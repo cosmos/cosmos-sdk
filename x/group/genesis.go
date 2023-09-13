@@ -3,6 +3,8 @@ package group
 import (
 	"fmt"
 
+	errorsmod "cosmossdk.io/errors"
+
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -12,6 +14,8 @@ func NewGenesisState() *GenesisState {
 	return &GenesisState{}
 }
 
+// Validate performs basic genesis state validation returning an error upon any
+// failure.
 func (s GenesisState) Validate() error {
 	groups := make(map[uint64]GroupInfo)
 	groupPolicies := make(map[string]GroupPolicyInfo)
@@ -20,7 +24,7 @@ func (s GenesisState) Validate() error {
 
 	for _, g := range s.Groups {
 		if err := g.ValidateBasic(); err != nil {
-			return sdkerrors.Wrap(err, "Group validation failed")
+			return errorsmod.Wrap(err, "Group validation failed")
 		}
 		groups[g.Id] = *g
 	}
@@ -29,11 +33,11 @@ func (s GenesisState) Validate() error {
 
 		// check that group with group policy's GroupId exists
 		if _, exists := groups[g.GroupId]; !exists {
-			return sdkerrors.Wrap(sdkerrors.ErrNotFound, fmt.Sprintf("group with GroupId %d doesn't exist", g.GroupId))
+			return errorsmod.Wrap(sdkerrors.ErrNotFound, fmt.Sprintf("group with GroupId %d doesn't exist", g.GroupId))
 		}
 
 		if err := g.ValidateBasic(); err != nil {
-			return sdkerrors.Wrap(err, "GroupPolicy validation failed")
+			return errorsmod.Wrap(err, "GroupPolicy validation failed")
 		}
 		groupPolicies[g.Address] = *g
 	}
@@ -42,11 +46,11 @@ func (s GenesisState) Validate() error {
 
 		// check that group with group member's GroupId exists
 		if _, exists := groups[g.GroupId]; !exists {
-			return sdkerrors.Wrap(sdkerrors.ErrNotFound, fmt.Sprintf("group member with GroupId %d doesn't exist", g.GroupId))
+			return errorsmod.Wrap(sdkerrors.ErrNotFound, fmt.Sprintf("group member with GroupId %d doesn't exist", g.GroupId))
 		}
 
 		if err := g.ValidateBasic(); err != nil {
-			return sdkerrors.Wrap(err, "GroupMember validation failed")
+			return errorsmod.Wrap(err, "GroupMember validation failed")
 		}
 		groupMembers[g.GroupId] = *g
 	}
@@ -55,11 +59,11 @@ func (s GenesisState) Validate() error {
 
 		// check that group policy with proposal address exists
 		if _, exists := groupPolicies[p.GroupPolicyAddress]; !exists {
-			return sdkerrors.Wrap(sdkerrors.ErrNotFound, fmt.Sprintf("group policy account with address %s doesn't correspond to proposal address", p.GroupPolicyAddress))
+			return errorsmod.Wrap(sdkerrors.ErrNotFound, fmt.Sprintf("group policy account with address %s doesn't correspond to proposal address", p.GroupPolicyAddress))
 		}
 
 		if err := p.ValidateBasic(); err != nil {
-			return sdkerrors.Wrap(err, "Proposal validation failed")
+			return errorsmod.Wrap(err, "Proposal validation failed")
 		}
 		proposals[p.Id] = *p
 	}
@@ -67,12 +71,12 @@ func (s GenesisState) Validate() error {
 	for _, v := range s.Votes {
 
 		if err := v.ValidateBasic(); err != nil {
-			return sdkerrors.Wrap(err, "Vote validation failed")
+			return errorsmod.Wrap(err, "Vote validation failed")
 		}
 
 		// check that proposal exists
 		if _, exists := proposals[v.ProposalId]; !exists {
-			return sdkerrors.Wrap(sdkerrors.ErrNotFound, fmt.Sprintf("proposal with ProposalId %d doesn't exist", v.ProposalId))
+			return errorsmod.Wrap(sdkerrors.ErrNotFound, fmt.Sprintf("proposal with ProposalId %d doesn't exist", v.ProposalId))
 		}
 	}
 	return nil

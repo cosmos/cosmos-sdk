@@ -1,9 +1,6 @@
-<!--
-order: 0
-title: Evidence Overview
-parent:
-  title: "evidence"
--->
+---
+sidebar_position: 1
+---
 
 # `x/evidence`
 
@@ -25,7 +22,7 @@ that allows for the submission and handling of arbitrary evidence of misbehavior
 as equivocation and counterfactual signing.
 
 The evidence module differs from standard evidence handling which typically expects the
-underlying consensus engine, e.g. Tendermint, to automatically submit evidence when
+underlying consensus engine, e.g. CometBFT, to automatically submit evidence when
 it is discovered by allowing clients and foreign chains to submit more complex evidence
 directly.
 
@@ -39,11 +36,9 @@ Each corresponding handler must also fulfill the `Handler` interface contract. T
 `Handler` for a given `Evidence` type can perform any arbitrary state transitions
 such as slashing, jailing, and tombstoning.
 
-<!-- order: 1 -->
+## Concepts
 
-# Concepts
-
-## Evidence
+### Evidence
 
 Any concrete type of evidence submitted to the `x/evidence` module must fulfill the
 `Evidence` contract outlined below. Not all concrete types of evidence will fulfill
@@ -58,9 +53,8 @@ type Evidence interface {
 	proto.Message
 
 	Route() string
-	Type() string
 	String() string
-	Hash() tmbytes.HexBytes
+	Hash() []byte
 	ValidateBasic() error
 
 	// Height at which the infraction occurred
@@ -83,7 +77,7 @@ type ValidatorEvidence interface {
 }
 ```
 
-## Registration & Handling
+### Registration & Handling
 
 The `x/evidence` module must first know about all types of evidence it is expected
 to handle. This is accomplished by registering the `Route` method in the `Evidence`
@@ -113,12 +107,11 @@ by the `Handler` should be persisted.
 // for executing all corresponding business logic necessary for verifying the
 // evidence as valid. In addition, the Handler may execute any necessary
 // slashing and potential jailing.
-type Handler func(sdk.Context, Evidence) error
+type Handler func(context.Context, Evidence) error
 ```
 
-<!-- order: 2 -->
 
-# State
+## State
 
 Currently the `x/evidence` module only stores valid submitted `Evidence` in state.
 The evidence state is also stored and exported in the `x/evidence` module's `GenesisState`.
@@ -134,11 +127,10 @@ message GenesisState {
 
 All `Evidence` is retrieved and stored via a prefix `KVStore` using prefix `0x00` (`KeyPrefixEvidence`).
 
-<!-- order: 3 -->
 
-# Messages
+## Messages
 
-## MsgSubmitEvidence
+### MsgSubmitEvidence
 
 Evidence is submitted through a `MsgSubmitEvidence` message:
 
@@ -160,22 +152,22 @@ as follows:
 
 ```go
 func SubmitEvidence(ctx Context, evidence Evidence) error {
-  if _, ok := GetEvidence(ctx, evidence.Hash()); ok {
-    return sdkerrors.Wrap(types.ErrEvidenceExists, evidence.Hash().String())
+  if _, err := GetEvidence(ctx, evidence.Hash()); err == nil {
+    return errorsmod.Wrap(types.ErrEvidenceExists, strings.ToUpper(hex.EncodeToString(evidence.Hash())))
   }
   if !router.HasRoute(evidence.Route()) {
-    return sdkerrors.Wrap(types.ErrNoEvidenceHandlerExists, evidence.Route())
+    return errorsmod.Wrap(types.ErrNoEvidenceHandlerExists, evidence.Route())
   }
 
   handler := router.GetRoute(evidence.Route())
   if err := handler(ctx, evidence); err != nil {
-    return sdkerrors.Wrap(types.ErrInvalidEvidence, err.Error())
+    return errorsmod.Wrap(types.ErrInvalidEvidence, err.Error())
   }
 
   ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			types.EventTypeSubmitEvidence,
-			sdk.NewAttribute(types.AttributeKeyEvidenceHash, evidence.Hash().String()),
+			sdk.NewAttribute(types.AttributeKeyEvidenceHash, strings.ToUpper(hex.EncodeToString(evidence.Hash()))),
 		),
 	)
 
@@ -188,15 +180,14 @@ First, there must not already exist valid submitted `Evidence` of the exact same
 type. Secondly, the `Evidence` is routed to the `Handler` and executed. Finally,
 if there is no error in handling the `Evidence`, an event is emitted and it is persisted to state.
 
-<!-- order: 4 -->
 
-# Events
+## Events
 
 The `x/evidence` module emits the following events:
 
-## Handlers
+### Handlers
 
-### MsgSubmitEvidence
+#### MsgSubmitEvidence
 
 | Type            | Attribute Key | Attribute Value |
 | --------------- | ------------- | --------------- |
@@ -205,38 +196,30 @@ The `x/evidence` module emits the following events:
 | message         | sender        | {senderAddress} |
 | message         | action        | submit_evidence |
 
-<!-- order: 5 -->
 
-# Parameters
+## Parameters
 
 The evidence module does not contain any parameters.
 
-<!-- order: 6 -->
 
-# BeginBlock
+## BeginBlock
 
-## Evidence Handling
+### Evidence Handling
 
-Tendermint blocks can include
-[Evidence](https://github.com/tendermint/tendermint/blob/master/docs/spec/blockchain/blockchain.md#evidence) that indicates if a validator committed malicious behavior. The relevant information is forwarded to the application as ABCI Evidence in `abci.RequestBeginBlock` so that the validator can be punished accordingly.
+CometBFT blocks can include
+[Evidence](https://github.com/cometbft/cometbft/blob/main/spec/abci/abci%2B%2B_basic_concepts.md#evidence) that indicates if a validator committed malicious behavior. The relevant information is forwarded to the application as ABCI Evidence in `abci.RequestBeginBlock` so that the validator can be punished accordingly.
 
-### Equivocation
+#### Equivocation
 
 The Cosmos SDK handles two types of evidence inside the ABCI `BeginBlock`:
 
 * `DuplicateVoteEvidence`,
 * `LightClientAttackEvidence`.
 
-The evidence module handles these two evidence types the same way. First, the Cosmos SDK converts the Tendermint concrete evidence type to an SDK `Evidence` interface using `Equivocation` as the concrete type.
+The evidence module handles these two evidence types the same way. First, the Cosmos SDK converts the CometBFT concrete evidence type to an SDK `Evidence` interface using `Equivocation` as the concrete type.
 
-```proto
-// Equivocation implements the Evidence interface.
-message Equivocation {
-  int64                     height            = 1;
-  google.protobuf.Timestamp time              = 2;
-  int64                     power             = 3;
-  string                    consensus_address = 4;
-}
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/evidence/v1beta1/evidence.proto#L12-L32
 ```
 
 For some `Equivocation` submitted in `block` to be valid, it must satisfy:
@@ -259,118 +242,21 @@ validator to ever re-enter the validator set.
 
 The `Equivocation` evidence is handled as follows:
 
-```go
-func (k Keeper) HandleEquivocationEvidence(ctx sdk.Context, evidence *types.Equivocation) {
-	logger := k.Logger(ctx)
-	consAddr := evidence.GetConsensusAddress()
-
-	if _, err := k.slashingKeeper.GetPubkey(ctx, consAddr.Bytes()); err != nil {
-		// Ignore evidence that cannot be handled.
-		//
-		// NOTE: We used to panic with:
-		// `panic(fmt.Sprintf("Validator consensus-address %v not found", consAddr))`,
-		// but this couples the expectations of the app to both Tendermint and
-		// the simulator.  Both are expected to provide the full range of
-		// allowable but none of the disallowed evidence types.  Instead of
-		// getting this coordination right, it is easier to relax the
-		// constraints and ignore evidence that cannot be handled.
-		return
-	}
-
-	// calculate the age of the evidence
-	infractionHeight := evidence.GetHeight()
-	infractionTime := evidence.GetTime()
-	ageDuration := ctx.BlockHeader().Time.Sub(infractionTime)
-	ageBlocks := ctx.BlockHeader().Height - infractionHeight
-
-	// Reject evidence if the double-sign is too old. Evidence is considered stale
-	// if the difference in time and number of blocks is greater than the allowed
-	// parameters defined.
-	cp := ctx.ConsensusParams()
-	if cp != nil && cp.Evidence != nil {
-		if ageDuration > cp.Evidence.MaxAgeDuration && ageBlocks > cp.Evidence.MaxAgeNumBlocks {
-			logger.Info(
-				"ignored equivocation; evidence too old",
-				"validator", consAddr,
-				"infraction_height", infractionHeight,
-				"max_age_num_blocks", cp.Evidence.MaxAgeNumBlocks,
-				"infraction_time", infractionTime,
-				"max_age_duration", cp.Evidence.MaxAgeDuration,
-			)
-			return
-		}
-	}
-
-	validator := k.stakingKeeper.ValidatorByConsAddr(ctx, consAddr)
-	if validator == nil || validator.IsUnbonded() {
-		// Defensive: Simulation doesn't take unbonding periods into account, and
-		// Tendermint might break this assumption at some point.
-		return
-	}
-
-	if ok := k.slashingKeeper.HasValidatorSigningInfo(ctx, consAddr); !ok {
-		panic(fmt.Sprintf("expected signing info for validator %s but not found", consAddr))
-	}
-
-	// ignore if the validator is already tombstoned
-	if k.slashingKeeper.IsTombstoned(ctx, consAddr) {
-		logger.Info(
-			"ignored equivocation; validator already tombstoned",
-			"validator", consAddr,
-			"infraction_height", infractionHeight,
-			"infraction_time", infractionTime,
-		)
-		return
-	}
-
-	logger.Info(
-		"confirmed equivocation",
-		"validator", consAddr,
-		"infraction_height", infractionHeight,
-		"infraction_time", infractionTime,
-	)
-
-	// We need to retrieve the stake distribution which signed the block, so we
-	// subtract ValidatorUpdateDelay from the evidence height.
-	// Note, that this *can* result in a negative "distributionHeight", up to
-	// -ValidatorUpdateDelay, i.e. at the end of the
-	// pre-genesis block (none) = at the beginning of the genesis block.
-	// That's fine since this is just used to filter unbonding delegations & redelegations.
-	distributionHeight := infractionHeight - sdk.ValidatorUpdateDelay
-
-	// Slash validator. The `power` is the int64 power of the validator as provided
-	// to/by Tendermint. This value is validator.Tokens as sent to Tendermint via
-	// ABCI, and now received as evidence. The fraction is passed in to separately
-	// to slash unbonding and rebonding delegations.
-	k.slashingKeeper.Slash(
-		ctx,
-		consAddr,
-		k.slashingKeeper.SlashFractionDoubleSign(ctx),
-		evidence.GetValidatorPower(), distributionHeight,
-	)
-
-	// Jail the validator if not already jailed. This will begin unbonding the
-	// validator if not already unbonding (tombstoned).
-	if !validator.IsJailed() {
-		k.slashingKeeper.Jail(ctx, consAddr)
-	}
-
-	k.slashingKeeper.JailUntil(ctx, consAddr, types.DoubleSignJailEndTime)
-	k.slashingKeeper.Tombstone(ctx, consAddr)
-}
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/x/evidence/keeper/infraction.go#L26-L140
 ```
 
 **Note:** The slashing, jailing, and tombstoning calls are delegated through the `x/slashing` module
 that emits informative events and finally delegates calls to the `x/staking` module. See documentation
-on slashing and jailing in [State Transitions](/.././cosmos-sdk/x/staking/spec/02_state_transitions.md).
+on slashing and jailing in [State Transitions](../staking/README.md#state-transitions).
 
-# Client
+## Client
 
-## CLI
+### CLI
 
 A user can query and interact with the `evidence` module using the CLI.
 
-### Query
+#### Query
 
 The `query` commands allows users to query `evidence` state.
 
@@ -378,14 +264,14 @@ The `query` commands allows users to query `evidence` state.
 simd query evidence --help
 ```
 
-### evidence
+#### evidence
 
 The `evidence` command allows users to list all evidence or evidence by hash.
 
 Usage:
 
 ```bash
-simd query evidence [flags]
+simd query evidence evidence [flags]
 ```
 
 To query evidence by hash
@@ -393,7 +279,7 @@ To query evidence by hash
 Example:
 
 ```bash
-simd query evidence "DF0C23E8634E480F84B9D5674A7CDC9816466DEC28A3358F73260F68D28D7660"
+simd query evidence evidence "DF0C23E8634E480F84B9D5674A7CDC9816466DEC28A3358F73260F68D28D7660"
 ```
 
 Example Output:
@@ -411,7 +297,7 @@ To get all evidence
 Example:
 
 ```bash
-simd query evidence
+simd query evidence list
 ```
 
 Example Output:
@@ -427,16 +313,16 @@ pagination:
   total: "1"
 ```
 
-## REST
+### REST
 
 A user can query the `evidence` module using REST endpoints.
 
-### Evidence
+#### Evidence
 
 Get evidence by hash
 
 ```bash
-/cosmos/evidence/v1beta1/evidence/{evidence_hash}
+/cosmos/evidence/v1beta1/evidence/{hash}
 ```
 
 Example:
@@ -458,7 +344,7 @@ Example Output:
 }
 ```
 
-### All evidence
+#### All evidence
 
 Get all evidence
 
@@ -490,11 +376,11 @@ Example Output:
 }
 ```
 
-## gRPC
+### gRPC
 
 A user can query the `evidence` module using gRPC endpoints.
 
-### Evidence
+#### Evidence
 
 Get evidence by hash
 
@@ -521,7 +407,7 @@ Example Output:
 }
 ```
 
-### All evidence
+#### All evidence
 
 Get all evidence
 

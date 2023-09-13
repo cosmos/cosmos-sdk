@@ -2,6 +2,7 @@ name: Deploy docs
 # This job builds and deploys documenation to github pages.
 # It runs on every push to main with a change in the docs folder.
 on:
+  workflow_dispatch:
   push:
     branches:
       - main
@@ -19,24 +20,28 @@ jobs:
     permissions:
       contents: write # for JamesIves/github-pages-deploy-action to push changes in repo
     runs-on: ubuntu-latest
-    container:
-      image: ghcr.io/cosmos/website-deployment
     steps:
       - name: Checkout 🛎️
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           persist-credentials: false
           fetch-depth: 0
           path: "."
 
+      - name: Setup Node.js 🔧
+        uses: actions/setup-node@v3
+        with:
+          node-version: "16.x"
+
+      # npm install npm should be removed when https://github.com/npm/cli/issues/4942 is fixed
       - name: Build 🔧
         run: |
-          git config --global --add safe.directory /__w/cosmos-sdk/cosmos-sdk
-          make build-docs LEDGER_ENABLED=false
+          npm install -g npm@8.5.5
+          make build-docs
 
-      - name: Deploy 🚀
-        uses: JamesIves/github-pages-deploy-action@v4.4.0
-        with:
-          branch: gh-pages
-          folder: ~/output
-          single-commit: true
+      # - name: Deploy 🚀
+      #   uses: JamesIves/github-pages-deploy-action@v4.4.3
+      #   with:
+      #     branch: gh-pages
+      #     folder: ~/output
+      #     single-commit: true

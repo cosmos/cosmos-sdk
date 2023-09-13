@@ -1223,6 +1223,7 @@ type GenesisState struct {
 
 	// class defines the class of the nft type.
 	Classes []*Class `protobuf:"bytes,1,rep,name=classes,proto3" json:"classes,omitempty"`
+	// entry defines all nft owned by a person.
 	Entries []*Entry `protobuf:"bytes,2,rep,name=entries,proto3" json:"entries,omitempty"`
 }
 

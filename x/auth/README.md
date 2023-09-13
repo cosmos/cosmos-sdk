@@ -1,9 +1,6 @@
-<!--
-order: 0
-title: "Auth Overview"
-parent:
-  title: "auth"
--->
+---
+sidebar_position: 1
+---
 
 # `x/auth`
 
@@ -29,13 +26,11 @@ This module is used in the Cosmos Hub.
     * [Account Keeper](#account-keeper)
 * [Parameters](#parameters)
 * [Client](#client)
-  * [CLI](#cli)
-  * [gRPC](#grpc)
-  * [REST](#rest)
+    * [CLI](#cli)
+    * [gRPC](#grpc)
+    * [REST](#rest)
 
-<!-- order: 1 -->
-
-# Concepts
+## Concepts
 
 **Note:** The auth module is different from the [authz module](../modules/authz/).
 
@@ -44,7 +39,7 @@ The differences are:
 * `auth` - authentication of accounts and transactions for Cosmos SDK applications and is responsible for specifying the base transaction and account types.
 * `authz` - authorization for accounts to perform actions on behalf of other accounts and enables a granter to grant authorizations to a grantee that allows the grantee to execute messages on behalf of the granter.
 
-## Gas & Fees
+### Gas & Fees
 
 Fees serve two purposes for an operator of the network.
 
@@ -67,7 +62,7 @@ any of the validator's minimum gas prices. In other words, a transaction must
 provide a fee of at least one denomination that matches a validator's minimum
 gas price.
 
-Tendermint does not currently provide fee based mempool prioritization, and fee
+CometBFT does not currently provide fee based mempool prioritization, and fee
 based mempool filtering is local to node and not part of consensus. But with
 minimum gas prices set, such a mechanism could be implemented by node operators.
 
@@ -75,11 +70,9 @@ Because the market value for tokens will fluctuate, validators are expected to
 dynamically adjust their minimum gas prices to a level that would encourage the
 use of the network.		
 
-<!-- order: 2 -->
+## State
 
-# State
-
-## Accounts
+### Accounts
 
 Accounts contain authentication information for a uniquely identified external user of an SDK blockchain,
 including public key, address, and account number / sequence number for replay protection. For efficiency,
@@ -92,10 +85,10 @@ account types may do so.
 
 * `0x01 | Address -> ProtocolBuffer(account)`
 
-### Account Interface
+#### Account Interface
 
 The account interface exposes methods to read and write standard account information.
-Note that all of these methods operate on an account struct confirming to the
+Note that all of these methods operate on an account struct conforming to the
 interface - in order to write the account to the store, the account keeper will
 need to be used.
 
@@ -126,7 +119,7 @@ type AccountI interface {
 }
 ```
 
-#### Base Account
+##### Base Account
 
 A base account is the simplest and most common account type, which just stores all requisite
 fields directly in a struct.
@@ -145,18 +138,16 @@ message BaseAccount {
 
 ### Vesting Account
 
-See [Vesting](https://docs.cosmos.network/main/modules/vesting/).
+See [Vesting](https://docs.cosmos.network/main/modules/auth/vesting/).
 
-<!-- order: 3 -->
-
-# AnteHandlers
+## AnteHandlers
 
 The `x/auth` module presently has no transaction handlers of its own, but does expose the special `AnteHandler`, used for performing basic validity checks on a transaction, such that it could be thrown out of the mempool.
 The `AnteHandler` can be seen as a set of decorators that check transactions within the current context, per [ADR 010](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-010-modular-antehandler.md).
 
-Note that the `AnteHandler` is called on both `CheckTx` and `DeliverTx`, as Tendermint proposers presently have the ability to include in their proposed block transactions which fail `CheckTx`.
+Note that the `AnteHandler` is called on both `CheckTx` and `DeliverTx`, as CometBFT proposers presently have the ability to include in their proposed block transactions which fail `CheckTx`.
 
-## Decorators
+### Decorators
 
 The auth module provides `AnteDecorator`s that are recursively chained together into a single `AnteHandler` in the following order:
 
@@ -186,13 +177,11 @@ The auth module provides `AnteDecorator`s that are recursively chained together 
 
 * `IncrementSequenceDecorator`: Increments the account sequence for each signer to prevent replay attacks.
 
-<!-- order: 4 -->
-
-# Keepers
+## Keepers
 
 The auth module only exposes one keeper, the account keeper, which can be used to read and write accounts.
 
-## Account Keeper
+### Account Keeper
 
 Presently only one fully-permissioned account keeper is exposed, which has the ability to both read and write
 all fields of all accounts, and to iterate over all stored accounts.
@@ -228,13 +217,11 @@ type AccountKeeperI interface {
 	GetSequence(sdk.Context, sdk.AccAddress) (uint64, error)
 
 	// Fetch the next account number, and increment the internal counter.
-	GetNextAccountNumber(sdk.Context) uint64
+	NextAccountNumber(sdk.Context) uint64
 }
 ```
 
-<!-- order: 5 -->
-
-# Parameters
+## Parameters
 
 The auth module contains the following parameters:
 
@@ -246,11 +233,9 @@ The auth module contains the following parameters:
 | SigVerifyCostED25519   |      uint64     | 590     |
 | SigVerifyCostSecp256k1 |      uint64     | 1000    |
 
-<!-- order: 6 -->
+## Client
 
-# Client
-
-## CLI
+### CLI
 
 A user can query and interact with the `auth` module using the CLI.
 
@@ -411,11 +396,108 @@ tx_sig_limit: "7"
 tx_size_cost_per_byte: "10"
 ```
 
-## gRPC
+### Transactions
+
+The `auth` module supports transactions commands to help you with signing and more. Compared to other modules you can access directly the `auth` module transactions commands using the only `tx` command.
+
+Use directly the `--help` flag to get more information about the `tx` command.
+
+```bash
+simd tx --help
+```
+
+#### `sign`
+
+The `sign` command allows users to sign transactions that was generated offline.
+
+```bash
+simd tx sign tx.json --from $ALICE > tx.signed.json
+```
+
+The result is a signed transaction that can be broadcasted to the network thanks to the broadcast command.
+
+More information about the `sign` command can be found running `simd tx sign --help`.
+
+#### `sign-batch`
+
+The `sign-batch` command allows users to sign multiples offline generated transactions.
+The transactions can be in one file, with one tx per line, or in multiple files.
+
+```bash
+simd tx sign txs.json --from $ALICE > tx.signed.json
+```
+
+or
+
+```bash 
+simd tx sign tx1.json tx2.json tx3.json --from $ALICE > tx.signed.json
+```
+
+The result is multiples signed transactions. For combining the signed transactions into one transactions, use the `--append` flag.
+
+More information about the `sign-batch` command can be found running `simd tx sign-batch --help`.
+
+#### `multi-sign`
+
+The `multi-sign` command allows users to sign transactions that was generated offline by a multisig account.
+
+```bash
+simd tx multisign transaction.json k1k2k3 k1sig.json k2sig.json k3sig.json
+```
+
+Where `k1k2k3` is the multisig account address, `k1sig.json` is the signature of the first signer, `k2sig.json` is the signature of the second signer, and `k3sig.json` is the signature of the third signer.
+
+More information about the `multi-sign` command can be found running `simd tx multi-sign --help`.
+
+#### `multisign-batch`
+
+The `multisign-batch` works the same way as `sign-batch`, but for multisig accounts.
+With the difference that the `multisign-batch` command requires all transactions to be in one file, and the `--append` flag does not exist.
+
+More information about the `multisign-batch` command can be found running `simd tx multisign-batch --help`.
+
+#### `validate-signatures`
+
+The `validate-signatures` command allows users to validate the signatures of a signed transaction.
+
+```bash
+$ simd tx validate-signatures tx.signed.json
+Signers:
+  0: cosmos1l6vsqhh7rnwsyr2kyz3jjg3qduaz8gwgyl8275
+
+Signatures:
+  0: cosmos1l6vsqhh7rnwsyr2kyz3jjg3qduaz8gwgyl8275                      [OK]
+```
+
+More information about the `validate-signatures` command can be found running `simd tx validate-signatures --help`.
+
+#### `broadcast`
+
+The `broadcast` command allows users to broadcast a signed transaction to the network.
+
+```bash
+simd tx broadcast tx.signed.json
+```
+
+More information about the `broadcast` command can be found running `simd tx broadcast --help`.
+
+#### `aux-to-fee`
+
+The `aux-to-fee` comamnds includes the aux signer data in the tx, broadcast the tx, and sends the tip amount to the broadcaster.
+[Learn more about tip transaction](https://docs.cosmos.network/main/core/tips).
+
+```bash
+# simd tx bank send <from> <to> <amount> --aux (optional: --tip <tipAmt> --tipper <tipper>)
+simd tx aux-to-fee tx.aux.signed.json
+```
+
+More information about the `aux-to-fee` command can be found running `simd tx aux-to-fee --help`.
+
+### gRPC
 
 A user can query the `auth` module using gRPC endpoints.
 
-### Account
+#### Account
 
 The `account` endpoint allow users to query for an account by it's address.
 
@@ -448,7 +530,7 @@ Example Output:
 }
 ```
 
-### Accounts
+#### Accounts
 
 The `accounts` endpoint allow users to query all the available accounts.
 
@@ -564,7 +646,7 @@ Example Output:
 }
 ```
 
-### Params
+#### Params
 
 The `params` endpoint allow users to query the current auth parameters.
 
@@ -594,11 +676,11 @@ Example Output:
 }
 ```
 
-## REST
+### REST
 
 A user can query the `auth` module using REST endpoints.
 
-### Account
+#### Account
 
 The `account` endpoint allow users to query for an account by it's address.
 
@@ -606,7 +688,7 @@ The `account` endpoint allow users to query for an account by it's address.
 /cosmos/auth/v1beta1/account?address={address}
 ```
 
-### Accounts
+#### Accounts
 
 The `accounts` endpoint allow users to query all the available accounts.
 
@@ -614,7 +696,7 @@ The `accounts` endpoint allow users to query all the available accounts.
 /cosmos/auth/v1beta1/accounts
 ```
 
-### Params
+#### Params
 
 The `params` endpoint allow users to query the current auth parameters.
 

@@ -5,6 +5,7 @@
 * 2021-05-01: Initial Draft
 * 2021-07-02: Review updates
 * 2022-06-15: Add batch operation
+* 2022-11-11: Remove strict validation of classID and tokenID
 
 ## Status
 
@@ -75,7 +76,7 @@ message Class {
 }
 ```
 
-* `id` is an alphanumeric identifier of the NFT class; it is used as the primary index for storing the class; _required_
+* `id` is used as the primary index for storing the class; _required_
 * `name` is a descriptive name of the NFT class; _optional_
 * `symbol` is the symbol usually shown on exchanges for the NFT class; _optional_
 * `description` is a detailed description of the NFT class; _optional_
@@ -97,8 +98,8 @@ message NFT {
 }
 ```
 
-* `class_id` is the identifier of the NFT class where the NFT belongs; _required_,`[a-zA-Z][a-zA-Z0-9/:-]{2,100}`
-* `id` is an alphanumeric identifier of the NFT, unique within the scope of its class. It is specified by the creator of the NFT and may be expanded to use DID in the future. `class_id` combined with `id` uniquely identifies an NFT and is used as the primary index for storing the NFT; _required_,`[a-zA-Z][a-zA-Z0-9/:-]{2,100}`
+* `class_id` is the identifier of the NFT class where the NFT belongs; _required_
+* `id` is an identifier of the NFT, unique within the scope of its class. It is specified by the creator of the NFT and may be expanded to use DID in the future. `class_id` combined with `id` uniquely identifies an NFT and is used as the primary index for storing the NFT; _required_
 
   ```text
   {class_id}/{id} --> NFT (bytes)
@@ -182,7 +183,7 @@ func (m msgServer) Send(ctx context.Context, msg *types.MsgSend) (*types.MsgSend
 
 The query service methods for the `x/nft` module are:
 
-```proto
+```protobuf
 service Query {
   // Balance queries the number of NFTs of a given class owned by the owner, same as balanceOf in ERC721
   rpc Balance(QueryBalanceRequest) returns (QueryBalanceResponse) {

@@ -1,9 +1,6 @@
-<!--
-order: 0
-title: Fee grant Overview
-parent:
-  title: "feegrant"
--->
+---
+sidebar_position: 1
+---
 
 # `x/feegrant`
 
@@ -31,21 +28,23 @@ This module allows accounts to grant fee allowances and to use fees from their a
     * [CLI](#cli)
     * [gRPC](#grpc)
 
-<!-- order: 1 -->
+## Concepts
 
-# Concepts
-
-## Grant
+### Grant
 
 `Grant` is stored in the KVStore to record a grant with full context. Every grant will contain `granter`, `grantee` and what kind of `allowance` is granted. `granter` is an account address who is giving permission to `grantee` (the beneficiary account address) to pay for some or all of `grantee`'s transaction fees. `allowance` defines what kind of fee allowance (`BasicAllowance` or `PeriodicAllowance`, see below) is granted to `grantee`. `allowance` accepts an interface which implements `FeeAllowanceI`, encoded as `Any` type. There can be only one existing fee grant allowed for a `grantee` and `granter`, self grants are not allowed.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/feegrant/v1beta1/feegrant.proto#L76-L77
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/feegrant/v1beta1/feegrant.proto#L83-L93
+```
 
 `FeeAllowanceI` looks like:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/x/feegrant/fees.go#L9-L32
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/x/feegrant/fees.go#L9-L32
+```
 
-## Fee Allowance types
+### Fee Allowance types
 
 There are two types of fee allowances present at the moment:
 
@@ -53,11 +52,13 @@ There are two types of fee allowances present at the moment:
 * `PeriodicAllowance`
 * `AllowedMsgAllowance`
 
-## BasicAllowance
+### BasicAllowance
 
 `BasicAllowance` is permission for `grantee` to use fee from a `granter`'s account. If any of the `spend_limit` or `expiration` reaches its limit, the grant will be removed from the state.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/feegrant/v1beta1/feegrant.proto#L13-L26
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/feegrant/v1beta1/feegrant.proto#L15-L28
+```
 
 * `spend_limit` is the limit of coins that are allowed to be used from the `granter` account. If it is empty, it assumes there's no spend limit, `grantee` can use any number of available coins from `granter` account address before the expiration.
 
@@ -65,11 +66,13 @@ There are two types of fee allowances present at the moment:
 
 * When a grant is created with empty values for `spend_limit` and `expiration`, it is still a valid grant. It won't restrict the `grantee` to use any number of coins from `granter` and it won't have any expiration. The only way to restrict the `grantee` is by revoking the grant.
 
-## PeriodicAllowance
+### PeriodicAllowance
 
 `PeriodicAllowance` is a repeating fee allowance for the mentioned period, we can mention when the grant can expire as well as when a period can reset. We can also define the maximum number of coins that can be used in a mentioned period of time.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/feegrant/v1beta1/feegrant.proto#L29-L54
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/feegrant/v1beta1/feegrant.proto#L34-L68
+```
 
 * `basic` is the instance of `BasicAllowance` which is optional for periodic fee allowance. If empty, the grant will have no `expiration` and no `spend_limit`.
 
@@ -81,27 +84,37 @@ There are two types of fee allowances present at the moment:
 
 * `period_reset` keeps track of when a next period reset should happen.
 
-## AllowedMsgAllowance
+### AllowedMsgAllowance
 
 `AllowedMsgAllowance` is a fee allowance, it can be any of `BasicFeeAllowance`, `PeriodicAllowance` but restricted only to the allowed messages mentioned by the granter.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/feegrant/v1beta1/feegrant.proto#L56-L66
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/feegrant/v1beta1/feegrant.proto#L70-L81
+```
 
 * `allowance` is either `BasicAllowance` or `PeriodicAllowance`.
 
 * `allowed_messages` is array of messages allowed to execute the given allowance.
 
-## FeeGranter flag
+### FeeGranter flag
 
 `feegrant` module introduces a `FeeGranter` flag for CLI for the sake of executing transactions with fee granter. When this flag is set, `clientCtx` will append the granter account address for transactions generated through CLI.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/client/cmd.go#L236-L246
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/client/cmd.go#L249-L260
+```
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/client/tx/tx.go#L109-L109
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/client/tx/tx.go#L109-L109
+```
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/x/auth/tx/builder.go#L270-L279
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/x/auth/tx/builder.go#L275-L284
+```
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/tx/v1beta1/tx.proto#L196-L217
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/tx/v1beta1/tx.proto#L203-L224
+```
 
 Example cmd:
 
@@ -109,25 +122,23 @@ Example cmd:
 ./simd tx gov submit-proposal --title="Test Proposal" --description="My awesome proposal" --type="Text" --from validator-key --fee-granter=cosmos1xh44hxt7spr67hqaa7nyx5gnutrz5fraw6grxn --chain-id=testnet --fees="10stake"
 ```
 
-## Granted Fee Deductions
+### Granted Fee Deductions
 
-Fees are deducted from grants in the `x/auth` ante handler. To learn more about how ante handlers work, read the [Auth Module AnteHandlers Guide](../../auth/spec/03_antehandlers.md).
+Fees are deducted from grants in the `x/auth` ante handler. To learn more about how ante handlers work, read the [Auth Module AnteHandlers Guide](../auth/README.md#antehandlers).
 
-## Gas
+### Gas
 
 In order to prevent DoS attacks, using a filtered `x/feegrant` incurs gas. The SDK must assure that the `grantee`'s transactions all conform to the filter set by the `granter`. The SDK does this by iterating over the allowed messages in the filter and charging 10 gas per filtered message. The SDK will then iterate over the messages being sent by the `grantee` to ensure the messages adhere to the filter, also charging 10 gas per message. The SDK will stop iterating and fail the transaction if it finds a message that does not conform to the filter.
 
 **WARNING**: The gas is charged against the granted allowance. Ensure your messages conform to the filter, if any, before sending transactions using your allowance.
 
-## Pruning
+### Pruning
 
 A queue in the state maintained with the prefix of expiration of the grants and checks them on EndBlock with the current block time for every block to prune.
 
-<!-- order: 2 -->
+## State
 
-# State
-
-## FeeAllowance
+### FeeAllowance
 
 Fee Allowances are identified by combining `Grantee` (the account address of fee allowance grantee) with the `Granter` (the account address of fee allowance granter).
 
@@ -135,9 +146,11 @@ Fee allowance grants are stored in the state as follows:
 
 * Grant: `0x00 | grantee_addr_len (1 byte) | grantee_addr_bytes |  granter_addr_len (1 byte) | granter_addr_bytes -> ProtocolBuffer(Grant)`
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/x/feegrant/feegrant.pb.go#L221-L229
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/x/feegrant/feegrant.pb.go#L222-L230
+```
 
-## FeeAllowanceQueue
+### FeeAllowanceQueue
 
 Fee Allowances queue items are identified by combining the `FeeAllowancePrefixQueue` (i.e., 0x01), `expiration`, `grantee` (the account address of fee allowance grantee), `granter` (the account address of fee allowance granter). Endblocker checks `FeeAllowanceQueue` state for the expired grants and prunes them from  `FeeAllowance` if there are any found.
 
@@ -145,31 +158,31 @@ Fee allowance queue keys are stored in the state as follows:
 
 * Grant: `0x01 | expiration_bytes | grantee_addr_len (1 byte) | grantee_addr_bytes |  granter_addr_len (1 byte) | granter_addr_bytes -> EmptyBytes`
 
-<!-- order: 3 -->
+## Messages
 
-# Messages
-
-## Msg/GrantAllowance
+### Msg/GrantAllowance
 
 A fee allowance grant will be created with the `MsgGrantAllowance` message.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/feegrant/v1beta1/tx.proto#L23-L36
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/feegrant/v1beta1/tx.proto#L25-L39
+```
 
-## Msg/RevokeAllowance
+### Msg/RevokeAllowance
 
 An allowed grant fee allowance can be removed with the `MsgRevokeAllowance` message.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/feegrant/v1beta1/tx.proto#L41-L50
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/feegrant/v1beta1/tx.proto#L41-L54
+```
 
-<!-- order: 4 -->
-
-# Events
+## Events
 
 The feegrant module emits the following events:
 
-# Msg Server
+## Msg Server
 
-## MsgGrantAllowance
+### MsgGrantAllowance
 
 | Type    | Attribute Key | Attribute Value  |
 | ------- | ------------- | ---------------- |
@@ -177,7 +190,7 @@ The feegrant module emits the following events:
 | message | granter       | {granterAddress} |
 | message | grantee       | {granteeAddress} |
 
-## MsgRevokeAllowance
+### MsgRevokeAllowance
 
 | Type    | Attribute Key | Attribute Value  |
 | ------- | ------------- | ---------------- |
@@ -185,7 +198,7 @@ The feegrant module emits the following events:
 | message | granter       | {granterAddress} |
 | message | grantee       | {granteeAddress} |
 
-## Exec fee allowance
+### Exec fee allowance
 
 | Type    | Attribute Key | Attribute Value  |
 | ------- | ------------- | ---------------- |
@@ -193,33 +206,31 @@ The feegrant module emits the following events:
 | message | granter       | {granterAddress} |
 | message | grantee       | {granteeAddress} |
 
-<!-- order: 6 -->
+## Client
 
-# Client
-
-## CLI
+### CLI
 
 A user can query and interact with the `feegrant` module using the CLI.
 
-### Query
+#### Query
 
 The `query` commands allow users to query `feegrant` state.
 
-```sh
+```shell
 simd query feegrant --help
 ```
 
-#### grant
+##### grant
 
 The `grant` command allows users to query a grant for a given granter-grantee pair.
 
-```sh
+```shell
 simd query feegrant grant [granter] [grantee] [flags]
 ```
 
 Example:
 
-```sh
+```shell
 simd query feegrant grant cosmos1.. cosmos1..
 ```
 
@@ -236,17 +247,17 @@ grantee: cosmos1..
 granter: cosmos1..
 ```
 
-#### grants
+##### grants
 
 The `grants` command allows users to query all grants for a given grantee.
 
-```sh
+```shell
 simd query feegrant grants [grantee] [flags]
 ```
 
 Example:
 
-```sh
+```shell
 simd query feegrant grants cosmos1..
 ```
 
@@ -267,63 +278,63 @@ pagination:
   total: "0"
 ```
 
-### Transactions
+#### Transactions
 
 The `tx` commands allow users to interact with the `feegrant` module.
 
-```sh
+```shell
 simd tx feegrant --help
 ```
 
-#### grant
+##### grant
 
 The `grant` command allows users to grant fee allowances to another account. The fee allowance can have an expiration date, a total spend limit, and/or a periodic spend limit.
 
-```sh
+```shell
 simd tx feegrant grant [granter] [grantee] [flags]
 ```
 
 Example (one-time spend limit):
 
-```sh
+```shell
 simd tx feegrant grant cosmos1.. cosmos1.. --spend-limit 100stake
 ```
 
 Example (periodic spend limit):
 
-```sh
+```shell
 simd tx feegrant grant cosmos1.. cosmos1.. --period 3600 --period-limit 10stake
 ```
 
-#### revoke
+##### revoke
 
 The `revoke` command allows users to revoke a granted fee allowance.
 
-```sh
+```shell
 simd tx feegrant revoke [granter] [grantee] [flags]
 ```
 
 Example:
 
-```sh
+```shell
 simd tx feegrant revoke cosmos1.. cosmos1..
 ```
 
-## gRPC
+### gRPC
 
 A user can query the `feegrant` module using gRPC endpoints.
 
-### Allowance
+#### Allowance
 
 The `Allowance` endpoint allows users to query a granted fee allowance.
 
-```sh
+```shell
 cosmos.feegrant.v1beta1.Query/Allowance
 ```
 
 Example:
 
-```sh
+```shell
 grpcurl -plaintext \
     -d '{"grantee":"cosmos1..","granter":"cosmos1.."}' \
     localhost:9090 \
@@ -342,17 +353,17 @@ Example Output:
 }
 ```
 
-### Allowances
+#### Allowances
 
 The `Allowances` endpoint allows users to query all granted fee allowances for a given grantee.
 
-```sh
+```shell
 cosmos.feegrant.v1beta1.Query/Allowances
 ```
 
 Example:
 
-```sh
+```shell
 grpcurl -plaintext \
     -d '{"address":"cosmos1.."}' \
     localhost:9090 \

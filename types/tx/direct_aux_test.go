@@ -63,8 +63,8 @@ func TestAuxSignerData(t *testing.T) {
 	}{
 		{"empty address", tx.AuxSignerData{}, true},
 		{"empty sign mode", tx.AuxSignerData{Address: addr.String()}, true},
-		{"SIGN_MODE_DIRECT", tx.AuxSignerData{Address: addr.String(), Mode: signing.SignMode(signing.SignMode_SIGN_MODE_DIRECT)}, true},
-		{"no sig", tx.AuxSignerData{Address: addr.String(), Mode: signing.SignMode(signing.SignMode_SIGN_MODE_DIRECT_AUX)}, true},
+		{"SIGN_MODE_DIRECT", tx.AuxSignerData{Address: addr.String(), Mode: signing.SignMode_SIGN_MODE_DIRECT}, true},
+		{"no sig", tx.AuxSignerData{Address: addr.String(), Mode: signing.SignMode_SIGN_MODE_DIRECT_AUX}, true},
 		{"happy case WITH DIRECT_AUX", tx.AuxSignerData{Address: addr.String(), Mode: signing.SignMode_SIGN_MODE_DIRECT_AUX, SignDoc: sd, Sig: sig}, false},
 		{"happy case WITH DIRECT_AUX", tx.AuxSignerData{Address: addr.String(), Mode: signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, SignDoc: sd, Sig: sig}, false},
 	}

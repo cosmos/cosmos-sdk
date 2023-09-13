@@ -47,7 +47,7 @@ a name. A `String()` method is provided for debugging.
 
 A `Capability` is simply a struct, the address of which is taken for the actual capability.
 
-```golang
+```go
 type Capability struct {
   index uint64
 }
@@ -55,7 +55,7 @@ type Capability struct {
 
 A `CapabilityKeeper` contains a persistent store key, memory store key, and mapping of allocated module names.
 
-```golang
+```go
 type CapabilityKeeper struct {
   persistentKey StoreKey
   memKey        StoreKey
@@ -71,7 +71,7 @@ and passed to modules, which can then use them to claim capabilities they receiv
 capabilities which they own by name, in addition to creating new capabilities & authenticating capabilities
 passed by other modules.
 
-```golang
+```go
 type ScopedCapabilityKeeper struct {
   persistentKey StoreKey
   memKey        StoreKey
@@ -83,7 +83,7 @@ type ScopedCapabilityKeeper struct {
 `ScopeToModule` is used to create a scoped sub-keeper with a particular name, which must be unique.
 It MUST be called before `InitialiseAndSeal`.
 
-```golang
+```go
 func (ck CapabilityKeeper) ScopeToModule(moduleName string) ScopedCapabilityKeeper {
 	if k.sealed {
 		panic("cannot scope to module via a sealed capability keeper")
@@ -110,7 +110,7 @@ necessary `ScopedCapabilityKeeper`s, in order to populate the memory store with 
 capability keys in accordance with the keys previously claimed by particular modules and prevent the
 creation of any new `ScopedCapabilityKeeper`s.
 
-```golang
+```go
 func (ck CapabilityKeeper) InitialiseAndSeal(ctx Context) {
   if ck.sealed {
     panic("capability keeper is sealed")
@@ -140,7 +140,7 @@ func (ck CapabilityKeeper) InitialiseAndSeal(ctx Context) {
 reference. The newly created capability is automatically persisted; the calling module need not
 call `ClaimCapability`.
 
-```golang
+```go
 func (sck ScopedCapabilityKeeper) NewCapability(ctx Context, name string) (Capability, error) {
   // check name not taken in memory store
   if capStore.Get("rev/" + name) != nil {
@@ -178,7 +178,7 @@ func (sck ScopedCapabilityKeeper) NewCapability(ctx Context, name string) (Capab
 does in fact correspond to a particular name (the name can be untrusted user input)
 with which the calling module previously associated it.
 
-```golang
+```go
 func (sck ScopedCapabilityKeeper) AuthenticateCapability(name string, capability Capability) bool {
   // return whether forward mapping in memory store matches name
   return memStore.Get(sck.moduleName + "/fwd/" + capability) === name
@@ -192,7 +192,7 @@ so that future `GetCapability` calls will succeed.
 in the future. Capabilities are multi-owner, so if multiple modules have a single `Capability` reference,
 they will all own it.
 
-```golang
+```go
 func (sck ScopedCapabilityKeeper) ClaimCapability(ctx Context, capability Capability, name string) error {
   persistentStore := ctx.KVStore(sck.persistentKey)
 
@@ -212,7 +212,7 @@ func (sck ScopedCapabilityKeeper) ClaimCapability(ctx Context, capability Capabi
 `GetCapability` allows a module to fetch a capability which it has previously claimed by name.
 The module is not allowed to retrieve capabilities which it does not own.
 
-```golang
+```go
 func (sck ScopedCapabilityKeeper) GetCapability(ctx Context, name string) (Capability, error) {
   // fetch the index of capability using reverse mapping in memstore
   index := memStore.Get(sck.moduleName + "/rev/" + name)
@@ -228,7 +228,7 @@ func (sck ScopedCapabilityKeeper) GetCapability(ctx Context, name string) (Capab
 `ReleaseCapability` allows a module to release a capability which it had previously claimed. If no
 more owners exist, the capability will be deleted globally.
 
-```golang
+```go
 func (sck ScopedCapabilityKeeper) ReleaseCapability(ctx Context, capability Capability) err {
   persistentStore := ctx.KVStore(sck.persistentKey)
 
@@ -263,7 +263,7 @@ func (sck ScopedCapabilityKeeper) ReleaseCapability(ctx Context, capability Capa
 
 Any modules which use dynamic capabilities must be provided a `ScopedCapabilityKeeper` in `app.go`:
 
-```golang
+```go
 ck := NewCapabilityKeeper(persistentKey, memoryKey)
 mod1Keeper := NewMod1Keeper(ck.ScopeToModule("mod1"), ....)
 mod2Keeper := NewMod2Keeper(ck.ScopeToModule("mod2"), ....)
@@ -281,14 +281,14 @@ Consider the case where `mod1` wants to create a capability, associate it with a
 
 Module 1 would have the following code:
 
-```golang
+```go
 capability := scopedCapabilityKeeper.NewCapability(ctx, "resourceABC")
 mod2Keeper.SomeFunction(ctx, capability, args...)
 ```
 
 `SomeFunction`, running in module 2, could then claim the capability:
 
-```golang
+```go
 func (k Mod2Keeper) SomeFunction(ctx Context, capability Capability) {
   k.sck.ClaimCapability(ctx, capability, "resourceABC")
   // other logic...
@@ -297,7 +297,7 @@ func (k Mod2Keeper) SomeFunction(ctx Context, capability Capability) {
 
 Later on, module 2 can retrieve that capability by name and pass it to module 1, which will authenticate it against the resource:
 
-```golang
+```go
 func (k Mod2Keeper) SomeOtherFunction(ctx Context, name string) {
   capability := k.sck.GetCapability(ctx, name)
   mod1.UseResource(ctx, capability, "resourceABC")
@@ -306,7 +306,7 @@ func (k Mod2Keeper) SomeOtherFunction(ctx Context, name string) {
 
 Module 1 will then check that this capability key is authenticated to use the resource before allowing module 2 to use it:
 
-```golang
+```go
 func (k Mod1Keeper) UseResource(ctx Context, capability Capability, resource string) {
   if !k.sck.AuthenticateCapability(name, capability) {
     return errors.New("unauthenticated")

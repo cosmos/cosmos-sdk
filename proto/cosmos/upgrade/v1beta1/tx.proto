@@ -6,8 +6,9 @@ import "gogoproto/gogo.proto";
 import "cosmos_proto/cosmos.proto";
 import "cosmos/upgrade/v1beta1/upgrade.proto";
 import "cosmos/msg/v1/msg.proto";
+import "amino/amino.proto";
 
-option go_package = "github.com/cosmos/cosmos-sdk/x/upgrade/types";
+option go_package = "cosmossdk.io/x/upgrade/types";
 
 // Msg defines the upgrade Msg service.
 service Msg {
@@ -17,8 +18,9 @@ service Msg {
   //
   // Since: cosmos-sdk 0.46
   rpc SoftwareUpgrade(MsgSoftwareUpgrade) returns (MsgSoftwareUpgradeResponse);
+
   // CancelUpgrade is a governance operation for cancelling a previously
-  // approvid software upgrade.
+  // approved software upgrade.
   //
   // Since: cosmos-sdk 0.46
   rpc CancelUpgrade(MsgCancelUpgrade) returns (MsgCancelUpgradeResponse);
@@ -29,12 +31,13 @@ service Msg {
 // Since: cosmos-sdk 0.46
 message MsgSoftwareUpgrade {
   option (cosmos.msg.v1.signer) = "authority";
+  option (amino.name)           = "cosmos-sdk/MsgSoftwareUpgrade";
 
-  // authority is the address of the governance account.
+  // authority is the address that controls the module (defaults to x/gov unless overwritten).
   string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
   // plan is the upgrade plan.
-  Plan plan = 2 [(gogoproto.nullable) = false];
+  Plan plan = 2 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 }
 
 // MsgSoftwareUpgradeResponse is the Msg/SoftwareUpgrade response type.
@@ -47,8 +50,9 @@ message MsgSoftwareUpgradeResponse {}
 // Since: cosmos-sdk 0.46
 message MsgCancelUpgrade {
   option (cosmos.msg.v1.signer) = "authority";
+  option (amino.name)           = "cosmos-sdk/MsgCancelUpgrade";
 
-  // authority is the address of the governance account.
+  // authority is the address that controls the module (defaults to x/gov unless overwritten).
   string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 

@@ -1,12 +1,16 @@
 package math_test
 
 import (
+	"encoding/json"
 	"fmt"
 	"math/big"
 	"math/rand"
+	"os"
 	"strconv"
+	"strings"
 	"testing"
 
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/math"
@@ -37,6 +41,19 @@ func (s *intTestSuite) TestFromUint64() {
 		s.Require().True(math.NewIntFromUint64(r).IsUint64())
 		s.Require().Equal(r, math.NewIntFromUint64(r).Uint64())
 	}
+}
+
+func (s *intTestSuite) TestNewIntFromBigInt() {
+	i := math.NewIntFromBigInt(nil)
+	s.Require().True(i.IsNil())
+
+	r := big.NewInt(42)
+	i = math.NewIntFromBigInt(r)
+	s.Require().Equal(r, i.BigInt())
+
+	// modify r and ensure i doesn't change
+	r = r.SetInt64(100)
+	s.Require().NotEqual(r, i.BigInt())
 }
 
 func (s *intTestSuite) TestIntPanic() {
@@ -423,4 +440,173 @@ func TestRoundTripMarshalToInt(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestFormatInt(t *testing.T) {
+	type integerTest []string
+	var testcases []integerTest
+	raw, err := os.ReadFile("testdata/integers.json")
+	require.NoError(t, err)
+	err = json.Unmarshal(raw, &testcases)
+	require.NoError(t, err)
+
+	for _, tc := range testcases {
+		out, err := math.FormatInt(tc[0])
+		require.NoError(t, err)
+		require.Equal(t, tc[1], out)
+	}
+}
+
+func TestFormatIntNonDigits(t *testing.T) {
+	badCases := []string{
+		"a10",
+		"1a10",
+		"p1a10",
+		"10p",
+		"--10",
+		"😎😎",
+		"11111111111133333333333333333333333333333a",
+		"11111111111133333333333333333333333333333 192892",
+	}
+
+	for _, value := range badCases {
+		value := value
+		t.Run(value, func(t *testing.T) {
+			s, err := math.FormatInt(value)
+			if err == nil {
+				t.Fatal("Expected an error")
+			}
+			if g, w := err.Error(), "but got non-digits in"; !strings.Contains(g, w) {
+				t.Errorf("Error mismatch\nGot:  %q\nWant substring: %q", g, w)
+			}
+			if s != "" {
+				t.Fatalf("Got a non-empty string: %q", s)
+			}
+		})
+	}
+}
+
+func TestFormatIntEmptyString(t *testing.T) {
+	_, err := math.FormatInt("")
+	require.ErrorContains(t, err, "cannot format empty string")
+}
+
+func TestFormatIntCorrectness(t *testing.T) {
+	tests := []struct {
+		in   string
+		want string
+	}{
+		{"0", "0"},
+		{"-2", "-2"},
+		{"10", "10"},
+		{"123", "123"},
+		{"1234", "1'234"},
+		{"12345", "12'345"},
+		{"123456", "123'456"},
+		{"-123456", "-123'456"},
+		{"1234567", "1'234'567"},
+		{"12345678", "12'345'678"},
+		{"123456789", "123'456'789"},
+		{"12345678910", "12'345'678'910"},
+		{"9999999999999999", "9'999'999'999'999'999"},
+		{"-9999999999999999", "-9'999'999'999'999'999"},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.in, func(t *testing.T) {
+			got, err := math.FormatInt(tt.in)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if got != tt.want {
+				t.Fatalf("Mismatch:\n\tGot:  %q\n\tWant: %q", got, tt.want)
+			}
+		})
+	}
+}
+
+var sizeTests = []struct {
+	s    string
+	want int
+}{
+	{"", 1},
+	{"0", 1},
+	{"-0", 1},
+	{"-10", 3},
+	{"-10000", 6},
+	{"10000", 5},
+	{"100000", 6},
+	{"99999", 5},
+	{"9999999999", 10},
+	{"10000000000", 11},
+	{"99999999999", 11},
+	{"999999999999", 12},
+	{"9999999999999", 13},
+	{"99999999999999", 14},
+	{"999999999999999", 15},
+	{"9999999999999999", 16},
+	{"99999999999999999", 17},
+	{"999999999999999999", 18},
+	{"-999999999999999999", 19},
+	{"9000000000000000000", 19},
+	{"-9999999999999990000", 20},
+	{"9999999999999990000", 19},
+	{"9999999999999999000", 19},
+	{"9999999999999999999", 19},
+	{"-9999999999999999999", 20},
+	{"18446744073709551616", 20},
+	{"18446744073709551618", 20},
+	{"184467440737095516181", 21},
+	{"100000000000000000000000", 24},
+	{"1000000000000000000000000000", 28},
+	{"9000000000099999999999999999", 28},
+	{"9999999999999999999999999999", 28},
+	{"9903520314283042199192993792", 28},
+	{"340282366920938463463374607431768211456", 39},
+	{"3402823669209384634633746074317682114569999", 43},
+	{"9999999999999999999999999999999999999999999", 43},
+	{"99999999999999999999999999999999999999999999", 44},
+	{"999999999999999999999999999999999999999999999", 45},
+	{"90000000000999999999999999999000000000099999999999999999", 56},
+	{"-90000000000999999999999999999000000000099999999999999999", 57},
+	{"9000000000099999999999999999900000000009999999999999999990", 58},
+	{"990000000009999999999999999990000000000999999999999999999999", 60},
+	{"99000000000999999999999999999000000000099999999999999999999919", 62},
+	{"90000000000999999990000000000000000000000000000000000000000000", 62},
+	{"99999999999999999999999999990000000000000000000000000000000000", 62},
+	{"11111111111111119999999999990000000000000000000000000000000000", 62},
+	{"99000000000999999999999999999000000000099999999999999999999919", 62},
+	{"10000000000000000000000000000000000000000000000000000000000000", 62},
+	{"10000000000000000000000000000000000000000000000000000000000000000000000000000", 77},
+	{"99999999999999999999999999999999999999999999999999999999999999999999999999999", 77},
+	{"110000000000000000000000000000000000000000000000000000000000000000000000000009", 78},
+}
+
+func TestNewIntFromString(t *testing.T) {
+	for _, st := range sizeTests {
+		ii, _ := math.NewIntFromString(st.s)
+		require.Equal(t, st.want, ii.Size(), "size mismatch for %q", st.s)
+	}
+}
+
+func BenchmarkIntSize(b *testing.B) {
+	var tests []math.Int
+	for _, st := range sizeTests {
+		ii, _ := math.NewIntFromString(st.s)
+		tests = append(tests, ii)
+	}
+	b.ResetTimer()
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		for _, ii := range tests {
+			got := ii.Size()
+			sink = got
+		}
+	}
+	if sink == nil {
+		b.Fatal("Benchmark did not run!")
+	}
+	sink = nil
 }

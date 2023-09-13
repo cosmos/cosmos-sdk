@@ -6,11 +6,11 @@ package tx
 import (
 	context "context"
 	fmt "fmt"
+	types1 "github.com/cometbft/cometbft/proto/tendermint/types"
 	types "github.com/cosmos/cosmos-sdk/types"
 	query "github.com/cosmos/cosmos-sdk/types/query"
 	grpc1 "github.com/cosmos/gogoproto/grpc"
 	proto "github.com/cosmos/gogoproto/proto"
-	types1 "github.com/tendermint/tendermint/proto/tendermint/types"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
@@ -35,7 +35,8 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 type OrderBy int32
 
 const (
-	// ORDER_BY_UNSPECIFIED specifies an unknown sorting order. OrderBy defaults to ASC in this case.
+	// ORDER_BY_UNSPECIFIED specifies an unknown sorting order. OrderBy defaults
+	// to ASC in this case.
 	OrderBy_ORDER_BY_UNSPECIFIED OrderBy = 0
 	// ORDER_BY_ASC defines ascending order
 	OrderBy_ORDER_BY_ASC OrderBy = 1
@@ -63,7 +64,8 @@ func (OrderBy) EnumDescriptor() ([]byte, []int) {
 	return fileDescriptor_e0b00a618705eca7, []int{0}
 }
 
-// BroadcastMode specifies the broadcast mode for the TxService.Broadcast RPC method.
+// BroadcastMode specifies the broadcast mode for the TxService.Broadcast RPC
+// method.
 type BroadcastMode int32
 
 const (
@@ -72,11 +74,11 @@ const (
 	// DEPRECATED: use BROADCAST_MODE_SYNC instead,
 	// BROADCAST_MODE_BLOCK is not supported by the SDK from v0.47.x onwards.
 	BroadcastMode_BROADCAST_MODE_BLOCK BroadcastMode = 1 // Deprecated: Do not use.
-	// BROADCAST_MODE_SYNC defines a tx broadcasting mode where the client waits for
-	// a CheckTx execution response only.
+	// BROADCAST_MODE_SYNC defines a tx broadcasting mode where the client waits
+	// for a CheckTx execution response only.
 	BroadcastMode_BROADCAST_MODE_SYNC BroadcastMode = 2
-	// BROADCAST_MODE_ASYNC defines a tx broadcasting mode where the client returns
-	// immediately.
+	// BROADCAST_MODE_ASYNC defines a tx broadcasting mode where the client
+	// returns immediately.
 	BroadcastMode_BROADCAST_MODE_ASYNC BroadcastMode = 3
 )
 
@@ -106,16 +108,24 @@ func (BroadcastMode) EnumDescriptor() ([]byte, []int) {
 // RPC method.
 type GetTxsEventRequest struct {
 	// events is the list of transaction event type.
-	Events []string `protobuf:"bytes,1,rep,name=events,proto3" json:"events,omitempty"`
+	// Deprecated post v0.47.x: use query instead, which should contain a valid
+	// events query.
+	Events []string `protobuf:"bytes,1,rep,name=events,proto3" json:"events,omitempty"` // Deprecated: Do not use.
 	// pagination defines a pagination for the request.
 	// Deprecated post v0.46.x: use page and limit instead.
 	Pagination *query.PageRequest `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"` // Deprecated: Do not use.
 	OrderBy    OrderBy            `protobuf:"varint,3,opt,name=order_by,json=orderBy,proto3,enum=cosmos.tx.v1beta1.OrderBy" json:"order_by,omitempty"`
-	// page is the page number to query, starts at 1. If not provided, will default to first page.
+	// page is the page number to query, starts at 1. If not provided, will
+	// default to first page.
 	Page uint64 `protobuf:"varint,4,opt,name=page,proto3" json:"page,omitempty"`
 	// limit is the total number of results to be returned in the result page.
 	// If left empty it will default to a value to be set by each app.
 	Limit uint64 `protobuf:"varint,5,opt,name=limit,proto3" json:"limit,omitempty"`
+	// query defines the transaction event query that is proxied to Tendermint's
+	// TxSearch RPC method. The query must be valid.
+	//
+	// Since cosmos-sdk 0.50
+	Query string `protobuf:"bytes,6,opt,name=query,proto3" json:"query,omitempty"`
 }
 
 func (m *GetTxsEventRequest) Reset()         { *m = GetTxsEventRequest{} }
@@ -151,6 +161,7 @@ func (m *GetTxsEventRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_GetTxsEventRequest proto.InternalMessageInfo
 
+// Deprecated: Do not use.
 func (m *GetTxsEventRequest) GetEvents() []string {
 	if m != nil {
 		return m.Events
@@ -185,6 +196,13 @@ func (m *GetTxsEventRequest) GetLimit() uint64 {
 		return m.Limit
 	}
 	return 0
+}
+
+func (m *GetTxsEventRequest) GetQuery() string {
+	if m != nil {
+		return m.Query
+	}
+	return ""
 }
 
 // GetTxsEventResponse is the response type for the Service.TxsByEvents
@@ -641,7 +659,8 @@ func (m *GetBlockWithTxsRequest) GetPagination() *query.PageRequest {
 	return nil
 }
 
-// GetBlockWithTxsResponse is the response type for the Service.GetBlockWithTxs method.
+// GetBlockWithTxsResponse is the response type for the Service.GetBlockWithTxs
+// method.
 //
 // Since: cosmos-sdk 0.45.2
 type GetBlockWithTxsResponse struct {
@@ -714,6 +733,394 @@ func (m *GetBlockWithTxsResponse) GetPagination() *query.PageResponse {
 	return nil
 }
 
+// TxDecodeRequest is the request type for the Service.TxDecode
+// RPC method.
+//
+// Since: cosmos-sdk 0.47
+type TxDecodeRequest struct {
+	// tx_bytes is the raw transaction.
+	TxBytes []byte `protobuf:"bytes,1,opt,name=tx_bytes,json=txBytes,proto3" json:"tx_bytes,omitempty"`
+}
+
+func (m *TxDecodeRequest) Reset()         { *m = TxDecodeRequest{} }
+func (m *TxDecodeRequest) String() string { return proto.CompactTextString(m) }
+func (*TxDecodeRequest) ProtoMessage()    {}
+func (*TxDecodeRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_e0b00a618705eca7, []int{10}
+}
+func (m *TxDecodeRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *TxDecodeRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_TxDecodeRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *TxDecodeRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_TxDecodeRequest.Merge(m, src)
+}
+func (m *TxDecodeRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *TxDecodeRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_TxDecodeRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_TxDecodeRequest proto.InternalMessageInfo
+
+func (m *TxDecodeRequest) GetTxBytes() []byte {
+	if m != nil {
+		return m.TxBytes
+	}
+	return nil
+}
+
+// TxDecodeResponse is the response type for the
+// Service.TxDecode method.
+//
+// Since: cosmos-sdk 0.47
+type TxDecodeResponse struct {
+	// tx is the decoded transaction.
+	Tx *Tx `protobuf:"bytes,1,opt,name=tx,proto3" json:"tx,omitempty"`
+}
+
+func (m *TxDecodeResponse) Reset()         { *m = TxDecodeResponse{} }
+func (m *TxDecodeResponse) String() string { return proto.CompactTextString(m) }
+func (*TxDecodeResponse) ProtoMessage()    {}
+func (*TxDecodeResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_e0b00a618705eca7, []int{11}
+}
+func (m *TxDecodeResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *TxDecodeResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_TxDecodeResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *TxDecodeResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_TxDecodeResponse.Merge(m, src)
+}
+func (m *TxDecodeResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *TxDecodeResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_TxDecodeResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_TxDecodeResponse proto.InternalMessageInfo
+
+func (m *TxDecodeResponse) GetTx() *Tx {
+	if m != nil {
+		return m.Tx
+	}
+	return nil
+}
+
+// TxEncodeRequest is the request type for the Service.TxEncode
+// RPC method.
+//
+// Since: cosmos-sdk 0.47
+type TxEncodeRequest struct {
+	// tx is the transaction to encode.
+	Tx *Tx `protobuf:"bytes,1,opt,name=tx,proto3" json:"tx,omitempty"`
+}
+
+func (m *TxEncodeRequest) Reset()         { *m = TxEncodeRequest{} }
+func (m *TxEncodeRequest) String() string { return proto.CompactTextString(m) }
+func (*TxEncodeRequest) ProtoMessage()    {}
+func (*TxEncodeRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_e0b00a618705eca7, []int{12}
+}
+func (m *TxEncodeRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *TxEncodeRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_TxEncodeRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *TxEncodeRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_TxEncodeRequest.Merge(m, src)
+}
+func (m *TxEncodeRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *TxEncodeRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_TxEncodeRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_TxEncodeRequest proto.InternalMessageInfo
+
+func (m *TxEncodeRequest) GetTx() *Tx {
+	if m != nil {
+		return m.Tx
+	}
+	return nil
+}
+
+// TxEncodeResponse is the response type for the
+// Service.TxEncode method.
+//
+// Since: cosmos-sdk 0.47
+type TxEncodeResponse struct {
+	// tx_bytes is the encoded transaction bytes.
+	TxBytes []byte `protobuf:"bytes,1,opt,name=tx_bytes,json=txBytes,proto3" json:"tx_bytes,omitempty"`
+}
+
+func (m *TxEncodeResponse) Reset()         { *m = TxEncodeResponse{} }
+func (m *TxEncodeResponse) String() string { return proto.CompactTextString(m) }
+func (*TxEncodeResponse) ProtoMessage()    {}
+func (*TxEncodeResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_e0b00a618705eca7, []int{13}
+}
+func (m *TxEncodeResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *TxEncodeResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_TxEncodeResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *TxEncodeResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_TxEncodeResponse.Merge(m, src)
+}
+func (m *TxEncodeResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *TxEncodeResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_TxEncodeResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_TxEncodeResponse proto.InternalMessageInfo
+
+func (m *TxEncodeResponse) GetTxBytes() []byte {
+	if m != nil {
+		return m.TxBytes
+	}
+	return nil
+}
+
+// TxEncodeAminoRequest is the request type for the Service.TxEncodeAmino
+// RPC method.
+//
+// Since: cosmos-sdk 0.47
+type TxEncodeAminoRequest struct {
+	AminoJson string `protobuf:"bytes,1,opt,name=amino_json,json=aminoJson,proto3" json:"amino_json,omitempty"`
+}
+
+func (m *TxEncodeAminoRequest) Reset()         { *m = TxEncodeAminoRequest{} }
+func (m *TxEncodeAminoRequest) String() string { return proto.CompactTextString(m) }
+func (*TxEncodeAminoRequest) ProtoMessage()    {}
+func (*TxEncodeAminoRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_e0b00a618705eca7, []int{14}
+}
+func (m *TxEncodeAminoRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *TxEncodeAminoRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_TxEncodeAminoRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *TxEncodeAminoRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_TxEncodeAminoRequest.Merge(m, src)
+}
+func (m *TxEncodeAminoRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *TxEncodeAminoRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_TxEncodeAminoRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_TxEncodeAminoRequest proto.InternalMessageInfo
+
+func (m *TxEncodeAminoRequest) GetAminoJson() string {
+	if m != nil {
+		return m.AminoJson
+	}
+	return ""
+}
+
+// TxEncodeAminoResponse is the response type for the Service.TxEncodeAmino
+// RPC method.
+//
+// Since: cosmos-sdk 0.47
+type TxEncodeAminoResponse struct {
+	AminoBinary []byte `protobuf:"bytes,1,opt,name=amino_binary,json=aminoBinary,proto3" json:"amino_binary,omitempty"`
+}
+
+func (m *TxEncodeAminoResponse) Reset()         { *m = TxEncodeAminoResponse{} }
+func (m *TxEncodeAminoResponse) String() string { return proto.CompactTextString(m) }
+func (*TxEncodeAminoResponse) ProtoMessage()    {}
+func (*TxEncodeAminoResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_e0b00a618705eca7, []int{15}
+}
+func (m *TxEncodeAminoResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *TxEncodeAminoResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_TxEncodeAminoResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *TxEncodeAminoResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_TxEncodeAminoResponse.Merge(m, src)
+}
+func (m *TxEncodeAminoResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *TxEncodeAminoResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_TxEncodeAminoResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_TxEncodeAminoResponse proto.InternalMessageInfo
+
+func (m *TxEncodeAminoResponse) GetAminoBinary() []byte {
+	if m != nil {
+		return m.AminoBinary
+	}
+	return nil
+}
+
+// TxDecodeAminoRequest is the request type for the Service.TxDecodeAmino
+// RPC method.
+//
+// Since: cosmos-sdk 0.47
+type TxDecodeAminoRequest struct {
+	AminoBinary []byte `protobuf:"bytes,1,opt,name=amino_binary,json=aminoBinary,proto3" json:"amino_binary,omitempty"`
+}
+
+func (m *TxDecodeAminoRequest) Reset()         { *m = TxDecodeAminoRequest{} }
+func (m *TxDecodeAminoRequest) String() string { return proto.CompactTextString(m) }
+func (*TxDecodeAminoRequest) ProtoMessage()    {}
+func (*TxDecodeAminoRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_e0b00a618705eca7, []int{16}
+}
+func (m *TxDecodeAminoRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *TxDecodeAminoRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_TxDecodeAminoRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *TxDecodeAminoRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_TxDecodeAminoRequest.Merge(m, src)
+}
+func (m *TxDecodeAminoRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *TxDecodeAminoRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_TxDecodeAminoRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_TxDecodeAminoRequest proto.InternalMessageInfo
+
+func (m *TxDecodeAminoRequest) GetAminoBinary() []byte {
+	if m != nil {
+		return m.AminoBinary
+	}
+	return nil
+}
+
+// TxDecodeAminoResponse is the response type for the Service.TxDecodeAmino
+// RPC method.
+//
+// Since: cosmos-sdk 0.47
+type TxDecodeAminoResponse struct {
+	AminoJson string `protobuf:"bytes,1,opt,name=amino_json,json=aminoJson,proto3" json:"amino_json,omitempty"`
+}
+
+func (m *TxDecodeAminoResponse) Reset()         { *m = TxDecodeAminoResponse{} }
+func (m *TxDecodeAminoResponse) String() string { return proto.CompactTextString(m) }
+func (*TxDecodeAminoResponse) ProtoMessage()    {}
+func (*TxDecodeAminoResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_e0b00a618705eca7, []int{17}
+}
+func (m *TxDecodeAminoResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *TxDecodeAminoResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_TxDecodeAminoResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *TxDecodeAminoResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_TxDecodeAminoResponse.Merge(m, src)
+}
+func (m *TxDecodeAminoResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *TxDecodeAminoResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_TxDecodeAminoResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_TxDecodeAminoResponse proto.InternalMessageInfo
+
+func (m *TxDecodeAminoResponse) GetAminoJson() string {
+	if m != nil {
+		return m.AminoJson
+	}
+	return ""
+}
+
 func init() {
 	proto.RegisterEnum("cosmos.tx.v1beta1.OrderBy", OrderBy_name, OrderBy_value)
 	proto.RegisterEnum("cosmos.tx.v1beta1.BroadcastMode", BroadcastMode_name, BroadcastMode_value)
@@ -727,76 +1134,98 @@ func init() {
 	proto.RegisterType((*GetTxResponse)(nil), "cosmos.tx.v1beta1.GetTxResponse")
 	proto.RegisterType((*GetBlockWithTxsRequest)(nil), "cosmos.tx.v1beta1.GetBlockWithTxsRequest")
 	proto.RegisterType((*GetBlockWithTxsResponse)(nil), "cosmos.tx.v1beta1.GetBlockWithTxsResponse")
+	proto.RegisterType((*TxDecodeRequest)(nil), "cosmos.tx.v1beta1.TxDecodeRequest")
+	proto.RegisterType((*TxDecodeResponse)(nil), "cosmos.tx.v1beta1.TxDecodeResponse")
+	proto.RegisterType((*TxEncodeRequest)(nil), "cosmos.tx.v1beta1.TxEncodeRequest")
+	proto.RegisterType((*TxEncodeResponse)(nil), "cosmos.tx.v1beta1.TxEncodeResponse")
+	proto.RegisterType((*TxEncodeAminoRequest)(nil), "cosmos.tx.v1beta1.TxEncodeAminoRequest")
+	proto.RegisterType((*TxEncodeAminoResponse)(nil), "cosmos.tx.v1beta1.TxEncodeAminoResponse")
+	proto.RegisterType((*TxDecodeAminoRequest)(nil), "cosmos.tx.v1beta1.TxDecodeAminoRequest")
+	proto.RegisterType((*TxDecodeAminoResponse)(nil), "cosmos.tx.v1beta1.TxDecodeAminoResponse")
 }
 
 func init() { proto.RegisterFile("cosmos/tx/v1beta1/service.proto", fileDescriptor_e0b00a618705eca7) }
 
 var fileDescriptor_e0b00a618705eca7 = []byte{
-	// 1013 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x56, 0xcf, 0x6f, 0x1a, 0x47,
-	0x14, 0xf6, 0x2e, 0x60, 0xc8, 0xc3, 0x4e, 0xc8, 0xd8, 0xb5, 0x09, 0x71, 0x31, 0xd9, 0xd4, 0x3f,
-	0x62, 0xc9, 0xbb, 0x0a, 0x4d, 0xa5, 0xaa, 0xaa, 0x54, 0x99, 0x1f, 0xa1, 0x34, 0x4d, 0x88, 0x06,
-	0x57, 0x51, 0xaa, 0x4a, 0x68, 0x81, 0x09, 0xac, 0x02, 0x3b, 0x98, 0x19, 0xac, 0x45, 0xae, 0xd5,
-	0xaa, 0xc7, 0x9e, 0xaa, 0xf6, 0xd0, 0x7f, 0xa9, 0xc7, 0x48, 0xbd, 0xb4, 0xb7, 0xca, 0xee, 0xa9,
-	0xa7, 0xfe, 0x09, 0xd1, 0xce, 0x0e, 0xb0, 0xc0, 0x12, 0x27, 0xb9, 0xd8, 0x33, 0xcc, 0xf7, 0xde,
-	0xfb, 0xde, 0xf7, 0xe6, 0xbd, 0x59, 0xd8, 0x6e, 0x50, 0xd6, 0xa5, 0xcc, 0xe0, 0x8e, 0x71, 0x7a,
-	0xbf, 0x4e, 0xb8, 0x79, 0xdf, 0x60, 0xa4, 0x7f, 0x6a, 0x35, 0x88, 0xde, 0xeb, 0x53, 0x4e, 0xd1,
-	0x4d, 0x0f, 0xa0, 0x73, 0x47, 0x97, 0x80, 0xd4, 0x56, 0x8b, 0xd2, 0x56, 0x87, 0x18, 0x66, 0xcf,
-	0x32, 0x4c, 0xdb, 0xa6, 0xdc, 0xe4, 0x16, 0xb5, 0x99, 0x67, 0x90, 0xba, 0x2b, 0x3d, 0xd6, 0x4d,
-	0x46, 0x0c, 0xb3, 0xde, 0xb0, 0xc6, 0x8e, 0xdd, 0x8d, 0x04, 0xa5, 0xe6, 0xc3, 0x72, 0x47, 0x9e,
-	0x1d, 0xf8, 0x1d, 0x9c, 0x0c, 0x48, 0x7f, 0x38, 0xc6, 0xf4, 0xcc, 0x96, 0x65, 0x8b, 0x68, 0x12,
-	0xbb, 0xc5, 0x89, 0xdd, 0x24, 0xfd, 0xae, 0x65, 0x73, 0x83, 0x0f, 0x7b, 0x84, 0x19, 0xf5, 0x0e,
-	0x6d, 0xbc, 0x5c, 0x78, 0x2a, 0xfe, 0x7a, 0xa7, 0xda, 0xdf, 0x0a, 0xa0, 0x12, 0xe1, 0xc7, 0x0e,
-	0x2b, 0x9e, 0x12, 0x9b, 0x63, 0x72, 0x32, 0x20, 0x8c, 0xa3, 0x0d, 0x58, 0x26, 0xee, 0x9e, 0x25,
-	0x95, 0x4c, 0x68, 0xff, 0x1a, 0x96, 0x3b, 0xf4, 0x15, 0xc0, 0x24, 0x7c, 0x52, 0xcd, 0x28, 0xfb,
-	0xf1, 0xec, 0xae, 0x2e, 0xd5, 0x71, 0xb9, 0xea, 0x82, 0xeb, 0x48, 0x25, 0xfd, 0xa9, 0xd9, 0x22,
-	0xd2, 0x67, 0x4e, 0x4d, 0x2a, 0xd8, 0x67, 0x8d, 0x3e, 0x81, 0x18, 0xed, 0x37, 0x49, 0xbf, 0x56,
-	0x1f, 0x26, 0x43, 0x19, 0x65, 0xff, 0x7a, 0x36, 0xa5, 0xcf, 0xe9, 0xac, 0x57, 0x5c, 0x48, 0x6e,
-	0x88, 0xa3, 0xd4, 0x5b, 0x20, 0x04, 0xe1, 0x9e, 0xd9, 0x22, 0xc9, 0x70, 0x46, 0xd9, 0x0f, 0x63,
-	0xb1, 0x46, 0xeb, 0x10, 0xe9, 0x58, 0x5d, 0x8b, 0x27, 0x23, 0xe2, 0x47, 0x6f, 0xa3, 0xfd, 0xa7,
-	0xc0, 0xda, 0x54, 0x6e, 0xac, 0x47, 0x6d, 0x46, 0xd0, 0x1e, 0x84, 0xb8, 0xe3, 0x65, 0x16, 0xcf,
-	0x7e, 0x10, 0x10, 0xf3, 0xd8, 0xc1, 0x2e, 0x02, 0x95, 0x60, 0x85, 0x3b, 0xb5, 0xbe, 0xb4, 0x63,
-	0x49, 0x55, 0x58, 0x7c, 0x34, 0x95, 0xaf, 0xa8, 0xa7, 0xcf, 0x50, 0x82, 0x71, 0x9c, 0x8f, 0xd7,
-	0x0c, 0x3d, 0x9a, 0x92, 0x2d, 0x24, 0x64, 0xdb, 0xbb, 0x52, 0x36, 0xcf, 0x7a, 0x4e, 0xb7, 0x75,
-	0x88, 0x70, 0xca, 0xcd, 0x8e, 0x54, 0xc0, 0xdb, 0x68, 0x04, 0x50, 0xae, 0x4f, 0xcd, 0x66, 0xc3,
-	0x64, 0xdc, 0xa5, 0xe1, 0xd5, 0xf1, 0x16, 0xc4, 0xb8, 0x53, 0xab, 0x0f, 0x39, 0x71, 0xf3, 0x55,
-	0xf6, 0x57, 0x70, 0x94, 0x3b, 0x39, 0x77, 0x8b, 0x1e, 0x40, 0xb8, 0x4b, 0x9b, 0x44, 0x14, 0xf1,
-	0x7a, 0x36, 0x13, 0x20, 0xc3, 0xd8, 0xdf, 0x63, 0xda, 0x24, 0x58, 0xa0, 0xb5, 0xef, 0x60, 0x6d,
-	0x2a, 0x8c, 0x94, 0xb4, 0x08, 0x71, 0x9f, 0x52, 0x22, 0xd4, 0xdb, 0x0a, 0x05, 0x13, 0xa1, 0xb4,
-	0x67, 0x70, 0xa3, 0x6a, 0x75, 0x07, 0x1d, 0x93, 0x8f, 0x6e, 0x0d, 0xba, 0x07, 0x2a, 0x77, 0xa4,
-	0xc3, 0xe0, 0x5a, 0x09, 0x81, 0x54, 0xee, 0x4c, 0x25, 0xab, 0x4e, 0x25, 0xab, 0xfd, 0xac, 0x40,
-	0x62, 0xe2, 0x59, 0x92, 0xfe, 0x1c, 0x62, 0x2d, 0x93, 0xd5, 0x2c, 0xfb, 0x05, 0x95, 0x01, 0xee,
-	0x2c, 0x66, 0x5c, 0x32, 0x59, 0xd9, 0x7e, 0x41, 0x71, 0xb4, 0xe5, 0x2d, 0xd0, 0xa7, 0xb0, 0xdc,
-	0x27, 0x6c, 0xd0, 0xe1, 0xb2, 0x0d, 0x32, 0x8b, 0x6d, 0xb1, 0xc0, 0x61, 0x89, 0xd7, 0x34, 0x58,
-	0x11, 0xd7, 0x72, 0x94, 0x22, 0x82, 0x70, 0xdb, 0x64, 0x6d, 0xc1, 0xe1, 0x1a, 0x16, 0x6b, 0xed,
-	0x1c, 0x56, 0x25, 0x46, 0x92, 0xdd, 0xb9, 0x52, 0x07, 0xa1, 0xc1, 0x4c, 0x21, 0xd4, 0xf7, 0x2c,
-	0x84, 0x03, 0x1b, 0x25, 0xc2, 0x73, 0xee, 0x18, 0x79, 0x66, 0xf1, 0xf6, 0xb1, 0xc3, 0x7c, 0x93,
-	0xa1, 0x4d, 0xac, 0x56, 0x9b, 0x0b, 0x2e, 0x21, 0x2c, 0x77, 0xe8, 0xe1, 0xfb, 0x4f, 0x06, 0xff,
-	0xed, 0xd6, 0xfe, 0x57, 0x60, 0x73, 0x2e, 0xf4, 0xbb, 0x36, 0xee, 0x03, 0x88, 0x89, 0x11, 0x58,
-	0xb3, 0x9a, 0x92, 0xca, 0x2d, 0x7d, 0x32, 0x06, 0x75, 0x6f, 0x00, 0x8a, 0x10, 0xe5, 0x02, 0x8e,
-	0x0a, 0x68, 0xb9, 0x89, 0x0e, 0x21, 0x22, 0x96, 0xb2, 0x41, 0x37, 0x17, 0x98, 0x60, 0x0f, 0x85,
-	0x4a, 0x53, 0x19, 0x87, 0xdf, 0xa9, 0xa9, 0xfd, 0x29, 0x1f, 0x7c, 0x09, 0x51, 0x39, 0xe5, 0x50,
-	0x12, 0xd6, 0x2b, 0xb8, 0x50, 0xc4, 0xb5, 0xdc, 0xf3, 0xda, 0x37, 0x4f, 0xaa, 0x4f, 0x8b, 0xf9,
-	0xf2, 0xc3, 0x72, 0xb1, 0x90, 0x58, 0x42, 0x09, 0x58, 0x19, 0x9f, 0x1c, 0x55, 0xf3, 0x09, 0x05,
-	0xdd, 0x84, 0xd5, 0xf1, 0x2f, 0x85, 0x62, 0x35, 0x9f, 0x50, 0x0f, 0x7e, 0x54, 0x60, 0x75, 0xaa,
-	0x6b, 0x51, 0x1a, 0x52, 0x39, 0x5c, 0x39, 0x2a, 0xe4, 0x8f, 0xaa, 0xc7, 0xb5, 0xc7, 0x95, 0x42,
-	0x71, 0xc6, 0xed, 0x16, 0xac, 0xcf, 0x9c, 0xe7, 0xbe, 0xae, 0xe4, 0x1f, 0x25, 0x94, 0x94, 0x1a,
-	0x53, 0xd0, 0x26, 0xac, 0xcd, 0x9c, 0x56, 0x9f, 0x3f, 0xc9, 0x27, 0x54, 0x97, 0xe7, 0xcc, 0xc1,
-	0x91, 0x38, 0x09, 0x65, 0x7f, 0x8d, 0x40, 0xb4, 0xea, 0x3d, 0x9e, 0xe8, 0x0c, 0x62, 0xa3, 0xa6,
-	0x43, 0x5a, 0x40, 0xb9, 0x66, 0x7a, 0x3d, 0x75, 0xf7, 0x8d, 0x18, 0x79, 0x35, 0x77, 0x7f, 0xfa,
-	0xf3, 0xdf, 0xdf, 0xd4, 0x8c, 0x76, 0xdb, 0x08, 0x78, 0xb5, 0x25, 0xf8, 0x33, 0xe5, 0x00, 0x9d,
-	0x40, 0x44, 0x74, 0x10, 0xda, 0x0e, 0xf0, 0xea, 0xef, 0xbf, 0x54, 0x66, 0x31, 0x40, 0xc6, 0xdc,
-	0x11, 0x31, 0xb7, 0xd1, 0x87, 0x46, 0xd0, 0x93, 0xcd, 0x8c, 0x33, 0xb7, 0x67, 0xcf, 0xd1, 0x0f,
-	0x10, 0xf7, 0x0d, 0x47, 0xb4, 0xf3, 0xa6, 0x99, 0x3a, 0x09, 0xbf, 0x7b, 0x15, 0x4c, 0x92, 0xb8,
-	0x23, 0x48, 0xdc, 0xd6, 0x36, 0x82, 0x49, 0xb8, 0x39, 0x7f, 0x0f, 0x71, 0xdf, 0x83, 0x17, 0x48,
-	0x60, 0xfe, 0xb1, 0x0f, 0x24, 0x10, 0xf0, 0x6e, 0x6a, 0x69, 0x41, 0x20, 0x89, 0x16, 0x10, 0x40,
-	0xbf, 0x2b, 0x70, 0x63, 0xa6, 0x75, 0xd1, 0xbd, 0x60, 0xdf, 0x01, 0x93, 0x25, 0x75, 0xf0, 0x36,
-	0x50, 0x49, 0xe5, 0x50, 0x50, 0xd9, 0x43, 0x3b, 0x0b, 0x0a, 0x22, 0x3a, 0xd4, 0x38, 0xf3, 0x66,
-	0xd3, 0x79, 0xee, 0x8b, 0x3f, 0x2e, 0xd2, 0xca, 0xab, 0x8b, 0xb4, 0xf2, 0xcf, 0x45, 0x5a, 0xf9,
-	0xe5, 0x32, 0xbd, 0xf4, 0xea, 0x32, 0xbd, 0xf4, 0xd7, 0x65, 0x7a, 0xe9, 0xdb, 0x9d, 0x96, 0xc5,
-	0xdb, 0x83, 0xba, 0xde, 0xa0, 0xdd, 0x91, 0x2b, 0xef, 0xdf, 0x21, 0x6b, 0xbe, 0x1c, 0x7d, 0x2f,
-	0x39, 0xf5, 0x65, 0xf1, 0xb5, 0xf4, 0xf1, 0xeb, 0x00, 0x00, 0x00, 0xff, 0xff, 0xdb, 0xc8, 0xb5,
-	0x68, 0x2a, 0x0a, 0x00, 0x00,
+	// 1237 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x57, 0x4d, 0x4f, 0x1b, 0x47,
+	0x18, 0x66, 0x6d, 0x83, 0xcd, 0x6b, 0x08, 0xce, 0x40, 0xc0, 0x38, 0xc4, 0x98, 0x0d, 0x1f, 0x8e,
+	0x55, 0xbc, 0x0a, 0x4d, 0xaa, 0x24, 0xaa, 0x54, 0xe1, 0x8f, 0x50, 0x92, 0x26, 0x44, 0x6b, 0xaa,
+	0x28, 0x55, 0x25, 0x6b, 0x6d, 0x4f, 0xec, 0x6d, 0xec, 0x5d, 0xe3, 0x19, 0xd0, 0x5a, 0x14, 0xb5,
+	0xea, 0xb1, 0x87, 0xaa, 0x52, 0x0f, 0xfd, 0x0f, 0xfd, 0x25, 0x3d, 0x46, 0xea, 0xa5, 0xc7, 0x0a,
+	0x7a, 0xea, 0xa9, 0x52, 0xff, 0x40, 0xb5, 0x33, 0xb3, 0xb6, 0xd7, 0xde, 0xc5, 0x90, 0x0b, 0xcc,
+	0xc7, 0xf3, 0xbe, 0xcf, 0x33, 0xef, 0xcc, 0x3c, 0x3b, 0x86, 0xd5, 0xaa, 0x49, 0x5a, 0x26, 0x51,
+	0xa8, 0xa5, 0x9c, 0xdc, 0xaf, 0x60, 0xaa, 0xdd, 0x57, 0x08, 0xee, 0x9c, 0xe8, 0x55, 0x9c, 0x6d,
+	0x77, 0x4c, 0x6a, 0xa2, 0x9b, 0x1c, 0x90, 0xa5, 0x56, 0x56, 0x00, 0x12, 0x2b, 0x75, 0xd3, 0xac,
+	0x37, 0xb1, 0xa2, 0xb5, 0x75, 0x45, 0x33, 0x0c, 0x93, 0x6a, 0x54, 0x37, 0x0d, 0xc2, 0x03, 0x12,
+	0x77, 0x45, 0xc6, 0x8a, 0x46, 0xb0, 0xa2, 0x55, 0xaa, 0x7a, 0x2f, 0xb1, 0xdd, 0x11, 0xa0, 0xc4,
+	0x28, 0x2d, 0xb5, 0xc4, 0x5c, 0x66, 0x30, 0xc1, 0xd1, 0x31, 0xee, 0x74, 0x7b, 0x98, 0xb6, 0x56,
+	0xd7, 0x0d, 0xc6, 0x26, 0xb0, 0x2b, 0x14, 0x1b, 0x35, 0xdc, 0x69, 0xe9, 0x06, 0x55, 0x68, 0xb7,
+	0x8d, 0x89, 0x52, 0x69, 0x9a, 0xd5, 0x77, 0xbe, 0xb3, 0xec, 0x2f, 0x9f, 0x95, 0xff, 0x93, 0x00,
+	0xed, 0x61, 0x7a, 0x68, 0x91, 0xe2, 0x09, 0x36, 0xa8, 0x8a, 0x8f, 0x8e, 0x31, 0xa1, 0x28, 0x01,
+	0x53, 0xd8, 0xee, 0x93, 0xb8, 0x94, 0x0a, 0xa6, 0xa7, 0x73, 0x81, 0xb8, 0xa4, 0x8a, 0x11, 0xf4,
+	0x0c, 0xa0, 0x2f, 0x21, 0x1e, 0x48, 0x49, 0xe9, 0xe8, 0xce, 0x66, 0x56, 0x54, 0xc8, 0xd6, 0x9b,
+	0x65, 0x7a, 0x9d, 0x4a, 0x65, 0x5f, 0x69, 0x75, 0x2c, 0xf2, 0xb2, 0x3c, 0x03, 0xd1, 0xe8, 0x21,
+	0x44, 0xcc, 0x4e, 0x0d, 0x77, 0xca, 0x95, 0x6e, 0x3c, 0x98, 0x92, 0xd2, 0x37, 0x76, 0x12, 0xd9,
+	0x91, 0x5a, 0x67, 0x0f, 0x6c, 0x48, 0xae, 0xab, 0x86, 0x4d, 0xde, 0x40, 0x08, 0x42, 0x6d, 0xad,
+	0x8e, 0xe3, 0xa1, 0x94, 0x94, 0x0e, 0xa9, 0xac, 0x8d, 0x16, 0x60, 0xb2, 0xa9, 0xb7, 0x74, 0x1a,
+	0x9f, 0x64, 0x83, 0xbc, 0x63, 0x8f, 0x32, 0x35, 0xf1, 0xa9, 0x94, 0x94, 0x9e, 0x56, 0x79, 0x47,
+	0xfe, 0x47, 0x82, 0x79, 0xd7, 0xaa, 0x49, 0xdb, 0x34, 0x08, 0x46, 0x5b, 0x10, 0xa4, 0x16, 0x5f,
+	0x73, 0x74, 0xe7, 0x96, 0x87, 0x92, 0x43, 0x4b, 0xb5, 0x11, 0x68, 0x0f, 0x66, 0xa8, 0x55, 0xee,
+	0x88, 0x38, 0x12, 0x0f, 0xb0, 0x88, 0x75, 0x57, 0x15, 0xd8, 0x4e, 0x0f, 0x04, 0x0a, 0xb0, 0x1a,
+	0xa5, 0xbd, 0x36, 0x41, 0xcf, 0x5d, 0xc5, 0x0c, 0xb2, 0x62, 0x6e, 0x8d, 0x2d, 0x26, 0x8f, 0x1e,
+	0xa9, 0xe6, 0x02, 0x4c, 0x52, 0x93, 0x6a, 0x4d, 0x51, 0x17, 0xde, 0x91, 0x31, 0xa0, 0x5c, 0xc7,
+	0xd4, 0x6a, 0x55, 0x8d, 0x50, 0x5b, 0x06, 0xdf, 0xe1, 0x65, 0x88, 0x50, 0xab, 0x5c, 0xe9, 0x52,
+	0x6c, 0xaf, 0x57, 0x4a, 0xcf, 0xa8, 0x61, 0x6a, 0xe5, 0xec, 0x2e, 0x7a, 0x00, 0xa1, 0x96, 0x59,
+	0xc3, 0x6c, 0x6b, 0x6f, 0xec, 0xa4, 0x3c, 0xca, 0xd0, 0xcb, 0xf7, 0xc2, 0xac, 0x61, 0x95, 0xa1,
+	0xe5, 0xaf, 0x61, 0xde, 0x45, 0x23, 0x4a, 0x5a, 0x84, 0xe8, 0x40, 0xa5, 0x18, 0xd5, 0x55, 0x0b,
+	0x05, 0xfd, 0x42, 0xc9, 0xaf, 0x61, 0xae, 0xa4, 0xb7, 0x8e, 0x9b, 0x1a, 0x75, 0xce, 0x12, 0xba,
+	0x07, 0x01, 0x6a, 0x89, 0x84, 0xde, 0x7b, 0xc5, 0x0a, 0x14, 0xa0, 0x96, 0x6b, 0xb1, 0x01, 0xd7,
+	0x62, 0xe5, 0x1f, 0x25, 0x88, 0xf5, 0x33, 0x0b, 0xd1, 0x9f, 0x42, 0xa4, 0xae, 0x91, 0xb2, 0x6e,
+	0xbc, 0x35, 0x05, 0xc1, 0x9a, 0xbf, 0xe2, 0x3d, 0x8d, 0xec, 0x1b, 0x6f, 0x4d, 0x35, 0x5c, 0xe7,
+	0x0d, 0xf4, 0x08, 0xa6, 0x3a, 0x98, 0x1c, 0x37, 0xa9, 0xb8, 0x1c, 0x29, 0xff, 0x58, 0x95, 0xe1,
+	0x54, 0x81, 0x97, 0x65, 0x98, 0x61, 0xc7, 0xd2, 0x59, 0x22, 0x82, 0x50, 0x43, 0x23, 0x0d, 0xa6,
+	0x61, 0x5a, 0x65, 0x6d, 0xf9, 0x0c, 0x66, 0x05, 0x46, 0x88, 0xdd, 0x18, 0x5b, 0x07, 0x56, 0x83,
+	0xa1, 0x8d, 0x08, 0x7c, 0xe0, 0x46, 0x58, 0xb0, 0xb8, 0x87, 0x69, 0xce, 0x36, 0x98, 0xd7, 0x3a,
+	0x6d, 0x1c, 0x5a, 0xc4, 0x11, 0xbb, 0x08, 0x53, 0x0d, 0xac, 0xd7, 0x1b, 0x94, 0x69, 0x09, 0xaa,
+	0xa2, 0x87, 0x9e, 0x7e, 0xb8, 0x5f, 0x0c, 0x9e, 0x6e, 0xf9, 0x5f, 0x09, 0x96, 0x46, 0xa8, 0xaf,
+	0x7b, 0x71, 0x1f, 0x40, 0x84, 0x99, 0x63, 0x59, 0xaf, 0x09, 0x29, 0xcb, 0xd9, 0xbe, 0x41, 0x66,
+	0xb9, 0x35, 0x32, 0x8a, 0xfd, 0x82, 0x1a, 0x66, 0xd0, 0xfd, 0x1a, 0xda, 0x86, 0x49, 0xd6, 0x14,
+	0x17, 0x74, 0xc9, 0x27, 0x44, 0xe5, 0x28, 0xb4, 0xe7, 0x5a, 0x71, 0xe8, 0x5a, 0x97, 0xda, 0xb5,
+	0xe4, 0x8f, 0x60, 0xee, 0xd0, 0x2a, 0xe0, 0xaa, 0x7d, 0xcb, 0xc6, 0xde, 0x5b, 0xf9, 0x31, 0xc4,
+	0xfa, 0xe8, 0x6b, 0x1d, 0x0e, 0xf9, 0x91, 0x4d, 0x54, 0x34, 0x06, 0x89, 0xae, 0x18, 0xb9, 0x6d,
+	0x93, 0x3a, 0x91, 0x82, 0xf4, 0x12, 0x8d, 0x0f, 0x61, 0xc1, 0x81, 0xef, 0xb6, 0x74, 0xc3, 0x74,
+	0xd8, 0xee, 0x00, 0x68, 0x76, 0xbf, 0xfc, 0x0d, 0x31, 0x0d, 0x71, 0xde, 0xa7, 0xd9, 0xc8, 0x33,
+	0x62, 0x1a, 0xf2, 0x13, 0xb8, 0x35, 0x14, 0x26, 0xa8, 0xd6, 0x60, 0x86, 0xc7, 0x55, 0x74, 0x43,
+	0xeb, 0x74, 0x05, 0x5d, 0x94, 0x8d, 0xe5, 0xd8, 0x90, 0xfc, 0xd8, 0xa6, 0xe4, 0x65, 0x71, 0x51,
+	0x5e, 0x21, 0xf4, 0x13, 0x9b, 0xd6, 0x15, 0x2a, 0x68, 0x2f, 0x97, 0x9b, 0xf9, 0x1c, 0xc2, 0xe2,
+	0x9b, 0x85, 0xe2, 0xb0, 0x70, 0xa0, 0x16, 0x8a, 0x6a, 0x39, 0xf7, 0xa6, 0xfc, 0xe5, 0xcb, 0xd2,
+	0xab, 0x62, 0x7e, 0xff, 0xe9, 0x7e, 0xb1, 0x10, 0x9b, 0x40, 0x31, 0x98, 0xe9, 0xcd, 0xec, 0x96,
+	0xf2, 0x31, 0x09, 0xdd, 0x84, 0xd9, 0xde, 0x48, 0xa1, 0x58, 0xca, 0xc7, 0x02, 0x99, 0xef, 0x25,
+	0x98, 0x75, 0xb9, 0x2d, 0x4a, 0x42, 0x22, 0xa7, 0x1e, 0xec, 0x16, 0xf2, 0xbb, 0xa5, 0xc3, 0xf2,
+	0x8b, 0x83, 0x42, 0x71, 0x28, 0xed, 0x0a, 0x2c, 0x0c, 0xcd, 0xe7, 0xbe, 0x38, 0xc8, 0x3f, 0x8f,
+	0x49, 0x89, 0x40, 0x44, 0x42, 0x4b, 0x30, 0x3f, 0x34, 0x5b, 0x7a, 0xf3, 0x32, 0x1f, 0x0b, 0xd8,
+	0x3a, 0x87, 0x26, 0x76, 0xd9, 0x4c, 0x70, 0xe7, 0xb7, 0x69, 0x08, 0x97, 0xf8, 0x73, 0x08, 0x9d,
+	0x42, 0xc4, 0x31, 0x4b, 0x24, 0x7b, 0x1c, 0x8a, 0x21, 0x8f, 0x4e, 0xdc, 0xbd, 0x14, 0x23, 0x2c,
+	0x65, 0xf3, 0x87, 0x3f, 0xfe, 0xfe, 0x25, 0x90, 0x7a, 0x22, 0x65, 0xe4, 0xdb, 0x8a, 0xc7, 0x53,
+	0xcc, 0x21, 0x3c, 0x82, 0x49, 0xe6, 0x7c, 0x68, 0xd5, 0x23, 0xeb, 0xa0, 0x6f, 0x26, 0x52, 0xfe,
+	0x00, 0xc1, 0xb9, 0xc1, 0x38, 0x57, 0xd1, 0x1d, 0xc5, 0xeb, 0x11, 0x46, 0x94, 0x53, 0xdb, 0x6b,
+	0xcf, 0xd0, 0x77, 0x10, 0x1d, 0xf8, 0xa8, 0xa1, 0x8d, 0xcb, 0xbe, 0x85, 0x7d, 0xfa, 0xcd, 0x71,
+	0x30, 0x21, 0x62, 0x8d, 0x89, 0xb8, 0x6d, 0x2f, 0x7c, 0xd1, 0x5b, 0x07, 0xfa, 0x16, 0xa2, 0x03,
+	0x0f, 0x15, 0x4f, 0x01, 0xa3, 0xcf, 0x37, 0x4f, 0x01, 0x1e, 0xef, 0x1d, 0x39, 0xc9, 0x04, 0xc4,
+	0x91, 0x1f, 0xfb, 0xaf, 0x12, 0xcc, 0x0d, 0x59, 0x2e, 0xba, 0xe7, 0x9d, 0xdb, 0xe3, 0x8b, 0x90,
+	0xc8, 0x5c, 0x05, 0x2a, 0xa4, 0x6c, 0x33, 0x29, 0x5b, 0x68, 0xc3, 0x67, 0x43, 0x98, 0xb3, 0x2a,
+	0xa7, 0xfc, 0x9b, 0x72, 0x86, 0xba, 0x10, 0x71, 0x6e, 0xa6, 0xe7, 0x41, 0x1c, 0xb2, 0x4d, 0xcf,
+	0x83, 0x38, 0x6c, 0x96, 0xf2, 0x3a, 0xd3, 0x90, 0xb4, 0xf7, 0x63, 0xd9, 0x43, 0x46, 0x8d, 0xd3,
+	0x31, 0x6a, 0xee, 0x45, 0x3e, 0xd4, 0x2e, 0x23, 0xf5, 0xa1, 0x76, 0x5b, 0xe6, 0x38, 0x6a, 0xcc,
+	0xe9, 0x7e, 0x92, 0x60, 0xd6, 0xe5, 0x83, 0x68, 0xeb, 0x92, 0xe4, 0x83, 0x6e, 0x97, 0x48, 0x8f,
+	0x07, 0x0a, 0x29, 0x19, 0x26, 0x65, 0xdd, 0x96, 0xb2, 0xea, 0x2b, 0x45, 0x61, 0x66, 0x27, 0x04,
+	0x0d, 0x38, 0xa4, 0x8f, 0xa0, 0x51, 0xfb, 0xf5, 0x11, 0xe4, 0x61, 0xb6, 0xe3, 0x04, 0xf1, 0x6d,
+	0xe1, 0x82, 0x72, 0x9f, 0xfd, 0x7e, 0x9e, 0x94, 0xde, 0x9f, 0x27, 0xa5, 0xbf, 0xce, 0x93, 0xd2,
+	0xcf, 0x17, 0xc9, 0x89, 0xf7, 0x17, 0xc9, 0x89, 0x3f, 0x2f, 0x92, 0x13, 0x5f, 0x6d, 0xd4, 0x75,
+	0xda, 0x38, 0xae, 0x64, 0xab, 0x66, 0xcb, 0x49, 0xc2, 0xff, 0x6d, 0x93, 0xda, 0x3b, 0xe7, 0x97,
+	0x91, 0x55, 0x99, 0x62, 0xbf, 0x8b, 0x3e, 0xfe, 0x3f, 0x00, 0x00, 0xff, 0xff, 0x42, 0xa8, 0xd7,
+	0x97, 0x14, 0x0e, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -823,6 +1252,22 @@ type ServiceClient interface {
 	//
 	// Since: cosmos-sdk 0.45.2
 	GetBlockWithTxs(ctx context.Context, in *GetBlockWithTxsRequest, opts ...grpc.CallOption) (*GetBlockWithTxsResponse, error)
+	// TxDecode decodes the transaction.
+	//
+	// Since: cosmos-sdk 0.47
+	TxDecode(ctx context.Context, in *TxDecodeRequest, opts ...grpc.CallOption) (*TxDecodeResponse, error)
+	// TxEncode encodes the transaction.
+	//
+	// Since: cosmos-sdk 0.47
+	TxEncode(ctx context.Context, in *TxEncodeRequest, opts ...grpc.CallOption) (*TxEncodeResponse, error)
+	// TxEncodeAmino encodes an Amino transaction from JSON to encoded bytes.
+	//
+	// Since: cosmos-sdk 0.47
+	TxEncodeAmino(ctx context.Context, in *TxEncodeAminoRequest, opts ...grpc.CallOption) (*TxEncodeAminoResponse, error)
+	// TxDecodeAmino decodes an Amino transaction from encoded bytes to JSON.
+	//
+	// Since: cosmos-sdk 0.47
+	TxDecodeAmino(ctx context.Context, in *TxDecodeAminoRequest, opts ...grpc.CallOption) (*TxDecodeAminoResponse, error)
 }
 
 type serviceClient struct {
@@ -878,6 +1323,42 @@ func (c *serviceClient) GetBlockWithTxs(ctx context.Context, in *GetBlockWithTxs
 	return out, nil
 }
 
+func (c *serviceClient) TxDecode(ctx context.Context, in *TxDecodeRequest, opts ...grpc.CallOption) (*TxDecodeResponse, error) {
+	out := new(TxDecodeResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.tx.v1beta1.Service/TxDecode", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *serviceClient) TxEncode(ctx context.Context, in *TxEncodeRequest, opts ...grpc.CallOption) (*TxEncodeResponse, error) {
+	out := new(TxEncodeResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.tx.v1beta1.Service/TxEncode", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *serviceClient) TxEncodeAmino(ctx context.Context, in *TxEncodeAminoRequest, opts ...grpc.CallOption) (*TxEncodeAminoResponse, error) {
+	out := new(TxEncodeAminoResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.tx.v1beta1.Service/TxEncodeAmino", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *serviceClient) TxDecodeAmino(ctx context.Context, in *TxDecodeAminoRequest, opts ...grpc.CallOption) (*TxDecodeAminoResponse, error) {
+	out := new(TxDecodeAminoResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.tx.v1beta1.Service/TxDecodeAmino", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ServiceServer is the server API for Service service.
 type ServiceServer interface {
 	// Simulate simulates executing a transaction for estimating gas usage.
@@ -892,6 +1373,22 @@ type ServiceServer interface {
 	//
 	// Since: cosmos-sdk 0.45.2
 	GetBlockWithTxs(context.Context, *GetBlockWithTxsRequest) (*GetBlockWithTxsResponse, error)
+	// TxDecode decodes the transaction.
+	//
+	// Since: cosmos-sdk 0.47
+	TxDecode(context.Context, *TxDecodeRequest) (*TxDecodeResponse, error)
+	// TxEncode encodes the transaction.
+	//
+	// Since: cosmos-sdk 0.47
+	TxEncode(context.Context, *TxEncodeRequest) (*TxEncodeResponse, error)
+	// TxEncodeAmino encodes an Amino transaction from JSON to encoded bytes.
+	//
+	// Since: cosmos-sdk 0.47
+	TxEncodeAmino(context.Context, *TxEncodeAminoRequest) (*TxEncodeAminoResponse, error)
+	// TxDecodeAmino decodes an Amino transaction from encoded bytes to JSON.
+	//
+	// Since: cosmos-sdk 0.47
+	TxDecodeAmino(context.Context, *TxDecodeAminoRequest) (*TxDecodeAminoResponse, error)
 }
 
 // UnimplementedServiceServer can be embedded to have forward compatible implementations.
@@ -912,6 +1409,18 @@ func (*UnimplementedServiceServer) GetTxsEvent(ctx context.Context, req *GetTxsE
 }
 func (*UnimplementedServiceServer) GetBlockWithTxs(ctx context.Context, req *GetBlockWithTxsRequest) (*GetBlockWithTxsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetBlockWithTxs not implemented")
+}
+func (*UnimplementedServiceServer) TxDecode(ctx context.Context, req *TxDecodeRequest) (*TxDecodeResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method TxDecode not implemented")
+}
+func (*UnimplementedServiceServer) TxEncode(ctx context.Context, req *TxEncodeRequest) (*TxEncodeResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method TxEncode not implemented")
+}
+func (*UnimplementedServiceServer) TxEncodeAmino(ctx context.Context, req *TxEncodeAminoRequest) (*TxEncodeAminoResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method TxEncodeAmino not implemented")
+}
+func (*UnimplementedServiceServer) TxDecodeAmino(ctx context.Context, req *TxDecodeAminoRequest) (*TxDecodeAminoResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method TxDecodeAmino not implemented")
 }
 
 func RegisterServiceServer(s grpc1.Server, srv ServiceServer) {
@@ -1008,6 +1517,78 @@ func _Service_GetBlockWithTxs_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Service_TxDecode_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(TxDecodeRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ServiceServer).TxDecode(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.tx.v1beta1.Service/TxDecode",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ServiceServer).TxDecode(ctx, req.(*TxDecodeRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Service_TxEncode_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(TxEncodeRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ServiceServer).TxEncode(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.tx.v1beta1.Service/TxEncode",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ServiceServer).TxEncode(ctx, req.(*TxEncodeRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Service_TxEncodeAmino_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(TxEncodeAminoRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ServiceServer).TxEncodeAmino(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.tx.v1beta1.Service/TxEncodeAmino",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ServiceServer).TxEncodeAmino(ctx, req.(*TxEncodeAminoRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Service_TxDecodeAmino_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(TxDecodeAminoRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ServiceServer).TxDecodeAmino(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.tx.v1beta1.Service/TxDecodeAmino",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ServiceServer).TxDecodeAmino(ctx, req.(*TxDecodeAminoRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Service_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "cosmos.tx.v1beta1.Service",
 	HandlerType: (*ServiceServer)(nil),
@@ -1031,6 +1612,22 @@ var _Service_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetBlockWithTxs",
 			Handler:    _Service_GetBlockWithTxs_Handler,
+		},
+		{
+			MethodName: "TxDecode",
+			Handler:    _Service_TxDecode_Handler,
+		},
+		{
+			MethodName: "TxEncode",
+			Handler:    _Service_TxEncode_Handler,
+		},
+		{
+			MethodName: "TxEncodeAmino",
+			Handler:    _Service_TxEncodeAmino_Handler,
+		},
+		{
+			MethodName: "TxDecodeAmino",
+			Handler:    _Service_TxDecodeAmino_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -1057,6 +1654,13 @@ func (m *GetTxsEventRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if len(m.Query) > 0 {
+		i -= len(m.Query)
+		copy(dAtA[i:], m.Query)
+		i = encodeVarintService(dAtA, i, uint64(len(m.Query)))
+		i--
+		dAtA[i] = 0x32
+	}
 	if m.Limit != 0 {
 		i = encodeVarintService(dAtA, i, uint64(m.Limit))
 		i--
@@ -1513,6 +2117,256 @@ func (m *GetBlockWithTxsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error)
 	return len(dAtA) - i, nil
 }
 
+func (m *TxDecodeRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *TxDecodeRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *TxDecodeRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.TxBytes) > 0 {
+		i -= len(m.TxBytes)
+		copy(dAtA[i:], m.TxBytes)
+		i = encodeVarintService(dAtA, i, uint64(len(m.TxBytes)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *TxDecodeResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *TxDecodeResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *TxDecodeResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Tx != nil {
+		{
+			size, err := m.Tx.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintService(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *TxEncodeRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *TxEncodeRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *TxEncodeRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Tx != nil {
+		{
+			size, err := m.Tx.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintService(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *TxEncodeResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *TxEncodeResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *TxEncodeResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.TxBytes) > 0 {
+		i -= len(m.TxBytes)
+		copy(dAtA[i:], m.TxBytes)
+		i = encodeVarintService(dAtA, i, uint64(len(m.TxBytes)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *TxEncodeAminoRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *TxEncodeAminoRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *TxEncodeAminoRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.AminoJson) > 0 {
+		i -= len(m.AminoJson)
+		copy(dAtA[i:], m.AminoJson)
+		i = encodeVarintService(dAtA, i, uint64(len(m.AminoJson)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *TxEncodeAminoResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *TxEncodeAminoResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *TxEncodeAminoResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.AminoBinary) > 0 {
+		i -= len(m.AminoBinary)
+		copy(dAtA[i:], m.AminoBinary)
+		i = encodeVarintService(dAtA, i, uint64(len(m.AminoBinary)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *TxDecodeAminoRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *TxDecodeAminoRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *TxDecodeAminoRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.AminoBinary) > 0 {
+		i -= len(m.AminoBinary)
+		copy(dAtA[i:], m.AminoBinary)
+		i = encodeVarintService(dAtA, i, uint64(len(m.AminoBinary)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *TxDecodeAminoResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *TxDecodeAminoResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *TxDecodeAminoResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.AminoJson) > 0 {
+		i -= len(m.AminoJson)
+		copy(dAtA[i:], m.AminoJson)
+		i = encodeVarintService(dAtA, i, uint64(len(m.AminoJson)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintService(dAtA []byte, offset int, v uint64) int {
 	offset -= sovService(v)
 	base := offset
@@ -1548,6 +2402,10 @@ func (m *GetTxsEventRequest) Size() (n int) {
 	}
 	if m.Limit != 0 {
 		n += 1 + sovService(uint64(m.Limit))
+	}
+	l = len(m.Query)
+	if l > 0 {
+		n += 1 + l + sovService(uint64(l))
 	}
 	return n
 }
@@ -1716,6 +2574,110 @@ func (m *GetBlockWithTxsResponse) Size() (n int) {
 	return n
 }
 
+func (m *TxDecodeRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.TxBytes)
+	if l > 0 {
+		n += 1 + l + sovService(uint64(l))
+	}
+	return n
+}
+
+func (m *TxDecodeResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Tx != nil {
+		l = m.Tx.Size()
+		n += 1 + l + sovService(uint64(l))
+	}
+	return n
+}
+
+func (m *TxEncodeRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Tx != nil {
+		l = m.Tx.Size()
+		n += 1 + l + sovService(uint64(l))
+	}
+	return n
+}
+
+func (m *TxEncodeResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.TxBytes)
+	if l > 0 {
+		n += 1 + l + sovService(uint64(l))
+	}
+	return n
+}
+
+func (m *TxEncodeAminoRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.AminoJson)
+	if l > 0 {
+		n += 1 + l + sovService(uint64(l))
+	}
+	return n
+}
+
+func (m *TxEncodeAminoResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.AminoBinary)
+	if l > 0 {
+		n += 1 + l + sovService(uint64(l))
+	}
+	return n
+}
+
+func (m *TxDecodeAminoRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.AminoBinary)
+	if l > 0 {
+		n += 1 + l + sovService(uint64(l))
+	}
+	return n
+}
+
+func (m *TxDecodeAminoResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.AminoJson)
+	if l > 0 {
+		n += 1 + l + sovService(uint64(l))
+	}
+	return n
+}
+
 func sovService(x uint64) (n int) {
 	return (math_bits.Len64(x|1) + 6) / 7
 }
@@ -1876,6 +2838,38 @@ func (m *GetTxsEventRequest) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
+		case 6:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Query", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowService
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthService
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthService
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Query = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipService(dAtA[iNdEx:])
@@ -2980,6 +3974,678 @@ func (m *GetBlockWithTxsResponse) Unmarshal(dAtA []byte) error {
 			if err := m.Pagination.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipService(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthService
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *TxDecodeRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowService
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: TxDecodeRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: TxDecodeRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TxBytes", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowService
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthService
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthService
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.TxBytes = append(m.TxBytes[:0], dAtA[iNdEx:postIndex]...)
+			if m.TxBytes == nil {
+				m.TxBytes = []byte{}
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipService(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthService
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *TxDecodeResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowService
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: TxDecodeResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: TxDecodeResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Tx", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowService
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthService
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthService
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Tx == nil {
+				m.Tx = &Tx{}
+			}
+			if err := m.Tx.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipService(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthService
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *TxEncodeRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowService
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: TxEncodeRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: TxEncodeRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Tx", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowService
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthService
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthService
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Tx == nil {
+				m.Tx = &Tx{}
+			}
+			if err := m.Tx.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipService(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthService
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *TxEncodeResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowService
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: TxEncodeResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: TxEncodeResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TxBytes", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowService
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthService
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthService
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.TxBytes = append(m.TxBytes[:0], dAtA[iNdEx:postIndex]...)
+			if m.TxBytes == nil {
+				m.TxBytes = []byte{}
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipService(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthService
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *TxEncodeAminoRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowService
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: TxEncodeAminoRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: TxEncodeAminoRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AminoJson", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowService
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthService
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthService
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.AminoJson = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipService(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthService
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *TxEncodeAminoResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowService
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: TxEncodeAminoResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: TxEncodeAminoResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AminoBinary", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowService
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthService
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthService
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.AminoBinary = append(m.AminoBinary[:0], dAtA[iNdEx:postIndex]...)
+			if m.AminoBinary == nil {
+				m.AminoBinary = []byte{}
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipService(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthService
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *TxDecodeAminoRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowService
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: TxDecodeAminoRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: TxDecodeAminoRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AminoBinary", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowService
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthService
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthService
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.AminoBinary = append(m.AminoBinary[:0], dAtA[iNdEx:postIndex]...)
+			if m.AminoBinary == nil {
+				m.AminoBinary = []byte{}
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipService(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthService
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *TxDecodeAminoResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowService
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: TxDecodeAminoResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: TxDecodeAminoResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AminoJson", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowService
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthService
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthService
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.AminoJson = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex

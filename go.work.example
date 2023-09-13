@@ -1,17 +1,29 @@
-go 1.19
+go 1.21
+
+toolchain go1.21.0
 
 use (
 	.
 	./api
 	./client/v2
+	./collections
 	./core
-	./cosmovisor
 	./depinject
 	./errors
+	./log
 	./math
 	./orm
-	./store/tools/ics23
-	./tx
 	./simapp
 	./tests
+	./store
+	./tools/cosmovisor
+	./tools/confix
+	./tools/hubl
+	./x/accounts
+	./x/tx
+	./x/nft
+	./x/circuit
+	./x/feegrant
+	./x/evidence
+	./x/upgrade
 )

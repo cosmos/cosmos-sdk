@@ -8,6 +8,7 @@ import "google/api/annotations.proto";
 import "cosmos/group/v1/types.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "cosmos_proto/cosmos.proto";
+import "amino/amino.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/group";
 
@@ -24,7 +25,7 @@ service Query {
     option (google.api.http).get = "/cosmos/group/v1/group_policy_info/{address}";
   };
 
-  // GroupMembers queries members of a group
+  // GroupMembers queries members of a group by group id.
   rpc GroupMembers(QueryGroupMembersRequest) returns (QueryGroupMembersResponse) {
     option (google.api.http).get = "/cosmos/group/v1/group_members/{group_id}";
   };
@@ -39,7 +40,7 @@ service Query {
     option (google.api.http).get = "/cosmos/group/v1/group_policies_by_group/{group_id}";
   };
 
-  // GroupsByAdmin queries group policies by admin address.
+  // GroupPoliciesByAdmin queries group policies by admin address.
   rpc GroupPoliciesByAdmin(QueryGroupPoliciesByAdminRequest) returns (QueryGroupPoliciesByAdminResponse) {
     option (google.api.http).get = "/cosmos/group/v1/group_policies_by_admin/{admin}";
   };
@@ -59,7 +60,7 @@ service Query {
     option (google.api.http).get = "/cosmos/group/v1/vote_by_proposal_voter/{proposal_id}/{voter}";
   };
 
-  // VotesByProposal queries a vote by proposal.
+  // VotesByProposal queries a vote by proposal id.
   rpc VotesByProposal(QueryVotesByProposalRequest) returns (QueryVotesByProposalResponse) {
     option (google.api.http).get = "/cosmos/group/v1/votes_by_proposal/{proposal_id}";
   };
@@ -82,39 +83,41 @@ service Query {
   rpc TallyResult(QueryTallyResultRequest) returns (QueryTallyResultResponse) {
     option (google.api.http).get = "/cosmos/group/v1/proposals/{proposal_id}/tally";
   };
+
+  // Groups queries all groups in state.
+  //
+  // Since: cosmos-sdk 0.47.1
+  rpc Groups(QueryGroupsRequest) returns (QueryGroupsResponse) {
+    option (google.api.http).get = "/cosmos/group/v1/groups";
+  };
 }
 
 // QueryGroupInfoRequest is the Query/GroupInfo request type.
 message QueryGroupInfoRequest {
-
   // group_id is the unique ID of the group.
   uint64 group_id = 1;
 }
 
 // QueryGroupInfoResponse is the Query/GroupInfo response type.
 message QueryGroupInfoResponse {
-
-  // info is the GroupInfo for the group.
+  // info is the GroupInfo of the group.
   GroupInfo info = 1;
 }
 
 // QueryGroupPolicyInfoRequest is the Query/GroupPolicyInfo request type.
 message QueryGroupPolicyInfoRequest {
-
   // address is the account address of the group policy.
   string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 
 // QueryGroupPolicyInfoResponse is the Query/GroupPolicyInfo response type.
 message QueryGroupPolicyInfoResponse {
-
-  // info is the GroupPolicyInfo for the group policy.
+  // info is the GroupPolicyInfo of the group policy.
   GroupPolicyInfo info = 1;
 }
 
 // QueryGroupMembersRequest is the Query/GroupMembers request type.
 message QueryGroupMembersRequest {
-
   // group_id is the unique ID of the group.
   uint64 group_id = 1;
 
@@ -124,7 +127,6 @@ message QueryGroupMembersRequest {
 
 // QueryGroupMembersResponse is the Query/GroupMembersResponse response type.
 message QueryGroupMembersResponse {
-
   // members are the members of the group with given group_id.
   repeated GroupMember members = 1;
 
@@ -134,7 +136,6 @@ message QueryGroupMembersResponse {
 
 // QueryGroupsByAdminRequest is the Query/GroupsByAdmin request type.
 message QueryGroupsByAdminRequest {
-
   // admin is the account address of a group's admin.
   string admin = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
@@ -144,7 +145,6 @@ message QueryGroupsByAdminRequest {
 
 // QueryGroupsByAdminResponse is the Query/GroupsByAdminResponse response type.
 message QueryGroupsByAdminResponse {
-
   // groups are the groups info with the provided admin.
   repeated GroupInfo groups = 1;
 
@@ -154,7 +154,6 @@ message QueryGroupsByAdminResponse {
 
 // QueryGroupPoliciesByGroupRequest is the Query/GroupPoliciesByGroup request type.
 message QueryGroupPoliciesByGroupRequest {
-
   // group_id is the unique ID of the group policy's group.
   uint64 group_id = 1;
 
@@ -164,7 +163,6 @@ message QueryGroupPoliciesByGroupRequest {
 
 // QueryGroupPoliciesByGroupResponse is the Query/GroupPoliciesByGroup response type.
 message QueryGroupPoliciesByGroupResponse {
-
   // group_policies are the group policies info associated with the provided group.
   repeated GroupPolicyInfo group_policies = 1;
 
@@ -174,7 +172,6 @@ message QueryGroupPoliciesByGroupResponse {
 
 // QueryGroupPoliciesByAdminRequest is the Query/GroupPoliciesByAdmin request type.
 message QueryGroupPoliciesByAdminRequest {
-
   // admin is the admin address of the group policy.
   string admin = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
@@ -184,7 +181,6 @@ message QueryGroupPoliciesByAdminRequest {
 
 // QueryGroupPoliciesByAdminResponse is the Query/GroupPoliciesByAdmin response type.
 message QueryGroupPoliciesByAdminResponse {
-
   // group_policies are the group policies info with provided admin.
   repeated GroupPolicyInfo group_policies = 1;
 
@@ -194,21 +190,18 @@ message QueryGroupPoliciesByAdminResponse {
 
 // QueryProposalRequest is the Query/Proposal request type.
 message QueryProposalRequest {
-
   // proposal_id is the unique ID of a proposal.
   uint64 proposal_id = 1;
 }
 
 // QueryProposalResponse is the Query/Proposal response type.
 message QueryProposalResponse {
-
   // proposal is the proposal info.
   Proposal proposal = 1;
 }
 
 // QueryProposalsByGroupPolicyRequest is the Query/ProposalByGroupPolicy request type.
 message QueryProposalsByGroupPolicyRequest {
-
   // address is the account address of the group policy related to proposals.
   string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
@@ -218,7 +211,6 @@ message QueryProposalsByGroupPolicyRequest {
 
 // QueryProposalsByGroupPolicyResponse is the Query/ProposalByGroupPolicy response type.
 message QueryProposalsByGroupPolicyResponse {
-
   // proposals are the proposals with given group policy.
   repeated Proposal proposals = 1;
 
@@ -228,7 +220,6 @@ message QueryProposalsByGroupPolicyResponse {
 
 // QueryVoteByProposalVoterRequest is the Query/VoteByProposalVoter request type.
 message QueryVoteByProposalVoterRequest {
-
   // proposal_id is the unique ID of a proposal.
   uint64 proposal_id = 1;
 
@@ -238,14 +229,12 @@ message QueryVoteByProposalVoterRequest {
 
 // QueryVoteByProposalVoterResponse is the Query/VoteByProposalVoter response type.
 message QueryVoteByProposalVoterResponse {
-
   // vote is the vote with given proposal_id and voter.
   Vote vote = 1;
 }
 
 // QueryVotesByProposalRequest is the Query/VotesByProposal request type.
 message QueryVotesByProposalRequest {
-
   // proposal_id is the unique ID of a proposal.
   uint64 proposal_id = 1;
 
@@ -255,7 +244,6 @@ message QueryVotesByProposalRequest {
 
 // QueryVotesByProposalResponse is the Query/VotesByProposal response type.
 message QueryVotesByProposalResponse {
-
   // votes are the list of votes for given proposal_id.
   repeated Vote votes = 1;
 
@@ -274,7 +262,6 @@ message QueryVotesByVoterRequest {
 
 // QueryVotesByVoterResponse is the Query/VotesByVoter response type.
 message QueryVotesByVoterResponse {
-
   // votes are the list of votes by given voter.
   repeated Vote votes = 1;
 
@@ -309,5 +296,25 @@ message QueryTallyResultRequest {
 // QueryTallyResultResponse is the Query/TallyResult response type.
 message QueryTallyResultResponse {
   // tally defines the requested tally.
-  TallyResult tally = 1 [(gogoproto.nullable) = false];
+  TallyResult tally = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+}
+
+// QueryGroupsRequest is the Query/Groups request type.
+//
+// Since: cosmos-sdk 0.47.1
+message QueryGroupsRequest {
+
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+// QueryGroupsResponse is the Query/Groups response type.
+//
+// Since: cosmos-sdk 0.47.1
+message QueryGroupsResponse {
+  // `groups` is all the groups present in state.
+  repeated GroupInfo groups = 1;
+
+  // pagination defines the pagination in the response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }

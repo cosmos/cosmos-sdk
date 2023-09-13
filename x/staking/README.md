@@ -1,9 +1,6 @@
-<!--
-order: 0
-title: Staking Overview
-parent:
-  title: "staking"
--->
+---
+sidebar_position: 1
+---
 
 # `x/staking`
 
@@ -26,6 +23,8 @@ network.
 * [State](#state)
     * [Pool](#pool)
     * [LastTotalPower](#lasttotalpower)
+    * [ValidatorUpdates](#validatorupdates)
+    * [UnbondingID](#unbondingid)
     * [Params](#params)
     * [Validator](#validator)
     * [Delegation](#delegation)
@@ -50,6 +49,7 @@ network.
     * [Historical Info Tracking](#historical-info-tracking)
 * [End-Block](#end-block)
     * [Validator Set Changes](#validator-set-changes)
+    * [Queues](#queues-1)
 * [Hooks](#hooks)
 * [Events](#events)
     * [EndBlocker](#endblocker)
@@ -60,38 +60,51 @@ network.
     * [gRPC](#grpc)
     * [REST](#rest)
 
-<!-- order: 1 -->
+## State
 
-# State
-
-## Pool
+### Pool
 
 Pool is used for tracking bonded and not-bonded token supply of the bond denomination.
 
-## LastTotalPower
+### LastTotalPower
 
 LastTotalPower tracks the total amounts of bonded tokens recorded during the previous end block.
 Store entries prefixed with "Last" must remain unchanged until EndBlock.
 
 * LastTotalPower: `0x12 -> ProtocolBuffer(math.Int)`
 
-## Params
+### ValidatorUpdates
+
+ValidatorUpdates contains the validator updates returned to ABCI at the end of every block. 
+The values are overwritten in every block. 
+
+* ValidatorUpdates `0x61 -> []abci.ValidatorUpdate`
+
+### UnbondingID
+
+UnbondingID stores the ID of the latest unbonding operation. It enables to create unique IDs for unbonding operation, i.e., UnbondingID is incremented every time a new unbonding operation (validator unbonding, unbonding delegation, redelegation) is initiated.
+
+* UnbondingID: `0x37 -> uint64`
+
+### Params
 
 The staking module stores its params in state with the prefix of `0x51`,
 it can be updated with governance or the address with authority.
 
 * Params: `0x51 | ProtocolBuffer(Params)`
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/staking.proto#L285-L306
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/staking/v1beta1/staking.proto#L310-L333
+```
 
-## Validator
+### Validator
 
 Validators can have one of three statuses
 
 * `Unbonded`: The validator is not in the active set. They cannot sign blocks and do not earn
   rewards. They can receive delegations.
 * `Bonded`: Once the validator receives sufficient bonded tokens they automatically join the
-  active set during [`EndBlock`](./05_end_block.md#validator-set-changes) and their status is updated to `Bonded`.
+  active set during [`EndBlock`](#validator-set-changes) and their status is updated to `Bonded`.
   They are signing blocks and receiving rewards. They can receive further delegations.
   They can be slashed for misbehavior. Delegators to this validator who unbond their delegation
   must wait the duration of the UnbondingTime, a chain-specific param, during which time
@@ -100,6 +113,10 @@ Validators can have one of three statuses
 * `Unbonding`: When a validator leaves the active set, either by choice or due to slashing, jailing or
   tombstoning, an unbonding of all their delegations begins. All delegations must then wait the UnbondingTime
   before their tokens are moved to their accounts from the `BondedPool`.
+
+:::warning
+Tombstoning is permanent, once tombstoned a validators consensus key can not be reused within the chain where the tombstoning happened. 
+:::
 
 Validators objects should be primarily stored and accessed by the
 `OperatorAddr`, an SDK validator address for the operator of the validator. Two
@@ -113,14 +130,18 @@ records within a block.
 * ValidatorsByConsAddr: `0x22 | ConsAddrLen (1 byte) | ConsAddr -> OperatorAddr`
 * ValidatorsByPower: `0x23 | BigEndian(ConsensusPower) | OperatorAddrLen (1 byte) | OperatorAddr -> OperatorAddr`
 * LastValidatorsPower: `0x11 | OperatorAddrLen (1 byte) | OperatorAddr -> ProtocolBuffer(ConsensusPower)`
+* ValidatorsByUnbondingID: `0x38 | UnbondingID ->  0x21 | OperatorAddrLen (1 byte) | OperatorAddr`
 
 `Validators` is the primary index - it ensures that each operator can have only one
 associated validator, where the public key of that validator can change in the
 future. Delegators can refer to the immutable operator of the validator, without
 concern for the changing public key.
 
+`ValidatorsByUnbondingID` is an additional index that enables lookups for 
+ validators by the unbonding IDs corresponding to their current unbonding.
+
 `ValidatorByConsAddr` is an additional index that enables lookups for slashing.
-When Tendermint reports evidence, it provides the validator address, so this
+When CometBFT reports evidence, it provides the validator address, so this
 map is needed to find the operator. Note that the `ConsAddr` corresponds to the
 address which can be derived from the validator's `ConsPubKey`.
 
@@ -131,15 +152,19 @@ where `Jailed` is true are not stored within this index.
 
 `LastValidatorsPower` is a special index that provides a historical list of the
 last-block's bonded validators. This index remains constant during a block but
-is updated during the validator set update process which takes place in [`EndBlock`](./05_end_block.md).
+is updated during the validator set update process which takes place in [`EndBlock`](#end-block).
 
 Each validator's state is stored in a `Validator` struct:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/staking.proto#L78-L127
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/staking/v1beta1/staking.proto#L82-L138
+```
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/staking.proto#L24-L76
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/staking/v1beta1/staking.proto#L26-L80
+```
 
-## Delegation
+### Delegation
 
 Delegations are identified by combining `DelegatorAddr` (the address of the delegator)
 with the `ValidatorAddr` Delegators are indexed in the store as follows:
@@ -151,9 +176,11 @@ funds are held in a `Delegation` data structure. It is owned by one
 delegator, and is associated with the shares for one validator. The sender of
 the transaction is the owner of the bond.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/staking.proto#L187-L205
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/staking/v1beta1/staking.proto#L198-L216
+```
 
-### Delegator Shares
+#### Delegator Shares
 
 When one Delegates tokens to a Validator they are issued a number of delegator shares based on a
 dynamic exchange rate, calculated as follows from the total number of tokens delegated to the
@@ -172,7 +199,7 @@ this mechanism is to simplify the accounting around slashing. Rather than iterat
 tokens of every delegation entry, instead the Validators total bonded tokens can be slashed,
 effectively reducing the value of each issued delegator share.
 
-## UnbondingDelegation
+### UnbondingDelegation
 
 Shares in a `Delegation` can be unbonded, but they must for some time exist as
 an `UnbondingDelegation`, where shares can be reduced if Byzantine behavior is
@@ -182,17 +209,26 @@ detected.
 
 * UnbondingDelegation: `0x32 | DelegatorAddrLen (1 byte) | DelegatorAddr | ValidatorAddrLen (1 byte) | ValidatorAddr -> ProtocolBuffer(unbondingDelegation)`
 * UnbondingDelegationsFromValidator: `0x33 | ValidatorAddrLen (1 byte) | ValidatorAddr | DelegatorAddrLen (1 byte) | DelegatorAddr -> nil`
+* UnbondingDelegationByUnbondingId: `0x38 | UnbondingId -> 0x32 | DelegatorAddrLen (1 byte) | DelegatorAddr | ValidatorAddrLen (1 byte) | ValidatorAddr`
+ `UnbondingDelegation` is used in queries, to lookup all unbonding delegations for
+ a given delegator.
 
-The first map here is used in queries, to lookup all unbonding delegations for
-a given delegator, while the second map is used in slashing, to lookup all
-unbonding delegations associated with a given validator that need to be
-slashed.
+`UnbondingDelegationsFromValidator` is used in slashing, to lookup all
+ unbonding delegations associated with a given validator that need to be
+ slashed.
+
+ `UnbondingDelegationByUnbondingId` is an additional index that enables 
+ lookups for unbonding delegations by the unbonding IDs of the containing 
+ unbonding delegation entries.
+
 
 A UnbondingDelegation object is created every time an unbonding is initiated.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/staking.proto#L207-L220
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/staking/v1beta1/staking.proto#L218-L261
+```
 
-## Redelegation
+### Redelegation
 
 The bonded tokens worth of a `Delegation` may be instantly redelegated from a
 source validator to a different validator (destination validator). However when
@@ -205,10 +241,22 @@ committed by the source validator.
 * Redelegations: `0x34 | DelegatorAddrLen (1 byte) | DelegatorAddr | ValidatorAddrLen (1 byte) | ValidatorSrcAddr | ValidatorDstAddr -> ProtocolBuffer(redelegation)`
 * RedelegationsBySrc: `0x35 | ValidatorSrcAddrLen (1 byte) | ValidatorSrcAddr | ValidatorDstAddrLen (1 byte) | ValidatorDstAddr | DelegatorAddrLen (1 byte) | DelegatorAddr -> nil`
 * RedelegationsByDst: `0x36 | ValidatorDstAddrLen (1 byte) | ValidatorDstAddr | ValidatorSrcAddrLen (1 byte) | ValidatorSrcAddr | DelegatorAddrLen (1 byte) | DelegatorAddr -> nil`
+* RedelegationByUnbondingId: `0x38 | UnbondingId -> 0x34 | DelegatorAddrLen (1 byte) | DelegatorAddr | ValidatorAddrLen (1 byte) | ValidatorSrcAddr | ValidatorDstAddr`
+
+ `Redelegations` is used for queries, to lookup all redelegations for a given
+ delegator.
+
+ `RedelegationsBySrc` is used for slashing based on the `ValidatorSrcAddr`.
+
+ `RedelegationsByDst` is used for slashing based on the `ValidatorDstAddr`
 
 The first map here is used for queries, to lookup all redelegations for a given
 delegator. The second map is used for slashing based on the `ValidatorSrcAddr`,
 while the third map is for slashing based on the `ValidatorDstAddr`.
+
+`RedelegationByUnbondingId` is an additional index that enables 
+ lookups for redelegations by the unbonding IDs of the containing 
+ redelegation entries.
 
 A redelegation object is created every time a redelegation occurs. To prevent
 "redelegation hopping" redelegations may not occur under the situation that:
@@ -218,9 +266,11 @@ A redelegation object is created every time a redelegation occurs. To prevent
 * and, the (re)delegator is attempting to create a _new_ redelegation
   where the source validator for this new redelegation is `Validator X`.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/staking.proto#L245-L283
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/staking/v1beta1/staking.proto#L263-L308
+```
 
-## Queues
+### Queues
 
 All queues objects are sorted by timestamp. The time used within any queue is
 first rounded to the nearest nanosecond then sorted. The sortable time format
@@ -233,25 +283,29 @@ used is a slight modification of the RFC3339Nano and uses the format string
 In all cases, the stored timestamp represents the maturation time of the queue
 element.
 
-### UnbondingDelegationQueue
+#### UnbondingDelegationQueue
 
 For the purpose of tracking progress of unbonding delegations the unbonding
 delegations queue is kept.
 
 * UnbondingDelegation: `0x41 | format(time) -> []DVPair`
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/staking.proto#L151-L161
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/staking/v1beta1/staking.proto#L162-L172
+```
 
-### RedelegationQueue
+#### RedelegationQueue
 
 For the purpose of tracking progress of redelegations the redelegation queue is
 kept.
 
 * RedelegationQueue: `0x42 | format(time) -> []DVVTriplet`
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/staking.proto#L168-L179
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/staking/v1beta1/staking.proto#L179-L191
+```
 
-### ValidatorQueue
+#### ValidatorQueue
 
 For the purpose of tracking progress of unbonding validators the validator
 queue is kept.
@@ -263,12 +317,14 @@ which the validator object can be accessed. Typically it is expected that only
 a single validator record will be associated with a given timestamp however it is possible
 that multiple validators exist in the queue at the same location.
 
-## HistoricalInfo
+### HistoricalInfo
 
 HistoricalInfo objects are stored and pruned at each block such that the staking keeper persists
 the `n` most recent historical info defined by staking module parameter: `HistoricalEntries`.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/staking.proto#L15-L22
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/staking/v1beta1/staking.proto#L17-L24
+```
 
 At each BeginBlock, the staking keeper will persist the current Header and the Validators that committed
 the current block in a `HistoricalInfo` object. The Validators are sorted on their address to ensure that
@@ -276,26 +332,18 @@ they are in a deterministic order.
 The oldest HistoricalEntries will be pruned to ensure that there only exist the parameter-defined number of
 historical entries.
 
-<!-- order: 2 -->
+## State Transitions
 
-# State Transitions
+### Validators
 
-This document describes the state transition operations pertaining to:
-
-1. [Validators](./02_state_transitions.md#validators)
-2. [Delegations](./02_state_transitions.md#delegations)
-3. [Slashing](./02_state_transitions.md#slashing)
-
-## Validators
-
-State transitions in validators are performed on every [`EndBlock`](./05_end_block.md#validator-set-changes)
+State transitions in validators are performed on every [`EndBlock`](#validator-set-changes)
 in order to check for changes in the active `ValidatorSet`.
 
 A validator can be `Unbonded`, `Unbonding` or `Bonded`. `Unbonded`
 and `Unbonding` are collectively called `Not Bonded`. A validator can move
 directly between all the states, except for from `Bonded` to `Unbonded`.
 
-### Not bonded to Bonded
+#### Not bonded to Bonded
 
 The following transition occurs when a validator's ranking in the `ValidatorPowerIndex` surpasses
 that of the `LastValidator`.
@@ -307,7 +355,7 @@ that of the `LastValidator`.
 * update the `Validator` object for this validator
 * if it exists, delete any `ValidatorQueue` record for this validator
 
-### Bonded to Unbonding
+#### Bonded to Unbonding
 
 When a validator begins the unbonding process the following operations occur:
 
@@ -318,7 +366,7 @@ When a validator begins the unbonding process the following operations occur:
 * update the `Validator` object for this validator
 * insert a new record into the `ValidatorQueue` for this validator
 
-### Unbonding to Unbonded
+#### Unbonding to Unbonded
 
 A validator moves from unbonding to unbonded when the `ValidatorQueue` object
 moves from bonded to unbonded
@@ -326,9 +374,9 @@ moves from bonded to unbonded
 * update the `Validator` object for this validator
 * set `validator.Status` to `Unbonded`
 
-### Jail/Unjail
+#### Jail/Unjail
 
-when a validator is jailed it is effectively removed from the Tendermint set.
+when a validator is jailed it is effectively removed from the CometBFT set.
 this process may be also be reversed. the following operations occur:
 
 * set `Validator.Jailed` and update object
@@ -339,9 +387,9 @@ Jailed validators are not present in any of the following stores:
 
 * the power store (from consensus power to address)
 
-## Delegations
+### Delegations
 
-### Delegate
+#### Delegate
 
 When a delegation occurs both the validator and the delegation objects are affected
 
@@ -353,21 +401,25 @@ When a delegation occurs both the validator and the delegation objects are affec
 * delete the existing record from `ValidatorByPowerIndex`
 * add an new updated record to the `ValidatorByPowerIndex`
 
-### Begin Unbonding
+#### Begin Unbonding
 
 As a part of the Undelegate and Complete Unbonding state transitions Unbond
 Delegation may be called.
 
 * subtract the unbonded shares from delegator
-* add the unbonded tokens to an `UnbondingDelegation` Entry
+* add the unbonded tokens to an `UnbondingDelegationEntry`
 * update the delegation or remove the delegation if there are no more shares
 * if the delegation is the operator of the validator and no more shares exist then trigger a jail validator
 * update the validator with removed the delegator shares and associated coins
 * if the validator state is `Bonded`, transfer the `Coins` worth of the unbonded
   shares from the `BondedPool` to the `NotBondedPool` `ModuleAccount`
 * remove the validator if it is unbonded and there are no more delegation shares.
+* remove the validator if it is unbonded and there are no more delegation shares
+* get a unique `unbondingId` and map it to the `UnbondingDelegationEntry` in `UnbondingDelegationByUnbondingId` 
+* call the `AfterUnbondingInitiated(unbondingId)` hook
+* add the unbonding delegation to `UnbondingDelegationQueue` with the completion time set to `UnbondingTime`
 
-### Cancel an `UnbondingDelegation` Entry 
+#### Cancel an `UnbondingDelegation` Entry 
 
 When a `cancel unbond delegation` occurs both the `validator`, the `delegation` and an `UnbondingDelegationQueue` state will be updated.
 
@@ -375,7 +427,7 @@ When a `cancel unbond delegation` occurs both the `validator`, the `delegation` 
 * if the `cancel unbonding delegation amount is less than the `UnbondingDelegation` entry balance, then the `UnbondingDelegation` entry will be updated with new balance in the `UnbondingDelegationQueue`. 
 * cancel `amount` is [Delegated](#delegations) back to  the original `validator`.
 
-### Complete Unbonding
+#### Complete Unbonding
 
 For undelegations which do not complete immediately, the following operations
 occur when the unbonding delegation queue element matures:
@@ -383,7 +435,7 @@ occur when the unbonding delegation queue element matures:
 * remove the entry from the `UnbondingDelegation` object
 * transfer the tokens from the `NotBondedPool` `ModuleAccount` to the delegator `Account`
 
-### Begin Redelegation
+#### Begin Redelegation
 
 Redelegations affect the delegation, source and destination validators.
 
@@ -398,15 +450,15 @@ Redelegations affect the delegation, source and destination validators.
 From when a redelegation begins until it completes, the delegator is in a state of "pseudo-unbonding", and can still be
 slashed for infractions that occurred before the redelegation began.
 
-### Complete Redelegation
+#### Complete Redelegation
 
 When a redelegations complete the following occurs:
 
 * remove the entry from the `Redelegation` object
 
-## Slashing
+### Slashing
 
-### Slash Validator
+#### Slash Validator
 
 When a Validator is slashed, the following occurs:
 
@@ -423,14 +475,14 @@ In the case of a slash due to any infraction that requires evidence to submitted
 occurs at the block where the evidence is included, not at the block where the infraction occured.
 Put otherwise, validators are not slashed retroactively, only when they are caught.
 
-### Slash Unbonding Delegation
+#### Slash Unbonding Delegation
 
 When a validator is slashed, so are those unbonding delegations from the validator that began unbonding
 after the time of the infraction. Every entry in every unbonding delegation from the validator
 is slashed by `slashFactor`. The amount slashed is calculated from the `InitialBalance` of the
 delegation and is capped to prevent a resulting negative balance. Completed (or mature) unbondings are not slashed.
 
-### Slash Redelegation
+#### Slash Redelegation
 
 When a validator is slashed, so are all redelegations from the validator that began after the
 infraction. Redelegations are slashed by `slashFactor`.
@@ -439,7 +491,7 @@ The amount slashed is calculated from the `InitialBalance` of the delegation and
 prevent a resulting negative balance.
 Mature redelegations (that have completed pseudo-unbonding) are not slashed.
 
-## How Shares are calculated
+### How Shares are calculated
 
 At any given point in time, each validator has a number of tokens, `T`, and has a number of shares issued, `S`.
 Each delegator, `i`, holds a number of shares, `S_i`.
@@ -457,20 +509,22 @@ A special case is the initial delegation, when `T = 0` and `S = 0`, so `T_j / T`
 For the initial delegation, delegator `j` who delegates `T_j` tokens receive `S_j = T_j` shares.
 So a validator that hasn't received any rewards and has not been slashed will have `T = S`.
 
-<!-- order: 3 -->
+## Messages
 
-# Messages
+In this section we describe the processing of the staking messages and the corresponding updates to the state. All created/modified state objects specified by each message are defined within the [state](#state) section.
 
-In this section we describe the processing of the staking messages and the corresponding updates to the state. All created/modified state objects specified by each message are defined within the [state](./02_state_transitions.md) section.
-
-## MsgCreateValidator
+### MsgCreateValidator
 
 A validator is created using the `MsgCreateValidator` message.
 The validator must be created with an initial delegation from the operator.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/tx.proto#L18-L19
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/staking/v1beta1/tx.proto#L20-L21
+```
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/tx.proto#L43-L65
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/staking/v1beta1/tx.proto#L50-L73
+```
 
 This message is expected to fail if:
 
@@ -488,14 +542,18 @@ Additionally a self-delegation is made with the initial tokens delegation
 tokens `Delegation`. The validator always starts as unbonded but may be bonded
 in the first end-block.
 
-## MsgEditValidator
+### MsgEditValidator
 
 The `Description`, `CommissionRate` of a validator can be updated using the
 `MsgEditValidator` message.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/tx.proto#L21-L22
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/staking/v1beta1/tx.proto#L23-L24
+```
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/tx.proto#L70-L88
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/staking/v1beta1/tx.proto#L78-L97
+```
 
 This message is expected to fail if:
 
@@ -506,15 +564,19 @@ This message is expected to fail if:
 
 This message stores the updated `Validator` object.
 
-## MsgDelegate
+### MsgDelegate
 
 Within this message the delegator provides coins, and in return receives
 some amount of their validator's (newly created) delegator-shares that are
 assigned to `Delegation.Shares`.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/tx.proto#L24-L26
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/staking/v1beta1/tx.proto#L26-L28
+```
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/tx.proto#L93-L104
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/staking/v1beta1/tx.proto#L102-L114
+```
 
 This message is expected to fail if:
 
@@ -537,20 +599,26 @@ tracked in validator object in the `Validators` index.
 It is possible to delegate to a jailed validator, the only difference being it
 will not be added to the power index until it is unjailed.
 
-![Delegation sequence](../../../docs/uml/svg/delegation_sequence.svg)
+![Delegation sequence](https://raw.githubusercontent.com/cosmos/cosmos-sdk/release/v0.46.x/docs/uml/svg/delegation_sequence.svg)
 
-## MsgUndelegate
+### MsgUndelegate
 
 The `MsgUndelegate` message allows delegators to undelegate their tokens from
 validator.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/tx.proto#L32-L34
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/staking/v1beta1/tx.proto#L34-L36
+```
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/tx.proto#L128-L139
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/staking/v1beta1/tx.proto#L140-L152
+```
 
 This message returns a response containing the completion time of the undelegation:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/tx.proto#L128-L144
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/staking/v1beta1/tx.proto#L154-L158
+```
 
 This message is expected to fail if:
 
@@ -571,15 +639,19 @@ When this message is processed the following actions occur:
 * if there are no more `Shares` in the delegation, then the delegation object is removed from the store
     * under this situation if the delegation is the validator's self-delegation then also jail the validator.
 
-![Unbond sequence](../../../docs/uml/svg/unbond_sequence.svg)
+![Unbond sequence](https://raw.githubusercontent.com/cosmos/cosmos-sdk/release/v0.46.x/docs/uml/svg/unbond_sequence.svg)
 
-## MsgCancelUnbondingDelegation
+### MsgCancelUnbondingDelegation
 
 The `MsgCancelUnbondingDelegation` message allows delegators to cancel the `unbondingDelegation` entry and delegate back to a previous validator.
 
-+++ hhttps://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/tx.proto#L36-L40
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/staking/v1beta1/tx.proto#L38-L42
+```
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/tx.proto#L146-L165
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/staking/v1beta1/tx.proto#L160-L175
+```
 
 This message is expected to fail if:
 
@@ -594,19 +666,25 @@ When this message is processed the following actions occur:
     * otherwise `unbondingDelegationQueue` will be updated with new `unbondingDelegation` entry balance and initial balance
 * the validator's `DelegatorShares` and the delegation's `Shares` are both increased by the message `Amount`.
 
-## MsgBeginRedelegate
+### MsgBeginRedelegate
 
 The redelegation command allows delegators to instantly switch validators. Once
 the unbonding period has passed, the redelegation is automatically completed in
 the EndBlocker.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/tx.proto#L28-L30
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/staking/v1beta1/tx.proto#L30-L32
+```
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/tx.proto#L109-L121
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/staking/v1beta1/tx.proto#L119-L132
+```
 
 This message returns a response containing the completion time of the redelegation:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/tx.proto#L123-L126
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/staking/v1beta1/tx.proto#L133-L138
+```
 
 This message is expected to fail if:
 
@@ -629,28 +707,28 @@ When this message is processed the following actions occur:
 * if there are no more `Shares` in the source delegation, then the source delegation object is removed from the store
     * under this situation if the delegation is the validator's self-delegation then also jail the validator.
 
-![Begin redelegation sequence](../../../docs/uml/svg/begin_redelegation_sequence.svg)
+![Begin redelegation sequence](https://raw.githubusercontent.com/cosmos/cosmos-sdk/release/v0.46.x/docs/uml/svg/begin_redelegation_sequence.svg)
 
 
-## MsgUpdateParams
+### MsgUpdateParams
 
 The `MsgUpdateParams` update the staking module parameters.
 The params are updated through a governance proposal where the signer is the gov module account address.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/e412ce990251768579d49947991be76a87564f7d/proto/cosmos/staking/v1beta1/tx.proto#L172-L190
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/staking/v1beta1/tx.proto#L182-L195
+```
 
 The message handling can fail if:
 
 * signer is not the authority defined in the staking keeper (usually the gov module account).
 
-<!-- order: 4 -->
-
-# Begin-Block
+## Begin-Block
 
 Each abci begin block call, the historical info will get stored and pruned
 according to the `HistoricalEntries` parameter.
 
-## Historical Info Tracking
+### Historical Info Tracking
 
 If the `HistoricalEntries` parameter is 0, then the `BeginBlock` performs a no-op.
 
@@ -658,19 +736,17 @@ Otherwise, the latest historical info is stored under the key `historicalInfoKey
 In most cases, this results in a single entry being pruned per block.
 However, if the parameter `HistoricalEntries` has changed to a lower value there will be multiple entries in the store that must be pruned.
 
-<!-- order: 5 -->
-
-# End-Block
+## End-Block
 
 Each abci end block call, the operations to update queues and validator set
 changes are specified to execute.
 
-## Validator Set Changes
+### Validator Set Changes
 
 The staking validator set is updated during this process by state transitions
 that run at the end of every block. As a part of this process any updated
-validators are also returned back to Tendermint for inclusion in the Tendermint
-validator set which is responsible for validating Tendermint messages at the
+validators are also returned back to CometBFT for inclusion in the CometBFT
+validator set which is responsible for validating CometBFT messages at the
 consensus layer. Operations are as following:
 
 * the new validator set is taken as the top `params.MaxValidators` number of
@@ -683,14 +759,14 @@ consensus layer. Operations are as following:
 
 In all cases, any validators leaving or entering the bonded validator set or
 changing balances and staying within the bonded validator set incur an update
-message reporting their new consensus power which is passed back to Tendermint.
+message reporting their new consensus power which is passed back to CometBFT.
 
 The `LastTotalPower` and `LastValidatorsPower` hold the state of the total power
 and validator power from the end of the last block, and are used to check for
 changes that have occurred in `ValidatorsByPower` and the total new power, which
 is calculated during `EndBlock`.
 
-## Queues
+### Queues
 
 Within staking, certain state-transitions are not instantaneous but take place
 over a duration of time (typically the unbonding period). When these
@@ -698,7 +774,7 @@ transitions are mature certain operations must take place in order to complete
 the state operation. This is achieved through the use of queues which are
 checked/processed at the end of each block.
 
-### Unbonding Validators
+#### Unbonding Validators
 
 When a validator is kicked out of the bonded validator set (either through
 being jailed, or not having sufficient bonded tokens) it begins the unbonding
@@ -715,7 +791,13 @@ validators that still have remaining delegations, the `validator.Status` is
 switched from `types.Unbonding` to
 `types.Unbonded`.
 
-### Unbonding Delegations
+Unbonding operations can be put on hold by external modules via the `PutUnbondingOnHold(unbondingId)` method. 
+ As a result, an unbonding operation (e.g., an unbonding delegation) that is on hold, cannot complete 
+ even if it reaches maturity. For an unbonding operation with `unbondingId` to eventually complete 
+ (after it reaches maturity), every call to `PutUnbondingOnHold(unbondingId)` must be matched 
+ by a call to `UnbondingCanComplete(unbondingId)`. 
+
+#### Unbonding Delegations
 
 Complete the unbonding of all mature `UnbondingDelegations.Entries` within the
 `UnbondingDelegations` queue with the following procedure:
@@ -725,7 +807,7 @@ Complete the unbonding of all mature `UnbondingDelegations.Entries` within the
 * remove the `UnbondingDelegation` object from the store if there are no
   remaining entries.
 
-### Redelegations
+#### Redelegations
 
 Complete the unbonding of all mature `Redelegation.Entries` within the
 `Redelegations` queue with the following procedure:
@@ -734,9 +816,7 @@ Complete the unbonding of all mature `Redelegation.Entries` within the
 * remove the `Redelegation` object from the store if there are no
   remaining entries.
 
-<!-- order: 6 -->
-
-# Hooks
+## Hooks
 
 Other modules may register operations to execute when a certain event has
 occurred within staking.  These events can be registered to execute either
@@ -761,14 +841,15 @@ following hooks can registered with staking:
     * called when a delegation is created or modified
 * `BeforeDelegationRemoved(Context, AccAddress, ValAddress) error`
     * called when a delegation is removed
+* `AfterUnbondingInitiated(Context, UnbondingID)`
+    * called when an unbonding operation (validator unbonding, unbonding delegation, redelegation) was initiated
 
-<!-- order: 7 -->
 
-# Events
+## Events
 
 The staking module emits the following events:
 
-## EndBlocker
+### EndBlocker
 
 | Type                  | Attribute Key         | Attribute Value           |
 | --------------------- | --------------------- | ------------------------- |
@@ -851,9 +932,7 @@ The staking module emits the following events:
 
 * [0] Time is formatted in the RFC3339 standard
 
-<!-- order: 8 -->
-
-# Parameters
+## Parameters
 
 The staking module contains the following parameters:
 
@@ -866,15 +945,13 @@ The staking module contains the following parameters:
 | BondDenom         | string           | "stake"                |
 | MinCommissionRate | string           | "0.000000000000000000" |
 
-<!-- order: 9 -->
+## Client
 
-# Client
-
-## CLI
+### CLI
 
 A user can query and interact with the `staking` module using the CLI.
 
-### Query
+#### Query
 
 The `query` commands allows users to query `staking` state.
 
@@ -882,7 +959,7 @@ The `query` commands allows users to query `staking` state.
 simd query staking --help
 ```
 
-#### delegation
+##### delegation
 
 The `delegation` command allows users to query delegations for an individual delegator on an individual validator.
 
@@ -910,7 +987,7 @@ delegation:
   validator_address: cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj
 ```
 
-#### delegations
+##### delegations
 
 The `delegations` command allows users to query delegations for an individual delegator on all validators.
 
@@ -949,7 +1026,7 @@ pagination:
   total: "0"
 ```
 
-#### delegations-to
+##### delegations-to
 
 The `delegations-to` command allows users to query delegations on an individual validator.
 
@@ -987,7 +1064,7 @@ pagination:
   total: "0"
 ```
 
-#### historical-info
+##### historical-info
 
 The `historical-info` command allows users to query historical information at given height.
 
@@ -1053,7 +1130,7 @@ valset:
   unbonding_time: "1970-01-01T00:00:00Z"
 ```
 
-#### params
+##### params
 
 The `params` command allows users to query values set as staking parameters.
 
@@ -1079,7 +1156,7 @@ max_validators: 50
 unbonding_time: 1814400s
 ```
 
-#### pool
+##### pool
 
 The `pool` command allows users to query values for amounts stored in the staking pool.
 
@@ -1102,7 +1179,7 @@ bonded_tokens: "10000000"
 not_bonded_tokens: "0"
 ```
 
-#### redelegation
+##### redelegation
 
 The `redelegation` command allows users to query a redelegation record based on delegator and a source and destination validator address.
 
@@ -1143,7 +1220,7 @@ redelegation_responses:
     validator_src_address: cosmosvaloper1l2rsakp388kuv9k8qzq6lrm9taddae7fpx59wm
 ```
 
-#### redelegations
+##### redelegations
 
 The `redelegations` command allows users to query all redelegation records for an individual delegator.
 
@@ -1198,7 +1275,7 @@ redelegation_responses:
     validator_src_address: cosmosvaloper1zppjyal5emta5cquje8ndkpz0rs046m7zqxrpp
 ```
 
-#### redelegations-from
+##### redelegations-from
 
 The `redelegations-from` command allows users to query delegations that are redelegating _from_ a validator.
 
@@ -1253,7 +1330,7 @@ redelegation_responses:
     validator_src_address: cosmosvaloper1y4rzzrgl66eyhzt6gse2k7ej3zgwmngeleucjy
 ```
 
-#### unbonding-delegation
+##### unbonding-delegation
 
 The `unbonding-delegation` command allows users to query unbonding delegations for an individual delegator on an individual validator.
 
@@ -1281,7 +1358,7 @@ entries:
 validator_address: cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj
 ```
 
-#### unbonding-delegations
+##### unbonding-delegations
 
 The `unbonding-delegations` command allows users to query all unbonding-delegations records for one delegator.
 
@@ -1314,7 +1391,7 @@ unbonding_responses:
 
 ```
 
-#### unbonding-delegations-from
+##### unbonding-delegations-from
 
 The `unbonding-delegations-from` command allows users to query delegations that are unbonding _from_ a validator.
 
@@ -1353,7 +1430,7 @@ unbonding_responses:
   validator_address: cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj
 ```
 
-#### validator
+##### validator
 
 The `validator` command allows users to query details about an individual validator.
 
@@ -1400,7 +1477,7 @@ unbonding_height: "0"
 unbonding_time: "1970-01-01T00:00:00Z"
 ```
 
-#### validators
+##### validators
 
 The `validators` command allows users to query details about all validators on a network.
 
@@ -1477,7 +1554,7 @@ description:
   unbonding_time: "1970-01-01T00:00:00Z"
 ```
 
-### Transactions
+#### Transactions
 
 The `tx` commands allows users to interact with the `staking` module.
 
@@ -1485,37 +1562,47 @@ The `tx` commands allows users to interact with the `staking` module.
 simd tx staking --help
 ```
 
-#### create-validator
+##### create-validator
 
 The command `create-validator` allows users to create new validator initialized with a self-delegation to it.
 
 Usage:
 
 ```bash
-simd tx staking create-validator [flags]
+simd tx staking create-validator [path/to/validator.json] [flags]
 ```
 
 Example:
 
 ```bash
-simd tx staking create-validator \
-  --amount=1000000stake \
-  --pubkey=$(simd tendermint show-validator) \
-  --moniker="my-moniker" \
-  --website="https://myweb.site" \
-  --details="description of your validator" \
+simd tx staking create-validator /path/to/validator.json \
   --chain-id="name_of_chain_id" \
-  --commission-rate="0.10" \
-  --commission-max-rate="0.20" \
-  --commission-max-change-rate="0.01" \
-  --min-self-delegation="1" \
   --gas="auto" \
   --gas-adjustment="1.2" \
   --gas-prices="0.025stake" \
   --from=mykey
 ```
 
-#### delegate
+where `validator.json` contains:
+
+```json
+{
+  "pubkey": {"@type":"/cosmos.crypto.ed25519.PubKey","key":"BnbwFpeONLqvWqJb3qaUbL5aoIcW3fSuAp9nT3z5f20="},
+  "amount": "1000000stake",
+  "moniker": "my-moniker",
+  "website": "https://myweb.site",
+  "security": "security-contact@gmail.com",
+  "details": "description of your validator",
+  "commission-rate": "0.10",
+  "commission-max-rate": "0.20",
+  "commission-max-change-rate": "0.01",
+  "min-self-delegation": "1"
+}
+```
+
+and pubkey can be obtained by using `simd tendermint show-validator` command.
+
+##### delegate
 
 The command `delegate` allows users to delegate liquid tokens to a validator.
 
@@ -1531,7 +1618,7 @@ Example:
 simd tx staking delegate cosmosvaloper1l2rsakp388kuv9k8qzq6lrm9taddae7fpx59wm 1000stake --from mykey
 ```
 
-#### edit-validator
+##### edit-validator
 
 The command `edit-validator` allows users to edit an existing validator account.
 
@@ -1547,7 +1634,7 @@ Example:
 simd tx staking edit-validator --moniker "new_moniker_name" --website "new_webiste_url" --from mykey
 ```
 
-#### redelegate
+##### redelegate
 
 The command `redelegate` allows users to redelegate illiquid tokens from one validator to another.
 
@@ -1563,7 +1650,7 @@ Example:
 simd tx staking redelegate cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj cosmosvaloper1l2rsakp388kuv9k8qzq6lrm9taddae7fpx59wm 100stake --from mykey
 ```
 
-#### unbond
+##### unbond
 
 The command `unbond` allows users to unbond shares from a validator.
 
@@ -1579,7 +1666,7 @@ Example:
 simd tx staking unbond cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj 100stake --from mykey
 ```
 
-#### cancel unbond 
+##### cancel unbond 
 
 The command `cancel-unbond` allow users to cancel the unbonding delegation entry and delegate back to the original validator.
 
@@ -1596,11 +1683,11 @@ simd tx staking cancel-unbond cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhf
 ```
 
 
-## gRPC
+### gRPC
 
 A user can query the `staking` module using gRPC endpoints.
 
-### Validators
+#### Validators
 
 The `Validators` endpoint queries all validators that match the given status.
 
@@ -1646,7 +1733,7 @@ Example Output:
 }
 ```
 
-### Validator
+#### Validator
 
 The `Validator` endpoint queries validator information for given validator address.
 
@@ -1688,7 +1775,7 @@ Example Output:
 }
 ```
 
-### ValidatorDelegations
+#### ValidatorDelegations
 
 The `ValidatorDelegations` endpoint queries delegate information for given validator.
 
@@ -1726,7 +1813,7 @@ Example Output:
 }
 ```
 
-### ValidatorUnbondingDelegations
+#### ValidatorUnbondingDelegations
 
 The `ValidatorUnbondingDelegations` endpoint queries delegate information for given validator.
 
@@ -1778,7 +1865,7 @@ Example Output:
 }
 ```
 
-### Delegation
+#### Delegation
 
 The `Delegation` endpoint queries delegate information for given validator delegator pair.
 
@@ -1815,7 +1902,7 @@ Example Output:
 }
 ```
 
-### UnbondingDelegation
+#### UnbondingDelegation
 
 The `UnbondingDelegation` endpoint queries unbonding information for given validator delegator.
 
@@ -1856,7 +1943,7 @@ Example Output:
 }
 ```
 
-### DelegatorDelegations
+#### DelegatorDelegations
 
 The `DelegatorDelegations` endpoint queries all delegations of a given delegator address.
 
@@ -1886,7 +1973,7 @@ Example Output:
 }
 ```
 
-### DelegatorUnbondingDelegations
+#### DelegatorUnbondingDelegations
 
 The `DelegatorUnbondingDelegations` endpoint queries all unbonding delegations of a given delegator address.
 
@@ -1933,7 +2020,7 @@ Example Output:
 }
 ```
 
-### Redelegations
+#### Redelegations
 
 The `Redelegations` endpoint queries redelegations of given address.
 
@@ -1978,7 +2065,7 @@ Example Output:
 }
 ```
 
-### DelegatorValidators
+#### DelegatorValidators
 
 The `DelegatorValidators` endpoint queries all validators information for given delegator.
 
@@ -2036,7 +2123,7 @@ Example Output:
 }
 ```
 
-### DelegatorValidator
+#### DelegatorValidator
 
 The `DelegatorValidator` endpoint queries validator information for given delegator validator
 
@@ -2088,7 +2175,7 @@ Example Output:
 }
 ```
 
-### HistoricalInfo
+#### HistoricalInfo
 
 ```bash
 cosmos.staking.v1beta1.Query/HistoricalInfo
@@ -2166,7 +2253,7 @@ Example Output:
 
 ```
 
-### Pool
+#### Pool
 
 The `Pool` endpoint queries the pool information.
 
@@ -2191,7 +2278,7 @@ Example Output:
 }
 ```
 
-### Params
+#### Params
 
 The `Params` endpoint queries the pool information.
 
@@ -2219,11 +2306,11 @@ Example Output:
 }
 ```
 
-## REST
+### REST
 
 A user can query the `staking` module using REST endpoints.
 
-### DelegatorDelegations
+#### DelegatorDelegations
 
 The `DelegtaorDelegations` REST endpoint queries all delegations of a given delegator address.
 
@@ -2272,7 +2359,7 @@ Example Output:
 }
 ```
 
-### Redelegations
+#### Redelegations
 
 The `Redelegations` REST endpoint queries redelegations of given address.
 
@@ -2317,7 +2404,7 @@ Example Output:
 }
 ```
 
-### DelegatorUnbondingDelegations
+#### DelegatorUnbondingDelegations
 
 The `DelegatorUnbondingDelegations` REST endpoint queries all unbonding delegations of a given delegator address.
 
@@ -2358,7 +2445,7 @@ Example Output:
 }
 ```
 
-### DelegatorValidators
+#### DelegatorValidators
 
 The `DelegatorValidators` REST endpoint queries all validators information for given delegator address.
 
@@ -2416,7 +2503,7 @@ Example Output:
 }
 ```
 
-### DelegatorValidator
+#### DelegatorValidator
 
 The `DelegatorValidator` REST endpoint queries validator information for given delegator validator pair.
 
@@ -2468,7 +2555,7 @@ Example Output:
 }
 ```
 
-### HistoricalInfo
+#### HistoricalInfo
 
 The `HistoricalInfo` REST endpoint queries the historical information for given height.
 
@@ -2576,7 +2663,7 @@ Example Output:
 }
 ```
 
-### Parameters
+#### Parameters
 
 The `Parameters` REST endpoint queries the staking parameters.
 
@@ -2604,7 +2691,7 @@ Example Output:
 }
 ```
 
-### Pool
+#### Pool
 
 The `Pool` REST endpoint queries the pool information.
 
@@ -2629,7 +2716,7 @@ Example Output:
 }
 ```
 
-### Validators
+#### Validators
 
 The `Validators` REST endpoint queries all validators that match the given status.
 
@@ -2714,7 +2801,7 @@ Example Output:
 }
 ```
 
-### Validator
+#### Validator
 
 The `Validator` REST endpoint queries validator information for given validator address.
 
@@ -2766,7 +2853,7 @@ Example Output:
 }
 ```
 
-### ValidatorDelegations
+#### ValidatorDelegations
 
 The `ValidatorDelegations` REST endpoint queries delegate information for given validator.
 
@@ -2848,7 +2935,7 @@ Example Output:
 }
 ```
 
-### Delegation
+#### Delegation
 
 The `Delegation` REST endpoint queries delegate information for given validator delegator pair.
 
@@ -2882,7 +2969,7 @@ Example Output:
 }
 ```
 
-### UnbondingDelegation
+#### UnbondingDelegation
 
 The `UnbondingDelegation` REST endpoint queries unbonding information for given validator delegator pair.
 
@@ -2917,7 +3004,7 @@ Example Output:
 }
 ```
 
-### ValidatorUnbondingDelegations
+#### ValidatorUnbondingDelegations
 
 The `ValidatorUnbondingDelegations` REST endpoint queries unbonding delegations of a validator.
 

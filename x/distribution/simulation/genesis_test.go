@@ -8,9 +8,9 @@ import (
 	"github.com/stretchr/testify/require"
 
 	sdkmath "cosmossdk.io/math"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/distribution/simulation"
@@ -40,13 +40,9 @@ func TestRandomizedGenState(t *testing.T) {
 	var distrGenesis types.GenesisState
 	simState.Cdc.MustUnmarshalJSON(simState.GenState[types.ModuleName], &distrGenesis)
 
-	dec1, _ := sdk.NewDecFromStr("0.170000000000000000")
-	dec2, _ := sdk.NewDecFromStr("0.010000000000000000")
-	dec3, _ := sdk.NewDecFromStr("0.210000000000000000")
+	dec1, _ := sdkmath.LegacyNewDecFromStr("0.210000000000000000")
 
-	require.Equal(t, dec1, distrGenesis.Params.BaseProposerReward)
-	require.Equal(t, dec2, distrGenesis.Params.BonusProposerReward)
-	require.Equal(t, dec3, distrGenesis.Params.CommunityTax)
+	require.Equal(t, dec1, distrGenesis.Params.CommunityTax)
 	require.Equal(t, true, distrGenesis.Params.WithdrawAddrEnabled)
 	require.Len(t, distrGenesis.DelegatorStartingInfos, 0)
 	require.Len(t, distrGenesis.DelegatorWithdrawInfos, 0)
@@ -77,6 +73,8 @@ func TestRandomizedGenState1(t *testing.T) {
 	}
 
 	for _, tt := range tests {
+		tt := tt
+
 		require.Panicsf(t, func() { simulation.RandomizedGenState(&tt.simState) }, tt.panicMsg)
 	}
 }

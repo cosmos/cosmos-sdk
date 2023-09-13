@@ -6,28 +6,30 @@ import "tendermint/types/types.proto";
 import "tendermint/types/evidence.proto";
 import "tendermint/version/types.proto";
 import "google/protobuf/timestamp.proto";
+import "amino/amino.proto";
 
-option go_package = "github.com/cosmos/cosmos-sdk/client/grpc/tmservice";
+option go_package = "github.com/cosmos/cosmos-sdk/client/grpc/cmtservice";
 
 // Block is tendermint type Block, with the Header proposer address
 // field converted to bech32 string.
 message Block {
-  Header                         header      = 1 [(gogoproto.nullable) = false];
-  .tendermint.types.Data         data        = 2 [(gogoproto.nullable) = false];
-  .tendermint.types.EvidenceList evidence    = 3 [(gogoproto.nullable) = false];
+  Header                         header      = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+  .tendermint.types.Data         data        = 2 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+  .tendermint.types.EvidenceList evidence    = 3 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
   .tendermint.types.Commit       last_commit = 4;
 }
 
 // Header defines the structure of a Tendermint block header.
 message Header {
   // basic block info
-  .tendermint.version.Consensus version  = 1 [(gogoproto.nullable) = false];
+  .tendermint.version.Consensus version  = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
   string                        chain_id = 2 [(gogoproto.customname) = "ChainID"];
   int64                         height   = 3;
-  google.protobuf.Timestamp     time     = 4 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
+  google.protobuf.Timestamp     time     = 4
+      [(gogoproto.nullable) = false, (amino.dont_omitempty) = true, (gogoproto.stdtime) = true];
 
   // prev block info
-  .tendermint.types.BlockID last_block_id = 5 [(gogoproto.nullable) = false];
+  .tendermint.types.BlockID last_block_id = 5 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 
   // hashes of block data
   bytes last_commit_hash = 6; // commit from validators from the last block

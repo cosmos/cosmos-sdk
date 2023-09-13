@@ -5,12 +5,13 @@ import "gogoproto/gogo.proto";
 import "cosmos_proto/cosmos.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/msg/v1/msg.proto";
+import "amino/amino.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/bank/types";
 
 // Params defines the parameters for the bank module.
 message Params {
-  option (gogoproto.goproto_stringer) = false;
+  option (amino.name) = "cosmos-sdk/x/bank/Params";
   // Deprecated: Use of SendEnabled in params is deprecated.
   // For genesis, use the newly added send_enabled field in the genesis object.
   // Storage, lookup, and manipulation of this information is now in the keeper.
@@ -23,10 +24,9 @@ message Params {
 // SendEnabled maps coin denom to a send_enabled status (whether a denom is
 // sendable).
 message SendEnabled {
-  option (gogoproto.equal)            = true;
-  option (gogoproto.goproto_stringer) = false;
-  string denom                        = 1;
-  bool   enabled                      = 2;
+  option (gogoproto.equal) = true;
+  string denom             = 1;
+  bool   enabled           = 2;
 }
 
 // Input models transaction input.
@@ -37,8 +37,12 @@ message Input {
   option (gogoproto.goproto_getters) = false;
 
   string   address                        = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  repeated cosmos.base.v1beta1.Coin coins = 2
-      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  repeated cosmos.base.v1beta1.Coin coins = 2 [
+    (gogoproto.nullable)     = false,
+    (amino.dont_omitempty)   = true,
+    (amino.encoding)         = "legacy_coins",
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
 }
 
 // Output models transaction outputs.
@@ -47,8 +51,12 @@ message Output {
   option (gogoproto.goproto_getters) = false;
 
   string   address                        = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  repeated cosmos.base.v1beta1.Coin coins = 2
-      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  repeated cosmos.base.v1beta1.Coin coins = 2 [
+    (gogoproto.nullable)     = false,
+    (amino.dont_omitempty)   = true,
+    (amino.encoding)         = "legacy_coins",
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
 }
 
 // Supply represents a struct that passively keeps track of the total supply
@@ -60,10 +68,14 @@ message Supply {
   option (gogoproto.equal)           = true;
   option (gogoproto.goproto_getters) = false;
 
-  option (cosmos_proto.implements_interface) = "SupplyI";
+  option (cosmos_proto.implements_interface) = "cosmos.bank.v1beta1.SupplyI";
 
-  repeated cosmos.base.v1beta1.Coin total = 1
-      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  repeated cosmos.base.v1beta1.Coin total = 1 [
+    (gogoproto.nullable)     = false,
+    (amino.dont_omitempty)   = true,
+    (amino.encoding)         = "legacy_coins",
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
 }
 
 // DenomUnit represents a struct that describes a given

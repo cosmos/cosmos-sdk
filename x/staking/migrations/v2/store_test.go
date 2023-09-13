@@ -7,25 +7,29 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/testutil"
+	storetypes "cosmossdk.io/store/types"
+
+	"github.com/cosmos/cosmos-sdk/codec/address"
+	sdktestutil "github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/staking/migrations/v1"
-	"github.com/cosmos/cosmos-sdk/x/staking/migrations/v2"
-	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
+	sdkaddress "github.com/cosmos/cosmos-sdk/types/address"
+	v1 "github.com/cosmos/cosmos-sdk/x/staking/migrations/v1"
+	v2 "github.com/cosmos/cosmos-sdk/x/staking/migrations/v2"
+	"github.com/cosmos/cosmos-sdk/x/staking/testutil"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 func TestStoreMigration(t *testing.T) {
-	stakingKey := sdk.NewKVStoreKey("staking")
-	tStakingKey := sdk.NewTransientStoreKey("transient_test")
-	ctx := testutil.DefaultContext(stakingKey, tStakingKey)
+	stakingKey := storetypes.NewKVStoreKey("staking")
+	tStakingKey := storetypes.NewTransientStoreKey("transient_test")
+	ctx := sdktestutil.DefaultContext(stakingKey, tStakingKey)
 	store := ctx.KVStore(stakingKey)
 
 	_, pk1, addr1 := testdata.KeyTestPubAddr()
 	valAddr1 := sdk.ValAddress(addr1)
-	val := teststaking.NewValidator(t, valAddr1, pk1)
-	_, pk1, addr2 := testdata.KeyTestPubAddr()
+	val := testutil.NewValidator(t, valAddr1, pk1)
+	_, _, addr2 := testdata.KeyTestPubAddr()
 	valAddr2 := sdk.ValAddress(addr2)
 	_, _, addr3 := testdata.KeyTestPubAddr()
 	consAddr := sdk.ConsAddress(addr3.String())
@@ -42,7 +46,7 @@ func TestStoreMigration(t *testing.T) {
 		{
 			"LastValidatorPowerKey",
 			v1.GetLastValidatorPowerKey(valAddr1),
-			types.GetLastValidatorPowerKey(valAddr1),
+			getLastValidatorPowerKey(valAddr1),
 		},
 		{
 			"LastTotalPowerKey",
@@ -52,67 +56,67 @@ func TestStoreMigration(t *testing.T) {
 		{
 			"ValidatorsKey",
 			v1.GetValidatorKey(valAddr1),
-			types.GetValidatorKey(valAddr1),
+			getValidatorKey(valAddr1),
 		},
 		{
 			"ValidatorsByConsAddrKey",
 			v1.GetValidatorByConsAddrKey(consAddr),
-			types.GetValidatorByConsAddrKey(consAddr),
+			v2.GetValidatorByConsAddrKey(consAddr),
 		},
 		{
 			"ValidatorsByPowerIndexKey",
 			v1.GetValidatorsByPowerIndexKey(val),
-			types.GetValidatorsByPowerIndexKey(val, sdk.DefaultPowerReduction),
+			types.GetValidatorsByPowerIndexKey(val, sdk.DefaultPowerReduction, address.NewBech32Codec("cosmosvaloper")),
 		},
 		{
 			"DelegationKey",
 			v1.GetDelegationKey(addr4, valAddr1),
-			types.GetDelegationKey(addr4, valAddr1),
+			v2.GetDelegationKey(addr4, valAddr1),
 		},
 		{
 			"UnbondingDelegationKey",
 			v1.GetUBDKey(addr4, valAddr1),
-			types.GetUBDKey(addr4, valAddr1),
+			unbondingKey(addr4, valAddr1),
 		},
 		{
 			"UnbondingDelegationByValIndexKey",
 			v1.GetUBDByValIndexKey(addr4, valAddr1),
-			types.GetUBDByValIndexKey(addr4, valAddr1),
+			getUBDByValIndexKey(addr4, valAddr1),
 		},
 		{
 			"RedelegationKey",
 			v1.GetREDKey(addr4, valAddr1, valAddr2),
-			types.GetREDKey(addr4, valAddr1, valAddr2),
+			v2.GetREDKey(addr4, valAddr1, valAddr2),
 		},
 		{
 			"RedelegationByValSrcIndexKey",
 			v1.GetREDByValSrcIndexKey(addr4, valAddr1, valAddr2),
-			types.GetREDByValSrcIndexKey(addr4, valAddr1, valAddr2),
+			v2.GetREDByValSrcIndexKey(addr4, valAddr1, valAddr2),
 		},
 		{
 			"RedelegationByValDstIndexKey",
 			v1.GetREDByValDstIndexKey(addr4, valAddr1, valAddr2),
-			types.GetREDByValDstIndexKey(addr4, valAddr1, valAddr2),
+			v2.GetREDByValDstIndexKey(addr4, valAddr1, valAddr2),
 		},
 		{
 			"UnbondingQueueKey",
 			v1.GetUnbondingDelegationTimeKey(now),
-			types.GetUnbondingDelegationTimeKey(now),
+			getUnbondingDelegationTimeKey(now),
 		},
 		{
 			"RedelegationQueueKey",
 			v1.GetRedelegationTimeKey(now),
-			types.GetRedelegationTimeKey(now),
+			getRedelegationTimeKey(now),
 		},
 		{
 			"ValidatorQueueKey",
 			v1.GetValidatorQueueKey(now, 4),
-			types.GetValidatorQueueKey(now, 4),
+			getValidatorQueueKey(now, 4),
 		},
 		{
 			"HistoricalInfoKey",
 			v1.GetHistoricalInfoKey(4),
-			types.GetHistoricalInfoKey(4),
+			v2.GetHistoricalInfoKey(4),
 		},
 	}
 
@@ -122,7 +126,7 @@ func TestStoreMigration(t *testing.T) {
 	}
 
 	// Run migrations.
-	err := v2.MigrateStore(ctx, stakingKey)
+	err := v2.MigrateStore(ctx, store)
 	require.NoError(t, err)
 
 	// Make sure the new keys are set and old keys are deleted.
@@ -135,4 +139,53 @@ func TestStoreMigration(t *testing.T) {
 			require.Equal(t, value, store.Get(tc.newKey))
 		})
 	}
+}
+
+func getRedelegationTimeKey(timestamp time.Time) []byte {
+	bz := sdk.FormatTimeBytes(timestamp)
+	return append(types.RedelegationQueueKey, bz...)
+}
+
+func getLastValidatorPowerKey(operator sdk.ValAddress) []byte {
+	return append(types.LastValidatorPowerKey, sdkaddress.MustLengthPrefix(operator)...)
+}
+
+func getUBDByValIndexKey(delAddr sdk.AccAddress, valAddr sdk.ValAddress) []byte {
+	return append(append(types.UnbondingDelegationByValIndexKey, sdkaddress.MustLengthPrefix(valAddr)...), sdkaddress.MustLengthPrefix(delAddr)...)
+}
+
+func getUnbondingDelegationTimeKey(timestamp time.Time) []byte {
+	bz := sdk.FormatTimeBytes(timestamp)
+	return append(types.UnbondingQueueKey, bz...)
+}
+
+func getValidatorKey(operatorAddr sdk.ValAddress) []byte {
+	return append(types.ValidatorsKey, sdkaddress.MustLengthPrefix(operatorAddr)...)
+}
+
+func unbondingKey(delAddr sdk.AccAddress, valAddr sdk.ValAddress) []byte {
+	return append(append(types.UnbondingDelegationKey, sdkaddress.MustLengthPrefix(delAddr)...), sdkaddress.MustLengthPrefix(valAddr)...)
+}
+
+func getValidatorQueueKey(timestamp time.Time, height int64) []byte {
+	heightBz := sdk.Uint64ToBigEndian(uint64(height))
+	timeBz := sdk.FormatTimeBytes(timestamp)
+	timeBzL := len(timeBz)
+	prefixL := len(types.ValidatorQueueKey)
+
+	bz := make([]byte, prefixL+8+timeBzL+8)
+
+	// copy the prefix
+	copy(bz[:prefixL], types.ValidatorQueueKey)
+
+	// copy the encoded time bytes length
+	copy(bz[prefixL:prefixL+8], sdk.Uint64ToBigEndian(uint64(timeBzL)))
+
+	// copy the encoded time bytes
+	copy(bz[prefixL+8:prefixL+8+timeBzL], timeBz)
+
+	// copy the encoded height
+	copy(bz[prefixL+8+timeBzL:], heightBz)
+
+	return bz
 }

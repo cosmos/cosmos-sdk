@@ -1,12 +1,12 @@
 package v2
 
 import (
-	"github.com/cosmos/cosmos-sdk/store/prefix"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	"cosmossdk.io/store/prefix"
+	storetypes "cosmossdk.io/store/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
-	v042auth "github.com/cosmos/cosmos-sdk/x/auth/migrations/v042"
-	v043distribution "github.com/cosmos/cosmos-sdk/x/distribution/migrations/v043"
+	v1auth "github.com/cosmos/cosmos-sdk/x/auth/migrations/v1"
 	v1 "github.com/cosmos/cosmos-sdk/x/staking/migrations/v1"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -15,16 +15,16 @@ import (
 // prefix_bytes | address_1_bytes | address_2_bytes | address_3_bytes
 // into format:
 // prefix_bytes | address_1_len (1 byte) | address_1_bytes | address_2_len (1 byte) | address_2_bytes | address_3_len (1 byte) | address_3_bytes
-func migratePrefixAddressAddressAddress(store sdk.KVStore, prefixBz []byte) {
+func migratePrefixAddressAddressAddress(store storetypes.KVStore, prefixBz []byte) {
 	oldStore := prefix.NewStore(store, prefixBz)
 
 	oldStoreIter := oldStore.Iterator(nil, nil)
 	defer oldStoreIter.Close()
 
 	for ; oldStoreIter.Valid(); oldStoreIter.Next() {
-		addr1 := oldStoreIter.Key()[:v042auth.AddrLen]
-		addr2 := oldStoreIter.Key()[v042auth.AddrLen : 2*v042auth.AddrLen]
-		addr3 := oldStoreIter.Key()[2*v042auth.AddrLen:]
+		addr1 := oldStoreIter.Key()[:v1auth.AddrLen]
+		addr2 := oldStoreIter.Key()[v1auth.AddrLen : 2*v1auth.AddrLen]
+		addr3 := oldStoreIter.Key()[2*v1auth.AddrLen:]
 		newStoreKey := append(append(append(
 			prefixBz,
 			address.MustLengthPrefix(addr1)...), address.MustLengthPrefix(addr2)...), address.MustLengthPrefix(addr3)...,
@@ -38,7 +38,7 @@ func migratePrefixAddressAddressAddress(store sdk.KVStore, prefixBz []byte) {
 
 const powerBytesLen = 8
 
-func migrateValidatorsByPowerIndexKey(store sdk.KVStore) {
+func migrateValidatorsByPowerIndexKey(store storetypes.KVStore) {
 	oldStore := prefix.NewStore(store, v1.ValidatorsByPowerIndexKey)
 
 	oldStoreIter := oldStore.Iterator(nil, nil)
@@ -59,18 +59,16 @@ func migrateValidatorsByPowerIndexKey(store sdk.KVStore) {
 // migration includes:
 //
 // - Setting the Power Reduction param in the paramstore
-func MigrateStore(ctx sdk.Context, storeKey storetypes.StoreKey) error {
-	store := ctx.KVStore(storeKey)
+func MigrateStore(ctx sdk.Context, store storetypes.KVStore) error {
+	MigratePrefixAddress(store, v1.LastValidatorPowerKey)
 
-	v043distribution.MigratePrefixAddress(store, v1.LastValidatorPowerKey)
-
-	v043distribution.MigratePrefixAddress(store, v1.ValidatorsKey)
-	v043distribution.MigratePrefixAddress(store, v1.ValidatorsByConsAddrKey)
+	MigratePrefixAddress(store, v1.ValidatorsKey)
+	MigratePrefixAddress(store, v1.ValidatorsByConsAddrKey)
 	migrateValidatorsByPowerIndexKey(store)
 
-	v043distribution.MigratePrefixAddressAddress(store, v1.DelegationKey)
-	v043distribution.MigratePrefixAddressAddress(store, v1.UnbondingDelegationKey)
-	v043distribution.MigratePrefixAddressAddress(store, v1.UnbondingDelegationByValIndexKey)
+	MigratePrefixAddressAddress(store, v1.DelegationKey)
+	MigratePrefixAddressAddress(store, v1.UnbondingDelegationKey)
+	MigratePrefixAddressAddress(store, v1.UnbondingDelegationByValIndexKey)
 	migratePrefixAddressAddressAddress(store, v1.RedelegationKey)
 	migratePrefixAddressAddressAddress(store, v1.RedelegationByValSrcIndexKey)
 	migratePrefixAddressAddressAddress(store, v1.RedelegationByValDstIndexKey)

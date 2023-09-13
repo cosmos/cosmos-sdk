@@ -8,9 +8,12 @@ import (
 	"fmt"
 	"strings"
 	"sync"
+	"sync/atomic"
 
 	"github.com/hashicorp/golang-lru/simplelru"
 	"sigs.k8s.io/yaml"
+
+	errorsmod "cosmossdk.io/errors"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/internal/conv"
@@ -83,6 +86,8 @@ var (
 	consAddrCache *simplelru.LRU
 	valAddrMu     sync.Mutex
 	valAddrCache  *simplelru.LRU
+
+	isCachingEnabled atomic.Bool
 )
 
 // sentinel errors
@@ -92,6 +97,8 @@ var (
 
 func init() {
 	var err error
+	SetAddrCacheEnabled(true)
+
 	// in total the cache size is 61k entries. Key is 32 bytes and value is around 50-70 bytes.
 	// That will make around 92 * 61k * 2 (LRU) bytes ~ 11 MB
 	if accAddrCache, err = simplelru.NewLRU(60000, nil); err != nil {
@@ -103,6 +110,16 @@ func init() {
 	if valAddrCache, err = simplelru.NewLRU(500, nil); err != nil {
 		panic(err)
 	}
+}
+
+// SetAddrCacheEnabled enables or disables accAddrCache, consAddrCache, and valAddrCache. By default, caches are enabled.
+func SetAddrCacheEnabled(enabled bool) {
+	isCachingEnabled.Store(enabled)
+}
+
+// IsAddrCacheEnabled returns if the address caches are enabled.
+func IsAddrCacheEnabled() bool {
+	return isCachingEnabled.Load()
 }
 
 // Address is a common interface for different types of addresses used by the SDK
@@ -153,11 +170,11 @@ func VerifyAddressFormat(bz []byte) error {
 	}
 
 	if len(bz) == 0 {
-		return sdkerrors.Wrap(sdkerrors.ErrUnknownAddress, "addresses cannot be empty")
+		return errorsmod.Wrap(sdkerrors.ErrUnknownAddress, "addresses cannot be empty")
 	}
 
 	if len(bz) > address.MaxAddrLen {
-		return sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "address max length is %d, got %d", address.MaxAddrLen, len(bz))
+		return errorsmod.Wrapf(sdkerrors.ErrUnknownAddress, "address max length is %d, got %d", address.MaxAddrLen, len(bz))
 	}
 
 	return nil
@@ -285,11 +302,15 @@ func (aa AccAddress) String() string {
 	}
 
 	key := conv.UnsafeBytesToStr(aa)
-	accAddrMu.Lock()
-	defer accAddrMu.Unlock()
-	addr, ok := accAddrCache.Get(key)
-	if ok {
-		return addr.(string)
+
+	if IsAddrCacheEnabled() {
+		accAddrMu.Lock()
+		defer accAddrMu.Unlock()
+
+		addr, ok := accAddrCache.Get(key)
+		if ok {
+			return addr.(string)
+		}
 	}
 	return cacheBech32Addr(GetConfig().GetBech32AccountAddrPrefix(), aa, accAddrCache, key)
 }
@@ -351,7 +372,7 @@ func (va ValAddress) Equals(va2 Address) bool {
 	return bytes.Equal(va.Bytes(), va2.Bytes())
 }
 
-// Returns boolean for whether an AccAddress is empty
+// Returns boolean for whether an ValAddress is empty
 func (va ValAddress) Empty() bool {
 	return len(va) == 0
 }
@@ -435,11 +456,15 @@ func (va ValAddress) String() string {
 	}
 
 	key := conv.UnsafeBytesToStr(va)
-	valAddrMu.Lock()
-	defer valAddrMu.Unlock()
-	addr, ok := valAddrCache.Get(key)
-	if ok {
-		return addr.(string)
+
+	if IsAddrCacheEnabled() {
+		valAddrMu.Lock()
+		defer valAddrMu.Unlock()
+
+		addr, ok := valAddrCache.Get(key)
+		if ok {
+			return addr.(string)
+		}
 	}
 	return cacheBech32Addr(GetConfig().GetBech32ValidatorAddrPrefix(), va, valAddrCache, key)
 }
@@ -466,6 +491,7 @@ func (va ValAddress) Format(s fmt.State, verb rune) {
 type ConsAddress []byte
 
 // ConsAddressFromHex creates a ConsAddress from a hex string.
+// Deprecated: use ConsensusAddressCodec from Staking keeper
 func ConsAddressFromHex(address string) (addr ConsAddress, err error) {
 	bz, err := addressBytesFromHexString(address)
 	return ConsAddress(bz), err
@@ -590,11 +616,15 @@ func (ca ConsAddress) String() string {
 	}
 
 	key := conv.UnsafeBytesToStr(ca)
-	consAddrMu.Lock()
-	defer consAddrMu.Unlock()
-	addr, ok := consAddrCache.Get(key)
-	if ok {
-		return addr.(string)
+
+	if IsAddrCacheEnabled() {
+		consAddrMu.Lock()
+		defer consAddrMu.Unlock()
+
+		addr, ok := consAddrCache.Get(key)
+		if ok {
+			return addr.(string)
+		}
 	}
 	return cacheBech32Addr(GetConfig().GetBech32ConsensusAddrPrefix(), ca, consAddrCache, key)
 }
@@ -674,6 +704,8 @@ func cacheBech32Addr(prefix string, addr []byte, cache *simplelru.LRU, cacheKey 
 	if err != nil {
 		panic(err)
 	}
-	cache.Add(cacheKey, bech32Addr)
+	if IsAddrCacheEnabled() {
+		cache.Add(cacheKey, bech32Addr)
+	}
 	return bech32Addr
 }

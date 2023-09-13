@@ -21,7 +21,7 @@ and is rich with ecosystem tooling.
 
 We must also aim to integrate metrics into the Cosmos SDK in the most seamless way possible such that
 metrics may be added or removed at will and without much friction. To do this, we will use the
-[go-metrics](https://github.com/armon/go-metrics) library.
+[go-metrics](https://github.com/hashicorp/go-metrics) library.
 
 Finally, operators may enable telemetry along with specific configuration options. If enabled, metrics
 will be exposed via `/metrics?format={text|prometheus}` via the API server.

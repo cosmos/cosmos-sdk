@@ -1,3 +1,4 @@
+//nolint:unused // ignore unused code linting
 package codegen
 
 import (
@@ -87,7 +88,11 @@ func (f fileGen) storeStructName() string {
 }
 
 func (f fileGen) fileShortName() string {
-	filename := f.file.Proto.GetName()
+	return fileShortName(f.file)
+}
+
+func fileShortName(file *protogen.File) string {
+	filename := file.Proto.GetName()
 	shortName := filepath.Base(filename)
 	i := strings.Index(shortName, ".")
 	if i > 0 {
@@ -155,11 +160,20 @@ func (f fileGen) genStoreConstructor(stores []*protogen.Message) {
 	f.P("}")
 }
 
-func (f fileGen) fieldsToCamelCase(fields string) string {
+func fieldsToCamelCase(fields string) string {
 	splitFields := strings.Split(fields, ",")
 	camelFields := make([]string, len(splitFields))
 	for i, field := range splitFields {
 		camelFields[i] = strcase.ToCamel(field)
 	}
 	return strings.Join(camelFields, "")
+}
+
+func fieldsToSnakeCase(fields string) string {
+	splitFields := strings.Split(fields, ",")
+	camelFields := make([]string, len(splitFields))
+	for i, field := range splitFields {
+		camelFields[i] = strcase.ToSnake(field)
+	}
+	return strings.Join(camelFields, "_")
 }

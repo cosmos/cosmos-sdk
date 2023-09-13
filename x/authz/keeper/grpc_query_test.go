@@ -19,6 +19,7 @@ func (suite *TestSuite) TestGRPCQueryAuthorization() {
 		req              *authz.QueryGrantsRequest
 		expAuthorization authz.Authorization
 	)
+
 	testCases := []struct {
 		msg      string
 		malleate func(require *require.Assertions)
@@ -56,7 +57,19 @@ func (suite *TestSuite) TestGRPCQueryAuthorization() {
 			func(require *require.Assertions, res *authz.QueryGrantsResponse) {},
 		},
 		{
-			"Success",
+			"authorization not found",
+			func(require *require.Assertions) {
+				req = &authz.QueryGrantsRequest{
+					Granter:    addrs[1].String(),
+					Grantee:    addrs[0].String(),
+					MsgTypeUrl: banktypes.SendAuthorization{}.MsgTypeURL(),
+				}
+			},
+			"authorization not found for /cosmos.bank.v1beta1.MsgSend",
+			func(require *require.Assertions, res *authz.QueryGrantsResponse) {},
+		},
+		{
+			"success",
 			func(require *require.Assertions) {
 				expAuthorization = suite.createSendAuthorization(addrs[0], addrs[1])
 				req = &authz.QueryGrantsRequest{
@@ -75,6 +88,28 @@ func (suite *TestSuite) TestGRPCQueryAuthorization() {
 				require.Equal(auth.String(), expAuthorization.String())
 			},
 		},
+		{
+			"success with allow list",
+			func(require *require.Assertions) {
+				expAuthorization = suite.createSendAuthorizationWithAllowList(addrs[0], addrs[1])
+				require.Len(expAuthorization.(*banktypes.SendAuthorization).GetAllowList(), 1)
+				req = &authz.QueryGrantsRequest{
+					Granter:    addrs[1].String(),
+					Grantee:    addrs[0].String(),
+					MsgTypeUrl: expAuthorization.MsgTypeURL(),
+				}
+			},
+			"",
+			func(require *require.Assertions, res *authz.QueryGrantsResponse) {
+				var auth authz.Authorization
+				require.Equal(1, len(res.Grants))
+				err := suite.encCfg.InterfaceRegistry.UnpackAny(res.Grants[0].Authorization, &auth)
+				require.NoError(err)
+				require.NotNil(auth)
+				require.Equal(auth.String(), expAuthorization.String())
+				require.Equal(auth.(*banktypes.SendAuthorization).GetAllowList(), expAuthorization.(*banktypes.SendAuthorization).GetAllowList())
+			},
+		},
 	}
 	for _, tc := range testCases {
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
@@ -88,70 +123,6 @@ func (suite *TestSuite) TestGRPCQueryAuthorization() {
 				require.Contains(err.Error(), tc.expError)
 			}
 			tc.postTest(require, result)
-		})
-	}
-}
-
-func (suite *TestSuite) TestGRPCQueryAuthorizations() {
-	queryClient, addrs := suite.queryClient, suite.addrs
-	var (
-		req              *authz.QueryGrantsRequest
-		expAuthorization authz.Authorization
-	)
-	testCases := []struct {
-		msg      string
-		malleate func()
-		expPass  bool
-		postTest func(res *authz.QueryGrantsResponse)
-	}{
-		{
-			"fail invalid granter addr",
-			func() {
-				req = &authz.QueryGrantsRequest{}
-			},
-			false,
-			func(res *authz.QueryGrantsResponse) {},
-		},
-		{
-			"fail invalid grantee addr",
-			func() {
-				req = &authz.QueryGrantsRequest{
-					Granter: addrs[0].String(),
-				}
-			},
-			false,
-			func(res *authz.QueryGrantsResponse) {},
-		},
-		{
-			"Success",
-			func() {
-				expAuthorization = suite.createSendAuthorization(addrs[0], addrs[1])
-				req = &authz.QueryGrantsRequest{
-					Granter: addrs[1].String(),
-					Grantee: addrs[0].String(),
-				}
-			},
-			true,
-			func(res *authz.QueryGrantsResponse) {
-				var auth authz.Authorization
-				suite.Require().Equal(1, len(res.Grants))
-				err := suite.encCfg.InterfaceRegistry.UnpackAny(res.Grants[0].Authorization, &auth)
-				suite.Require().NoError(err)
-				suite.Require().NotNil(auth)
-				suite.Require().Equal(auth.String(), expAuthorization.String())
-			},
-		},
-	}
-	for _, testCase := range testCases {
-		suite.Run(fmt.Sprintf("Case %s", testCase.msg), func() {
-			testCase.malleate()
-			result, err := queryClient.Grants(gocontext.Background(), req)
-			if testCase.expPass {
-				suite.Require().NoError(err)
-			} else {
-				suite.Require().Error(err)
-			}
-			testCase.postTest(result)
 		})
 	}
 }
@@ -212,6 +183,7 @@ func (suite *TestSuite) TestGRPCQueryGranterGrants() {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			tc.preRun()
 			result, err := queryClient.GranterGrants(gocontext.Background(), &tc.request)
@@ -289,6 +261,8 @@ func (suite *TestSuite) TestGRPCQueryGranteeGrants() {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
+
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			tc.preRun()
 			result, err := queryClient.GranteeGrants(gocontext.Background(), &tc.request)
@@ -302,11 +276,20 @@ func (suite *TestSuite) TestGRPCQueryGranteeGrants() {
 	}
 }
 
-func (suite *TestSuite) createSendAuthorization(a1, a2 sdk.AccAddress) authz.Authorization {
+func (suite *TestSuite) createSendAuthorization(grantee, granter sdk.AccAddress) authz.Authorization {
 	exp := suite.ctx.BlockHeader().Time.Add(time.Hour)
 	newCoins := sdk.NewCoins(sdk.NewInt64Coin("steak", 100))
 	authorization := &banktypes.SendAuthorization{SpendLimit: newCoins}
-	err := suite.authzKeeper.SaveGrant(suite.ctx, a1, a2, authorization, &exp)
+	err := suite.authzKeeper.SaveGrant(suite.ctx, grantee, granter, authorization, &exp)
+	suite.Require().NoError(err)
+	return authorization
+}
+
+func (suite *TestSuite) createSendAuthorizationWithAllowList(grantee, granter sdk.AccAddress) authz.Authorization {
+	exp := suite.ctx.BlockHeader().Time.Add(time.Hour)
+	newCoins := sdk.NewCoins(sdk.NewInt64Coin("steak", 100))
+	authorization := &banktypes.SendAuthorization{SpendLimit: newCoins, AllowList: []string{suite.addrs[5].String()}}
+	err := suite.authzKeeper.SaveGrant(suite.ctx, grantee, granter, authorization, &exp)
 	suite.Require().NoError(err)
 	return authorization
 }

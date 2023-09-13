@@ -1,238 +1,247 @@
 package keeper_test
 
 import (
-	gocontext "context"
 	"fmt"
 	"testing"
 
-	"cosmossdk.io/math"
-	"github.com/stretchr/testify/suite"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	"gotest.tools/v3/assert"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
+	"cosmossdk.io/collections"
+	"cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
-	"github.com/cosmos/cosmos-sdk/x/distribution/keeper"
-	"github.com/cosmos/cosmos-sdk/x/distribution/testutil"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
-	"github.com/cosmos/cosmos-sdk/x/staking"
-	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
-	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
+	stakingtestutil "github.com/cosmos/cosmos-sdk/x/staking/testutil"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-type KeeperTestSuite struct {
-	suite.Suite
+func TestGRPCParams(t *testing.T) {
+	t.Parallel()
+	f := initFixture(t)
 
-	ctx         sdk.Context
-	queryClient types.QueryClient
-	addrs       []sdk.AccAddress
-	valAddrs    []sdk.ValAddress
+	assert.NilError(t, f.distrKeeper.Params.Set(f.sdkCtx, types.DefaultParams()))
 
-	interfaceRegistry codectypes.InterfaceRegistry
-	bankKeeper        bankkeeper.Keeper
-	distrKeeper       keeper.Keeper
-	stakingKeeper     *stakingkeeper.Keeper
-	msgServer         types.MsgServer
-}
-
-func (suite *KeeperTestSuite) SetupTest() {
-	app, err := simtestutil.Setup(testutil.AppConfig,
-		&suite.interfaceRegistry,
-		&suite.bankKeeper,
-		&suite.distrKeeper,
-		&suite.stakingKeeper,
-	)
-	suite.NoError(err)
-
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-
-	queryHelper := baseapp.NewQueryServerTestHelper(ctx, suite.interfaceRegistry)
-	types.RegisterQueryServer(queryHelper, keeper.NewQuerier(suite.distrKeeper))
-	queryClient := types.NewQueryClient(queryHelper)
-
-	suite.ctx = ctx
-	suite.queryClient = queryClient
-
-	suite.addrs = simtestutil.AddTestAddrs(suite.bankKeeper, suite.stakingKeeper, ctx, 2, sdk.NewInt(1000000000))
-	suite.valAddrs = simtestutil.ConvertAddrsToValAddrs(suite.addrs)
-
-	suite.NoError(suite.distrKeeper.SetParams(suite.ctx, types.DefaultParams()))
-	suite.msgServer = keeper.NewMsgServerImpl(suite.distrKeeper)
-}
-
-func (suite *KeeperTestSuite) TestGRPCParams() {
-	ctx, queryClient := suite.ctx, suite.queryClient
+	qr := f.app.QueryHelper()
+	queryClient := types.NewQueryClient(qr)
 
 	var (
 		params    types.Params
-		req       *types.QueryParamsRequest
 		expParams types.Params
 	)
 
 	testCases := []struct {
-		msg      string
-		malleate func()
-		expPass  bool
+		name      string
+		malleate  func()
+		msg       *types.QueryParamsRequest
+		expErrMsg string
 	}{
 		{
-			"empty params request",
-			func() {
-				req = &types.QueryParamsRequest{}
+			name: "empty params request",
+			malleate: func() {
 				expParams = types.DefaultParams()
 			},
-			true,
+			msg: &types.QueryParamsRequest{},
 		},
 		{
-			"valid request",
-			func() {
+			name: "valid request",
+			malleate: func() {
 				params = types.Params{
-					CommunityTax:        sdk.NewDecWithPrec(3, 1),
-					BaseProposerReward:  sdk.NewDecWithPrec(2, 1),
-					BonusProposerReward: sdk.NewDecWithPrec(1, 1),
+					CommunityTax:        math.LegacyNewDecWithPrec(3, 1),
+					BaseProposerReward:  math.LegacyZeroDec(),
+					BonusProposerReward: math.LegacyZeroDec(),
 					WithdrawAddrEnabled: true,
 				}
 
-				suite.NoError(suite.distrKeeper.SetParams(ctx, params))
-				req = &types.QueryParamsRequest{}
+				assert.NilError(t, f.distrKeeper.Params.Set(f.sdkCtx, params))
 				expParams = params
 			},
-			true,
+			msg: &types.QueryParamsRequest{},
 		},
 	}
-
 	for _, testCase := range testCases {
-		suite.Run(fmt.Sprintf("Case %s", testCase.msg), func() {
-			testCase.malleate()
+		tc := testCase
+		t.Run(fmt.Sprintf("Case %s", tc.name), func(t *testing.T) {
+			tc.malleate()
 
-			paramsRes, err := queryClient.Params(gocontext.Background(), req)
-
-			if testCase.expPass {
-				suite.Require().NoError(err)
-				suite.Require().NotNil(paramsRes)
-				suite.Require().Equal(paramsRes.Params, expParams)
-			} else {
-				suite.Require().Error(err)
-			}
+			paramsRes, err := queryClient.Params(f.sdkCtx, tc.msg)
+			assert.NilError(t, err)
+			assert.Assert(t, paramsRes != nil)
+			assert.DeepEqual(t, paramsRes.Params, expParams)
 		})
+
 	}
 }
 
-func (suite *KeeperTestSuite) TestGRPCValidatorOutstandingRewards() {
-	ctx, queryClient, valAddrs := suite.ctx, suite.queryClient, suite.valAddrs
+func TestGRPCValidatorOutstandingRewards(t *testing.T) {
+	t.Parallel()
+	f := initFixture(t)
+
+	// set module account coins
+	initTokens := f.stakingKeeper.TokensFromConsensusPower(f.sdkCtx, int64(1000))
+	assert.NilError(t, f.bankKeeper.MintCoins(f.sdkCtx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens))))
+
+	// Set default staking params
+	assert.NilError(t, f.stakingKeeper.SetParams(f.sdkCtx, stakingtypes.DefaultParams()))
+
+	qr := f.app.QueryHelper()
+	queryClient := types.NewQueryClient(qr)
 
 	valCommission := sdk.DecCoins{
 		sdk.NewDecCoinFromDec("mytoken", math.LegacyNewDec(5000)),
 		sdk.NewDecCoinFromDec("stake", math.LegacyNewDec(300)),
 	}
 
+	// send funds to val addr
+	funds := f.stakingKeeper.TokensFromConsensusPower(f.sdkCtx, int64(1000))
+	assert.NilError(t, f.bankKeeper.SendCoinsFromModuleToAccount(f.sdkCtx, types.ModuleName, sdk.AccAddress(f.valAddr), sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, funds))))
+
+	initialStake := int64(10)
+	tstaking := stakingtestutil.NewHelper(t, f.sdkCtx, f.stakingKeeper)
+	tstaking.Commission = stakingtypes.NewCommissionRates(math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDec(0))
+	tstaking.CreateValidator(f.valAddr, valConsPk0, math.NewInt(initialStake), true)
+
 	// set outstanding rewards
-	suite.distrKeeper.SetValidatorOutstandingRewards(ctx, valAddrs[0], types.ValidatorOutstandingRewards{Rewards: valCommission})
-	rewards := suite.distrKeeper.GetValidatorOutstandingRewards(ctx, valAddrs[0])
+	err := f.distrKeeper.ValidatorOutstandingRewards.Set(f.sdkCtx, f.valAddr, types.ValidatorOutstandingRewards{Rewards: valCommission})
+	assert.NilError(t, err)
 
-	var req *types.QueryValidatorOutstandingRewardsRequest
+	rewards, err := f.distrKeeper.ValidatorOutstandingRewards.Get(f.sdkCtx, f.valAddr)
+	assert.NilError(t, err)
 
 	testCases := []struct {
-		msg      string
-		malleate func()
-		expPass  bool
+		name      string
+		msg       *types.QueryValidatorOutstandingRewardsRequest
+		expPass   bool
+		expErrMsg string
 	}{
 		{
-			"empty request",
-			func() {
-				req = &types.QueryValidatorOutstandingRewardsRequest{}
-			},
-			false,
-		}, {
-			"valid request",
-			func() {
-				req = &types.QueryValidatorOutstandingRewardsRequest{ValidatorAddress: valAddrs[0].String()}
-			},
-			true,
+			name:      "empty request",
+			msg:       &types.QueryValidatorOutstandingRewardsRequest{},
+			expPass:   false,
+			expErrMsg: "empty validator address",
+		},
+		{
+			name:      "invalid address",
+			msg:       &types.QueryValidatorOutstandingRewardsRequest{ValidatorAddress: sdk.ValAddress("addr1_______________").String()},
+			expPass:   false,
+			expErrMsg: "validator does not exist",
+		},
+		{
+			name:    "valid request",
+			msg:     &types.QueryValidatorOutstandingRewardsRequest{ValidatorAddress: f.valAddr.String()},
+			expPass: true,
 		},
 	}
 
 	for _, testCase := range testCases {
-		suite.Run(fmt.Sprintf("Case %s", testCase.msg), func() {
-			testCase.malleate()
+		tc := testCase
+		t.Run(fmt.Sprintf("Case %s", tc.name), func(t *testing.T) {
+			validatorOutstandingRewards, err := queryClient.ValidatorOutstandingRewards(f.sdkCtx, tc.msg)
 
-			validatorOutstandingRewards, err := queryClient.ValidatorOutstandingRewards(gocontext.Background(), req)
-
-			if testCase.expPass {
-				suite.Require().NoError(err)
-				suite.Require().Equal(rewards, validatorOutstandingRewards.Rewards)
-				suite.Require().Equal(valCommission, validatorOutstandingRewards.Rewards.Rewards)
+			if tc.expPass {
+				assert.NilError(t, err)
+				assert.DeepEqual(t, rewards, validatorOutstandingRewards.Rewards)
+				assert.DeepEqual(t, valCommission, validatorOutstandingRewards.Rewards.Rewards)
 			} else {
-				suite.Require().Error(err)
-				suite.Require().Nil(validatorOutstandingRewards)
+				assert.ErrorContains(t, err, tc.expErrMsg)
+				assert.Assert(t, validatorOutstandingRewards == nil)
 			}
 		})
 	}
 }
 
-func (suite *KeeperTestSuite) TestGRPCValidatorCommission() {
-	ctx, queryClient, valAddrs := suite.ctx, suite.queryClient, suite.valAddrs
+func TestGRPCValidatorCommission(t *testing.T) {
+	t.Parallel()
+	f := initFixture(t)
 
-	commission := sdk.DecCoins{{Denom: "token1", Amount: math.LegacyNewDec(4)}, {Denom: "token2", Amount: math.LegacyNewDec(2)}}
-	suite.distrKeeper.SetValidatorAccumulatedCommission(ctx, valAddrs[0], types.ValidatorAccumulatedCommission{Commission: commission})
+	// set module account coins
+	initTokens := f.stakingKeeper.TokensFromConsensusPower(f.sdkCtx, int64(1000))
+	assert.NilError(t, f.bankKeeper.MintCoins(f.sdkCtx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens))))
 
-	var req *types.QueryValidatorCommissionRequest
+	// Set default staking params
+	assert.NilError(t, f.stakingKeeper.SetParams(f.sdkCtx, stakingtypes.DefaultParams()))
+
+	qr := f.app.QueryHelper()
+	queryClient := types.NewQueryClient(qr)
+
+	// send funds to val addr
+	funds := f.stakingKeeper.TokensFromConsensusPower(f.sdkCtx, int64(1000))
+	assert.NilError(t, f.bankKeeper.SendCoinsFromModuleToAccount(f.sdkCtx, types.ModuleName, sdk.AccAddress(f.valAddr), sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, funds))))
+
+	initialStake := int64(10)
+	tstaking := stakingtestutil.NewHelper(t, f.sdkCtx, f.stakingKeeper)
+	tstaking.Commission = stakingtypes.NewCommissionRates(math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDec(0))
+	tstaking.CreateValidator(f.valAddr, valConsPk0, math.NewInt(initialStake), true)
+
+	commission := sdk.DecCoins{sdk.DecCoin{Denom: "token1", Amount: math.LegacyNewDec(4)}, {Denom: "token2", Amount: math.LegacyNewDec(2)}}
+	assert.NilError(t, f.distrKeeper.ValidatorsAccumulatedCommission.Set(f.sdkCtx, f.valAddr, types.ValidatorAccumulatedCommission{Commission: commission}))
 
 	testCases := []struct {
-		msg      string
-		malleate func()
-		expPass  bool
+		name      string
+		msg       *types.QueryValidatorCommissionRequest
+		expPass   bool
+		expErrMsg string
 	}{
 		{
-			"empty request",
-			func() {
-				req = &types.QueryValidatorCommissionRequest{}
-			},
-			false,
+			name:      "empty request",
+			msg:       &types.QueryValidatorCommissionRequest{},
+			expPass:   false,
+			expErrMsg: "empty validator address",
 		},
 		{
-			"valid request",
-			func() {
-				req = &types.QueryValidatorCommissionRequest{ValidatorAddress: valAddrs[0].String()}
-			},
-			true,
+			name:      "invalid validator",
+			msg:       &types.QueryValidatorCommissionRequest{ValidatorAddress: sdk.ValAddress("addr1_______________").String()},
+			expPass:   false,
+			expErrMsg: "validator does not exist",
+		},
+		{
+			name:    "valid request",
+			msg:     &types.QueryValidatorCommissionRequest{ValidatorAddress: f.valAddr.String()},
+			expPass: true,
 		},
 	}
 
 	for _, testCase := range testCases {
-		suite.Run(fmt.Sprintf("Case %s", testCase.msg), func() {
-			testCase.malleate()
+		tc := testCase
+		t.Run(fmt.Sprintf("Case %s", tc.name), func(t *testing.T) {
+			commissionRes, err := queryClient.ValidatorCommission(f.sdkCtx, tc.msg)
 
-			commissionRes, err := queryClient.ValidatorCommission(gocontext.Background(), req)
-
-			if testCase.expPass {
-				suite.Require().NoError(err)
-				suite.Require().NotNil(commissionRes)
-				suite.Require().Equal(commissionRes.Commission.Commission, commission)
+			if tc.expPass {
+				assert.NilError(t, err)
+				assert.Assert(t, commissionRes != nil)
+				assert.DeepEqual(t, commissionRes.Commission.Commission, commission)
 			} else {
-				suite.Require().Error(err)
-				suite.Require().Nil(commissionRes)
+				assert.ErrorContains(t, err, tc.expErrMsg)
+				assert.Assert(t, commissionRes == nil)
 			}
 		})
 	}
 }
 
-func (suite *KeeperTestSuite) TestGRPCValidatorSlashes() {
-	ctx, queryClient, valAddrs := suite.ctx, suite.queryClient, suite.valAddrs
+func TestGRPCValidatorSlashes(t *testing.T) {
+	t.Parallel()
+	f := initFixture(t)
+
+	qr := f.app.QueryHelper()
+	queryClient := types.NewQueryClient(qr)
+
+	addr2 := sdk.AccAddress(PKS[1].Address())
+	valAddr2 := sdk.ValAddress(addr2)
 
 	slashes := []types.ValidatorSlashEvent{
-		types.NewValidatorSlashEvent(3, sdk.NewDecWithPrec(5, 1)),
-		types.NewValidatorSlashEvent(5, sdk.NewDecWithPrec(5, 1)),
-		types.NewValidatorSlashEvent(7, sdk.NewDecWithPrec(5, 1)),
-		types.NewValidatorSlashEvent(9, sdk.NewDecWithPrec(5, 1)),
+		types.NewValidatorSlashEvent(3, math.LegacyNewDecWithPrec(5, 1)),
+		types.NewValidatorSlashEvent(5, math.LegacyNewDecWithPrec(5, 1)),
+		types.NewValidatorSlashEvent(7, math.LegacyNewDecWithPrec(5, 1)),
+		types.NewValidatorSlashEvent(9, math.LegacyNewDecWithPrec(5, 1)),
 	}
 
 	for i, slash := range slashes {
-		suite.distrKeeper.SetValidatorSlashEvent(ctx, valAddrs[0], uint64(i+2), 0, slash)
+		err := f.distrKeeper.ValidatorSlashEvents.Set(
+			f.sdkCtx,
+			collections.Join3(f.valAddr, uint64(i+2), uint64(0)),
+			slash,
+		)
+		assert.NilError(t, err)
 	}
 
 	var (
@@ -241,52 +250,55 @@ func (suite *KeeperTestSuite) TestGRPCValidatorSlashes() {
 	)
 
 	testCases := []struct {
-		msg      string
-		malleate func()
-		expPass  bool
+		name      string
+		malleate  func()
+		expPass   bool
+		expErrMsg string
 	}{
 		{
-			"empty request",
-			func() {
+			name: "empty request",
+			malleate: func() {
 				req = &types.QueryValidatorSlashesRequest{}
 				expRes = &types.QueryValidatorSlashesResponse{}
 			},
-			false,
+			expPass:   false,
+			expErrMsg: "empty validator address",
 		},
 		{
-			"Ending height lesser than start height request",
-			func() {
+			name: "Ending height lesser than start height request",
+			malleate: func() {
 				req = &types.QueryValidatorSlashesRequest{
-					ValidatorAddress: valAddrs[1].String(),
+					ValidatorAddress: valAddr2.String(),
 					StartingHeight:   10,
 					EndingHeight:     1,
 				}
 				expRes = &types.QueryValidatorSlashesResponse{Pagination: &query.PageResponse{}}
 			},
-			false,
+			expPass:   false,
+			expErrMsg: "starting height greater than ending height",
 		},
 		{
-			"no slash event validator request",
-			func() {
+			name: "no slash event validator request",
+			malleate: func() {
 				req = &types.QueryValidatorSlashesRequest{
-					ValidatorAddress: valAddrs[1].String(),
+					ValidatorAddress: valAddr2.String(),
 					StartingHeight:   1,
 					EndingHeight:     10,
 				}
 				expRes = &types.QueryValidatorSlashesResponse{Pagination: &query.PageResponse{}}
 			},
-			true,
+			expPass: true,
 		},
 		{
-			"request slashes with offset 2 and limit 2",
-			func() {
+			name: "request slashes with offset 2 and limit 2",
+			malleate: func() {
 				pageReq := &query.PageRequest{
 					Offset: 2,
 					Limit:  2,
 				}
 
 				req = &types.QueryValidatorSlashesRequest{
-					ValidatorAddress: valAddrs[0].String(),
+					ValidatorAddress: f.valAddr.String(),
 					StartingHeight:   1,
 					EndingHeight:     10,
 					Pagination:       pageReq,
@@ -296,18 +308,18 @@ func (suite *KeeperTestSuite) TestGRPCValidatorSlashes() {
 					Slashes: slashes[2:],
 				}
 			},
-			true,
+			expPass: true,
 		},
 		{
-			"request slashes with page limit 3 and count total",
-			func() {
+			name: "request slashes with page limit 3 and count total",
+			malleate: func() {
 				pageReq := &query.PageRequest{
 					Limit:      3,
 					CountTotal: true,
 				}
 
 				req = &types.QueryValidatorSlashesRequest{
-					ValidatorAddress: valAddrs[0].String(),
+					ValidatorAddress: f.valAddr.String(),
 					StartingHeight:   1,
 					EndingHeight:     10,
 					Pagination:       pageReq,
@@ -317,18 +329,18 @@ func (suite *KeeperTestSuite) TestGRPCValidatorSlashes() {
 					Slashes: slashes[:3],
 				}
 			},
-			true,
+			expPass: true,
 		},
 		{
-			"request slashes with page limit 4 and count total",
-			func() {
+			name: "request slashes with page limit 4 and count total",
+			malleate: func() {
 				pageReq := &query.PageRequest{
 					Limit:      4,
 					CountTotal: true,
 				}
 
 				req = &types.QueryValidatorSlashesRequest{
-					ValidatorAddress: valAddrs[0].String(),
+					ValidatorAddress: f.valAddr.String(),
 					StartingHeight:   1,
 					EndingHeight:     10,
 					Pagination:       pageReq,
@@ -338,291 +350,87 @@ func (suite *KeeperTestSuite) TestGRPCValidatorSlashes() {
 					Slashes: slashes[:4],
 				}
 			},
-			true,
+			expPass: true,
 		},
 	}
 
 	for _, testCase := range testCases {
-		suite.Run(fmt.Sprintf("Case %s", testCase.msg), func() {
-			testCase.malleate()
+		tc := testCase
+		t.Run(fmt.Sprintf("Case %s", tc.name), func(t *testing.T) {
+			tc.malleate()
 
-			slashesRes, err := queryClient.ValidatorSlashes(gocontext.Background(), req)
+			slashesRes, err := queryClient.ValidatorSlashes(f.sdkCtx, req)
 
-			if testCase.expPass {
-				suite.Require().NoError(err)
-				suite.Require().Equal(expRes.GetSlashes(), slashesRes.GetSlashes())
+			if tc.expPass {
+				assert.NilError(t, err)
+				assert.DeepEqual(t, expRes.GetSlashes(), slashesRes.GetSlashes())
 			} else {
-				suite.Require().Error(err)
-				suite.Require().Nil(slashesRes)
+				assert.ErrorContains(t, err, tc.expErrMsg)
+				assert.Assert(t, slashesRes == nil)
 			}
 		})
 	}
 }
 
-func (suite *KeeperTestSuite) TestGRPCDelegationRewards() {
-	ctx, addrs, valAddrs := suite.ctx, suite.addrs, suite.valAddrs
+func TestGRPCDelegatorWithdrawAddress(t *testing.T) {
+	t.Parallel()
+	f := initFixture(t)
 
-	tstaking := teststaking.NewHelper(suite.T(), ctx, suite.stakingKeeper)
-	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), math.LegacyNewDec(0))
-	tstaking.CreateValidator(valAddrs[0], valConsPk0, sdk.NewInt(100), true)
+	assert.NilError(t, f.distrKeeper.Params.Set(f.sdkCtx, types.DefaultParams()))
 
-	staking.EndBlocker(ctx, suite.stakingKeeper)
-	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+	qr := f.app.QueryHelper()
+	queryClient := types.NewQueryClient(qr)
 
-	queryHelper := baseapp.NewQueryServerTestHelper(ctx, suite.interfaceRegistry)
-	types.RegisterQueryServer(queryHelper, keeper.NewQuerier(suite.distrKeeper))
-	queryClient := types.NewQueryClient(queryHelper)
+	addr2 := sdk.AccAddress(PKS[1].Address())
 
-	val := suite.stakingKeeper.Validator(ctx, valAddrs[0])
-
-	initial := int64(10)
-	tokens := sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: math.LegacyNewDec(initial)}}
-	suite.distrKeeper.AllocateTokensToValidator(ctx, val, tokens)
-
-	// test command delegation rewards grpc
-	var (
-		req    *types.QueryDelegationRewardsRequest
-		expRes *types.QueryDelegationRewardsResponse
-	)
+	err := f.distrKeeper.SetWithdrawAddr(f.sdkCtx, f.addr, addr2)
+	assert.Assert(t, err == nil)
 
 	testCases := []struct {
-		msg      string
-		malleate func()
-		expPass  bool
+		name      string
+		msg       *types.QueryDelegatorWithdrawAddressRequest
+		expPass   bool
+		expErrMsg string
 	}{
 		{
-			"empty request",
-			func() {
-				req = &types.QueryDelegationRewardsRequest{}
-			},
-			false,
+			name:      "empty request",
+			msg:       &types.QueryDelegatorWithdrawAddressRequest{},
+			expPass:   false,
+			expErrMsg: "empty delegator address",
 		},
 		{
-			"empty delegator request",
-			func() {
-				req = &types.QueryDelegationRewardsRequest{
-					DelegatorAddress: "",
-					ValidatorAddress: valAddrs[0].String(),
-				}
-			},
-			false,
-		},
-		{
-			"empty validator request",
-			func() {
-				req = &types.QueryDelegationRewardsRequest{
-					DelegatorAddress: addrs[1].String(),
-					ValidatorAddress: "",
-				}
-			},
-			false,
-		},
-		{
-			"request with wrong delegator and validator",
-			func() {
-				req = &types.QueryDelegationRewardsRequest{
-					DelegatorAddress: addrs[1].String(),
-					ValidatorAddress: valAddrs[1].String(),
-				}
-			},
-			false,
-		},
-		{
-			"valid request",
-			func() {
-				req = &types.QueryDelegationRewardsRequest{
-					DelegatorAddress: addrs[0].String(),
-					ValidatorAddress: valAddrs[0].String(),
-				}
-
-				expRes = &types.QueryDelegationRewardsResponse{
-					Rewards: sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: math.LegacyNewDec(initial / 2)}},
-				}
-			},
-			true,
+			name:    "valid request",
+			msg:     &types.QueryDelegatorWithdrawAddressRequest{DelegatorAddress: f.addr.String()},
+			expPass: true,
 		},
 	}
 
 	for _, testCase := range testCases {
-		suite.Run(fmt.Sprintf("Case %s", testCase.msg), func() {
-			testCase.malleate()
+		tc := testCase
+		t.Run(fmt.Sprintf("Case %s", tc.name), func(t *testing.T) {
+			withdrawAddress, err := queryClient.DelegatorWithdrawAddress(f.sdkCtx, tc.msg)
 
-			rewards, err := queryClient.DelegationRewards(gocontext.Background(), req)
-
-			if testCase.expPass {
-				suite.Require().NoError(err)
-				suite.Require().Equal(expRes, rewards)
+			if tc.expPass {
+				assert.NilError(t, err)
+				assert.Equal(t, withdrawAddress.WithdrawAddress, addr2.String())
 			} else {
-				suite.Require().Error(err)
-				suite.Require().Nil(rewards)
-			}
-		})
-	}
-
-	// test command delegator total rewards grpc
-	var (
-		totalRewardsReq    *types.QueryDelegationTotalRewardsRequest
-		expTotalRewardsRes *types.QueryDelegationTotalRewardsResponse
-	)
-
-	testCases = []struct {
-		msg      string
-		malleate func()
-		expPass  bool
-	}{
-		{
-			"empty request",
-			func() {
-				totalRewardsReq = &types.QueryDelegationTotalRewardsRequest{}
-			},
-			false,
-		},
-		{
-			"valid total delegation rewards",
-			func() {
-				totalRewardsReq = &types.QueryDelegationTotalRewardsRequest{
-					DelegatorAddress: addrs[0].String(),
-				}
-
-				expectedDelReward := types.NewDelegationDelegatorReward(valAddrs[0],
-					sdk.DecCoins{sdk.NewInt64DecCoin("stake", 5)})
-
-				expTotalRewardsRes = &types.QueryDelegationTotalRewardsResponse{
-					Rewards: []types.DelegationDelegatorReward{expectedDelReward},
-					Total:   expectedDelReward.Reward,
-				}
-			},
-			true,
-		},
-	}
-
-	for _, testCase := range testCases {
-		suite.Run(fmt.Sprintf("Case %s", testCase.msg), func() {
-			testCase.malleate()
-
-			totalRewardsRes, err := queryClient.DelegationTotalRewards(gocontext.Background(), totalRewardsReq)
-
-			if testCase.expPass {
-				suite.Require().NoError(err)
-				suite.Require().Equal(totalRewardsRes, expTotalRewardsRes)
-			} else {
-
-				suite.Require().Error(err)
-				suite.Require().Nil(totalRewardsRes)
-			}
-		})
-	}
-
-	// test command validator delegators grpc
-	var (
-		delegatorValidatorsReq    *types.QueryDelegatorValidatorsRequest
-		expDelegatorValidatorsRes *types.QueryDelegatorValidatorsResponse
-	)
-
-	testCases = []struct {
-		msg      string
-		malleate func()
-		expPass  bool
-	}{
-		{
-			"empty request",
-			func() {
-				delegatorValidatorsReq = &types.QueryDelegatorValidatorsRequest{}
-			},
-			false,
-		},
-		{
-			"request no delegations address",
-			func() {
-				delegatorValidatorsReq = &types.QueryDelegatorValidatorsRequest{
-					DelegatorAddress: addrs[1].String(),
-				}
-
-				expDelegatorValidatorsRes = &types.QueryDelegatorValidatorsResponse{}
-			},
-			true,
-		},
-		{
-			"valid request",
-			func() {
-				delegatorValidatorsReq = &types.QueryDelegatorValidatorsRequest{
-					DelegatorAddress: addrs[0].String(),
-				}
-				expDelegatorValidatorsRes = &types.QueryDelegatorValidatorsResponse{
-					Validators: []string{valAddrs[0].String()},
-				}
-			},
-			true,
-		},
-	}
-
-	for _, testCase := range testCases {
-		suite.Run(fmt.Sprintf("Case %s", testCase.msg), func() {
-			testCase.malleate()
-
-			validators, err := queryClient.DelegatorValidators(gocontext.Background(), delegatorValidatorsReq)
-
-			if testCase.expPass {
-				suite.Require().NoError(err)
-				suite.Require().Equal(expDelegatorValidatorsRes, validators)
-			} else {
-				suite.Require().Error(err)
-				suite.Require().Nil(validators)
+				assert.ErrorContains(t, err, tc.expErrMsg)
+				assert.Assert(t, withdrawAddress == nil)
 			}
 		})
 	}
 }
 
-func (suite *KeeperTestSuite) TestGRPCDelegatorWithdrawAddress() {
-	ctx, queryClient, addrs := suite.ctx, suite.queryClient, suite.addrs
+func TestGRPCCommunityPool(t *testing.T) {
+	t.Parallel()
+	f := initFixture(t)
 
-	err := suite.distrKeeper.SetWithdrawAddr(ctx, addrs[0], addrs[1])
-	suite.Require().Nil(err)
+	assert.NilError(t, f.distrKeeper.FeePool.Set(f.sdkCtx, types.FeePool{
+		CommunityPool: sdk.NewDecCoins(sdk.DecCoin{Denom: sdk.DefaultBondDenom, Amount: math.LegacyNewDec(0)}),
+	}))
 
-	var req *types.QueryDelegatorWithdrawAddressRequest
-
-	testCases := []struct {
-		msg      string
-		malleate func()
-		expPass  bool
-	}{
-		{
-			"empty request",
-			func() {
-				req = &types.QueryDelegatorWithdrawAddressRequest{}
-			},
-			false,
-		},
-		{
-			"valid request",
-			func() {
-				req = &types.QueryDelegatorWithdrawAddressRequest{DelegatorAddress: addrs[0].String()}
-			},
-			true,
-		},
-	}
-
-	for _, testCase := range testCases {
-		suite.Run(fmt.Sprintf("Case %s", testCase.msg), func() {
-			testCase.malleate()
-
-			withdrawAddress, err := queryClient.DelegatorWithdrawAddress(gocontext.Background(), req)
-
-			if testCase.expPass {
-				suite.Require().NoError(err)
-				suite.Require().Equal(withdrawAddress.WithdrawAddress, addrs[1].String())
-			} else {
-				suite.Require().Error(err)
-				suite.Require().Nil(withdrawAddress)
-			}
-		})
-	}
-}
-
-func (suite *KeeperTestSuite) TestGRPCCommunityPool() {
-	ctx, queryClient, addrs := suite.ctx, suite.queryClient, suite.addrs
-	// reset fee pool
-	suite.distrKeeper.SetFeePool(ctx, types.InitialFeePool())
+	qr := f.app.QueryHelper()
+	queryClient := types.NewQueryClient(qr)
 
 	var (
 		req     *types.QueryCommunityPoolRequest
@@ -630,51 +438,163 @@ func (suite *KeeperTestSuite) TestGRPCCommunityPool() {
 	)
 
 	testCases := []struct {
-		msg      string
+		name     string
 		malleate func()
-		expPass  bool
 	}{
 		{
-			"valid request empty community pool",
-			func() {
+			name: "valid request empty community pool",
+			malleate: func() {
 				req = &types.QueryCommunityPoolRequest{}
 				expPool = &types.QueryCommunityPoolResponse{}
 			},
-			true,
 		},
 		{
-			"valid request",
-			func() {
-				amount := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
-				suite.Require().NoError(banktestutil.FundAccount(suite.bankKeeper, ctx, addrs[0], amount))
+			name: "valid request",
+			malleate: func() {
+				amount := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100))
+				assert.NilError(t, f.bankKeeper.MintCoins(f.sdkCtx, types.ModuleName, amount))
+				assert.NilError(t, f.bankKeeper.SendCoinsFromModuleToAccount(f.sdkCtx, types.ModuleName, f.addr, amount))
 
-				err := suite.distrKeeper.FundCommunityPool(ctx, amount, addrs[0])
-				suite.Require().Nil(err)
+				err := f.distrKeeper.FundCommunityPool(f.sdkCtx, amount, f.addr)
+				assert.Assert(t, err == nil)
 				req = &types.QueryCommunityPoolRequest{}
 
 				expPool = &types.QueryCommunityPoolResponse{Pool: sdk.NewDecCoinsFromCoins(amount...)}
 			},
-			true,
 		},
 	}
 
 	for _, testCase := range testCases {
-		suite.Run(fmt.Sprintf("Case %s", testCase.msg), func() {
+		tc := testCase
+		t.Run(fmt.Sprintf("Case %s", tc.name), func(t *testing.T) {
 			testCase.malleate()
 
-			pool, err := queryClient.CommunityPool(gocontext.Background(), req)
+			pool, err := queryClient.CommunityPool(f.sdkCtx, req)
 
-			if testCase.expPass {
-				suite.Require().NoError(err)
-				suite.Require().Equal(expPool, pool)
-			} else {
-				suite.Require().Error(err)
-				suite.Require().Nil(pool)
-			}
+			assert.NilError(t, err)
+			assert.DeepEqual(t, expPool, pool)
 		})
 	}
 }
 
-func TestDistributionTestSuite(t *testing.T) {
-	suite.Run(t, new(KeeperTestSuite))
+func TestGRPCDelegationRewards(t *testing.T) {
+	t.Parallel()
+	f := initFixture(t)
+
+	assert.NilError(t, f.distrKeeper.FeePool.Set(f.sdkCtx, types.FeePool{
+		CommunityPool: sdk.NewDecCoins(sdk.DecCoin{Denom: sdk.DefaultBondDenom, Amount: math.LegacyNewDec(1000)}),
+	}))
+
+	// set module account coins
+	initTokens := f.stakingKeeper.TokensFromConsensusPower(f.sdkCtx, int64(1000))
+	assert.NilError(t, f.bankKeeper.MintCoins(f.sdkCtx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens))))
+
+	// Set default staking params
+	assert.NilError(t, f.stakingKeeper.SetParams(f.sdkCtx, stakingtypes.DefaultParams()))
+
+	qr := f.app.QueryHelper()
+	queryClient := types.NewQueryClient(qr)
+
+	addr2 := sdk.AccAddress(PKS[1].Address())
+	valAddr2 := sdk.ValAddress(addr2)
+	delAddr := sdk.AccAddress(PKS[2].Address())
+
+	// send funds to val addr
+	funds := f.stakingKeeper.TokensFromConsensusPower(f.sdkCtx, int64(1000))
+	assert.NilError(t, f.bankKeeper.SendCoinsFromModuleToAccount(f.sdkCtx, types.ModuleName, sdk.AccAddress(f.valAddr), sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, funds))))
+
+	initialStake := int64(10)
+	tstaking := stakingtestutil.NewHelper(t, f.sdkCtx, f.stakingKeeper)
+	tstaking.Commission = stakingtypes.NewCommissionRates(math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDec(0))
+	tstaking.CreateValidator(f.valAddr, valConsPk0, math.NewInt(initialStake), true)
+
+	val, found := f.stakingKeeper.GetValidator(f.sdkCtx, f.valAddr)
+	assert.Assert(t, found)
+
+	// setup delegation
+	delTokens := sdk.TokensFromConsensusPower(2, sdk.DefaultPowerReduction)
+	validator, issuedShares := val.AddTokensFromDel(delTokens)
+	delegation := stakingtypes.NewDelegation(delAddr.String(), f.valAddr.String(), issuedShares)
+	assert.NilError(t, f.stakingKeeper.SetDelegation(f.sdkCtx, delegation))
+	valBz, err := f.stakingKeeper.ValidatorAddressCodec().StringToBytes(validator.GetOperator())
+	assert.NilError(t, err)
+	assert.NilError(t, f.distrKeeper.DelegatorStartingInfo.Set(f.sdkCtx, collections.Join(sdk.ValAddress(valBz), delAddr), types.NewDelegatorStartingInfo(2, math.LegacyNewDec(initialStake), 20)))
+
+	// setup validator rewards
+	decCoins := sdk.DecCoins{sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, math.LegacyOneDec())}
+	historicalRewards := types.NewValidatorHistoricalRewards(decCoins, 2)
+	assert.NilError(t, f.distrKeeper.ValidatorHistoricalRewards.Set(f.sdkCtx, collections.Join(sdk.ValAddress(valBz), uint64(2)), historicalRewards))
+	// setup current rewards and outstanding rewards
+	currentRewards := types.NewValidatorCurrentRewards(decCoins, 3)
+	assert.NilError(t, f.distrKeeper.ValidatorCurrentRewards.Set(f.sdkCtx, f.valAddr, currentRewards))
+	assert.NilError(t, f.distrKeeper.ValidatorOutstandingRewards.Set(f.sdkCtx, f.valAddr, types.ValidatorOutstandingRewards{Rewards: decCoins}))
+
+	expRes := &types.QueryDelegationRewardsResponse{
+		Rewards: sdk.DecCoins{sdk.DecCoin{Denom: sdk.DefaultBondDenom, Amount: math.LegacyNewDec(initialStake / 10)}},
+	}
+
+	// test command delegation rewards grpc
+	testCases := []struct {
+		name      string
+		msg       *types.QueryDelegationRewardsRequest
+		expPass   bool
+		expErrMsg string
+	}{
+		{
+			name:      "empty request",
+			msg:       &types.QueryDelegationRewardsRequest{},
+			expPass:   false,
+			expErrMsg: "empty delegator address",
+		},
+		{
+			name: "empty delegator address",
+			msg: &types.QueryDelegationRewardsRequest{
+				DelegatorAddress: "",
+				ValidatorAddress: f.valAddr.String(),
+			},
+			expPass:   false,
+			expErrMsg: "empty delegator address",
+		},
+		{
+			name: "empty validator address",
+			msg: &types.QueryDelegationRewardsRequest{
+				DelegatorAddress: addr2.String(),
+				ValidatorAddress: "",
+			},
+			expPass:   false,
+			expErrMsg: "empty validator address",
+		},
+		{
+			name: "request with wrong delegator and validator",
+			msg: &types.QueryDelegationRewardsRequest{
+				DelegatorAddress: addr2.String(),
+				ValidatorAddress: valAddr2.String(),
+			},
+			expPass:   false,
+			expErrMsg: "validator does not exist",
+		},
+		{
+			name: "valid request",
+			msg: &types.QueryDelegationRewardsRequest{
+				DelegatorAddress: delAddr.String(),
+				ValidatorAddress: f.valAddr.String(),
+			},
+			expPass: true,
+		},
+	}
+
+	for _, testCase := range testCases {
+		tc := testCase
+		t.Run(fmt.Sprintf("Case %s", tc.name), func(t *testing.T) {
+			rewards, err := queryClient.DelegationRewards(f.sdkCtx, tc.msg)
+
+			if tc.expPass {
+				assert.NilError(t, err)
+				assert.DeepEqual(t, expRes, rewards)
+			} else {
+				assert.ErrorContains(t, err, tc.expErrMsg)
+				assert.Assert(t, rewards == nil)
+			}
+		})
+	}
 }

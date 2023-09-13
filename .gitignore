@@ -14,11 +14,6 @@ private
 # Build
 vendor
 build
-docs/_build
-docs/tutorial
-docs/node_modules
-docs/modules
-docs/run-node/cosmovisor.md
 dist
 tools-stamp
 buf-stamp
@@ -34,11 +29,13 @@ client/lcd/keys/*
 .testnets
 
 # Testing
+coverage.out
 coverage.txt
-profile.out
+*profile.out
 sim_log_file
 x/genutil/config
 x/genutil/data
+*.fail
 
 # Vagrant
 .vagrant/
@@ -49,12 +46,15 @@ vagrant
 # IDE
 .idea
 *.iml
+*.ipr
+*.iws
 .dir-locals.el
 .vscode
 
-# Graphviz
+# Depinject & Graphviz
 dependency-graph.png
 debug_container.dot
+debug_container.log
 
 # Latex
 *.aux

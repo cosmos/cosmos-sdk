@@ -1,9 +1,13 @@
 package types
 
 import (
+	"context"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
+	st "cosmossdk.io/api/cosmos/staking/v1beta1"
+	"cosmossdk.io/core/address"
+	"cosmossdk.io/core/comet"
+	"cosmossdk.io/math"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -14,26 +18,28 @@ type (
 	// StakingKeeper defines the staking module interface contract needed by the
 	// evidence module.
 	StakingKeeper interface {
-		ValidatorByConsAddr(sdk.Context, sdk.ConsAddress) stakingtypes.ValidatorI
-		GetParams(ctx sdk.Context) (params stakingtypes.Params)
+		ConsensusAddressCodec() address.Codec
+		ValidatorByConsAddr(context.Context, sdk.ConsAddress) (stakingtypes.ValidatorI, error)
+		GetParams(ctx context.Context) (params stakingtypes.Params, err error)
 	}
 
 	// SlashingKeeper defines the slashing module interface contract needed by the
 	// evidence module.
 	SlashingKeeper interface {
-		GetPubkey(sdk.Context, cryptotypes.Address) (cryptotypes.PubKey, error)
-		IsTombstoned(sdk.Context, sdk.ConsAddress) bool
-		HasValidatorSigningInfo(sdk.Context, sdk.ConsAddress) bool
-		Tombstone(sdk.Context, sdk.ConsAddress)
-		Slash(sdk.Context, sdk.ConsAddress, sdk.Dec, int64, int64)
-		SlashFractionDoubleSign(sdk.Context) sdk.Dec
-		Jail(sdk.Context, sdk.ConsAddress)
-		JailUntil(sdk.Context, sdk.ConsAddress, time.Time)
+		GetPubkey(context.Context, cryptotypes.Address) (cryptotypes.PubKey, error)
+		IsTombstoned(context.Context, sdk.ConsAddress) bool
+		HasValidatorSigningInfo(context.Context, sdk.ConsAddress) bool
+		Tombstone(context.Context, sdk.ConsAddress) error
+		Slash(context.Context, sdk.ConsAddress, math.LegacyDec, int64, int64) error
+		SlashWithInfractionReason(context.Context, sdk.ConsAddress, math.LegacyDec, int64, int64, st.Infraction) error
+		SlashFractionDoubleSign(context.Context) (math.LegacyDec, error)
+		Jail(context.Context, sdk.ConsAddress) error
+		JailUntil(context.Context, sdk.ConsAddress, time.Time) error
 	}
 
 	// AccountKeeper define the account keeper interface contracted needed by the evidence module
 	AccountKeeper interface {
-		SetAccount(ctx sdk.Context, acc types.AccountI)
+		SetAccount(ctx context.Context, acc sdk.AccountI)
 	}
 
 	// BankKeeper define the account keeper interface contracted needed by the evidence module
@@ -41,5 +47,9 @@ type (
 		MintCoins(ctx sdk.Context, moduleName string, amt sdk.Coins) error
 		SendCoinsFromModuleToAccount(ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
 		GetAllBalances(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
+	}
+
+	Cometinfo interface {
+		comet.BlockInfoService
 	}
 )

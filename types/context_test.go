@@ -5,10 +5,13 @@ import (
 	"testing"
 	"time"
 
+	abci "github.com/cometbft/cometbft/abci/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmttime "github.com/cometbft/cometbft/types/time"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
-	abci "github.com/tendermint/tendermint/abci/types"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+
+	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -25,13 +28,13 @@ func TestContextTestSuite(t *testing.T) {
 }
 
 func (s *contextTestSuite) TestCacheContext() {
-	key := types.NewKVStoreKey(s.T().Name() + "_TestCacheContext")
+	key := storetypes.NewKVStoreKey(s.T().Name() + "_TestCacheContext")
 	k1 := []byte("hello")
 	v1 := []byte("world")
 	k2 := []byte("key")
 	v2 := []byte("value")
 
-	ctx := testutil.DefaultContext(key, types.NewTransientStoreKey("transient_"+s.T().Name()))
+	ctx := testutil.DefaultContext(key, storetypes.NewTransientStoreKey("transient_"+s.T().Name()))
 	store := ctx.KVStore(key)
 	store.Set(k1, v1)
 	s.Require().Equal(v1, store.Get(k1))
@@ -57,8 +60,8 @@ func (s *contextTestSuite) TestCacheContext() {
 }
 
 func (s *contextTestSuite) TestLogContext() {
-	key := types.NewKVStoreKey(s.T().Name())
-	ctx := testutil.DefaultContext(key, types.NewTransientStoreKey("transient_"+s.T().Name()))
+	key := storetypes.NewKVStoreKey(s.T().Name())
+	ctx := testutil.DefaultContext(key, storetypes.NewTransientStoreKey("transient_"+s.T().Name()))
 	ctrl := gomock.NewController(s.T())
 	s.T().Cleanup(ctrl.Finish)
 
@@ -73,12 +76,6 @@ func (s *contextTestSuite) TestLogContext() {
 	ctx.Logger().Error("error")
 }
 
-type dummy int64 //nolint:unused
-
-func (d dummy) Clone() interface{} {
-	return d
-}
-
 // Testing saving/loading sdk type values to/from the context
 func (s *contextTestSuite) TestContextWithCustom() {
 	var ctx types.Context
@@ -87,20 +84,20 @@ func (s *contextTestSuite) TestContextWithCustom() {
 	ctrl := gomock.NewController(s.T())
 	s.T().Cleanup(ctrl.Finish)
 
-	header := tmproto.Header{}
 	height := int64(1)
 	chainid := "chainid"
 	ischeck := true
 	txbytes := []byte("txbytes")
 	logger := mock.NewMockLogger(ctrl)
 	voteinfos := []abci.VoteInfo{{}}
-	meter := types.NewGasMeter(10000)
-	blockGasMeter := types.NewGasMeter(20000)
+	meter := storetypes.NewGasMeter(10000)
+	blockGasMeter := storetypes.NewGasMeter(20000)
 	minGasPrices := types.DecCoins{types.NewInt64DecCoin("feetoken", 1)}
 	headerHash := []byte("headerHash")
+	zeroGasCfg := storetypes.GasConfig{}
 
-	ctx = types.NewContext(nil, header, ischeck, logger)
-	s.Require().Equal(header, ctx.BlockHeader())
+	ctx = types.NewContext(nil, ischeck, logger)
+	s.Require().Equal(cmtproto.Header{}, ctx.BlockHeader())
 
 	ctx = ctx.
 		WithBlockHeight(height).
@@ -110,7 +107,10 @@ func (s *contextTestSuite) TestContextWithCustom() {
 		WithGasMeter(meter).
 		WithMinGasPrices(minGasPrices).
 		WithBlockGasMeter(blockGasMeter).
-		WithHeaderHash(headerHash)
+		WithHeaderHash(headerHash).
+		WithKVGasConfig(zeroGasCfg).
+		WithTransientKVGasConfig(zeroGasCfg)
+
 	s.Require().Equal(height, ctx.BlockHeight())
 	s.Require().Equal(chainid, ctx.ChainID())
 	s.Require().Equal(ischeck, ctx.IsCheckTx())
@@ -120,8 +120,10 @@ func (s *contextTestSuite) TestContextWithCustom() {
 	s.Require().Equal(meter, ctx.GasMeter())
 	s.Require().Equal(minGasPrices, ctx.MinGasPrices())
 	s.Require().Equal(blockGasMeter, ctx.BlockGasMeter())
-	s.Require().Equal(headerHash, ctx.HeaderHash().Bytes())
+	s.Require().Equal(headerHash, ctx.HeaderHash())
 	s.Require().False(ctx.WithIsCheckTx(false).IsCheckTx())
+	s.Require().Equal(zeroGasCfg, ctx.KVGasConfig())
+	s.Require().Equal(zeroGasCfg, ctx.TransientKVGasConfig())
 
 	// test IsReCheckTx
 	s.Require().False(ctx.IsReCheckTx())
@@ -131,12 +133,12 @@ func (s *contextTestSuite) TestContextWithCustom() {
 	s.Require().True(ctx.IsReCheckTx())
 
 	// test consensus param
-	s.Require().Nil(ctx.ConsensusParams())
-	cp := &tmproto.ConsensusParams{}
+	s.Require().Equal(cmtproto.ConsensusParams{}, ctx.ConsensusParams())
+	cp := cmtproto.ConsensusParams{}
 	s.Require().Equal(cp, ctx.WithConsensusParams(cp).ConsensusParams())
 
 	// test inner context
-	newContext := context.WithValue(ctx.Context(), "key", "value") //nolint:golint,staticcheck
+	newContext := context.WithValue(ctx.Context(), struct{}{}, "value")
 	s.Require().NotEqual(ctx.Context(), ctx.WithContext(newContext).Context())
 }
 
@@ -149,7 +151,7 @@ func (s *contextTestSuite) TestContextHeader() {
 	addr := secp256k1.GenPrivKey().PubKey().Address()
 	proposer := types.ConsAddress(addr)
 
-	ctx = types.NewContext(nil, tmproto.Header{}, false, nil)
+	ctx = types.NewContext(nil, false, nil)
 
 	ctx = ctx.
 		WithBlockHeight(height).
@@ -161,37 +163,45 @@ func (s *contextTestSuite) TestContextHeader() {
 	s.Require().Equal(proposer.Bytes(), ctx.BlockHeader().ProposerAddress)
 }
 
+func (s *contextTestSuite) TestWithBlockTime() {
+	now := time.Now()
+	ctx := types.NewContext(nil, false, nil)
+	ctx = ctx.WithBlockTime(now)
+	cmttime2 := cmttime.Canonical(now)
+	s.Require().Equal(ctx.BlockTime(), cmttime2)
+}
+
 func (s *contextTestSuite) TestContextHeaderClone() {
 	cases := map[string]struct {
-		h tmproto.Header
+		h cmtproto.Header
 	}{
 		"empty": {
-			h: tmproto.Header{},
+			h: cmtproto.Header{},
 		},
 		"height": {
-			h: tmproto.Header{
+			h: cmtproto.Header{
 				Height: 77,
 			},
 		},
 		"time": {
-			h: tmproto.Header{
+			h: cmtproto.Header{
 				Time: time.Unix(12345677, 12345),
 			},
 		},
 		"zero time": {
-			h: tmproto.Header{
+			h: cmtproto.Header{
 				Time: time.Unix(0, 0),
 			},
 		},
 		"many items": {
-			h: tmproto.Header{
+			h: cmtproto.Header{
 				Height:  823,
 				Time:    time.Unix(9999999999, 0),
 				ChainID: "silly-demo",
 			},
 		},
 		"many items with hash": {
-			h: tmproto.Header{
+			h: cmtproto.Header{
 				Height:        823,
 				Time:          time.Unix(9999999999, 0),
 				ChainID:       "silly-demo",
@@ -204,7 +214,7 @@ func (s *contextTestSuite) TestContextHeaderClone() {
 	for name, tc := range cases {
 		tc := tc
 		s.T().Run(name, func(t *testing.T) {
-			ctx := types.NewContext(nil, tc.h, false, nil)
+			ctx := types.NewContext(nil, false, nil).WithBlockHeader(tc.h)
 			s.Require().Equal(tc.h.Height, ctx.BlockHeight())
 			s.Require().Equal(tc.h.Time.UTC(), ctx.BlockTime())
 
@@ -218,7 +228,7 @@ func (s *contextTestSuite) TestContextHeaderClone() {
 }
 
 func (s *contextTestSuite) TestUnwrapSDKContext() {
-	sdkCtx := types.NewContext(nil, tmproto.Header{}, false, nil)
+	sdkCtx := types.NewContext(nil, false, nil)
 	ctx := types.WrapSDKContext(sdkCtx)
 	sdkCtx2 := types.UnwrapSDKContext(ctx)
 	s.Require().Equal(sdkCtx, sdkCtx2)
@@ -227,7 +237,7 @@ func (s *contextTestSuite) TestUnwrapSDKContext() {
 	s.Require().Panics(func() { types.UnwrapSDKContext(ctx) })
 
 	// test unwrapping when we've used context.WithValue
-	ctx = context.WithValue(sdkCtx, "foo", "bar")
+	ctx = context.WithValue(sdkCtx, struct{}{}, "bar")
 	sdkCtx2 = types.UnwrapSDKContext(ctx)
 	s.Require().Equal(sdkCtx, sdkCtx2)
 }

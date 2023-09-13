@@ -16,6 +16,22 @@ pull_request_rules:
         commit_message_template: |
           {{ title }} (#{{ number }})
           {{ body }}
+  - name: backport patches to v0.50.x branch
+    conditions:
+      - base=main
+      - label=backport/v0.50.x
+    actions:
+      backport:
+        branches:
+          - release/v0.50.x
+  - name: backport patches to v0.47.x branch
+    conditions:
+      - base=main
+      - label=backport/v0.47.x
+    actions:
+      backport:
+        branches:
+          - release/v0.47.x
   - name: backport patches to v0.46.x branch
     conditions:
       - base=main
@@ -32,19 +48,3 @@ pull_request_rules:
       backport:
         branches:
           - release/v0.45.x
-  - name: backport patches to v0.44.x branch
-    conditions:
-      - base=main
-      - label=backport/0.44.x
-    actions:
-      backport:
-        branches:
-          - release/v0.44.x
-  - name: backport patches to v0.42.x branch
-    conditions:
-      - base=main
-      - label=backport/0.42.x (Stargate)
-    actions:
-      backport:
-        branches:
-          - release/v0.42.x

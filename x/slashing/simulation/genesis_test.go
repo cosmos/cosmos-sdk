@@ -8,23 +8,20 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/depinject"
 	sdkmath "cosmossdk.io/math"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/slashing/simulation"
-	"github.com/cosmos/cosmos-sdk/x/slashing/testutil"
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
 
 // TestRandomizedGenState tests the normal scenario of applying RandomizedGenState.
 // Abonormal scenarios are not tested here.
 func TestRandomizedGenState(t *testing.T) {
-	var interfaceRegistry codectypes.InterfaceRegistry
-	depinject.Inject(testutil.AppConfig, &interfaceRegistry)
+	interfaceRegistry := codectypes.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(interfaceRegistry)
 
 	s := rand.NewSource(1)
@@ -45,9 +42,9 @@ func TestRandomizedGenState(t *testing.T) {
 	var slashingGenesis types.GenesisState
 	simState.Cdc.MustUnmarshalJSON(simState.GenState[types.ModuleName], &slashingGenesis)
 
-	dec1, _ := sdk.NewDecFromStr("0.600000000000000000")
-	dec2, _ := sdk.NewDecFromStr("0.022222222222222222")
-	dec3, _ := sdk.NewDecFromStr("0.008928571428571429")
+	dec1, _ := sdkmath.LegacyNewDecFromStr("0.600000000000000000")
+	dec2, _ := sdkmath.LegacyNewDecFromStr("0.022222222222222222")
+	dec3, _ := sdkmath.LegacyNewDecFromStr("0.008928571428571429")
 
 	require.Equal(t, dec1, slashingGenesis.Params.MinSignedPerWindow)
 	require.Equal(t, dec2, slashingGenesis.Params.SlashFractionDoubleSign)
@@ -60,8 +57,7 @@ func TestRandomizedGenState(t *testing.T) {
 
 // TestRandomizedGenState tests abnormal scenarios of applying RandomizedGenState.
 func TestRandomizedGenState1(t *testing.T) {
-	var interfaceRegistry codectypes.InterfaceRegistry
-	depinject.Inject(testutil.AppConfig, &interfaceRegistry)
+	interfaceRegistry := codectypes.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(interfaceRegistry)
 
 	s := rand.NewSource(1)
@@ -83,6 +79,8 @@ func TestRandomizedGenState1(t *testing.T) {
 	}
 
 	for _, tt := range tests {
+		tt := tt
+
 		require.Panicsf(t, func() { simulation.RandomizedGenState(&tt.simState) }, tt.panicMsg)
 	}
 }

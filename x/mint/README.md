@@ -1,9 +1,6 @@
-<!--
-order: 0
-title: Mint Overview
-parent:
-  title: "mint"
--->
+---
+sidebar_position: 1
+---
 
 # `x/mint`
 
@@ -20,13 +17,13 @@ parent:
 * [Events](#events)
     * [BeginBlocker](#beginblocker)
 * [Client](#client)
-        * [CLI](#cli)
-        * [gRPC](#grpc)
-        * [REST](#rest)
+    * [CLI](#cli)
+    * [gRPC](#grpc)
+    * [REST](#rest)
 
-# Concepts
+## Concepts
 
-## The Minting Mechanism
+### The Minting Mechanism
 
 The minting mechanism was designed to:
 
@@ -49,35 +46,35 @@ It can be broken down in the following way:
 * If the inflation rate is above the goal %-bonded the inflation rate will
    decrease until a minimum value is reached
 
-<!-- order: 1 -->
 
-# State
+## State
 
-## Minter
+### Minter
 
 The minter is a space for holding current inflation information.
 
 * Minter: `0x00 -> ProtocolBuffer(minter)`
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/mint/v1beta1/mint.proto#L9-L23
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/mint/v1beta1/mint.proto#L10-L24
+```
 
-## Params
+### Params
 
 The mint module stores it's params in state with the prefix of `0x01`,
 it can be updated with governance or the address with authority.
 
 * Params: `mint/params -> legacy_amino(params)`
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/mint/v1beta1/mint.proto#L25-L57
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/mint/v1beta1/mint.proto#L26-L59
+```
 
-<!-- order: 2 -->
+## Begin-Block
 
-# Begin-Block
+Minting parameters are recalculated and inflation paid at the beginning of each block.
 
-Minting parameters are recalculated and inflation
-paid at the beginning of each block.
-
-## Inflation rate calculation
+### Inflation rate calculation
 
 Inflation rate is calculated using an "inflation calculation function" that's
 passed to the `NewAppModule` function. If no function is passed, then the SDK's
@@ -86,10 +83,10 @@ inflation calculation logic is needed, this can be achieved by defining and
 passing a function that matches `InflationCalculationFn`'s signature.
 
 ```go
-type InflationCalculationFn func(ctx sdk.Context, minter Minter, params Params, bondedRatio sdk.Dec) sdk.Dec
+type InflationCalculationFn func(ctx sdk.Context, minter Minter, params Params, bondedRatio math.LegacyDec) math.LegacyDec
 ```
 
-### NextInflationRate
+#### NextInflationRate
 
 The target annual inflation rate is recalculated each block.
 The inflation is also subject to a rate change (positive or negative)
@@ -98,11 +95,11 @@ possible is defined to be 13% per year, however the annual inflation is capped
 as between 7% and 20%.
 
 ```go
-NextInflationRate(params Params, bondedRatio sdk.Dec) (inflation sdk.Dec) {
+NextInflationRate(params Params, bondedRatio math.LegacyDec) (inflation math.LegacyDec) {
 	inflationRateChangePerYear = (1 - bondedRatio/params.GoalBonded) * params.InflationRateChange
 	inflationRateChange = inflationRateChangePerYear/blocksPerYr
 
-	// increase the new annual inflation for this next cycle
+	// increase the new annual inflation for this next block
 	inflation += inflationRateChange
 	if inflation > params.InflationMax {
 		inflation = params.InflationMax
@@ -115,17 +112,17 @@ NextInflationRate(params Params, bondedRatio sdk.Dec) (inflation sdk.Dec) {
 }
 ```
 
-## NextAnnualProvisions
+### NextAnnualProvisions
 
 Calculate the annual provisions based on current total supply and inflation
 rate. This parameter is calculated once per block.
 
 ```go
-NextAnnualProvisions(params Params, totalSupply sdk.Dec) (provisions sdk.Dec) {
+NextAnnualProvisions(params Params, totalSupply math.LegacyDec) (provisions math.LegacyDec) {
 	return Inflation * totalSupply
 ```
 
-## BlockProvision
+### BlockProvision
 
 Calculate the provisions generated for each block based on current annual provisions. The provisions are then minted by the `mint` module's `ModuleMinterAccount` and then transferred to the `auth`'s `FeeCollector` `ModuleAccount`.
 
@@ -135,9 +132,8 @@ BlockProvision(params Params) sdk.Coin {
 	return sdk.NewCoin(params.MintDenom, provisionAmt.Truncate())
 ```
 
-<!-- order: 3 -->
 
-# Parameters
+## Parameters
 
 The minting module contains the following parameters:
 
@@ -150,13 +146,12 @@ The minting module contains the following parameters:
 | GoalBonded          | string (dec)    | "0.670000000000000000" |
 | BlocksPerYear       | string (uint64) | "6311520"              |
 
-<!-- order: 4 -->
 
-# Events
+## Events
 
 The minting module emits the following events:
 
-## BeginBlocker
+### BeginBlocker
 
 | Type | Attribute Key     | Attribute Value    |
 |------|-------------------|--------------------|
@@ -165,67 +160,66 @@ The minting module emits the following events:
 | mint | annual_provisions | {annualProvisions} |
 | mint | amount            | {amount}           |
 
-<!-- order: 5 -->
 
-# Client
+## Client
 
-## CLI
+### CLI
 
 A user can query and interact with the `mint` module using the CLI.
 
-### Query
+#### Query
 
 The `query` commands allow users to query `mint` state.
 
-```sh
+```shell
 simd query mint --help
 ```
 
-#### annual-provisions
+##### annual-provisions
 
 The `annual-provisions` command allow users to query the current minting annual provisions value
 
-```sh
+```shell
 simd query mint annual-provisions [flags]
 ```
 
 Example:
 
-```sh
+```shell
 simd query mint annual-provisions
 ```
 
 Example Output:
 
-```sh
+```shell
 22268504368893.612100895088410693
 ```
 
-#### inflation
+##### inflation
 
 The `inflation` command allow users to query the current minting inflation value
 
-```sh
+```shell
 simd query mint inflation [flags]
 ```
 
 Example:
 
-```sh
+```shell
 simd query mint inflation
 ```
 
 Example Output:
 
-```sh
+```shell
 0.199200302563256955
 ```
 
-#### params
+##### params
 
 The `params` command allow users to query the current minting parameters
 
-```sh
+```shell
 simd query mint params [flags]
 ```
 
@@ -240,21 +234,21 @@ inflation_rate_change: "0.130000000000000000"
 mint_denom: stake
 ```
 
-## gRPC
+### gRPC
 
 A user can query the `mint` module using gRPC endpoints.
 
-### AnnualProvisions
+#### AnnualProvisions
 
 The `AnnualProvisions` endpoint allow users to query the current minting annual provisions value
 
-```sh
+```shell
 /cosmos.mint.v1beta1.Query/AnnualProvisions
 ```
 
 Example:
 
-```sh
+```shell
 grpcurl -plaintext localhost:9090 cosmos.mint.v1beta1.Query/AnnualProvisions
 ```
 
@@ -266,17 +260,17 @@ Example Output:
 }
 ```
 
-### Inflation
+#### Inflation
 
 The `Inflation` endpoint allow users to query the current minting inflation value
 
-```sh
+```shell
 /cosmos.mint.v1beta1.Query/Inflation
 ```
 
 Example:
 
-```sh
+```shell
 grpcurl -plaintext localhost:9090 cosmos.mint.v1beta1.Query/Inflation
 ```
 
@@ -288,17 +282,17 @@ Example Output:
 }
 ```
 
-### Params
+#### Params
 
 The `Params` endpoint allow users to query the current minting parameters
 
-```sh
+```shell
 /cosmos.mint.v1beta1.Query/Params
 ```
 
 Example:
 
-```sh
+```shell
 grpcurl -plaintext localhost:9090 cosmos.mint.v1beta1.Query/Params
 ```
 
@@ -317,19 +311,19 @@ Example Output:
 }
 ```
 
-## REST
+### REST
 
 A user can query the `mint` module using REST endpoints.
 
-### annual-provisions
+#### annual-provisions
 
-```sh
+```shell
 /cosmos/mint/v1beta1/annual_provisions
 ```
 
 Example:
 
-```sh
+```shell
 curl "localhost:1317/cosmos/mint/v1beta1/annual_provisions"
 ```
 
@@ -341,15 +335,15 @@ Example Output:
 }
 ```
 
-### inflation
+#### inflation
 
-```sh
+```shell
 /cosmos/mint/v1beta1/inflation
 ```
 
 Example:
 
-```sh
+```shell
 curl "localhost:1317/cosmos/mint/v1beta1/inflation"
 ```
 
@@ -361,15 +355,15 @@ Example Output:
 }
 ```
 
-### params
+#### params
 
-```sh
+```shell
 /cosmos/mint/v1beta1/params
 ```
 
 Example:
 
-```sh
+```shell
 curl "localhost:1317/cosmos/mint/v1beta1/params"
 ```
 

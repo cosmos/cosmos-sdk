@@ -6,31 +6,23 @@ import (
 	"io"
 	"testing"
 
+	rpcclientmock "github.com/cometbft/cometbft/rpc/client/mock"
 	"github.com/stretchr/testify/require"
-	rpcclientmock "github.com/tendermint/tendermint/rpc/client/mock"
-	coretypes "github.com/tendermint/tendermint/rpc/core/types"
-	tmtypes "github.com/tendermint/tendermint/types"
+
+	sdkmath "cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
 	"github.com/cosmos/cosmos-sdk/testutil"
+	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	testutilmod "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	"github.com/cosmos/cosmos-sdk/x/crisis/client/cli"
 )
-
-var _ client.TendermintRPC = (*mockTendermintRPC)(nil)
-
-type mockTendermintRPC struct {
-	rpcclientmock.Client
-}
-
-func (mockTendermintRPC) BroadcastTxSync(context.Context, tmtypes.Tx) (*coretypes.ResultBroadcastTx, error) {
-	return &coretypes.ResultBroadcastTx{}, nil
-}
 
 func TestNewMsgVerifyInvariantTxCmd(t *testing.T) {
 	encCfg := testutilmod.MakeTestEncodingConfig(crisis.AppModuleBasic{})
@@ -39,18 +31,19 @@ func TestNewMsgVerifyInvariantTxCmd(t *testing.T) {
 		WithKeyring(kr).
 		WithTxConfig(encCfg.TxConfig).
 		WithCodec(encCfg.Codec).
-		WithClient(mockTendermintRPC{Client: rpcclientmock.Client{}}).
+		WithClient(clitestutil.MockCometRPC{Client: rpcclientmock.Client{}}).
 		WithAccountRetriever(client.MockAccountRetriever{}).
 		WithOutput(io.Discard).
-		WithChainID("test-chain")
+		WithChainID("test-chain").
+		WithAddressCodec(addresscodec.NewBech32Codec("cosmos")).
+		WithValidatorAddressCodec(addresscodec.NewBech32Codec("cosmosvaloper")).
+		WithConsensusAddressCodec(addresscodec.NewBech32Codec("cosmosvalcons"))
 
 	accounts := testutil.CreateKeyringAccounts(t, kr, 1)
 	testCases := []struct {
 		name         string
 		args         []string
-		expectErr    bool
-		errString    string
-		expectedCode uint32
+		expectErrMsg string
 	}{
 		{
 			"missing module",
@@ -59,9 +52,9 @@ func TestNewMsgVerifyInvariantTxCmd(t *testing.T) {
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, accounts[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))).String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.NewInt(10))).String()),
 			},
-			true, "invalid module name", 0,
+			"invalid module name",
 		},
 		{
 			"missing invariant route",
@@ -70,9 +63,9 @@ func TestNewMsgVerifyInvariantTxCmd(t *testing.T) {
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, accounts[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))).String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.NewInt(10))).String()),
 			},
-			true, "invalid invariant route", 0,
+			"invalid invariant route",
 		},
 		{
 			"valid transaction",
@@ -81,9 +74,9 @@ func TestNewMsgVerifyInvariantTxCmd(t *testing.T) {
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, accounts[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))).String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.NewInt(10))).String()),
 			},
-			false, "", 0,
+			"",
 		},
 	}
 
@@ -91,22 +84,19 @@ func TestNewMsgVerifyInvariantTxCmd(t *testing.T) {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			ctx := svrcmd.CreateExecuteContext(context.Background())
-
 			cmd := cli.NewMsgVerifyInvariantTxCmd()
-			cmd.SetOut(io.Discard)
-			require.NotNil(t, cmd)
-
 			cmd.SetContext(ctx)
 			cmd.SetArgs(tc.args)
-
 			require.NoError(t, client.SetCmdClientContextHandler(baseCtx, cmd))
 
-			err := cmd.Execute()
-			if tc.expectErr {
+			out, err := clitestutil.ExecTestCLICmd(baseCtx, cmd, tc.args)
+			if tc.expectErrMsg != "" {
 				require.Error(t, err)
-				require.Contains(t, err.Error(), tc.errString)
+				require.Contains(t, out.String(), tc.expectErrMsg)
 			} else {
 				require.NoError(t, err)
+				msg := &sdk.TxResponse{}
+				require.NoError(t, baseCtx.Codec.UnmarshalJSON(out.Bytes(), msg), out.String())
 			}
 		})
 	}

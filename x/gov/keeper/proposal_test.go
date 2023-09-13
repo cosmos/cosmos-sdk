@@ -2,12 +2,12 @@ package keeper_test
 
 import (
 	"errors"
-	"fmt"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/require"
+
+	"cosmossdk.io/collections"
 
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -16,37 +16,127 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
+// TODO(tip): remove this
 func (suite *KeeperTestSuite) TestGetSetProposal() {
-	tp := TestProposal
-	proposal, err := suite.govKeeper.SubmitProposal(suite.ctx, tp, "")
-	suite.Require().NoError(err)
-	proposalID := proposal.Id
-	suite.govKeeper.SetProposal(suite.ctx, proposal)
+	testCases := map[string]struct {
+		expedited bool
+	}{
+		"regular proposal": {},
+		"expedited proposal": {
+			expedited: true,
+		},
+	}
 
-	gotProposal, ok := suite.govKeeper.GetProposal(suite.ctx, proposalID)
-	suite.Require().True(ok)
-	suite.Require().Equal(proposal, gotProposal)
+	for _, tc := range testCases {
+		tp := TestProposal
+		proposal, err := suite.govKeeper.SubmitProposal(suite.ctx, tp, "", "test", "summary", suite.addrs[0], tc.expedited)
+		suite.Require().NoError(err)
+		proposalID := proposal.Id
+		err = suite.govKeeper.SetProposal(suite.ctx, proposal)
+		suite.Require().NoError(err)
+
+		gotProposal, err := suite.govKeeper.Proposals.Get(suite.ctx, proposalID)
+		suite.Require().Nil(err)
+		suite.Require().Equal(proposal, gotProposal)
+	}
+}
+
+// TODO(tip): remove this
+func (suite *KeeperTestSuite) TestDeleteProposal() {
+	testCases := map[string]struct {
+		expedited bool
+	}{
+		"regular proposal": {},
+		"expedited proposal": {
+			expedited: true,
+		},
+	}
+
+	for _, tc := range testCases {
+		// delete non-existing proposal
+		suite.Require().ErrorIs(suite.govKeeper.DeleteProposal(suite.ctx, 10), collections.ErrNotFound)
+
+		tp := TestProposal
+		proposal, err := suite.govKeeper.SubmitProposal(suite.ctx, tp, "", "test", "summary", suite.addrs[0], tc.expedited)
+		suite.Require().NoError(err)
+		proposalID := proposal.Id
+		err = suite.govKeeper.SetProposal(suite.ctx, proposal)
+		suite.Require().NoError(err)
+
+		suite.Require().NotPanics(func() {
+			err := suite.govKeeper.DeleteProposal(suite.ctx, proposalID)
+			suite.Require().NoError(err)
+		}, "")
+	}
 }
 
 func (suite *KeeperTestSuite) TestActivateVotingPeriod() {
-	tp := TestProposal
-	proposal, err := suite.govKeeper.SubmitProposal(suite.ctx, tp, "")
-	suite.Require().NoError(err)
+	testCases := []struct {
+		name      string
+		expedited bool
+	}{
+		{name: "regular proposal"},
+		{name: "expedited proposal", expedited: true},
+	}
 
-	suite.Require().Nil(proposal.VotingStartTime)
+	for _, tc := range testCases {
+		tp := TestProposal
+		proposal, err := suite.govKeeper.SubmitProposal(suite.ctx, tp, "", "test", "summary", suite.addrs[0], tc.expedited)
+		suite.Require().NoError(err)
 
-	suite.govKeeper.ActivateVotingPeriod(suite.ctx, proposal)
+		suite.Require().Nil(proposal.VotingStartTime)
 
-	proposal, ok := suite.govKeeper.GetProposal(suite.ctx, proposal.Id)
-	suite.Require().True(ok)
-	suite.Require().True(proposal.VotingStartTime.Equal(suite.ctx.BlockHeader().Time))
+		err = suite.govKeeper.ActivateVotingPeriod(suite.ctx, proposal)
+		suite.Require().NoError(err)
 
-	activeIterator := suite.govKeeper.ActiveProposalQueueIterator(suite.ctx, *proposal.VotingEndTime)
-	suite.Require().True(activeIterator.Valid())
+		proposal, err = suite.govKeeper.Proposals.Get(suite.ctx, proposal.Id)
+		suite.Require().Nil(err)
+		suite.Require().True(proposal.VotingStartTime.Equal(suite.ctx.BlockHeader().Time))
 
-	proposalID := types.GetProposalIDFromBytes(activeIterator.Value())
-	suite.Require().Equal(proposalID, proposal.Id)
-	activeIterator.Close()
+		has, err := suite.govKeeper.ActiveProposalsQueue.Has(suite.ctx, collections.Join(*proposal.VotingEndTime, proposal.Id))
+		suite.Require().NoError(err)
+		suite.Require().True(has)
+		suite.Require().NoError(suite.govKeeper.DeleteProposal(suite.ctx, proposal.Id))
+	}
+}
+
+func (suite *KeeperTestSuite) TestDeleteProposalInVotingPeriod() {
+	testCases := []struct {
+		name      string
+		expedited bool
+	}{
+		{name: "regular proposal"},
+		{name: "expedited proposal", expedited: true},
+	}
+
+	for _, tc := range testCases {
+		suite.reset()
+		tp := TestProposal
+		proposal, err := suite.govKeeper.SubmitProposal(suite.ctx, tp, "", "test", "summary", suite.addrs[0], tc.expedited)
+		suite.Require().NoError(err)
+		suite.Require().Nil(proposal.VotingStartTime)
+
+		suite.Require().NoError(suite.govKeeper.ActivateVotingPeriod(suite.ctx, proposal))
+
+		proposal, err = suite.govKeeper.Proposals.Get(suite.ctx, proposal.Id)
+		suite.Require().Nil(err)
+		suite.Require().True(proposal.VotingStartTime.Equal(suite.ctx.BlockHeader().Time))
+
+		has, err := suite.govKeeper.ActiveProposalsQueue.Has(suite.ctx, collections.Join(*proposal.VotingEndTime, proposal.Id))
+		suite.Require().NoError(err)
+		suite.Require().True(has)
+
+		// add vote
+		voteOptions := []*v1.WeightedVoteOption{{Option: v1.OptionYes, Weight: "1.0"}}
+		err = suite.govKeeper.AddVote(suite.ctx, proposal.Id, suite.addrs[0], voteOptions, "")
+		suite.Require().NoError(err)
+
+		suite.Require().NoError(suite.govKeeper.DeleteProposal(suite.ctx, proposal.Id))
+
+		// add vote but proposal is deleted along with its VotingPeriodProposalKey
+		err = suite.govKeeper.AddVote(suite.ctx, proposal.Id, suite.addrs[0], voteOptions, "")
+		suite.Require().ErrorContains(err, ": inactive proposal")
+	}
 }
 
 type invalidProposalRoute struct{ v1beta1.TextProposal }
@@ -62,85 +152,151 @@ func (suite *KeeperTestSuite) TestSubmitProposal() {
 		content     v1beta1.Content
 		authority   string
 		metadata    string
+		expedited   bool
 		expectedErr error
 	}{
-		{&tp, govAcct, "", nil},
+		{&tp, govAcct, "", false, nil},
+		{&tp, govAcct, "", true, nil},
 		// Keeper does not check the validity of title and description, no error
-		{&v1beta1.TextProposal{Title: "", Description: "description"}, govAcct, "", nil},
-		{&v1beta1.TextProposal{Title: strings.Repeat("1234567890", 100), Description: "description"}, govAcct, "", nil},
-		{&v1beta1.TextProposal{Title: "title", Description: ""}, govAcct, "", nil},
-		{&v1beta1.TextProposal{Title: "title", Description: strings.Repeat("1234567890", 1000)}, govAcct, "", nil},
+		{&v1beta1.TextProposal{Title: "", Description: "description"}, govAcct, "", false, nil},
+		{&v1beta1.TextProposal{Title: strings.Repeat("1234567890", 100), Description: "description"}, govAcct, "", false, nil},
+		{&v1beta1.TextProposal{Title: "title", Description: ""}, govAcct, "", false, nil},
+		{&v1beta1.TextProposal{Title: "title", Description: strings.Repeat("1234567890", 1000)}, govAcct, "", true, nil},
 		// error when metadata is too long (>10000)
-		{&tp, govAcct, strings.Repeat("a", 100001), types.ErrMetadataTooLong},
+		{&tp, govAcct, strings.Repeat("a", 100001), true, types.ErrMetadataTooLong},
 		// error when signer is not gov acct
-		{&tp, randomAddr.String(), "", types.ErrInvalidSigner},
+		{&tp, randomAddr.String(), "", false, types.ErrInvalidSigner},
 		// error only when invalid route
-		{&invalidProposalRoute{}, govAcct, "", types.ErrNoProposalHandlerExists},
+		{&invalidProposalRoute{}, govAcct, "", false, types.ErrNoProposalHandlerExists},
 	}
 
 	for i, tc := range testCases {
 		prop, err := v1.NewLegacyContent(tc.content, tc.authority)
 		suite.Require().NoError(err)
-		_, err = suite.govKeeper.SubmitProposal(suite.ctx, []sdk.Msg{prop}, tc.metadata)
+		_, err = suite.govKeeper.SubmitProposal(suite.ctx, []sdk.Msg{prop}, tc.metadata, "title", "", suite.addrs[0], tc.expedited)
 		suite.Require().True(errors.Is(tc.expectedErr, err), "tc #%d; got: %v, expected: %v", i, err, tc.expectedErr)
 	}
 }
 
-func (suite *KeeperTestSuite) TestGetProposalsFiltered() {
-	proposalID := uint64(1)
-	status := []v1.ProposalStatus{v1.StatusDepositPeriod, v1.StatusVotingPeriod}
+func (suite *KeeperTestSuite) TestCancelProposal() {
+	govAcct := suite.govKeeper.GetGovernanceAccount(suite.ctx).GetAddress().String()
+	tp := v1beta1.TextProposal{Title: "title", Description: "description"}
+	prop, err := v1.NewLegacyContent(&tp, govAcct)
+	suite.Require().NoError(err)
+	proposal, err := suite.govKeeper.SubmitProposal(suite.ctx, []sdk.Msg{prop}, "", "title", "summary", suite.addrs[0], false)
+	suite.Require().NoError(err)
+	proposalID := proposal.Id
 
-	addr1 := sdk.AccAddress("foo_________________")
+	proposal2, err := suite.govKeeper.SubmitProposal(suite.ctx, []sdk.Msg{prop}, "", "title", "summary", suite.addrs[1], true)
+	suite.Require().NoError(err)
+	proposal2ID := proposal2.Id
 
-	for _, s := range status {
-		for i := 0; i < 50; i++ {
-			p, err := v1.NewProposal(TestProposal, proposalID, "", time.Now(), time.Now())
-			suite.Require().NoError(err)
+	// proposal3 is only used to check the votes for proposals which doesn't go through `CancelProposal` are still present in state
+	proposal3, err := suite.govKeeper.SubmitProposal(suite.ctx, []sdk.Msg{prop}, "", "title", "summary", suite.addrs[2], false)
+	suite.Require().NoError(err)
+	proposal3ID := proposal3.Id
 
-			p.Status = s
+	// add votes for proposal 3
+	suite.Require().NoError(suite.govKeeper.ActivateVotingPeriod(suite.ctx, proposal3))
 
-			if i%2 == 0 {
-				d := v1.NewDeposit(proposalID, addr1, nil)
-				v := v1.NewVote(proposalID, addr1, v1.NewNonSplitVoteOption(v1.OptionYes), "")
-				suite.govKeeper.SetDeposit(suite.ctx, d)
-				suite.govKeeper.SetVote(suite.ctx, v)
-			}
-
-			suite.govKeeper.SetProposal(suite.ctx, p)
-			proposalID++
-		}
-	}
+	proposal3, err = suite.govKeeper.Proposals.Get(suite.ctx, proposal3ID)
+	suite.Require().Nil(err)
+	suite.Require().True(proposal3.VotingStartTime.Equal(suite.ctx.BlockHeader().Time))
+	// add vote
+	voteOptions := []*v1.WeightedVoteOption{{Option: v1.OptionYes, Weight: "1.0"}}
+	err = suite.govKeeper.AddVote(suite.ctx, proposal3ID, suite.addrs[0], voteOptions, "")
+	suite.Require().NoError(err)
 
 	testCases := []struct {
-		params             v1.QueryProposalsParams
-		expectedNumResults int
+		name        string
+		malleate    func() (proposalID uint64, proposer string)
+		proposalID  uint64
+		proposer    string
+		expectedErr bool
 	}{
-		{v1.NewQueryProposalsParams(1, 50, v1.StatusNil, nil, nil), 50},
-		{v1.NewQueryProposalsParams(1, 50, v1.StatusDepositPeriod, nil, nil), 50},
-		{v1.NewQueryProposalsParams(1, 50, v1.StatusVotingPeriod, nil, nil), 50},
-		{v1.NewQueryProposalsParams(1, 25, v1.StatusNil, nil, nil), 25},
-		{v1.NewQueryProposalsParams(2, 25, v1.StatusNil, nil, nil), 25},
-		{v1.NewQueryProposalsParams(1, 50, v1.StatusRejected, nil, nil), 0},
-		{v1.NewQueryProposalsParams(1, 50, v1.StatusNil, addr1, nil), 50},
-		{v1.NewQueryProposalsParams(1, 50, v1.StatusNil, nil, addr1), 50},
-		{v1.NewQueryProposalsParams(1, 50, v1.StatusNil, addr1, addr1), 50},
-		{v1.NewQueryProposalsParams(1, 50, v1.StatusDepositPeriod, addr1, addr1), 25},
-		{v1.NewQueryProposalsParams(1, 50, v1.StatusDepositPeriod, nil, nil), 50},
-		{v1.NewQueryProposalsParams(1, 50, v1.StatusVotingPeriod, nil, nil), 50},
+		{
+			name: "without proposer",
+			malleate: func() (uint64, string) {
+				return 1, ""
+			},
+			expectedErr: true,
+		},
+		{
+			name: "invalid proposal id",
+			malleate: func() (uint64, string) {
+				return 1, suite.addrs[1].String()
+			},
+			expectedErr: true,
+		},
+		{
+			name: "valid proposalID but invalid proposer",
+			malleate: func() (uint64, string) {
+				return proposalID, suite.addrs[1].String()
+			},
+			expectedErr: true,
+		},
+		{
+			name: "valid proposalID but invalid proposal which has already passed",
+			malleate: func() (uint64, string) {
+				// making proposal status pass
+				proposal2, err := suite.govKeeper.Proposals.Get(suite.ctx, proposal2ID)
+				suite.Require().Nil(err)
+
+				proposal2.Status = v1.ProposalStatus_PROPOSAL_STATUS_PASSED
+				err = suite.govKeeper.SetProposal(suite.ctx, proposal2)
+				suite.Require().NoError(err)
+				return proposal2ID, suite.addrs[1].String()
+			},
+			expectedErr: true,
+		},
+		{
+			name: "valid proposer and proposal id",
+			malleate: func() (uint64, string) {
+				return proposalID, suite.addrs[0].String()
+			},
+			expectedErr: false,
+		},
+		{
+			name: "valid case with deletion of votes",
+			malleate: func() (uint64, string) {
+				suite.Require().NoError(suite.govKeeper.ActivateVotingPeriod(suite.ctx, proposal))
+
+				proposal, err = suite.govKeeper.Proposals.Get(suite.ctx, proposal.Id)
+				suite.Require().Nil(err)
+				suite.Require().True(proposal.VotingStartTime.Equal(suite.ctx.BlockHeader().Time))
+
+				// add vote
+				voteOptions := []*v1.WeightedVoteOption{{Option: v1.OptionYes, Weight: "1.0"}}
+				err = suite.govKeeper.AddVote(suite.ctx, proposalID, suite.addrs[0], voteOptions, "")
+				suite.Require().NoError(err)
+				vote, err := suite.govKeeper.Votes.Get(suite.ctx, collections.Join(proposalID, suite.addrs[0]))
+				suite.Require().NoError(err)
+				suite.Require().NotNil(vote)
+
+				return proposalID, suite.addrs[0].String()
+			},
+			expectedErr: false,
+		},
 	}
 
-	for i, tc := range testCases {
-		suite.Run(fmt.Sprintf("Test Case %d", i), func() {
-			proposals := suite.govKeeper.GetProposalsFiltered(suite.ctx, tc.params)
-			suite.Require().Len(proposals, tc.expectedNumResults)
-
-			for _, p := range proposals {
-				if v1.ValidProposalStatus(tc.params.ProposalStatus) {
-					suite.Require().Equal(tc.params.ProposalStatus, p.Status)
-				}
+	for _, tc := range testCases {
+		suite.Run(tc.name, func() {
+			pID, proposer := tc.malleate()
+			err = suite.govKeeper.CancelProposal(suite.ctx, pID, proposer)
+			if tc.expectedErr {
+				suite.Require().Error(err)
+			} else {
+				suite.Require().NoError(err)
 			}
 		})
 	}
+	_, err = suite.govKeeper.Votes.Get(suite.ctx, collections.Join(proposalID, suite.addrs[0]))
+	suite.Require().ErrorContains(err, collections.ErrNotFound.Error())
+
+	// check that proposal 3 votes are still present in the state
+	votes, err := suite.govKeeper.Votes.Get(suite.ctx, collections.Join(proposal3ID, suite.addrs[0]))
+	suite.Require().NoError(err)
+	suite.Require().NotNil(votes)
 }
 
 func TestMigrateProposalMessages(t *testing.T) {

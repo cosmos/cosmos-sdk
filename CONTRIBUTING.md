@@ -1,28 +1,29 @@
 # Contributing
 
-* [Contributing](#contributing)
-    * [Teams Dev Calls](#teams-dev-calls)
-    * [Architecture Decision Records (ADR)](#architecture-decision-records-adr)
-    * [Development Procedure](#development-procedure)
-        * [Testing](#testing)
-        * [Pull Requests](#pull-requests)
-        * [Pull Request Templates](#pull-request-templates)
-        * [Requesting Reviews](#requesting-reviews)
-        * [Updating Documentation](#updating-documentation)
-    * [Dependencies](#dependencies)
-        * [`go.work`](#gowork)
-    * [Protobuf](#protobuf)
-    * [Branching Model and Release](#branching-model-and-release)
-        * [PR Targeting](#pr-targeting)
-    * [Code Owner Membership](#code-owner-membership)
-    * [Concept & Feature Approval Process](#concept--feature-approval-process)
-        * [Strategy Discovery](#strategy-discovery)
-        * [Concept Approval](#concept-approval)
-            * [Time Bound Period](#time-bound-period)
-            * [Approval Committee & Decision Making](#approval-committee--decision-making)
-            * [Committee Members](#committee-members)
-            * [Committee Criteria](#committee-criteria)
-        * [Implementation & Release Approval](#implementation--release-approval)
+* [Teams Dev Calls](#teams-dev-calls)
+* [Architecture Decision Records (ADR)](#architecture-decision-records-adr)
+* [Development Procedure](#development-procedure)
+    * [Testing](#testing)
+    * [Pull Requests](#pull-requests)
+    * [Pull Request Templates](#pull-request-templates)
+    * [Requesting Reviews](#requesting-reviews)
+    * [Updating Documentation](#updating-documentation)
+    * [RFC & ADR](#RFC & ADR)
+* [Dependencies](#dependencies)
+    * [`go.work`](#gowork)
+    * [`go.mod`](#gomod)
+* [Protobuf](#protobuf)
+* [Branching Model and Release](#branching-model-and-release)
+    * [PR Targeting](#pr-targeting)
+* [Code Owner Membership](#code-owner-membership)
+* [Concept & Feature Approval Process](#concept--feature-approval-process)
+    * [Strategy Discovery](#strategy-discovery)
+    * [Concept Approval](#concept-approval)
+        * [Time Bound Period](#time-bound-period)
+        * [Approval Committee & Decision Making](#approval-committee--decision-making)
+        * [Committee Members](#committee-members)
+        * [Committee Criteria](#committee-criteria)
+    * [Implementation & Release Approval](#implementation--release-approval)
 
 Thank you for considering making contributions to the Cosmos SDK and related repositories!
 
@@ -64,7 +65,7 @@ To synchronize we have few major meetings:
 * Cosmos SDK Sprint Review on Monday and Thursday at 14:00 UTC (limited participation to core devs).
 * Cosmos SDK Community Call on Thursday at 16:00 UTC.
 
-If you would like to join one of the community call, then please contact us on [Discord](https://discord.com/invite/cosmosnetwork) or reach out directly to Marko (@marbar3778).
+If you would like to join one of the community call, then please contact us on [Discord](https://discord.com/invite/cosmosnetwork) or reach out directly to Marko (@tac0turtle).
 
 ## Architecture Decision Records (ADR)
 
@@ -159,9 +160,17 @@ If you open a PR on the Cosmos SDK, it is mandatory to update the relevant docum
 
 * If your change relates to the core SDK (baseapp, store, ...), be sure to update the content in `docs/basics/`, `docs/core/` and/or `docs/building-modules/` folders.
 * If your changes relate to the core of the CLI (not specifically to module's CLI/Rest), then modify the content in the `docs/run-node/` folder.
-* If your changes relate to a module, then be sure to update the module's spec in `x/{moduleName}/docs/spec/`.
+* If your changes relate to a module, then be sure to update the module's spec in `x/{moduleName}/README.md`.
 
 When writing documentation, follow the [Documentation Writing Guidelines](./docs/DOC_WRITING_GUIDELINES.md).
+
+### RFC & ADR
+
+Within the Cosmos SDK we have two forms of documenting decisions, Request For Comment (RFC) & Architecture Design Record (ADR). They perform two different functions. The process for assessing if something needs an RFC is located in the respective folders: 
+
+* [RFC Process](./docs/rfc/process.md)
+* [ADR Process](./docs/adr/process.md) 
+
 
 ## Dependencies
 
@@ -181,6 +190,21 @@ The Cosmos SDK is a multi-module repo, for this reason, the use of a `go.work` f
 We provide a [`go.work.example`](./go.work.example) that contains all the modules used in the SDK.
 Do note that contributions modifying multiple Go modules should be submitted as separate PRs, this allows us to tag the changes and avoid `replace`s.
 For consistency between our CI and the local tests, `GOWORK=off` is set in the `Makefile`. This means that the `go.work` file is not used when using `make test` or any other `make` command.
+
+### `go.mod`
+
+When extracting a package to its own go modules, some extra steps are required, for keeping our CI checks and Dev UX:
+
+* Add a CHANGELOG.md / README.md under the new package folder
+* Add the package in [`labeler.yml`](./.github/labeler.yml)
+* Add the package in [`go.work.example`](./go.work.example)
+* Add weekly dependabot checks (see [dependabot.yml](./.github/dependabot.yml))
+* Add tests to github workflow [test.yml](.github/workflows/test.yml) (under submodules)
+* Configure SonarCloud
+    * Add `sonar-projects.properties` (see math [sonar-projects.properties](./math/sonar-projects.properties) for example)
+    * Add a GitHub Workflow entry for running the scans (see [test.yml](.github/workflows/test.yml))
+    * Ask the team to add the project to SonarCloud
+* (optional) Configure a `cosmossdk.io` vanity url by submitting a PR to [cosmos/vanity](https://github.com/cosmos/vanity).
 
 ## Protobuf
 

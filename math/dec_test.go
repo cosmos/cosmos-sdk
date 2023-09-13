@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/big"
+	"os"
 	"strings"
 	"testing"
 
@@ -220,40 +221,40 @@ func (s *decimalTestSuite) TestDecsEqual() {
 func (s *decimalTestSuite) TestArithmetic() {
 	tests := []struct {
 		d1, d2                                math.LegacyDec
-		expMul, expMulTruncate                math.LegacyDec
+		expMul, expMulTruncate, expMulRoundUp math.LegacyDec
 		expQuo, expQuoRoundUp, expQuoTruncate math.LegacyDec
 		expAdd, expSub                        math.LegacyDec
 	}{
-		//  d1         d2         MUL    MulTruncate    QUO    QUORoundUp QUOTrunctate  ADD         SUB
-		{math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0)},
-		{math.LegacyNewDec(1), math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(1), math.LegacyNewDec(1)},
-		{math.LegacyNewDec(0), math.LegacyNewDec(1), math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(1), math.LegacyNewDec(-1)},
-		{math.LegacyNewDec(0), math.LegacyNewDec(-1), math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(-1), math.LegacyNewDec(1)},
-		{math.LegacyNewDec(-1), math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(-1), math.LegacyNewDec(-1)},
+		//  d1         d2         MUL    MulTruncate   MulRoundUp    QUO    QUORoundUp QUOTrunctate  ADD         SUB
+		{math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0)},
+		{math.LegacyNewDec(1), math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(1), math.LegacyNewDec(1)},
+		{math.LegacyNewDec(0), math.LegacyNewDec(1), math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(1), math.LegacyNewDec(-1)},
+		{math.LegacyNewDec(0), math.LegacyNewDec(-1), math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(-1), math.LegacyNewDec(1)},
+		{math.LegacyNewDec(-1), math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(-1), math.LegacyNewDec(-1)},
 
-		{math.LegacyNewDec(1), math.LegacyNewDec(1), math.LegacyNewDec(1), math.LegacyNewDec(1), math.LegacyNewDec(1), math.LegacyNewDec(1), math.LegacyNewDec(1), math.LegacyNewDec(2), math.LegacyNewDec(0)},
-		{math.LegacyNewDec(-1), math.LegacyNewDec(-1), math.LegacyNewDec(1), math.LegacyNewDec(1), math.LegacyNewDec(1), math.LegacyNewDec(1), math.LegacyNewDec(1), math.LegacyNewDec(-2), math.LegacyNewDec(0)},
-		{math.LegacyNewDec(1), math.LegacyNewDec(-1), math.LegacyNewDec(-1), math.LegacyNewDec(-1), math.LegacyNewDec(-1), math.LegacyNewDec(-1), math.LegacyNewDec(-1), math.LegacyNewDec(0), math.LegacyNewDec(2)},
-		{math.LegacyNewDec(-1), math.LegacyNewDec(1), math.LegacyNewDec(-1), math.LegacyNewDec(-1), math.LegacyNewDec(-1), math.LegacyNewDec(-1), math.LegacyNewDec(-1), math.LegacyNewDec(0), math.LegacyNewDec(-2)},
+		{math.LegacyNewDec(1), math.LegacyNewDec(1), math.LegacyNewDec(1), math.LegacyNewDec(1), math.LegacyNewDec(1), math.LegacyNewDec(1), math.LegacyNewDec(1), math.LegacyNewDec(1), math.LegacyNewDec(2), math.LegacyNewDec(0)},
+		{math.LegacyNewDec(-1), math.LegacyNewDec(-1), math.LegacyNewDec(1), math.LegacyNewDec(1), math.LegacyNewDec(1), math.LegacyNewDec(1), math.LegacyNewDec(1), math.LegacyNewDec(1), math.LegacyNewDec(-2), math.LegacyNewDec(0)},
+		{math.LegacyNewDec(1), math.LegacyNewDec(-1), math.LegacyNewDec(-1), math.LegacyNewDec(-1), math.LegacyNewDec(-1), math.LegacyNewDec(-1), math.LegacyNewDec(-1), math.LegacyNewDec(-1), math.LegacyNewDec(0), math.LegacyNewDec(2)},
+		{math.LegacyNewDec(-1), math.LegacyNewDec(1), math.LegacyNewDec(-1), math.LegacyNewDec(-1), math.LegacyNewDec(-1), math.LegacyNewDec(-1), math.LegacyNewDec(-1), math.LegacyNewDec(-1), math.LegacyNewDec(0), math.LegacyNewDec(-2)},
 
 		{
-			math.LegacyNewDec(3), math.LegacyNewDec(7), math.LegacyNewDec(21), math.LegacyNewDec(21),
+			math.LegacyNewDec(3), math.LegacyNewDec(7), math.LegacyNewDec(21), math.LegacyNewDec(21), math.LegacyNewDec(21),
 			math.LegacyNewDecWithPrec(428571428571428571, 18), math.LegacyNewDecWithPrec(428571428571428572, 18), math.LegacyNewDecWithPrec(428571428571428571, 18),
 			math.LegacyNewDec(10), math.LegacyNewDec(-4),
 		},
 		{
-			math.LegacyNewDec(2), math.LegacyNewDec(4), math.LegacyNewDec(8), math.LegacyNewDec(8), math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDecWithPrec(5, 1),
+			math.LegacyNewDec(2), math.LegacyNewDec(4), math.LegacyNewDec(8), math.LegacyNewDec(8), math.LegacyNewDec(8), math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDecWithPrec(5, 1),
 			math.LegacyNewDec(6), math.LegacyNewDec(-2),
 		},
 
-		{math.LegacyNewDec(100), math.LegacyNewDec(100), math.LegacyNewDec(10000), math.LegacyNewDec(10000), math.LegacyNewDec(1), math.LegacyNewDec(1), math.LegacyNewDec(1), math.LegacyNewDec(200), math.LegacyNewDec(0)},
+		{math.LegacyNewDec(100), math.LegacyNewDec(100), math.LegacyNewDec(10000), math.LegacyNewDec(10000), math.LegacyNewDec(10000), math.LegacyNewDec(1), math.LegacyNewDec(1), math.LegacyNewDec(1), math.LegacyNewDec(200), math.LegacyNewDec(0)},
 
 		{
-			math.LegacyNewDecWithPrec(15, 1), math.LegacyNewDecWithPrec(15, 1), math.LegacyNewDecWithPrec(225, 2), math.LegacyNewDecWithPrec(225, 2),
+			math.LegacyNewDecWithPrec(15, 1), math.LegacyNewDecWithPrec(15, 1), math.LegacyNewDecWithPrec(225, 2), math.LegacyNewDecWithPrec(225, 2), math.LegacyNewDecWithPrec(225, 2),
 			math.LegacyNewDec(1), math.LegacyNewDec(1), math.LegacyNewDec(1), math.LegacyNewDec(3), math.LegacyNewDec(0),
 		},
 		{
-			math.LegacyNewDecWithPrec(3333, 4), math.LegacyNewDecWithPrec(333, 4), math.LegacyNewDecWithPrec(1109889, 8), math.LegacyNewDecWithPrec(1109889, 8),
+			math.LegacyNewDecWithPrec(3333, 4), math.LegacyNewDecWithPrec(333, 4), math.LegacyNewDecWithPrec(1109889, 8), math.LegacyNewDecWithPrec(1109889, 8), math.LegacyNewDecWithPrec(1109889, 8),
 			math.LegacyMustNewDecFromStr("10.009009009009009009"), math.LegacyMustNewDecFromStr("10.009009009009009010"), math.LegacyMustNewDecFromStr("10.009009009009009009"),
 			math.LegacyNewDecWithPrec(3666, 4), math.LegacyNewDecWithPrec(3, 1),
 		},
@@ -265,10 +266,12 @@ func (s *decimalTestSuite) TestArithmetic() {
 		resSub := tc.d1.Sub(tc.d2)
 		resMul := tc.d1.Mul(tc.d2)
 		resMulTruncate := tc.d1.MulTruncate(tc.d2)
+		resMulRoundUp := tc.d1.MulRoundUp(tc.d2)
 		s.Require().True(tc.expAdd.Equal(resAdd), "exp %v, res %v, tc %d", tc.expAdd, resAdd, tcIndex)
 		s.Require().True(tc.expSub.Equal(resSub), "exp %v, res %v, tc %d", tc.expSub, resSub, tcIndex)
 		s.Require().True(tc.expMul.Equal(resMul), "exp %v, res %v, tc %d", tc.expMul, resMul, tcIndex)
 		s.Require().True(tc.expMulTruncate.Equal(resMulTruncate), "exp %v, res %v, tc %d", tc.expMulTruncate, resMulTruncate, tcIndex)
+		s.Require().True(tc.expMulRoundUp.Equal(resMulRoundUp), "exp %v, res %v, tc %d", tc.expMulRoundUp, resMulRoundUp, tcIndex)
 
 		if tc.d2.IsZero() { // panic for divide by zero
 			s.Require().Panics(func() { tc.d1.Quo(tc.d2) })
@@ -285,6 +288,21 @@ func (s *decimalTestSuite) TestArithmetic() {
 				tc.expQuoTruncate.String(), resQuoTruncate.String(), tcIndex)
 		}
 	}
+}
+
+func (s *decimalTestSuite) TestMulRoundUp_RoundingAtPrecisionEnd() {
+	var (
+		a                = math.LegacyMustNewDecFromStr("0.000000000000000009")
+		b                = math.LegacyMustNewDecFromStr("0.000000000000000009")
+		expectedRoundUp  = math.LegacyMustNewDecFromStr("0.000000000000000001")
+		expectedTruncate = math.LegacyMustNewDecFromStr("0.000000000000000000")
+	)
+
+	actualRoundUp := a.MulRoundUp(b)
+	s.Require().Equal(expectedRoundUp.String(), actualRoundUp.String(), "exp %v, res %v", expectedRoundUp, actualRoundUp)
+
+	actualTruncate := a.MulTruncate(b)
+	s.Require().Equal(expectedTruncate.String(), actualTruncate.String(), "exp %v, res %v", expectedRoundUp, actualTruncate)
 }
 
 func (s *decimalTestSuite) TestBankerRoundChop() {
@@ -452,12 +470,16 @@ func (s *decimalTestSuite) TestApproxSqrt() {
 		input    math.LegacyDec
 		expected math.LegacyDec
 	}{
-		{math.LegacyOneDec(), math.LegacyOneDec()},                                                     // 1.0 => 1.0
-		{math.LegacyNewDecWithPrec(25, 2), math.LegacyNewDecWithPrec(5, 1)},                            // 0.25 => 0.5
-		{math.LegacyNewDecWithPrec(4, 2), math.LegacyNewDecWithPrec(2, 1)},                             // 0.09 => 0.3
-		{math.LegacyNewDecFromInt(math.NewInt(9)), math.LegacyNewDecFromInt(math.NewInt(3))},           // 9 => 3
-		{math.LegacyNewDecFromInt(math.NewInt(-9)), math.LegacyNewDecFromInt(math.NewInt(-3))},         // -9 => -3
-		{math.LegacyNewDecFromInt(math.NewInt(2)), math.LegacyNewDecWithPrec(1414213562373095049, 18)}, // 2 => 1.414213562373095049
+		{math.LegacyOneDec(), math.LegacyOneDec()},                                 // 1.0 => 1.0
+		{math.LegacyNewDecWithPrec(25, 2), math.LegacyNewDecWithPrec(5, 1)},        // 0.25 => 0.5
+		{math.LegacyNewDecWithPrec(4, 2), math.LegacyNewDecWithPrec(2, 1)},         // 0.09 => 0.3
+		{math.LegacyNewDec(9), math.LegacyNewDecFromInt(math.NewInt(3))},           // 9 => 3
+		{math.LegacyNewDec(-9), math.LegacyNewDecFromInt(math.NewInt(-3))},         // -9 => -3
+		{math.LegacyNewDec(2), math.LegacyNewDecWithPrec(1414213562373095049, 18)}, // 2 => 1.414213562373095049
+		{ // 2^127 - 1 => 13043817825332782212.3495718062525083688 which rounds to 13043817825332782212.3495718062525083689
+			math.LegacyNewDec(2).Power(127).Sub(math.LegacyOneDec()),
+			math.LegacyMustNewDecFromStr("13043817825332782212.349571806252508369"),
+		},
 	}
 
 	for i, tc := range testCases {
@@ -611,10 +633,8 @@ func BenchmarkMarshalTo(b *testing.B) {
 		for _, bi := range bis {
 			if n, err := bi.in.MarshalTo(data); err != nil {
 				b.Fatal(err)
-			} else {
-				if !bytes.Equal(data[:n], bi.want) {
-					b.Fatalf("Mismatch\nGot:  % x\nWant: % x\n", data[:n], bi.want)
-				}
+			} else if !bytes.Equal(data[:n], bi.want) {
+				b.Fatalf("Mismatch\nGot:  % x\nWant: % x\n", data[:n], bi.want)
 			}
 		}
 	}
@@ -652,6 +672,20 @@ func BenchmarkLegacyQuoTruncateMut(b *testing.B) {
 	sink = (interface{})(nil)
 }
 
+func BenchmarkLegacySqrtOnMersennePrime(b *testing.B) {
+	b1 := math.LegacyNewDec(2).Power(127).Sub(math.LegacyOneDec())
+	b.ReportAllocs()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		sink, _ = b1.ApproxSqrt()
+	}
+
+	if sink == nil {
+		b.Fatal("Benchmark did not run")
+	}
+	sink = (interface{})(nil)
+}
+
 func BenchmarkLegacyQuoRoundupMut(b *testing.B) {
 	b1 := math.LegacyNewDec(17e2 + 8371)
 	b2 := math.LegacyNewDec(4371)
@@ -665,4 +699,57 @@ func BenchmarkLegacyQuoRoundupMut(b *testing.B) {
 		b.Fatal("Benchmark did not run")
 	}
 	sink = (interface{})(nil)
+}
+
+func TestFormatDec(t *testing.T) {
+	type decimalTest []string
+	var testcases []decimalTest
+	raw, err := os.ReadFile("./testdata/decimals.json")
+	require.NoError(t, err)
+	err = json.Unmarshal(raw, &testcases)
+	require.NoError(t, err)
+
+	for _, tc := range testcases {
+		tc := tc
+		t.Run(tc[0], func(t *testing.T) {
+			out, err := math.FormatDec(tc[0])
+			require.NoError(t, err)
+			require.Equal(t, tc[1], out)
+		})
+	}
+}
+
+func TestFormatDecNonDigits(t *testing.T) {
+	badCases := []string{
+		"10.a",
+		"1a.10",
+		"p1a10.",
+		"0.10p",
+		"--10",
+		"12.😎😎",
+		"11111111111133333333333333333333333333333a",
+		"11111111111133333333333333333333333333333 192892",
+	}
+
+	for _, value := range badCases {
+		value := value
+		t.Run(value, func(t *testing.T) {
+			s, err := math.FormatDec(value)
+			if err == nil {
+				t.Fatal("Expected an error")
+			}
+			if g, w := err.Error(), "non-digits"; !strings.Contains(g, w) {
+				t.Errorf("Error mismatch\nGot:  %q\nWant substring: %q", g, w)
+			}
+			if s != "" {
+				t.Fatalf("Got a non-empty string: %q", s)
+			}
+		})
+	}
+}
+
+func TestNegativePrecisionPanic(t *testing.T) {
+	require.Panics(t, func() {
+		math.LegacyNewDecWithPrec(10, -1)
+	})
 }

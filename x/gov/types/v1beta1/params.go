@@ -3,7 +3,7 @@ package v1beta1
 import (
 	"time"
 
-	"sigs.k8s.io/yaml"
+	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -15,10 +15,10 @@ const (
 
 // Default governance params
 var (
-	DefaultMinDepositTokens = sdk.NewInt(10000000)
-	DefaultQuorum           = sdk.NewDecWithPrec(334, 3)
-	DefaultThreshold        = sdk.NewDecWithPrec(5, 1)
-	DefaultVetoThreshold    = sdk.NewDecWithPrec(334, 3)
+	DefaultMinDepositTokens = math.NewInt(10000000)
+	DefaultQuorum           = math.LegacyNewDecWithPrec(334, 3)
+	DefaultThreshold        = math.LegacyNewDecWithPrec(5, 1)
+	DefaultVetoThreshold    = math.LegacyNewDecWithPrec(334, 3)
 )
 
 // NewDepositParams creates a new DepositParams object
@@ -29,7 +29,7 @@ func NewDepositParams(minDeposit sdk.Coins, maxDepositPeriod time.Duration) Depo
 	}
 }
 
-// DefaultDepositParams default parameters for deposits
+// DefaultDepositParams returns the default parameters for deposits
 func DefaultDepositParams() DepositParams {
 	return NewDepositParams(
 		sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, DefaultMinDepositTokens)),
@@ -37,19 +37,13 @@ func DefaultDepositParams() DepositParams {
 	)
 }
 
-// String implements stringer insterface
-func (dp DepositParams) String() string {
-	out, _ := yaml.Marshal(dp)
-	return string(out)
-}
-
 // Equal checks equality of DepositParams
 func (dp DepositParams) Equal(dp2 DepositParams) bool {
-	return dp.MinDeposit.IsEqual(dp2.MinDeposit) && dp.MaxDepositPeriod == dp2.MaxDepositPeriod
+	return dp.MinDeposit.Equal(dp2.MinDeposit) && dp.MaxDepositPeriod == dp2.MaxDepositPeriod
 }
 
 // NewTallyParams creates a new TallyParams object
-func NewTallyParams(quorum, threshold, vetoThreshold sdk.Dec) TallyParams {
+func NewTallyParams(quorum, threshold, vetoThreshold math.LegacyDec) TallyParams {
 	return TallyParams{
 		Quorum:        quorum,
 		Threshold:     threshold,
@@ -57,7 +51,7 @@ func NewTallyParams(quorum, threshold, vetoThreshold sdk.Dec) TallyParams {
 	}
 }
 
-// DefaultTallyParams default parameters for tallying
+// DefaultTallyParams returns default parameters for tallying
 func DefaultTallyParams() TallyParams {
 	return NewTallyParams(DefaultQuorum, DefaultThreshold, DefaultVetoThreshold)
 }
@@ -65,12 +59,6 @@ func DefaultTallyParams() TallyParams {
 // Equal checks equality of TallyParams
 func (tp TallyParams) Equal(other TallyParams) bool {
 	return tp.Quorum.Equal(other.Quorum) && tp.Threshold.Equal(other.Threshold) && tp.VetoThreshold.Equal(other.VetoThreshold)
-}
-
-// String implements stringer insterface
-func (tp TallyParams) String() string {
-	out, _ := yaml.Marshal(tp)
-	return string(out)
 }
 
 // NewVotingParams creates a new VotingParams object
@@ -90,12 +78,6 @@ func (vp VotingParams) Equal(other VotingParams) bool {
 	return vp.VotingPeriod == other.VotingPeriod
 }
 
-// String implements stringer interface
-func (vp VotingParams) String() string {
-	out, _ := yaml.Marshal(vp)
-	return string(out)
-}
-
 // Params returns all of the governance params
 type Params struct {
 	VotingParams  VotingParams  `json:"voting_params" yaml:"voting_params"`
@@ -103,6 +85,7 @@ type Params struct {
 	DepositParams DepositParams `json:"deposit_params" yaml:"deposit_params"`
 }
 
+// String implements stringer interface
 func (gp Params) String() string {
 	return gp.VotingParams.String() + "\n" +
 		gp.TallyParams.String() + "\n" + gp.DepositParams.String()
@@ -117,7 +100,7 @@ func NewParams(vp VotingParams, tp TallyParams, dp DepositParams) Params {
 	}
 }
 
-// DefaultParams default governance params
+// DefaultParams returns the default governance params
 func DefaultParams() Params {
 	return NewParams(DefaultVotingParams(), DefaultTallyParams(), DefaultDepositParams())
 }

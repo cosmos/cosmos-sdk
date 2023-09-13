@@ -1,9 +1,6 @@
-<!--
-order: 0
-title: Upgrade Overview
-parent:
-  title: "upgrade"
--->
+---
+sidebar_position: 1
+---
 
 # `x/upgrade`
 
@@ -25,14 +22,14 @@ recover from.
 * [State](#state)
 * [Events](#events)
 * [Client](#client)
-    * [CLI](#cli)
-    * [REST](#rest)
-    * [gRPC](#grpc)
+  * [CLI](#cli)
+  * [REST](#rest)
+  * [gRPC](#grpc)
 * [Resources](#resources)
 
-# Concepts
+## Concepts
 
-## Plan
+### Plan
 
 The `x/upgrade` module defines a `Plan` type in which a live upgrade is scheduled
 to occur. A `Plan` can be scheduled at a specific block height.
@@ -44,12 +41,6 @@ may contain various metadata about the upgrade, typically application specific
 upgrade info to be included on-chain such as a git commit that validators could
 automatically upgrade to.
 
-### Sidecar Process
-
-If an operator running the application binary also runs a sidecar process to assist
-in the automatic download and upgrade of a binary, the `Info` allows this process to
-be seamless. This tool is [Cosmovisor](https://github.com/cosmos/cosmos-sdk/tree/main/cosmovisor#readme).
-
 ```go
 type Plan struct {
   Name   string
@@ -58,7 +49,13 @@ type Plan struct {
 }
 ```
 
-## Handler
+#### Sidecar Process
+
+If an operator running the application binary also runs a sidecar process to assist
+in the automatic download and upgrade of a binary, the `Info` allows this process to
+be seamless. This tool is [Cosmovisor](https://github.com/cosmos/cosmos-sdk/tree/main/tools/cosmovisor#readme).
+
+### Handler
 
 The `x/upgrade` module facilitates upgrading from major version X to major version Y. To
 accomplish this, node operators must first upgrade their current binary to a new
@@ -78,7 +75,7 @@ During each `EndBlock` execution, the `x/upgrade` module checks if there exists 
 `Handler` is executed. If the `Plan` is expected to execute but no `Handler` is registered
 or if the binary was upgraded too early, the node will gracefully panic and exit.
 
-## StoreLoader
+### StoreLoader
 
 The `x/upgrade` module also facilitates store migrations as part of the upgrade. The
 `StoreLoader` sets the migrations that need to occur before the new binary can
@@ -97,7 +94,7 @@ expected upgrade. It eliminiates the chances for the new binary to execute `Stor
 times everytime on restart. Also if there are multiple upgrades planned on same height, the `Name`
 will ensure these `StoreUpgrades` takes place only in planned upgrade handler.
 
-## Proposal
+### Proposal
 
 Typically, a `Plan` is proposed and submitted through governance via a proposal
 containing a `MsgSoftwareUpgrade` message.
@@ -105,9 +102,11 @@ This proposal prescribes to the standard governance process. If the proposal pas
 the `Plan`, which targets a specific `Handler`, is persisted and scheduled. The
 upgrade can be delayed or hastened by updating the `Plan.Height` in a new proposal.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/upgrade/v1beta1/tx.proto#L24-L36
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/upgrade/v1beta1/tx.proto#L29-L41
+```
 
-### Cancelling Upgrade Proposals
+#### Cancelling Upgrade Proposals
 
 Upgrade proposals can be cancelled. There exists a gov-enabled `MsgCancelUpgrade`
 message type, which can be embedded in a proposal, voted on and, if passed, will
@@ -115,7 +114,9 @@ remove the scheduled upgrade `Plan`.
 Of course this requires that the upgrade was known to be a bad idea well before the
 upgrade itself, to allow time for a vote.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/upgrade/v1beta1/tx.proto#L43-L51
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/upgrade/v1beta1/tx.proto#L48-L57
+```
 
 If such a possibility is desired, the upgrade height is to be
 `2 * (VotingPeriod + DepositPeriod) + (SafetyDelta)` from the beginning of the
@@ -126,9 +127,7 @@ A `MsgCancelUpgrade` proposal can also be made while the original
 `MsgSoftwareUpgrade` proposal is still being voted upon, as long as the `VotingPeriod`
 ends after the `MsgSoftwareUpgrade` proposal.
 
-<!-- order: 1 -->
-
-# State
+## State
 
 The internal state of the `x/upgrade` module is relatively minimal and simple. The
 state contains the currently active upgrade `Plan` (if one exists) by key
@@ -145,22 +144,18 @@ by the corresponding module name of type `string`. The state maintains a
 
 The `x/upgrade` module contains no genesis state.
 
-<!-- order: 2 -->
-
-# Events
+## Events
 
 The `x/upgrade` does not emit any events by itself. Any and all proposal related
 events are emitted through the `x/gov` module.
 
-<!-- order: 3 -->
+## Client
 
-# Client
-
-## CLI
+### CLI
 
 A user can query and interact with the `upgrade` module using the CLI.
 
-### Query
+#### Query
 
 The `query` commands allow users to query `upgrade` state.
 
@@ -168,7 +163,7 @@ The `query` commands allow users to query `upgrade` state.
 simd query upgrade --help
 ```
 
-#### applied
+##### applied
 
 The `applied` command allows users to query the block header for height at which a completed upgrade was applied.
 
@@ -224,7 +219,7 @@ Example Output:
 }
 ```
 
-#### module versions
+##### module versions
 
 The `module_versions` command gets a list of module names and their respective consensus versions.
 
@@ -251,8 +246,6 @@ module_versions:
   version: "1"
 - name: bank
   version: "2"
-- name: capability
-  version: "1"
 - name: crisis
   version: "1"
 - name: distribution
@@ -297,7 +290,7 @@ module_versions:
   version: "2"
 ```
 
-#### plan
+##### plan
 
 The `plan` command gets the currently scheduled upgrade plan, if one exists.
 
@@ -321,11 +314,28 @@ time: "0001-01-01T00:00:00Z"
 upgraded_client_state: null
 ```
 
-## REST
+#### Transactions
+
+The upgrade module supports the following transactions:
+
+* `software-proposal` - submits an upgrade proposal:
+
+```bash
+simd tx upgrade software-upgrade v2 --title="Test Proposal" --summary="testing" --deposit="100000000stake" --upgrade-height 1000000 \
+--upgrade-info '{ "binaries": { "linux/amd64":"https://example.com/simd.zip?checksum=sha256:aec070645fe53ee3b3763059376134f058cc337247c978add178b6ccdfb0019f" } }' --from cosmos1..
+```
+
+* `cancel-software-upgrade` - cancels a previously submitted upgrade proposal:
+
+```bash
+simd tx upgrade cancel-software-upgrade --title="Test Proposal" --summary="testing" --deposit="100000000stake" --from cosmos1..
+```
+
+### REST
 
 A user can query the `upgrade` module using REST endpoints.
 
-### Applied Plan
+#### Applied Plan
 
 `AppliedPlan` queries a previously applied upgrade plan by its name.
 
@@ -347,7 +357,7 @@ Example Output:
 }
 ```
 
-### Current Plan
+#### Current Plan
 
 `CurrentPlan` queries the current upgrade plan.
 
@@ -369,7 +379,7 @@ Example Output:
 }
 ```
 
-### Module versions
+#### Module versions
 
 `ModuleVersions` queries the list of module versions from state.
 
@@ -401,10 +411,6 @@ Example Output:
       "version": "2"
     },
     {
-      "name": "capability",
-      "version": "1"
-    },
-    {
       "name": "crisis",
       "version": "1"
     },
@@ -464,11 +470,11 @@ Example Output:
 }
 ```
 
-## gRPC
+### gRPC
 
 A user can query the `upgrade` module using gRPC endpoints.
 
-### Applied Plan
+#### Applied Plan
 
 `AppliedPlan` queries a previously applied upgrade plan by its name.
 
@@ -493,7 +499,7 @@ Example Output:
 }
 ```
 
-### Current Plan
+#### Current Plan
 
 `CurrentPlan` queries the current upgrade plan.
 
@@ -515,7 +521,7 @@ Example Output:
 }
 ```
 
-### Module versions
+#### Module versions
 
 `ModuleVersions` queries the list of module versions from state.
 
@@ -547,10 +553,6 @@ Example Output:
       "version": "2"
     },
     {
-      "name": "capability",
-      "version": "1"
-    },
-    {
       "name": "crisis",
       "version": "1"
     },
@@ -610,9 +612,7 @@ Example Output:
 }
 ```
 
-<!-- order: 4 -->
-
-# Resources
+## Resources
 
 A list of (external) resources to learn more about the `x/upgrade` module.
 

@@ -1,9 +1,9 @@
 package testdata
 
 import (
-	"encoding/json"
+	"testing"
 
-	"github.com/stretchr/testify/require"
+	"gotest.tools/v3/assert"
 	"pgregory.net/rapid"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -11,6 +11,7 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/types/query"
 )
 
 // AddressGenerator creates and returns a random address generator using rapid.
@@ -18,6 +19,19 @@ func AddressGenerator(t *rapid.T) *rapid.Generator[sdk.AccAddress] {
 	return rapid.Custom(func(t *rapid.T) sdk.AccAddress {
 		pkBz := rapid.SliceOfN(rapid.Byte(), 20, 20).Draw(t, "hex")
 		return sdk.AccAddress(pkBz)
+	})
+}
+
+// PaginationGenerator creates and returns a pagination PageRequest generator
+// using rapid.
+func PaginationGenerator(t *rapid.T, maxLimit uint64) *rapid.Generator[*query.PageRequest] {
+	return rapid.Custom(func(t *rapid.T) *query.PageRequest {
+		return &query.PageRequest{
+			Offset:     rapid.Uint64Range(0, maxLimit).Draw(t, "offset"),
+			Limit:      rapid.Uint64Range(0, maxLimit).Draw(t, "limit"),
+			CountTotal: rapid.Bool().Draw(t, "count-total"),
+			Reverse:    rapid.Bool().Draw(t, "reverse"),
+		}
 	})
 }
 
@@ -30,9 +44,9 @@ func KeyTestPubAddr() (cryptotypes.PrivKey, cryptotypes.PubKey, sdk.AccAddress) 
 }
 
 // KeyTestPubAddr generates a new secp256r1 keypair.
-func KeyTestPubAddrSecp256R1(require *require.Assertions) (cryptotypes.PrivKey, cryptotypes.PubKey, sdk.AccAddress) {
+func KeyTestPubAddrSecp256R1(t *testing.T) (cryptotypes.PrivKey, cryptotypes.PubKey, sdk.AccAddress) {
 	key, err := secp256r1.GenPrivKey()
-	require.NoError(err)
+	assert.NilError(t, err)
 	pub := key.PubKey()
 	addr := sdk.AccAddress(pub.Address())
 	return key, pub, addr
@@ -62,16 +76,6 @@ func NewTestMsg(addrs ...sdk.AccAddress) *TestMsg {
 }
 
 var _ sdk.Msg = (*TestMsg)(nil)
-
-func (msg *TestMsg) Route() string { return "TestMsg" }
-func (msg *TestMsg) Type() string  { return "Test message" }
-func (msg *TestMsg) GetSignBytes() []byte {
-	bz, err := json.Marshal(msg.Signers)
-	if err != nil {
-		panic(err)
-	}
-	return sdk.MustSortJSON(bz)
-}
 
 func (msg *TestMsg) GetSigners() []sdk.AccAddress {
 	signers := make([]sdk.AccAddress, 0, len(msg.Signers))

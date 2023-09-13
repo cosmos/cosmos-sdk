@@ -3,8 +3,11 @@ package genutil
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 
-	abci "github.com/tendermint/tendermint/abci/types"
+	abci "github.com/cometbft/cometbft/abci/types"
+
+	"cosmossdk.io/core/genesis"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -52,9 +55,8 @@ func ValidateAccountInGenesis(
 		func(bal bankexported.GenesisBalance) (stop bool) {
 			accAddress := bal.GetAddress()
 			accCoins := bal.GetCoins()
-
 			// ensure that account is in genesis
-			if accAddress.Equals(addr) {
+			if strings.EqualFold(accAddress, addr.String()) {
 				// ensure account contains enough funds of default bond denom
 				if coins.AmountOf(bondDenom).GT(accCoins.AmountOf(bondDenom)) {
 					err = fmt.Errorf(
@@ -84,30 +86,28 @@ func ValidateAccountInGenesis(
 	return nil
 }
 
-type deliverTxfn func(abci.RequestDeliverTx) abci.ResponseDeliverTx
-
 // DeliverGenTxs iterates over all genesis txs, decodes each into a Tx and
 // invokes the provided deliverTxfn with the decoded Tx. It returns the result
 // of the staking module's ApplyAndReturnValidatorSetUpdates.
 func DeliverGenTxs(
 	ctx sdk.Context, genTxs []json.RawMessage,
-	stakingKeeper types.StakingKeeper, deliverTx deliverTxfn,
+	stakingKeeper types.StakingKeeper, deliverTx genesis.TxHandler,
 	txEncodingConfig client.TxEncodingConfig,
 ) ([]abci.ValidatorUpdate, error) {
 	for _, genTx := range genTxs {
 		tx, err := txEncodingConfig.TxJSONDecoder()(genTx)
 		if err != nil {
-			return nil, fmt.Errorf("failed to decode GenTx '%s': %s", genTx, err)
+			return nil, fmt.Errorf("failed to decode GenTx '%s': %w", genTx, err)
 		}
 
 		bz, err := txEncodingConfig.TxEncoder()(tx)
 		if err != nil {
-			return nil, fmt.Errorf("failed to encode GenTx '%s': %s", genTx, err)
+			return nil, fmt.Errorf("failed to encode GenTx '%s': %w", genTx, err)
 		}
 
-		res := deliverTx(abci.RequestDeliverTx{Tx: bz})
-		if !res.IsOK() {
-			return nil, fmt.Errorf("failed to execute DelverTx for '%s': %s", genTx, res.Log)
+		err = deliverTx.ExecuteGenesisTx(bz)
+		if err != nil {
+			return nil, fmt.Errorf("failed to execute DeliverTx for '%s': %w", genTx, err)
 		}
 	}
 

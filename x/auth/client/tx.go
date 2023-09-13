@@ -6,18 +6,17 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/cosmos/gogoproto/jsonpb"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 )
 
 // GasEstimateResponse defines a response definition for tx gas estimation.
@@ -49,8 +48,12 @@ func SignTx(txFactory tx.Factory, clientCtx client.Context, name string, txBuild
 		return err
 	}
 	addr := sdk.AccAddress(pubKey.Address())
-	if !isTxSigner(addr, txBuilder.GetTx().GetSigners()) {
-		return fmt.Errorf("%s: %s", sdkerrors.ErrorInvalidSigner, name)
+	signers, err := txBuilder.GetTx().GetSigners()
+	if err != nil {
+		return err
+	}
+	if !isTxSigner(addr, signers) {
+		return fmt.Errorf("%w: %s", errors.ErrorInvalidSigner, name)
 	}
 	if !offline {
 		txFactory, err = populateAccountFromState(txFactory, clientCtx, addr)
@@ -59,7 +62,7 @@ func SignTx(txFactory tx.Factory, clientCtx client.Context, name string, txBuild
 		}
 	}
 
-	return tx.Sign(txFactory, name, txBuilder, overwriteSig)
+	return tx.Sign(clientCtx.CmdContext, txFactory, name, txBuilder, overwriteSig)
 }
 
 // SignTxWithSignerAddress attaches a signature to a transaction.
@@ -76,8 +79,13 @@ func SignTxWithSignerAddress(txFactory tx.Factory, clientCtx client.Context, add
 	}
 
 	// check whether the address is a signer
-	if !isTxSigner(addr, txBuilder.GetTx().GetSigners()) {
-		return fmt.Errorf("%s: %s", sdkerrors.ErrorInvalidSigner, name)
+	signers, err := txBuilder.GetTx().GetSigners()
+	if err != nil {
+		return err
+	}
+
+	if !isTxSigner(addr, signers) {
+		return fmt.Errorf("%w: %s", errors.ErrorInvalidSigner, name)
 	}
 
 	if !offline {
@@ -87,10 +95,10 @@ func SignTxWithSignerAddress(txFactory tx.Factory, clientCtx client.Context, add
 		}
 	}
 
-	return tx.Sign(txFactory, name, txBuilder, overwrite)
+	return tx.Sign(clientCtx.CmdContext, txFactory, name, txBuilder, overwrite)
 }
 
-// Read and decode a StdTx from the given filename.  Can pass "-" to read from stdin.
+// Read and decode a StdTx from the given filename. Can pass "-" to read from stdin.
 func ReadTxFromFile(ctx client.Context, filename string) (tx sdk.Tx, err error) {
 	var bytes []byte
 
@@ -105,6 +113,33 @@ func ReadTxFromFile(ctx client.Context, filename string) (tx sdk.Tx, err error) 
 	}
 
 	return ctx.TxConfig.TxJSONDecoder()(bytes)
+}
+
+// ReadTxsFromInput reads multiples txs from the given filename(s). Can pass "-" to read from stdin.
+// Unlike ReadTxFromFile, this function does not decode the txs.
+func ReadTxsFromInput(txCfg client.TxConfig, filenames ...string) (scanner *BatchScanner, err error) {
+	if len(filenames) == 0 {
+		return nil, fmt.Errorf("no file name provided")
+	}
+
+	var infile io.Reader = os.Stdin
+	if filenames[0] != "-" {
+		buf := new(bytes.Buffer)
+		for _, f := range filenames {
+			bytes, err := os.ReadFile(filepath.Clean(f))
+			if err != nil {
+				return nil, fmt.Errorf("couldn't read %s: %w", f, err)
+			}
+
+			if _, err := buf.WriteString(string(bytes)); err != nil {
+				return nil, fmt.Errorf("couldn't write to merged file: %w", err)
+			}
+		}
+
+		infile = buf
+	}
+
+	return NewBatchScanner(txCfg, infile), nil
 }
 
 // NewBatchScanner returns a new BatchScanner to read newline-delimited StdTx transactions from r.
@@ -154,17 +189,6 @@ func populateAccountFromState(
 	return txBldr.WithAccountNumber(num).WithSequence(seq), nil
 }
 
-// GetTxEncoder return tx encoder from global sdk configuration if ones is defined.
-// Otherwise returns encoder with default logic.
-func GetTxEncoder(cdc *codec.LegacyAmino) (encoder sdk.TxEncoder) {
-	encoder = sdk.GetConfig().GetTxEncoder()
-	if encoder == nil {
-		encoder = legacytx.DefaultTxEncoder(cdc)
-	}
-
-	return encoder
-}
-
 func ParseQueryResponse(bz []byte) (sdk.SimulationResponse, error) {
 	var simRes sdk.SimulationResponse
 	if err := jsonpb.Unmarshal(strings.NewReader(string(bz)), &simRes); err != nil {
@@ -174,9 +198,9 @@ func ParseQueryResponse(bz []byte) (sdk.SimulationResponse, error) {
 	return simRes, nil
 }
 
-func isTxSigner(user sdk.AccAddress, signers []sdk.AccAddress) bool {
+func isTxSigner(user []byte, signers [][]byte) bool {
 	for _, s := range signers {
-		if bytes.Equal(user.Bytes(), s.Bytes()) {
+		if bytes.Equal(user, s) {
 			return true
 		}
 	}

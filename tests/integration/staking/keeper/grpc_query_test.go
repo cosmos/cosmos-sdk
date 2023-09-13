@@ -3,6 +3,13 @@ package keeper_test
 import (
 	gocontext "context"
 	"fmt"
+	"testing"
+
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	"gotest.tools/v3/assert"
+
+	"cosmossdk.io/collections"
+	"cosmossdk.io/math"
 
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -10,15 +17,41 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-func (suite *IntegrationTestSuite) TestGRPCQueryValidators() {
-	queryClient, vals := suite.queryClient, suite.vals
+func createValidatorAccs(t *testing.T, f *fixture) ([]sdk.AccAddress, []types.Validator) {
+	t.Helper()
+	addrs, _, validators := createValidators(&testing.T{}, f, []int64{9, 8, 7})
+	header := cmtproto.Header{
+		ChainID: "HelloChain",
+		Height:  5,
+	}
+
+	// sort a copy of the validators, so that original validators does not
+	// have its order changed
+	sortedVals := make([]types.Validator, len(validators))
+	copy(sortedVals, validators)
+	hi := types.NewHistoricalInfo(header, types.Validators{Validators: sortedVals}, f.stakingKeeper.PowerReduction(f.sdkCtx))
+	assert.NilError(t, f.stakingKeeper.HistoricalInfo.Set(f.sdkCtx, uint64(5), hi))
+
+	return addrs, validators
+}
+
+func TestGRPCQueryValidators(t *testing.T) {
+	t.Parallel()
+	f := initFixture(t)
+
+	_, vals := createValidatorAccs(t, f)
+
+	qr := f.app.QueryHelper()
+	queryClient := types.NewQueryClient(qr)
+
 	var req *types.QueryValidatorsRequest
 	testCases := []struct {
-		msg      string
-		malleate func()
-		expPass  bool
-		numVals  int
-		hasNext  bool
+		msg       string
+		malleate  func()
+		expPass   bool
+		numVals   int
+		hasNext   bool
+		expErrMsg string
 	}{
 		{
 			"empty request",
@@ -26,9 +59,9 @@ func (suite *IntegrationTestSuite) TestGRPCQueryValidators() {
 				req = &types.QueryValidatorsRequest{}
 			},
 			true,
-
-			len(vals) + 1, // +1 validator from genesis state
+			len(vals),
 			false,
+			"",
 		},
 		{
 			"empty status returns all the validators",
@@ -36,8 +69,9 @@ func (suite *IntegrationTestSuite) TestGRPCQueryValidators() {
 				req = &types.QueryValidatorsRequest{Status: ""}
 			},
 			true,
-			len(vals) + 1, // +1 validator from genesis state
+			len(vals),
 			false,
+			"",
 		},
 		{
 			"invalid request",
@@ -47,6 +81,7 @@ func (suite *IntegrationTestSuite) TestGRPCQueryValidators() {
 			false,
 			0,
 			false,
+			"invalid validator status test",
 		},
 		{
 			"valid request",
@@ -59,39 +94,51 @@ func (suite *IntegrationTestSuite) TestGRPCQueryValidators() {
 			true,
 			1,
 			true,
+			"",
 		},
 	}
 	for _, tc := range testCases {
-		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
+		t.Run(fmt.Sprintf("Case %s", tc.msg), func(t *testing.T) {
 			tc.malleate()
 			valsResp, err := queryClient.Validators(gocontext.Background(), req)
 			if tc.expPass {
-				suite.NoError(err)
-				suite.NotNil(valsResp)
-				suite.Equal(tc.numVals, len(valsResp.Validators))
-				suite.Equal(uint64(len(vals))+1, valsResp.Pagination.Total) // +1 validator from genesis state
+				assert.NilError(t, err)
+				assert.Assert(t, valsResp != nil)
+				assert.Equal(t, tc.numVals, len(valsResp.Validators))
+				assert.Equal(t, uint64(len(vals)), valsResp.Pagination.Total)
 
 				if tc.hasNext {
-					suite.NotNil(valsResp.Pagination.NextKey)
+					assert.Assert(t, valsResp.Pagination.NextKey != nil)
 				} else {
-					suite.Nil(valsResp.Pagination.NextKey)
+					assert.Assert(t, valsResp.Pagination.NextKey == nil)
 				}
 			} else {
-				suite.Require().Error(err)
+				assert.ErrorContains(t, err, tc.expErrMsg)
 			}
 		})
 	}
 }
 
-func (suite *IntegrationTestSuite) TestGRPCQueryDelegatorValidators() {
-	app, ctx, queryClient, addrs := suite.app, suite.ctx, suite.queryClient, suite.addrs
-	params := app.StakingKeeper.GetParams(ctx)
-	delValidators := app.StakingKeeper.GetDelegatorValidators(ctx, addrs[0], params.MaxValidators)
+func TestGRPCQueryDelegatorValidators(t *testing.T) {
+	t.Parallel()
+	f := initFixture(t)
+
+	ctx := f.sdkCtx
+	addrs, _ := createValidatorAccs(t, f)
+
+	qr := f.app.QueryHelper()
+	queryClient := types.NewQueryClient(qr)
+
+	params, err := f.stakingKeeper.GetParams(ctx)
+	assert.NilError(t, err)
+	delValidators, err := f.stakingKeeper.GetDelegatorValidators(ctx, addrs[0], params.MaxValidators)
+	assert.NilError(t, err)
 	var req *types.QueryDelegatorValidatorsRequest
 	testCases := []struct {
-		msg      string
-		malleate func()
-		expPass  bool
+		msg       string
+		malleate  func()
+		expPass   bool
+		expErrMsg string
 	}{
 		{
 			"empty request",
@@ -99,6 +146,18 @@ func (suite *IntegrationTestSuite) TestGRPCQueryDelegatorValidators() {
 				req = &types.QueryDelegatorValidatorsRequest{}
 			},
 			false,
+			"delegator address cannot be empty",
+		},
+		{
+			"invalid delegator address",
+			func() {
+				req = &types.QueryDelegatorValidatorsRequest{
+					DelegatorAddr: "invalid",
+					Pagination:    &query.PageRequest{Limit: 1, CountTotal: true},
+				}
+			},
+			false,
+			"invalid bech32",
 		},
 		{
 			"valid request",
@@ -109,35 +168,44 @@ func (suite *IntegrationTestSuite) TestGRPCQueryDelegatorValidators() {
 				}
 			},
 			true,
+			"",
 		},
 	}
 
 	for _, tc := range testCases {
-		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
+		t.Run(fmt.Sprintf("Case %s", tc.msg), func(t *testing.T) {
 			tc.malleate()
 			res, err := queryClient.DelegatorValidators(gocontext.Background(), req)
 			if tc.expPass {
-				suite.NoError(err)
-				suite.Equal(1, len(res.Validators))
-				suite.NotNil(res.Pagination.NextKey)
-				suite.Equal(uint64(len(delValidators)), res.Pagination.Total)
+				assert.NilError(t, err)
+				assert.Equal(t, 1, len(res.Validators))
+				assert.Assert(t, res.Pagination.NextKey != nil)
+				assert.Equal(t, uint64(len(delValidators.Validators)), res.Pagination.Total)
 			} else {
-				suite.Error(err)
-				suite.Nil(res)
+				assert.ErrorContains(t, err, tc.expErrMsg)
+				assert.Assert(t, res == nil)
 			}
 		})
 	}
 }
 
-func (suite *IntegrationTestSuite) TestGRPCQueryDelegatorValidator() {
-	queryClient, addrs, vals := suite.queryClient, suite.addrs, suite.vals
+func TestGRPCQueryDelegatorValidator(t *testing.T) {
+	t.Parallel()
+	f := initFixture(t)
+
+	addrs, vals := createValidatorAccs(t, f)
+
+	qr := f.app.QueryHelper()
+	queryClient := types.NewQueryClient(qr)
+
 	addr := addrs[1]
 	addrVal, addrVal1 := vals[0].OperatorAddress, vals[1].OperatorAddress
 	var req *types.QueryDelegatorValidatorRequest
 	testCases := []struct {
-		msg      string
-		malleate func()
-		expPass  bool
+		msg       string
+		malleate  func()
+		expPass   bool
+		expErrMsg string
 	}{
 		{
 			"empty request",
@@ -145,6 +213,7 @@ func (suite *IntegrationTestSuite) TestGRPCQueryDelegatorValidator() {
 				req = &types.QueryDelegatorValidatorRequest{}
 			},
 			false,
+			"delegator address cannot be empty",
 		},
 		{
 			"invalid delegator, validator pair",
@@ -155,6 +224,29 @@ func (suite *IntegrationTestSuite) TestGRPCQueryDelegatorValidator() {
 				}
 			},
 			false,
+			"not found",
+		},
+		{
+			"empty delegator address",
+			func() {
+				req = &types.QueryDelegatorValidatorRequest{
+					DelegatorAddr: "",
+					ValidatorAddr: addrVal1,
+				}
+			},
+			false,
+			"delegator address cannot be empty",
+		},
+		{
+			"empty validator address",
+			func() {
+				req = &types.QueryDelegatorValidatorRequest{
+					DelegatorAddr: addr.String(),
+					ValidatorAddr: "",
+				}
+			},
+			false,
+			"validator address cannot be empty",
 		},
 		{
 			"valid request",
@@ -165,38 +257,48 @@ func (suite *IntegrationTestSuite) TestGRPCQueryDelegatorValidator() {
 				}
 			},
 			true,
+			"",
 		},
 	}
 
 	for _, tc := range testCases {
-		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
+		t.Run(fmt.Sprintf("Case %s", tc.msg), func(t *testing.T) {
 			tc.malleate()
 			res, err := queryClient.DelegatorValidator(gocontext.Background(), req)
 			if tc.expPass {
-				suite.NoError(err)
-				suite.Equal(addrVal1, res.Validator.OperatorAddress)
+				assert.NilError(t, err)
+				assert.Equal(t, addrVal1, res.Validator.OperatorAddress)
 			} else {
-				suite.Error(err)
-				suite.Nil(res)
+				assert.ErrorContains(t, err, tc.expErrMsg)
+				assert.Assert(t, res == nil)
 			}
 		})
 	}
 }
 
-func (suite *IntegrationTestSuite) TestGRPCQueryDelegation() {
-	app, ctx, queryClient, addrs, vals := suite.app, suite.ctx, suite.queryClient, suite.addrs, suite.vals
+func TestGRPCQueryDelegation(t *testing.T) {
+	t.Parallel()
+	f := initFixture(t)
+
+	ctx := f.sdkCtx
+	addrs, vals := createValidatorAccs(t, f)
+
+	qr := f.app.QueryHelper()
+	queryClient := types.NewQueryClient(qr)
+
 	addrAcc, addrAcc1 := addrs[0], addrs[1]
 	addrVal := vals[0].OperatorAddress
 	valAddr, err := sdk.ValAddressFromBech32(addrVal)
-	suite.NoError(err)
-	delegation, found := app.StakingKeeper.GetDelegation(ctx, addrAcc, valAddr)
-	suite.True(found)
+	assert.NilError(t, err)
+	delegation, found := f.stakingKeeper.Delegations.Get(ctx, collections.Join(addrAcc, valAddr))
+	assert.Assert(t, found)
 	var req *types.QueryDelegationRequest
 
 	testCases := []struct {
-		msg      string
-		malleate func()
-		expPass  bool
+		msg       string
+		malleate  func()
+		expPass   bool
+		expErrMsg string
 	}{
 		{
 			"empty request",
@@ -204,6 +306,7 @@ func (suite *IntegrationTestSuite) TestGRPCQueryDelegation() {
 				req = &types.QueryDelegationRequest{}
 			},
 			false,
+			"delegator address cannot be empty",
 		},
 		{
 			"invalid validator, delegator pair",
@@ -214,6 +317,7 @@ func (suite *IntegrationTestSuite) TestGRPCQueryDelegation() {
 				}
 			},
 			false,
+			fmt.Sprintf("delegation with delegator %s not found for validator %s", addrAcc1.String(), addrVal),
 		},
 		{
 			"valid request",
@@ -221,59 +325,71 @@ func (suite *IntegrationTestSuite) TestGRPCQueryDelegation() {
 				req = &types.QueryDelegationRequest{DelegatorAddr: addrAcc.String(), ValidatorAddr: addrVal}
 			},
 			true,
+			"",
 		},
 	}
 
 	for _, tc := range testCases {
-		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
+		t.Run(fmt.Sprintf("Case %s", tc.msg), func(t *testing.T) {
 			tc.malleate()
 			res, err := queryClient.Delegation(gocontext.Background(), req)
 			if tc.expPass {
-				suite.Equal(delegation.ValidatorAddress, res.DelegationResponse.Delegation.ValidatorAddress)
-				suite.Equal(delegation.DelegatorAddress, res.DelegationResponse.Delegation.DelegatorAddress)
-				suite.Equal(sdk.NewCoin(sdk.DefaultBondDenom, delegation.Shares.TruncateInt()), res.DelegationResponse.Balance)
+				assert.Equal(t, delegation.ValidatorAddress, res.DelegationResponse.Delegation.ValidatorAddress)
+				assert.Equal(t, delegation.DelegatorAddress, res.DelegationResponse.Delegation.DelegatorAddress)
+				assert.DeepEqual(t, sdk.NewCoin(sdk.DefaultBondDenom, delegation.Shares.TruncateInt()), res.DelegationResponse.Balance)
 			} else {
-				suite.Error(err)
-				suite.Nil(res)
+				assert.ErrorContains(t, err, tc.expErrMsg)
+				assert.Assert(t, res == nil)
 			}
 		})
 	}
 }
 
-func (suite *IntegrationTestSuite) TestGRPCQueryDelegatorDelegations() {
-	app, ctx, queryClient, addrs, vals := suite.app, suite.ctx, suite.queryClient, suite.addrs, suite.vals
+func TestGRPCQueryDelegatorDelegations(t *testing.T) {
+	t.Parallel()
+	f := initFixture(t)
+
+	ctx := f.sdkCtx
+	addrs, vals := createValidatorAccs(t, f)
+
+	qr := f.app.QueryHelper()
+	queryClient := types.NewQueryClient(qr)
+
 	addrAcc := addrs[0]
 	addrVal1 := vals[0].OperatorAddress
 	valAddr, err := sdk.ValAddressFromBech32(addrVal1)
-	suite.NoError(err)
-	delegation, found := app.StakingKeeper.GetDelegation(ctx, addrAcc, valAddr)
-	suite.True(found)
+	assert.NilError(t, err)
+	delegation, found := f.stakingKeeper.Delegations.Get(ctx, collections.Join(addrAcc, valAddr))
+	assert.Assert(t, found)
 	var req *types.QueryDelegatorDelegationsRequest
 
 	testCases := []struct {
 		msg       string
 		malleate  func()
-		onSuccess func(suite *IntegrationTestSuite, response *types.QueryDelegatorDelegationsResponse)
+		onSuccess func(response *types.QueryDelegatorDelegationsResponse)
 		expErr    bool
+		expErrMsg string
 	}{
 		{
 			"empty request",
 			func() {
 				req = &types.QueryDelegatorDelegationsRequest{}
 			},
-			func(suite *IntegrationTestSuite, response *types.QueryDelegatorDelegationsResponse) {},
+			func(response *types.QueryDelegatorDelegationsResponse) {},
 			true,
+			"delegator address cannot be empty",
 		},
 		{
 			"valid request with no delegations",
 			func() {
 				req = &types.QueryDelegatorDelegationsRequest{DelegatorAddr: addrs[4].String()}
 			},
-			func(suite *IntegrationTestSuite, response *types.QueryDelegatorDelegationsResponse) {
-				suite.Equal(uint64(0), response.Pagination.Total)
-				suite.Len(response.DelegationResponses, 0)
+			func(response *types.QueryDelegatorDelegationsResponse) {
+				assert.Equal(t, uint64(0), response.Pagination.Total)
+				assert.Assert(t, len(response.DelegationResponses) == 0)
 			},
 			false,
+			"",
 		},
 		{
 			"valid request",
@@ -283,46 +399,56 @@ func (suite *IntegrationTestSuite) TestGRPCQueryDelegatorDelegations() {
 					Pagination:    &query.PageRequest{Limit: 1, CountTotal: true},
 				}
 			},
-			func(suite *IntegrationTestSuite, response *types.QueryDelegatorDelegationsResponse) {
-				suite.Equal(uint64(2), response.Pagination.Total)
-				suite.Len(response.DelegationResponses, 1)
-				suite.Equal(sdk.NewCoin(sdk.DefaultBondDenom, delegation.Shares.TruncateInt()), response.DelegationResponses[0].Balance)
+			func(response *types.QueryDelegatorDelegationsResponse) {
+				assert.Equal(t, uint64(2), response.Pagination.Total)
+				assert.Assert(t, len(response.DelegationResponses) == 1)
+				assert.DeepEqual(t, sdk.NewCoin(sdk.DefaultBondDenom, delegation.Shares.TruncateInt()), response.DelegationResponses[0].Balance)
 			},
 			false,
+			"",
 		},
 	}
 
 	for _, tc := range testCases {
-		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
+		t.Run(fmt.Sprintf("Case %s", tc.msg), func(t *testing.T) {
 			tc.malleate()
 			res, err := queryClient.DelegatorDelegations(gocontext.Background(), req)
 			if tc.expErr {
-				suite.Error(err)
+				assert.ErrorContains(t, err, tc.expErrMsg)
 			} else {
-				suite.NoError(err)
-				tc.onSuccess(suite, res)
+				assert.NilError(t, err)
+				tc.onSuccess(res)
 			}
 		})
 	}
 }
 
-func (suite *IntegrationTestSuite) TestGRPCQueryValidatorDelegations() {
-	app, ctx, queryClient, addrs, vals := suite.app, suite.ctx, suite.queryClient, suite.addrs, suite.vals
+func TestGRPCQueryValidatorDelegations(t *testing.T) {
+	t.Parallel()
+	f := initFixture(t)
+
+	ctx := f.sdkCtx
+	addrs, vals := createValidatorAccs(t, f)
+
+	qr := f.app.QueryHelper()
+	queryClient := types.NewQueryClient(qr)
+
 	addrAcc := addrs[0]
 	addrVal1 := vals[1].OperatorAddress
 	valAddrs := simtestutil.ConvertAddrsToValAddrs(addrs)
 	addrVal2 := valAddrs[4]
 	valAddr, err := sdk.ValAddressFromBech32(addrVal1)
-	suite.NoError(err)
-	delegation, found := app.StakingKeeper.GetDelegation(ctx, addrAcc, valAddr)
-	suite.True(found)
+	assert.NilError(t, err)
+	delegation, found := f.stakingKeeper.Delegations.Get(ctx, collections.Join(addrAcc, valAddr))
+	assert.Assert(t, found)
 
 	var req *types.QueryValidatorDelegationsRequest
 	testCases := []struct {
-		msg      string
-		malleate func()
-		expPass  bool
-		expErr   bool
+		msg       string
+		malleate  func()
+		expPass   bool
+		expErr    bool
+		expErrMsg string
 	}{
 		{
 			"empty request",
@@ -331,14 +457,16 @@ func (suite *IntegrationTestSuite) TestGRPCQueryValidatorDelegations() {
 			},
 			false,
 			true,
+			"validator address cannot be empty",
 		},
 		{
-			"invalid validator delegator pair",
+			"invalid validator address",
 			func() {
 				req = &types.QueryValidatorDelegationsRequest{ValidatorAddr: addrVal2.String()}
 			},
 			false,
 			false,
+			"",
 		},
 		{
 			"valid request",
@@ -350,49 +478,60 @@ func (suite *IntegrationTestSuite) TestGRPCQueryValidatorDelegations() {
 			},
 			true,
 			false,
+			"",
 		},
 	}
 
 	for _, tc := range testCases {
-		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
+		t.Run(fmt.Sprintf("Case %s", tc.msg), func(t *testing.T) {
 			tc.malleate()
 			res, err := queryClient.ValidatorDelegations(gocontext.Background(), req)
-			if tc.expPass && !tc.expErr {
-				suite.NoError(err)
-				suite.Len(res.DelegationResponses, 1)
-				suite.NotNil(res.Pagination.NextKey)
-				suite.Equal(uint64(2), res.Pagination.Total)
-				suite.Equal(addrVal1, res.DelegationResponses[0].Delegation.ValidatorAddress)
-				suite.Equal(sdk.NewCoin(sdk.DefaultBondDenom, delegation.Shares.TruncateInt()), res.DelegationResponses[0].Balance)
-			} else if !tc.expPass && !tc.expErr {
-				suite.NoError(err)
-				suite.Nil(res.DelegationResponses)
-			} else {
-				suite.Error(err)
-				suite.Nil(res)
+			switch {
+			case tc.expPass && !tc.expErr:
+				assert.NilError(t, err)
+				assert.Assert(t, len(res.DelegationResponses) == 1)
+				assert.Assert(t, res.Pagination.NextKey != nil)
+				assert.Equal(t, uint64(2), res.Pagination.Total)
+				assert.Equal(t, addrVal1, res.DelegationResponses[0].Delegation.ValidatorAddress)
+				assert.DeepEqual(t, sdk.NewCoin(sdk.DefaultBondDenom, delegation.Shares.TruncateInt()), res.DelegationResponses[0].Balance)
+			case !tc.expPass && !tc.expErr:
+				assert.NilError(t, err)
+				assert.Assert(t, res.DelegationResponses == nil)
+			default:
+				assert.ErrorContains(t, err, tc.expErrMsg)
+				assert.Assert(t, res == nil)
 			}
 		})
 	}
 }
 
-func (suite *IntegrationTestSuite) TestGRPCQueryUnbondingDelegation() {
-	app, ctx, queryClient, addrs, vals := suite.app, suite.ctx, suite.queryClient, suite.addrs, suite.vals
+func TestGRPCQueryUnbondingDelegation(t *testing.T) {
+	t.Parallel()
+	f := initFixture(t)
+
+	ctx := f.sdkCtx
+	addrs, vals := createValidatorAccs(t, f)
+
+	qr := f.app.QueryHelper()
+	queryClient := types.NewQueryClient(qr)
+
 	addrAcc2 := addrs[1]
 	addrVal2 := vals[1].OperatorAddress
 
-	unbondingTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 2)
+	unbondingTokens := f.stakingKeeper.TokensFromConsensusPower(ctx, 2)
 	valAddr, err1 := sdk.ValAddressFromBech32(addrVal2)
-	suite.NoError(err1)
-	_, err := app.StakingKeeper.Undelegate(ctx, addrAcc2, valAddr, sdk.NewDecFromInt(unbondingTokens))
-	suite.NoError(err)
+	assert.NilError(t, err1)
+	_, _, err := f.stakingKeeper.Undelegate(ctx, addrAcc2, valAddr, math.LegacyNewDecFromInt(unbondingTokens))
+	assert.NilError(t, err)
 
-	unbond, found := app.StakingKeeper.GetUnbondingDelegation(ctx, addrAcc2, valAddr)
-	suite.True(found)
+	unbond, found := f.stakingKeeper.GetUnbondingDelegation(ctx, addrAcc2, valAddr)
+	assert.Assert(t, found)
 	var req *types.QueryUnbondingDelegationRequest
 	testCases := []struct {
-		msg      string
-		malleate func()
-		expPass  bool
+		msg       string
+		malleate  func()
+		expPass   bool
+		expErrMsg string
 	}{
 		{
 			"empty request",
@@ -400,13 +539,47 @@ func (suite *IntegrationTestSuite) TestGRPCQueryUnbondingDelegation() {
 				req = &types.QueryUnbondingDelegationRequest{}
 			},
 			false,
+			"delegator address cannot be empty",
 		},
 		{
-			"invalid request",
+			"empty validator address",
 			func() {
-				req = &types.QueryUnbondingDelegationRequest{}
+				req = &types.QueryUnbondingDelegationRequest{
+					DelegatorAddr: addrAcc2.String(),
+				}
 			},
 			false,
+			"validator address cannot be empty",
+		},
+		{
+			"empty delegator address",
+			func() {
+				req = &types.QueryUnbondingDelegationRequest{
+					ValidatorAddr: addrVal2,
+				}
+			},
+			false,
+			"delegator address cannot be empty",
+		},
+		{
+			"invalid validator address",
+			func() {
+				req = &types.QueryUnbondingDelegationRequest{
+					DelegatorAddr: addrAcc2.String(), ValidatorAddr: sdk.AccAddress([]byte("invalid")).String(),
+				}
+			},
+			false,
+			"hrp does not match bech32 prefix",
+		},
+		{
+			"delegation not found for validator",
+			func() {
+				req = &types.QueryUnbondingDelegationRequest{
+					DelegatorAddr: addrAcc2.String(), ValidatorAddr: sdk.ValAddress([]byte("invalid")).String(),
+				}
+			},
+			false,
+			fmt.Sprintf("unbonding delegation with delegator %s not found for validator", addrAcc2.String()),
 		},
 		{
 			"valid request",
@@ -416,47 +589,57 @@ func (suite *IntegrationTestSuite) TestGRPCQueryUnbondingDelegation() {
 				}
 			},
 			true,
+			"",
 		},
 	}
 
 	for _, tc := range testCases {
-		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
+		t.Run(fmt.Sprintf("Case %s", tc.msg), func(t *testing.T) {
 			tc.malleate()
 			res, err := queryClient.UnbondingDelegation(gocontext.Background(), req)
 			if tc.expPass {
-				suite.NotNil(res)
-				suite.Equal(unbond, res.Unbond)
+				assert.Assert(t, res != nil)
+				assert.DeepEqual(t, unbond, res.Unbond)
 			} else {
-				suite.Error(err)
-				suite.Nil(res)
+				assert.ErrorContains(t, err, tc.expErrMsg)
+				assert.Assert(t, res == nil)
 			}
 		})
 	}
 }
 
-func (suite *IntegrationTestSuite) TestGRPCQueryDelegatorUnbondingDelegations() {
-	app, ctx, queryClient, addrs, vals := suite.app, suite.ctx, suite.queryClient, suite.addrs, suite.vals
+func TestGRPCQueryDelegatorUnbondingDelegations(t *testing.T) {
+	t.Parallel()
+	f := initFixture(t)
+
+	ctx := f.sdkCtx
+	addrs, vals := createValidatorAccs(t, f)
+
+	qr := f.app.QueryHelper()
+	queryClient := types.NewQueryClient(qr)
+
 	addrAcc, addrAcc1 := addrs[0], addrs[1]
 	addrVal, addrVal2 := vals[0].OperatorAddress, vals[1].OperatorAddress
 
-	unbondingTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 2)
+	unbondingTokens := f.stakingKeeper.TokensFromConsensusPower(ctx, 2)
 	valAddr1, err1 := sdk.ValAddressFromBech32(addrVal)
-	suite.NoError(err1)
-	_, err := app.StakingKeeper.Undelegate(ctx, addrAcc, valAddr1, sdk.NewDecFromInt(unbondingTokens))
-	suite.NoError(err)
+	assert.NilError(t, err1)
+	_, _, err := f.stakingKeeper.Undelegate(ctx, addrAcc, valAddr1, math.LegacyNewDecFromInt(unbondingTokens))
+	assert.NilError(t, err)
 	valAddr2, err1 := sdk.ValAddressFromBech32(addrVal2)
-	suite.NoError(err1)
-	_, err = app.StakingKeeper.Undelegate(ctx, addrAcc, valAddr2, sdk.NewDecFromInt(unbondingTokens))
-	suite.NoError(err)
+	assert.NilError(t, err1)
+	_, _, err = f.stakingKeeper.Undelegate(ctx, addrAcc, valAddr2, math.LegacyNewDecFromInt(unbondingTokens))
+	assert.NilError(t, err)
 
-	unbond, found := app.StakingKeeper.GetUnbondingDelegation(ctx, addrAcc, valAddr1)
-	suite.True(found)
+	unbond, found := f.stakingKeeper.GetUnbondingDelegation(ctx, addrAcc, valAddr1)
+	assert.Assert(t, found)
 	var req *types.QueryDelegatorUnbondingDelegationsRequest
 	testCases := []struct {
-		msg      string
-		malleate func()
-		expPass  bool
-		expErr   bool
+		msg       string
+		malleate  func()
+		expPass   bool
+		expErr    bool
+		expErrMsg string
 	}{
 		{
 			"empty request",
@@ -465,6 +648,7 @@ func (suite *IntegrationTestSuite) TestGRPCQueryDelegatorUnbondingDelegations() 
 			},
 			false,
 			true,
+			"delegator address cannot be empty",
 		},
 		{
 			"invalid request",
@@ -473,6 +657,7 @@ func (suite *IntegrationTestSuite) TestGRPCQueryDelegatorUnbondingDelegations() 
 			},
 			false,
 			false,
+			"",
 		},
 		{
 			"valid request",
@@ -484,59 +669,78 @@ func (suite *IntegrationTestSuite) TestGRPCQueryDelegatorUnbondingDelegations() 
 			},
 			true,
 			false,
+			"",
 		},
 	}
 
 	for _, tc := range testCases {
-		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
+		t.Run(fmt.Sprintf("Case %s", tc.msg), func(t *testing.T) {
 			tc.malleate()
 			res, err := queryClient.DelegatorUnbondingDelegations(gocontext.Background(), req)
-			if tc.expPass && !tc.expErr {
-				suite.NoError(err)
-				suite.NotNil(res.Pagination.NextKey)
-				suite.Equal(uint64(2), res.Pagination.Total)
-				suite.Len(res.UnbondingResponses, 1)
-				suite.Equal(unbond, res.UnbondingResponses[0])
-			} else if !tc.expPass && !tc.expErr {
-				suite.NoError(err)
-				suite.Nil(res.UnbondingResponses)
-			} else {
-				suite.Error(err)
-				suite.Nil(res)
+			switch {
+			case tc.expPass && !tc.expErr:
+				assert.NilError(t, err)
+				assert.Assert(t, res.Pagination.NextKey != nil)
+				assert.Equal(t, uint64(2), res.Pagination.Total)
+				assert.Assert(t, len(res.UnbondingResponses) == 1)
+				assert.DeepEqual(t, unbond, res.UnbondingResponses[0])
+			case !tc.expPass && !tc.expErr:
+				assert.NilError(t, err)
+				assert.Assert(t, res.UnbondingResponses == nil)
+			default:
+				assert.ErrorContains(t, err, tc.expErrMsg)
+				assert.Assert(t, res == nil)
 			}
 		})
 	}
 }
 
-func (suite *IntegrationTestSuite) TestGRPCQueryPoolParameters() {
-	app, ctx, queryClient := suite.app, suite.ctx, suite.queryClient
+func TestGRPCQueryPoolParameters(t *testing.T) {
+	t.Parallel()
+	f := initFixture(t)
+
+	ctx := f.sdkCtx
+
+	qr := f.app.QueryHelper()
+	queryClient := types.NewQueryClient(qr)
+
 	bondDenom := sdk.DefaultBondDenom
 
 	// Query pool
 	res, err := queryClient.Pool(gocontext.Background(), &types.QueryPoolRequest{})
-	suite.NoError(err)
-	bondedPool := app.StakingKeeper.GetBondedPool(ctx)
-	notBondedPool := app.StakingKeeper.GetNotBondedPool(ctx)
-	suite.Equal(app.BankKeeper.GetBalance(ctx, notBondedPool.GetAddress(), bondDenom).Amount, res.Pool.NotBondedTokens)
-	suite.Equal(app.BankKeeper.GetBalance(ctx, bondedPool.GetAddress(), bondDenom).Amount, res.Pool.BondedTokens)
+	assert.NilError(t, err)
+	bondedPool := f.stakingKeeper.GetBondedPool(ctx)
+	notBondedPool := f.stakingKeeper.GetNotBondedPool(ctx)
+	assert.DeepEqual(t, f.bankKeeper.GetBalance(ctx, notBondedPool.GetAddress(), bondDenom).Amount, res.Pool.NotBondedTokens)
+	assert.DeepEqual(t, f.bankKeeper.GetBalance(ctx, bondedPool.GetAddress(), bondDenom).Amount, res.Pool.BondedTokens)
 
 	// Query Params
 	resp, err := queryClient.Params(gocontext.Background(), &types.QueryParamsRequest{})
-	suite.NoError(err)
-	suite.Equal(app.StakingKeeper.GetParams(ctx), resp.Params)
+	assert.NilError(t, err)
+	params, err := f.stakingKeeper.GetParams(ctx)
+	assert.NilError(t, err)
+	assert.DeepEqual(t, params, resp.Params)
 }
 
-func (suite *IntegrationTestSuite) TestGRPCQueryHistoricalInfo() {
-	app, ctx, queryClient := suite.app, suite.ctx, suite.queryClient
+func TestGRPCQueryHistoricalInfo(t *testing.T) {
+	t.Parallel()
+	f := initFixture(t)
 
-	hi, found := app.StakingKeeper.GetHistoricalInfo(ctx, 5)
-	suite.True(found)
+	ctx := f.sdkCtx
+	_, _ = createValidatorAccs(t, f)
+
+	qr := f.app.QueryHelper()
+	queryClient := types.NewQueryClient(qr)
+
+	hi, found := f.stakingKeeper.HistoricalInfo.Get(ctx, uint64(5))
+	assert.Assert(t, found)
 
 	var req *types.QueryHistoricalInfoRequest
 	testCases := []struct {
-		msg      string
-		malleate func()
-		expPass  bool
+		msg       string
+		malleate  func()
+		expPass   bool
+		expErrMsg string
 	}{
 		{
 			"empty request",
@@ -544,6 +748,7 @@ func (suite *IntegrationTestSuite) TestGRPCQueryHistoricalInfo() {
 				req = &types.QueryHistoricalInfoRequest{}
 			},
 			false,
+			"historical info for height 0 not found",
 		},
 		{
 			"invalid request with negative height",
@@ -551,6 +756,7 @@ func (suite *IntegrationTestSuite) TestGRPCQueryHistoricalInfo() {
 				req = &types.QueryHistoricalInfoRequest{Height: -1}
 			},
 			false,
+			"height cannot be negative",
 		},
 		{
 			"valid request with old height",
@@ -558,6 +764,7 @@ func (suite *IntegrationTestSuite) TestGRPCQueryHistoricalInfo() {
 				req = &types.QueryHistoricalInfoRequest{Height: 4}
 			},
 			false,
+			"historical info for height 4 not found",
 		},
 		{
 			"valid request with current height",
@@ -565,50 +772,64 @@ func (suite *IntegrationTestSuite) TestGRPCQueryHistoricalInfo() {
 				req = &types.QueryHistoricalInfoRequest{Height: 5}
 			},
 			true,
+			"",
 		},
 	}
 
 	for _, tc := range testCases {
-		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
+		t.Run(fmt.Sprintf("Case %s", tc.msg), func(t *testing.T) {
 			tc.malleate()
 			res, err := queryClient.HistoricalInfo(gocontext.Background(), req)
 			if tc.expPass {
-				suite.NoError(err)
-				suite.NotNil(res)
-				suite.True(hi.Equal(res.Hist))
+				assert.NilError(t, err)
+				assert.Assert(t, res != nil)
+				assert.Assert(t, hi.Equal(res.Hist))
 			} else {
-				suite.Error(err)
-				suite.Nil(res)
+				assert.ErrorContains(t, err, tc.expErrMsg)
+				assert.Assert(t, res == nil)
 			}
 		})
 	}
 }
 
-func (suite *IntegrationTestSuite) TestGRPCQueryRedelegations() {
-	app, ctx, queryClient, addrs, vals := suite.app, suite.ctx, suite.queryClient, suite.addrs, suite.vals
+func TestGRPCQueryRedelegations(t *testing.T) {
+	t.Parallel()
+	f := initFixture(t)
+
+	ctx := f.sdkCtx
+	addrs, vals := createValidatorAccs(t, f)
+
+	qr := f.app.QueryHelper()
+	queryClient := types.NewQueryClient(qr)
 
 	addrAcc, addrAcc1 := addrs[0], addrs[1]
 	valAddrs := simtestutil.ConvertAddrsToValAddrs(addrs)
 	val1, val2, val3, val4 := vals[0], vals[1], valAddrs[3], valAddrs[4]
-	delAmount := app.StakingKeeper.TokensFromConsensusPower(ctx, 1)
-	_, err := app.StakingKeeper.Delegate(ctx, addrAcc1, delAmount, types.Unbonded, val1, true)
-	suite.NoError(err)
-	applyValidatorSetUpdates(suite.T(), ctx, app.StakingKeeper, -1)
+	delAmount := f.stakingKeeper.TokensFromConsensusPower(ctx, 1)
+	_, err := f.stakingKeeper.Delegate(ctx, addrAcc1, delAmount, types.Unbonded, val1, true)
+	assert.NilError(t, err)
+	applyValidatorSetUpdates(t, ctx, f.stakingKeeper, -1)
 
-	rdAmount := app.StakingKeeper.TokensFromConsensusPower(ctx, 1)
-	_, err = app.StakingKeeper.BeginRedelegation(ctx, addrAcc1, val1.GetOperator(), val2.GetOperator(), sdk.NewDecFromInt(rdAmount))
-	suite.NoError(err)
-	applyValidatorSetUpdates(suite.T(), ctx, app.StakingKeeper, -1)
+	rdAmount := f.stakingKeeper.TokensFromConsensusPower(ctx, 1)
+	val1bz, err := f.stakingKeeper.ValidatorAddressCodec().StringToBytes(val1.GetOperator())
+	assert.NilError(t, err)
+	val2bz, err := f.stakingKeeper.ValidatorAddressCodec().StringToBytes(val2.GetOperator())
+	assert.NilError(t, err)
 
-	redel, found := app.StakingKeeper.GetRedelegation(ctx, addrAcc1, val1.GetOperator(), val2.GetOperator())
-	suite.True(found)
+	_, err = f.stakingKeeper.BeginRedelegation(ctx, addrAcc1, val1bz, val2bz, math.LegacyNewDecFromInt(rdAmount))
+	assert.NilError(t, err)
+	applyValidatorSetUpdates(t, ctx, f.stakingKeeper, -1)
+
+	redel, found := f.stakingKeeper.Redelegations.Get(ctx, collections.Join3(addrAcc1.Bytes(), valAddrs[0].Bytes(), valAddrs[1].Bytes()))
+	assert.Assert(t, found)
 
 	var req *types.QueryRedelegationsRequest
 	testCases := []struct {
-		msg      string
-		malleate func()
-		expPass  bool
-		expErr   bool
+		msg       string
+		malleate  func()
+		expPass   bool
+		expErr    bool
+		expErrMsg string
 	}{
 		{
 			"request redelegations for non existent addr",
@@ -617,6 +838,7 @@ func (suite *IntegrationTestSuite) TestGRPCQueryRedelegations() {
 			},
 			false,
 			false,
+			fmt.Sprintf("redelegation not found for delegator address %s", addrAcc.String()),
 		},
 		{
 			"request redelegations with non existent pairs",
@@ -628,6 +850,8 @@ func (suite *IntegrationTestSuite) TestGRPCQueryRedelegations() {
 			},
 			false,
 			true,
+			fmt.Sprintf("redelegation not found for delegator address %s from validator address %s",
+				addrAcc.String(), val3.String()),
 		},
 		{
 			"request redelegations with delegatoraddr, sourceValAddr, destValAddr",
@@ -639,6 +863,7 @@ func (suite *IntegrationTestSuite) TestGRPCQueryRedelegations() {
 			},
 			true,
 			false,
+			"",
 		},
 		{
 			"request redelegations with delegatoraddr and sourceValAddr",
@@ -650,58 +875,72 @@ func (suite *IntegrationTestSuite) TestGRPCQueryRedelegations() {
 			},
 			true,
 			false,
+			"",
 		},
 		{
 			"query redelegations with sourceValAddr only",
 			func() {
 				req = &types.QueryRedelegationsRequest{
-					SrcValidatorAddr: val1.GetOperator().String(),
+					SrcValidatorAddr: val1.GetOperator(),
 					Pagination:       &query.PageRequest{Limit: 1, CountTotal: true},
 				}
 			},
 			true,
 			false,
+			"",
 		},
 	}
 
 	for _, tc := range testCases {
-		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
+		t.Run(fmt.Sprintf("Case %s", tc.msg), func(t *testing.T) {
 			tc.malleate()
 			res, err := queryClient.Redelegations(gocontext.Background(), req)
-			if tc.expPass && !tc.expErr {
-				suite.NoError(err)
-				suite.Len(res.RedelegationResponses, len(redel.Entries))
-				suite.Equal(redel.DelegatorAddress, res.RedelegationResponses[0].Redelegation.DelegatorAddress)
-				suite.Equal(redel.ValidatorSrcAddress, res.RedelegationResponses[0].Redelegation.ValidatorSrcAddress)
-				suite.Equal(redel.ValidatorDstAddress, res.RedelegationResponses[0].Redelegation.ValidatorDstAddress)
-				suite.Len(redel.Entries, len(res.RedelegationResponses[0].Entries))
-			} else if !tc.expPass && !tc.expErr {
-				suite.NoError(err)
-				suite.Nil(res.RedelegationResponses)
-			} else {
-				suite.Error(err)
-				suite.Nil(res)
+			switch {
+			case tc.expPass && !tc.expErr:
+				assert.NilError(t, err)
+				assert.Assert(t, len(res.RedelegationResponses) == len(redel.Entries))
+				assert.Equal(t, redel.DelegatorAddress, res.RedelegationResponses[0].Redelegation.DelegatorAddress)
+				assert.Equal(t, redel.ValidatorSrcAddress, res.RedelegationResponses[0].Redelegation.ValidatorSrcAddress)
+				assert.Equal(t, redel.ValidatorDstAddress, res.RedelegationResponses[0].Redelegation.ValidatorDstAddress)
+				assert.Assert(t, len(redel.Entries) == len(res.RedelegationResponses[0].Entries))
+			case !tc.expPass && !tc.expErr:
+				assert.NilError(t, err)
+				assert.Assert(t, res.RedelegationResponses == nil)
+			default:
+				assert.ErrorContains(t, err, tc.expErrMsg)
+				assert.Assert(t, res == nil)
 			}
 		})
 	}
 }
 
-func (suite *IntegrationTestSuite) TestGRPCQueryValidatorUnbondingDelegations() {
-	app, ctx, queryClient, addrs, vals := suite.app, suite.ctx, suite.queryClient, suite.addrs, suite.vals
+func TestGRPCQueryValidatorUnbondingDelegations(t *testing.T) {
+	t.Parallel()
+	f := initFixture(t)
+
+	ctx := f.sdkCtx
+	addrs, vals := createValidatorAccs(t, f)
+
+	qr := f.app.QueryHelper()
+	queryClient := types.NewQueryClient(qr)
+
 	addrAcc1, _ := addrs[0], addrs[1]
 	val1 := vals[0]
 
 	// undelegate
-	undelAmount := app.StakingKeeper.TokensFromConsensusPower(ctx, 2)
-	_, err := app.StakingKeeper.Undelegate(ctx, addrAcc1, val1.GetOperator(), sdk.NewDecFromInt(undelAmount))
-	suite.NoError(err)
-	applyValidatorSetUpdates(suite.T(), ctx, app.StakingKeeper, -1)
+	undelAmount := f.stakingKeeper.TokensFromConsensusPower(ctx, 2)
+	valbz, err := f.stakingKeeper.ValidatorAddressCodec().StringToBytes(val1.GetOperator())
+	assert.NilError(t, err)
+	_, _, err = f.stakingKeeper.Undelegate(ctx, addrAcc1, valbz, math.LegacyNewDecFromInt(undelAmount))
+	assert.NilError(t, err)
+	applyValidatorSetUpdates(t, ctx, f.stakingKeeper, -1)
 
 	var req *types.QueryValidatorUnbondingDelegationsRequest
 	testCases := []struct {
-		msg      string
-		malleate func()
-		expPass  bool
+		msg       string
+		malleate  func()
+		expPass   bool
+		expErrMsg string
 	}{
 		{
 			"empty request",
@@ -709,31 +948,44 @@ func (suite *IntegrationTestSuite) TestGRPCQueryValidatorUnbondingDelegations() 
 				req = &types.QueryValidatorUnbondingDelegationsRequest{}
 			},
 			false,
+			"validator address cannot be empty",
+		},
+		{
+			"invalid validator address",
+			func() {
+				req = &types.QueryValidatorUnbondingDelegationsRequest{
+					ValidatorAddr: "invalid",
+					Pagination:    &query.PageRequest{Limit: 1, CountTotal: true},
+				}
+			},
+			false,
+			"invalid bech32",
 		},
 		{
 			"valid request",
 			func() {
 				req = &types.QueryValidatorUnbondingDelegationsRequest{
-					ValidatorAddr: val1.GetOperator().String(),
+					ValidatorAddr: val1.GetOperator(),
 					Pagination:    &query.PageRequest{Limit: 1, CountTotal: true},
 				}
 			},
 			true,
+			"",
 		},
 	}
 
 	for _, tc := range testCases {
-		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
+		t.Run(fmt.Sprintf("Case %s", tc.msg), func(t *testing.T) {
 			tc.malleate()
 			res, err := queryClient.ValidatorUnbondingDelegations(gocontext.Background(), req)
 			if tc.expPass {
-				suite.NoError(err)
-				suite.Equal(uint64(1), res.Pagination.Total)
-				suite.Equal(1, len(res.UnbondingResponses))
-				suite.Equal(res.UnbondingResponses[0].ValidatorAddress, val1.OperatorAddress)
+				assert.NilError(t, err)
+				assert.Equal(t, uint64(1), res.Pagination.Total)
+				assert.Equal(t, 1, len(res.UnbondingResponses))
+				assert.Equal(t, res.UnbondingResponses[0].ValidatorAddress, val1.OperatorAddress)
 			} else {
-				suite.Error(err)
-				suite.Nil(res)
+				assert.ErrorContains(t, err, tc.expErrMsg)
+				assert.Assert(t, res == nil)
 			}
 		})
 	}

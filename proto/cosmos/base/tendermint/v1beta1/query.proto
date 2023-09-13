@@ -10,8 +10,9 @@ import "cosmos/base/query/v1beta1/pagination.proto";
 import "cosmos/base/tendermint/v1beta1/types.proto";
 import "cosmos_proto/cosmos.proto";
 import "tendermint/types/block.proto";
+import "amino/amino.proto";
 
-option go_package = "github.com/cosmos/cosmos-sdk/client/grpc/tmservice";
+option go_package = "github.com/cosmos/cosmos-sdk/client/grpc/cmtservice";
 
 // Service defines the gRPC querier service for tendermint queries.
 service Service {
@@ -189,7 +190,7 @@ message ABCIQueryResponse {
 }
 
 // ProofOp defines an operation used for calculating Merkle root. The data could
-// be arbitrary format, providing nessecary data for example neighbouring node
+// be arbitrary format, providing necessary data for example neighbouring node
 // hash.
 //
 // Note: This type is a duplicate of the ProofOp proto type defined in Tendermint.
@@ -203,5 +204,5 @@ message ProofOp {
 //
 // Note: This type is a duplicate of the ProofOps proto type defined in Tendermint.
 message ProofOps {
-  repeated ProofOp ops = 1 [(gogoproto.nullable) = false];
+  repeated ProofOp ops = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 }

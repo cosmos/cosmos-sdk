@@ -4,28 +4,12 @@ import (
 	"fmt"
 	"strings"
 
-	"cosmossdk.io/math"
-	"sigs.k8s.io/yaml"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkmath "cosmossdk.io/math"
 )
-
-// NewVote creates a new Vote instance
-//
-//nolint:interfacer
-func NewVote(proposalID uint64, voter sdk.AccAddress, options WeightedVoteOptions) Vote {
-	return Vote{ProposalId: proposalID, Voter: voter.String(), Options: options}
-}
-
-// String returns the string representation of the vote
-func (v Vote) String() string {
-	out, _ := yaml.Marshal(v)
-	return string(out)
-}
 
 // Empty returns whether a vote is empty.
 func (v Vote) Empty() bool {
-	return v.String() == Vote{}.String()
+	return v.String() == (&Vote{}).String()
 }
 
 // Votes is an array of vote
@@ -46,6 +30,7 @@ func (v Votes) Equal(other Votes) bool {
 	return true
 }
 
+// String implements stringer interface
 func (v Votes) String() string {
 	if len(v) == 0 {
 		return "[]"
@@ -59,12 +44,7 @@ func (v Votes) String() string {
 
 // NewNonSplitVoteOption creates a single option vote with weight 1
 func NewNonSplitVoteOption(option VoteOption) WeightedVoteOptions {
-	return WeightedVoteOptions{{option, math.LegacyNewDec(1)}}
-}
-
-func (v WeightedVoteOption) String() string {
-	out, _ := yaml.Marshal(v)
-	return string(out)
+	return WeightedVoteOptions{{option, sdkmath.LegacyNewDec(1)}}
 }
 
 // WeightedVoteOptions describes array of WeightedVoteOptions
@@ -80,7 +60,7 @@ func (v WeightedVoteOptions) String() (out string) {
 
 // ValidWeightedVoteOption returns true if the sub vote is valid and false otherwise.
 func ValidWeightedVoteOption(option WeightedVoteOption) bool {
-	if !option.Weight.IsPositive() || option.Weight.GT(math.LegacyNewDec(1)) {
+	if !option.Weight.IsPositive() || option.Weight.GT(sdkmath.LegacyNewDec(1)) {
 		return false
 	}
 	return ValidVoteOption(option.Option)
@@ -109,7 +89,7 @@ func WeightedVoteOptionsFromString(str string) (WeightedVoteOptions, error) {
 		if len(fields) < 2 {
 			return options, fmt.Errorf("weight field does not exist for %s option", fields[0])
 		}
-		weight, err := sdk.NewDecFromStr(fields[1])
+		weight, err := sdkmath.LegacyNewDecFromStr(fields[1])
 		if err != nil {
 			return options, err
 		}

@@ -1,11 +1,11 @@
 package transient
 
 import (
-	dbm "github.com/tendermint/tm-db"
+	dbm "github.com/cosmos/cosmos-db"
 
-	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
-	"github.com/cosmos/cosmos-sdk/store/dbadapter"
-	"github.com/cosmos/cosmos-sdk/store/types"
+	"cosmossdk.io/store/dbadapter"
+	pruningtypes "cosmossdk.io/store/pruning/types"
+	"cosmossdk.io/store/types"
 )
 
 var (
@@ -39,8 +39,12 @@ func (ts *Store) GetPruning() pruningtypes.PruningOptions {
 }
 
 // Implements CommitStore
-func (ts *Store) LastCommitID() (id types.CommitID) {
-	return
+func (ts *Store) LastCommitID() types.CommitID {
+	return types.CommitID{}
+}
+
+func (ts *Store) WorkingHash() []byte {
+	return []byte{}
 }
 
 // Implements Store.

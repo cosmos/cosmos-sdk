@@ -1,130 +1,132 @@
 package keeper
 
 import (
+	"context"
+
+	"cosmossdk.io/collections"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-// Return all validators that a delegator is bonded to. If maxRetrieve is supplied, the respective amount will be returned.
+// GetDelegatorValidators returns all validators that a delegator is bonded to. If maxRetrieve is supplied, the respective amount will be returned.
 func (k Keeper) GetDelegatorValidators(
-	ctx sdk.Context, delegatorAddr sdk.AccAddress, maxRetrieve uint32,
-) types.Validators {
+	ctx context.Context, delegatorAddr sdk.AccAddress, maxRetrieve uint32,
+) (types.Validators, error) {
 	validators := make([]types.Validator, maxRetrieve)
 
-	store := ctx.KVStore(k.storeKey)
-	delegatorPrefixKey := types.GetDelegationsKey(delegatorAddr)
+	var i uint32
+	rng := collections.NewPrefixedPairRange[sdk.AccAddress, sdk.ValAddress](delegatorAddr)
+	err := k.Delegations.Walk(ctx, rng, func(key collections.Pair[sdk.AccAddress, sdk.ValAddress], del types.Delegation) (stop bool, err error) {
+		if i >= maxRetrieve {
+			return true, nil
+		}
 
-	iterator := sdk.KVStorePrefixIterator(store, delegatorPrefixKey) // smallest to largest
-	defer iterator.Close()
+		valAddr, err := k.validatorAddressCodec.StringToBytes(del.GetValidatorAddr())
+		if err != nil {
+			return false, err
+		}
 
-	i := 0
-	for ; iterator.Valid() && i < int(maxRetrieve); iterator.Next() {
-		delegation := types.MustUnmarshalDelegation(k.cdc, iterator.Value())
-
-		validator, found := k.GetValidator(ctx, delegation.GetValidatorAddr())
-		if !found {
-			panic(types.ErrNoValidatorFound)
+		validator, err := k.GetValidator(ctx, valAddr)
+		if err != nil {
+			return false, err
 		}
 
 		validators[i] = validator
 		i++
+
+		return false, nil
+	})
+	if err != nil {
+		return types.Validators{}, err
 	}
 
-	return validators[:i] // trim
+	return types.Validators{Validators: validators[:i], ValidatorCodec: k.validatorAddressCodec}, nil // trim
 }
 
-// return a validator that a delegator is bonded to
+// GetDelegatorValidator returns a validator that a delegator is bonded to
 func (k Keeper) GetDelegatorValidator(
-	ctx sdk.Context, delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress,
+	ctx context.Context, delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress,
 ) (validator types.Validator, err error) {
-	delegation, found := k.GetDelegation(ctx, delegatorAddr, validatorAddr)
-	if !found {
-		return validator, types.ErrNoDelegation
+	delegation, err := k.Delegations.Get(ctx, collections.Join(delegatorAddr, validatorAddr))
+	if err != nil {
+		return validator, err
 	}
 
-	validator, found = k.GetValidator(ctx, delegation.GetValidatorAddr())
-	if !found {
-		panic(types.ErrNoValidatorFound)
+	valAddr, err := k.validatorAddressCodec.StringToBytes(delegation.GetValidatorAddr())
+	if err != nil {
+		return validator, err
 	}
 
-	return validator, nil
+	return k.GetValidator(ctx, valAddr)
 }
 
-// return all delegations for a delegator
-func (k Keeper) GetAllDelegatorDelegations(ctx sdk.Context, delegator sdk.AccAddress) []types.Delegation {
+// GetAllDelegatorDelegations returns all delegations of a delegator
+func (k Keeper) GetAllDelegatorDelegations(ctx context.Context, delegator sdk.AccAddress) ([]types.Delegation, error) {
 	delegations := make([]types.Delegation, 0)
 
-	store := ctx.KVStore(k.storeKey)
-	delegatorPrefixKey := types.GetDelegationsKey(delegator)
-
-	iterator := sdk.KVStorePrefixIterator(store, delegatorPrefixKey) // smallest to largest
-	defer iterator.Close()
-
-	i := 0
-
-	for ; iterator.Valid(); iterator.Next() {
-		delegation := types.MustUnmarshalDelegation(k.cdc, iterator.Value())
-		delegations = append(delegations, delegation)
+	var i int64
+	rng := collections.NewPrefixedPairRange[sdk.AccAddress, sdk.ValAddress](delegator)
+	err := k.Delegations.Walk(ctx, rng, func(key collections.Pair[sdk.AccAddress, sdk.ValAddress], del types.Delegation) (stop bool, err error) {
+		delegations = append(delegations, del)
 		i++
+
+		return false, nil
+	})
+	if err != nil {
+		return nil, err
 	}
 
-	return delegations
+	return delegations, nil
 }
 
-// return all unbonding-delegations for a delegator
-func (k Keeper) GetAllUnbondingDelegations(ctx sdk.Context, delegator sdk.AccAddress) []types.UnbondingDelegation {
+// GetAllUnbondingDelegations returns all unbonding-delegations of a delegator
+func (k Keeper) GetAllUnbondingDelegations(ctx context.Context, delegator sdk.AccAddress) ([]types.UnbondingDelegation, error) {
 	unbondingDelegations := make([]types.UnbondingDelegation, 0)
 
-	store := ctx.KVStore(k.storeKey)
-	delegatorPrefixKey := types.GetUBDsKey(delegator)
-
-	iterator := sdk.KVStorePrefixIterator(store, delegatorPrefixKey) // smallest to largest
-	defer iterator.Close()
-
-	for i := 0; iterator.Valid(); iterator.Next() {
-		unbondingDelegation := types.MustUnmarshalUBD(k.cdc, iterator.Value())
-		unbondingDelegations = append(unbondingDelegations, unbondingDelegation)
-		i++
+	rng := collections.NewPrefixUntilPairRange[[]byte, []byte](delegator)
+	err := k.UnbondingDelegations.Walk(
+		ctx,
+		rng,
+		func(key collections.Pair[[]byte, []byte], value types.UnbondingDelegation) (stop bool, err error) {
+			unbondingDelegations = append(unbondingDelegations, value)
+			return false, nil
+		},
+	)
+	if err != nil {
+		return nil, err
 	}
-
-	return unbondingDelegations
+	return unbondingDelegations, nil
 }
 
-// return all redelegations for a delegator
+// GetAllRedelegations returns all redelegations of a delegator
 func (k Keeper) GetAllRedelegations(
-	ctx sdk.Context, delegator sdk.AccAddress, srcValAddress, dstValAddress sdk.ValAddress,
-) []types.Redelegation {
-	store := ctx.KVStore(k.storeKey)
-	delegatorPrefixKey := types.GetREDsKey(delegator)
-
-	iterator := sdk.KVStorePrefixIterator(store, delegatorPrefixKey) // smallest to largest
-	defer iterator.Close()
-
+	ctx context.Context, delegator sdk.AccAddress, srcValAddress, dstValAddress sdk.ValAddress,
+) ([]types.Redelegation, error) {
 	srcValFilter := !(srcValAddress.Empty())
 	dstValFilter := !(dstValAddress.Empty())
 
 	redelegations := []types.Redelegation{}
+	rng := collections.NewPrefixedTripleRange[[]byte, []byte, []byte](delegator)
+	err := k.Redelegations.Walk(ctx, rng,
+		func(key collections.Triple[[]byte, []byte, []byte], redelegation types.Redelegation) (stop bool, err error) {
+			valSrcAddr, valDstAddr := key.K2(), key.K3()
 
-	for ; iterator.Valid(); iterator.Next() {
-		redelegation := types.MustUnmarshalRED(k.cdc, iterator.Value())
-		valSrcAddr, err := sdk.ValAddressFromBech32(redelegation.ValidatorSrcAddress)
-		if err != nil {
-			panic(err)
-		}
-		valDstAddr, err := sdk.ValAddressFromBech32(redelegation.ValidatorDstAddress)
-		if err != nil {
-			panic(err)
-		}
-		if srcValFilter && !(srcValAddress.Equals(valSrcAddr)) {
-			continue
-		}
+			if srcValFilter && !(srcValAddress.Equals(sdk.ValAddress(valSrcAddr))) {
+				return false, nil
+			}
 
-		if dstValFilter && !(dstValAddress.Equals(valDstAddr)) {
-			continue
-		}
+			if dstValFilter && !(dstValAddress.Equals(sdk.ValAddress(valDstAddr))) {
+				return false, nil
+			}
 
-		redelegations = append(redelegations, redelegation)
+			redelegations = append(redelegations, redelegation)
+			return false, nil
+		},
+	)
+	if err != nil {
+		return nil, err
 	}
 
-	return redelegations
+	return redelegations, nil
 }

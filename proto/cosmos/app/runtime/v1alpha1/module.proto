@@ -37,6 +37,26 @@ message Module {
   // override_store_keys is an optional list of overrides for the module store keys
   // to be used in keeper construction.
   repeated StoreKeyConfig override_store_keys = 6;
+
+  // order_migrations defines the order in which module migrations are performed.
+  // If this is left empty, it uses the default migration order.
+  // https://pkg.go.dev/github.com/cosmos/cosmos-sdk@v0.47.0-alpha2/types/module#DefaultMigrationsOrder
+  repeated string order_migrations = 7;
+
+  // precommiters specifies the module names of the precommiters
+  // to call in the order in which they should be called. If this is left empty
+  // no precommit function will be registered.
+  repeated string precommiters = 8;
+
+  // prepare_check_staters specifies the module names of the prepare_check_staters
+  // to call in the order in which they should be called. If this is left empty
+  // no preparecheckstate function will be registered.
+  repeated string prepare_check_staters = 9;
+
+  // pre_blockers specifies the module names of pre blockers
+  // to call in the order in which they should be called. If this is left empty
+  // no pre blocker will be registered.
+  repeated string pre_blockers = 10;
 }
 
 // StoreKeyConfig may be supplied to override the default module store key, which

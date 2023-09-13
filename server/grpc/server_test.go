@@ -6,13 +6,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/jhump/protoreflect/grpcreflect"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
-
-	"github.com/jhump/protoreflect/grpcreflect"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
-	rpb "google.golang.org/grpc/reflection/grpc_reflection_v1alpha"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	reflectionv1 "github.com/cosmos/cosmos-sdk/client/grpc/reflection"
@@ -55,7 +53,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	val0 := s.network.Validators[0]
 	s.conn, err = grpc.Dial(
 		val0.AppConfig.GRPC.Address,
-		grpc.WithInsecure(), // Or else we get "no transport security set"
+		grpc.WithInsecure(), //nolint:staticcheck // ignore SA1019, we don't need to use a secure connection for tests
 		grpc.WithDefaultCallOptions(grpc.ForceCodec(codec.NewProtoCodec(s.cfg.InterfaceRegistry).GRPCCodec())),
 	)
 	s.Require().NoError(err)
@@ -96,7 +94,7 @@ func (s *IntegrationTestSuite) TestGRPCServer_BankBalance() {
 	s.Require().NotEmpty(blockHeight[0]) // Should contain the block height
 
 	// Request metadata should work
-	bankRes, err = bankClient.Balance(
+	_, err = bankClient.Balance(
 		metadata.AppendToOutgoingContext(context.Background(), grpctypes.GRPCBlockHeightHeader, "1"), // Add metadata to request
 		&banktypes.QueryBalanceRequest{Address: val0.Address.String(), Denom: denom},
 		grpc.Header(&header),
@@ -110,12 +108,11 @@ func (s *IntegrationTestSuite) TestGRPCServer_Reflection() {
 	// Test server reflection
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
-	stub := rpb.NewServerReflectionClient(s.conn)
 	// NOTE(fdymylja): we use grpcreflect because it solves imports too
 	// so that we can always assert that given a reflection server it is
 	// possible to fully query all the methods, without having any context
 	// on the proto registry
-	rc := grpcreflect.NewClient(ctx, stub)
+	rc := grpcreflect.NewClientAuto(ctx, s.conn)
 
 	services, err := rc.ListServices()
 	s.Require().NoError(err)
@@ -159,7 +156,7 @@ func (s *IntegrationTestSuite) TestGRPCServer_GetTxsEvent() {
 	_, err := txServiceClient.GetTxsEvent(
 		context.Background(),
 		&txtypes.GetTxsEventRequest{
-			Events: []string{"message.action='send'"},
+			Query: "message.action='send'",
 		},
 	)
 	s.Require().NoError(err)
@@ -239,7 +236,7 @@ func (s *IntegrationTestSuite) TestGRPCUnpacker() {
 }
 
 // mkTxBuilder creates a TxBuilder containing a signed tx from validator 0.
-func (s IntegrationTestSuite) mkTxBuilder() client.TxBuilder {
+func (s *IntegrationTestSuite) mkTxBuilder() client.TxBuilder {
 	val := s.network.Validators[0]
 	s.Require().NoError(s.network.WaitForNextBlock())
 

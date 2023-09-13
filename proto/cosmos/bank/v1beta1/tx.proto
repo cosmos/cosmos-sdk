@@ -6,6 +6,7 @@ import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/bank/v1beta1/bank.proto";
 import "cosmos_proto/cosmos.proto";
 import "cosmos/msg/v1/msg.proto";
+import "amino/amino.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/bank/types";
 
@@ -18,6 +19,11 @@ service Msg {
 
   // MultiSend defines a method for sending coins from some accounts to other accounts.
   rpc MultiSend(MsgMultiSend) returns (MsgMultiSendResponse);
+
+  // Burn defines a method for burning coins by an account.
+  //
+  // Since: cosmos-sdk 0.51
+  rpc Burn(MsgBurn) returns (MsgBurnResponse);
 
   // UpdateParams defines a governance operation for updating the x/bank module parameters.
   // The authority is defined in the keeper.
@@ -37,14 +43,19 @@ service Msg {
 // MsgSend represents a message to send coins from one account to another.
 message MsgSend {
   option (cosmos.msg.v1.signer) = "from_address";
+  option (amino.name)           = "cosmos-sdk/MsgSend";
 
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
   string   from_address                    = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   string   to_address                      = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  repeated cosmos.base.v1beta1.Coin amount = 3
-      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  repeated cosmos.base.v1beta1.Coin amount = 3 [
+    (gogoproto.nullable)     = false,
+    (amino.dont_omitempty)   = true,
+    (amino.encoding)         = "legacy_coins",
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
 }
 
 // MsgSendResponse defines the Msg/Send response type.
@@ -53,13 +64,14 @@ message MsgSendResponse {}
 // MsgMultiSend represents an arbitrary multi-in, multi-out send message.
 message MsgMultiSend {
   option (cosmos.msg.v1.signer) = "inputs";
+  option (amino.name)           = "cosmos-sdk/MsgMultiSend";
 
   option (gogoproto.equal) = false;
 
   // Inputs, despite being `repeated`, only allows one sender input. This is
   // checked in MsgMultiSend's ValidateBasic.
-  repeated Input  inputs  = 1 [(gogoproto.nullable) = false];
-  repeated Output outputs = 2 [(gogoproto.nullable) = false];
+  repeated Input  inputs  = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+  repeated Output outputs = 2 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 }
 
 // MsgMultiSendResponse defines the Msg/MultiSend response type.
@@ -71,13 +83,14 @@ message MsgMultiSendResponse {}
 message MsgUpdateParams {
   option (cosmos.msg.v1.signer) = "authority";
 
-  // authority is the address of the governance account.
-  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // authority is the address that controls the module (defaults to x/gov unless overwritten).
+  string authority    = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  option (amino.name) = "cosmos-sdk/x/bank/MsgUpdateParams";
 
   // params defines the x/bank parameters to update.
   //
   // NOTE: All parameters must be supplied.
-  Params params = 2 [(gogoproto.nullable) = false];
+  Params params = 2 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 }
 
 // MsgUpdateParamsResponse defines the response structure for executing a
@@ -95,7 +108,9 @@ message MsgUpdateParamsResponse {}
 // Since: cosmos-sdk 0.47
 message MsgSetSendEnabled {
   option (cosmos.msg.v1.signer) = "authority";
+  option (amino.name)           = "cosmos-sdk/MsgSetSendEnabled";
 
+  // authority is the address that controls the module.
   string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
   // send_enabled is the list of entries to add or update.
@@ -112,3 +127,21 @@ message MsgSetSendEnabled {
 //
 // Since: cosmos-sdk 0.47
 message MsgSetSendEnabledResponse {}
+
+// MsgBurn defines a message for burning coins.
+//
+// Since: cosmos-sdk 0.51
+message MsgBurn {
+  option (cosmos.msg.v1.signer) = "from_address";
+
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string   from_address                    = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  repeated cosmos.base.v1beta1.Coin amount = 2;
+}
+
+// MsgBurnResponse defines the Msg/Burn response type.
+//
+// Since: cosmos-sdk 0.51
+message MsgBurnResponse {}

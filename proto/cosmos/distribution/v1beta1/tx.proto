@@ -8,6 +8,7 @@ import "gogoproto/gogo.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos_proto/cosmos.proto";
 import "cosmos/msg/v1/msg.proto";
+import "amino/amino.proto";
 import "cosmos/distribution/v1beta1/distribution.proto";
 
 // Msg defines the distribution Msg service.
@@ -43,12 +44,19 @@ service Msg {
   //
   // Since: cosmos-sdk 0.47
   rpc CommunityPoolSpend(MsgCommunityPoolSpend) returns (MsgCommunityPoolSpendResponse);
+
+  // DepositValidatorRewardsPool defines a method to provide additional rewards
+  // to delegators to a specific validator.
+  //
+  // Since: cosmos-sdk 0.50
+  rpc DepositValidatorRewardsPool(MsgDepositValidatorRewardsPool) returns (MsgDepositValidatorRewardsPoolResponse);
 }
 
 // MsgSetWithdrawAddress sets the withdraw address for
 // a delegator (or validator self-delegation).
 message MsgSetWithdrawAddress {
   option (cosmos.msg.v1.signer) = "delegator_address";
+  option (amino.name)           = "cosmos-sdk/MsgModifyWithdrawAddress";
 
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
@@ -65,51 +73,66 @@ message MsgSetWithdrawAddressResponse {}
 // from a single validator.
 message MsgWithdrawDelegatorReward {
   option (cosmos.msg.v1.signer) = "delegator_address";
+  option (amino.name)           = "cosmos-sdk/MsgWithdrawDelegationReward";
 
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
   string delegator_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  string validator_address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string validator_address = 2 [(cosmos_proto.scalar) = "cosmos.ValidatorAddressString"];
 }
 
 // MsgWithdrawDelegatorRewardResponse defines the Msg/WithdrawDelegatorReward
 // response type.
 message MsgWithdrawDelegatorRewardResponse {
   // Since: cosmos-sdk 0.46
-  repeated cosmos.base.v1beta1.Coin amount = 1
-      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  repeated cosmos.base.v1beta1.Coin amount = 1 [
+    (gogoproto.nullable)     = false,
+    (amino.dont_omitempty)   = true,
+    (amino.encoding)         = "legacy_coins",
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
 }
 
 // MsgWithdrawValidatorCommission withdraws the full commission to the validator
 // address.
 message MsgWithdrawValidatorCommission {
   option (cosmos.msg.v1.signer) = "validator_address";
+  option (amino.name)           = "cosmos-sdk/MsgWithdrawValCommission";
 
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
-  string validator_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string validator_address = 1 [(cosmos_proto.scalar) = "cosmos.ValidatorAddressString"];
 }
 
 // MsgWithdrawValidatorCommissionResponse defines the
 // Msg/WithdrawValidatorCommission response type.
 message MsgWithdrawValidatorCommissionResponse {
   // Since: cosmos-sdk 0.46
-  repeated cosmos.base.v1beta1.Coin amount = 1
-      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  repeated cosmos.base.v1beta1.Coin amount = 1 [
+    (gogoproto.nullable)     = false,
+    (amino.dont_omitempty)   = true,
+    (amino.encoding)         = "legacy_coins",
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
 }
 
 // MsgFundCommunityPool allows an account to directly
 // fund the community pool.
 message MsgFundCommunityPool {
   option (cosmos.msg.v1.signer) = "depositor";
+  option (amino.name)           = "cosmos-sdk/MsgFundCommunityPool";
 
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
-  repeated cosmos.base.v1beta1.Coin amount = 1
-      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  repeated cosmos.base.v1beta1.Coin amount = 1 [
+    (gogoproto.nullable)     = false,
+    (amino.dont_omitempty)   = true,
+    (amino.encoding)         = "legacy_coins",
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
   string depositor = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 
@@ -121,14 +144,15 @@ message MsgFundCommunityPoolResponse {}
 // Since: cosmos-sdk 0.47
 message MsgUpdateParams {
   option (cosmos.msg.v1.signer) = "authority";
+  option (amino.name)           = "cosmos-sdk/distribution/MsgUpdateParams";
 
-  // authority is the address of the governance account.
+  // authority is the address that controls the module (defaults to x/gov unless overwritten).
   string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
   // params defines the x/distribution parameters to update.
   //
   // NOTE: All parameters must be supplied.
-  Params params = 2 [(gogoproto.nullable) = false];
+  Params params = 2 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 }
 
 // MsgUpdateParamsResponse defines the response structure for executing a
@@ -144,12 +168,17 @@ message MsgUpdateParamsResponse {}
 // Since: cosmos-sdk 0.47
 message MsgCommunityPoolSpend {
   option (cosmos.msg.v1.signer) = "authority";
+  option (amino.name)           = "cosmos-sdk/distr/MsgCommunityPoolSpend";
 
-  // authority is the address of the governance account.
+  // authority is the address that controls the module (defaults to x/gov unless overwritten).
   string   authority                       = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   string   recipient                       = 2;
-  repeated cosmos.base.v1beta1.Coin amount = 3
-      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  repeated cosmos.base.v1beta1.Coin amount = 3 [
+    (gogoproto.nullable)     = false,
+    (amino.dont_omitempty)   = true,
+    (amino.encoding)         = "legacy_coins",
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
 }
 
 // MsgCommunityPoolSpendResponse defines the response to executing a
@@ -157,3 +186,30 @@ message MsgCommunityPoolSpend {
 //
 // Since: cosmos-sdk 0.47
 message MsgCommunityPoolSpendResponse {}
+
+// DepositValidatorRewardsPool defines the request structure to provide
+// additional rewards to delegators from a specific validator.
+//
+// Since: cosmos-sdk 0.50
+message MsgDepositValidatorRewardsPool {
+  option (amino.name)           = "cosmos-sdk/distr/MsgDepositValRewards";
+  option (cosmos.msg.v1.signer) = "depositor";
+
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string   depositor                       = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string   validator_address               = 2 [(cosmos_proto.scalar) = "cosmos.ValidatorAddressString"];
+  repeated cosmos.base.v1beta1.Coin amount = 3 [
+    (gogoproto.nullable)     = false,
+    (amino.encoding)         = "legacy_coins",
+    (amino.dont_omitempty)   = true,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
+}
+
+// MsgDepositValidatorRewardsPoolResponse defines the response to executing a
+// MsgDepositValidatorRewardsPool message.
+//
+// Since: cosmos-sdk 0.50
+message MsgDepositValidatorRewardsPoolResponse {}

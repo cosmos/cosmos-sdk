@@ -6,9 +6,8 @@ import (
 	types "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
-	authzcodec "github.com/cosmos/cosmos-sdk/x/authz/codec"
-	govcodec "github.com/cosmos/cosmos-sdk/x/gov/codec"
-	groupcodec "github.com/cosmos/cosmos-sdk/x/group/codec"
+	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
+	staking "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // RegisterLegacyAminoCodec registers the necessary x/authz interfaces and concrete types
@@ -30,19 +29,16 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		&MsgExec{},
 	)
 
+	// since bank.SendAuthorization and staking.StakeAuthorization both implement Authorization
+	// and authz depends on x/bank and x/staking in other places, these registrations are placed here
+	// to prevent a cyclic dependency.
+	// see: https://github.com/cosmos/cosmos-sdk/pull/16509
 	registry.RegisterInterface(
-		"cosmos.v1beta1.Authorization",
+		"cosmos.authz.v1beta1.Authorization",
 		(*Authorization)(nil),
 		&GenericAuthorization{},
+		&bank.SendAuthorization{},
+		&staking.StakeAuthorization{},
 	)
-
 	msgservice.RegisterMsgServiceDesc(registry, MsgServiceDesc())
-}
-
-func init() {
-	// Register all Amino interfaces and concrete types on the authz  and gov Amino codec so that this can later be
-	// used to properly serialize MsgGrant, MsgExec and MsgSubmitProposal instances
-	RegisterLegacyAminoCodec(authzcodec.Amino)
-	RegisterLegacyAminoCodec(govcodec.Amino)
-	RegisterLegacyAminoCodec(groupcodec.Amino)
 }

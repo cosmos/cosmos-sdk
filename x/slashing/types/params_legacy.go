@@ -18,16 +18,12 @@ var (
 	KeySlashFractionDowntime   = []byte("SlashFractionDowntime")
 )
 
-// ParamKeyTable for slashing module
-//
-// Deprecated.
+// Deprecated: ParamKeyTable for slashing module
 func ParamKeyTable() paramtypes.KeyTable {
 	return paramtypes.NewKeyTable().RegisterParamSet(&Params{})
 }
 
-// ParamSetPairs - Implements params.ParamSet
-//
-// Deprecated.
+// Deprecated: ParamSetPairs implements params.ParamSet
 func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
 		paramtypes.NewParamSetPair(KeySignedBlocksWindow, &p.SignedBlocksWindow, validateSignedBlocksWindow),

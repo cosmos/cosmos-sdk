@@ -3,30 +3,31 @@ package rootmulti
 import (
 	"testing"
 
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
-	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/libs/log"
-	dbm "github.com/tendermint/tm-db"
 
-	"github.com/cosmos/cosmos-sdk/store/iavl"
-	"github.com/cosmos/cosmos-sdk/store/types"
+	"cosmossdk.io/log"
+	"cosmossdk.io/store/iavl"
+	"cosmossdk.io/store/metrics"
+	"cosmossdk.io/store/types"
 )
 
 func TestVerifyIAVLStoreQueryProof(t *testing.T) {
 	// Create main tree for testing.
 	db := dbm.NewMemDB()
-	iStore, err := iavl.LoadStore(db, log.NewNopLogger(), types.NewKVStoreKey("test"), types.CommitID{}, false, iavl.DefaultIAVLCacheSize, false)
+	iStore, err := iavl.LoadStore(db, log.NewNopLogger(), types.NewKVStoreKey("test"), types.CommitID{}, iavl.DefaultIAVLCacheSize, false, metrics.NewNoOpMetrics())
 	store := iStore.(*iavl.Store)
 	require.Nil(t, err)
 	store.Set([]byte("MYKEY"), []byte("MYVALUE"))
 	cid := store.Commit()
 
 	// Get Proof
-	res := store.Query(abci.RequestQuery{
+	res, err := store.Query(&types.RequestQuery{
 		Path:  "/key", // required path to get key/value+proof
 		Data:  []byte("MYKEY"),
 		Prove: true,
 	})
+	require.NoError(t, err)
 	require.NotNil(t, res.ProofOps)
 
 	// Verify proof.
@@ -58,7 +59,7 @@ func TestVerifyIAVLStoreQueryProof(t *testing.T) {
 func TestVerifyMultiStoreQueryProof(t *testing.T) {
 	// Create main tree for testing.
 	db := dbm.NewMemDB()
-	store := NewStore(db, log.NewNopLogger())
+	store := NewStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
 	iavlStoreKey := types.NewKVStoreKey("iavlStoreKey")
 
 	store.MountStoreWithDB(iavlStoreKey, types.StoreTypeIAVL, nil)
@@ -69,16 +70,17 @@ func TestVerifyMultiStoreQueryProof(t *testing.T) {
 	cid := store.Commit()
 
 	// Get Proof
-	res := store.Query(abci.RequestQuery{
+	res, err := store.Query(&types.RequestQuery{
 		Path:  "/iavlStoreKey/key", // required path to get key/value+proof
 		Data:  []byte("MYKEY"),
 		Prove: true,
 	})
+	require.NoError(t, err)
 	require.NotNil(t, res.ProofOps)
 
 	// Verify proof.
 	prt := DefaultProofRuntime()
-	err := prt.VerifyValue(res.ProofOps, cid.Hash, "/iavlStoreKey/MYKEY", []byte("MYVALUE"))
+	err = prt.VerifyValue(res.ProofOps, cid.Hash, "/iavlStoreKey/MYKEY", []byte("MYVALUE"))
 	require.Nil(t, err)
 
 	// Verify proof.
@@ -113,7 +115,7 @@ func TestVerifyMultiStoreQueryProof(t *testing.T) {
 func TestVerifyMultiStoreQueryProofAbsence(t *testing.T) {
 	// Create main tree for testing.
 	db := dbm.NewMemDB()
-	store := NewStore(db, log.NewNopLogger())
+	store := NewStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
 	iavlStoreKey := types.NewKVStoreKey("iavlStoreKey")
 
 	store.MountStoreWithDB(iavlStoreKey, types.StoreTypeIAVL, nil)
@@ -125,11 +127,12 @@ func TestVerifyMultiStoreQueryProofAbsence(t *testing.T) {
 	cid := store.Commit() // Commit with empty iavl store.
 
 	// Get Proof
-	res := store.Query(abci.RequestQuery{
+	res, err := store.Query(&types.RequestQuery{
 		Path:  "/iavlStoreKey/key", // required path to get key/value+proof
 		Data:  []byte("MYABSENTKEY"),
 		Prove: true,
 	})
+	require.NoError(t, err)
 	require.NotNil(t, res.ProofOps)
 
 	// Verify proof.

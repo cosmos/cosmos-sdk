@@ -4,7 +4,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/codec"
+	proto "github.com/cosmos/gogoproto/proto"
+
+	errorsmod "cosmossdk.io/errors"
+
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -26,15 +29,19 @@ type DecisionPolicyResult struct {
 
 // DecisionPolicy is the persistent set of rules to determine the result of election on a proposal.
 type DecisionPolicy interface {
-	codec.ProtoMarshaler
+	proto.Message
 
 	// GetVotingPeriod returns the duration after proposal submission where
 	// votes are accepted.
 	GetVotingPeriod() time.Duration
+	// GetMinExecutionPeriod returns the minimum duration after submission
+	// where we can execution a proposal. It can be set to 0 or to a value
+	// lesser than VotingPeriod to allow TRY_EXEC.
+	GetMinExecutionPeriod() time.Duration
 	// Allow defines policy-specific logic to allow a proposal to pass or not,
 	// based on its tally result, the group's total power and the time since
 	// the proposal was submitted.
-	Allow(tallyResult TallyResult, totalPower string, sinceSubmission time.Duration) (DecisionPolicyResult, error)
+	Allow(tallyResult TallyResult, totalPower string) (DecisionPolicyResult, error)
 
 	ValidateBasic() error
 	Validate(g GroupInfo, config Config) error
@@ -44,44 +51,47 @@ type DecisionPolicy interface {
 var _ DecisionPolicy = &ThresholdDecisionPolicy{}
 
 // NewThresholdDecisionPolicy creates a threshold DecisionPolicy
-func NewThresholdDecisionPolicy(threshold string, votingPeriod time.Duration, minExecutionPeriod time.Duration) DecisionPolicy {
+func NewThresholdDecisionPolicy(threshold string, votingPeriod, minExecutionPeriod time.Duration) DecisionPolicy {
 	return &ThresholdDecisionPolicy{threshold, &DecisionPolicyWindows{votingPeriod, minExecutionPeriod}}
 }
 
+// GetVotingPeriod returns the voitng period of ThresholdDecisionPolicy
 func (p ThresholdDecisionPolicy) GetVotingPeriod() time.Duration {
 	return p.Windows.VotingPeriod
 }
 
+// GetMinExecutionPeriod returns the minimum execution period of ThresholdDecisionPolicy
+func (p ThresholdDecisionPolicy) GetMinExecutionPeriod() time.Duration {
+	return p.Windows.MinExecutionPeriod
+}
+
+// ValidateBasic does basic validation on ThresholdDecisionPolicy
 func (p ThresholdDecisionPolicy) ValidateBasic() error {
 	if _, err := math.NewPositiveDecFromString(p.Threshold); err != nil {
-		return sdkerrors.Wrap(err, "threshold")
+		return errorsmod.Wrap(err, "threshold")
 	}
 
 	if p.Windows == nil || p.Windows.VotingPeriod == 0 {
-		return sdkerrors.Wrap(errors.ErrInvalid, "voting period cannot be zero")
+		return errorsmod.Wrap(errors.ErrInvalid, "voting period cannot be zero")
 	}
 
 	return nil
 }
 
 // Allow allows a proposal to pass when the tally of yes votes equals or exceeds the threshold before the timeout.
-func (p ThresholdDecisionPolicy) Allow(tallyResult TallyResult, totalPower string, sinceSubmission time.Duration) (DecisionPolicyResult, error) {
-	if sinceSubmission < p.Windows.MinExecutionPeriod {
-		return DecisionPolicyResult{}, errors.ErrUnauthorized.Wrapf("must wait %s after submission before execution, currently at %s", p.Windows.MinExecutionPeriod, sinceSubmission)
-	}
-
+func (p ThresholdDecisionPolicy) Allow(tallyResult TallyResult, totalPower string) (DecisionPolicyResult, error) {
 	threshold, err := math.NewPositiveDecFromString(p.Threshold)
 	if err != nil {
-		return DecisionPolicyResult{}, sdkerrors.Wrap(err, "threshold")
+		return DecisionPolicyResult{}, errorsmod.Wrap(err, "threshold")
 	}
 	yesCount, err := math.NewNonNegativeDecFromString(tallyResult.YesCount)
 	if err != nil {
-		return DecisionPolicyResult{}, sdkerrors.Wrap(err, "yes count")
+		return DecisionPolicyResult{}, errorsmod.Wrap(err, "yes count")
 	}
 
 	totalPowerDec, err := math.NewNonNegativeDecFromString(totalPower)
 	if err != nil {
-		return DecisionPolicyResult{}, sdkerrors.Wrap(err, "total power")
+		return DecisionPolicyResult{}, errorsmod.Wrap(err, "total power")
 	}
 
 	// the real threshold of the policy is `min(threshold,total_weight)`. If
@@ -129,15 +139,15 @@ func min(a, b math.Dec) math.Dec {
 func (p *ThresholdDecisionPolicy) Validate(g GroupInfo, config Config) error {
 	_, err := math.NewPositiveDecFromString(p.Threshold)
 	if err != nil {
-		return sdkerrors.Wrap(err, "threshold")
+		return errorsmod.Wrap(err, "threshold")
 	}
 	_, err = math.NewNonNegativeDecFromString(g.TotalWeight)
 	if err != nil {
-		return sdkerrors.Wrap(err, "group total weight")
+		return errorsmod.Wrap(err, "group total weight")
 	}
 
 	if p.Windows.MinExecutionPeriod > p.Windows.VotingPeriod+config.MaxExecutionPeriod {
-		return sdkerrors.Wrap(errors.ErrInvalid, "min_execution_period should be smaller than voting_period + max_execution_period")
+		return errorsmod.Wrap(errors.ErrInvalid, "min_execution_period should be smaller than voting_period + max_execution_period")
 	}
 	return nil
 }
@@ -146,54 +156,58 @@ func (p *ThresholdDecisionPolicy) Validate(g GroupInfo, config Config) error {
 var _ DecisionPolicy = &PercentageDecisionPolicy{}
 
 // NewPercentageDecisionPolicy creates a new percentage DecisionPolicy
-func NewPercentageDecisionPolicy(percentage string, votingPeriod time.Duration, executionPeriod time.Duration) DecisionPolicy {
+func NewPercentageDecisionPolicy(percentage string, votingPeriod, executionPeriod time.Duration) DecisionPolicy {
 	return &PercentageDecisionPolicy{percentage, &DecisionPolicyWindows{votingPeriod, executionPeriod}}
 }
 
+// GetVotingPeriod returns the voitng period of PercentageDecisionPolicy
 func (p PercentageDecisionPolicy) GetVotingPeriod() time.Duration {
 	return p.Windows.VotingPeriod
 }
 
+// GetMinExecutionPeriod returns the minimum execution period of PercentageDecisionPolicy
+func (p PercentageDecisionPolicy) GetMinExecutionPeriod() time.Duration {
+	return p.Windows.MinExecutionPeriod
+}
+
+// ValidateBasic does basic validation on PercentageDecisionPolicy
 func (p PercentageDecisionPolicy) ValidateBasic() error {
 	percentage, err := math.NewPositiveDecFromString(p.Percentage)
 	if err != nil {
-		return sdkerrors.Wrap(err, "percentage threshold")
+		return errorsmod.Wrap(err, "percentage threshold")
 	}
 	if percentage.Cmp(math.NewDecFromInt64(1)) == 1 {
-		return sdkerrors.Wrap(errors.ErrInvalid, "percentage must be > 0 and <= 1")
+		return errorsmod.Wrap(errors.ErrInvalid, "percentage must be > 0 and <= 1")
 	}
 
 	if p.Windows == nil || p.Windows.VotingPeriod == 0 {
-		return sdkerrors.Wrap(errors.ErrInvalid, "voting period cannot be 0")
+		return errorsmod.Wrap(errors.ErrInvalid, "voting period cannot be 0")
 	}
 
 	return nil
 }
 
+// Validate validates the policy against the group.
 func (p *PercentageDecisionPolicy) Validate(g GroupInfo, config Config) error {
 	if p.Windows.MinExecutionPeriod > p.Windows.VotingPeriod+config.MaxExecutionPeriod {
-		return sdkerrors.Wrap(errors.ErrInvalid, "min_execution_period should be smaller than voting_period + max_execution_period")
+		return errorsmod.Wrap(errors.ErrInvalid, "min_execution_period should be smaller than voting_period + max_execution_period")
 	}
 	return nil
 }
 
 // Allow allows a proposal to pass when the tally of yes votes equals or exceeds the percentage threshold before the timeout.
-func (p PercentageDecisionPolicy) Allow(tally TallyResult, totalPower string, sinceSubmission time.Duration) (DecisionPolicyResult, error) {
-	if sinceSubmission < p.Windows.MinExecutionPeriod {
-		return DecisionPolicyResult{}, errors.ErrUnauthorized.Wrapf("must wait %s after submission before execution, currently at %s", p.Windows.MinExecutionPeriod, sinceSubmission)
-	}
-
+func (p PercentageDecisionPolicy) Allow(tally TallyResult, totalPower string) (DecisionPolicyResult, error) {
 	percentage, err := math.NewPositiveDecFromString(p.Percentage)
 	if err != nil {
-		return DecisionPolicyResult{}, sdkerrors.Wrap(err, "percentage")
+		return DecisionPolicyResult{}, errorsmod.Wrap(err, "percentage")
 	}
 	yesCount, err := math.NewNonNegativeDecFromString(tally.YesCount)
 	if err != nil {
-		return DecisionPolicyResult{}, sdkerrors.Wrap(err, "yes count")
+		return DecisionPolicyResult{}, errorsmod.Wrap(err, "yes count")
 	}
 	totalPowerDec, err := math.NewNonNegativeDecFromString(totalPower)
 	if err != nil {
-		return DecisionPolicyResult{}, sdkerrors.Wrap(err, "total power")
+		return DecisionPolicyResult{}, errorsmod.Wrap(err, "total power")
 	}
 
 	yesPercentage, err := yesCount.Quo(totalPowerDec)
@@ -250,6 +264,7 @@ func NewGroupPolicyInfo(address sdk.AccAddress, group uint64, admin sdk.AccAddre
 	return p, nil
 }
 
+// SetDecisionPolicy sets the decision policy for GroupPolicyInfo.
 func (g *GroupPolicyInfo) SetDecisionPolicy(decisionPolicy DecisionPolicy) error {
 	any, err := codectypes.NewAnyWithValue(decisionPolicy)
 	if err != nil {
@@ -259,6 +274,7 @@ func (g *GroupPolicyInfo) SetDecisionPolicy(decisionPolicy DecisionPolicy) error
 	return nil
 }
 
+// GetDecisionPolicy gets the decision policy of GroupPolicyInfo
 func (g GroupPolicyInfo) GetDecisionPolicy() (DecisionPolicy, error) {
 	decisionPolicy, ok := g.DecisionPolicy.GetCachedValue().(DecisionPolicy)
 	if !ok {
@@ -278,21 +294,22 @@ func (g GroupInfo) PrimaryKeyFields() []interface{} {
 	return []interface{}{g.Id}
 }
 
+// ValidateBasic does basic validation on group info.
 func (g GroupInfo) ValidateBasic() error {
 	if g.Id == 0 {
-		return sdkerrors.Wrap(errors.ErrEmpty, "group's GroupId")
+		return errorsmod.Wrap(errors.ErrEmpty, "group's GroupId")
 	}
 
 	_, err := sdk.AccAddressFromBech32(g.Admin)
 	if err != nil {
-		return sdkerrors.Wrap(err, "admin")
+		return errorsmod.Wrap(err, "admin")
 	}
 
 	if _, err := math.NewNonNegativeDecFromString(g.TotalWeight); err != nil {
-		return sdkerrors.Wrap(err, "total weight")
+		return errorsmod.Wrap(err, "total weight")
 	}
 	if g.Version == 0 {
-		return sdkerrors.Wrap(errors.ErrEmpty, "version")
+		return errorsmod.Wrap(errors.ErrEmpty, "version")
 	}
 	return nil
 }
@@ -307,29 +324,30 @@ func (g Proposal) PrimaryKeyFields() []interface{} {
 	return []interface{}{g.Id}
 }
 
+// ValidateBasic does basic validation on group policy info.
 func (g GroupPolicyInfo) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(g.Admin)
 	if err != nil {
-		return sdkerrors.Wrap(err, "group policy admin")
+		return errorsmod.Wrap(err, "group policy admin")
 	}
 	_, err = sdk.AccAddressFromBech32(g.Address)
 	if err != nil {
-		return sdkerrors.Wrap(err, "group policy account address")
+		return errorsmod.Wrap(err, "group policy account address")
 	}
 
 	if g.GroupId == 0 {
-		return sdkerrors.Wrap(errors.ErrEmpty, "group policy's group id")
+		return errorsmod.Wrap(errors.ErrEmpty, "group policy's group id")
 	}
 	if g.Version == 0 {
-		return sdkerrors.Wrap(errors.ErrEmpty, "group policy version")
+		return errorsmod.Wrap(errors.ErrEmpty, "group policy version")
 	}
 	policy, err := g.GetDecisionPolicy()
 	if err != nil {
-		return sdkerrors.Wrap(err, "group policy decision policy")
+		return errorsmod.Wrap(err, "group policy decision policy")
 	}
 
 	if err := policy.ValidateBasic(); err != nil {
-		return sdkerrors.Wrap(err, "group policy's decision policy")
+		return errorsmod.Wrap(err, "group policy's decision policy")
 	}
 	return nil
 }
@@ -340,15 +358,20 @@ func (g GroupMember) PrimaryKeyFields() []interface{} {
 	return []interface{}{g.GroupId, addr.Bytes()}
 }
 
+// ValidateBasic does basic validation on group member.
 func (g GroupMember) ValidateBasic() error {
 	if g.GroupId == 0 {
-		return sdkerrors.Wrap(errors.ErrEmpty, "group member's group id")
+		return errorsmod.Wrap(errors.ErrEmpty, "group member's group id")
 	}
 
-	err := MemberToMemberRequest(g.Member).ValidateBasic()
-	if err != nil {
-		return sdkerrors.Wrap(err, "group member")
+	if _, err := sdk.AccAddressFromBech32(g.Member.Address); err != nil {
+		return errorsmod.Wrap(err, "group member's address")
 	}
+
+	if _, err := math.NewNonNegativeDecFromString(g.Member.Weight); err != nil {
+		return errorsmod.Wrap(err, "weight must be non negative")
+	}
+
 	return nil
 }
 
@@ -364,35 +387,36 @@ func MemberToMemberRequest(m *Member) MemberRequest {
 	}
 }
 
+// ValidateBasic does basic validation on proposal.
 func (g Proposal) ValidateBasic() error {
 	if g.Id == 0 {
-		return sdkerrors.Wrap(errors.ErrEmpty, "proposal id")
+		return errorsmod.Wrap(errors.ErrEmpty, "proposal id")
 	}
 	_, err := sdk.AccAddressFromBech32(g.GroupPolicyAddress)
 	if err != nil {
-		return sdkerrors.Wrap(err, "proposal group policy address")
+		return errorsmod.Wrap(err, "proposal group policy address")
 	}
 	if g.GroupVersion == 0 {
-		return sdkerrors.Wrap(errors.ErrEmpty, "proposal group version")
+		return errorsmod.Wrap(errors.ErrEmpty, "proposal group version")
 	}
 	if g.GroupPolicyVersion == 0 {
-		return sdkerrors.Wrap(errors.ErrEmpty, "proposal group policy version")
+		return errorsmod.Wrap(errors.ErrEmpty, "proposal group policy version")
 	}
 	_, err = g.FinalTallyResult.GetYesCount()
 	if err != nil {
-		return sdkerrors.Wrap(err, "proposal FinalTallyResult yes count")
+		return errorsmod.Wrap(err, "proposal FinalTallyResult yes count")
 	}
 	_, err = g.FinalTallyResult.GetNoCount()
 	if err != nil {
-		return sdkerrors.Wrap(err, "proposal FinalTallyResult no count")
+		return errorsmod.Wrap(err, "proposal FinalTallyResult no count")
 	}
 	_, err = g.FinalTallyResult.GetAbstainCount()
 	if err != nil {
-		return sdkerrors.Wrap(err, "proposal FinalTallyResult abstain count")
+		return errorsmod.Wrap(err, "proposal FinalTallyResult abstain count")
 	}
 	_, err = g.FinalTallyResult.GetNoWithVetoCount()
 	if err != nil {
-		return sdkerrors.Wrap(err, "proposal FinalTallyResult veto count")
+		return errorsmod.Wrap(err, "proposal FinalTallyResult veto count")
 	}
 	return nil
 }
@@ -405,19 +429,20 @@ func (v Vote) PrimaryKeyFields() []interface{} {
 
 var _ orm.Validateable = Vote{}
 
+// ValidateBasic does basic validation on vote.
 func (v Vote) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(v.Voter)
 	if err != nil {
-		return sdkerrors.Wrap(err, "voter")
+		return errorsmod.Wrap(err, "voter")
 	}
 	if v.ProposalId == 0 {
-		return sdkerrors.Wrap(errors.ErrEmpty, "voter ProposalId")
+		return errorsmod.Wrap(errors.ErrEmpty, "voter ProposalId")
 	}
 	if v.Option == VOTE_OPTION_UNSPECIFIED {
-		return sdkerrors.Wrap(errors.ErrEmpty, "voter vote option")
+		return errorsmod.Wrap(errors.ErrEmpty, "voter vote option")
 	}
 	if _, ok := VoteOption_name[int32(v.Option)]; !ok {
-		return sdkerrors.Wrap(errors.ErrInvalid, "vote option")
+		return errorsmod.Wrap(errors.ErrInvalid, "vote option")
 	}
 	return nil
 }
@@ -453,52 +478,53 @@ func (t *TallyResult) operation(vote Vote, weight string, op operation) error {
 
 	yesCount, err := t.GetYesCount()
 	if err != nil {
-		return sdkerrors.Wrap(err, "yes count")
+		return errorsmod.Wrap(err, "yes count")
 	}
 	noCount, err := t.GetNoCount()
 	if err != nil {
-		return sdkerrors.Wrap(err, "no count")
+		return errorsmod.Wrap(err, "no count")
 	}
 	abstainCount, err := t.GetAbstainCount()
 	if err != nil {
-		return sdkerrors.Wrap(err, "abstain count")
+		return errorsmod.Wrap(err, "abstain count")
 	}
 	vetoCount, err := t.GetNoWithVetoCount()
 	if err != nil {
-		return sdkerrors.Wrap(err, "veto count")
+		return errorsmod.Wrap(err, "veto count")
 	}
 
 	switch vote.Option {
 	case VOTE_OPTION_YES:
 		yesCount, err := op(yesCount, weightDec)
 		if err != nil {
-			return sdkerrors.Wrap(err, "yes count")
+			return errorsmod.Wrap(err, "yes count")
 		}
 		t.YesCount = yesCount.String()
 	case VOTE_OPTION_NO:
 		noCount, err := op(noCount, weightDec)
 		if err != nil {
-			return sdkerrors.Wrap(err, "no count")
+			return errorsmod.Wrap(err, "no count")
 		}
 		t.NoCount = noCount.String()
 	case VOTE_OPTION_ABSTAIN:
 		abstainCount, err := op(abstainCount, weightDec)
 		if err != nil {
-			return sdkerrors.Wrap(err, "abstain count")
+			return errorsmod.Wrap(err, "abstain count")
 		}
 		t.AbstainCount = abstainCount.String()
 	case VOTE_OPTION_NO_WITH_VETO:
 		vetoCount, err := op(vetoCount, weightDec)
 		if err != nil {
-			return sdkerrors.Wrap(err, "veto count")
+			return errorsmod.Wrap(err, "veto count")
 		}
 		t.NoWithVetoCount = vetoCount.String()
 	default:
-		return sdkerrors.Wrapf(errors.ErrInvalid, "unknown vote option %s", vote.Option.String())
+		return errorsmod.Wrapf(errors.ErrInvalid, "unknown vote option %s", vote.Option.String())
 	}
 	return nil
 }
 
+// GetYesCount returns the number of yes counts from tally result.
 func (t TallyResult) GetYesCount() (math.Dec, error) {
 	yesCount, err := math.NewNonNegativeDecFromString(t.YesCount)
 	if err != nil {
@@ -507,6 +533,7 @@ func (t TallyResult) GetYesCount() (math.Dec, error) {
 	return yesCount, nil
 }
 
+// GetNoCount returns the number of no counts from tally result.
 func (t TallyResult) GetNoCount() (math.Dec, error) {
 	noCount, err := math.NewNonNegativeDecFromString(t.NoCount)
 	if err != nil {
@@ -515,6 +542,7 @@ func (t TallyResult) GetNoCount() (math.Dec, error) {
 	return noCount, nil
 }
 
+// GetAbstainCount returns the number of abstain counts from tally result.
 func (t TallyResult) GetAbstainCount() (math.Dec, error) {
 	abstainCount, err := math.NewNonNegativeDecFromString(t.AbstainCount)
 	if err != nil {
@@ -523,6 +551,7 @@ func (t TallyResult) GetAbstainCount() (math.Dec, error) {
 	return abstainCount, nil
 }
 
+// GetNoWithVetoCount returns the number of no with veto counts from tally result.
 func (t TallyResult) GetNoWithVetoCount() (math.Dec, error) {
 	vetoCount, err := math.NewNonNegativeDecFromString(t.NoWithVetoCount)
 	if err != nil {
@@ -542,19 +571,19 @@ func (t *TallyResult) Add(vote Vote, weight string) error {
 func (t TallyResult) TotalCounts() (math.Dec, error) {
 	yesCount, err := t.GetYesCount()
 	if err != nil {
-		return math.Dec{}, sdkerrors.Wrap(err, "yes count")
+		return math.Dec{}, errorsmod.Wrap(err, "yes count")
 	}
 	noCount, err := t.GetNoCount()
 	if err != nil {
-		return math.Dec{}, sdkerrors.Wrap(err, "no count")
+		return math.Dec{}, errorsmod.Wrap(err, "no count")
 	}
 	abstainCount, err := t.GetAbstainCount()
 	if err != nil {
-		return math.Dec{}, sdkerrors.Wrap(err, "abstain count")
+		return math.Dec{}, errorsmod.Wrap(err, "abstain count")
 	}
 	vetoCount, err := t.GetNoWithVetoCount()
 	if err != nil {
-		return math.Dec{}, sdkerrors.Wrap(err, "veto count")
+		return math.Dec{}, errorsmod.Wrap(err, "veto count")
 	}
 
 	totalCounts := math.NewDecFromInt64(0)

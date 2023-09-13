@@ -201,7 +201,7 @@ satisfy this dependency graph which allows staking and slashing to depend on eac
 In order to test and debug the module configuration, we need to build an app config, generally defined in a YAML file.
 This configuration should be passed first to `appconfig.LoadYAML` to get an `depinject.Config` instance.Then the
 `depinject.Config` can be passed to `depinject.Inject` and we can try to resolve dependencies in the app config.
-Alternatively, the `depinject.Config` can be created via [pure Go code](https://github.com/cosmos/cosmos-sdk/blob/61dc023/simapp/app_config.go).
+Alternatively, the `depinject.Config` can be created via [pure Go code](https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/simapp/app_config.go).
 
 Ex:
 

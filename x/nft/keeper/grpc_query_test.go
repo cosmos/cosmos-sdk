@@ -8,7 +8,9 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/cosmos/cosmos-sdk/x/nft"
+	"cosmossdk.io/x/nft"
+
+	"github.com/cosmos/cosmos-sdk/codec/address"
 )
 
 func TestGRPCQuery(t *testing.T) {
@@ -16,6 +18,7 @@ func TestGRPCQuery(t *testing.T) {
 }
 
 func (s *TestSuite) TestBalance() {
+	s.accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
 	var req *nft.QueryBalanceRequest
 	testCases := []struct {
 		msg      string
@@ -29,7 +32,7 @@ func (s *TestSuite) TestBalance() {
 			func(index int, require *require.Assertions) {
 				req = &nft.QueryBalanceRequest{}
 			},
-			"invalid class id",
+			nft.ErrEmptyClassID.Error(),
 			0,
 			func(index int, require *require.Assertions, res *nft.QueryBalanceResponse, expBalance uint64) {},
 		},
@@ -95,7 +98,7 @@ func (s *TestSuite) TestOwner() {
 					Id: testID,
 				}
 			},
-			"invalid class id",
+			nft.ErrEmptyClassID.Error(),
 			func(index int, require *require.Assertions, res *nft.QueryOwnerResponse) {},
 		},
 		{
@@ -105,7 +108,7 @@ func (s *TestSuite) TestOwner() {
 					ClassId: testClassID,
 				}
 			},
-			"invalid nft id",
+			nft.ErrEmptyNFTID.Error(),
 			func(index int, require *require.Assertions, res *nft.QueryOwnerResponse) {},
 		},
 		{
@@ -180,7 +183,7 @@ func (s *TestSuite) TestSupply() {
 			func(index int, require *require.Assertions) {
 				req = &nft.QuerySupplyRequest{}
 			},
-			"invalid class id",
+			nft.ErrEmptyClassID.Error(),
 			0,
 			func(index int, require *require.Assertions, res *nft.QuerySupplyResponse, supply uint64) {},
 		},
@@ -393,7 +396,7 @@ func (s *TestSuite) TestNFT() {
 			func(index int, require *require.Assertions) {
 				req = &nft.QueryNFTRequest{}
 			},
-			"invalid class id",
+			nft.ErrEmptyClassID.Error(),
 			func(index int, require *require.Assertions, res *nft.QueryNFTResponse) {},
 		},
 		{
@@ -403,7 +406,7 @@ func (s *TestSuite) TestNFT() {
 					ClassId: testClassID,
 				}
 			},
-			"invalid nft id",
+			nft.ErrEmptyNFTID.Error(),
 			func(index int, require *require.Assertions, res *nft.QueryNFTResponse) {},
 		},
 		{
@@ -480,7 +483,7 @@ func (s *TestSuite) TestClass() {
 			func(index int, require *require.Assertions) {
 				req = &nft.QueryClassRequest{}
 			},
-			"invalid class id",
+			nft.ErrEmptyClassID.Error(),
 			func(index int, require *require.Assertions, res *nft.QueryClassResponse) {},
 		},
 		{

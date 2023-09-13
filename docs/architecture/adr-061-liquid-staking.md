@@ -6,11 +6,11 @@
 
 ## Status
 
-PROPOSED
+ACCEPTED
 
 ## Abstract
 
-Add a semi-fungible liquid staking primitive to the default cosmos SDK staking module. This upgrades proof of stake to enable safe designs with lower overall monetary issuance and integration with numerous liquid staking protocols like Stride, Persistence, Quicksilver, Lido etc.
+Add a semi-fungible liquid staking primitive to the default Cosmos SDK staking module. This upgrades proof of stake to enable safe designs with lower overall monetary issuance and integration with numerous liquid staking protocols like Stride, Persistence, Quicksilver, Lido etc.
 
 ## Context
 
@@ -22,7 +22,7 @@ The most important deficiency of the legacy staking design is that it composes p
 
 The Osmosis team has adopted the idea of Superfluid and Interfluid staking where assets that are participating in DeFi appliactions can also be used in proof of stake. This requires tight integration with an enshrined set of DeFi applications and thus is unsuitable for the Cosmos SDK.
 
-It's also important to note that Interchain Accounts are available in the default IBC implementation and can be used to (rehypothecate)[https://www.investopedia.com/terms/h/hypothecation.asp#toc-what-is-rehypothecation] delegations. Thus liquid staking is already possible and these changes merely improve the UX of liquid staking. Centralized exchanges also rehypothecate staked assets, posing challenges for decentralization. This ADR takes the position that adoption of in-protocol liquid staking is the preferable outcome and provides new levers to incentivize decentralization of stake. 
+It's also important to note that Interchain Accounts are available in the default IBC implementation and can be used to [rehypothecate](https://www.investopedia.com/terms/h/hypothecation.asp#toc-what-is-rehypothecation) delegations. Thus liquid staking is already possible and these changes merely improve the UX of liquid staking. Centralized exchanges also rehypothecate staked assets, posing challenges for decentralization. This ADR takes the position that adoption of in-protocol liquid staking is the preferable outcome and provides new levers to incentivize decentralization of stake. 
 
 These changes to the staking module have been in development for more than a year and have seen substantial industry adoption who plan to build staking UX. The internal economics at Informal team has also done a review of the impacts of these changes and this review led to the development of the exempt delegation system. This system provides governance with a tuneable parameter for modulating the risks of principal agent problem called the exemption factor. 
 
@@ -34,7 +34,7 @@ A new governance parameter is introduced that defines the ratio of exempt to iss
 
 Min self delegation is removed from the staking system with the expectation that it will be replaced by the exempt delegations system. The exempt delegation system allows multiple accounts to demonstrate economic alignment with the validator operator as team members, partners etc. without co-mingling funds. Delegation exemption will likely be required to grow the validators' business under widespread adoption of liquid staking once governance has adjusted the exemption factor.
 
-When shares are tokenized, the underlying shares are transfered to a module account and rewards go to the module account for the TokenizedShareRecord. 
+When shares are tokenized, the underlying shares are transferred to a module account and rewards go to the module account for the TokenizedShareRecord. 
 
 There is no longer a mechanism to override the validators vote for TokenizedShares.
 
@@ -71,9 +71,7 @@ The MsgExemptDelegation message is used to exempt a delegation to a validator. I
 
 This design allows the chain to force an amount of self-delegation by validators participating in liquid staking schemes.
 
-
 ## Consequences
-
 
 ### Backwards Compatibility
 
@@ -82,7 +80,3 @@ By setting the exemption factor to zero, this module works like legacy staking. 
 ### Positive
 
 This approach should enable integration with liquid staking providers and improved user experience. It provides a pathway to security under non-exponential issuance policies in the baseline staking module.
-
-
-## References
-

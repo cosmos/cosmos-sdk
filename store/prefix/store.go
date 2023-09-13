@@ -5,15 +5,14 @@ import (
 	"errors"
 	"io"
 
-	"github.com/cosmos/cosmos-sdk/store/cachekv"
-	"github.com/cosmos/cosmos-sdk/store/listenkv"
-	"github.com/cosmos/cosmos-sdk/store/tracekv"
-	"github.com/cosmos/cosmos-sdk/store/types"
+	"cosmossdk.io/store/cachekv"
+	"cosmossdk.io/store/tracekv"
+	"cosmossdk.io/store/types"
 )
 
 var _ types.KVStore = Store{}
 
-// Store is similar with tendermint/tendermint/libs/db/prefix_db
+// Store is similar with cometbft/cometbft/libs/db/prefix_db
 // both gives access only to the limited subset of the store
 // for convinience or safety
 type Store struct {
@@ -28,7 +27,7 @@ func NewStore(parent types.KVStore, prefix []byte) Store {
 	}
 }
 
-func cloneAppend(bz []byte, tail []byte) (res []byte) {
+func cloneAppend(bz, tail []byte) (res []byte) {
 	res = make([]byte, len(bz)+len(tail))
 	copy(res, bz)
 	copy(res[len(bz):], tail)
@@ -58,11 +57,6 @@ func (s Store) CacheWrapWithTrace(w io.Writer, tc types.TraceContext) types.Cach
 	return cachekv.NewStore(tracekv.NewStore(s, w, tc))
 }
 
-// CacheWrapWithListeners implements the CacheWrapper interface.
-func (s Store) CacheWrapWithListeners(storeKey types.StoreKey, listeners []types.WriteListener) types.CacheWrap {
-	return cachekv.NewStore(listenkv.NewStore(s, storeKey, listeners))
-}
-
 // Implements KVStore
 func (s Store) Get(key []byte) []byte {
 	res := s.parent.Get(s.key(key))
@@ -87,7 +81,7 @@ func (s Store) Delete(key []byte) {
 }
 
 // Implements KVStore
-// Check https://github.com/tendermint/tendermint/blob/master/libs/db/prefix_db.go#L106
+// Check https://github.com/cometbft/cometbft/blob/master/libs/db/prefix_db.go#L106
 func (s Store) Iterator(start, end []byte) types.Iterator {
 	newstart := cloneAppend(s.prefix, start)
 
@@ -104,7 +98,7 @@ func (s Store) Iterator(start, end []byte) types.Iterator {
 }
 
 // ReverseIterator implements KVStore
-// Check https://github.com/tendermint/tendermint/blob/master/libs/db/prefix_db.go#L129
+// Check https://github.com/cometbft/cometbft/blob/master/libs/db/prefix_db.go#L129
 func (s Store) ReverseIterator(start, end []byte) types.Iterator {
 	newstart := cloneAppend(s.prefix, start)
 
@@ -198,8 +192,8 @@ func (pi *prefixIterator) Error() error {
 	return nil
 }
 
-// copied from github.com/tendermint/tendermint/libs/db/prefix_db.go
-func stripPrefix(key []byte, prefix []byte) []byte {
+// copied from github.com/cometbft/cometbft/libs/db/prefix_db.go
+func stripPrefix(key, prefix []byte) []byte {
 	if len(key) < len(prefix) || !bytes.Equal(key[:len(prefix)], prefix) {
 		panic("should not happen")
 	}

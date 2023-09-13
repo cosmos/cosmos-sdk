@@ -1,9 +1,6 @@
-<!--
-order: 0
-title: Crisis Overview
-parent:
-  title: "crisis"
--->
+---
+sidebar_position: 1
+---
 
 # `x/crisis`
 
@@ -22,11 +19,9 @@ application initialization process.
 * [Client](#client)
     * [CLI](#cli)
 
-<!-- order: 1 -->
+## State
 
-# State
-
-## ConstantFee
+### ConstantFee
 
 Due to the anticipated large gas cost requirement to verify an invariant (and
 potential to exceed the maximum allowable block gas limit) a constant fee is
@@ -39,18 +34,18 @@ it can be updated with governance or the address with authority.
 
 * Params: `mint/params -> legacy_amino(sdk.Coin)`
 
-<!-- order: 2 -->
-
-# Messages
+## Messages
 
 In this section we describe the processing of the crisis messages and the
 corresponding updates to the state.
 
-## MsgVerifyInvariant
+### MsgVerifyInvariant
 
 Blockchain invariants can be checked using the `MsgVerifyInvariant` message.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/crisis/v1beta1/tx.proto#L16-L26
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/crisis/v1beta1/tx.proto#L26-L42
+```
 
 This message is expected to fail if:
 
@@ -63,15 +58,13 @@ never deducted as the transaction is never committed to a block (equivalent to
 being refunded). However, if the invariant is not broken, the constant fee will
 not be refunded.
 
-<!-- order: 3 -->
-
-# Events
+## Events
 
 The crisis module emits the following events:
 
-## Handlers
+### Handlers
 
-### MsgVerifyInvariance
+#### MsgVerifyInvariance
 
 | Type      | Attribute Key | Attribute Value  |
 |-----------|---------------|------------------|
@@ -80,7 +73,7 @@ The crisis module emits the following events:
 | message   | action        | verify_invariant |
 | message   | sender        | {senderAddress}  |
 
-# Parameters
+## Parameters
 
 The crisis module contains the following parameters:
 
@@ -88,15 +81,13 @@ The crisis module contains the following parameters:
 |-------------|---------------|-----------------------------------|
 | ConstantFee | object (coin) | {"denom":"uatom","amount":"1000"} |
 
-<!-- order: 4 -->
+## Client
 
-# Client
-
-## CLI
+### CLI
 
 A user can query and interact with the `crisis` module using the CLI.
 
-### Transactions
+#### Transactions
 
 The `tx` commands allow users to interact with the `crisis` module.
 
@@ -104,7 +95,7 @@ The `tx` commands allow users to interact with the `crisis` module.
 simd tx crisis --help
 ```
 
-#### invariant-broken
+##### invariant-broken
 
 The `invariant-broken` command submits proof when an invariant was broken to halt the chain
 

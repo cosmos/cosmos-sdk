@@ -1,9 +1,6 @@
-<!--
-order: 0
-title: Slashing Overview
-parent:
-  title: "slashing"
--->
+---
+sidebar_position: 1
+---
 
 # `x/slashing`
 
@@ -45,11 +42,9 @@ This module will be used by the Cosmos Hub, the first hub in the Cosmos ecosyste
     * [gRPC](#grpc)
     * [REST](#rest)
 
-<!-- order: 1 -->
+## Concepts
 
-# Concepts
-
-## States
+### States
 
 At any given time, there are any number of validators registered in the state
 machine. Each block, the top `MaxValidators` (defined by `x/staking`) validators
@@ -61,7 +56,7 @@ For each of these validators we keep a `ValidatorSigningInfo` record that contai
 information partaining to validator's liveness and other infraction related
 attributes.
 
-## Tombstone Caps
+### Tombstone Caps
 
 In order to mitigate the impact of initially likely categories of non-malicious
 protocol faults, the Cosmos Hub implements for each validator
@@ -72,10 +67,10 @@ somewhat blunt the economic impact of unintentional misconfiguration.
 
 Liveness faults do not have caps, as they can't stack upon each other. Liveness bugs are "detected" as soon as the infraction occurs, and the validators are immediately put in jail, so it is not possible for them to commit multiple liveness faults without unjailing in between.
 
-## Infraction Timelines
+### Infraction Timelines
 
 To illustrate how the `x/slashing` module handles submitted evidence through
-Tendermint consensus, consider the following examples:
+CometBFT consensus, consider the following examples:
 
 **Definitions**:
 
@@ -86,14 +81,14 @@ _D<sub>n</sub>_ : infraction `n` discovered
 _V<sub>b</sub>_ : validator bonded  
 _V<sub>u</sub>_ : validator unbonded
 
-### Single Double Sign Infraction
+#### Single Double Sign Infraction
 
 \[----------C<sub>1</sub>----D<sub>1</sub>,V<sub>u</sub>-----\]
 
 A single infraction is committed then later discovered, at which point the
 validator is unbonded and slashed at the full amount for the infraction.
 
-### Multiple Double Sign Infractions
+#### Multiple Double Sign Infractions
 
 \[----------C<sub>1</sub>--C<sub>2</sub>---C<sub>3</sub>---D<sub>1</sub>,D<sub>2</sub>,D<sub>3</sub>V<sub>u</sub>-----\]
 
@@ -101,19 +96,17 @@ Multiple infractions are committed and then later discovered, at which point the
 validator is jailed and slashed for only one infraction. Because the validator
 is also tombstoned, they can not rejoin the validator set.
 
-<!-- order: 2 -->
+## State
 
-# State
-
-## Signing Info (Liveness)
+### Signing Info (Liveness)
 
 Every block includes a set of precommits by the validators for the previous block,
-known as the `LastCommitInfo` provided by Tendermint. A `LastCommitInfo` is valid so
+known as the `LastCommitInfo` provided by CometBFT. A `LastCommitInfo` is valid so
 long as it contains precommits from +2/3 of total voting power.
 
-Proposers are incentivized to include precommits from all validators in the Tendermint `LastCommitInfo`
+Proposers are incentivized to include precommits from all validators in the CometBFT `LastCommitInfo`
 by receiving additional fees proportional to the difference between the voting
-power included in the `LastCommitInfo` and +2/3 (see [fee distribution](x/distribution/spec/03_begin_block.md)).
+power included in the `LastCommitInfo` and +2/3 (see [fee distribution](../distribution/README.md#begin-block)).
 
 ```go
 type LastCommitInfo struct {
@@ -149,24 +142,26 @@ bonded validator. The `SignedBlocksWindow` parameter defines the size
 
 The information stored for tracking validator liveness is as follows:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/slashing/v1beta1/slashing.proto#L12-L33
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/slashing/v1beta1/slashing.proto#L13-L35
+```
 
-## Params
+### Params
 
 The slashing module stores it's params in state with the prefix of `0x00`,
 it can be updated with governance or the address with authority.
 
 * Params: `0x00 | ProtocolBuffer(Params)`
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc3/proto/cosmos/slashing/v1beta1/slashing.proto#L35-L45
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/slashing/v1beta1/slashing.proto#L37-L59
+```
 
-<!-- order: 3 -->
-
-# Messages
+## Messages
 
 In this section we describe the processing of messages for the `slashing` module.
 
-## Unjail
+### Unjail
 
 If a validator was automatically unbonded due to downtime and wishes to come back online &
 possibly rejoin the bonded set, it must send `MsgUnjail`:
@@ -210,11 +205,9 @@ If the validator has enough stake to be in the top `n = MaximumBondedValidators`
 and all delegators still delegated to the validator will be rebonded and begin to again collect
 provisions and rewards.
 
-<!-- order: 4 -->
+## BeginBlock
 
-# BeginBlock
-
-## Liveness Tracking
+### Liveness Tracking
 
 At the beginning of each block, we update the `ValidatorSigningInfo` for each
 validator and check if they've crossed below the liveness threshold over a
@@ -291,7 +284,7 @@ for vote in block.LastCommitInfo.Votes {
     // That's fine since this is just used to filter unbonding delegations & redelegations.
     distributionHeight := height - sdk.ValidatorUpdateDelay - 1
 
-    Slash(vote.Validator.Address, distributionHeight, vote.Validator.Power, SlashFractionDowntime())
+    SlashWithInfractionReason(vote.Validator.Address, distributionHeight, vote.Validator.Power, SlashFractionDowntime(), stakingtypes.Downtime)
     Jail(vote.Validator.Address)
 
     signInfo.JailedUntil = block.Time.Add(DowntimeJailDuration())
@@ -306,13 +299,12 @@ for vote in block.LastCommitInfo.Votes {
   SetValidatorSigningInfo(vote.Validator.Address, signInfo)
 }
 ```
-<!-- order: 5 -->
 
-# Hooks
+## Hooks
 
 This section contains a description of the module's `hooks`. Hooks are operations that are executed automatically when events are raised.
 
-## Staking hooks
+### Staking hooks
 
 The slashing module implements the `StakingHooks` defined in `x/staking` and are used as record-keeping of validators information. During the app initialization, these hooks should be registered in the staking module struct.
 
@@ -322,7 +314,7 @@ The following hooks impact the slashing state:
 * `AfterValidatorCreated` stores a validator's consensus key.
 * `AfterValidatorRemoved` removes a validator's consensus key.
 
-## Validator Bonded
+### Validator Bonded
 
 Upon successful first-time bonding of a new validator, we create a new `ValidatorSigningInfo` structure for the
 now-bonded validator, which `StartHeight` of the current block.
@@ -349,24 +341,23 @@ onValidatorBonded(address sdk.ValAddress)
 
   return
 ```
-<!-- order: 6 -->
 
-# Events
+## Events
 
 The slashing module emits the following events:
 
-## MsgServer
+### MsgServer
 
-### MsgUnjail
+#### MsgUnjail
 
 | Type    | Attribute Key | Attribute Value    |
 | ------- | ------------- | ------------------ |
 | message | module        | slashing           |
 | message | sender        | {validatorAddress} |
 
-## Keeper
+### Keeper
 
-## BeginBlocker: HandleValidatorSignature
+### BeginBlocker: HandleValidatorSignature
 
 | Type  | Attribute Key | Attribute Value             |
 | ----- | ------------- | --------------------------- |
@@ -384,21 +375,19 @@ The slashing module emits the following events:
 | liveness | missed_blocks | {missedBlocksCounter}       |
 | liveness | height        | {blockHeight}               |
 
-### Slash
+#### Slash
 
 * same as `"slash"` event from `HandleValidatorSignature`, but without the `jailed` attribute.
 
-### Jail
+#### Jail
 
 | Type  | Attribute Key | Attribute Value    |
 | ----- | ------------- | ------------------ |
 | slash | jailed        | {validatorAddress} |
 
-<!-- order: 7 -->
+## Staking Tombstone
 
-# Staking Tombstone
-
-## Abstract
+### Abstract
 
 In the current implementation of the `slashing` module, when the consensus engine
 informs the state machine of a validator's consensus fault, the validator is
@@ -483,7 +472,7 @@ stay with them. Given that consensus safety faults are so egregious
 (way more so than liveness faults), it is probably prudent to have delegators not
 "auto-rebond" to the validator.
 
-### Proposal: infinite jail
+#### Proposal: infinite jail
 
 We propose setting the "jail time" for a
 validator who commits a consensus safety fault, to `infinite` (i.e. a tombstone state).
@@ -498,14 +487,14 @@ will make the `slashing` module way simpler, especially because we can remove al
 of the hooks defined in the `slashing` module consumed by the `staking` module
 (the `slashing` module still consumes hooks defined in `staking`).
 
-### Single slashing amount
+#### Single slashing amount
 
 Another optimization that can be made is that if we assume that all ABCI faults
-for Tendermint consensus are slashed at the same level, we don't have to keep
+for CometBFT consensus are slashed at the same level, we don't have to keep
 track of "max slash". Once an ABCI fault happens, we don't have to worry about
 comparing potential future ones to find the max.
 
-Currently the only Tendermint ABCI fault is:
+Currently the only CometBFT ABCI fault is:
 
 * Unjustified precommits (double signs)
 
@@ -516,13 +505,11 @@ It is currently planned to include the following fault in the near future:
 Given that these faults are both attributable byzantine faults, we will likely
 want to slash them equally, and thus we can enact the above change.
 
-> Note: This change may make sense for current Tendermint consensus, but maybe
-> not for a different consensus algorithm or future versions of Tendermint that
+> Note: This change may make sense for current CometBFT consensus, but maybe
+> not for a different consensus algorithm or future versions of CometBFT that
 > may want to punish at different levels (for example, partial slashing).
 
-<!-- order: 8 -->
-
-# Parameters
+## Parameters
 
 The slashing module contains the following parameters:
 
@@ -534,31 +521,29 @@ The slashing module contains the following parameters:
 | SlashFractionDoubleSign | string (dec)   | "0.050000000000000000" |
 | SlashFractionDowntime   | string (dec)   | "0.010000000000000000" |
 
-<!-- order: 9 -->
-
-# CLI
+## CLI
 
 A user can query and interact with the `slashing` module using the CLI.
 
-## Query
+### Query
 
 The `query` commands allow users to query `slashing` state.
 
-```sh
+```shell
 simd query slashing --help
 ```
 
-### params
+#### params
 
 The `params` command allows users to query genesis parameters for the slashing module.
 
-```sh
+```shell
 simd query slashing params [flags]
 ```
 
 Example:
 
-```sh
+```shell
 simd query slashing params
 ```
 
@@ -572,17 +557,17 @@ slash_fraction_double_sign: "0.050000000000000000"
 slash_fraction_downtime: "0.010000000000000000"
 ```
 
-### signing-info
+#### signing-info
 
 The `signing-info` command allows users to query signing-info of the validator using consensus public key.
 
-```sh
+```shell
 simd query slashing signing-infos [flags]
 ```
 
 Example:
 
-```sh
+```shell
 simd query slashing signing-info '{"@type":"/cosmos.crypto.ed25519.PubKey","key":"Auxs3865HpB/EfssYOzfqNhEJjzys6jD5B6tPgC8="}'
 
 ```
@@ -598,17 +583,17 @@ start_height: "0"
 tombstoned: false
 ```
 
-### signing-infos
+#### signing-infos
 
 The `signing-infos` command allows users to query signing infos of all validators.
 
-```sh
+```shell
 simd query slashing signing-infos [flags]
 ```
 
 Example:
 
-```sh
+```shell
 simd query slashing signing-infos
 ```
 
@@ -627,7 +612,7 @@ pagination:
   total: "0"
 ```
 
-## Transactions
+### Transactions
 
 The `tx` commands allow users to interact with the `slashing` module.
 
@@ -635,12 +620,12 @@ The `tx` commands allow users to interact with the `slashing` module.
 simd tx slashing --help
 ```
 
-### unjail
+#### unjail
 
 The `unjail` command allows users to unjail a validator previously jailed for downtime.
 
 ```bash
-  simd tx slashing unjail --from mykey [flags]
+simd tx slashing unjail --from mykey [flags]
 ```
 
 Example:
@@ -649,21 +634,21 @@ Example:
 simd tx slashing unjail --from mykey
 ```
 
-## gRPC
+### gRPC
 
 A user can query the `slashing` module using gRPC endpoints.
 
-### Params
+#### Params
 
 The `Params` endpoint allows users to query the parameters of slashing module.
 
-```sh
+```shell
 cosmos.slashing.v1beta1.Query/Params
 ```
 
 Example:
 
-```sh
+```shell
 grpcurl -plaintext localhost:9090 cosmos.slashing.v1beta1.Query/Params
 ```
 
@@ -681,17 +666,17 @@ Example Output:
 }
 ```
 
-### SigningInfo
+#### SigningInfo
 
 The SigningInfo queries the signing info of given cons address.
 
-```sh
+```shell
 cosmos.slashing.v1beta1.Query/SigningInfo
 ```
 
 Example:
 
-```sh
+```shell
 grpcurl -plaintext -d '{"cons_address":"cosmosvalcons1nrqsld3aw6lh6t082frdqc84uwxn0t958c"}' localhost:9090 cosmos.slashing.v1beta1.Query/SigningInfo
 ```
 
@@ -707,17 +692,17 @@ Example Output:
 }
 ```
 
-### SigningInfos
+#### SigningInfos
 
 The SigningInfos queries signing info of all validators.
 
-```sh
+```shell
 cosmos.slashing.v1beta1.Query/SigningInfos
 ```
 
 Example:
 
-```sh
+```shell
 grpcurl -plaintext localhost:9090 cosmos.slashing.v1beta1.Query/SigningInfos
 ```
 
@@ -738,19 +723,19 @@ Example Output:
 }
 ```
 
-## REST
+### REST
 
 A user can query the `slashing` module using REST endpoints.
 
-### Params
+#### Params
 
-```sh
+```shell
 /cosmos/slashing/v1beta1/params
 ```
 
 Example:
 
-```sh
+```shell
 curl "localhost:1317/cosmos/slashing/v1beta1/params"
 ```
 
@@ -767,15 +752,15 @@ Example Output:
 }
 ```
 
-### signing_info
+#### signing_info
 
-```sh
+```shell
 /cosmos/slashing/v1beta1/signing_infos/%s
 ```
 
 Example:
 
-```sh
+```shell
 curl "localhost:1317/cosmos/slashing/v1beta1/signing_infos/cosmosvalcons1nrqslkwd3pz096lh6t082frdqc84uwxn0t958c"
 ```
 
@@ -794,15 +779,15 @@ Example Output:
 }
 ```
 
-### signing_infos
+#### signing_infos
 
-```sh
+```shell
 /cosmos/slashing/v1beta1/signing_infos
 ```
 
 Example:
 
-```sh
+```shell
 curl "localhost:1317/cosmos/slashing/v1beta1/signing_infos
 ```
 

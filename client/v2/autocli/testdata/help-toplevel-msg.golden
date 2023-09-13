@@ -1,0 +1,17 @@
+Transactions commands for the test module
+
+Usage:
+  test [flags]
+  test [command]
+
+Available Commands:
+  completion    Generate the autocompletion script for the specified shell
+  deprecatedmsg Tx commands for the testpb.Msg service
+  help          Help about any command
+  send          send msg the value provided by the user
+  skipmsg       Tx commands for the testpb.Msg service
+
+Flags:
+  -h, --help   help for test
+
+Use "test [command] --help" for more information about a command.

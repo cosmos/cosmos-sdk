@@ -41,7 +41,7 @@ and API.
 
 UAT should be revisited at each stage of the product development:
 
-![acceptance-tests.png](./docs/assets/acceptance-tests.png)
+![acceptance-tests.png](./docs/static/img/acceptance-tests.png)
 
 ### Why Acceptance Testing
 

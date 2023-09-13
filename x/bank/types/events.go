@@ -11,8 +11,6 @@ const (
 	AttributeKeyRecipient = "recipient"
 	AttributeKeySender    = sdk.AttributeKeySender
 
-	AttributeValueCategory = ModuleName
-
 	// supply and balance tracking events name and attributes
 	EventTypeCoinSpent    = "coin_spent"
 	EventTypeCoinReceived = "coin_received"

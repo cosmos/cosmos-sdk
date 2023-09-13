@@ -4,9 +4,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/x/group"
-
 	"github.com/stretchr/testify/require"
+
+	"github.com/cosmos/cosmos-sdk/x/group"
 )
 
 func TestThresholdDecisionPolicyValidate(t *testing.T) {
@@ -122,7 +122,7 @@ func TestPercentageDecisionPolicyAllow(t *testing.T) {
 				NoWithVetoCount: "0",
 			},
 			"3",
-			time.Duration(time.Second * 50),
+			time.Second * 50,
 			group.DecisionPolicyResult{
 				Allow: true,
 				Final: true,
@@ -144,7 +144,7 @@ func TestPercentageDecisionPolicyAllow(t *testing.T) {
 				NoWithVetoCount: "0",
 			},
 			"4",
-			time.Duration(time.Second * 50),
+			time.Second * 50,
 			group.DecisionPolicyResult{
 				Allow: true,
 				Final: true,
@@ -166,7 +166,7 @@ func TestPercentageDecisionPolicyAllow(t *testing.T) {
 				NoWithVetoCount: "0",
 			},
 			"3",
-			time.Duration(time.Second * 50),
+			time.Second * 50,
 			group.DecisionPolicyResult{
 				Allow: false,
 				Final: false,
@@ -188,7 +188,7 @@ func TestPercentageDecisionPolicyAllow(t *testing.T) {
 				NoWithVetoCount: "0",
 			},
 			"3",
-			time.Duration(time.Second * 50),
+			time.Second * 50,
 			group.DecisionPolicyResult{
 				Allow: false,
 				Final: true,
@@ -210,7 +210,7 @@ func TestPercentageDecisionPolicyAllow(t *testing.T) {
 				NoWithVetoCount: "0",
 			},
 			"4",
-			time.Duration(time.Second * 50),
+			time.Second * 50,
 			group.DecisionPolicyResult{
 				Allow: false,
 				Final: false,
@@ -232,37 +232,17 @@ func TestPercentageDecisionPolicyAllow(t *testing.T) {
 				NoWithVetoCount: "0",
 			},
 			"3",
-			time.Duration(time.Second * 50),
+			time.Second * 50,
 			group.DecisionPolicyResult{
 				Allow: false,
 				Final: false,
 			},
 			false,
 		},
-		{
-			"time since submission < min execution period",
-			&group.PercentageDecisionPolicy{
-				Percentage: "0.5",
-				Windows: &group.DecisionPolicyWindows{
-					VotingPeriod:       time.Second * 10,
-					MinExecutionPeriod: time.Minute,
-				},
-			},
-			&group.TallyResult{
-				YesCount:        "2",
-				NoCount:         "0",
-				AbstainCount:    "0",
-				NoWithVetoCount: "0",
-			},
-			"3",
-			time.Duration(time.Second * 50),
-			group.DecisionPolicyResult{},
-			true,
-		},
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			policyResult, err := tc.policy.Allow(*tc.tally, tc.totalPower, tc.votingDuration)
+			policyResult, err := tc.policy.Allow(*tc.tally, tc.totalPower)
 			if tc.expErr {
 				require.Error(t, err)
 			} else {
@@ -298,7 +278,7 @@ func TestThresholdDecisionPolicyAllow(t *testing.T) {
 				NoWithVetoCount: "0",
 			},
 			"3",
-			time.Duration(time.Second * 50),
+			time.Second * 50,
 			group.DecisionPolicyResult{
 				Allow: true,
 				Final: true,
@@ -320,7 +300,7 @@ func TestThresholdDecisionPolicyAllow(t *testing.T) {
 				NoWithVetoCount: "0",
 			},
 			"3",
-			time.Duration(time.Second * 50),
+			time.Second * 50,
 			group.DecisionPolicyResult{
 				Allow: false,
 				Final: false,
@@ -342,7 +322,7 @@ func TestThresholdDecisionPolicyAllow(t *testing.T) {
 				NoWithVetoCount: "0",
 			},
 			"3",
-			time.Duration(time.Second * 50),
+			time.Second * 50,
 			group.DecisionPolicyResult{
 				Allow: true,
 				Final: true,
@@ -364,7 +344,7 @@ func TestThresholdDecisionPolicyAllow(t *testing.T) {
 				NoWithVetoCount: "0",
 			},
 			"3",
-			time.Duration(time.Second * 50),
+			time.Second * 50,
 			group.DecisionPolicyResult{
 				Allow: false,
 				Final: true,
@@ -386,40 +366,17 @@ func TestThresholdDecisionPolicyAllow(t *testing.T) {
 				NoWithVetoCount: "0",
 			},
 			"3",
-			time.Duration(time.Second * 50),
+			time.Second * 50,
 			group.DecisionPolicyResult{
 				Allow: false,
 				Final: false,
 			},
 			false,
 		},
-		{
-			"time since submission < min execution period",
-			&group.ThresholdDecisionPolicy{
-				Threshold: "3",
-				Windows: &group.DecisionPolicyWindows{
-					VotingPeriod:       time.Second * 10,
-					MinExecutionPeriod: time.Minute,
-				},
-			},
-			&group.TallyResult{
-				YesCount:        "3",
-				NoCount:         "0",
-				AbstainCount:    "0",
-				NoWithVetoCount: "0",
-			},
-			"3",
-			time.Duration(time.Second * 50),
-			group.DecisionPolicyResult{
-				Allow: false,
-				Final: true,
-			},
-			true,
-		},
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			policyResult, err := tc.policy.Allow(*tc.tally, tc.totalPower, tc.votingDuration)
+			policyResult, err := tc.policy.Allow(*tc.tally, tc.totalPower)
 			if tc.expErr {
 				require.Error(t, err)
 			} else {

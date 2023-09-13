@@ -9,15 +9,16 @@ import (
 
 	"github.com/spf13/cobra"
 
+	errorsmod "cosmossdk.io/errors"
+
 	"github.com/cosmos/cosmos-sdk/client"
+	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	legacybech32 "github.com/cosmos/cosmos-sdk/types/bech32/legacybech32" //nolint:staticcheck // we do old keys, they're keys after all.
 	"github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/version"
-
-	legacybech32 "github.com/cosmos/cosmos-sdk/types/bech32/legacybech32" //nolint:staticcheck // we do old keys, they're keys after all.
 )
 
 var (
@@ -88,7 +89,7 @@ func bytesToPubkey(bz []byte, keytype string) (cryptotypes.PubKey, bool) {
 // getPubKeyFromRawString returns a PubKey (PubKeyEd25519 or PubKeySecp256k1) by attempting
 // to decode the pubkey string from hex, base64, and finally bech32. If all
 // encodings fail, an error is returned.
-func getPubKeyFromRawString(pkstr string, keytype string) (cryptotypes.PubKey, error) {
+func getPubKeyFromRawString(pkstr, keytype string) (cryptotypes.PubKey, error) {
 	// Try hex decoding
 	bz, err := hex.DecodeString(pkstr)
 	if err == nil {
@@ -106,17 +107,17 @@ func getPubKeyFromRawString(pkstr string, keytype string) (cryptotypes.PubKey, e
 		}
 	}
 
-	pk, err := legacybech32.UnmarshalPubKey(legacybech32.AccPK, pkstr) //nolint:staticcheck // we do old keys, they're keys after all.
+	pk, err := legacybech32.UnmarshalPubKey(legacybech32.AccPK, pkstr)
 	if err == nil {
 		return pk, nil
 	}
 
-	pk, err = legacybech32.UnmarshalPubKey(legacybech32.ValPK, pkstr) //nolint:staticcheck // we do old keys, they're keys after all.
+	pk, err = legacybech32.UnmarshalPubKey(legacybech32.ValPK, pkstr)
 	if err == nil {
 		return pk, nil
 	}
 
-	pk, err = legacybech32.UnmarshalPubKey(legacybech32.ConsPK, pkstr) //nolint:staticcheck // we do old keys, they're keys after all.
+	pk, err = legacybech32.UnmarshalPubKey(legacybech32.ConsPK, pkstr)
 	if err == nil {
 		return pk, nil
 	}
@@ -143,7 +144,7 @@ $ %s debug pubkey-raw cosmos1e0jnq2sun3dzjh8p2xq95kk0expwmd7shwjpfg
 			}
 			pubkeyType = strings.ToLower(pubkeyType)
 			if pubkeyType != "secp256k1" && pubkeyType != ed {
-				return errors.Wrapf(errors.ErrInvalidType, "invalid pubkey type, expected oneof ed25519 or secp256k1")
+				return errorsmod.Wrapf(errors.ErrInvalidType, "invalid pubkey type, expected oneof ed25519 or secp256k1")
 			}
 
 			pk, err := getPubKeyFromRawString(args[0], pubkeyType)
@@ -154,7 +155,7 @@ $ %s debug pubkey-raw cosmos1e0jnq2sun3dzjh8p2xq95kk0expwmd7shwjpfg
 			var consensusPub string
 			edPK, ok := pk.(*ed25519.PubKey)
 			if ok && pubkeyType == ed {
-				consensusPub, err = legacybech32.MarshalPubKey(legacybech32.ConsPK, edPK) //nolint:staticcheck // we do old keys, they're keys after all.
+				consensusPub, err = legacybech32.MarshalPubKey(legacybech32.ConsPK, edPK)
 				if err != nil {
 					return err
 				}
@@ -167,11 +168,11 @@ $ %s debug pubkey-raw cosmos1e0jnq2sun3dzjh8p2xq95kk0expwmd7shwjpfg
 			if err != nil {
 				return err
 			}
-			accPub, err := legacybech32.MarshalPubKey(legacybech32.AccPK, pk) //nolint:staticcheck // we do old keys, they're keys after all.
+			accPub, err := legacybech32.MarshalPubKey(legacybech32.AccPK, pk)
 			if err != nil {
 				return err
 			}
-			valPub, err := legacybech32.MarshalPubKey(legacybech32.ValPK, pk) //nolint:staticcheck // we do old keys, they're keys after all.
+			valPub, err := legacybech32.MarshalPubKey(legacybech32.ValPK, pk)
 			if err != nil {
 				return err
 			}
@@ -192,38 +193,39 @@ $ %s debug pubkey-raw cosmos1e0jnq2sun3dzjh8p2xq95kk0expwmd7shwjpfg
 
 func AddrCmd() *cobra.Command {
 	return &cobra.Command{
-		Use:   "addr [address]",
-		Short: "Convert an address between hex and bech32",
-		Long: fmt.Sprintf(`Convert an address between hex encoding and bech32.
-
-Example:
-$ %s debug addr cosmos1e0jnq2sun3dzjh8p2xq95kk0expwmd7shwjpfg
-			`, version.AppName),
-		Args: cobra.ExactArgs(1),
+		Use:     "addr [address]",
+		Short:   "Convert an address between hex and bech32",
+		Example: fmt.Sprintf("%s debug addr cosmos1e0jnq2sun3dzjh8p2xq95kk0expwmd7shwjpfg", version.AppName),
+		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			addrString := args[0]
-			var addr []byte
+			clientCtx := client.GetClientContextFromCmd(cmd)
 
+			addrString := args[0]
 			// try hex, then bech32
-			var err error
+			var (
+				addr []byte
+				err  error
+			)
 			addr, err = hex.DecodeString(addrString)
 			if err != nil {
 				var err2 error
-				addr, err2 = sdk.AccAddressFromBech32(addrString)
+				addr, err2 = clientCtx.AddressCodec.StringToBytes(addrString)
 				if err2 != nil {
 					var err3 error
-					addr, err3 = sdk.ValAddressFromBech32(addrString)
-
+					addr, err3 = clientCtx.ValidatorAddressCodec.StringToBytes(addrString)
 					if err3 != nil {
-						return fmt.Errorf("expected hex or bech32. Got errors: hex: %v, bech32 acc: %v, bech32 val: %v", err, err2, err3)
+						return fmt.Errorf("expected hex or bech32. Got errors: hex: %w, bech32 acc: %w, bech32 val: %w", err, err2, err3)
 					}
 				}
 			}
 
+			acc, _ := clientCtx.AddressCodec.BytesToString(addr)
+			val, _ := clientCtx.ValidatorAddressCodec.BytesToString(addr)
+
 			cmd.Println("Address:", addr)
 			cmd.Printf("Address (hex): %X\n", addr)
-			cmd.Printf("Bech32 Acc: %s\n", sdk.AccAddress(addr))
-			cmd.Printf("Bech32 Val: %s\n", sdk.ValAddress(addr))
+			cmd.Printf("Bech32 Acc: %s\n", acc)
+			cmd.Printf("Bech32 Val: %s\n", val)
 			return nil
 		},
 	}
@@ -263,12 +265,24 @@ func PrefixesCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:     "prefixes",
 		Short:   "List prefixes used for Human-Readable Part (HRP) in Bech32",
-		Long:    "List prefixes used in Bech32 addresses.",
 		Example: fmt.Sprintf("$ %s debug prefixes", version.AppName),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cmd.Printf("Bech32 Acc: %s\n", sdk.GetConfig().GetBech32AccountAddrPrefix())
-			cmd.Printf("Bech32 Val: %s\n", sdk.GetConfig().GetBech32ValidatorAddrPrefix())
-			cmd.Printf("Bech32 Con: %s\n", sdk.GetConfig().GetBech32ConsensusAddrPrefix())
+			clientCtx := client.GetClientContextFromCmd(cmd)
+
+			acc, _ := clientCtx.AddressCodec.BytesToString([]byte{})
+			val, _ := clientCtx.ValidatorAddressCodec.BytesToString([]byte{})
+			cons, _ := clientCtx.ConsensusAddressCodec.BytesToString([]byte{})
+
+			checksumLen := 7
+			if _, ok := clientCtx.AddressCodec.(addresscodec.Bech32Codec); !ok {
+				cmd.Printf("%s uses custom address codec, this command may not work as expected.\n", version.AppName)
+				checksumLen = 0
+			}
+
+			cmd.Printf("Bech32 Acc: %s\n", acc[:len(acc)-checksumLen])
+			cmd.Printf("Bech32 Val: %s\n", val[:len(val)-checksumLen])
+			cmd.Printf("Bech32 Con: %s\n", cons[:len(cons)-checksumLen])
+
 			return nil
 		},
 	}

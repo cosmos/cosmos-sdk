@@ -1,7 +1,10 @@
 package feegrant
 
 import (
+	"context"
 	time "time"
+
+	errorsmod "cosmossdk.io/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -19,15 +22,15 @@ var _ FeeAllowanceI = (*BasicAllowance)(nil)
 //
 // If remove is true (regardless of the error), the FeeAllowance will be deleted from storage
 // (eg. when it is used up). (See call to RevokeAllowance in Keeper.UseGrantedFees)
-func (a *BasicAllowance) Accept(ctx sdk.Context, fee sdk.Coins, _ []sdk.Msg) (bool, error) {
-	if a.Expiration != nil && a.Expiration.Before(ctx.BlockTime()) {
-		return true, sdkerrors.Wrap(ErrFeeLimitExpired, "basic allowance")
+func (a *BasicAllowance) Accept(ctx context.Context, fee sdk.Coins, _ []sdk.Msg) (bool, error) {
+	if a.Expiration != nil && a.Expiration.Before(sdk.UnwrapSDKContext(ctx).BlockTime()) {
+		return true, errorsmod.Wrap(ErrFeeLimitExpired, "basic allowance")
 	}
 
 	if a.SpendLimit != nil {
 		left, invalid := a.SpendLimit.SafeSub(fee...)
 		if invalid {
-			return false, sdkerrors.Wrap(ErrFeeLimitExceeded, "basic allowance")
+			return false, errorsmod.Wrap(ErrFeeLimitExceeded, "basic allowance")
 		}
 
 		a.SpendLimit = left
@@ -41,20 +44,21 @@ func (a *BasicAllowance) Accept(ctx sdk.Context, fee sdk.Coins, _ []sdk.Msg) (bo
 func (a BasicAllowance) ValidateBasic() error {
 	if a.SpendLimit != nil {
 		if !a.SpendLimit.IsValid() {
-			return sdkerrors.Wrapf(sdkerrors.ErrInvalidCoins, "send amount is invalid: %s", a.SpendLimit)
+			return errorsmod.Wrapf(sdkerrors.ErrInvalidCoins, "send amount is invalid: %s", a.SpendLimit)
 		}
 		if !a.SpendLimit.IsAllPositive() {
-			return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, "spend limit must be positive")
+			return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, "spend limit must be positive")
 		}
 	}
 
 	if a.Expiration != nil && a.Expiration.Unix() < 0 {
-		return sdkerrors.Wrap(ErrInvalidDuration, "expiration time cannot be negative")
+		return errorsmod.Wrap(ErrInvalidDuration, "expiration time cannot be negative")
 	}
 
 	return nil
 }
 
+// ExpiresAt returns the expiry time of the BasicAllowance.
 func (a BasicAllowance) ExpiresAt() (*time.Time, error) {
 	return a.Expiration, nil
 }

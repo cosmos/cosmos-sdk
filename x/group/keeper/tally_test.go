@@ -42,14 +42,14 @@ func (s *TestSuite) TestTally() {
 		"withdrawn proposal": {
 			setupProposal: func(ctx context.Context) uint64 {
 				msgs := []sdk.Msg{msgSend1}
-				proposalId := submitProposal(ctx, s, msgs, proposers)
+				proposalID := submitProposal(ctx, s, msgs, proposers)
 				_, err := s.groupKeeper.WithdrawProposal(ctx, &group.MsgWithdrawProposal{
-					ProposalId: proposalId,
+					ProposalId: proposalID,
 					Address:    proposers[0],
 				})
 				s.Require().NoError(err)
 
-				return proposalId
+				return proposalID
 			},
 			expErr: true,
 		},
@@ -71,14 +71,12 @@ func (s *TestSuite) TestTally() {
 		spec := spec
 		s.Run(msg, func() {
 			sdkCtx, _ := s.sdkCtx.CacheContext()
-			ctx := sdk.WrapSDKContext(sdkCtx)
-
-			pId := spec.setupProposal(ctx)
+			pID := spec.setupProposal(sdkCtx)
 			req := &group.QueryTallyResultRequest{
-				ProposalId: pId,
+				ProposalId: pID,
 			}
 
-			res, err := s.groupKeeper.TallyResult(ctx, req)
+			res, err := s.groupKeeper.TallyResult(sdkCtx, req)
 			if spec.expErr {
 				s.Require().Error(err)
 			} else {

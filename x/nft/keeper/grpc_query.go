@@ -3,11 +3,13 @@ package keeper
 import (
 	"context"
 
-	"github.com/cosmos/cosmos-sdk/store/prefix"
+	"cosmossdk.io/store/prefix"
+	"cosmossdk.io/x/nft"
+
+	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	"github.com/cosmos/cosmos-sdk/x/nft"
 )
 
 var _ nft.QueryServer = Keeper{}
@@ -18,11 +20,11 @@ func (k Keeper) Balance(goCtx context.Context, r *nft.QueryBalanceRequest) (*nft
 		return nil, sdkerrors.ErrInvalidRequest.Wrap("empty request")
 	}
 
-	if err := nft.ValidateClassID(r.ClassId); err != nil {
-		return nil, err
+	if len(r.ClassId) == 0 {
+		return nil, nft.ErrEmptyClassID
 	}
 
-	owner, err := sdk.AccAddressFromBech32(r.Owner)
+	owner, err := k.ac.StringToBytes(r.Owner)
 	if err != nil {
 		return nil, err
 	}
@@ -38,12 +40,12 @@ func (k Keeper) Owner(goCtx context.Context, r *nft.QueryOwnerRequest) (*nft.Que
 		return nil, sdkerrors.ErrInvalidRequest.Wrap("empty request")
 	}
 
-	if err := nft.ValidateClassID(r.ClassId); err != nil {
-		return nil, err
+	if len(r.ClassId) == 0 {
+		return nil, nft.ErrEmptyClassID
 	}
 
-	if err := nft.ValidateNFTID(r.Id); err != nil {
-		return nil, err
+	if len(r.Id) == 0 {
+		return nil, nft.ErrEmptyNFTID
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
@@ -57,8 +59,8 @@ func (k Keeper) Supply(goCtx context.Context, r *nft.QuerySupplyRequest) (*nft.Q
 		return nil, sdkerrors.ErrInvalidRequest.Wrap("empty request")
 	}
 
-	if err := nft.ValidateClassID(r.ClassId); err != nil {
-		return nil, err
+	if len(r.ClassId) == 0 {
+		return nil, nft.ErrEmptyClassID
 	}
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	supply := k.GetTotalSupply(ctx, r.ClassId)
@@ -73,14 +75,9 @@ func (k Keeper) NFTs(goCtx context.Context, r *nft.QueryNFTsRequest) (*nft.Query
 
 	var err error
 	var owner sdk.AccAddress
-	if len(r.ClassId) > 0 {
-		if err := nft.ValidateClassID(r.ClassId); err != nil {
-			return nil, err
-		}
-	}
 
 	if len(r.Owner) > 0 {
-		owner, err = sdk.AccAddressFromBech32(r.Owner)
+		owner, err = k.ac.StringToBytes(r.Owner)
 		if err != nil {
 			return nil, err
 		}
@@ -92,7 +89,7 @@ func (k Keeper) NFTs(goCtx context.Context, r *nft.QueryNFTsRequest) (*nft.Query
 
 	switch {
 	case len(r.ClassId) > 0 && len(r.Owner) > 0:
-		if pageRes, err = query.Paginate(k.getClassStoreByOwner(ctx, owner, r.ClassId), r.Pagination, func(key []byte, _ []byte) error {
+		if pageRes, err = query.Paginate(k.getClassStoreByOwner(ctx, owner, r.ClassId), r.Pagination, func(key, _ []byte) error {
 			nft, has := k.GetNFT(ctx, r.ClassId, string(key))
 			if has {
 				nfts = append(nfts, &nft)
@@ -103,7 +100,7 @@ func (k Keeper) NFTs(goCtx context.Context, r *nft.QueryNFTsRequest) (*nft.Query
 		}
 	case len(r.ClassId) > 0 && len(r.Owner) == 0:
 		nftStore := k.getNFTStore(ctx, r.ClassId)
-		if pageRes, err = query.Paginate(nftStore, r.Pagination, func(_ []byte, value []byte) error {
+		if pageRes, err = query.Paginate(nftStore, r.Pagination, func(_, value []byte) error {
 			var nft nft.NFT
 			if err := k.cdc.Unmarshal(value, &nft); err != nil {
 				return err
@@ -114,7 +111,7 @@ func (k Keeper) NFTs(goCtx context.Context, r *nft.QueryNFTsRequest) (*nft.Query
 			return nil, err
 		}
 	case len(r.ClassId) == 0 && len(r.Owner) > 0:
-		if pageRes, err = query.Paginate(k.prefixStoreNftOfClassByOwner(ctx, owner), r.Pagination, func(key []byte, value []byte) error {
+		if pageRes, err = query.Paginate(k.prefixStoreNftOfClassByOwner(ctx, owner), r.Pagination, func(key, value []byte) error {
 			classID, nftID := parseNftOfClassByOwnerStoreKey(key)
 			if n, has := k.GetNFT(ctx, classID, nftID); has {
 				nfts = append(nfts, &n)
@@ -138,11 +135,11 @@ func (k Keeper) NFT(goCtx context.Context, r *nft.QueryNFTRequest) (*nft.QueryNF
 		return nil, sdkerrors.ErrInvalidRequest.Wrap("empty request")
 	}
 
-	if err := nft.ValidateClassID(r.ClassId); err != nil {
-		return nil, err
+	if len(r.ClassId) == 0 {
+		return nil, nft.ErrEmptyClassID
 	}
-	if err := nft.ValidateNFTID(r.Id); err != nil {
-		return nil, err
+	if len(r.Id) == 0 {
+		return nil, nft.ErrEmptyNFTID
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
@@ -159,8 +156,8 @@ func (k Keeper) Class(goCtx context.Context, r *nft.QueryClassRequest) (*nft.Que
 		return nil, sdkerrors.ErrInvalidRequest.Wrap("empty request")
 	}
 
-	if err := nft.ValidateClassID(r.ClassId); err != nil {
-		return nil, err
+	if len(r.ClassId) == 0 {
+		return nil, nft.ErrEmptyClassID
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
@@ -178,11 +175,11 @@ func (k Keeper) Classes(goCtx context.Context, r *nft.QueryClassesRequest) (*nft
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	store := ctx.KVStore(k.storeKey)
-	classStore := prefix.NewStore(store, ClassKey)
+	store := k.storeService.OpenKVStore(ctx)
+	classStore := prefix.NewStore(runtime.KVStoreAdapter(store), ClassKey)
 
 	var classes []*nft.Class
-	pageRes, err := query.Paginate(classStore, r.Pagination, func(_ []byte, value []byte) error {
+	pageRes, err := query.Paginate(classStore, r.Pagination, func(_, value []byte) error {
 		var class nft.Class
 		if err := k.cdc.Unmarshal(value, &class); err != nil {
 			return err

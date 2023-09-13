@@ -6,6 +6,7 @@ import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "cosmos/slashing/v1beta1/slashing.proto";
 import "cosmos_proto/cosmos.proto";
+import "amino/amino.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/slashing/types";
 
@@ -32,21 +33,21 @@ message QueryParamsRequest {}
 
 // QueryParamsResponse is the response type for the Query/Params RPC method
 message QueryParamsResponse {
-  Params params = 1 [(gogoproto.nullable) = false];
+  Params params = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 }
 
 // QuerySigningInfoRequest is the request type for the Query/SigningInfo RPC
 // method
 message QuerySigningInfoRequest {
   // cons_address is the address to query signing info of
-  string cons_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string cons_address = 1 [(cosmos_proto.scalar) = "cosmos.ConsensusAddressString"];
 }
 
 // QuerySigningInfoResponse is the response type for the Query/SigningInfo RPC
 // method
 message QuerySigningInfoResponse {
   // val_signing_info is the signing info of requested val cons address
-  ValidatorSigningInfo val_signing_info = 1 [(gogoproto.nullable) = false];
+  ValidatorSigningInfo val_signing_info = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 }
 
 // QuerySigningInfosRequest is the request type for the Query/SigningInfos RPC
@@ -59,6 +60,7 @@ message QuerySigningInfosRequest {
 // method
 message QuerySigningInfosResponse {
   // info is the signing info of all validators
-  repeated cosmos.slashing.v1beta1.ValidatorSigningInfo info       = 1 [(gogoproto.nullable) = false];
-  cosmos.base.query.v1beta1.PageResponse                pagination = 2;
+  repeated cosmos.slashing.v1beta1.ValidatorSigningInfo info = 1
+      [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }

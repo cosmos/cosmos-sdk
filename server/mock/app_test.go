@@ -1,78 +1,99 @@
 package mock
 
 import (
+	"context"
+	"math/rand"
 	"testing"
+	"time"
 
+	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/stretchr/testify/require"
-	abci "github.com/tendermint/tendermint/abci/types"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	"github.com/tendermint/tendermint/types"
+
+	"cosmossdk.io/log"
+
+	servertypes "github.com/cosmos/cosmos-sdk/server/types"
+	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
-// TestInitApp makes sure we can initialize this thing without an error
+// SetupApp initializes a new application,
+// failing t if initialization fails.
+func SetupApp(t *testing.T) servertypes.ABCI {
+	t.Helper()
+
+	logger := log.NewTestLogger(t)
+
+	rootDir := t.TempDir()
+
+	app, err := NewApp(rootDir, logger)
+	require.NoError(t, err)
+
+	return app
+}
+
 func TestInitApp(t *testing.T) {
-	// set up an app
-	app, closer, err := SetupApp()
+	app := SetupApp(t)
 
-	// closer may need to be run, even when error in later stage
-	if closer != nil {
-		defer closer()
-	}
+	appState, err := AppGenState(nil, genutiltypes.AppGenesis{}, nil)
 	require.NoError(t, err)
 
-	// initialize it future-way
-	appState, err := AppGenState(nil, types.GenesisDoc{}, nil)
-	require.NoError(t, err)
-
-	// TODO test validators in the init chain?
 	req := abci.RequestInitChain{
 		AppStateBytes: appState,
 	}
-	app.InitChain(req)
-	app.Commit()
+	res, err := app.InitChain(&req)
+	require.NoError(t, err)
+	_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{
+		Hash:   res.AppHash,
+		Height: 1,
+	})
+	require.NoError(t, err)
+
+	_, err = app.Commit()
+	require.NoError(t, err)
 
 	// make sure we can query these values
 	query := abci.RequestQuery{
 		Path: "/store/main/key",
 		Data: []byte("foo"),
 	}
-	qres := app.Query(query)
+
+	qres, err := app.Query(context.Background(), &query)
+	require.NoError(t, err)
 	require.Equal(t, uint32(0), qres.Code, qres.Log)
 	require.Equal(t, []byte("bar"), qres.Value)
 }
 
-// TextDeliverTx ensures we can write a tx
 func TestDeliverTx(t *testing.T) {
-	// set up an app
-	app, closer, err := SetupApp()
-	// closer may need to be run, even when error in later stage
-	if closer != nil {
-		defer closer()
-	}
-	require.NoError(t, err)
+	app := SetupApp(t)
 
 	key := "my-special-key"
 	value := "top-secret-data!!"
-	tx := NewTx(key, value)
+
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+	randomAccounts := simtypes.RandomAccounts(r, 1)
+
+	tx := NewTx(key, value, randomAccounts[0].Address)
 	txBytes := tx.GetSignBytes()
 
-	header := tmproto.Header{
-		AppHash: []byte("apphash"),
-		Height:  1,
-	}
-	app.BeginBlock(abci.RequestBeginBlock{Header: header})
-	dres := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
-	require.Equal(t, uint32(0), dres.Code, dres.Log)
-	app.EndBlock(abci.RequestEndBlock{})
-	cres := app.Commit()
-	require.NotEmpty(t, cres.Data)
+	res, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{
+		Hash:   []byte("apphash"),
+		Height: 1,
+		Txs:    [][]byte{txBytes},
+	})
+	require.NoError(t, err)
+	require.NotEmpty(t, res.AppHash)
+
+	_, err = app.Commit()
+	require.NoError(t, err)
 
 	// make sure we can query these values
 	query := abci.RequestQuery{
 		Path: "/store/main/key",
 		Data: []byte(key),
 	}
-	qres := app.Query(query)
+
+	qres, err := app.Query(context.Background(), &query)
+	require.NoError(t, err)
 	require.Equal(t, uint32(0), qres.Code, qres.Log)
 	require.Equal(t, []byte(value), qres.Value)
 }

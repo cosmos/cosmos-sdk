@@ -3,6 +3,8 @@ package types_test
 import (
 	"testing"
 
+	sdkmath "cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -44,7 +46,7 @@ func BenchmarkUintMarshal(b *testing.B) {
 	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
 		for _, value := range values {
-			u := sdk.NewUint(value)
+			u := sdkmath.NewUint(value)
 			n, err := u.MarshalTo(scratch[:])
 			if err != nil {
 				b.Fatal(err)
@@ -69,7 +71,7 @@ func BenchmarkIntMarshal(b *testing.B) {
 	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
 		for _, value := range values {
-			in := sdk.NewInt(value)
+			in := sdkmath.NewInt(value)
 			n, err := in.MarshalTo(scratch[:])
 			if err != nil {
 				b.Fatal(err)

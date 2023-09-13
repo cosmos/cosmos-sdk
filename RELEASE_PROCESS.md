@@ -2,9 +2,11 @@
 
 This document outlines the process for releasing a new version of Cosmos SDK, which involves major release and patch releases as well as maintenance for the major release.
 
+> **Note, the Cosmos SDK went directly from v0.47 to v0.50 and skipped the v0.48 and v0.49 versions.**
+
 ## Major Release Procedure
 
-A _major release_ is an increment of the first number (eg: `v1.2` → `v2.0.0`) or the _point number_ (eg: `v1.1 → v1.2.0`, also called _point release_). Each major release opens a _stable release series_ and receives updates outlined in the [Major Release Maintenance](#major-release-maintenance)_section.
+A _major release_ is an increment of the first number (eg: `v1.2` → `v2.0.0`) or the _point number_ (eg: `v1.1.0 → v1.2.0`, also called _point release_). Each major release opens a _stable release series_ and receives updates outlined in the [Major Release Maintenance](#major-release-maintenance)_section.
 
 Before making a new _major_ release we do beta and release candidate releases. For example, for release 1.0.0:
 
@@ -21,10 +23,18 @@ v1.0.0-beta1 → v1.0.0-beta2 → ... → v1.0.0-rc1 → v1.0.0-rc2 → ... → 
 * After the team feels that the `main` works fine we create a `release/vY` branch (going forward known a release branch), where `Y` is the version number, with the patch part substituted to `x` (eg: 0.42.x, 1.0.x). Ensure the release branch is protected so that pushes against the release branch are permitted only by the release manager or release coordinator.
     * **PRs targeting this branch can be merged _only_ when exceptional circumstances arise**
     * update the GitHub mergify integration by adding instructions for automatically backporting commits from `main` to the `release/vY` using the `backport/Y` label.
-* In the release branch, prepare a new version section in the `CHANGELOG.md`
-    * All links must be link-ified: `$ python ./scripts/linkify_changelog.py CHANGELOG.md`
-    * Copy the entries into a `RELEASE_CHANGELOG.md`, this is needed so the bot knows which entries to add to the release page on GitHub.
-* Create a new annotated git tag for a release candidate  (eg: `git tag -a v1.1.0-rc1`) in the release branch.
+* In the release branch prepare a new version section in the `CHANGELOG.md`
+    * All links must point to their respective pull request.
+    * The `CHANGELOG.md` must contain only the changes of that specific released version. All other changelog entries must be deleted and linked to the `main` branch changelog ([example](https://github.com/cosmos/cosmos-sdk/blob/release/v0.46.x/CHANGELOG.md#previous-versions)).
+    * Create release notes, in `RELEASE_NOTES.md`, highlighting the new features and changes in the version. This is needed so the bot knows which entries to add to the release page on GitHub.
+    * Additionally verify that the `UPGRADING.md` file is up to date and contains all the necessary information for upgrading to the new version.
+* Remove GitHub workflows that should not be in the release branch
+    * `deploy-docs.yml`: must be removed to avoid duplicate documentation deployment.
+    * `test.yml`: All standalone go module tests should be removed (expect `./simapp`, and `./tests` and SDK tests).
+        * These packages are tracked and tested directly on main.
+    * `build.yml`: Only the SDK and SimApp needs to be built on release branches.
+        * Tooling is tracked and tested directly on main.
+* Create a new annotated git tag for a release candidate (eg: `git tag -a v1.1.0-rc1`) in the release branch.
     * from this point we unfreeze main.
     * the SDK teams collaborate and do their best to run testnets in order to validate the release.
     * when bugs are found, create a PR for `main`, and backport fixes to the release branch.
@@ -58,32 +68,36 @@ Point Release must follow the [Stable Release Policy](#stable-release-policy).
 
 After the release branch has all commits required for the next patch release:
 
-* update `CHANGELOG.md`.
-* create a new annotated git tag (eg `git -a v1.1.0`) in the release branch.
-* Create a GitHub release.
+* Update `CHANGELOG.md` and `RELEASE_NOTES.md` (if applicable).
+* Create a new annotated git tag (eg `git -a v1.1.0`) in the release branch.
+    * If the release is a submodule update, first go the submodule folder and name the tag prepending the path to the version:
+      `cd core && git -a core/v1.1.0` or `cd tools/cosmovisor && git -a tools/cosmovisor/v1.4.0`
+* Create a GitHub release (if applicable).
 
 ## Major Release Maintenance
 
 Major Release series continue to receive bug fixes (released as a Patch Release) until they reach **End Of Life**.
 Major Release series is maintained in compliance with the **Stable Release Policy** as described in this document.
-Note: not every Major Release is denoted as stable releases.
 
 Only the following major release series have a stable release status:
 
-* **0.42 «Stargate»** is supported until 2022-02-09. A fairly strict **bugfix-only** rule applies to pull requests that are requested to be included into a stable point-release.
-* **0.44** is supported until 2022-07-17. A fairly strict **bugfix-only** rule applies to pull requests that are requested to be included into a stable point-release.
-* **0.45** is the latest major release and will be supported until 6 months after **0.46.0** release.
+* **0.46** is the previous major release and is supported until the release of **0.50.0**. A fairly strict **bugfix-only** rule applies to pull requests that are requested to be included into a not latest stable point-release.
+* **0.47** is the last major release and is supported until the release of **0.51.0**.
+
+The SDK team maintains the last two major releases, any other major release is considered to have reached end of life.
+The SDK team will not backport any bug fixes to releases that are not supported.
+Widely-used (decided at SDK team's discretion) unsupported releases are considered to be in a security maintenance mode. The SDK team will backport security fixes to these releases.
 
 ## Stable Release Policy
 
 ### Patch Releases
 
 Once a Cosmos-SDK release has been completed and published, updates for it are released under certain circumstances
-and must follow the [Patch Release Procedure][CONTRIBUTING.md#patch-release-procedure](Point Release Procedure).
+and must follow the [Patch Release Procedure](CONTRIBUTING.md#branching-model-and-release).
 
 ### Rationale
 
-Unlike in-development `main` branch snapshots, **Cosmos-SDK** releases are subject to much wider adoption,
+Unlike in-development `main` branch snapshots, **Cosmos SDK** releases are subject to much wider adoption,
 and by a significantly different demographic of users. During development, changes in the `main` branch
 affect SDK users, application developers, early adopters, and other advanced users that elect to use
 unstable experimental software at their own risk.
@@ -108,7 +122,7 @@ ways in stable releases and `main` branch.
 
 ### Migrations
 
-To smoothen the update to the latest stable release, the SDK includes a set of CLI commands for managing migrations between SDK versions, under the `migrate` subcommand. Only migration scripts between stable releases are included. For the current major release, and later, migrations are supported.
+See the SDK's policy on migrations [here](https://docs.cosmos.network/main/migrations/intro).
 
 ### What qualifies as a Stable Release Update (SRU)
 
@@ -187,8 +201,8 @@ It's crucial to make the effort of thinking about what could happen in case a re
 
 ### Stable Release Managers
 
-The **Stable Release Managers** evaluate and approve or reject updates and backports to Cosmos-SDK Stable Release series,
-according to the [stable release policy](#stable-release-policy) and [release procedure](#stable-release-exception-procedure).
+The **Stable Release Managers** evaluate and approve or reject updates and backports to Cosmos SDK Stable Release series,
+according to the [stable release policy](#stable-release-policy) and [release procedure](#major-release-procedure).
 Decisions are made by consensus.
 
 Their responsibilites include:
@@ -197,8 +211,32 @@ Their responsibilites include:
 * Approving/rejecting proposed changes to a stable release series.
 * Executing the release process of stable point-releases in compliance with the [Point Release Procedure](CONTRIBUTING.md).
 
-The Stable Release Managers are appointed by the Interchain Foundation. Currently residing Stable Release Managers:
+Currently residing Stable Release Managers:
 
-* @clevinson - Cory Levinson
-* @amaurym - Amaury Martiny
-* @robert-zaremba - Robert Zaremba
+* @tac0turtle - Marko Baricevic
+* @julienrbrt - Julien Robert
+
+## Cosmos SDK Modules
+
+The Cosmos SDK repository is a mono-repo where its Go modules have a different release process and cadence than the Cosmos SDK itself.
+There are two types of modules:
+
+1. Modules that import the Cosmos SDK and depend on a specific version of it.
+    * Modules to be imported in an app (e.g `x/` modules).
+    * Modules that are not imported into an app and are a standalone module (e.g. `cosmovisor`).
+2. Modules that do not depend on the Cosmos SDK.
+
+The same changelog procedure applies to all modules in the Cosmos SDK repository, and must be up-to-date with the latest changes before tagging a module version.
+Note: The Cosmos SDK team is in an active process of limiting Go modules that depend on the Cosmos SDK.
+
+### Modules that depend on the Cosmos SDK
+
+The Cosmos SDK team should strive to release modules that depend on the Cosmos SDK at the same time or soon after a major version Cosmos SDK itself.
+Those modules can be considered as part of the Cosmos SDK, but features and improvements are released at a different cadence.
+
+* When a module is supposed to be used in an app (e.g `x/` modules), due to the dependency on the SDK, tagging a new version of a module must be done from a Cosmos SDK release branch. A compability matrix must be provided in the `README.md` of that module with the corresponding versions.
+* Modules that import the SDK but do not need to be imported in an app (`e.g. cosmovisor`) must be released from the `main` branch and follow the process defined below.
+
+### Modules that do not depend on the Cosmos SDK
+
+Modules that do not depend on the Cosmos SDK can be released at any time from the `main` branch of the Cosmos SDK repository.

@@ -2,11 +2,13 @@ package keeper
 
 import (
 	"context"
+	"strings"
+
+	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/x/feegrant"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/feegrant"
 )
 
 type msgServer struct {
@@ -25,25 +27,32 @@ var _ feegrant.MsgServer = msgServer{}
 
 // GrantAllowance grants an allowance from the granter's funds to be used by the grantee.
 func (k msgServer) GrantAllowance(goCtx context.Context, msg *feegrant.MsgGrantAllowance) (*feegrant.MsgGrantAllowanceResponse, error) {
+	if strings.EqualFold(msg.Grantee, msg.Granter) {
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidAddress, "cannot self-grant fee authorization")
+	}
+
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	grantee, err := sdk.AccAddressFromBech32(msg.Grantee)
+	grantee, err := k.authKeeper.AddressCodec().StringToBytes(msg.Grantee)
 	if err != nil {
 		return nil, err
 	}
 
-	granter, err := sdk.AccAddressFromBech32(msg.Granter)
+	granter, err := k.authKeeper.AddressCodec().StringToBytes(msg.Granter)
 	if err != nil {
 		return nil, err
 	}
 
-	// Checking for duplicate entry
-	if f, _ := k.Keeper.GetAllowance(ctx, granter, grantee); f != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "fee allowance already exists")
+	if f, _ := k.GetAllowance(ctx, granter, grantee); f != nil {
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "fee allowance already exists")
 	}
 
 	allowance, err := msg.GetFeeAllowanceI()
 	if err != nil {
+		return nil, err
+	}
+
+	if err := allowance.ValidateBasic(); err != nil {
 		return nil, err
 	}
 
@@ -57,14 +66,18 @@ func (k msgServer) GrantAllowance(goCtx context.Context, msg *feegrant.MsgGrantA
 
 // RevokeAllowance revokes a fee allowance between a granter and grantee.
 func (k msgServer) RevokeAllowance(goCtx context.Context, msg *feegrant.MsgRevokeAllowance) (*feegrant.MsgRevokeAllowanceResponse, error) {
+	if msg.Grantee == msg.Granter {
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidAddress, "addresses must be different")
+	}
+
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	grantee, err := sdk.AccAddressFromBech32(msg.Grantee)
+	grantee, err := k.authKeeper.AddressCodec().StringToBytes(msg.Grantee)
 	if err != nil {
 		return nil, err
 	}
 
-	granter, err := sdk.AccAddressFromBech32(msg.Granter)
+	granter, err := k.authKeeper.AddressCodec().StringToBytes(msg.Granter)
 	if err != nil {
 		return nil, err
 	}

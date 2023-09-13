@@ -12,6 +12,7 @@ type Migrator struct {
 	legacySubspace exported.Subspace
 }
 
+// NewMigrator returns Migrator instance for the state migration.
 func NewMigrator(k Keeper, ss exported.Subspace) Migrator {
 	return Migrator{
 		keeper:         k,
@@ -24,5 +25,5 @@ func NewMigrator(k Keeper, ss exported.Subspace) Migrator {
 // and managed by the x/params modules and stores them directly into the x/mint
 // module state.
 func (m Migrator) Migrate1to2(ctx sdk.Context) error {
-	return v2.Migrate(ctx, ctx.KVStore(m.keeper.storeKey), m.legacySubspace, m.keeper.cdc)
+	return v2.Migrate(ctx, m.keeper.storeService.OpenKVStore(ctx), m.legacySubspace, m.keeper.cdc)
 }

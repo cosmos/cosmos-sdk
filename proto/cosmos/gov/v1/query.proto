@@ -1,4 +1,3 @@
-
 // Since: cosmos-sdk 0.46
 syntax = "proto3";
 package cosmos.gov.v1;
@@ -12,6 +11,11 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/gov/types/v1";
 
 // Query defines the gRPC querier service for gov module
 service Query {
+  // Constitution queries the chain's constitution.
+  rpc Constitution(QueryConstitutionRequest) returns (QueryConstitutionResponse) {
+    option (google.api.http).get = "/cosmos/gov/v1/constitution";
+  }
+
   // Proposal queries proposal details based on ProposalID.
   rpc Proposal(QueryProposalRequest) returns (QueryProposalResponse) {
     option (google.api.http).get = "/cosmos/gov/v1/proposals/{proposal_id}";
@@ -37,7 +41,7 @@ service Query {
     option (google.api.http).get = "/cosmos/gov/v1/params/{params_type}";
   }
 
-  // Deposit queries single deposit information based proposalID, depositAddr.
+  // Deposit queries single deposit information based on proposalID, depositAddr.
   rpc Deposit(QueryDepositRequest) returns (QueryDepositResponse) {
     option (google.api.http).get = "/cosmos/gov/v1/proposals/{proposal_id}/deposits/{depositor}";
   }
@@ -53,6 +57,14 @@ service Query {
   }
 }
 
+// QueryConstitutionRequest is the request type for the Query/Constitution RPC method
+message QueryConstitutionRequest {}
+
+// QueryConstitutionResponse is the response type for the Query/Constitution RPC method
+message QueryConstitutionResponse {
+  string constitution = 1;
+}
+
 // QueryProposalRequest is the request type for the Query/Proposal RPC method.
 message QueryProposalRequest {
   // proposal_id defines the unique id of the proposal.
@@ -61,6 +73,7 @@ message QueryProposalRequest {
 
 // QueryProposalResponse is the response type for the Query/Proposal RPC method.
 message QueryProposalResponse {
+  // proposal is the requested governance proposal.
   Proposal proposal = 1;
 }
 
@@ -82,6 +95,7 @@ message QueryProposalsRequest {
 // QueryProposalsResponse is the response type for the Query/Proposals RPC
 // method.
 message QueryProposalsResponse {
+  // proposals defines all the requested governance proposals.
   repeated Proposal proposals = 1;
 
   // pagination defines the pagination in the response.
@@ -99,7 +113,7 @@ message QueryVoteRequest {
 
 // QueryVoteResponse is the response type for the Query/Vote RPC method.
 message QueryVoteResponse {
-  // vote defined the queried vote.
+  // vote defines the queried vote.
   Vote vote = 1;
 }
 
@@ -114,7 +128,7 @@ message QueryVotesRequest {
 
 // QueryVotesResponse is the response type for the Query/Votes RPC method.
 message QueryVotesResponse {
-  // votes defined the queried votes.
+  // votes defines the queried votes.
   repeated Vote votes = 1;
 
   // pagination defines the pagination in the response.
@@ -171,6 +185,7 @@ message QueryDepositsRequest {
 
 // QueryDepositsResponse is the response type for the Query/Deposits RPC method.
 message QueryDepositsResponse {
+  // deposits defines the requested deposits.
   repeated Deposit deposits = 1;
 
   // pagination defines the pagination in the response.

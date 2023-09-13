@@ -4,9 +4,8 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/stretchr/testify/require"
-
 	"github.com/cosmos/gogoproto/proto"
+	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -389,7 +388,7 @@ func TestRejectUnknownFieldsNested(t *testing.T) {
 			name: "unknown field types.Any in G",
 			in: &testdata.TestVersion3{
 				G: &types.Any{
-					TypeUrl: "/testdata.TestVersion1",
+					TypeUrl: "/testpb.TestVersion1",
 					Value: mustMarshal(&testdata.TestVersion2{
 						Sum: &testdata.TestVersion2_F{
 							F: &testdata.TestVersion2{
@@ -410,7 +409,7 @@ func TestRejectUnknownFieldsNested(t *testing.T) {
 			in: &testdata.TestVersionFD1WithExtraAny{
 				G: &testdata.AnyWithExtra{
 					Any: &types.Any{
-						TypeUrl: "/testdata.TestVersion1",
+						TypeUrl: "/testpb.TestVersion1",
 						Value: mustMarshal(&testdata.TestVersion2{
 							Sum: &testdata.TestVersion2_F{
 								F: &testdata.TestVersion2{
@@ -434,7 +433,7 @@ func TestRejectUnknownFieldsNested(t *testing.T) {
 			name: "mismatched types.Any in G",
 			in: &testdata.TestVersion1{
 				G: &types.Any{
-					TypeUrl: "/testdata.TestVersion4LoneNesting",
+					TypeUrl: "/testpb.TestVersion4LoneNesting",
 					Value: mustMarshal(&testdata.TestVersion3LoneNesting_Inner1{
 						Inner: &testdata.TestVersion3LoneNesting_Inner1_InnerInner{
 							Id:   "ID",
@@ -656,11 +655,11 @@ func TestRejectUnknownFieldsFlat(t *testing.T) {
 func TestPackedEncoding(t *testing.T) {
 	data := testdata.TestRepeatedUints{Nums: []uint64{12, 13}}
 
-	marshalled, err := data.Marshal()
+	marshaled, err := data.Marshal()
 	require.NoError(t, err)
 
 	unmarshalled := &testdata.TestRepeatedUints{}
-	_, err = RejectUnknownFields(marshalled, unmarshalled, false, DefaultAnyResolver{})
+	_, err = RejectUnknownFields(marshaled, unmarshalled, false, DefaultAnyResolver{})
 	require.NoError(t, err)
 }
 

@@ -3,8 +3,8 @@ package baseapp
 import (
 	"fmt"
 
+	abci "github.com/cometbft/cometbft/abci/types"
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
-	abci "github.com/tendermint/tendermint/abci/types"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/encoding"
 
@@ -38,7 +38,7 @@ func NewGRPCQueryRouter() *GRPCQueryRouter {
 
 // GRPCQueryHandler defines a function type which handles ABCI Query requests
 // using gRPC
-type GRPCQueryHandler = func(ctx sdk.Context, req abci.RequestQuery) (abci.ResponseQuery, error)
+type GRPCQueryHandler = func(ctx sdk.Context, req *abci.RequestQuery) (*abci.ResponseQuery, error)
 
 // Route returns the GRPCQueryHandler for a given query route path or nil
 // if not found
@@ -76,25 +76,25 @@ func (qrt *GRPCQueryRouter) RegisterService(sd *grpc.ServiceDesc, handler interf
 			)
 		}
 
-		qrt.routes[fqName] = func(ctx sdk.Context, req abci.RequestQuery) (abci.ResponseQuery, error) {
+		qrt.routes[fqName] = func(ctx sdk.Context, req *abci.RequestQuery) (*abci.ResponseQuery, error) {
 			// call the method handler from the service description with the handler object,
 			// a wrapped sdk.Context with proto-unmarshaled data from the ABCI request data
-			res, err := methodHandler(handler, sdk.WrapSDKContext(ctx), func(i interface{}) error {
+			res, err := methodHandler(handler, ctx, func(i interface{}) error {
 				return qrt.cdc.Unmarshal(req.Data, i)
 			}, nil)
 			if err != nil {
-				return abci.ResponseQuery{}, err
+				return nil, err
 			}
 
 			// proto marshal the result bytes
 			var resBytes []byte
 			resBytes, err = qrt.cdc.Marshal(res)
 			if err != nil {
-				return abci.ResponseQuery{}, err
+				return nil, err
 			}
 
 			// return the result bytes as the response value
-			return abci.ResponseQuery{
+			return &abci.ResponseQuery{
 				Height: req.Height,
 				Value:  resBytes,
 			}, nil
@@ -114,8 +114,5 @@ func (qrt *GRPCQueryRouter) SetInterfaceRegistry(interfaceRegistry codectypes.In
 	qrt.cdc = codec.NewProtoCodec(interfaceRegistry).GRPCCodec()
 	// Once we have an interface registry, we can register the interface
 	// registry reflection gRPC service.
-	reflection.RegisterReflectionServiceServer(
-		qrt,
-		reflection.NewReflectionServiceServer(interfaceRegistry),
-	)
+	reflection.RegisterReflectionServiceServer(qrt, reflection.NewReflectionServiceServer(interfaceRegistry))
 }

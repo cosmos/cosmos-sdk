@@ -1,7 +1,7 @@
 package ormtable
 
 import (
-	"github.com/cosmos/cosmos-sdk/orm/types/kv"
+	"cosmossdk.io/orm/types/kv"
 )
 
 type batchIndexCommitmentWriter struct {
@@ -62,14 +62,15 @@ func flushWrites(store kv.Store, writer *batchStoreWriter) error {
 
 func flushBuf(store kv.Store, writes []*batchWriterEntry) error {
 	for _, write := range writes {
-		if write.hookCall != nil {
+		switch {
+		case write.hookCall != nil:
 			write.hookCall()
-		} else if !write.delete {
+		case !write.delete:
 			err := store.Set(write.key, write.value)
 			if err != nil {
 				return err
 			}
-		} else {
+		default:
 			err := store.Delete(write.key)
 			if err != nil {
 				return err

@@ -1,12 +1,14 @@
-# ADR 60: ABCI 1.0 Integration
+# ADR 60: ABCI 1.0 Integration (Phase I)
 
 ## Changelog
 
-* 2022-08-10: Initial Draft (@alexanderbez, @marbar3778)
+* 2022-08-10: Initial Draft (@alexanderbez, @tac0turtle)
+* Nov 12, 2022: Update `PrepareProposal` and `ProcessProposal` semantics per the
+  initial implementation [PR](https://github.com/cosmos/cosmos-sdk/pull/13453) (@alexanderbez)
 
 ## Status
 
-PROPOSED
+ACCEPTED
 
 ## Abstract
 
@@ -32,8 +34,14 @@ sends it, favoring its own transactions. This essentially means that the Tenderm
 mempool acts more like a gossip data structure.
 
 The second ABCI method, `ProcessProposal`, is used to process the block proposer's
-proposal as defined by `PrepareProposal`. This ABCI method requests that the
-application evaluate the entire proposed block for validity.
+proposal as defined by `PrepareProposal`. It is important to note the following
+with respect to `ProcessProposal`:
+
+* Execution of `ProcessProposal` must be deterministic.
+* There must be coherence between `PrepareProposal` and `ProcessProposal`. In
+  other words, for any two correct processes *p* and *q*, if *q*'s Tendermint
+	calls `RequestProcessProposal` on *u<sub>p</sub>*, *q*'s Application returns
+	ACCEPT in `ResponseProcessProposal`.
 
 It is important to note that in ABCI 1.0 integration, the application
 is NOT responsible for locking semantics -- Tendermint will still be responsible
@@ -44,8 +52,8 @@ which allows for parallel execution possibilities.
 
 We will integrate ABCI 1.0, which will be introduced in Tendermint
 v0.37.0, in the next major release of the Cosmos SDK. We will integrate ABCI 1.0
-methods on the `BaseApp` type. We describe the implementations
-of the two methods individually below.
+methods on the `BaseApp` type. We describe the implementations of the two methods
+individually below.
 
 Prior to describing the implementation of the two new methods, it is important to
 note that the existing ABCI methods, `CheckTx`, `DeliverTx`, etc, still exist and
@@ -56,7 +64,7 @@ serve the same functions as they do now.
 Prior to evaluating the decision for how to implement `PrepareProposal`, it is
 important to note that `CheckTx` will still be executed and will be responsible
 for evaluating transaction validity as it does now, with one very important
-_additive_ distinction.
+*additive* distinction.
 
 When executing transactions in `CheckTx`, the application will now add valid
 transactions, i.e. passing the AnteHandler, to its own mempool data structure.
@@ -69,81 +77,51 @@ custom mempool implementation.
 We define the general mempool interface as follows (subject to change):
 
 ```go
-// MempoolTx we define an app-side mempool transaction interface that is as
-// minimal as possible, only requiring applications to define the size of the
-// transaction to be used when reaping and getting the transaction itself.
-// Interface type casting can be used in the actual app-side mempool implementation.
-type MempoolTx interface {
-	// Size returns the size of the transaction in bytes.
-	Size(codec.Codec) int
-	Tx() sdk.Tx
-}
-
-// PrepareTxRecord defines a wrapper around a MempoolTx that is returned from
-// PrepareProposal which includes an Action to inform Tendermint what to do with
-// the transaction.
-type PrepareTxRecord[T MempoolTx] struct {
-	Tx T
-	Action abci.TxAction
-}
-
-type Mempool[T MempoolTx] interface {
-	// Insert attempts to insert a MempoolTx into the app-side mempool returning
+type Mempool interface {
+	// Insert attempts to insert a Tx into the app-side mempool returning
 	// an error upon failure.
-	Insert(sdk.Context, T) error
-	// ReapMaxBytes returns the next set of available transactions from the app-side
-	// mempool, up to maxBytes or until the mempool is empty. The application can
-	// decide to return transactions from its own mempool or from the incoming
-	// TxRecords or some combination of both. The notion of 'available' or 'next'
-	// is defined by the application's mempool implementation.
-	ReapMaxBytes(ctx sdk.Context, txRecords abci.TxRecords, maxBytes int) ([]PrepareTxRecord[T], error)
-	// NumTxs returns the number of transactions currently in the mempool.
-	NumTxs() int
+	Insert(sdk.Context, sdk.Tx) error
+
+	// Select returns an Iterator over the app-side mempool. If txs are specified,
+	// then they shall be incorporated into the Iterator. The Iterator must
+	// closed by the caller.
+	Select(sdk.Context, [][]byte) Iterator
+
+	// CountTx returns the number of transactions currently in the mempool.
+	CountTx() int
+
 	// Remove attempts to remove a transaction from the mempool, returning an error
 	// upon failure.
-	Remove(sdk.Context, T) error
+	Remove(sdk.Tx) error
+}
+
+// Iterator defines an app-side mempool iterator interface that is as minimal as
+// possible. The order of iteration is determined by the app-side mempool
+// implementation.
+type Iterator interface {
+	// Next returns the next transaction from the mempool. If there are no more
+	// transactions, it returns nil.
+	Next() Iterator
+
+	// Tx returns the transaction at the current position of the iterator.
+	Tx() sdk.Tx
 }
 ```
 
-We will define an implementation of `Mempool[T MempoolTx]` that will cover a
-majority of application use cases. Namely, it will prioritize transactions by
-priority and transaction sender, allowing for multiple prioritized transactions
-from the same sender. The app-side mempool will be defined as a wrapper around a
-simple priority queue using a max binary heap, along with additional indexes/metadata
-to store senders and their nonces, allowing for simple multi-dimensional
-prioritization (2-ary).
+We will define an implementation of `Mempool`, defined by `nonceMempool`, that
+will cover most basic application use-cases. Namely, it will prioritize transactions
+by transaction sender, allowing for multiple transactions from the same sender.
 
-Transaction reaping will essentially happen via a two-phase approach:
-
-1. Reap one or more transactions from the priority queue and collect them into 
-   one of two buffers -- _valid_ and _invalid_.
-2. For transactions that DO NOT violate the nonce validation, they are included
-   in the _valid_ buffer.
-3. For transactions that DO violate the nonce validation, they are included in
-   the _invalid_ buffer.
-4. Continue this process until the desired number of valid transactions are
-   reaped or until the mempool is empty.
-5. Provide Tendermint the list of all transactions from the _valid_ buffer.
-6. Re-insert all transactions, from both buffers, back into app-side mempool.
-   This is to ensure we do not discard transactions from the app-side mempool in
-	 case `ProcessProposal` fails or in case that the proposal, while passing
-	 `ProcessProposal` is not the one decided for that height, i.e. the height took
-	 more than one round.
+The default app-side mempool implementation, `nonceMempool`, will operate on a 
+single skip list data structure. Specifically, transactions with the lowest nonce
+globally are prioritized. Transactions with the same nonce are prioritized by
+sender address.
 
 ```go
-type PriorityMempool[T MempoolTx] struct {
-	queue *PriorityQueue[MempoolTx]
-
-	// senders will contain a mapping from tx sender account addresses to all
-	// sequence numbers (nonces) or txs that they have in the app-side mempool.
-	senders map[string][]int64
-
-	// ...
+type nonceMempool struct {
+	txQueue *huandu.SkipList
 }
 ```
-
-> The `PriorityMempool[T MempoolTx]` implementation will support Options such as
-> limiting the mempool size by a fixed number of bytes.
 
 Previous discussions<sup>1</sup> have come to the agreement that Tendermint will
 perform a request to the application, via `RequestPrepareProposal`, with a certain
@@ -154,13 +132,24 @@ This is referred to as the "one-shot approach" seen in discussions.
 When Tendermint reaps transactions from the local mempool and sends them to the
 application via `RequestPrepareProposal`, the application will have to evaluate
 the transactions. Specifically, it will need to inform Tendermint if it should
-reject and or include each transaction. Note, the application can even _replace_
+reject and or include each transaction. Note, the application can even *replace*
 transactions entirely with other transactions.
 
 When evaluating transactions from `RequestPrepareProposal`, the application will
-ignore _all_ transactions sent to it in the request and instead reap up to
-`RequestPrepareProposal.max_tx_bytes` from it's own mempool. There is no need to
-execute the transactions for validity as they have already passed CheckTx.
+ignore *ALL* transactions sent to it in the request and instead reap up to
+`RequestPrepareProposal.max_tx_bytes` from it's own mempool.
+
+Since an application can technically insert or inject transactions on `Insert`
+during `CheckTx` execution, it is recommended that applications ensure transaction
+validity when reaping transactions during `PrepareProposal`. However, what validity
+exactly means is entirely determined by the application.
+
+The Cosmos SDK will provide a default `PrepareProposal` implementation that simply
+select up to `MaxBytes` *valid* transactions.
+
+However, applications can override this default implementation with their own
+implementation and set that on `BaseApp` via `SetPrepareProposal`.
+
 
 ### `ProcessProposal`
 
@@ -190,9 +179,9 @@ Note, we must call `ProcessProposal` with a new internal branched state on the
 off of `deliverState`. Note, the `processProposalState` is never committed and
 is completely discarded after `ProcessProposal` finishes execution.
 
-We will only populate the `Status` field of the `ResponseProcessProposal` with
-`ACCEPT` if ALL the transactions were accepted as valid, otherwise we will
-populate with `REJECT`.
+The Cosmos SDK will provide a default implementation of `ProcessProposal` in which
+all transactions are validated using the CheckTx flow, i.e. the AnteHandler, and
+will always return ACCEPT unless any transaction cannot be decoded.
 
 ### `DeliverTx`
 
@@ -232,8 +221,6 @@ know them today will still exist and function as they currently do.
 * Additional requests between Tendermint and the Cosmos SDK in the context of
   block execution. Albeit, the overhead should be negligible.
 * Not backwards compatible with previous versions of Tendermint and the Cosmos SDK.
-
-### Neutral
 
 ## Further Discussions
 

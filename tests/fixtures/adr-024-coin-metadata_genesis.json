@@ -85,10 +85,6 @@
     "genutil": {
       "gentxs": []
     },
-    "capability": {
-      "index": "1",
-      "owners": []
-    },
     "mint": {
       "minter": {
         "inflation": "0.130000000000000000",
@@ -172,8 +168,8 @@
     "distribution": {
       "params": {
         "community_tax": "0.020000000000000000",
-        "base_proposer_reward": "0.010000000000000000",
-        "bonus_proposer_reward": "0.040000000000000000",
+        "base_proposer_reward": "0.000000000000000000",
+        "bonus_proposer_reward": "0.000000000000000000",
         "withdraw_addr_enabled": true
       },
       "fee_pool": {

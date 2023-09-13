@@ -3,24 +3,31 @@ package iavl
 import (
 	"testing"
 
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/iavl"
 	"github.com/stretchr/testify/require"
-	dbm "github.com/tendermint/tm-db"
+
+	"cosmossdk.io/log"
 )
 
 func TestImmutableTreePanics(t *testing.T) {
 	t.Parallel()
-	immTree := iavl.NewImmutableTree(dbm.NewMemDB(), 100, false)
+	immTree := iavl.NewImmutableTree(dbm.NewMemDB(), 100, false, log.NewNopLogger())
 	it := &immutableTree{immTree}
-	require.Panics(t, func() { it.Set([]byte{}, []byte{}) })
-	require.Panics(t, func() { it.Remove([]byte{}) })
-	require.Panics(t, func() { it.SaveVersion() })           // nolint:errcheck
-	require.Panics(t, func() { it.DeleteVersion(int64(1)) }) // nolint:errcheck
+	require.Panics(t, func() {
+		_, err := it.Set([]byte{}, []byte{})
+		require.NoError(t, err)
+	})
+	require.Panics(t, func() {
+		_, _, err := it.Remove([]byte{})
+		require.NoError(t, err)
+	})
+	require.Panics(t, func() { _, _, _ = it.SaveVersion() })
+	require.Panics(t, func() { _ = it.DeleteVersionsTo(int64(1)) })
 
-	val, proof, err := it.GetVersionedWithProof(nil, 1)
+	val, err := it.GetVersioned(nil, 1)
 	require.Error(t, err)
 	require.Nil(t, val)
-	require.Nil(t, proof)
 
 	imm, err := it.GetImmutable(1)
 	require.Error(t, err)

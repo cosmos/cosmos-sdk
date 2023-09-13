@@ -7,8 +7,8 @@ import (
 	"math/big"
 	"testing"
 
+	"github.com/cometbft/cometbft/crypto"
 	"github.com/stretchr/testify/suite"
-	"github.com/tendermint/tendermint/crypto"
 )
 
 func TestSKSuite(t *testing.T) {
@@ -71,17 +71,17 @@ func (suite *SKSuite) TestSign() {
 
 	// extract the r, s values from sig
 	r := new(big.Int).SetBytes(sig[:32])
-	low_s := new(big.Int).SetBytes(sig[32:64])
+	lowS := new(big.Int).SetBytes(sig[32:64])
 
 	// test that NormalizeS simply returns an already
 	// normalized s
-	require.Equal(NormalizeS(low_s), low_s)
+	require.Equal(NormalizeS(lowS), lowS)
 
 	// flip the s value into high order of curve P256
 	// leave r untouched!
-	high_s := new(big.Int).Mod(new(big.Int).Neg(low_s), elliptic.P256().Params().N)
+	highS := new(big.Int).Mod(new(big.Int).Neg(lowS), elliptic.P256().Params().N)
 
-	require.False(suite.pk.VerifySignature(msg, signatureRaw(r, high_s)))
+	require.False(suite.pk.VerifySignature(msg, signatureRaw(r, highS)))
 
 	// Valid signature using low_s, but too long
 	sigCpy = make([]byte, len(sig)+2)
@@ -92,8 +92,8 @@ func (suite *SKSuite) TestSign() {
 
 	// check whether msg can be verified with same key, and high_s
 	// value using "regular" ecdsa signature
-	hash := sha256.Sum256([]byte(msg))
-	require.True(ecdsa.Verify(&suite.pk.PublicKey, hash[:], r, high_s))
+	hash := sha256.Sum256(msg)
+	require.True(ecdsa.Verify(&suite.pk.PublicKey, hash[:], r, highS))
 
 	// Mutate the message
 	msg[1] ^= byte(2)

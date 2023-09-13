@@ -1,28 +1,31 @@
 package ante_test
 
 import (
+	"context"
+	"errors"
 	"math/rand"
 	"testing"
 	"time"
 
+	"github.com/cometbft/cometbft/crypto"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
-	"github.com/tendermint/tendermint/crypto"
+
+	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	authsign "github.com/cosmos/cosmos-sdk/x/auth/signing"
+	"github.com/cosmos/cosmos-sdk/x/auth/testutil"
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/cosmos/cosmos-sdk/x/feegrant"
 )
 
 func TestDeductFeesNoDelegation(t *testing.T) {
@@ -30,6 +33,7 @@ func TestDeductFeesNoDelegation(t *testing.T) {
 		fee      int64
 		valid    bool
 		err      error
+		errMsg   string
 		malleate func(*AnteTestSuite) (signer TestAccount, feeAcc sdk.AccAddress)
 	}{
 		"paying with low funds": {
@@ -94,9 +98,9 @@ func TestDeductFeesNoDelegation(t *testing.T) {
 			valid: true,
 			malleate: func(suite *AnteTestSuite) (TestAccount, sdk.AccAddress) {
 				accs := suite.CreateTestAccounts(2)
+
 				suite.feeGrantKeeper.EXPECT().UseGrantedFees(gomock.Any(), accs[1].acc.GetAddress(), accs[0].acc.GetAddress(), gomock.Any(), gomock.Any()).Return(nil).Times(2)
 				suite.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), accs[1].acc.GetAddress(), authtypes.FeeCollectorName, gomock.Any()).Return(nil).Times(2)
-
 				return accs[0], accs[1].acc.GetAddress()
 			},
 		},
@@ -114,14 +118,14 @@ func TestDeductFeesNoDelegation(t *testing.T) {
 			},
 		},
 		"allowance smaller than requested fee": {
-			fee:   50,
-			valid: false,
-			err:   feegrant.ErrFeeLimitExceeded,
+			fee:    50,
+			valid:  false,
+			errMsg: "fee limit exceeded",
 			malleate: func(suite *AnteTestSuite) (TestAccount, sdk.AccAddress) {
 				accs := suite.CreateTestAccounts(2)
 				suite.feeGrantKeeper.EXPECT().
 					UseGrantedFees(gomock.Any(), accs[1].acc.GetAddress(), accs[0].acc.GetAddress(), gomock.Any(), gomock.Any()).
-					Return(feegrant.ErrFeeLimitExceeded.Wrap("basic allowance")).
+					Return(errors.New("fee limit exceeded")).
 					Times(2)
 				return accs[0], accs[1].acc.GetAddress()
 			},
@@ -165,25 +169,29 @@ func TestDeductFeesNoDelegation(t *testing.T) {
 			var defaultGenTxGas uint64 = 10000000
 			tx, err := genTxWithFeeGranter(protoTxCfg, msgs, fee, defaultGenTxGas, suite.ctx.ChainID(), accNums, seqs, feeAcc, privs...)
 			require.NoError(t, err)
-			_, err = feeAnteHandler(suite.ctx, tx, false) // tests only feegrant ante
+			txBytes, err := protoTxCfg.TxEncoder()(tx)
+			require.NoError(t, err)
+			bytesCtx := suite.ctx.WithTxBytes(txBytes)
+			require.NoError(t, err)
+			_, err = feeAnteHandler(bytesCtx, tx, false) // tests only feegrant ante
 			if tc.valid {
 				require.NoError(t, err)
 			} else {
-				require.ErrorIs(t, err, tc.err)
+				testutil.AssertError(t, err, tc.err, tc.errMsg)
 			}
 
-			_, err = anteHandlerStack(suite.ctx, tx, false) // tests while stack
+			_, err = anteHandlerStack(bytesCtx, tx, false) // tests whole stack
 			if tc.valid {
 				require.NoError(t, err)
 			} else {
-				require.ErrorIs(t, err, tc.err)
+				testutil.AssertError(t, err, tc.err, tc.errMsg)
 			}
 		})
 	}
 }
 
 // don't consume any gas
-func SigGasNoConsumer(meter sdk.GasMeter, sig []byte, pubkey crypto.PubKey, params authtypes.Params) error {
+func SigGasNoConsumer(meter storetypes.GasMeter, sig []byte, pubkey crypto.PubKey, params authtypes.Params) error {
 	return nil
 }
 
@@ -197,7 +205,7 @@ func genTxWithFeeGranter(gen client.TxConfig, msgs []sdk.Msg, feeAmt sdk.Coins, 
 
 	memo := simulation.RandStringOfLength(r, simulation.RandIntBetween(r, 0, 100))
 
-	signMode := gen.SignModeHandler().DefaultMode()
+	signMode := signing.SignMode_SIGN_MODE_DIRECT
 
 	// 1st round: set SignatureV2 with empty signatures, to set correct
 	// signer infos.
@@ -231,8 +239,10 @@ func genTxWithFeeGranter(gen client.TxConfig, msgs []sdk.Msg, feeAmt sdk.Coins, 
 			ChainID:       chainID,
 			AccountNumber: accNums[i],
 			Sequence:      accSeqs[i],
+			PubKey:        p.PubKey(),
 		}
-		signBytes, err := gen.SignModeHandler().GetSignBytes(signMode, signerData, tx.GetTx())
+		signBytes, err := authsign.GetSignBytesAdapter(
+			context.Background(), gen.SignModeHandler(), signMode, signerData, tx.GetTx())
 		if err != nil {
 			panic(err)
 		}

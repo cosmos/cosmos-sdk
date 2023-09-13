@@ -3,16 +3,17 @@ package orm
 import (
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
+	errorsmod "cosmossdk.io/errors"
+	storetypes "cosmossdk.io/store/types"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/x/group/errors"
-
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 var _ Indexable = &nilRowGetterBuilder{}
@@ -101,7 +102,7 @@ func TestIndexPrefixScan(t *testing.T) {
 	require.NoError(t, err)
 
 	ctx := NewMockContext()
-	store := ctx.KVStore(sdk.NewKVStoreKey("test"))
+	store := ctx.KVStore(storetypes.NewKVStoreKey("test"))
 
 	g1 := testdata.TableModel{
 		Id:       1,
@@ -119,6 +120,7 @@ func TestIndexPrefixScan(t *testing.T) {
 		Metadata: []byte("metadata-b"),
 	}
 	for _, g := range []testdata.TableModel{g1, g2, g3} {
+		g := g
 		_, err := tb.Create(store, &g)
 		require.NoError(t, err)
 	}
@@ -127,8 +129,8 @@ func TestIndexPrefixScan(t *testing.T) {
 		start, end interface{}
 		expResult  []testdata.TableModel
 		expRowIDs  []RowID
-		expError   *sdkerrors.Error
-		method     func(store sdk.KVStore, start, end interface{}) (Iterator, error)
+		expError   *errorsmod.Error
+		method     func(store storetypes.KVStore, start, end interface{}) (Iterator, error)
 	}{
 		"exact match with a single result": {
 			start:     []byte("metadata-a"),
@@ -300,7 +302,7 @@ func TestUniqueIndex(t *testing.T) {
 	require.NoError(t, err)
 
 	ctx := NewMockContext()
-	store := ctx.KVStore(sdk.NewKVStoreKey("test"))
+	store := ctx.KVStore(storetypes.NewKVStoreKey("test"))
 
 	m := testdata.TableModel{
 		Id:       1,

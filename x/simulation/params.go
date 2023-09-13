@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"math/rand"
 
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	"github.com/tendermint/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	"github.com/cometbft/cometbft/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
@@ -86,52 +86,78 @@ func RandomParams(r *rand.Rand) Params {
 	}
 }
 
-// Param change proposals
+// Legacy param change proposals
 
-// ParamChange defines the object used for simulating parameter change proposals
-type ParamChange struct {
+// LegacyParamChange defines the object used for simulating parameter change proposals
+type LegacyParamChange struct {
 	subspace string
 	key      string
 	simValue simulation.SimValFn
 }
 
-func (spc ParamChange) Subspace() string {
+func (spc LegacyParamChange) Subspace() string {
 	return spc.subspace
 }
 
-func (spc ParamChange) Key() string {
+func (spc LegacyParamChange) Key() string {
 	return spc.key
 }
 
-func (spc ParamChange) SimValue() simulation.SimValFn {
+func (spc LegacyParamChange) SimValue() simulation.SimValFn {
 	return spc.simValue
 }
 
-// NewSimParamChange creates a new ParamChange instance
-func NewSimParamChange(subspace, key string, simVal simulation.SimValFn) simulation.ParamChange {
-	return ParamChange{
+// ComposedKey creates a new composed key for the legacy param change proposal
+func (spc LegacyParamChange) ComposedKey() string {
+	return spc.Subspace() + "/" + spc.Key()
+}
+
+// NewSimLegacyParamChange creates a new LegacyParamChange instance
+func NewSimLegacyParamChange(subspace, key string, simVal simulation.SimValFn) simulation.LegacyParamChange {
+	return LegacyParamChange{
 		subspace: subspace,
 		key:      key,
 		simValue: simVal,
 	}
 }
 
-// ComposedKey creates a new composed key for the param change proposal
-func (spc ParamChange) ComposedKey() string {
-	return spc.Subspace() + "/" + spc.Key()
+// Proposal Msgs
+
+// WeightedProposalMsg defines a common struct for proposal msgs defined by external modules (i.e outside gov)
+type WeightedProposalMsg struct {
+	appParamsKey   string                    // key used to retrieve the value of the weight from the simulation application params
+	defaultWeight  int                       // default weight
+	msgSimulatorFn simulation.MsgSimulatorFn // msg simulator function
 }
 
-// Proposal Contents
+func NewWeightedProposalMsg(appParamsKey string, defaultWeight int, msgSimulatorFn simulation.MsgSimulatorFn) simulation.WeightedProposalMsg {
+	return &WeightedProposalMsg{appParamsKey: appParamsKey, defaultWeight: defaultWeight, msgSimulatorFn: msgSimulatorFn}
+}
 
-// WeightedProposalContent defines a common struct for proposal contents defined by
-// external modules (i.e outside gov)
+func (w WeightedProposalMsg) AppParamsKey() string {
+	return w.appParamsKey
+}
+
+func (w WeightedProposalMsg) DefaultWeight() int {
+	return w.defaultWeight
+}
+
+func (w WeightedProposalMsg) MsgSimulatorFn() simulation.MsgSimulatorFn {
+	return w.msgSimulatorFn
+}
+
+// Legacy Proposal Content
+
+// WeightedProposalContent defines a common struct for proposal content defined by external modules (i.e outside gov)
+//
+//nolint:staticcheck // used for legacy testing
 type WeightedProposalContent struct {
 	appParamsKey       string                        // key used to retrieve the value of the weight from the simulation application params
 	defaultWeight      int                           // default weight
 	contentSimulatorFn simulation.ContentSimulatorFn // content simulator function
 }
 
-func NewWeightedProposalContent(appParamsKey string, defaultWeight int, contentSimulatorFn simulation.ContentSimulatorFn) simulation.WeightedProposalContent {
+func NewWeightedProposalContent(appParamsKey string, defaultWeight int, contentSimulatorFn simulation.ContentSimulatorFn) simulation.WeightedProposalContent { //nolint:staticcheck // used for legacy testing
 	return &WeightedProposalContent{appParamsKey: appParamsKey, defaultWeight: defaultWeight, contentSimulatorFn: contentSimulatorFn}
 }
 
@@ -143,14 +169,14 @@ func (w WeightedProposalContent) DefaultWeight() int {
 	return w.defaultWeight
 }
 
-func (w WeightedProposalContent) ContentSimulatorFn() simulation.ContentSimulatorFn {
+func (w WeightedProposalContent) ContentSimulatorFn() simulation.ContentSimulatorFn { //nolint:staticcheck // used for legacy testing
 	return w.contentSimulatorFn
 }
 
-// Param change proposals
+// Consensus Params
 
 // randomConsensusParams returns random simulation consensus parameters, it extracts the Evidence from the Staking genesis state.
-func randomConsensusParams(r *rand.Rand, appState json.RawMessage, cdc codec.JSONCodec) *tmproto.ConsensusParams {
+func randomConsensusParams(r *rand.Rand, appState json.RawMessage, cdc codec.JSONCodec, maxGas int64) *cmtproto.ConsensusParams {
 	var genesisState map[string]json.RawMessage
 	err := json.Unmarshal(appState, &genesisState)
 	if err != nil {
@@ -158,15 +184,15 @@ func randomConsensusParams(r *rand.Rand, appState json.RawMessage, cdc codec.JSO
 	}
 
 	stakingGenesisState := stakingtypes.GetGenesisStateFromAppState(cdc, genesisState)
-	consensusParams := &tmproto.ConsensusParams{
-		Block: &tmproto.BlockParams{
+	consensusParams := &cmtproto.ConsensusParams{
+		Block: &cmtproto.BlockParams{
 			MaxBytes: int64(simulation.RandIntBetween(r, 20000000, 30000000)),
-			MaxGas:   -1,
+			MaxGas:   maxGas,
 		},
-		Validator: &tmproto.ValidatorParams{
+		Validator: &cmtproto.ValidatorParams{
 			PubKeyTypes: []string{types.ABCIPubKeyTypeEd25519},
 		},
-		Evidence: &tmproto.EvidenceParams{
+		Evidence: &cmtproto.EvidenceParams{
 			MaxAgeNumBlocks: int64(stakingGenesisState.Params.UnbondingTime / AverageBlockTime),
 			MaxAgeDuration:  stakingGenesisState.Params.UnbondingTime,
 		},

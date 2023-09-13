@@ -1,0 +1,26 @@
+# Request review on PRs without changing our codeowners file (which is stricter than review team)
+name: Request review on PRs
+
+on:
+  pull_request_target:
+    types:
+      - opened
+      - reopened
+      - ready_for_review
+    branches:
+      - "main"
+      - "release/**"
+
+jobs:
+  request:
+    permissions:
+      pull-requests: write
+    name: Request reviews on opened PRs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create PR review request
+        if: ${{ !github.event.pull_request.draft }}
+        run: gh pr edit $PR_URL --add-reviewer @cosmos/sdk-core-review
+        env:
+          GH_TOKEN: ${{ secrets.PRBOT_PAT }}
+          PR_URL: ${{ github.event.pull_request.html_url }}

@@ -820,7 +820,7 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// QueryParamsRequest defines the request type for querying x/consensus_param parameters.
+// QueryParamsRequest defines the request type for querying x/consensus parameters.
 type QueryParamsRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -847,12 +847,15 @@ func (*QueryParamsRequest) Descriptor() ([]byte, []int) {
 	return file_cosmos_consensus_v1_query_proto_rawDescGZIP(), []int{0}
 }
 
-// QueryParamsResponse defines the response type for querying x/consensus_param parameters.
+// QueryParamsResponse defines the response type for querying x/consensus parameters.
 type QueryParamsResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
+	// params are the tendermint consensus params stored in the consensus module.
+	// Please note that `params.version` is not populated in this response, it is
+	// tracked separately in the x/upgrade module.
 	Params *types.ConsensusParams `protobuf:"bytes,1,opt,name=params,proto3" json:"params,omitempty"`
 }
 

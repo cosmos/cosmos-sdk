@@ -4,8 +4,7 @@ import (
 	"fmt"
 	"math/rand"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/nft"
+	"cosmossdk.io/x/nft"
 )
 
 func (s *TestSuite) TestBatchMint() {
@@ -87,7 +86,8 @@ func (s *TestSuite) TestBatchMint() {
 			func(tokens []nft.NFT) {
 				s.saveClass(tokens)
 				idx := rand.Intn(len(tokens))
-				s.nftKeeper.Mint(s.ctx, tokens[idx], receiver)
+				err := s.nftKeeper.Mint(s.ctx, tokens[idx], receiver)
+				s.Require().NoError(err)
 			},
 			[]nft.NFT{
 				{ClassId: "classID1", Id: "nftID1"},
@@ -157,7 +157,8 @@ func (s *TestSuite) TestBatchBurn() {
 			"success",
 			func() {
 				s.saveClass(tokens)
-				s.nftKeeper.BatchMint(s.ctx, tokens, receiver)
+				err := s.nftKeeper.BatchMint(s.ctx, tokens, receiver)
+				s.Require().NoError(err)
 			},
 			"classID1",
 			[]string{"nftID1", "nftID2"},
@@ -217,7 +218,8 @@ func (s *TestSuite) TestBatchUpdate() {
 			"success",
 			func() {
 				s.saveClass(tokens)
-				s.nftKeeper.BatchMint(s.ctx, tokens, receiver)
+				err := s.nftKeeper.BatchMint(s.ctx, tokens, receiver)
+				s.Require().NoError(err)
 			},
 			[]nft.NFT{
 				{ClassId: "classID1", Id: "nftID1", Uri: "nftID1_URI"},
@@ -287,7 +289,8 @@ func (s *TestSuite) TestBatchTransfer() {
 			"success",
 			func() {
 				s.saveClass(tokens)
-				s.nftKeeper.BatchMint(s.ctx, tokens, owner)
+				err := s.nftKeeper.BatchMint(s.ctx, tokens, owner)
+				s.Require().NoError(err)
 			},
 			"classID1",
 			[]string{"nftID1", "nftID2"},
@@ -297,7 +300,8 @@ func (s *TestSuite) TestBatchTransfer() {
 			"failed with not exist classID",
 			func() {
 				s.saveClass(tokens)
-				s.nftKeeper.BatchMint(s.ctx, tokens, receiver)
+				err := s.nftKeeper.BatchMint(s.ctx, tokens, receiver)
+				s.Require().NoError(err)
 			},
 			"classID3",
 			[]string{"nftID1", "nftID2"},
@@ -348,13 +352,6 @@ func (s *TestSuite) saveClass(tokens []nft.NFT) {
 	classMap := groupByClassID(tokens)
 	for classID := range classMap {
 		err := s.nftKeeper.SaveClass(s.ctx, nft.Class{Id: classID})
-		s.Require().NoError(err)
-	}
-}
-
-func (s *TestSuite) mintNFT(tokens []nft.NFT, receiver sdk.AccAddress) {
-	for _, token := range tokens {
-		err := s.nftKeeper.Mint(s.ctx, token, receiver)
 		s.Require().NoError(err)
 	}
 }

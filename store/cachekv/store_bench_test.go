@@ -3,10 +3,10 @@ package cachekv_test
 import (
 	"testing"
 
-	dbm "github.com/tendermint/tm-db"
+	dbm "github.com/cosmos/cosmos-db"
 
-	"github.com/cosmos/cosmos-sdk/store/cachekv"
-	"github.com/cosmos/cosmos-sdk/store/dbadapter"
+	"cosmossdk.io/store/cachekv"
+	"cosmossdk.io/store/dbadapter"
 )
 
 var sink interface{}
@@ -15,6 +15,7 @@ const defaultValueSizeBz = 1 << 12
 
 // This benchmark measures the time of iterator.Next() when the parent store is blank
 func benchmarkBlankParentIteratorNext(b *testing.B, keysize int) {
+	b.Helper()
 	mem := dbadapter.Store{DB: dbm.NewMemDB()}
 	kvstore := cachekv.NewStore(mem)
 	// Use a singleton for value, to not waste time computing it
@@ -44,6 +45,7 @@ func benchmarkBlankParentIteratorNext(b *testing.B, keysize int) {
 
 // Benchmark setting New keys to a store, where the new keys are in sequence.
 func benchmarkBlankParentAppend(b *testing.B, keysize int) {
+	b.Helper()
 	mem := dbadapter.Store{DB: dbm.NewMemDB()}
 	kvstore := cachekv.NewStore(mem)
 
@@ -66,6 +68,7 @@ func benchmarkBlankParentAppend(b *testing.B, keysize int) {
 // Benchmark setting New keys to a store, where the new keys are random.
 // the speed of this function does not depend on the values in the parent store
 func benchmarkRandomSet(b *testing.B, keysize int) {
+	b.Helper()
 	mem := dbadapter.Store{DB: dbm.NewMemDB()}
 	kvstore := cachekv.NewStore(mem)
 
@@ -96,6 +99,7 @@ func benchmarkRandomSet(b *testing.B, keysize int) {
 // We essentially are benchmarking the cacheKV iterator creation & iteration times
 // with the number of entries deleted in the parent.
 func benchmarkIteratorOnParentWithManyDeletes(b *testing.B, numDeletes int) {
+	b.Helper()
 	mem := dbadapter.Store{DB: dbm.NewMemDB()}
 
 	// Use a singleton for value, to not waste time computing it

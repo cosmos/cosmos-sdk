@@ -4,12 +4,15 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"gotest.tools/v3/assert"
 )
 
 func TestStoreUpgrades(t *testing.T) {
 	t.Parallel()
+	type toAdd struct {
+		key string
+	}
 	type toDelete struct {
 		key    string
 		delete bool
@@ -21,6 +24,7 @@ func TestStoreUpgrades(t *testing.T) {
 
 	cases := map[string]struct {
 		upgrades     *StoreUpgrades
+		expectAdd    []toAdd
 		expectDelete []toDelete
 		expectRename []toRename
 	}{
@@ -38,9 +42,11 @@ func TestStoreUpgrades(t *testing.T) {
 		},
 		"many data points": {
 			upgrades: &StoreUpgrades{
+				Added:   []string{"foo", "bar", "baz"},
 				Deleted: []string{"one", "two", "three", "four", "five"},
 				Renamed: []StoreRename{{"old", "new"}, {"white", "blue"}, {"black", "orange"}, {"fun", "boring"}},
 			},
+			expectAdd:    []toAdd{{"foo"}, {"bar"}, {"baz"}},
 			expectDelete: []toDelete{{"four", true}, {"six", false}, {"baz", false}},
 			expectRename: []toRename{{"white", ""}, {"blue", "white"}, {"boring", "fun"}, {"missing", ""}},
 		},
@@ -49,6 +55,9 @@ func TestStoreUpgrades(t *testing.T) {
 	for name, tc := range cases {
 		tc := tc
 		t.Run(name, func(t *testing.T) {
+			for _, r := range tc.expectAdd {
+				assert.Equal(t, tc.upgrades.IsAdded(r.key), true)
+			}
 			for _, d := range tc.expectDelete {
 				assert.Equal(t, tc.upgrades.IsDeleted(d.key), d.delete)
 			}
@@ -89,6 +98,14 @@ func TestTransientStoreKey(t *testing.T) {
 	require.Equal(t, "test", key.name)
 	require.Equal(t, key.name, key.Name())
 	require.Equal(t, fmt.Sprintf("TransientStoreKey{%p, test}", key), key.String())
+}
+
+func TestMemoryStoreKey(t *testing.T) {
+	t.Parallel()
+	key := NewMemoryStoreKey("test")
+	require.Equal(t, "test", key.name)
+	require.Equal(t, key.name, key.Name())
+	require.Equal(t, fmt.Sprintf("MemoryStoreKey{%p, test}", key), key.String())
 }
 
 func TestTraceContext_Clone(t *testing.T) {
@@ -206,4 +223,18 @@ func TestTraceContext_Merge(t *testing.T) {
 			require.Equal(t, tt.want, tt.tc.Merge(tt.other))
 		})
 	}
+}
+
+func TestNewTransientStoreKeys(t *testing.T) {
+	assert.DeepEqual(t, map[string]*TransientStoreKey{}, NewTransientStoreKeys())
+	assert.DeepEqual(t, 1, len(NewTransientStoreKeys("one")))
+}
+
+func TestNewInfiniteGasMeter(t *testing.T) {
+	gm := NewInfiniteGasMeter()
+	require.NotNil(t, gm)
+}
+
+func TestStoreTypes(t *testing.T) {
+	assert.DeepEqual(t, InclusiveEndBytes([]byte("endbytes")), InclusiveEndBytes([]byte("endbytes")))
 }

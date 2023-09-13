@@ -1,16 +1,16 @@
 package types_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
-	"github.com/cosmos/cosmos-sdk/x/evidence/types"
+	"cosmossdk.io/x/evidence/exported"
+	"cosmossdk.io/x/evidence/types"
 )
 
-func testHandler(sdk.Context, exported.Evidence) error { return nil }
+func testHandler(context.Context, exported.Evidence) error { return nil }
 
 func TestRouterSeal(t *testing.T) {
 	r := types.NewRouter()

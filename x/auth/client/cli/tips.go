@@ -17,7 +17,7 @@ import (
 func GetAuxToFeeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "aux-to-fee <aux_signed_tx.json>",
-		Short: "includes the aux signer data in the tx, broadcast the tx, and sends the tip amount to the broadcaster",
+		Short: "Includes the aux signer data in the tx, broadcast the tx, and sends the tip amount to the broadcaster",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
@@ -35,7 +35,10 @@ func GetAuxToFeeCommand() *cobra.Command {
 				return fmt.Errorf("expected chain-id %s, got %s in aux signer data", clientCtx.ChainID, auxSignerData.SignDoc.ChainId)
 			}
 
-			f := clienttx.NewFactoryCLI(clientCtx, cmd.Flags())
+			f, err := clienttx.NewFactoryCLI(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
 
 			txBuilder := clientCtx.TxConfig.NewTxBuilder()
 			err = txBuilder.AddAuxSignerData(auxSignerData)
@@ -65,7 +68,7 @@ func GetAuxToFeeCommand() *cobra.Command {
 				return err
 			}
 
-			// broadcast to a Tendermint node
+			// broadcast to a CometBFT node
 			res, err := clientCtx.BroadcastTx(txBytes)
 			if err != nil {
 				return err

@@ -2,20 +2,20 @@ package baseapp_test
 
 import (
 	"context"
-	"os"
 	"sync"
 	"testing"
 
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
-	"github.com/tendermint/tendermint/libs/log"
-	dbm "github.com/tendermint/tm-db"
 
 	"cosmossdk.io/depinject"
+	"cosmossdk.io/log"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
-	"github.com/cosmos/cosmos-sdk/testutil/testdata_pulsar"
+	testdata_pulsar "github.com/cosmos/cosmos-sdk/testutil/testdata/testpb"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -35,9 +35,9 @@ func TestGRPCQueryRouter(t *testing.T) {
 	require.NotNil(t, res)
 	require.Equal(t, "hello", res.Message)
 
-	require.Panics(t, func() {
-		_, _ = client.Echo(context.Background(), nil)
-	})
+	res, err = client.Echo(context.Background(), nil)
+	require.Nil(t, err)
+	require.Empty(t, res.Message)
 
 	res2, err := client.SayHello(context.Background(), &testdata.SayHelloRequest{Name: "Foo"})
 	require.Nil(t, err)
@@ -56,10 +56,15 @@ func TestGRPCQueryRouter(t *testing.T) {
 func TestRegisterQueryServiceTwice(t *testing.T) {
 	// Setup baseapp.
 	var appBuilder *runtime.AppBuilder
-	err := depinject.Inject(makeMinimalConfig(), &appBuilder)
+	err := depinject.Inject(
+		depinject.Configs(
+			makeMinimalConfig(),
+			depinject.Supply(log.NewTestLogger(t)),
+		),
+		&appBuilder)
 	require.NoError(t, err)
 	db := dbm.NewMemDB()
-	app := appBuilder.Build(log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, nil)
+	app := appBuilder.Build(db, nil)
 
 	// First time registering service shouldn't panic.
 	require.NotPanics(t, func() {
@@ -113,6 +118,7 @@ func TestQueryDataRaces_uniqueConnectionsToSameHandler(t *testing.T) {
 }
 
 func testQueryDataRacesSameHandler(t *testing.T, makeClientConn func(*baseapp.GRPCQueryRouter) *baseapp.QueryServiceTestHelper) {
+	t.Helper()
 	t.Parallel()
 
 	qr := baseapp.NewGRPCQueryRouter()
@@ -153,9 +159,9 @@ func testQueryDataRacesSameHandler(t *testing.T, makeClientConn func(*baseapp.GR
 			require.NotNil(t, res)
 			require.Equal(t, "hello", res.Message)
 
-			require.Panics(t, func() {
-				_, _ = client.Echo(context.Background(), nil)
-			})
+			res, err = client.Echo(context.Background(), nil)
+			require.Nil(t, err)
+			require.Empty(t, res.Message)
 
 			res2, err := client.SayHello(context.Background(), &testdata.SayHelloRequest{Name: "Foo"})
 			require.Nil(t, err)

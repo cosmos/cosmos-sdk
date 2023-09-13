@@ -5,8 +5,10 @@ import (
 	"reflect"
 	"testing"
 
+	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/stretchr/testify/suite"
-	abci "github.com/tendermint/tendermint/abci/types"
+
+	"cosmossdk.io/math"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	testdata "github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -37,6 +39,25 @@ func (s *eventsTestSuite) TestAppendAttributes() {
 	e = e.AppendAttributes(sdk.NewAttribute("recipient", "bar"))
 	s.Require().Len(e.Attributes, 2)
 	s.Require().Equal(e, sdk.NewEvent("transfer", sdk.NewAttribute("sender", "foo"), sdk.NewAttribute("recipient", "bar")))
+}
+
+func (s *eventsTestSuite) TestGetAttributes() {
+	e := sdk.NewEvent("transfer", sdk.NewAttribute("sender", "foo"))
+	e = e.AppendAttributes(sdk.NewAttribute("recipient", "bar"))
+	attr, found := e.GetAttribute("recipient")
+	s.Require().True(found)
+	s.Require().Equal(attr, sdk.NewAttribute("recipient", "bar"))
+	_, found = e.GetAttribute("foo")
+	s.Require().False(found)
+
+	events := sdk.Events{e}.AppendEvent(sdk.NewEvent("message", sdk.NewAttribute("sender", "bar")))
+	attrs, found := events.GetAttributes("sender")
+	s.Require().True(found)
+	s.Require().Len(attrs, 2)
+	s.Require().Equal(attrs[0], sdk.NewAttribute("sender", "foo"))
+	s.Require().Equal(attrs[1], sdk.NewAttribute("sender", "bar"))
+	_, found = events.GetAttributes("foo")
+	s.Require().False(found)
 }
 
 func (s *eventsTestSuite) TestEmptyEvents() {
@@ -71,13 +92,13 @@ func (s *eventsTestSuite) TestEmitTypedEvent() {
 	s.Run("deterministic key-value order", func() {
 		for i := 0; i < 10; i++ {
 			em := sdk.NewEventManager()
-			coin := sdk.NewCoin("fakedenom", sdk.NewInt(1999999))
+			coin := sdk.NewCoin("fakedenom", math.NewInt(1999999))
 			s.Require().NoError(em.EmitTypedEvent(&coin))
 			s.Require().Len(em.Events(), 1)
 			attrs := em.Events()[0].Attributes
 			s.Require().Len(attrs, 2)
-			s.Require().Equal(string(attrs[0].Key), "amount")
-			s.Require().Equal(string(attrs[1].Key), "denom")
+			s.Require().Equal(attrs[0].Key, "amount")
+			s.Require().Equal(attrs[1].Key, "denom")
 		}
 	})
 }
@@ -85,7 +106,7 @@ func (s *eventsTestSuite) TestEmitTypedEvent() {
 func (s *eventsTestSuite) TestEventManagerTypedEvents() {
 	em := sdk.NewEventManager()
 
-	coin := sdk.NewCoin("fakedenom", sdk.NewInt(1999999))
+	coin := sdk.NewCoin("fakedenom", math.NewInt(1999999))
 	cat := testdata.Cat{
 		Moniker: "Garfield",
 		Lives:   6,
@@ -126,8 +147,8 @@ func (s *eventsTestSuite) TestStringifyEvents() {
 				sdk.NewEvent("message", sdk.NewAttribute(sdk.AttributeKeySender, "foo")),
 				sdk.NewEvent("message", sdk.NewAttribute(sdk.AttributeKeyModule, "bank")),
 			},
-			expTxtStr:  "\t\t- message\n\t\t\t- sender: foo\n\t\t\t- module: bank",
-			expJSONStr: "[{\"type\":\"message\",\"attributes\":[{\"key\":\"sender\",\"value\":\"foo\"},{\"key\":\"module\",\"value\":\"bank\"}]}]",
+			expTxtStr:  "\t\t- message\n\t\t\t- sender: foo\n\t\t- message\n\t\t\t- module: bank",
+			expJSONStr: "[{\"type\":\"message\",\"attributes\":[{\"key\":\"sender\",\"value\":\"foo\"}]},{\"type\":\"message\",\"attributes\":[{\"key\":\"module\",\"value\":\"bank\"}]}]",
 		},
 		{
 			name: "multiple events with same attributes",
@@ -139,8 +160,8 @@ func (s *eventsTestSuite) TestStringifyEvents() {
 				),
 				sdk.NewEvent("message", sdk.NewAttribute(sdk.AttributeKeySender, "foo")),
 			},
-			expTxtStr:  "\t\t- message\n\t\t\t- module: staking\n\t\t\t- sender: cosmos1foo\n\t\t\t- sender: foo",
-			expJSONStr: `[{"type":"message","attributes":[{"key":"module","value":"staking"},{"key":"sender","value":"cosmos1foo"},{"key":"sender","value":"foo"}]}]`,
+			expTxtStr:  "\t\t- message\n\t\t\t- module: staking\n\t\t\t- sender: cosmos1foo\n\t\t- message\n\t\t\t- sender: foo",
+			expJSONStr: `[{"type":"message","attributes":[{"key":"module","value":"staking"},{"key":"sender","value":"cosmos1foo"}]},{"type":"message","attributes":[{"key":"sender","value":"foo"}]}]`,
 		},
 	}
 

@@ -3,26 +3,23 @@ package simulation
 import (
 	"math/rand"
 
+	"cosmossdk.io/x/nft"
+	"cosmossdk.io/x/nft/keeper"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
-
-	"github.com/cosmos/cosmos-sdk/x/nft"
-	"github.com/cosmos/cosmos-sdk/x/nft/keeper"
 )
 
-//nolint:gosec // these are not hardcoded credentials.
 const (
 	// OpWeightMsgSend Simulation operation weights constants
 	OpWeightMsgSend = "op_weight_msg_send"
-)
 
-const (
 	// WeightSend nft operations weights
 	WeightSend = 100
 )
@@ -33,14 +30,15 @@ var TypeMsgSend = sdk.MsgTypeURL(&nft.MsgSend{})
 func WeightedOperations(
 	registry cdctypes.InterfaceRegistry,
 	appParams simtypes.AppParams,
-	cdc codec.JSONCodec,
+	_ codec.JSONCodec,
+	txCfg client.TxConfig,
 	ak nft.AccountKeeper,
 	bk nft.BankKeeper,
 	k keeper.Keeper,
 ) simulation.WeightedOperations {
 	var weightMsgSend int
 
-	appParams.GetOrGenerate(cdc, OpWeightMsgSend, &weightMsgSend, nil,
+	appParams.GetOrGenerate(OpWeightMsgSend, &weightMsgSend, nil,
 		func(_ *rand.Rand) {
 			weightMsgSend = WeightSend
 		},
@@ -49,14 +47,15 @@ func WeightedOperations(
 	return simulation.WeightedOperations{
 		simulation.NewWeightedOperation(
 			weightMsgSend,
-			SimulateMsgSend(codec.NewProtoCodec(registry), ak, bk, k),
+			SimulateMsgSend(codec.NewProtoCodec(registry), txCfg, ak, bk, k),
 		),
 	}
 }
 
 // SimulateMsgSend generates a MsgSend with random values.
 func SimulateMsgSend(
-	cdc *codec.ProtoCodec,
+	_ *codec.ProtoCodec,
+	txCfg client.TxConfig,
 	ak nft.AccountKeeper,
 	bk nft.BankKeeper,
 	k keeper.Keeper,
@@ -95,7 +94,6 @@ func SimulateMsgSend(
 			Receiver: receiver.Address.String(),
 		}
 
-		txCfg := tx.NewTxConfig(cdc, tx.DefaultSignModes)
 		tx, err := simtestutil.GenSignedMockTx(
 			r,
 			txCfg,
@@ -115,10 +113,11 @@ func SimulateMsgSend(
 			return simtypes.NoOpMsg(nft.ModuleName, sdk.MsgTypeURL(msg), "unable to deliver tx"), nil, err
 		}
 
-		return simtypes.NewOperationMsg(msg, true, "", cdc), nil, nil
+		return simtypes.NewOperationMsg(msg, true, ""), nil, nil
 	}
 }
 
+// randNFT picks a random NFT from a class belonging to the specified owner(minter).
 func randNFT(ctx sdk.Context, r *rand.Rand, k keeper.Keeper, minter sdk.AccAddress) (nft.NFT, error) {
 	c, err := randClass(ctx, r, k)
 	if err != nil {
@@ -141,6 +140,7 @@ func randNFT(ctx sdk.Context, r *rand.Rand, k keeper.Keeper, minter sdk.AccAddre
 	return n, nil
 }
 
+// randClass picks a random Class.
 func randClass(ctx sdk.Context, r *rand.Rand, k keeper.Keeper) (nft.Class, error) {
 	classes := k.GetClasses(ctx)
 	if len(classes) == 0 {

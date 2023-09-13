@@ -2,10 +2,11 @@ package depinject
 
 import (
 	"bytes"
+	stderrors "errors"
 	"fmt"
 	"reflect"
 
-	"github.com/pkg/errors"
+	"github.com/cockroachdb/errors"
 
 	"cosmossdk.io/depinject/internal/graphviz"
 )
@@ -295,47 +296,47 @@ func (c *container) addNode(provider *providerDescriptor, key *moduleKey) (inter
 		}
 
 		return sp, nil
-	} else {
-		if hasOwnModuleKeyParam {
-			return nil, errors.Errorf("%T and %T must not be declared as dependencies on the same provided",
-				ModuleKey{}, OwnModuleKey{})
-		}
-
-		c.logf("Registering module-scoped provider: %s", provider.Location.String())
-		c.indentLogger()
-		defer c.dedentLogger()
-
-		node := &moduleDepProvider{
-			provider:        provider,
-			calledForModule: map[*moduleKey]bool{},
-			valueMap:        map[*moduleKey][]reflect.Value{},
-		}
-
-		for i, out := range provider.Outputs {
-			typ := out.Type
-
-			c.logf("Registering resolver for module-scoped type %v", typ)
-
-			existing, ok := c.resolverByType(typ)
-			if ok {
-				return nil, errors.Errorf("duplicate provision of type %v by module-scoped provider %s\n\talready provided by %s",
-					typ, provider.Location, existing.describeLocation())
-			}
-
-			typeGraphNode := c.typeGraphNode(typ)
-			c.addResolver(typ, &moduleDepResolver{
-				typ:         typ,
-				idxInValues: i,
-				node:        node,
-				valueMap:    map[*moduleKey]reflect.Value{},
-				graphNode:   typeGraphNode,
-			})
-
-			c.addGraphEdge(providerGraphNode, typeGraphNode)
-		}
-
-		return node, nil
 	}
+
+	if hasOwnModuleKeyParam {
+		return nil, errors.Errorf("%T and %T must not be declared as dependencies on the same provided",
+			ModuleKey{}, OwnModuleKey{})
+	}
+
+	c.logf("Registering module-scoped provider: %s", provider.Location.String())
+	c.indentLogger()
+	defer c.dedentLogger()
+
+	node := &moduleDepProvider{
+		provider:        provider,
+		calledForModule: map[*moduleKey]bool{},
+		valueMap:        map[*moduleKey][]reflect.Value{},
+	}
+
+	for i, out := range provider.Outputs {
+		typ := out.Type
+
+		c.logf("Registering resolver for module-scoped type %v", typ)
+
+		existing, ok := c.resolverByType(typ)
+		if ok {
+			return nil, errors.Errorf("duplicate provision of type %v by module-scoped provider %s\n\talready provided by %s",
+				typ, provider.Location, existing.describeLocation())
+		}
+
+		typeGraphNode := c.typeGraphNode(typ)
+		c.addResolver(typ, &moduleDepResolver{
+			typ:         typ,
+			idxInValues: i,
+			node:        node,
+			valueMap:    map[*moduleKey]reflect.Value{},
+			graphNode:   typeGraphNode,
+		})
+
+		c.addGraphEdge(providerGraphNode, typeGraphNode)
+	}
+
+	return node, nil
 }
 
 func (c *container) supply(value reflect.Value, location Location) error {
@@ -441,7 +442,7 @@ func (c *container) build(loc Location, outputs ...interface{}) error {
 		Outputs: nil,
 		Fn: func(values []reflect.Value) ([]reflect.Value, error) {
 			if len(values) != len(outputs) {
-				return nil, fmt.Errorf("internal error, unexpected number of values")
+				return nil, stderrors.New("internal error, unexpected number of values")
 			}
 
 			for i, output := range outputs {

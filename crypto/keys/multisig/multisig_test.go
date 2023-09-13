@@ -6,19 +6,21 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/depinject"
+	"cosmossdk.io/log"
+
 	"github.com/cosmos/cosmos-sdk/codec"
+	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
-	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
-	_ "github.com/cosmos/cosmos-sdk/runtime"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 )
@@ -269,7 +271,7 @@ func TestMultiSigMigration(t *testing.T) {
 	require.NoError(t, multisig.AddSignatureFromPubKey(multisignature, sigs[0], pkSet[0], pkSet))
 
 	// create a StdSignature for msg, and convert it to sigV2
-	sig := legacytx.StdSignature{PubKey: pkSet[1], Signature: sigs[1].(*signing.SingleSignatureData).Signature}
+	sig := legacytx.StdSignature{PubKey: pkSet[1], Signature: sigs[1].(*signing.SingleSignatureData).Signature} //nolint:staticcheck // SA1019: legacytx.StdSignature is deprecated: use Tx.Msgs, Signatures and Memo instead.
 	sigV2, err := legacytx.StdSignatureToSignatureV2(cdc, sig)
 	require.NoError(t, multisig.AddSignatureV2(multisignature, sigV2, pkSet))
 
@@ -354,12 +356,17 @@ func TestDisplay(t *testing.T) {
 	pubKeys := generatePubKeys(3)
 	msig := kmultisig.NewLegacyAminoPubKey(2, pubKeys)
 
-	// LegacyAminoPubKey wraps PubKeys into Amino (for serialization) and Any String method doesn't work.
-	require.PanicsWithValue("reflect.Value.Interface: cannot return value obtained from unexported field or method",
-		func() { require.Empty(msig.String()) },
-	)
+	require.NotEmpty(msig.String())
 	var cdc codec.Codec
-	err := depinject.Inject(configurator.NewAppConfig(), &cdc)
+	err := depinject.Inject(
+		depinject.Configs(
+			configurator.NewAppConfig(),
+			depinject.Supply(log.NewNopLogger(),
+				func() address.Codec { return addresscodec.NewBech32Codec("cosmos") },
+				func() runtime.ValidatorAddressCodec { return addresscodec.NewBech32Codec("cosmosvaloper") },
+				func() runtime.ConsensusAddressCodec { return addresscodec.NewBech32Codec("cosmosvalcons") },
+			),
+		), &cdc)
 	require.NoError(err)
 	bz, err := cdc.MarshalInterfaceJSON(msig)
 	require.NoError(err)
@@ -445,30 +452,4 @@ func TestAminoUnmarshalJSON(t *testing.T) {
 		err := pk.Unmarshal(key.Value)
 		require.NoError(t, err)
 	}
-}
-
-func TestProtoMarshalJSON(t *testing.T) {
-	require := require.New(t)
-	pubkeys := generatePubKeys(3)
-	msig := kmultisig.NewLegacyAminoPubKey(2, pubkeys)
-
-	registry := types.NewInterfaceRegistry()
-	cryptocodec.RegisterInterfaces(registry)
-	cdc := codec.NewProtoCodec(registry)
-
-	bz, err := cdc.MarshalInterfaceJSON(msig)
-	require.NoError(err)
-
-	var pk2 cryptotypes.PubKey
-	err = cdc.UnmarshalInterfaceJSON(bz, &pk2)
-	require.NoError(err)
-	require.True(pk2.Equals(msig))
-
-	// Test that we can correctly unmarshal key from keyring output
-	k, err := keyring.NewMultiRecord("my multisig", msig)
-	require.NoError(err)
-	ko, err := keyring.MkAccKeyOutput(k)
-	require.NoError(err)
-	require.Equal(ko.Address, sdk.AccAddress(pk2.Address()).String())
-	require.Equal(ko.PubKey, string(bz))
 }

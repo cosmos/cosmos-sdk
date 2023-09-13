@@ -1,33 +1,42 @@
 #!/usr/bin/env bash
 
-mkdir -p modules
-
+## Create modules pages
 for D in ../x/*; do
   if [ -d "${D}" ]; then
-    MODDOC=modules/$(echo $D | awk -F/ '{print $NF}')
+    MODDOC=docs/build/modules/$(echo $D | awk -F/ '{print $NF}')
     rm -rf $MODDOC
     mkdir -p $MODDOC && cp -r $D/README.md "$_"
-    if [ -f "$MODDOC/README.md" ]; then
-      cd $MODDOC
-      # This ensures that we have multiples pages for the modules documantation
-      # This is easier to read for the user
-      # In order to split pages, we need to add a <!-- order: X --> in the module README.md, for each pages that we want.
-      csplit -k -q README.md '/<!-- order:/' '{*}' --prefix='section_' --suffix-format='%02d.md'
-      mv section_00.md README.md
-      cd ../..
-    fi
   fi
 done
 
 ## Vesting is a submodule of auth, but we still want to display it in docs
 ## TODO to be removed in https://github.com/cosmos/cosmos-sdk/issues/9958
-mkdir -p modules/vesting
-cp -r ../x/auth/vesting/README.md modules/vesting
-cd modules/vesting
-csplit -k -q README.md '/<!-- order:/' '{*}' --prefix='section_' --suffix-format='%02d.md'
-mv section_00.md README.md
-cd ../..
+cp ../x/auth/vesting/README.md ./docs/build/modules/auth/1-vesting.md
+cp ../x/auth/tx/README.md ./docs/build/modules/auth/2-tx.md
 
-cat ../x/README.md | sed 's/\.\/x/\/modules/g' | sed 's/\.\.\/docs\/building-modules\/README\.md/\/building-modules\/intro\.html/g' > ./modules/README.md
+## Add modules page list
+cat ../x/README.md | sed 's/\.\.\/docs\/build\/building-modules\/README\.md/\/building-modules\/intro\.html/g' > ./docs/modules/README.md
 
-cp ../cosmovisor/README.md ./run-node/cosmovisor.md
+## Add tooling documentation
+cp ../tools/cosmovisor/README.md ./docs/build/tooling/01-cosmovisor.md
+cp ../tools/confix/README.md ./docs/build/tooling/02-confix.md
+cp ../tools/hubl/README.md ./docs/build/tooling/03-hubl.md
+wget -O docs/user/run-node/04-rosetta.md https://raw.githubusercontent.com/cosmos/rosetta/main/README.md
+
+## Add package documentation
+cp ../client/v2/README.md ./docs/develop/advanced/17-autocli.md
+cp ../depinject/README.md ./docs/build/packages/01-depinject.md
+cp ../collections/README.md ./docs/build/packages/02-collections.md
+cp ../orm/README.md ./docs/build/packages/03-orm.md
+
+## Add architecture documentation
+cp -r ./architecture ./docs/build
+
+## Add spec documentation
+cp -r ./spec ./docs/build
+
+## Add rfc documentation
+cp -r ./rfc ./docs/build/rfc
+
+## Add SDK migration documentation
+cp -r ../UPGRADING.md ./docs/build/migrations/02-upgrading.md

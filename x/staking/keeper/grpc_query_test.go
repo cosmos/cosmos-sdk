@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
+	"github.com/cosmos/cosmos-sdk/x/staking/testutil"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -13,8 +13,8 @@ func (s *KeeperTestSuite) TestGRPCQueryValidator() {
 	ctx, keeper, queryClient := s.ctx, s.stakingKeeper, s.queryClient
 	require := s.Require()
 
-	validator := teststaking.NewValidator(s.T(), sdk.ValAddress(PKs[0].Address().Bytes()), PKs[0])
-	keeper.SetValidator(ctx, validator)
+	validator := testutil.NewValidator(s.T(), sdk.ValAddress(PKs[0].Address().Bytes()), PKs[0])
+	require.NoError(keeper.SetValidator(ctx, validator))
 	var req *types.QueryValidatorRequest
 	testCases := []struct {
 		msg      string
@@ -25,6 +25,15 @@ func (s *KeeperTestSuite) TestGRPCQueryValidator() {
 			"empty request",
 			func() {
 				req = &types.QueryValidatorRequest{}
+			},
+			false,
+		},
+		{
+			"with valid and not existing address",
+			func() {
+				req = &types.QueryValidatorRequest{
+					ValidatorAddr: "cosmosvaloper15jkng8hytwt22lllv6mw4k89qkqehtahd84ptu",
+				}
 			},
 			false,
 		},

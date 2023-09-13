@@ -30,6 +30,6 @@ extend google.protobuf.MethodOptions {
   // also recommend adding Protobuf comments to warn module developers
   // consuming these queries.
   //
-  // When set to true, the query can safely be called 
+  // When set to true, the query can safely be called
   bool module_query_safe = 11110001;
 }

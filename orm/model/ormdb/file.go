@@ -3,19 +3,17 @@ package ormdb
 import (
 	"bytes"
 	"encoding/binary"
+	"errors"
 	"math"
-
-	"google.golang.org/protobuf/reflect/protoregistry"
-
-	"github.com/cosmos/cosmos-sdk/orm/encoding/encodeutil"
-
-	"github.com/cosmos/cosmos-sdk/orm/encoding/ormkv"
-	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
 
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/reflect/protoregistry"
 
-	"github.com/cosmos/cosmos-sdk/orm/model/ormtable"
+	"cosmossdk.io/orm/encoding/encodeutil"
+	"cosmossdk.io/orm/encoding/ormkv"
+	"cosmossdk.io/orm/model/ormtable"
+	"cosmossdk.io/orm/types/ormerrors"
 )
 
 type fileDescriptorDBOptions struct {
@@ -29,7 +27,7 @@ type fileDescriptorDBOptions struct {
 type fileDescriptorDB struct {
 	id             uint32
 	prefix         []byte
-	tablesById     map[uint32]ormtable.Table
+	tablesByID     map[uint32]ormtable.Table
 	tablesByName   map[protoreflect.FullName]ormtable.Table
 	fileDescriptor protoreflect.FileDescriptor
 }
@@ -40,7 +38,7 @@ func newFileDescriptorDB(fileDescriptor protoreflect.FileDescriptor, options fil
 	schema := &fileDescriptorDB{
 		id:             options.ID,
 		prefix:         prefix,
-		tablesById:     map[uint32]ormtable.Table{},
+		tablesByID:     map[uint32]ormtable.Table{},
 		tablesByName:   map[protoreflect.FullName]ormtable.Table{},
 		fileDescriptor: fileDescriptor,
 	}
@@ -67,15 +65,18 @@ func newFileDescriptorDB(fileDescriptor protoreflect.FileDescriptor, options fil
 			JSONValidator:   options.JSONValidator,
 			BackendResolver: options.BackendResolver,
 		})
+		if errors.Is(err, ormerrors.NoTableDescriptor) {
+			continue
+		}
 		if err != nil {
 			return nil, err
 		}
 
 		id := table.ID()
-		if _, ok := schema.tablesById[id]; ok {
+		if _, ok := schema.tablesByID[id]; ok {
 			return nil, ormerrors.InvalidTableId.Wrapf("duplicate ID %d for %s", id, tableName)
 		}
-		schema.tablesById[id] = table
+		schema.tablesByID[id] = table
 
 		if _, ok := schema.tablesByName[tableName]; ok {
 			return nil, ormerrors.InvalidTableDefinition.Wrapf("duplicate table %s", tableName)
@@ -102,7 +103,7 @@ func (f fileDescriptorDB) DecodeEntry(k, v []byte) (ormkv.Entry, error) {
 		return nil, ormerrors.UnexpectedDecodePrefix.Wrapf("uint32 varint id out of range %d", id)
 	}
 
-	table, ok := f.tablesById[uint32(id)]
+	table, ok := f.tablesByID[uint32(id)]
 	if !ok {
 		return nil, ormerrors.UnexpectedDecodePrefix.Wrapf("can't find table with id %d", id)
 	}

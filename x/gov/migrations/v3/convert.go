@@ -3,8 +3,11 @@ package v3
 import (
 	"fmt"
 
+	"cosmossdk.io/math"
+
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
@@ -13,6 +16,7 @@ import (
 // ConvertToLegacyProposal takes a new proposal and attempts to convert it to the
 // legacy proposal format. This conversion is best effort. New proposal types that
 // don't have a legacy message will return a "nil" content.
+// Returns error when the amount of messages in `proposal` is different than one.
 func ConvertToLegacyProposal(proposal v1.Proposal) (v1beta1.Proposal, error) {
 	var err error
 	legacyProposal := v1beta1.Proposal{
@@ -46,33 +50,41 @@ func ConvertToLegacyProposal(proposal v1.Proposal) (v1beta1.Proposal, error) {
 	if err != nil {
 		return v1beta1.Proposal{}, err
 	}
-	for _, msg := range msgs {
-		if legacyMsg, ok := msg.(*v1.MsgExecLegacyContent); ok {
-			// check that the content struct can be unmarshalled
-			_, err := v1.LegacyContentFromMessage(legacyMsg)
-			if err != nil {
-				return v1beta1.Proposal{}, err
-			}
-			legacyProposal.Content = legacyMsg.Content
-		}
+	if len(msgs) != 1 {
+		return v1beta1.Proposal{}, sdkerrors.ErrInvalidType.Wrap("can't convert a gov/v1 Proposal to gov/v1beta1 Proposal when amount of proposal messages not exactly one")
 	}
-	return legacyProposal, nil
+	if legacyMsg, ok := msgs[0].(*v1.MsgExecLegacyContent); ok {
+		// check that the content struct can be unmarshalled
+		_, err := v1.LegacyContentFromMessage(legacyMsg)
+		if err != nil {
+			return v1beta1.Proposal{}, err
+		}
+		legacyProposal.Content = legacyMsg.Content
+		return legacyProposal, nil
+	}
+	// hack to fill up the content with the first message
+	// this is to support clients that have not yet (properly) use gov/v1 endpoints
+	// https://github.com/cosmos/cosmos-sdk/issues/14334
+	// VerifyBasic assures that we have at least one message.
+	legacyProposal.Content, err = codectypes.NewAnyWithValue(msgs[0])
+
+	return legacyProposal, err
 }
 
 func ConvertToLegacyTallyResult(tally *v1.TallyResult) (v1beta1.TallyResult, error) {
-	yes, ok := types.NewIntFromString(tally.YesCount)
+	yes, ok := math.NewIntFromString(tally.YesCount)
 	if !ok {
 		return v1beta1.TallyResult{}, fmt.Errorf("unable to convert yes tally string (%s) to int", tally.YesCount)
 	}
-	no, ok := types.NewIntFromString(tally.NoCount)
+	no, ok := math.NewIntFromString(tally.NoCount)
 	if !ok {
 		return v1beta1.TallyResult{}, fmt.Errorf("unable to convert no tally string (%s) to int", tally.NoCount)
 	}
-	veto, ok := types.NewIntFromString(tally.NoWithVetoCount)
+	veto, ok := math.NewIntFromString(tally.NoWithVetoCount)
 	if !ok {
 		return v1beta1.TallyResult{}, fmt.Errorf("unable to convert no with veto tally string (%s) to int", tally.NoWithVetoCount)
 	}
-	abstain, ok := types.NewIntFromString(tally.AbstainCount)
+	abstain, ok := math.NewIntFromString(tally.AbstainCount)
 	if !ok {
 		return v1beta1.TallyResult{}, fmt.Errorf("unable to convert abstain tally string (%s) to int", tally.AbstainCount)
 	}
@@ -100,7 +112,7 @@ func ConvertToLegacyVote(vote v1.Vote) (v1beta1.Vote, error) {
 func ConvertToLegacyVoteOptions(voteOptions []*v1.WeightedVoteOption) ([]v1beta1.WeightedVoteOption, error) {
 	options := make([]v1beta1.WeightedVoteOption, len(voteOptions))
 	for i, option := range voteOptions {
-		weight, err := types.NewDecFromStr(option.Weight)
+		weight, err := math.LegacyNewDecFromStr(option.Weight)
 		if err != nil {
 			return options, err
 		}
@@ -151,9 +163,8 @@ func convertToNewVotes(oldVotes v1beta1.Votes) (v1.Votes, error) {
 
 		case oldVote.Option != v1beta1.OptionEmpty:
 			newWVOs = v1.NewNonSplitVoteOption(v1.VoteOption(oldVote.Option))
-
 		default:
-			return nil, fmt.Errorf("vote does not have neither Options nor Option")
+			return nil, fmt.Errorf("vote does not have neither InterfaceRegistryOptions nor Option")
 		}
 
 		newVotes[i] = &v1.Vote{
@@ -212,6 +223,8 @@ func convertToNewProposal(oldProp v1beta1.Proposal) (v1.Proposal, error) {
 		TotalDeposit:    oldProp.TotalDeposit,
 		VotingStartTime: &oldProp.VotingStartTime,
 		VotingEndTime:   &oldProp.VotingEndTime,
+		Title:           oldProp.GetContent().GetTitle(),
+		Summary:         oldProp.GetContent().GetDescription(),
 	}, nil
 }
 

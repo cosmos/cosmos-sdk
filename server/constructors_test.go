@@ -4,9 +4,8 @@ import (
 	"path/filepath"
 	"testing"
 
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
-
-	dbm "github.com/tendermint/tm-db"
 )
 
 func Test_openDB(t *testing.T) {

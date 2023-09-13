@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"cosmossdk.io/math"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // Default parameter namespace
@@ -15,15 +14,15 @@ const (
 )
 
 var (
-	DefaultMinSignedPerWindow      = sdk.NewDecWithPrec(5, 1)
+	DefaultMinSignedPerWindow      = math.LegacyNewDecWithPrec(5, 1)
 	DefaultSlashFractionDoubleSign = math.LegacyNewDec(1).Quo(math.LegacyNewDec(20))
 	DefaultSlashFractionDowntime   = math.LegacyNewDec(1).Quo(math.LegacyNewDec(100))
 )
 
 // NewParams creates a new Params object
 func NewParams(
-	signedBlocksWindow int64, minSignedPerWindow sdk.Dec, downtimeJailDuration time.Duration,
-	slashFractionDoubleSign, slashFractionDowntime sdk.Dec,
+	signedBlocksWindow int64, minSignedPerWindow math.LegacyDec, downtimeJailDuration time.Duration,
+	slashFractionDoubleSign, slashFractionDowntime math.LegacyDec,
 ) Params {
 	return Params{
 		SignedBlocksWindow:      signedBlocksWindow,
@@ -45,7 +44,7 @@ func DefaultParams() Params {
 	)
 }
 
-// validate params
+// Validate validates the params
 func (p Params) Validate() error {
 	if err := validateSignedBlocksWindow(p.SignedBlocksWindow); err != nil {
 		return err
@@ -79,11 +78,14 @@ func validateSignedBlocksWindow(i interface{}) error {
 }
 
 func validateMinSignedPerWindow(i interface{}) error {
-	v, ok := i.(sdk.Dec)
+	v, ok := i.(math.LegacyDec)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
+	if v.IsNil() {
+		return fmt.Errorf("min signed per window cannot be nil: %s", v)
+	}
 	if v.IsNegative() {
 		return fmt.Errorf("min signed per window cannot be negative: %s", v)
 	}
@@ -108,11 +110,14 @@ func validateDowntimeJailDuration(i interface{}) error {
 }
 
 func validateSlashFractionDoubleSign(i interface{}) error {
-	v, ok := i.(sdk.Dec)
+	v, ok := i.(math.LegacyDec)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
+	if v.IsNil() {
+		return fmt.Errorf("double sign slash fraction cannot be nil: %s", v)
+	}
 	if v.IsNegative() {
 		return fmt.Errorf("double sign slash fraction cannot be negative: %s", v)
 	}
@@ -124,11 +129,14 @@ func validateSlashFractionDoubleSign(i interface{}) error {
 }
 
 func validateSlashFractionDowntime(i interface{}) error {
-	v, ok := i.(sdk.Dec)
+	v, ok := i.(math.LegacyDec)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
+	if v.IsNil() {
+		return fmt.Errorf("downtime slash fraction cannot be nil: %s", v)
+	}
 	if v.IsNegative() {
 		return fmt.Errorf("downtime slash fraction cannot be negative: %s", v)
 	}

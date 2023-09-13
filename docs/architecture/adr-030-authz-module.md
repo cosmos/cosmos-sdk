@@ -128,7 +128,7 @@ the field will be `nil`.
 
 ### `Msg` Service
 
-```proto
+```protobuf
 service Msg {
   // Grant grants the provided authorization to the grantee on the granter's
   // account with the provided expiration time.
@@ -147,7 +147,7 @@ service Msg {
 // Grant gives permissions to execute
 // the provided method with expiration time.
 message Grant {
-  google.protobuf.Any       authorization = 1 [(cosmos_proto.accepts_interface) = "Authorization"];
+  google.protobuf.Any       authorization = 1 [(cosmos_proto.accepts_interface) = "cosmos.authz.v1beta1.Authorization"];
   google.protobuf.Timestamp expiration    = 2 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
 }
 
@@ -165,7 +165,7 @@ message MsgExecResponse {
 message MsgExec {
   string   grantee                  = 1;
   // Authorization Msg requests to execute. Each msg must implement Authorization interface
-  repeated google.protobuf.Any msgs = 2 [(cosmos_proto.accepts_interface) = "sdk.Msg"];;
+  repeated google.protobuf.Any msgs = 2 [(cosmos_proto.accepts_interface) = "cosmos.base.v1beta1.Msg"];;
 }
 ```
 
@@ -216,7 +216,7 @@ This CLI command will send a `MsgRevoke` transaction.
 
 #### `SendAuthorization`
 
-```proto
+```protobuf
 // SendAuthorization allows the grantee to spend up to spend_limit coins from
 // the granter's account.
 message SendAuthorization {
@@ -226,7 +226,7 @@ message SendAuthorization {
 
 #### `GenericAuthorization`
 
-```proto
+```protobuf
 // GenericAuthorization gives the grantee unrestricted permissions to execute
 // the provided method on behalf of the granter's account.
 message GenericAuthorization {

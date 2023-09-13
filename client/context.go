@@ -2,6 +2,7 @@ package client
 
 import (
 	"bufio"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -11,6 +12,8 @@ import (
 	"github.com/spf13/viper"
 	"google.golang.org/grpc"
 	"sigs.k8s.io/yaml"
+
+	"cosmossdk.io/core/address"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -25,7 +28,7 @@ type PreprocessTxFn func(chainID string, key keyring.KeyType, tx TxBuilder) erro
 // handling and queries.
 type Context struct {
 	FromAddress       sdk.AccAddress
-	Client            TendermintRPC
+	Client            CometRPC
 	GRPCClient        *grpc.ClientConn
 	ChainID           string
 	Codec             codec.Codec
@@ -61,6 +64,21 @@ type Context struct {
 
 	// TODO: Deprecated (remove).
 	LegacyAmino *codec.LegacyAmino
+
+	// CmdContext is the context.Context from the Cobra command.
+	CmdContext context.Context
+
+	// Address codecs
+	AddressCodec          address.Codec
+	ValidatorAddressCodec address.Codec
+	ConsensusAddressCodec address.Codec
+}
+
+// WithCmdContext returns a copy of the context with an updated context.Context,
+// usually set to the cobra cmd context.
+func (ctx Context) WithCmdContext(c context.Context) Context {
+	ctx.CmdContext = c
+	return ctx
 }
 
 // WithKeyring returns a copy of the context with an updated keyring.
@@ -129,7 +147,7 @@ func (ctx Context) WithHeight(height int64) Context {
 
 // WithClient returns a copy of the context with an updated RPC client
 // instance.
-func (ctx Context) WithClient(client TendermintRPC) Context {
+func (ctx Context) WithClient(client CometRPC) Context {
 	ctx.Client = client
 	return ctx
 }
@@ -281,6 +299,24 @@ func (ctx Context) WithPreprocessTxHook(preprocessFn PreprocessTxFn) Context {
 	return ctx
 }
 
+// WithAddressCodec returns the context with the provided address codec.
+func (ctx Context) WithAddressCodec(addressCodec address.Codec) Context {
+	ctx.AddressCodec = addressCodec
+	return ctx
+}
+
+// WithValidatorAddressCodec returns the context with the provided validator address codec.
+func (ctx Context) WithValidatorAddressCodec(validatorAddressCodec address.Codec) Context {
+	ctx.ValidatorAddressCodec = validatorAddressCodec
+	return ctx
+}
+
+// WithConsensusAddressCodec returns the context with the provided consensus address codec.
+func (ctx Context) WithConsensusAddressCodec(consensusAddressCodec address.Codec) Context {
+	ctx.ConsensusAddressCodec = consensusAddressCodec
+	return ctx
+}
+
 // PrintString prints the raw string to ctx.Output if it's defined, otherwise to os.Stdout
 func (ctx Context) PrintString(str string) error {
 	return ctx.PrintBytes([]byte(str))
@@ -304,17 +340,6 @@ func (ctx Context) PrintBytes(o []byte) error {
 func (ctx Context) PrintProto(toPrint proto.Message) error {
 	// always serialize JSON initially because proto json can't be directly YAML encoded
 	out, err := ctx.Codec.MarshalJSON(toPrint)
-	if err != nil {
-		return err
-	}
-	return ctx.printOutput(out)
-}
-
-// PrintObjectLegacy is a variant of PrintProto that doesn't require a proto.Message type
-// and uses amino JSON encoding.
-// Deprecated: It will be removed in the near future!
-func (ctx Context) PrintObjectLegacy(toPrint interface{}) error {
-	out, err := ctx.LegacyAmino.MarshalJSON(toPrint)
 	if err != nil {
 		return err
 	}
@@ -365,11 +390,11 @@ func GetFromFields(clientCtx Context, kr keyring.Keyring, from string) (sdk.AccA
 		return nil, "", 0, nil
 	}
 
-	addr, err := sdk.AccAddressFromBech32(from)
+	addr, err := clientCtx.AddressCodec.StringToBytes(from)
 	switch {
 	case clientCtx.Simulate:
 		if err != nil {
-			return nil, "", 0, fmt.Errorf("a valid bech32 address must be provided in simulation mode: %w", err)
+			return nil, "", 0, fmt.Errorf("a valid address must be provided in simulation mode: %w", err)
 		}
 
 		return addr, "", 0, nil

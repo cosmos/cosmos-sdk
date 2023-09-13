@@ -3,7 +3,7 @@ package gaskv
 import (
 	"io"
 
-	"github.com/cosmos/cosmos-sdk/store/types"
+	"cosmossdk.io/store/types"
 )
 
 var _ types.KVStore = &Store{}
@@ -44,7 +44,7 @@ func (gs *Store) Get(key []byte) (value []byte) {
 }
 
 // Implements KVStore.
-func (gs *Store) Set(key []byte, value []byte) {
+func (gs *Store) Set(key, value []byte) {
 	types.AssertValidKey(key)
 	types.AssertValidValue(value)
 	gs.gasMeter.ConsumeGas(gs.gasConfig.WriteCostFlat, types.GasWriteCostFlatDesc)
@@ -92,11 +92,6 @@ func (gs *Store) CacheWrapWithTrace(_ io.Writer, _ types.TraceContext) types.Cac
 	panic("cannot CacheWrapWithTrace a GasKVStore")
 }
 
-// CacheWrapWithListeners implements the CacheWrapper interface.
-func (gs *Store) CacheWrapWithListeners(_ types.StoreKey, _ []types.WriteListener) types.CacheWrap {
-	panic("cannot CacheWrapWithListeners a GasKVStore")
-}
-
 func (gs *Store) iterator(start, end []byte, ascending bool) types.Iterator {
 	var parent types.Iterator
 	if ascending {
@@ -126,7 +121,7 @@ func newGasIterator(gasMeter types.GasMeter, gasConfig types.GasConfig, parent t
 }
 
 // Implements Iterator.
-func (gi *gasIterator) Domain() (start []byte, end []byte) {
+func (gi *gasIterator) Domain() (start, end []byte) {
 	return gi.parent.Domain()
 }
 

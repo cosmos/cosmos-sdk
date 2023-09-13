@@ -3,18 +3,29 @@ package keeper
 import (
 	"context"
 
-	"cosmossdk.io/math"
-
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/cosmos/cosmos-sdk/store/prefix"
+	v1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
+	"cosmossdk.io/collections"
+	"cosmossdk.io/math"
+	"cosmossdk.io/store/prefix"
+
+	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
+type Querier struct {
+	BaseKeeper
+}
+
 var _ types.QueryServer = BaseKeeper{}
+
+func NewQuerier(keeper *BaseKeeper) Querier {
+	return Querier{BaseKeeper: *keeper}
+}
 
 // Balance implements the Query/Balance gRPC method
 func (k BaseKeeper) Balance(ctx context.Context, req *types.QueryBalanceRequest) (*types.QueryBalanceResponse, error) {
@@ -22,16 +33,12 @@ func (k BaseKeeper) Balance(ctx context.Context, req *types.QueryBalanceRequest)
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
-	if req.Address == "" {
-		return nil, status.Error(codes.InvalidArgument, "address cannot be empty")
-	}
-
-	if req.Denom == "" {
-		return nil, status.Error(codes.InvalidArgument, "invalid denom")
+	if err := sdk.ValidateDenom(req.Denom); err != nil {
+		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	address, err := sdk.AccAddressFromBech32(req.Address)
+	address, err := k.ak.AddressCodec().StringToBytes(req.Address)
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid address: %s", err.Error())
 	}
@@ -47,29 +54,26 @@ func (k BaseKeeper) AllBalances(ctx context.Context, req *types.QueryAllBalances
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
-	if req.Address == "" {
-		return nil, status.Error(codes.InvalidArgument, "address cannot be empty")
-	}
-
-	addr, err := sdk.AccAddressFromBech32(req.Address)
+	addr, err := k.ak.AddressCodec().StringToBytes(req.Address)
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid address: %s", err.Error())
 	}
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-
-	balances := sdk.NewCoins()
-	accountStore := k.getAccountStore(sdkCtx, addr)
-
-	pageRes, err := query.Paginate(accountStore, req.Pagination, func(key, value []byte) error {
-		denom := string(key)
-		balance, err := UnmarshalBalanceCompat(k.cdc, value, denom)
-		if err != nil {
-			return err
-		}
-		balances = append(balances, balance)
-		return nil
-	})
+	balances, pageRes, err := query.CollectionPaginate(
+		ctx,
+		k.Balances,
+		req.Pagination,
+		func(key collections.Pair[sdk.AccAddress, string], value math.Int) (sdk.Coin, error) {
+			if req.ResolveDenom {
+				if metadata, ok := k.GetDenomMetaData(sdkCtx, key.K2()); ok {
+					return sdk.NewCoin(metadata.Display, value), nil
+				}
+			}
+			return sdk.NewCoin(key.K2(), value), nil
+		},
+		query.WithCollectionPaginationPairPrefix[sdk.AccAddress, string](addr),
+	)
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "paginate: %v", err)
 	}
@@ -84,21 +88,18 @@ func (k BaseKeeper) SpendableBalances(ctx context.Context, req *types.QuerySpend
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
-	addr, err := sdk.AccAddressFromBech32(req.Address)
+	addr, err := k.ak.AddressCodec().StringToBytes(req.Address)
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid address: %s", err.Error())
 	}
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	balances := sdk.NewCoins()
-	accountStore := k.getAccountStore(sdkCtx, addr)
 	zeroAmt := math.ZeroInt()
 
-	pageRes, err := query.Paginate(accountStore, req.Pagination, func(key, _ []byte) error {
-		balances = append(balances, sdk.NewCoin(string(key), zeroAmt))
-		return nil
-	})
+	balances, pageRes, err := query.CollectionPaginate(ctx, k.Balances, req.Pagination, func(key collections.Pair[sdk.AccAddress, string], _ math.Int) (coin sdk.Coin, err error) {
+		return sdk.NewCoin(key.K2(), zeroAmt), nil
+	}, query.WithCollectionPaginationPairPrefix[sdk.AccAddress, string](addr))
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "paginate: %v", err)
 	}
@@ -111,6 +112,29 @@ func (k BaseKeeper) SpendableBalances(ctx context.Context, req *types.QuerySpend
 	}
 
 	return &types.QuerySpendableBalancesResponse{Balances: result, Pagination: pageRes}, nil
+}
+
+// SpendableBalanceByDenom implements a gRPC query handler for retrieving an account's
+// spendable balance for a specific denom.
+func (k BaseKeeper) SpendableBalanceByDenom(ctx context.Context, req *types.QuerySpendableBalanceByDenomRequest) (*types.QuerySpendableBalanceByDenomResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	addr, err := k.ak.AddressCodec().StringToBytes(req.Address)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid address: %s", err.Error())
+	}
+
+	if err := sdk.ValidateDenom(req.Denom); err != nil {
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
+
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	spendable := k.SpendableCoin(sdkCtx, addr, req.Denom)
+
+	return &types.QuerySpendableBalanceByDenomResponse{Balance: &spendable}, nil
 }
 
 // TotalSupply implements the Query/TotalSupply gRPC method
@@ -130,8 +154,8 @@ func (k BaseKeeper) SupplyOf(c context.Context, req *types.QuerySupplyOfRequest)
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
-	if req.Denom == "" {
-		return nil, status.Error(codes.InvalidArgument, "invalid denom")
+	if err := sdk.ValidateDenom(req.Denom); err != nil {
+		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
@@ -157,9 +181,8 @@ func (k BaseKeeper) DenomsMetadata(c context.Context, req *types.QueryDenomsMeta
 	if req == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
-
-	ctx := sdk.UnwrapSDKContext(c)
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.DenomMetadataPrefix)
+	kvStore := runtime.KVStoreAdapter(k.storeService.OpenKVStore(c))
+	store := prefix.NewStore(kvStore, types.DenomMetadataPrefix)
 
 	metadatas := []types.Metadata{}
 	pageRes, err := query.Paginate(store, req.Pagination, func(_, value []byte) error {
@@ -185,8 +208,8 @@ func (k BaseKeeper) DenomMetadata(c context.Context, req *types.QueryDenomMetada
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
 
-	if req.Denom == "" {
-		return nil, status.Error(codes.InvalidArgument, "invalid denom")
+	if err := sdk.ValidateDenom(req.Denom); err != nil {
+		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
@@ -201,6 +224,71 @@ func (k BaseKeeper) DenomMetadata(c context.Context, req *types.QueryDenomMetada
 	}, nil
 }
 
+// DenomMetadataByQueryString is identical to DenomMetadata query, but receives request via query string.
+func (k BaseKeeper) DenomMetadataByQueryString(c context.Context, req *types.QueryDenomMetadataByQueryStringRequest) (*types.QueryDenomMetadataByQueryStringResponse, error) {
+	if req == nil {
+		return nil, status.Errorf(codes.InvalidArgument, "empty request")
+	}
+
+	if err := sdk.ValidateDenom(req.Denom); err != nil {
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+
+	metadata, found := k.GetDenomMetaData(ctx, req.Denom)
+	if !found {
+		return nil, status.Errorf(codes.NotFound, "client metadata for denom %s", req.Denom)
+	}
+
+	return &types.QueryDenomMetadataByQueryStringResponse{
+		Metadata: metadata,
+	}, nil
+}
+
+// DenomMetadataV2 is identical to DenomMetadata but receives protoreflect types instead of gogo types.  It exists to
+// resolve a cyclic dependency existent between x/auth and x/bank, so that x/auth may call this keeper without
+// depending on x/bank.
+func (k BaseKeeper) DenomMetadataV2(c context.Context, req *v1beta1.QueryDenomMetadataRequest) (*v1beta1.QueryDenomMetadataResponse, error) {
+	if req == nil {
+		return nil, status.Errorf(codes.InvalidArgument, "empty request")
+	}
+
+	if err := sdk.ValidateDenom(req.Denom); err != nil {
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+
+	metadata, found := k.GetDenomMetaData(ctx, req.Denom)
+	if !found {
+		return nil, status.Errorf(codes.NotFound, "client metadata for denom %s", req.Denom)
+	}
+
+	denomUnits := make([]*v1beta1.DenomUnit, len(metadata.DenomUnits))
+	for i, unit := range metadata.DenomUnits {
+		denomUnits[i] = &v1beta1.DenomUnit{
+			Denom:    unit.Denom,
+			Exponent: unit.Exponent,
+			Aliases:  unit.Aliases,
+		}
+	}
+	metadataV2 := &v1beta1.Metadata{
+		Description: metadata.Description,
+		DenomUnits:  denomUnits,
+		Base:        metadata.Base,
+		Display:     metadata.Display,
+		Name:        metadata.Name,
+		Symbol:      metadata.Symbol,
+		Uri:         metadata.URI,
+		UriHash:     metadata.URIHash,
+	}
+
+	return &v1beta1.QueryDenomMetadataResponse{
+		Metadata: metadataV2,
+	}, nil
+}
+
 func (k BaseKeeper) DenomOwners(
 	goCtx context.Context,
 	req *types.QueryDenomOwnersRequest,
@@ -209,38 +297,25 @@ func (k BaseKeeper) DenomOwners(
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
 
-	if req.Denom == "" {
-		return nil, status.Error(codes.InvalidArgument, "empty denom")
+	if err := sdk.ValidateDenom(req.Denom); err != nil {
+		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
 
-	ctx := sdk.UnwrapSDKContext(goCtx)
-	denomPrefixStore := k.getDenomAddressPrefixStore(ctx, req.Denom)
-
-	var denomOwners []*types.DenomOwner
-	pageRes, err := query.FilteredPaginate(
-		denomPrefixStore,
+	denomOwners, pageRes, err := query.CollectionPaginate(
+		goCtx,
+		k.Balances.Indexes.Denom,
 		req.Pagination,
-		func(key []byte, _ []byte, accumulate bool) (bool, error) {
-			if accumulate {
-				address, _, err := types.AddressAndDenomFromBalancesStore(key)
-				if err != nil {
-					return false, err
-				}
-
-				denomOwners = append(
-					denomOwners,
-					&types.DenomOwner{
-						Address: address.String(),
-						Balance: k.GetBalance(ctx, address, req.Denom),
-					},
-				)
+		func(key collections.Pair[string, sdk.AccAddress], value collections.NoValue) (*types.DenomOwner, error) {
+			amt, err := k.Balances.Get(goCtx, collections.Join(key.K2(), req.Denom))
+			if err != nil {
+				return nil, err
 			}
-
-			return true, nil
+			return &types.DenomOwner{Address: key.K2().String(), Balance: sdk.NewCoin(req.Denom, amt)}, nil
 		},
+		query.WithCollectionPaginationPairPrefix[string, sdk.AccAddress](req.Denom),
 	)
 	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
+		return nil, err
 	}
 
 	return &types.QueryDenomOwnersResponse{DenomOwners: denomOwners, Pagination: pageRes}, nil
@@ -253,28 +328,25 @@ func (k BaseKeeper) SendEnabled(goCtx context.Context, req *types.QuerySendEnabl
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	resp := &types.QuerySendEnabledResponse{}
 	if len(req.Denoms) > 0 {
-		store := ctx.KVStore(k.storeKey)
 		for _, denom := range req.Denoms {
-			if se, ok := k.getSendEnabled(store, denom); ok {
+			if se, ok := k.getSendEnabled(ctx, denom); ok {
 				resp.SendEnabled = append(resp.SendEnabled, types.NewSendEnabled(denom, se))
 			}
 		}
 	} else {
-		store := k.getSendEnabledPrefixStore(ctx)
-		var err error
-		resp.Pagination, err = query.FilteredPaginate(
-			store,
-			req.Pagination,
-			func(key []byte, value []byte, accumulate bool) (bool, error) {
-				if accumulate {
-					resp.SendEnabled = append(resp.SendEnabled, types.NewSendEnabled(string(key), types.IsTrueB(value)))
-				}
-				return true, nil
+		results, pageResp, err := query.CollectionPaginate(
+			ctx,
+			k.BaseViewKeeper.SendEnabled,
+			req.Pagination, func(key string, value bool) (*types.SendEnabled, error) {
+				return types.NewSendEnabled(key, value), nil
 			},
 		)
 		if err != nil {
 			return nil, status.Error(codes.Internal, err.Error())
 		}
+		resp.SendEnabled = results
+		resp.Pagination = pageResp
 	}
+
 	return resp, nil
 }

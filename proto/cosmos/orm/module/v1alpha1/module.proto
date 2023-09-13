@@ -5,10 +5,10 @@ package cosmos.orm.module.v1alpha1;
 import "cosmos/app/v1alpha1/module.proto";
 
 // Module defines the ORM module which adds providers to the app container for
-// module-scoped DB's. In the future it may provide gRPC services for interacting
-// with ORM data.
+// ORM ModuleDB's and in the future will automatically register query
+// services for modules that use the ORM.
 message Module {
   option (cosmos.app.v1alpha1.module) = {
-    go_import: "github.com/cosmos/cosmos-sdk/orm"
+    go_import: "cosmossdk.io/orm"
   };
 }

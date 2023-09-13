@@ -3,13 +3,13 @@ package types
 import (
 	"fmt"
 
-	ics23 "github.com/confio/ics23/go"
-	"github.com/tendermint/tendermint/crypto/merkle"
-	tmmerkle "github.com/tendermint/tendermint/proto/tendermint/crypto"
+	"github.com/cometbft/cometbft/crypto/merkle"
+	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
+	ics23 "github.com/cosmos/ics23/go"
 
-	sdkmaps "github.com/cosmos/cosmos-sdk/store/internal/maps"
-	sdkproofs "github.com/cosmos/cosmos-sdk/store/internal/proofs"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	errorsmod "cosmossdk.io/errors"
+	sdkmaps "cosmossdk.io/store/internal/maps"
+	sdkproofs "cosmossdk.io/store/internal/proofs"
 )
 
 const (
@@ -61,9 +61,9 @@ func NewSmtCommitmentOp(key []byte, proof *ics23.CommitmentProof) CommitmentOp {
 }
 
 // CommitmentOpDecoder takes a merkle.ProofOp and attempts to decode it into a CommitmentOp ProofOperator
-// The proofOp.Data is just a marshalled CommitmentProof. The Key of the CommitmentOp is extracted
+// The proofOp.Data is just a marshaled CommitmentProof. The Key of the CommitmentOp is extracted
 // from the unmarshalled proof.
-func CommitmentOpDecoder(pop tmmerkle.ProofOp) (merkle.ProofOperator, error) {
+func CommitmentOpDecoder(pop cmtprotocrypto.ProofOp) (merkle.ProofOperator, error) {
 	var spec *ics23.ProofSpec
 	switch pop.Type {
 	case ProofOpIAVLCommitment:
@@ -73,7 +73,7 @@ func CommitmentOpDecoder(pop tmmerkle.ProofOp) (merkle.ProofOperator, error) {
 	case ProofOpSMTCommitment:
 		spec = ics23.SmtSpec
 	default:
-		return nil, sdkerrors.Wrapf(ErrInvalidProof, "unexpected ProofOp.Type; got %s, want supported ics23 subtypes 'ProofOpSimpleMerkleCommitment', 'ProofOpIAVLCommitment', or 'ProofOpSMTCommitment'", pop.Type)
+		return nil, errorsmod.Wrapf(ErrInvalidProof, "unexpected ProofOp.Type; got %s, want supported ics23 subtypes 'ProofOpSimpleMerkleCommitment', 'ProofOpIAVLCommitment', or 'ProofOpSMTCommitment'", pop.Type)
 	}
 
 	proof := &ics23.CommitmentProof{}
@@ -108,7 +108,7 @@ func (op CommitmentOp) Run(args [][]byte) ([][]byte, error) {
 	// calculate root from proof
 	root, err := op.Proof.Calculate()
 	if err != nil {
-		return nil, sdkerrors.Wrapf(ErrInvalidProof, "could not calculate root for proof: %v", err)
+		return nil, errorsmod.Wrapf(ErrInvalidProof, "could not calculate root for proof: %v", err)
 	}
 	// Only support an existence proof or nonexistence proof (batch proofs currently unsupported)
 	switch len(args) {
@@ -116,16 +116,16 @@ func (op CommitmentOp) Run(args [][]byte) ([][]byte, error) {
 		// Args are nil, so we verify the absence of the key.
 		absent := ics23.VerifyNonMembership(op.Spec, root, op.Proof, op.Key)
 		if !absent {
-			return nil, sdkerrors.Wrapf(ErrInvalidProof, "proof did not verify absence of key: %s", string(op.Key))
+			return nil, errorsmod.Wrapf(ErrInvalidProof, "proof did not verify absence of key: %s", string(op.Key))
 		}
 
 	case 1:
 		// Args is length 1, verify existence of key with value args[0]
 		if !ics23.VerifyMembership(op.Spec, root, op.Proof, op.Key, args[0]) {
-			return nil, sdkerrors.Wrapf(ErrInvalidProof, "proof did not verify existence of key %s with given value %x", op.Key, args[0])
+			return nil, errorsmod.Wrapf(ErrInvalidProof, "proof did not verify existence of key %s with given value %x", op.Key, args[0])
 		}
 	default:
-		return nil, sdkerrors.Wrapf(ErrInvalidProof, "args must be length 0 or 1, got: %d", len(args))
+		return nil, errorsmod.Wrapf(ErrInvalidProof, "args must be length 0 or 1, got: %d", len(args))
 	}
 
 	return [][]byte{root}, nil
@@ -134,12 +134,12 @@ func (op CommitmentOp) Run(args [][]byte) ([][]byte, error) {
 // ProofOp implements ProofOperator interface and converts a CommitmentOp
 // into a merkle.ProofOp format that can later be decoded by CommitmentOpDecoder
 // back into a CommitmentOp for proof verification
-func (op CommitmentOp) ProofOp() tmmerkle.ProofOp {
+func (op CommitmentOp) ProofOp() cmtprotocrypto.ProofOp {
 	bz, err := op.Proof.Marshal()
 	if err != nil {
 		panic(err.Error())
 	}
-	return tmmerkle.ProofOp{
+	return cmtprotocrypto.ProofOp{
 		Type: op.Type,
 		Key:  op.Key,
 		Data: bz,
@@ -147,7 +147,7 @@ func (op CommitmentOp) ProofOp() tmmerkle.ProofOp {
 }
 
 // ProofOpFromMap generates a single proof from a map and converts it to a ProofOp.
-func ProofOpFromMap(cmap map[string][]byte, storeName string) (ret tmmerkle.ProofOp, err error) {
+func ProofOpFromMap(cmap map[string][]byte, storeName string) (ret cmtprotocrypto.ProofOp, err error) {
 	_, proofs, _ := sdkmaps.ProofsFromMap(cmap)
 
 	proof := proofs[storeName]

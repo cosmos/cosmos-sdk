@@ -5,6 +5,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	sdkmath "cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	v4 "github.com/cosmos/cosmos-sdk/x/bank/migrations/v4"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -22,9 +24,9 @@ func TestMigrateGenState(t *testing.T) {
 				Params: types.Params{},
 				Balances: []types.Balance{{
 					Address: "balance1",
-					Coins:   sdk.Coins{sdk.NewCoin("balance1coin", sdk.NewInt(8))},
+					Coins:   sdk.Coins{sdk.NewCoin("balance1coin", sdkmath.NewInt(8))},
 				}},
-				Supply: sdk.Coins{sdk.NewCoin("supplycoin", sdk.NewInt(800))},
+				Supply: sdk.Coins{sdk.NewCoin("supplycoin", sdkmath.NewInt(800))},
 				DenomMetadata: []types.Metadata{{
 					Description: "metadesk",
 					DenomUnits:  nil,
@@ -41,9 +43,9 @@ func TestMigrateGenState(t *testing.T) {
 				Params: types.Params{},
 				Balances: []types.Balance{{
 					Address: "balance1",
-					Coins:   sdk.Coins{sdk.NewCoin("balance1coin", sdk.NewInt(8))},
+					Coins:   sdk.Coins{sdk.NewCoin("balance1coin", sdkmath.NewInt(8))},
 				}},
-				Supply: sdk.Coins{sdk.NewCoin("supplycoin", sdk.NewInt(800))},
+				Supply: sdk.Coins{sdk.NewCoin("supplycoin", sdkmath.NewInt(800))},
 				DenomMetadata: []types.Metadata{{
 					Description: "metadesk",
 					DenomUnits:  nil,

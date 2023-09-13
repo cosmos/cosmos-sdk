@@ -4,12 +4,14 @@ import (
 	"reflect"
 	"testing"
 
-	"cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
+	"cosmossdk.io/math"
+	"cosmossdk.io/store/prefix"
+	storetypes "cosmossdk.io/store/types"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/store/prefix"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
@@ -29,8 +31,8 @@ type KeeperTestSuite struct {
 
 func (suite *KeeperTestSuite) SetupTest() {
 	encodingCfg := moduletestutil.MakeTestEncodingConfig(params.AppModuleBasic{})
-	key := sdk.NewKVStoreKey(types.StoreKey)
-	tkey := sdk.NewTransientStoreKey("params_transient_test")
+	key := storetypes.NewKVStoreKey(types.StoreKey)
+	tkey := storetypes.NewTransientStoreKey("params_transient_test")
 
 	suite.ctx = testutil.DefaultContext(key, tkey)
 	suite.paramsKeeper = keeper.NewKeeper(encodingCfg.Codec, encodingCfg.Amino, key, tkey)
@@ -190,9 +192,9 @@ func TestSubspace(t *testing.T) {
 		{"uint16", uint16(1), uint16(0), new(uint16)},
 		{"uint32", uint32(1), uint32(0), new(uint32)},
 		{"uint64", uint64(1), uint64(0), new(uint64)},
-		{"int", sdk.NewInt(1), *new(math.Int), new(math.Int)},
-		{"uint", sdk.NewUint(1), *new(sdk.Uint), new(sdk.Uint)},
-		{"dec", math.LegacyNewDec(1), *new(sdk.Dec), new(sdk.Dec)},
+		{"int", math.NewInt(1), math.Int{}, new(math.Int)},
+		{"uint", math.NewUint(1), math.Uint{}, new(math.Uint)},
+		{"dec", math.LegacyNewDec(1), math.LegacyDec{}, new(math.LegacyDec)},
 		{"struct", s{1}, s{0}, new(s)},
 	}
 
@@ -206,8 +208,8 @@ func TestSubspace(t *testing.T) {
 		types.NewParamSetPair([]byte("uint32"), uint32(0), validateNoOp),
 		types.NewParamSetPair([]byte("uint64"), uint64(0), validateNoOp),
 		types.NewParamSetPair([]byte("int"), math.Int{}, validateNoOp),
-		types.NewParamSetPair([]byte("uint"), sdk.Uint{}, validateNoOp),
-		types.NewParamSetPair([]byte("dec"), sdk.Dec{}, validateNoOp),
+		types.NewParamSetPair([]byte("uint"), math.Uint{}, validateNoOp),
+		types.NewParamSetPair([]byte("dec"), math.LegacyDec{}, validateNoOp),
 		types.NewParamSetPair([]byte("struct"), s{}, validateNoOp),
 	)
 

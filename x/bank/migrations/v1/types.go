@@ -1,12 +1,13 @@
 package v1
 
 import (
+	"github.com/golang/protobuf/proto"
+
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
-	v042auth "github.com/cosmos/cosmos-sdk/x/auth/migrations/v042"
+	v1auth "github.com/cosmos/cosmos-sdk/x/auth/migrations/v1"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/golang/protobuf/proto"
 )
 
 const (
@@ -40,9 +41,9 @@ func DenomMetadataKey(denom string) []byte {
 // store. The key must not contain the perfix BalancesPrefix as the prefix store
 // iterator discards the actual prefix.
 func AddressFromBalancesStore(key []byte) sdk.AccAddress {
-	kv.AssertKeyAtLeastLength(key, 1+v042auth.AddrLen)
-	addr := key[:v042auth.AddrLen]
-	kv.AssertKeyLength(addr, v042auth.AddrLen)
+	kv.AssertKeyAtLeastLength(key, 1+v1auth.AddrLen)
+	addr := key[:v1auth.AddrLen]
+	kv.AssertKeyLength(addr, v1auth.AddrLen)
 	return sdk.AccAddress(addr)
 }
 

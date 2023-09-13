@@ -1,45 +1,51 @@
 package keeper
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/nft"
+	"context"
+
+	"cosmossdk.io/errors"
+	storetypes "cosmossdk.io/store/types"
+	"cosmossdk.io/x/nft"
+
+	"github.com/cosmos/cosmos-sdk/runtime"
 )
 
 // SaveClass defines a method for creating a new nft class
-func (k Keeper) SaveClass(ctx sdk.Context, class nft.Class) error {
+func (k Keeper) SaveClass(ctx context.Context, class nft.Class) error {
 	if k.HasClass(ctx, class.Id) {
-		return sdkerrors.Wrap(nft.ErrClassExists, class.Id)
+		return errors.Wrap(nft.ErrClassExists, class.Id)
 	}
 	bz, err := k.cdc.Marshal(&class)
 	if err != nil {
-		return sdkerrors.Wrap(err, "Marshal nft.Class failed")
+		return errors.Wrap(err, "Marshal nft.Class failed")
 	}
-	store := ctx.KVStore(k.storeKey)
-	store.Set(classStoreKey(class.Id), bz)
-	return nil
+	store := k.storeService.OpenKVStore(ctx)
+	return store.Set(classStoreKey(class.Id), bz)
 }
 
-// UpdateClass defines a method for updating a exist nft class
-func (k Keeper) UpdateClass(ctx sdk.Context, class nft.Class) error {
+// UpdateClass defines a method for updating an exist nft class
+func (k Keeper) UpdateClass(ctx context.Context, class nft.Class) error {
 	if !k.HasClass(ctx, class.Id) {
-		return sdkerrors.Wrap(nft.ErrClassNotExists, class.Id)
+		return errors.Wrap(nft.ErrClassNotExists, class.Id)
 	}
 	bz, err := k.cdc.Marshal(&class)
 	if err != nil {
-		return sdkerrors.Wrap(err, "Marshal nft.Class failed")
+		return errors.Wrap(err, "Marshal nft.Class failed")
 	}
-	store := ctx.KVStore(k.storeKey)
-	store.Set(classStoreKey(class.Id), bz)
-	return nil
+	store := k.storeService.OpenKVStore(ctx)
+	return store.Set(classStoreKey(class.Id), bz)
 }
 
 // GetClass defines a method for returning the class information of the specified id
-func (k Keeper) GetClass(ctx sdk.Context, classID string) (nft.Class, bool) {
-	store := ctx.KVStore(k.storeKey)
-	bz := store.Get(classStoreKey(classID))
-
+func (k Keeper) GetClass(ctx context.Context, classID string) (nft.Class, bool) {
+	store := k.storeService.OpenKVStore(ctx)
 	var class nft.Class
+
+	bz, err := store.Get(classStoreKey(classID))
+	if err != nil {
+		return class, false
+	}
+
 	if len(bz) == 0 {
 		return class, false
 	}
@@ -48,9 +54,9 @@ func (k Keeper) GetClass(ctx sdk.Context, classID string) (nft.Class, bool) {
 }
 
 // GetClasses defines a method for returning all classes information
-func (k Keeper) GetClasses(ctx sdk.Context) (classes []*nft.Class) {
-	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, ClassKey)
+func (k Keeper) GetClasses(ctx context.Context) (classes []*nft.Class) {
+	store := k.storeService.OpenKVStore(ctx)
+	iterator := storetypes.KVStorePrefixIterator(runtime.KVStoreAdapter(store), ClassKey)
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
 		var class nft.Class
@@ -61,7 +67,11 @@ func (k Keeper) GetClasses(ctx sdk.Context) (classes []*nft.Class) {
 }
 
 // HasClass determines whether the specified classID exist
-func (k Keeper) HasClass(ctx sdk.Context, classID string) bool {
-	store := ctx.KVStore(k.storeKey)
-	return store.Has(classStoreKey(classID))
+func (k Keeper) HasClass(ctx context.Context, classID string) bool {
+	store := k.storeService.OpenKVStore(ctx)
+	has, err := store.Has(classStoreKey(classID))
+	if err != nil {
+		panic(err)
+	}
+	return has
 }

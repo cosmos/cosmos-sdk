@@ -4,6 +4,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/suite"
+
+	"cosmossdk.io/math"
 )
 
 var (
@@ -22,7 +24,7 @@ func TestInternalDenomTestSuite(t *testing.T) {
 }
 
 func (s *internalDenomTestSuite) TestRegisterDenom() {
-	atomUnit := OneDec() // 1 (base denom unit)
+	atomUnit := math.LegacyOneDec() // 1 (base denom unit)
 
 	s.Require().NoError(RegisterDenom(atom, atomUnit))
 	s.Require().Error(RegisterDenom(atom, atomUnit))
@@ -33,39 +35,46 @@ func (s *internalDenomTestSuite) TestRegisterDenom() {
 
 	res, ok = GetDenomUnit(matom)
 	s.Require().False(ok)
-	s.Require().Equal(ZeroDec(), res)
+	s.Require().Equal(math.LegacyZeroDec(), res)
+
+	err := SetBaseDenom(atom)
+	s.Require().NoError(err)
+
+	res, ok = GetDenomUnit(atom)
+	s.Require().True(ok)
+	s.Require().Equal(atomUnit, res)
 
 	// reset registration
 	baseDenom = ""
-	denomUnits = map[string]Dec{}
+	denomUnits = map[string]math.LegacyDec{}
 }
 
 func (s *internalDenomTestSuite) TestConvertCoins() {
-	atomUnit := OneDec() // 1 (base denom unit)
+	atomUnit := math.LegacyOneDec() // 1 (base denom unit)
 	s.Require().NoError(RegisterDenom(atom, atomUnit))
 
-	matomUnit := NewDecWithPrec(1, 3) // 10^-3 (milli)
+	matomUnit := math.LegacyNewDecWithPrec(1, 3) // 10^-3 (milli)
 	s.Require().NoError(RegisterDenom(matom, matomUnit))
 
-	uatomUnit := NewDecWithPrec(1, 6) // 10^-6 (micro)
+	uatomUnit := math.LegacyNewDecWithPrec(1, 6) // 10^-6 (micro)
 	s.Require().NoError(RegisterDenom(uatom, uatomUnit))
 
-	natomUnit := NewDecWithPrec(1, 9) // 10^-9 (nano)
+	natomUnit := math.LegacyNewDecWithPrec(1, 9) // 10^-9 (nano)
 	s.Require().NoError(RegisterDenom(natom, natomUnit))
 
 	res, err := GetBaseDenom()
 	s.Require().NoError(err)
 	s.Require().Equal(res, natom)
-	s.Require().Equal(NormalizeCoin(NewCoin(uatom, NewInt(1))), NewCoin(natom, NewInt(1000)))
-	s.Require().Equal(NormalizeCoin(NewCoin(matom, NewInt(1))), NewCoin(natom, NewInt(1000000)))
-	s.Require().Equal(NormalizeCoin(NewCoin(atom, NewInt(1))), NewCoin(natom, NewInt(1000000000)))
+	s.Require().Equal(NormalizeCoin(NewCoin(uatom, math.NewInt(1))), NewCoin(natom, math.NewInt(1000)))
+	s.Require().Equal(NormalizeCoin(NewCoin(matom, math.NewInt(1))), NewCoin(natom, math.NewInt(1000000)))
+	s.Require().Equal(NormalizeCoin(NewCoin(atom, math.NewInt(1))), NewCoin(natom, math.NewInt(1000000000)))
 
 	coins, err := ParseCoinsNormalized("1atom,1matom,1uatom")
 	s.Require().NoError(err)
 	s.Require().Equal(coins, Coins{
-		Coin{natom, NewInt(1000000000)},
-		Coin{natom, NewInt(1000000)},
-		Coin{natom, NewInt(1000)},
+		Coin{natom, math.NewInt(1000000000)},
+		Coin{natom, math.NewInt(1000000)},
+		Coin{natom, math.NewInt(1000)},
 	})
 
 	testCases := []struct {
@@ -74,20 +83,20 @@ func (s *internalDenomTestSuite) TestConvertCoins() {
 		result Coin
 		expErr bool
 	}{
-		{NewCoin("foo", ZeroInt()), atom, Coin{}, true},
-		{NewCoin(atom, ZeroInt()), "foo", Coin{}, true},
-		{NewCoin(atom, ZeroInt()), "FOO", Coin{}, true},
+		{NewCoin("foo", math.ZeroInt()), atom, Coin{}, true},
+		{NewCoin(atom, math.ZeroInt()), "foo", Coin{}, true},
+		{NewCoin(atom, math.ZeroInt()), "FOO", Coin{}, true},
 
-		{NewCoin(atom, NewInt(5)), matom, NewCoin(matom, NewInt(5000)), false},       // atom => matom
-		{NewCoin(atom, NewInt(5)), uatom, NewCoin(uatom, NewInt(5000000)), false},    // atom => uatom
-		{NewCoin(atom, NewInt(5)), natom, NewCoin(natom, NewInt(5000000000)), false}, // atom => natom
+		{NewCoin(atom, math.NewInt(5)), matom, NewCoin(matom, math.NewInt(5000)), false},       // atom => matom
+		{NewCoin(atom, math.NewInt(5)), uatom, NewCoin(uatom, math.NewInt(5000000)), false},    // atom => uatom
+		{NewCoin(atom, math.NewInt(5)), natom, NewCoin(natom, math.NewInt(5000000000)), false}, // atom => natom
 
-		{NewCoin(uatom, NewInt(5000000)), matom, NewCoin(matom, NewInt(5000)), false},       // uatom => matom
-		{NewCoin(uatom, NewInt(5000000)), natom, NewCoin(natom, NewInt(5000000000)), false}, // uatom => natom
-		{NewCoin(uatom, NewInt(5000000)), atom, NewCoin(atom, NewInt(5)), false},            // uatom => atom
+		{NewCoin(uatom, math.NewInt(5000000)), matom, NewCoin(matom, math.NewInt(5000)), false},       // uatom => matom
+		{NewCoin(uatom, math.NewInt(5000000)), natom, NewCoin(natom, math.NewInt(5000000000)), false}, // uatom => natom
+		{NewCoin(uatom, math.NewInt(5000000)), atom, NewCoin(atom, math.NewInt(5)), false},            // uatom => atom
 
-		{NewCoin(matom, NewInt(5000)), natom, NewCoin(natom, NewInt(5000000000)), false}, // matom => natom
-		{NewCoin(matom, NewInt(5000)), uatom, NewCoin(uatom, NewInt(5000000)), false},    // matom => uatom
+		{NewCoin(matom, math.NewInt(5000)), natom, NewCoin(natom, math.NewInt(5000000000)), false}, // matom => natom
+		{NewCoin(matom, math.NewInt(5000)), uatom, NewCoin(uatom, math.NewInt(5000000)), false},    // matom => uatom
 	}
 
 	for i, tc := range testCases {
@@ -104,35 +113,35 @@ func (s *internalDenomTestSuite) TestConvertCoins() {
 
 	// reset registration
 	baseDenom = ""
-	denomUnits = map[string]Dec{}
+	denomUnits = map[string]math.LegacyDec{}
 }
 
 func (s *internalDenomTestSuite) TestConvertDecCoins() {
-	atomUnit := OneDec() // 1 (base denom unit)
+	atomUnit := math.LegacyOneDec() // 1 (base denom unit)
 	s.Require().NoError(RegisterDenom(atom, atomUnit))
 
-	matomUnit := NewDecWithPrec(1, 3) // 10^-3 (milli)
+	matomUnit := math.LegacyNewDecWithPrec(1, 3) // 10^-3 (milli)
 	s.Require().NoError(RegisterDenom(matom, matomUnit))
 
-	uatomUnit := NewDecWithPrec(1, 6) // 10^-6 (micro)
+	uatomUnit := math.LegacyNewDecWithPrec(1, 6) // 10^-6 (micro)
 	s.Require().NoError(RegisterDenom(uatom, uatomUnit))
 
-	natomUnit := NewDecWithPrec(1, 9) // 10^-9 (nano)
+	natomUnit := math.LegacyNewDecWithPrec(1, 9) // 10^-9 (nano)
 	s.Require().NoError(RegisterDenom(natom, natomUnit))
 
 	res, err := GetBaseDenom()
 	s.Require().NoError(err)
 	s.Require().Equal(res, natom)
-	s.Require().Equal(NormalizeDecCoin(NewDecCoin(uatom, NewInt(1))), NewDecCoin(natom, NewInt(1000)))
-	s.Require().Equal(NormalizeDecCoin(NewDecCoin(matom, NewInt(1))), NewDecCoin(natom, NewInt(1000000)))
-	s.Require().Equal(NormalizeDecCoin(NewDecCoin(atom, NewInt(1))), NewDecCoin(natom, NewInt(1000000000)))
+	s.Require().Equal(NormalizeDecCoin(NewDecCoin(uatom, math.NewInt(1))), NewDecCoin(natom, math.NewInt(1000)))
+	s.Require().Equal(NormalizeDecCoin(NewDecCoin(matom, math.NewInt(1))), NewDecCoin(natom, math.NewInt(1000000)))
+	s.Require().Equal(NormalizeDecCoin(NewDecCoin(atom, math.NewInt(1))), NewDecCoin(natom, math.NewInt(1000000000)))
 
 	coins, err := ParseCoinsNormalized("0.1atom,0.1matom,0.1uatom")
 	s.Require().NoError(err)
 	s.Require().Equal(coins, Coins{
-		Coin{natom, NewInt(100000000)},
-		Coin{natom, NewInt(100000)},
-		Coin{natom, NewInt(100)},
+		Coin{natom, math.NewInt(100000000)},
+		Coin{natom, math.NewInt(100000)},
+		Coin{natom, math.NewInt(100)},
 	})
 
 	testCases := []struct {
@@ -141,21 +150,21 @@ func (s *internalDenomTestSuite) TestConvertDecCoins() {
 		result DecCoin
 		expErr bool
 	}{
-		{NewDecCoin("foo", ZeroInt()), atom, DecCoin{}, true},
-		{NewDecCoin(atom, ZeroInt()), "foo", DecCoin{}, true},
-		{NewDecCoin(atom, ZeroInt()), "FOO", DecCoin{}, true},
+		{NewDecCoin("foo", math.ZeroInt()), atom, DecCoin{}, true},
+		{NewDecCoin(atom, math.ZeroInt()), "foo", DecCoin{}, true},
+		{NewDecCoin(atom, math.ZeroInt()), "FOO", DecCoin{}, true},
 
 		// 0.5atom
-		{NewDecCoinFromDec(atom, NewDecWithPrec(5, 1)), matom, NewDecCoin(matom, NewInt(500)), false},       // atom => matom
-		{NewDecCoinFromDec(atom, NewDecWithPrec(5, 1)), uatom, NewDecCoin(uatom, NewInt(500000)), false},    // atom => uatom
-		{NewDecCoinFromDec(atom, NewDecWithPrec(5, 1)), natom, NewDecCoin(natom, NewInt(500000000)), false}, // atom => natom
+		{NewDecCoinFromDec(atom, math.LegacyNewDecWithPrec(5, 1)), matom, NewDecCoin(matom, math.NewInt(500)), false},       // atom => matom
+		{NewDecCoinFromDec(atom, math.LegacyNewDecWithPrec(5, 1)), uatom, NewDecCoin(uatom, math.NewInt(500000)), false},    // atom => uatom
+		{NewDecCoinFromDec(atom, math.LegacyNewDecWithPrec(5, 1)), natom, NewDecCoin(natom, math.NewInt(500000000)), false}, // atom => natom
 
-		{NewDecCoin(uatom, NewInt(5000000)), matom, NewDecCoin(matom, NewInt(5000)), false},       // uatom => matom
-		{NewDecCoin(uatom, NewInt(5000000)), natom, NewDecCoin(natom, NewInt(5000000000)), false}, // uatom => natom
-		{NewDecCoin(uatom, NewInt(5000000)), atom, NewDecCoin(atom, NewInt(5)), false},            // uatom => atom
+		{NewDecCoin(uatom, math.NewInt(5000000)), matom, NewDecCoin(matom, math.NewInt(5000)), false},       // uatom => matom
+		{NewDecCoin(uatom, math.NewInt(5000000)), natom, NewDecCoin(natom, math.NewInt(5000000000)), false}, // uatom => natom
+		{NewDecCoin(uatom, math.NewInt(5000000)), atom, NewDecCoin(atom, math.NewInt(5)), false},            // uatom => atom
 
-		{NewDecCoin(matom, NewInt(5000)), natom, NewDecCoin(natom, NewInt(5000000000)), false}, // matom => natom
-		{NewDecCoin(matom, NewInt(5000)), uatom, NewDecCoin(uatom, NewInt(5000000)), false},    // matom => uatom
+		{NewDecCoin(matom, math.NewInt(5000)), natom, NewDecCoin(natom, math.NewInt(5000000000)), false}, // matom => natom
+		{NewDecCoin(matom, math.NewInt(5000)), uatom, NewDecCoin(uatom, math.NewInt(5000000)), false},    // matom => uatom
 	}
 
 	for i, tc := range testCases {
@@ -172,21 +181,31 @@ func (s *internalDenomTestSuite) TestConvertDecCoins() {
 
 	// reset registration
 	baseDenom = ""
-	denomUnits = map[string]Dec{}
+	denomUnits = map[string]math.LegacyDec{}
 }
 
 func (s *internalDenomTestSuite) TestDecOperationOrder() {
-	dec, err := NewDecFromStr("11")
+	dec, err := math.LegacyNewDecFromStr("11")
 	s.Require().NoError(err)
 	s.Require().NoError(RegisterDenom("unit1", dec))
-	dec, err = NewDecFromStr("100000011")
+	dec, err = math.LegacyNewDecFromStr("100000011")
+	s.Require().NoError(err)
 	s.Require().NoError(RegisterDenom("unit2", dec))
 
-	coin, err := ConvertCoin(NewCoin("unit1", NewInt(100000011)), "unit2")
+	coin, err := ConvertCoin(NewCoin("unit1", math.NewInt(100000011)), "unit2")
 	s.Require().NoError(err)
-	s.Require().Equal(coin, NewCoin("unit2", NewInt(11)))
+	s.Require().Equal(coin, NewCoin("unit2", math.NewInt(11)))
 
 	// reset registration
 	baseDenom = ""
-	denomUnits = map[string]Dec{}
+	denomUnits = map[string]math.LegacyDec{}
+}
+
+func (s *internalDenomTestSuite) TestSetBaseDenomError() {
+	err := SetBaseDenom(atom)
+	s.Require().Error(err)
+
+	// reset registration
+	baseDenom = ""
+	denomUnits = map[string]math.LegacyDec{}
 }

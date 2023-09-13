@@ -16,7 +16,7 @@ func GetEncodeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "encode [file]",
 		Short: "Encode transactions generated offline",
-		Long: `Encode transactions created with the --generate-only flag and signed with the sign command.
+		Long: `Encode transactions created with the --generate-only flag or signed with the sign command.
 Read a transaction from <file>, serialize it to the Protobuf wire protocol, and output it as base64.
 If you supply a dash (-) argument in place of an input filename, the command reads from standard input.`,
 		Args: cobra.ExactArgs(1),
@@ -42,6 +42,7 @@ If you supply a dash (-) argument in place of an input filename, the command rea
 	}
 
 	flags.AddTxFlagsToCmd(cmd)
+	_ = cmd.Flags().MarkHidden(flags.FlagOutput) // encoding makes sense to output only json
 
 	return cmd
 }

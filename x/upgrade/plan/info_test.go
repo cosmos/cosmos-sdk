@@ -26,13 +26,13 @@ func TestInfoTestSuite(t *testing.T) {
 
 // saveSrcTestFile saves a TestFile in this test's Home/src directory.
 // The full path to the saved file is returned.
-func (s InfoTestSuite) saveTestFile(f *TestFile) string {
+func (s *InfoTestSuite) saveTestFile(f *TestFile) string {
 	fullName, err := f.SaveIn(s.Home)
 	s.Require().NoError(err, "saving test file %s", f.Name)
 	return fullName
 }
 
-func (s InfoTestSuite) TestParseInfo() {
+func (s *InfoTestSuite) TestParseInfo() {
 	goodJSON := `{"binaries":{"os1/arch1":"url1","os2/arch2":"url2"}}`
 	binariesWrongJSON := `{"binaries":["foo","bar"]}`
 	binariesWrongValueJSON := `{"binaries":{"os1/arch1":1,"os2/arch2":2}}`
@@ -47,11 +47,13 @@ func (s InfoTestSuite) TestParseInfo() {
 	}
 	makeInfoStrFuncString := func(val string) func(t *testing.T) string {
 		return func(t *testing.T) string {
+			t.Helper()
 			return val
 		}
 	}
 	makeInfoStrFuncURL := func(file string) func(t *testing.T) string {
 		return func(t *testing.T) string {
+			t.Helper()
 			return makeFileURL(t, file)
 		}
 	}
@@ -129,7 +131,7 @@ func (s InfoTestSuite) TestParseInfo() {
 	}
 }
 
-func (s InfoTestSuite) TestInfoValidateFull() {
+func (s *InfoTestSuite) TestInfoValidateFull() {
 	darwinAMD64File := NewTestFile("darwin_amd64", "#!/usr/bin\necho 'darwin/amd64'\n")
 	linux386File := NewTestFile("linux_386", "#!/usr/bin\necho 'darwin/amd64'\n")
 	darwinAMD64Path := s.saveTestFile(darwinAMD64File)
@@ -186,14 +188,15 @@ func (s InfoTestSuite) TestInfoValidateFull() {
 	}
 }
 
-func (s InfoTestSuite) TestBinaryDownloadURLMapValidateBasic() {
+func (s *InfoTestSuite) TestBinaryDownloadURLMapValidateBasic() {
 	addDummyChecksum := func(url string) string {
 		return url + "?checksum=sha256:b5a2c96250612366ea272ffac6d9744aaf4b45aacd96aa7cfcb931ee3b558259"
 	}
 	tests := []struct {
-		name   string
-		urlMap BinaryDownloadURLMap
-		errs   []string
+		name        string
+		urlMap      BinaryDownloadURLMap
+		parseConfig ParseConfig
+		errs        []string
 	}{
 		{
 			name:   "empty map",
@@ -241,7 +244,8 @@ func (s InfoTestSuite) TestBinaryDownloadURLMapValidateBasic() {
 			urlMap: BinaryDownloadURLMap{
 				"darwin/amd64": "https://v1.cosmos.network/sdk",
 			},
-			errs: []string{"invalid url", "darwin/amd64", "missing checksum query parameter"},
+			parseConfig: ParseConfig{EnforceChecksum: false},
+			errs:        nil,
 		},
 		{
 			name: "multiple valid entries but one bad url",
@@ -269,7 +273,7 @@ func (s InfoTestSuite) TestBinaryDownloadURLMapValidateBasic() {
 
 	for _, tc := range tests {
 		s.T().Run(tc.name, func(t *testing.T) {
-			actualErr := tc.urlMap.ValidateBasic()
+			actualErr := tc.urlMap.ValidateBasic(tc.parseConfig.EnforceChecksum)
 			if len(tc.errs) > 0 {
 				require.Error(t, actualErr)
 				for _, expectedErr := range tc.errs {
@@ -282,7 +286,7 @@ func (s InfoTestSuite) TestBinaryDownloadURLMapValidateBasic() {
 	}
 }
 
-func (s InfoTestSuite) TestBinaryDownloadURLMapCheckURLs() {
+func (s *InfoTestSuite) TestBinaryDownloadURLMapCheckURLs() {
 	darwinAMD64File := NewTestFile("darwin_amd64", "#!/usr/bin\necho 'darwin/amd64'\n")
 	linux386File := NewTestFile("linux_386", "#!/usr/bin\necho 'darwin/amd64'\n")
 	darwinAMD64Path := s.saveTestFile(darwinAMD64File)
@@ -291,9 +295,10 @@ func (s InfoTestSuite) TestBinaryDownloadURLMapCheckURLs() {
 	linux386URL := makeFileURL(s.T(), linux386Path)
 
 	tests := []struct {
-		name   string
-		urlMap BinaryDownloadURLMap
-		errs   []string
+		name        string
+		urlMap      BinaryDownloadURLMap
+		parseConfig ParseConfig
+		errs        []string
 	}{
 		{
 			name: "two good entries",
@@ -321,7 +326,7 @@ func (s InfoTestSuite) TestBinaryDownloadURLMapCheckURLs() {
 
 	for _, tc := range tests {
 		s.T().Run(tc.name, func(t *testing.T) {
-			actualErr := tc.urlMap.CheckURLs("daemon")
+			actualErr := tc.urlMap.CheckURLs("daemon", tc.parseConfig.EnforceChecksum)
 			if len(tc.errs) > 0 {
 				require.Error(t, actualErr)
 				for _, expectedErr := range tc.errs {

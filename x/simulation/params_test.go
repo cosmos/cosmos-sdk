@@ -6,19 +6,18 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 )
 
-func TestParamChange(t *testing.T) {
+func TestLegacyParamChange(t *testing.T) {
 	subspace, key := "theSubspace", "key"
 	f := func(r *rand.Rand) string {
 		return "theResult"
 	}
 
-	pChange := NewSimParamChange(subspace, key, f)
+	pChange := NewSimLegacyParamChange(subspace, key, f)
 
 	require.Equal(t, subspace, pChange.Subspace())
 	require.Equal(t, key, pChange.Key())
@@ -30,7 +29,7 @@ func TestNewWeightedProposalContent(t *testing.T) {
 	key := "theKey"
 	weight := 1
 	content := &testContent{}
-	f := func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) simtypes.Content {
+	f := func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) simtypes.Content { //nolint:staticcheck // used for legacy testing
 		return content
 	}
 
@@ -39,7 +38,7 @@ func TestNewWeightedProposalContent(t *testing.T) {
 	require.Equal(t, key, pContent.AppParamsKey())
 	require.Equal(t, weight, pContent.DefaultWeight())
 
-	ctx := sdk.NewContext(nil, tmproto.Header{}, true, nil)
+	ctx := sdk.NewContext(nil, true, nil)
 	require.Equal(t, content, pContent.ContentSimulatorFn()(nil, ctx, nil))
 }
 

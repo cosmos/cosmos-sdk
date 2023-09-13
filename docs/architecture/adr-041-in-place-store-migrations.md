@@ -14,7 +14,7 @@ This ADR introduces a mechanism to perform in-place state store migrations durin
 
 ## Context
 
-When a chain upgrade introduces state-breaking changes inside modules, the current procedure consists of exporting the whole state into a JSON file (via the `simd export` command), running migration scripts on the JSON file (`simd migrate` command), clearing the stores (`simd unsafe-reset-all` command), and starting a new chain with the migrated JSON file as new genesis (optionally with a custom initial block height). An example of such a procedure can be seen [in the Cosmos Hub 3->4 migration guide](https://github.com/cosmos/gaia/blob/v4.0.3/docs/migration/cosmoshub-3.md#upgrade-procedure).
+When a chain upgrade introduces state-breaking changes inside modules, the current procedure consists of exporting the whole state into a JSON file (via the `simd export` command), running migration scripts on the JSON file (`simd genesis migrate` command), clearing the stores (`simd unsafe-reset-all` command), and starting a new chain with the migrated JSON file as new genesis (optionally with a custom initial block height). An example of such a procedure can be seen [in the Cosmos Hub 3->4 migration guide](https://github.com/cosmos/gaia/blob/v4.0.3/docs/migration/cosmoshub-3.md#upgrade-procedure).
 
 This procedure is cumbersome for multiple reasons:
 
@@ -155,7 +155,7 @@ While modules MUST register their migration functions when bumping ConsensusVers
 
 ### Neutral
 
-* The Cosmos SDK will continue to support JSON migrations via the existing `simd export` and `simd migrate` commands.
+* The Cosmos SDK will continue to support JSON migrations via the existing `simd export` and `simd genesis migrate` commands.
 * The current ADR does not allow creating, renaming or deleting stores, only modifying existing store keys and values. The Cosmos SDK already has the `StoreLoader` for those operations.
 
 ## Further Discussions

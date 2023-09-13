@@ -12,6 +12,8 @@ import (
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 
+	errorsmod "cosmossdk.io/errors"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
@@ -36,7 +38,7 @@ func (app *BaseApp) RegisterGRPCServer(server gogogrpc.Server) {
 		if heightHeaders := md.Get(grpctypes.GRPCBlockHeightHeader); len(heightHeaders) == 1 {
 			height, err = strconv.ParseInt(heightHeaders[0], 10, 64)
 			if err != nil {
-				return nil, sdkerrors.Wrapf(
+				return nil, errorsmod.Wrapf(
 					sdkerrors.ErrInvalidRequest,
 					"Baseapp.RegisterGRPCServer: invalid height header %q: %v", grpctypes.GRPCBlockHeightHeader, err)
 			}
@@ -47,7 +49,7 @@ func (app *BaseApp) RegisterGRPCServer(server gogogrpc.Server) {
 
 		// Create the sdk.Context. Passing false as 2nd arg, as we can't
 		// actually support proofs with gRPC right now.
-		sdkCtx, err := app.createQueryContext(height, false)
+		sdkCtx, err := app.CreateQueryContext(height, false)
 		if err != nil {
 			return nil, err
 		}

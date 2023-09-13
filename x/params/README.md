@@ -1,11 +1,8 @@
-<!--
-order: 0
-title: Params Overview
-parent:
-  title: "params (depreacated)"
--->
+---
+sidebar_position: 1
+---
 
-# `x/params` (Deprecated)
+# `x/params`
 
 > Note: The Params module has been depreacted in favour of each module housing its own parameters. 
 
@@ -30,9 +27,7 @@ The following contents explains how to use params module for master and user mod
     * [KeyTable](#keytable)
     * [ParamSet](#paramset)
 
-<!-- order: 1 -->
-
-# Keeper
+## Keeper
 
 In the app initialization stage, [subspaces](#subspace) can be allocated for other modules' keeper using `Keeper.Subspace` and are stored in `Keeper.spaces`. Then, those modules can have a reference to their specific parameter store through `Keeper.GetSubspace`.
 
@@ -48,14 +43,12 @@ func (k ExampleKeeper) SetParams(ctx sdk.Context, params types.Params) {
 }
 ```
 
-<!-- order: 2 -->
-
-# Subspace
+## Subspace
 
 `Subspace` is a prefixed subspace of the parameter store. Each module which uses the
 parameter store will take a `Subspace` to isolate permission to access.
 
-## Key
+### Key
 
 Parameter keys are human readable alphanumeric strings. A parameter for the key
 `"ExampleParameter"` is stored under `[]byte("SubspaceName" + "/" + "ExampleParameter")`,
@@ -64,7 +57,7 @@ Parameter keys are human readable alphanumeric strings. A parameter for the key
 Subkeys are secondary parameter keys those are used along with a primary parameter key.
 Subkeys can be used for grouping or dynamic parameter key generation during runtime.
 
-## KeyTable
+### KeyTable
 
 All of the parameter keys that will be used should be registered at the compile
 time. `KeyTable` is essentially a `map[string]attribute`, where the `string` is a parameter key.
@@ -75,7 +68,7 @@ type to check that provided key and value are compatible and registered, as well
 Only primary keys have to be registered on the `KeyTable`. Subkeys inherit the
 attribute of the primary key.
 
-## ParamSet
+### ParamSet
 
 Modules often define parameters as a proto message. The generated struct can implement
 `ParamSet` interface to be used with the following methods:

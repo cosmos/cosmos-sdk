@@ -10,9 +10,9 @@ import (
 	"gotest.tools/v3/assert"
 	"gotest.tools/v3/golden"
 
-	"github.com/cosmos/cosmos-sdk/orm/internal/testkv"
-	"github.com/cosmos/cosmos-sdk/orm/internal/testpb"
-	"github.com/cosmos/cosmos-sdk/orm/model/ormtable"
+	"cosmossdk.io/orm/internal/testkv"
+	"cosmossdk.io/orm/internal/testpb"
+	"cosmossdk.io/orm/model/ormtable"
 )
 
 func TestAutoIncrementScenario(t *testing.T) {
@@ -43,6 +43,7 @@ func TestAutoIncrementScenario(t *testing.T) {
 }
 
 func runAutoIncrementScenario(t *testing.T, table ormtable.AutoIncrementTable, ctx context.Context) {
+	t.Helper()
 	store, err := testpb.NewExampleAutoIncrementTableTable(table)
 	assert.NilError(t, err)
 
@@ -52,12 +53,18 @@ func runAutoIncrementScenario(t *testing.T, table ormtable.AutoIncrementTable, c
 	ex1 := &testpb.ExampleAutoIncrementTable{X: "foo", Y: 5}
 	assert.NilError(t, store.Save(ctx, ex1))
 	assert.Equal(t, uint64(1), ex1.Id)
+	curSeq, err := table.LastInsertedSequence(ctx)
+	assert.NilError(t, err)
+	assert.Equal(t, curSeq, uint64(1))
 
 	ex2 := &testpb.ExampleAutoIncrementTable{X: "bar", Y: 10}
-	newId, err := table.InsertReturningPKey(ctx, ex2)
+	newID, err := table.InsertReturningPKey(ctx, ex2)
 	assert.NilError(t, err)
 	assert.Equal(t, uint64(2), ex2.Id)
-	assert.Equal(t, newId, ex2.Id)
+	assert.Equal(t, newID, ex2.Id)
+	curSeq, err = table.LastInsertedSequence(ctx)
+	assert.NilError(t, err)
+	assert.Equal(t, curSeq, uint64(2))
 
 	buf := &bytes.Buffer{}
 	assert.NilError(t, table.ExportJSON(ctx, buf))
@@ -78,6 +85,9 @@ func runAutoIncrementScenario(t *testing.T, table ormtable.AutoIncrementTable, c
 	ex1.Id = 0
 	assert.NilError(t, table.Insert(store3, ex1))
 	assert.Equal(t, uint64(3), ex1.Id) // should equal 3 because the sequence number 2 should have been imported from JSON
+	curSeq, err = table.LastInsertedSequence(store3)
+	assert.NilError(t, err)
+	assert.Equal(t, curSeq, uint64(3))
 }
 
 func TestBadJSON(t *testing.T) {

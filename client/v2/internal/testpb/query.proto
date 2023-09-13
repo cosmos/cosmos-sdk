@@ -13,6 +13,11 @@ service Query {
   rpc Echo(EchoRequest) returns (EchoResponse);
 }
 
+message AMessage {
+  string bar = 1;
+  int32  baz = 2;
+}
+
 message EchoRequest {
   // u32 is an uint32
   uint32                                u32        = 1;
@@ -35,6 +40,19 @@ message EchoRequest {
   repeated Enum                         enums      = 24;
   repeated google.protobuf.Duration durations      = 25;
   repeated AMessage                 some_messages  = 26;
+
+  int32    positional1                                  = 27;
+  string   positional2                                  = 28;
+  repeated cosmos.base.v1beta1.Coin positional3_varargs = 29;
+
+  string                                deprecated_field           = 30;
+  string                                shorthand_deprecated_field = 31;
+  bool                                  hidden_bool                = 32;
+  map<string, string>                   map_string_string          = 33;
+  map<string, uint32>                   map_string_uint32          = 34;
+  map<string, cosmos.base.v1beta1.Coin> map_string_coin            = 35;
+  string a_validator_address = 36 [(cosmos_proto.scalar) = "cosmos.ValidatorAddressString"];
+  string a_consensus_address = 37 [(cosmos_proto.scalar) = "cosmos.ConsensusAddressString"];
 }
 
 enum Enum {
@@ -43,11 +61,6 @@ enum Enum {
   ENUM_TWO         = 2;
   ENUM_FIVE        = 5;
   ENUM_NEG_THREE   = -3;
-}
-
-message AMessage {
-  string bar = 1;
-  int32  baz = 2;
 }
 
 message EchoResponse {

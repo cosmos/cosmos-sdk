@@ -2,16 +2,14 @@ syntax = "proto3";
 
 package cosmos.autocli.v1;
 
-import "google/protobuf/descriptor.proto";
-
 option go_package = "cosmossdk.io/api/cosmos/base/cli/v1;cliv1";
 
 // ModuleOptions describes the CLI options for a Cosmos SDK module.
 message ModuleOptions {
-  // tx describes the tx command for the module.
+  // tx describes the tx commands for the module.
   ServiceCommandDescriptor tx = 1;
 
-  // query describes the tx command for the module.
+  // query describes the queries commands for the module.
   ServiceCommandDescriptor query = 2;
 }
 
@@ -32,6 +30,11 @@ message ServiceCommandDescriptor {
   // different protobuf services. The map key is used as the name of the
   // sub-command.
   map<string, ServiceCommandDescriptor> sub_commands = 3;
+
+  // enhance_custom_commands specifies whether to skip the service when generating commands, if a custom command already
+  // exists, or enhance the existing command. If set to true, the custom command will be enhanced with the services from
+  // gRPC. otherwise when a custom command exists, no commands will be generated for the service.
+  bool enhance_custom_command = 4;
 }
 
 // RpcCommandOptions specifies options for commands generated from protobuf
@@ -103,9 +106,6 @@ message FlagOptions {
   // default_value is the default value as text.
   string default_value = 4;
 
-  // default value is the default value as text if the flag is used without any value.
-  string no_opt_default_value = 5;
-
   // deprecated is the usage text to show if this flag is deprecated.
   string deprecated = 6;
 
@@ -124,6 +124,10 @@ message PositionalArgDescriptor {
 
   // varargs makes a positional parameter a varargs parameter. This can only be
   // applied to last positional parameter and the proto_field must a repeated
-  // field.
+  // field. Note: It is mutually exclusive with optional.
   bool varargs = 2;
+
+  // optional makes the last positional parameter optional.
+  // Note: It is mutually exclusive with varargs.
+  bool optional = 3;
 }

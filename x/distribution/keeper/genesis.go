@@ -3,6 +3,8 @@ package keeper
 import (
 	"fmt"
 
+	"cosmossdk.io/collections"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
@@ -11,73 +13,118 @@ import (
 func (k Keeper) InitGenesis(ctx sdk.Context, data types.GenesisState) {
 	var moduleHoldings sdk.DecCoins
 
-	k.SetFeePool(ctx, data.FeePool)
+	err := k.FeePool.Set(ctx, data.FeePool)
+	if err != nil {
+		panic(err)
+	}
 
-	if err := k.SetParams(ctx, data.Params); err != nil {
+	if err := k.Params.Set(ctx, data.Params); err != nil {
 		panic(err)
 	}
 
 	for _, dwi := range data.DelegatorWithdrawInfos {
-		delegatorAddress := sdk.MustAccAddressFromBech32(dwi.DelegatorAddress)
-		withdrawAddress := sdk.MustAccAddressFromBech32(dwi.WithdrawAddress)
-		k.SetDelegatorWithdrawAddr(ctx, delegatorAddress, withdrawAddress)
+		delegatorAddress, err := k.authKeeper.AddressCodec().StringToBytes(dwi.DelegatorAddress)
+		if err != nil {
+			panic(err)
+		}
+		withdrawAddress, err := k.authKeeper.AddressCodec().StringToBytes(dwi.WithdrawAddress)
+		if err != nil {
+			panic(err)
+		}
+		err = k.DelegatorsWithdrawAddress.Set(ctx, delegatorAddress, withdrawAddress)
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	var previousProposer sdk.ConsAddress
 	if data.PreviousProposer != "" {
 		var err error
-		previousProposer, err = sdk.ConsAddressFromBech32(data.PreviousProposer)
+		previousProposer, err = k.stakingKeeper.ConsensusAddressCodec().StringToBytes(data.PreviousProposer)
 		if err != nil {
 			panic(err)
 		}
 	}
 
-	k.SetPreviousProposerConsAddr(ctx, previousProposer)
+	if err = k.PreviousProposer.Set(ctx, previousProposer); err != nil {
+		panic(err)
+	}
 
 	for _, rew := range data.OutstandingRewards {
-		valAddr, err := sdk.ValAddressFromBech32(rew.ValidatorAddress)
+		valAddr, err := k.stakingKeeper.ValidatorAddressCodec().StringToBytes(rew.ValidatorAddress)
 		if err != nil {
 			panic(err)
 		}
-		k.SetValidatorOutstandingRewards(ctx, valAddr, types.ValidatorOutstandingRewards{Rewards: rew.OutstandingRewards})
+		err = k.ValidatorOutstandingRewards.Set(ctx, valAddr, types.ValidatorOutstandingRewards{Rewards: rew.OutstandingRewards})
+		if err != nil {
+			panic(err)
+		}
 		moduleHoldings = moduleHoldings.Add(rew.OutstandingRewards...)
 	}
 	for _, acc := range data.ValidatorAccumulatedCommissions {
-		valAddr, err := sdk.ValAddressFromBech32(acc.ValidatorAddress)
+		valAddr, err := k.stakingKeeper.ValidatorAddressCodec().StringToBytes(acc.ValidatorAddress)
 		if err != nil {
 			panic(err)
 		}
-		k.SetValidatorAccumulatedCommission(ctx, valAddr, acc.Accumulated)
+		err = k.ValidatorsAccumulatedCommission.Set(ctx, valAddr, acc.Accumulated)
+		if err != nil {
+			panic(err)
+		}
 	}
 	for _, his := range data.ValidatorHistoricalRewards {
-		valAddr, err := sdk.ValAddressFromBech32(his.ValidatorAddress)
+		valAddr, err := k.stakingKeeper.ValidatorAddressCodec().StringToBytes(his.ValidatorAddress)
 		if err != nil {
 			panic(err)
 		}
-		k.SetValidatorHistoricalRewards(ctx, valAddr, his.Period, his.Rewards)
+		err = k.ValidatorHistoricalRewards.Set(ctx, collections.Join(sdk.ValAddress(valAddr), his.Period), his.Rewards)
+		if err != nil {
+			panic(err)
+		}
 	}
 	for _, cur := range data.ValidatorCurrentRewards {
-		valAddr, err := sdk.ValAddressFromBech32(cur.ValidatorAddress)
+		valAddr, err := k.stakingKeeper.ValidatorAddressCodec().StringToBytes(cur.ValidatorAddress)
 		if err != nil {
 			panic(err)
 		}
-		k.SetValidatorCurrentRewards(ctx, valAddr, cur.Rewards)
+		err = k.ValidatorCurrentRewards.Set(ctx, valAddr, cur.Rewards)
+		if err != nil {
+			panic(err)
+		}
 	}
 	for _, del := range data.DelegatorStartingInfos {
-		valAddr, err := sdk.ValAddressFromBech32(del.ValidatorAddress)
+		valAddr, err := k.stakingKeeper.ValidatorAddressCodec().StringToBytes(del.ValidatorAddress)
 		if err != nil {
 			panic(err)
 		}
-		delegatorAddress := sdk.MustAccAddressFromBech32(del.DelegatorAddress)
+		delegatorAddress, err := k.authKeeper.AddressCodec().StringToBytes(del.DelegatorAddress)
+		if err != nil {
+			panic(err)
+		}
 
-		k.SetDelegatorStartingInfo(ctx, valAddr, delegatorAddress, del.StartingInfo)
+		err = k.DelegatorStartingInfo.Set(ctx, collections.Join(sdk.ValAddress(valAddr), sdk.AccAddress(delegatorAddress)), del.StartingInfo)
+		if err != nil {
+			panic(err)
+		}
 	}
 	for _, evt := range data.ValidatorSlashEvents {
-		valAddr, err := sdk.ValAddressFromBech32(evt.ValidatorAddress)
+		valAddr, err := k.stakingKeeper.ValidatorAddressCodec().StringToBytes(evt.ValidatorAddress)
 		if err != nil {
 			panic(err)
 		}
-		k.SetValidatorSlashEvent(ctx, valAddr, evt.Height, evt.Period, evt.ValidatorSlashEvent)
+
+		err = k.ValidatorSlashEvents.Set(
+			ctx,
+			collections.Join3(
+				sdk.ValAddress(valAddr),
+				evt.Height,
+				evt.Period,
+			),
+			evt.ValidatorSlashEvent,
+		)
+
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	moduleHoldings = moduleHoldings.Add(data.FeePool.CommunityPool...)
@@ -93,96 +140,126 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data types.GenesisState) {
 	if balances.IsZero() {
 		k.authKeeper.SetModuleAccount(ctx, moduleAcc)
 	}
-	if !balances.IsEqual(moduleHoldingsInt) {
+	if !balances.Equal(moduleHoldingsInt) {
 		panic(fmt.Sprintf("distribution module balance does not match the module holdings: %s <-> %s", balances, moduleHoldingsInt))
 	}
 }
 
 // ExportGenesis returns a GenesisState for a given context and keeper.
 func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
-	feePool := k.GetFeePool(ctx)
-	params := k.GetParams(ctx)
+	feePool, err := k.FeePool.Get(ctx)
+	if err != nil {
+		panic(err)
+	}
 
-	dwi := make([]types.DelegatorWithdrawInfo, 0)
-	k.IterateDelegatorWithdrawAddrs(ctx, func(del sdk.AccAddress, addr sdk.AccAddress) (stop bool) {
+	params, err := k.Params.Get(ctx)
+	if err != nil {
+		panic(err)
+	}
+
+	var dwi []types.DelegatorWithdrawInfo
+	err = k.DelegatorsWithdrawAddress.Walk(ctx, nil, func(key, value sdk.AccAddress) (stop bool, err error) {
 		dwi = append(dwi, types.DelegatorWithdrawInfo{
-			DelegatorAddress: del.String(),
-			WithdrawAddress:  addr.String(),
+			DelegatorAddress: key.String(),
+			WithdrawAddress:  value.String(),
 		})
-		return false
+		return false, nil
 	})
+	if err != nil {
+		panic(err)
+	}
 
-	pp := k.GetPreviousProposerConsAddr(ctx)
+	pp, err := k.PreviousProposer.Get(ctx)
+	if err != nil {
+		panic(err)
+	}
+
 	outstanding := make([]types.ValidatorOutstandingRewardsRecord, 0)
 
-	k.IterateValidatorOutstandingRewards(ctx,
-		func(addr sdk.ValAddress, rewards types.ValidatorOutstandingRewards) (stop bool) {
-			outstanding = append(outstanding, types.ValidatorOutstandingRewardsRecord{
-				ValidatorAddress:   addr.String(),
-				OutstandingRewards: rewards.Rewards,
-			})
-			return false
-		},
+	err = k.ValidatorOutstandingRewards.Walk(ctx, nil, func(addr sdk.ValAddress, rewards types.ValidatorOutstandingRewards) (stop bool, err error) {
+		outstanding = append(outstanding, types.ValidatorOutstandingRewardsRecord{
+			ValidatorAddress:   addr.String(),
+			OutstandingRewards: rewards.Rewards,
+		})
+		return false, nil
+	},
 	)
+	if err != nil {
+		panic(err)
+	}
 
 	acc := make([]types.ValidatorAccumulatedCommissionRecord, 0)
-	k.IterateValidatorAccumulatedCommissions(ctx,
-		func(addr sdk.ValAddress, commission types.ValidatorAccumulatedCommission) (stop bool) {
-			acc = append(acc, types.ValidatorAccumulatedCommissionRecord{
-				ValidatorAddress: addr.String(),
-				Accumulated:      commission,
-			})
-			return false
-		},
-	)
+	err = k.ValidatorsAccumulatedCommission.Walk(ctx, nil, func(addr sdk.ValAddress, commission types.ValidatorAccumulatedCommission) (stop bool, err error) {
+		acc = append(acc, types.ValidatorAccumulatedCommissionRecord{
+			ValidatorAddress: addr.String(),
+			Accumulated:      commission,
+		})
+		return false, nil
+	})
+	if err != nil {
+		panic(err)
+	}
 
 	his := make([]types.ValidatorHistoricalRewardsRecord, 0)
-	k.IterateValidatorHistoricalRewards(ctx,
-		func(val sdk.ValAddress, period uint64, rewards types.ValidatorHistoricalRewards) (stop bool) {
+	err = k.ValidatorHistoricalRewards.Walk(ctx, nil,
+		func(key collections.Pair[sdk.ValAddress, uint64], rewards types.ValidatorHistoricalRewards) (stop bool, err error) {
 			his = append(his, types.ValidatorHistoricalRewardsRecord{
-				ValidatorAddress: val.String(),
-				Period:           period,
+				ValidatorAddress: key.K1().String(),
+				Period:           key.K2(),
 				Rewards:          rewards,
 			})
-			return false
+			return false, nil
 		},
 	)
+	if err != nil {
+		panic(err)
+	}
 
 	cur := make([]types.ValidatorCurrentRewardsRecord, 0)
-	k.IterateValidatorCurrentRewards(ctx,
-		func(val sdk.ValAddress, rewards types.ValidatorCurrentRewards) (stop bool) {
+	err = k.ValidatorCurrentRewards.Walk(ctx, nil,
+		func(val sdk.ValAddress, rewards types.ValidatorCurrentRewards) (stop bool, err error) {
 			cur = append(cur, types.ValidatorCurrentRewardsRecord{
 				ValidatorAddress: val.String(),
 				Rewards:          rewards,
 			})
-			return false
+			return false, nil
 		},
 	)
+	if err != nil {
+		panic(err)
+	}
 
 	dels := make([]types.DelegatorStartingInfoRecord, 0)
-	k.IterateDelegatorStartingInfos(ctx,
-		func(val sdk.ValAddress, del sdk.AccAddress, info types.DelegatorStartingInfo) (stop bool) {
-			dels = append(dels, types.DelegatorStartingInfoRecord{
-				ValidatorAddress: val.String(),
-				DelegatorAddress: del.String(),
-				StartingInfo:     info,
-			})
-			return false
-		},
-	)
+	err = k.DelegatorStartingInfo.Walk(ctx, nil, func(key collections.Pair[sdk.ValAddress, sdk.AccAddress], value types.DelegatorStartingInfo) (stop bool, err error) {
+		dels = append(dels, types.DelegatorStartingInfoRecord{
+			DelegatorAddress: key.K2().String(),
+			ValidatorAddress: key.K1().String(),
+			StartingInfo:     value,
+		})
+		return false, nil
+	})
+	if err != nil {
+		panic(err)
+	}
 
 	slashes := make([]types.ValidatorSlashEventRecord, 0)
-	k.IterateValidatorSlashEvents(ctx,
-		func(val sdk.ValAddress, height uint64, event types.ValidatorSlashEvent) (stop bool) {
+	err = k.ValidatorSlashEvents.Walk(
+		ctx,
+		nil,
+		func(k collections.Triple[sdk.ValAddress, uint64, uint64], event types.ValidatorSlashEvent) (stop bool, err error) {
 			slashes = append(slashes, types.ValidatorSlashEventRecord{
-				ValidatorAddress:    val.String(),
-				Height:              height,
+				ValidatorAddress:    k.K1().String(),
+				Height:              k.K2(),
 				Period:              event.ValidatorPeriod,
 				ValidatorSlashEvent: event,
 			})
-			return false
+			return false, nil
 		},
 	)
+
+	if err != nil {
+		panic(err)
+	}
 
 	return types.NewGenesisState(params, feePool, dwi, pp, outstanding, acc, his, cur, dels, slashes)
 }

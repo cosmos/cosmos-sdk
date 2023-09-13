@@ -73,7 +73,6 @@ func TestBasicManager(t *testing.T) {
 	require.Equal(t, mockAppModule2, mm["mockCoreAppModule2"])
 	require.Equal(t, mockCoreAppModule3, mm["mockCoreAppModule3"])
 
-	mm.RegisterLegacyAminoCodec(legacyAmino)
 	mm.RegisterInterfaces(interfaceRegistry)
 
 	require.Equal(t, expDefaultGenesis, mm.DefaultGenesis(cdc))

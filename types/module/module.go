@@ -54,7 +54,6 @@ import (
 // AppModuleBasic is the standard form for basic non-dependant elements of an application module.
 type AppModuleBasic interface {
 	HasName
-	RegisterLegacyAminoCodec(*codec.LegacyAmino)
 	RegisterInterfaces(types.InterfaceRegistry)
 	RegisterGRPCGatewayRoutes(client.Context, *runtime.ServeMux)
 }
@@ -106,13 +105,6 @@ func NewBasicManagerFromManager(manager *Manager, customModuleBasics map[string]
 	}
 
 	return moduleMap
-}
-
-// RegisterLegacyAminoCodec registers all module codecs
-func (bm BasicManager) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-	for _, b := range bm {
-		b.RegisterLegacyAminoCodec(cdc)
-	}
 }
 
 // RegisterInterfaces registers all module interface types

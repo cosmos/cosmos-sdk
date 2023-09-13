@@ -6,7 +6,7 @@ import (
 )
 
 // BlockInfoService is an interface that can be used to get information specific to Comet
-type InfoService interface {
+type CometInfoService interface {
 	GetCometInfo(context.Context) Info
 }
 

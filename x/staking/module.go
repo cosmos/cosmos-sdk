@@ -36,11 +36,13 @@ const (
 )
 
 var (
-	_ appmodule.AppModule        = AppModule{}
-	_ appmodule.HasBeginBlocker  = AppModule{}
-	_ module.HasABCIEndblock     = AppModule{}
 	_ module.AppModuleBasic      = AppModuleBasic{}
 	_ module.AppModuleSimulation = AppModule{}
+	_ module.HasABCIEndblock     = AppModule{}
+	_ module.HasServices         = AppModule{}
+
+	_ appmodule.AppModule       = AppModule{}
+	_ appmodule.HasBeginBlocker = AppModule{}
 )
 
 // AppModuleBasic defines the basic application module used by the staking module.
@@ -48,8 +50,6 @@ type AppModuleBasic struct {
 	cdc codec.Codec
 	ak  types.AccountKeeper
 }
-
-var _ module.AppModuleBasic = AppModuleBasic{}
 
 // Name returns the staking module's name.
 func (AppModuleBasic) Name() string {
@@ -123,21 +123,11 @@ func NewAppModule(
 	}
 }
 
-var (
-	_ appmodule.AppModule       = AppModule{}
-	_ appmodule.HasBeginBlocker = AppModule{}
-)
-
 // IsOnePerModuleType implements the depinject.OnePerModuleType interface.
 func (am AppModule) IsOnePerModuleType() {}
 
 // IsAppModule implements the appmodule.AppModule interface.
 func (am AppModule) IsAppModule() {}
-
-// Name returns the staking module's name.
-func (AppModule) Name() string {
-	return types.ModuleName
-}
 
 // RegisterInvariants registers the staking module invariants.
 func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {

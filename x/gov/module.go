@@ -265,11 +265,6 @@ func InvokeSetHooks(keeper *keeper.Keeper, govHooks map[string]govtypes.GovHooks
 	return nil
 }
 
-// Name returns the gov module's name.
-func (AppModule) Name() string {
-	return govtypes.ModuleName
-}
-
 // RegisterInvariants registers module invariants
 func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
 	keeper.RegisterInvariants(ir, am.keeper, am.bankKeeper)

@@ -33,7 +33,7 @@ import (
 const ConsensusVersion = 1
 
 var (
-	_ module.AppModuleBasic = AppModuleBasic{}
+	_ module.AppModuleBasic = AppModule{}
 	_ module.HasGenesis     = AppModule{}
 
 	_ appmodule.AppModule = AppModule{}

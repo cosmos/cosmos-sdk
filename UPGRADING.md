@@ -363,18 +363,22 @@ In case a module requires to return `abci.ValidatorUpdate` from `EndBlock`, it c
 ```
 
 :::tip
-You can ensure that a module implements the correct interfaces by using interface checks in your `x/{moduleName}/module.go`:
+It is possible to ensure that a module implements the correct interfaces by using compiler assertions in your `x/{moduleName}/module.go`:
 
 ```go
 var (
-	_ module.AppModule           = (*AppModule)(nil)
-	_ module.AppModuleBasic      = (*AppModuleBasic)(nil)
+	_ module.AppModuleBasic      = (*AppModule)(nil)
 	_ module.AppModuleSimulation = (*AppModule)(nil)
 	_ module.HasGenesis          = (*AppModule)(nil)
+
 	_ appmodule.AppModule        = (*AppModule)(nil)
 	_ appmodule.HasBeginBlocker  = (*AppModule)(nil)
+	_ appmodule.HasEndBlocker    = (*AppModule)(nil)
+	...
 )
 ```
+
+Read more on those interfaces [here](https://docs.cosmos.network/v0.50/building-modules/module-manager#application-module-interfaces).
 
 :::
 

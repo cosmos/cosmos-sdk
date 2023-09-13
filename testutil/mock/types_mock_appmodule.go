@@ -540,8 +540,6 @@ func (mr *MockCoreAppModuleMockRecorder) ValidateGenesis(arg0 interface{}) *gomo
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ValidateGenesis", reflect.TypeOf((*MockCoreAppModule)(nil).ValidateGenesis), arg0)
 }
-<<<<<<< HEAD
-=======
 
 // MockCoreModuleWithPreBlock is a mock of CoreModuleWithPreBlock interface.
 type MockCoreModuleWithPreBlock struct {
@@ -584,4 +582,3 @@ func (mr *MockCoreModuleWithPreBlockMockRecorder) PreBlock(arg0 interface{}) *go
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PreBlock", reflect.TypeOf((*MockCoreModuleWithPreBlock)(nil).PreBlock), arg0)
 }
->>>>>>> 4eb018541 (feat: introduce PreBlock (#17421))

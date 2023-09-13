@@ -167,24 +167,14 @@ func TestHaltIfTooNew(t *testing.T) {
 	})
 
 	newCtx := s.ctx.WithHeaderInfo(header.Info{Height: s.ctx.HeaderInfo().Height + 1, Time: time.Now()})
-<<<<<<< HEAD
-
-	err := s.module.BeginBlock(newCtx)
-=======
 	_, err := s.preModule.PreBlock(newCtx)
->>>>>>> 4eb018541 (feat: introduce PreBlock (#17421))
 	require.NoError(t, err)
 	require.Equal(t, 0, called)
 
 	t.Log("Verify we error if we have a registered handler ahead of time")
 	err = s.keeper.ScheduleUpgrade(s.ctx, types.Plan{Name: "future", Height: s.ctx.HeaderInfo().Height + 3})
 	require.NoError(t, err)
-<<<<<<< HEAD
-
-	err = s.module.BeginBlock(newCtx)
-=======
 	_, err = s.preModule.PreBlock(newCtx)
->>>>>>> 4eb018541 (feat: introduce PreBlock (#17421))
 	require.EqualError(t, err, "BINARY UPDATED BEFORE TRIGGER! UPGRADE \"future\" - in binary but not executed on chain. Downgrade your binary")
 	require.Equal(t, 0, called)
 
@@ -359,12 +349,7 @@ func TestUpgradeWithoutSkip(t *testing.T) {
 	err := s.keeper.ScheduleUpgrade(s.ctx, types.Plan{Name: "test", Height: s.ctx.HeaderInfo().Height + 1})
 	require.NoError(t, err)
 	t.Log("Verify if upgrade happens without skip upgrade")
-<<<<<<< HEAD
-
-	err = s.module.BeginBlock(newCtx)
-=======
 	_, err = s.preModule.PreBlock(newCtx)
->>>>>>> 4eb018541 (feat: introduce PreBlock (#17421))
 	require.ErrorContains(t, err, "UPGRADE \"test\" NEEDED at height:")
 
 	s.VerifyDoUpgrade(t)

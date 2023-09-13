@@ -85,22 +85,14 @@ func PreBlocker(ctx context.Context, k *keeper.Keeper) (sdk.ResponsePreBlock, er
 			// store migrations.
 			err := k.DumpUpgradeInfoToDisk(blockHeight, plan)
 			if err != nil {
-<<<<<<< HEAD
-				return fmt.Errorf("unable to write upgrade info to filesystem: %s", err.Error())
-=======
 				return rsp, fmt.Errorf("unable to write upgrade info to filesystem: %w", err)
->>>>>>> 4eb018541 (feat: introduce PreBlock (#17421))
 			}
 
 			upgradeMsg := BuildUpgradeNeededMsg(plan)
 			logger.Error(upgradeMsg)
 
 			// Returning an error will end up in a panic
-<<<<<<< HEAD
-			return fmt.Errorf(upgradeMsg)
-=======
 			return rsp, errors.New(upgradeMsg)
->>>>>>> 4eb018541 (feat: introduce PreBlock (#17421))
 		}
 
 		// We have an upgrade handler for this upgrade name, so apply the upgrade
@@ -121,11 +113,7 @@ func PreBlocker(ctx context.Context, k *keeper.Keeper) (sdk.ResponsePreBlock, er
 		logger.Error(downgradeMsg)
 
 		// Returning an error will end up in a panic
-<<<<<<< HEAD
-		return fmt.Errorf(downgradeMsg)
-=======
 		return rsp, errors.New(downgradeMsg)
->>>>>>> 4eb018541 (feat: introduce PreBlock (#17421))
 	}
 	return rsp, nil
 }

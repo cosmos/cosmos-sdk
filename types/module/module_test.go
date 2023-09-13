@@ -465,8 +465,6 @@ func TestCoreAPIManagerOrderSetters(t *testing.T) {
 	require.Equal(t, []string{"module3", "module2", "module1"}, mm.OrderPrecommiters)
 }
 
-<<<<<<< HEAD
-=======
 func TestCoreAPIManager_PreBlock(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	t.Cleanup(mockCtrl.Finish)
@@ -501,7 +499,6 @@ func TestCoreAPIManager_PreBlock(t *testing.T) {
 	require.EqualError(t, err, "some error")
 }
 
->>>>>>> 4eb018541 (feat: introduce PreBlock (#17421))
 func TestCoreAPIManager_BeginBlock(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	t.Cleanup(mockCtrl.Finish)

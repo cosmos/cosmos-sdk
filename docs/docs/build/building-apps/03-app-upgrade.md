@@ -50,8 +50,6 @@ the rest of the block as normal. Once 2/3 of the voting power has upgraded, the 
 resume the consensus mechanism. If the majority of operators add a custom `do-upgrade` script, this should
 be a matter of minutes and not even require them to be awake at that time.
 
-<<<<<<< HEAD
-=======
 ## Set PreBlocker
 
 :::tip
@@ -70,7 +68,6 @@ func (app *SimApp) PreBlocker(ctx sdk.Context, req abci.RequestBeginBlock) (sdk.
 }
 ```
 
->>>>>>> 4eb018541 (feat: introduce PreBlock (#17421))
 ## Integrating With An App
 
 Setup an upgrade Keeper for the app and then define a `BeginBlocker` that calls the upgrade

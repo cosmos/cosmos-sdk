@@ -3,12 +3,7 @@ module github.com/cosmos/cosmos-sdk/tests
 go 1.21
 
 require (
-<<<<<<< HEAD
-	cosmossdk.io/api v0.7.0
-=======
 	cosmossdk.io/api v0.7.1-0.20230820170544-1bd37053e0c0
-	cosmossdk.io/collections v0.4.0
->>>>>>> 4eb018541 (feat: introduce PreBlock (#17421))
 	cosmossdk.io/core v0.11.0
 	cosmossdk.io/depinject v1.0.0-alpha.4
 	cosmossdk.io/errors v1.0.0

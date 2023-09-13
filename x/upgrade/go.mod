@@ -12,7 +12,7 @@ require (
 	github.com/cometbft/cometbft v0.38.0
 	github.com/cosmos/cosmos-db v1.0.0
 	github.com/cosmos/cosmos-proto v1.0.0-beta.3
-	github.com/cosmos/cosmos-sdk v0.50.0-rc.0.0.20230829152823-ca0f89e96ce9
+	github.com/cosmos/cosmos-sdk v0.50.0-rc.0.0.20230913123357-e879d0c647b8
 	github.com/cosmos/gogoproto v1.4.11
 	github.com/golang/protobuf v1.5.3
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
@@ -181,12 +181,4 @@ require (
 
 // Fix upstream GHSA-h395-qcrw-5vmq and GHSA-3vp4-m3rf-835h vulnerabilities.
 // TODO Remove it: https://github.com/cosmos/cosmos-sdk/issues/10409
-<<<<<<< HEAD
 replace github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.9.1
-=======
-
-replace (
-	github.com/cosmos/cosmos-sdk => ../../.
-	github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.9.1
-)
->>>>>>> 4eb018541 (feat: introduce PreBlock (#17421))

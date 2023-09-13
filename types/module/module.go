@@ -735,8 +735,6 @@ func (m Manager) RunMigrations(ctx context.Context, cfg Configurator, fromVM Ver
 	return updatedVM, nil
 }
 
-<<<<<<< HEAD
-=======
 // PreBlock performs begin block functionality for upgrade module.
 // It takes the current context as a parameter and returns a boolean value
 // indicating whether the migration was successfully executed or not.
@@ -759,7 +757,6 @@ func (m *Manager) PreBlock(ctx sdk.Context) (sdk.ResponsePreBlock, error) {
 	}, nil
 }
 
->>>>>>> 4eb018541 (feat: introduce PreBlock (#17421))
 // BeginBlock performs begin block functionality for all modules. It creates a
 // child context with an event manager to aggregate events emitted from all
 // modules.

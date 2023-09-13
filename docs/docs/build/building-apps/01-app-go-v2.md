@@ -37,7 +37,7 @@ The `app_config.go` file is the single place to configure all modules parameters
     https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/simapp/app_config.go#L103-L167
     ```
 
-3. Configure the modules defined in the `BeginBlocker` and `EndBlocker` and the `tx` module:
+3. Configure the modules defined in the `PreBlocker`, `BeginBlocker` and `EndBlocker` and the `tx` module:
 
     ```go reference
     https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/simapp/app_config.go#L112-L129

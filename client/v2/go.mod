@@ -4,10 +4,10 @@ go 1.21
 
 require (
 	cosmossdk.io/api v0.7.0
-	cosmossdk.io/core v0.10.0
+	cosmossdk.io/core v0.11.0
 	cosmossdk.io/depinject v1.0.0-alpha.4
 	cosmossdk.io/log v1.2.1
-	cosmossdk.io/x/tx v0.9.2-0.20230911171206-1f8d1ed9203e
+	cosmossdk.io/x/tx v0.9.2-0.20230913111958-e394604f8382
 	github.com/cockroachdb/errors v1.11.1
 	github.com/cosmos/cosmos-proto v1.0.0-beta.3
 	github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230718211500-1d74652f6021

@@ -14,7 +14,7 @@ require (
 	cosmossdk.io/x/evidence v0.0.0-20230830091712-93ab28fe0ea1
 	cosmossdk.io/x/feegrant v0.0.0-20230830091712-93ab28fe0ea1
 	cosmossdk.io/x/nft v0.0.0-20230830091712-93ab28fe0ea1 // indirect
-	cosmossdk.io/x/tx v0.9.1
+	cosmossdk.io/x/tx v0.9.2-0.20230913111958-e394604f8382
 	cosmossdk.io/x/upgrade v0.0.0-20230818115413-c402c51a1508
 	github.com/cometbft/cometbft v0.38.0
 	github.com/cosmos/cosmos-db v1.0.0
@@ -37,7 +37,7 @@ require (
 	cloud.google.com/go/compute/metadata v0.2.3 // indirect
 	cloud.google.com/go/iam v1.1.1 // indirect
 	cloud.google.com/go/storage v1.30.1 // indirect
-	cosmossdk.io/client/v2 v2.0.0-20230818115413-c402c51a1508 // indirect
+	cosmossdk.io/client/v2 v2.0.0-20230913132541-a4de97633356 // indirect
 	cosmossdk.io/collections v0.4.0 // indirect
 	cosmossdk.io/x/circuit v0.0.0-20230830091712-93ab28fe0ea1 // indirect
 	filippo.io/edwards25519 v1.0.0 // indirect

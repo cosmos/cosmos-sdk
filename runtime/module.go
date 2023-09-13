@@ -106,7 +106,6 @@ func ProvideApp(interfaceRegistry codectypes.InterfaceRegistry) (
 	amino := codec.NewLegacyAmino()
 
 	std.RegisterInterfaces(interfaceRegistry)
-	std.RegisterLegacyAminoCodec(amino)
 
 	cdc := codec.NewProtoCodec(interfaceRegistry)
 	msgServiceRouter := baseapp.NewMsgServiceRouter()

@@ -63,10 +63,6 @@ func (AppModuleBasic) Name() string {
 	return govtypes.ModuleName
 }
 
-// RegisterLegacyAminoCodec registers the gov module's types for the given codec.
-func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-}
-
 // DefaultGenesis returns default genesis state as raw bytes for the gov
 // module.
 func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {

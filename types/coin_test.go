@@ -1249,7 +1249,6 @@ func (s *coinTestSuite) TestCoinsIsAnyNil() {
 
 func (s *coinTestSuite) TestMarshalJSONCoins() {
 	cdc := codec.NewLegacyAmino()
-	sdk.RegisterLegacyAminoCodec(cdc)
 
 	testCases := []struct {
 		name      string

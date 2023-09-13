@@ -108,10 +108,6 @@ func (AppModuleBasic) RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 	group.RegisterInterfaces(registry)
 }
 
-// RegisterLegacyAminoCodec registers the group module's types for the given codec.
-func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-}
-
 // Name returns the group module's name.
 func (AppModule) Name() string {
 	return group.ModuleName

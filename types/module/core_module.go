@@ -176,15 +176,6 @@ func (c coreAppModuleBasicAdaptor) RegisterInterfaces(registry codectypes.Interf
 	}
 }
 
-// RegisterLegacyAminoCodec implements AppModuleBasic
-func (c coreAppModuleBasicAdaptor) RegisterLegacyAminoCodec(amino *codec.LegacyAmino) {
-	if mod, ok := c.module.(interface {
-		RegisterLegacyAminoCodec(amino *codec.LegacyAmino)
-	}); ok {
-		mod.RegisterLegacyAminoCodec(amino)
-	}
-}
-
 // RegisterServices implements HasServices
 func (c coreAppModuleBasicAdaptor) RegisterServices(cfg Configurator) {
 	if module, ok := c.module.(appmodule.HasServices); ok {

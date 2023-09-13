@@ -150,7 +150,6 @@ func TestStdSignBytes(t *testing.T) {
 func TestSignatureV2Conversions(t *testing.T) {
 	_, pubKey, _ := testdata.KeyTestPubAddr()
 	cdc := codec.NewLegacyAmino()
-	sdk.RegisterLegacyAminoCodec(cdc)
 	dummy := []byte("dummySig")
 	sig := StdSignature{PubKey: pubKey, Signature: dummy}
 
@@ -206,7 +205,6 @@ func TestGetSignaturesV2(t *testing.T) {
 	dummy := []byte("dummySig")
 
 	cdc := codec.NewLegacyAmino()
-	sdk.RegisterLegacyAminoCodec(cdc)
 	cryptocodec.RegisterCrypto(cdc)
 
 	fee := NewStdFee(50000, sdk.Coins{sdk.NewInt64Coin("atom", 150)})

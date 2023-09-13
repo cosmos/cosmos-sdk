@@ -25,7 +25,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/server/mock"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
@@ -358,7 +357,6 @@ func TestInitWithNegativeHeight(t *testing.T) {
 // custom tx codec
 func makeCodec() *codec.LegacyAmino {
 	cdc := codec.NewLegacyAmino()
-	sdk.RegisterLegacyAminoCodec(cdc)
 	cryptocodec.RegisterCrypto(cdc)
 	return cdc
 }

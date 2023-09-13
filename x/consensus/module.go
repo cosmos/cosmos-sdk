@@ -39,10 +39,6 @@ type AppModuleBasic struct {
 // Name returns the consensus module's name.
 func (AppModuleBasic) Name() string { return types.ModuleName }
 
-// RegisterLegacyAminoCodec registers the consensus module's types on the LegacyAmino codec.
-func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-}
-
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes
 func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *gwruntime.ServeMux) {
 	if err := types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx)); err != nil {

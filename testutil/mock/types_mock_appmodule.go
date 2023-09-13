@@ -162,18 +162,6 @@ func (mr *MockAppModuleWithAllExtensionsMockRecorder) RegisterInvariants(arg0 in
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterInvariants", reflect.TypeOf((*MockAppModuleWithAllExtensions)(nil).RegisterInvariants), arg0)
 }
 
-// RegisterLegacyAminoCodec mocks base method.
-func (m *MockAppModuleWithAllExtensions) RegisterLegacyAminoCodec(arg0 *codec.LegacyAmino) {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "RegisterLegacyAminoCodec", arg0)
-}
-
-// RegisterLegacyAminoCodec indicates an expected call of RegisterLegacyAminoCodec.
-func (mr *MockAppModuleWithAllExtensionsMockRecorder) RegisterLegacyAminoCodec(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterLegacyAminoCodec", reflect.TypeOf((*MockAppModuleWithAllExtensions)(nil).RegisterLegacyAminoCodec), arg0)
-}
-
 // RegisterServices mocks base method.
 func (m *MockAppModuleWithAllExtensions) RegisterServices(arg0 module.Configurator) {
 	m.ctrl.T.Helper()
@@ -342,18 +330,6 @@ func (m *MockAppModuleWithAllExtensionsABCI) RegisterInvariants(arg0 types1.Inva
 func (mr *MockAppModuleWithAllExtensionsABCIMockRecorder) RegisterInvariants(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterInvariants", reflect.TypeOf((*MockAppModuleWithAllExtensionsABCI)(nil).RegisterInvariants), arg0)
-}
-
-// RegisterLegacyAminoCodec mocks base method.
-func (m *MockAppModuleWithAllExtensionsABCI) RegisterLegacyAminoCodec(arg0 *codec.LegacyAmino) {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "RegisterLegacyAminoCodec", arg0)
-}
-
-// RegisterLegacyAminoCodec indicates an expected call of RegisterLegacyAminoCodec.
-func (mr *MockAppModuleWithAllExtensionsABCIMockRecorder) RegisterLegacyAminoCodec(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterLegacyAminoCodec", reflect.TypeOf((*MockAppModuleWithAllExtensionsABCI)(nil).RegisterLegacyAminoCodec), arg0)
 }
 
 // RegisterServices mocks base method.
@@ -539,46 +515,4 @@ func (m *MockCoreAppModule) ValidateGenesis(arg0 appmodule.GenesisSource) error 
 func (mr *MockCoreAppModuleMockRecorder) ValidateGenesis(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ValidateGenesis", reflect.TypeOf((*MockCoreAppModule)(nil).ValidateGenesis), arg0)
-}
-
-// MockCoreModuleWithPreBlock is a mock of CoreModuleWithPreBlock interface.
-type MockCoreModuleWithPreBlock struct {
-	MockCoreAppModule
-	recorder *MockCoreModuleWithPreBlockMockRecorder
-}
-
-// MockCoreModuleWithPreBlockMockRecorder is the mock recorder for MockCoreModuleWithPreBlock.
-type MockCoreModuleWithPreBlockMockRecorder struct {
-	mock *MockCoreModuleWithPreBlock
-}
-
-// NewMockCoreModuleWithPreBlock creates a new mock instance.
-func NewMockCoreModuleWithPreBlock(ctrl *gomock.Controller) *MockCoreModuleWithPreBlock {
-	mock := &MockCoreModuleWithPreBlock{
-		MockCoreAppModule: MockCoreAppModule{
-			ctrl: ctrl,
-		},
-	}
-	mock.recorder = &MockCoreModuleWithPreBlockMockRecorder{mock}
-	return mock
-}
-
-// EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockCoreModuleWithPreBlock) EXPECT() *MockCoreModuleWithPreBlockMockRecorder {
-	return m.recorder
-}
-
-// PreBlock mocks base method.
-func (m *MockCoreModuleWithPreBlock) PreBlock(arg0 context.Context) (appmodule.ResponsePreBlock, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "PreBlock", arg0)
-	ret0, _ := ret[0].(appmodule.ResponsePreBlock)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// PreBlock indicates an expected call of PreBlock.
-func (mr *MockCoreModuleWithPreBlockMockRecorder) PreBlock(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PreBlock", reflect.TypeOf((*MockCoreModuleWithPreBlock)(nil).PreBlock), arg0)
 }

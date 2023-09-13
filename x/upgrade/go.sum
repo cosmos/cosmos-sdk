@@ -187,8 +187,8 @@ cloud.google.com/go/webrisk v1.4.0/go.mod h1:Hn8X6Zr+ziE2aNd8SliSDWpEnSS1u4R9+xX
 cloud.google.com/go/webrisk v1.5.0/go.mod h1:iPG6fr52Tv7sGk0H6qUFzmL3HHZev1htXuWDEEsqMTg=
 cloud.google.com/go/workflows v1.6.0/go.mod h1:6t9F5h/unJz41YqfBmqSASJSXccBLtD1Vwf+KmJENM0=
 cloud.google.com/go/workflows v1.7.0/go.mod h1:JhSrZuVZWuiDfKEFxU0/F1PQjmpnpcoISEXH2bcHC3M=
-cosmossdk.io/api v0.7.0 h1:QsEMIWuv9xWDbF2HZnW4Lpu1/SejCztPu0LQx7t6MN4=
-cosmossdk.io/api v0.7.0/go.mod h1:kJFAEMLN57y0viszHDPLMmieF0471o5QAwwApa+270M=
+cosmossdk.io/api v0.7.1-0.20230820170544-1bd37053e0c0 h1:z1aCAqEXi5fzC5tjanWnkP/zhhuWTX17IiNKxLvXFcw=
+cosmossdk.io/api v0.7.1-0.20230820170544-1bd37053e0c0/go.mod h1:h4YT2OHIBT/YIwWrc5L+4dY05ZIqvo89zs6m7j4/RSk=
 cosmossdk.io/collections v0.4.0 h1:PFmwj2W8szgpD5nOd8GWH6AbYNi1f2J6akWXJ7P5t9s=
 cosmossdk.io/collections v0.4.0/go.mod h1:oa5lUING2dP+gdDquow+QjlF45eL1t4TJDypgGd+tv0=
 cosmossdk.io/core v0.11.0 h1:vtIafqUi+1ZNAE/oxLOQQ7Oek2n4S48SWLG8h/+wdbo=
@@ -347,8 +347,8 @@ github.com/cosmos/cosmos-db v1.0.0 h1:EVcQZ+qYag7W6uorBKFPvX6gRjw6Uq2hIh4hCWjuQ0
 github.com/cosmos/cosmos-db v1.0.0/go.mod h1:iBvi1TtqaedwLdcrZVYRSSCb6eSy61NLj4UNmdIgs0U=
 github.com/cosmos/cosmos-proto v1.0.0-beta.3 h1:VitvZ1lPORTVxkmF2fAp3IiA61xVwArQYKXTdEcpW6o=
 github.com/cosmos/cosmos-proto v1.0.0-beta.3/go.mod h1:t8IASdLaAq+bbHbjq4p960BvcTqtwuAxid3b/2rOD6I=
-github.com/cosmos/cosmos-sdk v0.50.0-rc.0.0.20230829152823-ca0f89e96ce9 h1:y235JKySvAU3UgksIY5nk4t90WPozlkV9ZefDZvPE3c=
-github.com/cosmos/cosmos-sdk v0.50.0-rc.0.0.20230829152823-ca0f89e96ce9/go.mod h1:olbHxcVB4zWwnF+oNPbKIoEIO5HgHndzKUqdpuu4s34=
+github.com/cosmos/cosmos-sdk v0.50.0-rc.0.0.20230913151713-376c3ea7fd0c h1:/B9YWdEuublZoLxpCLTpqIfwteIs16R6HiMOGj/g5SY=
+github.com/cosmos/cosmos-sdk v0.50.0-rc.0.0.20230913151713-376c3ea7fd0c/go.mod h1:A4EWz1NvP6QHQf0y9+BpnB/0ruFrONnru+vEWwIX4DY=
 github.com/cosmos/go-bip39 v1.0.0 h1:pcomnQdrdH22njcAatO0yWojsUnCO3y2tNoV1cb6hHY=
 github.com/cosmos/go-bip39 v1.0.0/go.mod h1:RNJv0H/pOIVgxw6KS7QeX2a0Uo0aKUlfhZ4xuwvCdJw=
 github.com/cosmos/gogogateway v1.2.0 h1:Ae/OivNhp8DqBi/sh2A8a1D0y638GpL3tkmLQAiKxTE=

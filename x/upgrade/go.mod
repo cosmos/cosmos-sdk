@@ -3,7 +3,7 @@ module cosmossdk.io/x/upgrade
 go 1.21
 
 require (
-	cosmossdk.io/api v0.7.0
+	cosmossdk.io/api v0.7.1-0.20230820170544-1bd37053e0c0
 	cosmossdk.io/core v0.11.0
 	cosmossdk.io/depinject v1.0.0-alpha.4
 	cosmossdk.io/errors v1.0.0
@@ -12,7 +12,7 @@ require (
 	github.com/cometbft/cometbft v0.38.0
 	github.com/cosmos/cosmos-db v1.0.0
 	github.com/cosmos/cosmos-proto v1.0.0-beta.3
-	github.com/cosmos/cosmos-sdk v0.50.0-rc.0.0.20230829152823-ca0f89e96ce9
+	github.com/cosmos/cosmos-sdk v0.50.0-rc.0.0.20230913151713-376c3ea7fd0c
 	github.com/cosmos/gogoproto v1.4.11
 	github.com/golang/protobuf v1.5.3
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0

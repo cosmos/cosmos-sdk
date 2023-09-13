@@ -98,9 +98,9 @@ func NewAppModule(keeper *keeper.Keeper, ac address.Codec) AppModule {
 }
 
 var (
-	_ appmodule.AppModule       = AppModule{}
-	_ appmodule.HasBeginBlocker = AppModule{}
-	_ module.HasGenesis         = AppModule{}
+	_ appmodule.AppModule     = AppModule{}
+	_ appmodule.HasPreBlocker = AppModule{}
+	_ module.HasGenesis       = AppModule{}
 )
 
 // IsOnePerModuleType implements the depinject.OnePerModuleType interface.
@@ -153,11 +153,11 @@ func (am AppModule) ExportGenesis(_ sdk.Context, cdc codec.JSONCodec) json.RawMe
 // ConsensusVersion implements AppModule/ConsensusVersion.
 func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
 
-// BeginBlock calls the upgrade module hooks
+// PreBlock calls the upgrade module hooks
 //
-// CONTRACT: this is registered in BeginBlocker *before* all other modules' BeginBlock functions
-func (am AppModule) BeginBlock(ctx context.Context) error {
-	return BeginBlocker(ctx, am.keeper)
+// CONTRACT: this is called *before* all other modules' BeginBlock functions
+func (am AppModule) PreBlock(ctx context.Context) (appmodule.ResponsePreBlock, error) {
+	return PreBlocker(ctx, am.keeper)
 }
 
 //

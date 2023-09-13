@@ -3,7 +3,7 @@ module github.com/cosmos/cosmos-sdk/tests
 go 1.21
 
 require (
-	cosmossdk.io/api v0.7.0
+	cosmossdk.io/api v0.7.1-0.20230820170544-1bd37053e0c0
 	cosmossdk.io/core v0.11.0
 	cosmossdk.io/depinject v1.0.0-alpha.4
 	cosmossdk.io/errors v1.0.0
@@ -15,7 +15,7 @@ require (
 	cosmossdk.io/x/feegrant v0.0.0-20230830091712-93ab28fe0ea1
 	cosmossdk.io/x/nft v0.0.0-20230830091712-93ab28fe0ea1 // indirect
 	cosmossdk.io/x/tx v0.9.2-0.20230913111958-e394604f8382
-	cosmossdk.io/x/upgrade v0.0.0-20230818115413-c402c51a1508
+	cosmossdk.io/x/upgrade v0.0.0-20230913161052-9f2c39bb9d01
 	github.com/cometbft/cometbft v0.38.0
 	github.com/cosmos/cosmos-db v1.0.0
 	github.com/cosmos/cosmos-proto v1.0.0-beta.3

@@ -205,6 +205,7 @@ cosmossdk.io/math v1.1.2 h1:ORZetZCTyWkI5GlZ6CZS28fMHi83ZYf+A2vVnHNzZBM=
 cosmossdk.io/math v1.1.2/go.mod h1:l2Gnda87F0su8a/7FEKJfFdJrM0JZRXQaohlgJeyQh0=
 cosmossdk.io/store v1.0.0-rc.0 h1:9DwOjuUYxDtYxn/REkTxGQAmxlIGfRroB35MQ8TrxF4=
 cosmossdk.io/store v1.0.0-rc.0/go.mod h1:FtBDOJmwtOZfmKKF65bKZbTYgS3bDNjjo3nP76dAegk=
+<<<<<<< HEAD
 cosmossdk.io/tools/confix v0.0.0-20230818115413-c402c51a1508 h1:axKhxRa3M9QW2GdKJUsSyzo44gxcwSOTGeomtkbQClM=
 cosmossdk.io/tools/confix v0.0.0-20230818115413-c402c51a1508/go.mod h1:qcJ1zwLIMefpDHZuYSa73yBe/k5HyQ5H1Jg9PWv30Ts=
 cosmossdk.io/x/circuit v0.0.0-20230830091712-93ab28fe0ea1 h1:SbR6MUhK3YXuKVHv0Z1ofFknDLMhRCQQV8UH2zoHOQA=
@@ -219,6 +220,10 @@ cosmossdk.io/x/tx v0.9.1 h1:9pmmXA9Vs4qdouOFnzhsdsff2mif0f0kylMq5xTGhRI=
 cosmossdk.io/x/tx v0.9.1/go.mod h1:/YFGTXG6+kyihd8YbfuJiXHV4R/mIMm2uvVzo80CIhA=
 cosmossdk.io/x/upgrade v0.0.0-20230818115413-c402c51a1508 h1:tZ5fSX+ev+QHQ15457Vhxug8BSZJcHeBhU8DpgwlkCc=
 cosmossdk.io/x/upgrade v0.0.0-20230818115413-c402c51a1508/go.mod h1:M0JWINHzdN0eFHrWMs082akHHSO5muExS+/tNNIOyP8=
+=======
+cosmossdk.io/x/tx v0.9.2-0.20230913111958-e394604f8382 h1:p/wyc5pVTMtx2/RsKP0fUpOKGbDfy6q6WswJtmARdbg=
+cosmossdk.io/x/tx v0.9.2-0.20230913111958-e394604f8382/go.mod h1:MKo9/b5wsoL8dd9y9pvD2yOP1CMvzHIWYxi1l2oLPFo=
+>>>>>>> 2f4e1094d (feat(client/v2): stringify bytes `cosmos.Dec` (#16985))
 dmitri.shuralyov.com/gpu/mtl v0.0.0-20190408044501-666a987793e9/go.mod h1:H6x//7gZCb22OMCxBHrMx7a5I7Hp++hsVxbQ4BYO7hU=
 filippo.io/edwards25519 v1.0.0 h1:0wAIcmJUqRdI8IJ/3eGi5/HwXZWPujYXXlkrQogz0Ek=
 filippo.io/edwards25519 v1.0.0/go.mod h1:N1IkdkCkiLB6tki+MYJoSx2JTY9NUlxZE7eHn5EwJns=

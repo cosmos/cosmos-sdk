@@ -475,8 +475,31 @@ func (s *StorageTestSuite) TestDatabase_Prune() {
 	// prune the first 25 versions
 	s.Require().NoError(db.Prune(25))
 
-	// ensure all keys are no longer present up to and including version 25
-	for v := uint64(1); v <= 25; v++ {
+	latestVersion, err := db.GetLatestVersion()
+	s.Require().NoError(err)
+	s.Require().Equal(uint64(50), latestVersion)
+
+	// Ensure all keys are no longer present up to and including version 25 and
+	// all keys are present after version 25.
+	for v := uint64(1); v <= 50; v++ {
+		for i := 0; i < 10; i++ {
+			key := fmt.Sprintf("key%03d", i)
+			val := fmt.Sprintf("val%03d-%03d", i, v)
+
+			bz, err := db.Get(storeKey1, v, []byte(key))
+			s.Require().NoError(err)
+			if v <= 25 {
+				s.Require().Nil(bz)
+			} else {
+				s.Require().Equal([]byte(val), bz)
+			}
+		}
+	}
+
+	// prune the latest version which should prune the entire dataset
+	s.Require().NoError(db.Prune(50))
+
+	for v := uint64(1); v <= 50; v++ {
 		for i := 0; i < 10; i++ {
 			key := fmt.Sprintf("key%03d", i)
 

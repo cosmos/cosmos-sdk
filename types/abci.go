@@ -30,6 +30,9 @@ type ExtendVoteHandler func(Context, *abci.RequestExtendVote) (*abci.ResponseExt
 // pre-commit vote extension.
 type VerifyVoteExtensionHandler func(Context, *abci.RequestVerifyVoteExtension) (*abci.ResponseVerifyVoteExtension, error)
 
+// PreBlocker runs code before the `BeginBlocker`.
+type PreBlocker func(Context) (ResponsePreBlock, error)
+
 // BeginBlocker defines a function type alias for executing application
 // business logic before transactions are executed.
 //
@@ -65,4 +68,12 @@ type EndBlock struct {
 // BeginBlock defines a type which contains beginBlock events
 type BeginBlock struct {
 	Events []abci.Event
+}
+
+type ResponsePreBlock struct {
+	ConsensusParamsChanged bool
+}
+
+func (r ResponsePreBlock) IsConsensusParamsChanged() bool {
+	return r.ConsensusParamsChanged
 }

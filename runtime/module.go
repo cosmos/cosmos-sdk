@@ -14,7 +14,6 @@ import (
 	stakingmodulev1 "cosmossdk.io/api/cosmos/staking/module/v1"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/comet"
 	"cosmossdk.io/core/event"
 	"cosmossdk.io/core/genesis"
 	"cosmossdk.io/core/header"
@@ -245,10 +244,6 @@ func ProvideTransientStoreService(key depinject.ModuleKey, app *AppBuilder) stor
 
 func ProvideEventService() event.Service {
 	return EventService{}
-}
-
-func ProvideCometInfoService() comet.CometInfoService {
-	return cometInfoService{}
 }
 
 func ProvideHeaderInfoService(app *AppBuilder) header.Service {

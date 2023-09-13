@@ -35,7 +35,14 @@ import (
 // ConsensusVersion defines the current x/crisis module consensus version.
 const ConsensusVersion = 2
 
-var _ module.AppModuleBasic = AppModuleBasic{}
+var (
+	_ module.AppModuleBasic = AppModule{}
+	_ module.HasGenesis     = AppModule{}
+	_ module.HasServices    = AppModule{}
+
+	_ appmodule.AppModule     = AppModule{}
+	_ appmodule.HasEndBlocker = AppModule{}
+)
 
 // Module init related flags
 const (
@@ -114,12 +121,6 @@ func NewAppModule(keeper *keeper.Keeper, skipGenesisInvariants bool, ss exported
 	}
 }
 
-var (
-	_ appmodule.AppModule     = AppModule{}
-	_ appmodule.HasEndBlocker = AppModule{}
-	_ module.HasGenesis       = AppModule{}
-)
-
 // IsOnePerModuleType implements the depinject.OnePerModuleType interface.
 func (am AppModule) IsOnePerModuleType() {}
 
@@ -129,11 +130,6 @@ func (am AppModule) IsAppModule() {}
 // AddModuleInitFlags implements servertypes.ModuleInitFlags interface.
 func AddModuleInitFlags(startCmd *cobra.Command) {
 	startCmd.Flags().Bool(FlagSkipGenesisInvariants, false, "Skip x/crisis invariants check on startup")
-}
-
-// Name returns the crisis module's name.
-func (AppModule) Name() string {
-	return types.ModuleName
 }
 
 // RegisterServices registers module services.

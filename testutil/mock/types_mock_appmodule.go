@@ -541,35 +541,125 @@ func (mr *MockCoreAppModuleMockRecorder) ValidateGenesis(arg0 interface{}) *gomo
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ValidateGenesis", reflect.TypeOf((*MockCoreAppModule)(nil).ValidateGenesis), arg0)
 }
 
-// MockCoreModuleWithPreBlock is a mock of CoreModuleWithPreBlock interface.
-type MockCoreModuleWithPreBlock struct {
-	MockCoreAppModule
-	recorder *MockCoreModuleWithPreBlockMockRecorder
+// MockCoreAppModuleWithPreBlock is a mock of CoreAppModuleWithPreBlock interface.
+type MockCoreAppModuleWithPreBlock struct {
+	ctrl     *gomock.Controller
+	recorder *MockCoreAppModuleWithPreBlockMockRecorder
 }
 
-// MockCoreModuleWithPreBlockMockRecorder is the mock recorder for MockCoreModuleWithPreBlock.
-type MockCoreModuleWithPreBlockMockRecorder struct {
-	mock *MockCoreModuleWithPreBlock
+// MockCoreAppModuleWithPreBlockMockRecorder is the mock recorder for MockCoreAppModuleWithPreBlock.
+type MockCoreAppModuleWithPreBlockMockRecorder struct {
+	mock *MockCoreAppModuleWithPreBlock
 }
 
-// NewMockCoreModuleWithPreBlock creates a new mock instance.
-func NewMockCoreModuleWithPreBlock(ctrl *gomock.Controller) *MockCoreModuleWithPreBlock {
-	mock := &MockCoreModuleWithPreBlock{
-		MockCoreAppModule: MockCoreAppModule{
-			ctrl: ctrl,
-		},
-	}
-	mock.recorder = &MockCoreModuleWithPreBlockMockRecorder{mock}
+// NewMockCoreAppModuleWithPreBlock creates a new mock instance.
+func NewMockCoreAppModuleWithPreBlock(ctrl *gomock.Controller) *MockCoreAppModuleWithPreBlock {
+	mock := &MockCoreAppModuleWithPreBlock{ctrl: ctrl}
+	mock.recorder = &MockCoreAppModuleWithPreBlockMockRecorder{mock}
 	return mock
 }
 
 // EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockCoreModuleWithPreBlock) EXPECT() *MockCoreModuleWithPreBlockMockRecorder {
+func (m *MockCoreAppModuleWithPreBlock) EXPECT() *MockCoreAppModuleWithPreBlockMockRecorder {
 	return m.recorder
 }
 
+// BeginBlock mocks base method.
+func (m *MockCoreAppModuleWithPreBlock) BeginBlock(arg0 context.Context) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "BeginBlock", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// BeginBlock indicates an expected call of BeginBlock.
+func (mr *MockCoreAppModuleWithPreBlockMockRecorder) BeginBlock(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BeginBlock", reflect.TypeOf((*MockCoreAppModuleWithPreBlock)(nil).BeginBlock), arg0)
+}
+
+// DefaultGenesis mocks base method.
+func (m *MockCoreAppModuleWithPreBlock) DefaultGenesis(arg0 appmodule.GenesisTarget) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DefaultGenesis", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DefaultGenesis indicates an expected call of DefaultGenesis.
+func (mr *MockCoreAppModuleWithPreBlockMockRecorder) DefaultGenesis(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DefaultGenesis", reflect.TypeOf((*MockCoreAppModuleWithPreBlock)(nil).DefaultGenesis), arg0)
+}
+
+// EndBlock mocks base method.
+func (m *MockCoreAppModuleWithPreBlock) EndBlock(arg0 context.Context) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "EndBlock", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// EndBlock indicates an expected call of EndBlock.
+func (mr *MockCoreAppModuleWithPreBlockMockRecorder) EndBlock(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EndBlock", reflect.TypeOf((*MockCoreAppModuleWithPreBlock)(nil).EndBlock), arg0)
+}
+
+// ExportGenesis mocks base method.
+func (m *MockCoreAppModuleWithPreBlock) ExportGenesis(arg0 context.Context, arg1 appmodule.GenesisTarget) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ExportGenesis", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// ExportGenesis indicates an expected call of ExportGenesis.
+func (mr *MockCoreAppModuleWithPreBlockMockRecorder) ExportGenesis(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ExportGenesis", reflect.TypeOf((*MockCoreAppModuleWithPreBlock)(nil).ExportGenesis), arg0, arg1)
+}
+
+// InitGenesis mocks base method.
+func (m *MockCoreAppModuleWithPreBlock) InitGenesis(arg0 context.Context, arg1 appmodule.GenesisSource) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "InitGenesis", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// InitGenesis indicates an expected call of InitGenesis.
+func (mr *MockCoreAppModuleWithPreBlockMockRecorder) InitGenesis(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InitGenesis", reflect.TypeOf((*MockCoreAppModuleWithPreBlock)(nil).InitGenesis), arg0, arg1)
+}
+
+// IsAppModule mocks base method.
+func (m *MockCoreAppModuleWithPreBlock) IsAppModule() {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "IsAppModule")
+}
+
+// IsAppModule indicates an expected call of IsAppModule.
+func (mr *MockCoreAppModuleWithPreBlockMockRecorder) IsAppModule() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsAppModule", reflect.TypeOf((*MockCoreAppModuleWithPreBlock)(nil).IsAppModule))
+}
+
+// IsOnePerModuleType mocks base method.
+func (m *MockCoreAppModuleWithPreBlock) IsOnePerModuleType() {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "IsOnePerModuleType")
+}
+
+// IsOnePerModuleType indicates an expected call of IsOnePerModuleType.
+func (mr *MockCoreAppModuleWithPreBlockMockRecorder) IsOnePerModuleType() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsOnePerModuleType", reflect.TypeOf((*MockCoreAppModuleWithPreBlock)(nil).IsOnePerModuleType))
+}
+
 // PreBlock mocks base method.
-func (m *MockCoreModuleWithPreBlock) PreBlock(arg0 context.Context) (appmodule.ResponsePreBlock, error) {
+func (m *MockCoreAppModuleWithPreBlock) PreBlock(arg0 context.Context) (appmodule.ResponsePreBlock, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "PreBlock", arg0)
 	ret0, _ := ret[0].(appmodule.ResponsePreBlock)
@@ -578,7 +668,49 @@ func (m *MockCoreModuleWithPreBlock) PreBlock(arg0 context.Context) (appmodule.R
 }
 
 // PreBlock indicates an expected call of PreBlock.
-func (mr *MockCoreModuleWithPreBlockMockRecorder) PreBlock(arg0 interface{}) *gomock.Call {
+func (mr *MockCoreAppModuleWithPreBlockMockRecorder) PreBlock(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PreBlock", reflect.TypeOf((*MockCoreModuleWithPreBlock)(nil).PreBlock), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PreBlock", reflect.TypeOf((*MockCoreAppModuleWithPreBlock)(nil).PreBlock), arg0)
+}
+
+// Precommit mocks base method.
+func (m *MockCoreAppModuleWithPreBlock) Precommit(arg0 context.Context) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Precommit", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Precommit indicates an expected call of Precommit.
+func (mr *MockCoreAppModuleWithPreBlockMockRecorder) Precommit(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Precommit", reflect.TypeOf((*MockCoreAppModuleWithPreBlock)(nil).Precommit), arg0)
+}
+
+// PrepareCheckState mocks base method.
+func (m *MockCoreAppModuleWithPreBlock) PrepareCheckState(arg0 context.Context) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "PrepareCheckState", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// PrepareCheckState indicates an expected call of PrepareCheckState.
+func (mr *MockCoreAppModuleWithPreBlockMockRecorder) PrepareCheckState(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PrepareCheckState", reflect.TypeOf((*MockCoreAppModuleWithPreBlock)(nil).PrepareCheckState), arg0)
+}
+
+// ValidateGenesis mocks base method.
+func (m *MockCoreAppModuleWithPreBlock) ValidateGenesis(arg0 appmodule.GenesisSource) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ValidateGenesis", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// ValidateGenesis indicates an expected call of ValidateGenesis.
+func (mr *MockCoreAppModuleWithPreBlockMockRecorder) ValidateGenesis(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ValidateGenesis", reflect.TypeOf((*MockCoreAppModuleWithPreBlock)(nil).ValidateGenesis), arg0)
 }

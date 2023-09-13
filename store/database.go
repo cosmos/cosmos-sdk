@@ -72,6 +72,8 @@ type VersionedDatabase interface {
 	VersionedIteratorCreator
 	VersionedBatcher
 
+	Prune(version uint64) error
+
 	// Close releases associated resources. It should NOT be idempotent. It must
 	// only be called once and any call after may panic.
 	io.Closer

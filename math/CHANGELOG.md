@@ -36,6 +36,10 @@ Ref: https://github.com/commitizen/conventional-commit-types/blob/v3.0.0/index.j
 
 ## [Unreleased]
 
+### Bug Fixes
+
+* [#17725](https://github.com/cosmos/cosmos-sdk/pull/17725) Fix state break in ApproxRoot.
+
 ### Improvements
 
 * [#17497](https://github.com/cosmos/cosmos-sdk/pull/17497) Optimize math.Int.Size for values that fit in 53 bits.

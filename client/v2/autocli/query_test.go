@@ -5,13 +5,18 @@ import (
 	"os"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/spf13/cobra"
 	"google.golang.org/protobuf/testing/protocmp"
+	"google.golang.org/protobuf/types/known/durationpb"
+	"google.golang.org/protobuf/types/known/timestamppb"
 	"gotest.tools/v3/assert"
 	"gotest.tools/v3/golden"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
+	queryv1beta1 "cosmossdk.io/api/cosmos/base/query/v1beta1"
+	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
 	"cosmossdk.io/client/v2/internal/testpb"
 )
 
@@ -293,23 +298,6 @@ func TestMap(t *testing.T) {
 	assert.ErrorContains(t, err, "invalid argument \"bar=123.9\" for \"--map-string-uint32\" flag: strconv.ParseUint: parsing \"123.9\": invalid syntax")
 }
 
-func TestMapError(t *testing.T) {
-	fixture := initFixture(t)
-
-	_, err := runCmd(fixture.conn, fixture.b, buildModuleQueryCommand,
-		"echo",
-		"1",
-		"abc",
-		"1234foo",
-		"4321bar",
-		"--map-string-uint32", "bar=123",
-		"--map-string-coin", "baz=100000foo",
-		"--map-string-coin", "sec=100000bar",
-	)
-	assert.NilError(t, err)
-	assert.DeepEqual(t, fixture.conn.lastRequest, fixture.conn.lastResponse.(*testpb.EchoResponse).Request, protocmp.Transform())
-}
-
 func TestEverything(t *testing.T) {
 	fixture := initFixture(t)
 
@@ -357,7 +345,69 @@ func TestEverything(t *testing.T) {
 		"--uints", "4",
 	)
 	assert.NilError(t, err)
+
+	expectedResp := &testpb.EchoResponse{
+		Request: &testpb.EchoRequest{
+			Positional1: 1,
+			Positional2: "abc",
+			Positional3Varargs: []*basev1beta1.Coin{
+				{Amount: "123.123123124", Denom: "foo"},
+				{Amount: "4321", Denom: "bar"},
+			},
+			ABool:  true,
+			AnEnum: testpb.Enum_ENUM_ONE,
+			AMessage: &testpb.AMessage{
+				Bar: "abc",
+				Baz: -3,
+			},
+			Duration: durationpb.New(4*time.Hour + 3*time.Second),
+			U32:      27,
+			U64:      3267246890,
+			I32:      -253,
+			I64:      -234602347,
+			Str:      "def",
+			Timestamp: &timestamppb.Timestamp{
+				Seconds: 1546382462,
+			},
+			ACoin: &basev1beta1.Coin{
+				Amount: "100000",
+				Denom:  "foo",
+			},
+			AnAddress:         "cosmos1y74p8wyy4enfhfn342njve6cjmj5c8dtl6emdk",
+			AValidatorAddress: "cosmosvaloper1tnh2q55v8wyygtt9srz5safamzdengsn9dsd7z",
+			AConsensusAddress: "cosmosvalcons16vm0nx49eam4q0xasdnwdzsdl6ymgyjt757sgr",
+			Bz:                []byte("sdgqwefwdgsdg"),
+			Page: &queryv1beta1.PageRequest{
+				CountTotal: true,
+				Key:        []byte("1235487sdhas"),
+				Limit:      1000,
+				Offset:     10,
+				Reverse:    true,
+			},
+			Bools: []bool{true, false, false, true},
+			Enums: []testpb.Enum{testpb.Enum_ENUM_ONE, testpb.Enum_ENUM_FIVE, testpb.Enum_ENUM_TWO},
+			Strings: []string{
+				"abc",
+				"xyz",
+				"xyz",
+				"qrs",
+			},
+			Durations: []*durationpb.Duration{
+				durationpb.New(3 * time.Second),
+				durationpb.New(5 * time.Second),
+				durationpb.New(10 * time.Hour),
+			},
+			SomeMessages: []*testpb.AMessage{
+				{},
+				{Bar: "baz"},
+				{Baz: -1},
+			},
+			Uints: []uint32{1, 2, 3, 4},
+		},
+	}
+
 	assert.DeepEqual(t, fixture.conn.lastRequest, fixture.conn.lastResponse.(*testpb.EchoResponse).Request, protocmp.Transform())
+	assert.Equal(t, fixture.conn.lastResponse.(*testpb.EchoResponse), expectedResp)
 }
 
 func TestPubKeyParsingConsensusAddress(t *testing.T) {
@@ -635,4 +685,13 @@ func TestNotFoundErrors(t *testing.T) {
 		},
 	})
 	assert.ErrorContains(t, err, "can't find field baz")
+}
+
+func TestDurationMarshal(t *testing.T) {
+	fixture := initFixture(t)
+
+	out, err := runCmd(fixture.conn, fixture.b, buildModuleQueryCommand, "echo", "1", "abc", "--duration", "1s")
+	assert.NilError(t, err)
+	fmt.Println(out.String())
+	assert.Assert(t, strings.Contains(out.String(), "duration: 1s"))
 }

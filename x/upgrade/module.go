@@ -87,8 +87,9 @@ func NewAppModule(keeper *keeper.Keeper, ac address.Codec) AppModule {
 }
 
 var (
-	_ appmodule.AppModule = AppModule{}
-	_ module.HasGenesis   = AppModule{}
+	_ appmodule.AppModule     = AppModule{}
+	_ appmodule.HasPreBlocker = AppModule{}
+	_ module.HasGenesis       = AppModule{}
 )
 
 // IsOnePerModuleType implements the depinject.OnePerModuleType interface.

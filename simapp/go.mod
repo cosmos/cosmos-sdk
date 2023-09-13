@@ -11,13 +11,13 @@ require (
 	cosmossdk.io/log v1.2.1
 	cosmossdk.io/math v1.1.2
 	cosmossdk.io/store v1.0.0-rc.0
-	cosmossdk.io/tools/confix v0.0.0-20230818115413-c402c51a1508
-	cosmossdk.io/x/circuit v0.0.0-20230830091712-93ab28fe0ea1
-	cosmossdk.io/x/evidence v0.0.0-20230830091712-93ab28fe0ea1
-	cosmossdk.io/x/feegrant v0.0.0-20230830091712-93ab28fe0ea1
-	cosmossdk.io/x/nft v0.0.0-20230830091712-93ab28fe0ea1
+	cosmossdk.io/tools/confix v0.0.0-20230913185058-9b5a203d35bc
+	cosmossdk.io/x/circuit v0.0.0-20230913185058-9b5a203d35bc
+	cosmossdk.io/x/evidence v0.0.0-20230913185058-9b5a203d35bc
+	cosmossdk.io/x/feegrant v0.0.0-20230913185058-9b5a203d35bc
+	cosmossdk.io/x/nft v0.0.0-20230913185058-9b5a203d35bc
 	cosmossdk.io/x/tx v0.9.2-0.20230913111958-e394604f8382
-	cosmossdk.io/x/upgrade v0.0.0-20230913161052-9f2c39bb9d01
+	cosmossdk.io/x/upgrade v0.0.0-20230913185058-9b5a203d35bc
 	github.com/cometbft/cometbft v0.38.0
 	github.com/cosmos/cosmos-db v1.0.0
 	// this version is not used as it is always replaced by the latest Cosmos SDK version

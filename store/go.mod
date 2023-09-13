@@ -1,10 +1,11 @@
 module cosmossdk.io/store/v2
 
-go 1.20
+go 1.21
 
 require (
 	cosmossdk.io/errors v1.0.0
 	cosmossdk.io/log v1.2.0
+	cosmossdk.io/math v1.1.2
 	github.com/cockroachdb/pebble v0.0.0-20230819001538-1798fbf5956c
 	github.com/cometbft/cometbft v0.38.0-rc3
 	github.com/cosmos/cosmos-db v1.0.0
@@ -13,6 +14,7 @@ require (
 	github.com/cosmos/ics23/go v0.10.0
 	github.com/linxGnu/grocksdb v1.8.0
 	github.com/stretchr/testify v1.8.4
+	golang.org/x/exp v0.0.0-20230811145659-89c5cff77bcb
 	modernc.org/sqlite v1.25.0
 )
 
@@ -58,7 +60,6 @@ require (
 	github.com/spf13/cast v1.5.1 // indirect
 	github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7 // indirect
 	golang.org/x/crypto v0.12.0 // indirect
-	golang.org/x/exp v0.0.0-20230811145659-89c5cff77bcb // indirect
 	golang.org/x/mod v0.11.0 // indirect
 	golang.org/x/net v0.14.0 // indirect
 	golang.org/x/sys v0.11.0 // indirect

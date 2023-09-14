@@ -150,7 +150,7 @@ func SimulateMsgCreateValidator(
 
 		coins, hasNeg := spendable.SafeSub(selfDelegation)
 		if !hasNeg {
-			fees, err = simtypes.RandomFees(r, ctx, coins)
+			fees, err = simtypes.RandomFees(r, coins)
 			if err != nil {
 				return simtypes.NoOpMsg(types.ModuleName, msgType, "unable to generate fees"), nil, err
 			}
@@ -321,7 +321,7 @@ func SimulateMsgDelegate(
 
 		coins, hasNeg := spendable.SafeSub(bondAmt)
 		if !hasNeg {
-			fees, err = simtypes.RandomFees(r, ctx, coins)
+			fees, err = simtypes.RandomFees(r, coins)
 			if err != nil {
 				return simtypes.NoOpMsg(types.ModuleName, msgType, "unable to generate fees"), nil, err
 			}

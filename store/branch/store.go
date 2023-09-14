@@ -2,9 +2,9 @@ package branch
 
 import (
 	"io"
+	"slices"
 
 	"golang.org/x/exp/maps"
-	"slices"
 
 	"cosmossdk.io/store/v2"
 )
@@ -19,11 +19,8 @@ var (
 // discarded altogether. If a read is not found through an uncommitted write, it
 // will be delegated to the SS backend.
 type Store struct {
-	// storage reflects backing storage for reads that are not found in uncommitted volatile state
-	//
-	// XXX/TODO: We use a SC backend here instead of SS since not all SS backends
-	// may support reverse iteration (which is needed for state machine logic).
-	storage store.Tree
+	// storage reflects backing storage (SS) for reads that are not found in uncommitted volatile state
+	storage store.VersionedDatabase
 
 	// storeKey reflects the store key used for the store
 	storeKey string
@@ -41,9 +38,9 @@ type Store struct {
 	// reflect what currently exists in cachekv.Store.
 }
 
-func New(storeKey string, sc store.Tree) store.KVStore {
+func New(storeKey string, ss store.VersionedDatabase) store.KVStore {
 	return &Store{
-		storage:   sc,
+		storage:   ss,
 		storeKey:  storeKey,
 		changeSet: make(map[string]store.KVPair),
 	}

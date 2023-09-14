@@ -55,7 +55,7 @@ func New(
 		initialVersion:  initVersion,
 		stateStore:      ss,
 		stateCommitment: sc,
-		rootKVStore:     branch.New(defaultStoreKey, sc),
+		rootKVStore:     branch.New(defaultStoreKey, ss),
 	}, nil
 }
 

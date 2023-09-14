@@ -189,6 +189,7 @@ type HasABCIGenesis interface {
 
 // AppModule is the form for an application module. Most of
 // its functionality has been moved to extension interfaces.
+// Deprecated: use appmodule.AppModule with a combination of extension interfaes interfaces instead.
 type AppModule interface {
 	AppModuleBasic
 }
@@ -214,7 +215,12 @@ type HasConsensusVersion interface {
 	ConsensusVersion() uint64
 }
 
-type HasABCIEndblock interface {
+// HasABCIEndblock is a released typo of HasABCIEndBlock.
+// Deprecated: use HasABCIEndBlock instead.
+type HasABCIEndblock HasABCIEndBlock
+
+// HasABCIEndBlock is the interface for modules that need to run code at the end of the block.
+type HasABCIEndBlock interface {
 	AppModule
 	EndBlock(context.Context) ([]abci.ValidatorUpdate, error)
 }
@@ -389,7 +395,7 @@ func (m *Manager) SetOrderEndBlockers(moduleNames ...string) {
 				return !hasEndBlock
 			}
 
-			_, hasABCIEndBlock := module.(HasABCIEndblock)
+			_, hasABCIEndBlock := module.(HasABCIEndBlock)
 			return !hasABCIEndBlock
 		})
 	m.OrderEndBlockers = moduleNames
@@ -780,7 +786,7 @@ func (m *Manager) EndBlock(ctx sdk.Context) (sdk.EndBlock, error) {
 			if err != nil {
 				return sdk.EndBlock{}, err
 			}
-		} else if module, ok := m.Modules[moduleName].(HasABCIEndblock); ok {
+		} else if module, ok := m.Modules[moduleName].(HasABCIEndBlock); ok {
 			moduleValUpdates, err := module.EndBlock(ctx)
 			if err != nil {
 				return sdk.EndBlock{}, err

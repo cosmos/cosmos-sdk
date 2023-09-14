@@ -21,8 +21,10 @@ import (
 )
 
 var (
+	_ module.AppModuleBasic = AppModule{}
 	_ module.HasABCIGenesis = AppModule{}
-	_ module.AppModuleBasic = AppModuleBasic{}
+
+	_ appmodule.AppModule = AppModule{}
 )
 
 // AppModuleBasic defines the basic application module used by the genutil module.
@@ -87,8 +89,6 @@ func NewAppModule(accountKeeper types.AccountKeeper,
 		txEncodingConfig: txEncodingConfig,
 	})
 }
-
-var _ appmodule.AppModule = AppModule{}
 
 // IsOnePerModuleType implements the depinject.OnePerModuleType interface.
 func (AppModule) IsOnePerModuleType() {}

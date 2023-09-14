@@ -6,7 +6,6 @@ import (
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
-	"cosmossdk.io/core/comet"
 	"cosmossdk.io/core/header"
 
 	"github.com/cosmos/cosmos-sdk/runtime/services"
@@ -25,14 +24,6 @@ func (a *App) registerRuntimeServices(cfg module.Configurator) error {
 	reflectionv1.RegisterReflectionServiceServer(cfg.QueryServer(), reflectionSvc)
 
 	return nil
-}
-
-var _ comet.BlockInfoService = cometInfoService{}
-
-type cometInfoService struct{}
-
-func (cometInfoService) GetCometBlockInfo(ctx context.Context) comet.BlockInfo {
-	return sdk.UnwrapSDKContext(ctx).CometInfo()
 }
 
 var _ header.Service = headerInfoService{}

@@ -17,6 +17,7 @@ import (
 	"cosmossdk.io/core/comet"
 	"cosmossdk.io/core/event"
 	"cosmossdk.io/core/genesis"
+	"cosmossdk.io/core/header"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"

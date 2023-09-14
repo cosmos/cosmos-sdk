@@ -1,16 +1,16 @@
 package runtime
 
 import (
+	"context"
+
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
-<<<<<<< HEAD
 	"cosmossdk.io/core/comet"
 	"cosmossdk.io/core/header"
-=======
->>>>>>> 98895f497 (chore: remove unneeded code  (#17741))
 
 	"github.com/cosmos/cosmos-sdk/runtime/services"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 )
 
@@ -26,7 +26,6 @@ func (a *App) registerRuntimeServices(cfg module.Configurator) error {
 
 	return nil
 }
-<<<<<<< HEAD
 
 var _ comet.BlockInfoService = cometInfoService{}
 
@@ -43,5 +42,3 @@ type headerInfoService struct{}
 func (headerInfoService) GetHeaderInfo(ctx context.Context) header.Info {
 	return sdk.UnwrapSDKContext(ctx).HeaderInfo()
 }
-=======
->>>>>>> 98895f497 (chore: remove unneeded code  (#17741))

@@ -435,13 +435,12 @@ func (suite *KeeperTestSuite) TestSupply_DelegateUndelegateCoins() {
 
 	suite.mockDelegateCoinsFromAccountToModule(baseAcc, burnerAcc)
 
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	require.NoError(keeper.DelegateCoinsFromAccountToModule(sdkCtx, baseAcc.GetAddress(), authtypes.Burner, initCoins))
+	require.NoError(keeper.DelegateCoinsFromAccountToModule(ctx, baseAcc.GetAddress(), authtypes.Burner, initCoins))
 	require.Equal(sdk.NewCoins(), keeper.GetAllBalances(ctx, baseAcc.GetAddress()))
 	require.Equal(initCoins, keeper.GetAllBalances(ctx, burnerAcc.GetAddress()))
 
 	suite.mockUndelegateCoinsFromModuleToAccount(burnerAcc, baseAcc)
-	require.NoError(keeper.UndelegateCoinsFromModuleToAccount(sdkCtx, authtypes.Burner, baseAcc.GetAddress(), initCoins))
+	require.NoError(keeper.UndelegateCoinsFromModuleToAccount(ctx, authtypes.Burner, baseAcc.GetAddress(), initCoins))
 	require.Equal(sdk.NewCoins(), keeper.GetAllBalances(ctx, burnerAcc.GetAddress()))
 	require.Equal(initCoins, keeper.GetAllBalances(ctx, baseAcc.GetAddress()))
 }
@@ -497,8 +496,7 @@ func (suite *KeeperTestSuite) TestSupply_SendCoins() {
 
 	suite.mockSendCoinsFromAccountToModule(baseAcc, burnerAcc)
 
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	require.NoError(keeper.SendCoinsFromAccountToModule(sdkCtx, baseAcc.GetAddress(), authtypes.Burner, initCoins))
+	require.NoError(keeper.SendCoinsFromAccountToModule(ctx, baseAcc.GetAddress(), authtypes.Burner, initCoins))
 	require.Equal(sdk.NewCoins(), keeper.GetAllBalances(ctx, baseAcc.GetAddress()))
 	require.Equal(initCoins, keeper.GetAllBalances(ctx, burnerAcc.GetAddress()))
 }
@@ -1341,16 +1339,15 @@ func (suite *KeeperTestSuite) TestHasBalance() {
 }
 
 func (suite *KeeperTestSuite) TestMsgSendEvents() {
-	ctx := sdk.UnwrapSDKContext(suite.ctx)
 	require := suite.Require()
 
 	acc0 := authtypes.NewBaseAccountWithAddress(accAddrs[0])
 	newCoins := sdk.NewCoins(sdk.NewInt64Coin(fooDenom, 50))
 	suite.mockFundAccount(accAddrs[0])
-	require.NoError(banktestutil.FundAccount(ctx, suite.bankKeeper, accAddrs[0], newCoins))
+	require.NoError(banktestutil.FundAccount(suite.ctx, suite.bankKeeper, accAddrs[0], newCoins))
 
-	suite.mockSendCoins(ctx, acc0, accAddrs[1])
-	require.NoError(suite.bankKeeper.SendCoins(ctx, accAddrs[0], accAddrs[1], newCoins))
+	suite.mockSendCoins(suite.ctx, acc0, accAddrs[1])
+	require.NoError(suite.bankKeeper.SendCoins(suite.ctx, accAddrs[0], accAddrs[1], newCoins))
 	event1 := sdk.Event{
 		Type:       banktypes.EventTypeTransfer,
 		Attributes: []abci.EventAttribute{},
@@ -1368,6 +1365,7 @@ func (suite *KeeperTestSuite) TestMsgSendEvents() {
 		abci.EventAttribute{Key: sdk.AttributeKeyAmount, Value: newCoins.String()},
 	)
 
+	ctx := sdk.UnwrapSDKContext(suite.ctx)
 	// events are shifted due to the funding account events
 	events := ctx.EventManager().ABCIEvents()
 	require.Equal(8, len(events))

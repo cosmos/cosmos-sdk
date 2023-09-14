@@ -78,8 +78,7 @@ First, the important parameters that are initialized during the bootstrapping of
 * [`AnteHandler`](#antehandler): This handler is used to handle signature verification, fee payment,
   and other pre-message execution checks when a transaction is received. It's executed during
   [`CheckTx/RecheckTx`](#checktx) and [`FinalizeBlock`](#finalizeblock).
-* [`InitChainer`](../beginner/00-app-anatomy.md#initchainer),
-  [`BeginBlocker` and `EndBlocker`](../beginner/00-app-anatomy.md#beginblocker-and-endblocker): These are
+* [`InitChainer`](../beginner/00-app-anatomy.md#initchainer), [`PreBlocker`](../beginner/00-app-anatomy.md#preblocker), [`BeginBlocker` and `EndBlocker`](../beginner/00-app-anatomy.md#beginblocker-and-endblocker): These are
   the functions executed when the application receives the `InitChain` and `FinalizeBlock`
   ABCI messages from the underlying CometBFT engine.
 
@@ -444,6 +443,10 @@ The [`FinalizeBlock` ABCI message](https://github.com/cometbft/cometbft/blob/v0.
 https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/baseapp/abci.go#L623
 ```
 
+#### PreBlock 
+
+* Run the application's [`preBlocker()`](../beginner/00-app-anatomy.md#preblocker), which mainly runs the [`PreBlocker()`](../building-modules/17-preblock.md#preblock) method of each of the modules.
+
 #### BeginBlock 
 
 * Initialize [`finalizeBlockState`](#state-updates) with the latest header using the `req abci.RequestFinalizeBlock` passed as parameter via the `setState` function.
@@ -455,7 +458,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/baseapp/abci.go#L623
   This function also resets the [main gas meter](../beginner/04-gas-fees.md#main-gas-meter).
 
 * Initialize the [block gas meter](../beginner/04-gas-fees.md#block-gas-meter) with the `maxGas` limit. The `gas` consumed within the block cannot go above `maxGas`. This parameter is defined in the application's consensus parameters.
-* Run the application's [`beginBlocker()`](../beginner/00-app-anatomy.md#beginblocker-and-endblock), which mainly runs the [`BeginBlocker()`](../../build/building-modules/05-beginblock-endblock.md#beginblock) method of each of the non-upgrade modules.
+* Run the application's [`beginBlocker()`](../beginner/00-app-anatomy.md#beginblocker-and-endblocker), which mainly runs the [`BeginBlocker()`](../../build/building-modules/05-beginblock-endblock.md#beginblock) method of each of the modules.
 * Set the [`VoteInfos`](https://github.com/cometbft/cometbft/blob/v0.37.x/spec/abci/abci++_methods.md#voteinfo) of the application, i.e. the list of validators whose _precommit_ for the previous block was included by the proposer of the current block. This information is carried into the [`Context`](./02-context.md) so that it can be used during transaction execution and EndBlock.
 
 #### Transaction Execution

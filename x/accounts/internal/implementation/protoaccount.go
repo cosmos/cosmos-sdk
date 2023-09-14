@@ -17,7 +17,8 @@ type ProtoMsg[T any] interface {
 // RegisterInitHandler registers an initialisation handler for a smart account that uses protobuf.
 func RegisterInitHandler[
 	Req any, ProtoReq ProtoMsg[Req], Resp any, ProtoResp ProtoMsg[Resp],
-](router *InitBuilder, handler func(ctx context.Context, req ProtoReq) (ProtoResp, error)) {
+](router *InitBuilder, handler func(ctx context.Context, req ProtoReq) (ProtoResp, error),
+) {
 	reqName := ProtoReq(new(Req)).ProtoReflect().Descriptor().FullName()
 	respName := ProtoResp(new(Resp)).ProtoReflect().Descriptor().FullName()
 
@@ -47,7 +48,8 @@ func RegisterInitHandler[
 // RegisterExecuteHandler registers an execution handler for a smart account that uses protobuf.
 func RegisterExecuteHandler[
 	Req any, ProtoReq ProtoMsg[Req], Resp any, ProtoResp ProtoMsg[Resp],
-](router *ExecuteBuilder, handler func(ctx context.Context, req ProtoReq) (ProtoResp, error)) {
+](router *ExecuteBuilder, handler func(ctx context.Context, req ProtoReq) (ProtoResp, error),
+) {
 	reqName := ProtoReq(new(Req)).ProtoReflect().Descriptor().FullName()
 	// check if not registered already
 	if _, ok := router.handlers[string(reqName)]; ok {
@@ -67,6 +69,7 @@ func RegisterExecuteHandler[
 // RegisterQueryHandler registers a query handler for a smart account that uses protobuf.
 func RegisterQueryHandler[
 	Req any, ProtoReq ProtoMsg[Req], Resp any, ProtoResp ProtoMsg[Resp],
-](router *QueryBuilder, handler func(ctx context.Context, req ProtoReq) (ProtoResp, error)) {
+](router *QueryBuilder, handler func(ctx context.Context, req ProtoReq) (ProtoResp, error),
+) {
 	RegisterExecuteHandler(router.er, handler)
 }

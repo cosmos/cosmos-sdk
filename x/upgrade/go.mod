@@ -3,8 +3,8 @@ module cosmossdk.io/x/upgrade
 go 1.21
 
 require (
-	cosmossdk.io/api v0.7.0
-	cosmossdk.io/core v0.11.0
+	cosmossdk.io/api v0.7.1-0.20230820170544-1bd37053e0c0
+	cosmossdk.io/core v0.12.0
 	cosmossdk.io/depinject v1.0.0-alpha.4
 	cosmossdk.io/errors v1.0.0
 	cosmossdk.io/log v1.2.1
@@ -35,7 +35,7 @@ require (
 	cloud.google.com/go/storage v1.31.0 // indirect
 	cosmossdk.io/collections v0.4.0 // indirect
 	cosmossdk.io/math v1.1.2 // indirect
-	cosmossdk.io/x/tx v0.9.1 // indirect
+	cosmossdk.io/x/tx v0.10.0 // indirect
 	filippo.io/edwards25519 v1.0.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/99designs/keyring v1.2.1 // indirect
@@ -178,6 +178,11 @@ require (
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
 
-replace github.com/cosmos/cosmos-sdk => ../../.
-
 replace cosmossdk.io/api => ../../api
+
+// TODO Remove it: https://github.com/cosmos/cosmos-sdk/issues/10409
+
+replace (
+	github.com/cosmos/cosmos-sdk => ../../.
+	github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.9.1
+)

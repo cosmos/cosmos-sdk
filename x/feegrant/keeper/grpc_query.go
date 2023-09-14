@@ -18,7 +18,7 @@ import (
 var _ feegrant.QueryServer = Keeper{}
 
 // Allowance returns granted allowance to the grantee by the granter.
-func (q Keeper) Allowance(c context.Context, req *feegrant.QueryAllowanceRequest) (*feegrant.QueryAllowanceResponse, error) {
+func (q Keeper) Allowance(ctx context.Context, req *feegrant.QueryAllowanceRequest) (*feegrant.QueryAllowanceResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
@@ -32,8 +32,6 @@ func (q Keeper) Allowance(c context.Context, req *feegrant.QueryAllowanceRequest
 	if err != nil {
 		return nil, err
 	}
-
-	ctx := sdk.UnwrapSDKContext(c)
 
 	feeAllowance, err := q.GetAllowance(ctx, granterAddr, granteeAddr)
 	if err != nil {

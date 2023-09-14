@@ -38,17 +38,14 @@ but please do not over-use it. We try to keep all data structured
 and standard additions here would be better just to add to the Context struct
 */
 type Context struct {
-	baseCtx context.Context
-	ms      storetypes.MultiStore
-	// Deprecated: Use HeaderService for height, time, and chainID and CometService for the rest
-	header cmtproto.Header
-	// Deprecated: Use HeaderService for hash
-	headerHash []byte
-	// Deprecated: Use HeaderService for chainID and CometService for the rest
-	chainID              string
+	baseCtx              context.Context
+	ms                   storetypes.MultiStore
+	header               cmtproto.Header // Deprecated: Use HeaderService for height, time, and chainID and CometService for the rest
+	headerHash           []byte          // Deprecated: Use HeaderService for hash
+	chainID              string          // Deprecated: Use HeaderService for chainID and CometService for the rest
 	txBytes              []byte
 	logger               log.Logger
-	voteInfo             []abci.VoteInfo
+	voteInfo             []abci.VoteInfo // Deprecated: use Cometinfo.GetLastCommit().Votes() instead, will be removed in 0.51
 	gasMeter             storetypes.GasMeter
 	blockGasMeter        storetypes.GasMeter
 	checkTx              bool
@@ -217,6 +214,7 @@ func (c Context) WithLogger(logger log.Logger) Context {
 }
 
 // WithVoteInfos returns a Context with an updated consensus VoteInfo.
+// Deprecated: use WithCometinfo() instead, will be removed after 0.51
 func (c Context) WithVoteInfos(voteInfo []abci.VoteInfo) Context {
 	c.voteInfo = voteInfo
 	return c

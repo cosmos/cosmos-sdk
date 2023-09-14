@@ -42,7 +42,7 @@ type Builder struct {
 	// Keyring implementation
 	Keyring keyring.Keyring
 
-	// ClientCtx contains the necessary information needed to execute the commands.
+	// ClientCtx holds the necessary information needed to execute the commands.
 	ClientCtx *client.Context
 }
 

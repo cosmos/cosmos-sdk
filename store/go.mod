@@ -6,7 +6,7 @@ require (
 	cosmossdk.io/errors v1.0.0
 	cosmossdk.io/log v1.2.0
 	cosmossdk.io/math v1.1.2
-	github.com/cockroachdb/errors v1.8.1
+	github.com/cockroachdb/errors v1.11.1
 	github.com/cockroachdb/pebble v0.0.0-20230819001538-1798fbf5956c
 	github.com/cometbft/cometbft v0.38.0-rc3
 	github.com/cosmos/cosmos-db v1.0.0
@@ -26,13 +26,12 @@ require (
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/cockroachdb/logtags v0.0.0-20230118201751-21c54148d20b // indirect
 	github.com/cockroachdb/redact v1.1.5 // indirect
-	github.com/cockroachdb/sentry-go v0.6.1-cockroachdb.2 // indirect
 	github.com/cockroachdb/tokenbucket v0.0.0-20230807174530-cc333fc44b06 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.2.0 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/emicklei/dot v1.4.2 // indirect
-	github.com/go-errors/errors v1.4.2 // indirect
+	github.com/getsentry/sentry-go v0.18.0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/golang/snappy v0.0.4 // indirect

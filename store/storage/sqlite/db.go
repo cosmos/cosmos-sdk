@@ -200,7 +200,7 @@ func (db *Database) Prune(version uint64) error {
 }
 
 func (db *Database) NewIterator(storeKey string, version uint64, start, end []byte) (store.Iterator, error) {
-	if (len(start) == 0) || (end != nil && len(end) == 0) {
+	if (start != nil && len(start) == 0) || (end != nil && len(end) == 0) {
 		return nil, store.ErrKeyEmpty
 	}
 

@@ -6,6 +6,7 @@ import (
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/golang/mock/gomock"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -82,7 +83,7 @@ func (s *KeeperTestSuite) TestValidator() {
 	require.Equal(power, resPower)
 	require.NoError(keeper.DeleteLastValidatorPower(ctx, valAddr))
 	resPower, err = keeper.GetLastValidatorPower(ctx, valAddr)
-	require.NoError(err)
+	require.Error(err, collections.ErrNotFound)
 	require.Equal(int64(0), resPower)
 }
 

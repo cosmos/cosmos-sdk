@@ -39,7 +39,7 @@ type BankKeeper interface {
 	UndelegateCoinsFromModuleToAccount(ctx context.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
 	DelegateCoinsFromAccountToModule(ctx context.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
 
-	BurnCoins(ctx context.Context, name string, amt sdk.Coins) error
+	BurnCoins(context.Context, []byte, sdk.Coins) error
 }
 
 // ValidatorSet expected properties for the set of all validators (noalias)
@@ -50,10 +50,6 @@ type ValidatorSet interface {
 
 	// iterate through bonded validators by operator address, execute func for each validator
 	IterateBondedValidatorsByPower(context.Context,
-		func(index int64, validator ValidatorI) (stop bool)) error
-
-	// iterate through the consensus validator set of the last block by operator address, execute func for each validator
-	IterateLastValidators(context.Context,
 		func(index int64, validator ValidatorI) (stop bool)) error
 
 	Validator(context.Context, sdk.ValAddress) (ValidatorI, error)            // get a particular validator by operator address
@@ -74,9 +70,9 @@ type ValidatorSet interface {
 	// MaxValidators returns the maximum amount of bonded validators
 	MaxValidators(context.Context) (uint32, error)
 
-	// BondedTokensAndPubKeyByConsAddr returns the bonded tokens and consensus public key for a validator.
-	// Used in vote extension validation.
-	BondedTokensAndPubKeyByConsAddr(context.Context, sdk.ConsAddress) (math.Int, cmtprotocrypto.PublicKey, error)
+	// GetPubKeyByConsAddr returns the consensus public key for a validator. Used in vote
+	// extension validation.
+	GetPubKeyByConsAddr(context.Context, sdk.ConsAddress) (cmtprotocrypto.PublicKey, error)
 }
 
 // DelegationSet expected properties for the set of all delegations for a particular (noalias)

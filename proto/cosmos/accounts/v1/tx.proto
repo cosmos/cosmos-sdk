@@ -1,0 +1,50 @@
+syntax = "proto3";
+
+package cosmos.accounts.v1;
+
+option go_package = "cosmossdk.io/x/accounts/v1";
+
+// Msg defines the Msg service for the x/accounts module.
+service Msg {
+  // Init creates a new account in the chain.
+  rpc Init(MsgInit) returns (MsgInitResponse);
+
+  // Execute executes a message to the target account.
+  rpc Execute(MsgExecute) returns (MsgExecuteResponse);
+}
+
+// MsgInit defines the Create request type for the Msg/Create RPC method.
+message MsgInit {
+  // sender is the address of the sender of this message.
+  string sender = 1;
+  // account_type is the type of the account to be created.
+  string account_type = 2;
+  // message is the message to be sent to the account, it's up to the account
+  // implementation to decide what encoding format should be used to interpret
+  // this message.
+  bytes message = 3;
+}
+
+// MsgInitResponse defines the Create response type for the Msg/Create RPC method.
+message MsgInitResponse {
+  // account_address is the address of the newly created account.
+  string account_address = 1;
+  // response is the response returned by the account implementation.
+  bytes response = 2;
+}
+
+// MsgExecute defines the Execute request type for the Msg/Execute RPC method.
+message MsgExecute {
+  // sender is the address of the sender of this message.
+  string sender = 1;
+  // target is the address of the account to be executed.
+  string target = 2;
+  // message is the message to be sent to the account, it's up to the account
+  bytes message = 3;
+}
+
+// MsgExecuteResponse defines the Execute response type for the Msg/Execute RPC method.
+message MsgExecuteResponse {
+  // response is the response returned by the account implementation.
+  bytes response = 1;
+}

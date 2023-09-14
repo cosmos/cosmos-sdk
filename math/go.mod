@@ -16,3 +16,6 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
+
+// Issue with math.Int{}.Size() implementation.
+retract [v1.1.0, v1.1.1]

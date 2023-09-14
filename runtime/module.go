@@ -14,7 +14,6 @@ import (
 	stakingmodulev1 "cosmossdk.io/api/cosmos/staking/module/v1"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/comet"
 	"cosmossdk.io/core/event"
 	"cosmossdk.io/core/genesis"
 	"cosmossdk.io/core/header"
@@ -73,8 +72,8 @@ func init() {
 			ProvideTransientStoreService,
 			ProvideEventService,
 			ProvideHeaderInfoService,
-			ProvideCometInfoService,
 			ProvideBasicManager,
+			ProvideAppVersionModifier,
 			ProvideAddressCodec,
 		),
 		appmodule.Invoke(SetupAppBuilder),
@@ -246,16 +245,16 @@ func ProvideEventService() event.Service {
 	return EventService{}
 }
 
-func ProvideCometInfoService() comet.BlockInfoService {
-	return cometInfoService{}
-}
-
 func ProvideHeaderInfoService(app *AppBuilder) header.Service {
 	return headerInfoService{}
 }
 
 func ProvideBasicManager(app *AppBuilder) module.BasicManager {
 	return app.app.basicManager
+}
+
+func ProvideAppVersionModifier(app *AppBuilder) baseapp.AppVersionModifier {
+	return app.app
 }
 
 type (

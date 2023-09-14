@@ -8,7 +8,6 @@ import (
 	context "context"
 	reflect "reflect"
 
-	math "cosmossdk.io/math"
 	crypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 	types "github.com/cosmos/cosmos-sdk/types"
 	gomock "github.com/golang/mock/gomock"
@@ -37,35 +36,19 @@ func (m *MockValidatorStore) EXPECT() *MockValidatorStoreMockRecorder {
 	return m.recorder
 }
 
-// BondedTokensAndPubKeyByConsAddr mocks base method.
-func (m *MockValidatorStore) BondedTokensAndPubKeyByConsAddr(arg0 context.Context, arg1 types.ConsAddress) (math.Int, crypto.PublicKey, error) {
+// GetPubKeyByConsAddr mocks base method.
+func (m *MockValidatorStore) GetPubKeyByConsAddr(arg0 context.Context, arg1 types.ConsAddress) (crypto.PublicKey, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "BondedTokensAndPubKeyByConsAddr", arg0, arg1)
-	ret0, _ := ret[0].(math.Int)
-	ret1, _ := ret[1].(crypto.PublicKey)
-	ret2, _ := ret[2].(error)
-	return ret0, ret1, ret2
-}
-
-// BondedTokensAndPubKeyByConsAddr indicates an expected call of BondedTokensAndPubKeyByConsAddr.
-func (mr *MockValidatorStoreMockRecorder) BondedTokensAndPubKeyByConsAddr(arg0, arg1 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BondedTokensAndPubKeyByConsAddr", reflect.TypeOf((*MockValidatorStore)(nil).BondedTokensAndPubKeyByConsAddr), arg0, arg1)
-}
-
-// TotalBondedTokens mocks base method.
-func (m *MockValidatorStore) TotalBondedTokens(ctx context.Context) (math.Int, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "TotalBondedTokens", ctx)
-	ret0, _ := ret[0].(math.Int)
+	ret := m.ctrl.Call(m, "GetPubKeyByConsAddr", arg0, arg1)
+	ret0, _ := ret[0].(crypto.PublicKey)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// TotalBondedTokens indicates an expected call of TotalBondedTokens.
-func (mr *MockValidatorStoreMockRecorder) TotalBondedTokens(ctx interface{}) *gomock.Call {
+// GetPubKeyByConsAddr indicates an expected call of GetPubKeyByConsAddr.
+func (mr *MockValidatorStoreMockRecorder) GetPubKeyByConsAddr(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TotalBondedTokens", reflect.TypeOf((*MockValidatorStore)(nil).TotalBondedTokens), ctx)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPubKeyByConsAddr", reflect.TypeOf((*MockValidatorStore)(nil).GetPubKeyByConsAddr), arg0, arg1)
 }
 
 // MockGasTx is a mock of GasTx interface.

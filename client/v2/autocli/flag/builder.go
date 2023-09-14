@@ -30,7 +30,10 @@ type Builder struct {
 
 	// FileResolver specifies how protobuf file descriptors will be resolved. If it is
 	// nil protoregistry.GlobalFiles will be used.
-	FileResolver protodesc.Resolver
+	FileResolver interface {
+		protodesc.Resolver
+		RangeFiles(func(protoreflect.FileDescriptor) bool)
+	}
 
 	messageFlagTypes map[protoreflect.FullName]Type
 	scalarFlagTypes  map[string]Type

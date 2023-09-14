@@ -318,7 +318,7 @@ func (i *PriorityNonceIterator[C]) Next() Iterator {
 	// priority in the pool.
 	if i.mempool.cfg.TxPriority.Compare(key.priority, i.nextPriority) < 0 {
 		return i.iteratePriority()
-	} else if i.mempool.cfg.TxPriority.Compare(key.priority, i.nextPriority) == 0 {
+	} else if i.priorityNode.Next() != nil && i.mempool.cfg.TxPriority.Compare(key.priority, i.nextPriority) == 0 {
 		// Weight is incorporated into the priority index key only (not sender index)
 		// so we must fetch it here from the scores map.
 		weight := i.mempool.scores[txMeta[C]{nonce: key.nonce, sender: key.sender}].weight

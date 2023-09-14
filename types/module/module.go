@@ -2,7 +2,6 @@
 Package module contains application module patterns and associated "manager" functionality.
 The module pattern has been broken down by:
   - independent module functionality (AppModuleBasic)
-  - inter-dependent module genesis functionality (AppModuleGenesis)
   - inter-dependent module simulation functionality (AppModuleSimulation)
   - inter-dependent module full functionality (AppModule)
 
@@ -21,7 +20,7 @@ have to manually register all of the codecs for all the modules. This basic
 procedure as well as other basic patterns are handled through the use of
 BasicManager.
 
-Lastly the interface for genesis functionality (AppModuleGenesis) has been
+Lastly the interface for genesis functionality (HasGenesis & HasABCIGenesis) has been
 separated out from full module functionality (AppModule) so that modules which
 are only used for genesis can take advantage of the Module patterns without
 needlessly defining many placeholder functions
@@ -182,14 +181,15 @@ func (bm BasicManager) AddQueryCommands(rootQueryCmd *cobra.Command) {
 	}
 }
 
-// AppModuleGenesis is the standard form for an application module genesis functions
-type AppModuleGenesis interface {
-	AppModuleBasic
-	HasGenesis
-}
-
 // HasGenesis is the extension interface for stateful genesis methods.
 type HasGenesis interface {
+	HasGenesisBasics
+	InitGenesis(sdk.Context, codec.JSONCodec, json.RawMessage)
+	ExportGenesis(sdk.Context, codec.JSONCodec) json.RawMessage
+}
+
+// HasABCIGenesis is the extension interface for stateful genesis methods which returns validator updates.
+type HasABCIGenesis interface {
 	HasGenesisBasics
 	InitGenesis(sdk.Context, codec.JSONCodec, json.RawMessage) []abci.ValidatorUpdate
 	ExportGenesis(sdk.Context, codec.JSONCodec) json.RawMessage
@@ -197,6 +197,7 @@ type HasGenesis interface {
 
 // AppModule is the form for an application module. Most of
 // its functionality has been moved to extension interfaces.
+// Deprecated: use appmodule.AppModule with a combination of extension interfaes interfaces instead.
 type AppModule interface {
 	AppModuleBasic
 }
@@ -222,20 +223,36 @@ type HasConsensusVersion interface {
 	ConsensusVersion() uint64
 }
 
-type HasABCIEndblock interface {
+// HasABCIEndblock is a released typo of HasABCIEndBlock.
+// Deprecated: use HasABCIEndBlock instead.
+type HasABCIEndblock HasABCIEndBlock
+
+// HasABCIEndBlock is the interface for modules that need to run code at the end of the block.
+type HasABCIEndBlock interface {
 	AppModule
 	EndBlock(context.Context) ([]abci.ValidatorUpdate, error)
 }
 
+var (
+	_ appmodule.AppModule = (*GenesisOnlyAppModule)(nil)
+	_ AppModuleBasic      = (*GenesisOnlyAppModule)(nil)
+)
+
+// genesisOnlyModule is an interface need to return GenesisOnlyAppModule struct in order to wrap two interfaces
+type genesisOnlyModule interface {
+	AppModuleBasic
+	HasABCIGenesis
+}
+
 // GenesisOnlyAppModule is an AppModule that only has import/export functionality
 type GenesisOnlyAppModule struct {
-	AppModuleGenesis
+	genesisOnlyModule
 }
 
 // NewGenesisOnlyAppModule creates a new GenesisOnlyAppModule object
-func NewGenesisOnlyAppModule(amg AppModuleGenesis) GenesisOnlyAppModule {
+func NewGenesisOnlyAppModule(amg genesisOnlyModule) GenesisOnlyAppModule {
 	return GenesisOnlyAppModule{
-		AppModuleGenesis: amg,
+		genesisOnlyModule: amg,
 	}
 }
 
@@ -248,22 +265,8 @@ func (GenesisOnlyAppModule) IsAppModule() {}
 // RegisterInvariants is a placeholder function register no invariants
 func (GenesisOnlyAppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
-// QuerierRoute returns an empty module querier route
-func (GenesisOnlyAppModule) QuerierRoute() string { return "" }
-
-// RegisterServices registers all services.
-func (gam GenesisOnlyAppModule) RegisterServices(Configurator) {}
-
 // ConsensusVersion implements AppModule/ConsensusVersion.
 func (gam GenesisOnlyAppModule) ConsensusVersion() uint64 { return 1 }
-
-// BeginBlock returns an empty module begin-block
-func (gam GenesisOnlyAppModule) BeginBlock(ctx sdk.Context) error { return nil }
-
-// EndBlock returns an empty module end-block
-func (GenesisOnlyAppModule) EndBlock(sdk.Context) ([]abci.ValidatorUpdate, error) {
-	return []abci.ValidatorUpdate{}, nil
-}
 
 // Manager defines a module manager that provides the high level utility for managing and executing
 // operations for a group of modules
@@ -271,6 +274,7 @@ type Manager struct {
 	Modules                  map[string]interface{} // interface{} is used now to support the legacy AppModule as well as new core appmodule.AppModule.
 	OrderInitGenesis         []string
 	OrderExportGenesis       []string
+	OrderPreBlockers         []string
 	OrderBeginBlockers       []string
 	OrderEndBlockers         []string
 	OrderPrepareCheckStaters []string
@@ -282,15 +286,20 @@ type Manager struct {
 func NewManager(modules ...AppModule) *Manager {
 	moduleMap := make(map[string]interface{})
 	modulesStr := make([]string, 0, len(modules))
+	preBlockModulesStr := make([]string, 0)
 	for _, module := range modules {
 		moduleMap[module.Name()] = module
 		modulesStr = append(modulesStr, module.Name())
+		if _, ok := module.(appmodule.HasPreBlocker); ok {
+			preBlockModulesStr = append(preBlockModulesStr, module.Name())
+		}
 	}
 
 	return &Manager{
 		Modules:                  moduleMap,
 		OrderInitGenesis:         modulesStr,
 		OrderExportGenesis:       modulesStr,
+		OrderPreBlockers:         preBlockModulesStr,
 		OrderBeginBlockers:       modulesStr,
 		OrderPrepareCheckStaters: modulesStr,
 		OrderPrecommiters:        modulesStr,
@@ -303,9 +312,13 @@ func NewManager(modules ...AppModule) *Manager {
 func NewManagerFromMap(moduleMap map[string]appmodule.AppModule) *Manager {
 	simpleModuleMap := make(map[string]interface{})
 	modulesStr := make([]string, 0, len(simpleModuleMap))
+	preBlockModulesStr := make([]string, 0)
 	for name, module := range moduleMap {
 		simpleModuleMap[name] = module
 		modulesStr = append(modulesStr, name)
+		if _, ok := module.(appmodule.HasPreBlocker); ok {
+			preBlockModulesStr = append(preBlockModulesStr, name)
+		}
 	}
 
 	// Sort the modules by name. Given that we are using a map above we can't guarantee the order.
@@ -315,6 +328,7 @@ func NewManagerFromMap(moduleMap map[string]appmodule.AppModule) *Manager {
 		Modules:                  simpleModuleMap,
 		OrderInitGenesis:         modulesStr,
 		OrderExportGenesis:       modulesStr,
+		OrderPreBlockers:         preBlockModulesStr,
 		OrderBeginBlockers:       modulesStr,
 		OrderEndBlockers:         modulesStr,
 		OrderPrecommiters:        modulesStr,
@@ -328,6 +342,10 @@ func (m *Manager) SetOrderInitGenesis(moduleNames ...string) {
 		module := m.Modules[moduleName]
 		if _, hasGenesis := module.(appmodule.HasGenesis); hasGenesis {
 			return !hasGenesis
+		}
+
+		if _, hasABCIGenesis := module.(HasABCIGenesis); hasABCIGenesis {
+			return !hasABCIGenesis
 		}
 
 		_, hasGenesis := module.(HasGenesis)
@@ -344,10 +362,25 @@ func (m *Manager) SetOrderExportGenesis(moduleNames ...string) {
 			return !hasGenesis
 		}
 
+		if _, hasABCIGenesis := module.(HasABCIGenesis); hasABCIGenesis {
+			return !hasABCIGenesis
+		}
+
 		_, hasGenesis := module.(HasGenesis)
 		return !hasGenesis
 	})
 	m.OrderExportGenesis = moduleNames
+}
+
+// SetOrderPreBlockers sets the order of set pre-blocker calls
+func (m *Manager) SetOrderPreBlockers(moduleNames ...string) {
+	m.assertNoForgottenModules("SetOrderPreBlockers", moduleNames,
+		func(moduleName string) bool {
+			module := m.Modules[moduleName]
+			_, hasBlock := module.(appmodule.HasPreBlocker)
+			return !hasBlock
+		})
+	m.OrderPreBlockers = moduleNames
 }
 
 // SetOrderBeginBlockers sets the order of set begin-blocker calls
@@ -370,7 +403,7 @@ func (m *Manager) SetOrderEndBlockers(moduleNames ...string) {
 				return !hasEndBlock
 			}
 
-			_, hasABCIEndBlock := module.(HasABCIEndblock)
+			_, hasABCIEndBlock := module.(HasABCIEndBlock)
 			return !hasABCIEndBlock
 		})
 	m.OrderEndBlockers = moduleNames
@@ -463,6 +496,9 @@ func (m *Manager) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, genesisData 
 			}
 		} else if module, ok := mod.(HasGenesis); ok {
 			ctx.Logger().Debug("running initialization for module", "module", moduleName)
+			module.InitGenesis(ctx, cdc, genesisData[moduleName])
+		} else if module, ok := mod.(HasABCIGenesis); ok {
+			ctx.Logger().Debug("running initialization for module", "module", moduleName)
 			moduleValUpdates := module.InitGenesis(ctx, cdc, genesisData[moduleName])
 
 			// use these validator updates if provided, the module manager assumes
@@ -532,6 +568,12 @@ func (m *Manager) ExportGenesisForModules(ctx sdk.Context, cdc codec.JSONCodec, 
 		} else if module, ok := mod.(HasGenesis); ok {
 			channels[moduleName] = make(chan genesisResult)
 			go func(module HasGenesis, ch chan genesisResult) {
+				ctx := ctx.WithGasMeter(storetypes.NewInfiniteGasMeter()) // avoid race conditions
+				ch <- genesisResult{module.ExportGenesis(ctx, cdc), nil}
+			}(module, channels[moduleName])
+		} else if module, ok := mod.(HasABCIGenesis); ok {
+			channels[moduleName] = make(chan genesisResult)
+			go func(module HasABCIGenesis, ch chan genesisResult) {
 				ctx := ctx.WithGasMeter(storetypes.NewInfiniteGasMeter()) // avoid race conditions
 				ch <- genesisResult{module.ExportGenesis(ctx, cdc), nil}
 			}(module, channels[moduleName])
@@ -681,6 +723,9 @@ func (m Manager) RunMigrations(ctx context.Context, cfg Configurator, fromVM Ver
 		} else {
 			sdkCtx.Logger().Info(fmt.Sprintf("adding a new module: %s", moduleName))
 			if module, ok := m.Modules[moduleName].(HasGenesis); ok {
+				module.InitGenesis(sdkCtx, c.cdc, module.DefaultGenesis(c.cdc))
+			}
+			if module, ok := m.Modules[moduleName].(HasABCIGenesis); ok {
 				moduleValUpdates := module.InitGenesis(sdkCtx, c.cdc, module.DefaultGenesis(c.cdc))
 				// The module manager assumes only one module will update the
 				// validator set, and it can't be a new module.
@@ -696,32 +741,37 @@ func (m Manager) RunMigrations(ctx context.Context, cfg Configurator, fromVM Ver
 	return updatedVM, nil
 }
 
-// RunMigrationBeginBlock performs begin block functionality for upgrade module.
+// PreBlock performs begin block functionality for upgrade module.
 // It takes the current context as a parameter and returns a boolean value
-// indicating whether the migration was executed or not and an error if fails.
-func (m *Manager) RunMigrationBeginBlock(ctx sdk.Context) (bool, error) {
-	for _, moduleName := range m.OrderBeginBlockers {
-		if mod, ok := m.Modules[moduleName].(appmodule.HasBeginBlocker); ok {
-			if _, ok := mod.(appmodule.UpgradeModule); ok {
-				err := mod.BeginBlock(ctx)
-				return err == nil, err
+// indicating whether the migration was successfully executed or not.
+func (m *Manager) PreBlock(ctx sdk.Context) (sdk.ResponsePreBlock, error) {
+	ctx = ctx.WithEventManager(sdk.NewEventManager())
+	paramsChanged := false
+	for _, moduleName := range m.OrderPreBlockers {
+		if module, ok := m.Modules[moduleName].(appmodule.HasPreBlocker); ok {
+			rsp, err := module.PreBlock(ctx)
+			if err != nil {
+				return sdk.ResponsePreBlock{}, err
+			}
+			if rsp.IsConsensusParamsChanged() {
+				paramsChanged = true
 			}
 		}
 	}
-	return false, nil
+	return sdk.ResponsePreBlock{
+		ConsensusParamsChanged: paramsChanged,
+	}, nil
 }
 
-// BeginBlock performs begin block functionality for non-upgrade modules. It creates a
-// child context with an event manager to aggregate events emitted from non-upgrade
+// BeginBlock performs begin block functionality for all modules. It creates a
+// child context with an event manager to aggregate events emitted from all
 // modules.
 func (m *Manager) BeginBlock(ctx sdk.Context) (sdk.BeginBlock, error) {
 	ctx = ctx.WithEventManager(sdk.NewEventManager())
 	for _, moduleName := range m.OrderBeginBlockers {
 		if module, ok := m.Modules[moduleName].(appmodule.HasBeginBlocker); ok {
-			if _, ok := module.(appmodule.UpgradeModule); !ok {
-				if err := module.BeginBlock(ctx); err != nil {
-					return sdk.BeginBlock{}, err
-				}
+			if err := module.BeginBlock(ctx); err != nil {
+				return sdk.BeginBlock{}, err
 			}
 		}
 	}
@@ -744,7 +794,7 @@ func (m *Manager) EndBlock(ctx sdk.Context) (sdk.EndBlock, error) {
 			if err != nil {
 				return sdk.EndBlock{}, err
 			}
-		} else if module, ok := m.Modules[moduleName].(HasABCIEndblock); ok {
+		} else if module, ok := m.Modules[moduleName].(HasABCIEndBlock); ok {
 			moduleValUpdates, err := module.EndBlock(ctx)
 			if err != nil {
 				return sdk.EndBlock{}, err

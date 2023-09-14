@@ -4,13 +4,12 @@ import (
 	"fmt"
 	"testing"
 
-	cmtabcitypes "github.com/cometbft/cometbft/abci/types"
-	"github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
 	"gotest.tools/v3/assert"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/comet"
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
@@ -68,7 +67,7 @@ func initFixture(tb testing.TB) *fixture {
 	logger := log.NewTestLogger(tb)
 	cms := integration.CreateMultiStore(keys, logger)
 
-	newCtx := sdk.NewContext(cms, types.Header{}, true, logger)
+	newCtx := sdk.NewContext(cms, true, logger)
 
 	authority := authtypes.NewModuleAddress("gov")
 
@@ -116,13 +115,17 @@ func initFixture(tb testing.TB) *fixture {
 	valConsAddr := sdk.ConsAddress(valConsPk0.Address())
 
 	// set proposer and vote infos
-	ctx := newCtx.WithProposer(valConsAddr).WithVoteInfos([]cmtabcitypes.VoteInfo{
-		{
-			Validator: cmtabcitypes.Validator{
-				Address: valAddr,
-				Power:   100,
+	ctx := newCtx.WithProposer(valConsAddr).WithCometInfo(comet.Info{
+		LastCommit: comet.CommitInfo{
+			Votes: []comet.VoteInfo{
+				{
+					Validator: comet.Validator{
+						Address: valAddr,
+						Power:   100,
+					},
+					BlockIDFlag: comet.BlockIDFlagCommit,
+				},
 			},
-			BlockIdFlag: types.BlockIDFlagCommit,
 		},
 	})
 
@@ -322,8 +325,8 @@ func TestMsgWithdrawDelegatorReward(t *testing.T) {
 			assert.Assert(t, prevProposerConsAddr.Empty() == false)
 			assert.DeepEqual(t, prevProposerConsAddr, valConsAddr)
 			var previousTotalPower int64
-			for _, voteInfo := range f.sdkCtx.VoteInfos() {
-				previousTotalPower += voteInfo.Validator.Power
+			for _, vote := range f.sdkCtx.CometInfo().LastCommit.Votes {
+				previousTotalPower += vote.Validator.Power
 			}
 			assert.Equal(t, previousTotalPower, int64(100))
 		})

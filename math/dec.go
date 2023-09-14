@@ -318,6 +318,22 @@ func (d LegacyDec) MulTruncateMut(d2 LegacyDec) LegacyDec {
 	return d
 }
 
+// multiplication round up at precision end.
+func (d LegacyDec) MulRoundUp(d2 LegacyDec) LegacyDec {
+	return d.ImmutOp(LegacyDec.MulRoundUpMut, d2)
+}
+
+// mutable multiplication with round up at precision end.
+func (d LegacyDec) MulRoundUpMut(d2 LegacyDec) LegacyDec {
+	d.i.Mul(d.i, d2.i)
+	chopPrecisionAndRoundUp(d.i)
+
+	if d.i.BitLen() > maxDecBitLen {
+		panic("Int overflow")
+	}
+	return d
+}
+
 // multiplication
 func (d LegacyDec) MulInt(i Int) LegacyDec {
 	return d.ImmutOpInt(LegacyDec.MulIntMut, i)

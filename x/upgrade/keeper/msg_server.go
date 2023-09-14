@@ -27,7 +27,7 @@ var (
 )
 
 // SoftwareUpgrade implements the Msg/SoftwareUpgrade Msg service.
-func (k msgServer) SoftwareUpgrade(goCtx context.Context, msg *types.MsgSoftwareUpgrade) (*types.MsgSoftwareUpgradeResponse, error) {
+func (k msgServer) SoftwareUpgrade(ctx context.Context, msg *types.MsgSoftwareUpgrade) (*types.MsgSoftwareUpgradeResponse, error) {
 	if k.authority != msg.Authority {
 		return nil, errors.Wrapf(types.ErrInvalidSigner, "expected %s got %s", k.authority, msg.Authority)
 	}
@@ -36,7 +36,6 @@ func (k msgServer) SoftwareUpgrade(goCtx context.Context, msg *types.MsgSoftware
 		return nil, errors.Wrap(err, "plan")
 	}
 
-	ctx := sdk.UnwrapSDKContext(goCtx)
 	err := k.ScheduleUpgrade(ctx, msg.Plan)
 	if err != nil {
 		return nil, err

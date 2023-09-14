@@ -23,8 +23,8 @@ schema = 3
     version = "v0.4.0"
     hash = "sha256-minFyzgO/D+Oda4E3B1qvOAN5qd65SjS6nmjca4cp/8="
   [mod."cosmossdk.io/core"]
-    version = "v0.11.0"
-    hash = "sha256-zUiOF04lWHK8OZqGhwVuzKYfig5I0107D+8fWX5/pbQ="
+    version = "v0.12.0"
+    hash = "sha256-/BbjTNEoPUQaHf0j+QEp3rmCkrzlYqWhE9lpffGCib0="
   [mod."cosmossdk.io/depinject"]
     version = "v1.0.0-alpha.4"
     hash = "sha256-xpLH0K6ivQznFrLw2hmhWIIyYgqjstV47OhTEj/c1oQ="
@@ -41,7 +41,7 @@ schema = 3
     version = "v1.0.0-rc.0"
     hash = "sha256-DgW4ZrDwmgsPtEXajPyAsrQuPjXekw5PfsYFvA5yuiE="
   [mod."cosmossdk.io/x/tx"]
-    version = "v0.9.2-0.20230913111958-e394604f8382"
+    version = "v0.10.0"
     hash = "sha256-am/+/mfQR+xqjQSTFh2X/AiC6EQZvZ7te6d8MIwd/EA="
   [mod."filippo.io/edwards25519"]
     version = "v1.0.0"

@@ -77,15 +77,15 @@ func (e Equivocation) GetTotalPower() int64 { return 0 }
 // FromABCIEvidence converts a CometBFT concrete Evidence type to
 // SDK Evidence using Equivocation as the concrete type.
 func FromABCIEvidence(e comet.Evidence, conAc address.Codec) *Equivocation {
-	consAddr, err := conAc.BytesToString(e.Validator().Address())
+	consAddr, err := conAc.BytesToString(e.Validator.Address)
 	if err != nil {
 		panic(err)
 	}
 
 	return &Equivocation{
-		Height:           e.Height(),
-		Power:            e.Validator().Power(),
+		Height:           e.Height,
+		Power:            e.Validator.Power,
 		ConsensusAddress: consAddr,
-		Time:             e.Time(),
+		Time:             e.Time,
 	}
 }

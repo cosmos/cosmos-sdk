@@ -8,9 +8,10 @@ import (
 	"strings"
 	"time"
 
-	"cosmossdk.io/core/header"
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/golang/mock/gomock"
+
+	"cosmossdk.io/core/header"
 
 	"github.com/cosmos/cosmos-sdk/codec/address"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"

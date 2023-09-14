@@ -6,7 +6,6 @@ import (
 	"github.com/golang/mock/gomock"
 
 	"cosmossdk.io/collections"
-	"cosmossdk.io/core/header"
 	coreheader "cosmossdk.io/core/header"
 	"cosmossdk.io/math"
 
@@ -558,7 +557,7 @@ func (s *KeeperTestSuite) TestUndelegateFromUnbondedValidator() {
 	require.NoError(keeper.SetDelegation(ctx, delegation))
 
 	ctx = ctx.WithBlockHeight(10)
-	ctx = ctx.WithHeaderInfo(header.Info{Height: 10, Time: time.Unix(333, 0)})
+	ctx = ctx.WithHeaderInfo(coreheader.Info{Height: 10, Time: time.Unix(333, 0)})
 
 	// unbond the all self-delegation to put validator in unbonding state
 	s.bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), stakingtypes.BondedPoolName, stakingtypes.NotBondedPoolName, gomock.Any())
@@ -578,7 +577,7 @@ func (s *KeeperTestSuite) TestUndelegateFromUnbondedValidator() {
 	require.True(ctx.HeaderInfo().Time.Add(params.UnbondingTime).Equal(validator.UnbondingTime))
 
 	// unbond the validator
-	ctx = ctx.WithHeaderInfo(header.Info{Time: validator.UnbondingTime})
+	ctx = ctx.WithHeaderInfo(coreheader.Info{Time: validator.UnbondingTime})
 	err = keeper.UnbondAllMatureValidators(ctx)
 	require.NoError(err)
 
@@ -662,7 +661,7 @@ func (s *KeeperTestSuite) TestUnbondingAllDelegationFromValidator() {
 	require.Equal(validator.Status, stakingtypes.Unbonding)
 
 	// unbond the validator
-	ctx = ctx.WithHeaderInfo(header.Info{Time: validator.UnbondingTime})
+	ctx = ctx.WithHeaderInfo(coreheader.Info{Time: validator.UnbondingTime})
 	err = keeper.UnbondAllMatureValidators(ctx)
 	require.NoError(err)
 
@@ -845,7 +844,7 @@ func (s *KeeperTestSuite) TestRedelegationMaxEntries() {
 	require.Error(err)
 
 	// mature redelegations
-	ctx = ctx.WithHeaderInfo(header.Info{Time: completionTime})
+	ctx = ctx.WithHeaderInfo(coreheader.Info{Time: completionTime})
 	_, err = keeper.CompleteRedelegation(ctx, val0AccAddr, addrVals[0], addrVals[1])
 	require.NoError(err)
 

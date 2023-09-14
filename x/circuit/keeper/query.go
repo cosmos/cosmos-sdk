@@ -22,7 +22,6 @@ func NewQueryServer(keeper Keeper) types.QueryServer {
 
 // Account returns account permissions.
 func (qs QueryServer) Account(ctx context.Context, req *types.QueryAccountRequest) (*types.AccountResponse, error) {
-
 	add, err := qs.keeper.addressCodec.StringToBytes(req.Address)
 	if err != nil {
 		return nil, err

@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/spf13/cobra"
-	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/protobuf/reflect/protoregistry"
@@ -50,7 +49,7 @@ func initFixture(t *testing.T) *fixture {
 
 	appCodec := moduletestutil.MakeTestEncodingConfig().Codec
 	kr, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendMemory, home, nil, appCodec)
-	require.NoError(t, err)
+	assert.NilError(t, err)
 
 	var initClientCtx client.Context
 	initClientCtx = initClientCtx.

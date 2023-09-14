@@ -50,7 +50,11 @@ func (b *Builder) Validate() error {
 	}
 
 	if b.Keyring == nil {
-		b.Keyring = keyring.NoKeyring{}
+		if b.ClientCtx.Keyring != nil {
+			b.Keyring = b.ClientCtx.Keyring
+		} else {
+			b.Keyring = keyring.NoKeyring{}
+		}
 	}
 
 	if b.TypeResolver == nil {

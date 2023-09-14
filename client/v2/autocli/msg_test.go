@@ -290,7 +290,7 @@ func TestErrorBuildMsgCommand(t *testing.T) {
 				Tx: commandDescriptor,
 			},
 		},
-		ClientCtx: *b.ClientCtx,
+		ClientCtx: b.ClientCtx,
 	}
 
 	_, err := b.BuildMsgCommand(appOptions, nil)

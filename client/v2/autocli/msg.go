@@ -7,7 +7,6 @@ import (
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	"github.com/cockroachdb/errors"
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/config"
 	"github.com/spf13/cobra"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -116,12 +115,7 @@ func (b *Builder) BuildMsgMethodCommand(descriptor protoreflect.MethodDescriptor
 			return err
 		}
 
-		clientCtx, err := config.ReadFromClientConfig(*b.ClientCtx)
-		if err != nil {
-			return err
-		}
-
-		clientCtx, err = client.ReadPersistentCommandFlags(clientCtx, cmd.Flags())
+		clientCtx, err := client.ReadPersistentCommandFlags(*b.ClientCtx, cmd.Flags())
 		if err != nil {
 			return err
 		}

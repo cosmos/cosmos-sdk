@@ -40,7 +40,8 @@ type AppOptions struct {
 	// module or need to be improved.
 	ModuleOptions map[string]*autocliv1.ModuleOptions `optional:"true"`
 
-	ClientCtx client.Context
+	// ClientCtx contains the necessary information needed to execute the commands.
+	ClientCtx *client.Context
 
 	// Keyring is the keyring to use for client/v2.
 	Keyring keyring.Keyring `optional:"true"`
@@ -67,7 +68,7 @@ func (appOptions AppOptions) EnhanceRootCommand(rootCmd *cobra.Command) error {
 		Builder: flag.Builder{
 			TypeResolver: protoregistry.GlobalTypes,
 			FileResolver: proto.HybridResolver,
-			ClientCtx:    &appOptions.ClientCtx,
+			ClientCtx:    appOptions.ClientCtx,
 			Keyring:      appOptions.Keyring,
 		},
 		GetClientConn: func(cmd *cobra.Command) (grpc.ClientConnInterface, error) {

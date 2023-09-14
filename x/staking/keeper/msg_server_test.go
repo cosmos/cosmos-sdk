@@ -7,6 +7,7 @@ import (
 	"github.com/golang/mock/gomock"
 
 	"cosmossdk.io/collections"
+	"cosmossdk.io/core/header"
 	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/codec/address"
@@ -247,7 +248,7 @@ func (s *KeeperTestSuite) TestMsgEditValidator() {
 	s.execExpectCalls()
 
 	// create new context with updated block time
-	newCtx := ctx.WithBlockTime(ctx.BlockTime().AddDate(0, 0, 1))
+	newCtx := ctx.WithHeaderInfo(header.Info{Time: ctx.HeaderInfo().Time.AddDate(0, 0, 1)})
 
 	pk := ed25519.GenPrivKey().PubKey()
 	require.NotNil(pk)
@@ -852,7 +853,7 @@ func (s *KeeperTestSuite) TestMsgCancelUnbondingDelegation() {
 	require.NoError(err)
 	require.Equal(del, resDel)
 
-	ubd := stakingtypes.NewUnbondingDelegation(Addr, ValAddr, 10, ctx.BlockTime().Add(time.Minute*10), shares.RoundInt(), 0, keeper.ValidatorAddressCodec(), ak.AddressCodec())
+	ubd := stakingtypes.NewUnbondingDelegation(Addr, ValAddr, 10, ctx.HeaderInfo().Time.Add(time.Minute*10), shares.RoundInt(), 0, keeper.ValidatorAddressCodec(), ak.AddressCodec())
 	require.NoError(keeper.SetUnbondingDelegation(ctx, ubd))
 	resUnbond, err := keeper.GetUnbondingDelegation(ctx, Addr, ValAddr)
 	require.NoError(err)

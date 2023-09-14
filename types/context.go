@@ -72,7 +72,7 @@ type Request = Context
 func (c Context) Context() context.Context                      { return c.baseCtx }
 func (c Context) MultiStore() storetypes.MultiStore             { return c.ms }
 func (c Context) BlockHeight() int64                            { return c.header.Height }
-func (c Context) BlockTime() time.Time                          { return c.header.Time }
+func (c Context) BlockTime() time.Time                          { return c.headerInfo.Time } // Deprecated: use HeaderInfo().Time
 func (c Context) ChainID() string                               { return c.chainID }
 func (c Context) TxBytes() []byte                               { return c.txBytes }
 func (c Context) Logger() log.Logger                            { return c.logger }
@@ -176,6 +176,7 @@ func (c Context) WithHeaderHash(hash []byte) Context {
 
 // WithBlockTime returns a Context with an updated CometBFT block header time in UTC with no monotonic component.
 // Stripping the monotonic component is for time equality.
+// Deprecated: use WithHeaderInfo instead
 func (c Context) WithBlockTime(newTime time.Time) Context {
 	newHeader := c.BlockHeader()
 	// https://github.com/gogo/protobuf/issues/519

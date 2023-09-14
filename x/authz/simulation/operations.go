@@ -117,7 +117,7 @@ func SimulateMsgGrant(
 
 		var expiration *time.Time
 		t1 := simtypes.RandTimestamp(r)
-		if !t1.Before(ctx.BlockTime()) {
+		if !t1.Before(ctx.HeaderInfo().Time) {
 			expiration = &t1
 		}
 		randomAuthz := generateRandomAuthorization(r, spendLimit)

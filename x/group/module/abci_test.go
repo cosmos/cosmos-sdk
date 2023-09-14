@@ -5,11 +5,10 @@ import (
 	"testing"
 	"time"
 
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	cmttime "github.com/cometbft/cometbft/types/time"
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/core/address"
+	"cosmossdk.io/core/header"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
@@ -62,7 +61,7 @@ func (s *IntegrationTestSuite) SetupTest() {
 
 	ctx := app.BaseApp.NewContext(false)
 
-	ctx = ctx.WithBlockHeader(cmtproto.Header{Time: cmttime.Now()})
+	ctx = ctx.WithHeaderInfo(header.Info{Time: time.Now()})
 
 	s.ctx = ctx
 
@@ -269,7 +268,7 @@ func (s *IntegrationTestSuite) TestEndBlockerPruning() {
 				s.Require().NoError(err)
 				return pID
 			},
-			newCtx:    ctx.WithBlockTime(ctx.BlockTime().Add(votingPeriod).Add(time.Hour)),
+			newCtx:    ctx.WithHeaderInfo(header.Info{Time: ctx.HeaderInfo().Time.Add(votingPeriod).Add(time.Hour)}),
 			expErrMsg: "load proposal: not found",
 			expStatus: group.PROPOSAL_STATUS_WITHDRAWN,
 		},
@@ -306,7 +305,7 @@ func (s *IntegrationTestSuite) TestEndBlockerPruning() {
 
 				return pID
 			},
-			newCtx:            ctx.WithBlockTime(ctx.BlockTime().Add(votingPeriod).Add(time.Hour)),
+			newCtx:            ctx.WithHeaderInfo(header.Info{Time: ctx.HeaderInfo().Time.Add(votingPeriod).Add(time.Hour)}),
 			expErrMsg:         "load proposal: not found",
 			expStatus:         group.PROPOSAL_STATUS_ABORTED,
 			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
@@ -436,7 +435,7 @@ func (s *IntegrationTestSuite) TestEndBlockerTallying() {
 				return pID
 			},
 			admin:     proposers[0],
-			newCtx:    ctx.WithBlockTime(ctx.BlockTime().Add(votingPeriod).Add(time.Hour)),
+			newCtx:    ctx.WithHeaderInfo(header.Info{Time: ctx.HeaderInfo().Time.Add(votingPeriod).Add(time.Hour)}),
 			tallyRes:  group.DefaultTallyResult(),
 			expStatus: group.PROPOSAL_STATUS_REJECTED,
 		},
@@ -473,7 +472,7 @@ func (s *IntegrationTestSuite) TestEndBlockerTallying() {
 				return pID
 			},
 			admin:  proposers[0],
-			newCtx: ctx.WithBlockTime(ctx.BlockTime().Add(votingPeriod).Add(time.Hour)),
+			newCtx: ctx.WithHeaderInfo(header.Info{Time: ctx.HeaderInfo().Time.Add(votingPeriod).Add(time.Hour)}),
 			tallyRes: group.TallyResult{
 				YesCount:        "1",
 				NoCount:         "0",
@@ -490,7 +489,7 @@ func (s *IntegrationTestSuite) TestEndBlockerTallying() {
 				return pID
 			},
 			admin:  proposers[0],
-			newCtx: ctx.WithBlockTime(ctx.BlockTime().Add(votingPeriod).Add(time.Hour)),
+			newCtx: ctx.WithHeaderInfo(header.Info{Time: ctx.HeaderInfo().Time.Add(votingPeriod).Add(time.Hour)}),
 			tallyRes: group.TallyResult{
 				YesCount:        "2",
 				NoCount:         "0",

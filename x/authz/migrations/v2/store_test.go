@@ -36,7 +36,7 @@ func TestMigration(t *testing.T) {
 	sendMsgType := banktypes.SendAuthorization{}.MsgTypeURL()
 	genericMsgType := sdk.MsgTypeURL(&govtypes.MsgVote{})
 	coins100 := sdk.NewCoins(sdk.NewInt64Coin("atom", 100))
-	blockTime := ctx.BlockTime()
+	blockTime := ctx.HeaderInfo().Time
 	oneDay := blockTime.AddDate(0, 0, 1)
 	oneYear := blockTime.AddDate(1, 0, 0)
 	sendAuthz := banktypes.NewSendAuthorization(coins100, nil)
@@ -110,7 +110,7 @@ func TestMigration(t *testing.T) {
 		require.NoError(t, err)
 	}
 
-	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(1 * time.Hour))
+	ctx = ctx.WithBlockTime(ctx.HeaderInfo().Time.Add(1 * time.Hour))
 	require.NoError(t, v2.MigrateStore(ctx, storeService, cdc))
 
 	bz, err := store.Get(v2.GrantStoreKey(grantee1, granter2, genericMsgType))

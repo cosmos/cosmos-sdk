@@ -25,7 +25,7 @@ func (suite *TestSuite) createAccounts(accs int) []sdk.AccAddress {
 func (suite *TestSuite) TestGrant() {
 	ctx := suite.ctx.WithBlockTime(time.Now())
 	addrs := suite.createAccounts(2)
-	curBlockTime := ctx.BlockTime()
+	curBlockTime := ctx.HeaderInfo().Time
 
 	suite.accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
 

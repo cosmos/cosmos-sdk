@@ -288,7 +288,7 @@ func TestHandleDoubleSign_TooOld(t *testing.T) {
 	nci := comet.Info{Evidence: []comet.Evidence{{
 		Validator: comet.Validator{Address: valpubkey.Address(), Power: power},
 		Type:      comet.MisbehaviorType(abci.MisbehaviorType_DUPLICATE_VOTE),
-		Time:      ctx.BlockTime(),
+		Time:      ctx.HeaderInfo().Time,
 		Height:    0,
 	}}}
 
@@ -297,7 +297,7 @@ func TestHandleDoubleSign_TooOld(t *testing.T) {
 
 	ctx = ctx.WithCometInfo(nci)
 	ctx = ctx.WithConsensusParams(cp)
-	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(cp.Evidence.MaxAgeDuration + 1))
+	ctx = ctx.WithBlockTime(ctx.HeaderInfo().Time.Add(cp.Evidence.MaxAgeDuration + 1))
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + cp.Evidence.MaxAgeNumBlocks + 1)
 
 	assert.NilError(t, f.evidenceKeeper.BeginBlocker(ctx))

@@ -37,7 +37,7 @@ func addExpiredGrantsIndex(ctx sdk.Context, store storetypes.KVStore, cdc codec.
 	defer grantsIter.Close()
 
 	queueItems := make(map[string][]string)
-	now := ctx.BlockTime()
+	now := ctx.HeaderInfo().Time
 	for ; grantsIter.Valid(); grantsIter.Next() {
 		var grant authz.Grant
 		bz := grantsIter.Value()

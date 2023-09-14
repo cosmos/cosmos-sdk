@@ -517,7 +517,7 @@ func SimulateMsgCancelUnbondingDelegate(
 			}
 		}
 
-		if unbondingDelegationEntry.CompletionTime.Before(ctx.BlockTime()) {
+		if unbondingDelegationEntry.CompletionTime.Before(ctx.HeaderInfo().Time) {
 			return simtypes.NoOpMsg(types.ModuleName, msgType, "unbonding delegation is already processed"), nil, nil
 		}
 

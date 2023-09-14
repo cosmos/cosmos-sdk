@@ -541,7 +541,7 @@ func (k msgServer) CancelUnbondingDelegation(ctx context.Context, msg *types.Msg
 	}
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	if unbondEntry.CompletionTime.Before(sdkCtx.BlockTime()) {
+	if unbondEntry.CompletionTime.Before(sdkCtx.HeaderInfo().Time) {
 		return nil, sdkerrors.ErrInvalidRequest.Wrap("unbonding delegation is already processed")
 	}
 

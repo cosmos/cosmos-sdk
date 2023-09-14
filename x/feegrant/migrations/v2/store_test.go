@@ -6,6 +6,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/core/header"
 	sdkmath "cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/feegrant"
@@ -31,7 +32,7 @@ func TestMigration(t *testing.T) {
 	grantee2 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address())
 
 	spendLimit := sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(1000)))
-	now := ctx.BlockTime()
+	now := ctx.HeaderInfo().Time
 	oneDay := now.AddDate(0, 0, 1)
 	twoDays := now.AddDate(0, 0, 2)
 
@@ -79,7 +80,7 @@ func TestMigration(t *testing.T) {
 		store.Set(v2.FeeAllowanceKey(grant.granter, grant.grantee), bz)
 	}
 
-	ctx = ctx.WithBlockTime(now.Add(30 * time.Hour))
+	ctx = ctx.WithHeaderInfo(header.Info{Time: now.Add(30 * time.Hour)})
 	require.NoError(t, v2.MigrateStore(ctx, runtime.NewKVStoreService(feegrantKey), cdc))
 	store = ctx.KVStore(feegrantKey)
 

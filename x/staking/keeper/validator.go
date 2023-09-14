@@ -476,7 +476,7 @@ func (k Keeper) DeleteValidatorQueue(ctx context.Context, val types.Validator) e
 // have finished their unbonding period.
 func (k Keeper) UnbondAllMatureValidators(ctx context.Context) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	blockTime := sdkCtx.BlockTime()
+	blockTime := sdkCtx.HeaderInfo().Time
 	blockHeight := uint64(sdkCtx.BlockHeight())
 
 	rng := new(collections.Range[collections.Triple[uint64, time.Time, uint64]]).

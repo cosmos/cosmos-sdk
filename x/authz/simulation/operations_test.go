@@ -195,7 +195,7 @@ func (suite *SimTestSuite) TestSimulateExec() {
 	granter := accounts[0]
 	grantee := accounts[1]
 	a := banktypes.NewSendAuthorization(initCoins, nil)
-	expire := suite.ctx.BlockTime().Add(1 * time.Hour)
+	expire := suite.ctx.HeaderInfo().Time.Add(1 * time.Hour)
 
 	err = suite.authzKeeper.SaveGrant(suite.ctx, grantee.Address, granter.Address, a, &expire)
 	suite.Require().NoError(err)

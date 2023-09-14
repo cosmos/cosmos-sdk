@@ -267,7 +267,7 @@ func (s *KeeperTestSuite) TestUnjail() {
 				s.Require().NoError(err)
 
 				info := slashingtypes.NewValidatorSigningInfo(sdk.ConsAddress(addr), int64(4), int64(3),
-					s.ctx.BlockTime().AddDate(0, 0, 1), false, int64(10))
+					s.ctx.HeaderInfo().Time.AddDate(0, 0, 1), false, int64(10))
 
 				s.Require().NoError(s.slashingKeeper.ValidatorSigningInfo.Set(s.ctx, sdk.ConsAddress(addr), info))
 				s.stakingKeeper.EXPECT().Validator(s.ctx, valAddr).Return(val, nil)

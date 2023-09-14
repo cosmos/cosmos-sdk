@@ -134,7 +134,7 @@ app.ModuleManager.SetOrderBeginBlockers(
 
 // ... //
 
-+func (app *SimApp) PreBlocker(ctx sdk.Context, req abci.RequestBeginBlock) (sdk.ResponsePreBlock, error) {
++func (app *SimApp) PreBlocker(ctx sdk.Context, req abci.RequestBeginBlock) (*sdk.ResponsePreBlock, error) {
 +	return app.ModuleManager.PreBlock(ctx, req)
 +}
 ```

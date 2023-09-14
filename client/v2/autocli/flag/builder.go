@@ -6,7 +6,6 @@ import (
 	"strconv"
 
 	cosmos_proto "github.com/cosmos/cosmos-proto"
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"google.golang.org/protobuf/proto"
@@ -17,6 +16,8 @@ import (
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	"cosmossdk.io/client/v2/autocli/keyring"
 	"cosmossdk.io/client/v2/internal/util"
+
+	"github.com/cosmos/cosmos-sdk/client"
 )
 
 // Builder manages options for building pflag flags for protobuf messages.

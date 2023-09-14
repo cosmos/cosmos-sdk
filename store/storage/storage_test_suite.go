@@ -487,6 +487,7 @@ func (s *StorageTestSuite) TestDatabase_Prune() {
 			val := fmt.Sprintf("val%03d-%03d", i, v)
 
 			bz, err := db.Get(storeKey1, v, []byte(key))
+
 			s.Require().NoError(err)
 			if v <= 25 {
 				s.Require().Nil(bz)
@@ -495,6 +496,10 @@ func (s *StorageTestSuite) TestDatabase_Prune() {
 			}
 		}
 	}
+
+	itr, err := db.NewIterator(storeKey1, 25, []byte("key000"), nil)
+	s.Require().NoError(err)
+	s.Require().False(itr.Valid())
 
 	// prune the latest version which should prune the entire dataset
 	s.Require().NoError(db.Prune(50))

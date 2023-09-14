@@ -431,7 +431,7 @@ func (i *Int) Unmarshal(data []byte) error {
 // Size implements the gogo proto custom type interface.
 func (i *Int) Size() int {
 	if i.i == nil {
-		return 1
+		i.i = new(big.Int)
 	}
 	// A float64 can store 52 bits exactly, which allows us to use
 	// math.Log10 to compute the size fast and garbage free.

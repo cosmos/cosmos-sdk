@@ -5,6 +5,7 @@ import (
 
 	"github.com/golang/mock/gomock"
 
+	"cosmossdk.io/core/header"
 	sdkmath "cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/codec/address"
@@ -23,7 +24,7 @@ func (suite *TestSuite) createAccounts(accs int) []sdk.AccAddress {
 }
 
 func (suite *TestSuite) TestGrant() {
-	ctx := suite.ctx.WithBlockTime(time.Now())
+	ctx := suite.ctx.WithHeaderInfo(header.Info{Time: time.Now()})
 	addrs := suite.createAccounts(2)
 	curBlockTime := ctx.HeaderInfo().Time
 

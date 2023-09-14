@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/suite"
 
+	"cosmossdk.io/core/header"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 
@@ -120,7 +121,7 @@ func (suite *SimTestSuite) TestSimulateGrant() {
 	r := rand.New(s)
 	accounts := suite.getTestingAccounts(r, 2)
 	blockTime := time.Now().UTC()
-	ctx := suite.ctx.WithBlockTime(blockTime)
+	ctx := suite.ctx.WithHeaderInfo(header.Info{Time: blockTime})
 
 	_, err := suite.app.FinalizeBlock(&abci.RequestFinalizeBlock{
 		Height: suite.app.LastBlockHeight() + 1,

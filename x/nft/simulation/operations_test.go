@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/suite"
 
+	"cosmossdk.io/core/header"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	"cosmossdk.io/x/nft"
@@ -122,7 +123,7 @@ func (suite *SimTestSuite) TestSimulateMsgSend() {
 	r := rand.New(s)
 	accounts := suite.getTestingAccounts(r, 2)
 	blockTime := time.Now().UTC()
-	ctx := suite.ctx.WithBlockTime(blockTime)
+	ctx := suite.ctx.WithHeaderInfo(header.Info{Time: blockTime})
 
 	// begin new block
 	_, err := suite.app.FinalizeBlock(&abci.RequestFinalizeBlock{

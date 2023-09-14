@@ -30,3 +30,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 # Changelog
 
 ## [Unreleased]
+
+### Api Breaking Changes
+
+* [#17741](https://github.com/cosmos/cosmos-sdk/pull/17741) Remove `NewMsgAuthorizeCircuitBreaker`, `NewMsgTripCircuitBreaker`, `NewMsgResetCircuitBreaker` were removed in favor of direct creation of the types where they are used

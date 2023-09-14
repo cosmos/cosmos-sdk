@@ -106,7 +106,7 @@ func (k msgServer) CreateValidator(ctx context.Context, msg *types.MsgCreateVali
 
 	commission := types.NewCommissionWithTime(
 		msg.Commission.Rate, msg.Commission.MaxRate,
-		msg.Commission.MaxChangeRate, sdkCtx.BlockHeader().Time,
+		msg.Commission.MaxChangeRate, sdkCtx.HeaderInfo().Time,
 	)
 
 	validator, err = validator.SetInitialCommission(commission)

@@ -130,7 +130,7 @@ func (sh *Helper) TurnBlock(newTime time.Time) sdk.Context {
 // TurnBlockTimeDiff calls EndBlocker and updates the block time by adding the
 // duration to the current block time
 func (sh *Helper) TurnBlockTimeDiff(diff time.Duration) sdk.Context {
-	sh.Ctx = sh.Ctx.WithBlockTime(sh.Ctx.BlockHeader().Time.Add(diff))
+	sh.Ctx = sh.Ctx.WithBlockTime(sh.Ctx.HeaderInfo().Time.Add(diff))
 	_, err := sh.k.EndBlocker(sh.Ctx)
 	require.NoError(sh.t, err)
 	return sh.Ctx

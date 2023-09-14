@@ -292,7 +292,7 @@ func (k Keeper) GetAuthorizations(ctx context.Context, grantee, granter sdk.AccA
 func (k Keeper) GetAuthorization(ctx context.Context, grantee, granter sdk.AccAddress, msgType string) (authz.Authorization, *time.Time) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	grant, found := k.getGrant(ctx, grantStoreKey(grantee, granter, msgType))
-	if !found || (grant.Expiration != nil && grant.Expiration.Before(sdkCtx.BlockHeader().Time)) {
+	if !found || (grant.Expiration != nil && grant.Expiration.Before(sdkCtx.HeaderInfo().Time)) {
 		return nil, nil
 	}
 

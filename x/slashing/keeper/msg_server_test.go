@@ -303,7 +303,7 @@ func (s *KeeperTestSuite) TestUnjail() {
 				del := types.NewDelegation(addr.String(), valAddr.String(), sdkmath.LegacyNewDec(100))
 
 				s.stakingKeeper.EXPECT().Delegation(s.ctx, addr, valAddr).Return(del, nil)
-				s.stakingKeeper.EXPECT().Unjail(s.ctx, sdk.ConsAddress(addr)).Return(nil)
+				s.stakingKeeper.EXPECT().Unjail(s.ctx, sdk.ConsAddress(addr)).Return(nil).AnyTimes()
 
 				return &slashingtypes.MsgUnjail{
 					ValidatorAddr: sdk.ValAddress(addr).String(),

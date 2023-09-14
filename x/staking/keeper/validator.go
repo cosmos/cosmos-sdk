@@ -185,7 +185,7 @@ func (k Keeper) UpdateValidatorCommission(ctx context.Context,
 ) (types.Commission, error) {
 	commission := validator.Commission
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	blockTime := sdkCtx.BlockHeader().Time
+	blockTime := sdkCtx.HeaderInfo().Time
 
 	if err := commission.ValidateNewRate(newRate, blockTime); err != nil {
 		return commission, err

@@ -13,6 +13,7 @@ import (
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/comet"
+	"cosmossdk.io/core/header"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/evidence"
@@ -236,7 +237,7 @@ func TestHandleDoubleSign(t *testing.T) {
 	assert.Assert(t, val.GetTokens().Equal(newTokens))
 
 	// jump to past the unbonding period
-	ctx = ctx.WithBlockTime(time.Unix(1, 0).Add(stakingParams.UnbondingTime))
+	ctx = ctx.WithHeaderInfo(header.Info{Time: time.Unix(1, 0).Add(stakingParams.UnbondingTime)})
 
 	// require we cannot unjail
 	assert.Error(t, f.slashingKeeper.Unjail(ctx, operatorAddr), slashingtypes.ErrValidatorJailed.Error())
@@ -262,7 +263,7 @@ func TestHandleDoubleSign_TooOld(t *testing.T) {
 	t.Parallel()
 	f := initFixture(t)
 
-	ctx := f.sdkCtx.WithIsCheckTx(false).WithBlockHeight(1).WithBlockTime(time.Now())
+	ctx := f.sdkCtx.WithIsCheckTx(false).WithBlockHeight(1).WithHeaderInfo(header.Info{Time: time.Now()})
 	populateValidators(t, f)
 
 	power := int64(100)
@@ -297,7 +298,7 @@ func TestHandleDoubleSign_TooOld(t *testing.T) {
 
 	ctx = ctx.WithCometInfo(nci)
 	ctx = ctx.WithConsensusParams(cp)
-	ctx = ctx.WithBlockTime(ctx.HeaderInfo().Time.Add(cp.Evidence.MaxAgeDuration + 1))
+	ctx = ctx.WithHeaderInfo(header.Info{Time: ctx.HeaderInfo().Time.Add(cp.Evidence.MaxAgeDuration + 1)})
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + cp.Evidence.MaxAgeNumBlocks + 1)
 
 	assert.NilError(t, f.evidenceKeeper.BeginBlocker(ctx))

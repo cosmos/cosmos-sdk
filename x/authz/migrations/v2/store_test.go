@@ -6,6 +6,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/core/header"
 	storetypes "cosmossdk.io/store/types"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -110,7 +111,7 @@ func TestMigration(t *testing.T) {
 		require.NoError(t, err)
 	}
 
-	ctx = ctx.WithBlockTime(ctx.HeaderInfo().Time.Add(1 * time.Hour))
+	ctx = ctx.WithHeaderInfo(header.Info{Time: ctx.HeaderInfo().Time.Add(1 * time.Hour)})
 	require.NoError(t, v2.MigrateStore(ctx, storeService, cdc))
 
 	bz, err := store.Get(v2.GrantStoreKey(grantee1, granter2, genericMsgType))

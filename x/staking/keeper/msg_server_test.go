@@ -249,7 +249,6 @@ func (s *KeeperTestSuite) TestMsgEditValidator() {
 
 	// create new context with updated block time
 	newCtx := ctx.WithHeaderInfo(header.Info{Time: ctx.HeaderInfo().Time.AddDate(0, 0, 1)})
-
 	pk := ed25519.GenPrivKey().PubKey()
 	require.NotNil(pk)
 

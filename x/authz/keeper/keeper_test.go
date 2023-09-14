@@ -50,7 +50,7 @@ func (s *TestSuite) SetupTest() {
 	key := storetypes.NewKVStoreKey(authzkeeper.StoreKey)
 	storeService := runtime.NewKVStoreService(key)
 	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
-	s.ctx = testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now()})
+	s.ctx = testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now().Round(0).UTC()})
 	s.encCfg = moduletestutil.MakeTestEncodingConfig(authzmodule.AppModuleBasic{})
 
 	s.baseApp = baseapp.NewBaseApp(
@@ -412,7 +412,7 @@ func (s *TestSuite) TestGetAuthorization() {
 	genAuthSend := authz.NewGenericAuthorization(sdk.MsgTypeURL(&banktypes.MsgSend{}))
 	sendAuth := banktypes.NewSendAuthorization(coins10, nil)
 
-	start := s.ctx.BlockHeader().Time
+	start := s.ctx.HeaderInfo().Time
 	expired := start.Add(time.Duration(1) * time.Second)
 	notExpired := start.Add(time.Duration(5) * time.Hour)
 
@@ -489,7 +489,7 @@ func (s *TestSuite) TestGetAuthorizations() {
 	genAuthMulti := authz.NewGenericAuthorization(sdk.MsgTypeURL(&banktypes.MsgMultiSend{}))
 	genAuthSend := authz.NewGenericAuthorization(sdk.MsgTypeURL(&banktypes.MsgSend{}))
 
-	start := s.ctx.BlockHeader().Time
+	start := s.ctx.HeaderInfo().Time
 	expired := start.Add(time.Duration(1) * time.Second)
 
 	s.Require().NoError(s.authzKeeper.SaveGrant(s.ctx, addr1, addr2, genAuthMulti, &expired), "creating multi send grant 1->2")

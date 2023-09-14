@@ -59,7 +59,6 @@ func (AppModuleBasic) Name() string {
 
 // RegisterLegacyAminoCodec registers the crisis module's types on the given LegacyAmino codec.
 func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-	types.RegisterLegacyAminoCodec(cdc)
 }
 
 // DefaultGenesis returns default genesis state as raw bytes for the crisis

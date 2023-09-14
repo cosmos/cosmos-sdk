@@ -67,15 +67,6 @@ service Service {
       body: "*"
     };
   }
-  // TxDecodeAmino decodes an Amino transaction from encoded bytes to JSON.
-  //
-  // Since: cosmos-sdk 0.47
-  rpc TxDecodeAmino(TxDecodeAminoRequest) returns (TxDecodeAminoResponse) {
-    option (google.api.http) = {
-      post: "/cosmos/tx/v1beta1/decode/amino"
-      body: "*"
-    };
-  }
 }
 
 // GetTxsEventRequest is the request type for the Service.TxsByEvents

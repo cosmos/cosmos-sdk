@@ -17,7 +17,6 @@ import (
 	"cosmossdk.io/core/comet"
 	"cosmossdk.io/core/event"
 	"cosmossdk.io/core/genesis"
-	"cosmossdk.io/core/header"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
@@ -72,8 +71,11 @@ func init() {
 			ProvideMemoryStoreService,
 			ProvideTransientStoreService,
 			ProvideEventService,
+<<<<<<< HEAD
 			ProvideHeaderInfoService,
 			ProvideCometInfoService,
+=======
+>>>>>>> 98895f497 (chore: remove unneeded code  (#17741))
 			ProvideBasicManager,
 			ProvideAddressCodec,
 		),
@@ -246,6 +248,7 @@ func ProvideEventService() event.Service {
 	return EventService{}
 }
 
+<<<<<<< HEAD
 func ProvideCometInfoService() comet.BlockInfoService {
 	return cometInfoService{}
 }
@@ -254,6 +257,8 @@ func ProvideHeaderInfoService(app *AppBuilder) header.Service {
 	return headerInfoService{}
 }
 
+=======
+>>>>>>> 98895f497 (chore: remove unneeded code  (#17741))
 func ProvideBasicManager(app *AppBuilder) module.BasicManager {
 	return app.app.basicManager
 }

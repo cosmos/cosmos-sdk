@@ -210,15 +210,15 @@ func (s *Store) Commit() ([]byte, error) {
 
 	changeSet := s.rootKVStore.GetChangeSet()
 
+	// commit SS
+	if err := s.commitSS(version, changeSet); err != nil {
+		return nil, fmt.Errorf("failed to commit SS: %w", err)
+	}
+
 	// commit SC
 	commitInfo, err := s.commitSC(version, changeSet)
 	if err != nil {
 		return nil, fmt.Errorf("failed to commit SC stores: %w", err)
-	}
-
-	// commit SS
-	if err := s.commitSS(version, changeSet); err != nil {
-		return nil, fmt.Errorf("failed to commit SS: %w", err)
 	}
 
 	s.lastCommitInfo = commitInfo

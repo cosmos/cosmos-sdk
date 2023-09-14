@@ -2045,9 +2045,9 @@ func TestBaseApp_PreBlocker(t *testing.T) {
 	require.NoError(t, err)
 
 	wasHookCalled := false
-	app.SetPreBlocker(func(ctx sdk.Context, req *abci.RequestFinalizeBlock) (sdk.ResponsePreBlock, error) {
+	app.SetPreBlocker(func(ctx sdk.Context, req *abci.RequestFinalizeBlock) (*sdk.ResponsePreBlock, error) {
 		wasHookCalled = true
-		return sdk.ResponsePreBlock{
+		return &sdk.ResponsePreBlock{
 			ConsensusParamsChanged: true,
 		}, nil
 	})
@@ -2062,8 +2062,8 @@ func TestBaseApp_PreBlocker(t *testing.T) {
 	_, err = app.InitChain(&abci.RequestInitChain{})
 	require.NoError(t, err)
 
-	app.SetPreBlocker(func(ctx sdk.Context, req *abci.RequestFinalizeBlock) (sdk.ResponsePreBlock, error) {
-		return sdk.ResponsePreBlock{}, errors.New("some error")
+	app.SetPreBlocker(func(ctx sdk.Context, req *abci.RequestFinalizeBlock) (*sdk.ResponsePreBlock, error) {
+		return nil, errors.New("some error")
 	})
 	app.Seal()
 
@@ -2124,7 +2124,7 @@ func TestBaseApp_VoteExtensions(t *testing.T) {
 			return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_ACCEPT}, nil
 		})
 
-		app.SetPreBlocker(func(ctx sdk.Context, req *abci.RequestFinalizeBlock) (sdk.ResponsePreBlock, error) {
+		app.SetPreBlocker(func(ctx sdk.Context, req *abci.RequestFinalizeBlock) (*sdk.ResponsePreBlock, error) {
 			count := uint64(0)
 			pricesSum := uint64(0)
 			for _, v := range req.Txs {
@@ -2143,7 +2143,7 @@ func TestBaseApp_VoteExtensions(t *testing.T) {
 				ctx.KVStore(capKey1).Set([]byte("avgPrice"), buf)
 			}
 
-			return sdk.ResponsePreBlock{
+			return &sdk.ResponsePreBlock{
 				ConsensusParamsChanged: true,
 			}, nil
 		})

@@ -183,5 +183,6 @@ require (
 
 replace (
 	github.com/cosmos/cosmos-sdk => ../../.
+	cosmossdk.io/api => ../../api
 	github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.9.1
 )

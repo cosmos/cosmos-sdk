@@ -76,7 +76,7 @@ func DefaultContextWithDB(tb testing.TB, key, tkey storetypes.StoreKey) TestCont
 	err := cms.LoadLatestVersion()
 	assert.NoError(tb, err)
 
-	ctx := sdk.NewContext(cms, false, log.NewNopLogger()).WithBlockTime(time.Now()).WithHeaderInfo(header.Info{Time: time.Now()})
+	ctx := sdk.NewContext(cms, false, log.NewNopLogger()).WithHeaderInfo(header.Info{Time: time.Now()})
 
 	return TestContext{ctx, db, cms}
 }

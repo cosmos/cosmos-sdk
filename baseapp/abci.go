@@ -426,7 +426,6 @@ func (app *BaseApp) PrepareProposal(req *abci.RequestPrepareProposal) (resp *abc
 	app.prepareProposalState.ctx = app.getContextForProposal(app.prepareProposalState.ctx, req.Height).
 		WithVoteInfos(toVoteInfo(req.LocalLastCommit.Votes)). // this is a set of votes that are not finalized yet, wait for commit
 		WithBlockHeight(req.Height).
-		WithBlockTime(req.Time).
 		WithProposer(req.ProposerAddress).
 		WithExecMode(sdk.ExecModePrepareProposal).
 		WithCometInfo(corecomet.Info{
@@ -517,7 +516,6 @@ func (app *BaseApp) ProcessProposal(req *abci.RequestProcessProposal) (resp *abc
 	app.processProposalState.ctx = app.getContextForProposal(app.processProposalState.ctx, req.Height).
 		WithVoteInfos(req.ProposedLastCommit.Votes). // this is a set of votes that are not finalized yet, wait for commit
 		WithBlockHeight(req.Height).
-		WithBlockTime(req.Time).
 		WithHeaderHash(req.Hash).
 		WithProposer(req.ProposerAddress).
 		WithCometInfo(corecomet.Info{
@@ -1155,7 +1153,7 @@ func (app *BaseApp) CreateQueryContext(height int64, prove bool) (sdk.Context, e
 		if ok {
 			cInfo, err := rms.GetCommitInfo(height)
 			if cInfo != nil && err == nil {
-				ctx = ctx.WithBlockTime(cInfo.Timestamp)
+				ctx = ctx.WithHeaderInfo(coreheader.Info{Time: cInfo.Timestamp})
 			}
 		}
 	}

@@ -292,32 +292,22 @@ decision based on the vote extensions.
 #### Vote Extension Persistence
 
 In certain contexts, it may be useful or necessary for applications to persist
-data derived from vote extensions. In order to facilitate this use case, we
-propose to allow application developers to manually retrieve the `finalizeState`
-context (see [`FinalizeBlock`](#finalizeblock-1) below). Using this context,
-state can be directly written to `finalizeState`, which will be used during
-`FinalizeBlock` and eventually committed to the application state. Note, since
-`ProcessProposal` can timeout and thus require another round of consensus, we
-will reset `finalizeState` in the beginning of `ProcessProposal`.
+data derived from vote extensions. In order to facilitate this use case, we propose
+to allow app developers to define a pre-Blocker hook which will be called
+at the very beginning of `FinalizeBlock`, i.e. before `BeginBlock` (see below).
 
-A `ProcessProposal` handler could look like the following:
+Note, we cannot allow applications to directly write to the application state
+during `ProcessProposal` because during replay, CometBFT will NOT call `ProcessProposal`,
+which would result in an incomplete state view.
 
 ```go
-func (h MyHandler) ProcessProposalHandler() sdk.ProcessProposalHandler {
-	return func(ctx sdk.Context, req abci.RequestProcessProposal) abci.ResponseProcessProposal {
-		for _, txBytes := range req.Txs {
-			_, err := h.app.ProcessProposalVerifyTx(txBytes)
-			if err != nil {
-				return abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}
-			}
-		}
-
-		fCtx := h.app.GetFinalizeState()
-
-		// Any state changes that occur on the provided fCtx WILL be written to state!
-		h.myKeeper.SetVoteExtResult(fCtx, ...)
+func (a MyApp) PreBlocker(ctx sdk.Context, req *abci.RequestFinalizeBlock) error {
+	voteExts := GetVoteExtensions(ctx, req.Txs)
 	
-		return abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_ACCEPT}
+	// Process and perform some compute on vote extensions, storing any resulting
+	// state.
+	if err a.processVoteExtensions(ctx, voteExts); if err != nil {
+		return err
 	}
 }
 ```
@@ -360,11 +350,20 @@ legacy ABCI types, e.g. `LegacyBeginBlockRequest` and `LegacyEndBlockRequest`. O
 we can come up with new types and names altogether.
 
 ```go
-func (app *BaseApp) FinalizeBlock(req abci.RequestFinalizeBlock) abci.ResponseFinalizeBlock {
-	// merge any state changes from ProcessProposal into the FinalizeBlock state
-	app.MergeProcessProposalState()
+func (app *BaseApp) FinalizeBlock(req abci.RequestFinalizeBlock) (*abci.ResponseFinalizeBlock, error) {
+	ctx := ...
 
-	beginBlockResp := app.beginBlock(ctx, req)
+	if app.preBlocker != nil {
+		ctx := app.finalizeBlockState.ctx
+		rsp, err := app.preBlocker(ctx, req)
+		if err != nil {
+			return nil, err
+		}
+		if rsp.ConsensusParamsChanged {
+			app.finalizeBlockState.ctx = ctx.WithConsensusParams(app.GetConsensusParams(ctx))
+		}
+	}
+	beginBlockResp, err := app.beginBlock(req)
 	appendBlockEventAttr(beginBlockResp.Events, "begin_block")
 
 	txExecResults := make([]abci.ExecTxResult, 0, len(req.Txs))
@@ -373,7 +372,7 @@ func (app *BaseApp) FinalizeBlock(req abci.RequestFinalizeBlock) abci.ResponseFi
 		txExecResults = append(txExecResults, result)
 	}
 
-	endBlockResp := app.endBlock(ctx, req)
+	endBlockResp, err := app.endBlock(app.finalizeBlockState.ctx)
 	appendBlockEventAttr(beginBlockResp.Events, "end_block")
 
 	return abci.ResponseFinalizeBlock{

@@ -2015,7 +2015,7 @@ func TestABCI_HaltChain(t *testing.T) {
 	}
 }
 
-func TestBaseApp_PreFinalizeBlockHook(t *testing.T) {
+func TestBaseApp_PreBlocker(t *testing.T) {
 	db := dbm.NewMemDB()
 	name := t.Name()
 	logger := log.NewTestLogger(t)
@@ -2025,9 +2025,11 @@ func TestBaseApp_PreFinalizeBlockHook(t *testing.T) {
 	require.NoError(t, err)
 
 	wasHookCalled := false
-	app.SetPreFinalizeBlockHook(func(ctx sdk.Context, req *abci.RequestFinalizeBlock) error {
+	app.SetPreBlocker(func(ctx sdk.Context, req *abci.RequestFinalizeBlock) (*sdk.ResponsePreBlock, error) {
 		wasHookCalled = true
-		return nil
+		return &sdk.ResponsePreBlock{
+			ConsensusParamsChanged: true,
+		}, nil
 	})
 	app.Seal()
 
@@ -2040,8 +2042,8 @@ func TestBaseApp_PreFinalizeBlockHook(t *testing.T) {
 	_, err = app.InitChain(&abci.RequestInitChain{})
 	require.NoError(t, err)
 
-	app.SetPreFinalizeBlockHook(func(ctx sdk.Context, req *abci.RequestFinalizeBlock) error {
-		return errors.New("some error")
+	app.SetPreBlocker(func(ctx sdk.Context, req *abci.RequestFinalizeBlock) (*sdk.ResponsePreBlock, error) {
+		return nil, errors.New("some error")
 	})
 	app.Seal()
 
@@ -2102,7 +2104,7 @@ func TestBaseApp_VoteExtensions(t *testing.T) {
 			return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_ACCEPT}, nil
 		})
 
-		app.SetPreFinalizeBlockHook(func(ctx sdk.Context, req *abci.RequestFinalizeBlock) error {
+		app.SetPreBlocker(func(ctx sdk.Context, req *abci.RequestFinalizeBlock) (*sdk.ResponsePreBlock, error) {
 			count := uint64(0)
 			pricesSum := uint64(0)
 			for _, v := range req.Txs {
@@ -2121,7 +2123,9 @@ func TestBaseApp_VoteExtensions(t *testing.T) {
 				ctx.KVStore(capKey1).Set([]byte("avgPrice"), buf)
 			}
 
-			return nil
+			return &sdk.ResponsePreBlock{
+				ConsensusParamsChanged: true,
+			}, nil
 		})
 	}
 

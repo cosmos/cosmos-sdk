@@ -68,7 +68,11 @@ func AuthorizeCircuitBreakerCmd() *cobra.Command {
 
 			permission := types.Permissions{Level: types.Permissions_Level(lvl.Uint64()), LimitTypeUrls: typeUrls}
 
-			msg := types.NewMsgAuthorizeCircuitBreaker(clientCtx.GetFromAddress().String(), grantee.String(), &permission)
+			msg := &types.MsgAuthorizeCircuitBreaker{
+				Granter:     clientCtx.GetFromAddress().String(),
+				Grantee:     grantee.String(),
+				Permissions: &permission,
+			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
@@ -92,7 +96,10 @@ func TripCircuitBreakerCmd() *cobra.Command {
 				return err
 			}
 
-			msg := types.NewMsgTripCircuitBreaker(clientCtx.GetFromAddress().String(), strings.Split(args[0], ","))
+			msg := &types.MsgTripCircuitBreaker{
+				Authority:   clientCtx.GetFromAddress().String(),
+				MsgTypeUrls: strings.Split(args[0], ","),
+			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
@@ -118,7 +125,10 @@ func ResetCircuitBreakerCmd() *cobra.Command {
 
 			msgTypeUrls := strings.Split(args[0], ",")
 
-			msg := types.NewMsgResetCircuitBreaker(clientCtx.GetFromAddress().String(), msgTypeUrls)
+			msg := &types.MsgResetCircuitBreaker{
+				Authority:   clientCtx.GetFromAddress().String(),
+				MsgTypeUrls: msgTypeUrls,
+			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},

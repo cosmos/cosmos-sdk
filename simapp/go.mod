@@ -16,8 +16,8 @@ require (
 	cosmossdk.io/x/evidence v0.0.0-20230913185058-9b5a203d35bc
 	cosmossdk.io/x/feegrant v0.0.0-20230913185058-9b5a203d35bc
 	cosmossdk.io/x/nft v0.0.0-20230913185058-9b5a203d35bc
-	cosmossdk.io/x/tx v0.9.2-0.20230913111958-e394604f8382
-	cosmossdk.io/x/upgrade v0.0.0-20230913185058-9b5a203d35bc
+	cosmossdk.io/x/tx v0.10.0
+	cosmossdk.io/x/upgrade v0.0.0-20230915075604-076dc1ee9619
 	github.com/cometbft/cometbft v0.38.0
 	github.com/cosmos/cosmos-db v1.0.0
 	// this version is not used as it is always replaced by the latest Cosmos SDK version

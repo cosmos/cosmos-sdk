@@ -198,14 +198,6 @@ func (app *BaseApp) SetPrecommiter(precommiter sdk.Precommiter) {
 	app.precommiter = precommiter
 }
 
-func (app *BaseApp) SetPreFinalizeBlockHook(hook sdk.PreFinalizeBlockHook) {
-	if app.sealed {
-		panic("SetPreFinalizeBlockHook() on sealed BaseApp")
-	}
-
-	app.preFinalizeBlockHook = hook
-}
-
 func (app *BaseApp) SetAnteHandler(ah sdk.AnteHandler) {
 	if app.sealed {
 		panic("SetAnteHandler() on sealed BaseApp")

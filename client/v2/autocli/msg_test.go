@@ -290,7 +290,9 @@ func TestErrorBuildMsgCommand(t *testing.T) {
 				Tx: commandDescriptor,
 			},
 		},
-		ClientCtx: b.ClientCtx,
+		AddressCodec:          b.AddressCodec,
+		ValidatorAddressCodec: b.ValidatorAddressCodec,
+		ClientCtx:             b.ClientCtx,
 	}
 
 	_, err := b.BuildMsgCommand(appOptions, nil)

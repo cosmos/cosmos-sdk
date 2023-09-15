@@ -18,6 +18,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
@@ -60,10 +61,13 @@ func initFixture(t *testing.T) *fixture {
 	conn := &testClientConn{ClientConn: clientConn}
 	b := &Builder{
 		Builder: flag.Builder{
-			TypeResolver: protoregistry.GlobalTypes,
-			FileResolver: protoregistry.GlobalFiles,
-			ClientCtx:    &initClientCtx,
-			Keyring:      kr,
+			TypeResolver:          protoregistry.GlobalTypes,
+			FileResolver:          protoregistry.GlobalFiles,
+			ClientCtx:             &initClientCtx,
+			Keyring:               kr,
+			AddressCodec:          addresscodec.NewBech32Codec("cosmos"),
+			ValidatorAddressCodec: addresscodec.NewBech32Codec("cosmosvaloper"),
+			ConsensusAddressCodec: addresscodec.NewBech32Codec("cosmosvalcons"),
 		},
 		GetClientConn: func(*cobra.Command) (grpc.ClientConnInterface, error) {
 			return conn, nil

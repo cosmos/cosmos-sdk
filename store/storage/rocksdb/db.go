@@ -30,7 +30,11 @@ var (
 type Database struct {
 	storage  *grocksdb.DB
 	cfHandle *grocksdb.ColumnFamilyHandle
-	tsLow    uint64
+
+	// tsLow reflects the full_history_ts_low CF value. Since pruning is done in
+	// a lazy manner, we use this value to prevent reads for versions that will
+	// be purged in the next compaction.
+	tsLow uint64
 }
 
 func New(dataDir string) (*Database, error) {

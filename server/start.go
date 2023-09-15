@@ -175,8 +175,6 @@ is performed. Note, when enabled, gRPC will also be automatically enabled.
 			})
 
 			serverCtx.Logger.Debug("received quit signal")
-
-			// wait for app.Close() and tmNode.Stop() to flush async db writes to disk
 			graceDuration, _ := cmd.Flags().GetDuration(FlagShutdownGrace)
 			if graceDuration > 0 {
 				serverCtx.Logger.Info("graceful shutdown start", FlagShutdownGrace, graceDuration)

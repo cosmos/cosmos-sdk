@@ -275,7 +275,7 @@ func (s *ABCIUtilsTestSuite) TestValidateVoteExtensionsTwoVotesNilAbsent() {
 	s.Require().Error(baseapp.ValidateVoteExtensions(s.ctx, s.valStore, 3, chainID, llc))
 }
 
-func (s *ABCIUtilsTestSuite) TestDefaultProposalHandler_NoMempoolSelection() {
+func (s *ABCIUtilsTestSuite) TestDefaultProposalHandler_NoOpMempoolTxSelection() {
 	ph := baseapp.NewDefaultProposalHandler(mempool.NoOpMempool{}, nil)
 	handler := ph.PrepareProposalHandler()
 

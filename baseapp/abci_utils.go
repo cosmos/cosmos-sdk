@@ -313,6 +313,10 @@ func NoOpVerifyVoteExtensionHandler() sdk.VerifyVoteExtensionHandler {
 	}
 }
 
+// TxSelector defines a helper type that assists in selecting transactions during
+// mempool transaction selection in PrepareProposal. It keeps track of the total
+// number of bytes and total gas of the selected transactions. It also keeps
+// track of the selected transactions themselves.
 type TxSelector struct {
 	maxTxBytes   uint64
 	maxBlockGas  uint64

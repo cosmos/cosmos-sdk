@@ -35,12 +35,68 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 # Changelog
 
-## [Unreleased]
+Since **v0.45.15**, the v0.45.x line of the Cosmos SDK has reached end-of-life.
+Any release after **v0.45.15** is a security release that contains security fixes.
+It is strongly recommended to upgrade to these releases as well.
 
-## v0.45.11 - 2022-11-09
+## [v0.45.16](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.45.16) - 2023-05-11
+
+### Security Bug Fixes
+
+* (x/feegrant) [#16097](https://github.com/cosmos/cosmos-sdk/pull/16097) Fix infinite feegrant allowance bug.
+
+## [v0.45.15](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.45.15) - 2023-03-22
 
 ### Improvements
 
+* (deps) Migrate to [CometBFT](https://github.com/cometbft/cometbft). Follow the instructions in the [release notes](./RELEASE_NOTES.md).
+* (deps) [#15127](https://github.com/cosmos/cosmos-sdk/pull/15127) Bump btcd.
+* (store) [#14410](https://github.com/cosmos/cosmos-sdk/pull/14410) `rootmulti.Store.loadVersion` has validation to check if all the module stores' height is correct, it will error if any module store has incorrect height.
+
+## [v0.45.14](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.45.14) - 2023-02-16
+
+### Features
+
+* [#14583](https://github.com/cosmos/cosmos-sdk/pull/14583) Add support for Core API.
+
+## [v0.45.13](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.45.13) - 2023-02-09
+
+### Improvements
+
+* (deps) Bump Tendermint version to [v0.34.26](https://github.com/informalsystems/tendermint/releases/tag/v0.34.26).
+
+### Bug Fixes
+
+* (store) [#14798](https://github.com/cosmos/cosmos-sdk/pull/14798) Copy btree to avoid the problem of modify while iteration.
+
+## [v0.45.12](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.45.12) - 2023-01-23
+
+### Improvements
+
+* [#13881](https://github.com/cosmos/cosmos-sdk/pull/13881) Optimize iteration on nested cached KV stores and other operations in general.
+* (store) [#11646](https://github.com/cosmos/cosmos-sdk/pull/11646) Add store name in tracekv-emitted store traces
+* (deps) Bump Tendermint version to [v0.34.24](https://github.com/tendermint/tendermint/releases/tag/v0.34.24) and use Informal Systems fork.
+
+### API Breaking Changes
+
+* (store) [#13516](https://github.com/cosmos/cosmos-sdk/pull/13516) Update State Streaming APIs:
+    * Add method `ListenCommit` to `ABCIListener`
+    * Move `ListeningEnabled` and  `AddListener` methods to `CommitMultiStore`
+    * Remove `CacheWrapWithListeners` from `CacheWrap` and `CacheWrapper` interfaces
+    * Remove listening APIs from the caching layer (it should only listen to the `rootmulti.Store`)
+    * Add three new options to file streaming service constructor.
+    * Modify `ABCIListener` such that any error from any method will always halt the app via `panic`
+
+### Bug Fixes
+
+* (store) [#13516](https://github.com/cosmos/cosmos-sdk/pull/13516) Fix state listener that was observing writes at wrong time.
+* (store) [#12945](https://github.com/cosmos/cosmos-sdk/pull/12945) Fix nil end semantics in store/cachekv/iterator when iterating a dirty cache.
+
+## [v0.45.11](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.45.11) - 2022-11-09
+
+### Improvements
+
+* [#13896](https://github.com/cosmos/cosmos-sdk/pull/13896) Queries on pruned height returns error instead of empty values.
 * (deps) Bump Tendermint version to [v0.34.23](https://github.com/tendermint/tendermint/releases/tag/v0.34.23).
 * (deps) Bump IAVL version to [v0.19.4](https://github.com/cosmos/iavl/releases/tag/v0.19.4).
 * (snapshot) [#13400](https://github.com/cosmos/cosmos-sdk/pull/13400) Fix snapshot checksum issue in golang 1.19.
@@ -58,7 +114,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [#13673](https://github.com/cosmos/cosmos-sdk/pull/13673) The `GetFromFields` function now takes `Context` as an argument and removes `genOnly`.
 * (store) [#11825](https://github.com/cosmos/cosmos-sdk/pull/11825) Make extension snapshotter interface safer to use, renamed the util function `WriteExtensionItem` to `WriteExtensionPayload`.
 
-## v0.45.10 - 2022-10-24
+## [v0.45.10](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.45.10) - 2022-10-24
 
 ### Features
 
@@ -76,7 +132,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [#13564](https://github.com/cosmos/cosmos-sdk/pull/13564) - Fix `make proto-gen`.
 * (server) [#13610](https://github.com/cosmos/cosmos-sdk/pull/13610) Read the pruning-keep-every field again.
 
-## v0.45.9 - 2022-10-14
+## [v0.45.9](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.45.9) - 2022-10-14
 
 ATTENTION:
 
@@ -116,7 +172,7 @@ replace github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8
 
 Reverted #12437 due to API breaking changes.
 
-## v0.45.8 - 2022-08-25
+## [v0.45.8](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.45.8) - 2022-08-25
 
 ### Improvements
 
@@ -131,7 +187,7 @@ Reverted #12437 due to API breaking changes.
 
 * [#13046](https://github.com/cosmos/cosmos-sdk/pull/13046) Fix missing return statement in BaseApp.Query.
 
-## v0.45.7 - 2022-08-04
+## [v0.45.7](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.45.7) - 2022-08-04
 
 ### Features
 

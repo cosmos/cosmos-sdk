@@ -209,6 +209,29 @@ snapshot-interval = {{ .StateSync.SnapshotInterval }}
 
 # snapshot-keep-recent specifies the number of recent snapshots to keep and serve (0 to keep all).
 snapshot-keep-recent = {{ .StateSync.SnapshotKeepRecent }}
+
+###############################################################################
+###                         Store / State Streaming                         ###
+###############################################################################
+
+[store]
+streamers = [{{ range .Store.Streamers }}{{ printf "%q, " . }}{{end}}]
+
+[streamers]
+[streamers.file]
+keys = [{{ range .Streamers.File.Keys }}{{ printf "%q, " . }}{{end}}]
+write_dir = "{{ .Streamers.File.WriteDir }}"
+prefix = "{{ .Streamers.File.Prefix }}"
+
+# output-metadata specifies if output the metadata file which includes the abci request/responses 
+# during processing the block.
+output-metadata = "{{ .Streamers.File.OutputMetadata }}"
+
+# stop-node-on-error specifies if propagate the file streamer errors to consensus state machine.
+stop-node-on-error = "{{ .Streamers.File.StopNodeOnError }}"
+
+# fsync specifies if call fsync after writing the files.
+fsync = "{{ .Streamers.File.Fsync }}"
 `
 
 var configTemplate *template.Template

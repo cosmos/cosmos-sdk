@@ -6,7 +6,7 @@
 package ledger
 
 import (
-	"github.com/pkg/errors"
+	"errors"
 )
 
 // If ledger support (build tag) has been enabled, which implies a CGO dependency,

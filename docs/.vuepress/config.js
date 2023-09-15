@@ -34,8 +34,8 @@ module.exports = {
     label: "sdk",
     algolia: {
       id: "QLS2QSP47E",
-      key: "067b84458bfa80c295e1d4f12c461911",
-      index: "cosmos_network"
+      key: "4d9feeb481e3cfef8f91bbc63e090042",
+      index: "cosmos_network_vue"
     },
     versions: [
       {

@@ -185,6 +185,8 @@
     - [StoreInfo](#cosmos.base.store.v1beta1.StoreInfo)
   
 - [cosmos/base/store/v1beta1/listening.proto](#cosmos/base/store/v1beta1/listening.proto)
+    - [BlockMetadata](#cosmos.base.store.v1beta1.BlockMetadata)
+    - [BlockMetadata.DeliverTx](#cosmos.base.store.v1beta1.BlockMetadata.DeliverTx)
     - [StoreKVPair](#cosmos.base.store.v1beta1.StoreKVPair)
   
 - [cosmos/base/tendermint/v1beta1/query.proto](#cosmos/base/tendermint/v1beta1/query.proto)
@@ -3006,6 +3008,43 @@ between a store name and the commit ID.
 <p align="right"><a href="#top">Top</a></p>
 
 ## cosmos/base/store/v1beta1/listening.proto
+
+
+
+<a name="cosmos.base.store.v1beta1.BlockMetadata"></a>
+
+### BlockMetadata
+BlockMetadata contains all the abci event data of a block
+the file streamer dump them into files together with the state changes.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `request_begin_block` | [tendermint.abci.RequestBeginBlock](#tendermint.abci.RequestBeginBlock) |  |  |
+| `response_begin_block` | [tendermint.abci.ResponseBeginBlock](#tendermint.abci.ResponseBeginBlock) |  |  |
+| `deliver_txs` | [BlockMetadata.DeliverTx](#cosmos.base.store.v1beta1.BlockMetadata.DeliverTx) | repeated |  |
+| `request_end_block` | [tendermint.abci.RequestEndBlock](#tendermint.abci.RequestEndBlock) |  |  |
+| `response_end_block` | [tendermint.abci.ResponseEndBlock](#tendermint.abci.ResponseEndBlock) |  |  |
+| `response_commit` | [tendermint.abci.ResponseCommit](#tendermint.abci.ResponseCommit) |  |  |
+
+
+
+
+
+
+<a name="cosmos.base.store.v1beta1.BlockMetadata.DeliverTx"></a>
+
+### BlockMetadata.DeliverTx
+DeliverTx encapulate deliver tx request and response.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `request` | [tendermint.abci.RequestDeliverTx](#tendermint.abci.RequestDeliverTx) |  |  |
+| `response` | [tendermint.abci.ResponseDeliverTx](#tendermint.abci.ResponseDeliverTx) |  |  |
+
+
+
 
 
 

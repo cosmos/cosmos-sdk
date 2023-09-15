@@ -14,7 +14,6 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/store/cachekv"
-	"github.com/cosmos/cosmos-sdk/store/listenkv"
 	"github.com/cosmos/cosmos-sdk/store/tracekv"
 	"github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -109,7 +108,7 @@ func UnsafeNewStore(tree *iavl.MutableTree) *Store {
 // Any mutable operations executed will result in a panic.
 func (st *Store) GetImmutable(version int64) (*Store, error) {
 	if !st.VersionExists(version) {
-		return &Store{tree: &immutableTree{&iavl.ImmutableTree{}}}, nil
+		return &Store{tree: &immutableTree{&iavl.ImmutableTree{}}}, fmt.Errorf("version mismatch on immutable IAVL tree; version does not exist. Version has either been pruned, or is for a future block height")
 	}
 
 	iTree, err := st.tree.GetImmutable(version)
@@ -186,11 +185,6 @@ func (st *Store) CacheWrap() types.CacheWrap {
 // CacheWrapWithTrace implements the Store interface.
 func (st *Store) CacheWrapWithTrace(w io.Writer, tc types.TraceContext) types.CacheWrap {
 	return cachekv.NewStore(tracekv.NewStore(st, w, tc))
-}
-
-// CacheWrapWithListeners implements the CacheWrapper interface.
-func (st *Store) CacheWrapWithListeners(storeKey types.StoreKey, listeners []types.WriteListener) types.CacheWrap {
-	return cachekv.NewStore(listenkv.NewStore(st, storeKey, listeners))
 }
 
 // Implements types.KVStore.
@@ -273,7 +267,7 @@ func (st *Store) Export(version int64) (*iavl.Exporter, error) {
 	if !ok || tree == nil {
 		return nil, fmt.Errorf("iavl export failed: unable to fetch tree for version %v", version)
 	}
-	return tree.Export(), nil
+	return tree.Export()
 }
 
 // Import imports an IAVL tree at the given version, returning an iavl.Importer for importing.

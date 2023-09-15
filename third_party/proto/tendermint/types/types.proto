@@ -54,7 +54,7 @@ message BlockID {
 
 // --------------------------------
 
-// Header defines the structure of a Tendermint block header.
+// Header defines the structure of a block header.
 message Header {
   // basic block info
   tendermint.version.Consensus version  = 1 [(gogoproto.nullable) = false];

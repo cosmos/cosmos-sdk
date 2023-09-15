@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"database/sql"
 	"fmt"
+	"strings"
 
 	_ "modernc.org/sqlite"
 
@@ -22,37 +23,39 @@ type iterator struct {
 }
 
 func newIterator(storage *sql.DB, storeKey string, targetVersion uint64, start, end []byte) (*iterator, error) {
-	// XXX(bez): Think of a cleaner way of creating the SQL statement to handle
-	// end domain existing or not without resorting to fmt.Sprintf or relying on
-	// a SQL builder (which can be a last resort option). For now, this will suffice.
 	var (
-		stmt      *sql.Stmt
+		keyClause = []string{"store_key = ?", "version <= ?"}
 		queryArgs []any
-		err       error
 	)
-	if len(end) > 0 {
-		stmt, err = storage.Prepare(`
-		SELECT x.key, x.value
-		FROM (
-			SELECT key, value, version, tombstone,
-				row_number() OVER (PARTITION BY key ORDER BY version DESC) AS _rn
-			FROM state_storage WHERE store_key = ? AND version <= ? AND key >= ? AND key < ?
-		) x
-		WHERE x._rn = 1 AND (x.tombstone = 0 OR x.tombstone > ?) ORDER BY x.key ASC;
-		`)
+
+	switch {
+	case len(start) > 0 && len(end) > 0:
+		keyClause = append(keyClause, "key >= ?", "key < ?")
 		queryArgs = []any{storeKey, targetVersion, start, end, targetVersion}
-	} else {
-		stmt, err = storage.Prepare(`
-		SELECT x.key, x.value
-		FROM (
-			SELECT key, value, version, tombstone,
-				row_number() OVER (PARTITION BY key ORDER BY version DESC) AS _rn
-			FROM state_storage WHERE store_key = ? AND version <= ? AND key >= ?
-		) x
-		WHERE x._rn = 1 AND (x.tombstone = 0 OR x.tombstone > ?) ORDER BY x.key ASC;
-		`)
+
+	case len(start) > 0 && len(end) == 0:
+		keyClause = append(keyClause, "key >= ?")
 		queryArgs = []any{storeKey, targetVersion, start, targetVersion}
+
+	case len(start) == 0 && len(end) > 0:
+		keyClause = append(keyClause, "key < ?")
+		queryArgs = []any{storeKey, targetVersion, end, targetVersion}
+
+	default:
+		queryArgs = []any{storeKey, targetVersion, targetVersion}
 	}
+
+	// Note, this is not susceptible to SQL injection because placeholders are used
+	// for parts of the query outside the store's direct control.
+	stmt, err := storage.Prepare(fmt.Sprintf(`
+	SELECT x.key, x.value
+	FROM (
+		SELECT key, value, version, tombstone,
+			row_number() OVER (PARTITION BY key ORDER BY version DESC) AS _rn
+			FROM state_storage WHERE %s
+		) x
+	WHERE x._rn = 1 AND (x.tombstone = 0 OR x.tombstone > ?) ORDER BY x.key ASC;
+	`, strings.Join(keyClause, " AND ")))
 	if err != nil {
 		return nil, fmt.Errorf("failed to prepare SQL statement: %w", err)
 	}

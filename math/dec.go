@@ -42,6 +42,7 @@ var (
 	zeroInt              = big.NewInt(0)
 	oneInt               = big.NewInt(1)
 	tenInt               = big.NewInt(10)
+	smallestDec          = LegacySmallestDec()
 )
 
 // Decimal errors
@@ -459,17 +460,19 @@ func (d LegacyDec) ApproxRoot(root uint64) (guess LegacyDec, err error) {
 		return absRoot.NegMut(), err
 	}
 
-	if root == 1 || d.IsZero() || d.Equal(LegacyOneDec()) {
+	// One decimal, that we invalidate later. Helps us save a heap allocation.
+	scratchOneDec := LegacyOneDec()
+	if root == 1 || d.IsZero() || d.Equal(scratchOneDec) {
 		return d, nil
 	}
 
 	if root == 0 {
-		return LegacyOneDec(), nil
+		return scratchOneDec, nil
 	}
 
-	guess, delta := LegacyOneDec(), LegacyOneDec()
+	guess, delta := scratchOneDec, LegacyOneDec()
 
-	for iter := 0; delta.Abs().GT(LegacySmallestDec()) && iter < maxApproxRootIterations; iter++ {
+	for iter := 0; iter < maxApproxRootIterations && delta.Abs().GT(smallestDec); iter++ {
 		prev := guess.Power(root - 1)
 		if prev.IsZero() {
 			prev = LegacySmallestDec()

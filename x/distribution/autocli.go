@@ -100,18 +100,6 @@ $ %s query distribution rewards %s [validator-address]
 		},
 		Tx: &autocliv1.ServiceCommandDescriptor{
 			Service: distirbuitonv1beta1.Msg_ServiceDesc.ServiceName,
-			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
-				{
-					RpcMethod: "SetWithdrawAddress",
-					Use:       "set-withdraw-addr",
-					Short:     "Change the default withdraw address for rewards associated with an address",
-					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
-						{ProtoField: "withdraw_address"},
-						{ProtoField: "delegator_address"},
-					},
-				},
-			},
-			EnhanceCustomCommand: true,
 		},
 	}
 }

@@ -123,7 +123,7 @@ func ProvideClientContext(
 	addressCodec address.Codec,
 	validatorAddressCodec runtime.ValidatorAddressCodec,
 	consensusAddressCodec runtime.ConsensusAddressCodec,
-) client.Context {
+) *client.Context {
 	var err error
 
 	initClientCtx := client.Context{}.
@@ -145,7 +145,7 @@ func ProvideClientContext(
 		panic(err)
 	}
 
-	return initClientCtx
+	return &initClientCtx
 }
 
 func ProvideKeyring(clientCtx client.Context, addressCodec address.Codec) (clientv2keyring.Keyring, error) {

@@ -115,20 +115,7 @@ func NewRootCmd() *cobra.Command {
 	return rootCmd
 }
 
-<<<<<<< HEAD
-func ProvideClientContext(appCodec codec.Codec, interfaceRegistry codectypes.InterfaceRegistry, legacyAmino *codec.LegacyAmino) client.Context {
-=======
-func ProvideClientContext(
-	appCodec codec.Codec,
-	interfaceRegistry codectypes.InterfaceRegistry,
-	legacyAmino *codec.LegacyAmino,
-	addressCodec address.Codec,
-	validatorAddressCodec runtime.ValidatorAddressCodec,
-	consensusAddressCodec runtime.ConsensusAddressCodec,
-) *client.Context {
-	var err error
-
->>>>>>> a0bd4e9fb (feat(client/v2): Add `clientCtx` to commands in autocli (#17709))
+func ProvideClientContext(appCodec codec.Codec, interfaceRegistry codectypes.InterfaceRegistry, legacyAmino *codec.LegacyAmino) *client.Context {
 	initClientCtx := client.Context{}.
 		WithCodec(appCodec).
 		WithInterfaceRegistry(interfaceRegistry).

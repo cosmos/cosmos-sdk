@@ -37,15 +37,15 @@ func (b *Builder) Validate() error {
 		return errors.New("client context is required in builder")
 	}
 
-	if b.ClientCtx.AddressCodec == nil {
+	if b.AddressCodec == nil {
 		return errors.New("address codec is required in builder")
 	}
 
-	if b.ClientCtx.ValidatorAddressCodec == nil {
+	if b.ValidatorAddressCodec == nil {
 		return errors.New("validator address codec is required in builder")
 	}
 
-	if b.ClientCtx.ConsensusAddressCodec == nil {
+	if b.ConsensusAddressCodec == nil {
 		return errors.New("consensus address codec is required in builder")
 	}
 

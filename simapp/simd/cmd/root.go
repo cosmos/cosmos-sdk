@@ -97,10 +97,7 @@ func NewRootCmd() *cobra.Command {
 	autoCliOpts := tempApp.AutoCliOpts()
 	initClientCtx, _ = config.ReadFromClientConfig(initClientCtx)
 	autoCliOpts.Keyring = initClientCtx.Keyring
-<<<<<<< HEAD
-=======
 	autoCliOpts.ClientCtx = &initClientCtx
->>>>>>> a0bd4e9fb (feat(client/v2): Add `clientCtx` to commands in autocli (#17709))
 
 	if err := autoCliOpts.EnhanceRootCommand(rootCmd); err != nil {
 		panic(err)

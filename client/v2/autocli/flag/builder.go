@@ -16,8 +16,10 @@ import (
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	"cosmossdk.io/client/v2/autocli/keyring"
 	"cosmossdk.io/client/v2/internal/util"
+	"cosmossdk.io/core/address"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/runtime"
 )
 
 // Builder manages options for building pflag flags for protobuf messages.
@@ -38,6 +40,11 @@ type Builder struct {
 
 	messageFlagTypes map[protoreflect.FullName]Type
 	scalarFlagTypes  map[string]Type
+
+	// AddressCodec is the address codec to use for the app.
+	AddressCodec          address.Codec
+	ValidatorAddressCodec runtime.ValidatorAddressCodec
+	ConsensusAddressCodec runtime.ConsensusAddressCodec
 
 	// Keyring implementation
 	Keyring keyring.Keyring

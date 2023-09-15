@@ -475,7 +475,7 @@ func (d LegacyDec) ApproxRoot(root uint64) (guess LegacyDec, err error) {
 	for iter := 0; iter < maxApproxRootIterations && delta.Abs().GT(smallestDec); iter++ {
 		prev := guess.Power(root - 1)
 		if prev.IsZero() {
-			prev = LegacySmallestDec()
+			prev = smallestDec
 		}
 		delta.Set(d).QuoMut(prev)
 		delta.SubMut(guess)

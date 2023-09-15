@@ -332,12 +332,14 @@ func NewTxSelector(maxTxBytes, maxBlockGas uint64) *TxSelector {
 	}
 }
 
+// SelectedTxs returns a copy of the selected transactions.
 func (ts *TxSelector) SelectedTxs() [][]byte {
 	txs := make([][]byte, len(ts.selectedTxs))
 	copy(txs, ts.selectedTxs)
 	return txs
 }
 
+// Clear clears the TxSelector, nulling out all fields.
 func (ts *TxSelector) Clear() {
 	ts.totalTxBytes = 0
 	ts.totalTxGas = 0

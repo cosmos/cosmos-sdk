@@ -31,6 +31,7 @@ service Msg {
   // granter's account that has been granted to the grantee.
   rpc Revoke(MsgRevoke) returns (MsgRevokeResponse);
 
+  // ExecCompat has same functionality as Exec but accepts array of json-encoded message string instead of []*Any
   rpc ExecCompat(MsgExecCompat) returns (MsgExecCompatResponse);
 }
 

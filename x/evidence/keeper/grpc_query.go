@@ -13,7 +13,6 @@ import (
 	"cosmossdk.io/x/evidence/types"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 )
 
@@ -28,7 +27,7 @@ func NewQuerier(keeper *Keeper) Querier {
 }
 
 // Evidence implements the Query/Evidence gRPC method
-func (k Querier) Evidence(c context.Context, req *types.QueryEvidenceRequest) (*types.QueryEvidenceResponse, error) {
+func (k Querier) Evidence(ctx context.Context, req *types.QueryEvidenceRequest) (*types.QueryEvidenceResponse, error) {
 	if req == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
@@ -36,8 +35,6 @@ func (k Querier) Evidence(c context.Context, req *types.QueryEvidenceRequest) (*
 	if req.Hash == "" {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid request; hash is empty")
 	}
-
-	ctx := sdk.UnwrapSDKContext(c)
 
 	decodedHash, err := hex.DecodeString(req.Hash)
 	if err != nil {

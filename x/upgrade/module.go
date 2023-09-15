@@ -38,7 +38,14 @@ func init() {
 // ConsensusVersion defines the current x/upgrade module consensus version.
 const ConsensusVersion uint64 = 3
 
-var _ module.AppModuleBasic = AppModuleBasic{}
+var (
+	_ module.AppModuleBasic = AppModule{}
+	_ module.HasGenesis     = AppModule{}
+	_ module.HasServices    = AppModule{}
+
+	_ appmodule.AppModule     = AppModule{}
+	_ appmodule.HasPreBlocker = AppModule{}
+)
 
 // AppModuleBasic implements the sdk.AppModuleBasic interface
 type AppModuleBasic struct {
@@ -85,12 +92,6 @@ func NewAppModule(keeper *keeper.Keeper, ac address.Codec) AppModule {
 		keeper:         keeper,
 	}
 }
-
-var (
-	_ appmodule.AppModule     = AppModule{}
-	_ appmodule.HasPreBlocker = AppModule{}
-	_ module.HasGenesis       = AppModule{}
-)
 
 // IsOnePerModuleType implements the depinject.OnePerModuleType interface.
 func (am AppModule) IsOnePerModuleType() {}

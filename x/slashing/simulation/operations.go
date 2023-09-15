@@ -109,7 +109,7 @@ func SimulateMsgUnjail(
 		account := ak.GetAccount(ctx, sdk.AccAddress(bz))
 		spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
-		fees, err := simtypes.RandomFees(r, ctx, spendable)
+		fees, err := simtypes.RandomFees(r, spendable)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, msgType, "unable to generate fees"), nil, err
 		}

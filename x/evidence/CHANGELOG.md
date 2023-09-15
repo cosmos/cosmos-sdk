@@ -36,6 +36,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (keeper) [#15825](https://github.com/cosmos/cosmos-sdk/pull/15825) Evidence constructor now requires an `address.Codec` (`import "cosmossdk.io/core/address"`)
 * [#16336](https://github.com/cosmos/cosmos-sdk/pull/16336) Use collections for state management:
     * Removed: keeper `SetEvidence`, `GetEvidence`, `IterateEvidences`, `GetAllEvidences`, `MustMarshalEvidence`, `MustUnmarshalEvidence`, `MarshalEvidence`, `UnmarshalEvidence`
+* [#17688](https://github.com/cosmos/cosmos-sdk/pull/17688) Remove `comet.Info` as an arg to evidence
 
 ### Client Breaking Changes
 

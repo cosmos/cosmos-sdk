@@ -197,6 +197,7 @@ type HasABCIGenesis interface {
 
 // AppModule is the form for an application module. Most of
 // its functionality has been moved to extension interfaces.
+// Deprecated: use appmodule.AppModule with a combination of extension interfaes interfaces instead.
 type AppModule interface {
 	AppModuleBasic
 }
@@ -222,7 +223,12 @@ type HasConsensusVersion interface {
 	ConsensusVersion() uint64
 }
 
-type HasABCIEndblock interface {
+// HasABCIEndblock is a released typo of HasABCIEndBlock.
+// Deprecated: use HasABCIEndBlock instead.
+type HasABCIEndblock HasABCIEndBlock
+
+// HasABCIEndBlock is the interface for modules that need to run code at the end of the block.
+type HasABCIEndBlock interface {
 	AppModule
 	EndBlock(context.Context) ([]abci.ValidatorUpdate, error)
 }
@@ -397,7 +403,7 @@ func (m *Manager) SetOrderEndBlockers(moduleNames ...string) {
 				return !hasEndBlock
 			}
 
-			_, hasABCIEndBlock := module.(HasABCIEndblock)
+			_, hasABCIEndBlock := module.(HasABCIEndBlock)
 			return !hasABCIEndBlock
 		})
 	m.OrderEndBlockers = moduleNames
@@ -738,21 +744,21 @@ func (m Manager) RunMigrations(ctx context.Context, cfg Configurator, fromVM Ver
 // PreBlock performs begin block functionality for upgrade module.
 // It takes the current context as a parameter and returns a boolean value
 // indicating whether the migration was successfully executed or not.
-func (m *Manager) PreBlock(ctx sdk.Context) (sdk.ResponsePreBlock, error) {
+func (m *Manager) PreBlock(ctx sdk.Context) (*sdk.ResponsePreBlock, error) {
 	ctx = ctx.WithEventManager(sdk.NewEventManager())
 	paramsChanged := false
 	for _, moduleName := range m.OrderPreBlockers {
 		if module, ok := m.Modules[moduleName].(appmodule.HasPreBlocker); ok {
 			rsp, err := module.PreBlock(ctx)
 			if err != nil {
-				return sdk.ResponsePreBlock{}, err
+				return nil, err
 			}
 			if rsp.IsConsensusParamsChanged() {
 				paramsChanged = true
 			}
 		}
 	}
-	return sdk.ResponsePreBlock{
+	return &sdk.ResponsePreBlock{
 		ConsensusParamsChanged: paramsChanged,
 	}, nil
 }
@@ -788,7 +794,7 @@ func (m *Manager) EndBlock(ctx sdk.Context) (sdk.EndBlock, error) {
 			if err != nil {
 				return sdk.EndBlock{}, err
 			}
-		} else if module, ok := m.Modules[moduleName].(HasABCIEndblock); ok {
+		} else if module, ok := m.Modules[moduleName].(HasABCIEndBlock); ok {
 			moduleValUpdates, err := module.EndBlock(ctx)
 			if err != nil {
 				return sdk.EndBlock{}, err

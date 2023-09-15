@@ -292,6 +292,7 @@ decision based on the vote extensions.
 #### Vote Extension Persistence
 
 In certain contexts, it may be useful or necessary for applications to persist
+<<<<<<< HEAD
 data derived from vote extensions. In order to facilitate this use case, we
 propose to allow application developers to manually retrieve the `finalizeState`
 context (see [`FinalizeBlock`](#finalizeblock-1) below). Using this context,
@@ -299,10 +300,16 @@ state can be directly written to `finalizeState`, which will be used during
 `FinalizeBlock` and eventually committed to the application state. Note, since
 `ProcessProposal` can timeout and thus require another round of consensus, we
 will reset `finalizeState` in the beginning of `ProcessProposal`.
+=======
+data derived from vote extensions. In order to facilitate this use case, we propose
+to allow app developers to define a pre-Blocker hook which will be called
+at the very beginning of `FinalizeBlock`, i.e. before `BeginBlock` (see below).
+>>>>>>> f99a6242a (refactor!: reimplement PreFinalizeBlockHook as PreBlocker (#17713))
 
 A `ProcessProposal` handler could look like the following:
 
 ```go
+<<<<<<< HEAD
 func (h MyHandler) ProcessProposalHandler() sdk.ProcessProposalHandler {
 	return func(ctx sdk.Context, req abci.RequestProcessProposal) abci.ResponseProcessProposal {
 		for _, txBytes := range req.Txs {
@@ -316,6 +323,10 @@ func (h MyHandler) ProcessProposalHandler() sdk.ProcessProposalHandler {
 
 		// Any state changes that occur on the provided fCtx WILL be written to state!
 		h.myKeeper.SetVoteExtResult(fCtx, ...)
+=======
+func (a MyApp) PreBlocker(ctx sdk.Context, req *abci.RequestFinalizeBlock) error {
+	voteExts := GetVoteExtensions(ctx, req.Txs)
+>>>>>>> f99a6242a (refactor!: reimplement PreFinalizeBlockHook as PreBlocker (#17713))
 	
 		return abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_ACCEPT}
 	}
@@ -360,11 +371,28 @@ legacy ABCI types, e.g. `LegacyBeginBlockRequest` and `LegacyEndBlockRequest`. O
 we can come up with new types and names altogether.
 
 ```go
+<<<<<<< HEAD
 func (app *BaseApp) FinalizeBlock(req abci.RequestFinalizeBlock) abci.ResponseFinalizeBlock {
 	// merge any state changes from ProcessProposal into the FinalizeBlock state
 	app.MergeProcessProposalState()
 
 	beginBlockResp := app.beginBlock(ctx, req)
+=======
+func (app *BaseApp) FinalizeBlock(req abci.RequestFinalizeBlock) (*abci.ResponseFinalizeBlock, error) {
+	ctx := ...
+
+	if app.preBlocker != nil {
+		ctx := app.finalizeBlockState.ctx
+		rsp, err := app.preBlocker(ctx, req)
+		if err != nil {
+			return nil, err
+		}
+		if rsp.ConsensusParamsChanged {
+			app.finalizeBlockState.ctx = ctx.WithConsensusParams(app.GetConsensusParams(ctx))
+		}
+	}
+	beginBlockResp, err := app.beginBlock(req)
+>>>>>>> f99a6242a (refactor!: reimplement PreFinalizeBlockHook as PreBlocker (#17713))
 	appendBlockEventAttr(beginBlockResp.Events, "begin_block")
 
 	txExecResults := make([]abci.ExecTxResult, 0, len(req.Txs))
@@ -373,7 +401,7 @@ func (app *BaseApp) FinalizeBlock(req abci.RequestFinalizeBlock) abci.ResponseFi
 		txExecResults = append(txExecResults, result)
 	}
 
-	endBlockResp := app.endBlock(ctx, req)
+	endBlockResp, err := app.endBlock(app.finalizeBlockState.ctx)
 	appendBlockEventAttr(beginBlockResp.Events, "end_block")
 
 	return abci.ResponseFinalizeBlock{

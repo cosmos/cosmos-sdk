@@ -279,7 +279,8 @@ func (s *ABCIUtilsTestSuite) TestDefaultProposalHandler_NoOpMempoolTxSelection()
 	ph := baseapp.NewDefaultProposalHandler(mempool.NoOpMempool{}, nil)
 	handler := ph.PrepareProposalHandler()
 
-	// request PrepareProposal with 5 txs, 5 bytes each, with a max size of 15
+	// Request PrepareProposal with 5 txs, 5 bytes each, with a max size of 15.
+	// We should only select the first 3 txs.
 	resp, err := handler(s.ctx, &abci.RequestPrepareProposal{
 		Txs: [][]byte{
 			{0xFF, 0xFF, 0xFF, 0xFF, 0xFF},

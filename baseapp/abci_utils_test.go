@@ -16,6 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/baseapp/testutil/mock"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/mempool"
 )
 
 const (
@@ -272,6 +273,25 @@ func (s *ABCIUtilsTestSuite) TestValidateVoteExtensionsTwoVotesNilAbsent() {
 
 	// expect-pass (votes of height 2 are included in next block)
 	s.Require().Error(baseapp.ValidateVoteExtensions(s.ctx, s.valStore, 3, chainID, llc))
+}
+
+func (s *ABCIUtilsTestSuite) TestDefaultProposalHandler_NoMempoolSelection() {
+	ph := baseapp.NewDefaultProposalHandler(mempool.NoOpMempool{}, nil)
+	handler := ph.PrepareProposalHandler()
+
+	// request PrepareProposal with 5 txs, 5 bytes each, with a max size of 15
+	resp, err := handler(s.ctx, &abci.RequestPrepareProposal{
+		Txs: [][]byte{
+			{0xFF, 0xFF, 0xFF, 0xFF, 0xFF},
+			{0xFF, 0xFF, 0xFF, 0xFF, 0xFF},
+			{0xFF, 0xFF, 0xFF, 0xFF, 0xFF},
+			{0xFF, 0xFF, 0xFF, 0xFF, 0xFF},
+			{0xFF, 0xFF, 0xFF, 0xFF, 0xFF},
+		},
+		MaxTxBytes: 15,
+	})
+	s.Require().NoError(err)
+	s.Require().Len(resp.Txs, 3)
 }
 
 func marshalDelimitedFn(msg proto.Message) ([]byte, error) {

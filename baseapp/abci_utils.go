@@ -359,7 +359,7 @@ func (ts *TxSelector) SelectTxForProposal(memTx sdk.Tx, txBz []byte) bool {
 	}
 
 	// only add the transaction to the proposal if we have enough capacity
-	if (txSize + ts.totalTxBytes) < ts.maxTxBytes {
+	if (txSize + ts.totalTxBytes) <= ts.maxTxBytes {
 		// If there is a max block gas limit, add the tx only if the limit has
 		// not been met.
 		if ts.maxBlockGas > 0 {

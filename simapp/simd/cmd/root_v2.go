@@ -35,7 +35,7 @@ func NewRootCmd() *cobra.Command {
 		txConfig           client.TxConfig
 		autoCliOpts        autocli.AppOptions
 		moduleBasicManager module.BasicManager
-		initClientCtx      client.Context
+		clientCtx          *client.Context
 	)
 
 	if err := depinject.Inject(
@@ -54,7 +54,7 @@ func NewRootCmd() *cobra.Command {
 		&txConfig,
 		&autoCliOpts,
 		&moduleBasicManager,
-		&initClientCtx,
+		&clientCtx,
 	); err != nil {
 		panic(err)
 	}
@@ -68,6 +68,7 @@ func NewRootCmd() *cobra.Command {
 			cmd.SetOut(cmd.OutOrStdout())
 			cmd.SetErr(cmd.ErrOrStderr())
 
+			initClientCtx := *clientCtx
 			initClientCtx = initClientCtx.WithCmdContext(cmd.Context())
 			initClientCtx, err := client.ReadPersistentCommandFlags(initClientCtx, cmd.Flags())
 			if err != nil {
@@ -114,7 +115,20 @@ func NewRootCmd() *cobra.Command {
 	return rootCmd
 }
 
+<<<<<<< HEAD
 func ProvideClientContext(appCodec codec.Codec, interfaceRegistry codectypes.InterfaceRegistry, legacyAmino *codec.LegacyAmino) client.Context {
+=======
+func ProvideClientContext(
+	appCodec codec.Codec,
+	interfaceRegistry codectypes.InterfaceRegistry,
+	legacyAmino *codec.LegacyAmino,
+	addressCodec address.Codec,
+	validatorAddressCodec runtime.ValidatorAddressCodec,
+	consensusAddressCodec runtime.ConsensusAddressCodec,
+) *client.Context {
+	var err error
+
+>>>>>>> a0bd4e9fb (feat(client/v2): Add `clientCtx` to commands in autocli (#17709))
 	initClientCtx := client.Context{}.
 		WithCodec(appCodec).
 		WithInterfaceRegistry(interfaceRegistry).
@@ -127,11 +141,11 @@ func ProvideClientContext(appCodec codec.Codec, interfaceRegistry codectypes.Int
 	// Read the config again to overwrite the default values with the values from the config file
 	initClientCtx, _ = config.ReadFromClientConfig(initClientCtx)
 
-	return initClientCtx
+	return &initClientCtx
 }
 
-func ProvideKeyring(clientCtx client.Context, addressCodec address.Codec) (clientv2keyring.Keyring, error) {
-	kb, err := client.NewKeyringFromBackend(clientCtx, clientCtx.Keyring.Backend())
+func ProvideKeyring(clientCtx *client.Context, addressCodec address.Codec) (clientv2keyring.Keyring, error) {
+	kb, err := client.NewKeyringFromBackend(*clientCtx, clientCtx.Keyring.Backend())
 	if err != nil {
 		return nil, err
 	}

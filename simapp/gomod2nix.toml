@@ -487,11 +487,11 @@ schema = 3
     version = "v1.6.7"
     hash = "sha256-zIxGRHiq4QBvRqkrhMGMGCaVL4iM4TtlYpAi/hrivS4="
   [mod."google.golang.org/genproto"]
-    version = "v0.0.0-20230913181813-007df8e322eb"
-    hash = "sha256-0lXldjgjAjpPBID24a5hbRDJmuIxduVrAG98KwfbZLI="
+    version = "v0.0.0-20230803162519-f966b187b2e5"
+    hash = "sha256-OZHnOp5lPfVy70LEBNdaMqlLjoJZdTkLAZODmvWRqJE="
   [mod."google.golang.org/genproto/googleapis/api"]
-    version = "v0.0.0-20230913181813-007df8e322eb"
-    hash = "sha256-qd9dJezVHNJZNMkywXapT1rsyD+lb25AU8aG8NJlhm4="
+    version = "v0.0.0-20230726155614-23370e0ffb3e"
+    hash = "sha256-C5k3rjFGJasm5uQd1oz/oxZ2Qvu0WQ2n8imG4vyvf7k="
   [mod."google.golang.org/genproto/googleapis/rpc"]
     version = "v0.0.0-20230913181813-007df8e322eb"
     hash = "sha256-1kP7lqQ+fKtARDzTrRNob0owX4GsUnxzOwLyBZSmHOc="

@@ -10,7 +10,7 @@ This document details how to build CLI and REST interfaces for a module. Example
 
 :::note Pre-requisite Readings
 
-* [Building Modules Intro](./01-intro.md)
+* [Building Modules Intro](./00-intro.md)
 
 :::
 

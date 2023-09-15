@@ -41,6 +41,10 @@ enum SignMode {
   // Amino JSON and will be removed in the future.
   SIGN_MODE_LEGACY_AMINO_JSON = 127;
 
+  // Injective EIP712 support for any cosmos messages which uses proto-json encoded string for messages
+  // Signature verification is implemented in injective core
+  SIGN_MODE_EIP712_V2 = 128;
+
   // SIGN_MODE_EIP_191 specifies the sign mode for EIP 191 signing on the Cosmos
   // SDK. Ref: https://eips.ethereum.org/EIPS/eip-191
   //

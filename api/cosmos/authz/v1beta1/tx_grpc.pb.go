@@ -43,6 +43,7 @@ type MsgClient interface {
 	// Revoke revokes any authorization corresponding to the provided method name on the
 	// granter's account that has been granted to the grantee.
 	Revoke(ctx context.Context, in *MsgRevoke, opts ...grpc.CallOption) (*MsgRevokeResponse, error)
+	// ExecCompat has same functionality as Exec but accepts array of json-encoded message string instead of []*Any
 	ExecCompat(ctx context.Context, in *MsgExecCompat, opts ...grpc.CallOption) (*MsgExecCompatResponse, error)
 }
 
@@ -106,6 +107,7 @@ type MsgServer interface {
 	// Revoke revokes any authorization corresponding to the provided method name on the
 	// granter's account that has been granted to the grantee.
 	Revoke(context.Context, *MsgRevoke) (*MsgRevokeResponse, error)
+	// ExecCompat has same functionality as Exec but accepts array of json-encoded message string instead of []*Any
 	ExecCompat(context.Context, *MsgExecCompat) (*MsgExecCompatResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }

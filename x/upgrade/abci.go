@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	"cosmossdk.io/core/appmodule"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/upgrade/keeper"
 	"cosmossdk.io/x/upgrade/types"
@@ -22,17 +23,14 @@ import (
 // The purpose is to ensure the binary is switched EXACTLY at the desired block, and to allow
 // a migration to be executed if needed upon this switch (migration defined in the new binary)
 // skipUpgradeHeightArray is a set of block heights for which the upgrade must be skipped
-func PreBlocker(ctx context.Context, k *keeper.Keeper) (sdk.ResponsePreBlock, error) {
-	rsp := sdk.ResponsePreBlock{
-		ConsensusParamsChanged: false,
-	}
+func PreBlocker(ctx context.Context, k *keeper.Keeper) (appmodule.ResponsePreBlock, error) {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyBeginBlocker)
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	blockHeight := sdkCtx.HeaderInfo().Height
 	plan, err := k.GetUpgradePlan(ctx)
 	if err != nil && !errors.Is(err, types.ErrNoUpgradePlanFound) {
-		return rsp, err
+		return nil, err
 	}
 	found := err == nil
 
@@ -46,7 +44,7 @@ func PreBlocker(ctx context.Context, k *keeper.Keeper) (sdk.ResponsePreBlock, er
 		if !found || !plan.ShouldExecute(blockHeight) || (plan.ShouldExecute(blockHeight) && k.IsSkipHeight(blockHeight)) {
 			lastAppliedPlan, _, err := k.GetLastCompletedUpgrade(ctx)
 			if err != nil {
-				return rsp, err
+				return nil, err
 			}
 
 			if lastAppliedPlan != "" && !k.HasHandler(lastAppliedPlan) {
@@ -57,13 +55,15 @@ func PreBlocker(ctx context.Context, k *keeper.Keeper) (sdk.ResponsePreBlock, er
 					appVersion = cp.Version.App
 				}
 
-				return rsp, fmt.Errorf("wrong app version %d, upgrade handler is missing for %s upgrade plan", appVersion, lastAppliedPlan)
+				return nil, fmt.Errorf("wrong app version %d, upgrade handler is missing for %s upgrade plan", appVersion, lastAppliedPlan)
 			}
 		}
 	}
 
 	if !found {
-		return rsp, nil
+		return &sdk.ResponsePreBlock{
+			ConsensusParamsChanged: false,
+		}, nil
 	}
 
 	logger := k.Logger(ctx)
@@ -76,7 +76,12 @@ func PreBlocker(ctx context.Context, k *keeper.Keeper) (sdk.ResponsePreBlock, er
 			logger.Info(skipUpgradeMsg)
 
 			// Clear the upgrade plan at current height
-			return rsp, k.ClearUpgradePlan(ctx)
+			if err := k.ClearUpgradePlan(ctx); err != nil {
+				return nil, err
+			}
+			return &sdk.ResponsePreBlock{
+				ConsensusParamsChanged: false,
+			}, nil
 		}
 
 		// Prepare shutdown if we don't have an upgrade handler for this upgrade name (meaning this software is out of date)
@@ -85,25 +90,27 @@ func PreBlocker(ctx context.Context, k *keeper.Keeper) (sdk.ResponsePreBlock, er
 			// store migrations.
 			err := k.DumpUpgradeInfoToDisk(blockHeight, plan)
 			if err != nil {
-				return rsp, fmt.Errorf("unable to write upgrade info to filesystem: %w", err)
+				return nil, fmt.Errorf("unable to write upgrade info to filesystem: %w", err)
 			}
 
 			upgradeMsg := BuildUpgradeNeededMsg(plan)
 			logger.Error(upgradeMsg)
 
 			// Returning an error will end up in a panic
-			return rsp, errors.New(upgradeMsg)
+			return nil, errors.New(upgradeMsg)
 		}
 
 		// We have an upgrade handler for this upgrade name, so apply the upgrade
 		logger.Info(fmt.Sprintf("applying upgrade \"%s\" at %s", plan.Name, plan.DueAt()))
 		sdkCtx = sdkCtx.WithBlockGasMeter(storetypes.NewInfiniteGasMeter())
-		err = k.ApplyUpgrade(sdkCtx, plan)
-		return sdk.ResponsePreBlock{
+		if err := k.ApplyUpgrade(sdkCtx, plan); err != nil {
+			return nil, err
+		}
+		return &sdk.ResponsePreBlock{
 			// the consensus parameters might be modified in the migration,
 			// refresh the consensus parameters in context.
 			ConsensusParamsChanged: true,
-		}, err
+		}, nil
 	}
 
 	// if we have a pending upgrade, but it is not yet time, make sure we did not
@@ -113,9 +120,11 @@ func PreBlocker(ctx context.Context, k *keeper.Keeper) (sdk.ResponsePreBlock, er
 		logger.Error(downgradeMsg)
 
 		// Returning an error will end up in a panic
-		return rsp, errors.New(downgradeMsg)
+		return nil, errors.New(downgradeMsg)
 	}
-	return rsp, nil
+	return &sdk.ResponsePreBlock{
+		ConsensusParamsChanged: false,
+	}, nil
 }
 
 // BuildUpgradeNeededMsg prints the message that notifies that an upgrade is needed.

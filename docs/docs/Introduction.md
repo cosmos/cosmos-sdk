@@ -19,7 +19,7 @@ Get familiar with the SDK and explore its main concepts.
 * [**Introduction**](develop/intro/00-overview.md) - High-level overview of the Cosmos SDK.
 * [**Basics**](develop/beginner/00-app-anatomy.md) - Anatomy of a blockchain, transaction lifecycle, accounts and more.
 * [**Core Concepts**](develop/advanced/00-baseapp.md) -  Read about the core concepts like baseapp, the store, or the server.
-* [**Building Modules**](build/building-modules/01-intro.md) -  Discover how to build modules for the Cosmos SDK.
+* [**Building Modules**](build/building-modules/00-intro.md) -  Discover how to build modules for the Cosmos SDK.
 * [**Running a Node**](user/run-node/00-keyring.md) - Running and interacting with nodes using the CLI and API.
 * [**Modules**](./build/modules/README.md) - Explore existing modules to build your application with.
 

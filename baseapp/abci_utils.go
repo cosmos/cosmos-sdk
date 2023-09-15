@@ -178,26 +178,33 @@ func NewDefaultProposalHandler(mp mempool.Mempool, txVerifier ProposalTxVerifier
 // FIFO order.
 func (h DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHandler {
 	return func(ctx sdk.Context, req *abci.RequestPrepareProposal) (*abci.ResponsePrepareProposal, error) {
+		var maxBlockGas uint64
+		if b := ctx.ConsensusParams().Block; b != nil {
+			maxBlockGas = uint64(b.MaxGas)
+		}
+
+		txSelector := NewTxSelector(uint64(req.MaxTxBytes), maxBlockGas)
+		defer txSelector.Clear()
+
 		// If the mempool is nil or NoOp we simply return the transactions
 		// requested from CometBFT, which, by default, should be in FIFO order.
+		//
+		// Note, we still need to ensure the transactions returned respect req.MaxTxBytes.
 		_, isNoOp := h.mempool.(mempool.NoOpMempool)
 		if h.mempool == nil || isNoOp {
-			return &abci.ResponsePrepareProposal{Txs: req.Txs}, nil
-		}
+			for _, txBz := range req.Txs {
+				// XXX: We pass nil as the memTx because we have no way of decoding the
+				// txBz. We'd need to break (update) the ProposalTxVerifier interface.
+				stop := txSelector.SelectTxForProposal(nil, txBz)
+				if stop {
+					break
+				}
+			}
 
-		var maxBlockGas int64
-		if b := ctx.ConsensusParams().Block; b != nil {
-			maxBlockGas = b.MaxGas
+			return &abci.ResponsePrepareProposal{Txs: txSelector.SelectedTxs()}, nil
 		}
-
-		var (
-			selectedTxs  [][]byte
-			totalTxBytes int64
-			totalTxGas   uint64
-		)
 
 		iterator := h.mempool.Select(ctx, req.Txs)
-
 		for iterator != nil {
 			memTx := iterator.Tx()
 
@@ -205,40 +212,15 @@ func (h DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHand
 			// which calls mempool.Insert, in theory everything in the pool should be
 			// valid. But some mempool implementations may insert invalid txs, so we
 			// check again.
-			bz, err := h.txVerifier.PrepareProposalVerifyTx(memTx)
+			txBz, err := h.txVerifier.PrepareProposalVerifyTx(memTx)
 			if err != nil {
 				err := h.mempool.Remove(memTx)
 				if err != nil && !errors.Is(err, mempool.ErrTxNotFound) {
 					return nil, err
 				}
 			} else {
-				var txGasLimit uint64
-				txSize := int64(len(bz))
-
-				gasTx, ok := memTx.(GasTx)
-				if ok {
-					txGasLimit = gasTx.GetGas()
-				}
-
-				// only add the transaction to the proposal if we have enough capacity
-				if (txSize + totalTxBytes) < req.MaxTxBytes {
-					// If there is a max block gas limit, add the tx only if the limit has
-					// not been met.
-					if maxBlockGas > 0 {
-						if (txGasLimit + totalTxGas) <= uint64(maxBlockGas) {
-							totalTxGas += txGasLimit
-							totalTxBytes += txSize
-							selectedTxs = append(selectedTxs, bz)
-						}
-					} else {
-						totalTxBytes += txSize
-						selectedTxs = append(selectedTxs, bz)
-					}
-				}
-
-				// Check if we've reached capacity. If so, we cannot select any more
-				// transactions.
-				if totalTxBytes >= req.MaxTxBytes || (maxBlockGas > 0 && (totalTxGas >= uint64(maxBlockGas))) {
+				stop := txSelector.SelectTxForProposal(memTx, txBz)
+				if stop {
 					break
 				}
 			}
@@ -246,7 +228,7 @@ func (h DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHand
 			iterator = iterator.Next()
 		}
 
-		return &abci.ResponsePrepareProposal{Txs: selectedTxs}, nil
+		return &abci.ResponsePrepareProposal{Txs: txSelector.SelectedTxs()}, nil
 	}
 }
 
@@ -329,4 +311,69 @@ func NoOpVerifyVoteExtensionHandler() sdk.VerifyVoteExtensionHandler {
 	return func(_ sdk.Context, _ *abci.RequestVerifyVoteExtension) (*abci.ResponseVerifyVoteExtension, error) {
 		return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_ACCEPT}, nil
 	}
+}
+
+type TxSelector struct {
+	maxTxBytes   uint64
+	maxBlockGas  uint64
+	totalTxBytes uint64
+	totalTxGas   uint64
+	selectedTxs  [][]byte
+}
+
+func NewTxSelector(maxTxBytes, maxBlockGas uint64) *TxSelector {
+	return &TxSelector{
+		maxTxBytes:  maxTxBytes,
+		maxBlockGas: maxBlockGas,
+	}
+}
+
+func (ts *TxSelector) SelectedTxs() [][]byte {
+	txs := make([][]byte, len(ts.selectedTxs))
+	copy(txs, ts.selectedTxs)
+	return txs
+}
+
+func (ts *TxSelector) Clear() {
+	ts.totalTxBytes = 0
+	ts.totalTxGas = 0
+	ts.selectedTxs = nil
+}
+
+// SelectTxForProposal selects a transaction for inclusion in a proposal. It will
+// only select the provided transaction if there is enough capacity in the block.
+// It will return <true> if the caller should halt the transaction selection loop
+// (typically over a mempool) or <false> otherwise.
+func (ts *TxSelector) SelectTxForProposal(memTx sdk.Tx, txBz []byte) bool {
+	txSize := uint64(len(txBz))
+
+	var txGasLimit uint64
+	if memTx != nil {
+		if gasTx, ok := memTx.(GasTx); ok {
+			txGasLimit = gasTx.GetGas()
+		}
+	}
+
+	// only add the transaction to the proposal if we have enough capacity
+	if (txSize + ts.totalTxBytes) < ts.maxTxBytes {
+		// If there is a max block gas limit, add the tx only if the limit has
+		// not been met.
+		if ts.maxBlockGas > 0 {
+			if (txGasLimit + ts.totalTxGas) <= ts.maxBlockGas {
+				ts.totalTxGas += txGasLimit
+				ts.totalTxBytes += txSize
+				ts.selectedTxs = append(ts.selectedTxs, txBz)
+			}
+		} else {
+			ts.totalTxBytes += txSize
+			ts.selectedTxs = append(ts.selectedTxs, txBz)
+		}
+	}
+
+	// Check if we've reached capacity. If so, we cannot select any more transactions.
+	if ts.totalTxBytes >= ts.maxTxBytes || (ts.maxBlockGas > 0 && (ts.totalTxGas >= ts.maxBlockGas)) {
+		return true
+	}
+
+	return false
 }

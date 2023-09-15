@@ -451,3 +451,41 @@ func (s *StorageTestSuite) TestDatabase_IteratorMultiVersion() {
 	s.Require().Equal(10, count)
 	s.Require().NoError(itr.Error())
 }
+
+func (s *StorageTestSuite) TestDatabase_IteratorNoDomain() {
+	db, err := s.NewDB(s.T().TempDir())
+	s.Require().NoError(err)
+	defer db.Close()
+
+	// for versions 1-50, set all 10 keys
+	for v := uint64(1); v <= 50; v++ {
+		b, err := db.NewBatch(v)
+		s.Require().NoError(err)
+
+		for i := 0; i < 10; i++ {
+			key := fmt.Sprintf("key%03d", i)
+			val := fmt.Sprintf("val%03d-%03d", i, v)
+
+			s.Require().NoError(b.Set(storeKey1, []byte(key), []byte(val)))
+		}
+
+		s.Require().NoError(b.Write())
+	}
+
+	// create an iterator over the entire domain
+	itr, err := db.NewIterator(storeKey1, 50, nil, nil)
+	s.Require().NoError(err)
+
+	defer itr.Close()
+
+	var i, count int
+	for ; itr.Valid(); itr.Next() {
+		s.Require().Equal([]byte(fmt.Sprintf("key%03d", i)), itr.Key(), string(itr.Key()))
+		s.Require().Equal([]byte(fmt.Sprintf("val%03d-%03d", i, 50)), itr.Value())
+
+		i++
+		count++
+	}
+	s.Require().Equal(10, count)
+	s.Require().NoError(itr.Error())
+}

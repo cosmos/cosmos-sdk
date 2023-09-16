@@ -16,7 +16,6 @@ import (
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/event"
 	"cosmossdk.io/core/genesis"
-	"cosmossdk.io/core/header"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
@@ -71,7 +70,6 @@ func init() {
 			ProvideMemoryStoreService,
 			ProvideTransientStoreService,
 			ProvideEventService,
-			ProvideHeaderInfoService,
 			ProvideBasicManager,
 			ProvideAppVersionModifier,
 			ProvideAddressCodec,
@@ -240,10 +238,6 @@ func ProvideTransientStoreService(key depinject.ModuleKey, app *AppBuilder) stor
 
 func ProvideEventService() event.Service {
 	return EventService{}
-}
-
-func ProvideHeaderInfoService(app *AppBuilder) header.Service {
-	return headerInfoService{}
 }
 
 func ProvideBasicManager(app *AppBuilder) module.BasicManager {

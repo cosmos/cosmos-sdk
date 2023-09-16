@@ -43,7 +43,6 @@ func newSupportedKeyring(
 	}
 
 	db, err = keyring.Open(newKeyctlBackendConfig(appName, "", userInput))
-
 	if err != nil {
 		return nil, err
 	}

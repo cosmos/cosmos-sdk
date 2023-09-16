@@ -338,7 +338,7 @@ func SimulateMsgDeposit(
 		var fees sdk.Coins
 		coins, hasNeg := spendable.SafeSub(deposit...)
 		if !hasNeg {
-			fees, err = simtypes.RandomFees(r, ctx, coins)
+			fees, err = simtypes.RandomFees(r, coins)
 			if err != nil {
 				return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), "unable to generate fees"), nil, err
 			}

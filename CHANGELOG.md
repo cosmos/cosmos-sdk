@@ -40,9 +40,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Features
 
+* (client/keys) [#17639](https://github.com/cosmos/cosmos-sdk/pull/17639) Allows using and saving public keys encoded as base64
 * (client) [#17513](https://github.com/cosmos/cosmos-sdk/pull/17513) Allow overwritting `client.toml`. Use `client.CreateClientConfig` in place of `client.ReadFromClientConfig` and provide a custom template and a custom config.
 * (x/bank) [#14224](https://github.com/cosmos/cosmos-sdk/pull/14224) Allow injection of restrictions on transfers using `AppendSendRestriction` or `PrependSendRestriction`.
+* (x/bank) [#17569](https://github.com/cosmos/cosmos-sdk/pull/17569) Introduce a new message type, `MsgBurn `, to burn coins.
 * (genutil) [#17571](https://github.com/cosmos/cosmos-sdk/pull/17571) Allow creation of `AppGenesis` without a file lookup.
+* (server) [#17094](https://github.com/cosmos/cosmos-sdk/pull/17094) Add duration `shutdown-grace` for resource clean up (closing database handles) before exit.
 
 ### Improvements
 
@@ -51,14 +54,26 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (all) [#16537](https://github.com/cosmos/cosmos-sdk/pull/16537) Properly propagated `fmt.Errorf` errors and using `errors.New` where appropriate.
 * (rpc) [#17470](https://github.com/cosmos/cosmos-sdk/pull/17470) Avoid open 0.0.0.0 to public by default and add `listen-ip-address` argument for `testnet init-files` cmd.
 * (types/module) [#17554](https://github.com/cosmos/cosmos-sdk/pull/17554) Introduce `HasABCIGenesis` which is implemented by a module only when a validatorset update needs to be returned 
-
+* (baseapp) [#17667](https://github.com/cosmos/cosmos-sdk/pull/17667) Close databases opened by cosmos-sdk during BaseApp shutdown 
+* (types) [#17670](https://github.com/cosmos/cosmos-sdk/pull/17670) Use `ctx.CometInfo` in place of `ctx.VoteInfos`
+* [#17733](https://github.com/cosmos/cosmos-sdk/pull/17733) Ensure `buf export` exports all proto dependencies
+  
 ### Bug Fixes
 
-* (types) [#16583](https://github.com/cosmos/cosmos-sdk/pull/16583), [#17372](https://github.com/cosmos/cosmos-sdk/pull/17372) Add `MigrationModuleManager` to handle migration of upgrade module before other modules, ensuring access to the updated context with consensus parameters within the same block that executes the migration.
+* (types) [#16583](https://github.com/cosmos/cosmos-sdk/pull/16583), [#17372](https://github.com/cosmos/cosmos-sdk/pull/17372), [#17421](https://github.com/cosmos/cosmos-sdk/pull/17421), [#17713](https://github.com/cosmos/cosmos-sdk/pull/17713) Introduce `PreBlock`, which executes in `FinalizeBlock` before `BeginBlock`. It allows the application to modify consensus parameters and have access to VE state. Note, `PreFinalizeBlockHook` is replaced by`PreBlocker`.
 * (baseapp) [#17518](https://github.com/cosmos/cosmos-sdk/pull/17518) Utilizing voting power from vote extensions (CometBFT) instead of the current bonded tokens (x/staking) to determine if a set of vote extensions are valid.
+* (config) [#17649](https://github.com/cosmos/cosmos-sdk/pull/17649) Fix `mempool.max-txs` configuration is invalid in `app.config`.
+* (mempool) [#17668](https://github.com/cosmos/cosmos-sdk/pull/17668) Fix: `PriorityNonceIterator.Next()` nil pointer ref for min priority at the end of iteration.
 
 ### API Breaking Changes
 
+* (types/simulation) [#17737](https://github.com/cosmos/cosmos-sdk/pull/17737) Remove unused parameter from `RandomFees`
+* (x/staking) [#17486](https://github.com/cosmos/cosmos-sdk/pull/17486) Use collections for `RedelegationQueueKey`:
+    * remove from `types`: `GetRedelegationTimeKey`
+    * remove from `Keeper`: `RedelegationQueueIterator`
+* (x/staking) [#17562](https://github.com/cosmos/cosmos-sdk/pull/17562) Use collections for `ValidatorQueue`
+    * remove from `types`: `GetValidatorQueueKey`, `ParseValidatorQueueKey`
+    * remove from `Keeper`: `ValidatorQueueIterator`
 * (x/staking) [#17498](https://github.com/cosmos/cosmos-sdk/pull/17498) Use collections for `LastValidatorPower`:
     * remove from `types`: `GetLastValidatorPowerKey`
     * remove from `Keeper`: `LastValidatorsIterator`, `IterateLastValidators`
@@ -129,6 +144,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/gov) [#17496](https://github.com/cosmos/cosmos-sdk/pull/17469) in `x/gov/types/v1beta1/vote.go` `NewVote` was removed, constructing the struct is required for this type
 * (types) [#17426](https://github.com/cosmos/cosmos-sdk/pull/17426) `NewContext` does not take a `cmtproto.Header{}` any longer. 
     * `WithChainID` / `WithBlockHeight` / `WithBlockHeader` must be used to set values on the context
+* (x/bank) [#17569](https://github.com/cosmos/cosmos-sdk/pull/17569) `BurnCoins` takes an address instead of a module name
+* (x/distribution) [#17670](https://github.com/cosmos/cosmos-sdk/pull/17670) `AllocateTokens` takes `comet.VoteInfos` instead of `[]abci.VoteInfo`
 
 ### CLI Breaking Changes
 

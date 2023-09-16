@@ -154,7 +154,7 @@ func sendMsgSend(
 
 	coins, hasNeg := spendable.SafeSub(msg.Amount...)
 	if !hasNeg {
-		fees, err = simtypes.RandomFees(r, ctx, coins)
+		fees, err = simtypes.RandomFees(r, coins)
 		if err != nil {
 			return err
 		}
@@ -371,7 +371,7 @@ func sendMsgMultiSend(
 	spendable := bk.SpendableCoins(ctx, feePayer.GetAddress())
 	coins, hasNeg := spendable.SafeSub(msg.Inputs[0].Coins...)
 	if !hasNeg {
-		fees, err = simtypes.RandomFees(r, ctx, coins)
+		fees, err = simtypes.RandomFees(r, coins)
 		if err != nil {
 			return err
 		}

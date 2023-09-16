@@ -21,7 +21,7 @@ jobs:
       matrix:
         go-arch: ["amd64", "arm", "arm64"]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: DeterminateSystems/nix-installer-action@main
       - uses: DeterminateSystems/magic-nix-cache-action@main
       - uses: actions/setup-go@v4

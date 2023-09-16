@@ -5,7 +5,6 @@ import (
 
 	"cosmossdk.io/x/circuit/types"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 )
 
@@ -22,15 +21,13 @@ func NewQueryServer(keeper Keeper) types.QueryServer {
 }
 
 // Account returns account permissions.
-func (qs QueryServer) Account(c context.Context, req *types.QueryAccountRequest) (*types.AccountResponse, error) {
-	sdkCtx := sdk.UnwrapSDKContext(c)
-
+func (qs QueryServer) Account(ctx context.Context, req *types.QueryAccountRequest) (*types.AccountResponse, error) {
 	add, err := qs.keeper.addressCodec.StringToBytes(req.Address)
 	if err != nil {
 		return nil, err
 	}
 
-	perms, err := qs.keeper.Permissions.Get(sdkCtx, add)
+	perms, err := qs.keeper.Permissions.Get(ctx, add)
 	if err != nil {
 		return nil, err
 	}

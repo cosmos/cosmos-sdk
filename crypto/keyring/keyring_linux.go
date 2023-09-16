@@ -32,7 +32,7 @@ func New(
 		return newKeyringGeneric(appName, backend, rootDir, userInput, cdc, opts...)
 	}
 
-	db, err = keyring.Open(newKeyctlBackendConfig(appName, "", userInput))
+	db, err := keyring.Open(newKeyctlBackendConfig(appName, "", userInput))
 	if err != nil {
 		return nil, err
 	}

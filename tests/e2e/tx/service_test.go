@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
-	"os"
 	"strings"
 	"testing"
 
@@ -33,7 +32,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 	authtest "github.com/cosmos/cosmos-sdk/x/auth/client/testutil"
-	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
@@ -902,91 +900,6 @@ func (s *E2ETestSuite) TestTxDecode_GRPCGateway() {
 				tx, err := val.ClientCtx.TxConfig.TxEncoder()(txb.GetTx())
 				s.Require().NoError(err)
 				s.Require().Equal(encodedTxBytes, tx)
-			}
-		})
-	}
-}
-
-func (s *E2ETestSuite) readTestAminoTxJSON() ([]byte, *legacytx.StdTx) {
-	val := s.network.Validators[0]
-	txJSONBytes, err := os.ReadFile("testdata/tx_amino1.json")
-	s.Require().NoError(err)
-	var stdTx legacytx.StdTx
-	err = val.ClientCtx.LegacyAmino.UnmarshalJSON(txJSONBytes, &stdTx)
-	s.Require().NoError(err)
-	return txJSONBytes, &stdTx
-}
-
-func (s *E2ETestSuite) TestTxEncodeAmino_GRPC() {
-	val := s.network.Validators[0]
-	txJSONBytes, stdTx := s.readTestAminoTxJSON()
-
-	testCases := []struct {
-		name      string
-		req       *tx.TxEncodeAminoRequest
-		expErr    bool
-		expErrMsg string
-	}{
-		{"nil request", nil, true, "request cannot be nil"},
-		{"empty request", &tx.TxEncodeAminoRequest{}, true, "invalid empty tx json"},
-		{"invalid request", &tx.TxEncodeAminoRequest{AminoJson: "invalid tx json"}, true, "invalid request"},
-		{"valid request with amino-json", &tx.TxEncodeAminoRequest{AminoJson: string(txJSONBytes)}, false, ""},
-	}
-
-	for _, tc := range testCases {
-		tc := tc
-		s.Run(tc.name, func() {
-			res, err := s.queryClient.TxEncodeAmino(context.Background(), tc.req)
-			if tc.expErr {
-				s.Require().Error(err)
-				s.Require().Contains(err.Error(), tc.expErrMsg)
-				s.Require().Empty(res)
-			} else {
-				s.Require().NoError(err)
-				s.Require().NotEmpty(res.GetAminoBinary())
-
-				var decodedTx legacytx.StdTx
-				err = val.ClientCtx.LegacyAmino.Unmarshal(res.AminoBinary, &decodedTx)
-				s.Require().NoError(err)
-				s.Require().Equal(decodedTx.GetMsgs(), stdTx.GetMsgs())
-			}
-		})
-	}
-}
-
-func (s *E2ETestSuite) TestTxEncodeAmino_GRPCGateway() {
-	val := s.network.Validators[0]
-	txJSONBytes, stdTx := s.readTestAminoTxJSON()
-
-	testCases := []struct {
-		name      string
-		req       *tx.TxEncodeAminoRequest
-		expErr    bool
-		expErrMsg string
-	}{
-		{"empty request", &tx.TxEncodeAminoRequest{}, true, "invalid empty tx json"},
-		{"invalid request", &tx.TxEncodeAminoRequest{AminoJson: "invalid tx json"}, true, "invalid request"},
-		{"valid request with amino-json", &tx.TxEncodeAminoRequest{AminoJson: string(txJSONBytes)}, false, ""},
-	}
-
-	for _, tc := range testCases {
-		s.Run(tc.name, func() {
-			req, err := val.ClientCtx.Codec.MarshalJSON(tc.req)
-			s.Require().NoError(err)
-
-			res, err := testutil.PostRequest(fmt.Sprintf("%s/cosmos/tx/v1beta1/encode/amino", val.APIAddress), "application/json", req)
-			s.Require().NoError(err)
-			if tc.expErr {
-				s.Require().Contains(string(res), tc.expErrMsg)
-			} else {
-				var result tx.TxEncodeAminoResponse
-				err := val.ClientCtx.Codec.UnmarshalJSON(res, &result)
-				s.Require().NoError(err)
-
-				var decodedTx legacytx.StdTx
-				err = val.ClientCtx.LegacyAmino.Unmarshal(result.AminoBinary, &decodedTx)
-				s.Require().NoError(err)
-				s.Require().Equal(decodedTx.GetMsgs(), stdTx.GetMsgs())
 			}
 		})
 	}

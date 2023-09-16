@@ -58,15 +58,6 @@ service Service {
       body: "*"
     };
   }
-  // TxEncodeAmino encodes an Amino transaction from JSON to encoded bytes.
-  //
-  // Since: cosmos-sdk 0.47
-  rpc TxEncodeAmino(TxEncodeAminoRequest) returns (TxEncodeAminoResponse) {
-    option (google.api.http) = {
-      post: "/cosmos/tx/v1beta1/encode/amino"
-      body: "*"
-    };
-  }
 }
 
 // GetTxsEventRequest is the request type for the Service.TxsByEvents
@@ -248,36 +239,4 @@ message TxEncodeRequest {
 message TxEncodeResponse {
   // tx_bytes is the encoded transaction bytes.
   bytes tx_bytes = 1;
-}
-
-// TxEncodeAminoRequest is the request type for the Service.TxEncodeAmino
-// RPC method.
-//
-// Since: cosmos-sdk 0.47
-message TxEncodeAminoRequest {
-  string amino_json = 1;
-}
-
-// TxEncodeAminoResponse is the response type for the Service.TxEncodeAmino
-// RPC method.
-//
-// Since: cosmos-sdk 0.47
-message TxEncodeAminoResponse {
-  bytes amino_binary = 1;
-}
-
-// TxDecodeAminoRequest is the request type for the Service.TxDecodeAmino
-// RPC method.
-//
-// Since: cosmos-sdk 0.47
-message TxDecodeAminoRequest {
-  bytes amino_binary = 1;
-}
-
-// TxDecodeAminoResponse is the response type for the Service.TxDecodeAmino
-// RPC method.
-//
-// Since: cosmos-sdk 0.47
-message TxDecodeAminoResponse {
-  string amino_json = 1;
 }

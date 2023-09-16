@@ -104,7 +104,6 @@ func ProvideApp(interfaceRegistry codectypes.InterfaceRegistry) (
 	amino := codec.NewLegacyAmino()
 
 	std.RegisterInterfaces(interfaceRegistry)
-	std.RegisterLegacyAminoCodec(amino)
 
 	cdc := codec.NewProtoCodec(interfaceRegistry)
 	msgServiceRouter := baseapp.NewMsgServiceRouter()
@@ -147,14 +146,12 @@ func SetupAppBuilder(inputs AppInputs) {
 		if customBasicMod, ok := inputs.CustomModuleBasics[name]; ok {
 			app.basicManager[name] = customBasicMod
 			customBasicMod.RegisterInterfaces(inputs.InterfaceRegistry)
-			customBasicMod.RegisterLegacyAminoCodec(inputs.LegacyAmino)
 			continue
 		}
 
 		coreAppModuleBasic := module.CoreAppModuleBasicAdaptor(name, mod)
 		app.basicManager[name] = coreAppModuleBasic
 		coreAppModuleBasic.RegisterInterfaces(inputs.InterfaceRegistry)
-		coreAppModuleBasic.RegisterLegacyAminoCodec(inputs.LegacyAmino)
 	}
 }
 

@@ -1247,36 +1247,6 @@ func (s *coinTestSuite) TestCoinsIsAnyNil() {
 	s.Require().False(sdk.Coins{twoAtom, fiveAtom, threeEth}.IsAnyNil())
 }
 
-func (s *coinTestSuite) TestMarshalJSONCoins() {
-	cdc := codec.NewLegacyAmino()
-	sdk.RegisterLegacyAminoCodec(cdc)
-
-	testCases := []struct {
-		name      string
-		input     sdk.Coins
-		strOutput string
-	}{
-		{"nil coins", nil, `[]`},
-		{"empty coins", sdk.Coins{}, `[]`},
-		{"non-empty coins", sdk.NewCoins(sdk.NewInt64Coin("foo", 50)), `[{"denom":"foo","amount":"50"}]`},
-	}
-
-	for _, tc := range testCases {
-		bz, err := cdc.MarshalJSON(tc.input)
-		s.Require().NoError(err)
-		s.Require().Equal(tc.strOutput, string(bz))
-
-		var newCoins sdk.Coins
-		s.Require().NoError(cdc.UnmarshalJSON(bz, &newCoins))
-
-		if tc.input.Empty() {
-			s.Require().Nil(newCoins)
-		} else {
-			s.Require().Equal(tc.input, newCoins)
-		}
-	}
-}
-
 func (s *coinTestSuite) TestCoinValidate() {
 	testCases := []struct {
 		name    string

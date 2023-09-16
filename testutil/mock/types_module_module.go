@@ -80,18 +80,6 @@ func (mr *MockAppModuleBasicMockRecorder) RegisterInterfaces(arg0 interface{}) *
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterInterfaces", reflect.TypeOf((*MockAppModuleBasic)(nil).RegisterInterfaces), arg0)
 }
 
-// RegisterLegacyAminoCodec mocks base method.
-func (m *MockAppModuleBasic) RegisterLegacyAminoCodec(arg0 *codec.LegacyAmino) {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "RegisterLegacyAminoCodec", arg0)
-}
-
-// RegisterLegacyAminoCodec indicates an expected call of RegisterLegacyAminoCodec.
-func (mr *MockAppModuleBasicMockRecorder) RegisterLegacyAminoCodec(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterLegacyAminoCodec", reflect.TypeOf((*MockAppModuleBasic)(nil).RegisterLegacyAminoCodec), arg0)
-}
-
 // MockHasName is a mock of HasName interface.
 type MockHasName struct {
 	ctrl     *gomock.Controller
@@ -397,18 +385,6 @@ func (mr *MockAppModuleMockRecorder) RegisterInterfaces(arg0 interface{}) *gomoc
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterInterfaces", reflect.TypeOf((*MockAppModule)(nil).RegisterInterfaces), arg0)
 }
 
-// RegisterLegacyAminoCodec mocks base method.
-func (m *MockAppModule) RegisterLegacyAminoCodec(arg0 *codec.LegacyAmino) {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "RegisterLegacyAminoCodec", arg0)
-}
-
-// RegisterLegacyAminoCodec indicates an expected call of RegisterLegacyAminoCodec.
-func (mr *MockAppModuleMockRecorder) RegisterLegacyAminoCodec(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterLegacyAminoCodec", reflect.TypeOf((*MockAppModule)(nil).RegisterLegacyAminoCodec), arg0)
-}
-
 // MockHasInvariants is a mock of HasInvariants interface.
 type MockHasInvariants struct {
 	ctrl     *gomock.Controller
@@ -592,18 +568,6 @@ func (mr *MockHasABCIEndBlockMockRecorder) RegisterInterfaces(arg0 interface{}) 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterInterfaces", reflect.TypeOf((*MockHasABCIEndBlock)(nil).RegisterInterfaces), arg0)
 }
 
-// RegisterLegacyAminoCodec mocks base method.
-func (m *MockHasABCIEndBlock) RegisterLegacyAminoCodec(arg0 *codec.LegacyAmino) {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "RegisterLegacyAminoCodec", arg0)
-}
-
-// RegisterLegacyAminoCodec indicates an expected call of RegisterLegacyAminoCodec.
-func (mr *MockHasABCIEndBlockMockRecorder) RegisterLegacyAminoCodec(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterLegacyAminoCodec", reflect.TypeOf((*MockHasABCIEndBlock)(nil).RegisterLegacyAminoCodec), arg0)
-}
-
 // MockgenesisOnlyModule is a mock of genesisOnlyModule interface.
 type MockgenesisOnlyModule struct {
 	ctrl     *gomock.Controller
@@ -705,18 +669,6 @@ func (m *MockgenesisOnlyModule) RegisterInterfaces(arg0 types0.InterfaceRegistry
 func (mr *MockgenesisOnlyModuleMockRecorder) RegisterInterfaces(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterInterfaces", reflect.TypeOf((*MockgenesisOnlyModule)(nil).RegisterInterfaces), arg0)
-}
-
-// RegisterLegacyAminoCodec mocks base method.
-func (m *MockgenesisOnlyModule) RegisterLegacyAminoCodec(arg0 *codec.LegacyAmino) {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "RegisterLegacyAminoCodec", arg0)
-}
-
-// RegisterLegacyAminoCodec indicates an expected call of RegisterLegacyAminoCodec.
-func (mr *MockgenesisOnlyModuleMockRecorder) RegisterLegacyAminoCodec(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterLegacyAminoCodec", reflect.TypeOf((*MockgenesisOnlyModule)(nil).RegisterLegacyAminoCodec), arg0)
 }
 
 // ValidateGenesis mocks base method.

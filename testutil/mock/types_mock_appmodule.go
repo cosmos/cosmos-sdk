@@ -162,18 +162,6 @@ func (mr *MockAppModuleWithAllExtensionsMockRecorder) RegisterInvariants(arg0 in
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterInvariants", reflect.TypeOf((*MockAppModuleWithAllExtensions)(nil).RegisterInvariants), arg0)
 }
 
-// RegisterLegacyAminoCodec mocks base method.
-func (m *MockAppModuleWithAllExtensions) RegisterLegacyAminoCodec(arg0 *codec.LegacyAmino) {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "RegisterLegacyAminoCodec", arg0)
-}
-
-// RegisterLegacyAminoCodec indicates an expected call of RegisterLegacyAminoCodec.
-func (mr *MockAppModuleWithAllExtensionsMockRecorder) RegisterLegacyAminoCodec(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterLegacyAminoCodec", reflect.TypeOf((*MockAppModuleWithAllExtensions)(nil).RegisterLegacyAminoCodec), arg0)
-}
-
 // RegisterServices mocks base method.
 func (m *MockAppModuleWithAllExtensions) RegisterServices(arg0 module.Configurator) {
 	m.ctrl.T.Helper()
@@ -342,18 +330,6 @@ func (m *MockAppModuleWithAllExtensionsABCI) RegisterInvariants(arg0 types1.Inva
 func (mr *MockAppModuleWithAllExtensionsABCIMockRecorder) RegisterInvariants(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterInvariants", reflect.TypeOf((*MockAppModuleWithAllExtensionsABCI)(nil).RegisterInvariants), arg0)
-}
-
-// RegisterLegacyAminoCodec mocks base method.
-func (m *MockAppModuleWithAllExtensionsABCI) RegisterLegacyAminoCodec(arg0 *codec.LegacyAmino) {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "RegisterLegacyAminoCodec", arg0)
-}
-
-// RegisterLegacyAminoCodec indicates an expected call of RegisterLegacyAminoCodec.
-func (mr *MockAppModuleWithAllExtensionsABCIMockRecorder) RegisterLegacyAminoCodec(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterLegacyAminoCodec", reflect.TypeOf((*MockAppModuleWithAllExtensionsABCI)(nil).RegisterLegacyAminoCodec), arg0)
 }
 
 // RegisterServices mocks base method.

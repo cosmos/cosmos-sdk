@@ -55,9 +55,6 @@ func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
 	return nil
 }
 
-// RegisterLegacyAminoCodec registers the nft module's types for the given codec.
-func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {}
-
 // RegisterInterfaces registers the nft module's interface types
 func (AppModuleBasic) RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 	nft.RegisterInterfaces(registry)

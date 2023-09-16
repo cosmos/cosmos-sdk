@@ -108,11 +108,6 @@ func (AppModuleBasic) RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 	group.RegisterInterfaces(registry)
 }
 
-// RegisterLegacyAminoCodec registers the group module's types for the given codec.
-func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-	group.RegisterLegacyAminoCodec(cdc)
-}
-
 // RegisterInvariants does nothing, there are no invariants to enforce
 func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
 	keeper.RegisterInvariants(ir, am.keeper)

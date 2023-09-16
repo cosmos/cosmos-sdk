@@ -48,10 +48,6 @@ type AppModuleBasic struct {
 // Name returns the circuit module's name.
 func (AppModuleBasic) Name() string { return types.ModuleName }
 
-// RegisterLegacyAminoCodec registers the circuit module's types on the LegacyAmino codec.
-func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-}
-
 // DefaultGenesis returns default genesis state as raw bytes for the circuit
 // module.
 func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {

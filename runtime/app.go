@@ -74,7 +74,6 @@ func (a *App) RegisterModules(modules ...module.AppModule) error {
 		a.ModuleManager.Modules[name] = appModule
 		a.basicManager[name] = appModule
 		appModule.RegisterInterfaces(a.interfaceRegistry)
-		appModule.RegisterLegacyAminoCodec(a.amino)
 
 		if module, ok := appModule.(module.HasServices); ok {
 			module.RegisterServices(a.configurator)

@@ -207,7 +207,6 @@ func NewSimApp(
 	legacyAmino := codec.NewLegacyAmino()
 	txConfig := tx.NewTxConfig(appCodec, tx.DefaultSignModes)
 
-	std.RegisterLegacyAminoCodec(legacyAmino)
 	std.RegisterInterfaces(interfaceRegistry)
 
 	// Below we could construct and set an application specific mempool and
@@ -416,7 +415,6 @@ func NewSimApp(
 				},
 			),
 		})
-	app.BasicModuleManager.RegisterLegacyAminoCodec(legacyAmino)
 	app.BasicModuleManager.RegisterInterfaces(interfaceRegistry)
 
 	// NOTE: upgrade module is required to be prioritized

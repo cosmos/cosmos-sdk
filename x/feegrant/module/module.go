@@ -64,10 +64,6 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	}
 }
 
-// RegisterLegacyAminoCodec registers the feegrant module's types for the given codec.
-func (ab AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-}
-
 // RegisterInterfaces registers the feegrant module's interface types
 func (ab AppModuleBasic) RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 	feegrant.RegisterInterfaces(registry)

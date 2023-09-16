@@ -35,7 +35,6 @@ func (MockCoreAppModule) GetQueryCmd() *cobra.Command {
 func TestBasicManager(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	t.Cleanup(mockCtrl.Finish)
-	legacyAmino := codec.NewLegacyAmino()
 	interfaceRegistry := types.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(interfaceRegistry)
 
@@ -55,7 +54,6 @@ func TestBasicManager(t *testing.T) {
 	mockAppModuleBasic1.EXPECT().DefaultGenesis(gomock.Eq(cdc)).Times(1).Return(json.RawMessage(``))
 	// Allow ValidateGenesis to be called any times because other module can fail before this one is called.
 	mockAppModuleBasic1.EXPECT().ValidateGenesis(gomock.Eq(cdc), gomock.Eq(nil), gomock.Eq(expDefaultGenesis["mockAppModuleBasic1"])).AnyTimes().Return(nil)
-	mockAppModuleBasic1.EXPECT().RegisterLegacyAminoCodec(gomock.Eq(legacyAmino)).Times(1)
 	mockAppModuleBasic1.EXPECT().RegisterInterfaces(gomock.Eq(interfaceRegistry)).Times(1)
 
 	// mock core API module
@@ -73,7 +71,6 @@ func TestBasicManager(t *testing.T) {
 	require.Equal(t, mockAppModule2, mm["mockCoreAppModule2"])
 	require.Equal(t, mockCoreAppModule3, mm["mockCoreAppModule3"])
 
-	mm.RegisterLegacyAminoCodec(legacyAmino)
 	mm.RegisterInterfaces(interfaceRegistry)
 
 	require.Equal(t, expDefaultGenesis, mm.DefaultGenesis(cdc))

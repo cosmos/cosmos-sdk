@@ -35,9 +35,7 @@ func MakeTestEncodingConfig(modules ...module.AppModuleBasic) TestEncodingConfig
 
 	mb := module.NewBasicManager(modules...)
 
-	std.RegisterLegacyAminoCodec(encCfg.Amino)
 	std.RegisterInterfaces(encCfg.InterfaceRegistry)
-	mb.RegisterLegacyAminoCodec(encCfg.Amino)
 	mb.RegisterInterfaces(encCfg.InterfaceRegistry)
 
 	return encCfg

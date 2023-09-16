@@ -992,16 +992,6 @@ func (s *E2ETestSuite) TestTxEncodeAmino_GRPCGateway() {
 	}
 }
 
-func (s *E2ETestSuite) readTestAminoTxBinary() ([]byte, *legacytx.StdTx) {
-	val := s.network.Validators[0]
-	txJSONBytes, err := os.ReadFile("testdata/tx_amino1.bin")
-	s.Require().NoError(err)
-	var stdTx legacytx.StdTx
-	err = val.ClientCtx.LegacyAmino.Unmarshal(txJSONBytes, &stdTx)
-	s.Require().NoError(err)
-	return txJSONBytes, &stdTx
-}
-
 func TestE2ETestSuite(t *testing.T) {
 	suite.Run(t, new(E2ETestSuite))
 }

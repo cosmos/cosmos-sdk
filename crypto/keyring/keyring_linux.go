@@ -21,22 +21,12 @@ func newKeyctlBackendConfig(appName, _ string, inpt io.Reader) keyring.Config {
 	}
 }
 
-func New(
-	appName, backend, rootDir string, userInput io.Reader, cdc codec.Codec, opts ...Option,
-) (Keyring, error) {
-	return newSupportedKeyring(appName, backend, rootDir, userInput, cdc, opts...)
-}
-
 // New creates a new instance of a keyring.
 // Keyring options can be applied when generating the new instance.
 // Available backends are "os", "file", "kwallet", "memory", "pass", "test".
-func newSupportedKeyring(
+func New(
 	appName, backend, rootDir string, userInput io.Reader, cdc codec.Codec, opts ...Option,
 ) (Keyring, error) {
-	var (
-		db  keyring.Keyring
-		err error
-	)
 
 	if backend != BackendKeyctl {
 		return newKeyringGeneric(appName, backend, rootDir, userInput, cdc, opts...)

@@ -45,7 +45,7 @@ type Context struct {
 	chainID              string          // Deprecated: Use HeaderService for chainID and CometService for the rest
 	txBytes              []byte
 	logger               log.Logger
-	voteInfo             []abci.VoteInfo // Deprecated: use Cometinfo.GetLastCommit().Votes() instead, will be removed in 0.51
+	voteInfo             []abci.VoteInfo // Deprecated: use Cometinfo.LastCommit.Votes instead, will be removed after 0.51
 	gasMeter             storetypes.GasMeter
 	blockGasMeter        storetypes.GasMeter
 	checkTx              bool

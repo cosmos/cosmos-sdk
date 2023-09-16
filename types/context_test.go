@@ -10,7 +10,6 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 
-	"cosmossdk.io/core/header"
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -147,7 +146,6 @@ func (s *contextTestSuite) TestContextHeader() {
 	var ctx types.Context
 
 	height := int64(5)
-	time := time.Now()
 	addr := secp256k1.GenPrivKey().PubKey().Address()
 	proposer := types.ConsAddress(addr)
 
@@ -155,20 +153,10 @@ func (s *contextTestSuite) TestContextHeader() {
 
 	ctx = ctx.
 		WithBlockHeight(height).
-		WithBlockTime(time).
 		WithProposer(proposer)
 	s.Require().Equal(height, ctx.BlockHeight())
 	s.Require().Equal(height, ctx.BlockHeader().Height)
-	s.Require().Equal(time.UTC(), ctx.BlockHeader().Time)
 	s.Require().Equal(proposer.Bytes(), ctx.BlockHeader().ProposerAddress)
-}
-
-func (s *contextTestSuite) TestWithBlockTime() {
-	now := time.Now()
-	ctx := types.NewContext(nil, false, nil)
-	ctx = ctx.WithHeaderInfo(header.Info{Time: now})
-	cmttime2 := now.Round(0).UTC()
-	s.Require().Equal(ctx.HeaderInfo().Time, cmttime2)
 }
 
 func (s *contextTestSuite) TestContextHeaderClone() {

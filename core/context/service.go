@@ -31,18 +31,19 @@ const (
 
 // Context is an interface that extends the stdlib context.Context with SDK-specific
 // This context is specific to modules
-type Context interface {
+type Context[H header.Header] interface {
 	Context() context.Context
 	HeaderInfo() header.Info
-	CometInfo() comet.BlockInfo
+	CometInfo() comet.Info
 	Logger() log.Logger
-	EventManager() event.Service
+	EventService() event.Service
 	ExecMode() ExecMode
+	header.GetService[H]
 }
 
-func UnwrapSDKContext(ctx context.Context) Context {
+func UnwrapSDKContext[H header.Header](ctx context.Context) Context[H] {
 	if ctx == nil {
 		return nil
 	}
-	return ctx.Value(SdkContextKey).(Context)
+	return ctx.Value(SdkContextKey).(Context[H])
 }

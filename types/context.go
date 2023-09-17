@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 
 	"cosmossdk.io/core/comet"
+	coreevent "cosmossdk.io/core/event"
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/gaskv"
@@ -54,6 +55,7 @@ type Context struct {
 	minGasPrice          DecCoins
 	consParams           cmtproto.ConsensusParams
 	eventManager         EventManagerI
+	eventService         coreevent.Service
 	priority             int64 // The tx priority, only relevant in CheckTx
 	kvGasConfig          storetypes.GasConfig
 	transientKVGasConfig storetypes.GasConfig
@@ -89,6 +91,7 @@ func (c Context) TransientKVGasConfig() storetypes.GasConfig    { return c.trans
 func (c Context) StreamingManager() storetypes.StreamingManager { return c.streamingManager }
 func (c Context) CometInfo() comet.Info                         { return c.cometInfo }
 func (c Context) HeaderInfo() header.Info                       { return c.headerInfo }
+func (c Context) EventService() coreevent.Service               { return c.eventService }
 
 // clone the header before returning
 func (c Context) BlockHeader() cmtproto.Header {
@@ -286,6 +289,12 @@ func (c Context) WithConsensusParams(params cmtproto.ConsensusParams) Context {
 // WithEventManager returns a Context with an updated event manager
 func (c Context) WithEventManager(em EventManagerI) Context {
 	c.eventManager = em
+	return c
+}
+
+// WithEventService returns a Context with an updated event service
+func (c Context) WithEventService(es coreevent.Service) Context {
+	c.eventService = es
 	return c
 }
 

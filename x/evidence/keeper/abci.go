@@ -6,10 +6,10 @@ import (
 	"time"
 
 	"cosmossdk.io/core/comet"
+	corecontext "cosmossdk.io/core/context"
 	"cosmossdk.io/x/evidence/types"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // BeginBlocker iterates through and handles any newly discovered evidence of
@@ -17,11 +17,8 @@ import (
 func (k Keeper) BeginBlocker(ctx context.Context) error {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyBeginBlocker)
 
-	bi := sdk.UnwrapSDKContext(ctx).CometInfo()
-
-	evidences := bi.Evidence
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	for _, evidence := range evidences {
+	sdkctx := corecontext.UnwrapSDKContext[comet.CometHeader](ctx)
+	for _, evidence := range sdkctx.GetHeader(ctx).Evidence {
 		switch evidence.Type {
 		// It's still ongoing discussion how should we treat and slash attacks with
 		// premeditation. So for now we agree to treat them in the same way.
@@ -32,7 +29,7 @@ func (k Keeper) BeginBlocker(ctx context.Context) error {
 				return err
 			}
 		default:
-			k.Logger(sdkCtx).Error(fmt.Sprintf("ignored unknown evidence type: %x", evidence.Type))
+			k.Logger(ctx).Error(fmt.Sprintf("ignored unknown evidence type: %x", evidence.Type))
 		}
 	}
 	return nil

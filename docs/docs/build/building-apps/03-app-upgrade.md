@@ -50,28 +50,22 @@ the rest of the block as normal. Once 2/3 of the voting power has upgraded, the 
 resume the consensus mechanism. If the majority of operators add a custom `do-upgrade` script, this should
 be a matter of minutes and not even require them to be awake at that time.
 
-## Set Migration Module Manager
-
-:::tip
-Users using `depinject` / app v2 do not need any changes, this is abstracted for them.
-:::
-
-After app initiation, call `SetMigrationModuleManager` with ModuleManager to give BaseApp access to `RunMigrationBeginBlock`:
-
-```go
-app.BaseApp.SetMigrationModuleManager(app.ModuleManager)
-```
-
 ## Integrating With An App
 
-Setup an upgrade Keeper for the app and then define a `BeginBlocker` that calls the upgrade
-keeper's BeginBlocker method:
+::tip
+The following is not required for users using `depinject` / app v2, this is abstracted for them.
+::
+
+In addition to basic module wiring, setup the upgrade Keeper for the app and then define a `PreBlocker` that calls the upgrade
+keeper's PreBlocker method:
 
 ```go
- func (app *myApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) (abci.ResponseBeginBlock, error) {
-  app.upgradeKeeper.BeginBlocker(ctx, req)
-  return abci.ResponseBeginBlock{}, nil
- }
+func (app *myApp) PreBlocker(ctx sdk.Context, req req.RequestFinalizeBlock) (*sdk.ResponsePreBlock, error) {
+      // For demonstration sake, the app PreBlocker only returns the upgrade module pre-blocker.
+      // In a real app, the module manager should call all pre-blockers
+      // return return app.ModuleManager.PreBlock(ctx, req)
+      return app.upgradeKeeper.PreBlocker(ctx, req)
+}
 ```
 
 The app must then integrate the upgrade keeper with its governance module as appropriate. The governance module

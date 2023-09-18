@@ -4,6 +4,7 @@ import (
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
 	"cosmossdk.io/collections"
+	coreheader "cosmossdk.io/core/header"
 	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/x/staking/testutil"
@@ -108,7 +109,7 @@ func (s *KeeperTestSuite) TestTrackHistoricalInfo() {
 		ChainID: "HelloChain",
 		Height:  10,
 	}
-	ctx = ctx.WithBlockHeader(header)
+	ctx = ctx.WithBlockHeader(header).WithHeaderInfo(coreheader.Info{ChainID: header.ChainID, Height: header.Height})
 
 	require.NoError(keeper.TrackHistoricalInfo(ctx))
 

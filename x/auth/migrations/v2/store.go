@@ -100,7 +100,7 @@ func migrateVestingAccounts(ctx sdk.Context, account sdk.AccountI, queryServer g
 		balance = balance.Add(coin)
 	}
 
-	asVesting.TrackDelegation(ctx.BlockTime(), balance, delegations)
+	asVesting.TrackDelegation(ctx.HeaderInfo().Time, balance, delegations)
 
 	return asVesting.(sdk.AccountI), nil
 }

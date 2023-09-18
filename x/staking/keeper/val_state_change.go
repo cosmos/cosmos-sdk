@@ -41,7 +41,7 @@ func (k Keeper) BlockValidatorUpdates(ctx context.Context) ([]abci.ValidatorUpda
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	// Remove all mature unbonding delegations from the ubd queue.
-	matureUnbonds, err := k.DequeueAllMatureUBDQueue(ctx, sdkCtx.BlockHeader().Time)
+	matureUnbonds, err := k.DequeueAllMatureUBDQueue(ctx, sdkCtx.HeaderInfo().Time)
 	if err != nil {
 		return nil, err
 	}
@@ -72,7 +72,7 @@ func (k Keeper) BlockValidatorUpdates(ctx context.Context) ([]abci.ValidatorUpda
 	}
 
 	// Remove all mature redelegations from the red queue.
-	matureRedelegations, err := k.DequeueAllMatureRedelegationQueue(ctx, sdkCtx.BlockHeader().Time)
+	matureRedelegations, err := k.DequeueAllMatureRedelegationQueue(ctx, sdkCtx.HeaderInfo().Time)
 	if err != nil {
 		return nil, err
 	}
@@ -400,8 +400,8 @@ func (k Keeper) BeginUnbondingValidator(ctx context.Context, validator types.Val
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	// set the unbonding completion time and completion height appropriately
-	validator.UnbondingTime = sdkCtx.BlockHeader().Time.Add(params.UnbondingTime)
-	validator.UnbondingHeight = sdkCtx.BlockHeader().Height
+	validator.UnbondingTime = sdkCtx.HeaderInfo().Time.Add(params.UnbondingTime)
+	validator.UnbondingHeight = sdkCtx.HeaderInfo().Height
 
 	validator.UnbondingIds = append(validator.UnbondingIds, id)
 

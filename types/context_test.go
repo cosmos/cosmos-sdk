@@ -7,7 +7,6 @@ import (
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	cmttime "github.com/cometbft/cometbft/types/time"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 
@@ -147,7 +146,6 @@ func (s *contextTestSuite) TestContextHeader() {
 	var ctx types.Context
 
 	height := int64(5)
-	time := time.Now()
 	addr := secp256k1.GenPrivKey().PubKey().Address()
 	proposer := types.ConsAddress(addr)
 
@@ -155,20 +153,10 @@ func (s *contextTestSuite) TestContextHeader() {
 
 	ctx = ctx.
 		WithBlockHeight(height).
-		WithBlockTime(time).
 		WithProposer(proposer)
 	s.Require().Equal(height, ctx.BlockHeight())
 	s.Require().Equal(height, ctx.BlockHeader().Height)
-	s.Require().Equal(time.UTC(), ctx.BlockHeader().Time)
 	s.Require().Equal(proposer.Bytes(), ctx.BlockHeader().ProposerAddress)
-}
-
-func (s *contextTestSuite) TestWithBlockTime() {
-	now := time.Now()
-	ctx := types.NewContext(nil, false, nil)
-	ctx = ctx.WithBlockTime(now)
-	cmttime2 := cmttime.Canonical(now)
-	s.Require().Equal(ctx.BlockTime(), cmttime2)
 }
 
 func (s *contextTestSuite) TestContextHeaderClone() {
@@ -216,13 +204,13 @@ func (s *contextTestSuite) TestContextHeaderClone() {
 		s.T().Run(name, func(t *testing.T) {
 			ctx := types.NewContext(nil, false, nil).WithBlockHeader(tc.h)
 			s.Require().Equal(tc.h.Height, ctx.BlockHeight())
-			s.Require().Equal(tc.h.Time.UTC(), ctx.BlockTime())
+			s.Require().Equal(tc.h.Time.UTC(), ctx.BlockHeader().Time)
 
 			// update only changes one field
 			var newHeight int64 = 17
 			ctx = ctx.WithBlockHeight(newHeight)
 			s.Require().Equal(newHeight, ctx.BlockHeight())
-			s.Require().Equal(tc.h.Time.UTC(), ctx.BlockTime())
+			s.Require().Equal(tc.h.Time.UTC(), ctx.BlockHeader().Time)
 		})
 	}
 }

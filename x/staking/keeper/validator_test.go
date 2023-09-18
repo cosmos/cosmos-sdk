@@ -7,6 +7,7 @@ import (
 	"github.com/golang/mock/gomock"
 
 	"cosmossdk.io/collections"
+	"cosmossdk.io/core/header"
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -342,7 +343,7 @@ func (s *KeeperTestSuite) TestUpdateValidatorCommission() {
 			require.Equal(tc.newRate, val.Commission.Rate,
 				"expected new validator commission rate for test case #%d with rate: %s", i, tc.newRate,
 			)
-			require.Equal(ctx.BlockHeader().Time, val.Commission.UpdateTime,
+			require.Equal(ctx.HeaderInfo().Time, val.Commission.UpdateTime,
 				"expected new validator commission update time for test case #%d with rate: %s", i, tc.newRate,
 			)
 		}
@@ -415,12 +416,12 @@ func (s *KeeperTestSuite) TestUnbondingValidator() {
 	require.Equal(valAddr.String(), resVals[0])
 
 	// check unbonding mature validators
-	ctx = ctx.WithBlockHeight(endHeight).WithBlockTime(endTime)
+	ctx = ctx.WithBlockHeight(endHeight).WithHeaderInfo(header.Info{Time: endTime})
 	err = keeper.UnbondAllMatureValidators(ctx)
 	require.EqualError(err, "validator in the unbonding queue was not found: validator does not exist")
 
 	require.NoError(keeper.SetValidator(ctx, validator))
-	ctx = ctx.WithBlockHeight(endHeight).WithBlockTime(endTime)
+	ctx = ctx.WithBlockHeight(endHeight).WithHeaderInfo(header.Info{Time: endTime})
 
 	err = keeper.UnbondAllMatureValidators(ctx)
 	require.EqualError(err, "unexpected validator in unbonding queue; status was not unbonding")

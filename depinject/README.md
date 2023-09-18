@@ -45,17 +45,20 @@ import (
 
 type AnotherInt int
 
+func GetInt() int               { return 1 }
+func GetAnotherInt() AnotherInt { return 2 }
+
 func main() {
 	var (
-	  x int
-	  y AnotherInt
+		x int
+		y AnotherInt
 	)
 
 	fmt.Printf("Before (%v, %v)\n", x, y)
 	depinject.Inject(
 		depinject.Provide(
-			func() int { return 1 },
-			func() AnotherInt { return AnotherInt(2) },
+			GetInt,
+			GetAnotherInt,
 		),
 		&x,
 		&y,
@@ -66,7 +69,7 @@ func main() {
 
 In this example, `depinject.Provide` registers two provider functions that return `int` and `AnotherInt` values. The `depinject.Inject` function is then used to inject these values into the variables `x` and `y`.
 
-Provider functions serve as the basis for the dependency tree. They are analysed to identify their inputs as dependencies and their outputs as dependents. These dependents can either be used by another provider function or be stored outside the DI container (e.g., `&x` and `&y` in the example above).
+Provider functions serve as the basis for the dependency tree. They are analysed to identify their inputs as dependencies and their outputs as dependents. These dependents can either be used by another provider function or be stored outside the DI container (e.g., `&x` and `&y` in the example above). Provider functions must be exported.
 
 ### Interface type resolution
 
@@ -98,6 +101,22 @@ type Pond struct {
 }
 ```
 
+And the following provider functions:
+
+```go
+func GetMallard() duck.Mallard {
+	return Mallard{}
+}
+
+func GetPond(duck Duck) Pond {
+	return Pond{Duck: duck}
+}
+
+func GetCanvasback() Canvasback {
+	return Canvasback{}
+}
+```
+
 In this example, there's a `Pond` struct that has a `Duck` field of type `AlsoDuck`. The `depinject` framework can automatically resolve the appropriate implementation when there's only one available, as shown below:
 
 ```go
@@ -105,10 +124,9 @@ var pond Pond
 
 depinject.Inject(
   depinject.Provide(
-    func() Mallard { return Mallard{} },
-    func(duck Duck) Pond {
-      return Pond{Duck: duck}
-    }),
+ 		GetMallard,
+ 		GetPond,
+ 	),
    &pond)
 ```
 
@@ -120,13 +138,12 @@ However, if there are multiple implementations of the `Duck` interface, as in th
 var pond Pond
 
 depinject.Inject(
-  depinject.Provide(
-    func() Mallard { return Mallard{} },
-    func() Canvasback { return Canvasback{} },
-    func(duck Duck) Pond {
-      return Pond{Duck: duck}
-    }),
-   &pond)
+	depinject.Provide(
+		GetMallard,
+		GetCanvasback,
+		GetPond,
+	),
+	&pond)
 ```
 
 A specific binding preference for `Duck` is required.
@@ -137,17 +154,18 @@ In the above situation registering a binding for a given interface binding may l
 
 ```go
 depinject.Inject(
-  depinject.Configs(
-    depinject.BindInterface(
-      "duck.Duck",
-      "duck.Mallard"),
-     depinject.Provide(
-       func() Mallard { return Mallard{} },
-       func() Canvasback { return Canvasback{} },
-       func(duck Duck) APond {
-         return Pond{Duck: duck}
-      })),
-   &pond)
+	depinject.Configs(
+		depinject.BindInterface(
+			"duck/duck.Duck",
+			"duck/duck.Mallard",
+		),
+		depinject.Provide(
+			GetMallard,
+			GetCanvasback,
+			GetPond,
+		),
+	),
+	&pond)
 ```
 
 Now `depinject` has enough information to provide `Mallard` as an input to `APond`. 

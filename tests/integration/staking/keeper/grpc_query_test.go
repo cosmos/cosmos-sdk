@@ -783,7 +783,7 @@ func TestGRPCQueryHistoricalInfo(t *testing.T) {
 			if tc.expPass {
 				assert.NilError(t, err)
 				assert.Assert(t, res != nil)
-				assert.Assert(t, hi.Equal(res.Hist))
+				assert.Equal(t, hi, res.Hist)
 			} else {
 				assert.ErrorContains(t, err, tc.expErrMsg)
 				assert.Assert(t, res == nil)

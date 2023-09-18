@@ -37,7 +37,7 @@ func (s *KeeperTestSuite) TestHistoricalInfo() {
 	time := ctx.BlockTime()
 	hi := stakingtypes.Historical{
 		Time:              &time,
-		NextValidatorHash: ctx.CometInfo().GetValidatorsHash(),
+		NextValidatorHash: ctx.CometInfo().ValidatorsHash,
 		Apphash:           ctx.HeaderInfo().AppHash,
 	}
 	require.NoError(keeper.HistoricalInfo.Set(ctx, uint64(2), hi))

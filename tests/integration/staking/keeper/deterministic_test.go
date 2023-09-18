@@ -4,7 +4,6 @@ import (
 	"testing"
 	"time"
 
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"gotest.tools/v3/assert"
 	"pgregory.net/rapid"
 
@@ -688,12 +687,7 @@ func TestGRPCHistoricalInfo(t *testing.T) {
 
 	f = initDeterministicFixture(t) // reset
 
-	validator := getStaticValidator(t, f)
-
-	historicalInfo := stakingtypes.HistoricalInfo{
-		Header: cmtproto.Header{},
-		Valset: []stakingtypes.Validator{validator},
-	}
+	historicalInfo := stakingtypes.Historical{}
 
 	height := int64(127)
 

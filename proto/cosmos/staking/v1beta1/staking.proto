@@ -23,7 +23,10 @@ message HistoricalInfo {
   repeated Validator      valset = 2 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 }
 
-// Hsitorical is a set of minimum values needed for ibc.
+// Hsitorical is a set of minimum values.
+// It is stored as part of staking module's state, which persists the `n` most
+// recent HistoricalInfo
+// (`n` is set by the staking module's `historical_entries` parameter).
 message Historical {
   bytes                     apphash             = 1;
   google.protobuf.Timestamp time                = 2 [(gogoproto.stdtime) = true];

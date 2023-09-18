@@ -89,7 +89,6 @@ func TestAuxTxBuilder(t *testing.T) {
 			func() error {
 				require.NoError(t, b.SetMsgs(msg1))
 				require.NoError(t, b.SetPubKey(pub1))
-				b.SetTip(&typestx.Tip{})
 				require.NoError(t, b.SetSignMode(signing.SignMode_SIGN_MODE_DIRECT_AUX))
 
 				_, err := b.GetSignBytes()
@@ -102,7 +101,6 @@ func TestAuxTxBuilder(t *testing.T) {
 			func() error {
 				require.NoError(t, b.SetMsgs(msg1))
 				require.NoError(t, b.SetPubKey(pub1))
-				b.SetTip(tip)
 				require.NoError(t, b.SetSignMode(signing.SignMode_SIGN_MODE_DIRECT_AUX))
 
 				_, err := b.GetSignBytes()
@@ -115,7 +113,6 @@ func TestAuxTxBuilder(t *testing.T) {
 			func() error {
 				require.NoError(t, b.SetMsgs(msg1))
 				require.NoError(t, b.SetPubKey(pub1))
-				b.SetTip(tip)
 				require.NoError(t, b.SetSignMode(signing.SignMode_SIGN_MODE_DIRECT_AUX))
 
 				_, err := b.GetSignBytes()
@@ -131,7 +128,6 @@ func TestAuxTxBuilder(t *testing.T) {
 			func() error {
 				require.NoError(t, b.SetMsgs(msg1))
 				require.NoError(t, b.SetPubKey(pub1))
-				b.SetTip(tip)
 				b.SetAddress(addr1.String())
 				require.NoError(t, b.SetSignMode(signing.SignMode_SIGN_MODE_DIRECT_AUX))
 
@@ -153,7 +149,6 @@ func TestAuxTxBuilder(t *testing.T) {
 				b.SetChainID(chainID)
 				require.NoError(t, b.SetMsgs(msg1))
 				require.NoError(t, b.SetPubKey(pub1))
-				b.SetTip(tip)
 				b.SetAddress(addr1.String())
 				err := b.SetSignMode(signing.SignMode_SIGN_MODE_DIRECT_AUX)
 				require.NoError(t, err)
@@ -176,7 +171,6 @@ func TestAuxTxBuilder(t *testing.T) {
 			func() error {
 				require.NoError(t, b.SetMsgs(msg1))
 				require.NoError(t, b.SetPubKey(pub1))
-				b.SetTip(tip)
 				b.SetAddress(addr1.String())
 				err := b.SetSignMode(signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
 				require.NoError(t, err)
@@ -196,7 +190,6 @@ func TestAuxTxBuilder(t *testing.T) {
 				b.SetChainID(chainID)
 				require.NoError(t, b.SetMsgs(msg1))
 				require.NoError(t, b.SetPubKey(pub1))
-				b.SetTip(tip)
 				b.SetAddress(addr1.String())
 				err := b.SetSignMode(signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
 				require.NoError(t, err)
@@ -251,7 +244,6 @@ func checkCorrectData(t *testing.T, cdc codec.Codec, auxSignerData typestx.AuxSi
 	require.Equal(t, chainID, auxSignerData.SignDoc.ChainId)
 	require.Equal(t, msgAny, body.GetMessages()[0])
 	require.Equal(t, pkAny, auxSignerData.SignDoc.PublicKey)
-	require.Equal(t, tip, auxSignerData.SignDoc.Tip)
 	require.Equal(t, signMode, auxSignerData.Mode)
 	require.Equal(t, rawSig, auxSignerData.Sig)
 }

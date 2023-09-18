@@ -9082,7 +9082,7 @@ type BroadcastMode int32
 const (
 	// zero-value for mode ordering
 	BroadcastMode_BROADCAST_MODE_UNSPECIFIED BroadcastMode = 0
-	// DEPRECATED: use BROADCAST_MODE_SYNC instead,
+	// Deptrecated: use BROADCAST_MODE_SYNC instead,
 	// BROADCAST_MODE_BLOCK is not supported by the SDK from v0.47.x onwards.
 	//
 	// Deprecated: Do not use.
@@ -9146,13 +9146,13 @@ type GetTxsEventRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// events is the list of transaction event type.
-	// Deprecated post v0.47.x: use query instead, which should contain a valid
+	// Deprecated: post v0.47.x use query instead, which should contain a valid
 	// events query.
 	//
 	// Deprecated: Do not use.
 	Events []string `protobuf:"bytes,1,rep,name=events,proto3" json:"events,omitempty"`
 	// pagination defines a pagination for the request.
-	// Deprecated post v0.46.x: use page and limit instead.
+	// Deprecated: post v0.46.x use page and limit instead.
 	//
 	// Deprecated: Do not use.
 	Pagination *v1beta1.PageRequest `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
@@ -9246,7 +9246,7 @@ type GetTxsEventResponse struct {
 	// tx_responses is the list of queried TxResponses.
 	TxResponses []*v1beta11.TxResponse `protobuf:"bytes,2,rep,name=tx_responses,json=txResponses,proto3" json:"tx_responses,omitempty"`
 	// pagination defines a pagination for the response.
-	// Deprecated post v0.46.x: use total instead.
+	// Deprecated: post v0.46.x use total instead.
 	//
 	// Deprecated: Do not use.
 	Pagination *v1beta1.PageResponse `protobuf:"bytes,3,opt,name=pagination,proto3" json:"pagination,omitempty"`

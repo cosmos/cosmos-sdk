@@ -314,7 +314,9 @@ func deleteKVStore(kv types.KVStore) error {
 		keys = append(keys, itr.Key())
 		itr.Next()
 	}
-	itr.Close()
+	if err := itr.Close(); err != nil {
+		return err
+	}
 
 	for _, k := range keys {
 		kv.Delete(k)
@@ -330,7 +332,9 @@ func moveKVStoreData(oldDB, newDB types.KVStore) error {
 		newDB.Set(itr.Key(), itr.Value())
 		itr.Next()
 	}
-	itr.Close()
+	if err := itr.Close(); err != nil {
+		return err
+	}
 
 	// then delete the old store
 	return deleteKVStore(oldDB)

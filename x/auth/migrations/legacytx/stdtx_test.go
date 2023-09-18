@@ -85,21 +85,6 @@ func TestStdSignBytes(t *testing.T) {
 			args{"1234", 3, 6, 0, &txv1beta1.Fee{Amount: defaultFee.Amount, GasLimit: defaultFee.GasLimit, Payer: addr.String(), Granter: addr.String()}, []sdk.Msg{testdata.NewTestMsg(addr)}, "memo"},
 			fmt.Sprintf(`{"account_number":"3","chain_id":"1234","fee":{"amount":[{"amount":"150","denom":"atom"}],"gas":"100000","granter":"%s","payer":"%s"},"memo":"memo","msgs":[%s],"sequence":"6"}`, addr, addr, msgStr),
 		},
-		{
-			"no fee, with tip",
-			args{"1234", 3, 6, 0, &txv1beta1.Fee{}, []sdk.Msg{testdata.NewTestMsg(addr)}, "memo"},
-			fmt.Sprintf(`{"account_number":"3","chain_id":"1234","fee":{"amount":[],"gas":"0"},"memo":"memo","msgs":[%s],"sequence":"6","tip":{"amount":[{"amount":"150","denom":"tiptoken"}],"tipper":"%s"}}`, msgStr, addr),
-		},
-		{
-			"with fee and with tip",
-			args{"1234", 3, 6, 0, &txv1beta1.Fee{Amount: defaultFee.Amount, GasLimit: defaultFee.GasLimit, Payer: addr.String()}, []sdk.Msg{testdata.NewTestMsg(addr)}, "memo"},
-			fmt.Sprintf(`{"account_number":"3","chain_id":"1234","fee":{"amount":[{"amount":"150","denom":"atom"}],"gas":"100000","payer":"%s"},"memo":"memo","msgs":[%s],"sequence":"6","tip":{"amount":[{"amount":"150","denom":"tiptoken"}],"tipper":"%s"}}`, addr, msgStr, addr),
-		},
-		{
-			"with empty tip (but not nil), tipper cannot be empty",
-			args{"1234", 3, 6, 0, defaultFee, []sdk.Msg{testdata.NewTestMsg(addr)}, "memo"},
-			fmt.Sprintf(`{"account_number":"3","chain_id":"1234","fee":{"amount":[{"amount":"150","denom":"atom"}],"gas":"100000"},"memo":"memo","msgs":[%s],"sequence":"6","tip":{"amount":[],"tipper":"%s"}}`, msgStr, addr),
-		},
 	}
 	handler := aminojson.NewSignModeHandler(aminojson.SignModeHandlerOptions{
 		FileResolver: proto.HybridResolver,

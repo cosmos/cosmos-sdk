@@ -58,25 +58,12 @@ func TestAminoJsonSignMode(t *testing.T) {
 			},
 		},
 		{
-			name: "empty tipper",
-			malleate: func(opts testutil.HandlerArgumentOptions) testutil.HandlerArgumentOptions {
-				return opts
-			},
-			error: "tipper cannot be empty",
-		},
-		{
 			name: "nil fee",
 			malleate: func(opts testutil.HandlerArgumentOptions) testutil.HandlerArgumentOptions {
 				opts.Fee = nil
 				return opts
 			},
 			error: "fee cannot be nil",
-		},
-		{
-			name: "tipper is signer",
-			malleate: func(opts testutil.HandlerArgumentOptions) testutil.HandlerArgumentOptions {
-				return opts
-			},
 		},
 	}
 

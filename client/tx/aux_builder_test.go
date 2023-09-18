@@ -85,18 +85,6 @@ func TestAuxTxBuilder(t *testing.T) {
 			true, "got unknown sign mode SIGN_MODE_UNSPECIFIED",
 		},
 		{
-			"GetSignBytes tipper should not be nil (if tip is set)",
-			func() error {
-				require.NoError(t, b.SetMsgs(msg1))
-				require.NoError(t, b.SetPubKey(pub1))
-				require.NoError(t, b.SetSignMode(signing.SignMode_SIGN_MODE_DIRECT_AUX))
-
-				_, err := b.GetSignBytes()
-				return err
-			},
-			true, "tipper cannot be empty",
-		},
-		{
 			"GetSignBytes works for DIRECT_AUX",
 			func() error {
 				require.NoError(t, b.SetMsgs(msg1))

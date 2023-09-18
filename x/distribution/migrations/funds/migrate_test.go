@@ -3,11 +3,11 @@ package funds_test
 import (
 	"testing"
 
-	"cosmossdk.io/log"
-	storetypes "cosmossdk.io/store/types"
-
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
+
+	"cosmossdk.io/log"
+	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"

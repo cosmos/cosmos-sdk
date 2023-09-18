@@ -4,8 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"google.golang.org/protobuf/proto"
-
 	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
 	pooltypes "cosmossdk.io/api/cosmos/pool/v1"
 	"cosmossdk.io/collections"
@@ -213,7 +211,16 @@ func (keeper Keeper) ChargeDeposit(ctx context.Context, proposalID uint64, destA
 				Amount:    amount,
 				Depositor: keeper.ModuleAccountAddress().String(),
 			}
-			_, err := proto.Marshal(&msg)
+
+			// Convert your message to an sdk.Msg
+			protoMsg := []sdk.Msg{&msg}
+
+			// Pass the sdk.Msg to the MessageRouter
+			handler := keeper.router.Handler(protoMsg[0])
+			if handler == nil {
+				return fmt.Errorf("message not recognized by router: %s", sdk.MsgTypeURL(protoMsg[0]))
+			}
+			_, err := handler(sdk.UnwrapSDKContext(ctx), &msg)
 			if err != nil {
 				return err
 			}

@@ -146,14 +146,23 @@ type (
 	DefaultProposalHandler struct {
 		mempool    mempool.Mempool
 		txVerifier ProposalTxVerifier
+		txSelector func(maxTxBytes, maxBlockGas uint64) TxSelector
 	}
 )
 
-func NewDefaultProposalHandler(mp mempool.Mempool, txVerifier ProposalTxVerifier) DefaultProposalHandler {
-	return DefaultProposalHandler{
+func NewDefaultProposalHandler(mp mempool.Mempool, txVerifier ProposalTxVerifier) *DefaultProposalHandler {
+	return &DefaultProposalHandler{
 		mempool:    mp,
 		txVerifier: txVerifier,
+		txSelector: func(maxTxBytes, maxBlockGas uint64) TxSelector {
+			return NewDefaultTxSelector(maxTxBytes, maxBlockGas)
+		},
 	}
+}
+
+// SetTxSelector sets the TxSelector function on the DefaultProposalHandler.
+func (h *DefaultProposalHandler) SetTxSelector(fn func(maxTxBytes, maxBlockGas uint64) TxSelector) {
+	h.txSelector = fn
 }
 
 // PrepareProposalHandler returns the default implementation for processing an
@@ -176,14 +185,14 @@ func NewDefaultProposalHandler(mp mempool.Mempool, txVerifier ProposalTxVerifier
 // - If no mempool is set or if the mempool is a no-op mempool, the transactions
 // requested from CometBFT will simply be returned, which, by default, are in
 // FIFO order.
-func (h DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHandler {
+func (h *DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHandler {
 	return func(ctx sdk.Context, req *abci.RequestPrepareProposal) (*abci.ResponsePrepareProposal, error) {
 		var maxBlockGas uint64
 		if b := ctx.ConsensusParams().Block; b != nil {
 			maxBlockGas = uint64(b.MaxGas)
 		}
 
-		txSelector := NewTxSelector(uint64(req.MaxTxBytes), maxBlockGas)
+		txSelector := h.txSelector(uint64(req.MaxTxBytes), maxBlockGas)
 		defer txSelector.Clear()
 
 		// If the mempool is nil or NoOp we simply return the transactions
@@ -243,7 +252,7 @@ func (h DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHand
 // DefaultPrepareProposal. It is very important that the same validation logic
 // is used in both steps, and applications must ensure that this is the case in
 // non-default handlers.
-func (h DefaultProposalHandler) ProcessProposalHandler() sdk.ProcessProposalHandler {
+func (h *DefaultProposalHandler) ProcessProposalHandler() sdk.ProcessProposalHandler {
 	// If the mempool is nil or NoOp we simply return ACCEPT,
 	// because PrepareProposal may have included txs that could fail verification.
 	_, isNoOp := h.mempool.(mempool.NoOpMempool)
@@ -317,7 +326,21 @@ func NoOpVerifyVoteExtensionHandler() sdk.VerifyVoteExtensionHandler {
 // mempool transaction selection in PrepareProposal. It keeps track of the total
 // number of bytes and total gas of the selected transactions. It also keeps
 // track of the selected transactions themselves.
-type TxSelector struct {
+type TxSelector interface {
+	// SelectedTxs should return a copy of the selected transactions.
+	SelectedTxs() [][]byte
+
+	// Clear should clear the TxSelector, nulling out all relevant fields.
+	Clear()
+
+	// SelectTxForProposal should attempt to select a transaction for inclusion in
+	// a proposal based on inclusion criteria defined by the TxSelector. It must
+	// return <true> if the caller should halt the transaction selection loop
+	// (typically over a mempool) or <false> otherwise.
+	SelectTxForProposal(memTx sdk.Tx, txBz []byte) bool
+}
+
+type defaultTxSelector struct {
 	maxTxBytes   uint64
 	maxBlockGas  uint64
 	totalTxBytes uint64
@@ -325,32 +348,26 @@ type TxSelector struct {
 	selectedTxs  [][]byte
 }
 
-func NewTxSelector(maxTxBytes, maxBlockGas uint64) *TxSelector {
-	return &TxSelector{
+func NewDefaultTxSelector(maxTxBytes, maxBlockGas uint64) TxSelector {
+	return &defaultTxSelector{
 		maxTxBytes:  maxTxBytes,
 		maxBlockGas: maxBlockGas,
 	}
 }
 
-// SelectedTxs returns a copy of the selected transactions.
-func (ts *TxSelector) SelectedTxs() [][]byte {
+func (ts *defaultTxSelector) SelectedTxs() [][]byte {
 	txs := make([][]byte, len(ts.selectedTxs))
 	copy(txs, ts.selectedTxs)
 	return txs
 }
 
-// Clear clears the TxSelector, nulling out all fields.
-func (ts *TxSelector) Clear() {
+func (ts *defaultTxSelector) Clear() {
 	ts.totalTxBytes = 0
 	ts.totalTxGas = 0
 	ts.selectedTxs = nil
 }
 
-// SelectTxForProposal selects a transaction for inclusion in a proposal. It will
-// only select the provided transaction if there is enough capacity in the block.
-// It will return <true> if the caller should halt the transaction selection loop
-// (typically over a mempool) or <false> otherwise.
-func (ts *TxSelector) SelectTxForProposal(memTx sdk.Tx, txBz []byte) bool {
+func (ts *defaultTxSelector) SelectTxForProposal(memTx sdk.Tx, txBz []byte) bool {
 	txSize := uint64(len(txBz))
 
 	var txGasLimit uint64
@@ -376,10 +393,6 @@ func (ts *TxSelector) SelectTxForProposal(memTx sdk.Tx, txBz []byte) bool {
 		}
 	}
 
-	// Check if we've reached capacity. If so, we cannot select any more transactions.
-	if ts.totalTxBytes >= ts.maxTxBytes || (ts.maxBlockGas > 0 && (ts.totalTxGas >= ts.maxBlockGas)) {
-		return true
-	}
-
-	return false
+	// check if we've reached capacity; if so, we cannot select any more transactions
+	return ts.totalTxBytes >= ts.maxTxBytes || (ts.maxBlockGas > 0 && (ts.totalTxGas >= ts.maxBlockGas))
 }

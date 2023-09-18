@@ -71,7 +71,7 @@ type BroadcastMode int32
 const (
 	// zero-value for mode ordering
 	BroadcastMode_BROADCAST_MODE_UNSPECIFIED BroadcastMode = 0
-	// Deptrecated: use BROADCAST_MODE_SYNC instead,
+	// Deprecated: use BROADCAST_MODE_SYNC instead,
 	// BROADCAST_MODE_BLOCK is not supported by the SDK from v0.47.x onwards.
 	BroadcastMode_BROADCAST_MODE_BLOCK BroadcastMode = 1 // Deprecated: Do not use.
 	// BROADCAST_MODE_SYNC defines a tx broadcasting mode where the client waits

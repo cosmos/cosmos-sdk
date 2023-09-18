@@ -9082,7 +9082,7 @@ type BroadcastMode int32
 const (
 	// zero-value for mode ordering
 	BroadcastMode_BROADCAST_MODE_UNSPECIFIED BroadcastMode = 0
-	// Deptrecated: use BROADCAST_MODE_SYNC instead,
+	// Deprecated: use BROADCAST_MODE_SYNC instead,
 	// BROADCAST_MODE_BLOCK is not supported by the SDK from v0.47.x onwards.
 	//
 	// Deprecated: Do not use.

@@ -58,3 +58,4 @@ The new ctx must be passed to all the other lifecycle methods.
 * [1] https://github.com/cosmos/cosmos-sdk/issues/16494
 * [2] https://github.com/cosmos/cosmos-sdk/pull/16583
 * [3] https://github.com/cosmos/cosmos-sdk/pull/17421
+* [4] https://github.com/cosmos/cosmos-sdk/pull/17713

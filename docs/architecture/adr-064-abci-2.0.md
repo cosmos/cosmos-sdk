@@ -293,7 +293,7 @@ decision based on the vote extensions.
 
 In certain contexts, it may be useful or necessary for applications to persist
 data derived from vote extensions. In order to facilitate this use case, we propose
-to allow app developers to define a pre-FinalizeBlock hook which will be called
+to allow app developers to define a pre-Blocker hook which will be called
 at the very beginning of `FinalizeBlock`, i.e. before `BeginBlock` (see below).
 
 Note, we cannot allow applications to directly write to the application state
@@ -301,7 +301,7 @@ during `ProcessProposal` because during replay, CometBFT will NOT call `ProcessP
 which would result in an incomplete state view.
 
 ```go
-func (a MyApp) PreFinalizeBlockHook(ctx sdk.Context, req.RequestFinalizeBlock) error {
+func (a MyApp) PreBlocker(ctx sdk.Context, req *abci.RequestFinalizeBlock) error {
 	voteExts := GetVoteExtensions(ctx, req.Txs)
 	
 	// Process and perform some compute on vote extensions, storing any resulting
@@ -353,13 +353,17 @@ we can come up with new types and names altogether.
 func (app *BaseApp) FinalizeBlock(req abci.RequestFinalizeBlock) (*abci.ResponseFinalizeBlock, error) {
 	ctx := ...
 
-	if app.preFinalizeBlockHook != nil {
-		if err := app.preFinalizeBlockHook(ctx, req); err != nil {
+	if app.preBlocker != nil {
+		ctx := app.finalizeBlockState.ctx
+		rsp, err := app.preBlocker(ctx, req)
+		if err != nil {
 			return nil, err
 		}
+		if rsp.ConsensusParamsChanged {
+			app.finalizeBlockState.ctx = ctx.WithConsensusParams(app.GetConsensusParams(ctx))
+		}
 	}
-
-	beginBlockResp := app.beginBlock(ctx, req)
+	beginBlockResp, err := app.beginBlock(req)
 	appendBlockEventAttr(beginBlockResp.Events, "begin_block")
 
 	txExecResults := make([]abci.ExecTxResult, 0, len(req.Txs))
@@ -368,7 +372,7 @@ func (app *BaseApp) FinalizeBlock(req abci.RequestFinalizeBlock) (*abci.Response
 		txExecResults = append(txExecResults, result)
 	}
 
-	endBlockResp := app.endBlock(ctx, req)
+	endBlockResp, err := app.endBlock(app.finalizeBlockState.ctx)
 	appendBlockEventAttr(beginBlockResp.Events, "end_block")
 
 	return abci.ResponseFinalizeBlock{

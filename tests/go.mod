@@ -11,11 +11,11 @@ require (
 	cosmossdk.io/math v1.1.2
 	cosmossdk.io/simapp v0.0.0-20230620040119-e078f1a49e8b
 	cosmossdk.io/store v1.0.0-rc.0
-	cosmossdk.io/x/evidence v0.0.0-20230913185058-9b5a203d35bc
-	cosmossdk.io/x/feegrant v0.0.0-20230913185058-9b5a203d35bc
-	cosmossdk.io/x/nft v0.0.0-20230913185058-9b5a203d35bc // indirect
+	cosmossdk.io/x/evidence v0.0.0-20230915171831-2196edacb99d
+	cosmossdk.io/x/feegrant v0.0.0-20230915171831-2196edacb99d
+	cosmossdk.io/x/nft v0.0.0-20230915171831-2196edacb99d // indirect
 	cosmossdk.io/x/tx v0.10.0
-	cosmossdk.io/x/upgrade v0.0.0-20230915075604-076dc1ee9619
+	cosmossdk.io/x/upgrade v0.0.0-20230915171831-2196edacb99d
 	github.com/cometbft/cometbft v0.38.0
 	github.com/cosmos/cosmos-db v1.0.0
 	github.com/cosmos/cosmos-proto v1.0.0-beta.3
@@ -37,9 +37,9 @@ require (
 	cloud.google.com/go/compute/metadata v0.2.3 // indirect
 	cloud.google.com/go/iam v1.1.1 // indirect
 	cloud.google.com/go/storage v1.30.1 // indirect
-	cosmossdk.io/client/v2 v2.0.0-20230915125841-fb18a3dd99c6 // indirect
+	cosmossdk.io/client/v2 v2.0.0-20230915171831-2196edacb99d // indirect
 	cosmossdk.io/collections v0.4.0 // indirect
-	cosmossdk.io/x/circuit v0.0.0-20230913185058-9b5a203d35bc // indirect
+	cosmossdk.io/x/circuit v0.0.0-20230915171831-2196edacb99d // indirect
 	filippo.io/edwards25519 v1.0.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/99designs/keyring v1.2.1 // indirect

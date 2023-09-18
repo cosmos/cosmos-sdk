@@ -896,7 +896,7 @@ func TestMsgDepositValidatorRewardsPool(t *testing.T) {
 	require.NoError(t, f.bankKeeper.MintCoins(f.sdkCtx, distrtypes.ModuleName, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens))))
 
 	// Set default staking params
-	require.NoError(t, f.stakingKeeper.SetParams(f.sdkCtx, stakingtypes.DefaultParams()))
+	require.NoError(t, f.stakingKeeper.Params.Set(f.sdkCtx, stakingtypes.DefaultParams()))
 
 	addr := sdk.AccAddress("addr")
 	addr1 := sdk.AccAddress(PKS[0].Address())

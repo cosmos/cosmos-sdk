@@ -25,7 +25,6 @@ func TestSignDocDirectAux(t *testing.T) {
 	}{
 		{"empty bodyBz", tx.SignDocDirectAux{}, true},
 		{"empty pubkey", tx.SignDocDirectAux{BodyBytes: bodyBz}, true},
-		{"empty tipper", tx.SignDocDirectAux{BodyBytes: bodyBz, PublicKey: pkAny}, true},
 		{"happy case w/o tip", tx.SignDocDirectAux{BodyBytes: bodyBz, PublicKey: pkAny}, false},
 		{"happy case w/ tip", tx.SignDocDirectAux{
 			BodyBytes: bodyBz,

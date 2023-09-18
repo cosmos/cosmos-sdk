@@ -286,13 +286,6 @@
 					"gas_limit": 100000,
 					"payer": "cosmos1ejrf4cur2wy6kfurg9f2jppp2h3afe5h6pkh5t",
 					"granter": "cosmos1ulav3hsenupswqfkw2y3sup5kgtqwnvqa8eyhs"
-				},
-				"tip": {
-					"amount": [
-						{ "amount": "20000", "denom": "uatom" },
-						{ "amount": "30000", "denom": "uosmo" }
-					],
-					"tipper": "cosmos1ejrf4cur2wy6kfurg9f2jppp2h3afe5h6pkh5t"
 				}
 			}
 		},
@@ -344,8 +337,6 @@
 			{ "title": "Fees", "content": "0.002 ATOM" },
 			{ "title": "Fee payer", "content": "cosmos1ejrf4cur2wy6kfurg9f2jppp2h3afe5h6pkh5t", "expert": true },
 			{ "title": "Fee granter", "content": "cosmos1ulav3hsenupswqfkw2y3sup5kgtqwnvqa8eyhs", "expert": true },
-			{ "title": "Tip", "content": "0.02 ATOM, 30'000 uosmo" },
-			{ "title": "Tipper", "content": "cosmos1ejrf4cur2wy6kfurg9f2jppp2h3afe5h6pkh5t" },
 			{ "title": "Gas limit", "content": "100'000", "expert": true },
 			{ "title": "Timeout height", "content": "20", "expert": true },
 			{ "title": "Other signer", "content": "1 SignerInfo", "expert": true },

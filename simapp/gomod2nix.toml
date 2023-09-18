@@ -511,8 +511,8 @@ schema = 3
     version = "v3.0.1"
     hash = "sha256-FqL9TKYJ0XkNwJFnq9j0VvJ5ZUU1RvH/52h/f5bkYAU="
   [mod."gotest.tools/v3"]
-    version = "v3.5.0"
-    hash = "sha256-QZhzxX+G/6SOdztVIi6EQMwUcL79Za1dh7xGRQvc0W4="
+    version = "v3.5.1"
+    hash = "sha256-ps2GEc3P2xvlrU4TCtXz+nLTxyP0RrF7SScz5jUqE5E="
   [mod."nhooyr.io/websocket"]
     version = "v1.8.6"
     hash = "sha256-DyaiCc/1iELrl6JSpz6WYMtFwUiSCOSoNF8IhSyP1ag="

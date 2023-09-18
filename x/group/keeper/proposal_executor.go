@@ -19,7 +19,7 @@ import (
 func (s Keeper) doExecuteMsgs(ctx sdk.Context, router baseapp.MessageRouter, proposal group.Proposal, groupPolicyAcc sdk.AccAddress, decisionPolicy group.DecisionPolicy) ([]sdk.Result, error) {
 	// Ensure it's not too early to execute the messages.
 	minExecutionDate := proposal.SubmitTime.Add(decisionPolicy.GetMinExecutionPeriod())
-	if ctx.BlockTime().Before(minExecutionDate) {
+	if ctx.HeaderInfo().Time.Before(minExecutionDate) {
 		return nil, errors.ErrInvalid.Wrapf("must wait until %s to execute proposal %d", minExecutionDate, proposal.Id)
 	}
 
@@ -29,7 +29,7 @@ func (s Keeper) doExecuteMsgs(ctx sdk.Context, router baseapp.MessageRouter, pro
 	// the proposal doesn't exist in state. For sanity check, we can still keep
 	// this simple and cheap check.
 	expiryDate := proposal.VotingPeriodEnd.Add(s.config.MaxExecutionPeriod)
-	if expiryDate.Before(ctx.BlockTime()) {
+	if expiryDate.Before(ctx.HeaderInfo().Time) {
 		return nil, errors.ErrExpired.Wrapf("proposal expired on %s", expiryDate)
 	}
 

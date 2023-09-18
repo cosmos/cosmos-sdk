@@ -7,7 +7,7 @@ import (
 
 // InitGenesis initializes new authz genesis
 func (k Keeper) InitGenesis(ctx sdk.Context, data *authz.GenesisState) {
-	now := ctx.BlockTime()
+	now := ctx.HeaderInfo().Time
 	for _, entry := range data.Authorization {
 		// ignore expired authorizations
 		if entry.Expiration != nil && entry.Expiration.Before(now) {

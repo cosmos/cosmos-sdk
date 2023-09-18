@@ -284,7 +284,7 @@ func (k Keeper) unbondingDelegationEntryCanComplete(ctx context.Context, id uint
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	// Check if entry is matured.
-	if !ubd.Entries[i].OnHold() && ubd.Entries[i].IsMature(sdkCtx.BlockHeader().Time) {
+	if !ubd.Entries[i].OnHold() && ubd.Entries[i].IsMature(sdkCtx.HeaderInfo().Time) {
 		// If matured, complete it.
 		delegatorAddress, err := k.authKeeper.AddressCodec().StringToBytes(ubd.DelegatorAddress)
 		if err != nil {
@@ -346,7 +346,7 @@ func (k Keeper) redelegationEntryCanComplete(ctx context.Context, id uint64) err
 	red.Entries[i].UnbondingOnHoldRefCount--
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	if !red.Entries[i].OnHold() && red.Entries[i].IsMature(sdkCtx.BlockHeader().Time) {
+	if !red.Entries[i].OnHold() && red.Entries[i].IsMature(sdkCtx.HeaderInfo().Time) {
 		// If matured, complete it.
 		// Remove entry
 		red.RemoveEntry(int64(i))

@@ -4,12 +4,8 @@ import (
 	"fmt"
 	"time"
 
-<<<<<<< HEAD
-=======
-	"cosmossdk.io/collections"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
->>>>>>> a0b39a1d3 (feat(gov): handle panics when executing x/gov proposals (#17780))
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/keeper"
@@ -84,24 +80,13 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) {
 			if err == nil {
 				for idx, msg = range messages {
 					handler := keeper.Router().Handler(msg)
-
 					var res *sdk.Result
-					res, err = handler(cacheCtx, msg)
+					res, err = safeExecuteHandler(cacheCtx, msg, handler)
 					if err != nil {
 						break
 					}
 
-<<<<<<< HEAD
 					events = append(events, res.GetEvents()...)
-=======
-			// execute all messages
-			for idx, msg = range messages {
-				handler := keeper.Router().Handler(msg)
-				var res *sdk.Result
-				res, err = safeExecuteHandler(cacheCtx, msg, handler)
-				if err != nil {
-					break
->>>>>>> a0b39a1d3 (feat(gov): handle panics when executing x/gov proposals (#17780))
 				}
 			}
 

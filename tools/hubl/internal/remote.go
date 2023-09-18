@@ -16,6 +16,7 @@ import (
 	"cosmossdk.io/tools/hubl/internal/config"
 	"cosmossdk.io/tools/hubl/internal/flags"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
 )
 
@@ -65,13 +66,16 @@ func RemoteCommand(config *config.Config, configDir string) ([]*cobra.Command, e
 			return nil, err
 		}
 
+		clientCtx := client.Context{}.
+			WithAddressCodec(addressCodec).
+			WithValidatorAddressCodec(validatorAddressCodec).
+			WithConsensusAddressCodec(consensusAddressCodec)
+
 		builder := &autocli.Builder{
 			Builder: flag.Builder{
-				AddressCodec:          addressCodec,
-				ValidatorAddressCodec: validatorAddressCodec,
-				ConsensusAddressCodec: consensusAddressCodec,
-				TypeResolver:          &dynamicTypeResolver{chainInfo},
-				FileResolver:          chainInfo.ProtoFiles,
+				ClientCtx:    &clientCtx,
+				TypeResolver: &dynamicTypeResolver{chainInfo},
+				FileResolver: chainInfo.ProtoFiles,
 			},
 			GetClientConn: func(command *cobra.Command) (grpc.ClientConnInterface, error) {
 				return chainInfo.OpenClient()

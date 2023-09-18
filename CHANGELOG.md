@@ -46,6 +46,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/bank) [#17569](https://github.com/cosmos/cosmos-sdk/pull/17569) Introduce a new message type, `MsgBurn `, to burn coins.
 * (genutil) [#17571](https://github.com/cosmos/cosmos-sdk/pull/17571) Allow creation of `AppGenesis` without a file lookup.
 * (server) [#17094](https://github.com/cosmos/cosmos-sdk/pull/17094) Add duration `shutdown-grace` for resource clean up (closing database handles) before exit.
+* (x/gov) [#17780](https://github.com/cosmos/cosmos-sdk/pull/17780) Handle panics when executing x/gov proposals.
 
 ### Improvements
 

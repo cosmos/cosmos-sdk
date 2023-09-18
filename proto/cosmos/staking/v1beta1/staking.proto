@@ -23,7 +23,7 @@ message HistoricalInfo {
   repeated Validator      valset = 2 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 }
 
-// Hsitorical is a set of minimum values.
+// Historical contains a set of minimum values needed for evaluating historical validator sets and blocks.
 // It is stored as part of staking module's state, which persists the `n` most
 // recent HistoricalInfo
 // (`n` is set by the staking module's `historical_entries` parameter).

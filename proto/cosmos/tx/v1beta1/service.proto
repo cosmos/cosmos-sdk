@@ -82,12 +82,12 @@ service Service {
 // RPC method.
 message GetTxsEventRequest {
   // events is the list of transaction event type.
-  // Deprecated post v0.47.x: use query instead, which should contain a valid
+  // Deprecated: post v0.47.x use query instead, which should contain a valid
   // events query.
   repeated string events = 1 [deprecated = true];
 
   // pagination defines a pagination for the request.
-  // Deprecated post v0.46.x: use page and limit instead.
+  // Deprecated: post v0.46.x use page and limit instead.
   cosmos.base.query.v1beta1.PageRequest pagination = 2 [deprecated = true];
 
   OrderBy order_by = 3;
@@ -126,7 +126,7 @@ message GetTxsEventResponse {
   // tx_responses is the list of queried TxResponses.
   repeated cosmos.base.abci.v1beta1.TxResponse tx_responses = 2;
   // pagination defines a pagination for the response.
-  // Deprecated post v0.46.x: use total instead.
+  // Deprecated: post v0.46.x use total instead.
   cosmos.base.query.v1beta1.PageResponse pagination = 3 [deprecated = true];
   // total is total number of results available
   uint64 total = 4;
@@ -145,7 +145,7 @@ message BroadcastTxRequest {
 enum BroadcastMode {
   // zero-value for mode ordering
   BROADCAST_MODE_UNSPECIFIED = 0;
-  // DEPRECATED: use BROADCAST_MODE_SYNC instead,
+  // Deprecated: use BROADCAST_MODE_SYNC instead,
   // BROADCAST_MODE_BLOCK is not supported by the SDK from v0.47.x onwards.
   BROADCAST_MODE_BLOCK = 1 [deprecated = true];
   // BROADCAST_MODE_SYNC defines a tx broadcasting mode where the client waits

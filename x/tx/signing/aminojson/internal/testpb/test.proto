@@ -63,7 +63,7 @@ message ABitOfEverything {
 }
 
 message Duration {
-  google.protobuf.Duration duration = 1;
+  google.protobuf.Duration  duration  = 1;
   google.protobuf.Timestamp timestamp = 2;
 }
 

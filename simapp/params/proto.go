@@ -12,7 +12,7 @@ import (
 // MakeTestEncodingConfig creates an EncodingConfig for a non-amino based test configuration.
 // This function should be used only internally (in the SDK).
 // App user should'nt create new codecs - use the app.AppCodec instead.
-// [DEPRECATED]
+// Deprecated:
 func MakeTestEncodingConfig() EncodingConfig {
 	cdc := codec.NewLegacyAmino()
 	interfaceRegistry := types.NewInterfaceRegistry()

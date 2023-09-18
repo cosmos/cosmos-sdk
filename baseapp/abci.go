@@ -511,6 +511,8 @@ func (app *BaseApp) ProcessProposal(req *abci.RequestProcessProposal) (resp *abc
 	// processed the first block, as we want to avoid overwriting the finalizeState
 	// after state changes during InitChain.
 	if req.Height > app.initialHeight {
+		// abort any running OE
+		app.optimisticExec.Abort()
 		app.setState(execModeFinalize, header)
 	}
 
@@ -555,6 +557,19 @@ func (app *BaseApp) ProcessProposal(req *abci.RequestProcessProposal) (resp *abc
 	if err != nil {
 		app.logger.Error("failed to process proposal", "height", req.Height, "time", req.Time, "hash", fmt.Sprintf("%X", req.Hash), "err", err)
 		return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
+	}
+
+	// Only execute optimistic execution if the proposal is accepted, OE is
+	// enabled and the block height is greater than the initial height. During
+	// the first block we'll be carrying state from InitChain, so it would be
+	// impossible for us to easily revert.
+	// After the first block has been processed, the next blocks will get executed
+	// optimistically, so that when the ABCI client calls `FinalizeBlock` the app
+	// can have a response ready.
+	if resp.Status == abci.ResponseProcessProposal_ACCEPT &&
+		app.optimisticExec.Enabled() &&
+		req.Height > app.initialHeight {
+		app.optimisticExec.Execute(req)
 	}
 
 	return resp, nil
@@ -668,17 +683,11 @@ func (app *BaseApp) VerifyVoteExtension(req *abci.RequestVerifyVoteExtension) (r
 	return resp, err
 }
 
-// FinalizeBlock will execute the block proposal provided by RequestFinalizeBlock.
-// Specifically, it will execute an application's BeginBlock (if defined), followed
-// by the transactions in the proposal, finally followed by the application's
-// EndBlock (if defined).
-//
-// For each raw transaction, i.e. a byte slice, BaseApp will only execute it if
-// it adheres to the sdk.Tx interface. Otherwise, the raw transaction will be
-// skipped. This is to support compatibility with proposers injecting vote
-// extensions into the proposal, which should not themselves be executed in cases
-// where they adhere to the sdk.Tx interface.
-func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (*abci.ResponseFinalizeBlock, error) {
+// internalFinalizeBlock executes the block, called by the Optimistic
+// Execution flow or by the FinalizeBlock ABCI method. The context received is
+// only used to handle early cancellation, for anything related to state app.finalizeBlockState.ctx
+// must be used.
+func (app *BaseApp) internalFinalizeBlock(ctx context.Context, req *abci.RequestFinalizeBlock) (*abci.ResponseFinalizeBlock, error) {
 	var events []abci.Event
 
 	if err := app.checkHalt(req.Height, req.Time); err != nil {
@@ -751,6 +760,15 @@ func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (*abci.Respons
 		return nil, err
 	}
 
+	// First check for an abort signal after beginBlock, as it's the first place
+	// we spend any significant amount of time.
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	default:
+		// continue
+	}
+
 	events = append(events, beginBlock.Events...)
 
 	// Iterate over all raw transactions in the proposal and attempt to execute
@@ -777,6 +795,14 @@ func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (*abci.Respons
 			)
 		}
 
+		// check after every tx if we should abort
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		default:
+			// continue
+		}
+
 		txResults = append(txResults, response)
 	}
 
@@ -789,6 +815,14 @@ func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (*abci.Respons
 		return nil, err
 	}
 
+	// check after endBlock if we should abort, to avoid propagating the result
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	default:
+		// continue
+	}
+
 	events = append(events, endBlock.Events...)
 	cp := app.GetConsensusParams(app.finalizeBlockState.ctx)
 
@@ -797,8 +831,45 @@ func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (*abci.Respons
 		TxResults:             txResults,
 		ValidatorUpdates:      endBlock.ValidatorUpdates,
 		ConsensusParamUpdates: &cp,
-		AppHash:               app.workingHash(),
 	}, nil
+}
+
+// FinalizeBlock will execute the block proposal provided by RequestFinalizeBlock.
+// Specifically, it will execute an application's BeginBlock (if defined), followed
+// by the transactions in the proposal, finally followed by the application's
+// EndBlock (if defined).
+//
+// For each raw transaction, i.e. a byte slice, BaseApp will only execute it if
+// it adheres to the sdk.Tx interface. Otherwise, the raw transaction will be
+// skipped. This is to support compatibility with proposers injecting vote
+// extensions into the proposal, which should not themselves be executed in cases
+// where they adhere to the sdk.Tx interface.
+func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (*abci.ResponseFinalizeBlock, error) {
+	if app.optimisticExec.Initialized() {
+		// check if the hash we got is the same as the one we are executing
+		aborted := app.optimisticExec.AbortIfNeeded(req.Hash)
+		// Wait for the OE to finish, regardless of whether it was aborted or not
+		res, err := app.optimisticExec.WaitResult()
+
+		// only return if we are not aborting
+		if !aborted {
+			if res != nil {
+				res.AppHash = app.workingHash()
+			}
+			return res, err
+		}
+
+		// if it was aborted, we need to reset the state
+		app.finalizeBlockState = nil
+		app.optimisticExec.Reset()
+	}
+
+	// if no OE is running, just run the block (this is either a block replay or a OE that got aborted)
+	res, err := app.internalFinalizeBlock(context.Background(), req)
+	if res != nil {
+		res.AppHash = app.workingHash()
+	}
+	return res, err
 }
 
 // checkHalt checkes if height or time exceeds halt-height or halt-time respectively.

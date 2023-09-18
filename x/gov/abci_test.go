@@ -54,16 +54,16 @@ func TestTickExpiredDepositPeriod(t *testing.T) {
 
 	checkInactiveProposalsQueue(t, ctx, suite.GovKeeper)
 
-	newHeader := ctx.BlockHeader()
-	newHeader.Time = ctx.BlockHeader().Time.Add(time.Duration(1) * time.Second)
-	ctx = ctx.WithBlockHeader(newHeader)
+	newHeader := ctx.HeaderInfo()
+	newHeader.Time = ctx.HeaderInfo().Time.Add(time.Duration(1) * time.Second)
+	ctx = ctx.WithHeaderInfo(newHeader)
 
 	checkInactiveProposalsQueue(t, ctx, suite.GovKeeper)
 
 	params, _ := suite.GovKeeper.Params.Get(ctx)
-	newHeader = ctx.BlockHeader()
-	newHeader.Time = ctx.BlockHeader().Time.Add(*params.MaxDepositPeriod)
-	ctx = ctx.WithBlockHeader(newHeader)
+	newHeader = ctx.HeaderInfo()
+	newHeader.Time = ctx.HeaderInfo().Time.Add(*params.MaxDepositPeriod)
+	ctx = ctx.WithHeaderInfo(newHeader)
 
 	checkInactiveProposalsQueue(t, ctx, suite.GovKeeper)
 
@@ -105,9 +105,9 @@ func TestTickMultipleExpiredDepositPeriod(t *testing.T) {
 
 	checkInactiveProposalsQueue(t, ctx, suite.GovKeeper)
 
-	newHeader := ctx.BlockHeader()
-	newHeader.Time = ctx.BlockHeader().Time.Add(time.Duration(2) * time.Second)
-	ctx = ctx.WithBlockHeader(newHeader)
+	newHeader := ctx.HeaderInfo()
+	newHeader.Time = ctx.HeaderInfo().Time.Add(time.Duration(2) * time.Second)
+	ctx = ctx.WithHeaderInfo(newHeader)
 
 	checkInactiveProposalsQueue(t, ctx, suite.GovKeeper)
 
@@ -126,18 +126,18 @@ func TestTickMultipleExpiredDepositPeriod(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, res)
 
-	newHeader = ctx.BlockHeader()
+	newHeader = ctx.HeaderInfo()
 	params, _ := suite.GovKeeper.Params.Get(ctx)
-	newHeader.Time = ctx.BlockHeader().Time.Add(*params.MaxDepositPeriod).Add(time.Duration(-1) * time.Second)
-	ctx = ctx.WithBlockHeader(newHeader)
+	newHeader.Time = ctx.HeaderInfo().Time.Add(*params.MaxDepositPeriod).Add(time.Duration(-1) * time.Second)
+	ctx = ctx.WithHeaderInfo(newHeader)
 
 	checkInactiveProposalsQueue(t, ctx, suite.GovKeeper)
 	require.NoError(t, gov.EndBlocker(ctx, suite.GovKeeper))
 	checkInactiveProposalsQueue(t, ctx, suite.GovKeeper)
 
-	newHeader = ctx.BlockHeader()
-	newHeader.Time = ctx.BlockHeader().Time.Add(time.Duration(5) * time.Second)
-	ctx = ctx.WithBlockHeader(newHeader)
+	newHeader = ctx.HeaderInfo()
+	newHeader.Time = ctx.HeaderInfo().Time.Add(time.Duration(5) * time.Second)
+	ctx = ctx.WithHeaderInfo(newHeader)
 
 	checkInactiveProposalsQueue(t, ctx, suite.GovKeeper)
 	require.NoError(t, gov.EndBlocker(ctx, suite.GovKeeper))
@@ -176,9 +176,9 @@ func TestTickPassedDepositPeriod(t *testing.T) {
 
 	checkInactiveProposalsQueue(t, ctx, suite.GovKeeper)
 
-	newHeader := ctx.BlockHeader()
-	newHeader.Time = ctx.BlockHeader().Time.Add(time.Duration(1) * time.Second)
-	ctx = ctx.WithBlockHeader(newHeader)
+	newHeader := ctx.HeaderInfo()
+	newHeader.Time = ctx.HeaderInfo().Time.Add(time.Duration(1) * time.Second)
+	ctx = ctx.WithHeaderInfo(newHeader)
 
 	checkInactiveProposalsQueue(t, ctx, suite.GovKeeper)
 
@@ -235,9 +235,9 @@ func TestTickPassedVotingPeriod(t *testing.T) {
 
 			proposalID := res.ProposalId
 
-			newHeader := ctx.BlockHeader()
-			newHeader.Time = ctx.BlockHeader().Time.Add(time.Duration(1) * time.Second)
-			ctx = ctx.WithBlockHeader(newHeader)
+			newHeader := ctx.HeaderInfo()
+			newHeader.Time = ctx.HeaderInfo().Time.Add(time.Duration(1) * time.Second)
+			ctx = ctx.WithHeaderInfo(newHeader)
 
 			newDepositMsg := v1.NewMsgDeposit(addrs[1], proposalID, proposalCoins)
 
@@ -251,9 +251,9 @@ func TestTickPassedVotingPeriod(t *testing.T) {
 				votingPeriod = params.ExpeditedVotingPeriod
 			}
 
-			newHeader = ctx.BlockHeader()
-			newHeader.Time = ctx.BlockHeader().Time.Add(*params.MaxDepositPeriod).Add(*votingPeriod)
-			ctx = ctx.WithBlockHeader(newHeader)
+			newHeader = ctx.HeaderInfo()
+			newHeader.Time = ctx.HeaderInfo().Time.Add(*params.MaxDepositPeriod).Add(*votingPeriod)
+			ctx = ctx.WithHeaderInfo(newHeader)
 
 			checkInactiveProposalsQueue(t, ctx, suite.GovKeeper)
 			checkActiveProposalsQueue(t, ctx, suite.GovKeeper)
@@ -345,10 +345,10 @@ func TestProposalPassedEndblocker(t *testing.T) {
 			err = suite.GovKeeper.AddVote(ctx, proposal.Id, addrs[0], v1.NewNonSplitVoteOption(v1.OptionYes), "")
 			require.NoError(t, err)
 
-			newHeader := ctx.BlockHeader()
+			newHeader := ctx.HeaderInfo()
 			params, _ := suite.GovKeeper.Params.Get(ctx)
-			newHeader.Time = ctx.BlockHeader().Time.Add(*params.MaxDepositPeriod).Add(*params.VotingPeriod)
-			ctx = ctx.WithBlockHeader(newHeader)
+			newHeader.Time = ctx.HeaderInfo().Time.Add(*params.MaxDepositPeriod).Add(*params.VotingPeriod)
+			ctx = ctx.WithHeaderInfo(newHeader)
 
 			err = gov.EndBlocker(ctx, suite.GovKeeper)
 			require.NoError(t, err)
@@ -397,9 +397,9 @@ func TestEndBlockerProposalHandlerFailed(t *testing.T) {
 	require.NoError(t, err)
 
 	params, _ := suite.GovKeeper.Params.Get(ctx)
-	newHeader := ctx.BlockHeader()
-	newHeader.Time = ctx.BlockHeader().Time.Add(*params.MaxDepositPeriod).Add(*params.VotingPeriod)
-	ctx = ctx.WithBlockHeader(newHeader)
+	newHeader := ctx.HeaderInfo()
+	newHeader.Time = ctx.HeaderInfo().Time.Add(*params.MaxDepositPeriod).Add(*params.VotingPeriod)
+	ctx = ctx.WithHeaderInfo(newHeader)
 
 	// validate that the proposal fails/has been rejected
 	err = gov.EndBlocker(ctx, suite.GovKeeper)
@@ -487,9 +487,9 @@ func TestExpeditedProposal_PassAndConversionToRegular(t *testing.T) {
 
 			proposalID := res.ProposalId
 
-			newHeader := ctx.BlockHeader()
-			newHeader.Time = ctx.BlockHeader().Time.Add(time.Duration(1) * time.Second)
-			ctx = ctx.WithBlockHeader(newHeader)
+			newHeader := ctx.HeaderInfo()
+			newHeader.Time = ctx.HeaderInfo().Time.Add(time.Duration(1) * time.Second)
+			ctx = ctx.WithHeaderInfo(newHeader)
 
 			newDepositMsg := v1.NewMsgDeposit(addrs[1], proposalID, proposalCoins)
 
@@ -497,9 +497,9 @@ func TestExpeditedProposal_PassAndConversionToRegular(t *testing.T) {
 			require.NoError(t, err)
 			require.NotNil(t, res1)
 
-			newHeader = ctx.BlockHeader()
-			newHeader.Time = ctx.BlockHeader().Time.Add(*params.MaxDepositPeriod).Add(*params.ExpeditedVotingPeriod)
-			ctx = ctx.WithBlockHeader(newHeader)
+			newHeader = ctx.HeaderInfo()
+			newHeader.Time = ctx.HeaderInfo().Time.Add(*params.MaxDepositPeriod).Add(*params.ExpeditedVotingPeriod)
+			ctx = ctx.WithHeaderInfo(newHeader)
 
 			checkInactiveProposalsQueue(t, ctx, suite.GovKeeper)
 			checkActiveProposalsQueue(t, ctx, suite.GovKeeper)
@@ -557,8 +557,8 @@ func TestExpeditedProposal_PassAndConversionToRegular(t *testing.T) {
 			require.Equal(t, expectedIntermediateMofuleAccCoings, intermediateModuleAccCoins)
 
 			// block header time at the voting period
-			newHeader.Time = ctx.BlockHeader().Time.Add(*params.MaxDepositPeriod).Add(*params.VotingPeriod)
-			ctx = ctx.WithBlockHeader(newHeader)
+			newHeader.Time = ctx.HeaderInfo().Time.Add(*params.MaxDepositPeriod).Add(*params.VotingPeriod)
+			ctx = ctx.WithHeaderInfo(newHeader)
 
 			checkInactiveProposalsQueue(t, ctx, suite.GovKeeper)
 			checkActiveProposalsQueue(t, ctx, suite.GovKeeper)
@@ -634,7 +634,7 @@ func getDepositMultiplier(expedited bool) int64 {
 
 func checkActiveProposalsQueue(t *testing.T, ctx sdk.Context, k *keeper.Keeper) {
 	t.Helper()
-	err := k.ActiveProposalsQueue.Walk(ctx, collections.NewPrefixUntilPairRange[time.Time, uint64](ctx.BlockTime()), func(key collections.Pair[time.Time, uint64], value uint64) (stop bool, err error) {
+	err := k.ActiveProposalsQueue.Walk(ctx, collections.NewPrefixUntilPairRange[time.Time, uint64](ctx.HeaderInfo().Time), func(key collections.Pair[time.Time, uint64], value uint64) (stop bool, err error) {
 		return false, err
 	})
 
@@ -643,7 +643,7 @@ func checkActiveProposalsQueue(t *testing.T, ctx sdk.Context, k *keeper.Keeper) 
 
 func checkInactiveProposalsQueue(t *testing.T, ctx sdk.Context, k *keeper.Keeper) {
 	t.Helper()
-	err := k.InactiveProposalsQueue.Walk(ctx, collections.NewPrefixUntilPairRange[time.Time, uint64](ctx.BlockTime()), func(key collections.Pair[time.Time, uint64], value uint64) (stop bool, err error) {
+	err := k.InactiveProposalsQueue.Walk(ctx, collections.NewPrefixUntilPairRange[time.Time, uint64](ctx.HeaderInfo().Time), func(key collections.Pair[time.Time, uint64], value uint64) (stop bool, err error) {
 		return false, err
 	})
 

@@ -10,6 +10,7 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/suite"
 
+	"cosmossdk.io/core/header"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	"cosmossdk.io/x/feegrant"
@@ -99,8 +100,6 @@ func (suite *SimTestSuite) getTestingAccounts(r *rand.Rand, n int) []simtypes.Ac
 func (suite *SimTestSuite) TestWeightedOperations() {
 	require := suite.Require()
 
-	suite.ctx.WithChainID("test-chain")
-
 	appParams := make(simtypes.AppParams)
 
 	weightedOps := simulation.WeightedOperations(
@@ -131,7 +130,7 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 	}
 
 	for i, w := range weightedOps {
-		operationMsg, _, err := w.Op()(r, suite.app.BaseApp, suite.ctx, accs, suite.ctx.ChainID())
+		operationMsg, _, err := w.Op()(r, suite.app.BaseApp, suite.ctx.WithHeaderInfo(header.Info{Time: time.Now()}), accs, suite.ctx.ChainID())
 		require.NoError(err)
 
 		// the following checks are very much dependent from the ordering of the output given
@@ -157,7 +156,7 @@ func (suite *SimTestSuite) TestSimulateMsgGrantAllowance() {
 
 	// execute operation
 	op := simulation.SimulateMsgGrantAllowance(codec.NewProtoCodec(suite.interfaceRegistry), suite.txConfig, suite.accountKeeper, suite.bankKeeper, suite.feegrantKeeper)
-	operationMsg, futureOperations, err := op(r, app.BaseApp, ctx, accounts, "")
+	operationMsg, futureOperations, err := op(r, app.BaseApp, ctx.WithHeaderInfo(header.Info{Time: time.Now()}), accounts, "")
 	require.NoError(err)
 
 	var msg feegrant.MsgGrantAllowance
@@ -185,7 +184,7 @@ func (suite *SimTestSuite) TestSimulateMsgRevokeAllowance() {
 
 	granter, grantee := accounts[0], accounts[1]
 
-	oneYear := ctx.BlockTime().AddDate(1, 0, 0)
+	oneYear := ctx.HeaderInfo().Time.AddDate(1, 0, 0)
 	err = suite.feegrantKeeper.GrantAllowance(
 		ctx,
 		granter.Address,

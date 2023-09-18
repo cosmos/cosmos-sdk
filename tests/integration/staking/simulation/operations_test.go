@@ -13,6 +13,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/collections"
+	"cosmossdk.io/core/header"
 	"cosmossdk.io/depinject"
 	sdklog "cosmossdk.io/log"
 	"cosmossdk.io/math"
@@ -188,7 +189,7 @@ func (s *SimTestSuite) TestSimulateMsgCreateValidator() {
 func (s *SimTestSuite) TestSimulateMsgCancelUnbondingDelegation() {
 	require := s.Require()
 	blockTime := time.Now().UTC()
-	ctx := s.ctx.WithBlockTime(blockTime)
+	ctx := s.ctx.WithHeaderInfo(header.Info{Time: blockTime})
 
 	// setup accounts[1] as validator
 	validator0 := s.getTestingValidator0(ctx)
@@ -233,7 +234,7 @@ func (s *SimTestSuite) TestSimulateMsgCancelUnbondingDelegation() {
 func (s *SimTestSuite) TestSimulateMsgEditValidator() {
 	require := s.Require()
 	blockTime := time.Now().UTC()
-	ctx := s.ctx.WithBlockTime(blockTime)
+	ctx := s.ctx.WithHeaderInfo(header.Info{Time: blockTime})
 
 	// setup accounts[0] as validator
 	_ = s.getTestingValidator0(ctx)
@@ -259,7 +260,7 @@ func (s *SimTestSuite) TestSimulateMsgEditValidator() {
 func (s *SimTestSuite) TestSimulateMsgDelegate() {
 	require := s.Require()
 	blockTime := time.Now().UTC()
-	ctx := s.ctx.WithBlockTime(blockTime)
+	ctx := s.ctx.WithHeaderInfo(header.Info{Time: blockTime})
 
 	// execute operation
 	op := simulation.SimulateMsgDelegate(s.txConfig, s.accountKeeper, s.bankKeeper, s.stakingKeeper)
@@ -282,7 +283,7 @@ func (s *SimTestSuite) TestSimulateMsgDelegate() {
 func (s *SimTestSuite) TestSimulateMsgUndelegate() {
 	require := s.Require()
 	blockTime := time.Now().UTC()
-	ctx := s.ctx.WithBlockTime(blockTime)
+	ctx := s.ctx.WithHeaderInfo(header.Info{Time: blockTime})
 
 	// setup accounts[1] as validator
 	validator0 := s.getTestingValidator0(ctx)
@@ -323,7 +324,7 @@ func (s *SimTestSuite) TestSimulateMsgUndelegate() {
 func (s *SimTestSuite) TestSimulateMsgBeginRedelegate() {
 	require := s.Require()
 	blockTime := time.Now().UTC()
-	ctx := s.ctx.WithBlockTime(blockTime)
+	ctx := s.ctx.WithHeaderInfo(header.Info{Time: blockTime})
 
 	// setup accounts[1] as validator0 and accounts[2] as validator1
 	validator0 := s.getTestingValidator0(ctx)

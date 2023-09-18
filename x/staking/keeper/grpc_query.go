@@ -402,7 +402,7 @@ func (k Querier) HistoricalInfo(ctx context.Context, req *types.QueryHistoricalI
 		return nil, status.Errorf(codes.NotFound, "historical info for height %d not found", req.Height)
 	}
 
-	return &types.QueryHistoricalInfoResponse{Hist: &hi}, nil
+	return &types.QueryHistoricalInfoResponse{Historical: &hi}, nil
 }
 
 // Redelegations queries redelegations of given address

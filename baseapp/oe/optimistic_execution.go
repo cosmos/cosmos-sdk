@@ -37,7 +37,7 @@ type OptimisticExecution struct {
 
 // NewOptimisticExecution initializes the Optimistic Execution context but does not start it.
 func NewOptimisticExecution(logger log.Logger, fn FinalizeBlockFunc, opts ...func(*OptimisticExecution)) *OptimisticExecution {
-	logger = logger.With("module", "oe")
+	logger = logger.With(log.ModuleKey, "oe")
 	oe := &OptimisticExecution{logger: logger, finalizeBlockFunc: fn}
 	for _, opt := range opts {
 		opt(oe)

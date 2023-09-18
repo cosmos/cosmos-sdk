@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"cosmossdk.io/collections"
-	"google.golang.org/protobuf/proto"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -231,7 +230,7 @@ func safeExecuteHandler(ctx sdk.Context, msg sdk.Msg, handler baseapp.MsgService
 
 	defer func() {
 		if r := recover(); r != nil {
-			err = fmt.Errorf("handling x/gov poposal msg [%s] PANICED: %v", msg, r)
+			err = fmt.Errorf("handling x/gov proposal msg [%s] PANICED: %v", msg, r)
 		}
 	}()
 	res, err = handler(ctx, msg)

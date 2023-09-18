@@ -3,9 +3,11 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution/exported"
+	"github.com/cosmos/cosmos-sdk/x/distribution/migrations/funds"
 	v2 "github.com/cosmos/cosmos-sdk/x/distribution/migrations/v2"
 	v3 "github.com/cosmos/cosmos-sdk/x/distribution/migrations/v3"
 	v4 "github.com/cosmos/cosmos-sdk/x/distribution/migrations/v4"
+	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
 // Migrator is a struct for handling in-place store migrations.
@@ -34,4 +36,24 @@ func (m Migrator) Migrate2to3(ctx sdk.Context) error {
 
 func (m Migrator) Migrate3to4(ctx sdk.Context) error {
 	return v4.MigrateStore(ctx, m.keeper.storeService, m.keeper.cdc)
+}
+
+func (m Migrator) MigrateFundsToPool(ctx sdk.Context) error {
+	macc := m.keeper.GetDistributionAccount(ctx)
+	poolMacc := m.keeper.authKeeper.GetModuleAccount(ctx, poolModuleName)
+
+	feePool, err := m.keeper.FeePool.Get(ctx)
+	if err != nil {
+		return err
+	}
+	err = funds.MigrateFunds(ctx, m.keeper.bankKeeper, feePool, macc, poolMacc)
+	if err != nil {
+		return err
+	}
+	// set FeePool as empty (since FeePool funds are migrated to pool module account)
+	err = m.keeper.FeePool.Set(ctx, types.FeePool{})
+	if err != nil {
+		return err
+	}
+	return nil
 }

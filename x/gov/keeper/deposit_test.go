@@ -17,7 +17,7 @@ import (
 )
 
 const (
-	poolModuleName         = "cosmos-pool"
+	poolModuleName         = "protocol-pool"
 	baseDepositTestAmount  = 100
 	baseDepositTestPercent = 25
 )

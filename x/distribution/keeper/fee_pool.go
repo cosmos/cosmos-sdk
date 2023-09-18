@@ -6,7 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-const poolModuleName = "cosmos-pool"
+const poolModuleName = "protocol-pool"
 
 // DistributeFromFeePool distributes funds from the pool module account to
 // a receiver address

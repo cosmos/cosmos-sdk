@@ -53,10 +53,6 @@ func (k MsgServer) CommunityPoolSpend(ctx context.Context, msg *types.MsgCommuni
 		return nil, err
 	}
 
-	if k.bankKeeper.BlockedAddr(recipient) {
-		return nil, errors.Wrapf(sdkerrors.ErrUnauthorized, "%s is not allowed to receive external funds", msg.Recipient)
-	}
-
 	if err := k.DistributeFromFeePool(ctx, msg.Amount, recipient); err != nil {
 		return nil, err
 	}

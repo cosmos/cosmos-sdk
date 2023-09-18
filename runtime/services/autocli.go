@@ -113,6 +113,10 @@ func (a *autocliConfigurator) RegisterMigration(string, uint64, module.Migration
 	return nil
 }
 
+func (a *autocliConfigurator) RegisterFundsMigration(string, string) error {
+	return nil
+}
+
 func (a *autocliConfigurator) RegisterService(sd *grpc.ServiceDesc, ss interface{}) {
 	if a.registryCache == nil {
 		a.registryCache, a.err = proto.MergedRegistry()

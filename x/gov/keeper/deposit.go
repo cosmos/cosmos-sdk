@@ -17,7 +17,7 @@ import (
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 )
 
-const poolModuleName = "cosmos-pool"
+const poolModuleName = "protocol-pool"
 
 // SetDeposit sets a Deposit to the gov store
 func (keeper Keeper) SetDeposit(ctx context.Context, deposit v1.Deposit) error {

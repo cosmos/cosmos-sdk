@@ -149,6 +149,10 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	if err := cfg.RegisterMigration(types.ModuleName, 3, m.Migrate3to4); err != nil {
 		panic(fmt.Sprintf("failed to migrate x/%s from version 3 to 4: %v", types.ModuleName, err))
 	}
+
+	if err := cfg.RegisterFundsMigration("protocol-pool", types.ModuleName); err != nil {
+		panic(fmt.Sprintf("failed to migrate funds from x/%s to x/pool module", types.ModuleName))
+	}
 }
 
 // InitGenesis performs genesis initialization for the distribution module. It returns

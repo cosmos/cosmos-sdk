@@ -40,6 +40,10 @@ func NewMsgServiceRouter() *MsgServiceRouter {
 }
 
 func (msr *MsgServiceRouter) SetCircuit(cb CircuitBreaker) {
+	if cb == nil {
+		panic("circuit breaker cannot be nil")
+	}
+
 	msr.circuitBreaker = cb
 }
 

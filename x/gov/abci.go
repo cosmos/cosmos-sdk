@@ -227,10 +227,9 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) error {
 // executes handle(msg) and recovers from panic.
 func safeExecuteHandler(ctx sdk.Context, msg sdk.Msg, handler baseapp.MsgServiceHandler,
 ) (res *sdk.Result, err error) {
-
 	defer func() {
 		if r := recover(); r != nil {
-			err = fmt.Errorf("handling x/gov proposal msg [%s] PANICED: %v", msg, r)
+			err = fmt.Errorf("handling x/gov proposal msg [%s] PANICKED: %v", msg, r)
 		}
 	}()
 	res, err = handler(ctx, msg)

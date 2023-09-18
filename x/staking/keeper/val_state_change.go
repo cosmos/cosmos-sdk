@@ -128,7 +128,7 @@ func (k Keeper) BlockValidatorUpdates(ctx context.Context) ([]abci.ValidatorUpda
 // at the previous block height or were removed from the validator set entirely
 // are returned to CometBFT.
 func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx context.Context) (updates []abci.ValidatorUpdate, err error) {
-	params, err := k.GetParams(ctx)
+	params, err := k.Params.Get(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -376,7 +376,7 @@ func (k Keeper) bondValidator(ctx context.Context, validator types.Validator) (t
 
 // BeginUnbondingValidator performs all the store operations for when a validator begins unbonding
 func (k Keeper) BeginUnbondingValidator(ctx context.Context, validator types.Validator) (types.Validator, error) {
-	params, err := k.GetParams(ctx)
+	params, err := k.Params.Get(ctx)
 	if err != nil {
 		return validator, err
 	}

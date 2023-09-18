@@ -126,7 +126,7 @@ func initDeterministicFixture(t *testing.T) *deterministicFixture {
 	stakingtypes.RegisterQueryServer(integrationApp.QueryHelper(), stakingkeeper.NewQuerier(stakingKeeper))
 
 	// set default staking params
-	assert.NilError(t, stakingKeeper.SetParams(ctx, stakingtypes.DefaultParams()))
+	assert.NilError(t, stakingKeeper.Params.Set(ctx, stakingtypes.DefaultParams()))
 
 	// set pools
 	startTokens := stakingKeeper.TokensFromConsensusPower(ctx, 10)
@@ -840,7 +840,7 @@ func TestGRPCParams(t *testing.T) {
 			MinCommissionRate: math.LegacyNewDecWithPrec(rapid.Int64Range(0, 100).Draw(rt, "commission"), 2),
 		}
 
-		err := f.stakingKeeper.SetParams(f.ctx, params)
+		err := f.stakingKeeper.Params.Set(f.ctx, params)
 		assert.NilError(t, err)
 
 		testdata.DeterministicIterations(f.ctx, t, &stakingtypes.QueryParamsRequest{}, f.queryClient.Params, 0, true)
@@ -855,7 +855,7 @@ func TestGRPCParams(t *testing.T) {
 		MinCommissionRate: math.LegacyNewDecWithPrec(5, 2),
 	}
 
-	err := f.stakingKeeper.SetParams(f.ctx, params)
+	err := f.stakingKeeper.Params.Set(f.ctx, params)
 	assert.NilError(t, err)
 
 	testdata.DeterministicIterations(f.ctx, t, &stakingtypes.QueryParamsRequest{}, f.queryClient.Params, 1114, false)

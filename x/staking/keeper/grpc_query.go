@@ -492,7 +492,7 @@ func (k Querier) Pool(ctx context.Context, _ *types.QueryPoolRequest) (*types.Qu
 
 // Params queries the staking parameters
 func (k Querier) Params(ctx context.Context, _ *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
-	params, err := k.GetParams(ctx)
+	params, err := k.Keeper.Params.Get(ctx)
 	if err != nil {
 		return nil, err
 	}

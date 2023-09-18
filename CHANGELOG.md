@@ -69,6 +69,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### API Breaking Changes
 
+* (x/staking) [#17778](https://github.com/cosmos/cosmos-sdk/pull/17778) Use collections for `Params`
+    * remove from `Keeper`: `GetParams`, `SetParams`
 * (types/simulation) [#17737](https://github.com/cosmos/cosmos-sdk/pull/17737) Remove unused parameter from `RandomFees`
 * (x/staking) [#17486](https://github.com/cosmos/cosmos-sdk/pull/17486) Use collections for `RedelegationQueueKey`:
     * remove from `types`: `GetRedelegationTimeKey`

@@ -5,7 +5,9 @@ import (
 	"time"
 
 	"cosmossdk.io/collections"
+	"google.golang.org/protobuf/proto"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/keeper"
@@ -133,9 +135,8 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) error {
 			// execute all messages
 			for idx, msg = range messages {
 				handler := keeper.Router().Handler(msg)
-
 				var res *sdk.Result
-				res, err = handler(cacheCtx, msg)
+				res, err = safeExecuteHandler(cacheCtx, msg, handler)
 				if err != nil {
 					break
 				}
@@ -222,4 +223,17 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) error {
 		return err
 	}
 	return nil
+}
+
+// executes handle(msg) and recovers from panic.
+func safeExecuteHandler(ctx sdk.Context, msg sdk.Msg, handler baseapp.MsgServiceHandler,
+) (res *sdk.Result, err error) {
+
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("handling x/gov poposal msg [%s] PANICED: %v", msg, r)
+		}
+	}()
+	res, err = handler(ctx, msg)
+	return
 }

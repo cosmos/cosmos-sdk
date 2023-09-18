@@ -16,6 +16,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 
+	"cosmossdk.io/core/header"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
@@ -1476,7 +1477,7 @@ func (suite *KeeperTestSuite) TestSpendableCoins() {
 	suite.mockSpendableCoins(ctx, acc1)
 	require.Equal(origCoins[0], suite.bankKeeper.SpendableCoin(ctx, accAddrs[1], "stake"))
 
-	ctx = ctx.WithBlockTime(now.Add(12 * time.Hour))
+	ctx = ctx.WithHeaderInfo(header.Info{Time: now.Add(12 * time.Hour)})
 	suite.mockSpendableCoins(ctx, vacc)
 	require.Equal(origCoins.Sub(lockedCoins...), suite.bankKeeper.SpendableCoins(ctx, accAddrs[0]))
 
@@ -1508,7 +1509,7 @@ func (suite *KeeperTestSuite) TestVestingAccountSend() {
 	suite.mockFundAccount(accAddrs[0])
 	require.NoError(banktestutil.FundAccount(ctx, suite.bankKeeper, accAddrs[0], sendCoins))
 	// require that all vested coins are spendable plus any received
-	ctx = ctx.WithBlockTime(now.Add(12 * time.Hour))
+	ctx = ctx.WithHeaderInfo(header.Info{Time: now.Add(12 * time.Hour)})
 	suite.mockSendCoins(ctx, vacc, accAddrs[1])
 	require.NoError(suite.bankKeeper.SendCoins(ctx, accAddrs[0], accAddrs[1], sendCoins))
 	require.Equal(origCoins, suite.bankKeeper.GetAllBalances(ctx, accAddrs[0]))
@@ -1543,7 +1544,7 @@ func (suite *KeeperTestSuite) TestPeriodicVestingAccountSend() {
 	require.NoError(banktestutil.FundAccount(ctx, suite.bankKeeper, accAddrs[0], sendCoins))
 
 	// require that all vested coins are spendable plus any received
-	ctx = ctx.WithBlockTime(now.Add(12 * time.Hour))
+	ctx = ctx.WithHeaderInfo(header.Info{Time: now.Add(12 * time.Hour)})
 	suite.mockSendCoins(ctx, vacc, accAddrs[1])
 	require.NoError(suite.bankKeeper.SendCoins(ctx, accAddrs[0], accAddrs[1], sendCoins))
 	require.Equal(origCoins, suite.bankKeeper.GetAllBalances(ctx, accAddrs[0]))
@@ -1640,7 +1641,7 @@ func (suite *KeeperTestSuite) TestDelegateCoins() {
 	suite.mockFundAccount(accAddrs[1])
 	require.NoError(banktestutil.FundAccount(ctx, suite.bankKeeper, accAddrs[1], origCoins))
 
-	ctx = ctx.WithBlockTime(now.Add(12 * time.Hour))
+	ctx = ctx.WithHeaderInfo(header.Info{Time: now.Add(12 * time.Hour)})
 
 	// require the ability for a non-vesting account to delegate
 	suite.mockDelegateCoins(ctx, acc1, holderAcc)
@@ -1698,7 +1699,7 @@ func (suite *KeeperTestSuite) TestUndelegateCoins() {
 	suite.mockFundAccount(accAddrs[1])
 	require.NoError(banktestutil.FundAccount(ctx, suite.bankKeeper, accAddrs[1], origCoins))
 
-	ctx = ctx.WithBlockTime(now.Add(12 * time.Hour))
+	ctx = ctx.WithHeaderInfo(header.Info{Time: now.Add(12 * time.Hour)})
 
 	// require the ability for a non-vesting account to delegate
 	suite.mockDelegateCoins(ctx, acc1, holderAcc)

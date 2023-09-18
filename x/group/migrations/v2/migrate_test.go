@@ -62,7 +62,7 @@ func createGroupPolicies(ctx sdk.Context, storeKey storetypes.StoreKey, cdc code
 	groupPolicySeq := orm.NewSequence(v2.GroupPolicyTableSeqPrefix)
 
 	for _, policyAddr := range policies {
-		groupPolicyInfo, err := group.NewGroupPolicyInfo(policyAddr, 1, authorityAddr, "", 1, group.NewPercentageDecisionPolicy("1", 1, 1), ctx.BlockTime())
+		groupPolicyInfo, err := group.NewGroupPolicyInfo(policyAddr, 1, authorityAddr, "", 1, group.NewPercentageDecisionPolicy("1", 1, 1), ctx.HeaderInfo().Time)
 		if err != nil {
 			return orm.PrimaryKeyTable{}, orm.Sequence{}, err
 		}

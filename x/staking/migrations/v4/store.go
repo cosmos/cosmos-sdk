@@ -37,7 +37,7 @@ func migrateParams(ctx sdk.Context, store storetypes.KVStore, cdc codec.BinaryCo
 	}
 
 	bz := cdc.MustMarshal(&legacyParams)
-	store.Set(types.ParamsKey, bz)
+	store.Set(ParamsKey, bz)
 	return nil
 }
 

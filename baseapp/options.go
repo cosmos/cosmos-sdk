@@ -15,6 +15,7 @@ import (
 	snapshottypes "cosmossdk.io/store/snapshots/types"
 	storetypes "cosmossdk.io/store/types"
 
+	"github.com/cosmos/cosmos-sdk/baseapp/oe"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -104,6 +105,13 @@ func SetMempool(mempool mempool.Mempool) func(*BaseApp) {
 // SetChainID sets the chain ID in BaseApp.
 func SetChainID(chainID string) func(*BaseApp) {
 	return func(app *BaseApp) { app.chainID = chainID }
+}
+
+// SetOptimisticExecution enables optimistic execution.
+func SetOptimisticExecution(opts ...func(*oe.OptimisticExecution)) func(*BaseApp) {
+	return func(app *BaseApp) {
+		app.optimisticExec = oe.NewOptimisticExecution(app.logger, app.internalFinalizeBlock, opts...)
+	}
 }
 
 func (app *BaseApp) SetName(name string) {

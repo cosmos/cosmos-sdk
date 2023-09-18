@@ -6,6 +6,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 
+	"cosmossdk.io/core/header"
 	sdkmath "cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/feegrant"
@@ -62,8 +63,8 @@ func (suite *KeeperTestSuite) SetupTest() {
 func (suite *KeeperTestSuite) TestKeeperCrud() {
 	// some helpers
 	eth := sdk.NewCoins(sdk.NewInt64Coin("eth", 123))
-	exp := suite.ctx.BlockTime().AddDate(1, 0, 0)
-	exp2 := suite.ctx.BlockTime().AddDate(2, 0, 0)
+	exp := suite.ctx.HeaderInfo().Time.AddDate(1, 0, 0)
+	exp2 := suite.ctx.HeaderInfo().Time.AddDate(2, 0, 0)
 	basic := &feegrant.BasicAllowance{
 		SpendLimit: suite.atom,
 		Expiration: &exp,
@@ -188,7 +189,7 @@ func (suite *KeeperTestSuite) TestKeeperCrud() {
 
 func (suite *KeeperTestSuite) TestUseGrantedFee() {
 	eth := sdk.NewCoins(sdk.NewInt64Coin("eth", 123))
-	blockTime := suite.ctx.BlockTime()
+	blockTime := suite.ctx.HeaderInfo().Time
 	oneYear := blockTime.AddDate(1, 0, 0)
 
 	future := &feegrant.BasicAllowance{
@@ -281,7 +282,7 @@ func (suite *KeeperTestSuite) TestUseGrantedFee() {
 	suite.Require().NoError(err)
 
 	// waiting for future blocks, allowance to be pruned.
-	ctx := suite.ctx.WithBlockTime(oneYear)
+	ctx := suite.ctx.WithHeaderInfo(header.Info{Time: oneYear})
 
 	// expect error: feegrant expired
 	err = suite.feegrantKeeper.UseGrantedFees(ctx, suite.addrs[0], suite.addrs[2], eth, []sdk.Msg{})
@@ -296,7 +297,7 @@ func (suite *KeeperTestSuite) TestUseGrantedFee() {
 
 func (suite *KeeperTestSuite) TestIterateGrants() {
 	eth := sdk.NewCoins(sdk.NewInt64Coin("eth", 123))
-	exp := suite.ctx.BlockTime().AddDate(1, 0, 0)
+	exp := suite.ctx.HeaderInfo().Time.AddDate(1, 0, 0)
 
 	allowance := &feegrant.BasicAllowance{
 		SpendLimit: suite.atom,
@@ -322,7 +323,7 @@ func (suite *KeeperTestSuite) TestIterateGrants() {
 
 func (suite *KeeperTestSuite) TestPruneGrants() {
 	eth := sdk.NewCoins(sdk.NewInt64Coin("eth", 123))
-	now := suite.ctx.BlockTime()
+	now := suite.ctx.HeaderInfo().Time
 	oneDay := now.AddDate(0, 0, 1)
 	oneYearExpiry := now.AddDate(1, 0, 0)
 
@@ -359,7 +360,7 @@ func (suite *KeeperTestSuite) TestPruneGrants() {
 		},
 		{
 			name:      "grant pruned from state after a day: error",
-			ctx:       suite.ctx.WithBlockTime(now.AddDate(0, 0, 1)),
+			ctx:       suite.ctx.WithHeaderInfo(header.Info{Time: now.AddDate(0, 0, 1)}),
 			granter:   suite.addrs[1],
 			grantee:   suite.addrs[0],
 			expErrMsg: "not found",
@@ -370,7 +371,7 @@ func (suite *KeeperTestSuite) TestPruneGrants() {
 		},
 		{
 			name:    "grant not pruned from state after a day: no error",
-			ctx:     suite.ctx.WithBlockTime(now.AddDate(0, 0, 1)),
+			ctx:     suite.ctx.WithHeaderInfo(header.Info{Time: now.AddDate(0, 0, 1)}),
 			granter: suite.addrs[1],
 			grantee: suite.addrs[0],
 			allowance: &feegrant.BasicAllowance{
@@ -380,7 +381,7 @@ func (suite *KeeperTestSuite) TestPruneGrants() {
 		},
 		{
 			name:      "grant pruned from state after a year: error",
-			ctx:       suite.ctx.WithBlockTime(now.AddDate(1, 0, 0)),
+			ctx:       suite.ctx.WithHeaderInfo(header.Info{Time: now.AddDate(1, 0, 0)}),
 			granter:   suite.addrs[1],
 			grantee:   suite.addrs[2],
 			expErrMsg: "not found",
@@ -391,7 +392,7 @@ func (suite *KeeperTestSuite) TestPruneGrants() {
 		},
 		{
 			name:    "no expiry: no error",
-			ctx:     suite.ctx.WithBlockTime(now.AddDate(1, 0, 0)),
+			ctx:     suite.ctx.WithHeaderInfo(header.Info{Time: now.AddDate(1, 0, 0)}),
 			granter: suite.addrs[1],
 			grantee: suite.addrs[2],
 			allowance: &feegrant.BasicAllowance{

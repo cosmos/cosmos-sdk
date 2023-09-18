@@ -277,7 +277,7 @@ func (suite *TestSuite) TestGRPCQueryGranteeGrants() {
 }
 
 func (suite *TestSuite) createSendAuthorization(grantee, granter sdk.AccAddress) authz.Authorization {
-	exp := suite.ctx.BlockHeader().Time.Add(time.Hour)
+	exp := suite.ctx.HeaderInfo().Time.Add(time.Hour)
 	newCoins := sdk.NewCoins(sdk.NewInt64Coin("steak", 100))
 	authorization := &banktypes.SendAuthorization{SpendLimit: newCoins}
 	err := suite.authzKeeper.SaveGrant(suite.ctx, grantee, granter, authorization, &exp)
@@ -286,7 +286,7 @@ func (suite *TestSuite) createSendAuthorization(grantee, granter sdk.AccAddress)
 }
 
 func (suite *TestSuite) createSendAuthorizationWithAllowList(grantee, granter sdk.AccAddress) authz.Authorization {
-	exp := suite.ctx.BlockHeader().Time.Add(time.Hour)
+	exp := suite.ctx.HeaderInfo().Time.Add(time.Hour)
 	newCoins := sdk.NewCoins(sdk.NewInt64Coin("steak", 100))
 	authorization := &banktypes.SendAuthorization{SpendLimit: newCoins, AllowList: []string{suite.addrs[5].String()}}
 	err := suite.authzKeeper.SaveGrant(suite.ctx, grantee, granter, authorization, &exp)

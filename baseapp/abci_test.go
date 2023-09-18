@@ -2276,6 +2276,7 @@ func TestBaseApp_VoteExtensions(t *testing.T) {
 	require.Equal(t, avgPrice, committedAvgPrice)
 }
 
+<<<<<<< HEAD
 func TestABCI_PrepareProposal_Panic(t *testing.T) {
 	prepareOpt := func(bapp *baseapp.BaseApp) {
 		bapp.SetPrepareProposal(func(ctx sdk.Context, req *abci.RequestPrepareProposal) (*abci.ResponsePrepareProposal, error) {
@@ -2291,10 +2292,17 @@ func TestABCI_PrepareProposal_Panic(t *testing.T) {
 
 	_, err := suite.baseApp.InitChain(&abci.RequestInitChain{
 		InitialHeight:   1,
+=======
+func TestOptimisticExecution(t *testing.T) {
+	suite := NewBaseAppSuite(t, baseapp.SetOptimisticExecution())
+
+	_, err := suite.baseApp.InitChain(&abci.RequestInitChain{
+>>>>>>> 8df065b61 (feat: Optimistic Execution (#16581))
 		ConsensusParams: &cmtproto.ConsensusParams{},
 	})
 	require.NoError(t, err)
 
+<<<<<<< HEAD
 	txs := [][]byte{{1}, {2}}
 	reqPrepareProposal := abci.RequestPrepareProposal{
 		MaxTxBytes: 1000,
@@ -2311,4 +2319,37 @@ func TestABCI_PrepareProposal_Panic(t *testing.T) {
 	resPrepareProposal, err = suite.baseApp.PrepareProposal(&reqPrepareProposal)
 	require.NoError(t, err)
 	require.Equal(t, 3, len(resPrepareProposal.Txs))
+=======
+	// run 50 blocks
+	for i := 0; i < 50; i++ {
+		tx := newTxCounter(t, suite.txConfig, 0, 1)
+		txBytes, err := suite.txConfig.TxEncoder()(tx)
+		require.NoError(t, err)
+
+		reqProcProp := abci.RequestProcessProposal{
+			Txs:    [][]byte{txBytes},
+			Height: suite.baseApp.LastBlockHeight() + 1,
+			Hash:   []byte("some-hash" + strconv.FormatInt(suite.baseApp.LastBlockHeight()+1, 10)),
+		}
+
+		respProcProp, err := suite.baseApp.ProcessProposal(&reqProcProp)
+		require.Equal(t, abci.ResponseProcessProposal_ACCEPT, respProcProp.Status)
+		require.NoError(t, err)
+
+		reqFinalizeBlock := abci.RequestFinalizeBlock{
+			Height: reqProcProp.Height,
+			Txs:    reqProcProp.Txs,
+			Hash:   reqProcProp.Hash,
+		}
+
+		respFinalizeBlock, err := suite.baseApp.FinalizeBlock(&reqFinalizeBlock)
+		require.NoError(t, err)
+		require.Len(t, respFinalizeBlock.TxResults, 1)
+
+		_, err = suite.baseApp.Commit()
+		require.NoError(t, err)
+	}
+
+	require.Equal(t, int64(50), suite.baseApp.LastBlockHeight())
+>>>>>>> 8df065b61 (feat: Optimistic Execution (#16581))
 }

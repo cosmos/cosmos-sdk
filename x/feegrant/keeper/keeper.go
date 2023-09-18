@@ -85,7 +85,7 @@ func (k Keeper) GrantAllowance(ctx context.Context, granter, grantee sdk.AccAddr
 
 	// expiration shouldn't be in the past.
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	if exp != nil && exp.Before(sdkCtx.BlockTime()) {
+	if exp != nil && exp.Before(sdkCtx.HeaderInfo().Time) {
 		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "expiration is before current block time")
 	}
 
@@ -299,7 +299,7 @@ func (k Keeper) ExportGenesis(ctx context.Context) (*feegrant.GenesisState, erro
 
 // RemoveExpiredAllowances iterates grantsByExpiryQueue and deletes the expired grants.
 func (k Keeper) RemoveExpiredAllowances(ctx context.Context) error {
-	exp := sdk.UnwrapSDKContext(ctx).BlockTime()
+	exp := sdk.UnwrapSDKContext(ctx).HeaderInfo().Time
 	rng := collections.NewPrefixUntilTripleRange[time.Time, sdk.AccAddress, sdk.AccAddress](exp)
 
 	err := k.FeeAllowanceQueue.Walk(ctx, rng, func(key collections.Triple[time.Time, sdk.AccAddress, sdk.AccAddress], value bool) (stop bool, err error) {

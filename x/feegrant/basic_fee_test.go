@@ -27,9 +27,7 @@ func TestBasicFeeValidAllow(t *testing.T) {
 	}
 	require.Error(t, allowace.ValidateBasic())
 
-	ctx = ctx.WithHeaderInfo(header.Info{
-		Time: time.Now(),
-	})
+	ctx = ctx.WithHeaderInfo(header.Info{Time: time.Now()})
 	eth := sdk.NewCoins(sdk.NewInt64Coin("eth", 10))
 	atom := sdk.NewCoins(sdk.NewInt64Coin("atom", 555))
 	smallAtom := sdk.NewCoins(sdk.NewInt64Coin("atom", 43))
@@ -135,7 +133,7 @@ func TestBasicFeeValidAllow(t *testing.T) {
 			err := tc.allowance.ValidateBasic()
 			require.NoError(t, err)
 
-			ctx := testCtx.Ctx.WithBlockTime(tc.blockTime)
+			ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Time: tc.blockTime})
 
 			// now try to deduct
 			removed, err := tc.allowance.Accept(ctx, tc.fee, []sdk.Msg{})

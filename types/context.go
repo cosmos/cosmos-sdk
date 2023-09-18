@@ -45,7 +45,7 @@ type Context struct {
 	chainID              string          // Deprecated: Use HeaderService for chainID and CometService for the rest
 	txBytes              []byte
 	logger               log.Logger
-	voteInfo             []abci.VoteInfo // Deprecated: use Cometinfo.GetLastCommit().Votes() instead, will be removed in 0.51
+	voteInfo             []abci.VoteInfo // Deprecated: use Cometinfo.LastCommit.Votes instead, will be removed after 0.51
 	gasMeter             storetypes.GasMeter
 	blockGasMeter        storetypes.GasMeter
 	checkTx              bool
@@ -66,15 +66,13 @@ type Context struct {
 type Request = Context
 
 // Read-only accessors
-func (c Context) Context() context.Context          { return c.baseCtx }
-func (c Context) MultiStore() storetypes.MultiStore { return c.ms }
-func (c Context) BlockHeight() int64                { return c.header.Height }
-func (c Context) BlockTime() time.Time              { return c.header.Time }
-func (c Context) ChainID() string                   { return c.chainID }
-func (c Context) TxBytes() []byte                   { return c.txBytes }
-func (c Context) Logger() log.Logger                { return c.logger }
-
-// Deprecated: use Cometinfo.GetLastCommit().Votes() instead, will be removed after 0.51
+func (c Context) Context() context.Context                      { return c.baseCtx }
+func (c Context) MultiStore() storetypes.MultiStore             { return c.ms }
+func (c Context) BlockHeight() int64                            { return c.header.Height }
+func (c Context) BlockTime() time.Time                          { return c.headerInfo.Time } // Deprecated: use HeaderInfo().Time
+func (c Context) ChainID() string                               { return c.chainID }
+func (c Context) TxBytes() []byte                               { return c.txBytes }
+func (c Context) Logger() log.Logger                            { return c.logger }
 func (c Context) VoteInfos() []abci.VoteInfo                    { return c.voteInfo }
 func (c Context) GasMeter() storetypes.GasMeter                 { return c.gasMeter }
 func (c Context) BlockGasMeter() storetypes.GasMeter            { return c.blockGasMeter }
@@ -171,15 +169,6 @@ func (c Context) WithHeaderHash(hash []byte) Context {
 
 	c.headerHash = temp
 	return c
-}
-
-// WithBlockTime returns a Context with an updated CometBFT block header time in UTC with no monotonic component.
-// Stripping the monotonic component is for time equality.
-func (c Context) WithBlockTime(newTime time.Time) Context {
-	newHeader := c.BlockHeader()
-	// https://github.com/gogo/protobuf/issues/519
-	newHeader.Time = newTime.Round(0).UTC()
-	return c.WithBlockHeader(newHeader)
 }
 
 // WithProposer returns a Context with an updated proposer consensus address.

@@ -71,7 +71,7 @@ type BroadcastMode int32
 const (
 	// zero-value for mode ordering
 	BroadcastMode_BROADCAST_MODE_UNSPECIFIED BroadcastMode = 0
-	// DEPRECATED: use BROADCAST_MODE_SYNC instead,
+	// Deprecated: use BROADCAST_MODE_SYNC instead,
 	// BROADCAST_MODE_BLOCK is not supported by the SDK from v0.47.x onwards.
 	BroadcastMode_BROADCAST_MODE_BLOCK BroadcastMode = 1 // Deprecated: Do not use.
 	// BROADCAST_MODE_SYNC defines a tx broadcasting mode where the client waits
@@ -108,11 +108,11 @@ func (BroadcastMode) EnumDescriptor() ([]byte, []int) {
 // RPC method.
 type GetTxsEventRequest struct {
 	// events is the list of transaction event type.
-	// Deprecated post v0.47.x: use query instead, which should contain a valid
+	// Deprecated: post v0.47.x use query instead, which should contain a valid
 	// events query.
 	Events []string `protobuf:"bytes,1,rep,name=events,proto3" json:"events,omitempty"` // Deprecated: Do not use.
 	// pagination defines a pagination for the request.
-	// Deprecated post v0.46.x: use page and limit instead.
+	// Deprecated: post v0.46.x use page and limit instead.
 	Pagination *query.PageRequest `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"` // Deprecated: Do not use.
 	OrderBy    OrderBy            `protobuf:"varint,3,opt,name=order_by,json=orderBy,proto3,enum=cosmos.tx.v1beta1.OrderBy" json:"order_by,omitempty"`
 	// page is the page number to query, starts at 1. If not provided, will
@@ -213,7 +213,7 @@ type GetTxsEventResponse struct {
 	// tx_responses is the list of queried TxResponses.
 	TxResponses []*types.TxResponse `protobuf:"bytes,2,rep,name=tx_responses,json=txResponses,proto3" json:"tx_responses,omitempty"`
 	// pagination defines a pagination for the response.
-	// Deprecated post v0.46.x: use total instead.
+	// Deprecated: post v0.46.x use total instead.
 	Pagination *query.PageResponse `protobuf:"bytes,3,opt,name=pagination,proto3" json:"pagination,omitempty"` // Deprecated: Do not use.
 	// total is total number of results available
 	Total uint64 `protobuf:"varint,4,opt,name=total,proto3" json:"total,omitempty"`

@@ -480,6 +480,7 @@ func (s *decimalTestSuite) TestApproxSqrt() {
 			math.LegacyNewDec(2).Power(127).Sub(math.LegacyOneDec()),
 			math.LegacyMustNewDecFromStr("13043817825332782212.349571806252508369"),
 		},
+		{math.LegacyMustNewDecFromStr("1.000000011823380862"), math.LegacyMustNewDecFromStr("1.000000005911690414")},
 	}
 
 	for i, tc := range testCases {

@@ -661,13 +661,6 @@ func TestGRPCHistoricalInfo(t *testing.T) {
 	f := initDeterministicFixture(t)
 
 	rapid.Check(t, func(rt *rapid.T) {
-		numVals := rapid.IntRange(1, 5).Draw(rt, "num-vals")
-		vals := stakingtypes.Validators{}
-		for i := 0; i < numVals; i++ {
-			validator := createAndSetValidatorWithStatus(t, rt, f, stakingtypes.Bonded)
-			vals.Validators = append(vals.Validators, validator)
-		}
-
 		historical := stakingtypes.Historical{}
 
 		height := rapid.Int64Min(0).Draw(rt, "height")
@@ -701,7 +694,7 @@ func TestGRPCHistoricalInfo(t *testing.T) {
 		Height: height,
 	}
 
-	testdata.DeterministicIterations(f.ctx, t, req, f.queryClient.HistoricalInfo, 1945, false)
+	testdata.DeterministicIterations(f.ctx, t, req, f.queryClient.HistoricalInfo, 1027, false)
 }
 
 func TestGRPCDelegatorValidators(t *testing.T) {

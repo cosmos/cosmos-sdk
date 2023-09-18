@@ -98,7 +98,7 @@ func SimulateMsgGrantAllowance(
 			return simtypes.NoOpMsg(feegrant.ModuleName, TypeMsgGrantAllowance, "unable to grant empty coins as SpendLimit"), nil, nil
 		}
 
-		oneYear := ctx.BlockTime().AddDate(1, 0, 0)
+		oneYear := ctx.HeaderInfo().Time.AddDate(1, 0, 0)
 		msg, err := feegrant.NewMsgGrantAllowance(&feegrant.BasicAllowance{
 			SpendLimit: spendableCoins,
 			Expiration: &oneYear,

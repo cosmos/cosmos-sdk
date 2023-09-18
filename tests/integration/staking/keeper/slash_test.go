@@ -4,11 +4,11 @@ import (
 	"testing"
 	"time"
 
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
 	"gotest.tools/v3/assert"
 
 	"cosmossdk.io/collections"
+	"cosmossdk.io/core/header"
 	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/codec/address"
@@ -74,7 +74,7 @@ func TestSlashUnbondingDelegation(t *testing.T) {
 	assert.Assert(t, slashAmount.Equal(math.NewInt(0)))
 
 	// after the expiration time, no longer eligible for slashing
-	f.sdkCtx = f.sdkCtx.WithBlockHeader(cmtproto.Header{Time: time.Unix(10, 0)})
+	f.sdkCtx = f.sdkCtx.WithHeaderInfo(header.Info{Time: time.Unix(10, 0)})
 	assert.NilError(t, f.stakingKeeper.SetUnbondingDelegation(f.sdkCtx, ubd))
 	slashAmount, err = f.stakingKeeper.SlashUnbondingDelegation(f.sdkCtx, ubd, 0, fraction)
 	assert.NilError(t, err)
@@ -83,7 +83,7 @@ func TestSlashUnbondingDelegation(t *testing.T) {
 	// test valid slash, before expiration timestamp and to which stake contributed
 	notBondedPool := f.stakingKeeper.GetNotBondedPool(f.sdkCtx)
 	oldUnbondedPoolBalances := f.bankKeeper.GetAllBalances(f.sdkCtx, notBondedPool.GetAddress())
-	f.sdkCtx = f.sdkCtx.WithBlockHeader(cmtproto.Header{Time: time.Unix(0, 0)})
+	f.sdkCtx = f.sdkCtx.WithHeaderInfo(header.Info{Time: time.Unix(0, 0)})
 	assert.NilError(t, f.stakingKeeper.SetUnbondingDelegation(f.sdkCtx, ubd))
 	slashAmount, err = f.stakingKeeper.SlashUnbondingDelegation(f.sdkCtx, ubd, 0, fraction)
 	assert.NilError(t, err)
@@ -139,7 +139,7 @@ func TestSlashRedelegation(t *testing.T) {
 	assert.Assert(t, slashAmount.Equal(math.NewInt(0)))
 
 	// after the expiration time, no longer eligible for slashing
-	f.sdkCtx = f.sdkCtx.WithBlockHeader(cmtproto.Header{Time: time.Unix(10, 0)})
+	f.sdkCtx = f.sdkCtx.WithHeaderInfo(header.Info{Time: time.Unix(10, 0)})
 	assert.NilError(t, f.stakingKeeper.SetRedelegation(f.sdkCtx, rd))
 	validator, found = f.stakingKeeper.GetValidator(f.sdkCtx, addrVals[1])
 	assert.Assert(t, found)
@@ -150,7 +150,7 @@ func TestSlashRedelegation(t *testing.T) {
 	balances := f.bankKeeper.GetAllBalances(f.sdkCtx, bondedPool.GetAddress())
 
 	// test valid slash, before expiration timestamp and to which stake contributed
-	f.sdkCtx = f.sdkCtx.WithBlockHeader(cmtproto.Header{Time: time.Unix(0, 0)})
+	f.sdkCtx = f.sdkCtx.WithHeaderInfo(header.Info{Time: time.Unix(0, 0)})
 	assert.NilError(t, f.stakingKeeper.SetRedelegation(f.sdkCtx, rd))
 	validator, found = f.stakingKeeper.GetValidator(f.sdkCtx, addrVals[1])
 	assert.Assert(t, found)

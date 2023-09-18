@@ -7,6 +7,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/core/header"
 	"cosmossdk.io/math"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -121,7 +122,7 @@ func (sh *Helper) CheckValidator(addr sdk.ValAddress, status stakingtypes.BondSt
 
 // TurnBlock calls EndBlocker and updates the block time
 func (sh *Helper) TurnBlock(newTime time.Time) sdk.Context {
-	sh.Ctx = sh.Ctx.WithBlockTime(newTime)
+	sh.Ctx = sh.Ctx.WithHeaderInfo(header.Info{Time: newTime})
 	_, err := sh.k.EndBlocker(sh.Ctx)
 	require.NoError(sh.t, err)
 	return sh.Ctx
@@ -130,7 +131,7 @@ func (sh *Helper) TurnBlock(newTime time.Time) sdk.Context {
 // TurnBlockTimeDiff calls EndBlocker and updates the block time by adding the
 // duration to the current block time
 func (sh *Helper) TurnBlockTimeDiff(diff time.Duration) sdk.Context {
-	sh.Ctx = sh.Ctx.WithBlockTime(sh.Ctx.BlockHeader().Time.Add(diff))
+	sh.Ctx = sh.Ctx.WithHeaderInfo(header.Info{Time: sh.Ctx.HeaderInfo().Time.Add(diff)})
 	_, err := sh.k.EndBlocker(sh.Ctx)
 	require.NoError(sh.t, err)
 	return sh.Ctx

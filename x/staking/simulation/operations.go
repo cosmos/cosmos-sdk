@@ -221,7 +221,7 @@ func SimulateMsgEditValidator(
 		address := val.GetOperator()
 		newCommissionRate := simtypes.RandomDecAmount(r, val.Commission.MaxRate)
 
-		if err := val.Commission.ValidateNewRate(newCommissionRate, ctx.BlockHeader().Time); err != nil {
+		if err := val.Commission.ValidateNewRate(newCommissionRate, ctx.HeaderInfo().Time); err != nil {
 			// skip as the commission is invalid
 			return simtypes.NoOpMsg(types.ModuleName, msgType, "invalid commission rate"), nil, nil
 		}
@@ -517,7 +517,7 @@ func SimulateMsgCancelUnbondingDelegate(
 			}
 		}
 
-		if unbondingDelegationEntry.CompletionTime.Before(ctx.BlockTime()) {
+		if unbondingDelegationEntry.CompletionTime.Before(ctx.HeaderInfo().Time) {
 			return simtypes.NoOpMsg(types.ModuleName, msgType, "unbonding delegation is already processed"), nil, nil
 		}
 

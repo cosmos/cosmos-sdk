@@ -28,9 +28,9 @@ message HistoricalInfo {
 // recent HistoricalInfo
 // (`n` is set by the staking module's `historical_entries` parameter).
 message Historical {
-  bytes                     apphash             = 1;
-  google.protobuf.Timestamp time                = 2 [(gogoproto.stdtime) = true];
-  bytes                     next_validator_hash = 3;
+  bytes                     apphash        = 1;
+  google.protobuf.Timestamp time           = 2 [(gogoproto.stdtime) = true];
+  bytes                     validator_hash = 3;
 }
 
 // CommissionRates defines the initial commission rates to be used for creating

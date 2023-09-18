@@ -29,7 +29,7 @@ func createValidatorAccs(t *testing.T, f *fixture) ([]sdk.AccAddress, []types.Va
 	// have its order changed
 	sortedVals := make([]types.Validator, len(validators))
 	copy(sortedVals, validators)
-	hi := types.Historical{Time: &header.Time, Apphash: header.AppHash, NextValidatorHash: header.NextValidatorsHash}
+	hi := types.Historical{Time: &header.Time, Apphash: header.AppHash, ValidatorHash: header.NextValidatorsHash}
 	assert.NilError(t, f.stakingKeeper.HistoricalInfo.Set(f.sdkCtx, uint64(5), hi))
 
 	return addrs, validators
@@ -783,7 +783,7 @@ func TestGRPCQueryHistoricalInfo(t *testing.T) {
 			if tc.expPass {
 				assert.NilError(t, err)
 				assert.Assert(t, res != nil)
-				assert.Equal(t, hi, res.Hist)
+				assert.DeepEqual(t, &hi, res.Hist)
 			} else {
 				assert.ErrorContains(t, err, tc.expErrMsg)
 				assert.Assert(t, res == nil)

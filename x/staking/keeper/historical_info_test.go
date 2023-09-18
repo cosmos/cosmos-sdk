@@ -1,7 +1,7 @@
 package keeper_test
 
 import (
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	"time"
 
 	"cosmossdk.io/collections"
 	coreheader "cosmossdk.io/core/header"
@@ -36,9 +36,9 @@ func (s *KeeperTestSuite) TestHistoricalInfo() {
 
 	time := ctx.BlockTime()
 	hi := stakingtypes.Historical{
-		Time:              &time,
-		NextValidatorHash: ctx.CometInfo().ValidatorsHash,
-		Apphash:           ctx.HeaderInfo().AppHash,
+		Time:          &time,
+		ValidatorHash: ctx.CometInfo().ValidatorsHash,
+		Apphash:       ctx.HeaderInfo().AppHash,
 	}
 	require.NoError(keeper.HistoricalInfo.Set(ctx, uint64(2), hi))
 
@@ -50,7 +50,7 @@ func (s *KeeperTestSuite) TestHistoricalInfo() {
 
 	recv, err = keeper.HistoricalInfo.Get(ctx, uint64(2))
 	require.ErrorIs(err, collections.ErrNotFound, "HistoricalInfo not found after delete")
-	require.Equal(stakingtypes.HistoricalInfo{}, recv, "HistoricalInfo is not empty")
+	require.Equal(stakingtypes.Historical{}, recv, "HistoricalInfo is not empty")
 }
 
 func (s *KeeperTestSuite) TestTrackHistoricalInfo() {
@@ -66,25 +66,17 @@ func (s *KeeperTestSuite) TestTrackHistoricalInfo() {
 
 	// set historical info at 5, 4 which should be pruned
 	// and check that it has been stored
-	h4 := cmtproto.Header{
-		ChainID: "HelloChain",
-		Height:  4,
-	}
-	h5 := cmtproto.Header{
-		ChainID: "HelloChain",
-		Height:  5,
-	}
-
+	t := time.Now().Round(0).UTC()
 	hi4 := stakingtypes.Historical{
-		Time:              &h4.Time,
-		NextValidatorHash: h4.NextValidatorsHash,
-		Apphash:           h4.AppHash,
+		Time:          &t,
+		ValidatorHash: []byte("validatorHash"),
+		Apphash:       []byte("AppHash"),
 	}
 
 	hi5 := stakingtypes.Historical{
-		Time:              &h5.Time,
-		NextValidatorHash: h5.NextValidatorsHash,
-		Apphash:           h5.AppHash,
+		Time:          &t,
+		ValidatorHash: []byte("validatorHash"),
+		Apphash:       []byte("AppHash"),
 	}
 
 	require.NoError(keeper.HistoricalInfo.Set(ctx, uint64(4), hi4))
@@ -116,26 +108,19 @@ func (s *KeeperTestSuite) TestTrackHistoricalInfo() {
 	require.True(IsValSetSorted(vals, keeper.PowerReduction(ctx)))
 
 	// Set Header for BeginBlock context
-	header := cmtproto.Header{
-		ChainID: "HelloChain",
-		Height:  10,
-	}
 	ctx = ctx.WithHeaderInfo(coreheader.Info{
 		ChainID: "HelloChain",
 		Height:  10,
+		Time:    t,
 	})
-
-	// ctx = ctx.WithCometInfo(comet.BlockInfo{
-	// 	ChainID: "HelloChain",
-	// 	Height:  10,
-	// })
 
 	require.NoError(keeper.TrackHistoricalInfo(ctx))
 
 	// Check HistoricalInfo at height 10 is persisted
-	expected := stakingtypes.HistoricalInfo{
-		Header: header,
-		Valset: vals,
+	expected := stakingtypes.Historical{
+		Time:          &t,
+		ValidatorHash: ctx.CometInfo().ValidatorsHash,
+		Apphash:       ctx.HeaderInfo().AppHash,
 	}
 	recv, err = keeper.HistoricalInfo.Get(ctx, uint64(10))
 	require.NoError(err, "GetHistoricalInfo failed after BeginBlock")
@@ -144,34 +129,32 @@ func (s *KeeperTestSuite) TestTrackHistoricalInfo() {
 	// Check HistoricalInfo at height 5, 4 is pruned
 	recv, err = keeper.HistoricalInfo.Get(ctx, uint64(4))
 	require.ErrorIs(err, collections.ErrNotFound, "GetHistoricalInfo did not prune earlier height")
-	require.Equal(stakingtypes.HistoricalInfo{}, recv, "GetHistoricalInfo at height 4 is not empty after prune")
+	require.Equal(stakingtypes.Historical{}, recv, "GetHistoricalInfo at height 4 is not empty after prune")
 	recv, err = keeper.HistoricalInfo.Get(ctx, uint64(5))
 	require.ErrorIs(err, collections.ErrNotFound, "GetHistoricalInfo did not prune first prune height")
-	require.Equal(stakingtypes.HistoricalInfo{}, recv, "GetHistoricalInfo at height 5 is not empty after prune")
+	require.Equal(stakingtypes.Historical{}, recv, "GetHistoricalInfo at height 5 is not empty after prune")
 }
 
 func (s *KeeperTestSuite) TestGetAllHistoricalInfo() {
 	ctx, keeper := s.ctx, s.stakingKeeper
 	require := s.Require()
 
-	header1 := cmtproto.Header{ChainID: "HelloChain", Height: 9}
-	header2 := cmtproto.Header{ChainID: "HelloChain", Height: 10}
-	header3 := cmtproto.Header{ChainID: "HelloChain", Height: 11}
+	t := time.Now().Round(0).UTC()
 
 	hist1 := stakingtypes.Historical{
-		Time:              &header1.Time,
-		NextValidatorHash: header1.NextValidatorsHash,
-		Apphash:           header1.AppHash,
+		Time:          &t,
+		ValidatorHash: nil,
+		Apphash:       nil,
 	}
 	hist2 := stakingtypes.Historical{
-		Time:              &header2.Time,
-		NextValidatorHash: header2.NextValidatorsHash,
-		Apphash:           header2.AppHash,
+		Time:          &t,
+		ValidatorHash: nil,
+		Apphash:       nil,
 	}
 	hist3 := stakingtypes.Historical{
-		Time:              &header3.Time,
-		NextValidatorHash: header3.NextValidatorsHash,
-		Apphash:           header3.AppHash,
+		Time:          &t,
+		ValidatorHash: nil,
+		Apphash:       nil,
 	}
 
 	expHistInfos := []stakingtypes.Historical{hist1, hist2, hist3}

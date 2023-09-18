@@ -19,11 +19,10 @@ import (
 // https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-031-msg-service.md
 type MessageRouter interface {
 	RegisterService(sd *grpc.ServiceDesc, ss interface{})
+	WithOptions(opts ...MessageRouterOption) MessageRouter
 
 	Handler(msg sdk.Msg) MsgServiceHandler
 	HandlerByTypeURL(typeURL string) MsgServiceHandler
-
-	WithOptions(opts ...MessageRouterOption) MessageRouter
 }
 
 // MessageRouterOption sets parameters on the MessageRouter.

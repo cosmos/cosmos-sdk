@@ -154,9 +154,7 @@ func NewDefaultProposalHandler(mp mempool.Mempool, txVerifier ProposalTxVerifier
 	return &DefaultProposalHandler{
 		mempool:    mp,
 		txVerifier: txVerifier,
-		txSelector: func(maxTxBytes, maxBlockGas uint64) TxSelector {
-			return NewDefaultTxSelector(maxTxBytes, maxBlockGas)
-		},
+		txSelector: NewDefaultTxSelector,
 	}
 }
 

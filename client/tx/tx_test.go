@@ -423,7 +423,6 @@ func TestPreprocessHook(t *testing.T) {
 
 	opt := hasExtOptsTx.GetExtensionOptions()[0]
 	requireT.Equal(opt, extAny)
-
 }
 
 func testSigners(require *require.Assertions, tr signing.Tx, pks ...cryptotypes.PubKey) []signingtypes.SignatureV2 {

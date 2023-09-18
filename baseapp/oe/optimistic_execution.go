@@ -35,7 +35,9 @@ type OptimisticExecution struct {
 	abortRate int // number from 0 to 100 that determines the percentage of OE that should be aborted
 }
 
+// NewOptimisticExecution initializes the Optimistic Execution context but does not start it.
 func NewOptimisticExecution(logger log.Logger, fn FinalizeBlockFunc, opts ...func(*OptimisticExecution)) *OptimisticExecution {
+	logger = logger.With("module", "oe")
 	oe := &OptimisticExecution{logger: logger, finalizeBlockFunc: fn}
 	for _, opt := range opts {
 		opt(oe)
@@ -43,6 +45,9 @@ func NewOptimisticExecution(logger log.Logger, fn FinalizeBlockFunc, opts ...fun
 	return oe
 }
 
+// WithAbortRate sets the abort rate for the OE. The abort rate is a number from
+// 0 to 100 that determines the percentage of OE that should be aborted.
+// This is for testing purposes only and must not be used in production.
 func WithAbortRate(rate int) func(*OptimisticExecution) {
 	return func(oe *OptimisticExecution) {
 		oe.abortRate = rate

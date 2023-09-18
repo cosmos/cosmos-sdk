@@ -177,6 +177,9 @@ type BaseApp struct {
 
 	cdc codec.Codec
 
+	// optimisticExec contains the context required for Optimistic Execution,
+	// including the goroutine handling.This is experimental and must be enabled
+	// by developers.
 	optimisticExec *oe.OptimisticExecution
 }
 

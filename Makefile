@@ -166,20 +166,6 @@ go.sum: go.mod
 	go mod tidy
 
 ###############################################################################
-###                              Documentation                              ###
-###############################################################################
-
-godocs:
-	@echo "--> Wait a few seconds and visit http://localhost:6060/pkg/github.com/cosmos/cosmos-sdk/types"
-	go install golang.org/x/tools/cmd/godoc@latest
-	godoc -http=:6060
-
-build-docs:
-	@cd docs && DOCS_DOMAIN=docs.cosmos.network sh ./build-all.sh
-
-.PHONY: build-docs
-
-###############################################################################
 ###                           Tests & Simulation                            ###
 ###############################################################################
 

@@ -15,6 +15,7 @@ import (
 	"google.golang.org/grpc/codes"
 	grpcstatus "google.golang.org/grpc/status"
 
+	corecomet "cosmossdk.io/core/comet"
 	coreheader "cosmossdk.io/core/header"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/store/rootmulti"
@@ -428,7 +429,12 @@ func (app *BaseApp) PrepareProposal(req *abci.RequestPrepareProposal) (resp *abc
 		WithBlockTime(req.Time).
 		WithProposer(req.ProposerAddress).
 		WithExecMode(sdk.ExecModePrepareProposal).
-		WithCometInfo(prepareProposalInfo{req}).
+		WithCometInfo(corecomet.Info{
+			Evidence:        sdk.ToSDKEvidence(req.Misbehavior),
+			ValidatorsHash:  req.NextValidatorsHash,
+			ProposerAddress: req.ProposerAddress,
+			LastCommit:      sdk.ToSDKExtendedCommitInfo(req.LocalLastCommit),
+		}).
 		WithHeaderInfo(coreheader.Info{
 			ChainID: app.chainID,
 			Height:  req.Height,
@@ -514,7 +520,13 @@ func (app *BaseApp) ProcessProposal(req *abci.RequestProcessProposal) (resp *abc
 		WithBlockTime(req.Time).
 		WithHeaderHash(req.Hash).
 		WithProposer(req.ProposerAddress).
-		WithCometInfo(cometInfo{ProposerAddress: req.ProposerAddress, ValidatorsHash: req.NextValidatorsHash, Misbehavior: req.Misbehavior, LastCommit: req.ProposedLastCommit}).
+		WithCometInfo(corecomet.Info{
+			ProposerAddress: req.ProposerAddress,
+			ValidatorsHash:  req.NextValidatorsHash,
+			Evidence:        sdk.ToSDKEvidence(req.Misbehavior),
+			LastCommit:      sdk.ToSDKCommitInfo(req.ProposedLastCommit),
+		},
+		).
 		WithExecMode(sdk.ExecModeProcessProposal).
 		WithHeaderInfo(coreheader.Info{
 			ChainID: app.chainID,
@@ -713,11 +725,11 @@ func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (*abci.Respons
 		WithConsensusParams(app.GetConsensusParams(app.finalizeBlockState.ctx)).
 		WithVoteInfos(req.DecidedLastCommit.Votes).
 		WithExecMode(sdk.ExecModeFinalize).
-		WithCometInfo(cometInfo{
-			Misbehavior:     req.Misbehavior,
+		WithCometInfo(corecomet.Info{
+			Evidence:        sdk.ToSDKEvidence(req.Misbehavior),
 			ValidatorsHash:  req.NextValidatorsHash,
 			ProposerAddress: req.ProposerAddress,
-			LastCommit:      req.DecidedLastCommit,
+			LastCommit:      sdk.ToSDKCommitInfo(req.DecidedLastCommit),
 		})
 
 	// GasMeter must be set after we get a context with updated consensus params.
@@ -730,10 +742,8 @@ func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (*abci.Respons
 			WithHeaderHash(req.Hash)
 	}
 
-	if app.preFinalizeBlockHook != nil {
-		if err := app.preFinalizeBlockHook(app.finalizeBlockState.ctx, req); err != nil {
-			return nil, err
-		}
+	if err := app.preBlock(req); err != nil {
+		return nil, err
 	}
 
 	beginBlock, err := app.beginBlock(req)

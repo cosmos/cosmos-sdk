@@ -106,12 +106,12 @@ func TestStoreMigration(t *testing.T) {
 		{
 			"RedelegationQueueKey",
 			v1.GetRedelegationTimeKey(now),
-			types.GetRedelegationTimeKey(now),
+			getRedelegationTimeKey(now),
 		},
 		{
 			"ValidatorQueueKey",
 			v1.GetValidatorQueueKey(now, 4),
-			types.GetValidatorQueueKey(now, 4),
+			getValidatorQueueKey(now, 4),
 		},
 		{
 			"HistoricalInfoKey",
@@ -141,6 +141,11 @@ func TestStoreMigration(t *testing.T) {
 	}
 }
 
+func getRedelegationTimeKey(timestamp time.Time) []byte {
+	bz := sdk.FormatTimeBytes(timestamp)
+	return append(types.RedelegationQueueKey, bz...)
+}
+
 func getLastValidatorPowerKey(operator sdk.ValAddress) []byte {
 	return append(types.LastValidatorPowerKey, sdkaddress.MustLengthPrefix(operator)...)
 }
@@ -160,4 +165,27 @@ func getValidatorKey(operatorAddr sdk.ValAddress) []byte {
 
 func unbondingKey(delAddr sdk.AccAddress, valAddr sdk.ValAddress) []byte {
 	return append(append(types.UnbondingDelegationKey, sdkaddress.MustLengthPrefix(delAddr)...), sdkaddress.MustLengthPrefix(valAddr)...)
+}
+
+func getValidatorQueueKey(timestamp time.Time, height int64) []byte {
+	heightBz := sdk.Uint64ToBigEndian(uint64(height))
+	timeBz := sdk.FormatTimeBytes(timestamp)
+	timeBzL := len(timeBz)
+	prefixL := len(types.ValidatorQueueKey)
+
+	bz := make([]byte, prefixL+8+timeBzL+8)
+
+	// copy the prefix
+	copy(bz[:prefixL], types.ValidatorQueueKey)
+
+	// copy the encoded time bytes length
+	copy(bz[prefixL:prefixL+8], sdk.Uint64ToBigEndian(uint64(timeBzL)))
+
+	// copy the encoded time bytes
+	copy(bz[prefixL+8:prefixL+8+timeBzL], timeBz)
+
+	// copy the encoded height
+	copy(bz[prefixL+8+timeBzL:], heightBz)
+
+	return bz
 }

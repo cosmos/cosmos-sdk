@@ -38,7 +38,14 @@ func init() {
 // ConsensusVersion defines the current x/upgrade module consensus version.
 const ConsensusVersion uint64 = 3
 
-var _ module.AppModuleBasic = AppModuleBasic{}
+var (
+	_ module.AppModuleBasic = AppModule{}
+	_ module.HasGenesis     = AppModule{}
+	_ module.HasServices    = AppModule{}
+
+	_ appmodule.AppModule     = AppModule{}
+	_ appmodule.HasPreBlocker = AppModule{}
+)
 
 // AppModuleBasic implements the sdk.AppModuleBasic interface
 type AppModuleBasic struct {
@@ -85,12 +92,6 @@ func NewAppModule(keeper *keeper.Keeper, ac address.Codec) AppModule {
 		keeper:         keeper,
 	}
 }
-
-var (
-	_ appmodule.AppModule       = AppModule{}
-	_ appmodule.HasBeginBlocker = AppModule{}
-	_ module.HasGenesis         = AppModule{}
-)
 
 // IsOnePerModuleType implements the depinject.OnePerModuleType interface.
 func (am AppModule) IsOnePerModuleType() {}
@@ -156,15 +157,12 @@ func (am AppModule) ExportGenesis(_ sdk.Context, cdc codec.JSONCodec) json.RawMe
 // ConsensusVersion implements AppModule/ConsensusVersion.
 func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
 
-// BeginBlock calls the upgrade module hooks
+// PreBlock calls the upgrade module hooks
 //
-// CONTRACT: this is registered in BeginBlocker *before* all other modules' BeginBlock functions
-func (am AppModule) BeginBlock(ctx context.Context) error {
-	return BeginBlocker(ctx, am.keeper)
+// CONTRACT: this is called *before* all other modules' BeginBlock functions
+func (am AppModule) PreBlock(ctx context.Context) (appmodule.ResponsePreBlock, error) {
+	return PreBlocker(ctx, am.keeper)
 }
-
-// IsUpgradeModule implements the module.UpgradeModule interface.
-func (am AppModuleBasic) IsUpgradeModule() {}
 
 //
 // App Wiring Setup

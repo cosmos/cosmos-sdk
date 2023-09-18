@@ -55,7 +55,7 @@ The first thing defined in `app.go` is the `type` of the application. It is gene
 * **A list of module's `keeper`s.** Each module defines an abstraction called [`keeper`](../../build/building-modules/06-keeper.md), which handles reads and writes for this module's store(s). The `keeper`'s methods of one module can be called from other modules (if authorized), which is why they are declared in the application's type and exported as interfaces to other modules so that the latter can only access the authorized functions.
 * **A reference to an [`appCodec`](../advanced/05-encoding.md).** The application's `appCodec` is used to serialize and deserialize data structures in order to store them, as stores can only persist `[]bytes`. The default codec is [Protocol Buffers](../advanced/05-encoding.md).
 * **A reference to a [`legacyAmino`](../advanced/05-encoding.md) codec.** Some parts of the Cosmos SDK have not been migrated to use the `appCodec` above, and are still hardcoded to use Amino. Other parts explicitly use Amino for backwards compatibility. For these reasons, the application still holds a reference to the legacy Amino codec. Please note that the Amino codec will be removed from the SDK in the upcoming releases.
-* **A reference to a [module manager](../../build/building-modules/01-module-manager.md#manager)** and a [basic module manager](../../build/building-modules/01-module-manager.md#basicmanager). The module manager is an object that contains a list of the application's modules. It facilitates operations related to these modules, like registering their [`Msg` service](../advanced/00-baseapp.md#msg-services) and [gRPC `Query` service](../advanced/00-baseapp.md#grpc-query-services), or setting the order of execution between modules for various functions like [`InitChainer`](#initchainer), [`BeginBlocker` and `EndBlocker`](#beginblocker-and-endblocker).
+* **A reference to a [module manager](../../build/building-modules/01-module-manager.md#manager)** and a [basic module manager](../../build/building-modules/01-module-manager.md#basicmanager). The module manager is an object that contains a list of the application's modules. It facilitates operations related to these modules, like registering their [`Msg` service](../advanced/00-baseapp.md#msg-services) and [gRPC `Query` service](../advanced/00-baseapp.md#grpc-query-services), or setting the order of execution between modules for various functions like [`InitChainer`](#initchainer), [`PreBlocker`](#preblocker) and [`BeginBlocker` and `EndBlocker`](#beginblocker-and-endblocker).
 
 See an example of application type definition from `simapp`, the Cosmos SDK's own app used for demo and testing purposes:
 
@@ -79,10 +79,11 @@ Here are the main actions performed by this function:
 * Instantiate the application's [module manager](../../build/building-modules/01-module-manager.md#manager) with the [`AppModule`](#application-module-interface) object of each of the application's modules.
 * With the module manager, initialize the application's [`Msg` services](../advanced/00-baseapp.md#msg-services), [gRPC `Query` services](../advanced/00-baseapp.md#grpc-query-services), [legacy `Msg` routes](../advanced/00-baseapp.md#routing), and [legacy query routes](../advanced/00-baseapp.md#query-routing). When a transaction is relayed to the application by CometBFT via the ABCI, it is routed to the appropriate module's [`Msg` service](#msg-services) using the routes defined here. Likewise, when a gRPC query request is received by the application, it is routed to the appropriate module's [`gRPC query service`](#grpc-query-services) using the gRPC routes defined here. The Cosmos SDK still supports legacy `Msg`s and legacy CometBFT queries, which are routed using the legacy `Msg` routes and the legacy query routes, respectively.
 * With the module manager, register the [application's modules' invariants](../../build/building-modules/07-invariants.md). Invariants are variables (e.g. total supply of a token) that are evaluated at the end of each block. The process of checking invariants is done via a special module called the [`InvariantsRegistry`](../../build/building-modules/07-invariants.md#invariant-registry). The value of the invariant should be equal to a predicted value defined in the module. Should the value be different than the predicted one, special logic defined in the invariant registry is triggered (usually the chain is halted). This is useful to make sure that no critical bug goes unnoticed, producing long-lasting effects that are hard to fix.
-* With the module manager, set the order of execution between the `InitGenesis`, `BeginBlocker`, and `EndBlocker` functions of each of the [application's modules](#application-module-interface). Note that not all modules implement these functions.
+* With the module manager, set the order of execution between the `InitGenesis`, `PreBlocker`, `BeginBlocker`, and `EndBlocker` functions of each of the [application's modules](#application-module-interface). Note that not all modules implement these functions.
 * Set the remaining application parameters:
     * [`InitChainer`](#initchainer): used to initialize the application when it is first started.
-    * [`BeginBlocker`, `EndBlocker`](#beginblocker-and-endlbocker): called at the beginning and at the end of every block.
+    * [`PreBlocker`](#preblocker): called before BeginBlock.
+    * [`BeginBlocker`, `EndBlocker`](#beginblocker-and-endblocker): called at the beginning and at the end of every block.
     * [`anteHandler`](../advanced/00-baseapp.md#antehandler): used to handle fees and signature verification.
 * Mount the stores.
 * Return the application.
@@ -107,11 +108,24 @@ See an example of an `InitChainer` from `simapp`:
 https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/simapp/app.go#L626-L634
 ```
 
+### PreBlocker
+
+There are two semantics around the new lifecycle method:
+
+- It runs before the `BeginBlocker` of all modules
+- It can modify consensus parameters in storage, and signal the caller through the return value.
+
+When it returns `ConsensusParamsChanged=true`, the caller must refresh the consensus parameter in the finalize context:
+```
+app.finalizeBlockState.ctx = app.finalizeBlockState.ctx.WithConsensusParams(app.GetConsensusParams())
+```
+The new ctx must be passed to all the other lifecycle methods.
+
 ### BeginBlocker and EndBlocker
 
 The Cosmos SDK offers developers the possibility to implement automatic execution of code as part of their application. This is implemented through two functions called `BeginBlocker` and `EndBlocker`. They are called when the application receives the `FinalizeBlock` messages from the CometBFT consensus engine, which happens respectively at the beginning and at the end of each block. The application must set the `BeginBlocker` and `EndBlocker` in its [constructor](#constructor-function) via the [`SetBeginBlocker`](https://pkg.go.dev/github.com/cosmos/cosmos-sdk/baseapp#BaseApp.SetBeginBlocker) and [`SetEndBlocker`](https://pkg.go.dev/github.com/cosmos/cosmos-sdk/baseapp#BaseApp.SetEndBlocker) methods.
 
-In general, the `BeginBlocker` and `EndBlocker` functions are mostly composed of the [`BeginBlock` and `EndBlock`](../../build/building-modules/05-beginblock-endblock.md) functions of each of the application's modules. This is done by calling the `BeginBlock` and `EndBlock` functions of the module manager, which in turn calls the `BeginBlock` and `EndBlock` functions of each of the modules it contains. Note that the order in which the modules' `BeginBlock` and `EndBlock` functions must be called has to be set in the module manager using the `SetOrderBeginBlockers` and `SetOrderEndBlockers` methods, respectively. This is done via the [module manager](../../build/building-modules/01-module-manager.md) in the [application's constructor](#application-constructor), and the `SetOrderBeginBlockers` and `SetOrderEndBlockers` methods have to be called before the `SetBeginBlocker` and `SetEndBlocker` functions.
+In general, the `BeginBlocker` and `EndBlocker` functions are mostly composed of the [`BeginBlock` and `EndBlock`](../../build/building-modules/06-beginblock-endblock.md) functions of each of the application's modules. This is done by calling the `BeginBlock` and `EndBlock` functions of the module manager, which in turn calls the `BeginBlock` and `EndBlock` functions of each of the modules it contains. Note that the order in which the modules' `BeginBlock` and `EndBlock` functions must be called has to be set in the module manager using the `SetOrderBeginBlockers` and `SetOrderEndBlockers` methods, respectively. This is done via the [module manager](../../build/building-modules/01-module-manager.md) in the [application's constructor](#application-constructor), and the `SetOrderBeginBlockers` and `SetOrderEndBlockers` methods have to be called before the `SetBeginBlocker` and `SetEndBlocker` functions.
 
 As a sidenote, it is important to remember that application-specific blockchains are deterministic. Developers must be careful not to introduce non-determinism in `BeginBlocker` or `EndBlocker`, and must also be careful not to make them too computationally expensive, as [gas](./04-gas-fees.md) does not constrain the cost of `BeginBlocker` and `EndBlocker` execution.
 
@@ -147,7 +161,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/simapp/params/encoding
 
 ## Modules
 
-[Modules](../../build/building-modules/01-intro.md) are the heart and soul of Cosmos SDK applications. They can be considered as state-machines nested within the state-machine. When a transaction is relayed from the underlying CometBFT engine via the ABCI to the application, it is routed by [`baseapp`](../advanced/00-baseapp.md) to the appropriate module in order to be processed. This paradigm enables developers to easily build complex state-machines, as most of the modules they need often already exist. **For developers, most of the work involved in building a Cosmos SDK application revolves around building custom modules required by their application that do not exist yet, and integrating them with modules that do already exist into one coherent application**. In the application directory, the standard practice is to store modules in the `x/` folder (not to be confused with the Cosmos SDK's `x/` folder, which contains already-built modules).
+[Modules](../../build/building-modules/00-intro.md) are the heart and soul of Cosmos SDK applications. They can be considered as state-machines nested within the state-machine. When a transaction is relayed from the underlying CometBFT engine via the ABCI to the application, it is routed by [`baseapp`](../advanced/00-baseapp.md) to the appropriate module in order to be processed. This paradigm enables developers to easily build complex state-machines, as most of the modules they need often already exist. **For developers, most of the work involved in building a Cosmos SDK application revolves around building custom modules required by their application that do not exist yet, and integrating them with modules that do already exist into one coherent application**. In the application directory, the standard practice is to store modules in the `x/` folder (not to be confused with the Cosmos SDK's `x/` folder, which contains already-built modules).
 
 ### Application Module Interface
 

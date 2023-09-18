@@ -102,15 +102,42 @@ allows an application to define handlers for these methods via `ExtendVoteHandle
 and `VerifyVoteExtensionHandler` respectively. Please see [here](https://docs.cosmos.network/v0.50/building-apps/vote-extensions)
 for more info.
 
-#### Upgrade
+#### Set PreBlocker
 
-**Users using `depinject` / app v2 do not need any changes, this is abstracted for them.**
+A `SetPreBlocker` method has been added to BaseApp. This is essential for BaseApp to run `PreBlock` which runs before begin blocker other modules, and allows to modify consensus parameters, and the changes are visible to the following state machine logics.
+Read more about other use cases [here](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-068-preblock.md).
+
+`depinject` / app v2 users need to add `x/upgrade` in their `app_config.go` / `app.yml`:
 
 ```diff
-+ app.BaseApp.SetMigrationModuleManager(app.ModuleManager)
++ PreBlockers: []string{
++	upgradetypes.ModuleName,
++ },
+BeginBlockers: []string{
+-	upgradetypes.ModuleName,
+	minttypes.ModuleName,
+}
 ```
 
-BaseApp added `SetMigrationModuleManager` for apps to set their ModuleManager which implements `RunMigrationBeginBlock`. This is essential for BaseApp to run `BeginBlock` of upgrade module and inject `ConsensusParams` to context for `beginBlocker` during `beginBlock`.
+When using (legacy) application wiring, the following must be added to `app.go`:
+
+```diff
++app.ModuleManager.SetOrderPreBlockers(
++	upgradetypes.ModuleName,
++)
+
+app.ModuleManager.SetOrderBeginBlockers(
+-	upgradetypes.ModuleName,
+)
+
++ app.SetPreBlocker(app.PreBlocker)
+
+// ... //
+
++func (app *SimApp) PreBlocker(ctx sdk.Context, req *abci.RequestFinalizeBlock) (*sdk.ResponsePreBlock, error) {
++	return app.ModuleManager.PreBlock(ctx, req)
++}
+```
 
 #### Events
 
@@ -337,7 +364,7 @@ The return type of the interface method `TxConfig.SignModeHandler()` has been ch
     * `x/slashing`
     * `x/upgrade`
 
-* BeginBlock and EndBlock have changed their signature, so it is important that any module implementing them are updated accordingly.
+* `BeginBlock` and `EndBlock` have changed their signature, so it is important that any module implementing them are updated accordingly.
 
 ```diff
 - BeginBlock(sdk.Context, abci.RequestBeginBlock)
@@ -349,18 +376,38 @@ The return type of the interface method `TxConfig.SignModeHandler()` has been ch
 + EndBlock(context.Context) error
 ```
 
-In case a module requires to return `abci.ValidatorUpdate` from `EndBlock`, it can use the `HasABCIEndblock` interface instead.
+In case a module requires to return `abci.ValidatorUpdate` from `EndBlock`, it can use the `HasABCIEndBlock` interface instead.
 
 ```diff
 - EndBlock(sdk.Context, abci.RequestEndBlock) []abci.ValidatorUpdate
 + EndBlock(context.Context) ([]abci.ValidatorUpdate, error)
 ```
 
-`GetSigners()` is no longer required to be implemented on `Msg` types. The SDK will automatically infer the signers from the `Signer` field on the message. The signer field is required on all messages unless using a custom signer function.
+:::tip
+It is possible to ensure that a module implements the correct interfaces by using compiler assertions in your `x/{moduleName}/module.go`:
 
+```go
+var (
+	_ module.AppModuleBasic      = (*AppModule)(nil)
+	_ module.AppModuleSimulation = (*AppModule)(nil)
+	_ module.HasGenesis          = (*AppModule)(nil)
 
-To find out more please read the [signer field](./05-protobuf-annotations.md#signer) &  [here](https://github.com/cosmos/cosmos-sdk/blob/7352d0bce8e72121e824297df453eb1059c28da8/docs/docs/build/building-modules/02-messages-and-queries.md#L40)documentation. 
+	_ appmodule.AppModule        = (*AppModule)(nil)
+	_ appmodule.HasBeginBlocker  = (*AppModule)(nil)
+	_ appmodule.HasEndBlocker    = (*AppModule)(nil)
+	...
+)
+```
+
+Read more on those interfaces [here](https://docs.cosmos.network/v0.50/building-modules/module-manager#application-module-interfaces).
+
+:::
+
+* `GetSigners()` is no longer required to be implemented on `Msg` types. The SDK will automatically infer the signers from the `Signer` field on the message. The signer field is required on all messages unless using a custom signer function.
+
+To find out more please read the [signer field](./05-protobuf-annotations.md#signer) & [here](https://github.com/cosmos/cosmos-sdk/blob/7352d0bce8e72121e824297df453eb1059c28da8/docs/docs/build/building-modules/02-messages-and-queries.md#L40) documentation. 
 <!-- Link to docs once redeployed -->
+
 #### `x/auth`
 
 For ante handler construction via `ante.NewAnteHandler`, the field `ante.HandlerOptions.SignModeHandler` has been updated to `x/tx/signing/HandlerMap` from `x/auth/signing/SignModeHandler`. Callers typically fetch this value from `client.TxConfig.SignModeHandler()` (which is also changed) so this change should be transparent to most users.

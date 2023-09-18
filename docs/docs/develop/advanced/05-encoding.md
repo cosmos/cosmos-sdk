@@ -4,10 +4,6 @@ sidebar_position: 1
 
 # Encoding
 
-:::note Synopsis
-While encoding in the Cosmos SDK used to be mainly handled by `go-amino` codec, the Cosmos SDK is moving towards using `gogoprotobuf` for both state and client-side encoding.
-:::
-
 :::note Pre-requisite Readings
 
 * [Anatomy of a Cosmos SDK application](../beginner/00-app-anatomy.md)
@@ -16,14 +12,9 @@ While encoding in the Cosmos SDK used to be mainly handled by `go-amino` codec, 
 
 ## Encoding
 
-The Cosmos SDK utilizes two binary wire encoding protocols, [Amino](https://github.com/tendermint/go-amino/) which is an object encoding specification and [Protocol Buffers](https://developers.google.com/protocol-buffers), a subset of Proto3 with an extension for
+The Cosmos SDK utilizes a binary wire encoding protocols, [Protocol Buffers](https://developers.google.com/protocol-buffers), a subset of Proto3 with an extension for
 interface support. See the [Proto3 spec](https://developers.google.com/protocol-buffers/docs/proto3)
-for more information on Proto3, which Amino is largely compatible with (but not with Proto2).
-
-Due to Amino having significant performance drawbacks, being reflection-based, and
-not having any meaningful cross-language/client support, Protocol Buffers, specifically
-[gogoprotobuf](https://github.com/cosmos/gogoproto/), is being used in place of Amino.
-Note, this process of using Protocol Buffers over Amino is still an ongoing process.
+for more information on Proto3.
 
 Binary wire encoding of types in the Cosmos SDK can be broken down into two main
 categories, client encoding and store encoding. Client encoding mainly revolves

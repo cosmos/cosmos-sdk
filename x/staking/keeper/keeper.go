@@ -27,7 +27,7 @@ var _ types.DelegationSet = Keeper{}
 
 func HistoricalInfoCodec(cdc codec.BinaryCodec) collcodec.ValueCodec[types.HistoricalRecord] {
 	return collcodec.NewAltValueCodec(codec.CollValue[types.HistoricalRecord](cdc), func(b []byte) (types.HistoricalRecord, error) {
-		historicalinfo := types.HistoricalInfo{}
+		historicalinfo := types.HistoricalInfo{} //nolint: staticcheck // HistoricalInfo is deprecated
 		err := historicalinfo.Unmarshal(b)
 		if err != nil {
 			return types.HistoricalRecord{}, err

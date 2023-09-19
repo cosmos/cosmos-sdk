@@ -4,7 +4,7 @@ import (
 	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/mint/types"
+	"cosmossdk.io/x/mint/types"
 )
 
 func (s *IntegrationTestSuite) TestUpdateParams() {

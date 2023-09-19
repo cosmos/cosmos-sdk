@@ -12,6 +12,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	sdkmath "cosmossdk.io/math"
+	minttypes "cosmossdk.io/x/mint/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -26,7 +27,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/distribution/client/cli"
 	distrtestutil "github.com/cosmos/cosmos-sdk/x/distribution/testutil"
-	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
 type CLITestSuite struct {

@@ -1,6 +1,6 @@
-go 1.21
+go 1.21.0
 
-toolchain go1.21.0
+toolchain go1.21.1
 
 module github.com/cosmos/cosmos-sdk
 
@@ -13,6 +13,7 @@ require (
 	cosmossdk.io/log v1.2.1
 	cosmossdk.io/math v1.1.2
 	cosmossdk.io/store v1.0.0-rc.0
+	cosmossdk.io/x/mint v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/tx v0.10.0
 	github.com/99designs/keyring v1.2.1
 	github.com/bgentry/speakeasy v0.1.1-0.20220910012023-760eaf8b6816
@@ -59,7 +60,7 @@ require (
 	golang.org/x/crypto v0.13.0
 	golang.org/x/exp v0.0.0-20230817173708-d852ddb80c63
 	golang.org/x/sync v0.3.0
-	google.golang.org/genproto/googleapis/api v0.0.0-20230726155614-23370e0ffb3e
+	google.golang.org/genproto/googleapis/api v0.0.0-20230913181813-007df8e322eb
 	google.golang.org/grpc v1.58.1
 	google.golang.org/protobuf v1.31.0
 	gotest.tools/v3 v3.5.1
@@ -169,6 +170,7 @@ require (
 
 // Below are the long-lived replace of the Cosmos SDK
 replace (
+	cosmossdk.io/x/mint => ./x/mint
 	// use cosmos fork of keyring
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 	// dgrijalva/jwt-go is deprecated and doesn't receive security updates.

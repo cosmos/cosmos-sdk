@@ -3,6 +3,7 @@ module cosmossdk.io/math
 go 1.20
 
 require (
+	github.com/google/go-cmp v0.5.8
 	github.com/stretchr/testify v1.8.4
 	golang.org/x/exp v0.0.0-20221205204356-47842c84f3db
 	sigs.k8s.io/yaml v1.3.0

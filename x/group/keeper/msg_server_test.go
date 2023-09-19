@@ -12,6 +12,7 @@ import (
 	"github.com/golang/mock/gomock"
 
 	"cosmossdk.io/core/header"
+	minttypes "cosmossdk.io/x/mint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec/address"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -22,7 +23,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/group"
 	"github.com/cosmos/cosmos-sdk/x/group/internal/math"
 	"github.com/cosmos/cosmos-sdk/x/group/keeper"
-	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
 var EventProposalPruned = "cosmos.group.v1.EventProposalPruned"

@@ -15,6 +15,7 @@ import (
 	circuitkeeper "cosmossdk.io/x/circuit/keeper"
 	evidencekeeper "cosmossdk.io/x/evidence/keeper"
 	feegrantkeeper "cosmossdk.io/x/feegrant/keeper"
+	mintkeeper "cosmossdk.io/x/mint/keeper"
 	nftkeeper "cosmossdk.io/x/nft/keeper"
 	upgradekeeper "cosmossdk.io/x/upgrade/keeper"
 
@@ -40,7 +41,6 @@ import (
 	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	groupkeeper "github.com/cosmos/cosmos-sdk/x/group/keeper"
-	mintkeeper "github.com/cosmos/cosmos-sdk/x/mint/keeper"
 	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	slashingkeeper "github.com/cosmos/cosmos-sdk/x/slashing/keeper"

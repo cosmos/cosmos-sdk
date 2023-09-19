@@ -1,6 +1,8 @@
 module cosmossdk.io/x/nft
 
-go 1.21
+go 1.21.0
+
+toolchain go1.21.1
 
 require (
 	cosmossdk.io/api v0.7.1
@@ -10,16 +12,17 @@ require (
 	cosmossdk.io/log v1.2.1
 	cosmossdk.io/math v1.1.2
 	cosmossdk.io/store v1.0.0-rc.0
+	cosmossdk.io/x/mint v0.0.0-00010101000000-000000000000
 	github.com/cometbft/cometbft v0.38.0
 	github.com/cosmos/cosmos-proto v1.0.0-beta.3
-	github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230822164746-64b2fc6ff80e
+	github.com/cosmos/cosmos-sdk v0.47.5
 	github.com/cosmos/gogoproto v1.4.11
 	github.com/golang/mock v1.6.0
 	github.com/golang/protobuf v1.5.3
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
 	github.com/spf13/cobra v1.7.0
 	github.com/stretchr/testify v1.8.4
-	google.golang.org/genproto/googleapis/api v0.0.0-20230726155614-23370e0ffb3e
+	google.golang.org/genproto/googleapis/api v0.0.0-20230913181813-007df8e322eb
 	google.golang.org/grpc v1.58.1
 )
 
@@ -151,5 +154,7 @@ require (
 	pgregory.net/rapid v1.1.0 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
+
+replace cosmossdk.io/x/mint => ../mint
 
 replace github.com/cosmos/cosmos-sdk => ../../.

@@ -8,7 +8,7 @@ import (
 	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/types/module"
-	"github.com/cosmos/cosmos-sdk/x/mint/types"
+	"cosmossdk.io/x/mint/types"
 )
 
 // Simulation parameter constants

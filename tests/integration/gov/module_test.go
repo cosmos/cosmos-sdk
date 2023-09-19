@@ -7,6 +7,7 @@ import (
 
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
+	_ "cosmossdk.io/x/mint"
 
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -14,7 +15,6 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	_ "github.com/cosmos/cosmos-sdk/x/distribution"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
-	_ "github.com/cosmos/cosmos-sdk/x/mint"
 )
 
 func TestItCreatesModuleAccountOnInitBlock(t *testing.T) {

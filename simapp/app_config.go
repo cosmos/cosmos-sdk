@@ -35,6 +35,8 @@ import (
 	evidencetypes "cosmossdk.io/x/evidence/types"
 	"cosmossdk.io/x/feegrant"
 	_ "cosmossdk.io/x/feegrant/module" // import for side-effects
+	_ "cosmossdk.io/x/mint"            // import for side-effects
+	minttypes "cosmossdk.io/x/mint/types"
 	"cosmossdk.io/x/nft"
 	_ "cosmossdk.io/x/nft/module" // import for side-effects
 	_ "cosmossdk.io/x/upgrade"    // import for side-effects
@@ -63,9 +65,7 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/group"
 	_ "github.com/cosmos/cosmos-sdk/x/group/module" // import for side-effects
-	_ "github.com/cosmos/cosmos-sdk/x/mint"         // import for side-effects
-	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
-	_ "github.com/cosmos/cosmos-sdk/x/params" // import for side-effects
+	_ "github.com/cosmos/cosmos-sdk/x/params"       // import for side-effects
 	paramsclient "github.com/cosmos/cosmos-sdk/x/params/client"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	_ "github.com/cosmos/cosmos-sdk/x/slashing" // import for side-effects

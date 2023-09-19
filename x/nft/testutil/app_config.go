@@ -1,6 +1,7 @@
 package testutil
 
 import (
+	_ "cosmossdk.io/x/mint"       // import as blank for app wiring
 	_ "cosmossdk.io/x/nft/module" // import as blank for app wiring
 
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
@@ -9,7 +10,6 @@ import (
 	_ "github.com/cosmos/cosmos-sdk/x/bank"           // import as blank for app wiring
 	_ "github.com/cosmos/cosmos-sdk/x/consensus"      // import as blank for app wiring
 	_ "github.com/cosmos/cosmos-sdk/x/genutil"        // import as blank for app wiring
-	_ "github.com/cosmos/cosmos-sdk/x/mint"           // import as blank for app wiring
 	_ "github.com/cosmos/cosmos-sdk/x/params"         // import as blank for app wiring
 	_ "github.com/cosmos/cosmos-sdk/x/staking"        // import as blank for app wiring
 )

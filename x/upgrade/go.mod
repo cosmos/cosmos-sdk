@@ -1,6 +1,8 @@
 module cosmossdk.io/x/upgrade
 
-go 1.21
+go 1.21.0
+
+toolchain go1.21.1
 
 require (
 	cosmossdk.io/api v0.7.1
@@ -12,7 +14,7 @@ require (
 	github.com/cometbft/cometbft v0.38.0
 	github.com/cosmos/cosmos-db v1.0.0
 	github.com/cosmos/cosmos-proto v1.0.0-beta.3
-	github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230713093628-90d9a75d4125
+	github.com/cosmos/cosmos-sdk v0.47.5
 	github.com/cosmos/gogoproto v1.4.11
 	github.com/golang/protobuf v1.5.3
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
@@ -22,7 +24,7 @@ require (
 	github.com/spf13/cobra v1.7.0
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.8.4
-	google.golang.org/genproto/googleapis/api v0.0.0-20230726155614-23370e0ffb3e
+	google.golang.org/genproto/googleapis/api v0.0.0-20230913181813-007df8e322eb
 	google.golang.org/grpc v1.58.1
 	google.golang.org/protobuf v1.31.0
 )
@@ -35,6 +37,7 @@ require (
 	cloud.google.com/go/storage v1.31.0 // indirect
 	cosmossdk.io/collections v0.4.0 // indirect
 	cosmossdk.io/math v1.1.2 // indirect
+	cosmossdk.io/x/mint v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/x/tx v0.10.0 // indirect
 	filippo.io/edwards25519 v1.0.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
@@ -182,6 +185,7 @@ require (
 // TODO Remove it: https://github.com/cosmos/cosmos-sdk/issues/10409
 
 replace (
+	cosmossdk.io/x/mint => ../../x/mint
 	github.com/cosmos/cosmos-sdk => ../../.
 	github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.9.1
 )

@@ -13,6 +13,7 @@ import (
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
+	minttypes "cosmossdk.io/x/mint/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec/address"
@@ -27,7 +28,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/group/keeper"
 	"github.com/cosmos/cosmos-sdk/x/group/module"
 	grouptestutil "github.com/cosmos/cosmos-sdk/x/group/testutil"
-	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
 const minExecutionPeriod = 5 * time.Second

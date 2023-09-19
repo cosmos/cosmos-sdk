@@ -7,7 +7,7 @@ import "cosmos/mint/v1beta1/mint.proto";
 import "amino/amino.proto";
 import "cosmos_proto/cosmos.proto";
 
-option go_package = "github.com/cosmos/cosmos-sdk/x/mint/types";
+option go_package = "cosmossdk.io/x/mint/types";
 
 // Query provides defines the gRPC querier service.
 service Query {

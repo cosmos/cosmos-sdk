@@ -21,6 +21,7 @@ use (
 	./tools/hubl
 	./x/accounts
 	./x/tx
+	./x/mint
 	./x/nft
 	./x/circuit
 	./x/feegrant

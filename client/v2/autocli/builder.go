@@ -33,6 +33,10 @@ func (b *Builder) Validate() error {
 		b.Logger = log.NewNopLogger()
 	}
 
+	if b.ClientCtx == nil {
+		return errors.New("client context is required in builder")
+	}
+
 	if b.AddressCodec == nil {
 		return errors.New("address codec is required in builder")
 	}
@@ -45,16 +49,20 @@ func (b *Builder) Validate() error {
 		return errors.New("consensus address codec is required in builder")
 	}
 
+	if b.Keyring == nil {
+		if b.ClientCtx.Keyring != nil {
+			b.Keyring = b.ClientCtx.Keyring
+		} else {
+			b.Keyring = keyring.NoKeyring{}
+		}
+	}
+
 	if b.TypeResolver == nil {
 		return errors.New("type resolver is required in builder")
 	}
 
 	if b.FileResolver == nil {
 		return errors.New("file resolver is required in builder")
-	}
-
-	if b.Keyring == nil {
-		b.Keyring = keyring.NoKeyring{}
 	}
 
 	return nil

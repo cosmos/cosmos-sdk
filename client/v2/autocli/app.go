@@ -42,6 +42,9 @@ type AppOptions struct {
 	// module or need to be improved.
 	ModuleOptions map[string]*autocliv1.ModuleOptions `optional:"true"`
 
+	// ClientCtx contains the necessary information needed to execute the commands.
+	ClientCtx *client.Context
+
 	// AddressCodec is the address codec to use for the app.
 	AddressCodec          address.Codec
 	ValidatorAddressCodec runtime.ValidatorAddressCodec
@@ -72,6 +75,7 @@ func (appOptions AppOptions) EnhanceRootCommand(rootCmd *cobra.Command) error {
 		Builder: flag.Builder{
 			TypeResolver:          protoregistry.GlobalTypes,
 			FileResolver:          proto.HybridResolver,
+			ClientCtx:             appOptions.ClientCtx,
 			AddressCodec:          appOptions.AddressCodec,
 			ValidatorAddressCodec: appOptions.ValidatorAddressCodec,
 			ConsensusAddressCodec: appOptions.ConsensusAddressCodec,

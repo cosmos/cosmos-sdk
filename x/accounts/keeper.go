@@ -82,7 +82,7 @@ type Keeper struct {
 	// AccountsState keeps track of the state of each account.
 	// NOTE: this is only used for genesis import and export.
 	// Contracts set and get their own state but this helps providing a nice mapping
-	// between: (contract address, contract state key) => contract state value.
+	// between: (account address, account state key) => account state value.
 	AccountsState collections.Map[[]byte, []byte]
 }
 

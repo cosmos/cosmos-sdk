@@ -40,3 +40,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Improvements
 
 * Agoric/agoric-sdk#8223 Merge [cosmos/cosmos-sdk v0.45.16](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.45.16)
+
+### Bug Fixes
+
+* (snapshots) [#304](https://github.com/agoric-labs/cosmos-sdk/pull/304) raise the per snapshot item limit. Fixes [Agoric/agoric-sdk#8325](https://github.com/Agoric/agoric-sdk/issues/8325)

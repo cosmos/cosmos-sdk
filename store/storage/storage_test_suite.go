@@ -2,6 +2,7 @@ package storage
 
 import (
 	"fmt"
+	"slices"
 
 	"github.com/stretchr/testify/suite"
 
@@ -18,6 +19,7 @@ type StorageTestSuite struct {
 
 	NewDB          func(dir string) (store.VersionedDatabase, error)
 	EmptyBatchSize int
+	SkipTests      []string
 }
 
 func (s *StorageTestSuite) TestDatabase_Close() {
@@ -491,6 +493,10 @@ func (s *StorageTestSuite) TestDatabase_IteratorNoDomain() {
 }
 
 func (s *StorageTestSuite) TestDatabase_Prune() {
+	if slices.Contains(s.SkipTests, s.T().Name()) {
+		s.T().SkipNow()
+	}
+
 	db, err := s.NewDB(s.T().TempDir())
 	s.Require().NoError(err)
 	defer db.Close()

@@ -159,6 +159,11 @@ func (db *Database) NewBatch(version uint64) (store.Batch, error) {
 	return NewBatch(db.storage, version)
 }
 
+// Prune for the PebbleDB SS backend is currently not supported. It seems the only
+// reliable way to prune is to iterate over the desired domain and either manually
+// tombstone or delete. Either way, the operation would be timely.
+//
+// See: https://github.com/cockroachdb/cockroach/blob/33623e3ee420174a4fd3226d1284b03f0e3caaac/pkg/storage/mvcc.go#L3182
 func (db *Database) Prune(version uint64) error {
 	panic("not implemented!")
 }

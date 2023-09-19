@@ -3,7 +3,9 @@ package baseapp
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -216,5 +218,61 @@ func (ps *paramStore) Get(_ sdk.Context, key []byte, ptr interface{}) {
 
 	if err := json.Unmarshal(bz, ptr); err != nil {
 		panic(err)
+	}
+}
+
+func TestABCI_HaltChain(t *testing.T) {
+	logger := defaultLogger()
+	db := dbm.NewMemDB()
+	name := t.Name()
+
+	testCases := []struct {
+		name        string
+		haltHeight  uint64
+		haltTime    uint64
+		blockHeight int64
+		blockTime   int64
+		expHalt     bool
+	}{
+		{"default", 0, 0, 10, 0, false},
+		{"halt-height-edge", 10, 0, 10, 0, false},
+		{"halt-height", 10, 0, 11, 0, true},
+		{"halt-time-edge", 0, 10, 1, 10, false},
+		{"halt-time", 0, 10, 1, 11, true},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			defer func() {
+				rec := recover()
+				var err error
+				if rec != nil {
+					err = rec.(error)
+				}
+				if !tc.expHalt {
+					require.NoError(t, err)
+				} else {
+					require.Error(t, err)
+					require.True(t, strings.HasPrefix(err.Error(), "halt application"))
+				}
+			}()
+
+			app := NewBaseApp(
+				name, logger, db, nil,
+				SetHaltHeight(tc.haltHeight),
+				SetHaltTime(tc.haltTime),
+			)
+
+			app.InitChain(abci.RequestInitChain{
+				InitialHeight: tc.blockHeight,
+			})
+
+			app.BeginBlock(abci.RequestBeginBlock{
+				Header: tmproto.Header{
+					Height: tc.blockHeight,
+					Time:   time.Unix(tc.blockTime, 0),
+				},
+			})
+		})
 	}
 }

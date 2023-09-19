@@ -44,3 +44,4 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Bug Fixes
 
 * (snapshots) [#304](https://github.com/agoric-labs/cosmos-sdk/pull/304) raise the per snapshot item limit. Fixes [Agoric/agoric-sdk#8325](https://github.com/Agoric/agoric-sdk/issues/8325)
+* (baseapp) [#305](https://github.com/agoric-labs/cosmos-sdk/pull/305) Make sure we don't execute blocks beyond the halt height. Port of [cosmos/cosmos-sdk#16639](https://github.com/cosmos/cosmos-sdk/pull/16639)

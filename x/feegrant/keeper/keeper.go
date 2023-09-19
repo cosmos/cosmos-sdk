@@ -22,11 +22,13 @@ import (
 // Keeper manages state of all fee grants, as well as calculating approval.
 // It must have a codec with all available allowances registered.
 type Keeper struct {
-	cdc               codec.BinaryCodec
-	storeService      store.KVStoreService
-	authKeeper        feegrant.AccountKeeper
-	Schema            collections.Schema
-	FeeAllowance      collections.Map[collections.Pair[sdk.AccAddress, sdk.AccAddress], feegrant.Grant]
+	cdc          codec.BinaryCodec
+	storeService store.KVStoreService
+	authKeeper   feegrant.AccountKeeper
+	Schema       collections.Schema
+	// FeeAllowance key: grantee+granter | value: Grant
+	FeeAllowance collections.Map[collections.Pair[sdk.AccAddress, sdk.AccAddress], feegrant.Grant]
+	// FeeAllowanceQueue key: expiration time+grantee+granter | value: bool
 	FeeAllowanceQueue collections.Map[collections.Triple[time.Time, sdk.AccAddress, sdk.AccAddress], bool]
 }
 
@@ -44,14 +46,14 @@ func NewKeeper(cdc codec.BinaryCodec, storeService store.KVStoreService, ak feeg
 			sb,
 			feegrant.FeeAllowanceKeyPrefix,
 			"allowances",
-			collections.PairKeyCodec(sdk.LengthPrefixedAddressKey(sdk.AccAddressKey), sdk.LengthPrefixedAddressKey(sdk.AccAddressKey)), // nolint: staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility
+			collections.PairKeyCodec(sdk.LengthPrefixedAddressKey(sdk.AccAddressKey), sdk.LengthPrefixedAddressKey(sdk.AccAddressKey)), //nolint: staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility
 			codec.CollValue[feegrant.Grant](cdc),
 		),
 		FeeAllowanceQueue: collections.NewMap(
 			sb,
 			feegrant.FeeAllowanceQueueKeyPrefix,
 			"allowances_queue",
-			collections.TripleKeyCodec(sdk.TimeKey, sdk.LengthPrefixedAddressKey(sdk.AccAddressKey), sdk.LengthPrefixedAddressKey(sdk.AccAddressKey)), // nolint: staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility
+			collections.TripleKeyCodec(sdk.TimeKey, sdk.LengthPrefixedAddressKey(sdk.AccAddressKey), sdk.LengthPrefixedAddressKey(sdk.AccAddressKey)), //nolint: staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility
 			collections.BoolValue,
 		),
 	}
@@ -83,7 +85,7 @@ func (k Keeper) GrantAllowance(ctx context.Context, granter, grantee sdk.AccAddr
 
 	// expiration shouldn't be in the past.
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	if exp != nil && exp.Before(sdkCtx.BlockTime()) {
+	if exp != nil && exp.Before(sdkCtx.HeaderInfo().Time) {
 		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "expiration is before current block time")
 	}
 
@@ -297,7 +299,7 @@ func (k Keeper) ExportGenesis(ctx context.Context) (*feegrant.GenesisState, erro
 
 // RemoveExpiredAllowances iterates grantsByExpiryQueue and deletes the expired grants.
 func (k Keeper) RemoveExpiredAllowances(ctx context.Context) error {
-	exp := sdk.UnwrapSDKContext(ctx).BlockTime()
+	exp := sdk.UnwrapSDKContext(ctx).HeaderInfo().Time
 	rng := collections.NewPrefixUntilTripleRange[time.Time, sdk.AccAddress, sdk.AccAddress](exp)
 
 	err := k.FeeAllowanceQueue.Walk(ctx, rng, func(key collections.Triple[time.Time, sdk.AccAddress, sdk.AccAddress], value bool) (stop bool, err error) {

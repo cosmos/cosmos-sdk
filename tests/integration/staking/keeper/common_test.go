@@ -4,7 +4,6 @@ import (
 	"math/big"
 	"testing"
 
-	cmtprototypes "github.com/cometbft/cometbft/proto/tendermint/types"
 	"gotest.tools/v3/assert"
 
 	"cosmossdk.io/core/appmodule"
@@ -103,7 +102,7 @@ func initFixture(tb testing.TB) *fixture {
 	logger := log.NewTestLogger(tb)
 	cms := integration.CreateMultiStore(keys, logger)
 
-	newCtx := sdk.NewContext(cms, cmtprototypes.Header{}, true, logger)
+	newCtx := sdk.NewContext(cms, true, logger)
 
 	authority := authtypes.NewModuleAddress("gov")
 
@@ -155,7 +154,7 @@ func initFixture(tb testing.TB) *fixture {
 	types.RegisterQueryServer(integrationApp.QueryHelper(), stakingkeeper.NewQuerier(stakingKeeper))
 
 	// set default staking params
-	assert.NilError(tb, stakingKeeper.SetParams(sdkCtx, types.DefaultParams()))
+	assert.NilError(tb, stakingKeeper.Params.Set(sdkCtx, types.DefaultParams()))
 
 	f := fixture{
 		app:           integrationApp,

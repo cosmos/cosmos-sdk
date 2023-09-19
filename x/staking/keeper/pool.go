@@ -55,7 +55,7 @@ func (k Keeper) burnBondedTokens(ctx context.Context, amt math.Int) error {
 
 	coins := sdk.NewCoins(sdk.NewCoin(bondDenom, amt))
 
-	return k.bankKeeper.BurnCoins(ctx, types.BondedPoolName, coins)
+	return k.bankKeeper.BurnCoins(ctx, k.authKeeper.GetModuleAddress(types.BondedPoolName), coins)
 }
 
 // burnNotBondedTokens burns coins from the not bonded pool module account
@@ -72,7 +72,7 @@ func (k Keeper) burnNotBondedTokens(ctx context.Context, amt math.Int) error {
 
 	coins := sdk.NewCoins(sdk.NewCoin(bondDenom, amt))
 
-	return k.bankKeeper.BurnCoins(ctx, types.NotBondedPoolName, coins)
+	return k.bankKeeper.BurnCoins(ctx, k.authKeeper.GetModuleAddress(types.NotBondedPoolName), coins)
 }
 
 // TotalBondedTokens total staking tokens supply which is bonded

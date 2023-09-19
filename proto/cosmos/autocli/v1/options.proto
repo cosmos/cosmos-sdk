@@ -31,9 +31,9 @@ message ServiceCommandDescriptor {
   // sub-command.
   map<string, ServiceCommandDescriptor> sub_commands = 3;
 
-  // enhance_custom_commands specifies whether to skip the service when generating commands, if a custom command already exists,
-  // or enhance the existing command. If set to true, the custom command will be enhanced with the services from gRPC.
-  // otherwise when a custom command exists, no commands will be generated for the service.
+  // enhance_custom_commands specifies whether to skip the service when generating commands, if a custom command already
+  // exists, or enhance the existing command. If set to true, the custom command will be enhanced with the services from
+  // gRPC. otherwise when a custom command exists, no commands will be generated for the service.
   bool enhance_custom_command = 4;
 }
 
@@ -86,7 +86,6 @@ message RpcCommandOptions {
 
   // skip specifies whether to skip this rpc method when generating commands.
   bool skip = 12;
-
 }
 
 // FlagOptions are options for flags generated from rpc request fields.
@@ -128,7 +127,7 @@ message PositionalArgDescriptor {
   // field. Note: It is mutually exclusive with optional.
   bool varargs = 2;
 
-  // optional makes the last positional parameter optional. 
+  // optional makes the last positional parameter optional.
   // Note: It is mutually exclusive with varargs.
   bool optional = 3;
 }

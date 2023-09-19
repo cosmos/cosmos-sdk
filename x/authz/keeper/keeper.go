@@ -95,7 +95,7 @@ func (k Keeper) update(ctx context.Context, grantee, granter sdk.AccAddress, upd
 func (k Keeper) DispatchActions(ctx context.Context, grantee sdk.AccAddress, msgs []sdk.Msg) ([][]byte, error) {
 	results := make([][]byte, len(msgs))
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	now := sdkCtx.BlockTime()
+	now := sdkCtx.HeaderInfo().Time
 
 	for i, msg := range msgs {
 		signers, _, err := k.cdc.GetMsgV1Signers(msg)
@@ -189,7 +189,7 @@ func (k Keeper) SaveGrant(ctx context.Context, grantee, granter sdk.AccAddress, 
 	store := k.storeService.OpenKVStore(ctx)
 	skey := grantStoreKey(grantee, granter, msgType)
 
-	grant, err := authz.NewGrant(sdkCtx.BlockTime(), authorization, expiration)
+	grant, err := authz.NewGrant(sdkCtx.HeaderInfo().Time, authorization, expiration)
 	if err != nil {
 		return err
 	}
@@ -266,9 +266,9 @@ func (k Keeper) GetAuthorizations(ctx context.Context, grantee, granter sdk.AccA
 	iter := storetypes.KVStorePrefixIterator(store, key)
 	defer iter.Close()
 
-	var authorization authz.Grant
 	var authorizations []authz.Authorization
 	for ; iter.Valid(); iter.Next() {
+		var authorization authz.Grant
 		if err := k.cdc.Unmarshal(iter.Value(), &authorization); err != nil {
 			return nil, err
 		}
@@ -292,7 +292,7 @@ func (k Keeper) GetAuthorizations(ctx context.Context, grantee, granter sdk.AccA
 func (k Keeper) GetAuthorization(ctx context.Context, grantee, granter sdk.AccAddress, msgType string) (authz.Authorization, *time.Time) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	grant, found := k.getGrant(ctx, grantStoreKey(grantee, granter, msgType))
-	if !found || (grant.Expiration != nil && grant.Expiration.Before(sdkCtx.BlockHeader().Time)) {
+	if !found || (grant.Expiration != nil && grant.Expiration.Before(sdkCtx.HeaderInfo().Time)) {
 		return nil, nil
 	}
 
@@ -411,7 +411,7 @@ func (k Keeper) DequeueAndDeleteExpiredGrants(ctx context.Context) error {
 	store := k.storeService.OpenKVStore(ctx)
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	iterator, err := store.Iterator(GrantQueuePrefix, storetypes.InclusiveEndBytes(GrantQueueTimePrefix(sdkCtx.BlockTime())))
+	iterator, err := store.Iterator(GrantQueuePrefix, storetypes.InclusiveEndBytes(GrantQueueTimePrefix(sdkCtx.HeaderInfo().Time)))
 	if err != nil {
 		return err
 	}

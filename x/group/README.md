@@ -1128,18 +1128,18 @@ Example:
 simd tx group update-group-policy-decision-policy cosmos1.. cosmos1.. '{"@type":"/cosmos.group.v1.ThresholdDecisionPolicy", "threshold":"2", "windows": {"voting_period": "120h", "min_execution_period": "0s"}}'
 ```
 
-#### create-proposal
+#### submit-proposal
 
-The `create-proposal` command allows users to submit a new proposal.
+The `submit-proposal` command allows users to submit a new proposal.
 
 ```bash
-simd tx group create-proposal [group-policy-account] [proposer[,proposer]*] [msg_tx_json_file] [metadata] [flags]
+simd tx group submit-proposal [group-policy-account] [proposer[,proposer]*] [msg_tx_json_file] [metadata] [flags]
 ```
 
 Example:
 
 ```bash
-simd tx group create-proposal cosmos1.. cosmos1.. msg_tx.json "AQ=="
+simd tx group submit-proposal cosmos1.. cosmos1.. msg_tx.json "AQ=="
 ```
 
 #### withdraw-proposal

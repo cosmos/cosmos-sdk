@@ -23,7 +23,7 @@ var _ Keeper = (*BaseKeeper)(nil)
 // between accounts.
 type Keeper interface {
 	SendKeeper
-	WithMintCoinsRestriction(MintingRestrictionFn) BaseKeeper
+	WithMintCoinsRestriction(types.MintingRestrictionFn) BaseKeeper
 
 	InitGenesis(context.Context, *types.GenesisState)
 	ExportGenesis(context.Context) *types.GenesisState
@@ -44,7 +44,7 @@ type Keeper interface {
 	DelegateCoinsFromAccountToModule(ctx context.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
 	UndelegateCoinsFromModuleToAccount(ctx context.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
 	MintCoins(ctx context.Context, moduleName string, amt sdk.Coins) error
-	BurnCoins(ctx context.Context, moduleName string, amt sdk.Coins) error
+	BurnCoins(ctx context.Context, address []byte, amt sdk.Coins) error
 
 	DelegateCoins(ctx context.Context, delegatorAddr, moduleAccAddr sdk.AccAddress, amt sdk.Coins) error
 	UndelegateCoins(ctx context.Context, moduleAccAddr, delegatorAddr sdk.AccAddress, amt sdk.Coins) error
@@ -59,11 +59,9 @@ type BaseKeeper struct {
 	ak                     types.AccountKeeper
 	cdc                    codec.BinaryCodec
 	storeService           store.KVStoreService
-	mintCoinsRestrictionFn MintingRestrictionFn
+	mintCoinsRestrictionFn types.MintingRestrictionFn
 	logger                 log.Logger
 }
-
-type MintingRestrictionFn func(ctx context.Context, coins sdk.Coins) error
 
 // GetPaginatedTotalSupply queries for the supply, ignoring 0 coins, with a given pagination
 func (k BaseKeeper) GetPaginatedTotalSupply(ctx context.Context, pagination *query.PageRequest) (sdk.Coins, *query.PageResponse, error) {
@@ -103,7 +101,7 @@ func NewBaseKeeper(
 		ak:                     ak,
 		cdc:                    cdc,
 		storeService:           storeService,
-		mintCoinsRestrictionFn: func(ctx context.Context, coins sdk.Coins) error { return nil },
+		mintCoinsRestrictionFn: types.NoOpMintingRestrictionFn,
 		logger:                 logger,
 	}
 }
@@ -113,19 +111,8 @@ func NewBaseKeeper(
 // Previous restriction functions can be nested as such:
 //
 //	bankKeeper.WithMintCoinsRestriction(restriction1).WithMintCoinsRestriction(restriction2)
-func (k BaseKeeper) WithMintCoinsRestriction(check MintingRestrictionFn) BaseKeeper {
-	oldRestrictionFn := k.mintCoinsRestrictionFn
-	k.mintCoinsRestrictionFn = func(ctx context.Context, coins sdk.Coins) error {
-		err := check(ctx, coins)
-		if err != nil {
-			return err
-		}
-		err = oldRestrictionFn(ctx, coins)
-		if err != nil {
-			return err
-		}
-		return nil
-	}
+func (k BaseKeeper) WithMintCoinsRestriction(check types.MintingRestrictionFn) BaseKeeper {
+	k.mintCoinsRestrictionFn = check.Then(k.mintCoinsRestrictionFn)
 	return k
 }
 
@@ -393,14 +380,16 @@ func (k BaseKeeper) MintCoins(ctx context.Context, moduleName string, amounts sd
 
 // BurnCoins burns coins deletes coins from the balance of the module account.
 // It will panic if the module account does not exist or is unauthorized.
-func (k BaseKeeper) BurnCoins(ctx context.Context, moduleName string, amounts sdk.Coins) error {
-	acc := k.ak.GetModuleAccount(ctx, moduleName)
+func (k BaseKeeper) BurnCoins(ctx context.Context, address []byte, amounts sdk.Coins) error {
+	acc := k.ak.GetAccount(ctx, address)
 	if acc == nil {
-		panic(errorsmod.Wrapf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", moduleName))
+		return errorsmod.Wrapf(sdkerrors.ErrUnknownAddress, "account %x does not exist", address)
 	}
 
-	if !acc.HasPermission(authtypes.Burner) {
-		panic(errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "module account %s does not have permissions to burn tokens", moduleName))
+	if macc, ok := acc.(sdk.ModuleAccountI); ok {
+		if !macc.HasPermission(authtypes.Burner) {
+			return errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "account %x does not have permissions to burn tokens", address)
+		}
 	}
 
 	err := k.subUnlockedCoins(ctx, acc.GetAddress(), amounts)
@@ -414,7 +403,7 @@ func (k BaseKeeper) BurnCoins(ctx context.Context, moduleName string, amounts sd
 		k.setSupply(ctx, supply)
 	}
 
-	k.logger.Debug("burned tokens from module account", "amount", amounts.String(), "from", moduleName)
+	k.logger.Debug("burned tokens from account", "amount", amounts.String(), "from", address)
 
 	// emit burn event
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
@@ -446,7 +435,7 @@ func (k BaseKeeper) trackDelegation(ctx context.Context, addr sdk.AccAddress, ba
 	if ok {
 		// TODO: return error on account.TrackDelegation
 		sdkCtx := sdk.UnwrapSDKContext(ctx)
-		vacc.TrackDelegation(sdkCtx.BlockHeader().Time, balance, amt)
+		vacc.TrackDelegation(sdkCtx.HeaderInfo().Time, balance, amt)
 		k.ak.SetAccount(ctx, acc)
 	}
 

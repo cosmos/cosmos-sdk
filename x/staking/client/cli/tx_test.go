@@ -39,6 +39,10 @@ type CLITestSuite struct {
 	addrs     []sdk.AccAddress
 }
 
+func TestCLITestSuite(t *testing.T) {
+	suite.Run(t, new(CLITestSuite))
+}
+
 func (s *CLITestSuite) SetupSuite() {
 	s.encCfg = testutilmod.MakeTestEncodingConfig(staking.AppModuleBasic{})
 	s.kr = keyring.NewInMemory(s.encCfg.Codec)
@@ -49,7 +53,10 @@ func (s *CLITestSuite) SetupSuite() {
 		WithClient(clitestutil.MockCometRPC{Client: rpcclientmock.Client{}}).
 		WithAccountRetriever(client.MockAccountRetriever{}).
 		WithOutput(io.Discard).
-		WithChainID("test-chain")
+		WithChainID("test-chain").
+		WithAddressCodec(addresscodec.NewBech32Codec("cosmos")).
+		WithValidatorAddressCodec(addresscodec.NewBech32Codec("cosmosvaloper")).
+		WithConsensusAddressCodec(addresscodec.NewBech32Codec("cosmosvalcons"))
 
 	ctxGen := func() client.Context {
 		bz, _ := s.encCfg.Codec.Marshal(&sdk.TxResponse{})
@@ -716,8 +723,4 @@ func (s *CLITestSuite) TestNewCancelUnbondingDelegationCmd() {
 			}
 		})
 	}
-}
-
-func TestCLITestSuite(t *testing.T) {
-	suite.Run(t, new(CLITestSuite))
 }

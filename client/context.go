@@ -13,6 +13,8 @@ import (
 	"google.golang.org/grpc"
 	"sigs.k8s.io/yaml"
 
+	"cosmossdk.io/core/address"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
@@ -65,6 +67,11 @@ type Context struct {
 
 	// CmdContext is the context.Context from the Cobra command.
 	CmdContext context.Context
+
+	// Address codecs
+	AddressCodec          address.Codec
+	ValidatorAddressCodec address.Codec
+	ConsensusAddressCodec address.Codec
 }
 
 // WithCmdContext returns a copy of the context with an updated context.Context,
@@ -292,6 +299,24 @@ func (ctx Context) WithPreprocessTxHook(preprocessFn PreprocessTxFn) Context {
 	return ctx
 }
 
+// WithAddressCodec returns the context with the provided address codec.
+func (ctx Context) WithAddressCodec(addressCodec address.Codec) Context {
+	ctx.AddressCodec = addressCodec
+	return ctx
+}
+
+// WithValidatorAddressCodec returns the context with the provided validator address codec.
+func (ctx Context) WithValidatorAddressCodec(validatorAddressCodec address.Codec) Context {
+	ctx.ValidatorAddressCodec = validatorAddressCodec
+	return ctx
+}
+
+// WithConsensusAddressCodec returns the context with the provided consensus address codec.
+func (ctx Context) WithConsensusAddressCodec(consensusAddressCodec address.Codec) Context {
+	ctx.ConsensusAddressCodec = consensusAddressCodec
+	return ctx
+}
+
 // PrintString prints the raw string to ctx.Output if it's defined, otherwise to os.Stdout
 func (ctx Context) PrintString(str string) error {
 	return ctx.PrintBytes([]byte(str))
@@ -365,11 +390,11 @@ func GetFromFields(clientCtx Context, kr keyring.Keyring, from string) (sdk.AccA
 		return nil, "", 0, nil
 	}
 
-	addr, err := sdk.AccAddressFromBech32(from)
+	addr, err := clientCtx.AddressCodec.StringToBytes(from)
 	switch {
 	case clientCtx.Simulate:
 		if err != nil {
-			return nil, "", 0, fmt.Errorf("a valid bech32 address must be provided in simulation mode: %w", err)
+			return nil, "", 0, fmt.Errorf("a valid address must be provided in simulation mode: %w", err)
 		}
 
 		return addr, "", 0, nil

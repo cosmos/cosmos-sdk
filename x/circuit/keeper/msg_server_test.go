@@ -194,7 +194,7 @@ func TestTripCircuitBreaker(t *testing.T) {
 	require.ErrorContains(t, err, "MsgEditValidator: unauthorized")
 
 	// user tries to trip an already tripped circuit breaker
-	alreadyTripped := "cosmos.bank.v1beta1.MsgSend"
+	alreadyTripped := msgSend
 	twoTrip := &types.MsgTripCircuitBreaker{Authority: addresses[1], MsgTypeUrls: []string{alreadyTripped}}
 	_, err = srv.TripCircuitBreaker(ft.ctx, twoTrip)
 	require.ErrorContains(t, err, "already disabled")
@@ -208,7 +208,7 @@ func TestResetCircuitBreaker(t *testing.T) {
 	srv := keeper.NewMsgServerImpl(ft.keeper)
 
 	// admin resets circuit breaker
-	url := "cosmos.bank.v1beta1.MsgSend"
+	url := msgSend
 	// admin trips circuit breaker
 	admintrip := &types.MsgTripCircuitBreaker{Authority: authority, MsgTypeUrls: []string{url}}
 	_, err = srv.TripCircuitBreaker(ft.ctx, admintrip)
@@ -291,7 +291,7 @@ func TestResetCircuitBreaker(t *testing.T) {
 	require.NoError(t, err)
 
 	// user with some messages resets circuit breaker
-	someMsgsReset := &types.MsgResetCircuitBreaker{Authority: addresses[2], MsgTypeUrls: []string{url}}
+	someMsgsReset := &types.MsgResetCircuitBreaker{Authority: addresses[2], MsgTypeUrls: []string{url2}}
 	_, err = srv.ResetCircuitBreaker(ft.ctx, someMsgsReset)
 	require.NoError(t, err)
 	require.Equal(
@@ -299,14 +299,14 @@ func TestResetCircuitBreaker(t *testing.T) {
 		sdk.NewEvent(
 			"reset_circuit_breaker",
 			sdk.NewAttribute("authority", addresses[2]),
-			sdk.NewAttribute("msg_url", url),
+			sdk.NewAttribute("msg_url", url2),
 		),
 		lastEvent(ft.ctx),
 	)
 
 	// user tries to reset an already reset circuit breaker
-	admintrip = &types.MsgTripCircuitBreaker{Authority: addresses[1], MsgTypeUrls: []string{url2}}
-	_, err = srv.TripCircuitBreaker(ft.ctx, admintrip)
+	someMsgsReset = &types.MsgResetCircuitBreaker{Authority: addresses[1], MsgTypeUrls: []string{url2}}
+	_, err = srv.ResetCircuitBreaker(ft.ctx, someMsgsReset)
 	require.Error(t, err)
 }
 
@@ -315,4 +315,61 @@ func lastEvent(ctx context.Context) sdk.Event {
 	events := sdkCtx.EventManager().Events()
 
 	return events[len(events)-1]
+}
+
+func TestResetCircuitBreakerSomeMsgs(t *testing.T) {
+	ft := initFixture(t)
+	authority, err := ft.ac.BytesToString(ft.mockAddr)
+	require.NoError(t, err)
+
+	srv := keeper.NewMsgServerImpl(ft.keeper)
+
+	// admin resets circuit breaker
+	url := msgSend
+	url2 := "the_only_message_acc2_can_trip_and_reset"
+
+	// add acc2 as an authorized account for only url2
+	authmsg := &types.MsgAuthorizeCircuitBreaker{
+		Granter: authority,
+		Grantee: addresses[2],
+		Permissions: &types.Permissions{
+			Level:         types.Permissions_LEVEL_SOME_MSGS,
+			LimitTypeUrls: []string{url2},
+		},
+	}
+	_, err = srv.AuthorizeCircuitBreaker(ft.ctx, authmsg)
+	require.NoError(t, err)
+
+	// admin trips circuit breaker
+	admintrip := &types.MsgTripCircuitBreaker{Authority: authority, MsgTypeUrls: []string{url, url2}}
+	_, err = srv.TripCircuitBreaker(ft.ctx, admintrip)
+	require.NoError(t, err)
+
+	// sanity check, both messages should be tripped
+	allowed, err := ft.keeper.IsAllowed(ft.ctx, url)
+	require.NoError(t, err)
+	require.False(t, allowed, "circuit breaker should be tripped")
+
+	allowed, err = ft.keeper.IsAllowed(ft.ctx, url2)
+	require.NoError(t, err)
+	require.False(t, allowed, "circuit breaker should be tripped")
+
+	// now let's try to reset url using acc2 (should fail)
+	acc2Reset := &types.MsgResetCircuitBreaker{Authority: addresses[2], MsgTypeUrls: []string{url}}
+	_, err = srv.ResetCircuitBreaker(ft.ctx, acc2Reset)
+	require.Error(t, err)
+
+	// now let's try to reset url2 using acc2 (should pass)
+	acc2Reset = &types.MsgResetCircuitBreaker{Authority: addresses[2], MsgTypeUrls: []string{url2}}
+	_, err = srv.ResetCircuitBreaker(ft.ctx, acc2Reset)
+	require.NoError(t, err)
+
+	// Only url2 should be reset, url should still be tripped
+	allowed, err = ft.keeper.IsAllowed(ft.ctx, url)
+	require.NoError(t, err)
+	require.False(t, allowed, "circuit breaker should be tripped")
+
+	allowed, err = ft.keeper.IsAllowed(ft.ctx, url2)
+	require.NoError(t, err)
+	require.True(t, allowed, "circuit breaker should be reset")
 }

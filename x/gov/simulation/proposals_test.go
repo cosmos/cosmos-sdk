@@ -4,7 +4,6 @@ import (
 	"math/rand"
 	"testing"
 
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"gotest.tools/v3/assert"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -17,7 +16,7 @@ func TestProposalMsgs(t *testing.T) {
 	s := rand.NewSource(1)
 	r := rand.New(s)
 
-	ctx := sdk.NewContext(nil, cmtproto.Header{}, true, nil)
+	ctx := sdk.NewContext(nil, true, nil)
 	accounts := simtypes.RandomAccounts(r, 3)
 
 	// execute ProposalMsgs function
@@ -39,7 +38,7 @@ func TestProposalContents(t *testing.T) {
 	s := rand.NewSource(1)
 	r := rand.New(s)
 
-	ctx := sdk.NewContext(nil, cmtproto.Header{}, true, nil)
+	ctx := sdk.NewContext(nil, true, nil)
 	accounts := simtypes.RandomAccounts(r, 3)
 
 	// execute ProposalContents function

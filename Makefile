@@ -174,11 +174,6 @@ godocs:
 	go install golang.org/x/tools/cmd/godoc@latest
 	godoc -http=:6060
 
-build-docs:
-	@cd docs && DOCS_DOMAIN=docs.cosmos.network sh ./build-all.sh
-
-.PHONY: build-docs
-
 ###############################################################################
 ###                           Tests & Simulation                            ###
 ###############################################################################
@@ -369,7 +364,7 @@ benchmark:
 ###                                Linting                                  ###
 ###############################################################################
 
-golangci_version=v1.53.3
+golangci_version=v1.54.2
 
 lint-install:
 	@echo "--> Installing golangci-lint $(golangci_version)"
@@ -391,7 +386,7 @@ lint-fix:
 ###                                Protobuf                                 ###
 ###############################################################################
 
-protoVer=0.13.5
+protoVer=0.14.0
 protoImageName=ghcr.io/cosmos/proto-builder:$(protoVer)
 protoImage=$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace $(protoImageName)
 
@@ -464,7 +459,7 @@ localnet-build-dlv:
 
 localnet-build-nodes:
 	$(DOCKER) run --rm -v $(CURDIR)/.testnets:/data cosmossdk/simd \
-			  testnet init-files --v 4 -o /data --starting-ip-address 192.168.10.2 --keyring-backend=test
+			  testnet init-files --v 4 -o /data --starting-ip-address 192.168.10.2 --keyring-backend=test --listen-ip-address 0.0.0.0
 	docker-compose up -d
 
 localnet-stop:

@@ -2,12 +2,12 @@ package server
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"io"
 	"net"
 	"os"
 	"runtime/pprof"
+	"time"
 
 	"github.com/cometbft/cometbft/abci/server"
 	cmtcmd "github.com/cometbft/cometbft/cmd/cometbft/commands"
@@ -64,6 +64,7 @@ const (
 	FlagMinRetainBlocks     = "min-retain-blocks"
 	FlagIAVLCacheSize       = "iavl-cache-size"
 	FlagDisableIAVLFastNode = "iavl-disable-fastnode"
+	FlagShutdownGrace       = "shutdown-grace"
 
 	// state sync-related flags
 	FlagStateSyncSnapshotInterval   = "state-sync.snapshot-interval"
@@ -168,14 +169,24 @@ is performed. Note, when enabled, gRPC will also be automatically enabled.
 				serverCtx.Logger.Info("starting ABCI without CometBFT")
 			}
 
-			return wrapCPUProfile(serverCtx, func() error {
+			err = wrapCPUProfile(serverCtx, func() error {
 				return start(serverCtx, clientCtx, appCreator, withCMT, opts)
 			})
+
+			serverCtx.Logger.Debug("received quit signal")
+			graceDuration, _ := cmd.Flags().GetDuration(FlagShutdownGrace)
+			if graceDuration > 0 {
+				serverCtx.Logger.Info("graceful shutdown start", FlagShutdownGrace, graceDuration)
+				<-time.After(graceDuration)
+				serverCtx.Logger.Info("graceful shutdown complete")
+			}
+
+			return err
 		},
 	}
 
 	cmd.Flags().Bool(flagWithComet, true, "Run abci app embedded in-process with CometBFT")
-	cmd.Flags().String(flagAddress, "tcp://0.0.0.0:26658", "Listen address")
+	cmd.Flags().String(flagAddress, "tcp://127.0.0.1:26658", "Listen address")
 	cmd.Flags().String(flagTransport, "socket", "Transport protocol: socket, grpc")
 	cmd.Flags().String(flagTraceStore, "", "Enable KVStore tracing to an output file")
 	cmd.Flags().String(FlagMinGasPrices, "", "Minimum gas prices to accept for transactions; Any fee in a tx must meet this minimum (e.g. 0.01photino;0.0001stake)")
@@ -207,6 +218,7 @@ is performed. Note, when enabled, gRPC will also be automatically enabled.
 	cmd.Flags().Uint32(FlagStateSyncSnapshotKeepRecent, 2, "State sync snapshot to keep")
 	cmd.Flags().Bool(FlagDisableIAVLFastNode, false, "Disable fast node for IAVL tree")
 	cmd.Flags().Int(FlagMempoolMaxTxs, mempool.DefaultMaxTx, "Sets MaxTx value for the app-side mempool")
+	cmd.Flags().Duration(FlagShutdownGrace, 0*time.Second, "On Shutdown, duration to wait for resource clean up")
 
 	// support old flags name for backwards compatibility
 	cmd.Flags().SetNormalizeFunc(func(f *pflag.FlagSet, name string) pflag.NormalizedName {
@@ -275,7 +287,7 @@ func startStandAlone(svrCtx *Context, app types.Application, opts StartCmdOption
 		// so we can gracefully stop the ABCI server.
 		<-ctx.Done()
 		svrCtx.Logger.Info("stopping the ABCI server...")
-		return errors.Join(svr.Stop(), app.Close())
+		return svr.Stop()
 	})
 
 	return g.Wait()
@@ -373,7 +385,6 @@ func startCmtNode(
 	cleanupFn = func() {
 		if tmNode != nil && tmNode.IsRunning() {
 			_ = tmNode.Stop()
-			_ = app.Close()
 		}
 	}
 

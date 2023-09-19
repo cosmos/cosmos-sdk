@@ -4,7 +4,6 @@ import (
 	"testing"
 	"time"
 
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
 	"gotest.tools/v3/assert"
 
@@ -60,7 +59,7 @@ func initFixture(tb testing.TB) *fixture {
 	logger := log.NewTestLogger(tb)
 	cms := integration.CreateMultiStore(keys, logger)
 
-	newCtx := sdk.NewContext(cms, cmtproto.Header{}, true, logger)
+	newCtx := sdk.NewContext(cms, true, logger)
 
 	authority := authtypes.NewModuleAddress("gov")
 
@@ -113,7 +112,7 @@ func initFixture(tb testing.TB) *fixture {
 	slashingtypes.RegisterQueryServer(integrationApp.QueryHelper(), slashingkeeper.NewQuerier(slashingKeeper))
 
 	// set default staking params
-	err := stakingKeeper.SetParams(sdkCtx, stakingtypes.DefaultParams())
+	err := stakingKeeper.Params.Set(sdkCtx, stakingtypes.DefaultParams())
 	assert.NilError(tb, err)
 	// TestParams set the SignedBlocksWindow to 1000 and MaxMissedBlocksPerWindow to 500
 	err = slashingKeeper.Params.Set(sdkCtx, testutil.TestParams())
@@ -143,10 +142,10 @@ func TestUnJailNotBonded(t *testing.T) {
 	t.Parallel()
 	f := initFixture(t)
 
-	p, err := f.stakingKeeper.GetParams(f.ctx)
+	p, err := f.stakingKeeper.Params.Get(f.ctx)
 	assert.NilError(t, err)
 	p.MaxValidators = 5
-	assert.NilError(t, f.stakingKeeper.SetParams(f.ctx, p))
+	assert.NilError(t, f.stakingKeeper.Params.Set(f.ctx, p))
 	pks := simtestutil.CreateTestPubKeys(6)
 	tstaking := stakingtestutil.NewHelper(t, f.ctx, f.stakingKeeper)
 
@@ -347,10 +346,10 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 	t.Parallel()
 	f := initFixture(t)
 
-	params, err := f.stakingKeeper.GetParams(f.ctx)
+	params, err := f.stakingKeeper.Params.Get(f.ctx)
 	require.NoError(t, err)
 	params.MaxValidators = 1
-	err = f.stakingKeeper.SetParams(f.ctx, params)
+	err = f.stakingKeeper.Params.Set(f.ctx, params)
 	assert.NilError(t, err)
 	power := int64(100)
 

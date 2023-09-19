@@ -10,9 +10,10 @@ import (
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/codec/address"
-	sdktestuil "github.com/cosmos/cosmos-sdk/testutil"
+	sdktestutil "github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkaddress "github.com/cosmos/cosmos-sdk/types/address"
 	v1 "github.com/cosmos/cosmos-sdk/x/staking/migrations/v1"
 	v2 "github.com/cosmos/cosmos-sdk/x/staking/migrations/v2"
 	"github.com/cosmos/cosmos-sdk/x/staking/testutil"
@@ -22,7 +23,7 @@ import (
 func TestStoreMigration(t *testing.T) {
 	stakingKey := storetypes.NewKVStoreKey("staking")
 	tStakingKey := storetypes.NewTransientStoreKey("transient_test")
-	ctx := sdktestuil.DefaultContext(stakingKey, tStakingKey)
+	ctx := sdktestutil.DefaultContext(stakingKey, tStakingKey)
 	store := ctx.KVStore(stakingKey)
 
 	_, pk1, addr1 := testdata.KeyTestPubAddr()
@@ -45,7 +46,7 @@ func TestStoreMigration(t *testing.T) {
 		{
 			"LastValidatorPowerKey",
 			v1.GetLastValidatorPowerKey(valAddr1),
-			types.GetLastValidatorPowerKey(valAddr1),
+			getLastValidatorPowerKey(valAddr1),
 		},
 		{
 			"LastTotalPowerKey",
@@ -55,7 +56,7 @@ func TestStoreMigration(t *testing.T) {
 		{
 			"ValidatorsKey",
 			v1.GetValidatorKey(valAddr1),
-			types.GetValidatorKey(valAddr1),
+			getValidatorKey(valAddr1),
 		},
 		{
 			"ValidatorsByConsAddrKey",
@@ -75,12 +76,12 @@ func TestStoreMigration(t *testing.T) {
 		{
 			"UnbondingDelegationKey",
 			v1.GetUBDKey(addr4, valAddr1),
-			types.GetUBDKey(addr4, valAddr1),
+			unbondingKey(addr4, valAddr1),
 		},
 		{
 			"UnbondingDelegationByValIndexKey",
 			v1.GetUBDByValIndexKey(addr4, valAddr1),
-			types.GetUBDByValIndexKey(addr4, valAddr1),
+			getUBDByValIndexKey(addr4, valAddr1),
 		},
 		{
 			"RedelegationKey",
@@ -90,27 +91,27 @@ func TestStoreMigration(t *testing.T) {
 		{
 			"RedelegationByValSrcIndexKey",
 			v1.GetREDByValSrcIndexKey(addr4, valAddr1, valAddr2),
-			types.GetREDByValSrcIndexKey(addr4, valAddr1, valAddr2),
+			v2.GetREDByValSrcIndexKey(addr4, valAddr1, valAddr2),
 		},
 		{
 			"RedelegationByValDstIndexKey",
 			v1.GetREDByValDstIndexKey(addr4, valAddr1, valAddr2),
-			types.GetREDByValDstIndexKey(addr4, valAddr1, valAddr2),
+			v2.GetREDByValDstIndexKey(addr4, valAddr1, valAddr2),
 		},
 		{
 			"UnbondingQueueKey",
 			v1.GetUnbondingDelegationTimeKey(now),
-			types.GetUnbondingDelegationTimeKey(now),
+			getUnbondingDelegationTimeKey(now),
 		},
 		{
 			"RedelegationQueueKey",
 			v1.GetRedelegationTimeKey(now),
-			types.GetRedelegationTimeKey(now),
+			getRedelegationTimeKey(now),
 		},
 		{
 			"ValidatorQueueKey",
 			v1.GetValidatorQueueKey(now, 4),
-			types.GetValidatorQueueKey(now, 4),
+			getValidatorQueueKey(now, 4),
 		},
 		{
 			"HistoricalInfoKey",
@@ -138,4 +139,53 @@ func TestStoreMigration(t *testing.T) {
 			require.Equal(t, value, store.Get(tc.newKey))
 		})
 	}
+}
+
+func getRedelegationTimeKey(timestamp time.Time) []byte {
+	bz := sdk.FormatTimeBytes(timestamp)
+	return append(types.RedelegationQueueKey, bz...)
+}
+
+func getLastValidatorPowerKey(operator sdk.ValAddress) []byte {
+	return append(types.LastValidatorPowerKey, sdkaddress.MustLengthPrefix(operator)...)
+}
+
+func getUBDByValIndexKey(delAddr sdk.AccAddress, valAddr sdk.ValAddress) []byte {
+	return append(append(types.UnbondingDelegationByValIndexKey, sdkaddress.MustLengthPrefix(valAddr)...), sdkaddress.MustLengthPrefix(delAddr)...)
+}
+
+func getUnbondingDelegationTimeKey(timestamp time.Time) []byte {
+	bz := sdk.FormatTimeBytes(timestamp)
+	return append(types.UnbondingQueueKey, bz...)
+}
+
+func getValidatorKey(operatorAddr sdk.ValAddress) []byte {
+	return append(types.ValidatorsKey, sdkaddress.MustLengthPrefix(operatorAddr)...)
+}
+
+func unbondingKey(delAddr sdk.AccAddress, valAddr sdk.ValAddress) []byte {
+	return append(append(types.UnbondingDelegationKey, sdkaddress.MustLengthPrefix(delAddr)...), sdkaddress.MustLengthPrefix(valAddr)...)
+}
+
+func getValidatorQueueKey(timestamp time.Time, height int64) []byte {
+	heightBz := sdk.Uint64ToBigEndian(uint64(height))
+	timeBz := sdk.FormatTimeBytes(timestamp)
+	timeBzL := len(timeBz)
+	prefixL := len(types.ValidatorQueueKey)
+
+	bz := make([]byte, prefixL+8+timeBzL+8)
+
+	// copy the prefix
+	copy(bz[:prefixL], types.ValidatorQueueKey)
+
+	// copy the encoded time bytes length
+	copy(bz[prefixL:prefixL+8], sdk.Uint64ToBigEndian(uint64(timeBzL)))
+
+	// copy the encoded time bytes
+	copy(bz[prefixL+8:prefixL+8+timeBzL], timeBz)
+
+	// copy the encoded height
+	copy(bz[prefixL+8+timeBzL:], heightBz)
+
+	return bz
 }

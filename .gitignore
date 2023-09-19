@@ -13,7 +13,7 @@ private
 
 # Build
 vendor
-build
+/build
 dist
 tools-stamp
 buf-stamp

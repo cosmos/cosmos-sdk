@@ -4,13 +4,12 @@ import (
 	"fmt"
 	"testing"
 
-	cmtabcitypes "github.com/cometbft/cometbft/abci/types"
-	"github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
 	"gotest.tools/v3/assert"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/comet"
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
@@ -68,7 +67,7 @@ func initFixture(tb testing.TB) *fixture {
 	logger := log.NewTestLogger(tb)
 	cms := integration.CreateMultiStore(keys, logger)
 
-	newCtx := sdk.NewContext(cms, types.Header{}, true, logger)
+	newCtx := sdk.NewContext(cms, true, logger)
 
 	authority := authtypes.NewModuleAddress("gov")
 
@@ -101,6 +100,7 @@ func initFixture(tb testing.TB) *fixture {
 	)
 
 	stakingKeeper := stakingkeeper.NewKeeper(cdc, runtime.NewKVStoreService(keys[stakingtypes.StoreKey]), accountKeeper, bankKeeper, authority.String(), addresscodec.NewBech32Codec(sdk.Bech32PrefixValAddr), addresscodec.NewBech32Codec(sdk.Bech32PrefixConsAddr))
+	require.NoError(tb, stakingKeeper.Params.Set(newCtx, stakingtypes.DefaultParams()))
 
 	distrKeeper := distrkeeper.NewKeeper(
 		cdc, runtime.NewKVStoreService(keys[distrtypes.StoreKey]), accountKeeper, bankKeeper, stakingKeeper, distrtypes.ModuleName, authority.String(),
@@ -116,13 +116,17 @@ func initFixture(tb testing.TB) *fixture {
 	valConsAddr := sdk.ConsAddress(valConsPk0.Address())
 
 	// set proposer and vote infos
-	ctx := newCtx.WithProposer(valConsAddr).WithVoteInfos([]cmtabcitypes.VoteInfo{
-		{
-			Validator: cmtabcitypes.Validator{
-				Address: valAddr,
-				Power:   100,
+	ctx := newCtx.WithProposer(valConsAddr).WithCometInfo(comet.Info{
+		LastCommit: comet.CommitInfo{
+			Votes: []comet.VoteInfo{
+				{
+					Validator: comet.Validator{
+						Address: valAddr,
+						Power:   100,
+					},
+					BlockIDFlag: comet.BlockIDFlagCommit,
+				},
 			},
-			BlockIdFlag: types.BlockIDFlagCommit,
 		},
 	})
 
@@ -322,8 +326,8 @@ func TestMsgWithdrawDelegatorReward(t *testing.T) {
 			assert.Assert(t, prevProposerConsAddr.Empty() == false)
 			assert.DeepEqual(t, prevProposerConsAddr, valConsAddr)
 			var previousTotalPower int64
-			for _, voteInfo := range f.sdkCtx.VoteInfos() {
-				previousTotalPower += voteInfo.Validator.Power
+			for _, vote := range f.sdkCtx.CometInfo().LastCommit.Votes {
+				previousTotalPower += vote.Validator.Power
 			}
 			assert.Equal(t, previousTotalPower, int64(100))
 		})
@@ -893,7 +897,7 @@ func TestMsgDepositValidatorRewardsPool(t *testing.T) {
 	require.NoError(t, f.bankKeeper.MintCoins(f.sdkCtx, distrtypes.ModuleName, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens))))
 
 	// Set default staking params
-	require.NoError(t, f.stakingKeeper.SetParams(f.sdkCtx, stakingtypes.DefaultParams()))
+	require.NoError(t, f.stakingKeeper.Params.Set(f.sdkCtx, stakingtypes.DefaultParams()))
 
 	addr := sdk.AccAddress("addr")
 	addr1 := sdk.AccAddress(PKS[0].Address())

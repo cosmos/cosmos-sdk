@@ -21,6 +21,7 @@ const _ = grpc.SupportPackageIsVersion7
 const (
 	Msg_Send_FullMethodName           = "/cosmos.bank.v1beta1.Msg/Send"
 	Msg_MultiSend_FullMethodName      = "/cosmos.bank.v1beta1.Msg/MultiSend"
+	Msg_Burn_FullMethodName           = "/cosmos.bank.v1beta1.Msg/Burn"
 	Msg_UpdateParams_FullMethodName   = "/cosmos.bank.v1beta1.Msg/UpdateParams"
 	Msg_SetSendEnabled_FullMethodName = "/cosmos.bank.v1beta1.Msg/SetSendEnabled"
 )
@@ -33,6 +34,10 @@ type MsgClient interface {
 	Send(ctx context.Context, in *MsgSend, opts ...grpc.CallOption) (*MsgSendResponse, error)
 	// MultiSend defines a method for sending coins from some accounts to other accounts.
 	MultiSend(ctx context.Context, in *MsgMultiSend, opts ...grpc.CallOption) (*MsgMultiSendResponse, error)
+	// Burn defines a method for burning coins by an account.
+	//
+	// Since: cosmos-sdk 0.51
+	Burn(ctx context.Context, in *MsgBurn, opts ...grpc.CallOption) (*MsgBurnResponse, error)
 	// UpdateParams defines a governance operation for updating the x/bank module parameters.
 	// The authority is defined in the keeper.
 	//
@@ -73,6 +78,15 @@ func (c *msgClient) MultiSend(ctx context.Context, in *MsgMultiSend, opts ...grp
 	return out, nil
 }
 
+func (c *msgClient) Burn(ctx context.Context, in *MsgBurn, opts ...grpc.CallOption) (*MsgBurnResponse, error) {
+	out := new(MsgBurnResponse)
+	err := c.cc.Invoke(ctx, Msg_Burn_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *msgClient) UpdateParams(ctx context.Context, in *MsgUpdateParams, opts ...grpc.CallOption) (*MsgUpdateParamsResponse, error) {
 	out := new(MsgUpdateParamsResponse)
 	err := c.cc.Invoke(ctx, Msg_UpdateParams_FullMethodName, in, out, opts...)
@@ -99,6 +113,10 @@ type MsgServer interface {
 	Send(context.Context, *MsgSend) (*MsgSendResponse, error)
 	// MultiSend defines a method for sending coins from some accounts to other accounts.
 	MultiSend(context.Context, *MsgMultiSend) (*MsgMultiSendResponse, error)
+	// Burn defines a method for burning coins by an account.
+	//
+	// Since: cosmos-sdk 0.51
+	Burn(context.Context, *MsgBurn) (*MsgBurnResponse, error)
 	// UpdateParams defines a governance operation for updating the x/bank module parameters.
 	// The authority is defined in the keeper.
 	//
@@ -123,6 +141,9 @@ func (UnimplementedMsgServer) Send(context.Context, *MsgSend) (*MsgSendResponse,
 }
 func (UnimplementedMsgServer) MultiSend(context.Context, *MsgMultiSend) (*MsgMultiSendResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method MultiSend not implemented")
+}
+func (UnimplementedMsgServer) Burn(context.Context, *MsgBurn) (*MsgBurnResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Burn not implemented")
 }
 func (UnimplementedMsgServer) UpdateParams(context.Context, *MsgUpdateParams) (*MsgUpdateParamsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateParams not implemented")
@@ -179,6 +200,24 @@ func _Msg_MultiSend_Handler(srv interface{}, ctx context.Context, dec func(inter
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_Burn_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgBurn)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).Burn(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_Burn_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).Burn(ctx, req.(*MsgBurn))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Msg_UpdateParams_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(MsgUpdateParams)
 	if err := dec(in); err != nil {
@@ -229,6 +268,10 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "MultiSend",
 			Handler:    _Msg_MultiSend_Handler,
+		},
+		{
+			MethodName: "Burn",
+			Handler:    _Msg_Burn_Handler,
 		},
 		{
 			MethodName: "UpdateParams",

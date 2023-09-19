@@ -55,19 +55,19 @@ message Header {
   BlockID last_block_id = 5 [(gogoproto.nullable) = false];
 
   // hashes of block data
-  bytes last_commit_hash = 6;  // commit from validators from the last block
-  bytes data_hash        = 7;  // transactions
+  bytes last_commit_hash = 6; // commit from validators from the last block
+  bytes data_hash        = 7; // transactions
 
   // hashes from the app output from the prev block
-  bytes validators_hash      = 8;   // validators for the current block
-  bytes next_validators_hash = 9;   // validators for the next block
-  bytes consensus_hash       = 10;  // consensus params for current block
-  bytes app_hash             = 11;  // state after txs from the previous block
-  bytes last_results_hash    = 12;  // root hash of all results from the txs from the previous block
+  bytes validators_hash      = 8;  // validators for the current block
+  bytes next_validators_hash = 9;  // validators for the next block
+  bytes consensus_hash       = 10; // consensus params for current block
+  bytes app_hash             = 11; // state after txs from the previous block
+  bytes last_results_hash    = 12; // root hash of all results from the txs from the previous block
 
   // consensus info
-  bytes evidence_hash    = 13;  // evidence included in the block
-  bytes proposer_address = 14;  // original proposer of the block
+  bytes evidence_hash    = 13; // evidence included in the block
+  bytes proposer_address = 14; // original proposer of the block
 }
 
 // Data contains the set of transactions included in the block
@@ -84,12 +84,10 @@ message Vote {
   SignedMsgType type     = 1;
   int64         height   = 2;
   int32         round    = 3;
-  BlockID       block_id = 4
-      [(gogoproto.nullable) = false, (gogoproto.customname) = "BlockID"];  // zero if vote is nil.
-  google.protobuf.Timestamp timestamp = 5
-      [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
-  bytes validator_address = 6;
-  int32 validator_index   = 7;
+  BlockID       block_id = 4 [(gogoproto.nullable) = false, (gogoproto.customname) = "BlockID"]; // zero if vote is nil.
+  google.protobuf.Timestamp timestamp         = 5 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
+  bytes                     validator_address = 6;
+  int32                     validator_index   = 7;
   // Vote signature by the validator if they participated in consensus for the
   // associated block.
   bytes signature = 8;
@@ -114,16 +112,14 @@ message Commit {
 message CommitSig {
   tendermint.types.BlockIDFlag block_id_flag     = 1;
   bytes                        validator_address = 2;
-  google.protobuf.Timestamp    timestamp         = 3
-      [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
-  bytes signature = 4;
+  google.protobuf.Timestamp    timestamp         = 3 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
+  bytes                        signature         = 4;
 }
 
 message ExtendedCommit {
-  int64   height   = 1;
-  int32   round    = 2;
-  BlockID block_id = 3
-      [(gogoproto.nullable) = false, (gogoproto.customname) = "BlockID"];
+  int64                      height              = 1;
+  int32                      round               = 2;
+  BlockID                    block_id            = 3 [(gogoproto.nullable) = false, (gogoproto.customname) = "BlockID"];
   repeated ExtendedCommitSig extended_signatures = 4 [(gogoproto.nullable) = false];
 }
 
@@ -133,9 +129,8 @@ message ExtendedCommit {
 message ExtendedCommitSig {
   tendermint.types.BlockIDFlag block_id_flag     = 1;
   bytes                        validator_address = 2;
-  google.protobuf.Timestamp    timestamp         = 3
-      [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
-  bytes signature = 4;
+  google.protobuf.Timestamp    timestamp         = 3 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
+  bytes                        signature         = 4;
   // Vote extension data
   bytes extension = 5;
   // Vote extension signature
@@ -148,9 +143,8 @@ message Proposal {
   int32                     round     = 3;
   int32                     pol_round = 4;
   BlockID                   block_id  = 5 [(gogoproto.customname) = "BlockID", (gogoproto.nullable) = false];
-  google.protobuf.Timestamp timestamp = 6
-      [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
-  bytes signature = 7;
+  google.protobuf.Timestamp timestamp = 6 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
+  bytes                     signature = 7;
 }
 
 message SignedHeader {

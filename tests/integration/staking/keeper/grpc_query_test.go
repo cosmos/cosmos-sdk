@@ -29,7 +29,7 @@ func createValidatorAccs(t *testing.T, f *fixture) ([]sdk.AccAddress, []types.Va
 	// have its order changed
 	sortedVals := make([]types.Validator, len(validators))
 	copy(sortedVals, validators)
-	hi := types.NewHistoricalInfo(header, types.Validators{Validators: sortedVals}, f.stakingKeeper.PowerReduction(f.sdkCtx))
+	hi := types.HistoricalRecord{Time: &header.Time, Apphash: header.AppHash, ValidatorHash: header.NextValidatorsHash}
 	assert.NilError(t, f.stakingKeeper.HistoricalInfo.Set(f.sdkCtx, uint64(5), hi))
 
 	return addrs, validators
@@ -129,7 +129,7 @@ func TestGRPCQueryDelegatorValidators(t *testing.T) {
 	qr := f.app.QueryHelper()
 	queryClient := types.NewQueryClient(qr)
 
-	params, err := f.stakingKeeper.GetParams(ctx)
+	params, err := f.stakingKeeper.Params.Get(ctx)
 	assert.NilError(t, err)
 	delValidators, err := f.stakingKeeper.GetDelegatorValidators(ctx, addrs[0], params.MaxValidators)
 	assert.NilError(t, err)
@@ -717,7 +717,7 @@ func TestGRPCQueryPoolParameters(t *testing.T) {
 	// Query Params
 	resp, err := queryClient.Params(gocontext.Background(), &types.QueryParamsRequest{})
 	assert.NilError(t, err)
-	params, err := f.stakingKeeper.GetParams(ctx)
+	params, err := f.stakingKeeper.Params.Get(ctx)
 	assert.NilError(t, err)
 	assert.DeepEqual(t, params, resp.Params)
 }
@@ -783,7 +783,7 @@ func TestGRPCQueryHistoricalInfo(t *testing.T) {
 			if tc.expPass {
 				assert.NilError(t, err)
 				assert.Assert(t, res != nil)
-				assert.Assert(t, hi.Equal(res.Hist))
+				assert.DeepEqual(t, &hi, res.HistoricalRecord)
 			} else {
 				assert.ErrorContains(t, err, tc.expErrMsg)
 				assert.Assert(t, res == nil)

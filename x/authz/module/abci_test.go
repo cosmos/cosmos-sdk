@@ -4,10 +4,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/core/header"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 
@@ -31,7 +31,7 @@ func TestExpiredGrantsQueue(t *testing.T) {
 	storeService := runtime.NewKVStoreService(key)
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
 	encCfg := moduletestutil.MakeTestEncodingConfig(authzmodule.AppModuleBasic{})
-	ctx := testCtx.Ctx.WithBlockHeader(types.Header{})
+	ctx := testCtx.Ctx
 
 	baseApp := baseapp.NewBaseApp(
 		"authz",
@@ -50,7 +50,7 @@ func TestExpiredGrantsQueue(t *testing.T) {
 	grantee2 := addrs[2]
 	grantee3 := addrs[3]
 	grantee4 := addrs[4]
-	expiration := ctx.BlockTime().AddDate(0, 1, 0)
+	expiration := ctx.HeaderInfo().Time.AddDate(0, 1, 0)
 	expiration2 := expiration.AddDate(1, 0, 0)
 	smallCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 10))
 	sendAuthz := banktypes.NewSendAuthorization(smallCoins, nil)
@@ -95,12 +95,12 @@ func TestExpiredGrantsQueue(t *testing.T) {
 	checkGrants(ctx, 4)
 
 	// expiration is exclusive!
-	ctx = ctx.WithBlockTime(expiration)
+	ctx = ctx.WithHeaderInfo(header.Info{Time: expiration})
 	checkGrants(ctx, 4)
 
-	ctx = ctx.WithBlockTime(expiration.AddDate(0, 0, 1))
+	ctx = ctx.WithHeaderInfo(header.Info{Time: expiration.AddDate(0, 0, 1)})
 	checkGrants(ctx, 2)
 
-	ctx = ctx.WithBlockTime(expiration2.AddDate(0, 0, 1))
+	ctx = ctx.WithHeaderInfo(header.Info{Time: expiration2.AddDate(0, 0, 1)})
 	checkGrants(ctx, 1)
 }

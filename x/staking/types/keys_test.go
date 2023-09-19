@@ -5,7 +5,6 @@ import (
 	"encoding/hex"
 	"math/big"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/require"
 
@@ -19,11 +18,7 @@ import (
 
 var (
 	keysPK1   = ed25519.GenPrivKeyFromSecret([]byte{1}).PubKey()
-	keysPK2   = ed25519.GenPrivKeyFromSecret([]byte{2}).PubKey()
-	keysPK3   = ed25519.GenPrivKeyFromSecret([]byte{3}).PubKey()
 	keysAddr1 = keysPK1.Address()
-	keysAddr2 = keysPK2.Address()
-	keysAddr3 = keysPK3.Address()
 )
 
 func TestGetValidatorPowerRank(t *testing.T) {

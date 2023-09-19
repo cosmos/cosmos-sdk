@@ -19,8 +19,20 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/staking/types";
 // recent HistoricalInfo
 // (`n` is set by the staking module's `historical_entries` parameter).
 message HistoricalInfo {
+  option deprecated = true;
+
   tendermint.types.Header header = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
   repeated Validator      valset = 2 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+}
+
+// Historical contains a set of minimum values needed for evaluating historical validator sets and blocks.
+// It is stored as part of staking module's state, which persists the `n` most
+// recent HistoricalInfo
+// (`n` is set by the staking module's `historical_entries` parameter).
+message HistoricalRecord {
+  bytes                     apphash        = 1;
+  google.protobuf.Timestamp time           = 2 [(gogoproto.stdtime) = true];
+  bytes                     validator_hash = 3;
 }
 
 // CommissionRates defines the initial commission rates to be used for creating
@@ -220,7 +232,7 @@ message UnbondingDelegation {
   string validator_address = 2 [(cosmos_proto.scalar) = "cosmos.ValidatorAddressString"];
   // entries are the unbonding delegation entries.
   repeated UnbondingDelegationEntry entries = 3
-      [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];  // unbonding delegation entries
+      [(gogoproto.nullable) = false, (amino.dont_omitempty) = true]; // unbonding delegation entries
 }
 
 // UnbondingDelegationEntry defines an unbonding object with relevant metadata.
@@ -293,7 +305,7 @@ message Redelegation {
   string validator_dst_address = 3 [(cosmos_proto.scalar) = "cosmos.ValidatorAddressString"];
   // entries are the redelegation entries.
   repeated RedelegationEntry entries = 4
-      [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];  // redelegation entries
+      [(gogoproto.nullable) = false, (amino.dont_omitempty) = true]; // redelegation entries
 }
 
 // Params defines the parameters for the x/staking module.

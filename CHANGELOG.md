@@ -153,6 +153,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (types) [#17738](https://github.com/cosmos/cosmos-sdk/pull/17738) `WithBlockTime()` was removed & `BlockTime()` were deprecated in favor of `WithHeaderInfo()` & `HeaderInfo()`. `BlockTime` now gets data from `HeaderInfo()` instead of `BlockHeader()`.
 * (client) [#17746](https://github.com/cosmos/cosmos-sdk/pull/17746) `txEncodeAmino` & `txDecodeAmino` txs via grpc and rest were removed
     * `RegisterLegacyAmino` was removed from `AppModuleBasic`
+* (x/staking) [#17655](https://github.com/cosmos/cosmos-sdk/pull/17655) `QueryHistoricalInfo` was adjusted to return `HistoricalRecord` and marked `Hist` as deprecated.
 
 ### CLI Breaking Changes
 
@@ -160,7 +161,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * (x/distribution) [#17115](https://github.com/cosmos/cosmos-sdk/pull/17115) Migrate `PreviousProposer` to collections.
 * (x/upgrade) [#16244](https://github.com/cosmos/cosmos-sdk/pull/16244) upgrade module no longer stores the app version but gets and sets the app version stored in the `ParamStore` of baseapp.
-* (x/staking) [#17655](https://github.com/cosmos/cosmos-sdk/pull/17655) `HistoricalInfo` was replaced with `HistoricalRecord`, it removes the validator set and comet header and only keep what is needed for IBC. `QueryHistoricalInfo` was adjusted to return `HistoricalRecord` and marked `Hist` as deprecated.
+* (x/staking) [#17655](https://github.com/cosmos/cosmos-sdk/pull/17655) `HistoricalInfo` was replaced with `HistoricalRecord`, it removes the validator set and comet header and only keep what is needed for IBC. 
 
 ## [v0.50.0-rc.0](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.50.0-rc.0) - 2023-08-18
 

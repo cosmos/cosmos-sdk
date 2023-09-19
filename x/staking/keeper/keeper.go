@@ -74,6 +74,8 @@ type Keeper struct {
 	ValidatorQueue collections.Map[collections.Triple[uint64, time.Time, uint64], types.ValAddresses]
 	// LastValidatorPower key: valAddr | value: power(gogotypes.Int64Value())
 	LastValidatorPower collections.Map[[]byte, gogotypes.Int64Value]
+	// Params key: ParamsKeyPrefix | value: Params
+	Params collections.Item[types.Params]
 }
 
 // NewKeeper creates a new staking Keeper instance
@@ -205,6 +207,8 @@ func NewKeeper(
 			),
 			codec.CollValue[types.ValAddresses](cdc),
 		),
+		// key is: 113 (it's a direct prefix)
+		Params: collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
 	}
 
 	schema, err := sb.Build()

@@ -58,7 +58,7 @@ func (k Keeper) handleEquivocationEvidence(ctx context.Context, evidence *types.
 	// calculate the age of the evidence
 	infractionHeight := evidence.GetHeight()
 	infractionTime := evidence.GetTime()
-	ageDuration := sdkCtx.BlockHeader().Time.Sub(infractionTime)
+	ageDuration := sdkCtx.HeaderInfo().Time.Sub(infractionTime)
 	ageBlocks := sdkCtx.BlockHeader().Height - infractionHeight
 
 	// Reject evidence if the double-sign is too old. Evidence is considered stale

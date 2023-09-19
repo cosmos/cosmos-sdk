@@ -12,6 +12,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/collections"
+	"cosmossdk.io/core/header"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
@@ -153,7 +154,7 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 // Abonormal scenarios, where the message is created by an errors, are not tested here.
 func (suite *SimTestSuite) TestSimulateMsgUnjail() {
 	blockTime := time.Now().UTC()
-	ctx := suite.ctx.WithBlockTime(blockTime)
+	ctx := suite.ctx.WithHeaderInfo(header.Info{Time: blockTime})
 
 	// setup accounts[0] as validator0
 	validator0, err := getTestingValidator0(ctx, suite.stakingKeeper, suite.accounts)

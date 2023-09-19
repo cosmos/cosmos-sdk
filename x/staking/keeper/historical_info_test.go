@@ -4,6 +4,7 @@ import (
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
 	"cosmossdk.io/collections"
+	coreheader "cosmossdk.io/core/header"
 	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/x/staking/testutil"
@@ -57,7 +58,7 @@ func (s *KeeperTestSuite) TestTrackHistoricalInfo() {
 	// set historical entries in params to 5
 	params := stakingtypes.DefaultParams()
 	params.HistoricalEntries = 5
-	require.NoError(keeper.SetParams(ctx, params))
+	require.NoError(keeper.Params.Set(ctx, params))
 
 	// set historical info at 5, 4 which should be pruned
 	// and check that it has been stored
@@ -108,7 +109,7 @@ func (s *KeeperTestSuite) TestTrackHistoricalInfo() {
 		ChainID: "HelloChain",
 		Height:  10,
 	}
-	ctx = ctx.WithBlockHeader(header)
+	ctx = ctx.WithBlockHeader(header).WithHeaderInfo(coreheader.Info{ChainID: header.ChainID, Height: header.Height})
 
 	require.NoError(keeper.TrackHistoricalInfo(ctx))
 

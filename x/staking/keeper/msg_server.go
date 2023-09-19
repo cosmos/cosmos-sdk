@@ -106,7 +106,7 @@ func (k msgServer) CreateValidator(ctx context.Context, msg *types.MsgCreateVali
 
 	commission := types.NewCommissionWithTime(
 		msg.Commission.Rate, msg.Commission.MaxRate,
-		msg.Commission.MaxChangeRate, sdkCtx.BlockHeader().Time,
+		msg.Commission.MaxChangeRate, sdkCtx.HeaderInfo().Time,
 	)
 
 	validator, err = validator.SetInitialCommission(commission)
@@ -541,7 +541,7 @@ func (k msgServer) CancelUnbondingDelegation(ctx context.Context, msg *types.Msg
 	}
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	if unbondEntry.CompletionTime.Before(sdkCtx.BlockTime()) {
+	if unbondEntry.CompletionTime.Before(sdkCtx.HeaderInfo().Time) {
 		return nil, sdkerrors.ErrInvalidRequest.Wrap("unbonding delegation is already processed")
 	}
 
@@ -596,7 +596,7 @@ func (k msgServer) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams)
 	}
 
 	// store params
-	if err := k.SetParams(ctx, msg.Params); err != nil {
+	if err := k.Params.Set(ctx, msg.Params); err != nil {
 		return nil, err
 	}
 

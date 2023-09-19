@@ -1,7 +1,7 @@
 package keeper_test
 
 import (
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	"time"
 
 	"cosmossdk.io/collections"
 	coreheader "cosmossdk.io/core/header"
@@ -34,19 +34,23 @@ func (s *KeeperTestSuite) TestHistoricalInfo() {
 		validators[i] = testutil.NewValidator(s.T(), valAddr, PKs[i])
 	}
 
-	hi := stakingtypes.NewHistoricalInfo(ctx.BlockHeader(), stakingtypes.Validators{Validators: validators}, keeper.PowerReduction(ctx))
+	time := ctx.BlockTime()
+	hi := stakingtypes.HistoricalRecord{
+		Time:           &time,
+		ValidatorsHash: ctx.CometInfo().ValidatorsHash,
+		Apphash:        ctx.HeaderInfo().AppHash,
+	}
 	require.NoError(keeper.HistoricalInfo.Set(ctx, uint64(2), hi))
 
 	recv, err := keeper.HistoricalInfo.Get(ctx, uint64(2))
 	require.NoError(err, "HistoricalInfo found after set")
 	require.Equal(hi, recv, "HistoricalInfo not equal")
-	require.True(IsValSetSorted(recv.Valset, keeper.PowerReduction(ctx)), "HistoricalInfo validators is not sorted")
 
 	require.NoError(keeper.HistoricalInfo.Remove(ctx, uint64(2)))
 
 	recv, err = keeper.HistoricalInfo.Get(ctx, uint64(2))
 	require.ErrorIs(err, collections.ErrNotFound, "HistoricalInfo not found after delete")
-	require.Equal(stakingtypes.HistoricalInfo{}, recv, "HistoricalInfo is not empty")
+	require.Equal(stakingtypes.HistoricalRecord{}, recv, "HistoricalInfo is not empty")
 }
 
 func (s *KeeperTestSuite) TestTrackHistoricalInfo() {
@@ -58,24 +62,23 @@ func (s *KeeperTestSuite) TestTrackHistoricalInfo() {
 	// set historical entries in params to 5
 	params := stakingtypes.DefaultParams()
 	params.HistoricalEntries = 5
-	require.NoError(keeper.SetParams(ctx, params))
+	require.NoError(keeper.Params.Set(ctx, params))
 
 	// set historical info at 5, 4 which should be pruned
 	// and check that it has been stored
-	h4 := cmtproto.Header{
-		ChainID: "HelloChain",
-		Height:  4,
+	t := time.Now().Round(0).UTC()
+	hi4 := stakingtypes.HistoricalRecord{
+		Time:           &t,
+		ValidatorsHash: []byte("validatorHash"),
+		Apphash:        []byte("AppHash"),
 	}
-	h5 := cmtproto.Header{
-		ChainID: "HelloChain",
-		Height:  5,
+
+	hi5 := stakingtypes.HistoricalRecord{
+		Time:           &t,
+		ValidatorsHash: []byte("validatorHash"),
+		Apphash:        []byte("AppHash"),
 	}
-	valSet := []stakingtypes.Validator{
-		testutil.NewValidator(s.T(), addrVals[0], PKs[0]),
-		testutil.NewValidator(s.T(), addrVals[1], PKs[1]),
-	}
-	hi4 := stakingtypes.NewHistoricalInfo(h4, stakingtypes.Validators{Validators: valSet}, keeper.PowerReduction(ctx))
-	hi5 := stakingtypes.NewHistoricalInfo(h5, stakingtypes.Validators{Validators: valSet}, keeper.PowerReduction(ctx))
+
 	require.NoError(keeper.HistoricalInfo.Set(ctx, uint64(4), hi4))
 	require.NoError(keeper.HistoricalInfo.Set(ctx, uint64(5), hi5))
 	recv, err := keeper.HistoricalInfo.Get(ctx, uint64(4))
@@ -105,18 +108,19 @@ func (s *KeeperTestSuite) TestTrackHistoricalInfo() {
 	require.True(IsValSetSorted(vals, keeper.PowerReduction(ctx)))
 
 	// Set Header for BeginBlock context
-	header := cmtproto.Header{
+	ctx = ctx.WithHeaderInfo(coreheader.Info{
 		ChainID: "HelloChain",
 		Height:  10,
-	}
-	ctx = ctx.WithBlockHeader(header).WithHeaderInfo(coreheader.Info{ChainID: header.ChainID, Height: header.Height})
+		Time:    t,
+	})
 
 	require.NoError(keeper.TrackHistoricalInfo(ctx))
 
 	// Check HistoricalInfo at height 10 is persisted
-	expected := stakingtypes.HistoricalInfo{
-		Header: header,
-		Valset: vals,
+	expected := stakingtypes.HistoricalRecord{
+		Time:           &t,
+		ValidatorsHash: ctx.CometInfo().ValidatorsHash,
+		Apphash:        ctx.HeaderInfo().AppHash,
 	}
 	recv, err = keeper.HistoricalInfo.Get(ctx, uint64(10))
 	require.NoError(err, "GetHistoricalInfo failed after BeginBlock")
@@ -125,39 +129,42 @@ func (s *KeeperTestSuite) TestTrackHistoricalInfo() {
 	// Check HistoricalInfo at height 5, 4 is pruned
 	recv, err = keeper.HistoricalInfo.Get(ctx, uint64(4))
 	require.ErrorIs(err, collections.ErrNotFound, "GetHistoricalInfo did not prune earlier height")
-	require.Equal(stakingtypes.HistoricalInfo{}, recv, "GetHistoricalInfo at height 4 is not empty after prune")
+	require.Equal(stakingtypes.HistoricalRecord{}, recv, "GetHistoricalInfo at height 4 is not empty after prune")
 	recv, err = keeper.HistoricalInfo.Get(ctx, uint64(5))
 	require.ErrorIs(err, collections.ErrNotFound, "GetHistoricalInfo did not prune first prune height")
-	require.Equal(stakingtypes.HistoricalInfo{}, recv, "GetHistoricalInfo at height 5 is not empty after prune")
+	require.Equal(stakingtypes.HistoricalRecord{}, recv, "GetHistoricalInfo at height 5 is not empty after prune")
 }
 
 func (s *KeeperTestSuite) TestGetAllHistoricalInfo() {
 	ctx, keeper := s.ctx, s.stakingKeeper
 	require := s.Require()
 
-	_, addrVals := createValAddrs(50)
+	t := time.Now().Round(0).UTC()
 
-	valSet := []stakingtypes.Validator{
-		testutil.NewValidator(s.T(), addrVals[0], PKs[0]),
-		testutil.NewValidator(s.T(), addrVals[1], PKs[1]),
+	hist1 := stakingtypes.HistoricalRecord{
+		Time:           &t,
+		ValidatorsHash: nil,
+		Apphash:        nil,
+	}
+	hist2 := stakingtypes.HistoricalRecord{
+		Time:           &t,
+		ValidatorsHash: nil,
+		Apphash:        nil,
+	}
+	hist3 := stakingtypes.HistoricalRecord{
+		Time:           &t,
+		ValidatorsHash: nil,
+		Apphash:        nil,
 	}
 
-	header1 := cmtproto.Header{ChainID: "HelloChain", Height: 9}
-	header2 := cmtproto.Header{ChainID: "HelloChain", Height: 10}
-	header3 := cmtproto.Header{ChainID: "HelloChain", Height: 11}
-
-	hist1 := stakingtypes.HistoricalInfo{Header: header1, Valset: valSet}
-	hist2 := stakingtypes.HistoricalInfo{Header: header2, Valset: valSet}
-	hist3 := stakingtypes.HistoricalInfo{Header: header3, Valset: valSet}
-
-	expHistInfos := []stakingtypes.HistoricalInfo{hist1, hist2, hist3}
+	expHistInfos := []stakingtypes.HistoricalRecord{hist1, hist2, hist3}
 
 	for i, hi := range expHistInfos {
 		require.NoError(keeper.HistoricalInfo.Set(ctx, uint64(int64(9+i)), hi))
 	}
 
-	var infos []stakingtypes.HistoricalInfo
-	err := keeper.HistoricalInfo.Walk(ctx, nil, func(key uint64, info stakingtypes.HistoricalInfo) (stop bool, err error) {
+	var infos []stakingtypes.HistoricalRecord
+	err := keeper.HistoricalInfo.Walk(ctx, nil, func(key uint64, info stakingtypes.HistoricalRecord) (stop bool, err error) {
 		infos = append(infos, info)
 		return false, nil
 	})

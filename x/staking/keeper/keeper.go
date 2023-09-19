@@ -25,6 +25,22 @@ var _ types.ValidatorSet = Keeper{}
 // Implements DelegationSet interface
 var _ types.DelegationSet = Keeper{}
 
+func HistoricalInfoCodec(cdc codec.BinaryCodec) collcodec.ValueCodec[types.HistoricalRecord] {
+	return collcodec.NewAltValueCodec(codec.CollValue[types.HistoricalRecord](cdc), func(b []byte) (types.HistoricalRecord, error) {
+		historicalinfo := types.HistoricalInfo{} //nolint: staticcheck // HistoricalInfo is deprecated
+		err := historicalinfo.Unmarshal(b)
+		if err != nil {
+			return types.HistoricalRecord{}, err
+		}
+
+		return types.HistoricalRecord{
+			Apphash:        historicalinfo.Header.AppHash,
+			Time:           &historicalinfo.Header.Time,
+			ValidatorsHash: historicalinfo.Header.NextValidatorsHash,
+		}, nil
+	})
+}
+
 // Keeper of the x/staking store
 type Keeper struct {
 	storeService          storetypes.KVStoreService
@@ -37,8 +53,9 @@ type Keeper struct {
 	consensusAddressCodec addresscodec.Codec
 
 	Schema collections.Schema
+
 	// HistoricalInfo key: Height | value: HistoricalInfo
-	HistoricalInfo collections.Map[uint64, types.HistoricalInfo]
+	HistoricalInfo collections.Map[uint64, types.HistoricalRecord]
 	// LastTotalPower value: LastTotalPower
 	LastTotalPower collections.Item[math.Int]
 	// ValidatorUpdates value: ValidatorUpdates
@@ -74,6 +91,8 @@ type Keeper struct {
 	ValidatorQueue collections.Map[collections.Triple[uint64, time.Time, uint64], types.ValAddresses]
 	// LastValidatorPower key: valAddr | value: power(gogotypes.Int64Value())
 	LastValidatorPower collections.Map[[]byte, gogotypes.Int64Value]
+	// Params key: ParamsKeyPrefix | value: Params
+	Params collections.Item[types.Params]
 }
 
 // NewKeeper creates a new staking Keeper instance
@@ -115,7 +134,7 @@ func NewKeeper(
 		validatorAddressCodec: validatorAddressCodec,
 		consensusAddressCodec: consensusAddressCodec,
 		LastTotalPower:        collections.NewItem(sb, types.LastTotalPowerKey, "last_total_power", sdk.IntValue),
-		HistoricalInfo:        collections.NewMap(sb, types.HistoricalInfoKey, "historical_info", collections.Uint64Key, codec.CollValue[types.HistoricalInfo](cdc)),
+		HistoricalInfo:        collections.NewMap(sb, types.HistoricalInfoKey, "historical_info", collections.Uint64Key, HistoricalInfoCodec(cdc)),
 		ValidatorUpdates:      collections.NewItem(sb, types.ValidatorUpdatesKey, "validator_updates", codec.CollValue[types.ValidatorUpdates](cdc)),
 		Delegations: collections.NewMap(
 			sb, types.DelegationKey, "delegations",
@@ -205,6 +224,8 @@ func NewKeeper(
 			),
 			codec.CollValue[types.ValAddresses](cdc),
 		),
+		// key is: 113 (it's a direct prefix)
+		Params: collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
 	}
 
 	schema, err := sb.Build()

@@ -154,7 +154,7 @@ func initFixture(tb testing.TB) *fixture {
 	assert.NilError(tb, slashingKeeper.Params.Set(sdkCtx, testutil.TestParams()))
 
 	// set default staking params
-	assert.NilError(tb, stakingKeeper.SetParams(sdkCtx, stakingtypes.DefaultParams()))
+	assert.NilError(tb, stakingKeeper.Params.Set(sdkCtx, stakingtypes.DefaultParams()))
 
 	return &fixture{
 		app:            integrationApp,
@@ -175,7 +175,7 @@ func TestHandleDoubleSign(t *testing.T) {
 	populateValidators(t, f)
 
 	power := int64(100)
-	stakingParams, err := f.stakingKeeper.GetParams(ctx)
+	stakingParams, err := f.stakingKeeper.Params.Get(ctx)
 	assert.NilError(t, err)
 	operatorAddr, valpubkey := valAddresses[0], pubkeys[0]
 	tstaking := stakingtestutil.NewHelper(t, ctx, f.stakingKeeper)
@@ -267,7 +267,7 @@ func TestHandleDoubleSign_TooOld(t *testing.T) {
 	populateValidators(t, f)
 
 	power := int64(100)
-	stakingParams, err := f.stakingKeeper.GetParams(ctx)
+	stakingParams, err := f.stakingKeeper.Params.Get(ctx)
 	assert.NilError(t, err)
 	operatorAddr, valpubkey := valAddresses[0], pubkeys[0]
 

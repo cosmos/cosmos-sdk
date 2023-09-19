@@ -75,7 +75,7 @@ func TestMigrateVestingAccounts(t *testing.T) {
 
 	ctx = app.BaseApp.NewContext(false)
 	ctx = ctx.WithHeaderInfo(header.Info{Time: time.Now()})
-	err = stakingKeeper.SetParams(ctx, stakingtypes.DefaultParams())
+	err = stakingKeeper.Params.Set(ctx, stakingtypes.DefaultParams())
 	require.NoError(t, err)
 	lastAccNum := uint64(1000)
 	createBaseAccount := func(addr sdk.AccAddress) *authtypes.BaseAccount {

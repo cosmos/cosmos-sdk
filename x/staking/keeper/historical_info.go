@@ -24,7 +24,7 @@ func (k Keeper) TrackHistoricalInfo(ctx context.Context) error {
 	// Since the entries to be deleted are always in a continuous range, we can iterate
 	// over the historical entries starting from the most recent version to be pruned
 	// and then return at the first empty entry.
-	for i := sdkCtx.BlockHeight() - int64(entryNum); i >= 0; i-- {
+	for i := sdkCtx.HeaderInfo().Height - int64(entryNum); i >= 0; i-- {
 		has, err := k.HistoricalInfo.Has(ctx, uint64(i))
 		if err != nil {
 			return err
@@ -42,14 +42,14 @@ func (k Keeper) TrackHistoricalInfo(ctx context.Context) error {
 		return nil
 	}
 
-	// Create HistoricalInfo struct
-	lastVals, err := k.GetLastValidators(ctx)
-	if err != nil {
-		return err
+	time := sdkCtx.HeaderInfo().Time
+
+	historicalEntry := types.HistoricalRecord{
+		Time:           &time,
+		ValidatorsHash: sdkCtx.CometInfo().ValidatorsHash,
+		Apphash:        sdkCtx.HeaderInfo().AppHash,
 	}
 
-	historicalEntry := types.NewHistoricalInfo(sdkCtx.BlockHeader(), types.Validators{Validators: lastVals, ValidatorCodec: k.validatorAddressCodec}, k.PowerReduction(ctx))
-
 	// Set latest HistoricalInfo at current height
-	return k.HistoricalInfo.Set(ctx, uint64(sdkCtx.BlockHeight()), historicalEntry)
+	return k.HistoricalInfo.Set(ctx, uint64(sdkCtx.HeaderInfo().Height), historicalEntry)
 }

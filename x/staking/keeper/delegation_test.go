@@ -500,7 +500,7 @@ func (s *KeeperTestSuite) TestUndelegateFromUnbondingValidator() {
 	validator, err = keeper.GetValidator(ctx, addrVals[0])
 	require.NoError(err)
 	require.Equal(blockHeight, validator.UnbondingHeight)
-	params, err := keeper.GetParams(ctx)
+	params, err := keeper.Params.Get(ctx)
 	require.NoError(err)
 	require.True(blockTime.Add(params.UnbondingTime).Equal(validator.UnbondingTime))
 
@@ -571,7 +571,7 @@ func (s *KeeperTestSuite) TestUndelegateFromUnbondedValidator() {
 	validator, err = keeper.GetValidator(ctx, addrVals[0])
 	require.NoError(err)
 	require.Equal(ctx.BlockHeight(), validator.UnbondingHeight)
-	params, err := keeper.GetParams(ctx)
+	params, err := keeper.Params.Get(ctx)
 	require.NoError(err)
 	require.True(ctx.HeaderInfo().Time.Add(params.UnbondingTime).Equal(validator.UnbondingTime))
 
@@ -958,7 +958,7 @@ func (s *KeeperTestSuite) TestRedelegateFromUnbondingValidator() {
 	validator, err = keeper.GetValidator(ctx, addrVals[0])
 	require.NoError(err)
 	require.Equal(blockHeight, validator.UnbondingHeight)
-	params, err := keeper.GetParams(ctx)
+	params, err := keeper.Params.Get(ctx)
 	require.NoError(err)
 	require.True(blockTime.Add(params.UnbondingTime).Equal(validator.UnbondingTime))
 
@@ -1036,7 +1036,7 @@ func (s *KeeperTestSuite) TestRedelegateFromUnbondedValidator() {
 	validator, err = keeper.GetValidator(ctx, addrVals[0])
 	require.NoError(err)
 	require.Equal(ctx.HeaderInfo().Height, validator.UnbondingHeight)
-	params, err := keeper.GetParams(ctx)
+	params, err := keeper.Params.Get(ctx)
 	require.NoError(err)
 	require.True(ctx.HeaderInfo().Time.Add(params.UnbondingTime).Equal(validator.UnbondingTime))
 

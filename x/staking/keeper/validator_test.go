@@ -285,10 +285,10 @@ func (s *KeeperTestSuite) TestUpdateValidatorCommission() {
 	require := s.Require()
 
 	// Set MinCommissionRate to 0.05
-	params, err := keeper.GetParams(ctx)
+	params, err := keeper.Params.Get(ctx)
 	require.NoError(err)
 	params.MinCommissionRate = math.LegacyNewDecWithPrec(5, 2)
-	require.NoError(keeper.SetParams(ctx, params))
+	require.NoError(keeper.Params.Set(ctx, params))
 
 	commission1 := stakingtypes.NewCommissionWithTime(
 		math.LegacyNewDecWithPrec(1, 1), math.LegacyNewDecWithPrec(3, 1),

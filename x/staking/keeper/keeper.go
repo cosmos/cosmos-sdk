@@ -34,9 +34,9 @@ func HistoricalInfoCodec(cdc codec.BinaryCodec) collcodec.ValueCodec[types.Histo
 		}
 
 		return types.HistoricalRecord{
-			Apphash:       historicalinfo.Header.AppHash,
-			Time:          &historicalinfo.Header.Time,
-			ValidatorHash: historicalinfo.Header.NextValidatorsHash,
+			Apphash:        historicalinfo.Header.AppHash,
+			Time:           &historicalinfo.Header.Time,
+			ValidatorsHash: historicalinfo.Header.NextValidatorsHash,
 		}, nil
 	})
 }

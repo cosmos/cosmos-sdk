@@ -45,9 +45,9 @@ func (k Keeper) TrackHistoricalInfo(ctx context.Context) error {
 	time := sdkCtx.HeaderInfo().Time
 
 	historicalEntry := types.HistoricalRecord{
-		Time:          &time,
-		ValidatorHash: sdkCtx.CometInfo().ValidatorsHash,
-		Apphash:       sdkCtx.HeaderInfo().AppHash,
+		Time:           &time,
+		ValidatorsHash: sdkCtx.CometInfo().ValidatorsHash,
+		Apphash:        sdkCtx.HeaderInfo().AppHash,
 	}
 
 	// Set latest HistoricalInfo at current height

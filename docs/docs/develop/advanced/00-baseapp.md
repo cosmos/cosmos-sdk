@@ -445,7 +445,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/baseapp/abci.go#L623
 
 #### PreBlock 
 
-* Run the application's [`preBlocker()`](../beginner/00-app-anatomy.md#preblocker), which mainly runs the [`PreBlocker()`](../building-modules/17-preblock.md#preblock) method of each of the modules.
+* Run the application's [`preBlocker()`](../beginner/00-app-anatomy.md#preblocker), which mainly runs the [`PreBlocker()`](../../build/building-modules/17-preblock.md#preblock) method of each of the modules.
 
 #### BeginBlock 
 

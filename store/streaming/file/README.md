@@ -1,4 +1,5 @@
 # File Streaming Service
+
 This pkg contains an implementation of the [StreamingService](../../../baseapp/streaming.go) that writes
 the data stream out to files on the local filesystem. This process is performed synchronously with the message processing
 of the state machine.
@@ -23,42 +24,68 @@ The `file.StreamingService` is configured from within an App using the `AppOptio
 We turn the service on by adding its name, "file", to `store.streamers`- the list of streaming services for this App to employ.
 
 In `streamers.file` we include three configuration parameters for the file streaming service:
-1. `streamers.x.keys` contains the list of `StoreKey` names for the KVStores to expose using this service. 
-In order to expose *all* KVStores, we can include `*` in this list. An empty list is equivalent to turning the service off.
+
+1. `streamers.file.keys` contains the list of `StoreKey` names for the KVStores to expose using this service.
+    In order to expose *all* KVStores, we can include `*` in this list. An empty list is equivalent to turning the service off.
 2. `streamers.file.write_dir` contains the path to the directory to write the files to.
 3. `streamers.file.prefix` contains an optional prefix to prepend to the output files to prevent potential collisions
-with other App `StreamingService` output files.
+    with other App `StreamingService` output files.
+4. `streamers.file.output-metadata` specifies if output the metadata file, otherwise only data file is outputted.
+5. `streamers.file.stop-node-on-error` specifies if propagate the error to consensus state machine, it's nesserary for data integrity when node restarts.
+6. `streamers.file.fsync` specifies if call fsync after writing the files, it's nesserary for data integrity when system crash, but slows down the commit time.
 
-##### Encoding
+### Encoding
 
-For each pair of `BeginBlock` requests and responses, a file is created and named `block-{N}-begin`, where N is the block number.
-At the head of this file the length-prefixed protobuf encoded `BeginBlock` request is written.
-At the tail of this file the length-prefixed protobuf encoded `BeginBlock` response is written.
-In between these two encoded messages, the state changes that occurred due to the `BeginBlock` request are written chronologically as
-a series of length-prefixed protobuf encoded `StoreKVPair`s representing `Set` and `Delete` operations within the KVStores the service
-is configured to listen to.
+For each block, two files are created and names `block-{N}-meta` and `block-{N}-data`, where `N` is the block number.
 
-For each pair of `DeliverTx` requests and responses, a file is created and named `block-{N}-tx-{M}` where N is the block number and M
-is the tx number in the block (i.e. 0, 1, 2...).
-At the head of this file the length-prefixed protobuf encoded `DeliverTx` request is written.
-At the tail of this file the length-prefixed protobuf encoded `DeliverTx` response is written.
-In between these two encoded messages, the state changes that occurred due to the `DeliverTx` request are written chronologically as
-a series of length-prefixed protobuf encoded `StoreKVPair`s representing `Set` and `Delete` operations within the KVStores the service
-is configured to listen to.
+The meta file contains the protobuf encoded message `BlockMetadata` which contains the abci event requests and responses of the block:
 
-For each pair of `EndBlock` requests and responses, a file is created and named `block-{N}-end`, where N is the block number.
-At the head of this file the length-prefixed protobuf encoded `EndBlock` request is written.
-At the tail of this file the length-prefixed protobuf encoded `EndBlock` response is written.
-In between these two encoded messages, the state changes that occurred due to the `EndBlock` request are written chronologically as
-a series of length-prefixed protobuf encoded `StoreKVPair`s representing `Set` and `Delete` operations within the KVStores the service
-is configured to listen to.
+```protobuf
+message BlockMetadata {
+    message DeliverTx {
+        tendermint.abci.RequestDeliverTx request = 1;
+        tendermint.abci.ResponseDeliverTx response = 2;
+    }
+    tendermint.abci.RequestBeginBlock request_begin_block = 1;
+    tendermint.abci.ResponseBeginBlock response_begin_block = 2;
+    repeated DeliverTx deliver_txs = 3;
+    tendermint.abci.RequestEndBlock request_end_block = 4;
+    tendermint.abci.ResponseEndBlock response_end_block = 5;
+    tendermint.abci.ResponseCommit response_commit = 6;
+}
+```
 
-##### Decoding
+The data file contains a series of length-prefixed protobuf encoded `StoreKVPair`s representing `Set` and `Delete` operations within the KVStores during the execution of block.
 
-To decode the files written in the above format we read all the bytes from a given file into memory and segment them into proto
-messages based on the length-prefixing of each message. Once segmented, it is known that the first message is the ABCI request,
-the last message is the ABCI response, and that every message in between is a `StoreKVPair`. This enables us to decode each segment into
-the appropriate message type.
+Both meta and data files are prefixed with the length of the data content for consumer to detect completeness of the file, the length is encoded as 8 bytes with big endianness.
 
-The type of ABCI req/res, the block height, and the transaction index (where relevant) is known
-from the file name, and the KVStore each `StoreKVPair` originates from is known since the `StoreKey` is included as a field in the proto message.
+The files are written at abci commit event, by default the error happens will be propagated to interuppted consensus state machine, but fsync is not called, it'll have good performance but have the risk of lossing data in face of rare event of system crash.
+
+### Decoding
+
+The pseudo-code for decoding is like this:
+
+```python
+def decode_meta_file(file):
+  bz = file.read(8)
+  if len(bz) < 8:
+    raise "incomplete file exception"
+  size = int.from_bytes(bz, 'big')
+
+  if file.size != size + 8:
+    raise "incomplete file exception"
+
+  return decode_protobuf_message(BlockMetadata, file)
+
+def decode_data_file(file):
+  bz = file.read(8)
+  if len(bz) < 8:
+    raise "incomplete file exception"
+  size = int.from_bytes(bz, 'big')
+
+  if file.size != size + 8:
+    raise "incomplete file exception"
+
+  while not file.eof():
+    yield decode_length_prefixed_protobuf_message(StoreKVStore, file)
+```

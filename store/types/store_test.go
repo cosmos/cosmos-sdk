@@ -90,3 +90,120 @@ func TestTransientStoreKey(t *testing.T) {
 	require.Equal(t, key.name, key.Name())
 	require.Equal(t, fmt.Sprintf("TransientStoreKey{%p, test}", key), key.String())
 }
+
+func TestTraceContext_Clone(t *testing.T) {
+	tests := []struct {
+		name string
+		tc   TraceContext
+		want TraceContext
+	}{
+		{
+			"nil TraceContext yields empty TraceContext",
+			nil,
+			TraceContext{},
+		},
+		{
+			"non-nil TraceContext yields equal TraceContext",
+			TraceContext{
+				"value": 42,
+			},
+			TraceContext{
+				"value": 42,
+			},
+		},
+		{
+			"non-nil TraceContext yields equal TraceContext, for more than one key",
+			TraceContext{
+				"value":   42,
+				"another": 24,
+				"weird":   "string",
+			},
+			TraceContext{
+				"value":   42,
+				"another": 24,
+				"weird":   "string",
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			require.Equal(t, tt.want, tt.tc.Clone())
+		})
+	}
+}
+
+func TestTraceContext_Clone_is_deep(t *testing.T) {
+	original := TraceContext{
+		"value":   42,
+		"another": 24,
+		"weird":   "string",
+	}
+
+	clone := original.Clone()
+
+	clone["other"] = true
+
+	require.NotEqual(t, original, clone)
+}
+
+func TestTraceContext_Merge(t *testing.T) {
+	tests := []struct {
+		name  string
+		tc    TraceContext
+		other TraceContext
+		want  TraceContext
+	}{
+		{
+			"tc is nil, other is empty, yields an empty TraceContext",
+			nil,
+			TraceContext{},
+			TraceContext{},
+		},
+		{
+			"tc is nil, other is nil, yields an empty TraceContext",
+			nil,
+			nil,
+			TraceContext{},
+		},
+		{
+			"tc is not nil, other is nil, yields tc",
+			TraceContext{
+				"data": 42,
+			},
+			nil,
+			TraceContext{
+				"data": 42,
+			},
+		},
+		{
+			"tc is not nil, other is not nil, yields tc + other",
+			TraceContext{
+				"data": 42,
+			},
+			TraceContext{
+				"data2": 42,
+			},
+			TraceContext{
+				"data":  42,
+				"data2": 42,
+			},
+		},
+		{
+			"tc is not nil, other is not nil, other updates value in tc, yields tc updated with value from other",
+			TraceContext{
+				"data": 42,
+			},
+			TraceContext{
+				"data": 24,
+			},
+			TraceContext{
+				"data": 24,
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			require.Equal(t, tt.want, tt.tc.Merge(tt.other))
+		})
+	}
+}

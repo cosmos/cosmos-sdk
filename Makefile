@@ -132,6 +132,7 @@ mocks: $(MOCKS_DIR)
 	$(mockgen_cmd) -source=client/account_retriever.go -package mocks -destination tests/mocks/account_retriever.go
 	$(mockgen_cmd) -package mocks -destination tests/mocks/tendermint_tm_db_DB.go github.com/tendermint/tm-db DB
 	$(mockgen_cmd) -source=types/module/module.go -package mocks -destination tests/mocks/types_module_module.go
+	$(mockgen_cmd) -source=types/module/mock_appmodule_test.go -package mocks -destination tests/mocks/mock_appmodule.go
 	$(mockgen_cmd) -source=types/invariant.go -package mocks -destination tests/mocks/types_invariant.go
 	$(mockgen_cmd) -source=types/router.go -package mocks -destination tests/mocks/types_router.go
 	$(mockgen_cmd) -package mocks -destination tests/mocks/grpc_server.go github.com/gogo/protobuf/grpc Server
@@ -400,7 +401,7 @@ proto-check-breaking:
 	@$(DOCKER_BUF) breaking --against $(PR_TARGET_REPO)#branch=$(PR_TARGET_BRANCH)
 
 
-TM_URL              = https://raw.githubusercontent.com/agoric-labs/tendermint/v0.34.23-alpha.agoric.2/proto/tendermint
+TM_URL              = https://raw.githubusercontent.com/agoric-labs/cometbft/v0.34.27-alpha.agoric.2/proto/tendermint
 GOGO_PROTO_URL      = https://raw.githubusercontent.com/regen-network/protobuf/cosmos
 COSMOS_PROTO_URL    = https://raw.githubusercontent.com/regen-network/cosmos-proto/master
 CONFIO_URL          = https://raw.githubusercontent.com/confio/ics23/v0.7.0

@@ -19,6 +19,8 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/staking/types";
 // recent HistoricalInfo
 // (`n` is set by the staking module's `historical_entries` parameter).
 message HistoricalInfo {
+  option deprecated = true;
+
   tendermint.types.Header header = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
   repeated Validator      valset = 2 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 }

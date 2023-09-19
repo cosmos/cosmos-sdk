@@ -35,7 +35,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 # Changelog
 
-## [v0.46.16-alpha.agoric.1] - 2023-09-15
+## [Unreleased]
 
 ### Improvements
 

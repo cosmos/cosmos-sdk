@@ -5,7 +5,7 @@ go 1.21
 require (
 	cosmossdk.io/api v0.7.1
 	cosmossdk.io/collections v0.4.0
-	cosmossdk.io/core v0.11.0
+	cosmossdk.io/core v0.12.0
 	github.com/cosmos/gogoproto v1.4.11
 	github.com/stretchr/testify v1.8.4
 	google.golang.org/grpc v1.58.1

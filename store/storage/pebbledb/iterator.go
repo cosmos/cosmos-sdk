@@ -107,6 +107,11 @@ func (itr *iterator) Next() bool {
 			itr.valid = false
 			return itr.valid
 		}
+		if !bytes.HasPrefix(nextKey, itr.prefix) {
+			// the next key must have itr.prefix as the prefix
+			itr.valid = false
+			return itr.valid
+		}
 
 		// Move the iterator to the closest version to the desired version, so we
 		// append the current iterator key to the prefix and seek to that key.
@@ -237,7 +242,13 @@ func (itr *iterator) DebugRawIterate() {
 			if !ok {
 				panic(fmt.Sprintf("invalid PebbleDB MVCC key: %s", itr.source.Key()))
 			}
-			valid = itr.source.SeekLT(MVCCEncode(nextKey, itr.version+1))
+
+			// the next key must have itr.prefix as the prefix
+			if !bytes.HasPrefix(nextKey, itr.prefix) {
+				valid = false
+			} else {
+				valid = itr.source.SeekLT(MVCCEncode(nextKey, itr.version+1))
+			}
 		} else {
 			valid = false
 		}

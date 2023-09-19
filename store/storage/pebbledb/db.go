@@ -159,6 +159,10 @@ func (db *Database) NewBatch(version uint64) (store.Batch, error) {
 	return NewBatch(db.storage, version)
 }
 
+func (db *Database) Prune(version uint64) error {
+	panic("not implemented!")
+}
+
 func (db *Database) NewIterator(storeKey string, version uint64, start, end []byte) (store.Iterator, error) {
 	if (start != nil && len(start) == 0) || (end != nil && len(end) == 0) {
 		return nil, store.ErrKeyEmpty

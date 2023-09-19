@@ -661,7 +661,7 @@ func TestGRPCHistoricalInfo(t *testing.T) {
 	f := initDeterministicFixture(t)
 
 	rapid.Check(t, func(rt *rapid.T) {
-		historical := stakingtypes.Historical{}
+		historical := stakingtypes.HistoricalRecord{}
 
 		height := rapid.Int64Min(0).Draw(rt, "height")
 
@@ -680,7 +680,7 @@ func TestGRPCHistoricalInfo(t *testing.T) {
 
 	f = initDeterministicFixture(t) // reset
 
-	historicalInfo := stakingtypes.Historical{}
+	historicalInfo := stakingtypes.HistoricalRecord{}
 
 	height := int64(127)
 

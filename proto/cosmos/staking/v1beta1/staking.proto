@@ -27,7 +27,7 @@ message HistoricalInfo {
 // It is stored as part of staking module's state, which persists the `n` most
 // recent HistoricalInfo
 // (`n` is set by the staking module's `historical_entries` parameter).
-message Historical {
+message HistoricalRecord {
   bytes                     apphash        = 1;
   google.protobuf.Timestamp time           = 2 [(gogoproto.stdtime) = true];
   bytes                     validator_hash = 3;

@@ -35,7 +35,7 @@ func (s *KeeperTestSuite) TestHistoricalInfo() {
 	}
 
 	time := ctx.BlockTime()
-	hi := stakingtypes.Historical{
+	hi := stakingtypes.HistoricalRecord{
 		Time:          &time,
 		ValidatorHash: ctx.CometInfo().ValidatorsHash,
 		Apphash:       ctx.HeaderInfo().AppHash,
@@ -50,7 +50,7 @@ func (s *KeeperTestSuite) TestHistoricalInfo() {
 
 	recv, err = keeper.HistoricalInfo.Get(ctx, uint64(2))
 	require.ErrorIs(err, collections.ErrNotFound, "HistoricalInfo not found after delete")
-	require.Equal(stakingtypes.Historical{}, recv, "HistoricalInfo is not empty")
+	require.Equal(stakingtypes.HistoricalRecord{}, recv, "HistoricalInfo is not empty")
 }
 
 func (s *KeeperTestSuite) TestTrackHistoricalInfo() {
@@ -67,13 +67,13 @@ func (s *KeeperTestSuite) TestTrackHistoricalInfo() {
 	// set historical info at 5, 4 which should be pruned
 	// and check that it has been stored
 	t := time.Now().Round(0).UTC()
-	hi4 := stakingtypes.Historical{
+	hi4 := stakingtypes.HistoricalRecord{
 		Time:          &t,
 		ValidatorHash: []byte("validatorHash"),
 		Apphash:       []byte("AppHash"),
 	}
 
-	hi5 := stakingtypes.Historical{
+	hi5 := stakingtypes.HistoricalRecord{
 		Time:          &t,
 		ValidatorHash: []byte("validatorHash"),
 		Apphash:       []byte("AppHash"),
@@ -117,7 +117,7 @@ func (s *KeeperTestSuite) TestTrackHistoricalInfo() {
 	require.NoError(keeper.TrackHistoricalInfo(ctx))
 
 	// Check HistoricalInfo at height 10 is persisted
-	expected := stakingtypes.Historical{
+	expected := stakingtypes.HistoricalRecord{
 		Time:          &t,
 		ValidatorHash: ctx.CometInfo().ValidatorsHash,
 		Apphash:       ctx.HeaderInfo().AppHash,
@@ -129,10 +129,10 @@ func (s *KeeperTestSuite) TestTrackHistoricalInfo() {
 	// Check HistoricalInfo at height 5, 4 is pruned
 	recv, err = keeper.HistoricalInfo.Get(ctx, uint64(4))
 	require.ErrorIs(err, collections.ErrNotFound, "GetHistoricalInfo did not prune earlier height")
-	require.Equal(stakingtypes.Historical{}, recv, "GetHistoricalInfo at height 4 is not empty after prune")
+	require.Equal(stakingtypes.HistoricalRecord{}, recv, "GetHistoricalInfo at height 4 is not empty after prune")
 	recv, err = keeper.HistoricalInfo.Get(ctx, uint64(5))
 	require.ErrorIs(err, collections.ErrNotFound, "GetHistoricalInfo did not prune first prune height")
-	require.Equal(stakingtypes.Historical{}, recv, "GetHistoricalInfo at height 5 is not empty after prune")
+	require.Equal(stakingtypes.HistoricalRecord{}, recv, "GetHistoricalInfo at height 5 is not empty after prune")
 }
 
 func (s *KeeperTestSuite) TestGetAllHistoricalInfo() {
@@ -141,30 +141,30 @@ func (s *KeeperTestSuite) TestGetAllHistoricalInfo() {
 
 	t := time.Now().Round(0).UTC()
 
-	hist1 := stakingtypes.Historical{
+	hist1 := stakingtypes.HistoricalRecord{
 		Time:          &t,
 		ValidatorHash: nil,
 		Apphash:       nil,
 	}
-	hist2 := stakingtypes.Historical{
+	hist2 := stakingtypes.HistoricalRecord{
 		Time:          &t,
 		ValidatorHash: nil,
 		Apphash:       nil,
 	}
-	hist3 := stakingtypes.Historical{
+	hist3 := stakingtypes.HistoricalRecord{
 		Time:          &t,
 		ValidatorHash: nil,
 		Apphash:       nil,
 	}
 
-	expHistInfos := []stakingtypes.Historical{hist1, hist2, hist3}
+	expHistInfos := []stakingtypes.HistoricalRecord{hist1, hist2, hist3}
 
 	for i, hi := range expHistInfos {
 		require.NoError(keeper.HistoricalInfo.Set(ctx, uint64(int64(9+i)), hi))
 	}
 
-	var infos []stakingtypes.Historical
-	err := keeper.HistoricalInfo.Walk(ctx, nil, func(key uint64, info stakingtypes.Historical) (stop bool, err error) {
+	var infos []stakingtypes.HistoricalRecord
+	err := keeper.HistoricalInfo.Walk(ctx, nil, func(key uint64, info stakingtypes.HistoricalRecord) (stop bool, err error) {
 		infos = append(infos, info)
 		return false, nil
 	})

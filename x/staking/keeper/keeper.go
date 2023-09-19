@@ -25,15 +25,15 @@ var _ types.ValidatorSet = Keeper{}
 // Implements DelegationSet interface
 var _ types.DelegationSet = Keeper{}
 
-func HistoricalInfoCodec(cdc codec.BinaryCodec) collcodec.ValueCodec[types.Historical] {
-	return collcodec.NewAltValueCodec(codec.CollValue[types.Historical](cdc), func(b []byte) (types.Historical, error) {
+func HistoricalInfoCodec(cdc codec.BinaryCodec) collcodec.ValueCodec[types.HistoricalRecord] {
+	return collcodec.NewAltValueCodec(codec.CollValue[types.HistoricalRecord](cdc), func(b []byte) (types.HistoricalRecord, error) {
 		historicalinfo := types.HistoricalInfo{}
 		err := historicalinfo.Unmarshal(b)
 		if err != nil {
-			return types.Historical{}, err
+			return types.HistoricalRecord{}, err
 		}
 
-		return types.Historical{
+		return types.HistoricalRecord{
 			Apphash:       historicalinfo.Header.AppHash,
 			Time:          &historicalinfo.Header.Time,
 			ValidatorHash: historicalinfo.Header.NextValidatorsHash,
@@ -55,7 +55,7 @@ type Keeper struct {
 	Schema collections.Schema
 
 	// HistoricalInfo key: Height | value: HistoricalInfo
-	HistoricalInfo collections.Map[uint64, types.Historical]
+	HistoricalInfo collections.Map[uint64, types.HistoricalRecord]
 	// LastTotalPower value: LastTotalPower
 	LastTotalPower collections.Item[math.Int]
 	// ValidatorUpdates value: ValidatorUpdates

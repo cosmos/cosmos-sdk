@@ -8,11 +8,14 @@ import (
 
 	"google.golang.org/protobuf/proto"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/x/accounts/internal/prefixstore"
 )
 
 var errUnauthorized = errors.New("unauthorized")
+
+var AccountStatePrefix = collections.NewPrefix(255)
 
 type contextKey struct{}
 
@@ -41,7 +44,7 @@ func MakeAccountContext(
 	moduleQuery func(ctx context.Context, msg proto.Message) (proto.Message, error),
 ) context.Context {
 	return context.WithValue(ctx, contextKey{}, contextValue{
-		store:             prefixstore.New(storeSvc.OpenKVStore(ctx), accountAddr),
+		store:             prefixstore.New(storeSvc.OpenKVStore(ctx), append(AccountStatePrefix, accountAddr...)),
 		sender:            sender,
 		whoami:            accountAddr,
 		originalContext:   ctx,

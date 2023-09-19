@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package cosmos.accounts.v1;
+
+option go_package = "cosmossdk.io/x/accounts/v1";
+
+// GenesisState defines the accounts' module's genesis state.
+message GenesisState {
+  uint64                  account_number = 1;
+  repeated GenesisAccount accounts       = 2;
+  message                 GenesisAccount {
+    string          address      = 1;
+    string          account_type = 2;
+    repeated KVPair state        = 3;
+    message         KVPair {
+      bytes key   = 1;
+      bytes value = 2;
+    }
+  }
+}

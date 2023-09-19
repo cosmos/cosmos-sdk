@@ -12,6 +12,5 @@ rm -rf docs/user/run-node/04-rosetta.md
 rm -rf docs/build/architecture
 rm -rf docs/build/spec
 rm -rf docs/build/rfc
-rm -rf  docs/develop/advanced/17-autocli.md
+rm -rf docs/develop/advanced/17-autocli.md
 rm -rf docs/build/migrations/02-upgrading.md
-rm -rf versioned_docs versioned_sidebars versions.json

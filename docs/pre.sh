@@ -36,7 +36,7 @@ cp -r ./architecture ./build
 cp -r ./spec ./build
 
 ## Add rfc documentation
-cp -r ./rfc ./build/rfc
+cp -r ./rfc ./build
 
 ## Add SDK migration documentation
 cp -r ../UPGRADING.md ./build/migrations/02-upgrading.md

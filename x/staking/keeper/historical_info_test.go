@@ -36,9 +36,9 @@ func (s *KeeperTestSuite) TestHistoricalInfo() {
 
 	time := ctx.BlockTime()
 	hi := stakingtypes.HistoricalRecord{
-		Time:          &time,
-		ValidatorHash: ctx.CometInfo().ValidatorsHash,
-		Apphash:       ctx.HeaderInfo().AppHash,
+		Time:           &time,
+		ValidatorsHash: ctx.CometInfo().ValidatorsHash,
+		Apphash:        ctx.HeaderInfo().AppHash,
 	}
 	require.NoError(keeper.HistoricalInfo.Set(ctx, uint64(2), hi))
 
@@ -68,15 +68,15 @@ func (s *KeeperTestSuite) TestTrackHistoricalInfo() {
 	// and check that it has been stored
 	t := time.Now().Round(0).UTC()
 	hi4 := stakingtypes.HistoricalRecord{
-		Time:          &t,
-		ValidatorHash: []byte("validatorHash"),
-		Apphash:       []byte("AppHash"),
+		Time:           &t,
+		ValidatorsHash: []byte("validatorHash"),
+		Apphash:        []byte("AppHash"),
 	}
 
 	hi5 := stakingtypes.HistoricalRecord{
-		Time:          &t,
-		ValidatorHash: []byte("validatorHash"),
-		Apphash:       []byte("AppHash"),
+		Time:           &t,
+		ValidatorsHash: []byte("validatorHash"),
+		Apphash:        []byte("AppHash"),
 	}
 
 	require.NoError(keeper.HistoricalInfo.Set(ctx, uint64(4), hi4))
@@ -118,9 +118,9 @@ func (s *KeeperTestSuite) TestTrackHistoricalInfo() {
 
 	// Check HistoricalInfo at height 10 is persisted
 	expected := stakingtypes.HistoricalRecord{
-		Time:          &t,
-		ValidatorHash: ctx.CometInfo().ValidatorsHash,
-		Apphash:       ctx.HeaderInfo().AppHash,
+		Time:           &t,
+		ValidatorsHash: ctx.CometInfo().ValidatorsHash,
+		Apphash:        ctx.HeaderInfo().AppHash,
 	}
 	recv, err = keeper.HistoricalInfo.Get(ctx, uint64(10))
 	require.NoError(err, "GetHistoricalInfo failed after BeginBlock")
@@ -142,19 +142,19 @@ func (s *KeeperTestSuite) TestGetAllHistoricalInfo() {
 	t := time.Now().Round(0).UTC()
 
 	hist1 := stakingtypes.HistoricalRecord{
-		Time:          &t,
-		ValidatorHash: nil,
-		Apphash:       nil,
+		Time:           &t,
+		ValidatorsHash: nil,
+		Apphash:        nil,
 	}
 	hist2 := stakingtypes.HistoricalRecord{
-		Time:          &t,
-		ValidatorHash: nil,
-		Apphash:       nil,
+		Time:           &t,
+		ValidatorsHash: nil,
+		Apphash:        nil,
 	}
 	hist3 := stakingtypes.HistoricalRecord{
-		Time:          &t,
-		ValidatorHash: nil,
-		Apphash:       nil,
+		Time:           &t,
+		ValidatorsHash: nil,
+		Apphash:        nil,
 	}
 
 	expHistInfos := []stakingtypes.HistoricalRecord{hist1, hist2, hist3}

@@ -29,7 +29,7 @@ func createValidatorAccs(t *testing.T, f *fixture) ([]sdk.AccAddress, []types.Va
 	// have its order changed
 	sortedVals := make([]types.Validator, len(validators))
 	copy(sortedVals, validators)
-	hi := types.HistoricalRecord{Time: &header.Time, Apphash: header.AppHash, ValidatorHash: header.NextValidatorsHash}
+	hi := types.HistoricalRecord{Time: &header.Time, Apphash: header.AppHash, ValidatorsHash: header.NextValidatorsHash}
 	assert.NilError(t, f.stakingKeeper.HistoricalInfo.Set(f.sdkCtx, uint64(5), hi))
 
 	return addrs, validators

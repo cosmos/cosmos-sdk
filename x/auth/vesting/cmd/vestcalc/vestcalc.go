@@ -13,7 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting/client/cli"
 )
 
-// vestcalc is a utility for creating or reading period files
+// vestcalc is a utility for creating or reading schedule files
 // for use in some vesting account types.  See README.md for usage.
 
 // divide returns the division of total as evenly as possible.
@@ -98,7 +98,7 @@ func divideCoins(coins sdk.Coins, divisor int) ([]sdk.Coins, error) {
 // monthlyVestTimes generates timestamps for successive months after startTime.
 // The monthly events occur at the given time of day. If the month is not
 // long enough for the desired date, the last day of the month is used.
-// The number of months must be postive.
+// The number of months must be positive.
 func monthlyVestTimes(startTime time.Time, months int, timeOfDay time.Time) ([]time.Time, error) {
 	if months < 1 {
 		return nil, fmt.Errorf("must have at least one vesting period")

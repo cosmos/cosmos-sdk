@@ -299,13 +299,6 @@
 					"gas_limit": 100000,
 					"payer": "cosmos1ejrf4cur2wy6kfurg9f2jppp2h3afe5h6pkh5t",
 					"granter": "cosmos1ulav3hsenupswqfkw2y3sup5kgtqwnvqa8eyhs"
-				},
-				"tip": {
-					"amount": [
-						{ "amount": "20000", "denom": "uatom" },
-						{ "amount": "30000", "denom": "uosmo" }
-					],
-					"tipper": "cosmos1ejrf4cur2wy6kfurg9f2jppp2h3afe5h6pkh5t"
 				}
 			}
 		},
@@ -357,8 +350,6 @@
 			{ "title": "Fees", "content": "0.002 ATOM" },
 			{ "title": "Fee payer", "content": "cosmos1ejrf4cur2wy6kfurg9f2jppp2h3afe5h6pkh5t", "expert": true },
 			{ "title": "Fee granter", "content": "cosmos1ulav3hsenupswqfkw2y3sup5kgtqwnvqa8eyhs", "expert": true },
-			{ "title": "Tip", "content": "0.02 ATOM, 30'000 uosmo" },
-			{ "title": "Tipper", "content": "cosmos1ejrf4cur2wy6kfurg9f2jppp2h3afe5h6pkh5t" },
 			{ "title": "Gas limit", "content": "100'000", "expert": true },
 			{ "title": "Timeout height", "content": "20", "expert": true },
 			{ "title": "Other signer", "content": "1 SignerInfo", "expert": true },
@@ -394,7 +385,7 @@
 			{ "title": "Non critical extension options (1/1)", "content": "/cosmos.auth.v1beta1.Params", "indent": 1, "expert": true },
 			{ "title": "Max memo characters", "content": "10", "indent": 2, "expert": true },
 			{ "content": "End of Non critical extension options", "expert": true },
-			{ "title": "Hash of raw bytes", "content": "7ea02e8f0baed2db969e2d9ae4dc51fa31116259bd42897588072faf0ebb4d2e", "expert": true }
+			{ "title": "Hash of raw bytes", "content": "e7be7808de4985bd609811d2a32805cb233c168c7d247d61d37f4a6dd4cf3a2a", "expert": true }
 		]
 	}
 ]

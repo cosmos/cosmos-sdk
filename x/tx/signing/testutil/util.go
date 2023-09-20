@@ -17,7 +17,6 @@ type HandlerArgumentOptions struct {
 	Msg           proto.Message
 	AccNum        uint64
 	AccSeq        uint64
-	Tip           *txv1beta1.Tip
 	Fee           *txv1beta1.Fee
 	SignerAddress string
 }
@@ -57,7 +56,6 @@ func MakeHandlerArguments(options HandlerArgumentOptions) (signing.SignerData, s
 
 	authInfo := &txv1beta1.AuthInfo{
 		Fee:         options.Fee,
-		Tip:         options.Tip,
 		SignerInfos: signerInfo,
 	}
 

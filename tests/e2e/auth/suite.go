@@ -1676,12 +1676,6 @@ func (s *E2ETestSuite) TestAuxToFeeWithTips() {
 				genTxFile := testutil.WriteToNewTempFile(s.T(), string(res.Bytes()))
 				defer genTxFile.Close()
 
-				// broadcast the tx
-				res, err = authclitestutil.TxAuxToFeeExec(
-					val.ClientCtx,
-					genTxFile.Name(),
-					tc.feePayerArgs...,
-				)
 				s.Require().NoError(s.network.WaitForNextBlock())
 
 				switch {

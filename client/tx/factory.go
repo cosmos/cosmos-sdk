@@ -18,7 +18,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
 
@@ -38,7 +37,6 @@ type Factory struct {
 	generateOnly       bool
 	memo               string
 	fees               sdk.Coins
-	tip                *tx.Tip
 	feeGranter         sdk.AccAddress
 	feePayer           sdk.AccAddress
 	gasPrices          sdk.DecCoins
@@ -105,11 +103,6 @@ func NewFactoryCLI(clientCtx client.Context, flagSet *pflag.FlagSet) (Factory, e
 	feesStr, _ := flagSet.GetString(flags.FlagFees)
 	f = f.WithFees(feesStr)
 
-	tipsStr, _ := flagSet.GetString(flags.FlagTip)
-	// Add tips to factory. The tipper is necessarily the Msg signer, i.e.
-	// the from address.
-	f = f.WithTips(tipsStr, clientCtx.FromAddress.String())
-
 	gasPricesStr, _ := flagSet.GetString(flags.FlagGasPrices)
 	f = f.WithGasPrices(gasPricesStr)
 
@@ -166,20 +159,6 @@ func (f Factory) WithFees(fees string) Factory {
 	}
 
 	f.fees = parsedFees
-	return f
-}
-
-// WithTips returns a copy of the Factory with an updated tip.
-func (f Factory) WithTips(tip, tipper string) Factory {
-	parsedTips, err := sdk.ParseCoinsNormalized(tip)
-	if err != nil {
-		panic(err)
-	}
-
-	f.tip = &tx.Tip{
-		Tipper: tipper,
-		Amount: parsedTips,
-	}
 	return f
 }
 

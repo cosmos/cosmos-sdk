@@ -2035,7 +2035,7 @@ func TestABCI_HaltChain(t *testing.T) {
 	}
 }
 
-func TestBaseApp_PreFinalizeBlockHook(t *testing.T) {
+func TestBaseApp_PreBlocker(t *testing.T) {
 	db := dbm.NewMemDB()
 	name := t.Name()
 	logger := log.NewTestLogger(t)
@@ -2045,9 +2045,11 @@ func TestBaseApp_PreFinalizeBlockHook(t *testing.T) {
 	require.NoError(t, err)
 
 	wasHookCalled := false
-	app.SetPreFinalizeBlockHook(func(ctx sdk.Context, req *abci.RequestFinalizeBlock) error {
+	app.SetPreBlocker(func(ctx sdk.Context, req *abci.RequestFinalizeBlock) (*sdk.ResponsePreBlock, error) {
 		wasHookCalled = true
-		return nil
+		return &sdk.ResponsePreBlock{
+			ConsensusParamsChanged: true,
+		}, nil
 	})
 	app.Seal()
 
@@ -2060,8 +2062,8 @@ func TestBaseApp_PreFinalizeBlockHook(t *testing.T) {
 	_, err = app.InitChain(&abci.RequestInitChain{})
 	require.NoError(t, err)
 
-	app.SetPreFinalizeBlockHook(func(ctx sdk.Context, req *abci.RequestFinalizeBlock) error {
-		return errors.New("some error")
+	app.SetPreBlocker(func(ctx sdk.Context, req *abci.RequestFinalizeBlock) (*sdk.ResponsePreBlock, error) {
+		return nil, errors.New("some error")
 	})
 	app.Seal()
 
@@ -2122,7 +2124,7 @@ func TestBaseApp_VoteExtensions(t *testing.T) {
 			return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_ACCEPT}, nil
 		})
 
-		app.SetPreFinalizeBlockHook(func(ctx sdk.Context, req *abci.RequestFinalizeBlock) error {
+		app.SetPreBlocker(func(ctx sdk.Context, req *abci.RequestFinalizeBlock) (*sdk.ResponsePreBlock, error) {
 			count := uint64(0)
 			pricesSum := uint64(0)
 			for _, v := range req.Txs {
@@ -2141,7 +2143,9 @@ func TestBaseApp_VoteExtensions(t *testing.T) {
 				ctx.KVStore(capKey1).Set([]byte("avgPrice"), buf)
 			}
 
-			return nil
+			return &sdk.ResponsePreBlock{
+				ConsensusParamsChanged: true,
+			}, nil
 		})
 	}
 
@@ -2225,4 +2229,45 @@ func TestBaseApp_VoteExtensions(t *testing.T) {
 	// check if avgPrice was committed
 	committedAvgPrice := suite.baseApp.NewContext(true).KVStore(capKey1).Get([]byte("avgPrice"))
 	require.Equal(t, avgPrice, committedAvgPrice)
+}
+
+func TestOptimisticExecution(t *testing.T) {
+	suite := NewBaseAppSuite(t, baseapp.SetOptimisticExecution())
+
+	_, err := suite.baseApp.InitChain(&abci.RequestInitChain{
+		ConsensusParams: &cmtproto.ConsensusParams{},
+	})
+	require.NoError(t, err)
+
+	// run 50 blocks
+	for i := 0; i < 50; i++ {
+		tx := newTxCounter(t, suite.txConfig, 0, 1)
+		txBytes, err := suite.txConfig.TxEncoder()(tx)
+		require.NoError(t, err)
+
+		reqProcProp := abci.RequestProcessProposal{
+			Txs:    [][]byte{txBytes},
+			Height: suite.baseApp.LastBlockHeight() + 1,
+			Hash:   []byte("some-hash" + strconv.FormatInt(suite.baseApp.LastBlockHeight()+1, 10)),
+		}
+
+		respProcProp, err := suite.baseApp.ProcessProposal(&reqProcProp)
+		require.Equal(t, abci.ResponseProcessProposal_ACCEPT, respProcProp.Status)
+		require.NoError(t, err)
+
+		reqFinalizeBlock := abci.RequestFinalizeBlock{
+			Height: reqProcProp.Height,
+			Txs:    reqProcProp.Txs,
+			Hash:   reqProcProp.Hash,
+		}
+
+		respFinalizeBlock, err := suite.baseApp.FinalizeBlock(&reqFinalizeBlock)
+		require.NoError(t, err)
+		require.Len(t, respFinalizeBlock.TxResults, 1)
+
+		_, err = suite.baseApp.Commit()
+		require.NoError(t, err)
+	}
+
+	require.Equal(t, int64(50), suite.baseApp.LastBlockHeight())
 }

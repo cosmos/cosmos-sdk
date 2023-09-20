@@ -154,7 +154,7 @@ func initFixture(tb testing.TB) *fixture {
 	types.RegisterQueryServer(integrationApp.QueryHelper(), stakingkeeper.NewQuerier(stakingKeeper))
 
 	// set default staking params
-	assert.NilError(tb, stakingKeeper.SetParams(sdkCtx, types.DefaultParams()))
+	assert.NilError(tb, stakingKeeper.Params.Set(sdkCtx, types.DefaultParams()))
 
 	f := fixture{
 		app:           integrationApp,

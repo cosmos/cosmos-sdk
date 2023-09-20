@@ -115,7 +115,7 @@ func TestDeposits(t *testing.T) {
 			// Check that proposal moved to voting period
 			proposal, err = govKeeper.Proposals.Get(ctx, proposalID)
 			require.Nil(t, err)
-			require.True(t, proposal.VotingStartTime.Equal(ctx.BlockHeader().Time))
+			require.True(t, proposal.VotingStartTime.Equal(ctx.HeaderInfo().Time))
 
 			// Test deposit iterator
 			// NOTE order of deposits is determined by the addresses

@@ -23,7 +23,7 @@ var _ FeeAllowanceI = (*PeriodicAllowance)(nil)
 // If remove is true (regardless of the error), the FeeAllowance will be deleted from storage
 // (eg. when it is used up). (See call to RevokeAllowance in Keeper.UseGrantedFees)
 func (a *PeriodicAllowance) Accept(ctx context.Context, fee sdk.Coins, _ []sdk.Msg) (bool, error) {
-	blockTime := sdk.UnwrapSDKContext(ctx).BlockTime()
+	blockTime := sdk.UnwrapSDKContext(ctx).HeaderInfo().Time
 
 	if a.Basic.Expiration != nil && blockTime.After(*a.Basic.Expiration) {
 		return true, errorsmod.Wrap(ErrFeeLimitExpired, "absolute limit")

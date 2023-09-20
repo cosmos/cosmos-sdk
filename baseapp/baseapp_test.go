@@ -431,6 +431,9 @@ func TestBaseAppOptionSeal(t *testing.T) {
 		suite.baseApp.SetInitChainer(nil)
 	})
 	require.Panics(t, func() {
+		suite.baseApp.SetPreBlocker(nil)
+	})
+	require.Panics(t, func() {
 		suite.baseApp.SetBeginBlocker(nil)
 	})
 	require.Panics(t, func() {

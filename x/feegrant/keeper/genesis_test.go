@@ -62,7 +62,7 @@ func TestImportExportGenesis(t *testing.T) {
 	f.accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
 
 	coins := sdk.NewCoins(sdk.NewCoin("foo", math.NewInt(1_000)))
-	now := f.ctx.BlockHeader().Time
+	now := f.ctx.HeaderInfo().Time
 	oneYear := now.AddDate(1, 0, 0)
 	msgSrvr := keeper.NewMsgServerImpl(f.feegrantKeeper)
 

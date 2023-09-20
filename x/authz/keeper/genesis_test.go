@@ -74,7 +74,7 @@ func (suite *GenesisTestSuite) SetupTest() {
 func (suite *GenesisTestSuite) TestImportExportGenesis() {
 	coins := sdk.NewCoins(sdk.NewCoin("foo", sdkmath.NewInt(1_000)))
 
-	now := suite.ctx.BlockTime()
+	now := suite.ctx.HeaderInfo().Time
 	expires := now.Add(time.Hour)
 	grant := &bank.SendAuthorization{SpendLimit: coins}
 	err := suite.keeper.SaveGrant(suite.ctx, granteeAddr, granterAddr, grant, &expires)

@@ -13,6 +13,7 @@ import (
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/comet"
+	"cosmossdk.io/core/header"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/evidence"
@@ -125,7 +126,7 @@ func initFixture(tb testing.TB) *fixture {
 
 	slashingKeeper := slashingkeeper.NewKeeper(cdc, codec.NewLegacyAmino(), runtime.NewKVStoreService(keys[slashingtypes.StoreKey]), stakingKeeper, authority.String())
 
-	evidenceKeeper := keeper.NewKeeper(cdc, runtime.NewKVStoreService(keys[evidencetypes.StoreKey]), stakingKeeper, slashingKeeper, addresscodec.NewBech32Codec("cosmos"), runtime.ProvideCometInfoService())
+	evidenceKeeper := keeper.NewKeeper(cdc, runtime.NewKVStoreService(keys[evidencetypes.StoreKey]), stakingKeeper, slashingKeeper, addresscodec.NewBech32Codec("cosmos"))
 	router := evidencetypes.NewRouter()
 	router = router.AddRoute(evidencetypes.RouteEquivocation, testEquivocationHandler(evidenceKeeper))
 	evidenceKeeper.SetRouter(router)
@@ -153,7 +154,7 @@ func initFixture(tb testing.TB) *fixture {
 	assert.NilError(tb, slashingKeeper.Params.Set(sdkCtx, testutil.TestParams()))
 
 	// set default staking params
-	assert.NilError(tb, stakingKeeper.SetParams(sdkCtx, stakingtypes.DefaultParams()))
+	assert.NilError(tb, stakingKeeper.Params.Set(sdkCtx, stakingtypes.DefaultParams()))
 
 	return &fixture{
 		app:            integrationApp,
@@ -174,7 +175,7 @@ func TestHandleDoubleSign(t *testing.T) {
 	populateValidators(t, f)
 
 	power := int64(100)
-	stakingParams, err := f.stakingKeeper.GetParams(ctx)
+	stakingParams, err := f.stakingKeeper.Params.Get(ctx)
 	assert.NilError(t, err)
 	operatorAddr, valpubkey := valAddresses[0], pubkeys[0]
 	tstaking := stakingtestutil.NewHelper(t, ctx, f.stakingKeeper)
@@ -205,14 +206,14 @@ func TestHandleDoubleSign(t *testing.T) {
 	assert.NilError(t, err)
 	oldTokens := val.GetTokens()
 
-	nci := NewCometInfo(abci.RequestFinalizeBlock{
-		Misbehavior: []abci.Misbehavior{{
-			Validator: abci.Validator{Address: valpubkey.Address(), Power: power},
-			Type:      abci.MisbehaviorType_DUPLICATE_VOTE,
+	nci := comet.Info{
+		Evidence: []comet.Evidence{{
+			Validator: comet.Validator{Address: valpubkey.Address(), Power: power},
+			Type:      comet.DuplicateVote,
 			Time:      time.Now().UTC(),
 			Height:    1,
 		}},
-	})
+	}
 
 	ctx = ctx.WithCometInfo(nci)
 	assert.NilError(t, f.evidenceKeeper.BeginBlocker(ctx.WithCometInfo(nci)))
@@ -236,7 +237,7 @@ func TestHandleDoubleSign(t *testing.T) {
 	assert.Assert(t, val.GetTokens().Equal(newTokens))
 
 	// jump to past the unbonding period
-	ctx = ctx.WithBlockTime(time.Unix(1, 0).Add(stakingParams.UnbondingTime))
+	ctx = ctx.WithHeaderInfo(header.Info{Time: time.Unix(1, 0).Add(stakingParams.UnbondingTime)})
 
 	// require we cannot unjail
 	assert.Error(t, f.slashingKeeper.Unjail(ctx, operatorAddr), slashingtypes.ErrValidatorJailed.Error())
@@ -262,11 +263,11 @@ func TestHandleDoubleSign_TooOld(t *testing.T) {
 	t.Parallel()
 	f := initFixture(t)
 
-	ctx := f.sdkCtx.WithIsCheckTx(false).WithBlockHeight(1).WithBlockTime(time.Now())
+	ctx := f.sdkCtx.WithIsCheckTx(false).WithBlockHeight(1).WithHeaderInfo(header.Info{Time: time.Now()})
 	populateValidators(t, f)
 
 	power := int64(100)
-	stakingParams, err := f.stakingKeeper.GetParams(ctx)
+	stakingParams, err := f.stakingKeeper.Params.Get(ctx)
 	assert.NilError(t, err)
 	operatorAddr, valpubkey := valAddresses[0], pubkeys[0]
 
@@ -285,21 +286,19 @@ func TestHandleDoubleSign_TooOld(t *testing.T) {
 	assert.NilError(t, err)
 	assert.DeepEqual(t, amt, val.GetBondedTokens())
 
-	nci := NewCometInfo(abci.RequestFinalizeBlock{
-		Misbehavior: []abci.Misbehavior{{
-			Validator: abci.Validator{Address: valpubkey.Address(), Power: power},
-			Type:      abci.MisbehaviorType_DUPLICATE_VOTE,
-			Time:      ctx.BlockTime(),
-			Height:    0,
-		}},
-	})
+	nci := comet.Info{Evidence: []comet.Evidence{{
+		Validator: comet.Validator{Address: valpubkey.Address(), Power: power},
+		Type:      comet.MisbehaviorType(abci.MisbehaviorType_DUPLICATE_VOTE),
+		Time:      ctx.HeaderInfo().Time,
+		Height:    0,
+	}}}
 
 	assert.NilError(t, f.app.BaseApp.StoreConsensusParams(ctx, *simtestutil.DefaultConsensusParams))
 	cp := f.app.BaseApp.GetConsensusParams(ctx)
 
 	ctx = ctx.WithCometInfo(nci)
 	ctx = ctx.WithConsensusParams(cp)
-	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(cp.Evidence.MaxAgeDuration + 1))
+	ctx = ctx.WithHeaderInfo(header.Info{Time: ctx.HeaderInfo().Time.Add(cp.Evidence.MaxAgeDuration + 1)})
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + cp.Evidence.MaxAgeNumBlocks + 1)
 
 	assert.NilError(t, f.evidenceKeeper.BeginBlocker(ctx))
@@ -348,81 +347,4 @@ func testEquivocationHandler(_ interface{}) evidencetypes.Handler {
 
 		return nil
 	}
-}
-
-type CometService struct {
-	Evidence []abci.Misbehavior
-}
-
-func NewCometInfo(bg abci.RequestFinalizeBlock) comet.BlockInfo {
-	return CometService{
-		Evidence: bg.Misbehavior,
-	}
-}
-
-func (r CometService) GetEvidence() comet.EvidenceList {
-	return evidenceWrapper{evidence: r.Evidence}
-}
-
-func (CometService) GetValidatorsHash() []byte {
-	return []byte{}
-}
-
-func (CometService) GetProposerAddress() []byte {
-	return []byte{}
-}
-
-func (CometService) GetLastCommit() comet.CommitInfo {
-	return nil
-}
-
-type evidenceWrapper struct {
-	evidence []abci.Misbehavior
-}
-
-func (e evidenceWrapper) Len() int {
-	return len(e.evidence)
-}
-
-func (e evidenceWrapper) Get(i int) comet.Evidence {
-	return misbehaviorWrapper{e.evidence[i]}
-}
-
-type misbehaviorWrapper struct {
-	abci.Misbehavior
-}
-
-func (m misbehaviorWrapper) Type() comet.MisbehaviorType {
-	return comet.MisbehaviorType(m.Misbehavior.Type)
-}
-
-func (m misbehaviorWrapper) Height() int64 {
-	return m.Misbehavior.Height
-}
-
-func (m misbehaviorWrapper) Validator() comet.Validator {
-	return validatorWrapper{m.Misbehavior.Validator}
-}
-
-func (m misbehaviorWrapper) Time() time.Time {
-	return m.Misbehavior.Time
-}
-
-func (m misbehaviorWrapper) TotalVotingPower() int64 {
-	return m.Misbehavior.TotalVotingPower
-}
-
-// validatorWrapper is a wrapper around abci.Validator that implements Validator interface
-type validatorWrapper struct {
-	abci.Validator
-}
-
-var _ comet.Validator = (*validatorWrapper)(nil)
-
-func (v validatorWrapper) Address() []byte {
-	return v.Validator.Address
-}
-
-func (v validatorWrapper) Power() int64 {
-	return v.Validator.Power
 }

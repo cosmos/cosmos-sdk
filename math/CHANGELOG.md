@@ -36,9 +36,9 @@ Ref: https://github.com/commitizen/conventional-commit-types/blob/v3.0.0/index.j
 
 ## [Unreleased]
 
-### Improvements
+### Bug Fixes
 
-* [#17497](https://github.com/cosmos/cosmos-sdk/pull/17497) Optimize math.Int.Size for values that fit in 53 bits.
+* [#17725](https://github.com/cosmos/cosmos-sdk/pull/17725) Fix state break in ApproxRoot. This has been present since math/v1.0.1. It changed the rounding behavior at precision end in an intermediary division from banker's to truncation. The truncation occurs from binary right shift in the case of square roots. The change is now reverted back to banker's rounding universally for any root.
 
 ## [math/v1.1.2](https://github.com/cosmos/cosmos-sdk/releases/tag/math/v1.1.2) - 2023-08-21
 

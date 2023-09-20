@@ -4,8 +4,6 @@ import (
 	"context"
 	"time"
 
-	"cosmossdk.io/core/comet"
-
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/slashing/keeper"
@@ -21,8 +19,9 @@ func BeginBlocker(ctx context.Context, k keeper.Keeper) error {
 	// store whether or not they have actually signed it and slash/unbond any
 	// which have missed too many blocks in a row (downtime slashing)
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	for _, voteInfo := range sdkCtx.VoteInfos() {
-		err := k.HandleValidatorSignature(ctx, voteInfo.Validator.Address, voteInfo.Validator.Power, comet.BlockIDFlag(voteInfo.BlockIdFlag))
+	for _, vote := range sdkCtx.CometInfo().LastCommit.Votes {
+
+		err := k.HandleValidatorSignature(ctx, vote.Validator.Address, vote.Validator.Power, vote.BlockIDFlag)
 		if err != nil {
 			return err
 		}

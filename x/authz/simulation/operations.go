@@ -105,7 +105,7 @@ func SimulateMsgGrant(
 
 		granterAcc := ak.GetAccount(ctx, granter.Address)
 		spendableCoins := bk.SpendableCoins(ctx, granter.Address)
-		fees, err := simtypes.RandomFees(r, ctx, spendableCoins)
+		fees, err := simtypes.RandomFees(r, spendableCoins)
 		if err != nil {
 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgGrant, err.Error()), nil, err
 		}
@@ -117,7 +117,7 @@ func SimulateMsgGrant(
 
 		var expiration *time.Time
 		t1 := simtypes.RandTimestamp(r)
-		if !t1.Before(ctx.BlockTime()) {
+		if !t1.Before(ctx.HeaderInfo().Time) {
 			expiration = &t1
 		}
 		randomAuthz := generateRandomAuthorization(r, spendLimit)
@@ -191,7 +191,7 @@ func SimulateMsgRevoke(
 		}
 
 		spendableCoins := bk.SpendableCoins(ctx, granterAddr)
-		fees, err := simtypes.RandomFees(r, ctx, spendableCoins)
+		fees, err := simtypes.RandomFees(r, spendableCoins)
 		if err != nil {
 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgRevoke, "fee error"), nil, err
 		}
@@ -297,7 +297,7 @@ func SimulateMsgExec(
 
 		msgExec := authz.NewMsgExec(granteeAddr, msg)
 		granteeSpendableCoins := bk.SpendableCoins(ctx, granteeAddr)
-		fees, err := simtypes.RandomFees(r, ctx, granteeSpendableCoins)
+		fees, err := simtypes.RandomFees(r, granteeSpendableCoins)
 		if err != nil {
 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, "fee error"), nil, err
 		}

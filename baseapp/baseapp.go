@@ -23,6 +23,7 @@ import (
 	"cosmossdk.io/store/snapshots"
 	storetypes "cosmossdk.io/store/types"
 
+	"github.com/cosmos/cosmos-sdk/baseapp/oe"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
@@ -42,12 +43,6 @@ type (
 	// between two versions of the software.
 	StoreLoader func(ms storetypes.CommitMultiStore) error
 )
-
-// MigrationModuleManager is the interface that a migration module manager should implement to handle
-// the execution of migration logic during the beginning of a block.
-type MigrationModuleManager interface {
-	RunMigrationBeginBlock(ctx sdk.Context) (bool, error)
-}
 
 const (
 	execModeCheck           execMode = iota // Check a transaction
@@ -80,16 +75,16 @@ type BaseApp struct {
 	anteHandler sdk.AnteHandler // ante handler for fee and auth
 	postHandler sdk.PostHandler // post handler, optional, e.g. for tips
 
-	initChainer          sdk.InitChainer                // ABCI InitChain handler
-	beginBlocker         sdk.BeginBlocker               // (legacy ABCI) BeginBlock handler
-	endBlocker           sdk.EndBlocker                 // (legacy ABCI) EndBlock handler
-	processProposal      sdk.ProcessProposalHandler     // ABCI ProcessProposal handler
-	prepareProposal      sdk.PrepareProposalHandler     // ABCI PrepareProposal
-	extendVote           sdk.ExtendVoteHandler          // ABCI ExtendVote handler
-	verifyVoteExt        sdk.VerifyVoteExtensionHandler // ABCI VerifyVoteExtension handler
-	prepareCheckStater   sdk.PrepareCheckStater         // logic to run during commit using the checkState
-	precommiter          sdk.Precommiter                // logic to run during commit using the deliverState
-	preFinalizeBlockHook sdk.PreFinalizeBlockHook       // logic to run before FinalizeBlock
+	initChainer        sdk.InitChainer                // ABCI InitChain handler
+	preBlocker         sdk.PreBlocker                 // logic to run before BeginBlocker
+	beginBlocker       sdk.BeginBlocker               // (legacy ABCI) BeginBlock handler
+	endBlocker         sdk.EndBlocker                 // (legacy ABCI) EndBlock handler
+	processProposal    sdk.ProcessProposalHandler     // ABCI ProcessProposal handler
+	prepareProposal    sdk.PrepareProposalHandler     // ABCI PrepareProposal
+	extendVote         sdk.ExtendVoteHandler          // ABCI ExtendVote handler
+	verifyVoteExt      sdk.VerifyVoteExtensionHandler // ABCI VerifyVoteExtension handler
+	prepareCheckStater sdk.PrepareCheckStater         // logic to run during commit using the checkState
+	precommiter        sdk.Precommiter                // logic to run during commit using the deliverState
 
 	addrPeerFilter sdk.PeerFilter // filter peers by address and port
 	idPeerFilter   sdk.PeerFilter // filter peers by node ID
@@ -97,9 +92,6 @@ type BaseApp struct {
 
 	// manages snapshots, i.e. dumps of app state at certain intervals
 	snapshotManager *snapshots.Manager
-
-	// manages migrate module
-	migrationModuleManager MigrationModuleManager
 
 	// volatile states:
 	//
@@ -183,6 +175,11 @@ type BaseApp struct {
 	chainID string
 
 	cdc codec.Codec
+
+	// optimisticExec contains the context required for Optimistic Execution,
+	// including the goroutine handling.This is experimental and must be enabled
+	// by developers.
+	optimisticExec *oe.OptimisticExecution
 }
 
 // NewBaseApp returns a reference to an initialized BaseApp. It accepts a
@@ -281,11 +278,6 @@ func (app *BaseApp) MsgServiceRouter() MessageRouter { return app.msgServiceRout
 // SetMsgServiceRouter sets the MsgServiceRouter of a BaseApp.
 func (app *BaseApp) SetMsgServiceRouter(msgServiceRouter MessageRouterBuilder) {
 	app.msgServiceRouter = msgServiceRouter
-}
-
-// SetMigrationModuleManager sets the MigrationModuleManager of a BaseApp.
-func (app *BaseApp) SetMigrationModuleManager(migrationModuleManager MigrationModuleManager) {
-	app.migrationModuleManager = migrationModuleManager
 }
 
 // MountStores mounts all IAVL or DB stores to the provided keys in the BaseApp
@@ -673,6 +665,26 @@ func (app *BaseApp) cacheTxContext(ctx sdk.Context, txBytes []byte) (sdk.Context
 	return ctx.WithMultiStore(msCache), msCache
 }
 
+func (app *BaseApp) preBlock(req *abci.RequestFinalizeBlock) error {
+	if app.preBlocker != nil {
+		ctx := app.finalizeBlockState.ctx
+		rsp, err := app.preBlocker(ctx, req)
+		if err != nil {
+			return err
+		}
+		// rsp.ConsensusParamsChanged is true from preBlocker means ConsensusParams in store get changed
+		// write the consensus parameters in store to context
+		if rsp.ConsensusParamsChanged {
+			ctx = ctx.WithConsensusParams(app.GetConsensusParams(ctx))
+			// GasMeter must be set after we get a context with updated consensus params.
+			gasMeter := app.getBlockGasMeter(ctx)
+			ctx = ctx.WithBlockGasMeter(gasMeter)
+			app.finalizeBlockState.ctx = ctx
+		}
+	}
+	return nil
+}
+
 func (app *BaseApp) beginBlock(req *abci.RequestFinalizeBlock) (sdk.BeginBlock, error) {
 	var (
 		resp sdk.BeginBlock
@@ -680,22 +692,7 @@ func (app *BaseApp) beginBlock(req *abci.RequestFinalizeBlock) (sdk.BeginBlock, 
 	)
 
 	if app.beginBlocker != nil {
-		ctx := app.finalizeBlockState.ctx
-		if app.migrationModuleManager != nil {
-			if success, err := app.migrationModuleManager.RunMigrationBeginBlock(ctx); success {
-				cp := ctx.ConsensusParams()
-				// Manager skips this step if Block is non-nil since upgrade module is expected to set this params
-				// and consensus parameters should not be overwritten.
-				if cp.Block == nil {
-					if cp = app.GetConsensusParams(ctx); cp.Block != nil {
-						ctx = ctx.WithConsensusParams(cp)
-					}
-				}
-			} else if err != nil {
-				return sdk.BeginBlock{}, err
-			}
-		}
-		resp, err = app.beginBlocker(ctx)
+		resp, err = app.beginBlocker(app.finalizeBlockState.ctx)
 		if err != nil {
 			return resp, err
 		}

@@ -6,6 +6,7 @@ import (
 
 	"cosmossdk.io/collections"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/keeper"
@@ -20,7 +21,7 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) error {
 	logger := ctx.Logger().With("module", "x/"+types.ModuleName)
 	// delete dead proposals from store and returns theirs deposits.
 	// A proposal is dead when it's inactive and didn't get enough deposit on time to get into voting phase.
-	rng := collections.NewPrefixUntilPairRange[time.Time, uint64](ctx.BlockTime())
+	rng := collections.NewPrefixUntilPairRange[time.Time, uint64](ctx.HeaderInfo().Time)
 	err := keeper.InactiveProposalsQueue.Walk(ctx, rng, func(key collections.Pair[time.Time, uint64], _ uint64) (bool, error) {
 		proposal, err := keeper.Proposals.Get(ctx, key.K2())
 		if err != nil {
@@ -72,7 +73,7 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) error {
 	}
 
 	// fetch active proposals whose voting periods have ended (are passed the block time)
-	rng = collections.NewPrefixUntilPairRange[time.Time, uint64](ctx.BlockTime())
+	rng = collections.NewPrefixUntilPairRange[time.Time, uint64](ctx.HeaderInfo().Time)
 	err = keeper.ActiveProposalsQueue.Walk(ctx, rng, func(key collections.Pair[time.Time, uint64], _ uint64) (bool, error) {
 		proposal, err := keeper.Proposals.Get(ctx, key.K2())
 		if err != nil {
@@ -133,9 +134,8 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) error {
 			// execute all messages
 			for idx, msg = range messages {
 				handler := keeper.Router().Handler(msg)
-
 				var res *sdk.Result
-				res, err = handler(cacheCtx, msg)
+				res, err = safeExecuteHandler(cacheCtx, msg, handler)
 				if err != nil {
 					break
 				}
@@ -222,4 +222,16 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) error {
 		return err
 	}
 	return nil
+}
+
+// executes handle(msg) and recovers from panic.
+func safeExecuteHandler(ctx sdk.Context, msg sdk.Msg, handler baseapp.MsgServiceHandler,
+) (res *sdk.Result, err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("handling x/gov proposal msg [%s] PANICKED: %v", msg, r)
+		}
+	}()
+	res, err = handler(ctx, msg)
+	return
 }

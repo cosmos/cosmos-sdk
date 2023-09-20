@@ -385,7 +385,7 @@ func (k Keeper) InsertUBDQueue(ctx context.Context, ubd types.UnbondingDelegatio
 // DequeueAllMatureUBDQueue returns a concatenated list of all the timeslices inclusively previous to
 // currTime, and deletes the timeslices from the queue.
 func (k Keeper) DequeueAllMatureUBDQueue(ctx context.Context, currTime time.Time) (matureUnbonds []types.DVPair, err error) {
-	// get an iterator for all timeslices from time 0 until the current Blockheader time
+	// get an iterator for all timeslices from time 0 until the current HeaderInfo time
 	iter, err := k.UnbondingQueue.Iterate(ctx, (&collections.Range[time.Time]{}).EndInclusive(currTime))
 	if err != nil {
 		return matureUnbonds, err
@@ -894,7 +894,7 @@ func (k Keeper) getBeginInfo(
 	switch {
 	case errors.Is(err, types.ErrNoValidatorFound) || validator.IsBonded():
 		// the longest wait - just unbonding period from now
-		completionTime = sdkCtx.BlockHeader().Time.Add(unbondingTime)
+		completionTime = sdkCtx.HeaderInfo().Time.Add(unbondingTime)
 		height = sdkCtx.BlockHeight()
 
 		return completionTime, height, false, nil
@@ -951,7 +951,7 @@ func (k Keeper) Undelegate(
 	}
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	completionTime := sdkCtx.BlockHeader().Time.Add(unbondingTime)
+	completionTime := sdkCtx.HeaderInfo().Time.Add(unbondingTime)
 	ubd, err := k.SetUnbondingDelegationEntry(ctx, delAddr, valAddr, sdkCtx.BlockHeight(), completionTime, returnAmount)
 	if err != nil {
 		return time.Time{}, math.Int{}, err
@@ -981,7 +981,7 @@ func (k Keeper) CompleteUnbonding(ctx context.Context, delAddr sdk.AccAddress, v
 
 	balances := sdk.NewCoins()
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	ctxTime := sdkCtx.BlockHeader().Time
+	ctxTime := sdkCtx.HeaderInfo().Time
 
 	delegatorAddress, err := k.authKeeper.AddressCodec().StringToBytes(ubd.DelegatorAddress)
 	if err != nil {
@@ -1126,7 +1126,7 @@ func (k Keeper) CompleteRedelegation(
 
 	balances := sdk.NewCoins()
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	ctxTime := sdkCtx.BlockHeader().Time
+	ctxTime := sdkCtx.HeaderInfo().Time
 
 	// loop through all the entries and complete mature redelegation entries
 	for i := 0; i < len(red.Entries); i++ {

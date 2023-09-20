@@ -30,7 +30,7 @@ service Msg {
   // FundCommunityPool defines a method to allow an account to directly
   // fund the community pool.
   //
-  // Deprecated: Use x/pool module's FundCommunityPool instead.
+  // Deprecated: Use x/protocolpool module's FundCommunityPool instead.
   // Since: cosmos-sdk 0.50
   rpc FundCommunityPool(MsgFundCommunityPool) returns (MsgFundCommunityPoolResponse) {
     option deprecated = true;
@@ -47,7 +47,7 @@ service Msg {
   // could be the governance module itself. The authority is defined in the
   // keeper.
   //
-  // Deprecated: Use x/pool module's CommunityPoolSpend instead.
+  // Deprecated: Use x/protocolpool module's CommunityPoolSpend instead.
   // Since: cosmos-sdk 0.50
   rpc CommunityPoolSpend(MsgCommunityPoolSpend) returns (MsgCommunityPoolSpendResponse);
 
@@ -127,7 +127,7 @@ message MsgWithdrawValidatorCommissionResponse {
 // MsgFundCommunityPool allows an account to directly
 // fund the community pool.
 //
-// Deprecated: Use x/pool module's MsgFundCommunityPool instead.
+// Deprecated: Use x/protocolpool module's MsgFundCommunityPool instead.
 // Since: cosmos-sdk 0.50
 message MsgFundCommunityPool {
   option deprecated             = true;
@@ -180,7 +180,7 @@ message MsgUpdateParamsResponse {}
 // pool to another account. This message is typically executed via a governance
 // proposal with the governance module being the executing authority.
 
-// Deprecated: Use x/pool module's MsgCommunityPoolSpend instead
+// Deprecated: Use x/protocolpool module's MsgCommunityPoolSpend instead
 // Since: cosmos-sdk 0.50
 message MsgCommunityPoolSpend {
   option deprecated             = true;

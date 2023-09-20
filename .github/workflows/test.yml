@@ -800,18 +800,18 @@ jobs:
           go-version: "1.21"
           check-latest: true
           cache: true
-          cache-dependency-path: x/pool/go.sum
+          cache-dependency-path: x/protocolpool/go.sum
       - uses: technote-space/get-diff-action@v6.1.2
         id: git_diff
         with:
           PATTERNS: |
-            x/pool/**/*.go
-            x/pool/go.mod
-            x/pool/go.sum
+            x/protocolpool/**/*.go
+            x/protocolpool/go.mod
+            x/protocolpool/go.sum
       - name: tests
         if: env.GIT_DIFF
         run: |
-          cd x/pool
+          cd x/protocolpool
           go test -mod=readonly -timeout 30m -coverprofile=coverage.out -covermode=atomic -tags='norace ledger test_ledger_mock rocksdb_build' ./...
       - name: sonarcloud
         if: ${{ env.GIT_DIFF && !github.event.pull_request.draft && env.SONAR_TOKEN != null }}
@@ -820,7 +820,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
-          projectBaseDir: x/pool/   
+          projectBaseDir: x/protocolpool/   
 
   test-x-feegrant:
     runs-on: ubuntu-latest

@@ -68,7 +68,7 @@ service Query {
 
   // CommunityPool queries the community pool coins.
   //
-  // Deprecated: Prefer to use x/pool module's CommunityPool rpc method.
+  // Deprecated: Prefer to use x/protocolpool module's CommunityPool rpc method.
   // Since: cosmos-sdk 0.50
   rpc CommunityPool(QueryCommunityPoolRequest) returns (QueryCommunityPoolResponse) {
     option deprecated            = true;

@@ -7,7 +7,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	pooltypes "cosmossdk.io/api/cosmos/pool/v1"
+	pooltypes "cosmossdk.io/api/cosmos/protocolpool/v1"
 	"cosmossdk.io/collections"
 	"cosmossdk.io/errors"
 	"cosmossdk.io/math"
@@ -358,7 +358,7 @@ func (k Querier) DelegatorWithdrawAddress(ctx context.Context, req *types.QueryD
 }
 
 // NOTE: DO NOT USE
-// This method uses deprecated query request. Use CommunityPool from x/pool module instead.
+// This method uses deprecated query request. Use CommunityPool from x/protocolpool module instead.
 // CommunityPool queries the community pool coins
 func (k Querier) CommunityPool(ctx context.Context, req *types.QueryCommunityPoolRequest) (*types.QueryCommunityPoolResponse, error) { //nolint:staticcheck // we're using a deprecated call for compatibility
 	helper := &baseapp.QueryServiceTestHelper{

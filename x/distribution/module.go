@@ -151,7 +151,7 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	}
 
 	if err := cfg.RegisterMigration(types.ModuleName, 4, m.MigrateFundsToPool); err != nil {
-		panic(fmt.Sprintf("failed to migrate funds from x/%s to x/pool module", types.ModuleName))
+		panic(fmt.Sprintf("failed to migrate funds from x/%s to x/protocolpool module", types.ModuleName))
 	}
 }
 

@@ -1,16 +1,16 @@
-package pool
+package protocolpool
 
 import (
 	"context"
 
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 
-	modulev1 "cosmossdk.io/api/cosmos/pool/module/v1"
+	modulev1 "cosmossdk.io/api/cosmos/protocolpool/module/v1"
 	"cosmossdk.io/core/appmodule"
 	storetypes "cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
-	"cosmossdk.io/x/pool/keeper"
-	"cosmossdk.io/x/pool/types"
+	"cosmossdk.io/x/protocolpool/keeper"
+	"cosmossdk.io/x/protocolpool/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"

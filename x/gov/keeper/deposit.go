@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
-	pooltypes "cosmossdk.io/api/cosmos/pool/v1"
+	pooltypes "cosmossdk.io/api/cosmos/protocolpool/v1"
 	"cosmossdk.io/collections"
 	"cosmossdk.io/errors"
 	sdkmath "cosmossdk.io/math"

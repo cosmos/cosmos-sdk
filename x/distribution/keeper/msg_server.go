@@ -7,7 +7,7 @@ import (
 	"github.com/hashicorp/go-metrics"
 
 	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
-	pooltypes "cosmossdk.io/api/cosmos/pool/v1"
+	pooltypes "cosmossdk.io/api/cosmos/protocolpool/v1"
 	"cosmossdk.io/errors"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -105,7 +105,7 @@ func (k msgServer) WithdrawValidatorCommission(ctx context.Context, msg *types.M
 }
 
 // NOTE: DO NOT USE
-// This method uses deprecated message request. Use FundCommunityPool from x/pool module instead.
+// This method uses deprecated message request. Use FundCommunityPool from x/protocolpool module instead.
 func (k msgServer) FundCommunityPool(ctx context.Context, msg *types.MsgFundCommunityPool) (*types.MsgFundCommunityPoolResponse, error) { //nolint:staticcheck // we're using a deprecated call for compatibility
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
@@ -162,7 +162,7 @@ func (k msgServer) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams)
 }
 
 // NOTE: DO NOT USE
-// This method uses deprecated message request. Use CommunityPoolSpend from x/pool module instead.
+// This method uses deprecated message request. Use CommunityPoolSpend from x/protocolpool module instead.
 func (k msgServer) CommunityPoolSpend(ctx context.Context, msg *types.MsgCommunityPoolSpend) (*types.MsgCommunityPoolSpendResponse, error) { //nolint:staticcheck // we're using a deprecated call for compatibility
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 

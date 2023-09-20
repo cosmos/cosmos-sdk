@@ -1,8 +1,8 @@
 // Since: cosmos-sdk 0.50
 syntax = "proto3";
-package cosmos.pool.v1;
+package cosmos.protocolpool.v1;
 
-option go_package = "cosmossdk.io/x/pool/types";
+option go_package = "cosmossdk.io/x/protocolpool/types";
 
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
@@ -13,7 +13,7 @@ import "amino/amino.proto";
 service Query {
   // CommunityPool queries the community pool coins.
   rpc CommunityPool(QueryCommunityPoolRequest) returns (QueryCommunityPoolResponse) {
-    option (google.api.http).get = "/cosmos/pool/v1/community_pool";
+    option (google.api.http).get = "/cosmos/protocolpool/v1/community_pool";
   }
 }
 

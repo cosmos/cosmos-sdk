@@ -1,10 +1,10 @@
-package pool
+package protocolpool
 
 import (
 	"fmt"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
-	poolv1 "cosmossdk.io/api/cosmos/pool/v1"
+	poolv1 "cosmossdk.io/api/cosmos/protocolpool/v1"
 
 	"github.com/cosmos/cosmos-sdk/version"
 )

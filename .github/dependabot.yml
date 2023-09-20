@@ -216,7 +216,7 @@ updates:
       - "A:automerge"
       - dependencies
   - package-ecosystem: gomod
-    directory: "/x/pool"
+    directory: "/x/protocolpool"
     schedule:
       interval: weekly
       day: wednesday

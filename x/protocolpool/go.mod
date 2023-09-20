@@ -1,4 +1,4 @@
-module cosmossdk.io/x/pool
+module cosmossdk.io/x/protocolpool
 
 go 1.21
 

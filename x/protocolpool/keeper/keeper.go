@@ -6,7 +6,7 @@ import (
 
 	storetypes "cosmossdk.io/core/store"
 	"cosmossdk.io/log"
-	"cosmossdk.io/x/pool/types"
+	"cosmossdk.io/x/protocolpool/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -35,7 +35,7 @@ func NewKeeper(cdc codec.BinaryCodec, storeService storetypes.KVStoreService,
 	}
 }
 
-// GetAuthority returns the x/pool module's authority.
+// GetAuthority returns the x/protocolpool module's authority.
 func (k Keeper) GetAuthority() string {
 	return k.authority
 }

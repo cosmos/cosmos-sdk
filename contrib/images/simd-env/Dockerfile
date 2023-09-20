@@ -13,7 +13,7 @@ COPY collections/go.mod collections/go.sum /work/collections/
 COPY store/go.mod store/go.sum /work/store/
 COPY log/go.mod log/go.sum /work/log/
 COPY x/tx/go.mod x/tx/go.sum /work/x/tx/
-COPY x/pool/go.mod x/pool/go.sum /work/x/pool/
+COPY x/protocolpool/go.mod x/protocolpool/go.sum /work/x/protocolpool/
 RUN go mod download
 
 COPY ./ /work

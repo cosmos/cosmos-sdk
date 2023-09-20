@@ -32,7 +32,8 @@ func (k MsgServer) FundCommunityPool(ctx context.Context, msg *types.MsgFundComm
 		return nil, err
 	}
 
-	if err := k.Keeper.FundCommunityPool(ctx, msg.Amount, depositor); err != nil {
+	// send funds to community pool module account
+	if err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, depositor, types.ModuleName, msg.Amount); err != nil {
 		return nil, err
 	}
 
@@ -53,7 +54,8 @@ func (k MsgServer) CommunityPoolSpend(ctx context.Context, msg *types.MsgCommuni
 		return nil, err
 	}
 
-	if err := k.Keeper.DistributeFromFeePool(ctx, msg.Amount, recipient); err != nil {
+	// distribute funds from community pool module account
+	if err := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, recipient, msg.Amount); err != nil {
 		return nil, err
 	}
 

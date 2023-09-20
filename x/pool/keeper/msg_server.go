@@ -53,7 +53,7 @@ func (k MsgServer) CommunityPoolSpend(ctx context.Context, msg *types.MsgCommuni
 		return nil, err
 	}
 
-	if err := k.DistributeFromFeePool(ctx, msg.Amount, recipient); err != nil {
+	if err := k.Keeper.DistributeFromFeePool(ctx, msg.Amount, recipient); err != nil {
 		return nil, err
 	}
 

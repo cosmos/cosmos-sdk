@@ -107,10 +107,6 @@ func (k msgServer) WithdrawValidatorCommission(ctx context.Context, msg *types.M
 func (k msgServer) FundCommunityPool(ctx context.Context, msg *types.MsgFundCommunityPool) (*types.MsgFundCommunityPoolResponse, error) { //nolint:staticcheck // we're using a deprecated call for compatibility
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	if err := validateAmount(msg.Amount); err != nil {
-		return nil, err
-	}
-
 	amount := make([]*basev1beta1.Coin, len(msg.Amount))
 	for i, coin := range msg.Amount {
 		amount[i] = &basev1beta1.Coin{
@@ -164,29 +160,38 @@ func (k msgServer) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams)
 }
 
 func (k msgServer) CommunityPoolSpend(ctx context.Context, msg *types.MsgCommunityPoolSpend) (*types.MsgCommunityPoolSpendResponse, error) { //nolint:staticcheck // we're using a deprecated call for compatibility
-	if err := k.validateAuthority(msg.Authority); err != nil {
-		return nil, err
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	amount := make([]*basev1beta1.Coin, len(msg.Amount))
+	for i, coin := range msg.Amount {
+		amount[i] = &basev1beta1.Coin{
+			Denom:  coin.Denom,
+			Amount: coin.Amount.String(),
+		}
 	}
 
-	if err := validateAmount(msg.Amount); err != nil {
-		return nil, err
+	poolMsg := pooltypes.MsgCommunityPoolSpend{
+		Authority: msg.Authority,
+		Recipient: msg.Recipient,
+		Amount:    amount,
 	}
 
-	recipient, err := k.authKeeper.AddressCodec().StringToBytes(msg.Recipient)
+	// Pass the msg to the MessageRouter
+	handler := k.router.Handler(&poolMsg)
+	if handler == nil {
+		return nil, fmt.Errorf("message not recognized by router: %s", sdk.MsgTypeURL(&poolMsg))
+	}
+	msgResp, err := handler(sdkCtx, &poolMsg)
 	if err != nil {
 		return nil, err
 	}
 
-	if k.bankKeeper.BlockedAddr(recipient) {
-		return nil, errors.Wrapf(sdkerrors.ErrUnauthorized, "%s is not allowed to receive external funds", msg.Recipient)
+	events := msgResp.Events
+	sdkEvents := make([]sdk.Event, 0, len(events))
+	for _, event := range events {
+		sdkEvents = append(sdkEvents, sdk.Event(event))
 	}
-
-	if err := k.DistributeFromFeePool(ctx, msg.Amount, recipient); err != nil {
-		return nil, err
-	}
-
-	logger := k.Logger(ctx)
-	logger.Info("transferred from the community pool to recipient", "amount", msg.Amount.String(), "recipient", msg.Recipient)
+	sdkCtx.EventManager().EmitEvents(sdkEvents)
 
 	return &types.MsgCommunityPoolSpendResponse{}, nil //nolint:staticcheck // we're using a deprecated call for compatibility
 }

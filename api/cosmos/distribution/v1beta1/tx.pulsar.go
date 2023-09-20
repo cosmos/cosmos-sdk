@@ -6721,7 +6721,7 @@ func (x *MsgWithdrawValidatorCommissionResponse) GetAmount() []*v1beta1.Coin {
 // MsgFundCommunityPool allows an account to directly
 // fund the community pool.
 //
-// DEPRECATED: Use x/pool modules MsgFundCommunityPool instead.
+// Deprecated: Use x/pool modules MsgFundCommunityPool instead.
 // Since 0.50
 //
 // Deprecated: Do not use.
@@ -6770,7 +6770,7 @@ func (x *MsgFundCommunityPool) GetDepositor() string {
 
 // MsgFundCommunityPoolResponse defines the Msg/FundCommunityPool response type.
 //
-// DEPRECATED
+// Deprecated
 // Since 0.50
 //
 // Deprecated: Do not use.
@@ -6880,7 +6880,7 @@ func (*MsgUpdateParamsResponse) Descriptor() ([]byte, []int) {
 	return file_cosmos_distribution_v1beta1_tx_proto_rawDescGZIP(), []int{9}
 }
 
-// DEPRECATED: Use x/pool modules MsgCommunityPoolSpend instead
+// Deprecated: Use x/pool modules MsgCommunityPoolSpend instead
 // Since: cosmos-sdk 0.50
 //
 // Deprecated: Do not use.
@@ -6939,7 +6939,7 @@ func (x *MsgCommunityPoolSpend) GetAmount() []*v1beta1.Coin {
 // MsgCommunityPoolSpendResponse defines the response to executing a
 // MsgCommunityPoolSpend message.
 //
-// DEPRECATED
+// Deprecated
 // Since: cosmos-sdk 0.50
 //
 // Deprecated: Do not use.

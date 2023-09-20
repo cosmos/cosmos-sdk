@@ -10180,7 +10180,7 @@ func (x *QueryDelegatorWithdrawAddressResponse) GetWithdrawAddress() string {
 // QueryCommunityPoolRequest is the request type for the Query/CommunityPool RPC
 // method.
 //
-// DEPRECATED
+// Deprecated
 // Since 0.50
 //
 // Deprecated: Do not use.
@@ -10213,7 +10213,7 @@ func (*QueryCommunityPoolRequest) Descriptor() ([]byte, []int) {
 // QueryCommunityPoolResponse is the response type for the Query/CommunityPool
 // RPC method.
 //
-// DEPRECATED
+// Deprecated
 // Since 0.50
 //
 // Deprecated: Do not use.

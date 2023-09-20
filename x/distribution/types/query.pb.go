@@ -870,7 +870,7 @@ var xxx_messageInfo_QueryDelegatorWithdrawAddressResponse proto.InternalMessageI
 // QueryCommunityPoolRequest is the request type for the Query/CommunityPool RPC
 // method.
 //
-// DEPRECATED
+// Deprecated
 // Since 0.50
 //
 // Deprecated: Do not use.
@@ -913,7 +913,7 @@ var xxx_messageInfo_QueryCommunityPoolRequest proto.InternalMessageInfo
 // QueryCommunityPoolResponse is the response type for the Query/CommunityPool
 // RPC method.
 //
-// DEPRECATED
+// Deprecated
 // Since 0.50
 //
 // Deprecated: Do not use.
@@ -1106,7 +1106,7 @@ type QueryClient interface {
 	DelegatorWithdrawAddress(ctx context.Context, in *QueryDelegatorWithdrawAddressRequest, opts ...grpc.CallOption) (*QueryDelegatorWithdrawAddressResponse, error)
 	// CommunityPool queries the community pool coins.
 	//
-	// DEPRECATED: Prefer to use x/pool modules CommunityPool rpc method.
+	// Deprecated: Prefer to use x/pool modules CommunityPool rpc method.
 	// Since 0.50
 	CommunityPool(ctx context.Context, in *QueryCommunityPoolRequest, opts ...grpc.CallOption) (*QueryCommunityPoolResponse, error)
 }
@@ -1233,7 +1233,7 @@ type QueryServer interface {
 	DelegatorWithdrawAddress(context.Context, *QueryDelegatorWithdrawAddressRequest) (*QueryDelegatorWithdrawAddressResponse, error)
 	// CommunityPool queries the community pool coins.
 	//
-	// DEPRECATED: Prefer to use x/pool modules CommunityPool rpc method.
+	// Deprecated: Prefer to use x/pool modules CommunityPool rpc method.
 	// Since 0.50
 	CommunityPool(context.Context, *QueryCommunityPoolRequest) (*QueryCommunityPoolResponse, error)
 }

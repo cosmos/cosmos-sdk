@@ -18,7 +18,7 @@ replace (
 	cosmossdk.io/x/evidence => ../../../x/evidence
 	cosmossdk.io/x/feegrant => ../../../x/feegrant
 	cosmossdk.io/x/nft => ../../../x/nft
-	cosmossdk.io/x/pool => ../../../x/pool
+	cosmossdk.io/x/protocolpool => ../../../x/protocolpool
 	cosmossdk.io/x/tx => ../../../x/tx
 	cosmossdk.io/x/upgrade => ../../../x/upgrade
 )
@@ -51,7 +51,7 @@ require (
 	cosmossdk.io/x/evidence v0.0.0-20230613133644-0a778132a60f // indirect
 	cosmossdk.io/x/feegrant v0.0.0-20230613133644-0a778132a60f // indirect
 	cosmossdk.io/x/nft v0.0.0-20230613133644-0a778132a60f // indirect
-	cosmossdk.io/x/pool v0.0.0-20230907131022-067909526905 // indirect
+	cosmossdk.io/x/protocolpool v0.0.0-20230907131022-067909526905 // indirect
 	cosmossdk.io/x/tx v0.10.0 // indirect
 	cosmossdk.io/x/upgrade v0.0.0-20230613133644-0a778132a60f // indirect
 	filippo.io/edwards25519 v1.0.0 // indirect

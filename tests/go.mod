@@ -40,7 +40,7 @@ require (
 	cloud.google.com/go/storage v1.31.0 // indirect
 	cosmossdk.io/client/v2 v2.0.0-20230630094428-02b760776860 // indirect
 	cosmossdk.io/x/circuit v0.0.0-20230613133644-0a778132a60f // indirect
-	cosmossdk.io/x/pool v0.0.0-20230907131022-067909526905 // indirect
+	cosmossdk.io/x/protocolpool v0.0.0-20230907131022-067909526905 // indirect
 	filippo.io/edwards25519 v1.0.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/99designs/keyring v1.2.1 // indirect
@@ -203,7 +203,7 @@ replace (
 	cosmossdk.io/x/evidence => ../x/evidence
 	cosmossdk.io/x/feegrant => ../x/feegrant
 	cosmossdk.io/x/nft => ../x/nft
-	cosmossdk.io/x/pool => ../x/pool
+	cosmossdk.io/x/protocolpool => ../x/protocolpool
 	cosmossdk.io/x/upgrade => ../x/upgrade
 )
 

@@ -16,7 +16,7 @@ require (
 	cosmossdk.io/x/evidence v0.0.0-20230613133644-0a778132a60f
 	cosmossdk.io/x/feegrant v0.0.0-20230613133644-0a778132a60f
 	cosmossdk.io/x/nft v0.0.0-20230613133644-0a778132a60f
-	cosmossdk.io/x/pool v0.0.0-20230907131022-067909526905
+	cosmossdk.io/x/protocolpool v0.0.0-20230907131022-067909526905
 	cosmossdk.io/x/tx v0.10.0
 	cosmossdk.io/x/upgrade v0.0.0-20230613133644-0a778132a60f
 	github.com/cometbft/cometbft v0.38.0
@@ -206,7 +206,7 @@ replace (
 	cosmossdk.io/x/evidence => ../x/evidence
 	cosmossdk.io/x/feegrant => ../x/feegrant
 	cosmossdk.io/x/nft => ../x/nft
-	cosmossdk.io/x/pool => ../x/pool
+	cosmossdk.io/x/protocolpool => ../x/protocolpool
 	cosmossdk.io/x/upgrade => ../x/upgrade
 )
 

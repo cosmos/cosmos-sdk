@@ -68,8 +68,8 @@ service Query {
 
   // CommunityPool queries the community pool coins.
   //
-  // Deprecated: Prefer to use x/pool modules CommunityPool rpc method.
-  // Since 0.50
+  // Deprecated: Prefer to use x/pool module's CommunityPool rpc method.
+  // Since: cosmos-sdk 0.50
   rpc CommunityPool(QueryCommunityPoolRequest) returns (QueryCommunityPoolResponse) {
     option deprecated            = true;
     option (google.api.http).get = "/cosmos/distribution/v1beta1/community_pool";
@@ -247,7 +247,7 @@ message QueryDelegatorWithdrawAddressResponse {
 // method.
 //
 // Deprecated
-// Since 0.50
+// Since: cosmos-sdk 0.50
 message QueryCommunityPoolRequest {
   option deprecated = true;
 }
@@ -256,7 +256,7 @@ message QueryCommunityPoolRequest {
 // RPC method.
 //
 // Deprecated
-// Since 0.50
+// Since: cosmos-sdk 0.50
 message QueryCommunityPoolResponse {
   option deprecated = true;
   // pool defines community pool's coins.

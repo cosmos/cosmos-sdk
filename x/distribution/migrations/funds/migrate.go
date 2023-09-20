@@ -8,7 +8,7 @@ import (
 )
 
 // MigrateFunds migrates the distribution module funds to pool module
-func MigrateFunds(ctx sdk.Context, bankKeeper types.BankKeeper, feePool types.FeePool, macc sdk.ModuleAccountI, poolMacc sdk.ModuleAccountI) error {
+func MigrateFunds(ctx sdk.Context, bankKeeper types.BankKeeper, feePool types.FeePool, macc, poolMacc sdk.ModuleAccountI) error {
 	poolBal := sdk.NormalizeCoins(feePool.CommunityPool)
 	distrbalances := bankKeeper.GetAllBalances(ctx, macc.GetAddress())
 	if distrbalances.IsZero() || distrbalances.IsAllLT(poolBal) {

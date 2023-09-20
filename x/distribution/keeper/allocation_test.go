@@ -10,11 +10,9 @@ import (
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/comet"
-	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -45,14 +43,7 @@ func TestAllocateTokensToValidatorWithCommission(t *testing.T) {
 	accountKeeper.EXPECT().GetModuleAddress("distribution").Return(distrAcc.GetAddress())
 	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(valCodec).AnyTimes()
 
-	baseApp := baseapp.NewBaseApp(
-		"authz",
-		log.NewNopLogger(),
-		testCtx.DB,
-		encCfg.TxConfig.TxDecoder(),
-	)
-	baseApp.SetCMS(testCtx.CMS)
-	baseApp.SetInterfaceRegistry(encCfg.InterfaceRegistry)
+	baseApp := initBaseApp(testCtx, encCfg)
 
 	distrKeeper := keeper.NewKeeper(
 		encCfg.Codec,
@@ -113,14 +104,7 @@ func TestAllocateTokensToManyValidators(t *testing.T) {
 	accountKeeper.EXPECT().GetModuleAccount(gomock.Any(), "fee_collector").Return(feeCollectorAcc)
 	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec("cosmosvaloper")).AnyTimes()
 
-	baseApp := baseapp.NewBaseApp(
-		"authz",
-		log.NewNopLogger(),
-		testCtx.DB,
-		encCfg.TxConfig.TxDecoder(),
-	)
-	baseApp.SetCMS(testCtx.CMS)
-	baseApp.SetInterfaceRegistry(encCfg.InterfaceRegistry)
+	baseApp := initBaseApp(testCtx, encCfg)
 
 	distrKeeper := keeper.NewKeeper(
 		encCfg.Codec,
@@ -252,14 +236,7 @@ func TestAllocateTokensTruncation(t *testing.T) {
 	accountKeeper.EXPECT().GetModuleAccount(gomock.Any(), "fee_collector").Return(feeCollectorAcc)
 	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec("cosmosvaloper")).AnyTimes()
 
-	baseApp := baseapp.NewBaseApp(
-		"authz",
-		log.NewNopLogger(),
-		testCtx.DB,
-		encCfg.TxConfig.TxDecoder(),
-	)
-	baseApp.SetCMS(testCtx.CMS)
-	baseApp.SetInterfaceRegistry(encCfg.InterfaceRegistry)
+	baseApp := initBaseApp(testCtx, encCfg)
 
 	distrKeeper := keeper.NewKeeper(
 		encCfg.Codec,

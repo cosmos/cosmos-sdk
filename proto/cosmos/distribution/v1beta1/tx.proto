@@ -30,8 +30,8 @@ service Msg {
   // FundCommunityPool defines a method to allow an account to directly
   // fund the community pool.
   //
-  // Deprecated: Use x/pool modules FundCommunityPool instead.
-  // Since 0.50
+  // Deprecated: Use x/pool module's FundCommunityPool instead.
+  // Since: cosmos-sdk 0.50
   rpc FundCommunityPool(MsgFundCommunityPool) returns (MsgFundCommunityPoolResponse) {
     option deprecated = true;
   };
@@ -47,8 +47,8 @@ service Msg {
   // could be the governance module itself. The authority is defined in the
   // keeper.
   //
-  // Deprecated: Use x/pool modules CommunityPoolSpend instead.
-  // Since: 0.50
+  // Deprecated: Use x/pool module's CommunityPoolSpend instead.
+  // Since: cosmos-sdk 0.50
   rpc CommunityPoolSpend(MsgCommunityPoolSpend) returns (MsgCommunityPoolSpendResponse);
 
   // DepositValidatorRewardsPool defines a method to provide additional rewards
@@ -127,8 +127,8 @@ message MsgWithdrawValidatorCommissionResponse {
 // MsgFundCommunityPool allows an account to directly
 // fund the community pool.
 //
-// Deprecated: Use x/pool modules MsgFundCommunityPool instead.
-// Since 0.50
+// Deprecated: Use x/pool module's MsgFundCommunityPool instead.
+// Since: cosmos-sdk 0.50
 message MsgFundCommunityPool {
   option deprecated             = true;
   option (cosmos.msg.v1.signer) = "depositor";
@@ -149,7 +149,7 @@ message MsgFundCommunityPool {
 // MsgFundCommunityPoolResponse defines the Msg/FundCommunityPool response type.
 //
 // Deprecated
-// Since 0.50
+// Since: cosmos-sdk 0.50
 message MsgFundCommunityPoolResponse {
   option deprecated = true;
 }
@@ -180,7 +180,7 @@ message MsgUpdateParamsResponse {}
 // pool to another account. This message is typically executed via a governance
 // proposal with the governance module being the executing authority.
 
-// Deprecated: Use x/pool modules MsgCommunityPoolSpend instead
+// Deprecated: Use x/pool module's MsgCommunityPoolSpend instead
 // Since: cosmos-sdk 0.50
 message MsgCommunityPoolSpend {
   option deprecated             = true;

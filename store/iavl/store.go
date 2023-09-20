@@ -363,7 +363,9 @@ func (st *Store) Query(req *types.RequestQuery) (res *types.ResponseQuery, err e
 		for ; iterator.Valid(); iterator.Next() {
 			pairs.Pairs = append(pairs.Pairs, kv.Pair{Key: iterator.Key(), Value: iterator.Value()})
 		}
-		iterator.Close()
+		if err := iterator.Close(); err != nil {
+			panic(fmt.Errorf("failed to close iterator: %w", err))
+		}
 
 		bz, err := pairs.Marshal()
 		if err != nil {

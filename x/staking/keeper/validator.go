@@ -89,6 +89,12 @@ func (k Keeper) DeleteValidatorByPowerIndex(ctx sdk.Context, validator types.Val
 	store.Delete(types.GetValidatorsByPowerIndexKey(validator, k.PowerReduction(ctx)))
 }
 
+// DeleteStoreEntry added to ease LSM bugfix migration (e.g. to bypass DeleteValidatorByPowerIndex)
+func (k Keeper) DeleteStoreEntry(ctx sdk.Context, key []byte) {
+	store := ctx.KVStore(k.storeKey)
+	store.Delete(key)
+}
+
 // validator index
 func (k Keeper) SetNewValidatorByPowerIndex(ctx sdk.Context, validator types.Validator) {
 	store := ctx.KVStore(k.storeKey)

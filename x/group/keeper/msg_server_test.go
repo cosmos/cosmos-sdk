@@ -11,6 +11,8 @@ import (
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/golang/mock/gomock"
 
+	"cosmossdk.io/core/header"
+
 	"github.com/cosmos/cosmos-sdk/codec/address"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -174,7 +176,7 @@ func (s *TestSuite) TestCreateGroup() {
 	for msg, spec := range specs {
 		spec := spec
 		s.Run(msg, func() {
-			blockTime := sdk.UnwrapSDKContext(s.ctx).BlockTime()
+			blockTime := sdk.UnwrapSDKContext(s.ctx).HeaderInfo().Time
 			res, err := s.groupKeeper.CreateGroup(s.ctx, spec.req)
 			if spec.expErr {
 				s.Require().Error(err)
@@ -333,7 +335,7 @@ func (s *TestSuite) TestUpdateGroupMembers() {
 					Member: &group.Member{
 						Address: member2,
 						Weight:  "2",
-						AddedAt: s.sdkCtx.BlockTime(),
+						AddedAt: s.sdkCtx.HeaderInfo().Time,
 					},
 					GroupId: groupID,
 				},
@@ -428,7 +430,7 @@ func (s *TestSuite) TestUpdateGroupMembers() {
 				Member: &group.Member{
 					Address: member2,
 					Weight:  "1",
-					AddedAt: s.sdkCtx.BlockTime(),
+					AddedAt: s.sdkCtx.HeaderInfo().Time,
 				},
 			}},
 		},
@@ -919,7 +921,7 @@ func (s *TestSuite) TestCreateGroupWithPolicy() {
 			err := spec.req.SetDecisionPolicy(spec.policy)
 			s.Require().NoError(err)
 
-			blockTime := sdk.UnwrapSDKContext(s.ctx).BlockTime()
+			blockTime := sdk.UnwrapSDKContext(s.ctx).HeaderInfo().Time
 			res, err := s.groupKeeper.CreateGroupWithPolicy(s.ctx, spec.req)
 			if spec.expErr {
 				s.Require().Error(err)
@@ -1997,8 +1999,8 @@ func (s *TestSuite) TestWithdrawProposal() {
 				resp, err := s.groupKeeper.Proposal(s.ctx, &group.QueryProposalRequest{ProposalId: proposalID})
 				s.Require().NoError(err)
 				vpe := resp.Proposal.VotingPeriodEnd
-				timeDiff := vpe.Sub(s.sdkCtx.BlockTime())
-				ctxVPE := sdkCtx.WithBlockTime(s.sdkCtx.BlockTime().Add(timeDiff).Add(time.Second * 1))
+				timeDiff := vpe.Sub(s.sdkCtx.HeaderInfo().Time)
+				ctxVPE := sdkCtx.WithHeaderInfo(header.Info{Time: s.sdkCtx.HeaderInfo().Time.Add(timeDiff).Add(time.Second * 1)})
 				s.Require().NoError(s.groupKeeper.TallyProposalsAtVPEnd(ctxVPE))
 				events := ctxVPE.EventManager().ABCIEvents()
 
@@ -2349,7 +2351,7 @@ func (s *TestSuite) TestVote() {
 				Voter:      addr4.String(),
 				Option:     group.VOTE_OPTION_NO,
 			},
-			srcCtx:    s.sdkCtx.WithBlockTime(s.blockTime.Add(time.Second)),
+			srcCtx:    s.sdkCtx.WithHeaderInfo(header.Info{Time: s.sdkCtx.HeaderInfo().Time.Add(time.Second)}),
 			expErr:    true,
 			expErrMsg: "voting period has ended already: expired",
 			postRun:   func(sdkCtx sdk.Context) {},
@@ -2697,7 +2699,7 @@ func (s *TestSuite) TestExecProposal() {
 
 				// Wait after min execution period end before Exec
 				sdkCtx := sdk.UnwrapSDKContext(ctx)
-				sdkCtx = sdkCtx.WithBlockTime(sdkCtx.BlockTime().Add(minExecutionPeriod)) // MinExecutionPeriod is 5s
+				sdkCtx = sdkCtx.WithHeaderInfo(header.Info{Time: sdkCtx.HeaderInfo().Time.Add(minExecutionPeriod)}) // MinExecutionPeriod is 5s
 				_, err := s.groupKeeper.Exec(sdkCtx, &group.MsgExec{Executor: addr1.String(), ProposalId: myProposalID})
 				s.Require().NoError(err)
 				return myProposalID
@@ -2732,7 +2734,7 @@ func (s *TestSuite) TestExecProposal() {
 
 				// Wait after min execution period end before Exec
 				sdkCtx := sdk.UnwrapSDKContext(ctx)
-				sdkCtx = sdkCtx.WithBlockTime(sdkCtx.BlockTime().Add(minExecutionPeriod)) // MinExecutionPeriod is 5s
+				sdkCtx = sdkCtx.WithHeaderInfo(header.Info{Time: sdkCtx.HeaderInfo().Time.Add(minExecutionPeriod)}) // MinExecutionPeriod is 5s
 				s.bankKeeper.EXPECT().Send(gomock.Any(), msgSend2).Return(nil, fmt.Errorf("error"))
 				_, err := s.groupKeeper.Exec(sdkCtx, &group.MsgExec{Executor: addr1.String(), ProposalId: myProposalID})
 				s.bankKeeper.EXPECT().Send(gomock.Any(), msgSend2).Return(nil, nil)
@@ -2755,7 +2757,7 @@ func (s *TestSuite) TestExecProposal() {
 			proposalID := spec.setupProposal(sdkCtx)
 
 			if !spec.srcBlockTime.IsZero() {
-				sdkCtx = sdkCtx.WithBlockTime(spec.srcBlockTime)
+				sdkCtx = sdkCtx.WithHeaderInfo(header.Info{Time: spec.srcBlockTime})
 			}
 
 			_, err := s.groupKeeper.Exec(sdkCtx, &group.MsgExec{Executor: addr1.String(), ProposalId: proposalID})
@@ -2938,7 +2940,7 @@ func (s *TestSuite) TestExecPrunedProposalsAndVotes() {
 
 				// Wait for min execution period end
 				sdkCtx := sdk.UnwrapSDKContext(ctx)
-				sdkCtx = sdkCtx.WithBlockTime(sdkCtx.BlockTime().Add(minExecutionPeriod))
+				sdkCtx = sdkCtx.WithHeaderInfo(header.Info{Time: sdkCtx.HeaderInfo().Time.Add(minExecutionPeriod)})
 				_, err := s.groupKeeper.Exec(sdkCtx, &group.MsgExec{Executor: addr1.String(), ProposalId: myProposalID})
 				s.bankKeeper.EXPECT().Send(gomock.Any(), msgSend2).Return(nil, nil)
 
@@ -2956,11 +2958,11 @@ func (s *TestSuite) TestExecPrunedProposalsAndVotes() {
 			proposalID := spec.setupProposal(sdkCtx)
 
 			if !spec.srcBlockTime.IsZero() {
-				sdkCtx = sdkCtx.WithBlockTime(spec.srcBlockTime)
+				sdkCtx = sdkCtx.WithHeaderInfo(header.Info{Time: spec.srcBlockTime})
 			}
 
 			// Wait for min execution period end
-			sdkCtx = sdkCtx.WithBlockTime(sdkCtx.BlockTime().Add(minExecutionPeriod))
+			sdkCtx = sdkCtx.WithHeaderInfo(header.Info{Time: sdkCtx.HeaderInfo().Time.Add(minExecutionPeriod)})
 			_, err := s.groupKeeper.Exec(sdkCtx, &group.MsgExec{Executor: addr1.String(), ProposalId: proposalID})
 			if spec.expErr {
 				s.Require().Error(err)
@@ -3397,7 +3399,7 @@ func (s *TestSuite) TestExecProposalsWhenMemberLeavesOrIsUpdated() {
 			s.Require().NoError(err)
 
 			// travel in time
-			sdkCtx = sdkCtx.WithBlockTime(s.blockTime.Add(minExecutionPeriod + 1))
+			sdkCtx = sdkCtx.WithHeaderInfo(header.Info{Time: s.blockTime.Add(minExecutionPeriod + 1)})
 			_, err = s.groupKeeper.Exec(sdkCtx, &group.MsgExec{Executor: s.addrs[1].String(), ProposalId: proposalID})
 			if spec.expErrMsg != "" {
 				s.Require().Contains(err.Error(), spec.expErrMsg)

@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"time"
 
+	"cosmossdk.io/core/header"
+
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -173,7 +175,7 @@ func (suite *KeeperTestSuite) TestSpendableBalances() {
 	_, _, addr := testdata.KeyTestPubAddr()
 
 	ctx := sdk.UnwrapSDKContext(suite.ctx)
-	ctx = ctx.WithBlockTime(time.Now())
+	ctx = ctx.WithHeaderInfo(header.Info{Time: time.Now()})
 	queryClient := suite.mockQueryClient(ctx)
 
 	_, err := queryClient.SpendableBalances(ctx, &types.QuerySpendableBalancesRequest{})
@@ -200,8 +202,8 @@ func (suite *KeeperTestSuite) TestSpendableBalances() {
 	vacc, err := vestingtypes.NewContinuousVestingAccount(
 		acc,
 		sdk.NewCoins(fooCoins),
-		ctx.BlockTime().Unix(),
-		ctx.BlockTime().Add(time.Hour).Unix(),
+		ctx.HeaderInfo().Time.Unix(),
+		ctx.HeaderInfo().Time.Add(time.Hour).Unix(),
 	)
 	suite.Require().NoError(err)
 
@@ -209,7 +211,7 @@ func (suite *KeeperTestSuite) TestSpendableBalances() {
 	suite.Require().NoError(testutil.FundAccount(suite.ctx, suite.bankKeeper, addr, origCoins))
 
 	// move time forward for some tokens to vest
-	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(30 * time.Minute))
+	ctx = ctx.WithHeaderInfo(header.Info{Time: ctx.HeaderInfo().Time.Add(30 * time.Minute)})
 	queryClient = suite.mockQueryClient(ctx)
 
 	suite.mockSpendableCoins(ctx, vacc)
@@ -226,7 +228,7 @@ func (suite *KeeperTestSuite) TestSpendableBalanceByDenom() {
 	_, _, addr := testdata.KeyTestPubAddr()
 
 	ctx := sdk.UnwrapSDKContext(suite.ctx)
-	ctx = ctx.WithBlockTime(time.Now())
+	ctx = ctx.WithHeaderInfo(header.Info{Time: time.Now()})
 	queryClient := suite.mockQueryClient(ctx)
 
 	_, err := queryClient.SpendableBalanceByDenom(ctx, &types.QuerySpendableBalanceByDenomRequest{})
@@ -248,8 +250,8 @@ func (suite *KeeperTestSuite) TestSpendableBalanceByDenom() {
 	vacc, err := vestingtypes.NewContinuousVestingAccount(
 		acc,
 		sdk.NewCoins(fooCoins),
-		ctx.BlockTime().Unix(),
-		ctx.BlockTime().Add(time.Hour).Unix(),
+		ctx.HeaderInfo().Time.Unix(),
+		ctx.HeaderInfo().Time.Add(time.Hour).Unix(),
 	)
 	suite.Require().NoError(err)
 
@@ -257,7 +259,7 @@ func (suite *KeeperTestSuite) TestSpendableBalanceByDenom() {
 	suite.Require().NoError(testutil.FundAccount(suite.ctx, suite.bankKeeper, addr, origCoins))
 
 	// move time forward for half of the tokens to vest
-	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(30 * time.Minute))
+	ctx = ctx.WithHeaderInfo(header.Info{Time: ctx.HeaderInfo().Time.Add(30 * time.Minute)})
 	queryClient = suite.mockQueryClient(ctx)
 
 	// check fooCoins first, it has some vested and some vesting

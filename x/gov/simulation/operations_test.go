@@ -10,6 +10,7 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/core/header"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 
@@ -211,7 +212,7 @@ func TestSimulateMsgCancelProposal(t *testing.T) {
 	suite, ctx := createTestSuite(t, false)
 	app := suite.App
 	blockTime := time.Now().UTC()
-	ctx = ctx.WithBlockTime(blockTime)
+	ctx = ctx.WithHeaderInfo(header.Info{Time: blockTime})
 
 	// setup 3 accounts
 	s := rand.NewSource(1)
@@ -223,7 +224,7 @@ func TestSimulateMsgCancelProposal(t *testing.T) {
 	contentMsg, err := v1.NewLegacyContent(content, suite.GovKeeper.GetGovernanceAccount(ctx).GetAddress().String())
 	require.NoError(t, err)
 
-	submitTime := ctx.BlockHeader().Time
+	submitTime := ctx.HeaderInfo().Time
 	params, _ := suite.GovKeeper.Params.Get(ctx)
 	depositPeriod := params.MaxDepositPeriod
 
@@ -260,7 +261,7 @@ func TestSimulateMsgDeposit(t *testing.T) {
 	suite, ctx := createTestSuite(t, false)
 	app := suite.App
 	blockTime := time.Now().UTC()
-	ctx = ctx.WithBlockTime(blockTime)
+	ctx = ctx.WithHeaderInfo(header.Info{Time: blockTime})
 
 	// setup 3 accounts
 	s := rand.NewSource(1)
@@ -272,7 +273,7 @@ func TestSimulateMsgDeposit(t *testing.T) {
 	contentMsg, err := v1.NewLegacyContent(content, suite.GovKeeper.GetGovernanceAccount(ctx).GetAddress().String())
 	require.NoError(t, err)
 
-	submitTime := ctx.BlockHeader().Time
+	submitTime := ctx.HeaderInfo().Time
 	params, _ := suite.GovKeeper.Params.Get(ctx)
 	depositPeriod := params.MaxDepositPeriod
 
@@ -310,7 +311,7 @@ func TestSimulateMsgVote(t *testing.T) {
 	suite, ctx := createTestSuite(t, false)
 	app := suite.App
 	blockTime := time.Now().UTC()
-	ctx = ctx.WithBlockTime(blockTime)
+	ctx = ctx.WithHeaderInfo(header.Info{Time: blockTime})
 
 	// setup 3 accounts
 	s := rand.NewSource(1)
@@ -322,7 +323,7 @@ func TestSimulateMsgVote(t *testing.T) {
 	contentMsg, err := v1.NewLegacyContent(v1beta1.NewTextProposal("Test", "description"), govAcc)
 	require.NoError(t, err)
 
-	submitTime := ctx.BlockHeader().Time
+	submitTime := ctx.HeaderInfo().Time
 	params, _ := suite.GovKeeper.Params.Get(ctx)
 	depositPeriod := params.MaxDepositPeriod
 
@@ -359,7 +360,7 @@ func TestSimulateMsgVoteWeighted(t *testing.T) {
 	suite, ctx := createTestSuite(t, false)
 	app := suite.App
 	blockTime := time.Now().UTC()
-	ctx = ctx.WithBlockTime(blockTime)
+	ctx = ctx.WithHeaderInfo(header.Info{Time: blockTime})
 
 	// setup 3 accounts
 	s := rand.NewSource(1)
@@ -370,7 +371,7 @@ func TestSimulateMsgVoteWeighted(t *testing.T) {
 	govAcc := suite.GovKeeper.GetGovernanceAccount(ctx).GetAddress().String()
 	contentMsg, err := v1.NewLegacyContent(v1beta1.NewTextProposal("Test", "description"), govAcc)
 	require.NoError(t, err)
-	submitTime := ctx.BlockHeader().Time
+	submitTime := ctx.HeaderInfo().Time
 	params, _ := suite.GovKeeper.Params.Get(ctx)
 	depositPeriod := params.MaxDepositPeriod
 

@@ -912,7 +912,7 @@ func SimulateMsgWithdrawProposal(
 				timeout := p.VotingPeriodEnd
 				proposal = p
 				proposalID = int(p.Id)
-				if timeout.Before(sdkCtx.BlockTime()) || timeout.Equal(sdkCtx.BlockTime()) {
+				if timeout.Before(sdkCtx.HeaderInfo().Time) || timeout.Equal(sdkCtx.HeaderInfo().Time) {
 					return simtypes.NoOpMsg(group.ModuleName, TypeMsgWithdrawProposal, "voting period ended: skipping"), nil, nil
 				}
 				break
@@ -1023,7 +1023,7 @@ func SimulateMsgVote(
 			if p.Status == group.PROPOSAL_STATUS_SUBMITTED {
 				timeout := p.VotingPeriodEnd
 				proposalID = int(p.Id)
-				if timeout.Before(sdkCtx.BlockTime()) || timeout.Equal(sdkCtx.BlockTime()) {
+				if timeout.Before(sdkCtx.HeaderInfo().Time) || timeout.Equal(sdkCtx.HeaderInfo().Time) {
 					return simtypes.NoOpMsg(group.ModuleName, TypeMsgVote, "voting period ended: skipping"), nil, nil
 				}
 				break

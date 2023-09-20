@@ -90,7 +90,7 @@ func initFixture(tb testing.TB) *fixture {
 	stakingKeeper := stakingkeeper.NewKeeper(cdc, runtime.NewKVStoreService(keys[stakingtypes.StoreKey]), accountKeeper, bankKeeper, authority.String(), addresscodec.NewBech32Codec(sdk.Bech32PrefixValAddr), addresscodec.NewBech32Codec(sdk.Bech32PrefixConsAddr))
 
 	// set default staking params
-	err := stakingKeeper.SetParams(newCtx, stakingtypes.DefaultParams())
+	err := stakingKeeper.Params.Set(newCtx, stakingtypes.DefaultParams())
 	assert.NilError(tb, err)
 
 	// Create MsgServiceRouter, but don't populate it before creating the gov

@@ -791,7 +791,7 @@ jobs:
         with:
           projectBaseDir: x/circuit/
           
-  test-x-pool:
+  test-x-protocolpool:
     runs-on: ubuntu-latest    
     steps:
       - uses: actions/checkout@v4

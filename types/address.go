@@ -34,7 +34,10 @@ const (
 	//	config.Seal()
 
 	// Bech32MainPrefix defines the main SDK Bech32 prefix of an account's address
-	Bech32MainPrefix = "cosmos"
+	Bech32MainPrefix = "qredo"
+
+	// Bech32PrefixWorkspace defines the Bech32 prefix used in workspace bank-controlled accounts
+	Bech32PrefixWorkspace = "workspace"
 
 	// Purpose is the ATOM purpose as defined in SLIP44 (https://github.com/satoshilabs/slips/blob/master/slip-0044.md)
 	Purpose = 44
@@ -64,6 +67,8 @@ const (
 	Bech32PrefixAccAddr = Bech32MainPrefix
 	// Bech32PrefixAccPub defines the Bech32 prefix of an account's public key
 	Bech32PrefixAccPub = Bech32MainPrefix + PrefixPublic
+	// Bech32PrefixWorkspaceAddr defines the Bech32 prefix used for workspace bank-controlled accounts
+	Bech32PrefixWorkspaceAddr = Bech32MainPrefix + Bech32PrefixWorkspace
 	// Bech32PrefixValAddr defines the Bech32 prefix of a validator's operator address
 	Bech32PrefixValAddr = Bech32MainPrefix + PrefixValidator + PrefixOperator
 	// Bech32PrefixValPub defines the Bech32 prefix of a validator's operator public key
@@ -78,13 +83,12 @@ const (
 var (
 	// AccAddress.String() is expensive and if unoptimized dominantly showed up in profiles,
 	// yet has no mechanisms to trivially cache the result given that AccAddress is a []byte type.
-	accAddrMu     sync.Mutex
-	accAddrCache  *simplelru.LRU
-	consAddrMu    sync.Mutex
-	consAddrCache *simplelru.LRU
-	valAddrMu     sync.Mutex
-	valAddrCache  *simplelru.LRU
-
+	accAddrMu        sync.Mutex
+	accAddrCache     *simplelru.LRU
+	consAddrMu       sync.Mutex
+	consAddrCache    *simplelru.LRU
+	valAddrMu        sync.Mutex
+	valAddrCache     *simplelru.LRU
 	isCachingEnabled atomic.Bool
 )
 
@@ -194,11 +198,16 @@ func AccAddressFromBech32(address string) (addr AccAddress, err error) {
 		return AccAddress{}, errors.New("empty address string is not allowed")
 	}
 
-	bech32PrefixAccAddr := GetConfig().GetBech32AccountAddrPrefix()
-
-	bz, err := GetFromBech32(address, bech32PrefixAccAddr)
+	bech32Prefixes := []string{GetConfig().GetBech32AccountAddrPrefix(), GetConfig().GetBech32WorkspaceAddrPrefix()}
+	var bz []byte
+	for _, prefix := range bech32Prefixes {
+		bz, err := GetFromBech32(address, prefix)
+		if err == nil {
+			return bz, nil
+		}
+	}
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to convert Bech32 address: invalid address format for account/workspace")
 	}
 
 	err = VerifyAddressFormat(bz)

@@ -9,7 +9,7 @@ import (
 )
 
 // DefaultKeyringServiceName defines a default service name for the keyring.
-const DefaultKeyringServiceName = "cosmos"
+const DefaultKeyringServiceName = "qredo"
 
 // Config is the structure that holds the SDK configuration parameters.
 // This could be used to initialize certain configuration parameters for the SDK.
@@ -90,6 +90,11 @@ func (config *Config) SetBech32PrefixForAccount(addressPrefix, pubKeyPrefix stri
 	config.bech32AddressPrefix["account_pub"] = pubKeyPrefix
 }
 
+func (config *Config) SetBech32PrefixForWorkspace(workspacePrefix string) {
+	config.assertNotSealed()
+	config.bech32AddressPrefix["workspace_addr"] = workspacePrefix
+}
+
 // SetBech32PrefixForValidator builds the Config with Bech32 addressPrefix and publKeyPrefix for validators
 //
 //	and returns the config instance
@@ -160,6 +165,11 @@ func (config *Config) Seal() *Config {
 // GetBech32AccountAddrPrefix returns the Bech32 prefix for account address
 func (config *Config) GetBech32AccountAddrPrefix() string {
 	return config.bech32AddressPrefix["account_addr"]
+}
+
+// GetBech32WorkspaceAddrPrefix returns the Bech32 prefix for workspace address
+func (config *Config) GetBech32WorkspaceAddrPrefix() string {
+	return config.bech32AddressPrefix["workspace_addr"]
 }
 
 // GetBech32ValidatorAddrPrefix returns the Bech32 prefix for validator address

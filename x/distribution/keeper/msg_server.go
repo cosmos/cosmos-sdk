@@ -254,15 +254,3 @@ func (k *Keeper) validateAuthority(authority string) error {
 
 	return nil
 }
-
-func validateAmount(amount sdk.Coins) error {
-	if amount == nil {
-		return errors.Wrap(sdkerrors.ErrInvalidCoins, "amount cannot be nil")
-	}
-
-	if err := amount.Validate(); err != nil {
-		return errors.Wrap(sdkerrors.ErrInvalidCoins, amount.String())
-	}
-
-	return nil
-}

@@ -18,7 +18,7 @@ import (
 type MessageRouterBuilder interface {
 	MessageRouter
 
-	// WithOptios allows to change the default options of the MessageRouter instance after initialization.
+	// WithOptions allows to change the default options of the MessageRouter instance after initialization.
 	WithOptions(opts ...MessageRouterOption) MessageRouter
 }
 

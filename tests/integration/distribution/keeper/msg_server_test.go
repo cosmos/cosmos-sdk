@@ -59,21 +59,21 @@ type fixture struct {
 	valAddr sdk.ValAddress
 }
 
-func initFixture(tb *testing.T) *fixture {
-	tb.Helper()
+func initFixture(t *testing.T) *fixture {
+	t.Helper()
 	keys := storetypes.NewKVStoreKeys(
 		authtypes.StoreKey, banktypes.StoreKey, distrtypes.StoreKey, stakingtypes.StoreKey,
 	)
 	cdc := moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{}, distribution.AppModuleBasic{}).Codec
 
-	logger := log.NewTestLogger(tb)
+	logger := log.NewTestLogger(t)
 	cms := integration.CreateMultiStore(keys, logger)
 
 	newCtx := sdk.NewContext(cms, true, logger)
 
 	authority := authtypes.NewModuleAddress("gov")
 
-	testCtx := testutil.DefaultContextWithDB(tb, keys[distrtypes.StoreKey], storetypes.NewTransientStoreKey("transient_test"))
+	testCtx := testutil.DefaultContextWithDB(t, keys[distrtypes.StoreKey], storetypes.NewTransientStoreKey("transient_test"))
 	encCfg := moduletestutil.MakeTestEncodingConfig(distribution.AppModuleBasic{})
 
 	baseApp := baseapp.NewBaseApp(
@@ -114,7 +114,7 @@ func initFixture(tb *testing.T) *fixture {
 	)
 
 	stakingKeeper := stakingkeeper.NewKeeper(cdc, runtime.NewKVStoreService(keys[stakingtypes.StoreKey]), accountKeeper, bankKeeper, authority.String(), addresscodec.NewBech32Codec(sdk.Bech32PrefixValAddr), addresscodec.NewBech32Codec(sdk.Bech32PrefixConsAddr))
-	require.NoError(tb, stakingKeeper.Params.Set(newCtx, stakingtypes.DefaultParams()))
+	require.NoError(t, stakingKeeper.Params.Set(newCtx, stakingtypes.DefaultParams()))
 
 	distrKeeper := distrkeeper.NewKeeper(
 		cdc, runtime.NewKVStoreService(keys[distrtypes.StoreKey]), accountKeeper, bankKeeper, stakingKeeper, baseApp.MsgServiceRouter(), baseApp.GRPCQueryRouter(), distrtypes.ModuleName, authority.String(),

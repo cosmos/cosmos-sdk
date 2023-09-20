@@ -144,6 +144,8 @@ func (keeper Keeper) ChargeDeposit(ctx context.Context, proposalID uint64, destA
 	rate := sdkmath.LegacyMustNewDecFromStr(proposalCancelRate)
 	var cancellationCharges sdk.Coins
 
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
 	deposits, err := keeper.GetDeposits(ctx, proposalID)
 	if err != nil {
 		return err
@@ -188,7 +190,7 @@ func (keeper Keeper) ChargeDeposit(ctx context.Context, proposalID uint64, destA
 		}
 	}
 
-	// burn the cancellation fee or sent the cancellation charges to destination address.
+	// burn the cancellation fee or send the cancellation charges to destination address.
 	if !cancellationCharges.IsZero() {
 		// get the pool module account address
 		poolAddress := keeper.authKeeper.GetModuleAddress(poolModuleName)
@@ -200,27 +202,19 @@ func (keeper Keeper) ChargeDeposit(ctx context.Context, proposalID uint64, destA
 				return err
 			}
 		case poolAddress.String() == destAddress:
-			amount := make([]*basev1beta1.Coin, len(cancellationCharges))
-			for i, coin := range cancellationCharges {
-				amount[i] = &basev1beta1.Coin{
-					Denom:  coin.Denom,
-					Amount: coin.Amount.String(),
-				}
-			}
-			msg := pooltypes.MsgFundCommunityPool{
-				Amount:    amount,
-				Depositor: keeper.ModuleAccountAddress().String(),
-			}
-
-			// Pass the sdk.Msg to the MessageRouter
-			handler := keeper.router.Handler(&msg)
-			if handler == nil {
-				return fmt.Errorf("message not recognized by router: %s", sdk.MsgTypeURL(&msg))
-			}
-			_, err := handler(sdk.UnwrapSDKContext(ctx), &msg)
+			// send cancellation charges to the community pool
+			msgResp, err := keeper.fundCommunityPool(sdkCtx, cancellationCharges, keeper.ModuleAccountAddress().String())
 			if err != nil {
 				return err
 			}
+
+			events := msgResp.Events
+			sdkEvents := make([]sdk.Event, 0, len(events))
+			for _, event := range events {
+				sdkEvents = append(sdkEvents, sdk.Event(event))
+			}
+			sdkCtx.EventManager().EmitEvents(sdkEvents)
+
 		default:
 			destAccAddress, err := keeper.authKeeper.AddressCodec().StringToBytes(destAddress)
 			if err != nil {
@@ -236,6 +230,31 @@ func (keeper Keeper) ChargeDeposit(ctx context.Context, proposalID uint64, destA
 	}
 
 	return nil
+}
+
+func (keeper Keeper) fundCommunityPool(ctx sdk.Context, cancellationCharges sdk.Coins, depositor string) (*sdk.Result, error) {
+	amount := make([]*basev1beta1.Coin, len(cancellationCharges))
+	for i, coin := range cancellationCharges {
+		amount[i] = &basev1beta1.Coin{
+			Denom:  coin.Denom,
+			Amount: coin.Amount.String(),
+		}
+	}
+	msg := pooltypes.MsgFundCommunityPool{
+		Amount:    amount,
+		Depositor: depositor,
+	}
+
+	// Pass the msg to the MessageRouter
+	handler := keeper.router.Handler(&msg)
+	if handler == nil {
+		return nil, fmt.Errorf("message not recognized by router: %s", sdk.MsgTypeURL(&msg))
+	}
+	msgResp, err := handler(ctx, &msg)
+	if err != nil {
+		return nil, err
+	}
+	return msgResp, nil
 }
 
 // RefundAndDeleteDeposits refunds and deletes all the deposits on a specific proposal.

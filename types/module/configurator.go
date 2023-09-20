@@ -45,8 +45,6 @@ type Configurator interface {
 	// will panic. If the ConsensusVersion bump does not introduce any store
 	// changes, then a no-op function must be registered here.
 	RegisterMigration(moduleName string, fromVersion uint64, handler MigrationHandler) error
-
-	RegisterFundsMigration(toModuleName, fromModule string) error
 }
 
 type configurator struct {

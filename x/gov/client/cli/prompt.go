@@ -33,6 +33,10 @@ var suggestedProposalTypes = []proposalType{
 		MsgType: "", // no message for text proposal
 	},
 	{
+		Name:    "community-pool-spend",
+		MsgType: "/cosmos.pool.v1.MsgCommunityPoolSpend",
+	},
+	{
 		Name:    "software-upgrade",
 		MsgType: "/cosmos.upgrade.v1beta1.MsgSoftwareUpgrade",
 	},

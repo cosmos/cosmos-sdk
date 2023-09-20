@@ -105,6 +105,8 @@ func (k msgServer) WithdrawValidatorCommission(ctx context.Context, msg *types.M
 }
 
 func (k msgServer) FundCommunityPool(ctx context.Context, msg *types.MsgFundCommunityPool) (*types.MsgFundCommunityPoolResponse, error) { //nolint:staticcheck // we're using a deprecated call for compatibility
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
 	if err := validateAmount(msg.Amount); err != nil {
 		return nil, err
 	}
@@ -125,10 +127,17 @@ func (k msgServer) FundCommunityPool(ctx context.Context, msg *types.MsgFundComm
 	if handler == nil {
 		return nil, fmt.Errorf("message not recognized by router: %s", sdk.MsgTypeURL(&poolMsg))
 	}
-	_, err := handler(sdk.UnwrapSDKContext(ctx), &poolMsg)
+	msgResp, err := handler(sdkCtx, &poolMsg)
 	if err != nil {
 		return nil, err
 	}
+
+	events := msgResp.Events
+	sdkEvents := make([]sdk.Event, 0, len(events))
+	for _, event := range events {
+		sdkEvents = append(sdkEvents, sdk.Event(event))
+	}
+	sdkCtx.EventManager().EmitEvents(sdkEvents)
 
 	return &types.MsgFundCommunityPoolResponse{}, nil //nolint:staticcheck // we're using a deprecated call for compatibility
 }

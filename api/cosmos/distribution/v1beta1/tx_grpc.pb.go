@@ -45,8 +45,8 @@ type MsgClient interface {
 	// FundCommunityPool defines a method to allow an account to directly
 	// fund the community pool.
 	//
-	// Deprecated: Use x/pool modules FundCommunityPool instead.
-	// Since 0.50
+	// Deprecated: Use x/pool module's FundCommunityPool instead.
+	// Since: cosmos-sdk 0.50
 	FundCommunityPool(ctx context.Context, in *MsgFundCommunityPool, opts ...grpc.CallOption) (*MsgFundCommunityPoolResponse, error)
 	// UpdateParams defines a governance operation for updating the x/distribution
 	// module parameters. The authority is defined in the keeper.
@@ -58,8 +58,8 @@ type MsgClient interface {
 	// could be the governance module itself. The authority is defined in the
 	// keeper.
 	//
-	// Deprecated: Use x/pool modules CommunityPoolSpend instead.
-	// Since: 0.50
+	// Deprecated: Use x/pool module's CommunityPoolSpend instead.
+	// Since: cosmos-sdk 0.50
 	CommunityPoolSpend(ctx context.Context, in *MsgCommunityPoolSpend, opts ...grpc.CallOption) (*MsgCommunityPoolSpendResponse, error)
 	// DepositValidatorRewardsPool defines a method to provide additional rewards
 	// to delegators to a specific validator.
@@ -157,8 +157,8 @@ type MsgServer interface {
 	// FundCommunityPool defines a method to allow an account to directly
 	// fund the community pool.
 	//
-	// Deprecated: Use x/pool modules FundCommunityPool instead.
-	// Since 0.50
+	// Deprecated: Use x/pool module's FundCommunityPool instead.
+	// Since: cosmos-sdk 0.50
 	FundCommunityPool(context.Context, *MsgFundCommunityPool) (*MsgFundCommunityPoolResponse, error)
 	// UpdateParams defines a governance operation for updating the x/distribution
 	// module parameters. The authority is defined in the keeper.
@@ -170,8 +170,8 @@ type MsgServer interface {
 	// could be the governance module itself. The authority is defined in the
 	// keeper.
 	//
-	// Deprecated: Use x/pool modules CommunityPoolSpend instead.
-	// Since: 0.50
+	// Deprecated: Use x/pool module's CommunityPoolSpend instead.
+	// Since: cosmos-sdk 0.50
 	CommunityPoolSpend(context.Context, *MsgCommunityPoolSpend) (*MsgCommunityPoolSpendResponse, error)
 	// DepositValidatorRewardsPool defines a method to provide additional rewards
 	// to delegators to a specific validator.

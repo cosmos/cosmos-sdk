@@ -871,7 +871,7 @@ var xxx_messageInfo_QueryDelegatorWithdrawAddressResponse proto.InternalMessageI
 // method.
 //
 // Deprecated
-// Since 0.50
+// Since: cosmos-sdk 0.50
 //
 // Deprecated: Do not use.
 type QueryCommunityPoolRequest struct {
@@ -914,7 +914,7 @@ var xxx_messageInfo_QueryCommunityPoolRequest proto.InternalMessageInfo
 // RPC method.
 //
 // Deprecated
-// Since 0.50
+// Since: cosmos-sdk 0.50
 //
 // Deprecated: Do not use.
 type QueryCommunityPoolResponse struct {
@@ -1106,8 +1106,8 @@ type QueryClient interface {
 	DelegatorWithdrawAddress(ctx context.Context, in *QueryDelegatorWithdrawAddressRequest, opts ...grpc.CallOption) (*QueryDelegatorWithdrawAddressResponse, error)
 	// CommunityPool queries the community pool coins.
 	//
-	// Deprecated: Prefer to use x/pool modules CommunityPool rpc method.
-	// Since 0.50
+	// Deprecated: Prefer to use x/pool module's CommunityPool rpc method.
+	// Since: cosmos-sdk 0.50
 	CommunityPool(ctx context.Context, in *QueryCommunityPoolRequest, opts ...grpc.CallOption) (*QueryCommunityPoolResponse, error)
 }
 
@@ -1233,8 +1233,8 @@ type QueryServer interface {
 	DelegatorWithdrawAddress(context.Context, *QueryDelegatorWithdrawAddressRequest) (*QueryDelegatorWithdrawAddressResponse, error)
 	// CommunityPool queries the community pool coins.
 	//
-	// Deprecated: Prefer to use x/pool modules CommunityPool rpc method.
-	// Since 0.50
+	// Deprecated: Prefer to use x/pool module's CommunityPool rpc method.
+	// Since: cosmos-sdk 0.50
 	CommunityPool(context.Context, *QueryCommunityPoolRequest) (*QueryCommunityPoolResponse, error)
 }
 

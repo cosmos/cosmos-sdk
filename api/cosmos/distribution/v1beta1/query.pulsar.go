@@ -10181,7 +10181,7 @@ func (x *QueryDelegatorWithdrawAddressResponse) GetWithdrawAddress() string {
 // method.
 //
 // Deprecated
-// Since 0.50
+// Since: cosmos-sdk 0.50
 //
 // Deprecated: Do not use.
 type QueryCommunityPoolRequest struct {
@@ -10214,7 +10214,7 @@ func (*QueryCommunityPoolRequest) Descriptor() ([]byte, []int) {
 // RPC method.
 //
 // Deprecated
-// Since 0.50
+// Since: cosmos-sdk 0.50
 //
 // Deprecated: Do not use.
 type QueryCommunityPoolResponse struct {

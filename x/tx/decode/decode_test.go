@@ -85,6 +85,10 @@ func TestDecode(t *testing.T) {
 						Payer:    "payer",
 						Granter:  "",
 					},
+					Tip: &txv1beta1.Tip{
+						Amount: []*basev1beta1.Coin{{Amount: "100", Denom: "denom"}},
+						Tipper: "tipper",
+					},
 				},
 				Signatures: nil,
 			}

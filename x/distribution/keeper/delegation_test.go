@@ -53,7 +53,6 @@ func TestCalculateRewardsBasic(t *testing.T) {
 		baseApp.MsgServiceRouter(),
 		baseApp.GRPCQueryRouter(),
 		"fee_collector",
-
 		authtypes.NewModuleAddress("gov").String(),
 	)
 

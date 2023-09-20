@@ -18,6 +18,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/runtime"
+	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/integration"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
@@ -58,7 +59,7 @@ type fixture struct {
 	valAddr sdk.ValAddress
 }
 
-func initFixture(tb testing.TB) *fixture {
+func initFixture(tb *testing.T) *fixture {
 	tb.Helper()
 	keys := storetypes.NewKVStoreKeys(
 		authtypes.StoreKey, banktypes.StoreKey, distrtypes.StoreKey, stakingtypes.StoreKey,
@@ -72,10 +73,17 @@ func initFixture(tb testing.TB) *fixture {
 
 	authority := authtypes.NewModuleAddress("gov")
 
-	// Create MsgServiceRouter
-	msr := baseapp.NewMsgServiceRouter()
-	// Create QueryServiceRouter
-	qsr := baseapp.NewGRPCQueryRouter()
+	testCtx := testutil.DefaultContextWithDB(tb, keys[distrtypes.StoreKey], storetypes.NewTransientStoreKey("transient_test"))
+	encCfg := moduletestutil.MakeTestEncodingConfig(distribution.AppModuleBasic{})
+
+	baseApp := baseapp.NewBaseApp(
+		"distribution",
+		log.NewNopLogger(),
+		testCtx.DB,
+		encCfg.TxConfig.TxDecoder(),
+	)
+	baseApp.SetCMS(testCtx.CMS)
+	baseApp.SetInterfaceRegistry(encCfg.InterfaceRegistry)
 
 	maccPerms := map[string][]string{
 		distrtypes.ModuleName:          {authtypes.Minter},
@@ -109,7 +117,7 @@ func initFixture(tb testing.TB) *fixture {
 	require.NoError(tb, stakingKeeper.Params.Set(newCtx, stakingtypes.DefaultParams()))
 
 	distrKeeper := distrkeeper.NewKeeper(
-		cdc, runtime.NewKVStoreService(keys[distrtypes.StoreKey]), accountKeeper, bankKeeper, stakingKeeper, msr, qsr, distrtypes.ModuleName, authority.String(),
+		cdc, runtime.NewKVStoreService(keys[distrtypes.StoreKey]), accountKeeper, bankKeeper, stakingKeeper, baseApp.MsgServiceRouter(), baseApp.GRPCQueryRouter(), distrtypes.ModuleName, authority.String(),
 	)
 
 	authModule := auth.NewAppModule(cdc, accountKeeper, authsims.RandomGenesisAccounts, nil)

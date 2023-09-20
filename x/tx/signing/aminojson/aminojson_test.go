@@ -52,12 +52,6 @@ func TestAminoJsonSignMode(t *testing.T) {
 			error: "got empty address in SIGN_MODE_LEGACY_AMINO_JSON handler: invalid request",
 		},
 		{
-			name: "nil tip",
-			malleate: func(opts testutil.HandlerArgumentOptions) testutil.HandlerArgumentOptions {
-				return opts
-			},
-		},
-		{
 			name: "nil fee",
 			malleate: func(opts testutil.HandlerArgumentOptions) testutil.HandlerArgumentOptions {
 				opts.Fee = nil

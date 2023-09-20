@@ -212,13 +212,10 @@ func (keeper Keeper) ChargeDeposit(ctx context.Context, proposalID uint64, destA
 				Depositor: keeper.ModuleAccountAddress().String(),
 			}
 
-			// Convert your message to an sdk.Msg
-			protoMsg := []sdk.Msg{&msg}
-
 			// Pass the sdk.Msg to the MessageRouter
-			handler := keeper.router.Handler(protoMsg[0])
+			handler := keeper.router.Handler(&msg)
 			if handler == nil {
-				return fmt.Errorf("message not recognized by router: %s", sdk.MsgTypeURL(protoMsg[0]))
+				return fmt.Errorf("message not recognized by router: %s", sdk.MsgTypeURL(&msg))
 			}
 			_, err := handler(sdk.UnwrapSDKContext(ctx), &msg)
 			if err != nil {

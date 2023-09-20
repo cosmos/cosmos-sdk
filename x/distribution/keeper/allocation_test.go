@@ -10,6 +10,7 @@ import (
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/comet"
+	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 
@@ -44,10 +45,14 @@ func TestAllocateTokensToValidatorWithCommission(t *testing.T) {
 	accountKeeper.EXPECT().GetModuleAddress("distribution").Return(distrAcc.GetAddress())
 	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(valCodec).AnyTimes()
 
-	// Create MsgServiceRouter
-	msr := baseapp.NewMsgServiceRouter()
-	// Create GRPCQueryRouter
-	qsr := baseapp.NewGRPCQueryRouter()
+	baseApp := baseapp.NewBaseApp(
+		"authz",
+		log.NewNopLogger(),
+		testCtx.DB,
+		encCfg.TxConfig.TxDecoder(),
+	)
+	baseApp.SetCMS(testCtx.CMS)
+	baseApp.SetInterfaceRegistry(encCfg.InterfaceRegistry)
 
 	distrKeeper := keeper.NewKeeper(
 		encCfg.Codec,
@@ -55,8 +60,8 @@ func TestAllocateTokensToValidatorWithCommission(t *testing.T) {
 		accountKeeper,
 		bankKeeper,
 		stakingKeeper,
-		msr,
-		qsr,
+		baseApp.MsgServiceRouter(),
+		baseApp.GRPCQueryRouter(),
 		"fee_collector",
 		authtypes.NewModuleAddress("gov").String(),
 	)
@@ -108,10 +113,14 @@ func TestAllocateTokensToManyValidators(t *testing.T) {
 	accountKeeper.EXPECT().GetModuleAccount(gomock.Any(), "fee_collector").Return(feeCollectorAcc)
 	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec("cosmosvaloper")).AnyTimes()
 
-	// Create MsgServiceRouter
-	msr := baseapp.NewMsgServiceRouter()
-	// Create GRPCQueryRouter
-	qsr := baseapp.NewGRPCQueryRouter()
+	baseApp := baseapp.NewBaseApp(
+		"authz",
+		log.NewNopLogger(),
+		testCtx.DB,
+		encCfg.TxConfig.TxDecoder(),
+	)
+	baseApp.SetCMS(testCtx.CMS)
+	baseApp.SetInterfaceRegistry(encCfg.InterfaceRegistry)
 
 	distrKeeper := keeper.NewKeeper(
 		encCfg.Codec,
@@ -119,8 +128,8 @@ func TestAllocateTokensToManyValidators(t *testing.T) {
 		accountKeeper,
 		bankKeeper,
 		stakingKeeper,
-		msr,
-		qsr,
+		baseApp.MsgServiceRouter(),
+		baseApp.GRPCQueryRouter(),
 		"fee_collector",
 		authtypes.NewModuleAddress("gov").String(),
 	)
@@ -243,10 +252,14 @@ func TestAllocateTokensTruncation(t *testing.T) {
 	accountKeeper.EXPECT().GetModuleAccount(gomock.Any(), "fee_collector").Return(feeCollectorAcc)
 	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec("cosmosvaloper")).AnyTimes()
 
-	// Create MsgServiceRouter
-	msr := baseapp.NewMsgServiceRouter()
-	// Create GRPCQueryRouter
-	qsr := baseapp.NewGRPCQueryRouter()
+	baseApp := baseapp.NewBaseApp(
+		"authz",
+		log.NewNopLogger(),
+		testCtx.DB,
+		encCfg.TxConfig.TxDecoder(),
+	)
+	baseApp.SetCMS(testCtx.CMS)
+	baseApp.SetInterfaceRegistry(encCfg.InterfaceRegistry)
 
 	distrKeeper := keeper.NewKeeper(
 		encCfg.Codec,
@@ -254,8 +267,8 @@ func TestAllocateTokensTruncation(t *testing.T) {
 		accountKeeper,
 		bankKeeper,
 		stakingKeeper,
-		msr,
-		qsr,
+		baseApp.MsgServiceRouter(),
+		baseApp.GRPCQueryRouter(),
 		"fee_collector",
 		authtypes.NewModuleAddress("gov").String(),
 	)

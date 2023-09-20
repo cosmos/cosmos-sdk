@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/collections"
+	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 
@@ -41,10 +42,14 @@ func TestCalculateRewardsBasic(t *testing.T) {
 	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec(sdk.Bech32PrefixValAddr)).AnyTimes()
 	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec(sdk.Bech32MainPrefix)).AnyTimes()
 
-	// Create MsgServiceRouter
-	msr := baseapp.NewMsgServiceRouter()
-	// Create GRPCQueryRouter
-	qsr := baseapp.NewGRPCQueryRouter()
+	baseApp := baseapp.NewBaseApp(
+		"authz",
+		log.NewNopLogger(),
+		testCtx.DB,
+		encCfg.TxConfig.TxDecoder(),
+	)
+	baseApp.SetCMS(testCtx.CMS)
+	baseApp.SetInterfaceRegistry(encCfg.InterfaceRegistry)
 
 	distrKeeper := keeper.NewKeeper(
 		encCfg.Codec,
@@ -52,8 +57,8 @@ func TestCalculateRewardsBasic(t *testing.T) {
 		accountKeeper,
 		bankKeeper,
 		stakingKeeper,
-		msr,
-		qsr,
+		baseApp.MsgServiceRouter(),
+		baseApp.GRPCQueryRouter(),
 		"fee_collector",
 
 		authtypes.NewModuleAddress("gov").String(),
@@ -149,10 +154,14 @@ func TestCalculateRewardsAfterSlash(t *testing.T) {
 	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec(sdk.Bech32PrefixValAddr)).AnyTimes()
 	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec(sdk.Bech32MainPrefix)).AnyTimes()
 
-	// Create MsgServiceRouter
-	msr := baseapp.NewMsgServiceRouter()
-	// Create GRPCQueryRouter
-	qsr := baseapp.NewGRPCQueryRouter()
+	baseApp := baseapp.NewBaseApp(
+		"authz",
+		log.NewNopLogger(),
+		testCtx.DB,
+		encCfg.TxConfig.TxDecoder(),
+	)
+	baseApp.SetCMS(testCtx.CMS)
+	baseApp.SetInterfaceRegistry(encCfg.InterfaceRegistry)
 
 	distrKeeper := keeper.NewKeeper(
 		encCfg.Codec,
@@ -160,8 +169,8 @@ func TestCalculateRewardsAfterSlash(t *testing.T) {
 		accountKeeper,
 		bankKeeper,
 		stakingKeeper,
-		msr,
-		qsr,
+		baseApp.MsgServiceRouter(),
+		baseApp.GRPCQueryRouter(),
 		"fee_collector",
 		authtypes.NewModuleAddress("gov").String(),
 	)
@@ -259,10 +268,14 @@ func TestCalculateRewardsAfterManySlashes(t *testing.T) {
 	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec(sdk.Bech32PrefixValAddr)).AnyTimes()
 	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec(sdk.Bech32MainPrefix)).AnyTimes()
 
-	// Create MsgServiceRouter
-	msr := baseapp.NewMsgServiceRouter()
-	// Create GRPCQueryRouter
-	qsr := baseapp.NewGRPCQueryRouter()
+	baseApp := baseapp.NewBaseApp(
+		"authz",
+		log.NewNopLogger(),
+		testCtx.DB,
+		encCfg.TxConfig.TxDecoder(),
+	)
+	baseApp.SetCMS(testCtx.CMS)
+	baseApp.SetInterfaceRegistry(encCfg.InterfaceRegistry)
 
 	distrKeeper := keeper.NewKeeper(
 		encCfg.Codec,
@@ -270,8 +283,8 @@ func TestCalculateRewardsAfterManySlashes(t *testing.T) {
 		accountKeeper,
 		bankKeeper,
 		stakingKeeper,
-		msr,
-		qsr,
+		baseApp.MsgServiceRouter(),
+		baseApp.GRPCQueryRouter(),
 		"fee_collector",
 		authtypes.NewModuleAddress("gov").String(),
 	)
@@ -390,10 +403,14 @@ func TestCalculateRewardsMultiDelegator(t *testing.T) {
 	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec(sdk.Bech32PrefixValAddr)).AnyTimes()
 	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec(sdk.Bech32MainPrefix)).AnyTimes()
 
-	// Create MsgServiceRouter
-	msr := baseapp.NewMsgServiceRouter()
-	// Create GRPCQueryRouter
-	qsr := baseapp.NewGRPCQueryRouter()
+	baseApp := baseapp.NewBaseApp(
+		"authz",
+		log.NewNopLogger(),
+		testCtx.DB,
+		encCfg.TxConfig.TxDecoder(),
+	)
+	baseApp.SetCMS(testCtx.CMS)
+	baseApp.SetInterfaceRegistry(encCfg.InterfaceRegistry)
 
 	distrKeeper := keeper.NewKeeper(
 		encCfg.Codec,
@@ -401,8 +418,8 @@ func TestCalculateRewardsMultiDelegator(t *testing.T) {
 		accountKeeper,
 		bankKeeper,
 		stakingKeeper,
-		msr,
-		qsr,
+		baseApp.MsgServiceRouter(),
+		baseApp.GRPCQueryRouter(),
 		"fee_collector",
 		authtypes.NewModuleAddress("gov").String(),
 	)
@@ -494,10 +511,14 @@ func TestWithdrawDelegationRewardsBasic(t *testing.T) {
 	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec(sdk.Bech32PrefixValAddr)).AnyTimes()
 	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec(sdk.Bech32MainPrefix)).AnyTimes()
 
-	// Create MsgServiceRouter
-	msr := baseapp.NewMsgServiceRouter()
-	// Create GRPCQueryRouter
-	qsr := baseapp.NewGRPCQueryRouter()
+	baseApp := baseapp.NewBaseApp(
+		"authz",
+		log.NewNopLogger(),
+		testCtx.DB,
+		encCfg.TxConfig.TxDecoder(),
+	)
+	baseApp.SetCMS(testCtx.CMS)
+	baseApp.SetInterfaceRegistry(encCfg.InterfaceRegistry)
 
 	distrKeeper := keeper.NewKeeper(
 		encCfg.Codec,
@@ -505,8 +526,8 @@ func TestWithdrawDelegationRewardsBasic(t *testing.T) {
 		accountKeeper,
 		bankKeeper,
 		stakingKeeper,
-		msr,
-		qsr,
+		baseApp.MsgServiceRouter(),
+		baseApp.GRPCQueryRouter(),
 		"fee_collector",
 		authtypes.NewModuleAddress("gov").String(),
 	)
@@ -576,10 +597,14 @@ func TestCalculateRewardsAfterManySlashesInSameBlock(t *testing.T) {
 	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec(sdk.Bech32PrefixValAddr)).AnyTimes()
 	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec(sdk.Bech32MainPrefix)).AnyTimes()
 
-	// Create MsgServiceRouter
-	msr := baseapp.NewMsgServiceRouter()
-	// Create GRPCQueryRouter
-	qsr := baseapp.NewGRPCQueryRouter()
+	baseApp := baseapp.NewBaseApp(
+		"authz",
+		log.NewNopLogger(),
+		testCtx.DB,
+		encCfg.TxConfig.TxDecoder(),
+	)
+	baseApp.SetCMS(testCtx.CMS)
+	baseApp.SetInterfaceRegistry(encCfg.InterfaceRegistry)
 
 	distrKeeper := keeper.NewKeeper(
 		encCfg.Codec,
@@ -587,8 +612,8 @@ func TestCalculateRewardsAfterManySlashesInSameBlock(t *testing.T) {
 		accountKeeper,
 		bankKeeper,
 		stakingKeeper,
-		msr,
-		qsr,
+		baseApp.MsgServiceRouter(),
+		baseApp.GRPCQueryRouter(),
 		"fee_collector",
 		authtypes.NewModuleAddress("gov").String(),
 	)
@@ -699,10 +724,14 @@ func TestCalculateRewardsMultiDelegatorMultiSlash(t *testing.T) {
 	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec(sdk.Bech32PrefixValAddr)).AnyTimes()
 	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec(sdk.Bech32MainPrefix)).AnyTimes()
 
-	// Create MsgServiceRouter
-	msr := baseapp.NewMsgServiceRouter()
-	// Create GRPCQueryRouter
-	qsr := baseapp.NewGRPCQueryRouter()
+	baseApp := baseapp.NewBaseApp(
+		"authz",
+		log.NewNopLogger(),
+		testCtx.DB,
+		encCfg.TxConfig.TxDecoder(),
+	)
+	baseApp.SetCMS(testCtx.CMS)
+	baseApp.SetInterfaceRegistry(encCfg.InterfaceRegistry)
 
 	distrKeeper := keeper.NewKeeper(
 		encCfg.Codec,
@@ -710,8 +739,8 @@ func TestCalculateRewardsMultiDelegatorMultiSlash(t *testing.T) {
 		accountKeeper,
 		bankKeeper,
 		stakingKeeper,
-		msr,
-		qsr,
+		baseApp.MsgServiceRouter(),
+		baseApp.GRPCQueryRouter(),
 		"fee_collector",
 		authtypes.NewModuleAddress("gov").String(),
 	)
@@ -843,10 +872,14 @@ func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
 	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec(sdk.Bech32PrefixValAddr)).AnyTimes()
 	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec(sdk.Bech32MainPrefix)).AnyTimes()
 
-	// Create MsgServiceRouter
-	msr := baseapp.NewMsgServiceRouter()
-	// Create GRPCQueryRouter
-	qsr := baseapp.NewGRPCQueryRouter()
+	baseApp := baseapp.NewBaseApp(
+		"authz",
+		log.NewNopLogger(),
+		testCtx.DB,
+		encCfg.TxConfig.TxDecoder(),
+	)
+	baseApp.SetCMS(testCtx.CMS)
+	baseApp.SetInterfaceRegistry(encCfg.InterfaceRegistry)
 
 	distrKeeper := keeper.NewKeeper(
 		encCfg.Codec,
@@ -854,8 +887,8 @@ func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
 		accountKeeper,
 		bankKeeper,
 		stakingKeeper,
-		msr,
-		qsr,
+		baseApp.MsgServiceRouter(),
+		baseApp.GRPCQueryRouter(),
 		"fee_collector",
 		authtypes.NewModuleAddress("gov").String(),
 	)
@@ -1049,10 +1082,14 @@ func Test100PercentCommissionReward(t *testing.T) {
 	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec(sdk.Bech32PrefixValAddr)).AnyTimes()
 	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec(sdk.Bech32MainPrefix)).AnyTimes()
 
-	// Create MsgServiceRouter
-	msr := baseapp.NewMsgServiceRouter()
-	// Create GRPCQueryRouter
-	qsr := baseapp.NewGRPCQueryRouter()
+	baseApp := baseapp.NewBaseApp(
+		"authz",
+		log.NewNopLogger(),
+		testCtx.DB,
+		encCfg.TxConfig.TxDecoder(),
+	)
+	baseApp.SetCMS(testCtx.CMS)
+	baseApp.SetInterfaceRegistry(encCfg.InterfaceRegistry)
 
 	distrKeeper := keeper.NewKeeper(
 		encCfg.Codec,
@@ -1060,8 +1097,8 @@ func Test100PercentCommissionReward(t *testing.T) {
 		accountKeeper,
 		bankKeeper,
 		stakingKeeper,
-		msr,
-		qsr,
+		baseApp.MsgServiceRouter(),
+		baseApp.GRPCQueryRouter(),
 		"fee_collector",
 		authtypes.NewModuleAddress("gov").String(),
 	)

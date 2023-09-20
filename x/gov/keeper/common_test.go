@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/core/header"
+	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 
@@ -96,9 +97,14 @@ func setupGovKeeper(t *testing.T, expectations ...func(sdk.Context, mocks)) (
 	v1beta1.RegisterInterfaces(encCfg.InterfaceRegistry)
 	banktypes.RegisterInterfaces(encCfg.InterfaceRegistry)
 
-	// Create MsgServiceRouter, but don't populate it before creating the gov
-	// keeper.
-	msr := baseapp.NewMsgServiceRouter()
+	baseApp := baseapp.NewBaseApp(
+		"authz",
+		log.NewNopLogger(),
+		testCtx.DB,
+		encCfg.TxConfig.TxDecoder(),
+	)
+	baseApp.SetCMS(testCtx.CMS)
+	baseApp.SetInterfaceRegistry(encCfg.InterfaceRegistry)
 
 	// gomock initializations
 	ctrl := gomock.NewController(t)
@@ -117,7 +123,7 @@ func setupGovKeeper(t *testing.T, expectations ...func(sdk.Context, mocks)) (
 
 	// Gov keeper initializations
 
-	govKeeper := keeper.NewKeeper(encCfg.Codec, storeService, m.acctKeeper, m.bankKeeper, m.stakingKeeper, msr, types.DefaultConfig(), govAcct.String())
+	govKeeper := keeper.NewKeeper(encCfg.Codec, storeService, m.acctKeeper, m.bankKeeper, m.stakingKeeper, baseApp.MsgServiceRouter(), types.DefaultConfig(), govAcct.String())
 	require.NoError(t, govKeeper.ProposalID.Set(ctx, 1))
 	govRouter := v1beta1.NewRouter() // Also register legacy gov handlers to test them too.
 	govRouter.AddRoute(types.RouterKey, v1beta1.ProposalHandler)
@@ -128,9 +134,8 @@ func setupGovKeeper(t *testing.T, expectations ...func(sdk.Context, mocks)) (
 	require.NoError(t, err)
 
 	// Register all handlers for the MegServiceRouter.
-	msr.SetInterfaceRegistry(encCfg.InterfaceRegistry)
-	v1.RegisterMsgServer(msr, keeper.NewMsgServerImpl(govKeeper))
-	banktypes.RegisterMsgServer(msr, nil) // Nil is fine here as long as we never execute the proposal's Msgs.
+	v1.RegisterMsgServer(baseApp.MsgServiceRouter(), keeper.NewMsgServerImpl(govKeeper))
+	banktypes.RegisterMsgServer(baseApp.MsgServiceRouter(), nil) // Nil is fine here as long as we never execute the proposal's Msgs.
 
 	return govKeeper, m, encCfg, ctx
 }

@@ -163,7 +163,7 @@ func LoadStreamingServices(
 			// Close any services we may have already spun up before hitting the error
 			// on this one.
 			for _, activeStreamer := range activeStreamers {
-				activeStreamer.Close()
+				_ = activeStreamer.Close()
 			}
 
 			return nil, nil, err
@@ -176,7 +176,7 @@ func LoadStreamingServices(
 			// Close any services we may have already spun up before hitting the error
 			// on this one.
 			for _, activeStreamer := range activeStreamers {
-				activeStreamer.Close()
+				_ = activeStreamer.Close()
 			}
 
 			return nil, nil, err
@@ -186,7 +186,9 @@ func LoadStreamingServices(
 		bApp.SetStreamingService(streamingService)
 
 		// kick off the background streaming service loop
-		streamingService.Stream(wg)
+		if err := streamingService.Stream(wg); err != nil {
+			return nil, nil, err
+		}
 
 		// add to the list of active streamers
 		activeStreamers = append(activeStreamers, streamingService)

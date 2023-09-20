@@ -28,6 +28,5 @@ message QueryCommunityPoolResponse {
   repeated cosmos.base.v1beta1.DecCoin pool = 1 [
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins",
     (gogoproto.nullable)     = false,
-    (amino.dont_omitempty)   = true
   ];
 }

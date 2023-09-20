@@ -183,6 +183,26 @@ func TestMonthlyVestTimes(t *testing.T) {
 				iso("2021-01-01T12:00"),
 			},
 		},
+		{
+			Name:      "clip to end of month",
+			Start:     iso("2021-01-31"),
+			Months:    12,
+			TimeOfDay: hhmm("17:00"),
+			Want: []time.Time{
+				iso("2021-02-28T17:00"),
+				iso("2021-03-31T17:00"),
+				iso("2021-04-30T17:00"),
+				iso("2021-05-31T17:00"),
+				iso("2021-06-30T17:00"),
+				iso("2021-07-31T17:00"),
+				iso("2021-08-31T17:00"),
+				iso("2021-09-30T17:00"),
+				iso("2021-10-31T17:00"),
+				iso("2021-11-30T17:00"),
+				iso("2021-12-31T17:00"),
+				iso("2022-01-31T17:00"),
+			},
+		},
 	} {
 		t.Run(tt.Name, func(t *testing.T) {
 			got, err := monthlyVestTimes(tt.Start, tt.Months, tt.TimeOfDay)

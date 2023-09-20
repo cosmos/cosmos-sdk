@@ -10,6 +10,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
+const poolModuleName = "protocol-pool"
+
 // Migrator is a struct for handling in-place store migrations.
 type Migrator struct {
 	keeper         Keeper

@@ -68,7 +68,7 @@ service Query {
 
   // CommunityPool queries the community pool coins.
   //
-  // DEPRECATED: Prefer to use x/pool modules CommunityPool rpc method.
+  // Deprecated: Prefer to use x/pool modules CommunityPool rpc method.
   // Since 0.50
   rpc CommunityPool(QueryCommunityPoolRequest) returns (QueryCommunityPoolResponse) {
     option deprecated            = true;
@@ -246,7 +246,7 @@ message QueryDelegatorWithdrawAddressResponse {
 // QueryCommunityPoolRequest is the request type for the Query/CommunityPool RPC
 // method.
 //
-// DEPRECATED
+// Deprecated
 // Since 0.50
 message QueryCommunityPoolRequest {
   option deprecated = true;
@@ -255,7 +255,7 @@ message QueryCommunityPoolRequest {
 // QueryCommunityPoolResponse is the response type for the Query/CommunityPool
 // RPC method.
 //
-// DEPRECATED
+// Deprecated
 // Since 0.50
 message QueryCommunityPoolResponse {
   option deprecated = true;

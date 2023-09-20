@@ -30,7 +30,7 @@ service Msg {
   // FundCommunityPool defines a method to allow an account to directly
   // fund the community pool.
   //
-  // DEPRECATED: Use x/pool modules FundCommunityPool instead.
+  // Deprecated: Use x/pool modules FundCommunityPool instead.
   // Since 0.50
   rpc FundCommunityPool(MsgFundCommunityPool) returns (MsgFundCommunityPoolResponse) {
     option deprecated = true;
@@ -47,7 +47,7 @@ service Msg {
   // could be the governance module itself. The authority is defined in the
   // keeper.
   //
-  // DEPRECATED: Use x/pool modules CommunityPoolSpend instead.
+  // Deprecated: Use x/pool modules CommunityPoolSpend instead.
   // Since: 0.50
   rpc CommunityPoolSpend(MsgCommunityPoolSpend) returns (MsgCommunityPoolSpendResponse);
 
@@ -127,7 +127,7 @@ message MsgWithdrawValidatorCommissionResponse {
 // MsgFundCommunityPool allows an account to directly
 // fund the community pool.
 //
-// DEPRECATED: Use x/pool modules MsgFundCommunityPool instead.
+// Deprecated: Use x/pool modules MsgFundCommunityPool instead.
 // Since 0.50
 message MsgFundCommunityPool {
   option deprecated             = true;
@@ -148,7 +148,7 @@ message MsgFundCommunityPool {
 
 // MsgFundCommunityPoolResponse defines the Msg/FundCommunityPool response type.
 //
-// DEPRECATED
+// Deprecated
 // Since 0.50
 message MsgFundCommunityPoolResponse {
   option deprecated = true;
@@ -180,7 +180,7 @@ message MsgUpdateParamsResponse {}
 // pool to another account. This message is typically executed via a governance
 // proposal with the governance module being the executing authority.
 
-// DEPRECATED: Use x/pool modules MsgCommunityPoolSpend instead
+// Deprecated: Use x/pool modules MsgCommunityPoolSpend instead
 // Since: cosmos-sdk 0.50
 message MsgCommunityPoolSpend {
   option deprecated             = true;
@@ -201,7 +201,7 @@ message MsgCommunityPoolSpend {
 // MsgCommunityPoolSpendResponse defines the response to executing a
 // MsgCommunityPoolSpend message.
 //
-// DEPRECATED
+// Deprecated
 // Since: cosmos-sdk 0.50
 message MsgCommunityPoolSpendResponse {
   option deprecated = true;

@@ -50,10 +50,6 @@ func (m Migrator) MigrateFundsToPool(ctx sdk.Context) error {
 	if err != nil {
 		return err
 	}
-	// set FeePool as empty (since FeePool funds are migrated to pool module account)
-	err = m.keeper.FeePool.Set(ctx, types.FeePool{})
-	if err != nil {
-		return err
-	}
-	return nil
+	// return FeePool as empty (since FeePool funds are migrated to pool module account)
+	return m.keeper.FeePool.Set(ctx, types.FeePool{})
 }

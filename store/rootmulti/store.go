@@ -1110,7 +1110,9 @@ func (rs *Store) GetCommitInfo(ver int64) (*types.CommitInfo, error) {
 func (rs *Store) flushMetadata(db dbm.DB, version int64, cInfo *types.CommitInfo) {
 	rs.logger.Debug("flushing metadata", "height", version)
 	batch := db.NewBatch()
-	defer batch.Close()
+	defer func() {
+		_ = batch.Close()
+	}()
 
 	if cInfo != nil {
 		flushCommitInfo(batch, version, cInfo)

@@ -49,8 +49,7 @@ const (
 	SignMode_SIGN_MODE_TEXTUAL SignMode = 2
 	// SIGN_MODE_DIRECT_AUX specifies a signing mode which uses
 	// SignDocDirectAux. As opposed to SIGN_MODE_DIRECT, this sign mode does not
-	// require signers signing over other signers' `signer_info`. It also allows
-	// for adding Tips in transactions.
+	// require signers signing over other signers' `signer_info`.
 	//
 	// Since: cosmos-sdk 0.46
 	SignMode_SIGN_MODE_DIRECT_AUX SignMode = 3

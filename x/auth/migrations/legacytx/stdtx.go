@@ -8,7 +8,6 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
 
@@ -169,9 +168,6 @@ func (tx StdTx) GetFee() sdk.Coins { return tx.Fee.Amount }
 func (tx StdTx) FeeGranter() sdk.AccAddress {
 	return nil
 }
-
-// GetTip always returns nil for StdTx
-func (tx StdTx) GetTip() *tx.Tip { return nil }
 
 func (tx StdTx) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	for _, m := range tx.Msgs {

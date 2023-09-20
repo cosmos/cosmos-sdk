@@ -119,10 +119,6 @@ func (c *configurator) RegisterMigration(moduleName string, fromVersion uint64, 
 	return nil
 }
 
-func (c *configurator) RegisterFundsMigration(toModuleName, fromModuleName string) error {
-	return nil
-}
-
 // runModuleMigrations runs all in-place store migrations for one given module from a
 // version to another version.
 func (c *configurator) runModuleMigrations(ctx sdk.Context, moduleName string, fromVersion, toVersion uint64) error {

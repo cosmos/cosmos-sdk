@@ -105,7 +105,7 @@ func (k msgServer) WithdrawValidatorCommission(ctx context.Context, msg *types.M
 }
 
 // NOTE: DO NOT USE
-// This method uses deprecated messages. Use FundCommunityPool from x/pool module instead.
+// This method uses deprecated message request. Use FundCommunityPool from x/pool module instead.
 func (k msgServer) FundCommunityPool(ctx context.Context, msg *types.MsgFundCommunityPool) (*types.MsgFundCommunityPoolResponse, error) { //nolint:staticcheck // we're using a deprecated call for compatibility
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
@@ -162,7 +162,7 @@ func (k msgServer) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams)
 }
 
 // NOTE: DO NOT USE
-// This method uses deprecated messages. Use CommunityPoolSpend from x/pool module instead.
+// This method uses deprecated message request. Use CommunityPoolSpend from x/pool module instead.
 func (k msgServer) CommunityPoolSpend(ctx context.Context, msg *types.MsgCommunityPoolSpend) (*types.MsgCommunityPoolSpendResponse, error) { //nolint:staticcheck // we're using a deprecated call for compatibility
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 

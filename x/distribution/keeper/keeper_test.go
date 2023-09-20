@@ -11,7 +11,6 @@ import (
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -45,10 +44,7 @@ func TestSetWithdrawAddr(t *testing.T) {
 	bankKeeper.EXPECT().BlockedAddr(withdrawAddr).Return(false).AnyTimes()
 	bankKeeper.EXPECT().BlockedAddr(distrAcc.GetAddress()).Return(true).AnyTimes()
 
-	// Create MsgServiceRouter, but don't populate it before creating the gov
-	// keeper.
-	msr := baseapp.NewMsgServiceRouter()
-	qsr := baseapp.NewGRPCQueryRouter()
+	baseApp := initBaseApp(testCtx, encCfg)
 
 	distrKeeper := keeper.NewKeeper(
 		encCfg.Codec,
@@ -56,8 +52,8 @@ func TestSetWithdrawAddr(t *testing.T) {
 		accountKeeper,
 		bankKeeper,
 		stakingKeeper,
-		msr,
-		qsr,
+		baseApp.MsgServiceRouter(),
+		baseApp.GRPCQueryRouter(),
 		"fee_collector",
 		authtypes.NewModuleAddress("gov").String(),
 	)
@@ -103,10 +99,7 @@ func TestWithdrawValidatorCommission(t *testing.T) {
 		sdk.NewDecCoinFromDec("stake", math.LegacyNewDec(3).Quo(math.LegacyNewDec(2))),
 	}
 
-	// Create MsgServiceRouter, but don't populate it before creating the gov
-	// keeper.
-	msr := baseapp.NewMsgServiceRouter()
-	qsr := baseapp.NewGRPCQueryRouter()
+	baseApp := initBaseApp(testCtx, encCfg)
 
 	distrKeeper := keeper.NewKeeper(
 		encCfg.Codec,
@@ -114,8 +107,8 @@ func TestWithdrawValidatorCommission(t *testing.T) {
 		accountKeeper,
 		bankKeeper,
 		stakingKeeper,
-		msr,
-		qsr,
+		baseApp.MsgServiceRouter(),
+		baseApp.GRPCQueryRouter(),
 		"fee_collector",
 		authtypes.NewModuleAddress("gov").String(),
 	)
@@ -162,10 +155,7 @@ func TestGetTotalRewards(t *testing.T) {
 
 	accountKeeper.EXPECT().GetModuleAddress("distribution").Return(distrAcc.GetAddress())
 
-	// Create MsgServiceRouter, but don't populate it before creating the gov
-	// keeper.
-	msr := baseapp.NewMsgServiceRouter()
-	qsr := baseapp.NewGRPCQueryRouter()
+	baseApp := initBaseApp(testCtx, encCfg)
 
 	distrKeeper := keeper.NewKeeper(
 		encCfg.Codec,
@@ -173,8 +163,8 @@ func TestGetTotalRewards(t *testing.T) {
 		accountKeeper,
 		bankKeeper,
 		stakingKeeper,
-		msr,
-		qsr,
+		baseApp.MsgServiceRouter(),
+		baseApp.GRPCQueryRouter(),
 		"fee_collector",
 		authtypes.NewModuleAddress("gov").String(),
 	)

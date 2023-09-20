@@ -180,6 +180,7 @@ require (
 
 replace cosmossdk.io/api => ../../api
 
+// Fix upstream GHSA-h395-qcrw-5vmq and GHSA-3vp4-m3rf-835h vulnerabilities.
 // TODO Remove it: https://github.com/cosmos/cosmos-sdk/issues/10409
 
 replace (

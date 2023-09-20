@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
-	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 
 	modulev1 "cosmossdk.io/api/cosmos/nft/module/v1"
@@ -15,7 +14,6 @@ import (
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/errors"
 	"cosmossdk.io/x/nft"
-	"cosmossdk.io/x/nft/client/cli"
 	"cosmossdk.io/x/nft/keeper"
 	"cosmossdk.io/x/nft/simulation"
 
@@ -84,11 +82,6 @@ func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx sdkclient.Context, mux
 	if err := nft.RegisterQueryHandlerClient(context.Background(), mux, nft.NewQueryClient(clientCtx)); err != nil {
 		panic(err)
 	}
-}
-
-// GetTxCmd returns the transaction commands for the nft module
-func (AppModuleBasic) GetTxCmd() *cobra.Command {
-	return cli.GetTxCmd()
 }
 
 // AppModule implements the sdk.AppModule interface

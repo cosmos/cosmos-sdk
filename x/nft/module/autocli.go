@@ -83,6 +83,21 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 		},
 		Tx: &autocliv1.ServiceCommandDescriptor{
 			Service: nftv1beta1.Msg_ServiceDesc.ServiceName,
+			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
+				{
+					RpcMethod: "Send",
+					Use:       "send [class-id] [nft-id] [receiver] --from [sender]",
+					Short:     "Transfer ownership of NFT",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "class_id"},
+						{ProtoField: "id"},
+						{ProtoField: "receiver"},
+					},
+					FlagOptions: map[string]*autocliv1.FlagOptions{
+						"sender": {Name: "from", Shorthand: "f", Usage: "Address of the sender"},
+					},
+				},
+			},
 		},
 	}
 }

@@ -4,9 +4,9 @@
 // versions:
 // - protoc-gen-go-grpc v1.3.0
 // - protoc             (unknown)
-// source: cosmos/pool/v1/query.proto
+// source: cosmos/protocolpool/v1/query.proto
 
-package poolv1
+package protocolpoolv1
 
 import (
 	context "context"
@@ -21,7 +21,7 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	Query_CommunityPool_FullMethodName = "/cosmos.pool.v1.Query/CommunityPool"
+	Query_CommunityPool_FullMethodName = "/cosmos.protocolpool.v1.Query/CommunityPool"
 )
 
 // QueryClient is the client API for Query service.
@@ -100,7 +100,7 @@ func _Query_CommunityPool_Handler(srv interface{}, ctx context.Context, dec func
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var Query_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "cosmos.pool.v1.Query",
+	ServiceName: "cosmos.protocolpool.v1.Query",
 	HandlerType: (*QueryServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
@@ -109,5 +109,5 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "cosmos/pool/v1/query.proto",
+	Metadata: "cosmos/protocolpool/v1/query.proto",
 }

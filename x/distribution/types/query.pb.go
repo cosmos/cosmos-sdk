@@ -1106,7 +1106,7 @@ type QueryClient interface {
 	DelegatorWithdrawAddress(ctx context.Context, in *QueryDelegatorWithdrawAddressRequest, opts ...grpc.CallOption) (*QueryDelegatorWithdrawAddressResponse, error)
 	// CommunityPool queries the community pool coins.
 	//
-	// Deprecated: Prefer to use x/pool module's CommunityPool rpc method.
+	// Deprecated: Prefer to use x/protocolpool module's CommunityPool rpc method.
 	// Since: cosmos-sdk 0.50
 	CommunityPool(ctx context.Context, in *QueryCommunityPoolRequest, opts ...grpc.CallOption) (*QueryCommunityPoolResponse, error)
 }
@@ -1233,7 +1233,7 @@ type QueryServer interface {
 	DelegatorWithdrawAddress(context.Context, *QueryDelegatorWithdrawAddressRequest) (*QueryDelegatorWithdrawAddressResponse, error)
 	// CommunityPool queries the community pool coins.
 	//
-	// Deprecated: Prefer to use x/pool module's CommunityPool rpc method.
+	// Deprecated: Prefer to use x/protocolpool module's CommunityPool rpc method.
 	// Since: cosmos-sdk 0.50
 	CommunityPool(context.Context, *QueryCommunityPoolRequest) (*QueryCommunityPoolResponse, error)
 }

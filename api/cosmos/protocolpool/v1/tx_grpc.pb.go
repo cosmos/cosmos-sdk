@@ -4,9 +4,9 @@
 // versions:
 // - protoc-gen-go-grpc v1.3.0
 // - protoc             (unknown)
-// source: cosmos/pool/v1/tx.proto
+// source: cosmos/protocolpool/v1/tx.proto
 
-package poolv1
+package protocolpoolv1
 
 import (
 	context "context"
@@ -21,8 +21,8 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	Msg_FundCommunityPool_FullMethodName  = "/cosmos.pool.v1.Msg/FundCommunityPool"
-	Msg_CommunityPoolSpend_FullMethodName = "/cosmos.pool.v1.Msg/CommunityPoolSpend"
+	Msg_FundCommunityPool_FullMethodName  = "/cosmos.protocolpool.v1.Msg/FundCommunityPool"
+	Msg_CommunityPoolSpend_FullMethodName = "/cosmos.protocolpool.v1.Msg/CommunityPoolSpend"
 )
 
 // MsgClient is the client API for Msg service.
@@ -35,7 +35,7 @@ type MsgClient interface {
 	// Since: cosmos-sdk 0.50
 	FundCommunityPool(ctx context.Context, in *MsgFundCommunityPool, opts ...grpc.CallOption) (*MsgFundCommunityPoolResponse, error)
 	// CommunityPoolSpend defines a governance operation for sending tokens from
-	// the community pool in the x/pool module to another account, which
+	// the community pool in the x/protocolpool module to another account, which
 	// could be the governance module itself. The authority is defined in the
 	// keeper.
 	//
@@ -79,7 +79,7 @@ type MsgServer interface {
 	// Since: cosmos-sdk 0.50
 	FundCommunityPool(context.Context, *MsgFundCommunityPool) (*MsgFundCommunityPoolResponse, error)
 	// CommunityPoolSpend defines a governance operation for sending tokens from
-	// the community pool in the x/pool module to another account, which
+	// the community pool in the x/protocolpool module to another account, which
 	// could be the governance module itself. The authority is defined in the
 	// keeper.
 	//
@@ -151,7 +151,7 @@ func _Msg_CommunityPoolSpend_Handler(srv interface{}, ctx context.Context, dec f
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var Msg_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "cosmos.pool.v1.Msg",
+	ServiceName: "cosmos.protocolpool.v1.Msg",
 	HandlerType: (*MsgServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
@@ -164,5 +164,5 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "cosmos/pool/v1/tx.proto",
+	Metadata: "cosmos/protocolpool/v1/tx.proto",
 }

@@ -45,7 +45,7 @@ type MsgClient interface {
 	// FundCommunityPool defines a method to allow an account to directly
 	// fund the community pool.
 	//
-	// Deprecated: Use x/pool module's FundCommunityPool instead.
+	// Deprecated: Use x/protocolpool module's FundCommunityPool instead.
 	// Since: cosmos-sdk 0.50
 	FundCommunityPool(ctx context.Context, in *MsgFundCommunityPool, opts ...grpc.CallOption) (*MsgFundCommunityPoolResponse, error)
 	// UpdateParams defines a governance operation for updating the x/distribution
@@ -58,7 +58,7 @@ type MsgClient interface {
 	// could be the governance module itself. The authority is defined in the
 	// keeper.
 	//
-	// Deprecated: Use x/pool module's CommunityPoolSpend instead.
+	// Deprecated: Use x/protocolpool module's CommunityPoolSpend instead.
 	// Since: cosmos-sdk 0.50
 	CommunityPoolSpend(ctx context.Context, in *MsgCommunityPoolSpend, opts ...grpc.CallOption) (*MsgCommunityPoolSpendResponse, error)
 	// DepositValidatorRewardsPool defines a method to provide additional rewards
@@ -157,7 +157,7 @@ type MsgServer interface {
 	// FundCommunityPool defines a method to allow an account to directly
 	// fund the community pool.
 	//
-	// Deprecated: Use x/pool module's FundCommunityPool instead.
+	// Deprecated: Use x/protocolpool module's FundCommunityPool instead.
 	// Since: cosmos-sdk 0.50
 	FundCommunityPool(context.Context, *MsgFundCommunityPool) (*MsgFundCommunityPoolResponse, error)
 	// UpdateParams defines a governance operation for updating the x/distribution
@@ -170,7 +170,7 @@ type MsgServer interface {
 	// could be the governance module itself. The authority is defined in the
 	// keeper.
 	//
-	// Deprecated: Use x/pool module's CommunityPoolSpend instead.
+	// Deprecated: Use x/protocolpool module's CommunityPoolSpend instead.
 	// Since: cosmos-sdk 0.50
 	CommunityPoolSpend(context.Context, *MsgCommunityPoolSpend) (*MsgCommunityPoolSpendResponse, error)
 	// DepositValidatorRewardsPool defines a method to provide additional rewards

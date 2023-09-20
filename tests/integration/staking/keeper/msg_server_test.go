@@ -53,7 +53,7 @@ func TestCancelUnbondingDelegation(t *testing.T) {
 	unbondingAmount := sdk.NewInt64Coin(bondDenom, 5)
 	ubd := types.NewUnbondingDelegation(
 		delegatorAddr, validatorAddr, 10,
-		ctx.BlockTime().Add(time.Minute*10),
+		ctx.HeaderInfo().Time.Add(time.Minute*10),
 		unbondingAmount.Amount,
 		0,
 		address.NewBech32Codec("cosmosvaloper"), address.NewBech32Codec("cosmos"),

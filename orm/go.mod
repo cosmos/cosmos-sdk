@@ -3,7 +3,7 @@ module cosmossdk.io/orm
 go 1.20
 
 require (
-	cosmossdk.io/api v0.7.0
+	cosmossdk.io/api v0.7.1
 	cosmossdk.io/core v0.11.0
 	cosmossdk.io/depinject v1.0.0-alpha.4
 	cosmossdk.io/errors v1.0.0
@@ -17,7 +17,7 @@ require (
 	golang.org/x/exp v0.0.0-20230817173708-d852ddb80c63
 	google.golang.org/grpc v1.58.1
 	google.golang.org/protobuf v1.31.0
-	gotest.tools/v3 v3.5.0
+	gotest.tools/v3 v3.5.1
 	pgregory.net/rapid v1.1.0
 )
 

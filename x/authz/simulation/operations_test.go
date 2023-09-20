@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/suite"
 
+	"cosmossdk.io/core/header"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 
@@ -120,7 +121,7 @@ func (suite *SimTestSuite) TestSimulateGrant() {
 	r := rand.New(s)
 	accounts := suite.getTestingAccounts(r, 2)
 	blockTime := time.Now().UTC()
-	ctx := suite.ctx.WithBlockTime(blockTime)
+	ctx := suite.ctx.WithHeaderInfo(header.Info{Time: blockTime})
 
 	_, err := suite.app.FinalizeBlock(&abci.RequestFinalizeBlock{
 		Height: suite.app.LastBlockHeight() + 1,
@@ -195,7 +196,7 @@ func (suite *SimTestSuite) TestSimulateExec() {
 	granter := accounts[0]
 	grantee := accounts[1]
 	a := banktypes.NewSendAuthorization(initCoins, nil)
-	expire := suite.ctx.BlockTime().Add(1 * time.Hour)
+	expire := suite.ctx.HeaderInfo().Time.Add(1 * time.Hour)
 
 	err = suite.authzKeeper.SaveGrant(suite.ctx, grantee.Address, granter.Address, a, &expire)
 	suite.Require().NoError(err)

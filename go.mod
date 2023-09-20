@@ -5,7 +5,7 @@ toolchain go1.21.0
 module github.com/cosmos/cosmos-sdk
 
 require (
-	cosmossdk.io/api v0.7.1-0.20230820170544-1bd37053e0c0
+	cosmossdk.io/api v0.7.1
 	cosmossdk.io/collections v0.4.0
 	cosmossdk.io/core v0.12.0
 	cosmossdk.io/depinject v1.0.0-alpha.4
@@ -62,7 +62,7 @@ require (
 	google.golang.org/genproto/googleapis/api v0.0.0-20230726155614-23370e0ffb3e
 	google.golang.org/grpc v1.58.1
 	google.golang.org/protobuf v1.31.0
-	gotest.tools/v3 v3.5.0
+	gotest.tools/v3 v3.5.1
 	pgregory.net/rapid v1.1.0
 	sigs.k8s.io/yaml v1.3.0
 )

@@ -226,7 +226,7 @@ func (k Keeper) SlashUnbondingDelegation(ctx context.Context, unbondingDelegatio
 	infractionHeight int64, slashFactor math.LegacyDec,
 ) (totalSlashAmount math.Int, err error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	now := sdkCtx.BlockHeader().Time
+	now := sdkCtx.HeaderInfo().Time
 	totalSlashAmount = math.ZeroInt()
 	burnedAmount := math.ZeroInt()
 
@@ -283,7 +283,7 @@ func (k Keeper) SlashRedelegation(ctx context.Context, srcValidator types.Valida
 	infractionHeight int64, slashFactor math.LegacyDec,
 ) (totalSlashAmount math.Int, err error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	now := sdkCtx.BlockHeader().Time
+	now := sdkCtx.HeaderInfo().Time
 	totalSlashAmount = math.ZeroInt()
 	bondedBurnedAmount, notBondedBurnedAmount := math.ZeroInt(), math.ZeroInt()
 

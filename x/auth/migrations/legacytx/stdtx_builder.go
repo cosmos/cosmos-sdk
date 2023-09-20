@@ -45,10 +45,6 @@ func (s *StdTxBuilder) SetGasLimit(limit uint64) {
 	s.StdTx.Fee.Gas = limit
 }
 
-func (s *StdTxBuilder) SetTip(tip *tx.Tip) {
-	panic("StdTxBuilder does not support tips")
-}
-
 // SetMemo implements TxBuilder.SetMemo
 func (s *StdTxBuilder) SetMemo(memo string) {
 	s.Memo = memo

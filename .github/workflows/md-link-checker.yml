@@ -1,7 +1,8 @@
 name: Check Markdown links
 on: 
-  schedule: 
-    - cron: '* */24 * * *'
+  pull_request:
+    paths:
+      - "docs/**"
 jobs:
   markdown-link-check:
     runs-on: ubuntu-latest

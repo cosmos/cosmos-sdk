@@ -2,13 +2,14 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/hashicorp/go-metrics"
-	"google.golang.org/protobuf/proto"
 
 	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
 	pooltypes "cosmossdk.io/api/cosmos/pool/v1"
 	"cosmossdk.io/errors"
+	errorsmod "cosmossdk.io/errors"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -120,9 +121,16 @@ func (k msgServer) FundCommunityPool(ctx context.Context, msg *types.MsgFundComm
 		Amount:    amount,
 		Depositor: msg.Depositor,
 	}
-	_, err := proto.Marshal(&poolMsg)
+	// Convert your message to an sdk.Msg
+	protoMsg := []sdk.Msg{&poolMsg}
+	// Pass the sdk.Msg to the MessageRouter
+	handler := k.router.Handler(protoMsg[0])
+	if handler == nil {
+		return nil, fmt.Errorf("message not recognized by router: %s", sdk.MsgTypeURL(protoMsg[0]))
+	}
+	_, err := handler(sdk.UnwrapSDKContext(ctx), &poolMsg)
 	if err != nil {
-		return nil, err
+		return nil, errorsmod.Wrapf(err, "failed to execute message; message %v", protoMsg)
 	}
 
 	return &types.MsgFundCommunityPoolResponse{}, nil //nolint:staticcheck // we're using a deprecated call for compatibility

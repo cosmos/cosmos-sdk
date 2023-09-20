@@ -7,8 +7,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
-func MigrateFunds(ctx sdk.Context, bankKeeper types.BankKeeper, feepool types.FeePool, macc sdk.ModuleAccountI, poolMacc sdk.ModuleAccountI) error {
-	poolBal := sdk.NormalizeCoins(feepool.CommunityPool)
+// MigrateFunds migrates the distribution module funds to pool module
+func MigrateFunds(ctx sdk.Context, bankKeeper types.BankKeeper, feePool types.FeePool, macc sdk.ModuleAccountI, poolMacc sdk.ModuleAccountI) error {
+	poolBal := sdk.NormalizeCoins(feePool.CommunityPool)
 	distrbalances := bankKeeper.GetAllBalances(ctx, macc.GetAddress())
 	if distrbalances.IsZero() || distrbalances.IsAllLT(poolBal) {
 		return fmt.Errorf("%s module account balance is less than FeePool balance", macc.GetName())

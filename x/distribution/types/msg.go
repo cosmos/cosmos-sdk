@@ -10,6 +10,7 @@ var (
 	_ sdk.Msg = (*MsgWithdrawDelegatorReward)(nil)
 	_ sdk.Msg = (*MsgWithdrawValidatorCommission)(nil)
 	_ sdk.Msg = (*MsgUpdateParams)(nil)
+	_ sdk.Msg = (*MsgCommunityPoolSpend)(nil)
 	_ sdk.Msg = (*MsgDepositValidatorRewardsPool)(nil)
 )
 
@@ -30,6 +31,15 @@ func NewMsgWithdrawDelegatorReward(delAddr, valAddr string) *MsgWithdrawDelegato
 func NewMsgWithdrawValidatorCommission(valAddr string) *MsgWithdrawValidatorCommission {
 	return &MsgWithdrawValidatorCommission{
 		ValidatorAddress: valAddr,
+	}
+}
+
+// NewMsgFundCommunityPool returns a new MsgFundCommunityPool with a sender and
+// a funding amount.
+func NewMsgFundCommunityPool(amount sdk.Coins, depositor string) *MsgFundCommunityPool {
+	return &MsgFundCommunityPool{
+		Amount:    amount,
+		Depositor: depositor,
 	}
 }
 

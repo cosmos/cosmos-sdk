@@ -90,6 +90,10 @@ func (f fieldBinding) bind(msg protoreflect.Message) error {
 		return err
 	}
 
+	if field.IsMap() {
+		return nil
+	}
+
 	if msg.IsValid() && val.IsValid() {
 		msg.Set(f.field, val)
 	}

@@ -6,7 +6,6 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
-	v1auth "github.com/cosmos/cosmos-sdk/x/auth/migrations/v1"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
@@ -22,6 +21,7 @@ const (
 
 	// QuerierRoute defines the module's query routing key
 	QuerierRoute = ModuleName
+	addrLen      = 20
 )
 
 // KVStore keys
@@ -41,9 +41,9 @@ func DenomMetadataKey(denom string) []byte {
 // store. The key must not contain the perfix BalancesPrefix as the prefix store
 // iterator discards the actual prefix.
 func AddressFromBalancesStore(key []byte) sdk.AccAddress {
-	kv.AssertKeyAtLeastLength(key, 1+v1auth.AddrLen)
-	addr := key[:v1auth.AddrLen]
-	kv.AssertKeyLength(addr, v1auth.AddrLen)
+	kv.AssertKeyAtLeastLength(key, 1+addrLen)
+	addr := key[:addrLen]
+	kv.AssertKeyLength(addr, addrLen)
 	return sdk.AccAddress(addr)
 }
 

@@ -2,7 +2,6 @@ package v047
 
 import (
 	"github.com/cosmos/cosmos-sdk/client"
-	v1auth "github.com/cosmos/cosmos-sdk/x/auth/migrations/v1"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankv4 "github.com/cosmos/cosmos-sdk/x/bank/migrations/v4"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -14,6 +13,8 @@ import (
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	groupv2 "github.com/cosmos/cosmos-sdk/x/group/migrations/v2"
 )
+
+const authModuleName = "auth"
 
 // Migrate migrates exported state from v0.46 to a v0.47 genesis state.
 func Migrate(appState types.AppMap, clientCtx client.Context) (types.AppMap, error) {
@@ -43,11 +44,11 @@ func Migrate(appState types.AppMap, clientCtx client.Context) (types.AppMap, err
 	}
 
 	// Migrate x/auth group policy accounts
-	if authOldState, ok := appState[v1auth.ModuleName]; ok {
+	if authOldState, ok := appState[authModuleName]; ok {
 		var old authtypes.GenesisState
 		clientCtx.Codec.MustUnmarshalJSON(authOldState, &old)
 		newAuthState := groupv2.MigrateGenState(&old)
-		appState[v1auth.ModuleName] = clientCtx.Codec.MustMarshalJSON(newAuthState)
+		appState[authModuleName] = clientCtx.Codec.MustMarshalJSON(newAuthState)
 	}
 
 	// Migrate x/distribution params (reset unused)

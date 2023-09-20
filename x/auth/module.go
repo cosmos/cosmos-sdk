@@ -19,7 +19,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/cosmos/cosmos-sdk/x/auth/exported"
 	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	"github.com/cosmos/cosmos-sdk/x/auth/simulation"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -89,9 +88,6 @@ type AppModule struct {
 
 	accountKeeper     keeper.AccountKeeper
 	randGenAccountsFn types.RandomGenesisAccountsFn
-
-	// legacySubspace is used solely for migration of x/params managed parameters
-	legacySubspace exported.Subspace
 }
 
 // IsOnePerModuleType implements the depinject.OnePerModuleType interface.
@@ -101,12 +97,11 @@ func (am AppModule) IsOnePerModuleType() {}
 func (am AppModule) IsAppModule() {}
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(cdc codec.Codec, accountKeeper keeper.AccountKeeper, randGenAccountsFn types.RandomGenesisAccountsFn, ss exported.Subspace) AppModule {
+func NewAppModule(cdc codec.Codec, accountKeeper keeper.AccountKeeper, randGenAccountsFn types.RandomGenesisAccountsFn) AppModule {
 	return AppModule{
 		AppModuleBasic:    AppModuleBasic{ac: accountKeeper.AddressCodec()},
 		accountKeeper:     accountKeeper,
 		randGenAccountsFn: randGenAccountsFn,
-		legacySubspace:    ss,
 	}
 }
 
@@ -116,18 +111,7 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.accountKeeper))
 	types.RegisterQueryServer(cfg.QueryServer(), keeper.NewQueryServer(am.accountKeeper))
 
-	m := keeper.NewMigrator(am.accountKeeper, cfg.QueryServer(), am.legacySubspace)
-	if err := cfg.RegisterMigration(types.ModuleName, 1, m.Migrate1to2); err != nil {
-		panic(fmt.Sprintf("failed to migrate x/%s from version 1 to 2: %v", types.ModuleName, err))
-	}
-
-	if err := cfg.RegisterMigration(types.ModuleName, 2, m.Migrate2to3); err != nil {
-		panic(fmt.Sprintf("failed to migrate x/%s from version 2 to 3: %v", types.ModuleName, err))
-	}
-
-	if err := cfg.RegisterMigration(types.ModuleName, 3, m.Migrate3to4); err != nil {
-		panic(fmt.Sprintf("failed to migrate x/%s from version 3 to 4: %v", types.ModuleName, err))
-	}
+	m := keeper.NewMigrator(am.accountKeeper, cfg.QueryServer())
 
 	if err := cfg.RegisterMigration(types.ModuleName, 4, m.Migrate4To5); err != nil {
 		panic(fmt.Sprintf("failed to migrate x/%s from version 4 to 5", types.ModuleName))
@@ -194,9 +178,6 @@ type ModuleInputs struct {
 	AddressCodec            address.Codec
 	RandomGenesisAccountsFn types.RandomGenesisAccountsFn `optional:"true"`
 	AccountI                func() sdk.AccountI           `optional:"true"`
-
-	// LegacySubspace is used solely for migration of x/params managed parameters
-	LegacySubspace exported.Subspace `optional:"true"`
 }
 
 type ModuleOutputs struct {
@@ -232,7 +213,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 	}
 
 	k := keeper.NewAccountKeeper(in.Cdc, in.StoreService, in.AccountI, maccPerms, in.AddressCodec, in.Config.Bech32Prefix, auth)
-	m := NewAppModule(in.Cdc, k, in.RandomGenesisAccountsFn, in.LegacySubspace)
+	m := NewAppModule(in.Cdc, k, in.RandomGenesisAccountsFn)
 
 	return ModuleOutputs{AccountKeeper: k, Module: m}
 }

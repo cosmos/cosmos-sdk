@@ -10,10 +10,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	v1auth "github.com/cosmos/cosmos-sdk/x/auth/migrations/v1"
 	v1 "github.com/cosmos/cosmos-sdk/x/bank/migrations/v1"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
+
+const addrLen = 20
 
 // migrateSupply migrates the supply to be stored by denom key instead in a
 // single blob.
@@ -66,7 +67,7 @@ func migrateBalanceKeys(store storetypes.KVStore, logger log.Logger) {
 
 	for ; oldStoreIter.Valid(); oldStoreIter.Next() {
 		addr := v1.AddressFromBalancesStore(oldStoreIter.Key())
-		denom := oldStoreIter.Key()[v1auth.AddrLen:]
+		denom := oldStoreIter.Key()[addrLen:]
 		newStoreKey := CreatePrefixedAccountStoreKey(addr, denom)
 
 		// Set new key on store. Values don't change.

@@ -99,7 +99,7 @@ func initDeterministicFixture(t *testing.T) *deterministicFixture {
 		log.NewNopLogger(),
 	)
 
-	authModule := auth.NewAppModule(cdc, accountKeeper, authsims.RandomGenesisAccounts, nil)
+	authModule := auth.NewAppModule(cdc, accountKeeper, authsims.RandomGenesisAccounts)
 	bankModule := bank.NewAppModule(cdc, bankKeeper, accountKeeper, nil)
 
 	integrationApp := integration.NewIntegrationApp(newCtx, logger, keys, cdc, map[string]appmodule.AppModule{

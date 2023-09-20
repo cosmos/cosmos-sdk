@@ -123,7 +123,7 @@ func initFixture(tb testing.TB) *fixture {
 	err = govKeeper.Params.Set(newCtx, v1.DefaultParams())
 	assert.NilError(tb, err)
 
-	authModule := auth.NewAppModule(cdc, accountKeeper, authsims.RandomGenesisAccounts, nil)
+	authModule := auth.NewAppModule(cdc, accountKeeper, authsims.RandomGenesisAccounts)
 	bankModule := bank.NewAppModule(cdc, bankKeeper, accountKeeper, nil)
 	stakingModule := staking.NewAppModule(cdc, stakingKeeper, accountKeeper, bankKeeper, nil)
 	distrModule := distribution.NewAppModule(cdc, distrKeeper, accountKeeper, bankKeeper, stakingKeeper, nil)

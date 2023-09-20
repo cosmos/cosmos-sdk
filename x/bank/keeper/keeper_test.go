@@ -32,7 +32,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/query"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	vesting "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
-	"github.com/cosmos/cosmos-sdk/x/bank/exported"
 	"github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -2341,14 +2340,6 @@ func (suite *KeeperTestSuite) TestGetAllSendEnabledEntries() {
 		actual := bankKeeper.GetAllSendEnabledEntries(ctx)
 		require.Len(actual, 0)
 	})
-}
-
-type mockSubspace struct {
-	ps banktypes.Params
-}
-
-func (ms mockSubspace) GetParamSet(ctx sdk.Context, ps exported.ParamSet) {
-	*ps.(*banktypes.Params) = ms.ps
 }
 
 func (suite *KeeperTestSuite) TestSetParams() {

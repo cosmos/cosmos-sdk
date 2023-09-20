@@ -64,7 +64,7 @@ func (suite *GenesisTestSuite) SetupTest() {
 
 	bank.RegisterInterfaces(suite.encCfg.InterfaceRegistry)
 
-	msr := suite.baseApp.MsgServiceRouter().WithOptions(func(options *baseapp.MessageRouterOptions) {
+	msr := suite.baseApp.MsgServiceRouter().(baseapp.MessageRouterBuilder).WithOptions(func(options *baseapp.MessageRouterOptions) {
 		options.InterfaceRegistry = suite.encCfg.InterfaceRegistry
 	})
 

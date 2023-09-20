@@ -70,7 +70,7 @@ func NewBaseAppSuite(t *testing.T, opts ...func(*baseapp.BaseApp)) *BaseAppSuite
 	require.Equal(t, t.Name(), app.Name())
 
 	app.SetInterfaceRegistry(cdc.InterfaceRegistry())
-	app.MsgServiceRouter().WithOptions(func(options *baseapp.MessageRouterOptions) {
+	app.MsgServiceRouter().(baseapp.MessageRouterBuilder).WithOptions(func(options *baseapp.MessageRouterOptions) {
 		options.InterfaceRegistry = cdc.InterfaceRegistry()
 	})
 

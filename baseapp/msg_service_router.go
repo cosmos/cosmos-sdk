@@ -15,11 +15,17 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
+type MessageRouterBuilder interface {
+	MessageRouter
+
+	// WithOptios allows to change the default options of the MessageRouter instance after initialization.
+	WithOptions(opts ...MessageRouterOption) MessageRouter
+}
+
 // MessageRouter ADR 031 request type routing
 // https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-031-msg-service.md
 type MessageRouter interface {
 	RegisterService(sd *grpc.ServiceDesc, ss interface{})
-	WithOptions(opts ...MessageRouterOption) MessageRouter
 
 	Handler(msg sdk.Msg) MsgServiceHandler
 	HandlerByTypeURL(typeURL string) MsgServiceHandler
@@ -43,7 +49,7 @@ type MsgServiceRouter struct {
 }
 
 // NewMsgServiceRouter creates a new MsgServiceRouter.
-func NewMsgServiceRouter(opts ...MessageRouterOption) MessageRouter {
+func NewMsgServiceRouter(opts ...MessageRouterOption) MessageRouterBuilder {
 	options := MessageRouterOptions{}
 
 	for _, opt := range opts {

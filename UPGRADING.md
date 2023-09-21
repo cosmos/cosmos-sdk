@@ -44,7 +44,7 @@ The existing chains using x/distribution module needs to add the new x/protocolp
 
 #### `x/protocolpool`
 
-Introducing a new `x/protocolpool` module to handle community pool funds.
+Introducing a new `x/protocolpool` module to handle community pool funds. Its store must be added while upgrading to v0.51.x
 
 Example:
 
@@ -61,7 +61,7 @@ func (app SimApp) RegisterUpgradeHandlers() {
 }
 ```
 
-Because the `x/protocolpool` module is a new module, its store must be added while upgrading to v0.50.x:
+Add `x/protocolpool` store while upgrading to v0.51.x:
 
 ```go
 storetypes.StoreUpgrades{

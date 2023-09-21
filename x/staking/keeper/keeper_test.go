@@ -4,13 +4,12 @@ import (
 	"testing"
 	"time"
 
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	cmttime "github.com/cometbft/cometbft/types/time"
 	gogotypes "github.com/cosmos/gogoproto/types"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/collections"
+	"cosmossdk.io/core/header"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 
@@ -56,7 +55,7 @@ func (s *KeeperTestSuite) SetupTest() {
 	storeService := runtime.NewKVStoreService(key)
 	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
 	s.key = key
-	ctx := testCtx.Ctx.WithBlockHeader(cmtproto.Header{Time: cmttime.Now()})
+	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now()})
 	encCfg := moduletestutil.MakeTestEncodingConfig()
 	s.cdc = encCfg.Codec
 
@@ -77,7 +76,7 @@ func (s *KeeperTestSuite) SetupTest() {
 		address.NewBech32Codec("cosmosvaloper"),
 		address.NewBech32Codec("cosmosvalcons"),
 	)
-	require.NoError(keeper.SetParams(ctx, stakingtypes.DefaultParams()))
+	require.NoError(keeper.Params.Set(ctx, stakingtypes.DefaultParams()))
 
 	s.ctx = ctx
 	s.stakingKeeper = keeper
@@ -97,14 +96,14 @@ func (s *KeeperTestSuite) TestParams() {
 
 	expParams := stakingtypes.DefaultParams()
 	// check that the empty keeper loads the default
-	resParams, err := keeper.GetParams(ctx)
+	resParams, err := keeper.Params.Get(ctx)
 	require.NoError(err)
 	require.Equal(expParams, resParams)
 
 	expParams.MaxValidators = 555
 	expParams.MaxEntries = 111
-	require.NoError(keeper.SetParams(ctx, expParams))
-	resParams, err = keeper.GetParams(ctx)
+	require.NoError(keeper.Params.Set(ctx, expParams))
+	resParams, err = keeper.Params.Get(ctx)
 	require.NoError(err)
 	require.True(expParams.Equal(resParams))
 }

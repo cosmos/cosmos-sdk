@@ -23,6 +23,7 @@ import (
 	"cosmossdk.io/store/snapshots"
 	storetypes "cosmossdk.io/store/types"
 
+	"github.com/cosmos/cosmos-sdk/baseapp/oe"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
@@ -72,19 +73,18 @@ type BaseApp struct {
 
 	mempool     mempool.Mempool // application side mempool
 	anteHandler sdk.AnteHandler // ante handler for fee and auth
-	postHandler sdk.PostHandler // post handler, optional, e.g. for tips
+	postHandler sdk.PostHandler // post handler, optional
 
-	initChainer          sdk.InitChainer                // ABCI InitChain handler
-	preBlocker           sdk.PreBlocker                 // logic to run before BeginBlocker
-	beginBlocker         sdk.BeginBlocker               // (legacy ABCI) BeginBlock handler
-	endBlocker           sdk.EndBlocker                 // (legacy ABCI) EndBlock handler
-	processProposal      sdk.ProcessProposalHandler     // ABCI ProcessProposal handler
-	prepareProposal      sdk.PrepareProposalHandler     // ABCI PrepareProposal
-	extendVote           sdk.ExtendVoteHandler          // ABCI ExtendVote handler
-	verifyVoteExt        sdk.VerifyVoteExtensionHandler // ABCI VerifyVoteExtension handler
-	prepareCheckStater   sdk.PrepareCheckStater         // logic to run during commit using the checkState
-	precommiter          sdk.Precommiter                // logic to run during commit using the deliverState
-	preFinalizeBlockHook sdk.PreFinalizeBlockHook       // logic to run before FinalizeBlock
+	initChainer        sdk.InitChainer                // ABCI InitChain handler
+	preBlocker         sdk.PreBlocker                 // logic to run before BeginBlocker
+	beginBlocker       sdk.BeginBlocker               // (legacy ABCI) BeginBlock handler
+	endBlocker         sdk.EndBlocker                 // (legacy ABCI) EndBlock handler
+	processProposal    sdk.ProcessProposalHandler     // ABCI ProcessProposal handler
+	prepareProposal    sdk.PrepareProposalHandler     // ABCI PrepareProposal
+	extendVote         sdk.ExtendVoteHandler          // ABCI ExtendVote handler
+	verifyVoteExt      sdk.VerifyVoteExtensionHandler // ABCI VerifyVoteExtension handler
+	prepareCheckStater sdk.PrepareCheckStater         // logic to run during commit using the checkState
+	precommiter        sdk.Precommiter                // logic to run during commit using the deliverState
 
 	addrPeerFilter sdk.PeerFilter // filter peers by address and port
 	idPeerFilter   sdk.PeerFilter // filter peers by node ID
@@ -175,6 +175,11 @@ type BaseApp struct {
 	chainID string
 
 	cdc codec.Codec
+
+	// optimisticExec contains the context required for Optimistic Execution,
+	// including the goroutine handling.This is experimental and must be enabled
+	// by developers.
+	optimisticExec *oe.OptimisticExecution
 }
 
 // NewBaseApp returns a reference to an initialized BaseApp. It accepts a
@@ -669,10 +674,10 @@ func (app *BaseApp) cacheTxContext(ctx sdk.Context, txBytes []byte) (sdk.Context
 	return ctx.WithMultiStore(msCache), msCache
 }
 
-func (app *BaseApp) preBlock() error {
+func (app *BaseApp) preBlock(req *abci.RequestFinalizeBlock) error {
 	if app.preBlocker != nil {
 		ctx := app.finalizeBlockState.ctx
-		rsp, err := app.preBlocker(ctx)
+		rsp, err := app.preBlocker(ctx, req)
 		if err != nil {
 			return err
 		}

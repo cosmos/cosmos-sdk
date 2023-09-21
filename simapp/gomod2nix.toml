@@ -17,8 +17,8 @@ schema = 3
     version = "v1.31.0"
     hash = "sha256-d59Q6JjMga6/7d1TtFW9GuAq+6O2U4LhNesz3Knmo0E="
   [mod."cosmossdk.io/api"]
-    version = "v0.7.1-0.20230820170544-1bd37053e0c0"
-    hash = "sha256-iASrjR6a28d+feKXAtP4lEoKlx+TBZm/Q7IBJhR6Omo="
+    version = "v0.7.1"
+    hash = "sha256-ot0ArFrnMTt5K82I4rEf0wtQvHMTHKG6dRWP5oXU3Tk="
   [mod."cosmossdk.io/collections"]
     version = "v0.4.0"
     hash = "sha256-minFyzgO/D+Oda4E3B1qvOAN5qd65SjS6nmjca4cp/8="
@@ -138,11 +138,11 @@ schema = 3
     version = "v0.13.0"
     hash = "sha256-Ufa7YvD/L8zLCr8ZX/WtVE8+awJSGFbWV6VRBrsXr0Q="
   [mod."github.com/creachadair/atomicfile"]
-    version = "v0.3.1"
-    hash = "sha256-GEp1gRxKfBYI6K0XbElcVYcJMPu6eeLufaYxr7Z0MAQ="
+    version = "v0.3.2"
+    hash = "sha256-oklAvdJrNFKNcCHvQdLVrLyLf0LG5ipusTXKSVycc64="
   [mod."github.com/creachadair/tomledit"]
-    version = "v0.0.24"
-    hash = "sha256-4vUukHONOjNn0qfQr4esK6TWfPWsIp+rbdz65og84lw="
+    version = "v0.0.25"
+    hash = "sha256-EW3K2z4sfCdgKTQsjTpHxV96xdnTbnggu1EF34BlTzk="
   [mod."github.com/danieljoos/wincred"]
     version = "v1.1.2"
     hash = "sha256-Nnklfg12vmWCOhELGyoRqEF4w4srp0WbPwreaChYLKs="
@@ -493,11 +493,11 @@ schema = 3
     version = "v0.0.0-20230726155614-23370e0ffb3e"
     hash = "sha256-C5k3rjFGJasm5uQd1oz/oxZ2Qvu0WQ2n8imG4vyvf7k="
   [mod."google.golang.org/genproto/googleapis/rpc"]
-    version = "v0.0.0-20230822172742-b8732ec3820d"
+    version = "v0.0.0-20230913181813-007df8e322eb"
     hash = "sha256-1kP7lqQ+fKtARDzTrRNob0owX4GsUnxzOwLyBZSmHOc="
   [mod."google.golang.org/grpc"]
-    version = "v1.58.0"
-    hash = "sha256-BopdJVzhPKY3wWjN6g8tqpUK25z0UyKbp0NxOLnb86w="
+    version = "v1.58.1"
+    hash = "sha256-Oqcw5RLWngXbcDSwFuPR3HqfWGM3WndlfEgSsObNQz8="
   [mod."google.golang.org/protobuf"]
     version = "v1.31.0"
     hash = "sha256-UdIk+xRaMfdhVICvKRk1THe3R1VU+lWD8hqoW/y8jT0="
@@ -511,8 +511,8 @@ schema = 3
     version = "v3.0.1"
     hash = "sha256-FqL9TKYJ0XkNwJFnq9j0VvJ5ZUU1RvH/52h/f5bkYAU="
   [mod."gotest.tools/v3"]
-    version = "v3.5.0"
-    hash = "sha256-QZhzxX+G/6SOdztVIi6EQMwUcL79Za1dh7xGRQvc0W4="
+    version = "v3.5.1"
+    hash = "sha256-ps2GEc3P2xvlrU4TCtXz+nLTxyP0RrF7SScz5jUqE5E="
   [mod."nhooyr.io/websocket"]
     version = "v1.8.6"
     hash = "sha256-DyaiCc/1iELrl6JSpz6WYMtFwUiSCOSoNF8IhSyP1ag="

@@ -546,6 +546,7 @@ var sizeTests = []struct {
 	{"9999999999999", 13},
 	{"99999999999999", 14},
 	{"999999999999999", 15},
+	{"1000000000000000", 16},
 	{"9999999999999999", 16},
 	{"99999999999999999", 17},
 	{"999999999999999999", 18},
@@ -592,16 +593,14 @@ func TestNewIntFromString(t *testing.T) {
 }
 
 func BenchmarkIntSize(b *testing.B) {
-	var tests []math.Int
-	for _, st := range sizeTests {
-		ii, _ := math.NewIntFromString(st.s)
-		tests = append(tests, ii)
-	}
-	b.ResetTimer()
 	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
-		for _, ii := range tests {
+		for _, st := range sizeTests {
+			ii, _ := math.NewIntFromString(st.s)
 			got := ii.Size()
+			if got != st.want {
+				b.Errorf("%q:: got=%d, want=%d", st.s, got, st.want)
+			}
 			sink = got
 		}
 	}

@@ -2055,7 +2055,7 @@ func (x *MsgCommunityPoolSpend) GetAmount() []*v1beta1.Coin {
 // MsgCommunityPoolSpendResponse defines the response to executing a
 // MsgCommunityPoolSpend message.
 //
-// Since: cosmos-sdk 0.47
+// Since: cosmos-sdk 0.50
 type MsgCommunityPoolSpendResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

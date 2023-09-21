@@ -178,7 +178,7 @@ func (m *MsgCommunityPoolSpend) GetAmount() github_com_cosmos_cosmos_sdk_types.C
 // MsgCommunityPoolSpendResponse defines the response to executing a
 // MsgCommunityPoolSpend message.
 //
-// Since: cosmos-sdk 0.47
+// Since: cosmos-sdk 0.50
 type MsgCommunityPoolSpendResponse struct {
 }
 

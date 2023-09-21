@@ -163,9 +163,7 @@ require (
 
 // Here are the short-lived replace from the Cosmos SDK
 // Replace here are pending PRs, or version to be tagged
-replace (
-	cosmossdk.io/api => ./api
-)
+replace cosmossdk.io/api => ./api
 
 // Below are the long-lived replace of the Cosmos SDK
 replace (
@@ -180,7 +178,6 @@ replace (
 	// replace broken goleveldb
 	github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
 )
-
 
 retract (
 	// revert fix https://github.com/cosmos/cosmos-sdk/pull/16331

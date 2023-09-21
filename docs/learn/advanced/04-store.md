@@ -168,7 +168,7 @@ The documentation on the IAVL Tree is located [here](https://github.com/cosmos/i
 
 ### `DbAdapter` Store
 
-`dbadapter.Store` is a adapter for `dbm.DB` making it fulfilling the `KVStore` interface.
+`dbadapter.Store` is an adapter for `dbm.DB` making it fulfilling the `KVStore` interface.
 
 ```go reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/store/dbadapter/store.go#L13-L16
@@ -269,7 +269,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/store/prefix/store.go#
 
 When `Store.{Get, Set}()` is called, the store forwards the call to its parent, with the key prefixed with the `Store.prefix`.
 
-When `Store.Iterator()` is called, it does not simply prefix the `Store.prefix`, since it does not work as intended. In that case, some of the elements are traversed even they are not starting with the prefix.
+When `Store.Iterator()` is called, it does not simply prefix the `Store.prefix`, since it does not work as intended. In that case, some of the elements are traversed even if they are not starting with the prefix.
 
 ### `ListenKv` Store
 

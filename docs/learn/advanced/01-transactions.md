@@ -98,7 +98,7 @@ create the final transaction by appending a fee. Note that the fee payer of the 
 
 #### Custom Sign modes
 
-There is the the opportunity to add your own custom sign mode to the Cosmos-SDK.  While we can not accept the implementation of the sign mode to the repository, we can accept a pull request to add the custom signmode to the SignMode enum located [here](https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/proto/cosmos/tx/signing/v1beta1/signing.proto#L17)
+There is the opportunity to add your own custom sign mode to the Cosmos-SDK.  While we can not accept the implementation of the sign mode to the repository, we can accept a pull request to add the custom signmode to the SignMode enum located [here](https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/proto/cosmos/tx/signing/v1beta1/signing.proto#L17)
 
 ## Transaction Process
 
@@ -145,7 +145,7 @@ As there are currently two sign modes for signing transactions, there are also t
 * [wrapper](https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/x/auth/tx/builder.go#L26-L43) for creating transactions for `SIGN_MODE_DIRECT`,
 * [StdTxBuilder](https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/x/auth/migrations/legacytx/stdtx_builder.go#L14-L17) for `SIGN_MODE_LEGACY_AMINO_JSON`.
 
-However, the two implementation of `TxBuilder` should be hidden away from end-users, as they should prefer using the overarching `TxConfig` interface:
+However, the two implementations of `TxBuilder` should be hidden away from end-users, as they should prefer using the overarching `TxConfig` interface:
 
 ```go reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/client/tx_config.go#L24-L34

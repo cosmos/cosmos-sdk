@@ -187,7 +187,7 @@ During `FinalizeBlock`, the `finalizeBlockState` is set for use during transacti
 `finalizeBlockState` is based off of the last committed state from the root store and is branched.
 Note, the `finalizeBlockState` is set to `nil` on [`Commit`](#commit).
 
-The state flow for transcation execution is nearly identical to `CheckTx` except state transitions occur on
+The state flow for transaction execution is nearly identical to `CheckTx` except state transitions occur on
 the `finalizeBlockState` and messages in a transaction are executed. Similarly to `CheckTx`, state transitions
 occur on a doubly branched state -- `finalizeBlockState`. Successful message execution results in
 writes being committed to `finalizeBlockState`. Note, if message execution fails, state transitions from
@@ -324,7 +324,7 @@ to do the following checks:
    with the transaction is superior to a minimum reference gas amount based on the raw transaction size,
    in order to avoid spam with transactions that provide 0 gas.
 
-`CheckTx` does **not** process `sdk.Msg`s -  they only need to be processed when the canonical state need to be updated, which happens during `FinalizeBlock`.
+`CheckTx` does **not** process `sdk.Msg`s -  they only need to be processed when the canonical state needs to be updated, which happens during `FinalizeBlock`.
 
 Steps 2. and 3. are performed by the [`AnteHandler`](../beginner/04-gas-fees.md#antehandler) in the [`RunTx()`](#runtx-antehandler-and-runmsgs)
 function, which `CheckTx()` calls with the `runTxModeCheck` mode. During each step of `CheckTx()`, a
@@ -410,7 +410,7 @@ First, it retrieves the `sdk.Msg`'s fully-qualified type name, by checking the `
 
 ### PostHandler
 
-`PostHandler` is similar to `AnteHandler`, but it, as the name suggests, executes custom post tx processing logic after [`RunMsgs`](#runmsgs) is called. `PostHandler` receives the `Result` of the the `RunMsgs` in order to enable this customizable behavior.
+`PostHandler` is similar to `AnteHandler`, but it, as the name suggests, executes custom post tx processing logic after [`RunMsgs`](#runmsgs) is called. `PostHandler` receives the `Result` of the `RunMsgs` in order to enable this customizable behavior.
 
 Like `AnteHandler`s, `PostHandler`s are theoretically optional.
 
@@ -528,7 +528,7 @@ Each CometBFT `query` comes with a `path`, which is a `string` which denotes wha
 
 ### ExtendVote
 
-`ExtendVote` allows an application to extend a pre-commit vote with arbitrary data. This process does NOT have be deterministic and the data returned can be unique to the validator process.
+`ExtendVote` allows an application to extend a pre-commit vote with arbitrary data. This process does NOT have to be deterministic and the data returned can be unique to the validator process.
 
 In the Cosmos-SDK this is implemented as a NoOp:
 
@@ -538,7 +538,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/baseapp/abci_utils.go#
 
 ### VerifyVoteExtension
 
-`VerifyVoteExtension` allows an application to verify that the data returned by `ExtendVote` is valid. This process does NOT have be deterministic and the data returned can be unique to the validator process.
+`VerifyVoteExtension` allows an application to verify that the data returned by `ExtendVote` is valid. This process does NOT have to be deterministic and the data returned can be unique to the validator process.
 
 In the Cosmos-SDK this is implemented as a NoOp:
 

@@ -6,7 +6,7 @@ sidebar_position: 1
 
 :::note Pre-requisite Readings
 
-* [Cosmos Blockchain Simulator](../../develop/advanced/12-simulation.md)
+* [Cosmos Blockchain Simulator](../../learn/advanced/12-simulation.md)
 :::
 
 ## Synopsis
@@ -37,7 +37,7 @@ for the key-value pairs from the stores to be decoded (_i.e_ unmarshalled)
 to their corresponding types. In particular, it matches the key to a concrete type
 and then unmarshals the value from the `KVPair` to the type provided.
 
-You can use the example [here](https://github.com/cosmos/cosmos-sdk/blob/v/x/distribution/simulation/decoder.go) from the distribution module to implement your store decoders.
+You can use the example [here](https://github.com/cosmos/cosmos-sdk/blob/main/x/distribution/simulation/decoder.go) from the distribution module to implement your store decoders.
 
 ### Randomized genesis
 
@@ -48,13 +48,7 @@ Once the module genesis parameter are generated randomly (or with the key and
 values defined in a `params` file), they are marshaled to JSON format and added
 to the app genesis JSON to use it on the simulations.
 
-You can check an example on how to create the randomized genesis [here](https://github.com/cosmos/cosmos-sdk/blob/v/x/staking/simulation/genesis.go).
-
-### Randomized parameter changes
-
-The simulator is able to test parameter changes at random. The simulator package from each module must contain a `RandomizedParams` func that will simulate parameter changes of the module throughout the simulations lifespan.
-
-You can see how an example of what is needed to fully test parameter changes [here](https://github.com/cosmos/cosmos-sdk/blob/v/x/staking/simulation/params.go)
+You can check an example on how to create the randomized genesis [here](https://github.com/cosmos/cosmos-sdk/blob/main/x/staking/simulation/genesis.go).
 
 ### Random weighted operations
 
@@ -62,7 +56,7 @@ Operations are one of the crucial parts of the Cosmos SDK simulation. They are t
 (`Msg`) that are simulated with random field values. The sender of the operation
 is also assigned randomly.
 
-Operations on the simulation are simulated using the full [transaction cycle](../../develop/advanced/01-transactions.md) of a
+Operations on the simulation are simulated using the full [transaction cycle](../../learn/advanced/01-transactions.md) of a
 `ABCI` application that exposes the `BaseApp`.
 
 Shown below is how weights are set:

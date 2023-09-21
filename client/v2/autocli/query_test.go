@@ -354,7 +354,7 @@ func TestEverything(t *testing.T) {
 			Positional2: "abc",
 			Positional3Varargs: []*basev1beta1.Coin{
 				{Amount: "123.123123124", Denom: "foo"},
-				// {Amount: "4321", Denom: "bar"}, // TODO fix repeated fields
+				{Amount: "4321", Denom: "bar"},
 			},
 			ABool:  true,
 			AnEnum: testpb.Enum_ENUM_ONE,

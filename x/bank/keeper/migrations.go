@@ -1,6 +1,8 @@
 package keeper
 
-import "context"
+import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
+)
 
 // Migrator is a struct for handling in-place store migrations.
 type Migrator struct {
@@ -13,16 +15,16 @@ func NewMigrator(keeper BaseKeeper) Migrator {
 }
 
 // Migrate1to2 migrates from version 1 to 2.
-func (m Migrator) Migrate1to2(ctx context.Context) error {
+func (m Migrator) Migrate1to2(ctx sdk.Context) error {
 	return nil
 }
 
 // Migrate2to3 migrates x/bank storage from version 2 to 3.
-func (m Migrator) Migrate2to3(ctx context.Context) error {
+func (m Migrator) Migrate2to3(ctx sdk.Context) error {
 	return nil
 }
 
 // Migrate3to4 migrates x/bank storage from version 3 to 4.
-func (m Migrator) Migrate3to4(ctx context.Context) error {
+func (m Migrator) Migrate3to4(ctx sdk.Context) error {
 	return nil
 }

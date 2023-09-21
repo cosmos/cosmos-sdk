@@ -34,19 +34,19 @@ func (k Keeper) ExportState(ctx context.Context) (*v1.GenesisState, error) {
 	return genState, nil
 }
 
-func (k Keeper) exportAccount(ctx context.Context, addr []byte, accType string) (*v1.GenesisState_GenesisAccount, error) {
+func (k Keeper) exportAccount(ctx context.Context, addr []byte, accType string) (*v1.GenesisAccount, error) {
 	addrString, err := k.addressCodec.BytesToString(addr)
 	if err != nil {
 		return nil, err
 	}
-	account := &v1.GenesisState_GenesisAccount{
+	account := &v1.GenesisAccount{
 		Address:     addrString,
 		AccountType: accType,
 	}
 	rng := new(collections.Range[[]byte]).
 		Prefix(addr)
 	err = k.AccountsState.Walk(ctx, rng, func(key, value []byte) (stop bool, err error) {
-		account.State = append(account.State, &v1.GenesisState_GenesisAccount_KVPair{
+		account.State = append(account.State, &v1.KVPair{
 			Key:   key,
 			Value: value,
 		})
@@ -74,7 +74,7 @@ func (k Keeper) ImportState(ctx context.Context, genState *v1.GenesisState) erro
 	return nil
 }
 
-func (k Keeper) importAccount(ctx context.Context, acc *v1.GenesisState_GenesisAccount) error {
+func (k Keeper) importAccount(ctx context.Context, acc *v1.GenesisAccount) error {
 	// TODO: maybe check if impl exists?
 	addrBytes, err := k.addressCodec.StringToBytes(acc.Address)
 	if err != nil {

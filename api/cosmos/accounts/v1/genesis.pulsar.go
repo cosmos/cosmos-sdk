@@ -15,7 +15,7 @@ import (
 var _ protoreflect.List = (*_GenesisState_2_list)(nil)
 
 type _GenesisState_2_list struct {
-	list *[]*GenesisState_GenesisAccount
+	list *[]*GenesisAccount
 }
 
 func (x *_GenesisState_2_list) Len() int {
@@ -31,18 +31,18 @@ func (x *_GenesisState_2_list) Get(i int) protoreflect.Value {
 
 func (x *_GenesisState_2_list) Set(i int, value protoreflect.Value) {
 	valueUnwrapped := value.Message()
-	concreteValue := valueUnwrapped.Interface().(*GenesisState_GenesisAccount)
+	concreteValue := valueUnwrapped.Interface().(*GenesisAccount)
 	(*x.list)[i] = concreteValue
 }
 
 func (x *_GenesisState_2_list) Append(value protoreflect.Value) {
 	valueUnwrapped := value.Message()
-	concreteValue := valueUnwrapped.Interface().(*GenesisState_GenesisAccount)
+	concreteValue := valueUnwrapped.Interface().(*GenesisAccount)
 	*x.list = append(*x.list, concreteValue)
 }
 
 func (x *_GenesisState_2_list) AppendMutable() protoreflect.Value {
-	v := new(GenesisState_GenesisAccount)
+	v := new(GenesisAccount)
 	*x.list = append(*x.list, v)
 	return protoreflect.ValueOfMessage(v.ProtoReflect())
 }
@@ -55,7 +55,7 @@ func (x *_GenesisState_2_list) Truncate(n int) {
 }
 
 func (x *_GenesisState_2_list) NewElement() protoreflect.Value {
-	v := new(GenesisState_GenesisAccount)
+	v := new(GenesisAccount)
 	return protoreflect.ValueOfMessage(v.ProtoReflect())
 }
 
@@ -265,7 +265,7 @@ func (x *fastReflection_GenesisState) Mutable(fd protoreflect.FieldDescriptor) p
 	switch fd.FullName() {
 	case "cosmos.accounts.v1.GenesisState.accounts":
 		if x.Accounts == nil {
-			x.Accounts = []*GenesisState_GenesisAccount{}
+			x.Accounts = []*GenesisAccount{}
 		}
 		value := &_GenesisState_2_list{list: &x.Accounts}
 		return protoreflect.ValueOfList(value)
@@ -287,7 +287,7 @@ func (x *fastReflection_GenesisState) NewField(fd protoreflect.FieldDescriptor) 
 	case "cosmos.accounts.v1.GenesisState.account_number":
 		return protoreflect.ValueOfUint64(uint64(0))
 	case "cosmos.accounts.v1.GenesisState.accounts":
-		list := []*GenesisState_GenesisAccount{}
+		list := []*GenesisAccount{}
 		return protoreflect.ValueOfList(&_GenesisState_2_list{list: &list})
 	default:
 		if fd.IsExtension() {
@@ -514,7 +514,7 @@ func (x *fastReflection_GenesisState) ProtoMethods() *protoiface.Methods {
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.Accounts = append(x.Accounts, &GenesisState_GenesisAccount{})
+				x.Accounts = append(x.Accounts, &GenesisAccount{})
 				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Accounts[len(x.Accounts)-1]); err != nil {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
 				}
@@ -554,81 +554,81 @@ func (x *fastReflection_GenesisState) ProtoMethods() *protoiface.Methods {
 	}
 }
 
-var _ protoreflect.List = (*_GenesisState_GenesisAccount_3_list)(nil)
+var _ protoreflect.List = (*_GenesisAccount_3_list)(nil)
 
-type _GenesisState_GenesisAccount_3_list struct {
-	list *[]*GenesisState_GenesisAccount_KVPair
+type _GenesisAccount_3_list struct {
+	list *[]*KVPair
 }
 
-func (x *_GenesisState_GenesisAccount_3_list) Len() int {
+func (x *_GenesisAccount_3_list) Len() int {
 	if x.list == nil {
 		return 0
 	}
 	return len(*x.list)
 }
 
-func (x *_GenesisState_GenesisAccount_3_list) Get(i int) protoreflect.Value {
+func (x *_GenesisAccount_3_list) Get(i int) protoreflect.Value {
 	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
 }
 
-func (x *_GenesisState_GenesisAccount_3_list) Set(i int, value protoreflect.Value) {
+func (x *_GenesisAccount_3_list) Set(i int, value protoreflect.Value) {
 	valueUnwrapped := value.Message()
-	concreteValue := valueUnwrapped.Interface().(*GenesisState_GenesisAccount_KVPair)
+	concreteValue := valueUnwrapped.Interface().(*KVPair)
 	(*x.list)[i] = concreteValue
 }
 
-func (x *_GenesisState_GenesisAccount_3_list) Append(value protoreflect.Value) {
+func (x *_GenesisAccount_3_list) Append(value protoreflect.Value) {
 	valueUnwrapped := value.Message()
-	concreteValue := valueUnwrapped.Interface().(*GenesisState_GenesisAccount_KVPair)
+	concreteValue := valueUnwrapped.Interface().(*KVPair)
 	*x.list = append(*x.list, concreteValue)
 }
 
-func (x *_GenesisState_GenesisAccount_3_list) AppendMutable() protoreflect.Value {
-	v := new(GenesisState_GenesisAccount_KVPair)
+func (x *_GenesisAccount_3_list) AppendMutable() protoreflect.Value {
+	v := new(KVPair)
 	*x.list = append(*x.list, v)
 	return protoreflect.ValueOfMessage(v.ProtoReflect())
 }
 
-func (x *_GenesisState_GenesisAccount_3_list) Truncate(n int) {
+func (x *_GenesisAccount_3_list) Truncate(n int) {
 	for i := n; i < len(*x.list); i++ {
 		(*x.list)[i] = nil
 	}
 	*x.list = (*x.list)[:n]
 }
 
-func (x *_GenesisState_GenesisAccount_3_list) NewElement() protoreflect.Value {
-	v := new(GenesisState_GenesisAccount_KVPair)
+func (x *_GenesisAccount_3_list) NewElement() protoreflect.Value {
+	v := new(KVPair)
 	return protoreflect.ValueOfMessage(v.ProtoReflect())
 }
 
-func (x *_GenesisState_GenesisAccount_3_list) IsValid() bool {
+func (x *_GenesisAccount_3_list) IsValid() bool {
 	return x.list != nil
 }
 
 var (
-	md_GenesisState_GenesisAccount              protoreflect.MessageDescriptor
-	fd_GenesisState_GenesisAccount_address      protoreflect.FieldDescriptor
-	fd_GenesisState_GenesisAccount_account_type protoreflect.FieldDescriptor
-	fd_GenesisState_GenesisAccount_state        protoreflect.FieldDescriptor
+	md_GenesisAccount              protoreflect.MessageDescriptor
+	fd_GenesisAccount_address      protoreflect.FieldDescriptor
+	fd_GenesisAccount_account_type protoreflect.FieldDescriptor
+	fd_GenesisAccount_state        protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_cosmos_accounts_v1_genesis_proto_init()
-	md_GenesisState_GenesisAccount = File_cosmos_accounts_v1_genesis_proto.Messages().ByName("GenesisState").Messages().ByName("GenesisAccount")
-	fd_GenesisState_GenesisAccount_address = md_GenesisState_GenesisAccount.Fields().ByName("address")
-	fd_GenesisState_GenesisAccount_account_type = md_GenesisState_GenesisAccount.Fields().ByName("account_type")
-	fd_GenesisState_GenesisAccount_state = md_GenesisState_GenesisAccount.Fields().ByName("state")
+	md_GenesisAccount = File_cosmos_accounts_v1_genesis_proto.Messages().ByName("GenesisAccount")
+	fd_GenesisAccount_address = md_GenesisAccount.Fields().ByName("address")
+	fd_GenesisAccount_account_type = md_GenesisAccount.Fields().ByName("account_type")
+	fd_GenesisAccount_state = md_GenesisAccount.Fields().ByName("state")
 }
 
-var _ protoreflect.Message = (*fastReflection_GenesisState_GenesisAccount)(nil)
+var _ protoreflect.Message = (*fastReflection_GenesisAccount)(nil)
 
-type fastReflection_GenesisState_GenesisAccount GenesisState_GenesisAccount
+type fastReflection_GenesisAccount GenesisAccount
 
-func (x *GenesisState_GenesisAccount) ProtoReflect() protoreflect.Message {
-	return (*fastReflection_GenesisState_GenesisAccount)(x)
+func (x *GenesisAccount) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_GenesisAccount)(x)
 }
 
-func (x *GenesisState_GenesisAccount) slowProtoReflect() protoreflect.Message {
+func (x *GenesisAccount) slowProtoReflect() protoreflect.Message {
 	mi := &file_cosmos_accounts_v1_genesis_proto_msgTypes[1]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -640,43 +640,43 @@ func (x *GenesisState_GenesisAccount) slowProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-var _fastReflection_GenesisState_GenesisAccount_messageType fastReflection_GenesisState_GenesisAccount_messageType
-var _ protoreflect.MessageType = fastReflection_GenesisState_GenesisAccount_messageType{}
+var _fastReflection_GenesisAccount_messageType fastReflection_GenesisAccount_messageType
+var _ protoreflect.MessageType = fastReflection_GenesisAccount_messageType{}
 
-type fastReflection_GenesisState_GenesisAccount_messageType struct{}
+type fastReflection_GenesisAccount_messageType struct{}
 
-func (x fastReflection_GenesisState_GenesisAccount_messageType) Zero() protoreflect.Message {
-	return (*fastReflection_GenesisState_GenesisAccount)(nil)
+func (x fastReflection_GenesisAccount_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_GenesisAccount)(nil)
 }
-func (x fastReflection_GenesisState_GenesisAccount_messageType) New() protoreflect.Message {
-	return new(fastReflection_GenesisState_GenesisAccount)
+func (x fastReflection_GenesisAccount_messageType) New() protoreflect.Message {
+	return new(fastReflection_GenesisAccount)
 }
-func (x fastReflection_GenesisState_GenesisAccount_messageType) Descriptor() protoreflect.MessageDescriptor {
-	return md_GenesisState_GenesisAccount
+func (x fastReflection_GenesisAccount_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_GenesisAccount
 }
 
 // Descriptor returns message descriptor, which contains only the protobuf
 // type information for the message.
-func (x *fastReflection_GenesisState_GenesisAccount) Descriptor() protoreflect.MessageDescriptor {
-	return md_GenesisState_GenesisAccount
+func (x *fastReflection_GenesisAccount) Descriptor() protoreflect.MessageDescriptor {
+	return md_GenesisAccount
 }
 
 // Type returns the message type, which encapsulates both Go and protobuf
 // type information. If the Go type information is not needed,
 // it is recommended that the message descriptor be used instead.
-func (x *fastReflection_GenesisState_GenesisAccount) Type() protoreflect.MessageType {
-	return _fastReflection_GenesisState_GenesisAccount_messageType
+func (x *fastReflection_GenesisAccount) Type() protoreflect.MessageType {
+	return _fastReflection_GenesisAccount_messageType
 }
 
 // New returns a newly allocated and mutable empty message.
-func (x *fastReflection_GenesisState_GenesisAccount) New() protoreflect.Message {
-	return new(fastReflection_GenesisState_GenesisAccount)
+func (x *fastReflection_GenesisAccount) New() protoreflect.Message {
+	return new(fastReflection_GenesisAccount)
 }
 
 // Interface unwraps the message reflection interface and
 // returns the underlying ProtoMessage interface.
-func (x *fastReflection_GenesisState_GenesisAccount) Interface() protoreflect.ProtoMessage {
-	return (*GenesisState_GenesisAccount)(x)
+func (x *fastReflection_GenesisAccount) Interface() protoreflect.ProtoMessage {
+	return (*GenesisAccount)(x)
 }
 
 // Range iterates over every populated field in an undefined order,
@@ -684,22 +684,22 @@ func (x *fastReflection_GenesisState_GenesisAccount) Interface() protoreflect.Pr
 // Range returns immediately if f returns false.
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
-func (x *fastReflection_GenesisState_GenesisAccount) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+func (x *fastReflection_GenesisAccount) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
 	if x.Address != "" {
 		value := protoreflect.ValueOfString(x.Address)
-		if !f(fd_GenesisState_GenesisAccount_address, value) {
+		if !f(fd_GenesisAccount_address, value) {
 			return
 		}
 	}
 	if x.AccountType != "" {
 		value := protoreflect.ValueOfString(x.AccountType)
-		if !f(fd_GenesisState_GenesisAccount_account_type, value) {
+		if !f(fd_GenesisAccount_account_type, value) {
 			return
 		}
 	}
 	if len(x.State) != 0 {
-		value := protoreflect.ValueOfList(&_GenesisState_GenesisAccount_3_list{list: &x.State})
-		if !f(fd_GenesisState_GenesisAccount_state, value) {
+		value := protoreflect.ValueOfList(&_GenesisAccount_3_list{list: &x.State})
+		if !f(fd_GenesisAccount_state, value) {
 			return
 		}
 	}
@@ -716,19 +716,19 @@ func (x *fastReflection_GenesisState_GenesisAccount) Range(f func(protoreflect.F
 // In other cases (aside from the nullable cases above),
 // a proto3 scalar field is populated if it contains a non-zero value, and
 // a repeated field is populated if it is non-empty.
-func (x *fastReflection_GenesisState_GenesisAccount) Has(fd protoreflect.FieldDescriptor) bool {
+func (x *fastReflection_GenesisAccount) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "cosmos.accounts.v1.GenesisState.GenesisAccount.address":
+	case "cosmos.accounts.v1.GenesisAccount.address":
 		return x.Address != ""
-	case "cosmos.accounts.v1.GenesisState.GenesisAccount.account_type":
+	case "cosmos.accounts.v1.GenesisAccount.account_type":
 		return x.AccountType != ""
-	case "cosmos.accounts.v1.GenesisState.GenesisAccount.state":
+	case "cosmos.accounts.v1.GenesisAccount.state":
 		return len(x.State) != 0
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.v1.GenesisState.GenesisAccount"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.v1.GenesisAccount"))
 		}
-		panic(fmt.Errorf("message cosmos.accounts.v1.GenesisState.GenesisAccount does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.accounts.v1.GenesisAccount does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -738,19 +738,19 @@ func (x *fastReflection_GenesisState_GenesisAccount) Has(fd protoreflect.FieldDe
 // associated with the given field number.
 //
 // Clear is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_GenesisState_GenesisAccount) Clear(fd protoreflect.FieldDescriptor) {
+func (x *fastReflection_GenesisAccount) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "cosmos.accounts.v1.GenesisState.GenesisAccount.address":
+	case "cosmos.accounts.v1.GenesisAccount.address":
 		x.Address = ""
-	case "cosmos.accounts.v1.GenesisState.GenesisAccount.account_type":
+	case "cosmos.accounts.v1.GenesisAccount.account_type":
 		x.AccountType = ""
-	case "cosmos.accounts.v1.GenesisState.GenesisAccount.state":
+	case "cosmos.accounts.v1.GenesisAccount.state":
 		x.State = nil
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.v1.GenesisState.GenesisAccount"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.v1.GenesisAccount"))
 		}
-		panic(fmt.Errorf("message cosmos.accounts.v1.GenesisState.GenesisAccount does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.accounts.v1.GenesisAccount does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -760,25 +760,25 @@ func (x *fastReflection_GenesisState_GenesisAccount) Clear(fd protoreflect.Field
 // the default value of a bytes scalar is guaranteed to be a copy.
 // For unpopulated composite types, it returns an empty, read-only view
 // of the value; to obtain a mutable reference, use Mutable.
-func (x *fastReflection_GenesisState_GenesisAccount) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_GenesisAccount) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "cosmos.accounts.v1.GenesisState.GenesisAccount.address":
+	case "cosmos.accounts.v1.GenesisAccount.address":
 		value := x.Address
 		return protoreflect.ValueOfString(value)
-	case "cosmos.accounts.v1.GenesisState.GenesisAccount.account_type":
+	case "cosmos.accounts.v1.GenesisAccount.account_type":
 		value := x.AccountType
 		return protoreflect.ValueOfString(value)
-	case "cosmos.accounts.v1.GenesisState.GenesisAccount.state":
+	case "cosmos.accounts.v1.GenesisAccount.state":
 		if len(x.State) == 0 {
-			return protoreflect.ValueOfList(&_GenesisState_GenesisAccount_3_list{})
+			return protoreflect.ValueOfList(&_GenesisAccount_3_list{})
 		}
-		listValue := &_GenesisState_GenesisAccount_3_list{list: &x.State}
+		listValue := &_GenesisAccount_3_list{list: &x.State}
 		return protoreflect.ValueOfList(listValue)
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.v1.GenesisState.GenesisAccount"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.v1.GenesisAccount"))
 		}
-		panic(fmt.Errorf("message cosmos.accounts.v1.GenesisState.GenesisAccount does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message cosmos.accounts.v1.GenesisAccount does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -792,21 +792,21 @@ func (x *fastReflection_GenesisState_GenesisAccount) Get(descriptor protoreflect
 // empty, read-only value, then it panics.
 //
 // Set is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_GenesisState_GenesisAccount) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+func (x *fastReflection_GenesisAccount) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "cosmos.accounts.v1.GenesisState.GenesisAccount.address":
+	case "cosmos.accounts.v1.GenesisAccount.address":
 		x.Address = value.Interface().(string)
-	case "cosmos.accounts.v1.GenesisState.GenesisAccount.account_type":
+	case "cosmos.accounts.v1.GenesisAccount.account_type":
 		x.AccountType = value.Interface().(string)
-	case "cosmos.accounts.v1.GenesisState.GenesisAccount.state":
+	case "cosmos.accounts.v1.GenesisAccount.state":
 		lv := value.List()
-		clv := lv.(*_GenesisState_GenesisAccount_3_list)
+		clv := lv.(*_GenesisAccount_3_list)
 		x.State = *clv.list
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.v1.GenesisState.GenesisAccount"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.v1.GenesisAccount"))
 		}
-		panic(fmt.Errorf("message cosmos.accounts.v1.GenesisState.GenesisAccount does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.accounts.v1.GenesisAccount does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -820,53 +820,53 @@ func (x *fastReflection_GenesisState_GenesisAccount) Set(fd protoreflect.FieldDe
 // It panics if the field does not contain a composite type.
 //
 // Mutable is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_GenesisState_GenesisAccount) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_GenesisAccount) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.accounts.v1.GenesisState.GenesisAccount.state":
+	case "cosmos.accounts.v1.GenesisAccount.state":
 		if x.State == nil {
-			x.State = []*GenesisState_GenesisAccount_KVPair{}
+			x.State = []*KVPair{}
 		}
-		value := &_GenesisState_GenesisAccount_3_list{list: &x.State}
+		value := &_GenesisAccount_3_list{list: &x.State}
 		return protoreflect.ValueOfList(value)
-	case "cosmos.accounts.v1.GenesisState.GenesisAccount.address":
-		panic(fmt.Errorf("field address of message cosmos.accounts.v1.GenesisState.GenesisAccount is not mutable"))
-	case "cosmos.accounts.v1.GenesisState.GenesisAccount.account_type":
-		panic(fmt.Errorf("field account_type of message cosmos.accounts.v1.GenesisState.GenesisAccount is not mutable"))
+	case "cosmos.accounts.v1.GenesisAccount.address":
+		panic(fmt.Errorf("field address of message cosmos.accounts.v1.GenesisAccount is not mutable"))
+	case "cosmos.accounts.v1.GenesisAccount.account_type":
+		panic(fmt.Errorf("field account_type of message cosmos.accounts.v1.GenesisAccount is not mutable"))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.v1.GenesisState.GenesisAccount"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.v1.GenesisAccount"))
 		}
-		panic(fmt.Errorf("message cosmos.accounts.v1.GenesisState.GenesisAccount does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.accounts.v1.GenesisAccount does not contain field %s", fd.FullName()))
 	}
 }
 
 // NewField returns a new value that is assignable to the field
 // for the given descriptor. For scalars, this returns the default value.
 // For lists, maps, and messages, this returns a new, empty, mutable value.
-func (x *fastReflection_GenesisState_GenesisAccount) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_GenesisAccount) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.accounts.v1.GenesisState.GenesisAccount.address":
+	case "cosmos.accounts.v1.GenesisAccount.address":
 		return protoreflect.ValueOfString("")
-	case "cosmos.accounts.v1.GenesisState.GenesisAccount.account_type":
+	case "cosmos.accounts.v1.GenesisAccount.account_type":
 		return protoreflect.ValueOfString("")
-	case "cosmos.accounts.v1.GenesisState.GenesisAccount.state":
-		list := []*GenesisState_GenesisAccount_KVPair{}
-		return protoreflect.ValueOfList(&_GenesisState_GenesisAccount_3_list{list: &list})
+	case "cosmos.accounts.v1.GenesisAccount.state":
+		list := []*KVPair{}
+		return protoreflect.ValueOfList(&_GenesisAccount_3_list{list: &list})
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.v1.GenesisState.GenesisAccount"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.v1.GenesisAccount"))
 		}
-		panic(fmt.Errorf("message cosmos.accounts.v1.GenesisState.GenesisAccount does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.accounts.v1.GenesisAccount does not contain field %s", fd.FullName()))
 	}
 }
 
 // WhichOneof reports which field within the oneof is populated,
 // returning nil if none are populated.
 // It panics if the oneof descriptor does not belong to this message.
-func (x *fastReflection_GenesisState_GenesisAccount) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+func (x *fastReflection_GenesisAccount) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in cosmos.accounts.v1.GenesisState.GenesisAccount", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.accounts.v1.GenesisAccount", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -874,7 +874,7 @@ func (x *fastReflection_GenesisState_GenesisAccount) WhichOneof(d protoreflect.O
 // GetUnknown retrieves the entire list of unknown fields.
 // The caller may only mutate the contents of the RawFields
 // if the mutated bytes are stored back into the message with SetUnknown.
-func (x *fastReflection_GenesisState_GenesisAccount) GetUnknown() protoreflect.RawFields {
+func (x *fastReflection_GenesisAccount) GetUnknown() protoreflect.RawFields {
 	return x.unknownFields
 }
 
@@ -885,7 +885,7 @@ func (x *fastReflection_GenesisState_GenesisAccount) GetUnknown() protoreflect.R
 // An empty RawFields may be passed to clear the fields.
 //
 // SetUnknown is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_GenesisState_GenesisAccount) SetUnknown(fields protoreflect.RawFields) {
+func (x *fastReflection_GenesisAccount) SetUnknown(fields protoreflect.RawFields) {
 	x.unknownFields = fields
 }
 
@@ -897,7 +897,7 @@ func (x *fastReflection_GenesisState_GenesisAccount) SetUnknown(fields protorefl
 // message type, but the details are implementation dependent.
 // Validity is not part of the protobuf data model, and may not
 // be preserved in marshaling or other operations.
-func (x *fastReflection_GenesisState_GenesisAccount) IsValid() bool {
+func (x *fastReflection_GenesisAccount) IsValid() bool {
 	return x != nil
 }
 
@@ -907,9 +907,9 @@ func (x *fastReflection_GenesisState_GenesisAccount) IsValid() bool {
 // The returned methods type is identical to
 // "google.golang.org/protobuf/runtime/protoiface".Methods.
 // Consult the protoiface package documentation for details.
-func (x *fastReflection_GenesisState_GenesisAccount) ProtoMethods() *protoiface.Methods {
+func (x *fastReflection_GenesisAccount) ProtoMethods() *protoiface.Methods {
 	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
-		x := input.Message.Interface().(*GenesisState_GenesisAccount)
+		x := input.Message.Interface().(*GenesisAccount)
 		if x == nil {
 			return protoiface.SizeOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -945,7 +945,7 @@ func (x *fastReflection_GenesisState_GenesisAccount) ProtoMethods() *protoiface.
 	}
 
 	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
-		x := input.Message.Interface().(*GenesisState_GenesisAccount)
+		x := input.Message.Interface().(*GenesisAccount)
 		if x == nil {
 			return protoiface.MarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -1005,7 +1005,7 @@ func (x *fastReflection_GenesisState_GenesisAccount) ProtoMethods() *protoiface.
 		}, nil
 	}
 	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
-		x := input.Message.Interface().(*GenesisState_GenesisAccount)
+		x := input.Message.Interface().(*GenesisAccount)
 		if x == nil {
 			return protoiface.UnmarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -1037,10 +1037,10 @@ func (x *fastReflection_GenesisState_GenesisAccount) ProtoMethods() *protoiface.
 			fieldNum := int32(wire >> 3)
 			wireType := int(wire & 0x7)
 			if wireType == 4 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: GenesisState_GenesisAccount: wiretype end group for non-group")
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: GenesisAccount: wiretype end group for non-group")
 			}
 			if fieldNum <= 0 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: GenesisState_GenesisAccount: illegal tag %d (wire type %d)", fieldNum, wire)
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: GenesisAccount: illegal tag %d (wire type %d)", fieldNum, wire)
 			}
 			switch fieldNum {
 			case 1:
@@ -1136,7 +1136,7 @@ func (x *fastReflection_GenesisState_GenesisAccount) ProtoMethods() *protoiface.
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.State = append(x.State, &GenesisState_GenesisAccount_KVPair{})
+				x.State = append(x.State, &KVPair{})
 				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.State[len(x.State)-1]); err != nil {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
 				}
@@ -1177,27 +1177,27 @@ func (x *fastReflection_GenesisState_GenesisAccount) ProtoMethods() *protoiface.
 }
 
 var (
-	md_GenesisState_GenesisAccount_KVPair       protoreflect.MessageDescriptor
-	fd_GenesisState_GenesisAccount_KVPair_key   protoreflect.FieldDescriptor
-	fd_GenesisState_GenesisAccount_KVPair_value protoreflect.FieldDescriptor
+	md_KVPair       protoreflect.MessageDescriptor
+	fd_KVPair_key   protoreflect.FieldDescriptor
+	fd_KVPair_value protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_cosmos_accounts_v1_genesis_proto_init()
-	md_GenesisState_GenesisAccount_KVPair = File_cosmos_accounts_v1_genesis_proto.Messages().ByName("GenesisState").Messages().ByName("GenesisAccount").Messages().ByName("KVPair")
-	fd_GenesisState_GenesisAccount_KVPair_key = md_GenesisState_GenesisAccount_KVPair.Fields().ByName("key")
-	fd_GenesisState_GenesisAccount_KVPair_value = md_GenesisState_GenesisAccount_KVPair.Fields().ByName("value")
+	md_KVPair = File_cosmos_accounts_v1_genesis_proto.Messages().ByName("KVPair")
+	fd_KVPair_key = md_KVPair.Fields().ByName("key")
+	fd_KVPair_value = md_KVPair.Fields().ByName("value")
 }
 
-var _ protoreflect.Message = (*fastReflection_GenesisState_GenesisAccount_KVPair)(nil)
+var _ protoreflect.Message = (*fastReflection_KVPair)(nil)
 
-type fastReflection_GenesisState_GenesisAccount_KVPair GenesisState_GenesisAccount_KVPair
+type fastReflection_KVPair KVPair
 
-func (x *GenesisState_GenesisAccount_KVPair) ProtoReflect() protoreflect.Message {
-	return (*fastReflection_GenesisState_GenesisAccount_KVPair)(x)
+func (x *KVPair) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_KVPair)(x)
 }
 
-func (x *GenesisState_GenesisAccount_KVPair) slowProtoReflect() protoreflect.Message {
+func (x *KVPair) slowProtoReflect() protoreflect.Message {
 	mi := &file_cosmos_accounts_v1_genesis_proto_msgTypes[2]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -1209,43 +1209,43 @@ func (x *GenesisState_GenesisAccount_KVPair) slowProtoReflect() protoreflect.Mes
 	return mi.MessageOf(x)
 }
 
-var _fastReflection_GenesisState_GenesisAccount_KVPair_messageType fastReflection_GenesisState_GenesisAccount_KVPair_messageType
-var _ protoreflect.MessageType = fastReflection_GenesisState_GenesisAccount_KVPair_messageType{}
+var _fastReflection_KVPair_messageType fastReflection_KVPair_messageType
+var _ protoreflect.MessageType = fastReflection_KVPair_messageType{}
 
-type fastReflection_GenesisState_GenesisAccount_KVPair_messageType struct{}
+type fastReflection_KVPair_messageType struct{}
 
-func (x fastReflection_GenesisState_GenesisAccount_KVPair_messageType) Zero() protoreflect.Message {
-	return (*fastReflection_GenesisState_GenesisAccount_KVPair)(nil)
+func (x fastReflection_KVPair_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_KVPair)(nil)
 }
-func (x fastReflection_GenesisState_GenesisAccount_KVPair_messageType) New() protoreflect.Message {
-	return new(fastReflection_GenesisState_GenesisAccount_KVPair)
+func (x fastReflection_KVPair_messageType) New() protoreflect.Message {
+	return new(fastReflection_KVPair)
 }
-func (x fastReflection_GenesisState_GenesisAccount_KVPair_messageType) Descriptor() protoreflect.MessageDescriptor {
-	return md_GenesisState_GenesisAccount_KVPair
+func (x fastReflection_KVPair_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_KVPair
 }
 
 // Descriptor returns message descriptor, which contains only the protobuf
 // type information for the message.
-func (x *fastReflection_GenesisState_GenesisAccount_KVPair) Descriptor() protoreflect.MessageDescriptor {
-	return md_GenesisState_GenesisAccount_KVPair
+func (x *fastReflection_KVPair) Descriptor() protoreflect.MessageDescriptor {
+	return md_KVPair
 }
 
 // Type returns the message type, which encapsulates both Go and protobuf
 // type information. If the Go type information is not needed,
 // it is recommended that the message descriptor be used instead.
-func (x *fastReflection_GenesisState_GenesisAccount_KVPair) Type() protoreflect.MessageType {
-	return _fastReflection_GenesisState_GenesisAccount_KVPair_messageType
+func (x *fastReflection_KVPair) Type() protoreflect.MessageType {
+	return _fastReflection_KVPair_messageType
 }
 
 // New returns a newly allocated and mutable empty message.
-func (x *fastReflection_GenesisState_GenesisAccount_KVPair) New() protoreflect.Message {
-	return new(fastReflection_GenesisState_GenesisAccount_KVPair)
+func (x *fastReflection_KVPair) New() protoreflect.Message {
+	return new(fastReflection_KVPair)
 }
 
 // Interface unwraps the message reflection interface and
 // returns the underlying ProtoMessage interface.
-func (x *fastReflection_GenesisState_GenesisAccount_KVPair) Interface() protoreflect.ProtoMessage {
-	return (*GenesisState_GenesisAccount_KVPair)(x)
+func (x *fastReflection_KVPair) Interface() protoreflect.ProtoMessage {
+	return (*KVPair)(x)
 }
 
 // Range iterates over every populated field in an undefined order,
@@ -1253,16 +1253,16 @@ func (x *fastReflection_GenesisState_GenesisAccount_KVPair) Interface() protoref
 // Range returns immediately if f returns false.
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
-func (x *fastReflection_GenesisState_GenesisAccount_KVPair) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+func (x *fastReflection_KVPair) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
 	if len(x.Key) != 0 {
 		value := protoreflect.ValueOfBytes(x.Key)
-		if !f(fd_GenesisState_GenesisAccount_KVPair_key, value) {
+		if !f(fd_KVPair_key, value) {
 			return
 		}
 	}
 	if len(x.Value) != 0 {
 		value := protoreflect.ValueOfBytes(x.Value)
-		if !f(fd_GenesisState_GenesisAccount_KVPair_value, value) {
+		if !f(fd_KVPair_value, value) {
 			return
 		}
 	}
@@ -1279,17 +1279,17 @@ func (x *fastReflection_GenesisState_GenesisAccount_KVPair) Range(f func(protore
 // In other cases (aside from the nullable cases above),
 // a proto3 scalar field is populated if it contains a non-zero value, and
 // a repeated field is populated if it is non-empty.
-func (x *fastReflection_GenesisState_GenesisAccount_KVPair) Has(fd protoreflect.FieldDescriptor) bool {
+func (x *fastReflection_KVPair) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "cosmos.accounts.v1.GenesisState.GenesisAccount.KVPair.key":
+	case "cosmos.accounts.v1.KVPair.key":
 		return len(x.Key) != 0
-	case "cosmos.accounts.v1.GenesisState.GenesisAccount.KVPair.value":
+	case "cosmos.accounts.v1.KVPair.value":
 		return len(x.Value) != 0
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.v1.GenesisState.GenesisAccount.KVPair"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.v1.KVPair"))
 		}
-		panic(fmt.Errorf("message cosmos.accounts.v1.GenesisState.GenesisAccount.KVPair does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.accounts.v1.KVPair does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -1299,17 +1299,17 @@ func (x *fastReflection_GenesisState_GenesisAccount_KVPair) Has(fd protoreflect.
 // associated with the given field number.
 //
 // Clear is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_GenesisState_GenesisAccount_KVPair) Clear(fd protoreflect.FieldDescriptor) {
+func (x *fastReflection_KVPair) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "cosmos.accounts.v1.GenesisState.GenesisAccount.KVPair.key":
+	case "cosmos.accounts.v1.KVPair.key":
 		x.Key = nil
-	case "cosmos.accounts.v1.GenesisState.GenesisAccount.KVPair.value":
+	case "cosmos.accounts.v1.KVPair.value":
 		x.Value = nil
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.v1.GenesisState.GenesisAccount.KVPair"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.v1.KVPair"))
 		}
-		panic(fmt.Errorf("message cosmos.accounts.v1.GenesisState.GenesisAccount.KVPair does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.accounts.v1.KVPair does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -1319,19 +1319,19 @@ func (x *fastReflection_GenesisState_GenesisAccount_KVPair) Clear(fd protoreflec
 // the default value of a bytes scalar is guaranteed to be a copy.
 // For unpopulated composite types, it returns an empty, read-only view
 // of the value; to obtain a mutable reference, use Mutable.
-func (x *fastReflection_GenesisState_GenesisAccount_KVPair) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_KVPair) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "cosmos.accounts.v1.GenesisState.GenesisAccount.KVPair.key":
+	case "cosmos.accounts.v1.KVPair.key":
 		value := x.Key
 		return protoreflect.ValueOfBytes(value)
-	case "cosmos.accounts.v1.GenesisState.GenesisAccount.KVPair.value":
+	case "cosmos.accounts.v1.KVPair.value":
 		value := x.Value
 		return protoreflect.ValueOfBytes(value)
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.v1.GenesisState.GenesisAccount.KVPair"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.v1.KVPair"))
 		}
-		panic(fmt.Errorf("message cosmos.accounts.v1.GenesisState.GenesisAccount.KVPair does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message cosmos.accounts.v1.KVPair does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -1345,17 +1345,17 @@ func (x *fastReflection_GenesisState_GenesisAccount_KVPair) Get(descriptor proto
 // empty, read-only value, then it panics.
 //
 // Set is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_GenesisState_GenesisAccount_KVPair) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+func (x *fastReflection_KVPair) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "cosmos.accounts.v1.GenesisState.GenesisAccount.KVPair.key":
+	case "cosmos.accounts.v1.KVPair.key":
 		x.Key = value.Bytes()
-	case "cosmos.accounts.v1.GenesisState.GenesisAccount.KVPair.value":
+	case "cosmos.accounts.v1.KVPair.value":
 		x.Value = value.Bytes()
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.v1.GenesisState.GenesisAccount.KVPair"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.v1.KVPair"))
 		}
-		panic(fmt.Errorf("message cosmos.accounts.v1.GenesisState.GenesisAccount.KVPair does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.accounts.v1.KVPair does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -1369,44 +1369,44 @@ func (x *fastReflection_GenesisState_GenesisAccount_KVPair) Set(fd protoreflect.
 // It panics if the field does not contain a composite type.
 //
 // Mutable is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_GenesisState_GenesisAccount_KVPair) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_KVPair) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.accounts.v1.GenesisState.GenesisAccount.KVPair.key":
-		panic(fmt.Errorf("field key of message cosmos.accounts.v1.GenesisState.GenesisAccount.KVPair is not mutable"))
-	case "cosmos.accounts.v1.GenesisState.GenesisAccount.KVPair.value":
-		panic(fmt.Errorf("field value of message cosmos.accounts.v1.GenesisState.GenesisAccount.KVPair is not mutable"))
+	case "cosmos.accounts.v1.KVPair.key":
+		panic(fmt.Errorf("field key of message cosmos.accounts.v1.KVPair is not mutable"))
+	case "cosmos.accounts.v1.KVPair.value":
+		panic(fmt.Errorf("field value of message cosmos.accounts.v1.KVPair is not mutable"))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.v1.GenesisState.GenesisAccount.KVPair"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.v1.KVPair"))
 		}
-		panic(fmt.Errorf("message cosmos.accounts.v1.GenesisState.GenesisAccount.KVPair does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.accounts.v1.KVPair does not contain field %s", fd.FullName()))
 	}
 }
 
 // NewField returns a new value that is assignable to the field
 // for the given descriptor. For scalars, this returns the default value.
 // For lists, maps, and messages, this returns a new, empty, mutable value.
-func (x *fastReflection_GenesisState_GenesisAccount_KVPair) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_KVPair) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.accounts.v1.GenesisState.GenesisAccount.KVPair.key":
+	case "cosmos.accounts.v1.KVPair.key":
 		return protoreflect.ValueOfBytes(nil)
-	case "cosmos.accounts.v1.GenesisState.GenesisAccount.KVPair.value":
+	case "cosmos.accounts.v1.KVPair.value":
 		return protoreflect.ValueOfBytes(nil)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.v1.GenesisState.GenesisAccount.KVPair"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.v1.KVPair"))
 		}
-		panic(fmt.Errorf("message cosmos.accounts.v1.GenesisState.GenesisAccount.KVPair does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.accounts.v1.KVPair does not contain field %s", fd.FullName()))
 	}
 }
 
 // WhichOneof reports which field within the oneof is populated,
 // returning nil if none are populated.
 // It panics if the oneof descriptor does not belong to this message.
-func (x *fastReflection_GenesisState_GenesisAccount_KVPair) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+func (x *fastReflection_KVPair) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in cosmos.accounts.v1.GenesisState.GenesisAccount.KVPair", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.accounts.v1.KVPair", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -1414,7 +1414,7 @@ func (x *fastReflection_GenesisState_GenesisAccount_KVPair) WhichOneof(d protore
 // GetUnknown retrieves the entire list of unknown fields.
 // The caller may only mutate the contents of the RawFields
 // if the mutated bytes are stored back into the message with SetUnknown.
-func (x *fastReflection_GenesisState_GenesisAccount_KVPair) GetUnknown() protoreflect.RawFields {
+func (x *fastReflection_KVPair) GetUnknown() protoreflect.RawFields {
 	return x.unknownFields
 }
 
@@ -1425,7 +1425,7 @@ func (x *fastReflection_GenesisState_GenesisAccount_KVPair) GetUnknown() protore
 // An empty RawFields may be passed to clear the fields.
 //
 // SetUnknown is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_GenesisState_GenesisAccount_KVPair) SetUnknown(fields protoreflect.RawFields) {
+func (x *fastReflection_KVPair) SetUnknown(fields protoreflect.RawFields) {
 	x.unknownFields = fields
 }
 
@@ -1437,7 +1437,7 @@ func (x *fastReflection_GenesisState_GenesisAccount_KVPair) SetUnknown(fields pr
 // message type, but the details are implementation dependent.
 // Validity is not part of the protobuf data model, and may not
 // be preserved in marshaling or other operations.
-func (x *fastReflection_GenesisState_GenesisAccount_KVPair) IsValid() bool {
+func (x *fastReflection_KVPair) IsValid() bool {
 	return x != nil
 }
 
@@ -1447,9 +1447,9 @@ func (x *fastReflection_GenesisState_GenesisAccount_KVPair) IsValid() bool {
 // The returned methods type is identical to
 // "google.golang.org/protobuf/runtime/protoiface".Methods.
 // Consult the protoiface package documentation for details.
-func (x *fastReflection_GenesisState_GenesisAccount_KVPair) ProtoMethods() *protoiface.Methods {
+func (x *fastReflection_KVPair) ProtoMethods() *protoiface.Methods {
 	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
-		x := input.Message.Interface().(*GenesisState_GenesisAccount_KVPair)
+		x := input.Message.Interface().(*KVPair)
 		if x == nil {
 			return protoiface.SizeOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -1479,7 +1479,7 @@ func (x *fastReflection_GenesisState_GenesisAccount_KVPair) ProtoMethods() *prot
 	}
 
 	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
-		x := input.Message.Interface().(*GenesisState_GenesisAccount_KVPair)
+		x := input.Message.Interface().(*KVPair)
 		if x == nil {
 			return protoiface.MarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -1523,7 +1523,7 @@ func (x *fastReflection_GenesisState_GenesisAccount_KVPair) ProtoMethods() *prot
 		}, nil
 	}
 	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
-		x := input.Message.Interface().(*GenesisState_GenesisAccount_KVPair)
+		x := input.Message.Interface().(*KVPair)
 		if x == nil {
 			return protoiface.UnmarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -1555,10 +1555,10 @@ func (x *fastReflection_GenesisState_GenesisAccount_KVPair) ProtoMethods() *prot
 			fieldNum := int32(wire >> 3)
 			wireType := int(wire & 0x7)
 			if wireType == 4 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: GenesisState_GenesisAccount_KVPair: wiretype end group for non-group")
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: KVPair: wiretype end group for non-group")
 			}
 			if fieldNum <= 0 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: GenesisState_GenesisAccount_KVPair: illegal tag %d (wire type %d)", fieldNum, wire)
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: KVPair: illegal tag %d (wire type %d)", fieldNum, wire)
 			}
 			switch fieldNum {
 			case 1:
@@ -1683,8 +1683,10 @@ type GenesisState struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	AccountNumber uint64                         `protobuf:"varint,1,opt,name=account_number,json=accountNumber,proto3" json:"account_number,omitempty"`
-	Accounts      []*GenesisState_GenesisAccount `protobuf:"bytes,2,rep,name=accounts,proto3" json:"accounts,omitempty"`
+	// account_number is the latest account number.
+	AccountNumber uint64 `protobuf:"varint,1,opt,name=account_number,json=accountNumber,proto3" json:"account_number,omitempty"`
+	// accounts are the genesis accounts.
+	Accounts []*GenesisAccount `protobuf:"bytes,2,rep,name=accounts,proto3" json:"accounts,omitempty"`
 }
 
 func (x *GenesisState) Reset() {
@@ -1714,25 +1716,29 @@ func (x *GenesisState) GetAccountNumber() uint64 {
 	return 0
 }
 
-func (x *GenesisState) GetAccounts() []*GenesisState_GenesisAccount {
+func (x *GenesisState) GetAccounts() []*GenesisAccount {
 	if x != nil {
 		return x.Accounts
 	}
 	return nil
 }
 
-type GenesisState_GenesisAccount struct {
+// GenesisAccount defines an account to be initialized in the genesis state.
+type GenesisAccount struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Address     string                                `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
-	AccountType string                                `protobuf:"bytes,2,opt,name=account_type,json=accountType,proto3" json:"account_type,omitempty"`
-	State       []*GenesisState_GenesisAccount_KVPair `protobuf:"bytes,3,rep,name=state,proto3" json:"state,omitempty"`
+	// address is the address of the account.
+	Address string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
+	// account_type is the account type of the account.
+	AccountType string `protobuf:"bytes,2,opt,name=account_type,json=accountType,proto3" json:"account_type,omitempty"`
+	// state is the account state represented as a slice of raw key value byte pairs.
+	State []*KVPair `protobuf:"bytes,3,rep,name=state,proto3" json:"state,omitempty"`
 }
 
-func (x *GenesisState_GenesisAccount) Reset() {
-	*x = GenesisState_GenesisAccount{}
+func (x *GenesisAccount) Reset() {
+	*x = GenesisAccount{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_cosmos_accounts_v1_genesis_proto_msgTypes[1]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -1740,49 +1746,52 @@ func (x *GenesisState_GenesisAccount) Reset() {
 	}
 }
 
-func (x *GenesisState_GenesisAccount) String() string {
+func (x *GenesisAccount) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*GenesisState_GenesisAccount) ProtoMessage() {}
+func (*GenesisAccount) ProtoMessage() {}
 
-// Deprecated: Use GenesisState_GenesisAccount.ProtoReflect.Descriptor instead.
-func (*GenesisState_GenesisAccount) Descriptor() ([]byte, []int) {
-	return file_cosmos_accounts_v1_genesis_proto_rawDescGZIP(), []int{0, 0}
+// Deprecated: Use GenesisAccount.ProtoReflect.Descriptor instead.
+func (*GenesisAccount) Descriptor() ([]byte, []int) {
+	return file_cosmos_accounts_v1_genesis_proto_rawDescGZIP(), []int{1}
 }
 
-func (x *GenesisState_GenesisAccount) GetAddress() string {
+func (x *GenesisAccount) GetAddress() string {
 	if x != nil {
 		return x.Address
 	}
 	return ""
 }
 
-func (x *GenesisState_GenesisAccount) GetAccountType() string {
+func (x *GenesisAccount) GetAccountType() string {
 	if x != nil {
 		return x.AccountType
 	}
 	return ""
 }
 
-func (x *GenesisState_GenesisAccount) GetState() []*GenesisState_GenesisAccount_KVPair {
+func (x *GenesisAccount) GetState() []*KVPair {
 	if x != nil {
 		return x.State
 	}
 	return nil
 }
 
-type GenesisState_GenesisAccount_KVPair struct {
+// KVPair defines a key value pair.
+type KVPair struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Key   []byte `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
+	// key is the key of the pair.
+	Key []byte `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
+	// value is the value of the pair.
 	Value []byte `protobuf:"bytes,2,opt,name=value,proto3" json:"value,omitempty"`
 }
 
-func (x *GenesisState_GenesisAccount_KVPair) Reset() {
-	*x = GenesisState_GenesisAccount_KVPair{}
+func (x *KVPair) Reset() {
+	*x = KVPair{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_cosmos_accounts_v1_genesis_proto_msgTypes[2]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -1790,25 +1799,25 @@ func (x *GenesisState_GenesisAccount_KVPair) Reset() {
 	}
 }
 
-func (x *GenesisState_GenesisAccount_KVPair) String() string {
+func (x *KVPair) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*GenesisState_GenesisAccount_KVPair) ProtoMessage() {}
+func (*KVPair) ProtoMessage() {}
 
-// Deprecated: Use GenesisState_GenesisAccount_KVPair.ProtoReflect.Descriptor instead.
-func (*GenesisState_GenesisAccount_KVPair) Descriptor() ([]byte, []int) {
-	return file_cosmos_accounts_v1_genesis_proto_rawDescGZIP(), []int{0, 0, 0}
+// Deprecated: Use KVPair.ProtoReflect.Descriptor instead.
+func (*KVPair) Descriptor() ([]byte, []int) {
+	return file_cosmos_accounts_v1_genesis_proto_rawDescGZIP(), []int{2}
 }
 
-func (x *GenesisState_GenesisAccount_KVPair) GetKey() []byte {
+func (x *KVPair) GetKey() []byte {
 	if x != nil {
 		return x.Key
 	}
 	return nil
 }
 
-func (x *GenesisState_GenesisAccount_KVPair) GetValue() []byte {
+func (x *KVPair) GetValue() []byte {
 	if x != nil {
 		return x.Value
 	}
@@ -1821,41 +1830,38 @@ var file_cosmos_accounts_v1_genesis_proto_rawDesc = []byte{
 	0x0a, 0x20, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74,
 	0x73, 0x2f, 0x76, 0x31, 0x2f, 0x67, 0x65, 0x6e, 0x65, 0x73, 0x69, 0x73, 0x2e, 0x70, 0x72, 0x6f,
 	0x74, 0x6f, 0x12, 0x12, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x61, 0x63, 0x63, 0x6f, 0x75,
-	0x6e, 0x74, 0x73, 0x2e, 0x76, 0x31, 0x22, 0xd2, 0x02, 0x0a, 0x0c, 0x47, 0x65, 0x6e, 0x65, 0x73,
-	0x69, 0x73, 0x53, 0x74, 0x61, 0x74, 0x65, 0x12, 0x25, 0x0a, 0x0e, 0x61, 0x63, 0x63, 0x6f, 0x75,
-	0x6e, 0x74, 0x5f, 0x6e, 0x75, 0x6d, 0x62, 0x65, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52,
-	0x0d, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x4e, 0x75, 0x6d, 0x62, 0x65, 0x72, 0x12, 0x4b,
-	0x0a, 0x08, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x18, 0x02, 0x20, 0x03, 0x28, 0x0b,
-	0x32, 0x2f, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e,
-	0x74, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x47, 0x65, 0x6e, 0x65, 0x73, 0x69, 0x73, 0x53, 0x74, 0x61,
-	0x74, 0x65, 0x2e, 0x47, 0x65, 0x6e, 0x65, 0x73, 0x69, 0x73, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e,
-	0x74, 0x52, 0x08, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x1a, 0xcd, 0x01, 0x0a, 0x0e,
-	0x47, 0x65, 0x6e, 0x65, 0x73, 0x69, 0x73, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x12, 0x18,
-	0x0a, 0x07, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52,
-	0x07, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x21, 0x0a, 0x0c, 0x61, 0x63, 0x63, 0x6f,
-	0x75, 0x6e, 0x74, 0x5f, 0x74, 0x79, 0x70, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0b,
-	0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x54, 0x79, 0x70, 0x65, 0x12, 0x4c, 0x0a, 0x05, 0x73,
-	0x74, 0x61, 0x74, 0x65, 0x18, 0x03, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x36, 0x2e, 0x63, 0x6f, 0x73,
-	0x6d, 0x6f, 0x73, 0x2e, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x2e, 0x76, 0x31, 0x2e,
-	0x47, 0x65, 0x6e, 0x65, 0x73, 0x69, 0x73, 0x53, 0x74, 0x61, 0x74, 0x65, 0x2e, 0x47, 0x65, 0x6e,
-	0x65, 0x73, 0x69, 0x73, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x2e, 0x4b, 0x56, 0x50, 0x61,
-	0x69, 0x72, 0x52, 0x05, 0x73, 0x74, 0x61, 0x74, 0x65, 0x1a, 0x30, 0x0a, 0x06, 0x4b, 0x56, 0x50,
-	0x61, 0x69, 0x72, 0x12, 0x10, 0x0a, 0x03, 0x6b, 0x65, 0x79, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0c,
-	0x52, 0x03, 0x6b, 0x65, 0x79, 0x12, 0x14, 0x0a, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x18, 0x02,
-	0x20, 0x01, 0x28, 0x0c, 0x52, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x42, 0xc0, 0x01, 0x0a, 0x16,
-	0x63, 0x6f, 0x6d, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x61, 0x63, 0x63, 0x6f, 0x75,
-	0x6e, 0x74, 0x73, 0x2e, 0x76, 0x31, 0x42, 0x0c, 0x47, 0x65, 0x6e, 0x65, 0x73, 0x69, 0x73, 0x50,
-	0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64,
-	0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f,
-	0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x2f, 0x76, 0x31, 0x3b, 0x61, 0x63, 0x63, 0x6f,
-	0x75, 0x6e, 0x74, 0x73, 0x76, 0x31, 0xa2, 0x02, 0x03, 0x43, 0x41, 0x58, 0xaa, 0x02, 0x12, 0x43,
-	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x2e, 0x56,
-	0x31, 0xca, 0x02, 0x12, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x41, 0x63, 0x63, 0x6f, 0x75,
-	0x6e, 0x74, 0x73, 0x5c, 0x56, 0x31, 0xe2, 0x02, 0x1e, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c,
-	0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x5c, 0x56, 0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d,
-	0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x14, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
-	0x3a, 0x3a, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x3a, 0x3a, 0x56, 0x31, 0x62, 0x06,
-	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x6e, 0x74, 0x73, 0x2e, 0x76, 0x31, 0x22, 0x75, 0x0a, 0x0c, 0x47, 0x65, 0x6e, 0x65, 0x73, 0x69,
+	0x73, 0x53, 0x74, 0x61, 0x74, 0x65, 0x12, 0x25, 0x0a, 0x0e, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e,
+	0x74, 0x5f, 0x6e, 0x75, 0x6d, 0x62, 0x65, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x0d,
+	0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x4e, 0x75, 0x6d, 0x62, 0x65, 0x72, 0x12, 0x3e, 0x0a,
+	0x08, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x18, 0x02, 0x20, 0x03, 0x28, 0x0b, 0x32,
+	0x22, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74,
+	0x73, 0x2e, 0x76, 0x31, 0x2e, 0x47, 0x65, 0x6e, 0x65, 0x73, 0x69, 0x73, 0x41, 0x63, 0x63, 0x6f,
+	0x75, 0x6e, 0x74, 0x52, 0x08, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x22, 0x7f, 0x0a,
+	0x0e, 0x47, 0x65, 0x6e, 0x65, 0x73, 0x69, 0x73, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x12,
+	0x18, 0x0a, 0x07, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09,
+	0x52, 0x07, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x21, 0x0a, 0x0c, 0x61, 0x63, 0x63,
+	0x6f, 0x75, 0x6e, 0x74, 0x5f, 0x74, 0x79, 0x70, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52,
+	0x0b, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x54, 0x79, 0x70, 0x65, 0x12, 0x30, 0x0a, 0x05,
+	0x73, 0x74, 0x61, 0x74, 0x65, 0x18, 0x03, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x1a, 0x2e, 0x63, 0x6f,
+	0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x2e, 0x76, 0x31,
+	0x2e, 0x4b, 0x56, 0x50, 0x61, 0x69, 0x72, 0x52, 0x05, 0x73, 0x74, 0x61, 0x74, 0x65, 0x22, 0x30,
+	0x0a, 0x06, 0x4b, 0x56, 0x50, 0x61, 0x69, 0x72, 0x12, 0x10, 0x0a, 0x03, 0x6b, 0x65, 0x79, 0x18,
+	0x01, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x03, 0x6b, 0x65, 0x79, 0x12, 0x14, 0x0a, 0x05, 0x76, 0x61,
+	0x6c, 0x75, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65,
+	0x42, 0xc0, 0x01, 0x0a, 0x16, 0x63, 0x6f, 0x6d, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e,
+	0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x2e, 0x76, 0x31, 0x42, 0x0c, 0x47, 0x65, 0x6e,
+	0x65, 0x73, 0x69, 0x73, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x2e, 0x63, 0x6f, 0x73,
+	0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x63, 0x6f,
+	0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x2f, 0x76, 0x31,
+	0x3b, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x76, 0x31, 0xa2, 0x02, 0x03, 0x43, 0x41,
+	0x58, 0xaa, 0x02, 0x12, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x63, 0x63, 0x6f, 0x75,
+	0x6e, 0x74, 0x73, 0x2e, 0x56, 0x31, 0xca, 0x02, 0x12, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c,
+	0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x5c, 0x56, 0x31, 0xe2, 0x02, 0x1e, 0x43, 0x6f,
+	0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x5c, 0x56, 0x31,
+	0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x14, 0x43,
+	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x3a, 0x3a, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x3a,
+	0x3a, 0x56, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -1872,13 +1878,13 @@ func file_cosmos_accounts_v1_genesis_proto_rawDescGZIP() []byte {
 
 var file_cosmos_accounts_v1_genesis_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
 var file_cosmos_accounts_v1_genesis_proto_goTypes = []interface{}{
-	(*GenesisState)(nil),                       // 0: cosmos.accounts.v1.GenesisState
-	(*GenesisState_GenesisAccount)(nil),        // 1: cosmos.accounts.v1.GenesisState.GenesisAccount
-	(*GenesisState_GenesisAccount_KVPair)(nil), // 2: cosmos.accounts.v1.GenesisState.GenesisAccount.KVPair
+	(*GenesisState)(nil),   // 0: cosmos.accounts.v1.GenesisState
+	(*GenesisAccount)(nil), // 1: cosmos.accounts.v1.GenesisAccount
+	(*KVPair)(nil),         // 2: cosmos.accounts.v1.KVPair
 }
 var file_cosmos_accounts_v1_genesis_proto_depIdxs = []int32{
-	1, // 0: cosmos.accounts.v1.GenesisState.accounts:type_name -> cosmos.accounts.v1.GenesisState.GenesisAccount
-	2, // 1: cosmos.accounts.v1.GenesisState.GenesisAccount.state:type_name -> cosmos.accounts.v1.GenesisState.GenesisAccount.KVPair
+	1, // 0: cosmos.accounts.v1.GenesisState.accounts:type_name -> cosmos.accounts.v1.GenesisAccount
+	2, // 1: cosmos.accounts.v1.GenesisAccount.state:type_name -> cosmos.accounts.v1.KVPair
 	2, // [2:2] is the sub-list for method output_type
 	2, // [2:2] is the sub-list for method input_type
 	2, // [2:2] is the sub-list for extension type_name
@@ -1905,7 +1911,7 @@ func file_cosmos_accounts_v1_genesis_proto_init() {
 			}
 		}
 		file_cosmos_accounts_v1_genesis_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*GenesisState_GenesisAccount); i {
+			switch v := v.(*GenesisAccount); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1917,7 +1923,7 @@ func file_cosmos_accounts_v1_genesis_proto_init() {
 			}
 		}
 		file_cosmos_accounts_v1_genesis_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*GenesisState_GenesisAccount_KVPair); i {
+			switch v := v.(*KVPair); i {
 			case 0:
 				return &v.state
 			case 1:

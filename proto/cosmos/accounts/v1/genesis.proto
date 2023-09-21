@@ -6,15 +6,26 @@ option go_package = "cosmossdk.io/x/accounts/v1";
 
 // GenesisState defines the accounts' module's genesis state.
 message GenesisState {
-  uint64                  account_number = 1;
-  repeated GenesisAccount accounts       = 2;
-  message                 GenesisAccount {
-    string          address      = 1;
-    string          account_type = 2;
-    repeated KVPair state        = 3;
-    message         KVPair {
-      bytes key   = 1;
-      bytes value = 2;
-    }
-  }
+  // account_number is the latest account number.
+  uint64 account_number = 1;
+  // accounts are the genesis accounts.
+  repeated GenesisAccount accounts = 2;
+}
+
+// GenesisAccount defines an account to be initialized in the genesis state.
+message GenesisAccount {
+  // address is the address of the account.
+  string address = 1;
+  // account_type is the account type of the account.
+  string account_type = 2;
+  // state is the account state represented as a slice of raw key value byte pairs.
+  repeated KVPair state = 3;
+}
+
+// KVPair defines a key value pair.
+message KVPair {
+  // key is the key of the pair.
+  bytes key = 1;
+  // value is the value of the pair.
+  bytes value = 2;
 }

@@ -24,8 +24,10 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // GenesisState defines the accounts' module's genesis state.
 type GenesisState struct {
-	AccountNumber uint64                         `protobuf:"varint,1,opt,name=account_number,json=accountNumber,proto3" json:"account_number,omitempty"`
-	Accounts      []*GenesisState_GenesisAccount `protobuf:"bytes,2,rep,name=accounts,proto3" json:"accounts,omitempty"`
+	// account_number is the latest account number.
+	AccountNumber uint64 `protobuf:"varint,1,opt,name=account_number,json=accountNumber,proto3" json:"account_number,omitempty"`
+	// accounts are the genesis accounts.
+	Accounts []*GenesisAccount `protobuf:"bytes,2,rep,name=accounts,proto3" json:"accounts,omitempty"`
 }
 
 func (m *GenesisState) Reset()         { *m = GenesisState{} }
@@ -68,31 +70,35 @@ func (m *GenesisState) GetAccountNumber() uint64 {
 	return 0
 }
 
-func (m *GenesisState) GetAccounts() []*GenesisState_GenesisAccount {
+func (m *GenesisState) GetAccounts() []*GenesisAccount {
 	if m != nil {
 		return m.Accounts
 	}
 	return nil
 }
 
-type GenesisState_GenesisAccount struct {
-	Address     string                                `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
-	AccountType string                                `protobuf:"bytes,2,opt,name=account_type,json=accountType,proto3" json:"account_type,omitempty"`
-	State       []*GenesisState_GenesisAccount_KVPair `protobuf:"bytes,3,rep,name=state,proto3" json:"state,omitempty"`
+// GenesisAccount defines an account to be initialized in the genesis state.
+type GenesisAccount struct {
+	// address is the address of the account.
+	Address string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
+	// account_type is the account type of the account.
+	AccountType string `protobuf:"bytes,2,opt,name=account_type,json=accountType,proto3" json:"account_type,omitempty"`
+	// state is the account state represented as a slice of raw key value byte pairs.
+	State []*KVPair `protobuf:"bytes,3,rep,name=state,proto3" json:"state,omitempty"`
 }
 
-func (m *GenesisState_GenesisAccount) Reset()         { *m = GenesisState_GenesisAccount{} }
-func (m *GenesisState_GenesisAccount) String() string { return proto.CompactTextString(m) }
-func (*GenesisState_GenesisAccount) ProtoMessage()    {}
-func (*GenesisState_GenesisAccount) Descriptor() ([]byte, []int) {
-	return fileDescriptor_409859d32eae9438, []int{0, 0}
+func (m *GenesisAccount) Reset()         { *m = GenesisAccount{} }
+func (m *GenesisAccount) String() string { return proto.CompactTextString(m) }
+func (*GenesisAccount) ProtoMessage()    {}
+func (*GenesisAccount) Descriptor() ([]byte, []int) {
+	return fileDescriptor_409859d32eae9438, []int{1}
 }
-func (m *GenesisState_GenesisAccount) XXX_Unmarshal(b []byte) error {
+func (m *GenesisAccount) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *GenesisState_GenesisAccount) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *GenesisAccount) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_GenesisState_GenesisAccount.Marshal(b, m, deterministic)
+		return xxx_messageInfo_GenesisAccount.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -102,56 +108,59 @@ func (m *GenesisState_GenesisAccount) XXX_Marshal(b []byte, deterministic bool) 
 		return b[:n], nil
 	}
 }
-func (m *GenesisState_GenesisAccount) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_GenesisState_GenesisAccount.Merge(m, src)
+func (m *GenesisAccount) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GenesisAccount.Merge(m, src)
 }
-func (m *GenesisState_GenesisAccount) XXX_Size() int {
+func (m *GenesisAccount) XXX_Size() int {
 	return m.Size()
 }
-func (m *GenesisState_GenesisAccount) XXX_DiscardUnknown() {
-	xxx_messageInfo_GenesisState_GenesisAccount.DiscardUnknown(m)
+func (m *GenesisAccount) XXX_DiscardUnknown() {
+	xxx_messageInfo_GenesisAccount.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_GenesisState_GenesisAccount proto.InternalMessageInfo
+var xxx_messageInfo_GenesisAccount proto.InternalMessageInfo
 
-func (m *GenesisState_GenesisAccount) GetAddress() string {
+func (m *GenesisAccount) GetAddress() string {
 	if m != nil {
 		return m.Address
 	}
 	return ""
 }
 
-func (m *GenesisState_GenesisAccount) GetAccountType() string {
+func (m *GenesisAccount) GetAccountType() string {
 	if m != nil {
 		return m.AccountType
 	}
 	return ""
 }
 
-func (m *GenesisState_GenesisAccount) GetState() []*GenesisState_GenesisAccount_KVPair {
+func (m *GenesisAccount) GetState() []*KVPair {
 	if m != nil {
 		return m.State
 	}
 	return nil
 }
 
-type GenesisState_GenesisAccount_KVPair struct {
-	Key   []byte `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
+// KVPair defines a key value pair.
+type KVPair struct {
+	// key is the key of the pair.
+	Key []byte `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
+	// value is the value of the pair.
 	Value []byte `protobuf:"bytes,2,opt,name=value,proto3" json:"value,omitempty"`
 }
 
-func (m *GenesisState_GenesisAccount_KVPair) Reset()         { *m = GenesisState_GenesisAccount_KVPair{} }
-func (m *GenesisState_GenesisAccount_KVPair) String() string { return proto.CompactTextString(m) }
-func (*GenesisState_GenesisAccount_KVPair) ProtoMessage()    {}
-func (*GenesisState_GenesisAccount_KVPair) Descriptor() ([]byte, []int) {
-	return fileDescriptor_409859d32eae9438, []int{0, 0, 0}
+func (m *KVPair) Reset()         { *m = KVPair{} }
+func (m *KVPair) String() string { return proto.CompactTextString(m) }
+func (*KVPair) ProtoMessage()    {}
+func (*KVPair) Descriptor() ([]byte, []int) {
+	return fileDescriptor_409859d32eae9438, []int{2}
 }
-func (m *GenesisState_GenesisAccount_KVPair) XXX_Unmarshal(b []byte) error {
+func (m *KVPair) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *GenesisState_GenesisAccount_KVPair) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *KVPair) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_GenesisState_GenesisAccount_KVPair.Marshal(b, m, deterministic)
+		return xxx_messageInfo_KVPair.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -161,26 +170,26 @@ func (m *GenesisState_GenesisAccount_KVPair) XXX_Marshal(b []byte, deterministic
 		return b[:n], nil
 	}
 }
-func (m *GenesisState_GenesisAccount_KVPair) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_GenesisState_GenesisAccount_KVPair.Merge(m, src)
+func (m *KVPair) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_KVPair.Merge(m, src)
 }
-func (m *GenesisState_GenesisAccount_KVPair) XXX_Size() int {
+func (m *KVPair) XXX_Size() int {
 	return m.Size()
 }
-func (m *GenesisState_GenesisAccount_KVPair) XXX_DiscardUnknown() {
-	xxx_messageInfo_GenesisState_GenesisAccount_KVPair.DiscardUnknown(m)
+func (m *KVPair) XXX_DiscardUnknown() {
+	xxx_messageInfo_KVPair.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_GenesisState_GenesisAccount_KVPair proto.InternalMessageInfo
+var xxx_messageInfo_KVPair proto.InternalMessageInfo
 
-func (m *GenesisState_GenesisAccount_KVPair) GetKey() []byte {
+func (m *KVPair) GetKey() []byte {
 	if m != nil {
 		return m.Key
 	}
 	return nil
 }
 
-func (m *GenesisState_GenesisAccount_KVPair) GetValue() []byte {
+func (m *KVPair) GetValue() []byte {
 	if m != nil {
 		return m.Value
 	}
@@ -189,32 +198,32 @@ func (m *GenesisState_GenesisAccount_KVPair) GetValue() []byte {
 
 func init() {
 	proto.RegisterType((*GenesisState)(nil), "cosmos.accounts.v1.GenesisState")
-	proto.RegisterType((*GenesisState_GenesisAccount)(nil), "cosmos.accounts.v1.GenesisState.GenesisAccount")
-	proto.RegisterType((*GenesisState_GenesisAccount_KVPair)(nil), "cosmos.accounts.v1.GenesisState.GenesisAccount.KVPair")
+	proto.RegisterType((*GenesisAccount)(nil), "cosmos.accounts.v1.GenesisAccount")
+	proto.RegisterType((*KVPair)(nil), "cosmos.accounts.v1.KVPair")
 }
 
 func init() { proto.RegisterFile("cosmos/accounts/v1/genesis.proto", fileDescriptor_409859d32eae9438) }
 
 var fileDescriptor_409859d32eae9438 = []byte{
-	// 286 bytes of a gzipped FileDescriptorProto
+	// 280 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x52, 0x48, 0xce, 0x2f, 0xce,
 	0xcd, 0x2f, 0xd6, 0x4f, 0x4c, 0x4e, 0xce, 0x2f, 0xcd, 0x2b, 0x29, 0xd6, 0x2f, 0x33, 0xd4, 0x4f,
 	0x4f, 0xcd, 0x4b, 0x2d, 0xce, 0x2c, 0xd6, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x12, 0x82, 0xa8,
-	0xd0, 0x83, 0xa9, 0xd0, 0x2b, 0x33, 0x54, 0xba, 0xc4, 0xc4, 0xc5, 0xe3, 0x0e, 0x51, 0x15, 0x5c,
-	0x92, 0x58, 0x92, 0x2a, 0xa4, 0xca, 0xc5, 0x07, 0x95, 0x8f, 0xcf, 0x2b, 0xcd, 0x4d, 0x4a, 0x2d,
-	0x92, 0x60, 0x54, 0x60, 0xd4, 0x60, 0x09, 0xe2, 0x85, 0x8a, 0xfa, 0x81, 0x05, 0x85, 0xbc, 0xb9,
-	0x38, 0x60, 0xc6, 0x48, 0x30, 0x29, 0x30, 0x6b, 0x70, 0x1b, 0xe9, 0xeb, 0x61, 0x1a, 0xaf, 0x87,
-	0x6c, 0x34, 0x8c, 0xe3, 0x08, 0x91, 0x0f, 0x82, 0x1b, 0x20, 0x75, 0x96, 0x91, 0x8b, 0x0f, 0x55,
-	0x52, 0x48, 0x82, 0x8b, 0x3d, 0x31, 0x25, 0xa5, 0x28, 0xb5, 0xb8, 0x18, 0x6c, 0x3f, 0x67, 0x10,
-	0x8c, 0x2b, 0xa4, 0xc8, 0xc5, 0x03, 0x73, 0x60, 0x49, 0x65, 0x41, 0xaa, 0x04, 0x13, 0x58, 0x9a,
-	0x1b, 0x2a, 0x16, 0x52, 0x59, 0x90, 0x2a, 0xe4, 0xc3, 0xc5, 0x5a, 0x0c, 0xb2, 0x51, 0x82, 0x19,
-	0xec, 0x32, 0x33, 0x12, 0x5d, 0xa6, 0xe7, 0x1d, 0x16, 0x90, 0x98, 0x59, 0x14, 0x04, 0x31, 0x44,
-	0xca, 0x80, 0x8b, 0x0d, 0x22, 0x20, 0x24, 0xc0, 0xc5, 0x9c, 0x9d, 0x5a, 0x09, 0x76, 0x10, 0x4f,
-	0x10, 0x88, 0x29, 0x24, 0xc2, 0xc5, 0x5a, 0x96, 0x98, 0x53, 0x0a, 0x71, 0x05, 0x4f, 0x10, 0x84,
-	0xe3, 0x64, 0x72, 0xe2, 0x91, 0x1c, 0xe3, 0x85, 0x47, 0x72, 0x8c, 0x0f, 0x1e, 0xc9, 0x31, 0x4e,
-	0x78, 0x2c, 0xc7, 0x70, 0xe1, 0xb1, 0x1c, 0xc3, 0x8d, 0xc7, 0x72, 0x0c, 0x51, 0x52, 0x10, 0x97,
-	0x14, 0xa7, 0x64, 0xeb, 0x65, 0xe6, 0xeb, 0x57, 0x20, 0x47, 0x56, 0x12, 0x1b, 0x38, 0x96, 0x8c,
-	0x01, 0x01, 0x00, 0x00, 0xff, 0xff, 0x96, 0xa4, 0x16, 0xbf, 0xc9, 0x01, 0x00, 0x00,
+	0xd0, 0x83, 0xa9, 0xd0, 0x2b, 0x33, 0x54, 0x2a, 0xe5, 0xe2, 0x71, 0x87, 0x28, 0x0a, 0x2e, 0x49,
+	0x2c, 0x49, 0x15, 0x52, 0xe5, 0xe2, 0x83, 0x4a, 0xc7, 0xe7, 0x95, 0xe6, 0x26, 0xa5, 0x16, 0x49,
+	0x30, 0x2a, 0x30, 0x6a, 0xb0, 0x04, 0xf1, 0x42, 0x45, 0xfd, 0xc0, 0x82, 0x42, 0x76, 0x5c, 0x1c,
+	0x30, 0x53, 0x24, 0x98, 0x14, 0x98, 0x35, 0xb8, 0x8d, 0x94, 0xf4, 0x30, 0x4d, 0xd7, 0x83, 0x1a,
+	0xed, 0x08, 0x11, 0x0a, 0x82, 0xeb, 0x51, 0xaa, 0xe7, 0xe2, 0x43, 0x95, 0x13, 0x92, 0xe0, 0x62,
+	0x4f, 0x4c, 0x49, 0x29, 0x4a, 0x2d, 0x2e, 0x06, 0xdb, 0xc8, 0x19, 0x04, 0xe3, 0x0a, 0x29, 0x72,
+	0xf1, 0xc0, 0x9c, 0x54, 0x52, 0x59, 0x90, 0x2a, 0xc1, 0x04, 0x96, 0xe6, 0x86, 0x8a, 0x85, 0x54,
+	0x16, 0xa4, 0x0a, 0x19, 0x70, 0xb1, 0x16, 0x83, 0x9c, 0x2f, 0xc1, 0x0c, 0x76, 0x8b, 0x14, 0x36,
+	0xb7, 0x78, 0x87, 0x05, 0x24, 0x66, 0x16, 0x05, 0x41, 0x14, 0x2a, 0x19, 0x70, 0xb1, 0x41, 0x04,
+	0x84, 0x04, 0xb8, 0x98, 0xb3, 0x53, 0x2b, 0xc1, 0x96, 0xf2, 0x04, 0x81, 0x98, 0x42, 0x22, 0x5c,
+	0xac, 0x65, 0x89, 0x39, 0xa5, 0x10, 0x9b, 0x78, 0x82, 0x20, 0x1c, 0x27, 0x93, 0x13, 0x8f, 0xe4,
+	0x18, 0x2f, 0x3c, 0x92, 0x63, 0x7c, 0xf0, 0x48, 0x8e, 0x71, 0xc2, 0x63, 0x39, 0x86, 0x0b, 0x8f,
+	0xe5, 0x18, 0x6e, 0x3c, 0x96, 0x63, 0x88, 0x92, 0x82, 0xd8, 0x56, 0x9c, 0x92, 0xad, 0x97, 0x99,
+	0xaf, 0x5f, 0x81, 0x1c, 0x03, 0x49, 0x6c, 0xe0, 0xa0, 0x37, 0x06, 0x04, 0x00, 0x00, 0xff, 0xff,
+	0x11, 0x08, 0x28, 0x3a, 0x9e, 0x01, 0x00, 0x00,
 }
 
 func (m *GenesisState) Marshal() (dAtA []byte, err error) {
@@ -259,7 +268,7 @@ func (m *GenesisState) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *GenesisState_GenesisAccount) Marshal() (dAtA []byte, err error) {
+func (m *GenesisAccount) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -269,12 +278,12 @@ func (m *GenesisState_GenesisAccount) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *GenesisState_GenesisAccount) MarshalTo(dAtA []byte) (int, error) {
+func (m *GenesisAccount) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *GenesisState_GenesisAccount) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *GenesisAccount) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -310,7 +319,7 @@ func (m *GenesisState_GenesisAccount) MarshalToSizedBuffer(dAtA []byte) (int, er
 	return len(dAtA) - i, nil
 }
 
-func (m *GenesisState_GenesisAccount_KVPair) Marshal() (dAtA []byte, err error) {
+func (m *KVPair) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -320,12 +329,12 @@ func (m *GenesisState_GenesisAccount_KVPair) Marshal() (dAtA []byte, err error) 
 	return dAtA[:n], nil
 }
 
-func (m *GenesisState_GenesisAccount_KVPair) MarshalTo(dAtA []byte) (int, error) {
+func (m *KVPair) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *GenesisState_GenesisAccount_KVPair) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *KVPair) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -376,7 +385,7 @@ func (m *GenesisState) Size() (n int) {
 	return n
 }
 
-func (m *GenesisState_GenesisAccount) Size() (n int) {
+func (m *GenesisAccount) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -399,7 +408,7 @@ func (m *GenesisState_GenesisAccount) Size() (n int) {
 	return n
 }
 
-func (m *GenesisState_GenesisAccount_KVPair) Size() (n int) {
+func (m *KVPair) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -499,7 +508,7 @@ func (m *GenesisState) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Accounts = append(m.Accounts, &GenesisState_GenesisAccount{})
+			m.Accounts = append(m.Accounts, &GenesisAccount{})
 			if err := m.Accounts[len(m.Accounts)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
@@ -525,7 +534,7 @@ func (m *GenesisState) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *GenesisState_GenesisAccount) Unmarshal(dAtA []byte) error {
+func (m *GenesisAccount) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -647,7 +656,7 @@ func (m *GenesisState_GenesisAccount) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.State = append(m.State, &GenesisState_GenesisAccount_KVPair{})
+			m.State = append(m.State, &KVPair{})
 			if err := m.State[len(m.State)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
@@ -673,7 +682,7 @@ func (m *GenesisState_GenesisAccount) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *GenesisState_GenesisAccount_KVPair) Unmarshal(dAtA []byte) error {
+func (m *KVPair) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {

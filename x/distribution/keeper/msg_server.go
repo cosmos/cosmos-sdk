@@ -106,7 +106,7 @@ func (k msgServer) WithdrawValidatorCommission(ctx context.Context, msg *types.M
 
 // Deprecated: DO NOT USE
 // This method uses deprecated message request. Use FundCommunityPool from x/protocolpool module instead.
-func (k msgServer) FundCommunityPool(ctx context.Context, msg *types.MsgFundCommunityPool) (*types.MsgFundCommunityPoolResponse, error) {
+func (k msgServer) FundCommunityPool(ctx context.Context, msg *types.MsgFundCommunityPool) (*types.MsgFundCommunityPoolResponse, error) { //nolint:staticcheck // we're using a deprecated call for compatibility
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
 	amount := make([]*basev1beta1.Coin, len(msg.Amount))
@@ -122,6 +122,7 @@ func (k msgServer) FundCommunityPool(ctx context.Context, msg *types.MsgFundComm
 	}
 	// Pass the msg to the MessageRouter
 	handler := k.router.Handler(&poolMsg)
+	fmt.Printf("handler: %v\n", handler)
 	if handler == nil {
 		return nil, fmt.Errorf("message not recognized by router: %s", sdk.MsgTypeURL(&poolMsg))
 	}
@@ -137,7 +138,7 @@ func (k msgServer) FundCommunityPool(ctx context.Context, msg *types.MsgFundComm
 	}
 	sdkCtx.EventManager().EmitEvents(sdkEvents)
 
-	return &types.MsgFundCommunityPoolResponse{}, nil
+	return &types.MsgFundCommunityPoolResponse{}, nil //nolint:staticcheck // we're using a deprecated call for compatibility
 }
 
 func (k msgServer) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams) (*types.MsgUpdateParamsResponse, error) {
@@ -163,7 +164,7 @@ func (k msgServer) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams)
 
 // Deprecated: DO NOT USE
 // This method uses deprecated message request. Use CommunityPoolSpend from x/protocolpool module instead.
-func (k msgServer) CommunityPoolSpend(ctx context.Context, msg *types.MsgCommunityPoolSpend) (*types.MsgCommunityPoolSpendResponse, error) {
+func (k msgServer) CommunityPoolSpend(ctx context.Context, msg *types.MsgCommunityPoolSpend) (*types.MsgCommunityPoolSpendResponse, error) { //nolint:staticcheck // we're using a deprecated call for compatibility
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
 	amount := make([]*basev1beta1.Coin, len(msg.Amount))
@@ -197,7 +198,7 @@ func (k msgServer) CommunityPoolSpend(ctx context.Context, msg *types.MsgCommuni
 	}
 	sdkCtx.EventManager().EmitEvents(sdkEvents)
 
-	return &types.MsgCommunityPoolSpendResponse{}, nil
+	return &types.MsgCommunityPoolSpendResponse{}, nil //nolint:staticcheck // we're using a deprecated call for compatibility
 }
 
 func (k msgServer) DepositValidatorRewardsPool(ctx context.Context, msg *types.MsgDepositValidatorRewardsPool) (*types.MsgDepositValidatorRewardsPoolResponse, error) {

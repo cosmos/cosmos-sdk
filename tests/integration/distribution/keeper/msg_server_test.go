@@ -13,12 +13,14 @@ import (
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
+	"cosmossdk.io/x/protocolpool"
+	poolkeeper "cosmossdk.io/x/protocolpool/keeper"
+	pooltypes "cosmossdk.io/x/protocolpool/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/runtime"
-	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/integration"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
@@ -62,9 +64,9 @@ type fixture struct {
 func initFixture(t *testing.T) *fixture {
 	t.Helper()
 	keys := storetypes.NewKVStoreKeys(
-		authtypes.StoreKey, banktypes.StoreKey, distrtypes.StoreKey, stakingtypes.StoreKey,
+		authtypes.StoreKey, banktypes.StoreKey, distrtypes.StoreKey, pooltypes.StoreKey, stakingtypes.StoreKey,
 	)
-	cdc := moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{}, distribution.AppModuleBasic{}).Codec
+	cdc := moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{}, distribution.AppModuleBasic{}, protocolpool.AppModuleBasic{}).Codec
 
 	logger := log.NewTestLogger(t)
 	cms := integration.CreateMultiStore(keys, logger)
@@ -73,19 +75,8 @@ func initFixture(t *testing.T) *fixture {
 
 	authority := authtypes.NewModuleAddress("gov")
 
-	testCtx := testutil.DefaultContextWithDB(t, keys[distrtypes.StoreKey], storetypes.NewTransientStoreKey("transient_test"))
-	encCfg := moduletestutil.MakeTestEncodingConfig(distribution.AppModuleBasic{})
-
-	baseApp := baseapp.NewBaseApp(
-		"distribution",
-		log.NewNopLogger(),
-		testCtx.DB,
-		encCfg.TxConfig.TxDecoder(),
-	)
-	baseApp.SetCMS(testCtx.CMS)
-	baseApp.SetInterfaceRegistry(encCfg.InterfaceRegistry)
-
 	maccPerms := map[string][]string{
+		pooltypes.ModuleName:           {},
 		distrtypes.ModuleName:          {authtypes.Minter},
 		stakingtypes.BondedPoolName:    {authtypes.Burner, authtypes.Staking},
 		stakingtypes.NotBondedPoolName: {authtypes.Burner, authtypes.Staking},
@@ -116,14 +107,26 @@ func initFixture(t *testing.T) *fixture {
 	stakingKeeper := stakingkeeper.NewKeeper(cdc, runtime.NewKVStoreService(keys[stakingtypes.StoreKey]), accountKeeper, bankKeeper, authority.String(), addresscodec.NewBech32Codec(sdk.Bech32PrefixValAddr), addresscodec.NewBech32Codec(sdk.Bech32PrefixConsAddr))
 	require.NoError(t, stakingKeeper.Params.Set(newCtx, stakingtypes.DefaultParams()))
 
+	// Create MsgServiceRouter and GRPCQueryRouter, but don't populate it before creating the distribution
+	// keeper.
+	router := baseapp.NewMsgServiceRouter()
+	router.SetInterfaceRegistry(cdc.InterfaceRegistry())
+	grpcRouter := baseapp.NewGRPCQueryRouter()
+	grpcRouter.SetInterfaceRegistry(cdc.InterfaceRegistry())
+
 	distrKeeper := distrkeeper.NewKeeper(
-		cdc, runtime.NewKVStoreService(keys[distrtypes.StoreKey]), accountKeeper, bankKeeper, stakingKeeper, baseApp.MsgServiceRouter(), baseApp.GRPCQueryRouter(), distrtypes.ModuleName, authority.String(),
+		cdc, runtime.NewKVStoreService(keys[distrtypes.StoreKey]), accountKeeper, bankKeeper, stakingKeeper, router, grpcRouter, distrtypes.ModuleName, authority.String(),
+	)
+
+	poolKeeper := poolkeeper.NewKeeper(
+		cdc, runtime.NewKVStoreService(keys[pooltypes.StoreKey]), accountKeeper, bankKeeper, authority.String(),
 	)
 
 	authModule := auth.NewAppModule(cdc, accountKeeper, authsims.RandomGenesisAccounts, nil)
 	bankModule := bank.NewAppModule(cdc, bankKeeper, accountKeeper)
 	stakingModule := staking.NewAppModule(cdc, stakingKeeper, accountKeeper, bankKeeper, nil)
 	distrModule := distribution.NewAppModule(cdc, distrKeeper, accountKeeper, bankKeeper, stakingKeeper, nil)
+	poolModule := protocolpool.NewAppModule(cdc, poolKeeper, accountKeeper, bankKeeper)
 
 	addr := sdk.AccAddress(PKS[0].Address())
 	valAddr := sdk.ValAddress(addr)
@@ -149,13 +152,14 @@ func initFixture(t *testing.T) *fixture {
 		banktypes.ModuleName:    bankModule,
 		stakingtypes.ModuleName: stakingModule,
 		distrtypes.ModuleName:   distrModule,
+		pooltypes.ModuleName:    poolModule,
 	})
 
 	sdkCtx := sdk.UnwrapSDKContext(integrationApp.Context())
 
 	// Register MsgServer and QueryServer
-	distrtypes.RegisterMsgServer(integrationApp.MsgServiceRouter(), distrkeeper.NewMsgServerImpl(distrKeeper))
-	distrtypes.RegisterQueryServer(integrationApp.QueryHelper(), distrkeeper.NewQuerier(distrKeeper))
+	distrtypes.RegisterMsgServer(router, distrkeeper.NewMsgServerImpl(distrKeeper))
+	distrtypes.RegisterQueryServer(grpcRouter, distrkeeper.NewQuerier(distrKeeper))
 
 	return &fixture{
 		app:           integrationApp,
@@ -580,6 +584,88 @@ func TestMsgWithdrawValidatorCommission(t *testing.T) {
 			}
 		})
 
+	}
+}
+
+func TestMsgFundCommunityPool(t *testing.T) {
+	t.Parallel()
+	f := initFixture(t)
+
+	initTokens := f.stakingKeeper.TokensFromConsensusPower(f.sdkCtx, int64(100))
+	err := f.bankKeeper.MintCoins(f.sdkCtx, distrtypes.ModuleName, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens)))
+	require.NoError(t, err)
+
+	addr := sdk.AccAddress(PKS[0].Address())
+	addr2 := sdk.AccAddress(PKS[1].Address())
+
+	testCases := []struct {
+		name      string
+		msg       *distrtypes.MsgFundCommunityPool
+		expErr    bool
+		expErrMsg string
+	}{
+		{
+			name: "no depositor address",
+			msg: &distrtypes.MsgFundCommunityPool{
+				Amount:    sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(100))),
+				Depositor: emptyDelAddr.String(),
+			},
+			expErr:    true,
+			expErrMsg: "invalid depositor address",
+		},
+		{
+			name: "invalid coin",
+			msg: &distrtypes.MsgFundCommunityPool{
+				Amount:    sdk.Coins{sdk.NewInt64Coin("stake", 10), sdk.NewInt64Coin("stake", 10)},
+				Depositor: addr.String(),
+			},
+			expErr:    true,
+			expErrMsg: "10stake,10stake: invalid coins",
+		},
+		{
+			name: "depositor address with no funds",
+			msg: &distrtypes.MsgFundCommunityPool{
+				Amount:    sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(100))),
+				Depositor: addr2.String(),
+			},
+			expErr:    true,
+			expErrMsg: "insufficient funds",
+		},
+		{
+			name: "valid message",
+			msg: &distrtypes.MsgFundCommunityPool{
+				Amount:    sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(100))),
+				Depositor: addr.String(),
+			},
+			expErr: false,
+		},
+	}
+	for _, tc := range testCases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			res, err := f.app.RunMsg(
+				tc.msg,
+				integration.WithAutomaticFinalizeBlock(),
+				integration.WithAutomaticCommit(),
+			)
+			if tc.expErr {
+				assert.ErrorContains(t, err, tc.expErrMsg)
+			} else {
+				assert.NilError(t, err)
+				assert.Assert(t, res != nil)
+
+				// check the result
+				result := distrtypes.MsgFundCommunityPool{}
+				err = f.cdc.Unmarshal(res.Value, &result)
+				assert.NilError(t, err)
+
+				// // query the community pool funds
+				// feePool, err := f.distrKeeper.FeePool.Get(f.sdkCtx)
+				// require.NoError(t, err)
+				// assert.DeepEqual(t, initPool.CommunityPool.Add(sdk.NewDecCoinsFromCoins(amount...)...), feePool.CommunityPool)
+				assert.Assert(t, f.bankKeeper.GetAllBalances(f.sdkCtx, addr).Empty())
+			}
+		})
 	}
 }
 

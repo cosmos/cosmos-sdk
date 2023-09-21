@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-find docs/build/modules ! -name '_category_.json' -type f -exec rm -rf {} +
+find build/modules ! -name '_category_.json' -type f -exec rm -rf {} +
 rm -rf build/tooling/01-cosmovisor.md
 rm -rf build/tooling/02-confix.md
 rm -rf build/tooling/03-hubl.md

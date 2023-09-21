@@ -114,12 +114,12 @@ func initFixture(t *testing.T) *fixture {
 	grpcRouter := baseapp.NewGRPCQueryRouter()
 	grpcRouter.SetInterfaceRegistry(cdc.InterfaceRegistry())
 
-	distrKeeper := distrkeeper.NewKeeper(
-		cdc, runtime.NewKVStoreService(keys[distrtypes.StoreKey]), accountKeeper, bankKeeper, stakingKeeper, router, grpcRouter, distrtypes.ModuleName, authority.String(),
-	)
-
 	poolKeeper := poolkeeper.NewKeeper(
 		cdc, runtime.NewKVStoreService(keys[pooltypes.StoreKey]), accountKeeper, bankKeeper, authority.String(),
+	)
+
+	distrKeeper := distrkeeper.NewKeeper(
+		cdc, runtime.NewKVStoreService(keys[distrtypes.StoreKey]), accountKeeper, bankKeeper, stakingKeeper, router, grpcRouter, distrtypes.ModuleName, authority.String(),
 	)
 
 	authModule := auth.NewAppModule(cdc, accountKeeper, authsims.RandomGenesisAccounts, nil)
@@ -158,8 +158,11 @@ func initFixture(t *testing.T) *fixture {
 	sdkCtx := sdk.UnwrapSDKContext(integrationApp.Context())
 
 	// Register MsgServer and QueryServer
-	distrtypes.RegisterMsgServer(router, distrkeeper.NewMsgServerImpl(distrKeeper))
-	distrtypes.RegisterQueryServer(grpcRouter, distrkeeper.NewQuerier(distrKeeper))
+	distrtypes.RegisterMsgServer(integrationApp.MsgServiceRouter(), distrkeeper.NewMsgServerImpl(distrKeeper))
+	distrtypes.RegisterQueryServer(integrationApp.QueryHelper(), distrkeeper.NewQuerier(distrKeeper))
+
+	pooltypes.RegisterMsgServer(integrationApp.MsgServiceRouter(), poolkeeper.NewMsgServerImpl(poolKeeper))
+	pooltypes.RegisterQueryServer(integrationApp.QueryHelper(), poolkeeper.NewQuerier(poolKeeper))
 
 	return &fixture{
 		app:           integrationApp,

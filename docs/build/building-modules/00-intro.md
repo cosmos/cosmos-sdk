@@ -10,18 +10,18 @@ Modules define most of the logic of Cosmos SDK applications. Developers compose 
 
 :::note Pre-requisite Readings
 
-* [Anatomy of a Cosmos SDK application](../../develop/beginner/00-app-anatomy.md)
-* [Lifecycle of a Cosmos SDK transaction](../../develop/beginner/01-tx-lifecycle.md)
+* [Anatomy of a Cosmos SDK application](../../learn/beginner/00-app-anatomy.md)
+* [Lifecycle of a Cosmos SDK transaction](../../learn/beginner/01-tx-lifecycle.md)
 
 :::
 
 ## Role of Modules in a Cosmos SDK Application
 
-The Cosmos SDK can be thought of as the Ruby-on-Rails of blockchain development. It comes with a core that provides the basic functionalities every blockchain application needs, like a [boilerplate implementation of the ABCI](../../develop/advanced/00-baseapp.md) to communicate with the underlying consensus engine, a [`multistore`](../../develop/advanced/04-store.md#multistore) to persist state, a [server](../../develop/advanced/03-node.md) to form a full-node and [interfaces](./09-module-interfaces.md) to handle queries.
+The Cosmos SDK can be thought of as the Ruby-on-Rails of blockchain development. It comes with a core that provides the basic functionalities every blockchain application needs, like a [boilerplate implementation of the ABCI](../../learn/advanced/00-baseapp.md) to communicate with the underlying consensus engine, a [`multistore`](../../learn/advanced/04-store.md#multistore) to persist state, a [server](../../learn/advanced/03-node.md) to form a full-node and [interfaces](./09-module-interfaces.md) to handle queries.
 
 On top of this core, the Cosmos SDK enables developers to build modules that implement the business logic of their application. In other words, SDK modules implement the bulk of the logic of applications, while the core does the wiring and enables modules to be composed together. The end goal is to build a robust ecosystem of open-source Cosmos SDK modules, making it increasingly easier to build complex blockchain applications.
 
-Cosmos SDK modules can be seen as little state-machines within the state-machine. They generally define a subset of the state using one or more `KVStore`s in the [main multistore](../../develop/advanced/04-store.md), as well as a subset of [message types](./02-messages-and-queries.md#messages). These messages are routed by one of the main components of Cosmos SDK core, [`BaseApp`](../../develop/advanced/00-baseapp.md), to a module Protobuf [`Msg` service](./03-msg-services.md) that defines them.
+Cosmos SDK modules can be seen as little state-machines within the state-machine. They generally define a subset of the state using one or more `KVStore`s in the [main multistore](../../learn/advanced/04-store.md), as well as a subset of [message types](./02-messages-and-queries.md#messages). These messages are routed by one of the main components of Cosmos SDK core, [`BaseApp`](../../learn/advanced/00-baseapp.md), to a module Protobuf [`Msg` service](./03-msg-services.md) that defines them.
 
 ```text
                                       +
@@ -83,8 +83,8 @@ While there are no definitive guidelines for writing modules, here are some impo
 Modules are by convention defined in the `./x/` subfolder (e.g. the `bank` module will be defined in the `./x/bank` folder). They generally share the same core components:
 
 * A [`keeper`](./06-keeper.md), used to access the module's store(s) and update the state.
-* A [`Msg` service](./02-messages-and-queries.md#messages), used to process messages when they are routed to the module by [`BaseApp`](../../develop/advanced/00-baseapp.md#message-routing) and trigger state-transitions.
-* A [query service](./04-query-services.md), used to process user queries when they are routed to the module by [`BaseApp`](../../develop/advanced/00-baseapp.md#query-routing).
+* A [`Msg` service](./02-messages-and-queries.md#messages), used to process messages when they are routed to the module by [`BaseApp`](../../learn/advanced/00-baseapp.md#message-routing) and trigger state-transitions.
+* A [query service](./04-query-services.md), used to process user queries when they are routed to the module by [`BaseApp`](../../learn/advanced/00-baseapp.md#query-routing).
 * Interfaces, for end users to query the subset of the state defined by the module and create `message`s of the custom types defined in the module.
 
 In addition to these components, modules implement the `AppModule` interface in order to be managed by the [`module manager`](./01-module-manager.md).

@@ -27,7 +27,7 @@ type contextValue struct {
 	originalContext   context.Context                                                     // originalContext that was used to build the account context.
 	getExpectedSender func(msg proto.Message) ([]byte, error)                             // getExpectedSender is a function that returns the expected sender for a given message.
 	moduleExec        func(ctx context.Context, msg proto.Message) (proto.Message, error) // moduleExec is a function that executes a module message.
-	moduleQuery       func(ctx context.Context, msg proto.Message) (proto.Message, error) // moduleQuery is a function that queries a module message.
+	moduleQuery       func(ctx context.Context, msg proto.Message) (proto.Message, error) // moduleQuery is a function that queries a module.
 }
 
 // MakeAccountContext creates a new account execution context given:
@@ -35,6 +35,8 @@ type contextValue struct {
 // accountAddr: the address of the account being invoked, which is used to give the
 // account a prefixed storage.
 // sender: the address of entity invoking the account action.
+// moduleExec: a function that executes a module message.
+// moduleQuery: a function that queries a module.
 func MakeAccountContext(
 	ctx context.Context,
 	storeSvc store.KVStoreService,

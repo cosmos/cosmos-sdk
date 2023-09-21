@@ -38,6 +38,39 @@ Most of Cosmos SDK modules have migrated to [collections](https://docs.cosmos.ne
 Many functions have been removed due to this changes as the API can be smaller thanks to collections.
 For modules that have migrated, verify you are checking against `collections.ErrNotFound` when applicable.
 
+#### `x/distribution`
+
+The existing chains using x/distribution module needs to add the new x/protocolpool module.
+
+#### `x/protocolpool`
+
+Introducing a new `x/protocolpool` module to handle community pool funds.
+
+Example:
+
+```go
+func (app SimApp) RegisterUpgradeHandlers() {
+  	app.UpgradeKeeper.SetUpgradeHandler(
+ 		UpgradeName,
+ 		func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+ 			return app.ModuleManager.RunMigrations(ctx, app.Configurator(), fromVM)
+ 		},
+ 	)
+
+  // ...
+}
+```
+
+Because the `x/protocolpool` module is a new module, its store must be added while upgrading to v0.50.x:
+
+```go
+storetypes.StoreUpgrades{
+			Added: []string{
+				protocolpooltypes.ModuleName,
+			},
+}
+```
+
 ## [v0.50.x](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.50.0-alpha.0)
 
 ### Migration to CometBFT (Part 2)

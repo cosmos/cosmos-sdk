@@ -19,6 +19,25 @@ func NewMigrator(keeper AccountKeeper, queryServer grpc.Server) Migrator {
 	return Migrator{keeper: keeper, queryServer: queryServer}
 }
 
+// Migrate1to2 migrates from version 1 to 2.
+func (m Migrator) Migrate1to2(ctx sdk.Context) error {
+	return nil
+}
+
+// Migrate2to3 migrates from consensus version 2 to version 3. Specifically, for each account
+// we index the account's ID to their address.
+func (m Migrator) Migrate2to3(ctx sdk.Context) error {
+	return nil
+}
+
+// Migrate3to4 migrates the x/auth module state from the consensus version 3 to
+// version 4. Specifically, it takes the parameters that are currently stored
+// and managed by the x/params modules and stores them directly into the x/auth
+// module state.
+func (m Migrator) Migrate3to4(ctx sdk.Context) error {
+	return nil
+}
+
 // Migrate4To5 migrates the x/auth module state from the consensus version 4 to 5.
 // It migrates the GlobalAccountNumber from being a protobuf defined value to a
 // big-endian encoded uint64, it also migrates it to use a more canonical prefix.

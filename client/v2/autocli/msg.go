@@ -1,10 +1,12 @@
 package autocli
 
 import (
+	"context"
 	"fmt"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	"github.com/cockroachdb/errors"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/spf13/cobra"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -109,6 +111,21 @@ func (b *Builder) BuildMsgMethodCommand(descriptor protoreflect.MethodDescriptor
 		}
 
 		bz, err := jsonMarshalOptions.Marshal(input.Interface())
+		if err != nil {
+			return err
+		}
+
+		clientCtx, err := client.ReadPersistentCommandFlags(*b.ClientCtx, cmd.Flags())
+		if err != nil {
+			return err
+		}
+
+		cmd.SetContext(context.WithValue(context.Background(), client.ClientContextKey, &clientCtx))
+		if err = client.SetCmdClientContextHandler(clientCtx, cmd); err != nil {
+			return err
+		}
+
+		clientCtx, err = client.GetClientTxContext(cmd)
 		if err != nil {
 			return err
 		}

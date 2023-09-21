@@ -38,17 +38,14 @@ but please do not over-use it. We try to keep all data structured
 and standard additions here would be better just to add to the Context struct
 */
 type Context struct {
-	baseCtx context.Context
-	ms      storetypes.MultiStore
-	// Deprecated: Use HeaderService for height, time, and chainID and CometService for the rest
-	header cmtproto.Header
-	// Deprecated: Use HeaderService for hash
-	headerHash []byte
-	// Deprecated: Use HeaderService for chainID and CometService for the rest
-	chainID              string
+	baseCtx              context.Context
+	ms                   storetypes.MultiStore
+	header               cmtproto.Header // Deprecated: Use HeaderService for height, time, and chainID and CometService for the rest
+	headerHash           []byte          // Deprecated: Use HeaderService for hash
+	chainID              string          // Deprecated: Use HeaderService for chainID and CometService for the rest
 	txBytes              []byte
 	logger               log.Logger
-	voteInfo             []abci.VoteInfo
+	voteInfo             []abci.VoteInfo // Deprecated: use Cometinfo.LastCommit.Votes instead, will be removed after 0.51
 	gasMeter             storetypes.GasMeter
 	blockGasMeter        storetypes.GasMeter
 	checkTx              bool
@@ -61,7 +58,7 @@ type Context struct {
 	kvGasConfig          storetypes.GasConfig
 	transientKVGasConfig storetypes.GasConfig
 	streamingManager     storetypes.StreamingManager
-	cometInfo            comet.BlockInfo
+	cometInfo            comet.Info
 	headerInfo           header.Info
 }
 
@@ -72,7 +69,7 @@ type Request = Context
 func (c Context) Context() context.Context                      { return c.baseCtx }
 func (c Context) MultiStore() storetypes.MultiStore             { return c.ms }
 func (c Context) BlockHeight() int64                            { return c.header.Height }
-func (c Context) BlockTime() time.Time                          { return c.header.Time }
+func (c Context) BlockTime() time.Time                          { return c.headerInfo.Time } // Deprecated: use HeaderInfo().Time
 func (c Context) ChainID() string                               { return c.chainID }
 func (c Context) TxBytes() []byte                               { return c.txBytes }
 func (c Context) Logger() log.Logger                            { return c.logger }
@@ -88,7 +85,7 @@ func (c Context) Priority() int64                               { return c.prior
 func (c Context) KVGasConfig() storetypes.GasConfig             { return c.kvGasConfig }
 func (c Context) TransientKVGasConfig() storetypes.GasConfig    { return c.transientKVGasConfig }
 func (c Context) StreamingManager() storetypes.StreamingManager { return c.streamingManager }
-func (c Context) CometInfo() comet.BlockInfo                    { return c.cometInfo }
+func (c Context) CometInfo() comet.Info                         { return c.cometInfo }
 func (c Context) HeaderInfo() header.Info                       { return c.headerInfo }
 
 // clone the header before returning
@@ -174,15 +171,6 @@ func (c Context) WithHeaderHash(hash []byte) Context {
 	return c
 }
 
-// WithBlockTime returns a Context with an updated CometBFT block header time in UTC with no monotonic component.
-// Stripping the monotonic component is for time equality.
-func (c Context) WithBlockTime(newTime time.Time) Context {
-	newHeader := c.BlockHeader()
-	// https://github.com/gogo/protobuf/issues/519
-	newHeader.Time = newTime.Round(0).UTC()
-	return c.WithBlockHeader(newHeader)
-}
-
 // WithProposer returns a Context with an updated proposer consensus address.
 func (c Context) WithProposer(addr ConsAddress) Context {
 	newHeader := c.BlockHeader()
@@ -216,6 +204,7 @@ func (c Context) WithLogger(logger log.Logger) Context {
 }
 
 // WithVoteInfos returns a Context with an updated consensus VoteInfo.
+// Deprecated: use WithCometinfo() instead, will be removed after 0.51
 func (c Context) WithVoteInfos(voteInfo []abci.VoteInfo) Context {
 	c.voteInfo = voteInfo
 	return c
@@ -302,7 +291,7 @@ func (c Context) WithStreamingManager(sm storetypes.StreamingManager) Context {
 }
 
 // WithCometInfo returns a Context with an updated comet info
-func (c Context) WithCometInfo(cometInfo comet.BlockInfo) Context {
+func (c Context) WithCometInfo(cometInfo comet.Info) Context {
 	c.cometInfo = cometInfo
 	return c
 }
@@ -392,4 +381,59 @@ func UnwrapSDKContext(ctx context.Context) Context {
 		return sdkCtx
 	}
 	return ctx.Value(SdkContextKey).(Context)
+}
+
+// ToSDKEvidence takes comet evidence and returns sdk evidence
+func ToSDKEvidence(ev []abci.Misbehavior) []comet.Evidence {
+	evidence := make([]comet.Evidence, len(ev))
+	for i, e := range ev {
+		evidence[i] = comet.Evidence{
+			Type:             comet.MisbehaviorType(e.Type),
+			Height:           e.Height,
+			Time:             e.Time,
+			TotalVotingPower: e.TotalVotingPower,
+			Validator: comet.Validator{
+				Address: e.Validator.Address,
+				Power:   e.Validator.Power,
+			},
+		}
+	}
+	return evidence
+}
+
+// ToSDKDecidedCommitInfo takes comet commit info and returns sdk commit info
+func ToSDKCommitInfo(commit abci.CommitInfo) comet.CommitInfo {
+	ci := comet.CommitInfo{
+		Round: commit.Round,
+	}
+
+	for _, v := range commit.Votes {
+		ci.Votes = append(ci.Votes, comet.VoteInfo{
+			Validator: comet.Validator{
+				Address: v.Validator.Address,
+				Power:   v.Validator.Power,
+			},
+			BlockIDFlag: comet.BlockIDFlag(v.BlockIdFlag),
+		})
+	}
+	return ci
+}
+
+// ToSDKExtendedCommitInfo takes comet extended commit info and returns sdk commit info
+func ToSDKExtendedCommitInfo(commit abci.ExtendedCommitInfo) comet.CommitInfo {
+	ci := comet.CommitInfo{
+		Round: commit.Round,
+	}
+
+	for _, v := range commit.Votes {
+		ci.Votes = append(ci.Votes, comet.VoteInfo{
+			Validator: comet.Validator{
+				Address: v.Validator.Address,
+				Power:   v.Validator.Power,
+			},
+			BlockIDFlag: comet.BlockIDFlag(v.BlockIdFlag),
+		})
+	}
+
+	return ci
 }

@@ -44,7 +44,7 @@ type Keeper interface {
 	DelegateCoinsFromAccountToModule(ctx context.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
 	UndelegateCoinsFromModuleToAccount(ctx context.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
 	MintCoins(ctx context.Context, moduleName string, amt sdk.Coins) error
-	BurnCoins(ctx context.Context, moduleName string, amt sdk.Coins) error
+	BurnCoins(ctx context.Context, address []byte, amt sdk.Coins) error
 
 	DelegateCoins(ctx context.Context, delegatorAddr, moduleAccAddr sdk.AccAddress, amt sdk.Coins) error
 	UndelegateCoins(ctx context.Context, moduleAccAddr, delegatorAddr sdk.AccAddress, amt sdk.Coins) error
@@ -380,14 +380,16 @@ func (k BaseKeeper) MintCoins(ctx context.Context, moduleName string, amounts sd
 
 // BurnCoins burns coins deletes coins from the balance of the module account.
 // It will panic if the module account does not exist or is unauthorized.
-func (k BaseKeeper) BurnCoins(ctx context.Context, moduleName string, amounts sdk.Coins) error {
-	acc := k.ak.GetModuleAccount(ctx, moduleName)
+func (k BaseKeeper) BurnCoins(ctx context.Context, address []byte, amounts sdk.Coins) error {
+	acc := k.ak.GetAccount(ctx, address)
 	if acc == nil {
-		panic(errorsmod.Wrapf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", moduleName))
+		return errorsmod.Wrapf(sdkerrors.ErrUnknownAddress, "account %x does not exist", address)
 	}
 
-	if !acc.HasPermission(authtypes.Burner) {
-		panic(errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "module account %s does not have permissions to burn tokens", moduleName))
+	if macc, ok := acc.(sdk.ModuleAccountI); ok {
+		if !macc.HasPermission(authtypes.Burner) {
+			return errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "account %x does not have permissions to burn tokens", address)
+		}
 	}
 
 	err := k.subUnlockedCoins(ctx, acc.GetAddress(), amounts)
@@ -401,7 +403,7 @@ func (k BaseKeeper) BurnCoins(ctx context.Context, moduleName string, amounts sd
 		k.setSupply(ctx, supply)
 	}
 
-	k.logger.Debug("burned tokens from module account", "amount", amounts.String(), "from", moduleName)
+	k.logger.Debug("burned tokens from account", "amount", amounts.String(), "from", address)
 
 	// emit burn event
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
@@ -433,7 +435,7 @@ func (k BaseKeeper) trackDelegation(ctx context.Context, addr sdk.AccAddress, ba
 	if ok {
 		// TODO: return error on account.TrackDelegation
 		sdkCtx := sdk.UnwrapSDKContext(ctx)
-		vacc.TrackDelegation(sdkCtx.BlockHeader().Time, balance, amt)
+		vacc.TrackDelegation(sdkCtx.HeaderInfo().Time, balance, amt)
 		k.ak.SetAccount(ctx, acc)
 	}
 

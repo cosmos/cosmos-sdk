@@ -177,7 +177,7 @@ message ABCIQueryRequest {
 // Tendermint.
 message ABCIQueryResponse {
   uint32 code = 1;
-  // DEPRECATED: use "value" instead
+  // Deprecated: use "value" instead
   reserved 2;
   string   log       = 3; // nondeterministic
   string   info      = 4; // nondeterministic

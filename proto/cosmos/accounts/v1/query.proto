@@ -1,7 +1,25 @@
 syntax = "proto3";
 
 package cosmos.accounts.v1;
-option  go_package = "cosmossdk.io/x/accounts/v1";
+
+option go_package = "cosmossdk.io/x/accounts/v1";
 
 // Query defines the Query service for the x/accounts module.
-service Query {}
+service Query {
+  // AccountQuery runs an account query.
+  rpc AccountQuery(AccountQueryRequest) returns (AccountQueryResponse) {};
+}
+
+// AccountQueryRequest is the request type for the Query/AccountQuery RPC
+message AccountQueryRequest {
+  // target defines the account to be queried.
+  string target = 1;
+  // request defines the query message being sent to the account.
+  bytes request = 2;
+}
+
+// AccountQueryResponse is the response type for the Query/AccountQuery RPC method.
+message AccountQueryResponse {
+  // response defines the query response of the account.
+  bytes response = 1;
+}

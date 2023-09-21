@@ -314,7 +314,9 @@ func deleteKVStore(kv types.KVStore) error {
 		keys = append(keys, itr.Key())
 		itr.Next()
 	}
-	itr.Close()
+	if err := itr.Close(); err != nil {
+		return err
+	}
 
 	for _, k := range keys {
 		kv.Delete(k)
@@ -330,7 +332,9 @@ func moveKVStoreData(oldDB, newDB types.KVStore) error {
 		newDB.Set(itr.Key(), itr.Value())
 		itr.Next()
 	}
-	itr.Close()
+	if err := itr.Close(); err != nil {
+		return err
+	}
 
 	// then delete the old store
 	return deleteKVStore(oldDB)
@@ -646,8 +650,8 @@ func (rs *Store) GetKVStore(key types.StoreKey) types.KVStore {
 
 func (rs *Store) handlePruning(version int64) error {
 	pruneHeight := rs.pruningManager.GetPruningHeight(version)
-	rs.logger.Info("prune start", "height", version)
-	defer rs.logger.Info("prune end", "height", version)
+	rs.logger.Debug("prune start", "height", version)
+	defer rs.logger.Debug("prune end", "height", version)
 	return rs.PruneStores(pruneHeight)
 }
 
@@ -1106,7 +1110,9 @@ func (rs *Store) GetCommitInfo(ver int64) (*types.CommitInfo, error) {
 func (rs *Store) flushMetadata(db dbm.DB, version int64, cInfo *types.CommitInfo) {
 	rs.logger.Debug("flushing metadata", "height", version)
 	batch := db.NewBatch()
-	defer batch.Close()
+	defer func() {
+		_ = batch.Close()
+	}()
 
 	if cInfo != nil {
 		flushCommitInfo(batch, version, cInfo)

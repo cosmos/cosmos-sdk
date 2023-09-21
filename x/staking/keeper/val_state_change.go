@@ -41,7 +41,7 @@ func (k Keeper) BlockValidatorUpdates(ctx context.Context) ([]abci.ValidatorUpda
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	// Remove all mature unbonding delegations from the ubd queue.
-	matureUnbonds, err := k.DequeueAllMatureUBDQueue(ctx, sdkCtx.BlockHeader().Time)
+	matureUnbonds, err := k.DequeueAllMatureUBDQueue(ctx, sdkCtx.HeaderInfo().Time)
 	if err != nil {
 		return nil, err
 	}
@@ -72,7 +72,7 @@ func (k Keeper) BlockValidatorUpdates(ctx context.Context) ([]abci.ValidatorUpda
 	}
 
 	// Remove all mature redelegations from the red queue.
-	matureRedelegations, err := k.DequeueAllMatureRedelegationQueue(ctx, sdkCtx.BlockHeader().Time)
+	matureRedelegations, err := k.DequeueAllMatureRedelegationQueue(ctx, sdkCtx.HeaderInfo().Time)
 	if err != nil {
 		return nil, err
 	}
@@ -128,7 +128,7 @@ func (k Keeper) BlockValidatorUpdates(ctx context.Context) ([]abci.ValidatorUpda
 // at the previous block height or were removed from the validator set entirely
 // are returned to CometBFT.
 func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx context.Context) (updates []abci.ValidatorUpdate, err error) {
-	params, err := k.GetParams(ctx)
+	params, err := k.Params.Get(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -376,7 +376,7 @@ func (k Keeper) bondValidator(ctx context.Context, validator types.Validator) (t
 
 // BeginUnbondingValidator performs all the store operations for when a validator begins unbonding
 func (k Keeper) BeginUnbondingValidator(ctx context.Context, validator types.Validator) (types.Validator, error) {
-	params, err := k.GetParams(ctx)
+	params, err := k.Params.Get(ctx)
 	if err != nil {
 		return validator, err
 	}
@@ -400,8 +400,8 @@ func (k Keeper) BeginUnbondingValidator(ctx context.Context, validator types.Val
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	// set the unbonding completion time and completion height appropriately
-	validator.UnbondingTime = sdkCtx.BlockHeader().Time.Add(params.UnbondingTime)
-	validator.UnbondingHeight = sdkCtx.BlockHeader().Height
+	validator.UnbondingTime = sdkCtx.HeaderInfo().Time.Add(params.UnbondingTime)
+	validator.UnbondingHeight = sdkCtx.HeaderInfo().Height
 
 	validator.UnbondingIds = append(validator.UnbondingIds, id)
 
@@ -463,23 +463,19 @@ type validatorsByAddr map[string][]byte
 func (k Keeper) getLastValidatorsByAddr(ctx context.Context) (validatorsByAddr, error) {
 	last := make(validatorsByAddr)
 
-	iterator, err := k.LastValidatorsIterator(ctx)
-	if err != nil {
-		return nil, err
-	}
-	defer iterator.Close()
-
-	for ; iterator.Valid(); iterator.Next() {
-		// extract the validator address from the key (prefix is 1-byte, addrLen is 1-byte)
-		valAddr := types.AddressFromLastValidatorPowerKey(iterator.Key())
-		valAddrStr, err := k.validatorAddressCodec.BytesToString(valAddr)
+	err := k.LastValidatorPower.Walk(ctx, nil, func(key []byte, value gogotypes.Int64Value) (bool, error) {
+		valAddrStr, err := k.validatorAddressCodec.BytesToString(key)
 		if err != nil {
-			return nil, err
+			return true, err
 		}
 
-		powerBytes := iterator.Value()
-		last[valAddrStr] = make([]byte, len(powerBytes))
-		copy(last[valAddrStr], powerBytes)
+		intV := value.GetValue()
+		bz := k.cdc.MustMarshal(&gogotypes.Int64Value{Value: intV})
+		last[valAddrStr] = bz
+		return false, nil
+	})
+	if err != nil {
+		return nil, err
 	}
 
 	return last, nil

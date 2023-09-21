@@ -64,12 +64,13 @@ func NewRootCmd() *cobra.Command {
 				return err
 			}
 
-			initClientCtx, err = config.ReadFromClientConfig(initClientCtx)
+			customClientTemplate, customClientConfig := initClientConfig()
+			initClientCtx, err = config.CreateClientConfig(initClientCtx, customClientTemplate, customClientConfig)
 			if err != nil {
 				return err
 			}
 
-			// This needs to go after ReadFromClientConfig, as that function
+			// This needs to go after CreateClientConfig, as that function
 			// sets the RPC client needed for SIGN_MODE_TEXTUAL.
 			enabledSignModes := append(tx.DefaultSignModes, signing.SignMode_SIGN_MODE_TEXTUAL)
 			txConfigOpts := tx.ConfigOptions{
@@ -99,13 +100,16 @@ func NewRootCmd() *cobra.Command {
 	initRootCmd(rootCmd, encodingConfig.TxConfig, encodingConfig.InterfaceRegistry, encodingConfig.Codec, tempApp.BasicModuleManager)
 
 	// autocli opts
-	initClientCtx, _ = config.ReadFromClientConfig(initClientCtx)
+	customClientTemplate, customClientConfig := initClientConfig()
+	var err error
+	initClientCtx, err = config.CreateClientConfig(initClientCtx, customClientTemplate, customClientConfig)
+	if err != nil {
+		panic(err)
+	}
 
 	autoCliOpts := tempApp.AutoCliOpts()
 	autoCliOpts.Keyring = initClientCtx.Keyring
-	autoCliOpts.AddressCodec = initClientCtx.AddressCodec
-	autoCliOpts.ValidatorAddressCodec = initClientCtx.ValidatorAddressCodec
-	autoCliOpts.ConsensusAddressCodec = initClientCtx.ConsensusAddressCodec
+	autoCliOpts.ClientCtx = &initClientCtx
 
 	if err := autoCliOpts.EnhanceRootCommand(rootCmd); err != nil {
 		panic(err)

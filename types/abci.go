@@ -30,6 +30,14 @@ type ExtendVoteHandler func(Context, *abci.RequestExtendVote) (*abci.ResponseExt
 // pre-commit vote extension.
 type VerifyVoteExtensionHandler func(Context, *abci.RequestVerifyVoteExtension) (*abci.ResponseVerifyVoteExtension, error)
 
+// PreBlocker runs code before the `BeginBlocker` and defines a function type alias for executing logic right
+// before FinalizeBlock is called (but after its context has been set up). It is
+// intended to allow applications to perform computation on vote extensions and
+// persist their results in state.
+//
+// Note: returning an error will make FinalizeBlock fail.
+type PreBlocker func(Context, *abci.RequestFinalizeBlock) (*ResponsePreBlock, error)
+
 // BeginBlocker defines a function type alias for executing application
 // business logic before transactions are executed.
 //
@@ -48,14 +56,6 @@ type BeginBlocker func(Context) (BeginBlock, error)
 // and allows for existing EndBlock functionality within applications.
 type EndBlocker func(Context) (EndBlock, error)
 
-// PreFinalizeBlockHook defines a function type alias for executing logic right
-// before FinalizeBlock is called (but after its context has been set up). It is
-// intended to allow applications to perform computation on vote extensions and
-// persist their results in state.
-//
-// Note: returning an error will make FinalizeBlock fail.
-type PreFinalizeBlockHook func(Context, *abci.RequestFinalizeBlock) error
-
 // EndBlock defines a type which contains endblock events and validator set updates
 type EndBlock struct {
 	ValidatorUpdates []abci.ValidatorUpdate
@@ -65,4 +65,12 @@ type EndBlock struct {
 // BeginBlock defines a type which contains beginBlock events
 type BeginBlock struct {
 	Events []abci.Event
+}
+
+type ResponsePreBlock struct {
+	ConsensusParamsChanged bool
+}
+
+func (r ResponsePreBlock) IsConsensusParamsChanged() bool {
+	return r.ConsensusParamsChanged
 }

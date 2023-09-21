@@ -174,11 +174,6 @@ godocs:
 	go install golang.org/x/tools/cmd/godoc@latest
 	godoc -http=:6060
 
-build-docs:
-	@cd docs && DOCS_DOMAIN=docs.cosmos.network sh ./build-all.sh
-
-.PHONY: build-docs
-
 ###############################################################################
 ###                           Tests & Simulation                            ###
 ###############################################################################
@@ -369,7 +364,7 @@ benchmark:
 ###                                Linting                                  ###
 ###############################################################################
 
-golangci_version=v1.53.3
+golangci_version=v1.54.2
 
 lint-install:
 	@echo "--> Installing golangci-lint $(golangci_version)"

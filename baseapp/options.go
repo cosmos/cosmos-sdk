@@ -1,6 +1,8 @@
 package baseapp
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"io"
 	"math"
@@ -13,6 +15,7 @@ import (
 	snapshottypes "cosmossdk.io/store/snapshots/types"
 	storetypes "cosmossdk.io/store/types"
 
+	"github.com/cosmos/cosmos-sdk/baseapp/oe"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -104,6 +107,13 @@ func SetChainID(chainID string) func(*BaseApp) {
 	return func(app *BaseApp) { app.chainID = chainID }
 }
 
+// SetOptimisticExecution enables optimistic execution.
+func SetOptimisticExecution(opts ...func(*oe.OptimisticExecution)) func(*BaseApp) {
+	return func(app *BaseApp) {
+		app.optimisticExec = oe.NewOptimisticExecution(app.logger, app.internalFinalizeBlock, opts...)
+	}
+}
+
 func (app *BaseApp) SetName(name string) {
 	if app.sealed {
 		panic("SetName() on sealed BaseApp")
@@ -129,9 +139,25 @@ func (app *BaseApp) SetVersion(v string) {
 	app.version = v
 }
 
-// SetProtocolVersion sets the application's protocol version
-func (app *BaseApp) SetProtocolVersion(v uint64) {
-	app.appVersion = v
+// SetAppVersion sets the application's version this is used as part of the
+// header in blocks and is returned to the consensus engine in EndBlock.
+func (app *BaseApp) SetAppVersion(ctx context.Context, v uint64) error {
+	if app.paramStore == nil {
+		return errors.New("param store must be set to set app version")
+	}
+
+	cp, err := app.paramStore.Get(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to get consensus params: %w", err)
+	}
+	if cp.Version == nil {
+		return errors.New("version is not set in param store")
+	}
+	cp.Version.App = v
+	if err := app.paramStore.Set(ctx, cp); err != nil {
+		return err
+	}
+	return nil
 }
 
 func (app *BaseApp) SetDB(db dbm.DB) {
@@ -156,6 +182,14 @@ func (app *BaseApp) SetInitChainer(initChainer sdk.InitChainer) {
 	}
 
 	app.initChainer = initChainer
+}
+
+func (app *BaseApp) SetPreBlocker(preBlocker sdk.PreBlocker) {
+	if app.sealed {
+		panic("SetPreBlocker() on sealed BaseApp")
+	}
+
+	app.preBlocker = preBlocker
 }
 
 func (app *BaseApp) SetBeginBlocker(beginBlocker sdk.BeginBlocker) {
@@ -188,14 +222,6 @@ func (app *BaseApp) SetPrecommiter(precommiter sdk.Precommiter) {
 	}
 
 	app.precommiter = precommiter
-}
-
-func (app *BaseApp) SetPreFinalizeBlockHook(hook sdk.PreFinalizeBlockHook) {
-	if app.sealed {
-		panic("SetPreFinalizeBlockHook() on sealed BaseApp")
-	}
-
-	app.preFinalizeBlockHook = hook
 }
 
 func (app *BaseApp) SetAnteHandler(ah sdk.AnteHandler) {

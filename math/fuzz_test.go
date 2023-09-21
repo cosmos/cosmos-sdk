@@ -22,15 +22,3 @@ func FuzzLegacyNewDecFromStr(f *testing.F) {
 		}
 	})
 }
-
-func FuzzSmallIntSize(f *testing.F) {
-	f.Add(int64(2<<53 - 1))
-	f.Add(-int64(2<<53 - 1))
-	f.Fuzz(func(t *testing.T, input int64) {
-		i := NewInt(input)
-		exp, _ := i.Marshal()
-		if i.Size() != len(exp) {
-			t.Fatalf("input %d: i.Size()=%d, len(input)=%d", input, i.Size(), len(exp))
-		}
-	})
-}

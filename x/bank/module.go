@@ -108,6 +108,8 @@ func (am AppModule) IsAppModule() {}
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.keeper))
 	types.RegisterQueryServer(cfg.QueryServer(), am.keeper)
+
+	keeper.NewMigrator(am.keeper.(keeper.BaseKeeper))
 }
 
 // NewAppModule creates a new AppModule object

@@ -122,7 +122,6 @@ func (k msgServer) FundCommunityPool(ctx context.Context, msg *types.MsgFundComm
 	}
 	// Pass the msg to the MessageRouter
 	handler := k.router.Handler(&poolMsg)
-	fmt.Printf("handler: %v\n", handler)
 	if handler == nil {
 		return nil, fmt.Errorf("message not recognized by router: %s", sdk.MsgTypeURL(&poolMsg))
 	}

@@ -163,11 +163,14 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### State Machine Breaking
 
-* (x/distribution) [#17657](https://github.com/cosmos/cosmos-sdk/pull/17657) Deprecate `CommunityPool` and `FundCommunityPool` rpc methods. Use x/protocolpool module's rpc methods instead.
 * (x/distribution) [#17657](https://github.com/cosmos/cosmos-sdk/pull/17657) Migrate community pool funds from x/distribution to x/protocolpool.
 * (x/distribution) [#17115](https://github.com/cosmos/cosmos-sdk/pull/17115) Migrate `PreviousProposer` to collections.
 * (x/upgrade) [#16244](https://github.com/cosmos/cosmos-sdk/pull/16244) upgrade module no longer stores the app version but gets and sets the app version stored in the `ParamStore` of baseapp.
 * (x/staking) [#17655](https://github.com/cosmos/cosmos-sdk/pull/17655) `HistoricalInfo` was replaced with `HistoricalRecord`, it removes the validator set and comet header and only keep what is needed for IBC. 
+
+### Client Breaking Changes
+
+* (x/distribution) [#17657](https://github.com/cosmos/cosmos-sdk/pull/17657) Deprecate `CommunityPool` and `FundCommunityPool` rpc methods. Use x/protocolpool module's rpc methods instead.
 
 ## [v0.50.0-rc.0](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.50.0-rc.0) - 2023-08-18
 

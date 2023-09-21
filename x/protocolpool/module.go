@@ -19,7 +19,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
-// ConsensusVersion defines the current x/consensus module consensus version.
+// ConsensusVersion defines the current x/protocolpool module consensus version.
 const ConsensusVersion = 1
 
 var _ module.AppModule = AppModule{}

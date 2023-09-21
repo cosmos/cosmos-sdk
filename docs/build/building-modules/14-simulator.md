@@ -37,7 +37,7 @@ for the key-value pairs from the stores to be decoded (_i.e_ unmarshalled)
 to their corresponding types. In particular, it matches the key to a concrete type
 and then unmarshals the value from the `KVPair` to the type provided.
 
-You can use the example [here](https://github.com/cosmos/cosmos-sdk/blob/v/x/distribution/simulation/decoder.go) from the distribution module to implement your store decoders.
+You can use the example [here](https://github.com/cosmos/cosmos-sdk/blob/main/x/distribution/simulation/decoder.go) from the distribution module to implement your store decoders.
 
 ### Randomized genesis
 
@@ -48,13 +48,7 @@ Once the module genesis parameter are generated randomly (or with the key and
 values defined in a `params` file), they are marshaled to JSON format and added
 to the app genesis JSON to use it on the simulations.
 
-You can check an example on how to create the randomized genesis [here](https://github.com/cosmos/cosmos-sdk/blob/v/x/staking/simulation/genesis.go).
-
-### Randomized parameter changes
-
-The simulator is able to test parameter changes at random. The simulator package from each module must contain a `RandomizedParams` func that will simulate parameter changes of the module throughout the simulations lifespan.
-
-You can see how an example of what is needed to fully test parameter changes [here](https://github.com/cosmos/cosmos-sdk/blob/v/x/staking/simulation/params.go)
+You can check an example on how to create the randomized genesis [here](https://github.com/cosmos/cosmos-sdk/blob/main/x/staking/simulation/genesis.go).
 
 ### Random weighted operations
 

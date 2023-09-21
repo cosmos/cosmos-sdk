@@ -360,7 +360,7 @@ func (k Querier) DelegatorWithdrawAddress(ctx context.Context, req *types.QueryD
 // Deprecated: DO NOT USE
 // This method uses deprecated query request. Use CommunityPool from x/protocolpool module instead.
 // CommunityPool queries the community pool coins
-func (k Querier) CommunityPool(ctx context.Context, req *types.QueryCommunityPoolRequest) (*types.QueryCommunityPoolResponse, error) { //nolint:staticcheck // we're using a deprecated call for compatibility
+func (k Querier) CommunityPool(ctx context.Context, req *types.QueryCommunityPoolRequest) (*types.QueryCommunityPoolResponse, error) {
 	helper := &baseapp.QueryServiceTestHelper{
 		GRPCQueryRouter: k.grpcRouter,
 		Ctx:             sdk.Context{}.WithContext(ctx),
@@ -380,5 +380,5 @@ func (k Querier) CommunityPool(ctx context.Context, req *types.QueryCommunityPoo
 		}
 		poolAmount[i] = sdk.NewDecCoin(coin.Denom, amount)
 	}
-	return &types.QueryCommunityPoolResponse{Pool: poolAmount}, nil //nolint:staticcheck // we're using a deprecated call for compatibility
+	return &types.QueryCommunityPoolResponse{Pool: poolAmount}, nil
 }

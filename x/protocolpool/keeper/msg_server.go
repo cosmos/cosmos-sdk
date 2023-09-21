@@ -16,7 +16,7 @@ type MsgServer struct {
 
 var _ types.MsgServer = MsgServer{}
 
-// NewMsgServerImpl returns an implementation of the distribution MsgServer interface
+// NewMsgServerImpl returns an implementation of the protocolpool MsgServer interface
 // for the provided Keeper.
 func NewMsgServerImpl(keeper Keeper) types.MsgServer {
 	return &MsgServer{Keeper: keeper}

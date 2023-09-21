@@ -10,19 +10,24 @@ import (
 	storetypes "cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/x/protocolpool/keeper"
+	"cosmossdk.io/x/protocolpool/simulation"
 	"cosmossdk.io/x/protocolpool/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // ConsensusVersion defines the current x/protocolpool module consensus version.
 const ConsensusVersion = 1
 
-var _ module.AppModule = AppModule{}
+var (
+	_ module.AppModule           = AppModule{}
+	_ module.AppModuleSimulation = AppModule{}
+)
 
 // AppModuleBasic defines the basic application module used by the pool module.
 type AppModuleBasic struct {
@@ -129,4 +134,24 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		Keeper: k,
 		Module: m,
 	}
+}
+
+// ____________________________________________________________________________
+
+// AppModuleSimulation functions
+
+// GenerateGenesisState creates a randomized GenState of the protocolpool module.
+func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
+}
+
+// RegisterStoreDecoder registers a decoder for protocolpool module's types
+func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
+}
+
+// WeightedOperations returns the all the protocolpool module operations with their respective weights.
+func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
+	return simulation.WeightedOperations(
+		simState.AppParams, simState.Cdc, simState.TxConfig,
+		am.accountKeeper, am.bankKeeper, am.keeper,
+	)
 }

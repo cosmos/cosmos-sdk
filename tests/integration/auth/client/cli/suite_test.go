@@ -1204,13 +1204,6 @@ func (s *CLITestSuite) TestAuxToFeeWithTips() {
 				genTxFile := testutil.WriteToNewTempFile(s.T(), string(res.Bytes()))
 				defer genTxFile.Close()
 
-				// broadcast the tx
-				res, err = authtestutil.TxAuxToFeeExec(
-					s.clientCtx,
-					genTxFile.Name(),
-					tc.feePayerArgs...,
-				)
-
 				switch {
 				case tc.expectErrBroadCast:
 					require.Error(err)

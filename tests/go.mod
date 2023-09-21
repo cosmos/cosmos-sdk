@@ -14,7 +14,7 @@ require (
 	cosmossdk.io/x/evidence v0.0.0-20230915171831-2196edacb99d
 	cosmossdk.io/x/feegrant v0.0.0-20230915171831-2196edacb99d
 	cosmossdk.io/x/nft v0.0.0-20230915171831-2196edacb99d // indirect
-	cosmossdk.io/x/tx v0.10.0
+	cosmossdk.io/x/tx v0.10.1-0.20230920120022-6715b5afb59f
 	cosmossdk.io/x/upgrade v0.0.0-20230915171831-2196edacb99d
 	github.com/cometbft/cometbft v0.38.0
 	github.com/cosmos/cosmos-db v1.0.0
@@ -27,7 +27,7 @@ require (
 	github.com/stretchr/testify v1.8.4
 	google.golang.org/grpc v1.58.1
 	google.golang.org/protobuf v1.31.0
-	gotest.tools/v3 v3.5.0
+	gotest.tools/v3 v3.5.1
 	pgregory.net/rapid v1.1.0
 )
 

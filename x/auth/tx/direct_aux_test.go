@@ -50,7 +50,6 @@ func TestDirectAuxHandler(t *testing.T) {
 	}
 
 	fee := txtypes.Fee{Amount: sdk.NewCoins(sdk.NewInt64Coin("atom", 150)), GasLimit: 20000}
-	tip := &txtypes.Tip{Amount: sdk.NewCoins(sdk.NewInt64Coin("tip-token", 10))}
 
 	err = txBuilder.SetMsgs(msgs...)
 	require.NoError(t, err)
@@ -58,7 +57,6 @@ func TestDirectAuxHandler(t *testing.T) {
 	txBuilder.SetFeeAmount(fee.Amount)
 	txBuilder.SetFeePayer(feePayerAddr)
 	txBuilder.SetGasLimit(fee.GasLimit)
-	txBuilder.SetTip(tip)
 
 	err = txBuilder.SetSignatures(sig, feePayerSig)
 	require.NoError(t, err)
@@ -110,7 +108,6 @@ func TestDirectAuxHandler(t *testing.T) {
 		ChainId:       "test-chain",
 		PublicKey:     any,
 		Sequence:      accSeq,
-		Tip:           tip,
 	}
 
 	expectedSignBytes, err := signDocDirectAux.Marshal()

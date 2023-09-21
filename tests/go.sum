@@ -213,8 +213,8 @@ cosmossdk.io/x/feegrant v0.0.0-20230915171831-2196edacb99d h1:Cm3KveQ0GkXJvUkBwO
 cosmossdk.io/x/feegrant v0.0.0-20230915171831-2196edacb99d/go.mod h1:KcSYzPq6JR8C8yhVYgCGsmRoTpFlLnask4ZlRi7f3h0=
 cosmossdk.io/x/nft v0.0.0-20230915171831-2196edacb99d h1:jj/vNw1pOMh3ar/8Yb42jEAi6U+vB/TrPPWrqlkdAMo=
 cosmossdk.io/x/nft v0.0.0-20230915171831-2196edacb99d/go.mod h1:Q60Uu6/UsZlACzmGzSkGLSc/U8I6tbEusbqjTE40pvk=
-cosmossdk.io/x/tx v0.10.0 h1:LxWF/hksVDbeQmFj4voLM5ZCHyVZ1cCNIqKenfH9plc=
-cosmossdk.io/x/tx v0.10.0/go.mod h1:MKo9/b5wsoL8dd9y9pvD2yOP1CMvzHIWYxi1l2oLPFo=
+cosmossdk.io/x/tx v0.10.1-0.20230920120022-6715b5afb59f h1:Dkw1pM+jnjK9Pk0CM6JZKLLDaMXWDCHSlLJiHcSmPpg=
+cosmossdk.io/x/tx v0.10.1-0.20230920120022-6715b5afb59f/go.mod h1:lRM7U4VkxFjWBKZp7Mo818azphiNixeMCV8h1ZofkhM=
 cosmossdk.io/x/upgrade v0.0.0-20230915171831-2196edacb99d h1:LH8NPa2+yoMFdCTxCFyQUX5zVDip4YDgtg7e0EecDqo=
 cosmossdk.io/x/upgrade v0.0.0-20230915171831-2196edacb99d/go.mod h1:+5jCm6Lk/CrQhQvtJFy/tmuLfhQKNMn/U0vwrRz/dxQ=
 dmitri.shuralyov.com/gpu/mtl v0.0.0-20190408044501-666a987793e9/go.mod h1:H6x//7gZCb22OMCxBHrMx7a5I7Hp++hsVxbQ4BYO7hU=
@@ -1706,8 +1706,8 @@ gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c/go.mod h1:K4uyk7z7BCEPqu6E+C
 gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b/go.mod h1:K4uyk7z7BCEPqu6E+C64Yfv1cQ7kz7rIZviUmN+EgEM=
 gopkg.in/yaml.v3 v3.0.1 h1:fxVm/GzAzEWqLHuvctI91KS9hhNmmWOoWu0XTYJS7CA=
 gopkg.in/yaml.v3 v3.0.1/go.mod h1:K4uyk7z7BCEPqu6E+C64Yfv1cQ7kz7rIZviUmN+EgEM=
-gotest.tools/v3 v3.5.0 h1:Ljk6PdHdOhAb5aDMWXjDLMMhph+BpztA4v1QdqEW2eY=
-gotest.tools/v3 v3.5.0/go.mod h1:isy3WKz7GK6uNw/sbHzfKBLvlvXwUyV06n6brMxxopU=
+gotest.tools/v3 v3.5.1 h1:EENdUnS3pdur5nybKYIh2Vfgc8IUNBjxDPSjtiJcOzU=
+gotest.tools/v3 v3.5.1/go.mod h1:isy3WKz7GK6uNw/sbHzfKBLvlvXwUyV06n6brMxxopU=
 honnef.co/go/tools v0.0.0-20180728063816-88497007e858/go.mod h1:rf3lG4BRIbNafJWhAfAdb/ePZxsR/4RtNHQocxwk9r4=
 honnef.co/go/tools v0.0.0-20190102054323-c2f93a96b099/go.mod h1:rf3lG4BRIbNafJWhAfAdb/ePZxsR/4RtNHQocxwk9r4=
 honnef.co/go/tools v0.0.0-20190106161140-3f1c8253044a/go.mod h1:rf3lG4BRIbNafJWhAfAdb/ePZxsR/4RtNHQocxwk9r4=

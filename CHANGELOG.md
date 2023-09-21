@@ -154,6 +154,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### API Breaking Changes
 
+* (x/auth) [#17787](https://github.com/cosmos/cosmos-sdk/pull/17787) Remove Tip functionality.
 * (types) `module.EndBlockAppModule` has been replaced by Core API `appmodule.HasEndBlocker` or `module.HasABCIEndBlock` when needing validator updates.
 * (types) `module.BeginBlockAppModule` has been replaced by Core API `appmodule.HasBeginBlocker`.
 * (types) [#17358](https://github.com/cosmos/cosmos-sdk/pull/17358) Remove deprecated `sdk.Handler`, use `baseapp.MsgServiceHandler` instead.

@@ -72,7 +72,7 @@ type BaseApp struct {
 
 	mempool     mempool.Mempool // application side mempool
 	anteHandler sdk.AnteHandler // ante handler for fee and auth
-	postHandler sdk.PostHandler // post handler, optional, e.g. for tips
+	postHandler sdk.PostHandler // post handler, optional
 
 	initChainer        sdk.InitChainer                // ABCI InitChain handler
 	preBlocker         sdk.PreBlocker                 // logic to run before BeginBlocker

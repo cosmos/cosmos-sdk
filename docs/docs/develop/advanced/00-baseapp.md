@@ -412,7 +412,8 @@ First, it retrieves the `sdk.Msg`'s fully-qualified type name, by checking the `
 
 `PostHandler` is similar to `AnteHandler`, but it, as the name suggests, executes custom post tx processing logic after [`RunMsgs`](#runmsgs) is called. `PostHandler` receives the `Result` of the the `RunMsgs` in order to enable this customizable behavior.
 
-Like `AnteHandler`s, `PostHandler`s are theoretically optional, one use case for `PostHandler`s is transaction tips (enabled by default in simapp).
+Like `AnteHandler`s, `PostHandler`s are theoretically optional.
+
 Other use cases like unused gas refund can also be enabled by `PostHandler`s.
 
 ```go reference

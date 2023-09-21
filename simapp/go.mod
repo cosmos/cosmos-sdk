@@ -16,7 +16,7 @@ require (
 	cosmossdk.io/x/evidence v0.0.0-20230915171831-2196edacb99d
 	cosmossdk.io/x/feegrant v0.0.0-20230915171831-2196edacb99d
 	cosmossdk.io/x/nft v0.0.0-20230915171831-2196edacb99d
-	cosmossdk.io/x/tx v0.10.0
+	cosmossdk.io/x/tx v0.10.1-0.20230920120022-6715b5afb59f
 	cosmossdk.io/x/upgrade v0.0.0-20230915171831-2196edacb99d
 	github.com/cometbft/cometbft v0.38.0
 	github.com/cosmos/cosmos-db v1.0.0
@@ -184,7 +184,7 @@ require (
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	gotest.tools/v3 v3.5.0 // indirect
+	gotest.tools/v3 v3.5.1 // indirect
 	nhooyr.io/websocket v1.8.6 // indirect
 	pgregory.net/rapid v1.1.0 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect

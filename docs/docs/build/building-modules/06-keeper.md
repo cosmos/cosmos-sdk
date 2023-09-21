@@ -47,14 +47,9 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/x/staking/keeper/keepe
 Let us go through the different parameters:
 
 * An expected `keeper` is a `keeper` external to a module that is required by the internal `keeper` of said module. External `keeper`s are listed in the internal `keeper`'s type definition as interfaces. These interfaces are themselves defined in an `expected_keepers.go` file in the root of the module's folder. In this context, interfaces are used to reduce the number of dependencies, as well as to facilitate the maintenance of the module itself.
-<<<<<<< HEAD:docs/docs/build/building-modules/06-keeper.md
-* `storeKey`s grant access to the store(s) of the [multistore](../../develop/advanced/04-store.md) managed by the module. They should always remain unexposed to external modules.
-* `cdc` is the [codec](../../build/develop/advanced/05-encoding.md) used to marshall and unmarshall structs to/from `[]byte`. The `cdc` can be any of `codec.BinaryCodec`, `codec.JSONCodec` or `codec.Codec` based on your requirements. It can be either a proto or amino codec as long as they implement these interfaces. The authority listed is a module account or user account that has the right to change module level parameters. Previously this was handled by the param module, which has been deprecated.
-=======
 * `storeKey`s grant access to the store(s) of the [multistore](../../learn/advanced/04-store.md) managed by the module. They should always remain unexposed to external modules.
 * `cdc` is the [codec](../../learn/advanced/05-encoding.md) used to marshall and unmarshall structs to/from `[]byte`. The `cdc` can be any of `codec.BinaryCodec`, `codec.JSONCodec` or `codec.Codec` based on your requirements. It can be either a proto or amino codec as long as they implement these interfaces.
 * The authority listed is a module account or user account that has the right to change module level parameters. Previously this was handled by the param module, which has been deprecated.
->>>>>>> 2efafee65 (chore: rename develop to learn (#17821)):docs/build/building-modules/06-keeper.md
 
 Of course, it is possible to define different types of internal `keeper`s for the same module (e.g. a read-only `keeper`). Each type of `keeper` comes with its own constructor function, which is called from the [application's constructor function](../../learn/beginner/00-app-anatomy.md). This is where `keeper`s are instantiated, and where developers make sure to pass correct instances of modules' `keeper`s to other modules that require them.
 

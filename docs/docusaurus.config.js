@@ -217,9 +217,9 @@ const config = {
         toExtensions: ["html"],
         createRedirects(existingPath) {
           return [
-            existingPath.replace('/core', '/develop/advanced'),
-            existingPath.replace('/basics', '/develop/beginner'),
-            existingPath.replace('/intro', '/develop/intro'),
+            existingPath.replace('/core', '/learn/advanced'),
+            existingPath.replace('/basics', '/learn/beginner'),
+            existingPath.replace('/intro', '/learn/intro'),
             existingPath.replace('/architecture', '/build/architecture/'),
             existingPath.replace('/building-apps', '/build/building-apps'),
             existingPath.replace('/building-modules', '/build/building-modules'),
@@ -432,7 +432,7 @@ const config = {
           },
           {
             from: ["/main/building-modules/autocli"],
-            to: "/main/develop/advanced/autocli",
+            to: "/main/learn/advanced/autocli",
           },
         ],
       },

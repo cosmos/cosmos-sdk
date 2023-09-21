@@ -74,7 +74,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
     * remove from `Keeper`: `GetParams`, `SetParams`
 * (types/simulation) [#17737](https://github.com/cosmos/cosmos-sdk/pull/17737) Remove unused parameter from `RandomFees`
 * (x/staking) [#17486](https://github.com/cosmos/cosmos-sdk/pull/17486) Use collections for `RedelegationQueueKey`:
-    * remove from `types`: `GetRedelegationTimeKey`a
+    * remove from `types`: `GetRedelegationTimeKey`
     * remove from `Keeper`: `RedelegationQueueIterator`
 * (x/staking) [#17562](https://github.com/cosmos/cosmos-sdk/pull/17562) Use collections for `ValidatorQueue`
     * remove from `types`: `GetValidatorQueueKey`, `ParseValidatorQueueKey`

@@ -232,6 +232,7 @@ func (keeper Keeper) ChargeDeposit(ctx context.Context, proposalID uint64, destA
 	return nil
 }
 
+// fundCommunityPool sends the cancellationCharges to protocolpool module account using the message router defined in Keeper.
 func (keeper Keeper) fundCommunityPool(ctx sdk.Context, cancellationCharges sdk.Coins, depositor string) (*sdk.Result, error) {
 	amount := make([]*basev1beta1.Coin, len(cancellationCharges))
 	for i, coin := range cancellationCharges {

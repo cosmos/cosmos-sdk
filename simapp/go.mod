@@ -193,13 +193,12 @@ require (
 
 // Here are the short-lived replace from the SimApp
 // Replace here are pending PRs, or version to be tagged
-// replace (
-// 	<temporary replace>
-// )
+replace (
+	cosmossdk.io/api => ../api
+)
 
 // SimApp on main always tests the latest extracted SDK modules importing the sdk
 replace (
-	cosmossdk.io/api => ../api
 	cosmossdk.io/client/v2 => ../client/v2
 	cosmossdk.io/tools/confix => ../tools/confix
 	cosmossdk.io/x/circuit => ../x/circuit

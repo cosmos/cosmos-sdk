@@ -603,13 +603,13 @@ func TestMsgFundCommunityPool(t *testing.T) {
 
 	testCases := []struct {
 		name      string
-		msg       *distrtypes.MsgFundCommunityPool
+		msg       *distrtypes.MsgFundCommunityPool //nolint:staticcheck // we're using a deprecated call
 		expErr    bool
 		expErrMsg string
 	}{
 		{
 			name: "no depositor address",
-			msg: &distrtypes.MsgFundCommunityPool{
+			msg: &distrtypes.MsgFundCommunityPool{ //nolint:staticcheck // we're using a deprecated call
 				Amount:    sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(100))),
 				Depositor: emptyDelAddr.String(),
 			},
@@ -618,7 +618,7 @@ func TestMsgFundCommunityPool(t *testing.T) {
 		},
 		{
 			name: "invalid coin",
-			msg: &distrtypes.MsgFundCommunityPool{
+			msg: &distrtypes.MsgFundCommunityPool{ //nolint:staticcheck // we're using a deprecated call
 				Amount:    sdk.Coins{sdk.NewInt64Coin("stake", 10), sdk.NewInt64Coin("stake", 10)},
 				Depositor: addr.String(),
 			},
@@ -627,7 +627,7 @@ func TestMsgFundCommunityPool(t *testing.T) {
 		},
 		{
 			name: "depositor address with no funds",
-			msg: &distrtypes.MsgFundCommunityPool{
+			msg: &distrtypes.MsgFundCommunityPool{ //nolint:staticcheck // we're using a deprecated call
 				Amount:    sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(100))),
 				Depositor: addr2.String(),
 			},
@@ -636,7 +636,7 @@ func TestMsgFundCommunityPool(t *testing.T) {
 		},
 		{
 			name: "valid message",
-			msg: &distrtypes.MsgFundCommunityPool{
+			msg: &distrtypes.MsgFundCommunityPool{ //nolint:staticcheck // we're using a deprecated call
 				Amount:    sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(100))),
 				Depositor: addr.String(),
 			},
@@ -658,7 +658,7 @@ func TestMsgFundCommunityPool(t *testing.T) {
 				assert.Assert(t, res != nil)
 
 				// check the result
-				result := distrtypes.MsgFundCommunityPool{}
+				result := distrtypes.MsgFundCommunityPool{} //nolint:staticcheck // we're using a deprecated call
 				err = f.cdc.Unmarshal(res.Value, &result)
 				assert.NilError(t, err)
 

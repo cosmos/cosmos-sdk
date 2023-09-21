@@ -357,7 +357,8 @@ func (k Querier) DelegatorWithdrawAddress(ctx context.Context, req *types.QueryD
 	return &types.QueryDelegatorWithdrawAddressResponse{WithdrawAddress: withdrawAddr.String()}, nil
 }
 
-// NOTE: This method uses deprecated query request. Use CommunityPool from x/protocolpool module instead.
+// Deprecated: DO NOT USE
+// This method uses deprecated query request. Use CommunityPool from x/protocolpool module instead.
 // CommunityPool queries the community pool coins
 func (k Querier) CommunityPool(ctx context.Context, req *types.QueryCommunityPoolRequest) (*types.QueryCommunityPoolResponse, error) { //nolint:staticcheck // we're using a deprecated call for compatibility
 	// TODO: Rename QueryServiceTestHelper (https://github.com/cosmos/cosmos-sdk/pull/17657#discussion_r1332928620)

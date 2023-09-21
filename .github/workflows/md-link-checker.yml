@@ -1,12 +1,19 @@
 name: Check Markdown links
 on: 
-  schedule: 
-    - cron: '* */24 * * *'
+  pull_request:
+    paths:
+      - "docs/**"
 jobs:
   markdown-link-check:
     runs-on: ubuntu-latest
     steps:
+<<<<<<< HEAD
       - uses: actions/checkout@v3
+=======
+      - uses: actions/checkout@v4
+      - run: cd docs && sh ./pre.sh
+>>>>>>> 2efafee65 (chore: rename develop to learn (#17821))
       - uses: gaurav-nelson/github-action-markdown-link-check@1.0.15
         with:
           folder-path: "docs"
+      - run: cd docs && sh ./post.sh

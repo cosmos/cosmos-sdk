@@ -5,12 +5,12 @@ sidebar_position: 1
 # Upgrading Modules
 
 :::note Synopsis
-[In-Place Store Migrations](../../develop/advanced/15-upgrade.md) allow your modules to upgrade to new versions that include breaking changes. This document outlines how to build modules to take advantage of this functionality.
+[In-Place Store Migrations](../../learn/advanced/15-upgrade.md) allow your modules to upgrade to new versions that include breaking changes. This document outlines how to build modules to take advantage of this functionality.
 :::
 
 :::note Pre-requisite Readings
 
-* [In-Place Store Migration](../../develop/advanced/15-upgrade.md)
+* [In-Place Store Migration](../../learn/advanced/15-upgrade.md)
 
 :::
 

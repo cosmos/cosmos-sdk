@@ -16,11 +16,11 @@ This document details how to build CLI and REST interfaces for a module. Example
 
 ## CLI
 
-One of the main interfaces for an application is the [command-line interface](../../develop/advanced/07-cli.md). This entrypoint adds commands from the application's modules enabling end-users to create [**messages**](./02-messages-and-queries.md#messages) wrapped in transactions and [**queries**](./02-messages-and-queries.md#queries). The CLI files are typically found in the module's `./client/cli` folder.
+One of the main interfaces for an application is the [command-line interface](../../learn/advanced/07-cli.md). This entrypoint adds commands from the application's modules enabling end-users to create [**messages**](./02-messages-and-queries.md#messages) wrapped in transactions and [**queries**](./02-messages-and-queries.md#queries). The CLI files are typically found in the module's `./client/cli` folder.
 
 ### Transaction Commands
 
-In order to create messages that trigger state changes, end-users must create [transactions](../../develop/advanced/01-transactions.md) that wrap and deliver the messages. A transaction command creates a transaction that includes one or more messages.
+In order to create messages that trigger state changes, end-users must create [transactions](../../learn/advanced/01-transactions.md) that wrap and deliver the messages. A transaction command creates a transaction that includes one or more messages.
 
 Transaction commands typically have their own `tx.go` file that lives within the module's `./client/cli` folder. The commands are specified in getter functions and the name of the function should include the name of the command.
 
@@ -101,7 +101,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/x/bank/module.go#L84-L
 
 ### Flags
 
-[Flags](../../develop/advanced/07-cli.md#flags) allow users to customize commands. `--fees` and `--gas-prices` are examples of flags that allow users to set the [fees](../../develop/beginner/04-gas-fees.md) and gas prices for their transactions.
+[Flags](../../learn/advanced/07-cli.md#flags) allow users to customize commands. `--fees` and `--gas-prices` are examples of flags that allow users to set the [fees](../../learn/beginner/04-gas-fees.md) and gas prices for their transactions.
 
 Flags that are specific to a module are typically created in a `flags.go` file in the module's `./client/cli` folder. When creating a flag, developers set the value type, the name of the flag, the default value, and a description about the flag. Developers also have the option to mark flags as _required_ so that an error is thrown if the user does not include a value for the flag.
 

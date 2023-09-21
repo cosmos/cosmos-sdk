@@ -71,13 +71,14 @@ func NewRootCmd() *cobra.Command {
 
 			initClientCtx := *clientCtx
 			initClientCtx = initClientCtx.WithCmdContext(cmd.Context())
-			initClientCtx, err := client.ReadPersistentCommandFlags(initClientCtx, cmd.Flags())
+
+			customClientTemplate, customClientConfig := initClientConfig()
+			initClientCtx, err := config.CreateClientConfig(initClientCtx, customClientTemplate, customClientConfig)
 			if err != nil {
 				return err
 			}
 
-			customClientTemplate, customClientConfig := initClientConfig()
-			initClientCtx, err = config.CreateClientConfig(initClientCtx, customClientTemplate, customClientConfig)
+			initClientCtx, err = client.ReadPersistentCommandFlags(initClientCtx, cmd.Flags())
 			if err != nil {
 				return err
 			}

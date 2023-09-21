@@ -172,7 +172,7 @@ Flags are added to commands directly (generally in the [module's CLI file](../..
 
 ## Environment variables
 
-Each flag is bound to it's respecteve named environment variable. Then name of the environment variable consist of two parts - capital case `basename` followed by flag name of the flag. `-` must be substituted with `_`. For example flag `--home` for application with basename `GAIA` is bound to `GAIA_HOME`. It allows reducing the amount of flags typed for routine operations. For example instead of:
+Each flag is bound to its respective named environment variable. Then name of the environment variable consist of two parts - capital case `basename` followed by flag name of the flag. `-` must be substituted with `_`. For example flag `--home` for application with basename `GAIA` is bound to `GAIA_HOME`. It allows reducing the amount of flags typed for routine operations. For example instead of:
 
 ```shell
 gaia --home=./ --node=<node address> --chain-id="testchain-1" --keyring-backend=test tx ... --from=<key name>
@@ -193,7 +193,7 @@ gaia tx ... --from=<key name>
 
 ## Configurations
 
-It is vital that the root command of an application uses `PersistentPreRun()` cobra command property for executing the command, so all child commands have access to the server and client contexts. These contexts are set as their default values initially and maybe modified, scoped to the command, in their respective `PersistentPreRun()` functions. Note that the `client.Context` is typically pre-populated with "default" values that may be useful for all commands to inherit and override if necessary.
+It is vital that the root command of an application uses `PersistentPreRun()` cobra command property for executing the command, so all child commands have access to the server and client contexts. These contexts are set as their default values initially and may be modified, scoped to the command, in their respective `PersistentPreRun()` functions. Note that the `client.Context` is typically pre-populated with "default" values that may be useful for all commands to inherit and override if necessary.
 
 Here is an example of an `PersistentPreRun()` function from `simapp`:
 
@@ -206,7 +206,7 @@ The `SetCmdClientContextHandler` call reads persistent flags via `ReadPersistent
 The `InterceptConfigsPreRunHandler` call creates a viper literal, default `server.Context`, and a logger and sets that on the root command's `Context`. The `server.Context` will be modified and saved to disk. The internal `interceptConfigs` call reads or creates a CometBFT configuration based on the home path provided. In addition, `interceptConfigs` also reads and loads the application configuration, `app.toml`, and binds that to the `server.Context` viper literal. This is vital so the application can get access to not only the CLI flags, but also to the application configuration values provided by this file.
 
 :::tip
-When willing to configure which logger is used, do not to use `InterceptConfigsPreRunHandler`, which sets the default SDK logger, but instead use `InterceptConfigsAndCreateContext` and set the server context and the logger manually:
+When willing to configure which logger is used, do not use `InterceptConfigsPreRunHandler`, which sets the default SDK logger, but instead use `InterceptConfigsAndCreateContext` and set the server context and the logger manually:
 
 ```diff
 -return server.InterceptConfigsPreRunHandler(cmd, customAppTemplate, customAppConfig, customCMTConfig)

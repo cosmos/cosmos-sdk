@@ -164,7 +164,7 @@ err := cdc.Unmarshal(profilebz, &myProfile)
 fmt.Printf("%T\n", myProfile.Account)                  // Prints "Any"
 fmt.Printf("%T\n", myProfile.Account.GetCachedValue()) // Prints "BaseAccount", "ContinuousVestingAccount" or whatever was initially packed in the Any.
 
-// Get the address of the accountt.
+// Get the address of the account.
 accAddr := myProfile.Account.GetCachedValue().(AccountI).GetAddress()
 ```
 
@@ -191,8 +191,8 @@ The above `Profile` example is a fictive example used for educational purposes. 
 
 * the `cryptotypes.PubKey` interface for encoding different types of public keys,
 * the `sdk.Msg` interface for encoding different `Msg`s in a transaction,
-* the `AccountI` interface for encodinig different types of accounts (similar to the above example) in the x/auth query responses,
-* the `Evidencei` interface for encoding different types of evidences in the x/evidence module,
+* the `AccountI` interface for encoding different types of accounts (similar to the above example) in the x/auth query responses,
+* the `EvidenceI` interface for encoding different types of evidences in the x/evidence module,
 * the `AuthorizationI` interface for encoding different types of x/authz authorizations,
 * the [`Validator`](https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/x/staking/types/staking.pb.go#L340-L377) struct that contains information about a validator.
 

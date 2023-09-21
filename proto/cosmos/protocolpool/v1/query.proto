@@ -7,7 +7,6 @@ option go_package = "cosmossdk.io/x/protocolpool/types";
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "cosmos/base/v1beta1/coin.proto";
-import "amino/amino.proto";
 
 // Query defines the gRPC querier service for community pool module.
 service Query {

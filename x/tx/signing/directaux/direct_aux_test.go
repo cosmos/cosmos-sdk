@@ -54,7 +54,6 @@ func TestDirectAuxHandler(t *testing.T) {
 		GasLimit: 20000,
 		Payer:    feePayerAddr,
 	}
-	tip := &txv1beta1.Tip{Amount: []*basev1beta1.Coin{{Denom: "tip-token", Amount: "10"}}}
 
 	txBody := &txv1beta1.TxBody{
 		Messages: []*anypb.Any{msg},
@@ -63,7 +62,6 @@ func TestDirectAuxHandler(t *testing.T) {
 
 	authInfo := &txv1beta1.AuthInfo{
 		Fee:         fee,
-		Tip:         tip,
 		SignerInfos: signerInfo,
 	}
 
@@ -113,7 +111,6 @@ func TestDirectAuxHandler(t *testing.T) {
 	}
 	authInfoWithNoFeePayer := &txv1beta1.AuthInfo{
 		Fee:         feeWithNoPayer,
-		Tip:         tip,
 		SignerInfos: signerInfo,
 	}
 	authInfoWithNoFeePayerBz, err := proto.Marshal(authInfoWithNoFeePayer)
@@ -139,7 +136,6 @@ func TestDirectAuxHandler(t *testing.T) {
 		ChainId:       chainID,
 		AccountNumber: accNum,
 		Sequence:      accSeq,
-		Tip:           tip,
 	}
 	expectedSignBytes, err := proto.Marshal(signDocDirectAux)
 	require.NoError(t, err)

@@ -151,9 +151,11 @@ Ref: https://keepachangelog.com/en/1.0.0/
     * `WithChainID` / `WithBlockHeight` / `WithBlockHeader` must be used to set values on the context
 * (x/bank) [#17569](https://github.com/cosmos/cosmos-sdk/pull/17569) `BurnCoins` takes an address instead of a module name
 * (x/distribution) [#17670](https://github.com/cosmos/cosmos-sdk/pull/17670) `AllocateTokens` takes `comet.VoteInfos` instead of `[]abci.VoteInfo`
+* (x/auth) [#17787](https://github.com/cosmos/cosmos-sdk/pull/17787) remove tip functionality
 * (types) [#17738](https://github.com/cosmos/cosmos-sdk/pull/17738) `WithBlockTime()` was removed & `BlockTime()` were deprecated in favor of `WithHeaderInfo()` & `HeaderInfo()`. `BlockTime` now gets data from `HeaderInfo()` instead of `BlockHeader()`.
 * (client) [#17746](https://github.com/cosmos/cosmos-sdk/pull/17746) `txEncodeAmino` & `txDecodeAmino` txs via grpc and rest were removed
     * `RegisterLegacyAmino` was removed from `AppModuleBasic`
+* (x/staking) [#17655](https://github.com/cosmos/cosmos-sdk/pull/17655) `QueryHistoricalInfo` was adjusted to return `HistoricalRecord` and marked `Hist` as deprecated.
 
 ### CLI Breaking Changes
 
@@ -161,6 +163,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * (x/distribution) [#17115](https://github.com/cosmos/cosmos-sdk/pull/17115) Migrate `PreviousProposer` to collections.
 * (x/upgrade) [#16244](https://github.com/cosmos/cosmos-sdk/pull/16244) upgrade module no longer stores the app version but gets and sets the app version stored in the `ParamStore` of baseapp.
+* (x/staking) [#17655](https://github.com/cosmos/cosmos-sdk/pull/17655) `HistoricalInfo` was replaced with `HistoricalRecord`, it removes the validator set and comet header and only keep what is needed for IBC. 
 
 ## [v0.50.0-rc.0](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.50.0-rc.0) - 2023-08-18
 
@@ -421,6 +424,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (snapshots) [14048](https://github.com/cosmos/cosmos-sdk/pull/14048) Move the Snapshot package to the store package. This is done in an effort group all storage related logic under one package.
 * (signing) [#13701](https://github.com/cosmos/cosmos-sdk/pull/) Add `context.Context` as an argument `x/auth/signing.VerifySignature`.
 * (store) [#11825](https://github.com/cosmos/cosmos-sdk/pull/11825) Make extension snapshotter interface safer to use, renamed the util function `WriteExtensionItem` to `WriteExtensionPayload`.
+* (x/bank) [#17818](https://github.com/cosmos/cosmos-sdk/pull/17818) Remove params requirement from `NewAppModule`
+* (x/slashing & x/auth) [#17820](https://github.com/cosmos/cosmos-sdk/pull/17820) Remove params requirement from `NewAppModule`
+* (x/distribution & x/staking) [#17834](https://github.com/cosmos/cosmos-sdk/pull/17834) Remove params requirement from `NewAppModule`
+* (x/mint & x/gov & x/crisis) [#17837](https://github.com/cosmos/cosmos-sdk/pull/17837) Remove params requirement from `NewAppModule`
 
 ### Client Breaking Changes
 

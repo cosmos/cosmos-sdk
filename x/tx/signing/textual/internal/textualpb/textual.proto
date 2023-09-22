@@ -77,8 +77,6 @@ message Envelope {
   repeated cosmos.base.v1beta1.Coin fees                      = 8;
   string                            fee_payer                 = 9;
   string                            fee_granter               = 10;
-  repeated cosmos.base.v1beta1.Coin tip                       = 11;
-  string                            tipper                    = 12;
   uint64                            gas_limit                 = 13;
   uint64                            timeout_height            = 14;
   repeated cosmos.tx.v1beta1.SignerInfo other_signer          = 15;

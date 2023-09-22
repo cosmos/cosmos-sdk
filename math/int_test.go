@@ -56,6 +56,20 @@ func (s *intTestSuite) TestNewIntFromBigInt() {
 	s.Require().NotEqual(r, i.BigInt())
 }
 
+func (s *intTestSuite) TestConvertToBigIntMutative() {
+	r := big.NewInt(42)
+	i := math.NewIntFromBigInt(r)
+
+	// Compare value of BigInt & BigIntMut
+	s.Require().Equal(i.BigInt(), i.BigIntMut())
+	
+	// Modify big.Int pointer and ensure i.BigIntMut change
+	p := i.BigIntMut()
+	p.SetInt64(50)
+	s.Require().Equal(big.NewInt(50), i.BigIntMut())
+	s.Require().Equal(big.NewInt(50), i.BigInt())
+}
+
 func (s *intTestSuite) TestIntPanic() {
 	// Max Int = 2^256-1 = 1.1579209e+77
 	// Min Int = -(2^256-1) = -1.1579209e+77

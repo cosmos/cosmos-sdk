@@ -33,6 +33,7 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
+	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
 const ConsensusVersion = 5
@@ -157,7 +158,12 @@ func (am AppModule) IsAppModule() {}
 func init() {
 	appmodule.Register(
 		&modulev1.Module{},
+		appmodule.Provide(ProvideModule, ProvideKeyTable),
 		appmodule.Invoke(InvokeAddRoutes, InvokeSetHooks))
+}
+
+func ProvideKeyTable() paramtypes.KeyTable {
+	return v1.ParamKeyTable() //nolint:staticcheck // we still need this for upgrades
 }
 
 type ModuleInputs struct {

@@ -3,6 +3,7 @@
 </div>
 
 ![banner](https://github.com/cosmos/cosmos-sdk-docs/blob/main/static/img/banner.jpg)
+
 <div align="center">
   <a href="https://github.com/cosmos/cosmos-sdk/blob/main/LICENSE">
     <img alt="License: Apache-2.0" src="https://img.shields.io/github/license/cosmos/cosmos-sdk.svg" />

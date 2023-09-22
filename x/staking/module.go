@@ -25,7 +25,6 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/client/cli"
-	"github.com/cosmos/cosmos-sdk/x/staking/exported"
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking/simulation"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -103,9 +102,6 @@ type AppModule struct {
 	keeper        *keeper.Keeper
 	accountKeeper types.AccountKeeper
 	bankKeeper    types.BankKeeper
-
-	// legacySubspace is used solely for migration of x/params managed parameters
-	legacySubspace exported.Subspace
 }
 
 // NewAppModule creates a new AppModule object
@@ -114,14 +110,12 @@ func NewAppModule(
 	keeper *keeper.Keeper,
 	ak types.AccountKeeper,
 	bk types.BankKeeper,
-	ls exported.Subspace,
 ) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{cdc: cdc, ak: ak},
 		keeper:         keeper,
 		accountKeeper:  ak,
 		bankKeeper:     bk,
-		legacySubspace: ls,
 	}
 }
 
@@ -142,7 +136,7 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	querier := keeper.Querier{Keeper: am.keeper}
 	types.RegisterQueryServer(cfg.QueryServer(), querier)
 
-	m := keeper.NewMigrator(am.keeper, am.legacySubspace)
+	m := keeper.NewMigrator(am.keeper)
 	if err := cfg.RegisterMigration(types.ModuleName, 1, m.Migrate1to2); err != nil {
 		panic(fmt.Sprintf("failed to migrate x/%s from version 1 to 2: %v", types.ModuleName, err))
 	}
@@ -204,9 +198,6 @@ type ModuleInputs struct {
 	BankKeeper            types.BankKeeper
 	Cdc                   codec.Codec
 	StoreService          store.KVStoreService
-
-	// LegacySubspace is used solely for migration of x/params managed parameters
-	LegacySubspace exported.Subspace `optional:"true"`
 }
 
 // Dependency Injection Outputs
@@ -238,7 +229,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		in.ValidatorAddressCodec,
 		in.ConsensusAddressCodec,
 	)
-	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.LegacySubspace)
+	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper)
 	return ModuleOutputs{StakingKeeper: k, Module: m}
 }
 

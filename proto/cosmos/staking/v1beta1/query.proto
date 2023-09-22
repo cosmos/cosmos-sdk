@@ -365,7 +365,8 @@ message QueryHistoricalInfoRequest {
 // method.
 message QueryHistoricalInfoResponse {
   // hist defines the historical info at the given height.
-  HistoricalInfo hist = 1;
+  HistoricalInfo   hist              = 1 [deprecated = true];
+  HistoricalRecord historical_record = 2;
 }
 
 // QueryPoolRequest is request type for the Query/Pool RPC method.

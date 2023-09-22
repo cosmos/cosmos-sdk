@@ -4,7 +4,6 @@ import (
 	"sort"
 
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	"github.com/cosmos/gogoproto/proto"
 
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/errors"
@@ -38,22 +37,6 @@ func ValidateBasic(hi HistoricalInfo, valAc address.Codec) error {
 	}
 
 	return nil
-}
-
-// Equal checks if receiver is equal to the parameter
-func (hi *HistoricalInfo) Equal(hi2 *HistoricalInfo) bool {
-	if !proto.Equal(&hi.Header, &hi2.Header) {
-		return false
-	}
-	if len(hi.Valset) != len(hi2.Valset) {
-		return false
-	}
-	for i := range hi.Valset {
-		if !hi.Valset[i].Equal(&hi2.Valset[i]) {
-			return false
-		}
-	}
-	return true
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces

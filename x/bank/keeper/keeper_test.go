@@ -32,7 +32,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/query"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	vesting "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
-	"github.com/cosmos/cosmos-sdk/x/bank/exported"
 	"github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -2341,66 +2340,6 @@ func (suite *KeeperTestSuite) TestGetAllSendEnabledEntries() {
 		actual := bankKeeper.GetAllSendEnabledEntries(ctx)
 		require.Len(actual, 0)
 	})
-}
-
-type mockSubspace struct {
-	ps banktypes.Params
-}
-
-func (ms mockSubspace) GetParamSet(ctx sdk.Context, ps exported.ParamSet) {
-	*ps.(*banktypes.Params) = ms.ps
-}
-
-func (suite *KeeperTestSuite) TestMigrator_Migrate3to4() {
-	bankKeeper := suite.bankKeeper
-	ctx := sdk.UnwrapSDKContext(suite.ctx)
-	require := suite.Require()
-
-	for _, def := range []bool{true, false} {
-		params := banktypes.Params{DefaultSendEnabled: def}
-		require.NoError(bankKeeper.SetParams(ctx, params))
-
-		suite.T().Run(fmt.Sprintf("default %t does not change", def), func(t *testing.T) {
-			legacySubspace := func(ps banktypes.Params) mockSubspace {
-				return mockSubspace{ps: ps}
-			}(banktypes.NewParams(def))
-
-			migrator := keeper.NewMigrator(bankKeeper, legacySubspace)
-			require.NoError(migrator.Migrate3to4(ctx))
-
-			actual := bankKeeper.GetParams(ctx)
-			require.Equal(params.DefaultSendEnabled, actual.DefaultSendEnabled)
-		})
-	}
-
-	for _, def := range []bool{true, false} {
-		params := banktypes.Params{
-			SendEnabled: []*banktypes.SendEnabled{
-				{Denom: fmt.Sprintf("truecoin%t", def), Enabled: true},
-				{Denom: fmt.Sprintf("falsecoin%t", def), Enabled: false},
-			},
-		}
-
-		require.NoError(bankKeeper.SetParams(ctx, params))
-
-		suite.T().Run(fmt.Sprintf("default %t send enabled info moved to store", def), func(t *testing.T) {
-			legacySubspace := func(ps banktypes.Params) mockSubspace {
-				return mockSubspace{ps: ps}
-			}(banktypes.NewParams(def))
-
-			migrator := keeper.NewMigrator(bankKeeper, legacySubspace)
-			require.NoError(migrator.Migrate3to4(ctx))
-
-			newParams := bankKeeper.GetParams(ctx)
-			require.Len(newParams.SendEnabled, 0) //nolint:staticcheck // we're testing the old way here
-			require.Equal(def, newParams.DefaultSendEnabled)
-
-			for _, se := range params.SendEnabled {
-				actual := bankKeeper.IsSendEnabledDenom(ctx, se.Denom)
-				require.Equal(se.Enabled, actual, se.Denom)
-			}
-		})
-	}
 }
 
 func (suite *KeeperTestSuite) TestSetParams() {

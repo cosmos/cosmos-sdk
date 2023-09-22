@@ -28,7 +28,6 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	_ "github.com/cosmos/cosmos-sdk/x/consensus"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
-	_ "github.com/cosmos/cosmos-sdk/x/params"
 	_ "github.com/cosmos/cosmos-sdk/x/staking"
 )
 
@@ -99,7 +98,7 @@ func initDeterministicFixture(t *testing.T) *deterministicFixture {
 		log.NewNopLogger(),
 	)
 
-	authModule := auth.NewAppModule(cdc, accountKeeper, authsims.RandomGenesisAccounts, nil)
+	authModule := auth.NewAppModule(cdc, accountKeeper, authsims.RandomGenesisAccounts)
 	bankModule := bank.NewAppModule(cdc, bankKeeper, accountKeeper)
 
 	integrationApp := integration.NewIntegrationApp(newCtx, logger, keys, cdc, map[string]appmodule.AppModule{

@@ -31,7 +31,6 @@ import (
 	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	_ "github.com/cosmos/cosmos-sdk/x/gov"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
-	_ "github.com/cosmos/cosmos-sdk/x/params"
 	_ "github.com/cosmos/cosmos-sdk/x/staking"
 )
 
@@ -117,7 +116,6 @@ func createTestSuite(t *testing.T, genesisAccounts []authtypes.GenesisAccount) s
 	app, err := simtestutil.SetupWithConfiguration(
 		depinject.Configs(
 			configurator.NewAppConfig(
-				configurator.ParamsModule(),
 				configurator.AuthModule(),
 				configurator.StakingModule(),
 				configurator.TxModule(),

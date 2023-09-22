@@ -261,6 +261,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (signing) [#14087](https://github.com/cosmos/cosmos-sdk/pull/14087) Add SignModeHandlerWithContext interface with a new `GetSignBytesWithContext` to get the sign bytes using `context.Context` as an argument to access state.
 * (server) [#14062](https://github.com/cosmos/cosmos-sdk/pull/14062) Remove rosetta from server start.
 * (crypto) [#3129](https://github.com/cosmos/cosmos-sdk/pull/3129) New armor and keyring key derivation uses aead and encryption uses chacha20poly.
+* (app) [#17838](https://github.com/cosmos/cosmos-sdk/pull/17838) Params module was removed from simapp and all imports of the params module removed throughout the repo. 
+    * The Cosmos SDK has migrated aay from using params, if you're app still uses it, then you can leave it plugged into your app
 
 ### State Machine Breaking
 
@@ -424,6 +426,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (signing) [#13701](https://github.com/cosmos/cosmos-sdk/pull/) Add `context.Context` as an argument `x/auth/signing.VerifySignature`.
 * (store) [#11825](https://github.com/cosmos/cosmos-sdk/pull/11825) Make extension snapshotter interface safer to use, renamed the util function `WriteExtensionItem` to `WriteExtensionPayload`.
 * (x/bank) [#17818](https://github.com/cosmos/cosmos-sdk/pull/17818) Remove params requirement from `NewAppModule`
+* (x/slashing & x/auth) [#17820](https://github.com/cosmos/cosmos-sdk/pull/17820) Remove params requirement from `NewAppModule`
+* (x/distribution & x/staking) [#17834](https://github.com/cosmos/cosmos-sdk/pull/17834) Remove params requirement from `NewAppModule`
+* (x/mint & x/gov & x/crisis) [#17837](https://github.com/cosmos/cosmos-sdk/pull/17837) Remove params requirement from `NewAppModule`
 
 ### Client Breaking Changes
 

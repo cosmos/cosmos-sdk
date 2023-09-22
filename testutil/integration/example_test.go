@@ -50,12 +50,12 @@ func Example() {
 	)
 
 	// subspace is nil because we don't test params (which is legacy anyway)
-	authModule := auth.NewAppModule(encodingCfg.Codec, accountKeeper, authsims.RandomGenesisAccounts, nil)
+	authModule := auth.NewAppModule(encodingCfg.Codec, accountKeeper, authsims.RandomGenesisAccounts)
 
 	// here bankkeeper and staking keeper is nil because we are not testing them
 	// subspace is nil because we don't test params (which is legacy anyway)
 	mintKeeper := mintkeeper.NewKeeper(encodingCfg.Codec, runtime.NewKVStoreService(keys[minttypes.StoreKey]), nil, accountKeeper, nil, authtypes.FeeCollectorName, authority)
-	mintModule := mint.NewAppModule(encodingCfg.Codec, mintKeeper, accountKeeper, nil, nil)
+	mintModule := mint.NewAppModule(encodingCfg.Codec, mintKeeper, accountKeeper, nil)
 
 	// create the application and register all the modules from the previous step
 	integrationApp := integration.NewIntegrationApp(
@@ -139,7 +139,7 @@ func Example_oneModule() {
 	)
 
 	// subspace is nil because we don't test params (which is legacy anyway)
-	authModule := auth.NewAppModule(encodingCfg.Codec, accountKeeper, authsims.RandomGenesisAccounts, nil)
+	authModule := auth.NewAppModule(encodingCfg.Codec, accountKeeper, authsims.RandomGenesisAccounts)
 
 	// create the application and register all the modules from the previous step
 	integrationApp := integration.NewIntegrationApp(

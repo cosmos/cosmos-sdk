@@ -8,10 +8,8 @@ import (
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 )
 
-var (
-	// ParamsKey is the key of x/gov params
-	ParamsKey = []byte{0x30}
-)
+// ParamsKey is the key of x/gov params
+var ParamsKey = []byte{0x30}
 
 // MigrateStore performs in-place store migrations from v4 (v0.47) to v5 (v0.50). The
 // migration includes:

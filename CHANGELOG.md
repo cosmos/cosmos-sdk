@@ -426,6 +426,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/bank) [#17818](https://github.com/cosmos/cosmos-sdk/pull/17818) Remove params requirement from `NewAppModule`
 * (x/slashing & x/auth) [#17820](https://github.com/cosmos/cosmos-sdk/pull/17820) Remove params requirement from `NewAppModule`
 * (x/distribution & x/staking) [#17834](https://github.com/cosmos/cosmos-sdk/pull/17834) Remove params requirement from `NewAppModule`
+* (x/mint & x/gov & x/crisis) [#17837](https://github.com/cosmos/cosmos-sdk/pull/17837) Remove params requirement from `NewAppModule`
 
 ### Client Breaking Changes
 

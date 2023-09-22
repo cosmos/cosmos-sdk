@@ -39,7 +39,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	group "github.com/cosmos/cosmos-sdk/x/group/module"
 	"github.com/cosmos/cosmos-sdk/x/mint"
-
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 )

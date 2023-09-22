@@ -12,10 +12,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
-var (
-	// KeyDefaultSendEnabled is store's key for the DefaultSendEnabled option
-	KeyDefaultSendEnabled = []byte("DefaultSendEnabled")
-)
+// KeyDefaultSendEnabled is store's key for the DefaultSendEnabled option
+var KeyDefaultSendEnabled = []byte("DefaultSendEnabled")
 
 // RandomGenesisDefaultSendEnabledParam computes randomized allow all send transfers param for the bank module
 func RandomGenesisDefaultSendEnabledParam(r *rand.Rand) bool {

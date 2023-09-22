@@ -432,6 +432,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (signing) [#13701](https://github.com/cosmos/cosmos-sdk/pull/) Add `context.Context` as an argument `x/auth/signing.VerifySignature`.
 * (store) [#11825](https://github.com/cosmos/cosmos-sdk/pull/11825) Make extension snapshotter interface safer to use, renamed the util function `WriteExtensionItem` to `WriteExtensionPayload`.
 * (x/bank) [#17818](https://github.com/cosmos/cosmos-sdk/pull/17818) Remove params requirement from `NewAppModule`
+* (x/slashing & x/auth) [#17820](https://github.com/cosmos/cosmos-sdk/pull/17820) Remove params requirement from `NewAppModule`
 
 ### Client Breaking Changes
 

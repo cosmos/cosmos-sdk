@@ -4,19 +4,25 @@ import (
 	"bytes"
 	"testing"
 
+	"cosmossdk.io/log"
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/crypto/secp256k1"
 	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	dbm "github.com/cosmos/cosmos-db"
 	protoio "github.com/cosmos/gogoproto/io"
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	baseapptestutil "github.com/cosmos/cosmos-sdk/baseapp/testutil"
 	"github.com/cosmos/cosmos-sdk/baseapp/testutil/mock"
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/mempool"
+	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 )
 
 const (
@@ -276,23 +282,90 @@ func (s *ABCIUtilsTestSuite) TestValidateVoteExtensionsTwoVotesNilAbsent() {
 }
 
 func (s *ABCIUtilsTestSuite) TestDefaultProposalHandler_NoOpMempoolTxSelection() {
-	ph := baseapp.NewDefaultProposalHandler(mempool.NoOpMempool{}, nil)
+	// create a codec for marshaling
+	cdc := codectestutil.CodecOptions{}.NewCodec()
+	baseapptestutil.RegisterInterfaces(cdc.InterfaceRegistry())
+
+	// create a baseapp along with a tx config for tx generation
+	txConfig := authtx.NewTxConfig(cdc, authtx.DefaultSignModes)
+	app := baseapp.NewBaseApp(s.T().Name(), log.NewNopLogger(), dbm.NewMemDB(), txConfig.TxDecoder())
+
+	// create a proposal handler
+	ph := baseapp.NewDefaultProposalHandler(mempool.NoOpMempool{}, app)
 	handler := ph.PrepareProposalHandler()
 
-	// Request PrepareProposal with 5 txs, 5 bytes each, with a max size of 15.
-	// We should only select the first 3 txs.
-	resp, err := handler(s.ctx, &abci.RequestPrepareProposal{
-		Txs: [][]byte{
-			{0xFF, 0xFF, 0xFF, 0xFF, 0xFF},
-			{0xFF, 0xFF, 0xFF, 0xFF, 0xFF},
-			{0xFF, 0xFF, 0xFF, 0xFF, 0xFF},
-			{0xFF, 0xFF, 0xFF, 0xFF, 0xFF},
-			{0xFF, 0xFF, 0xFF, 0xFF, 0xFF},
-		},
-		MaxTxBytes: 15,
-	})
+	// build a tx
+	_, _, addr := testdata.KeyTestPubAddr()
+	builder := txConfig.NewTxBuilder()
+	s.Require().NoError(builder.SetMsgs(
+		&baseapptestutil.MsgCounter{Counter: 0, FailOnHandler: false, Signer: addr.String()},
+	))
+	builder.SetGasLimit(100)
+	setTxSignature(s.T(), builder, 0)
+
+	// encode the tx to be used in the proposal request
+	tx := builder.GetTx()
+	txBz, err := txConfig.TxEncoder()(tx)
 	s.Require().NoError(err)
-	s.Require().Len(resp.Txs, 3)
+	s.Require().Len(txBz, 152)
+
+	testCases := map[string]struct {
+		ctx         sdk.Context
+		req         *abci.RequestPrepareProposal
+		expectedTxs int
+	}{
+		"small max tx bytes": {
+			ctx: s.ctx,
+			req: &abci.RequestPrepareProposal{
+				Txs:        [][]byte{txBz, txBz, txBz, txBz, txBz},
+				MaxTxBytes: 10,
+			},
+			expectedTxs: 0,
+		},
+		"small max gas": {
+			ctx: s.ctx.WithConsensusParams(cmtproto.ConsensusParams{
+				Block: &cmtproto.BlockParams{
+					MaxGas: 10,
+				},
+			}),
+			req: &abci.RequestPrepareProposal{
+				Txs:        [][]byte{txBz, txBz, txBz, txBz, txBz},
+				MaxTxBytes: 456,
+			},
+			expectedTxs: 0,
+		},
+		"large max tx bytes": {
+			ctx: s.ctx,
+			req: &abci.RequestPrepareProposal{
+				Txs:        [][]byte{txBz, txBz, txBz, txBz, txBz},
+				MaxTxBytes: 456,
+			},
+			expectedTxs: 3,
+		},
+		"max gas and tx bytes": {
+			ctx: s.ctx.WithConsensusParams(cmtproto.ConsensusParams{
+				Block: &cmtproto.BlockParams{
+					MaxGas: 200,
+				},
+			}),
+			req: &abci.RequestPrepareProposal{
+				Txs:        [][]byte{txBz, txBz, txBz, txBz, txBz},
+				MaxTxBytes: 456,
+			},
+			expectedTxs: 2,
+		},
+	}
+
+	for name, tc := range testCases {
+		s.Run(name, func() {
+			// iterate multiple times to ensure the tx selector is cleared each time
+			for i := 0; i < 5; i++ {
+				resp, err := handler(tc.ctx, tc.req)
+				s.Require().NoError(err)
+				s.Require().Len(resp.Txs, tc.expectedTxs)
+			}
+		})
+	}
 }
 
 func marshalDelimitedFn(msg proto.Message) ([]byte, error) {

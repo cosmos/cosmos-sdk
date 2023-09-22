@@ -139,6 +139,8 @@ type (
 	ProposalTxVerifier interface {
 		PrepareProposalVerifyTx(tx sdk.Tx) ([]byte, error)
 		ProcessProposalVerifyTx(txBz []byte) (sdk.Tx, error)
+		TxDecode(txBz []byte) (sdk.Tx, error)
+		TxEncode(tx sdk.Tx) ([]byte, error)
 	}
 
 	// DefaultProposalHandler defines the default ABCI PrepareProposal and
@@ -146,7 +148,7 @@ type (
 	DefaultProposalHandler struct {
 		mempool    mempool.Mempool
 		txVerifier ProposalTxVerifier
-		txSelector func(maxTxBytes, maxBlockGas uint64) TxSelector
+		txSelector TxSelector
 	}
 )
 
@@ -154,13 +156,13 @@ func NewDefaultProposalHandler(mp mempool.Mempool, txVerifier ProposalTxVerifier
 	return &DefaultProposalHandler{
 		mempool:    mp,
 		txVerifier: txVerifier,
-		txSelector: NewDefaultTxSelector,
+		txSelector: NewDefaultTxSelector(),
 	}
 }
 
 // SetTxSelector sets the TxSelector function on the DefaultProposalHandler.
-func (h *DefaultProposalHandler) SetTxSelector(fn func(maxTxBytes, maxBlockGas uint64) TxSelector) {
-	h.txSelector = fn
+func (h *DefaultProposalHandler) SetTxSelector(ts TxSelector) {
+	h.txSelector = ts
 }
 
 // PrepareProposalHandler returns the default implementation for processing an
@@ -190,8 +192,7 @@ func (h *DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHan
 			maxBlockGas = uint64(b.MaxGas)
 		}
 
-		txSelector := h.txSelector(uint64(req.MaxTxBytes), maxBlockGas)
-		defer txSelector.Clear()
+		defer h.txSelector.Clear()
 
 		// If the mempool is nil or NoOp we simply return the transactions
 		// requested from CometBFT, which, by default, should be in FIFO order.
@@ -200,15 +201,18 @@ func (h *DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHan
 		_, isNoOp := h.mempool.(mempool.NoOpMempool)
 		if h.mempool == nil || isNoOp {
 			for _, txBz := range req.Txs {
-				// XXX: We pass nil as the memTx because we have no way of decoding the
-				// txBz. We'd need to break (update) the ProposalTxVerifier interface.
-				stop := txSelector.SelectTxForProposal(nil, txBz)
+				tx, err := h.txVerifier.TxDecode(txBz)
+				if err != nil {
+					return nil, err
+				}
+
+				stop := h.txSelector.SelectTxForProposal(uint64(req.MaxTxBytes), maxBlockGas, tx, txBz)
 				if stop {
 					break
 				}
 			}
 
-			return &abci.ResponsePrepareProposal{Txs: txSelector.SelectedTxs()}, nil
+			return &abci.ResponsePrepareProposal{Txs: h.txSelector.SelectedTxs()}, nil
 		}
 
 		iterator := h.mempool.Select(ctx, req.Txs)
@@ -226,7 +230,7 @@ func (h *DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHan
 					return nil, err
 				}
 			} else {
-				stop := txSelector.SelectTxForProposal(memTx, txBz)
+				stop := h.txSelector.SelectTxForProposal(uint64(req.MaxTxBytes), maxBlockGas, memTx, txBz)
 				if stop {
 					break
 				}
@@ -235,7 +239,7 @@ func (h *DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHan
 			iterator = iterator.Next()
 		}
 
-		return &abci.ResponsePrepareProposal{Txs: txSelector.SelectedTxs()}, nil
+		return &abci.ResponsePrepareProposal{Txs: h.txSelector.SelectedTxs()}, nil
 	}
 }
 
@@ -335,22 +339,17 @@ type TxSelector interface {
 	// a proposal based on inclusion criteria defined by the TxSelector. It must
 	// return <true> if the caller should halt the transaction selection loop
 	// (typically over a mempool) or <false> otherwise.
-	SelectTxForProposal(memTx sdk.Tx, txBz []byte) bool
+	SelectTxForProposal(maxTxBytes, maxBlockGas uint64, memTx sdk.Tx, txBz []byte) bool
 }
 
 type defaultTxSelector struct {
-	maxTxBytes   uint64
-	maxBlockGas  uint64
 	totalTxBytes uint64
 	totalTxGas   uint64
 	selectedTxs  [][]byte
 }
 
-func NewDefaultTxSelector(maxTxBytes, maxBlockGas uint64) TxSelector {
-	return &defaultTxSelector{
-		maxTxBytes:  maxTxBytes,
-		maxBlockGas: maxBlockGas,
-	}
+func NewDefaultTxSelector() TxSelector {
+	return &defaultTxSelector{}
 }
 
 func (ts *defaultTxSelector) SelectedTxs() [][]byte {
@@ -365,7 +364,7 @@ func (ts *defaultTxSelector) Clear() {
 	ts.selectedTxs = nil
 }
 
-func (ts *defaultTxSelector) SelectTxForProposal(memTx sdk.Tx, txBz []byte) bool {
+func (ts *defaultTxSelector) SelectTxForProposal(maxTxBytes, maxBlockGas uint64, memTx sdk.Tx, txBz []byte) bool {
 	txSize := uint64(len(txBz))
 
 	var txGasLimit uint64
@@ -376,11 +375,11 @@ func (ts *defaultTxSelector) SelectTxForProposal(memTx sdk.Tx, txBz []byte) bool
 	}
 
 	// only add the transaction to the proposal if we have enough capacity
-	if (txSize + ts.totalTxBytes) <= ts.maxTxBytes {
+	if (txSize + ts.totalTxBytes) <= maxTxBytes {
 		// If there is a max block gas limit, add the tx only if the limit has
 		// not been met.
-		if ts.maxBlockGas > 0 {
-			if (txGasLimit + ts.totalTxGas) <= ts.maxBlockGas {
+		if maxBlockGas > 0 {
+			if (txGasLimit + ts.totalTxGas) <= maxBlockGas {
 				ts.totalTxGas += txGasLimit
 				ts.totalTxBytes += txSize
 				ts.selectedTxs = append(ts.selectedTxs, txBz)
@@ -392,5 +391,5 @@ func (ts *defaultTxSelector) SelectTxForProposal(memTx sdk.Tx, txBz []byte) bool
 	}
 
 	// check if we've reached capacity; if so, we cannot select any more transactions
-	return ts.totalTxBytes >= ts.maxTxBytes || (ts.maxBlockGas > 0 && (ts.totalTxGas >= ts.maxBlockGas))
+	return ts.totalTxBytes >= maxTxBytes || (maxBlockGas > 0 && (ts.totalTxGas >= maxBlockGas))
 }

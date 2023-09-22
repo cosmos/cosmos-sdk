@@ -160,6 +160,10 @@ func init() {
 		appmodule.Invoke(InvokeAddRoutes, InvokeSetHooks))
 }
 
+func ProvideKeyTable() paramtypes.KeyTable {
+	return v1.ParamKeyTable() //nolint:staticcheck // we still need this for upgrades
+}
+
 type ModuleInputs struct {
 	depinject.In
 

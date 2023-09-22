@@ -13,6 +13,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
+const (
+	// ModuleName is the name of the module
+	ModuleName = "gov"
+)
+
 // ConvertToLegacyProposal takes a new proposal and attempts to convert it to the
 // legacy proposal format. This conversion is best effort. New proposal types that
 // don't have a legacy message will return a "nil" content.

@@ -12,8 +12,7 @@ import (
 	address "cosmossdk.io/core/address"
 	math "cosmossdk.io/math"
 	types "github.com/cosmos/cosmos-sdk/types"
-	types0 "github.com/cosmos/cosmos-sdk/x/params/types"
-	types1 "github.com/cosmos/cosmos-sdk/x/staking/types"
+	types0 "github.com/cosmos/cosmos-sdk/x/staking/types"
 	gomock "github.com/golang/mock/gomock"
 )
 
@@ -145,93 +144,6 @@ func (mr *MockBankKeeperMockRecorder) SpendableCoins(ctx, addr interface{}) *gom
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SpendableCoins", reflect.TypeOf((*MockBankKeeper)(nil).SpendableCoins), ctx, addr)
 }
 
-// MockParamSubspace is a mock of ParamSubspace interface.
-type MockParamSubspace struct {
-	ctrl     *gomock.Controller
-	recorder *MockParamSubspaceMockRecorder
-}
-
-// MockParamSubspaceMockRecorder is the mock recorder for MockParamSubspace.
-type MockParamSubspaceMockRecorder struct {
-	mock *MockParamSubspace
-}
-
-// NewMockParamSubspace creates a new mock instance.
-func NewMockParamSubspace(ctrl *gomock.Controller) *MockParamSubspace {
-	mock := &MockParamSubspace{ctrl: ctrl}
-	mock.recorder = &MockParamSubspaceMockRecorder{mock}
-	return mock
-}
-
-// EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockParamSubspace) EXPECT() *MockParamSubspaceMockRecorder {
-	return m.recorder
-}
-
-// Get mocks base method.
-func (m *MockParamSubspace) Get(ctx types.Context, key []byte, ptr interface{}) {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "Get", ctx, key, ptr)
-}
-
-// Get indicates an expected call of Get.
-func (mr *MockParamSubspaceMockRecorder) Get(ctx, key, ptr interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockParamSubspace)(nil).Get), ctx, key, ptr)
-}
-
-// GetParamSet mocks base method.
-func (m *MockParamSubspace) GetParamSet(ctx types.Context, ps types0.ParamSet) {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "GetParamSet", ctx, ps)
-}
-
-// GetParamSet indicates an expected call of GetParamSet.
-func (mr *MockParamSubspaceMockRecorder) GetParamSet(ctx, ps interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetParamSet", reflect.TypeOf((*MockParamSubspace)(nil).GetParamSet), ctx, ps)
-}
-
-// HasKeyTable mocks base method.
-func (m *MockParamSubspace) HasKeyTable() bool {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "HasKeyTable")
-	ret0, _ := ret[0].(bool)
-	return ret0
-}
-
-// HasKeyTable indicates an expected call of HasKeyTable.
-func (mr *MockParamSubspaceMockRecorder) HasKeyTable() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HasKeyTable", reflect.TypeOf((*MockParamSubspace)(nil).HasKeyTable))
-}
-
-// SetParamSet mocks base method.
-func (m *MockParamSubspace) SetParamSet(ctx types.Context, ps types0.ParamSet) {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "SetParamSet", ctx, ps)
-}
-
-// SetParamSet indicates an expected call of SetParamSet.
-func (mr *MockParamSubspaceMockRecorder) SetParamSet(ctx, ps interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetParamSet", reflect.TypeOf((*MockParamSubspace)(nil).SetParamSet), ctx, ps)
-}
-
-// WithKeyTable mocks base method.
-func (m *MockParamSubspace) WithKeyTable(table types0.KeyTable) types0.Subspace {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "WithKeyTable", table)
-	ret0, _ := ret[0].(types0.Subspace)
-	return ret0
-}
-
-// WithKeyTable indicates an expected call of WithKeyTable.
-func (mr *MockParamSubspaceMockRecorder) WithKeyTable(table interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WithKeyTable", reflect.TypeOf((*MockParamSubspace)(nil).WithKeyTable), table)
-}
-
 // MockStakingKeeper is a mock of StakingKeeper interface.
 type MockStakingKeeper struct {
 	ctrl     *gomock.Controller
@@ -270,10 +182,10 @@ func (mr *MockStakingKeeperMockRecorder) ConsensusAddressCodec() *gomock.Call {
 }
 
 // Delegation mocks base method.
-func (m *MockStakingKeeper) Delegation(arg0 context.Context, arg1 types.AccAddress, arg2 types.ValAddress) (types1.DelegationI, error) {
+func (m *MockStakingKeeper) Delegation(arg0 context.Context, arg1 types.AccAddress, arg2 types.ValAddress) (types0.DelegationI, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Delegation", arg0, arg1, arg2)
-	ret0, _ := ret[0].(types1.DelegationI)
+	ret0, _ := ret[0].(types0.DelegationI)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -285,10 +197,10 @@ func (mr *MockStakingKeeperMockRecorder) Delegation(arg0, arg1, arg2 interface{}
 }
 
 // GetAllValidators mocks base method.
-func (m *MockStakingKeeper) GetAllValidators(ctx context.Context) ([]types1.Validator, error) {
+func (m *MockStakingKeeper) GetAllValidators(ctx context.Context) ([]types0.Validator, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAllValidators", ctx)
-	ret0, _ := ret[0].([]types1.Validator)
+	ret0, _ := ret[0].([]types0.Validator)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -315,7 +227,7 @@ func (mr *MockStakingKeeperMockRecorder) IsValidatorJailed(ctx, addr interface{}
 }
 
 // IterateValidators mocks base method.
-func (m *MockStakingKeeper) IterateValidators(arg0 context.Context, arg1 func(int64, types1.ValidatorI) bool) error {
+func (m *MockStakingKeeper) IterateValidators(arg0 context.Context, arg1 func(int64, types0.ValidatorI) bool) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "IterateValidators", arg0, arg1)
 	ret0, _ := ret[0].(error)
@@ -402,10 +314,10 @@ func (mr *MockStakingKeeperMockRecorder) Unjail(arg0, arg1 interface{}) *gomock.
 }
 
 // Validator mocks base method.
-func (m *MockStakingKeeper) Validator(arg0 context.Context, arg1 types.ValAddress) (types1.ValidatorI, error) {
+func (m *MockStakingKeeper) Validator(arg0 context.Context, arg1 types.ValAddress) (types0.ValidatorI, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Validator", arg0, arg1)
-	ret0, _ := ret[0].(types1.ValidatorI)
+	ret0, _ := ret[0].(types0.ValidatorI)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -431,10 +343,10 @@ func (mr *MockStakingKeeperMockRecorder) ValidatorAddressCodec() *gomock.Call {
 }
 
 // ValidatorByConsAddr mocks base method.
-func (m *MockStakingKeeper) ValidatorByConsAddr(arg0 context.Context, arg1 types.ConsAddress) (types1.ValidatorI, error) {
+func (m *MockStakingKeeper) ValidatorByConsAddr(arg0 context.Context, arg1 types.ConsAddress) (types0.ValidatorI, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ValidatorByConsAddr", arg0, arg1)
-	ret0, _ := ret[0].(types1.ValidatorI)
+	ret0, _ := ret[0].(types0.ValidatorI)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

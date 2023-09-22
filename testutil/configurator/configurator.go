@@ -16,7 +16,6 @@ import (
 	groupmodulev1 "cosmossdk.io/api/cosmos/group/module/v1"
 	mintmodulev1 "cosmossdk.io/api/cosmos/mint/module/v1"
 	nftmodulev1 "cosmossdk.io/api/cosmos/nft/module/v1"
-	paramsmodulev1 "cosmossdk.io/api/cosmos/params/module/v1"
 	slashingmodulev1 "cosmossdk.io/api/cosmos/slashing/module/v1"
 	stakingmodulev1 "cosmossdk.io/api/cosmos/staking/module/v1"
 	txconfigv1 "cosmossdk.io/api/cosmos/tx/config/v1"
@@ -56,7 +55,6 @@ func defaultConfig() *Config {
 			"feegrant",
 			"nft",
 			"group",
-			"params",
 			"consensus",
 			"vesting",
 			"circuit",
@@ -158,15 +156,6 @@ func AuthModule() ModuleOption {
 					{Account: "nft"},
 				},
 			}),
-		}
-	}
-}
-
-func ParamsModule() ModuleOption {
-	return func(config *Config) {
-		config.ModuleConfigs["params"] = &appv1alpha1.ModuleConfig{
-			Name:   "params",
-			Config: appconfig.WrapAny(&paramsmodulev1.Module{}),
 		}
 	}
 }

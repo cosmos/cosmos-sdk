@@ -24,7 +24,6 @@ import (
 	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
 	_ "github.com/cosmos/cosmos-sdk/x/bank"
 	_ "github.com/cosmos/cosmos-sdk/x/consensus"
-	_ "github.com/cosmos/cosmos-sdk/x/params"
 	_ "github.com/cosmos/cosmos-sdk/x/staking"
 )
 
@@ -45,7 +44,6 @@ func initFixture(t assert.TestingT) *fixture {
 			configurator.NewAppConfig(
 				configurator.AuthModule(),
 				configurator.TxModule(),
-				configurator.ParamsModule(),
 				configurator.ConsensusModule(),
 				configurator.BankModule(),
 				configurator.StakingModule(),

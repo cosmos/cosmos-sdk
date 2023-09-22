@@ -157,11 +157,8 @@ func (am AppModule) IsAppModule() {}
 func init() {
 	appmodule.Register(
 		&modulev1.Module{},
-		appmodule.Invoke(InvokeAddRoutes, InvokeSetHooks))
-}
-
-func ProvideKeyTable() paramtypes.KeyTable {
-	return v1.ParamKeyTable() //nolint:staticcheck // we still need this for upgrades
+		appmodule.Invoke(InvokeAddRoutes, InvokeSetHooks),
+		appmodule.Provide(ProvideModule))
 }
 
 type ModuleInputs struct {

@@ -33,13 +33,14 @@ Types of changes (Stanzas):
 Ref: https://keepachangelog.com/en/1.0.0/
 -->
 
-# Changelog
+# Changelog (Agoric fork)
 
-## [Unreleased]
+## `v0.45.16-alpha.agoric.1` - 2023-09-22
 
 ### Improvements
 
 * Agoric/agoric-sdk#8223 Merge [cosmos/cosmos-sdk v0.45.16](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.45.16)
+* (vesting) [#303](https://github.com/agoric-labs/cosmos-sdk/pull/303) Improve vestcalc comments and documentation.
 
 ### Bug Fixes
 

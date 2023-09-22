@@ -159,6 +159,7 @@ func AuthModule() ModuleOption {
 		}
 	}
 }
+
 func ParamsModule() ModuleOption {
 	return func(config *Config) {
 		config.ModuleConfigs["params"] = &appv1alpha1.ModuleConfig{
@@ -167,6 +168,7 @@ func ParamsModule() ModuleOption {
 		}
 	}
 }
+
 func TxModule() ModuleOption {
 	return func(config *Config) {
 		config.ModuleConfigs["tx"] = &appv1alpha1.ModuleConfig{

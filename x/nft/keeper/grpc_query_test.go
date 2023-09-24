@@ -54,7 +54,7 @@ func (s *TestSuite) TestBalance() {
 				s.TestMint()
 				req = &nft.QueryBalanceRequest{
 					ClassId: testClassID,
-					Owner:   s.addrs[0].String(),
+					Owner:   s.encodedAddrs[0],
 				}
 			},
 			"",
@@ -119,7 +119,7 @@ func (s *TestSuite) TestOwner() {
 					Id:      "kitty2",
 				}
 			},
-			"",
+			"owner not found: class: kitty, id: kitty2",
 			func(index int, require *require.Assertions, res *nft.QueryOwnerResponse) {
 				require.Equal(res.Owner, owner, "the error occurred on:%d", index)
 			},
@@ -145,7 +145,7 @@ func (s *TestSuite) TestOwner() {
 					ClassId: testClassID,
 					Id:      testID,
 				}
-				owner = s.addrs[0].String()
+				owner = s.encodedAddrs[0]
 			},
 			"",
 			func(index int, require *require.Assertions, res *nft.QueryOwnerResponse) {
@@ -275,7 +275,7 @@ func (s *TestSuite) TestNFTs() {
 			"success,empty ClassId and no nft",
 			func(index int, require *require.Assertions) {
 				req = &nft.QueryNFTsRequest{
-					Owner: s.addrs[1].String(),
+					Owner: s.encodedAddrs[1],
 				}
 				s.TestSaveClass()
 			},
@@ -323,7 +323,7 @@ func (s *TestSuite) TestNFTs() {
 				}
 
 				req = &nft.QueryNFTsRequest{
-					Owner: s.addrs[2].String(),
+					Owner: s.encodedAddrs[2],
 				}
 			},
 			"",
@@ -348,7 +348,7 @@ func (s *TestSuite) TestNFTs() {
 			func(index int, require *require.Assertions) {
 				req = &nft.QueryNFTsRequest{
 					ClassId: testClassID,
-					Owner:   s.addrs[0].String(),
+					Owner:   s.encodedAddrs[0],
 				}
 				nfts = []*nft.NFT{
 					{

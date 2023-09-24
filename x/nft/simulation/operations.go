@@ -87,11 +87,21 @@ func SimulateMsgSend(
 			return simtypes.NoOpMsg(nft.ModuleName, TypeMsgSend, err.Error()), nil, err
 		}
 
+		senderst, err := ak.AddressCodec().BytesToString(senderAcc.GetAddress().Bytes())
+		if err != nil {
+			return simtypes.NoOpMsg(nft.ModuleName, TypeMsgSend, err.Error()), nil, err
+		}
+
+		recieverst, err := ak.AddressCodec().BytesToString(receiver.Address.Bytes())
+		if err != nil {
+			return simtypes.NoOpMsg(nft.ModuleName, TypeMsgSend, err.Error()), nil, err
+		}
+
 		msg := &nft.MsgSend{
 			ClassId:  n.ClassId,
 			Id:       n.Id,
-			Sender:   senderAcc.GetAddress().String(),
-			Receiver: receiver.Address.String(),
+			Sender:   senderst,
+			Receiver: recieverst,
 		}
 
 		tx, err := simtestutil.GenSignedMockTx(

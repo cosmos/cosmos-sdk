@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-	"fmt"
 
 	"cosmossdk.io/store/prefix"
 	"cosmossdk.io/x/nft"
@@ -52,9 +51,8 @@ func (k Keeper) Owner(goCtx context.Context, r *nft.QueryOwnerRequest) (*nft.Que
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	owner := k.GetOwner(ctx, r.ClassId, r.Id)
 	if owner.Empty() {
-		return nil, fmt.Errorf("owner not found: class: %s, id: %s", r.ClassId, r.Id)
+		return &nft.QueryOwnerResponse{Owner: ""}, nil
 	}
-	fmt.Println(owner, "owner")
 	ownerstr, err := k.ac.BytesToString(owner.Bytes())
 	if err != nil {
 		return nil, err

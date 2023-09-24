@@ -119,7 +119,7 @@ func (s *TestSuite) TestOwner() {
 					Id:      "kitty2",
 				}
 			},
-			"owner not found: class: kitty, id: kitty2",
+			"",
 			func(index int, require *require.Assertions, res *nft.QueryOwnerResponse) {
 				require.Equal(res.Owner, owner, "the error occurred on:%d", index)
 			},

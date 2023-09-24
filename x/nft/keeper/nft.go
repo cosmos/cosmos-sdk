@@ -41,7 +41,6 @@ func (k Keeper) mintWithNoCheck(ctx context.Context, token nft.NFT, receiver sdk
 		Id:      token.Id,
 		Owner:   rest,
 	})
-
 }
 
 // Burn defines a method for burning a nft from a specific account.

@@ -906,6 +906,7 @@ func (app *BaseApp) ProcessProposalVerifyTx(txBz []byte) (sdk.Tx, error) {
 	return tx, nil
 }
 
+<<<<<<< HEAD
 type (
 	// ProposalTxVerifier defines the interface that is implemented by BaseApp,
 	// that any custom ABCI PrepareProposal and ProcessProposal handler can use
@@ -1069,6 +1070,14 @@ func NoOpProcessProposal() sdk.ProcessProposalHandler {
 	return func(_ sdk.Context, _ abci.RequestProcessProposal) abci.ResponseProcessProposal {
 		return abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_ACCEPT}
 	}
+=======
+func (app *BaseApp) TxDecode(txBytes []byte) (sdk.Tx, error) {
+	return app.txDecoder(txBytes)
+}
+
+func (app *BaseApp) TxEncode(tx sdk.Tx) ([]byte, error) {
+	return app.txEncoder(tx)
+>>>>>>> 63d046dd5 (fix(baseapp): select txs correctly with no-op mempool (#17769))
 }
 
 // Close is called in start cmd to gracefully cleanup resources.

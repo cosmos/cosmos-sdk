@@ -32,15 +32,11 @@ func (k Keeper) mintWithNoCheck(ctx context.Context, token nft.NFT, receiver sdk
 	k.setOwner(ctx, token.ClassId, token.Id, receiver)
 	k.incrTotalSupply(ctx, token.ClassId)
 
-<<<<<<< HEAD
-	sdk.UnwrapSDKContext(ctx).EventManager().EmitTypedEvent(&nft.EventMint{
-=======
 	recStr, err := k.ac.BytesToString(receiver.Bytes())
 	if err != nil {
 		return err
 	}
 	return sdk.UnwrapSDKContext(ctx).EventManager().EmitTypedEvent(&nft.EventMint{
->>>>>>> f9c5fd474 (chore(nft): remove address.String() calls from nft (#17846))
 		ClassId: token.ClassId,
 		Id:      token.Id,
 		Owner:   recStr,
@@ -72,14 +68,6 @@ func (k Keeper) burnWithNoCheck(ctx context.Context, classID, nftID string) erro
 
 	k.deleteOwner(ctx, classID, nftID, owner)
 	k.decrTotalSupply(ctx, classID)
-<<<<<<< HEAD
-	sdk.UnwrapSDKContext(ctx).EventManager().EmitTypedEvent(&nft.EventBurn{
-		ClassId: classID,
-		Id:      nftID,
-		Owner:   owner.String(),
-	})
-	return nil
-=======
 	ownerStr, err := k.ac.BytesToString(owner.Bytes())
 	if err != nil {
 		return err
@@ -90,7 +78,6 @@ func (k Keeper) burnWithNoCheck(ctx context.Context, classID, nftID string) erro
 		Id:      nftID,
 		Owner:   ownerStr,
 	})
->>>>>>> f9c5fd474 (chore(nft): remove address.String() calls from nft (#17846))
 }
 
 // Update defines a method for updating an exist nft

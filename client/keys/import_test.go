@@ -140,7 +140,7 @@ func Test_runImportHexCmd(t *testing.T) {
 			mockIn := testutil.ApplyMockIODiscardOutErr(cmd)
 
 			// Now add a temporary keybase
-			kbHome := t.TempDir()
+			kbHome := filepath.Join(t.TempDir(), fmt.Sprintf("kbhome-%s", tc.name))
 			kb, err := keyring.New(sdk.KeyringServiceName(), tc.keyringBackend, kbHome, nil, cdc)
 			require.NoError(t, err)
 

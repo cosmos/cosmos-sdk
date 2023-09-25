@@ -82,6 +82,7 @@ func (h *DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHan
 			for _, txBz := range req.Txs {
 				// XXX: We pass nil as the memTx because we have no way of decoding the
 				// txBz. We'd need to break (update) the ProposalTxVerifier interface.
+				// As a result, we CANNOT account for block max gas.
 				stop := h.txSelector.SelectTxForProposal(uint64(req.MaxTxBytes), maxBlockGas, nil, txBz)
 				if stop {
 					break

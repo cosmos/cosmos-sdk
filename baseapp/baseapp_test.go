@@ -681,9 +681,10 @@ func TestDefaultProposalHandler_NoOpMempoolTxSelection(t *testing.T) {
 	tx := builder.GetTx()
 	txBz, err := txConfig.TxEncoder()(tx)
 	require.NoError(t, err)
-	require.Len(t, txBz, 152)
+	require.Len(t, txBz, 103)
 
-	ctx := app.NewContext(true, tmproto.Header{})
+	ctx := sdk.NewContext(nil, tmproto.Header{}, false, nil).
+		WithConsensusParams(&tmproto.ConsensusParams{})
 
 	testCases := map[string]struct {
 		ctx         sdk.Context
@@ -706,15 +707,15 @@ func TestDefaultProposalHandler_NoOpMempoolTxSelection(t *testing.T) {
 			}),
 			req: abci.RequestPrepareProposal{
 				Txs:        [][]byte{txBz, txBz, txBz, txBz, txBz},
-				MaxTxBytes: 456,
+				MaxTxBytes: 309,
 			},
-			expectedTxs: 0,
+			expectedTxs: 3,
 		},
 		"large max tx bytes": {
 			ctx: ctx,
 			req: abci.RequestPrepareProposal{
 				Txs:        [][]byte{txBz, txBz, txBz, txBz, txBz},
-				MaxTxBytes: 456,
+				MaxTxBytes: 309,
 			},
 			expectedTxs: 3,
 		},
@@ -726,9 +727,9 @@ func TestDefaultProposalHandler_NoOpMempoolTxSelection(t *testing.T) {
 			}),
 			req: abci.RequestPrepareProposal{
 				Txs:        [][]byte{txBz, txBz, txBz, txBz, txBz},
-				MaxTxBytes: 456,
+				MaxTxBytes: 309,
 			},
-			expectedTxs: 2,
+			expectedTxs: 3,
 		},
 	}
 

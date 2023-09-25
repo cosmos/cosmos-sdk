@@ -5,6 +5,10 @@ Note, always read the **SimApp** section for more information on application wir
 
 ## [Unreleased]
 
+### Params
+
+Params Migrations were removed. It is required to migrate to 0.50 prior to upgrading to .51.
+
 ### SimApp
 
 In this section we describe the changes made in Cosmos SDK' SimApp.
@@ -622,7 +626,7 @@ Here are the following replacements that you need to perform on your proto files
 
 Please also check that in your own app's proto files that there are no single-word names for those two proto annotations. If so, then replace them with fully-qualified names, even though those names don't actually resolve to an actual protobuf entity.
 
-For more information, see the [encoding guide](https://github.com/cosmos/cosmos-sdk/blob/main/docs/docs/develop/advanced/05-encoding.md).
+For more information, see the [encoding guide](https://github.com/cosmos/cosmos-sdk/blob/main/docs/learn/advanced/05-encoding.md).
 
 ### Transactions
 

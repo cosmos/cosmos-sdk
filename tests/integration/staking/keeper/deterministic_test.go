@@ -4,7 +4,6 @@ import (
 	"testing"
 	"time"
 
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"gotest.tools/v3/assert"
 	"pgregory.net/rapid"
 
@@ -109,9 +108,9 @@ func initDeterministicFixture(t *testing.T) *deterministicFixture {
 
 	stakingKeeper := stakingkeeper.NewKeeper(cdc, runtime.NewKVStoreService(keys[stakingtypes.StoreKey]), accountKeeper, bankKeeper, authority.String(), addresscodec.NewBech32Codec(sdk.Bech32PrefixValAddr), addresscodec.NewBech32Codec(sdk.Bech32PrefixConsAddr))
 
-	authModule := auth.NewAppModule(cdc, accountKeeper, authsims.RandomGenesisAccounts, nil)
-	bankModule := bank.NewAppModule(cdc, bankKeeper, accountKeeper, nil)
-	stakingModule := staking.NewAppModule(cdc, stakingKeeper, accountKeeper, bankKeeper, nil)
+	authModule := auth.NewAppModule(cdc, accountKeeper, authsims.RandomGenesisAccounts)
+	bankModule := bank.NewAppModule(cdc, bankKeeper, accountKeeper)
+	stakingModule := staking.NewAppModule(cdc, stakingKeeper, accountKeeper, bankKeeper)
 
 	integrationApp := integration.NewIntegrationApp(newCtx, logger, keys, cdc, map[string]appmodule.AppModule{
 		authtypes.ModuleName:    authModule,
@@ -662,24 +661,14 @@ func TestGRPCHistoricalInfo(t *testing.T) {
 	f := initDeterministicFixture(t)
 
 	rapid.Check(t, func(rt *rapid.T) {
-		numVals := rapid.IntRange(1, 5).Draw(rt, "num-vals")
-		vals := stakingtypes.Validators{}
-		for i := 0; i < numVals; i++ {
-			validator := createAndSetValidatorWithStatus(t, rt, f, stakingtypes.Bonded)
-			vals.Validators = append(vals.Validators, validator)
-		}
-
-		historicalInfo := stakingtypes.HistoricalInfo{
-			Header: cmtproto.Header{},
-			Valset: vals.Validators,
-		}
+		historical := stakingtypes.HistoricalRecord{}
 
 		height := rapid.Int64Min(0).Draw(rt, "height")
 
 		assert.NilError(t, f.stakingKeeper.HistoricalInfo.Set(
 			f.ctx,
 			uint64(height),
-			historicalInfo,
+			historical,
 		))
 
 		req := &stakingtypes.QueryHistoricalInfoRequest{
@@ -691,12 +680,7 @@ func TestGRPCHistoricalInfo(t *testing.T) {
 
 	f = initDeterministicFixture(t) // reset
 
-	validator := getStaticValidator(t, f)
-
-	historicalInfo := stakingtypes.HistoricalInfo{
-		Header: cmtproto.Header{},
-		Valset: []stakingtypes.Validator{validator},
-	}
+	historicalInfo := stakingtypes.HistoricalRecord{}
 
 	height := int64(127)
 
@@ -710,7 +694,7 @@ func TestGRPCHistoricalInfo(t *testing.T) {
 		Height: height,
 	}
 
-	testdata.DeterministicIterations(f.ctx, t, req, f.queryClient.HistoricalInfo, 1945, false)
+	testdata.DeterministicIterations(f.ctx, t, req, f.queryClient.HistoricalInfo, 1027, false)
 }
 
 func TestGRPCDelegatorValidators(t *testing.T) {

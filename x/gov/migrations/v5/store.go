@@ -5,9 +5,11 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	v4 "github.com/cosmos/cosmos-sdk/x/gov/migrations/v4"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 )
+
+// ParamsKey is the key of x/gov params
+var ParamsKey = []byte{0x30}
 
 // MigrateStore performs in-place store migrations from v4 (v0.47) to v5 (v0.50). The
 // migration includes:
@@ -15,7 +17,7 @@ import (
 // Addition of the new proposal expedited parameters that are set to 0 by default.
 func MigrateStore(ctx sdk.Context, storeService corestoretypes.KVStoreService, cdc codec.BinaryCodec) error {
 	store := storeService.OpenKVStore(ctx)
-	paramsBz, err := store.Get(v4.ParamsKey)
+	paramsBz, err := store.Get(ParamsKey)
 	if err != nil {
 		return err
 	}
@@ -38,5 +40,5 @@ func MigrateStore(ctx sdk.Context, storeService corestoretypes.KVStoreService, c
 		return err
 	}
 
-	return store.Set(v4.ParamsKey, bz)
+	return store.Set(ParamsKey, bz)
 }

@@ -1,138 +1,19 @@
 package baseapp
 
 import (
-	"bytes"
-	"context"
-	"fmt"
-
 	"github.com/cockroachdb/errors"
 	abci "github.com/cometbft/cometbft/abci/types"
-	cryptoenc "github.com/cometbft/cometbft/crypto/encoding"
-	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	protoio "github.com/cosmos/gogoproto/io"
-	"github.com/cosmos/gogoproto/proto"
-
-	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/mempool"
 )
 
-// VoteExtensionThreshold defines the total voting power % that must be
-// submitted in order for all vote extensions to be considered valid for a
-// given height.
-var VoteExtensionThreshold = math.LegacyNewDecWithPrec(667, 3)
-
 type (
-	// ValidatorStore defines the interface contract require for verifying vote
-	// extension signatures. Typically, this will be implemented by the x/staking
-	// module, which has knowledge of the CometBFT public key.
-	ValidatorStore interface {
-		GetPubKeyByConsAddr(context.Context, sdk.ConsAddress) (cmtprotocrypto.PublicKey, error)
-	}
-
 	// GasTx defines the contract that a transaction with a gas limit must implement.
 	GasTx interface {
 		GetGas() uint64
 	}
-)
 
-// ValidateVoteExtensions defines a helper function for verifying vote extension
-// signatures that may be passed or manually injected into a block proposal from
-// a proposer in PrepareProposal. It returns an error if any signature is invalid
-// or if unexpected vote extensions and/or signatures are found or less than 2/3
-// power is received.
-func ValidateVoteExtensions(
-	ctx sdk.Context,
-	valStore ValidatorStore,
-	currentHeight int64,
-	chainID string,
-	extCommit abci.ExtendedCommitInfo,
-) error {
-	cp := ctx.ConsensusParams()
-	extsEnabled := cp.Abci != nil && currentHeight >= cp.Abci.VoteExtensionsEnableHeight && cp.Abci.VoteExtensionsEnableHeight != 0
-	marshalDelimitedFn := func(msg proto.Message) ([]byte, error) {
-		var buf bytes.Buffer
-		if err := protoio.NewDelimitedWriter(&buf).WriteMsg(msg); err != nil {
-			return nil, err
-		}
-
-		return buf.Bytes(), nil
-	}
-
-	var (
-		// Total voting power of all vote extensions.
-		totalVP int64
-		// Total voting power of all validators that submitted valid vote extensions.
-		sumVP int64
-	)
-
-	for _, vote := range extCommit.Votes {
-		totalVP += vote.Validator.Power
-
-		// Only check + include power if the vote is a commit vote. There must be super-majority, otherwise the
-		// previous block (the block vote is for) could not have been committed.
-		if vote.BlockIdFlag != cmtproto.BlockIDFlagCommit {
-			continue
-		}
-
-		if !extsEnabled {
-			if len(vote.VoteExtension) > 0 {
-				return fmt.Errorf("vote extensions disabled; received non-empty vote extension at height %d", currentHeight)
-			}
-			if len(vote.ExtensionSignature) > 0 {
-				return fmt.Errorf("vote extensions disabled; received non-empty vote extension signature at height %d", currentHeight)
-			}
-
-			continue
-		}
-
-		if len(vote.ExtensionSignature) == 0 {
-			return fmt.Errorf("vote extensions enabled; received empty vote extension signature at height %d", currentHeight)
-		}
-
-		valConsAddr := sdk.ConsAddress(vote.Validator.Address)
-		pubKeyProto, err := valStore.GetPubKeyByConsAddr(ctx, valConsAddr)
-		if err != nil {
-			return fmt.Errorf("failed to get validator %X public key: %w", valConsAddr, err)
-		}
-
-		cmtPubKey, err := cryptoenc.PubKeyFromProto(pubKeyProto)
-		if err != nil {
-			return fmt.Errorf("failed to convert validator %X public key: %w", valConsAddr, err)
-		}
-
-		cve := cmtproto.CanonicalVoteExtension{
-			Extension: vote.VoteExtension,
-			Height:    currentHeight - 1, // the vote extension was signed in the previous height
-			Round:     int64(extCommit.Round),
-			ChainId:   chainID,
-		}
-
-		extSignBytes, err := marshalDelimitedFn(&cve)
-		if err != nil {
-			return fmt.Errorf("failed to encode CanonicalVoteExtension: %w", err)
-		}
-
-		if !cmtPubKey.VerifySignature(extSignBytes, vote.ExtensionSignature) {
-			return fmt.Errorf("failed to verify validator %X vote extension signature", valConsAddr)
-		}
-
-		sumVP += vote.Validator.Power
-	}
-
-	if totalVP > 0 {
-		percentSubmitted := math.LegacyNewDecFromInt(math.NewInt(sumVP)).Quo(math.LegacyNewDecFromInt(math.NewInt(totalVP)))
-		if percentSubmitted.LT(VoteExtensionThreshold) {
-			return fmt.Errorf("insufficient cumulative voting power received to verify vote extensions; got: %s, expected: >=%s", percentSubmitted, VoteExtensionThreshold)
-		}
-	}
-
-	return nil
-}
-
-type (
 	// ProposalTxVerifier defines the interface that is implemented by BaseApp,
 	// that any custom ABCI PrepareProposal and ProcessProposal handler can use
 	// to verify a transaction.
@@ -184,7 +65,7 @@ func (h *DefaultProposalHandler) SetTxSelector(ts TxSelector) {
 // requested from CometBFT will simply be returned, which, by default, are in
 // FIFO order.
 func (h *DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHandler {
-	return func(ctx sdk.Context, req *abci.RequestPrepareProposal) (*abci.ResponsePrepareProposal, error) {
+	return func(ctx sdk.Context, req abci.RequestPrepareProposal) abci.ResponsePrepareProposal {
 		var maxBlockGas uint64
 		if b := ctx.ConsensusParams().Block; b != nil {
 			maxBlockGas = uint64(b.MaxGas)
@@ -201,13 +82,13 @@ func (h *DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHan
 			for _, txBz := range req.Txs {
 				// XXX: We pass nil as the memTx because we have no way of decoding the
 				// txBz. We'd need to break (update) the ProposalTxVerifier interface.
-				stop := txSelector.SelectTxForProposal(nil, txBz)
+				stop := h.txSelector.SelectTxForProposal(uint64(req.MaxTxBytes), maxBlockGas, nil, txBz)
 				if stop {
 					break
 				}
 			}
 
-			return &abci.ResponsePrepareProposal{Txs: txSelector.SelectedTxs()}, nil
+			return abci.ResponsePrepareProposal{Txs: h.txSelector.SelectedTxs()}
 		}
 
 		iterator := h.mempool.Select(ctx, req.Txs)
@@ -222,7 +103,7 @@ func (h *DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHan
 			if err != nil {
 				err := h.mempool.Remove(memTx)
 				if err != nil && !errors.Is(err, mempool.ErrTxNotFound) {
-					return nil, err
+					panic(err)
 				}
 			} else {
 				stop := h.txSelector.SelectTxForProposal(uint64(req.MaxTxBytes), maxBlockGas, memTx, txBz)
@@ -234,7 +115,7 @@ func (h *DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHan
 			iterator = iterator.Next()
 		}
 
-		return &abci.ResponsePrepareProposal{Txs: h.txSelector.SelectedTxs()}, nil
+		return abci.ResponsePrepareProposal{Txs: h.txSelector.SelectedTxs()}
 	}
 }
 
@@ -257,7 +138,7 @@ func (h *DefaultProposalHandler) ProcessProposalHandler() sdk.ProcessProposalHan
 		return NoOpProcessProposal()
 	}
 
-	return func(ctx sdk.Context, req *abci.RequestProcessProposal) (*abci.ResponseProcessProposal, error) {
+	return func(ctx sdk.Context, req abci.RequestProcessProposal) abci.ResponseProcessProposal {
 		var totalTxGas uint64
 
 		var maxBlockGas int64
@@ -268,7 +149,7 @@ func (h *DefaultProposalHandler) ProcessProposalHandler() sdk.ProcessProposalHan
 		for _, txBytes := range req.Txs {
 			tx, err := h.txVerifier.ProcessProposalVerifyTx(txBytes)
 			if err != nil {
-				return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
+				return abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}
 			}
 
 			if maxBlockGas > 0 {
@@ -278,44 +159,28 @@ func (h *DefaultProposalHandler) ProcessProposalHandler() sdk.ProcessProposalHan
 				}
 
 				if totalTxGas > uint64(maxBlockGas) {
-					return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
+					return abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}
 				}
 			}
 		}
 
-		return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_ACCEPT}, nil
+		return abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_ACCEPT}
 	}
 }
 
 // NoOpPrepareProposal defines a no-op PrepareProposal handler. It will always
 // return the transactions sent by the client's request.
 func NoOpPrepareProposal() sdk.PrepareProposalHandler {
-	return func(_ sdk.Context, req *abci.RequestPrepareProposal) (*abci.ResponsePrepareProposal, error) {
-		return &abci.ResponsePrepareProposal{Txs: req.Txs}, nil
+	return func(_ sdk.Context, req abci.RequestPrepareProposal) abci.ResponsePrepareProposal {
+		return abci.ResponsePrepareProposal{Txs: req.Txs}
 	}
 }
 
 // NoOpProcessProposal defines a no-op ProcessProposal Handler. It will always
 // return ACCEPT.
 func NoOpProcessProposal() sdk.ProcessProposalHandler {
-	return func(_ sdk.Context, _ *abci.RequestProcessProposal) (*abci.ResponseProcessProposal, error) {
-		return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_ACCEPT}, nil
-	}
-}
-
-// NoOpExtendVote defines a no-op ExtendVote handler. It will always return an
-// empty byte slice as the vote extension.
-func NoOpExtendVote() sdk.ExtendVoteHandler {
-	return func(_ sdk.Context, _ *abci.RequestExtendVote) (*abci.ResponseExtendVote, error) {
-		return &abci.ResponseExtendVote{VoteExtension: []byte{}}, nil
-	}
-}
-
-// NoOpVerifyVoteExtensionHandler defines a no-op VerifyVoteExtension handler. It
-// will always return an ACCEPT status with no error.
-func NoOpVerifyVoteExtensionHandler() sdk.VerifyVoteExtensionHandler {
-	return func(_ sdk.Context, _ *abci.RequestVerifyVoteExtension) (*abci.ResponseVerifyVoteExtension, error) {
-		return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_ACCEPT}, nil
+	return func(_ sdk.Context, _ abci.RequestProcessProposal) abci.ResponseProcessProposal {
+		return abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_ACCEPT}
 	}
 }
 

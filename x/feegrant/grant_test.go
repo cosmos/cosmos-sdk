@@ -82,7 +82,11 @@ func TestGrant(t *testing.T) {
 	for name, tc := range cases {
 		tc := tc
 		t.Run(name, func(t *testing.T) {
-			grant, err := feegrant.NewGrant(tc.granter, tc.grantee, &feegrant.BasicAllowance{
+			granterStr, err := addressCodec.BytesToString(tc.granter)
+			require.NoError(t, err)
+			granteeStr, err := addressCodec.BytesToString(tc.grantee)
+			require.NoError(t, err)
+			grant, err := feegrant.NewGrant(granterStr, granteeStr, &feegrant.BasicAllowance{
 				SpendLimit: tc.limit,
 				Expiration: &tc.expires,
 			})

@@ -37,12 +37,11 @@ func TestCalculateRewardsBasic(t *testing.T) {
 	bankKeeper := distrtestutil.NewMockBankKeeper(ctrl)
 	stakingKeeper := distrtestutil.NewMockStakingKeeper(ctrl)
 	accountKeeper := distrtestutil.NewMockAccountKeeper(ctrl)
+	poolKeeper := distrtestutil.NewMockPoolKeeper(ctrl)
 
 	accountKeeper.EXPECT().GetModuleAddress("distribution").Return(distrAcc.GetAddress())
 	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec(sdk.Bech32PrefixValAddr)).AnyTimes()
 	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec(sdk.Bech32MainPrefix)).AnyTimes()
-
-	baseApp := initBaseApp(testCtx, encCfg)
 
 	distrKeeper := keeper.NewKeeper(
 		encCfg.Codec,
@@ -50,8 +49,7 @@ func TestCalculateRewardsBasic(t *testing.T) {
 		accountKeeper,
 		bankKeeper,
 		stakingKeeper,
-		baseApp.MsgServiceRouter(),
-		baseApp.GRPCQueryRouter(),
+		poolKeeper,
 		"fee_collector",
 		authtypes.NewModuleAddress("gov").String(),
 	)
@@ -141,12 +139,11 @@ func TestCalculateRewardsAfterSlash(t *testing.T) {
 	bankKeeper := distrtestutil.NewMockBankKeeper(ctrl)
 	stakingKeeper := distrtestutil.NewMockStakingKeeper(ctrl)
 	accountKeeper := distrtestutil.NewMockAccountKeeper(ctrl)
+	poolKeeper := distrtestutil.NewMockPoolKeeper(ctrl)
 
 	accountKeeper.EXPECT().GetModuleAddress("distribution").Return(distrAcc.GetAddress())
 	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec(sdk.Bech32PrefixValAddr)).AnyTimes()
 	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec(sdk.Bech32MainPrefix)).AnyTimes()
-
-	baseApp := initBaseApp(testCtx, encCfg)
 
 	distrKeeper := keeper.NewKeeper(
 		encCfg.Codec,
@@ -154,8 +151,7 @@ func TestCalculateRewardsAfterSlash(t *testing.T) {
 		accountKeeper,
 		bankKeeper,
 		stakingKeeper,
-		baseApp.MsgServiceRouter(),
-		baseApp.GRPCQueryRouter(),
+		poolKeeper,
 		"fee_collector",
 		authtypes.NewModuleAddress("gov").String(),
 	)
@@ -248,12 +244,11 @@ func TestCalculateRewardsAfterManySlashes(t *testing.T) {
 	bankKeeper := distrtestutil.NewMockBankKeeper(ctrl)
 	stakingKeeper := distrtestutil.NewMockStakingKeeper(ctrl)
 	accountKeeper := distrtestutil.NewMockAccountKeeper(ctrl)
+	poolKeeper := distrtestutil.NewMockPoolKeeper(ctrl)
 
 	accountKeeper.EXPECT().GetModuleAddress("distribution").Return(distrAcc.GetAddress())
 	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec(sdk.Bech32PrefixValAddr)).AnyTimes()
 	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec(sdk.Bech32MainPrefix)).AnyTimes()
-
-	baseApp := initBaseApp(testCtx, encCfg)
 
 	distrKeeper := keeper.NewKeeper(
 		encCfg.Codec,
@@ -261,8 +256,7 @@ func TestCalculateRewardsAfterManySlashes(t *testing.T) {
 		accountKeeper,
 		bankKeeper,
 		stakingKeeper,
-		baseApp.MsgServiceRouter(),
-		baseApp.GRPCQueryRouter(),
+		poolKeeper,
 		"fee_collector",
 		authtypes.NewModuleAddress("gov").String(),
 	)
@@ -376,12 +370,11 @@ func TestCalculateRewardsMultiDelegator(t *testing.T) {
 	bankKeeper := distrtestutil.NewMockBankKeeper(ctrl)
 	stakingKeeper := distrtestutil.NewMockStakingKeeper(ctrl)
 	accountKeeper := distrtestutil.NewMockAccountKeeper(ctrl)
+	poolKeeper := distrtestutil.NewMockPoolKeeper(ctrl)
 
 	accountKeeper.EXPECT().GetModuleAddress("distribution").Return(distrAcc.GetAddress())
 	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec(sdk.Bech32PrefixValAddr)).AnyTimes()
 	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec(sdk.Bech32MainPrefix)).AnyTimes()
-
-	baseApp := initBaseApp(testCtx, encCfg)
 
 	distrKeeper := keeper.NewKeeper(
 		encCfg.Codec,
@@ -389,8 +382,7 @@ func TestCalculateRewardsMultiDelegator(t *testing.T) {
 		accountKeeper,
 		bankKeeper,
 		stakingKeeper,
-		baseApp.MsgServiceRouter(),
-		baseApp.GRPCQueryRouter(),
+		poolKeeper,
 		"fee_collector",
 		authtypes.NewModuleAddress("gov").String(),
 	)
@@ -477,12 +469,11 @@ func TestWithdrawDelegationRewardsBasic(t *testing.T) {
 	bankKeeper := distrtestutil.NewMockBankKeeper(ctrl)
 	stakingKeeper := distrtestutil.NewMockStakingKeeper(ctrl)
 	accountKeeper := distrtestutil.NewMockAccountKeeper(ctrl)
+	poolKeeper := distrtestutil.NewMockPoolKeeper(ctrl)
 
 	accountKeeper.EXPECT().GetModuleAddress("distribution").Return(distrAcc.GetAddress())
 	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec(sdk.Bech32PrefixValAddr)).AnyTimes()
 	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec(sdk.Bech32MainPrefix)).AnyTimes()
-
-	baseApp := initBaseApp(testCtx, encCfg)
 
 	distrKeeper := keeper.NewKeeper(
 		encCfg.Codec,
@@ -490,8 +481,7 @@ func TestWithdrawDelegationRewardsBasic(t *testing.T) {
 		accountKeeper,
 		bankKeeper,
 		stakingKeeper,
-		baseApp.MsgServiceRouter(),
-		baseApp.GRPCQueryRouter(),
+		poolKeeper,
 		"fee_collector",
 		authtypes.NewModuleAddress("gov").String(),
 	)
@@ -556,12 +546,11 @@ func TestCalculateRewardsAfterManySlashesInSameBlock(t *testing.T) {
 	bankKeeper := distrtestutil.NewMockBankKeeper(ctrl)
 	stakingKeeper := distrtestutil.NewMockStakingKeeper(ctrl)
 	accountKeeper := distrtestutil.NewMockAccountKeeper(ctrl)
+	poolKeeper := distrtestutil.NewMockPoolKeeper(ctrl)
 
 	accountKeeper.EXPECT().GetModuleAddress("distribution").Return(distrAcc.GetAddress())
 	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec(sdk.Bech32PrefixValAddr)).AnyTimes()
 	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec(sdk.Bech32MainPrefix)).AnyTimes()
-
-	baseApp := initBaseApp(testCtx, encCfg)
 
 	distrKeeper := keeper.NewKeeper(
 		encCfg.Codec,
@@ -569,8 +558,7 @@ func TestCalculateRewardsAfterManySlashesInSameBlock(t *testing.T) {
 		accountKeeper,
 		bankKeeper,
 		stakingKeeper,
-		baseApp.MsgServiceRouter(),
-		baseApp.GRPCQueryRouter(),
+		poolKeeper,
 		"fee_collector",
 		authtypes.NewModuleAddress("gov").String(),
 	)
@@ -676,12 +664,11 @@ func TestCalculateRewardsMultiDelegatorMultiSlash(t *testing.T) {
 	bankKeeper := distrtestutil.NewMockBankKeeper(ctrl)
 	stakingKeeper := distrtestutil.NewMockStakingKeeper(ctrl)
 	accountKeeper := distrtestutil.NewMockAccountKeeper(ctrl)
+	poolKeeper := distrtestutil.NewMockPoolKeeper(ctrl)
 
 	accountKeeper.EXPECT().GetModuleAddress("distribution").Return(distrAcc.GetAddress())
 	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec(sdk.Bech32PrefixValAddr)).AnyTimes()
 	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec(sdk.Bech32MainPrefix)).AnyTimes()
-
-	baseApp := initBaseApp(testCtx, encCfg)
 
 	distrKeeper := keeper.NewKeeper(
 		encCfg.Codec,
@@ -689,8 +676,7 @@ func TestCalculateRewardsMultiDelegatorMultiSlash(t *testing.T) {
 		accountKeeper,
 		bankKeeper,
 		stakingKeeper,
-		baseApp.MsgServiceRouter(),
-		baseApp.GRPCQueryRouter(),
+		poolKeeper,
 		"fee_collector",
 		authtypes.NewModuleAddress("gov").String(),
 	)
@@ -817,12 +803,11 @@ func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
 	bankKeeper := distrtestutil.NewMockBankKeeper(ctrl)
 	stakingKeeper := distrtestutil.NewMockStakingKeeper(ctrl)
 	accountKeeper := distrtestutil.NewMockAccountKeeper(ctrl)
+	poolKeeper := distrtestutil.NewMockPoolKeeper(ctrl)
 
 	accountKeeper.EXPECT().GetModuleAddress("distribution").Return(distrAcc.GetAddress())
 	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec(sdk.Bech32PrefixValAddr)).AnyTimes()
 	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec(sdk.Bech32MainPrefix)).AnyTimes()
-
-	baseApp := initBaseApp(testCtx, encCfg)
 
 	distrKeeper := keeper.NewKeeper(
 		encCfg.Codec,
@@ -830,8 +815,7 @@ func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
 		accountKeeper,
 		bankKeeper,
 		stakingKeeper,
-		baseApp.MsgServiceRouter(),
-		baseApp.GRPCQueryRouter(),
+		poolKeeper,
 		"fee_collector",
 		authtypes.NewModuleAddress("gov").String(),
 	)
@@ -1020,12 +1004,11 @@ func Test100PercentCommissionReward(t *testing.T) {
 	bankKeeper := distrtestutil.NewMockBankKeeper(ctrl)
 	stakingKeeper := distrtestutil.NewMockStakingKeeper(ctrl)
 	accountKeeper := distrtestutil.NewMockAccountKeeper(ctrl)
+	poolKeeper := distrtestutil.NewMockPoolKeeper(ctrl)
 
 	accountKeeper.EXPECT().GetModuleAddress("distribution").Return(distrAcc.GetAddress())
 	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec(sdk.Bech32PrefixValAddr)).AnyTimes()
 	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec(sdk.Bech32MainPrefix)).AnyTimes()
-
-	baseApp := initBaseApp(testCtx, encCfg)
 
 	distrKeeper := keeper.NewKeeper(
 		encCfg.Codec,
@@ -1033,8 +1016,7 @@ func Test100PercentCommissionReward(t *testing.T) {
 		accountKeeper,
 		bankKeeper,
 		stakingKeeper,
-		baseApp.MsgServiceRouter(),
-		baseApp.GRPCQueryRouter(),
+		poolKeeper,
 		"fee_collector",
 		authtypes.NewModuleAddress("gov").String(),
 	)

@@ -226,6 +226,71 @@ func (mr *MockBankKeeperMockRecorder) SpendableCoins(ctx, addr interface{}) *gom
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SpendableCoins", reflect.TypeOf((*MockBankKeeper)(nil).SpendableCoins), ctx, addr)
 }
 
+// MockPoolKeeper is a mock of PoolKeeper interface.
+type MockPoolKeeper struct {
+	ctrl     *gomock.Controller
+	recorder *MockPoolKeeperMockRecorder
+}
+
+// MockPoolKeeperMockRecorder is the mock recorder for MockPoolKeeper.
+type MockPoolKeeperMockRecorder struct {
+	mock *MockPoolKeeper
+}
+
+// NewMockPoolKeeper creates a new mock instance.
+func NewMockPoolKeeper(ctrl *gomock.Controller) *MockPoolKeeper {
+	mock := &MockPoolKeeper{ctrl: ctrl}
+	mock.recorder = &MockPoolKeeperMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockPoolKeeper) EXPECT() *MockPoolKeeperMockRecorder {
+	return m.recorder
+}
+
+// DistributeFromFeePool mocks base method.
+func (m *MockPoolKeeper) DistributeFromFeePool(ctx context.Context, amount types.Coins, receiveAddr types.AccAddress) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DistributeFromFeePool", ctx, amount, receiveAddr)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DistributeFromFeePool indicates an expected call of DistributeFromFeePool.
+func (mr *MockPoolKeeperMockRecorder) DistributeFromFeePool(ctx, amount, receiveAddr interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DistributeFromFeePool", reflect.TypeOf((*MockPoolKeeper)(nil).DistributeFromFeePool), ctx, amount, receiveAddr)
+}
+
+// FundCommunityPool mocks base method.
+func (m *MockPoolKeeper) FundCommunityPool(ctx context.Context, amount types.Coins, sender types.AccAddress) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FundCommunityPool", ctx, amount, sender)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// FundCommunityPool indicates an expected call of FundCommunityPool.
+func (mr *MockPoolKeeperMockRecorder) FundCommunityPool(ctx, amount, sender interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FundCommunityPool", reflect.TypeOf((*MockPoolKeeper)(nil).FundCommunityPool), ctx, amount, sender)
+}
+
+// GetCommunityPool mocks base method.
+func (m *MockPoolKeeper) GetCommunityPool(ctx context.Context) types.Coins {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetCommunityPool", ctx)
+	ret0, _ := ret[0].(types.Coins)
+	return ret0
+}
+
+// GetCommunityPool indicates an expected call of GetCommunityPool.
+func (mr *MockPoolKeeperMockRecorder) GetCommunityPool(ctx interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCommunityPool", reflect.TypeOf((*MockPoolKeeper)(nil).GetCommunityPool), ctx)
+}
+
 // MockStakingKeeper is a mock of StakingKeeper interface.
 type MockStakingKeeper struct {
 	ctrl     *gomock.Controller

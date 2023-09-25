@@ -56,6 +56,11 @@ type BankKeeper interface {
 	BurnCoins(context.Context, []byte, sdk.Coins) error
 }
 
+// PoolKeeper defines the expected interface needed to fund & distribute pool balances.
+type PoolKeeper interface {
+	FundCommunityPool(ctx context.Context, amount sdk.Coins, sender sdk.AccAddress) error
+}
+
 // Event Hooks
 // These can be utilized to communicate between a governance keeper and another
 // keepers.

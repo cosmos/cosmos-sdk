@@ -37,13 +37,12 @@ func TestAllocateTokensToValidatorWithCommission(t *testing.T) {
 	bankKeeper := distrtestutil.NewMockBankKeeper(ctrl)
 	stakingKeeper := distrtestutil.NewMockStakingKeeper(ctrl)
 	accountKeeper := distrtestutil.NewMockAccountKeeper(ctrl)
+	poolKeeper := distrtestutil.NewMockPoolKeeper(ctrl)
 
 	valCodec := address.NewBech32Codec("cosmosvaloper")
 
 	accountKeeper.EXPECT().GetModuleAddress("distribution").Return(distrAcc.GetAddress())
 	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(valCodec).AnyTimes()
-
-	baseApp := initBaseApp(testCtx, encCfg)
 
 	distrKeeper := keeper.NewKeeper(
 		encCfg.Codec,
@@ -51,8 +50,7 @@ func TestAllocateTokensToValidatorWithCommission(t *testing.T) {
 		accountKeeper,
 		bankKeeper,
 		stakingKeeper,
-		baseApp.MsgServiceRouter(),
-		baseApp.GRPCQueryRouter(),
+		poolKeeper,
 		"fee_collector",
 		authtypes.NewModuleAddress("gov").String(),
 	)
@@ -98,13 +96,12 @@ func TestAllocateTokensToManyValidators(t *testing.T) {
 	bankKeeper := distrtestutil.NewMockBankKeeper(ctrl)
 	stakingKeeper := distrtestutil.NewMockStakingKeeper(ctrl)
 	accountKeeper := distrtestutil.NewMockAccountKeeper(ctrl)
+	poolKeeper := distrtestutil.NewMockPoolKeeper(ctrl)
 
 	feeCollectorAcc := authtypes.NewEmptyModuleAccount("fee_collector")
 	accountKeeper.EXPECT().GetModuleAddress("distribution").Return(distrAcc.GetAddress())
 	accountKeeper.EXPECT().GetModuleAccount(gomock.Any(), "fee_collector").Return(feeCollectorAcc)
 	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec("cosmosvaloper")).AnyTimes()
-
-	baseApp := initBaseApp(testCtx, encCfg)
 
 	distrKeeper := keeper.NewKeeper(
 		encCfg.Codec,
@@ -112,8 +109,7 @@ func TestAllocateTokensToManyValidators(t *testing.T) {
 		accountKeeper,
 		bankKeeper,
 		stakingKeeper,
-		baseApp.MsgServiceRouter(),
-		baseApp.GRPCQueryRouter(),
+		poolKeeper,
 		"fee_collector",
 		authtypes.NewModuleAddress("gov").String(),
 	)
@@ -230,13 +226,12 @@ func TestAllocateTokensTruncation(t *testing.T) {
 	bankKeeper := distrtestutil.NewMockBankKeeper(ctrl)
 	stakingKeeper := distrtestutil.NewMockStakingKeeper(ctrl)
 	accountKeeper := distrtestutil.NewMockAccountKeeper(ctrl)
+	poolKeeper := distrtestutil.NewMockPoolKeeper(ctrl)
 
 	feeCollectorAcc := authtypes.NewEmptyModuleAccount("fee_collector")
 	accountKeeper.EXPECT().GetModuleAddress("distribution").Return(distrAcc.GetAddress())
 	accountKeeper.EXPECT().GetModuleAccount(gomock.Any(), "fee_collector").Return(feeCollectorAcc)
 	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec("cosmosvaloper")).AnyTimes()
-
-	baseApp := initBaseApp(testCtx, encCfg)
 
 	distrKeeper := keeper.NewKeeper(
 		encCfg.Codec,
@@ -244,8 +239,7 @@ func TestAllocateTokensTruncation(t *testing.T) {
 		accountKeeper,
 		bankKeeper,
 		stakingKeeper,
-		baseApp.MsgServiceRouter(),
-		baseApp.GRPCQueryRouter(),
+		poolKeeper,
 		"fee_collector",
 		authtypes.NewModuleAddress("gov").String(),
 	)

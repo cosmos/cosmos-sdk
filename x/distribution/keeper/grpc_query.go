@@ -2,17 +2,13 @@ package keeper
 
 import (
 	"context"
-	"fmt"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	pooltypes "cosmossdk.io/api/cosmos/protocolpool/v1"
 	"cosmossdk.io/collections"
 	"cosmossdk.io/errors"
-	"cosmossdk.io/math"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
@@ -361,25 +357,6 @@ func (k Querier) DelegatorWithdrawAddress(ctx context.Context, req *types.QueryD
 // This method uses deprecated query request. Use CommunityPool from x/protocolpool module instead.
 // CommunityPool queries the community pool coins
 func (k Querier) CommunityPool(ctx context.Context, req *types.QueryCommunityPoolRequest) (*types.QueryCommunityPoolResponse, error) {
-	// TODO: Rename QueryServiceTestHelper (https://github.com/cosmos/cosmos-sdk/pull/17657#discussion_r1332928620)
-	helper := &baseapp.QueryServiceTestHelper{
-		GRPCQueryRouter: k.grpcRouter,
-		Ctx:             sdk.UnwrapSDKContext(ctx),
-	}
-	client := pooltypes.NewQueryClient(helper)
-	poolreq := &pooltypes.QueryCommunityPoolRequest{}
-	res, err := client.CommunityPool(ctx, poolreq)
-	if err != nil {
-		return nil, err
-	}
-
-	poolAmount := make([]sdk.DecCoin, len(res.Pool))
-	for i, coin := range res.Pool {
-		amount, ok := math.NewIntFromString(coin.Amount)
-		if !ok {
-			return nil, fmt.Errorf("unable to convert amount %s to int", coin.Amount)
-		}
-		poolAmount[i] = sdk.NewDecCoin(coin.Denom, amount)
-	}
-	return &types.QueryCommunityPoolResponse{Pool: poolAmount}, nil
+	pool := k.poolKeeper.GetCommunityPool(ctx)
+	return &types.QueryCommunityPoolResponse{Pool: sdk.NewDecCoinsFromCoins(pool...)}, nil
 }

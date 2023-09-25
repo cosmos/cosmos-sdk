@@ -101,6 +101,7 @@ type AppModule struct {
 	accountKeeper types.AccountKeeper
 	bankKeeper    types.BankKeeper
 	stakingKeeper types.StakingKeeper
+	poolKeeper    types.PoolKeeper
 
 	// legacySubspace is used solely for migration of x/params managed parameters
 	legacySubspace exported.Subspace
@@ -109,7 +110,7 @@ type AppModule struct {
 // NewAppModule creates a new AppModule object
 func NewAppModule(
 	cdc codec.Codec, keeper keeper.Keeper, accountKeeper types.AccountKeeper,
-	bankKeeper types.BankKeeper, stakingKeeper types.StakingKeeper, ss exported.Subspace,
+	bankKeeper types.BankKeeper, stakingKeeper types.StakingKeeper, poolKeeper types.PoolKeeper, ss exported.Subspace,
 ) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{cdc: cdc, ac: accountKeeper.AddressCodec()},
@@ -117,6 +118,7 @@ func NewAppModule(
 		accountKeeper:  accountKeeper,
 		bankKeeper:     bankKeeper,
 		stakingKeeper:  stakingKeeper,
+		poolKeeper:     poolKeeper,
 		legacySubspace: ss,
 	}
 }
@@ -226,6 +228,7 @@ type ModuleInputs struct {
 	AccountKeeper types.AccountKeeper
 	BankKeeper    types.BankKeeper
 	StakingKeeper types.StakingKeeper
+	PoolKeeper    types.PoolKeeper
 
 	// LegacySubspace is used solely for migration of x/params managed parameters
 	LegacySubspace exported.Subspace `optional:"true"`
@@ -257,13 +260,12 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		in.AccountKeeper,
 		in.BankKeeper,
 		in.StakingKeeper,
-		in.MsgServiceRouter,
-		in.GrpcQueryRouter,
+		in.PoolKeeper,
 		feeCollectorName,
 		authority.String(),
 	)
 
-	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.StakingKeeper, in.LegacySubspace)
+	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.StakingKeeper, in.PoolKeeper, in.LegacySubspace)
 
 	return ModuleOutputs{
 		DistrKeeper: k,

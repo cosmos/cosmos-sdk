@@ -9,10 +9,8 @@ import (
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/runtime"
-	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/integration"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
@@ -37,7 +35,6 @@ func TestFundsMigration(t *testing.T) {
 	cms := integration.CreateMultiStore(keys, logger)
 	encCfg := moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{}, bank.AppModuleBasic{}, distribution.AppModuleBasic{})
 	ctx := sdk.NewContext(cms, true, logger)
-	testCtx := testutil.DefaultContextWithDB(t, keys[disttypes.StoreKey], storetypes.NewTransientStoreKey("transient_test"))
 
 	maccPerms := map[string][]string{
 		disttypes.ModuleName: {authtypes.Minter},
@@ -70,15 +67,7 @@ func TestFundsMigration(t *testing.T) {
 	// gomock initializations
 	ctrl := gomock.NewController(t)
 	stakingKeeper := distrtestutil.NewMockStakingKeeper(ctrl)
-
-	baseApp := baseapp.NewBaseApp(
-		"distribution",
-		log.NewNopLogger(),
-		testCtx.DB,
-		encCfg.TxConfig.TxDecoder(),
-	)
-	baseApp.SetCMS(testCtx.CMS)
-	baseApp.SetInterfaceRegistry(encCfg.InterfaceRegistry)
+	poolKeeper := distrtestutil.NewMockPoolKeeper(ctrl)
 
 	// create distribution keeper
 	distrKeeper := keeper.NewKeeper(
@@ -87,8 +76,7 @@ func TestFundsMigration(t *testing.T) {
 		accountKeeper,
 		bankKeeper,
 		stakingKeeper,
-		baseApp.MsgServiceRouter(),
-		baseApp.GRPCQueryRouter(),
+		poolKeeper,
 		disttypes.ModuleName,
 		authority.String(),
 	)

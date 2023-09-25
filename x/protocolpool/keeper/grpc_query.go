@@ -3,11 +3,9 @@ package keeper
 import (
 	"context"
 
-	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/x/protocolpool/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 var _ types.QueryServer = Querier{}
@@ -22,12 +20,7 @@ func NewQuerier(keeper Keeper) Querier {
 
 // CommunityPool queries the community pool coins
 func (k Querier) CommunityPool(ctx context.Context, req *types.QueryCommunityPoolRequest) (*types.QueryCommunityPoolResponse, error) {
-	moduleAccount := k.authKeeper.GetModuleAccount(ctx, types.ModuleName)
-	if moduleAccount == nil {
-		panic(errorsmod.Wrapf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", moduleAccount))
-	}
-	amount := k.bankKeeper.GetAllBalances(ctx, moduleAccount.GetAddress())
+	amount := k.Keeper.GetCommunityPool(ctx)
 	decCoins := sdk.NewDecCoinsFromCoins(amount...)
-
 	return &types.QueryCommunityPoolResponse{Pool: decCoins}, nil
 }

@@ -4,8 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
-	pooltypes "cosmossdk.io/api/cosmos/protocolpool/v1"
 	"cosmossdk.io/collections"
 	"cosmossdk.io/errors"
 	sdkmath "cosmossdk.io/math"
@@ -144,8 +142,6 @@ func (keeper Keeper) ChargeDeposit(ctx context.Context, proposalID uint64, destA
 	rate := sdkmath.LegacyMustNewDecFromStr(proposalCancelRate)
 	var cancellationCharges sdk.Coins
 
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-
 	deposits, err := keeper.GetDeposits(ctx, proposalID)
 	if err != nil {
 		return err
@@ -202,19 +198,10 @@ func (keeper Keeper) ChargeDeposit(ctx context.Context, proposalID uint64, destA
 				return err
 			}
 		case poolAddress.String() == destAddress:
-			// send cancellation charges to the community pool
-			msgResp, err := keeper.fundCommunityPool(sdkCtx, cancellationCharges, keeper.ModuleAccountAddress().String())
+			err := keeper.poolKeeper.FundCommunityPool(ctx, cancellationCharges, keeper.ModuleAccountAddress())
 			if err != nil {
 				return err
 			}
-
-			events := msgResp.Events
-			sdkEvents := make([]sdk.Event, 0, len(events))
-			for _, event := range events {
-				sdkEvents = append(sdkEvents, sdk.Event(event))
-			}
-			sdkCtx.EventManager().EmitEvents(sdkEvents)
-
 		default:
 			destAccAddress, err := keeper.authKeeper.AddressCodec().StringToBytes(destAddress)
 			if err != nil {
@@ -230,32 +217,6 @@ func (keeper Keeper) ChargeDeposit(ctx context.Context, proposalID uint64, destA
 	}
 
 	return nil
-}
-
-// fundCommunityPool sends the cancellationCharges to protocolpool module account using the message router defined in Keeper.
-func (keeper Keeper) fundCommunityPool(ctx sdk.Context, cancellationCharges sdk.Coins, depositor string) (*sdk.Result, error) {
-	amount := make([]*basev1beta1.Coin, len(cancellationCharges))
-	for i, coin := range cancellationCharges {
-		amount[i] = &basev1beta1.Coin{
-			Denom:  coin.Denom,
-			Amount: coin.Amount.String(),
-		}
-	}
-	msg := pooltypes.MsgFundCommunityPool{
-		Amount:    amount,
-		Depositor: depositor,
-	}
-
-	// Pass the msg to the MessageRouter
-	handler := keeper.router.Handler(&msg)
-	if handler == nil {
-		return nil, fmt.Errorf("message not recognized by router: %s", sdk.MsgTypeURL(&msg))
-	}
-	msgResp, err := handler(ctx, &msg)
-	if err != nil {
-		return nil, err
-	}
-	return msgResp, nil
 }
 
 // RefundAndDeleteDeposits refunds and deletes all the deposits on a specific proposal.

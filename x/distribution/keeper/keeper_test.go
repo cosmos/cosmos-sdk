@@ -38,13 +38,12 @@ func TestSetWithdrawAddr(t *testing.T) {
 	bankKeeper := distrtestutil.NewMockBankKeeper(ctrl)
 	stakingKeeper := distrtestutil.NewMockStakingKeeper(ctrl)
 	accountKeeper := distrtestutil.NewMockAccountKeeper(ctrl)
+	poolKeeper := distrtestutil.NewMockPoolKeeper(ctrl)
 
 	accountKeeper.EXPECT().GetModuleAddress("distribution").Return(distrAcc.GetAddress())
 
 	bankKeeper.EXPECT().BlockedAddr(withdrawAddr).Return(false).AnyTimes()
 	bankKeeper.EXPECT().BlockedAddr(distrAcc.GetAddress()).Return(true).AnyTimes()
-
-	baseApp := initBaseApp(testCtx, encCfg)
 
 	distrKeeper := keeper.NewKeeper(
 		encCfg.Codec,
@@ -52,8 +51,7 @@ func TestSetWithdrawAddr(t *testing.T) {
 		accountKeeper,
 		bankKeeper,
 		stakingKeeper,
-		baseApp.MsgServiceRouter(),
-		baseApp.GRPCQueryRouter(),
+		poolKeeper,
 		"fee_collector",
 		authtypes.NewModuleAddress("gov").String(),
 	)
@@ -91,6 +89,7 @@ func TestWithdrawValidatorCommission(t *testing.T) {
 	bankKeeper := distrtestutil.NewMockBankKeeper(ctrl)
 	stakingKeeper := distrtestutil.NewMockStakingKeeper(ctrl)
 	accountKeeper := distrtestutil.NewMockAccountKeeper(ctrl)
+	poolKeeper := distrtestutil.NewMockPoolKeeper(ctrl)
 
 	accountKeeper.EXPECT().GetModuleAddress("distribution").Return(distrAcc.GetAddress())
 
@@ -99,16 +98,13 @@ func TestWithdrawValidatorCommission(t *testing.T) {
 		sdk.NewDecCoinFromDec("stake", math.LegacyNewDec(3).Quo(math.LegacyNewDec(2))),
 	}
 
-	baseApp := initBaseApp(testCtx, encCfg)
-
 	distrKeeper := keeper.NewKeeper(
 		encCfg.Codec,
 		storeService,
 		accountKeeper,
 		bankKeeper,
 		stakingKeeper,
-		baseApp.MsgServiceRouter(),
-		baseApp.GRPCQueryRouter(),
+		poolKeeper,
 		"fee_collector",
 		authtypes.NewModuleAddress("gov").String(),
 	)
@@ -152,10 +148,9 @@ func TestGetTotalRewards(t *testing.T) {
 	bankKeeper := distrtestutil.NewMockBankKeeper(ctrl)
 	stakingKeeper := distrtestutil.NewMockStakingKeeper(ctrl)
 	accountKeeper := distrtestutil.NewMockAccountKeeper(ctrl)
+	poolKeeper := distrtestutil.NewMockPoolKeeper(ctrl)
 
 	accountKeeper.EXPECT().GetModuleAddress("distribution").Return(distrAcc.GetAddress())
-
-	baseApp := initBaseApp(testCtx, encCfg)
 
 	distrKeeper := keeper.NewKeeper(
 		encCfg.Codec,
@@ -163,8 +158,7 @@ func TestGetTotalRewards(t *testing.T) {
 		accountKeeper,
 		bankKeeper,
 		stakingKeeper,
-		baseApp.MsgServiceRouter(),
-		baseApp.GRPCQueryRouter(),
+		poolKeeper,
 		"fee_collector",
 		authtypes.NewModuleAddress("gov").String(),
 	)

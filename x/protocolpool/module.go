@@ -3,8 +3,6 @@ package protocolpool
 import (
 	"context"
 
-	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
-
 	modulev1 "cosmossdk.io/api/cosmos/protocolpool/module/v1"
 	"cosmossdk.io/core/appmodule"
 	storetypes "cosmossdk.io/core/store"
@@ -12,6 +10,7 @@ import (
 	"cosmossdk.io/x/protocolpool/keeper"
 	"cosmossdk.io/x/protocolpool/simulation"
 	"cosmossdk.io/x/protocolpool/types"
+	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -25,6 +24,8 @@ import (
 const ConsensusVersion = 1
 
 var (
+	_ module.AppModuleBasic = AppModule{}
+
 	_ module.AppModule           = AppModule{}
 	_ module.AppModuleSimulation = AppModule{}
 )

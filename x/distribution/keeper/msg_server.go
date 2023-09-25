@@ -2,12 +2,9 @@ package keeper
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/hashicorp/go-metrics"
 
-	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
-	pooltypes "cosmossdk.io/api/cosmos/protocolpool/v1"
 	"cosmossdk.io/errors"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -107,35 +104,18 @@ func (k msgServer) WithdrawValidatorCommission(ctx context.Context, msg *types.M
 // Deprecated: DO NOT USE
 // This method uses deprecated message request. Use FundCommunityPool from x/protocolpool module instead.
 func (k msgServer) FundCommunityPool(ctx context.Context, msg *types.MsgFundCommunityPool) (*types.MsgFundCommunityPoolResponse, error) {
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-
-	amount := make([]*basev1beta1.Coin, len(msg.Amount))
-	for i, coin := range msg.Amount {
-		amount[i] = &basev1beta1.Coin{
-			Denom:  coin.Denom,
-			Amount: coin.Amount.String(),
-		}
-	}
-	poolMsg := pooltypes.MsgFundCommunityPool{
-		Amount:    amount,
-		Depositor: msg.Depositor,
-	}
-	// Pass the msg to the MessageRouter
-	handler := k.router.Handler(&poolMsg)
-	if handler == nil {
-		return nil, fmt.Errorf("message not recognized by router: %s", sdk.MsgTypeURL(&poolMsg))
-	}
-	msgResp, err := handler(sdkCtx, &poolMsg)
+	depositor, err := k.authKeeper.AddressCodec().StringToBytes(msg.Depositor)
 	if err != nil {
+		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid depositor address: %s", err)
+	}
+
+	if err := validateAmount(msg.Amount); err != nil {
 		return nil, err
 	}
 
-	events := msgResp.Events
-	sdkEvents := make([]sdk.Event, 0, len(events))
-	for _, event := range events {
-		sdkEvents = append(sdkEvents, sdk.Event(event))
+	if err := k.poolKeeper.FundCommunityPool(ctx, msg.Amount, depositor); err != nil {
+		return nil, err
 	}
-	sdkCtx.EventManager().EmitEvents(sdkEvents)
 
 	return &types.MsgFundCommunityPoolResponse{}, nil
 }
@@ -164,38 +144,25 @@ func (k msgServer) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams)
 // Deprecated: DO NOT USE
 // This method uses deprecated message request. Use CommunityPoolSpend from x/protocolpool module instead.
 func (k msgServer) CommunityPoolSpend(ctx context.Context, msg *types.MsgCommunityPoolSpend) (*types.MsgCommunityPoolSpendResponse, error) {
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-
-	amount := make([]*basev1beta1.Coin, len(msg.Amount))
-	for i, coin := range msg.Amount {
-		amount[i] = &basev1beta1.Coin{
-			Denom:  coin.Denom,
-			Amount: coin.Amount.String(),
-		}
+	if err := k.validateAuthority(msg.Authority); err != nil {
+		return nil, err
 	}
 
-	poolMsg := pooltypes.MsgCommunityPoolSpend{
-		Authority: msg.Authority,
-		Recipient: msg.Recipient,
-		Amount:    amount,
+	if err := validateAmount(msg.Amount); err != nil {
+		return nil, err
 	}
 
-	// Pass the msg to the MessageRouter
-	handler := k.router.Handler(&poolMsg)
-	if handler == nil {
-		return nil, fmt.Errorf("message not recognized by router: %s", sdk.MsgTypeURL(&poolMsg))
-	}
-	msgResp, err := handler(sdkCtx, &poolMsg)
+	recipient, err := k.authKeeper.AddressCodec().StringToBytes(msg.Recipient)
 	if err != nil {
 		return nil, err
 	}
 
-	events := msgResp.Events
-	sdkEvents := make([]sdk.Event, 0, len(events))
-	for _, event := range events {
-		sdkEvents = append(sdkEvents, sdk.Event(event))
+	if err := k.poolKeeper.DistributeFromFeePool(ctx, msg.Amount, recipient); err != nil {
+		return nil, err
 	}
-	sdkCtx.EventManager().EmitEvents(sdkEvents)
+
+	logger := k.Logger(ctx)
+	logger.Info("transferred from the community pool to recipient", "amount", msg.Amount.String(), "recipient", msg.Recipient)
 
 	return &types.MsgCommunityPoolSpendResponse{}, nil
 }
@@ -250,6 +217,18 @@ func (k *Keeper) validateAuthority(authority string) error {
 
 	if k.authority != authority {
 		return errors.Wrapf(types.ErrInvalidSigner, "invalid authority; expected %s, got %s", k.authority, authority)
+	}
+
+	return nil
+}
+
+func validateAmount(amount sdk.Coins) error {
+	if amount == nil {
+		return errors.Wrap(sdkerrors.ErrInvalidCoins, "amount cannot be nil")
+	}
+
+	if err := amount.Validate(); err != nil {
+		return errors.Wrap(sdkerrors.ErrInvalidCoins, amount.String())
 	}
 
 	return nil

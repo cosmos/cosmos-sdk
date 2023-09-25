@@ -33,6 +33,13 @@ type BankKeeper interface {
 	BlockedAddr(addr sdk.AccAddress) bool
 }
 
+// PoolKeeper defines the expected interface needed to fund & distribute pool balances.
+type PoolKeeper interface {
+	FundCommunityPool(ctx context.Context, amount sdk.Coins, sender sdk.AccAddress) error
+	DistributeFromFeePool(ctx context.Context, amount sdk.Coins, receiveAddr sdk.AccAddress) error
+	GetCommunityPool(ctx context.Context) sdk.Coins
+}
+
 // StakingKeeper expected staking keeper (noalias)
 type StakingKeeper interface {
 	ValidatorAddressCodec() address.Codec

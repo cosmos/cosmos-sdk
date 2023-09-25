@@ -21,6 +21,7 @@ import (
 type Keeper struct {
 	authKeeper types.AccountKeeper
 	bankKeeper types.BankKeeper
+	poolKeeper types.PoolKeeper
 
 	// The reference to the DelegationSet and ValidatorSet to get information about validators and delegators
 	sk types.StakingKeeper
@@ -78,7 +79,7 @@ func (k Keeper) GetAuthority() string {
 // CONTRACT: the parameter Subspace must have the param key table already initialized
 func NewKeeper(
 	cdc codec.Codec, storeService corestoretypes.KVStoreService, authKeeper types.AccountKeeper,
-	bankKeeper types.BankKeeper, sk types.StakingKeeper,
+	bankKeeper types.BankKeeper, sk types.StakingKeeper, pk types.PoolKeeper,
 	router baseapp.MessageRouter, config types.Config, authority string,
 ) *Keeper {
 	// ensure governance module account is set
@@ -101,6 +102,7 @@ func NewKeeper(
 		authKeeper:             authKeeper,
 		bankKeeper:             bankKeeper,
 		sk:                     sk,
+		poolKeeper:             pk,
 		cdc:                    cdc,
 		router:                 router,
 		config:                 config,

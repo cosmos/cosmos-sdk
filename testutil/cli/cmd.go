@@ -8,13 +8,12 @@ import (
 
 	"cosmossdk.io/core/address"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
+	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/bank"
+	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
@@ -44,21 +43,60 @@ func MsgSendExec(clientCtx client.Context, from, to, amount fmt.Stringer, ac add
 		return nil, err
 	}
 
-	cdc := moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{}, bank.AppModuleBasic{}).Codec
-	router := baseapp.NewMsgServiceRouter()
-
-	router.SetInterfaceRegistry(cdc.InterfaceRegistry())
-
+	txBuilder := clientCtx.TxConfig.NewTxBuilder()
 	msgSend := banktypes.MsgSend{
 		FromAddress: from.String(),
 		ToAddress:   to.String(),
 		Amount:      coins,
 	}
 
-	handler := router.Handler(&msgSend)
+	fee := sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(0)))
+	txBuilder.SetFeeAmount(fee)    // Arbitrary fee
+	txBuilder.SetGasLimit(1000000) // Need at least 100386
 
-	fmt.Printf("handler: %v\n", handler)
+	err = txBuilder.SetMsgs(&msgSend)
+	if err != nil {
+		return nil, err
+	}
 
+	txFactory := tx.Factory{}
+	txFactory = txFactory.
+		WithChainID(clientCtx.ChainID).
+		WithKeybase(clientCtx.Keyring).
+		WithTxConfig(clientCtx.TxConfig)
+
+	accBytes, err := clientCtx.AddressCodec.StringToBytes(from.String())
+	if err != nil {
+		return nil, err
+	}
+
+	keyRecord, err := clientCtx.Keyring.KeyByAddress(accBytes)
+	if err != nil {
+		return nil, err
+	}
+
+	err = tx.Sign(context.Background(), txFactory, keyRecord.Name, txBuilder, true)
+	if err != nil {
+		return nil, err
+	}
+
+	txBz, err := clientCtx.TxConfig.TxJSONEncoder()(txBuilder.GetTx())
+	if err != nil {
+		return nil, err
+	}
+
+	fmt.Println("txBz", string(txBz))
+
+	req := &txtypes.BroadcastTxRequest{
+		TxBytes: txBz,
+		Mode:    txtypes.BroadcastMode_BROADCAST_MODE_SYNC,
+	}
+
+	serviceClient := txtypes.NewServiceClient(clientCtx)
+	resp, err := serviceClient.BroadcastTx(context.Background(), req)
+
+	fmt.Println("Resp", resp, err)
+
+	// return resp, err
 	return nil, nil
-	// return ExecTestCLICmd(clientCtx, cli.NewSendTxCmd(ac), args)
 }

@@ -62,7 +62,7 @@ func (s *intTestSuite) TestConvertToBigIntMutative() {
 
 	// Compare value of BigInt & BigIntMut
 	s.Require().Equal(i.BigInt(), i.BigIntMut())
-	
+
 	// Modify BigIntMut() pointer and ensure i.BigIntMut() & i.BigInt() change
 	p := i.BigIntMut()
 	p.SetInt64(50)

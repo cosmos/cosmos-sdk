@@ -812,6 +812,90 @@ func TestMsgUpdateParams(t *testing.T) {
 	}
 }
 
+func TestMsgCommunityPoolSpend(t *testing.T) {
+	t.Parallel()
+	f := initFixture(t)
+
+	initTokens := f.stakingKeeper.TokensFromConsensusPower(f.sdkCtx, int64(100))
+	err := f.bankKeeper.MintCoins(f.sdkCtx, distrtypes.ModuleName, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens)))
+	require.NoError(t, err)
+
+	// fund pool module account
+	amount := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
+	poolAcc := f.accountKeeper.GetModuleAccount(f.sdkCtx, "protocol-pool")
+	err = f.bankKeeper.SendCoinsFromModuleToModule(f.sdkCtx, distrtypes.ModuleName, poolAcc.GetName(), amount)
+	require.NoError(t, err)
+
+	// query the community pool to verify it has been updated with balance
+	poolBal := f.bankKeeper.GetAllBalances(f.sdkCtx, poolAcc.GetAddress())
+	assert.Assert(t, poolBal.Equal(amount))
+
+	recipient := sdk.AccAddress([]byte("addr1"))
+
+	testCases := []struct {
+		name      string
+		msg       *distrtypes.MsgCommunityPoolSpend //nolint:staticcheck // we're using a deprecated call
+		expErr    bool
+		expErrMsg string
+	}{
+		{
+			name: "invalid authority",
+			msg: &distrtypes.MsgCommunityPoolSpend{ //nolint:staticcheck // we're using a deprecated call
+				Authority: "invalid",
+				Recipient: recipient.String(),
+				Amount:    sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(100))),
+			},
+			expErr:    true,
+			expErrMsg: "invalid authority",
+		},
+		{
+			name: "invalid recipient",
+			msg: &distrtypes.MsgCommunityPoolSpend{ //nolint:staticcheck // we're using a deprecated call
+				Authority: f.distrKeeper.GetAuthority(),
+				Recipient: "invalid",
+				Amount:    sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(100))),
+			},
+			expErr:    true,
+			expErrMsg: "decoding bech32 failed",
+		},
+		{
+			name: "valid message",
+			msg: &distrtypes.MsgCommunityPoolSpend{ //nolint:staticcheck // we're using a deprecated call
+				Authority: f.distrKeeper.GetAuthority(),
+				Recipient: recipient.String(),
+				Amount:    sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(100))),
+			},
+			expErr: false,
+		},
+	}
+	for _, tc := range testCases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			res, err := f.app.RunMsg(
+				tc.msg,
+				integration.WithAutomaticFinalizeBlock(),
+				integration.WithAutomaticCommit(),
+			)
+			if tc.expErr {
+				assert.ErrorContains(t, err, tc.expErrMsg)
+			} else {
+				assert.NilError(t, err)
+				assert.Assert(t, res != nil)
+
+				// check the result
+				result := distrtypes.MsgCommunityPoolSpend{} //nolint:staticcheck // we're using a deprecated call
+				err = f.cdc.Unmarshal(res.Value, &result)
+				assert.NilError(t, err)
+
+				// query the community pool to verify it has been updated
+				poolBal := f.bankKeeper.GetAllBalances(f.sdkCtx, poolAcc.GetAddress())
+				assert.Assert(t, poolBal.Empty())
+
+			}
+		})
+	}
+}
+
 func TestMsgDepositValidatorRewardsPool(t *testing.T) {
 	t.Parallel()
 	f := initFixture(t)

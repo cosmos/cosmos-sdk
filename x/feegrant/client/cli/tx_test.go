@@ -96,7 +96,12 @@ func (s *CLITestSuite) SetupSuite() {
 
 	s.createGrant(granter, grantee)
 
-	grant, err := feegrant.NewGrant(granter, grantee, &feegrant.BasicAllowance{
+	granteeStr, err := s.baseCtx.AddressCodec.BytesToString(grantee)
+	s.Require().NoError(err)
+	granterStr, err := s.baseCtx.AddressCodec.BytesToString(granter)
+	s.Require().NoError(err)
+
+	grant, err := feegrant.NewGrant(granterStr, granteeStr, &feegrant.BasicAllowance{
 		SpendLimit: sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(100))),
 	})
 	s.Require().NoError(err)

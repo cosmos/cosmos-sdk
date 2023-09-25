@@ -13,7 +13,7 @@ require (
 	cosmossdk.io/log v1.2.1
 	cosmossdk.io/math v1.1.2
 	cosmossdk.io/store v1.0.0-rc.0
-	cosmossdk.io/x/protocolpool v0.0.0-20230922061658-07ff495e05da
+	cosmossdk.io/x/protocolpool v0.0.0-20230925100009-095ee2024af0
 	cosmossdk.io/x/tx v0.10.0
 	github.com/99designs/keyring v1.2.1
 	github.com/bgentry/speakeasy v0.1.1-0.20220910012023-760eaf8b6816
@@ -171,7 +171,7 @@ replace cosmossdk.io/api => ./api
 
 // Below are the long-lived replace of the Cosmos SDK
 replace (
-	cosmossdk.io/protocolpool => ./x/protocolpool
+	cosmossdk.io/x/protocolpool => ./x/protocolpool
 	// use cosmos fork of keyring
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 	// dgrijalva/jwt-go is deprecated and doesn't receive security updates.

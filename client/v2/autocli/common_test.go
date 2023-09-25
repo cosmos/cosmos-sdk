@@ -75,7 +75,7 @@ func initFixture(t *testing.T) *fixture {
 		AddQueryConnFlags: flags.AddQueryFlagsToCmd,
 		AddTxConnFlags:    flags.AddTxFlagsToCmd,
 	}
-	assert.NilError(t, b.Validate())
+	assert.NilError(t, b.ValidateAndComplete())
 
 	return &fixture{
 		conn: conn,

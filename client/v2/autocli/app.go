@@ -92,7 +92,7 @@ func (appOptions AppOptions) EnhanceRootCommand(rootCmd *cobra.Command) error {
 }
 
 func (appOptions AppOptions) EnhanceRootCommandWithBuilder(rootCmd *cobra.Command, builder *Builder) error {
-	if err := builder.Validate(); err != nil {
+	if err := builder.ValidateAndComplete(); err != nil {
 		return err
 	}
 

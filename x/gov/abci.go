@@ -31,6 +31,7 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) error {
 			// this could be to some types missing their registration
 			// instead of returning an error (i.e, halting the chain), we fail the proposal
 			if errors.Is(err, collections.ErrEncoding) {
+				proposal.Id = key.K2()
 				if err := failUnsupportedProposal(logger, ctx, keeper, proposal, err.Error()); err != nil {
 					return false, err
 				}
@@ -98,6 +99,7 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) error {
 			// this could be to some types missing their registration
 			// instead of returning an error (i.e, halting the chain), we fail the proposal
 			if errors.Is(err, collections.ErrEncoding) {
+				proposal.Id = key.K2()
 				if err := failUnsupportedProposal(logger, ctx, keeper, proposal, err.Error()); err != nil {
 					return false, err
 				}

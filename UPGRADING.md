@@ -5,6 +5,10 @@ Note, always read the **SimApp** section for more information on application wir
 
 ## [Unreleased]
 
+### Params
+
+Params Migrations were removed. It is required to migrate to 0.50 prior to upgrading to .51.
+
 ### SimApp
 
 In this section we describe the changes made in Cosmos SDK' SimApp.

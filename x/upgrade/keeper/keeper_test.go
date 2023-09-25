@@ -77,9 +77,9 @@ func (s *KeeperTestSuite) SetupTest() {
 
 	s.msgSrvr = keeper.NewMsgServerImpl(s.upgradeKeeper)
 	s.addrs = simtestutil.CreateIncrementalAccounts(1)
-	encodedaddr, err := ac.BytesToString(s.addrs[0].Bytes())
+	encodedAddr, err := ac.BytesToString(s.addrs[0].Bytes())
 	s.Require().NoError(err)
-	s.encodedAddrs = []string{encodedaddr}
+	s.encodedAddrs = []string{encodedAddr}
 }
 
 func (s *KeeperTestSuite) TestReadUpgradeInfoFromDisk() {

@@ -2,6 +2,7 @@ package flag
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -13,7 +14,7 @@ import (
 type coinType struct{}
 
 type coinValue struct {
-	values []*basev1beta1.Coin
+	value *basev1beta1.Coin
 }
 
 func (c coinType) NewValue(context.Context, *Builder) Value {
@@ -25,42 +26,27 @@ func (c coinType) DefaultValue() string {
 	return stringCoin
 }
 
-func (c *coinValue) Get(mutable protoreflect.Value) (protoreflect.Value, error) {
-	if c.values == nil {
+func (c *coinValue) Get(protoreflect.Value) (protoreflect.Value, error) {
+	if c.value == nil {
 		return protoreflect.Value{}, nil
 	}
-
-	list := mutable.List()
-	for _, value := range c.values {
-		list.Append(protoreflect.ValueOfMessage(value.ProtoReflect()))
-	}
-
-	return mutable, nil
+	return protoreflect.ValueOfMessage(c.value.ProtoReflect()), nil
 }
 
 func (c *coinValue) String() string {
-	if len(c.values) == 1 {
-		return c.values[0].String()
-	}
-
-	var result string
-	for _, coin := range c.values {
-		result += coin.String() + ","
-	}
-
-	return result
+	return c.value.String()
 }
 
 func (c *coinValue) Set(stringValue string) error {
-	result := strings.Split(stringValue, ",")
-	for _, coin := range result {
-		coin, err := coins.ParseCoin(coin)
-		if err != nil {
-			return err
-		}
-		c.values = append(c.values, coin)
+	if strings.Contains(stringValue, ",") {
+		return fmt.Errorf("coin flag must be a single coin, specific multiple coins with multiple flags or spaces")
 	}
 
+	coin, err := coins.ParseCoin(stringValue)
+	if err != nil {
+		return err
+	}
+	c.value = coin
 	return nil
 }
 

@@ -50,7 +50,14 @@ func (k Keeper) Owner(goCtx context.Context, r *nft.QueryOwnerRequest) (*nft.Que
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	owner := k.GetOwner(ctx, r.ClassId, r.Id)
-	return &nft.QueryOwnerResponse{Owner: owner.String()}, nil
+	if owner.Empty() {
+		return &nft.QueryOwnerResponse{Owner: ""}, nil
+	}
+	ownerstr, err := k.ac.BytesToString(owner.Bytes())
+	if err != nil {
+		return nil, err
+	}
+	return &nft.QueryOwnerResponse{Owner: ownerstr}, nil
 }
 
 // Supply return the number of NFTs from the given class, same as totalSupply of ERC721.

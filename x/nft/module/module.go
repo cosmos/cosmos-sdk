@@ -141,8 +141,8 @@ func (AppModule) ConsensusVersion() uint64 { return 1 }
 // AppModuleSimulation functions
 
 // GenerateGenesisState creates a randomized GenState of the nft module.
-func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
-	simulation.RandomizedGenState(simState)
+func (am AppModule) GenerateGenesisState(simState *module.SimulationState) {
+	simulation.RandomizedGenState(simState, am.accountKeeper.AddressCodec())
 }
 
 // RegisterStoreDecoder registers a decoder for nft module's types

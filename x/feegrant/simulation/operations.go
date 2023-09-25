@@ -181,7 +181,13 @@ func SimulateMsgRevokeAllowance(
 		spendableCoins := bk.SpendableCoins(ctx, account.GetAddress())
 
 		granterStr, err := ak.AddressCodec().BytesToString(granterAddr)
+		if err != nil {
+			return simtypes.NoOpMsg(feegrant.ModuleName, TypeMsgRevokeAllowance, err.Error()), nil, err
+		}
 		granteeStr, err := ak.AddressCodec().BytesToString(granteeAddr)
+		if err != nil {
+			return simtypes.NoOpMsg(feegrant.ModuleName, TypeMsgRevokeAllowance, err.Error()), nil, err
+		}
 		msg := feegrant.NewMsgRevokeAllowance(granterStr, granteeStr)
 
 		txCtx := simulation.OperationInput{

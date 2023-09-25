@@ -199,7 +199,9 @@ func (suite *SimTestSuite) TestSimulateMsgRevokeAllowance() {
 	require.NoError(err)
 
 	granterStr, err := suite.accountKeeper.AddressCodec().BytesToString(accounts[0].Address)
+	require.NoError(err)
 	granteeStr, err := suite.accountKeeper.AddressCodec().BytesToString(accounts[1].Address)
+	require.NoError(err)
 
 	// execute operation
 	op := simulation.SimulateMsgRevokeAllowance(codec.NewProtoCodec(suite.interfaceRegistry), suite.txConfig, suite.accountKeeper, suite.bankKeeper, suite.feegrantKeeper, codecaddress.NewBech32Codec("cosmos"))

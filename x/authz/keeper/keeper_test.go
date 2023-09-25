@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
@@ -60,7 +61,10 @@ func (s *TestSuite) SetupTest() {
 		s.encCfg.TxConfig.TxDecoder(),
 	)
 	s.baseApp.SetCMS(testCtx.CMS)
+	fmt.Printf("s.baseApp.MsgServiceRouter()1: %v\n", s.baseApp.MsgServiceRouter())
 	s.baseApp.SetInterfaceRegistry(s.encCfg.InterfaceRegistry)
+	fmt.Printf("s.encCfg.InterfaceRegistry: %v\n", s.encCfg.InterfaceRegistry)
+	fmt.Printf("s.baseApp.MsgServiceRouter()2: %v\n", s.baseApp.MsgServiceRouter())
 
 	s.addrs = simtestutil.CreateIncrementalAccounts(7)
 

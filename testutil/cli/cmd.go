@@ -8,9 +8,14 @@ import (
 
 	"cosmossdk.io/core/address"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/testutil"
-	"github.com/cosmos/cosmos-sdk/x/bank/client/cli"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/bank"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 // ExecTestCLICmd builds the client context, mocks the output and executes the command.
@@ -34,5 +39,27 @@ func MsgSendExec(clientCtx client.Context, from, to, amount fmt.Stringer, ac add
 	args := []string{from.String(), to.String(), amount.String()}
 	args = append(args, extraArgs...)
 
-	return ExecTestCLICmd(clientCtx, cli.NewSendTxCmd(ac), args)
+	coins, err := sdk.ParseCoinsNormalized(amount.String())
+	if err != nil {
+		return nil, err
+	}
+
+	cdc := moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{}, bank.AppModuleBasic{}).Codec
+	router := baseapp.NewMsgServiceRouter()
+
+	router.SetInterfaceRegistry(cdc.InterfaceRegistry())
+
+	msgSend := banktypes.MsgSend{
+		FromAddress: from.String(),
+		ToAddress:   to.String(),
+		Amount:      coins,
+	}
+
+	// router.RegisterService(router, banktypes.MsgServer{})
+	handler := router.Handler(&msgSend)
+
+	fmt.Printf("handler: %v\n", handler)
+
+	return nil, nil
+	// return ExecTestCLICmd(clientCtx, cli.NewSendTxCmd(ac), args)
 }

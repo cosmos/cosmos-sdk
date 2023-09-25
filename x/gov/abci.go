@@ -31,7 +31,7 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) error {
 			// this could be to some types missing their registration
 			// instead of returning an error (i.e, halting the chain), we fail the proposal
 			if errors.Is(err, collections.ErrEncoding) {
-				if err := deleteUnsupportedProposals(logger, ctx, keeper, proposal, err.Error()); err != nil {
+				if err := failUnsupportedProposal(logger, ctx, keeper, proposal, err.Error()); err != nil {
 					return false, err
 				}
 
@@ -98,7 +98,7 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) error {
 			// this could be to some types missing their registration
 			// instead of returning an error (i.e, halting the chain), we fail the proposal
 			if errors.Is(err, collections.ErrEncoding) {
-				if err := deleteUnsupportedProposals(logger, ctx, keeper, proposal, err.Error()); err != nil {
+				if err := failUnsupportedProposal(logger, ctx, keeper, proposal, err.Error()); err != nil {
 					return false, err
 				}
 
@@ -266,7 +266,8 @@ func safeExecuteHandler(ctx sdk.Context, msg sdk.Msg, handler baseapp.MsgService
 	return
 }
 
-func deleteUnsupportedProposals(
+// failUnsupportedProposal fails a proposal that cannot be processed by gov
+func failUnsupportedProposal(
 	logger log.Logger,
 	ctx sdk.Context,
 	keeper *keeper.Keeper,
@@ -274,7 +275,7 @@ func deleteUnsupportedProposals(
 	errMsg string,
 ) error {
 	proposal.Status = v1.StatusFailed
-	proposal.FailedReason = errMsg
+	proposal.FailedReason = fmt.Sprintf("proposal failed because it cannot be processed by gov: %s", errMsg)
 	proposal.Messages = nil // clear out the messages
 
 	if err := keeper.SetProposal(ctx, proposal); err != nil {
@@ -289,7 +290,7 @@ func deleteUnsupportedProposals(
 		sdk.NewEvent(
 			types.EventTypeInactiveProposal,
 			sdk.NewAttribute(types.AttributeKeyProposalID, fmt.Sprintf("%d", proposal.Id)),
-			sdk.NewAttribute(types.AttributeKeyProposalResult, types.AttributeValueProposalDropped),
+			sdk.NewAttribute(types.AttributeKeyProposalResult, types.AttributeValueProposalFailed),
 		),
 	)
 
@@ -302,5 +303,4 @@ func deleteUnsupportedProposals(
 	)
 
 	return nil
-
 }

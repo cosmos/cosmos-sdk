@@ -8,11 +8,9 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/collections"
-	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -1084,17 +1082,4 @@ func Test100PercentCommissionReward(t *testing.T) {
 		}
 	}
 	require.True(t, hasValue)
-}
-
-func initBaseApp(testCtx testutil.TestContext, encCfg moduletestutil.TestEncodingConfig) *baseapp.BaseApp {
-	baseApp := baseapp.NewBaseApp(
-		"distribution",
-		log.NewNopLogger(),
-		testCtx.DB,
-		encCfg.TxConfig.TxDecoder(),
-	)
-	baseApp.SetCMS(testCtx.CMS)
-	baseApp.SetInterfaceRegistry(encCfg.InterfaceRegistry)
-
-	return baseApp
 }

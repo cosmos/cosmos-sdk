@@ -17,7 +17,6 @@ import (
 	poolkeeper "cosmossdk.io/x/protocolpool/keeper"
 	pooltypes "cosmossdk.io/x/protocolpool/types"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/runtime"
@@ -56,6 +55,7 @@ type fixture struct {
 	bankKeeper    bankkeeper.Keeper
 	distrKeeper   distrkeeper.Keeper
 	stakingKeeper *stakingkeeper.Keeper
+	poolKeeper    poolkeeper.Keeper
 
 	addr    sdk.AccAddress
 	valAddr sdk.ValAddress
@@ -107,25 +107,18 @@ func initFixture(t *testing.T) *fixture {
 	stakingKeeper := stakingkeeper.NewKeeper(cdc, runtime.NewKVStoreService(keys[stakingtypes.StoreKey]), accountKeeper, bankKeeper, authority.String(), addresscodec.NewBech32Codec(sdk.Bech32PrefixValAddr), addresscodec.NewBech32Codec(sdk.Bech32PrefixConsAddr))
 	require.NoError(t, stakingKeeper.Params.Set(newCtx, stakingtypes.DefaultParams()))
 
-	// Create MsgServiceRouter and GRPCQueryRouter, but don't populate it before creating the distribution
-	// keeper.
-	router := baseapp.NewMsgServiceRouter()
-	router.SetInterfaceRegistry(cdc.InterfaceRegistry())
-	grpcRouter := baseapp.NewGRPCQueryRouter()
-	grpcRouter.SetInterfaceRegistry(cdc.InterfaceRegistry())
-
 	poolKeeper := poolkeeper.NewKeeper(
 		cdc, runtime.NewKVStoreService(keys[pooltypes.StoreKey]), accountKeeper, bankKeeper, authority.String(),
 	)
 
 	distrKeeper := distrkeeper.NewKeeper(
-		cdc, runtime.NewKVStoreService(keys[distrtypes.StoreKey]), accountKeeper, bankKeeper, stakingKeeper, router, grpcRouter, distrtypes.ModuleName, authority.String(),
+		cdc, runtime.NewKVStoreService(keys[distrtypes.StoreKey]), accountKeeper, bankKeeper, stakingKeeper, poolKeeper, distrtypes.ModuleName, authority.String(),
 	)
 
 	authModule := auth.NewAppModule(cdc, accountKeeper, authsims.RandomGenesisAccounts)
 	bankModule := bank.NewAppModule(cdc, bankKeeper, accountKeeper)
 	stakingModule := staking.NewAppModule(cdc, stakingKeeper, accountKeeper, bankKeeper)
-	distrModule := distribution.NewAppModule(cdc, distrKeeper, accountKeeper, bankKeeper, stakingKeeper)
+	distrModule := distribution.NewAppModule(cdc, distrKeeper, accountKeeper, bankKeeper, stakingKeeper, poolKeeper)
 	poolModule := protocolpool.NewAppModule(cdc, poolKeeper, accountKeeper, bankKeeper)
 
 	addr := sdk.AccAddress(PKS[0].Address())
@@ -173,6 +166,7 @@ func initFixture(t *testing.T) *fixture {
 		bankKeeper:    bankKeeper,
 		distrKeeper:   distrKeeper,
 		stakingKeeper: stakingKeeper,
+		poolKeeper:    poolKeeper,
 		addr:          addr,
 		valAddr:       valAddr,
 	}
@@ -594,12 +588,20 @@ func TestMsgFundCommunityPool(t *testing.T) {
 	t.Parallel()
 	f := initFixture(t)
 
-	initTokens := f.stakingKeeper.TokensFromConsensusPower(f.sdkCtx, int64(100))
-	err := f.bankKeeper.MintCoins(f.sdkCtx, distrtypes.ModuleName, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens)))
-	require.NoError(t, err)
-
 	addr := sdk.AccAddress(PKS[0].Address())
 	addr2 := sdk.AccAddress(PKS[1].Address())
+	amount := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
+
+	poolAcc := f.accountKeeper.GetModuleAccount(f.sdkCtx, "protocol-pool")
+
+	// check that the pool account balance is empty
+	assert.Assert(t, f.bankKeeper.GetAllBalances(f.sdkCtx, poolAcc.GetAddress()).Empty())
+
+	// fund the account by minting and sending amount from distribution module to addr
+	err := f.bankKeeper.MintCoins(f.sdkCtx, distrtypes.ModuleName, amount)
+	assert.NilError(t, err)
+	err = f.bankKeeper.SendCoinsFromModuleToAccount(f.sdkCtx, distrtypes.ModuleName, addr, amount)
+	assert.NilError(t, err)
 
 	testCases := []struct {
 		name      string
@@ -662,11 +664,12 @@ func TestMsgFundCommunityPool(t *testing.T) {
 				err = f.cdc.Unmarshal(res.Value, &result)
 				assert.NilError(t, err)
 
-				// // query the community pool funds
-				// feePool, err := f.distrKeeper.FeePool.Get(f.sdkCtx)
-				// require.NoError(t, err)
-				// assert.DeepEqual(t, initPool.CommunityPool.Add(sdk.NewDecCoinsFromCoins(amount...)...), feePool.CommunityPool)
+				// query the community pool funds
+				poolBal := f.bankKeeper.GetAllBalances(f.sdkCtx, poolAcc.GetAddress())
+				assert.Assert(t, poolBal.Equal(amount))
+
 				assert.Assert(t, f.bankKeeper.GetAllBalances(f.sdkCtx, addr).Empty())
+
 			}
 		})
 	}

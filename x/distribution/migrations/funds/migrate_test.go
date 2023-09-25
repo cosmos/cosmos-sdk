@@ -8,6 +8,7 @@ import (
 
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
+	pooltypes "cosmossdk.io/x/protocolpool/types"
 
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/runtime"
@@ -37,8 +38,8 @@ func TestFundsMigration(t *testing.T) {
 	ctx := sdk.NewContext(cms, true, logger)
 
 	maccPerms := map[string][]string{
+		pooltypes.ModuleName: nil,
 		disttypes.ModuleName: {authtypes.Minter},
-		"protocol-pool":      {},
 	}
 
 	authority := authtypes.NewModuleAddress("gov")

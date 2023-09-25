@@ -5,7 +5,6 @@ import (
 )
 
 func (s *KeeperTestSuite) TestSoftwareUpgrade() {
-
 	testCases := []struct {
 		name      string
 		req       *types.MsgSoftwareUpgrade
@@ -79,7 +78,6 @@ func (s *KeeperTestSuite) TestSoftwareUpgrade() {
 }
 
 func (s *KeeperTestSuite) TestCancelUpgrade() {
-
 	err := s.upgradeKeeper.ScheduleUpgrade(s.ctx, types.Plan{
 		Name:   "some name",
 		Info:   "some info",

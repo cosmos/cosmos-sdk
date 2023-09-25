@@ -74,11 +74,6 @@ Examples:
 				return err
 			}
 
-			_, err = ac.StringToBytes(args[1])
-			if err != nil {
-				return err
-			}
-
 			granter := clientCtx.GetFromAddress()
 			granterStr, err := ac.BytesToString(granter)
 			if err != nil {
@@ -209,11 +204,6 @@ Example:
 				return err
 			}
 			clientCtx, err := client.GetClientTxContext(cmd)
-			if err != nil {
-				return err
-			}
-
-			_, err = ac.StringToBytes(args[1])
 			if err != nil {
 				return err
 			}

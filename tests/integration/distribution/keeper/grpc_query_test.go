@@ -429,8 +429,8 @@ func TestGRPCCommunityPool(t *testing.T) {
 	queryClient := types.NewQueryClient(qr)
 
 	var (
-		req     *types.QueryCommunityPoolRequest
-		expPool *types.QueryCommunityPoolResponse
+		req     *types.QueryCommunityPoolRequest  //nolint:staticcheck // we're using a deprecated call
+		expPool *types.QueryCommunityPoolResponse //nolint:staticcheck // we're using a deprecated call
 	)
 
 	testCases := []struct {
@@ -440,8 +440,8 @@ func TestGRPCCommunityPool(t *testing.T) {
 		{
 			name: "valid request empty community pool",
 			malleate: func() {
-				req = &types.QueryCommunityPoolRequest{}
-				expPool = &types.QueryCommunityPoolResponse{}
+				req = &types.QueryCommunityPoolRequest{}      //nolint:staticcheck // we're using a deprecated call
+				expPool = &types.QueryCommunityPoolResponse{} //nolint:staticcheck // we're using a deprecated call
 			},
 		},
 		{
@@ -453,9 +453,9 @@ func TestGRPCCommunityPool(t *testing.T) {
 
 				err := f.poolKeeper.FundCommunityPool(f.sdkCtx, amount, f.addr)
 				assert.Assert(t, err == nil)
-				req = &types.QueryCommunityPoolRequest{}
+				req = &types.QueryCommunityPoolRequest{} //nolint:staticcheck // we're using a deprecated call
 
-				expPool = &types.QueryCommunityPoolResponse{Pool: sdk.NewDecCoinsFromCoins(amount...)}
+				expPool = &types.QueryCommunityPoolResponse{Pool: sdk.NewDecCoinsFromCoins(amount...)} //nolint:staticcheck // we're using a deprecated call
 			},
 		},
 	}
@@ -465,7 +465,7 @@ func TestGRPCCommunityPool(t *testing.T) {
 		t.Run(fmt.Sprintf("Case %s", tc.name), func(t *testing.T) {
 			testCase.malleate()
 
-			pool, err := queryClient.CommunityPool(f.sdkCtx, req)
+			pool, err := queryClient.CommunityPool(f.sdkCtx, req) //nolint:staticcheck // we're using a deprecated call
 
 			assert.NilError(t, err)
 			assert.DeepEqual(t, expPool, pool)

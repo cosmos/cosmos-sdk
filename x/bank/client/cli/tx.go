@@ -29,10 +29,55 @@ func NewTxCmd(ac address.Codec) *cobra.Command {
 	}
 
 	txCmd.AddCommand(
+		NewSendTxCmd(ac),
 		NewMultiSendTxCmd(ac),
 	)
 
 	return txCmd
+}
+
+// NewSendTxCmd returns a CLI command handler for creating a MsgSend transaction.
+func NewSendTxCmd(ac address.Codec) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "send [from_key_or_address] [to_address] [amount]",
+		Short: "Send funds from one account to another.",
+		Long: `Send funds from one account to another.
+Note, the '--from' flag is ignored as it is implied from [from_key_or_address].
+When using '--dry-run' a key name cannot be used, only a bech32 address.
+`,
+		Args: cobra.ExactArgs(3),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			err := cmd.Flags().Set(flags.FlagFrom, args[0])
+			if err != nil {
+				return err
+			}
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+			toAddr, err := ac.StringToBytes(args[1])
+			if err != nil {
+				return err
+			}
+
+			coins, err := sdk.ParseCoinsNormalized(args[2])
+			if err != nil {
+				return err
+			}
+
+			if len(coins) == 0 {
+				return fmt.Errorf("invalid coins")
+			}
+
+			msg := types.NewMsgSend(clientCtx.GetFromAddress(), toAddr, coins)
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
 }
 
 // NewMultiSendTxCmd returns a CLI command handler for creating a MsgMultiSend transaction.

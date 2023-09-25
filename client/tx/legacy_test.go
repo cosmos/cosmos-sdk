@@ -3,7 +3,6 @@ package tx_test
 import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	"github.com/cosmos/cosmos-sdk/types"
-	typestx "github.com/cosmos/cosmos-sdk/types/tx"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
@@ -19,5 +18,4 @@ var (
 	msg1           = banktypes.NewMsgSend(addr1, addr2, types.NewCoins(types.NewInt64Coin("wack", 2)))
 
 	chainID = "test-chain"
-	tip     = &typestx.Tip{Tipper: addr1.String(), Amount: testdata.NewTestFeeAmount()}
 )

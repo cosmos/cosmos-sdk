@@ -8,6 +8,7 @@ import (
 	dbm "github.com/cosmos/cosmos-db"
 	"gotest.tools/v3/assert"
 
+	"cosmossdk.io/core/header"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 
@@ -30,7 +31,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
-	_ "github.com/cosmos/cosmos-sdk/x/params"
 	_ "github.com/cosmos/cosmos-sdk/x/staking"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -48,7 +48,6 @@ type suite struct {
 }
 
 var appConfig = configurator.NewAppConfig(
-	configurator.ParamsModule(),
 	configurator.AuthModule(),
 	configurator.StakingModule(),
 	configurator.BankModule(),
@@ -163,7 +162,7 @@ func TestImportExportQueues(t *testing.T) {
 	params, err = s2.GovKeeper.Params.Get(ctx2)
 	assert.NilError(t, err)
 	// Jump the time forward past the DepositPeriod and VotingPeriod
-	ctx2 = ctx2.WithBlockTime(ctx2.BlockHeader().Time.Add(*params.MaxDepositPeriod).Add(*params.VotingPeriod))
+	ctx2 = ctx2.WithHeaderInfo(header.Info{Time: ctx2.BlockHeader().Time.Add(*params.MaxDepositPeriod).Add(*params.VotingPeriod)})
 
 	// Make sure that they are still in the DepositPeriod and VotingPeriod respectively
 	proposal1, err = s2.GovKeeper.Proposals.Get(ctx2, proposalID1)

@@ -23,12 +23,6 @@ func TestMigrateGenesis(t *testing.T) {
 		check     func(jsonOut string)
 	}{
 		{
-			"migrate 0.37 to 0.43",
-			v037Exported,
-			"v0.43",
-			true, "make sure that you have correctly migrated all CometBFT consensus params", func(_ string) {},
-		},
-		{
 			"invalid target version",
 			func() string {
 				bz, err := os.ReadFile("../../types/testdata/app_genesis.json")
@@ -37,7 +31,8 @@ func TestMigrateGenesis(t *testing.T) {
 				return string(bz)
 			}(),
 			"v0.10",
-			true, "unknown migration function for version: v0.10 (supported versions v0.43, v0.46, v0.47)", func(_ string) {},
+			true,
+			"unknown migration function for version: v0.10", func(_ string) {},
 		},
 		{
 			"invalid target version",
@@ -48,7 +43,8 @@ func TestMigrateGenesis(t *testing.T) {
 				return string(bz)
 			}(),
 			"v0.10",
-			true, "unknown migration function for version: v0.10 (supported versions v0.43, v0.46, v0.47)", func(_ string) {},
+			true,
+			"unknown migration function for version: v0.10", func(_ string) {},
 		},
 	}
 

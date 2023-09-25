@@ -55,9 +55,9 @@ var (
 	HistoricalInfoKey   = collections.NewPrefix(80) // prefix for the historical info
 	ValidatorUpdatesKey = collections.NewPrefix(97) // prefix for the end block validator updates key
 
-	ParamsKey = []byte{0x51} // prefix for parameters for module x/staking
+	ParamsKey = collections.NewPrefix(81) // prefix for parameters for module x/staking
 
-	DelegationByValIndexKey = []byte{0x71} // key for delegations by a validator
+	DelegationByValIndexKey = collections.NewPrefix(113) // key for delegations by a validator
 )
 
 // UnbondingType defines the type of unbonding operation

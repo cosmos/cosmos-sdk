@@ -44,7 +44,7 @@ func TestInitGenesis(t *testing.T) {
 	}
 	assert.NilError(t, f.stakingKeeper.SetValidator(f.sdkCtx, bondedVal))
 
-	params, err := f.stakingKeeper.GetParams(f.sdkCtx)
+	params, err := f.stakingKeeper.Params.Get(f.sdkCtx)
 	assert.NilError(t, err)
 
 	validators, err := f.stakingKeeper.GetAllValidators(f.sdkCtx)
@@ -188,7 +188,7 @@ func TestInitGenesisLargeValidatorSet(t *testing.T) {
 	genesisValidators, err := f.stakingKeeper.GetAllValidators(f.sdkCtx)
 	assert.NilError(t, err)
 
-	params, err := f.stakingKeeper.GetParams(f.sdkCtx)
+	params, err := f.stakingKeeper.Params.Get(f.sdkCtx)
 	assert.NilError(t, err)
 	delegations := []types.Delegation{}
 	validators := make([]types.Validator, size)

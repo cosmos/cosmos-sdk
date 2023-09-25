@@ -3,13 +3,13 @@ package keeper_test
 import (
 	"encoding/binary"
 	"testing"
+	"time"
 
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	cmttime "github.com/cometbft/cometbft/types/time"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 
 	st "cosmossdk.io/api/cosmos/staking/v1beta1"
+	"cosmossdk.io/core/header"
 	sdkmath "cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 
@@ -46,7 +46,7 @@ func (s *KeeperTestSuite) SetupTest() {
 	s.key = key
 	storeService := runtime.NewKVStoreService(key)
 	testCtx := sdktestutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
-	ctx := testCtx.Ctx.WithBlockHeader(cmtproto.Header{Time: cmttime.Now()})
+	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now().Round(0).UTC()})
 	encCfg := moduletestutil.MakeTestEncodingConfig()
 
 	// gomock initializations

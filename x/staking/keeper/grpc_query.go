@@ -402,7 +402,7 @@ func (k Querier) HistoricalInfo(ctx context.Context, req *types.QueryHistoricalI
 		return nil, status.Errorf(codes.NotFound, "historical info for height %d not found", req.Height)
 	}
 
-	return &types.QueryHistoricalInfoResponse{Hist: &hi}, nil
+	return &types.QueryHistoricalInfoResponse{HistoricalRecord: &hi}, nil
 }
 
 // Redelegations queries redelegations of given address
@@ -492,7 +492,7 @@ func (k Querier) Pool(ctx context.Context, _ *types.QueryPoolRequest) (*types.Qu
 
 // Params queries the staking parameters
 func (k Querier) Params(ctx context.Context, _ *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
-	params, err := k.GetParams(ctx)
+	params, err := k.Keeper.Params.Get(ctx)
 	if err != nil {
 		return nil, err
 	}

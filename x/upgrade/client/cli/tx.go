@@ -101,7 +101,9 @@ func NewCmdSubmitUpgradeProposal(ac addresscodec.Codec) *cobra.Command {
 					return fmt.Errorf("invalid authority address: %w", err)
 				}
 			} else {
-				authority = sdk.AccAddress(address.Module("gov")).String()
+				if authority, err = ac.BytesToString(address.Module("gov")); err != nil {
+					return fmt.Errorf("failed to convert authority address to string: %w", err)
+				}
 			}
 
 			if err := proposal.SetMsgs([]sdk.Msg{
@@ -159,7 +161,9 @@ func NewCmdSubmitCancelUpgradeProposal(ac addresscodec.Codec) *cobra.Command {
 					return fmt.Errorf("invalid authority address: %w", err)
 				}
 			} else {
-				authority = sdk.AccAddress(address.Module("gov")).String()
+				if authority, err = ac.BytesToString(address.Module("gov")); err != nil {
+					return fmt.Errorf("failed to convert authority address to string: %w", err)
+				}
 			}
 
 			if err := proposal.SetMsgs([]sdk.Msg{

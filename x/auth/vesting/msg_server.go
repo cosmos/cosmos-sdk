@@ -70,8 +70,8 @@ func (s msgServer) CreateVestingAccount(ctx context.Context, msg *types.MsgCreat
 	if msg.Delayed {
 		vestingAccount = types.NewDelayedVestingAccountRaw(baseVestingAccount)
 	} else {
-		sdkCtx := sdk.UnwrapSDKContext(ctx)
-		vestingAccount = types.NewContinuousVestingAccountRaw(baseVestingAccount, sdkCtx.BlockTime().Unix())
+		sdkctx := sdk.UnwrapSDKContext(ctx)
+		vestingAccount = types.NewContinuousVestingAccountRaw(baseVestingAccount, sdkctx.HeaderInfo().Time.Unix())
 	}
 
 	s.AccountKeeper.SetAccount(ctx, vestingAccount)

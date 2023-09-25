@@ -5,6 +5,10 @@ Note, always read the **SimApp** section for more information on application wir
 
 ## [Unreleased]
 
+### Params
+
+Params Migrations were removed. It is required to migrate to 0.50 prior to upgrading to .51.
+
 ### SimApp
 
 In this section we describe the changes made in Cosmos SDK' SimApp.
@@ -405,7 +409,7 @@ Read more on those interfaces [here](https://docs.cosmos.network/v0.50/building-
 
 * `GetSigners()` is no longer required to be implemented on `Msg` types. The SDK will automatically infer the signers from the `Signer` field on the message. The signer field is required on all messages unless using a custom signer function.
 
-To find out more please read the [signer field](./05-protobuf-annotations.md#signer) & [here](https://github.com/cosmos/cosmos-sdk/blob/7352d0bce8e72121e824297df453eb1059c28da8/docs/docs/build/building-modules/02-messages-and-queries.md#L40) documentation. 
+To find out more please read the [signer field](../../build/building-modules/05-protobuf-annotations.md#signer) & [here](https://github.com/cosmos/cosmos-sdk/blob/7352d0bce8e72121e824297df453eb1059c28da8/docs/docs/build/building-modules/02-messages-and-queries.md#L40) documentation.
 <!-- Link to docs once redeployed -->
 
 #### `x/auth`
@@ -622,7 +626,7 @@ Here are the following replacements that you need to perform on your proto files
 
 Please also check that in your own app's proto files that there are no single-word names for those two proto annotations. If so, then replace them with fully-qualified names, even though those names don't actually resolve to an actual protobuf entity.
 
-For more information, see the [encoding guide](https://github.com/cosmos/cosmos-sdk/blob/main/docs/docs/develop/advanced/05-encoding.md).
+For more information, see the [encoding guide](https://github.com/cosmos/cosmos-sdk/blob/main/docs/learn/advanced/05-encoding.md).
 
 ### Transactions
 

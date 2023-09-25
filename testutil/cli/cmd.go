@@ -55,7 +55,6 @@ func MsgSendExec(clientCtx client.Context, from, to, amount fmt.Stringer, ac add
 		Amount:      coins,
 	}
 
-	// router.RegisterService(router, banktypes.MsgServer{})
 	handler := router.Handler(&msgSend)
 
 	fmt.Printf("handler: %v\n", handler)

@@ -26,7 +26,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/crisis/client/cli"
-	"github.com/cosmos/cosmos-sdk/x/crisis/exported"
 	"github.com/cosmos/cosmos-sdk/x/crisis/keeper"
 	"github.com/cosmos/cosmos-sdk/x/crisis/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -101,9 +100,6 @@ type AppModule struct {
 	// executed.
 	keeper *keeper.Keeper
 
-	// legacySubspace is used solely for migration of x/params managed parameters
-	legacySubspace exported.Subspace
-
 	skipGenesisInvariants bool
 }
 
@@ -111,11 +107,10 @@ type AppModule struct {
 // we will call keeper.AssertInvariants during InitGenesis (it may take a significant time)
 // - which doesn't impact the chain security unless 66+% of validators have a wrongly
 // modified genesis file.
-func NewAppModule(keeper *keeper.Keeper, skipGenesisInvariants bool, ss exported.Subspace) AppModule {
+func NewAppModule(keeper *keeper.Keeper, skipGenesisInvariants bool) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{},
 		keeper:         keeper,
-		legacySubspace: ss,
 
 		skipGenesisInvariants: skipGenesisInvariants,
 	}
@@ -136,7 +131,7 @@ func AddModuleInitFlags(startCmd *cobra.Command) {
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterMsgServer(cfg.MsgServer(), am.keeper)
 
-	m := keeper.NewMigrator(am.keeper, am.legacySubspace)
+	m := keeper.NewMigrator(am.keeper)
 	if err := cfg.RegisterMigration(types.ModuleName, 1, m.Migrate1to2); err != nil {
 		panic(fmt.Sprintf("failed to migrate x/%s from version 1 to 2: %v", types.ModuleName, err))
 	}
@@ -192,9 +187,6 @@ type ModuleInputs struct {
 
 	BankKeeper   types.SupplyKeeper
 	AddressCodec address.Codec
-
-	// LegacySubspace is used solely for migration of x/params managed parameters
-	LegacySubspace exported.Subspace `optional:"true"`
 }
 
 type ModuleOutputs struct {
@@ -236,7 +228,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		skipGenesisInvariants = cast.ToBool(in.AppOpts.Get(FlagSkipGenesisInvariants))
 	}
 
-	m := NewAppModule(k, skipGenesisInvariants, in.LegacySubspace)
+	m := NewAppModule(k, skipGenesisInvariants)
 
 	return ModuleOutputs{CrisisKeeper: k, Module: m}
 }

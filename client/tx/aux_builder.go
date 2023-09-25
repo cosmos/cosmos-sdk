@@ -6,7 +6,6 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 
-	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
 	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
 	txsigning "cosmossdk.io/x/tx/signing"
 	"cosmossdk.io/x/tx/signing/aminojson"
@@ -130,12 +129,6 @@ func (b *AuxTxBuilder) SetSignMode(mode signing.SignMode) error {
 	return nil
 }
 
-// SetTip sets an optional tip in the AuxSignerData.
-func (b *AuxTxBuilder) SetTip(tip *tx.Tip) {
-	b.checkEmptyFields()
-	b.auxSignerData.SignDoc.Tip = tip
-}
-
 // SetSignature sets the aux signer's signature in the AuxSignerData.
 func (b *AuxTxBuilder) SetSignature(sig []byte) {
 	b.checkEmptyFields()
@@ -214,11 +207,7 @@ func (b *AuxTxBuilder) GetSignBytes() ([]byte, error) {
 			handler := aminojson.NewSignModeHandler(aminojson.SignModeHandlerOptions{
 				FileResolver: proto.HybridResolver,
 			})
-			legacyTip := b.auxSignerData.SignDoc.Tip
-			tip := &txv1beta1.Tip{
-				Amount: make([]*basev1beta1.Coin, len(legacyTip.Amount)),
-				Tipper: legacyTip.Tipper,
-			}
+
 			auxBody := &txv1beta1.TxBody{
 				Messages:      body.Messages,
 				Memo:          body.Memo,
@@ -230,12 +219,7 @@ func (b *AuxTxBuilder) GetSignBytes() ([]byte, error) {
 				ExtensionOptions:            nil,
 				NonCriticalExtensionOptions: nil,
 			}
-			for i, coin := range legacyTip.Amount {
-				tip.Amount[i] = &basev1beta1.Coin{
-					Denom:  coin.Denom,
-					Amount: coin.Amount.String(),
-				}
-			}
+
 			signBz, err = handler.GetSignBytes(
 				context.Background(),
 				txsigning.SignerData{
@@ -254,7 +238,6 @@ func (b *AuxTxBuilder) GetSignBytes() ([]byte, error) {
 						// over empty fees.
 						// ref: https://github.com/cosmos/cosmos-sdk/pull/10348
 						Fee: &txv1beta1.Fee{},
-						Tip: tip,
 					},
 				},
 			)

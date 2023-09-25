@@ -43,6 +43,7 @@ func NewKeeper(
 		Schema:          collections.Schema{},
 		AccountNumber:   collections.NewSequence(sb, AccountNumberKey, "account_number"),
 		AccountsByType:  collections.NewMap(sb, AccountTypeKeyPrefix, "accounts_by_type", collections.BytesKey, collections.StringValue),
+		AccountsState:   collections.NewMap(sb, implementation.AccountStatePrefix, "accounts_state", collections.BytesKey, collections.BytesValue),
 	}
 
 	// make accounts implementation
@@ -77,6 +78,12 @@ type Keeper struct {
 	AccountNumber collections.Sequence
 	// AccountsByType maps account address to their implementation.
 	AccountsByType collections.Map[[]byte, string]
+
+	// AccountsState keeps track of the state of each account.
+	// NOTE: this is only used for genesis import and export.
+	// Contracts set and get their own state but this helps providing a nice mapping
+	// between: (account address, account state key) => account state value.
+	AccountsState collections.Map[[]byte, []byte]
 }
 
 // Init creates a new account of the given type.

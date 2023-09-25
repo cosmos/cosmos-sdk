@@ -7,6 +7,7 @@ import (
 
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
+	_ "cosmossdk.io/x/protocolpool"
 
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -26,6 +27,7 @@ func TestItCreatesModuleAccountOnInitBlock(t *testing.T) {
 				configurator.BankModule(),
 				configurator.GovModule(),
 				configurator.ConsensusModule(),
+				configurator.ProtocolPoolModule(),
 			),
 			depinject.Supply(log.NewNopLogger()),
 		),

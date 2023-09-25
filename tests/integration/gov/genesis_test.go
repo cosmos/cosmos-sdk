@@ -50,6 +50,7 @@ var appConfig = configurator.NewAppConfig(
 	configurator.GovModule(),
 	configurator.MintModule(),
 	configurator.ConsensusModule(),
+	configurator.ProtocolPoolModule(),
 )
 
 func TestImportExportQueues(t *testing.T) {

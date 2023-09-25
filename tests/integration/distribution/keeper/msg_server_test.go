@@ -154,9 +154,6 @@ func initFixture(t *testing.T) *fixture {
 	distrtypes.RegisterMsgServer(integrationApp.MsgServiceRouter(), distrkeeper.NewMsgServerImpl(distrKeeper))
 	distrtypes.RegisterQueryServer(integrationApp.QueryHelper(), distrkeeper.NewQuerier(distrKeeper))
 
-	pooltypes.RegisterMsgServer(integrationApp.MsgServiceRouter(), poolkeeper.NewMsgServerImpl(poolKeeper))
-	pooltypes.RegisterQueryServer(integrationApp.QueryHelper(), poolkeeper.NewQuerier(poolKeeper))
-
 	return &fixture{
 		app:           integrationApp,
 		sdkCtx:        sdkCtx,

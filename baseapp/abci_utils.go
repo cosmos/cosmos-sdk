@@ -139,8 +139,6 @@ type (
 	ProposalTxVerifier interface {
 		PrepareProposalVerifyTx(tx sdk.Tx) ([]byte, error)
 		ProcessProposalVerifyTx(txBz []byte) (sdk.Tx, error)
-		TxDecode(txBz []byte) (sdk.Tx, error)
-		TxEncode(tx sdk.Tx) ([]byte, error)
 	}
 
 	// DefaultProposalHandler defines the default ABCI PrepareProposal and
@@ -201,18 +199,15 @@ func (h *DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHan
 		_, isNoOp := h.mempool.(mempool.NoOpMempool)
 		if h.mempool == nil || isNoOp {
 			for _, txBz := range req.Txs {
-				tx, err := h.txVerifier.TxDecode(txBz)
-				if err != nil {
-					return nil, err
-				}
-
-				stop := h.txSelector.SelectTxForProposal(uint64(req.MaxTxBytes), maxBlockGas, tx, txBz)
+				// XXX: We pass nil as the memTx because we have no way of decoding the
+				// txBz. We'd need to break (update) the ProposalTxVerifier interface.
+				stop := txSelector.SelectTxForProposal(nil, txBz)
 				if stop {
 					break
 				}
 			}
 
-			return &abci.ResponsePrepareProposal{Txs: h.txSelector.SelectedTxs()}, nil
+			return &abci.ResponsePrepareProposal{Txs: txSelector.SelectedTxs()}, nil
 		}
 
 		iterator := h.mempool.Select(ctx, req.Txs)

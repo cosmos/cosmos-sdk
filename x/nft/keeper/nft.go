@@ -32,14 +32,14 @@ func (k Keeper) mintWithNoCheck(ctx context.Context, token nft.NFT, receiver sdk
 	k.setOwner(ctx, token.ClassId, token.Id, receiver)
 	k.incrTotalSupply(ctx, token.ClassId)
 
-	rest, err := k.ac.BytesToString(receiver.Bytes())
+	recStr, err := k.ac.BytesToString(receiver.Bytes())
 	if err != nil {
 		return err
 	}
 	return sdk.UnwrapSDKContext(ctx).EventManager().EmitTypedEvent(&nft.EventMint{
 		ClassId: token.ClassId,
 		Id:      token.Id,
-		Owner:   rest,
+		Owner:   recStr,
 	})
 }
 
@@ -71,7 +71,7 @@ func (k Keeper) burnWithNoCheck(ctx context.Context, classID, nftID string) erro
 
 	k.deleteOwner(ctx, classID, nftID, owner)
 	k.decrTotalSupply(ctx, classID)
-	ownerst, err := k.ac.BytesToString(owner.Bytes())
+	ownerStr, err := k.ac.BytesToString(owner.Bytes())
 	if err != nil {
 		return err
 	}
@@ -79,7 +79,7 @@ func (k Keeper) burnWithNoCheck(ctx context.Context, classID, nftID string) erro
 	return sdk.UnwrapSDKContext(ctx).EventManager().EmitTypedEvent(&nft.EventBurn{
 		ClassId: classID,
 		Id:      nftID,
-		Owner:   ownerst,
+		Owner:   ownerStr,
 	})
 }
 

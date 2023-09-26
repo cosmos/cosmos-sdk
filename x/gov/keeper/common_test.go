@@ -113,6 +113,7 @@ func setupGovKeeper(t *testing.T, expectations ...func(sdk.Context, mocks)) (
 		acctKeeper:    govtestutil.NewMockAccountKeeper(ctrl),
 		bankKeeper:    govtestutil.NewMockBankKeeper(ctrl),
 		stakingKeeper: govtestutil.NewMockStakingKeeper(ctrl),
+		poolKeeper:    govtestutil.NewMockPoolKeeper(ctrl),
 	}
 	if len(expectations) == 0 {
 		mockDefaultExpectations(ctx, m)

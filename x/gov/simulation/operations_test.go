@@ -13,6 +13,7 @@ import (
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
+	_ "cosmossdk.io/x/protocolpool"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/runtime"
@@ -424,6 +425,7 @@ func createTestSuite(t *testing.T, isCheckTx bool) (suite, sdk.Context) {
 				configurator.StakingModule(),
 				configurator.ConsensusModule(),
 				configurator.GovModule(),
+				configurator.ProtocolPoolModule(),
 			),
 			depinject.Supply(log.NewNopLogger()),
 		),

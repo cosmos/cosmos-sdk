@@ -11,6 +11,7 @@ import (
 	"cosmossdk.io/depinject"
 	sdklog "cosmossdk.io/log"
 	"cosmossdk.io/math"
+	_ "cosmossdk.io/x/protocolpool"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -121,6 +122,7 @@ func createTestSuite(t *testing.T) suite {
 				configurator.BankModule(),
 				configurator.GovModule(),
 				configurator.ConsensusModule(),
+				configurator.ProtocolPoolModule(),
 			),
 			depinject.Supply(sdklog.NewNopLogger()),
 		),

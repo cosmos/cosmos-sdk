@@ -194,13 +194,48 @@ func TestCoin(t *testing.T) {
 		"echo",
 		"1",
 		"abc",
+		"1234foo,4321bar",
+		"100uatom",
+		"--a-coin", "100000foo",
+	)
+	assert.ErrorContains(t, err, "coin flag must be a single coin, specific multiple coins with multiple flags or spaces")
+
+	_, err = runCmd(fixture.conn, fixture.b, buildModuleQueryCommand,
+		"echo",
+		"1",
+		"abc",
 		"1234foo",
 		"4321bar",
+		"100uatom",
 		"--a-coin", "100000foo",
-		"--duration", "4h3s",
+		"--coins", "100000bar",
+		"--coins", "100uatom",
 	)
 	assert.NilError(t, err)
 	assert.DeepEqual(t, fixture.conn.lastRequest, fixture.conn.lastResponse.(*testpb.EchoResponse).Request, protocmp.Transform())
+	expectedResp := &testpb.EchoResponse{
+		Request: &testpb.EchoRequest{
+			Positional1: 1,
+			Positional2: "abc",
+			Positional3Varargs: []*basev1beta1.Coin{
+				{Amount: "1234", Denom: "foo"},
+				{Amount: "4321", Denom: "bar"},
+				{Amount: "100", Denom: "uatom"},
+			},
+			ACoin: &basev1beta1.Coin{
+				Amount: "100000",
+				Denom:  "foo",
+			},
+			Coins: []*basev1beta1.Coin{
+				{Amount: "100000", Denom: "bar"},
+				{Amount: "100", Denom: "uatom"},
+			},
+			Page: &queryv1beta1.PageRequest{},
+			I32:  3,
+			U64:  5,
+		},
+	}
+	assert.DeepEqual(t, fixture.conn.lastResponse.(*testpb.EchoResponse), expectedResp, protocmp.Transform())
 }
 
 func TestOptional(t *testing.T) {
@@ -354,7 +389,7 @@ func TestEverything(t *testing.T) {
 			Positional2: "abc",
 			Positional3Varargs: []*basev1beta1.Coin{
 				{Amount: "123.123123124", Denom: "foo"},
-				// {Amount: "4321", Denom: "bar"}, // TODO fix repeated fields
+				{Amount: "4321", Denom: "bar"},
 			},
 			ABool:  true,
 			AnEnum: testpb.Enum_ENUM_ONE,

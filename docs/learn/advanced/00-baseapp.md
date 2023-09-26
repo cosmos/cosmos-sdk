@@ -19,7 +19,7 @@ This document describes `BaseApp`, the abstraction that implements the core func
 
 `BaseApp` is a base type that implements the core of a Cosmos SDK application, namely:
 
-* The [Application Blockchain Interface](#main-abci-messages), for the state-machine to communicate with the underlying consensus engine (e.g. CometBFT).
+* The [Application Blockchain Interface](#main-abci-2.0-messages), for the state-machine to communicate with the underlying consensus engine (e.g. CometBFT).
 * [Service Routers](#service-routers), to route messages and queries to the appropriate module.
 * Different [states](#state-updates), as the state-machine can have different volatile states updated based on the ABCI message received.
 
@@ -330,7 +330,7 @@ Steps 2. and 3. are performed by the [`AnteHandler`](../beginner/04-gas-fees.md#
 function, which `CheckTx()` calls with the `runTxModeCheck` mode. During each step of `CheckTx()`, a
 special [volatile state](#state-updates) called `checkState` is updated. This state is used to keep
 track of the temporary changes triggered by the `CheckTx()` calls of each transaction without modifying
-the [main canonical state](#main-state). For example, when a transaction goes through `CheckTx()`, the
+the [main canonical state](#state-updates). For example, when a transaction goes through `CheckTx()`, the
 transaction's fees are deducted from the sender's account in `checkState`. If a second transaction is
 received from the same account before the first is processed, and the account has consumed all its
 funds in `checkState` during the first transaction, the second transaction will fail `CheckTx`() and
@@ -466,7 +466,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/baseapp/abci.go#L623
 
 When the underlying consensus engine receives a block proposal, each transaction in the block needs to be processed by the application. To that end, the underlying consensus engine sends the transactions in FinalizeBlock message to the application for each transaction in a sequential order.
 
-Before the first transaction of a given block is processed, a [volatile state](#state-updates) called `finalizeBlockState` is initialized during FinalizeBlock. This state is updated each time a transaction is processed via `FinalizeBlock`, and committed to the [main state](#main-state) when the block is [committed](#commit), after what it is set to `nil`.
+Before the first transaction of a given block is processed, a [volatile state](#state-updates) called `finalizeBlockState` is initialized during FinalizeBlock. This state is updated each time a transaction is processed via `FinalizeBlock`, and committed to the [main state](#state-updates) when the block is [committed](#commit), after what it is set to `nil`.
 
 ```go reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/baseapp/baseapp.go#LL708-L743

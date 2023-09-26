@@ -72,7 +72,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### API Breaking Changes
 
 * (x/distribution) [#17657](https://github.com/cosmos/cosmos-sdk/pull/17657) The `FundCommunityPool` and `DistributeFromFeePool` keeper methods are now removed from x/distribution.
-* (x/distribution) [#17657](https://github.com/cosmos/cosmos-sdk/pull/17657) The distribution keeper now takes 2 more arguments, msg service router and grpc query router.
+* (x/distribution) [#17657](https://github.com/cosmos/cosmos-sdk/pull/17657) The distribution module keeper now takes a new argument `PoolKeeper` in addition.
 * (x/staking) [#17778](https://github.com/cosmos/cosmos-sdk/pull/17778) Use collections for `Params`
     * remove from `Keeper`: `GetParams`, `SetParams`
 * (types/simulation) [#17737](https://github.com/cosmos/cosmos-sdk/pull/17737) Remove unused parameter from `RandomFees`

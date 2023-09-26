@@ -666,7 +666,6 @@ func TestMsgFundCommunityPool(t *testing.T) {
 				assert.Assert(t, poolBal.Equal(amount))
 
 				assert.Assert(t, f.bankKeeper.GetAllBalances(f.sdkCtx, addr).Empty())
-
 			}
 		})
 	}

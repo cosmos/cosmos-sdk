@@ -21,13 +21,13 @@ var (
 type contextKey struct{}
 
 type contextValue struct {
-	store             store.KVStore                                                       // store is the prefixed store for the account.
-	sender            []byte                                                              // sender is the address of the entity invoking the account action.
-	whoami            []byte                                                              // whoami is the address of the account being invoked.
-	originalContext   context.Context                                                     // originalContext that was used to build the account context.
-	getExpectedSender func(msg proto.Message) ([]byte, error)                             // getExpectedSender is a function that returns the expected sender for a given message.
-	moduleExec        func(ctx context.Context, msg proto.Message) (proto.Message, error) // moduleExec is a function that executes a module message.
-	moduleQuery       func(ctx context.Context, msg proto.Message) (proto.Message, error) // moduleQuery is a function that queries a module.
+	store             store.KVStore                                                                      // store is the prefixed store for the account.
+	sender            []byte                                                                             // sender is the address of the entity invoking the account action.
+	whoami            []byte                                                                             // whoami is the address of the account being invoked.
+	originalContext   context.Context                                                                    // originalContext that was used to build the account context.
+	getExpectedSender func(msg proto.Message) ([]byte, error)                                            // getExpectedSender is a function that returns the expected sender for a given message.
+	moduleExec        func(ctx context.Context, msg proto.Message) (proto.Message, error)                // moduleExec is a function that executes a module message.
+	moduleQuery       func(ctx context.Context, method string, msg proto.Message) (proto.Message, error) // moduleQuery is a function that queries a module.
 }
 
 // MakeAccountContext creates a new account execution context given:
@@ -44,7 +44,7 @@ func MakeAccountContext(
 	sender []byte,
 	getSenderFunc func(msg proto.Message) ([]byte, error),
 	moduleExec func(ctx context.Context, msg proto.Message) (proto.Message, error),
-	moduleQuery func(ctx context.Context, msg proto.Message) (proto.Message, error),
+	moduleQuery func(ctx context.Context, method string, msg proto.Message) (proto.Message, error),
 ) context.Context {
 	return context.WithValue(ctx, contextKey{}, contextValue{
 		store:             prefixstore.New(storeSvc.OpenKVStore(ctx), append(AccountStatePrefix, accountAddr...)),
@@ -76,22 +76,6 @@ func ExecModule[Resp any, RespProto ProtoMsg[Resp], Req any, ReqProto ProtoMsg[R
 		return nil, err
 	}
 
-	concreteResp, ok := resp.(RespProto)
-	if !ok {
-		return nil, fmt.Errorf("unexpected response type %T", resp)
-	}
-	return concreteResp, nil
-}
-
-// QueryModule can be used by an account to execute a module query.
-func QueryModule[Resp any, RespProto ProtoMsg[Resp], Req any, ReqProto ProtoMsg[Req]](ctx context.Context, msg ReqProto) (RespProto, error) {
-	// we do not need to check the sender in a query because it is not a state transition.
-	// we also unwrap the original context.
-	v := ctx.Value(contextKey{}).(contextValue)
-	resp, err := v.moduleQuery(v.originalContext, msg)
-	if err != nil {
-		return nil, err
-	}
 	concreteResp, ok := resp.(RespProto)
 	if !ok {
 		return nil, fmt.Errorf("unexpected response type %T", resp)

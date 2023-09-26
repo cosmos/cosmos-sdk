@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	"google.golang.org/protobuf/proto"
 
 	"cosmossdk.io/collections"
@@ -24,20 +25,36 @@ var (
 	AccountNumberKey = collections.NewPrefix(1)
 )
 
+// SignerProvider defines an interface used to get the expected sender from a message.
+type SignerProvider interface {
+	// GetSigners returns the signers of the message.
+	GetSigners(msg proto.Message) ([][]byte, error)
+}
+
 func NewKeeper(
+	cdc codec.Codec,
 	ss store.KVStoreService,
 	addressCodec address.Codec,
-	getMsgSenderFunc func(msg proto.Message) ([]byte, error),
-	execModuleFunc func(ctx context.Context, msg proto.Message) (proto.Message, error),
+	signerProvider SignerProvider,
+	execRouter MsgRouter,
 	queryModuleFunc func(ctx context.Context, msg proto.Message) (proto.Message, error),
 	accounts map[string]implementation.Account,
 ) (Keeper, error) {
 	sb := collections.NewSchemaBuilder(ss)
 	keeper := Keeper{
-		storeService:    ss,
-		addressCodec:    addressCodec,
-		getSenderFunc:   getMsgSenderFunc,
-		execModuleFunc:  execModuleFunc,
+		storeService: ss,
+		addressCodec: addressCodec,
+		getSenderFunc: func(msg proto.Message) ([]byte, error) {
+			signers, err := signerProvider.GetSigners(msg)
+			if err != nil {
+				return nil, err
+			}
+			if len(signers) != 1 {
+				return nil, fmt.Errorf("expected 1 signer, got %d", len(signers))
+			}
+			return signers[0], nil
+		},
+		execModuleFunc:  newExecFunc(cdc, execRouter),
 		queryModuleFunc: queryModuleFunc,
 		accounts:        map[string]implementation.Implementation{},
 		Schema:          collections.Schema{},

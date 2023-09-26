@@ -149,6 +149,11 @@ func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
 }
 
+// ProposalMsgs returns all the protocolpool msgs used to simulate governance proposals.
+func (AppModule) ProposalMsgs(simState module.SimulationState) []simtypes.WeightedProposalMsg {
+	return simulation.ProposalMsgs()
+}
+
 // WeightedOperations returns the all the protocolpool module operations with their respective weights.
 func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
 	return simulation.WeightedOperations(

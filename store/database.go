@@ -72,6 +72,11 @@ type VersionedDatabase interface {
 	VersionedIteratorCreator
 	VersionedBatcher
 
+	// Prune attempts to prune all versions up to and including the provided
+	// version argument. The operation should be idempotent. An error should be
+	// returned upon failure.
+	Prune(version uint64) error
+
 	// Close releases associated resources. It should NOT be idempotent. It must
 	// only be called once and any call after may panic.
 	io.Closer

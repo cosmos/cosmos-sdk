@@ -188,6 +188,17 @@ func (db *Database) NewBatch(version uint64) (store.Batch, error) {
 	return NewBatch(db.storage, version)
 }
 
+func (db *Database) Prune(version uint64) error {
+	stmt := "DELETE FROM state_storage WHERE version <= ? AND store_key != ?;"
+
+	_, err := db.storage.Exec(stmt, version, reservedStoreKey)
+	if err != nil {
+		return fmt.Errorf("failed to exec SQL statement: %w", err)
+	}
+
+	return nil
+}
+
 func (db *Database) NewIterator(storeKey string, version uint64, start, end []byte) (store.Iterator, error) {
 	if (start != nil && len(start) == 0) || (end != nil && len(end) == 0) {
 		return nil, store.ErrKeyEmpty

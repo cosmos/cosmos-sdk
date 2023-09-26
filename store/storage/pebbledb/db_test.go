@@ -20,6 +20,9 @@ func TestStorageTestSuite(t *testing.T) {
 			return New(dir)
 		},
 		EmptyBatchSize: 12,
+		SkipTests: []string{
+			"TestStorageTestSuite/TestDatabase_Prune",
+		},
 	}
 	suite.Run(t, s)
 }

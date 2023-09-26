@@ -8,6 +8,7 @@ import (
 
 	"cosmossdk.io/collections"
 	sdkmath "cosmossdk.io/math"
+	pooltypes "cosmossdk.io/x/protocolpool/types"
 
 	"github.com/cosmos/cosmos-sdk/codec/address"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -17,7 +18,6 @@ import (
 )
 
 const (
-	poolModuleName         = "protocol-pool"
 	baseDepositTestAmount  = 100
 	baseDepositTestPercent = 25
 )
@@ -329,7 +329,7 @@ func TestChargeDeposit(t *testing.T) {
 					params.ProposalCancelDest = TestAddrs[1].String()
 				default:
 					// community address for proposal cancel dest address
-					params.ProposalCancelDest = authtypes.NewModuleAddress(poolModuleName).String()
+					params.ProposalCancelDest = authtypes.NewModuleAddress(pooltypes.ModuleName).String()
 				}
 
 				err := govKeeper.Params.Set(ctx, params)

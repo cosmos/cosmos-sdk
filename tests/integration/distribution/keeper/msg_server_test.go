@@ -589,7 +589,7 @@ func TestMsgFundCommunityPool(t *testing.T) {
 	addr2 := sdk.AccAddress(PKS[1].Address())
 	amount := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
 
-	poolAcc := f.accountKeeper.GetModuleAccount(f.sdkCtx, "protocol-pool")
+	poolAcc := f.accountKeeper.GetModuleAccount(f.sdkCtx, pooltypes.ModuleName)
 
 	// check that the pool account balance is empty
 	assert.Assert(t, f.bankKeeper.GetAllBalances(f.sdkCtx, poolAcc.GetAddress()).Empty())
@@ -821,7 +821,7 @@ func TestMsgCommunityPoolSpend(t *testing.T) {
 
 	// fund pool module account
 	amount := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
-	poolAcc := f.accountKeeper.GetModuleAccount(f.sdkCtx, "protocol-pool")
+	poolAcc := f.accountKeeper.GetModuleAccount(f.sdkCtx, pooltypes.ModuleName)
 	err = f.bankKeeper.SendCoinsFromModuleToModule(f.sdkCtx, distrtypes.ModuleName, poolAcc.GetName(), amount)
 	require.NoError(t, err)
 

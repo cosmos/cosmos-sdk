@@ -60,10 +60,10 @@ func (k Keeper) DistributeFromFeePool(ctx context.Context, amount sdk.Coins, rec
 }
 
 // GetCommunityPool get the community pool balance.
-func (k Keeper) GetCommunityPool(ctx context.Context) sdk.Coins {
+func (k Keeper) GetCommunityPool(ctx context.Context) (sdk.Coins, error) {
 	moduleAccount := k.authKeeper.GetModuleAccount(ctx, types.ModuleName)
 	if moduleAccount == nil {
-		panic(errorsmod.Wrapf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", moduleAccount))
+		return nil, errorsmod.Wrapf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", moduleAccount)
 	}
-	return k.bankKeeper.GetAllBalances(ctx, moduleAccount.GetAddress())
+	return k.bankKeeper.GetAllBalances(ctx, moduleAccount.GetAddress()), nil
 }

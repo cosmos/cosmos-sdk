@@ -22,6 +22,8 @@ replace (
 	cosmossdk.io/x/upgrade => ../../../x/upgrade
 )
 
+replace cosmossdk.io/api => ../../../api
+
 require (
 	cosmossdk.io/log v1.2.1
 	cosmossdk.io/math v1.1.3-rc.1
@@ -210,5 +212,3 @@ require (
 	pgregory.net/rapid v1.1.0 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
-
-replace cosmossdk.io/api => ../../../api

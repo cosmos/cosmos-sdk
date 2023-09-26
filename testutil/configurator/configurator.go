@@ -315,7 +315,7 @@ func CircuitModule() ModuleOption {
 func ProtocolPoolModule() ModuleOption {
 	return func(config *Config) {
 		config.ModuleConfigs["protocolpool"] = &appv1alpha1.ModuleConfig{
-			Name:   "protocolpool",
+			Name:   "protocol-pool",
 			Config: appconfig.WrapAny(&poolmodulev1.Module{}),
 		}
 	}

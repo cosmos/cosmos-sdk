@@ -20,7 +20,10 @@ func NewQuerier(keeper Keeper) Querier {
 
 // CommunityPool queries the community pool coins
 func (k Querier) CommunityPool(ctx context.Context, req *types.QueryCommunityPoolRequest) (*types.QueryCommunityPoolResponse, error) {
-	amount := k.Keeper.GetCommunityPool(ctx)
+	amount, err := k.Keeper.GetCommunityPool(ctx)
+	if err != nil {
+		return nil, err
+	}
 	decCoins := sdk.NewDecCoinsFromCoins(amount...)
 	return &types.QueryCommunityPoolResponse{Pool: decCoins}, nil
 }

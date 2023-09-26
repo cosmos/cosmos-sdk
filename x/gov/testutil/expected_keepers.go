@@ -28,8 +28,6 @@ type BankKeeper interface {
 
 // PoolKeeper extends the gov's actual expected PoolKeeper.
 type PoolKeeper interface {
-	types.PoolKeeper
-
 	FundCommunityPool(ctx context.Context, amount sdk.Coins, sender sdk.AccAddress) error
 }
 

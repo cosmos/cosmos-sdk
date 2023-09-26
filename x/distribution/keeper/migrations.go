@@ -1,13 +1,13 @@
 package keeper
 
 import (
+	pooltypes "cosmossdk.io/x/protocolpool/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution/migrations/funds"
 	v4 "github.com/cosmos/cosmos-sdk/x/distribution/migrations/v4"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
-
-const poolModuleName = "protocol-pool"
 
 // Migrator is a struct for handling in-place store migrations.
 type Migrator struct {
@@ -38,7 +38,7 @@ func (m Migrator) Migrate3to4(ctx sdk.Context) error {
 
 func (m Migrator) MigrateFundsToPool(ctx sdk.Context) error {
 	macc := m.keeper.GetDistributionAccount(ctx)
-	poolMacc := m.keeper.authKeeper.GetModuleAccount(ctx, poolModuleName)
+	poolMacc := m.keeper.authKeeper.GetModuleAccount(ctx, pooltypes.ModuleName)
 
 	feePool, err := m.keeper.FeePool.Get(ctx)
 	if err != nil {

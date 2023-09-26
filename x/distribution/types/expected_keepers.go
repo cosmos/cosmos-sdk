@@ -37,7 +37,7 @@ type BankKeeper interface {
 type PoolKeeper interface {
 	FundCommunityPool(ctx context.Context, amount sdk.Coins, sender sdk.AccAddress) error
 	DistributeFromFeePool(ctx context.Context, amount sdk.Coins, receiveAddr sdk.AccAddress) error
-	GetCommunityPool(ctx context.Context) sdk.Coins
+	GetCommunityPool(ctx context.Context) (sdk.Coins, error)
 }
 
 // StakingKeeper expected staking keeper (noalias)

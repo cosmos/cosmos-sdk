@@ -278,11 +278,12 @@ func (mr *MockPoolKeeperMockRecorder) FundCommunityPool(ctx, amount, sender inte
 }
 
 // GetCommunityPool mocks base method.
-func (m *MockPoolKeeper) GetCommunityPool(ctx context.Context) types.Coins {
+func (m *MockPoolKeeper) GetCommunityPool(ctx context.Context) (types.Coins, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetCommunityPool", ctx)
 	ret0, _ := ret[0].(types.Coins)
-	return ret0
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // GetCommunityPool indicates an expected call of GetCommunityPool.

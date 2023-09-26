@@ -155,7 +155,7 @@ func AuthModule() ModuleOption {
 					{Account: "not_bonded_tokens_pool", Permissions: []string{"burner", "staking"}},
 					{Account: "gov", Permissions: []string{"burner"}},
 					{Account: "nft"},
-					{Account: "protocol-pool"},
+					{Account: "protocolpool"},
 				},
 			}),
 		}
@@ -315,7 +315,7 @@ func CircuitModule() ModuleOption {
 func ProtocolPoolModule() ModuleOption {
 	return func(config *Config) {
 		config.ModuleConfigs["protocolpool"] = &appv1alpha1.ModuleConfig{
-			Name:   "protocol-pool",
+			Name:   "protocolpool",
 			Config: appconfig.WrapAny(&poolmodulev1.Module{}),
 		}
 	}

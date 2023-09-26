@@ -4,9 +4,10 @@ import (
 	"math/rand"
 	"testing"
 
+	"gotest.tools/v3/assert"
+
 	"cosmossdk.io/x/protocolpool/simulation"
 	pooltypes "cosmossdk.io/x/protocolpool/types"
-	"gotest.tools/v3/assert"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"

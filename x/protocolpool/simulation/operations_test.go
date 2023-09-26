@@ -2,14 +2,14 @@ package simulation_test
 
 import (
 	"math/rand"
+	"testing"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/gogoproto/proto"
-	"github.com/stretchr/testify/suite"
+	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
-	"cosmossdk.io/math"
 	"cosmossdk.io/x/protocolpool/keeper"
 	"cosmossdk.io/x/protocolpool/simulation"
 	pooltestutil "cosmossdk.io/x/protocolpool/testutil"
@@ -24,55 +24,63 @@ import (
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
+	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 )
 
-type SimTestSuite struct {
-	suite.Suite
+type suite struct {
+	Ctx sdk.Context
+	App *runtime.App
 
-	ctx sdk.Context
-	app *runtime.App
-
-	txConfig      client.TxConfig
-	cdc           codec.Codec
-	accountKeeper authkeeper.AccountKeeper
-	bankKeeper    bankkeeper.Keeper
-	poolKeeper    keeper.Keeper
+	TxConfig      client.TxConfig
+	Cdc           codec.Codec
+	AccountKeeper authkeeper.AccountKeeper
+	BankKeeper    bankkeeper.Keeper
+	StakingKeeper *stakingkeeper.Keeper
+	PoolKeeper    keeper.Keeper
 }
 
-func (suite *SimTestSuite) SetupTest() {
+func setUpTest(t *testing.T) suite {
+	t.Helper()
+	res := suite{}
+
 	var (
 		appBuilder *runtime.AppBuilder
 		err        error
 	)
-	suite.app, err = simtestutil.Setup(
+
+	app, err := simtestutil.Setup(
 		depinject.Configs(
 			pooltestutil.AppConfig,
 			depinject.Supply(log.NewNopLogger()),
 		),
-		&suite.accountKeeper,
-		&suite.bankKeeper,
-		&suite.cdc,
+		&res.AccountKeeper,
+		&res.BankKeeper,
+		&res.Cdc,
 		&appBuilder,
-		&suite.poolKeeper,
-		&suite.txConfig,
+		&res.StakingKeeper,
+		&res.PoolKeeper,
+		&res.TxConfig,
 	)
+	require.NoError(t, err)
 
-	suite.NoError(err)
-
-	suite.ctx = suite.app.BaseApp.NewContext(false)
+	res.App = app
+	res.Ctx = app.BaseApp.NewContext(false)
+	return res
 }
 
 // TestWeightedOperations tests the weights of the operations.
-func (suite *SimTestSuite) TestWeightedOperations() {
+func TestWeightedOperations(t *testing.T) {
+	suite := setUpTest(t)
+
 	appParams := make(simtypes.AppParams)
 
-	weightedOps := simulation.WeightedOperations(appParams, suite.cdc, suite.txConfig, suite.accountKeeper,
-		suite.bankKeeper, suite.poolKeeper)
+	weightedOps := simulation.WeightedOperations(appParams, suite.Cdc, suite.TxConfig, suite.AccountKeeper,
+		suite.BankKeeper, suite.PoolKeeper)
 
 	// setup 3 accounts
 	s := rand.NewSource(1)
 	r := rand.New(s)
-	accs := suite.getTestingAccounts(r, 3)
+	accs := getTestingAccounts(t, r, suite.AccountKeeper, suite.BankKeeper, suite.StakingKeeper, suite.Ctx, 3)
 
 	expected := []struct {
 		weight     int
@@ -83,57 +91,64 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 	}
 
 	for i, w := range weightedOps {
-		operationMsg, _, err := w.Op()(r, suite.app.BaseApp, suite.ctx, accs, "")
-		suite.Require().NoError(err)
+		operationMsg, _, err := w.Op()(r, suite.App.BaseApp, suite.Ctx, accs, "")
+		require.NoError(t, err)
 
 		// the following checks are very much dependent from the ordering of the output given
 		// by WeightedOperations. if the ordering in WeightedOperations changes some tests
 		// will fail
-		suite.Require().Equal(expected[i].weight, w.Weight(), "weight should be the same")
-		suite.Require().Equal(expected[i].opMsgRoute, operationMsg.Route, "route should be the same")
-		suite.Require().Equal(expected[i].opMsgName, operationMsg.Name, "operation Msg name should be the same")
+		require.Equal(t, expected[i].weight, w.Weight(), "weight should be the same")
+		require.Equal(t, expected[i].opMsgRoute, operationMsg.Route, "route should be the same")
+		require.Equal(t, expected[i].opMsgName, operationMsg.Name, "operation Msg name should be the same")
 	}
 }
 
 // TestSimulateMsgFundCommunityPool tests the normal scenario of a valid message of type TypeMsgFundCommunityPool.
 // Abonormal scenarios, where the message is created by an errors, are not tested here.
-func (suite *SimTestSuite) TestSimulateMsgFundCommunityPool() {
+func TestSimulateMsgFundCommunityPool(t *testing.T) {
+	suite := setUpTest(t)
+
 	// setup 3 accounts
 	s := rand.NewSource(1)
 	r := rand.New(s)
-	accounts := suite.getTestingAccounts(r, 3)
+	accounts := getTestingAccounts(t, r, suite.AccountKeeper, suite.BankKeeper, suite.StakingKeeper, suite.Ctx, 3)
 
-	_, err := suite.app.FinalizeBlock(&abci.RequestFinalizeBlock{
-		Height: suite.app.LastBlockHeight() + 1,
-		Hash:   suite.app.LastCommitID().Hash,
+	_, err := suite.App.FinalizeBlock(&abci.RequestFinalizeBlock{
+		Height: suite.App.LastBlockHeight() + 1,
+		Hash:   suite.App.LastCommitID().Hash,
 	})
-	suite.Require().NoError(err)
+	require.NoError(t, err)
 
 	// execute operation
-	op := simulation.SimulateMsgFundCommunityPool(suite.txConfig, suite.accountKeeper, suite.bankKeeper, suite.poolKeeper)
-	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
-	suite.Require().NoError(err)
+	op := simulation.SimulateMsgFundCommunityPool(suite.TxConfig, suite.AccountKeeper, suite.BankKeeper, suite.PoolKeeper)
+	operationMsg, futureOperations, err := op(r, suite.App.BaseApp, suite.Ctx, accounts, "")
+	require.NoError(t, err)
 
 	var msg types.MsgFundCommunityPool
 	err = proto.Unmarshal(operationMsg.Msg, &msg)
-	suite.Require().NoError(err)
-	suite.Require().True(operationMsg.OK)
-	suite.Require().Equal("4896096stake", msg.Amount.String())
-	suite.Require().Equal("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r", msg.Depositor)
-	suite.Require().Equal(sdk.MsgTypeURL(&types.MsgFundCommunityPool{}), sdk.MsgTypeURL(&msg))
-	suite.Require().Len(futureOperations, 0)
+	require.NoError(t, err)
+	require.True(t, operationMsg.OK)
+	require.Equal(t, "4896096stake", msg.Amount.String())
+	require.Equal(t, "cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r", msg.Depositor)
+	require.Equal(t, sdk.MsgTypeURL(&types.MsgFundCommunityPool{}), sdk.MsgTypeURL(&msg))
+	require.Len(t, futureOperations, 0)
 }
 
-func (suite *SimTestSuite) getTestingAccounts(r *rand.Rand, n int) []simtypes.Account {
+func getTestingAccounts(
+	t *testing.T, r *rand.Rand,
+	accountKeeper authkeeper.AccountKeeper, bankKeeper bankkeeper.Keeper,
+	stakingKeeper *stakingkeeper.Keeper, ctx sdk.Context, n int,
+) []simtypes.Account {
 	accounts := simtypes.RandomAccounts(r, n)
 
-	initCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(200)))
+	initAmt := stakingKeeper.TokensFromConsensusPower(ctx, 200)
+	initCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initAmt))
 
 	// add coins to the accounts
 	for _, account := range accounts {
-		acc := suite.accountKeeper.NewAccountWithAddress(suite.ctx, account.Address)
-		suite.accountKeeper.SetAccount(suite.ctx, acc)
-		suite.Require().NoError(banktestutil.FundAccount(suite.ctx, suite.bankKeeper, account.Address, initCoins))
+		acc := accountKeeper.NewAccountWithAddress(ctx, account.Address)
+		accountKeeper.SetAccount(ctx, acc)
+		require.NoError(t, banktestutil.FundAccount(ctx, bankKeeper, account.Address, initCoins))
 	}
 
 	return accounts

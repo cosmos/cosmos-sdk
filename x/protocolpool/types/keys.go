@@ -2,7 +2,7 @@ package types
 
 const (
 	// ModuleName is the module name constant used in many places
-	ModuleName = "protocol-pool"
+	ModuleName = "protocolpool"
 
 	// StoreKey is the store key string for protocolpool
 	StoreKey = ModuleName

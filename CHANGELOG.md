@@ -38,6 +38,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+### Bug Fixes
+
+* (x/gov) [#17873](https://github.com/cosmos/cosmos-sdk/pull/17873) Fail any inactive and active proposals that cannot be decoded.
+
 ## [v0.50.0-rc.1](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.50.0-rc.1) - 2023-09-25
 
 ### Features

@@ -28,11 +28,11 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) error {
 		proposal, err := keeper.Proposals.Get(ctx, key.K2())
 		if err != nil {
 			// if the proposal has an encoding error, this means it cannot be processed by x/gov
-			// this could be to some types missing their registration
+			// this could be due to some types missing their registration
 			// instead of returning an error (i.e, halting the chain), we fail the proposal
 			if errors.Is(err, collections.ErrEncoding) {
 				proposal.Id = key.K2()
-				if err := failUnsupportedProposal(logger, ctx, keeper, proposal, err.Error()); err != nil {
+				if err := failUnsupportedProposal(logger, ctx, keeper, proposal, err.Error(), false); err != nil {
 					return false, err
 				}
 
@@ -96,11 +96,11 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) error {
 		proposal, err := keeper.Proposals.Get(ctx, key.K2())
 		if err != nil {
 			// if the proposal has an encoding error, this means it cannot be processed by x/gov
-			// this could be to some types missing their registration
+			// this could be due to some types missing their registration
 			// instead of returning an error (i.e, halting the chain), we fail the proposal
 			if errors.Is(err, collections.ErrEncoding) {
 				proposal.Id = key.K2()
-				if err := failUnsupportedProposal(logger, ctx, keeper, proposal, err.Error()); err != nil {
+				if err := failUnsupportedProposal(logger, ctx, keeper, proposal, err.Error(), true); err != nil {
 					return false, err
 				}
 
@@ -275,6 +275,7 @@ func failUnsupportedProposal(
 	keeper *keeper.Keeper,
 	proposal v1.Proposal,
 	errMsg string,
+	active bool,
 ) error {
 	proposal.Status = v1.StatusFailed
 	proposal.FailedReason = fmt.Sprintf("proposal failed because it cannot be processed by gov: %s", errMsg)
@@ -288,9 +289,14 @@ func failUnsupportedProposal(
 		return err
 	}
 
+	eventType := types.EventTypeInactiveProposal
+	if active {
+		eventType = types.EventTypeActiveProposal
+	}
+
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
-			types.EventTypeInactiveProposal,
+			eventType,
 			sdk.NewAttribute(types.AttributeKeyProposalID, fmt.Sprintf("%d", proposal.Id)),
 			sdk.NewAttribute(types.AttributeKeyProposalResult, types.AttributeValueProposalFailed),
 		),

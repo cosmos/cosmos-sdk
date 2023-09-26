@@ -1,6 +1,7 @@
 package module
 
 import (
+	"context"
 	"encoding/json"
 
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -82,9 +83,9 @@ func (c coreAppModuleBasicAdaptor) ValidateGenesis(cdc codec.JSONCodec, txConfig
 }
 
 // ExportGenesis implements HasGenesis
-func (c coreAppModuleBasicAdaptor) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.RawMessage {
+func (c coreAppModuleBasicAdaptor) ExportGenesis(ctx context.Context, cdc codec.JSONCodec) json.RawMessage {
 	if module, ok := c.module.(appmodule.HasGenesis); ok {
-		ctx := ctx.WithGasMeter(storetypes.NewInfiniteGasMeter()) // avoid race conditions
+		ctx := sdk.UnwrapSDKContext(ctx).WithGasMeter(storetypes.NewInfiniteGasMeter()) // avoid race conditions
 		target := genesis.RawJSONTarget{}
 		err := module.ExportGenesis(ctx, target.Target())
 		if err != nil {
@@ -107,7 +108,7 @@ func (c coreAppModuleBasicAdaptor) ExportGenesis(ctx sdk.Context, cdc codec.JSON
 }
 
 // InitGenesis implements HasGenesis
-func (c coreAppModuleBasicAdaptor) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, bz json.RawMessage) []abci.ValidatorUpdate {
+func (c coreAppModuleBasicAdaptor) InitGenesis(ctx context.Context, cdc codec.JSONCodec, bz json.RawMessage) []abci.ValidatorUpdate {
 	if module, ok := c.module.(appmodule.HasGenesis); ok {
 		// core API genesis
 		source, err := genesis.SourceFromRawJSON(bz)

@@ -139,6 +139,7 @@ func getTestingAccounts(
 	accountKeeper authkeeper.AccountKeeper, bankKeeper bankkeeper.Keeper,
 	stakingKeeper *stakingkeeper.Keeper, ctx sdk.Context, n int,
 ) []simtypes.Account {
+	t.Helper()
 	accounts := simtypes.RandomAccounts(r, n)
 
 	initAmt := stakingKeeper.TokensFromConsensusPower(ctx, 200)

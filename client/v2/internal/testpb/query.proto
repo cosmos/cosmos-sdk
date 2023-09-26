@@ -48,6 +48,8 @@ message EchoRequest {
   map<string, cosmos.base.v1beta1.Coin> map_string_coin            = 35;
   string a_validator_address = 36 [(cosmos_proto.scalar) = "cosmos.ValidatorAddressString"];
   string a_consensus_address = 37 [(cosmos_proto.scalar) = "cosmos.ConsensusAddressString"];
+
+  repeated cosmos.base.v1beta1.Coin coins = 38;
 }
 
 enum Enum {

@@ -92,8 +92,6 @@ func (b *Builder) addMessageFlags(ctx context.Context, flagSet *pflag.FlagSet, m
 	}
 
 	isPositional := map[string]bool{}
-	hasVarargs := false
-	hasOptional := false
 	n := len(commandOptions.PositionalArgs)
 	// positional args are also parsed using a FlagSet so that we can reuse all the same parsers
 	handler.positionalFlagSet = pflag.NewFlagSet("positional", pflag.ContinueOnError)
@@ -114,7 +112,7 @@ func (b *Builder) addMessageFlags(ctx context.Context, flagSet *pflag.FlagSet, m
 				return nil, fmt.Errorf("varargs positional argument %s must be the last argument", arg.ProtoField)
 			}
 
-			hasVarargs = true
+			handler.hasVarargs = true
 		}
 
 		if arg.Optional {
@@ -122,7 +120,7 @@ func (b *Builder) addMessageFlags(ctx context.Context, flagSet *pflag.FlagSet, m
 				return nil, fmt.Errorf("optional positional argument %s must be the last argument", arg.ProtoField)
 			}
 
-			hasOptional = true
+			handler.hasOptional = true
 		}
 
 		_, hasValue, err := b.addFieldFlag(
@@ -142,14 +140,15 @@ func (b *Builder) addMessageFlags(ctx context.Context, flagSet *pflag.FlagSet, m
 		})
 	}
 
-	if hasVarargs {
+	if handler.hasVarargs {
 		handler.CobraArgs = cobra.MinimumNArgs(n - 1)
-		handler.hasVarargs = true
-	} else if hasOptional {
+		handler.MandatoryArgUntil = n - 1
+	} else if handler.hasOptional {
 		handler.CobraArgs = cobra.RangeArgs(n-1, n)
-		handler.hasOptional = true
+		handler.MandatoryArgUntil = n - 1
 	} else {
 		handler.CobraArgs = cobra.ExactArgs(n)
+		handler.MandatoryArgUntil = n
 	}
 
 	// validate flag options

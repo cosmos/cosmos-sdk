@@ -659,8 +659,17 @@ func (app *BaseApp) VerifyVoteExtension(req *abci.RequestVerifyVoteExtension) (r
 		return nil, errors.New("application VerifyVoteExtension handler not set")
 	}
 
-	ms := app.cms.CacheMultiStore()
-	ctx := sdk.NewContext(ms, false, app.logger).WithStreamingManager(app.streamingManager).WithChainID(app.chainID).WithBlockHeight(req.Height)
+	var ctx sdk.Context
+
+	// If we're verifying the vote for the initial height, we need to use the
+	// finalizeBlockState context, otherwise we don't get the uncommitted data
+	// from InitChain.
+	if req.Height == app.initialHeight {
+		ctx, _ = app.finalizeBlockState.ctx.CacheContext()
+	} else {
+		ms := app.cms.CacheMultiStore()
+		ctx = sdk.NewContext(ms, false, app.logger).WithStreamingManager(app.streamingManager).WithChainID(app.chainID).WithBlockHeight(req.Height)
+	}
 
 	// If vote extensions are not enabled, as a safety precaution, we return an
 	// error.

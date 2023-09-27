@@ -1,7 +1,9 @@
 package root
 
 import (
+	"bytes"
 	"fmt"
+	"slices"
 
 	"github.com/cockroachdb/errors"
 	ics23 "github.com/cosmos/ics23/go"
@@ -42,6 +44,9 @@ type Store struct {
 
 	// lastCommitInfo reflects the last version/hash that has been committed
 	lastCommitInfo *store.CommitInfo
+
+	// workingHash defines the current (yet to be committed) hash
+	workingHash []byte
 }
 
 func New(
@@ -111,7 +116,7 @@ func (s *Store) LastCommitID() (store.CommitID, error) {
 		return store.CommitID{}, err
 	}
 
-	// ensure integrity of latest version against SC
+	// sanity check: ensure integrity of latest version against SC
 	scVersion := s.stateCommitment.GetLatestVersion()
 	if scVersion != latestVersion {
 		return store.CommitID{}, fmt.Errorf("SC and SS version mismatch; got: %d, expected: %d", scVersion, latestVersion)
@@ -165,29 +170,81 @@ func (s *Store) loadVersion(v uint64, upgrades any) error {
 	return nil
 }
 
-func (s *Store) WorkingHash() []byte {
-	storeInfos := []store.StoreInfo{
-		{
-			Name: defaultStoreKey,
-			CommitID: store.CommitID{
-				Hash: s.stateCommitment.WorkingHash(),
-			},
-		},
-	}
-
-	return store.CommitInfo{StoreInfos: storeInfos}.Hash()
-}
-
 func (s *Store) SetCommitHeader(h store.CommitHeader) {
 	s.commitHeader = h
 }
 
-// Commit commits all state changes to the underlying SS backend and all SC stores.
-// Note, writes to the SS backend are retrieved from the SC memory listeners and
-// are committed in a single batch synchronously. All writes to each SC are also
-// committed synchronously, however, they are NOT atomic. A byte slice is returned
-// reflecting the Merkle root hash of all committed SC stores.
+// WorkingHash returns the working hash of the root store. Note, WorkingHash()
+// should only be called once per block once all writes are complete and prior
+// to Commit() being called.
+//
+// If working hash is nil, then we need to compute and set it on the root store
+// by constructing a CommitInfo object, which in turn creates and writes a batch
+// of the current changeset to the SC tree.
+func (s *Store) WorkingHash() ([]byte, error) {
+	if s.workingHash == nil {
+		if err := s.writeSC(); err != nil {
+			return nil, err
+		}
+
+		s.workingHash = s.lastCommitInfo.Hash()
+	}
+
+	return slices.Clone(s.workingHash), nil
+}
+
+// Commit commits all state changes to the underlying SS and SC backends. Note,
+// at the time of Commit(), we expect WorkingHash() to have already been called,
+// which internally sets the working hash, retrieved by writing a batch of the
+// changeset to the SC tree, and CommitInfo on the root store. The changeset is
+// retrieved from the rootKVStore and represents the entire set of writes to be
+// committed. The same changeset is used to flush writes to the SS backend.
+//
+// Note, Commit() commits SC and SC synchronously.
 func (s *Store) Commit() ([]byte, error) {
+	if s.workingHash == nil {
+		return nil, fmt.Errorf("working hash is nil; must call WorkingHash() before Commit()")
+	}
+
+	version := s.lastCommitInfo.Version
+
+	if s.commitHeader.GetHeight() != version {
+		s.logger.Debug("commit header and version mismatch", "header_height", s.commitHeader.GetHeight(), "version", version)
+	}
+
+	changeSet := s.rootKVStore.GetChangeSet()
+
+	// commit SS
+	if err := s.commitSS(version, changeSet); err != nil {
+		return nil, fmt.Errorf("failed to commit SS: %w", err)
+	}
+
+	// commit SC
+	if err := s.commitSC(); err != nil {
+		return nil, fmt.Errorf("failed to commit SC stores: %w", err)
+	}
+
+	if s.commitHeader != nil {
+		s.lastCommitInfo.Timestamp = s.commitHeader.GetTime()
+	}
+
+	s.rootKVStore.Reset()
+	s.workingHash = nil
+
+	return s.WorkingHash()
+}
+
+// writeSC gets the current changeset from the rootKVStore and writes that as a
+// batch to the underlying SC tree, which allows us to retrieve the working hash
+// of the SC tree. Finally, we construct a *CommitInfo and return the hash.
+// Note, this should only be called once per block!
+func (s *Store) writeSC() error {
+	changeSet := s.rootKVStore.GetChangeSet()
+
+	if err := s.stateCommitment.WriteBatch(changeSet); err != nil {
+		return fmt.Errorf("failed to write batch to SC store: %w", err)
+	}
+
 	var previousHeight, version uint64
 	if s.lastCommitInfo.GetVersion() == 0 && s.initialVersion > 1 {
 		// This case means that no commit has been made in the store, we
@@ -204,58 +261,44 @@ func (s *Store) Commit() ([]byte, error) {
 		version = previousHeight + 1
 	}
 
-	if s.commitHeader.GetHeight() != version {
-		s.logger.Debug("commit header and version mismatch", "header_height", s.commitHeader.GetHeight(), "version", version)
-	}
+	workingHash := s.stateCommitment.WorkingHash()
 
-	changeSet := s.rootKVStore.GetChangeSet()
-
-	// commit SS
-	if err := s.commitSS(version, changeSet); err != nil {
-		return nil, fmt.Errorf("failed to commit SS: %w", err)
-	}
-
-	// commit SC
-	commitInfo, err := s.commitSC(version, changeSet)
-	if err != nil {
-		return nil, fmt.Errorf("failed to commit SC stores: %w", err)
-	}
-
-	s.lastCommitInfo = commitInfo
-	s.lastCommitInfo.Timestamp = s.commitHeader.GetTime()
-
-	s.rootKVStore.Reset()
-
-	return s.lastCommitInfo.Hash(), nil
-}
-
-// commitSC commits the SC store and returns a CommitInfo representing commitment
-// of the underlying SC backend tree. Since there is only a single SC backing tree,
-// all SC commits are atomic. An error is returned if commitment fails.
-func (s *Store) commitSC(version uint64, cs *store.ChangeSet) (*store.CommitInfo, error) {
-	if err := s.stateCommitment.WriteBatch(cs); err != nil {
-		return nil, fmt.Errorf("failed to write batch to SC store: %w", err)
-	}
-
-	commitBz, err := s.stateCommitment.Commit()
-	if err != nil {
-		return nil, fmt.Errorf("failed to commit SC store: %w", err)
-	}
-
-	storeInfos := []store.StoreInfo{
-		{
-			Name: defaultStoreKey,
-			CommitID: store.CommitID{
-				Version: version,
-				Hash:    commitBz,
+	s.lastCommitInfo = &store.CommitInfo{
+		Version: version,
+		StoreInfos: []store.StoreInfo{
+			{
+				Name: defaultStoreKey,
+				CommitID: store.CommitID{
+					Version: version,
+					Hash:    workingHash,
+				},
 			},
 		},
 	}
 
-	return &store.CommitInfo{
-		Version:    version,
-		StoreInfos: storeInfos,
-	}, nil
+	return nil
+}
+
+// commitSC commits the SC store. At this point, a batch of the current changeset
+// should have already been written to the SC via WorkingHash(). This method
+// solely commits that batch. An error is returned if commit fails or if the
+// resulting commit hash is not equivalent to the working hash.
+func (s *Store) commitSC() error {
+	commitBz, err := s.stateCommitment.Commit()
+	if err != nil {
+		return fmt.Errorf("failed to commit SC store: %w", err)
+	}
+
+	workingHash, err := s.WorkingHash()
+	if err != nil {
+		return fmt.Errorf("failed to get working hash: %w", err)
+	}
+
+	if bytes.Equal(commitBz, workingHash) {
+		return fmt.Errorf("unexpected commit hash; got: %X, expected: %X", commitBz, workingHash)
+	}
+
+	return nil
 }
 
 // commitSS flushes all accumulated writes to the SS backend via a single batch.

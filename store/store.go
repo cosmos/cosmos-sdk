@@ -29,7 +29,7 @@ type RootStore interface {
 	LoadLatestVersion() error
 	GetLatestVersion() (uint64, error)
 
-	WorkingHash() []byte
+	WorkingHash() ([]byte, error)
 	SetCommitHeader(h CommitHeader)
 	Commit() ([]byte, error)
 

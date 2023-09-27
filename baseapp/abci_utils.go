@@ -47,6 +47,7 @@ func ValidateVoteExtensions(
 	ctx sdk.Context,
 	valStore ValidatorStore,
 	currentHeight int64,
+	chainID string,
 	extCommit abci.ExtendedCommitInfo,
 ) error {
 	cp := ctx.ConsensusParams()
@@ -109,7 +110,7 @@ func ValidateVoteExtensions(
 			Extension: vote.VoteExtension,
 			Height:    currentHeight - 1, // the vote extension was signed in the previous height
 			Round:     int64(extCommit.Round),
-			ChainId:   ctx.ChainID(),
+			ChainId:   chainID,
 		}
 
 		extSignBytes, err := marshalDelimitedFn(&cve)

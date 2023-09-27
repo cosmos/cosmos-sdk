@@ -370,7 +370,6 @@ func BootstrapStateCmd(appCreator types.AppCreator) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			var apphash []byte
 			if height == 0 {
 				home := serverCtx.Viper.GetString(flags.FlagHome)
 				db, err := openDB(home, GetAppDBBackend(serverCtx.Viper))
@@ -379,11 +378,10 @@ func BootstrapStateCmd(appCreator types.AppCreator) *cobra.Command {
 				}
 
 				app := appCreator(logger, db, nil, serverCtx.Viper)
-				apphash = app.CommitMultiStore().WorkingHash()
 				height = app.CommitMultiStore().LastCommitID().Version
 			}
 
-			return node.BootstrapState(context.Background(), cfg, cmtcfg.DefaultDBProvider, uint64(height), apphash)
+			return node.BootstrapState(context.Background(), cfg, cmtcfg.DefaultDBProvider, uint64(height), nil)
 		},
 	}
 

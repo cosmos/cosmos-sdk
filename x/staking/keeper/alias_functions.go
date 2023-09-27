@@ -115,18 +115,23 @@ func (k Keeper) GetValidatorSet() types.ValidatorSet {
 
 // Delegation gets the delegation interface for a particular set of delegator and validator addresses
 func (k Keeper) Delegation(ctx context.Context, addrDel sdk.AccAddress, addrVal sdk.ValAddress) (types.DelegationI, error) {
+<<<<<<< HEAD
 	bond, err := k.GetDelegation(ctx, addrDel, addrVal)
 	if err != nil {
 		return nil, err
 	}
 
 	return bond, nil
+=======
+	return k.Delegations.Get(ctx, collections.Join(addrDel, addrVal))
+>>>>>>> ddd26b5df (chore(x/staking/keeper): remove redundant code/returns (#17890))
 }
 
 // IterateDelegations iterates through all of the delegations from a delegator
 func (k Keeper) IterateDelegations(ctx context.Context, delAddr sdk.AccAddress,
 	fn func(index int64, del types.DelegationI) (stop bool),
 ) error {
+<<<<<<< HEAD
 	store := k.storeService.OpenKVStore(ctx)
 	delegatorPrefixKey := types.GetDelegationsKey(delAddr)
 	iterator, err := store.Iterator(delegatorPrefixKey, storetypes.PrefixEndBytes(delegatorPrefixKey))
@@ -149,6 +154,19 @@ func (k Keeper) IterateDelegations(ctx context.Context, delAddr sdk.AccAddress,
 	}
 
 	return nil
+=======
+	var i int64
+	rng := collections.NewPrefixedPairRange[sdk.AccAddress, sdk.ValAddress](delAddr)
+	return k.Delegations.Walk(ctx, rng, func(key collections.Pair[sdk.AccAddress, sdk.ValAddress], del types.Delegation) (stop bool, err error) {
+		stop = fn(i, del)
+		if stop {
+			return true, nil
+		}
+		i++
+
+		return false, nil
+	})
+>>>>>>> ddd26b5df (chore(x/staking/keeper): remove redundant code/returns (#17890))
 }
 
 // GetAllSDKDelegations returns all delegations used during genesis dump

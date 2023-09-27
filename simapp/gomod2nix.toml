@@ -16,6 +16,9 @@ schema = 3
   [mod."cloud.google.com/go/storage"]
     version = "v1.31.0"
     hash = "sha256-d59Q6JjMga6/7d1TtFW9GuAq+6O2U4LhNesz3Knmo0E="
+  [mod."cosmossdk.io/api"]
+    version = "v0.7.2-0.20230927090904-9dd34510e273"
+    hash = "sha256-KRosrgOUbZeHDkLcSRLq4e4DHugXynj5vSHNrzGKEqs="
   [mod."cosmossdk.io/collections"]
     version = "v0.4.0"
     hash = "sha256-minFyzgO/D+Oda4E3B1qvOAN5qd65SjS6nmjca4cp/8="
@@ -270,8 +273,8 @@ schema = 3
     version = "v0.5.1"
     hash = "sha256-nQ+qduNhVwj+YIyPTuq8rytQYT3zWcEQM3zQ7LTegdI="
   [mod."github.com/hashicorp/go-plugin"]
-    version = "v1.5.1"
-    hash = "sha256-rXNajanQOAkqHDghaICUkikQHuWbAICg6OKelhEleEo="
+    version = "v1.5.2"
+    hash = "sha256-bdBT9TyHUJkUogQZWj0waniVv/Qauy/iKEbegyK2HZA="
   [mod."github.com/hashicorp/go-safetemp"]
     version = "v1.0.0"
     hash = "sha256-g5i9m7FSRInQzZ4iRpIsoUu685AY7fppUwjhuZCezT8="

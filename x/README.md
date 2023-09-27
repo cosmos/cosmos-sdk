@@ -16,6 +16,7 @@ Here are some production-grade modules that can be used in Cosmos SDK applicatio
 * [Governance](./gov/README.md) - On-chain proposals and voting.
 * [Mint](./mint/README.md) - Creation of new units of staking token.
 * [Params](./params/README.md) - Globally available parameter store.
+* [Protocolpool](./protocolpool/README.md) - Functionalities handling community pool funds.
 * [Slashing](./slashing/README.md) - Validator punishment mechanisms.
 * [Staking](./staking/README.md) - Proof-of-Stake layer for public blockchains.
 * [Upgrade](./upgrade/README.md) - Software upgrades handling and coordination.

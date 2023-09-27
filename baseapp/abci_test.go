@@ -1811,9 +1811,9 @@ func TestABCI_PrepareProposal_VoteExtensions(t *testing.T) {
 	prepareOpt := func(bapp *baseapp.BaseApp) {
 		bapp.SetPrepareProposal(func(ctx sdk.Context, req *abci.RequestPrepareProposal) (*abci.ResponsePrepareProposal, error) {
 			cp := ctx.ConsensusParams()
-			extsEnabled := cp.Abci != nil && req.Height >= cp.Abci.VoteExtensionsEnableHeight && cp.Abci.VoteExtensionsEnableHeight != 0
+			extsEnabled := cp.Abci != nil && req.Height > cp.Abci.VoteExtensionsEnableHeight && cp.Abci.VoteExtensionsEnableHeight != 0
 			if extsEnabled {
-				err := baseapp.ValidateVoteExtensions(ctx, valStore, req.Height, bapp.ChainID(), req.LocalLastCommit)
+				err := baseapp.ValidateVoteExtensions(ctx, valStore, req.Height, req.LocalLastCommit)
 				if err != nil {
 					return nil, err
 				}

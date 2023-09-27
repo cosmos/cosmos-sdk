@@ -147,7 +147,7 @@ func (s *ABCIUtilsTestSuite) TestValidateVoteExtensionsHappyPath() {
 		},
 	}
 	// expect-pass (votes of height 2 are included in next block)
-	s.Require().NoError(baseapp.ValidateVoteExtensions(s.ctx, s.valStore, 3, chainID, llc))
+	s.Require().NoError(baseapp.ValidateVoteExtensions(s.ctx, s.valStore, 3, llc))
 }
 
 // check ValidateVoteExtensions works when a single node has submitted a BlockID_Absent
@@ -192,7 +192,7 @@ func (s *ABCIUtilsTestSuite) TestValidateVoteExtensionsSingleVoteAbsent() {
 		},
 	}
 	// expect-pass (votes of height 2 are included in next block)
-	s.Require().NoError(baseapp.ValidateVoteExtensions(s.ctx, s.valStore, 3, chainID, llc))
+	s.Require().NoError(baseapp.ValidateVoteExtensions(s.ctx, s.valStore, 3, llc))
 }
 
 // check ValidateVoteExtensions works when a single node has submitted a BlockID_Nil
@@ -237,7 +237,7 @@ func (s *ABCIUtilsTestSuite) TestValidateVoteExtensionsSingleVoteNil() {
 		},
 	}
 	// expect-pass (votes of height 2 are included in next block)
-	s.Require().NoError(baseapp.ValidateVoteExtensions(s.ctx, s.valStore, 3, chainID, llc))
+	s.Require().NoError(baseapp.ValidateVoteExtensions(s.ctx, s.valStore, 3, llc))
 }
 
 // check ValidateVoteExtensions works when two nodes have submitted a BlockID_Nil / BlockID_Absent
@@ -279,7 +279,7 @@ func (s *ABCIUtilsTestSuite) TestValidateVoteExtensionsTwoVotesNilAbsent() {
 	}
 
 	// expect-pass (votes of height 2 are included in next block)
-	s.Require().Error(baseapp.ValidateVoteExtensions(s.ctx, s.valStore, 3, chainID, llc))
+	s.Require().Error(baseapp.ValidateVoteExtensions(s.ctx, s.valStore, 3, llc))
 }
 
 func (s *ABCIUtilsTestSuite) TestDefaultProposalHandler_NoOpMempoolTxSelection() {

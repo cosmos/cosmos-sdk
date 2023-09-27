@@ -5,6 +5,7 @@ import (
 
 	"github.com/golang/mock/gomock"
 
+	"cosmossdk.io/core/header"
 	"cosmossdk.io/x/feegrant"
 
 	codecaddress "github.com/cosmos/cosmos-sdk/codec/address"
@@ -13,9 +14,9 @@ import (
 )
 
 func (suite *KeeperTestSuite) TestGrantAllowance() {
-	ctx := suite.ctx.WithBlockTime(time.Now())
-	oneYear := ctx.BlockTime().AddDate(1, 0, 0)
-	yesterday := ctx.BlockTime().AddDate(0, 0, -1)
+	ctx := suite.ctx.WithHeaderInfo(header.Info{Time: time.Now()})
+	oneYear := ctx.HeaderInfo().Time.AddDate(1, 0, 0)
+	yesterday := ctx.HeaderInfo().Time.AddDate(0, 0, -1)
 
 	addressCodec := codecaddress.NewBech32Codec("cosmos")
 
@@ -33,7 +34,7 @@ func (suite *KeeperTestSuite) TestGrantAllowance() {
 				invalid := "invalid-granter"
 				return &feegrant.MsgGrantAllowance{
 					Granter:   invalid,
-					Grantee:   suite.addrs[1].String(),
+					Grantee:   suite.encodedAddrs[1],
 					Allowance: any,
 				}
 			},
@@ -47,7 +48,7 @@ func (suite *KeeperTestSuite) TestGrantAllowance() {
 				suite.Require().NoError(err)
 				invalid := "invalid-grantee"
 				return &feegrant.MsgGrantAllowance{
-					Granter:   suite.addrs[0].String(),
+					Granter:   suite.encodedAddrs[0],
 					Grantee:   invalid,
 					Allowance: any,
 				}
@@ -78,7 +79,7 @@ func (suite *KeeperTestSuite) TestGrantAllowance() {
 
 				suite.Require().NoError(err)
 				return &feegrant.MsgGrantAllowance{
-					Granter:   suite.addrs[0].String(),
+					Granter:   suite.encodedAddrs[0],
 					Grantee:   grantee,
 					Allowance: any,
 				}
@@ -95,8 +96,8 @@ func (suite *KeeperTestSuite) TestGrantAllowance() {
 				})
 				suite.Require().NoError(err)
 				return &feegrant.MsgGrantAllowance{
-					Granter:   suite.addrs[0].String(),
-					Grantee:   suite.addrs[1].String(),
+					Granter:   suite.encodedAddrs[0],
+					Grantee:   suite.encodedAddrs[1],
 					Allowance: any,
 				}
 			},
@@ -112,8 +113,8 @@ func (suite *KeeperTestSuite) TestGrantAllowance() {
 				})
 				suite.Require().NoError(err)
 				return &feegrant.MsgGrantAllowance{
-					Granter:   suite.addrs[0].String(),
-					Grantee:   suite.addrs[1].String(),
+					Granter:   suite.encodedAddrs[0],
+					Grantee:   suite.encodedAddrs[1],
 					Allowance: any,
 				}
 			},
@@ -129,8 +130,8 @@ func (suite *KeeperTestSuite) TestGrantAllowance() {
 				})
 				suite.Require().NoError(err)
 				return &feegrant.MsgGrantAllowance{
-					Granter:   suite.addrs[0].String(),
-					Grantee:   suite.addrs[1].String(),
+					Granter:   suite.encodedAddrs[0],
+					Grantee:   suite.encodedAddrs[1],
 					Allowance: any,
 				}
 			},
@@ -149,8 +150,8 @@ func (suite *KeeperTestSuite) TestGrantAllowance() {
 				})
 				suite.Require().NoError(err)
 				return &feegrant.MsgGrantAllowance{
-					Granter:   suite.addrs[1].String(),
-					Grantee:   suite.addrs[2].String(),
+					Granter:   suite.encodedAddrs[1],
+					Grantee:   suite.encodedAddrs[2],
 					Allowance: any,
 				}
 			},
@@ -169,8 +170,8 @@ func (suite *KeeperTestSuite) TestGrantAllowance() {
 				})
 				suite.Require().NoError(err)
 				return &feegrant.MsgGrantAllowance{
-					Granter:   suite.addrs[1].String(),
-					Grantee:   suite.addrs[2].String(),
+					Granter:   suite.encodedAddrs[1],
+					Grantee:   suite.encodedAddrs[2],
 					Allowance: any,
 				}
 			},
@@ -190,7 +191,8 @@ func (suite *KeeperTestSuite) TestGrantAllowance() {
 }
 
 func (suite *KeeperTestSuite) TestRevokeAllowance() {
-	oneYear := suite.ctx.BlockTime().AddDate(1, 0, 0)
+	suite.ctx = suite.ctx.WithHeaderInfo(header.Info{Time: time.Now()})
+	oneYear := suite.ctx.HeaderInfo().Time.AddDate(1, 0, 0)
 
 	testCases := []struct {
 		name      string
@@ -203,7 +205,7 @@ func (suite *KeeperTestSuite) TestRevokeAllowance() {
 			"error: invalid granter",
 			&feegrant.MsgRevokeAllowance{
 				Granter: invalidGranter,
-				Grantee: suite.addrs[1].String(),
+				Grantee: suite.encodedAddrs[1],
 			},
 			func() {},
 			true,
@@ -212,7 +214,7 @@ func (suite *KeeperTestSuite) TestRevokeAllowance() {
 		{
 			"error: invalid grantee",
 			&feegrant.MsgRevokeAllowance{
-				Granter: suite.addrs[0].String(),
+				Granter: suite.encodedAddrs[0],
 				Grantee: invalidGrantee,
 			},
 			func() {},
@@ -222,8 +224,8 @@ func (suite *KeeperTestSuite) TestRevokeAllowance() {
 		{
 			"error: fee allowance not found",
 			&feegrant.MsgRevokeAllowance{
-				Granter: suite.addrs[0].String(),
-				Grantee: suite.addrs[1].String(),
+				Granter: suite.encodedAddrs[0],
+				Grantee: suite.encodedAddrs[1],
 			},
 			func() {},
 			true,
@@ -232,14 +234,14 @@ func (suite *KeeperTestSuite) TestRevokeAllowance() {
 		{
 			"success: revoke fee allowance",
 			&feegrant.MsgRevokeAllowance{
-				Granter: suite.addrs[0].String(),
-				Grantee: suite.addrs[1].String(),
+				Granter: suite.encodedAddrs[0],
+				Grantee: suite.encodedAddrs[1],
 			},
 			func() {
 				// removing fee allowance from previous tests if exists
 				_, err := suite.msgSrvr.RevokeAllowance(suite.ctx, &feegrant.MsgRevokeAllowance{
-					Granter: suite.addrs[0].String(),
-					Grantee: suite.addrs[1].String(),
+					Granter: suite.encodedAddrs[0],
+					Grantee: suite.encodedAddrs[1],
 				})
 				suite.Require().Error(err)
 				any, err := codectypes.NewAnyWithValue(&feegrant.PeriodicAllowance{
@@ -251,8 +253,8 @@ func (suite *KeeperTestSuite) TestRevokeAllowance() {
 				})
 				suite.Require().NoError(err)
 				req := &feegrant.MsgGrantAllowance{
-					Granter:   suite.addrs[0].String(),
-					Grantee:   suite.addrs[1].String(),
+					Granter:   suite.encodedAddrs[0],
+					Grantee:   suite.encodedAddrs[1],
 					Allowance: any,
 				}
 				_, err = suite.msgSrvr.GrantAllowance(suite.ctx, req)
@@ -264,8 +266,8 @@ func (suite *KeeperTestSuite) TestRevokeAllowance() {
 		{
 			"error: check fee allowance revoked",
 			&feegrant.MsgRevokeAllowance{
-				Granter: suite.addrs[0].String(),
-				Grantee: suite.addrs[1].String(),
+				Granter: suite.encodedAddrs[0],
+				Grantee: suite.encodedAddrs[1],
 			},
 			func() {},
 			true,

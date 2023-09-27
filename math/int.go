@@ -86,6 +86,14 @@ func (i Int) BigInt() *big.Int {
 	return new(big.Int).Set(i.i)
 }
 
+// BigInt converts Int to big.Int, mutative the input
+func (i Int) BigIntMut() *big.Int {
+	if i.IsNil() {
+		return nil
+	}
+	return i.i
+}
+
 // IsNil returns true if Int is uninitialized
 func (i Int) IsNil() bool {
 	return i.i == nil

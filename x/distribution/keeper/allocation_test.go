@@ -4,12 +4,12 @@ import (
 	"testing"
 	"time"
 
-	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/collections"
+	"cosmossdk.io/core/comet"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 
@@ -37,6 +37,7 @@ func TestAllocateTokensToValidatorWithCommission(t *testing.T) {
 	bankKeeper := distrtestutil.NewMockBankKeeper(ctrl)
 	stakingKeeper := distrtestutil.NewMockStakingKeeper(ctrl)
 	accountKeeper := distrtestutil.NewMockAccountKeeper(ctrl)
+	poolKeeper := distrtestutil.NewMockPoolKeeper(ctrl)
 
 	valCodec := address.NewBech32Codec("cosmosvaloper")
 
@@ -49,6 +50,7 @@ func TestAllocateTokensToValidatorWithCommission(t *testing.T) {
 		accountKeeper,
 		bankKeeper,
 		stakingKeeper,
+		poolKeeper,
 		"fee_collector",
 		authtypes.NewModuleAddress("gov").String(),
 	)
@@ -94,6 +96,7 @@ func TestAllocateTokensToManyValidators(t *testing.T) {
 	bankKeeper := distrtestutil.NewMockBankKeeper(ctrl)
 	stakingKeeper := distrtestutil.NewMockStakingKeeper(ctrl)
 	accountKeeper := distrtestutil.NewMockAccountKeeper(ctrl)
+	poolKeeper := distrtestutil.NewMockPoolKeeper(ctrl)
 
 	feeCollectorAcc := authtypes.NewEmptyModuleAccount("fee_collector")
 	accountKeeper.EXPECT().GetModuleAddress("distribution").Return(distrAcc.GetAddress())
@@ -106,6 +109,7 @@ func TestAllocateTokensToManyValidators(t *testing.T) {
 		accountKeeper,
 		bankKeeper,
 		stakingKeeper,
+		poolKeeper,
 		"fee_collector",
 		authtypes.NewModuleAddress("gov").String(),
 	)
@@ -128,11 +132,11 @@ func TestAllocateTokensToManyValidators(t *testing.T) {
 	val1.Commission = stakingtypes.NewCommission(math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0))
 	stakingKeeper.EXPECT().ValidatorByConsAddr(gomock.Any(), sdk.GetConsAddress(valConsPk1)).Return(val1, nil).AnyTimes()
 
-	abciValA := abci.Validator{
+	abciValA := comet.Validator{
 		Address: valConsPk0.Address(),
 		Power:   100,
 	}
-	abciValB := abci.Validator{
+	abciValB := comet.Validator{
 		Address: valConsPk1.Address(),
 		Power:   100,
 	}
@@ -165,7 +169,7 @@ func TestAllocateTokensToManyValidators(t *testing.T) {
 	bankKeeper.EXPECT().GetAllBalances(gomock.Any(), feeCollectorAcc.GetAddress()).Return(fees)
 	bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), "fee_collector", disttypes.ModuleName, fees)
 
-	votes := []abci.VoteInfo{
+	votes := []comet.VoteInfo{
 		{
 			Validator: abciValA,
 		},
@@ -173,6 +177,7 @@ func TestAllocateTokensToManyValidators(t *testing.T) {
 			Validator: abciValB,
 		},
 	}
+
 	require.NoError(t, distrKeeper.AllocateTokens(ctx, 200, votes))
 
 	// 98 outstanding rewards (100 less 2 to community pool)
@@ -221,6 +226,7 @@ func TestAllocateTokensTruncation(t *testing.T) {
 	bankKeeper := distrtestutil.NewMockBankKeeper(ctrl)
 	stakingKeeper := distrtestutil.NewMockStakingKeeper(ctrl)
 	accountKeeper := distrtestutil.NewMockAccountKeeper(ctrl)
+	poolKeeper := distrtestutil.NewMockPoolKeeper(ctrl)
 
 	feeCollectorAcc := authtypes.NewEmptyModuleAccount("fee_collector")
 	accountKeeper.EXPECT().GetModuleAddress("distribution").Return(distrAcc.GetAddress())
@@ -233,6 +239,7 @@ func TestAllocateTokensTruncation(t *testing.T) {
 		accountKeeper,
 		bankKeeper,
 		stakingKeeper,
+		poolKeeper,
 		"fee_collector",
 		authtypes.NewModuleAddress("gov").String(),
 	)
@@ -262,15 +269,15 @@ func TestAllocateTokensTruncation(t *testing.T) {
 	val2.Commission = stakingtypes.NewCommission(math.LegacyNewDecWithPrec(1, 1), math.LegacyNewDecWithPrec(1, 1), math.LegacyNewDec(0))
 	stakingKeeper.EXPECT().ValidatorByConsAddr(gomock.Any(), sdk.GetConsAddress(valConsPk2)).Return(val2, nil).AnyTimes()
 
-	abciValA := abci.Validator{
+	abciValA := comet.Validator{
 		Address: valConsPk0.Address(),
 		Power:   11,
 	}
-	abciValB := abci.Validator{
+	abciValB := comet.Validator{
 		Address: valConsPk1.Address(),
 		Power:   10,
 	}
-	abciValC := abci.Validator{
+	abciValC := comet.Validator{
 		Address: valConsPk2.Address(),
 		Power:   10,
 	}
@@ -303,7 +310,7 @@ func TestAllocateTokensTruncation(t *testing.T) {
 	bankKeeper.EXPECT().GetAllBalances(gomock.Any(), feeCollectorAcc.GetAddress()).Return(fees)
 	bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), "fee_collector", disttypes.ModuleName, fees)
 
-	votes := []abci.VoteInfo{
+	votes := []comet.VoteInfo{
 		{
 			Validator: abciValA,
 		},
@@ -314,6 +321,7 @@ func TestAllocateTokensTruncation(t *testing.T) {
 			Validator: abciValC,
 		},
 	}
+
 	require.NoError(t, distrKeeper.AllocateTokens(ctx, 31, votes))
 
 	val0OutstandingRewards, err := distrKeeper.ValidatorOutstandingRewards.Get(ctx, valAddr0)

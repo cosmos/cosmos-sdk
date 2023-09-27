@@ -56,6 +56,26 @@ func (s *intTestSuite) TestNewIntFromBigInt() {
 	s.Require().NotEqual(r, i.BigInt())
 }
 
+func (s *intTestSuite) TestConvertToBigIntMutative() {
+	r := big.NewInt(42)
+	i := math.NewIntFromBigInt(r)
+
+	// Compare value of BigInt & BigIntMut
+	s.Require().Equal(i.BigInt(), i.BigIntMut())
+
+	// Modify BigIntMut() pointer and ensure i.BigIntMut() & i.BigInt() change
+	p := i.BigIntMut()
+	p.SetInt64(50)
+	s.Require().Equal(big.NewInt(50), i.BigIntMut())
+	s.Require().Equal(big.NewInt(50), i.BigInt())
+
+	// Modify big.Int() pointer and ensure i.BigIntMut() & i.BigInt() don't change
+	p = i.BigInt()
+	p.SetInt64(60)
+	s.Require().NotEqual(big.NewInt(60), i.BigIntMut())
+	s.Require().NotEqual(big.NewInt(60), i.BigInt())
+}
+
 func (s *intTestSuite) TestIntPanic() {
 	// Max Int = 2^256-1 = 1.1579209e+77
 	// Min Int = -(2^256-1) = -1.1579209e+77
@@ -546,6 +566,7 @@ var sizeTests = []struct {
 	{"9999999999999", 13},
 	{"99999999999999", 14},
 	{"999999999999999", 15},
+	{"1000000000000000", 16},
 	{"9999999999999999", 16},
 	{"99999999999999999", 17},
 	{"999999999999999999", 18},

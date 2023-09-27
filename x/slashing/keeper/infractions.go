@@ -152,7 +152,7 @@ func (k Keeper) HandleValidatorSignature(ctx context.Context, addr cryptotypes.A
 			if err != nil {
 				return err
 			}
-			signInfo.JailedUntil = sdkCtx.BlockHeader().Time.Add(downtimeJailDur)
+			signInfo.JailedUntil = sdkCtx.HeaderInfo().Time.Add(downtimeJailDur)
 
 			// We need to reset the counter & bitmap so that the validator won't be
 			// immediately slashed for downtime upon re-bonding.

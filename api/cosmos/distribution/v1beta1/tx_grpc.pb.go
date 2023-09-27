@@ -41,8 +41,12 @@ type MsgClient interface {
 	// WithdrawValidatorCommission defines a method to withdraw the
 	// full commission to the validator address.
 	WithdrawValidatorCommission(ctx context.Context, in *MsgWithdrawValidatorCommission, opts ...grpc.CallOption) (*MsgWithdrawValidatorCommissionResponse, error)
+	// Deprecated: Do not use.
 	// FundCommunityPool defines a method to allow an account to directly
 	// fund the community pool.
+	//
+	// Deprecated: Use x/protocolpool module's FundCommunityPool instead.
+	// Since: cosmos-sdk 0.50
 	FundCommunityPool(ctx context.Context, in *MsgFundCommunityPool, opts ...grpc.CallOption) (*MsgFundCommunityPoolResponse, error)
 	// UpdateParams defines a governance operation for updating the x/distribution
 	// module parameters. The authority is defined in the keeper.
@@ -54,7 +58,8 @@ type MsgClient interface {
 	// could be the governance module itself. The authority is defined in the
 	// keeper.
 	//
-	// Since: cosmos-sdk 0.47
+	// Deprecated: Use x/protocolpool module's CommunityPoolSpend instead.
+	// Since: cosmos-sdk 0.50
 	CommunityPoolSpend(ctx context.Context, in *MsgCommunityPoolSpend, opts ...grpc.CallOption) (*MsgCommunityPoolSpendResponse, error)
 	// DepositValidatorRewardsPool defines a method to provide additional rewards
 	// to delegators to a specific validator.
@@ -98,6 +103,7 @@ func (c *msgClient) WithdrawValidatorCommission(ctx context.Context, in *MsgWith
 	return out, nil
 }
 
+// Deprecated: Do not use.
 func (c *msgClient) FundCommunityPool(ctx context.Context, in *MsgFundCommunityPool, opts ...grpc.CallOption) (*MsgFundCommunityPoolResponse, error) {
 	out := new(MsgFundCommunityPoolResponse)
 	err := c.cc.Invoke(ctx, Msg_FundCommunityPool_FullMethodName, in, out, opts...)
@@ -147,8 +153,12 @@ type MsgServer interface {
 	// WithdrawValidatorCommission defines a method to withdraw the
 	// full commission to the validator address.
 	WithdrawValidatorCommission(context.Context, *MsgWithdrawValidatorCommission) (*MsgWithdrawValidatorCommissionResponse, error)
+	// Deprecated: Do not use.
 	// FundCommunityPool defines a method to allow an account to directly
 	// fund the community pool.
+	//
+	// Deprecated: Use x/protocolpool module's FundCommunityPool instead.
+	// Since: cosmos-sdk 0.50
 	FundCommunityPool(context.Context, *MsgFundCommunityPool) (*MsgFundCommunityPoolResponse, error)
 	// UpdateParams defines a governance operation for updating the x/distribution
 	// module parameters. The authority is defined in the keeper.
@@ -160,7 +170,8 @@ type MsgServer interface {
 	// could be the governance module itself. The authority is defined in the
 	// keeper.
 	//
-	// Since: cosmos-sdk 0.47
+	// Deprecated: Use x/protocolpool module's CommunityPoolSpend instead.
+	// Since: cosmos-sdk 0.50
 	CommunityPoolSpend(context.Context, *MsgCommunityPoolSpend) (*MsgCommunityPoolSpendResponse, error)
 	// DepositValidatorRewardsPool defines a method to provide additional rewards
 	// to delegators to a specific validator.

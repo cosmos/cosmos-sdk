@@ -65,7 +65,10 @@ func (s *CLITestSuite) SetupSuite() {
 		WithClient(clitestutil.MockCometRPC{Client: rpcclientmock.Client{}}).
 		WithAccountRetriever(client.MockAccountRetriever{}).
 		WithOutput(io.Discard).
-		WithChainID("test-chain")
+		WithChainID("test-chain").
+		WithAddressCodec(addresscodec.NewBech32Codec("cosmos")).
+		WithValidatorAddressCodec(addresscodec.NewBech32Codec("cosmosvaloper")).
+		WithConsensusAddressCodec(addresscodec.NewBech32Codec("cosmosvalcons"))
 
 	ctxGen := func() client.Context {
 		bz, _ := s.encCfg.Codec.Marshal(&sdk.TxResponse{})
@@ -1204,13 +1207,6 @@ func (s *CLITestSuite) TestAuxToFeeWithTips() {
 				require.NoError(err)
 				genTxFile := testutil.WriteToNewTempFile(s.T(), string(res.Bytes()))
 				defer genTxFile.Close()
-
-				// broadcast the tx
-				res, err = authtestutil.TxAuxToFeeExec(
-					s.clientCtx,
-					genTxFile.Name(),
-					tc.feePayerArgs...,
-				)
 
 				switch {
 				case tc.expectErrBroadCast:

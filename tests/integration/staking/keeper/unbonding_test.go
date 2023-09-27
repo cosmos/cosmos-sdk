@@ -7,6 +7,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"gotest.tools/v3/assert"
 
+	"cosmossdk.io/core/header"
 	"cosmossdk.io/math"
 
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -207,7 +208,7 @@ func TestValidatorUnbondingOnHold1(t *testing.T) {
 	assert.Equal(t, validator.OperatorAddress, unbondingVals[0])
 
 	// PROVIDER CHAIN'S UNBONDING PERIOD ENDS - BUT UNBONDING CANNOT COMPLETE
-	f.sdkCtx = f.sdkCtx.WithBlockTime(completionTime.Add(time.Duration(1)))
+	f.sdkCtx = f.sdkCtx.WithHeaderInfo(header.Info{Time: completionTime.Add(time.Duration(1))})
 	f.sdkCtx = f.sdkCtx.WithBlockHeight(completionHeight + 1)
 	assert.NilError(t, f.stakingKeeper.UnbondAllMatureValidators(f.sdkCtx))
 
@@ -253,7 +254,7 @@ func TestValidatorUnbondingOnHold2(t *testing.T) {
 	completionHeight := validator1.UnbondingHeight
 
 	// PROVIDER CHAIN'S UNBONDING PERIOD ENDS - BUT UNBONDING CANNOT COMPLETE
-	f.sdkCtx = f.sdkCtx.WithBlockTime(completionTime.Add(time.Duration(1)))
+	f.sdkCtx = f.sdkCtx.WithHeaderInfo(header.Info{Time: completionTime.Add(time.Duration(1))})
 	f.sdkCtx = f.sdkCtx.WithBlockHeight(completionHeight + 1)
 	assert.NilError(t, f.stakingKeeper.UnbondAllMatureValidators(f.sdkCtx))
 
@@ -328,7 +329,7 @@ func TestRedelegationOnHold1(t *testing.T) {
 	assert.Equal(t, 1, len(redelegations))
 
 	// PROVIDER CHAIN'S UNBONDING PERIOD ENDS - STOPPED UNBONDING CAN NOW COMPLETE
-	f.sdkCtx = f.sdkCtx.WithBlockTime(completionTime)
+	f.sdkCtx = f.sdkCtx.WithHeaderInfo(header.Info{Time: completionTime})
 	_, err = f.stakingKeeper.CompleteRedelegation(f.sdkCtx, addrDels[0], addrVals[0], addrVals[1])
 	assert.NilError(t, err)
 
@@ -352,7 +353,7 @@ func TestRedelegationOnHold2(t *testing.T) {
 	completionTime := doRedelegation(t, f.stakingKeeper, f.sdkCtx, addrDels, addrVals, &hookCalled)
 
 	// PROVIDER CHAIN'S UNBONDING PERIOD ENDS - BUT UNBONDING CANNOT COMPLETE
-	f.sdkCtx = f.sdkCtx.WithBlockTime(completionTime)
+	f.sdkCtx = f.sdkCtx.WithHeaderInfo(header.Info{Time: completionTime})
 	_, err := f.stakingKeeper.CompleteRedelegation(f.sdkCtx, addrDels[0], addrVals[0], addrVals[1])
 	assert.NilError(t, err)
 
@@ -397,7 +398,7 @@ func TestUnbondingDelegationOnHold1(t *testing.T) {
 	assert.Assert(math.IntEq(t, notBondedAmt1, notBondedAmt3))
 
 	// PROVIDER CHAIN'S UNBONDING PERIOD ENDS - STOPPED UNBONDING CAN NOW COMPLETE
-	f.sdkCtx = f.sdkCtx.WithBlockTime(completionTime)
+	f.sdkCtx = f.sdkCtx.WithHeaderInfo(header.Info{Time: completionTime})
 	_, err = f.stakingKeeper.CompleteUnbonding(f.sdkCtx, addrDels[0], addrVals[0])
 	assert.NilError(t, err)
 
@@ -424,7 +425,7 @@ func TestUnbondingDelegationOnHold2(t *testing.T) {
 	completionTime, bondedAmt1, notBondedAmt1 := doUnbondingDelegation(t, f.stakingKeeper, f.bankKeeper, f.sdkCtx, bondDenom, addrDels, addrVals, &hookCalled)
 
 	// PROVIDER CHAIN'S UNBONDING PERIOD ENDS - BUT UNBONDING CANNOT COMPLETE
-	f.sdkCtx = f.sdkCtx.WithBlockTime(completionTime)
+	f.sdkCtx = f.sdkCtx.WithHeaderInfo(header.Info{Time: completionTime})
 	_, err := f.stakingKeeper.CompleteUnbonding(f.sdkCtx, addrDels[0], addrVals[0])
 	assert.NilError(t, err)
 

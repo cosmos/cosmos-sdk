@@ -92,22 +92,10 @@ func TestBasicManager(t *testing.T) {
 	require.Nil(t, module.NewBasicManager().ValidateGenesis(cdc, nil, expDefaultGenesis))
 }
 
-func TestGenesisOnlyAppModule(t *testing.T) {
-	mockCtrl := gomock.NewController(t)
-	t.Cleanup(mockCtrl.Finish)
-
-	mockModule := mock.NewMockAppModuleGenesis(mockCtrl)
-	mockInvariantRegistry := mock.NewMockInvariantRegistry(mockCtrl)
-	goam := module.NewGenesisOnlyAppModule(mockModule)
-
-	// no-op
-	goam.RegisterInvariants(mockInvariantRegistry)
-}
-
 func TestAssertNoForgottenModules(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	t.Cleanup(mockCtrl.Finish)
-	mockAppModule1 := mock.NewMockHasABCIEndblock(mockCtrl)
+	mockAppModule1 := mock.NewMockHasABCIEndBlock(mockCtrl)
 	mockAppModule3 := mock.NewMockCoreAppModule(mockCtrl)
 
 	mockAppModule1.EXPECT().Name().Times(2).Return("module1")
@@ -154,6 +142,10 @@ func TestManagerOrderSetters(t *testing.T) {
 	require.Equal(t, []string{"module1", "module2", "module3"}, mm.OrderExportGenesis)
 	mm.SetOrderExportGenesis("module2", "module1", "module3")
 	require.Equal(t, []string{"module2", "module1", "module3"}, mm.OrderExportGenesis)
+
+	require.Equal(t, []string{}, mm.OrderPreBlockers)
+	mm.SetOrderPreBlockers("module2", "module1", "module3")
+	require.Equal(t, []string{"module2", "module1", "module3"}, mm.OrderPreBlockers)
 
 	require.Equal(t, []string{"module1", "module2", "module3"}, mm.OrderBeginBlockers)
 	mm.SetOrderBeginBlockers("module2", "module1", "module3")
@@ -234,7 +226,7 @@ func TestManager_InitGenesis(t *testing.T) {
 	mockAppModule2 := mock.NewMockAppModuleWithAllExtensions(mockCtrl)
 	mockAppModule3 := mock.NewMockCoreAppModule(mockCtrl)
 	mockAppModule1.EXPECT().Name().Times(2).Return("module1")
-	mockAppModule2.EXPECT().Name().Times(2).Return("module2")
+	mockAppModule2.EXPECT().Name().Times(4).Return("module2")
 	mm := module.NewManager(mockAppModule1, mockAppModule2, module.CoreAppModuleBasicAdaptor("module3", mockAppModule3))
 	require.NotNil(t, mm)
 	require.Equal(t, 3, len(mm.Modules))
@@ -245,7 +237,7 @@ func TestManager_InitGenesis(t *testing.T) {
 	genesisData := map[string]json.RawMessage{"module1": json.RawMessage(`{"key": "value"}`)}
 
 	// this should panic since the validator set is empty even after init genesis
-	mockAppModule1.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Eq(cdc), gomock.Eq(genesisData["module1"])).Times(1).Return(nil)
+	mockAppModule1.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Eq(cdc), gomock.Eq(genesisData["module1"])).Times(1)
 	_, err := mm.InitGenesis(ctx, cdc, genesisData)
 	require.ErrorContains(t, err, "validator set is empty after InitGenesis")
 
@@ -256,17 +248,24 @@ func TestManager_InitGenesis(t *testing.T) {
 		"module3": json.RawMessage(`{"key": "value"}`),
 	}
 
+	mockAppModuleABCI1 := mock.NewMockAppModuleWithAllExtensionsABCI(mockCtrl)
+	mockAppModuleABCI2 := mock.NewMockAppModuleWithAllExtensionsABCI(mockCtrl)
+	mockAppModuleABCI1.EXPECT().Name().Times(4).Return("module1")
+	mockAppModuleABCI2.EXPECT().Name().Times(2).Return("module2")
+	mmABCI := module.NewManager(mockAppModuleABCI1, mockAppModuleABCI2)
 	// panic because more than one module returns validator set updates
-	mockAppModule1.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Eq(cdc), gomock.Eq(genesisData["module1"])).Times(1).Return([]abci.ValidatorUpdate{{}})
-	mockAppModule2.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Eq(cdc), gomock.Eq(genesisData["module2"])).Times(1).Return([]abci.ValidatorUpdate{{}})
-	_, err = mm.InitGenesis(ctx, cdc, genesisData)
+	mockAppModuleABCI1.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Eq(cdc), gomock.Eq(genesisData["module1"])).Times(1).Return([]abci.ValidatorUpdate{{}})
+	mockAppModuleABCI2.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Eq(cdc), gomock.Eq(genesisData["module2"])).Times(1).Return([]abci.ValidatorUpdate{{}})
+	_, err = mmABCI.InitGenesis(ctx, cdc, genesisData)
 	require.ErrorContains(t, err, "validator InitGenesis updates already set by a previous module")
 
 	// happy path
-	mockAppModule1.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Eq(cdc), gomock.Eq(genesisData["module1"])).Times(1).Return([]abci.ValidatorUpdate{{}})
-	mockAppModule2.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Eq(cdc), gomock.Eq(genesisData["module2"])).Times(1).Return([]abci.ValidatorUpdate{})
+
+	mm2 := module.NewManager(mockAppModuleABCI1, mockAppModule2, module.CoreAppModuleBasicAdaptor("module3", mockAppModule3))
+	mockAppModuleABCI1.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Eq(cdc), gomock.Eq(genesisData["module1"])).Times(1).Return([]abci.ValidatorUpdate{{}})
+	mockAppModule2.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Eq(cdc), gomock.Eq(genesisData["module2"])).Times(1)
 	mockAppModule3.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Any()).Times(1).Return(nil)
-	_, err = mm.InitGenesis(ctx, cdc, genesisData)
+	_, err = mm2.InitGenesis(ctx, cdc, genesisData)
 	require.NoError(t, err)
 }
 
@@ -321,8 +320,8 @@ func TestManager_EndBlock(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	t.Cleanup(mockCtrl.Finish)
 
-	mockAppModule1 := mock.NewMockHasABCIEndblock(mockCtrl)
-	mockAppModule2 := mock.NewMockHasABCIEndblock(mockCtrl)
+	mockAppModule1 := mock.NewMockHasABCIEndBlock(mockCtrl)
+	mockAppModule2 := mock.NewMockHasABCIEndBlock(mockCtrl)
 	mockAppModule3 := mock.NewMockAppModule(mockCtrl)
 	mockAppModule1.EXPECT().Name().Times(2).Return("module1")
 	mockAppModule2.EXPECT().Name().Times(2).Return("module2")
@@ -449,6 +448,10 @@ func TestCoreAPIManagerOrderSetters(t *testing.T) {
 	mm.SetOrderExportGenesis("module2", "module1", "module3")
 	require.Equal(t, []string{"module2", "module1", "module3"}, mm.OrderExportGenesis)
 
+	require.Equal(t, []string{}, mm.OrderPreBlockers)
+	mm.SetOrderPreBlockers("module2", "module1", "module3")
+	require.Equal(t, []string{"module2", "module1", "module3"}, mm.OrderPreBlockers)
+
 	require.Equal(t, []string{"module1", "module2", "module3"}, mm.OrderBeginBlockers)
 	mm.SetOrderBeginBlockers("module2", "module1", "module3")
 	require.Equal(t, []string{"module2", "module1", "module3"}, mm.OrderBeginBlockers)
@@ -466,35 +469,38 @@ func TestCoreAPIManagerOrderSetters(t *testing.T) {
 	require.Equal(t, []string{"module3", "module2", "module1"}, mm.OrderPrecommiters)
 }
 
-func TestCoreAPIManager_RunMigrationBeginBlock(t *testing.T) {
+func TestCoreAPIManager_PreBlock(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	t.Cleanup(mockCtrl.Finish)
 
-	mockAppModule1 := mock.NewMockCoreAppModule(mockCtrl)
-	mockAppModule2 := mock.NewMockCoreUpgradeAppModule(mockCtrl)
+	mockAppModule1 := mock.NewMockCoreAppModuleWithPreBlock(mockCtrl)
 	mm := module.NewManagerFromMap(map[string]appmodule.AppModule{
 		"module1": mockAppModule1,
-		"module2": mockAppModule2,
+		"module2": mock.NewMockCoreAppModule(mockCtrl),
 	})
 	require.NotNil(t, mm)
 	require.Equal(t, 2, len(mm.Modules))
+	require.Equal(t, 1, len(mm.OrderPreBlockers))
 
-	mockAppModule1.EXPECT().BeginBlock(gomock.Any()).Times(0)
-	mockAppModule2.EXPECT().BeginBlock(gomock.Any()).Times(1).Return(nil)
-	success, err := mm.RunMigrationBeginBlock(sdk.Context{})
-	require.Equal(t, true, success)
+	mockAppModule1.EXPECT().PreBlock(gomock.Any()).Times(1).Return(&sdk.ResponsePreBlock{
+		ConsensusParamsChanged: true,
+	}, nil)
+	res, err := mm.PreBlock(sdk.Context{})
 	require.NoError(t, err)
+	require.True(t, res.ConsensusParamsChanged)
 
 	// test false
-	success, err = module.NewManager().RunMigrationBeginBlock(sdk.Context{})
-	require.Equal(t, false, success)
+	mockAppModule1.EXPECT().PreBlock(gomock.Any()).Times(1).Return(&sdk.ResponsePreBlock{
+		ConsensusParamsChanged: false,
+	}, nil)
+	res, err = mm.PreBlock(sdk.Context{})
 	require.NoError(t, err)
+	require.False(t, res.ConsensusParamsChanged)
 
-	// test panic
-	mockAppModule2.EXPECT().BeginBlock(gomock.Any()).Times(1).Return(errors.New("some error"))
-	success, err = mm.RunMigrationBeginBlock(sdk.Context{})
-	require.Equal(t, false, success)
-	require.Error(t, err)
+	// test error
+	mockAppModule1.EXPECT().PreBlock(gomock.Any()).Times(1).Return(nil, errors.New("some error"))
+	_, err = mm.PreBlock(sdk.Context{})
+	require.EqualError(t, err, "some error")
 }
 
 func TestCoreAPIManager_BeginBlock(t *testing.T) {

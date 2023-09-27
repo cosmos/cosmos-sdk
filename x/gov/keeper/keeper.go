@@ -19,9 +19,9 @@ import (
 
 // Keeper defines the governance module Keeper
 type Keeper struct {
-	authKeeper  types.AccountKeeper
-	bankKeeper  types.BankKeeper
-	distrKeeper types.DistributionKeeper
+	authKeeper types.AccountKeeper
+	bankKeeper types.BankKeeper
+	poolKeeper types.PoolKeeper
 
 	// The reference to the DelegationSet and ValidatorSet to get information about validators and delegators
 	sk types.StakingKeeper
@@ -47,16 +47,22 @@ type Keeper struct {
 	// should be the x/gov module account.
 	authority string
 
-	Schema                 collections.Schema
-	Constitution           collections.Item[string]
-	Params                 collections.Item[v1.Params]
-	Deposits               collections.Map[collections.Pair[uint64, sdk.AccAddress], v1.Deposit]
-	Votes                  collections.Map[collections.Pair[uint64, sdk.AccAddress], v1.Vote]
-	ProposalID             collections.Sequence
-	Proposals              collections.Map[uint64, v1.Proposal]
-	ActiveProposalsQueue   collections.Map[collections.Pair[time.Time, uint64], uint64] // TODO(tip): this should be simplified and go into an index.
+	Schema       collections.Schema
+	Constitution collections.Item[string]
+	Params       collections.Item[v1.Params]
+	// Deposits key: proposalID+depositorAddr | value: Deposit
+	Deposits collections.Map[collections.Pair[uint64, sdk.AccAddress], v1.Deposit]
+	// Votes key: proposalID+voterAddr | value: Vote
+	Votes      collections.Map[collections.Pair[uint64, sdk.AccAddress], v1.Vote]
+	ProposalID collections.Sequence
+	// Proposals key:proposalID | value: Proposal
+	Proposals collections.Map[uint64, v1.Proposal]
+	// ActiveProposalsQueue key: votingEndTime+proposalID | value: proposalID
+	ActiveProposalsQueue collections.Map[collections.Pair[time.Time, uint64], uint64] // TODO(tip): this should be simplified and go into an index.
+	// InactiveProposalsQueue key: depositEndTime+proposalID | value: proposalID
 	InactiveProposalsQueue collections.Map[collections.Pair[time.Time, uint64], uint64] // TODO(tip): this should be simplified and go into an index.
-	VotingPeriodProposals  collections.Map[uint64, []byte]                              // TODO(tip): this could be a keyset or index.
+	// VotingPeriodProposals key: proposalID | value: proposalStatus (votingPeriod or not)
+	VotingPeriodProposals collections.Map[uint64, []byte] // TODO(tip): this could be a keyset or index.
 }
 
 // GetAuthority returns the x/gov module's authority.
@@ -73,7 +79,7 @@ func (k Keeper) GetAuthority() string {
 // CONTRACT: the parameter Subspace must have the param key table already initialized
 func NewKeeper(
 	cdc codec.Codec, storeService corestoretypes.KVStoreService, authKeeper types.AccountKeeper,
-	bankKeeper types.BankKeeper, sk types.StakingKeeper, distrKeeper types.DistributionKeeper,
+	bankKeeper types.BankKeeper, sk types.StakingKeeper, pk types.PoolKeeper,
 	router baseapp.MessageRouter, config types.Config, authority string,
 ) *Keeper {
 	// ensure governance module account is set
@@ -95,16 +101,16 @@ func NewKeeper(
 		storeService:           storeService,
 		authKeeper:             authKeeper,
 		bankKeeper:             bankKeeper,
-		distrKeeper:            distrKeeper,
 		sk:                     sk,
+		poolKeeper:             pk,
 		cdc:                    cdc,
 		router:                 router,
 		config:                 config,
 		authority:              authority,
 		Constitution:           collections.NewItem(sb, types.ConstitutionKey, "constitution", collections.StringValue),
 		Params:                 collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[v1.Params](cdc)),
-		Deposits:               collections.NewMap(sb, types.DepositsKeyPrefix, "deposits", collections.PairKeyCodec(collections.Uint64Key, sdk.LengthPrefixedAddressKey(sdk.AccAddressKey)), codec.CollValue[v1.Deposit](cdc)), // nolint: staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility
-		Votes:                  collections.NewMap(sb, types.VotesKeyPrefix, "votes", collections.PairKeyCodec(collections.Uint64Key, sdk.LengthPrefixedAddressKey(sdk.AccAddressKey)), codec.CollValue[v1.Vote](cdc)),          // nolint: staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility
+		Deposits:               collections.NewMap(sb, types.DepositsKeyPrefix, "deposits", collections.PairKeyCodec(collections.Uint64Key, sdk.LengthPrefixedAddressKey(sdk.AccAddressKey)), codec.CollValue[v1.Deposit](cdc)), //nolint: staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility
+		Votes:                  collections.NewMap(sb, types.VotesKeyPrefix, "votes", collections.PairKeyCodec(collections.Uint64Key, sdk.LengthPrefixedAddressKey(sdk.AccAddressKey)), codec.CollValue[v1.Vote](cdc)),          //nolint: staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility
 		ProposalID:             collections.NewSequence(sb, types.ProposalIDKey, "proposal_id"),
 		Proposals:              collections.NewMap(sb, types.ProposalsKeyPrefix, "proposals", collections.Uint64Key, codec.CollValue[v1.Proposal](cdc)),
 		ActiveProposalsQueue:   collections.NewMap(sb, types.ActiveProposalQueuePrefix, "active_proposals_queue", collections.PairKeyCodec(sdk.TimeKey, collections.Uint64Key), collections.Uint64Value),     // sdk.TimeKey is needed to retain state compatibility

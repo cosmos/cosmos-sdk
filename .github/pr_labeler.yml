@@ -39,6 +39,8 @@
   - x/consensus/**/*
 "C:x/circuit":
   - x/circuit/**/*
+"C:x/protocolpool":
+  - x/protocolpool/**/*
 "C:x/tx":
   - x/tx/**/*
 "C:collections":
@@ -66,8 +68,6 @@
   - x/*/client/**/*
 "Type: ADR":
   - docs/architecture/**/*
-"C:container":
-  - container/**/*
 "C:Store":
   - store/**/*
 "C:orm":

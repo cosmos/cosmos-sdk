@@ -368,11 +368,13 @@ func (k Keeper) votesByProposal(ctx sdk.Context, proposalID uint64) ([]group.Vot
 // `voting_period + max_execution_period` is greater than the current block
 // time.
 func (k Keeper) PruneProposals(ctx sdk.Context) error {
-	proposals, err := k.proposalsByVPEnd(ctx, ctx.BlockTime().Add(-k.config.MaxExecutionPeriod))
+	proposals, err := k.proposalsByVPEnd(ctx, ctx.HeaderInfo().Time.Add(-k.config.MaxExecutionPeriod))
 	if err != nil {
 		return nil
 	}
 	for _, proposal := range proposals {
+		proposal := proposal
+
 		err := k.pruneProposal(ctx, proposal.Id)
 		if err != nil {
 			return err
@@ -395,7 +397,7 @@ func (k Keeper) PruneProposals(ctx sdk.Context) error {
 // has ended, tallies their votes, prunes them, and updates the proposal's
 // `FinalTallyResult` field.
 func (k Keeper) TallyProposalsAtVPEnd(ctx sdk.Context) error {
-	proposals, err := k.proposalsByVPEnd(ctx, ctx.BlockTime())
+	proposals, err := k.proposalsByVPEnd(ctx, ctx.HeaderInfo().Time)
 	if err != nil {
 		return nil
 	}

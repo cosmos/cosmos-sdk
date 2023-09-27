@@ -3,7 +3,6 @@ package signing
 import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
 
@@ -23,7 +22,6 @@ type Tx interface {
 
 	types.TxWithMemo
 	types.FeeTx
-	tx.TipTx
 	types.TxWithTimeoutHeight
 	types.HasValidateBasic
 }

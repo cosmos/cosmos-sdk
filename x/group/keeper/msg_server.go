@@ -68,7 +68,7 @@ func (k Keeper) CreateGroup(goCtx context.Context, msg *group.MsgCreateGroup) (*
 		Metadata:    msg.Metadata,
 		Version:     1,
 		TotalWeight: totalWeight.String(),
-		CreatedAt:   ctx.BlockTime(),
+		CreatedAt:   ctx.HeaderInfo().Time,
 	}
 	groupID, err := k.groupTable.Create(ctx.KVStore(k.key), groupInfo)
 	if err != nil {
@@ -83,7 +83,7 @@ func (k Keeper) CreateGroup(goCtx context.Context, msg *group.MsgCreateGroup) (*
 				Address:  m.Address,
 				Weight:   m.Weight,
 				Metadata: m.Metadata,
-				AddedAt:  ctx.BlockTime(),
+				AddedAt:  ctx.HeaderInfo().Time,
 			},
 		})
 		if err != nil {
@@ -189,7 +189,7 @@ func (k Keeper) UpdateGroupMembers(goCtx context.Context, msg *group.MsgUpdateGr
 					return errorsmod.Wrap(err, "add member")
 				}
 			} else { // else handle create.
-				groupMember.Member.AddedAt = ctx.BlockTime()
+				groupMember.Member.AddedAt = ctx.HeaderInfo().Time
 				if err := k.groupMemberTable.Create(ctx.KVStore(k.key), &groupMember); err != nil {
 					return errorsmod.Wrap(err, "add member")
 				}
@@ -407,7 +407,7 @@ func (k Keeper) CreateGroupPolicy(goCtx context.Context, msg *group.MsgCreateGro
 		msg.GetMetadata(),
 		1,
 		policy,
-		ctx.BlockTime(),
+		ctx.HeaderInfo().Time,
 	)
 	if err != nil {
 		return nil, err
@@ -593,12 +593,12 @@ func (k Keeper) SubmitProposal(goCtx context.Context, msg *group.MsgSubmitPropos
 		GroupPolicyAddress: msg.GroupPolicyAddress,
 		Metadata:           msg.Metadata,
 		Proposers:          msg.Proposers,
-		SubmitTime:         ctx.BlockTime(),
+		SubmitTime:         ctx.HeaderInfo().Time,
 		GroupVersion:       groupInfo.Version,
 		GroupPolicyVersion: policyAcc.Version,
 		Status:             group.PROPOSAL_STATUS_SUBMITTED,
 		ExecutorResult:     group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
-		VotingPeriodEnd:    ctx.BlockTime().Add(policy.GetVotingPeriod()), // The voting window begins as soon as the proposal is submitted.
+		VotingPeriodEnd:    ctx.HeaderInfo().Time.Add(policy.GetVotingPeriod()), // The voting window begins as soon as the proposal is submitted.
 		FinalTallyResult:   group.DefaultTallyResult(),
 		Title:              msg.Title,
 		Summary:            msg.Summary,
@@ -722,7 +722,7 @@ func (k Keeper) Vote(goCtx context.Context, msg *group.MsgVote) (*group.MsgVoteR
 		return nil, errorsmod.Wrap(errors.ErrInvalid, "proposal not open for voting")
 	}
 
-	if ctx.BlockTime().After(proposal.VotingPeriodEnd) {
+	if ctx.HeaderInfo().Time.After(proposal.VotingPeriodEnd) {
 		return nil, errorsmod.Wrap(errors.ErrExpired, "voting period has ended already")
 	}
 
@@ -746,7 +746,7 @@ func (k Keeper) Vote(goCtx context.Context, msg *group.MsgVote) (*group.MsgVoteR
 		Voter:      msg.Voter,
 		Option:     msg.Option,
 		Metadata:   msg.Metadata,
-		SubmitTime: ctx.BlockTime(),
+		SubmitTime: ctx.HeaderInfo().Time,
 	}
 
 	// The ORM will return an error if the vote already exists,
@@ -791,7 +791,7 @@ func (k Keeper) doTallyAndUpdate(ctx sdk.Context, p *group.Proposal, groupInfo g
 
 	// If the result was final (i.e. enough votes to pass) or if the voting
 	// period ended, then we consider the proposal as final.
-	if isFinal := result.Final || ctx.BlockTime().After(p.VotingPeriodEnd); isFinal {
+	if isFinal := result.Final || ctx.HeaderInfo().Time.After(p.VotingPeriodEnd); isFinal {
 		if err := k.pruneVotes(ctx, p.Id); err != nil {
 			return err
 		}

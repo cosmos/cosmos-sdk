@@ -31,6 +31,14 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+## v0.10.0
+
+### Features
+
+* [#17681](https://github.com/cosmos/cosmos-sdk/pull/17681) Add encoder `DefineTypeEncoding` method for defining custom type encodings.
+* [#17600](https://github.com/cosmos/cosmos-sdk/pull/17600) Add encoder `DefineScalarEncoding` method for defining custom scalar encodings.
+* [#17600](https://github.com/cosmos/cosmos-sdk/pull/17600) Add indent option to encoder.
+
 ## v0.9.1
 
 ### Improvements

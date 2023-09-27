@@ -7,6 +7,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 
+	"cosmossdk.io/core/header"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/nft"
 	"cosmossdk.io/x/nft/keeper"
@@ -39,6 +40,7 @@ type TestSuite struct {
 
 	ctx           sdk.Context
 	addrs         []sdk.AccAddress
+	encodedAddrs  []string
 	queryClient   nft.QueryClient
 	nftKeeper     keeper.Keeper
 	accountKeeper *nfttestutil.MockAccountKeeper
@@ -54,7 +56,7 @@ func (s *TestSuite) SetupTest() {
 	key := storetypes.NewKVStoreKey(nft.StoreKey)
 	storeService := runtime.NewKVStoreService(key)
 	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
-	ctx := testCtx.Ctx.WithBlockTime(time.Now().Round(0).UTC())
+	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now().Round(0).UTC()})
 
 	// gomock initializations
 	ctrl := gomock.NewController(s.T())
@@ -62,6 +64,12 @@ func (s *TestSuite) SetupTest() {
 	bankKeeper := nfttestutil.NewMockBankKeeper(ctrl)
 	accountKeeper.EXPECT().GetModuleAddress("nft").Return(s.addrs[0]).AnyTimes()
 	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
+
+	for _, addr := range s.addrs {
+		st, err := accountKeeper.AddressCodec().BytesToString(addr.Bytes())
+		s.Require().NoError(err)
+		s.encodedAddrs = append(s.encodedAddrs, st)
+	}
 
 	s.accountKeeper = accountKeeper
 
@@ -347,7 +355,7 @@ func (s *TestSuite) TestExportGenesis() {
 	expGenesis := &nft.GenesisState{
 		Classes: []*nft.Class{&class},
 		Entries: []*nft.Entry{{
-			Owner: s.addrs[0].String(),
+			Owner: s.encodedAddrs[0],
 			Nfts:  []*nft.NFT{&expNFT},
 		}},
 	}
@@ -372,7 +380,7 @@ func (s *TestSuite) TestInitGenesis() {
 	expGenesis := &nft.GenesisState{
 		Classes: []*nft.Class{&expClass},
 		Entries: []*nft.Entry{{
-			Owner: s.addrs[0].String(),
+			Owner: s.encodedAddrs[0],
 			Nfts:  []*nft.NFT{&expNFT},
 		}},
 	}

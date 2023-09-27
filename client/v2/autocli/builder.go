@@ -28,21 +28,37 @@ type Builder struct {
 	AddTxConnFlags    func(*cobra.Command)
 }
 
-func (b *Builder) Validate() error {
+// ValidateAndComplete the builder fields.
+// It returns an error if any of the required fields are missing.
+// If the Logger is nil, it will be set to a nop logger.
+// If the keyring is nil, it will be set to a no keyring.
+func (b *Builder) ValidateAndComplete() error {
 	if b.Logger == nil {
 		b.Logger = log.NewNopLogger()
 	}
 
-	if b.AddressCodec == nil {
+	if b.ClientCtx == nil {
+		return errors.New("client context is required in builder")
+	}
+
+	if b.ClientCtx.AddressCodec == nil {
 		return errors.New("address codec is required in builder")
 	}
 
-	if b.ValidatorAddressCodec == nil {
+	if b.ClientCtx.ValidatorAddressCodec == nil {
 		return errors.New("validator address codec is required in builder")
 	}
 
-	if b.ConsensusAddressCodec == nil {
+	if b.ClientCtx.ConsensusAddressCodec == nil {
 		return errors.New("consensus address codec is required in builder")
+	}
+
+	if b.Keyring == nil {
+		if b.ClientCtx.Keyring != nil {
+			b.Keyring = b.ClientCtx.Keyring
+		} else {
+			b.Keyring = keyring.NoKeyring{}
+		}
 	}
 
 	if b.TypeResolver == nil {
@@ -51,10 +67,6 @@ func (b *Builder) Validate() error {
 
 	if b.FileResolver == nil {
 		return errors.New("file resolver is required in builder")
-	}
-
-	if b.Keyring == nil {
-		b.Keyring = keyring.NoKeyring{}
 	}
 
 	return nil

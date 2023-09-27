@@ -23,7 +23,10 @@ type FieldEncoder func(*Encoder, protoreflect.Value, io.Writer) error
 
 // EncoderOptions are options for creating a new Encoder.
 type EncoderOptions struct {
-	// DonotSortFields when set turns off sorting of field names.
+	// Indent can only be composed of space or tab characters.
+	// It defines the indentation used for each level of indentation.
+	Indent string
+	// DoNotSortFields when set turns off sorting of field names.
 	DoNotSortFields bool
 	// TypeResolver is used to resolve protobuf message types by TypeURL when marshaling any packed messages.
 	TypeResolver signing.TypeResolver
@@ -34,12 +37,14 @@ type EncoderOptions struct {
 // Encoder is a JSON encoder that uses the Amino JSON encoding rules for protobuf messages.
 type Encoder struct {
 	// maps cosmos_proto.scalar -> field encoder
-	scalarEncoders  map[string]FieldEncoder
-	messageEncoders map[string]MessageEncoder
-	fieldEncoders   map[string]FieldEncoder
-	fileResolver    signing.ProtoFileResolver
-	typeResolver    protoregistry.MessageTypeResolver
-	doNotSortFields bool
+	cosmosProtoScalarEncoders map[string]FieldEncoder
+	aminoMessageEncoders      map[string]MessageEncoder
+	aminoFieldEncoders        map[string]FieldEncoder
+	protoTypeEncoders         map[string]MessageEncoder
+	fileResolver              signing.ProtoFileResolver
+	typeResolver              protoregistry.MessageTypeResolver
+	doNotSortFields           bool
+	indent                    string
 }
 
 // NewEncoder returns a new Encoder capable of serializing protobuf messages to JSON using the Amino JSON encoding
@@ -52,21 +57,27 @@ func NewEncoder(options EncoderOptions) Encoder {
 		options.TypeResolver = protoregistry.GlobalTypes
 	}
 	enc := Encoder{
-		scalarEncoders: map[string]FieldEncoder{
+		cosmosProtoScalarEncoders: map[string]FieldEncoder{
 			"cosmos.Dec": cosmosDecEncoder,
 			"cosmos.Int": cosmosIntEncoder,
 		},
-		messageEncoders: map[string]MessageEncoder{
+		aminoMessageEncoders: map[string]MessageEncoder{
 			"key_field":        keyFieldEncoder,
 			"module_account":   moduleAccountEncoder,
 			"threshold_string": thresholdStringEncoder,
 		},
-		fieldEncoders: map[string]FieldEncoder{
+		aminoFieldEncoders: map[string]FieldEncoder{
 			"legacy_coins": nullSliceAsEmptyEncoder,
+		},
+		protoTypeEncoders: map[string]MessageEncoder{
+			"google.protobuf.Timestamp": marshalTimestamp,
+			"google.protobuf.Duration":  marshalDuration,
+			"google.protobuf.Any":       marshalAny,
 		},
 		fileResolver:    options.FileResolver,
 		typeResolver:    options.TypeResolver,
 		doNotSortFields: options.DoNotSortFields,
+		indent:          options.Indent,
 	}
 	return enc
 }
@@ -81,10 +92,10 @@ func NewEncoder(options EncoderOptions) Encoder {
 //	  ...
 //	}
 func (enc Encoder) DefineMessageEncoding(name string, encoder MessageEncoder) Encoder {
-	if enc.messageEncoders == nil {
-		enc.messageEncoders = map[string]MessageEncoder{}
+	if enc.aminoMessageEncoders == nil {
+		enc.aminoMessageEncoders = map[string]MessageEncoder{}
 	}
-	enc.messageEncoders[name] = encoder
+	enc.aminoMessageEncoders[name] = encoder
 	return enc
 }
 
@@ -102,10 +113,43 @@ func (enc Encoder) DefineMessageEncoding(name string, encoder MessageEncoder) En
 //	  ...
 //	}
 func (enc Encoder) DefineFieldEncoding(name string, encoder FieldEncoder) Encoder {
-	if enc.fieldEncoders == nil {
-		enc.fieldEncoders = map[string]FieldEncoder{}
+	if enc.aminoFieldEncoders == nil {
+		enc.aminoFieldEncoders = map[string]FieldEncoder{}
 	}
-	enc.fieldEncoders[name] = encoder
+	enc.aminoFieldEncoders[name] = encoder
+	return enc
+}
+
+// DefineScalarEncoding defines a custom encoding for a protobuf scalar field.  The `name` field must match a usage of
+// an (cosmos_proto.scalar) option in the protobuf message as in the following example. This encoding will be used
+// instead of the default encoding for all usages of the tagged field.
+//
+//	message Balance {
+//	  string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+//	  ...
+//	}
+func (enc Encoder) DefineScalarEncoding(name string, encoder FieldEncoder) Encoder {
+	if enc.cosmosProtoScalarEncoders == nil {
+		enc.cosmosProtoScalarEncoders = map[string]FieldEncoder{}
+	}
+	enc.cosmosProtoScalarEncoders[name] = encoder
+	return enc
+}
+
+// DefineTypeEncoding defines a custom encoding for a protobuf message type.  The `typeURL` field must match the
+// type of the protobuf message as in the following example. This encoding will be used instead of the default
+// encoding for all usages of the tagged message.
+//
+//	message Foo {
+//	  google.protobuf.Duration type_url = 1;
+//	  ...
+//	}
+
+func (enc Encoder) DefineTypeEncoding(typeURL string, encoder MessageEncoder) Encoder {
+	if enc.protoTypeEncoders == nil {
+		enc.protoTypeEncoders = map[string]MessageEncoder{}
+	}
+	enc.protoTypeEncoders[typeURL] = encoder
 	return enc
 }
 
@@ -113,6 +157,16 @@ func (enc Encoder) DefineFieldEncoding(name string, encoder FieldEncoder) Encode
 func (enc Encoder) Marshal(message proto.Message) ([]byte, error) {
 	buf := &bytes.Buffer{}
 	err := enc.beginMarshal(message.ProtoReflect(), buf)
+
+	if enc.indent != "" {
+		indentBuf := &bytes.Buffer{}
+		if err := json.Indent(indentBuf, buf.Bytes(), "", enc.indent); err != nil {
+			return nil, err
+		}
+
+		return indentBuf.Bytes(), err
+	}
+
 	return buf.Bytes(), err
 }
 
@@ -178,14 +232,9 @@ func (enc Encoder) marshalMessage(msg protoreflect.Message, writer io.Writer) er
 		return errors.New("nil message")
 	}
 
-	switch msg.Descriptor().FullName() {
-	case timestampFullName:
-		// replicate https://github.com/tendermint/go-amino/blob/8e779b71f40d175cd1302d3cd41a75b005225a7a/json-encode.go#L45-L51
-		return marshalTimestamp(msg, writer)
-	case durationFullName:
-		return marshalDuration(msg, writer)
-	case anyFullName:
-		return enc.marshalAny(msg, writer)
+	// check if we have a custom type encoder for this type
+	if typeEnc, ok := enc.protoTypeEncoders[string(msg.Descriptor().FullName())]; ok {
+		return typeEnc(&enc, msg, writer)
 	}
 
 	if encoder := enc.getMessageEncoder(msg); encoder != nil {
@@ -339,9 +388,3 @@ func (enc Encoder) marshalList(list protoreflect.List, writer io.Writer) error {
 	_, err = io.WriteString(writer, "]")
 	return err
 }
-
-const (
-	timestampFullName protoreflect.FullName = "google.protobuf.Timestamp"
-	durationFullName  protoreflect.FullName = "google.protobuf.Duration"
-	anyFullName       protoreflect.FullName = "google.protobuf.Any"
-)

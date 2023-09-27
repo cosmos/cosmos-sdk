@@ -10,8 +10,10 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/core/header"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
+	_ "cosmossdk.io/x/protocolpool"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/runtime"
@@ -26,15 +28,12 @@ import (
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	_ "github.com/cosmos/cosmos-sdk/x/consensus"
-	_ "github.com/cosmos/cosmos-sdk/x/distribution"
-	dk "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	_ "github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	"github.com/cosmos/cosmos-sdk/x/gov/simulation"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
-	_ "github.com/cosmos/cosmos-sdk/x/params"
 	_ "github.com/cosmos/cosmos-sdk/x/staking"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 )
@@ -213,7 +212,7 @@ func TestSimulateMsgCancelProposal(t *testing.T) {
 	suite, ctx := createTestSuite(t, false)
 	app := suite.App
 	blockTime := time.Now().UTC()
-	ctx = ctx.WithBlockTime(blockTime)
+	ctx = ctx.WithHeaderInfo(header.Info{Time: blockTime})
 
 	// setup 3 accounts
 	s := rand.NewSource(1)
@@ -225,7 +224,7 @@ func TestSimulateMsgCancelProposal(t *testing.T) {
 	contentMsg, err := v1.NewLegacyContent(content, suite.GovKeeper.GetGovernanceAccount(ctx).GetAddress().String())
 	require.NoError(t, err)
 
-	submitTime := ctx.BlockHeader().Time
+	submitTime := ctx.HeaderInfo().Time
 	params, _ := suite.GovKeeper.Params.Get(ctx)
 	depositPeriod := params.MaxDepositPeriod
 
@@ -262,7 +261,7 @@ func TestSimulateMsgDeposit(t *testing.T) {
 	suite, ctx := createTestSuite(t, false)
 	app := suite.App
 	blockTime := time.Now().UTC()
-	ctx = ctx.WithBlockTime(blockTime)
+	ctx = ctx.WithHeaderInfo(header.Info{Time: blockTime})
 
 	// setup 3 accounts
 	s := rand.NewSource(1)
@@ -274,7 +273,7 @@ func TestSimulateMsgDeposit(t *testing.T) {
 	contentMsg, err := v1.NewLegacyContent(content, suite.GovKeeper.GetGovernanceAccount(ctx).GetAddress().String())
 	require.NoError(t, err)
 
-	submitTime := ctx.BlockHeader().Time
+	submitTime := ctx.HeaderInfo().Time
 	params, _ := suite.GovKeeper.Params.Get(ctx)
 	depositPeriod := params.MaxDepositPeriod
 
@@ -312,7 +311,7 @@ func TestSimulateMsgVote(t *testing.T) {
 	suite, ctx := createTestSuite(t, false)
 	app := suite.App
 	blockTime := time.Now().UTC()
-	ctx = ctx.WithBlockTime(blockTime)
+	ctx = ctx.WithHeaderInfo(header.Info{Time: blockTime})
 
 	// setup 3 accounts
 	s := rand.NewSource(1)
@@ -324,7 +323,7 @@ func TestSimulateMsgVote(t *testing.T) {
 	contentMsg, err := v1.NewLegacyContent(v1beta1.NewTextProposal("Test", "description"), govAcc)
 	require.NoError(t, err)
 
-	submitTime := ctx.BlockHeader().Time
+	submitTime := ctx.HeaderInfo().Time
 	params, _ := suite.GovKeeper.Params.Get(ctx)
 	depositPeriod := params.MaxDepositPeriod
 
@@ -361,7 +360,7 @@ func TestSimulateMsgVoteWeighted(t *testing.T) {
 	suite, ctx := createTestSuite(t, false)
 	app := suite.App
 	blockTime := time.Now().UTC()
-	ctx = ctx.WithBlockTime(blockTime)
+	ctx = ctx.WithHeaderInfo(header.Info{Time: blockTime})
 
 	// setup 3 accounts
 	s := rand.NewSource(1)
@@ -372,7 +371,7 @@ func TestSimulateMsgVoteWeighted(t *testing.T) {
 	govAcc := suite.GovKeeper.GetGovernanceAccount(ctx).GetAddress().String()
 	contentMsg, err := v1.NewLegacyContent(v1beta1.NewTextProposal("Test", "description"), govAcc)
 	require.NoError(t, err)
-	submitTime := ctx.BlockHeader().Time
+	submitTime := ctx.HeaderInfo().Time
 	params, _ := suite.GovKeeper.Params.Get(ctx)
 	depositPeriod := params.MaxDepositPeriod
 
@@ -404,13 +403,12 @@ func TestSimulateMsgVoteWeighted(t *testing.T) {
 }
 
 type suite struct {
-	TxConfig           client.TxConfig
-	AccountKeeper      authkeeper.AccountKeeper
-	BankKeeper         bankkeeper.Keeper
-	GovKeeper          *keeper.Keeper
-	StakingKeeper      *stakingkeeper.Keeper
-	DistributionKeeper dk.Keeper
-	App                *runtime.App
+	TxConfig      client.TxConfig
+	AccountKeeper authkeeper.AccountKeeper
+	BankKeeper    bankkeeper.Keeper
+	GovKeeper     *keeper.Keeper
+	StakingKeeper *stakingkeeper.Keeper
+	App           *runtime.App
 }
 
 // returns context and an app with updated mint keeper
@@ -423,16 +421,15 @@ func createTestSuite(t *testing.T, isCheckTx bool) (suite, sdk.Context) {
 			configurator.NewAppConfig(
 				configurator.AuthModule(),
 				configurator.TxModule(),
-				configurator.ParamsModule(),
 				configurator.BankModule(),
 				configurator.StakingModule(),
 				configurator.ConsensusModule(),
-				configurator.DistributionModule(),
 				configurator.GovModule(),
+				configurator.ProtocolPoolModule(),
 			),
 			depinject.Supply(log.NewNopLogger()),
 		),
-		&res.TxConfig, &res.AccountKeeper, &res.BankKeeper, &res.GovKeeper, &res.StakingKeeper, &res.DistributionKeeper)
+		&res.TxConfig, &res.AccountKeeper, &res.BankKeeper, &res.GovKeeper, &res.StakingKeeper)
 	require.NoError(t, err)
 
 	ctx := app.BaseApp.NewContext(isCheckTx)

@@ -47,7 +47,6 @@ type (
 		SetFeeAmount(amount sdk.Coins)
 		SetFeePayer(feePayer sdk.AccAddress)
 		SetGasLimit(limit uint64)
-		SetTip(tip *tx.Tip)
 		SetTimeoutHeight(height uint64)
 		SetFeeGranter(feeGranter sdk.AccAddress)
 		AddAuxSignerData(tx.AuxSignerData) error

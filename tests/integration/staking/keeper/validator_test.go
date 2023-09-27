@@ -72,10 +72,10 @@ func TestUpdateBondedValidatorsDecreaseCliff(t *testing.T) {
 	notBondedPool := f.stakingKeeper.GetNotBondedPool(f.sdkCtx)
 
 	// create keeper parameters
-	params, err := f.stakingKeeper.GetParams(f.sdkCtx)
+	params, err := f.stakingKeeper.Params.Get(f.sdkCtx)
 	assert.NilError(t, err)
 	params.MaxValidators = uint32(maxVals)
-	assert.NilError(t, f.stakingKeeper.SetParams(f.sdkCtx, params))
+	assert.NilError(t, f.stakingKeeper.Params.Set(f.sdkCtx, params))
 
 	bondDenom, err := f.stakingKeeper.BondDenom(f.sdkCtx)
 	assert.NilError(t, err)
@@ -262,10 +262,10 @@ func TestGetValidatorSortingMixed(t *testing.T) {
 	f.accountKeeper.SetModuleAccount(f.sdkCtx, bondedPool)
 
 	// now 2 max resValidators
-	params, err := f.stakingKeeper.GetParams(f.sdkCtx)
+	params, err := f.stakingKeeper.Params.Get(f.sdkCtx)
 	assert.NilError(t, err)
 	params.MaxValidators = 2
-	assert.NilError(t, f.stakingKeeper.SetParams(f.sdkCtx, params))
+	assert.NilError(t, f.stakingKeeper.Params.Set(f.sdkCtx, params))
 
 	// initialize some validators into the state
 	amts := []math.Int{
@@ -317,11 +317,11 @@ func TestGetValidatorsEdgeCases(t *testing.T) {
 	f, addrs, _ := bootstrapValidatorTest(t, 1000, 20)
 
 	// set max validators to 2
-	params, err := f.stakingKeeper.GetParams(f.sdkCtx)
+	params, err := f.stakingKeeper.Params.Get(f.sdkCtx)
 	assert.NilError(t, err)
 	nMax := uint32(2)
 	params.MaxValidators = nMax
-	assert.NilError(t, f.stakingKeeper.SetParams(f.sdkCtx, params))
+	assert.NilError(t, f.stakingKeeper.Params.Set(f.sdkCtx, params))
 	// initialize some validators into the state
 	powers := []int64{0, 100, 400, 400}
 	var validators [4]types.Validator
@@ -436,10 +436,10 @@ func TestValidatorBondHeight(t *testing.T) {
 	f, addrs, _ := bootstrapValidatorTest(t, 1000, 20)
 
 	// now 2 max resValidators
-	params, err := f.stakingKeeper.GetParams(f.sdkCtx)
+	params, err := f.stakingKeeper.Params.Get(f.sdkCtx)
 	assert.NilError(t, err)
 	params.MaxValidators = 2
-	assert.NilError(t, f.stakingKeeper.SetParams(f.sdkCtx, params))
+	assert.NilError(t, f.stakingKeeper.Params.Set(f.sdkCtx, params))
 	// initialize some validators into the state
 	var validators [3]types.Validator
 	validators[0] = testutil.NewValidator(t, sdk.ValAddress(PKs[0].Address().Bytes()), PKs[0])
@@ -483,11 +483,11 @@ func TestValidatorBondHeight(t *testing.T) {
 
 func TestFullValidatorSetPowerChange(t *testing.T) {
 	f, addrs, _ := bootstrapValidatorTest(t, 1000, 20)
-	params, err := f.stakingKeeper.GetParams(f.sdkCtx)
+	params, err := f.stakingKeeper.Params.Get(f.sdkCtx)
 	assert.NilError(t, err)
 	max := 2
 	params.MaxValidators = uint32(2)
-	assert.NilError(t, f.stakingKeeper.SetParams(f.sdkCtx, params))
+	assert.NilError(t, f.stakingKeeper.Params.Set(f.sdkCtx, params))
 
 	// initialize some validators into the state
 	powers := []int64{0, 100, 400, 400, 200}
@@ -676,7 +676,7 @@ func TestApplyAndReturnValidatorSetUpdatesWithCliffValidator(t *testing.T) {
 	f, addrs, _ := bootstrapValidatorTest(t, 1000, 20)
 	params := types.DefaultParams()
 	params.MaxValidators = 2
-	err := f.stakingKeeper.SetParams(f.sdkCtx, params)
+	err := f.stakingKeeper.Params.Set(f.sdkCtx, params)
 	assert.NilError(t, err)
 	powers := []int64{10, 20, 5}
 	var validators [5]types.Validator
@@ -712,11 +712,11 @@ func TestApplyAndReturnValidatorSetUpdatesWithCliffValidator(t *testing.T) {
 
 func TestApplyAndReturnValidatorSetUpdatesNewValidator(t *testing.T) {
 	f, _, _ := bootstrapValidatorTest(t, 1000, 20)
-	params, err := f.stakingKeeper.GetParams(f.sdkCtx)
+	params, err := f.stakingKeeper.Params.Get(f.sdkCtx)
 	assert.NilError(t, err)
 	params.MaxValidators = uint32(3)
 
-	assert.NilError(t, f.stakingKeeper.SetParams(f.sdkCtx, params))
+	assert.NilError(t, f.stakingKeeper.Params.Set(f.sdkCtx, params))
 
 	powers := []int64{100, 100}
 	var validators [2]types.Validator
@@ -798,11 +798,11 @@ func TestApplyAndReturnValidatorSetUpdatesNewValidator(t *testing.T) {
 
 func TestApplyAndReturnValidatorSetUpdatesBondTransition(t *testing.T) {
 	f, _, _ := bootstrapValidatorTest(t, 1000, 20)
-	params, err := f.stakingKeeper.GetParams(f.sdkCtx)
+	params, err := f.stakingKeeper.Params.Get(f.sdkCtx)
 	assert.NilError(t, err)
 	params.MaxValidators = uint32(2)
 
-	assert.NilError(t, f.stakingKeeper.SetParams(f.sdkCtx, params))
+	assert.NilError(t, f.stakingKeeper.Params.Set(f.sdkCtx, params))
 
 	powers := []int64{100, 200, 300}
 	var validators [3]types.Validator

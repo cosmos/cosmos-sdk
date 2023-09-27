@@ -47,11 +47,6 @@ To use Confix standalone, without having to add it in your application, install 
 go install cosmossdk.io/tools/confix/cmd/confix@latest
 ```
 
-:::warning
-Currently, due to the replace directive in the Confix go.mod, it is not possible to use `go install`.
-Building from source or importing in an application is required until that replace directive is removed.
-:::
-
 Alternatively, for building from source, simply run `make confix`. The binary will be located in `tools/confix`.
 
 ## Usage

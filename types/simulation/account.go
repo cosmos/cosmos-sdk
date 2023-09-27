@@ -65,7 +65,7 @@ func FindAccount(accs []Account, address sdk.Address) (Account, bool) {
 // RandomFees returns a random fee by selecting a random coin denomination and
 // amount from the account's available balance. If the user doesn't have enough
 // funds for paying fees, it returns empty coins.
-func RandomFees(r *rand.Rand, ctx sdk.Context, spendableCoins sdk.Coins) (sdk.Coins, error) {
+func RandomFees(r *rand.Rand, spendableCoins sdk.Coins) (sdk.Coins, error) {
 	if spendableCoins.Empty() {
 		return nil, nil
 	}

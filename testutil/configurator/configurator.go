@@ -17,6 +17,7 @@ import (
 	mintmodulev1 "cosmossdk.io/api/cosmos/mint/module/v1"
 	nftmodulev1 "cosmossdk.io/api/cosmos/nft/module/v1"
 	paramsmodulev1 "cosmossdk.io/api/cosmos/params/module/v1"
+	poolmodulev1 "cosmossdk.io/api/cosmos/protocolpool/module/v1"
 	slashingmodulev1 "cosmossdk.io/api/cosmos/slashing/module/v1"
 	stakingmodulev1 "cosmossdk.io/api/cosmos/staking/module/v1"
 	txconfigv1 "cosmossdk.io/api/cosmos/tx/config/v1"
@@ -28,6 +29,7 @@ import (
 // Config should never need to be instantiated manually and is solely used for ModuleOption.
 type Config struct {
 	ModuleConfigs      map[string]*appv1alpha1.ModuleConfig
+	PreBlockersOrder   []string
 	BeginBlockersOrder []string
 	EndBlockersOrder   []string
 	InitGenesisOrder   []string
@@ -37,8 +39,10 @@ type Config struct {
 func defaultConfig() *Config {
 	return &Config{
 		ModuleConfigs: make(map[string]*appv1alpha1.ModuleConfig),
-		BeginBlockersOrder: []string{
+		PreBlockersOrder: []string{
 			"upgrade",
+		},
+		BeginBlockersOrder: []string{
 			"mint",
 			"distribution",
 			"slashing",
@@ -53,8 +57,8 @@ func defaultConfig() *Config {
 			"feegrant",
 			"nft",
 			"group",
-			"params",
 			"consensus",
+			"params",
 			"vesting",
 			"circuit",
 		},
@@ -73,7 +77,6 @@ func defaultConfig() *Config {
 			"feegrant",
 			"nft",
 			"group",
-			"params",
 			"consensus",
 			"upgrade",
 			"vesting",
@@ -94,7 +97,6 @@ func defaultConfig() *Config {
 			"feegrant",
 			"nft",
 			"group",
-			"params",
 			"consensus",
 			"upgrade",
 			"vesting",
@@ -105,6 +107,12 @@ func defaultConfig() *Config {
 }
 
 type ModuleOption func(config *Config)
+
+func WithCustomPreBlockersOrder(preBlockOrder ...string) ModuleOption {
+	return func(config *Config) {
+		config.PreBlockersOrder = preBlockOrder
+	}
+}
 
 func WithCustomBeginBlockersOrder(beginBlockOrder ...string) ModuleOption {
 	return func(config *Config) {
@@ -147,6 +155,7 @@ func AuthModule() ModuleOption {
 					{Account: "not_bonded_tokens_pool", Permissions: []string{"burner", "staking"}},
 					{Account: "gov", Permissions: []string{"burner"}},
 					{Account: "nft"},
+					{Account: "protocolpool"},
 				},
 			}),
 		}
@@ -303,6 +312,15 @@ func CircuitModule() ModuleOption {
 	}
 }
 
+func ProtocolPoolModule() ModuleOption {
+	return func(config *Config) {
+		config.ModuleConfigs["protocolpool"] = &appv1alpha1.ModuleConfig{
+			Name:   "protocolpool",
+			Config: appconfig.WrapAny(&poolmodulev1.Module{}),
+		}
+	}
+}
+
 func OmitInitGenesis() ModuleOption {
 	return func(config *Config) {
 		config.setInitGenesis = false
@@ -315,10 +333,17 @@ func NewAppConfig(opts ...ModuleOption) depinject.Config {
 		opt(cfg)
 	}
 
+	preBlockers := make([]string, 0)
 	beginBlockers := make([]string, 0)
 	endBlockers := make([]string, 0)
 	initGenesis := make([]string, 0)
 	overrides := make([]*runtimev1alpha1.StoreKeyConfig, 0)
+
+	for _, s := range cfg.PreBlockersOrder {
+		if _, ok := cfg.ModuleConfigs[s]; ok {
+			preBlockers = append(preBlockers, s)
+		}
+	}
 
 	for _, s := range cfg.BeginBlockersOrder {
 		if _, ok := cfg.ModuleConfigs[s]; ok {
@@ -344,6 +369,7 @@ func NewAppConfig(opts ...ModuleOption) depinject.Config {
 
 	runtimeConfig := &runtimev1alpha1.Module{
 		AppName:           "TestApp",
+		PreBlockers:       preBlockers,
 		BeginBlockers:     beginBlockers,
 		EndBlockers:       endBlockers,
 		OverrideStoreKeys: overrides,

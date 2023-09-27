@@ -151,6 +151,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (client) [#17746](https://github.com/cosmos/cosmos-sdk/pull/17746) `txEncodeAmino` & `txDecodeAmino` txs via grpc and rest were removed
     * `RegisterLegacyAmino` was removed from `AppModuleBasic`
 * (x/staking) [#17655](https://github.com/cosmos/cosmos-sdk/pull/17655) `QueryHistoricalInfo` was adjusted to return `HistoricalRecord` and marked `Hist` as deprecated.
+* (types) [#17885](https://github.com/cosmos/cosmos-sdk/pull/17885) `InitGenesis` & `ExportGenesis` now take `context.Context` instead of `sdk.Context`
 
 ### CLI Breaking Changes
 

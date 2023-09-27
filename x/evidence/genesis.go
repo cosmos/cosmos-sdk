@@ -1,6 +1,7 @@
 package evidence
 
 import (
+	"context"
 	"fmt"
 
 	"cosmossdk.io/x/evidence/exported"
@@ -8,12 +9,11 @@ import (
 	"cosmossdk.io/x/evidence/types"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // InitGenesis initializes the evidence module's state from a provided genesis
 // state.
-func InitGenesis(ctx sdk.Context, k keeper.Keeper, gs *types.GenesisState) {
+func InitGenesis(ctx context.Context, k keeper.Keeper, gs *types.GenesisState) {
 	if err := gs.Validate(); err != nil {
 		panic(fmt.Sprintf("failed to validate %s genesis state: %s", types.ModuleName, err))
 	}
@@ -34,7 +34,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, gs *types.GenesisState) {
 }
 
 // ExportGenesis returns the evidence module's exported genesis.
-func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
+func ExportGenesis(ctx context.Context, k keeper.Keeper) *types.GenesisState {
 	gs := new(types.GenesisState)
 	err := k.Evidences.Walk(ctx, nil, func(_ []byte, value exported.Evidence) (stop bool, err error) {
 		anyEvi, err := codectypes.NewAnyWithValue(value)

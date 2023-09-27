@@ -30,10 +30,16 @@ func (ak AccountKeeper) AccountAddressByID(c context.Context, req *types.QueryAc
 
 	accId := req.AccountId
 
+<<<<<<< HEAD
 	ctx := sdk.UnwrapSDKContext(c)
 	address := ak.GetAccountAddressByID(ctx, accId)
 	if len(address) == 0 {
 		return nil, status.Errorf(codes.NotFound, "account address not found with account number %d", req.Id)
+=======
+	address, err := s.k.Accounts.Indexes.Number.MatchExact(ctx, accID)
+	if err != nil {
+		return nil, status.Errorf(codes.NotFound, "account address not found with account number %d", accID)
+>>>>>>> 6ac0abde3 (chore(auth): return accId in error (#17903))
 	}
 
 	return &types.QueryAccountAddressByIDResponse{AccountAddress: address}, nil

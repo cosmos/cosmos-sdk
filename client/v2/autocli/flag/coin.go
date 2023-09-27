@@ -2,6 +2,8 @@ package flag
 
 import (
 	"context"
+	"fmt"
+	"strings"
 
 	"google.golang.org/protobuf/reflect/protoreflect"
 
@@ -36,6 +38,10 @@ func (c *coinValue) String() string {
 }
 
 func (c *coinValue) Set(stringValue string) error {
+	if strings.Contains(stringValue, ",") {
+		return fmt.Errorf("coin flag must be a single coin, specific multiple coins with multiple flags or spaces")
+	}
+
 	coin, err := coins.ParseCoin(stringValue)
 	if err != nil {
 		return err

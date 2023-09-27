@@ -49,7 +49,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	"github.com/cosmos/cosmos-sdk/types/module/testutil"
-	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
@@ -149,10 +148,6 @@ func TestAminoJSON_Equivalence(t *testing.T) {
 					AccNum:        1,
 					AccSeq:        2,
 					SignerAddress: "signerAddress",
-					Tip: &txv1beta1.Tip{
-						Tipper: "tipper",
-						Amount: []*v1beta1.Coin{{Denom: "uatom", Amount: "1000"}},
-					},
 					Fee: &txv1beta1.Fee{
 						Amount: []*v1beta1.Coin{{Denom: "uatom", Amount: "1000"}},
 					},
@@ -170,10 +165,6 @@ func TestAminoJSON_Equivalence(t *testing.T) {
 				require.NoError(t, txBuilder.SetMsgs([]types.Msg{tt.Gogo}...))
 				txBuilder.SetMemo(handlerOptions.Memo)
 				txBuilder.SetFeeAmount(types.Coins{types.NewInt64Coin("uatom", 1000)})
-				txBuilder.SetTip(&txtypes.Tip{
-					Amount: types.Coins{types.NewInt64Coin("uatom", 1000)},
-					Tipper: "tipper",
-				})
 				theTx := txBuilder.GetTx()
 
 				legacySigningData := signing.SignerData{
@@ -275,10 +266,6 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 		"distribution/delegation_delegator_reward": {
 			gogo:   &disttypes.DelegationDelegatorReward{},
 			pulsar: &distapi.DelegationDelegatorReward{},
-		},
-		"distribution/community_pool_spend_proposal_with_deposit": {
-			gogo:   &disttypes.CommunityPoolSpendProposalWithDeposit{},
-			pulsar: &distapi.CommunityPoolSpendProposalWithDeposit{},
 		},
 		"distribution/msg_withdraw_delegator_reward": {
 			gogo:   &disttypes.MsgWithdrawDelegatorReward{DelegatorAddress: "foo"},

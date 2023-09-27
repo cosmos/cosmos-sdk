@@ -23,7 +23,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 )
@@ -136,7 +135,7 @@ func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
 
 // InitGenesis performs the evidence module's genesis initialization It returns
 // no validator updates.
-func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, bz json.RawMessage) {
+func (am AppModule) InitGenesis(ctx context.Context, cdc codec.JSONCodec, bz json.RawMessage) {
 	var gs types.GenesisState
 	err := cdc.UnmarshalJSON(bz, &gs)
 	if err != nil {
@@ -147,7 +146,7 @@ func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, bz json.Ra
 }
 
 // ExportGenesis returns the evidence module's exported genesis state as raw JSON bytes.
-func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.RawMessage {
+func (am AppModule) ExportGenesis(ctx context.Context, cdc codec.JSONCodec) json.RawMessage {
 	return cdc.MustMarshalJSON(ExportGenesis(ctx, am.keeper))
 }
 

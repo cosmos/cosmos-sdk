@@ -67,7 +67,11 @@ service Query {
   }
 
   // CommunityPool queries the community pool coins.
+  //
+  // Deprecated: Prefer to use x/protocolpool module's CommunityPool rpc method.
+  // Since: cosmos-sdk 0.50
   rpc CommunityPool(QueryCommunityPoolRequest) returns (QueryCommunityPoolResponse) {
+    option deprecated            = true;
     option (google.api.http).get = "/cosmos/distribution/v1beta1/community_pool";
   }
 }
@@ -241,11 +245,20 @@ message QueryDelegatorWithdrawAddressResponse {
 
 // QueryCommunityPoolRequest is the request type for the Query/CommunityPool RPC
 // method.
-message QueryCommunityPoolRequest {}
+//
+// Deprecated
+// Since: cosmos-sdk 0.50
+message QueryCommunityPoolRequest {
+  option deprecated = true;
+}
 
 // QueryCommunityPoolResponse is the response type for the Query/CommunityPool
 // RPC method.
+//
+// Deprecated
+// Since: cosmos-sdk 0.50
 message QueryCommunityPoolResponse {
+  option deprecated = true;
   // pool defines community pool's coins.
   repeated cosmos.base.v1beta1.DecCoin pool = 1 [
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins",

@@ -14,6 +14,7 @@ import (
 	"cosmossdk.io/x/upgrade/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -26,10 +27,11 @@ import (
 type UpgradeTestSuite struct {
 	suite.Suite
 
-	upgradeKeeper *keeper.Keeper
-	ctx           sdk.Context
-	queryClient   types.QueryClient
-	encCfg        moduletestutil.TestEncodingConfig
+	upgradeKeeper    *keeper.Keeper
+	ctx              sdk.Context
+	queryClient      types.QueryClient
+	encCfg           moduletestutil.TestEncodingConfig
+	encodedAuthority string
 }
 
 func (suite *UpgradeTestSuite) SetupTest() {
@@ -40,9 +42,11 @@ func (suite *UpgradeTestSuite) SetupTest() {
 	suite.ctx = testCtx.Ctx
 
 	skipUpgradeHeights := make(map[int64]bool)
-
-	suite.upgradeKeeper = keeper.NewKeeper(skipUpgradeHeights, storeService, suite.encCfg.Codec, suite.T().TempDir(), nil, authtypes.NewModuleAddress(govtypes.ModuleName).String())
-	err := suite.upgradeKeeper.SetModuleVersionMap(suite.ctx, module.VersionMap{
+	authority, err := addresscodec.NewBech32Codec("cosmos").BytesToString(authtypes.NewModuleAddress(govtypes.ModuleName))
+	suite.Require().NoError(err)
+	suite.encodedAuthority = authority
+	suite.upgradeKeeper = keeper.NewKeeper(skipUpgradeHeights, storeService, suite.encCfg.Codec, suite.T().TempDir(), nil, authority)
+	err = suite.upgradeKeeper.SetModuleVersionMap(suite.ctx, module.VersionMap{
 		"bank": 0,
 	})
 	suite.Require().NoError(err)
@@ -230,7 +234,7 @@ func (suite *UpgradeTestSuite) TestModuleVersions() {
 func (suite *UpgradeTestSuite) TestAuthority() {
 	res, err := suite.queryClient.Authority(context.Background(), &types.QueryAuthorityRequest{})
 	suite.Require().NoError(err)
-	suite.Require().Equal(authtypes.NewModuleAddress(govtypes.ModuleName).String(), res.Address)
+	suite.Require().Equal(suite.encodedAuthority, res.Address)
 }
 
 func TestUpgradeTestSuite(t *testing.T) {

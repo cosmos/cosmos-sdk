@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"context"
 	"fmt"
 
 	"cosmossdk.io/collections"
@@ -10,7 +11,7 @@ import (
 )
 
 // InitGenesis sets distribution information for genesis
-func (k Keeper) InitGenesis(ctx sdk.Context, data types.GenesisState) {
+func (k Keeper) InitGenesis(ctx context.Context, data types.GenesisState) {
 	var moduleHoldings sdk.DecCoins
 
 	err := k.FeePool.Set(ctx, data.FeePool)
@@ -146,7 +147,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data types.GenesisState) {
 }
 
 // ExportGenesis returns a GenesisState for a given context and keeper.
-func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
+func (k Keeper) ExportGenesis(ctx context.Context) *types.GenesisState {
 	feePool, err := k.FeePool.Get(ctx)
 	if err != nil {
 		panic(err)

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
+	"strconv"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
@@ -18,6 +19,7 @@ var (
 	DelegationKey           = []byte{0x31} // key for a delegation
 	HistoricalInfoKey       = []byte{0x50} // prefix for the historical info
 	DelegationByValIndexKey = []byte{0x71} // key for delegations by a validator
+
 )
 
 // ParseDelegationKey parses given key and returns delagator, validator address bytes
@@ -59,6 +61,11 @@ func GetHistoricalInfoKey(height int64) []byte {
 	heightBytes := make([]byte, 8)
 	binary.BigEndian.PutUint64(heightBytes, uint64(height))
 	return append(HistoricalInfoKey, heightBytes...)
+}
+
+// GetHistoricalInfoKey returns a key prefix for indexing HistoricalInfo objects.
+func GetLegacyHistoricalInfoKey(height int64) []byte {
+	return append(HistoricalInfoKey, []byte(strconv.FormatInt(height, 10))...)
 }
 
 // GetDelegationsByValPrefixKey builds a prefix key bytes with the given validator address bytes.

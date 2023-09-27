@@ -36,7 +36,6 @@ import (
 	_ "github.com/cosmos/cosmos-sdk/x/consensus"
 	_ "github.com/cosmos/cosmos-sdk/x/genutil"
 	_ "github.com/cosmos/cosmos-sdk/x/mint"
-	_ "github.com/cosmos/cosmos-sdk/x/params"
 	_ "github.com/cosmos/cosmos-sdk/x/staking"
 )
 
@@ -64,7 +63,6 @@ func (suite *SimTestSuite) SetupTest() {
 				configurator.StakingModule(),
 				configurator.TxModule(),
 				configurator.ConsensusModule(),
-				configurator.ParamsModule(),
 				configurator.GenutilModule(),
 				configurator.FeegrantModule(),
 			),
@@ -149,9 +147,13 @@ func (suite *SimTestSuite) TestSimulateMsgGrantAllowance() {
 	s := rand.NewSource(1)
 	r := rand.New(s)
 	accounts := suite.getTestingAccounts(r, 3)
+	addr1, err := suite.accountKeeper.AddressCodec().BytesToString(accounts[1].Address)
+	require.NoError(err)
+	addr2, err := suite.accountKeeper.AddressCodec().BytesToString(accounts[2].Address)
+	require.NoError(err)
 
 	//  new block
-	_, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: app.LastBlockHeight() + 1})
+	_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: app.LastBlockHeight() + 1})
 	require.NoError(err)
 
 	// execute operation
@@ -163,8 +165,8 @@ func (suite *SimTestSuite) TestSimulateMsgGrantAllowance() {
 	err = proto.Unmarshal(operationMsg.Msg, &msg)
 	require.NoError(err)
 	require.True(operationMsg.OK)
-	require.Equal(accounts[2].Address.String(), msg.Granter)
-	require.Equal(accounts[1].Address.String(), msg.Grantee)
+	require.Equal(addr2, msg.Granter)
+	require.Equal(addr1, msg.Grantee)
 	require.Len(futureOperations, 0)
 }
 
@@ -196,6 +198,11 @@ func (suite *SimTestSuite) TestSimulateMsgRevokeAllowance() {
 	)
 	require.NoError(err)
 
+	granterStr, err := suite.accountKeeper.AddressCodec().BytesToString(accounts[0].Address)
+	require.NoError(err)
+	granteeStr, err := suite.accountKeeper.AddressCodec().BytesToString(accounts[1].Address)
+	require.NoError(err)
+
 	// execute operation
 	op := simulation.SimulateMsgRevokeAllowance(codec.NewProtoCodec(suite.interfaceRegistry), suite.txConfig, suite.accountKeeper, suite.bankKeeper, suite.feegrantKeeper, codecaddress.NewBech32Codec("cosmos"))
 	operationMsg, futureOperations, err := op(r, app.BaseApp, ctx, accounts, "")
@@ -205,8 +212,8 @@ func (suite *SimTestSuite) TestSimulateMsgRevokeAllowance() {
 	err = proto.Unmarshal(operationMsg.Msg, &msg)
 	require.NoError(err)
 	require.True(operationMsg.OK)
-	require.Equal(granter.Address.String(), msg.Granter)
-	require.Equal(grantee.Address.String(), msg.Grantee)
+	require.Equal(granterStr, msg.Granter)
+	require.Equal(granteeStr, msg.Grantee)
 	require.Len(futureOperations, 0)
 }
 

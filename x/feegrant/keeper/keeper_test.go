@@ -28,6 +28,7 @@ type KeeperTestSuite struct {
 
 	ctx            sdk.Context
 	addrs          []sdk.AccAddress
+	encodedAddrs   []string
 	msgSrvr        feegrant.MsgServer
 	atom           sdk.Coins
 	feegrantKeeper keeper.Keeper
@@ -52,7 +53,13 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.accountKeeper.EXPECT().GetAccount(gomock.Any(), suite.addrs[2]).Return(authtypes.NewBaseAccountWithAddress(suite.addrs[2])).AnyTimes()
 	suite.accountKeeper.EXPECT().GetAccount(gomock.Any(), suite.addrs[3]).Return(authtypes.NewBaseAccountWithAddress(suite.addrs[3])).AnyTimes()
 
-	suite.accountKeeper.EXPECT().AddressCodec().Return(codecaddress.NewBech32Codec("cosmos")).AnyTimes()
+	ac := codecaddress.NewBech32Codec("cosmos")
+	suite.accountKeeper.EXPECT().AddressCodec().Return(ac).AnyTimes()
+	for _, addr := range suite.addrs {
+		str, err := ac.BytesToString(addr)
+		suite.Require().NoError(err)
+		suite.encodedAddrs = append(suite.encodedAddrs, str)
+	}
 
 	suite.feegrantKeeper = keeper.NewKeeper(encCfg.Codec, runtime.NewKVStoreService(key), suite.accountKeeper)
 	suite.ctx = testCtx.Ctx
@@ -107,21 +114,21 @@ func (suite *KeeperTestSuite) TestKeeperCrud() {
 	suite.Require().Error(err)
 
 	// remove some, overwrite other
-	_, err = suite.msgSrvr.RevokeAllowance(suite.ctx, &feegrant.MsgRevokeAllowance{Granter: suite.addrs[0].String(), Grantee: suite.addrs[1].String()})
+	_, err = suite.msgSrvr.RevokeAllowance(suite.ctx, &feegrant.MsgRevokeAllowance{Granter: suite.encodedAddrs[0], Grantee: suite.encodedAddrs[1]})
 	suite.Require().NoError(err)
 
-	_, err = suite.msgSrvr.RevokeAllowance(suite.ctx, &feegrant.MsgRevokeAllowance{Granter: suite.addrs[0].String(), Grantee: suite.addrs[2].String()})
+	_, err = suite.msgSrvr.RevokeAllowance(suite.ctx, &feegrant.MsgRevokeAllowance{Granter: suite.encodedAddrs[0], Grantee: suite.encodedAddrs[2]})
 	suite.Require().NoError(err)
 
 	// revoke non-exist fee allowance
-	_, err = suite.msgSrvr.RevokeAllowance(suite.ctx, &feegrant.MsgRevokeAllowance{Granter: suite.addrs[0].String(), Grantee: suite.addrs[2].String()})
+	_, err = suite.msgSrvr.RevokeAllowance(suite.ctx, &feegrant.MsgRevokeAllowance{Granter: suite.encodedAddrs[0], Grantee: suite.encodedAddrs[2]})
 	suite.Require().Error(err)
 
 	err = suite.feegrantKeeper.GrantAllowance(suite.ctx, suite.addrs[0], suite.addrs[2], basic)
 	suite.Require().NoError(err)
 
 	// revoke an existing grant and grant again with different allowance.
-	_, err = suite.msgSrvr.RevokeAllowance(suite.ctx, &feegrant.MsgRevokeAllowance{Granter: suite.addrs[1].String(), Grantee: suite.addrs[2].String()})
+	_, err = suite.msgSrvr.RevokeAllowance(suite.ctx, &feegrant.MsgRevokeAllowance{Granter: suite.encodedAddrs[1], Grantee: suite.encodedAddrs[2]})
 	suite.Require().NoError(err)
 
 	err = suite.feegrantKeeper.GrantAllowance(suite.ctx, suite.addrs[1], suite.addrs[2], basic3)
@@ -183,7 +190,7 @@ func (suite *KeeperTestSuite) TestKeeperCrud() {
 	_, err = suite.feegrantKeeper.GetAllowance(suite.ctx, suite.addrs[3], accAddr)
 	suite.Require().NoError(err)
 
-	_, err = suite.msgSrvr.RevokeAllowance(suite.ctx, &feegrant.MsgRevokeAllowance{Granter: suite.addrs[3].String(), Grantee: address})
+	_, err = suite.msgSrvr.RevokeAllowance(suite.ctx, &feegrant.MsgRevokeAllowance{Granter: suite.encodedAddrs[3], Grantee: address})
 	suite.Require().NoError(err)
 }
 
@@ -230,8 +237,8 @@ func (suite *KeeperTestSuite) TestUseGrantedFee() {
 			final:   future,
 			postRun: func() {
 				_, err := suite.msgSrvr.RevokeAllowance(suite.ctx, &feegrant.MsgRevokeAllowance{
-					Granter: suite.addrs[0].String(),
-					Grantee: suite.addrs[1].String(),
+					Granter: suite.encodedAddrs[0],
+					Grantee: suite.encodedAddrs[1],
 				})
 				suite.Require().NoError(err)
 			},
@@ -244,8 +251,8 @@ func (suite *KeeperTestSuite) TestUseGrantedFee() {
 			final:   futureAfterSmall,
 			postRun: func() {
 				_, err := suite.msgSrvr.RevokeAllowance(suite.ctx, &feegrant.MsgRevokeAllowance{
-					Granter: suite.addrs[0].String(),
-					Grantee: suite.addrs[1].String(),
+					Granter: suite.encodedAddrs[0],
+					Grantee: suite.encodedAddrs[1],
 				})
 				suite.Require().NoError(err)
 			},
@@ -314,8 +321,8 @@ func (suite *KeeperTestSuite) TestIterateGrants() {
 	err = suite.feegrantKeeper.GrantAllowance(suite.ctx, suite.addrs[2], suite.addrs[1], allowance1)
 	suite.Require().NoError(err)
 	err = suite.feegrantKeeper.IterateAllFeeAllowances(suite.ctx, func(grant feegrant.Grant) bool {
-		suite.Require().Equal(suite.addrs[1].String(), grant.Grantee)
-		suite.Require().Contains([]string{suite.addrs[0].String(), suite.addrs[2].String()}, grant.Granter)
+		suite.Require().Equal(suite.encodedAddrs[1], grant.Grantee)
+		suite.Require().Contains([]string{suite.encodedAddrs[0], suite.encodedAddrs[2]}, grant.Granter)
 		return true
 	})
 	suite.Require().NoError(err)

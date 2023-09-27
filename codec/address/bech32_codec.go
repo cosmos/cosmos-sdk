@@ -46,6 +46,10 @@ func (bc Bech32Codec) StringToBytes(text string) ([]byte, error) {
 
 // BytesToString decodes bytes to text
 func (bc Bech32Codec) BytesToString(bz []byte) (string, error) {
+	if len(bz) == 0 {
+		return "", nil
+	}
+
 	text, err := bech32.ConvertAndEncode(bc.Bech32Prefix, bz)
 	if err != nil {
 		return "", err

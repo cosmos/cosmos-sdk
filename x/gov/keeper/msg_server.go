@@ -3,14 +3,8 @@ package keeper
 import (
 	"context"
 	"fmt"
-<<<<<<< HEAD
-	"strconv"
-=======
->>>>>>> 5e53fb224 (refactor(x/gov): remove gov vote and proposal based telemetry (#17910))
 
 	"cosmossdk.io/errors"
-	"github.com/armon/go-metrics"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"

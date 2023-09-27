@@ -5,13 +5,14 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/pelletier/go-toml/v2"
 	"github.com/spf13/cobra"
+
+	"github.com/cosmos/cosmos-sdk/client"
 )
 
 func ViewCommand() *cobra.Command {
-	var flagOutputFomat = "output-format"
+	flagOutputFomat := "output-format"
 
 	cmd := &cobra.Command{
 		Use:   "view [config]",

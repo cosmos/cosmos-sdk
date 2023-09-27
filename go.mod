@@ -167,10 +167,10 @@ require (
 // replace (
 // 	<temporary replace>
 // )
+replace cosmossdk.io/x/protocolpool => ./x/protocolpool
 
 // Below are the long-lived replace of the Cosmos SDK
 replace (
-	cosmossdk.io/x/protocolpool => ./x/protocolpool
 	// use cosmos fork of keyring
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 	// dgrijalva/jwt-go is deprecated and doesn't receive security updates.

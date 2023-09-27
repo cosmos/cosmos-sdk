@@ -120,6 +120,18 @@ simd config diff v0.47 # gets the diff between defaultHome/config/app.toml and t
 confix diff v0.47 ~/.simapp/config/app.toml # gets the diff between ~/.simapp/config/app.toml and the latest v0.47 config
 ```
 
+### View
+
+View a configuration file, e.g:
+
+```shell
+simd config view client # views the current app client config
+```
+
+```shell
+confix view ~/.simapp/config/client.toml # views the current app client conf
+```
+
 ### Maintainer
 
 At each SDK modification of the default configuration, add the default SDK config under `data/v0.XX-app.toml`.

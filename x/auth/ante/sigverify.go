@@ -90,7 +90,7 @@ func (spkd SetPubKeyDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 			pk = simSecp256k1Pubkey
 		}
 		// Only make check if simulate=false
-		if !simulate && !bytes.Equal(pk.Address(), signers[i]) {
+		if !simulate && !bytes.Equal(pk.Address(), signers[i]) && ctx.IsSigverifyTx() {
 			return ctx, errorsmod.Wrapf(sdkerrors.ErrInvalidPubKey,
 				"pubKey does not match signer address %s with signer index: %d", signerStrs[i], i)
 		}
@@ -302,7 +302,7 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 		}
 
 		// no need to verify signatures on recheck tx
-		if !simulate && !ctx.IsReCheckTx() {
+		if !simulate && !ctx.IsReCheckTx() && ctx.IsSigverifyTx() {
 			anyPk, _ := codectypes.NewAnyWithValue(pubKey)
 
 			signerData := txsigning.SignerData{

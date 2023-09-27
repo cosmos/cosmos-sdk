@@ -50,6 +50,7 @@ type Context struct {
 	blockGasMeter        storetypes.GasMeter
 	checkTx              bool
 	recheckTx            bool // if recheckTx == true, then checkTx must also be true
+	sigverifyTx          bool // when run simulation, because the private key corresponding to the account in the genesis.json randomly generated, we must skip the sigverify.
 	execMode             ExecMode
 	minGasPrice          DecCoins
 	consParams           cmtproto.ConsensusParams
@@ -78,6 +79,7 @@ func (c Context) GasMeter() storetypes.GasMeter                 { return c.gasMe
 func (c Context) BlockGasMeter() storetypes.GasMeter            { return c.blockGasMeter }
 func (c Context) IsCheckTx() bool                               { return c.checkTx }
 func (c Context) IsReCheckTx() bool                             { return c.recheckTx }
+func (c Context) IsSigverifyTx() bool                           { return c.sigverifyTx }
 func (c Context) ExecMode() ExecMode                            { return c.execMode }
 func (c Context) MinGasPrices() DecCoins                        { return c.minGasPrice }
 func (c Context) EventManager() EventManagerI                   { return c.eventManager }
@@ -127,6 +129,7 @@ func NewContext(ms storetypes.MultiStore, isCheckTx bool, logger log.Logger) Con
 		header:               h,
 		chainID:              h.ChainID,
 		checkTx:              isCheckTx,
+		sigverifyTx:          true,
 		logger:               logger,
 		gasMeter:             storetypes.NewInfiniteGasMeter(),
 		minGasPrice:          DecCoins{},
@@ -251,6 +254,13 @@ func (c Context) WithIsReCheckTx(isRecheckTx bool) Context {
 	}
 	c.recheckTx = isRecheckTx
 	c.execMode = ExecModeReCheck
+	return c
+}
+
+// WithIsSigverifyTx called with true will sigverify in auth module
+// If the transaction is executed in execModeSimulationFinalize mode, the sigverify check will be skipped.
+func (c Context) WithIsSigverifyTx(isSigverifyTx bool) Context {
+	c.sigverifyTx = isSigverifyTx
 	return c
 }
 

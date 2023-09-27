@@ -45,13 +45,14 @@ type (
 )
 
 const (
-	execModeCheck           execMode = iota // Check a transaction
-	execModeReCheck                         // Recheck a (pending) transaction after a commit
-	execModeSimulate                        // Simulate a transaction
-	execModePrepareProposal                 // Prepare a block proposal
-	execModeProcessProposal                 // Process a block proposal
-	execModeVoteExtension                   // Extend or verify a pre-commit vote
-	execModeFinalize                        // Finalize a block proposal
+	execModeCheck              execMode = iota // Check a transaction
+	execModeReCheck                            // Recheck a (pending) transaction after a commit
+	execModeSimulate                           // Simulate a transaction
+	execModePrepareProposal                    // Prepare a block proposal
+	execModeProcessProposal                    // Process a block proposal
+	execModeVoteExtension                      // Extend or verify a pre-commit vote
+	execModeFinalize                           // Finalize a block proposal
+	execModeSimulationFinalize                 // Finalize a block proposal when run simulation, for example TestFullAppSimulation
 )
 
 var _ servertypes.ABCI = (*BaseApp)(nil)
@@ -610,7 +611,7 @@ func validateBasicTxMsgs(msgs []sdk.Msg) error {
 
 func (app *BaseApp) getState(mode execMode) *state {
 	switch mode {
-	case execModeFinalize:
+	case execModeFinalize, execModeSimulationFinalize:
 		return app.finalizeBlockState
 
 	case execModePrepareProposal:
@@ -641,6 +642,8 @@ func (app *BaseApp) getContextForTx(mode execMode, txBytes []byte) sdk.Context {
 	ctx := modeState.ctx.
 		WithTxBytes(txBytes)
 	// WithVoteInfos(app.voteInfos) // TODO: identify if this is needed
+
+	ctx = ctx.WithIsSigverifyTx(mode != execModeSimulationFinalize)
 
 	ctx = ctx.WithConsensusParams(app.GetConsensusParams(ctx))
 
@@ -797,6 +800,12 @@ func (app *BaseApp) runTx(mode execMode, txBytes []byte) (gInfo sdk.GasInfo, res
 	var gasWanted uint64
 
 	ctx := app.getContextForTx(mode, txBytes)
+	// after we set the sigverifyTx field in ctx in the function app.getContextForTx(mode, txBytes)
+	// we restore the mode value to facilitate logical judgment.
+	if mode == execModeSimulationFinalize {
+		mode = execModeFinalize
+	}
+
 	ms := ctx.MultiStore()
 
 	// only run the tx if there is block gas remaining

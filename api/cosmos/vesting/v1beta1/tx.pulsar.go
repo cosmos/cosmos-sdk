@@ -3176,6 +3176,8 @@ type MsgCreateVestingAccount struct {
 	EndTime int64 `protobuf:"varint,4,opt,name=end_time,json=endTime,proto3" json:"end_time,omitempty"`
 	Delayed bool  `protobuf:"varint,5,opt,name=delayed,proto3" json:"delayed,omitempty"`
 	// start of vesting as unix time (in seconds).
+	//
+	// Since 0.51.x
 	StartTime int64 `protobuf:"varint,6,opt,name=start_time,json=startTime,proto3" json:"start_time,omitempty"`
 }
 

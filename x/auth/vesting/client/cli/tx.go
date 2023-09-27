@@ -85,7 +85,7 @@ timestamp.`,
 				return err
 			}
 
-			msg := types.NewMsgCreateVestingAccount(clientCtx.GetFromAddress(), toAddr, amount, startTime, endTime, delayed)
+			msg := types.NewMsgCreateVestingAccountWithStartTime(clientCtx.GetFromAddress(), toAddr, amount, startTime, endTime, delayed)
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}

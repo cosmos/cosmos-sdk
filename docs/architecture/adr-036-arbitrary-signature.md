@@ -59,7 +59,7 @@ Proto definition:
 
 ```protobuf
 // MsgSignData defines an arbitrary, general-purpose, off-chain message
-message MsgSignData {
+message MsgSignArbitraryData {
     // Signer is the sdk.AccAddress of the message signer
     bytes Signer = 1 [(gogoproto.jsontag) = "signer", (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
     // Data represents the raw bytes of the content that is signed (text, json, etc)
@@ -75,7 +75,7 @@ Signed MsgSignData json example:
   "value": {
     "msg": [
       {
-        "type": "sign/MsgSignData",
+        "type": "offchain/MsgSignArbitraryData",
         "value": {
           "signer": "cosmos1hftz5ugqmpg9243xeegsqqav62f8hnywsjr4xr",
           "data": "cmFuZG9t"

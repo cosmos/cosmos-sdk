@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package cosmos.offchain.adr036;
+
+import "gogoproto/gogo.proto";
+import "cosmos_proto/cosmos.proto";
+import "cosmos/msg/v1/msg.proto";
+
+option go_package = "github.com/cosmos/cosmos-sdk/offchain/adr036";
+
+// MsgSignArbitraryData defines an arbitrary, general-purpose, off-chain message
+message MsgSignArbitraryData {
+  option (cosmos.msg.v1.signer) = "signer";
+  // Signer is the sdk.AccAddress of the message signer
+  string signer = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // Data represents the raw bytes of the content that is signed (text, json, etc)
+  bytes data = 2 [(gogoproto.jsontag) = "data"];
+}

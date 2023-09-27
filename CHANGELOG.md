@@ -59,7 +59,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Bug Fixes
 
 * (x/gov) [#17873](https://github.com/cosmos/cosmos-sdk/pull/17873) Fail any inactive and active proposals whose messages cannot be decoded.
-* (simulation) [#17910](https://github.com/cosmos/cosmos-sdk/pull/17910) Fix all problems with executing command `make test-sim-custom-genesis-fast` for simulation test.
+* (simulation) [#17911](https://github.com/cosmos/cosmos-sdk/pull/17911) Fix all problems with executing command `make test-sim-custom-genesis-fast` for simulation test.
 
 ### API Breaking Changes
 

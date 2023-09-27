@@ -6,6 +6,7 @@
 * 2023-04-06: Add upgrading section (@alexanderbez)
 * 2023-04-10: Simplify vote extension state persistence (@alexanderbez)
 * 2023-07-07: Revise vote extension state persistence (@alexanderbez)
+* 2023-08-24: Revise vote extension power calculations and staking interface (@davidterpay)
 
 ## Status
 
@@ -219,26 +220,35 @@ a default signature verification method which applications can use:
 
 ```go
 type ValidatorStore interface {
-	TotalBondedTokens(ctx context.Context) (math.Int, error)
-	BondedTokensAndPubKeyByConsAddr(context.Context, sdk.ConsAddress) (math.Int, cmtprotocrypto.PublicKey, error)
+	GetPubKeyByConsAddr(context.Context, sdk.ConsAddress) (cmtprotocrypto.PublicKey, error)
 }
 
 // ValidateVoteExtensions is a function that an application can execute in
 // ProcessProposal to verify vote extension signatures.
 func (app *BaseApp) ValidateVoteExtensions(ctx sdk.Context, currentHeight int64, extCommit abci.ExtendedCommitInfo) error {
+	votingPower := 0
+	totalVotingPower := 0
+
 	for _, vote := range extCommit.Votes {
+		totalVotingPower += vote.Validator.Power
+
 		if !vote.SignedLastBlock || len(vote.VoteExtension) == 0 {
 			continue
 		}
 
 		valConsAddr := sdk.ConsAddress(vote.Validator.Address)
-		bondedTokens, cmtPubKey, err := valStore.BondedTokensAndPubKeyByConsAddr(ctx, valConsAddr)
+		pubKeyProto, err := valStore.GetPubKeyByConsAddr(ctx, valConsAddr)
 		if err != nil {
-			return fmt.Errorf("failed to get bonded tokens and public key for validator %s: %w", valConsAddr, err)
+			return fmt.Errorf("failed to get public key for validator %s: %w", valConsAddr, err)
 		}
 
 		if len(vote.ExtensionSignature) == 0 {
 			return fmt.Errorf("received a non-empty vote extension with empty signature for validator %s", valConsAddr)
+		}
+
+		cmtPubKey, err := cryptoenc.PubKeyFromProto(pubKeyProto)
+		if err != nil {
+			return fmt.Errorf("failed to convert validator %X public key: %w", valConsAddr, err)
 		}
 
 		cve := cmtproto.CanonicalVoteExtension{
@@ -257,8 +267,14 @@ func (app *BaseApp) ValidateVoteExtensions(ctx sdk.Context, currentHeight int64,
 			return errors.New("received vote with invalid signature")
 		}
 
-		return nil
+		votingPower += vote.Validator.Power
 	}
+
+	if (votingPower / totalVotingPower) < threshold {
+		return errors.New("not enough voting power for the vote extensions")
+	}
+
+	return nil
 }
 ```
 
@@ -277,7 +293,7 @@ decision based on the vote extensions.
 
 In certain contexts, it may be useful or necessary for applications to persist
 data derived from vote extensions. In order to facilitate this use case, we propose
-to allow app developers to define a pre-FinalizeBlock hook which will be called
+to allow app developers to define a pre-Blocker hook which will be called
 at the very beginning of `FinalizeBlock`, i.e. before `BeginBlock` (see below).
 
 Note, we cannot allow applications to directly write to the application state
@@ -285,7 +301,7 @@ during `ProcessProposal` because during replay, CometBFT will NOT call `ProcessP
 which would result in an incomplete state view.
 
 ```go
-func (a MyApp) PreFinalizeBlockHook(ctx sdk.Context, req.RequestFinalizeBlock) error {
+func (a MyApp) PreBlocker(ctx sdk.Context, req *abci.RequestFinalizeBlock) error {
 	voteExts := GetVoteExtensions(ctx, req.Txs)
 	
 	// Process and perform some compute on vote extensions, storing any resulting
@@ -337,13 +353,17 @@ we can come up with new types and names altogether.
 func (app *BaseApp) FinalizeBlock(req abci.RequestFinalizeBlock) (*abci.ResponseFinalizeBlock, error) {
 	ctx := ...
 
-	if app.preFinalizeBlockHook != nil {
-		if err := app.preFinalizeBlockHook(ctx, req); err != nil {
+	if app.preBlocker != nil {
+		ctx := app.finalizeBlockState.ctx
+		rsp, err := app.preBlocker(ctx, req)
+		if err != nil {
 			return nil, err
 		}
+		if rsp.ConsensusParamsChanged {
+			app.finalizeBlockState.ctx = ctx.WithConsensusParams(app.GetConsensusParams(ctx))
+		}
 	}
-
-	beginBlockResp := app.beginBlock(ctx, req)
+	beginBlockResp, err := app.beginBlock(req)
 	appendBlockEventAttr(beginBlockResp.Events, "begin_block")
 
 	txExecResults := make([]abci.ExecTxResult, 0, len(req.Txs))
@@ -352,7 +372,7 @@ func (app *BaseApp) FinalizeBlock(req abci.RequestFinalizeBlock) (*abci.Response
 		txExecResults = append(txExecResults, result)
 	}
 
-	endBlockResp := app.endBlock(ctx, req)
+	endBlockResp, err := app.endBlock(app.finalizeBlockState.ctx)
 	appendBlockEventAttr(beginBlockResp.Events, "end_block")
 
 	return abci.ResponseFinalizeBlock{

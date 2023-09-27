@@ -8,6 +8,8 @@ import (
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
+	poolkeeper "cosmossdk.io/x/protocolpool/keeper"
+	pooltypes "cosmossdk.io/x/protocolpool/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
@@ -22,9 +24,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/cosmos/cosmos-sdk/x/distribution"
-	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
-	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -50,7 +49,7 @@ type fixture struct {
 func initFixture(tb testing.TB) *fixture {
 	tb.Helper()
 	keys := storetypes.NewKVStoreKeys(
-		authtypes.StoreKey, banktypes.StoreKey, distrtypes.StoreKey, stakingtypes.StoreKey, types.StoreKey,
+		authtypes.StoreKey, banktypes.StoreKey, stakingtypes.StoreKey, pooltypes.StoreKey, types.StoreKey,
 	)
 	cdc := moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{}, bank.AppModuleBasic{}, gov.AppModuleBasic{}).Codec
 
@@ -62,7 +61,7 @@ func initFixture(tb testing.TB) *fixture {
 	authority := authtypes.NewModuleAddress(types.ModuleName)
 
 	maccPerms := map[string][]string{
-		distrtypes.ModuleName:          nil,
+		pooltypes.ModuleName:           {},
 		minttypes.ModuleName:           {authtypes.Minter},
 		stakingtypes.BondedPoolName:    {authtypes.Burner, authtypes.Staking},
 		stakingtypes.NotBondedPoolName: {authtypes.Burner, authtypes.Staking},
@@ -93,12 +92,11 @@ func initFixture(tb testing.TB) *fixture {
 
 	stakingKeeper := stakingkeeper.NewKeeper(cdc, runtime.NewKVStoreService(keys[stakingtypes.StoreKey]), accountKeeper, bankKeeper, authority.String(), addresscodec.NewBech32Codec(sdk.Bech32PrefixValAddr), addresscodec.NewBech32Codec(sdk.Bech32PrefixConsAddr))
 
+	poolKeeper := poolkeeper.NewKeeper(cdc, runtime.NewKVStoreService(keys[pooltypes.StoreKey]), accountKeeper, bankKeeper, authority.String())
+
 	// set default staking params
-	err := stakingKeeper.SetParams(newCtx, stakingtypes.DefaultParams())
+	err := stakingKeeper.Params.Set(newCtx, stakingtypes.DefaultParams())
 	assert.NilError(tb, err)
-	distrKeeper := distrkeeper.NewKeeper(
-		cdc, runtime.NewKVStoreService(keys[distrtypes.StoreKey]), accountKeeper, bankKeeper, stakingKeeper, distrtypes.ModuleName, authority.String(),
-	)
 
 	// Create MsgServiceRouter, but don't populate it before creating the gov
 	// keeper.
@@ -111,7 +109,7 @@ func initFixture(tb testing.TB) *fixture {
 		accountKeeper,
 		bankKeeper,
 		stakingKeeper,
-		distrKeeper,
+		poolKeeper,
 		router,
 		types.DefaultConfig(),
 		authority.String(),
@@ -123,16 +121,14 @@ func initFixture(tb testing.TB) *fixture {
 	err = govKeeper.Params.Set(newCtx, v1.DefaultParams())
 	assert.NilError(tb, err)
 
-	authModule := auth.NewAppModule(cdc, accountKeeper, authsims.RandomGenesisAccounts, nil)
-	bankModule := bank.NewAppModule(cdc, bankKeeper, accountKeeper, nil)
-	stakingModule := staking.NewAppModule(cdc, stakingKeeper, accountKeeper, bankKeeper, nil)
-	distrModule := distribution.NewAppModule(cdc, distrKeeper, accountKeeper, bankKeeper, stakingKeeper, nil)
-	govModule := gov.NewAppModule(cdc, govKeeper, accountKeeper, bankKeeper, nil)
+	authModule := auth.NewAppModule(cdc, accountKeeper, authsims.RandomGenesisAccounts)
+	bankModule := bank.NewAppModule(cdc, bankKeeper, accountKeeper)
+	stakingModule := staking.NewAppModule(cdc, stakingKeeper, accountKeeper, bankKeeper)
+	govModule := gov.NewAppModule(cdc, govKeeper, accountKeeper, bankKeeper, poolKeeper)
 
 	integrationApp := integration.NewIntegrationApp(newCtx, logger, keys, cdc, map[string]appmodule.AppModule{
 		authtypes.ModuleName:    authModule,
 		banktypes.ModuleName:    bankModule,
-		distrtypes.ModuleName:   distrModule,
 		stakingtypes.ModuleName: stakingModule,
 		types.ModuleName:        govModule,
 	})

@@ -16,7 +16,8 @@ import (
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	"cosmossdk.io/client/v2/autocli/keyring"
 	"cosmossdk.io/client/v2/internal/util"
-	"cosmossdk.io/core/address"
+
+	"github.com/cosmos/cosmos-sdk/client"
 )
 
 // Builder manages options for building pflag flags for protobuf messages.
@@ -30,18 +31,19 @@ type Builder struct {
 
 	// FileResolver specifies how protobuf file descriptors will be resolved. If it is
 	// nil protoregistry.GlobalFiles will be used.
-	FileResolver protodesc.Resolver
+	FileResolver interface {
+		protodesc.Resolver
+		RangeFiles(func(protoreflect.FileDescriptor) bool)
+	}
 
 	messageFlagTypes map[protoreflect.FullName]Type
 	scalarFlagTypes  map[string]Type
 
-	// AddressCodec is the address codec used for the address flag
-	AddressCodec          address.Codec
-	ValidatorAddressCodec address.Codec
-	ConsensusAddressCodec address.Codec
-
 	// Keyring implementation
 	Keyring keyring.Keyring
+
+	// ClientCtx contains the necessary information needed to execute the commands.
+	ClientCtx *client.Context
 }
 
 func (b *Builder) init() {
@@ -83,8 +85,6 @@ func (b *Builder) addMessageFlags(ctx context.Context, flagSet *pflag.FlagSet, m
 	}
 
 	isPositional := map[string]bool{}
-	hasVarargs := false
-	hasOptional := false
 	n := len(commandOptions.PositionalArgs)
 	// positional args are also parsed using a FlagSet so that we can reuse all the same parsers
 	handler.positionalFlagSet = pflag.NewFlagSet("positional", pflag.ContinueOnError)
@@ -105,7 +105,7 @@ func (b *Builder) addMessageFlags(ctx context.Context, flagSet *pflag.FlagSet, m
 				return nil, fmt.Errorf("varargs positional argument %s must be the last argument", arg.ProtoField)
 			}
 
-			hasVarargs = true
+			handler.hasVarargs = true
 		}
 
 		if arg.Optional {
@@ -113,7 +113,7 @@ func (b *Builder) addMessageFlags(ctx context.Context, flagSet *pflag.FlagSet, m
 				return nil, fmt.Errorf("optional positional argument %s must be the last argument", arg.ProtoField)
 			}
 
-			hasOptional = true
+			handler.hasOptional = true
 		}
 
 		_, hasValue, err := b.addFieldFlag(
@@ -133,14 +133,15 @@ func (b *Builder) addMessageFlags(ctx context.Context, flagSet *pflag.FlagSet, m
 		})
 	}
 
-	if hasVarargs {
+	if handler.hasVarargs {
 		handler.CobraArgs = cobra.MinimumNArgs(n - 1)
-		handler.hasVarargs = true
-	} else if hasOptional {
+		handler.MandatoryArgUntil = n - 1
+	} else if handler.hasOptional {
 		handler.CobraArgs = cobra.RangeArgs(n-1, n)
-		handler.hasOptional = true
+		handler.MandatoryArgUntil = n - 1
 	} else {
 		handler.CobraArgs = cobra.ExactArgs(n)
+		handler.MandatoryArgUntil = n
 	}
 
 	// validate flag options

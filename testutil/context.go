@@ -7,6 +7,7 @@ import (
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/assert"
 
+	"cosmossdk.io/core/header"
 	"cosmossdk.io/log"
 	"cosmossdk.io/store"
 	"cosmossdk.io/store/metrics"
@@ -75,7 +76,7 @@ func DefaultContextWithDB(tb testing.TB, key, tkey storetypes.StoreKey) TestCont
 	err := cms.LoadLatestVersion()
 	assert.NoError(tb, err)
 
-	ctx := sdk.NewContext(cms, false, log.NewNopLogger()).WithBlockTime(time.Now())
+	ctx := sdk.NewContext(cms, false, log.NewNopLogger()).WithHeaderInfo(header.Info{Time: time.Now()})
 
 	return TestContext{ctx, db, cms}
 }

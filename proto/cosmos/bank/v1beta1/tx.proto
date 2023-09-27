@@ -20,6 +20,11 @@ service Msg {
   // MultiSend defines a method for sending coins from some accounts to other accounts.
   rpc MultiSend(MsgMultiSend) returns (MsgMultiSendResponse);
 
+  // Burn defines a method for burning coins by an account.
+  //
+  // Since: cosmos-sdk 0.51
+  rpc Burn(MsgBurn) returns (MsgBurnResponse);
+
   // UpdateParams defines a governance operation for updating the x/bank module parameters.
   // The authority is defined in the keeper.
   //
@@ -122,3 +127,21 @@ message MsgSetSendEnabled {
 //
 // Since: cosmos-sdk 0.47
 message MsgSetSendEnabledResponse {}
+
+// MsgBurn defines a message for burning coins.
+//
+// Since: cosmos-sdk 0.51
+message MsgBurn {
+  option (cosmos.msg.v1.signer) = "from_address";
+
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string   from_address                    = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  repeated cosmos.base.v1beta1.Coin amount = 2;
+}
+
+// MsgBurnResponse defines the Msg/Burn response type.
+//
+// Since: cosmos-sdk 0.51
+message MsgBurnResponse {}

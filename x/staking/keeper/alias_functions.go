@@ -70,33 +70,6 @@ func (k Keeper) IterateBondedValidatorsByPower(ctx context.Context, fn func(inde
 	return nil
 }
 
-// IterateLastValidators iterates through the active validator set and perform the provided function
-func (k Keeper) IterateLastValidators(ctx context.Context, fn func(index int64, validator types.ValidatorI) (stop bool)) error {
-	iterator, err := k.LastValidatorsIterator(ctx)
-	if err != nil {
-		return err
-	}
-	defer iterator.Close()
-
-	i := int64(0)
-
-	for ; iterator.Valid(); iterator.Next() {
-		address := types.AddressFromLastValidatorPowerKey(iterator.Key())
-
-		validator, err := k.GetValidator(ctx, address)
-		if err != nil {
-			return err
-		}
-
-		stop := fn(i, validator) // XXX is this safe will the validator unexposed fields be able to get written to?
-		if stop {
-			break
-		}
-		i++
-	}
-	return nil
-}
-
 // Validator gets the Validator interface for a particular address
 func (k Keeper) Validator(ctx context.Context, address sdk.ValAddress) (types.ValidatorI, error) {
 	return k.GetValidator(ctx, address)
@@ -116,12 +89,7 @@ func (k Keeper) GetValidatorSet() types.ValidatorSet {
 
 // Delegation gets the delegation interface for a particular set of delegator and validator addresses
 func (k Keeper) Delegation(ctx context.Context, addrDel sdk.AccAddress, addrVal sdk.ValAddress) (types.DelegationI, error) {
-	bond, err := k.Delegations.Get(ctx, collections.Join(addrDel, addrVal))
-	if err != nil {
-		return nil, err
-	}
-
-	return bond, nil
+	return k.Delegations.Get(ctx, collections.Join(addrDel, addrVal))
 }
 
 // IterateDelegations iterates through all of the delegations from a delegator
@@ -130,7 +98,7 @@ func (k Keeper) IterateDelegations(ctx context.Context, delAddr sdk.AccAddress,
 ) error {
 	var i int64
 	rng := collections.NewPrefixedPairRange[sdk.AccAddress, sdk.ValAddress](delAddr)
-	err := k.Delegations.Walk(ctx, rng, func(key collections.Pair[sdk.AccAddress, sdk.ValAddress], del types.Delegation) (stop bool, err error) {
+	return k.Delegations.Walk(ctx, rng, func(key collections.Pair[sdk.AccAddress, sdk.ValAddress], del types.Delegation) (stop bool, err error) {
 		stop = fn(i, del)
 		if stop {
 			return true, nil
@@ -139,11 +107,6 @@ func (k Keeper) IterateDelegations(ctx context.Context, delAddr sdk.AccAddress,
 
 		return false, nil
 	})
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
 
 // GetAllSDKDelegations returns all delegations used during genesis dump

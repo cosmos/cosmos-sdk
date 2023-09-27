@@ -13,6 +13,11 @@ service Query {
   rpc Echo(EchoRequest) returns (EchoResponse);
 }
 
+message AMessage {
+  string bar = 1;
+  int32  baz = 2;
+}
+
 message EchoRequest {
   // u32 is an uint32
   uint32                                u32        = 1;
@@ -48,6 +53,8 @@ message EchoRequest {
   map<string, cosmos.base.v1beta1.Coin> map_string_coin            = 35;
   string a_validator_address = 36 [(cosmos_proto.scalar) = "cosmos.ValidatorAddressString"];
   string a_consensus_address = 37 [(cosmos_proto.scalar) = "cosmos.ConsensusAddressString"];
+
+  repeated cosmos.base.v1beta1.Coin coins = 38;
 }
 
 enum Enum {
@@ -56,11 +63,6 @@ enum Enum {
   ENUM_TWO         = 2;
   ENUM_FIVE        = 5;
   ENUM_NEG_THREE   = -3;
-}
-
-message AMessage {
-  string bar = 1;
-  int32  baz = 2;
 }
 
 message EchoResponse {

@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 
-	abci "github.com/cometbft/cometbft/abci/types"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
@@ -13,7 +12,6 @@ import (
 	modulev1 "cosmossdk.io/api/cosmos/evidence/module/v1"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/comet"
 	store "cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
 	eviclient "cosmossdk.io/x/evidence/client"
@@ -25,14 +23,18 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 )
 
 var (
-	_ module.AppModuleBasic      = AppModuleBasic{}
+	_ module.AppModuleBasic      = AppModule{}
 	_ module.AppModuleSimulation = AppModule{}
+	_ module.HasGenesis          = AppModule{}
+
+	_ appmodule.AppModule       = AppModule{}
+	_ appmodule.HasServices     = AppModule{}
+	_ appmodule.HasBeginBlocker = AppModule{}
 )
 
 // ----------------------------------------------------------------------------
@@ -118,22 +120,11 @@ func NewAppModule(keeper keeper.Keeper) AppModule {
 	}
 }
 
-var (
-	_ appmodule.AppModule       = AppModule{}
-	_ appmodule.HasServices     = AppModule{}
-	_ appmodule.HasBeginBlocker = AppModule{}
-)
-
 // IsOnePerModuleType implements the depinject.OnePerModuleType interface.
 func (am AppModule) IsOnePerModuleType() {}
 
 // IsAppModule implements the appmodule.AppModule interface.
 func (am AppModule) IsAppModule() {}
-
-// Name returns the evidence module's name.
-func (am AppModule) Name() string {
-	return am.AppModuleBasic.Name()
-}
 
 // RegisterServices registers module services.
 func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
@@ -144,7 +135,7 @@ func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
 
 // InitGenesis performs the evidence module's genesis initialization It returns
 // no validator updates.
-func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, bz json.RawMessage) []abci.ValidatorUpdate {
+func (am AppModule) InitGenesis(ctx context.Context, cdc codec.JSONCodec, bz json.RawMessage) {
 	var gs types.GenesisState
 	err := cdc.UnmarshalJSON(bz, &gs)
 	if err != nil {
@@ -152,11 +143,10 @@ func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, bz json.Ra
 	}
 
 	InitGenesis(ctx, am.keeper, &gs)
-	return []abci.ValidatorUpdate{}
 }
 
 // ExportGenesis returns the evidence module's exported genesis state as raw JSON bytes.
-func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.RawMessage {
+func (am AppModule) ExportGenesis(ctx context.Context, cdc codec.JSONCodec) json.RawMessage {
 	return cdc.MustMarshalJSON(ExportGenesis(ctx, am.keeper))
 }
 
@@ -204,8 +194,6 @@ type ModuleInputs struct {
 	StakingKeeper  types.StakingKeeper
 	SlashingKeeper types.SlashingKeeper
 	AddressCodec   address.Codec
-
-	BlockInfoService comet.BlockInfoService
 }
 
 type ModuleOutputs struct {
@@ -216,7 +204,7 @@ type ModuleOutputs struct {
 }
 
 func ProvideModule(in ModuleInputs) ModuleOutputs {
-	k := keeper.NewKeeper(in.Cdc, in.StoreService, in.StakingKeeper, in.SlashingKeeper, in.AddressCodec, in.BlockInfoService)
+	k := keeper.NewKeeper(in.Cdc, in.StoreService, in.StakingKeeper, in.SlashingKeeper, in.AddressCodec)
 	m := NewAppModule(*k)
 
 	return ModuleOutputs{EvidenceKeeper: *k, Module: m}

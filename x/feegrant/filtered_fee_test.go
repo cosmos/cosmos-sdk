@@ -4,14 +4,15 @@ import (
 	"testing"
 	"time"
 
-	ocproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/core/header"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/feegrant"
 	"cosmossdk.io/x/feegrant/module"
 
+	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
@@ -23,15 +24,17 @@ func TestFilteredFeeValidAllow(t *testing.T) {
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
 	encCfg := moduletestutil.MakeTestEncodingConfig(module.AppModuleBasic{})
 
-	ctx := testCtx.Ctx.WithBlockHeader(ocproto.Header{Time: time.Now()})
+	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now()})
 
 	eth := sdk.NewCoins(sdk.NewInt64Coin("eth", 10))
 	atom := sdk.NewCoins(sdk.NewInt64Coin("atom", 555))
 	smallAtom := sdk.NewCoins(sdk.NewInt64Coin("atom", 43))
 	bigAtom := sdk.NewCoins(sdk.NewInt64Coin("atom", 1000))
 	leftAtom := sdk.NewCoins(sdk.NewInt64Coin("atom", 512))
-	now := ctx.BlockTime()
+	now := ctx.HeaderInfo().Time
 	oneHour := now.Add(1 * time.Hour)
+
+	ac := addresscodec.NewBech32Codec("cosmos")
 
 	// msg we will call in the all cases
 	call := banktypes.MsgSend{}
@@ -140,13 +143,15 @@ func TestFilteredFeeValidAllow(t *testing.T) {
 			err := tc.allowance.ValidateBasic()
 			require.NoError(t, err)
 
-			ctx := testCtx.Ctx.WithBlockTime(tc.blockTime)
+			ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Time: tc.blockTime})
 
 			// create grant
 			var granter, grantee sdk.AccAddress
 			allowance, err := feegrant.NewAllowedMsgAllowance(tc.allowance, tc.msgs)
 			require.NoError(t, err)
-			grant, err := feegrant.NewGrant(granter, grantee, allowance)
+			granterStr, err := ac.BytesToString(granter)
+			require.NoError(t, err)
+			granteeStr, err := ac.BytesToString(grantee)
 			require.NoError(t, err)
 
 			// now try to deduct
@@ -166,8 +171,8 @@ func TestFilteredFeeValidAllow(t *testing.T) {
 
 				// create a new updated grant
 				newGrant, err := feegrant.NewGrant(
-					sdk.AccAddress(grant.Granter),
-					sdk.AccAddress(grant.Grantee),
+					granterStr,
+					granteeStr,
 					allowance)
 				require.NoError(t, err)
 

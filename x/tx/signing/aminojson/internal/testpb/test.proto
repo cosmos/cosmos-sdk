@@ -62,6 +62,11 @@ message ABitOfEverything {
   // google.protobuf.Duration duration = 24;
 }
 
+message Duration {
+  google.protobuf.Duration  duration  = 1;
+  google.protobuf.Timestamp timestamp = 2;
+}
+
 message NestedMessage {
   option (amino.name) = "NestedMessage";
 

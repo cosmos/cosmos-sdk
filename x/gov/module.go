@@ -7,7 +7,6 @@ import (
 	"sort"
 	"strings"
 
-	abci "github.com/cometbft/cometbft/abci/types"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	"golang.org/x/exp/maps"
@@ -34,7 +33,6 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
-	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
 const ConsensusVersion = 5
@@ -42,6 +40,12 @@ const ConsensusVersion = 5
 var (
 	_ module.AppModuleBasic      = AppModuleBasic{}
 	_ module.AppModuleSimulation = AppModule{}
+	_ module.HasGenesis          = AppModule{}
+	_ module.HasServices         = AppModule{}
+	_ module.HasInvariants       = AppModule{}
+
+	_ appmodule.AppModule     = AppModule{}
+	_ appmodule.HasEndBlocker = AppModule{}
 )
 
 // AppModuleBasic defines the basic application module used by the gov module.
@@ -129,29 +133,22 @@ type AppModule struct {
 	keeper        *keeper.Keeper
 	accountKeeper govtypes.AccountKeeper
 	bankKeeper    govtypes.BankKeeper
-
-	// legacySubspace is used solely for migration of x/params managed parameters
-	legacySubspace govtypes.ParamSubspace
+	poolKeeper    govtypes.PoolKeeper
 }
 
 // NewAppModule creates a new AppModule object
 func NewAppModule(
 	cdc codec.Codec, keeper *keeper.Keeper,
-	ak govtypes.AccountKeeper, bk govtypes.BankKeeper, ss govtypes.ParamSubspace,
+	ak govtypes.AccountKeeper, bk govtypes.BankKeeper, pk govtypes.PoolKeeper,
 ) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{cdc: cdc, ac: ak.AddressCodec()},
 		keeper:         keeper,
 		accountKeeper:  ak,
 		bankKeeper:     bk,
-		legacySubspace: ss,
+		poolKeeper:     pk,
 	}
 }
-
-var (
-	_ appmodule.AppModule     = AppModule{}
-	_ appmodule.HasEndBlocker = AppModule{}
-)
 
 // IsOnePerModuleType implements the depinject.OnePerModuleType interface.
 func (am AppModule) IsOnePerModuleType() {}
@@ -162,8 +159,8 @@ func (am AppModule) IsAppModule() {}
 func init() {
 	appmodule.Register(
 		&modulev1.Module{},
-		appmodule.Provide(ProvideModule, ProvideKeyTable),
-		appmodule.Invoke(InvokeAddRoutes, InvokeSetHooks))
+		appmodule.Invoke(InvokeAddRoutes, InvokeSetHooks),
+		appmodule.Provide(ProvideModule))
 }
 
 type ModuleInputs struct {
@@ -175,13 +172,10 @@ type ModuleInputs struct {
 	ModuleKey        depinject.OwnModuleKey
 	MsgServiceRouter baseapp.MessageRouter
 
-	AccountKeeper      govtypes.AccountKeeper
-	BankKeeper         govtypes.BankKeeper
-	StakingKeeper      govtypes.StakingKeeper
-	DistributionKeeper govtypes.DistributionKeeper
-
-	// LegacySubspace is used solely for migration of x/params managed parameters
-	LegacySubspace govtypes.ParamSubspace `optional:"true"`
+	AccountKeeper govtypes.AccountKeeper
+	BankKeeper    govtypes.BankKeeper
+	StakingKeeper govtypes.StakingKeeper
+	PoolKeeper    govtypes.PoolKeeper
 }
 
 type ModuleOutputs struct {
@@ -210,19 +204,15 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		in.AccountKeeper,
 		in.BankKeeper,
 		in.StakingKeeper,
-		in.DistributionKeeper,
+		in.PoolKeeper,
 		in.MsgServiceRouter,
 		defaultConfig,
 		authority.String(),
 	)
-	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.LegacySubspace)
+	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.PoolKeeper)
 	hr := v1beta1.HandlerRoute{Handler: v1beta1.ProposalHandler, RouteKey: govtypes.RouterKey}
 
 	return ModuleOutputs{Module: m, Keeper: k, HandlerRoute: hr}
-}
-
-func ProvideKeyTable() paramtypes.KeyTable {
-	return v1.ParamKeyTable() //nolint:staticcheck // we still need this for upgrades
 }
 
 func InvokeAddRoutes(keeper *keeper.Keeper, routes []v1beta1.HandlerRoute) {
@@ -267,11 +257,6 @@ func InvokeSetHooks(keeper *keeper.Keeper, govHooks map[string]govtypes.GovHooks
 	return nil
 }
 
-// Name returns the gov module's name.
-func (AppModule) Name() string {
-	return govtypes.ModuleName
-}
-
 // RegisterInvariants registers module invariants
 func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
 	keeper.RegisterInvariants(ir, am.keeper, am.bankKeeper)
@@ -287,7 +272,7 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	v1beta1.RegisterQueryServer(cfg.QueryServer(), legacyQueryServer)
 	v1.RegisterQueryServer(cfg.QueryServer(), keeper.NewQueryServer(am.keeper))
 
-	m := keeper.NewMigrator(am.keeper, am.legacySubspace)
+	m := keeper.NewMigrator(am.keeper)
 	if err := cfg.RegisterMigration(govtypes.ModuleName, 1, m.Migrate1to2); err != nil {
 		panic(fmt.Sprintf("failed to migrate x/gov from version 1 to 2: %v", err))
 	}
@@ -307,16 +292,15 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 
 // InitGenesis performs genesis initialization for the gov module. It returns
 // no validator updates.
-func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.RawMessage) []abci.ValidatorUpdate {
+func (am AppModule) InitGenesis(ctx context.Context, cdc codec.JSONCodec, data json.RawMessage) {
 	var genesisState v1.GenesisState
 	cdc.MustUnmarshalJSON(data, &genesisState)
 	InitGenesis(ctx, am.accountKeeper, am.bankKeeper, am.keeper, &genesisState)
-	return []abci.ValidatorUpdate{}
 }
 
 // ExportGenesis returns the exported genesis state as raw bytes for the gov
 // module.
-func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.RawMessage {
+func (am AppModule) ExportGenesis(ctx context.Context, cdc codec.JSONCodec) json.RawMessage {
 	gs, err := ExportGenesis(ctx, am.keeper)
 	if err != nil {
 		panic(err)

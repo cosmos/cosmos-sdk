@@ -449,7 +449,8 @@ func TestEmptyMinGasPrices(t *testing.T) {
 	appCfgTempFilePath := filepath.Join(tempDir, "config", "app.toml")
 	appConf := config.DefaultConfig()
 	appConf.BaseConfig.MinGasPrices = ""
-	config.WriteConfigFile(appCfgTempFilePath, appConf)
+	err = config.WriteConfigFile(appCfgTempFilePath, appConf)
+	require.NoError(t, err)
 
 	// Run StartCmd.
 	cmd = server.StartCmd(nil)

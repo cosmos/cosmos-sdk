@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/hashicorp/go-metrics"
 
@@ -25,7 +26,7 @@ func NewMsgServerImpl(keeper Keeper) types.MsgServer {
 	return &msgServer{Keeper: keeper}
 }
 
-func (k msgServer) Send(goCtx context.Context, msg *types.MsgSend) (*types.MsgSendResponse, error) {
+func (k msgServer) Send(ctx context.Context, msg *types.MsgSend) (*types.MsgSendResponse, error) {
 	var (
 		from, to []byte
 		err      error
@@ -52,7 +53,6 @@ func (k msgServer) Send(goCtx context.Context, msg *types.MsgSend) (*types.MsgSe
 		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidCoins, msg.Amount.String())
 	}
 
-	ctx := sdk.UnwrapSDKContext(goCtx)
 	if err := k.IsSendEnabledCoins(ctx, msg.Amount...); err != nil {
 		return nil, err
 	}
@@ -81,7 +81,7 @@ func (k msgServer) Send(goCtx context.Context, msg *types.MsgSend) (*types.MsgSe
 	return &types.MsgSendResponse{}, nil
 }
 
-func (k msgServer) MultiSend(goCtx context.Context, msg *types.MsgMultiSend) (*types.MsgMultiSendResponse, error) {
+func (k msgServer) MultiSend(ctx context.Context, msg *types.MsgMultiSend) (*types.MsgMultiSendResponse, error) {
 	if len(msg.Inputs) == 0 {
 		return nil, types.ErrNoInputs
 	}
@@ -97,8 +97,6 @@ func (k msgServer) MultiSend(goCtx context.Context, msg *types.MsgMultiSend) (*t
 	if err := types.ValidateInputOutputs(msg.Inputs[0], msg.Outputs); err != nil {
 		return nil, err
 	}
-
-	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// NOTE: totalIn == totalOut should already have been checked
 	for _, in := range msg.Inputs {
@@ -130,7 +128,7 @@ func (k msgServer) MultiSend(goCtx context.Context, msg *types.MsgMultiSend) (*t
 	return &types.MsgMultiSendResponse{}, nil
 }
 
-func (k msgServer) UpdateParams(goCtx context.Context, req *types.MsgUpdateParams) (*types.MsgUpdateParamsResponse, error) {
+func (k msgServer) UpdateParams(ctx context.Context, req *types.MsgUpdateParams) (*types.MsgUpdateParamsResponse, error) {
 	if k.GetAuthority() != req.Authority {
 		return nil, errorsmod.Wrapf(types.ErrInvalidSigner, "invalid authority; expected %s, got %s", k.GetAuthority(), req.Authority)
 	}
@@ -139,7 +137,6 @@ func (k msgServer) UpdateParams(goCtx context.Context, req *types.MsgUpdateParam
 		return nil, err
 	}
 
-	ctx := sdk.UnwrapSDKContext(goCtx)
 	if err := k.SetParams(ctx, req.Params); err != nil {
 		return nil, err
 	}
@@ -147,7 +144,7 @@ func (k msgServer) UpdateParams(goCtx context.Context, req *types.MsgUpdateParam
 	return &types.MsgUpdateParamsResponse{}, nil
 }
 
-func (k msgServer) SetSendEnabled(goCtx context.Context, msg *types.MsgSetSendEnabled) (*types.MsgSetSendEnabledResponse, error) {
+func (k msgServer) SetSendEnabled(ctx context.Context, msg *types.MsgSetSendEnabled) (*types.MsgSetSendEnabledResponse, error) {
 	if k.GetAuthority() != msg.Authority {
 		return nil, errorsmod.Wrapf(types.ErrInvalidSigner, "invalid authority; expected %s, got %s", k.GetAuthority(), msg.Authority)
 	}
@@ -171,7 +168,6 @@ func (k msgServer) SetSendEnabled(goCtx context.Context, msg *types.MsgSetSendEn
 		}
 	}
 
-	ctx := sdk.UnwrapSDKContext(goCtx)
 	if len(msg.SendEnabled) > 0 {
 		k.SetAllSendEnabled(ctx, msg.SendEnabled)
 	}
@@ -180,4 +176,40 @@ func (k msgServer) SetSendEnabled(goCtx context.Context, msg *types.MsgSetSendEn
 	}
 
 	return &types.MsgSetSendEnabledResponse{}, nil
+}
+
+func (k msgServer) Burn(goCtx context.Context, msg *types.MsgBurn) (*types.MsgBurnResponse, error) {
+	var (
+		from []byte
+		err  error
+	)
+
+	var coins sdk.Coins
+	for _, coin := range msg.Amount {
+		coins = coins.Add(sdk.NewCoin(coin.Denom, coin.Amount))
+	}
+
+	if base, ok := k.Keeper.(BaseKeeper); ok {
+		from, err = base.ak.AddressCodec().StringToBytes(msg.FromAddress)
+		if err != nil {
+			return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid from address: %s", err)
+		}
+	} else {
+		return nil, sdkerrors.ErrInvalidRequest.Wrapf("invalid keeper type: %T", k.Keeper)
+	}
+
+	if !coins.IsValid() {
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidCoins, coins.String())
+	}
+	fmt.Println("coins", coins)
+	if !coins.IsAllPositive() {
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidCoins, coins.String())
+	}
+
+	err = k.BurnCoins(goCtx, from, coins)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.MsgBurnResponse{}, nil
 }

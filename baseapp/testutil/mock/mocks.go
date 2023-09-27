@@ -8,7 +8,6 @@ import (
 	context "context"
 	reflect "reflect"
 
-	math "cosmossdk.io/math"
 	crypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 	types "github.com/cosmos/cosmos-sdk/types"
 	gomock "github.com/golang/mock/gomock"
@@ -37,35 +36,19 @@ func (m *MockValidatorStore) EXPECT() *MockValidatorStoreMockRecorder {
 	return m.recorder
 }
 
-// BondedTokensAndPubKeyByConsAddr mocks base method.
-func (m *MockValidatorStore) BondedTokensAndPubKeyByConsAddr(arg0 context.Context, arg1 types.ConsAddress) (math.Int, crypto.PublicKey, error) {
+// GetPubKeyByConsAddr mocks base method.
+func (m *MockValidatorStore) GetPubKeyByConsAddr(arg0 context.Context, arg1 types.ConsAddress) (crypto.PublicKey, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "BondedTokensAndPubKeyByConsAddr", arg0, arg1)
-	ret0, _ := ret[0].(math.Int)
-	ret1, _ := ret[1].(crypto.PublicKey)
-	ret2, _ := ret[2].(error)
-	return ret0, ret1, ret2
-}
-
-// BondedTokensAndPubKeyByConsAddr indicates an expected call of BondedTokensAndPubKeyByConsAddr.
-func (mr *MockValidatorStoreMockRecorder) BondedTokensAndPubKeyByConsAddr(arg0, arg1 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BondedTokensAndPubKeyByConsAddr", reflect.TypeOf((*MockValidatorStore)(nil).BondedTokensAndPubKeyByConsAddr), arg0, arg1)
-}
-
-// TotalBondedTokens mocks base method.
-func (m *MockValidatorStore) TotalBondedTokens(ctx context.Context) (math.Int, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "TotalBondedTokens", ctx)
-	ret0, _ := ret[0].(math.Int)
+	ret := m.ctrl.Call(m, "GetPubKeyByConsAddr", arg0, arg1)
+	ret0, _ := ret[0].(crypto.PublicKey)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// TotalBondedTokens indicates an expected call of TotalBondedTokens.
-func (mr *MockValidatorStoreMockRecorder) TotalBondedTokens(ctx interface{}) *gomock.Call {
+// GetPubKeyByConsAddr indicates an expected call of GetPubKeyByConsAddr.
+func (mr *MockValidatorStoreMockRecorder) GetPubKeyByConsAddr(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TotalBondedTokens", reflect.TypeOf((*MockValidatorStore)(nil).TotalBondedTokens), ctx)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPubKeyByConsAddr", reflect.TypeOf((*MockValidatorStore)(nil).GetPubKeyByConsAddr), arg0, arg1)
 }
 
 // MockGasTx is a mock of GasTx interface.
@@ -156,4 +139,97 @@ func (m *MockProposalTxVerifier) ProcessProposalVerifyTx(txBz []byte) (types.Tx,
 func (mr *MockProposalTxVerifierMockRecorder) ProcessProposalVerifyTx(txBz interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ProcessProposalVerifyTx", reflect.TypeOf((*MockProposalTxVerifier)(nil).ProcessProposalVerifyTx), txBz)
+}
+
+// TxDecode mocks base method.
+func (m *MockProposalTxVerifier) TxDecode(txBz []byte) (types.Tx, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "TxDecode", txBz)
+	ret0, _ := ret[0].(types.Tx)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// TxDecode indicates an expected call of TxDecode.
+func (mr *MockProposalTxVerifierMockRecorder) TxDecode(txBz interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TxDecode", reflect.TypeOf((*MockProposalTxVerifier)(nil).TxDecode), txBz)
+}
+
+// TxEncode mocks base method.
+func (m *MockProposalTxVerifier) TxEncode(tx types.Tx) ([]byte, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "TxEncode", tx)
+	ret0, _ := ret[0].([]byte)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// TxEncode indicates an expected call of TxEncode.
+func (mr *MockProposalTxVerifierMockRecorder) TxEncode(tx interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TxEncode", reflect.TypeOf((*MockProposalTxVerifier)(nil).TxEncode), tx)
+}
+
+// MockTxSelector is a mock of TxSelector interface.
+type MockTxSelector struct {
+	ctrl     *gomock.Controller
+	recorder *MockTxSelectorMockRecorder
+}
+
+// MockTxSelectorMockRecorder is the mock recorder for MockTxSelector.
+type MockTxSelectorMockRecorder struct {
+	mock *MockTxSelector
+}
+
+// NewMockTxSelector creates a new mock instance.
+func NewMockTxSelector(ctrl *gomock.Controller) *MockTxSelector {
+	mock := &MockTxSelector{ctrl: ctrl}
+	mock.recorder = &MockTxSelectorMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockTxSelector) EXPECT() *MockTxSelectorMockRecorder {
+	return m.recorder
+}
+
+// Clear mocks base method.
+func (m *MockTxSelector) Clear() {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "Clear")
+}
+
+// Clear indicates an expected call of Clear.
+func (mr *MockTxSelectorMockRecorder) Clear() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Clear", reflect.TypeOf((*MockTxSelector)(nil).Clear))
+}
+
+// SelectTxForProposal mocks base method.
+func (m *MockTxSelector) SelectTxForProposal(maxTxBytes, maxBlockGas uint64, memTx types.Tx, txBz []byte) bool {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SelectTxForProposal", maxTxBytes, maxBlockGas, memTx, txBz)
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// SelectTxForProposal indicates an expected call of SelectTxForProposal.
+func (mr *MockTxSelectorMockRecorder) SelectTxForProposal(maxTxBytes, maxBlockGas, memTx, txBz interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SelectTxForProposal", reflect.TypeOf((*MockTxSelector)(nil).SelectTxForProposal), maxTxBytes, maxBlockGas, memTx, txBz)
+}
+
+// SelectedTxs mocks base method.
+func (m *MockTxSelector) SelectedTxs() [][]byte {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SelectedTxs")
+	ret0, _ := ret[0].([][]byte)
+	return ret0
+}
+
+// SelectedTxs indicates an expected call of SelectedTxs.
+func (mr *MockTxSelectorMockRecorder) SelectedTxs() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SelectedTxs", reflect.TypeOf((*MockTxSelector)(nil).SelectedTxs))
 }

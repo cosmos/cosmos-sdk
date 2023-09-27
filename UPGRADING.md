@@ -5,11 +5,91 @@ Note, always read the **SimApp** section for more information on application wir
 
 ## [Unreleased]
 
-### Migration to Collections
+### Params
+
+Params Migrations were removed. It is required to migrate to 0.50 prior to upgrading to .51.
+
+### SimApp
+
+In this section we describe the changes made in Cosmos SDK' SimApp.
+**These changes are directly applicable to your application wiring.**
+
+#### Client (`root.go`)
+
+The `client` package has been refactored to make use of the address codecs (address, validator address, consensus address, etc.).
+This is part of the work of abstracting the SDK from the global bech32 config.
+
+This means the address codecs must be provided in the `client.Context` in the application client (usually `root.go`).
+
+```diff
+clientCtx = clientCtx.
++ WithAddressCodec(addressCodec).
++ WithValidatorAddressCodec(validatorAddressCodec).
++ WithConsensusAddressCodec(consensusAddressCodec)
+```
+
+**When using `depinject` / `app v2`, the client codecs can be provided directly from application config.**
+
+Refer to SimApp `root_v2.go` and `root.go` for an example with an app v2 and a legacy app.
+
+### Modules
+
+#### `**all**`
+
+##### Genesis Interface
+
+All genesis interfaces have been migrated to take context.Context instead of sdk.Context.
+
+```golang
+// InitGenesis performs genesis initialization for the authz module. It returns
+// no validator updates.
+func (am AppModule) InitGenesis(ctx context.Context, cdc codec.JSONCodec, data json.RawMessage) {
+}
+
+// ExportGenesis returns the exported genesis state as raw bytes for the authz
+// module.
+func (am AppModule) ExportGenesis(ctx context.Context, cdc codec.JSONCodec) json.RawMessage {
+}
+```
+
+##### Migration to Collections
 
 Most of Cosmos SDK modules have migrated to [collections](https://docs.cosmos.network/main/packages/collections).
 Many functions have been removed due to this changes as the API can be smaller thanks to collections.
 For modules that have migrated, verify you are checking against `collections.ErrNotFound` when applicable.
+
+#### `x/distribution`
+
+The existing chains using x/distribution module needs to add the new x/protocolpool module.
+
+#### `x/protocolpool`
+
+Introducing a new `x/protocolpool` module to handle community pool funds. Its store must be added while upgrading to v0.51.x
+
+Example:
+
+```go
+func (app SimApp) RegisterUpgradeHandlers() {
+  	app.UpgradeKeeper.SetUpgradeHandler(
+ 		UpgradeName,
+ 		func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+ 			return app.ModuleManager.RunMigrations(ctx, app.Configurator(), fromVM)
+ 		},
+ 	)
+
+  // ...
+}
+```
+
+Add `x/protocolpool` store while upgrading to v0.51.x:
+
+```go
+storetypes.StoreUpgrades{
+			Added: []string{
+				protocolpooltypes.ModuleName,
+			},
+}
+```
 
 ## [v0.50.x](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.50.0-alpha.0)
 
@@ -26,7 +106,7 @@ Following an exhaustive list:
 * Package `client/grpc/tmservice` -> `client/grpc/cmtservice`
 
 Additionally, the commands and flags mentioning `tendermint` have been renamed to `comet`.
-However, these commands and flags are still supported for backward compatibility.
+These commands and flags are still supported for backward compatibility.
 
 For backward compatibility, the `**/tendermint/**` gRPC services are still supported.
 
@@ -34,6 +114,7 @@ Additionally, the SDK is starting its abstraction from CometBFT Go types thoroug
 
 * The usage of the CometBFT logger has been replaced by the Cosmos SDK logger interface (`cosmossdk.io/log.Logger`).
 * The usage of `github.com/cometbft/cometbft/libs/bytes.HexByte` has been replaced by `[]byte`.
+* Usage of an application genesis (see [genutil](#xgenutil)).
 
 #### Enable Vote Extensions
 
@@ -74,14 +155,42 @@ allows an application to define handlers for these methods via `ExtendVoteHandle
 and `VerifyVoteExtensionHandler` respectively. Please see [here](https://docs.cosmos.network/v0.50/building-apps/vote-extensions)
 for more info.
 
+#### Set PreBlocker
 
-#### Upgrade
+A `SetPreBlocker` method has been added to BaseApp. This is essential for BaseApp to run `PreBlock` which runs before begin blocker other modules, and allows to modify consensus parameters, and the changes are visible to the following state machine logics.
+Read more about other use cases [here](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-068-preblock.md).
 
-**Users using `depinject` / app v2 do not need any changes, this is abstracted for them.**
+`depinject` / app v2 users need to add `x/upgrade` in their `app_config.go` / `app.yml`:
+
 ```diff
-+ app.BaseApp.SetMigrationModuleManager(app.ModuleManager)
++ PreBlockers: []string{
++	upgradetypes.ModuleName,
++ },
+BeginBlockers: []string{
+-	upgradetypes.ModuleName,
+	minttypes.ModuleName,
+}
 ```
-BaseApp added `SetMigrationModuleManager` for apps to set their ModuleManager which implements `RunMigrationBeginBlock`. This is essential for BaseApp to run `BeginBlock` of upgrade module and inject `ConsensusParams` to context for `beginBlocker` during `beginBlock`.
+
+When using (legacy) application wiring, the following must be added to `app.go`:
+
+```diff
++app.ModuleManager.SetOrderPreBlockers(
++	upgradetypes.ModuleName,
++)
+
+app.ModuleManager.SetOrderBeginBlockers(
+-	upgradetypes.ModuleName,
+)
+
++ app.SetPreBlocker(app.PreBlocker)
+
+// ... //
+
++func (app *SimApp) PreBlocker(ctx sdk.Context, req *abci.RequestFinalizeBlock) (*sdk.ResponsePreBlock, error) {
++	return app.ModuleManager.PreBlock(ctx, req)
++}
+```
 
 #### Events
 
@@ -265,7 +374,7 @@ References to `types/store.go` which contained aliases for store types have been
 
 ##### Extract Store to a standalone module
 
-The `store` module is extracted to have a separate go.mod file which allows it be a standalone module. 
+The `store` module is extracted to have a separate go.mod file which allows it be a standalone module.
 All the store imports are now renamed to use `cosmossdk.io/store` instead of `github.com/cosmos/cosmos-sdk/store` across the SDK.
 
 ##### Streaming
@@ -282,17 +391,17 @@ if err := app.RegisterStreamingServices(appOpts, app.kvStoreKeys()); err != nil 
 
 #### Client
 
-The return type of the interface method `TxConfig.SignModeHandler()` has been changed from `x/auth/signing.SignModeHandler` to `x/tx/signing.HandlerMap`. This change is transparent to most users as the `TxConfig` interface is typically implemented by private `x/auth/tx.config` struct (as returned by `auth.NewTxConfig`) which has been updated to return the new type.  If users have implemented their own `TxConfig` interface, they will need to update their implementation to return the new type.
+The return type of the interface method `TxConfig.SignModeHandler()` has been changed from `x/auth/signing.SignModeHandler` to `x/tx/signing.HandlerMap`. This change is transparent to most users as the `TxConfig` interface is typically implemented by private `x/auth/tx.config` struct (as returned by `auth.NewTxConfig`) which has been updated to return the new type. If users have implemented their own `TxConfig` interface, they will need to update their implementation to return the new type.
 
 ### Modules
 
 #### `**all**`
 
 * [RFC 001](https://docs.cosmos.network/main/rfc/rfc-001-tx-validation) has defined a simplification of the message validation process for modules.
-The `sdk.Msg` interface has been updated to not require the implementation of the `ValidateBasic` method.
-It is now recommended to validate message directly in the message server. When the validation is performed in the message server, the `ValidateBasic` method on a message is no longer required and can be removed.
+  The `sdk.Msg` interface has been updated to not require the implementation of the `ValidateBasic` method.
+  It is now recommended to validate message directly in the message server. When the validation is performed in the message server, the `ValidateBasic` method on a message is no longer required and can be removed.
 
-* Messages no longer need to implement the `LegacyMsg` interface and implementations of `GetSignBytes` can be deleted. Because of this change, global legacy Amino codec definitions and their registration in `init()` can safely be removed as well.  
+* Messages no longer need to implement the `LegacyMsg` interface and implementations of `GetSignBytes` can be deleted. Because of this change, global legacy Amino codec definitions and their registration in `init()` can safely be removed as well.
 
 * The `AppModuleBasic` interface has been simplifed. Defining `GetTxCmd() *cobra.Command` and `GetQueryCmd() *cobra.Command` is no longer required. The module manager detects when module commands are defined. If AutoCLI is enabled, `EnhanceRootCommand()` will add the auto-generated commands to the root command, unless a custom module command is defined and register that one instead.
 
@@ -308,13 +417,75 @@ It is now recommended to validate message directly in the message server. When t
     * `x/slashing`
     * `x/upgrade`
 
+* `BeginBlock` and `EndBlock` have changed their signature, so it is important that any module implementing them are updated accordingly.
+
+```diff
+- BeginBlock(sdk.Context, abci.RequestBeginBlock)
++ BeginBlock(context.Context) error
+```
+
+```diff
+- EndBlock(sdk.Context, abci.RequestEndBlock) []abci.ValidatorUpdate
++ EndBlock(context.Context) error
+```
+
+In case a module requires to return `abci.ValidatorUpdate` from `EndBlock`, it can use the `HasABCIEndBlock` interface instead.
+
+```diff
+- EndBlock(sdk.Context, abci.RequestEndBlock) []abci.ValidatorUpdate
++ EndBlock(context.Context) ([]abci.ValidatorUpdate, error)
+```
+
+:::tip
+It is possible to ensure that a module implements the correct interfaces by using compiler assertions in your `x/{moduleName}/module.go`:
+
+```go
+var (
+	_ module.AppModuleBasic      = (*AppModule)(nil)
+	_ module.AppModuleSimulation = (*AppModule)(nil)
+	_ module.HasGenesis          = (*AppModule)(nil)
+
+	_ appmodule.AppModule        = (*AppModule)(nil)
+	_ appmodule.HasBeginBlocker  = (*AppModule)(nil)
+	_ appmodule.HasEndBlocker    = (*AppModule)(nil)
+	...
+)
+```
+
+Read more on those interfaces [here](https://docs.cosmos.network/v0.50/building-modules/module-manager#application-module-interfaces).
+
+:::
+
+* `GetSigners()` is no longer required to be implemented on `Msg` types. The SDK will automatically infer the signers from the `Signer` field on the message. The signer field is required on all messages unless using a custom signer function.
+
+To find out more please read the [signer field](../../build/building-modules/05-protobuf-annotations.md#signer) & [here](https://github.com/cosmos/cosmos-sdk/blob/7352d0bce8e72121e824297df453eb1059c28da8/docs/docs/build/building-modules/02-messages-and-queries.md#L40) documentation.
+<!-- Link to docs once redeployed -->
+
 #### `x/auth`
 
-For ante handler construction via `ante.NewAnteHandler`, the field `ante.HandlerOptions.SignModeHandler` has been updated to `x/tx/signing/HandlerMap` from `x/auth/signing/SignModeHandler`.  Callers typically fetch this value from `client.TxConfig.SignModeHandler()` (which is also changed) so this change should be transparent to most users.
+For ante handler construction via `ante.NewAnteHandler`, the field `ante.HandlerOptions.SignModeHandler` has been updated to `x/tx/signing/HandlerMap` from `x/auth/signing/SignModeHandler`. Callers typically fetch this value from `client.TxConfig.SignModeHandler()` (which is also changed) so this change should be transparent to most users.
 
 #### `x/capability`
 
-Capability has been moved to [IBC-GO](https://github.com/cosmos/ibc-go). IBC v8 will contain the necessary changes to incorporate the new module location.
+Capability has been moved to [IBC Go](https://github.com/cosmos/ibc-go). IBC v8 will contain the necessary changes to incorporate the new module location.
+
+#### `x/genutil`
+
+The Cosmos SDK has migrated from a CometBFT genesis to a application managed genesis file.
+The genesis is now fully handled by `x/genutil`. This has no consequences for running chains:
+
+* Importing a CometBFT genesis is still supported.
+* Exporting a genesis now exports the genesis as an application genesis.
+
+When needing to read an application genesis, use the following helpers from the `x/genutil/types` package:
+
+```go
+// AppGenesisFromReader reads the AppGenesis from the reader.
+func AppGenesisFromReader(reader io.Reader) (*AppGenesis, error)
+
+// AppGenesisFromFile reads the AppGenesis from the provided file.
+func AppGenesisFromFile(genFile string) (*AppGenesis, error)
+```
 
 #### `x/gov`
 
@@ -337,14 +508,14 @@ By default, the new `ProposalCancelRatio` parameter is set to `0.5` during migra
 
 ##### Extract evidence to a standalone module
 
-The `x/evidence` module is extracted to have a separate go.mod file which allows it be a standalone module. 
+The `x/evidence` module is extracted to have a separate go.mod file which allows it be a standalone module.
 All the evidence imports are now renamed to use `cosmossdk.io/x/evidence` instead of `github.com/cosmos/cosmos-sdk/x/evidence` across the SDK.
 
 #### `x/nft`
 
 ##### Extract nft to a standalone module
 
-The `x/nft` module is extracted to have a separate go.mod file which allows it to be a standalone module. 
+The `x/nft` module is extracted to have a separate go.mod file which allows it to be a standalone module.
 All the evidence imports are now renamed to use `cosmossdk.io/x/nft` instead of `github.com/cosmos/cosmos-sdk/x/nft` across the SDK.
 
 #### x/feegrant
@@ -358,7 +529,7 @@ All the feegrant imports are now renamed to use `cosmossdk.io/x/feegrant` instea
 
 ##### Extract upgrade to a standalone module
 
-The `x/upgrade` module is extracted to have a separate go.mod file which allows it to be a standalone module. 
+The `x/upgrade` module is extracted to have a separate go.mod file which allows it to be a standalone module.
 All the upgrade imports are now renamed to use `cosmossdk.io/x/upgrade` instead of `github.com/cosmos/cosmos-sdk/x/upgrade` across the SDK.
 
 ### Tooling
@@ -367,7 +538,7 @@ All the upgrade imports are now renamed to use `cosmossdk.io/x/upgrade` instead 
 
 Rosetta has moved to it's own [repo](https://github.com/cosmos/rosetta) and not imported by the Cosmos SDK SimApp by default.
 Any user who is interested on using the tool can connect it standalone to any node without the need to add it as part of the node binary.
-The rosetta tool also allows multi chain connections.  
+The rosetta tool also allows multi chain connections.
 
 ## [v0.47.x](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.47.0)
 
@@ -469,7 +640,7 @@ This allows you to remove the replace directive `replace github.com/gogo/protobu
 
 Please use the `ghcr.io/cosmos/proto-builder` image (version >= `0.11.5`) for generating protobuf files.
 
-See which buf commit for `cosmos/cosmos-sdk` to pin in your `buf.yaml` file [here](./proto/README.md).
+See which buf commit for `cosmos/cosmos-sdk` to pin in your `buf.yaml` file [here](https://github.com/cosmos/cosmos-sdk/blob/main/proto/README.md).
 
 #### Gogoproto Import Paths
 
@@ -504,7 +675,7 @@ Here are the following replacements that you need to perform on your proto files
 
 Please also check that in your own app's proto files that there are no single-word names for those two proto annotations. If so, then replace them with fully-qualified names, even though those names don't actually resolve to an actual protobuf entity.
 
-For more information, see the [encoding guide](./docs/docs/core/05-encoding.md).
+For more information, see the [encoding guide](https://github.com/cosmos/cosmos-sdk/blob/main/docs/learn/advanced/05-encoding.md).
 
 ### Transactions
 
@@ -566,8 +737,8 @@ The `gov` module has been updated to support a minimum proposal deposit at submi
 parameter called `MinInitialDepositRatio`. When multiplied by the existing `MinDeposit` parameter, it produces
 the necessary proportion of coins needed at the proposal submission time. The motivation for this change is to prevent proposal spamming.
 
-By default, the new `MinInitialDepositRatio` parameter is set to zero during migration. The value of zero signifies that this 
-feature is disabled. If chains wish to utilize the minimum proposal deposits at time of submission, the migration logic needs to be 
+By default, the new `MinInitialDepositRatio` parameter is set to zero during migration. The value of zero signifies that this
+feature is disabled. If chains wish to utilize the minimum proposal deposits at time of submission, the migration logic needs to be
 modified to set the new parameter to the desired value.
 
 ##### New `Proposal.Proposer` field
@@ -708,13 +879,11 @@ The keyring has been refactored in v0.46.
 * The keys' implementation has been refactored to be serialized as proto.
 * `keyring.NewInMemory` and `keyring.New` takes now a `codec.Codec`.
 * Take `keyring.Record` instead of `Info` as first argument in:
-        * `MkConsKeyOutput`
-        * `MkValKeyOutput`
-        * `MkAccKeyOutput`
+  _ `MkConsKeyOutput`
+  _ `MkValKeyOutput` \* `MkAccKeyOutput`
 * Rename:
-        * `SavePubKey` to `SaveOfflineKey` and remove the `algo` argument.
-        * `NewMultiInfo`, `NewLedgerInfo`  to `NewLegacyMultiInfo`, `newLegacyLedgerInfo` respectively.
-        * `NewOfflineInfo` to `newLegacyOfflineInfo` and move it to `migration_test.go`.
+  _ `SavePubKey` to `SaveOfflineKey` and remove the `algo` argument.
+  _ `NewMultiInfo`, `NewLedgerInfo` to `NewLegacyMultiInfo`, `newLegacyLedgerInfo` respectively. \* `NewOfflineInfo` to `newLegacyOfflineInfo` and move it to `migration_test.go`.
 
 ### PostHandler
 
@@ -741,7 +910,7 @@ mistakes.
 
 #### `x/params`
 
-* The `x/params` module has been depreacted in favour of each module housing and providing way to modify their parameters. Each module that has parameters that are changable during runtime have an authority, the authority can be a module or user account. The Cosmos SDK team recommends migrating modules away from using the param module. An example of how this could look like can be found [here](https://github.com/cosmos/cosmos-sdk/pull/12363). 
+* The `x/params` module has been depreacted in favour of each module housing and providing way to modify their parameters. Each module that has parameters that are changable during runtime have an authority, the authority can be a module or user account. The Cosmos SDK team recommends migrating modules away from using the param module. An example of how this could look like can be found [here](https://github.com/cosmos/cosmos-sdk/pull/12363).
 * The Param module will be maintained until April 18, 2023. At this point the module will reach end of life and be removed from the Cosmos SDK.
 
 #### `x/gov`
@@ -764,7 +933,7 @@ Instead, the SDK uses [`buf`](https://buf.build). Clients should have their own 
 
 The protos can as well be downloaded using `buf export buf.build/cosmos/cosmos-sdk:8cb30a2c4de74dc9bd8d260b1e75e176 --output <some_folder>`.
 
-Cosmos message protobufs should be extended with `cosmos.msg.v1.signer`: 
+Cosmos message protobufs should be extended with `cosmos.msg.v1.signer`:
 
 ```protobuf
 message MsgSetWithdrawAddress {

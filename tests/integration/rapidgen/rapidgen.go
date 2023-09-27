@@ -25,7 +25,6 @@ import (
 	gov_v1beta1_api "cosmossdk.io/api/cosmos/gov/v1beta1"
 	groupapi "cosmossdk.io/api/cosmos/group/v1"
 	mintapi "cosmossdk.io/api/cosmos/mint/v1beta1"
-	paramsapi "cosmossdk.io/api/cosmos/params/v1beta1"
 	slashingapi "cosmossdk.io/api/cosmos/slashing/v1beta1"
 	stakingapi "cosmossdk.io/api/cosmos/staking/v1beta1"
 	upgradeapi "cosmossdk.io/api/cosmos/upgrade/v1beta1"
@@ -45,7 +44,6 @@ import (
 	gov_v1beta1_types "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	grouptypes "github.com/cosmos/cosmos-sdk/x/group"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
-	"github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -129,9 +127,7 @@ var (
 		GenType(&disttypes.MsgWithdrawDelegatorReward{}, &distapi.MsgWithdrawDelegatorReward{}, GenOpts),
 		GenType(&disttypes.MsgWithdrawValidatorCommission{}, &distapi.MsgWithdrawValidatorCommission{}, GenOpts),
 		GenType(&disttypes.MsgSetWithdrawAddress{}, &distapi.MsgSetWithdrawAddress{}, GenOpts),
-		GenType(&disttypes.MsgFundCommunityPool{}, &distapi.MsgFundCommunityPool{}, GenOpts),
 		GenType(&disttypes.MsgUpdateParams{}, &distapi.MsgUpdateParams{}, GenOpts.WithDisallowNil()),
-		GenType(&disttypes.MsgCommunityPoolSpend{}, &distapi.MsgCommunityPoolSpend{}, GenOpts),
 		GenType(&disttypes.MsgDepositValidatorRewardsPool{}, &distapi.MsgDepositValidatorRewardsPool{}, GenOpts),
 
 		// evidence
@@ -267,15 +263,12 @@ var (
 
 		GenType(&minttypes.Params{}, &mintapi.Params{}, GenOpts),
 
-		// params
-		GenType(&proposal.ParameterChangeProposal{}, &paramsapi.ParameterChangeProposal{}, GenOpts),
-
 		GenType(&slashingtypes.Params{}, &slashingapi.Params{}, GenOpts.WithDisallowNil()),
 
 		GenType(&stakingtypes.StakeAuthorization{}, &stakingapi.StakeAuthorization{}, GenOpts),
 
-		GenType(&upgradetypes.CancelSoftwareUpgradeProposal{}, &upgradeapi.CancelSoftwareUpgradeProposal{}, GenOpts),       // nolint:staticcheck // testing legacy code path
-		GenType(&upgradetypes.SoftwareUpgradeProposal{}, &upgradeapi.SoftwareUpgradeProposal{}, GenOpts.WithDisallowNil()), // nolint:staticcheck // testing legacy code path
+		GenType(&upgradetypes.CancelSoftwareUpgradeProposal{}, &upgradeapi.CancelSoftwareUpgradeProposal{}, GenOpts),       //nolint:staticcheck // testing legacy code path
+		GenType(&upgradetypes.SoftwareUpgradeProposal{}, &upgradeapi.SoftwareUpgradeProposal{}, GenOpts.WithDisallowNil()), //nolint:staticcheck // testing legacy code path
 		GenType(&upgradetypes.Plan{}, &upgradeapi.Plan{}, GenOpts.WithDisallowNil()),
 
 		GenType(&vestingtypes.BaseVestingAccount{}, &vestingapi.BaseVestingAccount{}, GenOpts.WithDisallowNil()),

@@ -12,6 +12,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -31,7 +32,14 @@ func Test_runAddCmdBasic(t *testing.T) {
 	kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, kbHome, mockIn, cdc)
 	require.NoError(t, err)
 
-	clientCtx := client.Context{}.WithKeyringDir(kbHome).WithInput(mockIn).WithCodec(cdc)
+	clientCtx := client.Context{}.
+		WithKeyringDir(kbHome).
+		WithInput(mockIn).
+		WithCodec(cdc).
+		WithAddressCodec(addresscodec.NewBech32Codec("cosmos")).
+		WithValidatorAddressCodec(addresscodec.NewBech32Codec("cosmosvaloper")).
+		WithConsensusAddressCodec(addresscodec.NewBech32Codec("cosmosvalcons"))
+
 	ctx := context.WithValue(context.Background(), client.ClientContextKey, &clientCtx)
 
 	t.Cleanup(func() {
@@ -122,6 +130,7 @@ func Test_runAddCmdBasic(t *testing.T) {
 func Test_runAddCmdDryRun(t *testing.T) {
 	pubkey1 := `{"@type":"/cosmos.crypto.secp256k1.PubKey","key":"AtObiFVE4s+9+RX5SP8TN9r2mxpoaT4eGj9CJfK7VRzN"}`
 	pubkey2 := `{"@type":"/cosmos.crypto.secp256k1.PubKey","key":"A/se1vkqgdQ7VJQCM4mxN+L+ciGhnnJ4XYsQCRBMrdRi"}`
+	b64Pubkey := "QWhnOHhpdXBJcGZ2UlR2ak5la1ExclROUThTOW96YjdHK2RYQmFLVjl4aUo="
 	cdc := moduletestutil.MakeTestEncodingConfig().Codec
 
 	testData := []struct {
@@ -181,6 +190,24 @@ func Test_runAddCmdDryRun(t *testing.T) {
 			},
 			added: false,
 		},
+		{
+			name: "base64 pubkey account is added",
+			args: []string{
+				"testkey",
+				fmt.Sprintf("--%s=%s", flags.FlagDryRun, "false"),
+				fmt.Sprintf("--%s=%s", flagPubKeyBase64, b64Pubkey),
+			},
+			added: true,
+		},
+		{
+			name: "base64 pubkey account is not added with dry run",
+			args: []string{
+				"testkey",
+				fmt.Sprintf("--%s=%s", flags.FlagDryRun, "true"),
+				fmt.Sprintf("--%s=%s", flagPubKeyBase64, b64Pubkey),
+			},
+			added: false,
+		},
 	}
 	for _, tt := range testData {
 		tt := tt
@@ -197,7 +224,10 @@ func Test_runAddCmdDryRun(t *testing.T) {
 			clientCtx := client.Context{}.
 				WithCodec(cdc).
 				WithKeyringDir(kbHome).
-				WithKeyring(kb)
+				WithKeyring(kb).
+				WithAddressCodec(addresscodec.NewBech32Codec("cosmos")).
+				WithValidatorAddressCodec(addresscodec.NewBech32Codec("cosmosvaloper")).
+				WithConsensusAddressCodec(addresscodec.NewBech32Codec("cosmosvalcons"))
 			ctx := context.WithValue(context.Background(), client.ClientContextKey, &clientCtx)
 
 			path := sdk.GetConfig().GetFullBIP44Path()
@@ -238,7 +268,14 @@ func TestAddRecoverFileBackend(t *testing.T) {
 	mockIn := testutil.ApplyMockIODiscardOutErr(cmd)
 	kbHome := t.TempDir()
 
-	clientCtx := client.Context{}.WithKeyringDir(kbHome).WithInput(mockIn).WithCodec(cdc)
+	clientCtx := client.Context{}.
+		WithKeyringDir(kbHome).
+		WithInput(mockIn).
+		WithCodec(cdc).
+		WithAddressCodec(addresscodec.NewBech32Codec("cosmos")).
+		WithValidatorAddressCodec(addresscodec.NewBech32Codec("cosmosvaloper")).
+		WithConsensusAddressCodec(addresscodec.NewBech32Codec("cosmosvalcons"))
+
 	ctx := context.WithValue(context.Background(), client.ClientContextKey, &clientCtx)
 
 	cmd.SetArgs([]string{

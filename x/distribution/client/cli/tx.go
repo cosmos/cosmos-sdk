@@ -41,7 +41,6 @@ func NewTxCmd(valAc, ac address.Codec) *cobra.Command {
 		NewWithdrawRewardsCmd(valAc, ac),
 		NewWithdrawAllRewardsCmd(valAc, ac),
 		NewSetWithdrawAddrCmd(ac),
-		NewFundCommunityPoolCmd(ac),
 		NewDepositValidatorRewardsPoolCmd(valAc, ac),
 	)
 
@@ -218,46 +217,6 @@ $ %s tx distribution set-withdraw-addr %s1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p
 			}
 
 			msg := types.NewMsgSetWithdrawAddress(delAddr, withdrawAddr)
-
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
-		},
-	}
-
-	flags.AddTxFlagsToCmd(cmd)
-
-	return cmd
-}
-
-// NewFundCommunityPoolCmd returns a CLI command handler for creating a MsgFundCommunityPool transaction.
-func NewFundCommunityPoolCmd(ac address.Codec) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "fund-community-pool [amount]",
-		Args:  cobra.ExactArgs(1),
-		Short: "Funds the community pool with the specified amount",
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`Funds the community pool with the specified amount
-
-Example:
-$ %s tx distribution fund-community-pool 100uatom --from mykey
-`,
-				version.AppName,
-			),
-		),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientTxContext(cmd)
-			if err != nil {
-				return err
-			}
-			depositorAddr, err := ac.BytesToString(clientCtx.GetFromAddress())
-			if err != nil {
-				return err
-			}
-			amount, err := sdk.ParseCoinsNormalized(args[0])
-			if err != nil {
-				return err
-			}
-
-			msg := types.NewMsgFundCommunityPool(amount, depositorAddr)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},

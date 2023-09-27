@@ -1,36 +1,14 @@
-# Dependencies
-/node_modules
-
-# Production
-/build
-
-# Generated files
-.docusaurus
-.cache-loader
-versioned_docs
-versioned_sidebars
-docs/node_modules
-docs/docs/modules
-docs/docs/spec
-docs/docs/architecture
-docs/docs/rfc
-docs/docs/tooling/01-cosmovisor.md
-docs/docs/tooling/02-confix.md
-docs/docs/tooling/03-hubl.md
-docs/docs/core/17-autocli.md
-docs/docs/packages/01-depinject.md
-docs/docs/packages/02-collections.md
-docs/docs/packages/03-orm.md
-docs/run-node/04-rosetta.md
-docs/migrations/02-upgrading.md
-
-# Misc
-.DS_Store
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
+docs/modules
+docs/spec
+docs/architecture
+docs/rfc
+docs/tooling/01-cosmovisor.md
+docs/tooling/02-confix.md
+docs/tooling/03-hubl.md
+docs/core/17-autocli.md
+docs/packages/01-depinject.md
+docs/packages/02-collections.md
+docs/packages/03-orm.md
+docs/user/run-node/04-rosetta.md
+docs/build/migrations/02-upgrading.md
+docs/learn/advanced/17-autocli.md

@@ -13,6 +13,8 @@ import (
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
+	"cosmossdk.io/core/header"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -190,6 +192,10 @@ func SimulateFromSeed(
 			Time:            blockTime,
 			ProposerAddress: proposerAddress,
 			ChainID:         config.ChainID,
+		}).WithHeaderInfo(header.Info{
+			Height:  blockHeight,
+			Time:    blockTime,
+			ChainID: config.ChainID,
 		})
 
 		// run queued operations; ignores block size if block size is too small

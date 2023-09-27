@@ -90,7 +90,7 @@ slower than more fast moving projects.
 ### Core Services
 
 The following "core services" are defined by the core API. All valid runtime module implementations should provide
-implementations of these services to modules via both [dependency injection](./adr-057-app-wiring-1.md) and
+implementations of these services to modules via both [dependency injection](./adr-057-app-wiring.md) and
 manual wiring. The individual services described below are all bundled in a convenient `appmodule.Service`
 "bundle service" so that for simplicity modules can declare a dependency on a single service.
 
@@ -277,6 +277,17 @@ type HasGenesis interface {
 
 	// ExportGenesis exports module state to the genesis target.
 	ExportGenesis(context.Context, GenesisTarget) error
+}
+```
+
+#### Pre Blockers
+
+Modules that have functionality that runs before BeginBlock and should implement the has `HasPreBlocker` interfaces:
+
+```go
+type HasPreBlocker interface {
+  AppModule
+  PreBlock(context.Context) error
 }
 ```
 

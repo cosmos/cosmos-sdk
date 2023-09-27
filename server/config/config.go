@@ -166,7 +166,7 @@ type MempoolConfig struct {
 	// the mempool is disabled entirely, zero indicates that the mempool is
 	// unbounded in how many txs it may contain, and a positive value indicates
 	// the maximum amount of txs it may contain.
-	MaxTxs int
+	MaxTxs int `mapstructure:"max-txs"`
 }
 
 // State Streaming configuration

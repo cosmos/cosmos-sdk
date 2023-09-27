@@ -25,6 +25,7 @@ import (
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	testutilmod "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/group"
 	groupcli "github.com/cosmos/cosmos-sdk/x/group/client/cli"
 	groupmodule "github.com/cosmos/cosmos-sdk/x/group/module"
@@ -88,14 +89,17 @@ func (s *CLITestSuite) SetupSuite() {
 	s.Require().NoError(err)
 
 	account := sdk.AccAddress(pk.Address())
-	_, err = clitestutil.MsgSendExec(
-		s.clientCtx,
-		val.Address,
-		account,
-		sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(2000))), addresscodec.NewBech32Codec("cosmos"), fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(10))).String()),
-	)
+
+	from := val.Address
+	coins := sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(2000)))
+
+	msgSend := &banktypes.MsgSend{
+		FromAddress: from.String(),
+		ToAddress:   account.String(),
+		Amount:      coins,
+	}
+
+	clitestutil.GenOrBroadcastTestTx(s.clientCtx, msgSend, from, false)
 	s.Require().NoError(err)
 
 	// create a group

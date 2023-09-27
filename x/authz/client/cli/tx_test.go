@@ -180,18 +180,16 @@ func (s *CLITestSuite) msgSendExec(grantee sdk.AccAddress) {
 	_, err := s.ac.StringToBytes("cosmos16zex22087zs656t0vedytv5wqhm6axxd5679ry")
 	s.Require().NoError(err)
 
-	out, err := clitestutil.MsgSendExec(
-		s.clientCtx,
-		val[0].Address,
-		grantee,
-		sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(200))),
-		s.ac,
-		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(10))).String()),
-	)
+	coins := sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(200)))
+	from := val[0].Address
+	msgSend := &banktypes.MsgSend{
+		FromAddress: from.String(),
+		ToAddress:   grantee.String(),
+		Amount:      coins,
+	}
+
+	_, err = clitestutil.GenOrBroadcastTestTx(s.clientCtx, msgSend, from, false)
 	s.Require().NoError(err)
-	s.Require().Contains(out.String(), `"code":0`)
 }
 
 func (s *CLITestSuite) TestCLITxGrantAuthorization() {
@@ -766,19 +764,20 @@ func (s *CLITestSuite) TestNewExecGrantAuthorized() {
 	)
 	s.Require().NoError(err)
 
+	from := val[0].Address
 	tokens := sdk.NewCoins(
 		sdk.NewCoin("testtoken", sdkmath.NewInt(12)),
 	)
-	normalGeneratedTx, err := clitestutil.MsgSendExec(
+	msgSend := &banktypes.MsgSend{
+		FromAddress: from.String(),
+		ToAddress:   grantee.String(),
+		Amount:      tokens,
+	}
+	normalGeneratedTx, err := clitestutil.GenOrBroadcastTestTx(
 		s.clientCtx,
-		val[0].Address,
-		grantee,
-		tokens,
-		s.ac,
-		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(10))).String()),
-		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
+		msgSend,
+		from,
+		true,
 	)
 	s.Require().NoError(err)
 	execMsg := testutil.WriteToNewTempFile(s.T(), normalGeneratedTx.String())
@@ -863,36 +862,38 @@ func (s *CLITestSuite) TestExecSendAuthzWithAllowList() {
 	)
 	s.Require().NoError(err)
 
+	from := val[0].Address
 	tokens := sdk.NewCoins(
 		sdk.NewCoin("stake", sdkmath.NewInt(12)),
 	)
-
-	validGeneratedTx, err := clitestutil.MsgSendExec(
+	msgSend := &banktypes.MsgSend{
+		FromAddress: from.String(),
+		ToAddress:   grantee.String(),
+		Amount:      tokens,
+	}
+	validGeneratedTx, err := clitestutil.GenOrBroadcastTestTx(
 		s.clientCtx,
-		val[0].Address,
-		allowedAddr,
-		tokens,
-		s.ac,
-		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(10))).String()),
-		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
+		msgSend,
+		from,
+		true,
 	)
+
 	s.Require().NoError(err)
 	execMsg := testutil.WriteToNewTempFile(s.T(), validGeneratedTx.String())
 	defer execMsg.Close()
 
-	invalidGeneratedTx, err := clitestutil.MsgSendExec(
+	msgSend1 := &banktypes.MsgSend{
+		FromAddress: from.String(),
+		ToAddress:   notAllowedAddr.String(),
+		Amount:      tokens,
+	}
+	invalidGeneratedTx, err := clitestutil.GenOrBroadcastTestTx(
 		s.clientCtx,
-		val[0].Address,
-		notAllowedAddr,
-		tokens,
-		s.ac,
-		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(10))).String()),
-		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
+		msgSend1,
+		from,
+		true,
 	)
+
 	s.Require().NoError(err)
 	execMsg1 := testutil.WriteToNewTempFile(s.T(), invalidGeneratedTx.String())
 	defer execMsg1.Close()

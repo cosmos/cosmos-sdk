@@ -52,6 +52,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	_ "github.com/cosmos/cosmos-sdk/x/auth"           // import auth as a blank
 	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config" // import auth tx config as a blank
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -325,6 +326,19 @@ func (v Validator) GetCtx() *server.Context {
 
 func (v Validator) GetAppConfig() *srvconfig.Config {
 	return v.AppConfig
+}
+
+func (v Validator) BroadcastTx(txBytes []byte) ([]byte, error) {
+	txReq := &txtypes.BroadcastTxRequest{
+		Mode:    txtypes.BroadcastMode_BROADCAST_MODE_SYNC,
+		TxBytes: txBytes,
+	}
+	req, err := v.ClientCtx.Codec.MarshalJSON(txReq)
+	if err != nil {
+		return nil, err
+	}
+
+	return testutil.PostRequest(fmt.Sprintf("%s/cosmos/tx/v1beta1/txs", v.APIAddress), "application/json", req)
 }
 
 // CLILogger wraps a cobra.Command and provides command logging methods.

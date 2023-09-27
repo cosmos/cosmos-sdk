@@ -38,13 +38,17 @@ CommunityPoolSpend can be called by the module authority (default governance mod
 
 This message sends coins directly from the sender to the community pool.
 
+:::tip
+If you know the protocolpool module account address, you can directly use bank `send` transaction instead.
+::::
+
 ```protobuf reference
 https://github.com/cosmos/cosmos-sdk/blob/9dd34510e27376005e7e7ff3628eab9dbc8ad6dc/proto/cosmos/protocolpool/v1/tx.proto#L31-L41
 ```
 
 * The msg will fail if the amount cannot be transferred from the sender to the protocolpool module account.
 
-```go
+```go reference
 func (k Keeper) FundCommunityPool(ctx context.Context, amount sdk.Coins, sender sdk.AccAddress) error {
 	return k.bankKeeper.SendCoinsFromAccountToModule(ctx, sender, types.ModuleName, amount)
 }
@@ -67,4 +71,12 @@ The message will fail under the following conditions:
 func (k Keeper) DistributeFromFeePool(ctx context.Context, amount sdk.Coins, receiveAddr sdk.AccAddress) error {
 	return k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, receiveAddr, amount)
 }
+```
+
+## Client
+
+It takes the advantage of `AutoCLI`
+
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/9dd34510e27376005e7e7ff3628eab9dbc8ad6dc/x/protocolpool/autocli.go
 ```

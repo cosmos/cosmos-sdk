@@ -2,9 +2,9 @@ package branch
 
 import (
 	"io"
+	"slices"
 
 	"golang.org/x/exp/maps"
-	"slices"
 
 	"cosmossdk.io/store/v2"
 )
@@ -26,7 +26,7 @@ type Store struct {
 	storeKey string
 
 	// parent reflects a parent store if branched (it may be nil)
-	parent store.KVStore
+	// parent store.KVStore
 
 	// changeSet reflects the uncommitted writes to the store
 	//

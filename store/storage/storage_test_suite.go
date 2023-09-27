@@ -2,9 +2,9 @@ package storage
 
 import (
 	"fmt"
+	"slices"
 
 	"github.com/stretchr/testify/suite"
-	"slices"
 
 	"cosmossdk.io/store/v2"
 )

@@ -2,9 +2,9 @@ package branch
 
 import (
 	"io"
-	"slices"
 
 	"golang.org/x/exp/maps"
+	"slices"
 
 	"cosmossdk.io/store/v2"
 )

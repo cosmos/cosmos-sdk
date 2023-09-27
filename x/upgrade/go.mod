@@ -3,7 +3,7 @@ module cosmossdk.io/x/upgrade
 go 1.21
 
 require (
-	cosmossdk.io/api v0.7.1
+	cosmossdk.io/api v0.7.2-0.20230927090904-9dd34510e273
 	cosmossdk.io/core v0.12.0
 	cosmossdk.io/depinject v1.0.0-alpha.4
 	cosmossdk.io/errors v1.0.0
@@ -178,12 +178,4 @@ require (
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
 
-replace cosmossdk.io/api => ../../api
-
-// Fix upstream GHSA-h395-qcrw-5vmq and GHSA-3vp4-m3rf-835h vulnerabilities.
-// TODO Remove it: https://github.com/cosmos/cosmos-sdk/issues/10409
-
-replace (
-	github.com/cosmos/cosmos-sdk => ../../.
-	github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.9.1
-)
+replace github.com/cosmos/cosmos-sdk => ../../.

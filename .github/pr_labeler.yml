@@ -68,8 +68,6 @@
   - x/*/client/**/*
 "Type: ADR":
   - docs/architecture/**/*
-"C:container":
-  - container/**/*
 "C:Store":
   - store/**/*
 "C:orm":

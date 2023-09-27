@@ -26,4 +26,5 @@ use (
 	./x/feegrant
 	./x/evidence
 	./x/upgrade
+	./x/protocolpool
 )

@@ -40,6 +40,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Features
 
+* (x/protocolpool) [#17657](https://github.com/cosmos/cosmos-sdk/pull/17657) Create a new `x/protocolpool` module that is responsible for handling community pool funds. This module is split out into a new module from x/distribution.
 * (baseapp) [#16581](https://github.com/cosmos/cosmos-sdk/pull/16581) Implement Optimistic Execution as an experimental feature (not enabled by default).
 * (client/keys) [#17639](https://github.com/cosmos/cosmos-sdk/pull/17639) Allows using and saving public keys encoded as base64
 * (client) [#17513](https://github.com/cosmos/cosmos-sdk/pull/17513) Allow overwritting `client.toml`. Use `client.CreateClientConfig` in place of `client.ReadFromClientConfig` and provide a custom template and a custom config.
@@ -61,6 +62,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### API Breaking Changes
 
+* (x/distribution) [#17657](https://github.com/cosmos/cosmos-sdk/pull/17657) The `FundCommunityPool` and `DistributeFromFeePool` keeper methods are now removed from x/distribution.
+* (x/distribution) [#17657](https://github.com/cosmos/cosmos-sdk/pull/17657) The distribution module keeper now takes a new argument `PoolKeeper` in addition.
 * (app) [#17838](https://github.com/cosmos/cosmos-sdk/pull/17838) Params module was removed from simapp and all imports of the params module removed throughout the repo. 
     * The Cosmos SDK has migrated aay from using params, if you're app still uses it, then you can leave it plugged into your app
 * (x/staking) [#17778](https://github.com/cosmos/cosmos-sdk/pull/17778) Use collections for `Params`
@@ -154,9 +157,14 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### State Machine Breaking
 
+* (x/distribution) [#17657](https://github.com/cosmos/cosmos-sdk/pull/17657) Migrate community pool funds from x/distribution to x/protocolpool.
 * (x/distribution) [#17115](https://github.com/cosmos/cosmos-sdk/pull/17115) Migrate `PreviousProposer` to collections.
 * (x/upgrade) [#16244](https://github.com/cosmos/cosmos-sdk/pull/16244) upgrade module no longer stores the app version but gets and sets the app version stored in the `ParamStore` of baseapp.
 * (x/staking) [#17655](https://github.com/cosmos/cosmos-sdk/pull/17655) `HistoricalInfo` was replaced with `HistoricalRecord`, it removes the validator set and comet header and only keep what is needed for IBC. 
+
+### Client Breaking Changes
+
+* (x/distribution) [#17657](https://github.com/cosmos/cosmos-sdk/pull/17657) Deprecate `CommunityPool` and `FundCommunityPool` rpc methods. Use x/protocolpool module's rpc methods instead.
 
 ## [v0.50.0-rc.1](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.50.0-rc.1) - 2023-09-25
 

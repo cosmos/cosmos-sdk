@@ -20,7 +20,7 @@ require (
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
 	github.com/spf13/cobra v1.7.0
 	github.com/stretchr/testify v1.8.4
-	google.golang.org/genproto/googleapis/api v0.0.0-20230803162519-f966b187b2e5
+	google.golang.org/genproto/googleapis/api v0.0.0-20230822172742-b8732ec3820d
 	google.golang.org/grpc v1.58.2
 	google.golang.org/protobuf v1.31.0
 	gotest.tools/v3 v3.5.1
@@ -155,3 +155,5 @@ require (
 )
 
 replace github.com/cosmos/cosmos-sdk => ../../.
+
+replace cosmossdk.io/api => ../../api

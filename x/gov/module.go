@@ -133,18 +133,20 @@ type AppModule struct {
 	keeper        *keeper.Keeper
 	accountKeeper govtypes.AccountKeeper
 	bankKeeper    govtypes.BankKeeper
+	poolKeeper    govtypes.PoolKeeper
 }
 
 // NewAppModule creates a new AppModule object
 func NewAppModule(
 	cdc codec.Codec, keeper *keeper.Keeper,
-	ak govtypes.AccountKeeper, bk govtypes.BankKeeper,
+	ak govtypes.AccountKeeper, bk govtypes.BankKeeper, pk govtypes.PoolKeeper,
 ) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{cdc: cdc, ac: ak.AddressCodec()},
 		keeper:         keeper,
 		accountKeeper:  ak,
 		bankKeeper:     bk,
+		poolKeeper:     pk,
 	}
 }
 
@@ -170,10 +172,10 @@ type ModuleInputs struct {
 	ModuleKey        depinject.OwnModuleKey
 	MsgServiceRouter baseapp.MessageRouter
 
-	AccountKeeper      govtypes.AccountKeeper
-	BankKeeper         govtypes.BankKeeper
-	StakingKeeper      govtypes.StakingKeeper
-	DistributionKeeper govtypes.DistributionKeeper
+	AccountKeeper govtypes.AccountKeeper
+	BankKeeper    govtypes.BankKeeper
+	StakingKeeper govtypes.StakingKeeper
+	PoolKeeper    govtypes.PoolKeeper
 }
 
 type ModuleOutputs struct {
@@ -202,12 +204,12 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		in.AccountKeeper,
 		in.BankKeeper,
 		in.StakingKeeper,
-		in.DistributionKeeper,
+		in.PoolKeeper,
 		in.MsgServiceRouter,
 		defaultConfig,
 		authority.String(),
 	)
-	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper)
+	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.PoolKeeper)
 	hr := v1beta1.HandlerRoute{Handler: v1beta1.ProposalHandler, RouteKey: govtypes.RouterKey}
 
 	return ModuleOutputs{Module: m, Keeper: k, HandlerRoute: hr}

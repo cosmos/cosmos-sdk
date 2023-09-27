@@ -18,8 +18,11 @@ replace (
 	cosmossdk.io/x/evidence => ../../../x/evidence
 	cosmossdk.io/x/feegrant => ../../../x/feegrant
 	cosmossdk.io/x/nft => ../../../x/nft
+	cosmossdk.io/x/protocolpool => ../../../x/protocolpool
 	cosmossdk.io/x/upgrade => ../../../x/upgrade
 )
+
+replace cosmossdk.io/api => ../../../api
 
 require (
 	cosmossdk.io/log v1.2.1
@@ -49,6 +52,7 @@ require (
 	cosmossdk.io/x/evidence v0.0.0-20230613133644-0a778132a60f // indirect
 	cosmossdk.io/x/feegrant v0.0.0-20230613133644-0a778132a60f // indirect
 	cosmossdk.io/x/nft v0.0.0-20230613133644-0a778132a60f // indirect
+	cosmossdk.io/x/protocolpool v0.0.0-20230925135524-a1bc045b3190 // indirect
 	cosmossdk.io/x/tx v0.10.0 // indirect
 	cosmossdk.io/x/upgrade v0.0.0-20230613133644-0a778132a60f // indirect
 	filippo.io/edwards25519 v1.0.0 // indirect
@@ -198,7 +202,7 @@ require (
 	google.golang.org/api v0.134.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20230913181813-007df8e322eb // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20230803162519-f966b187b2e5 // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20230822172742-b8732ec3820d // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20230920204549-e6e6cdab5c13 // indirect
 	google.golang.org/protobuf v1.31.0 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect

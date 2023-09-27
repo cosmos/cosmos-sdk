@@ -36,7 +36,7 @@ func (s queryServer) AccountAddressByID(ctx context.Context, req *types.QueryAcc
 
 	address, err := s.k.Accounts.Indexes.Number.MatchExact(ctx, accID)
 	if err != nil {
-		return nil, status.Errorf(codes.NotFound, "account address not found with account number %d", req.Id)
+		return nil, status.Errorf(codes.NotFound, "account address not found with account number %d", accID)
 	}
 
 	return &types.QueryAccountAddressByIDResponse{AccountAddress: address.String()}, nil

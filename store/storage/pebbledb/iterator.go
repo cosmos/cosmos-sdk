@@ -3,11 +3,11 @@ package pebbledb
 import (
 	"bytes"
 	"fmt"
+	"slices"
 
 	"github.com/cockroachdb/pebble"
 
 	"cosmossdk.io/store/v2"
-	"cosmossdk.io/store/v2/storage/util"
 )
 
 var _ store.Iterator = (*iterator)(nil)
@@ -78,7 +78,7 @@ func (itr *iterator) Key() []byte {
 		panic(fmt.Sprintf("invalid PebbleDB MVCC key: %s", itr.source.Key()))
 	}
 
-	keyCopy := util.CopyBytes(key)
+	keyCopy := slices.Clone(key)
 	return keyCopy[len(itr.prefix):]
 }
 
@@ -92,7 +92,7 @@ func (itr *iterator) Value() []byte {
 		panic(fmt.Sprintf("invalid PebbleDB MVCC value: %s", itr.source.Key()))
 	}
 
-	return util.CopyBytes(val)
+	return slices.Clone(val)
 }
 
 func (itr *iterator) Next() bool {

@@ -153,9 +153,23 @@ func (db *Database) Get(storeKey string, targetVersion uint64, key []byte) ([]by
 }
 
 func (db *Database) Set(storeKey string, version uint64, key, value []byte) error {
-	_, err := db.storage.Exec(upsertStmt, storeKey, key, value, version, value)
+	tx, err := db.storage.Begin()
+	if err != nil {
+		return fmt.Errorf("failed to create SQL transaction: %w", err)
+	}
+
+	_, err = tx.Exec(latestVersionStmt, reservedStoreKey, keyLatestHeight, version, 0, version)
 	if err != nil {
 		return fmt.Errorf("failed to exec SQL statement: %w", err)
+	}
+
+	_, err = tx.Exec(upsertStmt, storeKey, key, value, version, value)
+	if err != nil {
+		return fmt.Errorf("failed to exec SQL statement: %w", err)
+	}
+
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("failed to write SQL transaction: %w", err)
 	}
 
 	return nil
@@ -174,8 +188,19 @@ func (db *Database) NewBatch(version uint64) (store.Batch, error) {
 	return NewBatch(db.storage, version)
 }
 
+func (db *Database) Prune(version uint64) error {
+	stmt := "DELETE FROM state_storage WHERE version <= ? AND store_key != ?;"
+
+	_, err := db.storage.Exec(stmt, version, reservedStoreKey)
+	if err != nil {
+		return fmt.Errorf("failed to exec SQL statement: %w", err)
+	}
+
+	return nil
+}
+
 func (db *Database) NewIterator(storeKey string, version uint64, start, end []byte) (store.Iterator, error) {
-	if (len(start) == 0) || (end != nil && len(end) == 0) {
+	if (start != nil && len(start) == 0) || (end != nil && len(end) == 0) {
 		return nil, store.ErrKeyEmpty
 	}
 

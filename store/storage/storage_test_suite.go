@@ -2,6 +2,7 @@ package storage
 
 import (
 	"fmt"
+	"slices"
 
 	"github.com/stretchr/testify/suite"
 
@@ -18,6 +19,7 @@ type StorageTestSuite struct {
 
 	NewDB          func(dir string) (store.VersionedDatabase, error)
 	EmptyBatchSize int
+	SkipTests      []string
 }
 
 func (s *StorageTestSuite) TestDatabase_Close() {
@@ -450,4 +452,108 @@ func (s *StorageTestSuite) TestDatabase_IteratorMultiVersion() {
 	}
 	s.Require().Equal(10, count)
 	s.Require().NoError(itr.Error())
+}
+
+func (s *StorageTestSuite) TestDatabase_IteratorNoDomain() {
+	db, err := s.NewDB(s.T().TempDir())
+	s.Require().NoError(err)
+	defer db.Close()
+
+	// for versions 1-50, set all 10 keys
+	for v := uint64(1); v <= 50; v++ {
+		b, err := db.NewBatch(v)
+		s.Require().NoError(err)
+
+		for i := 0; i < 10; i++ {
+			key := fmt.Sprintf("key%03d", i)
+			val := fmt.Sprintf("val%03d-%03d", i, v)
+
+			s.Require().NoError(b.Set(storeKey1, []byte(key), []byte(val)))
+		}
+
+		s.Require().NoError(b.Write())
+	}
+
+	// create an iterator over the entire domain
+	itr, err := db.NewIterator(storeKey1, 50, nil, nil)
+	s.Require().NoError(err)
+
+	defer itr.Close()
+
+	var i, count int
+	for ; itr.Valid(); itr.Next() {
+		s.Require().Equal([]byte(fmt.Sprintf("key%03d", i)), itr.Key(), string(itr.Key()))
+		s.Require().Equal([]byte(fmt.Sprintf("val%03d-%03d", i, 50)), itr.Value())
+
+		i++
+		count++
+	}
+	s.Require().Equal(10, count)
+	s.Require().NoError(itr.Error())
+}
+
+func (s *StorageTestSuite) TestDatabase_Prune() {
+	if slices.Contains(s.SkipTests, s.T().Name()) {
+		s.T().SkipNow()
+	}
+
+	db, err := s.NewDB(s.T().TempDir())
+	s.Require().NoError(err)
+	defer db.Close()
+
+	// for versions 1-50, set 10 keys
+	for v := uint64(1); v <= 50; v++ {
+		b, err := db.NewBatch(v)
+		s.Require().NoError(err)
+
+		for i := 0; i < 10; i++ {
+			key := fmt.Sprintf("key%03d", i)
+			val := fmt.Sprintf("val%03d-%03d", i, v)
+
+			s.Require().NoError(b.Set(storeKey1, []byte(key), []byte(val)))
+		}
+
+		s.Require().NoError(b.Write())
+	}
+
+	// prune the first 25 versions
+	s.Require().NoError(db.Prune(25))
+
+	latestVersion, err := db.GetLatestVersion()
+	s.Require().NoError(err)
+	s.Require().Equal(uint64(50), latestVersion)
+
+	// Ensure all keys are no longer present up to and including version 25 and
+	// all keys are present after version 25.
+	for v := uint64(1); v <= 50; v++ {
+		for i := 0; i < 10; i++ {
+			key := fmt.Sprintf("key%03d", i)
+			val := fmt.Sprintf("val%03d-%03d", i, v)
+
+			bz, err := db.Get(storeKey1, v, []byte(key))
+			s.Require().NoError(err)
+			if v <= 25 {
+				s.Require().Nil(bz)
+			} else {
+				s.Require().Equal([]byte(val), bz)
+			}
+		}
+	}
+
+	itr, err := db.NewIterator(storeKey1, 25, []byte("key000"), nil)
+	s.Require().NoError(err)
+	s.Require().False(itr.Valid())
+
+	// prune the latest version which should prune the entire dataset
+	s.Require().NoError(db.Prune(50))
+
+	for v := uint64(1); v <= 50; v++ {
+		for i := 0; i < 10; i++ {
+			key := fmt.Sprintf("key%03d", i)
+
+			bz, err := db.Get(storeKey1, v, []byte(key))
+			s.Require().NoError(err)
+			s.Require().Nil(bz)
+		}
+	}
 }

@@ -62,7 +62,7 @@ type KVStore interface {
 	Delete(key []byte)
 
 	// Reset resets the store, which is implementation dependent.
-	Reset()
+	Reset() error
 
 	BranchWrapper
 
@@ -109,8 +109,8 @@ type BranchWrapper interface {
 	// BranchWithTrace branches a store with tracing enabled.
 	BranchWithTrace(w io.Writer, tc TraceContext) BranchedKVStore
 
-	// GetChangeSet returns the ChangeSet, if any, for the branched state. This
+	// GetChangeset returns the ChangeSet, if any, for the branched state. This
 	// should contain all writes that are marked to be flushed and committed during
 	// Commit().
-	GetChangeSet() *ChangeSet
+	GetChangeset() *Changeset
 }

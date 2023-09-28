@@ -212,7 +212,7 @@ func (s *Store) Commit() ([]byte, error) {
 		s.logger.Debug("commit header and version mismatch", "header_height", s.commitHeader.GetHeight(), "version", version)
 	}
 
-	changeSet := s.rootKVStore.GetChangeSet()
+	changeSet := s.rootKVStore.GetChangeset()
 
 	// commit SS
 	if err := s.commitSS(version, changeSet); err != nil {
@@ -239,7 +239,7 @@ func (s *Store) Commit() ([]byte, error) {
 // of the SC tree. Finally, we construct a *CommitInfo and return the hash.
 // Note, this should only be called once per block!
 func (s *Store) writeSC() error {
-	changeSet := s.rootKVStore.GetChangeSet()
+	changeSet := s.rootKVStore.GetChangeset()
 
 	if err := s.stateCommitment.WriteBatch(changeSet); err != nil {
 		return fmt.Errorf("failed to write batch to SC store: %w", err)
@@ -307,7 +307,7 @@ func (s *Store) commitSC() error {
 //
 // TODO: Commit writes to SS backend asynchronously.
 // Ref: https://github.com/cosmos/cosmos-sdk/issues/17314
-func (s *Store) commitSS(version uint64, cs *store.ChangeSet) error {
+func (s *Store) commitSS(version uint64, cs *store.Changeset) error {
 	batch, err := s.stateStore.NewBatch(version)
 	if err != nil {
 		return err

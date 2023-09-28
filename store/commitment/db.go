@@ -24,7 +24,7 @@ func NewDatabase(tree store.Tree) *Database {
 }
 
 // WriteBatch writes a batch of key-value pairs to the database.
-func (db *Database) WriteBatch(cs *store.ChangeSet) error {
+func (db *Database) WriteBatch(cs *store.Changeset) error {
 	db.mu.Lock()
 	defer db.mu.Unlock()
 

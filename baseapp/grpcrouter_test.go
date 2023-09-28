@@ -5,11 +5,10 @@ import (
 	"sync"
 	"testing"
 
-	dbm "github.com/cosmos/cosmos-db"
-	"github.com/stretchr/testify/require"
-
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
+	dbm "github.com/cosmos/cosmos-db"
+	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec/types"
@@ -51,6 +50,26 @@ func TestGRPCQueryRouter(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, res3)
 	require.Equal(t, spot, res3.HasAnimal.Animal.GetCachedValue())
+
+	// test getting the handler by name
+	handlers := qr.HandlersByRequestName("testpb.EchoRequest")
+	require.NotNil(t, handlers)
+	require.Len(t, handlers, 1)
+	handler := handlers[0]
+	// sending a protov2 message should work, and return a protov2 message
+	resp, err := handler(helper.Ctx, &testdata_pulsar.EchoRequest{Message: "hello"})
+	require.Nil(t, err)
+	require.NotNil(t, resp)
+	protov2Resp, ok := resp.(*testdata_pulsar.EchoResponse)
+	require.True(t, ok)
+	require.Equal(t, "hello", protov2Resp.Message)
+	// also sending a protov1 message should work, and return a gogoproto message
+	resp, err = handler(helper.Ctx, &testdata.EchoRequest{Message: "hello"})
+	require.Nil(t, err)
+	require.NotNil(t, resp)
+	gogoprotoResp, ok := resp.(*testdata.EchoResponse)
+	require.True(t, ok)
+	require.Equal(t, "hello", gogoprotoResp.Message)
 }
 
 func TestRegisterQueryServiceTwice(t *testing.T) {

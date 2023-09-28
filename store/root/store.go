@@ -231,7 +231,7 @@ func (s *Store) Commit() ([]byte, error) {
 	s.rootKVStore.Reset()
 	s.workingHash = nil
 
-	return s.WorkingHash()
+	return s.lastCommitInfo.Hash(), nil
 }
 
 // writeSC gets the current changeset from the rootKVStore and writes that as a

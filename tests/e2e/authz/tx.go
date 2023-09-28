@@ -157,12 +157,10 @@ func (s *E2ETestSuite) msgSendExec(grantee sdk.AccAddress) {
 	}
 
 	out, err := clitestutil.SubmitTestTx(
-		val,
+		val.ClientCtx,
 		msgSend,
 		from,
-		clitestutil.SubmitTestTxConfig{
-			GenOnly: false,
-		},
+		clitestutil.TestTxConfig{},
 	)
 
 	s.Require().NoError(err)
@@ -515,10 +513,10 @@ func (s *E2ETestSuite) TestNewExecGrantAuthorized() {
 		Amount:      tokens,
 	}
 	normalGeneratedTx, err := clitestutil.SubmitTestTx(
-		val,
+		val.ClientCtx,
 		msgSend,
 		from,
-		clitestutil.SubmitTestTxConfig{
+		clitestutil.TestTxConfig{
 			GenOnly: true,
 		},
 	)
@@ -634,10 +632,10 @@ func (s *E2ETestSuite) TestExecSendAuthzWithAllowList() {
 	}
 
 	validGeneratedTx, err := clitestutil.SubmitTestTx(
-		val,
+		val.ClientCtx,
 		msgSend,
 		from,
-		clitestutil.SubmitTestTxConfig{
+		clitestutil.TestTxConfig{
 			GenOnly: true,
 		},
 	)
@@ -651,10 +649,10 @@ func (s *E2ETestSuite) TestExecSendAuthzWithAllowList() {
 		Amount:      tokens,
 	}
 	invalidGeneratedTx, err := clitestutil.SubmitTestTx(
-		val,
+		val.ClientCtx,
 		msgSend1,
 		from,
-		clitestutil.SubmitTestTxConfig{
+		clitestutil.TestTxConfig{
 			GenOnly: true,
 		},
 	)

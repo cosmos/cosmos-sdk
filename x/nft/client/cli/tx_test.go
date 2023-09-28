@@ -27,6 +27,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	testutilmod "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 const (
@@ -87,6 +88,7 @@ func TestCLITestSuite(t *testing.T) {
 
 func (s *CLITestSuite) SetupSuite() {
 	s.encCfg = testutilmod.MakeTestEncodingConfig(nftmodule.AppModuleBasic{})
+	banktypes.RegisterInterfaces(s.encCfg.InterfaceRegistry)
 	s.kr = keyring.NewInMemory(s.encCfg.Codec)
 	s.baseCtx = client.Context{}.
 		WithKeyring(s.kr).
@@ -227,16 +229,21 @@ func (s *CLITestSuite) initAccount() {
 	keyinfo, err := ctx.Keyring.Key(OwnerName)
 	s.Require().NoError(err)
 
-	args := []string{
-		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(10))).String()),
-	}
-
 	s.owner, err = keyinfo.GetAddress()
 	s.Require().NoError(err)
 
 	amount := sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(200)))
-	_, err = clitestutil.MsgSendExec(ctx, accounts[0].Address, s.owner, amount, s.ac, args...)
+	msgSend := &banktypes.MsgSend{
+		FromAddress: accounts[0].Address.String(),
+		ToAddress:   s.owner.String(),
+		Amount:      amount,
+	}
+
+	_, err = clitestutil.SubmitTestTx(
+		s.clientCtx,
+		msgSend,
+		accounts[0].Address,
+		clitestutil.TestTxConfig{GenOnly: true},
+	)
 	s.Require().NoError(err)
 }

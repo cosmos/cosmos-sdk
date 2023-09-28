@@ -15,9 +15,7 @@ import (
 	"cosmossdk.io/simapp"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/flags"
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
-	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
@@ -48,7 +46,7 @@ type E2ETestSuite struct {
 
 	txHeight    int64
 	queryClient tx.ServiceClient
-	txRes       sdk.TxResponse
+	goodTxHash  string
 }
 
 func (s *E2ETestSuite) SetupSuite() {
@@ -67,48 +65,53 @@ func (s *E2ETestSuite) SetupSuite() {
 
 	s.queryClient = tx.NewServiceClient(val.ClientCtx)
 
+	msgSend := &banktypes.MsgSend{
+		FromAddress: val.Address.String(),
+		ToAddress:   val.Address.String(),
+		Amount:      sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))),
+	}
+
 	// Create a new MsgSend tx from val to itself.
-	out, err := cli.MsgSendExec(
+	out, err := cli.SubmitTestTx(
 		val.ClientCtx,
+		msgSend,
 		val.Address,
-		val.Address,
-		sdk.NewCoins(
-			sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10)),
-		),
-		addresscodec.NewBech32Codec("cosmos"),
-		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
-		fmt.Sprintf("--gas=%d", flags.DefaultGasLimit),
-		fmt.Sprintf("--%s=foobar", flags.FlagNote),
+		cli.TestTxConfig{
+			Memo: "foobar",
+		},
 	)
-	s.Require().NoError(err)
-	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &s.txRes))
-	s.Require().Equal(uint32(0), s.txRes.Code, s.txRes)
 
-	out, err = cli.MsgSendExec(
+	s.Require().NoError(err)
+
+	var txRes tx.BroadcastTxResponse
+	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txRes))
+	s.Require().Equal(uint32(0), txRes.TxResponse.Code, txRes)
+	s.goodTxHash = txRes.TxResponse.TxHash
+
+	msgSend1 := &banktypes.MsgSend{
+		FromAddress: val.Address.String(),
+		ToAddress:   val.Address.String(),
+		Amount:      sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(1))),
+	}
+
+	out1, err := cli.SubmitTestTx(
 		val.ClientCtx,
+		msgSend1,
 		val.Address,
-		val.Address,
-		sdk.NewCoins(
-			sdk.NewCoin(s.cfg.BondDenom, math.NewInt(1)),
-		),
-		addresscodec.NewBech32Codec("cosmos"),
-		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s", flags.FlagOffline),
-		fmt.Sprintf("--%s=0", flags.FlagAccountNumber),
-		fmt.Sprintf("--%s=2", flags.FlagSequence),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
-		fmt.Sprintf("--gas=%d", flags.DefaultGasLimit),
-		fmt.Sprintf("--%s=foobar", flags.FlagNote),
+		cli.TestTxConfig{
+			Offline: true,
+			AccNum:  0,
+			Seq:     2,
+			Memo:    "foobar",
+		},
 	)
-	s.Require().NoError(err)
-	var tr sdk.TxResponse
-	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &tr))
-	s.Require().Equal(uint32(0), tr.Code)
 
-	resp, err := cli.GetTxResponse(s.network, val.ClientCtx, tr.TxHash)
+	s.Require().NoError(err)
+	var tr tx.BroadcastTxResponse
+	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out1.Bytes(), &tr))
+	s.Require().Equal(uint32(0), tr.TxResponse.Code)
+
+	resp, err := cli.GetTxResponse(s.network, val.ClientCtx, tr.TxResponse.TxHash)
 	s.Require().NoError(err)
 	s.txHeight = resp.Height
 }
@@ -419,7 +422,7 @@ func (s *E2ETestSuite) TestGetTx_GRPC() {
 		{"nil request", nil, true, "request cannot be nil"},
 		{"empty request", &tx.GetTxRequest{}, true, "tx hash cannot be empty"},
 		{"request with dummy hash", &tx.GetTxRequest{Hash: "deadbeef"}, true, "code = NotFound desc = tx not found: deadbeef"},
-		{"good request", &tx.GetTxRequest{Hash: s.txRes.TxHash}, false, ""},
+		{"good request", &tx.GetTxRequest{Hash: s.goodTxHash}, false, ""},
 	}
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
@@ -456,7 +459,7 @@ func (s *E2ETestSuite) TestGetTx_GRPCGateway() {
 		},
 		{
 			"good hash",
-			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs/%s", val.APIAddress, s.txRes.TxHash),
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs/%s", val.APIAddress, s.goodTxHash),
 			false, "",
 		},
 	}
@@ -594,18 +597,20 @@ func (s *E2ETestSuite) TestSimMultiSigTx() {
 	s.Require().NoError(err)
 
 	// Send coins from validator to multisig.
-	coins := sdk.NewInt64Coin(s.cfg.BondDenom, 15)
-	_, err = cli.MsgSendExec(
+	coin := sdk.NewInt64Coin(s.cfg.BondDenom, 15)
+	msgSend := &banktypes.MsgSend{
+		FromAddress: val1.Address.String(),
+		ToAddress:   addr.String(),
+		Amount:      sdk.NewCoins(coin),
+	}
+
+	_, err = cli.SubmitTestTx(
 		val1.ClientCtx,
+		msgSend,
 		val1.Address,
-		addr,
-		sdk.NewCoins(coins),
-		addresscodec.NewBech32Codec("cosmos"),
-		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
-		fmt.Sprintf("--gas=%d", flags.DefaultGasLimit),
+		cli.TestTxConfig{},
 	)
+
 	s.Require().NoError(err)
 
 	height, err = s.network.LatestHeight()
@@ -613,21 +618,24 @@ func (s *E2ETestSuite) TestSimMultiSigTx() {
 	_, err = s.network.WaitForHeight(height + 1)
 	s.Require().NoError(err)
 
-	// Generate multisig transaction.
-	multiGeneratedTx, err := cli.MsgSendExec(
-		val1.ClientCtx,
-		addr,
-		val1.Address,
-		sdk.NewCoins(
+	msgSend1 := &banktypes.MsgSend{
+		FromAddress: addr.String(),
+		ToAddress:   val1.Address.String(),
+		Amount: sdk.NewCoins(
 			sdk.NewInt64Coin(s.cfg.BondDenom, 5),
 		),
-		addresscodec.NewBech32Codec("cosmos"),
-		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
-		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
-		fmt.Sprintf("--%s=foobar", flags.FlagNote),
+	}
+	// Generate multisig transaction.
+	multiGeneratedTx, err := cli.SubmitTestTx(
+		val1.ClientCtx,
+		msgSend1,
+		val1.Address,
+		cli.TestTxConfig{
+			GenOnly: true,
+			Memo:    "foobar",
+		},
 	)
+
 	s.Require().NoError(err)
 
 	// Save tx to file

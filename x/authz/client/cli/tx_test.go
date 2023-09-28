@@ -61,6 +61,7 @@ func TestCLITestSuite(t *testing.T) {
 func (s *CLITestSuite) SetupSuite() {
 	s.encCfg = testutilmod.MakeTestEncodingConfig(gov.AppModuleBasic{}, bank.AppModuleBasic{})
 	s.kr = keyring.NewInMemory(s.encCfg.Codec)
+
 	s.baseCtx = client.Context{}.
 		WithKeyring(s.kr).
 		WithTxConfig(s.encCfg.TxConfig).
@@ -188,7 +189,7 @@ func (s *CLITestSuite) msgSendExec(grantee sdk.AccAddress) {
 		Amount:      coins,
 	}
 
-	_, err = clitestutil.GenOrBroadcastTestTx(s.clientCtx, msgSend, from, false)
+	_, err = clitestutil.SubmitTestTx(s.clientCtx, msgSend, from, clitestutil.TestTxConfig{})
 	s.Require().NoError(err)
 }
 
@@ -773,11 +774,11 @@ func (s *CLITestSuite) TestNewExecGrantAuthorized() {
 		ToAddress:   grantee.String(),
 		Amount:      tokens,
 	}
-	normalGeneratedTx, err := clitestutil.GenOrBroadcastTestTx(
+	normalGeneratedTx, err := clitestutil.SubmitTestTx(
 		s.clientCtx,
 		msgSend,
 		from,
-		true,
+		clitestutil.TestTxConfig{GenOnly: true},
 	)
 	s.Require().NoError(err)
 	execMsg := testutil.WriteToNewTempFile(s.T(), normalGeneratedTx.String())
@@ -871,11 +872,11 @@ func (s *CLITestSuite) TestExecSendAuthzWithAllowList() {
 		ToAddress:   grantee.String(),
 		Amount:      tokens,
 	}
-	validGeneratedTx, err := clitestutil.GenOrBroadcastTestTx(
+	validGeneratedTx, err := clitestutil.SubmitTestTx(
 		s.clientCtx,
 		msgSend,
 		from,
-		true,
+		clitestutil.TestTxConfig{GenOnly: true},
 	)
 
 	s.Require().NoError(err)
@@ -887,11 +888,11 @@ func (s *CLITestSuite) TestExecSendAuthzWithAllowList() {
 		ToAddress:   notAllowedAddr.String(),
 		Amount:      tokens,
 	}
-	invalidGeneratedTx, err := clitestutil.GenOrBroadcastTestTx(
+	invalidGeneratedTx, err := clitestutil.SubmitTestTx(
 		s.clientCtx,
 		msgSend1,
 		from,
-		true,
+		clitestutil.TestTxConfig{GenOnly: true},
 	)
 
 	s.Require().NoError(err)

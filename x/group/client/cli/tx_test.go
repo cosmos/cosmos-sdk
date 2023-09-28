@@ -99,7 +99,7 @@ func (s *CLITestSuite) SetupSuite() {
 		Amount:      coins,
 	}
 
-	clitestutil.GenOrBroadcastTestTx(s.clientCtx, msgSend, from, false)
+	_, err = clitestutil.SubmitTestTx(s.clientCtx, msgSend, from, clitestutil.TestTxConfig{})
 	s.Require().NoError(err)
 
 	// create a group

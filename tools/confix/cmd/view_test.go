@@ -8,10 +8,10 @@ import (
 
 	"gotest.tools/v3/assert"
 
+	"cosmossdk.io/tools/confix/cmd"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
-
-	"cosmossdk.io/tools/confix/cmd"
 )
 
 func TestViewCmd(t *testing.T) {

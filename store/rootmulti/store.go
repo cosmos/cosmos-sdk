@@ -1182,7 +1182,7 @@ func commitStores(version int64, storeMap map[types.StoreKey]types.CommitKVStore
 		}
 
 		storeType := store.GetStoreType()
-		if storeType == types.StoreTypeTransient || storeType == types.StoreTypeMemory {
+		if storeType == types.StoreTypeTransient || storeType == types.StoreTypeMemory || storeType == types.StoreTypeDB {
 			continue
 		}
 

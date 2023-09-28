@@ -585,8 +585,17 @@ func (app *BaseApp) ProcessProposal(req *abci.RequestProcessProposal) (resp *abc
 func (app *BaseApp) ExtendVote(_ context.Context, req *abci.RequestExtendVote) (resp *abci.ResponseExtendVote, err error) {
 	// Always reset state given that ExtendVote and VerifyVoteExtension can timeout
 	// and be called again in a subsequent round.
-	ms := app.cms.CacheMultiStore()
-	ctx := sdk.NewContext(ms, false, app.logger).WithStreamingManager(app.streamingManager).WithChainID(app.chainID).WithBlockHeight(req.Height)
+	var ctx sdk.Context
+
+	// If we're extending the vote for the initial height, we need to use the
+	// finalizeBlockState context, otherwise we don't get the uncommitted data
+	// from InitChain.
+	if req.Height == app.initialHeight {
+		ctx, _ = app.finalizeBlockState.ctx.CacheContext()
+	} else {
+		ms := app.cms.CacheMultiStore()
+		ctx = sdk.NewContext(ms, false, app.logger).WithStreamingManager(app.streamingManager).WithChainID(app.chainID).WithBlockHeight(req.Height)
+	}
 
 	if app.extendVote == nil {
 		return nil, errors.New("application ExtendVote handler not set")
@@ -596,6 +605,10 @@ func (app *BaseApp) ExtendVote(_ context.Context, req *abci.RequestExtendVote) (
 	// error.
 	cp := app.GetConsensusParams(ctx)
 
+	// Note: In this case, we do want to extend vote if the height is equal or
+	// greater than VoteExtensionsEnableHeight. This defers from the check done
+	// in ValidateVoteExtensions and PrepareProposal in which we'll check for
+	// vote extensions on VoteExtensionsEnableHeight+1.
 	extsEnabled := cp.Abci != nil && req.Height >= cp.Abci.VoteExtensionsEnableHeight && cp.Abci.VoteExtensionsEnableHeight != 0
 	if !extsEnabled {
 		return nil, fmt.Errorf("vote extensions are not enabled; unexpected call to ExtendVote at height %d", req.Height)
@@ -646,13 +659,24 @@ func (app *BaseApp) VerifyVoteExtension(req *abci.RequestVerifyVoteExtension) (r
 		return nil, errors.New("application VerifyVoteExtension handler not set")
 	}
 
-	ms := app.cms.CacheMultiStore()
-	ctx := sdk.NewContext(ms, false, app.logger).WithStreamingManager(app.streamingManager).WithChainID(app.chainID).WithBlockHeight(req.Height)
+	var ctx sdk.Context
+
+	// If we're verifying the vote for the initial height, we need to use the
+	// finalizeBlockState context, otherwise we don't get the uncommitted data
+	// from InitChain.
+	if req.Height == app.initialHeight {
+		ctx, _ = app.finalizeBlockState.ctx.CacheContext()
+	} else {
+		ms := app.cms.CacheMultiStore()
+		ctx = sdk.NewContext(ms, false, app.logger).WithStreamingManager(app.streamingManager).WithChainID(app.chainID).WithBlockHeight(req.Height)
+	}
 
 	// If vote extensions are not enabled, as a safety precaution, we return an
 	// error.
 	cp := app.GetConsensusParams(ctx)
 
+	// Note: we verify votes extensions on VoteExtensionsEnableHeight+1. Check
+	// comment in ExtendVote and ValidateVoteExtensions for more details.
 	extsEnabled := cp.Abci != nil && req.Height >= cp.Abci.VoteExtensionsEnableHeight && cp.Abci.VoteExtensionsEnableHeight != 0
 	if !extsEnabled {
 		return nil, fmt.Errorf("vote extensions are not enabled; unexpected call to VerifyVoteExtension at height %d", req.Height)

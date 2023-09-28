@@ -118,9 +118,9 @@ func NewE2EBenchmarkSuite(tb testing.TB) *E2EBenchmarkSuite {
 
 	assert.NilError(tb, err)
 
-	var txRes tx.BroadcastTxResponse
+	var txRes sdk.TxResponse
 	assert.NilError(tb, val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txRes))
-	assert.Equal(tb, uint32(0), txRes.TxResponse.Code, txRes)
+	assert.Equal(tb, uint32(0), txRes.Code, txRes)
 
 	msgSend1 := &banktypes.MsgSend{
 		FromAddress: val.Address.String(),
@@ -141,11 +141,11 @@ func NewE2EBenchmarkSuite(tb testing.TB) *E2EBenchmarkSuite {
 	)
 
 	assert.NilError(tb, err)
-	var tr tx.BroadcastTxResponse
+	var tr sdk.TxResponse
 	assert.NilError(tb, val.ClientCtx.Codec.UnmarshalJSON(out1.Bytes(), &tr))
-	assert.Equal(tb, uint32(0), tr.TxResponse.Code)
+	assert.Equal(tb, uint32(0), tr.Code)
 
-	resp, err := cli.GetTxResponse(s.network, val.ClientCtx, tr.TxResponse.TxHash)
+	resp, err := cli.GetTxResponse(s.network, val.ClientCtx, tr.TxHash)
 	assert.NilError(tb, err)
 	s.txHeight = resp.Height
 	return s

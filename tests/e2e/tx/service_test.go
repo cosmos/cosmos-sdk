@@ -83,10 +83,10 @@ func (s *E2ETestSuite) SetupSuite() {
 
 	s.Require().NoError(err)
 
-	var txRes tx.BroadcastTxResponse
+	var txRes sdk.TxResponse
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txRes))
-	s.Require().Equal(uint32(0), txRes.TxResponse.Code, txRes)
-	s.goodTxHash = txRes.TxResponse.TxHash
+	s.Require().Equal(uint32(0), txRes.Code, txRes)
+	s.goodTxHash = txRes.TxHash
 
 	msgSend1 := &banktypes.MsgSend{
 		FromAddress: val.Address.String(),
@@ -107,11 +107,11 @@ func (s *E2ETestSuite) SetupSuite() {
 	)
 
 	s.Require().NoError(err)
-	var tr tx.BroadcastTxResponse
+	var tr sdk.TxResponse
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out1.Bytes(), &tr))
-	s.Require().Equal(uint32(0), tr.TxResponse.Code)
+	s.Require().Equal(uint32(0), tr.Code)
 
-	resp, err := cli.GetTxResponse(s.network, val.ClientCtx, tr.TxResponse.TxHash)
+	resp, err := cli.GetTxResponse(s.network, val.ClientCtx, tr.TxHash)
 	s.Require().NoError(err)
 	s.txHeight = resp.Height
 }

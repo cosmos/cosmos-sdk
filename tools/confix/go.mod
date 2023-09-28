@@ -3,16 +3,10 @@ module cosmossdk.io/tools/confix
 go 1.21
 
 require (
-<<<<<<< HEAD
 	github.com/cosmos/cosmos-sdk v0.50.0-rc.1
 	github.com/creachadair/atomicfile v0.3.1
 	github.com/creachadair/tomledit v0.0.24
-=======
-	github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230614103911-b3da8bb4e801
-	github.com/creachadair/atomicfile v0.3.2
-	github.com/creachadair/tomledit v0.0.25
 	github.com/pelletier/go-toml/v2 v2.0.9
->>>>>>> f2d5aeb98 (feat(confix): add `view` command (#17904))
 	github.com/spf13/cobra v1.7.0
 	github.com/spf13/viper v1.16.0
 	golang.org/x/exp v0.0.0-20230817173708-d852ddb80c63
@@ -117,12 +111,7 @@ require (
 	github.com/mtibben/percent v0.2.1 // indirect
 	github.com/oasisprotocol/curve25519-voi v0.0.0-20230110094441-db37f07504ce // indirect
 	github.com/oklog/run v1.1.0 // indirect
-<<<<<<< HEAD
-	github.com/pelletier/go-toml/v2 v2.0.8 // indirect
 	github.com/petermattis/goid v0.0.0-20230518223814-80aa455d8761 // indirect
-=======
-	github.com/petermattis/goid v0.0.0-20230808133559-b036b712a89b // indirect
->>>>>>> f2d5aeb98 (feat(confix): add `view` command (#17904))
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/prometheus/client_golang v1.16.0 // indirect

@@ -1790,16 +1790,15 @@ func TestABCI_PrepareProposal_VoteExtensions(t *testing.T) {
 	// set up baseapp
 	prepareOpt := func(bapp *baseapp.BaseApp) {
 		bapp.SetPrepareProposal(func(ctx sdk.Context, req *abci.RequestPrepareProposal) (*abci.ResponsePrepareProposal, error) {
+			err := baseapp.ValidateVoteExtensions(ctx, valStore, req.Height, bapp.ChainID(), req.LocalLastCommit)
+			if err != nil {
+				return nil, err
+			}
+
 			cp := ctx.ConsensusParams()
 			extsEnabled := cp.Abci != nil && req.Height >= cp.Abci.VoteExtensionsEnableHeight && cp.Abci.VoteExtensionsEnableHeight != 0
 			if extsEnabled {
-				err := baseapp.ValidateVoteExtensions(ctx, valStore, req.Height, bapp.ChainID(), req.LocalLastCommit)
-				if err != nil {
-					return nil, err
-				}
-
 				req.Txs = append(req.Txs, []byte("some-tx-that-does-something-from-votes"))
-
 			}
 			return &abci.ResponsePrepareProposal{Txs: req.Txs}, nil
 		})
@@ -2053,6 +2052,19 @@ func TestBaseApp_PreBlocker(t *testing.T) {
 
 // TestBaseApp_VoteExtensions tests vote extensions using a price as an example.
 func TestBaseApp_VoteExtensions(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	valStore := mock.NewMockValidatorStore(ctrl)
+
+	// for brevity and simplicity, all validators have the same key
+	privKey := secp256k1.GenPrivKey()
+	pubKey := privKey.PubKey()
+	tmPk := cmtprotocrypto.PublicKey{
+		Sum: &cmtprotocrypto.PublicKey_Secp256K1{
+			Secp256K1: pubKey.Bytes(),
+		},
+	}
+	valStore.EXPECT().GetPubKeyByConsAddr(gomock.Any(), gomock.Any()).Return(tmPk, nil).AnyTimes()
+
 	baseappOpts := func(app *baseapp.BaseApp) {
 		app.SetExtendVoteHandler(func(sdk.Context, *abci.RequestExtendVote) (*abci.ResponseExtendVote, error) {
 			// here we would have a process to get the price from an external source
@@ -2075,7 +2087,9 @@ func TestBaseApp_VoteExtensions(t *testing.T) {
 
 		app.SetPrepareProposal(func(ctx sdk.Context, req *abci.RequestPrepareProposal) (*abci.ResponsePrepareProposal, error) {
 			txs := [][]byte{}
-
+			if err := baseapp.ValidateVoteExtensions(ctx, valStore, req.Height, app.ChainID(), req.LocalLastCommit); err != nil {
+				return nil, err
+			}
 			// add all VE as txs (in a real scenario we would need to check signatures too)
 			for _, v := range req.LocalLastCommit.Votes {
 				if len(v.VoteExtension) == 8 {
@@ -2181,14 +2195,23 @@ func TestBaseApp_VoteExtensions(t *testing.T) {
 		},
 	}
 
-	// add all VEs to the local last commit
+	// add all VEs to the local last commit, which will make PrepareProposal fail
+	// because it's not expecting to receive vote extensions when height == VoteExtensionsEnableHeight
 	for _, ve := range allVEs {
-		prepPropReq.LocalLastCommit.Votes = append(prepPropReq.LocalLastCommit.Votes, abci.ExtendedVoteInfo{VoteExtension: ve})
+		prepPropReq.LocalLastCommit.Votes = append(prepPropReq.LocalLastCommit.Votes, abci.ExtendedVoteInfo{
+			VoteExtension:      ve,
+			BlockIdFlag:        cmtproto.BlockIDFlagCommit,
+			ExtensionSignature: []byte{}, // doesn't matter, it's just to make the next PrepareProposal fail
+		})
 	}
-
 	resp, err := suite.baseApp.PrepareProposal(prepPropReq)
+	require.Len(t, resp.Txs, 0) // this is actually a failure, but we don't want to halt the chain
+	require.NoError(t, err)     // we don't error here
+
+	prepPropReq.LocalLastCommit.Votes = []abci.ExtendedVoteInfo{} // reset votes
+	resp, err = suite.baseApp.PrepareProposal(prepPropReq)
 	require.NoError(t, err)
-	require.Len(t, resp.Txs, 10)
+	require.Len(t, resp.Txs, 0)
 
 	procPropRes, err := suite.baseApp.ProcessProposal(&abci.RequestProcessProposal{Height: 1, Txs: resp.Txs})
 	require.NoError(t, err)
@@ -2197,8 +2220,50 @@ func TestBaseApp_VoteExtensions(t *testing.T) {
 	_, err = suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1, Txs: resp.Txs})
 	require.NoError(t, err)
 
-	// Check if the average price was available in FinalizeBlock's context
+	// The average price will be nil during the first block, given that we don't have
+	// any vote extensions on block 1 in PrepareProposal
 	avgPrice := getFinalizeBlockStateCtx(suite.baseApp).KVStore(capKey1).Get([]byte("avgPrice"))
+	require.Nil(t, avgPrice)
+	_, err = suite.baseApp.Commit()
+	require.NoError(t, err)
+
+	// Now onto the second block, this time we process vote extensions from the
+	// previous block (which we sign now)
+	for _, ve := range allVEs {
+		cve := cmtproto.CanonicalVoteExtension{
+			Extension: ve,
+			Height:    1,
+			Round:     int64(0),
+			ChainId:   suite.baseApp.ChainID(),
+		}
+
+		bz, err := marshalDelimitedFn(&cve)
+		require.NoError(t, err)
+
+		extSig, err := privKey.Sign(bz)
+		require.NoError(t, err)
+
+		prepPropReq.LocalLastCommit.Votes = append(prepPropReq.LocalLastCommit.Votes, abci.ExtendedVoteInfo{
+			VoteExtension:      ve,
+			BlockIdFlag:        cmtproto.BlockIDFlagCommit,
+			ExtensionSignature: extSig,
+		})
+	}
+
+	prepPropReq.Height = 2
+	resp, err = suite.baseApp.PrepareProposal(prepPropReq)
+	require.NoError(t, err)
+	require.Len(t, resp.Txs, 10)
+
+	procPropRes, err = suite.baseApp.ProcessProposal(&abci.RequestProcessProposal{Height: 2, Txs: resp.Txs})
+	require.NoError(t, err)
+	require.Equal(t, abci.ResponseProcessProposal_ACCEPT, procPropRes.Status)
+
+	_, err = suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 2, Txs: resp.Txs})
+	require.NoError(t, err)
+
+	// Check if the average price was available in FinalizeBlock's context
+	avgPrice = getFinalizeBlockStateCtx(suite.baseApp).KVStore(capKey1).Get([]byte("avgPrice"))
 	require.NotNil(t, avgPrice)
 	require.GreaterOrEqual(t, binary.BigEndian.Uint64(avgPrice), uint64(10000000))
 	require.Less(t, binary.BigEndian.Uint64(avgPrice), uint64(11000000))

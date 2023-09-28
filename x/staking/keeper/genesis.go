@@ -212,7 +212,7 @@ func (k Keeper) InitGenesis(ctx context.Context, data *types.GenesisState) (res 
 // ExportGenesis returns a GenesisState for a given context and keeper. The
 // GenesisState will contain the pool, params, validators, and bonds found in
 // the keeper.
-func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
+func (k Keeper) ExportGenesis(ctx context.Context) *types.GenesisState {
 	var unbondingDelegations []types.UnbondingDelegation
 
 	err := k.UnbondingDelegations.Walk(

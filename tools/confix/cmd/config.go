@@ -17,6 +17,7 @@ func ConfigCommand() *cobra.Command {
 		DiffCommand(),
 		GetCommand(),
 		SetCommand(),
+		ViewCommand(),
 		HomeCommand(),
 	)
 

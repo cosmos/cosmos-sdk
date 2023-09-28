@@ -101,6 +101,8 @@ func (k msgServer) WithdrawValidatorCommission(ctx context.Context, msg *types.M
 	return &types.MsgWithdrawValidatorCommissionResponse{Amount: amount}, nil
 }
 
+// Deprecated: DO NOT USE
+// This method uses deprecated message request. Use FundCommunityPool from x/protocolpool module instead.
 func (k msgServer) FundCommunityPool(ctx context.Context, msg *types.MsgFundCommunityPool) (*types.MsgFundCommunityPoolResponse, error) {
 	depositor, err := k.authKeeper.AddressCodec().StringToBytes(msg.Depositor)
 	if err != nil {
@@ -111,7 +113,7 @@ func (k msgServer) FundCommunityPool(ctx context.Context, msg *types.MsgFundComm
 		return nil, err
 	}
 
-	if err := k.Keeper.FundCommunityPool(ctx, msg.Amount, depositor); err != nil {
+	if err := k.poolKeeper.FundCommunityPool(ctx, msg.Amount, depositor); err != nil {
 		return nil, err
 	}
 
@@ -139,6 +141,8 @@ func (k msgServer) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams)
 	return &types.MsgUpdateParamsResponse{}, nil
 }
 
+// Deprecated: DO NOT USE
+// This method uses deprecated message request. Use CommunityPoolSpend from x/protocolpool module instead.
 func (k msgServer) CommunityPoolSpend(ctx context.Context, msg *types.MsgCommunityPoolSpend) (*types.MsgCommunityPoolSpendResponse, error) {
 	if err := k.validateAuthority(msg.Authority); err != nil {
 		return nil, err
@@ -153,11 +157,7 @@ func (k msgServer) CommunityPoolSpend(ctx context.Context, msg *types.MsgCommuni
 		return nil, err
 	}
 
-	if k.bankKeeper.BlockedAddr(recipient) {
-		return nil, errors.Wrapf(sdkerrors.ErrUnauthorized, "%s is not allowed to receive external funds", msg.Recipient)
-	}
-
-	if err := k.DistributeFromFeePool(ctx, msg.Amount, recipient); err != nil {
+	if err := k.poolKeeper.DistributeFromFeePool(ctx, msg.Amount, recipient); err != nil {
 		return nil, err
 	}
 

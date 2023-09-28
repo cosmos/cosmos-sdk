@@ -28,7 +28,11 @@ type Builder struct {
 	AddTxConnFlags    func(*cobra.Command)
 }
 
-func (b *Builder) Validate() error {
+// ValidateAndComplete the builder fields.
+// It returns an error if any of the required fields are missing.
+// If the Logger is nil, it will be set to a nop logger.
+// If the keyring is nil, it will be set to a no keyring.
+func (b *Builder) ValidateAndComplete() error {
 	if b.Logger == nil {
 		b.Logger = log.NewNopLogger()
 	}

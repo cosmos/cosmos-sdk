@@ -26,7 +26,7 @@ All endpoints are defaulted to localhost and must be modified to be exposed to t
 
 ## gRPC Server
 
-In the Cosmos SDK, Protobuf is the main [encoding](./encoding) library. This brings a wide range of Protobuf-based tools that can be plugged into the Cosmos SDK. One such tool is [gRPC](https://grpc.io), a modern open-source high performance RPC framework that has decent client support in several languages.
+In the Cosmos SDK, Protobuf is the main [encoding](./05-encoding) library. This brings a wide range of Protobuf-based tools that can be plugged into the Cosmos SDK. One such tool is [gRPC](https://grpc.io), a modern open-source high performance RPC framework that has decent client support in several languages.
 
 Each module exposes a [Protobuf `Query` service](../../build/building-modules/02-messages-and-queries.md#queries) that defines state queries. The `Query` services and a transaction service used to broadcast transactions are hooked up to the gRPC server via the following function inside the application:
 

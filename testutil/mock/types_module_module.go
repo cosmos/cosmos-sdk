@@ -218,7 +218,7 @@ func (mr *MockHasGenesisMockRecorder) DefaultGenesis(arg0 interface{}) *gomock.C
 }
 
 // ExportGenesis mocks base method.
-func (m *MockHasGenesis) ExportGenesis(arg0 types1.Context, arg1 codec.JSONCodec) json.RawMessage {
+func (m *MockHasGenesis) ExportGenesis(arg0 context.Context, arg1 codec.JSONCodec) json.RawMessage {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ExportGenesis", arg0, arg1)
 	ret0, _ := ret[0].(json.RawMessage)
@@ -232,7 +232,7 @@ func (mr *MockHasGenesisMockRecorder) ExportGenesis(arg0, arg1 interface{}) *gom
 }
 
 // InitGenesis mocks base method.
-func (m *MockHasGenesis) InitGenesis(arg0 types1.Context, arg1 codec.JSONCodec, arg2 json.RawMessage) {
+func (m *MockHasGenesis) InitGenesis(arg0 context.Context, arg1 codec.JSONCodec, arg2 json.RawMessage) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "InitGenesis", arg0, arg1, arg2)
 }
@@ -295,7 +295,7 @@ func (mr *MockHasABCIGenesisMockRecorder) DefaultGenesis(arg0 interface{}) *gomo
 }
 
 // ExportGenesis mocks base method.
-func (m *MockHasABCIGenesis) ExportGenesis(arg0 types1.Context, arg1 codec.JSONCodec) json.RawMessage {
+func (m *MockHasABCIGenesis) ExportGenesis(arg0 context.Context, arg1 codec.JSONCodec) json.RawMessage {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ExportGenesis", arg0, arg1)
 	ret0, _ := ret[0].(json.RawMessage)
@@ -309,7 +309,7 @@ func (mr *MockHasABCIGenesisMockRecorder) ExportGenesis(arg0, arg1 interface{}) 
 }
 
 // InitGenesis mocks base method.
-func (m *MockHasABCIGenesis) InitGenesis(arg0 types1.Context, arg1 codec.JSONCodec, arg2 json.RawMessage) []types.ValidatorUpdate {
+func (m *MockHasABCIGenesis) InitGenesis(arg0 context.Context, arg1 codec.JSONCodec, arg2 json.RawMessage) []types.ValidatorUpdate {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "InitGenesis", arg0, arg1, arg2)
 	ret0, _ := ret[0].([]types.ValidatorUpdate)
@@ -642,7 +642,7 @@ func (mr *MockgenesisOnlyModuleMockRecorder) DefaultGenesis(arg0 interface{}) *g
 }
 
 // ExportGenesis mocks base method.
-func (m *MockgenesisOnlyModule) ExportGenesis(arg0 types1.Context, arg1 codec.JSONCodec) json.RawMessage {
+func (m *MockgenesisOnlyModule) ExportGenesis(arg0 context.Context, arg1 codec.JSONCodec) json.RawMessage {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ExportGenesis", arg0, arg1)
 	ret0, _ := ret[0].(json.RawMessage)
@@ -656,7 +656,7 @@ func (mr *MockgenesisOnlyModuleMockRecorder) ExportGenesis(arg0, arg1 interface{
 }
 
 // InitGenesis mocks base method.
-func (m *MockgenesisOnlyModule) InitGenesis(arg0 types1.Context, arg1 codec.JSONCodec, arg2 json.RawMessage) []types.ValidatorUpdate {
+func (m *MockgenesisOnlyModule) InitGenesis(arg0 context.Context, arg1 codec.JSONCodec, arg2 json.RawMessage) []types.ValidatorUpdate {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "InitGenesis", arg0, arg1, arg2)
 	ret0, _ := ret[0].([]types.ValidatorUpdate)

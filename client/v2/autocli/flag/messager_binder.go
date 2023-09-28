@@ -10,7 +10,8 @@ import (
 
 // MessageBinder binds multiple flags in a flag set to a protobuf message.
 type MessageBinder struct {
-	CobraArgs cobra.PositionalArgs
+	MandatoryArgUntil int
+	CobraArgs         cobra.PositionalArgs
 
 	positionalFlagSet *pflag.FlagSet
 	positionalArgs    []fieldBinding
@@ -38,10 +39,9 @@ func (m MessageBinder) Bind(msg protoreflect.Message, positionalArgs []string) e
 		}
 
 		name := fmt.Sprintf("%d", i)
-		if i == n-1 && m.hasVarargs {
+		if i == m.MandatoryArgUntil && m.hasVarargs {
 			for _, v := range positionalArgs[i:] {
-				err := m.positionalFlagSet.Set(name, v)
-				if err != nil {
+				if err := m.positionalFlagSet.Set(name, v); err != nil {
 					return err
 				}
 			}

@@ -74,12 +74,16 @@ Examples:
 				return err
 			}
 
-			grantee, err := ac.StringToBytes(args[1])
+			_, err = ac.StringToBytes(args[1])
 			if err != nil {
 				return err
 			}
 
 			granter := clientCtx.GetFromAddress()
+			granterStr, err := ac.BytesToString(granter)
+			if err != nil {
+				return err
+			}
 			sl, err := cmd.Flags().GetString(FlagSpendLimit)
 			if err != nil {
 				return err
@@ -167,7 +171,7 @@ Examples:
 				}
 			}
 
-			msg, err := feegrant.NewMsgGrantAllowance(grant, granter, grantee)
+			msg, err := feegrant.NewMsgGrantAllowance(grant, granterStr, args[1])
 			if err != nil {
 				return err
 			}
@@ -209,12 +213,17 @@ Example:
 				return err
 			}
 
-			grantee, err := ac.StringToBytes(args[1])
+			_, err = ac.StringToBytes(args[1])
 			if err != nil {
 				return err
 			}
 
-			msg := feegrant.NewMsgRevokeAllowance(clientCtx.GetFromAddress(), grantee)
+			granter, err := ac.BytesToString(clientCtx.GetFromAddress())
+			if err != nil {
+				return err
+			}
+
+			msg := feegrant.NewMsgRevokeAllowance(granter, args[1])
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &msg)
 		},

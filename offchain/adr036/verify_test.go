@@ -29,9 +29,9 @@ func MakeTestTxConfig() client.TxConfig {
 		signingtypes.SignMode_SIGN_MODE_DIRECT_AUX,
 		signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
 	}
-	txConfigOpts := tx.ConfigOptions{
-		EnabledSignModes: enabledSignModes,
-	}
+	//txConfigOpts := tx.ConfigOptions{
+	//	EnabledSignModes: enabledSignModes,
+	//}
 	ir, err := codectypes.NewInterfaceRegistryWithOptions(codectypes.InterfaceRegistryOptions{
 		ProtoFiles: proto.HybridResolver,
 		SigningOptions: sig.Options{
@@ -44,10 +44,7 @@ func MakeTestTxConfig() client.TxConfig {
 	}
 	RegisterInterfaces(ir)
 	cdc := codec.NewProtoCodec(ir)
-	txConfig, err := tx.NewTxConfigWithOptions(cdc, txConfigOpts)
-	if err != nil {
-		panic(err)
-	}
+	txConfig := tx.NewTxConfig(cdc, enabledSignModes)
 	return txConfig
 }
 
@@ -108,7 +105,7 @@ func TestOffChainVerifier_Verify(t *testing.T) {
 				signer:   signer,
 				txConfig: tt.fields.txConfig,
 			}
-			signedTx, err := s.Sign(context.Background(), tt.msgs, "verifyKey", tt.signMode)
+			signedTx, err := s.Sign(context.Background(), tt.msgs, tt.signMode)
 			require.NoError(t, err)
 			require.NotNil(t, signedTx)
 			if err := v.Verify(context.Background(), signedTx); (err != nil) != tt.wantErr {

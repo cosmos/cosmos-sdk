@@ -123,7 +123,7 @@ func TestOfflineSigner_Sign(t *testing.T) {
 				signer:   signer,
 				txConfig: tt.fields.txConfig,
 			}
-			got, err := s.Sign(tt.args.ctx, tt.args.msgs, tt.args.uid, tt.args.signMode)
+			got, err := s.Sign(tt.args.ctx, tt.args.msgs, tt.args.signMode)
 			require.NoError(t, err)
 			require.NotNil(t, got)
 		})

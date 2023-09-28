@@ -3,10 +3,9 @@ package adr036
 import (
 	"context"
 	"errors"
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
@@ -78,16 +77,16 @@ func NewOffChainSigner(priv SignatureProvider, txConfig client.TxConfig) *OffCha
 }
 
 // Sign produces a signed tx given
-func (s OffChainSigner) Sign(ctx context.Context, msgs []sdk.Msg, uid string, signMode signing.SignMode) (authsigning.SigVerifiableTx, error) {
+func (s OffChainSigner) Sign(ctx context.Context, msgs []sdk.Msg, signMode signing.SignMode) (authsigning.SigVerifiableTx, error) {
 	err := validateMsgs(msgs)
 	if err != nil {
 		return nil, err
 	}
 
-	return s.singMsg(ctx, msgs, uid, signMode)
+	return s.singMsg(ctx, msgs, signMode)
 }
 
-func (s OffChainSigner) singMsg(ctx context.Context, msgs []sdk.Msg, uid string, signmode signing.SignMode) (authsigning.SigVerifiableTx, error) {
+func (s OffChainSigner) singMsg(ctx context.Context, msgs []sdk.Msg, signmode signing.SignMode) (authsigning.SigVerifiableTx, error) {
 	// Build unsigned tx
 	tx := s.txConfig.NewTxBuilder()
 	if err := tx.SetMsgs(msgs...); err != nil {

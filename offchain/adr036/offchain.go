@@ -7,8 +7,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-
-
 const (
 	// ExpectedChainID defines the chain id an off-chain message must have
 	ExpectedChainID = ""

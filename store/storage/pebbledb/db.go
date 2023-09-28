@@ -6,11 +6,11 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"slices"
 
 	"github.com/cockroachdb/pebble"
 
 	"cosmossdk.io/store/v2"
-	"cosmossdk.io/store/v2/storage/util"
 )
 
 const (
@@ -238,5 +238,5 @@ func getMVCCSlice(db *pebble.DB, storeKey string, key []byte, version uint64) ([
 		return nil, fmt.Errorf("key version too large: %d", keyVersion)
 	}
 
-	return util.CopyBytes(itr.Value()), nil
+	return slices.Clone(itr.Value()), nil
 }

@@ -7,11 +7,11 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/log"
+	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/commitment/iavl"
-	"cosmossdk.io/store/v2/commitment/types"
 )
 
-func generateTree(treeType string) types.Tree {
+func generateTree(treeType string) store.Tree {
 	if treeType == "iavl" {
 		cfg := iavl.DefaultConfig()
 		db := dbm.NewMemDB()
@@ -28,16 +28,16 @@ func TestIavlTree(t *testing.T) {
 	tree := generateTree("iavl")
 	require.NotNil(t, tree)
 
-	intialVersion := tree.GetLatestVersion()
-	require.Equal(t, uint64(0), intialVersion)
+	initVersion := tree.GetLatestVersion()
+	require.Equal(t, uint64(0), initVersion)
 
 	// write a batch of version 1
-	batch1 := types.NewBatch()
-	batch1.Add([]byte("key1"), []byte("value1"))
-	batch1.Add([]byte("key2"), []byte("value2"))
-	batch1.Add([]byte("key3"), []byte("value3"))
+	cs1 := store.NewChangeSet()
+	cs1.Add([]byte("key1"), []byte("value1"))
+	cs1.Add([]byte("key2"), []byte("value2"))
+	cs1.Add([]byte("key3"), []byte("value3"))
 
-	err := tree.WriteBatch(batch1)
+	err := tree.WriteBatch(cs1)
 	require.NoError(t, err)
 
 	workingHash := tree.WorkingHash()
@@ -52,12 +52,12 @@ func TestIavlTree(t *testing.T) {
 	version1Hash := tree.WorkingHash()
 
 	// write a batch of version 2
-	batch2 := types.NewBatch()
-	batch2.Add([]byte("key4"), []byte("value4"))
-	batch2.Add([]byte("key5"), []byte("value5"))
-	batch2.Add([]byte("key6"), []byte("value6"))
-	batch2.Add([]byte("key1"), nil) // delete key1
-	err = tree.WriteBatch(batch2)
+	cs2 := store.NewChangeSet()
+	cs2.Add([]byte("key4"), []byte("value4"))
+	cs2.Add([]byte("key5"), []byte("value5"))
+	cs2.Add([]byte("key6"), []byte("value6"))
+	cs2.Add([]byte("key1"), nil) // delete key1
+	err = tree.WriteBatch(cs2)
 	require.NoError(t, err)
 	workingHash = tree.WorkingHash()
 	require.NotNil(t, workingHash)

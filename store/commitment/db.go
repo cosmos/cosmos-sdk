@@ -5,7 +5,7 @@ import (
 
 	ics23 "github.com/cosmos/ics23/go"
 
-	"cosmossdk.io/store/v2/commitment/types"
+	"cosmossdk.io/store/v2"
 )
 
 // Database represents a state commitment store. It is designed to securely store
@@ -13,22 +13,22 @@ import (
 // Each module creates its own instance of Database for managing its specific state.
 type Database struct {
 	mu   sync.Mutex
-	tree types.Tree
+	tree store.Tree
 }
 
 // NewDatabase creates a new Database instance.
-func NewDatabase(tree types.Tree) *Database {
+func NewDatabase(tree store.Tree) *Database {
 	return &Database{
 		tree: tree,
 	}
 }
 
 // WriteBatch writes a batch of key-value pairs to the database.
-func (db *Database) WriteBatch(batch *types.Batch) error {
+func (db *Database) WriteBatch(cs *store.ChangeSet) error {
 	db.mu.Lock()
 	defer db.mu.Unlock()
 
-	return db.tree.WriteBatch(batch)
+	return db.tree.WriteBatch(cs)
 }
 
 // WorkingHash returns the working hash of the database.

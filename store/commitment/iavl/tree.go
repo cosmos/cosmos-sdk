@@ -8,10 +8,10 @@ import (
 	ics23 "github.com/cosmos/ics23/go"
 
 	log "cosmossdk.io/log"
-	commitmenttypes "cosmossdk.io/store/v2/commitment/types"
+	"cosmossdk.io/store/v2"
 )
 
-var _ commitmenttypes.Tree = (*IavlTree)(nil)
+var _ store.Tree = (*IavlTree)(nil)
 
 // IavlTree is a wrapper around iavl.MutableTree.
 type IavlTree struct {
@@ -27,8 +27,8 @@ func NewIavlTree(db dbm.DB, logger log.Logger, cfg *Config) *IavlTree {
 }
 
 // WriteBatch writes a batch of key-value pairs to the database.
-func (t *IavlTree) WriteBatch(batch *commitmenttypes.Batch) error {
-	for _, kv := range batch.Pairs {
+func (t *IavlTree) WriteBatch(cs *store.ChangeSet) error {
+	for _, kv := range cs.Pairs {
 		if kv.Value == nil {
 			_, res, err := t.tree.Remove(kv.Key)
 			if err != nil {

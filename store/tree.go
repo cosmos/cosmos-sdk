@@ -1,4 +1,4 @@
-package types
+package store
 
 import (
 	ics23 "github.com/cosmos/ics23/go"
@@ -6,7 +6,7 @@ import (
 
 // Tree is an interface for a commitment layer to support multiple backends.
 type Tree interface {
-	WriteBatch(batch *Batch) error
+	WriteBatch(cs *ChangeSet) error
 	WorkingHash() []byte
 	GetLatestVersion() uint64
 	LoadVersion(targetVersion uint64) error

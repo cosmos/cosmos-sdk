@@ -31,7 +31,6 @@ import (
 // NewRootCmd creates a new root command for simd. It is called once in the main function.
 func NewRootCmd() *cobra.Command {
 	var (
-		appCodec           codec.Codec
 		txConfigOpts       tx.ConfigOptions
 		autoCliOpts        autocli.AppOptions
 		moduleBasicManager module.BasicManager
@@ -49,7 +48,6 @@ func NewRootCmd() *cobra.Command {
 				ProvideKeyring,
 			),
 		),
-		&appCodec,
 		&txConfigOpts,
 		&autoCliOpts,
 		&moduleBasicManager,
@@ -103,7 +101,7 @@ func NewRootCmd() *cobra.Command {
 		},
 	}
 
-	initRootCmd(rootCmd, initClientCtx.TxConfig, initClientCtx.InterfaceRegistry, appCodec, moduleBasicManager)
+	initRootCmd(rootCmd, initClientCtx.TxConfig, initClientCtx.InterfaceRegistry, initClientCtx.Codec, moduleBasicManager)
 
 	if err := autoCliOpts.EnhanceRootCommand(rootCmd); err != nil {
 		panic(err)

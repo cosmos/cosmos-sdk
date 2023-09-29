@@ -750,7 +750,10 @@ func (app *BaseApp) beginBlock(_ *abci.RequestFinalizeBlock) (sdk.BeginBlock, er
 				abci.EventAttribute{Key: "mode", Value: "BeginBlock"},
 			)
 		}
-		app.AddStreamEvents(app.finalizeBlockState.ctx.BlockHeight(), resp.Events, true)
+
+		ctx := app.finalizeBlockState.ctx
+		app.AddStreamEvents(ctx.BlockHeight(), ctx.BlockTime(), resp.Events, true)
+
 		resp.Events = sdk.MarkEventsToIndex(resp.Events, app.indexEvents)
 	}
 
@@ -783,7 +786,8 @@ func (app *BaseApp) deliverTx(tx []byte) *abci.ExecTxResult {
 		return resp
 	}
 
-	app.AddStreamEvents(app.checkState.Context().BlockHeight(), result.Events, false)
+	ctx := app.checkState.Context()
+	app.AddStreamEvents(ctx.BlockHeight(), ctx.BlockTime(), result.Events, false)
 
 	resp = &abci.ExecTxResult{
 		GasWanted: int64(gInfo.GasWanted),
@@ -815,7 +819,9 @@ func (app *BaseApp) endBlock(_ context.Context) (sdk.EndBlock, error) {
 			)
 		}
 
-		app.AddStreamEvents(app.finalizeBlockState.ctx.BlockHeight(), eb.Events, true)
+		ctx := app.finalizeBlockState.ctx
+		app.AddStreamEvents(ctx.BlockHeight(), ctx.BlockTime(), eb.Events, true)
+
 		eb.Events = sdk.MarkEventsToIndex(eb.Events, app.indexEvents)
 		endblock = eb
 	}

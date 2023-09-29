@@ -16,7 +16,6 @@ var (
 )
 
 // TODO:
-// 1. Finish CRUD methods
 // 2. Test CRUD methods
 // 3. Implement Iterator methods
 // 4. Test Iterator methods
@@ -45,10 +44,6 @@ type Store struct {
 
 	// parent reflects a parent store if branched (it may be nil)
 	parent store.KVStore
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	// changeset reflects the uncommitted writes to the store
 	changeset map[string]store.KVPair

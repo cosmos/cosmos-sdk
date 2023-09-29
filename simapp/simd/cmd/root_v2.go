@@ -30,12 +30,10 @@ import (
 // NewRootCmd creates a new root command for simd. It is called once in the main function.
 func NewRootCmd() *cobra.Command {
 	var (
-		interfaceRegistry  codectypes.InterfaceRegistry
-		appCodec           codec.Codec
-		txConfig           client.TxConfig
+		txConfigOpts       tx.ConfigOptions
 		autoCliOpts        autocli.AppOptions
 		moduleBasicManager module.BasicManager
-		clientCtx          *client.Context
+		initClientCtx      *client.Context
 	)
 
 	if err := depinject.Inject(
@@ -49,12 +47,10 @@ func NewRootCmd() *cobra.Command {
 				ProvideKeyring,
 			),
 		),
-		&interfaceRegistry,
-		&appCodec,
-		&txConfig,
+		&txConfigOpts,
 		&autoCliOpts,
 		&moduleBasicManager,
-		&clientCtx,
+		&initClientCtx,
 	); err != nil {
 		panic(err)
 	}
@@ -68,34 +64,31 @@ func NewRootCmd() *cobra.Command {
 			cmd.SetOut(cmd.OutOrStdout())
 			cmd.SetErr(cmd.ErrOrStderr())
 
-			initClientCtx := *clientCtx
-			initClientCtx = initClientCtx.WithCmdContext(cmd.Context())
-			initClientCtx, err := client.ReadPersistentCommandFlags(initClientCtx, cmd.Flags())
+			clientCtx := *initClientCtx
+			clientCtx = clientCtx.WithCmdContext(cmd.Context())
+			clientCtx, err := client.ReadPersistentCommandFlags(clientCtx, cmd.Flags())
 			if err != nil {
 				return err
 			}
 
-			initClientCtx, err = config.ReadFromClientConfig(initClientCtx)
+			clientCtx, err = config.ReadFromClientConfig(clientCtx)
 			if err != nil {
 				return err
 			}
 
-			// This needs to go after ReadFromClientConfig, as that function
-			// sets the RPC client needed for SIGN_MODE_TEXTUAL.
-			enabledSignModes := append(tx.DefaultSignModes, signing.SignMode_SIGN_MODE_TEXTUAL)
-			txConfigOpts := tx.ConfigOptions{
-				EnabledSignModes:           enabledSignModes,
-				TextualCoinMetadataQueryFn: txmodule.NewGRPCCoinMetadataQueryFn(initClientCtx),
-			}
+			// This needs to go after CreateClientConfig, as that function sets the RPC client needed for SIGN_MODE_TEXTUAL.
+			txConfigOpts.EnabledSignModes = append(txConfigOpts.EnabledSignModes, signing.SignMode_SIGN_MODE_TEXTUAL)
+			txConfigOpts.TextualCoinMetadataQueryFn = txmodule.NewGRPCCoinMetadataQueryFn(clientCtx)
 			txConfigWithTextual, err := tx.NewTxConfigWithOptions(
-				codec.NewProtoCodec(interfaceRegistry),
+				codec.NewProtoCodec(clientCtx.InterfaceRegistry),
 				txConfigOpts,
 			)
 			if err != nil {
 				return err
 			}
-			initClientCtx = initClientCtx.WithTxConfig(txConfigWithTextual)
-			if err := client.SetCmdClientContextHandler(initClientCtx, cmd); err != nil {
+			clientCtx = clientCtx.WithTxConfig(txConfigWithTextual)
+
+			if err := client.SetCmdClientContextHandler(clientCtx, cmd); err != nil {
 				return err
 			}
 
@@ -106,7 +99,7 @@ func NewRootCmd() *cobra.Command {
 		},
 	}
 
-	initRootCmd(rootCmd, txConfig, interfaceRegistry, appCodec, moduleBasicManager)
+	initRootCmd(rootCmd, initClientCtx.TxConfig, initClientCtx.InterfaceRegistry, initClientCtx.Codec, moduleBasicManager)
 
 	if err := autoCliOpts.EnhanceRootCommand(rootCmd); err != nil {
 		panic(err)
@@ -115,10 +108,16 @@ func NewRootCmd() *cobra.Command {
 	return rootCmd
 }
 
-func ProvideClientContext(appCodec codec.Codec, interfaceRegistry codectypes.InterfaceRegistry, legacyAmino *codec.LegacyAmino) *client.Context {
-	initClientCtx := client.Context{}.
+func ProvideClientContext(
+	appCodec codec.Codec,
+	interfaceRegistry codectypes.InterfaceRegistry,
+	txConfig client.TxConfig,
+	legacyAmino *codec.LegacyAmino,
+) *client.Context {
+	clientCtx := client.Context{}.
 		WithCodec(appCodec).
 		WithInterfaceRegistry(interfaceRegistry).
+		WithTxConfig(txConfig).
 		WithLegacyAmino(legacyAmino).
 		WithInput(os.Stdin).
 		WithAccountRetriever(types.AccountRetriever{}).
@@ -126,9 +125,9 @@ func ProvideClientContext(appCodec codec.Codec, interfaceRegistry codectypes.Int
 		WithViper("") // In simapp, we don't use any prefix for env variables.
 
 	// Read the config again to overwrite the default values with the values from the config file
-	initClientCtx, _ = config.ReadFromClientConfig(initClientCtx)
+	clientCtx, _ = config.ReadFromClientConfig(clientCtx)
 
-	return &initClientCtx
+	return &clientCtx
 }
 
 func ProvideKeyring(clientCtx *client.Context, addressCodec address.Codec) (clientv2keyring.Keyring, error) {

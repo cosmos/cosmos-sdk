@@ -70,3 +70,35 @@ func (s *StoreTestSuite) TestReset() {
 	cs := s.kvStore.GetChangeset()
 	s.Require().Zero(cs.Size())
 }
+
+func (s *StoreTestSuite) TestGet() {
+	// perform read of key000, which is not dirty
+	bz := s.kvStore.Get([]byte("key000"))
+	s.Require().Equal([]byte("val000"), bz)
+
+	// update key000 and perform a read which should reflect the new value
+	s.kvStore.Set([]byte("key000"), []byte("updated_val000"))
+
+	bz = s.kvStore.Get([]byte("key000"))
+	s.Require().Equal([]byte("updated_val000"), bz)
+
+	// ensure the primary SS backend is not modified
+	bz, err := s.storage.Get(storeKey, 1, []byte("key000"))
+	s.Require().NoError(err)
+	s.Require().Equal([]byte("val000"), bz)
+}
+
+func (s *StoreTestSuite) TestHas() {
+	// perform read of key000, which is not dirty thus falling back to SS
+	ok := s.kvStore.Has([]byte("key000"))
+	s.Require().True(ok)
+
+	ok = s.kvStore.Has([]byte("key100"))
+	s.Require().False(ok)
+
+	// perform a write of a brand new key not in SS, but in the changeset
+	s.kvStore.Set([]byte("key100"), []byte("val100"))
+
+	ok = s.kvStore.Has([]byte("key100"))
+	s.Require().True(ok)
+}

@@ -56,8 +56,9 @@ type ModuleInputs struct {
 type ModuleOutputs struct {
 	depinject.Out
 
-	TxConfig      client.TxConfig
-	BaseAppOption runtime.BaseAppOption
+	TxConfig        client.TxConfig
+	TxConfigOptions tx.ConfigOptions
+	BaseAppOption   runtime.BaseAppOption
 }
 
 func ProvideProtoRegistry() txsigning.ProtoFileResolver {
@@ -130,7 +131,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		app.SetTxEncoder(txConfig.TxEncoder())
 	}
 
-	return ModuleOutputs{TxConfig: txConfig, BaseAppOption: baseAppOption}
+	return ModuleOutputs{TxConfig: txConfig, TxConfigOptions: txConfigOptions, BaseAppOption: baseAppOption}
 }
 
 func newAnteHandler(txConfig client.TxConfig, in ModuleInputs) (sdk.AnteHandler, error) {

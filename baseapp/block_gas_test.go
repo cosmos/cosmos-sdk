@@ -86,7 +86,6 @@ func TestBaseApp_BlockGas(t *testing.T) {
 				configurator.NewAppConfig(
 					configurator.AuthModule(),
 					configurator.TxModule(),
-					configurator.ParamsModule(),
 					configurator.ConsensusModule(),
 					configurator.BankModule(),
 					configurator.StakingModule(),

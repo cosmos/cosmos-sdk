@@ -88,13 +88,8 @@ message SignDocDirectAux {
   // sequence is the sequence number of the signing account.
   uint64 sequence = 5;
 
-  // Tip is the optional tip used for transactions fees paid in another denom.
-  // It should be left empty if the signer is not the tipper for this
-  // transaction.
-  //
-  // This field is ignored if the chain didn't enable tips, i.e. didn't add the
-  // `TipDecorator` in its posthandler.
-  Tip tip = 6;
+  // tips have been depreacted and should not be used
+  Tip tip = 6 [deprecated = true];
 }
 
 // TxBody is the body of a transaction that all signers sign over.
@@ -142,14 +137,13 @@ message AuthInfo {
   // based on the cost of evaluating the body and doing signature verification
   // of the signers. This can be estimated via simulation.
   Fee fee = 2;
-
   // Tip is the optional tip used for transactions fees paid in another denom.
   //
   // This field is ignored if the chain didn't enable tips, i.e. didn't add the
   // `TipDecorator` in its posthandler.
   //
   // Since: cosmos-sdk 0.46
-  Tip tip = 3;
+  Tip tip = 3 [deprecated = true];
 }
 
 // SignerInfo describes the public key and signing mode of a single top-level
@@ -232,6 +226,7 @@ message Fee {
 //
 // Since: cosmos-sdk 0.46
 message Tip {
+  option deprecated = true;
   // amount is the amount of the tip
   repeated cosmos.base.v1beta1.Coin amount = 1 [
     (gogoproto.nullable)     = false,

@@ -56,7 +56,7 @@ Tests which exercise a whole module's function with dependencies mocked, are *jo
 These are almost like integration tests in that they exercise many things together but still
 use mocks.
 
-Example 1 journey vs illustrative tests - [depinject's BDD style tests](https://github.com/cosmos/cosmos-sdk/blob/main/depinject/features/bindings.feature), show how we can
+Example 1 journey vs illustrative tests - depinject's BDD style tests, show how we can
 rapidly build up many illustrative cases demonstrating behavioral rules without [very much code](https://github.com/cosmos/cosmos-sdk/blob/main/depinject/binding_test.go) while maintaining high level readability.
 
 Example 2 [depinject table driven tests](https://github.com/cosmos/cosmos-sdk/blob/main/depinject/provider_desc_test.go)

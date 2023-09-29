@@ -73,7 +73,7 @@ type BaseApp struct {
 
 	mempool     mempool.Mempool // application side mempool
 	anteHandler sdk.AnteHandler // ante handler for fee and auth
-	postHandler sdk.PostHandler // post handler, optional, e.g. for tips
+	postHandler sdk.PostHandler // post handler, optional
 
 	initChainer        sdk.InitChainer                // ABCI InitChain handler
 	preBlocker         sdk.PreBlocker                 // logic to run before BeginBlocker
@@ -1090,6 +1090,14 @@ func (app *BaseApp) ProcessProposalVerifyTx(txBz []byte) (sdk.Tx, error) {
 	}
 
 	return tx, nil
+}
+
+func (app *BaseApp) TxDecode(txBytes []byte) (sdk.Tx, error) {
+	return app.txDecoder(txBytes)
+}
+
+func (app *BaseApp) TxEncode(tx sdk.Tx) ([]byte, error) {
+	return app.txEncoder(tx)
 }
 
 // Close is called in start cmd to gracefully cleanup resources.

@@ -9,12 +9,21 @@ import (
 
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
+	"cosmossdk.io/collections"
 	"cosmossdk.io/x/accounts/internal/implementation"
 )
 
 var _ implementation.Account = (*TestAccount)(nil)
 
-type TestAccount struct{}
+func NewTestAccount(sb *collections.SchemaBuilder) *TestAccount {
+	return &TestAccount{
+		Counter: collections.NewSequence(sb, collections.NewPrefix(0), "counter"),
+	}
+}
+
+type TestAccount struct {
+	Counter collections.Sequence
+}
 
 func (t TestAccount) RegisterInitHandler(builder *implementation.InitBuilder) {
 	implementation.RegisterInitHandler(builder, func(ctx context.Context, _ *emptypb.Empty) (*emptypb.Empty, error) {
@@ -62,6 +71,11 @@ func (t TestAccount) RegisterExecuteHandlers(builder *implementation.ExecuteBuil
 
 		return &emptypb.Empty{}, nil
 	})
+
+	// genesis testing
+	implementation.RegisterExecuteHandler(builder, func(ctx context.Context, req *wrapperspb.UInt64Value) (*emptypb.Empty, error) {
+		return new(emptypb.Empty), t.Counter.Set(ctx, req.Value)
+	})
 }
 
 func (t TestAccount) RegisterQueryHandlers(builder *implementation.QueryBuilder) {
@@ -89,5 +103,15 @@ func (t TestAccount) RegisterQueryHandlers(builder *implementation.QueryBuilder)
 			return nil, err
 		}
 		return wrapperspb.Int64(amt), nil
+	})
+
+	// genesis testing; DoubleValue does not make sense as a request type for this query, but empty is already taken
+	// and this is only used for testing.
+	implementation.RegisterQueryHandler(builder, func(ctx context.Context, _ *wrapperspb.DoubleValue) (*wrapperspb.UInt64Value, error) {
+		v, err := t.Counter.Peek(ctx)
+		if err != nil {
+			return nil, err
+		}
+		return &wrapperspb.UInt64Value{Value: v}, nil
 	})
 }

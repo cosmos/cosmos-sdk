@@ -35,7 +35,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
-	_ "github.com/cosmos/cosmos-sdk/x/params"
 	_ "github.com/cosmos/cosmos-sdk/x/staking"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 )
@@ -424,7 +423,6 @@ func createTestSuite(t *testing.T, isCheckTx bool) (suite, sdk.Context) {
 			configurator.NewAppConfig(
 				configurator.AuthModule(),
 				configurator.TxModule(),
-				configurator.ParamsModule(),
 				configurator.BankModule(),
 				configurator.StakingModule(),
 				configurator.ConsensusModule(),

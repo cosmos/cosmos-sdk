@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/google/gofuzz"
+	fuzz "github.com/google/gofuzz"
 
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
@@ -25,10 +25,7 @@ func FuzzSignModeGetSignBytes(f *testing.F) {
 	seed := &testutil.HandlerArgumentOptions{
 		ChainID: "test-chain",
 		Memo:    "sometestmemo",
-		Tip: &txv1beta1.Tip{
-			Tipper: "tipper",
-			Amount: []*basev1beta1.Coin{{Denom: "Tip-token", Amount: "10"}},
-		},
+
 		Msg: &bankv1beta1.MsgSend{
 			FromAddress: "foo",
 			ToAddress:   "bar",
@@ -53,7 +50,6 @@ func FuzzSignModeGetSignBytes(f *testing.F) {
 		// hence why we are mutating fields individually.
 		gf.Fuzz(&seed.ChainID)
 		gf.Fuzz(&seed.Memo)
-		gf.Fuzz(seed.Tip)
 		gf.Fuzz(&seed.AccNum)
 		gf.Fuzz(&seed.AccSeq)
 		gf.Fuzz(seed.Fee)

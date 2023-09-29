@@ -549,11 +549,6 @@ func (app *BaseApp) ProcessProposal(req *abci.RequestProcessProposal) (resp *abc
 func (app *BaseApp) ExtendVote(_ context.Context, req *abci.RequestExtendVote) (resp *abci.ResponseExtendVote, err error) {
 	// Always reset state given that ExtendVote and VerifyVoteExtension can timeout
 	// and be called again in a subsequent round.
-<<<<<<< HEAD
-	emptyHeader := cmtproto.Header{ChainID: app.chainID, Height: req.Height}
-	ms := app.cms.CacheMultiStore()
-	ctx := sdk.NewContext(ms, emptyHeader, false, app.logger).WithStreamingManager(app.streamingManager)
-=======
 	var ctx sdk.Context
 
 	// If we're extending the vote for the initial height, we need to use the
@@ -562,10 +557,10 @@ func (app *BaseApp) ExtendVote(_ context.Context, req *abci.RequestExtendVote) (
 	if req.Height == app.initialHeight {
 		ctx, _ = app.finalizeBlockState.ctx.CacheContext()
 	} else {
+		emptyHeader := cmtproto.Header{ChainID: app.chainID, Height: req.Height}
 		ms := app.cms.CacheMultiStore()
-		ctx = sdk.NewContext(ms, false, app.logger).WithStreamingManager(app.streamingManager).WithChainID(app.chainID).WithBlockHeight(req.Height)
+		ctx = sdk.NewContext(ms, emptyHeader, false, app.logger).WithStreamingManager(app.streamingManager)
 	}
->>>>>>> c889a07ef (fix(baseapp): vote extensions on first block (#17909))
 
 	if app.extendVote == nil {
 		return nil, errors.New("application ExtendVote handler not set")
@@ -629,11 +624,6 @@ func (app *BaseApp) VerifyVoteExtension(req *abci.RequestVerifyVoteExtension) (r
 		return nil, errors.New("application VerifyVoteExtension handler not set")
 	}
 
-<<<<<<< HEAD
-	emptyHeader := cmtproto.Header{ChainID: app.chainID, Height: req.Height}
-	ms := app.cms.CacheMultiStore()
-	ctx := sdk.NewContext(ms, emptyHeader, false, app.logger).WithStreamingManager(app.streamingManager)
-=======
 	var ctx sdk.Context
 
 	// If we're verifying the vote for the initial height, we need to use the
@@ -642,10 +632,10 @@ func (app *BaseApp) VerifyVoteExtension(req *abci.RequestVerifyVoteExtension) (r
 	if req.Height == app.initialHeight {
 		ctx, _ = app.finalizeBlockState.ctx.CacheContext()
 	} else {
+		emptyHeader := cmtproto.Header{ChainID: app.chainID, Height: req.Height}
 		ms := app.cms.CacheMultiStore()
-		ctx = sdk.NewContext(ms, false, app.logger).WithStreamingManager(app.streamingManager).WithChainID(app.chainID).WithBlockHeight(req.Height)
+		ctx = sdk.NewContext(ms, emptyHeader, false, app.logger).WithStreamingManager(app.streamingManager)
 	}
->>>>>>> c889a07ef (fix(baseapp): vote extensions on first block (#17909))
 
 	// If vote extensions are not enabled, as a safety precaution, we return an
 	// error.

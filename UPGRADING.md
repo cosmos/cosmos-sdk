@@ -36,11 +36,60 @@ Refer to SimApp `root_v2.go` and `root.go` for an example with an app v2 and a l
 
 #### `**all**`
 
+##### Genesis Interface
+
+All genesis interfaces have been migrated to take context.Context instead of sdk.Context.
+
+```golang
+// InitGenesis performs genesis initialization for the authz module. It returns
+// no validator updates.
+func (am AppModule) InitGenesis(ctx context.Context, cdc codec.JSONCodec, data json.RawMessage) {
+}
+
+// ExportGenesis returns the exported genesis state as raw bytes for the authz
+// module.
+func (am AppModule) ExportGenesis(ctx context.Context, cdc codec.JSONCodec) json.RawMessage {
+}
+```
+
 ##### Migration to Collections
 
 Most of Cosmos SDK modules have migrated to [collections](https://docs.cosmos.network/main/packages/collections).
 Many functions have been removed due to this changes as the API can be smaller thanks to collections.
 For modules that have migrated, verify you are checking against `collections.ErrNotFound` when applicable.
+
+#### `x/distribution`
+
+The existing chains using x/distribution module needs to add the new x/protocolpool module.
+
+#### `x/protocolpool`
+
+Introducing a new `x/protocolpool` module to handle community pool funds. Its store must be added while upgrading to v0.51.x
+
+Example:
+
+```go
+func (app SimApp) RegisterUpgradeHandlers() {
+  	app.UpgradeKeeper.SetUpgradeHandler(
+ 		UpgradeName,
+ 		func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+ 			return app.ModuleManager.RunMigrations(ctx, app.Configurator(), fromVM)
+ 		},
+ 	)
+
+  // ...
+}
+```
+
+Add `x/protocolpool` store while upgrading to v0.51.x:
+
+```go
+storetypes.StoreUpgrades{
+			Added: []string{
+				protocolpooltypes.ModuleName,
+			},
+}
+```
 
 ## [v0.50.x](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.50.0-alpha.0)
 

@@ -184,15 +184,15 @@ func (bm BasicManager) AddQueryCommands(rootQueryCmd *cobra.Command) {
 // HasGenesis is the extension interface for stateful genesis methods.
 type HasGenesis interface {
 	HasGenesisBasics
-	InitGenesis(sdk.Context, codec.JSONCodec, json.RawMessage)
-	ExportGenesis(sdk.Context, codec.JSONCodec) json.RawMessage
+	InitGenesis(context.Context, codec.JSONCodec, json.RawMessage)
+	ExportGenesis(context.Context, codec.JSONCodec) json.RawMessage
 }
 
 // HasABCIGenesis is the extension interface for stateful genesis methods which returns validator updates.
 type HasABCIGenesis interface {
 	HasGenesisBasics
-	InitGenesis(sdk.Context, codec.JSONCodec, json.RawMessage) []abci.ValidatorUpdate
-	ExportGenesis(sdk.Context, codec.JSONCodec) json.RawMessage
+	InitGenesis(context.Context, codec.JSONCodec, json.RawMessage) []abci.ValidatorUpdate
+	ExportGenesis(context.Context, codec.JSONCodec) json.RawMessage
 }
 
 // AppModule is the form for an application module. Most of

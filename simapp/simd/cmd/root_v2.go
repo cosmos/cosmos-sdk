@@ -71,29 +71,14 @@ func NewRootCmd() *cobra.Command {
 				return err
 			}
 
-<<<<<<< HEAD
-			initClientCtx, err = config.ReadFromClientConfig(initClientCtx)
-=======
-			customClientTemplate, customClientConfig := initClientConfig()
-			clientCtx, err = config.CreateClientConfig(clientCtx, customClientTemplate, customClientConfig)
->>>>>>> b478f2688 (fix(simapp): do not overwrite tx options (#17920))
+			clientCtx, err = config.ReadFromClientConfig(clientCtx)
 			if err != nil {
 				return err
 			}
 
-<<<<<<< HEAD
-			// This needs to go after ReadFromClientConfig, as that function
-			// sets the RPC client needed for SIGN_MODE_TEXTUAL.
-			enabledSignModes := append(tx.DefaultSignModes, signing.SignMode_SIGN_MODE_TEXTUAL)
-			txConfigOpts := tx.ConfigOptions{
-				EnabledSignModes:           enabledSignModes,
-				TextualCoinMetadataQueryFn: txmodule.NewGRPCCoinMetadataQueryFn(initClientCtx),
-			}
-=======
 			// This needs to go after CreateClientConfig, as that function sets the RPC client needed for SIGN_MODE_TEXTUAL.
 			txConfigOpts.EnabledSignModes = append(txConfigOpts.EnabledSignModes, signing.SignMode_SIGN_MODE_TEXTUAL)
 			txConfigOpts.TextualCoinMetadataQueryFn = txmodule.NewGRPCCoinMetadataQueryFn(clientCtx)
->>>>>>> b478f2688 (fix(simapp): do not overwrite tx options (#17920))
 			txConfigWithTextual, err := tx.NewTxConfigWithOptions(
 				codec.NewProtoCodec(clientCtx.InterfaceRegistry),
 				txConfigOpts,
@@ -123,23 +108,13 @@ func NewRootCmd() *cobra.Command {
 	return rootCmd
 }
 
-<<<<<<< HEAD
-func ProvideClientContext(appCodec codec.Codec, interfaceRegistry codectypes.InterfaceRegistry, legacyAmino *codec.LegacyAmino) *client.Context {
-	initClientCtx := client.Context{}.
-=======
 func ProvideClientContext(
 	appCodec codec.Codec,
 	interfaceRegistry codectypes.InterfaceRegistry,
 	txConfig client.TxConfig,
 	legacyAmino *codec.LegacyAmino,
-	addressCodec address.Codec,
-	validatorAddressCodec runtime.ValidatorAddressCodec,
-	consensusAddressCodec runtime.ConsensusAddressCodec,
 ) *client.Context {
-	var err error
-
 	clientCtx := client.Context{}.
->>>>>>> b478f2688 (fix(simapp): do not overwrite tx options (#17920))
 		WithCodec(appCodec).
 		WithInterfaceRegistry(interfaceRegistry).
 		WithTxConfig(txConfig).
@@ -149,17 +124,8 @@ func ProvideClientContext(
 		WithHomeDir(simapp.DefaultNodeHome).
 		WithViper("") // In simapp, we don't use any prefix for env variables.
 
-<<<<<<< HEAD
 	// Read the config again to overwrite the default values with the values from the config file
-	initClientCtx, _ = config.ReadFromClientConfig(initClientCtx)
-=======
-	// Read the config to overwrite the default values with the values from the config file
-	customClientTemplate, customClientConfig := initClientConfig()
-	clientCtx, err = config.CreateClientConfig(clientCtx, customClientTemplate, customClientConfig)
-	if err != nil {
-		panic(err)
-	}
->>>>>>> b478f2688 (fix(simapp): do not overwrite tx options (#17920))
+	clientCtx, _ = config.ReadFromClientConfig(clientCtx)
 
 	return &clientCtx
 }

@@ -46,6 +46,8 @@ type RootStore interface {
 
 // KVStore defines the core storage primitive for modules to read and write state.
 type KVStore interface {
+	GetStoreKey() string
+
 	// GetStoreType returns the concrete store type.
 	GetStoreType() StoreType
 

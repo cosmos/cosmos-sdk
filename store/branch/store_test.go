@@ -102,3 +102,37 @@ func (s *StoreTestSuite) TestHas() {
 	ok = s.kvStore.Has([]byte("key100"))
 	s.Require().True(ok)
 }
+
+func (s *StoreTestSuite) TestBranch() {
+	// perform a few writes on the original store
+	s.kvStore.Set([]byte("key000"), []byte("updated_val000"))
+	s.kvStore.Set([]byte("key001"), []byte("updated_val001"))
+
+	// create a new branch
+	b := s.kvStore.Branch()
+
+	// update an existing dirty write
+	b.Set([]byte("key001"), []byte("branched_updated_val001"))
+
+	// perform reads on the branched store without writing first
+
+	// key000 is dirty in the original store, but not in the branched store
+	s.Require().Equal([]byte("updated_val000"), b.Get([]byte("key000")))
+
+	// key001 is dirty in both the original and branched store, but branched store
+	// should reflect the branched write.
+	s.Require().Equal([]byte("branched_updated_val001"), b.Get([]byte("key001")))
+
+	// key002 is not dirty in either store, so should fall back to SS
+	s.Require().Equal([]byte("val002"), b.Get([]byte("key002")))
+
+	// ensure the original store is not modified
+	s.Require().Equal([]byte("updated_val001"), s.kvStore.Get([]byte("key001")))
+
+	s.Require().Equal(1, b.GetChangeset().Size())
+	s.Require().Equal([]byte("key001"), b.GetChangeset().Pairs[0].Key)
+
+	// write the branched store and ensure all writes are flushed to the parent
+	b.Write()
+	s.Require().Equal([]byte("branched_updated_val001"), s.kvStore.Get([]byte("key001")))
+}

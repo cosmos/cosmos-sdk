@@ -49,7 +49,7 @@ type Store struct {
 	changeset map[string]store.KVPair
 }
 
-func New(storeKey string, ss store.VersionedDatabase) (store.KVStore, error) {
+func New(storeKey string, ss store.VersionedDatabase) (store.BranchedKVStore, error) {
 	latestVersion, err := ss.GetLatestVersion()
 	if err != nil {
 		return nil, err
@@ -63,6 +63,18 @@ func New(storeKey string, ss store.VersionedDatabase) (store.KVStore, error) {
 	}, nil
 }
 
+func NewWithParent(parent store.KVStore) store.BranchedKVStore {
+	return &Store{
+		parent:    parent,
+		storeKey:  parent.GetStoreKey(),
+		changeset: make(map[string]store.KVPair),
+	}
+}
+
+func (s *Store) GetStoreKey() string {
+	return s.storeKey
+}
+
 func (s *Store) GetStoreType() store.StoreType {
 	return store.StoreTypeBranch
 }
@@ -74,7 +86,12 @@ func (s *Store) GetChangeset() *store.Changeset {
 
 	pairs := make([]store.KVPair, len(keys))
 	for i, key := range keys {
-		pairs[i] = s.changeset[key]
+		kvPair := s.changeset[key]
+		pairs[i] = store.KVPair{
+			Key:      []byte(key),
+			Value:    slices.Clone(kvPair.Value),
+			StoreKey: kvPair.StoreKey,
+		}
 	}
 
 	return store.NewChangeSet(pairs...)
@@ -96,7 +113,7 @@ func (s *Store) Reset() error {
 }
 
 func (s *Store) Branch() store.BranchedKVStore {
-	panic("not implemented!")
+	return NewWithParent(s)
 }
 
 func (s *Store) BranchWithTrace(w io.Writer, tc store.TraceContext) store.BranchedKVStore {

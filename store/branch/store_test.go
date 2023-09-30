@@ -135,4 +135,6 @@ func (s *StoreTestSuite) TestBranch() {
 	// write the branched store and ensure all writes are flushed to the parent
 	b.Write()
 	s.Require().Equal([]byte("branched_updated_val001"), s.kvStore.Get([]byte("key001")))
+
+	s.Require().Equal(2, s.kvStore.GetChangeset().Size())
 }

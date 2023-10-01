@@ -7,10 +7,10 @@ import (
 	abci "github.com/cometbft/cometbft/abci/types"
 
 	"cosmossdk.io/errors"
+	"cosmossdk.io/x/group"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/group"
 )
 
 // InitGenesis initializes the group module's genesis state.

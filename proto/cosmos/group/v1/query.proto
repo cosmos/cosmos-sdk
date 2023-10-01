@@ -10,7 +10,7 @@ import "cosmos/base/query/v1beta1/pagination.proto";
 import "cosmos_proto/cosmos.proto";
 import "amino/amino.proto";
 
-option go_package = "github.com/cosmos/cosmos-sdk/x/group";
+option go_package = "cosmossdk.io/x/group";
 
 // Query is the cosmos.group.v1 Query service.
 service Query {

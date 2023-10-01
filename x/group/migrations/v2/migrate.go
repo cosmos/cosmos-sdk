@@ -5,12 +5,12 @@ import (
 	"fmt"
 
 	storetypes "cosmossdk.io/store/types"
+	"cosmossdk.io/x/group"
+	"cosmossdk.io/x/group/internal/orm"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/cosmos/cosmos-sdk/x/group"
-	"github.com/cosmos/cosmos-sdk/x/group/internal/orm"
 )
 
 const (

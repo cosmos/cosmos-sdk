@@ -9,13 +9,13 @@ import (
 	"github.com/spf13/cobra"
 
 	"cosmossdk.io/core/address"
+	"cosmossdk.io/x/group"
+	"cosmossdk.io/x/group/internal/math"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/version"
-	"github.com/cosmos/cosmos-sdk/x/group"
-	"github.com/cosmos/cosmos-sdk/x/group/internal/math"
 )
 
 const (

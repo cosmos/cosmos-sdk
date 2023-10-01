@@ -202,6 +202,7 @@ replace (
 	cosmossdk.io/x/circuit => ../x/circuit
 	cosmossdk.io/x/evidence => ../x/evidence
 	cosmossdk.io/x/feegrant => ../x/feegrant
+	cosmossdk.io/x/group => ../x/group
 	cosmossdk.io/x/nft => ../x/nft
 	cosmossdk.io/x/params => ../x/params
 	cosmossdk.io/x/protocolpool => ../x/protocolpool

@@ -7,8 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	storetypes "cosmossdk.io/store/types"
-
-	"github.com/cosmos/cosmos-sdk/x/group/errors"
+	"cosmossdk.io/x/group/errors"
 )
 
 func TestSequenceUniqueConstraint(t *testing.T) {

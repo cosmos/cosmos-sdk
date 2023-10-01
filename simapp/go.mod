@@ -207,6 +207,7 @@ replace (
 	cosmossdk.io/x/nft => ../x/nft
 	cosmossdk.io/x/protocolpool => ../x/protocolpool
 	cosmossdk.io/x/upgrade => ../x/upgrade
+	cosmossdk.io/x/group => ../x/group
 )
 
 // Below are the long-lived replace of the SimApp

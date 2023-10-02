@@ -15,11 +15,6 @@ var (
 	_ store.BranchedKVStore = (*Store)(nil)
 )
 
-// TODO:
-//
-// - Implement tracing
-// - Test tracing
-
 // Store implements both a KVStore and BranchedKVStore interfaces. It is used to
 // accumulate writes that can be later committed to backing SS and SC engines or
 // discarded altogether. If a read is not found through an uncommitted write, it

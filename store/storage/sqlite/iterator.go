@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"strings"
 
+	"golang.org/x/exp/slices"
 	_ "modernc.org/sqlite"
 
 	"cosmossdk.io/store/v2"
@@ -102,20 +103,12 @@ func (itr *iterator) Domain() ([]byte, []byte) {
 
 func (itr *iterator) Key() []byte {
 	itr.assertIsValid()
-
-	keyCopy := make([]byte, len(itr.key))
-	_ = copy(keyCopy, itr.key)
-
-	return keyCopy
+	return slices.Clone(itr.key)
 }
 
 func (itr *iterator) Value() []byte {
 	itr.assertIsValid()
-
-	valCopy := make([]byte, len(itr.val))
-	_ = copy(valCopy, itr.val)
-
-	return valCopy
+	return slices.Clone(itr.val)
 }
 
 func (itr *iterator) Valid() bool {

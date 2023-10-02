@@ -208,11 +208,19 @@ func (db *Database) NewIterator(storeKey string, version uint64, start, end []by
 		return nil, store.ErrStartAfterEnd
 	}
 
-	return newIterator(db.storage, storeKey, version, start, end)
+	return newIterator(db.storage, storeKey, version, start, end, false)
 }
 
 func (db *Database) NewReverseIterator(storeKey string, version uint64, start, end []byte) (store.Iterator, error) {
-	panic("not implemented!")
+	if (start != nil && len(start) == 0) || (end != nil && len(end) == 0) {
+		return nil, store.ErrKeyEmpty
+	}
+
+	if start != nil && end != nil && bytes.Compare(start, end) > 0 {
+		return nil, store.ErrStartAfterEnd
+	}
+
+	return newIterator(db.storage, storeKey, version, start, end, true)
 }
 
 func (db *Database) PrintRowsDebug() {

@@ -55,12 +55,17 @@ func New(
 	ss store.VersionedDatabase,
 	sc *commitment.Database,
 ) (store.RootStore, error) {
+	rootKVStore, err := branch.New(defaultStoreKey, ss)
+	if err != nil {
+		return nil, err
+	}
+
 	return &Store{
 		logger:          logger.With("module", "root_store"),
 		initialVersion:  initVersion,
 		stateStore:      ss,
 		stateCommitment: sc,
-		rootKVStore:     branch.New(defaultStoreKey, ss),
+		rootKVStore:     rootKVStore,
 	}, nil
 }
 
@@ -228,7 +233,10 @@ func (s *Store) Commit() ([]byte, error) {
 		s.lastCommitInfo.Timestamp = s.commitHeader.GetTime()
 	}
 
-	s.rootKVStore.Reset()
+	if err := s.rootKVStore.Reset(); err != nil {
+		return nil, fmt.Errorf("failed to reset root KVStore: %w", err)
+	}
+
 	s.workingHash = nil
 
 	return s.lastCommitInfo.Hash(), nil

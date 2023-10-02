@@ -4,10 +4,11 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/stretchr/testify/suite"
+
 	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/branch"
 	"cosmossdk.io/store/v2/storage/sqlite"
-	"github.com/stretchr/testify/suite"
 )
 
 const storeKey = "storeKey"

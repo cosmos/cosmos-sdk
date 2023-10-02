@@ -23,7 +23,7 @@ type iterator struct {
 	err        error
 }
 
-func newIterator(storage *sql.DB, storeKey string, targetVersion uint64, start, end []byte) (*iterator, error) {
+func newIterator(storage *sql.DB, storeKey string, targetVersion uint64, start, end []byte, reverse bool) (*iterator, error) {
 	var (
 		keyClause = []string{"store_key = ?", "version <= ?"}
 		queryArgs []any
@@ -46,6 +46,11 @@ func newIterator(storage *sql.DB, storeKey string, targetVersion uint64, start, 
 		queryArgs = []any{storeKey, targetVersion, targetVersion}
 	}
 
+	orderBy := "ASC"
+	if reverse {
+		orderBy = "DESC"
+	}
+
 	// Note, this is not susceptible to SQL injection because placeholders are used
 	// for parts of the query outside the store's direct control.
 	stmt, err := storage.Prepare(fmt.Sprintf(`
@@ -55,8 +60,8 @@ func newIterator(storage *sql.DB, storeKey string, targetVersion uint64, start, 
 			row_number() OVER (PARTITION BY key ORDER BY version DESC) AS _rn
 			FROM state_storage WHERE %s
 		) x
-	WHERE x._rn = 1 AND (x.tombstone = 0 OR x.tombstone > ?) ORDER BY x.key ASC;
-	`, strings.Join(keyClause, " AND ")))
+	WHERE x._rn = 1 AND (x.tombstone = 0 OR x.tombstone > ?) ORDER BY x.key %s;
+	`, strings.Join(keyClause, " AND "), orderBy))
 	if err != nil {
 		return nil, fmt.Errorf("failed to prepare SQL statement: %w", err)
 	}

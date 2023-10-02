@@ -1,6 +1,7 @@
 package sqlite
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -29,5 +30,63 @@ func TestDatabase_ReverseIterator(t *testing.T) {
 	require.NoError(t, err)
 	defer db.Close()
 
-	require.Panics(t, func() { _, _ = db.NewReverseIterator(storeKey1, 1, []byte("key000"), nil) })
+	batch, err := db.NewBatch(1)
+	require.NoError(t, err)
+
+	for i := 0; i < 100; i++ {
+		key := fmt.Sprintf("key%03d", i) // key000, key001, ..., key099
+		val := fmt.Sprintf("val%03d", i) // val000, val001, ..., val099
+		err = batch.Set(storeKey1, []byte(key), []byte(val))
+		require.NoError(t, err)
+	}
+
+	err = batch.Write()
+	require.NoError(t, err)
+
+	// reverse iterator without an end key
+	iter, err := db.NewReverseIterator(storeKey1, 1, []byte("key000"), nil)
+	require.NoError(t, err)
+
+	defer iter.Close()
+
+	i, count := 99, 0
+	for ; iter.Valid(); iter.Next() {
+		require.Equal(t, []byte(fmt.Sprintf("key%03d", i)), iter.Key())
+		require.Equal(t, []byte(fmt.Sprintf("val%03d", i)), iter.Value())
+
+		i--
+		count++
+	}
+	require.Equal(t, 100, count)
+	require.NoError(t, iter.Error())
+
+	// seek past domain, which should make the iterator invalid and produce an error
+	require.False(t, iter.Next())
+	require.False(t, iter.Valid())
+
+	// reverse iterator with with a start and end domain
+	iter2, err := db.NewReverseIterator(storeKey1, 1, []byte("key010"), []byte("key019"))
+	require.NoError(t, err)
+
+	defer iter2.Close()
+
+	i, count = 18, 0
+	for ; iter2.Valid(); iter2.Next() {
+		require.Equal(t, []byte(fmt.Sprintf("key%03d", i)), iter2.Key())
+		require.Equal(t, []byte(fmt.Sprintf("val%03d", i)), iter2.Value())
+
+		i--
+		count++
+	}
+	require.Equal(t, 9, count)
+	require.NoError(t, iter2.Error())
+
+	// seek past domain, which should make the iterator invalid and produce an error
+	require.False(t, iter2.Next())
+	require.False(t, iter2.Valid())
+
+	// start must be <= end
+	iter3, err := db.NewReverseIterator(storeKey1, 1, []byte("key020"), []byte("key019"))
+	require.Error(t, err)
+	require.Nil(t, iter3)
 }

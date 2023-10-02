@@ -16,12 +16,11 @@ var (
 )
 
 // TODO:
-// 2. Test CRUD methods
-// 3. Implement Iterator methods
-// 4. Test Iterator methods
-// 5. Implement remaining methods
-// 6. Test remaining methods
-// 7. Cleanup + test
+//
+// - Implement Iterator methods
+// - Test Iterator methods
+// - Implement tracing
+// - Test tracing
 
 // Store implements both a KVStore and BranchedKVStore interfaces. It is used to
 // accumulate writes that can be later committed to backing SS and SC engines or
@@ -29,9 +28,6 @@ var (
 // will be delegated to the SS backend.
 type Store struct {
 	mu sync.Mutex
-
-	// TODO: Consider wrapping storage (SS) in a KVStore wrapper to avoid having to
-	// check SS and parent separately.
 
 	// storage reflects backing storage (SS) for reads that are not found in uncommitted volatile state
 	storage store.VersionedDatabase
@@ -219,8 +215,71 @@ func (s *Store) Write() {
 	}
 }
 
+// Iterator creates an iterator that walks over both the KVStore's changeset,
+// i.e. dirty writes, and the parent iterator, which can either be another KVStore
+// or the SS backend, at the same time.
+//
+// Note, writes that happen on the KVStore over an iterator will not affect the
+// iterator. This is because when an iterator is created, it takes a current
+// snapshot of the changeset.
 func (s *Store) Iterator(start, end []byte) store.Iterator {
-	panic("not implemented!")
+	var parentItr store.Iterator
+	if s.parent != nil {
+		parentItr = s.parent.Iterator(start, end)
+	} else {
+		var err error
+		parentItr, err = s.storage.NewIterator(s.storeKey, s.version, start, end)
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	startStr := string(start)
+	endStr := string(end)
+
+	keys := make([]string, 0, len(s.changeset))
+	for key := range s.changeset {
+		switch {
+		case start != nil && end != nil:
+			if key >= startStr && key < endStr {
+				keys = append(keys, key)
+			}
+
+		case start != nil:
+			if key >= startStr {
+				keys = append(keys, key)
+			}
+
+		case end != nil:
+			if key < endStr {
+				keys = append(keys, key)
+			}
+
+		default:
+			keys = append(keys, key)
+		}
+	}
+
+	slices.Sort(keys)
+
+	values := make([]store.KVPair, len(keys))
+	for i, key := range keys {
+		values[i] = s.changeset[key]
+	}
+
+	itr := &iterator{
+		parentItr: parentItr,
+		start:     start,
+		end:       end,
+		keys:      keys,
+		values:    values,
+		exhausted: !parentItr.Valid(),
+	}
+
+	// call Next() to move the iterator to the first key/value entry
+	_ = itr.Next()
+
+	return itr
 }
 
 func (s *Store) ReverseIterator(start, end []byte) store.Iterator {

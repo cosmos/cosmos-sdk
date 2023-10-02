@@ -11,6 +11,7 @@ import (
 	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/storage/util"
 	"github.com/linxGnu/grocksdb"
+	"golang.org/x/exp/slices"
 )
 
 const (
@@ -263,10 +264,7 @@ func copyAndFreeSlice(s *grocksdb.Slice) []byte {
 		return nil
 	}
 
-	v := make([]byte, len(s.Data()))
-	copy(v, s.Data())
-
-	return v
+	return slices.Clone(s.Data())
 }
 
 func readOnlySlice(s *grocksdb.Slice) []byte {

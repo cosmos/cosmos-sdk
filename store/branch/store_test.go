@@ -138,3 +138,211 @@ func (s *StoreTestSuite) TestBranch() {
 
 	s.Require().Equal(2, s.kvStore.GetChangeset().Size())
 }
+
+func (s *StoreTestSuite) TestIterator_NoWrites() {
+	// iterator without an end domain
+	s.Run("start_only", func() {
+		itr := s.kvStore.Iterator([]byte("key000"), nil)
+		defer itr.Close()
+
+		var i, count int
+		for ; itr.Valid(); itr.Next() {
+			s.Require().Equal([]byte(fmt.Sprintf("key%03d", i)), itr.Key(), string(itr.Key()))
+			s.Require().Equal([]byte(fmt.Sprintf("val%03d", i)), itr.Value())
+
+			i++
+			count++
+		}
+		s.Require().Equal(100, count)
+		s.Require().NoError(itr.Error())
+
+		// seek past domain, which should make the iterator invalid and produce an error
+		s.Require().False(itr.Next())
+		s.Require().False(itr.Valid())
+	})
+
+	// iterator without a start domain
+	s.Run("end_only", func() {
+		itr := s.kvStore.Iterator(nil, []byte("key100"))
+		defer itr.Close()
+
+		var i, count int
+		for ; itr.Valid(); itr.Next() {
+			s.Require().Equal([]byte(fmt.Sprintf("key%03d", i)), itr.Key(), string(itr.Key()))
+			s.Require().Equal([]byte(fmt.Sprintf("val%03d", i)), itr.Value())
+
+			i++
+			count++
+		}
+		s.Require().Equal(100, count)
+		s.Require().NoError(itr.Error())
+
+		// seek past domain, which should make the iterator invalid and produce an error
+		s.Require().False(itr.Next())
+		s.Require().False(itr.Valid())
+	})
+
+	// iterator with with a start and end domain
+	s.Run("start_and_end", func() {
+		itr := s.kvStore.Iterator([]byte("key000"), []byte("key050"))
+		defer itr.Close()
+
+		var i, count int
+		for ; itr.Valid(); itr.Next() {
+			s.Require().Equal([]byte(fmt.Sprintf("key%03d", i)), itr.Key(), string(itr.Key()))
+			s.Require().Equal([]byte(fmt.Sprintf("val%03d", i)), itr.Value())
+
+			i++
+			count++
+		}
+		s.Require().Equal(50, count)
+		s.Require().NoError(itr.Error())
+
+		// seek past domain, which should make the iterator invalid and produce an error
+		s.Require().False(itr.Next())
+		s.Require().False(itr.Valid())
+	})
+
+	// iterator with an open domain
+	s.Run("open_domain", func() {
+		itr := s.kvStore.Iterator(nil, nil)
+		defer itr.Close()
+
+		var i, count int
+		for ; itr.Valid(); itr.Next() {
+			s.Require().Equal([]byte(fmt.Sprintf("key%03d", i)), itr.Key(), string(itr.Key()))
+			s.Require().Equal([]byte(fmt.Sprintf("val%03d", i)), itr.Value())
+
+			i++
+			count++
+		}
+		s.Require().Equal(100, count)
+		s.Require().NoError(itr.Error())
+
+		// seek past domain, which should make the iterator invalid and produce an error
+		s.Require().False(itr.Next())
+		s.Require().False(itr.Valid())
+	})
+}
+
+func (s *StoreTestSuite) TestIterator_DirtyWrites() {
+	// modify all even keys
+	for i := 0; i < 100; i++ {
+		if i%2 == 0 {
+			key := fmt.Sprintf("key%03d", i)         // key000, key002, ...
+			val := fmt.Sprintf("updated_val%03d", i) // updated_val000, updated_val002, ...
+			s.kvStore.Set([]byte(key), []byte(val))
+		}
+	}
+
+	// add some new keys to ensure we cover those as well
+	for i := 100; i < 150; i++ {
+		key := fmt.Sprintf("key%03d", i) // key100, key101, ...
+		val := fmt.Sprintf("val%03d", i) // val100, val101, ...
+		s.kvStore.Set([]byte(key), []byte(val))
+	}
+
+	// iterator without an end domain
+	s.Run("start_only", func() {
+		itr := s.kvStore.Iterator([]byte("key000"), nil)
+		defer itr.Close()
+
+		var i, count int
+		for ; itr.Valid(); itr.Next() {
+			s.Require().Equal([]byte(fmt.Sprintf("key%03d", i)), itr.Key(), string(itr.Key()))
+
+			if i%2 == 0 && i < 100 {
+				s.Require().Equal([]byte(fmt.Sprintf("updated_val%03d", i)), itr.Value())
+			} else {
+				s.Require().Equal([]byte(fmt.Sprintf("val%03d", i)), itr.Value())
+			}
+
+			i++
+			count++
+		}
+		s.Require().Equal(150, count)
+		s.Require().NoError(itr.Error())
+
+		// seek past domain, which should make the iterator invalid and produce an error
+		s.Require().False(itr.Next())
+		s.Require().False(itr.Valid())
+	})
+
+	// iterator without a start domain
+	s.Run("end_only", func() {
+		itr := s.kvStore.Iterator(nil, []byte("key151"))
+		defer itr.Close()
+
+		var i, count int
+		for ; itr.Valid(); itr.Next() {
+			s.Require().Equal([]byte(fmt.Sprintf("key%03d", i)), itr.Key(), string(itr.Key()))
+
+			if i%2 == 0 && i < 100 {
+				s.Require().Equal([]byte(fmt.Sprintf("updated_val%03d", i)), itr.Value())
+			} else {
+				s.Require().Equal([]byte(fmt.Sprintf("val%03d", i)), itr.Value())
+			}
+
+			i++
+			count++
+		}
+		s.Require().Equal(150, count)
+		s.Require().NoError(itr.Error())
+
+		// seek past domain, which should make the iterator invalid and produce an error
+		s.Require().False(itr.Next())
+		s.Require().False(itr.Valid())
+	})
+
+	// iterator with with a start and end domain
+	s.Run("start_and_end", func() {
+		itr := s.kvStore.Iterator([]byte("key000"), []byte("key050"))
+		defer itr.Close()
+
+		var i, count int
+		for ; itr.Valid(); itr.Next() {
+			s.Require().Equal([]byte(fmt.Sprintf("key%03d", i)), itr.Key(), string(itr.Key()))
+
+			if i%2 == 0 && i < 100 {
+				s.Require().Equal([]byte(fmt.Sprintf("updated_val%03d", i)), itr.Value())
+			} else {
+				s.Require().Equal([]byte(fmt.Sprintf("val%03d", i)), itr.Value())
+			}
+
+			i++
+			count++
+		}
+		s.Require().Equal(50, count)
+		s.Require().NoError(itr.Error())
+
+		// seek past domain, which should make the iterator invalid and produce an error
+		s.Require().False(itr.Next())
+		s.Require().False(itr.Valid())
+	})
+
+	// iterator with an open domain
+	s.Run("open_domain", func() {
+		itr := s.kvStore.Iterator(nil, nil)
+		defer itr.Close()
+
+		var i, count int
+		for ; itr.Valid(); itr.Next() {
+			s.Require().Equal([]byte(fmt.Sprintf("key%03d", i)), itr.Key(), string(itr.Key()))
+
+			if i%2 == 0 && i < 100 {
+				s.Require().Equal([]byte(fmt.Sprintf("updated_val%03d", i)), itr.Value())
+			} else {
+				s.Require().Equal([]byte(fmt.Sprintf("val%03d", i)), itr.Value())
+			}
+
+			i++
+			count++
+		}
+		s.Require().Equal(150, count)
+		s.Require().NoError(itr.Error())
+
+		// seek past domain, which should make the iterator invalid and produce an error
+		s.Require().False(itr.Next())
+		s.Require().False(itr.Valid())
+	})
+}

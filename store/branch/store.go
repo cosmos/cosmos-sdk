@@ -17,8 +17,6 @@ var (
 
 // TODO:
 //
-// - Implement Iterator methods
-// - Test Iterator methods
 // - Implement tracing
 // - Test tracing
 
@@ -215,9 +213,9 @@ func (s *Store) Write() {
 	}
 }
 
-// Iterator creates an iterator that walks over both the KVStore's changeset,
-// i.e. dirty writes, and the parent iterator, which can either be another KVStore
-// or the SS backend, at the same time.
+// Iterator creates an iterator over the domain [start, end), which walks over
+// both the KVStore's changeset, i.e. dirty writes, and the parent iterator,
+// which can either be another KVStore or the SS backend, at the same time.
 //
 // Note, writes that happen on the KVStore over an iterator will not affect the
 // iterator. This is because when an iterator is created, it takes a current
@@ -234,54 +232,30 @@ func (s *Store) Iterator(start, end []byte) store.Iterator {
 		}
 	}
 
-	startStr := string(start)
-	endStr := string(end)
+	cs := maps.Clone(s.changeset)
+	return newIterator(parentItr, start, end, cs, false)
+}
 
-	keys := make([]string, 0, len(s.changeset))
-	for key := range s.changeset {
-		switch {
-		case start != nil && end != nil:
-			if key >= startStr && key < endStr {
-				keys = append(keys, key)
-			}
-
-		case start != nil:
-			if key >= startStr {
-				keys = append(keys, key)
-			}
-
-		case end != nil:
-			if key < endStr {
-				keys = append(keys, key)
-			}
-
-		default:
-			keys = append(keys, key)
+// ReverseIterator creates a reverse iterator over the domain [start, end), which
+// walks over both the KVStore's changeset, i.e. dirty writes, and the parent
+// iterator, which can either be another KVStore or the SS backend, at the same
+// time.
+//
+// Note, writes that happen on the KVStore over an iterator will not affect the
+// iterator. This is because when an iterator is created, it takes a current
+// snapshot of the changeset.
+func (s *Store) ReverseIterator(start, end []byte) store.Iterator {
+	var parentItr store.Iterator
+	if s.parent != nil {
+		parentItr = s.parent.ReverseIterator(start, end)
+	} else {
+		var err error
+		parentItr, err = s.storage.NewReverseIterator(s.storeKey, s.version, start, end)
+		if err != nil {
+			panic(err)
 		}
 	}
 
-	slices.Sort(keys)
-
-	values := make([]store.KVPair, len(keys))
-	for i, key := range keys {
-		values[i] = s.changeset[key]
-	}
-
-	itr := &iterator{
-		parentItr: parentItr,
-		start:     start,
-		end:       end,
-		keys:      keys,
-		values:    values,
-		exhausted: !parentItr.Valid(),
-	}
-
-	// call Next() to move the iterator to the first key/value entry
-	_ = itr.Next()
-
-	return itr
-}
-
-func (s *Store) ReverseIterator(start, end []byte) store.Iterator {
-	panic("not implemented!")
+	cs := maps.Clone(s.changeset)
+	return newIterator(parentItr, start, end, cs, true)
 }

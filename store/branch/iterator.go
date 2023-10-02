@@ -23,9 +23,62 @@ type iterator struct {
 	value     []byte
 	keys      []string
 	values    []store.KVPair
+	reverse   bool
+	exhausted bool // exhausted reflects if the parent iterator is exhausted or not
+}
 
-	// exhausted reflects if the parent iterator is exhausted or not
-	exhausted bool
+func newIterator(parentItr store.Iterator, start, end []byte, cs map[string]store.KVPair, reverse bool) *iterator {
+	startStr := string(start)
+	endStr := string(end)
+
+	keys := make([]string, 0, len(cs))
+	for key := range cs {
+		switch {
+		case start != nil && end != nil:
+			if key >= startStr && key < endStr {
+				keys = append(keys, key)
+			}
+
+		case start != nil:
+			if key >= startStr {
+				keys = append(keys, key)
+			}
+
+		case end != nil:
+			if key < endStr {
+				keys = append(keys, key)
+			}
+
+		default:
+			keys = append(keys, key)
+		}
+	}
+
+	slices.Sort(keys)
+
+	if reverse {
+		slices.Reverse(keys)
+	}
+
+	values := make([]store.KVPair, len(keys))
+	for i, key := range keys {
+		values[i] = cs[key]
+	}
+
+	itr := &iterator{
+		parentItr: parentItr,
+		start:     start,
+		end:       end,
+		keys:      keys,
+		values:    values,
+		reverse:   reverse,
+		exhausted: !parentItr.Valid(),
+	}
+
+	// call Next() to move the iterator to the first key/value entry
+	_ = itr.Next()
+
+	return itr
 }
 
 // Domain returns the domain of the iterator. The caller must not modify the
@@ -91,7 +144,7 @@ func (itr *iterator) Next() bool {
 			parentKeyStr := string(parentKey)
 
 			switch {
-			case dirtyKey < parentKeyStr:
+			case (!itr.reverse && dirtyKey < parentKeyStr) || (itr.reverse && dirtyKey > parentKeyStr): // dirty key should come before parent's key
 				// pop off key
 				itr.keys[0] = ""
 				itr.keys = itr.keys[1:]
@@ -106,7 +159,7 @@ func (itr *iterator) Next() bool {
 					return true
 				}
 
-			case parentKeyStr < dirtyKey:
+			case (!itr.reverse && parentKeyStr < dirtyKey) || (itr.reverse && parentKeyStr > dirtyKey): // parent's key should come before dirty key
 				itr.key = parentKey
 				itr.value = itr.parentItr.Value()
 				itr.exhausted = !itr.parentItr.Next()

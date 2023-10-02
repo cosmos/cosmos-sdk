@@ -215,7 +215,7 @@ func (h *DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHan
 				}
 			}
 
-			return &abci.ResponsePrepareProposal{Txs: h.txSelector.SelectedTxs()}, nil
+			return &abci.ResponsePrepareProposal{Txs: h.txSelector.SelectedTxs(ctx)}, nil
 		}
 
 		iterator := h.mempool.Select(ctx, req.Txs)
@@ -242,7 +242,7 @@ func (h *DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHan
 			iterator = iterator.Next()
 		}
 
-		return &abci.ResponsePrepareProposal{Txs: h.txSelector.SelectedTxs()}, nil
+		return &abci.ResponsePrepareProposal{Txs: h.txSelector.SelectedTxs(ctx)}, nil
 	}
 }
 
@@ -333,7 +333,7 @@ func NoOpVerifyVoteExtensionHandler() sdk.VerifyVoteExtensionHandler {
 // track of the selected transactions themselves.
 type TxSelector interface {
 	// SelectedTxs should return a copy of the selected transactions.
-	SelectedTxs() [][]byte
+	SelectedTxs(ctx context.Context) [][]byte
 
 	// Clear should clear the TxSelector, nulling out all relevant fields.
 	Clear()
@@ -355,7 +355,7 @@ func NewDefaultTxSelector() TxSelector {
 	return &defaultTxSelector{}
 }
 
-func (ts *defaultTxSelector) SelectedTxs() [][]byte {
+func (ts *defaultTxSelector) SelectedTxs(_ context.Context) [][]byte {
 	txs := make([][]byte, len(ts.selectedTxs))
 	copy(txs, ts.selectedTxs)
 	return txs

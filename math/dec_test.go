@@ -408,6 +408,16 @@ func (s *decimalTestSuite) TestDecCeil() {
 	}
 }
 
+func (s *decimalTestSuite) TestCeilOverflow() {
+	d, err := math.LegacyNewDecFromStr("66749594872528440074844428317798503581334516323645399060845050244444366430645.000000000000000001")
+	s.Require().NoError(err)
+	s.Require().True(d.BigInt().BitLen() <= 315, "d is too large")
+	// this assertion is violated, as d.Ceil() does not panic
+	s.Require().NotPanics(func() { d.Ceil() }, "Ceil should panic on overflow")
+	// uncomment the following assertion to see it failing the test
+	s.Require().False(d.Ceil().BigInt().BitLen() <= 315, "ceil is too large")
+}
+
 func (s *decimalTestSuite) TestPower() {
 	testCases := []struct {
 		input    math.LegacyDec

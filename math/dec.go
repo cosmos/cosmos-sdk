@@ -733,6 +733,10 @@ func (d LegacyDec) Ceil() LegacyDec {
 		return LegacyNewDecFromBigInt(quo)
 	}
 
+	if d.i.BitLen() >= maxDecBitLen {
+		panic("Int overflow")
+	}
+
 	return LegacyNewDecFromBigInt(quo.Add(quo, oneInt))
 }
 

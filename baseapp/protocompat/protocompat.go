@@ -11,6 +11,7 @@ import (
 	proto2 "google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
+	"google.golang.org/protobuf/runtime/protoiface"
 )
 
 var (
@@ -18,7 +19,7 @@ var (
 	protov2Type = reflect.TypeOf((*proto2.Message)(nil)).Elem()
 )
 
-type Handler = func(ctx context.Context, message gogoproto.Message) (gogoproto.Message, error)
+type Handler = func(ctx context.Context, message protoiface.MessageV1) (protoiface.MessageV1, error)
 
 func MakeHybridHandler(cdc codec.BinaryCodec, sd *grpc.ServiceDesc, method grpc.MethodDesc, handler interface{}) (Handler, error) {
 	methodFullName := protoreflect.FullName(fmt.Sprintf("%s.%s", sd.ServiceName, method.MethodName))
@@ -31,21 +32,14 @@ func MakeHybridHandler(cdc codec.BinaryCodec, sd *grpc.ServiceDesc, method grpc.
 		return nil, fmt.Errorf("invalid method descriptor %s", methodFullName)
 	}
 
-	funcType, err := getFuncType(handler, method.MethodName)
+	isProtov2Handler, err := isProtov2(method)
 	if err != nil {
 		return nil, err
 	}
-	// the handler function takes two arguments: context.Context and proto.Message
-	// since it is a method, the first argument is the receiver, which we don't care about.
-	// the second argument is the proto.Message, which we need to know the type of.
-	inputType := funcType.In(2)
-	switch {
-	case inputType.Implements(protov2Type):
+	if isProtov2Handler {
 		return makeProtoV2HybridHandler(methodDesc, cdc, method, handler)
-	case inputType.Implements(gogoType):
+	} else {
 		return makeGogoHybridHandler(methodDesc, cdc, method, handler)
-	default:
-		return nil, fmt.Errorf("invalid method handler type %T, input does not implement", method.Handler)
 	}
 }
 
@@ -54,7 +48,7 @@ func makeProtoV2HybridHandler(prefMethod protoreflect.MethodDescriptor, cdc code
 	// it's a protov2 handler, if a gogo counterparty is not found we cannot handle gogo messages.
 	gogoRespType := gogoproto.MessageType(string(prefMethod.Output().FullName()))
 	if gogoRespType == nil {
-		return func(ctx context.Context, request gogoproto.Message) (gogoproto.Message, error) {
+		return func(ctx context.Context, request protoiface.MessageV1) (protoiface.MessageV1, error) {
 			protov2Request, ok := request.(proto2.Message)
 			if !ok {
 				return nil, fmt.Errorf("invalid request type %T, method %s does not accept gogoproto messages", request, prefMethod.FullName())
@@ -66,11 +60,11 @@ func makeProtoV2HybridHandler(prefMethod protoreflect.MethodDescriptor, cdc code
 			if err != nil {
 				return nil, err
 			}
-			return resp.(gogoproto.Message), nil
+			return resp.(protoiface.MessageV1), nil
 		}, nil
 	}
 	gogoRespType = gogoRespType.Elem() // we need the non pointer type
-	return func(ctx context.Context, request gogoproto.Message) (gogoproto.Message, error) {
+	return func(ctx context.Context, request protoiface.MessageV1) (protoiface.MessageV1, error) {
 		// we check if the request is a protov2 message.
 		switch m := request.(type) {
 		case proto2.Message:
@@ -82,7 +76,7 @@ func makeProtoV2HybridHandler(prefMethod protoreflect.MethodDescriptor, cdc code
 			if err != nil {
 				return nil, err
 			}
-			return resp.(gogoproto.Message), nil
+			return resp.(protoiface.MessageV1), nil
 		case gogoproto.Message:
 			// we need to marshal and unmarshal the request.
 			requestBytes, err := cdc.Marshal(m)
@@ -118,7 +112,7 @@ func makeGogoHybridHandler(prefMethod protoreflect.MethodDescriptor, cdc codec.B
 	protov2RespType, err := protoregistry.GlobalTypes.FindMessageByName(prefMethod.Output().FullName())
 	if err != nil {
 		// this can only be a gogo message.
-		return func(ctx context.Context, request gogoproto.Message) (gogoproto.Message, error) {
+		return func(ctx context.Context, request protoiface.MessageV1) (protoiface.MessageV1, error) {
 			_, ok := request.(proto2.Message)
 			if ok {
 				return nil, fmt.Errorf("invalid request type %T, method %s does not accept protov2 messages", request, prefMethod.FullName())
@@ -131,11 +125,11 @@ func makeGogoHybridHandler(prefMethod protoreflect.MethodDescriptor, cdc codec.B
 			if err != nil {
 				return nil, err
 			}
-			return resp.(gogoproto.Message), nil
+			return resp.(protoiface.MessageV1), nil
 		}, nil
 	}
 	// this is a gogo handler, and we have a protov2 counterparty.
-	return func(ctx context.Context, request gogoproto.Message) (gogoproto.Message, error) {
+	return func(ctx context.Context, request protoiface.MessageV1) (protoiface.MessageV1, error) {
 		switch m := request.(type) {
 		case proto2.Message:
 			// we need to marshal and unmarshal the request.
@@ -169,23 +163,38 @@ func makeGogoHybridHandler(prefMethod protoreflect.MethodDescriptor, cdc codec.B
 			if err != nil {
 				return nil, err
 			}
-			return resp.(gogoproto.Message), nil
+			return resp.(protoiface.MessageV1), nil
 		default:
 			panic("unreachable")
 		}
 	}, nil
 }
 
-// getFuncType returns the handler type for the given method.
-// this is unfortunately hideous because we need to discover
-// from the gRPC server implementer (handler) the method  that
-// matches the protobuf service method. This depends on the
-// codegen semantics.
-func getFuncType(handler any, method string) (reflect.Type, error) {
-	handlerType := reflect.TypeOf(handler)
-	methodType, exists := handlerType.MethodByName(method)
-	if !exists {
-		return nil, fmt.Errorf("method %s not found on handler", method)
+// isProtov2 returns true if the given method accepts protov2 messages.
+// Returns false if it does not.
+// It uses the decoder function passed to the method handler to determine
+// the type. Since the decoder function is passed in by the concrete implementer the expected
+// message where bytes are unmarshaled to, we can use that to determine the type.
+func isProtov2(md grpc.MethodDesc) (isV2Type bool, err error) {
+	pullRequestType := func(msg interface{}) error {
+		typ := reflect.TypeOf(msg)
+		switch {
+		case typ.Implements(protov2Type):
+			isV2Type = true
+			return nil
+		case typ.Implements(gogoType):
+			isV2Type = false
+			return nil
+		default:
+			return fmt.Errorf("invalid request type %T, expected protov2 or gogo message", msg)
+		}
 	}
-	return methodType.Type, nil
+	// doNotExecute is a dummy handler that stops the request execution.
+	doNotExecute := func(_ context.Context, _ any, _ *grpc.UnaryServerInfo, _ grpc.UnaryHandler) (any, error) {
+		return nil, nil
+	}
+	// we are allowed to pass in a nil context and nil request, since we are not actually executing the request.
+	// this is made possible by the doNotExecute function which immediately returns without calling other handlers.
+	_, _ = md.Handler(nil, nil, pullRequestType, doNotExecute)
+	return
 }

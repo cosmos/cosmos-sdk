@@ -11,6 +11,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/encoding"
 	"google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/runtime/protoiface"
 
 	"github.com/cosmos/cosmos-sdk/client/grpc/reflection"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -21,7 +22,7 @@ import (
 // GRPCQueryRouter routes ABCI Query requests to GRPC handlers
 type GRPCQueryRouter struct {
 	routes               map[string]GRPCQueryHandler
-	handlerByMessageName map[string][]func(ctx context.Context, msg proto.Message) (proto.Message, error)
+	handlerByMessageName map[string][]func(ctx context.Context, msg protoiface.MessageV1) (protoiface.MessageV1, error)
 	sdkCodec             codec.BinaryCodec
 	cdc                  encoding.Codec
 	serviceData          []serviceData
@@ -39,7 +40,7 @@ var _ gogogrpc.Server = &GRPCQueryRouter{}
 func NewGRPCQueryRouter() *GRPCQueryRouter {
 	return &GRPCQueryRouter{
 		routes:               map[string]GRPCQueryHandler{},
-		handlerByMessageName: map[string][]func(ctx context.Context, msg proto.Message) (proto.Message, error){},
+		handlerByMessageName: map[string][]func(ctx context.Context, msg protoiface.MessageV1) (protoiface.MessageV1, error){},
 	}
 }
 
@@ -124,7 +125,7 @@ func (qrt *GRPCQueryRouter) registerABCIQueryHandler(sd *grpc.ServiceDesc, metho
 	return nil
 }
 
-func (qrt *GRPCQueryRouter) HandlersByRequestName(name string) []func(ctx context.Context, req proto.Message) (resp proto.Message, err error) {
+func (qrt *GRPCQueryRouter) HandlersByRequestName(name string) []func(ctx context.Context, req protoiface.MessageV1) (resp protoiface.MessageV1, err error) {
 	return qrt.handlerByMessageName[name]
 }
 

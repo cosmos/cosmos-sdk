@@ -114,7 +114,7 @@ func TestOfflineSigner_Sign(t *testing.T) {
 			},
 		},
 		{
-			name: "DIRECT signing",
+			name: "TEXTUAL signing",
 			fields: fields{
 				txConfig: MakeTestTxConfig(),
 			},

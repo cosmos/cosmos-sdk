@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	abci "github.com/cometbft/cometbft/abci/types"
-	"github.com/cosmos/cosmos-sdk/baseapp/protocompat"
+	"github.com/cosmos/cosmos-sdk/baseapp/internal/protocompat"
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
 	"github.com/cosmos/gogoproto/proto"
 	"google.golang.org/grpc"

@@ -10,7 +10,7 @@ import (
 
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/v2"
-	"cosmossdk.io/store/v2/branch"
+	"cosmossdk.io/store/v2/branchkv"
 	"cosmossdk.io/store/v2/commitment"
 )
 
@@ -55,7 +55,7 @@ func New(
 	ss store.VersionedDatabase,
 	sc *commitment.Database,
 ) (store.RootStore, error) {
-	rootKVStore, err := branch.New(defaultStoreKey, ss)
+	rootKVStore, err := branchkv.New(defaultStoreKey, ss)
 	if err != nil {
 		return nil, err
 	}

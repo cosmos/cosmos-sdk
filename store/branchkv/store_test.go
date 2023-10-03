@@ -1,4 +1,4 @@
-package branch_test
+package branchkv_test
 
 import (
 	"fmt"
@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/store/v2"
-	"cosmossdk.io/store/v2/branch"
+	"cosmossdk.io/store/v2/branchkv"
 	"cosmossdk.io/store/v2/storage/sqlite"
 )
 
@@ -41,7 +41,7 @@ func (s *StoreTestSuite) SetupTest() {
 	err = batch.Write()
 	s.Require().NoError(err)
 
-	kvStore, err := branch.New(storeKey, storage)
+	kvStore, err := branchkv.New(storeKey, storage)
 	s.Require().NoError(err)
 
 	s.storage = storage

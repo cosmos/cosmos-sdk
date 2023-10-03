@@ -1,4 +1,4 @@
-package branch
+package branchkv
 
 import (
 	"io"

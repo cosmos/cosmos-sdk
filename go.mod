@@ -43,7 +43,7 @@ require (
 	github.com/hdevalence/ed25519consensus v0.1.0
 	github.com/huandu/skiplist v1.2.0
 	github.com/improbable-eng/grpc-web v0.15.0
-	github.com/jhump/protoreflect v1.15.2
+	github.com/jhump/protoreflect v1.15.3
 	github.com/magiconair/properties v1.8.7
 	github.com/manifoldco/promptui v0.9.0
 	github.com/mattn/go-isatty v0.0.19

@@ -7,9 +7,9 @@ import (
 	"google.golang.org/grpc/status"
 
 	"cosmossdk.io/errors"
+	"cosmossdk.io/x/params/types/proposal"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"cosmossdk.io/x/params/types/proposal"
 )
 
 var _ proposal.QueryServer = Keeper{}

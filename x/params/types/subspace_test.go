@@ -13,12 +13,12 @@ import (
 	"cosmossdk.io/store"
 	"cosmossdk.io/store/metrics"
 	storetypes "cosmossdk.io/store/types"
+	paramsmodule "cosmossdk.io/x/params"
+	"cosmossdk.io/x/params/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	paramsmodule "cosmossdk.io/x/params"
-	"cosmossdk.io/x/params/types"
 )
 
 type SubspaceTestSuite struct {

@@ -10,15 +10,15 @@ import (
 	"cosmossdk.io/math"
 	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
+	"cosmossdk.io/x/params"
+	"cosmossdk.io/x/params/keeper"
+	"cosmossdk.io/x/params/types"
+	"cosmossdk.io/x/params/types/proposal"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	"cosmossdk.io/x/params"
-	"cosmossdk.io/x/params/keeper"
-	"cosmossdk.io/x/params/types"
-	"cosmossdk.io/x/params/types/proposal"
 )
 
 type KeeperTestSuite struct {

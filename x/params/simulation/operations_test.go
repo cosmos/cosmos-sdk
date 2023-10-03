@@ -7,10 +7,11 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"cosmossdk.io/x/params/simulation"
 	"cosmossdk.io/x/params/types/proposal"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 )
 
 type MockParamChange struct {

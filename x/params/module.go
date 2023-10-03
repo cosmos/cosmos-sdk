@@ -9,6 +9,9 @@ import (
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
 	store "cosmossdk.io/store/types"
+	"cosmossdk.io/x/params/keeper"
+	"cosmossdk.io/x/params/types"
+	"cosmossdk.io/x/params/types/proposal"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -16,9 +19,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
-	"cosmossdk.io/x/params/keeper"
-	"cosmossdk.io/x/params/types"
-	"cosmossdk.io/x/params/types/proposal"
 )
 
 var (

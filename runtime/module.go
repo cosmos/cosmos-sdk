@@ -82,7 +82,7 @@ func ProvideApp(interfaceRegistry codectypes.InterfaceRegistry) (
 	codec.Codec,
 	*codec.LegacyAmino,
 	*AppBuilder,
-	codec.ProtoCodecMarshaler,
+	codec.Codec,
 	*baseapp.MsgServiceRouter,
 	appmodule.AppModule,
 	protodesc.Resolver,

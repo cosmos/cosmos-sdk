@@ -379,7 +379,12 @@ func (f Factory) PrintUnsignedTx(clientCtx client.Context, msgs ...sdk.Msg) erro
 		return err
 	}
 
-	json, err := clientCtx.TxConfig.TxJSONEncoder()(unsignedTx.GetTx())
+	encoder := f.txConfig.TxJSONEncoder()
+	if encoder == nil {
+		return fmt.Errorf("cannot print unsigned tx: tx json encoder is nil")
+	}
+
+	json, err := encoder(unsignedTx.GetTx())
 	if err != nil {
 		return err
 	}

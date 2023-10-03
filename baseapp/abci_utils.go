@@ -209,13 +209,13 @@ func (h *DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHan
 					return nil, err
 				}
 
-				stop := h.txSelector.SelectTxForProposal(uint64(req.MaxTxBytes), maxBlockGas, tx, txBz)
+				stop := h.txSelector.SelectTxForProposal(ctx, uint64(req.MaxTxBytes), maxBlockGas, tx, txBz)
 				if stop {
 					break
 				}
 			}
 
-			return &abci.ResponsePrepareProposal{Txs: h.txSelector.SelectedTxs()}, nil
+			return &abci.ResponsePrepareProposal{Txs: h.txSelector.SelectedTxs(ctx)}, nil
 		}
 
 		iterator := h.mempool.Select(ctx, req.Txs)
@@ -233,7 +233,7 @@ func (h *DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHan
 					return nil, err
 				}
 			} else {
-				stop := h.txSelector.SelectTxForProposal(uint64(req.MaxTxBytes), maxBlockGas, memTx, txBz)
+				stop := h.txSelector.SelectTxForProposal(ctx, uint64(req.MaxTxBytes), maxBlockGas, memTx, txBz)
 				if stop {
 					break
 				}
@@ -242,7 +242,7 @@ func (h *DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHan
 			iterator = iterator.Next()
 		}
 
-		return &abci.ResponsePrepareProposal{Txs: h.txSelector.SelectedTxs()}, nil
+		return &abci.ResponsePrepareProposal{Txs: h.txSelector.SelectedTxs(ctx)}, nil
 	}
 }
 
@@ -333,7 +333,7 @@ func NoOpVerifyVoteExtensionHandler() sdk.VerifyVoteExtensionHandler {
 // track of the selected transactions themselves.
 type TxSelector interface {
 	// SelectedTxs should return a copy of the selected transactions.
-	SelectedTxs() [][]byte
+	SelectedTxs(ctx context.Context) [][]byte
 
 	// Clear should clear the TxSelector, nulling out all relevant fields.
 	Clear()
@@ -342,7 +342,7 @@ type TxSelector interface {
 	// a proposal based on inclusion criteria defined by the TxSelector. It must
 	// return <true> if the caller should halt the transaction selection loop
 	// (typically over a mempool) or <false> otherwise.
-	SelectTxForProposal(maxTxBytes, maxBlockGas uint64, memTx sdk.Tx, txBz []byte) bool
+	SelectTxForProposal(ctx context.Context, maxTxBytes, maxBlockGas uint64, memTx sdk.Tx, txBz []byte) bool
 }
 
 type defaultTxSelector struct {
@@ -355,7 +355,7 @@ func NewDefaultTxSelector() TxSelector {
 	return &defaultTxSelector{}
 }
 
-func (ts *defaultTxSelector) SelectedTxs() [][]byte {
+func (ts *defaultTxSelector) SelectedTxs(_ context.Context) [][]byte {
 	txs := make([][]byte, len(ts.selectedTxs))
 	copy(txs, ts.selectedTxs)
 	return txs
@@ -367,7 +367,7 @@ func (ts *defaultTxSelector) Clear() {
 	ts.selectedTxs = nil
 }
 
-func (ts *defaultTxSelector) SelectTxForProposal(maxTxBytes, maxBlockGas uint64, memTx sdk.Tx, txBz []byte) bool {
+func (ts *defaultTxSelector) SelectTxForProposal(_ context.Context, maxTxBytes, maxBlockGas uint64, memTx sdk.Tx, txBz []byte) bool {
 	txSize := uint64(len(txBz))
 
 	var txGasLimit uint64

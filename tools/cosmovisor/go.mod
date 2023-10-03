@@ -5,7 +5,7 @@ go 1.21
 require (
 	cosmossdk.io/log v1.2.1
 	cosmossdk.io/x/upgrade v0.0.0-20230614103911-b3da8bb4e801
-	github.com/otiai10/copy v1.12.0
+	github.com/otiai10/copy v1.14.0
 	github.com/spf13/cobra v1.7.0
 	github.com/stretchr/testify v1.8.4
 )

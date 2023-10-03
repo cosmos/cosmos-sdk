@@ -514,7 +514,7 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// MsgSignData defines an arbitrary, general-purpose, off-chain message
+// MsgSignArbitraryData defines an arbitrary, general-purpose, off-chain message
 type MsgSignArbitraryData struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

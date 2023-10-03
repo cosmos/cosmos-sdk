@@ -18,6 +18,8 @@ const (
 	ExpectedRoute = "offchain"
 )
 
+var _ msg = &MsgSignArbitraryData{}
+
 type msg interface {
 	sdk.Msg
 	offchain()

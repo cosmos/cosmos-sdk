@@ -13,38 +13,45 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/address"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
+	txmodule "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
 )
 
 func MakeTestTxConfig() client.TxConfig {
-	accAddressPrefix := "cosmos"
-	valAddressPrefix := "cosmosvaloper"
 	enabledSignModes := []signingtypes.SignMode{
 		signingtypes.SignMode_SIGN_MODE_DIRECT,
 		signingtypes.SignMode_SIGN_MODE_DIRECT_AUX,
 		signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
+		signingtypes.SignMode_SIGN_MODE_TEXTUAL,
 	}
-	//txConfigOpts := tx.ConfigOptions{
-	//	EnabledSignModes: enabledSignModes,
-	//}
+	initClientCtx := client.Context{}
+	txConfigOpts := tx.ConfigOptions{
+		EnabledSignModes:           enabledSignModes,
+		TextualCoinMetadataQueryFn: txmodule.NewGRPCCoinMetadataQueryFn(initClientCtx),
+	}
 	ir, err := codectypes.NewInterfaceRegistryWithOptions(codectypes.InterfaceRegistryOptions{
 		ProtoFiles: proto.HybridResolver,
 		SigningOptions: sig.Options{
-			AddressCodec:          address.NewBech32Codec(accAddressPrefix),
-			ValidatorAddressCodec: address.NewBech32Codec(valAddressPrefix),
+			AddressCodec:          address.NewBech32Codec("cosmos"),
+			ValidatorAddressCodec: address.NewBech32Codec("cosmosvaloper"),
 		},
 	})
 	if err != nil {
 		panic(err)
 	}
 	RegisterInterfaces(ir)
+	cryptocodec.RegisterInterfaces(ir)
 	cdc := codec.NewProtoCodec(ir)
-	txConfig := tx.NewTxConfig(cdc, enabledSignModes)
+	txConfig, err := tx.NewTxConfigWithOptions(cdc, txConfigOpts)
+	if err != nil {
+		panic(err)
+	}
 	return txConfig
 }
 

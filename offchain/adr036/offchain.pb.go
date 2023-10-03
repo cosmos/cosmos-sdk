@@ -25,7 +25,7 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// MsgSignData defines an arbitrary, general-purpose, off-chain message
+// MsgSignArbitraryData defines an arbitrary, general-purpose, off-chain message
 type MsgSignArbitraryData struct {
 	// Signer is the sdk.AccAddress of the message signer
 	Signer string `protobuf:"bytes,1,opt,name=signer,proto3" json:"signer,omitempty"`

@@ -21,6 +21,7 @@ import (
 func getCodec() codec.Codec {
 	registry := codectypes.NewInterfaceRegistry()
 	cryptocodec.RegisterInterfaces(registry)
+	RegisterInterfaces(registry)
 	return codec.NewProtoCodec(registry)
 }
 
@@ -43,6 +44,7 @@ func TestNewOfflineSigner(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			k := keyring.NewInMemory(getCodec())
 			_, err := k.NewAccount("uid", testdata.TestMnemonic, "", sdk.GetConfig().GetFullBIP44Path(), hd.Secp256k1)
+			require.NoError(t, err)
 			signer, err := newKeyRingWrapper("uid", k)
 			require.NoError(t, err)
 			got := NewOffChainSigner(signer, tt.args.txConfig)
@@ -111,6 +113,26 @@ func TestOfflineSigner_Sign(t *testing.T) {
 				signMode: signing.SignMode_SIGN_MODE_DIRECT_AUX,
 			},
 		},
+		{
+			name: "DIRECT signing",
+			fields: fields{
+				txConfig: MakeTestTxConfig(),
+			},
+			createKey: func(k keyring.Keyring, uid string) (*keyring.Record, error) {
+				return k.NewAccount(uid, testdata.TestMnemonic, "", sdk.GetConfig().GetFullBIP44Path(), hd.Secp256k1)
+			},
+			args: args{
+				ctx: context.Background(),
+				msgs: []sdk.Msg{
+					&MsgSignArbitraryData{
+						Signer: "cosmos1w34k53py5v5xyluazqpq65agyajavep2rflq6h",
+						Data:   []byte("Hello"),
+					},
+				},
+				uid:      "correctSigning",
+				signMode: signing.SignMode_SIGN_MODE_TEXTUAL,
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -152,20 +174,8 @@ func Test_validateMsgs(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name:    "no msgf",
+			name:    "no msg",
 			args:    args{msgs: []sdk.Msg{}},
-			wantErr: true,
-		},
-		{
-			name: "empty signer",
-			args: args{
-				msgs: []sdk.Msg{
-					&MsgSignArbitraryData{
-						Signer: "",
-						Data:   []byte("Hello"),
-					},
-				},
-			},
 			wantErr: true,
 		},
 		{

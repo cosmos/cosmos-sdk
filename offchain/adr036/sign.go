@@ -3,6 +3,7 @@ package adr036
 import (
 	"context"
 	"errors"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -112,8 +113,7 @@ func (s OffChainSigner) singMsg(ctx context.Context, msgs []sdk.Msg, signmode si
 		Sequence: ExpectedSequence,
 	}
 
-	var sigs []signing.SignatureV2
-	sigs = []signing.SignatureV2{sig}
+	sigs := []signing.SignatureV2{sig}
 
 	err := tx.SetSignatures(sigs...)
 	if err != nil {

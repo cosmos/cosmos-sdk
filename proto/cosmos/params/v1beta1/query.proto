@@ -6,7 +6,7 @@ import "google/api/annotations.proto";
 import "cosmos/params/v1beta1/params.proto";
 import "amino/amino.proto";
 
-option go_package = "github.com/cosmos/cosmos-sdk/x/params/types/proposal";
+option go_package = "cosmossdk.io/x/params/types/proposal";
 
 // Query defines the gRPC querier service.
 service Query {

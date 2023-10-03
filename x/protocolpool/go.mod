@@ -16,7 +16,7 @@ require (
 	github.com/golang/protobuf v1.5.3
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
 	github.com/stretchr/testify v1.8.4
-	google.golang.org/genproto/googleapis/api v0.0.0-20230822172742-b8732ec3820d
+	google.golang.org/genproto/googleapis/api v0.0.0-20230913181813-007df8e322eb
 	google.golang.org/grpc v1.58.2
 	gotest.tools/v3 v3.5.1
 )

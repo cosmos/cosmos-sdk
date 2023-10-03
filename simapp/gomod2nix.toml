@@ -490,7 +490,7 @@ schema = 3
     version = "v0.0.0-20230913181813-007df8e322eb"
     hash = "sha256-0lXldjgjAjpPBID24a5hbRDJmuIxduVrAG98KwfbZLI="
   [mod."google.golang.org/genproto/googleapis/api"]
-    version = "v0.0.0-20230822172742-b8732ec3820d"
+    version = "v0.0.0-20230913181813-007df8e322eb"
     hash = "sha256-qd9dJezVHNJZNMkywXapT1rsyD+lb25AU8aG8NJlhm4="
   [mod."google.golang.org/genproto/googleapis/rpc"]
     version = "v0.0.0-20230920204549-e6e6cdab5c13"

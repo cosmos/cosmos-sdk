@@ -7,7 +7,7 @@ Note, always read the **SimApp** section for more information on application wir
 
 ### Params
 
-Params Migrations were removed. It is required to migrate to 0.50 prior to upgrading to .51.
+* Params Migrations were removed. It is required to migrate to 0.50 prior to upgrading to .51.
 
 ### SimApp
 
@@ -33,6 +33,10 @@ clientCtx = clientCtx.
 Refer to SimApp `root_v2.go` and `root.go` for an example with an app v2 and a legacy app.
 
 ### Modules
+
+#### Params
+
+A standalone Go module was created and it is accessible at "cosmossdk.io/x/params".
 
 #### `**all**`
 

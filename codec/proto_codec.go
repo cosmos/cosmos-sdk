@@ -23,9 +23,9 @@ import (
 
 // ProtoCodecMarshaler defines an interface for codecs that utilize Protobuf for both
 // binary and JSON encoding.
+// Deprecated: Use Codec instead.
 type ProtoCodecMarshaler interface {
 	Codec
-	InterfaceRegistry() types.InterfaceRegistry
 }
 
 // ProtoCodec defines a codec that utilizes Protobuf for both binary and JSON
@@ -34,10 +34,7 @@ type ProtoCodec struct {
 	interfaceRegistry types.InterfaceRegistry
 }
 
-var (
-	_ Codec               = &ProtoCodec{}
-	_ ProtoCodecMarshaler = &ProtoCodec{}
-)
+var _ Codec = (*ProtoCodec)(nil)
 
 // NewProtoCodec returns a reference to a new ProtoCodec
 func NewProtoCodec(interfaceRegistry types.InterfaceRegistry) *ProtoCodec {

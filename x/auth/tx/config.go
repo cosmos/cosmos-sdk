@@ -22,7 +22,7 @@ type config struct {
 	encoder        sdk.TxEncoder
 	jsonDecoder    sdk.TxDecoder
 	jsonEncoder    sdk.TxEncoder
-	protoCodec     codec.ProtoCodecMarshaler
+	protoCodec     codec.Codec
 	signingContext *txsigning.Context
 }
 
@@ -73,7 +73,7 @@ var DefaultSignModes = []signingtypes.SignMode{
 // We prefer to use depinject to provide client.TxConfig, but we permit this constructor usage. Within the SDK,
 // this constructor is primarily used in tests, but also sees usage in app chains like:
 // https://github.com/evmos/evmos/blob/719363fbb92ff3ea9649694bd088e4c6fe9c195f/encoding/config.go#L37
-func NewTxConfig(protoCodec codec.ProtoCodecMarshaler, enabledSignModes []signingtypes.SignMode,
+func NewTxConfig(protoCodec codec.Codec, enabledSignModes []signingtypes.SignMode,
 	customSignModes ...txsigning.SignModeHandler,
 ) client.TxConfig {
 	txConfig, err := NewTxConfigWithOptions(protoCodec, ConfigOptions{
@@ -165,9 +165,13 @@ func NewSigningHandlerMap(configOptions ConfigOptions) (*txsigning.HandlerMap, e
 
 // NewTxConfigWithOptions returns a new protobuf TxConfig using the provided ProtoCodec, ConfigOptions and
 // custom sign mode handlers. If ConfigOptions is an empty struct then default values will be used.
-func NewTxConfigWithOptions(protoCodec codec.ProtoCodecMarshaler, configOptions ConfigOptions) (client.TxConfig, error) {
+func NewTxConfigWithOptions(protoCodec codec.Codec, configOptions ConfigOptions) (client.TxConfig, error) {
 	txConfig := &config{
-		protoCodec: protoCodec,
+		protoCodec:  protoCodec,
+		decoder:     configOptions.ProtoDecoder,
+		encoder:     configOptions.ProtoEncoder,
+		jsonDecoder: configOptions.JSONDecoder,
+		jsonEncoder: configOptions.JSONEncoder,
 	}
 	if configOptions.ProtoDecoder == nil {
 		txConfig.decoder = DefaultTxDecoder(protoCodec)

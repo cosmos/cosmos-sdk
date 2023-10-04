@@ -148,7 +148,11 @@ $ %s query distribution rewards %s [validator-address]
 				},
 				{
 					RpcMethod: "UpdateParams",
-					Skip:      true,
+					Skip:      true, // skipped because authority gated
+				},
+				{
+					RpcMethod: "CommunityPoolSpend",
+					Skip:      true, // skipped because authority gated
 				},
 			},
 			EnhanceCustomCommand: true,

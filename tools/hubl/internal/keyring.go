@@ -48,7 +48,6 @@ func getKeyring(chainName string) (sdkkeyring.Keyring, error) {
 
 	keyringDir := path.Join(configDir, "keyring", chainName)
 	return sdkkeyring.New(chainName, backend, keyringDir, nil, cdc)
-
 }
 
 func KeyringCmd(chainName string) *cobra.Command {

@@ -20,7 +20,7 @@ var (
 // migration includes:
 //
 // Addition of the new proposal expedited parameters that are set to 0 by default.
-// Set of default chain consitution.
+// Set of default chain constitution.
 func MigrateStore(ctx sdk.Context, storeService corestoretypes.KVStoreService, cdc codec.BinaryCodec, constitutionCollection collections.Item[string]) error {
 	store := storeService.OpenKVStore(ctx)
 	paramsBz, err := store.Get(ParamsKey)

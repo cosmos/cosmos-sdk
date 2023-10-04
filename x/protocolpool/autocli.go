@@ -30,7 +30,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					RpcMethod:      "FundCommunityPool",
 					Use:            "fund-community-pool [amount]",
 					Short:          "Funds the community pool with the specified amount",
-					Example:        fmt.Sprintf(`$ %s tx pool fund-community-pool 100uatom --from mykey`, version.AppName),
+					Example:        fmt.Sprintf(`$ %s tx protocolpool fund-community-pool 100uatom --from mykey`, version.AppName),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "amount"}},
 				},
 			},

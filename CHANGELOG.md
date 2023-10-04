@@ -155,6 +155,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### CLI Breaking Changes
 
+* (x/distribution) [#](https://github.com/cosmos/cosmos-sdk/pull/) `appd tx distribution withdraw-rewards` now only withdraws rewards for the delegator's own delegations. For withdrawing validators commission, use `appd tx distribution withdraw-validator-commission`.
+
 ### State Machine Breaking
 
 * (x/distribution) [#17657](https://github.com/cosmos/cosmos-sdk/pull/17657) Migrate community pool funds from x/distribution to x/protocolpool.

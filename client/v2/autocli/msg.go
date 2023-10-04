@@ -11,6 +11,7 @@ import (
 	"google.golang.org/protobuf/types/dynamicpb"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
+	"cosmossdk.io/client/v2/autocli/flag"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
@@ -126,6 +127,18 @@ func (b *Builder) BuildMsgMethodCommand(descriptor protoreflect.MethodDescriptor
 		}
 		clientCtx = clientCtx.WithTxConfig(txConfigWithTextual)
 		clientCtx.Output = cmd.OutOrStdout()
+
+		// set signer to signer field if empty
+		fd := input.Descriptor().Fields().ByName(protoreflect.Name(flag.GetSignerFieldName(input.Descriptor())))
+		if addr := input.Get(fd).String(); addr == "" {
+			signerFromFlag := clientCtx.GetFromAddress()
+			signer, err := b.ClientCtx.AddressCodec.BytesToString(signerFromFlag.Bytes())
+			if err != nil {
+				return fmt.Errorf("failed to set signer on message, got %v: %w", signerFromFlag, err)
+			}
+
+			input.Set(fd, protoreflect.ValueOfString(signer))
+		}
 
 		// AutoCLI uses protov2 messages, while the SDK only supports proto v1 messages.
 		// Here we use dynamicpb, to create a proto v1 compatible message.

@@ -85,7 +85,6 @@ func ProvideApp(interfaceRegistry codectypes.InterfaceRegistry) (
 	codec.Codec,
 	*codec.LegacyAmino,
 	*AppBuilder,
-	codec.ProtoCodecMarshaler,
 	*baseapp.MsgServiceRouter,
 	appmodule.AppModule,
 	protodesc.Resolver,
@@ -119,7 +118,7 @@ func ProvideApp(interfaceRegistry codectypes.InterfaceRegistry) (
 	}
 	appBuilder := &AppBuilder{app}
 
-	return cdc, amino, appBuilder, cdc, msgServiceRouter, appModule{app}, protoFiles, protoTypes, nil
+	return cdc, amino, appBuilder, msgServiceRouter, appModule{app}, protoFiles, protoTypes, nil
 }
 
 type AppInputs struct {

@@ -125,6 +125,7 @@ func (b *Builder) BuildMsgMethodCommand(descriptor protoreflect.MethodDescriptor
 			return err
 		}
 		clientCtx = clientCtx.WithTxConfig(txConfigWithTextual)
+		clientCtx.Output = cmd.OutOrStdout()
 
 		// AutoCLI uses protov2 messages, while the SDK only supports proto v1 messages.
 		// Here we use dynamicpb, to create a proto v1 compatible message.

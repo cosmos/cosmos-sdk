@@ -19,7 +19,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
-	"github.com/cosmos/cosmos-sdk/crypto/keyring"
+	sdkkeyring "github.com/cosmos/cosmos-sdk/crypto/keyring"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 )
@@ -47,9 +47,15 @@ func initFixture(t *testing.T) *fixture {
 	clientConn, err := grpc.Dial(listener.Addr().String(), grpc.WithTransportCredentials(insecure.NewCredentials()))
 	assert.NilError(t, err)
 
-	appCodec := moduletestutil.MakeTestEncodingConfig().Codec
-	kr, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendMemory, home, nil, appCodec)
+	encodingConfig := moduletestutil.MakeTestEncodingConfig()
+	kr, err := sdkkeyring.New(sdk.KeyringServiceName(), sdkkeyring.BackendMemory, home, nil, encodingConfig.Codec)
 	assert.NilError(t, err)
+
+	akr, err := sdkkeyring.NewAutoCLIKeyring(kr)
+	assert.NilError(t, err)
+
+	interfaceRegistry := encodingConfig.Codec.InterfaceRegistry()
+	interfaceRegistry.RegisterInterface(sdk.MsgTypeURL(&testpb.MsgRequest{}), (*sdk.Msg)(nil), &testpb.MsgRequest{})
 
 	var initClientCtx client.Context
 	initClientCtx = initClientCtx.
@@ -59,21 +65,28 @@ func initFixture(t *testing.T) *fixture {
 		WithKeyring(kr).
 		WithKeyringDir(home).
 		WithHomeDir(home).
-		WithViper("")
+		WithViper("").
+		WithInterfaceRegistry(interfaceRegistry).
+		WithTxConfig(encodingConfig.TxConfig).
+		WithAccountRetriever(client.MockAccountRetriever{}).
+		WithChainID("autocli-test")
 
 	conn := &testClientConn{ClientConn: clientConn}
 	b := &Builder{
 		Builder: flag.Builder{
-			TypeResolver: protoregistry.GlobalTypes,
-			FileResolver: protoregistry.GlobalFiles,
-			ClientCtx:    &initClientCtx,
-			Keyring:      kr,
+			TypeResolver:          protoregistry.GlobalTypes,
+			FileResolver:          protoregistry.GlobalFiles,
+			AddressCodec:          initClientCtx.AddressCodec,
+			ValidatorAddressCodec: initClientCtx.ValidatorAddressCodec,
+			ConsensusAddressCodec: initClientCtx.ConsensusAddressCodec,
+			Keyring:               akr,
 		},
 		GetClientConn: func(*cobra.Command) (grpc.ClientConnInterface, error) {
 			return conn, nil
 		},
 		AddQueryConnFlags: flags.AddQueryFlagsToCmd,
 		AddTxConnFlags:    flags.AddTxFlagsToCmd,
+		ClientCtx:         initClientCtx,
 	}
 	assert.NilError(t, b.ValidateAndComplete())
 

@@ -121,7 +121,7 @@ $ %s query distribution rewards %s [validator-address]
 				{
 					RpcMethod: "WithdrawValidatorCommission",
 					Use:       "withdraw-validator-commission [validator-addr]",
-					Short:     "Withdraw comissions from a validator address (must be a validator operator)",
+					Short:     "Withdraw commissions from a validator address (must be a validator operator)",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
 						{ProtoField: "validator_address"},
 					},

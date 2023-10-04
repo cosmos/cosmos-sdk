@@ -47,8 +47,9 @@ func GetTxCmd(ac address.Codec) *cobra.Command {
 // NewCmdFeeGrant returns a CLI command handler to create a MsgGrantAllowance transaction.
 func NewCmdFeeGrant(ac address.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "grant [granter_key_or_address] [grantee]",
-		Short: "Grant Fee allowance to an address",
+		Use:     "grant [granter_key_or_address] [grantee]",
+		Aliases: []string{"grant-allowance"},
+		Short:   "Grant Fee allowance to an address",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(
 				`Grant authorization to pay fees from your address. Note, the '--from' flag is

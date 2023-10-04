@@ -93,9 +93,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 						{ProtoField: "id"},
 						{ProtoField: "receiver"},
 					},
-					FlagOptions: map[string]*autocliv1.FlagOptions{
-						"sender": {Name: "from", Shorthand: "f", Usage: "Address of the sender"},
-					},
+					// Sender is the signer of the transaction and is automatically added as from flag by AutoCLI.
 				},
 			},
 		},

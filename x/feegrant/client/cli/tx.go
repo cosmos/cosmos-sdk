@@ -39,7 +39,6 @@ func GetTxCmd(ac address.Codec) *cobra.Command {
 
 	feegrantTxCmd.AddCommand(
 		NewCmdFeeGrant(ac),
-		NewCmdRevokeFeegrant(ac),
 	)
 
 	return feegrantTxCmd
@@ -187,49 +186,6 @@ Examples:
 	cmd.Flags().Int64(FlagPeriod, 0, "period specifies the time duration(in seconds) in which period_limit coins can be spent before that allowance is reset (ex: 3600)")
 	cmd.Flags().String(FlagPeriodLimit, "", "period limit specifies the maximum number of coins that can be spent in the period")
 
-	return cmd
-}
-
-// NewCmdRevokeFeegrant returns a CLI command handler to create a MsgRevokeAllowance transaction.
-func NewCmdRevokeFeegrant(ac address.Codec) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "revoke [granter] [grantee]",
-		Short: "revoke fee-grant",
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`revoke fee grant from a granter to a grantee. Note, the '--from' flag is
-			ignored as it is implied from [granter].
-
-Example:
- $ %s tx %s revoke cosmos1skj.. cosmos1skj..
-			`, version.AppName, feegrant.ModuleName),
-		),
-		Args: cobra.ExactArgs(2),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := cmd.Flags().Set(flags.FlagFrom, args[0]); err != nil {
-				return err
-			}
-			clientCtx, err := client.GetClientTxContext(cmd)
-			if err != nil {
-				return err
-			}
-
-			_, err = ac.StringToBytes(args[1])
-			if err != nil {
-				return err
-			}
-
-			granter, err := ac.BytesToString(clientCtx.GetFromAddress())
-			if err != nil {
-				return err
-			}
-
-			msg := feegrant.NewMsgRevokeAllowance(granter, args[1])
-
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &msg)
-		},
-	}
-
-	flags.AddTxFlagsToCmd(cmd)
 	return cmd
 }
 

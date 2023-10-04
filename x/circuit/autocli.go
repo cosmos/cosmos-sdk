@@ -1,8 +1,11 @@
 package circuit
 
 import (
+	"fmt"
+
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	circuitv1 "cosmossdk.io/api/cosmos/circuit/v1"
+	"github.com/cosmos/cosmos-sdk/version"
 )
 
 func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
@@ -30,6 +33,41 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 		},
 		Tx: &autocliv1.ServiceCommandDescriptor{
 			Service: circuitv1.Query_ServiceDesc.ServiceName,
+			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
+				{
+					RpcMethod: "AuthorizeCircuitBreaker",
+					Use:       "authorize [grantee] [permission_level] [limit_msg_type_urls] --from [granter]",
+					Short:     "Authorize an account to trip the circuit breaker.",
+					Long: `Authorize an account to trip the circuit breaker.
+		"SOME_MSGS" =     1,
+		"ALL_MSGS" =      2,
+		"SUPER_ADMIN" =   3,`,
+					Example: fmt.Sprintf(`%s circuit authorize [address] 0 "cosmos.bank.v1beta1.MsgSend cosmos.bank.v1beta1.MsgMultiSend"`, version.AppName),
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "grantee"},
+						{ProtoField: "permissions.level"},
+						{ProtoField: "limit_type_urls"},
+					},
+				},
+				{
+					RpcMethod: "TripCircuitBreaker",
+					Use:       "disable [msg_type_urls]",
+					Short:     "Disable a message from being executed",
+					Example:   fmt.Sprintf(`%s circuit disable "cosmos.bank.v1beta1.MsgSend cosmos.bank.v1beta1.MsgMultiSend"`, version.AppName),
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "msg_type_urls"},
+					},
+				},
+				{
+					RpcMethod: "ResetCircuitBreaker",
+					Use:       "reset [msg_type_urls]",
+					Short:     "Enable a message to be executed",
+					Example:   fmt.Sprintf(`%s circuit reset "cosmos.bank.v1beta1.MsgSend cosmos.bank.v1beta1.MsgMultiSend"`, version.AppName),
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "msg_type_urls"},
+					},
+				},
+			},
 		},
 	}
 }

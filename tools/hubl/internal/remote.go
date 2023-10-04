@@ -18,6 +18,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 )
 
 func InitCmd(config *config.Config, configDir string) *cobra.Command {
@@ -66,20 +67,35 @@ func RemoteCommand(config *config.Config, configDir string) ([]*cobra.Command, e
 			return nil, err
 		}
 
+		kr, err := getKeyring(chain)
+		if err != nil {
+			return nil, err
+		}
+
+		autoCLIKeyring, err := keyring.NewAutoCLIKeyring(kr)
+		if err != nil {
+			return nil, err
+		}
+
 		clientCtx := client.Context{}.
 			WithAddressCodec(addressCodec).
 			WithValidatorAddressCodec(validatorAddressCodec).
-			WithConsensusAddressCodec(consensusAddressCodec)
+			WithConsensusAddressCodec(consensusAddressCodec).
+			WithKeyring(kr)
 
 		builder := &autocli.Builder{
 			Builder: flag.Builder{
-				ClientCtx:    &clientCtx,
-				TypeResolver: &dynamicTypeResolver{chainInfo},
-				FileResolver: chainInfo.ProtoFiles,
+				TypeResolver:          &dynamicTypeResolver{chainInfo},
+				FileResolver:          chainInfo.ProtoFiles,
+				AddressCodec:          addressCodec,
+				ValidatorAddressCodec: validatorAddressCodec,
+				ConsensusAddressCodec: consensusAddressCodec,
+				Keyring:               autoCLIKeyring,
 			},
 			GetClientConn: func(command *cobra.Command) (grpc.ClientConnInterface, error) {
 				return chainInfo.OpenClient()
 			},
+			ClientCtx:         clientCtx,
 			AddQueryConnFlags: func(command *cobra.Command) {},
 		}
 

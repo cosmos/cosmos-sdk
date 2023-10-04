@@ -32,21 +32,20 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 			},
 		},
 		Tx: &autocliv1.ServiceCommandDescriptor{
-			Service: circuitv1.Query_ServiceDesc.ServiceName,
+			Service: circuitv1.Msg_ServiceDesc.ServiceName,
 			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
 				{
 					RpcMethod: "AuthorizeCircuitBreaker",
-					Use:       "authorize [grantee] [permission_level] [limit_msg_type_urls] --from [granter]",
+					Use:       "authorize [grantee] [permissions_json] --from [granter]",
 					Short:     "Authorize an account to trip the circuit breaker.",
 					Long: `Authorize an account to trip the circuit breaker.
 		"SOME_MSGS" =     1,
 		"ALL_MSGS" =      2,
 		"SUPER_ADMIN" =   3,`,
-					Example: fmt.Sprintf(`%s circuit authorize [address] 0 "cosmos.bank.v1beta1.MsgSend cosmos.bank.v1beta1.MsgMultiSend"`, version.AppName),
+					Example: fmt.Sprintf(`%s circuit authorize [address] '{"level":1,"limit_type_urls":["cosmos.bank.v1beta1.MsgSend,cosmos.bank.v1beta1.MsgMultiSend"]}'"`, version.AppName),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
 						{ProtoField: "grantee"},
-						{ProtoField: "permissions.level"},
-						{ProtoField: "limit_type_urls"},
+						{ProtoField: "permissions"}, // TODO(@julienrbrt) Support flattening msg for setting each field as a positional arg
 					},
 				},
 				{

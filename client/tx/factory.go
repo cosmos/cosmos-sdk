@@ -419,7 +419,12 @@ func (f Factory) BuildSimTx(msgs ...sdk.Msg) ([]byte, error) {
 		return nil, err
 	}
 
-	return f.txConfig.TxEncoder()(txb.GetTx())
+	encoder := f.txConfig.TxEncoder()
+	if encoder == nil {
+		return nil, fmt.Errorf("cannot simulate tx: tx encoder is nil")
+	}
+
+	return encoder(txb.GetTx())
 }
 
 // getSimPK gets the public key to use for building a simulation tx.

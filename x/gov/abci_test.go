@@ -22,6 +22,65 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
+func TestUnregisteredProposal_InactiveProposalFails(t *testing.T) {
+	suite := createTestSuite(t)
+	ctx := suite.App.BaseApp.NewContext(false)
+	addrs := simtestutil.AddTestAddrs(suite.BankKeeper, suite.StakingKeeper, ctx, 10, valTokens)
+
+	// manually set proposal in store
+	startTime, endTime := time.Now().Add(-4*time.Hour), ctx.BlockHeader().Time
+	proposal, err := v1.NewProposal([]sdk.Msg{
+		&v1.Proposal{}, // invalid proposal message
+	}, 1, startTime, startTime, "", "Unsupported proposal", "Unsupported proposal", addrs[0], false)
+	require.NoError(t, err)
+
+	err = suite.GovKeeper.SetProposal(ctx, proposal)
+	require.NoError(t, err)
+
+	// manually set proposal in inactive proposal queue
+	err = suite.GovKeeper.InactiveProposalsQueue.Set(ctx, collections.Join(endTime, proposal.Id), proposal.Id)
+	require.NoError(t, err)
+
+	checkInactiveProposalsQueue(t, ctx, suite.GovKeeper)
+
+	err = gov.EndBlocker(ctx, suite.GovKeeper)
+	require.NoError(t, err)
+
+	_, err = suite.GovKeeper.Proposals.Get(ctx, proposal.Id)
+	require.Error(t, err, collections.ErrNotFound)
+}
+
+func TestUnregisteredProposal_ActiveProposalFails(t *testing.T) {
+	suite := createTestSuite(t)
+	ctx := suite.App.BaseApp.NewContext(false)
+	addrs := simtestutil.AddTestAddrs(suite.BankKeeper, suite.StakingKeeper, ctx, 10, valTokens)
+
+	// manually set proposal in store
+	startTime, endTime := time.Now().Add(-4*time.Hour), ctx.BlockHeader().Time
+	proposal, err := v1.NewProposal([]sdk.Msg{
+		&v1.Proposal{}, // invalid proposal message
+	}, 1, startTime, startTime, "", "Unsupported proposal", "Unsupported proposal", addrs[0], false)
+	require.NoError(t, err)
+	proposal.Status = v1.StatusVotingPeriod
+	proposal.VotingEndTime = &endTime
+
+	err = suite.GovKeeper.SetProposal(ctx, proposal)
+	require.NoError(t, err)
+
+	// manually set proposal in active proposal queue
+	err = suite.GovKeeper.ActiveProposalsQueue.Set(ctx, collections.Join(endTime, proposal.Id), proposal.Id)
+	require.NoError(t, err)
+
+	checkActiveProposalsQueue(t, ctx, suite.GovKeeper)
+
+	err = gov.EndBlocker(ctx, suite.GovKeeper)
+	require.NoError(t, err)
+
+	p, err := suite.GovKeeper.Proposals.Get(ctx, proposal.Id)
+	require.NoError(t, err)
+	require.Equal(t, v1.StatusFailed, p.Status)
+}
+
 func TestTickExpiredDepositPeriod(t *testing.T) {
 	suite := createTestSuite(t)
 	app := suite.App

@@ -42,7 +42,7 @@ type ModuleInputs struct {
 	Config                *txconfigv1.Config
 	AddressCodec          address.Codec
 	ValidatorAddressCodec runtime.ValidatorAddressCodec
-	ProtoCodecMarshaler   codec.ProtoCodecMarshaler
+	Codec                 codec.Codec
 	ProtoFileResolver     txsigning.ProtoFileResolver
 	// BankKeeper is the expected bank keeper to be passed to AnteHandlers
 	BankKeeper             authtypes.BankKeeper               `optional:"true"`
@@ -55,8 +55,9 @@ type ModuleInputs struct {
 type ModuleOutputs struct {
 	depinject.Out
 
-	TxConfig      client.TxConfig
-	BaseAppOption runtime.BaseAppOption
+	TxConfig        client.TxConfig
+	TxConfigOptions tx.ConfigOptions
+	BaseAppOption   runtime.BaseAppOption
 }
 
 func ProvideProtoRegistry() txsigning.ProtoFileResolver {
@@ -85,7 +86,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		txConfigOptions.TextualCoinMetadataQueryFn = NewBankKeeperCoinMetadataQueryFn(in.MetadataBankKeeper)
 	}
 
-	txConfig, err := tx.NewTxConfigWithOptions(in.ProtoCodecMarshaler, txConfigOptions)
+	txConfig, err := tx.NewTxConfigWithOptions(in.Codec, txConfigOptions)
 	if err != nil {
 		panic(err)
 	}
@@ -129,7 +130,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		app.SetTxEncoder(txConfig.TxEncoder())
 	}
 
-	return ModuleOutputs{TxConfig: txConfig, BaseAppOption: baseAppOption}
+	return ModuleOutputs{TxConfig: txConfig, TxConfigOptions: txConfigOptions, BaseAppOption: baseAppOption}
 }
 
 func newAnteHandler(txConfig client.TxConfig, in ModuleInputs) (sdk.AnteHandler, error) {

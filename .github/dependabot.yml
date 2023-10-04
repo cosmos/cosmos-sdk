@@ -215,6 +215,24 @@ updates:
     labels:
       - "A:automerge"
       - dependencies
+  - package-ecosystem: gomod
+    directory: "/x/protocolpool"
+    schedule:
+      interval: weekly
+      day: wednesday
+      time: "03:00"
+    labels:
+      - "A:automerge"
+      - dependencies
+  - package-ecosystem: gomod
+    directory: "/x/params"
+    schedule:
+      interval: weekly
+      day: wednesday
+      time: "03:05"
+    labels:
+      - "A:automerge"
+      - dependencies
 
   # Dependencies should be up to date on release branch
   - package-ecosystem: gomod

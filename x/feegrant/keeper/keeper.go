@@ -97,7 +97,16 @@ func (k Keeper) GrantAllowance(ctx context.Context, granter, grantee sdk.AccAddr
 		}
 	}
 
-	grant, err := feegrant.NewGrant(granter, grantee, feeAllowance)
+	granterStr, err := k.authKeeper.AddressCodec().BytesToString(granter)
+	if err != nil {
+		return err
+	}
+	granteeStr, err := k.authKeeper.AddressCodec().BytesToString(grantee)
+	if err != nil {
+		return err
+	}
+
+	grant, err := feegrant.NewGrant(granterStr, granteeStr, feeAllowance)
 	if err != nil {
 		return err
 	}
@@ -124,7 +133,16 @@ func (k Keeper) UpdateAllowance(ctx context.Context, granter, grantee sdk.AccAdd
 		return err
 	}
 
-	grant, err := feegrant.NewGrant(granter, grantee, feeAllowance)
+	granterStr, err := k.authKeeper.AddressCodec().BytesToString(granter)
+	if err != nil {
+		return err
+	}
+	granteeStr, err := k.authKeeper.AddressCodec().BytesToString(grantee)
+	if err != nil {
+		return err
+	}
+
+	grant, err := feegrant.NewGrant(granterStr, granteeStr, feeAllowance)
 	if err != nil {
 		return err
 	}
@@ -166,11 +184,20 @@ func (k Keeper) revokeAllowance(ctx context.Context, granter, grantee sdk.AccAdd
 		}
 	}
 
+	granterStr, err := k.authKeeper.AddressCodec().BytesToString(granter)
+	if err != nil {
+		return err
+	}
+	granteeStr, err := k.authKeeper.AddressCodec().BytesToString(grantee)
+	if err != nil {
+		return err
+	}
+
 	sdk.UnwrapSDKContext(ctx).EventManager().EmitEvent(
 		sdk.NewEvent(
 			feegrant.EventTypeRevokeFeeGrant,
-			sdk.NewAttribute(feegrant.AttributeKeyGranter, granter.String()),
-			sdk.NewAttribute(feegrant.AttributeKeyGrantee, grantee.String()),
+			sdk.NewAttribute(feegrant.AttributeKeyGranter, granterStr),
+			sdk.NewAttribute(feegrant.AttributeKeyGrantee, granteeStr),
 		),
 	)
 	return nil
@@ -228,6 +255,15 @@ func (k Keeper) UseGrantedFees(ctx context.Context, granter, grantee sdk.AccAddr
 		return err
 	}
 
+	granterStr, err := k.authKeeper.AddressCodec().BytesToString(granter)
+	if err != nil {
+		return err
+	}
+	granteeStr, err := k.authKeeper.AddressCodec().BytesToString(grantee)
+	if err != nil {
+		return err
+	}
+
 	remove, err := grant.Accept(ctx, fee, msgs)
 	if remove {
 		// Ignoring the `revokeFeeAllowance` error, because the user has enough grants to perform this transaction.
@@ -235,14 +271,14 @@ func (k Keeper) UseGrantedFees(ctx context.Context, granter, grantee sdk.AccAddr
 		if err != nil {
 			return err
 		}
-		emitUseGrantEvent(ctx, granter.String(), grantee.String())
+		emitUseGrantEvent(ctx, granterStr, granteeStr)
 
 		return nil
 	}
 	if err != nil {
 		return err
 	}
-	emitUseGrantEvent(ctx, granter.String(), grantee.String())
+	emitUseGrantEvent(ctx, granterStr, granteeStr)
 
 	// if fee allowance is accepted, store the updated state of the allowance
 	return k.UpdateAllowance(ctx, granter, grantee, grant)

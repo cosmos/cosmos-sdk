@@ -38,6 +38,7 @@ func TestSetWithdrawAddr(t *testing.T) {
 	bankKeeper := distrtestutil.NewMockBankKeeper(ctrl)
 	stakingKeeper := distrtestutil.NewMockStakingKeeper(ctrl)
 	accountKeeper := distrtestutil.NewMockAccountKeeper(ctrl)
+	poolKeeper := distrtestutil.NewMockPoolKeeper(ctrl)
 
 	accountKeeper.EXPECT().GetModuleAddress("distribution").Return(distrAcc.GetAddress())
 
@@ -50,6 +51,7 @@ func TestSetWithdrawAddr(t *testing.T) {
 		accountKeeper,
 		bankKeeper,
 		stakingKeeper,
+		poolKeeper,
 		"fee_collector",
 		authtypes.NewModuleAddress("gov").String(),
 	)
@@ -87,6 +89,7 @@ func TestWithdrawValidatorCommission(t *testing.T) {
 	bankKeeper := distrtestutil.NewMockBankKeeper(ctrl)
 	stakingKeeper := distrtestutil.NewMockStakingKeeper(ctrl)
 	accountKeeper := distrtestutil.NewMockAccountKeeper(ctrl)
+	poolKeeper := distrtestutil.NewMockPoolKeeper(ctrl)
 
 	accountKeeper.EXPECT().GetModuleAddress("distribution").Return(distrAcc.GetAddress())
 
@@ -101,6 +104,7 @@ func TestWithdrawValidatorCommission(t *testing.T) {
 		accountKeeper,
 		bankKeeper,
 		stakingKeeper,
+		poolKeeper,
 		"fee_collector",
 		authtypes.NewModuleAddress("gov").String(),
 	)
@@ -144,6 +148,7 @@ func TestGetTotalRewards(t *testing.T) {
 	bankKeeper := distrtestutil.NewMockBankKeeper(ctrl)
 	stakingKeeper := distrtestutil.NewMockStakingKeeper(ctrl)
 	accountKeeper := distrtestutil.NewMockAccountKeeper(ctrl)
+	poolKeeper := distrtestutil.NewMockPoolKeeper(ctrl)
 
 	accountKeeper.EXPECT().GetModuleAddress("distribution").Return(distrAcc.GetAddress())
 
@@ -153,6 +158,7 @@ func TestGetTotalRewards(t *testing.T) {
 		accountKeeper,
 		bankKeeper,
 		stakingKeeper,
+		poolKeeper,
 		"fee_collector",
 		authtypes.NewModuleAddress("gov").String(),
 	)
@@ -169,46 +175,4 @@ func TestGetTotalRewards(t *testing.T) {
 	totalRewards := distrKeeper.GetTotalRewards(ctx)
 
 	require.Equal(t, expectedRewards, totalRewards)
-}
-
-func TestFundCommunityPool(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	key := storetypes.NewKVStoreKey(types.StoreKey)
-	storeService := runtime.NewKVStoreService(key)
-	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
-	encCfg := moduletestutil.MakeTestEncodingConfig(distribution.AppModuleBasic{})
-	ctx := testCtx.Ctx.WithBlockHeader(cmtproto.Header{Time: time.Now()})
-	addrs := simtestutil.CreateIncrementalAccounts(1)
-
-	bankKeeper := distrtestutil.NewMockBankKeeper(ctrl)
-	stakingKeeper := distrtestutil.NewMockStakingKeeper(ctrl)
-	accountKeeper := distrtestutil.NewMockAccountKeeper(ctrl)
-
-	accountKeeper.EXPECT().GetModuleAddress("distribution").Return(distrAcc.GetAddress())
-
-	distrKeeper := keeper.NewKeeper(
-		encCfg.Codec,
-		storeService,
-		accountKeeper,
-		bankKeeper,
-		stakingKeeper,
-		"fee_collector",
-		authtypes.NewModuleAddress("gov").String(),
-	)
-
-	// reset fee pool
-	require.NoError(t, distrKeeper.FeePool.Set(ctx, types.InitialFeePool()))
-
-	initPool, err := distrKeeper.FeePool.Get(ctx)
-	require.NoError(t, err)
-	require.Empty(t, initPool.CommunityPool)
-
-	amount := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
-	bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), addrs[0], "distribution", amount).Return(nil)
-	err = distrKeeper.FundCommunityPool(ctx, amount, addrs[0])
-	require.NoError(t, err)
-
-	feePool, err := distrKeeper.FeePool.Get(ctx)
-	require.NoError(t, err)
-	require.Equal(t, initPool.CommunityPool.Add(sdk.NewDecCoinsFromCoins(amount...)...), feePool.CommunityPool)
 }

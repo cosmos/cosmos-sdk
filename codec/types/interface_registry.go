@@ -189,7 +189,7 @@ func (registry *interfaceRegistry) EnsureRegistered(impl interface{}) error {
 // same typeURL.
 func (registry *interfaceRegistry) RegisterImplementations(iface interface{}, impls ...proto.Message) {
 	for _, impl := range impls {
-		typeURL := "/" + proto.MessageName(impl)
+		typeURL := MsgTypeURL(impl)
 		registry.registerImpl(iface, typeURL, impl)
 	}
 }

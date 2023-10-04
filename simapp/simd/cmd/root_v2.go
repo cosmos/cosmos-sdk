@@ -18,6 +18,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/config"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/server"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -34,7 +35,7 @@ func NewRootCmd() *cobra.Command {
 		txConfigOpts       tx.ConfigOptions
 		autoCliOpts        autocli.AppOptions
 		moduleBasicManager module.BasicManager
-		initClientCtx      *client.Context
+		clientCtx          client.Context
 	)
 
 	if err := depinject.Inject(
@@ -51,7 +52,7 @@ func NewRootCmd() *cobra.Command {
 		&txConfigOpts,
 		&autoCliOpts,
 		&moduleBasicManager,
-		&initClientCtx,
+		&clientCtx,
 	); err != nil {
 		panic(err)
 	}
@@ -65,7 +66,6 @@ func NewRootCmd() *cobra.Command {
 			cmd.SetOut(cmd.OutOrStdout())
 			cmd.SetErr(cmd.ErrOrStderr())
 
-			clientCtx := *initClientCtx
 			clientCtx = clientCtx.WithCmdContext(cmd.Context())
 			clientCtx, err := client.ReadPersistentCommandFlags(clientCtx, cmd.Flags())
 			if err != nil {
@@ -89,7 +89,6 @@ func NewRootCmd() *cobra.Command {
 				return err
 			}
 			clientCtx = clientCtx.WithTxConfig(txConfigWithTextual)
-
 			if err := client.SetCmdClientContextHandler(clientCtx, cmd); err != nil {
 				return err
 			}
@@ -101,7 +100,7 @@ func NewRootCmd() *cobra.Command {
 		},
 	}
 
-	initRootCmd(rootCmd, initClientCtx.TxConfig, initClientCtx.InterfaceRegistry, initClientCtx.Codec, moduleBasicManager)
+	initRootCmd(rootCmd, clientCtx.TxConfig, clientCtx.InterfaceRegistry, clientCtx.Codec, moduleBasicManager)
 
 	if err := autoCliOpts.EnhanceRootCommand(rootCmd); err != nil {
 		panic(err)
@@ -118,7 +117,7 @@ func ProvideClientContext(
 	addressCodec address.Codec,
 	validatorAddressCodec runtime.ValidatorAddressCodec,
 	consensusAddressCodec runtime.ConsensusAddressCodec,
-) *client.Context {
+) client.Context {
 	var err error
 
 	clientCtx := client.Context{}.
@@ -141,14 +140,14 @@ func ProvideClientContext(
 		panic(err)
 	}
 
-	return &clientCtx
+	return clientCtx
 }
 
-func ProvideKeyring(clientCtx *client.Context, addressCodec address.Codec) (clientv2keyring.Keyring, error) {
-	kb, err := client.NewKeyringFromBackend(*clientCtx, clientCtx.Keyring.Backend())
+func ProvideKeyring(clientCtx client.Context, addressCodec address.Codec) (clientv2keyring.Keyring, error) {
+	kb, err := client.NewKeyringFromBackend(clientCtx, clientCtx.Keyring.Backend())
 	if err != nil {
 		return nil, err
 	}
 
-	return kb, nil
+	return keyring.NewAutoCLIKeyring(kb)
 }

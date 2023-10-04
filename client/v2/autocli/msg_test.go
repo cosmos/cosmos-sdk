@@ -19,6 +19,14 @@ var buildModuleMsgCommand = func(moduleName string, b *Builder) (*cobra.Command,
 	return cmd, err
 }
 
+func buildCustomModuleMsgCommand(cmdDescriptor *autocliv1.ServiceCommandDescriptor) func(moduleName string, b *Builder) (*cobra.Command, error) {
+	return func(moduleName string, b *Builder) (*cobra.Command, error) {
+		cmd := topLevelCmd(moduleName, fmt.Sprintf("Transactions commands for the %s module", moduleName))
+		err := b.AddMsgServiceCommands(cmd, cmdDescriptor)
+		return cmd, err
+	}
+}
+
 var bankAutoCLI = &autocliv1.ServiceCommandDescriptor{
 	Service: bankv1beta1.Msg_ServiceDesc.ServiceName,
 	RpcCommandOptions: []*autocliv1.RpcCommandOptions{
@@ -36,6 +44,50 @@ func TestMsg(t *testing.T) {
 	fixture := initFixture(t)
 	out, err := runCmd(fixture.conn, fixture.b, buildModuleMsgCommand, "send",
 		"cosmos1y74p8wyy4enfhfn342njve6cjmj5c8dtl6emdk", "cosmos1y74p8wyy4enfhfn342njve6cjmj5c8dtl6emdk", "1foo",
+		"--generate-only",
+		"--output", "json",
+	)
+	assert.NilError(t, err)
+	golden.Assert(t, out.String(), "msg-output.golden")
+
+	out, err = runCmd(fixture.conn, fixture.b, buildCustomModuleMsgCommand(&autocliv1.ServiceCommandDescriptor{
+		Service: bankv1beta1.Msg_ServiceDesc.ServiceName,
+		RpcCommandOptions: []*autocliv1.RpcCommandOptions{
+			{
+				RpcMethod:      "Send",
+				Use:            "send [from_key_or_address] [to_address] [amount] [flags]",
+				Short:          "Send coins from one account to another",
+				PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "to_address"}, {ProtoField: "amount"}},
+				// from_address should be automatically added
+			},
+		},
+		EnhanceCustomCommand: true,
+	}), "send",
+		"cosmos1y74p8wyy4enfhfn342njve6cjmj5c8dtl6emdk", "1foo",
+		"--from", "cosmos1y74p8wyy4enfhfn342njve6cjmj5c8dtl6emdk",
+		"--generate-only",
+		"--output", "json",
+	)
+	assert.NilError(t, err)
+	golden.Assert(t, out.String(), "msg-output.golden")
+
+	out, err = runCmd(fixture.conn, fixture.b, buildCustomModuleMsgCommand(&autocliv1.ServiceCommandDescriptor{
+		Service: bankv1beta1.Msg_ServiceDesc.ServiceName,
+		RpcCommandOptions: []*autocliv1.RpcCommandOptions{
+			{
+				RpcMethod:      "Send",
+				Use:            "send [from_key_or_address] [to_address] [amount] [flags]",
+				Short:          "Send coins from one account to another",
+				PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "to_address"}, {ProtoField: "amount"}},
+				FlagOptions: map[string]*autocliv1.FlagOptions{
+					"from_address": {Name: "sender"}, // use a custom flag for signer
+				},
+			},
+		},
+		EnhanceCustomCommand: true,
+	}), "send",
+		"cosmos1y74p8wyy4enfhfn342njve6cjmj5c8dtl6emdk", "1foo",
+		"--sender", "cosmos1y74p8wyy4enfhfn342njve6cjmj5c8dtl6emdk",
 		"--generate-only",
 		"--output", "json",
 	)

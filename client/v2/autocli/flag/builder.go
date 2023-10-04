@@ -93,7 +93,7 @@ func (b *Builder) addMessageFlags(ctx context.Context, flagSet *pflag.FlagSet, m
 	}
 
 	fields := messageType.Descriptor().Fields()
-	signerFieldName := getSignerFieldName(messageType.Descriptor())
+	signerFieldName := GetSignerFieldName(messageType.Descriptor())
 
 	isPositional := map[string]bool{}
 
@@ -200,8 +200,9 @@ func (b *Builder) addMessageFlags(ctx context.Context, flagSet *pflag.FlagSet, m
 	flagOptsByFlagName := map[string]*autocliv1.FlagOptions{}
 	for i := 0; i < fields.Len(); i++ {
 		field := fields.Get(i)
-		// skips positional args and signer field
-		if isPositional[string(field.Name())] || string(field.Name()) == signerFieldName {
+		// skips positional args and signer field if already set
+		if isPositional[string(field.Name())] ||
+			(string(field.Name()) == signerFieldName && messageBinder.SignerInfo.FieldName == flags.FlagFrom) {
 			continue
 		}
 
@@ -412,9 +413,9 @@ func (b *Builder) resolveFlagTypeBasic(field protoreflect.FieldDescriptor) Type 
 	}
 }
 
-// getSignerFieldName gets signer field name of a message.
+// GetSignerFieldName gets signer field name of a message.
 // AutoCLI supports only one signer field per message.
-func getSignerFieldName(descriptor protoreflect.MessageDescriptor) string {
+func GetSignerFieldName(descriptor protoreflect.MessageDescriptor) string {
 	signersFields := proto.GetExtension(descriptor.Options(), msgv1.E_Signer).([]string)
 	if len(signersFields) == 0 {
 		return ""

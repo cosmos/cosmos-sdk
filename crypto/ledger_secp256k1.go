@@ -2,12 +2,14 @@ package crypto
 
 import (
 	"fmt"
+	"github.com/btcsuite/btcd/btcec/v2/ecdsa"
+	"github.com/decred/dcrd/dcrec/secp256k1/v4"
+	"math/big"
 	"os"
 
-	"github.com/btcsuite/btcd/btcec"
+	"github.com/btcsuite/btcd/btcec/v2"
 	"github.com/pkg/errors"
 
-	tmbtcec "github.com/tendermint/btcd/btcec"
 	tmcrypto "github.com/tendermint/tendermint/crypto"
 	tmsecp256k1 "github.com/tendermint/tendermint/crypto/secp256k1"
 
@@ -171,12 +173,31 @@ func warnIfErrors(f func() error) {
 }
 
 func convertDERtoBER(signatureDER []byte) ([]byte, error) {
-	sigDER, err := btcec.ParseDERSignature(signatureDER[:], btcec.S256())
+	sigDER, err := ecdsa.ParseDERSignature(signatureDER)
 	if err != nil {
 		return nil, err
 	}
-	sigBER := tmbtcec.Signature{R: sigDER.R, S: sigDER.S}
-	return sigBER.Serialize(), nil
+
+	sigStr := sigDER.Serialize()
+	// The format of a DER encoded signature is as follows:
+	// 0x30 <total length> 0x02 <length of R> <R> 0x02 <length of S> <S>
+	r, s := new(big.Int), new(big.Int)
+	r.SetBytes(sigStr[4 : 4+sigStr[3]])
+	s.SetBytes(sigStr[4+sigStr[3]+2:])
+
+	sModNScalar := new(secp256k1.ModNScalar)
+	sModNScalar.SetByteSlice(s.Bytes())
+	// based on https://github.com/tendermint/btcd/blob/ec996c5/btcec/signature.go#L33-L50
+	if sModNScalar.IsOverHalfOrder() {
+		s = new(big.Int).Sub(secp256k1.S256().N, s)
+	}
+
+	sigBytes := make([]byte, 64)
+	// 0 pad the byte arrays from the left if they aren't big enough.
+	copy(sigBytes[32-len(r.Bytes()):32], r.Bytes())
+	copy(sigBytes[64-len(s.Bytes()):64], s.Bytes())
+
+	return sigBytes, nil
 }
 
 func getLedgerDevice() (LedgerSECP256K1, error) {
@@ -240,7 +261,7 @@ func getPubKeyUnsafe(device LedgerSECP256K1, path hd.BIP44Params) (tmcrypto.PubK
 	}
 
 	// re-serialize in the 33-byte compressed format
-	cmp, err := btcec.ParsePubKey(publicKey[:], btcec.S256())
+	cmp, err := btcec.ParsePubKey(publicKey[:])
 	if err != nil {
 		return nil, fmt.Errorf("error parsing public key: %v", err)
 	}
@@ -264,7 +285,7 @@ func getPubKeyAddrSafe(device LedgerSECP256K1, path hd.BIP44Params, hrp string) 
 	}
 
 	// re-serialize in the 33-byte compressed format
-	cmp, err := btcec.ParsePubKey(publicKey[:], btcec.S256())
+	cmp, err := btcec.ParsePubKey(publicKey[:])
 	if err != nil {
 		return nil, "", fmt.Errorf("error parsing public key: %v", err)
 	}

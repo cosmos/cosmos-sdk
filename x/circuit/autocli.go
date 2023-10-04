@@ -5,6 +5,7 @@ import (
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	circuitv1 "cosmossdk.io/api/cosmos/circuit/v1"
+
 	"github.com/cosmos/cosmos-sdk/version"
 )
 

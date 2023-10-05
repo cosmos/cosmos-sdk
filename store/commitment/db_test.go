@@ -32,7 +32,7 @@ func TestIavlTree(t *testing.T) {
 	require.Equal(t, uint64(0), initVersion)
 
 	// write a batch of version 1
-	cs1 := store.NewChangeSet()
+	cs1 := store.NewChangeset()
 	cs1.Add([]byte("key1"), []byte("value1"))
 	cs1.Add([]byte("key2"), []byte("value2"))
 	cs1.Add([]byte("key3"), []byte("value3"))
@@ -52,7 +52,7 @@ func TestIavlTree(t *testing.T) {
 	version1Hash := tree.WorkingHash()
 
 	// write a batch of version 2
-	cs2 := store.NewChangeSet()
+	cs2 := store.NewChangeset()
 	cs2.Add([]byte("key4"), []byte("value4"))
 	cs2.Add([]byte("key5"), []byte("value5"))
 	cs2.Add([]byte("key6"), []byte("value6"))

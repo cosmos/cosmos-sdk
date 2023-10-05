@@ -83,7 +83,7 @@ func (s *Store) GetChangeset() *store.Changeset {
 		}
 	}
 
-	return store.NewChangeSet(pairs...)
+	return store.NewChangeset(pairs...)
 }
 
 func (s *Store) Reset() error {
@@ -216,6 +216,9 @@ func (s *Store) Write() {
 // iterator. This is because when an iterator is created, it takes a current
 // snapshot of the changeset.
 func (s *Store) Iterator(start, end []byte) store.Iterator {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
 	var parentItr store.Iterator
 	if s.parent != nil {
 		parentItr = s.parent.Iterator(start, end)
@@ -227,8 +230,7 @@ func (s *Store) Iterator(start, end []byte) store.Iterator {
 		}
 	}
 
-	cs := maps.Clone(s.changeset)
-	return newIterator(parentItr, start, end, cs, false)
+	return s.newIterator(parentItr, start, end, false)
 }
 
 // ReverseIterator creates a reverse iterator over the domain [start, end), which
@@ -240,6 +242,9 @@ func (s *Store) Iterator(start, end []byte) store.Iterator {
 // iterator. This is because when an iterator is created, it takes a current
 // snapshot of the changeset.
 func (s *Store) ReverseIterator(start, end []byte) store.Iterator {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
 	var parentItr store.Iterator
 	if s.parent != nil {
 		parentItr = s.parent.ReverseIterator(start, end)
@@ -251,6 +256,59 @@ func (s *Store) ReverseIterator(start, end []byte) store.Iterator {
 		}
 	}
 
-	cs := maps.Clone(s.changeset)
-	return newIterator(parentItr, start, end, cs, true)
+	return s.newIterator(parentItr, start, end, true)
+}
+
+func (s *Store) newIterator(parentItr store.Iterator, start, end []byte, reverse bool) *iterator {
+	startStr := string(start)
+	endStr := string(end)
+
+	keys := make([]string, 0, len(s.changeset))
+	for key := range s.changeset {
+		switch {
+		case start != nil && end != nil:
+			if key >= startStr && key < endStr {
+				keys = append(keys, key)
+			}
+
+		case start != nil:
+			if key >= startStr {
+				keys = append(keys, key)
+			}
+
+		case end != nil:
+			if key < endStr {
+				keys = append(keys, key)
+			}
+
+		default:
+			keys = append(keys, key)
+		}
+	}
+
+	slices.Sort(keys)
+
+	if reverse {
+		slices.Reverse(keys)
+	}
+
+	values := make([]store.KVPair, len(keys))
+	for i, key := range keys {
+		values[i] = s.changeset[key]
+	}
+
+	itr := &iterator{
+		parentItr: parentItr,
+		start:     start,
+		end:       end,
+		keys:      keys,
+		values:    values,
+		reverse:   reverse,
+		exhausted: !parentItr.Valid(),
+	}
+
+	// call Next() to move the iterator to the first key/value entry
+	_ = itr.Next()
+
+	return itr
 }

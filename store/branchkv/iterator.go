@@ -27,60 +27,6 @@ type iterator struct {
 	exhausted bool // exhausted reflects if the parent iterator is exhausted or not
 }
 
-func newIterator(parentItr store.Iterator, start, end []byte, cs map[string]store.KVPair, reverse bool) *iterator {
-	startStr := string(start)
-	endStr := string(end)
-
-	keys := make([]string, 0, len(cs))
-	for key := range cs {
-		switch {
-		case start != nil && end != nil:
-			if key >= startStr && key < endStr {
-				keys = append(keys, key)
-			}
-
-		case start != nil:
-			if key >= startStr {
-				keys = append(keys, key)
-			}
-
-		case end != nil:
-			if key < endStr {
-				keys = append(keys, key)
-			}
-
-		default:
-			keys = append(keys, key)
-		}
-	}
-
-	slices.Sort(keys)
-
-	if reverse {
-		slices.Reverse(keys)
-	}
-
-	values := make([]store.KVPair, len(keys))
-	for i, key := range keys {
-		values[i] = cs[key]
-	}
-
-	itr := &iterator{
-		parentItr: parentItr,
-		start:     start,
-		end:       end,
-		keys:      keys,
-		values:    values,
-		reverse:   reverse,
-		exhausted: !parentItr.Valid(),
-	}
-
-	// call Next() to move the iterator to the first key/value entry
-	_ = itr.Next()
-
-	return itr
-}
-
 // Domain returns the domain of the iterator. The caller must not modify the
 // return values.
 func (itr *iterator) Domain() ([]byte, []byte) {

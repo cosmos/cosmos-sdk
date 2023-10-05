@@ -47,7 +47,16 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 			},
 		},
 		Tx: &autocliv1.ServiceCommandDescriptor{
-			Service: authzv1beta1.Msg_ServiceDesc.ServiceName,
+			Service:              authzv1beta1.Msg_ServiceDesc.ServiceName,
+			EnhanceCustomCommand: true,
+			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
+				{
+					RpcMethod:      "Revoke",
+					Use:            "revoke [grantee] [msg-type-url] --from=[granter]",
+					Short:          "revoke authorization",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "granter"}, {ProtoField: "grantee"}, {ProtoField: "msg_type_url"}},
+				},
+			},
 		},
 	}
 }

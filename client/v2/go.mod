@@ -9,7 +9,7 @@ require (
 	cosmossdk.io/x/tx v0.10.0
 	github.com/cockroachdb/errors v1.11.1
 	github.com/cosmos/cosmos-proto v1.0.0-beta.3
-	github.com/cosmos/cosmos-sdk v0.50.0-rc.1.0.20231005110808-059498db8691
+	github.com/cosmos/cosmos-sdk v0.50.0-rc.1.0.20231005134150-8334eefaaf7c
 	github.com/cosmos/gogoproto v1.4.11
 	github.com/spf13/cobra v1.7.0
 	github.com/spf13/pflag v1.0.5
@@ -152,5 +152,3 @@ require (
 	nhooyr.io/websocket v1.8.6 // indirect
 	pgregory.net/rapid v1.1.0 // indirect
 )
-
-replace github.com/cosmos/cosmos-sdk => ./../../

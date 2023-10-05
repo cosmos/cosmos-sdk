@@ -42,7 +42,7 @@ type ModuleInputs struct {
 	Config                *txconfigv1.Config
 	AddressCodec          address.Codec
 	ValidatorAddressCodec runtime.ValidatorAddressCodec
-	ProtoCodecMarshaler   codec.ProtoCodecMarshaler
+	Codec                 codec.Codec
 	ProtoFileResolver     txsigning.ProtoFileResolver
 	// BankKeeper is the expected bank keeper to be passed to AnteHandlers
 	BankKeeper             authtypes.BankKeeper               `optional:"true"`
@@ -86,7 +86,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		txConfigOptions.TextualCoinMetadataQueryFn = NewBankKeeperCoinMetadataQueryFn(in.MetadataBankKeeper)
 	}
 
-	txConfig, err := tx.NewTxConfigWithOptions(in.ProtoCodecMarshaler, txConfigOptions)
+	txConfig, err := tx.NewTxConfigWithOptions(in.Codec, txConfigOptions)
 	if err != nil {
 		panic(err)
 	}

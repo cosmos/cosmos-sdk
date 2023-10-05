@@ -5,14 +5,14 @@ sidebar_position: 1
 # Vote Extensions
 
 :::note Synopsis
-This sections describes how the application can define and use vote extensions
+This section describes how the application can define and use vote extensions
 defined in ABCI++.
 :::
 
 ## Extend Vote
 
 ABCI++ allows an application to extend a pre-commit vote with arbitrary data. This
-process does NOT have be deterministic and the data returned can be unique to the
+process does NOT have to be deterministic, and the data returned can be unique to the
 validator process. The Cosmos SDK defines `baseapp.ExtendVoteHandler`:
 
 ```go
@@ -62,13 +62,13 @@ these vote extensions manually in the block proposal itself. This can be done by
 "injecting" them into the block proposal, since the `Txs` field in `PrepareProposal`
 is just a slice of byte slices.
 
-`FinalizeBlock` will ignore any byte slice that doesn't implement an `sdk.Tx` so
+`FinalizeBlock` will ignore any byte slice that doesn't implement an `sdk.Tx`, so
 any injected vote extensions will safely be ignored in `FinalizeBlock`. For more
 details on propagation, see the [ABCI++ 2.0 ADR](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-064-abci-2.0.md#vote-extension-propagation--verification).
 
 ### Recovery of injected Vote Extensions
 
-As stated before, vote extensions can be injected in a block proposal (along with
+As stated before, vote extensions can be injected into a block proposal (along with
 other transactions in the `Txs` field). The Cosmos SDK provides a pre-FinalizeBlock
 hook to allow applications to recover vote extensions, perform any necessary
 computation on them, and then store the results in the cached store. These results
@@ -102,7 +102,7 @@ app.SetPreBlocker(func(ctx sdk.Context, req *abci.RequestFinalizeBlock) error {
 
 ```
 
-Then in an app's module the application can retrieve the result of the computation
+Then, in an app's module, the application can retrieve the result of the computation
 of vote extensions from the cached store:
 
 ```go

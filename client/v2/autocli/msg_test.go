@@ -146,49 +146,6 @@ func TestBuildCustomMsgCommand(t *testing.T) {
 	assert.Assert(t, customCommandCalled)
 }
 
-<<<<<<< HEAD
-func TestErrorBuildMsgCommand(t *testing.T) {
-	fixture := initFixture(t)
-	b := fixture.b
-	b.AddQueryConnFlags = nil
-	b.AddTxConnFlags = nil
-
-	commandDescriptor := &autocliv1.ServiceCommandDescriptor{
-		Service: testpb.Msg_ServiceDesc.ServiceName,
-		RpcCommandOptions: []*autocliv1.RpcCommandOptions{
-			{
-				RpcMethod: "Send",
-				PositionalArgs: []*autocliv1.PositionalArgDescriptor{
-					{
-						ProtoField: "un-existent-proto-field",
-					},
-				},
-			},
-		},
-	}
-
-	appOptions := AppOptions{
-		ModuleOptions: map[string]*autocliv1.ModuleOptions{
-			"test": {
-				Tx: commandDescriptor,
-			},
-		},
-		AddressCodec:          b.AddressCodec,
-		ValidatorAddressCodec: b.ValidatorAddressCodec,
-		ClientCtx:             b.ClientCtx,
-	}
-
-	_, err := b.BuildMsgCommand(appOptions, nil)
-	assert.ErrorContains(t, err, "can't find field un-existent-proto-field")
-
-	nonExistentService := &autocliv1.ServiceCommandDescriptor{Service: "un-existent-service"}
-	appOptions.ModuleOptions["test"].Tx = nonExistentService
-	_, err = b.BuildMsgCommand(appOptions, nil)
-	assert.ErrorContains(t, err, "can't find service un-existent-service")
-}
-
-=======
->>>>>>> b62301d9d (feat(client/v2): signing (#17913))
 func TestNotFoundErrorsMsg(t *testing.T) {
 	fixture := initFixture(t)
 	b := fixture.b

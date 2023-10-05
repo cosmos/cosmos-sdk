@@ -18,11 +18,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/config"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-<<<<<<< HEAD
-=======
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-	"github.com/cosmos/cosmos-sdk/runtime"
->>>>>>> b62301d9d (feat(client/v2): signing (#17913))
 	"github.com/cosmos/cosmos-sdk/server"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -116,16 +112,7 @@ func ProvideClientContext(
 	interfaceRegistry codectypes.InterfaceRegistry,
 	txConfig client.TxConfig,
 	legacyAmino *codec.LegacyAmino,
-<<<<<<< HEAD
-) *client.Context {
-=======
-	addressCodec address.Codec,
-	validatorAddressCodec runtime.ValidatorAddressCodec,
-	consensusAddressCodec runtime.ConsensusAddressCodec,
 ) client.Context {
-	var err error
-
->>>>>>> b62301d9d (feat(client/v2): signing (#17913))
 	clientCtx := client.Context{}.
 		WithCodec(appCodec).
 		WithInterfaceRegistry(interfaceRegistry).

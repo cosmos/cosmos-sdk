@@ -132,7 +132,7 @@ func (b *Builder) BuildMsgMethodCommand(descriptor protoreflect.MethodDescriptor
 		fd := input.Descriptor().Fields().ByName(protoreflect.Name(flag.GetSignerFieldName(input.Descriptor())))
 		if addr := input.Get(fd).String(); addr == "" {
 			signerFromFlag := clientCtx.GetFromAddress()
-			signer, err := b.ClientCtx.AddressCodec.BytesToString(signerFromFlag.Bytes())
+			signer, err := b.AddressCodec.BytesToString(signerFromFlag.Bytes())
 			if err != nil {
 				return fmt.Errorf("failed to set signer on message, got %v: %w", signerFromFlag, err)
 			}

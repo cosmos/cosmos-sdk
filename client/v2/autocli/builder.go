@@ -46,18 +46,6 @@ func (b *Builder) ValidateAndComplete() error {
 		return errors.New("validator address codec is required in flag builder")
 	}
 
-<<<<<<< HEAD
-	if b.AddressCodec == nil {
-		return errors.New("address codec is required in builder")
-	}
-
-	if b.ValidatorAddressCodec == nil {
-		return errors.New("validator address codec is required in builder")
-	}
-
-	if b.ConsensusAddressCodec == nil {
-		return errors.New("consensus address codec is required in builder")
-=======
 	if b.Builder.ConsensusAddressCodec == nil {
 		return errors.New("consensus address codec is required in flag builder")
 	}
@@ -68,7 +56,6 @@ func (b *Builder) ValidateAndComplete() error {
 
 	if b.Builder.TypeResolver == nil {
 		return errors.New("type resolver is required in flag builder")
->>>>>>> b62301d9d (feat(client/v2): signing (#17913))
 	}
 
 	if b.Builder.FileResolver == nil {

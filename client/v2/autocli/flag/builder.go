@@ -20,10 +20,6 @@ import (
 	"cosmossdk.io/client/v2/internal/util"
 	"cosmossdk.io/core/address"
 
-<<<<<<< HEAD
-	"github.com/cosmos/cosmos-sdk/client"
-=======
->>>>>>> b62301d9d (feat(client/v2): signing (#17913))
 	"github.com/cosmos/cosmos-sdk/runtime"
 )
 
@@ -46,16 +42,7 @@ type Builder struct {
 	messageFlagTypes map[protoreflect.FullName]Type
 	scalarFlagTypes  map[string]Type
 
-<<<<<<< HEAD
-	// AddressCodec is the address codec to use for the app.
-	AddressCodec          address.Codec
-	ValidatorAddressCodec runtime.ValidatorAddressCodec
-	ConsensusAddressCodec runtime.ConsensusAddressCodec
-
-	// Keyring implementation
-=======
 	// Keyring is the keyring to use for client/v2.
->>>>>>> b62301d9d (feat(client/v2): signing (#17913))
 	Keyring keyring.Keyring
 
 	// Address Codecs are the address codecs to use for client/v2.

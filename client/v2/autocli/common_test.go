@@ -76,18 +76,10 @@ func initFixture(t *testing.T) *fixture {
 		Builder: flag.Builder{
 			TypeResolver:          protoregistry.GlobalTypes,
 			FileResolver:          protoregistry.GlobalFiles,
-<<<<<<< HEAD
-			ClientCtx:             &initClientCtx,
-			Keyring:               kr,
+			Keyring:               akr,
 			AddressCodec:          addresscodec.NewBech32Codec("cosmos"),
 			ValidatorAddressCodec: addresscodec.NewBech32Codec("cosmosvaloper"),
 			ConsensusAddressCodec: addresscodec.NewBech32Codec("cosmosvalcons"),
-=======
-			AddressCodec:          initClientCtx.AddressCodec,
-			ValidatorAddressCodec: initClientCtx.ValidatorAddressCodec,
-			ConsensusAddressCodec: initClientCtx.ConsensusAddressCodec,
-			Keyring:               akr,
->>>>>>> b62301d9d (feat(client/v2): signing (#17913))
 		},
 		GetClientConn: func(*cobra.Command) (grpc.ClientConnInterface, error) {
 			return conn, nil

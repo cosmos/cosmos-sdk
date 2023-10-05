@@ -55,7 +55,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Short:     "Disable a message from being executed",
 					Example:   fmt.Sprintf(`%s circuit disable "cosmos.bank.v1beta1.MsgSend cosmos.bank.v1beta1.MsgMultiSend"`, version.AppName),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
-						{ProtoField: "msg_type_urls"},
+						{ProtoField: "msg_type_urls", Varargs: true},
 					},
 				},
 				{
@@ -64,7 +64,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Short:     "Enable a message to be executed",
 					Example:   fmt.Sprintf(`%s circuit reset "cosmos.bank.v1beta1.MsgSend cosmos.bank.v1beta1.MsgMultiSend"`, version.AppName),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
-						{ProtoField: "msg_type_urls"},
+						{ProtoField: "msg_type_urls", Varargs: true},
 					},
 				},
 			},

@@ -96,12 +96,12 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Use:       "send [from_key_or_address] [to_address] [amount]",
 					Short:     "Send funds from one account to another.",
 					Long: `Send funds from one account to another.
-Note, the '--from' flag is ignored as it is implied from [from_key_or_address].
-When using '--dry-run' a key name cannot be used, only a bech32 address.`,
-					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "to"}, {ProtoField: "amount"}},
-					FlagOptions: map[string]*autocliv1.FlagOptions{
-						"sender": {Name: "from", Shorthand: "f", Usage: "Address of the sender"},
-					},
+			Note, the '--from' flag is ignored as it is implied from [from_key_or_address].
+			When using '--dry-run' a key name cannot be used, only a bech32 address.`,
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "to_address"}, {ProtoField: "amount"}},
+					// FlagOptions: map[string]*autocliv1.FlagOptions{
+					// 	"sender": {Name: "from", Shorthand: "f", Usage: "Address of the sender"},
+					// },
 				},
 			},
 		},

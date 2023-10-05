@@ -71,11 +71,11 @@ func BenchmarkTx(b *testing.B) {
 			assert.NilError(b, err)
 			// Check the result and gas used are correct.
 			//
-			// The 12 events are:
-			// - Sending Fee to the pool: coin_spent, coin_received, transfer and message.sender=<val1>
-			// - tx.* events: tx.fee, tx.acc_seq, tx.signature
-			// - Sending Amount to recipient: coin_spent, coin_received, transfer and message.sender=<val1>
-			// - Msg events: message.module=bank and message.action=/cosmos.bank.v1beta1.MsgSend (in one message)
+			// The 10 events are:
+			// - Sending Fee to the pool (3 events): coin_spent, coin_received, transfer
+			// - tx.* events (3 events): tx.fee, tx.acc_seq, tx.signature
+			// - Sending Amount to recipient (3 events): coin_spent, coin_received, transfer and message.sender=<val1>
+			// - Msg events (1 event): message.module=bank, message.action=/cosmos.bank.v1beta1.MsgSend and message.sender=<val1>
 			assert.Equal(b, 10, len(res.GetResult().GetEvents()))
 			assert.Assert(b, res.GetGasInfo().GetGasUsed() > 0) // Gas used sometimes change, just check it's not empty.
 		}

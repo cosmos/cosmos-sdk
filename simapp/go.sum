@@ -187,10 +187,10 @@ cloud.google.com/go/webrisk v1.4.0/go.mod h1:Hn8X6Zr+ziE2aNd8SliSDWpEnSS1u4R9+xX
 cloud.google.com/go/webrisk v1.5.0/go.mod h1:iPG6fr52Tv7sGk0H6qUFzmL3HHZev1htXuWDEEsqMTg=
 cloud.google.com/go/workflows v1.6.0/go.mod h1:6t9F5h/unJz41YqfBmqSASJSXccBLtD1Vwf+KmJENM0=
 cloud.google.com/go/workflows v1.7.0/go.mod h1:JhSrZuVZWuiDfKEFxU0/F1PQjmpnpcoISEXH2bcHC3M=
-cosmossdk.io/api v0.7.2-0.20230927090904-9dd34510e273 h1:rNTYK/OQQ5B8jNY0wGSOv+64Fwm7DG8Yke5eRmdTPqk=
-cosmossdk.io/api v0.7.2-0.20230927090904-9dd34510e273/go.mod h1:RgzIuGUBiX4E4imKHFyxl+uSKU+qs2v0W2ymVoGoyQQ=
-cosmossdk.io/client/v2 v2.0.0-20231005112528-01f010c38ede h1:o9gKgFoBINOosgbrb16VKpxBocOxN+qih8IfC2kebfI=
-cosmossdk.io/client/v2 v2.0.0-20231005112528-01f010c38ede/go.mod h1:9l0S6Vf5SEfW2iJgbEFYFn1NQFQTAcTAQRhtvBtYqXQ=
+cosmossdk.io/api v0.7.1 h1:PNQ1xN8+/0hj/sSD0ANqjkgfXFys+bZ5L8Hg7uzoUTU=
+cosmossdk.io/api v0.7.1/go.mod h1:ure9edhcROIHsngavM6mBLilMGFnfjhV/AaYhEMUkdo=
+cosmossdk.io/client/v2 v2.0.0-20231005120212-0062bf2e7141 h1:ovyUcvPX740eqC7bnGZpw4yn5GS2bNZ5jacRqiDwqU8=
+cosmossdk.io/client/v2 v2.0.0-20231005120212-0062bf2e7141/go.mod h1:0ycdqzdjVeUdKqgBbaxqSsc1C18GJc3uEF+uphv/MPg=
 cosmossdk.io/collections v0.4.0 h1:PFmwj2W8szgpD5nOd8GWH6AbYNi1f2J6akWXJ7P5t9s=
 cosmossdk.io/collections v0.4.0/go.mod h1:oa5lUING2dP+gdDquow+QjlF45eL1t4TJDypgGd+tv0=
 cosmossdk.io/core v0.11.0 h1:vtIafqUi+1ZNAE/oxLOQQ7Oek2n4S48SWLG8h/+wdbo=

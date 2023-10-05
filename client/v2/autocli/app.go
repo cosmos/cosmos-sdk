@@ -12,11 +12,15 @@ import (
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
-	"cosmossdk.io/log"
 
 	"github.com/cosmos/cosmos-sdk/client"
+<<<<<<< HEAD
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/runtime"
+=======
+	sdkflags "github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/x/auth/tx"
+>>>>>>> b62301d9d (feat(client/v2): signing (#17913))
 )
 
 // AppOptions are autocli options for an app. These options can be built via depinject based on an app config. Ex:
@@ -30,9 +34,6 @@ import (
 type AppOptions struct {
 	depinject.In
 
-	// Logger is the logger to use for client/v2.
-	Logger log.Logger
-
 	// Modules are the AppModule implementations for the modules in the app.
 	Modules map[string]appmodule.AppModule
 
@@ -42,6 +43,7 @@ type AppOptions struct {
 	// module or need to be improved.
 	ModuleOptions map[string]*autocliv1.ModuleOptions `optional:"true"`
 
+<<<<<<< HEAD
 	// ClientCtx contains the necessary information needed to execute the commands.
 	ClientCtx *client.Context
 
@@ -50,8 +52,16 @@ type AppOptions struct {
 	ValidatorAddressCodec runtime.ValidatorAddressCodec
 	ConsensusAddressCodec runtime.ConsensusAddressCodec
 
+=======
+>>>>>>> b62301d9d (feat(client/v2): signing (#17913))
 	// Keyring is the keyring to use for client/v2.
 	Keyring keyring.Keyring `optional:"true"`
+
+	// ClientCtx contains the necessary information needed to execute the commands.
+	ClientCtx client.Context
+
+	// TxConfigOptions are the transactions config options.
+	TxConfigOpts tx.ConfigOptions
 }
 
 // EnhanceRootCommand enhances the provided root command with autocli AppOptions,
@@ -71,21 +81,29 @@ type AppOptions struct {
 //	err = autoCliOpts.EnhanceRootCommand(rootCmd)
 func (appOptions AppOptions) EnhanceRootCommand(rootCmd *cobra.Command) error {
 	builder := &Builder{
-		Logger: appOptions.Logger,
 		Builder: flag.Builder{
 			TypeResolver:          protoregistry.GlobalTypes,
 			FileResolver:          proto.HybridResolver,
+<<<<<<< HEAD
 			ClientCtx:             appOptions.ClientCtx,
 			AddressCodec:          appOptions.AddressCodec,
 			ValidatorAddressCodec: appOptions.ValidatorAddressCodec,
 			ConsensusAddressCodec: appOptions.ConsensusAddressCodec,
 			Keyring:               appOptions.Keyring,
+=======
+			Keyring:               appOptions.Keyring,
+			AddressCodec:          appOptions.ClientCtx.AddressCodec,
+			ValidatorAddressCodec: appOptions.ClientCtx.ValidatorAddressCodec,
+			ConsensusAddressCodec: appOptions.ClientCtx.ConsensusAddressCodec,
+>>>>>>> b62301d9d (feat(client/v2): signing (#17913))
 		},
+		ClientCtx:    appOptions.ClientCtx,
+		TxConfigOpts: appOptions.TxConfigOpts,
 		GetClientConn: func(cmd *cobra.Command) (grpc.ClientConnInterface, error) {
 			return client.GetClientQueryContext(cmd)
 		},
-		AddQueryConnFlags: flags.AddQueryFlagsToCmd,
-		AddTxConnFlags:    flags.AddTxFlagsToCmd,
+		AddQueryConnFlags: sdkflags.AddQueryFlagsToCmd,
+		AddTxConnFlags:    sdkflags.AddTxFlagsToCmd,
 	}
 
 	return appOptions.EnhanceRootCommandWithBuilder(rootCmd, builder)

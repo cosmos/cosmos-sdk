@@ -18,6 +18,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/config"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+<<<<<<< HEAD
+=======
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
+	"github.com/cosmos/cosmos-sdk/runtime"
+>>>>>>> b62301d9d (feat(client/v2): signing (#17913))
 	"github.com/cosmos/cosmos-sdk/server"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -33,7 +38,7 @@ func NewRootCmd() *cobra.Command {
 		txConfigOpts       tx.ConfigOptions
 		autoCliOpts        autocli.AppOptions
 		moduleBasicManager module.BasicManager
-		initClientCtx      *client.Context
+		clientCtx          client.Context
 	)
 
 	if err := depinject.Inject(
@@ -50,7 +55,7 @@ func NewRootCmd() *cobra.Command {
 		&txConfigOpts,
 		&autoCliOpts,
 		&moduleBasicManager,
-		&initClientCtx,
+		&clientCtx,
 	); err != nil {
 		panic(err)
 	}
@@ -64,7 +69,6 @@ func NewRootCmd() *cobra.Command {
 			cmd.SetOut(cmd.OutOrStdout())
 			cmd.SetErr(cmd.ErrOrStderr())
 
-			clientCtx := *initClientCtx
 			clientCtx = clientCtx.WithCmdContext(cmd.Context())
 			clientCtx, err := client.ReadPersistentCommandFlags(clientCtx, cmd.Flags())
 			if err != nil {
@@ -87,7 +91,6 @@ func NewRootCmd() *cobra.Command {
 				return err
 			}
 			clientCtx = clientCtx.WithTxConfig(txConfigWithTextual)
-
 			if err := client.SetCmdClientContextHandler(clientCtx, cmd); err != nil {
 				return err
 			}
@@ -99,7 +102,7 @@ func NewRootCmd() *cobra.Command {
 		},
 	}
 
-	initRootCmd(rootCmd, initClientCtx.TxConfig, initClientCtx.InterfaceRegistry, initClientCtx.Codec, moduleBasicManager)
+	initRootCmd(rootCmd, clientCtx.TxConfig, clientCtx.InterfaceRegistry, clientCtx.Codec, moduleBasicManager)
 
 	if err := autoCliOpts.EnhanceRootCommand(rootCmd); err != nil {
 		panic(err)
@@ -113,7 +116,16 @@ func ProvideClientContext(
 	interfaceRegistry codectypes.InterfaceRegistry,
 	txConfig client.TxConfig,
 	legacyAmino *codec.LegacyAmino,
+<<<<<<< HEAD
 ) *client.Context {
+=======
+	addressCodec address.Codec,
+	validatorAddressCodec runtime.ValidatorAddressCodec,
+	consensusAddressCodec runtime.ConsensusAddressCodec,
+) client.Context {
+	var err error
+
+>>>>>>> b62301d9d (feat(client/v2): signing (#17913))
 	clientCtx := client.Context{}.
 		WithCodec(appCodec).
 		WithInterfaceRegistry(interfaceRegistry).
@@ -127,14 +139,14 @@ func ProvideClientContext(
 	// Read the config again to overwrite the default values with the values from the config file
 	clientCtx, _ = config.ReadFromClientConfig(clientCtx)
 
-	return &clientCtx
+	return clientCtx
 }
 
-func ProvideKeyring(clientCtx *client.Context, addressCodec address.Codec) (clientv2keyring.Keyring, error) {
-	kb, err := client.NewKeyringFromBackend(*clientCtx, clientCtx.Keyring.Backend())
+func ProvideKeyring(clientCtx client.Context, addressCodec address.Codec) (clientv2keyring.Keyring, error) {
+	kb, err := client.NewKeyringFromBackend(clientCtx, clientCtx.Keyring.Backend())
 	if err != nil {
 		return nil, err
 	}
 
-	return kb, nil
+	return keyring.NewAutoCLIKeyring(kb)
 }

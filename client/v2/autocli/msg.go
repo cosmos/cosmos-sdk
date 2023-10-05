@@ -4,12 +4,21 @@ import (
 	"context"
 	"fmt"
 
-	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	"github.com/cockroachdb/errors"
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/spf13/cobra"
-	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/types/dynamicpb"
+
+	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
+	"cosmossdk.io/client/v2/autocli/flag"
+
+	"github.com/cosmos/cosmos-sdk/client"
+	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
+	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
+	authtxconfig "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
 )
 
 // BuildMsgCommand builds the msg commands for all the provided modules. If a custom command is provided for a
@@ -97,46 +106,56 @@ func (b *Builder) AddMsgServiceCommands(cmd *cobra.Command, cmdDescriptor *autoc
 
 // BuildMsgMethodCommand returns a command that outputs the JSON representation of the message.
 func (b *Builder) BuildMsgMethodCommand(descriptor protoreflect.MethodDescriptor, options *autocliv1.RpcCommandOptions) (*cobra.Command, error) {
-	jsonMarshalOptions := protojson.MarshalOptions{
-		Indent:          "  ",
-		UseProtoNames:   true,
-		UseEnumNumbers:  false,
-		EmitUnpopulated: true,
-		Resolver:        b.TypeResolver,
-	}
-
 	cmd, err := b.buildMethodCommandCommon(descriptor, options, func(cmd *cobra.Command, input protoreflect.Message) error {
-		if noIdent, _ := cmd.Flags().GetBool(flagNoIndent); noIdent {
-			jsonMarshalOptions.Indent = ""
-		}
+		cmd.SetContext(context.WithValue(context.Background(), client.ClientContextKey, &b.ClientCtx))
 
-		bz, err := jsonMarshalOptions.Marshal(input.Interface())
+		clientCtx, err := client.GetClientTxContext(cmd)
 		if err != nil {
 			return err
 		}
 
-		clientCtx, err := client.ReadPersistentCommandFlags(*b.ClientCtx, cmd.Flags())
+		// enable sign mode textual and config tx options
+		b.TxConfigOpts.EnabledSignModes = append(b.TxConfigOpts.EnabledSignModes, signing.SignMode_SIGN_MODE_TEXTUAL)
+		b.TxConfigOpts.TextualCoinMetadataQueryFn = authtxconfig.NewGRPCCoinMetadataQueryFn(clientCtx)
+
+		txConfigWithTextual, err := authtx.NewTxConfigWithOptions(
+			codec.NewProtoCodec(clientCtx.InterfaceRegistry),
+			b.TxConfigOpts,
+		)
 		if err != nil {
 			return err
 		}
+		clientCtx = clientCtx.WithTxConfig(txConfigWithTextual)
+		clientCtx.Output = cmd.OutOrStdout()
 
-		cmd.SetContext(context.WithValue(context.Background(), client.ClientContextKey, &clientCtx))
-		if err = client.SetCmdClientContextHandler(clientCtx, cmd); err != nil {
-			return err
+		// set signer to signer field if empty
+		fd := input.Descriptor().Fields().ByName(protoreflect.Name(flag.GetSignerFieldName(input.Descriptor())))
+		if addr := input.Get(fd).String(); addr == "" {
+			signerFromFlag := clientCtx.GetFromAddress()
+			signer, err := b.ClientCtx.AddressCodec.BytesToString(signerFromFlag.Bytes())
+			if err != nil {
+				return fmt.Errorf("failed to set signer on message, got %v: %w", signerFromFlag, err)
+			}
+
+			input.Set(fd, protoreflect.ValueOfString(signer))
 		}
 
-		clientCtx, err = client.GetClientTxContext(cmd)
-		if err != nil {
-			return err
-		}
+		// AutoCLI uses protov2 messages, while the SDK only supports proto v1 messages.
+		// Here we use dynamicpb, to create a proto v1 compatible message.
+		// The SDK codec will handle protov2 -> protov1 (marshal)
+		msg := dynamicpb.NewMessage(input.Descriptor())
+		proto.Merge(msg, input.Interface())
 
-		return b.outOrStdoutFormat(cmd, bz)
+		return clienttx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 	})
 
 	if b.AddTxConnFlags != nil {
 		b.AddTxConnFlags(cmd)
+	}
 
-		cmd.Flags().BoolP(flagNoIndent, "", false, "Do not indent JSON output")
+	// silence usage only for inner txs & queries commands
+	if cmd != nil {
+		cmd.SilenceUsage = true
 	}
 
 	return cmd, err

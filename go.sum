@@ -1244,8 +1244,8 @@ github.com/magiconair/properties v1.8.6 h1:5ibWZ6iY0NctNGWo87LalDlEZ6R41TqbbDamh
 github.com/magiconair/properties v1.8.6/go.mod h1:y3VJvCyxH9uVvJTWEGAELF3aiYNyPKd5NZ3oSwXrF60=
 github.com/mailru/easyjson v0.0.0-20190614124828-94de47d64c63/go.mod h1:C1wdFJiN94OJF2b5HbByQZoLdCWB1Yqtg26g4irojpc=
 github.com/mailru/easyjson v0.0.0-20190626092158-b2ccc519800e/go.mod h1:C1wdFJiN94OJF2b5HbByQZoLdCWB1Yqtg26g4irojpc=
-github.com/maticnetwork/tendermint v0.26.0-dev0.0.20231004115423-a50d41cd20b7 h1:tVK9VoL+aHak/ABrlsXfMHYaM+Bwp7aUeLWEjKwwTcQ=
-github.com/maticnetwork/tendermint v0.26.0-dev0.0.20231004115423-a50d41cd20b7/go.mod h1:D2fcnxGk6bje+LoPwImuKSSYLiK7/G06IynGNDSEcJk=
+github.com/maticnetwork/tendermint v0.26.0-dev0.0.20231005133805-2bb6a831bb2e h1:gvjyv7uPmtfWe4mX+7Bmy02Ftal2Mfoadf+dXxGVBYI=
+github.com/maticnetwork/tendermint v0.26.0-dev0.0.20231005133805-2bb6a831bb2e/go.mod h1:D2fcnxGk6bje+LoPwImuKSSYLiK7/G06IynGNDSEcJk=
 github.com/matryer/moq v0.0.0-20190312154309-6cfb0558e1bd/go.mod h1:9ELz6aaclSIGnZBoaSLZ3NAl1VTufbOrXBPvtcy6WiQ=
 github.com/mattn/go-colorable v0.0.9/go.mod h1:9vuHe8Xs5qXnSaW/c/ABM9alt+Vo+STaOChaDxuIBZU=
 github.com/mattn/go-colorable v0.1.2/go.mod h1:U0ppj6V5qS13XJ6of8GYAs25YV2eR4EVcfRqFIhoBtE=

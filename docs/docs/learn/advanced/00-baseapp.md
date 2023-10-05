@@ -538,7 +538,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/baseapp/abci_utils.go#
 
 ### VerifyVoteExtension
 
-`VerifyVoteExtension` allows an application to verify that the data returned by `ExtendVote` is valid. This process does NOT have to be deterministic and the data returned can be unique to the validator process.
+`VerifyVoteExtension` allows an application to verify that the data returned by `ExtendVote` is valid. This process MUST be deterministic. Moreover, the value of ResponseVerifyVoteExtension.status MUST exclusively depend on the parameters passed in the call to RequestVerifyVoteExtension, and the last committed Application state.
 
 In the Cosmos-SDK this is implemented as a NoOp:
 

@@ -1,7 +1,6 @@
 package distribution
 
 import (
-	"context"
 	"encoding/hex"
 	"fmt"
 	"time"
@@ -12,10 +11,8 @@ import (
 	"cosmossdk.io/math"
 	"cosmossdk.io/simapp"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec/address"
-	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -70,120 +67,6 @@ func (s *E2ETestSuite) SetupSuite() {
 func (s *E2ETestSuite) TearDownSuite() {
 	s.T().Log("tearing down e2e test suite1")
 	s.network.Cleanup()
-}
-
-func (s *E2ETestSuite) TestNewWithdrawRewardsCmd() {
-	val := s.network.Validators[0]
-
-	testCases := []struct {
-		name                 string
-		valAddr              fmt.Stringer
-		args                 []string
-		expectErr            bool
-		expectedCode         uint32
-		respType             proto.Message
-		expectedResponseType []string
-	}{
-		{
-			"invalid validator address",
-			val.Address,
-			[]string{
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
-			},
-			true, 0, nil,
-			[]string{},
-		},
-		{
-			"valid transaction",
-			sdk.ValAddress(val.Address),
-			[]string{
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
-			},
-			false, 0, &sdk.TxResponse{},
-			[]string{
-				"/cosmos.distribution.v1beta1.MsgWithdrawDelegatorRewardResponse",
-			},
-		},
-		{
-			"valid transaction (with commission)",
-			sdk.ValAddress(val.Address),
-			[]string{
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=true", cli.FlagCommission),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
-			},
-			false, 0, &sdk.TxResponse{},
-			[]string{
-				"/cosmos.distribution.v1beta1.MsgWithdrawDelegatorRewardResponse",
-				"/cosmos.distribution.v1beta1.MsgWithdrawValidatorCommissionResponse",
-			},
-		},
-	}
-
-	for _, tc := range testCases {
-		tc := tc
-
-		s.Run(tc.name, func() {
-			clientCtx := val.ClientCtx
-
-			args := append([]string{tc.valAddr.String()}, tc.args...)
-
-			_, _ = s.network.WaitForHeightWithTimeout(10, time.Minute)
-
-			ctx := svrcmd.CreateExecuteContext(context.Background())
-			cmd := cli.NewWithdrawRewardsCmd(address.NewBech32Codec("cosmosvaloper"), address.NewBech32Codec("cosmos"))
-			cmd.SetContext(ctx)
-			cmd.SetArgs(args)
-			s.Require().NoError(client.SetCmdClientContextHandler(clientCtx, cmd))
-
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
-			if tc.expectErr {
-				s.Require().Error(err)
-			} else {
-				s.Require().NoError(err)
-				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
-				s.Require().NoError(s.network.WaitForNextBlock())
-
-				txResp, err := clitestutil.GetTxResponse(s.network, clientCtx, tc.respType.(*sdk.TxResponse).TxHash)
-				s.Require().NoError(err)
-				s.Require().Equal(tc.expectedCode, txResp.Code)
-
-				data, err := hex.DecodeString(txResp.Data)
-				s.Require().NoError(err)
-
-				txMsgData := sdk.TxMsgData{}
-				err = s.cfg.Codec.Unmarshal(data, &txMsgData)
-				s.Require().NoError(err)
-				for responseIdx, msgResponse := range txMsgData.MsgResponses {
-					s.Require().Equal(tc.expectedResponseType[responseIdx], msgResponse.TypeUrl)
-					switch msgResponse.TypeUrl {
-					case "/cosmos.distribution.v1beta1.MsgWithdrawDelegatorRewardResponse":
-						var resp distrtypes.MsgWithdrawDelegatorRewardResponse
-						// can't use unpackAny as response types are not registered.
-						err = s.cfg.Codec.Unmarshal(msgResponse.Value, &resp)
-						s.Require().NoError(err)
-						s.Require().True(resp.Amount.IsAllGT(sdk.NewCoins(sdk.NewCoin("stake", math.OneInt()))),
-							fmt.Sprintf("expected a positive coin value, got %v", resp.Amount))
-					case "/cosmos.distribution.v1beta1.MsgWithdrawValidatorCommissionResponse":
-						var resp distrtypes.MsgWithdrawValidatorCommissionResponse
-						// can't use unpackAny as response types are not registered.
-						err = s.cfg.Codec.Unmarshal(msgResponse.Value, &resp)
-						s.Require().NoError(err)
-						s.Require().True(resp.Amount.IsAllGT(sdk.NewCoins(sdk.NewCoin("stake", math.OneInt()))),
-							fmt.Sprintf("expected a positive coin value, got %v", resp.Amount))
-					}
-				}
-			}
-		})
-	}
 }
 
 func (s *E2ETestSuite) TestNewWithdrawAllRewardsCmd() {
@@ -269,61 +152,6 @@ func (s *E2ETestSuite) TestNewWithdrawAllRewardsCmd() {
 							fmt.Sprintf("expected a positive coin value, got %v", resp.Amount))
 					}
 				}
-			}
-		})
-	}
-}
-
-func (s *E2ETestSuite) TestNewSetWithdrawAddrCmd() {
-	val := s.network.Validators[0]
-
-	testCases := []struct {
-		name         string
-		args         []string
-		expectErr    bool
-		expectedCode uint32
-		respType     proto.Message
-	}{
-		{
-			"invalid withdraw address",
-			[]string{
-				"foo",
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
-			},
-			true, 0, nil,
-		},
-		{
-			"valid transaction",
-			[]string{
-				val.Address.String(),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
-			},
-			false, 0, &sdk.TxResponse{},
-		},
-	}
-
-	for _, tc := range testCases {
-		tc := tc
-
-		s.Run(tc.name, func() {
-			cmd := cli.NewSetWithdrawAddrCmd(address.NewBech32Codec("cosmos"))
-			clientCtx := val.ClientCtx
-
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
-			if tc.expectErr {
-				s.Require().Error(err)
-			} else {
-				s.Require().NoError(err)
-				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
-
-				txResp := tc.respType.(*sdk.TxResponse)
-				s.Require().NoError(clitestutil.CheckTxCode(s.network, clientCtx, txResp.TxHash, tc.expectedCode))
 			}
 		})
 	}

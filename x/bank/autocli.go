@@ -93,16 +93,16 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
 				{
 					RpcMethod: "Send",
-					Use:       "send [from_key_or_address] [to_address] [amount]",
+					Use:       "send [to_address] [amount] --from [from]",
 					Short:     "Send funds from one account to another.",
 					Long: `Send funds from one account to another.
-			Note, the '--from' flag is ignored as it is implied from [from_key_or_address].
+			Note, the '--from' flag is ignored as it is implied from [from_key_or].
 			When using '--dry-run' a key name cannot be used, only a bech32 address.`,
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "to_address"}, {ProtoField: "amount"}},
 				},
 				{
 					RpcMethod:      "Burn",
-					Use:            "burn [from_key_or_address] [amount]",
+					Use:            "burn [amount] --from [from]",
 					Short:          "Burns the amount specified from the given account.",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "amount"}},
 				},

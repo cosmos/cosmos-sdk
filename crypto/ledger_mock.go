@@ -1,3 +1,4 @@
+//go:build ledger && test_ledger_mock
 // +build ledger,test_ledger_mock
 
 package crypto
@@ -5,7 +6,7 @@ package crypto
 import (
 	"fmt"
 
-	"github.com/btcsuite/btcd/btcec"
+	"github.com/btcsuite/btcd/btcec/v2"
 	"github.com/pkg/errors"
 
 	secp256k1 "github.com/tendermint/btcd/btcec"

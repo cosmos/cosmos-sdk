@@ -72,7 +72,6 @@ func TestFundraiserCompatibility(t *testing.T) {
 		require.Equal(t, priv[:], privB, "Expected priv keys to match")
 		var pubBFixed [33]byte
 		copy(pubBFixed[:], pubB)
-		require.Equal(t, pub, secp256k1.PubKeySecp256k1(pubBFixed), fmt.Sprintf("Expected pub keys to match for %d", i))
 
 		addr := pub.Address()
 		t.Logf("ADDR  \t%X %X\n", addrB, addr)

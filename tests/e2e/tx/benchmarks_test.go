@@ -75,7 +75,7 @@ func BenchmarkTx(b *testing.B) {
 			// - Sending Fee to the pool (3 events): coin_spent, coin_received, transfer
 			// - tx.* events (3 events): tx.fee, tx.acc_seq, tx.signature
 			// - Sending Amount to recipient (3 events): coin_spent, coin_received, transfer and message.sender=<val1>
-			// - Msg events (1 event): message.module=bank, message.action=/cosmos.bank.v1beta1.MsgSend and message.sender=<val1>
+			// - Msg events (1 event): message.module=bank, message.action=/cosmos.bank.v1beta1.MsgSend and message.sender=<val1> (all in one event)
 			assert.Equal(b, 10, len(res.GetResult().GetEvents()))
 			assert.Assert(b, res.GetGasInfo().GetGasUsed() > 0) // Gas used sometimes change, just check it's not empty.
 		}
@@ -128,7 +128,7 @@ func NewE2EBenchmarkSuite(tb testing.TB) *E2EBenchmarkSuite {
 		Amount:      sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdkmath.NewInt(1))),
 	}
 
-	out1, err := cli.SubmitTestTx(
+	out, err = cli.SubmitTestTx(
 		val.ClientCtx,
 		msgSend1,
 		val.Address,
@@ -142,7 +142,7 @@ func NewE2EBenchmarkSuite(tb testing.TB) *E2EBenchmarkSuite {
 
 	assert.NilError(tb, err)
 	var tr sdk.TxResponse
-	assert.NilError(tb, val.ClientCtx.Codec.UnmarshalJSON(out1.Bytes(), &tr))
+	assert.NilError(tb, val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &tr))
 	assert.Equal(tb, uint32(0), tr.Code)
 
 	resp, err := cli.GetTxResponse(s.network, val.ClientCtx, tr.TxHash)

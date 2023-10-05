@@ -47,7 +47,6 @@ func GetTxCmd(ac address.Codec) *cobra.Command {
 
 	AuthorizationTxCmd.AddCommand(
 		NewCmdGrantAuthorization(ac),
-		// NewCmdRevokeAuthorization(ac),
 		NewCmdExecAuthorization(),
 	)
 
@@ -227,40 +226,6 @@ func getExpireTime(cmd *cobra.Command) (*time.Time, error) {
 	e := time.Unix(exp, 0)
 	return &e, nil
 }
-
-// // NewCmdRevokeAuthorization returns a CLI command handler for creating a MsgRevoke transaction.
-// func NewCmdRevokeAuthorization(ac address.Codec) *cobra.Command {
-// 	cmd := &cobra.Command{
-// 		Use:   "revoke [grantee] [msg-type-url] --from=[granter]",
-// 		Short: "revoke authorization",
-// 		Long: strings.TrimSpace(
-// 			fmt.Sprintf(`revoke authorization from a granter to a grantee:
-// Example:
-//  $ %s tx %s revoke cosmos1skj.. %s --from=cosmos1skj..
-// 			`, version.AppName, authz.ModuleName, bank.SendAuthorization{}.MsgTypeURL()),
-// 		),
-// 		Args: cobra.ExactArgs(2),
-// 		RunE: func(cmd *cobra.Command, args []string) error {
-// 			clientCtx, err := client.GetClientTxContext(cmd)
-// 			if err != nil {
-// 				return err
-// 			}
-
-// 			grantee, err := ac.StringToBytes(args[0])
-// 			if err != nil {
-// 				return err
-// 			}
-
-// 			granter := clientCtx.GetFromAddress()
-// 			msgAuthorized := args[1]
-// 			msg := authz.NewMsgRevoke(granter, grantee, msgAuthorized)
-
-// 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &msg)
-// 		},
-// 	}
-// 	flags.AddTxFlagsToCmd(cmd)
-// 	return cmd
-// }
 
 // NewCmdExecAuthorization returns a CLI command handler for creating a MsgExec transaction.
 func NewCmdExecAuthorization() *cobra.Command {

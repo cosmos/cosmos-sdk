@@ -2,11 +2,13 @@ package authz
 
 import (
 	"fmt"
+	"strings"
 
 	authzv1beta1 "cosmossdk.io/api/cosmos/authz/v1beta1"
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 
 	"github.com/cosmos/cosmos-sdk/version"
+	"github.com/cosmos/cosmos-sdk/x/authz"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
@@ -51,10 +53,14 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 			EnhanceCustomCommand: true,
 			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
 				{
-					RpcMethod:      "Revoke",
-					Use:            "revoke [grantee] [msg-type-url] --from=[granter]",
-					Short:          "revoke authorization",
-					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "granter"}, {ProtoField: "grantee"}, {ProtoField: "msg_type_url"}},
+					RpcMethod: "Revoke",
+					Use:       "revoke [grantee] [msg-type-url] --from=[granter]",
+					Short: strings.TrimSpace(
+						fmt.Sprintf(`Revoke authorization from a granter to a grantee:`+"\n"+
+							`Example: %s tx %s revoke cosmos1skj.. %s --from=cosmos1skj..`,
+							version.AppName, authz.ModuleName, bank.SendAuthorization{}.MsgTypeURL()),
+					),
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "grantee"}, {ProtoField: "msg_type_url"}},
 				},
 			},
 		},

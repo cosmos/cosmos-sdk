@@ -80,7 +80,12 @@ func (a addressValue) Type() string {
 type consensusAddressStringType struct{}
 
 func (a consensusAddressStringType) NewValue(ctx context.Context, b *Builder) Value {
-	return &consensusAddressValue{addressValue: addressValue{addressCodec: b.ConsensusAddressCodec, keyring: b.Keyring}}
+	return &consensusAddressValue{
+		addressValue: addressValue{
+			addressCodec: b.ConsensusAddressCodec,
+			keyring:      b.Keyring,
+		},
+	}
 }
 
 func (a consensusAddressStringType) DefaultValue() string {

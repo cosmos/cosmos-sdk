@@ -6,15 +6,14 @@ require (
 	cosmossdk.io/api v0.7.1
 	cosmossdk.io/core v0.11.0
 	cosmossdk.io/depinject v1.0.0-alpha.4
-	cosmossdk.io/log v1.2.1
 	cosmossdk.io/x/tx v0.10.0
 	github.com/cockroachdb/errors v1.11.1
 	github.com/cosmos/cosmos-proto v1.0.0-beta.3
-	github.com/cosmos/cosmos-sdk v0.50.0-rc.1
+	github.com/cosmos/cosmos-sdk v0.50.0-rc.1.0.20231005110808-059498db8691
 	github.com/cosmos/gogoproto v1.4.11
 	github.com/spf13/cobra v1.7.0
 	github.com/spf13/pflag v1.0.5
-	google.golang.org/grpc v1.58.1
+	google.golang.org/grpc v1.58.2
 	google.golang.org/protobuf v1.31.0
 	gotest.tools/v3 v3.5.0
 	sigs.k8s.io/yaml v1.3.0
@@ -23,6 +22,7 @@ require (
 require (
 	cosmossdk.io/collections v0.4.0 // indirect
 	cosmossdk.io/errors v1.0.0 // indirect
+	cosmossdk.io/log v1.2.1 // indirect
 	cosmossdk.io/math v1.1.3-rc.1 // indirect
 	cosmossdk.io/store v1.0.0-rc.0 // indirect
 	filippo.io/edwards25519 v1.0.0 // indirect
@@ -69,6 +69,7 @@ require (
 	github.com/gogo/googleapis v1.4.1 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/glog v1.1.0 // indirect
+	github.com/golang/mock v1.6.0 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/btree v1.1.2 // indirect
@@ -109,7 +110,7 @@ require (
 	github.com/mtibben/percent v0.2.1 // indirect
 	github.com/oasisprotocol/curve25519-voi v0.0.0-20230110094441-db37f07504ce // indirect
 	github.com/oklog/run v1.1.0 // indirect
-	github.com/pelletier/go-toml/v2 v2.0.9 // indirect
+	github.com/pelletier/go-toml/v2 v2.1.0 // indirect
 	github.com/petermattis/goid v0.0.0-20230808133559-b036b712a89b // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
@@ -142,12 +143,14 @@ require (
 	golang.org/x/sys v0.12.0 // indirect
 	golang.org/x/term v0.12.0 // indirect
 	golang.org/x/text v0.13.0 // indirect
-	google.golang.org/genproto v0.0.0-20230803162519-f966b187b2e5 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20230726155614-23370e0ffb3e // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20230913181813-007df8e322eb // indirect
+	google.golang.org/genproto v0.0.0-20230913181813-007df8e322eb // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20230913181813-007df8e322eb // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20230920204549-e6e6cdab5c13 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	nhooyr.io/websocket v1.8.6 // indirect
 	pgregory.net/rapid v1.1.0 // indirect
 )
+
+replace github.com/cosmos/cosmos-sdk => ./../../

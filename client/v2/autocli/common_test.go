@@ -12,6 +12,7 @@ import (
 	"google.golang.org/protobuf/reflect/protoregistry"
 	"gotest.tools/v3/assert"
 
+	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	reflectionv2alpha1 "cosmossdk.io/api/cosmos/base/reflection/v2alpha1"
 	"cosmossdk.io/client/v2/autocli/flag"
 	"cosmossdk.io/client/v2/internal/testpb"
@@ -19,9 +20,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
-	"github.com/cosmos/cosmos-sdk/crypto/keyring"
+	sdkkeyring "github.com/cosmos/cosmos-sdk/crypto/keyring"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	"github.com/cosmos/cosmos-sdk/x/bank"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 type fixture struct {
@@ -47,24 +50,33 @@ func initFixture(t *testing.T) *fixture {
 	clientConn, err := grpc.Dial(listener.Addr().String(), grpc.WithTransportCredentials(insecure.NewCredentials()))
 	assert.NilError(t, err)
 
-	appCodec := moduletestutil.MakeTestEncodingConfig().Codec
-	kr, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendMemory, home, nil, appCodec)
+	encodingConfig := moduletestutil.MakeTestEncodingConfig(bank.AppModuleBasic{})
+	kr, err := sdkkeyring.New(sdk.KeyringServiceName(), sdkkeyring.BackendMemory, home, nil, encodingConfig.Codec)
 	assert.NilError(t, err)
+
+	akr, err := sdkkeyring.NewAutoCLIKeyring(kr)
+	assert.NilError(t, err)
+
+	interfaceRegistry := encodingConfig.Codec.InterfaceRegistry()
+	banktypes.RegisterInterfaces(interfaceRegistry)
 
 	var initClientCtx client.Context
 	initClientCtx = initClientCtx.
 		WithKeyring(kr).
 		WithKeyringDir(home).
 		WithHomeDir(home).
-		WithViper("")
+		WithViper("").
+		WithInterfaceRegistry(interfaceRegistry).
+		WithTxConfig(encodingConfig.TxConfig).
+		WithAccountRetriever(client.MockAccountRetriever{}).
+		WithChainID("autocli-test")
 
 	conn := &testClientConn{ClientConn: clientConn}
 	b := &Builder{
 		Builder: flag.Builder{
 			TypeResolver:          protoregistry.GlobalTypes,
 			FileResolver:          protoregistry.GlobalFiles,
-			ClientCtx:             &initClientCtx,
-			Keyring:               kr,
+			Keyring:               akr,
 			AddressCodec:          addresscodec.NewBech32Codec("cosmos"),
 			ValidatorAddressCodec: addresscodec.NewBech32Codec("cosmosvaloper"),
 			ConsensusAddressCodec: addresscodec.NewBech32Codec("cosmosvalcons"),
@@ -74,6 +86,7 @@ func initFixture(t *testing.T) *fixture {
 		},
 		AddQueryConnFlags: flags.AddQueryFlagsToCmd,
 		AddTxConnFlags:    flags.AddTxFlagsToCmd,
+		ClientCtx:         initClientCtx,
 	}
 	assert.NilError(t, b.ValidateAndComplete())
 
@@ -131,3 +144,82 @@ func (t testEchoServer) Echo(_ context.Context, request *testpb.EchoRequest) (*t
 }
 
 var _ testpb.QueryServer = testEchoServer{}
+
+func TestEnhanceCommand(t *testing.T) {
+	b := &Builder{}
+	// Test that the command has a subcommand
+	cmd := &cobra.Command{Use: "test"}
+	cmd.AddCommand(&cobra.Command{Use: "test"})
+
+	for i := 0; i < 2; i++ {
+		cmdTp := cmdType(i)
+
+		appOptions := AppOptions{
+			ModuleOptions: map[string]*autocliv1.ModuleOptions{
+				"test": {},
+			},
+		}
+
+		err := b.enhanceCommandCommon(cmd, cmdTp, appOptions, map[string]*cobra.Command{})
+		assert.NilError(t, err)
+
+		cmd = &cobra.Command{Use: "test"}
+
+		appOptions = AppOptions{
+			ModuleOptions: map[string]*autocliv1.ModuleOptions{},
+		}
+		customCommands := map[string]*cobra.Command{
+			"test2": {Use: "test"},
+		}
+		err = b.enhanceCommandCommon(cmd, cmdTp, appOptions, customCommands)
+		assert.NilError(t, err)
+
+		cmd = &cobra.Command{Use: "test"}
+		appOptions = AppOptions{
+			ModuleOptions: map[string]*autocliv1.ModuleOptions{
+				"test": {Tx: nil},
+			},
+		}
+		err = b.enhanceCommandCommon(cmd, cmdTp, appOptions, map[string]*cobra.Command{})
+		assert.NilError(t, err)
+	}
+}
+
+func TestErrorBuildCommand(t *testing.T) {
+	fixture := initFixture(t)
+	b := fixture.b
+	b.AddQueryConnFlags = nil
+	b.AddTxConnFlags = nil
+
+	commandDescriptor := &autocliv1.ServiceCommandDescriptor{
+		Service: testpb.Msg_ServiceDesc.ServiceName,
+		RpcCommandOptions: []*autocliv1.RpcCommandOptions{
+			{
+				RpcMethod: "Send",
+				PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+					{
+						ProtoField: "un-existent-proto-field",
+					},
+				},
+			},
+		},
+	}
+
+	appOptions := AppOptions{
+		ModuleOptions: map[string]*autocliv1.ModuleOptions{
+			"test": {
+				Query: commandDescriptor,
+				Tx:    commandDescriptor,
+			},
+		},
+		ClientCtx: b.ClientCtx,
+	}
+
+	_, err := b.BuildMsgCommand(appOptions, nil)
+	assert.ErrorContains(t, err, "can't find field un-existent-proto-field")
+
+	appOptions.ModuleOptions["test"].Tx = &autocliv1.ServiceCommandDescriptor{Service: "un-existent-service"}
+	appOptions.ModuleOptions["test"].Query = &autocliv1.ServiceCommandDescriptor{Service: "un-existent-service"}
+	_, err = b.BuildMsgCommand(appOptions, nil)
+	assert.ErrorContains(t, err, "can't find service un-existent-service")
+}

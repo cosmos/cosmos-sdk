@@ -16,7 +16,7 @@ type SigVerifiableTx interface {
 }
 
 // Tx defines a transaction interface that supports all standard message, signature
-// fee, memo, tips, and auxiliary interfaces.
+// fee, memo and auxiliary interfaces.
 type Tx interface {
 	SigVerifiableTx
 

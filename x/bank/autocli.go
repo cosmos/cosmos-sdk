@@ -101,6 +101,12 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "to_address"}, {ProtoField: "amount"}},
 				},
 				{
+					RpcMethod:      "Burn",
+					Use:            "burn [from_key_or_address] [amount]",
+					Short:          "Burns the amount specified from the given account.",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "amount"}},
+				},
+				{
 					RpcMethod: "UpdateParams",
 					Skip:      true, // skipped because authority gated
 				},

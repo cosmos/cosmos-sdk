@@ -6,7 +6,7 @@ import (
 
 // Tree is an interface for a commitment layer to support multiple backends.
 type Tree interface {
-	WriteBatch(cs *ChangeSet) error
+	WriteBatch(cs *Changeset) error
 	WorkingHash() []byte
 	GetLatestVersion() uint64
 	LoadVersion(targetVersion uint64) error

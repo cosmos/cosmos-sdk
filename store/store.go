@@ -46,6 +46,8 @@ type RootStore interface {
 
 // KVStore defines the core storage primitive for modules to read and write state.
 type KVStore interface {
+	GetStoreKey() string
+
 	// GetStoreType returns the concrete store type.
 	GetStoreType() StoreType
 
@@ -62,7 +64,7 @@ type KVStore interface {
 	Delete(key []byte)
 
 	// Reset resets the store, which is implementation dependent.
-	Reset()
+	Reset() error
 
 	BranchWrapper
 
@@ -109,8 +111,8 @@ type BranchWrapper interface {
 	// BranchWithTrace branches a store with tracing enabled.
 	BranchWithTrace(w io.Writer, tc TraceContext) BranchedKVStore
 
-	// GetChangeSet returns the ChangeSet, if any, for the branched state. This
+	// GetChangeset returns the ChangeSet, if any, for the branched state. This
 	// should contain all writes that are marked to be flushed and committed during
 	// Commit().
-	GetChangeSet() *ChangeSet
+	GetChangeset() *Changeset
 }

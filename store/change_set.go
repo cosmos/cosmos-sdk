@@ -9,24 +9,24 @@ type KVPair struct {
 	StoreKey string // optional
 }
 
-// ChangeSet defines a set of KVPair entries.
-type ChangeSet struct {
+// Changeset defines a set of KVPair entries.
+type Changeset struct {
 	Pairs []KVPair
 }
 
-func NewChangeSet(pairs ...KVPair) *ChangeSet {
-	return &ChangeSet{
+func NewChangeset(pairs ...KVPair) *Changeset {
+	return &Changeset{
 		Pairs: pairs,
 	}
 }
 
 // Size returns the number of key-value pairs in the batch.
-func (cs *ChangeSet) Size() int {
+func (cs *Changeset) Size() int {
 	return len(cs.Pairs)
 }
 
 // Add adds a key-value pair to the ChangeSet.
-func (cs *ChangeSet) Add(key, value []byte) {
+func (cs *Changeset) Add(key, value []byte) {
 	cs.Pairs = append(cs.Pairs, KVPair{
 		Key:   key,
 		Value: value,
@@ -34,6 +34,6 @@ func (cs *ChangeSet) Add(key, value []byte) {
 }
 
 // AddKVPair adds a KVPair to the ChangeSet.
-func (cs *ChangeSet) AddKVPair(pair KVPair) {
+func (cs *Changeset) AddKVPair(pair KVPair) {
 	cs.Pairs = append(cs.Pairs, pair)
 }

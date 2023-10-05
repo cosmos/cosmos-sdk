@@ -27,7 +27,7 @@ func NewIavlTree(db dbm.DB, logger log.Logger, cfg *Config) *IavlTree {
 }
 
 // WriteBatch writes a batch of key-value pairs to the database.
-func (t *IavlTree) WriteBatch(cs *store.ChangeSet) error {
+func (t *IavlTree) WriteBatch(cs *store.Changeset) error {
 	for _, kv := range cs.Pairs {
 		if kv.Value == nil {
 			_, res, err := t.tree.Remove(kv.Key)

@@ -133,7 +133,7 @@ $ %s query distribution rewards %s [validator-address]
 					Example:   fmt.Sprintf("%s tx distribution fund-validator-rewards-pool cosmosvaloper1x20lytyf6zkcrv5edpkfkn8sz578qg5sqfyqnp 100uatom --from mykey", version.AppName),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
 						{ProtoField: "validator_address"},
-						{ProtoField: "amount"},
+						{ProtoField: "amount", Varargs: true},
 					},
 				},
 				{
@@ -143,7 +143,7 @@ $ %s query distribution rewards %s [validator-address]
 					Short:      "Funds the community pool with the specified amount",
 					Example:    fmt.Sprintf(`$ %s tx distribution fund-community-pool 100uatom --from mykey`, version.AppName),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
-						{ProtoField: "amount"},
+						{ProtoField: "amount", Varargs: true},
 					},
 				},
 				{

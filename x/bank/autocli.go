@@ -103,6 +103,18 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					// 	"sender": {Name: "from", Shorthand: "f", Usage: "Address of the sender"},
 					// },
 				},
+				{
+					RpcMethod: "UpdateParams",
+					Skip:      true, // skipped because authority gated
+				},
+				{
+					RpcMethod: "Burn",
+					Skip:      true, // skipped because authority gated
+				},
+				{
+					RpcMethod: "SetSendEnabled",
+					Skip:      true, // skipped because authority gated
+				},
 			},
 		},
 	}

@@ -14,7 +14,7 @@ type Changeset struct {
 	Pairs []KVPair
 }
 
-func NewChangeSet(pairs ...KVPair) *Changeset {
+func NewChangeset(pairs ...KVPair) *Changeset {
 	return &Changeset{
 		Pairs: pairs,
 	}

@@ -4,11 +4,11 @@ go 1.21
 
 require (
 	cosmossdk.io/api v0.7.2-0.20230927090904-9dd34510e273
-	cosmossdk.io/client/v2 v2.0.0-20231004153807-d0c4b434d4f1
+	cosmossdk.io/client/v2 v2.0.0-20231005110446-b62301d9d1d0
 	cosmossdk.io/core v0.12.0
 	cosmossdk.io/errors v1.0.0
 	github.com/cockroachdb/errors v1.11.1
-	github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20231004153807-d0c4b434d4f1
+	github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20231005110446-b62301d9d1d0
 	github.com/manifoldco/promptui v0.9.0
 	github.com/pelletier/go-toml/v2 v2.1.0
 	github.com/spf13/cobra v1.7.0

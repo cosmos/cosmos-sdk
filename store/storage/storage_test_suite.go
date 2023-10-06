@@ -241,7 +241,7 @@ func (s *StorageTestSuite) TestDatabase_IteratorEmptyDomain() {
 	s.Require().NoError(err)
 	defer db.Close()
 
-	iter, err := db.NewIterator(storeKey1, 1, []byte{}, []byte{})
+	iter, err := db.Iterator(storeKey1, 1, []byte{}, []byte{})
 	s.Require().Error(err)
 	s.Require().Nil(iter)
 }
@@ -251,7 +251,7 @@ func (s *StorageTestSuite) TestDatabase_IteratorClose() {
 	s.Require().NoError(err)
 	defer db.Close()
 
-	iter, err := db.NewIterator(storeKey1, 1, []byte("key000"), nil)
+	iter, err := db.Iterator(storeKey1, 1, []byte("key000"), nil)
 	s.Require().NoError(err)
 	iter.Close()
 
@@ -278,7 +278,7 @@ func (s *StorageTestSuite) TestDatabase_IteratorDomain() {
 
 	for name, tc := range testCases {
 		s.Run(name, func() {
-			iter, err := db.NewIterator(storeKey1, 1, tc.start, tc.end)
+			iter, err := db.Iterator(storeKey1, 1, tc.start, tc.end)
 			s.Require().NoError(err)
 
 			defer iter.Close()
@@ -310,7 +310,7 @@ func (s *StorageTestSuite) TestDatabase_Iterator() {
 
 	// iterator without an end key over multiple versions
 	for v := uint64(1); v < 5; v++ {
-		itr, err := db.NewIterator(storeKey1, v, []byte("key000"), nil)
+		itr, err := db.Iterator(storeKey1, v, []byte("key000"), nil)
 		s.Require().NoError(err)
 
 		defer itr.Close()
@@ -333,7 +333,7 @@ func (s *StorageTestSuite) TestDatabase_Iterator() {
 
 	// iterator with with a start and end domain over multiple versions
 	for v := uint64(1); v < 5; v++ {
-		itr2, err := db.NewIterator(storeKey1, v, []byte("key010"), []byte("key019"))
+		itr2, err := db.Iterator(storeKey1, v, []byte("key010"), []byte("key019"))
 		s.Require().NoError(err)
 
 		defer itr2.Close()
@@ -355,7 +355,7 @@ func (s *StorageTestSuite) TestDatabase_Iterator() {
 	}
 
 	// start must be <= end
-	iter3, err := db.NewIterator(storeKey1, 1, []byte("key020"), []byte("key019"))
+	iter3, err := db.Iterator(storeKey1, 1, []byte("key020"), []byte("key019"))
 	s.Require().Error(err)
 	s.Require().Nil(iter3)
 }
@@ -377,7 +377,7 @@ func (s *StorageTestSuite) TestDatabase_Iterator_RangedDeletes() {
 	err = db.Delete(storeKey1, 10, []byte("key002"))
 	s.Require().NoError(err)
 
-	itr, err := db.NewIterator(storeKey1, 11, []byte("key001"), nil)
+	itr, err := db.Iterator(storeKey1, 11, []byte("key001"), nil)
 	s.Require().NoError(err)
 
 	defer itr.Close()
@@ -429,7 +429,7 @@ func (s *StorageTestSuite) TestDatabase_IteratorMultiVersion() {
 		s.Require().NoError(b.Write())
 	}
 
-	itr, err := db.NewIterator(storeKey1, 69, []byte("key000"), nil)
+	itr, err := db.Iterator(storeKey1, 69, []byte("key000"), nil)
 	s.Require().NoError(err)
 
 	defer itr.Close()
@@ -475,7 +475,7 @@ func (s *StorageTestSuite) TestDatabase_IteratorNoDomain() {
 	}
 
 	// create an iterator over the entire domain
-	itr, err := db.NewIterator(storeKey1, 50, nil, nil)
+	itr, err := db.Iterator(storeKey1, 50, nil, nil)
 	s.Require().NoError(err)
 
 	defer itr.Close()
@@ -540,7 +540,7 @@ func (s *StorageTestSuite) TestDatabase_Prune() {
 		}
 	}
 
-	itr, err := db.NewIterator(storeKey1, 25, []byte("key000"), nil)
+	itr, err := db.Iterator(storeKey1, 25, []byte("key000"), nil)
 	s.Require().NoError(err)
 	s.Require().False(itr.Valid())
 

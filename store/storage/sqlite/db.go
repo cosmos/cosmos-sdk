@@ -199,7 +199,7 @@ func (db *Database) Prune(version uint64) error {
 	return nil
 }
 
-func (db *Database) NewIterator(storeKey string, version uint64, start, end []byte) (store.Iterator, error) {
+func (db *Database) Iterator(storeKey string, version uint64, start, end []byte) (store.Iterator, error) {
 	if (start != nil && len(start) == 0) || (end != nil && len(end) == 0) {
 		return nil, store.ErrKeyEmpty
 	}
@@ -211,7 +211,7 @@ func (db *Database) NewIterator(storeKey string, version uint64, start, end []by
 	return newIterator(db.storage, storeKey, version, start, end, false)
 }
 
-func (db *Database) NewReverseIterator(storeKey string, version uint64, start, end []byte) (store.Iterator, error) {
+func (db *Database) ReverseIterator(storeKey string, version uint64, start, end []byte) (store.Iterator, error) {
 	if (start != nil && len(start) == 0) || (end != nil && len(end) == 0) {
 		return nil, store.ErrKeyEmpty
 	}

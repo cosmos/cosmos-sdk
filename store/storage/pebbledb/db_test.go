@@ -32,5 +32,5 @@ func TestDatabase_ReverseIterator(t *testing.T) {
 	require.NoError(t, err)
 	defer db.Close()
 
-	require.Panics(t, func() { _, _ = db.NewReverseIterator(storeKey1, 1, []byte("key000"), nil) })
+	require.Panics(t, func() { _, _ = db.ReverseIterator(storeKey1, 1, []byte("key000"), nil) })
 }

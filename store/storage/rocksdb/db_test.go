@@ -46,7 +46,7 @@ func TestDatabase_ReverseIterator(t *testing.T) {
 	require.NoError(t, err)
 
 	// reverse iterator without an end key
-	iter, err := db.NewReverseIterator(storeKey1, 1, []byte("key000"), nil)
+	iter, err := db.ReverseIterator(storeKey1, 1, []byte("key000"), nil)
 	require.NoError(t, err)
 
 	defer iter.Close()
@@ -67,7 +67,7 @@ func TestDatabase_ReverseIterator(t *testing.T) {
 	require.False(t, iter.Valid())
 
 	// reverse iterator with with a start and end domain
-	iter2, err := db.NewReverseIterator(storeKey1, 1, []byte("key010"), []byte("key019"))
+	iter2, err := db.ReverseIterator(storeKey1, 1, []byte("key010"), []byte("key019"))
 	require.NoError(t, err)
 
 	defer iter2.Close()
@@ -88,7 +88,7 @@ func TestDatabase_ReverseIterator(t *testing.T) {
 	require.False(t, iter2.Valid())
 
 	// start must be <= end
-	iter3, err := db.NewReverseIterator(storeKey1, 1, []byte("key020"), []byte("key019"))
+	iter3, err := db.ReverseIterator(storeKey1, 1, []byte("key020"), []byte("key019"))
 	require.Error(t, err)
 	require.Nil(t, iter3)
 }

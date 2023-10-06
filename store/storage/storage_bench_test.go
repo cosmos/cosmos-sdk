@@ -196,7 +196,7 @@ func BenchmarkIterate(b *testing.B) {
 			for i := 0; i < b.N; i++ {
 				b.StopTimer()
 
-				itr, err := db.NewIterator(storeKey1, 1, keys[0], nil)
+				itr, err := db.Iterator(storeKey1, 1, keys[0], nil)
 				require.NoError(b, err)
 
 				b.StartTimer()

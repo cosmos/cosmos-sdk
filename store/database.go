@@ -4,13 +4,6 @@ import (
 	"io"
 )
 
-// VersionedReader extends the Reader interface by making all reads versioned.
-type VersionedReader interface {
-	Has(storeKey string, version uint64, key []byte) (bool, error)
-	Get(storeKey string, version uint64, key []byte) ([]byte, error)
-	GetLatestVersion() (uint64, error)
-}
-
 // Reader wraps the Has and Get method of a backing data store.
 type Reader interface {
 	// Has retrieves if a key is present in the key-value data store.
@@ -23,13 +16,6 @@ type Reader interface {
 	// Note: <key> is safe to modify and read after calling Get.
 	// The returned byte slice is safe to read, but cannot be modified.
 	Get(storeKey string, key []byte) ([]byte, error)
-}
-
-// VersionedWriter extends the Writer interface by making all writes versioned.
-type VersionedWriter interface {
-	Set(storeKey string, version uint64, key, value []byte) error
-	Delete(storeKey string, version uint64, key []byte) error
-	SetLatestVersion(version uint64) error
 }
 
 // Writer wraps the Set method of a backing data store.
@@ -45,32 +31,30 @@ type Writer interface {
 	Delete(storeKey string, key []byte) error
 }
 
-// VersionedReaderWriter combines the VersionedReader and VersionedWriter interfaces.
-type VersionedReaderWriter interface {
-	VersionedReader
-	VersionedWriter
-}
-
-// ReaderWriter combines the Reader and Writer interfaces.
-type ReaderWriter interface {
-	Reader
-	Writer
-}
-
 // Database contains all the methods required to allow handling different
 // key-value data stores backing the database.
 type Database interface {
-	ReaderWriter
+	Reader
+	Writer
 	IteratorCreator
 	io.Closer
 }
 
-// VersionedDatabase extends the Database interface by making all reads and writes
-// versioned.
+// VersionedDatabase defines an API for a versioned database that allows reads,
+// writes, iteration and commitment over a series of versions.
 type VersionedDatabase interface {
-	VersionedReaderWriter
-	VersionedIteratorCreator
-	VersionedBatcher
+	Has(storeKey string, version uint64, key []byte) (bool, error)
+	Get(storeKey string, version uint64, key []byte) ([]byte, error)
+	GetLatestVersion() (uint64, error)
+
+	Set(storeKey string, version uint64, key, value []byte) error
+	Delete(storeKey string, version uint64, key []byte) error
+	SetLatestVersion(version uint64) error
+
+	Iterator(storeKey string, version uint64, start, end []byte) (Iterator, error)
+	ReverseIterator(storeKey string, version uint64, start, end []byte) (Iterator, error)
+
+	NewBatch(version uint64) (Batch, error)
 
 	// Prune attempts to prune all versions up to and including the provided
 	// version argument. The operation should be idempotent. An error should be
@@ -82,6 +66,7 @@ type VersionedDatabase interface {
 	io.Closer
 }
 
+// Committer defines a contract for committing state.
 type Committer interface {
 	Commit() error
 }

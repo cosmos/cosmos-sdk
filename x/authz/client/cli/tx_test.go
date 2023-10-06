@@ -35,11 +35,7 @@ import (
 	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
-var (
-	typeMsgSend           = banktypes.SendAuthorization{}.MsgTypeURL()
-	typeMsgVote           = sdk.MsgTypeURL(&govv1.MsgVote{})
-	typeMsgSubmitProposal = sdk.MsgTypeURL(&govv1.MsgSubmitProposal{})
-)
+var typeMsgVote = sdk.MsgTypeURL(&govv1.MsgVote{})
 
 type CLITestSuite struct {
 	suite.Suite

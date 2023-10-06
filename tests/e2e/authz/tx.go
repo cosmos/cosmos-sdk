@@ -147,14 +147,22 @@ func (s *E2ETestSuite) createAccount(uid string) sdk.AccAddress {
 func (s *E2ETestSuite) msgSendExec(grantee sdk.AccAddress) {
 	val := s.network.Validators[0]
 	// Send some funds to the new account.
-	out, err := clitestutil.MsgSendExec(
+
+	from := val.Address
+	coins := sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(200)))
+	msgSend := &bank.MsgSend{
+		FromAddress: from.String(),
+		ToAddress:   grantee.String(),
+		Amount:      coins,
+	}
+
+	out, err := clitestutil.SubmitTestTx(
 		val.ClientCtx,
-		val.Address,
-		grantee,
-		sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(200))), addresscodec.NewBech32Codec("cosmos"), fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
+		msgSend,
+		from,
+		clitestutil.TestTxConfig{},
 	)
+
 	s.Require().NoError(err)
 	s.Require().Contains(out.String(), `"code":0`)
 	s.Require().NoError(s.network.WaitForNextBlock())
@@ -495,20 +503,24 @@ func (s *E2ETestSuite) TestNewExecGrantAuthorized() {
 	s.Require().NoError(err)
 	s.Require().NoError(s.network.WaitForNextBlock())
 
+	from := val.Address
 	tokens := sdk.NewCoins(
 		sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), math.NewInt(12)),
 	)
-	normalGeneratedTx, err := clitestutil.MsgSendExec(
+	msgSend := &bank.MsgSend{
+		FromAddress: from.String(),
+		ToAddress:   grantee.String(),
+		Amount:      tokens,
+	}
+	normalGeneratedTx, err := clitestutil.SubmitTestTx(
 		val.ClientCtx,
-		val.Address,
-		grantee,
-		tokens,
-		addresscodec.NewBech32Codec("cosmos"),
-		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
-		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
+		msgSend,
+		from,
+		clitestutil.TestTxConfig{
+			GenOnly: true,
+		},
 	)
+
 	s.Require().NoError(err)
 	execMsg := testutil.WriteToNewTempFile(s.T(), normalGeneratedTx.String())
 	defer execMsg.Close()
@@ -609,35 +621,40 @@ func (s *E2ETestSuite) TestExecSendAuthzWithAllowList() {
 	s.Require().NoError(err)
 	s.Require().NoError(s.network.WaitForNextBlock())
 
+	from := val.Address
 	tokens := sdk.NewCoins(
 		sdk.NewCoin("stake", math.NewInt(12)),
 	)
+	msgSend := &bank.MsgSend{
+		FromAddress: from.String(),
+		ToAddress:   allowedAddr.String(),
+		Amount:      tokens,
+	}
 
-	validGeneratedTx, err := clitestutil.MsgSendExec(
+	validGeneratedTx, err := clitestutil.SubmitTestTx(
 		val.ClientCtx,
-		val.Address,
-		allowedAddr,
-		tokens,
-		addresscodec.NewBech32Codec("cosmos"),
-		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
-		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
+		msgSend,
+		from,
+		clitestutil.TestTxConfig{
+			GenOnly: true,
+		},
 	)
 	s.Require().NoError(err)
 	execMsg := testutil.WriteToNewTempFile(s.T(), validGeneratedTx.String())
 	defer execMsg.Close()
 
-	invalidGeneratedTx, err := clitestutil.MsgSendExec(
+	msgSend1 := &bank.MsgSend{
+		FromAddress: from.String(),
+		ToAddress:   notAllowedAddr.String(),
+		Amount:      tokens,
+	}
+	invalidGeneratedTx, err := clitestutil.SubmitTestTx(
 		val.ClientCtx,
-		val.Address,
-		notAllowedAddr,
-		tokens,
-		addresscodec.NewBech32Codec("cosmos"),
-		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
-		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
+		msgSend1,
+		from,
+		clitestutil.TestTxConfig{
+			GenOnly: true,
+		},
 	)
 	s.Require().NoError(err)
 	execMsg1 := testutil.WriteToNewTempFile(s.T(), invalidGeneratedTx.String())

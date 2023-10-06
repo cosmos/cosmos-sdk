@@ -28,18 +28,15 @@ func (s *StoreTestSuite) SetupTest() {
 	storage, err := sqlite.New(s.T().TempDir())
 	s.Require().NoError(err)
 
-	batch, err := storage.NewBatch(1)
-	s.Require().NoError(err)
-
+	cs := new(store.Changeset)
 	for i := 0; i < 100; i++ {
 		key := fmt.Sprintf("key%03d", i) // key000, key001, ..., key099
 		val := fmt.Sprintf("val%03d", i) // val000, val001, ..., val099
-		err = batch.Set(storeKey, []byte(key), []byte(val))
-		s.Require().NoError(err)
+
+		cs.AddKVPair(store.KVPair{StoreKey: storeKey, Key: []byte(key), Value: []byte(val)})
 	}
 
-	err = batch.Write()
-	s.Require().NoError(err)
+	s.Require().NoError(storage.ApplyChangeset(1, cs))
 
 	kvStore, err := branchkv.New(storeKey, storage)
 	s.Require().NoError(err)

@@ -134,9 +134,13 @@ func (db *Database) ApplyChangeset(version uint64, cs *store.Changeset) error {
 
 	for _, kvPair := range cs.Pairs {
 		if kvPair.Value == nil {
-			b.Delete(kvPair.StoreKey, kvPair.Key)
+			if err := b.Delete(kvPair.StoreKey, kvPair.Key); err != nil {
+				return err
+			}
 		} else {
-			b.Set(kvPair.StoreKey, kvPair.Key, kvPair.Value)
+			if err := b.Set(kvPair.StoreKey, kvPair.Key, kvPair.Value); err != nil {
+				return err
+			}
 		}
 	}
 

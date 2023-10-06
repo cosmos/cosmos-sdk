@@ -157,6 +157,14 @@ message RequestExtendVote {
   bytes hash = 1;
   // the height of the extended vote
   int64 height = 2;
+  // info of the block that this vote may be referring to
+  google.protobuf.Timestamp time                 = 3 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
+  repeated bytes            txs                  = 4;
+  CommitInfo                proposed_last_commit = 5 [(gogoproto.nullable) = false];
+  repeated Misbehavior      misbehavior          = 6 [(gogoproto.nullable) = false];
+  bytes                     next_validators_hash = 7;
+  // address of the public key of the original proposer of the block.
+  bytes proposer_address = 8;
 }
 
 // Verify the vote extension

@@ -4,11 +4,11 @@ go 1.21
 
 require (
 	cosmossdk.io/api v0.7.2-0.20230927090904-9dd34510e273
-	cosmossdk.io/client/v2 v2.0.0-20231005110446-b62301d9d1d0
+	cosmossdk.io/client/v2 v2.0.0-20231006081625-45b44e678ccb
 	cosmossdk.io/core v0.12.0
 	cosmossdk.io/errors v1.0.0
 	github.com/cockroachdb/errors v1.11.1
-	github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20231005110446-b62301d9d1d0
+	github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20231006081625-45b44e678ccb
 	github.com/manifoldco/promptui v0.9.0
 	github.com/pelletier/go-toml/v2 v2.1.0
 	github.com/spf13/cobra v1.7.0
@@ -135,12 +135,12 @@ require (
 	github.com/zondax/hid v0.9.1 // indirect
 	github.com/zondax/ledger-go v0.14.2 // indirect
 	go.etcd.io/bbolt v1.3.7 // indirect
-	golang.org/x/crypto v0.13.0 // indirect
+	golang.org/x/crypto v0.14.0 // indirect
 	golang.org/x/exp v0.0.0-20230905200255-921286631fa9 // indirect
 	golang.org/x/net v0.15.0 // indirect
 	golang.org/x/sync v0.3.0 // indirect
-	golang.org/x/sys v0.12.0 // indirect
-	golang.org/x/term v0.12.0 // indirect
+	golang.org/x/sys v0.13.0 // indirect
+	golang.org/x/term v0.13.0 // indirect
 	golang.org/x/text v0.13.0 // indirect
 	google.golang.org/genproto v0.0.0-20230913181813-007df8e322eb // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20230913181813-007df8e322eb // indirect

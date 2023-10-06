@@ -1,6 +1,6 @@
 package store
 
-// Iterator ...
+// Iterator defines an interface for iterating over a domain of key/value pairs.
 type Iterator interface {
 	// Domain returns the start (inclusive) and end (exclusive) limits of the iterator.
 	Domain() ([]byte, []byte)
@@ -26,18 +26,13 @@ type Iterator interface {
 	Close()
 }
 
-// IteratorCreator ...
+// IteratorCreator defines an interface for creating forward and reverse iterators.
 type IteratorCreator interface {
-	// NewIterator creates a new iterator for the given store name and domain, where
+	// Iterator creates a new iterator for the given store name and domain, where
 	// domain is defined by [start, end). Note, both start and end are optional.
-	NewIterator(storeKey string, start, end []byte) (Iterator, error)
-	// NewReverseIterator creates a new reverse iterator for the given store name
+	Iterator(storeKey string, start, end []byte) (Iterator, error)
+	// ReverseIterator creates a new reverse iterator for the given store name
 	// and domain, where domain is defined by [start, end). Note, both start and
 	// end are optional.
-	NewReverseIterator(storeKey string, start, end []byte) (Iterator, error)
-}
-
-type VersionedIteratorCreator interface {
-	NewIterator(storeKey string, version uint64, start, end []byte) (Iterator, error)
-	NewReverseIterator(storeKey string, version uint64, start, end []byte) (Iterator, error)
+	ReverseIterator(storeKey string, start, end []byte) (Iterator, error)
 }

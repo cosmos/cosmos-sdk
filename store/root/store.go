@@ -217,10 +217,10 @@ func (s *Store) Commit() ([]byte, error) {
 		s.logger.Debug("commit header and version mismatch", "header_height", s.commitHeader.GetHeight(), "version", version)
 	}
 
-	changeSet := s.rootKVStore.GetChangeset()
+	changeset := s.rootKVStore.GetChangeset()
 
 	// commit SS
-	if err := s.commitSS(version, changeSet); err != nil {
+	if err := s.stateStore.ApplyChangeset(version, changeset); err != nil {
 		return nil, fmt.Errorf("failed to commit SS: %w", err)
 	}
 
@@ -307,31 +307,4 @@ func (s *Store) commitSC() error {
 	}
 
 	return nil
-}
-
-// commitSS flushes all accumulated writes to the SS backend via a single batch.
-// Note, this is a synchronous operation. It returns an error if the batch write
-// fails.
-//
-// TODO: Commit writes to SS backend asynchronously.
-// Ref: https://github.com/cosmos/cosmos-sdk/issues/17314
-func (s *Store) commitSS(version uint64, cs *store.Changeset) error {
-	batch, err := s.stateStore.NewBatch(version)
-	if err != nil {
-		return err
-	}
-
-	for _, pair := range cs.Pairs {
-		if pair.Value == nil {
-			if err := batch.Delete(pair.StoreKey, pair.Key); err != nil {
-				return err
-			}
-		} else {
-			if err := batch.Set(pair.StoreKey, pair.Key, pair.Value); err != nil {
-				return err
-			}
-		}
-	}
-
-	return batch.Write()
 }

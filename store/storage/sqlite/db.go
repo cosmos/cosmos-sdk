@@ -152,40 +152,25 @@ func (db *Database) Get(storeKey string, targetVersion uint64, key []byte) ([]by
 	return nil, nil
 }
 
-func (db *Database) Set(storeKey string, version uint64, key, value []byte) error {
-	tx, err := db.storage.Begin()
+func (db *Database) ApplyChangeset(version uint64, cs *store.Changeset) error {
+	b, err := NewBatch(db.storage, version)
 	if err != nil {
-		return fmt.Errorf("failed to create SQL transaction: %w", err)
+		return err
 	}
 
-	_, err = tx.Exec(latestVersionStmt, reservedStoreKey, keyLatestHeight, version, 0, version)
-	if err != nil {
-		return fmt.Errorf("failed to exec SQL statement: %w", err)
+	for _, kvPair := range cs.Pairs {
+		if kvPair.Value == nil {
+			if err := b.Delete(kvPair.StoreKey, kvPair.Key); err != nil {
+				return err
+			}
+		} else {
+			if err := b.Set(kvPair.StoreKey, kvPair.Key, kvPair.Value); err != nil {
+				return err
+			}
+		}
 	}
 
-	_, err = tx.Exec(upsertStmt, storeKey, key, value, version, value)
-	if err != nil {
-		return fmt.Errorf("failed to exec SQL statement: %w", err)
-	}
-
-	if err := tx.Commit(); err != nil {
-		return fmt.Errorf("failed to write SQL transaction: %w", err)
-	}
-
-	return nil
-}
-
-func (db *Database) Delete(storeKey string, version uint64, key []byte) error {
-	_, err := db.storage.Exec(delStmt, version, storeKey, key, version)
-	if err != nil {
-		return fmt.Errorf("failed to exec SQL statement: %w", err)
-	}
-
-	return nil
-}
-
-func (db *Database) NewBatch(version uint64) (store.Batch, error) {
-	return NewBatch(db.storage, version)
+	return b.Write()
 }
 
 func (db *Database) Prune(version uint64) error {
@@ -199,7 +184,7 @@ func (db *Database) Prune(version uint64) error {
 	return nil
 }
 
-func (db *Database) NewIterator(storeKey string, version uint64, start, end []byte) (store.Iterator, error) {
+func (db *Database) Iterator(storeKey string, version uint64, start, end []byte) (store.Iterator, error) {
 	if (start != nil && len(start) == 0) || (end != nil && len(end) == 0) {
 		return nil, store.ErrKeyEmpty
 	}
@@ -211,7 +196,7 @@ func (db *Database) NewIterator(storeKey string, version uint64, start, end []by
 	return newIterator(db.storage, storeKey, version, start, end, false)
 }
 
-func (db *Database) NewReverseIterator(storeKey string, version uint64, start, end []byte) (store.Iterator, error) {
+func (db *Database) ReverseIterator(storeKey string, version uint64, start, end []byte) (store.Iterator, error) {
 	if (start != nil && len(start) == 0) || (end != nil && len(end) == 0) {
 		return nil, store.ErrKeyEmpty
 	}

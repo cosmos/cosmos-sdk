@@ -224,7 +224,7 @@ func (s *Store) Iterator(start, end []byte) store.Iterator {
 		parentItr = s.parent.Iterator(start, end)
 	} else {
 		var err error
-		parentItr, err = s.storage.NewIterator(s.storeKey, s.version, start, end)
+		parentItr, err = s.storage.Iterator(s.storeKey, s.version, start, end)
 		if err != nil {
 			panic(err)
 		}
@@ -250,7 +250,7 @@ func (s *Store) ReverseIterator(start, end []byte) store.Iterator {
 		parentItr = s.parent.ReverseIterator(start, end)
 	} else {
 		var err error
-		parentItr, err = s.storage.NewReverseIterator(s.storeKey, s.version, start, end)
+		parentItr, err = s.storage.ReverseIterator(s.storeKey, s.version, start, end)
 		if err != nil {
 			panic(err)
 		}

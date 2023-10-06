@@ -52,12 +52,12 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 			EnhanceCustomCommand: true,
 			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
 				{
-					RpcMethod:      "Revoke",
-					Use:            "revoke [grantee] [msg-type-url] --from=[granter]",
-					Short:          `Revoke authorization from a granter to a grantee`,
-					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "grantee"}, {ProtoField: "msg_type_url"}},
+					RpcMethod: "Revoke",
+					Use:       "revoke [grantee] [msg-type-url] --from=[granter]",
+					Short:     `Revoke authorization from a granter to a grantee`,
 					Example: fmt.Sprintf(`%s tx %s revoke cosmos1skj.. %s --from=cosmos1skj..`,
 						version.AppName, authz.ModuleName, bank.SendAuthorization{}.MsgTypeURL()),
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "grantee"}, {ProtoField: "msg_type_url"}},
 				},
 			},
 		},

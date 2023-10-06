@@ -155,7 +155,6 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				{
 					RpcMethod: "BeginRedelegate",
 					Use:       "redelegate [src-validator-addr] [dst-validator-addr] [amount] --from [delegator]",
-					Alias:     []string{"redelegate"},
 					Short:     "Generate multisig signatures for transactions generated offline",
 					Long: `Sign transactions created with the --generate-only flag that require multisig signatures.
 

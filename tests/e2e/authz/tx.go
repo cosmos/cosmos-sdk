@@ -313,7 +313,7 @@ func (s *E2ETestSuite) TestCmdRevokeAuthorizations() {
 			out, err := clitestutil.SubmitTestTx(val.ClientCtx, tc.msg, tc.from, tc.testTxConfig)
 			if tc.checkGenTx {
 				s.Require().NoError(err)
-				s.Require().Contains(out.String(), `"messages":`)
+				s.Require().Contains(out.String(), `"@type":"/cosmos.authz.v1beta1.MsgRevoke"`)
 
 			} else {
 				s.Require().NoError(err)

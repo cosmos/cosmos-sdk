@@ -7,14 +7,12 @@ import (
 	"time"
 
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
-	"github.com/spf13/cobra"
 
 	modulev1 "cosmossdk.io/api/cosmos/circuit/module/v1"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
-	"cosmossdk.io/x/circuit/client/cli"
 	"cosmossdk.io/x/circuit/keeper"
 	"cosmossdk.io/x/circuit/types"
 
@@ -72,11 +70,6 @@ func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *g
 	if err := types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx)); err != nil {
 		panic(err)
 	}
-}
-
-// GetTxCmd returns the root tx command for the circuit module.
-func (AppModuleBasic) GetTxCmd() *cobra.Command {
-	return cli.NewTxCmd()
 }
 
 // RegisterInterfaces registers interfaces and implementations of the circuit module.

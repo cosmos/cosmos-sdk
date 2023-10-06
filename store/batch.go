@@ -15,10 +15,3 @@ type Batch interface {
 	// Reset resets the batch.
 	Reset()
 }
-
-// Batcher defines an interface for creating batches with a backing data store.
-type Batcher interface {
-	// NewBatch creates a write-only database that buffers changes to the underlying
-	// db until a final write is called.
-	NewBatch() (Batch, error)
-}

@@ -46,15 +46,12 @@ type VersionedDatabase interface {
 	Has(storeKey string, version uint64, key []byte) (bool, error)
 	Get(storeKey string, version uint64, key []byte) ([]byte, error)
 	GetLatestVersion() (uint64, error)
-
-	Set(storeKey string, version uint64, key, value []byte) error
-	Delete(storeKey string, version uint64, key []byte) error
 	SetLatestVersion(version uint64) error
 
 	Iterator(storeKey string, version uint64, start, end []byte) (Iterator, error)
 	ReverseIterator(storeKey string, version uint64, start, end []byte) (Iterator, error)
 
-	NewBatch(version uint64) (Batch, error)
+	ApplyChangeset(version uint64, cs *Changeset) error
 
 	// Prune attempts to prune all versions up to and including the provided
 	// version argument. The operation should be idempotent. An error should be

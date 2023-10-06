@@ -32,18 +32,15 @@ func TestDatabase_ReverseIterator(t *testing.T) {
 	require.NoError(t, err)
 	defer db.Close()
 
-	batch, err := db.NewBatch(1)
-	require.NoError(t, err)
-
+	cs := new(store.Changeset)
 	for i := 0; i < 100; i++ {
 		key := fmt.Sprintf("key%03d", i) // key000, key001, ..., key099
 		val := fmt.Sprintf("val%03d", i) // val000, val001, ..., val099
-		err = batch.Set(storeKey1, []byte(key), []byte(val))
-		require.NoError(t, err)
+
+		cs.AddKVPair(store.KVPair{StoreKey: storeKey1, Key: []byte(key), Value: []byte(val)})
 	}
 
-	err = batch.Write()
-	require.NoError(t, err)
+	require.NoError(t, db.ApplyChangeset(1, cs))
 
 	// reverse iterator without an end key
 	iter, err := db.ReverseIterator(storeKey1, 1, []byte("key000"), nil)

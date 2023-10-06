@@ -152,40 +152,21 @@ func (db *Database) Get(storeKey string, targetVersion uint64, key []byte) ([]by
 	return nil, nil
 }
 
-func (db *Database) Set(storeKey string, version uint64, key, value []byte) error {
-	tx, err := db.storage.Begin()
+func (db *Database) ApplyChangeset(version uint64, cs *store.Changeset) error {
+	b, err := NewBatch(db.storage, version)
 	if err != nil {
-		return fmt.Errorf("failed to create SQL transaction: %w", err)
+		return err
 	}
 
-	_, err = tx.Exec(latestVersionStmt, reservedStoreKey, keyLatestHeight, version, 0, version)
-	if err != nil {
-		return fmt.Errorf("failed to exec SQL statement: %w", err)
+	for _, kvPair := range cs.Pairs {
+		if kvPair.Value == nil {
+			b.Delete(kvPair.StoreKey, kvPair.Key)
+		} else {
+			b.Set(kvPair.StoreKey, kvPair.Key, kvPair.Value)
+		}
 	}
 
-	_, err = tx.Exec(upsertStmt, storeKey, key, value, version, value)
-	if err != nil {
-		return fmt.Errorf("failed to exec SQL statement: %w", err)
-	}
-
-	if err := tx.Commit(); err != nil {
-		return fmt.Errorf("failed to write SQL transaction: %w", err)
-	}
-
-	return nil
-}
-
-func (db *Database) Delete(storeKey string, version uint64, key []byte) error {
-	_, err := db.storage.Exec(delStmt, version, storeKey, key, version)
-	if err != nil {
-		return fmt.Errorf("failed to exec SQL statement: %w", err)
-	}
-
-	return nil
-}
-
-func (db *Database) NewBatch(version uint64) (store.Batch, error) {
-	return NewBatch(db.storage, version)
+	return b.Write()
 }
 
 func (db *Database) Prune(version uint64) error {

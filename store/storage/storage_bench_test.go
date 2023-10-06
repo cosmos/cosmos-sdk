@@ -32,35 +32,6 @@ var (
 	rng = rand.New(rand.NewSource(567320))
 )
 
-func BenchmarkSet(b *testing.B) {
-	for ty, fn := range backends {
-		db, err := fn(b.TempDir())
-		require.NoError(b, err)
-		defer func() {
-			_ = db.Close()
-		}()
-
-		b.Run(fmt.Sprintf("backend_%s", ty), func(b *testing.B) {
-			b.ResetTimer()
-
-			for i := 0; i < b.N; i++ {
-				b.StopTimer()
-				key := make([]byte, 128)
-				val := make([]byte, 128)
-
-				_, err = rng.Read(key)
-				require.NoError(b, err)
-				_, err = rng.Read(val)
-				require.NoError(b, err)
-
-				b.StartTimer()
-				err := db.Set(storeKey1, 1, key, val)
-				require.NoError(b, err)
-			}
-		})
-	}
-}
-
 func BenchmarkGet(b *testing.B) {
 	numKeyVals := 1_000_000
 	keys := make([][]byte, numKeyVals)
@@ -85,15 +56,12 @@ func BenchmarkGet(b *testing.B) {
 			_ = db.Close()
 		}()
 
-		batch, err := db.NewBatch(1)
-		require.NoError(b, err)
-
+		cs := new(store.Changeset)
 		for i := 0; i < numKeyVals; i++ {
-			err = batch.Set(storeKey1, keys[i], vals[i])
-			require.NoError(b, err)
+			cs.AddKVPair(store.KVPair{StoreKey: storeKey1, Key: keys[i], Value: vals[i]})
 		}
 
-		require.NoError(b, batch.Write())
+		require.NoError(b, db.ApplyChangeset(1, cs))
 
 		b.Run(fmt.Sprintf("backend_%s", ty), func(b *testing.B) {
 			b.ResetTimer()
@@ -110,7 +78,7 @@ func BenchmarkGet(b *testing.B) {
 	}
 }
 
-func BenchmarkBatch(b *testing.B) {
+func BenchmarkApplyChangeset(b *testing.B) {
 	for ty, fn := range backends {
 		db, err := fn(b.TempDir())
 		require.NoError(b, err)
@@ -124,11 +92,8 @@ func BenchmarkBatch(b *testing.B) {
 			for i := 0; i < b.N; i++ {
 				b.StopTimer()
 
-				batch, err := db.NewBatch(uint64(b.N + 1))
-				require.NoError(b, err)
-
+				cs := new(store.Changeset)
 				for j := 0; j < 1000; j++ {
-					b.StopTimer()
 					key := make([]byte, 128)
 					val := make([]byte, 128)
 
@@ -137,13 +102,11 @@ func BenchmarkBatch(b *testing.B) {
 					_, err = rng.Read(val)
 					require.NoError(b, err)
 
-					b.StartTimer()
-					err = batch.Set(storeKey1, key, val)
-					require.NoError(b, err)
+					cs.AddKVPair(store.KVPair{StoreKey: storeKey1, Key: key, Value: val})
 				}
 
-				err = batch.Write()
-				require.NoError(b, err)
+				b.StartTimer()
+				require.NoError(b, db.ApplyChangeset(uint64(b.N+1), cs))
 			}
 		})
 	}
@@ -176,15 +139,12 @@ func BenchmarkIterate(b *testing.B) {
 
 		b.StopTimer()
 
-		batch, err := db.NewBatch(1)
-		require.NoError(b, err)
-
+		cs := new(store.Changeset)
 		for i := 0; i < numKeyVals; i++ {
-			err = batch.Set(storeKey1, keys[i], vals[i])
-			require.NoError(b, err)
+			cs.AddKVPair(store.KVPair{StoreKey: storeKey1, Key: keys[i], Value: vals[i]})
 		}
 
-		require.NoError(b, batch.Write())
+		require.NoError(b, db.ApplyChangeset(1, cs))
 
 		sort.Slice(keys, func(i, j int) bool {
 			return bytes.Compare(keys[i], keys[j]) < 0

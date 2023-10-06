@@ -126,37 +126,21 @@ func (db *Database) Get(storeKey string, targetVersion uint64, key []byte) ([]by
 	return nil, nil
 }
 
-func (db *Database) Set(storeKey string, version uint64, key, value []byte) error {
-	b, err := db.NewBatch(version)
+func (db *Database) ApplyChangeset(version uint64, cs *store.Changeset) error {
+	b, err := NewBatch(db.storage, version)
 	if err != nil {
 		return err
 	}
 
-	if err := b.Set(storeKey, key, value); err != nil {
-		return err
+	for _, kvPair := range cs.Pairs {
+		if kvPair.Value == nil {
+			b.Delete(kvPair.StoreKey, kvPair.Key)
+		} else {
+			b.Set(kvPair.StoreKey, kvPair.Key, kvPair.Value)
+		}
 	}
 
 	return b.Write()
-}
-
-// Delete marks the key as deleted. The key will not be retrievable at or before
-// the provided version. However, the key is still persisted in the underlying
-// database engine as it's value is marked with a non-zero tombestone.
-func (db *Database) Delete(storeKey string, version uint64, key []byte) error {
-	b, err := db.NewBatch(version)
-	if err != nil {
-		return err
-	}
-
-	if err := b.Delete(storeKey, key); err != nil {
-		return err
-	}
-
-	return b.Write()
-}
-
-func (db *Database) NewBatch(version uint64) (store.Batch, error) {
-	return NewBatch(db.storage, version)
 }
 
 // Prune for the PebbleDB SS backend is currently not supported. It seems the only

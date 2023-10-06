@@ -1,6 +1,7 @@
 package v5
 
 import (
+	"cosmossdk.io/collections"
 	corestoretypes "cosmossdk.io/core/store"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -9,11 +10,22 @@ import (
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 )
 
+<<<<<<< HEAD
+=======
+var (
+	// ParamsKey is the key of x/gov params
+	ParamsKey = []byte{0x30}
+	// ConstitutionKey is the key of x/gov constitution
+	ConstitutionKey = collections.NewPrefix(49)
+)
+
+>>>>>>> 45b44e678 (fix(x/gov): set default constitution in gov migration (#17953))
 // MigrateStore performs in-place store migrations from v4 (v0.47) to v5 (v0.50). The
 // migration includes:
 //
 // Addition of the new proposal expedited parameters that are set to 0 by default.
-func MigrateStore(ctx sdk.Context, storeService corestoretypes.KVStoreService, cdc codec.BinaryCodec) error {
+// Set of default chain constitution.
+func MigrateStore(ctx sdk.Context, storeService corestoretypes.KVStoreService, cdc codec.BinaryCodec, constitutionCollection collections.Item[string]) error {
 	store := storeService.OpenKVStore(ctx)
 	paramsBz, err := store.Get(v4.ParamsKey)
 	if err != nil {
@@ -38,7 +50,20 @@ func MigrateStore(ctx sdk.Context, storeService corestoretypes.KVStoreService, c
 		return err
 	}
 
+<<<<<<< HEAD
 	store.Set(v4.ParamsKey, bz)
+=======
+	if err := store.Set(ParamsKey, bz); err != nil {
+		return err
+	}
+
+	// Set the default consisitution if it is not set
+	if ok, err := constitutionCollection.Has(ctx); !ok || err != nil {
+		if err := constitutionCollection.Set(ctx, "This chain has no constitution."); err != nil {
+			return err
+		}
+	}
+>>>>>>> 45b44e678 (fix(x/gov): set default constitution in gov migration (#17953))
 
 	return nil
 }

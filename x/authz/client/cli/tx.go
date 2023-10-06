@@ -54,6 +54,8 @@ func GetTxCmd(ac address.Codec) *cobra.Command {
 }
 
 // NewCmdGrantAuthorization returns a CLI command handler for creating a MsgGrant transaction.
+//
+// cannot give autocli support, can be CLI breaking
 func NewCmdGrantAuthorization(ac address.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "grant <grantee> <authorization_type=\"send\"|\"generic\"|\"delegate\"|\"unbond\"|\"redelegate\"> --from <granter>",
@@ -228,6 +230,8 @@ func getExpireTime(cmd *cobra.Command) (*time.Time, error) {
 }
 
 // NewCmdExecAuthorization returns a CLI command handler for creating a MsgExec transaction.
+//
+// cannot give autocli support, can be CLI breaking
 func NewCmdExecAuthorization() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "exec [tx-json-file] --from [grantee]",

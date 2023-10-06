@@ -187,7 +187,8 @@ func isProtov2(md grpc.MethodDesc) (isV2Type bool, err error) {
 			isV2Type = false
 			return nil
 		default:
-			return fmt.Errorf("invalid request type %T, expected protov2 or gogo message", msg)
+			err = fmt.Errorf("invalid request type %T, expected protov2 or gogo message", msg)
+			return nil
 		}
 	}
 	// doNotExecute is a dummy handler that stops the request execution.

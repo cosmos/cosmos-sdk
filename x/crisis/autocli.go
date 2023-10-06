@@ -12,10 +12,17 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 			Service: crisisv1beta1.Msg_ServiceDesc.ServiceName,
 			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
 				{
-					RpcMethod:      "VerifyInvariant",
-					Use:            "invariant-broken [module-name] [invariant-route]",
-					Short:          "Submit proof that an invariant broken to halt the chain",
-					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "invariant_module_name"}, {ProtoField: "invariant_route"}},
+					RpcMethod: "VerifyInvariant",
+					Use:       "invariant-broken [module-name] [invariant-route] --from mykey",
+					Short:     "Submit proof that an invariant broken",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "invariant_module_name"},
+						{ProtoField: "invariant_route"},
+					},
+				},
+				{
+					RpcMethod: "UpdateParams",
+					Skip:      true, // Skipped because UpdateParams is authority gated
 				},
 			},
 		},

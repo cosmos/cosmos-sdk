@@ -153,10 +153,18 @@ message RequestProcessProposal {
 
 // Extends a vote with application-injected data
 message RequestExtendVote {
-  // the hash of the block  that this vote may be referring to
+  // the hash of the block that this vote may be referring to
   bytes hash = 1;
   // the height of the extended vote
   int64 height = 2;
+  // info of the block that this vote may be referring to
+  google.protobuf.Timestamp time                 = 3 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
+  repeated bytes            txs                  = 4;
+  CommitInfo                proposed_last_commit = 5 [(gogoproto.nullable) = false];
+  repeated Misbehavior      misbehavior          = 6 [(gogoproto.nullable) = false];
+  bytes                     next_validators_hash = 7;
+  // address of the public key of the original proposer of the block.
+  bytes proposer_address = 8;
 }
 
 // Verify the vote extension
@@ -395,8 +403,8 @@ message ExecTxResult {
   bytes          data       = 2;
   string         log        = 3; // nondeterministic
   string         info       = 4; // nondeterministic
-  int64          gas_wanted = 5;
-  int64          gas_used   = 6;
+  int64          gas_wanted = 5 [json_name = "gas_wanted"];
+  int64          gas_used   = 6 [json_name = "gas_used"];
   repeated Event events     = 7
       [(gogoproto.nullable) = false, (gogoproto.jsontag) = "events,omitempty"]; // nondeterministic
   string codespace = 8;

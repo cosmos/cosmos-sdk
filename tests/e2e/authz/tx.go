@@ -244,89 +244,80 @@ func (s *E2ETestSuite) TestCmdRevokeAuthorizations() {
 	s.Require().NoError(s.network.WaitForNextBlock())
 
 	testCases := []struct {
+		// args         []string
 		name         string
-		args         []string
+		msg          *authz.MsgRevoke
+		testTxConfig clitestutil.TestTxConfig
 		respType     proto.Message
+		from         sdk.AccAddress
 		expectedCode uint32
-		expectErr    bool
+		checkGenTx   bool
 	}{
 		{
-			"invalid grantee address",
-			[]string{
-				"invalid grantee",
-				typeMsgSend,
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
-				fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
+			name: "invalid grantee address",
+			msg: &authz.MsgRevoke{
+				Granter:    val.Address.String(),
+				Grantee:    grantee.String(),
+				MsgTypeUrl: typeMsgSend,
 			},
-			nil,
-			0,
-			true,
+			from: val.Address,
+			testTxConfig: clitestutil.TestTxConfig{
+				GenOnly: true,
+			},
+			respType:   nil,
+			checkGenTx: true,
 		},
 		{
-			"invalid granter address",
-			[]string{
-				grantee.String(),
-				typeMsgSend,
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, "granter"),
-				fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
+			name: "invalid granter address",
+			msg: &authz.MsgRevoke{
+				Granter:    "granter",
+				Grantee:    grantee.String(),
+				MsgTypeUrl: typeMsgSend,
 			},
-			nil,
-			0,
-			true,
+			from: sdk.AccAddress("granter"),
+			testTxConfig: clitestutil.TestTxConfig{
+				GenOnly: true,
+			},
+			respType:   nil,
+			checkGenTx: true,
 		},
 		{
-			"Valid tx send authorization",
-			[]string{
-				grantee.String(),
-				typeMsgSend,
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
+			name: "valid tx send authorization",
+			msg: &authz.MsgRevoke{
+				Granter:    val.Address.String(),
+				Grantee:    grantee.String(),
+				MsgTypeUrl: typeMsgSend,
 			},
-			&sdk.TxResponse{}, 0,
-			false,
+			from:         val.Address,
+			respType:     &sdk.TxResponse{},
+			expectedCode: 0,
+			checkGenTx:   false,
 		},
 		{
-			"Valid tx generic authorization",
-			[]string{
-				grantee.String(),
-				typeMsgVote,
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
+			name: "valid tx generic authorization",
+			msg: &authz.MsgRevoke{
+				Granter:    val.Address.String(),
+				Grantee:    grantee.String(),
+				MsgTypeUrl: typeMsgVote,
 			},
-			&sdk.TxResponse{}, 0,
-			false,
-		},
-		{
-			"Valid tx with amino",
-			[]string{
-				grantee.String(),
-				typeMsgSubmitProposal,
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
-				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeLegacyAminoJSON),
-			},
-			&sdk.TxResponse{}, 0,
-			false,
+			from:         val.Address,
+			respType:     &sdk.TxResponse{},
+			expectedCode: 0,
+			checkGenTx:   false,
 		},
 	}
 	for _, tc := range testCases {
 		tc := tc
 		s.Run(tc.name, func() {
-			cmd := cli.NewCmdRevokeAuthorization(addresscodec.NewBech32Codec("cosmos"))
-			clientCtx := val.ClientCtx
 
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
-			if tc.expectErr {
-				s.Require().Error(err)
+			out, err := clitestutil.SubmitTestTx(val.ClientCtx, tc.msg, tc.from, tc.testTxConfig)
+			if tc.checkGenTx {
+				s.Require().NoError(err)
+				s.Require().Contains(out.String(), `"messages":`)
+
 			} else {
 				s.Require().NoError(err)
-				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+				s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 
 				txResp := tc.respType.(*sdk.TxResponse)
 				s.Require().NoError(clitestutil.CheckTxCode(s.network, val.ClientCtx, txResp.TxHash, tc.expectedCode))

@@ -54,7 +54,7 @@ func TestGRPCQueryRouter(t *testing.T) {
 }
 
 func TestGRPCRouterHybridHandlers(t *testing.T) {
-	assertRouterBehaviour := func(t *testing.T, helper *baseapp.QueryServiceTestHelper) {
+	assertRouterBehaviour := func(helper *baseapp.QueryServiceTestHelper) {
 		// test getting the handler by name
 		handlers := helper.GRPCQueryRouter.HandlersByRequestName("testpb.EchoRequest")
 		require.NotNil(t, handlers)
@@ -85,7 +85,7 @@ func TestGRPCRouterHybridHandlers(t *testing.T) {
 			GRPCQueryRouter: qr,
 			Ctx:             sdk.Context{}.WithContext(context.Background()),
 		}
-		assertRouterBehaviour(t, helper)
+		assertRouterBehaviour(helper)
 	})
 
 	t.Run("gogoproto server", func(t *testing.T) {
@@ -97,7 +97,7 @@ func TestGRPCRouterHybridHandlers(t *testing.T) {
 			GRPCQueryRouter: qr,
 			Ctx:             sdk.Context{}.WithContext(context.Background()),
 		}
-		assertRouterBehaviour(t, helper)
+		assertRouterBehaviour(helper)
 	})
 }
 

@@ -45,6 +45,7 @@ func GetTxCmd(ac address.Codec) *cobra.Command {
 }
 
 // NewCmdFeeGrant returns a CLI command handler to create a MsgGrantAllowance transaction.
+// This command is more powerful than AutoCLI generated command as it allows a better input validation.
 func NewCmdFeeGrant(ac address.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "grant [granter_key_or_address] [grantee]",

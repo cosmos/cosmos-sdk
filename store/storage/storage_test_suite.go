@@ -50,49 +50,15 @@ func (s *StorageTestSuite) TestDatabase_LatestVersion() {
 	}
 }
 
-func (s *StorageTestSuite) TestDatabase_CRUD() {
-	db, err := s.NewDB(s.T().TempDir())
-	s.Require().NoError(err)
-	defer db.Close()
-
-	ok, err := db.Has(storeKey1, 1, []byte("key"))
-	s.Require().NoError(err)
-	s.Require().False(ok)
-
-	err = db.Set(storeKey1, 1, []byte("key"), []byte("value"))
-	s.Require().NoError(err)
-
-	ok, err = db.Has(storeKey1, 1, []byte("key"))
-	s.Require().NoError(err)
-	s.Require().True(ok)
-
-	val, err := db.Get(storeKey1, 1, []byte("key"))
-	s.Require().NoError(err)
-	s.Require().Equal([]byte("value"), val)
-
-	err = db.Delete(storeKey1, 1, []byte("key"))
-	s.Require().NoError(err)
-
-	ok, err = db.Has(storeKey1, 1, []byte("key"))
-	s.Require().NoError(err)
-	s.Require().False(ok)
-
-	val, err = db.Get(storeKey1, 1, []byte("key"))
-	s.Require().NoError(err)
-	s.Require().Nil(val)
-
-	err = db.Delete(storeKey1, 1, []byte("not_exists"))
-	s.Require().NoError(err)
-}
-
 func (s *StorageTestSuite) TestDatabase_VersionedKeys() {
 	db, err := s.NewDB(s.T().TempDir())
 	s.Require().NoError(err)
 	defer db.Close()
 
 	for i := uint64(1); i <= 100; i++ {
-		err := db.Set(storeKey1, i, []byte("key"), []byte(fmt.Sprintf("value%03d", i)))
-		s.Require().NoError(err)
+		s.Require().NoError(db.ApplyChangeset(i, store.NewChangeset(
+			store.KVPair{StoreKey: storeKey1, Key: []byte("key"), Value: []byte(fmt.Sprintf("value%03d", i))},
+		)))
 	}
 
 	for i := uint64(1); i <= 100; i++ {
@@ -108,8 +74,9 @@ func (s *StorageTestSuite) TestDatabase_GetVersionedKey() {
 	defer db.Close()
 
 	// store a key at version 1
-	err = db.Set(storeKey1, 1, []byte("key"), []byte("value001"))
-	s.Require().NoError(err)
+	s.Require().NoError(db.ApplyChangeset(1, store.NewChangeset(
+		store.KVPair{StoreKey: storeKey1, Key: []byte("key"), Value: []byte("value001")},
+	)))
 
 	// assume chain progresses to version 10 w/o any changes to key
 	bz, err := db.Get(storeKey1, 10, []byte("key"))
@@ -121,8 +88,9 @@ func (s *StorageTestSuite) TestDatabase_GetVersionedKey() {
 	s.Require().True(ok)
 
 	// chain progresses to version 11 with an update to key
-	err = db.Set(storeKey1, 11, []byte("key"), []byte("value011"))
-	s.Require().NoError(err)
+	s.Require().NoError(db.ApplyChangeset(11, store.NewChangeset(
+		store.KVPair{StoreKey: storeKey1, Key: []byte("key"), Value: []byte("value011")},
+	)))
 
 	bz, err = db.Get(storeKey1, 10, []byte("key"))
 	s.Require().NoError(err)
@@ -143,8 +111,9 @@ func (s *StorageTestSuite) TestDatabase_GetVersionedKey() {
 	}
 
 	// chain progresses to version 15 with a delete to key
-	err = db.Delete(storeKey1, 15, []byte("key"))
-	s.Require().NoError(err)
+	s.Require().NoError(db.ApplyChangeset(15, store.NewChangeset(
+		store.KVPair{StoreKey: storeKey1, Key: []byte("key")},
+	)))
 
 	// all queries up to version 14 should return the latest value
 	for i := uint64(1); i <= 14; i++ {
@@ -169,30 +138,23 @@ func (s *StorageTestSuite) TestDatabase_GetVersionedKey() {
 	}
 }
 
-func (s *StorageTestSuite) TestDatabase_Batch() {
+func (s *StorageTestSuite) TestDatabase_ApplyChangeset() {
 	db, err := s.NewDB(s.T().TempDir())
 	s.Require().NoError(err)
 	defer db.Close()
 
-	batch, err := db.NewBatch(1)
-	s.Require().NoError(err)
-
+	cs := new(store.Changeset)
 	for i := 0; i < 100; i++ {
-		err = batch.Set(storeKey1, []byte(fmt.Sprintf("key%03d", i)), []byte("value"))
-		s.Require().NoError(err)
+		cs.AddKVPair(store.KVPair{StoreKey: storeKey1, Key: []byte(fmt.Sprintf("key%03d", i)), Value: []byte("value")})
 	}
 
 	for i := 0; i < 100; i++ {
 		if i%10 == 0 {
-			err = batch.Delete(storeKey1, []byte(fmt.Sprintf("key%03d", i)))
-			s.Require().NoError(err)
+			cs.AddKVPair(store.KVPair{StoreKey: storeKey1, Key: []byte(fmt.Sprintf("key%03d", i))})
 		}
 	}
 
-	s.Require().NotZero(batch.Size())
-
-	err = batch.Write()
-	s.Require().NoError(err)
+	s.Require().NoError(db.ApplyChangeset(1, cs))
 
 	lv, err := db.GetLatestVersion()
 	s.Require().NoError(err)
@@ -208,32 +170,6 @@ func (s *StorageTestSuite) TestDatabase_Batch() {
 			s.Require().True(ok)
 		}
 	}
-}
-
-func (s *StorageTestSuite) TestDatabase_ResetBatch() {
-	db, err := s.NewDB(s.T().TempDir())
-	s.Require().NoError(err)
-	defer db.Close()
-
-	batch, err := db.NewBatch(1)
-	s.Require().NoError(err)
-
-	for i := 0; i < 100; i++ {
-		err = batch.Set(storeKey1, []byte(fmt.Sprintf("key%d", i)), []byte("value"))
-		s.Require().NoError(err)
-	}
-
-	for i := 0; i < 100; i++ {
-		if i%10 == 0 {
-			err = batch.Delete(storeKey1, []byte(fmt.Sprintf("key%d", i)))
-			s.Require().NoError(err)
-		}
-	}
-
-	s.Require().NotZero(batch.Size())
-	batch.Reset()
-	s.Require().NotPanics(func() { batch.Reset() })
-	s.Require().LessOrEqual(batch.Size(), s.EmptyBatchSize)
 }
 
 func (s *StorageTestSuite) TestDatabase_IteratorEmptyDomain() {
@@ -295,18 +231,15 @@ func (s *StorageTestSuite) TestDatabase_Iterator() {
 	s.Require().NoError(err)
 	defer db.Close()
 
-	batch, err := db.NewBatch(1)
-	s.Require().NoError(err)
-
+	cs := new(store.Changeset)
 	for i := 0; i < 100; i++ {
 		key := fmt.Sprintf("key%03d", i) // key000, key001, ..., key099
 		val := fmt.Sprintf("val%03d", i) // val000, val001, ..., val099
-		err = batch.Set(storeKey1, []byte(key), []byte(val))
-		s.Require().NoError(err)
+
+		cs.AddKVPair(store.KVPair{StoreKey: storeKey1, Key: []byte(key), Value: []byte(val)})
 	}
 
-	err = batch.Write()
-	s.Require().NoError(err)
+	s.Require().NoError(db.ApplyChangeset(1, cs))
 
 	// iterator without an end key over multiple versions
 	for v := uint64(1); v < 5; v++ {

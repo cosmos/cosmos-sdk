@@ -12,6 +12,7 @@ import (
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	"cosmossdk.io/client/v2/autocli/flag"
+	"cosmossdk.io/core/address"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
@@ -131,8 +132,25 @@ func (b *Builder) BuildMsgMethodCommand(descriptor protoreflect.MethodDescriptor
 		// set signer to signer field if empty
 		fd := input.Descriptor().Fields().ByName(protoreflect.Name(flag.GetSignerFieldName(input.Descriptor())))
 		if addr := input.Get(fd).String(); addr == "" {
+			var addressCodec address.Codec
+
+			scalarType, ok := flag.GetScalarType(fd)
+			if ok {
+				switch scalarType {
+				case flag.AddressStringScalarType:
+					addressCodec = b.ClientCtx.AddressCodec
+				case flag.ValidatorAddressStringScalarType:
+					addressCodec = b.ClientCtx.ValidatorAddressCodec
+				case flag.ConsensusAddressStringScalarType:
+					addressCodec = b.ClientCtx.ConsensusAddressCodec
+				default:
+					// default to normal address codec
+					addressCodec = b.ClientCtx.AddressCodec
+				}
+			}
+
 			signerFromFlag := clientCtx.GetFromAddress()
-			signer, err := b.ClientCtx.AddressCodec.BytesToString(signerFromFlag.Bytes())
+			signer, err := addressCodec.BytesToString(signerFromFlag.Bytes())
 			if err != nil {
 				return fmt.Errorf("failed to set signer on message, got %v: %w", signerFromFlag, err)
 			}

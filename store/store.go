@@ -14,6 +14,7 @@ type StoreType int
 // Sentinel store types.
 const (
 	StoreTypeBranch StoreType = iota
+	StoreTypeTrace
 )
 
 // RootStore defines an abstraction layer containing a State Storage (SS) engine

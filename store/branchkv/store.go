@@ -8,12 +8,10 @@ import (
 	"golang.org/x/exp/maps"
 
 	"cosmossdk.io/store/v2"
+	"cosmossdk.io/store/v2/tracekv"
 )
 
-var (
-	_ store.KVStore         = (*Store)(nil)
-	_ store.BranchedKVStore = (*Store)(nil)
-)
+var _ store.BranchedKVStore = (*Store)(nil)
 
 // Store implements both a KVStore and BranchedKVStore interfaces. It is used to
 // accumulate writes that can be later committed to backing SS and SC engines or
@@ -106,7 +104,7 @@ func (s *Store) Branch() store.BranchedKVStore {
 }
 
 func (s *Store) BranchWithTrace(w io.Writer, tc store.TraceContext) store.BranchedKVStore {
-	panic("not implemented!")
+	return NewWithParent(tracekv.New(s, w, tc))
 }
 
 func (s *Store) Has(key []byte) bool {

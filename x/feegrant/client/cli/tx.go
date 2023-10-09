@@ -187,45 +187,6 @@ Examples:
 	return cmd
 }
 
-<<<<<<< HEAD
-// NewCmdRevokeFeegrant returns a CLI command handler to create a MsgRevokeAllowance transaction.
-func NewCmdRevokeFeegrant(ac address.Codec) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "revoke [granter] [grantee]",
-		Short: "revoke fee-grant",
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`revoke fee grant from a granter to a grantee. Note, the '--from' flag is
-			ignored as it is implied from [granter].
-
-Example:
- $ %s tx %s revoke cosmos1skj.. cosmos1skj..
-			`, version.AppName, feegrant.ModuleName),
-		),
-		Args: cobra.ExactArgs(2),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			cmd.Flags().Set(flags.FlagFrom, args[0])
-			clientCtx, err := client.GetClientTxContext(cmd)
-			if err != nil {
-				return err
-			}
-
-			grantee, err := ac.StringToBytes(args[1])
-			if err != nil {
-				return err
-			}
-
-			msg := feegrant.NewMsgRevokeAllowance(clientCtx.GetFromAddress(), grantee)
-
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &msg)
-		},
-	}
-
-	flags.AddTxFlagsToCmd(cmd)
-	return cmd
-}
-
-=======
->>>>>>> 1d03d890c (feat(x/feegrant): add autocli options for tx (#17959))
 func getPeriodReset(duration int64) time.Time {
 	return time.Now().Add(getPeriod(duration))
 }

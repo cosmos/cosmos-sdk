@@ -43,6 +43,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					RpcMethod: "Unjail",
 					Use:       "unjail",
 					Short:     "Unjail a jailed validator",
+					Example:   fmt.Sprintf("%s tx slashing unjail --from [validator]", version.AppName),
 				},
 				{
 					RpcMethod: "UpdateParams",

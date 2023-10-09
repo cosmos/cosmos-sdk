@@ -51,6 +51,20 @@ You can find the fee-grant of a granter and grantee.`),
 		},
 		Tx: &autocliv1.ServiceCommandDescriptor{
 			Service: feegrantv1beta1.Msg_ServiceDesc.ServiceName,
+			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
+				{
+					RpcMethod: "RevokeAllowance",
+					Use:       "revoke [granter] [grantee]",
+					Short:     "Revoke a fee grant",
+					Long:      "Revoke fee grant from a granter to a grantee. Note, the '--from' flag is ignored as it is implied from [granter]",
+					Example:   fmt.Sprintf(`$ %s tx feegrant revoke [granter] [grantee]`, version.AppName),
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "granter"},
+						{ProtoField: "grantee"},
+					},
+				},
+			},
+			EnhanceCustomCommand: true,
 		},
 	}
 }

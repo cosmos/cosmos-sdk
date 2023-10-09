@@ -4,7 +4,7 @@ go 1.21
 
 require (
 	cosmossdk.io/api v0.7.1
-	cosmossdk.io/client/v2 v2.0.0-20231005134150-8334eefaaf7c
+	cosmossdk.io/client/v2 v2.0.0-20231009114728-5259373edec8
 	cosmossdk.io/collections v0.4.0 // indirect
 	cosmossdk.io/core v0.11.0
 	cosmossdk.io/depinject v1.0.0-alpha.4
@@ -14,7 +14,7 @@ require (
 	cosmossdk.io/tools/confix v0.0.0-20230925151519-64e0e8980834
 	cosmossdk.io/x/circuit v0.0.0-20231006095526-33390754f9fe
 	cosmossdk.io/x/evidence v0.0.0-20230925151519-64e0e8980834
-	cosmossdk.io/x/feegrant v0.0.0-20230925151519-64e0e8980834
+	cosmossdk.io/x/feegrant v0.0.0-20231009114728-5259373edec8
 	cosmossdk.io/x/nft v0.0.0-20231006095526-33390754f9fe
 	cosmossdk.io/x/tx v0.10.1-0.20230920120022-6715b5afb59f
 	cosmossdk.io/x/upgrade v0.0.0-20230925151519-64e0e8980834

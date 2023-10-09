@@ -138,14 +138,14 @@ func (b *Builder) BuildMsgMethodCommand(descriptor protoreflect.MethodDescriptor
 			if ok {
 				switch scalarType {
 				case flag.AddressStringScalarType:
-					addressCodec = b.ClientCtx.AddressCodec
+					addressCodec = b.Builder.AddressCodec
 				case flag.ValidatorAddressStringScalarType:
-					addressCodec = b.ClientCtx.ValidatorAddressCodec
+					addressCodec = b.Builder.ValidatorAddressCodec
 				case flag.ConsensusAddressStringScalarType:
-					addressCodec = b.ClientCtx.ConsensusAddressCodec
+					addressCodec = b.Builder.ConsensusAddressCodec
 				default:
 					// default to normal address codec
-					addressCodec = b.ClientCtx.AddressCodec
+					addressCodec = b.Builder.AddressCodec
 				}
 			}
 

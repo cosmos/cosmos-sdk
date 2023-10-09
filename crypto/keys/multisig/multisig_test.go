@@ -119,7 +119,6 @@ func TestVerifyMultisignature(t *testing.T) {
 			"wrong size for sig bit array",
 			func(require *require.Assertions) {
 				pubKeys := generatePubKeys(3)
-
 				pk = kmultisig.NewLegacyAminoPubKey(3, pubKeys)
 				sig = multisig.NewMultisig(1)
 			},

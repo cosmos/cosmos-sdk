@@ -406,6 +406,11 @@ func (app *BaseApp) AnteHandler() sdk.AnteHandler {
 	return app.anteHandler
 }
 
+// Mempool returns the Mempool of the app.
+func (app *BaseApp) Mempool() mempool.Mempool {
+	return app.mempool
+}
+
 // Init initializes the app. It seals the app, preventing any
 // further modifications. In addition, it validates the app against
 // the earlier provided settings. Returns an error if validation fails.

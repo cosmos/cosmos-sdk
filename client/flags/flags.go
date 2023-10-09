@@ -35,8 +35,6 @@ const (
 	// SignModeDirectAux is the value of the --sign-mode flag for SIGN_MODE_DIRECT_AUX
 	SignModeDirectAux = "direct-aux"
 	// SignModeTextual is the value of the --sign-mode flag for SIGN_MODE_TEXTUAL.
-	// Choosing this flag will result in an error for now, as Textual should be
-	// used only for TESTING purposes for now.
 	SignModeTextual = "textual"
 	// SignModeEIP191 is the value of the --sign-mode flag for SIGN_MODE_EIP_191
 	SignModeEIP191 = "eip-191"
@@ -119,7 +117,9 @@ func AddQueryFlagsToCmd(cmd *cobra.Command) {
 func AddTxFlagsToCmd(cmd *cobra.Command) {
 	f := cmd.Flags()
 	f.StringP(FlagOutput, "o", OutputFormatJSON, "Output format (text|json)")
-	f.String(FlagFrom, "", "Name or address of private key with which to sign")
+	if cmd.Flag(FlagFrom) == nil { // avoid flag redefinition when it's already been added by AutoCLI
+		f.String(FlagFrom, "", "Name or address of private key with which to sign")
+	}
 	f.Uint64P(FlagAccountNumber, "a", 0, "The account number of the signing account (offline mode only)")
 	f.Uint64P(FlagSequence, "s", 0, "The sequence number of the signing account (offline mode only)")
 	f.String(FlagNote, "", "Note to add a description to the transaction (previously --memo)")

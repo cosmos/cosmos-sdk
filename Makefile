@@ -203,7 +203,6 @@ TEST_TARGETS := test-unit test-unit-amino test-unit-proto test-ledger-mock test-
 # a new rule, customise ARGS or TEST_PACKAGES ad libitum, and
 # append the new rule to the TEST_TARGETS list.
 test-unit: test_tags += cgo ledger test_ledger_mock norace
-test-unit-amino: test_tags += ledger test_ledger_mock test_amino norace
 test-ledger: test_tags += cgo ledger norace
 test-ledger-mock: test_tags += ledger test_ledger_mock norace
 test-race: test_tags += cgo ledger test_ledger_mock
@@ -215,7 +214,6 @@ $(TEST_TARGETS): run-tests
 # note: go test -c doesn't support multiple packages yet (https://github.com/golang/go/issues/15513)
 CHECK_TEST_TARGETS := check-test-unit check-test-unit-amino
 check-test-unit: test_tags += cgo ledger test_ledger_mock norace
-check-test-unit-amino: test_tags += ledger test_ledger_mock test_amino norace
 $(CHECK_TEST_TARGETS): EXTRA_ARGS=-run=none
 $(CHECK_TEST_TARGETS): run-tests
 
@@ -409,7 +407,7 @@ proto-lint:
 proto-check-breaking:
 	@$(protoImage) buf breaking --against $(HTTPS_GIT)#branch=main
 
-CMT_URL              = https://raw.githubusercontent.com/cometbft/cometbft/v0.38.0-alpha.2/proto/tendermint
+CMT_URL              = https://raw.githubusercontent.com/cometbft/cometbft/v0.38.0/proto/tendermint
 
 CMT_CRYPTO_TYPES     = proto/tendermint/crypto
 CMT_ABCI_TYPES       = proto/tendermint/abci

@@ -3,8 +3,8 @@ package keeper_test
 import (
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/x/params/types"
-	"github.com/cosmos/cosmos-sdk/x/params/types/proposal"
+	"cosmossdk.io/x/params/types"
+	"cosmossdk.io/x/params/types/proposal"
 )
 
 func (suite *KeeperTestSuite) TestGRPCQueryParams() {

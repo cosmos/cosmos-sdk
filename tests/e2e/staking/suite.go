@@ -19,6 +19,7 @@ import (
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/client/cli"
 )
 
@@ -102,14 +103,18 @@ func (s *E2ETestSuite) TestBlockResults() {
 	require.NoError(err)
 	newAddr := sdk.AccAddress(pub.Address())
 
+	msgSend := &banktypes.MsgSend{
+		FromAddress: val.Address.String(),
+		ToAddress:   newAddr.String(),
+		Amount:      sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(200))),
+	}
+
 	// Send some funds to the new account.
-	_, err = clitestutil.MsgSendExec(
+	_, err = clitestutil.SubmitTestTx(
 		val.ClientCtx,
+		msgSend,
 		val.Address,
-		newAddr,
-		sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(200))), addresscodec.NewBech32Codec("cosmos"), fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
+		clitestutil.TestTxConfig{},
 	)
 	require.NoError(err)
 	require.NoError(s.network.WaitForNextBlock())

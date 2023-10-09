@@ -4,10 +4,11 @@ import (
 	"crypto/ed25519"
 	"crypto/subtle"
 	"fmt"
-	"github.com/cometbft/cometbft/crypto/tmhash"
 	"io"
 
+
 	"github.com/cometbft/cometbft/crypto"
+	"github.com/cometbft/cometbft/crypto/tmhash"
 	"github.com/hdevalence/ed25519consensus"
 
 	errorsmod "cosmossdk.io/errors"

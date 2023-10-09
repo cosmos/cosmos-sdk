@@ -39,8 +39,10 @@ import (
 	"testing"
 )
 
-var privKey, _ = newPrivFromHex("18E14A7B6A307F426A94F8114701E7C8E774E7F9A47E2C2035DB29A206321725")
-var msg, _ = hex.DecodeString("000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f")
+var (
+	privKey, _ = newPrivFromHex("18E14A7B6A307F426A94F8114701E7C8E774E7F9A47E2C2035DB29A206321725")
+	msg, _     = hex.DecodeString("000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f")
+)
 
 func newPrivFromHex(s string) (ecdsa.PrivateKey, error) {
 	k, err := hex.DecodeString(s)

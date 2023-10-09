@@ -2,11 +2,11 @@ package types_test
 
 import (
 	"encoding/hex"
-	"github.com/stretchr/testify/require"
 	"math/big"
 	"testing"
 
 	"cosmossdk.io/math"
+	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"

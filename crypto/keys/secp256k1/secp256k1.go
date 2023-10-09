@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"crypto/subtle"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1/internal/secp256k1_go"
 	"io"
 	"math/big"
 
@@ -39,7 +40,20 @@ func (privKey *PrivKey) Bytes() []byte {
 // PubKey performs the point-scalar multiplication from the privKey on the
 // generator point to get the pubkey.
 func (privKey *PrivKey) PubKey() cryptotypes.PubKey {
-	pubkeyObject := secp256k1.PrivKeyFromBytes(privKey.Key).PubKey()
+	privkeyObject := secp256k1.PrivKeyFromBytes(privKey.Key)
+	pubkeyObject := privkeyObject.PubKey()
+
+	x, y := secp256k1_go.SECP256K1().ScalarBaseMult(privKey.Key)
+	parsedX := secp256k1.FieldVal{}
+	parsedX.SetByteSlice(x.Bytes())
+
+	parsedY := secp256k1.FieldVal{}
+	parsedY.SetByteSlice(y.Bytes())
+	parsedZ := secp256k1.FieldVal{}
+
+	result := secp256k1.JacobianPoint{parsedX, parsedY, parsedZ}
+	result.ToAffine()
+
 	pk := pubkeyObject.SerializeCompressed()
 	return &PubKey{Key: pk}
 }

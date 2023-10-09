@@ -51,7 +51,7 @@ func SetupSimulation(config simtypes.Config, dirPrefix, dbName string, verbose, 
 
 // SimulationOperations retrieves the simulation params from the provided file path
 // and returns all the modules weighted operations
-func SimulationOperations(app runtime.AppI, cdc codec.JSONCodec, config simtypes.Config) []simtypes.WeightedOperation {
+func SimulationOperations(app runtime.AppSimI, cdc codec.JSONCodec, config simtypes.Config) []simtypes.WeightedOperation {
 	simState := module.SimulationState{
 		AppParams: make(simtypes.AppParams),
 		Cdc:       cdc,
@@ -78,7 +78,7 @@ func SimulationOperations(app runtime.AppI, cdc codec.JSONCodec, config simtypes
 
 // CheckExportSimulation exports the app state and simulation parameters to JSON
 // if the export paths are defined.
-func CheckExportSimulation(app runtime.AppI, config simtypes.Config, params simtypes.Params) error {
+func CheckExportSimulation(app runtime.AppSimI, config simtypes.Config, params simtypes.Params) error {
 	if config.ExportStatePath != "" {
 		fmt.Println("exporting app state...")
 		exported, err := app.ExportAppStateAndValidators(false, nil, nil)

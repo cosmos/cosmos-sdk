@@ -20,7 +20,7 @@ var (
 	protov2Type = reflect.TypeOf((*proto2.Message)(nil)).Elem()
 )
 
-type Handler = func(ctx context.Context, request protoiface.MessageV1, response protoiface.MessageV1) error
+type Handler = func(ctx context.Context, request, response protoiface.MessageV1) error
 
 func MakeHybridHandler(cdc codec.BinaryCodec, sd *grpc.ServiceDesc, method grpc.MethodDesc, handler interface{}) (Handler, error) {
 	methodFullName := protoreflect.FullName(fmt.Sprintf("%s.%s", sd.ServiceName, method.MethodName))
@@ -49,7 +49,7 @@ func makeProtoV2HybridHandler(prefMethod protoreflect.MethodDescriptor, cdc code
 	// it's a protov2 handler, if a gogo counterparty is not found we cannot handle gogo messages.
 	gogoExists := gogoproto.MessageType(string(prefMethod.Output().FullName())) != nil
 	if !gogoExists {
-		return func(ctx context.Context, inReq protoiface.MessageV1, outResp protoiface.MessageV1) error {
+		return func(ctx context.Context, inReq, outResp protoiface.MessageV1) error {
 			protov2Request, ok := inReq.(proto2.Message)
 			if !ok {
 				return fmt.Errorf("invalid request type %T, method %s does not accept gogoproto messages", inReq, prefMethod.FullName())
@@ -66,7 +66,7 @@ func makeProtoV2HybridHandler(prefMethod protoreflect.MethodDescriptor, cdc code
 			return nil
 		}, nil
 	}
-	return func(ctx context.Context, inReq protoiface.MessageV1, outResp protoiface.MessageV1) error {
+	return func(ctx context.Context, inReq, outResp protoiface.MessageV1) error {
 		// we check if the request is a protov2 message.
 		switch m := inReq.(type) {
 		case proto2.Message:
@@ -115,7 +115,7 @@ func makeGogoHybridHandler(prefMethod protoreflect.MethodDescriptor, cdc codec.B
 	_, err := protoregistry.GlobalTypes.FindMessageByName(prefMethod.Output().FullName())
 	if err != nil {
 		// this can only be a gogo message.
-		return func(ctx context.Context, inReq protoiface.MessageV1, outResp protoiface.MessageV1) error {
+		return func(ctx context.Context, inReq, outResp protoiface.MessageV1) error {
 			_, ok := inReq.(proto2.Message)
 			if ok {
 				return fmt.Errorf("invalid request type %T, method %s does not accept protov2 messages", inReq, prefMethod.FullName())
@@ -134,7 +134,7 @@ func makeGogoHybridHandler(prefMethod protoreflect.MethodDescriptor, cdc codec.B
 		}, nil
 	}
 	// this is a gogo handler, and we have a protov2 counterparty.
-	return func(ctx context.Context, inReq protoiface.MessageV1, outResp protoiface.MessageV1) error {
+	return func(ctx context.Context, inReq, outResp protoiface.MessageV1) error {
 		switch m := inReq.(type) {
 		case proto2.Message:
 			// we need to marshal and unmarshal the request.

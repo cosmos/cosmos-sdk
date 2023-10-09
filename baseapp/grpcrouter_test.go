@@ -68,6 +68,7 @@ func TestGRPCRouterHybridHandlers(t *testing.T) {
 		// also sending a protov1 message should work, and return a gogoproto message
 		gogoResp := new(testdata.EchoResponse)
 		err = handler(helper.Ctx, &testdata.EchoRequest{Message: "hello"}, gogoResp)
+		require.NoError(t, err)
 		require.Equal(t, "hello", gogoResp.Message)
 	}
 

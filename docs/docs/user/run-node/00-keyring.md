@@ -108,7 +108,7 @@ The `memory` backend stores keys in memory. The keys are immediately deleted aft
 
 ### Setting backend using the env variable 
 
-You can set the keyring-backend using env variable: `BINNAME_KEYRING_BACKEND`. For example, if you binary name is `gaia-v5` then set: `export GAIA_V5_KEYRING_BACKEND=pass`
+You can set the keyring-backend using env variable: `BINNAME_KEYRING_BACKEND`. For example, if your binary name is `gaia-v5` then set: `export GAIA_V5_KEYRING_BACKEND=pass`
 
 ## Adding keys to the keyring
 

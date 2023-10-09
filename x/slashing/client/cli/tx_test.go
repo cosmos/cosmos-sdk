@@ -100,7 +100,7 @@ func (s *CLITestSuite) TestNewUnjailTxCmd() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			cmd := cli.NewUnjailTxCmd(addresscodec.NewBech32Codec("cosmosvaloper"))
+			cmd := cli.NewUnjailTxCmd()
 			clientCtx := s.clientCtx
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)

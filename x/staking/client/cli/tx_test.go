@@ -169,7 +169,7 @@ func (s *CLITestSuite) TestPrepareConfigForTxCreateValidator() {
 
 func (s *CLITestSuite) TestNewCreateValidatorCmd() {
 	require := s.Require()
-	cmd := cli.NewCreateValidatorCmd(addresscodec.NewBech32Codec("cosmosvaloper"))
+	cmd := cli.NewCreateValidatorCmd()
 
 	validJSON := fmt.Sprintf(`
 	{
@@ -316,7 +316,7 @@ func (s *CLITestSuite) TestNewCreateValidatorCmd() {
 }
 
 func (s *CLITestSuite) TestNewEditValidatorCmd() {
-	cmd := cli.NewEditValidatorCmd(addresscodec.NewBech32Codec("cosmos"))
+	cmd := cli.NewEditValidatorCmd()
 
 	moniker := "testing"
 	details := "bio"
@@ -439,7 +439,7 @@ func (s *CLITestSuite) TestNewEditValidatorCmd() {
 }
 
 func (s *CLITestSuite) TestNewDelegateCmd() {
-	cmd := cli.NewDelegateCmd(addresscodec.NewBech32Codec("cosmosvaloper"), addresscodec.NewBech32Codec("cosmos"))
+	cmd := cli.NewDelegateCmd()
 
 	testCases := []struct {
 		name         string
@@ -502,7 +502,7 @@ func (s *CLITestSuite) TestNewDelegateCmd() {
 }
 
 func (s *CLITestSuite) TestNewRedelegateCmd() {
-	cmd := cli.NewRedelegateCmd(addresscodec.NewBech32Codec("cosmosvaloper"), addresscodec.NewBech32Codec("cosmos"))
+	cmd := cli.NewRedelegateCmd()
 
 	testCases := []struct {
 		name         string
@@ -584,7 +584,7 @@ func (s *CLITestSuite) TestNewRedelegateCmd() {
 }
 
 func (s *CLITestSuite) TestNewUnbondCmd() {
-	cmd := cli.NewUnbondCmd(addresscodec.NewBech32Codec("cosmosvaloper"), addresscodec.NewBech32Codec("cosmos"))
+	cmd := cli.NewUnbondCmd()
 
 	testCases := []struct {
 		name         string
@@ -647,7 +647,7 @@ func (s *CLITestSuite) TestNewUnbondCmd() {
 }
 
 func (s *CLITestSuite) TestNewCancelUnbondingDelegationCmd() {
-	cmd := cli.NewCancelUnbondingDelegation(addresscodec.NewBech32Codec("cosmosvaloper"), addresscodec.NewBech32Codec("cosmos"))
+	cmd := cli.NewCancelUnbondingDelegation()
 
 	testCases := []struct {
 		name         string

@@ -34,7 +34,7 @@ var (
 )
 
 // NewTxCmd returns a root CLI command handler for all x/staking transaction commands.
-func NewTxCmd(valAddrCodec, ac address.Codec) *cobra.Command {
+func NewTxCmd() *cobra.Command {
 	stakingTxCmd := &cobra.Command{
 		Use:                        types.ModuleName,
 		Short:                      "Staking transaction subcommands",
@@ -44,19 +44,19 @@ func NewTxCmd(valAddrCodec, ac address.Codec) *cobra.Command {
 	}
 
 	stakingTxCmd.AddCommand(
-		NewCreateValidatorCmd(valAddrCodec),
-		NewEditValidatorCmd(valAddrCodec),
-		NewDelegateCmd(valAddrCodec, ac),
-		NewRedelegateCmd(valAddrCodec, ac),
-		NewUnbondCmd(valAddrCodec, ac),
-		NewCancelUnbondingDelegation(valAddrCodec, ac),
+		NewCreateValidatorCmd(),
+		NewEditValidatorCmd(),
+		NewDelegateCmd(),
+		NewRedelegateCmd(),
+		NewUnbondCmd(),
+		NewCancelUnbondingDelegation(),
 	)
 
 	return stakingTxCmd
 }
 
 // NewCreateValidatorCmd returns a CLI command handler for creating a MsgCreateValidator transaction.
-func NewCreateValidatorCmd(ac address.Codec) *cobra.Command {
+func NewCreateValidatorCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create-validator [path/to/validator.json]",
 		Short: "create new validator initialized with a self-delegation to it",
@@ -100,7 +100,7 @@ where we can get the pubkey using "%s tendermint show-validator"
 				return err
 			}
 
-			txf, msg, err := newBuildCreateValidatorMsg(clientCtx, txf, cmd.Flags(), validator, ac)
+			txf, msg, err := newBuildCreateValidatorMsg(clientCtx, txf, cmd.Flags(), validator, clientCtx.ValidatorAddressCodec)
 			if err != nil {
 				return err
 			}
@@ -119,7 +119,7 @@ where we can get the pubkey using "%s tendermint show-validator"
 }
 
 // NewEditValidatorCmd returns a CLI command handler for creating a MsgEditValidator transaction.
-func NewEditValidatorCmd(ac address.Codec) *cobra.Command {
+func NewEditValidatorCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "edit-validator",
 		Short: "edit an existing validator account",
@@ -160,7 +160,7 @@ func NewEditValidatorCmd(ac address.Codec) *cobra.Command {
 				newMinSelfDelegation = &msb
 			}
 
-			valAddr, err := ac.BytesToString(clientCtx.GetFromAddress())
+			valAddr, err := clientCtx.AddressCodec.BytesToString(clientCtx.GetFromAddress())
 			if err != nil {
 				return err
 			}
@@ -180,7 +180,7 @@ func NewEditValidatorCmd(ac address.Codec) *cobra.Command {
 }
 
 // NewDelegateCmd returns a CLI command handler for creating a MsgDelegate transaction.
-func NewDelegateCmd(valAddrCodec, ac address.Codec) *cobra.Command {
+func NewDelegateCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delegate [validator-addr] [amount]",
 		Args:  cobra.ExactArgs(2),
@@ -204,12 +204,12 @@ $ %s tx staking delegate cosmosvalopers1l2rsakp388kuv9k8qzq6lrm9taddae7fpx59wm 1
 				return err
 			}
 
-			delAddr, err := ac.BytesToString(clientCtx.GetFromAddress())
+			delAddr, err := clientCtx.AddressCodec.BytesToString(clientCtx.GetFromAddress())
 			if err != nil {
 				return err
 			}
 
-			_, err = valAddrCodec.StringToBytes(args[0])
+			_, err = clientCtx.ValidatorAddressCodec.StringToBytes(args[0])
 			if err != nil {
 				return err
 			}
@@ -226,7 +226,7 @@ $ %s tx staking delegate cosmosvalopers1l2rsakp388kuv9k8qzq6lrm9taddae7fpx59wm 1
 }
 
 // NewRedelegateCmd returns a CLI command handler for creating a MsgBeginRedelegate transaction.
-func NewRedelegateCmd(valAddrCodec, ac address.Codec) *cobra.Command {
+func NewRedelegateCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "redelegate [src-validator-addr] [dst-validator-addr] [amount]",
 		Short: "Redelegate illiquid tokens from one validator to another",
@@ -245,17 +245,17 @@ $ %s tx staking redelegate cosmosvalopers1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj
 			if err != nil {
 				return err
 			}
-			delAddr, err := ac.BytesToString(clientCtx.GetFromAddress())
+			delAddr, err := clientCtx.AddressCodec.BytesToString(clientCtx.GetFromAddress())
 			if err != nil {
 				return err
 			}
 
-			_, err = valAddrCodec.StringToBytes(args[0])
+			_, err = clientCtx.ValidatorAddressCodec.StringToBytes(args[0])
 			if err != nil {
 				return err
 			}
 
-			_, err = valAddrCodec.StringToBytes(args[1])
+			_, err = clientCtx.ValidatorAddressCodec.StringToBytes(args[1])
 			if err != nil {
 				return err
 			}
@@ -277,7 +277,7 @@ $ %s tx staking redelegate cosmosvalopers1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj
 }
 
 // NewUnbondCmd returns a CLI command handler for creating a MsgUndelegate transaction.
-func NewUnbondCmd(valAddrCodec, ac address.Codec) *cobra.Command {
+func NewUnbondCmd() *cobra.Command {
 	bech32PrefixValAddr := sdk.GetConfig().GetBech32ValidatorAddrPrefix()
 
 	cmd := &cobra.Command{
@@ -299,11 +299,11 @@ $ %s tx staking unbond %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj 100stake --from
 				return err
 			}
 
-			delAddr, err := ac.BytesToString(clientCtx.GetFromAddress())
+			delAddr, err := clientCtx.AddressCodec.BytesToString(clientCtx.GetFromAddress())
 			if err != nil {
 				return err
 			}
-			_, err = valAddrCodec.StringToBytes(args[0])
+			_, err = clientCtx.ValidatorAddressCodec.StringToBytes(args[0])
 			if err != nil {
 				return err
 			}
@@ -325,7 +325,7 @@ $ %s tx staking unbond %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj 100stake --from
 }
 
 // NewCancelUnbondingDelegation returns a CLI command handler for creating a MsgCancelUnbondingDelegation transaction.
-func NewCancelUnbondingDelegation(valAddrCodec, ac address.Codec) *cobra.Command {
+func NewCancelUnbondingDelegation() *cobra.Command {
 	bech32PrefixValAddr := sdk.GetConfig().GetBech32ValidatorAddrPrefix()
 
 	cmd := &cobra.Command{
@@ -348,12 +348,12 @@ $ %s tx staking cancel-unbond %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj 100stake
 			if err != nil {
 				return err
 			}
-			delAddr, err := ac.BytesToString(clientCtx.GetFromAddress())
+			delAddr, err := clientCtx.AddressCodec.BytesToString(clientCtx.GetFromAddress())
 			if err != nil {
 				return err
 			}
 
-			_, err = valAddrCodec.StringToBytes(args[0])
+			_, err = clientCtx.ValidatorAddressCodec.StringToBytes(args[0])
 			if err != nil {
 				return err
 			}

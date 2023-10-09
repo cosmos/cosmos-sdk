@@ -115,7 +115,7 @@ func (s *CLITestSuite) TestTxWithdrawAllRewardsCmd() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			cmd := cli.NewWithdrawAllRewardsCmd(addresscodec.NewBech32Codec("cosmosvaloper"), addresscodec.NewBech32Codec("cosmos"))
+			cmd := cli.NewWithdrawAllRewardsCmd()
 
 			out, err := clitestutil.ExecTestCLICmd(s.clientCtx, cmd, tc.args)
 			if tc.expectErrMsg != "" {

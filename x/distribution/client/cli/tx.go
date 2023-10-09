@@ -4,9 +4,6 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
-
-	"cosmossdk.io/core/address"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -27,7 +24,7 @@ const (
 )
 
 // NewTxCmd returns a root CLI command handler for all x/distribution transaction commands.
-func NewTxCmd(valAc, ac address.Codec) *cobra.Command {
+func NewTxCmd() *cobra.Command {
 	distTxCmd := &cobra.Command{
 		Use:                        types.ModuleName,
 		Short:                      "Distribution transactions subcommands",
@@ -37,42 +34,14 @@ func NewTxCmd(valAc, ac address.Codec) *cobra.Command {
 	}
 
 	distTxCmd.AddCommand(
-		NewWithdrawAllRewardsCmd(valAc, ac),
+		NewWithdrawAllRewardsCmd(),
 	)
 
 	return distTxCmd
 }
 
-type newGenerateOrBroadcastFunc func(client.Context, *pflag.FlagSet, ...sdk.Msg) error
-
-func newSplitAndApply(
-	genOrBroadcastFn newGenerateOrBroadcastFunc, clientCtx client.Context,
-	fs *pflag.FlagSet, msgs []sdk.Msg, chunkSize int,
-) error {
-	if chunkSize == 0 {
-		return genOrBroadcastFn(clientCtx, fs, msgs...)
-	}
-
-	// split messages into slices of length chunkSize
-	totalMessages := len(msgs)
-	for i := 0; i < len(msgs); i += chunkSize {
-
-		sliceEnd := i + chunkSize
-		if sliceEnd > totalMessages {
-			sliceEnd = totalMessages
-		}
-
-		msgChunk := msgs[i:sliceEnd]
-		if err := genOrBroadcastFn(clientCtx, fs, msgChunk...); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
 // NewWithdrawAllRewardsCmd returns a CLI command handler for creating a MsgWithdrawDelegatorReward transaction.
-func NewWithdrawAllRewardsCmd(valCodec, ac address.Codec) *cobra.Command {
+func NewWithdrawAllRewardsCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "withdraw-all-rewards",
 		Short:   "withdraw all delegations rewards for a delegator",
@@ -83,7 +52,7 @@ func NewWithdrawAllRewardsCmd(valCodec, ac address.Codec) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			delAddr, err := ac.BytesToString(clientCtx.GetFromAddress())
+			delAddr, err := clientCtx.AddressCodec.BytesToString(clientCtx.GetFromAddress())
 			if err != nil {
 				return err
 			}
@@ -104,7 +73,7 @@ func NewWithdrawAllRewardsCmd(valCodec, ac address.Codec) *cobra.Command {
 			// build multi-message transaction
 			msgs := make([]sdk.Msg, 0, len(validators))
 			for _, valAddr := range validators {
-				_, err := valCodec.StringToBytes(valAddr)
+				_, err := clientCtx.ValidatorAddressCodec.StringToBytes(valAddr)
 				if err != nil {
 					return err
 				}
@@ -114,8 +83,26 @@ func NewWithdrawAllRewardsCmd(valCodec, ac address.Codec) *cobra.Command {
 			}
 
 			chunkSize, _ := cmd.Flags().GetInt(FlagMaxMessagesPerTx)
+			if chunkSize == 0 {
+				return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msgs...)
+			}
 
-			return newSplitAndApply(tx.GenerateOrBroadcastTxCLI, clientCtx, cmd.Flags(), msgs, chunkSize)
+			// split messages into slices of length chunkSize
+			totalMessages := len(msgs)
+			for i := 0; i < len(msgs); i += chunkSize {
+
+				sliceEnd := i + chunkSize
+				if sliceEnd > totalMessages {
+					sliceEnd = totalMessages
+				}
+
+				msgChunk := msgs[i:sliceEnd]
+				if err := tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msgChunk...); err != nil {
+					return err
+				}
+			}
+
+			return nil
 		},
 	}
 

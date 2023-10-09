@@ -12,3 +12,7 @@ import (
 func TestWithdrawAllSuite(t *testing.T) {
 	suite.Run(t, new(WithdrawAllTestSuite))
 }
+
+func TestGRPCQueryTestSuite(t *testing.T) {
+	suite.Run(t, new(GRPCQueryTestSuite))
+}

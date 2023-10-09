@@ -2,7 +2,6 @@ package distribution
 
 import (
 	"fmt"
-	"strings"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	distirbuitonv1beta1 "cosmossdk.io/api/cosmos/distribution/v1beta1"
@@ -17,11 +16,6 @@ var (
 
 // AutoCLIOptions implements the autocli.HasAutoCLIConfig interface.
 func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
-	exAccAddress, err := am.ac.BytesToString([]byte("A58856F0FD53BF058B4909A21AEC019107BA6A58856F0FD53BF058B4909A21AEC019107BA6"))
-	if err != nil {
-		panic(err)
-	}
-
 	return &autocliv1.ModuleOptions{
 		Query: &autocliv1.ServiceCommandDescriptor{
 			Service: distirbuitonv1beta1.Query_ServiceDesc.ServiceName,
@@ -35,9 +29,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					RpcMethod: "ValidatorDistributionInfo",
 					Use:       "validator-distribution-info [validator]",
 					Short:     "Query validator distribution info",
-					Example: fmt.Sprintf(`Example: $ %s query distribution validator-distribution-info %s`,
-						version.AppName, exAccAddress,
-					),
+					Example:   fmt.Sprintf(`Example: $ %s query distribution validator-distribution-info [validator-addres]`, version.AppName),
 
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
 						{ProtoField: "validator_address"},
@@ -77,14 +69,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Use:       "rewards [delegator-addr] [validator-addr]",
 					Short:     "Query all distribution delegator rewards or rewards from a particular validator",
 					Long:      "Query all rewards earned by a delegator, optionally restrict to rewards from a single validator.",
-					Example: strings.TrimSpace(
-						fmt.Sprintf(`
-$ %s query distribution rewards %s
-$ %s query distribution rewards %s [validator-address]
-`,
-							version.AppName, exAccAddress, version.AppName, exAccAddress,
-						),
-					),
+					Example:   fmt.Sprintf("$ %s query distribution rewards [delegator-address] [validator-address]", version.AppName),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
 						{ProtoField: "delegator_address"},
 						{ProtoField: "validator_address"},

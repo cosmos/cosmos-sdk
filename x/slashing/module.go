@@ -85,7 +85,7 @@ func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *g
 
 // GetTxCmd returns the root tx command for the slashing module.
 func (amb AppModuleBasic) GetTxCmd() *cobra.Command {
-	return cli.NewTxCmd(amb.cdc.InterfaceRegistry().SigningContext().ValidatorAddressCodec())
+	return cli.NewTxCmd()
 }
 
 // AppModule implements an application module for the slashing module.

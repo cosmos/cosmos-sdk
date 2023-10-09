@@ -165,12 +165,12 @@ func TestMsgFundCommunityPool(t *testing.T) {
 
 	cases := []struct {
 		name   string
-		msg    *types.MsgFundCommunityPool
+		msg    *types.MsgFundCommunityPool //nolint:staticcheck // Testing deprecated method
 		errMsg string
 	}{
 		{
 			name: "invalid depositor address",
-			msg: &types.MsgFundCommunityPool{
+			msg: &types.MsgFundCommunityPool{ //nolint:staticcheck // Testing deprecated method
 				Depositor: "invalid",
 				Amount:    sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(100))),
 			},
@@ -178,7 +178,7 @@ func TestMsgFundCommunityPool(t *testing.T) {
 		},
 		{
 			name: "success",
-			msg: &types.MsgFundCommunityPool{
+			msg: &types.MsgFundCommunityPool{ //nolint:staticcheck // Testing deprecated method
 				Depositor: addrs[0].String(),
 				Amount:    sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(1000))),
 			},
@@ -188,7 +188,7 @@ func TestMsgFundCommunityPool(t *testing.T) {
 	for _, tc := range cases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-			_, err := msgServer.FundCommunityPool(ctx, tc.msg)
+			_, err := msgServer.FundCommunityPool(ctx, tc.msg) //nolint:staticcheck // Testing deprecated method
 			if tc.errMsg == "" {
 				require.NoError(t, err)
 			} else {
@@ -262,12 +262,12 @@ func TestMsgCommunityPoolSpend(t *testing.T) {
 
 	cases := []struct {
 		name   string
-		msg    *types.MsgCommunityPoolSpend
+		msg    *types.MsgCommunityPoolSpend //nolint:staticcheck // Testing deprecated method
 		errMsg string
 	}{
 		{
 			name: "invalid authority",
-			msg: &types.MsgCommunityPoolSpend{
+			msg: &types.MsgCommunityPoolSpend{ //nolint:staticcheck // Testing deprecated method
 				Authority: "invalid",
 				Amount:    sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(100))),
 			},
@@ -275,7 +275,7 @@ func TestMsgCommunityPoolSpend(t *testing.T) {
 		},
 		{
 			name: "incorrect authority",
-			msg: &types.MsgCommunityPoolSpend{
+			msg: &types.MsgCommunityPoolSpend{ //nolint:staticcheck // Testing deprecated method
 				Authority: addrs[0].String(),
 				Amount:    sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(100))),
 			},
@@ -283,7 +283,7 @@ func TestMsgCommunityPoolSpend(t *testing.T) {
 		},
 		{
 			name: "invalid recipient address",
-			msg: &types.MsgCommunityPoolSpend{
+			msg: &types.MsgCommunityPoolSpend{ //nolint:staticcheck // Testing deprecated method
 				Authority: authtypes.NewModuleAddress("gov").String(),
 				Recipient: "invalid",
 				Amount:    sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(100))),
@@ -292,7 +292,7 @@ func TestMsgCommunityPoolSpend(t *testing.T) {
 		},
 		{
 			name: "invalid amount",
-			msg: &types.MsgCommunityPoolSpend{
+			msg: &types.MsgCommunityPoolSpend{ //nolint:staticcheck // Testing deprecated method
 				Authority: authtypes.NewModuleAddress("gov").String(),
 				Recipient: addrs[0].String(),
 			},
@@ -300,7 +300,7 @@ func TestMsgCommunityPoolSpend(t *testing.T) {
 		},
 		{
 			name: "success",
-			msg: &types.MsgCommunityPoolSpend{
+			msg: &types.MsgCommunityPoolSpend{ //nolint:staticcheck // Testing deprecated method
 				Authority: authtypes.NewModuleAddress("gov").String(),
 				Recipient: addrs[0].String(),
 				Amount:    sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(1000))),
@@ -311,7 +311,7 @@ func TestMsgCommunityPoolSpend(t *testing.T) {
 	for _, tc := range cases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-			_, err := msgServer.CommunityPoolSpend(ctx, tc.msg)
+			_, err := msgServer.CommunityPoolSpend(ctx, tc.msg) //nolint:staticcheck // Testing deprecated method
 			if tc.errMsg == "" {
 				require.NoError(t, err)
 			} else {

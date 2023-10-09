@@ -11,11 +11,18 @@ import (
 
 // findSubCommand finds a sub-command of the provided command whose Use
 // string is or begins with the provided subCmdName.
+// It verifies the command's aliases as well.
 func findSubCommand(cmd *cobra.Command, subCmdName string) *cobra.Command {
 	for _, subCmd := range cmd.Commands() {
 		use := subCmd.Use
 		if use == subCmdName || strings.HasPrefix(use, subCmdName+" ") {
 			return subCmd
+		}
+
+		for _, alias := range subCmd.Aliases {
+			if alias == subCmdName || strings.HasPrefix(alias, subCmdName+" ") {
+				return subCmd
+			}
 		}
 	}
 	return nil

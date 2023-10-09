@@ -39,17 +39,18 @@ func GetTxCmd(ac address.Codec) *cobra.Command {
 
 	feegrantTxCmd.AddCommand(
 		NewCmdFeeGrant(ac),
-		NewCmdRevokeFeegrant(ac),
 	)
 
 	return feegrantTxCmd
 }
 
 // NewCmdFeeGrant returns a CLI command handler to create a MsgGrantAllowance transaction.
+// This command is more powerful than AutoCLI generated command as it allows a better input validation.
 func NewCmdFeeGrant(ac address.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "grant [granter_key_or_address] [grantee]",
-		Short: "Grant Fee allowance to an address",
+		Use:     "grant [granter_key_or_address] [grantee]",
+		Aliases: []string{"grant-allowance"},
+		Short:   "Grant Fee allowance to an address",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(
 				`Grant authorization to pay fees from your address. Note, the '--from' flag is
@@ -186,6 +187,7 @@ Examples:
 	return cmd
 }
 
+<<<<<<< HEAD
 // NewCmdRevokeFeegrant returns a CLI command handler to create a MsgRevokeAllowance transaction.
 func NewCmdRevokeFeegrant(ac address.Codec) *cobra.Command {
 	cmd := &cobra.Command{
@@ -222,6 +224,8 @@ Example:
 	return cmd
 }
 
+=======
+>>>>>>> 1d03d890c (feat(x/feegrant): add autocli options for tx (#17959))
 func getPeriodReset(duration int64) time.Time {
 	return time.Now().Add(getPeriod(duration))
 }

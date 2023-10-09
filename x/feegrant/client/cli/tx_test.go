@@ -428,6 +428,7 @@ func (s *CLITestSuite) TestNewCmdFeeGrant() {
 	}
 }
 
+<<<<<<< HEAD
 func (s *CLITestSuite) TestNewCmdRevokeFeegrant() {
 	granter := s.addedGranter
 	grantee := s.addedGrantee
@@ -521,6 +522,8 @@ func (s *CLITestSuite) TestNewCmdRevokeFeegrant() {
 	}
 }
 
+=======
+>>>>>>> 1d03d890c (feat(x/feegrant): add autocli options for tx (#17959))
 func (s *CLITestSuite) TestTxWithFeeGrant() {
 	clientCtx := s.clientCtx
 	granter := s.addedGranter

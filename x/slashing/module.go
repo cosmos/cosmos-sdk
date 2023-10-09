@@ -20,11 +20,7 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-<<<<<<< HEAD
-	"github.com/cosmos/cosmos-sdk/x/slashing/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/slashing/exported"
-=======
->>>>>>> 3690d9f7f (feat(x/slashing): add autocli options for tx (#17967))
 	"github.com/cosmos/cosmos-sdk/x/slashing/keeper"
 	"github.com/cosmos/cosmos-sdk/x/slashing/simulation"
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
@@ -87,14 +83,6 @@ func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *g
 	}
 }
 
-<<<<<<< HEAD
-// GetTxCmd returns the root tx command for the slashing module.
-func (b AppModuleBasic) GetTxCmd() *cobra.Command {
-	return cli.NewTxCmd(b.cdc.InterfaceRegistry().SigningContext().ValidatorAddressCodec())
-}
-
-=======
->>>>>>> 3690d9f7f (feat(x/slashing): add autocli options for tx (#17967))
 // AppModule implements an application module for the slashing module.
 type AppModule struct {
 	AppModuleBasic

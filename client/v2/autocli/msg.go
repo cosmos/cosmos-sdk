@@ -145,11 +145,7 @@ func (b *Builder) BuildMsgMethodCommand(descriptor protoreflect.MethodDescriptor
 			}
 
 			signerFromFlag := clientCtx.GetFromAddress()
-<<<<<<< HEAD
-			signer, err := b.AddressCodec.BytesToString(signerFromFlag.Bytes())
-=======
 			signer, err := addressCodec.BytesToString(signerFromFlag.Bytes())
->>>>>>> 3690d9f7f (feat(x/slashing): add autocli options for tx (#17967))
 			if err != nil {
 				return fmt.Errorf("failed to set signer on message, got %v: %w", signerFromFlag, err)
 			}

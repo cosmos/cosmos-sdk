@@ -58,6 +58,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (rpc) [#17470](https://github.com/cosmos/cosmos-sdk/pull/17470) Avoid open 0.0.0.0 to public by default and add `listen-ip-address` argument for `testnet init-files` cmd.
 * (types) [#17670](https://github.com/cosmos/cosmos-sdk/pull/17670) Use `ctx.CometInfo` in place of `ctx.VoteInfos`
 * [#17733](https://github.com/cosmos/cosmos-sdk/pull/17733) Ensure `buf export` exports all proto dependencies
+* (crypto/keys) [#7051](https://github.com/cosmos/cosmos-sdk/issues/7051) Made public key generation constant time on `secp256k1`
   
 ### Bug Fixes
 

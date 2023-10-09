@@ -121,14 +121,14 @@ func makeGogoHybridHandler(prefMethod protoreflect.MethodDescriptor, cdc codec.B
 				return fmt.Errorf("invalid request type %T, method %s does not accept protov2 messages", inReq, prefMethod.FullName())
 			}
 			resp, err := method.Handler(handler, ctx, func(msg any) error {
-				// merge!
+				// merge! ref: https://github.com/cosmos/cosmos-sdk/issues/18003
 				gogoproto.Merge(msg.(gogoproto.Message), inReq)
 				return nil
 			}, nil)
 			if err != nil {
 				return err
 			}
-			// merge resp
+			// merge resp, ref: https://github.com/cosmos/cosmos-sdk/issues/18003
 			gogoproto.Merge(outResp.(gogoproto.Message), resp.(gogoproto.Message))
 			return nil
 		}, nil
@@ -161,13 +161,14 @@ func makeGogoHybridHandler(prefMethod protoreflect.MethodDescriptor, cdc codec.B
 		case gogoproto.Message:
 			// we can just call the handler after making a copy of the message, for safety reasons.
 			resp, err := method.Handler(handler, ctx, func(msg any) error {
+				// ref: https://github.com/cosmos/cosmos-sdk/issues/18003
 				gogoproto.Merge(msg.(gogoproto.Message), m)
 				return nil
 			}, nil)
 			if err != nil {
 				return err
 			}
-			// merge on the resp
+			// merge on the resp, ref: https://github.com/cosmos/cosmos-sdk/issues/18003
 			gogoproto.Merge(outResp.(gogoproto.Message), resp.(gogoproto.Message))
 			return nil
 		default:

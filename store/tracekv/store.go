@@ -1,9 +1,12 @@
 package tracekv
 
 import (
+	"encoding/base64"
+	"encoding/json"
 	"io"
 
 	"cosmossdk.io/store/v2"
+	"github.com/cockroachdb/errors"
 )
 
 const (
@@ -50,36 +53,40 @@ func (s *Store) GetStoreType() store.StoreType {
 	return store.StoreTypeTrace
 }
 
+func (s *Store) GetChangeset() *store.Changeset {
+	return s.parent.GetChangeset()
+}
+
 func (s *Store) Get(key []byte) []byte {
-	panic("not implemented!")
+	value := s.parent.Get(key)
+	writeOperation(s.writer, readOp, s.context, key, value)
+	return value
 }
 
 func (s *Store) Has(key []byte) bool {
-	panic("not implemented!")
+	return s.parent.Has(key)
 }
 
 func (s *Store) Set(key, value []byte) {
-	panic("not implemented!")
+	writeOperation(s.writer, writeOp, s.context, key, value)
+	s.parent.Set(key, value)
 }
 
 func (s *Store) Delete(key []byte) {
-	panic("not implemented!")
+	writeOperation(s.writer, deleteOp, s.context, key, nil)
+	s.parent.Delete(key)
 }
 
 func (s *Store) Reset() error {
-	panic("not implemented!")
+	return s.parent.Reset()
 }
 
 func (s *Store) Branch() store.BranchedKVStore {
-	panic("not implemented!")
+	panic("cannot execute Branch() on tracekv.Store")
 }
 
 func (s *Store) BranchWithTrace(w io.Writer, tc store.TraceContext) store.BranchedKVStore {
-	panic("not implemented!")
-}
-
-func (s *Store) GetChangeset() *store.Changeset {
-	panic("not implemented!")
+	panic("cannot execute BranchWithTrace() on tracekv.Store")
 }
 
 func (s *Store) Iterator(start, end []byte) store.Iterator {
@@ -88,4 +95,32 @@ func (s *Store) Iterator(start, end []byte) store.Iterator {
 
 func (s *Store) ReverseIterator(start, end []byte) store.Iterator {
 	panic("not implemented!")
+}
+
+// writeOperation writes a KVStore operation to the underlying io.Writer as
+// JSON-encoded data where the key/value pair is base64 encoded.
+func writeOperation(w io.Writer, op string, tc store.TraceContext, key, value []byte) {
+	traceOp := traceOperation{
+		Operation: op,
+		Key:       base64.StdEncoding.EncodeToString(key),
+		Value:     base64.StdEncoding.EncodeToString(value),
+	}
+
+	if tc != nil {
+		traceOp.Metadata = tc
+	}
+
+	raw, err := json.Marshal(traceOp)
+	if err != nil {
+		panic(errors.Wrap(err, "failed to serialize trace operation"))
+	}
+
+	if _, err := w.Write(raw); err != nil {
+		panic(errors.Wrap(err, "failed to write trace operation"))
+	}
+
+	_, err = io.WriteString(w, "\n")
+	if err != nil {
+		panic(err)
+	}
 }

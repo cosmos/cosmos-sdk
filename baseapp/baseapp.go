@@ -351,6 +351,24 @@ func (app *BaseApp) LastBlockHeight() int64 {
 	return app.cms.LastCommitID().Version
 }
 
+<<<<<<< HEAD
+=======
+// ChainID returns the chainID of the app.
+func (app *BaseApp) ChainID() string {
+	return app.chainID
+}
+
+// AnteHandler returns the AnteHandler of the app.
+func (app *BaseApp) AnteHandler() sdk.AnteHandler {
+	return app.anteHandler
+}
+
+// Mempool returns the Mempool of the app.
+func (app *BaseApp) Mempool() mempool.Mempool {
+	return app.mempool
+}
+
+>>>>>>> 68a136b48 (feat(baseapp): expose `Mempool` (#17954))
 // Init initializes the app. It seals the app, preventing any
 // further modifications. In addition, it validates the app against
 // the earlier provided settings. Returns an error if validation fails.

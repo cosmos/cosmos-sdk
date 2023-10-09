@@ -189,8 +189,8 @@ cloud.google.com/go/workflows v1.6.0/go.mod h1:6t9F5h/unJz41YqfBmqSASJSXccBLtD1V
 cloud.google.com/go/workflows v1.7.0/go.mod h1:JhSrZuVZWuiDfKEFxU0/F1PQjmpnpcoISEXH2bcHC3M=
 cosmossdk.io/api v0.7.1 h1:PNQ1xN8+/0hj/sSD0ANqjkgfXFys+bZ5L8Hg7uzoUTU=
 cosmossdk.io/api v0.7.1/go.mod h1:ure9edhcROIHsngavM6mBLilMGFnfjhV/AaYhEMUkdo=
-cosmossdk.io/client/v2 v2.0.0-20231005134150-8334eefaaf7c h1:WlbeJazcWL5OAxSIay1DXQ52xUshtsuGmzny+3cYOyE=
-cosmossdk.io/client/v2 v2.0.0-20231005134150-8334eefaaf7c/go.mod h1:0ycdqzdjVeUdKqgBbaxqSsc1C18GJc3uEF+uphv/MPg=
+cosmossdk.io/client/v2 v2.0.0-20231009114728-5259373edec8 h1:IEBOxiA/KO2MeKEOwr1AUczynjWmWPooZ3U/naf6kTE=
+cosmossdk.io/client/v2 v2.0.0-20231009114728-5259373edec8/go.mod h1:VqOuMtieftq2OaX7WhRXjG0mhFih4qzw5JT8fyNlVuE=
 cosmossdk.io/collections v0.4.0 h1:PFmwj2W8szgpD5nOd8GWH6AbYNi1f2J6akWXJ7P5t9s=
 cosmossdk.io/collections v0.4.0/go.mod h1:oa5lUING2dP+gdDquow+QjlF45eL1t4TJDypgGd+tv0=
 cosmossdk.io/core v0.11.0 h1:vtIafqUi+1ZNAE/oxLOQQ7Oek2n4S48SWLG8h/+wdbo=
@@ -209,8 +209,8 @@ cosmossdk.io/x/circuit v0.0.0-20231006095526-33390754f9fe h1:xcQTAlbv1l8PBHXI5/x
 cosmossdk.io/x/circuit v0.0.0-20231006095526-33390754f9fe/go.mod h1:syo6njNlaE1KLXRFd1gZQr/7pMstANp2zMqVUC+u4h4=
 cosmossdk.io/x/evidence v0.0.0-20230925151519-64e0e8980834 h1:h4ooSV3X5BxEfl3EUbOlXNFMnEc/mXTXF5mdl17CQLg=
 cosmossdk.io/x/evidence v0.0.0-20230925151519-64e0e8980834/go.mod h1:yUgv71a56ZEJu7c8BXWCliDrQ7Ag+FCZ//rYKw9S93U=
-cosmossdk.io/x/feegrant v0.0.0-20230925151519-64e0e8980834 h1:hILr/Ve3CKlWwMC3oHFb1er9xWzxbx1UEZytTuGeI8o=
-cosmossdk.io/x/feegrant v0.0.0-20230925151519-64e0e8980834/go.mod h1:C5DALk9amuP9nd/xCgaQxbn43q695zQ/tXH8b9ugzAs=
+cosmossdk.io/x/feegrant v0.0.0-20231009114728-5259373edec8 h1:e3JUrisu36fIf+EzppkSeryOocs7oUue4e1IepdhMMI=
+cosmossdk.io/x/feegrant v0.0.0-20231009114728-5259373edec8/go.mod h1:nnIKdJKz1Os+sOlJHrjgMOh1WAlle0aV7Y+0x434OyI=
 cosmossdk.io/x/nft v0.0.0-20231006095526-33390754f9fe h1:xDWsbJp/9Tdwh2w8/KT7E0sxb52ASTn1M+UO4pq6kko=
 cosmossdk.io/x/nft v0.0.0-20231006095526-33390754f9fe/go.mod h1:QQROAXjZWeJzH6dNHUNCPhs7zHrYjknH8gYynf0IvXs=
 cosmossdk.io/x/tx v0.10.1-0.20230920120022-6715b5afb59f h1:Dkw1pM+jnjK9Pk0CM6JZKLLDaMXWDCHSlLJiHcSmPpg=

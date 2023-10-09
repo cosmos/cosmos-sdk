@@ -47,7 +47,6 @@ func GetTxCmd(ac address.Codec) *cobra.Command {
 
 	AuthorizationTxCmd.AddCommand(
 		NewCmdGrantAuthorization(ac),
-		NewCmdRevokeAuthorization(ac),
 		NewCmdExecAuthorization(),
 	)
 
@@ -55,6 +54,8 @@ func GetTxCmd(ac address.Codec) *cobra.Command {
 }
 
 // NewCmdGrantAuthorization returns a CLI command handler for creating a MsgGrant transaction.
+//
+// cannot give autocli support, can be CLI breaking
 func NewCmdGrantAuthorization(ac address.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "grant <grantee> <authorization_type=\"send\"|\"generic\"|\"delegate\"|\"unbond\"|\"redelegate\"> --from <granter>",
@@ -228,41 +229,9 @@ func getExpireTime(cmd *cobra.Command) (*time.Time, error) {
 	return &e, nil
 }
 
-// NewCmdRevokeAuthorization returns a CLI command handler for creating a MsgRevoke transaction.
-func NewCmdRevokeAuthorization(ac address.Codec) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "revoke [grantee] [msg-type-url] --from=[granter]",
-		Short: "revoke authorization",
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`revoke authorization from a granter to a grantee:
-Example:
- $ %s tx %s revoke cosmos1skj.. %s --from=cosmos1skj..
-			`, version.AppName, authz.ModuleName, bank.SendAuthorization{}.MsgTypeURL()),
-		),
-		Args: cobra.ExactArgs(2),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientTxContext(cmd)
-			if err != nil {
-				return err
-			}
-
-			grantee, err := ac.StringToBytes(args[0])
-			if err != nil {
-				return err
-			}
-
-			granter := clientCtx.GetFromAddress()
-			msgAuthorized := args[1]
-			msg := authz.NewMsgRevoke(granter, grantee, msgAuthorized)
-
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &msg)
-		},
-	}
-	flags.AddTxFlagsToCmd(cmd)
-	return cmd
-}
-
 // NewCmdExecAuthorization returns a CLI command handler for creating a MsgExec transaction.
+//
+// cannot give autocli support, can be CLI breaking
 func NewCmdExecAuthorization() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "exec [tx-json-file] --from [grantee]",

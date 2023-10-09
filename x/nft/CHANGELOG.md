@@ -28,3 +28,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 -->
 
 # Changelog
+
+## [Unreleased]
+
+### Features
+
+* [#17825](https://github.com/cosmos/cosmos-sdk/pull/17825) Add AutoCLI Options.

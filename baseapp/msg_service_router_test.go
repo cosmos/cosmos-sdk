@@ -91,7 +91,7 @@ func TestMsgService(t *testing.T) {
 
 	var (
 		appBuilder        *runtime.AppBuilder
-		cdc               codec.ProtoCodecMarshaler
+		cdc               codec.Codec
 		interfaceRegistry codectypes.InterfaceRegistry
 	)
 	err := depinject.Inject(

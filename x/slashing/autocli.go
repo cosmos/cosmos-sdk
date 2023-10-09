@@ -36,5 +36,20 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				},
 			},
 		},
+		Tx: &autocliv1.ServiceCommandDescriptor{
+			Service: slashingv1beta.Msg_ServiceDesc.ServiceName,
+			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
+				{
+					RpcMethod: "Unjail",
+					Use:       "unjail",
+					Short:     "Unjail a jailed validator",
+					Example:   fmt.Sprintf("%s tx slashing unjail --from [validator]", version.AppName),
+				},
+				{
+					RpcMethod: "UpdateParams",
+					Skip:      true, // skipped because authority gated
+				},
+			},
+		},
 	}
 }

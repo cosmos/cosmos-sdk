@@ -27,4 +27,5 @@ use (
 	./x/evidence
 	./x/upgrade
 	./x/protocolpool
+	./x/params
 )

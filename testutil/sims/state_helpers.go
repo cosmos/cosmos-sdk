@@ -1,12 +1,14 @@
 package sims
 
 import (
+	"bufio"
 	"encoding/json"
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"io"
 	"math/rand"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/cosmos/gogoproto/proto"
@@ -251,19 +253,23 @@ func AppStateRandomizedFn(
 // AppStateFromGenesisFileFn util function to generate the genesis AppState
 // from a genesis.json file.
 func AppStateFromGenesisFileFn(r io.Reader, cdc codec.JSONCodec, genesisFile string) (genutiltypes.AppGenesis, []simtypes.Account, error) {
-	bytes, err := os.ReadFile(genesisFile)
+	file, err := os.Open(filepath.Clean(genesisFile))
 	if err != nil {
 		panic(err)
 	}
 
-	var genesis genutiltypes.AppGenesis
-	if err = json.Unmarshal(bytes, &genesis); err != nil {
-		return genesis, nil, err
+	genesis, err := genutiltypes.AppGenesisFromReader(bufio.NewReader(file))
+	if err != nil {
+		return *genesis, nil, err
+	}
+
+	if err := file.Close(); err != nil {
+		return *genesis, nil, err
 	}
 
 	var appState map[string]json.RawMessage
 	if err = json.Unmarshal(genesis.AppState, &appState); err != nil {
-		return genesis, nil, err
+		return *genesis, nil, err
 	}
 
 	var authGenesis authtypes.GenesisState
@@ -285,7 +291,7 @@ func AppStateFromGenesisFileFn(r io.Reader, cdc codec.JSONCodec, genesisFile str
 
 		a, ok := acc.GetCachedValue().(sdk.AccountI)
 		if !ok {
-			return genesis, nil, fmt.Errorf("expected account")
+			return *genesis, nil, fmt.Errorf("expected account")
 		}
 
 		// create simulator accounts
@@ -293,5 +299,5 @@ func AppStateFromGenesisFileFn(r io.Reader, cdc codec.JSONCodec, genesisFile str
 		newAccs[i] = simAcc
 	}
 
-	return genesis, newAccs, nil
+	return *genesis, newAccs, nil
 }

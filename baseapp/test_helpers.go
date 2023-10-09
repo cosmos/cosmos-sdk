@@ -1,9 +1,8 @@
 package baseapp
 
 import (
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
-
 	errorsmod "cosmossdk.io/errors"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -35,7 +34,8 @@ func (app *BaseApp) SimDeliver(txEncoder sdk.TxEncoder, tx sdk.Tx) (sdk.GasInfo,
 	if err != nil {
 		return sdk.GasInfo{}, nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "%s", err)
 	}
-	gasInfo, result, _, err := app.runTx(execModeSimulationFinalize, bz)
+
+	gasInfo, result, _, err := app.runTx(execModeFinalize, bz)
 	return gasInfo, result, err
 }
 
@@ -46,7 +46,7 @@ func (app *BaseApp) SimTxFinalizeBlock(txEncoder sdk.TxEncoder, tx sdk.Tx) (sdk.
 		return sdk.GasInfo{}, nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "%s", err)
 	}
 
-	gasInfo, result, _, err := app.runTx(execModeSimulationFinalize, bz)
+	gasInfo, result, _, err := app.runTx(execModeFinalize, bz)
 	return gasInfo, result, err
 }
 

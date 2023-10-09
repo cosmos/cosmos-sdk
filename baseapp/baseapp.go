@@ -45,14 +45,13 @@ type (
 )
 
 const (
-	execModeCheck              execMode = iota // Check a transaction
-	execModeReCheck                            // Recheck a (pending) transaction after a commit
-	execModeSimulate                           // Simulate a transaction
-	execModePrepareProposal                    // Prepare a block proposal
-	execModeProcessProposal                    // Process a block proposal
-	execModeVoteExtension                      // Extend or verify a pre-commit vote
-	execModeFinalize                           // Finalize a block proposal
-	execModeSimulationFinalize                 // Finalize a block proposal when run simulation, for example TestFullAppSimulation
+	execModeCheck           execMode = iota // Check a transaction
+	execModeReCheck                         // Recheck a (pending) transaction after a commit
+	execModeSimulate                        // Simulate a transaction
+	execModePrepareProposal                 // Prepare a block proposal
+	execModeProcessProposal                 // Process a block proposal
+	execModeVoteExtension                   // Extend or verify a pre-commit vote
+	execModeFinalize                        // Finalize a block proposal
 )
 
 var _ servertypes.ABCI = (*BaseApp)(nil)
@@ -90,6 +89,7 @@ type BaseApp struct {
 	addrPeerFilter sdk.PeerFilter // filter peers by address and port
 	idPeerFilter   sdk.PeerFilter // filter peers by node ID
 	fauxMerkleMode bool           // if true, IAVL MountStores uses MountStoresDB for simulation speed.
+	sigverifyTx    bool           // whether to sigverify check for transaction
 
 	// manages snapshots, i.e. dumps of app state at certain intervals
 	snapshotManager *snapshots.Manager
@@ -199,6 +199,7 @@ func NewBaseApp(
 		msgServiceRouter: NewMsgServiceRouter(),
 		txDecoder:        txDecoder,
 		fauxMerkleMode:   false,
+		sigverifyTx:      true,
 		queryGasLimit:    math.MaxUint64,
 	}
 
@@ -611,7 +612,7 @@ func validateBasicTxMsgs(msgs []sdk.Msg) error {
 
 func (app *BaseApp) getState(mode execMode) *state {
 	switch mode {
-	case execModeFinalize, execModeSimulationFinalize:
+	case execModeFinalize:
 		return app.finalizeBlockState
 
 	case execModePrepareProposal:
@@ -643,7 +644,7 @@ func (app *BaseApp) getContextForTx(mode execMode, txBytes []byte) sdk.Context {
 		WithTxBytes(txBytes)
 	// WithVoteInfos(app.voteInfos) // TODO: identify if this is needed
 
-	ctx = ctx.WithIsSigverifyTx(mode != execModeSimulationFinalize)
+	ctx = ctx.WithIsSigverifyTx(app.sigverifyTx)
 
 	ctx = ctx.WithConsensusParams(app.GetConsensusParams(ctx))
 
@@ -800,12 +801,6 @@ func (app *BaseApp) runTx(mode execMode, txBytes []byte) (gInfo sdk.GasInfo, res
 	var gasWanted uint64
 
 	ctx := app.getContextForTx(mode, txBytes)
-	// after we set the sigverifyTx field in ctx in the function app.getContextForTx(mode, txBytes)
-	// we restore the mode value to facilitate logical judgment.
-	if mode == execModeSimulationFinalize {
-		mode = execModeFinalize
-	}
-
 	ms := ctx.MultiStore()
 
 	// only run the tx if there is block gas remaining

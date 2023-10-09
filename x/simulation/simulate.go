@@ -84,8 +84,10 @@ func SimulateFromSeed(
 	// Second variable to keep pending validator set (delayed one block since
 	// TM 0.24) Initially this is the same as the initial validator set
 	validators, blockTime, accs, chainID := initChain(r, params, accs, app, appStateFn, config, cdc)
-	if len(accs) == 0 {
-		return true, params, fmt.Errorf("must have greater than zero genesis accounts")
+	// At least 2 accounts must be added here, otherwise when executing SimulateMsgSend
+	// two accounts will be selected to meet the conditions from != to and it will fall into an infinite loop.
+	if len(accs) <= 1 {
+		return true, params, fmt.Errorf("At least two genesis accounts are required")
 	}
 
 	config.ChainID = chainID

@@ -258,7 +258,6 @@ func (c Context) WithIsReCheckTx(isRecheckTx bool) Context {
 }
 
 // WithIsSigverifyTx called with true will sigverify in auth module
-// If the transaction is executed in execModeSimulationFinalize mode, the sigverify check will be skipped.
 func (c Context) WithIsSigverifyTx(isSigverifyTx bool) Context {
 	c.sigverifyTx = isSigverifyTx
 	return c

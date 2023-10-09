@@ -150,7 +150,6 @@ func (curve *secp256k1Curve) addJacobian(x1, y1, z1, x2, y2, z2 *big.Int) (*big.
 	u2 := new(big.Int).Mul(x2, z1z1)
 	u2.Mod(u2, curve.P)
 	h := new(big.Int).Sub(u2, u1)
-	xEqual := h.Sign() == 0
 	if h.Sign() == -1 {
 		h.Add(h, curve.P)
 	}
@@ -167,10 +166,6 @@ func (curve *secp256k1Curve) addJacobian(x1, y1, z1, x2, y2, z2 *big.Int) (*big.
 	r := new(big.Int).Sub(s2, s1)
 	if r.Sign() == -1 {
 		r.Add(r, curve.P)
-	}
-	yEqual := r.Sign() == 0
-	if xEqual && yEqual {
-		return curve.doubleJacobian(x1, y1, z1)
 	}
 	r.Lsh(r, 1)
 	v := new(big.Int).Mul(u1, i)

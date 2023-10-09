@@ -4,6 +4,7 @@ import (
 	"crypto/ed25519"
 	"crypto/subtle"
 	"fmt"
+	"github.com/cometbft/cometbft/crypto/tmhash"
 	"io"
 
 	"github.com/cometbft/cometbft/crypto"
@@ -12,7 +13,6 @@ import (
 	errorsmod "cosmossdk.io/errors"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/crypto/hash"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -159,13 +159,17 @@ var (
 	_ codec.AminoMarshaler = &PubKey{}
 )
 
-// Address is the SHA256-20 ADR28 address type
+// Address is the SHA256-20 of the raw pubkey bytes.
+// It doesn't implement ADR-28 addresses and it must not be used
+// in SDK except in a tendermint validator context.
+
 func (pubKey *PubKey) Address() crypto.Address {
 	if len(pubKey.Key) != PubKeySize {
 		panic("pubkey is incorrect size")
 	}
-
-	return crypto.Address(hash.AddressBasic(pubKey))
+	// For ADR-28 compatible address we would need to
+	// return address.Hash(proto.MessageName(pubKey), pubKey.Key)
+	return crypto.Address(tmhash.SumTruncated(pubKey.Key))
 }
 
 // Bytes returns the PubKey byte format.

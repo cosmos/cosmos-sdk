@@ -32,6 +32,8 @@ type dep struct {
 }
 
 func initFixture(t *testing.T) (sdk.Context, []sdk.AccAddress, keeper.Keeper, dep) {
+	t.Helper()
+
 	ctrl := gomock.NewController(t)
 	key := storetypes.NewKVStoreKey(types.StoreKey)
 	storeService := runtime.NewKVStoreService(key)

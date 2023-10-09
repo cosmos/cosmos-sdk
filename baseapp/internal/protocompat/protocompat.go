@@ -20,7 +20,7 @@ var (
 	protov2Type = reflect.TypeOf((*proto2.Message)(nil)).Elem()
 )
 
-type Handler = func(ctx context.Context, message protoiface.MessageV1) (protoiface.MessageV1, error)
+type Handler = func(ctx context.Context, request protoiface.MessageV1, response protoiface.MessageV1) error
 
 func MakeHybridHandler(cdc codec.BinaryCodec, sd *grpc.ServiceDesc, method grpc.MethodDesc, handler interface{}) (Handler, error) {
 	methodFullName := protoreflect.FullName(fmt.Sprintf("%s.%s", sd.ServiceName, method.MethodName))
@@ -47,27 +47,28 @@ func MakeHybridHandler(cdc codec.BinaryCodec, sd *grpc.ServiceDesc, method grpc.
 // makeProtoV2HybridHandler returns a handler that can handle both gogo and protov2 messages.
 func makeProtoV2HybridHandler(prefMethod protoreflect.MethodDescriptor, cdc codec.BinaryCodec, method grpc.MethodDesc, handler any) (Handler, error) {
 	// it's a protov2 handler, if a gogo counterparty is not found we cannot handle gogo messages.
-	gogoRespType := gogoproto.MessageType(string(prefMethod.Output().FullName()))
-	if gogoRespType == nil {
-		return func(ctx context.Context, request protoiface.MessageV1) (protoiface.MessageV1, error) {
-			protov2Request, ok := request.(proto2.Message)
+	gogoExists := gogoproto.MessageType(string(prefMethod.Output().FullName())) != nil
+	if !gogoExists {
+		return func(ctx context.Context, inReq protoiface.MessageV1, outResp protoiface.MessageV1) error {
+			protov2Request, ok := inReq.(proto2.Message)
 			if !ok {
-				return nil, fmt.Errorf("invalid request type %T, method %s does not accept gogoproto messages", request, prefMethod.FullName())
+				return fmt.Errorf("invalid request type %T, method %s does not accept gogoproto messages", inReq, prefMethod.FullName())
 			}
 			resp, err := method.Handler(handler, ctx, func(msg any) error {
 				proto2.Merge(msg.(proto2.Message), protov2Request)
 				return nil
 			}, nil)
 			if err != nil {
-				return nil, err
+				return err
 			}
-			return resp.(protoiface.MessageV1), nil
+			// merge on the resp
+			proto2.Merge(outResp.(proto2.Message), resp.(proto2.Message))
+			return nil
 		}, nil
 	}
-	gogoRespType = gogoRespType.Elem() // we need the non pointer type
-	return func(ctx context.Context, request protoiface.MessageV1) (protoiface.MessageV1, error) {
+	return func(ctx context.Context, inReq protoiface.MessageV1, outResp protoiface.MessageV1) error {
 		// we check if the request is a protov2 message.
-		switch m := request.(type) {
+		switch m := inReq.(type) {
 		case proto2.Message:
 			// we can just call the handler after making a copy of the message, for safety reasons.
 			resp, err := method.Handler(handler, ctx, func(msg any) error {
@@ -75,33 +76,34 @@ func makeProtoV2HybridHandler(prefMethod protoreflect.MethodDescriptor, cdc code
 				return nil
 			}, nil)
 			if err != nil {
-				return nil, err
+				return err
 			}
-			return resp.(protoiface.MessageV1), nil
+			// merge on the resp
+			proto2.Merge(outResp.(proto2.Message), resp.(proto2.Message))
+			return nil
 		case gogoproto.Message:
 			// we need to marshal and unmarshal the request.
 			requestBytes, err := cdc.Marshal(m)
 			if err != nil {
-				return nil, err
+				return err
 			}
 			resp, err := method.Handler(handler, ctx, func(msg any) error {
 				// unmarshal request into the message.
 				return proto2.Unmarshal(requestBytes, msg.(proto2.Message))
 			}, nil)
 			if err != nil {
-				return nil, err
+				return err
 			}
 			// the response is a protov2 message, so we cannot just return it.
 			// since the request came as gogoproto, we expect the response
 			// to also be gogoproto.
 			respBytes, err := proto2.Marshal(resp.(proto2.Message))
 			if err != nil {
-				return nil, err
+				return err
 			}
 
 			// unmarshal response into a gogo message.
-			gogoResp := reflect.New(gogoRespType).Interface().(gogoproto.Message)
-			return gogoResp, cdc.Unmarshal(respBytes, gogoResp)
+			return cdc.Unmarshal(respBytes, outResp.(gogoproto.Message))
 		default:
 			panic("unreachable")
 		}
@@ -110,51 +112,52 @@ func makeProtoV2HybridHandler(prefMethod protoreflect.MethodDescriptor, cdc code
 
 func makeGogoHybridHandler(prefMethod protoreflect.MethodDescriptor, cdc codec.BinaryCodec, method grpc.MethodDesc, handler any) (Handler, error) {
 	// it's a gogo handler, we check if the existing protov2 counterparty exists.
-	protov2RespType, err := protoregistry.GlobalTypes.FindMessageByName(prefMethod.Output().FullName())
+	_, err := protoregistry.GlobalTypes.FindMessageByName(prefMethod.Output().FullName())
 	if err != nil {
 		// this can only be a gogo message.
-		return func(ctx context.Context, request protoiface.MessageV1) (protoiface.MessageV1, error) {
-			_, ok := request.(proto2.Message)
+		return func(ctx context.Context, inReq protoiface.MessageV1, outResp protoiface.MessageV1) error {
+			_, ok := inReq.(proto2.Message)
 			if ok {
-				return nil, fmt.Errorf("invalid request type %T, method %s does not accept protov2 messages", request, prefMethod.FullName())
+				return fmt.Errorf("invalid request type %T, method %s does not accept protov2 messages", inReq, prefMethod.FullName())
 			}
 			resp, err := method.Handler(handler, ctx, func(msg any) error {
 				// merge!
-				gogoproto.Merge(msg.(gogoproto.Message), request)
+				gogoproto.Merge(msg.(gogoproto.Message), inReq)
 				return nil
 			}, nil)
 			if err != nil {
-				return nil, err
+				return err
 			}
-			return resp.(protoiface.MessageV1), nil
+			// merge resp
+			gogoproto.Merge(outResp.(gogoproto.Message), resp.(gogoproto.Message))
+			return nil
 		}, nil
 	}
 	// this is a gogo handler, and we have a protov2 counterparty.
-	return func(ctx context.Context, request protoiface.MessageV1) (protoiface.MessageV1, error) {
-		switch m := request.(type) {
+	return func(ctx context.Context, inReq protoiface.MessageV1, outResp protoiface.MessageV1) error {
+		switch m := inReq.(type) {
 		case proto2.Message:
 			// we need to marshal and unmarshal the request.
 			requestBytes, err := proto2.Marshal(m)
 			if err != nil {
-				return nil, err
+				return err
 			}
 			resp, err := method.Handler(handler, ctx, func(msg any) error {
 				// unmarshal request into the message.
 				return cdc.Unmarshal(requestBytes, msg.(gogoproto.Message))
 			}, nil)
 			if err != nil {
-				return nil, err
+				return err
 			}
 			// the response is a gogo message, so we cannot just return it.
 			// since the request came as protov2, we expect the response
 			// to also be protov2.
 			respBytes, err := cdc.Marshal(resp.(gogoproto.Message))
 			if err != nil {
-				return nil, err
+				return err
 			}
 			// now we unmarshal back into a protov2 message.
-			protov2Resp := protov2RespType.New().Interface()
-			return protov2Resp.(gogoproto.Message), proto2.Unmarshal(respBytes, protov2Resp)
+			return proto2.Unmarshal(respBytes, outResp.(proto2.Message))
 		case gogoproto.Message:
 			// we can just call the handler after making a copy of the message, for safety reasons.
 			resp, err := method.Handler(handler, ctx, func(msg any) error {
@@ -162,9 +165,11 @@ func makeGogoHybridHandler(prefMethod protoreflect.MethodDescriptor, cdc codec.B
 				return nil
 			}, nil)
 			if err != nil {
-				return nil, err
+				return err
 			}
-			return resp.(protoiface.MessageV1), nil
+			// merge on the resp
+			gogoproto.Merge(outResp.(gogoproto.Message), resp.(gogoproto.Message))
+			return nil
 		default:
 			panic("unreachable")
 		}

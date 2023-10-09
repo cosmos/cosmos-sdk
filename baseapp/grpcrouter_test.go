@@ -61,19 +61,14 @@ func TestGRPCRouterHybridHandlers(t *testing.T) {
 		require.Len(t, handlers, 1)
 		handler := handlers[0]
 		// sending a protov2 message should work, and return a protov2 message
-		resp, err := handler(helper.Ctx, &testdata_pulsar.EchoRequest{Message: "hello"})
+		v2Resp := new(testdata_pulsar.EchoResponse)
+		err := handler(helper.Ctx, &testdata_pulsar.EchoRequest{Message: "hello"}, v2Resp)
 		require.Nil(t, err)
-		require.NotNil(t, resp)
-		protov2Resp, ok := resp.(*testdata_pulsar.EchoResponse)
-		require.True(t, ok)
-		require.Equal(t, "hello", protov2Resp.Message)
+		require.Equal(t, "hello", v2Resp.Message)
 		// also sending a protov1 message should work, and return a gogoproto message
-		resp, err = handler(helper.Ctx, &testdata.EchoRequest{Message: "hello"})
-		require.Nil(t, err)
-		require.NotNil(t, resp)
-		gogoprotoResp, ok := resp.(*testdata.EchoResponse)
-		require.True(t, ok)
-		require.Equal(t, "hello", gogoprotoResp.Message)
+		gogoResp := new(testdata.EchoResponse)
+		err = handler(helper.Ctx, &testdata.EchoRequest{Message: "hello"}, gogoResp)
+		require.Equal(t, "hello", gogoResp.Message)
 	}
 
 	t.Run("protov2 server", func(t *testing.T) {

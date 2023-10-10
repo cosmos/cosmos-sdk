@@ -66,12 +66,10 @@ func NewTxCmd(legacyPropCmds []*cobra.Command) *cobra.Command {
 	}
 
 	govTxCmd.AddCommand(
-		NewCmdDeposit(),
 		NewCmdVote(),
 		NewCmdWeightedVote(),
 		NewCmdSubmitProposal(),
 		NewCmdDraftProposal(),
-		NewCmdCancelProposal(),
 
 		// Deprecated
 		cmdSubmitLegacyProp,
@@ -152,36 +150,6 @@ metadata example:
 	return cmd
 }
 
-// NewCmdCancelProposal implements submitting a cancel proposal transaction command.
-func NewCmdCancelProposal() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:     "cancel-proposal [proposal-id]",
-		Short:   "Cancel governance proposal before the voting period ends. Must be signed by the proposal creator.",
-		Args:    cobra.ExactArgs(1),
-		Example: fmt.Sprintf(`$ %s tx gov cancel-proposal 1 --from mykey`, version.AppName),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientTxContext(cmd)
-			if err != nil {
-				return err
-			}
-
-			// validate that the proposal id is a uint
-			proposalID, err := strconv.ParseUint(args[0], 10, 64)
-			if err != nil {
-				return fmt.Errorf("proposal-id %s not a valid uint, please input a valid proposal-id", args[0])
-			}
-
-			// Get proposer address
-			from := clientCtx.GetFromAddress()
-			msg := v1.NewMsgCancelProposal(proposalID, from.String())
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
-		},
-	}
-
-	flags.AddTxFlagsToCmd(cmd)
-	return cmd
-}
-
 // NewCmdSubmitLegacyProposal implements submitting a proposal transaction command.
 // Deprecated: please use NewCmdSubmitProposal instead.
 func NewCmdSubmitLegacyProposal() *cobra.Command {
@@ -246,54 +214,6 @@ $ %s tx gov submit-legacy-proposal --title="Test Proposal" --description="My awe
 	cmd.Flags().String(FlagProposalType, "", "The proposal Type")
 	cmd.Flags().String(FlagDeposit, "", "The proposal deposit")
 	cmd.Flags().String(FlagProposal, "", "Proposal file path (if this path is given, other proposal flags are ignored)")
-	flags.AddTxFlagsToCmd(cmd)
-
-	return cmd
-}
-
-// NewCmdDeposit implements depositing tokens for an active proposal.
-func NewCmdDeposit() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "deposit [proposal-id] [deposit]",
-		Args:  cobra.ExactArgs(2),
-		Short: "Deposit tokens for an active proposal",
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`Submit a deposit for an active proposal. You can
-find the proposal-id by running "%s query gov proposals".
-
-Example:
-$ %s tx gov deposit 1 10stake --from mykey
-`,
-				version.AppName, version.AppName,
-			),
-		),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientTxContext(cmd)
-			if err != nil {
-				return err
-			}
-
-			// validate that the proposal id is a uint
-			proposalID, err := strconv.ParseUint(args[0], 10, 64)
-			if err != nil {
-				return fmt.Errorf("proposal-id %s not a valid uint, please input a valid proposal-id", args[0])
-			}
-
-			// Get depositor address
-			from := clientCtx.GetFromAddress()
-
-			// Get amount of coins
-			amount, err := sdk.ParseCoinsNormalized(args[1])
-			if err != nil {
-				return err
-			}
-
-			msg := v1.NewMsgDeposit(from, proposalID, amount)
-
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
-		},
-	}
-
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd

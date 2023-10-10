@@ -101,12 +101,35 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 		},
 		Tx: &autocliv1.ServiceCommandDescriptor{
 			Service: govv1.Msg_ServiceDesc.ServiceName,
+			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
+				{
+					RpcMethod: "MsgDeposit",
+					Use:       "deposit [proposal-id] [deposit]",
+					Short:     "Deposit tokens for an active proposal",
+					Long:      fmt.Sprintf(`Submit a deposit for an active proposal. You can find the proposal-id by running "%s query gov proposals"`, version.AppName),
+					Example:   fmt.Sprintf(`$ %s tx gov deposit 1 10stake --from mykey`, version.AppName),
+				},
+				{
+					RpcMethod: "MsgCancelProposal",
+					Use:       "cancel-proposal [proposal-id]",
+					Short:     "Cancel governance proposal before the voting period ends. Must be signed by the proposal creator.",
+					Example:   fmt.Sprintf(`$ %s tx gov cancel-proposal 1 --from mykey`, version.AppName),
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "proposal_id"},
+					},
+				},
+				{
+					RpcMethod: "UpdateParams",
+					Skip:      true, // skipped because authority gated
+				},
+			},
 			// map v1beta1 as a sub-command
 			SubCommands: map[string]*autocliv1.ServiceCommandDescriptor{
 				"v1beta1": {
 					Service: govv1beta1.Msg_ServiceDesc.ServiceName,
 				},
 			},
+			EnhanceCustomCommand: true, // We still have manual commands in gov that we want to keep
 		},
 	}
 }

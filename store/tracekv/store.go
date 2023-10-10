@@ -90,11 +90,11 @@ func (s *Store) BranchWithTrace(w io.Writer, tc store.TraceContext) store.Branch
 }
 
 func (s *Store) Iterator(start, end []byte) store.Iterator {
-	panic("not implemented!")
+	return newIterator(s.writer, s.parent.Iterator(start, end), s.context)
 }
 
 func (s *Store) ReverseIterator(start, end []byte) store.Iterator {
-	panic("not implemented!")
+	return newIterator(s.writer, s.parent.ReverseIterator(start, end), s.context)
 }
 
 // writeOperation writes a KVStore operation to the underlying io.Writer as

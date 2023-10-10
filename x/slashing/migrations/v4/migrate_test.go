@@ -40,7 +40,7 @@ func TestMigrate(t *testing.T) {
 
 	err := v4.Migrate(ctx, cdc, store, params)
 	require.NoError(t, err)
-	
+
 	for i := int64(0); i < params.SignedBlocksWindow; i++ {
 		chunkIndex := i / v4.MissedBlockBitmapChunkSize
 		chunk := store.Get(v4.ValidatorMissedBlockBitmapKey(consAddr, chunkIndex))

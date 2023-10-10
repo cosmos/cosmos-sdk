@@ -96,7 +96,7 @@ func (s *DepositTestSuite) TestQueryDepositsWithoutInitialDeposit() {
 	s.Require().NotNil(deposits)
 	s.Require().Len(deposits.Deposits, 1)
 	// verify initial deposit
-	s.Require().Equal(depositAmount, sdk.Coins(deposits.Deposits[0].Amount).String())
+	s.Require().Equal(depositAmount.String(), sdk.Coins(deposits.Deposits[0].Amount).String())
 }
 
 func (s *DepositTestSuite) TestQueryDepositsWithInitialDeposit() {

@@ -736,6 +736,7 @@ func (suite *KeeperTestSuite) TestMsgVoteWeighted() {
 }
 
 func (suite *KeeperTestSuite) TestMsgDeposit() {
+	suite.reset()
 	govAcct := suite.govKeeper.GetGovernanceAccount(suite.ctx).GetAddress()
 	addrs := suite.addrs
 	proposer := addrs[0]

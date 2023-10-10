@@ -128,7 +128,7 @@ func (k Keeper) GrantAllowance(ctx context.Context, granter, grantee sdk.AccAddr
 
 // UpdateAllowance updates the existing grant.
 func (k Keeper) UpdateAllowance(ctx context.Context, granter, grantee sdk.AccAddress, feeAllowance feegrant.FeeAllowanceI) error {
-	_, err := k.getGrant(ctx, granter, grantee)
+	_, err := k.GetAllowance(ctx, granter, grantee)
 	if err != nil {
 		return err
 	}
@@ -215,16 +215,6 @@ func (k Keeper) GetAllowance(ctx context.Context, granter, grantee sdk.AccAddres
 	return grant.GetGrant()
 }
 
-// getGrant returns entire grant between both accounts
-func (k Keeper) getGrant(ctx context.Context, granter, grantee sdk.AccAddress) (*feegrant.Grant, error) {
-	feegrant, err := k.FeeAllowance.Get(ctx, collections.Join(grantee, granter))
-	if err != nil {
-		return nil, err
-	}
-
-	return &feegrant, nil
-}
-
 // IterateAllFeeAllowances iterates over all the grants in the store.
 // Callback to get all data, returns true to stop, false to keep reading
 // Calling this without pagination is very expensive and only designed for export genesis
@@ -245,12 +235,7 @@ func (k Keeper) IterateAllFeeAllowances(ctx context.Context, cb func(grant feegr
 
 // UseGrantedFees will try to pay the given fee from the granter's account as requested by the grantee
 func (k Keeper) UseGrantedFees(ctx context.Context, granter, grantee sdk.AccAddress, fee sdk.Coins, msgs []sdk.Msg) error {
-	f, err := k.getGrant(ctx, granter, grantee)
-	if err != nil {
-		return err
-	}
-
-	grant, err := f.GetGrant()
+	grant, err := k.GetAllowance(ctx, granter, grantee)
 	if err != nil {
 		return err
 	}

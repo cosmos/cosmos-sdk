@@ -41,11 +41,11 @@ func NewTxCmd() *cobra.Command {
 }
 
 // NewWithdrawAllRewardsCmd returns a CLI command handler for creating a MsgWithdrawDelegatorReward transaction.
-// This command is more powerful than AutoCLI generated command as it allows sending bacth of messages.
+// This command is more powerful than AutoCLI generated command as it allows sending batch of messages.
 func NewWithdrawAllRewardsCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "withdraw-all-rewards",
-		Short:   "withdraw all delegations rewards for a delegator",
+		Short:   "Withdraw all delegations rewards for a delegator",
 		Example: fmt.Sprintf("%s tx distribution withdraw-all-rewards --from mykey", version.AppName),
 		Args:    cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {

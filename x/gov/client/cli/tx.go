@@ -153,8 +153,9 @@ metadata example:
 // Deprecated: please use NewCmdSubmitProposal instead.
 func NewCmdSubmitLegacyProposal() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "submit-legacy-proposal",
-		Short: "Submit a legacy proposal along with an initial deposit",
+		Use:     "submit-legacy-proposal",
+		Aliases: []string{"exec-legacy-content"},
+		Short:   "Submit a legacy proposal along with an initial deposit",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Submit a legacy proposal along with an initial deposit.
 Proposal title, description, type and deposit can be given directly or through a proposal JSON file.
@@ -221,9 +222,10 @@ $ %s tx gov submit-legacy-proposal --title="Test Proposal" --description="My awe
 // NewCmdWeightedVote implements creating a new weighted vote command.
 func NewCmdWeightedVote() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "weighted-vote [proposal-id] [weighted-options]",
-		Args:  cobra.ExactArgs(2),
-		Short: "Vote for an active proposal, options: yes/no/no_with_veto/abstain",
+		Use:     "weighted-vote [proposal-id] [weighted-options]",
+		Aliases: []string{"vote-weighted"},
+		Args:    cobra.ExactArgs(2),
+		Short:   "Vote for an active proposal, options: yes/no/no-with-veto/abstain",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Submit a vote for an active proposal. You can
 find the proposal-id by running "%s query gov proposals".

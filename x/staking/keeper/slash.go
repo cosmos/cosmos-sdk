@@ -285,6 +285,16 @@ func (k Keeper) SlashRedelegation(ctx context.Context, srcValidator types.Valida
 	totalSlashAmount = math.ZeroInt()
 	bondedBurnedAmount, notBondedBurnedAmount := math.ZeroInt(), math.ZeroInt()
 
+	valDstAddr, err := k.validatorAddressCodec.StringToBytes(redelegation.ValidatorDstAddress)
+	if err != nil {
+		return math.ZeroInt(), fmt.Errorf("SlashRedelegation: could not parse validator destination address: %w", err)
+	}
+
+	delegatorAddress, err := k.authKeeper.AddressCodec().StringToBytes(redelegation.DelegatorAddress)
+	if err != nil {
+		return math.ZeroInt(), fmt.Errorf("SlashRedelegation: could not parse delegator address: %w", err)
+	}
+
 	// perform slashing on all entries within the redelegation
 	for _, entry := range redelegation.Entries {
 		// If redelegation started before this height, stake didn't contribute to infraction
@@ -308,6 +318,7 @@ func (k Keeper) SlashRedelegation(ctx context.Context, srcValidator types.Valida
 			continue
 		}
 
+<<<<<<< HEAD
 		valDstAddr, err := k.validatorAddressCodec.StringToBytes(redelegation.ValidatorDstAddress)
 		if err != nil {
 			panic(err)
@@ -319,6 +330,10 @@ func (k Keeper) SlashRedelegation(ctx context.Context, srcValidator types.Valida
 		}
 
 		delegation, err := k.GetDelegation(ctx, delegatorAddress, valDstAddr)
+=======
+		// Delegations can be dynamic hence need to be looked up on every redelegation entry loop.
+		delegation, err := k.Delegations.Get(ctx, collections.Join(sdk.AccAddress(delegatorAddress), sdk.ValAddress(valDstAddr)))
+>>>>>>> 7d7d4907f (fix(x/slashing/keeper): hoist non-changing addresses parsing out of redelegation loop (#18035))
 		if err != nil {
 			// If deleted, delegation has zero shares, and we can't unbond any more
 			continue

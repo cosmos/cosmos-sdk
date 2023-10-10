@@ -175,6 +175,17 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 			expErr:    true,
 			expErrMsg: "invalid authority",
 		},
+		{
+			name: "invalid params",
+			input: &types.MsgUpdateParams{
+				Authority: s.consensusParamsKeeper.GetAuthority(),
+				Block:     defaultConsensusParams.Block,
+				Validator: defaultConsensusParams.Validator,
+				Evidence:  nil,
+			},
+			expErr:    true,
+			expErrMsg: "all parameters must be present",
+		},
 	}
 
 	for _, tc := range testCases {

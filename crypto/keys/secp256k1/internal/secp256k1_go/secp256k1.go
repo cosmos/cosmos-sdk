@@ -248,7 +248,7 @@ func (curve *secp256k1Curve) doubleJacobian(x, y, z *big.Int) (*big.Int, *big.In
 	return &x3, &y3, &z3
 }
 
-func (curve *secp256k1Curve) ScalarMult(Bx, By *big.Int, k []byte) (*big.Int, *big.Int) {
+func (curve *secp256k1Curve) ScalarMult(bX, bY *big.Int, k []byte) (*big.Int, *big.Int) {
 	Bz := new(big.Int).SetInt64(1)
 	x, y, z := new(big.Int), new(big.Int), new(big.Int)
 
@@ -256,7 +256,7 @@ func (curve *secp256k1Curve) ScalarMult(Bx, By *big.Int, k []byte) (*big.Int, *b
 		for bitNum := 0; bitNum < 8; bitNum++ {
 			x, y, z = curve.doubleJacobian(x, y, z)
 			if byte&0x80 == 0x80 {
-				x, y, z = curve.addJacobian(Bx, By, Bz, x, y, z)
+				x, y, z = curve.addJacobian(bX, bY, Bz, x, y, z)
 			}
 			byte <<= 1
 		}

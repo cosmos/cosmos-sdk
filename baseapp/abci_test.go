@@ -2275,8 +2275,6 @@ func TestBaseApp_VoteExtensions(t *testing.T) {
 	committedAvgPrice := suite.baseApp.NewContext(true).KVStore(capKey1).Get([]byte("avgPrice"))
 	require.Equal(t, avgPrice, committedAvgPrice)
 }
-<<<<<<< HEAD
-=======
 
 func TestABCI_PrepareProposal_Panic(t *testing.T) {
 	prepareOpt := func(bapp *baseapp.BaseApp) {
@@ -2355,4 +2353,3 @@ func TestOptimisticExecution(t *testing.T) {
 
 	require.Equal(t, int64(50), suite.baseApp.LastBlockHeight())
 }
->>>>>>> 223e179f2 (fix: keep behavior from v0.47 in PrepareProposal panic recovery (#17930))

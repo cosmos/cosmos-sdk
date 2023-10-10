@@ -21,11 +21,17 @@ import (
 
 // GRPCQueryRouter routes ABCI Query requests to GRPC handlers
 type GRPCQueryRouter struct {
-	routes               map[string]GRPCQueryHandler
+	// routes maps query handlers used in ABCIQuery.
+	routes map[string]GRPCQueryHandler
+	// handlerByMessageName maps the request name to the handler. It is a hybrid handler which seamlessly
+	// handles both gogo and protov2 messages.
 	handlerByMessageName map[string][]func(ctx context.Context, req, resp protoiface.MessageV1) error
-	sdkCodec             codec.BinaryCodec
-	cdc                  encoding.Codec
-	serviceData          []serviceData
+	// binaryCodec is used to encode/decode binary protobuf messages.
+	binaryCodec codec.BinaryCodec
+	// cdc is the gRPC codec used by the router to correctly unmarshal messages.
+	cdc encoding.Codec
+	// serviceData contains the gRPC services and their handlers.
+	serviceData []serviceData
 }
 
 // serviceData represents a gRPC service, along with its handler.
@@ -141,7 +147,7 @@ func (qrt *GRPCQueryRouter) registerHandlerByMessageName(sd *grpc.ServiceDesc, m
 		return fmt.Errorf("invalid method descriptor %s", methodFullName)
 	}
 	inputName := methodDesc.Input().FullName()
-	methodHandler, err := protocompat.MakeHybridHandler(qrt.sdkCodec, sd, method, handler)
+	methodHandler, err := protocompat.MakeHybridHandler(qrt.binaryCodec, sd, method, handler)
 	if err != nil {
 		return err
 	}
@@ -152,7 +158,7 @@ func (qrt *GRPCQueryRouter) registerHandlerByMessageName(sd *grpc.ServiceDesc, m
 // SetInterfaceRegistry sets the interface registry for the router. This will
 // also register the interface reflection gRPC service.
 func (qrt *GRPCQueryRouter) SetInterfaceRegistry(interfaceRegistry codectypes.InterfaceRegistry) {
-	qrt.sdkCodec = codec.NewProtoCodec(interfaceRegistry)
+	qrt.binaryCodec = codec.NewProtoCodec(interfaceRegistry)
 	// instantiate the codec
 	qrt.cdc = codec.NewProtoCodec(interfaceRegistry).GRPCCodec()
 	// Once we have an interface registry, we can register the interface

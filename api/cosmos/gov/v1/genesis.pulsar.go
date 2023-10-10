@@ -171,9 +171,6 @@ var (
 	fd_GenesisState_deposits             protoreflect.FieldDescriptor
 	fd_GenesisState_votes                protoreflect.FieldDescriptor
 	fd_GenesisState_proposals            protoreflect.FieldDescriptor
-	fd_GenesisState_deposit_params       protoreflect.FieldDescriptor
-	fd_GenesisState_voting_params        protoreflect.FieldDescriptor
-	fd_GenesisState_tally_params         protoreflect.FieldDescriptor
 	fd_GenesisState_params               protoreflect.FieldDescriptor
 	fd_GenesisState_constitution         protoreflect.FieldDescriptor
 )
@@ -185,9 +182,6 @@ func init() {
 	fd_GenesisState_deposits = md_GenesisState.Fields().ByName("deposits")
 	fd_GenesisState_votes = md_GenesisState.Fields().ByName("votes")
 	fd_GenesisState_proposals = md_GenesisState.Fields().ByName("proposals")
-	fd_GenesisState_deposit_params = md_GenesisState.Fields().ByName("deposit_params")
-	fd_GenesisState_voting_params = md_GenesisState.Fields().ByName("voting_params")
-	fd_GenesisState_tally_params = md_GenesisState.Fields().ByName("tally_params")
 	fd_GenesisState_params = md_GenesisState.Fields().ByName("params")
 	fd_GenesisState_constitution = md_GenesisState.Fields().ByName("constitution")
 }
@@ -281,24 +275,6 @@ func (x *fastReflection_GenesisState) Range(f func(protoreflect.FieldDescriptor,
 			return
 		}
 	}
-	if x.DepositParams != nil {
-		value := protoreflect.ValueOfMessage(x.DepositParams.ProtoReflect())
-		if !f(fd_GenesisState_deposit_params, value) {
-			return
-		}
-	}
-	if x.VotingParams != nil {
-		value := protoreflect.ValueOfMessage(x.VotingParams.ProtoReflect())
-		if !f(fd_GenesisState_voting_params, value) {
-			return
-		}
-	}
-	if x.TallyParams != nil {
-		value := protoreflect.ValueOfMessage(x.TallyParams.ProtoReflect())
-		if !f(fd_GenesisState_tally_params, value) {
-			return
-		}
-	}
 	if x.Params != nil {
 		value := protoreflect.ValueOfMessage(x.Params.ProtoReflect())
 		if !f(fd_GenesisState_params, value) {
@@ -334,12 +310,6 @@ func (x *fastReflection_GenesisState) Has(fd protoreflect.FieldDescriptor) bool 
 		return len(x.Votes) != 0
 	case "cosmos.gov.v1.GenesisState.proposals":
 		return len(x.Proposals) != 0
-	case "cosmos.gov.v1.GenesisState.deposit_params":
-		return x.DepositParams != nil
-	case "cosmos.gov.v1.GenesisState.voting_params":
-		return x.VotingParams != nil
-	case "cosmos.gov.v1.GenesisState.tally_params":
-		return x.TallyParams != nil
 	case "cosmos.gov.v1.GenesisState.params":
 		return x.Params != nil
 	case "cosmos.gov.v1.GenesisState.constitution":
@@ -368,12 +338,6 @@ func (x *fastReflection_GenesisState) Clear(fd protoreflect.FieldDescriptor) {
 		x.Votes = nil
 	case "cosmos.gov.v1.GenesisState.proposals":
 		x.Proposals = nil
-	case "cosmos.gov.v1.GenesisState.deposit_params":
-		x.DepositParams = nil
-	case "cosmos.gov.v1.GenesisState.voting_params":
-		x.VotingParams = nil
-	case "cosmos.gov.v1.GenesisState.tally_params":
-		x.TallyParams = nil
 	case "cosmos.gov.v1.GenesisState.params":
 		x.Params = nil
 	case "cosmos.gov.v1.GenesisState.constitution":
@@ -415,15 +379,6 @@ func (x *fastReflection_GenesisState) Get(descriptor protoreflect.FieldDescripto
 		}
 		listValue := &_GenesisState_4_list{list: &x.Proposals}
 		return protoreflect.ValueOfList(listValue)
-	case "cosmos.gov.v1.GenesisState.deposit_params":
-		value := x.DepositParams
-		return protoreflect.ValueOfMessage(value.ProtoReflect())
-	case "cosmos.gov.v1.GenesisState.voting_params":
-		value := x.VotingParams
-		return protoreflect.ValueOfMessage(value.ProtoReflect())
-	case "cosmos.gov.v1.GenesisState.tally_params":
-		value := x.TallyParams
-		return protoreflect.ValueOfMessage(value.ProtoReflect())
 	case "cosmos.gov.v1.GenesisState.params":
 		value := x.Params
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
@@ -464,12 +419,6 @@ func (x *fastReflection_GenesisState) Set(fd protoreflect.FieldDescriptor, value
 		lv := value.List()
 		clv := lv.(*_GenesisState_4_list)
 		x.Proposals = *clv.list
-	case "cosmos.gov.v1.GenesisState.deposit_params":
-		x.DepositParams = value.Message().Interface().(*DepositParams)
-	case "cosmos.gov.v1.GenesisState.voting_params":
-		x.VotingParams = value.Message().Interface().(*VotingParams)
-	case "cosmos.gov.v1.GenesisState.tally_params":
-		x.TallyParams = value.Message().Interface().(*TallyParams)
 	case "cosmos.gov.v1.GenesisState.params":
 		x.Params = value.Message().Interface().(*Params)
 	case "cosmos.gov.v1.GenesisState.constitution":
@@ -512,21 +461,6 @@ func (x *fastReflection_GenesisState) Mutable(fd protoreflect.FieldDescriptor) p
 		}
 		value := &_GenesisState_4_list{list: &x.Proposals}
 		return protoreflect.ValueOfList(value)
-	case "cosmos.gov.v1.GenesisState.deposit_params":
-		if x.DepositParams == nil {
-			x.DepositParams = new(DepositParams)
-		}
-		return protoreflect.ValueOfMessage(x.DepositParams.ProtoReflect())
-	case "cosmos.gov.v1.GenesisState.voting_params":
-		if x.VotingParams == nil {
-			x.VotingParams = new(VotingParams)
-		}
-		return protoreflect.ValueOfMessage(x.VotingParams.ProtoReflect())
-	case "cosmos.gov.v1.GenesisState.tally_params":
-		if x.TallyParams == nil {
-			x.TallyParams = new(TallyParams)
-		}
-		return protoreflect.ValueOfMessage(x.TallyParams.ProtoReflect())
 	case "cosmos.gov.v1.GenesisState.params":
 		if x.Params == nil {
 			x.Params = new(Params)
@@ -560,15 +494,6 @@ func (x *fastReflection_GenesisState) NewField(fd protoreflect.FieldDescriptor) 
 	case "cosmos.gov.v1.GenesisState.proposals":
 		list := []*Proposal{}
 		return protoreflect.ValueOfList(&_GenesisState_4_list{list: &list})
-	case "cosmos.gov.v1.GenesisState.deposit_params":
-		m := new(DepositParams)
-		return protoreflect.ValueOfMessage(m.ProtoReflect())
-	case "cosmos.gov.v1.GenesisState.voting_params":
-		m := new(VotingParams)
-		return protoreflect.ValueOfMessage(m.ProtoReflect())
-	case "cosmos.gov.v1.GenesisState.tally_params":
-		m := new(TallyParams)
-		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	case "cosmos.gov.v1.GenesisState.params":
 		m := new(Params)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
@@ -664,18 +589,6 @@ func (x *fastReflection_GenesisState) ProtoMethods() *protoiface.Methods {
 				n += 1 + l + runtime.Sov(uint64(l))
 			}
 		}
-		if x.DepositParams != nil {
-			l = options.Size(x.DepositParams)
-			n += 1 + l + runtime.Sov(uint64(l))
-		}
-		if x.VotingParams != nil {
-			l = options.Size(x.VotingParams)
-			n += 1 + l + runtime.Sov(uint64(l))
-		}
-		if x.TallyParams != nil {
-			l = options.Size(x.TallyParams)
-			n += 1 + l + runtime.Sov(uint64(l))
-		}
 		if x.Params != nil {
 			l = options.Size(x.Params)
 			n += 1 + l + runtime.Sov(uint64(l))
@@ -733,48 +646,6 @@ func (x *fastReflection_GenesisState) ProtoMethods() *protoiface.Methods {
 			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
 			i--
 			dAtA[i] = 0x42
-		}
-		if x.TallyParams != nil {
-			encoded, err := options.Marshal(x.TallyParams)
-			if err != nil {
-				return protoiface.MarshalOutput{
-					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-					Buf:               input.Buf,
-				}, err
-			}
-			i -= len(encoded)
-			copy(dAtA[i:], encoded)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
-			i--
-			dAtA[i] = 0x3a
-		}
-		if x.VotingParams != nil {
-			encoded, err := options.Marshal(x.VotingParams)
-			if err != nil {
-				return protoiface.MarshalOutput{
-					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-					Buf:               input.Buf,
-				}, err
-			}
-			i -= len(encoded)
-			copy(dAtA[i:], encoded)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
-			i--
-			dAtA[i] = 0x32
-		}
-		if x.DepositParams != nil {
-			encoded, err := options.Marshal(x.DepositParams)
-			if err != nil {
-				return protoiface.MarshalOutput{
-					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-					Buf:               input.Buf,
-				}, err
-			}
-			i -= len(encoded)
-			copy(dAtA[i:], encoded)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
-			i--
-			dAtA[i] = 0x2a
 		}
 		if len(x.Proposals) > 0 {
 			for iNdEx := len(x.Proposals) - 1; iNdEx >= 0; iNdEx-- {
@@ -999,114 +870,6 @@ func (x *fastReflection_GenesisState) ProtoMethods() *protoiface.Methods {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
 				}
 				iNdEx = postIndex
-			case 5:
-				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field DepositParams", wireType)
-				}
-				var msglen int
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					msglen |= int(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				if msglen < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				postIndex := iNdEx + msglen
-				if postIndex < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if postIndex > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				if x.DepositParams == nil {
-					x.DepositParams = &DepositParams{}
-				}
-				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.DepositParams); err != nil {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
-				}
-				iNdEx = postIndex
-			case 6:
-				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field VotingParams", wireType)
-				}
-				var msglen int
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					msglen |= int(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				if msglen < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				postIndex := iNdEx + msglen
-				if postIndex < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if postIndex > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				if x.VotingParams == nil {
-					x.VotingParams = &VotingParams{}
-				}
-				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.VotingParams); err != nil {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
-				}
-				iNdEx = postIndex
-			case 7:
-				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field TallyParams", wireType)
-				}
-				var msglen int
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					msglen |= int(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				if msglen < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				postIndex := iNdEx + msglen
-				if postIndex < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if postIndex > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				if x.TallyParams == nil {
-					x.TallyParams = &TallyParams{}
-				}
-				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.TallyParams); err != nil {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
-				}
-				iNdEx = postIndex
 			case 8:
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Params", wireType)
@@ -1239,21 +1002,6 @@ type GenesisState struct {
 	Votes []*Vote `protobuf:"bytes,3,rep,name=votes,proto3" json:"votes,omitempty"`
 	// proposals defines all the proposals present at genesis.
 	Proposals []*Proposal `protobuf:"bytes,4,rep,name=proposals,proto3" json:"proposals,omitempty"`
-	// Deprecated: Prefer to use `params` instead.
-	// deposit_params defines all the paramaters of related to deposit.
-	//
-	// Deprecated: Do not use.
-	DepositParams *DepositParams `protobuf:"bytes,5,opt,name=deposit_params,json=depositParams,proto3" json:"deposit_params,omitempty"`
-	// Deprecated: Prefer to use `params` instead.
-	// voting_params defines all the paramaters of related to voting.
-	//
-	// Deprecated: Do not use.
-	VotingParams *VotingParams `protobuf:"bytes,6,opt,name=voting_params,json=votingParams,proto3" json:"voting_params,omitempty"`
-	// Deprecated: Prefer to use `params` instead.
-	// tally_params defines all the paramaters of related to tally.
-	//
-	// Deprecated: Do not use.
-	TallyParams *TallyParams `protobuf:"bytes,7,opt,name=tally_params,json=tallyParams,proto3" json:"tally_params,omitempty"`
 	// params defines all the paramaters of x/gov module.
 	//
 	// Since: cosmos-sdk 0.47
@@ -1315,30 +1063,6 @@ func (x *GenesisState) GetProposals() []*Proposal {
 	return nil
 }
 
-// Deprecated: Do not use.
-func (x *GenesisState) GetDepositParams() *DepositParams {
-	if x != nil {
-		return x.DepositParams
-	}
-	return nil
-}
-
-// Deprecated: Do not use.
-func (x *GenesisState) GetVotingParams() *VotingParams {
-	if x != nil {
-		return x.VotingParams
-	}
-	return nil
-}
-
-// Deprecated: Do not use.
-func (x *GenesisState) GetTallyParams() *TallyParams {
-	if x != nil {
-		return x.TallyParams
-	}
-	return nil
-}
-
 func (x *GenesisState) GetParams() *Params {
 	if x != nil {
 		return x.Params
@@ -1360,7 +1084,7 @@ var file_cosmos_gov_v1_genesis_proto_rawDesc = []byte{
 	0x67, 0x65, 0x6e, 0x65, 0x73, 0x69, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x12, 0x0d, 0x63,
 	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x6f, 0x76, 0x2e, 0x76, 0x31, 0x1a, 0x17, 0x63, 0x6f,
 	0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x67, 0x6f, 0x76, 0x2f, 0x76, 0x31, 0x2f, 0x67, 0x6f, 0x76, 0x2e,
-	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0xfb, 0x03, 0x0a, 0x0c, 0x47, 0x65, 0x6e, 0x65, 0x73, 0x69,
+	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0xaf, 0x02, 0x0a, 0x0c, 0x47, 0x65, 0x6e, 0x65, 0x73, 0x69,
 	0x73, 0x53, 0x74, 0x61, 0x74, 0x65, 0x12, 0x30, 0x0a, 0x14, 0x73, 0x74, 0x61, 0x72, 0x74, 0x69,
 	0x6e, 0x67, 0x5f, 0x70, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x5f, 0x69, 0x64, 0x18, 0x01,
 	0x20, 0x01, 0x28, 0x04, 0x52, 0x12, 0x73, 0x74, 0x61, 0x72, 0x74, 0x69, 0x6e, 0x67, 0x50, 0x72,
@@ -1373,36 +1097,23 @@ var file_cosmos_gov_v1_genesis_proto_rawDesc = []byte{
 	0x52, 0x05, 0x76, 0x6f, 0x74, 0x65, 0x73, 0x12, 0x35, 0x0a, 0x09, 0x70, 0x72, 0x6f, 0x70, 0x6f,
 	0x73, 0x61, 0x6c, 0x73, 0x18, 0x04, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x17, 0x2e, 0x63, 0x6f, 0x73,
 	0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x6f, 0x76, 0x2e, 0x76, 0x31, 0x2e, 0x50, 0x72, 0x6f, 0x70, 0x6f,
-	0x73, 0x61, 0x6c, 0x52, 0x09, 0x70, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x73, 0x12, 0x47,
-	0x0a, 0x0e, 0x64, 0x65, 0x70, 0x6f, 0x73, 0x69, 0x74, 0x5f, 0x70, 0x61, 0x72, 0x61, 0x6d, 0x73,
-	0x18, 0x05, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1c, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e,
-	0x67, 0x6f, 0x76, 0x2e, 0x76, 0x31, 0x2e, 0x44, 0x65, 0x70, 0x6f, 0x73, 0x69, 0x74, 0x50, 0x61,
-	0x72, 0x61, 0x6d, 0x73, 0x42, 0x02, 0x18, 0x01, 0x52, 0x0d, 0x64, 0x65, 0x70, 0x6f, 0x73, 0x69,
-	0x74, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x12, 0x44, 0x0a, 0x0d, 0x76, 0x6f, 0x74, 0x69, 0x6e,
-	0x67, 0x5f, 0x70, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x18, 0x06, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1b,
-	0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x6f, 0x76, 0x2e, 0x76, 0x31, 0x2e, 0x56,
-	0x6f, 0x74, 0x69, 0x6e, 0x67, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x42, 0x02, 0x18, 0x01, 0x52,
-	0x0c, 0x76, 0x6f, 0x74, 0x69, 0x6e, 0x67, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x12, 0x41, 0x0a,
-	0x0c, 0x74, 0x61, 0x6c, 0x6c, 0x79, 0x5f, 0x70, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x18, 0x07, 0x20,
-	0x01, 0x28, 0x0b, 0x32, 0x1a, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x6f, 0x76,
-	0x2e, 0x76, 0x31, 0x2e, 0x54, 0x61, 0x6c, 0x6c, 0x79, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x42,
-	0x02, 0x18, 0x01, 0x52, 0x0b, 0x74, 0x61, 0x6c, 0x6c, 0x79, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73,
-	0x12, 0x2d, 0x0a, 0x06, 0x70, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x18, 0x08, 0x20, 0x01, 0x28, 0x0b,
-	0x32, 0x15, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x6f, 0x76, 0x2e, 0x76, 0x31,
-	0x2e, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x52, 0x06, 0x70, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x12,
-	0x22, 0x0a, 0x0c, 0x63, 0x6f, 0x6e, 0x73, 0x74, 0x69, 0x74, 0x75, 0x74, 0x69, 0x6f, 0x6e, 0x18,
-	0x09, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0c, 0x63, 0x6f, 0x6e, 0x73, 0x74, 0x69, 0x74, 0x75, 0x74,
-	0x69, 0x6f, 0x6e, 0x42, 0x9d, 0x01, 0x0a, 0x11, 0x63, 0x6f, 0x6d, 0x2e, 0x63, 0x6f, 0x73, 0x6d,
-	0x6f, 0x73, 0x2e, 0x67, 0x6f, 0x76, 0x2e, 0x76, 0x31, 0x42, 0x0c, 0x47, 0x65, 0x6e, 0x65, 0x73,
-	0x69, 0x73, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x24, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
-	0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x63, 0x6f, 0x73, 0x6d,
-	0x6f, 0x73, 0x2f, 0x67, 0x6f, 0x76, 0x2f, 0x76, 0x31, 0x3b, 0x67, 0x6f, 0x76, 0x76, 0x31, 0xa2,
-	0x02, 0x03, 0x43, 0x47, 0x58, 0xaa, 0x02, 0x0d, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x47,
-	0x6f, 0x76, 0x2e, 0x56, 0x31, 0xca, 0x02, 0x0d, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x47,
-	0x6f, 0x76, 0x5c, 0x56, 0x31, 0xe2, 0x02, 0x19, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x47,
-	0x6f, 0x76, 0x5c, 0x56, 0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74,
-	0x61, 0xea, 0x02, 0x0f, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x3a, 0x3a, 0x47, 0x6f, 0x76, 0x3a,
-	0x3a, 0x56, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x73, 0x61, 0x6c, 0x52, 0x09, 0x70, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x73, 0x12, 0x2d,
+	0x0a, 0x06, 0x70, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x18, 0x08, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x15,
+	0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x6f, 0x76, 0x2e, 0x76, 0x31, 0x2e, 0x50,
+	0x61, 0x72, 0x61, 0x6d, 0x73, 0x52, 0x06, 0x70, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x12, 0x22, 0x0a,
+	0x0c, 0x63, 0x6f, 0x6e, 0x73, 0x74, 0x69, 0x74, 0x75, 0x74, 0x69, 0x6f, 0x6e, 0x18, 0x09, 0x20,
+	0x01, 0x28, 0x09, 0x52, 0x0c, 0x63, 0x6f, 0x6e, 0x73, 0x74, 0x69, 0x74, 0x75, 0x74, 0x69, 0x6f,
+	0x6e, 0x4a, 0x04, 0x08, 0x05, 0x10, 0x08, 0x42, 0x9d, 0x01, 0x0a, 0x11, 0x63, 0x6f, 0x6d, 0x2e,
+	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x6f, 0x76, 0x2e, 0x76, 0x31, 0x42, 0x0c, 0x47,
+	0x65, 0x6e, 0x65, 0x73, 0x69, 0x73, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x24, 0x63,
+	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x61, 0x70, 0x69, 0x2f,
+	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x67, 0x6f, 0x76, 0x2f, 0x76, 0x31, 0x3b, 0x67, 0x6f,
+	0x76, 0x76, 0x31, 0xa2, 0x02, 0x03, 0x43, 0x47, 0x58, 0xaa, 0x02, 0x0d, 0x43, 0x6f, 0x73, 0x6d,
+	0x6f, 0x73, 0x2e, 0x47, 0x6f, 0x76, 0x2e, 0x56, 0x31, 0xca, 0x02, 0x0d, 0x43, 0x6f, 0x73, 0x6d,
+	0x6f, 0x73, 0x5c, 0x47, 0x6f, 0x76, 0x5c, 0x56, 0x31, 0xe2, 0x02, 0x19, 0x43, 0x6f, 0x73, 0x6d,
+	0x6f, 0x73, 0x5c, 0x47, 0x6f, 0x76, 0x5c, 0x56, 0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74,
+	0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x0f, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x3a, 0x3a,
+	0x47, 0x6f, 0x76, 0x3a, 0x3a, 0x56, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -1419,28 +1130,22 @@ func file_cosmos_gov_v1_genesis_proto_rawDescGZIP() []byte {
 
 var file_cosmos_gov_v1_genesis_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
 var file_cosmos_gov_v1_genesis_proto_goTypes = []interface{}{
-	(*GenesisState)(nil),  // 0: cosmos.gov.v1.GenesisState
-	(*Deposit)(nil),       // 1: cosmos.gov.v1.Deposit
-	(*Vote)(nil),          // 2: cosmos.gov.v1.Vote
-	(*Proposal)(nil),      // 3: cosmos.gov.v1.Proposal
-	(*DepositParams)(nil), // 4: cosmos.gov.v1.DepositParams
-	(*VotingParams)(nil),  // 5: cosmos.gov.v1.VotingParams
-	(*TallyParams)(nil),   // 6: cosmos.gov.v1.TallyParams
-	(*Params)(nil),        // 7: cosmos.gov.v1.Params
+	(*GenesisState)(nil), // 0: cosmos.gov.v1.GenesisState
+	(*Deposit)(nil),      // 1: cosmos.gov.v1.Deposit
+	(*Vote)(nil),         // 2: cosmos.gov.v1.Vote
+	(*Proposal)(nil),     // 3: cosmos.gov.v1.Proposal
+	(*Params)(nil),       // 4: cosmos.gov.v1.Params
 }
 var file_cosmos_gov_v1_genesis_proto_depIdxs = []int32{
 	1, // 0: cosmos.gov.v1.GenesisState.deposits:type_name -> cosmos.gov.v1.Deposit
 	2, // 1: cosmos.gov.v1.GenesisState.votes:type_name -> cosmos.gov.v1.Vote
 	3, // 2: cosmos.gov.v1.GenesisState.proposals:type_name -> cosmos.gov.v1.Proposal
-	4, // 3: cosmos.gov.v1.GenesisState.deposit_params:type_name -> cosmos.gov.v1.DepositParams
-	5, // 4: cosmos.gov.v1.GenesisState.voting_params:type_name -> cosmos.gov.v1.VotingParams
-	6, // 5: cosmos.gov.v1.GenesisState.tally_params:type_name -> cosmos.gov.v1.TallyParams
-	7, // 6: cosmos.gov.v1.GenesisState.params:type_name -> cosmos.gov.v1.Params
-	7, // [7:7] is the sub-list for method output_type
-	7, // [7:7] is the sub-list for method input_type
-	7, // [7:7] is the sub-list for extension type_name
-	7, // [7:7] is the sub-list for extension extendee
-	0, // [0:7] is the sub-list for field type_name
+	4, // 3: cosmos.gov.v1.GenesisState.params:type_name -> cosmos.gov.v1.Params
+	4, // [4:4] is the sub-list for method output_type
+	4, // [4:4] is the sub-list for method input_type
+	4, // [4:4] is the sub-list for extension type_name
+	4, // [4:4] is the sub-list for extension extendee
+	0, // [0:4] is the sub-list for field type_name
 }
 
 func init() { file_cosmos_gov_v1_genesis_proto_init() }

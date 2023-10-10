@@ -41,6 +41,7 @@ func NewTxCmd() *cobra.Command {
 }
 
 // NewWithdrawAllRewardsCmd returns a CLI command handler for creating a MsgWithdrawDelegatorReward transaction.
+// This command is more powerful than AutoCLI generated command as it allows sending bacth of messages.
 func NewWithdrawAllRewardsCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "withdraw-all-rewards",

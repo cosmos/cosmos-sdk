@@ -7,7 +7,7 @@ import (
 )
 
 func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
-	err := k.RemoveExpiredAllowances(ctx)
+	err := k.RemoveExpiredAllowances(ctx, 50)
 	if err != nil {
 		panic(err)
 	}

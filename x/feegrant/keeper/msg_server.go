@@ -84,3 +84,9 @@ func (k msgServer) RevokeAllowance(ctx context.Context, msg *feegrant.MsgRevokeA
 
 	return &feegrant.MsgRevokeAllowanceResponse{}, nil
 }
+
+// PruneAllowances removes expired allowances from the store.
+func (k msgServer) PruneAllowances(ctx context.Context, _ *feegrant.MsgPruneAllowances) (*feegrant.MsgPruneAllowancesResponse, error) {
+	err := k.RemoveExpiredAllowances(ctx, 5)
+	return &feegrant.MsgPruneAllowancesResponse{}, err
+}

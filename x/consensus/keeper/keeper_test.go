@@ -176,12 +176,34 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 			expErrMsg: "invalid authority",
 		},
 		{
-			name: "invalid params",
+			name: "nil evidence params",
 			input: &types.MsgUpdateParams{
 				Authority: s.consensusParamsKeeper.GetAuthority(),
 				Block:     defaultConsensusParams.Block,
 				Validator: defaultConsensusParams.Validator,
 				Evidence:  nil,
+			},
+			expErr:    true,
+			expErrMsg: "all parameters must be present",
+		},
+		{
+			name: "nil block params",
+			input: &types.MsgUpdateParams{
+				Authority: s.consensusParamsKeeper.GetAuthority(),
+				Block:     nil,
+				Validator: defaultConsensusParams.Validator,
+				Evidence:  defaultConsensusParams.Evidence,
+			},
+			expErr:    true,
+			expErrMsg: "all parameters must be present",
+		},
+		{
+			name: "nil validator params",
+			input: &types.MsgUpdateParams{
+				Authority: s.consensusParamsKeeper.GetAuthority(),
+				Block:     defaultConsensusParams.Block,
+				Validator: nil,
+				Evidence:  defaultConsensusParams.Evidence,
 			},
 			expErr:    true,
 			expErrMsg: "all parameters must be present",

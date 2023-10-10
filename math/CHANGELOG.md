@@ -39,6 +39,7 @@ Ref: https://github.com/commitizen/conventional-commit-types/blob/v3.0.0/index.j
 ### Features
 
 * [#17803](https://github.com/cosmos/cosmos-sdk/pull/17803) Add mutative api for Int.BigInt()
+* [#18030](https://github.com/cosmos/cosmos-sdk/pull/18030) Add mutative api for NewIntFromBigInt
 
 ### Bug Fixes
 

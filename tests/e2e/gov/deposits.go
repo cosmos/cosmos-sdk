@@ -80,8 +80,8 @@ func (s *DepositTestSuite) TestQueryDepositsWithoutInitialDeposit() {
 
 	// deposit amount
 	depositAmount := sdk.NewCoin(s.cfg.BondDenom, v1.DefaultMinDepositTokens.Add(math.NewInt(50)))
-	msg := v1.NewDeposit(id, val.Address, sdk.NewCoins(depositAmount))
-	_, err := clitestutil.SubmitTestTx(val.ClientCtx, &msg, val.Address, clitestutil.TestTxConfig{})
+	msg := v1.NewMsgDeposit(val.Address, id, sdk.NewCoins(depositAmount))
+	_, err := clitestutil.SubmitTestTx(val.ClientCtx, msg, val.Address, clitestutil.TestTxConfig{})
 	s.Require().NoError(err)
 	s.Require().NoError(s.network.WaitForNextBlock())
 

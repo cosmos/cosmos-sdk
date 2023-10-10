@@ -51,8 +51,7 @@ func NewTxCmd(valAddrCodec, ac address.Codec) *cobra.Command {
 }
 
 // NewCreateValidatorCmd returns a CLI command handler for creating a MsgCreateValidator transaction.
-//
-// cannot give autocli support, can be CLI breaking
+// TODO(@julienrbrt): remove this once AutoCLI can flatten nested structs.
 func NewCreateValidatorCmd(ac address.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create-validator [path/to/validator.json]",
@@ -116,8 +115,7 @@ where we can get the pubkey using "%s tendermint show-validator"
 }
 
 // NewEditValidatorCmd returns a CLI command handler for creating a MsgEditValidator transaction.
-//
-// cannot give autocli support, can be CLI breaking
+// TODO(@julienrbrt): remove this once AutoCLI can flatten nested structs.
 func NewEditValidatorCmd(ac address.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "edit-validator",

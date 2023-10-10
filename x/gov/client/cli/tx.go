@@ -220,6 +220,7 @@ $ %s tx gov submit-legacy-proposal --title="Test Proposal" --description="My awe
 }
 
 // NewCmdWeightedVote implements creating a new weighted vote command.
+// TODO(@julienrbrt): remove this once AutoCLI can flatten nested structs.
 func NewCmdWeightedVote() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "weighted-vote [proposal-id] [weighted-options]",

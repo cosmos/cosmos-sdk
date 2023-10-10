@@ -51,7 +51,7 @@ func (privKey *PrivKey) PubKey() cryptotypes.PubKey {
 	parsedY.SetByteSlice(y.Bytes())
 	parsedZ := secp256k1.FieldVal{}
 
-	result := secp256k1.JacobianPoint{parsedX, parsedY, parsedZ}
+	result := secp256k1.JacobianPoint{X: parsedX, Y: parsedY, Z: parsedZ}
 	result.ToAffine()
 
 	pk := pubkeyObject.SerializeCompressed()

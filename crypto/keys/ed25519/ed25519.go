@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 
-
 	"github.com/cometbft/cometbft/crypto"
 	"github.com/cometbft/cometbft/crypto/tmhash"
 	"github.com/hdevalence/ed25519consensus"

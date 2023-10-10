@@ -66,7 +66,6 @@ func NewTxCmd(legacyPropCmds []*cobra.Command) *cobra.Command {
 	}
 
 	govTxCmd.AddCommand(
-		NewCmdVote(),
 		NewCmdWeightedVote(),
 		NewCmdSubmitProposal(),
 		NewCmdDraftProposal(),
@@ -214,60 +213,6 @@ $ %s tx gov submit-legacy-proposal --title="Test Proposal" --description="My awe
 	cmd.Flags().String(FlagProposalType, "", "The proposal Type")
 	cmd.Flags().String(FlagDeposit, "", "The proposal deposit")
 	cmd.Flags().String(FlagProposal, "", "Proposal file path (if this path is given, other proposal flags are ignored)")
-	flags.AddTxFlagsToCmd(cmd)
-
-	return cmd
-}
-
-// NewCmdVote implements creating a new vote command.
-func NewCmdVote() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "vote [proposal-id] [option]",
-		Args:  cobra.ExactArgs(2),
-		Short: "Vote for an active proposal, options: yes/no/no_with_veto/abstain",
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`Submit a vote for an active proposal. You can
-find the proposal-id by running "%s query gov proposals".
-
-Example:
-$ %s tx gov vote 1 yes --from mykey
-`,
-				version.AppName, version.AppName,
-			),
-		),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientTxContext(cmd)
-			if err != nil {
-				return err
-			}
-			// Get voting address
-			from := clientCtx.GetFromAddress()
-
-			// validate that the proposal id is a uint
-			proposalID, err := strconv.ParseUint(args[0], 10, 64)
-			if err != nil {
-				return fmt.Errorf("proposal-id %s not a valid int, please input a valid proposal-id", args[0])
-			}
-
-			// Find out which vote option user chose
-			byteVoteOption, err := v1.VoteOptionFromString(govutils.NormalizeVoteOption(args[1]))
-			if err != nil {
-				return err
-			}
-
-			metadata, err := cmd.Flags().GetString(FlagMetadata)
-			if err != nil {
-				return err
-			}
-
-			// Build vote message and run basic validation
-			msg := v1.NewMsgVote(from, proposalID, byteVoteOption, metadata)
-
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
-		},
-	}
-
-	cmd.Flags().String(FlagMetadata, "", "Specify metadata of the vote")
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd

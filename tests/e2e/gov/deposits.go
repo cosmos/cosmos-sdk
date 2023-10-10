@@ -10,6 +10,7 @@ import (
 	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/testutil"
+	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/client/cli"
@@ -73,19 +74,19 @@ func (s *DepositTestSuite) TearDownSuite() {
 
 func (s *DepositTestSuite) TestQueryDepositsWithoutInitialDeposit() {
 	val := s.network.Validators[0]
-	clientCtx := val.ClientCtx
 
 	// submit proposal without initial deposit
 	id := s.submitProposal(val, sdk.NewCoin(s.cfg.BondDenom, math.NewInt(0)), "TestQueryDepositsWithoutInitialDeposit")
-	proposalID := strconv.FormatUint(id, 10)
 
 	// deposit amount
-	depositAmount := sdk.NewCoin(s.cfg.BondDenom, v1.DefaultMinDepositTokens.Add(math.NewInt(50))).String()
-	_, err := govclitestutil.MsgDeposit(clientCtx, val.Address.String(), proposalID, depositAmount)
+	depositAmount := sdk.NewCoin(s.cfg.BondDenom, v1.DefaultMinDepositTokens.Add(math.NewInt(50)))
+	msg := v1.NewDeposit(id, val.Address, sdk.NewCoins(depositAmount))
+	_, err := clitestutil.SubmitTestTx(val.ClientCtx, &msg, val.Address, clitestutil.TestTxConfig{})
 	s.Require().NoError(err)
 	s.Require().NoError(s.network.WaitForNextBlock())
 
 	// query deposit
+	proposalID := strconv.FormatUint(id, 10)
 	deposit := s.queryDeposit(val, proposalID, false, "")
 	s.Require().NotNil(deposit)
 	s.Require().Equal(depositAmount, sdk.Coins(deposit.Deposit.Amount).String())

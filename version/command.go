@@ -28,6 +28,9 @@ func NewVersionCommand() *cobra.Command {
 				return nil
 			}
 
+			extraInfo := extraInfoFromContext(cmd)
+			verInfo.ExtraInfo = &extraInfo
+
 			var (
 				bz  []byte
 				err error
@@ -55,4 +58,15 @@ func NewVersionCommand() *cobra.Command {
 	cmd.Flags().StringP(flagOutput, "o", "text", "Output format (text|json)")
 
 	return cmd
+}
+
+func extraInfoFromContext(cmd *cobra.Command) ExtraInfo {
+	ctx := cmd.Context()
+	if ctx != nil {
+		extraInfo, ok := ctx.Value("extraInfo").(ExtraInfo)
+		if ok {
+			return extraInfo
+		}
+	}
+	return nil
 }

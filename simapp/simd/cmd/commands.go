@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"context"
 	"errors"
 	"io"
 	"os"
@@ -26,6 +27,7 @@ import (
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	"github.com/cosmos/cosmos-sdk/version"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
@@ -38,9 +40,15 @@ func initRootCmd(
 	interfaceRegistry codectypes.InterfaceRegistry,
 	appCodec codec.Codec,
 	basicManager module.BasicManager,
+	extraInfo version.ExtraInfo,
 ) {
 	cfg := sdk.GetConfig()
 	cfg.Seal()
+
+	cmdContext := context.WithValue(rootCmd.Context(), "extraInfo", extraInfo)
+	rootCmd.SetContext(cmdContext)
+
+	rootCmd.AddCommand(version.NewVersionCommand())
 
 	rootCmd.AddCommand(
 		genutilcli.InitCmd(basicManager),

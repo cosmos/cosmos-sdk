@@ -2331,7 +2331,6 @@ func TestABCI_PrepareProposal_Panic(t *testing.T) {
 	resPrepareProposal, err = suite.baseApp.PrepareProposal(&reqPrepareProposal)
 	require.NoError(t, err)
 	require.Equal(t, 3, len(resPrepareProposal.Txs))
-
 }
 
 func TestOptimisticExecution(t *testing.T) {

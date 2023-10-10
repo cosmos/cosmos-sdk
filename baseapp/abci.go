@@ -437,14 +437,14 @@ func (app *BaseApp) PrepareProposal(req *abci.RequestPrepareProposal) (resp *abc
 				"panic", err,
 			)
 
-			resp = &abci.ResponsePrepareProposal{}
+			resp = &abci.ResponsePrepareProposal{Txs: req.Txs}
 		}
 	}()
 
 	resp, err = app.prepareProposal(app.prepareProposalState.ctx, req)
 	if err != nil {
 		app.logger.Error("failed to prepare proposal", "height", req.Height, "time", req.Time, "err", err)
-		return &abci.ResponsePrepareProposal{}, nil
+		return &abci.ResponsePrepareProposal{Txs: req.Txs}, nil
 	}
 
 	return resp, nil

@@ -2275,3 +2275,40 @@ func TestBaseApp_VoteExtensions(t *testing.T) {
 	committedAvgPrice := suite.baseApp.NewContext(true).KVStore(capKey1).Get([]byte("avgPrice"))
 	require.Equal(t, avgPrice, committedAvgPrice)
 }
+
+func TestABCI_PrepareProposal_Panic(t *testing.T) {
+	prepareOpt := func(bapp *baseapp.BaseApp) {
+		bapp.SetPrepareProposal(func(ctx sdk.Context, req *abci.RequestPrepareProposal) (*abci.ResponsePrepareProposal, error) {
+			if len(req.Txs) == 3 {
+				panic("i don't like number 3, panic")
+			}
+			// return empty if no panic
+			return &abci.ResponsePrepareProposal{}, nil
+		})
+	}
+
+	suite := NewBaseAppSuite(t, prepareOpt)
+
+	_, err := suite.baseApp.InitChain(&abci.RequestInitChain{
+		InitialHeight:   1,
+		ConsensusParams: &cmtproto.ConsensusParams{},
+	})
+	require.NoError(t, err)
+
+	txs := [][]byte{{1}, {2}}
+	reqPrepareProposal := abci.RequestPrepareProposal{
+		MaxTxBytes: 1000,
+		Height:     1, // this value can't be 0
+		Txs:        txs,
+	}
+	resPrepareProposal, err := suite.baseApp.PrepareProposal(&reqPrepareProposal)
+	require.NoError(t, err)
+	require.Equal(t, 0, len(resPrepareProposal.Txs))
+
+	// make it panic, and check if it returns 3 txs (because of panic recovery)
+	txs = [][]byte{{1}, {2}, {3}}
+	reqPrepareProposal.Txs = txs
+	resPrepareProposal, err = suite.baseApp.PrepareProposal(&reqPrepareProposal)
+	require.NoError(t, err)
+	require.Equal(t, 3, len(resPrepareProposal.Txs))
+}

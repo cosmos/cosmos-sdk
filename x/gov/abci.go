@@ -16,7 +16,7 @@ import (
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 )
 
-// EndBlocker called every block.
+// EndBlocker is called every block.
 func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) error {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyEndBlocker)
 

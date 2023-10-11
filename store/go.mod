@@ -15,6 +15,7 @@ require (
 	github.com/cosmos/ics23/go v0.10.0
 	github.com/linxGnu/grocksdb v1.8.4
 	github.com/stretchr/testify v1.8.4
+	github.com/tidwall/btree v1.7.0
 	golang.org/x/exp v0.0.0-20230817173708-d852ddb80c63
 	modernc.org/sqlite v1.25.0
 )

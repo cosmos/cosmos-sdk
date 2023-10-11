@@ -58,11 +58,7 @@ func (s *Store) Get(key []byte) []byte {
 func (s *Store) Has(key []byte) bool {
 	store.AssertValidKey(key)
 
-	if s.Get(key) == nil {
-		return false
-	}
-
-	return true
+	return s.Get(key) != nil
 }
 
 func (s *Store) Set(key, value []byte) {

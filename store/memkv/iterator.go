@@ -3,9 +3,10 @@ package memkv
 import (
 	"bytes"
 
-	"cosmossdk.io/store/v2"
 	"github.com/tidwall/btree"
 	"golang.org/x/exp/slices"
+
+	"cosmossdk.io/store/v2"
 )
 
 var _ store.Iterator = (*iterator)(nil)

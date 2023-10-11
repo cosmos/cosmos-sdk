@@ -45,10 +45,14 @@ func initRootCmd(
 	cfg := sdk.GetConfig()
 	cfg.Seal()
 
-	cmdContext := context.WithValue(rootCmd.Context(), "extraInfo", extraInfo)
-	rootCmd.SetContext(cmdContext)
+	type contextKey struct {
+		key string
+	}
 
-	rootCmd.AddCommand(version.NewVersionCommand())
+	var extraInfoKey = &contextKey{"extraInfo"}
+
+	cmdContext := context.WithValue(rootCmd.Context(), extraInfoKey, extraInfo)
+	rootCmd.SetContext(cmdContext)
 
 	rootCmd.AddCommand(
 		genutilcli.InitCmd(basicManager),

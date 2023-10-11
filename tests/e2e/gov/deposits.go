@@ -89,7 +89,7 @@ func (s *DepositTestSuite) TestQueryDepositsWithoutInitialDeposit() {
 	proposalID := strconv.FormatUint(id, 10)
 	deposit := s.queryDeposit(val, proposalID, false, "")
 	s.Require().NotNil(deposit)
-	s.Require().Equal(depositAmount, sdk.Coins(deposit.Deposit.Amount).String())
+	s.Require().Equal(depositAmount.String(), sdk.Coins(deposit.Deposit.Amount).String())
 
 	// query deposits
 	deposits := s.queryDeposits(val, proposalID, false, "")

@@ -33,7 +33,7 @@ var (
 )
 
 // NewTxCmd returns a root CLI command handler for all x/staking transaction commands.
-func NewTxCmd(valAddrCodec, ac address.Codec) *cobra.Command {
+func NewTxCmd() *cobra.Command {
 	stakingTxCmd := &cobra.Command{
 		Use:                        types.ModuleName,
 		Short:                      "Staking transaction subcommands",
@@ -43,8 +43,8 @@ func NewTxCmd(valAddrCodec, ac address.Codec) *cobra.Command {
 	}
 
 	stakingTxCmd.AddCommand(
-		NewCreateValidatorCmd(valAddrCodec),
-		NewEditValidatorCmd(valAddrCodec),
+		NewCreateValidatorCmd(),
+		NewEditValidatorCmd(),
 	)
 
 	return stakingTxCmd
@@ -52,7 +52,7 @@ func NewTxCmd(valAddrCodec, ac address.Codec) *cobra.Command {
 
 // NewCreateValidatorCmd returns a CLI command handler for creating a MsgCreateValidator transaction.
 // TODO(@julienrbrt): remove this once AutoCLI can flatten nested structs.
-func NewCreateValidatorCmd(ac address.Codec) *cobra.Command {
+func NewCreateValidatorCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create-validator [path/to/validator.json]",
 		Short: "Create new validator initialized with a self-delegation to it",
@@ -96,7 +96,7 @@ where we can get the pubkey using "%s tendermint show-validator"
 				return err
 			}
 
-			txf, msg, err := newBuildCreateValidatorMsg(clientCtx, txf, cmd.Flags(), validator, ac)
+			txf, msg, err := newBuildCreateValidatorMsg(clientCtx, txf, cmd.Flags(), validator, clientCtx.ValidatorAddressCodec)
 			if err != nil {
 				return err
 			}
@@ -116,7 +116,7 @@ where we can get the pubkey using "%s tendermint show-validator"
 
 // NewEditValidatorCmd returns a CLI command handler for creating a MsgEditValidator transaction.
 // TODO(@julienrbrt): remove this once AutoCLI can flatten nested structs.
-func NewEditValidatorCmd(ac address.Codec) *cobra.Command {
+func NewEditValidatorCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "edit-validator",
 		Short: "Edit an existing validator account",
@@ -157,7 +157,7 @@ func NewEditValidatorCmd(ac address.Codec) *cobra.Command {
 				newMinSelfDelegation = &msb
 			}
 
-			valAddr, err := ac.BytesToString(clientCtx.GetFromAddress())
+			valAddr, err := clientCtx.AddressCodec.BytesToString(clientCtx.GetFromAddress())
 			if err != nil {
 				return err
 			}

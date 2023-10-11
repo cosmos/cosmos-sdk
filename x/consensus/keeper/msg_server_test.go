@@ -12,6 +12,7 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 		name      string
 		input     *types.MsgUpdateParams
 		expErr    bool
+		expPanic  bool
 		expErrMsg string
 	}{
 		{
@@ -47,18 +48,60 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 			expErr:    true,
 			expErrMsg: "invalid authority",
 		},
+		{
+			name: "nil evidence params",
+			input: &types.MsgUpdateParams{
+				Authority: s.consensusParamsKeeper.GetAuthority(),
+				Block:     defaultConsensusParams.Block,
+				Validator: defaultConsensusParams.Validator,
+				Evidence:  nil,
+			},
+			expErr:    false,
+			expPanic:  true,
+			expErrMsg: "all parameters must be present",
+		},
+		{
+			name: "nil block params",
+			input: &types.MsgUpdateParams{
+				Authority: s.consensusParamsKeeper.GetAuthority(),
+				Block:     nil,
+				Validator: defaultConsensusParams.Validator,
+				Evidence:  defaultConsensusParams.Evidence,
+			},
+			expErr:    false,
+			expPanic:  true,
+			expErrMsg: "all parameters must be present",
+		},
+		{
+			name: "nil validator params",
+			input: &types.MsgUpdateParams{
+				Authority: s.consensusParamsKeeper.GetAuthority(),
+				Block:     defaultConsensusParams.Block,
+				Validator: nil,
+				Evidence:  defaultConsensusParams.Evidence,
+			},
+			expErr:    false,
+			expPanic:  true,
+			expErrMsg: "all parameters must be present",
+		},
 	}
 
 	for _, tc := range testCases {
 		tc := tc
 		s.Run(tc.name, func() {
 			s.SetupTest()
-			_, err := s.msgServer.UpdateParams(s.ctx, tc.input)
-			if tc.expErr {
-				s.Require().Error(err)
-				s.Require().Contains(err.Error(), tc.expErrMsg)
+			if tc.expPanic {
+				s.Require().Panics(func() {
+					s.msgServer.UpdateParams(s.ctx, tc.input)
+				})
 			} else {
-				s.Require().NoError(err)
+				_, err := s.msgServer.UpdateParams(s.ctx, tc.input)
+				if tc.expErr {
+					s.Require().Error(err)
+					s.Require().Contains(err.Error(), tc.expErrMsg)
+				} else {
+					s.Require().NoError(err)
+				}
 			}
 		})
 	}

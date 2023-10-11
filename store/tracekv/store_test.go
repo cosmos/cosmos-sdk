@@ -106,180 +106,161 @@ func TestTraceKVStoreSet(t *testing.T) {
 	require.Panics(t, func() { store.Set(nil, []byte("value")) }, "setting a nil key should panic")
 }
 
-// func TestTraceKVStoreDelete(t *testing.T) {
-// 	testCases := []struct {
-// 		key         []byte
-// 		expectedOut string
-// 	}{
-// 		{
-// 			key:         kvPairs[0].Key,
-// 			expectedOut: "{\"operation\":\"delete\",\"key\":\"a2V5MDAwMDAwMDE=\",\"value\":\"\",\"metadata\":{\"blockHeight\":64}}\n",
-// 		},
-// 	}
+func TestTraceKVStoreDelete(t *testing.T) {
+	testCases := []struct {
+		key         []byte
+		expectedOut string
+	}{
+		{
+			key:         kvPairs[0].Key,
+			expectedOut: "{\"operation\":\"delete\",\"key\":\"a2V5MDAwMDAwMDE=\",\"value\":\"\",\"metadata\":{\"blockHeight\":64}}\n",
+		},
+	}
 
-// 	for _, tc := range testCases {
-// 		var buf bytes.Buffer
+	for _, tc := range testCases {
+		var buf bytes.Buffer
 
-// 		store := newTraceKVStore(&buf)
-// 		buf.Reset()
-// 		store.Delete(tc.key)
+		store := newTraceKVStore(&buf)
+		buf.Reset()
+		store.Delete(tc.key)
 
-// 		require.Equal(t, tc.expectedOut, buf.String())
-// 	}
-// }
+		require.Equal(t, tc.expectedOut, buf.String())
+	}
+}
 
-// func TestTraceKVStoreHas(t *testing.T) {
-// 	testCases := []struct {
-// 		key      []byte
-// 		expected bool
-// 	}{
-// 		{
-// 			key:      kvPairs[0].Key,
-// 			expected: true,
-// 		},
-// 	}
+func TestTraceKVStoreHas(t *testing.T) {
+	testCases := []struct {
+		key      []byte
+		expected bool
+	}{
+		{
+			key:      kvPairs[0].Key,
+			expected: true,
+		},
+	}
 
-// 	for _, tc := range testCases {
-// 		var buf bytes.Buffer
+	for _, tc := range testCases {
+		var buf bytes.Buffer
 
-// 		store := newTraceKVStore(&buf)
-// 		buf.Reset()
-// 		ok := store.Has(tc.key)
+		store := newTraceKVStore(&buf)
+		buf.Reset()
+		ok := store.Has(tc.key)
 
-// 		require.Equal(t, tc.expected, ok)
-// 	}
-// }
+		require.Equal(t, tc.expected, ok)
+	}
+}
 
-// func TestTestTraceKVStoreIterator(t *testing.T) {
-// 	var buf bytes.Buffer
+func TestTestTraceKVStoreIterator(t *testing.T) {
+	var buf bytes.Buffer
 
-// 	store := newTraceKVStore(&buf)
-// 	iterator := store.Iterator(nil, nil)
+	store := newTraceKVStore(&buf)
+	iterator := store.Iterator(nil, nil)
 
-// 	s, e := iterator.Domain()
-// 	require.Equal(t, []byte(nil), s)
-// 	require.Equal(t, []byte(nil), e)
+	s, e := iterator.Domain()
+	require.Equal(t, []byte(nil), s)
+	require.Equal(t, []byte(nil), e)
 
-// 	testCases := []struct {
-// 		expectedKey      []byte
-// 		expectedValue    []byte
-// 		expectedKeyOut   string
-// 		expectedvalueOut string
-// 	}{
-// 		{
-// 			expectedKey:      kvPairs[0].Key,
-// 			expectedValue:    kvPairs[0].Value,
-// 			expectedKeyOut:   "{\"operation\":\"iterKey\",\"key\":\"a2V5MDAwMDAwMDE=\",\"value\":\"\",\"metadata\":{\"blockHeight\":64}}\n",
-// 			expectedvalueOut: "{\"operation\":\"iterValue\",\"key\":\"\",\"value\":\"dmFsdWUwMDAwMDAwMQ==\",\"metadata\":{\"blockHeight\":64}}\n",
-// 		},
-// 		{
-// 			expectedKey:      kvPairs[1].Key,
-// 			expectedValue:    kvPairs[1].Value,
-// 			expectedKeyOut:   "{\"operation\":\"iterKey\",\"key\":\"a2V5MDAwMDAwMDI=\",\"value\":\"\",\"metadata\":{\"blockHeight\":64}}\n",
-// 			expectedvalueOut: "{\"operation\":\"iterValue\",\"key\":\"\",\"value\":\"dmFsdWUwMDAwMDAwMg==\",\"metadata\":{\"blockHeight\":64}}\n",
-// 		},
-// 		{
-// 			expectedKey:      kvPairs[2].Key,
-// 			expectedValue:    kvPairs[2].Value,
-// 			expectedKeyOut:   "{\"operation\":\"iterKey\",\"key\":\"a2V5MDAwMDAwMDM=\",\"value\":\"\",\"metadata\":{\"blockHeight\":64}}\n",
-// 			expectedvalueOut: "{\"operation\":\"iterValue\",\"key\":\"\",\"value\":\"dmFsdWUwMDAwMDAwMw==\",\"metadata\":{\"blockHeight\":64}}\n",
-// 		},
-// 	}
+	testCases := []struct {
+		expectedKey      []byte
+		expectedValue    []byte
+		expectedKeyOut   string
+		expectedvalueOut string
+	}{
+		{
+			expectedKey:      kvPairs[0].Key,
+			expectedValue:    kvPairs[0].Value,
+			expectedKeyOut:   "{\"operation\":\"iterKey\",\"key\":\"a2V5MDAwMDAwMDE=\",\"value\":\"\",\"metadata\":{\"blockHeight\":64}}\n",
+			expectedvalueOut: "{\"operation\":\"iterValue\",\"key\":\"\",\"value\":\"dmFsdWUwMDAwMDAwMQ==\",\"metadata\":{\"blockHeight\":64}}\n",
+		},
+		{
+			expectedKey:      kvPairs[1].Key,
+			expectedValue:    kvPairs[1].Value,
+			expectedKeyOut:   "{\"operation\":\"iterKey\",\"key\":\"a2V5MDAwMDAwMDI=\",\"value\":\"\",\"metadata\":{\"blockHeight\":64}}\n",
+			expectedvalueOut: "{\"operation\":\"iterValue\",\"key\":\"\",\"value\":\"dmFsdWUwMDAwMDAwMg==\",\"metadata\":{\"blockHeight\":64}}\n",
+		},
+		{
+			expectedKey:      kvPairs[2].Key,
+			expectedValue:    kvPairs[2].Value,
+			expectedKeyOut:   "{\"operation\":\"iterKey\",\"key\":\"a2V5MDAwMDAwMDM=\",\"value\":\"\",\"metadata\":{\"blockHeight\":64}}\n",
+			expectedvalueOut: "{\"operation\":\"iterValue\",\"key\":\"\",\"value\":\"dmFsdWUwMDAwMDAwMw==\",\"metadata\":{\"blockHeight\":64}}\n",
+		},
+	}
 
-// 	for _, tc := range testCases {
-// 		buf.Reset()
-// 		ka := iterator.Key()
-// 		require.Equal(t, tc.expectedKeyOut, buf.String())
+	for _, tc := range testCases {
+		buf.Reset()
+		ka := iterator.Key()
+		require.Equal(t, tc.expectedKeyOut, buf.String())
 
-// 		buf.Reset()
-// 		va := iterator.Value()
-// 		require.Equal(t, tc.expectedvalueOut, buf.String())
+		buf.Reset()
+		va := iterator.Value()
+		require.Equal(t, tc.expectedvalueOut, buf.String())
 
-// 		require.Equal(t, tc.expectedKey, ka)
-// 		require.Equal(t, tc.expectedValue, va)
+		require.Equal(t, tc.expectedKey, ka)
+		require.Equal(t, tc.expectedValue, va)
 
-// 		iterator.Next()
-// 	}
+		iterator.Next()
+	}
 
-// 	require.False(t, iterator.Valid())
-// 	require.Panics(t, iterator.Next)
-// 	require.NoError(t, iterator.Close())
-// }
+	require.False(t, iterator.Valid())
+	require.False(t, iterator.Next())
+}
 
-// func TestTestTraceKVStoreReverseIterator(t *testing.T) {
-// 	var buf bytes.Buffer
+func TestTestTraceKVStoreReverseIterator(t *testing.T) {
+	var buf bytes.Buffer
 
-// 	store := newTraceKVStore(&buf)
-// 	iterator := store.ReverseIterator(nil, nil)
+	store := newTraceKVStore(&buf)
+	iterator := store.ReverseIterator(nil, nil)
 
-// 	s, e := iterator.Domain()
-// 	require.Equal(t, []byte(nil), s)
-// 	require.Equal(t, []byte(nil), e)
+	s, e := iterator.Domain()
+	require.Equal(t, []byte(nil), s)
+	require.Equal(t, []byte(nil), e)
 
-// 	testCases := []struct {
-// 		expectedKey      []byte
-// 		expectedValue    []byte
-// 		expectedKeyOut   string
-// 		expectedvalueOut string
-// 	}{
-// 		{
-// 			expectedKey:      kvPairs[2].Key,
-// 			expectedValue:    kvPairs[2].Value,
-// 			expectedKeyOut:   "{\"operation\":\"iterKey\",\"key\":\"a2V5MDAwMDAwMDM=\",\"value\":\"\",\"metadata\":{\"blockHeight\":64}}\n",
-// 			expectedvalueOut: "{\"operation\":\"iterValue\",\"key\":\"\",\"value\":\"dmFsdWUwMDAwMDAwMw==\",\"metadata\":{\"blockHeight\":64}}\n",
-// 		},
-// 		{
-// 			expectedKey:      kvPairs[1].Key,
-// 			expectedValue:    kvPairs[1].Value,
-// 			expectedKeyOut:   "{\"operation\":\"iterKey\",\"key\":\"a2V5MDAwMDAwMDI=\",\"value\":\"\",\"metadata\":{\"blockHeight\":64}}\n",
-// 			expectedvalueOut: "{\"operation\":\"iterValue\",\"key\":\"\",\"value\":\"dmFsdWUwMDAwMDAwMg==\",\"metadata\":{\"blockHeight\":64}}\n",
-// 		},
-// 		{
-// 			expectedKey:      kvPairs[0].Key,
-// 			expectedValue:    kvPairs[0].Value,
-// 			expectedKeyOut:   "{\"operation\":\"iterKey\",\"key\":\"a2V5MDAwMDAwMDE=\",\"value\":\"\",\"metadata\":{\"blockHeight\":64}}\n",
-// 			expectedvalueOut: "{\"operation\":\"iterValue\",\"key\":\"\",\"value\":\"dmFsdWUwMDAwMDAwMQ==\",\"metadata\":{\"blockHeight\":64}}\n",
-// 		},
-// 	}
+	testCases := []struct {
+		expectedKey      []byte
+		expectedValue    []byte
+		expectedKeyOut   string
+		expectedvalueOut string
+	}{
+		{
+			expectedKey:      kvPairs[2].Key,
+			expectedValue:    kvPairs[2].Value,
+			expectedKeyOut:   "{\"operation\":\"iterKey\",\"key\":\"a2V5MDAwMDAwMDM=\",\"value\":\"\",\"metadata\":{\"blockHeight\":64}}\n",
+			expectedvalueOut: "{\"operation\":\"iterValue\",\"key\":\"\",\"value\":\"dmFsdWUwMDAwMDAwMw==\",\"metadata\":{\"blockHeight\":64}}\n",
+		},
+		{
+			expectedKey:      kvPairs[1].Key,
+			expectedValue:    kvPairs[1].Value,
+			expectedKeyOut:   "{\"operation\":\"iterKey\",\"key\":\"a2V5MDAwMDAwMDI=\",\"value\":\"\",\"metadata\":{\"blockHeight\":64}}\n",
+			expectedvalueOut: "{\"operation\":\"iterValue\",\"key\":\"\",\"value\":\"dmFsdWUwMDAwMDAwMg==\",\"metadata\":{\"blockHeight\":64}}\n",
+		},
+		{
+			expectedKey:      kvPairs[0].Key,
+			expectedValue:    kvPairs[0].Value,
+			expectedKeyOut:   "{\"operation\":\"iterKey\",\"key\":\"a2V5MDAwMDAwMDE=\",\"value\":\"\",\"metadata\":{\"blockHeight\":64}}\n",
+			expectedvalueOut: "{\"operation\":\"iterValue\",\"key\":\"\",\"value\":\"dmFsdWUwMDAwMDAwMQ==\",\"metadata\":{\"blockHeight\":64}}\n",
+		},
+	}
 
-// 	for _, tc := range testCases {
-// 		buf.Reset()
-// 		ka := iterator.Key()
-// 		require.Equal(t, tc.expectedKeyOut, buf.String())
+	for _, tc := range testCases {
+		buf.Reset()
+		ka := iterator.Key()
+		require.Equal(t, tc.expectedKeyOut, buf.String())
 
-// 		buf.Reset()
-// 		va := iterator.Value()
-// 		require.Equal(t, tc.expectedvalueOut, buf.String())
+		buf.Reset()
+		va := iterator.Value()
+		require.Equal(t, tc.expectedvalueOut, buf.String())
 
-// 		require.Equal(t, tc.expectedKey, ka)
-// 		require.Equal(t, tc.expectedValue, va)
+		require.Equal(t, tc.expectedKey, ka)
+		require.Equal(t, tc.expectedValue, va)
 
-// 		iterator.Next()
-// 	}
+		iterator.Next()
+	}
 
-// 	require.False(t, iterator.Valid())
-// 	require.Panics(t, iterator.Next)
-// 	require.NoError(t, iterator.Close())
-// }
+	require.False(t, iterator.Valid())
+	require.False(t, iterator.Next())
+}
 
-// func TestTraceKVStorePrefix(t *testing.T) {
-// 	store := newEmptyTraceKVStore(nil)
-// 	pStore := prefix.NewStore(store, []byte("trace_prefix"))
-// 	require.IsType(t, prefix.Store{}, pStore)
-// }
-
-// func TestTraceKVStoreGetStoreType(t *testing.T) {
-// 	memDB := dbadapter.Store{DB: dbm.NewMemDB()}
-// 	store := newEmptyTraceKVStore(nil)
-// 	require.Equal(t, memDB.GetStoreType(), store.GetStoreType())
-// }
-
-// func TestTraceKVStoreCacheWrap(t *testing.T) {
-// 	store := newEmptyTraceKVStore(nil)
-// 	require.Panics(t, func() { store.CacheWrap() })
-// }
-
-// func TestTraceKVStoreCacheWrapWithTrace(t *testing.T) {
-// 	store := newEmptyTraceKVStore(nil)
-// 	require.Panics(t, func() { store.CacheWrapWithTrace(nil, nil) })
-// }
+func TestTraceKVStoreGetStoreType(t *testing.T) {
+	traceKVStore := newEmptyTraceKVStore(nil)
+	require.Equal(t, store.StoreTypeTrace, traceKVStore.GetStoreType())
+}

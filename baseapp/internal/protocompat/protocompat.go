@@ -207,19 +207,6 @@ func isProtov2(md grpc.MethodDesc) (isV2Type bool, err error) {
 	return
 }
 
-// MessageName returns the fully-qualified name of the message.
-// Supports proto2 and gogoproto.
-func MessageName(msg protoiface.MessageV1) string {
-	switch m := msg.(type) {
-	case proto2.Message:
-		return string(proto2.MessageName(m))
-	case gogoproto.Message:
-		return gogoproto.MessageName(m)
-	default:
-		panic("protocompat: unsupported message type")
-	}
-}
-
 // RequestFullNameFromMethodDesc returns the fully-qualified name of the request message of the provided service's method.
 func RequestFullNameFromMethodDesc(sd *grpc.ServiceDesc, method grpc.MethodDesc) (protoreflect.FullName, error) {
 	methodFullName := protoreflect.FullName(fmt.Sprintf("%s.%s", sd.ServiceName, method.MethodName))

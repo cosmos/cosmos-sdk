@@ -136,7 +136,11 @@ func (s *CLITestSuite) TestSendTxCmd() {
 func (s *CLITestSuite) TestMultiSendTxCmd() {
 	accounts := testutil.CreateKeyringAccounts(s.T(), s.kr, 3)
 
+<<<<<<< HEAD
 	cmd := cli.NewMultiSendTxCmd(address.NewBech32Codec("cosmos"))
+=======
+	cmd := cli.NewMultiSendTxCmd()
+>>>>>>> 44934e3b6 (feat(x/distribution): add autocli options for tx (#17963))
 	cmd.SetOutput(io.Discard)
 
 	extraArgs := []string{

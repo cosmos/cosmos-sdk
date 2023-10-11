@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/hashicorp/go-metrics"
 
@@ -151,7 +152,7 @@ func (k msgServer) CommunityPoolSpend(ctx context.Context, msg *types.MsgCommuni
 
 	recipient, err := k.authKeeper.AddressCodec().StringToBytes(msg.Recipient)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("invalid recipient address: %w", err)
 	}
 
 	if k.bankKeeper.BlockedAddr(recipient) {
@@ -171,7 +172,7 @@ func (k msgServer) CommunityPoolSpend(ctx context.Context, msg *types.MsgCommuni
 func (k msgServer) DepositValidatorRewardsPool(ctx context.Context, msg *types.MsgDepositValidatorRewardsPool) (*types.MsgDepositValidatorRewardsPoolResponse, error) {
 	depositor, err := k.authKeeper.AddressCodec().StringToBytes(msg.Depositor)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("invalid depositor address: %w", err)
 	}
 
 	// deposit coins from depositor's account to the distribution module

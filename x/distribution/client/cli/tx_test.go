@@ -1,14 +1,12 @@
 package cli_test
 
 import (
-	"context"
 	"fmt"
 	"io"
 	"testing"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	rpcclientmock "github.com/cometbft/cometbft/rpc/client/mock"
-	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/suite"
 
 	sdkmath "cosmossdk.io/math"
@@ -17,7 +15,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
@@ -82,6 +79,7 @@ func (s *CLITestSuite) SetupSuite() {
 	cfg.GenesisState = genesisState
 }
 
+<<<<<<< HEAD
 func (s *CLITestSuite) TestTxWithdrawRewardsCmd() {
 	val := testutil.CreateKeyringAccounts(s.T(), s.kr, 1)
 
@@ -152,6 +150,8 @@ func (s *CLITestSuite) TestTxWithdrawRewardsCmd() {
 	}
 }
 
+=======
+>>>>>>> 44934e3b6 (feat(x/distribution): add autocli options for tx (#17963))
 func (s *CLITestSuite) TestTxWithdrawAllRewardsCmd() {
 	val := testutil.CreateKeyringAccounts(s.T(), s.kr, 1)
 
@@ -186,7 +186,11 @@ func (s *CLITestSuite) TestTxWithdrawAllRewardsCmd() {
 		tc := tc
 
 		s.Run(tc.name, func() {
+<<<<<<< HEAD
 			cmd := cli.NewWithdrawAllRewardsCmd(address.NewBech32Codec("cosmosvaloper"), address.NewBech32Codec("cosmos"))
+=======
+			cmd := cli.NewWithdrawAllRewardsCmd()
+>>>>>>> 44934e3b6 (feat(x/distribution): add autocli options for tx (#17963))
 
 			out, err := clitestutil.ExecTestCLICmd(s.clientCtx, cmd, tc.args)
 			if tc.expectErrMsg != "" {
@@ -200,6 +204,7 @@ func (s *CLITestSuite) TestTxWithdrawAllRewardsCmd() {
 		})
 	}
 }
+<<<<<<< HEAD
 
 func (s *CLITestSuite) TestTxSetWithdrawAddrCmd() {
 	val := testutil.CreateKeyringAccounts(s.T(), s.kr, 1)
@@ -300,3 +305,5 @@ func (s *CLITestSuite) TestTxFundCommunityPoolCmd() {
 		})
 	}
 }
+=======
+>>>>>>> 44934e3b6 (feat(x/distribution): add autocli options for tx (#17963))

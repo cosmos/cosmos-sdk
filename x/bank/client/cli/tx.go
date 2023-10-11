@@ -5,7 +5,6 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"cosmossdk.io/core/address"
 	sdkmath "cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -19,7 +18,7 @@ import (
 var FlagSplit = "split"
 
 // NewTxCmd returns a root CLI command handler for all x/bank transaction commands.
-func NewTxCmd(ac address.Codec) *cobra.Command {
+func NewTxCmd() *cobra.Command {
 	txCmd := &cobra.Command{
 		Use:                        types.ModuleName,
 		Short:                      "Bank transaction subcommands",
@@ -29,8 +28,12 @@ func NewTxCmd(ac address.Codec) *cobra.Command {
 	}
 
 	txCmd.AddCommand(
+<<<<<<< HEAD
 		NewSendTxCmd(ac),
 		NewMultiSendTxCmd(ac),
+=======
+		NewMultiSendTxCmd(),
+>>>>>>> 44934e3b6 (feat(x/distribution): add autocli options for tx (#17963))
 	)
 
 	return txCmd
@@ -79,7 +82,7 @@ When using '--dry-run' a key name cannot be used, only a bech32 address.
 
 // NewMultiSendTxCmd returns a CLI command handler for creating a MsgMultiSend transaction.
 // For a better UX this command is limited to send funds from one account to two or more accounts.
-func NewMultiSendTxCmd(ac address.Codec) *cobra.Command {
+func NewMultiSendTxCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "multi-send [from_key_or_address] [to_address_1 to_address_2 ...] [amount]",
 		Short: "Send funds from one account to two or more accounts.",
@@ -121,7 +124,7 @@ When using '--dry-run' a key name cannot be used, only a bech32 address.`,
 
 			var output []types.Output
 			for _, arg := range args[1 : len(args)-1] {
-				toAddr, err := ac.StringToBytes(arg)
+				toAddr, err := clientCtx.AddressCodec.StringToBytes(arg)
 				if err != nil {
 					return err
 				}

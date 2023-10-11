@@ -66,8 +66,6 @@ type KVStore interface {
 	// Reset resets the store, which is implementation dependent.
 	Reset() error
 
-	BranchWrapper
-
 	// Iterator creates a new Iterator over the domain [start, end). Note:
 	//
 	// - Start must be less than end
@@ -81,6 +79,11 @@ type KVStore interface {
 	// ReverseIterator creates a new reverse Iterator over the domain [start, end).
 	// It has the some properties and contracts as Iterator.
 	ReverseIterator(start, end []byte) Iterator
+
+	// GetChangeset returns the ChangeSet, if any, for the branched state. This
+	// should contain all writes that are marked to be flushed and committed during
+	// Commit().
+	GetChangeset() *Changeset
 }
 
 // BranchedKVStore defines an interface for a branched a KVStore. It extends KVStore
@@ -98,21 +101,4 @@ type BranchedKVStore interface {
 
 	// BranchWithTrace recursively wraps with tracing enabled.
 	BranchWithTrace(w io.Writer, tc TraceContext) BranchedKVStore
-}
-
-// BranchWrapper defines an interface for a branching a KVStore's state, allowing
-// writes to be cached and flushed to the underlying store or discarded altogether.
-// Reads should be performed against a "branched" state, allowing dirty entries
-// to be cached and read from. If an entry is not found in the branched state, it
-// will fallthrough to the underlying store.
-type BranchWrapper interface {
-	Branch() BranchedKVStore
-
-	// BranchWithTrace branches a store with tracing enabled.
-	BranchWithTrace(w io.Writer, tc TraceContext) BranchedKVStore
-
-	// GetChangeset returns the ChangeSet, if any, for the branched state. This
-	// should contain all writes that are marked to be flushed and committed during
-	// Commit().
-	GetChangeset() *Changeset
 }

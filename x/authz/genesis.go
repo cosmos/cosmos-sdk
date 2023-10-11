@@ -1,7 +1,7 @@
 package authz
 
 import (
-	"errors"
+	fmt "fmt"
 
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 )
@@ -15,12 +15,12 @@ func NewGenesisState(entries []GrantAuthorization) *GenesisState {
 
 // ValidateGenesis check the given genesis state has no integrity issues
 func ValidateGenesis(data GenesisState) error {
-	for _, a := range data.Authorization {
+	for i, a := range data.Authorization {
 		if a.Grantee == "" {
-			return errors.New("missing grantee")
+			return fmt.Errorf("authorization: %d, missing grantee", i)
 		}
 		if a.Granter == "" {
-			return errors.New("missing granter")
+			return fmt.Errorf("authorization: %d,missing granter", i)
 		}
 
 	}

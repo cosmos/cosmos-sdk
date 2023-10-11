@@ -2,7 +2,6 @@ package types
 
 import (
 	"errors"
-	fmt "fmt"
 
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	cmttypes "github.com/cometbft/cometbft/types"
@@ -16,8 +15,6 @@ func (msg MsgUpdateParams) ToProtoConsensusParams() (cmtproto.ConsensusParams, e
 	if msg.Evidence == nil || msg.Block == nil || msg.Validator == nil {
 		return cmtproto.ConsensusParams{}, errors.New("all parameters must be present")
 	}
-
-	fmt.Println(msg.Evidence)
 
 	cp := cmtproto.ConsensusParams{
 		Block: &cmtproto.BlockParams{

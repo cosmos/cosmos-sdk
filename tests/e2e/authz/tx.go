@@ -12,7 +12,6 @@ import (
 	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -28,7 +27,7 @@ import (
 	govtestutil "github.com/cosmos/cosmos-sdk/x/gov/client/testutil"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
-	stakingcli "github.com/cosmos/cosmos-sdk/x/staking/client/cli"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 type E2ETestSuite struct {
@@ -177,12 +176,6 @@ var (
 	typeMsgSend = bank.SendAuthorization{}.MsgTypeURL()
 	typeMsgVote = sdk.MsgTypeURL(&govv1.MsgVote{})
 )
-
-func execDelegate(val *network.Validator, args []string) (testutil.BufferWriter, error) {
-	cmd := stakingcli.NewDelegateCmd(addresscodec.NewBech32Codec("cosmosvaloper"), addresscodec.NewBech32Codec("cosmos"))
-	clientCtx := val.ClientCtx
-	return clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
-}
 
 func (s *E2ETestSuite) TestExecAuthorizationWithExpiration() {
 	val := s.network.Validators[0]
@@ -777,17 +770,14 @@ func (s *E2ETestSuite) TestExecUndelegateAuthorization() {
 	s.Require().NoError(s.network.WaitForNextBlock())
 
 	// delegating stakes to validator
-	_, err = execDelegate(
-		val,
-		[]string{
-			val.ValAddress.String(),
-			"100stake",
-			fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-			fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
-			fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-			fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
-		},
-	)
+	msg := &stakingtypes.MsgDelegate{
+		DelegatorAddress: val.Address.String(),
+		ValidatorAddress: val.ValAddress.String(),
+		Amount:           sdk.NewCoin("stake", math.NewInt(100)),
+	}
+
+	_, err = clitestutil.SubmitTestTx(val.ClientCtx, msg, val.Address, clitestutil.TestTxConfig{})
+
 	s.Require().NoError(err)
 
 	tokens := sdk.NewCoins(

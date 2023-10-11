@@ -17,7 +17,7 @@ type StoreTestSuite struct {
 	suite.Suite
 
 	storage store.VersionedDatabase
-	kvStore store.KVStore
+	kvStore store.BranchedKVStore
 }
 
 func TestStorageTestSuite(t *testing.T) {

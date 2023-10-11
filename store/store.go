@@ -15,6 +15,7 @@ type StoreType int
 const (
 	StoreTypeBranch StoreType = iota
 	StoreTypeTrace
+	StoreTypeMem
 )
 
 // RootStore defines an abstraction layer containing a State Storage (SS) engine
@@ -64,10 +65,13 @@ type KVStore interface {
 	// Delete deletes the key from the store.
 	Delete(key []byte)
 
+	// GetChangeset returns the ChangeSet, if any, for the branched state. This
+	// should contain all writes that are marked to be flushed and committed during
+	// Commit().
+	GetChangeset() *Changeset
+
 	// Reset resets the store, which is implementation dependent.
 	Reset() error
-
-	BranchWrapper
 
 	// Iterator creates a new Iterator over the domain [start, end). Note:
 	//
@@ -99,21 +103,4 @@ type BranchedKVStore interface {
 
 	// BranchWithTrace recursively wraps with tracing enabled.
 	BranchWithTrace(w io.Writer, tc TraceContext) BranchedKVStore
-}
-
-// BranchWrapper defines an interface for a branching a KVStore's state, allowing
-// writes to be cached and flushed to the underlying store or discarded altogether.
-// Reads should be performed against a "branched" state, allowing dirty entries
-// to be cached and read from. If an entry is not found in the branched state, it
-// will fallthrough to the underlying store.
-type BranchWrapper interface {
-	Branch() BranchedKVStore
-
-	// BranchWithTrace branches a store with tracing enabled.
-	BranchWithTrace(w io.Writer, tc TraceContext) BranchedKVStore
-
-	// GetChangeset returns the ChangeSet, if any, for the branched state. This
-	// should contain all writes that are marked to be flushed and committed during
-	// Commit().
-	GetChangeset() *Changeset
 }

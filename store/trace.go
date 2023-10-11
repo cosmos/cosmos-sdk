@@ -4,7 +4,7 @@ import "golang.org/x/exp/maps"
 
 // TraceContext contains KVStore context data. It will be written with every
 // trace operation.
-type TraceContext map[string]interface{}
+type TraceContext map[string]any
 
 // Clone creates a shallow clone of a TraceContext.
 func (tc TraceContext) Clone() TraceContext {

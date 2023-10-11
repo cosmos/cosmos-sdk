@@ -6,10 +6,11 @@ import (
 	"io"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/memkv"
 	"cosmossdk.io/store/v2/tracekv"
-	"github.com/stretchr/testify/require"
 )
 
 const storeKey = "storeKey"

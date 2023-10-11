@@ -5,8 +5,9 @@ import (
 	"encoding/json"
 	"io"
 
-	"cosmossdk.io/store/v2"
 	"github.com/cockroachdb/errors"
+
+	"cosmossdk.io/store/v2"
 )
 
 const (

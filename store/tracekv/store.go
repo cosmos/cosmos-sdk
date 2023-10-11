@@ -30,10 +30,10 @@ type (
 
 	// traceOperation defines a traced KVStore operation, such as a read or write
 	traceOperation struct {
-		Operation string                 `json:"operation"`
-		Key       string                 `json:"key"`
-		Value     string                 `json:"value"`
-		Metadata  map[string]interface{} `json:"metadata"`
+		Operation string         `json:"operation"`
+		Key       string         `json:"key"`
+		Value     string         `json:"value"`
+		Metadata  map[string]any `json:"metadata"`
 	}
 )
 
@@ -79,14 +79,6 @@ func (s *Store) Delete(key []byte) {
 
 func (s *Store) Reset() error {
 	return s.parent.Reset()
-}
-
-func (s *Store) Branch() store.BranchedKVStore {
-	panic("cannot execute Branch() on tracekv.Store")
-}
-
-func (s *Store) BranchWithTrace(w io.Writer, tc store.TraceContext) store.BranchedKVStore {
-	panic("cannot execute BranchWithTrace() on tracekv.Store")
 }
 
 func (s *Store) Iterator(start, end []byte) store.Iterator {

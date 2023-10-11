@@ -54,7 +54,7 @@ func (s *CLITestSuite) SetupSuite() {
 
 func (s *CLITestSuite) TestNewMsgCreateVestingAccountCmd() {
 	accounts := testutil.CreateKeyringAccounts(s.T(), s.kr, 1)
-	cmd := cli.NewMsgCreateVestingAccountCmd(addresscodec.NewBech32Codec("cosmos"))
+	cmd := cli.NewMsgCreateVestingAccountCmd()
 	cmd.SetOutput(io.Discard)
 
 	extraArgs := []string{
@@ -143,7 +143,7 @@ func (s *CLITestSuite) TestNewMsgCreateVestingAccountCmd() {
 
 func (s *CLITestSuite) TestNewMsgCreatePermanentLockedAccountCmd() {
 	accounts := testutil.CreateKeyringAccounts(s.T(), s.kr, 1)
-	cmd := cli.NewMsgCreatePermanentLockedAccountCmd(addresscodec.NewBech32Codec("cosmos"))
+	cmd := cli.NewMsgCreatePermanentLockedAccountCmd()
 	cmd.SetOutput(io.Discard)
 
 	extraArgs := []string{
@@ -222,7 +222,7 @@ func (s *CLITestSuite) TestNewMsgCreatePermanentLockedAccountCmd() {
 
 func (s *CLITestSuite) TestNewMsgCreatePeriodicVestingAccountCmd() {
 	accounts := testutil.CreateKeyringAccounts(s.T(), s.kr, 1)
-	cmd := cli.NewMsgCreatePeriodicVestingAccountCmd(addresscodec.NewBech32Codec("cosmos"))
+	cmd := cli.NewMsgCreatePeriodicVestingAccountCmd()
 	cmd.SetOutput(io.Discard)
 
 	extraArgs := []string{

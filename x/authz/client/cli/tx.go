@@ -55,14 +55,11 @@ func NewCmdGrantAuthorization() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "grant [grantee] <authorization_type=\"send\"|\"generic\"|\"delegate\"|\"unbond\"|\"redelegate\"> --from [granter]",
 		Short: "Grant authorization to an address",
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`create a new grant authorization to an address to execute a transaction on your behalf:
-
+		Long: fmt.Sprintf(`create a new grant authorization to an address to execute a transaction on your behalf:
 Examples:
  $ %[1]s tx authz grant cosmos1skjw.. send --spend-limit=1000stake --from=cosmos1skl..
  $ %[1]s tx authz grant cosmos1skjw.. generic --msg-type=/cosmos.gov.v1.MsgVote --from=cosmos1sk..
 	`, version.AppName),
-		),
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)

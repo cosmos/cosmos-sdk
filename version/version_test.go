@@ -158,7 +158,14 @@ func Test_runVersionCmd(t *testing.T) {
 
 	info := version.NewInfo()
 	stringInfo, err := json.Marshal(info)
-	require.NoError(t, err)
-	require.NoError(t, cmd.Execute())
-	assert.Equal(t, string(stringInfo)+"\n", mockOut.String())
+
+	extraInfo := &version.ExtraInfo{"key1": "value1"}
+
+	for key, value := range *extraInfo {
+		require.NoError(t, err)
+		require.NoError(t, cmd.Execute())
+		assert.Equal(t, key, "key1")
+		assert.Equal(t, value, "value1")
+		assert.Equal(t, string(stringInfo)+"\n", mockOut.String())
+	}
 }

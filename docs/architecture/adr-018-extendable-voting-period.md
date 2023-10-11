@@ -6,7 +6,7 @@
 
 ## Context
 
-Currently the voting period for all governance proposals is the same.  However, this is suboptimal as all governance proposals do not require the same time period.  For more non-contentious proposals, they can be dealt with more efficently with a faster period, while more contentious or complex proposals may need a longer period for extended discussion/consideration.
+Currently the voting period for all governance proposals is the same.  However, this is suboptimal as all governance proposals do not require the same time period.  For more non-contentious proposals, they can be dealt with more efficiently with a faster period, while more contentious or complex proposals may need a longer period for extended discussion/consideration.
 
 ## Decision
 

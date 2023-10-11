@@ -48,6 +48,7 @@ func (k *Keeper) Get(ctx sdk.Context) (*tmproto.ConsensusParams, error) {
 func (k *Keeper) Has(ctx sdk.Context) bool {
 	store := ctx.KVStore(k.storeKey)
 
+<<<<<<< HEAD
 	return store.Has(types.ParamStoreKeyConsensusParams)
 }
 
@@ -55,4 +56,34 @@ func (k *Keeper) Has(ctx sdk.Context) bool {
 func (k *Keeper) Set(ctx sdk.Context, cp *tmproto.ConsensusParams) {
 	store := ctx.KVStore(k.storeKey)
 	store.Set(types.ParamStoreKeyConsensusParams, k.cdc.MustMarshal(cp))
+=======
+var _ types.MsgServer = Keeper{}
+
+func (k Keeper) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams) (*types.MsgUpdateParamsResponse, error) {
+	if k.GetAuthority() != msg.Authority {
+		return nil, fmt.Errorf("invalid authority; expected %s, got %s", k.GetAuthority(), msg.Authority)
+	}
+
+	consensusParams, err := msg.ToProtoConsensusParams()
+	if err != nil {
+		return nil, err
+	}
+	if err := cmttypes.ConsensusParamsFromProto(consensusParams).ValidateBasic(); err != nil {
+		return nil, err
+	}
+
+	if err := k.ParamsStore.Set(ctx, consensusParams); err != nil {
+		return nil, err
+	}
+
+	if err := k.event.EventManager(ctx).EmitKV(
+		ctx,
+		"update_consensus_params",
+		event.Attribute{Key: "authority", Value: msg.Authority},
+		event.Attribute{Key: "parameters", Value: consensusParams.String()}); err != nil {
+		return nil, err
+	}
+
+	return &types.MsgUpdateParamsResponse{}, nil
+>>>>>>> ed14ec03b (chore: check for nil params (#18041))
 }

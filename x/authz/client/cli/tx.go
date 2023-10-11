@@ -8,8 +8,6 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"cosmossdk.io/core/address"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
@@ -35,7 +33,7 @@ const (
 )
 
 // GetTxCmd returns the transaction commands for this module
-func GetTxCmd(ac address.Codec) *cobra.Command {
+func GetTxCmd() *cobra.Command {
 	AuthorizationTxCmd := &cobra.Command{
 		Use:                        authz.ModuleName,
 		Short:                      "Authorization transactions subcommands",
@@ -46,7 +44,7 @@ func GetTxCmd(ac address.Codec) *cobra.Command {
 	}
 
 	AuthorizationTxCmd.AddCommand(
-		NewCmdGrantAuthorization(ac),
+		NewCmdGrantAuthorization(),
 		NewCmdExecAuthorization(),
 	)
 
@@ -54,20 +52,17 @@ func GetTxCmd(ac address.Codec) *cobra.Command {
 }
 
 // NewCmdGrantAuthorization returns a CLI command handler for creating a MsgGrant transaction.
-//
-// cannot give autocli support, can be CLI breaking
-func NewCmdGrantAuthorization(ac address.Codec) *cobra.Command {
+// Migrating this command to AutoCLI is possible but would be CLI breaking.
+func NewCmdGrantAuthorization() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "grant <grantee> <authorization_type=\"send\"|\"generic\"|\"delegate\"|\"unbond\"|\"redelegate\"> --from <granter>",
+		Use:   "grant [grantee] <authorization_type=\"send\"|\"generic\"|\"delegate\"|\"unbond\"|\"redelegate\"> --from [granter]",
 		Short: "Grant authorization to an address",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`create a new grant authorization to an address to execute a transaction on your behalf:
-
 Examples:
- $ %s tx %s grant cosmos1skjw.. send --spend-limit=1000stake --from=cosmos1skl..
- $ %s tx %s grant cosmos1skjw.. generic --msg-type=/cosmos.gov.v1.MsgVote --from=cosmos1sk..
-	`, version.AppName, authz.ModuleName, version.AppName, authz.ModuleName),
-		),
+ $ %[1]s tx authz grant cosmos1skjw.. send --spend-limit=1000stake --from=cosmos1skl..
+ $ %[1]s tx authz grant cosmos1skjw.. generic --msg-type=/cosmos.gov.v1.MsgVote --from=cosmos1sk..
+	`, version.AppName)),
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
@@ -79,7 +74,7 @@ Examples:
 				return errors.New("grantee and granter should be different")
 			}
 
-			grantee, err := ac.StringToBytes(args[0])
+			grantee, err := clientCtx.AddressCodec.StringToBytes(args[0])
 			if err != nil {
 				return err
 			}
@@ -115,7 +110,7 @@ Examples:
 					}
 				}
 
-				allowed, err := bech32toAccAddresses(allowList, ac)
+				allowed, err := bech32toAccAddresses(clientCtx, allowList)
 				if err != nil {
 					return err
 				}
@@ -168,12 +163,12 @@ Examples:
 					delegateLimit = &spendLimit
 				}
 
-				allowed, err := bech32toValAddresses(allowValidators)
+				allowed, err := bech32toValAddresses(clientCtx, allowValidators)
 				if err != nil {
 					return err
 				}
 
-				denied, err := bech32toValAddresses(denyValidators)
+				denied, err := bech32toValAddresses(clientCtx, denyValidators)
 				if err != nil {
 					return err
 				}
@@ -271,10 +266,10 @@ Example:
 }
 
 // bech32toValAddresses returns []ValAddress from a list of Bech32 string addresses.
-func bech32toValAddresses(validators []string) ([]sdk.ValAddress, error) {
+func bech32toValAddresses(clientCtx client.Context, validators []string) ([]sdk.ValAddress, error) {
 	vals := make([]sdk.ValAddress, len(validators))
 	for i, validator := range validators {
-		addr, err := sdk.ValAddressFromBech32(validator)
+		addr, err := clientCtx.ValidatorAddressCodec.StringToBytes(validator)
 		if err != nil {
 			return nil, err
 		}
@@ -284,10 +279,10 @@ func bech32toValAddresses(validators []string) ([]sdk.ValAddress, error) {
 }
 
 // bech32toAccAddresses returns []AccAddress from a list of Bech32 string addresses.
-func bech32toAccAddresses(accAddrs []string, ac address.Codec) ([]sdk.AccAddress, error) {
+func bech32toAccAddresses(clientCtx client.Context, accAddrs []string) ([]sdk.AccAddress, error) {
 	addrs := make([]sdk.AccAddress, len(accAddrs))
 	for i, addr := range accAddrs {
-		accAddr, err := ac.StringToBytes(addr)
+		accAddr, err := clientCtx.AddressCodec.StringToBytes(addr)
 		if err != nil {
 			return nil, err
 		}

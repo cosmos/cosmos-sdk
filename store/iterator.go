@@ -8,9 +8,6 @@ type Iterator interface {
 	// Valid returns if the iterator is currently valid.
 	Valid() bool
 
-	// Next moves the iterator to the next key/value pair.
-	Next() bool
-
 	// Error returns any accumulated error. Error() should be called after all
 	// key/value pairs have been exhausted, i.e. after Next() has returned false.
 	Error() error
@@ -20,6 +17,9 @@ type Iterator interface {
 
 	// Value returns the value of the current key/value pair, or nil if done.
 	Value() []byte
+
+	// Next moves the iterator to the next key/value pair.
+	Next() bool
 
 	// Close releases associated resources. It should NOT be idempotent. It must
 	// only be called once and any call after may panic.

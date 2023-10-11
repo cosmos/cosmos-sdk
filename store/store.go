@@ -14,6 +14,7 @@ type StoreType int
 // Sentinel store types.
 const (
 	StoreTypeBranch StoreType = iota
+	StoreTypeMem
 )
 
 // RootStore defines an abstraction layer containing a State Storage (SS) engine
@@ -63,6 +64,11 @@ type KVStore interface {
 	// Delete deletes the key from the store.
 	Delete(key []byte)
 
+	// GetChangeset returns the ChangeSet, if any, for the branched state. This
+	// should contain all writes that are marked to be flushed and committed during
+	// Commit().
+	GetChangeset() *Changeset
+
 	// Reset resets the store, which is implementation dependent.
 	Reset() error
 
@@ -79,11 +85,6 @@ type KVStore interface {
 	// ReverseIterator creates a new reverse Iterator over the domain [start, end).
 	// It has the some properties and contracts as Iterator.
 	ReverseIterator(start, end []byte) Iterator
-
-	// GetChangeset returns the ChangeSet, if any, for the branched state. This
-	// should contain all writes that are marked to be flushed and committed during
-	// Commit().
-	GetChangeset() *Changeset
 }
 
 // BranchedKVStore defines an interface for a branched a KVStore. It extends KVStore

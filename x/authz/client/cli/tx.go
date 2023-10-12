@@ -13,6 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
+	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
 	staking "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -44,9 +45,47 @@ func GetTxCmd() *cobra.Command {
 
 	authorizationTxCmd.AddCommand(
 		NewCmdGrantAuthorization(),
+		NewCmdExecAuthorization(),
 	)
 
 	return authorizationTxCmd
+}
+
+// NewCmdExecAuthorization returns a CLI command handler for creating a MsgExec transaction.
+// Deprecated: This command is deprecated in favor for the AutoCLI exec command.
+// It stays here for backward compatibility, as the AutoCLI command has a small breaking change,
+// but it will be removed in future versions.
+func NewCmdExecAuthorization() *cobra.Command {
+	cmd := &cobra.Command{
+		Deprecated: "Use the AutoCLI exec command instead",
+		Use:        "legacy-exec [tx-json-file] --from [grantee]",
+		Short:      "Execute tx on behalf of granter account",
+		Example:    fmt.Sprintf("$ %s tx authz exec tx.json --from grantee\n $ %[1]s tx bank send [granter] [recipient] [amount] --generate-only tx.json && %[1]s tx authz exec tx.json --from grantee", version.AppName),
+		Args:       cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+			grantee := clientCtx.GetFromAddress()
+
+			if offline, _ := cmd.Flags().GetBool(flags.FlagOffline); offline {
+				return errors.New("cannot broadcast tx during offline mode")
+			}
+
+			theTx, err := authclient.ReadTxFromFile(clientCtx, args[0])
+			if err != nil {
+				return err
+			}
+			msg := authz.NewMsgExec(grantee, theTx.GetMsgs())
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
 }
 
 // NewCmdGrantAuthorization returns a CLI command handler for creating a MsgGrant transaction.

@@ -170,12 +170,23 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				{
 					RpcMethod: "Vote",
 					Use:       "vote [proposal-id] [voter] [vote-option] [metadata]",
-					Short:     "Vote on a proposal",
+					Long: `Vote on a proposal.
+		Parameters:
+			proposal-id: unique ID of the proposal
+			voter: voter account addresses.
+			vote-option: choice of the voter(s)
+				VOTE_OPTION_UNSPECIFIED: no-op
+				VOTE_OPTION_NO: no
+				VOTE_OPTION_YES: yes
+				VOTE_OPTION_ABSTAIN: abstain
+				VOTE_OPTION_NO_WITH_VETO: no-with-veto
+			Metadata: metadata for the vote
+`,
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
 						{ProtoField: "proposal_id"}, {ProtoField: "voter"}, {ProtoField: "option"}, {ProtoField: "metadata"},
 					},
 					FlagOptions: map[string]*autocliv1.FlagOptions{
-						"exec": {Name: "exec", DefaultValue: "", Usage: "Set to 1 to try to execute proposal immediately after voting"},
+						"exec": {Name: "exec", DefaultValue: "", Usage: "Set to 'try' for trying to execute proposal immediately after voting"},
 					},
 				},
 				{

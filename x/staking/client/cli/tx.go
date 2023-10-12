@@ -51,10 +51,11 @@ func NewTxCmd() *cobra.Command {
 }
 
 // NewCreateValidatorCmd returns a CLI command handler for creating a MsgCreateValidator transaction.
+// TODO(@julienrbrt): remove this once AutoCLI can flatten nested structs.
 func NewCreateValidatorCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create-validator [path/to/validator.json]",
-		Short: "create new validator initialized with a self-delegation to it",
+		Short: "Create new validator initialized with a self-delegation to it",
 		Args:  cobra.ExactArgs(1),
 		Long:  `Create a new validator initialized with a self-delegation by submitting a JSON file with the new validator details.`,
 		Example: strings.TrimSpace(
@@ -114,10 +115,11 @@ where we can get the pubkey using "%s tendermint show-validator"
 }
 
 // NewEditValidatorCmd returns a CLI command handler for creating a MsgEditValidator transaction.
+// TODO(@julienrbrt): remove this once AutoCLI can flatten nested structs.
 func NewEditValidatorCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "edit-validator",
-		Short: "edit an existing validator account",
+		Short: "Edit an existing validator account",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {

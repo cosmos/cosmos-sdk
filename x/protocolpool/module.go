@@ -30,6 +30,7 @@ var (
 
 	_ module.AppModule           = AppModule{}
 	_ module.AppModuleSimulation = AppModule{}
+	_ appmodule.HasEndBlocker    = AppModule{}
 )
 
 // AppModuleBasic defines the basic application module used by the pool module.

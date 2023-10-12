@@ -10,6 +10,10 @@ import (
 	abci "github.com/cometbft/cometbft/abci/types"
 	db "github.com/cosmos/cosmos-db"
 	"google.golang.org/grpc"
+	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/reflect/protodesc"
+	"google.golang.org/protobuf/reflect/protoregistry"
+	"google.golang.org/protobuf/types/descriptorpb"
 
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
@@ -45,7 +49,7 @@ func NewApp(rootDir string, logger log.Logger) (servertypes.ABCI, error) {
 	router.SetInterfaceRegistry(interfaceRegistry)
 
 	newDesc := &grpc.ServiceDesc{
-		ServiceName: "test",
+		ServiceName: "Test",
 		Methods: []grpc.MethodDesc{
 			{
 				MethodName: "Test",
@@ -169,4 +173,48 @@ func MsgTestHandler(srv interface{}, ctx context.Context, dec func(interface{}) 
 
 func (m MsgServerImpl) Test(ctx context.Context, msg *KVStoreTx) (*sdk.Result, error) {
 	return KVStoreHandler(m.capKeyMainStore)(sdk.UnwrapSDKContext(ctx), msg)
+}
+
+func init() {
+	err := registerFauxDescriptor()
+	if err != nil {
+		panic(err)
+	}
+}
+
+func registerFauxDescriptor() error {
+	fauxDescriptor, err := protodesc.NewFile(&descriptorpb.FileDescriptorProto{
+		Name:             proto.String("faux_proto/test.proto"),
+		Dependency:       nil,
+		PublicDependency: nil,
+		WeakDependency:   nil,
+		MessageType: []*descriptorpb.DescriptorProto{
+			{
+				Name: proto.String("KVStoreTx"),
+			},
+		},
+		EnumType: nil,
+		Service: []*descriptorpb.ServiceDescriptorProto{
+			{
+				Name: proto.String("Test"),
+				Method: []*descriptorpb.MethodDescriptorProto{
+					{
+						Name:       proto.String("Test"),
+						InputType:  proto.String("KVStoreTx"),
+						OutputType: proto.String("KVStoreTx"),
+					},
+				},
+			},
+		},
+		Extension:      nil,
+		Options:        nil,
+		SourceCodeInfo: nil,
+		Syntax:         nil,
+		Edition:        nil,
+	}, nil)
+	if err != nil {
+		return err
+	}
+
+	return protoregistry.GlobalFiles.RegisterFile(fauxDescriptor)
 }

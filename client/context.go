@@ -397,7 +397,7 @@ func (ctx Context) printOutput(out []byte) error {
 func GetFromFields(clientCtx Context, kr keyring.Keyring, from string) (sdk.AccAddress, string, keyring.KeyType, error) {
 	if from == "" && clientCtx.KeyringDefaultKeyName != "" {
 		from = clientCtx.KeyringDefaultKeyName
-		clientCtx.PrintString(fmt.Sprintf("No key name or address provided; using the default key: %s\n", clientCtx.KeyringDefaultKeyName))
+		_ = clientCtx.PrintString(fmt.Sprintf("No key name or address provided; using the default key: %s\n", clientCtx.KeyringDefaultKeyName))
 	}
 
 	if from == "" {

@@ -4,11 +4,13 @@ import (
 	"context"
 	"strings"
 
+	"cosmossdk.io/errors"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/x/feegrant"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 type msgServer struct {
@@ -102,4 +104,21 @@ func (k msgServer) PruneAllowances(ctx context.Context, req *feegrant.MsgPruneAl
 	)
 
 	return &feegrant.MsgPruneAllowancesResponse{}, nil
+}
+
+// UpdateParams updates the params.
+func (k msgServer) UpdateParams(ctx context.Context, msg *feegrant.MsgUpdateParams) (*feegrant.MsgUpdateParamsResponse, error) {
+	if k.authority != msg.Authority {
+		return nil, errors.Wrapf(types.ErrInvalidSigner, "invalid authority; expected %s, got %s", k.authority, msg.Authority)
+	}
+
+	if msg.Params.EndblockPrunes == 0 || msg.Params.ManualPrunes == 0 {
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "invalid prune params")
+	}
+
+	if err := k.Params.Set(ctx, msg.Params); err != nil {
+		return nil, err
+	}
+
+	return &feegrant.MsgUpdateParamsResponse{}, nil
 }

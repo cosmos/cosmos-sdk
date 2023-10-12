@@ -24,6 +24,8 @@ import (
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 var (
@@ -178,10 +180,22 @@ type FeegrantInputs struct {
 	AccountKeeper feegrant.AccountKeeper
 	BankKeeper    feegrant.BankKeeper
 	Registry      cdctypes.InterfaceRegistry
+	Config        *modulev1.Module
 }
 
 func ProvideModule(in FeegrantInputs) (keeper.Keeper, appmodule.AppModule) {
-	k := keeper.NewKeeper(in.Cdc, in.StoreService, in.AccountKeeper)
+	// default to governance authority if not provided
+	authority := authtypes.NewModuleAddress(types.GovModuleName)
+	if in.Config.Authority != "" {
+		authority = authtypes.NewModuleAddressOrBech32Address(in.Config.Authority)
+	}
+
+	as, err := in.AccountKeeper.AddressCodec().BytesToString(authority)
+	if err != nil {
+		panic(err)
+	}
+
+	k := keeper.NewKeeper(in.Cdc, in.StoreService, in.AccountKeeper, as)
 	m := NewAppModule(in.Cdc, in.AccountKeeper, in.BankKeeper, k, in.Registry)
 	return k, m
 }

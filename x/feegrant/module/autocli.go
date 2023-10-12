@@ -47,6 +47,11 @@ You can find the fee-grant of a granter and grantee.`),
 						{ProtoField: "granter"},
 					},
 				},
+				{
+					RpcMethod: "Params",
+					Use:       "params",
+					Short:     "Query the current parameters",
+				},
 			},
 		},
 		Tx: &autocliv1.ServiceCommandDescriptor{

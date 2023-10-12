@@ -26,4 +26,6 @@ var (
 	// FeeAllowanceQueueKeyPrefix is the set of the kvstore for fee allowance keys data
 	// - 0x01<allowance_prefix_queue_key_bytes>: <empty value>
 	FeeAllowanceQueueKeyPrefix = collections.NewPrefix(1)
+
+	ParamsKey = collections.NewPrefix(2)
 )

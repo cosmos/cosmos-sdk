@@ -25,23 +25,26 @@ type Keeper struct {
 	cdc          codec.BinaryCodec
 	storeService store.KVStoreService
 	authKeeper   feegrant.AccountKeeper
+	authority    string
 	Schema       collections.Schema
 	// FeeAllowance key: grantee+granter | value: Grant
 	FeeAllowance collections.Map[collections.Pair[sdk.AccAddress, sdk.AccAddress], feegrant.Grant]
 	// FeeAllowanceQueue key: expiration time+grantee+granter | value: bool
 	FeeAllowanceQueue collections.Map[collections.Triple[time.Time, sdk.AccAddress, sdk.AccAddress], bool]
+	Params            collections.Item[feegrant.Params]
 }
 
 var _ ante.FeegrantKeeper = &Keeper{}
 
 // NewKeeper creates a feegrant Keeper
-func NewKeeper(cdc codec.BinaryCodec, storeService store.KVStoreService, ak feegrant.AccountKeeper) Keeper {
+func NewKeeper(cdc codec.BinaryCodec, storeService store.KVStoreService, ak feegrant.AccountKeeper, authority string) Keeper {
 	sb := collections.NewSchemaBuilder(storeService)
 
 	return Keeper{
 		cdc:          cdc,
 		storeService: storeService,
 		authKeeper:   ak,
+		authority:    authority,
 		FeeAllowance: collections.NewMap(
 			sb,
 			feegrant.FeeAllowanceKeyPrefix,
@@ -56,6 +59,7 @@ func NewKeeper(cdc codec.BinaryCodec, storeService store.KVStoreService, ak feeg
 			collections.TripleKeyCodec(sdk.TimeKey, sdk.LengthPrefixedAddressKey(sdk.AccAddressKey), sdk.LengthPrefixedAddressKey(sdk.AccAddressKey)), //nolint: staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility
 			collections.BoolValue,
 		),
+		Params: collections.NewItem(sb, feegrant.ParamsKey, "params", codec.CollValue[feegrant.Params](cdc)),
 	}
 }
 
@@ -301,7 +305,8 @@ func (k Keeper) InitGenesis(ctx context.Context, data *feegrant.GenesisState) er
 			return err
 		}
 	}
-	return nil
+
+	return k.Params.Set(ctx, data.Params)
 }
 
 // ExportGenesis will dump the contents of the keeper into a serializable GenesisState.

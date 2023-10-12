@@ -22,6 +22,38 @@ func NewMsgServerImpl(keeper Keeper) types.MsgServer {
 	return &MsgServer{Keeper: keeper}
 }
 
+func (k MsgServer) MsgClaimBudget(ctx context.Context, msg *types.MsgClaimBudget) (*types.MsgClaimBudgetResponse, error) {
+	recipient, err := k.Keeper.authKeeper.AddressCodec().StringToBytes(msg.RecipientAddress)
+	if err != nil {
+		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid recipient address: %s", err)
+	}
+
+	amount, err := k.ClaimFunds(ctx, recipient)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.MsgClaimBudgetResponse{Amount: amount}, nil
+}
+
+func (k MsgServer) SubmitBudgetProposal(ctx context.Context, msg *types.BudgetProposal) (*types.MsgBudgetProposalResponse, error) {
+	recipient, err := k.Keeper.authKeeper.AddressCodec().StringToBytes(msg.RecipientAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := k.validateBudgetProposal(*msg); err != nil {
+		return nil, err
+	}
+
+	// set budget proposal in state
+	err = k.BudgetProposal.Set(ctx, recipient, *msg)
+	if err != nil {
+		return nil, err
+	}
+	return &types.MsgBudgetProposalResponse{}, nil
+}
+
 func (k MsgServer) FundCommunityPool(ctx context.Context, msg *types.MsgFundCommunityPool) (*types.MsgFundCommunityPoolResponse, error) {
 	depositor, err := k.authKeeper.AddressCodec().StringToBytes(msg.Depositor)
 	if err != nil {

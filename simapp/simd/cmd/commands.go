@@ -45,7 +45,7 @@ func initRootCmd(
 	cfg := sdk.GetConfig()
 	cfg.Seal()
 
-	cmdContext := context.WithValue(rootCmd.Context(), version.ContextKey{}, extraInfo)
+	cmdContext := context.WithValue(context.Background(), version.ContextKey{}, extraInfo)
 	rootCmd.SetContext(cmdContext)
 
 	rootCmd.AddCommand(

@@ -354,7 +354,6 @@ func (s *CLITestSuite) TestCLITxGrantAuthorization() {
 			[]string{
 				grantee.String(),
 				"invalid authz type",
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, val[0].Address.String()),
 			},
 			true,
 			"invalid authorization type",

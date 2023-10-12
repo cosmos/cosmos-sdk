@@ -8,7 +8,6 @@ import (
 	"io"
 	"os"
 
-	"github.com/cockroachdb/errors"
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/spf13/viper"
 	"google.golang.org/grpc"
@@ -401,7 +400,7 @@ func GetFromFields(clientCtx Context, kr keyring.Keyring, from string) (sdk.AccA
 	}
 
 	if from == "" {
-		return nil, "", 0, errors.New("no key name or address provided; have you forgotten the --from flag?")
+		return nil, "", 0, nil
 	}
 
 	addr, err := clientCtx.AddressCodec.StringToBytes(from)

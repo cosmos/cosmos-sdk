@@ -45,10 +45,6 @@ func initRootCmd(
 	cfg := sdk.GetConfig()
 	cfg.Seal()
 
-	type contextKey struct {
-		key string
-	}
-
 	cmdContext := context.WithValue(rootCmd.Context(), version.ContextKey{}, extraInfo)
 	rootCmd.SetContext(cmdContext)
 

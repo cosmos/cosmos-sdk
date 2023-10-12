@@ -177,20 +177,8 @@ func (s *E2ETestSuite) SetupSuite() {
 		Option:     group.VOTE_OPTION_YES,
 	}
 
-	out, err = clitestutil.SubmitTestTx(val.ClientCtx, msg, val.Address, clitestutil.TestTxConfig{})
-
 	// vote
-	// out, err = clitestutil.ExecTestCLICmd(val.ClientCtx, client.MsgVoteCmd(),
-	// 	append(
-	// 		[]string{
-	// 			"1",
-	// 			val.Address.String(),
-	// 			"VOTE_OPTION_YES",
-	// 			"",
-	// 		},
-	// 		s.commonFlags...,
-	// 	),
-	// )
+	out, err = clitestutil.SubmitTestTx(val.ClientCtx, msg, val.Address, clitestutil.TestTxConfig{})
 	s.Require().NoError(err, out.String())
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
 	s.Require().NoError(clitestutil.CheckTxCode(s.network, val.ClientCtx, txResp.TxHash, 0))

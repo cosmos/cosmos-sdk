@@ -181,6 +181,7 @@ func init() {
 		panic(err)
 	}
 }
+
 func registerFauxDescriptor() error {
 	fauxDescriptor, err := protodesc.NewFile(&descriptorpb.FileDescriptorProto{
 		Name:             proto.String("faux_proto/test.proto"),

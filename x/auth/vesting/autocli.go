@@ -42,6 +42,7 @@ timestamp.`,
 					},
 				},
 			},
+			EnhanceCustomCommand: true,
 		},
 	}
 }

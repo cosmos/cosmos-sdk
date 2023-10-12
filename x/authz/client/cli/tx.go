@@ -57,11 +57,10 @@ func GetTxCmd() *cobra.Command {
 // but it will be removed in future versions.
 func NewCmdExecAuthorization() *cobra.Command {
 	cmd := &cobra.Command{
-		Deprecated: "Use the AutoCLI exec command instead",
-		Use:        "legacy-exec [tx-json-file] --from [grantee]",
-		Short:      "Execute tx on behalf of granter account",
-		Example:    fmt.Sprintf("$ %s tx authz exec tx.json --from grantee\n $ %[1]s tx bank send [granter] [recipient] [amount] --generate-only tx.json && %[1]s tx authz exec tx.json --from grantee", version.AppName),
-		Args:       cobra.ExactArgs(1),
+		Use:     "legacy-exec [tx-json-file] --from [grantee]",
+		Short:   "Execute tx on behalf of granter account. Deprecated, use exec instead.",
+		Example: fmt.Sprintf("$ %s tx authz exec tx.json --from grantee\n $ %[1]s tx bank send [granter] [recipient] [amount] --generate-only tx.json && %[1]s tx authz exec tx.json --from grantee", version.AppName),
+		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {

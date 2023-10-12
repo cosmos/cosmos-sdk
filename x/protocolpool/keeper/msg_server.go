@@ -42,7 +42,7 @@ func (k MsgServer) SubmitBudgetProposal(ctx context.Context, msg *types.BudgetPr
 		return nil, err
 	}
 
-	if err := k.validateBudgetProposal(*msg); err != nil {
+	if err := k.validateBudgetProposal(ctx, *msg); err != nil {
 		return nil, err
 	}
 

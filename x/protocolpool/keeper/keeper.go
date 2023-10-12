@@ -139,21 +139,30 @@ func (k Keeper) getClaimableFunds(ctx context.Context, recipient sdk.AccAddress)
 	return amount, nil
 }
 
-func (k Keeper) validateBudgetProposal(bp types.BudgetProposal) error {
+func (k Keeper) validateBudgetProposal(ctx context.Context, bp types.BudgetProposal) error {
+	account := k.authKeeper.GetAccount(ctx, sdk.AccAddress(bp.RecipientAddress))
+	if account == nil {
+		return fmt.Errorf("account not found: %s", bp.RecipientAddress)
+	}
+
+	if bp.TotalBudget.IsZero() {
+		return fmt.Errorf("total budget cannot be zero")
+	}
+
 	if err := validateAmount(sdk.NewCoins(*bp.TotalBudget)); err != nil {
 		return err
 	}
 
 	if bp.StartTime <= 0 {
-		return fmt.Errorf("start time should be positive")
+		return fmt.Errorf("start time must be a positive value")
 	}
 
 	if bp.RemainingTranches <= 0 {
-		return fmt.Errorf("cannot set tranches <= 0")
+		return fmt.Errorf("remaining tranches must be a positive value")
 	}
 
 	if bp.Period <= 0 {
-		return fmt.Errorf("period should be a positive integer")
+		return fmt.Errorf("period should be a positive value")
 	}
 
 	return nil

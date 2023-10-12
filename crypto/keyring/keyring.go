@@ -586,7 +586,7 @@ func SignWithLedger(k *Record, msg []byte) (sig []byte, pub types.PubKey, err er
 		return
 	}
 
-	sig, err = priv.Sign(msg)
+	sig, err = priv.SignLedgerAminoJSON(msg)
 	if err != nil {
 		return nil, nil, err
 	}

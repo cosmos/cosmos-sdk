@@ -1,6 +1,7 @@
 package version_test
 
 import (
+	context "context"
 	"encoding/json"
 	"fmt"
 	"runtime"
@@ -160,12 +161,19 @@ func Test_runVersionCmd(t *testing.T) {
 	stringInfo, err := json.Marshal(info)
 
 	extraInfo := &version.ExtraInfo{"key1": "value1"}
+	ctx := context.WithValue(context.Background(), version.ContextKey{}, extraInfo)
 
-	for key, value := range *extraInfo {
-		require.NoError(t, err)
-		require.NoError(t, cmd.Execute())
-		assert.Equal(t, key, "key1")
-		assert.Equal(t, value, "value1")
-		assert.Equal(t, string(stringInfo)+"\n", mockOut.String())
-	}
+	require.NoError(t, err)
+	require.NoError(t, cmd.Execute())
+
+	extraInfoFromContext := ctx.Value(version.ContextKey{})
+	assert.NotNil(t, extraInfoFromContext)
+
+	castedExtraInfo, ok := extraInfoFromContext.(*version.ExtraInfo)
+	assert.True(t, ok)
+
+	key1Value := (*castedExtraInfo)["key1"]
+	assert.Equal(t, "value1", key1Value)
+
+	assert.Equal(t, string(stringInfo)+"\n", mockOut.String())
 }

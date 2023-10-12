@@ -49,9 +49,7 @@ func initRootCmd(
 		key string
 	}
 
-	var extraInfoKey = &contextKey{"extraInfo"}
-
-	cmdContext := context.WithValue(rootCmd.Context(), extraInfoKey, extraInfo)
+	cmdContext := context.WithValue(rootCmd.Context(), version.ContextKey{}, extraInfo)
 	rootCmd.SetContext(cmdContext)
 
 	rootCmd.AddCommand(

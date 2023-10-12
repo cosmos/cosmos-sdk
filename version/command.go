@@ -63,7 +63,7 @@ func NewVersionCommand() *cobra.Command {
 func extraInfoFromContext(cmd *cobra.Command) ExtraInfo {
 	ctx := cmd.Context()
 	if ctx != nil {
-		extraInfo, ok := ctx.Value("extraInfo").(ExtraInfo)
+		extraInfo, ok := ctx.Value(ContextKey{}).(ExtraInfo)
 		if ok {
 			return extraInfo
 		}

@@ -23,6 +23,9 @@ import (
 	"runtime/debug"
 )
 
+// ContextKey is used to store the ExtraInfo in the context.
+type ContextKey struct{}
+
 var (
 	// application's name
 	Name = ""

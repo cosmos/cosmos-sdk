@@ -8,6 +8,5 @@ import (
 )
 
 func CreateGrant(clientCtx client.Context, args []string) (testutil.BufferWriter, error) {
-	cmd := cli.NewCmdGrantAuthorization()
-	return clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
+	return clitestutil.ExecTestCLICmd(clientCtx, cli.NewCmdGrantAuthorization(), args)
 }

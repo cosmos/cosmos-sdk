@@ -48,11 +48,6 @@ func NewApp(rootDir string, logger log.Logger) (servertypes.ABCI, error) {
 	router := bam.NewMsgServiceRouter()
 	router.SetInterfaceRegistry(interfaceRegistry)
 
-	err = registerFauxDescriptor()
-	if err != nil {
-		return nil, err
-	}
-
 	newDesc := &grpc.ServiceDesc{
 		ServiceName: "Test",
 		Methods: []grpc.MethodDesc{
@@ -180,6 +175,12 @@ func (m MsgServerImpl) Test(ctx context.Context, msg *KVStoreTx) (*sdk.Result, e
 	return KVStoreHandler(m.capKeyMainStore)(sdk.UnwrapSDKContext(ctx), msg)
 }
 
+func init() {
+	err := registerFauxDescriptor()
+	if err != nil {
+		panic(err)
+	}
+}
 func registerFauxDescriptor() error {
 	fauxDescriptor, err := protodesc.NewFile(&descriptorpb.FileDescriptorProto{
 		Name:             proto.String("faux_proto/test.proto"),

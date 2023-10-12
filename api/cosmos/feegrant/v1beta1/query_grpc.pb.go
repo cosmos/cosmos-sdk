@@ -24,6 +24,7 @@ const (
 	Query_Allowance_FullMethodName           = "/cosmos.feegrant.v1beta1.Query/Allowance"
 	Query_Allowances_FullMethodName          = "/cosmos.feegrant.v1beta1.Query/Allowances"
 	Query_AllowancesByGranter_FullMethodName = "/cosmos.feegrant.v1beta1.Query/AllowancesByGranter"
+	Query_Params_FullMethodName              = "/cosmos.feegrant.v1beta1.Query/Params"
 )
 
 // QueryClient is the client API for Query service.
@@ -38,6 +39,7 @@ type QueryClient interface {
 	//
 	// Since: cosmos-sdk 0.46
 	AllowancesByGranter(ctx context.Context, in *QueryAllowancesByGranterRequest, opts ...grpc.CallOption) (*QueryAllowancesByGranterResponse, error)
+	Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error)
 }
 
 type queryClient struct {
@@ -75,6 +77,15 @@ func (c *queryClient) AllowancesByGranter(ctx context.Context, in *QueryAllowanc
 	return out, nil
 }
 
+func (c *queryClient) Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error) {
+	out := new(QueryParamsResponse)
+	err := c.cc.Invoke(ctx, Query_Params_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 // All implementations must embed UnimplementedQueryServer
 // for forward compatibility
@@ -87,6 +98,7 @@ type QueryServer interface {
 	//
 	// Since: cosmos-sdk 0.46
 	AllowancesByGranter(context.Context, *QueryAllowancesByGranterRequest) (*QueryAllowancesByGranterResponse, error)
+	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
 	mustEmbedUnimplementedQueryServer()
 }
 
@@ -102,6 +114,9 @@ func (UnimplementedQueryServer) Allowances(context.Context, *QueryAllowancesRequ
 }
 func (UnimplementedQueryServer) AllowancesByGranter(context.Context, *QueryAllowancesByGranterRequest) (*QueryAllowancesByGranterResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AllowancesByGranter not implemented")
+}
+func (UnimplementedQueryServer) Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Params not implemented")
 }
 func (UnimplementedQueryServer) mustEmbedUnimplementedQueryServer() {}
 
@@ -170,6 +185,24 @@ func _Query_AllowancesByGranter_Handler(srv interface{}, ctx context.Context, de
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_Params_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryParamsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).Params(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Query_Params_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).Params(ctx, req.(*QueryParamsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Query_ServiceDesc is the grpc.ServiceDesc for Query service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -188,6 +221,10 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "AllowancesByGranter",
 			Handler:    _Query_AllowancesByGranter_Handler,
+		},
+		{
+			MethodName: "Params",
+			Handler:    _Query_Params_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

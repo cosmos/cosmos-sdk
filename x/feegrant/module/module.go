@@ -57,7 +57,7 @@ func (ab AppModuleBasic) Name() string {
 // module-specific gRPC queries.
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 	feegrant.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.keeper))
-	feegrant.RegisterQueryServer(cfg.QueryServer(), am.keeper)
+	feegrant.RegisterQueryServer(cfg.QueryServer(), keeper.NewQueryServer(am.keeper))
 	m := keeper.NewMigrator(am.keeper)
 	err := cfg.RegisterMigration(feegrant.ModuleName, 1, m.Migrate1to2)
 	if err != nil {

@@ -5,7 +5,7 @@ toolchain go1.21.0
 module github.com/cosmos/cosmos-sdk
 
 require (
-	cosmossdk.io/api v0.7.2-0.20230927090904-9dd34510e273
+	cosmossdk.io/api v0.7.2-0.20231012113443-ff1d5e1bb63f
 	cosmossdk.io/collections v0.4.0
 	cosmossdk.io/core v0.12.0
 	cosmossdk.io/depinject v1.0.0-alpha.4

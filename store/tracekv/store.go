@@ -19,7 +19,7 @@ const (
 	IterValueOp = "iterValue"
 )
 
-var _ store.KVStore = (*Store)(nil)
+var _ store.BranchedKVStore = (*Store)(nil)
 
 type (
 	// Store defines a KVStore used for tracing capabilities, which typically wraps
@@ -39,7 +39,7 @@ type (
 	}
 )
 
-func New(p store.KVStore, w io.Writer, tc store.TraceContext) store.KVStore {
+func New(p store.KVStore, w io.Writer, tc store.TraceContext) store.BranchedKVStore {
 	return &Store{
 		parent:  p,
 		writer:  w,
@@ -81,6 +81,20 @@ func (s *Store) Delete(key []byte) {
 
 func (s *Store) Reset() error {
 	return s.parent.Reset()
+}
+
+func (s *Store) Write() {
+	if b, ok := s.parent.(store.BranchedKVStore); ok {
+		b.Write()
+	}
+}
+
+func (s *Store) Branch() store.BranchedKVStore {
+	panic("cannot call Branch() on tracekv.Store")
+}
+
+func (s *Store) BranchWithTrace(_ io.Writer, _ store.TraceContext) store.BranchedKVStore {
+	panic("cannot call BranchWithTrace() on tracekv.Store")
 }
 
 func (s *Store) Iterator(start, end []byte) store.Iterator {

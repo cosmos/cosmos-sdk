@@ -3,6 +3,7 @@ package root
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"slices"
 
 	"github.com/cockroachdb/errors"
@@ -12,6 +13,7 @@ import (
 	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/branchkv"
 	"cosmossdk.io/store/v2/commitment"
+	"cosmossdk.io/store/v2/tracekv"
 )
 
 // defaultStoreKey defines the default store key used for the single SC backend.
@@ -35,9 +37,9 @@ type Store struct {
 	// stateCommitment reflects the state commitment (SC) backend
 	stateCommitment *commitment.Database
 
-	// rootKVStore reflects the root KVStore that is used to accumulate writes
+	// rootKVStore reflects the root BranchedKVStore that is used to accumulate writes
 	// and branch off of.
-	rootKVStore store.KVStore
+	rootKVStore store.BranchedKVStore
 
 	// commitHeader reflects the header used when committing state (note, this isn't required and only used for query purposes)
 	commitHeader store.CommitHeader
@@ -47,6 +49,12 @@ type Store struct {
 
 	// workingHash defines the current (yet to be committed) hash
 	workingHash []byte
+
+	// traceWriter defines a writer for store tracing operation
+	traceWriter io.Writer
+
+	// traceContext defines the tracing context, if any, for trace operations
+	traceContext store.TraceContext
 }
 
 func New(
@@ -157,6 +165,18 @@ func (s *Store) LoadVersion(v uint64) (err error) {
 // a branched KVStore that allow writes to be discarded and propagated to the
 // root KVStore using Write().
 func (s *Store) GetKVStore(_ string) store.KVStore {
+	if s.TracingEnabled() {
+		return tracekv.New(s.rootKVStore, s.traceWriter, s.traceContext)
+	}
+
+	return s.rootKVStore
+}
+
+func (s *Store) GetBranchedKVStore(storeKey string) store.BranchedKVStore {
+	if s.TracingEnabled() {
+		return tracekv.New(s.rootKVStore, s.traceWriter, s.traceContext)
+	}
+
 	return s.rootKVStore
 }
 
@@ -173,6 +193,18 @@ func (s *Store) loadVersion(v uint64, upgrades any) error {
 	// Ref: https://github.com/cosmos/cosmos-sdk/issues/17314
 
 	return nil
+}
+
+func (s *Store) SetTracingContext(tc store.TraceContext) {
+	s.traceContext = tc
+}
+
+func (s *Store) SetTracer(w io.Writer) {
+	s.traceWriter = w
+}
+
+func (s *Store) TracingEnabled() bool {
+	return s.traceWriter != nil
 }
 
 func (s *Store) SetCommitHeader(h store.CommitHeader) {

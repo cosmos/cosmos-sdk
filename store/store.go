@@ -24,8 +24,13 @@ type RootStore interface {
 	GetSCStore(storeKey string) Tree
 	MountSCStore(storeKey string, sc Tree) error
 	GetKVStore(storeKey string) KVStore
+	GetBranchedKVStore(storeKey string) BranchedKVStore
 
 	GetProof(storeKey string, version uint64, key []byte) (*ics23.CommitmentProof, error)
+
+	SetTracingContext(tc TraceContext)
+	SetTracer(w io.Writer)
+	TracingEnabled() bool
 
 	LoadVersion(version uint64) error
 	LoadLatestVersion() error
@@ -37,7 +42,6 @@ type RootStore interface {
 
 	// TODO:
 	//
-	// - Tracing
 	// - Branching
 	// - Queries
 	//

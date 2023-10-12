@@ -224,13 +224,8 @@ func (d LegacyDec) LT(d2 LegacyDec) bool    { return (d.i).Cmp(d2.i) < 0 }      
 func (d LegacyDec) LTE(d2 LegacyDec) bool   { return (d.i).Cmp(d2.i) <= 0 }             // less than or equal
 func (d LegacyDec) Neg() LegacyDec          { return LegacyDec{new(big.Int).Neg(d.i)} } // reverse the decimal sign
 
-// NegMut reverses the decimal sign, mutable
-// Deprecated: use Mut().Neg().Immut() instead
-func (d LegacyDec) NegMut() LegacyDec {
-	return d.Mut().Neg().Immut()
-}                                              // reverse the decimal sign, mutable
-func (d LegacyDec) Abs() LegacyDec             { return LegacyDec{new(big.Int).Abs(d.i)} } // absolute value
-func (d LegacyDec) AbsMut() LegacyDec          { d.i.Abs(d.i); return d }                  // absolute value, mutable
+func (d LegacyDec) Abs() LegacyDec { return LegacyDec{new(big.Int).Abs(d.i)} } // absolute value
+
 func (d LegacyDec) Set(d2 LegacyDec) LegacyDec { d.i.Set(d2.i); return d }                 // set to existing dec value
 func (d LegacyDec) Clone() LegacyDec           { return LegacyDec{new(big.Int).Set(d.i)} } // clone new dec
 
@@ -270,29 +265,9 @@ func (d LegacyDec) Add(d2 LegacyDec) LegacyDec {
 	return d.ImmutOp(LegacyDec.AddMut, d2)
 }
 
-// mutable addition
-func (d LegacyDec) AddMut(d2 LegacyDec) LegacyDec {
-	d.i.Add(d.i, d2.i)
-
-	if d.i.BitLen() > maxDecBitLen {
-		panic("Int overflow")
-	}
-	return d
-}
-
 // subtraction
 func (d LegacyDec) Sub(d2 LegacyDec) LegacyDec {
 	return d.ImmutOp(LegacyDec.SubMut, d2)
-}
-
-// mutable subtraction
-func (d LegacyDec) SubMut(d2 LegacyDec) LegacyDec {
-	d.i.Sub(d.i, d2.i)
-
-	if d.i.BitLen() > maxDecBitLen {
-		panic("Int overflow")
-	}
-	return d
 }
 
 // multiplication
@@ -300,32 +275,9 @@ func (d LegacyDec) Mul(d2 LegacyDec) LegacyDec {
 	return d.ImmutOp(LegacyDec.MulMut, d2)
 }
 
-// mutable multiplication
-func (d LegacyDec) MulMut(d2 LegacyDec) LegacyDec {
-	d.i.Mul(d.i, d2.i)
-	chopped := chopPrecisionAndRound(d.i)
-
-	if chopped.BitLen() > maxDecBitLen {
-		panic("Int overflow")
-	}
-	*d.i = *chopped
-	return d
-}
-
 // multiplication truncate
 func (d LegacyDec) MulTruncate(d2 LegacyDec) LegacyDec {
 	return d.ImmutOp(LegacyDec.MulTruncateMut, d2)
-}
-
-// mutable multiplication truncage
-func (d LegacyDec) MulTruncateMut(d2 LegacyDec) LegacyDec {
-	d.i.Mul(d.i, d2.i)
-	chopPrecisionAndTruncate(d.i)
-
-	if d.i.BitLen() > maxDecBitLen {
-		panic("Int overflow")
-	}
-	return d
 }
 
 // multiplication round up at precision end.
@@ -333,42 +285,14 @@ func (d LegacyDec) MulRoundUp(d2 LegacyDec) LegacyDec {
 	return d.ImmutOp(LegacyDec.MulRoundUpMut, d2)
 }
 
-// mutable multiplication with round up at precision end.
-func (d LegacyDec) MulRoundUpMut(d2 LegacyDec) LegacyDec {
-	d.i.Mul(d.i, d2.i)
-	chopPrecisionAndRoundUp(d.i)
-
-	if d.i.BitLen() > maxDecBitLen {
-		panic("Int overflow")
-	}
-	return d
-}
-
 // multiplication
 func (d LegacyDec) MulInt(i Int) LegacyDec {
 	return d.ImmutOpInt(LegacyDec.MulIntMut, i)
 }
 
-func (d LegacyDec) MulIntMut(i Int) LegacyDec {
-	d.i.Mul(d.i, i.BigInt())
-	if d.i.BitLen() > maxDecBitLen {
-		panic("Int overflow")
-	}
-	return d
-}
-
 // MulInt64 - multiplication with int64
 func (d LegacyDec) MulInt64(i int64) LegacyDec {
 	return d.ImmutOpInt64(LegacyDec.MulInt64Mut, i)
-}
-
-func (d LegacyDec) MulInt64Mut(i int64) LegacyDec {
-	d.i.Mul(d.i, big.NewInt(i))
-
-	if d.i.BitLen() > maxDecBitLen {
-		panic("Int overflow")
-	}
-	return d
 }
 
 // quotient
@@ -378,35 +302,9 @@ func (d LegacyDec) Quo(d2 LegacyDec) LegacyDec {
 
 var squaredPrecisionReuse = new(big.Int).Mul(precisionReuse, precisionReuse)
 
-// mutable quotient
-func (d LegacyDec) QuoMut(d2 LegacyDec) LegacyDec {
-	// multiply by precision twice
-	d.i.Mul(d.i, squaredPrecisionReuse)
-	d.i.Quo(d.i, d2.i)
-
-	chopPrecisionAndRound(d.i)
-	if d.i.BitLen() > maxDecBitLen {
-		panic("Int overflow")
-	}
-	return d
-}
-
 // quotient truncate
 func (d LegacyDec) QuoTruncate(d2 LegacyDec) LegacyDec {
 	return d.ImmutOp(LegacyDec.QuoTruncateMut, d2)
-}
-
-// mutable quotient truncate
-func (d LegacyDec) QuoTruncateMut(d2 LegacyDec) LegacyDec {
-	// multiply precision twice
-	d.i.Mul(d.i, squaredPrecisionReuse)
-	d.i.Quo(d.i, d2.i)
-
-	chopPrecisionAndTruncate(d.i)
-	if d.i.BitLen() > maxDecBitLen {
-		panic("Int overflow")
-	}
-	return d
 }
 
 // quotient, round up
@@ -414,37 +312,14 @@ func (d LegacyDec) QuoRoundUp(d2 LegacyDec) LegacyDec {
 	return d.ImmutOp(LegacyDec.QuoRoundupMut, d2)
 }
 
-// mutable quotient, round up
-func (d LegacyDec) QuoRoundupMut(d2 LegacyDec) LegacyDec {
-	// multiply precision twice
-	d.i.Mul(d.i, squaredPrecisionReuse)
-	d.i.Quo(d.i, d2.i)
-
-	chopPrecisionAndRoundUp(d.i)
-	if d.i.BitLen() > maxDecBitLen {
-		panic("Int overflow")
-	}
-	return d
-}
-
 // quotient
 func (d LegacyDec) QuoInt(i Int) LegacyDec {
 	return d.ImmutOpInt(LegacyDec.QuoIntMut, i)
 }
 
-func (d LegacyDec) QuoIntMut(i Int) LegacyDec {
-	d.i.Quo(d.i, i.BigInt())
-	return d
-}
-
 // QuoInt64 - quotient with int64
 func (d LegacyDec) QuoInt64(i int64) LegacyDec {
 	return d.ImmutOpInt64(LegacyDec.QuoInt64Mut, i)
-}
-
-func (d LegacyDec) QuoInt64Mut(i int64) LegacyDec {
-	d.i.Quo(d.i, big.NewInt(i))
-	return d
 }
 
 // ApproxRoot returns an approximate estimation of a Dec's positive real nth root
@@ -500,25 +375,6 @@ func (d LegacyDec) ApproxRoot(root uint64) (guess LegacyDec, err error) {
 func (d LegacyDec) Power(power uint64) LegacyDec {
 	res := LegacyDec{new(big.Int).Set(d.i)}
 	return res.PowerMut(power)
-}
-
-func (d LegacyDec) PowerMut(power uint64) LegacyDec {
-	if power == 0 {
-		// Set to 1 with the correct precision.
-		d.i.Set(precisionReuse)
-		return d
-	}
-	tmp := LegacyOneDec()
-
-	for i := power; i > 1; {
-		if i%2 != 0 {
-			tmp.MulMut(d)
-		}
-		i /= 2
-		d.MulMut(d)
-	}
-
-	return d.MulMut(tmp)
 }
 
 // ApproxSqrt is a wrapper around ApproxRoot for the common special case

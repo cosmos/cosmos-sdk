@@ -2,7 +2,7 @@ package math
 
 import "math/big"
 
-// LegacyDecMut is a wrapper around *big.Int with an unsafe and mutable API
+// LegacyDecMut is a wrapper around big.Int with an unsafe and mutable API
 type LegacyDecMut big.Int
 
 // Immut converts a LegacyDecMut to a LegacyDec, exposing a non-mutable API.
@@ -86,8 +86,8 @@ func (d *LegacyDecMut) MulInt64(i int64) *LegacyDecMut {
 	return d
 }
 
-// QuoMut sets LegacyDecMut to LegacyDecMut / LegacyDec and returns it.
-func (d *LegacyDecMut) QuoMut(d2 LegacyDec) *LegacyDecMut {
+// Quo sets LegacyDecMut to LegacyDecMut / LegacyDec and returns it.
+func (d *LegacyDecMut) Quo(d2 LegacyDec) *LegacyDecMut {
 	// multiply by precision twice
 	(*big.Int)(d).Mul((*big.Int)(d), squaredPrecisionReuse)
 	(*big.Int)(d).Quo((*big.Int)(d), d2.i)
@@ -99,7 +99,7 @@ func (d *LegacyDecMut) QuoMut(d2 LegacyDec) *LegacyDecMut {
 	return d
 }
 
-// QuoTruncate behaves as QuoMut but rounds down.
+// QuoTruncate behaves as Quo but rounds down.
 func (d *LegacyDecMut) QuoTruncate(d2 LegacyDec) *LegacyDecMut {
 	(*big.Int)(d).Mul((*big.Int)(d), squaredPrecisionReuse)
 	(*big.Int)(d).Quo((*big.Int)(d), d2.i)
@@ -111,7 +111,7 @@ func (d *LegacyDecMut) QuoTruncate(d2 LegacyDec) *LegacyDecMut {
 	return d
 }
 
-// QuoRoundUp behaves as QuoMut but rounds up.
+// QuoRoundUp behaves as Quo but rounds up.
 func (d *LegacyDecMut) QuoRoundUp(d2 LegacyDec) *LegacyDecMut {
 	(*big.Int)(d).Mul((*big.Int)(d), squaredPrecisionReuse)
 	(*big.Int)(d).Quo((*big.Int)(d), d2.i)
@@ -136,7 +136,7 @@ func (d *LegacyDecMut) QuoInt64(i int64) *LegacyDecMut {
 }
 
 // Power sets LegacyDecMut to LegacyDecMut ^ power and returns it.
-func (d *LegacyDecMut) Power(power int64) *LegacyDecMut {
+func (d *LegacyDecMut) Power(power uint64) *LegacyDecMut {
 	if power == 0 {
 		// Set to 1 with the correct precision.
 		(*big.Int)(d).Set(precisionReuse)

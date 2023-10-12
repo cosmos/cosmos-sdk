@@ -51,3 +51,35 @@ func BenchmarkLegacyDecMut_Neg(b *testing.B) {
 	}
 	sink = nil
 }
+
+func BenchmarkLegacyDec_PowerMut(b *testing.B) {
+	b.ReportAllocs()
+
+	d := LegacyMustNewDecFromStr("0.00000001")
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		sink = d.PowerMut(500)
+	}
+
+	if sink == nil {
+		b.Fatal("Benchmark was not run")
+	}
+	sink = nil
+}
+
+func BenchmarkLegacyDecMut_Power(b *testing.B) {
+	b.ReportAllocs()
+
+	d := LegacyMustNewDecFromStr("0.00000001").Mut()
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		sink = d.Power(500)
+	}
+
+	if sink == nil {
+		b.Fatal("Benchmark was not run")
+	}
+	sink = nil
+}

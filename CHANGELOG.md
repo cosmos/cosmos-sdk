@@ -165,6 +165,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### CLI Breaking Changes
 
+* (x/auth/vesting) [#]() `appd tx vesting create-vesting-account` takes an amount of coin as last argument instead of second. Coins are space separated.
+  * `appd tx vesting create-periodic-vesting-account` takes an extra argument, start time instead of using a json for it.
 * (x/distribution) [#17963](https://github.com/cosmos/cosmos-sdk/pull/17963) `appd tx distribution withdraw-rewards` now only withdraws rewards for the delegator's own delegations. For withdrawing validators commission, use `appd tx distribution withdraw-validator-commission`.
 
 ### State Machine Breaking

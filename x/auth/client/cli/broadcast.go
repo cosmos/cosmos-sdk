@@ -2,12 +2,14 @@ package cli
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/version"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 )
 
@@ -19,11 +21,9 @@ func GetBroadcastCommand() *cobra.Command {
 		Long: strings.TrimSpace(`Broadcast transactions created with the --generate-only
 flag and signed with the sign command. Read a transaction from [file_path] and
 broadcast it to a node. If you supply a dash (-) argument in place of an input
-filename, the command reads from standard input.
-
-$ <appd> tx broadcast ./mytxn.json
-`),
-		Args: cobra.ExactArgs(1),
+filename, the command reads from standard input.`),
+		Example: fmt.Sprintf("%s tx broadcast <file_path>", version.AppName),
+		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {

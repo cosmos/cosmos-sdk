@@ -108,6 +108,12 @@ func TestGetFromFields(t *testing.T) {
 		expectedErr string
 	}{
 		{
+			clientCtx:   client.Context{}.WithAddressCodec(addresscodec.NewBech32Codec("cosmos")),
+			keyring:     func() keyring.Keyring { return nil },
+			from:        "",
+			expectedErr: "no key name or address provided; have you forgotten the --from flag?",
+		},
+		{
 			clientCtx: client.Context{}.WithAddressCodec(addresscodec.NewBech32Codec("cosmos")).WithKeyringDefaultKeyName("alice"),
 			keyring: func() keyring.Keyring {
 				kb := keyring.NewInMemory(cfg.Codec)

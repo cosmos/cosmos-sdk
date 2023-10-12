@@ -45,13 +45,13 @@ func (itr *iterator) Close() {
 func (itr *iterator) Key() []byte {
 	key := itr.parent.Key()
 
-	writeOperation(itr.writer, iterKeyOp, itr.context, key, nil)
+	writeOperation(itr.writer, IterKeyOp, itr.context, key, nil)
 	return key
 }
 
 func (itr *iterator) Value() []byte {
 	value := itr.parent.Value()
 
-	writeOperation(itr.writer, iterValueOp, itr.context, nil, value)
+	writeOperation(itr.writer, IterValueOp, itr.context, nil, value)
 	return value
 }

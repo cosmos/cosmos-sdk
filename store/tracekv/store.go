@@ -10,12 +10,13 @@ import (
 	"cosmossdk.io/store/v2"
 )
 
+// Operation types for tracing KVStore operations.
 const (
-	writeOp     = "write"
-	readOp      = "read"
-	deleteOp    = "delete"
-	iterKeyOp   = "iterKey"
-	iterValueOp = "iterValue"
+	WriteOp     = "write"
+	ReadOp      = "read"
+	DeleteOp    = "delete"
+	IterKeyOp   = "iterKey"
+	IterValueOp = "iterValue"
 )
 
 var _ store.KVStore = (*Store)(nil)
@@ -29,8 +30,8 @@ type (
 		writer  io.Writer
 	}
 
-	// traceOperation defines a traced KVStore operation, such as a read or write
-	traceOperation struct {
+	// TraceOperation defines a traced KVStore operation, such as a read or write
+	TraceOperation struct {
 		Operation string         `json:"operation"`
 		Key       string         `json:"key"`
 		Value     string         `json:"value"`
@@ -60,7 +61,7 @@ func (s *Store) GetChangeset() *store.Changeset {
 
 func (s *Store) Get(key []byte) []byte {
 	value := s.parent.Get(key)
-	writeOperation(s.writer, readOp, s.context, key, value)
+	writeOperation(s.writer, ReadOp, s.context, key, value)
 	return value
 }
 
@@ -69,12 +70,12 @@ func (s *Store) Has(key []byte) bool {
 }
 
 func (s *Store) Set(key, value []byte) {
-	writeOperation(s.writer, writeOp, s.context, key, value)
+	writeOperation(s.writer, WriteOp, s.context, key, value)
 	s.parent.Set(key, value)
 }
 
 func (s *Store) Delete(key []byte) {
-	writeOperation(s.writer, deleteOp, s.context, key, nil)
+	writeOperation(s.writer, DeleteOp, s.context, key, nil)
 	s.parent.Delete(key)
 }
 
@@ -93,7 +94,7 @@ func (s *Store) ReverseIterator(start, end []byte) store.Iterator {
 // writeOperation writes a KVStore operation to the underlying io.Writer as
 // JSON-encoded data where the key/value pair is base64 encoded.
 func writeOperation(w io.Writer, op string, tc store.TraceContext, key, value []byte) {
-	traceOp := traceOperation{
+	traceOp := TraceOperation{
 		Operation: op,
 		Key:       base64.StdEncoding.EncodeToString(key),
 		Value:     base64.StdEncoding.EncodeToString(value),

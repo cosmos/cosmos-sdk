@@ -45,7 +45,10 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper, authKeeper types.AccountKeeper
 			}
 
 			// store funds in the DistributionInfo until a claim tx
-			k.AppendDistributionInfo(ctx, distributionInfo)
+			err = k.AppendDistributionInfo(ctx, distributionInfo)
+			if err != nil {
+				return false, err
+			}
 
 			// update the budget's remaining tranches
 			budget.RemainingTranches--

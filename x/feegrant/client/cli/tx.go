@@ -7,7 +7,6 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"cosmossdk.io/core/address"
 	"cosmossdk.io/x/feegrant"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -27,7 +26,7 @@ const (
 )
 
 // GetTxCmd returns the transaction commands for feegrant module
-func GetTxCmd(ac address.Codec) *cobra.Command {
+func GetTxCmd() *cobra.Command {
 	feegrantTxCmd := &cobra.Command{
 		Use:                        feegrant.ModuleName,
 		Short:                      "Feegrant transactions sub-commands",
@@ -38,7 +37,7 @@ func GetTxCmd(ac address.Codec) *cobra.Command {
 	}
 
 	feegrantTxCmd.AddCommand(
-		NewCmdFeeGrant(ac),
+		NewCmdFeeGrant(),
 	)
 
 	return feegrantTxCmd
@@ -46,7 +45,7 @@ func GetTxCmd(ac address.Codec) *cobra.Command {
 
 // NewCmdFeeGrant returns a CLI command handler to create a MsgGrantAllowance transaction.
 // This command is more powerful than AutoCLI generated command as it allows a better input validation.
-func NewCmdFeeGrant(ac address.Codec) *cobra.Command {
+func NewCmdFeeGrant() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "grant [granter_key_or_address] [grantee]",
 		Aliases: []string{"grant-allowance"},
@@ -75,13 +74,13 @@ Examples:
 				return err
 			}
 
-			_, err = ac.StringToBytes(args[1])
+			_, err = clientCtx.AddressCodec.StringToBytes(args[1])
 			if err != nil {
 				return err
 			}
 
 			granter := clientCtx.GetFromAddress()
-			granterStr, err := ac.BytesToString(granter)
+			granterStr, err := clientCtx.AddressCodec.BytesToString(granter)
 			if err != nil {
 				return err
 			}

@@ -154,3 +154,87 @@ func (d *LegacyDecMut) Power(power uint64) *LegacyDecMut {
 
 	return d.Mul(tmp.Immut())
 }
+
+//     ____
+//  __|    |__   "chop 'em
+//       ` \     round!"
+// ___||  ~  _     -bankers
+// |         |      __
+// |       | |   __|__|__
+// |_____:  /   | $$$    |
+//              |________|
+
+// Remove a Precision amount of rightmost digits and perform bankers rounding
+// on the remainder (gaussian rounding) on the digits which have been removed.
+//
+// Mutates the input. Use the non-mutative version if that is undesired
+func chopPrecisionAndRound(d *big.Int) *big.Int {
+	// remove the negative and add it back when returning
+	if d.Sign() == -1 {
+		// make d positive, compute chopped value, and then un-mutate d
+		d = d.Neg(d)
+		d = chopPrecisionAndRound(d)
+		d = d.Neg(d)
+		return d
+	}
+
+	// get the truncated quotient and remainder
+	quo, rem := d, big.NewInt(0)
+	quo, rem = quo.QuoRem(d, precisionReuse, rem)
+
+	if rem.Sign() == 0 { // remainder is zero
+		return quo
+	}
+
+	switch rem.Cmp(fivePrecision) {
+	case -1:
+		return quo
+	case 1:
+		return quo.Add(quo, oneInt)
+	default: // bankers rounding must take place
+		// always round to an even number
+		if quo.Bit(0) == 0 {
+			return quo
+		}
+		return quo.Add(quo, oneInt)
+	}
+}
+
+func chopPrecisionAndRoundUp(d *big.Int) *big.Int {
+	// remove the negative and add it back when returning
+	if d.Sign() == -1 {
+		// make d positive, compute chopped value, and then un-mutate d
+		d = d.Neg(d)
+		// truncate since d is negative...
+		chopPrecisionAndTruncate(d)
+		d = d.Neg(d)
+		return d
+	}
+
+	// get the truncated quotient and remainder
+	quo, rem := d, big.NewInt(0)
+	quo, rem = quo.QuoRem(d, precisionReuse, rem)
+
+	if rem.Sign() == 0 { // remainder is zero
+		return quo
+	}
+
+	return quo.Add(quo, oneInt)
+}
+
+func chopPrecisionAndRoundNonMutative(d *big.Int) *big.Int {
+	tmp := new(big.Int).Set(d)
+	return chopPrecisionAndRound(tmp)
+}
+
+// chopPrecisionAndTruncate is similar to chopPrecisionAndRound,
+// but always rounds down. It does not mutate the input.
+func chopPrecisionAndTruncate(d *big.Int) {
+	d.Quo(d, precisionReuse)
+}
+
+func chopPrecisionAndTruncateNonMutative(d *big.Int) *big.Int {
+	tmp := new(big.Int).Set(d)
+	chopPrecisionAndTruncate(tmp)
+	return tmp
+}

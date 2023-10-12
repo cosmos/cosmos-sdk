@@ -18,6 +18,10 @@ func BenchmarkLegacyDecMut(b *testing.B) {
 	sink = nil
 }
 
+// before the conversions:
+// BenchmarkLegacyDec_NegMut-10    	496984528	         2.431 ns/op	       0 B/op	       0 allocs/op
+// after conversions:
+// BenchmarkLegacyDec_NegMut-10    	482561031	         2.471 ns/op	       0 B/op	       0 allocs/op
 func BenchmarkLegacyDec_NegMut(b *testing.B) {
 	b.ReportAllocs()
 

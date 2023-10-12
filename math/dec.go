@@ -223,6 +223,9 @@ func (d LegacyDec) GTE(d2 LegacyDec) bool   { return (d.i).Cmp(d2.i) >= 0 }     
 func (d LegacyDec) LT(d2 LegacyDec) bool    { return (d.i).Cmp(d2.i) < 0 }              // less than
 func (d LegacyDec) LTE(d2 LegacyDec) bool   { return (d.i).Cmp(d2.i) <= 0 }             // less than or equal
 func (d LegacyDec) Neg() LegacyDec          { return LegacyDec{new(big.Int).Neg(d.i)} } // reverse the decimal sign
+
+// NegMut reverses the decimal sign, mutable
+// Deprecated: use Mut().Neg().Immut() instead
 func (d LegacyDec) NegMut() LegacyDec {
 	return d.Mut().Neg().Immut()
 }                                              // reverse the decimal sign, mutable

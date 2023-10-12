@@ -81,6 +81,7 @@ func defaultConfig() *Config {
 			"upgrade",
 			"vesting",
 			"circuit",
+			"protocolpool",
 		},
 		InitGenesisOrder: []string{
 			"auth",

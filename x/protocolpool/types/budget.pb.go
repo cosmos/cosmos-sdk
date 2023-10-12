@@ -105,26 +105,25 @@ func (m *BudgetProposal) GetPeriod() int64 {
 	return 0
 }
 
-// MsgSubmitBudgetProposal defines a message for setting the budget proposal.
+// MsgBudgetProposalResponse defines the response to executing a
+// MsgBudgetProposal message.
 //
 // Since: cosmos-sdk 0.50
-type MsgSubmitBudgetProposal struct {
-	Proposal *BudgetProposal `protobuf:"bytes,1,opt,name=proposal,proto3" json:"proposal,omitempty"`
-	Signer   string          `protobuf:"bytes,2,opt,name=signer,proto3" json:"signer,omitempty"`
+type MsgBudgetProposalResponse struct {
 }
 
-func (m *MsgSubmitBudgetProposal) Reset()         { *m = MsgSubmitBudgetProposal{} }
-func (m *MsgSubmitBudgetProposal) String() string { return proto.CompactTextString(m) }
-func (*MsgSubmitBudgetProposal) ProtoMessage()    {}
-func (*MsgSubmitBudgetProposal) Descriptor() ([]byte, []int) {
+func (m *MsgBudgetProposalResponse) Reset()         { *m = MsgBudgetProposalResponse{} }
+func (m *MsgBudgetProposalResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgBudgetProposalResponse) ProtoMessage()    {}
+func (*MsgBudgetProposalResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_2414eab590ecb8a3, []int{1}
 }
-func (m *MsgSubmitBudgetProposal) XXX_Unmarshal(b []byte) error {
+func (m *MsgBudgetProposalResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *MsgSubmitBudgetProposal) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *MsgBudgetProposalResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_MsgSubmitBudgetProposal.Marshal(b, m, deterministic)
+		return xxx_messageInfo_MsgBudgetProposalResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -134,82 +133,30 @@ func (m *MsgSubmitBudgetProposal) XXX_Marshal(b []byte, deterministic bool) ([]b
 		return b[:n], nil
 	}
 }
-func (m *MsgSubmitBudgetProposal) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgSubmitBudgetProposal.Merge(m, src)
+func (m *MsgBudgetProposalResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgBudgetProposalResponse.Merge(m, src)
 }
-func (m *MsgSubmitBudgetProposal) XXX_Size() int {
+func (m *MsgBudgetProposalResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *MsgSubmitBudgetProposal) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgSubmitBudgetProposal.DiscardUnknown(m)
+func (m *MsgBudgetProposalResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgBudgetProposalResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_MsgSubmitBudgetProposal proto.InternalMessageInfo
+var xxx_messageInfo_MsgBudgetProposalResponse proto.InternalMessageInfo
 
-func (m *MsgSubmitBudgetProposal) GetProposal() *BudgetProposal {
-	if m != nil {
-		return m.Proposal
-	}
-	return nil
-}
-
-func (m *MsgSubmitBudgetProposal) GetSigner() string {
-	if m != nil {
-		return m.Signer
-	}
-	return ""
-}
-
-// MsgSubmitBudgetProposalResponse defines the response to executing a
-// MsgSubmitBudgetProposal message.
+// MsgClaimBudget defines a message for claiming the distributed budget.
 //
 // Since: cosmos-sdk 0.50
-type MsgSubmitBudgetProposalResponse struct {
-}
-
-func (m *MsgSubmitBudgetProposalResponse) Reset()         { *m = MsgSubmitBudgetProposalResponse{} }
-func (m *MsgSubmitBudgetProposalResponse) String() string { return proto.CompactTextString(m) }
-func (*MsgSubmitBudgetProposalResponse) ProtoMessage()    {}
-func (*MsgSubmitBudgetProposalResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_2414eab590ecb8a3, []int{2}
-}
-func (m *MsgSubmitBudgetProposalResponse) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *MsgSubmitBudgetProposalResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_MsgSubmitBudgetProposalResponse.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *MsgSubmitBudgetProposalResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgSubmitBudgetProposalResponse.Merge(m, src)
-}
-func (m *MsgSubmitBudgetProposalResponse) XXX_Size() int {
-	return m.Size()
-}
-func (m *MsgSubmitBudgetProposalResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgSubmitBudgetProposalResponse.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_MsgSubmitBudgetProposalResponse proto.InternalMessageInfo
-
 type MsgClaimBudget struct {
-	ProposalId       uint64 `protobuf:"varint,1,opt,name=proposal_id,json=proposalId,proto3" json:"proposal_id,omitempty"`
-	RecipientAddress string `protobuf:"bytes,2,opt,name=recipient_address,json=recipientAddress,proto3" json:"recipient_address,omitempty"`
+	RecipientAddress string `protobuf:"bytes,1,opt,name=recipient_address,json=recipientAddress,proto3" json:"recipient_address,omitempty"`
 }
 
 func (m *MsgClaimBudget) Reset()         { *m = MsgClaimBudget{} }
 func (m *MsgClaimBudget) String() string { return proto.CompactTextString(m) }
 func (*MsgClaimBudget) ProtoMessage()    {}
 func (*MsgClaimBudget) Descriptor() ([]byte, []int) {
-	return fileDescriptor_2414eab590ecb8a3, []int{3}
+	return fileDescriptor_2414eab590ecb8a3, []int{2}
 }
 func (m *MsgClaimBudget) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -238,13 +185,6 @@ func (m *MsgClaimBudget) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgClaimBudget proto.InternalMessageInfo
 
-func (m *MsgClaimBudget) GetProposalId() uint64 {
-	if m != nil {
-		return m.ProposalId
-	}
-	return 0
-}
-
 func (m *MsgClaimBudget) GetRecipientAddress() string {
 	if m != nil {
 		return m.RecipientAddress
@@ -252,6 +192,10 @@ func (m *MsgClaimBudget) GetRecipientAddress() string {
 	return ""
 }
 
+// MsgClaimBudgetResponse defines the response to executing a
+// MsgClaimBudget message.
+//
+// Since: cosmos-sdk 0.50
 type MsgClaimBudgetResponse struct {
 	Amount types.Coin `protobuf:"bytes,1,opt,name=amount,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"amount"`
 }
@@ -260,7 +204,7 @@ func (m *MsgClaimBudgetResponse) Reset()         { *m = MsgClaimBudgetResponse{}
 func (m *MsgClaimBudgetResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgClaimBudgetResponse) ProtoMessage()    {}
 func (*MsgClaimBudgetResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_2414eab590ecb8a3, []int{4}
+	return fileDescriptor_2414eab590ecb8a3, []int{3}
 }
 func (m *MsgClaimBudgetResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -298,8 +242,7 @@ func (m *MsgClaimBudgetResponse) GetAmount() types.Coin {
 
 func init() {
 	proto.RegisterType((*BudgetProposal)(nil), "cosmos.protocolpool.v1.BudgetProposal")
-	proto.RegisterType((*MsgSubmitBudgetProposal)(nil), "cosmos.protocolpool.v1.MsgSubmitBudgetProposal")
-	proto.RegisterType((*MsgSubmitBudgetProposalResponse)(nil), "cosmos.protocolpool.v1.MsgSubmitBudgetProposalResponse")
+	proto.RegisterType((*MsgBudgetProposalResponse)(nil), "cosmos.protocolpool.v1.MsgBudgetProposalResponse")
 	proto.RegisterType((*MsgClaimBudget)(nil), "cosmos.protocolpool.v1.MsgClaimBudget")
 	proto.RegisterType((*MsgClaimBudgetResponse)(nil), "cosmos.protocolpool.v1.MsgClaimBudgetResponse")
 }
@@ -309,39 +252,35 @@ func init() {
 }
 
 var fileDescriptor_2414eab590ecb8a3 = []byte{
-	// 511 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x53, 0xcf, 0x6e, 0xd3, 0x30,
-	0x18, 0xaf, 0xb7, 0x51, 0x31, 0x17, 0x4d, 0x2c, 0x9a, 0xba, 0xac, 0x12, 0x69, 0x17, 0x24, 0x54,
-	0x21, 0xd5, 0x59, 0xc7, 0x0d, 0xb8, 0x90, 0x89, 0x03, 0x87, 0x49, 0x28, 0xdb, 0x89, 0x4b, 0xe4,
-	0x24, 0x96, 0x67, 0x2d, 0xb6, 0x23, 0xdb, 0xad, 0xe0, 0xc0, 0x85, 0x17, 0x60, 0xcf, 0xc1, 0x89,
-	0x03, 0x0f, 0xb1, 0xe3, 0xc4, 0x89, 0x13, 0xa0, 0xf6, 0xc0, 0x43, 0x70, 0x41, 0x75, 0xdc, 0x6a,
-	0x85, 0x15, 0x69, 0xa7, 0x38, 0xdf, 0xef, 0x4f, 0x7e, 0xdf, 0xf7, 0xc5, 0xf0, 0x61, 0x2e, 0x35,
-	0x97, 0x3a, 0xaa, 0x94, 0x34, 0x32, 0x97, 0x65, 0x25, 0x65, 0x19, 0x8d, 0x87, 0x51, 0x36, 0x2a,
-	0x28, 0x31, 0xc8, 0x96, 0xbd, 0x76, 0x4d, 0x42, 0xd7, 0x49, 0x68, 0x3c, 0xec, 0xec, 0x50, 0x49,
-	0xa5, 0x2d, 0x46, 0xb3, 0x53, 0x8d, 0x77, 0x02, 0x67, 0x99, 0x61, 0x4d, 0xa2, 0xf1, 0x30, 0x23,
-	0x06, 0x0f, 0xa3, 0x5c, 0x32, 0xe1, 0xf0, 0xbd, 0x1a, 0x4f, 0x6b, 0xe1, 0x75, 0xeb, 0xce, 0xae,
-	0x93, 0x72, 0x4d, 0x67, 0x21, 0xb8, 0xa6, 0x35, 0x10, 0xfe, 0x06, 0x70, 0x2b, 0xb6, 0x91, 0x5e,
-	0x2b, 0x59, 0x49, 0x8d, 0x4b, 0xef, 0x25, 0xdc, 0x56, 0x24, 0x67, 0x15, 0x23, 0xc2, 0xa4, 0xb8,
-	0x28, 0x14, 0xd1, 0xda, 0x07, 0x3d, 0xd0, 0xdf, 0x8c, 0xfd, 0xaf, 0x5f, 0x06, 0x3b, 0xce, 0xf8,
-	0x45, 0x8d, 0x9c, 0x18, 0xc5, 0x04, 0x4d, 0xee, 0x2f, 0x24, 0xae, 0xee, 0x3d, 0x87, 0xf7, 0x8c,
-	0x34, 0xb8, 0x4c, 0xeb, 0x8e, 0xfd, 0xb5, 0x1e, 0xe8, 0xb7, 0x0e, 0xf7, 0x90, 0x93, 0xcf, 0x9a,
-	0x40, 0xae, 0x09, 0x74, 0x24, 0x99, 0x48, 0x5a, 0x96, 0x5e, 0x87, 0xf1, 0x1e, 0x40, 0xa8, 0x0d,
-	0x56, 0x26, 0x35, 0x8c, 0x13, 0x7f, 0xbd, 0x07, 0xfa, 0xeb, 0xc9, 0xa6, 0xad, 0x9c, 0x32, 0x4e,
-	0xbc, 0x01, 0xf4, 0x14, 0xe1, 0x98, 0x09, 0x26, 0x68, 0x6a, 0x14, 0x16, 0xf9, 0x19, 0xd1, 0xfe,
-	0x86, 0xa5, 0x6d, 0x2f, 0x90, 0x53, 0x07, 0x78, 0x6d, 0xd8, 0xac, 0x88, 0x62, 0xb2, 0xf0, 0xef,
-	0x58, 0x8a, 0x7b, 0x0b, 0x3f, 0x02, 0xb8, 0x7b, 0xac, 0xe9, 0xc9, 0x28, 0xe3, 0xcc, 0xfc, 0x35,
-	0x86, 0x18, 0xde, 0xad, 0xdc, 0xd9, 0x76, 0xdf, 0x3a, 0x7c, 0x84, 0x6e, 0x5e, 0x17, 0x5a, 0x56,
-	0x26, 0x0b, 0x9d, 0x77, 0x00, 0x9b, 0x9a, 0x51, 0x41, 0x94, 0xed, 0xfe, 0x7f, 0xf3, 0x73, 0xbc,
-	0x70, 0x1f, 0x76, 0x57, 0x04, 0x4a, 0x88, 0xae, 0xa4, 0xd0, 0x24, 0xbc, 0x00, 0x70, 0xeb, 0x58,
-	0xd3, 0xa3, 0x12, 0x33, 0xee, 0xa6, 0xd5, 0x85, 0xad, 0xf9, 0x37, 0x53, 0x56, 0xd8, 0xb8, 0x1b,
-	0x09, 0x9c, 0x97, 0x5e, 0x15, 0x37, 0xef, 0x74, 0xed, 0xb6, 0x3b, 0x7d, 0xda, 0xfe, 0xf0, 0xeb,
-	0xf3, 0xe3, 0x7f, 0x9d, 0xc2, 0xf7, 0xb0, 0xbd, 0x9c, 0x68, 0x1e, 0xd6, 0xcb, 0x61, 0x13, 0x73,
-	0x39, 0x12, 0xc6, 0xcd, 0x70, 0xf5, 0xfe, 0xe3, 0x83, 0xcb, 0xef, 0xdd, 0xc6, 0xa7, 0x1f, 0xdd,
-	0x3e, 0x65, 0xe6, 0x6c, 0x94, 0xa1, 0x5c, 0x72, 0xf7, 0x13, 0xbb, 0xc7, 0x40, 0x17, 0xe7, 0x91,
-	0x79, 0x57, 0x11, 0x6d, 0x05, 0x3a, 0x71, 0xd6, 0xf1, 0xb3, 0xcb, 0x49, 0x00, 0xae, 0x26, 0x01,
-	0xf8, 0x39, 0x09, 0xc0, 0xc5, 0x34, 0x68, 0x5c, 0x4d, 0x83, 0xc6, 0xb7, 0x69, 0xd0, 0x78, 0xb3,
-	0x5f, 0x2b, 0x75, 0x71, 0x8e, 0x98, 0x8c, 0xde, 0x2e, 0xdf, 0x46, 0x6b, 0x95, 0x35, 0x6d, 0xed,
-	0xc9, 0x9f, 0x00, 0x00, 0x00, 0xff, 0xff, 0x6c, 0x64, 0x40, 0x36, 0xb1, 0x03, 0x00, 0x00,
+	// 445 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x52, 0xbf, 0x6e, 0x13, 0x31,
+	0x18, 0xcf, 0xb5, 0x10, 0xa9, 0x2e, 0xaa, 0xe8, 0xa9, 0x0a, 0x97, 0x20, 0xae, 0x21, 0x2c, 0x11,
+	0x52, 0xce, 0x04, 0x36, 0x60, 0x21, 0x15, 0x63, 0x25, 0x74, 0x74, 0x62, 0x39, 0xf9, 0xee, 0x2c,
+	0xd7, 0xea, 0xd9, 0xdf, 0xc9, 0x9f, 0x13, 0xc1, 0xc0, 0xc2, 0x13, 0x20, 0xf1, 0x16, 0x4c, 0x0c,
+	0x3c, 0x44, 0xc7, 0x8a, 0x89, 0x09, 0x50, 0x32, 0xf0, 0x1a, 0x28, 0xb6, 0xa9, 0x1a, 0x21, 0x98,
+	0x98, 0xee, 0xfc, 0xfb, 0xe7, 0xdf, 0xf7, 0xc9, 0xe4, 0x5e, 0x05, 0xa8, 0x00, 0x69, 0x6b, 0xc0,
+	0x42, 0x05, 0x4d, 0x0b, 0xd0, 0xd0, 0xc5, 0x94, 0x96, 0xf3, 0x5a, 0x70, 0x9b, 0x39, 0x38, 0xee,
+	0x79, 0x51, 0x76, 0x55, 0x94, 0x2d, 0xa6, 0x83, 0x03, 0x01, 0x02, 0x1c, 0x48, 0xd7, 0x7f, 0x9e,
+	0x1f, 0xa4, 0x21, 0xb2, 0x64, 0xc8, 0xe9, 0x62, 0x5a, 0x72, 0xcb, 0xa6, 0xb4, 0x02, 0xa9, 0x03,
+	0xdf, 0xf7, 0x7c, 0xe1, 0x8d, 0x57, 0xa3, 0x07, 0xb7, 0x82, 0x55, 0xa1, 0x58, 0x97, 0x50, 0x28,
+	0x3c, 0x31, 0xfa, 0xb0, 0x45, 0xf6, 0x66, 0xae, 0xd2, 0x0b, 0x03, 0x2d, 0x20, 0x6b, 0xe2, 0xe7,
+	0x64, 0xdf, 0xf0, 0x4a, 0xb6, 0x92, 0x6b, 0x5b, 0xb0, 0xba, 0x36, 0x1c, 0x31, 0x89, 0x86, 0xd1,
+	0x78, 0x67, 0x96, 0x7c, 0xf9, 0x3c, 0x39, 0x08, 0xc1, 0xcf, 0x3c, 0xf3, 0xd2, 0x1a, 0xa9, 0x45,
+	0x7e, 0xf3, 0xd2, 0x12, 0xf0, 0xf8, 0x29, 0xb9, 0x61, 0xc1, 0xb2, 0xa6, 0xf0, 0x13, 0x27, 0x5b,
+	0xc3, 0x68, 0xbc, 0xfb, 0xb0, 0x9f, 0x05, 0xfb, 0x7a, 0x88, 0x2c, 0x0c, 0x91, 0x1d, 0x81, 0xd4,
+	0xf9, 0xae, 0x93, 0xfb, 0x32, 0xf1, 0x1d, 0x42, 0xd0, 0x32, 0x63, 0x0b, 0x2b, 0x15, 0x4f, 0xb6,
+	0x87, 0xd1, 0x78, 0x3b, 0xdf, 0x71, 0xc8, 0x89, 0x54, 0x3c, 0x9e, 0x90, 0xd8, 0x70, 0xc5, 0xa4,
+	0x96, 0x5a, 0x14, 0xd6, 0x30, 0x5d, 0x9d, 0x72, 0x4c, 0xae, 0x39, 0xd9, 0xfe, 0x25, 0x73, 0x12,
+	0x88, 0xb8, 0x47, 0xba, 0x2d, 0x37, 0x12, 0xea, 0xe4, 0xba, 0x93, 0x84, 0xd3, 0xe3, 0xde, 0xbb,
+	0x9f, 0x9f, 0xee, 0xff, 0x39, 0xed, 0xe8, 0x36, 0xe9, 0x1f, 0xa3, 0xd8, 0xdc, 0x4b, 0xce, 0xb1,
+	0x05, 0x8d, 0x7c, 0x04, 0x64, 0xef, 0x18, 0xc5, 0x51, 0xc3, 0xa4, 0x0a, 0x65, 0xff, 0xcf, 0xc6,
+	0xfe, 0xda, 0xe6, 0x2d, 0xe9, 0x6d, 0x5e, 0xf8, 0xbb, 0x4a, 0x5c, 0x91, 0x2e, 0x53, 0x30, 0xd7,
+	0xd6, 0xdd, 0xf6, 0xaf, 0xed, 0xce, 0x1e, 0x9c, 0x7f, 0x3b, 0xec, 0x7c, 0xfc, 0x7e, 0x38, 0x16,
+	0xd2, 0x9e, 0xce, 0xcb, 0xac, 0x02, 0x15, 0x9e, 0x48, 0xf8, 0x4c, 0xb0, 0x3e, 0xa3, 0xf6, 0x4d,
+	0xcb, 0xd1, 0x19, 0x30, 0x0f, 0xd1, 0xb3, 0x27, 0xe7, 0xcb, 0x34, 0xba, 0x58, 0xa6, 0xd1, 0x8f,
+	0x65, 0x1a, 0xbd, 0x5f, 0xa5, 0x9d, 0x8b, 0x55, 0xda, 0xf9, 0xba, 0x4a, 0x3b, 0xaf, 0xee, 0x7a,
+	0x27, 0xd6, 0x67, 0x99, 0x04, 0xfa, 0x7a, 0xf3, 0xad, 0xbb, 0xa8, 0xb2, 0xeb, 0xb0, 0x47, 0xbf,
+	0x02, 0x00, 0x00, 0xff, 0xff, 0x3e, 0x5a, 0xc6, 0x92, 0x0f, 0x03, 0x00, 0x00,
 }
 
 func (m *BudgetProposal) Marshal() (dAtA []byte, err error) {
@@ -401,7 +340,7 @@ func (m *BudgetProposal) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *MsgSubmitBudgetProposal) Marshal() (dAtA []byte, err error) {
+func (m *MsgBudgetProposalResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -411,54 +350,12 @@ func (m *MsgSubmitBudgetProposal) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *MsgSubmitBudgetProposal) MarshalTo(dAtA []byte) (int, error) {
+func (m *MsgBudgetProposalResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *MsgSubmitBudgetProposal) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if len(m.Signer) > 0 {
-		i -= len(m.Signer)
-		copy(dAtA[i:], m.Signer)
-		i = encodeVarintBudget(dAtA, i, uint64(len(m.Signer)))
-		i--
-		dAtA[i] = 0x12
-	}
-	if m.Proposal != nil {
-		{
-			size, err := m.Proposal.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintBudget(dAtA, i, uint64(size))
-		}
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *MsgSubmitBudgetProposalResponse) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *MsgSubmitBudgetProposalResponse) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *MsgSubmitBudgetProposalResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *MsgBudgetProposalResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -491,12 +388,7 @@ func (m *MsgClaimBudget) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		copy(dAtA[i:], m.RecipientAddress)
 		i = encodeVarintBudget(dAtA, i, uint64(len(m.RecipientAddress)))
 		i--
-		dAtA[i] = 0x12
-	}
-	if m.ProposalId != 0 {
-		i = encodeVarintBudget(dAtA, i, uint64(m.ProposalId))
-		i--
-		dAtA[i] = 0x8
+		dAtA[i] = 0xa
 	}
 	return len(dAtA) - i, nil
 }
@@ -571,24 +463,7 @@ func (m *BudgetProposal) Size() (n int) {
 	return n
 }
 
-func (m *MsgSubmitBudgetProposal) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	if m.Proposal != nil {
-		l = m.Proposal.Size()
-		n += 1 + l + sovBudget(uint64(l))
-	}
-	l = len(m.Signer)
-	if l > 0 {
-		n += 1 + l + sovBudget(uint64(l))
-	}
-	return n
-}
-
-func (m *MsgSubmitBudgetProposalResponse) Size() (n int) {
+func (m *MsgBudgetProposalResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -603,9 +478,6 @@ func (m *MsgClaimBudget) Size() (n int) {
 	}
 	var l int
 	_ = l
-	if m.ProposalId != 0 {
-		n += 1 + sovBudget(uint64(m.ProposalId))
-	}
 	l = len(m.RecipientAddress)
 	if l > 0 {
 		n += 1 + l + sovBudget(uint64(l))
@@ -805,7 +677,7 @@ func (m *BudgetProposal) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *MsgSubmitBudgetProposal) Unmarshal(dAtA []byte) error {
+func (m *MsgBudgetProposalResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -828,128 +700,10 @@ func (m *MsgSubmitBudgetProposal) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: MsgSubmitBudgetProposal: wiretype end group for non-group")
+			return fmt.Errorf("proto: MsgBudgetProposalResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgSubmitBudgetProposal: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Proposal", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowBudget
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthBudget
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthBudget
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.Proposal == nil {
-				m.Proposal = &BudgetProposal{}
-			}
-			if err := m.Proposal.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Signer", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowBudget
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthBudget
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthBudget
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Signer = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipBudget(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthBudget
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *MsgSubmitBudgetProposalResponse) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowBudget
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: MsgSubmitBudgetProposalResponse: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgSubmitBudgetProposalResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: MsgBudgetProposalResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:
@@ -1003,25 +757,6 @@ func (m *MsgClaimBudget) Unmarshal(dAtA []byte) error {
 		}
 		switch fieldNum {
 		case 1:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ProposalId", wireType)
-			}
-			m.ProposalId = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowBudget
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.ProposalId |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 2:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field RecipientAddress", wireType)
 			}

@@ -13,6 +13,7 @@ import "cosmos/msg/v1/msg.proto";
 //
 // Since: cosmos-sdk 0.50
 message BudgetProposal {
+  option (cosmos.msg.v1.signer)               = "recipient_address";
   string                   recipient_address  = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   cosmos.base.v1beta1.Coin total_budget       = 2;
   int64                    start_time         = 3;
@@ -31,8 +32,7 @@ message MsgBudgetProposalResponse {}
 // Since: cosmos-sdk 0.50
 message MsgClaimBudget {
   option (cosmos.msg.v1.signer) = "recipient_address";
-  uint64 proposal_id            = 1;
-  string recipient_address      = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string recipient_address      = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 
 // MsgClaimBudgetResponse defines the response to executing a

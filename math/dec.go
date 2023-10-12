@@ -209,17 +209,23 @@ func LegacyMustNewDecFromStr(s string) LegacyDec {
 	return dec
 }
 
-func (d LegacyDec) IsNil() bool                { return d.i == nil }                       // is decimal nil
-func (d LegacyDec) IsZero() bool               { return (d.i).Sign() == 0 }                // is equal to zero
-func (d LegacyDec) IsNegative() bool           { return (d.i).Sign() == -1 }               // is negative
-func (d LegacyDec) IsPositive() bool           { return (d.i).Sign() == 1 }                // is positive
-func (d LegacyDec) Equal(d2 LegacyDec) bool    { return (d.i).Cmp(d2.i) == 0 }             // equal decimals
-func (d LegacyDec) GT(d2 LegacyDec) bool       { return (d.i).Cmp(d2.i) > 0 }              // greater than
-func (d LegacyDec) GTE(d2 LegacyDec) bool      { return (d.i).Cmp(d2.i) >= 0 }             // greater than or equal
-func (d LegacyDec) LT(d2 LegacyDec) bool       { return (d.i).Cmp(d2.i) < 0 }              // less than
-func (d LegacyDec) LTE(d2 LegacyDec) bool      { return (d.i).Cmp(d2.i) <= 0 }             // less than or equal
-func (d LegacyDec) Neg() LegacyDec             { return LegacyDec{new(big.Int).Neg(d.i)} } // reverse the decimal sign
-func (d LegacyDec) NegMut() LegacyDec          { d.i.Neg(d.i); return d }                  // reverse the decimal sign, mutable
+// Mut converts a LegacyDec to a LegacyDecMut, exposing a mutable API.
+func (d LegacyDec) Mut() *LegacyDecMut {
+	return (*LegacyDecMut)(d.i)
+}
+func (d LegacyDec) IsNil() bool             { return d.i == nil }                       // is decimal nil
+func (d LegacyDec) IsZero() bool            { return (d.i).Sign() == 0 }                // is equal to zero
+func (d LegacyDec) IsNegative() bool        { return (d.i).Sign() == -1 }               // is negative
+func (d LegacyDec) IsPositive() bool        { return (d.i).Sign() == 1 }                // is positive
+func (d LegacyDec) Equal(d2 LegacyDec) bool { return (d.i).Cmp(d2.i) == 0 }             // equal decimals
+func (d LegacyDec) GT(d2 LegacyDec) bool    { return (d.i).Cmp(d2.i) > 0 }              // greater than
+func (d LegacyDec) GTE(d2 LegacyDec) bool   { return (d.i).Cmp(d2.i) >= 0 }             // greater than or equal
+func (d LegacyDec) LT(d2 LegacyDec) bool    { return (d.i).Cmp(d2.i) < 0 }              // less than
+func (d LegacyDec) LTE(d2 LegacyDec) bool   { return (d.i).Cmp(d2.i) <= 0 }             // less than or equal
+func (d LegacyDec) Neg() LegacyDec          { return LegacyDec{new(big.Int).Neg(d.i)} } // reverse the decimal sign
+func (d LegacyDec) NegMut() LegacyDec {
+	return d.Mut().Neg().Immut()
+}                                              // reverse the decimal sign, mutable
 func (d LegacyDec) Abs() LegacyDec             { return LegacyDec{new(big.Int).Abs(d.i)} } // absolute value
 func (d LegacyDec) AbsMut() LegacyDec          { d.i.Abs(d.i); return d }                  // absolute value, mutable
 func (d LegacyDec) Set(d2 LegacyDec) LegacyDec { d.i.Set(d2.i); return d }                 // set to existing dec value

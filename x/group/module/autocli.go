@@ -124,7 +124,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 			},
 		},
 		Tx: &autocliv1.ServiceCommandDescriptor{
-			Service:              groupv1.Query_ServiceDesc.ServiceName,
+			Service:              groupv1.Msg_ServiceDesc.ServiceName,
 			EnhanceCustomCommand: true,
 			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
 				{

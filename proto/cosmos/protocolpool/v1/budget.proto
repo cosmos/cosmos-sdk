@@ -4,8 +4,10 @@ package cosmos.protocolpool.v1;
 
 option go_package = "cosmossdk.io/x/protocolpool/types";
 
+import "gogoproto/gogo.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos_proto/cosmos.proto";
+import "cosmos/msg/v1/msg.proto";
 
 // Budget defines budget proposal type.
 //
@@ -23,7 +25,8 @@ message BudgetProposal {
 // Since: cosmos-sdk 0.50
 message MsgSubmitBudgetProposal {
   BudgetProposal proposal = 1;
-  string signer = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];; 
+  string         signer   = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  ;
 }
 
 // MsgSubmitBudgetProposalResponse defines the response to executing a
@@ -34,14 +37,12 @@ message MsgSubmitBudgetProposalResponse {}
 
 message MsgClaimBudget {
   option (cosmos.msg.v1.signer) = "recipient_address";
-  uint64 proposal_id = 1;
-  string recipient_address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  uint64 proposal_id            = 1;
+  string recipient_address      = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 
 message MsgClaimBudgetResponse {
-  cosmos.base.v1beta1.Coin amount  = 1 [
-    (gogoproto.nullable)     = false,
-    (amino.dont_omitempty)   = true,
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
-  ];;
+  cosmos.base.v1beta1.Coin amount = 1
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  ;
 }

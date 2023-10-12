@@ -140,6 +140,7 @@ func (s *CLITestSuite) TestNewCmdSubmitProposal() {
 			"invalid proposal",
 			[]string{
 				invalidPropFile.Name(),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(10))).String()),
 			},

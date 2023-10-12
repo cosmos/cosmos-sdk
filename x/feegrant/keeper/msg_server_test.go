@@ -5,11 +5,13 @@ import (
 
 	"github.com/golang/mock/gomock"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/x/feegrant"
 
 	codecaddress "github.com/cosmos/cosmos-sdk/codec/address"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
@@ -285,4 +287,53 @@ func (suite *KeeperTestSuite) TestRevokeAllowance() {
 			}
 		})
 	}
+}
+
+func (suite *KeeperTestSuite) TestPruneAllowances() {
+	ctx := suite.ctx.WithHeaderInfo(header.Info{Time: time.Now()})
+	oneYear := ctx.HeaderInfo().Time.AddDate(1, 0, 0)
+
+	// We create 6 allowances, all expiring in one year
+	for i := 0; i < 6; i++ {
+		any, err := codectypes.NewAnyWithValue(&feegrant.BasicAllowance{
+			SpendLimit: suite.atom,
+			Expiration: &oneYear,
+		})
+		suite.Require().NoError(err)
+		req := &feegrant.MsgGrantAllowance{
+			Granter:   suite.encodedAddrs[0],
+			Grantee:   suite.encodedAddrs[i+1],
+			Allowance: any,
+		}
+
+		_, err = suite.msgSrvr.GrantAllowance(ctx, req)
+		suite.Require().NoError(err)
+
+	}
+
+	// we have 6 allowances
+	count := 0
+	suite.feegrantKeeper.FeeAllowance.Walk(ctx, nil, func(key collections.Pair[types.AccAddress, types.AccAddress], value feegrant.Grant) (stop bool, err error) {
+		count++
+		return false, nil
+	})
+	suite.Require().Equal(6, count)
+
+	// after a year and one day passes, they are all expired
+	oneYearAndADay := ctx.HeaderInfo().Time.AddDate(1, 0, 1)
+	ctx = suite.ctx.WithHeaderInfo(header.Info{Time: oneYearAndADay})
+
+	// we prune them, but currently only 5 will be pruned
+	_, err := suite.msgSrvr.PruneAllowances(ctx, &feegrant.MsgPruneAllowances{})
+	suite.Require().NoError(err)
+
+	// we have 1 allowance left
+	count = 0
+	suite.feegrantKeeper.FeeAllowance.Walk(ctx, nil, func(key collections.Pair[types.AccAddress, types.AccAddress], value feegrant.Grant) (stop bool, err error) {
+		count++
+
+		return false, nil
+	})
+	suite.Require().Equal(1, count)
+
 }

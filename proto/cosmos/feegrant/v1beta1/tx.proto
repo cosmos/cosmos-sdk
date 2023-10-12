@@ -62,7 +62,6 @@ message MsgRevokeAllowanceResponse {}
 // MsgPruneAllowances prunes expired fee allowances.
 message MsgPruneAllowances {
   option (cosmos.msg.v1.signer) = "pruner";
-  option (amino.name)           = "cosmos-sdk/MsgPruneAllowances";
 
   // pruner is the address of the user pruning expired allowances.
   string pruner = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];

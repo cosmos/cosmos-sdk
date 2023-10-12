@@ -7,6 +7,7 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/x/feegrant"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
@@ -86,7 +87,19 @@ func (k msgServer) RevokeAllowance(ctx context.Context, msg *feegrant.MsgRevokeA
 }
 
 // PruneAllowances removes expired allowances from the store.
-func (k msgServer) PruneAllowances(ctx context.Context, _ *feegrant.MsgPruneAllowances) (*feegrant.MsgPruneAllowancesResponse, error) {
+func (k msgServer) PruneAllowances(ctx context.Context, req *feegrant.MsgPruneAllowances) (*feegrant.MsgPruneAllowancesResponse, error) {
 	err := k.RemoveExpiredAllowances(ctx, 5)
-	return &feegrant.MsgPruneAllowancesResponse{}, err
+	if err != nil {
+		return nil, err
+	}
+
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	sdkCtx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			feegrant.EventTypePruneFeeGrant,
+			sdk.NewAttribute(feegrant.AttributeKeyPruner, req.Pruner),
+		),
+	)
+
+	return &feegrant.MsgPruneAllowancesResponse{}, nil
 }

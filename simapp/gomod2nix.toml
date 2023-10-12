@@ -135,8 +135,8 @@ schema = 3
     version = "v0.10.0"
     hash = "sha256-KYEv727BO/ht63JO02xiKFGFAddg41Ve9l2vSSZZBq0="
   [mod."github.com/cosmos/ledger-cosmos-go"]
-    version = "v0.13.0"
-    hash = "sha256-Ufa7YvD/L8zLCr8ZX/WtVE8+awJSGFbWV6VRBrsXr0Q="
+    version = "v0.13.1"
+    hash = "sha256-UDRTBG1VPLQOA3tJjfen5tRmIBde7Cqc4UDUPXL3+c4="
   [mod."github.com/creachadair/atomicfile"]
     version = "v0.3.2"
     hash = "sha256-oklAvdJrNFKNcCHvQdLVrLyLf0LG5ipusTXKSVycc64="
@@ -451,8 +451,8 @@ schema = 3
     version = "v0.9.1"
     hash = "sha256-hSVmN/f/lQHFhF60o6ej78ELC0MMoqQgqIX2hHjdTXg="
   [mod."github.com/zondax/ledger-go"]
-    version = "v0.14.1"
-    hash = "sha256-iQmShSaty50yYTbYPNd4fnOyrcEG7P2fWmj+fLJQW4s="
+    version = "v0.14.2"
+    hash = "sha256-3ZSRcr86OpB0ccTkvSLDxs46WaqfyHBScX7vMerSRHE="
   [mod."go.etcd.io/bbolt"]
     version = "v1.3.7"
     hash = "sha256-poZk8tPLDWwW95oCOkTJcQtEvOJTD9UXAZ2TqGJutwk="

@@ -94,12 +94,3 @@ message Grant {
   // allowance can be any of basic, periodic, allowed fee allowance.
   google.protobuf.Any allowance = 3 [(cosmos_proto.accepts_interface) = "cosmos.feegrant.v1beta1.FeeAllowanceI"];
 }
-
-// Params defines the parameters for the x/feegrant module.
-message Params {
-  // amount of expired grants to prune at endblock
-  uint64 endblock_prunes = 1;
-
-  // amount of expired grants to prune using MsgPruneAllowances
-  uint64 manual_prunes = 2;
-}

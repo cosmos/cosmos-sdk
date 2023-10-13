@@ -1,8 +1,6 @@
 package feegrant
 
 import (
-	"errors"
-
 	"github.com/cosmos/cosmos-sdk/codec/types"
 )
 
@@ -27,19 +25,12 @@ func ValidateGenesis(data GenesisState) error {
 			return err
 		}
 	}
-
-	if data.Params.EndblockPrunes == 0 || data.Params.ManualPrunes == 0 {
-		return errors.New("invalid prune params")
-	}
-
 	return nil
 }
 
 // DefaultGenesisState returns default state for feegrant module.
 func DefaultGenesisState() *GenesisState {
-	return &GenesisState{
-		Params: DefaultParams(),
-	}
+	return &GenesisState{}
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
@@ -52,11 +43,4 @@ func (data GenesisState) UnpackInterfaces(unpacker types.AnyUnpacker) error {
 	}
 
 	return nil
-}
-
-func DefaultParams() Params {
-	return Params{
-		EndblockPrunes: 50,
-		ManualPrunes:   5,
-	}
 }

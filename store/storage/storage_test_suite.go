@@ -37,7 +37,7 @@ func (s *StorageTestSuite) TestDatabase_LatestVersion() {
 	defer db.Close()
 
 	lv, err := db.GetLatestVersion()
-	s.Require().Error(err)
+	s.Require().NoError(err)
 	s.Require().Zero(lv)
 
 	for i := uint64(1); i <= 1001; i++ {

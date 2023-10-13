@@ -111,7 +111,8 @@ func (db *Database) GetLatestVersion() (uint64, error) {
 	}
 
 	if len(bz) == 0 {
-		return 0, store.ErrVersionNotFound
+		// in case of a fresh database
+		return 0, nil
 	}
 
 	return binary.LittleEndian.Uint64(bz), nil

@@ -90,11 +90,12 @@ func (db *Database) GetLatestVersion() (uint64, error) {
 
 	var latestHeight uint64
 	if err := stmt.QueryRow(reservedStoreKey, keyLatestHeight).Scan(&latestHeight); err != nil {
-		return 0, fmt.Errorf("failed to query row: %w", err)
-	}
+		if errors.Is(err, sql.ErrNoRows) {
+			// in case of a fresh database
+			return 0, nil
+		}
 
-	if latestHeight == 0 {
-		return 0, store.ErrVersionNotFound
+		return 0, fmt.Errorf("failed to query row: %w", err)
 	}
 
 	return latestHeight, nil

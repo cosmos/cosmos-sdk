@@ -68,6 +68,11 @@ func (db *Database) SetLatestVersion(version uint64) error {
 func (db *Database) GetLatestVersion() (uint64, error) {
 	bz, closer, err := db.storage.Get([]byte(latestVersionKey))
 	if err != nil {
+		if errors.Is(err, pebble.ErrNotFound) {
+			// in case of a fresh database
+			return 0, nil
+		}
+
 		return 0, err
 	}
 

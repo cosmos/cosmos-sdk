@@ -35,5 +35,4 @@ var (
 	ErrInvalidVersion  = errors.Register(StoreCodespace, 11, "invalid version")
 	ErrKeyEmpty        = errors.Register(StoreCodespace, 12, "key empty")
 	ErrStartAfterEnd   = errors.Register(StoreCodespace, 13, "start key after end key")
-	ErrVersionNotFound = errors.Register(StoreCodespace, 14, "version not found")
 )

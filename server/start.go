@@ -258,12 +258,12 @@ func start(svrCtx *Context, clientCtx client.Context, appCreator types.AppCreato
 	emitServerInfoMetrics()
 
 	if !withCmt {
-		return startStandAlone(svrCtx, app, opts)
+		return startStandAlone(svrCtx, svrCfg, clientCtx, app, opts)
 	}
 	return startInProcess(svrCtx, svrCfg, clientCtx, app, metrics, opts)
 }
 
-func startStandAlone(svrCtx *Context, app types.Application, opts StartCmdOptions) error {
+func startStandAlone(svrCtx *Context, svrCfg serverconfig.Config, clientCtx client.Context, app types.Application, opts StartCmdOptions) error {
 	addr := svrCtx.Viper.GetString(flagAddress)
 	transport := svrCtx.Viper.GetString(flagTransport)
 
@@ -276,6 +276,19 @@ func startStandAlone(svrCtx *Context, app types.Application, opts StartCmdOption
 	svr.SetLogger(servercmtlog.CometLoggerWrapper{Logger: svrCtx.Logger.With("module", "abci-server")})
 
 	g, ctx := getCtx(svrCtx, false)
+
+	_, clientCtx, err = startGrpcServer(ctx, g, svrCfg.GRPC, clientCtx, svrCtx, app)
+	if err != nil {
+		return err
+	}
+
+	// Add the tx service to the gRPC router.
+	if svrCfg.GRPC.Enable {
+		// use the provided clientCtx to register the services
+		app.RegisterTxService(clientCtx)
+		app.RegisterTendermintService(clientCtx)
+		app.RegisterNodeService(clientCtx, svrCfg)
+	}
 
 	g.Go(func() error {
 		if err := svr.Start(); err != nil {

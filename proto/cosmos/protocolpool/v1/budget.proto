@@ -12,8 +12,7 @@ import "cosmos/msg/v1/msg.proto";
 // Budget defines budget proposal type.
 //
 // Since: cosmos-sdk 0.50
-message BudgetProposal {
-  option (cosmos.msg.v1.signer)               = "recipient_address";
+message MsgBudgetProposal {
   string                   recipient_address  = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   cosmos.base.v1beta1.Coin total_budget       = 2;
   int64                    start_time         = 3;

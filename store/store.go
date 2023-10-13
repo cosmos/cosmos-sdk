@@ -28,6 +28,8 @@ type RootStore interface {
 
 	GetProof(storeKey string, version uint64, key []byte) (*ics23.CommitmentProof, error)
 
+	Branch() BranchedRootStore
+
 	SetTracingContext(tc TraceContext)
 	SetTracer(w io.Writer)
 	TracingEnabled() bool
@@ -48,6 +50,13 @@ type RootStore interface {
 	// Ref: https://github.com/cosmos/cosmos-sdk/issues/17314
 
 	io.Closer
+}
+
+// TODO: BranchedRootStore ...
+type BranchedRootStore interface {
+	RootStore
+
+	Write()
 }
 
 // KVStore defines the core storage primitive for modules to read and write state.

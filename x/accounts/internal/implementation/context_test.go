@@ -70,4 +70,8 @@ func TestMakeAccountContext(t *testing.T) {
 		require.Equal(t, originalContext, ctx)
 		return wrapperspb.String("module query was called"), nil
 	})
+
+	resp, err = QueryModule[wrapperspb.StringValue](accountCtx, &wrapperspb.UInt64Value{Value: 1000})
+	require.NoError(t, err)
+	require.True(t, proto.Equal(wrapperspb.String("module query was called"), resp))
 }

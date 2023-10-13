@@ -22,8 +22,8 @@ service Msg {
   // keeper.
   rpc CommunityPoolSpend(MsgCommunityPoolSpend) returns (MsgCommunityPoolSpendResponse);
 
-  // SubmitMsgBudgetProposal defines a method to set a budget proposal.
-  rpc SubmitMsgBudgetProposal(MsgBudgetProposal) returns (MsgBudgetProposalResponse);
+  // BudgetProposal defines a method to set a budget proposal.
+  rpc BudgetProposal(MsgBudgetProposal) returns (MsgBudgetProposalResponse);
 
   // ClaimBudget defines a method to claim the distributed budget.
   rpc ClaimBudget(MsgClaimBudget) returns (MsgClaimBudgetResponse);

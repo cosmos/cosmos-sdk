@@ -36,7 +36,7 @@ func (k MsgServer) ClaimBudget(ctx context.Context, msg *types.MsgClaimBudget) (
 	return &types.MsgClaimBudgetResponse{Amount: amount}, nil
 }
 
-func (k MsgServer) SubmitMsgBudgetProposal(ctx context.Context, msg *types.MsgBudgetProposal) (*types.MsgBudgetProposalResponse, error) {
+func (k MsgServer) BudgetProposal(ctx context.Context, msg *types.MsgBudgetProposal) (*types.MsgBudgetProposalResponse, error) {
 	if err := k.validateAuthority(msg.GetAuthority()); err != nil {
 		return nil, err
 	}

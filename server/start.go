@@ -235,6 +235,7 @@ func startStandAlone(ctx *Context, clientCtx client.Context, appCreator types.Ap
 	// service if gRPC is enabled
 	if config.GRPC.Enable {
 		// create tendermint client
+		// assumes the rpc listen address is where tendermint has its rpc server
 		rpcclient, err := rpchttp.New(ctx.Config.RPC.ListenAddress, "/websocket")
 		if err != nil {
 			return err

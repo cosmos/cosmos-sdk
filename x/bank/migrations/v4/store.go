@@ -21,6 +21,9 @@ func MigrateStore(ctx sdk.Context, storeKey storetypes.StoreKey, legacySubspace 
 	var currParams types.Params
 	legacySubspace.GetParamSet(ctx, &currParams)
 
+	// it's migrated to the x/bank module store, so delete from the params
+	currParams.SendEnabled = nil
+
 	if err := currParams.Validate(); err != nil {
 		return err
 	}

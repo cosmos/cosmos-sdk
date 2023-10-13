@@ -1642,6 +1642,8 @@ func (ms mockSubspace) GetParamSet(ctx sdk.Context, ps exported.ParamSet) {
 	*ps.(*types.Params) = ms.ps
 }
 
+func (ms mockSubspace) Get(ctx sdk.Context, key []byte, ptr interface{}) {}
+
 func (suite *IntegrationTestSuite) TestMigrator_Migrate3to4() {
 	ctx, bankKeeper := suite.ctx, suite.bankKeeper
 

@@ -1697,6 +1697,8 @@ func (ms mockSubspace) GetParamSet(ctx sdk.Context, ps exported.ParamSet) {
 	*ps.(*banktypes.Params) = ms.ps
 }
 
+func (ms mockSubspace) Get(ctx sdk.Context, key []byte, ptr interface{}) {}
+
 func (suite *KeeperTestSuite) TestMigrator_Migrate3to4() {
 	ctx, bankKeeper := suite.ctx, suite.bankKeeper
 	require := suite.Require()

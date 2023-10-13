@@ -4,18 +4,20 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"io"
 	"math/rand"
 	"os"
 	"path/filepath"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
+
 	"github.com/cosmos/gogoproto/proto"
 
 	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"

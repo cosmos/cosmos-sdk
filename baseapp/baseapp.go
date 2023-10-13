@@ -89,7 +89,7 @@ type BaseApp struct {
 	addrPeerFilter sdk.PeerFilter // filter peers by address and port
 	idPeerFilter   sdk.PeerFilter // filter peers by node ID
 	fauxMerkleMode bool           // if true, IAVL MountStores uses MountStoresDB for simulation speed.
-	sigverifyTx    bool           // whether to sigverify check for transaction
+	sigverifyTx    bool           // in the simulation test, since the account does not have a private key, we have to ignore the tx sigverify.
 
 	// manages snapshots, i.e. dumps of app state at certain intervals
 	snapshotManager *snapshots.Manager

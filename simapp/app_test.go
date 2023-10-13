@@ -58,7 +58,7 @@ func TestSimAppExportAndBlockedAddrs(t *testing.T) {
 		if modAddr, err := sdk.AccAddressFromBech32(acc); err == nil {
 			addr = modAddr
 		} else {
-			addr = app.AccountKeeper.GetModuleAddress(acc)
+			addr = app.AuthKeeper.GetModuleAddress(acc)
 		}
 
 		require.True(

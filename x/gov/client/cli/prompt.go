@@ -45,7 +45,7 @@ var suggestedProposalTypes = []proposalType{
 		MsgType: "/cosmos.upgrade.v1beta1.MsgCancelUpgrade",
 	},
 	{
-		Name:    "set-budget-proposal",
+		Name:    "submit-budget-proposal",
 		MsgType: "/cosmos.protocolpool.v1.MsgSubmitBudgetProposal",
 	},
 	{

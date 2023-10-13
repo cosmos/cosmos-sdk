@@ -35,6 +35,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/mempool"
+
+	rpchttp "github.com/cometbft/cometbft/rpc/client/http"
 )
 
 const (
@@ -232,6 +234,14 @@ func startStandAlone(ctx *Context, clientCtx client.Context, appCreator types.Ap
 	// Add the tx service to the gRPC router. We only need to register this
 	// service if gRPC is enabled
 	if config.GRPC.Enable {
+		// create tendermint client
+		rpcclient, err := rpchttp.New(ctx.Config.RPC.ListenAddress, "/websocket")
+		if err != nil {
+			return err
+		}
+		// re-assign for making the client available below
+		// do not use := to avoid shadowing clientCtx
+		clientCtx = clientCtx.WithClient(rpcclient)
 		// use the clientCtx provided to start command
 		app.RegisterTxService(clientCtx)
 		app.RegisterTendermintService(clientCtx)

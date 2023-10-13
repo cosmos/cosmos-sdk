@@ -7,5 +7,5 @@ import (
 )
 
 func EndBlocker(ctx context.Context, k keeper.Keeper) error {
-	return k.RemoveExpiredAllowances(ctx, 50)
+	return k.RemoveExpiredAllowances(ctx, 200)
 }

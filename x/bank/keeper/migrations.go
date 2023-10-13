@@ -36,8 +36,7 @@ func (m Migrator) Migrate3to4(ctx sdk.Context) error {
 	return v4.MigrateStore(ctx, m.keeper.storeKey, m.legacySubspace, m.keeper.cdc)
 }
 
-// MigrateSendEnabledParams migrates x/bank storage from version 3 to 4 with
-// the send enabled params get from x/params and update the bank params.
+// MigrateSendEnabledParams get params from x/params and update the bank params.
 // This function is only needed for chains having migrated from <= v0.47 to v0.47.0-5
 func (m Migrator) MigrateSendEnabledParams(ctx sdk.Context) {
 	sendEnabled := types.GetSendEnabledParams(ctx, m.legacySubspace)

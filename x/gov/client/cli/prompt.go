@@ -46,7 +46,7 @@ var suggestedProposalTypes = []proposalType{
 	},
 	{
 		Name:    "set-budget",
-		MsgType: "/cosmos.protocolpool.v1.BudgetProposal",
+		MsgType: "/cosmos.protocolpool.v1.MsgBudgetProposal",
 	},
 	{
 		Name:    proposalOther,

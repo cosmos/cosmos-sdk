@@ -36,7 +36,7 @@ func (k MsgServer) MsgClaimBudget(ctx context.Context, msg *types.MsgClaimBudget
 	return &types.MsgClaimBudgetResponse{Amount: amount}, nil
 }
 
-func (k MsgServer) SubmitBudgetProposal(ctx context.Context, msg *types.BudgetProposal) (*types.MsgBudgetProposalResponse, error) {
+func (k MsgServer) SubmitBudgetProposal(ctx context.Context, msg *types.MsgBudgetProposal) (*types.MsgBudgetProposalResponse, error) {
 	recipient, err := k.Keeper.authKeeper.AddressCodec().StringToBytes(msg.RecipientAddress)
 	if err != nil {
 		return nil, err

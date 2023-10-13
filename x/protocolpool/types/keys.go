@@ -16,7 +16,4 @@ const (
 	GovModuleName = "gov"
 )
 
-var (
-	BudgetKey    = collections.NewPrefix(0)
-	DistrInfoKey = collections.NewPrefix(1)
-)
+var BudgetKey = collections.NewPrefix(0)

@@ -9,6 +9,7 @@ import (
 	storetypes "cosmossdk.io/core/store"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
+	"cosmossdk.io/math"
 	"cosmossdk.io/x/protocolpool/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -27,8 +28,7 @@ type Keeper struct {
 
 	// State
 	Schema         collections.Schema
-	BudgetProposal collections.Map[sdk.AccAddress, types.BudgetProposal]
-	DistrInfo      collections.Map[sdk.AccAddress, sdk.Coin]
+	BudgetProposal collections.Map[sdk.AccAddress, types.MsgBudgetProposal]
 }
 
 func NewKeeper(cdc codec.BinaryCodec, storeService storetypes.KVStoreService,
@@ -46,8 +46,7 @@ func NewKeeper(cdc codec.BinaryCodec, storeService storetypes.KVStoreService,
 		bankKeeper:     bk,
 		cdc:            cdc,
 		authority:      authority,
-		BudgetProposal: collections.NewMap(sb, types.BudgetKey, "budget", sdk.AccAddressKey, codec.CollValue[types.BudgetProposal](cdc)),
-		DistrInfo:      collections.NewMap(sb, types.DistrInfoKey, "distribution_info", sdk.AccAddressKey, codec.CollValue[sdk.Coin](cdc)),
+		BudgetProposal: collections.NewMap(sb, types.BudgetKey, "budget", sdk.AccAddressKey, codec.CollValue[types.MsgBudgetProposal](cdc)),
 	}
 
 	schema, err := sb.Build()
@@ -90,22 +89,6 @@ func (k Keeper) GetCommunityPool(ctx context.Context) (sdk.Coins, error) {
 	return k.bankKeeper.GetAllBalances(ctx, moduleAccount.GetAddress()), nil
 }
 
-func (k Keeper) AppendDistributionInfo(ctx sdk.Context, distributionInfo types.DistributionInfo) error {
-	amount, err := k.DistrInfo.Get(ctx, distributionInfo.Address)
-	if err != nil {
-		if errors.Is(err, collections.ErrNotFound) {
-			err := k.DistrInfo.Set(ctx, distributionInfo.Address, distributionInfo.Amount)
-			if err != nil {
-				return err
-			}
-		} else {
-			return err
-		}
-	}
-	updatedAmount := distributionInfo.Amount.Add(amount)
-	return k.DistrInfo.Set(ctx, distributionInfo.Address, updatedAmount)
-}
-
 func (k Keeper) ClaimFunds(ctx context.Context, recipient sdk.AccAddress) (amount sdk.Coin, err error) {
 	// get claimable funds from distribution info
 	amount, err = k.getClaimableFunds(ctx, recipient)
@@ -119,27 +102,65 @@ func (k Keeper) ClaimFunds(ctx context.Context, recipient sdk.AccAddress) (amoun
 		return sdk.Coin{}, err
 	}
 
-	// remove the recipient from the DistributionInfo
-	err = k.DistrInfo.Remove(ctx, recipient)
-	if err != nil {
-		return sdk.Coin{}, err
-	}
-
 	return amount, nil
 }
 
 func (k Keeper) getClaimableFunds(ctx context.Context, recipient sdk.AccAddress) (amount sdk.Coin, err error) {
-	amount, err = k.DistrInfo.Get(ctx, recipient)
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	budget, err := k.BudgetProposal.Get(ctx, recipient)
 	if err != nil {
 		if errors.Is(err, collections.ErrNotFound) {
 			return sdk.Coin{}, fmt.Errorf("no claimable funds are present for recipient: %s", recipient.String())
 		}
 		return sdk.Coin{}, err
 	}
-	return amount, nil
+
+	// check if the distribution is completed
+	if budget.RemainingTranches <= 0 {
+		// Log the end of the budget
+		k.Logger(ctx).Info(fmt.Sprintf("Budget ended for recipient: %s", recipient.String()))
+		return sdk.Coin{}, nil
+	}
+
+	currentTime := sdkCtx.BlockTime().Unix()
+
+	// Check if the start time is reached
+	if currentTime < budget.StartTime {
+		return sdk.Coin{}, fmt.Errorf("distribution has not started yet")
+	}
+
+	// Calculate the number of blocks elapsed since the start time
+	blocksElapsed := sdkCtx.BlockHeight() - budget.Period
+
+	// Check if its time to distribute funds based on period intervals
+	if blocksElapsed > 0 && blocksElapsed%budget.Period == 0 {
+		// Calculate how many periods have passed
+		periodsPassed := blocksElapsed / budget.Period
+
+		// Calculate the amount to distribute for all passed periods
+		coinsToDistribute := math.NewInt(periodsPassed).Mul(budget.TotalBudget.Amount.QuoRaw(budget.RemainingTranches))
+		amount := sdk.NewCoin(budget.TotalBudget.Denom, coinsToDistribute)
+
+		// update the budget's remaining tranches
+		budget.RemainingTranches -= periodsPassed
+
+		// update the TotalBudget amount
+		budget.TotalBudget.Amount.Sub(coinsToDistribute)
+
+		k.Logger(ctx).Info(fmt.Sprintf("Processing budget for recipient: %s. Amount: %s", budget.RecipientAddress, coinsToDistribute.String()))
+
+		// Save the updated budget in the state
+		err = k.BudgetProposal.Set(ctx, recipient, budget)
+		if err != nil {
+			return sdk.Coin{}, fmt.Errorf("error while updating the budget for recipient %s", budget.RecipientAddress)
+		}
+
+		return amount, nil
+	}
 }
 
-func (k Keeper) validateBudgetProposal(ctx context.Context, bp types.BudgetProposal) error {
+func (k Keeper) validateBudgetProposal(ctx context.Context, bp types.MsgBudgetProposal) error {
 	account := k.authKeeper.GetAccount(ctx, sdk.AccAddress(bp.RecipientAddress))
 	if account == nil {
 		return fmt.Errorf("account not found: %s", bp.RecipientAddress)

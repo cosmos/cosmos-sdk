@@ -127,7 +127,7 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 		panic(fmt.Sprintf("failed to migrate x/bank from version 2 to 3: %v", err))
 	}
 
-	if err := cfg.RegisterMigration(types.ModuleName, 3, m.Migrate3to4); err != nil {
+	if err := cfg.RegisterMigration(types.ModuleName, 3, m.Migrate3to4WithSendEnabledParams); err != nil {
 		panic(fmt.Sprintf("failed to migrate x/bank from version 3 to 4: %v", err))
 	}
 }
@@ -195,6 +195,12 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 	return simulation.WeightedOperations(
 		simState.AppParams, simState.Cdc, am.accountKeeper, am.keeper,
 	)
+}
+
+// MigrateSubspaceParams get send enabled params from x/params and update the bank params.
+func (am AppModule) MigrateSubspaceParams(ctx sdk.Context) {
+	sendEnabled := types.GetSendEnabledParams(ctx, am.legacySubspace)
+	am.keeper.SetAllSendEnabled(ctx, sendEnabled)
 }
 
 // App Wiring Setup

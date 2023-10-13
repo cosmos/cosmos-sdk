@@ -47,5 +47,5 @@ func (k Querier) UnclaimedBudget(ctx context.Context, req *types.QueryUnclaimedB
 		}
 		return nil, err
 	}
-	return &types.QueryUnclaimedBudgetResponse{budget.TotalBudget}, nil
+	return &types.QueryUnclaimedBudgetResponse{UnclaimedAmount: budget.TotalBudget}, nil
 }

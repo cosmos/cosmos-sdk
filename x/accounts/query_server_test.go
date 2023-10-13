@@ -6,11 +6,11 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/runtime/protoiface"
 	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 
-	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	"cosmossdk.io/x/accounts/internal/implementation"
 	v1 "cosmossdk.io/x/accounts/v1"
 )
@@ -19,8 +19,8 @@ func TestQueryServer(t *testing.T) {
 	k, ctx := newKeeper(t, map[string]implementation.Account{
 		"test": TestAccount{},
 	})
-	k.queryModuleFunc = func(ctx context.Context, msg proto.Message) (proto.Message, error) {
-		return &bankv1beta1.QueryBalanceResponse{}, nil
+	k.queryModuleFunc = func(ctx context.Context, req, resp protoiface.MessageV1) error {
+		return nil
 	}
 
 	ms := NewMsgServer(k)

@@ -9,6 +9,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/runtime/protoiface"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/address"
@@ -25,6 +26,18 @@ var (
 	AccountNumberKey = collections.NewPrefix(1)
 )
 
+// QueryRouter represents a router which can be used to route queries to the correct module.
+// It returns the handler given the message name, if multiple handlers are returned, then
+// it is up to the caller to choose which one to call.
+type QueryRouter interface {
+	HybridHandlerByRequestName(name string) []func(ctx context.Context, req, resp protoiface.MessageV1) error
+}
+
+// MsgRouter represents a router which can be used to route messages to the correct module.
+type MsgRouter interface {
+	HybridHandlerByMsgName(msgName string) func(ctx context.Context, req, resp protoiface.MessageV1) error
+}
+
 // SignerProvider defines an interface used to get the expected sender from a message.
 type SignerProvider interface {
 	// GetSigners returns the signers of the message.
@@ -37,7 +50,7 @@ func NewKeeper(
 	addressCodec address.Codec,
 	signerProvider SignerProvider,
 	execRouter MsgRouter,
-	queryModuleFunc func(ctx context.Context, msg proto.Message) (proto.Message, error),
+	queryRouter QueryRouter,
 	accounts map[string]implementation.Account,
 ) (Keeper, error) {
 	sb := collections.NewSchemaBuilder(ss)
@@ -54,8 +67,8 @@ func NewKeeper(
 			}
 			return signers[0], nil
 		},
-		execModuleFunc:  newExecFunc(cdc, execRouter),
-		queryModuleFunc: queryModuleFunc,
+		execModuleFunc:  nil,
+		queryModuleFunc: nil,
 		accounts:        map[string]implementation.Implementation{},
 		Schema:          collections.Schema{},
 		AccountNumber:   collections.NewSequence(sb, AccountNumberKey, "account_number"),
@@ -84,8 +97,8 @@ type Keeper struct {
 	storeService    store.KVStoreService
 	addressCodec    address.Codec
 	getSenderFunc   func(msg proto.Message) ([]byte, error)
-	execModuleFunc  func(ctx context.Context, msg proto.Message) (proto.Message, error)
-	queryModuleFunc func(ctx context.Context, msg proto.Message) (proto.Message, error)
+	execModuleFunc  implementation.ModuleExecFunc
+	queryModuleFunc implementation.ModuleQueryFunc
 
 	accounts map[string]implementation.Implementation
 
@@ -232,8 +245,8 @@ func (k Keeper) makeAccountContext(ctx context.Context, accountAddr, sender []by
 		func(_ proto.Message) ([]byte, error) {
 			return nil, fmt.Errorf("cannot get sender from query")
 		},
-		func(ctx context.Context, _ proto.Message) (proto.Message, error) {
-			return nil, fmt.Errorf("cannot execute module from query")
+		func(ctx context.Context, msg, msgResp protoiface.MessageV1) error {
+			return fmt.Errorf("cannot execute module from a query execution context")
 		},
 		k.queryModuleFunc,
 	)

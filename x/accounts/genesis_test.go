@@ -5,11 +5,10 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/runtime/protoiface"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 
-	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	"cosmossdk.io/collections"
 	"cosmossdk.io/collections/colltest"
 	"cosmossdk.io/x/accounts/internal/implementation"
@@ -22,8 +21,8 @@ func TestGenesis(t *testing.T) {
 	k, ctx := newKeeper(t, map[string]implementation.Account{
 		"test": acc,
 	})
-	k.queryModuleFunc = func(ctx context.Context, _ proto.Message) (proto.Message, error) {
-		return &bankv1beta1.QueryBalanceResponse{}, nil
+	k.queryModuleFunc = func(ctx context.Context, req, resp protoiface.MessageV1) error {
+		return nil
 	}
 
 	// we init two accounts of the same type

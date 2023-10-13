@@ -6,12 +6,14 @@ import (
 
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/runtime/protoiface"
 )
 
 // ProtoMsg is a generic interface for protobuf messages.
 type ProtoMsg[T any] interface {
 	*T
 	protoreflect.ProtoMessage
+	protoiface.MessageV1
 }
 
 // RegisterInitHandler registers an initialisation handler for a smart account that uses protobuf.

@@ -7,7 +7,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/runtime/protoiface"
 
@@ -45,7 +45,6 @@ type SignerProvider interface {
 }
 
 func NewKeeper(
-	cdc codec.Codec,
 	ss store.KVStoreService,
 	addressCodec address.Codec,
 	signerProvider SignerProvider,
@@ -67,13 +66,30 @@ func NewKeeper(
 			}
 			return signers[0], nil
 		},
-		execModuleFunc:  nil,
-		queryModuleFunc: nil,
-		accounts:        map[string]implementation.Implementation{},
-		Schema:          collections.Schema{},
-		AccountNumber:   collections.NewSequence(sb, AccountNumberKey, "account_number"),
-		AccountsByType:  collections.NewMap(sb, AccountTypeKeyPrefix, "accounts_by_type", collections.BytesKey, collections.StringValue),
-		AccountsState:   collections.NewMap(sb, implementation.AccountStatePrefix, "accounts_state", collections.BytesKey, collections.BytesValue),
+		execModuleFunc: func(ctx context.Context, msg, msgResp protoiface.MessageV1) error {
+			name := getMessageName(msg)
+			handler := execRouter.HybridHandlerByMsgName(name)
+			if handler == nil {
+				return fmt.Errorf("no handler found for message %s", name)
+			}
+			return handler(ctx, msg, msgResp)
+		},
+		queryModuleFunc: func(ctx context.Context, req, resp protoiface.MessageV1) error {
+			name := getMessageName(req)
+			handlers := queryRouter.HybridHandlerByRequestName(name)
+			if len(handlers) == 0 {
+				return fmt.Errorf("no handler found for query request %s", name)
+			}
+			if len(handlers) > 1 {
+				return fmt.Errorf("multiple handlers found for query request %s", name)
+			}
+			return handlers[0](ctx, req, resp)
+		},
+		accounts:       map[string]implementation.Implementation{},
+		Schema:         collections.Schema{},
+		AccountNumber:  collections.NewSequence(sb, AccountNumberKey, "account_number"),
+		AccountsByType: collections.NewMap(sb, AccountTypeKeyPrefix, "accounts_by_type", collections.BytesKey, collections.StringValue),
+		AccountsState:  collections.NewMap(sb, implementation.AccountStatePrefix, "accounts_state", collections.BytesKey, collections.BytesValue),
 	}
 
 	// make accounts implementation
@@ -250,4 +266,8 @@ func (k Keeper) makeAccountContext(ctx context.Context, accountAddr, sender []by
 		},
 		k.queryModuleFunc,
 	)
+}
+
+func getMessageName(msg protoiface.MessageV1) string {
+	return codectypes.MsgTypeURL(msg)[1:]
 }

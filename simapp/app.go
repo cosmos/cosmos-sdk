@@ -15,6 +15,7 @@ import (
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
+	"cosmossdk.io/x/accounts"
 	"cosmossdk.io/x/circuit"
 	circuitkeeper "cosmossdk.io/x/circuit/keeper"
 	circuittypes "cosmossdk.io/x/circuit/types"
@@ -145,6 +146,7 @@ type SimApp struct {
 	tkeys map[string]*storetypes.TransientStoreKey
 
 	// keepers
+	AccountsKeeper        accounts.Keeper
 	AuthKeeper            authkeeper.AccountKeeper
 	BankKeeper            bankkeeper.Keeper
 	StakingKeeper         *stakingkeeper.Keeper
@@ -254,7 +256,7 @@ func NewSimApp(
 		minttypes.StoreKey, distrtypes.StoreKey, slashingtypes.StoreKey,
 		govtypes.StoreKey, consensusparamtypes.StoreKey, upgradetypes.StoreKey, feegrant.StoreKey,
 		evidencetypes.StoreKey, circuittypes.StoreKey,
-		authzkeeper.StoreKey, nftkeeper.StoreKey, group.StoreKey, pooltypes.StoreKey,
+		authzkeeper.StoreKey, nftkeeper.StoreKey, group.StoreKey, pooltypes.StoreKey, accounts.Name,
 	)
 
 	// register streaming services
@@ -276,7 +278,22 @@ func NewSimApp(
 	bApp.SetParamStore(app.ConsensusParamsKeeper.ParamsStore)
 
 	// add keepers
+
 	app.AuthKeeper = authkeeper.NewAccountKeeper(appCodec, runtime.NewKVStoreService(keys[authtypes.StoreKey]), authtypes.ProtoBaseAccount, maccPerms, authcodec.NewBech32Codec(sdk.Bech32MainPrefix), sdk.Bech32MainPrefix, authtypes.NewModuleAddress(govtypes.ModuleName).String())
+
+	accountsKeeper, err := accounts.NewKeeper(
+		runtime.NewKVStoreService(keys[accounts.Name]),
+		app.AuthKeeper.AddressCodec(),
+		appCodec.InterfaceRegistry().SigningContext(),
+		app.MsgServiceRouter(),
+		app.GRPCQueryRouter(),
+		nil,
+	)
+	if err != nil {
+		panic(err)
+	}
+
+	app.AccountsKeeper = accountsKeeper
 
 	app.BankKeeper = bankkeeper.NewBaseKeeper(
 		appCodec,
@@ -457,7 +474,7 @@ func NewSimApp(
 
 	app.ModuleManager.RegisterInvariants(app.CrisisKeeper)
 	app.configurator = module.NewConfigurator(app.appCodec, app.MsgServiceRouter(), app.GRPCQueryRouter())
-	err := app.ModuleManager.RegisterServices(app.configurator)
+	err = app.ModuleManager.RegisterServices(app.configurator)
 	if err != nil {
 		panic(err)
 	}

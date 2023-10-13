@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	"cosmossdk.io/x/accounts/accountstd"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/runtime/protoiface"
@@ -25,18 +26,16 @@ type addressCodec struct{}
 func (a addressCodec) StringToBytes(text string) ([]byte, error) { return []byte(text), nil }
 func (a addressCodec) BytesToString(bz []byte) (string, error)   { return string(bz), nil }
 
-func newKeeper(t *testing.T, accounts map[string]implementation.Account) (Keeper, context.Context) {
+func newKeeper(t *testing.T, accounts ...implementation.AccountCreatorFunc) (Keeper, context.Context) {
 	t.Helper()
 	ss, ctx := colltest.MockStore()
-	m, err := NewKeeper(nil, ss, addressCodec{}, nil, nil, nil, accounts)
+	m, err := NewKeeper(ss, addressCodec{}, nil, nil, nil, accounts...)
 	require.NoError(t, err)
 	return m, ctx
 }
 
 func TestKeeper_Init(t *testing.T) {
-	m, ctx := newKeeper(t, map[string]implementation.Account{
-		"test": TestAccount{},
-	})
+	m, ctx := newKeeper(t, accountstd.AddAccount("test", NewTestAccount))
 	m.queryModuleFunc = func(ctx context.Context, req, resp protoiface.MessageV1) error {
 		_, ok := req.(*bankv1beta1.QueryBalanceRequest)
 		require.True(t, ok)
@@ -71,9 +70,7 @@ func TestKeeper_Init(t *testing.T) {
 }
 
 func TestKeeper_Execute(t *testing.T) {
-	m, ctx := newKeeper(t, map[string]implementation.Account{
-		"test": TestAccount{},
-	})
+	m, ctx := newKeeper(t, accountstd.AddAccount("test", NewTestAccount))
 	m.queryModuleFunc = func(ctx context.Context, req, resp protoiface.MessageV1) error { return nil }
 
 	// create account
@@ -114,9 +111,7 @@ func TestKeeper_Execute(t *testing.T) {
 }
 
 func TestKeeper_Query(t *testing.T) {
-	m, ctx := newKeeper(t, map[string]implementation.Account{
-		"test": TestAccount{},
-	})
+	m, ctx := newKeeper(t, accountstd.AddAccount("test", NewTestAccount))
 	m.queryModuleFunc = func(ctx context.Context, req, resp protoiface.MessageV1) error {
 		return nil
 	}

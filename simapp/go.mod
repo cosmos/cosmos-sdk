@@ -33,6 +33,8 @@ require (
 	google.golang.org/protobuf v1.31.0
 )
 
+require cosmossdk.io/x/accounts v0.0.0-20231013072015-ec9bcc41ef9c
+
 require (
 	cloud.google.com/go v0.110.8 // indirect
 	cloud.google.com/go/compute v1.23.0 // indirect
@@ -204,6 +206,7 @@ require (
 replace (
 	cosmossdk.io/client/v2 => ../client/v2
 	cosmossdk.io/tools/confix => ../tools/confix
+	cosmossdk.io/x/accounts => ../x/accounts
 	cosmossdk.io/x/circuit => ../x/circuit
 	cosmossdk.io/x/evidence => ../x/evidence
 	cosmossdk.io/x/feegrant => ../x/feegrant

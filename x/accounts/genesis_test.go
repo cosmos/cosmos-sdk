@@ -4,23 +4,18 @@ import (
 	"context"
 	"testing"
 
+	"cosmossdk.io/x/accounts/internal/implementation"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/runtime/protoiface"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 
-	"cosmossdk.io/collections"
 	"cosmossdk.io/collections/colltest"
-	"cosmossdk.io/x/accounts/internal/implementation"
 )
 
 func TestGenesis(t *testing.T) {
-	sb := collections.NewSchemaBuilderFromAccessor(implementation.OpenKVStore)
-	acc := NewTestAccount(sb)
 
-	k, ctx := newKeeper(t, map[string]implementation.Account{
-		"test": acc,
-	})
+	k, ctx := newKeeper(t, implementation.AddAccount("test", NewTestAccount))
 	k.queryModuleFunc = func(ctx context.Context, req, resp protoiface.MessageV1) error {
 		return nil
 	}

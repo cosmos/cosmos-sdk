@@ -1,6 +1,64 @@
 package implementation
 
-import "context"
+import (
+	"context"
+	"fmt"
+
+	"cosmossdk.io/collections"
+	"cosmossdk.io/core/address"
+)
+
+// Dependencies are passed to the constructor of a smart account.
+type Dependencies struct {
+	SchemaBuilder *collections.SchemaBuilder
+	AddressCodec  address.Codec
+}
+
+// AccountCreatorFunc is a function that creates an account.
+type AccountCreatorFunc = func(deps Dependencies) (string, Implementation, error)
+
+// AddAccount is a helper function to add a smart account to the list of smart accounts.
+func AddAccount[A Account](name string, constructor func(deps Dependencies) (A, error)) func(deps Dependencies) (string, Implementation, error) {
+	return func(deps Dependencies) (string, Implementation, error) {
+		acc, err := constructor(deps)
+		if err != nil {
+			return "", Implementation{}, err
+		}
+		impl, err := NewImplementation(acc)
+		if err != nil {
+			return "", Implementation{}, err
+		}
+		return name, impl, nil
+	}
+}
+
+func MakeAccountsMap(addressCodec address.Codec, accounts []AccountCreatorFunc) (map[string]Implementation, error) {
+	accountsMap := make(map[string]Implementation, len(accounts))
+	for _, makeAccount := range accounts {
+		stateSchemaBuilder := collections.NewSchemaBuilderFromAccessor(OpenKVStore)
+		deps := Dependencies{
+			SchemaBuilder: stateSchemaBuilder,
+			AddressCodec:  addressCodec,
+		}
+		name, impl, err := makeAccount(deps)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create account %s: %w", name, err)
+		}
+		// build schema
+		schema, err := stateSchemaBuilder.Build()
+		if err != nil {
+			return nil, fmt.Errorf("failed to build schema for account %s: %w", name, err)
+		}
+		impl.CollectionsSchema = schema
+		// check if account name is already registered
+		if _, ok := accountsMap[name]; ok {
+			return nil, fmt.Errorf("account %s is already registered", name)
+		}
+		accountsMap[name] = impl
+	}
+
+	return accountsMap, nil
+}
 
 // NewImplementation creates a new Implementation instance given an Account implementer.
 func NewImplementation(account Account) (Implementation, error) {
@@ -51,6 +109,8 @@ type Implementation struct {
 	Query func(ctx context.Context, msg any) (resp any, err error)
 
 	// Schema
+
+	CollectionsSchema collections.Schema
 
 	// DecodeInitRequest decodes an init request coming from the message server.
 	DecodeInitRequest func([]byte) (any, error)

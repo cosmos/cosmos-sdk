@@ -4,6 +4,7 @@ import (
 	"context"
 	"strconv"
 
+	"cosmossdk.io/x/accounts/accountstd"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 
@@ -15,10 +16,10 @@ import (
 
 var _ implementation.Account = (*TestAccount)(nil)
 
-func NewTestAccount(sb *collections.SchemaBuilder) *TestAccount {
+func NewTestAccount(d accountstd.Dependencies) (*TestAccount, error) {
 	return &TestAccount{
-		Counter: collections.NewSequence(sb, collections.NewPrefix(0), "counter"),
-	}
+		Counter: collections.NewSequence(d.SchemaBuilder, collections.NewPrefix(0), "counter"),
+	}, nil
 }
 
 type TestAccount struct {

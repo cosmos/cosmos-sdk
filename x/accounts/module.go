@@ -1,10 +1,9 @@
-package module
+package accounts
 
 import (
 	"context"
 	"encoding/json"
 
-	"cosmossdk.io/x/accounts"
 	v1 "cosmossdk.io/x/accounts/v1"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -21,19 +20,19 @@ var (
 	_ module.HasServices    = AppModule{}
 )
 
-func NewAppModule(k accounts.Keeper) AppModule {
+func NewAppModule(k Keeper) AppModule {
 	return AppModule{k: k}
 }
 
 type AppModule struct {
-	k accounts.Keeper
+	k Keeper
 }
 
 // App module services
 
 func (m AppModule) RegisterServices(configurator module.Configurator) {
-	v1.RegisterQueryServer(configurator.QueryServer(), accounts.NewQueryServer(m.k))
-	v1.RegisterMsgServer(configurator.MsgServer(), accounts.NewMsgServer(m.k))
+	v1.RegisterQueryServer(configurator.QueryServer(), NewQueryServer(m.k))
+	v1.RegisterMsgServer(configurator.MsgServer(), NewMsgServer(m.k))
 }
 
 // App module genesis

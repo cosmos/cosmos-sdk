@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 
+	"cosmossdk.io/x/accounts/accountstd"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/runtime/protoiface"
@@ -50,7 +51,7 @@ func NewKeeper(
 	signerProvider SignerProvider,
 	execRouter MsgRouter,
 	queryRouter QueryRouter,
-	accounts map[string]implementation.Account,
+	accounts ...accountstd.AccountCreatorFunc,
 ) (Keeper, error) {
 	sb := collections.NewSchemaBuilder(ss)
 	keeper := Keeper{
@@ -85,26 +86,20 @@ func NewKeeper(
 			}
 			return handlers[0](ctx, req, resp)
 		},
-		accounts:       map[string]implementation.Implementation{},
-		Schema:         collections.Schema{},
 		AccountNumber:  collections.NewSequence(sb, AccountNumberKey, "account_number"),
 		AccountsByType: collections.NewMap(sb, AccountTypeKeyPrefix, "accounts_by_type", collections.BytesKey, collections.StringValue),
 		AccountsState:  collections.NewMap(sb, implementation.AccountStatePrefix, "accounts_state", collections.BytesKey, collections.BytesValue),
 	}
 
-	// make accounts implementation
-	for typ, acc := range accounts {
-		impl, err := implementation.NewImplementation(acc)
-		if err != nil {
-			return Keeper{}, err
-		}
-		keeper.accounts[typ] = impl
-	}
 	schema, err := sb.Build()
 	if err != nil {
 		return Keeper{}, err
 	}
 	keeper.Schema = schema
+	keeper.accounts, err = implementation.MakeAccountsMap(keeper.addressCodec, accounts)
+	if err != nil {
+		return Keeper{}, err
+	}
 	return keeper, nil
 }
 

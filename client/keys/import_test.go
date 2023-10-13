@@ -80,7 +80,12 @@ HbP+c6JmeJy9JXe2rbbF1QtCX1gLqGcDQPBXiCtFvP7/8wTZtVOPj8vREzhZ9ElO
 			mockIn := testutil.ApplyMockIODiscardOutErr(cmd)
 
 			// Now add a temporary keybase
-			kbHome := t.TempDir()
+			kbHome := filepath.Join(t.TempDir(), fmt.Sprintf("kbhome-%s", tc.name))
+			// Create dir, otherwise os.WriteFile will fail
+			if _, err := os.Stat(kbHome); os.IsNotExist(err) {
+				err = os.MkdirAll(kbHome, 0o700)
+				require.NoError(t, err)
+			}
 			kb, err := keyring.New(sdk.KeyringServiceName(), tc.keyringBackend, kbHome, nil, cdc)
 			require.NoError(t, err)
 

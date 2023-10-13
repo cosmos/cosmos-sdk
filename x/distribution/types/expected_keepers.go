@@ -21,6 +21,7 @@ type AccountKeeper interface {
 
 // BankKeeper defines the expected interface needed to retrieve account balances.
 type BankKeeper interface {
+	MintCoins(ctx context.Context, moduleName string, amt sdk.Coins) error
 	GetAllBalances(ctx context.Context, addr sdk.AccAddress) sdk.Coins
 
 	SpendableCoins(ctx context.Context, addr sdk.AccAddress) sdk.Coins
@@ -30,6 +31,13 @@ type BankKeeper interface {
 	SendCoinsFromAccountToModule(ctx context.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
 
 	BlockedAddr(addr sdk.AccAddress) bool
+}
+
+// PoolKeeper defines the expected interface needed to fund & distribute pool balances.
+type PoolKeeper interface {
+	FundCommunityPool(ctx context.Context, amount sdk.Coins, sender sdk.AccAddress) error
+	DistributeFromFeePool(ctx context.Context, amount sdk.Coins, receiveAddr sdk.AccAddress) error
+	GetCommunityPool(ctx context.Context) (sdk.Coins, error)
 }
 
 // StakingKeeper expected staking keeper (noalias)

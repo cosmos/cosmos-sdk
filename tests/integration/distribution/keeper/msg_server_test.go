@@ -13,6 +13,9 @@ import (
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
+	"cosmossdk.io/x/protocolpool"
+	poolkeeper "cosmossdk.io/x/protocolpool/keeper"
+	pooltypes "cosmossdk.io/x/protocolpool/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
@@ -52,19 +55,20 @@ type fixture struct {
 	bankKeeper    bankkeeper.Keeper
 	distrKeeper   distrkeeper.Keeper
 	stakingKeeper *stakingkeeper.Keeper
+	poolKeeper    poolkeeper.Keeper
 
 	addr    sdk.AccAddress
 	valAddr sdk.ValAddress
 }
 
-func initFixture(tb testing.TB) *fixture {
-	tb.Helper()
+func initFixture(t *testing.T) *fixture {
+	t.Helper()
 	keys := storetypes.NewKVStoreKeys(
-		authtypes.StoreKey, banktypes.StoreKey, distrtypes.StoreKey, stakingtypes.StoreKey,
+		authtypes.StoreKey, banktypes.StoreKey, distrtypes.StoreKey, pooltypes.StoreKey, stakingtypes.StoreKey,
 	)
-	cdc := moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{}, distribution.AppModuleBasic{}).Codec
+	cdc := moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{}, distribution.AppModuleBasic{}, protocolpool.AppModuleBasic{}).Codec
 
-	logger := log.NewTestLogger(tb)
+	logger := log.NewTestLogger(t)
 	cms := integration.CreateMultiStore(keys, logger)
 
 	newCtx := sdk.NewContext(cms, true, logger)
@@ -72,6 +76,7 @@ func initFixture(tb testing.TB) *fixture {
 	authority := authtypes.NewModuleAddress("gov")
 
 	maccPerms := map[string][]string{
+		pooltypes.ModuleName:           {},
 		distrtypes.ModuleName:          {authtypes.Minter},
 		stakingtypes.BondedPoolName:    {authtypes.Burner, authtypes.Staking},
 		stakingtypes.NotBondedPoolName: {authtypes.Burner, authtypes.Staking},
@@ -100,16 +105,21 @@ func initFixture(tb testing.TB) *fixture {
 	)
 
 	stakingKeeper := stakingkeeper.NewKeeper(cdc, runtime.NewKVStoreService(keys[stakingtypes.StoreKey]), accountKeeper, bankKeeper, authority.String(), addresscodec.NewBech32Codec(sdk.Bech32PrefixValAddr), addresscodec.NewBech32Codec(sdk.Bech32PrefixConsAddr))
-	require.NoError(tb, stakingKeeper.Params.Set(newCtx, stakingtypes.DefaultParams()))
+	require.NoError(t, stakingKeeper.Params.Set(newCtx, stakingtypes.DefaultParams()))
+
+	poolKeeper := poolkeeper.NewKeeper(
+		cdc, runtime.NewKVStoreService(keys[pooltypes.StoreKey]), accountKeeper, bankKeeper, authority.String(),
+	)
 
 	distrKeeper := distrkeeper.NewKeeper(
-		cdc, runtime.NewKVStoreService(keys[distrtypes.StoreKey]), accountKeeper, bankKeeper, stakingKeeper, distrtypes.ModuleName, authority.String(),
+		cdc, runtime.NewKVStoreService(keys[distrtypes.StoreKey]), accountKeeper, bankKeeper, stakingKeeper, poolKeeper, distrtypes.ModuleName, authority.String(),
 	)
 
 	authModule := auth.NewAppModule(cdc, accountKeeper, authsims.RandomGenesisAccounts)
 	bankModule := bank.NewAppModule(cdc, bankKeeper, accountKeeper)
 	stakingModule := staking.NewAppModule(cdc, stakingKeeper, accountKeeper, bankKeeper)
-	distrModule := distribution.NewAppModule(cdc, distrKeeper, accountKeeper, bankKeeper, stakingKeeper)
+	distrModule := distribution.NewAppModule(cdc, distrKeeper, accountKeeper, bankKeeper, stakingKeeper, poolKeeper)
+	poolModule := protocolpool.NewAppModule(cdc, poolKeeper, accountKeeper, bankKeeper)
 
 	addr := sdk.AccAddress(PKS[0].Address())
 	valAddr := sdk.ValAddress(addr)
@@ -135,6 +145,7 @@ func initFixture(tb testing.TB) *fixture {
 		banktypes.ModuleName:    bankModule,
 		stakingtypes.ModuleName: stakingModule,
 		distrtypes.ModuleName:   distrModule,
+		pooltypes.ModuleName:    poolModule,
 	})
 
 	sdkCtx := sdk.UnwrapSDKContext(integrationApp.Context())
@@ -152,6 +163,7 @@ func initFixture(tb testing.TB) *fixture {
 		bankKeeper:    bankKeeper,
 		distrKeeper:   distrKeeper,
 		stakingKeeper: stakingKeeper,
+		poolKeeper:    poolKeeper,
 		addr:          addr,
 		valAddr:       valAddr,
 	}
@@ -573,33 +585,30 @@ func TestMsgFundCommunityPool(t *testing.T) {
 	t.Parallel()
 	f := initFixture(t)
 
-	// reset fee pool
-	initPool := distrtypes.InitialFeePool()
-	require.NoError(t, f.distrKeeper.FeePool.Set(f.sdkCtx, initPool))
-
-	initTokens := f.stakingKeeper.TokensFromConsensusPower(f.sdkCtx, int64(100))
-	err := f.bankKeeper.MintCoins(f.sdkCtx, distrtypes.ModuleName, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens)))
-	require.NoError(t, err)
-
 	addr := sdk.AccAddress(PKS[0].Address())
 	addr2 := sdk.AccAddress(PKS[1].Address())
 	amount := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
 
+	poolAcc := f.accountKeeper.GetModuleAccount(f.sdkCtx, pooltypes.ModuleName)
+
+	// check that the pool account balance is empty
+	assert.Assert(t, f.bankKeeper.GetAllBalances(f.sdkCtx, poolAcc.GetAddress()).Empty())
+
 	// fund the account by minting and sending amount from distribution module to addr
-	err = f.bankKeeper.MintCoins(f.sdkCtx, distrtypes.ModuleName, amount)
+	err := f.bankKeeper.MintCoins(f.sdkCtx, distrtypes.ModuleName, amount)
 	assert.NilError(t, err)
 	err = f.bankKeeper.SendCoinsFromModuleToAccount(f.sdkCtx, distrtypes.ModuleName, addr, amount)
 	assert.NilError(t, err)
 
 	testCases := []struct {
 		name      string
-		msg       *distrtypes.MsgFundCommunityPool
+		msg       *distrtypes.MsgFundCommunityPool //nolint:staticcheck // we're using a deprecated call
 		expErr    bool
 		expErrMsg string
 	}{
 		{
 			name: "no depositor address",
-			msg: &distrtypes.MsgFundCommunityPool{
+			msg: &distrtypes.MsgFundCommunityPool{ //nolint:staticcheck // we're using a deprecated call
 				Amount:    sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(100))),
 				Depositor: emptyDelAddr.String(),
 			},
@@ -608,7 +617,7 @@ func TestMsgFundCommunityPool(t *testing.T) {
 		},
 		{
 			name: "invalid coin",
-			msg: &distrtypes.MsgFundCommunityPool{
+			msg: &distrtypes.MsgFundCommunityPool{ //nolint:staticcheck // we're using a deprecated call
 				Amount:    sdk.Coins{sdk.NewInt64Coin("stake", 10), sdk.NewInt64Coin("stake", 10)},
 				Depositor: addr.String(),
 			},
@@ -617,7 +626,7 @@ func TestMsgFundCommunityPool(t *testing.T) {
 		},
 		{
 			name: "depositor address with no funds",
-			msg: &distrtypes.MsgFundCommunityPool{
+			msg: &distrtypes.MsgFundCommunityPool{ //nolint:staticcheck // we're using a deprecated call
 				Amount:    sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(100))),
 				Depositor: addr2.String(),
 			},
@@ -626,7 +635,7 @@ func TestMsgFundCommunityPool(t *testing.T) {
 		},
 		{
 			name: "valid message",
-			msg: &distrtypes.MsgFundCommunityPool{
+			msg: &distrtypes.MsgFundCommunityPool{ //nolint:staticcheck // we're using a deprecated call
 				Amount:    sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(100))),
 				Depositor: addr.String(),
 			},
@@ -648,14 +657,14 @@ func TestMsgFundCommunityPool(t *testing.T) {
 				assert.Assert(t, res != nil)
 
 				// check the result
-				result := distrtypes.MsgFundCommunityPool{}
+				result := distrtypes.MsgFundCommunityPool{} //nolint:staticcheck // we're using a deprecated call
 				err = f.cdc.Unmarshal(res.Value, &result)
 				assert.NilError(t, err)
 
 				// query the community pool funds
-				feePool, err := f.distrKeeper.FeePool.Get(f.sdkCtx)
-				require.NoError(t, err)
-				assert.DeepEqual(t, initPool.CommunityPool.Add(sdk.NewDecCoinsFromCoins(amount...)...), feePool.CommunityPool)
+				poolBal := f.bankKeeper.GetAllBalances(f.sdkCtx, poolAcc.GetAddress())
+				assert.Assert(t, poolBal.Equal(amount))
+
 				assert.Assert(t, f.bankKeeper.GetAllBalances(f.sdkCtx, addr).Empty())
 			}
 		})
@@ -806,27 +815,31 @@ func TestMsgCommunityPoolSpend(t *testing.T) {
 	t.Parallel()
 	f := initFixture(t)
 
-	require.NoError(t, f.distrKeeper.Params.Set(f.sdkCtx, distrtypes.DefaultParams()))
-	initialFeePool := sdk.NewDecCoins(sdk.DecCoin{Denom: "stake", Amount: math.LegacyNewDec(10000)})
-	require.NoError(t, f.distrKeeper.FeePool.Set(f.sdkCtx, distrtypes.FeePool{
-		CommunityPool: initialFeePool,
-	}))
-
 	initTokens := f.stakingKeeper.TokensFromConsensusPower(f.sdkCtx, int64(100))
 	err := f.bankKeeper.MintCoins(f.sdkCtx, distrtypes.ModuleName, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens)))
 	require.NoError(t, err)
+
+	// fund pool module account
+	amount := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
+	poolAcc := f.accountKeeper.GetModuleAccount(f.sdkCtx, pooltypes.ModuleName)
+	err = f.bankKeeper.SendCoinsFromModuleToModule(f.sdkCtx, distrtypes.ModuleName, poolAcc.GetName(), amount)
+	require.NoError(t, err)
+
+	// query the community pool to verify it has been updated with balance
+	poolBal := f.bankKeeper.GetAllBalances(f.sdkCtx, poolAcc.GetAddress())
+	assert.Assert(t, poolBal.Equal(amount))
 
 	recipient := sdk.AccAddress([]byte("addr1"))
 
 	testCases := []struct {
 		name      string
-		msg       *distrtypes.MsgCommunityPoolSpend
+		msg       *distrtypes.MsgCommunityPoolSpend //nolint:staticcheck // we're using a deprecated call
 		expErr    bool
 		expErrMsg string
 	}{
 		{
 			name: "invalid authority",
-			msg: &distrtypes.MsgCommunityPoolSpend{
+			msg: &distrtypes.MsgCommunityPoolSpend{ //nolint:staticcheck // we're using a deprecated call
 				Authority: "invalid",
 				Recipient: recipient.String(),
 				Amount:    sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(100))),
@@ -836,7 +849,7 @@ func TestMsgCommunityPoolSpend(t *testing.T) {
 		},
 		{
 			name: "invalid recipient",
-			msg: &distrtypes.MsgCommunityPoolSpend{
+			msg: &distrtypes.MsgCommunityPoolSpend{ //nolint:staticcheck // we're using a deprecated call
 				Authority: f.distrKeeper.GetAuthority(),
 				Recipient: "invalid",
 				Amount:    sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(100))),
@@ -846,7 +859,7 @@ func TestMsgCommunityPoolSpend(t *testing.T) {
 		},
 		{
 			name: "valid message",
-			msg: &distrtypes.MsgCommunityPoolSpend{
+			msg: &distrtypes.MsgCommunityPoolSpend{ //nolint:staticcheck // we're using a deprecated call
 				Authority: f.distrKeeper.GetAuthority(),
 				Recipient: recipient.String(),
 				Amount:    sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(100))),
@@ -869,16 +882,14 @@ func TestMsgCommunityPoolSpend(t *testing.T) {
 				assert.Assert(t, res != nil)
 
 				// check the result
-				result := distrtypes.MsgCommunityPoolSpend{}
+				result := distrtypes.MsgCommunityPoolSpend{} //nolint:staticcheck // we're using a deprecated call
 				err = f.cdc.Unmarshal(res.Value, &result)
 				assert.NilError(t, err)
 
 				// query the community pool to verify it has been updated
-				communityPool, err := f.distrKeeper.FeePool.Get(f.sdkCtx)
-				require.NoError(t, err)
-				newPool, negative := initialFeePool.SafeSub(sdk.NewDecCoinsFromCoins(tc.msg.Amount...))
-				assert.Assert(t, negative == false)
-				assert.DeepEqual(t, communityPool.CommunityPool, newPool)
+				poolBal := f.bankKeeper.GetAllBalances(f.sdkCtx, poolAcc.GetAddress())
+				assert.Assert(t, poolBal.Empty())
+
 			}
 		})
 	}

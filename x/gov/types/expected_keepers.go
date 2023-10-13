@@ -25,11 +25,6 @@ type StakingKeeper interface {
 	) error
 }
 
-// DistributionKeeper defines the expected distribution keeper (noalias)
-type DistributionKeeper interface {
-	FundCommunityPool(ctx context.Context, amount sdk.Coins, sender sdk.AccAddress) error
-}
-
 // AccountKeeper defines the expected account keeper (noalias)
 type AccountKeeper interface {
 	AddressCodec() addresscodec.Codec
@@ -53,6 +48,11 @@ type BankKeeper interface {
 	SendCoinsFromModuleToAccount(ctx context.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
 	SendCoinsFromAccountToModule(ctx context.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
 	BurnCoins(context.Context, []byte, sdk.Coins) error
+}
+
+// PoolKeeper defines the expected interface needed to fund & distribute pool balances.
+type PoolKeeper interface {
+	FundCommunityPool(ctx context.Context, amount sdk.Coins, sender sdk.AccAddress) error
 }
 
 // Event Hooks

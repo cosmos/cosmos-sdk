@@ -9,7 +9,6 @@ import (
 	"google.golang.org/grpc"
 
 	modulev1 "cosmossdk.io/api/cosmos/vesting/module/v1"
-	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
 
@@ -33,9 +32,7 @@ var (
 // AppModuleBasic defines the basic application module used by the sub-vesting
 // module. The module itself contain no special logic or state other than message
 // handling.
-type AppModuleBasic struct {
-	ac address.Codec
-}
+type AppModuleBasic struct{}
 
 // Name returns the module's name.
 func (AppModuleBasic) Name() string {
@@ -69,7 +66,7 @@ func (AppModuleBasic) RegisterGRPCGatewayRoutes(_ client.Context, _ *gwruntime.S
 
 // GetTxCmd returns the root tx command for the auth module.
 func (ab AppModuleBasic) GetTxCmd() *cobra.Command {
-	return cli.GetTxCmd(ab.ac)
+	return cli.GetTxCmd()
 }
 
 // AppModule extends the AppModuleBasic implementation by implementing the
@@ -83,7 +80,7 @@ type AppModule struct {
 
 func NewAppModule(ak keeper.AccountKeeper, bk types.BankKeeper) AppModule {
 	return AppModule{
-		AppModuleBasic: AppModuleBasic{ac: ak.AddressCodec()},
+		AppModuleBasic: AppModuleBasic{},
 		accountKeeper:  ak,
 		bankKeeper:     bk,
 	}

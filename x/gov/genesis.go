@@ -1,6 +1,7 @@
 package gov
 
 import (
+	"context"
 	"fmt"
 
 	"cosmossdk.io/collections"
@@ -12,7 +13,7 @@ import (
 )
 
 // InitGenesis - store genesis parameters
-func InitGenesis(ctx sdk.Context, ak types.AccountKeeper, bk types.BankKeeper, k *keeper.Keeper, data *v1.GenesisState) {
+func InitGenesis(ctx context.Context, ak types.AccountKeeper, bk types.BankKeeper, k *keeper.Keeper, data *v1.GenesisState) {
 	err := k.ProposalID.Set(ctx, data.StartingProposalId)
 	if err != nil {
 		panic(err)
@@ -86,7 +87,7 @@ func InitGenesis(ctx sdk.Context, ak types.AccountKeeper, bk types.BankKeeper, k
 }
 
 // ExportGenesis - output genesis parameters
-func ExportGenesis(ctx sdk.Context, k *keeper.Keeper) (*v1.GenesisState, error) {
+func ExportGenesis(ctx context.Context, k *keeper.Keeper) (*v1.GenesisState, error) {
 	startingProposalID, err := k.ProposalID.Peek(ctx)
 	if err != nil {
 		return nil, err

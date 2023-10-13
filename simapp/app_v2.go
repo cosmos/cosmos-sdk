@@ -16,6 +16,8 @@ import (
 	evidencekeeper "cosmossdk.io/x/evidence/keeper"
 	feegrantkeeper "cosmossdk.io/x/feegrant/keeper"
 	nftkeeper "cosmossdk.io/x/nft/keeper"
+	_ "cosmossdk.io/x/protocolpool"
+	poolkeeper "cosmossdk.io/x/protocolpool/keeper"
 	upgradekeeper "cosmossdk.io/x/upgrade/keeper"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -80,6 +82,7 @@ type SimApp struct {
 	NFTKeeper             nftkeeper.Keeper
 	ConsensusParamsKeeper consensuskeeper.Keeper
 	CircuitBreakerKeeper  circuitkeeper.Keeper
+	PoolKeeper            poolkeeper.Keeper
 
 	// simulation manager
 	sm *module.SimulationManager
@@ -181,6 +184,7 @@ func NewSimApp(
 		&app.NFTKeeper,
 		&app.ConsensusParamsKeeper,
 		&app.CircuitBreakerKeeper,
+		&app.PoolKeeper,
 	); err != nil {
 		panic(err)
 	}
@@ -252,7 +256,7 @@ func NewSimApp(
 	// However, when registering a module manually (i.e. that does not support app wiring), the module version map
 	// must be set manually as follow. The upgrade module will de-duplicate the module version map.
 	//
-	// app.SetInitChainer(func(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
+	// app.SetInitChainer(func(ctx sdk.Context, req *abci.RequestInitChain) (*abci.ResponseInitChain, error) {
 	// 	app.UpgradeKeeper.SetModuleVersionMap(ctx, app.ModuleManager.GetVersionMap())
 	// 	return app.App.InitChainer(ctx, req)
 	// })

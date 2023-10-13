@@ -75,7 +75,7 @@ if err := rootCmd.Execute(); err != nil {
 
 ### Keyring
 
-`autocli` supports a keyring for key name resolving and signing transactions. Providing a keyring is optional, but if you want to use the `autocli` generated commands to sign transactions, you must provide a keyring.
+`autocli` uses a keyring for key name resolving and signing transactions. Providing a keyring is optional, but if you want to use the `autocli` generated commands to sign transactions, you must provide a keyring.
 
 :::tip
 This provides a better UX as it allows to resolve key names directly from the keyring in all transactions and commands.
@@ -87,22 +87,39 @@ This provides a better UX as it allows to resolve key names directly from the ke
 
 :::
 
-The keyring to be provided to `client/v2` must match the `client/v2` keyring interface. The Cosmos SDK keyring and Hubl keyring both implement this interface.
+The keyring to be provided to `client/v2` must match the `client/v2` keyring interface.
 The keyring should be provided in the `appOptions` struct as follows, and can be gotten from the client context:
+
+:::tip
+The Cosmos SDK keyring and Hubl keyring both implement the `client/v2/autocli/keyring` interface, thanks to the following wrapper:
+
+```go
+keyring.NewAutoCLIKeyring(kb)
+```
+
+:::
 
 :::warning
 When using AutoCLI the keyring will only be created once and before any command flag parsing.
 :::
 
 ```go
-// Get the keyring from the client context
-keyring := ctx.Keyring
 // Set the keyring in the appOptions
 appOptions.Keyring = keyring
 
 err := autoCliOpts.EnhanceRootCommand(rootCmd)
 ...
 ```
+
+## Signing
+
+`autocli` supports signing transactions with the keyring.
+The [`cosmos.msg.v1.signer` protobuf annotation](https://github.com/cosmos/cosmos-sdk/blob/9dd34510e27376005e7e7ff3628eab9dbc8ad6dc/docs/build/building-modules/05-protobuf-annotations.md#L9) defines the signer field of the message.
+This field is automatically filled when using the `--from` flag or defining the signer as a positional argument.
+
+:::warning
+AutoCLI currently supports only one signer per transaction.
+:::
 
 ## Module Wiring & Customization
 

@@ -44,8 +44,8 @@ func TestFeegrantPruning(t *testing.T) {
 	accountKeeper.EXPECT().GetAccount(gomock.Any(), granter1).Return(authtypes.NewBaseAccountWithAddress(granter1)).AnyTimes()
 	accountKeeper.EXPECT().GetAccount(gomock.Any(), granter2).Return(authtypes.NewBaseAccountWithAddress(granter2)).AnyTimes()
 	accountKeeper.EXPECT().GetAccount(gomock.Any(), granter3).Return(authtypes.NewBaseAccountWithAddress(granter3)).AnyTimes()
-
-	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
+	ac := address.NewBech32Codec("cosmos")
+	accountKeeper.EXPECT().AddressCodec().Return(ac).AnyTimes()
 
 	feegrantKeeper := keeper.NewKeeper(encCfg.Codec, runtime.NewKVStoreService(key), accountKeeper)
 
@@ -85,8 +85,10 @@ func TestFeegrantPruning(t *testing.T) {
 
 	module.EndBlocker(testCtx.Ctx, feegrantKeeper)
 
+	granteeStr, err := ac.BytesToString(grantee)
+	require.NoError(t, err)
 	res, err := queryClient.Allowances(testCtx.Ctx.Context(), &feegrant.QueryAllowancesRequest{
-		Grantee: grantee.String(),
+		Grantee: granteeStr,
 	})
 	require.NoError(t, err)
 	require.NotNil(t, res)
@@ -96,7 +98,7 @@ func TestFeegrantPruning(t *testing.T) {
 	module.EndBlocker(testCtx.Ctx, feegrantKeeper)
 
 	res, err = queryClient.Allowances(testCtx.Ctx.Context(), &feegrant.QueryAllowancesRequest{
-		Grantee: grantee.String(),
+		Grantee: granteeStr,
 	})
 	require.NoError(t, err)
 	require.NotNil(t, res)

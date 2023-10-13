@@ -353,12 +353,13 @@ func (k Querier) DelegatorWithdrawAddress(ctx context.Context, req *types.QueryD
 	return &types.QueryDelegatorWithdrawAddressResponse{WithdrawAddress: withdrawAddr.String()}, nil
 }
 
+// Deprecated: DO NOT USE
+// This method uses deprecated query request. Use CommunityPool from x/protocolpool module instead.
 // CommunityPool queries the community pool coins
 func (k Querier) CommunityPool(ctx context.Context, req *types.QueryCommunityPoolRequest) (*types.QueryCommunityPoolResponse, error) {
-	pool, err := k.FeePool.Get(ctx)
+	pool, err := k.poolKeeper.GetCommunityPool(ctx)
 	if err != nil {
 		return nil, err
 	}
-
-	return &types.QueryCommunityPoolResponse{Pool: pool.CommunityPool}, nil
+	return &types.QueryCommunityPoolResponse{Pool: sdk.NewDecCoinsFromCoins(pool...)}, nil
 }

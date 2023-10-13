@@ -7,9 +7,9 @@ import (
 	"cosmossdk.io/collections"
 	"cosmossdk.io/errors"
 	sdkmath "cosmossdk.io/math"
+	pooltypes "cosmossdk.io/x/protocolpool/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	disttypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 )
@@ -185,10 +185,10 @@ func (keeper Keeper) ChargeDeposit(ctx context.Context, proposalID uint64, destA
 		}
 	}
 
-	// burn the cancellation fee or sent the cancellation charges to destination address.
+	// burn the cancellation fee or send the cancellation charges to destination address.
 	if !cancellationCharges.IsZero() {
-		// get the distribution module account address
-		distributionAddress := keeper.authKeeper.GetModuleAddress(disttypes.ModuleName)
+		// get the pool module account address
+		poolAddress := keeper.authKeeper.GetModuleAddress(pooltypes.ModuleName)
 		switch {
 		case destAddress == "":
 			// burn the cancellation charges from deposits
@@ -196,8 +196,8 @@ func (keeper Keeper) ChargeDeposit(ctx context.Context, proposalID uint64, destA
 			if err != nil {
 				return err
 			}
-		case distributionAddress.String() == destAddress:
-			err := keeper.distrKeeper.FundCommunityPool(ctx, cancellationCharges, keeper.ModuleAccountAddress())
+		case poolAddress.String() == destAddress:
+			err := keeper.poolKeeper.FundCommunityPool(ctx, cancellationCharges, keeper.ModuleAccountAddress())
 			if err != nil {
 				return err
 			}

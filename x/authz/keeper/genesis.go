@@ -1,13 +1,15 @@
 package keeper
 
 import (
+	"context"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 )
 
 // InitGenesis initializes new authz genesis
-func (k Keeper) InitGenesis(ctx sdk.Context, data *authz.GenesisState) {
-	now := ctx.HeaderInfo().Time
+func (k Keeper) InitGenesis(ctx context.Context, data *authz.GenesisState) {
+	now := sdk.UnwrapSDKContext(ctx).HeaderInfo().Time
 	for _, entry := range data.Authorization {
 		// ignore expired authorizations
 		if entry.Expiration != nil && entry.Expiration.Before(now) {
@@ -36,7 +38,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data *authz.GenesisState) {
 }
 
 // ExportGenesis returns a GenesisState for a given context.
-func (k Keeper) ExportGenesis(ctx sdk.Context) *authz.GenesisState {
+func (k Keeper) ExportGenesis(ctx context.Context) *authz.GenesisState {
 	var entries []authz.GrantAuthorization
 	k.IterateGrants(ctx, func(granter, grantee sdk.AccAddress, grant authz.Grant) bool {
 		entries = append(entries, authz.GrantAuthorization{

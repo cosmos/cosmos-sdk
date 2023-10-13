@@ -12,6 +12,7 @@ import (
 	"cosmossdk.io/x/feegrant"
 	"cosmossdk.io/x/feegrant/module"
 
+	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
@@ -32,6 +33,8 @@ func TestFilteredFeeValidAllow(t *testing.T) {
 	leftAtom := sdk.NewCoins(sdk.NewInt64Coin("atom", 512))
 	now := ctx.HeaderInfo().Time
 	oneHour := now.Add(1 * time.Hour)
+
+	ac := addresscodec.NewBech32Codec("cosmos")
 
 	// msg we will call in the all cases
 	call := banktypes.MsgSend{}
@@ -146,7 +149,9 @@ func TestFilteredFeeValidAllow(t *testing.T) {
 			var granter, grantee sdk.AccAddress
 			allowance, err := feegrant.NewAllowedMsgAllowance(tc.allowance, tc.msgs)
 			require.NoError(t, err)
-			grant, err := feegrant.NewGrant(granter, grantee, allowance)
+			granterStr, err := ac.BytesToString(granter)
+			require.NoError(t, err)
+			granteeStr, err := ac.BytesToString(grantee)
 			require.NoError(t, err)
 
 			// now try to deduct
@@ -166,8 +171,8 @@ func TestFilteredFeeValidAllow(t *testing.T) {
 
 				// create a new updated grant
 				newGrant, err := feegrant.NewGrant(
-					sdk.AccAddress(grant.Granter),
-					sdk.AccAddress(grant.Grantee),
+					granterStr,
+					granteeStr,
 					allowance)
 				require.NoError(t, err)
 

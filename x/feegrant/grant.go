@@ -6,14 +6,13 @@ import (
 	errorsmod "cosmossdk.io/errors"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 var _ types.UnpackInterfacesMessage = &Grant{}
 
 // NewGrant creates a new FeeAllowanceGrant.
-func NewGrant(granter, grantee sdk.AccAddress, feeAllowance FeeAllowanceI) (Grant, error) {
+func NewGrant(granter, grantee string, feeAllowance FeeAllowanceI) (Grant, error) {
 	msg, ok := feeAllowance.(proto.Message)
 	if !ok {
 		return Grant{}, errorsmod.Wrapf(sdkerrors.ErrPackAny, "cannot proto marshal %T", feeAllowance)
@@ -25,8 +24,8 @@ func NewGrant(granter, grantee sdk.AccAddress, feeAllowance FeeAllowanceI) (Gran
 	}
 
 	return Grant{
-		Granter:   granter.String(),
-		Grantee:   grantee.String(),
+		Granter:   granter,
+		Grantee:   grantee,
 		Allowance: any,
 	}, nil
 }

@@ -22,7 +22,7 @@ func NewMsgServerImpl(keeper Keeper) types.MsgServer {
 	return &MsgServer{Keeper: keeper}
 }
 
-func (k MsgServer) MsgClaimBudget(ctx context.Context, msg *types.MsgClaimBudget) (*types.MsgClaimBudgetResponse, error) {
+func (k MsgServer) ClaimBudget(ctx context.Context, msg *types.MsgClaimBudget) (*types.MsgClaimBudgetResponse, error) {
 	recipient, err := k.Keeper.authKeeper.AddressCodec().StringToBytes(msg.RecipientAddress)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid recipient address: %s", err)
@@ -36,7 +36,11 @@ func (k MsgServer) MsgClaimBudget(ctx context.Context, msg *types.MsgClaimBudget
 	return &types.MsgClaimBudgetResponse{Amount: amount}, nil
 }
 
-func (k MsgServer) SubmitBudgetProposal(ctx context.Context, msg *types.MsgBudgetProposal) (*types.MsgBudgetProposalResponse, error) {
+func (k MsgServer) SubmitMsgBudgetProposal(ctx context.Context, msg *types.MsgBudgetProposal) (*types.MsgBudgetProposalResponse, error) {
+	if err := k.validateAuthority(msg.Authority); err != nil {
+		return nil, err
+	}
+
 	recipient, err := k.Keeper.authKeeper.AddressCodec().StringToBytes(msg.RecipientAddress)
 	if err != nil {
 		return nil, err

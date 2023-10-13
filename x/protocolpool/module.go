@@ -16,7 +16,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -30,7 +29,6 @@ var (
 
 	_ module.AppModule           = AppModule{}
 	_ module.AppModuleSimulation = AppModule{}
-	_ appmodule.HasEndBlocker    = AppModule{}
 )
 
 // AppModuleBasic defines the basic application module used by the pool module.
@@ -93,12 +91,6 @@ func NewAppModule(cdc codec.Codec, keeper keeper.Keeper,
 
 // ConsensusVersion implements AppModule/ConsensusVersion.
 func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
-
-// EndBlock implements the protocolpool module's EndBlock.
-func (am AppModule) EndBlock(ctx context.Context) error {
-	c := sdk.UnwrapSDKContext(ctx)
-	return EndBlocker(c, am.keeper, am.accountKeeper)
-}
 
 //
 // App Wiring Setup

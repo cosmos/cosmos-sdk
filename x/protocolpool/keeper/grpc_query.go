@@ -4,10 +4,11 @@ import (
 	"context"
 	"errors"
 
-	"cosmossdk.io/collections"
-	"cosmossdk.io/x/protocolpool/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	"cosmossdk.io/collections"
+	"cosmossdk.io/x/protocolpool/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

@@ -28,10 +28,6 @@ service Query {
   rpc AllowancesByGranter(QueryAllowancesByGranterRequest) returns (QueryAllowancesByGranterResponse) {
     option (google.api.http).get = "/cosmos/feegrant/v1beta1/issued/{granter}";
   }
-
-  rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
-    option (google.api.http).get = "/cosmos/feegrant/v1beta1/params";
-  }
 }
 
 // QueryAllowanceRequest is the request type for the Query/Allowance RPC method.
@@ -85,12 +81,4 @@ message QueryAllowancesByGranterResponse {
 
   // pagination defines an pagination for the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
-}
-
-// QueryParamsRequest is the request type for the Query/Params RPC method.
-message QueryParamsRequest {}
-
-// QueryParamsResponse is the response type for the Query/Params RPC method.
-message QueryParamsResponse {
-  Params params = 1;
 }

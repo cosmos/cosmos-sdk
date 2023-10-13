@@ -75,10 +75,6 @@ You can find the fee-grant of a granter and grantee.`),
 					Long:      "Prune a limited amount of expired allowances in order to reduce the size of the store when the number of expired allowances is large.",
 					Example:   fmt.Sprintf(`$ %s tx feegrant prune --from [mykey]`, version.AppName),
 				},
-				{
-					RpcMethod: "UpdateParams",
-					Skip:      true, // skipped because authority gated
-				},
 			},
 			EnhanceCustomCommand: true,
 		},

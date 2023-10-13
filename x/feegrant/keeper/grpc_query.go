@@ -15,31 +15,25 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/query"
 )
 
-var _ feegrant.QueryServer = queryServer{}
-
-type queryServer struct{ k Keeper }
-
-func NewQueryServer(k Keeper) queryServer {
-	return queryServer{k: k}
-}
+var _ feegrant.QueryServer = Keeper{}
 
 // Allowance returns granted allowance to the grantee by the granter.
-func (q queryServer) Allowance(ctx context.Context, req *feegrant.QueryAllowanceRequest) (*feegrant.QueryAllowanceResponse, error) {
+func (q Keeper) Allowance(ctx context.Context, req *feegrant.QueryAllowanceRequest) (*feegrant.QueryAllowanceResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
-	granterAddr, err := q.k.authKeeper.AddressCodec().StringToBytes(req.Granter)
+	granterAddr, err := q.authKeeper.AddressCodec().StringToBytes(req.Granter)
 	if err != nil {
 		return nil, err
 	}
 
-	granteeAddr, err := q.k.authKeeper.AddressCodec().StringToBytes(req.Grantee)
+	granteeAddr, err := q.authKeeper.AddressCodec().StringToBytes(req.Grantee)
 	if err != nil {
 		return nil, err
 	}
 
-	feeAllowance, err := q.k.GetAllowance(ctx, granterAddr, granteeAddr)
+	feeAllowance, err := q.GetAllowance(ctx, granterAddr, granteeAddr)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, err.Error())
 	}
@@ -64,19 +58,19 @@ func (q queryServer) Allowance(ctx context.Context, req *feegrant.QueryAllowance
 }
 
 // Allowances queries all the allowances granted to the given grantee.
-func (q queryServer) Allowances(c context.Context, req *feegrant.QueryAllowancesRequest) (*feegrant.QueryAllowancesResponse, error) {
+func (q Keeper) Allowances(c context.Context, req *feegrant.QueryAllowancesRequest) (*feegrant.QueryAllowancesResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
-	granteeAddr, err := q.k.authKeeper.AddressCodec().StringToBytes(req.Grantee)
+	granteeAddr, err := q.authKeeper.AddressCodec().StringToBytes(req.Grantee)
 	if err != nil {
 		return nil, err
 	}
 
 	var grants []*feegrant.Grant
 
-	_, pageRes, err := query.CollectionFilteredPaginate(c, q.k.FeeAllowance, req.Pagination,
+	_, pageRes, err := query.CollectionFilteredPaginate(c, q.FeeAllowance, req.Pagination,
 		func(key collections.Pair[sdk.AccAddress, sdk.AccAddress], grant feegrant.Grant) (include bool, err error) {
 			grants = append(grants, &grant)
 			return true, nil
@@ -92,18 +86,18 @@ func (q queryServer) Allowances(c context.Context, req *feegrant.QueryAllowances
 }
 
 // AllowancesByGranter queries all the allowances granted by the given granter
-func (q queryServer) AllowancesByGranter(c context.Context, req *feegrant.QueryAllowancesByGranterRequest) (*feegrant.QueryAllowancesByGranterResponse, error) {
+func (q Keeper) AllowancesByGranter(c context.Context, req *feegrant.QueryAllowancesByGranterRequest) (*feegrant.QueryAllowancesByGranterResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
-	granterAddr, err := q.k.authKeeper.AddressCodec().StringToBytes(req.Granter)
+	granterAddr, err := q.authKeeper.AddressCodec().StringToBytes(req.Granter)
 	if err != nil {
 		return nil, err
 	}
 
 	var grants []*feegrant.Grant
-	_, pageRes, err := query.CollectionFilteredPaginate(c, q.k.FeeAllowance, req.Pagination,
+	_, pageRes, err := query.CollectionFilteredPaginate(c, q.FeeAllowance, req.Pagination,
 		func(key collections.Pair[sdk.AccAddress, sdk.AccAddress], grant feegrant.Grant) (include bool, err error) {
 			if !sdk.AccAddress(granterAddr).Equals(key.K2()) {
 				return false, nil
@@ -121,12 +115,4 @@ func (q queryServer) AllowancesByGranter(c context.Context, req *feegrant.QueryA
 	}
 
 	return &feegrant.QueryAllowancesByGranterResponse{Allowances: grants, Pagination: pageRes}, nil
-}
-
-func (q queryServer) Params(c context.Context, req *feegrant.QueryParamsRequest) (*feegrant.QueryParamsResponse, error) {
-	p, err := q.k.Params.Get(c)
-	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
-	}
-	return &feegrant.QueryParamsResponse{Params: &p}, nil
 }

@@ -279,11 +279,6 @@ func startStandAlone(svrCtx *Context, svrCfg serverconfig.Config, clientCtx clie
 
 	g, ctx := getCtx(svrCtx, false)
 
-	_, clientCtx, err = startGrpcServer(ctx, g, svrCfg.GRPC, clientCtx, svrCtx, app)
-	if err != nil {
-		return err
-	}
-
 	// Add the tx service to the gRPC router.
 	if svrCfg.GRPC.Enable {
 		// create tendermint client
@@ -300,6 +295,11 @@ func startStandAlone(svrCtx *Context, svrCfg serverconfig.Config, clientCtx clie
 		app.RegisterTxService(clientCtx)
 		app.RegisterTendermintService(clientCtx)
 		app.RegisterNodeService(clientCtx, svrCfg)
+	}
+
+	_, clientCtx, err = startGrpcServer(ctx, g, svrCfg.GRPC, clientCtx, svrCtx, app)
+	if err != nil {
+		return err
 	}
 
 	g.Go(func() error {

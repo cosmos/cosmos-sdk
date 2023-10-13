@@ -10,8 +10,6 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
-
 	"github.com/cosmos/gogoproto/proto"
 
 	"cosmossdk.io/math"

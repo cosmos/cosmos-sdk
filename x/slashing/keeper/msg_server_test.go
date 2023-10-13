@@ -7,9 +7,12 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
+
+var ac = addresscodec.NewBech32Codec("cosmos")
 
 func (s *KeeperTestSuite) TestUpdateParams() {
 	require := s.Require()
@@ -167,14 +170,17 @@ func (s *KeeperTestSuite) TestUnjail() {
 			malleate: func() *slashingtypes.MsgUnjail {
 				_, pubKey, addr := testdata.KeyTestPubAddr()
 				valAddr := sdk.ValAddress(addr)
-				val, err := types.NewValidator(valAddr.String(), pubKey, types.Description{Moniker: "test"})
+				valStr, err := s.stakingKeeper.ValidatorAddressCodec().BytesToString(addr)
+				s.Require().NoError(err)
+
+				val, err := types.NewValidator(valStr, pubKey, types.Description{Moniker: "test"})
 				s.Require().NoError(err)
 
 				s.stakingKeeper.EXPECT().Validator(s.ctx, valAddr).Return(val, nil)
 				s.stakingKeeper.EXPECT().Delegation(s.ctx, addr, valAddr).Return(nil, nil)
 
 				return &slashingtypes.MsgUnjail{
-					ValidatorAddr: sdk.ValAddress(addr).String(),
+					ValidatorAddr: valStr,
 				}
 			},
 			expErr:    true,
@@ -185,11 +191,12 @@ func (s *KeeperTestSuite) TestUnjail() {
 			malleate: func() *slashingtypes.MsgUnjail {
 				_, _, addr := testdata.KeyTestPubAddr()
 				valAddr := sdk.ValAddress(addr)
-
+				valStr, err := s.stakingKeeper.ValidatorAddressCodec().BytesToString(addr)
+				s.Require().NoError(err)
 				s.stakingKeeper.EXPECT().Validator(s.ctx, valAddr).Return(nil, nil)
 
 				return &slashingtypes.MsgUnjail{
-					ValidatorAddr: valAddr.String(),
+					ValidatorAddr: valStr,
 				}
 			},
 			expErr:    true,
@@ -200,8 +207,12 @@ func (s *KeeperTestSuite) TestUnjail() {
 			malleate: func() *slashingtypes.MsgUnjail {
 				_, pubKey, addr := testdata.KeyTestPubAddr()
 				valAddr := sdk.ValAddress(addr)
+				valStr, err := s.stakingKeeper.ValidatorAddressCodec().BytesToString(addr)
+				s.Require().NoError(err)
+				addrStr, err := ac.BytesToString(addr)
+				s.Require().NoError(err)
 
-				val, err := types.NewValidator(valAddr.String(), pubKey, types.Description{Moniker: "test"})
+				val, err := types.NewValidator(valStr, pubKey, types.Description{Moniker: "test"})
 				val.Tokens = sdkmath.NewInt(1000)
 				val.DelegatorShares = sdkmath.LegacyNewDec(1)
 				val.Jailed = false
@@ -213,12 +224,12 @@ func (s *KeeperTestSuite) TestUnjail() {
 
 				s.Require().NoError(s.slashingKeeper.ValidatorSigningInfo.Set(s.ctx, sdk.ConsAddress(addr), info))
 				s.stakingKeeper.EXPECT().Validator(s.ctx, valAddr).Return(val, nil)
-				del := types.NewDelegation(addr.String(), valAddr.String(), sdkmath.LegacyNewDec(100))
+				del := types.NewDelegation(addrStr, valStr, sdkmath.LegacyNewDec(100))
 
 				s.stakingKeeper.EXPECT().Delegation(s.ctx, addr, valAddr).Return(del, nil)
 
 				return &slashingtypes.MsgUnjail{
-					ValidatorAddr: sdk.ValAddress(addr).String(),
+					ValidatorAddr: valStr,
 				}
 			},
 			expErr:    true,
@@ -229,8 +240,12 @@ func (s *KeeperTestSuite) TestUnjail() {
 			malleate: func() *slashingtypes.MsgUnjail {
 				_, pubKey, addr := testdata.KeyTestPubAddr()
 				valAddr := sdk.ValAddress(addr)
+				valStr, err := s.stakingKeeper.ValidatorAddressCodec().BytesToString(addr)
+				s.Require().NoError(err)
+				addrStr, err := ac.BytesToString(addr)
+				s.Require().NoError(err)
 
-				val, err := types.NewValidator(valAddr.String(), pubKey, types.Description{Moniker: "test"})
+				val, err := types.NewValidator(valStr, pubKey, types.Description{Moniker: "test"})
 				val.Tokens = sdkmath.NewInt(1000)
 				val.DelegatorShares = sdkmath.LegacyNewDec(1)
 				val.Jailed = true
@@ -242,12 +257,12 @@ func (s *KeeperTestSuite) TestUnjail() {
 
 				s.Require().NoError(s.slashingKeeper.ValidatorSigningInfo.Set(s.ctx, sdk.ConsAddress(addr), info))
 				s.stakingKeeper.EXPECT().Validator(s.ctx, valAddr).Return(val, nil)
-				del := types.NewDelegation(addr.String(), valAddr.String(), sdkmath.LegacyNewDec(100))
+				del := types.NewDelegation(addrStr, valStr, sdkmath.LegacyNewDec(100))
 
 				s.stakingKeeper.EXPECT().Delegation(s.ctx, addr, valAddr).Return(del, nil)
 
 				return &slashingtypes.MsgUnjail{
-					ValidatorAddr: sdk.ValAddress(addr).String(),
+					ValidatorAddr: valStr,
 				}
 			},
 			expErr:    true,
@@ -258,8 +273,12 @@ func (s *KeeperTestSuite) TestUnjail() {
 			malleate: func() *slashingtypes.MsgUnjail {
 				_, pubKey, addr := testdata.KeyTestPubAddr()
 				valAddr := sdk.ValAddress(addr)
+				valStr, err := s.stakingKeeper.ValidatorAddressCodec().BytesToString(addr)
+				s.Require().NoError(err)
+				addrStr, err := ac.BytesToString(addr)
+				s.Require().NoError(err)
 
-				val, err := types.NewValidator(valAddr.String(), pubKey, types.Description{Moniker: "test"})
+				val, err := types.NewValidator(valStr, pubKey, types.Description{Moniker: "test"})
 				val.Tokens = sdkmath.NewInt(1000)
 				val.DelegatorShares = sdkmath.LegacyNewDec(1)
 				val.Jailed = true
@@ -271,12 +290,12 @@ func (s *KeeperTestSuite) TestUnjail() {
 
 				s.Require().NoError(s.slashingKeeper.ValidatorSigningInfo.Set(s.ctx, sdk.ConsAddress(addr), info))
 				s.stakingKeeper.EXPECT().Validator(s.ctx, valAddr).Return(val, nil)
-				del := types.NewDelegation(addr.String(), valAddr.String(), sdkmath.LegacyNewDec(10000))
+				del := types.NewDelegation(addrStr), valStr, sdkmath.LegacyNewDec(10000))
 
 				s.stakingKeeper.EXPECT().Delegation(s.ctx, addr, valAddr).Return(del, nil)
 
 				return &slashingtypes.MsgUnjail{
-					ValidatorAddr: sdk.ValAddress(addr).String(),
+					ValidatorAddr: valStr,
 				}
 			},
 			expErr:    true,
@@ -287,8 +306,12 @@ func (s *KeeperTestSuite) TestUnjail() {
 			malleate: func() *slashingtypes.MsgUnjail {
 				_, pubKey, addr := testdata.KeyTestPubAddr()
 				valAddr := sdk.ValAddress(addr)
+				valStr, err := s.stakingKeeper.ValidatorAddressCodec().BytesToString(addr)
+				s.Require().NoError(err)
+				addrStr, err := ac.BytesToString(addr)
+				s.Require().NoError(err)
 
-				val, err := types.NewValidator(valAddr.String(), pubKey, types.Description{Moniker: "test"})
+				val, err := types.NewValidator(valStr, pubKey, types.Description{Moniker: "test"})
 				val.Tokens = sdkmath.NewInt(1000)
 				val.DelegatorShares = sdkmath.LegacyNewDec(1)
 
@@ -300,13 +323,13 @@ func (s *KeeperTestSuite) TestUnjail() {
 
 				s.Require().NoError(s.slashingKeeper.ValidatorSigningInfo.Set(s.ctx, sdk.ConsAddress(addr), info))
 				s.stakingKeeper.EXPECT().Validator(s.ctx, valAddr).Return(val, nil)
-				del := types.NewDelegation(addr.String(), valAddr.String(), sdkmath.LegacyNewDec(100))
+				del := types.NewDelegation(addrStr, valStr, sdkmath.LegacyNewDec(100))
 
 				s.stakingKeeper.EXPECT().Delegation(s.ctx, addr, valAddr).Return(del, nil)
 				s.stakingKeeper.EXPECT().Unjail(s.ctx, sdk.ConsAddress(addr)).Return(nil).AnyTimes()
 
 				return &slashingtypes.MsgUnjail{
-					ValidatorAddr: sdk.ValAddress(addr).String(),
+					ValidatorAddr: valStr,
 				}
 			},
 			expErr: false,

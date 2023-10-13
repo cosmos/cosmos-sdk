@@ -13,6 +13,11 @@ service Query {
   rpc CommunityPool(QueryCommunityPoolRequest) returns (QueryCommunityPoolResponse) {
     option (google.api.http).get = "/cosmos/protocolpool/v1/community_pool";
   }
+
+  // UnclaimedBudget queries the remaining budget left to be claimed.
+  rpc UnclaimedBudget(QueryUnclaimedBudgetRequest) returns (QueryUnclaimedBudgetResponse) {
+    option (google.api.http).get = "/cosmos/protocolpool/v1/unclaimed_budget";
+  }
 }
 
 // QueryCommunityPoolRequest is the request type for the Query/CommunityPool RPC
@@ -25,4 +30,19 @@ message QueryCommunityPoolResponse {
   // pool defines community pool's coins.
   repeated cosmos.base.v1beta1.DecCoin pool = 1
       [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins", (gogoproto.nullable) = false];
+}
+
+// QueryUnclaimedBudgetRequest is the request type for the Query/UnclaimedBudgetRequest 
+// RPC method.
+message QueryUnclaimedBudgetRequest {
+  // address is the recipient address to query unclaimed budget amount for.
+  string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+}
+
+// QueryUnclaimedBudgetResponse is the response type for the Query/UnclaimedBudget
+// RPC method.
+message QueryUnclaimedBudgetResponse {
+  // unclaimed_amount is the remaining budget amount that is unclaimed by the recipient
+  cosmos.base.v1beta1.Coin unclaimed_amount = 1;
 }

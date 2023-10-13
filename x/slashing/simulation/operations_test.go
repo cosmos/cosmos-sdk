@@ -165,6 +165,7 @@ func (suite *SimTestSuite) TestSimulateMsgUnjail() {
 	suite.Require().NoError(err)
 
 	val0ConsAddress, err := validator0.GetConsAddr()
+	suite.Require().NoError(err)
 	val0ConsAddressStr, err := suite.stakingKeeper.ConsensusAddressCodec().BytesToString(val0ConsAddress)
 	suite.Require().NoError(err)
 	info := types.NewValidatorSigningInfo(val0ConsAddressStr, int64(4), int64(3),

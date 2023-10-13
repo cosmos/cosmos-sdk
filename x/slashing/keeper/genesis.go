@@ -69,7 +69,6 @@ func (keeper Keeper) ExportGenesis(ctx context.Context) (data *types.GenesisStat
 	signingInfos := make([]types.SigningInfo, 0)
 	missedBlocks := make([]types.ValidatorMissedBlocks, 0)
 	err = keeper.ValidatorSigningInfo.Walk(ctx, nil, func(address sdk.ConsAddress, info types.ValidatorSigningInfo) (stop bool, err error) {
-
 		bechAddr, err := keeper.sk.ConsensusAddressCodec().BytesToString(address)
 		if err != nil {
 			panic(err)

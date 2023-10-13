@@ -253,6 +253,21 @@ func (ak AccountKeeper) GetModuleAccountAndPermissions(ctx context.Context, modu
 	return maccI, perms
 }
 
+// SetModuleAccountAndPermissions the module account from the auth account store and its
+// registered permissions
+func (ak AccountKeeper) SetModuleAccountAndPermissions(ctx sdk.Context, moduleName string, perms ...string) types.ModuleAccountI {
+	// create a new empty module account
+	macc := types.NewEmptyModuleAccount(moduleName, perms...)
+	// set the account number
+	maccI := (ak.NewAccount(ctx, macc)).(types.ModuleAccountI)
+	// Add the account to the store
+	ak.SetModuleAccount(ctx, maccI)
+	// Add the permissions for the module account
+	ak.permAddrs[moduleName] = types.NewPermissionsForAddress(maccI.GetName(), perms)
+
+	return maccI
+}
+
 // GetModuleAccount gets the module account from the auth account store, if the account does not
 // exist in the AccountKeeper, then it is created.
 func (ak AccountKeeper) GetModuleAccount(ctx context.Context, moduleName string) sdk.ModuleAccountI {

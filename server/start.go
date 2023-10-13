@@ -278,7 +278,8 @@ func startStandAlone(svrCtx *Context, svrCfg serverconfig.Config, clientCtx clie
 
 	g, ctx := getCtx(svrCtx, false)
 
-	// Add the tx service to the gRPC router.
+	// Add the tx service to the gRPC router. We only need to register this
+	// service if gRPC is enabled.
 	if svrCfg.GRPC.Enable {
 		// create tendermint client
 		// assumes the rpc listen address is where tendermint has its rpc server

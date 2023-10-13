@@ -8,7 +8,6 @@ import (
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	rpcclientmock "github.com/cometbft/cometbft/rpc/client/mock"
-	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/suite"
 
 	sdkmath "cosmossdk.io/math"
@@ -196,106 +195,6 @@ func (s *CLITestSuite) TestTxWithdrawAllRewardsCmd() {
 				s.Require().NoError(err)
 				msg := &sdk.TxResponse{}
 				s.Require().NoError(s.clientCtx.Codec.UnmarshalJSON(out.Bytes(), msg), out.String())
-			}
-		})
-	}
-}
-
-func (s *CLITestSuite) TestTxSetWithdrawAddrCmd() {
-	val := testutil.CreateKeyringAccounts(s.T(), s.kr, 1)
-
-	testCases := []struct {
-		name      string
-		args      []string
-		expectErr bool
-		respType  proto.Message
-	}{
-		{
-			"invalid withdraw address",
-			[]string{
-				"foo",
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, val[0].Address.String()),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(10))).String()),
-			},
-			true, nil,
-		},
-		{
-			"valid transaction",
-			[]string{
-				val[0].Address.String(),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, val[0].Address.String()),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(10))).String()),
-			},
-			false, &sdk.TxResponse{},
-		},
-	}
-
-	for _, tc := range testCases {
-		tc := tc
-
-		s.Run(tc.name, func() {
-			cmd := cli.NewSetWithdrawAddrCmd(address.NewBech32Codec("cosmos"))
-
-			out, err := clitestutil.ExecTestCLICmd(s.clientCtx, cmd, tc.args)
-			if tc.expectErr {
-				s.Require().Error(err)
-			} else {
-				s.Require().NoError(err)
-				s.Require().NoError(s.clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
-			}
-		})
-	}
-}
-
-func (s *CLITestSuite) TestTxFundCommunityPoolCmd() {
-	val := testutil.CreateKeyringAccounts(s.T(), s.kr, 1)
-
-	testCases := []struct {
-		name      string
-		args      []string
-		expectErr bool
-		respType  proto.Message
-	}{
-		{
-			"invalid funding amount",
-			[]string{
-				"-43foocoin",
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, val[0].Address.String()),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(10))).String()),
-			},
-			true, nil,
-		},
-		{
-			"valid transaction",
-			[]string{
-				sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(5431))).String(),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, val[0].Address.String()),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(10))).String()),
-			},
-			false, &sdk.TxResponse{},
-		},
-	}
-
-	for _, tc := range testCases {
-		tc := tc
-
-		s.Run(tc.name, func() {
-			cmd := cli.NewFundCommunityPoolCmd(address.NewBech32Codec("cosmos"))
-
-			out, err := clitestutil.ExecTestCLICmd(s.clientCtx, cmd, tc.args)
-			if tc.expectErr {
-				s.Require().Error(err)
-			} else {
-				s.Require().NoError(err)
-				s.Require().NoError(s.clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 			}
 		})
 	}

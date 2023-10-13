@@ -122,11 +122,10 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					},
 				},
 				{
-					RpcMethod:  "FundCommunityPool",
-					Deprecated: fmt.Sprintf("Use %s tx protocolpool fund-community-pool", version.AppName),
-					Use:        "fund-community-pool [amount]",
-					Short:      "Funds the community pool with the specified amount",
-					Example:    fmt.Sprintf(`$ %s tx distribution fund-community-pool 100uatom --from mykey`, version.AppName),
+					RpcMethod: "FundCommunityPool",
+					Use:       "fund-community-pool [amount]",
+					Short:     "Funds the community pool with the specified amount",
+					Example:   fmt.Sprintf(`$ %s tx distribution fund-community-pool 100uatom --from mykey`, version.AppName),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
 						{ProtoField: "amount", Varargs: true},
 					},

@@ -40,9 +40,6 @@ func NewTxCmd(valAc, ac address.Codec) *cobra.Command {
 	distTxCmd.AddCommand(
 		NewWithdrawRewardsCmd(valAc, ac),
 		NewWithdrawAllRewardsCmd(valAc, ac),
-		NewSetWithdrawAddrCmd(ac),
-		NewFundCommunityPoolCmd(ac),
-		NewDepositValidatorRewardsPoolCmd(valAc, ac),
 	)
 
 	return distTxCmd
@@ -184,127 +181,6 @@ $ %[1]s tx distribution withdraw-all-rewards --from mykey
 	}
 
 	cmd.Flags().Int(FlagMaxMessagesPerTx, MaxMessagesPerTxDefault, "Limit the number of messages per tx (0 for unlimited)")
-	flags.AddTxFlagsToCmd(cmd)
-
-	return cmd
-}
-
-// NewSetWithdrawAddrCmd returns a CLI command handler for creating a MsgSetWithdrawAddress transaction.
-func NewSetWithdrawAddrCmd(ac address.Codec) *cobra.Command {
-	bech32PrefixAccAddr := sdk.GetConfig().GetBech32AccountAddrPrefix()
-
-	cmd := &cobra.Command{
-		Use:   "set-withdraw-addr [withdraw-addr]",
-		Short: "change the default withdraw address for rewards associated with an address",
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`Set the withdraw address for rewards associated with a delegator address.
-
-Example:
-$ %s tx distribution set-withdraw-addr %s1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p --from mykey
-`,
-				version.AppName, bech32PrefixAccAddr,
-			),
-		),
-		Args: cobra.ExactArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientTxContext(cmd)
-			if err != nil {
-				return err
-			}
-			delAddr := clientCtx.GetFromAddress()
-			withdrawAddr, err := ac.StringToBytes(args[0])
-			if err != nil {
-				return err
-			}
-
-			msg := types.NewMsgSetWithdrawAddress(delAddr, withdrawAddr)
-
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
-		},
-	}
-
-	flags.AddTxFlagsToCmd(cmd)
-
-	return cmd
-}
-
-// NewFundCommunityPoolCmd returns a CLI command handler for creating a MsgFundCommunityPool transaction.
-func NewFundCommunityPoolCmd(ac address.Codec) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "fund-community-pool [amount]",
-		Args:  cobra.ExactArgs(1),
-		Short: "Funds the community pool with the specified amount",
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`Funds the community pool with the specified amount
-
-Example:
-$ %s tx distribution fund-community-pool 100uatom --from mykey
-`,
-				version.AppName,
-			),
-		),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientTxContext(cmd)
-			if err != nil {
-				return err
-			}
-			depositorAddr, err := ac.BytesToString(clientCtx.GetFromAddress())
-			if err != nil {
-				return err
-			}
-			amount, err := sdk.ParseCoinsNormalized(args[0])
-			if err != nil {
-				return err
-			}
-
-			msg := types.NewMsgFundCommunityPool(amount, depositorAddr)
-
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
-		},
-	}
-
-	flags.AddTxFlagsToCmd(cmd)
-
-	return cmd
-}
-
-// NewDepositValidatorRewardsPoolCmd returns a CLI command handler for creating
-// a MsgDepositValidatorRewardsPool transaction.
-func NewDepositValidatorRewardsPoolCmd(valCodec, ac address.Codec) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "fund-validator-rewards-pool [val_addr] [amount]",
-		Args:  cobra.ExactArgs(2),
-		Short: "Fund the validator rewards pool with the specified amount",
-		Example: fmt.Sprintf(
-			"%s tx distribution fund-validator-rewards-pool cosmosvaloper1x20lytyf6zkcrv5edpkfkn8sz578qg5sqfyqnp 100uatom --from mykey",
-			version.AppName,
-		),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientTxContext(cmd)
-			if err != nil {
-				return err
-			}
-
-			depositorAddr, err := ac.BytesToString(clientCtx.GetFromAddress())
-			if err != nil {
-				return err
-			}
-
-			_, err = valCodec.StringToBytes(args[0])
-			if err != nil {
-				return err
-			}
-
-			amount, err := sdk.ParseCoinsNormalized(args[1])
-			if err != nil {
-				return err
-			}
-
-			msg := types.NewMsgDepositValidatorRewardsPool(depositorAddr, args[0], amount)
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
-		},
-	}
-
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd

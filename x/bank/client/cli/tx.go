@@ -29,7 +29,6 @@ func NewTxCmd(ac address.Codec) *cobra.Command {
 	}
 
 	txCmd.AddCommand(
-		NewSendTxCmd(ac),
 		NewMultiSendTxCmd(ac),
 	)
 
@@ -37,6 +36,8 @@ func NewTxCmd(ac address.Codec) *cobra.Command {
 }
 
 // NewSendTxCmd returns a CLI command handler for creating a MsgSend transaction.
+// Deprecated: This command has migrated to AutoCLI but is still used in tests
+// This command will be removed in v0.51.
 func NewSendTxCmd(ac address.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "send [from_key_or_address] [to_address] [amount]",

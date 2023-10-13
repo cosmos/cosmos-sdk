@@ -22,7 +22,7 @@ service Msg {
   // keeper.
   rpc CommunityPoolSpend(MsgCommunityPoolSpend) returns (MsgCommunityPoolSpendResponse);
 
-  // BudgetProposal defines a method to set a budget proposal.
+  // SubmitBudgetProposal defines a method to set a budget proposal.
   rpc SubmitBudgetProposal(MsgSubmitBudgetProposal) returns (MsgSubmitBudgetProposalResponse);
 
   // ClaimBudget defines a method to claim the distributed budget.
@@ -61,7 +61,7 @@ message MsgCommunityPoolSpend {
 // MsgCommunityPoolSpend message.
 message MsgCommunityPoolSpendResponse {}
 
-// Budget defines budget proposal type.
+// MsgSubmitBudgetProposal defines budget proposal type.
 message MsgSubmitBudgetProposal {
   option (cosmos.msg.v1.signer) = "authority";
 
@@ -74,8 +74,8 @@ message MsgSubmitBudgetProposal {
   int64                    period             = 6;
 }
 
-// MsgBudgetProposalResponse defines the response to executing a
-// MsgBudgetProposal message.
+// MsgSubmitBudgetProposalResponse defines the response to executing a
+// MsgSubmitBudgetProposal message.
 message MsgSubmitBudgetProposalResponse {}
 
 // MsgClaimBudget defines a message for claiming the distributed budget.

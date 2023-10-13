@@ -3994,7 +3994,7 @@ func (*MsgCommunityPoolSpendResponse) Descriptor() ([]byte, []int) {
 	return file_cosmos_protocolpool_v1_tx_proto_rawDescGZIP(), []int{3}
 }
 
-// Budget defines budget proposal type.
+// MsgSubmitBudgetProposal defines budget proposal type.
 type MsgSubmitBudgetProposal struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -4071,8 +4071,8 @@ func (x *MsgSubmitBudgetProposal) GetPeriod() int64 {
 	return 0
 }
 
-// MsgBudgetProposalResponse defines the response to executing a
-// MsgBudgetProposal message.
+// MsgSubmitBudgetProposalResponse defines the response to executing a
+// MsgSubmitBudgetProposal message.
 type MsgSubmitBudgetProposalResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

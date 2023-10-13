@@ -211,7 +211,7 @@ func (m *MsgCommunityPoolSpendResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgCommunityPoolSpendResponse proto.InternalMessageInfo
 
-// Budget defines budget proposal type.
+// MsgSubmitBudgetProposal defines budget proposal type.
 type MsgSubmitBudgetProposal struct {
 	// authority is the address that controls the module (defaults to x/gov unless overwritten).
 	Authority         string      `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
@@ -297,8 +297,8 @@ func (m *MsgSubmitBudgetProposal) GetPeriod() int64 {
 	return 0
 }
 
-// MsgBudgetProposalResponse defines the response to executing a
-// MsgBudgetProposal message.
+// MsgSubmitBudgetProposalResponse defines the response to executing a
+// MsgSubmitBudgetProposal message.
 type MsgSubmitBudgetProposalResponse struct {
 }
 
@@ -505,7 +505,7 @@ type MsgClient interface {
 	// could be the governance module itself. The authority is defined in the
 	// keeper.
 	CommunityPoolSpend(ctx context.Context, in *MsgCommunityPoolSpend, opts ...grpc.CallOption) (*MsgCommunityPoolSpendResponse, error)
-	// BudgetProposal defines a method to set a budget proposal.
+	// SubmitBudgetProposal defines a method to set a budget proposal.
 	SubmitBudgetProposal(ctx context.Context, in *MsgSubmitBudgetProposal, opts ...grpc.CallOption) (*MsgSubmitBudgetProposalResponse, error)
 	// ClaimBudget defines a method to claim the distributed budget.
 	ClaimBudget(ctx context.Context, in *MsgClaimBudget, opts ...grpc.CallOption) (*MsgClaimBudgetResponse, error)
@@ -565,7 +565,7 @@ type MsgServer interface {
 	// could be the governance module itself. The authority is defined in the
 	// keeper.
 	CommunityPoolSpend(context.Context, *MsgCommunityPoolSpend) (*MsgCommunityPoolSpendResponse, error)
-	// BudgetProposal defines a method to set a budget proposal.
+	// SubmitBudgetProposal defines a method to set a budget proposal.
 	SubmitBudgetProposal(context.Context, *MsgSubmitBudgetProposal) (*MsgSubmitBudgetProposalResponse, error)
 	// ClaimBudget defines a method to claim the distributed budget.
 	ClaimBudget(context.Context, *MsgClaimBudget) (*MsgClaimBudgetResponse, error)

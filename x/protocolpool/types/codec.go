@@ -11,7 +11,7 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		(*sdk.Msg)(nil),
 		&MsgFundCommunityPool{},
 		&MsgCommunityPoolSpend{},
-		&MsgBudgetProposal{},
+		&MsgSubmitBudgetProposal{},
 		&MsgClaimBudget{},
 	)
 

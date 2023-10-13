@@ -28,7 +28,7 @@ type Keeper struct {
 
 	// State
 	Schema         collections.Schema
-	BudgetProposal collections.Map[sdk.AccAddress, types.MsgBudgetProposal]
+	BudgetProposal collections.Map[sdk.AccAddress, types.MsgSubmitBudgetProposal]
 }
 
 func NewKeeper(cdc codec.BinaryCodec, storeService storetypes.KVStoreService,
@@ -46,7 +46,7 @@ func NewKeeper(cdc codec.BinaryCodec, storeService storetypes.KVStoreService,
 		bankKeeper:     bk,
 		cdc:            cdc,
 		authority:      authority,
-		BudgetProposal: collections.NewMap(sb, types.BudgetKey, "budget", sdk.AccAddressKey, codec.CollValue[types.MsgBudgetProposal](cdc)),
+		BudgetProposal: collections.NewMap(sb, types.BudgetKey, "budget", sdk.AccAddressKey, codec.CollValue[types.MsgSubmitBudgetProposal](cdc)),
 	}
 
 	schema, err := sb.Build()
@@ -166,7 +166,7 @@ func (k Keeper) getClaimableFunds(ctx context.Context, recipient sdk.AccAddress)
 	return sdk.Coin{}, nil
 }
 
-func (k Keeper) validateBudgetProposal(ctx context.Context, bp types.MsgBudgetProposal) error {
+func (k Keeper) validateBudgetProposal(ctx context.Context, bp types.MsgSubmitBudgetProposal) error {
 	account := k.authKeeper.GetAccount(ctx, sdk.AccAddress(bp.RecipientAddress))
 	if account == nil {
 		return fmt.Errorf("account not found: %s", bp.RecipientAddress)

@@ -5,9 +5,9 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 
+	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -290,7 +290,7 @@ func (s *KeeperTestSuite) TestUnjail() {
 
 				s.Require().NoError(s.slashingKeeper.ValidatorSigningInfo.Set(s.ctx, sdk.ConsAddress(addr), info))
 				s.stakingKeeper.EXPECT().Validator(s.ctx, valAddr).Return(val, nil)
-				del := types.NewDelegation(addrStr), valStr, sdkmath.LegacyNewDec(10000))
+				del := types.NewDelegation(addrStr, valStr, sdkmath.LegacyNewDec(10000))
 
 				s.stakingKeeper.EXPECT().Delegation(s.ctx, addr, valAddr).Return(del, nil)
 

@@ -42,8 +42,10 @@ func (s *KeeperTestSuite) TestGRPCSigningInfo() {
 	info, err := keeper.ValidatorSigningInfo.Get(ctx, consAddr)
 	require.NoError(err)
 
+	consAddrStr, err := s.stakingKeeper.ConsensusAddressCodec().BytesToString(consAddr)
+	require.NoError(err)
 	infoResp, err = queryClient.SigningInfo(gocontext.Background(),
-		&slashingtypes.QuerySigningInfoRequest{ConsAddress: consAddr.String()})
+		&slashingtypes.QuerySigningInfoRequest{ConsAddress: consAddrStr})
 	require.NoError(err)
 	require.Equal(info, infoResp.ValSigningInfo)
 }

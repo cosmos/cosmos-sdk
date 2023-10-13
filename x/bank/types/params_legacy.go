@@ -4,6 +4,7 @@ import (
 	fmt "fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/bank/exported"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
@@ -30,6 +31,13 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 
 // SendEnabledParams is a collection of parameters indicating if a coin denom is enabled for sending
 type SendEnabledParams []*SendEnabled
+
+// GetSendEnabledParams retrieves the send enabled parameters from the provided context and legacy subspace.
+func GetSendEnabledParams(ctx sdk.Context, legacySubspace exported.Subspace) []*SendEnabled {
+	var sendEnabled []*SendEnabled
+	legacySubspace.Get(ctx, KeySendEnabled, &sendEnabled)
+	return sendEnabled
+}
 
 func validateSendEnabledParams(i interface{}) error {
 	params, ok := i.([]*SendEnabled)

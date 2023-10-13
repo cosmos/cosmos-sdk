@@ -36,7 +36,7 @@ func (k MsgServer) ClaimBudget(ctx context.Context, msg *types.MsgClaimBudget) (
 	return &types.MsgClaimBudgetResponse{Amount: amount}, nil
 }
 
-func (k MsgServer) BudgetProposal(ctx context.Context, msg *types.MsgBudgetProposal) (*types.MsgBudgetProposalResponse, error) {
+func (k MsgServer) SubmitBudgetProposal(ctx context.Context, msg *types.MsgSubmitBudgetProposal) (*types.MsgSubmitBudgetProposalResponse, error) {
 	if err := k.validateAuthority(msg.GetAuthority()); err != nil {
 		return nil, err
 	}
@@ -55,7 +55,7 @@ func (k MsgServer) BudgetProposal(ctx context.Context, msg *types.MsgBudgetPropo
 	if err != nil {
 		return nil, err
 	}
-	return &types.MsgBudgetProposalResponse{}, nil
+	return &types.MsgSubmitBudgetProposalResponse{}, nil
 }
 
 func (k MsgServer) FundCommunityPool(ctx context.Context, msg *types.MsgFundCommunityPool) (*types.MsgFundCommunityPoolResponse, error) {

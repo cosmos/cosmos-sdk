@@ -66,10 +66,8 @@ func TestMakeAccountContext(t *testing.T) {
 
 	// ensure calling QueryModule works, also by setting everything else communication related to nil
 	// we can guarantee that exec paths do not impact query paths.
-	accountCtx = MakeAccountContext(originalContext, storeService, nil, nil, nil, nil, func(ctx context.Context, _ string, msg proto.Message) (proto.Message, error) {
+	accountCtx = MakeAccountContext(originalContext, storeService, nil, nil, nil, nil, func(ctx context.Context, msg proto.Message) (proto.Message, error) {
 		require.Equal(t, originalContext, ctx)
 		return wrapperspb.String("module query was called"), nil
 	})
-
-	t.Fatal("ensure query works as expected")
 }

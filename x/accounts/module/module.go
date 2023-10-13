@@ -1,6 +1,7 @@
 package module
 
 import (
+	"context"
 	"encoding/json"
 
 	"cosmossdk.io/x/accounts"
@@ -8,7 +9,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 )
@@ -46,17 +46,17 @@ func (AppModule) ValidateGenesis(jsonCodec codec.JSONCodec, config client.TxEnco
 	return nil
 }
 
-func (m AppModule) InitGenesis(context sdk.Context, jsonCodec codec.JSONCodec, message json.RawMessage) {
+func (m AppModule) InitGenesis(ctx context.Context, jsonCodec codec.JSONCodec, message json.RawMessage) {
 	gs := &v1.GenesisState{}
 	jsonCodec.MustUnmarshalJSON(message, gs)
-	err := m.k.ImportState(context, gs)
+	err := m.k.ImportState(ctx, gs)
 	if err != nil {
 		panic(err)
 	}
 }
 
-func (m AppModule) ExportGenesis(context sdk.Context, jsonCodec codec.JSONCodec) json.RawMessage {
-	gs, err := m.k.ExportState(context)
+func (m AppModule) ExportGenesis(ctx context.Context, jsonCodec codec.JSONCodec) json.RawMessage {
+	gs, err := m.k.ExportState(ctx)
 	if err != nil {
 		panic(err)
 	}

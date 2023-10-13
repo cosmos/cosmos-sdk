@@ -27,7 +27,7 @@ func (a addressCodec) BytesToString(bz []byte) (string, error)   { return string
 func newKeeper(t *testing.T, accounts map[string]implementation.Account) (Keeper, context.Context) {
 	t.Helper()
 	ss, ctx := colltest.MockStore()
-	m, err := NewKeeper(ss, addressCodec{}, nil, nil, nil, accounts)
+	m, err := NewKeeper(nil, ss, addressCodec{}, nil, nil, nil, accounts)
 	require.NoError(t, err)
 	return m, ctx
 }

@@ -87,7 +87,7 @@ func SimulateFromSeed(
 	// At least 2 accounts must be added here, otherwise when executing SimulateMsgSend
 	// two accounts will be selected to meet the conditions from != to and it will fall into an infinite loop.
 	if len(accs) <= 1 {
-		return true, params, fmt.Errorf("At least two genesis accounts are required")
+		return true, params, fmt.Errorf("at least two genesis accounts are required")
 	}
 
 	config.ChainID = chainID

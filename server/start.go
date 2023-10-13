@@ -142,7 +142,7 @@ is performed. Note, when enabled, gRPC will also be automatically enabled.
 			if !withTM {
 				serverCtx.Logger.Info("starting ABCI without Tendermint")
 				return wrapCPUProfile(serverCtx, func() error {
-					return startStandAlone(serverCtx, appCreator)
+					return startStandAlone(serverCtx, clientCtx, appCreator)
 				})
 			}
 
@@ -206,7 +206,7 @@ is performed. Note, when enabled, gRPC will also be automatically enabled.
 	return cmd
 }
 
-func startStandAlone(ctx *Context, appCreator types.AppCreator) error {
+func startStandAlone(ctx *Context, clientCtx client.Context, appCreator types.AppCreator) error {
 	addr := ctx.Viper.GetString(flagAddress)
 	transport := ctx.Viper.GetString(flagTransport)
 	home := ctx.Viper.GetString(flags.FlagHome)
@@ -229,9 +229,43 @@ func startStandAlone(ctx *Context, appCreator types.AppCreator) error {
 		return err
 	}
 
+	// Add the tx service to the gRPC router. We only need to register this
+	// service if gRPC is enabled
+	if config.GRPC.Enable {
+		// use the clientCtx provided to start command
+		app.RegisterTxService(clientCtx)
+		app.RegisterTendermintService(clientCtx)
+		app.RegisterNodeService(clientCtx)
+	}
+
 	_, err = startTelemetry(config)
 	if err != nil {
 		return err
+	}
+
+	var (
+		grpcSrv    *grpc.Server
+		grpcWebSrv *http.Server
+	)
+
+	if config.GRPC.Enable {
+		grpcSrv, err = servergrpc.StartGRPCServer(clientCtx, app, config.GRPC)
+		if err != nil {
+			return err
+		}
+		defer grpcSrv.Stop()
+		if config.GRPCWeb.Enable {
+			grpcWebSrv, err = servergrpc.StartGRPCWeb(grpcSrv, config)
+			if err != nil {
+				ctx.Logger.Error("failed to start grpc-web http server: ", err)
+				return err
+			}
+			defer func() {
+				if err := grpcWebSrv.Close(); err != nil {
+					ctx.Logger.Error("failed to close grpc-web http server: ", err)
+				}
+			}()
+		}
 	}
 
 	svr, err := server.NewServer(addr, transport, app)

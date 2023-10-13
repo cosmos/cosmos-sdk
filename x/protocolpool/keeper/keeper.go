@@ -134,30 +134,36 @@ func (k Keeper) getClaimableFunds(ctx context.Context, recipient sdk.AccAddress)
 	blocksElapsed := sdkCtx.BlockHeight() - budget.Period
 
 	// Check if its time to distribute funds based on period intervals
-	if blocksElapsed > 0 && blocksElapsed%budget.Period == 0 {
+	if blocksElapsed > 0 {
 		// Calculate how many periods have passed
 		periodsPassed := blocksElapsed / budget.Period
 
-		// Calculate the amount to distribute for all passed periods
-		coinsToDistribute := math.NewInt(periodsPassed).Mul(budget.TotalBudget.Amount.QuoRaw(budget.RemainingTranches))
-		amount := sdk.NewCoin(budget.TotalBudget.Denom, coinsToDistribute)
+		if periodsPassed > 0 {
+			// Calculate the amount to distribute for all passed periods
+			coinsToDistribute := math.NewInt(periodsPassed).Mul(budget.TotalBudget.Amount.QuoRaw(budget.RemainingTranches))
+			amount := sdk.NewCoin(budget.TotalBudget.Denom, coinsToDistribute)
 
-		// update the budget's remaining tranches
-		budget.RemainingTranches -= periodsPassed
+			// update the budget's remaining tranches
+			budget.RemainingTranches -= periodsPassed
 
-		// update the TotalBudget amount
-		budget.TotalBudget.Amount.Sub(coinsToDistribute)
+			// update the TotalBudget amount
+			budget.TotalBudget.Amount.Sub(coinsToDistribute)
 
-		k.Logger(ctx).Info(fmt.Sprintf("Processing budget for recipient: %s. Amount: %s", budget.RecipientAddress, coinsToDistribute.String()))
+			k.Logger(ctx).Info(fmt.Sprintf("Processing budget for recipient: %s. Amount: %s", budget.RecipientAddress, coinsToDistribute.String()))
 
-		// Save the updated budget in the state
-		err = k.BudgetProposal.Set(ctx, recipient, budget)
-		if err != nil {
-			return sdk.Coin{}, fmt.Errorf("error while updating the budget for recipient %s", budget.RecipientAddress)
+			// Save the updated budget in the state
+			err = k.BudgetProposal.Set(ctx, recipient, budget)
+			if err != nil {
+				return sdk.Coin{}, fmt.Errorf("error while updating the budget for recipient %s", budget.RecipientAddress)
+			}
+
+			return amount, nil
+		} else {
+			return sdk.Coin{}, fmt.Errorf("budget period has not passed yet")
 		}
 
-		return amount, nil
 	}
+	return sdk.Coin{}, nil
 }
 
 func (k Keeper) validateBudgetProposal(ctx context.Context, bp types.MsgBudgetProposal) error {

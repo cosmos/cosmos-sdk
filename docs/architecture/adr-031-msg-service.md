@@ -118,7 +118,7 @@ We propose to add a `msg_service_router` in BaseApp. This router is a key/value 
 
 When a transaction is processed by BaseApp (in CheckTx or in DeliverTx), its `TxBody.messages` are decoded as `Msg`s. Each `Msg`'s `type_url` is matched against an entry in the `msg_service_router`, and the respective `Msg` service method handler is called.
 
-For backward compatability, the old handlers are not removed yet. If BaseApp receives a legacy `Msg` with no correspoding entry in the `msg_service_router`, it will be routed via its legacy `Route()` method into the legacy handler.
+For backward compatibility, the old handlers are not removed yet. If BaseApp receives a legacy `Msg` with no correspoding entry in the `msg_service_router`, it will be routed via its legacy `Route()` method into the legacy handler.
 
 ### Module Configuration
 

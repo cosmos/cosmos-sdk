@@ -289,7 +289,7 @@ func startStandAlone(ctx *Context, clientCtx client.Context, appCreator types.Ap
 	err = svr.Start()
 	if err != nil {
 		fmt.Println(err.Error())
-		os.Exit(1)
+		return err
 	}
 
 	defer func() {

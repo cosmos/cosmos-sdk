@@ -39,8 +39,9 @@ func (s *RootStoreTestSuite) SetupTest() {
 	s.rootStore = rootStore
 }
 
-func (s *RootStoreTestSuite) TestClose() {
-	s.Require().NoError(s.rootStore.Close())
+func (s *RootStoreTestSuite) TearDownTest() {
+	err := s.rootStore.Close()
+	s.Require().NoError(err)
 }
 
 func (s *RootStoreTestSuite) TestMountSCStore() {

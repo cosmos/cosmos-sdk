@@ -174,6 +174,55 @@ func NewEditValidatorCmd(ac address.Codec) *cobra.Command {
 	return cmd
 }
 
+// NewUnbondCmd returns a CLI command handler for creating a MsgUndelegate transaction.
+// Deprecated: This command has migrated to AutoCLI but is still used in tests
+// This command will be removed in v0.51.
+func NewUnbondCmd(valAddrCodec, ac address.Codec) *cobra.Command {
+	bech32PrefixValAddr := sdk.GetConfig().GetBech32ValidatorAddrPrefix()
+
+	cmd := &cobra.Command{
+		Use:   "unbond [validator-addr] [amount]",
+		Short: "Unbond shares from a validator",
+		Args:  cobra.ExactArgs(2),
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Unbond an amount of bonded shares from a validator.
+Example:
+$ %s tx staking unbond %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj 100stake --from mykey
+`,
+				version.AppName, bech32PrefixValAddr,
+			),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			delAddr, err := ac.BytesToString(clientCtx.GetFromAddress())
+			if err != nil {
+				return err
+			}
+			_, err = valAddrCodec.StringToBytes(args[0])
+			if err != nil {
+				return err
+			}
+
+			amount, err := sdk.ParseCoinNormalized(args[1])
+			if err != nil {
+				return err
+			}
+
+			msg := types.NewMsgUndelegate(delAddr, args[0], amount)
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
 // NewDelegateCmd returns a CLI command handler for creating a MsgDelegate transaction.
 // Deprecated: This command has migrated to AutoCLI but is still used in tests
 // This command will be removed in v0.51.

@@ -31,9 +31,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
-## v0.10.1
+## v0.11.0
 
-### Bug Fixes
+### Improvements
 
 * [#17787](https://github.com/cosmos/cosmos-sdk/pull/17787) Drop tip support.
 

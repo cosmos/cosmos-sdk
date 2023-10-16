@@ -21,18 +21,6 @@ func NewMsgCreateVestingAccount(fromAddr, toAddr sdk.AccAddress, amount sdk.Coin
 	}
 }
 
-// NewMsgCreateVestingAccount returns a reference to a new MsgCreateVestingAccount.
-func NewMsgCreateVestingAccountWithStartTime(fromAddr, toAddr sdk.AccAddress, amount sdk.Coins, startTime, endTime int64, delayed bool) *MsgCreateVestingAccount {
-	return &MsgCreateVestingAccount{
-		FromAddress: fromAddr.String(),
-		ToAddress:   toAddr.String(),
-		Amount:      amount,
-		StartTime:   startTime,
-		EndTime:     endTime,
-		Delayed:     delayed,
-	}
-}
-
 // NewMsgCreatePermanentLockedAccount returns a reference to a new MsgCreatePermanentLockedAccount.
 func NewMsgCreatePermanentLockedAccount(fromAddr, toAddr sdk.AccAddress, amount sdk.Coins) *MsgCreatePermanentLockedAccount {
 	return &MsgCreatePermanentLockedAccount{

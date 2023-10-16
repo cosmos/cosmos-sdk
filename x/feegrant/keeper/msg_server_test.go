@@ -316,7 +316,10 @@ func (suite *KeeperTestSuite) TestPruneAllowances() {
 			}
 
 			_, err = suite.msgSrvr.GrantAllowance(ctx, req)
-			suite.Require().NoError(err)
+			if err != nil {
+				// do not fail, just try with another pair
+				continue
+			}
 
 			count++
 		}

@@ -249,7 +249,16 @@ func startStandAlone(ctx *Context, clientCtx client.Context, appCreator types.Ap
 		app.RegisterNodeService(clientCtx)
 	}
 
-	_, err = startTelemetry(config)
+	metrics, err := startTelemetry(config)
+	if err != nil {
+		return err
+	}
+
+	cfg := ctx.Config
+
+	genDocProvider := node.DefaultGenesisDocProviderFunc(cfg)
+
+	apiSrv, err := startAPIserver(config, genDocProvider, clientCtx, home, ctx, app, metrics)
 	if err != nil {
 		return err
 	}
@@ -293,14 +302,12 @@ func startStandAlone(ctx *Context, clientCtx client.Context, appCreator types.Ap
 	}
 
 	defer func() {
-		if err = svr.Stop(); err != nil {
-			fmt.Println(err.Error())
-			os.Exit(1)
-		}
+		_ = svr.Stop()
 
-		if err = app.Close(); err != nil {
-			fmt.Println(err.Error())
-			os.Exit(1)
+		_ = app.Close()
+
+		if apiSrv != nil {
+			_ = apiSrv.Close()
 		}
 	}()
 
@@ -399,70 +406,9 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 		return err
 	}
 
-	var apiSrv *api.Server
-	if config.API.Enable {
-		genDoc, err := genDocProvider()
-		if err != nil {
-			return err
-		}
-
-		clientCtx := clientCtx.WithHomeDir(home).WithChainID(genDoc.ChainID)
-
-		if config.GRPC.Enable {
-			_, port, err := net.SplitHostPort(config.GRPC.Address)
-			if err != nil {
-				return err
-			}
-
-			maxSendMsgSize := config.GRPC.MaxSendMsgSize
-			if maxSendMsgSize == 0 {
-				maxSendMsgSize = serverconfig.DefaultGRPCMaxSendMsgSize
-			}
-
-			maxRecvMsgSize := config.GRPC.MaxRecvMsgSize
-			if maxRecvMsgSize == 0 {
-				maxRecvMsgSize = serverconfig.DefaultGRPCMaxRecvMsgSize
-			}
-
-			grpcAddress := fmt.Sprintf("127.0.0.1:%s", port)
-
-			// If grpc is enabled, configure grpc client for grpc gateway.
-			grpcClient, err := grpc.Dial(
-				grpcAddress,
-				grpc.WithTransportCredentials(insecure.NewCredentials()),
-				grpc.WithDefaultCallOptions(
-					grpc.ForceCodec(codec.NewProtoCodec(clientCtx.InterfaceRegistry).GRPCCodec()),
-					grpc.MaxCallRecvMsgSize(maxRecvMsgSize),
-					grpc.MaxCallSendMsgSize(maxSendMsgSize),
-				),
-			)
-			if err != nil {
-				return err
-			}
-
-			clientCtx = clientCtx.WithGRPCClient(grpcClient)
-			ctx.Logger.Debug("grpc client assigned to client context", "target", grpcAddress)
-		}
-
-		apiSrv = api.New(clientCtx, ctx.Logger.With("module", "api-server"))
-		app.RegisterAPIRoutes(apiSrv, config.API)
-		if config.Telemetry.Enabled {
-			apiSrv.SetTelemetry(metrics)
-		}
-		errCh := make(chan error)
-
-		go func() {
-			if err := apiSrv.Start(config); err != nil {
-				errCh <- err
-			}
-		}()
-
-		select {
-		case err := <-errCh:
-			return err
-
-		case <-time.After(types.ServerStartTime): // assume server started successfully
-		}
+	apiSrv, err := startAPIserver(config, genDocProvider, clientCtx, home, ctx, app, metrics)
+	if err != nil {
+		return err
 	}
 
 	var (
@@ -566,6 +512,76 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 
 	// wait for signal capture and gracefully return
 	return WaitForQuitSignals()
+}
+
+func startAPIserver(config serverconfig.Config, genDocProvider node.GenesisDocProvider, clientCtx client.Context, home string, ctx *Context, app types.Application, metrics *telemetry.Metrics) (*api.Server, error) {
+	// If grpc is enabled, configure grpc client for grpc gateway.
+	// assume server started successfully
+	var apiSrv *api.Server
+	if config.API.Enable {
+		genDoc, err := genDocProvider()
+		if err != nil {
+			return nil, err
+		}
+
+		clientCtx := clientCtx.WithHomeDir(home).WithChainID(genDoc.ChainID)
+
+		if config.GRPC.Enable {
+			_, port, err := net.SplitHostPort(config.GRPC.Address)
+			if err != nil {
+				return nil, err
+			}
+
+			maxSendMsgSize := config.GRPC.MaxSendMsgSize
+			if maxSendMsgSize == 0 {
+				maxSendMsgSize = serverconfig.DefaultGRPCMaxSendMsgSize
+			}
+
+			maxRecvMsgSize := config.GRPC.MaxRecvMsgSize
+			if maxRecvMsgSize == 0 {
+				maxRecvMsgSize = serverconfig.DefaultGRPCMaxRecvMsgSize
+			}
+
+			grpcAddress := fmt.Sprintf("127.0.0.1:%s", port)
+
+			grpcClient, err := grpc.Dial(
+				grpcAddress,
+				grpc.WithTransportCredentials(insecure.NewCredentials()),
+				grpc.WithDefaultCallOptions(
+					grpc.ForceCodec(codec.NewProtoCodec(clientCtx.InterfaceRegistry).GRPCCodec()),
+					grpc.MaxCallRecvMsgSize(maxRecvMsgSize),
+					grpc.MaxCallSendMsgSize(maxSendMsgSize),
+				),
+			)
+			if err != nil {
+				return nil, err
+			}
+
+			clientCtx = clientCtx.WithGRPCClient(grpcClient)
+			ctx.Logger.Debug("grpc client assigned to client context", "target", grpcAddress)
+		}
+
+		apiSrv = api.New(clientCtx, ctx.Logger.With("module", "api-server"))
+		app.RegisterAPIRoutes(apiSrv, config.API)
+		if config.Telemetry.Enabled {
+			apiSrv.SetTelemetry(metrics)
+		}
+		errCh := make(chan error)
+
+		go func() {
+			if err := apiSrv.Start(config); err != nil {
+				errCh <- err
+			}
+		}()
+
+		select {
+		case err := <-errCh:
+			return nil, err
+
+		case <-time.After(types.ServerStartTime):
+		}
+	}
+	return apiSrv, nil
 }
 
 func startTelemetry(cfg serverconfig.Config) (*telemetry.Metrics, error) {

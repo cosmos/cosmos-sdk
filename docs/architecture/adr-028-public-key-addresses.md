@@ -179,7 +179,7 @@ We must be able to cryptographically derive one address from another one. The de
 
 ```go
 func Derive(address, derivationKey []byte) []byte {
-	return Hash(addres, derivationKey)
+	return Hash(address, derivationKey)
 }
 ```
 

@@ -7,7 +7,7 @@ sidebar_position: 1
 The Cosmos SDK contains different types of [tests](https://martinfowler.com/articles/practical-test-pyramid.html).
 These tests have different goals and are used at different stages of the development cycle.
 We advice, as a general rule, to use tests at all stages of the development cycle.
-It is adviced, as a chain developer, to test your application and modules in a similar way than the SDK.
+It is advised, as a chain developer, to test your application and modules in a similar way than the SDK.
 
 The rationale behind testing can be found in [ADR-59](https://docs.cosmos.network/main/architecture/adr-059-test-scopes.html).
 
@@ -59,7 +59,7 @@ In the SDK, we locate our integration tests under [`/tests/integrations`](https:
 
 The goal of these integration tests is to test how a component interacts with other dependencies. Compared to unit tests, integration tests do not mock dependencies. Instead, they use the direct dependencies of the component. This differs as well from end-to-end tests, which test the component with a full application.
 
-Integration tests interact with the tested module via the defined `Msg` and `Query` services. The result of the test can be verified by checking the state of the application, by checking the emitted events or the response. It is adviced to combine two of these methods to verify the result of the test.
+Integration tests interact with the tested module via the defined `Msg` and `Query` services. The result of the test can be verified by checking the state of the application, by checking the emitted events or the response. It is advised to combine two of these methods to verify the result of the test.
 
 The SDK provides small helpers for quickly setting up an integration tests. These helpers can be found at <https://github.com/cosmos/cosmos-sdk/blob/main/testutil/integration>.
 

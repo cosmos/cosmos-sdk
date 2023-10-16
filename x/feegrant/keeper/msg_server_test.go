@@ -324,10 +324,11 @@ func (suite *KeeperTestSuite) TestPruneAllowances() {
 
 	// we have 76 allowances
 	count = 0
-	suite.feegrantKeeper.FeeAllowance.Walk(ctx, nil, func(key collections.Pair[types.AccAddress, types.AccAddress], value feegrant.Grant) (stop bool, err error) {
+	err := suite.feegrantKeeper.FeeAllowance.Walk(ctx, nil, func(key collections.Pair[types.AccAddress, types.AccAddress], value feegrant.Grant) (stop bool, err error) {
 		count++
 		return false, nil
 	})
+	suite.Require().NoError(err)
 	suite.Require().Equal(76, count)
 
 	// after a year and one day passes, they are all expired
@@ -335,16 +336,17 @@ func (suite *KeeperTestSuite) TestPruneAllowances() {
 	ctx = suite.ctx.WithHeaderInfo(header.Info{Time: oneYearAndADay})
 
 	// we prune them, but currently only 75 will be pruned
-	_, err := suite.msgSrvr.PruneAllowances(ctx, &feegrant.MsgPruneAllowances{})
+	_, err = suite.msgSrvr.PruneAllowances(ctx, &feegrant.MsgPruneAllowances{})
 	suite.Require().NoError(err)
 
 	// we have 1 allowance left
 	count = 0
-	suite.feegrantKeeper.FeeAllowance.Walk(ctx, nil, func(key collections.Pair[types.AccAddress, types.AccAddress], value feegrant.Grant) (stop bool, err error) {
+	err = suite.feegrantKeeper.FeeAllowance.Walk(ctx, nil, func(key collections.Pair[types.AccAddress, types.AccAddress], value feegrant.Grant) (stop bool, err error) {
 		count++
 
 		return false, nil
 	})
+	suite.Require().NoError(err)
 	suite.Require().Equal(1, count)
 
 }

@@ -225,7 +225,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 
 	authStr, err := in.AccountKeeper.AddressCodec().BytesToString(authority)
 	if err != nil {
-		panic(err)
+		panic(fmt.Errorf("unable to decode authority in slashing: %w", err))
 	}
 
 	k := keeper.NewKeeper(in.Cdc, in.LegacyAmino, in.StoreService, in.StakingKeeper, authStr)

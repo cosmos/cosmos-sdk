@@ -44,7 +44,6 @@ type RootStore interface {
 
 	// TODO:
 	//
-	// - Branching
 	// - Queries
 	//
 	// Ref: https://github.com/cosmos/cosmos-sdk/issues/17314

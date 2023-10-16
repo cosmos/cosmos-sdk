@@ -1,4 +1,4 @@
-package root_test
+package root
 
 import (
 	"testing"
@@ -7,7 +7,6 @@ import (
 	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/commitment"
 	"cosmossdk.io/store/v2/commitment/iavl"
-	"cosmossdk.io/store/v2/root"
 	"cosmossdk.io/store/v2/storage/sqlite"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/suite"
@@ -16,9 +15,7 @@ import (
 type RootStoreTestSuite struct {
 	suite.Suite
 
-	rootStore       store.RootStore
-	stateStore      store.VersionedDatabase
-	stateCommitment *commitment.Database
+	rootStore store.RootStore
 }
 
 func TestStorageTestSuite(t *testing.T) {
@@ -34,12 +31,10 @@ func (s *RootStoreTestSuite) SetupTest() {
 	tree := iavl.NewIavlTree(dbm.NewMemDB(), noopLog, iavl.DefaultConfig())
 	sc := commitment.NewDatabase(tree)
 
-	rootStore, err := root.New(noopLog, 1, ss, sc)
+	rootStore, err := New(noopLog, 1, ss, sc)
 	s.Require().NoError(err)
 
 	s.rootStore = rootStore
-	s.stateStore = ss
-	s.stateCommitment = sc
 }
 
 func (s *RootStoreTestSuite) TestClose() {
@@ -51,5 +46,22 @@ func (s *RootStoreTestSuite) TestMountSCStore() {
 }
 
 func (s *RootStoreTestSuite) TestGetSCStore() {
-	s.Require().Equal(s.rootStore.GetSCStore(""), s.stateCommitment)
+	s.Require().Equal(s.rootStore.GetSCStore(""), s.rootStore.(*Store).stateCommitment)
+}
+
+func (s *RootStoreTestSuite) TestGetKVStore() {
+	s.Require().Equal(s.rootStore.GetKVStore(""), s.rootStore.(*Store).rootKVStore)
+}
+
+func (s *RootStoreTestSuite) TestGetBranchedKVStore() {
+	bs := s.rootStore.GetBranchedKVStore("")
+	s.Require().NotNil(bs)
+	s.Require().Equal(store.StoreTypeBranch, bs.GetStoreType())
+	s.Require().Empty(bs.GetChangeset().Pairs)
+}
+
+func (s *RootStoreTestSuite) TestGetProof() {
+	p, err := s.rootStore.GetProof("", 1, []byte("foo"))
+	s.Require().Nil(p)
+	s.Require().Error(err)
 }

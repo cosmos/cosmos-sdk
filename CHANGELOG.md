@@ -37,6 +37,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+### Features
+
+* (server) [#18110](https://github.com/cosmos/cosmos-sdk/pull/18110) Start gRPC server in standalone mode
+
 ## [v0.47.5](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.47.5) - 2023-09-01
 
 ### Features

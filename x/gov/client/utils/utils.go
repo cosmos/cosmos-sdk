@@ -18,7 +18,7 @@ func NormalizeVoteOption(option string) string {
 	case "No", "no":
 		return v1beta1.OptionNo.String()
 
-	case "NoWithVeto", "no_with_veto", "no-with-veto":
+	case "NoWithVeto", "no_with_veto":
 		return v1beta1.OptionNoWithVeto.String()
 
 	default:

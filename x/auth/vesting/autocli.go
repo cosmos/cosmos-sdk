@@ -42,7 +42,7 @@ timestamp.`,
 					},
 				},
 			},
-			EnhanceCustomCommand: true,
+			EnhanceCustomCommand: false, // use custom commands only until v0.51
 		},
 	}
 }

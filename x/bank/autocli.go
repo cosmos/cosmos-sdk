@@ -89,7 +89,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 		},
 		Tx: &autocliv1.ServiceCommandDescriptor{
 			Service:              bankv1beta1.Msg_ServiceDesc.ServiceName,
-			EnhanceCustomCommand: true,
+			EnhanceCustomCommand: false, // use custom commands only until v0.51
 			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
 				{
 					RpcMethod: "Send",

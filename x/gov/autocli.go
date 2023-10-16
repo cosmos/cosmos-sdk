@@ -134,7 +134,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Skip:      true, // skipped because authority gated
 				},
 			},
-			EnhanceCustomCommand: true, // We still have manual commands in gov that we want to keep
+			EnhanceCustomCommand: false, // use custom commands only until v0.51
 		},
 	}
 }

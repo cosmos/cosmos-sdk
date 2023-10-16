@@ -153,8 +153,8 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				},
 				{
 					RpcMethod: "UpdateGroupPolicyMetadata",
-					Use:       "update-group-policy-admin [admin] [group-policy-account] [new-admin]",
-					Short:     "Update a group policy admin",
+					Use:       "update-group-policy-metadata [admin] [group-policy-account] [new-metadata]",
+					Short:     "Update a group policy metadata",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
 						{ProtoField: "admin"}, {ProtoField: "group_policy_address"}, {ProtoField: "metadata"},
 					},

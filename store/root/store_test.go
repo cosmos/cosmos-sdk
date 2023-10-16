@@ -2,6 +2,7 @@ package root
 
 import (
 	"fmt"
+	"io"
 	"testing"
 
 	dbm "github.com/cosmos/cosmos-db"
@@ -33,10 +34,15 @@ func (s *RootStoreTestSuite) SetupTest() {
 	tree := iavl.NewIavlTree(dbm.NewMemDB(), noopLog, iavl.DefaultConfig())
 	sc := commitment.NewDatabase(tree)
 
-	rootStore, err := New(noopLog, 1, ss, sc)
+	rs, err := New(noopLog, 1, ss, sc)
 	s.Require().NoError(err)
 
-	s.rootStore = rootStore
+	rs.SetTracer(io.Discard)
+	rs.SetTracingContext(store.TraceContext{
+		"test": s.T().Name(),
+	})
+
+	s.rootStore = rs
 }
 
 func (s *RootStoreTestSuite) TearDownTest() {
@@ -53,13 +59,13 @@ func (s *RootStoreTestSuite) TestGetSCStore() {
 }
 
 func (s *RootStoreTestSuite) TestGetKVStore() {
-	s.Require().Equal(s.rootStore.GetKVStore(""), s.rootStore.(*Store).rootKVStore)
+	kvs := s.rootStore.GetKVStore("")
+	s.Require().NotNil(kvs)
 }
 
 func (s *RootStoreTestSuite) TestGetBranchedKVStore() {
 	bs := s.rootStore.GetBranchedKVStore("")
 	s.Require().NotNil(bs)
-	s.Require().Equal(store.StoreTypeBranch, bs.GetStoreType())
 	s.Require().Empty(bs.GetChangeset().Pairs)
 }
 

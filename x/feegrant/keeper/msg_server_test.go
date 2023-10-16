@@ -348,5 +348,4 @@ func (suite *KeeperTestSuite) TestPruneAllowances() {
 	})
 	suite.Require().NoError(err)
 	suite.Require().Equal(1, count)
-
 }

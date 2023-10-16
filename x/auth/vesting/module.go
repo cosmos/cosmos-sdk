@@ -64,7 +64,7 @@ func (AppModuleBasic) ValidateGenesis(_ codec.JSONCodec, _ client.TxEncodingConf
 // is a no-op.
 func (AppModuleBasic) RegisterGRPCGatewayRoutes(_ client.Context, _ *gwruntime.ServeMux) {}
 
-// GetTxCmd returns the root tx command for the staking module.
+// GetTxCmd returns the root tx command for the vesting module.
 func (amb AppModuleBasic) GetTxCmd() *cobra.Command {
 	return cli.GetTxCmd()
 }

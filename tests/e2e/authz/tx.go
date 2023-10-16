@@ -166,9 +166,8 @@ func (s *E2ETestSuite) TearDownSuite() {
 }
 
 var (
-	typeMsgSend           = bank.SendAuthorization{}.MsgTypeURL()
-	typeMsgVote           = sdk.MsgTypeURL(&govv1.MsgVote{})
-	typeMsgSubmitProposal = sdk.MsgTypeURL(&govv1.MsgSubmitProposal{})
+	typeMsgSend = bank.SendAuthorization{}.MsgTypeURL()
+	typeMsgVote = sdk.MsgTypeURL(&govv1.MsgVote{})
 )
 
 func execDelegate(val *network.Validator, args []string) (testutil.BufferWriter, error) {

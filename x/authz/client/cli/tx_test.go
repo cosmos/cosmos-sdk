@@ -36,9 +36,8 @@ import (
 )
 
 var (
-	typeMsgSend           = banktypes.SendAuthorization{}.MsgTypeURL()
-	typeMsgVote           = sdk.MsgTypeURL(&govv1.MsgVote{})
-	typeMsgSubmitProposal = sdk.MsgTypeURL(&govv1.MsgSubmitProposal{})
+	typeMsgSend = banktypes.SendAuthorization{}.MsgTypeURL()
+	typeMsgVote = sdk.MsgTypeURL(&govv1.MsgVote{})
 )
 
 type CLITestSuite struct {

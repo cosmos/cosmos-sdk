@@ -82,4 +82,40 @@ func (s *RootStoreTestSuite) TestGetProof() {
 	p, err = s.rootStore.GetProof("", 1, []byte("foo"))
 	s.Require().NoError(err)
 	s.Require().NotNil(p)
+	s.Require().Equal([]byte("foo"), p.GetExist().Key)
+	s.Require().Equal([]byte("bar"), p.GetExist().Value)
+}
+
+func (s *RootStoreTestSuite) TestBranch() {
+	// write and commit a changeset
+	bs := s.rootStore.GetKVStore("")
+	bs.Set([]byte("foo"), []byte("bar"))
+
+	workingHash, err := s.rootStore.WorkingHash()
+	s.Require().NoError(err)
+	s.Require().NotNil(workingHash)
+
+	commitHash, err := s.rootStore.Commit()
+	s.Require().NoError(err)
+	s.Require().NotNil(commitHash)
+	s.Require().Equal(workingHash, commitHash)
+
+	// branch the root store
+	rs2 := s.rootStore.Branch()
+
+	// ensure we can perform reads which pass through to the original root store
+	bs2 := rs2.GetKVStore("")
+	s.Require().Equal([]byte("bar"), bs2.Get([]byte("foo")))
+
+	// make a change to the branched root store
+	bs2.Set([]byte("foo"), []byte("updated_bar"))
+
+	// ensure the original root store is not modified
+	s.Require().Equal([]byte("bar"), bs.Get([]byte("foo")))
+
+	// write changes
+	rs2.Write()
+
+	// ensure changes are reflected in the original root store
+	s.Require().Equal([]byte("updated_bar"), bs.Get([]byte("foo")))
 }

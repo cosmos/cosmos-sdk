@@ -1,3 +1,4 @@
+// Package accountstd exports the types and functions that are used by developers to implement smart accounts.
 package accountstd
 
 import (
@@ -50,4 +51,24 @@ func RegisterInitHandler[
 // AddAccount is a helper function to add a smart account to the list of smart accounts.
 func AddAccount[A Interface](name string, constructor func(deps Dependencies) (A, error)) AccountCreatorFunc {
 	return implementation.AddAccount(name, constructor)
+}
+
+// Whoami returns the address of the account being invoked.
+func Whoami(ctx context.Context) []byte {
+	return implementation.Whoami(ctx)
+}
+
+// Sender returns the sender of the execution request.
+func Sender(ctx context.Context) []byte {
+	return implementation.Sender(ctx)
+}
+
+// ExecModule can be used to execute a message towards a module.
+func ExecModule[Resp any, RespProto implementation.ProtoMsg[Resp], Req any, ReqProto implementation.ProtoMsg[Req]](ctx context.Context, msg ReqProto) (RespProto, error) {
+	return implementation.ExecModule[Resp, RespProto, Req, ReqProto](ctx, msg)
+}
+
+// QueryModule can be used by an account to execute a module query.
+func QueryModule[Resp any, RespProto implementation.ProtoMsg[Resp], Req any, ReqProto implementation.ProtoMsg[Req]](ctx context.Context, req ReqProto) (RespProto, error) {
+	return implementation.QueryModule[Resp, RespProto, Req, ReqProto](ctx, req)
 }

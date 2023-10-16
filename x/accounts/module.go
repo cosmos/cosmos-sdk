@@ -7,17 +7,15 @@ import (
 	v1 "cosmossdk.io/x/accounts/v1"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 )
 
-const Name = "accounts"
+const ModuleName = "accounts"
 
 var (
-	_ module.AppModuleBasic = AppModule{}
-	_ module.HasGenesis     = AppModule{}
-	_ module.HasServices    = AppModule{}
+	_ module.HasName     = AppModule{}
+	_ module.HasGenesis  = AppModule{}
+	_ module.HasServices = AppModule{}
 )
 
 func NewAppModule(k Keeper) AppModule {
@@ -62,12 +60,4 @@ func (m AppModule) ExportGenesis(ctx context.Context, jsonCodec codec.JSONCodec)
 	return jsonCodec.MustMarshalJSON(gs)
 }
 
-// App module basic
-
-func (AppModule) Name() string { return Name }
-
-func (AppModule) RegisterLegacyAminoCodec(_ *codec.LegacyAmino) {}
-
-func (AppModule) RegisterInterfaces(_ types.InterfaceRegistry) {}
-
-func (AppModule) RegisterGRPCGatewayRoutes(context client.Context, mux *runtime.ServeMux) {}
+func (AppModule) Name() string { return ModuleName }

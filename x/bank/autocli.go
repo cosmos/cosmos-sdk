@@ -109,6 +109,10 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					RpcMethod: "SetSendEnabled",
 					Skip:      true, // skipped because authority gated
 				},
+				{
+					RpcMethod: "Burn",
+					Skip:      true, // skipped because available from v0.51
+				},
 			},
 		},
 	}

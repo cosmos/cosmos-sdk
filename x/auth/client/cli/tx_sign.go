@@ -60,8 +60,11 @@ account key. It implies --signature-only.
 
 	flags.AddTxFlagsToCmd(cmd)
 
+<<<<<<< HEAD
 	_ = cmd.MarkFlagRequired(flags.FlagFrom)
 
+=======
+>>>>>>> bb34c42f0 (feat(client): add default key name (#18101))
 	return cmd
 }
 
@@ -271,7 +274,7 @@ func multisigSign(clientCtx client.Context, txBuilder client.TxBuilder, txFactor
 		txFactory,
 		clientCtx,
 		multisigAddr,
-		clientCtx.GetFromName(),
+		clientCtx.FromName,
 		txBuilder,
 		clientCtx.Offline,
 		true,
@@ -355,8 +358,11 @@ be generated via the 'multisign' command.
 	cmd.Flags().String(flags.FlagOutputDocument, "", "The document will be written to the given file instead of STDOUT")
 	flags.AddTxFlagsToCmd(cmd)
 
+<<<<<<< HEAD
 	_ = cmd.MarkFlagRequired(flags.FlagFrom)
 
+=======
+>>>>>>> bb34c42f0 (feat(client): add default key name (#18101))
 	return cmd
 }
 
@@ -459,7 +465,7 @@ func signTx(cmd *cobra.Command, clientCtx client.Context, txF tx.Factory, newTx 
 		}
 		printSignatureOnly = true
 	} else {
-		err = authclient.SignTx(txF, clientCtx, clientCtx.GetFromName(), txBuilder, clientCtx.Offline, overwrite)
+		err = authclient.SignTx(txF, clientCtx, clientCtx.FromName, txBuilder, clientCtx.Offline, overwrite)
 	}
 	if err != nil {
 		return err

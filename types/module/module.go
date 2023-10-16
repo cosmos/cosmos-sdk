@@ -584,7 +584,7 @@ func (m *Manager) ExportGenesisForModules(ctx sdk.Context, cdc codec.JSONCodec, 
 	for moduleName := range channels {
 		res := <-channels[moduleName]
 		if res.err != nil {
-			return nil, res.err
+			return nil, fmt.Errorf("genesis export error in %s: %w", moduleName, res.err)
 		}
 
 		genesisData[moduleName] = res.bz

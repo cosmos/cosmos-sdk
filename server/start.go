@@ -259,12 +259,12 @@ func start(svrCtx *Context, clientCtx client.Context, appCreator types.AppCreato
 	emitServerInfoMetrics()
 
 	if !withCmt {
-		return startStandAlone(svrCtx, svrCfg, clientCtx, app, opts)
+		return startStandAlone(svrCtx, svrCfg, clientCtx, app, metrics, opts)
 	}
 	return startInProcess(svrCtx, svrCfg, clientCtx, app, metrics, opts)
 }
 
-func startStandAlone(svrCtx *Context, svrCfg serverconfig.Config, clientCtx client.Context, app types.Application, opts StartCmdOptions) error {
+func startStandAlone(svrCtx *Context, svrCfg serverconfig.Config, clientCtx client.Context, app types.Application, metrics *telemetry.Metrics, opts StartCmdOptions) error {
 	addr := svrCtx.Viper.GetString(flagAddress)
 	transport := svrCtx.Viper.GetString(flagTransport)
 
@@ -279,8 +279,9 @@ func startStandAlone(svrCtx *Context, svrCfg serverconfig.Config, clientCtx clie
 	g, ctx := getCtx(svrCtx, false)
 
 	// Add the tx service to the gRPC router. We only need to register this
-	// service if gRPC is enabled.
-	if svrCfg.GRPC.Enable {
+	// service if API or gRPC is enabled, and avoid doing so in the general
+	// case, because it spawns a new local CometBFT RPC client.
+	if svrCfg.API.Enable || svrCfg.GRPC.Enable {
 		// create tendermint client
 		// assumes the rpc listen address is where tendermint has its rpc server
 		rpcclient, err := rpchttp.New(svrCtx.Config.RPC.ListenAddress, "/websocket")
@@ -297,7 +298,15 @@ func startStandAlone(svrCtx *Context, svrCfg serverconfig.Config, clientCtx clie
 		app.RegisterNodeService(clientCtx, svrCfg)
 	}
 
-	_, _, err = startGrpcServer(ctx, g, svrCfg.GRPC, clientCtx, svrCtx, app)
+	grpcSrv, clientCtx, err := startGrpcServer(ctx, g, svrCfg.GRPC, clientCtx, svrCtx, app)
+	if err != nil {
+		return err
+	}
+
+	cmtCfg := svrCtx.Config
+	home := cmtCfg.RootDir
+
+	err = startAPIServer(ctx, g, cmtCfg, svrCfg, clientCtx, svrCtx, app, home, grpcSrv, metrics)
 	if err != nil {
 		return err
 	}

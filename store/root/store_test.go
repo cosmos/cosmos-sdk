@@ -4,13 +4,14 @@ import (
 	"fmt"
 	"testing"
 
+	dbm "github.com/cosmos/cosmos-db"
+	"github.com/stretchr/testify/suite"
+
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/commitment"
 	"cosmossdk.io/store/v2/commitment/iavl"
 	"cosmossdk.io/store/v2/storage/sqlite"
-	dbm "github.com/cosmos/cosmos-db"
-	"github.com/stretchr/testify/suite"
 )
 
 type RootStoreTestSuite struct {
@@ -103,6 +104,46 @@ func (s *RootStoreTestSuite) TestBranch() {
 
 	// branch the root store
 	rs2 := s.rootStore.Branch()
+
+	// ensure we can perform reads which pass through to the original root store
+	bs2 := rs2.GetKVStore("")
+	s.Require().Equal([]byte("bar"), bs2.Get([]byte("foo")))
+
+	// make a change to the branched root store
+	bs2.Set([]byte("foo"), []byte("updated_bar"))
+
+	// ensure the original root store is not modified
+	s.Require().Equal([]byte("bar"), bs.Get([]byte("foo")))
+
+	// write changes
+	rs2.Write()
+
+	// ensure changes are reflected in the original root store
+	s.Require().Equal([]byte("updated_bar"), bs.Get([]byte("foo")))
+}
+
+func (s *RootStoreTestSuite) TestMultiBranch() {
+	// write and commit a changeset
+	bs := s.rootStore.GetKVStore("")
+	bs.Set([]byte("foo"), []byte("bar"))
+
+	workingHash, err := s.rootStore.WorkingHash()
+	s.Require().NoError(err)
+	s.Require().NotNil(workingHash)
+
+	commitHash, err := s.rootStore.Commit()
+	s.Require().NoError(err)
+	s.Require().NotNil(commitHash)
+	s.Require().Equal(workingHash, commitHash)
+
+	// create multiple branches of the root store
+	var branchedRootStores []store.BranchedRootStore
+	for i := 0; i < 5; i++ {
+		branchedRootStores = append(branchedRootStores, s.rootStore.Branch())
+	}
+
+	// get the last branched root store
+	rs2 := branchedRootStores[4]
 
 	// ensure we can perform reads which pass through to the original root store
 	bs2 := rs2.GetKVStore("")

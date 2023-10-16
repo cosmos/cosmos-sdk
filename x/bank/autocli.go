@@ -87,5 +87,33 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				},
 			},
 		},
+		Tx: &autocliv1.ServiceCommandDescriptor{
+			Service:              bankv1beta1.Msg_ServiceDesc.ServiceName,
+			EnhanceCustomCommand: false, // use custom commands only until v0.51
+			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
+				{
+					RpcMethod: "Send",
+					Use:       "send [from_key_or_address] [to_address] [amount]",
+					Short:     "Send funds from one account to another.",
+					Long: `Send funds from one account to another.
+			Note, the '--from' flag is ignored as it is implied from [from_key_or_address].
+			When using '--dry-run' a key name cannot be used, only a bech32 address.
+			Note: multiple coins can be send by space separated.`,
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "from_address"}, {ProtoField: "to_address"}, {ProtoField: "amount", Varargs: true}},
+				},
+				{
+					RpcMethod: "UpdateParams",
+					Skip:      true, // skipped because authority gated
+				},
+				{
+					RpcMethod: "SetSendEnabled",
+					Skip:      true, // skipped because authority gated
+				},
+				{
+					RpcMethod: "Burn",
+					Skip:      true, // skipped because available from v0.51
+				},
+			},
+		},
 	}
 }

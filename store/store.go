@@ -51,7 +51,12 @@ type RootStore interface {
 	io.Closer
 }
 
-// TODO: BranchedRootStore ...
+// BranchedRootStore defines an extension of the RootStore interface that allows
+// for nested branching and flushing of writes. It extends RootStore by allowing
+// a caller to call Branch() which should return a BranchedRootStore that has all
+// internal relevant KV stores branched. A caller can then call Write() on the
+// BranchedRootStore which will flush all changesets to the parent RootStore's
+// internal KV stores.
 type BranchedRootStore interface {
 	RootStore
 

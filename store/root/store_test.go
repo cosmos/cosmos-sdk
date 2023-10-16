@@ -1,6 +1,7 @@
 package root
 
 import (
+	"fmt"
 	"testing"
 
 	"cosmossdk.io/log"
@@ -118,4 +119,54 @@ func (s *RootStoreTestSuite) TestBranch() {
 
 	// ensure changes are reflected in the original root store
 	s.Require().Equal([]byte("updated_bar"), bs.Get([]byte("foo")))
+}
+
+func (s *RootStoreTestSuite) TestCommit() {
+	lv, err := s.rootStore.GetLatestVersion()
+	s.Require().NoError(err)
+	s.Require().Zero(lv)
+
+	// branch the root store
+	rs2 := s.rootStore.Branch()
+
+	// perform changes
+	bs2 := rs2.GetKVStore("")
+	for i := 0; i < 100; i++ {
+		key := fmt.Sprintf("key%03d", i) // key000, key001, ..., key099
+		val := fmt.Sprintf("val%03d", i) // val000, val001, ..., val099
+
+		bs2.Set([]byte(key), []byte(val))
+	}
+
+	// write to the branched root store, which will flush to the parent root store
+	rs2.Write()
+
+	// committing w/o calling WorkingHash should error
+	_, err = s.rootStore.Commit()
+	s.Require().Error(err)
+
+	// execute WorkingHash and Commit
+	wHash, err := s.rootStore.WorkingHash()
+	s.Require().NoError(err)
+
+	cHash, err := s.rootStore.Commit()
+	s.Require().NoError(err)
+	s.Require().Equal(wHash, cHash)
+
+	// ensure latest version is updated
+	lv, err = s.rootStore.GetLatestVersion()
+	s.Require().NoError(err)
+	s.Require().Equal(uint64(1), lv)
+
+	// ensure the root KVStore is cleared
+	s.Require().Empty(s.rootStore.(*Store).rootKVStore.GetChangeset().Pairs)
+
+	// perform reads on the updated root store
+	bs := s.rootStore.GetKVStore("")
+	for i := 0; i < 100; i++ {
+		key := fmt.Sprintf("key%03d", i) // key000, key001, ..., key099
+		val := fmt.Sprintf("val%03d", i) // val000, val001, ..., val099
+
+		s.Require().Equal([]byte(val), bs.Get([]byte(key)))
+	}
 }

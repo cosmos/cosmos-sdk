@@ -76,9 +76,20 @@ func (b *Builder) buildMethodCommandCommon(descriptor protoreflect.MethodDescrip
 				// the client context uses the from flag to determine the signer.
 				// this sets the signer flags to the from flag value if a custom signer flag is set.
 				// marks the custom flag as required.
+<<<<<<< HEAD
 				if binder.SignerInfo.FlagName != flags.FlagFrom {
 					if err := cmd.MarkFlagRequired(binder.SignerInfo.FlagName); err != nil {
 						return err
+=======
+				if binder.SignerInfo.FieldName != flags.FlagFrom {
+					if err := cmd.MarkFlagRequired(binder.SignerInfo.FieldName); err != nil {
+						return err
+					}
+
+					signer, err := cmd.Flags().GetString(binder.SignerInfo.FieldName)
+					if err != nil {
+						return fmt.Errorf("failed to get signer flag: %w", err)
+>>>>>>> bb34c42f0 (feat(client): add default key name (#18101))
 					}
 
 					if err := cmd.Flags().Set(flags.FlagFrom, cmd.Flag(binder.SignerInfo.FlagName).Value.String()); err != nil {

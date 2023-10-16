@@ -76,7 +76,7 @@ func (BondStatus) EnumDescriptor() ([]byte, []int) {
 	return fileDescriptor_64c30c6cf92913c9, []int{0}
 }
 
-// Infraction indicates the infraction a validator commited.
+// Infraction indicates the infraction a validator committed.
 type Infraction int32
 
 const (

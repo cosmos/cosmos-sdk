@@ -15,20 +15,20 @@ To enable Rosetta API support, it's required to add the `RosettaCommand` to your
 Import the `server` package:
 
 ```go
-import "github.com/cosmos/cosmos-sdk/server"
+import rosettaCmd "cosmossdk.io/tools/rosetta/cmd"
 ```
 
-Find the following line:
+Find the following function:
 
 ```go
-initRootCmd(rootCmd, encodingConfig)
+func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig)
 ```
 
-After that line, add the following:
+Add the following at the end of the function
 
 ```go
 rootCmd.AddCommand(
-  server.RosettaCommand(encodingConfig.InterfaceRegistry, encodingConfig.Codec)
+	rosettaCmd.RosettaCommand(encodingConfig.InterfaceRegistry, encodingConfig.Codec)
 )
 ```
 

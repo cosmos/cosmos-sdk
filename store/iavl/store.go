@@ -223,7 +223,9 @@ func (st *Store) Has(key []byte) (exists bool) {
 // Implements types.KVStore.
 func (st *Store) Delete(key []byte) {
 	defer telemetry.MeasureSince(time.Now(), "store", "iavl", "delete")
-	st.tree.Remove(key)
+	if _, _, err := st.tree.Remove(key); err != nil {
+		panic(err)
+	}
 }
 
 // DeleteVersions deletes a series of versions from the MutableTree. An error
@@ -370,7 +372,8 @@ func (st *Store) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 		for ; iterator.Valid(); iterator.Next() {
 			pairs.Pairs = append(pairs.Pairs, kv.Pair{Key: iterator.Key(), Value: iterator.Value()})
 		}
-		iterator.Close()
+
+		_ = iterator.Close()
 
 		bz, err := pairs.Marshal()
 		if err != nil {

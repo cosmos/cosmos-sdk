@@ -1,6 +1,5 @@
 ---
 sidebar_position: 0
-slug : /modules
 ---
 
 # List of Modules

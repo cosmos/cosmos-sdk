@@ -62,6 +62,24 @@ func (s *RootStoreTestSuite) TestGetBranchedKVStore() {
 
 func (s *RootStoreTestSuite) TestGetProof() {
 	p, err := s.rootStore.GetProof("", 1, []byte("foo"))
-	s.Require().Nil(p)
 	s.Require().Error(err)
+	s.Require().Nil(p)
+
+	// write and commit a changeset
+	bs := s.rootStore.GetBranchedKVStore("")
+	bs.Set([]byte("foo"), []byte("bar"))
+
+	workingHash, err := s.rootStore.WorkingHash()
+	s.Require().NoError(err)
+	s.Require().NotNil(workingHash)
+
+	commitHash, err := s.rootStore.Commit()
+	s.Require().NoError(err)
+	s.Require().NotNil(commitHash)
+	s.Require().Equal(workingHash, commitHash)
+
+	// ensure the proof is non-nil for the corresponding version
+	p, err = s.rootStore.GetProof("", 1, []byte("foo"))
+	s.Require().NoError(err)
+	s.Require().NotNil(p)
 }

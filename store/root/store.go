@@ -267,7 +267,7 @@ func (s *Store) Commit() ([]byte, error) {
 
 	version := s.lastCommitInfo.Version
 
-	if s.commitHeader.GetHeight() != version {
+	if s.commitHeader != nil && s.commitHeader.GetHeight() != version {
 		s.logger.Debug("commit header and version mismatch", "header_height", s.commitHeader.GetHeight(), "version", version)
 	}
 

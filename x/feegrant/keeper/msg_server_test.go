@@ -293,37 +293,48 @@ func (suite *KeeperTestSuite) TestPruneAllowances() {
 	ctx := suite.ctx.WithHeaderInfo(header.Info{Time: time.Now()})
 	oneYear := ctx.HeaderInfo().Time.AddDate(1, 0, 0)
 
-	// We create 6 allowances, all expiring in one year
-	for i := 0; i < 6; i++ {
-		any, err := codectypes.NewAnyWithValue(&feegrant.BasicAllowance{
-			SpendLimit: suite.atom,
-			Expiration: &oneYear,
-		})
-		suite.Require().NoError(err)
-		req := &feegrant.MsgGrantAllowance{
-			Granter:   suite.encodedAddrs[0],
-			Grantee:   suite.encodedAddrs[i+1],
-			Allowance: any,
+	// We create 76 allowances, all expiring in one year
+	count := 0
+	for i := 0; i < len(suite.encodedAddrs); i++ {
+		for j := 0; j < len(suite.encodedAddrs); j++ {
+			if count == 76 {
+				break
+			}
+			if suite.encodedAddrs[i] == suite.encodedAddrs[j] {
+				continue
+			}
+
+			any, err := codectypes.NewAnyWithValue(&feegrant.BasicAllowance{
+				SpendLimit: suite.atom,
+				Expiration: &oneYear,
+			})
+			suite.Require().NoError(err)
+			req := &feegrant.MsgGrantAllowance{
+				Granter:   suite.encodedAddrs[i],
+				Grantee:   suite.encodedAddrs[j],
+				Allowance: any,
+			}
+
+			_, err = suite.msgSrvr.GrantAllowance(ctx, req)
+			suite.Require().NoError(err)
+
+			count++
 		}
-
-		_, err = suite.msgSrvr.GrantAllowance(ctx, req)
-		suite.Require().NoError(err)
-
 	}
 
-	// we have 6 allowances
-	count := 0
+	// we have 76 allowances
+	count = 0
 	suite.feegrantKeeper.FeeAllowance.Walk(ctx, nil, func(key collections.Pair[types.AccAddress, types.AccAddress], value feegrant.Grant) (stop bool, err error) {
 		count++
 		return false, nil
 	})
-	suite.Require().Equal(6, count)
+	suite.Require().Equal(76, count)
 
 	// after a year and one day passes, they are all expired
 	oneYearAndADay := ctx.HeaderInfo().Time.AddDate(1, 0, 1)
 	ctx = suite.ctx.WithHeaderInfo(header.Info{Time: oneYearAndADay})
 
-	// we prune them, but currently only 5 will be pruned
+	// we prune them, but currently only 75 will be pruned
 	_, err := suite.msgSrvr.PruneAllowances(ctx, &feegrant.MsgPruneAllowances{})
 	suite.Require().NoError(err)
 

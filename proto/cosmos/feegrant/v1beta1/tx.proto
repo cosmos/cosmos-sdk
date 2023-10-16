@@ -23,7 +23,7 @@ service Msg {
 
   // PruneAllowances prunes expired fee allowances, currently up to 75 at a time.
   //
-  // Since feegrant v0.1
+  // Since cosmos-sdk 0.50
   rpc PruneAllowances(MsgPruneAllowances) returns (MsgPruneAllowancesResponse);
 }
 
@@ -63,7 +63,7 @@ message MsgRevokeAllowanceResponse {}
 
 // MsgPruneAllowances prunes expired fee allowances.
 //
-// Since feegrant v0.1
+// Since cosmos-sdk 0.50
 message MsgPruneAllowances {
   option (cosmos.msg.v1.signer) = "pruner";
 
@@ -73,5 +73,5 @@ message MsgPruneAllowances {
 
 // MsgPruneAllowancesResponse defines the Msg/PruneAllowancesResponse response type.
 //
-// Since feegrant v0.1
+// Since cosmos-sdk 0.50
 message MsgPruneAllowancesResponse {}

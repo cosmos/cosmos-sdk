@@ -215,8 +215,8 @@ cosmossdk.io/x/feegrant v0.0.0-20231009114728-5259373edec8 h1:e3JUrisu36fIf+Ezpp
 cosmossdk.io/x/feegrant v0.0.0-20231009114728-5259373edec8/go.mod h1:nnIKdJKz1Os+sOlJHrjgMOh1WAlle0aV7Y+0x434OyI=
 cosmossdk.io/x/nft v0.0.0-20231006095526-33390754f9fe h1:xDWsbJp/9Tdwh2w8/KT7E0sxb52ASTn1M+UO4pq6kko=
 cosmossdk.io/x/nft v0.0.0-20231006095526-33390754f9fe/go.mod h1:QQROAXjZWeJzH6dNHUNCPhs7zHrYjknH8gYynf0IvXs=
-cosmossdk.io/x/tx v0.10.1-0.20230920120022-6715b5afb59f h1:Dkw1pM+jnjK9Pk0CM6JZKLLDaMXWDCHSlLJiHcSmPpg=
-cosmossdk.io/x/tx v0.10.1-0.20230920120022-6715b5afb59f/go.mod h1:lRM7U4VkxFjWBKZp7Mo818azphiNixeMCV8h1ZofkhM=
+cosmossdk.io/x/tx v0.11.0 h1:Ak2LIC06bXqPbpMIEorkQbwVddRvRys1sL3Cjm+KPfs=
+cosmossdk.io/x/tx v0.11.0/go.mod h1:tzuC7JlfGivYuIO32JbvvY3Ft9s6FK1+r0/nGHiHwtM=
 cosmossdk.io/x/upgrade v0.0.0-20230925151519-64e0e8980834 h1:M/yPP4g31SSgYEku5d5Xk+UGkjp47RKXFk1bYGnWJdY=
 cosmossdk.io/x/upgrade v0.0.0-20230925151519-64e0e8980834/go.mod h1:+5jCm6Lk/CrQhQvtJFy/tmuLfhQKNMn/U0vwrRz/dxQ=
 dmitri.shuralyov.com/gpu/mtl v0.0.0-20190408044501-666a987793e9/go.mod h1:H6x//7gZCb22OMCxBHrMx7a5I7Hp++hsVxbQ4BYO7hU=
@@ -565,8 +565,9 @@ github.com/google/go-cmp v0.5.5/go.mod h1:v8dTdLbMG2kIc/vJvl+f65V22dbkXbowE6jgT/
 github.com/google/go-cmp v0.5.6/go.mod h1:v8dTdLbMG2kIc/vJvl+f65V22dbkXbowE6jgT/gNBxE=
 github.com/google/go-cmp v0.5.7/go.mod h1:n+brtR0CgQNWTVd5ZUFpTBC8YFBDLK/h/bpaJ8/DtOE=
 github.com/google/go-cmp v0.5.8/go.mod h1:17dUlkBOakJ0+DkrSSNjCkIjxS6bF9zb3elmeNGIjoY=
-github.com/google/go-cmp v0.5.9 h1:O2Tfq5qg4qc4AmwVlvv0oLiVAGB7enBSJ2x2DqQFi38=
 github.com/google/go-cmp v0.5.9/go.mod h1:17dUlkBOakJ0+DkrSSNjCkIjxS6bF9zb3elmeNGIjoY=
+github.com/google/go-cmp v0.6.0 h1:ofyhxvXcZhMsU5ulbFiLKl/XBFqE1GSq7atu8tAmTRI=
+github.com/google/go-cmp v0.6.0/go.mod h1:17dUlkBOakJ0+DkrSSNjCkIjxS6bF9zb3elmeNGIjoY=
 github.com/google/gofuzz v0.0.0-20170612174753-24818f796faf/go.mod h1:HP5RmnzzSNb993RKQDq4+1A4ia9nllfqcQFTQJedwGI=
 github.com/google/gofuzz v1.0.0/go.mod h1:dBl0BpW6vV/+mYPU4Po3pmUjxk6FQPldtuIdl/M65Eg=
 github.com/google/gofuzz v1.2.0 h1:xRy4A+RhZaiKjJ1bPfwQ8sedCA+YS2YcCHW6ec7JMi0=

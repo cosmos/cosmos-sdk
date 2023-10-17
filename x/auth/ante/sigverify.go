@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
+	secp256k1dcrd "github.com/decred/dcrd/dcrec/secp256k1/v4"
 
 	"google.golang.org/protobuf/types/known/anypb"
 
@@ -250,6 +251,40 @@ func OnlyLegacyAminoSigners(sigData signing.SignatureData) bool {
 	}
 }
 
+func verifyIsOnCurve(pubKey cryptotypes.PubKey) (err error) {
+	switch pubKey.(type) {
+	case *ed25519.PubKey:
+		return errorsmod.Wrap(sdkerrors.ErrInvalidPubKey, "ED25519 public keys are unsupported")
+	case *secp256k1.PubKey:
+		pubKey, err := secp256k1dcrd.ParsePubKey(key)
+		if err != nil {
+			return err
+		}
+		if pubKey.IsOnCurve() == false {
+			return errorsmod.Wrap(sdkerrors.ErrInvalidPubKey, "secp256r1 key is not in curve")
+		}
+	case *secp256r1.PubKey:
+		pubKey := pubKey.(*secp256r1.PubKey).Key.PublicKey
+		if pubKey.IsOnCurve(pubKey.X, pubKey.Y) != false {
+			return errorsmod.Wrap(sdkerrors.ErrInvalidPubKey, "secp256r1 key is not on curve")
+		}
+	case multisig.PubKey:
+		for _, pubKeyObject := range pubKey.(multisig.PubKey).GetPubKeys() {
+			err = verifyIsOnCurve(pubKeyObject)
+			if err != nil {
+				break
+			}
+		}
+		if err != nil {
+			return errorsmod.Wrap(sdkerrors.ErrInvalidPubKey, "Multisig public key is not on curve")
+		}
+	default:
+		return errorsmod.Wrap(sdkerrors.ErrInvalidPubKey, "unrecognized public key type")
+	}
+
+	return nil
+}
+
 func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
 	sigTx, ok := tx.(authsigning.Tx)
 	if !ok {
@@ -285,12 +320,8 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 			return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidPubKey, "pubkey on account is not set")
 		}
 
-		// Check account sequence number.
-		if sig.Sequence != acc.GetSequence() {
-			return ctx, errorsmod.Wrapf(
-				sdkerrors.ErrWrongSequence,
-				"account sequence mismatch, expected %d, got %d", acc.GetSequence(), sig.Sequence,
-			)
+		if verifyIsOnCurve(pubKey) != nil {
+			return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidPubKey, "failed to verify if pub key is on curve.")
 		}
 
 		// retrieve signer data

@@ -407,8 +407,8 @@ message ValidatorUpdates {
 
 // ConsPubKeyRotationHistory contains a validator's consensus public key rotation history.
 message ConsPubKeyRotationHistory {
-  option (gogoproto.equal)            = false;
-  option (gogoproto.goproto_getters)  = false;
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
 
   // operator_address defines the address of the validator's operator; bech encoded in JSON.
   string operator_address = 1 [(gogoproto.moretags) = "yaml:\"operator_address\""];

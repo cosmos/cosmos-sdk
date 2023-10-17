@@ -194,7 +194,9 @@ func TestHandleDoubleSign(t *testing.T) {
 
 	assert.NilError(t, f.slashingKeeper.AddrPubkeyRelation.Set(f.sdkCtx, valpubkey.Address(), valpubkey))
 
-	info := slashingtypes.NewValidatorSigningInfo(sdk.ConsAddress(valpubkey.Address()), f.sdkCtx.BlockHeight(), int64(0), time.Unix(0, 0), false, int64(0))
+	consaddrStr, err := f.stakingKeeper.ConsensusAddressCodec().BytesToString(valpubkey.Address())
+	assert.NilError(t, err)
+	info := slashingtypes.NewValidatorSigningInfo(consaddrStr, f.sdkCtx.BlockHeight(), int64(0), time.Unix(0, 0), false, int64(0))
 	err = f.slashingKeeper.ValidatorSigningInfo.Set(f.sdkCtx, sdk.ConsAddress(valpubkey.Address()), info)
 	assert.NilError(t, err)
 	// handle a signature to set signing info

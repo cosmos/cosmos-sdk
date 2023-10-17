@@ -3,7 +3,7 @@ module cosmossdk.io/simapp
 go 1.21
 
 require (
-	cosmossdk.io/api v0.7.1
+	cosmossdk.io/api v0.7.2
 	cosmossdk.io/client/v2 v2.0.0-20231009141709-5e209c3c0fce
 	cosmossdk.io/collections v0.4.0 // indirect
 	cosmossdk.io/core v0.11.0
@@ -94,7 +94,7 @@ require (
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/btree v1.1.2 // indirect
-	github.com/google/go-cmp v0.5.9 // indirect
+	github.com/google/go-cmp v0.6.0 // indirect
 	github.com/google/orderedcode v0.0.1 // indirect
 	github.com/google/s2a-go v0.1.4 // indirect
 	github.com/google/uuid v1.3.0 // indirect

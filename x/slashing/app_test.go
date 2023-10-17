@@ -12,6 +12,7 @@ import (
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 
+	codecaddress "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
@@ -27,8 +28,10 @@ import (
 )
 
 var (
-	priv1 = secp256k1.GenPrivKey()
-	addr1 = sdk.AccAddress(priv1.PubKey().Address())
+	priv1        = secp256k1.GenPrivKey()
+	addr1        = sdk.AccAddress(priv1.PubKey().Address())
+	addrCodec    = codecaddress.NewBech32Codec("cosmos")
+	valaddrCodec = codecaddress.NewBech32Codec("cosmosvaloper")
 
 	valKey  = ed25519.GenPrivKey()
 	valAddr = sdk.AccAddress(valKey.PubKey().Address())
@@ -40,8 +43,10 @@ func TestSlashingMsgs(t *testing.T) {
 	genCoin := sdk.NewCoin(sdk.DefaultBondDenom, genTokens)
 	bondCoin := sdk.NewCoin(sdk.DefaultBondDenom, bondTokens)
 
+	addrStr, err := addrCodec.BytesToString(addr1)
+	require.NoError(t, err)
 	acc1 := &authtypes.BaseAccount{
-		Address: addr1.String(),
+		Address: addrStr,
 	}
 	accs := []sims.GenesisAccount{{GenesisAccount: acc1, Coins: sdk.Coins{genCoin}}}
 
@@ -79,8 +84,10 @@ func TestSlashingMsgs(t *testing.T) {
 	description := stakingtypes.NewDescription("foo_moniker", "", "", "", "")
 	commission := stakingtypes.NewCommissionRates(math.LegacyZeroDec(), math.LegacyZeroDec(), math.LegacyZeroDec())
 
+	addrStrVal, err := valaddrCodec.BytesToString(addr1)
+	require.NoError(t, err)
 	createValidatorMsg, err := stakingtypes.NewMsgCreateValidator(
-		sdk.ValAddress(addr1).String(), valKey.PubKey(), bondCoin, description, commission, math.OneInt(),
+		addrStrVal, valKey.PubKey(), bondCoin, description, commission, math.OneInt(),
 	)
 	require.NoError(t, err)
 
@@ -96,10 +103,10 @@ func TestSlashingMsgs(t *testing.T) {
 	validator, err := stakingKeeper.GetValidator(ctxCheck, sdk.ValAddress(addr1))
 	require.NoError(t, err)
 
-	require.Equal(t, sdk.ValAddress(addr1).String(), validator.OperatorAddress)
+	require.Equal(t, addrStrVal, validator.OperatorAddress)
 	require.Equal(t, stakingtypes.Bonded, validator.Status)
 	require.True(math.IntEq(t, bondTokens, validator.BondedTokens()))
-	unjailMsg := &types.MsgUnjail{ValidatorAddr: sdk.ValAddress(addr1).String()}
+	unjailMsg := &types.MsgUnjail{ValidatorAddr: addrStrVal}
 
 	ctxCheck = app.BaseApp.NewContext(true)
 	_, err = slashingKeeper.ValidatorSigningInfo.Get(ctxCheck, sdk.ConsAddress(valAddr))

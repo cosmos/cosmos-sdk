@@ -95,6 +95,11 @@ func (config *Config) SetBech32PrefixForWorkspace(workspacePrefix string) {
 	config.bech32AddressPrefix["workspace_addr"] = workspacePrefix
 }
 
+func (config *Config) SetBech32PrefixForKeyring(keyringPrefix string) {
+	config.assertNotSealed()
+	config.bech32AddressPrefix["keyring_addr"] = keyringPrefix
+}
+
 // SetBech32PrefixForValidator builds the Config with Bech32 addressPrefix and publKeyPrefix for validators
 //
 //	and returns the config instance
@@ -170,6 +175,11 @@ func (config *Config) GetBech32AccountAddrPrefix() string {
 // GetBech32WorkspaceAddrPrefix returns the Bech32 prefix for workspace address
 func (config *Config) GetBech32WorkspaceAddrPrefix() string {
 	return config.bech32AddressPrefix["workspace_addr"]
+}
+
+// GetBech32KeyringAddrPrefix returns the Bech32 prefix for keyring address
+func (config *Config) GetBech32KeyringAddrPrefix() string {
+	return config.bech32AddressPrefix["keyring_addr"]
 }
 
 // GetBech32ValidatorAddrPrefix returns the Bech32 prefix for validator address

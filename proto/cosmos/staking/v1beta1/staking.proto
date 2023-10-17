@@ -415,7 +415,7 @@ message ConsPubKeyRotationHistory {
   option (gogoproto.goproto_getters) = false;
 
   // operator_address defines the address of the validator's operator; bech encoded in JSON.
-  string operator_address = 1 [(gogoproto.moretags) = "yaml:\"operator_address\""];
+  string operator_address = 1;
   // old_cons_pubkey is the old consensus public key of the validator, as a Protobuf Any.
   google.protobuf.Any old_cons_pubkey = 2 [(cosmos_proto.accepts_interface) = "cosmos.crypto.PubKey"];
   // new_cons_pubkey is the new consensus public key of the validator, as a Protobuf Any.

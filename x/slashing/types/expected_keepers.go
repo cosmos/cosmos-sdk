@@ -13,6 +13,7 @@ import (
 
 // AccountKeeper expected account keeper
 type AccountKeeper interface {
+	AddressCodec() address.Codec
 	GetAccount(ctx context.Context, addr sdk.AccAddress) sdk.AccountI
 	IterateAccounts(ctx context.Context, process func(sdk.AccountI) (stop bool))
 }

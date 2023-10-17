@@ -166,6 +166,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/auth) [#17985](https://github.com/cosmos/cosmos-sdk/pull/17985) Remove `StdTxConfig`
     * Remove depreacted `MakeTestingEncodingParams` from `simapp/params`
 * (x/consensus) [#18041](https://github.com/cosmos/cosmos-sdk/pull/18041) `ToProtoConsensusParams()` returns an error 
+* (x/slashing) [#18115](https://github.com/cosmos/cosmos-sdk/pull/18115) `NewValidatorSigningInfo` takes strings instead of `sdk.AccAddress`
 
 ### CLI Breaking Changes
 

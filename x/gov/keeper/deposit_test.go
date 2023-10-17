@@ -172,7 +172,8 @@ func TestDepositAmount(t *testing.T) {
 			name:            "good amount and denoms",
 			deposit:         sdk.NewCoins(sdk.NewInt64Coin("stake", 10000)),
 			minDepositRatio: "0.001",
-		}, {
+		},
+		{
 			name:            "good amount and denoms but not enough balance for zcoin",
 			deposit:         sdk.NewCoins(sdk.NewInt64Coin("stake", 10000), sdk.NewInt64Coin("zcoin", 1)),
 			minDepositRatio: "0.001",
@@ -229,8 +230,6 @@ func TestDepositAmount(t *testing.T) {
 			require.NoError(t, err)
 			proposalID := proposal.Id
 
-			bankKeeper.MintCoins(ctx, "mint", sdk.NewCoins(sdk.NewCoin("zcoin", sdkmath.NewInt(1000000000))))
-
 			_, err = govKeeper.AddDeposit(ctx, proposalID, testAddrs[0], tc.deposit)
 			if tc.err != "" {
 				require.Error(t, err)
@@ -238,7 +237,6 @@ func TestDepositAmount(t *testing.T) {
 			} else {
 				require.NoError(t, err)
 			}
-
 		})
 	}
 }

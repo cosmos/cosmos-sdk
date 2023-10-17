@@ -7,7 +7,6 @@ import (
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/errors"
-	"cosmossdk.io/math"
 	sdkmath "cosmossdk.io/math"
 	pooltypes "cosmossdk.io/x/protocolpool/types"
 
@@ -79,7 +78,7 @@ func (keeper Keeper) AddDeposit(ctx context.Context, proposalID uint64, deposito
 	}
 
 	minDepositAmount := proposal.GetMinDepositFromParams(params)
-	minDepositRatio, err := math.LegacyNewDecFromStr(params.GetMinDepositRatio())
+	minDepositRatio, err := sdkmath.LegacyNewDecFromStr(params.GetMinDepositRatio())
 	if err != nil {
 		return false, err
 	}

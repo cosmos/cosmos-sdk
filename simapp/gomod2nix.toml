@@ -41,8 +41,8 @@ schema = 3
     version = "v1.0.0-rc.0"
     hash = "sha256-DgW4ZrDwmgsPtEXajPyAsrQuPjXekw5PfsYFvA5yuiE="
   [mod."cosmossdk.io/x/tx"]
-    version = "v0.10.0"
-    hash = "sha256-am/+/mfQR+xqjQSTFh2X/AiC6EQZvZ7te6d8MIwd/EA="
+    version = "v0.11.0"
+    hash = "sha256-8CYRI51ChKRonaK1lWWGGe/pvH1zEmrPzheTdE0C9hc="
   [mod."filippo.io/edwards25519"]
     version = "v1.0.0"
     hash = "sha256-APnPAcmItvtJ5Zsy863lzR2TjEBF9Y66TY1e4M1ap98="

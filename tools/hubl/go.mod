@@ -3,7 +3,7 @@ module cosmossdk.io/tools/hubl
 go 1.21
 
 require (
-	cosmossdk.io/api v0.7.1
+	cosmossdk.io/api v0.7.2
 	cosmossdk.io/client/v2 v2.0.0-20230915122801-a0bd4e9fb609
 	cosmossdk.io/core v0.12.0
 	cosmossdk.io/errors v1.0.0

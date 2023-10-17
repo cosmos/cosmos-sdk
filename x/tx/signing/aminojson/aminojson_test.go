@@ -21,7 +21,7 @@ func TestAminoJsonSignMode(t *testing.T) {
 	handlerOptions := testutil.HandlerArgumentOptions{
 		ChainID: "test-chain",
 		Memo:    "sometestmemo",
-		Tip:     &txv1beta1.Tip{Tipper: "tipper", Amount: []*basev1beta1.Coin{{Denom: "Tip-token", Amount: "10"}}},
+		Tip:     &txv1beta1.Tip{Tipper: "tipper", Amount: []*basev1beta1.Coin{{Denom: "Tip-token", Amount: "10"}}}, //nolint:staticcheck
 		Msg: &bankv1beta1.MsgSend{
 			FromAddress: "foo",
 			ToAddress:   "bar",

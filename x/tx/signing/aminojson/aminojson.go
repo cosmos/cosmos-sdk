@@ -72,7 +72,7 @@ func (h SignModeHandler) GetSignBytes(_ context.Context, signerData signing.Sign
 		return nil, fmt.Errorf("got empty address in %s handler: invalid request", h.Mode())
 	}
 
-	tip := txData.AuthInfo.Tip
+	tip := txData.AuthInfo.Tip 
 	if tip != nil && tip.Tipper == "" {
 		return nil, fmt.Errorf("tipper cannot be empty")
 	}

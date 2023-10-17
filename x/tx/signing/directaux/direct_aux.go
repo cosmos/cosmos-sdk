@@ -100,7 +100,7 @@ func (h SignModeHandler) GetSignBytes(
 		ChainId:       signerData.ChainID,
 		AccountNumber: signerData.AccountNumber,
 		Sequence:      signerData.Sequence,
-		Tip:           txData.AuthInfo.Tip,
+		Tip:           txData.AuthInfo.Tip, //nolint:staticcheck
 	}
 	return proto.Marshal(signDocDirectAux)
 }

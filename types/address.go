@@ -39,6 +39,9 @@ const (
 	// Bech32PrefixWorkspace defines the Bech32 prefix used in workspace bank-controlled accounts
 	Bech32PrefixWorkspace = "workspace"
 
+	// Bech32PrefixKeyring defines the Bech32 prefix used in keyring bank-controlled accounts
+	Bech32PrefixKeyring = "keyring"
+
 	// Purpose is the ATOM purpose as defined in SLIP44 (https://github.com/satoshilabs/slips/blob/master/slip-0044.md)
 	Purpose = 44
 
@@ -69,6 +72,8 @@ const (
 	Bech32PrefixAccPub = Bech32MainPrefix + PrefixPublic
 	// Bech32PrefixWorkspaceAddr defines the Bech32 prefix used for workspace bank-controlled accounts
 	Bech32PrefixWorkspaceAddr = Bech32MainPrefix + Bech32PrefixWorkspace
+	// Bech32PrefixKeyringAddr defines the Bech32 prefix used for keyring bank-controlled accounts
+	Bech32PrefixKeyringAddr = Bech32MainPrefix + Bech32PrefixKeyring
 	// Bech32PrefixValAddr defines the Bech32 prefix of a validator's operator address
 	Bech32PrefixValAddr = Bech32MainPrefix + PrefixValidator + PrefixOperator
 	// Bech32PrefixValPub defines the Bech32 prefix of a validator's operator public key
@@ -198,7 +203,11 @@ func AccAddressFromBech32(address string) (addr AccAddress, err error) {
 		return AccAddress{}, errors.New("empty address string is not allowed")
 	}
 
-	bech32Prefixes := []string{GetConfig().GetBech32AccountAddrPrefix(), GetConfig().GetBech32WorkspaceAddrPrefix()}
+	bech32Prefixes := []string{
+		GetConfig().GetBech32AccountAddrPrefix(),
+		GetConfig().GetBech32WorkspaceAddrPrefix(),
+		GetConfig().GetBech32KeyringAddrPrefix(),
+	}
 	var bz []byte
 	for _, prefix := range bech32Prefixes {
 		bz, err := GetFromBech32(address, prefix)
@@ -207,7 +216,7 @@ func AccAddressFromBech32(address string) (addr AccAddress, err error) {
 		}
 	}
 	if err != nil {
-		return nil, fmt.Errorf("failed to convert Bech32 address: invalid address format for account/workspace")
+		return nil, fmt.Errorf("failed to convert Bech32 address: invalid address format for account/workspace/keyring")
 	}
 
 	err = VerifyAddressFormat(bz)

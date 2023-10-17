@@ -3,13 +3,16 @@ package keeper
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/errors"
+	"cosmossdk.io/math"
 	sdkmath "cosmossdk.io/math"
 	pooltypes "cosmossdk.io/x/protocolpool/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 )
@@ -70,6 +73,49 @@ func (keeper Keeper) AddDeposit(ctx context.Context, proposalID uint64, deposito
 		return false, errors.Wrapf(types.ErrInactiveProposal, "%d", proposalID)
 	}
 
+	params, err := keeper.Params.Get(ctx)
+	if err != nil {
+		return false, err
+	}
+
+	minDepositAmount := proposal.GetMinDepositFromParams(params)
+	minDepositRatio, err := math.LegacyNewDecFromStr(params.GetMinDepositRatio())
+	if err != nil {
+		return false, err
+	}
+
+	// the deposit must only contain valid denoms (listed in the min deposit param)
+	if !depositAmount.DenomsSubsetOf(minDepositAmount) {
+		return false, errors.Wrapf(types.ErrInvalidDepositDenom, "deposit contains invalid denom/s %s, accepted denoms are: %s", depositAmount.Denoms(), minDepositAmount.Denoms())
+	}
+
+	// and the amount must be greater than minDepositAmount*minDepositRatio.
+	// If the threshold is met with at least one denom, the deposit is valid.
+	depositThresholdMet := false
+	thresholds := []string{}
+	for _, minDep := range minDepositAmount {
+		// calculate the threshold for this denom, and hold a list to later return a useful error message
+		threshold := sdk.NewCoin(minDep.GetDenom(), minDep.Amount.ToLegacyDec().Mul(minDepositRatio).TruncateInt())
+		thresholds = append(thresholds, threshold.String())
+
+		found, deposit := depositAmount.Find(minDep.Denom)
+		if !found { // if not found, continue, as we know the deposit contains at least 1 valid denom
+			continue
+		}
+
+		// once we know at least one threshold has been met, we can break. The deposit
+		// might contain other denoms but we don't care.
+		if deposit.IsGTE(threshold) {
+			depositThresholdMet = true
+			break
+		}
+	}
+
+	// the threshold must be met with at least one denom, if not, return the list of minimum deposits
+	if !depositThresholdMet {
+		return false, errors.Wrapf(types.ErrMinDepositTooSmall, "received %s but need at least one of the following: %s", depositAmount, strings.Join(thresholds, ","))
+	}
+
 	// update the governance module's account coins pool
 	err = keeper.bankKeeper.SendCoinsFromAccountToModule(ctx, depositorAddr, types.ModuleName, depositAmount)
 	if err != nil {
@@ -85,12 +131,6 @@ func (keeper Keeper) AddDeposit(ctx context.Context, proposalID uint64, deposito
 
 	// Check if deposit has provided sufficient total funds to transition the proposal into the voting period
 	activatedVotingPeriod := false
-	params, err := keeper.Params.Get(ctx)
-	if err != nil {
-		return false, err
-	}
-	minDepositAmount := proposal.GetMinDepositFromParams(params)
-
 	if proposal.Status == v1.StatusDepositPeriod && sdk.NewCoins(proposal.TotalDeposit...).IsAllGTE(minDepositAmount) {
 		err = keeper.ActivateVotingPeriod(ctx, proposal)
 		if err != nil {
@@ -235,6 +275,10 @@ func (keeper Keeper) RefundAndDeleteDeposits(ctx context.Context, proposalID uin
 // required at the time of proposal submission. This threshold amount is determined by
 // the deposit parameters. Returns nil on success, error otherwise.
 func (keeper Keeper) validateInitialDeposit(ctx context.Context, initialDeposit sdk.Coins, expedited bool) error {
+	if !initialDeposit.IsValid() || initialDeposit.IsAnyNegative() {
+		return errors.Wrap(sdkerrors.ErrInvalidCoins, initialDeposit.String())
+	}
+
 	params, err := keeper.Params.Get(ctx)
 	if err != nil {
 		return err

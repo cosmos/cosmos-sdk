@@ -212,7 +212,7 @@ message MsgUpdateParamsResponse {};
 
 // MsgRotateConsPubKey is the Msg/RotateConsPubKey request type.
 //
-// Since: cosmos-sdk 0.48
+// Since: cosmos-sdk 0.51
 message MsgRotateConsPubKey {
   option (cosmos.msg.v1.signer) = "validator_address";
   option (amino.name)           = "cosmos-sdk/MsgRotateConsPubKey";
@@ -227,5 +227,5 @@ message MsgRotateConsPubKey {
 // MsgRotateConsPubKeyResponse defines the response structure for executing a 
 // MsgRotateConsPubKey message.
 //
-// Since: cosmos-sdk 0.48
+// Since: cosmos-sdk 0.51
 message MsgRotateConsPubKeyResponse {}

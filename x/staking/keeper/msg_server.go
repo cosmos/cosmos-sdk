@@ -606,5 +606,5 @@ func (k msgServer) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams)
 }
 
 func (k msgServer) RotateConsPubKey(_ context.Context, _ *types.MsgRotateConsPubKey) (*types.MsgRotateConsPubKey, error) {
-	return nil, nilfu
+	return nil, nil
 }

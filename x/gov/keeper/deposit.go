@@ -89,31 +89,33 @@ func (keeper Keeper) AddDeposit(ctx context.Context, proposalID uint64, deposito
 		return false, errors.Wrapf(types.ErrInvalidDepositDenom, "deposit contains invalid denom/s %s, accepted denoms are: %s", depositAmount.Denoms(), minDepositAmount.Denoms())
 	}
 
-	// and the amount must be greater than minDepositAmount*minDepositRatio.
-	// If the threshold is met with at least one denom, the deposit is valid.
-	depositThresholdMet := false
-	thresholds := []string{}
-	for _, minDep := range minDepositAmount {
-		// calculate the threshold for this denom, and hold a list to later return a useful error message
-		threshold := sdk.NewCoin(minDep.GetDenom(), minDep.Amount.ToLegacyDec().Mul(minDepositRatio).TruncateInt())
-		thresholds = append(thresholds, threshold.String())
+	// if minDepositRatio is set, the deposit must be equal or greater than minDepositAmount*minDepositRatio
+	// for at least one denom. If minDepositRatio is zero we skip this check.
+	if !minDepositRatio.IsZero() {
+		depositThresholdMet := false
+		thresholds := []string{}
+		for _, minDep := range minDepositAmount {
+			// calculate the threshold for this denom, and hold a list to later return a useful error message
+			threshold := sdk.NewCoin(minDep.GetDenom(), minDep.Amount.ToLegacyDec().Mul(minDepositRatio).TruncateInt())
+			thresholds = append(thresholds, threshold.String())
 
-		found, deposit := depositAmount.Find(minDep.Denom)
-		if !found { // if not found, continue, as we know the deposit contains at least 1 valid denom
-			continue
+			found, deposit := depositAmount.Find(minDep.Denom)
+			if !found { // if not found, continue, as we know the deposit contains at least 1 valid denom
+				continue
+			}
+
+			// once we know at least one threshold has been met, we can break. The deposit
+			// might contain other denoms but we don't care.
+			if deposit.IsGTE(threshold) {
+				depositThresholdMet = true
+				break
+			}
 		}
 
-		// once we know at least one threshold has been met, we can break. The deposit
-		// might contain other denoms but we don't care.
-		if deposit.IsGTE(threshold) {
-			depositThresholdMet = true
-			break
+		// the threshold must be met with at least one denom, if not, return the list of minimum deposits
+		if !depositThresholdMet {
+			return false, errors.Wrapf(types.ErrMinDepositTooSmall, "received %s but need at least one of the following: %s", depositAmount, strings.Join(thresholds, ","))
 		}
-	}
-
-	// the threshold must be met with at least one denom, if not, return the list of minimum deposits
-	if !depositThresholdMet {
-		return false, errors.Wrapf(types.ErrMinDepositTooSmall, "received %s but need at least one of the following: %s", depositAmount, strings.Join(thresholds, ","))
 	}
 
 	// update the governance module's account coins pool

@@ -163,37 +163,49 @@ func TestDeposits(t *testing.T) {
 
 func TestDepositAmount(t *testing.T) {
 	testcases := []struct {
-		name    string
-		deposit sdk.Coins
-		err     string
+		name            string
+		deposit         sdk.Coins
+		minDepositRatio string
+		err             string
 	}{
 		{
-			name:    "good amount and denoms",
-			deposit: sdk.NewCoins(sdk.NewInt64Coin("stake", 10000)),
+			name:            "good amount and denoms",
+			deposit:         sdk.NewCoins(sdk.NewInt64Coin("stake", 10000)),
+			minDepositRatio: "0.001",
 		}, {
-			name:    "good amount and denoms but not enough balance for zcoin",
-			deposit: sdk.NewCoins(sdk.NewInt64Coin("stake", 10000), sdk.NewInt64Coin("zcoin", 1)),
-			err:     "not enough balance",
+			name:            "good amount and denoms but not enough balance for zcoin",
+			deposit:         sdk.NewCoins(sdk.NewInt64Coin("stake", 10000), sdk.NewInt64Coin("zcoin", 1)),
+			minDepositRatio: "0.001",
+			err:             "not enough balance",
 		},
 		{
-			name:    "too small amount",
-			deposit: sdk.NewCoins(sdk.NewInt64Coin("stake", 10)),
-			err:     "received 10stake but need at least one of the following: 10000stake,10zcoin: minimum deposit is too small",
+			name:            "too small amount",
+			deposit:         sdk.NewCoins(sdk.NewInt64Coin("stake", 10)),
+			minDepositRatio: "0.001",
+			err:             "received 10stake but need at least one of the following: 10000stake,10zcoin: minimum deposit is too small",
 		},
 		{
-			name:    "too small amount with another coin",
-			deposit: sdk.NewCoins(sdk.NewInt64Coin("zcoin", 1)),
-			err:     "received 1zcoin but need at least one of the following: 10000stake,10zcoin: minimum deposit is too small",
+			name:            "too small amount with another coin",
+			deposit:         sdk.NewCoins(sdk.NewInt64Coin("zcoin", 1)),
+			minDepositRatio: "0.001",
+			err:             "received 1zcoin but need at least one of the following: 10000stake,10zcoin: minimum deposit is too small",
 		},
 		{
-			name:    "bad denom",
-			deposit: sdk.NewCoins(sdk.NewInt64Coin("euro", 10000)),
-			err:     "deposit contains invalid denom/s [euro], accepted denoms are: [stake zcoin]: invalid deposit denom",
+			name:            "bad denom",
+			deposit:         sdk.NewCoins(sdk.NewInt64Coin("euro", 10000)),
+			minDepositRatio: "0.001",
+			err:             "deposit contains invalid denom/s [euro], accepted denoms are: [stake zcoin]: invalid deposit denom",
 		},
 		{
-			name:    "mix containing bad and good denom",
-			deposit: sdk.NewCoins(sdk.NewInt64Coin("stake", 10000), sdk.NewInt64Coin("euro", 10000)),
-			err:     "deposit contains invalid denom/s [euro stake], accepted denoms are: [stake zcoin]: invalid deposit denom",
+			name:            "mix containing bad and good denom",
+			deposit:         sdk.NewCoins(sdk.NewInt64Coin("stake", 10000), sdk.NewInt64Coin("euro", 10000)),
+			minDepositRatio: "0.001",
+			err:             "deposit contains invalid denom/s [euro stake], accepted denoms are: [stake zcoin]: invalid deposit denom",
+		},
+		{
+			name:            "minDepositRatio is zero",
+			deposit:         sdk.NewCoins(sdk.NewInt64Coin("stake", 10)),
+			minDepositRatio: "0.0",
 		},
 	}
 
@@ -207,7 +219,7 @@ func TestDepositAmount(t *testing.T) {
 			authKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
 
 			params, _ := govKeeper.Params.Get(ctx)
-			params.MinDepositRatio = "0.001"
+			params.MinDepositRatio = tc.minDepositRatio
 			params.MinDeposit = append(params.MinDeposit, sdk.NewCoin("zcoin", sdkmath.NewInt(10000))) // coins must be sorted by denom
 			err := govKeeper.Params.Set(ctx, params)
 			require.NoError(t, err)

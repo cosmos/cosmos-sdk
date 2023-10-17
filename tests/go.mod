@@ -14,7 +14,7 @@ require (
 	cosmossdk.io/x/evidence v0.0.0-20230925151519-64e0e8980834
 	cosmossdk.io/x/feegrant v0.0.0-20231009114728-5259373edec8
 	cosmossdk.io/x/nft v0.0.0-20231006095526-33390754f9fe // indirect
-	cosmossdk.io/x/tx v0.10.1-0.20230920120022-6715b5afb59f
+	cosmossdk.io/x/tx v0.11.0
 	cosmossdk.io/x/upgrade v0.0.0-20230925151519-64e0e8980834
 	github.com/cometbft/cometbft v0.38.0
 	github.com/cosmos/cosmos-db v1.0.0
@@ -92,7 +92,7 @@ require (
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/btree v1.1.2 // indirect
-	github.com/google/go-cmp v0.5.9 // indirect
+	github.com/google/go-cmp v0.6.0 // indirect
 	github.com/google/orderedcode v0.0.1 // indirect
 	github.com/google/s2a-go v0.1.4 // indirect
 	github.com/google/uuid v1.3.0 // indirect

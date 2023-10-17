@@ -10,6 +10,7 @@ run:
     - ".*\\.pb\\.go$"
     - ".*\\.pb\\.gw\\.go$"
     - ".*\\.pulsar\\.go$"
+    - "store/storage/*.go$"
 
 linters:
   disable-all: true

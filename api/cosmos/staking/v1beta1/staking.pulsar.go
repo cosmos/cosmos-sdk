@@ -9983,6 +9983,7 @@ var (
 	fd_Params_historical_entries  protoreflect.FieldDescriptor
 	fd_Params_bond_denom          protoreflect.FieldDescriptor
 	fd_Params_min_commission_rate protoreflect.FieldDescriptor
+	fd_Params_key_rotation_fee    protoreflect.FieldDescriptor
 )
 
 func init() {
@@ -9994,6 +9995,7 @@ func init() {
 	fd_Params_historical_entries = md_Params.Fields().ByName("historical_entries")
 	fd_Params_bond_denom = md_Params.Fields().ByName("bond_denom")
 	fd_Params_min_commission_rate = md_Params.Fields().ByName("min_commission_rate")
+	fd_Params_key_rotation_fee = md_Params.Fields().ByName("key_rotation_fee")
 }
 
 var _ protoreflect.Message = (*fastReflection_Params)(nil)
@@ -10097,6 +10099,12 @@ func (x *fastReflection_Params) Range(f func(protoreflect.FieldDescriptor, proto
 			return
 		}
 	}
+	if x.KeyRotationFee != nil {
+		value := protoreflect.ValueOfMessage(x.KeyRotationFee.ProtoReflect())
+		if !f(fd_Params_key_rotation_fee, value) {
+			return
+		}
+	}
 }
 
 // Has reports whether a field is populated.
@@ -10124,6 +10132,8 @@ func (x *fastReflection_Params) Has(fd protoreflect.FieldDescriptor) bool {
 		return x.BondDenom != ""
 	case "cosmos.staking.v1beta1.Params.min_commission_rate":
 		return x.MinCommissionRate != ""
+	case "cosmos.staking.v1beta1.Params.key_rotation_fee":
+		return x.KeyRotationFee != nil
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.Params"))
@@ -10152,6 +10162,8 @@ func (x *fastReflection_Params) Clear(fd protoreflect.FieldDescriptor) {
 		x.BondDenom = ""
 	case "cosmos.staking.v1beta1.Params.min_commission_rate":
 		x.MinCommissionRate = ""
+	case "cosmos.staking.v1beta1.Params.key_rotation_fee":
+		x.KeyRotationFee = nil
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.Params"))
@@ -10186,6 +10198,9 @@ func (x *fastReflection_Params) Get(descriptor protoreflect.FieldDescriptor) pro
 	case "cosmos.staking.v1beta1.Params.min_commission_rate":
 		value := x.MinCommissionRate
 		return protoreflect.ValueOfString(value)
+	case "cosmos.staking.v1beta1.Params.key_rotation_fee":
+		value := x.KeyRotationFee
+		return protoreflect.ValueOfMessage(value.ProtoReflect())
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.Params"))
@@ -10218,6 +10233,8 @@ func (x *fastReflection_Params) Set(fd protoreflect.FieldDescriptor, value proto
 		x.BondDenom = value.Interface().(string)
 	case "cosmos.staking.v1beta1.Params.min_commission_rate":
 		x.MinCommissionRate = value.Interface().(string)
+	case "cosmos.staking.v1beta1.Params.key_rotation_fee":
+		x.KeyRotationFee = value.Message().Interface().(*v1beta1.Coin)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.Params"))
@@ -10243,6 +10260,11 @@ func (x *fastReflection_Params) Mutable(fd protoreflect.FieldDescriptor) protore
 			x.UnbondingTime = new(durationpb.Duration)
 		}
 		return protoreflect.ValueOfMessage(x.UnbondingTime.ProtoReflect())
+	case "cosmos.staking.v1beta1.Params.key_rotation_fee":
+		if x.KeyRotationFee == nil {
+			x.KeyRotationFee = new(v1beta1.Coin)
+		}
+		return protoreflect.ValueOfMessage(x.KeyRotationFee.ProtoReflect())
 	case "cosmos.staking.v1beta1.Params.max_validators":
 		panic(fmt.Errorf("field max_validators of message cosmos.staking.v1beta1.Params is not mutable"))
 	case "cosmos.staking.v1beta1.Params.max_entries":
@@ -10279,6 +10301,9 @@ func (x *fastReflection_Params) NewField(fd protoreflect.FieldDescriptor) protor
 		return protoreflect.ValueOfString("")
 	case "cosmos.staking.v1beta1.Params.min_commission_rate":
 		return protoreflect.ValueOfString("")
+	case "cosmos.staking.v1beta1.Params.key_rotation_fee":
+		m := new(v1beta1.Coin)
+		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.Params"))
@@ -10369,6 +10394,10 @@ func (x *fastReflection_Params) ProtoMethods() *protoiface.Methods {
 		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
+		if x.KeyRotationFee != nil {
+			l = options.Size(x.KeyRotationFee)
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
 		if x.unknownFields != nil {
 			n += len(x.unknownFields)
 		}
@@ -10397,6 +10426,20 @@ func (x *fastReflection_Params) ProtoMethods() *protoiface.Methods {
 		if x.unknownFields != nil {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
+		}
+		if x.KeyRotationFee != nil {
+			encoded, err := options.Marshal(x.KeyRotationFee)
+			if err != nil {
+				return protoiface.MarshalOutput{
+					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+					Buf:               input.Buf,
+				}, err
+			}
+			i -= len(encoded)
+			copy(dAtA[i:], encoded)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+			i--
+			dAtA[i] = 0x3a
 		}
 		if len(x.MinCommissionRate) > 0 {
 			i -= len(x.MinCommissionRate)
@@ -10646,6 +10689,42 @@ func (x *fastReflection_Params) ProtoMethods() *protoiface.Methods {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
 				x.MinCommissionRate = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 7:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field KeyRotationFee", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if x.KeyRotationFee == nil {
+					x.KeyRotationFee = &v1beta1.Coin{}
+				}
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.KeyRotationFee); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
 				iNdEx = postIndex
 			default:
 				iNdEx = preIndex
@@ -15556,6 +15635,9 @@ type Params struct {
 	BondDenom string `protobuf:"bytes,5,opt,name=bond_denom,json=bondDenom,proto3" json:"bond_denom,omitempty"`
 	// min_commission_rate is the chain-wide minimum commission rate that a validator can charge their delegators
 	MinCommissionRate string `protobuf:"bytes,6,opt,name=min_commission_rate,json=minCommissionRate,proto3" json:"min_commission_rate,omitempty"`
+	// key_rotation_fee is fee to be spent when rotating validator's key
+	// (either consensus pubkey or operator key)
+	KeyRotationFee *v1beta1.Coin `protobuf:"bytes,7,opt,name=key_rotation_fee,json=keyRotationFee,proto3" json:"key_rotation_fee,omitempty"`
 }
 
 func (x *Params) Reset() {
@@ -15618,6 +15700,13 @@ func (x *Params) GetMinCommissionRate() string {
 		return x.MinCommissionRate
 	}
 	return ""
+}
+
+func (x *Params) GetKeyRotationFee() *v1beta1.Coin {
+	if x != nil {
+		return x.KeyRotationFee
+	}
+	return nil
 }
 
 // DelegationResponse is equivalent to Delegation except that it contains a
@@ -16236,7 +16325,7 @@ var file_cosmos_staking_v1beta1_staking_proto_rawDesc = []byte{
 	0x67, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x52, 0x65, 0x64, 0x65, 0x6c, 0x65,
 	0x67, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x42, 0x09, 0xc8, 0xde, 0x1f,
 	0x00, 0xa8, 0xe7, 0xb0, 0x2a, 0x01, 0x52, 0x07, 0x65, 0x6e, 0x74, 0x72, 0x69, 0x65, 0x73, 0x3a,
-	0x08, 0x88, 0xa0, 0x1f, 0x00, 0xe8, 0xa0, 0x1f, 0x00, 0x22, 0x9c, 0x03, 0x0a, 0x06, 0x50, 0x61,
+	0x08, 0x88, 0xa0, 0x1f, 0x00, 0xe8, 0xa0, 0x1f, 0x00, 0x22, 0xec, 0x03, 0x0a, 0x06, 0x50, 0x61,
 	0x72, 0x61, 0x6d, 0x73, 0x12, 0x4f, 0x0a, 0x0e, 0x75, 0x6e, 0x62, 0x6f, 0x6e, 0x64, 0x69, 0x6e,
 	0x67, 0x5f, 0x74, 0x69, 0x6d, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x67,
 	0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x44,
@@ -16260,7 +16349,12 @@ var file_cosmos_staking_v1beta1_staking_proto_rawDesc = []byte{
 	0x69, 0x73, 0x73, 0x69, 0x6f, 0x6e, 0x5f, 0x72, 0x61, 0x74, 0x65, 0x22, 0xd2, 0xb4, 0x2d, 0x0a,
 	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x44, 0x65, 0x63, 0xa8, 0xe7, 0xb0, 0x2a, 0x01, 0x52,
 	0x11, 0x6d, 0x69, 0x6e, 0x43, 0x6f, 0x6d, 0x6d, 0x69, 0x73, 0x73, 0x69, 0x6f, 0x6e, 0x52, 0x61,
-	0x74, 0x65, 0x3a, 0x24, 0xe8, 0xa0, 0x1f, 0x01, 0x8a, 0xe7, 0xb0, 0x2a, 0x1b, 0x63, 0x6f, 0x73,
+	0x74, 0x65, 0x12, 0x4e, 0x0a, 0x10, 0x6b, 0x65, 0x79, 0x5f, 0x72, 0x6f, 0x74, 0x61, 0x74, 0x69,
+	0x6f, 0x6e, 0x5f, 0x66, 0x65, 0x65, 0x18, 0x07, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x63,
+	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74,
+	0x61, 0x31, 0x2e, 0x43, 0x6f, 0x69, 0x6e, 0x42, 0x09, 0xc8, 0xde, 0x1f, 0x00, 0xa8, 0xe7, 0xb0,
+	0x2a, 0x01, 0x52, 0x0e, 0x6b, 0x65, 0x79, 0x52, 0x6f, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x46,
+	0x65, 0x65, 0x3a, 0x24, 0xe8, 0xa0, 0x1f, 0x01, 0x8a, 0xe7, 0xb0, 0x2a, 0x1b, 0x63, 0x6f, 0x73,
 	0x6d, 0x6f, 0x73, 0x2d, 0x73, 0x64, 0x6b, 0x2f, 0x78, 0x2f, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e,
 	0x67, 0x2f, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x22, 0xa9, 0x01, 0x0a, 0x12, 0x44, 0x65, 0x6c,
 	0x65, 0x67, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12,
@@ -16448,20 +16542,21 @@ var file_cosmos_staking_v1beta1_staking_proto_depIdxs = []int32{
 	27, // 14: cosmos.staking.v1beta1.RedelegationEntry.completion_time:type_name -> google.protobuf.Timestamp
 	16, // 15: cosmos.staking.v1beta1.Redelegation.entries:type_name -> cosmos.staking.v1beta1.RedelegationEntry
 	29, // 16: cosmos.staking.v1beta1.Params.unbonding_time:type_name -> google.protobuf.Duration
-	13, // 17: cosmos.staking.v1beta1.DelegationResponse.delegation:type_name -> cosmos.staking.v1beta1.Delegation
-	30, // 18: cosmos.staking.v1beta1.DelegationResponse.balance:type_name -> cosmos.base.v1beta1.Coin
-	16, // 19: cosmos.staking.v1beta1.RedelegationEntryResponse.redelegation_entry:type_name -> cosmos.staking.v1beta1.RedelegationEntry
-	17, // 20: cosmos.staking.v1beta1.RedelegationResponse.redelegation:type_name -> cosmos.staking.v1beta1.Redelegation
-	20, // 21: cosmos.staking.v1beta1.RedelegationResponse.entries:type_name -> cosmos.staking.v1beta1.RedelegationEntryResponse
-	31, // 22: cosmos.staking.v1beta1.ValidatorUpdates.updates:type_name -> tendermint.abci.ValidatorUpdate
-	28, // 23: cosmos.staking.v1beta1.ConsPubKeyRotationHistory.old_cons_pubkey:type_name -> google.protobuf.Any
-	28, // 24: cosmos.staking.v1beta1.ConsPubKeyRotationHistory.new_cons_pubkey:type_name -> google.protobuf.Any
-	30, // 25: cosmos.staking.v1beta1.ConsPubKeyRotationHistory.fee:type_name -> cosmos.base.v1beta1.Coin
-	26, // [26:26] is the sub-list for method output_type
-	26, // [26:26] is the sub-list for method input_type
-	26, // [26:26] is the sub-list for extension type_name
-	26, // [26:26] is the sub-list for extension extendee
-	0,  // [0:26] is the sub-list for field type_name
+	30, // 17: cosmos.staking.v1beta1.Params.key_rotation_fee:type_name -> cosmos.base.v1beta1.Coin
+	13, // 18: cosmos.staking.v1beta1.DelegationResponse.delegation:type_name -> cosmos.staking.v1beta1.Delegation
+	30, // 19: cosmos.staking.v1beta1.DelegationResponse.balance:type_name -> cosmos.base.v1beta1.Coin
+	16, // 20: cosmos.staking.v1beta1.RedelegationEntryResponse.redelegation_entry:type_name -> cosmos.staking.v1beta1.RedelegationEntry
+	17, // 21: cosmos.staking.v1beta1.RedelegationResponse.redelegation:type_name -> cosmos.staking.v1beta1.Redelegation
+	20, // 22: cosmos.staking.v1beta1.RedelegationResponse.entries:type_name -> cosmos.staking.v1beta1.RedelegationEntryResponse
+	31, // 23: cosmos.staking.v1beta1.ValidatorUpdates.updates:type_name -> tendermint.abci.ValidatorUpdate
+	28, // 24: cosmos.staking.v1beta1.ConsPubKeyRotationHistory.old_cons_pubkey:type_name -> google.protobuf.Any
+	28, // 25: cosmos.staking.v1beta1.ConsPubKeyRotationHistory.new_cons_pubkey:type_name -> google.protobuf.Any
+	30, // 26: cosmos.staking.v1beta1.ConsPubKeyRotationHistory.fee:type_name -> cosmos.base.v1beta1.Coin
+	27, // [27:27] is the sub-list for method output_type
+	27, // [27:27] is the sub-list for method input_type
+	27, // [27:27] is the sub-list for extension type_name
+	27, // [27:27] is the sub-list for extension extendee
+	0,  // [0:27] is the sub-list for field type_name
 }
 
 func init() { file_cosmos_staking_v1beta1_staking_proto_init() }

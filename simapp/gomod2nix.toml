@@ -135,8 +135,8 @@ schema = 3
     version = "v0.10.0"
     hash = "sha256-KYEv727BO/ht63JO02xiKFGFAddg41Ve9l2vSSZZBq0="
   [mod."github.com/cosmos/ledger-cosmos-go"]
-    version = "v0.13.1"
-    hash = "sha256-UDRTBG1VPLQOA3tJjfen5tRmIBde7Cqc4UDUPXL3+c4="
+    version = "v0.13.2"
+    hash = "sha256-TMVkC8rKVR7zzXVdcMnnK9FZhcHE1KIfIZ7KGMVqYpg="
   [mod."github.com/creachadair/atomicfile"]
     version = "v0.3.2"
     hash = "sha256-oklAvdJrNFKNcCHvQdLVrLyLf0LG5ipusTXKSVycc64="
@@ -448,11 +448,11 @@ schema = 3
     version = "v0.5.11"
     hash = "sha256-SUyrjc2wyN3cTGKe5JdBEXjtZC1rJySRxJHVUZ59row="
   [mod."github.com/zondax/hid"]
-    version = "v0.9.1"
-    hash = "sha256-hSVmN/f/lQHFhF60o6ej78ELC0MMoqQgqIX2hHjdTXg="
+    version = "v0.9.2"
+    hash = "sha256-9h1gEJ/loyaJvu9AsmslztiA8U9ixDTC6TBw9lCU2BE="
   [mod."github.com/zondax/ledger-go"]
-    version = "v0.14.2"
-    hash = "sha256-3ZSRcr86OpB0ccTkvSLDxs46WaqfyHBScX7vMerSRHE="
+    version = "v0.14.3"
+    hash = "sha256-tldEok5ebZ4R4B7H8dSlYS5oVuLvh89n9wUaVlDjYwg="
   [mod."go.etcd.io/bbolt"]
     version = "v1.3.7"
     hash = "sha256-poZk8tPLDWwW95oCOkTJcQtEvOJTD9UXAZ2TqGJutwk="
@@ -502,8 +502,8 @@ schema = 3
     version = "v0.0.0-20231012201019-e917dd12ba7a"
     hash = "sha256-2qUA/93JajYpDybsde+BciLncSYO2Qv5Eh+MG06HSfM="
   [mod."google.golang.org/genproto/googleapis/rpc"]
-    version = "v0.0.0-20231012201019-e917dd12ba7a"
-    hash = "sha256-VAMLHlDPnzbg5bNlNKDQ++pGTMRraIG1Eb5uLPJy+KA="
+    version = "v0.0.0-20231016165738-49dd2c1f3d0b"
+    hash = "sha256-ntiSoQBTSUfcdkolvYVXWD3BgF+0yur6ZqW+bxtxVlY="
   [mod."google.golang.org/grpc"]
     version = "v1.58.3"
     hash = "sha256-YxXO1UAc/+4E0bsSsGSiFNrY3yyR6AIml/1sVY2QJjQ="

@@ -54,7 +54,7 @@ func (s *CLITestSuite) SetupSuite() {
 func (s *CLITestSuite) TestMultiSendTxCmd() {
 	accounts := testutil.CreateKeyringAccounts(s.T(), s.kr, 3)
 
-	cmd := cli.NewMultiSendTxCmd(addresscodec.NewBech32Codec("cosmos"))
+	cmd := cli.NewMultiSendTxCmd()
 	cmd.SetOutput(io.Discard)
 
 	extraArgs := []string{

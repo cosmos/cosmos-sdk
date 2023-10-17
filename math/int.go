@@ -71,7 +71,7 @@ func unmarshalText(i *big.Int, text string) error {
 
 var _ customProtobufType = (*Int)(nil)
 
-// Int wraps big.Int with a 257 bit range bound
+// Int wraps big.Int with a 256 bit range bound
 // Checks overflow, underflow and division by zero
 // Exists in range from -(2^256 - 1) to 2^256 - 1
 type Int struct {

@@ -54,8 +54,3 @@ func (k Keeper) MinCommissionRate(ctx context.Context) (math.LegacyDec, error) {
 	params, err := k.Params.Get(ctx)
 	return params.MinCommissionRate, err
 }
-
-func (k Keeper) KeyRotationFee(ctx sdk.Context) (sdk.Coin, error) {
-	params, err := k.Params.Get(ctx)
-	return params.KeyRotationFee, err
-}

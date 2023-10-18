@@ -61,7 +61,7 @@ func TestImportExportGenesis(t *testing.T) {
 	f.accountKeeper.EXPECT().GetAccount(gomock.Any(), granteeAddr).Return(authtypes.NewBaseAccountWithAddress(granteeAddr)).AnyTimes()
 
 	coins := sdk.NewCoins(sdk.NewCoin("foo", math.NewInt(1_000)))
-	now := f.ctx.HeaderInfo().Time
+	now := f.ctx.BlockHeader().Time
 	oneYear := now.AddDate(1, 0, 0)
 	msgSrvr := keeper.NewMsgServerImpl(f.feegrantKeeper)
 

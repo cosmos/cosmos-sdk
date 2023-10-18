@@ -28,6 +28,8 @@ type RootStore interface {
 
 	GetProof(storeKey string, version uint64, key []byte) (*ics23.CommitmentProof, error)
 
+	Branch() BranchedRootStore
+
 	SetTracingContext(tc TraceContext)
 	SetTracer(w io.Writer)
 	TracingEnabled() bool
@@ -42,12 +44,23 @@ type RootStore interface {
 
 	// TODO:
 	//
-	// - Branching
 	// - Queries
 	//
 	// Ref: https://github.com/cosmos/cosmos-sdk/issues/17314
 
 	io.Closer
+}
+
+// BranchedRootStore defines an extension of the RootStore interface that allows
+// for nested branching and flushing of writes. It extends RootStore by allowing
+// a caller to call Branch() which should return a BranchedRootStore that has all
+// internal relevant KV stores branched. A caller can then call Write() on the
+// BranchedRootStore which will flush all changesets to the parent RootStore's
+// internal KV stores.
+type BranchedRootStore interface {
+	RootStore
+
+	Write()
 }
 
 // KVStore defines the core storage primitive for modules to read and write state.

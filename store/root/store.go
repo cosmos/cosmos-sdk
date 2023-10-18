@@ -172,7 +172,7 @@ func (s *Store) GetKVStore(_ string) store.KVStore {
 	return s.rootKVStore
 }
 
-func (s *Store) GetBranchedKVStore(storeKey string) store.BranchedKVStore {
+func (s *Store) GetBranchedKVStore(_ string) store.BranchedKVStore {
 	if s.TracingEnabled() {
 		return tracekv.New(s.rootKVStore, s.traceWriter, s.traceContext)
 	}
@@ -211,6 +211,24 @@ func (s *Store) SetCommitHeader(h store.CommitHeader) {
 	s.commitHeader = h
 }
 
+// Branch a copy of the Store with a branched underlying root KVStore. Any call
+// to GetKVStore and GetBranchedKVStore returns the branched KVStore.
+func (s *Store) Branch() store.BranchedRootStore {
+	branch := s.rootKVStore.Branch()
+
+	return &Store{
+		logger:          s.logger,
+		initialVersion:  s.initialVersion,
+		stateStore:      s.stateStore,
+		stateCommitment: s.stateCommitment,
+		rootKVStore:     branch,
+		commitHeader:    s.commitHeader,
+		lastCommitInfo:  s.lastCommitInfo,
+		traceWriter:     s.traceWriter,
+		traceContext:    s.traceContext,
+	}
+}
+
 // WorkingHash returns the working hash of the root store. Note, WorkingHash()
 // should only be called once per block once all writes are complete and prior
 // to Commit() being called.
@@ -230,6 +248,10 @@ func (s *Store) WorkingHash() ([]byte, error) {
 	return slices.Clone(s.workingHash), nil
 }
 
+func (s *Store) Write() {
+	s.rootKVStore.Write()
+}
+
 // Commit commits all state changes to the underlying SS and SC backends. Note,
 // at the time of Commit(), we expect WorkingHash() to have already been called,
 // which internally sets the working hash, retrieved by writing a batch of the
@@ -245,7 +267,7 @@ func (s *Store) Commit() ([]byte, error) {
 
 	version := s.lastCommitInfo.Version
 
-	if s.commitHeader.GetHeight() != version {
+	if s.commitHeader != nil && s.commitHeader.GetHeight() != version {
 		s.logger.Debug("commit header and version mismatch", "header_height", s.commitHeader.GetHeight(), "version", version)
 	}
 

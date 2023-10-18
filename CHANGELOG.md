@@ -38,6 +38,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+### Features
+
+* (server) [#18162](https://github.com/cosmos/cosmos-sdk/pull/18162) Start gRPC & API server in standalone mode
 ### Improvements
 
 * (x/staking/keeper) [#]18049(https://github.com/cosmos/cosmos-sdk/pull/18049) return early if Slash encounters zero tokens to burn.

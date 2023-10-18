@@ -13,7 +13,7 @@ require (
 	github.com/cosmos/gogoproto v1.4.11
 	github.com/spf13/cobra v1.7.0
 	github.com/spf13/pflag v1.0.5
-	google.golang.org/grpc v1.58.3
+	google.golang.org/grpc v1.59.0
 	google.golang.org/protobuf v1.31.0
 	gotest.tools/v3 v3.5.1
 	sigs.k8s.io/yaml v1.3.0
@@ -68,7 +68,7 @@ require (
 	github.com/godbus/dbus v0.0.0-20190726142602-4481cbc300e2 // indirect
 	github.com/gogo/googleapis v1.4.1 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
-	github.com/golang/glog v1.1.0 // indirect
+	github.com/golang/glog v1.1.2 // indirect
 	github.com/golang/mock v1.6.0 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/golang/snappy v0.0.4 // indirect

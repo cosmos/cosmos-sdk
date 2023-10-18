@@ -72,31 +72,19 @@ func (h SignModeHandler) GetSignBytes(_ context.Context, signerData signing.Sign
 		return nil, fmt.Errorf("got empty address in %s handler: invalid request", h.Mode())
 	}
 
-	tip := txData.AuthInfo.Tip
-	if tip != nil && tip.Tipper == "" {
-		return nil, fmt.Errorf("tipper cannot be empty")
-	}
-	isTipper := tip != nil && tip.Tipper == signerData.Address
-
 	// We set a convention that if the tipper signs with LEGACY_AMINO_JSON, then
 	// they sign over empty fees and 0 gas.
 	var fee *aminojsonpb.AminoSignFee
-	if isTipper {
-		fee = &aminojsonpb.AminoSignFee{
-			Amount: nil,
-			Gas:    0,
-		}
-	} else {
-		f := txData.AuthInfo.Fee
-		if f == nil {
-			return nil, fmt.Errorf("fee cannot be nil when tipper is not signer")
-		}
-		fee = &aminojsonpb.AminoSignFee{
-			Amount:  f.Amount,
-			Gas:     f.GasLimit,
-			Payer:   f.Payer,
-			Granter: f.Granter,
-		}
+
+	f := txData.AuthInfo.Fee
+	if f == nil {
+		return nil, fmt.Errorf("fee cannot be nil when tipper is not signer")
+	}
+	fee = &aminojsonpb.AminoSignFee{
+		Amount:  f.Amount,
+		Gas:     f.GasLimit,
+		Payer:   f.Payer,
+		Granter: f.Granter,
 	}
 
 	signDoc := &aminojsonpb.AminoSignDoc{
@@ -107,7 +95,6 @@ func (h SignModeHandler) GetSignBytes(_ context.Context, signerData signing.Sign
 		Memo:          body.Memo,
 		Msgs:          txData.Body.Messages,
 		Fee:           fee,
-		Tip:           tip,
 	}
 
 	return h.encoder.Marshal(signDoc)

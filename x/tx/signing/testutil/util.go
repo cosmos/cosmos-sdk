@@ -17,7 +17,7 @@ type HandlerArgumentOptions struct {
 	Msg           proto.Message
 	AccNum        uint64
 	AccSeq        uint64
-	Tip           *txv1beta1.Tip
+	Tip           *txv1beta1.Tip //nolint:staticcheck // we still need this deprecated struct
 	Fee           *txv1beta1.Fee
 	SignerAddress string
 }

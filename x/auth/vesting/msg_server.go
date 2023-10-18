@@ -46,7 +46,7 @@ func (s msgServer) CreateVestingAccount(ctx context.Context, msg *types.MsgCreat
 	if msg.StartTime < 0 {
 		return nil, sdkerrors.ErrInvalidRequest.Wrap("invalid start time")
 	}
-	
+
 	if msg.EndTime <= 0 {
 		return nil, sdkerrors.ErrInvalidRequest.Wrap("invalid end time")
 	}

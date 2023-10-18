@@ -1183,8 +1183,8 @@ schema = 3
     version = "v3.2.2+incompatible"
     hash = "sha256-LOkpuXhWrFayvVf1GOaOmZI5YKEsgqVSb22aF8LnCEM="
   [mod."github.com/golang-jwt/jwt/v4"]
-    version = "v4.4.2"
-    hash = "sha256-Tq9hcpUVjsMim90WZhZXBn5IYNtZb5Ig94eiRyWs0fo="
+    version = "v4.0.0"
+    hash = "sha256-m/Enz2eiBx6tht0G04UV5tyiFyu6q1fTG5h5NbYQgW0="
   [mod."github.com/golang/freetype"]
     version = "v0.0.0-20170609003504-e2365dfdc4a0"
     hash = "sha256-AHAFBd20/tqxohkWyQkui2bUef9i1HWYgk9LOIFErvA="

@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -27,13 +28,13 @@ func TestBasicFeeValidAllow(t *testing.T) {
 	}
 	require.Error(t, allowace.ValidateBasic())
 
-	ctx = ctx.WithHeaderInfo(header.Info{Time: time.Now()})
+	ctx = ctx.WithBlockHeader(cmtproto.Header{Time: time.Now()})
 	eth := sdk.NewCoins(sdk.NewInt64Coin("eth", 10))
 	atom := sdk.NewCoins(sdk.NewInt64Coin("atom", 555))
 	smallAtom := sdk.NewCoins(sdk.NewInt64Coin("atom", 43))
 	bigAtom := sdk.NewCoins(sdk.NewInt64Coin("atom", 1000))
 	leftAtom := sdk.NewCoins(sdk.NewInt64Coin("atom", 512))
-	now := ctx.HeaderInfo().Time
+	now := ctx.BlockTime()
 	oneHour := now.Add(1 * time.Hour)
 
 	cases := map[string]struct {
@@ -133,7 +134,7 @@ func TestBasicFeeValidAllow(t *testing.T) {
 			err := tc.allowance.ValidateBasic()
 			require.NoError(t, err)
 
-			ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Time: tc.blockTime})
+			ctx := testCtx.Ctx.WithBlockTime(tc.blockTime)
 
 			// now try to deduct
 			removed, err := tc.allowance.Accept(ctx, tc.fee, []sdk.Msg{})

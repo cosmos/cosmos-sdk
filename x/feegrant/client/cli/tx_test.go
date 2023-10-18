@@ -21,7 +21,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
+	codecaddress "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -70,10 +70,7 @@ func (s *CLITestSuite) SetupSuite() {
 		WithClient(clitestutil.MockCometRPC{Client: rpcclientmock.Client{}}).
 		WithAccountRetriever(client.MockAccountRetriever{}).
 		WithOutput(io.Discard).
-		WithChainID("test-chain").
-		WithAddressCodec(addresscodec.NewBech32Codec("cosmos")).
-		WithValidatorAddressCodec(addresscodec.NewBech32Codec("cosmosvaloper")).
-		WithConsensusAddressCodec(addresscodec.NewBech32Codec("cosmosvalcons"))
+		WithChainID("test-chain")
 
 	ctxGen := func() client.Context {
 		bz, _ := s.encCfg.Codec.Marshal(&sdk.TxResponse{})
@@ -96,12 +93,7 @@ func (s *CLITestSuite) SetupSuite() {
 
 	s.createGrant(granter, grantee)
 
-	granteeStr, err := s.baseCtx.AddressCodec.BytesToString(grantee)
-	s.Require().NoError(err)
-	granterStr, err := s.baseCtx.AddressCodec.BytesToString(granter)
-	s.Require().NoError(err)
-
-	grant, err := feegrant.NewGrant(granterStr, granteeStr, &feegrant.BasicAllowance{
+	grant, err := feegrant.NewGrant(granter, grantee, &feegrant.BasicAllowance{
 		SpendLimit: sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(100))),
 	})
 	s.Require().NoError(err)
@@ -136,7 +128,7 @@ func (s *CLITestSuite) createGrant(granter, grantee sdk.Address) {
 		commonFlags...,
 	)
 
-	cmd := cli.NewCmdFeeGrant()
+	cmd := cli.NewCmdFeeGrant(codecaddress.NewBech32Codec("cosmos"))
 	out, err := clitestutil.ExecTestCLICmd(s.clientCtx, cmd, args)
 	s.Require().NoError(err)
 

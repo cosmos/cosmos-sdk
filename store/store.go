@@ -45,8 +45,13 @@ type RootStore interface {
 	// except with all internal KV store(s) branched.
 	Branch() BranchedRootStore
 
+	// SetTracingContext sets the tracing context, i.e tracing metadata, on the
+	// RootStore.
 	SetTracingContext(tc TraceContext)
+	// SetTracer sets the tracer on the RootStore, such that any calls to GetKVStore
+	// or GetBranchedKVStore, will have tracing enabled.
 	SetTracer(w io.Writer)
+	// TracingEnabled returns true if tracing is enabled on the RootStore.
 	TracingEnabled() bool
 
 	LoadVersion(version uint64) error

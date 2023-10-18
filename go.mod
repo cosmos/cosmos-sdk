@@ -27,7 +27,7 @@ require (
 	github.com/cosmos/gogogateway v1.2.0
 	github.com/cosmos/gogoproto v1.4.10
 	github.com/cosmos/iavl v0.20.1
-	github.com/cosmos/ledger-cosmos-go v0.12.4
+	github.com/cosmos/ledger-cosmos-go v0.13.2
 	github.com/golang/mock v1.6.0
 	github.com/golang/protobuf v1.5.3
 	github.com/google/gofuzz v1.2.0

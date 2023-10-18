@@ -10,7 +10,9 @@ run:
     - ".*\\.pb\\.go$"
     - ".*\\.pb\\.gw\\.go$"
     - ".*\\.pulsar\\.go$"
-    - "store/storage/rocksdb/*.go$"
+
+build-tags:
+  - rocksdb
 
 linters:
   disable-all: true

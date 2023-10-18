@@ -75,12 +75,17 @@ Examples:
 				return err
 			}
 
-			grantee, err := ac.StringToBytes(args[1])
+			grantee := args[1]
+			_, err = ac.StringToBytes(grantee)
 			if err != nil {
 				return err
 			}
 
 			granter := clientCtx.GetFromAddress()
+			granterStr, err := ac.BytesToString(granter)
+			if err != nil {
+				return err
+			}
 			sl, err := cmd.Flags().GetString(FlagSpendLimit)
 			if err != nil {
 				return err
@@ -168,7 +173,7 @@ Examples:
 				}
 			}
 
-			msg, err := feegrant.NewMsgGrantAllowance(grant, granter, grantee)
+			msg, err := feegrant.NewMsgGrantAllowance(grant, granterStr, grantee)
 			if err != nil {
 				return err
 			}

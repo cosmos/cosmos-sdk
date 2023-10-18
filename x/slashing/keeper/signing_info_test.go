@@ -12,8 +12,11 @@ func (s *KeeperTestSuite) TestValidatorSigningInfo() {
 	ctx, keeper := s.ctx, s.slashingKeeper
 	require := s.Require()
 
+	consStr, err := s.stakingKeeper.ConsensusAddressCodec().BytesToString(consAddr)
+	require.NoError(err)
+
 	signingInfo := slashingtypes.NewValidatorSigningInfo(
-		consAddr,
+		consStr,
 		ctx.BlockHeight(),
 		int64(3),
 		time.Unix(2, 0),

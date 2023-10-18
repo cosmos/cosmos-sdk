@@ -36,11 +36,13 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 # Changelog
 
-## [Unreleased]
+## [v0.46.16](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.46.16) - 2023-10-16
 
-### Bug Fixes
+EOL notice. This is the last release of the `v0.46.x` line. Per this version, the v0.46.x line reached its end-of-life.
 
-* (x/authz) [#17524](https://github.com/cosmos/cosmos-sdk/pull/17524) Fix an issue where the `cachedValue` of an authorization would not be correcty populated when there are multiple authorizations returned in `GetAuthorizations`.
+### Improvements
+
+* (deps) Bump cosmos/ledger-cosmos-go to v0.12.3.
 
 ## [v0.46.15](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.46.14) - 2023-08-21
 

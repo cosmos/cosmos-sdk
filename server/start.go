@@ -232,8 +232,9 @@ func startStandAlone(ctx *Context, clientCtx client.Context, appCreator types.Ap
 	}
 
 	// Add the tx service to the gRPC router. We only need to register this
-	// service if gRPC is enabled
-	if config.GRPC.Enable {
+	// service if API or gRPC is enabled, and avoid doing so in the general
+	// case, because it spawns a new local CometBFT RPC client.
+	if config.API.Enable || config.GRPC.Enable {
 		// create tendermint client
 		// assumes the rpc listen address is where tendermint has its rpc server
 		rpcclient, err := rpchttp.New(ctx.Config.RPC.ListenAddress, "/websocket")

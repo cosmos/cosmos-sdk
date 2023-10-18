@@ -10,6 +10,7 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/suite"
 
+	"cosmossdk.io/core/header"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	"cosmossdk.io/x/feegrant"
@@ -35,7 +36,6 @@ import (
 	_ "github.com/cosmos/cosmos-sdk/x/consensus"
 	_ "github.com/cosmos/cosmos-sdk/x/genutil"
 	_ "github.com/cosmos/cosmos-sdk/x/mint"
-	_ "github.com/cosmos/cosmos-sdk/x/params"
 	_ "github.com/cosmos/cosmos-sdk/x/staking"
 )
 
@@ -63,7 +63,6 @@ func (suite *SimTestSuite) SetupTest() {
 				configurator.StakingModule(),
 				configurator.TxModule(),
 				configurator.ConsensusModule(),
-				configurator.ParamsModule(),
 				configurator.GenutilModule(),
 				configurator.FeegrantModule(),
 			),
@@ -99,8 +98,6 @@ func (suite *SimTestSuite) getTestingAccounts(r *rand.Rand, n int) []simtypes.Ac
 func (suite *SimTestSuite) TestWeightedOperations() {
 	require := suite.Require()
 
-	suite.ctx.WithChainID("test-chain")
-
 	appParams := make(simtypes.AppParams)
 
 	weightedOps := simulation.WeightedOperations(
@@ -131,7 +128,7 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 	}
 
 	for i, w := range weightedOps {
-		operationMsg, _, err := w.Op()(r, suite.app.BaseApp, suite.ctx, accs, suite.ctx.ChainID())
+		operationMsg, _, err := w.Op()(r, suite.app.BaseApp, suite.ctx.WithHeaderInfo(header.Info{Time: time.Now()}), accs, suite.ctx.ChainID())
 		require.NoError(err)
 
 		// the following checks are very much dependent from the ordering of the output given
@@ -150,22 +147,26 @@ func (suite *SimTestSuite) TestSimulateMsgGrantAllowance() {
 	s := rand.NewSource(1)
 	r := rand.New(s)
 	accounts := suite.getTestingAccounts(r, 3)
+	addr1, err := suite.accountKeeper.AddressCodec().BytesToString(accounts[1].Address)
+	require.NoError(err)
+	addr2, err := suite.accountKeeper.AddressCodec().BytesToString(accounts[2].Address)
+	require.NoError(err)
 
 	//  new block
-	_, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: app.LastBlockHeight() + 1})
+	_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: app.LastBlockHeight() + 1})
 	require.NoError(err)
 
 	// execute operation
 	op := simulation.SimulateMsgGrantAllowance(codec.NewProtoCodec(suite.interfaceRegistry), suite.txConfig, suite.accountKeeper, suite.bankKeeper, suite.feegrantKeeper)
-	operationMsg, futureOperations, err := op(r, app.BaseApp, ctx, accounts, "")
+	operationMsg, futureOperations, err := op(r, app.BaseApp, ctx.WithHeaderInfo(header.Info{Time: time.Now()}), accounts, "")
 	require.NoError(err)
 
 	var msg feegrant.MsgGrantAllowance
 	err = proto.Unmarshal(operationMsg.Msg, &msg)
 	require.NoError(err)
 	require.True(operationMsg.OK)
-	require.Equal(accounts[2].Address.String(), msg.Granter)
-	require.Equal(accounts[1].Address.String(), msg.Grantee)
+	require.Equal(addr2, msg.Granter)
+	require.Equal(addr1, msg.Grantee)
 	require.Len(futureOperations, 0)
 }
 
@@ -178,15 +179,15 @@ func (suite *SimTestSuite) TestSimulateMsgRevokeAllowance() {
 	accounts := suite.getTestingAccounts(r, 3)
 
 	// begin a new block
-	app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: suite.app.LastBlockHeight() + 1, Hash: suite.app.LastCommitID().Hash})
-
+	_, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: suite.app.LastBlockHeight() + 1, Hash: suite.app.LastCommitID().Hash})
+	require.NoError(err)
 	feeAmt := sdk.TokensFromConsensusPower(200000, sdk.DefaultPowerReduction)
 	feeCoins := sdk.NewCoins(sdk.NewCoin("foo", feeAmt))
 
 	granter, grantee := accounts[0], accounts[1]
 
-	oneYear := ctx.BlockTime().AddDate(1, 0, 0)
-	err := suite.feegrantKeeper.GrantAllowance(
+	oneYear := ctx.HeaderInfo().Time.AddDate(1, 0, 0)
+	err = suite.feegrantKeeper.GrantAllowance(
 		ctx,
 		granter.Address,
 		grantee.Address,
@@ -195,6 +196,11 @@ func (suite *SimTestSuite) TestSimulateMsgRevokeAllowance() {
 			Expiration: &oneYear,
 		},
 	)
+	require.NoError(err)
+
+	granterStr, err := suite.accountKeeper.AddressCodec().BytesToString(accounts[0].Address)
+	require.NoError(err)
+	granteeStr, err := suite.accountKeeper.AddressCodec().BytesToString(accounts[1].Address)
 	require.NoError(err)
 
 	// execute operation
@@ -206,8 +212,8 @@ func (suite *SimTestSuite) TestSimulateMsgRevokeAllowance() {
 	err = proto.Unmarshal(operationMsg.Msg, &msg)
 	require.NoError(err)
 	require.True(operationMsg.OK)
-	require.Equal(granter.Address.String(), msg.Granter)
-	require.Equal(grantee.Address.String(), msg.Grantee)
+	require.Equal(granterStr, msg.Granter)
+	require.Equal(granteeStr, msg.Grantee)
 	require.Len(futureOperations, 0)
 }
 

@@ -6,12 +6,14 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/core/header"
 	sdkmath "cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/feegrant"
 	v2 "cosmossdk.io/x/feegrant/migrations/v2"
 	"cosmossdk.io/x/feegrant/module"
 
+	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -22,6 +24,7 @@ import (
 func TestMigration(t *testing.T) {
 	encodingConfig := moduletestutil.MakeTestEncodingConfig(module.AppModuleBasic{})
 	cdc := encodingConfig.Codec
+	ac := addresscodec.NewBech32Codec("cosmos")
 
 	feegrantKey := storetypes.NewKVStoreKey(v2.ModuleName)
 	ctx := testutil.DefaultContext(feegrantKey, storetypes.NewTransientStoreKey("transient_test"))
@@ -31,7 +34,7 @@ func TestMigration(t *testing.T) {
 	grantee2 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address())
 
 	spendLimit := sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(1000)))
-	now := ctx.BlockTime()
+	now := ctx.HeaderInfo().Time
 	oneDay := now.AddDate(0, 0, 1)
 	twoDays := now.AddDate(0, 0, 2)
 
@@ -67,7 +70,11 @@ func TestMigration(t *testing.T) {
 
 	store := ctx.KVStore(feegrantKey)
 	for _, grant := range grants {
-		newGrant, err := feegrant.NewGrant(grant.granter, grant.grantee, &feegrant.BasicAllowance{
+		granterStr, err := ac.BytesToString(grant.granter)
+		require.NoError(t, err)
+		granteeStr, err := ac.BytesToString(grant.grantee)
+		require.NoError(t, err)
+		newGrant, err := feegrant.NewGrant(granterStr, granteeStr, &feegrant.BasicAllowance{
 			SpendLimit: grant.spendLimit,
 			Expiration: grant.expiration,
 		})
@@ -79,7 +86,7 @@ func TestMigration(t *testing.T) {
 		store.Set(v2.FeeAllowanceKey(grant.granter, grant.grantee), bz)
 	}
 
-	ctx = ctx.WithBlockTime(now.Add(30 * time.Hour))
+	ctx = ctx.WithHeaderInfo(header.Info{Time: now.Add(30 * time.Hour)})
 	require.NoError(t, v2.MigrateStore(ctx, runtime.NewKVStoreService(feegrantKey), cdc))
 	store = ctx.KVStore(feegrantKey)
 

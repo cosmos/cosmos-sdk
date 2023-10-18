@@ -18,12 +18,12 @@ func genFeeGrants(r *rand.Rand, accounts []simtypes.Account) []feegrant.Grant {
 	for i := 0; i < len(accounts)-1; i++ {
 		granter := accounts[i].Address
 		grantee := accounts[i+1].Address
-		allowances[i] = generateRandomAllowances(granter, grantee, r)
+		allowances[i] = generateRandomAllowances(granter.String(), grantee.String(), r) // TODO decouple this from call .String()
 	}
 	return allowances
 }
 
-func generateRandomAllowances(granter, grantee sdk.AccAddress, r *rand.Rand) feegrant.Grant {
+func generateRandomAllowances(granter, grantee string, r *rand.Rand) feegrant.Grant {
 	allowances := make([]feegrant.Grant, 3)
 	spendLimit := sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(100)))
 	periodSpendLimit := sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(10)))

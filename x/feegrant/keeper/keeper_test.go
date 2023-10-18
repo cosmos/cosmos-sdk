@@ -6,6 +6,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 
+	"cosmossdk.io/core/header"
 	sdkmath "cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/feegrant"
@@ -27,6 +28,7 @@ type KeeperTestSuite struct {
 
 	ctx            sdk.Context
 	addrs          []sdk.AccAddress
+	encodedAddrs   []string
 	msgSrvr        feegrant.MsgServer
 	atom           sdk.Coins
 	feegrantKeeper keeper.Keeper
@@ -38,7 +40,7 @@ func TestKeeperTestSuite(t *testing.T) {
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
-	suite.addrs = simtestutil.CreateIncrementalAccounts(4)
+	suite.addrs = simtestutil.CreateIncrementalAccounts(20)
 	key := storetypes.NewKVStoreKey(feegrant.StoreKey)
 	testCtx := testutil.DefaultContextWithDB(suite.T(), key, storetypes.NewTransientStoreKey("transient_test"))
 	encCfg := moduletestutil.MakeTestEncodingConfig(module.AppModuleBasic{})
@@ -46,12 +48,17 @@ func (suite *KeeperTestSuite) SetupTest() {
 	// setup gomock and initialize some globally expected executions
 	ctrl := gomock.NewController(suite.T())
 	suite.accountKeeper = feegranttestutil.NewMockAccountKeeper(ctrl)
-	suite.accountKeeper.EXPECT().GetAccount(gomock.Any(), suite.addrs[0]).Return(authtypes.NewBaseAccountWithAddress(suite.addrs[0])).AnyTimes()
-	suite.accountKeeper.EXPECT().GetAccount(gomock.Any(), suite.addrs[1]).Return(authtypes.NewBaseAccountWithAddress(suite.addrs[1])).AnyTimes()
-	suite.accountKeeper.EXPECT().GetAccount(gomock.Any(), suite.addrs[2]).Return(authtypes.NewBaseAccountWithAddress(suite.addrs[2])).AnyTimes()
-	suite.accountKeeper.EXPECT().GetAccount(gomock.Any(), suite.addrs[3]).Return(authtypes.NewBaseAccountWithAddress(suite.addrs[3])).AnyTimes()
+	for i := 0; i < len(suite.addrs); i++ {
+		suite.accountKeeper.EXPECT().GetAccount(gomock.Any(), suite.addrs[i]).Return(authtypes.NewBaseAccountWithAddress(suite.addrs[i])).AnyTimes()
+	}
 
-	suite.accountKeeper.EXPECT().AddressCodec().Return(codecaddress.NewBech32Codec("cosmos")).AnyTimes()
+	ac := codecaddress.NewBech32Codec("cosmos")
+	suite.accountKeeper.EXPECT().AddressCodec().Return(ac).AnyTimes()
+	for _, addr := range suite.addrs {
+		str, err := ac.BytesToString(addr)
+		suite.Require().NoError(err)
+		suite.encodedAddrs = append(suite.encodedAddrs, str)
+	}
 
 	suite.feegrantKeeper = keeper.NewKeeper(encCfg.Codec, runtime.NewKVStoreService(key), suite.accountKeeper)
 	suite.ctx = testCtx.Ctx
@@ -62,8 +69,8 @@ func (suite *KeeperTestSuite) SetupTest() {
 func (suite *KeeperTestSuite) TestKeeperCrud() {
 	// some helpers
 	eth := sdk.NewCoins(sdk.NewInt64Coin("eth", 123))
-	exp := suite.ctx.BlockTime().AddDate(1, 0, 0)
-	exp2 := suite.ctx.BlockTime().AddDate(2, 0, 0)
+	exp := suite.ctx.HeaderInfo().Time.AddDate(1, 0, 0)
+	exp2 := suite.ctx.HeaderInfo().Time.AddDate(2, 0, 0)
 	basic := &feegrant.BasicAllowance{
 		SpendLimit: suite.atom,
 		Expiration: &exp,
@@ -106,21 +113,21 @@ func (suite *KeeperTestSuite) TestKeeperCrud() {
 	suite.Require().Error(err)
 
 	// remove some, overwrite other
-	_, err = suite.msgSrvr.RevokeAllowance(suite.ctx, &feegrant.MsgRevokeAllowance{Granter: suite.addrs[0].String(), Grantee: suite.addrs[1].String()})
+	_, err = suite.msgSrvr.RevokeAllowance(suite.ctx, &feegrant.MsgRevokeAllowance{Granter: suite.encodedAddrs[0], Grantee: suite.encodedAddrs[1]})
 	suite.Require().NoError(err)
 
-	_, err = suite.msgSrvr.RevokeAllowance(suite.ctx, &feegrant.MsgRevokeAllowance{Granter: suite.addrs[0].String(), Grantee: suite.addrs[2].String()})
+	_, err = suite.msgSrvr.RevokeAllowance(suite.ctx, &feegrant.MsgRevokeAllowance{Granter: suite.encodedAddrs[0], Grantee: suite.encodedAddrs[2]})
 	suite.Require().NoError(err)
 
 	// revoke non-exist fee allowance
-	_, err = suite.msgSrvr.RevokeAllowance(suite.ctx, &feegrant.MsgRevokeAllowance{Granter: suite.addrs[0].String(), Grantee: suite.addrs[2].String()})
+	_, err = suite.msgSrvr.RevokeAllowance(suite.ctx, &feegrant.MsgRevokeAllowance{Granter: suite.encodedAddrs[0], Grantee: suite.encodedAddrs[2]})
 	suite.Require().Error(err)
 
 	err = suite.feegrantKeeper.GrantAllowance(suite.ctx, suite.addrs[0], suite.addrs[2], basic)
 	suite.Require().NoError(err)
 
 	// revoke an existing grant and grant again with different allowance.
-	_, err = suite.msgSrvr.RevokeAllowance(suite.ctx, &feegrant.MsgRevokeAllowance{Granter: suite.addrs[1].String(), Grantee: suite.addrs[2].String()})
+	_, err = suite.msgSrvr.RevokeAllowance(suite.ctx, &feegrant.MsgRevokeAllowance{Granter: suite.encodedAddrs[1], Grantee: suite.encodedAddrs[2]})
 	suite.Require().NoError(err)
 
 	err = suite.feegrantKeeper.GrantAllowance(suite.ctx, suite.addrs[1], suite.addrs[2], basic3)
@@ -182,13 +189,13 @@ func (suite *KeeperTestSuite) TestKeeperCrud() {
 	_, err = suite.feegrantKeeper.GetAllowance(suite.ctx, suite.addrs[3], accAddr)
 	suite.Require().NoError(err)
 
-	_, err = suite.msgSrvr.RevokeAllowance(suite.ctx, &feegrant.MsgRevokeAllowance{Granter: suite.addrs[3].String(), Grantee: address})
+	_, err = suite.msgSrvr.RevokeAllowance(suite.ctx, &feegrant.MsgRevokeAllowance{Granter: suite.encodedAddrs[3], Grantee: address})
 	suite.Require().NoError(err)
 }
 
 func (suite *KeeperTestSuite) TestUseGrantedFee() {
 	eth := sdk.NewCoins(sdk.NewInt64Coin("eth", 123))
-	blockTime := suite.ctx.BlockTime()
+	blockTime := suite.ctx.HeaderInfo().Time
 	oneYear := blockTime.AddDate(1, 0, 0)
 
 	future := &feegrant.BasicAllowance{
@@ -229,8 +236,8 @@ func (suite *KeeperTestSuite) TestUseGrantedFee() {
 			final:   future,
 			postRun: func() {
 				_, err := suite.msgSrvr.RevokeAllowance(suite.ctx, &feegrant.MsgRevokeAllowance{
-					Granter: suite.addrs[0].String(),
-					Grantee: suite.addrs[1].String(),
+					Granter: suite.encodedAddrs[0],
+					Grantee: suite.encodedAddrs[1],
 				})
 				suite.Require().NoError(err)
 			},
@@ -243,8 +250,8 @@ func (suite *KeeperTestSuite) TestUseGrantedFee() {
 			final:   futureAfterSmall,
 			postRun: func() {
 				_, err := suite.msgSrvr.RevokeAllowance(suite.ctx, &feegrant.MsgRevokeAllowance{
-					Granter: suite.addrs[0].String(),
-					Grantee: suite.addrs[1].String(),
+					Granter: suite.encodedAddrs[0],
+					Grantee: suite.encodedAddrs[1],
 				})
 				suite.Require().NoError(err)
 			},
@@ -281,7 +288,7 @@ func (suite *KeeperTestSuite) TestUseGrantedFee() {
 	suite.Require().NoError(err)
 
 	// waiting for future blocks, allowance to be pruned.
-	ctx := suite.ctx.WithBlockTime(oneYear)
+	ctx := suite.ctx.WithHeaderInfo(header.Info{Time: oneYear})
 
 	// expect error: feegrant expired
 	err = suite.feegrantKeeper.UseGrantedFees(ctx, suite.addrs[0], suite.addrs[2], eth, []sdk.Msg{})
@@ -291,12 +298,12 @@ func (suite *KeeperTestSuite) TestUseGrantedFee() {
 	// verify: feegrant is revoked
 	_, err = suite.feegrantKeeper.GetAllowance(ctx, suite.addrs[0], suite.addrs[2])
 	suite.Error(err)
-	suite.Contains(err.Error(), "fee-grant not found")
+	suite.Contains(err.Error(), "not found")
 }
 
 func (suite *KeeperTestSuite) TestIterateGrants() {
 	eth := sdk.NewCoins(sdk.NewInt64Coin("eth", 123))
-	exp := suite.ctx.BlockTime().AddDate(1, 0, 0)
+	exp := suite.ctx.HeaderInfo().Time.AddDate(1, 0, 0)
 
 	allowance := &feegrant.BasicAllowance{
 		SpendLimit: suite.atom,
@@ -308,19 +315,22 @@ func (suite *KeeperTestSuite) TestIterateGrants() {
 		Expiration: &exp,
 	}
 
-	suite.feegrantKeeper.GrantAllowance(suite.ctx, suite.addrs[0], suite.addrs[1], allowance)
-	suite.feegrantKeeper.GrantAllowance(suite.ctx, suite.addrs[2], suite.addrs[1], allowance1)
-
-	suite.feegrantKeeper.IterateAllFeeAllowances(suite.ctx, func(grant feegrant.Grant) bool {
-		suite.Require().Equal(suite.addrs[1].String(), grant.Grantee)
-		suite.Require().Contains([]string{suite.addrs[0].String(), suite.addrs[2].String()}, grant.Granter)
+	err := suite.feegrantKeeper.GrantAllowance(suite.ctx, suite.addrs[0], suite.addrs[1], allowance)
+	suite.Require().NoError(err)
+	err = suite.feegrantKeeper.GrantAllowance(suite.ctx, suite.addrs[2], suite.addrs[1], allowance1)
+	suite.Require().NoError(err)
+	err = suite.feegrantKeeper.IterateAllFeeAllowances(suite.ctx, func(grant feegrant.Grant) bool {
+		suite.Require().Equal(suite.encodedAddrs[1], grant.Grantee)
+		suite.Require().Contains([]string{suite.encodedAddrs[0], suite.encodedAddrs[2]}, grant.Granter)
 		return true
 	})
+	suite.Require().NoError(err)
 }
 
 func (suite *KeeperTestSuite) TestPruneGrants() {
 	eth := sdk.NewCoins(sdk.NewInt64Coin("eth", 123))
-	now := suite.ctx.BlockTime()
+	now := suite.ctx.HeaderInfo().Time
+	oneDay := now.AddDate(0, 0, 1)
 	oneYearExpiry := now.AddDate(1, 0, 0)
 
 	testCases := []struct {
@@ -334,29 +344,40 @@ func (suite *KeeperTestSuite) TestPruneGrants() {
 		postRun   func()
 	}{
 		{
-			name:    "grant not pruned from state",
-			ctx:     suite.ctx,
-			granter: suite.addrs[0],
-			grantee: suite.addrs[1],
+			name:      "grant pruned from state after a block: error",
+			ctx:       suite.ctx,
+			granter:   suite.addrs[0],
+			grantee:   suite.addrs[1],
+			expErrMsg: "not found",
 			allowance: &feegrant.BasicAllowance{
 				SpendLimit: suite.atom,
 				Expiration: &now,
 			},
 		},
 		{
-			name:      "grant pruned from state after a block: error",
-			ctx:       suite.ctx.WithBlockTime(now.AddDate(0, 0, 1)),
-			granter:   suite.addrs[2],
-			grantee:   suite.addrs[1],
+			name:    "grant not pruned from state before expiration: no error",
+			ctx:     suite.ctx,
+			granter: suite.addrs[2],
+			grantee: suite.addrs[1],
+			allowance: &feegrant.BasicAllowance{
+				SpendLimit: eth,
+				Expiration: &oneDay,
+			},
+		},
+		{
+			name:      "grant pruned from state after a day: error",
+			ctx:       suite.ctx.WithHeaderInfo(header.Info{Time: now.AddDate(0, 0, 1)}),
+			granter:   suite.addrs[1],
+			grantee:   suite.addrs[0],
 			expErrMsg: "not found",
 			allowance: &feegrant.BasicAllowance{
 				SpendLimit: eth,
-				Expiration: &now,
+				Expiration: &oneDay,
 			},
 		},
 		{
 			name:    "grant not pruned from state after a day: no error",
-			ctx:     suite.ctx.WithBlockTime(now.AddDate(0, 0, 1)),
+			ctx:     suite.ctx.WithHeaderInfo(header.Info{Time: now.AddDate(0, 0, 1)}),
 			granter: suite.addrs[1],
 			grantee: suite.addrs[0],
 			allowance: &feegrant.BasicAllowance{
@@ -366,7 +387,7 @@ func (suite *KeeperTestSuite) TestPruneGrants() {
 		},
 		{
 			name:      "grant pruned from state after a year: error",
-			ctx:       suite.ctx.WithBlockTime(now.AddDate(1, 0, 1)),
+			ctx:       suite.ctx.WithHeaderInfo(header.Info{Time: now.AddDate(1, 0, 0)}),
 			granter:   suite.addrs[1],
 			grantee:   suite.addrs[2],
 			expErrMsg: "not found",
@@ -377,12 +398,11 @@ func (suite *KeeperTestSuite) TestPruneGrants() {
 		},
 		{
 			name:    "no expiry: no error",
-			ctx:     suite.ctx.WithBlockTime(now.AddDate(1, 0, 0)),
+			ctx:     suite.ctx.WithHeaderInfo(header.Info{Time: now.AddDate(1, 0, 0)}),
 			granter: suite.addrs[1],
 			grantee: suite.addrs[2],
 			allowance: &feegrant.BasicAllowance{
 				SpendLimit: eth,
-				Expiration: &oneYearExpiry,
 			},
 		},
 	}
@@ -395,14 +415,18 @@ func (suite *KeeperTestSuite) TestPruneGrants() {
 			}
 			err := suite.feegrantKeeper.GrantAllowance(suite.ctx, tc.granter, tc.grantee, tc.allowance)
 			suite.NoError(err)
-			suite.feegrantKeeper.RemoveExpiredAllowances(tc.ctx)
+			err = suite.feegrantKeeper.RemoveExpiredAllowances(tc.ctx, 5)
+			suite.NoError(err)
+
 			grant, err := suite.feegrantKeeper.GetAllowance(tc.ctx, tc.granter, tc.grantee)
 			if tc.expErrMsg != "" {
 				suite.Error(err)
 				suite.Contains(err.Error(), tc.expErrMsg)
 			} else {
+				suite.NoError(err)
 				suite.NotNil(grant)
 			}
+
 			if tc.postRun != nil {
 				tc.postRun()
 			}

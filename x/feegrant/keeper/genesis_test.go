@@ -39,6 +39,7 @@ type genesisFixture struct {
 }
 
 func initFixture(t *testing.T) *genesisFixture {
+	t.Helper()
 	key := storetypes.NewKVStoreKey(feegrant.StoreKey)
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
 	encCfg := moduletestutil.MakeTestEncodingConfig(module.AppModuleBasic{})
@@ -58,10 +59,9 @@ func TestImportExportGenesis(t *testing.T) {
 	f := initFixture(t)
 
 	f.accountKeeper.EXPECT().GetAccount(gomock.Any(), granteeAddr).Return(authtypes.NewBaseAccountWithAddress(granteeAddr)).AnyTimes()
-	f.accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
 
 	coins := sdk.NewCoins(sdk.NewCoin("foo", math.NewInt(1_000)))
-	now := f.ctx.BlockHeader().Time
+	now := f.ctx.HeaderInfo().Time
 	oneYear := now.AddDate(1, 0, 0)
 	msgSrvr := keeper.NewMsgServerImpl(f.feegrantKeeper)
 
@@ -72,10 +72,15 @@ func TestImportExportGenesis(t *testing.T) {
 	genesis, err := f.feegrantKeeper.ExportGenesis(f.ctx)
 	assert.NilError(t, err)
 
+	granter, err := f.accountKeeper.AddressCodec().BytesToString(granterAddr.Bytes())
+	assert.NilError(t, err)
+	grantee, err := f.accountKeeper.AddressCodec().BytesToString(granteeAddr.Bytes())
+	assert.NilError(t, err)
+
 	// revoke fee allowance
 	_, err = msgSrvr.RevokeAllowance(f.ctx, &feegrant.MsgRevokeAllowance{
-		Granter: granterAddr.String(),
-		Grantee: granteeAddr.String(),
+		Granter: granter,
+		Grantee: grantee,
 	})
 	assert.NilError(t, err)
 
@@ -91,6 +96,13 @@ func TestInitGenesis(t *testing.T) {
 	any, err := codectypes.NewAnyWithValue(&testdata.Dog{})
 	assert.NilError(t, err)
 
+	ac := address.NewBech32Codec("cosmos")
+
+	granter, err := ac.BytesToString(granterAddr.Bytes())
+	assert.NilError(t, err)
+	grantee, err := ac.BytesToString(granteeAddr.Bytes())
+	assert.NilError(t, err)
+
 	testCases := []struct {
 		name          string
 		feeAllowances []feegrant.Grant
@@ -101,7 +113,7 @@ func TestInitGenesis(t *testing.T) {
 			[]feegrant.Grant{
 				{
 					Granter: "invalid granter",
-					Grantee: granteeAddr.String(),
+					Grantee: grantee,
 				},
 			},
 			true,
@@ -110,7 +122,7 @@ func TestInitGenesis(t *testing.T) {
 			"invalid grantee",
 			[]feegrant.Grant{
 				{
-					Granter: granterAddr.String(),
+					Granter: granter,
 					Grantee: "invalid grantee",
 				},
 			},
@@ -120,8 +132,8 @@ func TestInitGenesis(t *testing.T) {
 			"invalid allowance",
 			[]feegrant.Grant{
 				{
-					Granter:   granterAddr.String(),
-					Grantee:   granteeAddr.String(),
+					Granter:   granter,
+					Grantee:   grantee,
 					Allowance: any,
 				},
 			},

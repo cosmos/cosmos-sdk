@@ -11,6 +11,7 @@ import (
 	"cosmossdk.io/x/feegrant/module"
 	"cosmossdk.io/x/feegrant/simulation"
 
+	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
@@ -27,8 +28,14 @@ func TestDecodeStore(t *testing.T) {
 	encodingConfig := moduletestutil.MakeTestEncodingConfig(module.AppModuleBasic{})
 	cdc := encodingConfig.Codec
 	dec := simulation.NewDecodeStore(cdc)
+	ac := addresscodec.NewBech32Codec("cosmos")
 
-	grant, err := feegrant.NewGrant(granterAddr, granteeAddr, &feegrant.BasicAllowance{
+	granterStr, err := ac.BytesToString(granterAddr)
+	require.NoError(t, err)
+	granteeStr, err := ac.BytesToString(granteeAddr)
+	require.NoError(t, err)
+
+	grant, err := feegrant.NewGrant(granterStr, granteeStr, &feegrant.BasicAllowance{
 		SpendLimit: sdk.NewCoins(sdk.NewCoin("foo", sdkmath.NewInt(100))),
 	})
 

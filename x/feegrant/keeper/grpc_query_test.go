@@ -30,7 +30,7 @@ func (suite *KeeperTestSuite) TestFeeAllowance() {
 			"fail: invalid granter",
 			&feegrant.QueryAllowanceRequest{
 				Granter: invalidGranter,
-				Grantee: suite.addrs[0].String(),
+				Grantee: suite.encodedAddrs[0],
 			},
 			true,
 			func() {},
@@ -39,7 +39,7 @@ func (suite *KeeperTestSuite) TestFeeAllowance() {
 		{
 			"fail: invalid grantee",
 			&feegrant.QueryAllowanceRequest{
-				Granter: suite.addrs[0].String(),
+				Granter: suite.encodedAddrs[0],
 				Grantee: invalidGrantee,
 			},
 			true,
@@ -49,8 +49,8 @@ func (suite *KeeperTestSuite) TestFeeAllowance() {
 		{
 			"fail: no grants",
 			&feegrant.QueryAllowanceRequest{
-				Granter: suite.addrs[0].String(),
-				Grantee: suite.addrs[1].String(),
+				Granter: suite.encodedAddrs[0],
+				Grantee: suite.encodedAddrs[1],
 			},
 			true,
 			func() {},
@@ -69,16 +69,16 @@ func (suite *KeeperTestSuite) TestFeeAllowance() {
 		{
 			"valid query: expect single grant",
 			&feegrant.QueryAllowanceRequest{
-				Granter: suite.addrs[0].String(),
-				Grantee: suite.addrs[1].String(),
+				Granter: suite.encodedAddrs[0],
+				Grantee: suite.encodedAddrs[1],
 			},
 			false,
 			func() {
 				suite.grantFeeAllowance(suite.addrs[0], suite.addrs[1])
 			},
 			func(response *feegrant.QueryAllowanceResponse) {
-				suite.Require().Equal(response.Allowance.Granter, suite.addrs[0].String())
-				suite.Require().Equal(response.Allowance.Grantee, suite.addrs[1].String())
+				suite.Require().Equal(response.Allowance.Granter, suite.encodedAddrs[0])
+				suite.Require().Equal(response.Allowance.Grantee, suite.encodedAddrs[1])
 			},
 		},
 	}
@@ -124,7 +124,7 @@ func (suite *KeeperTestSuite) TestFeeAllowances() {
 		{
 			"no grants",
 			&feegrant.QueryAllowancesRequest{
-				Grantee: suite.addrs[1].String(),
+				Grantee: suite.encodedAddrs[1],
 			},
 			false,
 			func() {},
@@ -135,7 +135,7 @@ func (suite *KeeperTestSuite) TestFeeAllowances() {
 		{
 			"valid query: expect single grant",
 			&feegrant.QueryAllowancesRequest{
-				Grantee: suite.addrs[1].String(),
+				Grantee: suite.encodedAddrs[1],
 			},
 			false,
 			func() {
@@ -143,8 +143,8 @@ func (suite *KeeperTestSuite) TestFeeAllowances() {
 			},
 			func(resp *feegrant.QueryAllowancesResponse) {
 				suite.Require().Equal(len(resp.Allowances), 1)
-				suite.Require().Equal(resp.Allowances[0].Granter, suite.addrs[0].String())
-				suite.Require().Equal(resp.Allowances[0].Grantee, suite.addrs[1].String())
+				suite.Require().Equal(resp.Allowances[0].Granter, suite.encodedAddrs[0])
+				suite.Require().Equal(resp.Allowances[0].Grantee, suite.encodedAddrs[1])
 			},
 		},
 	}
@@ -190,7 +190,7 @@ func (suite *KeeperTestSuite) TestFeeAllowancesByGranter() {
 		{
 			"no grants",
 			&feegrant.QueryAllowancesByGranterRequest{
-				Granter: suite.addrs[0].String(),
+				Granter: suite.encodedAddrs[0],
 			},
 			false,
 			func() {},
@@ -201,7 +201,7 @@ func (suite *KeeperTestSuite) TestFeeAllowancesByGranter() {
 		{
 			"valid query: expect single grant",
 			&feegrant.QueryAllowancesByGranterRequest{
-				Granter: suite.addrs[0].String(),
+				Granter: suite.encodedAddrs[0],
 			},
 			false,
 			func() {
@@ -212,8 +212,8 @@ func (suite *KeeperTestSuite) TestFeeAllowancesByGranter() {
 			},
 			func(resp *feegrant.QueryAllowancesByGranterResponse) {
 				suite.Require().Equal(len(resp.Allowances), 1)
-				suite.Require().Equal(resp.Allowances[0].Granter, suite.addrs[0].String())
-				suite.Require().Equal(resp.Allowances[0].Grantee, suite.addrs[1].String())
+				suite.Require().Equal(resp.Allowances[0].Granter, suite.encodedAddrs[0])
+				suite.Require().Equal(resp.Allowances[0].Grantee, suite.encodedAddrs[1])
 				suite.Require().Equal(resp.Pagination.Total, uint64(1))
 			},
 		},
@@ -234,7 +234,7 @@ func (suite *KeeperTestSuite) TestFeeAllowancesByGranter() {
 }
 
 func (suite *KeeperTestSuite) grantFeeAllowance(granter, grantee sdk.AccAddress) {
-	exp := suite.ctx.BlockTime().AddDate(1, 0, 0)
+	exp := suite.ctx.HeaderInfo().Time.AddDate(1, 0, 0)
 	err := suite.feegrantKeeper.GrantAllowance(suite.ctx, granter, grantee, &feegrant.BasicAllowance{
 		SpendLimit: sdk.NewCoins(sdk.NewInt64Coin("atom", 555)),
 		Expiration: &exp,

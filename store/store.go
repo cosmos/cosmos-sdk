@@ -56,10 +56,15 @@ type RootStore interface {
 
 	LoadVersion(version uint64) error
 	LoadLatestVersion() error
+
+	// GetLatestVersion returns the latest version, i.e. height, committed.
 	GetLatestVersion() (uint64, error)
 
-	WorkingHash() ([]byte, error)
+	// SetCommitHeader sets the commit header for the next commit. This allows for
+	// the ability to perform block time-based queries.
 	SetCommitHeader(h CommitHeader)
+
+	WorkingHash() ([]byte, error)
 	Commit() ([]byte, error)
 
 	io.Closer

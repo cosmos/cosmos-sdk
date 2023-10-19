@@ -35,13 +35,9 @@ type RootStore interface {
 	// ignored.
 	GetBranchedKVStore(storeKey string) BranchedKVStore
 
-	// GetProof returns a proof for the given key, version (height), and store key
-	// tuple. See the CommitmentProof type for the concrete supported proof types.
-	GetProof(storeKey string, version uint64, key []byte) (*ics23.CommitmentProof, error)
-
 	// Query performs a query on the RootStore for a given store key, version (height),
 	// and key tuple. Queries should be routed to the underlying SS engine.
-	Query(storeKey string, version uint64, key []byte) (QueryResult, error)
+	Query(storeKey string, version uint64, key []byte, prove bool) (QueryResult, error)
 
 	// Branch should branch the entire RootStore, i.e. a copy of the original RootStore
 	// except with all internal KV store(s) branched.

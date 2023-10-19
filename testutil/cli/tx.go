@@ -32,7 +32,7 @@ func CheckTxCode(network *network.Network, clientCtx client.Context, txHash stri
 	}
 
 	if response.Code != expectedCode {
-		return fmt.Errorf("expected code %d, got %d", expectedCode, response.Code)
+		return fmt.Errorf("expected code %d, got %d. Logs: %s", expectedCode, response.Code, response.Logs.String())
 	}
 
 	return nil

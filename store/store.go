@@ -60,11 +60,23 @@ type RootStore interface {
 	// GetLatestVersion returns the latest version, i.e. height, committed.
 	GetLatestVersion() (uint64, error)
 
-	// SetCommitHeader sets the commit header for the next commit. This allows for
-	// the ability to perform block time-based queries.
+	// SetCommitHeader sets the commit header for the next commit. This call and
+	// implementation is optional. However, it must be supported in cases where
+	// queries based on block time need to be supported.
 	SetCommitHeader(h CommitHeader)
 
+	// WorkingHash returns the current WIP commitment hash. Depending on the underlying
+	// implementation, this may need to take the current changeset and write it to
+	// the SC backend(s). In such cases, Commit() would return this hash and flush
+	// writes to disk. This means that WorkingHash mutates the RootStore and must
+	// be called prior to Commit().
 	WorkingHash() ([]byte, error)
+	// Commit should be responsible for taking the current changeset and flushing
+	// it to disk. Note, depending on the implementation, the changeset, at this
+	// point, may already be written to the SC backends. Commit() should ensure
+	// the changeset is committed to all SC and SC backends and flushed to disk.
+	// It must return a hash of the merkle-ized committed state. This hash should
+	// be the same as the hash returned by WorkingHash() prior to calling Commit().
 	Commit() ([]byte, error)
 
 	io.Closer

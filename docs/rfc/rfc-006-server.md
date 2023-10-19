@@ -6,6 +6,12 @@
 
 ## Background
 
+The Cosmos SDK is one of the most used frameworks to build a blockchain in the past years. While this is an achievement, there are more advanced users emerging (Berachain, Celestia, Rollkit, etc..) that require modifying the Cosmos SDK beyond the capabilities of the current framework. Within this RFC we will walk through the current pitfalls and proposed modifications to the Cosmos SDK to allow for more advanced users to build on top of the Cosmos SDK. 
+
+Currently, the Cosmos SDK is tightly coupled with CometBFT in both production and in testing, with more environments emerging offering a simple and efficient manner to modify the Cosmos SDK to take advantage of these environments is necessary. Today, users must fork and maintain baseapp in order to modify the Cosmos SDK to work with these environments. This is not ideal as it requires users to maintain a fork of the Cosmos SDK and keep it up to date with the latest changes. We have seen this cause issues and forces teams to maintain a small team of developers to maintain the fork.
+
+Secondly the current design, while it works, can have edge cases. With the combination of transaction validation, message execution and interaction with the consensus engine, it can be difficult to understand the flow of the Cosmos SDK. This is especially true when trying to modify the Cosmos SDK to work with a new consensus engine. Some of these newer engines also may want to modify ABCI or introduce a custom interface to allow for more advanced features, currently this is not possible unless you fork both CometBFT and the Cosmos SDK.
+
 > The next section is the "Background" section. This section should be at least two paragraphs and can take up to a whole 
 > page in some cases. The guiding goal of the background section is: as a newcomer to this project (new employee, team 
 > transfer), can I read the background section and follow any links to get the full context of why this change is  
@@ -18,8 +24,53 @@
 
 ## Proposal
 
-> The next required section is "Proposal" or "Goal". Given the background above, this section proposes a solution. 
-> This should be an overview of the "how" for the solution, but for details further sections will be used.
+The proposal is to allow users to create custom server implementations that can reuse existing features but also allow custom implementations. 
+
+### Server
+
+The server is the main entry point for the Cosmos SDK. It is responsible for starting the application, initializing the application, and starting the application. The server is also responsible for starting the consensus engine and connecting the consensus engine to the application. Each consensus engine will have a custom server implementation that will be responsible for starting the consensus engine and connecting it to the application.
+
+While there will be default implementations provided by the Cosmos SDK if an application like Evmos or Berchain would like to implement their own server they can. This will allow for more advanced features to be implemented and allow for more advanced users to build on top of the Cosmos SDK.
+
+```go
+func NewGrpcCometServer(..) {..}
+func NewGrpcRollkitServer(..) {..}
+func NewEvmosCometServer(..) {..}
+func NewPolarisCometServer(..) {..}
+```
+
+A server will consist of the following components, but is not limited to the ones included here. 
+
+```go
+type CometServer struct {
+  // can load modules with either grpc, wasm, ffi or native. 
+  // Depinject helps wire different configs
+  // loaded from a config file that can compose different versions of apps
+  // allows to sync from genesis with different config files
+  // handles message execution 
+  AppManager app.Manager
+  // starts, stops and interacts with the consensus engine
+  Consensus consensus.Engine
+  // manages storage of application state
+  Store store.RootStore 
+  // manages application state snapshots
+  StateSync snapshot.Manager 
+  // transaction validation
+  TxValidation core.TxValidation
+  // decoder for trancations
+  TxCodec core.TxCodec 
+}
+```
+
+#### AppManager
+
+#### Consensus
+
+#### Storage
+
+#### Transaction Validation
+
+#### Transaction Codec
 
 
 ## Abandoned Ideas (Optional)

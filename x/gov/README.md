@@ -770,6 +770,8 @@ The governance module contains the following parameters:
 | burn_proposal_deposit_prevote | bool             | false                                    |
 | burn_vote_quorum              | bool             | false                                   |
 | burn_vote_veto                | bool             | true                                    |
+| min_initial_deposit_ratio                | string             | "0.1"                                    |
+
 
 **NOTE**: The governance module contains parameters that are objects unlike other
 modules. If only a subset of parameters are desired to be changed, only they need

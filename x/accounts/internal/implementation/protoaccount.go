@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/runtime/protoiface"
@@ -22,7 +23,6 @@ func RegisterInitHandler[
 ](router *InitBuilder, handler func(ctx context.Context, req ProtoReq) (ProtoResp, error),
 ) {
 	reqName := ProtoReq(new(Req)).ProtoReflect().Descriptor().FullName()
-	respName := ProtoResp(new(Resp)).ProtoReflect().Descriptor().FullName()
 
 	router.handler = func(ctx context.Context, initRequest any) (initResponse any, err error) {
 		concrete, ok := initRequest.(ProtoReq)
@@ -32,19 +32,8 @@ func RegisterInitHandler[
 		return handler(ctx, concrete)
 	}
 
-	router.decodeRequest = func(b []byte) (any, error) {
-		req := new(Req)
-		err := proto.Unmarshal(b, ProtoReq(req))
-		return req, err
-	}
-
-	router.encodeResponse = func(resp any) ([]byte, error) {
-		protoResp, ok := resp.(ProtoResp)
-		if !ok {
-			return nil, fmt.Errorf("%w: wanted %s, got %T", errInvalidMessage, respName, resp)
-		}
-		return proto.Marshal(protoResp)
-	}
+	router.RequestSchema = *NewProtoMessageSchema[Req, ProtoReq]()
+	router.ResponseSchema = *NewProtoMessageSchema[Resp, ProtoResp]()
 }
 
 // RegisterExecuteHandler registers an execution handler for a smart account that uses protobuf.
@@ -74,4 +63,46 @@ func RegisterQueryHandler[
 ](router *QueryBuilder, handler func(ctx context.Context, req ProtoReq) (ProtoResp, error),
 ) {
 	RegisterExecuteHandler(router.er, handler)
+}
+
+func NewProtoMessageSchema[T any, PT ProtoMsg[T]]() *MessageSchema {
+	msg := PT(new(T))
+	marshaler := proto.MarshalOptions{Deterministic: true}
+	unmarshaler := proto.UnmarshalOptions{DiscardUnknown: true} // TODO: safe to discard unknown? or should reject?
+	jsonMarshaler := protojson.MarshalOptions{
+		Multiline:     true,
+		Indent:        "	",
+		UseProtoNames: true,
+	}
+	jsonUnmarshaler := protojson.UnmarshalOptions{
+		DiscardUnknown: true,
+	}
+
+	return &MessageSchema{
+		Name: string(msg.ProtoReflect().Descriptor().FullName()),
+		TxDecode: func(bytes []byte) (any, error) {
+			obj := PT(new(T))
+			err := unmarshaler.Unmarshal(bytes, obj)
+			return obj, err
+		},
+		TxEncode: func(a any) ([]byte, error) {
+			concrete, ok := a.(PT)
+			if !ok {
+				return nil, fmt.Errorf("%w: wanted %s, got %T", errInvalidMessage, msg.ProtoReflect().Descriptor().FullName(), a)
+			}
+			return marshaler.Marshal(concrete)
+		},
+		HumanDecode: func(bytes []byte) (any, error) {
+			obj := PT(new(T))
+			err := jsonUnmarshaler.Unmarshal(bytes, obj)
+			return obj, err
+		},
+		HumanEncode: func(a any) ([]byte, error) {
+			concrete, ok := a.(PT)
+			if !ok {
+				return nil, fmt.Errorf("%w: wanted %s, got %T", errInvalidMessage, msg.ProtoReflect().Descriptor().FullName(), a)
+			}
+			return jsonMarshaler.Marshal(concrete)
+		},
+	}
 }

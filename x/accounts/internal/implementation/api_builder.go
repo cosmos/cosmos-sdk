@@ -28,11 +28,10 @@ type InitBuilder struct {
 	// with a typed version of it.
 	handler func(ctx context.Context, initRequest any) (initResponse any, err error)
 
-	// decodeRequest is the function that will be used to decode the init request from bytes.
-	decodeRequest func([]byte) (any, error)
-
-	// encodeResponse is the function that will be used to encode the init response to bytes.
-	encodeResponse func(any) ([]byte, error)
+	// RequestSchema is the schema of the request message.
+	RequestSchema MessageSchema
+	// ResponseSchema is the schema of the response message.
+	ResponseSchema MessageSchema
 }
 
 // makeHandler returns the handler function that will be called when the smart account is initialized.

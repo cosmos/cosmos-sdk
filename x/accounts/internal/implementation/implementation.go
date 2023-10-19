@@ -89,8 +89,8 @@ func NewImplementation(account Account) (Implementation, error) {
 		Init:                  initHandler,
 		Execute:               executeHandler,
 		Query:                 queryHandler,
-		DecodeInitRequest:     ir.decodeRequest,
-		EncodeInitResponse:    ir.encodeResponse,
+		InitRequestSchema:     ir.RequestSchema,
+		InitResponseSchema:    ir.ResponseSchema,
 		DecodeExecuteRequest:  er.makeRequestDecoder(),
 		EncodeExecuteResponse: er.makeResponseEncoder(),
 		DecodeQueryRequest:    qr.er.makeRequestDecoder(),
@@ -112,10 +112,10 @@ type Implementation struct {
 
 	CollectionsSchema collections.Schema
 
-	// DecodeInitRequest decodes an init request coming from the message server.
-	DecodeInitRequest func([]byte) (any, error)
-	// EncodeInitResponse encodes an init response to be sent back from the message server.
-	EncodeInitResponse func(any) ([]byte, error)
+	// InitRequestSchema is the MessageSchema of the init request.
+	InitRequestSchema MessageSchema
+	// InitResponseSchema is the MessageSchema of the init response.
+	InitResponseSchema MessageSchema
 
 	// DecodeExecuteRequest decodes an execute request coming from the message server.
 	DecodeExecuteRequest func([]byte) (any, error)
@@ -126,4 +126,23 @@ type Implementation struct {
 	DecodeQueryRequest func([]byte) (any, error)
 	// EncodeQueryResponse encodes a query response to be sent back from the message server.
 	EncodeQueryResponse func(any) ([]byte, error)
+}
+
+// MessageSchema defines the schema of a message.
+// A message can also define a state schema.
+type MessageSchema struct {
+	// Name identifies the message name, this must be queriable from some reflection service.
+	Name string
+	// TxDecode decodes into the message from transaction bytes.
+	// CONSENSUS SAFE.
+	TxDecode func([]byte) (any, error)
+	// TxEncode encodes the message into transaction bytes.
+	// CONSENSUS SAFE.
+	TxEncode func(any) ([]byte, error)
+	// HumanDecode decodes into the message from human-readable bytes.
+	// CONSENSUS UNSAFE.
+	HumanDecode func([]byte) (any, error)
+	// HumanEncode encodes the message into human-readable bytes.
+	// CONSENSUS UNSAFE.
+	HumanEncode func(any) ([]byte, error)
 }

@@ -25,6 +25,8 @@ func GetTxInitCmd() *cobra.Command {
 			sender := clientCtx.GetFromAddress()
 
 			// we need to convert the message from json to a protobuf message
+			// to know which message to use, we need to know the account type
+			// init message schema.
 
 			msg := v1.MsgInit{
 				Sender:      sender.String(),

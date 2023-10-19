@@ -9,8 +9,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
 
-	"cosmossdk.io/math"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -388,22 +386,12 @@ func TestPreprocessHook(t *testing.T) {
 	extAny, err := codectypes.NewAnyWithValue(extVal)
 	requireT.NoError(err)
 
-	coin := sdk.Coin{
-		Denom:  "atom",
-		Amount: math.NewInt(20),
-	}
-	newTip := &txtypes.Tip{
-		Amount: sdk.Coins{coin},
-		Tipper: "galaxy",
-	}
-
 	preprocessHook := client.PreprocessTxFn(func(chainID string, key keyring.KeyType, tx client.TxBuilder) error {
 		extensionBuilder, ok := tx.(authtx.ExtensionOptionsTxBuilder)
 		requireT.True(ok)
 
 		// Set new extension and tip
 		extensionBuilder.SetExtensionOptions(extAny)
-		tx.SetTip(newTip)
 
 		return nil
 	})
@@ -435,9 +423,6 @@ func TestPreprocessHook(t *testing.T) {
 
 	opt := hasExtOptsTx.GetExtensionOptions()[0]
 	requireT.Equal(opt, extAny)
-
-	tip := txb.GetTx().GetTip()
-	requireT.Equal(tip, newTip)
 }
 
 func testSigners(require *require.Assertions, tr signing.Tx, pks ...cryptotypes.PubKey) []signingtypes.SignatureV2 {

@@ -83,7 +83,16 @@ func SimulateMsgGrantAllowance(
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		granter, _ := simtypes.RandomAcc(r, accs)
 		grantee, _ := simtypes.RandomAcc(r, accs)
-		if grantee.Address.String() == granter.Address.String() {
+		granterStr, err := ak.AddressCodec().BytesToString(granter.Address)
+		if err != nil {
+			return simtypes.OperationMsg{}, nil, err
+		}
+		granteeStr, err := ak.AddressCodec().BytesToString(grantee.Address)
+		if err != nil {
+			return simtypes.OperationMsg{}, nil, err
+		}
+
+		if granteeStr == granterStr {
 			return simtypes.NoOpMsg(feegrant.ModuleName, TypeMsgGrantAllowance, "grantee and granter cannot be same"), nil, nil
 		}
 
@@ -102,7 +111,7 @@ func SimulateMsgGrantAllowance(
 		msg, err := feegrant.NewMsgGrantAllowance(&feegrant.BasicAllowance{
 			SpendLimit: spendableCoins,
 			Expiration: &oneYear,
-		}, granter.Address, grantee.Address)
+		}, granterStr, granteeStr)
 		if err != nil {
 			return simtypes.NoOpMsg(feegrant.ModuleName, TypeMsgGrantAllowance, err.Error()), nil, err
 		}
@@ -171,7 +180,15 @@ func SimulateMsgRevokeAllowance(
 		account := ak.GetAccount(ctx, granter.Address)
 		spendableCoins := bk.SpendableCoins(ctx, account.GetAddress())
 
-		msg := feegrant.NewMsgRevokeAllowance(granterAddr, granteeAddr)
+		granterStr, err := ak.AddressCodec().BytesToString(granterAddr)
+		if err != nil {
+			return simtypes.NoOpMsg(feegrant.ModuleName, TypeMsgRevokeAllowance, err.Error()), nil, err
+		}
+		granteeStr, err := ak.AddressCodec().BytesToString(granteeAddr)
+		if err != nil {
+			return simtypes.NoOpMsg(feegrant.ModuleName, TypeMsgRevokeAllowance, err.Error()), nil, err
+		}
+		msg := feegrant.NewMsgRevokeAllowance(granterStr, granteeStr)
 
 		txCtx := simulation.OperationInput{
 			R:               r,

@@ -124,7 +124,10 @@ func setupTest(t *testing.T, height int64, skip map[int64]bool) *TestSuite {
 
 	s.baseApp.SetParamStore(&paramStore{params: cmtproto.ConsensusParams{Version: &cmtproto.VersionParams{App: 1}}})
 
-	s.keeper = keeper.NewKeeper(skip, storeService, s.encCfg.Codec, t.TempDir(), s.baseApp, authtypes.NewModuleAddress(govtypes.ModuleName).String())
+	authority, err := addresscodec.NewBech32Codec("cosmos").BytesToString(authtypes.NewModuleAddress(govtypes.ModuleName))
+	require.NoError(t, err)
+
+	s.keeper = keeper.NewKeeper(skip, storeService, s.encCfg.Codec, t.TempDir(), s.baseApp, authority)
 
 	s.ctx = testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now(), Height: height})
 
@@ -460,12 +463,16 @@ func TestDowngradeVerification(t *testing.T) {
 	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now(), Height: 10})
 
 	skip := map[int64]bool{}
-	k := keeper.NewKeeper(skip, storeService, encCfg.Codec, t.TempDir(), nil, authtypes.NewModuleAddress(govtypes.ModuleName).String())
+
+	authority, err := addresscodec.NewBech32Codec("cosmos").BytesToString(authtypes.NewModuleAddress(govtypes.ModuleName))
+	require.NoError(t, err)
+
+	k := keeper.NewKeeper(skip, storeService, encCfg.Codec, t.TempDir(), nil, authority)
 	m := upgrade.NewAppModule(k, addresscodec.NewBech32Codec("cosmos"))
 
 	// submit a plan.
 	planName := "downgrade"
-	err := k.ScheduleUpgrade(ctx, types.Plan{Name: planName, Height: ctx.HeaderInfo().Height + 1})
+	err = k.ScheduleUpgrade(ctx, types.Plan{Name: planName, Height: ctx.HeaderInfo().Height + 1})
 	require.NoError(t, err)
 	ctx = ctx.WithHeaderInfo(header.Info{Height: ctx.HeaderInfo().Height + 1})
 
@@ -505,8 +512,11 @@ func TestDowngradeVerification(t *testing.T) {
 	for name, tc := range testCases {
 		ctx, _ := ctx.CacheContext()
 
+		authority, err := addresscodec.NewBech32Codec("cosmos").BytesToString(authtypes.NewModuleAddress(govtypes.ModuleName))
+		require.NoError(t, err)
+
 		// downgrade. now keeper does not have the handler.
-		k := keeper.NewKeeper(skip, storeService, encCfg.Codec, t.TempDir(), nil, authtypes.NewModuleAddress(govtypes.ModuleName).String())
+		k := keeper.NewKeeper(skip, storeService, encCfg.Codec, t.TempDir(), nil, authority)
 		m := upgrade.NewAppModule(k, addresscodec.NewBech32Codec("cosmos"))
 
 		// assertions

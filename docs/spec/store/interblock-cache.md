@@ -277,9 +277,9 @@ func CacheWrap(
 ```
 
 ### Implementation details
-
+<!-- markdown-link-check-disable -->
 The inter-block cache implementation uses a fixed-sized adaptive replacement cache (ARC) as cache. [The ARC implementation](https://github.com/hashicorp/golang-lru/blob/master/arc.go) is thread-safe. ARC is an enhancement over the standard LRU cache in that tracks both frequency and recency of use. This avoids a burst in access to new entries from evicting the frequently used older entries. It adds some additional tracking overhead to a standard LRU cache, computationally it is roughly `2x` the cost, and the extra memory overhead is linear with the size of the cache. The default cache size is `1000`.
-
+<!-- markdown-link-check-enable -->
 ## History
 
 Dec 20, 2022 - Initial draft finished and submitted as a PR

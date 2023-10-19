@@ -21,7 +21,7 @@ import (
 	groupmodulev1 "cosmossdk.io/api/cosmos/group/module/v1"
 	mintmodulev1 "cosmossdk.io/api/cosmos/mint/module/v1"
 	nftmodulev1 "cosmossdk.io/api/cosmos/nft/module/v1"
-	paramsmodulev1 "cosmossdk.io/api/cosmos/params/module/v1"
+	poolmodulev1 "cosmossdk.io/api/cosmos/protocolpool/module/v1"
 	slashingmodulev1 "cosmossdk.io/api/cosmos/slashing/module/v1"
 	stakingmodulev1 "cosmossdk.io/api/cosmos/staking/module/v1"
 	txconfigv1 "cosmossdk.io/api/cosmos/tx/config/v1"
@@ -38,8 +38,10 @@ import (
 	_ "cosmossdk.io/x/mint"            // import for side-effects
 	minttypes "cosmossdk.io/x/mint/types"
 	"cosmossdk.io/x/nft"
-	_ "cosmossdk.io/x/nft/module" // import for side-effects
-	_ "cosmossdk.io/x/upgrade"    // import for side-effects
+	_ "cosmossdk.io/x/nft/module"   // import for side-effects
+	_ "cosmossdk.io/x/protocolpool" // import for side-effects
+	pooltypes "cosmossdk.io/x/protocolpool/types"
+	_ "cosmossdk.io/x/upgrade" // import for side-effects
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 
 	"github.com/cosmos/cosmos-sdk/runtime"
@@ -66,9 +68,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/group"
 	_ "github.com/cosmos/cosmos-sdk/x/group/module" // import for side-effects
 	_ "github.com/cosmos/cosmos-sdk/x/params"       // import for side-effects
-	paramsclient "github.com/cosmos/cosmos-sdk/x/params/client"
-	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	_ "github.com/cosmos/cosmos-sdk/x/slashing" // import for side-effects
+	_ "github.com/cosmos/cosmos-sdk/x/slashing"     // import for side-effects
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	_ "github.com/cosmos/cosmos-sdk/x/staking" // import for side-effects
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -79,6 +79,7 @@ var (
 	moduleAccPerms = []*authmodulev1.ModuleAccountPermission{
 		{Account: authtypes.FeeCollectorName},
 		{Account: distrtypes.ModuleName},
+		{Account: pooltypes.ModuleName},
 		{Account: minttypes.ModuleName, Permissions: []string{authtypes.Minter}},
 		{Account: stakingtypes.BondedPoolName, Permissions: []string{authtypes.Burner, stakingtypes.ModuleName}},
 		{Account: stakingtypes.NotBondedPoolName, Permissions: []string{authtypes.Burner, stakingtypes.ModuleName}},
@@ -96,6 +97,7 @@ var (
 		nft.ModuleName,
 		// We allow the following module accounts to receive funds:
 		// govtypes.ModuleName
+		// pooltypes.ModuleName
 	}
 
 	// application configuration (used by depinject)
@@ -152,7 +154,6 @@ var (
 						feegrant.ModuleName,
 						nft.ModuleName,
 						group.ModuleName,
-						paramstypes.ModuleName,
 						upgradetypes.ModuleName,
 						vestingtypes.ModuleName,
 						circuittypes.ModuleName,
@@ -196,10 +197,6 @@ var (
 			{
 				Name:   slashingtypes.ModuleName,
 				Config: appconfig.WrapAny(&slashingmodulev1.Module{}),
-			},
-			{
-				Name:   paramstypes.ModuleName,
-				Config: appconfig.WrapAny(&paramsmodulev1.Module{}),
 			},
 			{
 				Name:   "tx",
@@ -260,6 +257,10 @@ var (
 				Name:   circuittypes.ModuleName,
 				Config: appconfig.WrapAny(&circuitmodulev1.Module{}),
 			},
+			{
+				Name:   pooltypes.ModuleName,
+				Config: appconfig.WrapAny(&poolmodulev1.Module{}),
+			},
 		},
 	}),
 		depinject.Supply(
@@ -267,9 +268,7 @@ var (
 			map[string]module.AppModuleBasic{
 				genutiltypes.ModuleName: genutil.NewAppModuleBasic(genutiltypes.DefaultMessageValidator),
 				govtypes.ModuleName: gov.NewAppModuleBasic(
-					[]govclient.ProposalHandler{
-						paramsclient.ProposalHandler,
-					},
+					[]govclient.ProposalHandler{},
 				),
 			},
 		))

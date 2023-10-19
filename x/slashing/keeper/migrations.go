@@ -3,26 +3,22 @@ package keeper
 import (
 	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/slashing/exported"
-	v2 "github.com/cosmos/cosmos-sdk/x/slashing/migrations/v2"
-	v3 "github.com/cosmos/cosmos-sdk/x/slashing/migrations/v3"
 	v4 "github.com/cosmos/cosmos-sdk/x/slashing/migrations/v4"
 )
 
 // Migrator is a struct for handling in-place store migrations.
 type Migrator struct {
-	keeper         Keeper
-	legacySubspace exported.Subspace
+	keeper Keeper
 }
 
 // NewMigrator returns a new Migrator.
-func NewMigrator(keeper Keeper, ss exported.Subspace) Migrator {
-	return Migrator{keeper: keeper, legacySubspace: ss}
+func NewMigrator(keeper Keeper) Migrator {
+	return Migrator{keeper: keeper}
 }
 
 // Migrate1to2 migrates from version 1 to 2.
 func (m Migrator) Migrate1to2(ctx sdk.Context) error {
-	return v2.MigrateStore(ctx, m.keeper.storeService)
+	return nil
 }
 
 // Migrate2to3 migrates the x/slashing module state from the consensus
@@ -30,8 +26,7 @@ func (m Migrator) Migrate1to2(ctx sdk.Context) error {
 // and managed by the x/params modules and stores them directly into the x/slashing
 // module state.
 func (m Migrator) Migrate2to3(ctx sdk.Context) error {
-	store := runtime.KVStoreAdapter(m.keeper.storeService.OpenKVStore(ctx))
-	return v3.Migrate(ctx, store, m.legacySubspace, m.keeper.cdc)
+	return nil
 }
 
 // Migrate3to4 migrates the x/slashing module state from the consensus

@@ -11,6 +11,9 @@ run:
     - ".*\\.pb\\.gw\\.go$"
     - ".*\\.pulsar\\.go$"
 
+build-tags:
+  - rocksdb
+
 linters:
   disable-all: true
   enable:

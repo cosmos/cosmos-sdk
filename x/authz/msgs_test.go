@@ -113,7 +113,7 @@ func TestAminoJSON(t *testing.T) {
 	for i, tt := range tests {
 		t.Run(fmt.Sprintf("case %d", i), func(t *testing.T) {
 			tx.Msgs = []sdk.Msg{tt.msg}
-			legacyJSON := string(legacytx.StdSignBytes("foo", 1, 1, 1, legacytx.StdFee{}, []sdk.Msg{tt.msg}, "memo", nil))
+			legacyJSON := string(legacytx.StdSignBytes("foo", 1, 1, 1, legacytx.StdFee{}, []sdk.Msg{tt.msg}, "memo"))
 			require.Equal(t, tt.exp, legacyJSON)
 
 			legacyAny, err := cdctypes.NewAnyWithValue(tt.msg)

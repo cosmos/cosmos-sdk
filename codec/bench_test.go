@@ -12,16 +12,26 @@ import (
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
+type bankSendWrapper struct {
+	*banktypes.MsgSend
+}
+
+func (msg bankSendWrapper) GetSigners() []sdk.AccAddress {
+	fromAddress, _ := sdk.AccAddressFromBech32(msg.FromAddress)
+	return []sdk.AccAddress{fromAddress}
+}
+
 func BenchmarkLegacyGetSigners(b *testing.B) {
 	_, _, addr := testdata.KeyTestPubAddr()
-	msg := &banktypes.MsgSend{
+	msg := bankSendWrapper{&banktypes.MsgSend{
 		FromAddress: addr.String(),
 		ToAddress:   "",
 		Amount:      nil,
-	}
+	}}
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {

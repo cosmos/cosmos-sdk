@@ -13,6 +13,7 @@ import (
 	v2 "cosmossdk.io/x/feegrant/migrations/v2"
 	"cosmossdk.io/x/feegrant/module"
 
+	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -23,6 +24,7 @@ import (
 func TestMigration(t *testing.T) {
 	encodingConfig := moduletestutil.MakeTestEncodingConfig(module.AppModuleBasic{})
 	cdc := encodingConfig.Codec
+	ac := addresscodec.NewBech32Codec("cosmos")
 
 	feegrantKey := storetypes.NewKVStoreKey(v2.ModuleName)
 	ctx := testutil.DefaultContext(feegrantKey, storetypes.NewTransientStoreKey("transient_test"))
@@ -68,7 +70,11 @@ func TestMigration(t *testing.T) {
 
 	store := ctx.KVStore(feegrantKey)
 	for _, grant := range grants {
-		newGrant, err := feegrant.NewGrant(grant.granter, grant.grantee, &feegrant.BasicAllowance{
+		granterStr, err := ac.BytesToString(grant.granter)
+		require.NoError(t, err)
+		granteeStr, err := ac.BytesToString(grant.grantee)
+		require.NoError(t, err)
+		newGrant, err := feegrant.NewGrant(granterStr, granteeStr, &feegrant.BasicAllowance{
 			SpendLimit: grant.spendLimit,
 			Expiration: grant.expiration,
 		})

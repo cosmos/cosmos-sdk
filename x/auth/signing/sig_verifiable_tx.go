@@ -3,7 +3,6 @@ package signing
 import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
 
@@ -17,13 +16,12 @@ type SigVerifiableTx interface {
 }
 
 // Tx defines a transaction interface that supports all standard message, signature
-// fee, memo, tips, and auxiliary interfaces.
+// fee, memo and auxiliary interfaces.
 type Tx interface {
 	SigVerifiableTx
 
 	types.TxWithMemo
 	types.FeeTx
-	tx.TipTx
 	types.TxWithTimeoutHeight
 	types.HasValidateBasic
 }

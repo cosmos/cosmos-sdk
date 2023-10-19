@@ -10,7 +10,6 @@ import (
 	_ "github.com/cosmos/cosmos-sdk/x/consensus"      // import as blank for app wiring
 	_ "github.com/cosmos/cosmos-sdk/x/distribution"   // import as blank for app wiring
 	_ "github.com/cosmos/cosmos-sdk/x/genutil"        // import as blank for app wiring
-	_ "github.com/cosmos/cosmos-sdk/x/params"         // import as blank for app wiring
 	_ "github.com/cosmos/cosmos-sdk/x/staking"        // import as blank for app wiring
 )
 
@@ -20,8 +19,8 @@ var AppConfig = configurator.NewAppConfig(
 	configurator.StakingModule(),
 	configurator.TxModule(),
 	configurator.ConsensusModule(),
-	configurator.ParamsModule(),
 	configurator.GenutilModule(),
 	configurator.DistributionModule(),
 	configurator.MintModule(),
+	configurator.ProtocolPoolModule(),
 )

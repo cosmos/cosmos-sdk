@@ -89,12 +89,7 @@ func (k Keeper) GetValidatorSet() types.ValidatorSet {
 
 // Delegation gets the delegation interface for a particular set of delegator and validator addresses
 func (k Keeper) Delegation(ctx context.Context, addrDel sdk.AccAddress, addrVal sdk.ValAddress) (types.DelegationI, error) {
-	bond, err := k.Delegations.Get(ctx, collections.Join(addrDel, addrVal))
-	if err != nil {
-		return nil, err
-	}
-
-	return bond, nil
+	return k.Delegations.Get(ctx, collections.Join(addrDel, addrVal))
 }
 
 // IterateDelegations iterates through all of the delegations from a delegator
@@ -103,7 +98,7 @@ func (k Keeper) IterateDelegations(ctx context.Context, delAddr sdk.AccAddress,
 ) error {
 	var i int64
 	rng := collections.NewPrefixedPairRange[sdk.AccAddress, sdk.ValAddress](delAddr)
-	err := k.Delegations.Walk(ctx, rng, func(key collections.Pair[sdk.AccAddress, sdk.ValAddress], del types.Delegation) (stop bool, err error) {
+	return k.Delegations.Walk(ctx, rng, func(key collections.Pair[sdk.AccAddress, sdk.ValAddress], del types.Delegation) (stop bool, err error) {
 		stop = fn(i, del)
 		if stop {
 			return true, nil
@@ -112,11 +107,6 @@ func (k Keeper) IterateDelegations(ctx context.Context, delAddr sdk.AccAddress,
 
 		return false, nil
 	})
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
 
 // GetAllSDKDelegations returns all delegations used during genesis dump

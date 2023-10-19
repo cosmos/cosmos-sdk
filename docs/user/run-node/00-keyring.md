@@ -5,7 +5,7 @@ sidebar_position: 1
 # Setting up the keyring
 
 :::note Synopsis
-This document describes how to configure and use the keyring and its various backends for an [**application**](../../develop/beginner/00-app-anatomy.md).
+This document describes how to configure and use the keyring and its various backends for an [**application**](../../learn/beginner/00-app-anatomy.md).
 :::
 
 The keyring holds the private/public keypairs used to interact with a node. For instance, a validator key needs to be set up before running the blockchain node, so that blocks can be correctly signed. The private key can be stored in different locations, called "backends", such as a file or the operating system's own key storage.
@@ -108,7 +108,7 @@ The `memory` backend stores keys in memory. The keys are immediately deleted aft
 
 ### Setting backend using the env variable 
 
-You can set the keyring-backend using env variable: `BINNAME_KEYRING_BACKEND`. For example, if you binary name is `gaia-v5` then set: `export GAIA_V5_KEYRING_BACKEND=pass`
+You can set the keyring-backend using env variable: `BINNAME_KEYRING_BACKEND`. For example, if your binary name is `gaia-v5` then set: `export GAIA_V5_KEYRING_BACKEND=pass`
 
 ## Adding keys to the keyring
 

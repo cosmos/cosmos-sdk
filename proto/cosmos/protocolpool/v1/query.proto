@@ -1,0 +1,29 @@
+// Since: cosmos-sdk 0.50
+syntax = "proto3";
+package cosmos.protocolpool.v1;
+
+option go_package = "cosmossdk.io/x/protocolpool/types";
+
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+import "cosmos/base/v1beta1/coin.proto";
+
+// Query defines the gRPC querier service for community pool module.
+service Query {
+  // CommunityPool queries the community pool coins.
+  rpc CommunityPool(QueryCommunityPoolRequest) returns (QueryCommunityPoolResponse) {
+    option (google.api.http).get = "/cosmos/protocolpool/v1/community_pool";
+  }
+}
+
+// QueryCommunityPoolRequest is the request type for the Query/CommunityPool RPC
+// method.
+message QueryCommunityPoolRequest {}
+
+// QueryCommunityPoolResponse is the response type for the Query/CommunityPool
+// RPC method.
+message QueryCommunityPoolResponse {
+  // pool defines community pool's coins.
+  repeated cosmos.base.v1beta1.DecCoin pool = 1
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins", (gogoproto.nullable) = false];
+}

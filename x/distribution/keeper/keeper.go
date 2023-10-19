@@ -25,6 +25,8 @@ type Keeper struct {
 	authKeeper    types.AccountKeeper
 	bankKeeper    types.BankKeeper
 	stakingKeeper types.StakingKeeper
+	poolKeeper    types.PoolKeeper // TODO: Needs to be removed in v0.53
+
 	// the address capable of executing a MsgUpdateParams message. Typically, this
 	// should be the x/gov module account.
 	authority string
@@ -54,7 +56,7 @@ type Keeper struct {
 // NewKeeper creates a new distribution Keeper instance
 func NewKeeper(
 	cdc codec.BinaryCodec, storeService store.KVStoreService,
-	ak types.AccountKeeper, bk types.BankKeeper, sk types.StakingKeeper,
+	ak types.AccountKeeper, bk types.BankKeeper, sk types.StakingKeeper, pk types.PoolKeeper,
 	feeCollectorName, authority string,
 ) Keeper {
 	// ensure distribution module account is set
@@ -69,6 +71,7 @@ func NewKeeper(
 		authKeeper:       ak,
 		bankKeeper:       bk,
 		stakingKeeper:    sk,
+		poolKeeper:       pk,
 		feeCollectorName: feeCollectorName,
 		authority:        authority,
 		Params:           collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
@@ -269,22 +272,4 @@ func (k Keeper) GetTotalRewards(ctx context.Context) (totalRewards sdk.DecCoins)
 	}
 
 	return totalRewards
-}
-
-// FundCommunityPool allows an account to directly fund the community fund pool.
-// The amount is first added to the distribution module account and then directly
-// added to the pool. An error is returned if the amount cannot be sent to the
-// module account.
-func (k Keeper) FundCommunityPool(ctx context.Context, amount sdk.Coins, sender sdk.AccAddress) error {
-	if err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, sender, types.ModuleName, amount); err != nil {
-		return err
-	}
-
-	feePool, err := k.FeePool.Get(ctx)
-	if err != nil {
-		return err
-	}
-
-	feePool.CommunityPool = feePool.CommunityPool.Add(sdk.NewDecCoinsFromCoins(amount...)...)
-	return k.FeePool.Set(ctx, feePool)
 }

@@ -100,9 +100,14 @@ func BroadcastTx(clientCtx client.Context, txf Factory, msgs ...sdk.Msg) error {
 	}
 
 	if !clientCtx.SkipConfirm {
-		txBytes, err := clientCtx.TxConfig.TxJSONEncoder()(tx.GetTx())
+		encoder := txf.txConfig.TxJSONEncoder()
+		if encoder == nil {
+			return errors.New("failed to encode transaction: tx json encoder is nil")
+		}
+
+		txBytes, err := encoder(tx.GetTx())
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to encode transaction: %w", err)
 		}
 
 		if err := clientCtx.PrintRaw(json.RawMessage(txBytes)); err != nil {
@@ -121,7 +126,7 @@ func BroadcastTx(clientCtx client.Context, txf Factory, msgs ...sdk.Msg) error {
 		}
 	}
 
-	err = Sign(clientCtx.CmdContext, txf, clientCtx.GetFromName(), tx, true)
+	err = Sign(clientCtx.CmdContext, txf, clientCtx.FromName, tx, true)
 	if err != nil {
 		return err
 	}
@@ -391,13 +396,6 @@ func makeAuxSignerData(clientCtx client.Context, f Factory, msgs ...sdk.Msg) (tx
 	err = b.SetMsgs(msgs...)
 	if err != nil {
 		return tx.AuxSignerData{}, err
-	}
-
-	if f.tip != nil {
-		if _, err := clientCtx.AddressCodec.StringToBytes(f.tip.Tipper); err != nil {
-			return tx.AuxSignerData{}, sdkerrors.ErrInvalidAddress.Wrap("tipper must be a valid address")
-		}
-		b.SetTip(f.tip)
 	}
 
 	err = b.SetSignMode(f.SignMode())

@@ -12,6 +12,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
+// KeyDefaultSendEnabled is store's key for the DefaultSendEnabled option
+var KeyDefaultSendEnabled = []byte("DefaultSendEnabled")
+
 // RandomGenesisDefaultSendEnabledParam computes randomized allow all send transfers param for the bank module
 func RandomGenesisDefaultSendEnabledParam(r *rand.Rand) bool {
 	// 90% chance of transfers being enabled or P(a) = 0.9 for success
@@ -72,7 +75,7 @@ func RandomGenesisBalances(simState *module.SimulationState) []types.Balance {
 // RandomizedGenState generates a random GenesisState for bank
 func RandomizedGenState(simState *module.SimulationState) {
 	var defaultSendEnabledParam bool
-	simState.AppParams.GetOrGenerate(string(types.KeyDefaultSendEnabled), &defaultSendEnabledParam, simState.Rand, func(r *rand.Rand) { defaultSendEnabledParam = RandomGenesisDefaultSendEnabledParam(r) })
+	simState.AppParams.GetOrGenerate(string(KeyDefaultSendEnabled), &defaultSendEnabledParam, simState.Rand, func(r *rand.Rand) { defaultSendEnabledParam = RandomGenesisDefaultSendEnabledParam(r) })
 
 	sendEnabled := RandomGenesisSendEnabled(simState.Rand, simState.BondDenom)
 

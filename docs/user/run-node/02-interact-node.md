@@ -10,7 +10,7 @@ There are multiple ways to interact with a node: using the CLI, using gRPC or us
 
 :::note Pre-requisite Readings
 
-* [gRPC, REST and CometBFT Endpoints](../../develop/advanced/06-grpc_rest.md)
+* [gRPC, REST and CometBFT Endpoints](../../learn/advanced/06-grpc_rest.md)
 * [Running a Node](./01-run-node.md)
 
 :::
@@ -54,7 +54,7 @@ You should see two delegations, the first one made from the `gentx`, and the sec
 
 ## Using gRPC
 
-The Protobuf ecosystem developed tools for different use cases, including code-generation from `*.proto` files into various languages. These tools allow the building of clients easily. Often, the client connection (i.e. the transport) can be plugged and replaced very easily. Let's explore one of the most popular transport: [gRPC](../../develop/advanced/06-grpc_rest.md).
+The Protobuf ecosystem developed tools for different use cases, including code-generation from `*.proto` files into various languages. These tools allow the building of clients easily. Often, the client connection (i.e. the transport) can be plugged and replaced very easily. Let's explore one of the most popular transport: [gRPC](../../learn/advanced/06-grpc_rest.md).
 
 Since the code generation library largely depends on your own tech stack, we will only present three alternatives:
 
@@ -248,7 +248,7 @@ CosmJS documentation can be found at [https://cosmos.github.io/cosmjs](https://c
 
 ## Using the REST Endpoints
 
-As described in the [gRPC guide](../../develop/advanced/06-grpc_rest.md), all gRPC services on the Cosmos SDK are made available for more convenient REST-based queries through gRPC-gateway. The format of the URL path is based on the Protobuf service method's full-qualified name, but may contain small customizations so that final URLs look more idiomatic. For example, the REST endpoint for the `cosmos.bank.v1beta1.Query/AllBalances` method is `GET /cosmos/bank/v1beta1/balances/{address}`. Request arguments are passed as query parameters.
+As described in the [gRPC guide](../../learn/advanced/06-grpc_rest.md), all gRPC services on the Cosmos SDK are made available for more convenient REST-based queries through gRPC-gateway. The format of the URL path is based on the Protobuf service method's full-qualified name, but may contain small customizations so that final URLs look more idiomatic. For example, the REST endpoint for the `cosmos.bank.v1beta1.Query/AllBalances` method is `GET /cosmos/bank/v1beta1/balances/{address}`. Request arguments are passed as query parameters.
 
 Note that the REST endpoints are not enabled by default. To enable them, edit the `api` section of your  `~/.simapp/config/app.toml` file:
 

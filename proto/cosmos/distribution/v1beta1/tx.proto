@@ -29,7 +29,12 @@ service Msg {
 
   // FundCommunityPool defines a method to allow an account to directly
   // fund the community pool.
-  rpc FundCommunityPool(MsgFundCommunityPool) returns (MsgFundCommunityPoolResponse);
+  //
+  // Deprecated: Use x/protocolpool module's FundCommunityPool instead.
+  // Since: cosmos-sdk 0.50
+  rpc FundCommunityPool(MsgFundCommunityPool) returns (MsgFundCommunityPoolResponse) {
+    option deprecated = true;
+  };
 
   // UpdateParams defines a governance operation for updating the x/distribution
   // module parameters. The authority is defined in the keeper.
@@ -42,7 +47,8 @@ service Msg {
   // could be the governance module itself. The authority is defined in the
   // keeper.
   //
-  // Since: cosmos-sdk 0.47
+  // Deprecated: Use x/protocolpool module's CommunityPoolSpend instead.
+  // Since: cosmos-sdk 0.50
   rpc CommunityPoolSpend(MsgCommunityPoolSpend) returns (MsgCommunityPoolSpendResponse);
 
   // DepositValidatorRewardsPool defines a method to provide additional rewards
@@ -120,7 +126,11 @@ message MsgWithdrawValidatorCommissionResponse {
 
 // MsgFundCommunityPool allows an account to directly
 // fund the community pool.
+//
+// Deprecated: Use x/protocolpool module's MsgFundCommunityPool instead.
+// Since: cosmos-sdk 0.50
 message MsgFundCommunityPool {
+  option deprecated             = true;
   option (cosmos.msg.v1.signer) = "depositor";
   option (amino.name)           = "cosmos-sdk/MsgFundCommunityPool";
 
@@ -137,7 +147,12 @@ message MsgFundCommunityPool {
 }
 
 // MsgFundCommunityPoolResponse defines the Msg/FundCommunityPool response type.
-message MsgFundCommunityPoolResponse {}
+//
+// Deprecated
+// Since: cosmos-sdk 0.50
+message MsgFundCommunityPoolResponse {
+  option deprecated = true;
+}
 
 // MsgUpdateParams is the Msg/UpdateParams request type.
 //
@@ -164,9 +179,11 @@ message MsgUpdateParamsResponse {}
 // MsgCommunityPoolSpend defines a message for sending tokens from the community
 // pool to another account. This message is typically executed via a governance
 // proposal with the governance module being the executing authority.
-//
-// Since: cosmos-sdk 0.47
+
+// Deprecated: Use x/protocolpool module's MsgCommunityPoolSpend instead
+// Since: cosmos-sdk 0.50
 message MsgCommunityPoolSpend {
+  option deprecated             = true;
   option (cosmos.msg.v1.signer) = "authority";
   option (amino.name)           = "cosmos-sdk/distr/MsgCommunityPoolSpend";
 
@@ -184,8 +201,11 @@ message MsgCommunityPoolSpend {
 // MsgCommunityPoolSpendResponse defines the response to executing a
 // MsgCommunityPoolSpend message.
 //
-// Since: cosmos-sdk 0.47
-message MsgCommunityPoolSpendResponse {}
+// Deprecated
+// Since: cosmos-sdk 0.50
+message MsgCommunityPoolSpendResponse {
+  option deprecated = true;
+}
 
 // DepositValidatorRewardsPool defines the request structure to provide
 // additional rewards to delegators from a specific validator.

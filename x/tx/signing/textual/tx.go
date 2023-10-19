@@ -83,10 +83,7 @@ func (vr txValueRenderer) Format(ctx context.Context, v protoreflect.Value) ([]S
 		NonCriticalExtensionOptions: txBody.NonCriticalExtensionOptions,
 		HashOfRawBytes:              getHash(textualData.BodyBytes, textualData.AuthInfoBytes),
 	}
-	if txAuthInfo.Tip != nil {
-		envelope.Tip = txAuthInfo.Tip.Amount
-		envelope.Tipper = txAuthInfo.Tip.Tipper
-	}
+
 	// Find all other tx signers than the current signer. In the case where our
 	// Textual signer is one key of a multisig, then otherSigners will include
 	// the multisig pubkey.
@@ -242,12 +239,6 @@ func (vr txValueRenderer) Parse(ctx context.Context, screens []Screen) (protoref
 			Payer:    envelope.FeePayer,
 			Granter:  envelope.FeeGranter,
 		},
-	}
-	if envelope.Tip != nil {
-		authInfo.Tip = &txv1beta1.Tip{
-			Amount: envelope.Tip,
-			Tipper: envelope.Tipper,
-		}
 	}
 
 	// Figure out the signers in the correct order.

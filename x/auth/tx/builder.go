@@ -45,10 +45,8 @@ type wrapper struct {
 var (
 	_ authsigning.Tx             = &wrapper{}
 	_ client.TxBuilder           = &wrapper{}
-	_ tx.TipTx                   = &wrapper{}
 	_ ante.HasExtensionOptionsTx = &wrapper{}
 	_ ExtensionOptionsTxBuilder  = &wrapper{}
-	_ tx.TipTx                   = &wrapper{}
 )
 
 // ExtensionOptionsTxBuilder defines a TxBuilder that can also set extensions.
@@ -214,10 +212,6 @@ func (w *wrapper) FeeGranter() []byte {
 	return w.tx.FeeGranter(w.cdc)
 }
 
-func (w *wrapper) GetTip() *tx.Tip {
-	return w.tx.AuthInfo.Tip
-}
-
 func (w *wrapper) GetMemo() string {
 	return w.tx.Body.Memo
 }
@@ -313,13 +307,6 @@ func (w *wrapper) SetFeeAmount(coins sdk.Coins) {
 	}
 
 	w.tx.AuthInfo.Fee.Amount = coins
-
-	// set authInfoBz to nil because the cached authInfoBz no longer matches tx.AuthInfo
-	w.authInfoBz = nil
-}
-
-func (w *wrapper) SetTip(tip *tx.Tip) {
-	w.tx.AuthInfo.Tip = tip
 
 	// set authInfoBz to nil because the cached authInfoBz no longer matches tx.AuthInfo
 	w.authInfoBz = nil
@@ -499,14 +486,6 @@ func (w *wrapper) AddAuxSignerData(data tx.AuxSignerData) error {
 			}
 		}
 	}
-	if w.tx.AuthInfo.Tip != nil && data.SignDoc.Tip != nil {
-		if !w.tx.AuthInfo.Tip.Amount.Equal(data.SignDoc.Tip.Amount) {
-			return sdkerrors.ErrInvalidRequest.Wrapf("TxBuilder has tip %+v, got %+v in AuxSignerData", w.tx.AuthInfo.Tip.Amount, data.SignDoc.Tip.Amount)
-		}
-		if w.tx.AuthInfo.Tip.Tipper != data.SignDoc.Tip.Tipper {
-			return sdkerrors.ErrInvalidRequest.Wrapf("TxBuilder has tipper %s, got %s in AuxSignerData", w.tx.AuthInfo.Tip.Tipper, data.SignDoc.Tip.Tipper)
-		}
-	}
 
 	w.SetMemo(body.Memo)
 	w.SetTimeoutHeight(body.TimeoutHeight)
@@ -520,7 +499,6 @@ func (w *wrapper) AddAuxSignerData(data tx.AuxSignerData) error {
 	if err != nil {
 		return err
 	}
-	w.SetTip(data.GetSignDoc().GetTip())
 
 	// Get the aux signer's index in GetSigners.
 	signerIndex := -1

@@ -76,7 +76,6 @@ func TestBaseApp_BlockGas(t *testing.T) {
 			appBuilder        *runtime.AppBuilder
 			txConfig          client.TxConfig
 			cdc               codec.Codec
-			pcdc              codec.ProtoCodecMarshaler
 			interfaceRegistry codectypes.InterfaceRegistry
 			err               error
 		)
@@ -86,7 +85,6 @@ func TestBaseApp_BlockGas(t *testing.T) {
 				configurator.NewAppConfig(
 					configurator.AuthModule(),
 					configurator.TxModule(),
-					configurator.ParamsModule(),
 					configurator.ConsensusModule(),
 					configurator.BankModule(),
 					configurator.StakingModule(),
@@ -98,7 +96,6 @@ func TestBaseApp_BlockGas(t *testing.T) {
 			&interfaceRegistry,
 			&txConfig,
 			&cdc,
-			&pcdc,
 			&appBuilder)
 		require.NoError(t, err)
 

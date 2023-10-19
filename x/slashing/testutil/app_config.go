@@ -1,7 +1,8 @@
 package testutil
 
 import (
-	_ "cosmossdk.io/x/mint" // import as blank for app wiring
+	_ "cosmossdk.io/x/mint"         // import as blank for app wiring
+	_ "cosmossdk.io/x/protocolpool" // import as blank for app wiring
 
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
 	_ "github.com/cosmos/cosmos-sdk/x/auth"           // import as blank for app wiring
@@ -22,8 +23,8 @@ var AppConfig = configurator.NewAppConfig(
 	configurator.SlashingModule(),
 	configurator.TxModule(),
 	configurator.ConsensusModule(),
-	configurator.ParamsModule(),
 	configurator.GenutilModule(),
 	configurator.MintModule(),
 	configurator.DistributionModule(),
+	configurator.ProtocolPoolModule(),
 )

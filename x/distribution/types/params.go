@@ -39,12 +39,3 @@ func validateCommunityTax(i interface{}) error {
 
 	return nil
 }
-
-func validateWithdrawAddrEnabled(i interface{}) error {
-	_, ok := i.(bool)
-	if !ok {
-		return fmt.Errorf("invalid parameter type: %T", i)
-	}
-
-	return nil
-}

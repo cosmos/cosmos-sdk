@@ -8,14 +8,26 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
+// SignerInfo contains information about the signer field.
+// That field is special because it needs to be known for signing.
+// This struct keeps track of the field name and whether it is a flag.
+// IsFlag and PositionalArgIndex are mutually exclusive.
+type SignerInfo struct {
+	PositionalArgIndex int
+	IsFlag             bool
+	FieldName          string
+}
+
 // MessageBinder binds multiple flags in a flag set to a protobuf message.
 type MessageBinder struct {
-	CobraArgs cobra.PositionalArgs
+	CobraArgs  cobra.PositionalArgs
+	SignerInfo SignerInfo
 
 	positionalFlagSet *pflag.FlagSet
 	positionalArgs    []fieldBinding
 	hasVarargs        bool
 	hasOptional       bool
+	mandatoryArgUntil int
 
 	flagBindings []fieldBinding
 	messageType  protoreflect.MessageType
@@ -38,16 +50,14 @@ func (m MessageBinder) Bind(msg protoreflect.Message, positionalArgs []string) e
 		}
 
 		name := fmt.Sprintf("%d", i)
-		if i == n-1 && m.hasVarargs {
+		if i == m.mandatoryArgUntil && m.hasVarargs {
 			for _, v := range positionalArgs[i:] {
-				err := m.positionalFlagSet.Set(name, v)
-				if err != nil {
+				if err := m.positionalFlagSet.Set(name, v); err != nil {
 					return err
 				}
 			}
 		} else {
-			err := m.positionalFlagSet.Set(name, positionalArgs[i])
-			if err != nil {
+			if err := m.positionalFlagSet.Set(name, positionalArgs[i]); err != nil {
 				return err
 			}
 		}
@@ -55,16 +65,14 @@ func (m MessageBinder) Bind(msg protoreflect.Message, positionalArgs []string) e
 
 	// bind positional arg values to the message
 	for _, arg := range m.positionalArgs {
-		err := arg.bind(msg)
-		if err != nil {
+		if err := arg.bind(msg); err != nil {
 			return err
 		}
 	}
 
 	// bind flag values to the message
 	for _, binding := range m.flagBindings {
-		err := binding.bind(msg)
-		if err != nil {
+		if err := binding.bind(msg); err != nil {
 			return err
 		}
 	}
@@ -90,11 +98,11 @@ func (f fieldBinding) bind(msg protoreflect.Message) error {
 		return err
 	}
 
-	kind := f.field.Kind()
-	if !(field.IsList() ||
-		field.IsMap() ||
-		kind == protoreflect.MessageKind ||
-		kind == protoreflect.GroupKind) {
+	if field.IsMap() {
+		return nil
+	}
+
+	if msg.IsValid() && val.IsValid() {
 		msg.Set(f.field, val)
 	}
 

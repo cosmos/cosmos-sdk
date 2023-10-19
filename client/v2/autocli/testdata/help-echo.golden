@@ -19,6 +19,7 @@ Flags:
       --an-enum Enum (unspecified | one | two | five | neg-three)             (default unspecified)
       --bools bools                                                           (default [])
       --bz binary                                                            some bytes
+      --coins cosmos.base.v1beta1.Coin (repeated)                            
       --deprecated-field string                                               (DEPRECATED: don't use this)
       --duration duration                                                    some random duration
       --durations duration (repeated)                                        

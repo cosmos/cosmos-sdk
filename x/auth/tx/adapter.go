@@ -54,23 +54,6 @@ func (w *wrapper) GetSigningTxData() txsigning.TxData {
 		}
 	}
 
-	var txTip *txv1beta1.Tip
-	tip := authInfo.Tip
-	if tip != nil {
-		tipCoins := tip.GetAmount()
-		tipAmount := make([]*basev1beta1.Coin, len(tipCoins))
-		for i, coin := range tipCoins {
-			tipAmount[i] = &basev1beta1.Coin{
-				Denom:  coin.Denom,
-				Amount: coin.Amount.String(),
-			}
-		}
-		txTip = &txv1beta1.Tip{
-			Amount: tipAmount,
-			Tipper: tip.Tipper,
-		}
-	}
-
 	txSignerInfos := make([]*txv1beta1.SignerInfo, len(authInfo.SignerInfos))
 	for i, signerInfo := range authInfo.SignerInfos {
 		modeInfo := &txv1beta1.ModeInfo{}
@@ -94,7 +77,6 @@ func (w *wrapper) GetSigningTxData() txsigning.TxData {
 			Payer:    authInfo.Fee.Payer,
 			Granter:  authInfo.Fee.Granter,
 		},
-		Tip: txTip,
 	}
 
 	txBody := &txv1beta1.TxBody{

@@ -21,7 +21,6 @@ func TestAminoJsonSignMode(t *testing.T) {
 	handlerOptions := testutil.HandlerArgumentOptions{
 		ChainID: "test-chain",
 		Memo:    "sometestmemo",
-		Tip:     &txv1beta1.Tip{Tipper: "tipper", Amount: []*basev1beta1.Coin{{Denom: "Tip-token", Amount: "10"}}},
 		Msg: &bankv1beta1.MsgSend{
 			FromAddress: "foo",
 			ToAddress:   "bar",
@@ -53,35 +52,12 @@ func TestAminoJsonSignMode(t *testing.T) {
 			error: "got empty address in SIGN_MODE_LEGACY_AMINO_JSON handler: invalid request",
 		},
 		{
-			name: "nil tip",
-			malleate: func(opts testutil.HandlerArgumentOptions) testutil.HandlerArgumentOptions {
-				opts.Tip = nil
-				return opts
-			},
-		},
-		{
-			name: "empty tipper",
-			malleate: func(opts testutil.HandlerArgumentOptions) testutil.HandlerArgumentOptions {
-				opts.Tip.Tipper = ""
-				return opts
-			},
-			error: "tipper cannot be empty",
-		},
-		{
 			name: "nil fee",
 			malleate: func(opts testutil.HandlerArgumentOptions) testutil.HandlerArgumentOptions {
-				opts.Tip.Tipper = "tipper"
 				opts.Fee = nil
 				return opts
 			},
 			error: "fee cannot be nil",
-		},
-		{
-			name: "tipper is signer",
-			malleate: func(opts testutil.HandlerArgumentOptions) testutil.HandlerArgumentOptions {
-				opts.Tip.Tipper = opts.SignerAddress
-				return opts
-			},
 		},
 	}
 

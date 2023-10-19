@@ -5,178 +5,110 @@ import (
 	"encoding/json"
 	"io"
 
-	"cosmossdk.io/errors"
-	"cosmossdk.io/store/types"
+	"github.com/cockroachdb/errors"
+
+	"cosmossdk.io/store/v2"
 )
 
+// Operation types for tracing KVStore operations.
 const (
-	writeOp     operation = "write"
-	readOp      operation = "read"
-	deleteOp    operation = "delete"
-	iterKeyOp   operation = "iterKey"
-	iterValueOp operation = "iterValue"
+	WriteOp     = "write"
+	ReadOp      = "read"
+	DeleteOp    = "delete"
+	IterKeyOp   = "iterKey"
+	IterValueOp = "iterValue"
 )
+
+var _ store.BranchedKVStore = (*Store)(nil)
 
 type (
-	// Store implements the KVStore interface with tracing enabled.
-	// Operations are traced on each core KVStore call and written to the
-	// underlying io.writer.
-	//
-	// TODO: Should we use a buffered writer and implement Commit on
-	// Store?
+	// Store defines a KVStore used for tracing capabilities, which typically wraps
+	// another KVStore implementation.
 	Store struct {
-		parent  types.KVStore
+		parent  store.KVStore
+		context store.TraceContext
 		writer  io.Writer
-		context types.TraceContext
 	}
 
-	// operation represents an IO operation
-	operation string
-
-	// traceOperation implements a traced KVStore operation
-	traceOperation struct {
-		Operation operation              `json:"operation"`
-		Key       string                 `json:"key"`
-		Value     string                 `json:"value"`
-		Metadata  map[string]interface{} `json:"metadata"`
+	// TraceOperation defines a traced KVStore operation, such as a read or write
+	TraceOperation struct {
+		Operation string         `json:"operation"`
+		Key       string         `json:"key"`
+		Value     string         `json:"value"`
+		Metadata  map[string]any `json:"metadata"`
 	}
 )
 
-// NewStore returns a reference to a new traceKVStore given a parent
-// KVStore implementation and a buffered writer.
-func NewStore(parent types.KVStore, writer io.Writer, tc types.TraceContext) *Store {
-	return &Store{parent: parent, writer: writer, context: tc}
-}
-
-// Get implements the KVStore interface. It traces a read operation and
-// delegates a Get call to the parent KVStore.
-func (tkv *Store) Get(key []byte) []byte {
-	value := tkv.parent.Get(key)
-
-	writeOperation(tkv.writer, readOp, tkv.context, key, value)
-	return value
-}
-
-// Set implements the KVStore interface. It traces a write operation and
-// delegates the Set call to the parent KVStore.
-func (tkv *Store) Set(key, value []byte) {
-	types.AssertValidKey(key)
-	writeOperation(tkv.writer, writeOp, tkv.context, key, value)
-	tkv.parent.Set(key, value)
-}
-
-// Delete implements the KVStore interface. It traces a write operation and
-// delegates the Delete call to the parent KVStore.
-func (tkv *Store) Delete(key []byte) {
-	writeOperation(tkv.writer, deleteOp, tkv.context, key, nil)
-	tkv.parent.Delete(key)
-}
-
-// Has implements the KVStore interface. It delegates the Has call to the
-// parent KVStore.
-func (tkv *Store) Has(key []byte) bool {
-	return tkv.parent.Has(key)
-}
-
-// Iterator implements the KVStore interface. It delegates the Iterator call
-// to the parent KVStore.
-func (tkv *Store) Iterator(start, end []byte) types.Iterator {
-	return tkv.iterator(start, end, true)
-}
-
-// ReverseIterator implements the KVStore interface. It delegates the
-// ReverseIterator call to the parent KVStore.
-func (tkv *Store) ReverseIterator(start, end []byte) types.Iterator {
-	return tkv.iterator(start, end, false)
-}
-
-// iterator facilitates iteration over a KVStore. It delegates the necessary
-// calls to it's parent KVStore.
-func (tkv *Store) iterator(start, end []byte, ascending bool) types.Iterator {
-	var parent types.Iterator
-
-	if ascending {
-		parent = tkv.parent.Iterator(start, end)
-	} else {
-		parent = tkv.parent.ReverseIterator(start, end)
+func New(p store.KVStore, w io.Writer, tc store.TraceContext) store.BranchedKVStore {
+	return &Store{
+		parent:  p,
+		writer:  w,
+		context: tc,
 	}
-
-	return newTraceIterator(tkv.writer, parent, tkv.context)
 }
 
-type traceIterator struct {
-	parent  types.Iterator
-	writer  io.Writer
-	context types.TraceContext
+func (s *Store) GetStoreKey() string {
+	return s.parent.GetStoreKey()
 }
 
-func newTraceIterator(w io.Writer, parent types.Iterator, tc types.TraceContext) types.Iterator {
-	return &traceIterator{writer: w, parent: parent, context: tc}
+func (s *Store) GetStoreType() store.StoreType {
+	return store.StoreTypeTrace
 }
 
-// Domain implements the Iterator interface.
-func (ti *traceIterator) Domain() (start, end []byte) {
-	return ti.parent.Domain()
+func (s *Store) GetChangeset() *store.Changeset {
+	return s.parent.GetChangeset()
 }
 
-// Valid implements the Iterator interface.
-func (ti *traceIterator) Valid() bool {
-	return ti.parent.Valid()
-}
-
-// Next implements the Iterator interface.
-func (ti *traceIterator) Next() {
-	ti.parent.Next()
-}
-
-// Key implements the Iterator interface.
-func (ti *traceIterator) Key() []byte {
-	key := ti.parent.Key()
-
-	writeOperation(ti.writer, iterKeyOp, ti.context, key, nil)
-	return key
-}
-
-// Value implements the Iterator interface.
-func (ti *traceIterator) Value() []byte {
-	value := ti.parent.Value()
-
-	writeOperation(ti.writer, iterValueOp, ti.context, nil, value)
+func (s *Store) Get(key []byte) []byte {
+	value := s.parent.Get(key)
+	writeOperation(s.writer, ReadOp, s.context, key, value)
 	return value
 }
 
-// Close implements the Iterator interface.
-func (ti *traceIterator) Close() error {
-	return ti.parent.Close()
+func (s *Store) Has(key []byte) bool {
+	return s.parent.Has(key)
 }
 
-// Error delegates the Error call to the parent iterator.
-func (ti *traceIterator) Error() error {
-	return ti.parent.Error()
+func (s *Store) Set(key, value []byte) {
+	writeOperation(s.writer, WriteOp, s.context, key, value)
+	s.parent.Set(key, value)
 }
 
-// GetStoreType implements the KVStore interface. It returns the underlying
-// KVStore type.
-func (tkv *Store) GetStoreType() types.StoreType {
-	return tkv.parent.GetStoreType()
+func (s *Store) Delete(key []byte) {
+	writeOperation(s.writer, DeleteOp, s.context, key, nil)
+	s.parent.Delete(key)
 }
 
-// CacheWrap implements the KVStore interface. It panics because a Store
-// cannot be branched.
-func (tkv *Store) CacheWrap() types.CacheWrap {
-	panic("cannot CacheWrap a TraceKVStore")
+func (s *Store) Reset() error {
+	return s.parent.Reset()
 }
 
-// CacheWrapWithTrace implements the KVStore interface. It panics as a
-// Store cannot be branched.
-func (tkv *Store) CacheWrapWithTrace(_ io.Writer, _ types.TraceContext) types.CacheWrap {
-	panic("cannot CacheWrapWithTrace a TraceKVStore")
+func (s *Store) Write() {
+	if b, ok := s.parent.(store.BranchedKVStore); ok {
+		b.Write()
+	}
+}
+
+func (s *Store) Branch() store.BranchedKVStore {
+	panic("cannot call Branch() on tracekv.Store")
+}
+
+func (s *Store) BranchWithTrace(_ io.Writer, _ store.TraceContext) store.BranchedKVStore {
+	panic("cannot call BranchWithTrace() on tracekv.Store")
+}
+
+func (s *Store) Iterator(start, end []byte) store.Iterator {
+	return newIterator(s.writer, s.parent.Iterator(start, end), s.context)
+}
+
+func (s *Store) ReverseIterator(start, end []byte) store.Iterator {
+	return newIterator(s.writer, s.parent.ReverseIterator(start, end), s.context)
 }
 
 // writeOperation writes a KVStore operation to the underlying io.Writer as
 // JSON-encoded data where the key/value pair is base64 encoded.
-func writeOperation(w io.Writer, op operation, tc types.TraceContext, key, value []byte) {
-	traceOp := traceOperation{
+func writeOperation(w io.Writer, op string, tc store.TraceContext, key, value []byte) {
+	traceOp := TraceOperation{
 		Operation: op,
 		Key:       base64.StdEncoding.EncodeToString(key),
 		Value:     base64.StdEncoding.EncodeToString(value),

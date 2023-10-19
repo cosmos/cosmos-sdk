@@ -425,16 +425,12 @@ func TestGRPCCommunityPool(t *testing.T) {
 	t.Parallel()
 	f := initFixture(t)
 
-	assert.NilError(t, f.distrKeeper.FeePool.Set(f.sdkCtx, types.FeePool{
-		CommunityPool: sdk.NewDecCoins(sdk.DecCoin{Denom: sdk.DefaultBondDenom, Amount: math.LegacyNewDec(0)}),
-	}))
-
 	qr := f.app.QueryHelper()
 	queryClient := types.NewQueryClient(qr)
 
 	var (
-		req     *types.QueryCommunityPoolRequest
-		expPool *types.QueryCommunityPoolResponse
+		req     *types.QueryCommunityPoolRequest  //nolint:staticcheck // we're using a deprecated call
+		expPool *types.QueryCommunityPoolResponse //nolint:staticcheck // we're using a deprecated call
 	)
 
 	testCases := []struct {
@@ -444,8 +440,8 @@ func TestGRPCCommunityPool(t *testing.T) {
 		{
 			name: "valid request empty community pool",
 			malleate: func() {
-				req = &types.QueryCommunityPoolRequest{}
-				expPool = &types.QueryCommunityPoolResponse{}
+				req = &types.QueryCommunityPoolRequest{}      //nolint:staticcheck // we're using a deprecated call
+				expPool = &types.QueryCommunityPoolResponse{} //nolint:staticcheck // we're using a deprecated call
 			},
 		},
 		{
@@ -455,11 +451,11 @@ func TestGRPCCommunityPool(t *testing.T) {
 				assert.NilError(t, f.bankKeeper.MintCoins(f.sdkCtx, types.ModuleName, amount))
 				assert.NilError(t, f.bankKeeper.SendCoinsFromModuleToAccount(f.sdkCtx, types.ModuleName, f.addr, amount))
 
-				err := f.distrKeeper.FundCommunityPool(f.sdkCtx, amount, f.addr)
+				err := f.poolKeeper.FundCommunityPool(f.sdkCtx, amount, f.addr)
 				assert.Assert(t, err == nil)
-				req = &types.QueryCommunityPoolRequest{}
+				req = &types.QueryCommunityPoolRequest{} //nolint:staticcheck // we're using a deprecated call
 
-				expPool = &types.QueryCommunityPoolResponse{Pool: sdk.NewDecCoinsFromCoins(amount...)}
+				expPool = &types.QueryCommunityPoolResponse{Pool: sdk.NewDecCoinsFromCoins(amount...)} //nolint:staticcheck // we're using a deprecated call
 			},
 		},
 	}
@@ -469,7 +465,7 @@ func TestGRPCCommunityPool(t *testing.T) {
 		t.Run(fmt.Sprintf("Case %s", tc.name), func(t *testing.T) {
 			testCase.malleate()
 
-			pool, err := queryClient.CommunityPool(f.sdkCtx, req)
+			pool, err := queryClient.CommunityPool(f.sdkCtx, req) //nolint:staticcheck // we're using a deprecated call
 
 			assert.NilError(t, err)
 			assert.DeepEqual(t, expPool, pool)

@@ -38,8 +38,8 @@ func TestMakeAccountContext(t *testing.T) {
 	// this store is the global x/accounts module store.
 	store := storeService.OpenKVStore(originalContext)
 
-	// now we want the value to be store in the following accounts prefix (accountAddr + itemPrefix)
-	value, err := store.Get(append(accountAddr, itemPrefix...))
+	// now we want the value to be store in the following accounts prefix (AccountsStatePrefix + accountAddr + itemPrefix)
+	value, err := store.Get(append(AccountStatePrefix, append(accountAddr, itemPrefix...)...))
 	require.NoError(t, err)
 	require.Equal(t, []byte{0, 0, 0, 0, 0, 0, 3, 232}, value)
 

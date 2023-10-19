@@ -46,7 +46,7 @@ func (t TestAccount) RegisterExecuteHandlers(builder *ExecuteBuilder) {
 	})
 }
 
-func (TestAccount) RegisterQueryHandlers(builder *QueryBuilder) {
+func (t TestAccount) RegisterQueryHandlers(builder *QueryBuilder) {
 	RegisterQueryHandler(builder, func(_ context.Context, req *wrapperspb.StringValue) (*wrapperspb.StringValue, error) {
 		return &wrapperspb.StringValue{Value: req.Value + "query-echo"}, nil
 	})

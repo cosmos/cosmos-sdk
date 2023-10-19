@@ -5,7 +5,7 @@ sidebar_position: 1
 # BeginBlocker and EndBlocker
 
 :::note Synopsis
-`BeginBlocker` and `EndBlocker` are optional methods module developers can implement in their module. They will be triggered at the beginning and at the end of each block respectively, when the [`BeginBlock`](../../develop/advanced/00-baseapp.md#beginblock) and [`EndBlock`](../../develop/advanced/00-baseapp.md#endblock) ABCI messages are received from the underlying consensus engine.
+`BeginBlocker` and `EndBlocker` are optional methods module developers can implement in their module. They will be triggered at the beginning and at the end of each block respectively, when the [`BeginBlock`](../../learn/advanced/00-baseapp.md#beginblock) and [`EndBlock`](../../learn/advanced/00-baseapp.md#endblock) ABCI messages are received from the underlying consensus engine.
 :::
 
 :::note Pre-requisite Readings
@@ -24,9 +24,9 @@ When needed, `BeginBlocker` and `EndBlocker` are implemented as part of the [`Ha
 
 The actual implementation of `BeginBlocker` and `EndBlocker` in `abci.go` are very similar to that of a [`Msg` service](./03-msg-services.md):
 
-* They generally use the [`keeper`](./06-keeper.md) and [`ctx`](../../develop/advanced/02-context.md) to retrieve information about the latest state.
+* They generally use the [`keeper`](./06-keeper.md) and [`ctx`](../../learn/advanced/02-context.md) to retrieve information about the latest state.
 * If needed, they use the `keeper` and `ctx` to trigger state-transitions.
-* If needed, they can emit [`events`](../../develop/advanced/08-events.md) via the `ctx`'s `EventManager`.
+* If needed, they can emit [`events`](../../learn/advanced/08-events.md) via the `ctx`'s `EventManager`.
 
 A specific type of `EndBlocker` is available to return validator updates to the underlying consensus engine in the form of an [`[]abci.ValidatorUpdates`](https://docs.cometbft.com/v0.37/spec/abci/abci++_methods#endblock). This is the preferred way to implement custom validator changes.
 

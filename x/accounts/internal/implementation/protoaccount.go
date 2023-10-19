@@ -55,6 +55,11 @@ func RegisterExecuteHandler[
 		}
 		return handler(ctx, concrete)
 	}
+
+	router.HandlerSchema[string(reqName)] = HandlerSchema{
+		RequestSchema:  *NewProtoMessageSchema[Req, ProtoReq](),
+		ResponseSchema: *NewProtoMessageSchema[Resp, ProtoResp](),
+	}
 }
 
 // RegisterQueryHandler registers a query handler for a smart account that uses protobuf.

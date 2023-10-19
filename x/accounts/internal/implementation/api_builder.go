@@ -46,8 +46,14 @@ func (i *InitBuilder) makeHandler() (func(ctx context.Context, initRequest any) 
 // NewExecuteBuilder creates a new ExecuteBuilder instance.
 func NewExecuteBuilder() *ExecuteBuilder {
 	return &ExecuteBuilder{
-		handlers: make(map[string]func(ctx context.Context, executeRequest any) (executeResponse any, err error)),
+		handlers:      make(map[string]func(ctx context.Context, executeRequest any) (executeResponse any, err error)),
+		HandlerSchema: make(map[string]HandlerSchema),
 	}
+}
+
+type HandlerSchema struct {
+	RequestSchema  MessageSchema
+	ResponseSchema MessageSchema
 }
 
 // ExecuteBuilder defines a smart account's execution router, it will be used to map an execution message
@@ -55,6 +61,9 @@ func NewExecuteBuilder() *ExecuteBuilder {
 type ExecuteBuilder struct {
 	// handlers is a map of handler functions that will be called when the smart account is executed.
 	handlers map[string]func(ctx context.Context, executeRequest any) (executeResponse any, err error)
+
+	HandlerSchema map[string]HandlerSchema
+
 	// err is the error that occurred before building the handler function.
 	err error
 }

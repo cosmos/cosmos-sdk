@@ -374,13 +374,14 @@ func TestMsgSetSendEnabled(t *testing.T) {
 
 	ctx := s.App.BaseApp.NewContext(false)
 	require.NoError(t, testutil.FundAccount(ctx, s.BankKeeper, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 101))))
+	require.NoError(t, testutil.FundAccount(ctx, s.BankKeeper, addr1, sdk.NewCoins(sdk.NewInt64Coin("stake", 10000))))
 	addr1Str := addr1.String()
 	govAddr := s.BankKeeper.GetAuthority()
 	goodGovProp, err := govv1.NewMsgSubmitProposal(
 		[]sdk.Msg{
 			types.NewMsgSetSendEnabled(govAddr, nil, nil),
 		},
-		sdk.Coins{{Denom: "foocoin", Amount: sdkmath.NewInt(5)}},
+		sdk.Coins{{Denom: "stake", Amount: sdkmath.NewInt(10000)}},
 		addr1Str,
 		"set default send enabled to true",
 		"Change send enabled",

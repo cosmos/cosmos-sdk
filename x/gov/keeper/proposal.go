@@ -114,7 +114,10 @@ func (keeper Keeper) SubmitProposal(ctx context.Context, messages []sdk.Msg, met
 	}
 
 	// called right after a proposal is submitted
-	keeper.Hooks().AfterProposalSubmission(ctx, proposalID)
+	err = keeper.Hooks().AfterProposalSubmission(ctx, proposalID)
+	if err != nil {
+		return v1.Proposal{}, err
+	}
 
 	sdkCtx.EventManager().EmitEvent(
 		sdk.NewEvent(

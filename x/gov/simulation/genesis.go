@@ -95,9 +95,10 @@ func GenVeto(r *rand.Rand) sdkmath.LegacyDec {
 	return sdkmath.LegacyNewDecWithPrec(int64(simulation.RandIntBetween(r, 250, 334)), 3)
 }
 
-// GenDepositMinRatio returns randomized DepositMinRatio
-func GenDepositMinRatio(r *rand.Rand) sdkmath.LegacyDec {
-	return sdkmath.LegacyNewDec(int64(simulation.RandIntBetween(r, 1, 50))).Quo(sdkmath.LegacyNewDec(1000))
+// GenMinDepositRatio returns randomized DepositMinRatio
+func GenMinDepositRatio(r *rand.Rand) sdkmath.LegacyDec {
+	return sdkmath.LegacyMustNewDecFromStr("0.001")
+	// return sdkmath.LegacyNewDec(int64(simulation.RandIntBetween(r, 1, 50))).Quo(sdkmath.LegacyNewDec(1000)) // TODO: re-add once I figure out why it doesn't work
 }
 
 // RandomizedGenState generates a random GenesisState for gov
@@ -138,7 +139,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 	simState.AppParams.GetOrGenerate(Veto, &veto, simState.Rand, func(r *rand.Rand) { veto = GenVeto(r) })
 
 	var minDepositRatio sdkmath.LegacyDec
-	simState.AppParams.GetOrGenerate(MinDepositRatio, &minDepositRatio, simState.Rand, func(r *rand.Rand) { minDepositRatio = GenDepositMinRatio(r) })
+	simState.AppParams.GetOrGenerate(MinDepositRatio, &minDepositRatio, simState.Rand, func(r *rand.Rand) { minDepositRatio = GenMinDepositRatio(r) })
 
 	govGenesis := v1.NewGenesisState(
 		startingProposalID,

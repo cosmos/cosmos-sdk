@@ -158,6 +158,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (types) [#17885](https://github.com/cosmos/cosmos-sdk/pull/17885) `InitGenesis` & `ExportGenesis` now take `context.Context` instead of `sdk.Context`
 * (x/auth) [#17985](https://github.com/cosmos/cosmos-sdk/pull/17985) Remove `StdTxConfig`
     * Remove depreacted `MakeTestingEncodingParams` from `simapp/params`
+* (x/group) [#17937](https://github.com/cosmos/cosmos-sdk/pull/17937) Groups module was moved to its own go.mod `cosmossdk.io/x/group`
 
 ### CLI Breaking Changes
 

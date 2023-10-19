@@ -41,7 +41,7 @@ type RootStore interface {
 
 	// Query performs a query on the RootStore for a given store key, version (height),
 	// and key tuple. Queries should be routed to the underlying SS engine.
-	Query(storeKey string, version uint64, key []byte) (QueryResponse, error)
+	Query(storeKey string, version uint64, key []byte) (QueryResult, error)
 
 	// Branch should branch the entire RootStore, i.e. a copy of the original RootStore
 	// except with all internal KV store(s) branched.
@@ -155,8 +155,8 @@ type BranchedKVStore interface {
 	BranchWithTrace(w io.Writer, tc TraceContext) BranchedKVStore
 }
 
-// QueryResponse defines the response type to performing a query on a RootStore.
-type QueryResponse struct {
+// QueryResult defines the response type to performing a query on a RootStore.
+type QueryResult struct {
 	Key     []byte
 	Value   []byte
 	Version uint64

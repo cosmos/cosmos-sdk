@@ -1,8 +1,6 @@
 module github.com/cosmos-sdk/tests/starship/tests
 
-go 1.21.0
-
-toolchain go1.21.1
+go 1.21
 
 replace (
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0

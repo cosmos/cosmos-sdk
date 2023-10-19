@@ -1,6 +1,4 @@
-go 1.21.0
-
-toolchain go1.21.1
+go 1.21
 
 module github.com/cosmos/cosmos-sdk
 

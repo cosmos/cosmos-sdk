@@ -9,7 +9,7 @@ require (
 	cosmossdk.io/x/tx v0.11.0
 	github.com/cockroachdb/errors v1.11.1
 	github.com/cosmos/cosmos-proto v1.0.0-beta.3
-	github.com/cosmos/cosmos-sdk v0.47.5
+	github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230713190037-6a0ab4fd167f
 	github.com/cosmos/gogoproto v1.4.11
 	github.com/spf13/cobra v1.7.0
 	github.com/spf13/pflag v1.0.5

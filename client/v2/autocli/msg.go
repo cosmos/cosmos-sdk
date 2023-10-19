@@ -131,8 +131,21 @@ func (b *Builder) BuildMsgMethodCommand(descriptor protoreflect.MethodDescriptor
 		// set signer to signer field if empty
 		fd := input.Descriptor().Fields().ByName(protoreflect.Name(flag.GetSignerFieldName(input.Descriptor())))
 		if addr := input.Get(fd).String(); addr == "" {
+			addressCodec := b.Builder.AddressCodec
+
+			scalarType, ok := flag.GetScalarType(fd)
+			if ok {
+				// override address codec if validator or consensus address
+				switch scalarType {
+				case flag.ValidatorAddressStringScalarType:
+					addressCodec = b.Builder.ValidatorAddressCodec
+				case flag.ConsensusAddressStringScalarType:
+					addressCodec = b.Builder.ConsensusAddressCodec
+				}
+			}
+
 			signerFromFlag := clientCtx.GetFromAddress()
-			signer, err := b.ClientCtx.AddressCodec.BytesToString(signerFromFlag.Bytes())
+			signer, err := addressCodec.BytesToString(signerFromFlag.Bytes())
 			if err != nil {
 				return fmt.Errorf("failed to set signer on message, got %v: %w", signerFromFlag, err)
 			}

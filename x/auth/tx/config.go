@@ -99,9 +99,8 @@ func NewDefaultSigningOptions() (*txsigning.Options, error) {
 // NewSigningHandlerMap returns a new txsigning.HandlerMap using the provided ConfigOptions.
 // It is recommended to use types.InterfaceRegistry in the field ConfigOptions.FileResolver as shown in
 // NewTxConfigWithOptions but this fn does not enforce it.
-func NewSigningHandlerMap(configOptions ConfigOptions) (*txsigning.HandlerMap, error) {
+func NewSigningHandlerMap(configOpts ConfigOptions) (*txsigning.HandlerMap, error) {
 	var err error
-	configOpts := &configOptions
 	if configOpts.SigningOptions == nil {
 		configOpts.SigningOptions, err = NewDefaultSigningOptions()
 		if err != nil {
@@ -187,27 +186,25 @@ func NewTxConfigWithOptions(protoCodec codec.Codec, configOptions ConfigOptions)
 	}
 
 	var err error
-	opts := &configOptions
-	if opts.SigningContext == nil {
-		signingOpts := configOptions.SigningOptions
-		if signingOpts == nil {
-			signingOpts, err = NewDefaultSigningOptions()
+	if configOptions.SigningContext == nil {
+		if configOptions.SigningOptions == nil {
+			configOptions.SigningOptions, err = NewDefaultSigningOptions()
 			if err != nil {
 				return nil, err
 			}
 		}
-		if signingOpts.FileResolver == nil {
-			signingOpts.FileResolver = protoCodec.InterfaceRegistry()
+		if configOptions.SigningOptions.FileResolver == nil {
+			configOptions.SigningOptions.FileResolver = protoCodec.InterfaceRegistry()
 		}
-		opts.SigningContext, err = txsigning.NewContext(*signingOpts)
+		configOptions.SigningContext, err = txsigning.NewContext(*configOptions.SigningOptions)
 		if err != nil {
 			return nil, err
 		}
 	}
-	txConfig.signingContext = opts.SigningContext
+	txConfig.signingContext = configOptions.SigningContext
 
-	if opts.SigningHandler != nil {
-		txConfig.handler = opts.SigningHandler
+	if configOptions.SigningHandler != nil {
+		txConfig.handler = configOptions.SigningHandler
 		return txConfig, nil
 	}
 

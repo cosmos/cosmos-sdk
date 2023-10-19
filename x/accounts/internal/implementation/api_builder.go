@@ -28,10 +28,8 @@ type InitBuilder struct {
 	// with a typed version of it.
 	handler func(ctx context.Context, initRequest any) (initResponse any, err error)
 
-	// RequestSchema is the schema of the request message.
-	RequestSchema MessageSchema
-	// ResponseSchema is the schema of the response message.
-	ResponseSchema MessageSchema
+	// schema is the schema of the message that will be passed to the handler function.
+	schema HandlerSchema
 }
 
 // makeHandler returns the handler function that will be called when the smart account is initialized.
@@ -49,11 +47,6 @@ func NewExecuteBuilder() *ExecuteBuilder {
 		handlers:      make(map[string]func(ctx context.Context, executeRequest any) (executeResponse any, err error)),
 		HandlerSchema: make(map[string]HandlerSchema),
 	}
-}
-
-type HandlerSchema struct {
-	RequestSchema  MessageSchema
-	ResponseSchema MessageSchema
 }
 
 // ExecuteBuilder defines a smart account's execution router, it will be used to map an execution message

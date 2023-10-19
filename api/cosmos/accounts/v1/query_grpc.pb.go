@@ -20,6 +20,7 @@ const _ = grpc.SupportPackageIsVersion7
 
 const (
 	Query_AccountQuery_FullMethodName = "/cosmos.accounts.v1.Query/AccountQuery"
+	Query_Schema_FullMethodName       = "/cosmos.accounts.v1.Query/Schema"
 )
 
 // QueryClient is the client API for Query service.
@@ -28,6 +29,8 @@ const (
 type QueryClient interface {
 	// AccountQuery runs an account query.
 	AccountQuery(ctx context.Context, in *AccountQueryRequest, opts ...grpc.CallOption) (*AccountQueryResponse, error)
+	// Schema returns an x/account schema. Unstable.
+	Schema(ctx context.Context, in *SchemaRequest, opts ...grpc.CallOption) (*SchemaResponse, error)
 }
 
 type queryClient struct {
@@ -47,12 +50,23 @@ func (c *queryClient) AccountQuery(ctx context.Context, in *AccountQueryRequest,
 	return out, nil
 }
 
+func (c *queryClient) Schema(ctx context.Context, in *SchemaRequest, opts ...grpc.CallOption) (*SchemaResponse, error) {
+	out := new(SchemaResponse)
+	err := c.cc.Invoke(ctx, Query_Schema_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 // All implementations must embed UnimplementedQueryServer
 // for forward compatibility
 type QueryServer interface {
 	// AccountQuery runs an account query.
 	AccountQuery(context.Context, *AccountQueryRequest) (*AccountQueryResponse, error)
+	// Schema returns an x/account schema. Unstable.
+	Schema(context.Context, *SchemaRequest) (*SchemaResponse, error)
 	mustEmbedUnimplementedQueryServer()
 }
 
@@ -62,6 +76,9 @@ type UnimplementedQueryServer struct {
 
 func (UnimplementedQueryServer) AccountQuery(context.Context, *AccountQueryRequest) (*AccountQueryResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AccountQuery not implemented")
+}
+func (UnimplementedQueryServer) Schema(context.Context, *SchemaRequest) (*SchemaResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Schema not implemented")
 }
 func (UnimplementedQueryServer) mustEmbedUnimplementedQueryServer() {}
 
@@ -94,6 +111,24 @@ func _Query_AccountQuery_Handler(srv interface{}, ctx context.Context, dec func(
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_Schema_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SchemaRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).Schema(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Query_Schema_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).Schema(ctx, req.(*SchemaRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Query_ServiceDesc is the grpc.ServiceDesc for Query service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -104,6 +139,10 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "AccountQuery",
 			Handler:    _Query_AccountQuery_Handler,
+		},
+		{
+			MethodName: "Schema",
+			Handler:    _Query_Schema_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

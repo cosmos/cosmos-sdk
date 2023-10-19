@@ -32,8 +32,10 @@ func RegisterInitHandler[
 		return handler(ctx, concrete)
 	}
 
-	router.RequestSchema = *NewProtoMessageSchema[Req, ProtoReq]()
-	router.ResponseSchema = *NewProtoMessageSchema[Resp, ProtoResp]()
+	router.schema = HandlerSchema{
+		RequestSchema:  *NewProtoMessageSchema[Req, ProtoReq](),
+		ResponseSchema: *NewProtoMessageSchema[Resp, ProtoResp](),
+	}
 }
 
 // RegisterExecuteHandler registers an execution handler for a smart account that uses protobuf.

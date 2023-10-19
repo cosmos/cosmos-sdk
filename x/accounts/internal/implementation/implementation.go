@@ -89,8 +89,10 @@ func NewImplementation(account Account) (Implementation, error) {
 		Init:                  initHandler,
 		Execute:               executeHandler,
 		Query:                 queryHandler,
-		InitRequestSchema:     ir.RequestSchema,
-		InitResponseSchema:    ir.ResponseSchema,
+		CollectionsSchema:     collections.Schema{},
+		InitHandlerSchema:     ir.schema,
+		QueryHandlersSchema:   qr.er.HandlerSchema,
+		ExecuteHandlersSchema: er.HandlerSchema,
 		DecodeExecuteRequest:  er.makeRequestDecoder(),
 		EncodeExecuteResponse: er.makeResponseEncoder(),
 		DecodeQueryRequest:    qr.er.makeRequestDecoder(),
@@ -107,15 +109,16 @@ type Implementation struct {
 	Execute func(ctx context.Context, msg any) (resp any, err error)
 	// Query defines the query handler for the smart account.
 	Query func(ctx context.Context, msg any) (resp any, err error)
-
-	// Schema
-
+	// CollectionsSchema represents the state schema.
 	CollectionsSchema collections.Schema
+	// InitHandlerSchema represents the init handler schema.
+	InitHandlerSchema HandlerSchema
+	// QueryHandlersSchema is the schema of the query handlers.
+	QueryHandlersSchema map[string]HandlerSchema
+	// ExecuteHandlersSchema is the schema of the execute handlers.
+	ExecuteHandlersSchema map[string]HandlerSchema
 
-	// InitRequestSchema is the MessageSchema of the init request.
-	InitRequestSchema MessageSchema
-	// InitResponseSchema is the MessageSchema of the init response.
-	InitResponseSchema MessageSchema
+	// TODO: remove these fields and use the schemas instead
 
 	// DecodeExecuteRequest decodes an execute request coming from the message server.
 	DecodeExecuteRequest func([]byte) (any, error)
@@ -145,4 +148,12 @@ type MessageSchema struct {
 	// HumanEncode encodes the message into human-readable bytes.
 	// CONSENSUS UNSAFE.
 	HumanEncode func(any) ([]byte, error)
+}
+
+// HandlerSchema defines the schema of a handler.
+type HandlerSchema struct {
+	// RequestSchema defines the schema of the request.
+	RequestSchema MessageSchema
+	// ResponseSchema defines the schema of the response.
+	ResponseSchema MessageSchema
 }

@@ -85,10 +85,10 @@ func (keeper Keeper) AddDeposit(ctx context.Context, proposalID uint64, deposito
 
 	// the deposit must only contain valid denoms (listed in the min deposit param)
 	if !depositAmount.DenomsSubsetOf(minDepositAmount) {
-		return false, errors.Wrapf(types.ErrInvalidDepositDenom, "deposit contains invalid denom/s %s, accepted denoms are: %s", depositAmount.Denoms(), minDepositAmount.Denoms())
+		return false, errors.Wrapf(types.ErrInvalidDepositDenom, "deposit contains invalid denom(s): %s; accepted denom(s): %s", depositAmount.Denoms(), minDepositAmount.Denoms())
 	}
 
-	// if minDepositRatio is set, the deposit must be equal or greater than minDepositAmount*minDepositRatio
+	// If minDepositRatio is set, the deposit must be equal or greater than minDepositAmount*minDepositRatio
 	// for at least one denom. If minDepositRatio is zero we skip this check.
 	if !minDepositRatio.IsZero() {
 		depositThresholdMet := false

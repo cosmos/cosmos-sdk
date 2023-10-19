@@ -1,6 +1,7 @@
 package testutil
 
 import (
+	_ "cosmossdk.io/x/mint"         // import as blank for app wiring
 	_ "cosmossdk.io/x/protocolpool" // import as blank for app wiring
 
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
@@ -11,7 +12,6 @@ import (
 	_ "github.com/cosmos/cosmos-sdk/x/distribution"   // import as blank for app wiring
 	_ "github.com/cosmos/cosmos-sdk/x/genutil"        // import as blank for app wiring
 	_ "github.com/cosmos/cosmos-sdk/x/gov"            // import as blank for app wiring
-	_ "github.com/cosmos/cosmos-sdk/x/mint"           // import as blank for app wiring
 	_ "github.com/cosmos/cosmos-sdk/x/staking"        // import as blank for app wiring
 )
 

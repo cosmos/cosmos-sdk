@@ -115,7 +115,10 @@ func (keeper Keeper) AddDeposit(ctx context.Context, proposalID uint64, deposito
 	}
 
 	// called when deposit has been added to a proposal, however the proposal may not be active
-	keeper.Hooks().AfterProposalDeposit(ctx, proposalID, depositorAddr)
+	err = keeper.Hooks().AfterProposalDeposit(ctx, proposalID, depositorAddr)
+	if err != nil {
+		return false, err
+	}
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	sdkCtx.EventManager().EmitEvent(

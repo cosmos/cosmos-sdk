@@ -82,9 +82,18 @@ func SimulateMsgSend(
 			return simtypes.NoOpMsg(types.ModuleName, msgType, "skip all transfers"), nil, nil
 		}
 
-		msg := types.NewMsgSend(from.Address, to.Address, coins)
+		fromstr, err := ak.AddressCodec().BytesToString(from.Address)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, msgType, err.Error()), nil, nil
+		}
+		tostr, err := ak.AddressCodec().BytesToString(to.Address)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, msgType, err.Error()), nil, nil
+		}
 
-		err := sendMsgSend(r, app, txGen, bk, ak, msg, ctx, chainID, []cryptotypes.PrivKey{from.PrivKey})
+		msg := types.NewMsgSend(fromstr, tostr, coins)
+
+		err = sendMsgSend(r, app, txGen, bk, ak, msg, ctx, chainID, []cryptotypes.PrivKey{from.PrivKey})
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), "invalid transfers"), nil, err
 		}
@@ -121,9 +130,18 @@ func SimulateMsgSendToModuleAccount(
 			return simtypes.NoOpMsg(types.ModuleName, msgType, err.Error()), nil, nil
 		}
 
-		msg := types.NewMsgSend(from.Address, to.Address, coins)
+		fromstr, err := ak.AddressCodec().BytesToString(from.Address)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, msgType, err.Error()), nil, nil
+		}
+		tostr, err := ak.AddressCodec().BytesToString(to.Address)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, msgType, err.Error()), nil, nil
+		}
 
-		err := sendMsgSend(r, app, txGen, bk, ak, msg, ctx, chainID, []cryptotypes.PrivKey{from.PrivKey})
+		msg := types.NewMsgSend(fromstr, tostr, coins)
+
+		err = sendMsgSend(r, app, txGen, bk, ak, msg, ctx, chainID, []cryptotypes.PrivKey{from.PrivKey})
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), "invalid transfers"), nil, err
 		}

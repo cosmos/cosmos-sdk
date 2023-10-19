@@ -6,10 +6,12 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/suite"
 
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
@@ -24,6 +26,7 @@ type E2ETestSuite struct {
 
 	cfg     network.Config
 	network *network.Network
+	ac      address.Codec
 }
 
 func NewE2ETestSuite(cfg network.Config) *E2ETestSuite {
@@ -85,6 +88,7 @@ func (s *E2ETestSuite) SetupSuite() {
 	s.network, err = network.New(s.T(), s.T().TempDir(), s.cfg)
 	s.Require().NoError(err)
 	s.Require().NoError(s.network.WaitForNextBlock())
+	s.ac = addresscodec.NewBech32Codec("cosmos")
 }
 
 func (s *E2ETestSuite) TearDownSuite() {
@@ -101,10 +105,13 @@ func (s *E2ETestSuite) TestNewSendTxCmdGenOnly() {
 		sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), math.NewInt(10)),
 		sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10)),
 	)
-
+	fromStr, err := s.ac.BytesToString(from)
+	s.Require().NoError(err)
+	toStr, err := s.ac.BytesToString(to)
+	s.Require().NoError(err)
 	msgSend := &types.MsgSend{
-		FromAddress: from.String(),
-		ToAddress:   to.String(),
+		FromAddress: fromStr,
+		ToAddress:   toStr,
 		Amount:      amount,
 	}
 
@@ -120,7 +127,7 @@ func (s *E2ETestSuite) TestNewSendTxCmdGenOnly() {
 
 	tx, err := s.cfg.TxConfig.TxJSONDecoder()(bz.Bytes())
 	s.Require().NoError(err)
-	s.Require().Equal([]sdk.Msg{types.NewMsgSend(from, to, amount)}, tx.GetMsgs())
+	s.Require().Equal([]sdk.Msg{types.NewMsgSend(fromStr, toStr, amount)}, tx.GetMsgs())
 }
 
 func (s *E2ETestSuite) TestNewSendTxCmdDryRun() {

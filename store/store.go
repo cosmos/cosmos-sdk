@@ -39,7 +39,9 @@ type RootStore interface {
 	// tuple. See the CommitmentProof type for the concrete supported proof types.
 	GetProof(storeKey string, version uint64, key []byte) (*ics23.CommitmentProof, error)
 
-	// Query(*RequestQuery) (*ResponseQuery, error)
+	// Query performs a query on the RootStore for a given store key, version (height),
+	// and key tuple. Queries should be routed to the underlying SS engine.
+	Query(storeKey string, version uint64, key []byte) (QueryResponse, error)
 
 	// Branch should branch the entire RootStore, i.e. a copy of the original RootStore
 	// except with all internal KV store(s) branched.
@@ -151,4 +153,12 @@ type BranchedKVStore interface {
 
 	// BranchWithTrace recursively wraps with tracing enabled.
 	BranchWithTrace(w io.Writer, tc TraceContext) BranchedKVStore
+}
+
+// QueryResponse defines the response type to performing a query on a RootStore.
+type QueryResponse struct {
+	Key     []byte
+	Value   []byte
+	Version uint64
+	Proof   *ics23.CommitmentProof
 }

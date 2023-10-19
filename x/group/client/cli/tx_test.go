@@ -17,7 +17,6 @@ import (
 	"cosmossdk.io/x/group"
 	groupcli "cosmossdk.io/x/group/client/cli"
 	groupmodule "cosmossdk.io/x/group/module"
-	groupcli "github.com/cosmos/cosmos-sdk/x/group/client/cli"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"

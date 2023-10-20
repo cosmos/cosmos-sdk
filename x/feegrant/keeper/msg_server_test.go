@@ -5,13 +5,11 @@ import (
 
 	"github.com/golang/mock/gomock"
 
-	"cosmossdk.io/collections"
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/x/feegrant"
 
 	codecaddress "github.com/cosmos/cosmos-sdk/codec/address"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
@@ -326,9 +324,9 @@ func (suite *KeeperTestSuite) TestPruneAllowances() {
 
 	// we have 76 allowances
 	count = 0
-	err := suite.feegrantKeeper.FeeAllowance.Walk(ctx, nil, func(key collections.Pair[types.AccAddress, types.AccAddress], value feegrant.Grant) (stop bool, err error) {
+	err := suite.feegrantKeeper.IterateAllFeeAllowances(ctx, func(grant feegrant.Grant) bool {
 		count++
-		return false, nil
+		return true
 	})
 	suite.Require().NoError(err)
 	suite.Require().Equal(76, count)
@@ -343,10 +341,9 @@ func (suite *KeeperTestSuite) TestPruneAllowances() {
 
 	// we have 1 allowance left
 	count = 0
-	err = suite.feegrantKeeper.FeeAllowance.Walk(ctx, nil, func(key collections.Pair[types.AccAddress, types.AccAddress], value feegrant.Grant) (stop bool, err error) {
+	err = suite.feegrantKeeper.IterateAllFeeAllowances(ctx, func(grant feegrant.Grant) bool {
 		count++
-
-		return false, nil
+		return true
 	})
 	suite.Require().NoError(err)
 	suite.Require().Equal(1, count)

@@ -333,6 +333,7 @@ func (k Keeper) RemoveExpiredAllowances(ctx context.Context, limit int32) error 
 		if count == limit {
 			return nil
 		}
+
 		err = store.Delete(iterator.Key())
 		if err != nil {
 			return err

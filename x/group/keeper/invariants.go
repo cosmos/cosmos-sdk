@@ -8,12 +8,12 @@ import (
 	"golang.org/x/exp/maps"
 
 	storetypes "cosmossdk.io/store/types"
+	"cosmossdk.io/x/group"
+	"cosmossdk.io/x/group/errors"
+	groupmath "cosmossdk.io/x/group/internal/math"
+	"cosmossdk.io/x/group/internal/orm"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/group"
-	"github.com/cosmos/cosmos-sdk/x/group/errors"
-	groupmath "github.com/cosmos/cosmos-sdk/x/group/internal/math"
-	"github.com/cosmos/cosmos-sdk/x/group/internal/orm"
 )
 
 const weightInvariant = "Group-TotalWeight"

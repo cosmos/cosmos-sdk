@@ -140,5 +140,16 @@ func (p Params) ValidateBasic() error {
 		return fmt.Errorf("voting period must be positive: %s", p.VotingPeriod)
 	}
 
+	minInitialDepositRatio, err := math.LegacyNewDecFromStr(p.MinInitialDepositRatio)
+	if err != nil {
+		return fmt.Errorf("invalid mininum initial deposit ratio of proposal: %w", err)
+	}
+	if minInitialDepositRatio.IsNegative() {
+		return fmt.Errorf("mininum initial deposit ratio of proposal must be positive: %s", minInitialDepositRatio)
+	}
+	if minInitialDepositRatio.GT(math.LegacyOneDec()) {
+		return fmt.Errorf("mininum initial deposit ratio of proposal is too large: %s", minInitialDepositRatio)
+	}
+
 	return nil
 }

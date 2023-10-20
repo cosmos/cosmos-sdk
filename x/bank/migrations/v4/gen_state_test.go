@@ -156,7 +156,6 @@ func TestMigrateGenState(t *testing.T) {
 			},
 		}
 		_ = v4.MigrateGenState(&origState)
-		//nolint:staticcheck // keep for test
-		assert.Len(t, origState.Params.SendEnabled, 2)
+		assert.Len(t, origState.Params.SendEnabled, 2) //nolint:staticcheck // keep for test
 	})
 }

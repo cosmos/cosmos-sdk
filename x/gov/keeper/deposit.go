@@ -268,6 +268,7 @@ func (keeper Keeper) validateInitialDeposit(ctx context.Context, params v1.Param
 	return nil
 }
 
+// validateDepositDenom validates if the deposit denom is accepted by the governance module.
 func (keeper Keeper) validateDepositDenom(ctx context.Context, params v1.Params, depositAmount sdk.Coins) error {
 	denoms := []string{}
 	acceptedDenoms := make(map[string]bool, len(params.MinDeposit))

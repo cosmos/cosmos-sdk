@@ -85,7 +85,7 @@ func TestDecode(t *testing.T) {
 						Payer:    "payer",
 						Granter:  "",
 					},
-					Tip: &txv1beta1.Tip{
+					Tip: &txv1beta1.Tip{ //nolint:staticcheck // we still need this deprecated struct
 						Amount: []*basev1beta1.Coin{{Amount: "100", Denom: "denom"}},
 						Tipper: "tipper",
 					},

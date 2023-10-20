@@ -54,7 +54,7 @@ func TestDirectAuxHandler(t *testing.T) {
 		GasLimit: 20000,
 		Payer:    feePayerAddr,
 	}
-	tip := &txv1beta1.Tip{Amount: []*basev1beta1.Coin{{Denom: "tip-token", Amount: "10"}}}
+	tip := &txv1beta1.Tip{Amount: []*basev1beta1.Coin{{Denom: "tip-token", Amount: "10"}}} //nolint:staticcheck // we still need this deprecated struct
 
 	txBody := &txv1beta1.TxBody{
 		Messages: []*anypb.Any{msg},

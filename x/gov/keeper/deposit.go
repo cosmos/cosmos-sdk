@@ -276,10 +276,6 @@ func (keeper Keeper) validateDepositDenom(ctx context.Context, params v1.Params,
 		denoms = append(denoms, coin.Denom)
 	}
 
-	if len(depositAmount) > len(params.MinDeposit) {
-		return errors.Wrapf(types.ErrInvalidDepositDenom, "deposited %s, but gov accepts only the following denom(s): %v", depositAmount, denoms)
-	}
-
 	for _, coin := range depositAmount {
 		if _, ok := acceptedDenoms[coin.Denom]; !ok {
 			return errors.Wrapf(types.ErrInvalidDepositDenom, "deposited %s, but gov accepts only the following denom(s): %v", coin, denoms)

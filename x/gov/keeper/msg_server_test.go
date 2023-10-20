@@ -235,7 +235,7 @@ func (suite *KeeperTestSuite) TestMsgSubmitProposal() {
 				)
 			},
 			expErr:    true,
-			expErrMsg: "deposited 100stake,100invalid, but gov accepts only the following denom(s): [stake]: invalid deposit denom",
+			expErrMsg: "deposited 100invalid, but gov accepts only the following denom(s): [stake]: invalid deposit denom",
 		},
 		"all good": {
 			preRun: func() (*v1.MsgSubmitProposal, error) {
@@ -838,7 +838,7 @@ func (suite *KeeperTestSuite) TestMsgDeposit() {
 			depositor: proposer,
 			deposit:   append(minDeposit, sdk.NewCoin("ibc/badcoin", sdkmath.NewInt(1000))),
 			expErr:    true,
-			expErrMsg: "deposited 10000000stake,1000ibc/badcoin, but gov accepts only the following denom(s): [stake]",
+			expErrMsg: "deposited 1000ibc/badcoin, but gov accepts only the following denom(s): [stake]",
 		},
 		"all good": {
 			preRun: func() uint64 {

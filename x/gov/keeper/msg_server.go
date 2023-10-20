@@ -75,7 +75,16 @@ func (k msgServer) SubmitProposal(goCtx context.Context, msg *v1.MsgSubmitPropos
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	initialDeposit := msg.GetInitialDeposit()
 
-	if err := k.validateInitialDeposit(ctx, initialDeposit, msg.Expedited); err != nil {
+	params, err := k.Params.Get(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get governance parameters: %w", err)
+	}
+
+	if err := k.validateInitialDeposit(ctx, params, initialDeposit, msg.Expedited); err != nil {
+		return nil, err
+	}
+
+	if err := k.validateDepositDenom(ctx, params, initialDeposit); err != nil {
 		return nil, err
 	}
 

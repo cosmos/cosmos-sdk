@@ -321,7 +321,7 @@ func (k Keeper) RemoveExpiredAllowances(ctx context.Context, limit int32) error 
 	exp := sdk.UnwrapSDKContext(ctx).BlockTime()
 	store := k.storeService.OpenKVStore(ctx)
 	iterator, err := store.Iterator(feegrant.FeeAllowanceQueueKeyPrefix, storetypes.InclusiveEndBytes(feegrant.AllowanceByExpTimeKey(&exp)))
-	var count int32 = 0
+	var count int32
 	if err != nil {
 		return err
 	}
@@ -333,6 +333,7 @@ func (k Keeper) RemoveExpiredAllowances(ctx context.Context, limit int32) error 
 		if count == limit {
 			return nil
 		}
+
 		err = store.Delete(iterator.Key())
 		if err != nil {
 			return err

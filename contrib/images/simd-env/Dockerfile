@@ -14,6 +14,7 @@ COPY store/go.mod store/go.sum /work/store/
 COPY log/go.mod log/go.sum /work/log/
 COPY x/tx/go.mod x/tx/go.sum /work/x/tx/
 COPY x/protocolpool/go.mod x/protocolpool/go.sum /work/x/protocolpool/
+COPY x/mint/go.mod x/mint/go.sum /work/x/mint/
 RUN go mod download
 
 COPY ./ /work

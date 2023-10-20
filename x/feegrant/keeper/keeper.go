@@ -328,12 +328,6 @@ func (k Keeper) RemoveExpiredAllowances(ctx context.Context, limit int32) error 
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
-		// limit the amount of iterations to avoid taking too much time
-		count++
-		if count == limit {
-			return nil
-		}
-
 		err = store.Delete(iterator.Key())
 		if err != nil {
 			return err
@@ -343,6 +337,12 @@ func (k Keeper) RemoveExpiredAllowances(ctx context.Context, limit int32) error 
 		err = store.Delete(feegrant.FeeAllowanceKey(granter, grantee))
 		if err != nil {
 			return err
+		}
+
+		// limit the amount of iterations to avoid taking too much time
+		count++
+		if count == limit {
+			return nil
 		}
 	}
 	return nil

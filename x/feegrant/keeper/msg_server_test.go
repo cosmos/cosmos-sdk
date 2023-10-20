@@ -5,7 +5,6 @@ import (
 
 	"github.com/golang/mock/gomock"
 
-	"cosmossdk.io/core/header"
 	"cosmossdk.io/x/feegrant"
 
 	codecaddress "github.com/cosmos/cosmos-sdk/codec/address"
@@ -287,8 +286,8 @@ func (suite *KeeperTestSuite) TestRevokeAllowance() {
 }
 
 func (suite *KeeperTestSuite) TestPruneAllowances() {
-	ctx := suite.ctx.WithHeaderInfo(header.Info{Time: time.Now()})
-	oneYear := ctx.HeaderInfo().Time.AddDate(1, 0, 0)
+	ctx := suite.ctx.WithBlockTime(time.Now())
+	oneYear := ctx.BlockTime().AddDate(1, 0, 0)
 
 	// We create 76 allowances, all expiring in one year
 	count := 0
@@ -332,8 +331,8 @@ func (suite *KeeperTestSuite) TestPruneAllowances() {
 	suite.Require().Equal(76, count)
 
 	// after a year and one day passes, they are all expired
-	oneYearAndADay := ctx.HeaderInfo().Time.AddDate(1, 0, 1)
-	ctx = suite.ctx.WithHeaderInfo(header.Info{Time: oneYearAndADay})
+	oneYearAndADay := ctx.BlockTime().AddDate(1, 0, 1)
+	ctx = suite.ctx.WithBlockTime(oneYearAndADay)
 
 	// we prune them, but currently only 75 will be pruned
 	_, err = suite.msgSrvr.PruneAllowances(ctx, &feegrant.MsgPruneAllowances{})

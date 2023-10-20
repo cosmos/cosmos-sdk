@@ -294,12 +294,12 @@ func (suite *KeeperTestSuite) TestPruneAllowances() {
 
 	// We create 76 allowances, all expiring in one year
 	count := 0
-	for i := 0; i < len(suite.encodedAddrs); i++ {
-		for j := 0; j < len(suite.encodedAddrs); j++ {
+	for i := 0; i < len(suite.addrs); i++ {
+		for j := 0; j < len(suite.addrs); j++ {
 			if count == 76 {
 				break
 			}
-			if suite.encodedAddrs[i] == suite.encodedAddrs[j] {
+			if suite.addrs[i].String() == suite.addrs[j].String() {
 				continue
 			}
 
@@ -309,8 +309,8 @@ func (suite *KeeperTestSuite) TestPruneAllowances() {
 			})
 			suite.Require().NoError(err)
 			req := &feegrant.MsgGrantAllowance{
-				Granter:   suite.encodedAddrs[i],
-				Grantee:   suite.encodedAddrs[j],
+				Granter:   suite.addrs[i].String(),
+				Grantee:   suite.addrs[j].String(),
 				Allowance: any,
 			}
 

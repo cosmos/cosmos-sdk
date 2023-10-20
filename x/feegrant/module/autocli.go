@@ -71,7 +71,6 @@ You can find the fee-grant of a granter and grantee.`),
 					Example:   fmt.Sprintf(`$ %s tx feegrant prune --from [mykey]`, version.AppName),
 				},
 			},
-			EnhanceCustomCommand: true,
 		},
 	}
 }

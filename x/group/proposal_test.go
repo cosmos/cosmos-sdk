@@ -3,9 +3,10 @@ package group_test
 import (
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"cosmossdk.io/x/group"
 	"cosmossdk.io/x/group/module"
-	"github.com/stretchr/testify/require"
 
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 )

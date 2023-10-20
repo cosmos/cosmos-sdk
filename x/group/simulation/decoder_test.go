@@ -4,12 +4,13 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"cosmossdk.io/x/group"
 	"cosmossdk.io/x/group/internal/orm"
 	"cosmossdk.io/x/group/keeper"
 	"cosmossdk.io/x/group/module"
 	"cosmossdk.io/x/group/simulation"
-	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	"github.com/cosmos/cosmos-sdk/types/kv"

@@ -6,6 +6,7 @@ import (
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/errors"
+	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -14,6 +15,17 @@ import (
 
 // AddVote adds a vote on a specific proposal
 func (keeper Keeper) AddVote(ctx context.Context, proposalID uint64, voterAddr sdk.AccAddress, options v1.WeightedVoteOptions, metadata string) error {
+	// Check if voter has enough staked token to vote.
+	params, err := keeper.Params.Get(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to get gov params: %w", err)
+	}
+
+	stakedCoins := sdk.NewCoin(sdk.DefaultBondDenom, math.ZeroInt()) // todo
+	if stakedCoins.IsLT(*params.MinStakeToVote) {
+		return fmt.Errorf("voter has too not enough staked token to vote: minimum %s, got %s", params.MinStakeToVote, stakedCoins)
+	}
+
 	// Check if proposal is in voting period.
 	inVotingPeriod, err := keeper.VotingPeriodProposals.Has(ctx, proposalID)
 	if err != nil {

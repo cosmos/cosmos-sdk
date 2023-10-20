@@ -30,6 +30,7 @@ var (
 	DefaultBurnProposalPrevote       = false // set to false to replicate behavior of when this change was made (0.47)
 	DefaultBurnVoteQuorom            = false // set to false to  replicate behavior of when this change was made (0.47)
 	DefaultBurnVoteVeto              = true  // set to true to replicate behavior of when this change was made (0.47)
+	DefaultMinStakeAmountToVote      = sdkmath.ZeroInt()
 )
 
 // Deprecated: NewDepositParams creates a new DepositParams object
@@ -59,7 +60,7 @@ func NewVotingParams(votingPeriod *time.Duration) VotingParams {
 // NewParams creates a new Params instance with given values.
 func NewParams(
 	minDeposit, expeditedminDeposit sdk.Coins, maxDepositPeriod, votingPeriod, expeditedVotingPeriod time.Duration,
-	quorum, threshold, expeditedThreshold, vetoThreshold, minInitialDepositRatio, proposalCancelRatio, proposalCancelDest string, burnProposalDeposit, burnVoteQuorum, burnVoteVeto bool,
+	quorum, threshold, expeditedThreshold, vetoThreshold, minInitialDepositRatio, proposalCancelRatio, proposalCancelDest string, burnProposalDeposit, burnVoteQuorum, burnVoteVeto bool, minStakeToVote sdk.Coin,
 ) Params {
 	return Params{
 		MinDeposit:                 minDeposit,
@@ -77,6 +78,7 @@ func NewParams(
 		BurnProposalDepositPrevote: burnProposalDeposit,
 		BurnVoteQuorum:             burnVoteQuorum,
 		BurnVoteVeto:               burnVoteVeto,
+		MinStakeToVote:             &minStakeToVote,
 	}
 }
 
@@ -98,6 +100,7 @@ func DefaultParams() Params {
 		DefaultBurnProposalPrevote,
 		DefaultBurnVoteQuorom,
 		DefaultBurnVoteVeto,
+		sdk.NewCoin(sdk.DefaultBondDenom, DefaultMinStakeAmountToVote),
 	)
 }
 
@@ -213,6 +216,10 @@ func (p Params) ValidateBasic() error {
 		if err != nil {
 			return fmt.Errorf("deposits destination address is invalid: %s", p.ProposalCancelDest)
 		}
+	}
+
+	if !p.MinStakeToVote.IsValid() {
+		return fmt.Errorf("invalid minimum stake to vote: %s", p.MinStakeToVote)
 	}
 
 	return nil

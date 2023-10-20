@@ -645,9 +645,10 @@ upon receiving txGovDeposit from sender do
 
 ### Vote
 
-Once `ActiveParam.MinDeposit` is reached, voting period starts. From there,
-bonded Atom holders are able to send `MsgVote` transactions to cast their
-vote on the proposal.
+Once `ActiveParam.MinDeposit` is reached, voting period starts.
+From there, bonded Atom holders are able to send `MsgVote` transactions to cast their vote on the proposal.
+Chains have the ability to limit voting to certain account having a minimum stake.
+This parameter is called `MinStakeToVote` and is set to 0 by default.
 
 ```protobuf reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/gov/v1/tx.proto#L92-L108
@@ -660,35 +661,6 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/gov/v1/tx.pro
 :::note
 Gas cost for this message has to take into account the future tallying of the vote in EndBlocker.
 :::
-
-Next is a pseudocode outline of the way `MsgVote` transactions are handled:
-
-```go
-  // PSEUDOCODE //
-  // Check if MsgVote is valid. If it is, count vote//
-
-  upon receiving txGovVote from sender do
-    // check if proposal is correctly formatted. Includes fee payment.
-
-    if !correctlyFormatted(txGovDeposit)
-      throw
-
-    proposal = load(Proposals, <txGovDeposit.ProposalID|'proposal'>)
-
-    if (proposal == nil)
-      // There is no proposal for this proposalID
-      throw
-
-
-    if  (proposal.CurrentStatus == ProposalStatusActive)
-
-
-        // Sender can vote if
-        // Proposal is active
-        // Sender has some bonds
-
-        store(Governance, <txGovVote.ProposalID|'addresses'|sender>, txGovVote.Vote)   // Voters can vote multiple times. Re-voting overrides previous vote. This is ok because tallying is done once at the end.
-```
 
 ## Events
 
@@ -767,11 +739,11 @@ The governance module contains the following parameters:
 | expedited_threshold           | string (time ns) | "0.667000000000000000"                  |
 | expedited_voting_period       | string (time ns) | "86400000000000" (8600s)                |
 | expedited_min_deposit         | array (coins)    | [{"denom":"uatom","amount":"50000000"}] |
-| burn_proposal_deposit_prevote | bool             | false                                    |
+| burn_proposal_deposit_prevote | bool             | false                                   |
 | burn_vote_quorum              | bool             | false                                   |
 | burn_vote_veto                | bool             | true                                    |
-| min_initial_deposit_ratio                | string             | "0.1"                                    |
-
+| min_initial_deposit_ratio      | string          | "0.1"                                   |
+| min_stake_to_vote             | string (coin)    | {"denom":"uatom","amount":"10000000"}   |
 
 **NOTE**: The governance module contains parameters that are objects unlike other
 modules. If only a subset of parameters are desired to be changed, only they need

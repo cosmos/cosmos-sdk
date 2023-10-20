@@ -21,6 +21,7 @@ var (
 //
 // Addition of the new proposal expedited parameters that are set to 0 by default.
 // Set of default chain constitution.
+// Set of default minimum stake to vote.
 func MigrateStore(ctx sdk.Context, storeService corestoretypes.KVStoreService, cdc codec.BinaryCodec, constitutionCollection collections.Item[string]) error {
 	store := storeService.OpenKVStore(ctx)
 	paramsBz, err := store.Get(ParamsKey)
@@ -40,6 +41,7 @@ func MigrateStore(ctx sdk.Context, storeService corestoretypes.KVStoreService, c
 	params.ExpeditedThreshold = defaultParams.ExpeditedThreshold
 	params.ProposalCancelRatio = defaultParams.ProposalCancelRatio
 	params.ProposalCancelDest = defaultParams.ProposalCancelDest
+	params.MinStakeToVote = defaultParams.MinStakeToVote
 
 	bz, err := cdc.Marshal(&params)
 	if err != nil {

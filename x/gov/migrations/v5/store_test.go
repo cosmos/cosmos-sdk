@@ -45,6 +45,7 @@ func TestMigrateStore(t *testing.T) {
 	require.Equal(t, v1.DefaultParams().ExpeditedMinDeposit, params.ExpeditedMinDeposit)
 	require.Equal(t, v1.DefaultParams().ExpeditedThreshold, params.ExpeditedThreshold)
 	require.Equal(t, v1.DefaultParams().ExpeditedVotingPeriod, params.ExpeditedVotingPeriod)
+	require.Equal(t, v1.DefaultParams().MinStakeToVote, params.MinStakeToVote)
 
 	// Check constitution
 	result, err := constitutionCollection.Get(ctx)

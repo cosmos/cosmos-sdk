@@ -28,6 +28,7 @@ const (
 	ExpeditedThreshold    = "expedited_threshold"
 	Veto                  = "veto"
 	ProposalCancelRate    = "proposal_cancel_rate"
+	MinStakeToVote        = "min_stake_to_vote"
 
 	// ExpeditedThreshold must be at least as large as the regular Threshold
 	// Therefore, we use this break out point in randomization.
@@ -94,6 +95,11 @@ func GenVeto(r *rand.Rand) sdkmath.LegacyDec {
 	return sdkmath.LegacyNewDecWithPrec(int64(simulation.RandIntBetween(r, 250, 334)), 3)
 }
 
+// GenMinStakeToVote returns randomized MinStakeToVote
+func GenMinStakeToVote(r *rand.Rand, bondDenom string) sdk.Coin {
+	return sdk.NewInt64Coin(bondDenom, int64(simulation.RandIntBetween(r, 0, 1)))
+}
+
 // RandomizedGenState generates a random GenesisState for gov
 func RandomizedGenState(simState *module.SimulationState) {
 	startingProposalID := uint64(simState.Rand.Intn(100))
@@ -131,9 +137,12 @@ func RandomizedGenState(simState *module.SimulationState) {
 	var veto sdkmath.LegacyDec
 	simState.AppParams.GetOrGenerate(Veto, &veto, simState.Rand, func(r *rand.Rand) { veto = GenVeto(r) })
 
+	var minStakeToVote sdk.Coin
+	simState.AppParams.GetOrGenerate(MinStakeToVote, &minStakeToVote, simState.Rand, func(r *rand.Rand) { minStakeToVote = GenMinStakeToVote(r, simState.BondDenom) })
+
 	govGenesis := v1.NewGenesisState(
 		startingProposalID,
-		v1.NewParams(minDeposit, expeditedMinDeposit, depositPeriod, votingPeriod, expeditedVotingPeriod, quorum.String(), threshold.String(), expitedVotingThreshold.String(), veto.String(), minInitialDepositRatio.String(), proposalCancelRate.String(), "", simState.Rand.Intn(2) == 0, simState.Rand.Intn(2) == 0, simState.Rand.Intn(2) == 0),
+		v1.NewParams(minDeposit, expeditedMinDeposit, depositPeriod, votingPeriod, expeditedVotingPeriod, quorum.String(), threshold.String(), expitedVotingThreshold.String(), veto.String(), minInitialDepositRatio.String(), proposalCancelRate.String(), "", simState.Rand.Intn(2) == 0, simState.Rand.Intn(2) == 0, simState.Rand.Intn(2) == 0, minStakeToVote),
 	)
 
 	bz, err := json.MarshalIndent(&govGenesis, "", " ")

@@ -451,6 +451,34 @@ func (suite *KeeperTestSuite) TestMsgVote() {
 			expErr:    true,
 			expErrMsg: longAddressError,
 		},
+		"minimum stake not met": {
+			preRun: func() uint64 {
+				minStake := sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.NewInt(1))
+				params.MinStakeToVote = &minStake
+				_ = suite.govKeeper.Params.Set(suite.ctx, params)
+
+				msg, err := v1.NewMsgSubmitProposal(
+					[]sdk.Msg{bankMsg},
+					minDeposit,
+					proposer.String(),
+					"",
+					"Proposal",
+					"description of proposal",
+					false,
+				)
+				suite.Require().NoError(err)
+
+				res, err := suite.msgSrvr.SubmitProposal(suite.ctx, msg)
+				suite.Require().NoError(err)
+				suite.Require().NotNil(res.ProposalId)
+				return res.ProposalId
+			},
+			option:    v1.VoteOption_VOTE_OPTION_YES,
+			voter:     proposer,
+			metadata:  "",
+			expErr:    false,
+			expErrMsg: "voter has too not enough staked token to vote",
+		},
 		"all good": {
 			preRun: func() uint64 {
 				msg, err := v1.NewMsgSubmitProposal(

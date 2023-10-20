@@ -171,16 +171,16 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					RpcMethod: "Vote",
 					Use:       "vote [proposal-id] [voter] [vote-option] [metadata]",
 					Long: `Vote on a proposal.
-		Parameters:
-			proposal-id: unique ID of the proposal
-			voter: voter account addresses.
-			vote-option: choice of the voter(s)
-				VOTE_OPTION_UNSPECIFIED: no-op
-				VOTE_OPTION_NO: no
-				VOTE_OPTION_YES: yes
-				VOTE_OPTION_ABSTAIN: abstain
-				VOTE_OPTION_NO_WITH_VETO: no-with-veto
-			Metadata: metadata for the vote
+Parameters:
+	proposal-id: unique ID of the proposal
+	voter: voter account addresses.
+	vote-option: choice of the voter(s)
+		VOTE_OPTION_UNSPECIFIED: no-op
+		VOTE_OPTION_NO: no
+		VOTE_OPTION_YES: yes
+		VOTE_OPTION_ABSTAIN: abstain
+		VOTE_OPTION_NO_WITH_VETO: no-with-veto
+	Metadata: metadata for the vote
 `,
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
 						{ProtoField: "proposal_id"}, {ProtoField: "voter"}, {ProtoField: "option"}, {ProtoField: "metadata"},

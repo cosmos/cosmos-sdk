@@ -5,8 +5,8 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
-	secp256k1dcrd "github.com/decred/dcrd/dcrec/secp256k1/v4"
 
+	secp256k1dcrd "github.com/decred/dcrd/dcrec/secp256k1/v4"
 	"google.golang.org/protobuf/types/known/anypb"
 
 	errorsmod "cosmossdk.io/errors"
@@ -258,13 +258,13 @@ func OnlyLegacyAminoSigners(sigData signing.SignatureData) bool {
 }
 
 func verifyIsOnCurve(pubKey cryptotypes.PubKey) (err error) {
-	switch pubKey.(type) {
+	switch typedPubKey := pubKey.(type) {
 	case *ed25519.PubKey:
 		return errorsmod.Wrap(sdkerrors.ErrInvalidPubKey, "ED25519 public keys are unsupported")
 	case *secp256k1.PubKey:
-		pubKeyObject, err := secp256k1dcrd.ParsePubKey(pubKey.Bytes())
+		pubKeyObject, err := secp256k1dcrd.ParsePubKey(typedPubKey.Bytes())
 		if err != nil {
-			if err.(secp256k1dcrd.Error).Err.Error() == "ErrPubKeyNotOnCurve" {
+			if err.(secp256k1dcrd.Error).Err.Error() == "1ErrPubKeyNotOnCurve" {
 				return errorsmod.Wrap(sdkerrors.ErrInvalidPubKey, "secp256k1 key is not on curve")
 			}
 			return err
@@ -273,8 +273,8 @@ func verifyIsOnCurve(pubKey cryptotypes.PubKey) (err error) {
 			return errorsmod.Wrap(sdkerrors.ErrInvalidPubKey, "secp256k1 key is not on curve")
 		}
 	case *secp256r1.PubKey:
-		pubKey := pubKey.(*secp256r1.PubKey).Key.PublicKey
-		if !pubKey.IsOnCurve(pubKey.X, pubKey.Y) {
+		pubKeyObject := typedPubKey.Key.PublicKey
+		if !pubKeyObject.IsOnCurve(pubKeyObject.X, pubKeyObject.Y) {
 			return errorsmod.Wrap(sdkerrors.ErrInvalidPubKey, "secp256r1 key is not on curve")
 		}
 	default:

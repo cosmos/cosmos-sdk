@@ -2,9 +2,8 @@ package ante_test
 
 import (
 	"fmt"
-	secp256k1dcrd "github.com/decred/dcrd/dcrec/secp256k1/v4"
 	"testing"
-
+	secp256k1dcrd "github.com/decred/dcrd/dcrec/secp256k1/v4"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 
@@ -396,8 +395,6 @@ func TestAnteHandlerChecks(t *testing.T) {
 	addr12 := sdk.AccAddress(priv12.PubKey().Address())
 
 	priv2, _, addr2 := testdata.KeyTestPubAddrSecp256R1(t)
-	//priv21 := priv1
-	//addr21 := sdk.AccAddress(priv21.PubKey().Address())
 
 	priv3, _, addr3 := testdata.KeyTestPubAddrED25519()
 
@@ -414,7 +411,6 @@ func TestAnteHandlerChecks(t *testing.T) {
 		accs[i] = acc
 	}
 
-	//All decorators where we check if the public key is on curve
 	setPubKeyDecorator := ante.NewSetPubKeyDecorator(suite.accountKeeper)
 	sigGasConsumeDecorator := ante.NewSigGasConsumeDecorator(suite.accountKeeper, ante.DefaultSigVerificationGasConsumer)
 	sigVerificationDecorator := ante.NewSigVerificationDecorator(suite.accountKeeper, anteTxConfig.SignModeHandler())
@@ -436,7 +432,7 @@ func TestAnteHandlerChecks(t *testing.T) {
 		{"secp256k1_onCurve", []cryptotypes.PrivKey{priv1}, msgs[0], []uint64{accs[0].GetAccountNumber()}, []uint64{0}, false, true},
 		{"secp256k1_NotOnCurve", []cryptotypes.PrivKey{priv12}, msgs[1], []uint64{accs[1].GetAccountNumber()}, []uint64{1}, true, true},
 		{"secp256r1_onCurve", []cryptotypes.PrivKey{priv2}, msgs[2], []uint64{accs[2].GetAccountNumber()}, []uint64{2}, false, true},
-		//{"secp256r1_notOnCurve", []cryptotypes.PrivKey{priv2}, msgs[3], []uint64{accs[1].GetAccountNumber()}, []uint64{1}, true, true},
+		// {"secp256r1_notOnCurve", []cryptotypes.PrivKey{priv2}, msgs[3], []uint64{accs[1].GetAccountNumber()}, []uint64{1}, true, true},
 		{"ed255619", []cryptotypes.PrivKey{priv3}, msgs[3], []uint64{accs[2].GetAccountNumber()}, []uint64{3}, true, false},
 	}
 

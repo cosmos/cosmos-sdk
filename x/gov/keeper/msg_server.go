@@ -77,7 +77,7 @@ func (k msgServer) SubmitProposal(goCtx context.Context, msg *v1.MsgSubmitPropos
 
 	params, err := k.Params.Get(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("error getting gov params: %w", err)
+		return nil, fmt.Errorf("failed to get governance parameters: %w", err)
 	}
 
 	if err := k.validateInitialDeposit(ctx, params, initialDeposit, msg.Expedited); err != nil {

@@ -6,8 +6,6 @@ import (
 	ics23 "github.com/cosmos/ics23/go"
 )
 
-// TODO: Move relevant types to the 'core' package.
-
 // StoreType defines a type of KVStore.
 type StoreType int
 
@@ -21,32 +19,63 @@ const (
 // RootStore defines an abstraction layer containing a State Storage (SS) engine
 // and one or more State Commitment (SC) engines.
 type RootStore interface {
+	// GetSCStore should return the SC backend for the given store key. A RootStore
+	// implementation may choose to ignore the store key in cases where only a single
+	// SC backend is used.
 	GetSCStore(storeKey string) Tree
+	// MountSCStore should mount the given SC backend for the given store key. For
+	// implementations that utilize a single SC backend, this method may be optional
+	// or a no-op.
 	MountSCStore(storeKey string, sc Tree) error
+	// GetKVStore returns the KVStore for the given store key. If an implementation
+	// chooses to have a single SS backend, the store key may be ignored.
 	GetKVStore(storeKey string) KVStore
+	// GetBranchedKVStore returns the KVStore for the given store key. If an
+	// implementation chooses to have a single SS backend, the store key may be
+	// ignored.
 	GetBranchedKVStore(storeKey string) BranchedKVStore
 
-	GetProof(storeKey string, version uint64, key []byte) (*ics23.CommitmentProof, error)
+	// Query performs a query on the RootStore for a given store key, version (height),
+	// and key tuple. Queries should be routed to the underlying SS engine.
+	Query(storeKey string, version uint64, key []byte, prove bool) (QueryResult, error)
 
+	// Branch should branch the entire RootStore, i.e. a copy of the original RootStore
+	// except with all internal KV store(s) branched.
 	Branch() BranchedRootStore
 
+	// SetTracingContext sets the tracing context, i.e tracing metadata, on the
+	// RootStore.
 	SetTracingContext(tc TraceContext)
+	// SetTracer sets the tracer on the RootStore, such that any calls to GetKVStore
+	// or GetBranchedKVStore, will have tracing enabled.
 	SetTracer(w io.Writer)
+	// TracingEnabled returns true if tracing is enabled on the RootStore.
 	TracingEnabled() bool
 
 	LoadVersion(version uint64) error
 	LoadLatestVersion() error
+
+	// GetLatestVersion returns the latest version, i.e. height, committed.
 	GetLatestVersion() (uint64, error)
 
-	WorkingHash() ([]byte, error)
+	// SetCommitHeader sets the commit header for the next commit. This call and
+	// implementation is optional. However, it must be supported in cases where
+	// queries based on block time need to be supported.
 	SetCommitHeader(h CommitHeader)
-	Commit() ([]byte, error)
 
-	// TODO:
-	//
-	// - Queries
-	//
-	// Ref: https://github.com/cosmos/cosmos-sdk/issues/17314
+	// WorkingHash returns the current WIP commitment hash. Depending on the underlying
+	// implementation, this may need to take the current changeset and write it to
+	// the SC backend(s). In such cases, Commit() would return this hash and flush
+	// writes to disk. This means that WorkingHash mutates the RootStore and must
+	// be called prior to Commit().
+	WorkingHash() ([]byte, error)
+	// Commit should be responsible for taking the current changeset and flushing
+	// it to disk. Note, depending on the implementation, the changeset, at this
+	// point, may already be written to the SC backends. Commit() should ensure
+	// the changeset is committed to all SC and SC backends and flushed to disk.
+	// It must return a hash of the merkle-ized committed state. This hash should
+	// be the same as the hash returned by WorkingHash() prior to calling Commit().
+	Commit() ([]byte, error)
 
 	io.Closer
 }
@@ -120,4 +149,12 @@ type BranchedKVStore interface {
 
 	// BranchWithTrace recursively wraps with tracing enabled.
 	BranchWithTrace(w io.Writer, tc TraceContext) BranchedKVStore
+}
+
+// QueryResult defines the response type to performing a query on a RootStore.
+type QueryResult struct {
+	Key     []byte
+	Value   []byte
+	Version uint64
+	Proof   *ics23.CommitmentProof
 }

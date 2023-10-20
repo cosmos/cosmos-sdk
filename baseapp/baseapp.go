@@ -91,6 +91,7 @@ type BaseApp struct {
 	addrPeerFilter sdk.PeerFilter // filter peers by address and port
 	idPeerFilter   sdk.PeerFilter // filter peers by node ID
 	fauxMerkleMode bool           // if true, IAVL MountStores uses MountStoresDB for simulation speed.
+	sigverifyTx    bool           // in the simulation test, since the account does not have a private key, we have to ignore the tx sigverify.
 
 	// manages snapshots, i.e. dumps of app state at certain intervals
 	snapshotManager *snapshots.Manager
@@ -211,6 +212,7 @@ func NewBaseApp(
 		msgServiceRouter: NewMsgServiceRouter(),
 		txDecoder:        txDecoder,
 		fauxMerkleMode:   false,
+		sigverifyTx:      true,
 		queryGasLimit:    math.MaxUint64,
 	}
 
@@ -666,6 +668,8 @@ func (app *BaseApp) getContextForTx(mode execMode, txBytes []byte) sdk.Context {
 		WithTxBytes(txBytes).
 		WithGasMeter(storetypes.NewInfiniteGasMeter())
 	// WithVoteInfos(app.voteInfos) // TODO: identify if this is needed
+
+	ctx = ctx.WithIsSigverifyTx(app.sigverifyTx)
 
 	ctx = ctx.WithConsensusParams(app.GetConsensusParams(ctx))
 

@@ -2,7 +2,6 @@ package module
 
 import (
 	"fmt"
-	"strings"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	feegrantv1beta1 "cosmossdk.io/api/cosmos/feegrant/v1beta1"
@@ -19,10 +18,8 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					RpcMethod: "Allowance",
 					Use:       "grant [granter] [grantee]",
 					Short:     "Query details of a single grant",
-					Long: strings.TrimSpace(
-						`Query details for a grant. 
-You can find the fee-grant of a granter and grantee.`),
-					Example: fmt.Sprintf(`$ %s query feegrant grant [granter] [grantee]`, version.AppName),
+					Long:      "Query details for a grant. You can find the fee-grant of a granter and grantee.",
+					Example:   fmt.Sprintf(`$ %s query feegrant grant [granter] [grantee]`, version.AppName),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
 						{ProtoField: "granter"},
 						{ProtoField: "grantee"},

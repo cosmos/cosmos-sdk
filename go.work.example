@@ -20,10 +20,13 @@ use (
 	./tools/confix
 	./tools/hubl
 	./x/accounts
+	./x/group
 	./x/tx
 	./x/nft
 	./x/circuit
 	./x/feegrant
 	./x/evidence
 	./x/upgrade
+	./x/protocolpool
+	./x/params
 )

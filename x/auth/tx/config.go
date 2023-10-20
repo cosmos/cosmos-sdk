@@ -22,7 +22,7 @@ type config struct {
 	encoder        sdk.TxEncoder
 	jsonDecoder    sdk.TxDecoder
 	jsonEncoder    sdk.TxEncoder
-	protoCodec     codec.ProtoCodecMarshaler
+	protoCodec     codec.Codec
 	signingContext *txsigning.Context
 }
 
@@ -73,7 +73,7 @@ var DefaultSignModes = []signingtypes.SignMode{
 // We prefer to use depinject to provide client.TxConfig, but we permit this constructor usage. Within the SDK,
 // this constructor is primarily used in tests, but also sees usage in app chains like:
 // https://github.com/evmos/evmos/blob/719363fbb92ff3ea9649694bd088e4c6fe9c195f/encoding/config.go#L37
-func NewTxConfig(protoCodec codec.ProtoCodecMarshaler, enabledSignModes []signingtypes.SignMode,
+func NewTxConfig(protoCodec codec.Codec, enabledSignModes []signingtypes.SignMode,
 	customSignModes ...txsigning.SignModeHandler,
 ) client.TxConfig {
 	txConfig, err := NewTxConfigWithOptions(protoCodec, ConfigOptions{
@@ -99,9 +99,8 @@ func NewDefaultSigningOptions() (*txsigning.Options, error) {
 // NewSigningHandlerMap returns a new txsigning.HandlerMap using the provided ConfigOptions.
 // It is recommended to use types.InterfaceRegistry in the field ConfigOptions.FileResolver as shown in
 // NewTxConfigWithOptions but this fn does not enforce it.
-func NewSigningHandlerMap(configOptions ConfigOptions) (*txsigning.HandlerMap, error) {
+func NewSigningHandlerMap(configOpts ConfigOptions) (*txsigning.HandlerMap, error) {
 	var err error
-	configOpts := &configOptions
 	if configOpts.SigningOptions == nil {
 		configOpts.SigningOptions, err = NewDefaultSigningOptions()
 		if err != nil {
@@ -165,9 +164,13 @@ func NewSigningHandlerMap(configOptions ConfigOptions) (*txsigning.HandlerMap, e
 
 // NewTxConfigWithOptions returns a new protobuf TxConfig using the provided ProtoCodec, ConfigOptions and
 // custom sign mode handlers. If ConfigOptions is an empty struct then default values will be used.
-func NewTxConfigWithOptions(protoCodec codec.ProtoCodecMarshaler, configOptions ConfigOptions) (client.TxConfig, error) {
+func NewTxConfigWithOptions(protoCodec codec.Codec, configOptions ConfigOptions) (client.TxConfig, error) {
 	txConfig := &config{
-		protoCodec: protoCodec,
+		protoCodec:  protoCodec,
+		decoder:     configOptions.ProtoDecoder,
+		encoder:     configOptions.ProtoEncoder,
+		jsonDecoder: configOptions.JSONDecoder,
+		jsonEncoder: configOptions.JSONEncoder,
 	}
 	if configOptions.ProtoDecoder == nil {
 		txConfig.decoder = DefaultTxDecoder(protoCodec)
@@ -183,27 +186,25 @@ func NewTxConfigWithOptions(protoCodec codec.ProtoCodecMarshaler, configOptions 
 	}
 
 	var err error
-	opts := &configOptions
-	if opts.SigningContext == nil {
-		signingOpts := configOptions.SigningOptions
-		if signingOpts == nil {
-			signingOpts, err = NewDefaultSigningOptions()
+	if configOptions.SigningContext == nil {
+		if configOptions.SigningOptions == nil {
+			configOptions.SigningOptions, err = NewDefaultSigningOptions()
 			if err != nil {
 				return nil, err
 			}
 		}
-		if signingOpts.FileResolver == nil {
-			signingOpts.FileResolver = protoCodec.InterfaceRegistry()
+		if configOptions.SigningOptions.FileResolver == nil {
+			configOptions.SigningOptions.FileResolver = protoCodec.InterfaceRegistry()
 		}
-		opts.SigningContext, err = txsigning.NewContext(*signingOpts)
+		configOptions.SigningContext, err = txsigning.NewContext(*configOptions.SigningOptions)
 		if err != nil {
 			return nil, err
 		}
 	}
-	txConfig.signingContext = opts.SigningContext
+	txConfig.signingContext = configOptions.SigningContext
 
-	if opts.SigningHandler != nil {
-		txConfig.handler = opts.SigningHandler
+	if configOptions.SigningHandler != nil {
+		txConfig.handler = configOptions.SigningHandler
 		return txConfig, nil
 	}
 

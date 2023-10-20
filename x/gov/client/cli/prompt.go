@@ -34,7 +34,7 @@ var suggestedProposalTypes = []proposalType{
 	},
 	{
 		Name:    "community-pool-spend",
-		MsgType: "/cosmos.distribution.v1beta1.MsgCommunityPoolSpend",
+		MsgType: "/cosmos.protocolpool.v1.MsgCommunityPoolSpend",
 	},
 	{
 		Name:    "software-upgrade",

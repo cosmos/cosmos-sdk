@@ -298,10 +298,10 @@ func (f Factory) WithExtensionOptions(extOpts ...*codectypes.Any) Factory {
 func (f Factory) BuildUnsignedTx(msgs ...sdk.Msg) (client.TxBuilder, error) {
 	if f.offline && f.generateOnly {
 		if f.chainID != "" {
-			return nil, fmt.Errorf("chain ID cannot be used when offline and generate-only flags are set")
+			return nil, errors.New("chain ID cannot be used when offline and generate-only flags are set")
 		}
 	} else if f.chainID == "" {
-		return nil, fmt.Errorf("chain ID required but not specified")
+		return nil, errors.New("chain ID required but not specified")
 	}
 
 	fees := f.fees
@@ -379,7 +379,12 @@ func (f Factory) PrintUnsignedTx(clientCtx client.Context, msgs ...sdk.Msg) erro
 		return err
 	}
 
-	json, err := clientCtx.TxConfig.TxJSONEncoder()(unsignedTx.GetTx())
+	encoder := f.txConfig.TxJSONEncoder()
+	if encoder == nil {
+		return errors.New("cannot print unsigned tx: tx json encoder is nil")
+	}
+
+	json, err := encoder(unsignedTx.GetTx())
 	if err != nil {
 		return err
 	}
@@ -414,7 +419,12 @@ func (f Factory) BuildSimTx(msgs ...sdk.Msg) ([]byte, error) {
 		return nil, err
 	}
 
-	return f.txConfig.TxEncoder()(txb.GetTx())
+	encoder := f.txConfig.TxEncoder()
+	if encoder == nil {
+		return nil, fmt.Errorf("cannot simulate tx: tx encoder is nil")
+	}
+
+	return encoder(txb.GetTx())
 }
 
 // getSimPK gets the public key to use for building a simulation tx.
@@ -457,7 +467,7 @@ func (f Factory) Prepare(clientCtx client.Context) (Factory, error) {
 	}
 
 	fc := f
-	from := clientCtx.GetFromAddress()
+	from := clientCtx.FromAddress
 
 	if err := fc.accountRetriever.EnsureExists(clientCtx, from); err != nil {
 		return fc, err

@@ -37,6 +37,7 @@ func TestAllocateTokensToValidatorWithCommission(t *testing.T) {
 	bankKeeper := distrtestutil.NewMockBankKeeper(ctrl)
 	stakingKeeper := distrtestutil.NewMockStakingKeeper(ctrl)
 	accountKeeper := distrtestutil.NewMockAccountKeeper(ctrl)
+	poolKeeper := distrtestutil.NewMockPoolKeeper(ctrl)
 
 	valCodec := address.NewBech32Codec("cosmosvaloper")
 
@@ -49,6 +50,7 @@ func TestAllocateTokensToValidatorWithCommission(t *testing.T) {
 		accountKeeper,
 		bankKeeper,
 		stakingKeeper,
+		poolKeeper,
 		"fee_collector",
 		authtypes.NewModuleAddress("gov").String(),
 	)
@@ -94,6 +96,7 @@ func TestAllocateTokensToManyValidators(t *testing.T) {
 	bankKeeper := distrtestutil.NewMockBankKeeper(ctrl)
 	stakingKeeper := distrtestutil.NewMockStakingKeeper(ctrl)
 	accountKeeper := distrtestutil.NewMockAccountKeeper(ctrl)
+	poolKeeper := distrtestutil.NewMockPoolKeeper(ctrl)
 
 	feeCollectorAcc := authtypes.NewEmptyModuleAccount("fee_collector")
 	accountKeeper.EXPECT().GetModuleAddress("distribution").Return(distrAcc.GetAddress())
@@ -106,6 +109,7 @@ func TestAllocateTokensToManyValidators(t *testing.T) {
 		accountKeeper,
 		bankKeeper,
 		stakingKeeper,
+		poolKeeper,
 		"fee_collector",
 		authtypes.NewModuleAddress("gov").String(),
 	)
@@ -222,6 +226,7 @@ func TestAllocateTokensTruncation(t *testing.T) {
 	bankKeeper := distrtestutil.NewMockBankKeeper(ctrl)
 	stakingKeeper := distrtestutil.NewMockStakingKeeper(ctrl)
 	accountKeeper := distrtestutil.NewMockAccountKeeper(ctrl)
+	poolKeeper := distrtestutil.NewMockPoolKeeper(ctrl)
 
 	feeCollectorAcc := authtypes.NewEmptyModuleAccount("fee_collector")
 	accountKeeper.EXPECT().GetModuleAddress("distribution").Return(distrAcc.GetAddress())
@@ -234,6 +239,7 @@ func TestAllocateTokensTruncation(t *testing.T) {
 		accountKeeper,
 		bankKeeper,
 		stakingKeeper,
+		poolKeeper,
 		"fee_collector",
 		authtypes.NewModuleAddress("gov").String(),
 	)

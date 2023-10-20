@@ -25,7 +25,6 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/server"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -48,9 +47,7 @@ var (
 )
 
 // AppModuleBasic implements the sdk.AppModuleBasic interface
-type AppModuleBasic struct {
-	ac address.Codec
-}
+type AppModuleBasic struct{}
 
 // Name returns the ModuleName
 func (AppModuleBasic) Name() string {
@@ -71,7 +68,7 @@ func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *g
 
 // GetTxCmd returns the CLI transaction commands for this module
 func (ab AppModuleBasic) GetTxCmd() *cobra.Command {
-	return cli.GetTxCmd(ab.ac)
+	return cli.GetTxCmd()
 }
 
 // RegisterInterfaces registers interfaces and implementations of the upgrade module.
@@ -88,7 +85,7 @@ type AppModule struct {
 // NewAppModule creates a new AppModule object
 func NewAppModule(keeper *keeper.Keeper, ac address.Codec) AppModule {
 	return AppModule{
-		AppModuleBasic: AppModuleBasic{ac: ac},
+		AppModuleBasic: AppModuleBasic{},
 		keeper:         keeper,
 	}
 }
@@ -116,7 +113,7 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 }
 
 // InitGenesis is ignored, no sense in serializing future upgrades
-func (am AppModule) InitGenesis(ctx sdk.Context, _ codec.JSONCodec, _ json.RawMessage) {
+func (am AppModule) InitGenesis(ctx context.Context, _ codec.JSONCodec, _ json.RawMessage) {
 	// set version map automatically if available
 	if versionMap := am.keeper.GetInitVersionMap(); versionMap != nil {
 		// chains can still use a custom init chainer for setting the version map
@@ -150,7 +147,7 @@ func (AppModuleBasic) ValidateGenesis(_ codec.JSONCodec, _ client.TxEncodingConf
 }
 
 // ExportGenesis is always empty, as InitGenesis does nothing either
-func (am AppModule) ExportGenesis(_ sdk.Context, cdc codec.JSONCodec) json.RawMessage {
+func (am AppModule) ExportGenesis(_ context.Context, cdc codec.JSONCodec) json.RawMessage {
 	return am.DefaultGenesis(cdc)
 }
 

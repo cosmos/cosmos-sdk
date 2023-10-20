@@ -2,7 +2,6 @@ package tx_test
 
 import (
 	"context"
-	"fmt"
 	"testing"
 
 	"gotest.tools/v3/assert"
@@ -11,9 +10,7 @@ import (
 	"cosmossdk.io/simapp"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/flags"
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
-	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -30,7 +27,6 @@ type E2EBenchmarkSuite struct {
 
 	txHeight    int64
 	queryClient tx.ServiceClient
-	txRes       sdk.TxResponse
 }
 
 // BenchmarkTx is lifted from E2ETestSuite from this package, with irrelevant state checks removed.
@@ -75,12 +71,12 @@ func BenchmarkTx(b *testing.B) {
 			assert.NilError(b, err)
 			// Check the result and gas used are correct.
 			//
-			// The 12 events are:
-			// - Sending Fee to the pool: coin_spent, coin_received, transfer and message.sender=<val1>
-			// - tx.* events: tx.fee, tx.acc_seq, tx.signature
-			// - Sending Amount to recipient: coin_spent, coin_received, transfer and message.sender=<val1>
-			// - Msg events: message.module=bank and message.action=/cosmos.bank.v1beta1.MsgSend (in one message)
-			assert.Equal(b, 12, len(res.GetResult().GetEvents()))
+			// The 10 events are:
+			// - Sending Fee to the pool (3 events): coin_spent, coin_received, transfer
+			// - tx.* events (3 events): tx.fee, tx.acc_seq, tx.signature
+			// - Sending Amount to recipient (3 events): coin_spent, coin_received, transfer and message.sender=<val1>
+			// - Msg events (1 event): message.module=bank, message.action=/cosmos.bank.v1beta1.MsgSend and message.sender=<val1> (all in one event)
+			assert.Equal(b, 10, len(res.GetResult().GetEvents()))
 			assert.Assert(b, res.GetGasInfo().GetGasUsed() > 0) // Gas used sometimes change, just check it's not empty.
 		}
 	}
@@ -104,42 +100,46 @@ func NewE2EBenchmarkSuite(tb testing.TB) *E2EBenchmarkSuite {
 
 	s.queryClient = tx.NewServiceClient(val.ClientCtx)
 
-	// Create a new MsgSend tx from val to itself.
-	out, err := cli.MsgSendExec(
-		val.ClientCtx,
-		val.Address,
-		val.Address,
-		sdk.NewCoins(
-			sdk.NewCoin(s.cfg.BondDenom, sdkmath.NewInt(10)),
-		),
-		addresscodec.NewBech32Codec("cosmos"),
-		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdkmath.NewInt(10))).String()),
-		fmt.Sprintf("--gas=%d", flags.DefaultGasLimit),
-		fmt.Sprintf("--%s=foobar", flags.FlagNote),
-	)
-	assert.NilError(tb, err)
-	assert.NilError(tb, val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &s.txRes))
-	assert.Equal(tb, uint32(0), s.txRes.Code, s.txRes)
+	msgSend := &banktypes.MsgSend{
+		FromAddress: val.Address.String(),
+		ToAddress:   val.Address.String(),
+		Amount:      sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdkmath.NewInt(10))),
+	}
 
-	out, err = cli.MsgSendExec(
+	// Create a new MsgSend tx from val to itself.
+	out, err := cli.SubmitTestTx(
 		val.ClientCtx,
+		msgSend,
 		val.Address,
-		val.Address,
-		sdk.NewCoins(
-			sdk.NewCoin(s.cfg.BondDenom, sdkmath.NewInt(1)),
-		),
-		addresscodec.NewBech32Codec("cosmos"),
-		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s", flags.FlagOffline),
-		fmt.Sprintf("--%s=0", flags.FlagAccountNumber),
-		fmt.Sprintf("--%s=2", flags.FlagSequence),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdkmath.NewInt(10))).String()),
-		fmt.Sprintf("--gas=%d", flags.DefaultGasLimit),
-		fmt.Sprintf("--%s=foobar", flags.FlagNote),
+		cli.TestTxConfig{
+			Memo: "foobar",
+		},
 	)
+
+	assert.NilError(tb, err)
+
+	var txRes sdk.TxResponse
+	assert.NilError(tb, val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txRes))
+	assert.Equal(tb, uint32(0), txRes.Code, txRes)
+
+	msgSend1 := &banktypes.MsgSend{
+		FromAddress: val.Address.String(),
+		ToAddress:   val.Address.String(),
+		Amount:      sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdkmath.NewInt(1))),
+	}
+
+	out, err = cli.SubmitTestTx(
+		val.ClientCtx,
+		msgSend1,
+		val.Address,
+		cli.TestTxConfig{
+			Offline: true,
+			AccNum:  0,
+			Seq:     2,
+			Memo:    "foobar",
+		},
+	)
+
 	assert.NilError(tb, err)
 	var tr sdk.TxResponse
 	assert.NilError(tb, val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &tr))

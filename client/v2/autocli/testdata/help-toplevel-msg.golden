@@ -5,11 +5,13 @@ Usage:
   test [command]
 
 Available Commands:
-  completion    Generate the autocompletion script for the specified shell
-  deprecatedmsg Tx commands for the testpb.Msg service
-  help          Help about any command
-  send          send msg the value provided by the user
-  skipmsg       Tx commands for the testpb.Msg service
+  burn             
+  completion       Generate the autocompletion script for the specified shell
+  help             Help about any command
+  multi-send       
+  send             Send coins from one account to another
+  set-send-enabled 
+  update-params    
 
 Flags:
   -h, --help   help for test

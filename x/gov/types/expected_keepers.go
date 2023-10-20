@@ -25,11 +25,6 @@ type StakingKeeper interface {
 	) error
 }
 
-// DistributionKeeper defines the expected distribution keeper (noalias)
-type DistributionKeeper interface {
-	FundCommunityPool(ctx context.Context, amount sdk.Coins, sender sdk.AccAddress) error
-}
-
 // AccountKeeper defines the expected account keeper (noalias)
 type AccountKeeper interface {
 	AddressCodec() addresscodec.Codec
@@ -55,17 +50,22 @@ type BankKeeper interface {
 	BurnCoins(context.Context, []byte, sdk.Coins) error
 }
 
+// PoolKeeper defines the expected interface needed to fund & distribute pool balances.
+type PoolKeeper interface {
+	FundCommunityPool(ctx context.Context, amount sdk.Coins, sender sdk.AccAddress) error
+}
+
 // Event Hooks
 // These can be utilized to communicate between a governance keeper and another
 // keepers.
 
 // GovHooks event hooks for governance proposal object (noalias)
 type GovHooks interface {
-	AfterProposalSubmission(ctx context.Context, proposalID uint64)                            // Must be called after proposal is submitted
-	AfterProposalDeposit(ctx context.Context, proposalID uint64, depositorAddr sdk.AccAddress) // Must be called after a deposit is made
-	AfterProposalVote(ctx context.Context, proposalID uint64, voterAddr sdk.AccAddress)        // Must be called after a vote on a proposal is cast
-	AfterProposalFailedMinDeposit(ctx context.Context, proposalID uint64)                      // Must be called when proposal fails to reach min deposit
-	AfterProposalVotingPeriodEnded(ctx context.Context, proposalID uint64)                     // Must be called when proposal's finishes it's voting period
+	AfterProposalSubmission(ctx context.Context, proposalID uint64) error                            // Must be called after proposal is submitted
+	AfterProposalDeposit(ctx context.Context, proposalID uint64, depositorAddr sdk.AccAddress) error // Must be called after a deposit is made
+	AfterProposalVote(ctx context.Context, proposalID uint64, voterAddr sdk.AccAddress) error        // Must be called after a vote on a proposal is cast
+	AfterProposalFailedMinDeposit(ctx context.Context, proposalID uint64) error                      // Must be called when proposal fails to reach min deposit
+	AfterProposalVotingPeriodEnded(ctx context.Context, proposalID uint64) error                     // Must be called when proposal's finishes it's voting period
 }
 
 type GovHooksWrapper struct{ GovHooks }

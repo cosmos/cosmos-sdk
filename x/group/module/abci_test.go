@@ -12,6 +12,10 @@ import (
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
+	"cosmossdk.io/x/group"
+	"cosmossdk.io/x/group/keeper"
+	"cosmossdk.io/x/group/module"
+	grouptestutil "cosmossdk.io/x/group/testutil"
 
 	codecaddress "github.com/cosmos/cosmos-sdk/codec/address"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -21,10 +25,6 @@ import (
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/cosmos/cosmos-sdk/x/group"
-	"github.com/cosmos/cosmos-sdk/x/group/keeper"
-	"github.com/cosmos/cosmos-sdk/x/group/module"
-	grouptestutil "github.com/cosmos/cosmos-sdk/x/group/testutil"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 )
 

@@ -102,9 +102,6 @@ type Keyring interface {
 	Exporter
 
 	Migrator
-
-	// Implements client/v2 keyring interface
-	LookupAddressByKeyName(name string) ([]byte, error)
 }
 
 // Signer is implemented by key stores that want to provide signing capabilities.
@@ -622,21 +619,6 @@ func (ks keystore) SupportedAlgorithms() (SigningAlgoList, SigningAlgoList) {
 	return ks.options.SupportedAlgos, ks.options.SupportedAlgosLedger
 }
 
-// LookupAddressByKeyName returns the address of a key stored in the keyring
-func (ks keystore) LookupAddressByKeyName(name string) ([]byte, error) {
-	record, err := ks.Key(name)
-	if err != nil {
-		return nil, err
-	}
-
-	addr, err := record.GetAddress()
-	if err != nil {
-		return nil, err
-	}
-
-	return addr, nil
-}
-
 // SignWithLedger signs a binary message with the ledger device referenced by an Info object
 // and returns the signed bytes and the public key. It returns an error if the device could
 // not be queried or it returned an error.
@@ -963,6 +945,10 @@ func (ks keystore) migrate(key string) (*Record, error) {
 	// 1. get the key.
 	item, err := ks.db.Get(key)
 	if err != nil {
+		if key == fmt.Sprintf(".%s", infoSuffix) {
+			return nil, errors.New("no key name or address provided; have you forgotten the --from flag?")
+		}
+
 		return nil, wrapKeyNotFound(err, key)
 	}
 

@@ -42,7 +42,10 @@ func (keeper Keeper) AddVote(ctx context.Context, proposalID uint64, voterAddr s
 	}
 
 	// called after a vote on a proposal is cast
-	keeper.Hooks().AfterProposalVote(ctx, proposalID, voterAddr)
+	err = keeper.Hooks().AfterProposalVote(ctx, proposalID, voterAddr)
+	if err != nil {
+		return err
+	}
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	sdkCtx.EventManager().EmitEvent(

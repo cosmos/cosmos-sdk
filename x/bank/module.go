@@ -10,7 +10,6 @@ import (
 	"github.com/spf13/cobra"
 
 	modulev1 "cosmossdk.io/api/cosmos/bank/module/v1"
-	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
@@ -46,7 +45,6 @@ var (
 // AppModuleBasic defines the basic application module used by the bank module.
 type AppModuleBasic struct {
 	cdc codec.Codec
-	ac  address.Codec
 }
 
 // Name returns the bank module's name.
@@ -82,7 +80,7 @@ func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *g
 
 // GetTxCmd returns the root tx command for the bank module.
 func (ab AppModuleBasic) GetTxCmd() *cobra.Command {
-	return cli.NewTxCmd(ab.ac)
+	return cli.NewTxCmd()
 }
 
 // RegisterInterfaces registers interfaces and implementations of the bank module.
@@ -127,7 +125,7 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 // NewAppModule creates a new AppModule object
 func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, accountKeeper types.AccountKeeper) AppModule {
 	return AppModule{
-		AppModuleBasic: AppModuleBasic{cdc: cdc, ac: accountKeeper.AddressCodec()},
+		AppModuleBasic: AppModuleBasic{cdc: cdc},
 		keeper:         keeper,
 		accountKeeper:  accountKeeper,
 	}
@@ -143,7 +141,7 @@ func (AppModule) QuerierRoute() string { return types.RouterKey }
 
 // InitGenesis performs genesis initialization for the bank module. It returns
 // no validator updates.
-func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.RawMessage) {
+func (am AppModule) InitGenesis(ctx context.Context, cdc codec.JSONCodec, data json.RawMessage) {
 	start := time.Now()
 	var genesisState types.GenesisState
 	cdc.MustUnmarshalJSON(data, &genesisState)
@@ -154,7 +152,7 @@ func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.
 
 // ExportGenesis returns the exported genesis state as raw bytes for the bank
 // module.
-func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.RawMessage {
+func (am AppModule) ExportGenesis(ctx context.Context, cdc codec.JSONCodec) json.RawMessage {
 	gs := am.keeper.ExportGenesis(ctx)
 	return cdc.MustMarshalJSON(gs)
 }

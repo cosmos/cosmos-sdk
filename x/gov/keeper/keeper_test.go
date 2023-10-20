@@ -32,7 +32,6 @@ type KeeperTestSuite struct {
 	acctKeeper        *govtestutil.MockAccountKeeper
 	bankKeeper        *govtestutil.MockBankKeeper
 	stakingKeeper     *govtestutil.MockStakingKeeper
-	distKeeper        *govtestutil.MockDistributionKeeper
 	queryClient       v1.QueryClient
 	legacyQueryClient v1beta1.QueryClient
 	addrs             []sdk.AccAddress
@@ -46,7 +45,7 @@ func (suite *KeeperTestSuite) SetupSuite() {
 
 func (suite *KeeperTestSuite) reset() {
 	govKeeper, mocks, encCfg, ctx := setupGovKeeper(suite.T())
-	acctKeeper, bankKeeper, stakingKeeper, distKeeper := mocks.acctKeeper, mocks.bankKeeper, mocks.stakingKeeper, mocks.distributionKeeper
+	acctKeeper, bankKeeper, stakingKeeper := mocks.acctKeeper, mocks.bankKeeper, mocks.stakingKeeper
 
 	// Populate the gov account with some coins, as the TestProposal we have
 	// is a MsgSend from the gov account.
@@ -68,7 +67,6 @@ func (suite *KeeperTestSuite) reset() {
 	suite.acctKeeper = acctKeeper
 	suite.bankKeeper = bankKeeper
 	suite.stakingKeeper = stakingKeeper
-	suite.distKeeper = distKeeper
 	suite.cdc = encCfg.Codec
 	suite.queryClient = queryClient
 	suite.legacyQueryClient = legacyQueryClient

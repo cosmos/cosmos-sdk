@@ -86,12 +86,47 @@ func TestRegisterMsgServiceTwice(t *testing.T) {
 	})
 }
 
+func TestHybridHandlerByMsgName(t *testing.T) {
+	// Setup baseapp and router.
+	var (
+		appBuilder *runtime.AppBuilder
+		registry   codectypes.InterfaceRegistry
+	)
+	err := depinject.Inject(
+		depinject.Configs(
+			makeMinimalConfig(),
+			depinject.Supply(log.NewTestLogger(t)),
+		), &appBuilder, &registry)
+	require.NoError(t, err)
+	db := dbm.NewMemDB()
+	app := appBuilder.Build(db, nil)
+	testdata.RegisterInterfaces(registry)
+
+	testdata.RegisterMsgServer(
+		app.MsgServiceRouter(),
+		testdata.MsgServerImpl{},
+	)
+
+	handler := app.MsgServiceRouter().HybridHandlerByMsgName("testpb.MsgCreateDog")
+
+	require.NotNil(t, handler)
+	require.NoError(t, app.Init())
+	ctx := app.NewContext(true)
+	resp := new(testdata.MsgCreateDogResponse)
+	err = handler(ctx, &testdata.MsgCreateDog{
+		Dog:   &testdata.Dog{Name: "Spot"},
+		Owner: "me",
+	}, resp)
+	require.NoError(t, err)
+	require.Equal(t, resp.Name, "Spot")
+}
+
 func TestMsgService(t *testing.T) {
 	priv, _, _ := testdata.KeyTestPubAddr()
 
 	var (
 		appBuilder        *runtime.AppBuilder
-		cdc               codec.ProtoCodecMarshaler
+		cdc               codec.Codec
 		interfaceRegistry codectypes.InterfaceRegistry
 	)
 	err := depinject.Inject(

@@ -34,6 +34,7 @@ import (
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/evidence"
 	feegrantmodule "cosmossdk.io/x/feegrant/module"
+	groupmodule "cosmossdk.io/x/group/module"
 	"cosmossdk.io/x/tx/signing/aminojson"
 	signing_testutil "cosmossdk.io/x/tx/signing/testutil"
 	"cosmossdk.io/x/upgrade"
@@ -67,9 +68,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	gov_v1_types "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	gov_v1beta1_types "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
-	groupmodule "github.com/cosmos/cosmos-sdk/x/group/module"
 	"github.com/cosmos/cosmos-sdk/x/mint"
-	"github.com/cosmos/cosmos-sdk/x/params"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
@@ -94,7 +93,7 @@ func TestAminoJSON_Equivalence(t *testing.T) {
 	encCfg := testutil.MakeTestEncodingConfig(
 		auth.AppModuleBasic{}, authzmodule.AppModuleBasic{}, bank.AppModuleBasic{}, consensus.AppModuleBasic{},
 		distribution.AppModuleBasic{}, evidence.AppModuleBasic{}, feegrantmodule.AppModuleBasic{},
-		gov.AppModuleBasic{}, groupmodule.AppModuleBasic{}, mint.AppModuleBasic{}, params.AppModuleBasic{},
+		gov.AppModuleBasic{}, groupmodule.AppModuleBasic{}, mint.AppModuleBasic{},
 		slashing.AppModuleBasic{}, staking.AppModuleBasic{}, upgrade.AppModuleBasic{}, vesting.AppModuleBasic{})
 	legacytx.RegressionTestingAminoCodec = encCfg.Amino
 	aj := aminojson.NewEncoder(aminojson.EncoderOptions{DoNotSortFields: true})
@@ -267,10 +266,6 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 			gogo:   &disttypes.DelegationDelegatorReward{},
 			pulsar: &distapi.DelegationDelegatorReward{},
 		},
-		"distribution/community_pool_spend_proposal_with_deposit": {
-			gogo:   &disttypes.CommunityPoolSpendProposalWithDeposit{},
-			pulsar: &distapi.CommunityPoolSpendProposalWithDeposit{},
-		},
 		"distribution/msg_withdraw_delegator_reward": {
 			gogo:   &disttypes.MsgWithdrawDelegatorReward{DelegatorAddress: "foo"},
 			pulsar: &distapi.MsgWithdrawDelegatorReward{DelegatorAddress: "foo"},
@@ -348,6 +343,20 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 			pulsar: &slashingapi.Params{
 				DowntimeJailDuration: &durationpb.Duration{Seconds: 1, Nanos: 7},
 				MinSignedPerWindow:   dec10bz,
+			},
+		},
+		"staking/msg_update_params": {
+			gogo: &stakingtypes.MsgUpdateParams{
+				Params: stakingtypes.Params{
+					UnbondingTime:  0,
+					KeyRotationFee: types.Coin{},
+				},
+			},
+			pulsar: &stakingapi.MsgUpdateParams{
+				Params: &stakingapi.Params{
+					UnbondingTime:  &durationpb.Duration{Seconds: 0},
+					KeyRotationFee: &v1beta1.Coin{},
+				},
 			},
 		},
 		"staking/create_validator": {

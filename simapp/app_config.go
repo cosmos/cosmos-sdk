@@ -21,6 +21,7 @@ import (
 	groupmodulev1 "cosmossdk.io/api/cosmos/group/module/v1"
 	mintmodulev1 "cosmossdk.io/api/cosmos/mint/module/v1"
 	nftmodulev1 "cosmossdk.io/api/cosmos/nft/module/v1"
+	poolmodulev1 "cosmossdk.io/api/cosmos/protocolpool/module/v1"
 	slashingmodulev1 "cosmossdk.io/api/cosmos/slashing/module/v1"
 	stakingmodulev1 "cosmossdk.io/api/cosmos/staking/module/v1"
 	txconfigv1 "cosmossdk.io/api/cosmos/tx/config/v1"
@@ -34,9 +35,13 @@ import (
 	evidencetypes "cosmossdk.io/x/evidence/types"
 	"cosmossdk.io/x/feegrant"
 	_ "cosmossdk.io/x/feegrant/module" // import for side-effects
+	"cosmossdk.io/x/group"
+	_ "cosmossdk.io/x/group/module" // import for side-effects
 	"cosmossdk.io/x/nft"
-	_ "cosmossdk.io/x/nft/module" // import for side-effects
-	_ "cosmossdk.io/x/upgrade"    // import for side-effects
+	_ "cosmossdk.io/x/nft/module"   // import for side-effects
+	_ "cosmossdk.io/x/protocolpool" // import for side-effects
+	pooltypes "cosmossdk.io/x/protocolpool/types"
+	_ "cosmossdk.io/x/upgrade" // import for side-effects
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 
 	"github.com/cosmos/cosmos-sdk/runtime"
@@ -60,9 +65,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	govclient "github.com/cosmos/cosmos-sdk/x/gov/client"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	"github.com/cosmos/cosmos-sdk/x/group"
-	_ "github.com/cosmos/cosmos-sdk/x/group/module" // import for side-effects
-	_ "github.com/cosmos/cosmos-sdk/x/mint"         // import for side-effects
+	_ "github.com/cosmos/cosmos-sdk/x/mint" // import for side-effects
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	_ "github.com/cosmos/cosmos-sdk/x/slashing" // import for side-effects
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
@@ -75,6 +78,7 @@ var (
 	moduleAccPerms = []*authmodulev1.ModuleAccountPermission{
 		{Account: authtypes.FeeCollectorName},
 		{Account: distrtypes.ModuleName},
+		{Account: pooltypes.ModuleName},
 		{Account: minttypes.ModuleName, Permissions: []string{authtypes.Minter}},
 		{Account: stakingtypes.BondedPoolName, Permissions: []string{authtypes.Burner, stakingtypes.ModuleName}},
 		{Account: stakingtypes.NotBondedPoolName, Permissions: []string{authtypes.Burner, stakingtypes.ModuleName}},
@@ -92,6 +96,7 @@ var (
 		nft.ModuleName,
 		// We allow the following module accounts to receive funds:
 		// govtypes.ModuleName
+		// pooltypes.ModuleName
 	}
 
 	// application configuration (used by depinject)
@@ -250,6 +255,10 @@ var (
 			{
 				Name:   circuittypes.ModuleName,
 				Config: appconfig.WrapAny(&circuitmodulev1.Module{}),
+			},
+			{
+				Name:   pooltypes.ModuleName,
+				Config: appconfig.WrapAny(&poolmodulev1.Module{}),
 			},
 		},
 	}),

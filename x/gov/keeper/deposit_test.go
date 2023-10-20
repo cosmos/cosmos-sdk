@@ -8,12 +8,12 @@ import (
 
 	"cosmossdk.io/collections"
 	sdkmath "cosmossdk.io/math"
+	pooltypes "cosmossdk.io/x/protocolpool/types"
 
 	"github.com/cosmos/cosmos-sdk/codec/address"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	disttypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 )
 
@@ -39,8 +39,8 @@ func TestDeposits(t *testing.T) {
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
 			govKeeper, mocks, _, ctx := setupGovKeeper(t)
-			authKeeper, bankKeeper, stakingKeeper, distKeeper := mocks.acctKeeper, mocks.bankKeeper, mocks.stakingKeeper, mocks.distributionKeeper
-			trackMockBalances(bankKeeper, distKeeper)
+			authKeeper, bankKeeper, stakingKeeper := mocks.acctKeeper, mocks.bankKeeper, mocks.stakingKeeper
+			trackMockBalances(bankKeeper)
 
 			// With expedited proposals the minimum deposit is higher, so we must
 			// initialize and deposit an amount depositMultiplier times larger
@@ -329,7 +329,7 @@ func TestChargeDeposit(t *testing.T) {
 					params.ProposalCancelDest = TestAddrs[1].String()
 				default:
 					// community address for proposal cancel dest address
-					params.ProposalCancelDest = authtypes.NewModuleAddress(disttypes.ModuleName).String()
+					params.ProposalCancelDest = authtypes.NewModuleAddress(pooltypes.ModuleName).String()
 				}
 
 				err := govKeeper.Params.Set(ctx, params)

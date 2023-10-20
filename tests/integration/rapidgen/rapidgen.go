@@ -31,6 +31,7 @@ import (
 	vestingapi "cosmossdk.io/api/cosmos/vesting/v1beta1"
 	evidencetypes "cosmossdk.io/x/evidence/types"
 	feegranttypes "cosmossdk.io/x/feegrant"
+	grouptypes "cosmossdk.io/x/group"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
@@ -42,7 +43,6 @@ import (
 	disttypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	gov_v1_types "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	gov_v1beta1_types "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
-	grouptypes "github.com/cosmos/cosmos-sdk/x/group"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -127,9 +127,7 @@ var (
 		GenType(&disttypes.MsgWithdrawDelegatorReward{}, &distapi.MsgWithdrawDelegatorReward{}, GenOpts),
 		GenType(&disttypes.MsgWithdrawValidatorCommission{}, &distapi.MsgWithdrawValidatorCommission{}, GenOpts),
 		GenType(&disttypes.MsgSetWithdrawAddress{}, &distapi.MsgSetWithdrawAddress{}, GenOpts),
-		GenType(&disttypes.MsgFundCommunityPool{}, &distapi.MsgFundCommunityPool{}, GenOpts),
 		GenType(&disttypes.MsgUpdateParams{}, &distapi.MsgUpdateParams{}, GenOpts.WithDisallowNil()),
-		GenType(&disttypes.MsgCommunityPoolSpend{}, &distapi.MsgCommunityPoolSpend{}, GenOpts),
 		GenType(&disttypes.MsgDepositValidatorRewardsPool{}, &distapi.MsgDepositValidatorRewardsPool{}, GenOpts),
 
 		// evidence

@@ -277,15 +277,6 @@ func verifyIsOnCurve(pubKey cryptotypes.PubKey) (err error) {
 		if !pubKey.IsOnCurve(pubKey.X, pubKey.Y) {
 			return errorsmod.Wrap(sdkerrors.ErrInvalidPubKey, "secp256r1 key is not on curve")
 		}
-	case multisig.PubKey:
-		for _, pubKeyObject := range pubKey.(multisig.PubKey).GetPubKeys() {
-			if err := verifyIsOnCurve(pubKeyObject); err != nil {
-				break
-			}
-		}
-		if err != nil {
-			return errorsmod.Wrap(sdkerrors.ErrInvalidPubKey, "Multisig public key is not on curve")
-		}
 	default:
 		return errorsmod.Wrap(sdkerrors.ErrInvalidPubKey, "unrecognized public key type")
 	}

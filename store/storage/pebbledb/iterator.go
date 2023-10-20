@@ -26,14 +26,21 @@ type iterator struct {
 	prefix, start, end []byte
 	version            uint64
 	valid              bool
+	reverse            bool
 }
 
-func newPebbleDBIterator(src *pebble.Iterator, prefix, mvccStart, mvccEnd []byte, version uint64) *iterator {
+func newPebbleDBIterator(src *pebble.Iterator, prefix, mvccStart, mvccEnd []byte, version uint64, reverse bool) *iterator {
 	// move the underlying PebbleDB iterator to the first key
-	valid := src.First()
+	var valid bool
+	if reverse {
+		valid = src.Last()
+	} else {
+		valid = src.First()
+	}
+
 	if valid {
-		// The first key may not represent the desired target version, so move the
-		// cursor to the correct location.
+		// The first key may not represent the desired target version, so seek to
+		// the correct location by moving the cursor to the first key < version + 1.
 		firstKey, _, ok := SplitMVCCKey(src.Key())
 		if !ok {
 			// XXX: This should not happen as that would indicate we have a malformed
@@ -51,6 +58,7 @@ func newPebbleDBIterator(src *pebble.Iterator, prefix, mvccStart, mvccEnd []byte
 		end:     mvccEnd,
 		version: version,
 		valid:   valid,
+		reverse: reverse,
 	}
 
 	// The cursor might now be pointing at a key/value pair that is tombstoned.

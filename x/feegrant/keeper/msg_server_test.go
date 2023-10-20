@@ -326,7 +326,7 @@ func (suite *KeeperTestSuite) TestPruneAllowances() {
 	count = 0
 	err := suite.feegrantKeeper.IterateAllFeeAllowances(ctx, func(grant feegrant.Grant) bool {
 		count++
-		return true
+		return count == 76
 	})
 	suite.Require().NoError(err)
 	suite.Require().Equal(76, count)

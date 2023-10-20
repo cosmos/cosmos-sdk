@@ -207,6 +207,36 @@ func (suite *KeeperTestSuite) TestSubmitProposalReq() {
 			expErr:    true,
 			expErrMsg: "proposal message not recognized by router",
 		},
+		"invalid deposited coin": {
+			preRun: func() (*v1.MsgSubmitProposal, error) {
+				return v1.NewMsgSubmitProposal(
+					[]sdk.Msg{bankMsg},
+					[]sdk.Coin{sdk.NewCoin("invalid", sdkmath.NewInt(100))},
+					proposer.String(),
+					"",
+					"Proposal",
+					"description of proposal",
+					false,
+				)
+			},
+			expErr:    true,
+			expErrMsg: "deposited 100invalid, but gov accepts only the following denom(s): [stake]: invalid deposit denom",
+		},
+		"invalid deposited coin (multiple)": {
+			preRun: func() (*v1.MsgSubmitProposal, error) {
+				return v1.NewMsgSubmitProposal(
+					[]sdk.Msg{bankMsg},
+					append(initialDeposit, sdk.NewCoin("invalid", sdkmath.NewInt(100))),
+					proposer.String(),
+					"",
+					"Proposal",
+					"description of proposal",
+					false,
+				)
+			},
+			expErr:    true,
+			expErrMsg: "deposited 100invalid, but gov accepts only the following denom(s): [stake]: invalid deposit denom",
+		},
 		"all good": {
 			preRun: func() (*v1.MsgSubmitProposal, error) {
 				return v1.NewMsgSubmitProposal(
@@ -790,6 +820,24 @@ func (suite *KeeperTestSuite) TestDepositReq() {
 			deposit:   minDeposit,
 			expErr:    true,
 			expErrMsg: "invalid depositor address",
+		},
+		"invalid deposited coin ": {
+			preRun: func() uint64 {
+				return pID
+			},
+			depositor: proposer,
+			deposit:   []sdk.Coin{sdk.NewCoin("ibc/badcoin", sdkmath.NewInt(1000))},
+			expErr:    true,
+			expErrMsg: "deposited 1000ibc/badcoin, but gov accepts only the following denom(s): [stake]",
+		},
+		"invalid deposited coin (multiple)": {
+			preRun: func() uint64 {
+				return pID
+			},
+			depositor: proposer,
+			deposit:   append(minDeposit, sdk.NewCoin("ibc/badcoin", sdkmath.NewInt(1000))),
+			expErr:    true,
+			expErrMsg: "deposited 1000ibc/badcoin, but gov accepts only the following denom(s): [stake]",
 		},
 		"all good": {
 			preRun: func() uint64 {

@@ -54,7 +54,7 @@ When using (legacy) application wiring, the following must be added to `app.go` 
 		txConfigOpts,
 	)
 	if err != nil {
-		panic(err)
+		log.Fatalf("Failed to create new TxConfig with options: %v", err)
 	}
 	app.txConfig = txConfig
 ```
@@ -76,7 +76,7 @@ And in the application client (usually `root.go`):
 	}
 ```
 
-When using `depinject` / `app v2`, it's enabled by default, and only needs to be added in the application client (`root.go`).
+When using `depinject` / `app v2`, **it's enabled by default** if there's a bank keeper present.
 
 ### Modules
 

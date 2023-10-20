@@ -108,14 +108,10 @@ func (k Keeper) GrantAllowance(ctx context.Context, granter, grantee sdk.AccAddr
 
 // UpdateAllowance updates the existing grant.
 func (k Keeper) UpdateAllowance(ctx context.Context, granter, grantee sdk.AccAddress, feeAllowance feegrant.FeeAllowanceI) error {
-<<<<<<< HEAD
 	store := k.storeService.OpenKVStore(ctx)
 	key := feegrant.FeeAllowanceKey(granter, grantee)
 
 	_, err := k.getGrant(ctx, granter, grantee)
-=======
-	_, err := k.GetAllowance(ctx, granter, grantee)
->>>>>>> 4caecf13b (feat(x/feegrant): Add limits to grant pruning and enable message to aid manually (#18047))
 	if err != nil {
 		return err
 	}
@@ -193,7 +189,6 @@ func (k Keeper) GetAllowance(ctx context.Context, granter, grantee sdk.AccAddres
 	return grant.GetGrant()
 }
 
-<<<<<<< HEAD
 // getGrant returns entire grant between both accounts
 func (k Keeper) getGrant(ctx context.Context, granter, grantee sdk.AccAddress) (*feegrant.Grant, error) {
 	store := k.storeService.OpenKVStore(ctx)
@@ -215,8 +210,6 @@ func (k Keeper) getGrant(ctx context.Context, granter, grantee sdk.AccAddress) (
 	return &feegrant, nil
 }
 
-=======
->>>>>>> 4caecf13b (feat(x/feegrant): Add limits to grant pruning and enable message to aid manually (#18047))
 // IterateAllFeeAllowances iterates over all the grants in the store.
 // Callback to get all data, returns true to stop, false to keep reading
 // Calling this without pagination is very expensive and only designed for export genesis
@@ -324,43 +317,22 @@ func (k Keeper) addToFeeAllowanceQueue(ctx context.Context, grantKey []byte, exp
 }
 
 // RemoveExpiredAllowances iterates grantsByExpiryQueue and deletes the expired grants.
-<<<<<<< HEAD
-func (k Keeper) RemoveExpiredAllowances(ctx context.Context) error {
+func (k Keeper) RemoveExpiredAllowances(ctx context.Context, limit int32) error {
 	exp := sdk.UnwrapSDKContext(ctx).BlockTime()
 	store := k.storeService.OpenKVStore(ctx)
 	iterator, err := store.Iterator(feegrant.FeeAllowanceQueueKeyPrefix, storetypes.InclusiveEndBytes(feegrant.AllowanceByExpTimeKey(&exp)))
-=======
-func (k Keeper) RemoveExpiredAllowances(ctx context.Context, limit int) error {
-	exp := sdk.UnwrapSDKContext(ctx).HeaderInfo().Time
-	rng := collections.NewPrefixUntilTripleRange[time.Time, sdk.AccAddress, sdk.AccAddress](exp)
-	count := 0
-
-	err := k.FeeAllowanceQueue.Walk(ctx, rng, func(key collections.Triple[time.Time, sdk.AccAddress, sdk.AccAddress], value bool) (stop bool, err error) {
-		grantee, granter := key.K2(), key.K3()
-
-		if err := k.FeeAllowance.Remove(ctx, collections.Join(grantee, granter)); err != nil {
-			return true, err
-		}
-
-		if err := k.FeeAllowanceQueue.Remove(ctx, key); err != nil {
-			return true, err
-		}
-
-		// limit the amount of iterations to avoid taking too much time
-		count++
-		if count == limit {
-			return true, nil
-		}
-
-		return false, nil
-	})
->>>>>>> 4caecf13b (feat(x/feegrant): Add limits to grant pruning and enable message to aid manually (#18047))
+	var count int32 = 0
 	if err != nil {
 		return err
 	}
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
+		// limit the amount of iterations to avoid taking too much time
+		count++
+		if count == limit {
+			return nil
+		}
 		err = store.Delete(iterator.Key())
 		if err != nil {
 			return err

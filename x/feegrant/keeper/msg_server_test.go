@@ -5,11 +5,8 @@ import (
 
 	"github.com/golang/mock/gomock"
 
-<<<<<<< HEAD
-=======
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/header"
->>>>>>> 4caecf13b (feat(x/feegrant): Add limits to grant pruning and enable message to aid manually (#18047))
 	"cosmossdk.io/x/feegrant"
 
 	codecaddress "github.com/cosmos/cosmos-sdk/codec/address"

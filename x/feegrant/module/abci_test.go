@@ -86,13 +86,8 @@ func TestFeegrantPruning(t *testing.T) {
 	require.NotNil(t, res)
 	require.Len(t, res.Allowances, 3)
 
-<<<<<<< HEAD
 	testCtx.Ctx = testCtx.Ctx.WithBlockTime(now.AddDate(0, 0, 2))
 	module.EndBlocker(testCtx.Ctx, feegrantKeeper)
-=======
-	testCtx.Ctx = testCtx.Ctx.WithHeaderInfo(header.Info{Time: now.AddDate(0, 0, 2)})
-	require.NoError(t, module.EndBlocker(testCtx.Ctx, feegrantKeeper))
->>>>>>> 4caecf13b (feat(x/feegrant): Add limits to grant pruning and enable message to aid manually (#18047))
 
 	res, err = queryClient.Allowances(testCtx.Ctx.Context(), &feegrant.QueryAllowancesRequest{
 		Grantee: grantee.String(),

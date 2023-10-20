@@ -394,13 +394,9 @@ func (suite *KeeperTestSuite) TestPruneGrants() {
 			}
 			err := suite.feegrantKeeper.GrantAllowance(suite.ctx, tc.granter, tc.grantee, tc.allowance)
 			suite.NoError(err)
-<<<<<<< HEAD
-			suite.feegrantKeeper.RemoveExpiredAllowances(tc.ctx)
-=======
 			err = suite.feegrantKeeper.RemoveExpiredAllowances(tc.ctx, 5)
 			suite.NoError(err)
 
->>>>>>> 4caecf13b (feat(x/feegrant): Add limits to grant pruning and enable message to aid manually (#18047))
 			grant, err := suite.feegrantKeeper.GetAllowance(tc.ctx, tc.granter, tc.grantee)
 			if tc.expErrMsg != "" {
 				suite.Error(err)

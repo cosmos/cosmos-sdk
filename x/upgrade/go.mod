@@ -3,13 +3,8 @@ module cosmossdk.io/x/upgrade
 go 1.21
 
 require (
-<<<<<<< HEAD
 	cosmossdk.io/api v0.7.1
 	cosmossdk.io/core v0.11.0
-=======
-	cosmossdk.io/api v0.7.2-0.20231016084709-1314de734f17
-	cosmossdk.io/core v0.12.0
->>>>>>> 4caecf13b (feat(x/feegrant): Add limits to grant pruning and enable message to aid manually (#18047))
 	cosmossdk.io/depinject v1.0.0-alpha.4
 	cosmossdk.io/errors v1.0.0
 	cosmossdk.io/log v1.2.1

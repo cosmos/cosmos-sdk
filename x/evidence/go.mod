@@ -3,11 +3,7 @@ module cosmossdk.io/x/evidence
 go 1.21
 
 require (
-<<<<<<< HEAD
 	cosmossdk.io/api v0.7.1
-=======
-	cosmossdk.io/api v0.7.2-0.20231016084709-1314de734f17
->>>>>>> 4caecf13b (feat(x/feegrant): Add limits to grant pruning and enable message to aid manually (#18047))
 	cosmossdk.io/collections v0.4.0
 	cosmossdk.io/core v0.11.0
 	cosmossdk.io/depinject v1.0.0-alpha.4

@@ -5,16 +5,11 @@ import (
 
 	"github.com/golang/mock/gomock"
 
-<<<<<<< HEAD
-=======
-	"cosmossdk.io/collections"
 	"cosmossdk.io/core/header"
->>>>>>> 4caecf13b (feat(x/feegrant): Add limits to grant pruning and enable message to aid manually (#18047))
 	"cosmossdk.io/x/feegrant"
 
 	codecaddress "github.com/cosmos/cosmos-sdk/codec/address"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
@@ -297,12 +292,12 @@ func (suite *KeeperTestSuite) TestPruneAllowances() {
 
 	// We create 76 allowances, all expiring in one year
 	count := 0
-	for i := 0; i < len(suite.encodedAddrs); i++ {
-		for j := 0; j < len(suite.encodedAddrs); j++ {
+	for i := 0; i < len(suite.addrs); i++ {
+		for j := 0; j < len(suite.addrs); j++ {
 			if count == 76 {
 				break
 			}
-			if suite.encodedAddrs[i] == suite.encodedAddrs[j] {
+			if suite.addrs[i].String() == suite.addrs[j].String() {
 				continue
 			}
 
@@ -312,8 +307,8 @@ func (suite *KeeperTestSuite) TestPruneAllowances() {
 			})
 			suite.Require().NoError(err)
 			req := &feegrant.MsgGrantAllowance{
-				Granter:   suite.encodedAddrs[i],
-				Grantee:   suite.encodedAddrs[j],
+				Granter:   suite.addrs[i].String(),
+				Grantee:   suite.addrs[j].String(),
 				Allowance: any,
 			}
 
@@ -329,9 +324,9 @@ func (suite *KeeperTestSuite) TestPruneAllowances() {
 
 	// we have 76 allowances
 	count = 0
-	err := suite.feegrantKeeper.FeeAllowance.Walk(ctx, nil, func(key collections.Pair[types.AccAddress, types.AccAddress], value feegrant.Grant) (stop bool, err error) {
+	err := suite.feegrantKeeper.IterateAllFeeAllowances(ctx, func(grant feegrant.Grant) bool {
 		count++
-		return false, nil
+		return true
 	})
 	suite.Require().NoError(err)
 	suite.Require().Equal(76, count)
@@ -346,10 +341,9 @@ func (suite *KeeperTestSuite) TestPruneAllowances() {
 
 	// we have 1 allowance left
 	count = 0
-	err = suite.feegrantKeeper.FeeAllowance.Walk(ctx, nil, func(key collections.Pair[types.AccAddress, types.AccAddress], value feegrant.Grant) (stop bool, err error) {
+	err = suite.feegrantKeeper.IterateAllFeeAllowances(ctx, func(grant feegrant.Grant) bool {
 		count++
-
-		return false, nil
+		return true
 	})
 	suite.Require().NoError(err)
 	suite.Require().Equal(1, count)

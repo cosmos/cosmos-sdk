@@ -16,9 +16,10 @@ type Batch struct {
 	storage *pebble.DB
 	batch   *pebble.Batch
 	version uint64
+	sync    bool
 }
 
-func NewBatch(storage *pebble.DB, version uint64) (*Batch, error) {
+func NewBatch(storage *pebble.DB, version uint64, sync bool) (*Batch, error) {
 	var versionBz [VersionSize]byte
 	binary.LittleEndian.PutUint64(versionBz[:], version)
 
@@ -32,6 +33,7 @@ func NewBatch(storage *pebble.DB, version uint64) (*Batch, error) {
 		storage: storage,
 		batch:   batch,
 		version: version,
+		sync:    sync,
 	}, nil
 }
 
@@ -67,5 +69,5 @@ func (b *Batch) Write() (err error) {
 		err = errors.Join(err, b.batch.Close())
 	}()
 
-	return b.batch.Commit(defaultWriteOpts)
+	return b.batch.Commit(&pebble.WriteOptions{Sync: b.sync})
 }

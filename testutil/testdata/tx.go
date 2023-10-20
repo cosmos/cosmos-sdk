@@ -1,6 +1,7 @@
 package testdata
 
 import (
+	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"testing"
 
 	"gotest.tools/v3/assert"
@@ -47,6 +48,14 @@ func KeyTestPubAddr() (cryptotypes.PrivKey, cryptotypes.PubKey, sdk.AccAddress) 
 func KeyTestPubAddrSecp256R1(t *testing.T) (cryptotypes.PrivKey, cryptotypes.PubKey, sdk.AccAddress) {
 	key, err := secp256r1.GenPrivKey()
 	assert.NilError(t, err)
+	pub := key.PubKey()
+	addr := sdk.AccAddress(pub.Address())
+	return key, pub, addr
+}
+
+// KeyTestPubAddrED25519 generates a new ed25519 keypair.
+func KeyTestPubAddrED25519() (cryptotypes.PrivKey, cryptotypes.PubKey, sdk.AccAddress) {
+	key := ed25519.GenPrivKey()
 	pub := key.PubKey()
 	addr := sdk.AccAddress(pub.Address())
 	return key, pub, addr

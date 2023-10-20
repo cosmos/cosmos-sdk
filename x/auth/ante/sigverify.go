@@ -95,6 +95,9 @@ func (spkd SetPubKeyDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 			return ctx, errorsmod.Wrapf(sdkerrors.ErrInvalidPubKey,
 				"pubKey does not match signer address %s with signer index: %d", signerStrs[i], i)
 		}
+		if err := verifyIsOnCurve(pk); err != nil {
+			return ctx, err
+		}
 
 		acc, err := GetSignerAcc(ctx, spkd.ak, signers[i])
 		if err != nil {
@@ -188,6 +191,9 @@ func (sgcd SigGasConsumeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simula
 		}
 
 		pubKey := signerAcc.GetPubKey()
+		if err := verifyIsOnCurve(pubKey); err != nil {
+			return ctx, err
+		}
 
 		// In simulate mode the transaction comes with no signatures, thus if the
 		// account's pubkey is nil, both signature verification and gasKVStore.Set()
@@ -256,22 +262,24 @@ func verifyIsOnCurve(pubKey cryptotypes.PubKey) (err error) {
 	case *ed25519.PubKey:
 		return errorsmod.Wrap(sdkerrors.ErrInvalidPubKey, "ED25519 public keys are unsupported")
 	case *secp256k1.PubKey:
-		pubKey, err := secp256k1dcrd.ParsePubKey(key)
+		pubKeyObject, err := secp256k1dcrd.ParsePubKey(pubKey.Bytes())
 		if err != nil {
+			if err.(secp256k1dcrd.Error).Err.Error() == "ErrPubKeyNotOnCurve" {
+				return errorsmod.Wrap(sdkerrors.ErrInvalidPubKey, "secp256k1 key is not on curve")
+			}
 			return err
 		}
-		if pubKey.IsOnCurve() == false {
-			return errorsmod.Wrap(sdkerrors.ErrInvalidPubKey, "secp256r1 key is not in curve")
+		if !pubKeyObject.IsOnCurve() {
+			return errorsmod.Wrap(sdkerrors.ErrInvalidPubKey, "secp256k1 key is not on curve")
 		}
 	case *secp256r1.PubKey:
 		pubKey := pubKey.(*secp256r1.PubKey).Key.PublicKey
-		if pubKey.IsOnCurve(pubKey.X, pubKey.Y) != false {
+		if !pubKey.IsOnCurve(pubKey.X, pubKey.Y) {
 			return errorsmod.Wrap(sdkerrors.ErrInvalidPubKey, "secp256r1 key is not on curve")
 		}
 	case multisig.PubKey:
 		for _, pubKeyObject := range pubKey.(multisig.PubKey).GetPubKeys() {
-			err = verifyIsOnCurve(pubKeyObject)
-			if err != nil {
+			if err := verifyIsOnCurve(pubKeyObject); err != nil {
 				break
 			}
 		}
@@ -320,8 +328,8 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 			return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidPubKey, "pubkey on account is not set")
 		}
 
-		if verifyIsOnCurve(pubKey) != nil {
-			return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidPubKey, "failed to verify if pub key is on curve.")
+		if err := verifyIsOnCurve(pubKey); err != nil {
+			return ctx, err
 		}
 
 		// retrieve signer data
@@ -405,6 +413,11 @@ func (isd IncrementSequenceDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, sim
 		acc := isd.ak.GetAccount(ctx, signer)
 		if err := acc.SetSequence(acc.GetSequence() + 1); err != nil {
 			panic(err)
+		}
+
+		pubKey := acc.GetPubKey()
+		if err := verifyIsOnCurve(pubKey); err != nil {
+			return ctx, err
 		}
 
 		isd.ak.SetAccount(ctx, acc)

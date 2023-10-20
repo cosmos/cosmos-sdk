@@ -34,7 +34,7 @@ Refer to SimApp `root_v2.go` and `root.go` for an example with an app v2 and a l
 
 #### Textual sign mode
 
-A new sign mode is available in the SDK that produces a better human readable output, currently only available on Ledger
+A new sign mode is available in the SDK that produces more human readable output, currently only available on Ledger
 devices but soon to be implemented in other UIs. 
 
 :::tip

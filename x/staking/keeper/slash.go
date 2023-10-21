@@ -182,11 +182,11 @@ func (k Keeper) Slash(ctx context.Context, consAddr sdk.ConsAddress, infractionH
 	}
 
 	switch validator.GetStatus() {
-	case types.Bonded:
+	case sdk.Bonded:
 		if err := k.burnBondedTokens(ctx, tokensToBurn); err != nil {
 			return math.NewInt(0), err
 		}
-	case types.Unbonding, types.Unbonded:
+	case sdk.Unbonding, sdk.Unbonded:
 		if err := k.burnNotBondedTokens(ctx, tokensToBurn); err != nil {
 			return math.NewInt(0), err
 		}

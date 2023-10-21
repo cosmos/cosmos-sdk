@@ -3,8 +3,8 @@ package funds
 import (
 	"fmt"
 
+	"cosmossdk.io/x/distribution/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
 // MigrateFunds migrates the distribution module funds to pool module

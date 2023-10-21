@@ -11,6 +11,7 @@ import (
 	"cosmossdk.io/simapp"
 	"github.com/stretchr/testify/suite"
 
+	_ "cosmossdk.io/x/distribution"
 	_ "cosmossdk.io/x/gov"
 	"github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -20,7 +21,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types"
 	qtypes "github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/version"
-	_ "github.com/cosmos/cosmos-sdk/x/distribution"
 )
 
 type E2ETestSuite struct {

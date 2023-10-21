@@ -5,8 +5,8 @@ import (
 
 	"cosmossdk.io/errors"
 
+	govtypes "cosmossdk.io/x/gov/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
 

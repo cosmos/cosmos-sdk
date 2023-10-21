@@ -7,9 +7,9 @@ import (
 	"cosmossdk.io/collections"
 	"cosmossdk.io/errors"
 
+	"cosmossdk.io/x/gov/types"
+	v1 "cosmossdk.io/x/gov/types/v1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/gov/types"
-	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 )
 
 // AddVote adds a vote on a specific proposal

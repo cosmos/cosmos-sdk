@@ -7,9 +7,9 @@ import (
 	"cosmossdk.io/x/params/keeper"
 	"cosmossdk.io/x/params/types/proposal"
 
+	govtypes "cosmossdk.io/x/gov/types/v1beta1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
 // NewParamChangeProposalHandler creates a new governance Handler for a ParamChangeProposal

@@ -33,7 +33,10 @@ require (
 	pgregory.net/rapid v1.1.0
 )
 
-require cosmossdk.io/x/group v0.0.0-00010101000000-000000000000
+require (
+	cosmossdk.io/x/gov v0.0.0-00010101000000-000000000000
+	cosmossdk.io/x/group v0.0.0-00010101000000-000000000000
+)
 
 require (
 	cloud.google.com/go v0.110.8 // indirect
@@ -206,6 +209,7 @@ replace (
 	cosmossdk.io/x/circuit => ../x/circuit
 	cosmossdk.io/x/evidence => ../x/evidence
 	cosmossdk.io/x/feegrant => ../x/feegrant
+	cosmossdk.io/x/gov => ../x/gov
 	cosmossdk.io/x/group => ../x/group
 	cosmossdk.io/x/nft => ../x/nft
 	cosmossdk.io/x/params => ../x/params

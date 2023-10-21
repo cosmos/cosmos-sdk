@@ -6,10 +6,10 @@ import (
 	"time"
 
 	"cosmossdk.io/math"
-
 	v3 "cosmossdk.io/x/gov/migrations/v3"
 	v1 "cosmossdk.io/x/gov/types/v1"
 	"cosmossdk.io/x/gov/types/v1beta1"
+
 	"github.com/cosmos/cosmos-sdk/codec/address"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"

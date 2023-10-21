@@ -13,6 +13,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"cosmossdk.io/x/gov/types"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"

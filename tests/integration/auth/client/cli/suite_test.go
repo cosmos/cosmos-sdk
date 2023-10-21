@@ -13,10 +13,10 @@ import (
 
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/math"
-
 	"cosmossdk.io/x/gov"
 	govtestutil "cosmossdk.io/x/gov/client/testutil"
 	govtypes "cosmossdk.io/x/gov/types/v1beta1"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"

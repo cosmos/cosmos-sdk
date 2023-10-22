@@ -21,6 +21,7 @@ import (
 	"cosmossdk.io/x/distribution"
 	"cosmossdk.io/x/gov"
 	"cosmossdk.io/x/slashing"
+	"cosmossdk.io/x/staking"
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/tests/integration/rapidgen"
@@ -36,7 +37,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/consensus"
 	"github.com/cosmos/cosmos-sdk/x/mint"
-	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
 // TestDecode tests that the tx decoder can decode all the txs in the test suite.

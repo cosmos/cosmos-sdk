@@ -7,8 +7,8 @@ import (
 	"cosmossdk.io/math"
 
 	v1 "cosmossdk.io/x/gov/types/v1"
+	stakingtypes "cosmossdk.io/x/staking/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // TODO: Break into several smaller functions for clarity

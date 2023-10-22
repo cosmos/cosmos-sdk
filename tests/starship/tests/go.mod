@@ -21,6 +21,7 @@ replace (
 	cosmossdk.io/x/gov => ../../../x/gov
 	cosmossdk.io/x/group => ../../../x/group
 	cosmossdk.io/x/nft => ../../../x/nft
+	cosmossdk.io/x/staking=> ../../../x/staking
 	cosmossdk.io/x/protocolpool => ../../../x/protocolpool
 	cosmossdk.io/x/upgrade => ../../../x/upgrade
 )

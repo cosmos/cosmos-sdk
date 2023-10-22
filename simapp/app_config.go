@@ -51,6 +51,8 @@ import (
 	govtypes "cosmossdk.io/x/gov/types"
 	_ "cosmossdk.io/x/slashing" // import for side-effects
 	slashingtypes "cosmossdk.io/x/slashing/types"
+	_ "cosmossdk.io/x/staking" // import for side-effects
+	stakingtypes "cosmossdk.io/x/staking/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config" // import for side-effects
@@ -69,8 +71,6 @@ import (
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	_ "github.com/cosmos/cosmos-sdk/x/mint" // import for side-effects
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
-	_ "github.com/cosmos/cosmos-sdk/x/staking" // import for side-effects
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 var (

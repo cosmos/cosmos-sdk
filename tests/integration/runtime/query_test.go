@@ -15,6 +15,7 @@ import (
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 
+	_ "cosmossdk.io/x/staking"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
@@ -24,7 +25,6 @@ import (
 	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
 	_ "github.com/cosmos/cosmos-sdk/x/bank"
 	_ "github.com/cosmos/cosmos-sdk/x/consensus"
-	_ "github.com/cosmos/cosmos-sdk/x/staking"
 )
 
 type fixture struct {

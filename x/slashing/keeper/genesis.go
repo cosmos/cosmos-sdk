@@ -4,8 +4,8 @@ import (
 	"context"
 
 	"cosmossdk.io/x/slashing/types"
+	stakingtypes "cosmossdk.io/x/staking/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // InitGenesis initializes default parameters and the keeper's address to

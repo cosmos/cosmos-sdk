@@ -37,6 +37,7 @@ import (
 	disttypes "cosmossdk.io/x/distribution/types"
 	gov_v1_types "cosmossdk.io/x/gov/types/v1"
 	gov_v1beta1_types "cosmossdk.io/x/gov/types/v1beta1"
+	slashingtypes "cosmossdk.io/x/slashing/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
@@ -44,7 +45,6 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	consensustypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
-	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 

@@ -10,8 +10,8 @@ import (
 	"cosmossdk.io/collections"
 	errorsmod "cosmossdk.io/errors"
 
+	"cosmossdk.io/x/slashing/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
 
 // HasValidatorSigningInfo returns if a given validator has signing information

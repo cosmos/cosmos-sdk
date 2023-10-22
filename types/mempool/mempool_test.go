@@ -10,7 +10,6 @@ import (
 	protov2 "google.golang.org/protobuf/proto"
 
 	"cosmossdk.io/log"
-	"cosmossdk.io/x/gov"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -235,7 +234,7 @@ func (s *MempoolTestSuite) TestSampleTxs() {
 }
 
 func unmarshalTx(txBytes []byte) (sdk.Tx, error) {
-	cfg := moduletestutil.MakeTestEncodingConfig(distribution.AppModuleBasic{}, gov.AppModuleBasic{})
+	cfg := moduletestutil.MakeTestEncodingConfig(distribution.AppModuleBasic{})
 	return cfg.TxConfig.TxJSONDecoder()(txBytes)
 }
 

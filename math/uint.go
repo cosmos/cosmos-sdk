@@ -243,8 +243,13 @@ func checkNewUint(i *big.Int) (Uint, error) {
 func RelativePow(x, n, b Uint) (z Uint) {
 	if x.IsZero() {
 		if n.IsZero() {
+<<<<<<< HEAD
 			z = b // 0^0 = 1
 			return
+=======
+			z = OneUint() // 0^0 = 1
+			return z
+>>>>>>> 442c3c5e4 (fix: RelativePow now returns 1 when 0^0 (#18211))
 		}
 		z = ZeroUint() // otherwise 0^a = 0
 		return

@@ -261,6 +261,16 @@ func (s *uintTestSuite) TestParseUint() {
 	}
 }
 
+func (s *uintTestSuite) TestNewUintFromBigInt() {
+	r := big.NewInt(42)
+	i := sdkmath.NewUintFromBigInt(r)
+	s.Require().Equal(r, i.BigInt())
+
+	// modify r and ensure i doesn't change
+	r = r.SetInt64(100)
+	s.Require().NotEqual(r, i.BigInt())
+}
+
 func randuint() sdkmath.Uint {
 	return sdkmath.NewUint(rand.Uint64())
 }

@@ -1,6 +1,8 @@
 package types
 
 import (
+	"errors"
+	fmt "fmt"
 	"io"
 
 	"github.com/bcicen/jstream"
@@ -12,13 +14,15 @@ const ChainIDFieldName = "chain-id"
 func ParseChainIDFromGenesis(reader io.Reader) (string, error) {
 	decoder := jstream.NewDecoder(reader, 1).EmitKV()
 	for mv := range decoder.Stream() {
-		kv := mv.Value.(jstream.KV)
-		if kv.Key == ChainIDFieldName {
-			if chain_id, ok := kv.Value.(string); ok {
+		if kv, ok := mv.Value.(jstream.KV); ok {
+			if kv.Key == ChainIDFieldName {
+				chain_id, ok := kv.Value.(string)
+				if !ok {
+					return "", fmt.Errorf("chain-id field is not string")
+				}
 				return chain_id, nil
 			}
-			break
 		}
 	}
-	return "", nil
+	return "", errors.New("chain-id field not found")
 }

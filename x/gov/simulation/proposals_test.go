@@ -6,9 +6,10 @@ import (
 
 	"gotest.tools/v3/assert"
 
+	"cosmossdk.io/x/gov/simulation"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/cosmos/cosmos-sdk/x/gov/simulation"
 )
 
 func TestProposalMsgs(t *testing.T) {

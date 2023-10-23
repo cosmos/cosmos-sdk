@@ -38,6 +38,10 @@ Refer to SimApp `root_v2.go` and `root.go` for an example with an app v2 and a l
 
 Group was spun out into its own `go.mod`. To import it use `cosmossdk.io/x/group`
 
+#### `x/gov`
+
+Gov was spun out into its own `go.mod`. To import it use `cosmossdk.io/x/gov`
+
 #### Params
 
 A standalone Go module was created and it is accessible at "cosmossdk.io/x/params".

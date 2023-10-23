@@ -9,13 +9,12 @@ import (
 	"cosmossdk.io/collections"
 	"cosmossdk.io/errors"
 	sdkmath "cosmossdk.io/math"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/query"
-
 	v3 "cosmossdk.io/x/gov/migrations/v3"
 	v1 "cosmossdk.io/x/gov/types/v1"
 	"cosmossdk.io/x/gov/types/v1beta1"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/query"
 )
 
 var _ v1.QueryServer = queryServer{}

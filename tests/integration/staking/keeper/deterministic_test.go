@@ -11,8 +11,8 @@ import (
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
-
 	"cosmossdk.io/x/distribution"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"

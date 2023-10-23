@@ -7,11 +7,11 @@ import (
 	"cosmossdk.io/collections"
 	"cosmossdk.io/errors"
 	sdkmath "cosmossdk.io/math"
-	pooltypes "cosmossdk.io/x/protocolpool/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"cosmossdk.io/x/gov/types"
 	v1 "cosmossdk.io/x/gov/types/v1"
+	pooltypes "cosmossdk.io/x/protocolpool/types"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // SetDeposit sets a Deposit to the gov store

@@ -24,7 +24,7 @@ Spec version: 0.
 
 ## Abstract
 
-This ADR specifies SIGN_MODE_TEXTUAL, a new string-based sign mode that is targetted at signing with hardware devices.
+This ADR specifies SIGN_MODE_TEXTUAL, a new string-based sign mode that is targeted at signing with hardware devices.
 
 ## Context
 

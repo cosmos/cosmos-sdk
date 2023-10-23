@@ -6,28 +6,22 @@ import (
 	"io"
 	"testing"
 
-	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/store/dbadapter"
-	"cosmossdk.io/store/internal/kv"
-	"cosmossdk.io/store/prefix"
-	"cosmossdk.io/store/tracekv"
-	"cosmossdk.io/store/types"
+	"cosmossdk.io/store/v2"
+	"cosmossdk.io/store/v2/memkv"
+	"cosmossdk.io/store/v2/tracekv"
 )
 
-func bz(s string) []byte { return []byte(s) }
+const storeKey = "storeKey"
 
-func keyFmt(i int) []byte { return bz(fmt.Sprintf("key%0.8d", i)) }
-func valFmt(i int) []byte { return bz(fmt.Sprintf("value%0.8d", i)) }
-
-var kvPairs = []kv.Pair{
-	{Key: keyFmt(1), Value: valFmt(1)},
-	{Key: keyFmt(2), Value: valFmt(2)},
-	{Key: keyFmt(3), Value: valFmt(3)},
+var kvPairs = []store.KVPair{
+	{Key: []byte(fmt.Sprintf("key%0.8d", 1)), Value: []byte(fmt.Sprintf("value%0.8d", 1))},
+	{Key: []byte(fmt.Sprintf("key%0.8d", 2)), Value: []byte(fmt.Sprintf("value%0.8d", 2))},
+	{Key: []byte(fmt.Sprintf("key%0.8d", 3)), Value: []byte(fmt.Sprintf("value%0.8d", 3))},
 }
 
-func newTraceKVStore(w io.Writer) *tracekv.Store {
+func newTraceKVStore(w io.Writer) store.KVStore {
 	store := newEmptyTraceKVStore(w)
 
 	for _, kvPair := range kvPairs {
@@ -37,11 +31,11 @@ func newTraceKVStore(w io.Writer) *tracekv.Store {
 	return store
 }
 
-func newEmptyTraceKVStore(w io.Writer) *tracekv.Store {
-	memDB := dbadapter.Store{DB: dbm.NewMemDB()}
-	tc := types.TraceContext(map[string]interface{}{"blockHeight": 64})
+func newEmptyTraceKVStore(w io.Writer) store.KVStore {
+	memKVStore := memkv.New(storeKey)
+	tc := store.TraceContext(map[string]any{"blockHeight": 64})
 
-	return tracekv.NewStore(memDB, w, tc)
+	return tracekv.New(memKVStore, w, tc)
 }
 
 func TestTraceKVStoreGet(t *testing.T) {
@@ -67,8 +61,8 @@ func TestTraceKVStoreGet(t *testing.T) {
 
 		store := newTraceKVStore(&buf)
 		buf.Reset()
-		value := store.Get(tc.key)
 
+		value := store.Get(tc.key)
 		require.Equal(t, tc.expectedValue, value)
 		require.Equal(t, tc.expectedOut, buf.String())
 	}
@@ -209,8 +203,7 @@ func TestTestTraceKVStoreIterator(t *testing.T) {
 	}
 
 	require.False(t, iterator.Valid())
-	require.Panics(t, iterator.Next)
-	require.NoError(t, iterator.Close())
+	require.False(t, iterator.Next())
 }
 
 func TestTestTraceKVStoreReverseIterator(t *testing.T) {
@@ -265,28 +258,10 @@ func TestTestTraceKVStoreReverseIterator(t *testing.T) {
 	}
 
 	require.False(t, iterator.Valid())
-	require.Panics(t, iterator.Next)
-	require.NoError(t, iterator.Close())
-}
-
-func TestTraceKVStorePrefix(t *testing.T) {
-	store := newEmptyTraceKVStore(nil)
-	pStore := prefix.NewStore(store, []byte("trace_prefix"))
-	require.IsType(t, prefix.Store{}, pStore)
+	require.False(t, iterator.Next())
 }
 
 func TestTraceKVStoreGetStoreType(t *testing.T) {
-	memDB := dbadapter.Store{DB: dbm.NewMemDB()}
-	store := newEmptyTraceKVStore(nil)
-	require.Equal(t, memDB.GetStoreType(), store.GetStoreType())
-}
-
-func TestTraceKVStoreCacheWrap(t *testing.T) {
-	store := newEmptyTraceKVStore(nil)
-	require.Panics(t, func() { store.CacheWrap() })
-}
-
-func TestTraceKVStoreCacheWrapWithTrace(t *testing.T) {
-	store := newEmptyTraceKVStore(nil)
-	require.Panics(t, func() { store.CacheWrapWithTrace(nil, nil) })
+	traceKVStore := newEmptyTraceKVStore(nil)
+	require.Equal(t, store.StoreTypeTrace, traceKVStore.GetStoreType())
 }

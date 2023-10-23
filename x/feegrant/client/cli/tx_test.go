@@ -18,6 +18,9 @@ import (
 	"cosmossdk.io/x/feegrant"
 	"cosmossdk.io/x/feegrant/client/cli"
 	"cosmossdk.io/x/feegrant/module"
+	govcli "cosmossdk.io/x/gov/client/cli"
+	govv1 "cosmossdk.io/x/gov/types/v1"
+	govv1beta1 "cosmossdk.io/x/gov/types/v1beta1"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -28,9 +31,6 @@ import (
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	testutilmod "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
-	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
-	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
 const (
@@ -136,7 +136,7 @@ func (s *CLITestSuite) createGrant(granter, grantee sdk.Address) {
 		commonFlags...,
 	)
 
-	cmd := cli.NewCmdFeeGrant(addresscodec.NewBech32Codec("cosmos"))
+	cmd := cli.NewCmdFeeGrant()
 	out, err := clitestutil.ExecTestCLICmd(s.clientCtx, cmd, args)
 	s.Require().NoError(err)
 
@@ -423,7 +423,7 @@ func (s *CLITestSuite) TestNewCmdFeeGrant() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			cmd := cli.NewCmdFeeGrant(addresscodec.NewBech32Codec("cosmos"))
+			cmd := cli.NewCmdFeeGrant()
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 
 			if tc.expectErr {
@@ -466,7 +466,7 @@ func (s *CLITestSuite) TestTxWithFeeGrant() {
 		commonFlags...,
 	)
 
-	cmd := cli.NewCmdFeeGrant(addresscodec.NewBech32Codec("cosmos"))
+	cmd := cli.NewCmdFeeGrant()
 
 	var res sdk.TxResponse
 	out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
@@ -619,7 +619,7 @@ func (s *CLITestSuite) TestFilteredFeeAllowance() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			cmd := cli.NewCmdFeeGrant(addresscodec.NewBech32Codec("cosmos"))
+			cmd := cli.NewCmdFeeGrant()
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErrMsg != "" {
 				s.Require().Error(err)
@@ -669,7 +669,7 @@ func (s *CLITestSuite) TestFilteredFeeAllowance() {
 					commonFlags...,
 				)
 
-				cmd := cli.NewCmdFeeGrant(addresscodec.NewBech32Codec("cosmos"))
+				cmd := cli.NewCmdFeeGrant()
 				out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &sdk.TxResponse{}), out.String())
 

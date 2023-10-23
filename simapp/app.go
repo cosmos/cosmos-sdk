@@ -33,6 +33,9 @@ import (
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 	abci "github.com/cometbft/cometbft/abci/types"
 	dbm "github.com/cosmos/cosmos-db"
+	"github.com/cosmos/gogoproto/proto"
+	"github.com/spf13/cast"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -105,8 +108,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/cosmos/gogoproto/proto"
-	"github.com/spf13/cast"
 )
 
 const appName = "SimApp"
@@ -243,7 +244,7 @@ func NewSimApp(
 		voteExtHandler := NewVoteExtensionHandler()
 		voteExtHandler.SetHandlers(bApp)
 	}
-	baseAppOptions = append(baseAppOptions, voteExtOp)
+	baseAppOptions = append(baseAppOptions, voteExtOp, baseapp.SetOptimisticExecution())
 
 	bApp := baseapp.NewBaseApp(appName, logger, db, txConfig.TxDecoder(), baseAppOptions...)
 	bApp.SetCommitMultiStoreTracer(traceStore)

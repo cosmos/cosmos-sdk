@@ -9,10 +9,10 @@ import (
 	"gotest.tools/v3/assert"
 
 	sdkmath "cosmossdk.io/math"
-
 	"cosmossdk.io/x/gov/simulation"
 	"cosmossdk.io/x/gov/types"
 	v1 "cosmossdk.io/x/gov/types/v1"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"

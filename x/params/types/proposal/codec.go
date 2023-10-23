@@ -2,6 +2,7 @@ package proposal
 
 import (
 	govtypes "cosmossdk.io/x/gov/types/v1beta1"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 )

@@ -1,10 +1,11 @@
 package v1
 
 import (
+	"cosmossdk.io/x/gov/types/v1beta1"
+
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdktx "github.com/cosmos/cosmos-sdk/types/tx"
-	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
 var (

@@ -94,7 +94,13 @@ create the final transaction by appending a fee. Note that the fee payer of the 
 
 #### `SIGN_MODE_TEXTUAL`
 
-`SIGN_MODE_TEXTUAL` is a new sign mode for delivering a better signing experience on hardware wallets, it is currently still under implementation. If you wish to learn more, please refer to [ADR-050](https://github.com/cosmos/cosmos-sdk/pull/10701).
+`SIGN_MODE_TEXTUAL` is a new sign mode for delivering a better signing experience on hardware wallets and it is included in the v0.50 release. In this mode, the signer signs over the human-readable string representation of the transaction (CBOR) and makes all data being displayed easier to read. The data is formatted as screens, and each screen is meant to be displayed in its entirety even on small devices like the Ledger Nano.
+
+There are also _expert_ screens, which will only be displayed if the user has chosen that option in its hardware device. These screens contain things like account number, account sequence and the sign data hash.
+
+Data is formatted using a set of `ValueRenderer` which the SDK provides defaults for all the known messages and value types. Chain developers can also opt to implement their own `ValueRenderer` for a type/message if they'd like to display information differently.
+
+If you wish to learn more, please refer to [ADR-050](../../build/architecture/adr-050-sign-mode-textual.md).
 
 #### Custom Sign modes
 

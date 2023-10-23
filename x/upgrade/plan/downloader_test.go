@@ -14,6 +14,12 @@ import (
 	"github.com/stretchr/testify/suite"
 )
 
+const (
+	zipStr      = ".zip"
+	checksumStr = "?checksum=sha256:"
+	fileStr     = "file://"
+)
+
 type DownloaderTestSuite struct {
 	suite.Suite
 
@@ -145,9 +151,9 @@ func (s *DownloaderTestSuite) TestDownloadUpgrade() {
 	someFileInBin := NewTestFile("bin"+someFileName, "#!/usr/bin\necho 'I am some file in bin'\n")
 	anotherFile := NewTestFile("another-file", "#!/usr/bin\necho 'I am just another file'\n")
 	justAFilePath := s.saveSrcTestFile(justAFile)
-	justAFileZip := s.saveSrcTestZip(justAFile.Name+".zip", NewTestZip(justAFile))
-	someFileInBinZip := s.saveSrcTestZip(someFileInBin.Name+".zip", NewTestZip(someFileInBin))
-	allFilesZip := s.saveSrcTestZip(anotherFile.Name+".zip", NewTestZip(justAFile, someFileInBin, anotherFile))
+	justAFileZip := s.saveSrcTestZip(justAFile.Name+zipStr, NewTestZip(justAFile))
+	someFileInBinZip := s.saveSrcTestZip(someFileInBin.Name+zipStr, NewTestZip(someFileInBin))
+	allFilesZip := s.saveSrcTestZip(anotherFile.Name+zipStr, NewTestZip(justAFile, someFileInBin, anotherFile))
 	getDstDir := func(testName string) string {
 		_, tName := filepath.Split(testName)
 		return s.Home + "/dst/" + tName
@@ -164,7 +170,7 @@ func (s *DownloaderTestSuite) TestDownloadUpgrade() {
 	s.T().Run("url has incorrect checksum", func(t *testing.T) {
 		dstRoot := getDstDir(t.Name())
 		badChecksum := "2c22e34510bd1d4ad2343cdc54f7165bccf30caef73f39af7dd1db2795a3da48"
-		url := "file://" + justAFilePath + "?checksum=sha256:" + badChecksum
+		url := fileStr + justAFilePath + checksumStr + badChecksum
 		err := DownloadUpgrade(dstRoot, url, justAFile.Name)
 		require.Error(t, err)
 		assert.Contains(t, err.Error(), "Checksums did not match")
@@ -260,14 +266,14 @@ func (s *DownloaderTestSuite) TestDownloadURL() {
 	})
 
 	s.T().Run("without checksum", func(t *testing.T) {
-		url := "file://" + planPath
+		url := fileStr + planPath
 		actual, err := DownloadURL(url)
 		require.NoError(t, err)
 		require.Equal(t, planContents, actual)
 	})
 
 	s.T().Run("with correct checksum", func(t *testing.T) {
-		url := "file://" + planPath + "?checksum=sha256:" + planChecksum
+		url := fileStr + planPath + checksumStr + planChecksum
 		actual, err := DownloadURL(url)
 		require.NoError(t, err)
 		require.Equal(t, planContents, actual)
@@ -275,7 +281,7 @@ func (s *DownloaderTestSuite) TestDownloadURL() {
 
 	s.T().Run("with incorrect checksum", func(t *testing.T) {
 		badChecksum := "2c22e34510bd1d4ad2343cdc54f7165bccf30caef73f39af7dd1db2795a3da48"
-		url := "file://" + planPath + "?checksum=sha256:" + badChecksum
+		url := fileStr + planPath + checksumStr + badChecksum
 		_, err := DownloadURL(url)
 		require.Error(t, err)
 		assert.Contains(t, err.Error(), "Checksums did not match")
@@ -284,7 +290,7 @@ func (s *DownloaderTestSuite) TestDownloadURL() {
 	})
 
 	s.T().Run("plan is empty", func(t *testing.T) {
-		url := "file://" + emptyPlanPath + "?checksum=sha256:" + emptyChecksum
+		url := fileStr + emptyPlanPath + checksumStr + emptyChecksum
 		_, err := DownloadURL(url)
 		require.Error(t, err)
 		assert.Contains(t, err.Error(), "no content returned")

@@ -17,6 +17,10 @@ import (
 	"cosmossdk.io/tools/cosmovisor"
 )
 
+const (
+	notset = " is not set"
+)
+
 type InitTestSuite struct {
 	suite.Suite
 }
@@ -302,13 +306,13 @@ func (s *InitTestSuite) TestInitializeCosmovisorNegativeValidation() {
 			name:  "no name",
 			env:   cosmovisorInitEnv{Home: "/example", Name: ""},
 			args:  []string{tmpExe},
-			inErr: []string{cosmovisor.EnvName + " is not set"},
+			inErr: []string{cosmovisor.EnvName + notset},
 		},
 		{
 			name:  "no home",
 			env:   cosmovisorInitEnv{Home: "", Name: "foo"},
 			args:  []string{tmpExe},
-			inErr: []string{cosmovisor.EnvHome + " is not set"},
+			inErr: []string{cosmovisor.EnvHome + notset},
 		},
 		{
 			name:  "home is relative",
@@ -320,7 +324,7 @@ func (s *InitTestSuite) TestInitializeCosmovisorNegativeValidation() {
 			name:  "no name and no home",
 			env:   cosmovisorInitEnv{Home: "", Name: ""},
 			args:  []string{tmpExe},
-			inErr: []string{cosmovisor.EnvName + " is not set", cosmovisor.EnvHome + " is not set"},
+			inErr: []string{cosmovisor.EnvName + notset, cosmovisor.EnvHome + notset},
 		},
 	}
 

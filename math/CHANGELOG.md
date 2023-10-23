@@ -38,11 +38,8 @@ Ref: https://github.com/commitizen/conventional-commit-types/blob/v3.0.0/index.j
 
 ### Bug Fixes
 
-<<<<<<< HEAD
 * [#16266](https://github.com/cosmos/cosmos-sdk/pull/16266) fix: legacy dec power mut zero exponent precision.
-=======
 * [#18214](https://github.com/cosmos/cosmos-sdk/pull/18214) Ensure that modifying the argument to `NewUIntFromBigInt` doesn't mutate the returned value.
->>>>>>> bbf2faa69 (fix(math): NewUintFromBigInt argument mutation (#18214))
 * [#18211](https://github.com/cosmos/cosmos-sdk/pull/18211) RelativePow now returns 1 when 0^0, before it was returning the scale factor.
 
 ## [math/v1.0.1](https://github.com/cosmos/cosmos-sdk/releases/tag/math/v1.0.1) - 2023-05-15

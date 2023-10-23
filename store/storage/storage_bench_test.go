@@ -23,7 +23,7 @@ var (
 			return rocksdb.New(dataDir)
 		},
 		"pebbledb_default_opts": func(dataDir string) (store.VersionedDatabase, error) {
-			return pebbledb.New(dataDir, false)
+			return pebbledb.New(dataDir)
 		},
 		"btree_sqlite": func(dataDir string) (store.VersionedDatabase, error) {
 			return sqlite.New(dataDir)

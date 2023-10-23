@@ -38,7 +38,7 @@ type Database struct {
 	sync bool
 }
 
-func New(dataDir string, sync bool) (*Database, error) {
+func New(dataDir string) (*Database, error) {
 	opts := &pebble.Options{
 		Comparer: MVCCComparer,
 	}
@@ -51,7 +51,7 @@ func New(dataDir string, sync bool) (*Database, error) {
 
 	return &Database{
 		storage: db,
-		sync:    sync,
+		sync:    true,
 	}, nil
 }
 

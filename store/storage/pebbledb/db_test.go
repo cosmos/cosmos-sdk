@@ -17,7 +17,7 @@ const (
 func TestStorageTestSuite(t *testing.T) {
 	s := &storage.StorageTestSuite{
 		NewDB: func(dir string) (store.VersionedDatabase, error) {
-			return New(dir, false)
+			return New(dir)
 		},
 		EmptyBatchSize: 12,
 		SkipTests: []string{
@@ -29,7 +29,7 @@ func TestStorageTestSuite(t *testing.T) {
 }
 
 func TestDatabase_ReverseIterator(t *testing.T) {
-	db, err := New(t.TempDir(), false)
+	db, err := New(t.TempDir())
 	require.NoError(t, err)
 	defer db.Close()
 

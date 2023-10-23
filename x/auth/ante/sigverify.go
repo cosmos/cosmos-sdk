@@ -319,6 +319,13 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 			return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidPubKey, "pubkey on account is not set")
 		}
 
+		if sig.Sequence != acc.GetSequence() {
+			return ctx, errorsmod.Wrapf(
+				sdkerrors.ErrWrongSequence,
+				"account sequence mismatch, expected %d, got %d", acc.GetSequence(), sig.Sequence,
+			)
+		}
+
 		if err := verifyIsOnCurve(pubKey); err != nil {
 			return ctx, err
 		}

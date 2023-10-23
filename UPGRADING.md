@@ -78,6 +78,8 @@ And in the application client (usually `root.go`):
 
 When using `depinject` / `app v2`, **it's enabled by default** if there's a bank keeper present.
 
+To learn more see the [docs](https://docs.cosmos.network/main/learn/advanced/transactions#sign_mode_textual) and the [ADR-050](https://docs.cosmos.network/main/build/architecture/adr-050-sign-mode-textual).
+
 ### Modules
 
 #### Params

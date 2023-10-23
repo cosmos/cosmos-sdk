@@ -4,7 +4,7 @@ go 1.21
 
 require (
 	cosmossdk.io/api v0.7.2
-	cosmossdk.io/client/v2 v2.0.0-20231009141709-5e209c3c0fce
+	cosmossdk.io/client/v2 v2.0.0-20231023154906-f2188065a4f6
 	cosmossdk.io/collections v0.4.0 // indirect
 	cosmossdk.io/core v0.11.0
 	cosmossdk.io/depinject v1.0.0-alpha.4

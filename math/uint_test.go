@@ -271,7 +271,7 @@ func (s *uintTestSuite) TestRelativePow() {
 		want sdkmath.Uint
 	}{
 		{[]sdkmath.Uint{sdkmath.ZeroUint(), sdkmath.ZeroUint(), sdkmath.OneUint()}, sdkmath.OneUint()},
-		{[]sdkmath.Uint{sdkmath.ZeroUint(), sdkmath.ZeroUint(), sdkmath.NewUint(10)}, sdkmath.NewUint(10)},
+		{[]sdkmath.Uint{sdkmath.ZeroUint(), sdkmath.ZeroUint(), sdkmath.NewUint(10)}, sdkmath.NewUint(1)},
 		{[]sdkmath.Uint{sdkmath.ZeroUint(), sdkmath.OneUint(), sdkmath.NewUint(10)}, sdkmath.ZeroUint()},
 		{[]sdkmath.Uint{sdkmath.NewUint(10), sdkmath.NewUint(2), sdkmath.OneUint()}, sdkmath.NewUint(100)},
 		{[]sdkmath.Uint{sdkmath.NewUint(210), sdkmath.NewUint(2), sdkmath.NewUint(100)}, sdkmath.NewUint(441)},

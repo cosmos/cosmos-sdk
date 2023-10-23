@@ -235,7 +235,6 @@ func checkNewUint(i *big.Int) (Uint, error) {
 	if err := UintOverflow(i); err != nil {
 		return Uint{}, err
 	}
-
 	return Uint{new(big.Int).Set(i)}, nil
 }
 

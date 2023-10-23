@@ -491,7 +491,6 @@ func (k Keeper) DumpUpgradeInfoToDisk(height int64, p types.Plan) error {
 // GetUpgradeInfoPath returns the upgrade info file path
 func (k Keeper) GetUpgradeInfoPath() (string, error) {
 	upgradeInfoFileDir := path.Join(k.getHomeDir(), "data")
-	// Only the owner can read and write. Everyone else can only read. No one can execute the file.
 	if err := os.MkdirAll(upgradeInfoFileDir, os.ModePerm); err != nil {
 		return "", fmt.Errorf("could not create directory %q: %w", upgradeInfoFileDir, err)
 	}

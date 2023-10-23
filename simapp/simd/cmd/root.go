@@ -13,11 +13,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/config"
-<<<<<<< HEAD
-	"github.com/cosmos/cosmos-sdk/codec"
-=======
-	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
->>>>>>> 511db5238 (fix(textual): only enable when online and added upgrading docs (#18166))
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/server"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -70,15 +65,7 @@ func NewRootCmd() *cobra.Command {
 				return err
 			}
 
-<<<<<<< HEAD
 			// This needs to go after ReadFromClientConfig, as that function
-			// sets the RPC client needed for SIGN_MODE_TEXTUAL.
-			enabledSignModes := append(tx.DefaultSignModes, signing.SignMode_SIGN_MODE_TEXTUAL)
-			txConfigOpts := tx.ConfigOptions{
-				EnabledSignModes:           enabledSignModes,
-				TextualCoinMetadataQueryFn: txmodule.NewGRPCCoinMetadataQueryFn(initClientCtx),
-=======
-			// This needs to go after CreateClientConfig, as that function
 			// sets the RPC client needed for SIGN_MODE_TEXTUAL. This sign mode
 			// is only available if the client is online.
 			if !initClientCtx.Offline {
@@ -96,7 +83,6 @@ func NewRootCmd() *cobra.Command {
 				}
 
 				initClientCtx = initClientCtx.WithTxConfig(txConfig)
->>>>>>> 511db5238 (fix(textual): only enable when online and added upgrading docs (#18166))
 			}
 
 			if err := client.SetCmdClientContextHandler(initClientCtx, cmd); err != nil {

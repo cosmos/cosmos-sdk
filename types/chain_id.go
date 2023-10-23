@@ -7,7 +7,7 @@ import (
 	"github.com/bcicen/jstream"
 )
 
-const ChainIDFieldName = "chain-id"
+const ChainIDFieldName = "chain_id"
 
 // ParseChainIDFromGenesis parses the chain-id from the genesis file using constant memory.
 func ParseChainIDFromGenesis(reader io.Reader) (string, error) {

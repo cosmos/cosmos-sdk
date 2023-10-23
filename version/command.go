@@ -15,6 +15,11 @@ const (
 )
 
 // NewVersionCommand returns a CLI command to interactively print the application binary version information.
+// Note: When seeking to add the extra info to the context
+// The below can be added to the initRootCmd to include the extraInfo field
+//
+// cmdContext := context.WithValue(context.Background(), version.ContextKey{}, extraInfo)
+// rootCmd.SetContext(cmdContext)
 func NewVersionCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "version",
@@ -28,6 +33,7 @@ func NewVersionCommand() *cobra.Command {
 				return nil
 			}
 
+			// Extract and set extra information from the context
 			extraInfo := extraInfoFromContext(cmd)
 			verInfo.ExtraInfo = &extraInfo
 

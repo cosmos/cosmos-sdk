@@ -4,20 +4,20 @@ go 1.21
 
 require (
 	cosmossdk.io/api v0.7.2
-	cosmossdk.io/client/v2 v2.0.0-20231009141709-5e209c3c0fce
+	cosmossdk.io/client/v2 v2.0.0-20231023154906-f2188065a4f6
 	cosmossdk.io/collections v0.4.0 // indirect
 	cosmossdk.io/core v0.11.0
 	cosmossdk.io/depinject v1.0.0-alpha.4
 	cosmossdk.io/log v1.2.1
 	cosmossdk.io/math v1.1.3-rc.1
 	cosmossdk.io/store v1.0.0-rc.0
-	cosmossdk.io/tools/confix v0.0.0-20230925151519-64e0e8980834
-	cosmossdk.io/x/circuit v0.0.0-20231006095526-33390754f9fe
-	cosmossdk.io/x/evidence v0.0.0-20230925151519-64e0e8980834
-	cosmossdk.io/x/feegrant v0.0.0-20231020161330-8acf4f8853ca
-	cosmossdk.io/x/nft v0.0.0-20231006095526-33390754f9fe
+	cosmossdk.io/tools/confix v0.0.0-20231023160833-026631cd833c
+	cosmossdk.io/x/circuit v0.0.0-20231023160833-026631cd833c
+	cosmossdk.io/x/evidence v0.0.0-20231023160833-026631cd833c
+	cosmossdk.io/x/feegrant v0.0.0-20231023160833-026631cd833c
+	cosmossdk.io/x/nft v0.0.0-20231023160833-026631cd833c
 	cosmossdk.io/x/tx v0.11.0
-	cosmossdk.io/x/upgrade v0.0.0-20230925151519-64e0e8980834
+	cosmossdk.io/x/upgrade v0.0.0-20231023160833-026631cd833c
 	github.com/cometbft/cometbft v0.38.0
 	github.com/cosmos/cosmos-db v1.0.0
 	// this version is not used as it is always replaced by the latest Cosmos SDK version

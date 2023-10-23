@@ -53,7 +53,7 @@ require (
 	cosmossdk.io/x/distribution v0.0.0-20230925135524-a1bc045b3190 // indirect
 	cosmossdk.io/x/evidence v0.0.0-20230613133644-0a778132a60f // indirect
 	cosmossdk.io/x/feegrant v0.0.0-20230613133644-0a778132a60f // indirect
-	cosmossdk.io/x/gov v0.0.0-00010101000000-000000000000 // indirect
+	cosmossdk.io/x/gov v0.0.0-20230925135524-a1bc045b3190 // indirect
 	cosmossdk.io/x/group v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/x/nft v0.0.0-20230613133644-0a778132a60f // indirect
 	cosmossdk.io/x/protocolpool v0.0.0-20230925135524-a1bc045b3190 // indirect

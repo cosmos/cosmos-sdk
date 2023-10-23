@@ -1,12 +1,8 @@
 package authz
 
 import (
-<<<<<<< HEAD
-	context "context"
-=======
 	"context"
 	"errors"
->>>>>>> 19eaac3ba (fix(authz): check string is not empty (#18209))
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

@@ -14,11 +14,14 @@ const ChainIDFieldName = "chain_id"
 // TODO consider [encoding/json/v2](https://github.com/golang/go/discussions/63397) when it's ready.
 func ParseChainIDFromGenesis(reader io.Reader) (string, error) {
 	decoder := jstream.NewDecoder(reader, 1).EmitKV()
-	var chain_id string
+	var (
+		chain_id string
+		ok       bool
+	)
 	err := decoder.Decode(func(mv *jstream.MetaValue) bool {
 		if kv, ok := mv.Value.(jstream.KV); ok {
 			if kv.Key == ChainIDFieldName {
-				chain_id, _ = kv.Value.(string)
+				chain_id, ok = kv.Value.(string)
 				return false
 			}
 		}
@@ -26,6 +29,9 @@ func ParseChainIDFromGenesis(reader io.Reader) (string, error) {
 	})
 	if len(chain_id) > 0 {
 		return chain_id, nil
+	}
+	if !ok {
+		return "", errors.New("chain-id is not a string")
 	}
 	if err == nil {
 		return "", errors.New("chain-id not found in genesis file")

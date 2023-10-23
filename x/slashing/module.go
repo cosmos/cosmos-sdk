@@ -223,7 +223,12 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		authority = authtypes.NewModuleAddressOrBech32Address(in.Config.Authority)
 	}
 
-	k := keeper.NewKeeper(in.Cdc, in.LegacyAmino, in.StoreService, in.StakingKeeper, authority.String())
+	authStr, err := in.AccountKeeper.AddressCodec().BytesToString(authority)
+	if err != nil {
+		panic(fmt.Errorf("unable to decode authority in slashing: %w", err))
+	}
+
+	k := keeper.NewKeeper(in.Cdc, in.LegacyAmino, in.StoreService, in.StakingKeeper, authStr)
 	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.StakingKeeper, in.Registry)
 	return ModuleOutputs{
 		Keeper: k,

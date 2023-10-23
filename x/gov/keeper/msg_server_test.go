@@ -21,7 +21,7 @@ const (
 
 var longAddressError = "address max length is 255"
 
-func (suite *KeeperTestSuite) TestSubmitProposalReq() {
+func (suite *KeeperTestSuite) TestMsgSubmitProposal() {
 	suite.reset()
 	govAcct := suite.govKeeper.GetGovernanceAccount(suite.ctx).GetAddress()
 	addrs := suite.addrs
@@ -253,7 +253,7 @@ func (suite *KeeperTestSuite) TestSubmitProposalReq() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestCancelProposalReq() {
+func (suite *KeeperTestSuite) TestMsgCancelProposal() {
 	govAcct := suite.govKeeper.GetGovernanceAccount(suite.ctx).GetAddress()
 	addrs := suite.addrs
 	proposer := addrs[0]
@@ -348,7 +348,7 @@ func (suite *KeeperTestSuite) TestCancelProposalReq() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestVoteReq() {
+func (suite *KeeperTestSuite) TestMsgVote() {
 	suite.reset()
 	govAcct := suite.govKeeper.GetGovernanceAccount(suite.ctx).GetAddress()
 	addrs := suite.addrs
@@ -491,7 +491,7 @@ func (suite *KeeperTestSuite) TestVoteReq() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestVoteWeightedReq() {
+func (suite *KeeperTestSuite) TestMsgVoteWeighted() {
 	suite.reset()
 	govAcct := suite.govKeeper.GetGovernanceAccount(suite.ctx).GetAddress()
 
@@ -735,7 +735,8 @@ func (suite *KeeperTestSuite) TestVoteWeightedReq() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestDepositReq() {
+func (suite *KeeperTestSuite) TestMsgDeposit() {
+	suite.reset()
 	govAcct := suite.govKeeper.GetGovernanceAccount(suite.ctx).GetAddress()
 	addrs := suite.addrs
 	proposer := addrs[0]

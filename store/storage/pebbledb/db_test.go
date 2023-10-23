@@ -9,10 +9,6 @@ import (
 	"cosmossdk.io/store/v2/storage"
 )
 
-const (
-	storeKey1 = "store1"
-)
-
 func TestStorageTestSuite(t *testing.T) {
 	s := &storage.StorageTestSuite{
 		NewDB: func(dir string) (store.VersionedDatabase, error) {

@@ -27,6 +27,13 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
+const (
+	strPlus   = ` string\s+`
+	startStr  = `(?m:^\s+--`
+	strDollar = `$)`
+	strHelp   = "help output"
+)
+
 func TestParseSubmitLegacyProposal(t *testing.T) {
 	okJSON := testutil.WriteToNewTempFile(t, `
 {
@@ -280,10 +287,10 @@ func TestAddGovPropFlagsToCmd(t *testing.T) {
 	expSummaryDesc := "The summary to include with the governance proposal"
 	// Regexp notes: (?m:...) = multi-line mode so ^ and $ match the beginning and end of each line.
 	// Each regexp assertion checks for a line containing only a specific flag and its description.
-	assert.Regexp(t, `(?m:^\s+--`+FlagDeposit+` string\s+`+expDepositDesc+`$)`, help, "help output")
-	assert.Regexp(t, `(?m:^\s+--`+FlagMetadata+` string\s+`+expMetadataDesc+`$)`, help, "help output")
-	assert.Regexp(t, `(?m:^\s+--`+FlagTitle+` string\s+`+expTitleDesc+`$)`, help, "help output")
-	assert.Regexp(t, `(?m:^\s+--`+FlagSummary+` string\s+`+expSummaryDesc+`$)`, help, "help output")
+	assert.Regexp(t, startStr+FlagDeposit+strPlus+expDepositDesc+strDollar, help, strHelp)
+	assert.Regexp(t, startStr+FlagMetadata+strPlus+expMetadataDesc+strDollar, help, strHelp)
+	assert.Regexp(t, startStr+FlagTitle+strPlus+expTitleDesc+strDollar, help, strHelp)
+	assert.Regexp(t, startStr+FlagSummary+strPlus+expSummaryDesc+strDollar, help, strHelp)
 }
 
 func TestReadGovPropFlags(t *testing.T) {

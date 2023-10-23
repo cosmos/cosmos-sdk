@@ -284,3 +284,66 @@ func (suite *KeeperTestSuite) TestRevokeAllowance() {
 		})
 	}
 }
+
+func (suite *KeeperTestSuite) TestPruneAllowances() {
+	ctx := suite.ctx.WithBlockTime(time.Now())
+	oneYear := ctx.BlockTime().AddDate(1, 0, 0)
+
+	// We create 76 allowances, all expiring in one year
+	count := 0
+	for i := 0; i < len(suite.addrs); i++ {
+		for j := 0; j < len(suite.addrs); j++ {
+			if count == 76 {
+				break
+			}
+			if suite.addrs[i].String() == suite.addrs[j].String() {
+				continue
+			}
+
+			any, err := codectypes.NewAnyWithValue(&feegrant.BasicAllowance{
+				SpendLimit: suite.atom,
+				Expiration: &oneYear,
+			})
+			suite.Require().NoError(err)
+			req := &feegrant.MsgGrantAllowance{
+				Granter:   suite.addrs[i].String(),
+				Grantee:   suite.addrs[j].String(),
+				Allowance: any,
+			}
+
+			_, err = suite.msgSrvr.GrantAllowance(ctx, req)
+			if err != nil {
+				// do not fail, just try with another pair
+				continue
+			}
+
+			count++
+		}
+	}
+
+	// we have 76 allowances
+	count = 0
+	err := suite.feegrantKeeper.IterateAllFeeAllowances(ctx, func(grant feegrant.Grant) bool {
+		count++
+		return false
+	})
+	suite.Require().NoError(err)
+	suite.Require().Equal(76, count)
+
+	// after a year and one day passes, they are all expired
+	oneYearAndADay := ctx.BlockTime().AddDate(1, 0, 1)
+	ctx = suite.ctx.WithBlockTime(oneYearAndADay)
+
+	// we prune them, but currently only 75 will be pruned
+	_, err = suite.msgSrvr.PruneAllowances(ctx, &feegrant.MsgPruneAllowances{})
+	suite.Require().NoError(err)
+
+	// we have 1 allowance left
+	count = 0
+	err = suite.feegrantKeeper.IterateAllFeeAllowances(ctx, func(grant feegrant.Grant) bool {
+		count++
+		return false
+	})
+	suite.Require().NoError(err)
+	suite.Require().Equal(1, count)
+}

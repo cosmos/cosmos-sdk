@@ -211,8 +211,8 @@ cosmossdk.io/x/circuit v0.0.0-20231006095526-33390754f9fe h1:xcQTAlbv1l8PBHXI5/x
 cosmossdk.io/x/circuit v0.0.0-20231006095526-33390754f9fe/go.mod h1:syo6njNlaE1KLXRFd1gZQr/7pMstANp2zMqVUC+u4h4=
 cosmossdk.io/x/evidence v0.0.0-20230925151519-64e0e8980834 h1:h4ooSV3X5BxEfl3EUbOlXNFMnEc/mXTXF5mdl17CQLg=
 cosmossdk.io/x/evidence v0.0.0-20230925151519-64e0e8980834/go.mod h1:yUgv71a56ZEJu7c8BXWCliDrQ7Ag+FCZ//rYKw9S93U=
-cosmossdk.io/x/feegrant v0.0.0-20231009114728-5259373edec8 h1:e3JUrisu36fIf+EzppkSeryOocs7oUue4e1IepdhMMI=
-cosmossdk.io/x/feegrant v0.0.0-20231009114728-5259373edec8/go.mod h1:nnIKdJKz1Os+sOlJHrjgMOh1WAlle0aV7Y+0x434OyI=
+cosmossdk.io/x/feegrant v0.0.0-20231020161330-8acf4f8853ca h1:YuagGZRMuE6lg913jEVGHTf6b4cWjt+gJdnhTmFQ1LA=
+cosmossdk.io/x/feegrant v0.0.0-20231020161330-8acf4f8853ca/go.mod h1:vmiW+2cIfGZULh6ReN03sawbhn8UUGrttNMxiIiduKI=
 cosmossdk.io/x/nft v0.0.0-20231006095526-33390754f9fe h1:xDWsbJp/9Tdwh2w8/KT7E0sxb52ASTn1M+UO4pq6kko=
 cosmossdk.io/x/nft v0.0.0-20231006095526-33390754f9fe/go.mod h1:QQROAXjZWeJzH6dNHUNCPhs7zHrYjknH8gYynf0IvXs=
 cosmossdk.io/x/tx v0.11.0 h1:Ak2LIC06bXqPbpMIEorkQbwVddRvRys1sL3Cjm+KPfs=

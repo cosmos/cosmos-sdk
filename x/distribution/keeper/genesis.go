@@ -5,8 +5,8 @@ import (
 	"fmt"
 
 	"cosmossdk.io/collections"
-
 	"cosmossdk.io/x/distribution/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 

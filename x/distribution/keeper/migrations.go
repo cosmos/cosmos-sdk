@@ -1,11 +1,11 @@
 package keeper
 
 import (
-	pooltypes "cosmossdk.io/x/protocolpool/types"
-
 	"cosmossdk.io/x/distribution/migrations/funds"
 	v4 "cosmossdk.io/x/distribution/migrations/v4"
 	"cosmossdk.io/x/distribution/types"
+	pooltypes "cosmossdk.io/x/protocolpool/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 

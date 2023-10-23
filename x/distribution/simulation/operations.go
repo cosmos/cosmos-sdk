@@ -7,9 +7,9 @@ import (
 	"github.com/pkg/errors"
 
 	"cosmossdk.io/collections"
-
 	"cosmossdk.io/x/distribution/keeper"
 	"cosmossdk.io/x/distribution/types"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"

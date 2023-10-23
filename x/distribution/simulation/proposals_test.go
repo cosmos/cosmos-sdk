@@ -7,9 +7,9 @@ import (
 	"gotest.tools/v3/assert"
 
 	sdkmath "cosmossdk.io/math"
-
 	"cosmossdk.io/x/distribution/simulation"
 	"cosmossdk.io/x/distribution/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"

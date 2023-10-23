@@ -13,7 +13,12 @@ require (
 	github.com/cosmos/gogoproto v1.4.11
 	github.com/spf13/cobra v1.7.0
 	github.com/spf13/pflag v1.0.5
+<<<<<<< HEAD
 	google.golang.org/grpc v1.58.3
+=======
+	golang.org/x/exp v0.0.0-20231006140011-7918f672742d
+	google.golang.org/grpc v1.59.0
+>>>>>>> 511db5238 (fix(textual): only enable when online and added upgrading docs (#18166))
 	google.golang.org/protobuf v1.31.0
 	gotest.tools/v3 v3.5.1
 	sigs.k8s.io/yaml v1.3.0
@@ -137,7 +142,10 @@ require (
 	github.com/zondax/ledger-go v0.14.3 // indirect
 	go.etcd.io/bbolt v1.3.7 // indirect
 	golang.org/x/crypto v0.14.0 // indirect
+<<<<<<< HEAD
 	golang.org/x/exp v0.0.0-20230817173708-d852ddb80c63 // indirect
+=======
+>>>>>>> 511db5238 (fix(textual): only enable when online and added upgrading docs (#18166))
 	golang.org/x/net v0.17.0 // indirect
 	golang.org/x/sync v0.3.0 // indirect
 	golang.org/x/sys v0.13.0 // indirect

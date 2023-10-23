@@ -60,6 +60,13 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 						{ProtoField: "grantee"},
 					},
 				},
+				{
+					RpcMethod: "PruneAllowances",
+					Use:       "prune",
+					Short:     "Prune expired allowances",
+					Long:      "Prune up to 75 expired allowances in order to reduce the size of the store when the number of expired allowances is large.",
+					Example:   fmt.Sprintf(`$ %s tx feegrant prune --from [mykey]`, version.AppName),
+				},
 			},
 			EnhanceCustomCommand: true,
 		},

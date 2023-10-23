@@ -162,9 +162,7 @@ func (AppModule) ConsensusVersion() uint64 { return 2 }
 // EndBlock returns the end blocker for the feegrant module. It returns no validator
 // updates.
 func (am AppModule) EndBlock(ctx context.Context) error {
-	c := sdk.UnwrapSDKContext(ctx)
-	EndBlocker(c, am.keeper)
-	return nil
+	return EndBlocker(ctx, am.keeper)
 }
 
 func init() {

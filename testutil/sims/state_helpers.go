@@ -205,11 +205,11 @@ func AppStateRandomizedFn(
 	)
 	appParams.GetOrGenerate(
 		StakePerAccount, &initialStake, r,
-		func(r *rand.Rand) { initialStake = math.NewInt(r.Int63n(1e12)) },
+		func(r *rand.Rand) { initialStake = sdk.DefaultPowerReduction.AddRaw(r.Int63n(1e12)) },
 	)
 	appParams.GetOrGenerate(
 		InitiallyBondedValidators, &numInitiallyBonded, r,
-		func(r *rand.Rand) { numInitiallyBonded = int64(r.Intn(300)) },
+		func(r *rand.Rand) { numInitiallyBonded = int64(r.Intn(299) + 1) },
 	)
 
 	if numInitiallyBonded > numAccs {

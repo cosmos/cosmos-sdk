@@ -48,18 +48,6 @@ type Factory struct {
 
 // NewFactoryCLI creates a new Factory.
 func NewFactoryCLI(clientCtx client.Context, flagSet *pflag.FlagSet) (Factory, error) {
-<<<<<<< HEAD
-	signModeStr := clientCtx.SignModeStr
-=======
-	if clientCtx.Viper == nil {
-		clientCtx.Viper = viper.New()
-	}
-
-	if err := clientCtx.Viper.BindPFlags(flagSet); err != nil {
-		return Factory{}, fmt.Errorf("failed to bind flags to viper: %w", err)
-	}
->>>>>>> fd93ee77e (fix(simapp): textual wiring (#18242))
-
 	signMode := signing.SignMode_SIGN_MODE_UNSPECIFIED
 	switch clientCtx.SignModeStr {
 	case flags.SignModeDirect:

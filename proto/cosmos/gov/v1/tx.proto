@@ -11,7 +11,7 @@ import "cosmos/msg/v1/msg.proto";
 import "amino/amino.proto";
 import "google/protobuf/timestamp.proto";
 
-option go_package = "github.com/cosmos/cosmos-sdk/x/gov/types/v1";
+option go_package = "cosmossdk.io/x/gov/types/v1";
 
 // Msg defines the gov Msg service.
 service Msg {

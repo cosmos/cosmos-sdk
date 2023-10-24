@@ -24,6 +24,7 @@ use (
 	./x/circuit
 	./x/evidence
 	./x/feegrant
+  ./x/gov
 	./x/group
 	./x/nft
 	./x/params

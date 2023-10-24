@@ -16,10 +16,8 @@ option go_package = "cosmossdk.io/store/types";
 message StoreKVPair {
   option deprecated = true;
 
-  string store_key =
-      1;  // the store key for the KVStore this pair originates from
-  bool delete =
-      2;  // true indicates a delete operation, false indicates a set operation
+  string store_key = 1;  // the store key for the KVStore this pair originates from
+  bool delete = 2;  // true indicates a delete operation, false indicates a set operation
   bytes key   = 3;
   bytes value = 4;
 }

@@ -10,6 +10,7 @@ import (
 	protov2 "google.golang.org/protobuf/proto"
 
 	"cosmossdk.io/log"
+	"cosmossdk.io/x/distribution"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -18,8 +19,6 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	txsigning "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
-	"github.com/cosmos/cosmos-sdk/x/distribution"
-	"github.com/cosmos/cosmos-sdk/x/gov"
 )
 
 // testPubKey is a dummy implementation of PubKey used for testing.
@@ -235,7 +234,7 @@ func (s *MempoolTestSuite) TestSampleTxs() {
 }
 
 func unmarshalTx(txBytes []byte) (sdk.Tx, error) {
-	cfg := moduletestutil.MakeTestEncodingConfig(distribution.AppModuleBasic{}, gov.AppModuleBasic{})
+	cfg := moduletestutil.MakeTestEncodingConfig(distribution.AppModuleBasic{})
 	return cfg.TxConfig.TxJSONDecoder()(txBytes)
 }
 

@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	errorsmod "cosmossdk.io/errors"
+	govtypes "cosmossdk.io/x/gov/types"
 	"cosmossdk.io/x/group"
 	"cosmossdk.io/x/group/errors"
 	"cosmossdk.io/x/group/internal/math"
@@ -17,7 +18,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 var _ group.MsgServer = Keeper{}

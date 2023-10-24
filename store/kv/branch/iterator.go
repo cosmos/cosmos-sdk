@@ -1,4 +1,4 @@
-package branchkv
+package branch
 
 import (
 	"slices"

@@ -32,10 +32,6 @@ func (k msgServer) SoftwareUpgrade(goCtx context.Context, msg *types.MsgSoftware
 		return nil, errors.Wrapf(types.ErrInvalidSigner, "expected %s got %s", k.authority, msg.Authority)
 	}
 
-	if err := msg.Plan.ValidateBasic(); err != nil {
-		return nil, errors.Wrap(err, "plan")
-	}
-
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	err := k.ScheduleUpgrade(ctx, msg.Plan)
 	if err != nil {

@@ -88,6 +88,12 @@ func (s *KeeperTestSuite) TestReadUpgradeInfoFromDisk() {
 	s.Require().NoError(err)
 	expected.Height = 101
 	s.Require().Equal(expected, ui)
+
+	// create invalid upgrade plan (with empty name)
+	expected.Name = ""
+	s.Require().NoError(s.upgradeKeeper.DumpUpgradeInfoToDisk(101, expected))
+	_, err = s.upgradeKeeper.ReadUpgradeInfoFromDisk()
+	s.Require().ErrorContains(err, "name cannot be empty: invalid request")
 }
 
 func (s *KeeperTestSuite) TestScheduleUpgrade() {

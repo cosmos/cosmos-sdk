@@ -14,7 +14,10 @@ run:
     - crypto/keys/secp256k1/internal/*
 
 build-tags:
-  - rocksdb
+  - e2e
+  - ledger
+  - test_ledger_mock
+
 
 linters:
   disable-all: true

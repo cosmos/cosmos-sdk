@@ -13,14 +13,14 @@ type Gas uint64
 
 // Gas consumption descriptors.
 const (
-	GasIterNextCostFlatDesc = "IterNextFlat"
-	GasValuePerByteDesc     = "ValuePerByte"
-	GasWritePerByteDesc     = "WritePerByte"
-	GasReadPerByteDesc      = "ReadPerByte"
-	GasWriteCostFlatDesc    = "WriteFlat"
-	GasReadCostFlatDesc     = "ReadFlat"
-	GasHasDesc              = "Has"
-	GasDeleteDesc           = "Delete"
+	GasDescIterNextCostFlat = "IterNextFlat"
+	GasDescValuePerByte     = "ValuePerByte"
+	GasDescWritePerByte     = "WritePerByte"
+	GasDescReadPerByte      = "ReadPerByte"
+	GasDescWriteCostFlat    = "WriteFlat"
+	GasDescReadCostFlat     = "ReadFlat"
+	GasDescHas              = "Has"
+	GasDescDelete           = "Delete"
 )
 
 type (

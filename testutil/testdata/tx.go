@@ -1,18 +1,17 @@
 package testdata
 
 import (
-	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"testing"
 
-	"gotest.tools/v3/assert"
-	"pgregory.net/rapid"
-
+	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256r1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
+	"gotest.tools/v3/assert"
+	"pgregory.net/rapid"
 )
 
 // AddressGenerator creates and returns a random address generator using rapid.
@@ -44,7 +43,7 @@ func KeyTestPubAddr() (cryptotypes.PrivKey, cryptotypes.PubKey, sdk.AccAddress) 
 	return key, pub, addr
 }
 
-// KeyTestPubAddr generates a new secp256r1 keypair.
+// KeyTestPubAddrSecp256R1 generates a new secp256r1 keypair.
 func KeyTestPubAddrSecp256R1(t *testing.T) (cryptotypes.PrivKey, cryptotypes.PubKey, sdk.AccAddress) {
 	key, err := secp256r1.GenPrivKey()
 	assert.NilError(t, err)

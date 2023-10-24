@@ -11,8 +11,17 @@
 
   outputs = { self, nixpkgs, gomod2nix, flake-utils }:
     {
-      overlays.default = pkgs: _: {
-        simd = pkgs.callPackage ./simapp { rev = self.shortRev or "dev"; };
+      overlays.default = self: super: {
+        simd = self.callPackage ./simapp { rev = self.shortRev or "dev"; };
+        rocksdb = super.rocksdb.overrideAttrs (_: rec {
+          version = "8.5.3";
+          src = self.fetchFromGitHub {
+            owner = "facebook";
+            repo = "rocksdb";
+            rev = "v${version}";
+            sha256 = "sha256-Qa4bAprXptA79ilNE5KSfggEDvNFHdrvDQ6SvzWMQus=";
+          };
+        });
       };
     } //
     (flake-utils.lib.eachDefaultSystem

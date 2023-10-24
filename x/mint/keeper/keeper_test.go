@@ -20,6 +20,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
+const govModuleNameStr = "cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn"
+
 type IntegrationTestSuite struct {
 	suite.Suite
 
@@ -56,7 +58,7 @@ func (s *IntegrationTestSuite) SetupTest() {
 		accountKeeper,
 		bankKeeper,
 		authtypes.FeeCollectorName,
-		authtypes.NewModuleAddress(types.GovModuleName).String(),
+		govModuleNameStr,
 	)
 	s.stakingKeeper = stakingKeeper
 	s.bankKeeper = bankKeeper

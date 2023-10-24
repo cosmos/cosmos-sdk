@@ -6,10 +6,10 @@ import (
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/errors"
+	"cosmossdk.io/x/gov/types"
+	v1 "cosmossdk.io/x/gov/types/v1"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/gov/types"
-	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 )
 
 // AddVote adds a vote on a specific proposal
@@ -42,7 +42,10 @@ func (keeper Keeper) AddVote(ctx context.Context, proposalID uint64, voterAddr s
 	}
 
 	// called after a vote on a proposal is cast
-	keeper.Hooks().AfterProposalVote(ctx, proposalID, voterAddr)
+	err = keeper.Hooks().AfterProposalVote(ctx, proposalID, voterAddr)
+	if err != nil {
+		return err
+	}
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	sdkCtx.EventManager().EmitEvent(

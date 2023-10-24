@@ -19,8 +19,6 @@ import (
 	distributionkeeper "cosmossdk.io/x/distribution/keeper"
 	distrtypes "cosmossdk.io/x/distribution/types"
 
-	distributionkeeper "cosmossdk.io/x/distribution/keeper"
-	distrtypes "cosmossdk.io/x/distribution/types"
 	slashingkeeper "cosmossdk.io/x/slashing/keeper"
 	"cosmossdk.io/x/slashing/simulation"
 	"cosmossdk.io/x/slashing/testutil"

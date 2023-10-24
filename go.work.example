@@ -22,6 +22,7 @@ use (
 	./tools/hubl
 	./x/accounts
 	./x/circuit
+	./x/distribution
 	./x/evidence
 	./x/feegrant
   ./x/gov

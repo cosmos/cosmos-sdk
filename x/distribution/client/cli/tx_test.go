@@ -10,6 +10,8 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	sdkmath "cosmossdk.io/math"
+	"cosmossdk.io/x/distribution/client/cli"
+	distrtestutil "cosmossdk.io/x/distribution/testutil"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -21,8 +23,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	testutilmod "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/x/bank"
-	"github.com/cosmos/cosmos-sdk/x/distribution/client/cli"
-	distrtestutil "github.com/cosmos/cosmos-sdk/x/distribution/testutil"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 

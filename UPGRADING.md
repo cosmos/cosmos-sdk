@@ -42,6 +42,10 @@ Group was spun out into its own `go.mod`. To import it use `cosmossdk.io/x/group
 
 Gov was spun out into its own `go.mod`. To import it use `cosmossdk.io/x/gov`
 
+#### `x/distribution`
+
+Distribution was spun out into its own `go.mod`. To import it use `cosmossdk.io/x/distribution`
+
 #### Params
 
 A standalone Go module was created and it is accessible at "cosmossdk.io/x/params".

@@ -8,6 +8,7 @@ import (
 
 	"cosmossdk.io/core/header"
 	storetypes "cosmossdk.io/store/types"
+	govtypes "cosmossdk.io/x/gov/types/v1beta1"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
@@ -20,7 +21,6 @@ import (
 	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
 func TestMigration(t *testing.T) {

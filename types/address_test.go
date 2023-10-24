@@ -20,6 +20,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/bech32/legacybech32" //nolint:staticcheck // we're using this to support the legacy way of dealing with bech32
 )
 
+const (
+	pubStr     = "pub"
+	valoper    = "valoper"
+	valoperpub = "valoperpub"
+	valcons    = "valcons"
+	valconspub = "valconspub"
+)
+
 type addressTestSuite struct {
 	suite.Suite
 }
@@ -138,18 +146,18 @@ func (s *addressTestSuite) TestAddrCache() {
 	// Set SDK bech32 prefixes to 'osmo'
 	prefix := "osmo"
 	conf := types.GetConfig()
-	conf.SetBech32PrefixForAccount(prefix, prefix+"pub")
-	conf.SetBech32PrefixForValidator(prefix+"valoper", prefix+"valoperpub")
-	conf.SetBech32PrefixForConsensusNode(prefix+"valcons", prefix+"valconspub")
+	conf.SetBech32PrefixForAccount(prefix, prefix+pubStr)
+	conf.SetBech32PrefixForValidator(prefix+valoper, prefix+valoperpub)
+	conf.SetBech32PrefixForConsensusNode(prefix+valcons, prefix+valconspub)
 
 	acc := types.AccAddress(pub.Address())
 	osmoAddrBech32 := acc.String()
 
 	// Set SDK bech32 to 'cosmos'
 	prefix = "cosmos"
-	conf.SetBech32PrefixForAccount(prefix, prefix+"pub")
-	conf.SetBech32PrefixForValidator(prefix+"valoper", prefix+"valoperpub")
-	conf.SetBech32PrefixForConsensusNode(prefix+"valcons", prefix+"valconspub")
+	conf.SetBech32PrefixForAccount(prefix, prefix+pubStr)
+	conf.SetBech32PrefixForValidator(prefix+valoper, prefix+valoperpub)
+	conf.SetBech32PrefixForConsensusNode(prefix+valcons, prefix+valconspub)
 
 	// We name this 'addrCosmos' to prove a point, but the bech32 address will still begin with 'osmo' due to the cache behavior.
 	addrCosmos := types.AccAddress(pub.Address())
@@ -175,18 +183,18 @@ func (s *addressTestSuite) TestAddrCacheDisabled() {
 	// Set SDK bech32 prefixes to 'osmo'
 	prefix := "osmo"
 	conf := types.GetConfig()
-	conf.SetBech32PrefixForAccount(prefix, prefix+"pub")
-	conf.SetBech32PrefixForValidator(prefix+"valoper", prefix+"valoperpub")
-	conf.SetBech32PrefixForConsensusNode(prefix+"valcons", prefix+"valconspub")
+	conf.SetBech32PrefixForAccount(prefix, prefix+pubStr)
+	conf.SetBech32PrefixForValidator(prefix+valoper, prefix+valoperpub)
+	conf.SetBech32PrefixForConsensusNode(prefix+valcons, prefix+valconspub)
 
 	acc := types.AccAddress(pub.Address())
 	osmoAddrBech32 := acc.String()
 
 	// Set SDK bech32 to 'cosmos'
 	prefix = "cosmos"
-	conf.SetBech32PrefixForAccount(prefix, prefix+"pub")
-	conf.SetBech32PrefixForValidator(prefix+"valoper", prefix+"valoperpub")
-	conf.SetBech32PrefixForConsensusNode(prefix+"valcons", prefix+"valconspub")
+	conf.SetBech32PrefixForAccount(prefix, prefix+pubStr)
+	conf.SetBech32PrefixForValidator(prefix+valoper, prefix+valoperpub)
+	conf.SetBech32PrefixForConsensusNode(prefix+valcons, prefix+valconspub)
 
 	addrCosmos := types.AccAddress(pub.Address())
 	cosmosAddrBech32 := addrCosmos.String()

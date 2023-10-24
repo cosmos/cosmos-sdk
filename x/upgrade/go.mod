@@ -9,10 +9,11 @@ require (
 	cosmossdk.io/errors v1.0.0
 	cosmossdk.io/log v1.2.1
 	cosmossdk.io/store v1.0.0-rc.0
+	cosmossdk.io/x/gov v0.0.0-00010101000000-000000000000
 	github.com/cometbft/cometbft v0.38.0
 	github.com/cosmos/cosmos-db v1.0.0
 	github.com/cosmos/cosmos-proto v1.0.0-beta.3
-	github.com/cosmos/cosmos-sdk v0.47.5
+	github.com/cosmos/cosmos-sdk v0.51.0
 	github.com/cosmos/gogoproto v1.4.11
 	github.com/golang/protobuf v1.5.3
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
@@ -185,6 +186,7 @@ require (
 // TODO Remove it: https://github.com/cosmos/cosmos-sdk/issues/10409
 
 replace (
+	cosmossdk.io/x/gov => ../gov
 	github.com/cosmos/cosmos-sdk => ../../.
 	github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.9.1
 )

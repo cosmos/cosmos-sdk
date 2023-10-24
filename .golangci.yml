@@ -6,14 +6,17 @@ run:
   exclude-dir: testutil/testdata
   skip-files:
     - server/grpc/gogoreflection/fix_registration.go
-    - tests/e2e/client/grpc/cmtservice/service_test.go
     - "fix_registration.go"
     - ".*\\.pb\\.go$"
     - ".*\\.pb\\.gw\\.go$"
     - ".*\\.pulsar\\.go$"
+    - crypto/keys/secp256k1/internal/*
 
 build-tags:
-  - rocksdb
+  - e2e
+  - ledger
+  - test_ledger_mock
+
 
 linters:
   disable-all: true

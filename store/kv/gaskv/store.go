@@ -54,11 +54,11 @@ func (s *Store) Delete(key []byte) {
 }
 
 func (s *Store) GetChangeset() *store.Changeset {
-	panic("not implemented!")
+	return s.parent.GetChangeset()
 }
 
 func (s *Store) Reset() error {
-	panic("not implemented!")
+	return s.parent.Reset()
 }
 
 func (s *Store) Iterator(start, end []byte) store.Iterator {

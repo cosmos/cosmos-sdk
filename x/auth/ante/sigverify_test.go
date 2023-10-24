@@ -2,10 +2,11 @@ package ante_test
 
 import (
 	"fmt"
+	"testing"
+
 	secp256k1dcrd "github.com/decred/dcrd/dcrec/secp256k1/v4"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
-	"testing"
 
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	storetypes "cosmossdk.io/store/types"

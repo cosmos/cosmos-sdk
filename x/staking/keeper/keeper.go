@@ -245,21 +245,23 @@ func NewKeeper(
 			codec.CollValue[types.ConsPubKeyRotationHistory](cdc),
 		),
 
+		// key format is: 102 | height
 		BlockConsPubKeyRotationHistory: collections.NewMap(
 			sb, types.BlockConsPubKeyRotationHistoryKey,
-			"block_cons_pubkey_history",
+			"cons_pubkey_history_by_block",
 			collections.Uint64Key,
 			codec.CollValue[types.ConsPubKeyRotationHistory](cdc),
 		),
 
-		// key format is: 104 | valAddr | uint64
+		// key format is: 103 | valAddr | time
 		ValidatorConsensusKeyRotationRecordIndexKey: collections.NewMap(
-			sb, types.ValidatorConsPubKeyRotationHistoryKey,
+			sb, types.ValidatorConsensusKeyRotationRecordQueueKey,
 			"cons_pub_rotation_index",
 			collections.PairKeyCodec(collections.BytesKey, sdk.TimeKey),
 			collections.BytesValue,
 		),
 
+		// key format is: 104 | time
 		ValidatorConsensusKeyRotationRecordQueue: collections.NewMap(
 			sb, types.ValidatorConsensusKeyRotationRecordQueueKey,
 			"cons_pub_rotation_queue",
@@ -267,6 +269,7 @@ func NewKeeper(
 			codec.CollValue[types.ValAddrsOfRotatedConsKeys](cdc),
 		),
 
+		// key format is: 105 | valAddr
 		RotatedConsKeyMapIndex: collections.NewMap(
 			sb, types.RotatedConsKeyMapIndex,
 			"cons_pubkey_map",

@@ -8,9 +8,10 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/stretchr/testify/suite"
+
 	"cosmossdk.io/simapp"
 	_ "cosmossdk.io/x/gov"
-	"github.com/stretchr/testify/suite"
 
 	"github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -92,7 +93,7 @@ func (s *E2ETestSuite) TestQueryLatestBlock() {
 	s.Require().NoError(err)
 	var blockInfoRes cmtservice.GetLatestBlockResponse
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(restRes, &blockInfoRes))
-	s.Require().Equal(types.ConsAddress(blockInfoRes.Block.Header.ProposerAddress).String(), blockInfoRes.SdkBlock.Header.ProposerAddress)
+	s.Require().Equal(types.ConsAddress(blockInfoRes.SdkBlock.Header.ProposerAddress).String(), blockInfoRes.SdkBlock.Header.ProposerAddress)
 	s.Require().Contains(blockInfoRes.SdkBlock.Header.ProposerAddress, "cosmosvalcons")
 }
 

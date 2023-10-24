@@ -11,6 +11,7 @@ run:
     - ".*\\.pb\\.go$"
     - ".*\\.pb\\.gw\\.go$"
     - ".*\\.pulsar\\.go$"
+    - crypto/keys/secp256k1/internal/*
 
 build-tags:
   - rocksdb

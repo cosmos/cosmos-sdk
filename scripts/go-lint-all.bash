@@ -13,7 +13,6 @@ lint_module() {
   if [[ "$(grep "^module" go.mod)" == "module cosmossdk.io/simapp" ]]; then
     golangci-lint run ./... -c "${REPO_ROOT}/.golangci.yml" "$@" --build-tags=app_v1
   fi
-  echo $1
   if [[ -z "${NIX:-}" ]]; then 
     golangci-lint run ./... -c "${REPO_ROOT}/.golangci.yml" "$@" --build-tags=e2e,ledger,test_ledger_mock
   else

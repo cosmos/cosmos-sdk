@@ -34,7 +34,7 @@ else
   for f in $(dirname $(echo "$GIT_DIFF" | tr -d "'") | uniq); do
     echo "linting $f [$(date -Iseconds -u)]" &&
     cd $f &&
-    golangci-lint run ./... -c "${REPO_ROOT}/.golangci.yml" "$@" --build-tags=e2e,ledger,dummy,test_ledger_mock
+    golangci-lint run ./... -c "${REPO_ROOT}/.golangci.yml" "$@" --build-tags=e2e,ledger,test_ledger_mock
     if [[ $f == simapp || $f == simapp/simd/cmd ]]; then
       golangci-lint run ./... -c "${REPO_ROOT}/.golangci.yml" "$@" --build-tags=app_v1
     fi

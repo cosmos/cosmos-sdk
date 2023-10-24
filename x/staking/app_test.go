@@ -3,7 +3,6 @@ package staking_test
 import (
 	"testing"
 
-	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
 
@@ -80,8 +79,6 @@ func TestStakingMsgs(t *testing.T) {
 	require.NoError(t, err)
 	require.True(t, sdk.Coins{genCoin.Sub(bondCoin)}.Equal(bankKeeper.GetAllBalances(ctxCheck, addr1)))
 
-	_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: app.LastBlockHeight() + 1})
-	require.NoError(t, err)
 	ctxCheck = app.BaseApp.NewContext(true)
 	validator, err := stakingKeeper.GetValidator(ctxCheck, sdk.ValAddress(addr1))
 	require.NoError(t, err)
@@ -89,9 +86,6 @@ func TestStakingMsgs(t *testing.T) {
 	require.Equal(t, sdk.ValAddress(addr1).String(), validator.OperatorAddress)
 	require.Equal(t, types.Bonded, validator.Status)
 	require.True(math.IntEq(t, bondTokens, validator.BondedTokens()))
-
-	_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: app.LastBlockHeight() + 1})
-	require.NoError(t, err)
 
 	// edit the validator
 	description = types.NewDescription("bar_moniker", "", "", "", "")

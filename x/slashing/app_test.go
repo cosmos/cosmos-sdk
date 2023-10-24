@@ -4,7 +4,6 @@ import (
 	"errors"
 	"testing"
 
-	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
 
@@ -97,8 +96,6 @@ func TestSlashingMsgs(t *testing.T) {
 	require.NoError(t, err)
 	require.True(t, sdk.Coins{genCoin.Sub(bondCoin)}.Equal(bankKeeper.GetAllBalances(ctxCheck, addr1)))
 
-	_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: app.LastBlockHeight() + 1})
-	require.NoError(t, err)
 	ctxCheck = baseApp.NewContext(true)
 	validator, err := stakingKeeper.GetValidator(ctxCheck, sdk.ValAddress(addr1))
 	require.NoError(t, err)

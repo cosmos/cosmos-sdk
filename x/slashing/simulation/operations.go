@@ -156,6 +156,7 @@ func SimulateMsgUnjail(
 		}
 
 		if err != nil {
+			panic(err)
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), "unable to deliver tx"), nil, errors.New(res.Log)
 		}
 

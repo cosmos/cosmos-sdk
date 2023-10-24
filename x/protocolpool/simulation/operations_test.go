@@ -4,7 +4,6 @@ import (
 	"math/rand"
 	"testing"
 
-	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/require"
 
@@ -112,12 +111,6 @@ func TestSimulateMsgFundCommunityPool(t *testing.T) {
 	s := rand.NewSource(1)
 	r := rand.New(s)
 	accounts := getTestingAccounts(t, r, suite.AccountKeeper, suite.BankKeeper, suite.StakingKeeper, suite.Ctx, 3)
-
-	_, err := suite.App.FinalizeBlock(&abci.RequestFinalizeBlock{
-		Height: suite.App.LastBlockHeight() + 1,
-		Hash:   suite.App.LastCommitID().Hash,
-	})
-	require.NoError(t, err)
 
 	// execute operation
 	op := simulation.SimulateMsgFundCommunityPool(suite.TxConfig, suite.AccountKeeper, suite.BankKeeper, suite.PoolKeeper)

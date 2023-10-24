@@ -184,8 +184,8 @@ func PubkeyRawCmd() *cobra.Command {
 		Short: "Decode a ED25519 or secp256k1 pubkey from hex, base64, or bech32",
 		Long:  "Decode a pubkey from hex, base64, or bech32.",
 		Example: fmt.Sprintf(`
-				%s debug pubkey-raw TWFuIGlzIGRpc3Rpbmd1aXNoZWQsIG5vdCBvbmx5IGJ5IGhpcyByZWFzb24sIGJ1dCBieSB0aGlz
-				%s debug pubkey-raw cosmos1e0jnq2sun3dzjh8p2xq95kk0expwmd7shwjpfg
+%s debug pubkey-raw TWFuIGlzIGRpc3Rpbmd1aXNoZWQsIG5vdCBvbmx5IGJ5IGhpcyByZWFzb24sIGJ1dCBieSB0aGlz
+%s debug pubkey-raw cosmos1e0jnq2sun3dzjh8p2xq95kk0expwmd7shwjpfg
 			`, version.AppName, version.AppName),
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {

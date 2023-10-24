@@ -1,6 +1,9 @@
 package store
 
-import "fmt"
+import (
+	"fmt"
+	"math"
+)
 
 // Gas defines type alias of uint64 for gas consumption. Gas is measured by the
 // SDK for store operations such as Get and Set calls. In addition, callers have
@@ -94,16 +97,85 @@ func DefaultGasConfig() GasConfig {
 	}
 }
 
-// gasMeter defines an implementation of a GasMeter.
-type gasMeter struct {
+// defaultGasMeter defines a default implementation of a GasMeter.
+type defaultGasMeter struct {
 	limit    Gas
 	consumed Gas
 }
 
 // NewGasMeter returns a reference to a GasMeter with the provided limit.
 func NewGasMeter(limit Gas) GasMeter {
-	return &gasMeter{
-		limit:    limit,
-		consumed: 0,
+	return &defaultGasMeter{
+		limit: limit,
 	}
+}
+
+func (gm *defaultGasMeter) GasConsumed() Gas {
+	return gm.consumed
+}
+
+// NOTE: This behavior should only be called when recovering from a panic when
+// BlockGasMeter consumes gas past the gas limit.
+func (gm *defaultGasMeter) GasConsumedToLimit() Gas {
+	if gm.IsPastLimit() {
+		return gm.limit
+	}
+
+	return gm.consumed
+}
+
+func (gm *defaultGasMeter) GasRemaining() Gas {
+	if gm.IsPastLimit() {
+		return 0
+	}
+
+	return gm.limit - gm.consumed
+}
+
+func (gm *defaultGasMeter) Limit() Gas {
+	return gm.limit
+}
+
+func (gm *defaultGasMeter) ConsumeGas(amount Gas, descriptor string) {
+	var overflow bool
+
+	gm.consumed, overflow = addGasOverflow(gm.consumed, amount)
+	if overflow {
+		gm.consumed = math.MaxUint64
+		panic(ErrorGasOverflow{descriptor})
+	}
+
+	if gm.consumed > gm.limit {
+		panic(ErrorOutOfGas{descriptor})
+	}
+}
+
+func (gm *defaultGasMeter) RefundGas(amount Gas, descriptor string) {
+	if gm.consumed < amount {
+		panic(ErrorNegativeGasConsumed{Descriptor: descriptor})
+	}
+
+	gm.consumed -= amount
+}
+
+func (gm *defaultGasMeter) IsPastLimit() bool {
+	return gm.consumed > gm.limit
+}
+
+func (gm *defaultGasMeter) IsOutOfGas() bool {
+	return gm.consumed >= gm.limit
+}
+
+func (gm *defaultGasMeter) String() string {
+	return fmt.Sprintf("GasMeter{limit: %d, consumed: %d}", gm.limit, gm.consumed)
+}
+
+// addGasOverflow performs the addition operation on two uint64 integers and
+// returns a boolean on whether or not the result overflows.
+func addGasOverflow(a, b Gas) (Gas, bool) {
+	if math.MaxUint64-a < b {
+		return 0, true
+	}
+
+	return a + b, false
 }

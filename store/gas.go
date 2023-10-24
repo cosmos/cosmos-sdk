@@ -52,3 +52,31 @@ type GasMeter interface {
 
 	fmt.Stringer
 }
+
+// GasConfig defines gas cost for each operation on a KVStore.
+type GasConfig struct {
+	HasCost          Gas
+	DeleteCost       Gas
+	ReadCostFlat     Gas
+	ReadCostPerByte  Gas
+	WriteCostFlat    Gas
+	WriteCostPerByte Gas
+	IterNextCostFlat Gas
+}
+
+// DefaultGasConfig returns a default GasConfig for gas metering.
+//
+// Note, these values are essentially arbitrary. They are not based on any specific
+// computation or measurements, but mainly reflect relative costs, i.e. writes
+// should be more expensive than reads.
+func DefaultGasConfig() GasConfig {
+	return GasConfig{
+		HasCost:          1000,
+		DeleteCost:       1000,
+		ReadCostFlat:     1000,
+		ReadCostPerByte:  3,
+		WriteCostFlat:    2000,
+		WriteCostPerByte: 30,
+		IterNextCostFlat: 30,
+	}
+}

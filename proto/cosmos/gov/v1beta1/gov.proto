@@ -9,7 +9,7 @@ import "google/protobuf/duration.proto";
 import "cosmos_proto/cosmos.proto";
 import "amino/amino.proto";
 
-option go_package = "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1";
+option go_package = "cosmossdk.io/x/gov/types/v1beta1";
 
 option (gogoproto.goproto_getters_all) = false;
 

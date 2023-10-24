@@ -19,6 +19,8 @@ const DefaultClientConfigTemplate = `# This is a TOML config file.
 chain-id = "{{ .ChainID }}"
 # The keyring's backend, where the keys are stored (os|file|kwallet|pass|test|memory)
 keyring-backend = "{{ .KeyringBackend }}"
+# Default key name, if set, defines the default key to use for signing transaction when the --from flag is not specified
+keyring-default-keyname = "{{ .KeyringDefaultKeyName }}"
 # CLI output format (text|json)
 output = "{{ .Output }}"
 # <host>:<port> to CometBFT RPC interface for this chain

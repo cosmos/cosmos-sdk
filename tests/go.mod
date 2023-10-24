@@ -37,7 +37,7 @@ require (
 	cloud.google.com/go/compute/metadata v0.2.3 // indirect
 	cloud.google.com/go/iam v1.1.2 // indirect
 	cloud.google.com/go/storage v1.30.1 // indirect
-	cosmossdk.io/client/v2 v2.0.0-20231023154906-f2188065a4f6 // indirect
+	cosmossdk.io/client/v2 v2.0.0-20231024213736-e269ea8c13d8 // indirect
 	cosmossdk.io/collections v0.4.0 // indirect
 	cosmossdk.io/x/circuit v0.0.0-20231023160833-026631cd833c // indirect
 	filippo.io/edwards25519 v1.0.0 // indirect
@@ -168,7 +168,7 @@ require (
 	go.etcd.io/bbolt v1.3.7 // indirect
 	go.opencensus.io v0.24.0 // indirect
 	golang.org/x/crypto v0.14.0 // indirect
-	golang.org/x/exp v0.0.0-20230817173708-d852ddb80c63 // indirect
+	golang.org/x/exp v0.0.0-20231006140011-7918f672742d // indirect
 	golang.org/x/net v0.17.0 // indirect
 	golang.org/x/oauth2 v0.10.0 // indirect
 	golang.org/x/sync v0.3.0 // indirect

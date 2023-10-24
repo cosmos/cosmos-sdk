@@ -48,10 +48,8 @@ type Factory struct {
 
 // NewFactoryCLI creates a new Factory.
 func NewFactoryCLI(clientCtx client.Context, flagSet *pflag.FlagSet) (Factory, error) {
-	signModeStr := clientCtx.SignModeStr
-
 	signMode := signing.SignMode_SIGN_MODE_UNSPECIFIED
-	switch signModeStr {
+	switch clientCtx.SignModeStr {
 	case flags.SignModeDirect:
 		signMode = signing.SignMode_SIGN_MODE_DIRECT
 	case flags.SignModeLegacyAminoJSON:

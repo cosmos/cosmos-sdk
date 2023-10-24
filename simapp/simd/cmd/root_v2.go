@@ -23,13 +23,13 @@ import (
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
+	authtxconfig "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // NewRootCmd creates a new root command for simd. It is called once in the main function.
 func NewRootCmd() *cobra.Command {
 	var (
-		txConfigOpts       tx.ConfigOptions
 		autoCliOpts        autocli.AppOptions
 		moduleBasicManager module.BasicManager
 		clientCtx          client.Context
@@ -46,7 +46,6 @@ func NewRootCmd() *cobra.Command {
 				ProvideKeyring,
 			),
 		),
-		&txConfigOpts,
 		&autoCliOpts,
 		&moduleBasicManager,
 		&clientCtx,
@@ -97,13 +96,12 @@ func NewRootCmd() *cobra.Command {
 func ProvideClientContext(
 	appCodec codec.Codec,
 	interfaceRegistry codectypes.InterfaceRegistry,
-	txConfig client.TxConfig,
+	txConfigOpts tx.ConfigOptions,
 	legacyAmino *codec.LegacyAmino,
 ) client.Context {
 	clientCtx := client.Context{}.
 		WithCodec(appCodec).
 		WithInterfaceRegistry(interfaceRegistry).
-		WithTxConfig(txConfig).
 		WithLegacyAmino(legacyAmino).
 		WithInput(os.Stdin).
 		WithAccountRetriever(types.AccountRetriever{}).
@@ -112,6 +110,14 @@ func ProvideClientContext(
 
 	// Read the config again to overwrite the default values with the values from the config file
 	clientCtx, _ = config.ReadFromClientConfig(clientCtx)
+
+	// re-create the tx config grpc instead of bank keeper
+	txConfigOpts.TextualCoinMetadataQueryFn = authtxconfig.NewGRPCCoinMetadataQueryFn(clientCtx)
+	txConfig, err := tx.NewTxConfigWithOptions(clientCtx.Codec, txConfigOpts)
+	if err != nil {
+		panic(err)
+	}
+	clientCtx = clientCtx.WithTxConfig(txConfig)
 
 	return clientCtx
 }

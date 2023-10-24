@@ -10,13 +10,13 @@ lint_module() {
   shift
   cd "$(dirname "$root")" &&
   echo "linting $(grep "^module" go.mod) [$(date -Iseconds -u)]" &&
-  if [[ "$(grep "^module" go.mod)" == "module cosmossdk.io/simapp" ]]; then
-    golangci-lint run ./... -c "${REPO_ROOT}/.golangci.yml" "$@" --build-tags=app_v1
-  fi
   if [[ -z "${NIX:-}" ]]; then 
     golangci-lint run ./... -c "${REPO_ROOT}/.golangci.yml" "$@" --build-tags=e2e,ledger,test_ledger_mock
   else
     golangci-lint run ./... -c "${REPO_ROOT}/.golangci.yml" "$@" --build-tags=rocksdb,e2e,ledger,test_ledger_mock
+  fi
+  if [[ "$(grep "^module" go.mod)" == "module cosmossdk.io/simapp" ]]; then
+    golangci-lint run ./... -c "${REPO_ROOT}/.golangci.yml" "$@" --build-tags=app_v1
   fi
 }
 export -f lint_module

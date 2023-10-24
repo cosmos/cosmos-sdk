@@ -3,7 +3,7 @@ package types
 import (
 	"encoding/json"
 	"errors"
-	fmt "fmt"
+	"fmt"
 	"io"
 
 	"github.com/cometbft/cometbft/types"

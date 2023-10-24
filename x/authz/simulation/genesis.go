@@ -5,8 +5,8 @@ import (
 	"time"
 
 	sdkmath "cosmossdk.io/math"
-
 	v1 "cosmossdk.io/x/gov/types/v1"
+
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"

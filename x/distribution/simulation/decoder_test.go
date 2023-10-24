@@ -7,10 +7,10 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/math"
-
 	"cosmossdk.io/x/distribution"
 	"cosmossdk.io/x/distribution/simulation"
 	"cosmossdk.io/x/distribution/types"
+
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"

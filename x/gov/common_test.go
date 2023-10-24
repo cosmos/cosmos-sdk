@@ -11,12 +11,12 @@ import (
 	"cosmossdk.io/depinject"
 	sdklog "cosmossdk.io/log"
 	"cosmossdk.io/math"
-	_ "cosmossdk.io/x/protocolpool"
-
 	"cosmossdk.io/x/gov/keeper"
 	"cosmossdk.io/x/gov/types"
 	v1 "cosmossdk.io/x/gov/types/v1"
 	"cosmossdk.io/x/gov/types/v1beta1"
+	_ "cosmossdk.io/x/protocolpool"
+
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/runtime"

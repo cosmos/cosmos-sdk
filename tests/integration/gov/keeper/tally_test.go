@@ -6,8 +6,8 @@ import (
 	"gotest.tools/v3/assert"
 
 	"cosmossdk.io/math"
-
 	v1 "cosmossdk.io/x/gov/types/v1"
+
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"

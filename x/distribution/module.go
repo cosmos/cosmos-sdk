@@ -12,11 +12,11 @@ import (
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
-
 	"cosmossdk.io/x/distribution/client/cli"
 	"cosmossdk.io/x/distribution/keeper"
 	"cosmossdk.io/x/distribution/simulation"
 	"cosmossdk.io/x/distribution/types"
+
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"

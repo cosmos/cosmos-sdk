@@ -11,11 +11,11 @@ import (
 	"cosmossdk.io/core/appmodule"
 	store "cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
-
 	govtypes "cosmossdk.io/x/gov/types"
 	"cosmossdk.io/x/slashing/keeper"
 	"cosmossdk.io/x/slashing/simulation"
 	"cosmossdk.io/x/slashing/types"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"

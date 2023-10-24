@@ -7,10 +7,10 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"cosmossdk.io/x/gov/client/cli"
 	"cosmossdk.io/x/upgrade/plan"
 	"cosmossdk.io/x/upgrade/types"
 
-	"cosmossdk.io/x/gov/client/cli"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"

@@ -10,9 +10,9 @@ import (
 	cmttypes "github.com/cometbft/cometbft/types"
 
 	"cosmossdk.io/math"
-
 	distributiontypes "cosmossdk.io/x/distribution/types"
 	slashingtypes "cosmossdk.io/x/slashing/types"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/address"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"

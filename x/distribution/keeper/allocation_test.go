@@ -12,11 +12,11 @@ import (
 	"cosmossdk.io/core/comet"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
-
 	"cosmossdk.io/x/distribution"
 	"cosmossdk.io/x/distribution/keeper"
 	distrtestutil "cosmossdk.io/x/distribution/testutil"
 	disttypes "cosmossdk.io/x/distribution/types"
+
 	"github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"

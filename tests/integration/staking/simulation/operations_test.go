@@ -17,9 +17,9 @@ import (
 	"cosmossdk.io/depinject"
 	sdklog "cosmossdk.io/log"
 	"cosmossdk.io/math"
-
 	distrkeeper "cosmossdk.io/x/distribution/keeper"
 	distrtypes "cosmossdk.io/x/distribution/types"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec/address"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"

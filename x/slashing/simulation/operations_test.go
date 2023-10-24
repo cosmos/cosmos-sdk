@@ -16,6 +16,8 @@ import (
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
+	distributionkeeper "cosmossdk.io/x/distribution/keeper"
+	distrtypes "cosmossdk.io/x/distribution/types"
 
 	distributionkeeper "cosmossdk.io/x/distribution/keeper"
 	distrtypes "cosmossdk.io/x/distribution/types"

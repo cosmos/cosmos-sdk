@@ -1,6 +1,7 @@
 package testutil
 
 import (
+	_ "cosmossdk.io/x/distribution" // import as blank for app wiring
 	_ "cosmossdk.io/x/protocolpool" // import as blank for app wiring
 
 	_ "cosmossdk.io/x/distribution" // import as blank for app wiring

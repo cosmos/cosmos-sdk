@@ -8,7 +8,6 @@ import (
 	"gotest.tools/v3/assert"
 
 	"cosmossdk.io/math"
-
 	v1 "cosmossdk.io/x/gov/types/v1"
 	"cosmossdk.io/x/gov/types/v1beta1"
 )

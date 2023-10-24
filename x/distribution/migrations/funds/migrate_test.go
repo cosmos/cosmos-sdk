@@ -8,13 +8,13 @@ import (
 
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
-	pooltypes "cosmossdk.io/x/protocolpool/types"
-
 	"cosmossdk.io/x/distribution"
 	"cosmossdk.io/x/distribution/keeper"
 	"cosmossdk.io/x/distribution/migrations/funds"
 	distrtestutil "cosmossdk.io/x/distribution/testutil"
 	disttypes "cosmossdk.io/x/distribution/types"
+	pooltypes "cosmossdk.io/x/protocolpool/types"
+
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil/integration"

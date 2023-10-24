@@ -9,8 +9,8 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/log"
-
 	"cosmossdk.io/x/distribution"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server"

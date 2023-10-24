@@ -20,11 +20,11 @@ import (
 	"cosmossdk.io/x/evidence/exported"
 	"cosmossdk.io/x/evidence/keeper"
 	evidencetypes "cosmossdk.io/x/evidence/types"
-
 	"cosmossdk.io/x/slashing"
 	slashingkeeper "cosmossdk.io/x/slashing/keeper"
 	"cosmossdk.io/x/slashing/testutil"
 	slashingtypes "cosmossdk.io/x/slashing/types"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"

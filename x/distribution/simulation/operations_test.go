@@ -12,11 +12,11 @@ import (
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
-
 	"cosmossdk.io/x/distribution/keeper"
 	"cosmossdk.io/x/distribution/simulation"
 	distrtestutil "cosmossdk.io/x/distribution/testutil"
 	"cosmossdk.io/x/distribution/types"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/address"

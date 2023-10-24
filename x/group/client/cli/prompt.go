@@ -11,6 +11,7 @@ import (
 
 	govcli "cosmossdk.io/x/gov/client/cli"
 	govtypes "cosmossdk.io/x/gov/types"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"

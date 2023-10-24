@@ -12,7 +12,7 @@ require (
 	cosmossdk.io/math v1.1.3-rc.1
 	cosmossdk.io/store v1.0.0-rc.0
 	cosmossdk.io/x/distribution v0.0.0-20230925135524-a1bc045b3190
-	cosmossdk.io/x/gov v0.0.0-00010101000000-000000000000
+	cosmossdk.io/x/gov v0.0.0-20230925135524-a1bc045b3190
 	cosmossdk.io/x/protocolpool v0.0.0-20230925135524-a1bc045b3190
 	cosmossdk.io/x/slashing v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/tx v0.11.0
@@ -172,11 +172,13 @@ require (
 // )
 // TODO remove after all modules have their own go.mods
 replace (
-	cosmossdk.io/x/distribution => ./x/distribution
-	cosmossdk.io/x/gov => ./x/gov
 	cosmossdk.io/x/protocolpool => ./x/protocolpool
 	cosmossdk.io/x/slashing => ./x/slashing
 )
+
+replace cosmossdk.io/x/gov => ./x/gov
+
+replace cosmossdk.io/x/distribution => ./x/distribution
 
 // Below are the long-lived replace of the Cosmos SDK
 replace (

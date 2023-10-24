@@ -6,10 +6,10 @@ import (
 	"time"
 
 	sdkmath "cosmossdk.io/math"
-
 	"cosmossdk.io/x/gov/keeper"
 	"cosmossdk.io/x/gov/types"
 	v1 "cosmossdk.io/x/gov/types/v1"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"

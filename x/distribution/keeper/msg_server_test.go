@@ -7,9 +7,9 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/math"
-
 	"cosmossdk.io/x/distribution/keeper"
 	"cosmossdk.io/x/distribution/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )

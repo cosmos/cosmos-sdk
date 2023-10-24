@@ -21,14 +21,21 @@ const (
 	tombstoneVal     = "TOMBSTONE"
 )
 
-var (
-	_ store.VersionedDatabase = (*Database)(nil)
-
-	defaultWriteOpts = pebble.Sync
-)
+var _ store.VersionedDatabase = (*Database)(nil)
 
 type Database struct {
 	storage *pebble.DB
+
+	// Sync is whether to sync writes through the OS buffer cache and down onto
+	// the actual disk, if applicable. Setting Sync is required for durability of
+	// individual write operations but can result in slower writes.
+	//
+	// If false, and the process or machine crashes, then a recent write may be
+	// lost. This is due to the recently written data being buffered inside the
+	// process running Pebble. This differs from the semantics of a write system
+	// call in which the data is buffered in the OS buffer cache and would thus
+	// survive a process crash.
+	sync bool
 }
 
 func New(dataDir string) (*Database, error) {
@@ -44,12 +51,14 @@ func New(dataDir string) (*Database, error) {
 
 	return &Database{
 		storage: db,
+		sync:    true,
 	}, nil
 }
 
-func NewWithDB(storage *pebble.DB) *Database {
+func NewWithDB(storage *pebble.DB, sync bool) *Database {
 	return &Database{
 		storage: storage,
+		sync:    sync,
 	}
 }
 
@@ -62,7 +71,7 @@ func (db *Database) Close() error {
 func (db *Database) SetLatestVersion(version uint64) error {
 	var ts [VersionSize]byte
 	binary.LittleEndian.PutUint64(ts[:], version)
-	return db.storage.Set([]byte(latestVersionKey), ts[:], defaultWriteOpts)
+	return db.storage.Set([]byte(latestVersionKey), ts[:], &pebble.WriteOptions{Sync: db.sync})
 }
 
 func (db *Database) GetLatestVersion() (uint64, error) {
@@ -132,7 +141,7 @@ func (db *Database) Get(storeKey string, targetVersion uint64, key []byte) ([]by
 }
 
 func (db *Database) ApplyChangeset(version uint64, cs *store.Changeset) error {
-	b, err := NewBatch(db.storage, version)
+	b, err := NewBatch(db.storage, version, db.sync)
 	if err != nil {
 		return err
 	}
@@ -182,11 +191,31 @@ func (db *Database) Iterator(storeKey string, version uint64, start, end []byte)
 		return nil, fmt.Errorf("failed to create PebbleDB iterator: %w", err)
 	}
 
-	return newPebbleDBIterator(itr, storePrefix(storeKey), start, end, version), nil
+	return newPebbleDBIterator(itr, storePrefix(storeKey), start, end, version, false), nil
 }
 
 func (db *Database) ReverseIterator(storeKey string, version uint64, start, end []byte) (store.Iterator, error) {
-	panic("not implemented!")
+	if (start != nil && len(start) == 0) || (end != nil && len(end) == 0) {
+		return nil, store.ErrKeyEmpty
+	}
+
+	if start != nil && end != nil && bytes.Compare(start, end) > 0 {
+		return nil, store.ErrStartAfterEnd
+	}
+
+	lowerBound := MVCCEncode(prependStoreKey(storeKey, start), 0)
+
+	var upperBound []byte
+	if end != nil {
+		upperBound = MVCCEncode(prependStoreKey(storeKey, end), 0)
+	}
+
+	itr, err := db.storage.NewIter(&pebble.IterOptions{LowerBound: lowerBound, UpperBound: upperBound})
+	if err != nil {
+		return nil, fmt.Errorf("failed to create PebbleDB iterator: %w", err)
+	}
+
+	return newPebbleDBIterator(itr, storePrefix(storeKey), start, end, version, true), nil
 }
 
 func storePrefix(storeKey string) []byte {

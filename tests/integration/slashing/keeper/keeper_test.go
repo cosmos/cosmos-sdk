@@ -11,11 +11,11 @@ import (
 	"cosmossdk.io/core/comet"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
-
 	"cosmossdk.io/x/slashing"
 	slashingkeeper "cosmossdk.io/x/slashing/keeper"
 	"cosmossdk.io/x/slashing/testutil"
 	slashingtypes "cosmossdk.io/x/slashing/types"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/runtime"

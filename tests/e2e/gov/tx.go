@@ -8,12 +8,12 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/math"
-
 	"cosmossdk.io/x/gov/client/cli"
 	govclitestutil "cosmossdk.io/x/gov/client/testutil"
 	"cosmossdk.io/x/gov/types"
 	v1 "cosmossdk.io/x/gov/types/v1"
 	"cosmossdk.io/x/gov/types/v1beta1"
+
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"

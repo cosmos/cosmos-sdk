@@ -8,14 +8,14 @@ import (
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
-	poolkeeper "cosmossdk.io/x/protocolpool/keeper"
-	pooltypes "cosmossdk.io/x/protocolpool/types"
-
 	"cosmossdk.io/x/gov"
 	"cosmossdk.io/x/gov/keeper"
 	"cosmossdk.io/x/gov/types"
 	v1 "cosmossdk.io/x/gov/types/v1"
 	"cosmossdk.io/x/gov/types/v1beta1"
+	poolkeeper "cosmossdk.io/x/protocolpool/keeper"
+	pooltypes "cosmossdk.io/x/protocolpool/types"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/runtime"

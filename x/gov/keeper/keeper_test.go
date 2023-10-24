@@ -8,12 +8,12 @@ import (
 
 	"cosmossdk.io/collections"
 	sdkmath "cosmossdk.io/math"
-
 	"cosmossdk.io/x/gov/keeper"
 	govtestutil "cosmossdk.io/x/gov/testutil"
 	"cosmossdk.io/x/gov/types"
 	v1 "cosmossdk.io/x/gov/types/v1"
 	"cosmossdk.io/x/gov/types/v1beta1"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/address"

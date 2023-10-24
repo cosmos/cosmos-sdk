@@ -20,8 +20,8 @@ import (
 	"cosmossdk.io/store"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/feegrant"
-
 	slashingtypes "cosmossdk.io/x/slashing/types"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server"

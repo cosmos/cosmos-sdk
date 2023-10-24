@@ -13,9 +13,9 @@ import (
 
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/math"
-
 	govtestutil "cosmossdk.io/x/gov/client/testutil"
 	govtypes "cosmossdk.io/x/gov/types/v1beta1"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"

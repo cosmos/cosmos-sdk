@@ -5,7 +5,6 @@ import (
 	"testing"
 	"time"
 
-	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/suite"
 
@@ -125,12 +124,6 @@ func (suite *SimTestSuite) TestSimulateMsgSend() {
 	blockTime := time.Now().UTC()
 	ctx := suite.ctx.WithHeaderInfo(header.Info{Time: blockTime})
 
-	// begin new block
-	_, err := suite.app.FinalizeBlock(&abci.RequestFinalizeBlock{
-		Height: suite.app.LastBlockHeight() + 1,
-		Hash:   suite.app.LastCommitID().Hash,
-	})
-	suite.Require().NoError(err)
 	// execute operation
 	registry := suite.interfaceRegistry
 	op := simulation.SimulateMsgSend(codec.NewProtoCodec(registry), suite.txConfig, suite.accountKeeper, suite.bankKeeper, suite.nftKeeper)

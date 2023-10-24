@@ -167,7 +167,64 @@ func (gm *defaultGasMeter) IsOutOfGas() bool {
 }
 
 func (gm *defaultGasMeter) String() string {
-	return fmt.Sprintf("GasMeter{limit: %d, consumed: %d}", gm.limit, gm.consumed)
+	return fmt.Sprintf("%T{limit: %d, consumed: %d}", gm, gm.limit, gm.consumed)
+}
+
+// infiniteGasMeter defines a GasMeter with an infinite gas limit.
+type infiniteGasMeter struct {
+	consumed Gas
+}
+
+// NewInfiniteGasMeter returns a reference to a GasMeter with an infinite gas limit.
+func NewInfiniteGasMeter() GasMeter {
+	return &infiniteGasMeter{
+		consumed: 0,
+	}
+}
+
+func (gm *infiniteGasMeter) GasConsumed() Gas {
+	return gm.consumed
+}
+
+func (gm *infiniteGasMeter) GasConsumedToLimit() Gas {
+	return gm.consumed
+}
+
+func (_ *infiniteGasMeter) GasRemaining() Gas {
+	return math.MaxUint64
+}
+
+func (_ *infiniteGasMeter) Limit() Gas {
+	return math.MaxUint64
+}
+
+func (gm *infiniteGasMeter) ConsumeGas(amount Gas, descriptor string) {
+	var overflow bool
+
+	gm.consumed, overflow = addGasOverflow(gm.consumed, amount)
+	if overflow {
+		panic(ErrorGasOverflow{descriptor})
+	}
+}
+
+func (gm *infiniteGasMeter) RefundGas(amount Gas, descriptor string) {
+	if gm.consumed < amount {
+		panic(ErrorNegativeGasConsumed{Descriptor: descriptor})
+	}
+
+	gm.consumed -= amount
+}
+
+func (_ *infiniteGasMeter) IsPastLimit() bool {
+	return false
+}
+
+func (_ *infiniteGasMeter) IsOutOfGas() bool {
+	return false
+}
+
+func (gm *infiniteGasMeter) String() string {
+	return fmt.Sprintf("%T{consumed: %d}", gm, gm.consumed)
 }
 
 // addGasOverflow performs the addition operation on two uint64 integers and

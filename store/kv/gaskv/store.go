@@ -1,4 +1,4 @@
-package gaskv
+package gas
 
 import "cosmossdk.io/store/v2"
 

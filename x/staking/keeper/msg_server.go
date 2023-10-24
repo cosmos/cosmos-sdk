@@ -638,7 +638,12 @@ func (k msgServer) RotateConsPubKey(goCtx context.Context, msg *types.MsgRotateC
 
 	// Check if the validator is exceeding parameter MaxConsPubKeyRotations within the
 	// unbonding period by iterating ConsPubKeyRotationHistory.
-	if isExceedingLimit := k.CheckLimitOfMaxRotationsExceed(ctx, valAddr); isExceedingLimit {
+	isExceedingLimit, err := k.CheckLimitOfMaxRotationsExceed(ctx, valAddr)
+	if err != nil {
+		return nil, err
+	}
+
+	if isExceedingLimit {
 		return nil, types.ErrExceedingMaxConsPubKeyRotations
 	}
 
@@ -661,7 +666,7 @@ func (k msgServer) RotateConsPubKey(goCtx context.Context, msg *types.MsgRotateC
 	}
 
 	// Add ConsPubKeyRotationHistory for tracking rotation
-	k.SetConsPubKeyRotationHistory(
+	err = k.SetConsPubKeyRotationHistory(
 		ctx,
 		valAddr,
 		val.ConsensusPubkey,
@@ -669,6 +674,9 @@ func (k msgServer) RotateConsPubKey(goCtx context.Context, msg *types.MsgRotateC
 		uint64(ctx.BlockHeight()),
 		params.KeyRotationFee,
 	)
+	if err != nil {
+		return nil, err
+	}
 
 	return res, err
 }

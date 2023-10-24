@@ -3,11 +3,11 @@ package keeper
 import (
 	"time"
 
+	"cosmossdk.io/collections"
+
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
-
-	"cosmossdk.io/collections"
 )
 
 // SetConsPubKeyRotationHistory sets the consensus key rotation of a validator into state
@@ -37,22 +37,29 @@ func (k Keeper) SetConsPubKeyRotationHistory(
 	}
 
 	queueTime := ctx.BlockHeader().Time.Add(ubdTime)
-	k.ValidatorConsensusKeyRotationRecordIndexKey.Set(ctx, collections.Join(valAddr.Bytes(), queueTime), []byte{})
-	k.SetConsKeyQueue(ctx, queueTime, valAddr)
+	if err := k.ValidatorConsensusKeyRotationRecordIndexKey.Set(ctx, collections.Join(valAddr.Bytes(), queueTime), []byte{}); err != nil {
+		return err
+	}
+
+	if err := k.SetConsKeyQueue(ctx, queueTime, valAddr); err != nil {
+		return err
+	}
 
 	return nil
 }
 
 // CheckLimitOfMaxRotationsExceed returns bool, count of iterations made within the unbonding period.
-func (k Keeper) CheckLimitOfMaxRotationsExceed(ctx sdk.Context, valAddr sdk.ValAddress) bool {
+func (k Keeper) CheckLimitOfMaxRotationsExceed(ctx sdk.Context, valAddr sdk.ValAddress) (bool, error) {
 	isFound := false
 	rng := collections.NewPrefixUntilPairRange[[]byte, time.Time](valAddr)
-	k.ValidatorConsensusKeyRotationRecordIndexKey.Walk(ctx, rng, func(key collections.Pair[[]byte, time.Time], value []byte) (stop bool, err error) {
+	if err := k.ValidatorConsensusKeyRotationRecordIndexKey.Walk(ctx, rng, func(key collections.Pair[[]byte, time.Time], value []byte) (stop bool, err error) {
 		isFound = true
 		return true, nil
-	})
+	}); err != nil {
+		return false, err
+	}
 
-	return isFound
+	return isFound, nil
 }
 
 // SetConsKeyQueue sets array of rotated validator addresses to a key of current block time + unbonding period

@@ -36,20 +36,22 @@ func ParseChainIDFromGenesis(r io.Reader) (string, error) {
 		if !ok {
 			return "", fmt.Errorf("expected string, got %s", t)
 		}
-		var value interface{}
-		err = dec.Decode(&value)
-		if err != nil {
-			return "", err
-		}
+
 		if key == ChainIDFieldName {
-			chainId, ok := value.(string)
-			if !ok {
-				return "", fmt.Errorf("expected string chain_id, got %s", value)
+			var chainId string
+			if err := dec.Decode(&chainId); err != nil {
+				return "", err
 			}
 			if err := validateChainID(chainId); err != nil {
 				return "", err
 			}
 			return chainId, nil
+		}
+
+		// skip the value
+		var value json.RawMessage
+		if err := dec.Decode(&value); err != nil {
+			return "", err
 		}
 	}
 

@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-//go:embed testdata/streaming_chain_id.json
+//go:embed testdata/parse_chain_id.json
 var BenchmarkGenesis string
 
 func TestParseChainIDFromGenesis(t *testing.T) {

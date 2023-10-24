@@ -69,7 +69,7 @@ func (s *uintTestSuite) TestUintPanics() {
 	s.Require().Panics(func() { uintmin.Sub(sdkmath.OneUint()) })
 	s.Require().Panics(func() { uintmin.Decr() })
 
-	s.Require().Panics(func() { Uint{}.BigInt() })
+	s.Require().NotPanics(func() { Uint{}.BigInt() })
 
 	s.Require().Equal(uint64(0), sdkmath.MinUint(sdkmath.ZeroUint(), sdkmath.OneUint()).Uint64())
 	s.Require().Equal(uint64(1), sdkmath.MaxUint(sdkmath.ZeroUint(), sdkmath.OneUint()).Uint64())

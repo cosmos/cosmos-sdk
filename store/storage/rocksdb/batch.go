@@ -22,7 +22,7 @@ type Batch struct {
 // destroy the batch when done.
 func NewBatch(db *Database, version uint64) Batch {
 	var ts [TimestampSize]byte
-	binary.LittleEndian.PutUint64(ts[:], uint64(version))
+	binary.LittleEndian.PutUint64(ts[:], version)
 
 	batch := grocksdb.NewWriteBatch()
 	batch.Put([]byte(latestVersionKey), ts[:])

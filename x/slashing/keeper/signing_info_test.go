@@ -5,6 +5,7 @@ import (
 
 	"cosmossdk.io/x/slashing/testutil"
 	slashingtypes "cosmossdk.io/x/slashing/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 

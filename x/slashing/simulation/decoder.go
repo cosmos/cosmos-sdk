@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"cosmossdk.io/x/slashing/types"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"

@@ -7,8 +7,8 @@ import (
 	"github.com/cometbft/cometbft/crypto"
 
 	sdkmath "cosmossdk.io/math"
-
 	"cosmossdk.io/x/slashing/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 

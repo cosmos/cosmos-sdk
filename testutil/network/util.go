@@ -122,7 +122,10 @@ func startInProcess(cfg Config, val *Validator) error {
 }
 
 func collectGenFiles(cfg Config, vals []*Validator, outputDir string) error {
-	genTime := cmttime.Now()
+	genTime := cfg.GenesisTime
+	if genTime.IsZero() {
+		genTime = cmttime.Now()
+	}
 
 	for i := 0; i < cfg.NumValidators; i++ {
 		cmtCfg := vals[i].Ctx.Config

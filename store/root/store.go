@@ -7,7 +7,6 @@ import (
 	"slices"
 
 	"github.com/cockroachdb/errors"
-	ics23 "github.com/cosmos/ics23/go"
 
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/v2"
@@ -150,9 +149,28 @@ func (s *Store) GetLatestVersion() (uint64, error) {
 	return lastCommitID.Version, nil
 }
 
-// GetProof delegates the GetProof to the store's underlying SC backend.
-func (s *Store) GetProof(_ string, version uint64, key []byte) (*ics23.CommitmentProof, error) {
-	return s.stateCommitment.GetProof(version, key)
+func (s *Store) Query(storeKey string, version uint64, key []byte, prove bool) (store.QueryResult, error) {
+	val, err := s.stateStore.Get(storeKey, version, key)
+	if err != nil {
+		return store.QueryResult{}, err
+	}
+
+	result := store.QueryResult{
+		Key:     key,
+		Value:   val,
+		Version: version,
+	}
+
+	if prove {
+		proof, err := s.stateCommitment.GetProof(version, key)
+		if err != nil {
+			return store.QueryResult{}, err
+		}
+
+		result.Proof = proof
+	}
+
+	return result, nil
 }
 
 // LoadVersion loads a specific version returning an error upon failure.

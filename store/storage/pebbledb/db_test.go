@@ -3,15 +3,10 @@ package pebbledb
 import (
 	"testing"
 
-	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/storage"
-)
-
-const (
-	storeKey1 = "store1"
 )
 
 func TestStorageTestSuite(t *testing.T) {
@@ -25,12 +20,4 @@ func TestStorageTestSuite(t *testing.T) {
 		},
 	}
 	suite.Run(t, s)
-}
-
-func TestDatabase_ReverseIterator(t *testing.T) {
-	db, err := New(t.TempDir())
-	require.NoError(t, err)
-	defer db.Close()
-
-	require.Panics(t, func() { _, _ = db.ReverseIterator(storeKey1, 1, []byte("key000"), nil) })
 }

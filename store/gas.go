@@ -88,9 +88,9 @@ type GasConfig struct {
 func DefaultGasConfig() GasConfig {
 	return GasConfig{
 		HasCost:          1000,
-		DeleteCost:       1000,
 		ReadCostFlat:     1000,
 		ReadCostPerByte:  3,
+		DeleteCost:       1500,
 		WriteCostFlat:    2000,
 		WriteCostPerByte: 30,
 		IterNextCostFlat: 30,

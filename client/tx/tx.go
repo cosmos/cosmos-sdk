@@ -126,8 +126,12 @@ func BroadcastTx(clientCtx client.Context, txf Factory, msgs ...sdk.Msg) error {
 		}
 	}
 
+<<<<<<< HEAD
 	err = Sign(clientCtx.CmdContext, txf, clientCtx.GetFromName(), tx, true)
 	if err != nil {
+=======
+	if err = Sign(clientCtx.CmdContext, txf, clientCtx.FromName, tx, true); err != nil {
+>>>>>>> fd93ee77e (fix(simapp): textual wiring (#18242))
 		return err
 	}
 
@@ -323,9 +327,7 @@ func Sign(ctx context.Context, txf Factory, name string, txBuilder client.TxBuil
 		return err
 	}
 
-	bytesToSign, err := authsigning.GetSignBytesAdapter(
-		ctx, txf.txConfig.SignModeHandler(),
-		signMode, signerData, txBuilder.GetTx())
+	bytesToSign, err := authsigning.GetSignBytesAdapter(ctx, txf.txConfig.SignModeHandler(), signMode, signerData, txBuilder.GetTx())
 	if err != nil {
 		return err
 	}

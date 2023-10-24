@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -63,10 +64,16 @@ func getCodecInterfaces() *cobra.Command {
 	return &cobra.Command{
 		Use:   "list-interfaces",
 		Short: "List all registered interface type URLs",
-		Long:  "List all registered interface type URLs using the application codec",
+		Long: fmt.Sprintf(`List all registered interface type URLs using the application codec.
+
+Example:
+$ %s debug codec list-interfaces
+			`, version.AppName),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 			iFaces := clientCtx.Codec.InterfaceRegistry().ListAllInterfaces()
+
+			slices.Sort(iFaces)
 			for _, iFace := range iFaces {
 				cmd.Println(iFace)
 			}
@@ -80,10 +87,16 @@ func getCodecInterfaceImpls() *cobra.Command {
 	return &cobra.Command{
 		Use:   "list-implementations [interface]",
 		Short: "List the registered type URLs for the provided interface",
-		Long:  "List the registered type URLs that can be used for the provided interface name using the application codec",
+		Long: fmt.Sprintf(`List the registered type URLs that can be used for the provided interface name using the application codec.
+		
+Example:
+$ %s debug codec list-implementations cosmos.crypto.PubKey
+			`, version.AppName),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 			impls := clientCtx.Codec.InterfaceRegistry().ListImplementations(args[0])
+
+			slices.Sort(impls)
 			for _, imp := range impls {
 				cmd.Println(imp)
 			}

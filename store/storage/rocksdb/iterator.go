@@ -6,8 +6,9 @@ package rocksdb
 import (
 	"bytes"
 
-	"cosmossdk.io/store/v2"
 	"github.com/linxGnu/grocksdb"
+
+	"cosmossdk.io/store/v2"
 )
 
 var _ store.Iterator = (*iterator)(nil)

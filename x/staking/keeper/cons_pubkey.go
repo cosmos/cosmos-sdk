@@ -6,6 +6,7 @@ import (
 	"cosmossdk.io/collections"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -42,6 +43,40 @@ func (k Keeper) SetConsPubKeyRotationHistory(
 	}
 
 	if err := k.SetConsKeyQueue(ctx, queueTime, valAddr); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (k Keeper) updateToNewPubkey(ctx sdk.Context, val types.Validator, oldPubKey, newPubKey *codectypes.Any, fee sdk.Coin) error {
+	consAddr, err := val.GetConsAddr()
+	if err != nil {
+		return err
+	}
+
+	if err := k.ValidatorByConsensusAddress.Remove(ctx, consAddr); err != nil {
+		return err
+	}
+	k.DeleteValidatorByPowerIndex(ctx, val)
+
+	val.ConsensusPubkey = newPubKey
+	if err := k.SetValidator(ctx, val); err != nil {
+		return err
+	}
+	if err := k.SetValidatorByConsAddr(ctx, val); err != nil {
+		return err
+	}
+
+	k.SetValidatorByPowerIndex(ctx, val)
+
+	oldPk := oldPubKey.GetCachedValue().(cryptotypes.PubKey)
+	newPk := newPubKey.GetCachedValue().(cryptotypes.PubKey)
+
+	// Sets a map to newly rotated consensus key with old consensus key
+	k.RotatedConsKeyMapIndex.Set(ctx, oldPk.Address(), newPk.Address())
+
+	if err := k.Hooks().AfterConsensusPubKeyUpdate(ctx, oldPk, newPk, fee); err != nil {
 		return err
 	}
 

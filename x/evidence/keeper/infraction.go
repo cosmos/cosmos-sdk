@@ -40,6 +40,13 @@ func (k Keeper) handleEquivocationEvidence(ctx context.Context, evidence *types.
 	}
 
 	if len(validator.GetOperator()) != 0 {
+		// get the consAddr again, this is because validator might've rotated it's key.
+		valConsAddr, err := validator.GetConsAddr()
+		if err != nil {
+			panic(err)
+		}
+		consAddr = valConsAddr
+
 		if _, err := k.slashingKeeper.GetPubkey(ctx, consAddr.Bytes()); err != nil {
 			// Ignore evidence that cannot be handled.
 			//

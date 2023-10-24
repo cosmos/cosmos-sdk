@@ -10,6 +10,7 @@ import (
 	"cosmossdk.io/collections"
 	errorsmod "cosmossdk.io/errors"
 
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
@@ -208,4 +209,44 @@ func (k Keeper) GetValidatorMissedBlocks(ctx context.Context, addr sdk.ConsAddre
 	})
 
 	return missedBlocks, err
+}
+
+func (k Keeper) PerformConsensusPubKeyUpdate(ctx sdk.Context, oldPubKey, newPubKey cryptotypes.PubKey) error {
+
+	// Connect new consensus address with PubKey
+	if err := k.AddrPubkeyRelation.Set(ctx, newPubKey.Address(), newPubKey); err != nil {
+		return err
+	}
+
+	// Migrate ValidatorSigningInfo from oldPubKey to newPubKey
+	signingInfo, err := k.ValidatorSigningInfo.Get(ctx, sdk.ConsAddress(oldPubKey.Address()))
+	if err != nil {
+		return types.ErrInvalidConsPubKey
+	}
+
+	if err := k.ValidatorSigningInfo.Set(ctx, sdk.ConsAddress(newPubKey.Address()), signingInfo); err != nil {
+		return err
+	}
+
+	if err := k.ValidatorSigningInfo.Remove(ctx, sdk.ConsAddress(oldPubKey.Address())); err != nil {
+		return err
+	}
+
+	// Migrate ValidatorMissedBlockBitArray from oldPubKey to newPubKey
+	missedBlocks, err := k.GetValidatorMissedBlocks(ctx, sdk.ConsAddress(oldPubKey.Address()))
+	if err != nil {
+		return err
+	}
+
+	if err := k.DeleteMissedBlockBitmap(ctx, sdk.ConsAddress(oldPubKey.Address())); err != nil {
+		return err
+	}
+
+	for _, missed := range missedBlocks {
+		if err := k.SetMissedBlockBitmapValue(ctx, sdk.ConsAddress(newPubKey.Address()), missed.Index, missed.Missed); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

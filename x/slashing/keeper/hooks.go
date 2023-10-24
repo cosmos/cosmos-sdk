@@ -8,6 +8,7 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
@@ -97,5 +98,17 @@ func (h Hooks) BeforeValidatorSlashed(_ context.Context, _ sdk.ValAddress, _ sdk
 }
 
 func (h Hooks) AfterUnbondingInitiated(_ context.Context, _ uint64) error {
+	return nil
+}
+
+func (h Hooks) AfterConsensusPubKeyUpdate(ctx sdk.Context, oldPubKey, newPubKey cryptotypes.PubKey, _ sdk.Coin) error {
+	if err := h.k.PerformConsensusPubKeyUpdate(ctx, oldPubKey, newPubKey); err != nil {
+		return err
+	}
+
+	if err := h.k.AddrPubkeyRelation.Remove(ctx, oldPubKey.Address()); err != nil {
+		return err
+	}
+
 	return nil
 }

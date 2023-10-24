@@ -29,12 +29,8 @@ func (k msgServer) SoftwareUpgrade(goCtx context.Context, req *types.MsgSoftware
 		return nil, errors.Wrapf(gov.ErrInvalidSigner, "expected %s got %s", k.authority, req.Authority)
 	}
 
-<<<<<<< HEAD
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	err := k.ScheduleUpgrade(ctx, req.Plan)
-=======
-	err := k.ScheduleUpgrade(ctx, msg.Plan)
->>>>>>> 458dd044b (chore(x/upgrade): Use ValidateBasic for Plan in ReadUpgradeInfoFromDisk (#18210))
 	if err != nil {
 		return nil, err
 	}

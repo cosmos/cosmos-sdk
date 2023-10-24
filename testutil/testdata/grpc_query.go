@@ -66,8 +66,8 @@ func (m *TestAnyResponse) UnpackInterfaces(unpacker types.AnyUnpacker) error {
 // `gasOverwrite` is set to true, we also check that this consumed
 // gas value is equal to the hardcoded `gasConsumed`.
 func DeterministicIterations[request, response proto.Message](
-	ctx sdk.Context,
 	t *testing.T,
+	ctx sdk.Context,
 	req request,
 	grpcFn func(context.Context, request, ...grpc.CallOption) (response, error),
 	gasConsumed uint64,

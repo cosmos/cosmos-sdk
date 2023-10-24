@@ -69,7 +69,7 @@ func AppStateFnWithExtendedCbs(
 		config simtypes.Config,
 	) (appState json.RawMessage, simAccs []simtypes.Account, chainID string, genesisTimestamp time.Time) {
 		if simcli.FlagGenesisTimeValue == 0 {
-			genesisTimestamp = simtypes.RandTimestamp(r)
+			genesisTimestamp = time.Now()
 		} else {
 			genesisTimestamp = time.Unix(simcli.FlagGenesisTimeValue, 0)
 		}

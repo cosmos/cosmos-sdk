@@ -27,8 +27,6 @@ service Msg {
 
   // ClaimBudget defines a method to claim the distributed budget.
   rpc ClaimBudget(MsgClaimBudget) returns (MsgClaimBudgetResponse);
-
-  rpc FundDispensationProposal(MsgFundDispensationProposal) returns (MsgFundDispensationProposalResponse);
 }
 
 // MsgFundCommunityPool allows an account to directly
@@ -98,9 +96,9 @@ message MsgFundDispensationProposal {
   option (cosmos.msg.v1.signer) = "authority";
 
   // authority is the address that controls the module (defaults to x/gov unless overwritten).
-  string                      authority         = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  string                      recipient_address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  cosmos.base.v1beta1.DecCoin percentage        = 3
+  string                      authority   = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string                      destination = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  cosmos.base.v1beta1.DecCoin percentage  = 3
       [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins"];
   repeated cosmos.base.v1beta1.Coin cap = 4
       [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];

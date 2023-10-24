@@ -9,10 +9,10 @@ import (
 
 	"cosmossdk.io/collections"
 	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/x/gov/types"
+	v1 "cosmossdk.io/x/gov/types/v1"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/gov/types"
-	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 )
 
 // SubmitProposal creates a new proposal given an array of messages
@@ -114,7 +114,10 @@ func (keeper Keeper) SubmitProposal(ctx context.Context, messages []sdk.Msg, met
 	}
 
 	// called right after a proposal is submitted
-	keeper.Hooks().AfterProposalSubmission(ctx, proposalID)
+	err = keeper.Hooks().AfterProposalSubmission(ctx, proposalID)
+	if err != nil {
+		return v1.Proposal{}, err
+	}
 
 	sdkCtx.EventManager().EmitEvent(
 		sdk.NewEvent(

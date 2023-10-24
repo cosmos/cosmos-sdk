@@ -7,10 +7,11 @@ import (
 	"fmt"
 	"testing"
 
-	"cosmossdk.io/store/v2"
-	"cosmossdk.io/store/v2/storage"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
+
+	"cosmossdk.io/store/v2"
+	"cosmossdk.io/store/v2/storage"
 )
 
 const (

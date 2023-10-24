@@ -4,7 +4,6 @@ import (
 	"testing"
 	"time"
 
-	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/collections"
@@ -87,11 +86,6 @@ func TestTickExpiredDepositPeriod(t *testing.T) {
 	ctx := app.BaseApp.NewContext(false)
 	addrs := simtestutil.AddTestAddrs(suite.BankKeeper, suite.StakingKeeper, ctx, 10, valTokens)
 
-	_, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{
-		Height: app.LastBlockHeight() + 1,
-		Hash:   app.LastCommitID().Hash,
-	})
-	require.NoError(t, err)
 	govMsgSvr := keeper.NewMsgServerImpl(suite.GovKeeper)
 
 	checkInactiveProposalsQueue(t, ctx, suite.GovKeeper)
@@ -137,12 +131,6 @@ func TestTickMultipleExpiredDepositPeriod(t *testing.T) {
 	app := suite.App
 	ctx := app.BaseApp.NewContext(false)
 	addrs := simtestutil.AddTestAddrs(suite.BankKeeper, suite.StakingKeeper, ctx, 10, valTokens)
-
-	_, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{
-		Height: app.LastBlockHeight() + 1,
-		Hash:   app.LastCommitID().Hash,
-	})
-	require.NoError(t, err)
 	govMsgSvr := keeper.NewMsgServerImpl(suite.GovKeeper)
 
 	checkInactiveProposalsQueue(t, ctx, suite.GovKeeper)
@@ -208,12 +196,6 @@ func TestTickPassedDepositPeriod(t *testing.T) {
 	app := suite.App
 	ctx := app.BaseApp.NewContext(false)
 	addrs := simtestutil.AddTestAddrs(suite.BankKeeper, suite.StakingKeeper, ctx, 10, valTokens)
-
-	_, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{
-		Height: app.LastBlockHeight() + 1,
-		Hash:   app.LastCommitID().Hash,
-	})
-	require.NoError(t, err)
 	govMsgSvr := keeper.NewMsgServerImpl(suite.GovKeeper)
 
 	newProposalMsg, err := v1.NewMsgSubmitProposal(
@@ -273,12 +255,6 @@ func TestTickPassedVotingPeriod(t *testing.T) {
 			addrs := simtestutil.AddTestAddrs(suite.BankKeeper, suite.StakingKeeper, ctx, 10, valTokens.Mul(math.NewInt(depositMultiplier)))
 
 			SortAddresses(addrs)
-
-			_, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{
-				Height: app.LastBlockHeight() + 1,
-				Hash:   app.LastCommitID().Hash,
-			})
-			require.NoError(t, err)
 			govMsgSvr := keeper.NewMsgServerImpl(suite.GovKeeper)
 
 			checkInactiveProposalsQueue(t, ctx, suite.GovKeeper)
@@ -367,18 +343,11 @@ func TestProposalPassedEndblocker(t *testing.T) {
 
 			govMsgSvr := keeper.NewMsgServerImpl(suite.GovKeeper)
 			stakingMsgSvr := stakingkeeper.NewMsgServerImpl(suite.StakingKeeper)
-
-			_, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{
-				Height: app.LastBlockHeight() + 1,
-				Hash:   app.LastCommitID().Hash,
-			})
-			require.NoError(t, err)
-
 			valAddr := sdk.ValAddress(addrs[0])
 			proposer := addrs[0]
 
 			createValidators(t, stakingMsgSvr, ctx, []sdk.ValAddress{valAddr}, []int64{10})
-			_, err = suite.StakingKeeper.EndBlocker(ctx)
+			_, err := suite.StakingKeeper.EndBlocker(ctx)
 			require.NoError(t, err)
 			macc := suite.GovKeeper.GetGovernanceAccount(ctx)
 			require.NotNil(t, macc)
@@ -428,17 +397,11 @@ func TestEndBlockerProposalHandlerFailed(t *testing.T) {
 
 	stakingMsgSvr := stakingkeeper.NewMsgServerImpl(suite.StakingKeeper)
 
-	_, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{
-		Height: app.LastBlockHeight() + 1,
-		Hash:   app.LastCommitID().Hash,
-	})
-	require.NoError(t, err)
-
 	valAddr := sdk.ValAddress(addrs[0])
 	proposer := addrs[0]
 
 	createValidators(t, stakingMsgSvr, ctx, []sdk.ValAddress{valAddr}, []int64{10})
-	_, err = suite.StakingKeeper.EndBlocker(ctx)
+	_, err := suite.StakingKeeper.EndBlocker(ctx)
 	require.NoError(t, err)
 	msg := banktypes.NewMsgSend(authtypes.NewModuleAddress(types.ModuleName), addrs[0], sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100000))))
 	proposal, err := suite.GovKeeper.SubmitProposal(ctx, []sdk.Msg{msg}, "", "title", "summary", proposer, false)
@@ -512,13 +475,6 @@ func TestExpeditedProposal_PassAndConversionToRegular(t *testing.T) {
 
 			govMsgSvr := keeper.NewMsgServerImpl(suite.GovKeeper)
 			stakingMsgSvr := stakingkeeper.NewMsgServerImpl(suite.StakingKeeper)
-
-			_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{
-				Height: app.LastBlockHeight() + 1,
-				Hash:   app.LastCommitID().Hash,
-			})
-			require.NoError(t, err)
-
 			valAddr := sdk.ValAddress(addrs[0])
 			proposer := addrs[0]
 

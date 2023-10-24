@@ -41,13 +41,26 @@ type (
 
 // GasMeter defines an interface for gas consumption tracking.
 type GasMeter interface {
+	// GasConsumed returns the amount of gas consumed so far.
 	GasConsumed() Gas
+	// GasConsumedToLimit returns the gas limit if gas consumed is past the limit,
+	// otherwise it returns the consumed gas so far.
 	GasConsumedToLimit() Gas
+	// GasRemaining returns the gas left in the GasMeter.
 	GasRemaining() Gas
+	// Limit returns the gas limit (if any).
 	Limit() Gas
+	// ConsumeGas adds the given amount of gas to the gas consumed and should panic
+	// if it overflows the gas limit (if any).
 	ConsumeGas(amount Gas, descriptor string)
+	// RefundGas will deduct the given amount from the gas consumed so far. If the
+	// amount is greater than the gas consumed, the function should panic.
 	RefundGas(amount Gas, descriptor string)
+	// IsPastLimit returns <true> if the gas consumed so far is past the limit (if any),
+	// otherwise it returns <false>.
 	IsPastLimit() bool
+	// IsOutOfGas returns <true> if the gas consumed so far is greater than or equal
+	// to gas limit (if any), otherwise it returns <false>.
 	IsOutOfGas() bool
 
 	fmt.Stringer
@@ -78,5 +91,19 @@ func DefaultGasConfig() GasConfig {
 		WriteCostFlat:    2000,
 		WriteCostPerByte: 30,
 		IterNextCostFlat: 30,
+	}
+}
+
+// gasMeter defines an implementation of a GasMeter.
+type gasMeter struct {
+	limit    Gas
+	consumed Gas
+}
+
+// NewGasMeter returns a reference to a GasMeter with the provided limit.
+func NewGasMeter(limit Gas) GasMeter {
+	return &gasMeter{
+		limit:    limit,
+		consumed: 0,
 	}
 }

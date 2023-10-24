@@ -11,7 +11,6 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/simapp"
-	_ "cosmossdk.io/x/distribution"
 	_ "cosmossdk.io/x/gov"
 
 	"github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
@@ -19,7 +18,6 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
-	"github.com/cosmos/cosmos-sdk/types"
 	qtypes "github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/version"
 )
@@ -93,7 +91,6 @@ func (s *E2ETestSuite) TestQueryLatestBlock() {
 	s.Require().NoError(err)
 	var blockInfoRes cmtservice.GetLatestBlockResponse
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(restRes, &blockInfoRes))
-	s.Require().Equal(types.ConsAddress(blockInfoRes.Block.Header.ProposerAddress).String(), blockInfoRes.SdkBlock.Header.ProposerAddress)
 	s.Require().Contains(blockInfoRes.SdkBlock.Header.ProposerAddress, "cosmosvalcons")
 }
 

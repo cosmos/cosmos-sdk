@@ -9,6 +9,11 @@ import (
 	"os"
 	"path/filepath"
 
+	abci "github.com/cometbft/cometbft/abci/types"
+	dbm "github.com/cosmos/cosmos-db"
+	"github.com/cosmos/gogoproto/proto"
+	"github.com/spf13/cast"
+
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
 	"cosmossdk.io/client/v2/autocli"
@@ -18,12 +23,20 @@ import (
 	"cosmossdk.io/x/circuit"
 	circuitkeeper "cosmossdk.io/x/circuit/keeper"
 	circuittypes "cosmossdk.io/x/circuit/types"
+	distr "cosmossdk.io/x/distribution"
+	distrkeeper "cosmossdk.io/x/distribution/keeper"
+	distrtypes "cosmossdk.io/x/distribution/types"
 	"cosmossdk.io/x/evidence"
 	evidencekeeper "cosmossdk.io/x/evidence/keeper"
 	evidencetypes "cosmossdk.io/x/evidence/types"
 	"cosmossdk.io/x/feegrant"
 	feegrantkeeper "cosmossdk.io/x/feegrant/keeper"
 	feegrantmodule "cosmossdk.io/x/feegrant/module"
+	"cosmossdk.io/x/gov"
+	govclient "cosmossdk.io/x/gov/client"
+	govkeeper "cosmossdk.io/x/gov/keeper"
+	govtypes "cosmossdk.io/x/gov/types"
+	govv1beta1 "cosmossdk.io/x/gov/types/v1beta1"
 	"cosmossdk.io/x/group"
 	groupkeeper "cosmossdk.io/x/group/keeper"
 	groupmodule "cosmossdk.io/x/group/module"
@@ -37,19 +50,6 @@ import (
 	"cosmossdk.io/x/upgrade"
 	upgradekeeper "cosmossdk.io/x/upgrade/keeper"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
-	abci "github.com/cometbft/cometbft/abci/types"
-	dbm "github.com/cosmos/cosmos-db"
-	"github.com/cosmos/gogoproto/proto"
-	"github.com/spf13/cast"
-
-	distr "cosmossdk.io/x/distribution"
-	distrkeeper "cosmossdk.io/x/distribution/keeper"
-	distrtypes "cosmossdk.io/x/distribution/types"
-	"cosmossdk.io/x/gov"
-	govclient "cosmossdk.io/x/gov/client"
-	govkeeper "cosmossdk.io/x/gov/keeper"
-	govtypes "cosmossdk.io/x/gov/types"
-	govv1beta1 "cosmossdk.io/x/gov/types/v1beta1"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -78,7 +78,6 @@ import (
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	"github.com/cosmos/cosmos-sdk/x/auth/posthandler"
 	authsims "github.com/cosmos/cosmos-sdk/x/auth/simulation"
-	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	txmodule "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -144,8 +143,7 @@ type SimApp struct {
 	interfaceRegistry types.InterfaceRegistry
 
 	// keys to access the substores
-	keys  map[string]*storetypes.KVStoreKey
-	tkeys map[string]*storetypes.TransientStoreKey
+	keys map[string]*storetypes.KVStoreKey
 
 	// keepers
 	AccountKeeper         authkeeper.AccountKeeper
@@ -208,7 +206,7 @@ func NewSimApp(
 	})
 	appCodec := codec.NewProtoCodec(interfaceRegistry)
 	legacyAmino := codec.NewLegacyAmino()
-	txConfig := tx.NewTxConfig(appCodec, tx.DefaultSignModes)
+	txConfig := authtx.NewTxConfig(appCodec, authtx.DefaultSignModes)
 
 	std.RegisterLegacyAminoCodec(legacyAmino)
 	std.RegisterInterfaces(interfaceRegistry)
@@ -291,12 +289,12 @@ func NewSimApp(
 	)
 
 	// optional: enable sign mode textual by overwriting the default tx config (after setting the bank keeper)
-	enabledSignModes := append(tx.DefaultSignModes, sigtypes.SignMode_SIGN_MODE_TEXTUAL)
-	txConfigOpts := tx.ConfigOptions{
+	enabledSignModes := append(authtx.DefaultSignModes, sigtypes.SignMode_SIGN_MODE_TEXTUAL)
+	txConfigOpts := authtx.ConfigOptions{
 		EnabledSignModes:           enabledSignModes,
 		TextualCoinMetadataQueryFn: txmodule.NewBankKeeperCoinMetadataQueryFn(app.BankKeeper),
 	}
-	txConfig, err := tx.NewTxConfigWithOptions(
+	txConfig, err := authtx.NewTxConfigWithOptions(
 		appCodec,
 		txConfigOpts,
 	)
@@ -614,7 +612,9 @@ func (app *SimApp) InitChainer(ctx sdk.Context, req *abci.RequestInitChain) (*ab
 	if err := json.Unmarshal(req.AppStateBytes, &genesisState); err != nil {
 		panic(err)
 	}
-	app.UpgradeKeeper.SetModuleVersionMap(ctx, app.ModuleManager.GetVersionMap())
+	if err := app.UpgradeKeeper.SetModuleVersionMap(ctx, app.ModuleManager.GetVersionMap()); err != nil {
+		panic(err)
+	}
 	return app.ModuleManager.InitGenesis(ctx, app.appCodec, genesisState)
 }
 

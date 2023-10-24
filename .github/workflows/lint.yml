@@ -32,6 +32,8 @@ jobs:
         id: lint_long
         run: |
           nix develop -c make lint
+        env:
+          NIX: 1
       - uses: technote-space/get-diff-action@v6.1.2
         if: steps.lint_long.outcome == 'skipped'
         id: git_diff_all
@@ -49,3 +51,4 @@ jobs:
         env:
           GIT_DIFF: ${{ env.GIT_DIFF }}
           LINT_DIFF: 1
+          NIX: 1

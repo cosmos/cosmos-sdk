@@ -1,4 +1,4 @@
-package memkv_test
+package mem_test
 
 import (
 	"fmt"
@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/store/v2"
-	"cosmossdk.io/store/v2/memkv"
+	"cosmossdk.io/store/v2/kv/mem"
 )
 
 const storeKey = "storeKey"
@@ -23,7 +23,7 @@ func TestStorageTestSuite(t *testing.T) {
 }
 
 func (s *StoreTestSuite) SetupTest() {
-	s.kvStore = memkv.New(storeKey)
+	s.kvStore = mem.New(storeKey)
 }
 
 func (s *StoreTestSuite) TestGetStoreType() {

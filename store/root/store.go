@@ -10,9 +10,9 @@ import (
 
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/v2"
-	"cosmossdk.io/store/v2/branchkv"
 	"cosmossdk.io/store/v2/commitment"
-	"cosmossdk.io/store/v2/tracekv"
+	"cosmossdk.io/store/v2/kv/branch"
+	"cosmossdk.io/store/v2/kv/trace"
 )
 
 // defaultStoreKey defines the default store key used for the single SC backend.
@@ -62,7 +62,7 @@ func New(
 	ss store.VersionedDatabase,
 	sc *commitment.Database,
 ) (store.RootStore, error) {
-	rootKVStore, err := branchkv.New(defaultStoreKey, ss)
+	rootKVStore, err := branch.New(defaultStoreKey, ss)
 	if err != nil {
 		return nil, err
 	}
@@ -184,7 +184,7 @@ func (s *Store) LoadVersion(v uint64) (err error) {
 // root KVStore using Write().
 func (s *Store) GetKVStore(_ string) store.KVStore {
 	if s.TracingEnabled() {
-		return tracekv.New(s.rootKVStore, s.traceWriter, s.traceContext)
+		return trace.New(s.rootKVStore, s.traceWriter, s.traceContext)
 	}
 
 	return s.rootKVStore
@@ -192,7 +192,7 @@ func (s *Store) GetKVStore(_ string) store.KVStore {
 
 func (s *Store) GetBranchedKVStore(_ string) store.BranchedKVStore {
 	if s.TracingEnabled() {
-		return tracekv.New(s.rootKVStore, s.traceWriter, s.traceContext)
+		return trace.New(s.rootKVStore, s.traceWriter, s.traceContext)
 	}
 
 	return s.rootKVStore

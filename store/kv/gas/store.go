@@ -1,6 +1,11 @@
 package gas
 
-import "cosmossdk.io/store/v2"
+import (
+	"fmt"
+	"io"
+
+	"cosmossdk.io/store/v2"
+)
 
 var _ store.BranchedKVStore = (*Store)(nil)
 
@@ -67,4 +72,18 @@ func (s *Store) Iterator(start, end []byte) store.Iterator {
 
 func (s *Store) ReverseIterator(start, end []byte) store.Iterator {
 	panic("not implemented!")
+}
+
+func (s *Store) Write() {
+	if b, ok := s.parent.(store.BranchedKVStore); ok {
+		b.Write()
+	}
+}
+
+func (s *Store) Branch() store.BranchedKVStore {
+	panic(fmt.Sprintf("cannot call Branch() on %T", s))
+}
+
+func (s *Store) BranchWithTrace(_ io.Writer, _ store.TraceContext) store.BranchedKVStore {
+	panic(fmt.Sprintf("cannot call BranchWithTrace() on %T", s))
 }

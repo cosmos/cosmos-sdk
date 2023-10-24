@@ -263,7 +263,7 @@ func NewKeeper(
 
 		// key format is: 104 | time
 		ValidatorConsensusKeyRotationRecordQueue: collections.NewMap(
-			sb, types.ValidatorConsensusKeyRotationRecordQueueKey,
+			sb, types.ValidatorConsensusKeyRotationRecordIndexKey,
 			"cons_pub_rotation_queue",
 			sdk.TimeKey,
 			codec.CollValue[types.ValAddrsOfRotatedConsKeys](cdc),

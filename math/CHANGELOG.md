@@ -42,6 +42,7 @@ Ref: https://github.com/commitizen/conventional-commit-types/blob/v3.0.0/index.j
 
 ### Bug Fixes
 
+* [#18228](https://github.com/cosmos/cosmos-sdk/pull/18228) Fix panic when calling `BigInt()` on an uninitialized `Uint`.
 * [#18214](https://github.com/cosmos/cosmos-sdk/pull/18214) Ensure that modifying the argument to `NewUIntFromBigInt` doesn't mutate the returned value.
 * [#18211](https://github.com/cosmos/cosmos-sdk/pull/18211) RelativePow now returns 1 when 0^0, before it was returning the scale factor.
 * [#17725](https://github.com/cosmos/cosmos-sdk/pull/17725) Fix state break in ApproxRoot. This has been present since math/v1.0.1. It changed the rounding behavior at precision end in an intermediary division from banker's to truncation. The truncation occurs from binary right shift in the case of square roots. The change is now reverted back to banker's rounding universally for any root.

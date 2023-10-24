@@ -10,7 +10,8 @@ option go_package = "cosmossdk.io/store/internal/kv";
 
 // Pairs defines a repeated slice of Pair objects.
 //
-// Deprecated: Store v1 is deprecated, please use Store v2 types instead.
+// Deprecated: Store v1 is deprecated as of v0.50.x, please use Store v2 types
+// instead.
 message Pairs {
   option deprecated = true;
 
@@ -19,7 +20,8 @@ message Pairs {
 
 // Pair defines a key/value bytes tuple.
 //
-// Deprecated: Store v1 is deprecated, please use Store v2 types instead.
+// Deprecated: Store v1 is deprecated as of v0.50.x, please use Store v2 types
+// instead.
 message Pair {
   option deprecated = true;
 

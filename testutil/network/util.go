@@ -39,6 +39,7 @@ func startInProcess(cfg Config, val *Validator) error {
 	}
 
 	app := cfg.AppConstructor(*val)
+	val.app = app
 	genDocProvider := node.DefaultGenesisDocProviderFunc(tmCfg)
 
 	tmNode, err := node.NewNode( //resleak:notresource

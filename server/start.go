@@ -543,10 +543,8 @@ func startAPIserver(config serverconfig.Config, genDocProvider node.GenesisDocPr
 				maxRecvMsgSize = serverconfig.DefaultGRPCMaxRecvMsgSize
 			}
 
-			grpcAddress := fmt.Sprintf(config.GRPC.Address)
-
 			grpcClient, err := grpc.Dial(
-				grpcAddress,
+				config.GRPC.Address,
 				grpc.WithTransportCredentials(insecure.NewCredentials()),
 				grpc.WithDefaultCallOptions(
 					grpc.ForceCodec(codec.NewProtoCodec(clientCtx.InterfaceRegistry).GRPCCodec()),
@@ -559,7 +557,7 @@ func startAPIserver(config serverconfig.Config, genDocProvider node.GenesisDocPr
 			}
 
 			clientCtx = clientCtx.WithGRPCClient(grpcClient)
-			ctx.Logger.Debug("grpc client assigned to client context", "target", grpcAddress)
+			ctx.Logger.Debug("grpc client assigned to client context", "target", config.GRPC.Address)
 		}
 
 		apiSrv = api.New(clientCtx, ctx.Logger.With("module", "api-server"))

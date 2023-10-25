@@ -42,7 +42,7 @@ import (
 	"unsafe"
 )
 
-var context *C.secp256k1_context
+var context *C.cosmos_secp256k1_context
 
 func init() {
 	// around 20 ms on a modern CPU.

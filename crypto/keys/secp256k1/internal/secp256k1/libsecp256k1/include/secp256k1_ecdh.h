@@ -18,7 +18,7 @@ extern "C" {
  *           privkey:    a 32-byte scalar with which to multiply the point
  */
 SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ecdh(
-  const secp256k1_context* ctx,
+  const cosmos_secp256k1_context* ctx,
   unsigned char *result,
   const secp256k1_pubkey *pubkey,
   const unsigned char *privkey

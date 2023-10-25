@@ -55,7 +55,7 @@ extern "C" {
  *  guaranteed to be parsable by secp256k1_ec_privkey_import_der
  */
 SECP256K1_WARN_UNUSED_RESULT int ec_privkey_export_der(
-    const secp256k1_context* ctx,
+    const cosmos_secp256k1_context* ctx,
     unsigned char *privkey,
     size_t *privkeylen,
     const unsigned char *seckey,
@@ -77,7 +77,7 @@ SECP256K1_WARN_UNUSED_RESULT int ec_privkey_export_der(
  * key.
  */
 SECP256K1_WARN_UNUSED_RESULT int ec_privkey_import_der(
-    const secp256k1_context* ctx,
+    const cosmos_secp256k1_context* ctx,
     unsigned char *seckey,
     const unsigned char *privkey,
     size_t privkeylen

@@ -3,7 +3,7 @@
 // the LICENSE file.
 
 // secp256k1_context_create_sign_verify creates a context for signing and signature verification.
-static secp256k1_context* secp256k1_context_create_sign_verify() {
+static cosmos_secp256k1_context* secp256k1_context_create_sign_verify() {
 	return secp256k1_context_create(SECP256K1_CONTEXT_SIGN | SECP256K1_CONTEXT_VERIFY);
 }
 
@@ -16,7 +16,7 @@ static secp256k1_context* secp256k1_context_create_sign_verify() {
 //  In:     sigdata:    pointer to a 65-byte signature with the recovery id at the end (cannot be NULL)
 //          msgdata:    pointer to a 32-byte message (cannot be NULL)
 static int secp256k1_ext_ecdsa_recover(
-	const secp256k1_context* ctx,
+	const cosmos_secp256k1_context* ctx,
 	unsigned char *pubkey_out,
 	const unsigned char *sigdata,
 	const unsigned char *msgdata
@@ -44,7 +44,7 @@ static int secp256k1_ext_ecdsa_recover(
 //          pubkeydata: pointer to public key data (cannot be NULL)
 //          pubkeylen:  length of pubkeydata
 static int secp256k1_ext_ecdsa_verify(
-	const secp256k1_context* ctx,
+	const cosmos_secp256k1_context* ctx,
 	const unsigned char *sigdata,
 	const unsigned char *msgdata,
 	const unsigned char *pubkeydata,
@@ -74,7 +74,7 @@ static int secp256k1_ext_ecdsa_verify(
 //          pubkeydata: the input public key (cannot be NULL)
 //          pubkeylen:  length of pubkeydata
 static int secp256k1_ext_reencode_pubkey(
-	const secp256k1_context* ctx,
+	const cosmos_secp256k1_context* ctx,
 	unsigned char *out,
 	size_t outlen,
 	const unsigned char *pubkeydata,
@@ -98,7 +98,7 @@ static int secp256k1_ext_reencode_pubkey(
 //  In:     point:    pointer to a 64-byte public point,
 //                    encoded as two 256bit big-endian numbers.
 //          scalar:   a 32-byte scalar with which to multiply the point
-int cosmos_secp256k1_ext_scalar_mul(const secp256k1_context* ctx, unsigned char *point, const unsigned char *scalar) {
+int cosmos_secp256k1_ext_scalar_mul(const cosmos_secp256k1_context* ctx, unsigned char *point, const unsigned char *scalar) {
 	int ret = 0;
 	int overflow = 0;
 	secp256k1_fe feX, feY;

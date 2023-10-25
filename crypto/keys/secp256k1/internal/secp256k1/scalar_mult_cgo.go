@@ -17,7 +17,7 @@ import (
 
 #include "libsecp256k1/include/cosmos_secp256k1.h"
 
-extern int cosmos_secp256k1_ext_scalar_mul(const secp256k1_context* ctx, const unsigned char *point, const unsigned char *scalar);
+extern int cosmos_secp256k1_ext_scalar_mul(const cosmos_secp256k1_context* ctx, const unsigned char *point, const unsigned char *scalar);
 
 */
 import "C"

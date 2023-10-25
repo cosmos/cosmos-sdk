@@ -11,6 +11,7 @@ import (
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
+	"cosmossdk.io/x/distribution"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
@@ -29,7 +30,6 @@ import (
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/cosmos/cosmos-sdk/x/distribution"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
@@ -422,7 +422,7 @@ func TestGRPCValidatorDelegations(t *testing.T) {
 		ValidatorAddr: validator.OperatorAddress,
 	}
 
-	testdata.DeterministicIterations(f.ctx, t, req, f.queryClient.ValidatorDelegations, 14475, false)
+	testdata.DeterministicIterations(f.ctx, t, req, f.queryClient.ValidatorDelegations, 14637, false)
 }
 
 func TestGRPCValidatorUnbondingDelegations(t *testing.T) {
@@ -502,7 +502,7 @@ func TestGRPCDelegation(t *testing.T) {
 		DelegatorAddr: delegator1,
 	}
 
-	testdata.DeterministicIterations(f.ctx, t, req, f.queryClient.Delegation, 4635, false)
+	testdata.DeterministicIterations(f.ctx, t, req, f.queryClient.Delegation, 4689, false)
 }
 
 func TestGRPCUnbondingDelegation(t *testing.T) {
@@ -577,7 +577,7 @@ func TestGRPCDelegatorDelegations(t *testing.T) {
 		DelegatorAddr: delegator1,
 	}
 
-	testdata.DeterministicIterations(f.ctx, t, req, f.queryClient.DelegatorDelegations, 4238, false)
+	testdata.DeterministicIterations(f.ctx, t, req, f.queryClient.DelegatorDelegations, 4292, false)
 }
 
 func TestGRPCDelegatorValidator(t *testing.T) {
@@ -742,7 +742,7 @@ func TestGRPCPool(t *testing.T) {
 
 	f = initDeterministicFixture(t) // reset
 	getStaticValidator(t, f)
-	testdata.DeterministicIterations(f.ctx, t, &stakingtypes.QueryPoolRequest{}, f.queryClient.Pool, 6242, false)
+	testdata.DeterministicIterations(f.ctx, t, &stakingtypes.QueryPoolRequest{}, f.queryClient.Pool, 6296, false)
 }
 
 func TestGRPCRedelegations(t *testing.T) {
@@ -815,13 +815,15 @@ func TestGRPCParams(t *testing.T) {
 	f := initDeterministicFixture(t)
 
 	rapid.Check(t, func(rt *rapid.T) {
+		bondDenom := rapid.StringMatching(sdk.DefaultCoinDenomRegex()).Draw(rt, "bond-denom")
 		params := stakingtypes.Params{
-			BondDenom:         rapid.StringMatching(sdk.DefaultCoinDenomRegex()).Draw(rt, "bond-denom"),
+			BondDenom:         bondDenom,
 			UnbondingTime:     durationGenerator().Draw(rt, "duration"),
 			MaxValidators:     rapid.Uint32Min(1).Draw(rt, "max-validators"),
 			MaxEntries:        rapid.Uint32Min(1).Draw(rt, "max-entries"),
 			HistoricalEntries: rapid.Uint32Min(1).Draw(rt, "historical-entries"),
 			MinCommissionRate: math.LegacyNewDecWithPrec(rapid.Int64Range(0, 100).Draw(rt, "commission"), 2),
+			KeyRotationFee:    sdk.NewInt64Coin(bondDenom, rapid.Int64Range(10000, 100000).Draw(rt, "amount")),
 		}
 
 		err := f.stakingKeeper.Params.Set(f.ctx, params)
@@ -837,10 +839,11 @@ func TestGRPCParams(t *testing.T) {
 		MaxEntries:        5,
 		HistoricalEntries: 5,
 		MinCommissionRate: math.LegacyNewDecWithPrec(5, 2),
+		KeyRotationFee:    sdk.NewInt64Coin("denom", 10000),
 	}
 
 	err := f.stakingKeeper.Params.Set(f.ctx, params)
 	assert.NilError(t, err)
 
-	testdata.DeterministicIterations(f.ctx, t, &stakingtypes.QueryParamsRequest{}, f.queryClient.Params, 1114, false)
+	testdata.DeterministicIterations(f.ctx, t, &stakingtypes.QueryParamsRequest{}, f.queryClient.Params, 1162, false)
 }

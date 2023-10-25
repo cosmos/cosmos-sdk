@@ -63,7 +63,7 @@ static void benchmark_schnorr_verify(void* arg) {
 int main(void) {
     benchmark_schnorr_verify_t data;
 
-    data.ctx = secp256k1_context_create(SECP256K1_CONTEXT_SIGN | SECP256K1_CONTEXT_VERIFY);
+    data.ctx = cosmos_secp256k1_context_create(SECP256K1_CONTEXT_SIGN | SECP256K1_CONTEXT_VERIFY);
 
     data.numsigs = 1;
     run_benchmark("schnorr_verify", benchmark_schnorr_verify, benchmark_schnorr_init, NULL, &data, 10, 20000);

@@ -85,7 +85,7 @@ int main(void) {
     cosmos_secp256k1_ecdsa_signature sig;
     benchmark_verify_t data;
 
-    data.ctx = secp256k1_context_create(SECP256K1_CONTEXT_SIGN | SECP256K1_CONTEXT_VERIFY);
+    data.ctx = cosmos_secp256k1_context_create(SECP256K1_CONTEXT_SIGN | SECP256K1_CONTEXT_VERIFY);
 
     for (i = 0; i < 32; i++) {
         data.msg[i] = 1 + i;

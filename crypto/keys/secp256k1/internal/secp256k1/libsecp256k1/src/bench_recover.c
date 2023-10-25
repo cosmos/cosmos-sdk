@@ -51,7 +51,7 @@ void bench_recover_setup(void* arg) {
 int main(void) {
     bench_recover_t data;
 
-    data.ctx = secp256k1_context_create(SECP256K1_CONTEXT_VERIFY);
+    data.ctx = cosmos_secp256k1_context_create(SECP256K1_CONTEXT_VERIFY);
 
     run_benchmark("ecdsa_recover", bench_recover, bench_recover_setup, NULL, &data, 10, 20000);
 

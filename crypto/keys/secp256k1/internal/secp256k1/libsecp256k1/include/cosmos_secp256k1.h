@@ -150,7 +150,7 @@ typedef int (*cosmos_secp256k1_nonce_function)(
 #define SECP256K1_FLAGS_BIT_CONTEXT_SIGN (1 << 9)
 #define SECP256K1_FLAGS_BIT_COMPRESSION (1 << 8)
 
-/** Flags to pass to secp256k1_context_create. */
+/** Flags to pass to cosmos_secp256k1_context_create. */
 #define SECP256K1_CONTEXT_VERIFY (SECP256K1_FLAGS_TYPE_CONTEXT | SECP256K1_FLAGS_BIT_CONTEXT_VERIFY)
 #define SECP256K1_CONTEXT_SIGN (SECP256K1_FLAGS_TYPE_CONTEXT | SECP256K1_FLAGS_BIT_CONTEXT_SIGN)
 #define SECP256K1_CONTEXT_NONE (SECP256K1_FLAGS_TYPE_CONTEXT)
@@ -164,7 +164,7 @@ typedef int (*cosmos_secp256k1_nonce_function)(
  *  Returns: a newly created context object.
  *  In:      flags: which parts of the context to initialize.
  */
-SECP256K1_API cosmos_secp256k1_context* secp256k1_context_create(
+SECP256K1_API cosmos_secp256k1_context* cosmos_secp256k1_context_create(
     unsigned int flags
 ) SECP256K1_WARN_UNUSED_RESULT;
 

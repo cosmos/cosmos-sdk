@@ -9,7 +9,7 @@
 
 void test_ecdh_api(void) {
     /* Setup context that just counts errors */
-    secp256k1_context *tctx = secp256k1_context_create(SECP256K1_CONTEXT_SIGN);
+    secp256k1_context *tctx = cosmos_secp256k1_context_create(SECP256K1_CONTEXT_SIGN);
     secp256k1_pubkey point;
     unsigned char res[32];
     unsigned char s_one[32] = { 0 };

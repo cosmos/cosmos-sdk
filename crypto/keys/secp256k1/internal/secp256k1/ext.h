@@ -4,7 +4,7 @@
 
 // secp256k1_context_create_sign_verify creates a context for signing and signature verification.
 static cosmos_secp256k1_context* secp256k1_context_create_sign_verify() {
-	return secp256k1_context_create(SECP256K1_CONTEXT_SIGN | SECP256K1_CONTEXT_VERIFY);
+	return cosmos_secp256k1_context_create(SECP256K1_CONTEXT_SIGN | SECP256K1_CONTEXT_VERIFY);
 }
 
 // secp256k1_ext_ecdsa_recover recovers the public key of an encoded compact signature.

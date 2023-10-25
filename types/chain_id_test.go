@@ -107,13 +107,14 @@ func TestParseChainIDFromGenesis(t *testing.T) {
 }
 
 func BenchmarkParseChainID(b *testing.B) {
+	expChainID := "cronosmainnet_25-1"
 	b.ReportAllocs()
 	b.Run("new", func(b *testing.B) {
 		b.ResetTimer()
 		for i := 0; i < b.N; i++ {
 			chainId, err := ParseChainIDFromGenesis(strings.NewReader(BenchmarkGenesis))
 			require.NoError(b, err)
-			require.Equal(b, "test_777-1", chainId)
+			require.Equal(b, expChainID, chainId)
 		}
 	})
 
@@ -122,7 +123,7 @@ func BenchmarkParseChainID(b *testing.B) {
 		for i := 0; i < b.N; i++ {
 			doc, err := genutiltypes.AppGenesisFromReader(strings.NewReader(BenchmarkGenesis))
 			require.NoError(b, err)
-			require.Equal(b, "test_777-1", doc.ChainID)
+			require.Equal(b, expChainID, doc.ChainID)
 		}
 	})
 }

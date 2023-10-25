@@ -161,3 +161,5 @@ require (
 replace github.com/cosmos/cosmos-sdk => ../../.
 
 replace cosmossdk.io/x/protocolpool => ../protocolpool
+
+replace cosmossdk.io/x/distribution => ../distribution

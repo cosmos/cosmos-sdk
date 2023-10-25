@@ -8,6 +8,11 @@ import (
 
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
+	"cosmossdk.io/x/distribution"
+	"cosmossdk.io/x/distribution/keeper"
+	"cosmossdk.io/x/distribution/migrations/funds"
+	distrtestutil "cosmossdk.io/x/distribution/testutil"
+	disttypes "cosmossdk.io/x/distribution/types"
 	pooltypes "cosmossdk.io/x/protocolpool/types"
 
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
@@ -21,11 +26,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/cosmos/cosmos-sdk/x/distribution"
-	"github.com/cosmos/cosmos-sdk/x/distribution/keeper"
-	"github.com/cosmos/cosmos-sdk/x/distribution/migrations/funds"
-	distrtestutil "github.com/cosmos/cosmos-sdk/x/distribution/testutil"
-	disttypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
 func TestFundsMigration(t *testing.T) {

@@ -1,4 +1,4 @@
-package branchkv
+package branch
 
 import (
 	"io"
@@ -8,7 +8,7 @@ import (
 	"golang.org/x/exp/maps"
 
 	"cosmossdk.io/store/v2"
-	"cosmossdk.io/store/v2/tracekv"
+	"cosmossdk.io/store/v2/kv/trace"
 )
 
 var _ store.BranchedKVStore = (*Store)(nil)
@@ -104,7 +104,7 @@ func (s *Store) Branch() store.BranchedKVStore {
 }
 
 func (s *Store) BranchWithTrace(w io.Writer, tc store.TraceContext) store.BranchedKVStore {
-	return NewWithParent(tracekv.New(s, w, tc))
+	return NewWithParent(trace.New(s, w, tc))
 }
 
 func (s *Store) Has(key []byte) bool {

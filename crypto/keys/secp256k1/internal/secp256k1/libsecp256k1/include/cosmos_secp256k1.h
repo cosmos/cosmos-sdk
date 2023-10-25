@@ -52,7 +52,7 @@ typedef struct secp256k1_context_struct cosmos_secp256k1_context;
  */
 typedef struct {
     unsigned char data[64];
-} secp256k1_pubkey;
+} cosmos_secp256k1_pubkey;
 
 /** Opaque data structured that holds a parsed ECDSA signature.
  *
@@ -249,10 +249,10 @@ SECP256K1_API void cosmos_secp256k1_context_set_error_callback(
  *  byte 0x06 or 0x07) format public keys.
  */
 SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_pubkey_parse(
-    const cosmos_secp256k1_context* ctx,
-    secp256k1_pubkey* pubkey,
-    const unsigned char *input,
-    size_t inputlen
+        const cosmos_secp256k1_context* ctx,
+        cosmos_secp256k1_pubkey* pubkey,
+        const unsigned char *input,
+        size_t inputlen
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3);
 
 /** Serialize a pubkey object into a serialized byte sequence.
@@ -265,7 +265,7 @@ SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_pubkey_parse(
  *  In/Out: outputlen:  a pointer to an integer which is initially set to the
  *                      size of output, and is overwritten with the written
  *                      size.
- *  In:     pubkey:     a pointer to a secp256k1_pubkey containing an
+ *  In:     pubkey:     a pointer to a cosmos_secp256k1_pubkey containing an
  *                      initialized public key.
  *          flags:      SECP256K1_EC_COMPRESSED if serialization should be in
  *                      compressed format, otherwise SECP256K1_EC_UNCOMPRESSED.
@@ -274,7 +274,7 @@ SECP256K1_API int cosmos_secp256k1_ec_pubkey_serialize(
     const cosmos_secp256k1_context* ctx,
     unsigned char *output,
     size_t *outputlen,
-    const secp256k1_pubkey* pubkey,
+    const cosmos_secp256k1_pubkey* pubkey,
     unsigned int flags
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3) SECP256K1_ARG_NONNULL(4);
 
@@ -376,7 +376,7 @@ SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ecdsa_verify(
     const cosmos_secp256k1_context* ctx,
     const cosmos_secp256k1_ecdsa_signature *sig,
     const unsigned char *msg32,
-    const secp256k1_pubkey *pubkey
+    const cosmos_secp256k1_pubkey *pubkey
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3) SECP256K1_ARG_NONNULL(4);
 
 /** Convert a signature to a normalized lower-S form.
@@ -480,9 +480,9 @@ SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_seckey_verify(
  *  In:     seckey:     pointer to a 32-byte private key (cannot be NULL)
  */
 SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_pubkey_create(
-    const cosmos_secp256k1_context* ctx,
-    secp256k1_pubkey *pubkey,
-    const unsigned char *seckey
+        const cosmos_secp256k1_context* ctx,
+        cosmos_secp256k1_pubkey *pubkey,
+        const unsigned char *seckey
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3);
 
 /** Tweak a private key by adding tweak to it.
@@ -511,9 +511,9 @@ SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_privkey_tweak_add(
  * In:      tweak:  pointer to a 32-byte tweak.
  */
 SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_pubkey_tweak_add(
-    const cosmos_secp256k1_context* ctx,
-    secp256k1_pubkey *pubkey,
-    const unsigned char *tweak
+        const cosmos_secp256k1_context* ctx,
+        cosmos_secp256k1_pubkey *pubkey,
+        const unsigned char *tweak
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3);
 
 /** Tweak a private key by multiplying it by a tweak.
@@ -537,10 +537,10 @@ SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int cosmos_secp256k1_ec_privkey_tweak
  * In/Out:  pubkey: pointer to a public key obkect.
  * In:      tweak:  pointer to a 32-byte tweak.
  */
-SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_pubkey_tweak_mul(
-    const cosmos_secp256k1_context* ctx,
-    secp256k1_pubkey *pubkey,
-    const unsigned char *tweak
+SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int cosmos_secp256k1_ec_pubkey_tweak_mul(
+        const cosmos_secp256k1_context* ctx,
+        cosmos_secp256k1_pubkey *pubkey,
+        const unsigned char *tweak
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3);
 
 /** Updates the context randomization.
@@ -564,10 +564,10 @@ SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_context_randomize(
  *          n:          the number of public keys to add together (must be at least 1)
  */
 SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_pubkey_combine(
-    const cosmos_secp256k1_context* ctx,
-    secp256k1_pubkey *out,
-    const secp256k1_pubkey * const * ins,
-    size_t n
+        const cosmos_secp256k1_context* ctx,
+        cosmos_secp256k1_pubkey *out,
+        const cosmos_secp256k1_pubkey * const * ins,
+        size_t n
 ) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3);
 
 # ifdef __cplusplus

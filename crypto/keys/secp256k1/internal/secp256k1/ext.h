@@ -22,7 +22,7 @@ static int secp256k1_ext_ecdsa_recover(
 	const unsigned char *msgdata
 ) {
 	secp256k1_ecdsa_recoverable_signature sig;
-	secp256k1_pubkey pubkey;
+	cosmos_secp256k1_pubkey pubkey;
 
 	if (!secp256k1_ecdsa_recoverable_signature_parse_compact(ctx, &sig, sigdata, (int)sigdata[64])) {
 		return 0;
@@ -51,7 +51,7 @@ static int secp256k1_ext_ecdsa_verify(
 	size_t pubkeylen
 ) {
 	cosmos_secp256k1_ecdsa_signature sig;
-	secp256k1_pubkey pubkey;
+    cosmos_secp256k1_pubkey pubkey;
 
 	if (!cosmos_secp256k1_ecdsa_signature_parse_compact(ctx, &sig, sigdata)) {
 		return 0;
@@ -80,7 +80,7 @@ static int secp256k1_ext_reencode_pubkey(
 	const unsigned char *pubkeydata,
 	size_t pubkeylen
 ) {
-	secp256k1_pubkey pubkey;
+    cosmos_secp256k1_pubkey pubkey;
 
 	if (!secp256k1_ec_pubkey_parse(ctx, &pubkey, pubkeydata, pubkeylen)) {
 		return 0;

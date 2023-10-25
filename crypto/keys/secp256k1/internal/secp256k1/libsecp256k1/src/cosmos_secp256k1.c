@@ -112,10 +112,10 @@ void cosmos_secp256k1_context_set_error_callback(cosmos_secp256k1_context* ctx, 
     ctx->error_callback.data = data;
 }
 
-static int secp256k1_pubkey_load(const cosmos_secp256k1_context* ctx, secp256k1_ge* ge, const secp256k1_pubkey* pubkey) {
+static int secp256k1_pubkey_load(const cosmos_secp256k1_context* ctx, secp256k1_ge* ge, const cosmos_secp256k1_pubkey* pubkey) {
     if (sizeof(secp256k1_ge_storage) == 64) {
         /* When the secp256k1_ge_storage type is exactly 64 byte, use its
-         * representation inside secp256k1_pubkey, as conversion is very fast.
+         * representation inside cosmos_secp256k1_pubkey, as conversion is very fast.
          * Note that secp256k1_pubkey_save must use the same representation. */
         secp256k1_ge_storage s;
         memcpy(&s, &pubkey->data[0], 64);
@@ -131,7 +131,7 @@ static int secp256k1_pubkey_load(const cosmos_secp256k1_context* ctx, secp256k1_
     return 1;
 }
 
-static void secp256k1_pubkey_save(secp256k1_pubkey* pubkey, secp256k1_ge* ge) {
+static void secp256k1_pubkey_save(cosmos_secp256k1_pubkey* pubkey, secp256k1_ge* ge) {
     if (sizeof(secp256k1_ge_storage) == 64) {
         secp256k1_ge_storage s;
         secp256k1_ge_to_storage(&s, ge);
@@ -145,7 +145,7 @@ static void secp256k1_pubkey_save(secp256k1_pubkey* pubkey, secp256k1_ge* ge) {
     }
 }
 
-int secp256k1_ec_pubkey_parse(const cosmos_secp256k1_context* ctx, secp256k1_pubkey* pubkey, const unsigned char *input, size_t inputlen) {
+int secp256k1_ec_pubkey_parse(const cosmos_secp256k1_context* ctx, cosmos_secp256k1_pubkey* pubkey, const unsigned char *input, size_t inputlen) {
     secp256k1_ge Q;
 
     VERIFY_CHECK(ctx != NULL);
@@ -160,7 +160,7 @@ int secp256k1_ec_pubkey_parse(const cosmos_secp256k1_context* ctx, secp256k1_pub
     return 1;
 }
 
-int cosmos_secp256k1_ec_pubkey_serialize(const cosmos_secp256k1_context* ctx, unsigned char *output, size_t *outputlen, const secp256k1_pubkey* pubkey, unsigned int flags) {
+int cosmos_secp256k1_ec_pubkey_serialize(const cosmos_secp256k1_context* ctx, unsigned char *output, size_t *outputlen, const cosmos_secp256k1_pubkey* pubkey, unsigned int flags) {
     secp256k1_ge Q;
     size_t len;
     int ret = 0;
@@ -288,7 +288,7 @@ int secp256k1_ecdsa_signature_normalize(const cosmos_secp256k1_context* ctx, cos
     return ret;
 }
 
-int secp256k1_ecdsa_verify(const cosmos_secp256k1_context* ctx, const cosmos_secp256k1_ecdsa_signature *sig, const unsigned char *msg32, const secp256k1_pubkey *pubkey) {
+int secp256k1_ecdsa_verify(const cosmos_secp256k1_context* ctx, const cosmos_secp256k1_ecdsa_signature *sig, const unsigned char *msg32, const cosmos_secp256k1_pubkey *pubkey) {
     secp256k1_ge q;
     secp256k1_scalar r, s;
     secp256k1_scalar m;
@@ -399,7 +399,7 @@ int secp256k1_ec_seckey_verify(const cosmos_secp256k1_context* ctx, const unsign
     return ret;
 }
 
-int secp256k1_ec_pubkey_create(const cosmos_secp256k1_context* ctx, secp256k1_pubkey *pubkey, const unsigned char *seckey) {
+int secp256k1_ec_pubkey_create(const cosmos_secp256k1_context* ctx, cosmos_secp256k1_pubkey *pubkey, const unsigned char *seckey) {
     secp256k1_gej pj;
     secp256k1_ge p;
     secp256k1_scalar sec;
@@ -445,7 +445,7 @@ int secp256k1_ec_privkey_tweak_add(const cosmos_secp256k1_context* ctx, unsigned
     return ret;
 }
 
-int secp256k1_ec_pubkey_tweak_add(const cosmos_secp256k1_context* ctx, secp256k1_pubkey *pubkey, const unsigned char *tweak) {
+int secp256k1_ec_pubkey_tweak_add(const cosmos_secp256k1_context* ctx, cosmos_secp256k1_pubkey *pubkey, const unsigned char *tweak) {
     secp256k1_ge p;
     secp256k1_scalar term;
     int ret = 0;
@@ -491,7 +491,7 @@ int cosmos_secp256k1_ec_privkey_tweak_mul(const cosmos_secp256k1_context* ctx, u
     return ret;
 }
 
-int secp256k1_ec_pubkey_tweak_mul(const cosmos_secp256k1_context* ctx, secp256k1_pubkey *pubkey, const unsigned char *tweak) {
+int cosmos_secp256k1_ec_pubkey_tweak_mul(const cosmos_secp256k1_context* ctx, cosmos_secp256k1_pubkey *pubkey, const unsigned char *tweak) {
     secp256k1_ge p;
     secp256k1_scalar factor;
     int ret = 0;
@@ -522,7 +522,7 @@ int secp256k1_context_randomize(cosmos_secp256k1_context* ctx, const unsigned ch
     return 1;
 }
 
-int secp256k1_ec_pubkey_combine(const cosmos_secp256k1_context* ctx, secp256k1_pubkey *pubnonce, const secp256k1_pubkey * const *pubnonces, size_t n) {
+int secp256k1_ec_pubkey_combine(const cosmos_secp256k1_context* ctx, cosmos_secp256k1_pubkey *pubnonce, const cosmos_secp256k1_pubkey * const *pubnonces, size_t n) {
     size_t i;
     secp256k1_gej Qj;
     secp256k1_ge Q;

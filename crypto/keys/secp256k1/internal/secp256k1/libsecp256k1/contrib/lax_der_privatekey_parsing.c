@@ -54,7 +54,7 @@ int ec_privkey_import_der(const cosmos_secp256k1_context* ctx, unsigned char *ou
 }
 
 int ec_privkey_export_der(const cosmos_secp256k1_context *ctx, unsigned char *privkey, size_t *privkeylen, const unsigned char *key32, int compressed) {
-    secp256k1_pubkey pubkey;
+    cosmos_secp256k1_pubkey pubkey;
     size_t pubkeylen = 0;
     if (!secp256k1_ec_pubkey_create(ctx, &pubkey, key32)) {
         *privkeylen = 0;

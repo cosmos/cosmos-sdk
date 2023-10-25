@@ -98,7 +98,7 @@ SECP256K1_API int secp256k1_ecdsa_sign_recoverable(
  */
 SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ecdsa_recover(
     const cosmos_secp256k1_context* ctx,
-    secp256k1_pubkey *pubkey,
+    cosmos_secp256k1_pubkey *pubkey,
     const secp256k1_ecdsa_recoverable_signature *sig,
     const unsigned char *msg32
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3) SECP256K1_ARG_NONNULL(4);

@@ -10,7 +10,6 @@ import (
 
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/v2"
-	"cosmossdk.io/store/v2/commitment"
 	"cosmossdk.io/store/v2/kv/branch"
 	"cosmossdk.io/store/v2/kv/trace"
 )
@@ -34,7 +33,7 @@ type Store struct {
 	stateStore store.VersionedDatabase
 
 	// stateCommitment reflects the state commitment (SC) backend
-	stateCommitment *commitment.Database
+	stateCommitment store.Committer
 
 	// rootKVStore reflects the root BranchedKVStore that is used to accumulate writes
 	// and branch off of.
@@ -60,7 +59,7 @@ func New(
 	logger log.Logger,
 	initVersion uint64,
 	ss store.VersionedDatabase,
-	sc *commitment.Database,
+	sc store.Committer,
 ) (store.RootStore, error) {
 	rootKVStore, err := branch.New(defaultStoreKey, ss)
 	if err != nil {
@@ -91,13 +90,13 @@ func (s *Store) Close() (err error) {
 }
 
 // MountSCStore performs a no-op as a SC backend must be provided at initialization.
-func (s *Store) MountSCStore(_ string, _ store.Tree) error {
+func (s *Store) MountSCStore(_ string, _ store.Committer) error {
 	return errors.New("cannot mount SC store; SC must be provided on initialization")
 }
 
 // GetSCStore returns the store's state commitment (SC) backend. Note, the store
 // key is ignored as there exists only a single SC tree.
-func (s *Store) GetSCStore(_ string) store.Tree {
+func (s *Store) GetSCStore(_ string) store.Committer {
 	return s.stateCommitment
 }
 

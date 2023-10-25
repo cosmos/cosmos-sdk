@@ -22,11 +22,11 @@ type RootStore interface {
 	// GetSCStore should return the SC backend for the given store key. A RootStore
 	// implementation may choose to ignore the store key in cases where only a single
 	// SC backend is used.
-	GetSCStore(storeKey string) Tree
+	GetSCStore(storeKey string) Committer
 	// MountSCStore should mount the given SC backend for the given store key. For
 	// implementations that utilize a single SC backend, this method may be optional
 	// or a no-op.
-	MountSCStore(storeKey string, sc Tree) error
+	MountSCStore(storeKey string, sc Committer) error
 	// GetKVStore returns the KVStore for the given store key. If an implementation
 	// chooses to have a single SS backend, the store key may be ignored.
 	GetKVStore(storeKey string) KVStore

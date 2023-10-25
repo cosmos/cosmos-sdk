@@ -10,7 +10,6 @@ import (
 
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/v2"
-	"cosmossdk.io/store/v2/commitment"
 	"cosmossdk.io/store/v2/commitment/iavl"
 	"cosmossdk.io/store/v2/storage/sqlite"
 )
@@ -31,8 +30,7 @@ func (s *RootStoreTestSuite) SetupTest() {
 	ss, err := sqlite.New(s.T().TempDir())
 	s.Require().NoError(err)
 
-	tree := iavl.NewIavlTree(dbm.NewMemDB(), noopLog, iavl.DefaultConfig())
-	sc := commitment.NewDatabase(tree)
+	sc := iavl.NewIavlTree(dbm.NewMemDB(), noopLog, iavl.DefaultConfig())
 
 	rs, err := New(noopLog, 1, ss, sc)
 	s.Require().NoError(err)

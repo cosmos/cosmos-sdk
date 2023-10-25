@@ -83,7 +83,7 @@ typedef struct {
  * Except for test cases, this function should compute some cryptographic hash of
  * the message, the algorithm, the key and the attempt.
  */
-typedef int (*secp256k1_nonce_function)(
+typedef int (*cosmos_secp256k1_nonce_function)(
     unsigned char *nonce32,
     const unsigned char *msg32,
     const unsigned char *key32,
@@ -431,10 +431,10 @@ SECP256K1_API int secp256k1_ecdsa_signature_normalize(
  * If a data pointer is passed, it is assumed to be a pointer to 32 bytes of
  * extra entropy.
  */
-SECP256K1_API extern const secp256k1_nonce_function secp256k1_nonce_function_rfc6979;
+SECP256K1_API extern const cosmos_secp256k1_nonce_function cosmos_secp256k1_nonce_function_rfc6979;
 
-/** A default safe nonce generation function (currently equal to secp256k1_nonce_function_rfc6979). */
-SECP256K1_API extern const secp256k1_nonce_function secp256k1_nonce_function_default;
+/** A default safe nonce generation function (currently equal to cosmos_secp256k1_nonce_function_rfc6979). */
+SECP256K1_API extern const cosmos_secp256k1_nonce_function cosmos_secp256k1_nonce_function_default;
 
 /** Create an ECDSA signature.
  *
@@ -444,19 +444,19 @@ SECP256K1_API extern const secp256k1_nonce_function secp256k1_nonce_function_def
  *  Out:     sig:    pointer to an array where the signature will be placed (cannot be NULL)
  *  In:      msg32:  the 32-byte message hash being signed (cannot be NULL)
  *           seckey: pointer to a 32-byte secret key (cannot be NULL)
- *           noncefp:pointer to a nonce generation function. If NULL, secp256k1_nonce_function_default is used
+ *           noncefp:pointer to a nonce generation function. If NULL, cosmos_secp256k1_nonce_function_default is used
  *           ndata:  pointer to arbitrary data used by the nonce generation function (can be NULL)
  *
  * The created signature is always in lower-S form. See
  * secp256k1_ecdsa_signature_normalize for more details.
  */
 SECP256K1_API int secp256k1_ecdsa_sign(
-    const secp256k1_context* ctx,
-    secp256k1_ecdsa_signature *sig,
-    const unsigned char *msg32,
-    const unsigned char *seckey,
-    secp256k1_nonce_function noncefp,
-    const void *ndata
+        const secp256k1_context* ctx,
+        secp256k1_ecdsa_signature *sig,
+        const unsigned char *msg32,
+        const unsigned char *seckey,
+        cosmos_secp256k1_nonce_function noncefp,
+        const void *ndata
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3) SECP256K1_ARG_NONNULL(4);
 
 /** Verify an ECDSA secret key.

@@ -3386,7 +3386,7 @@ static int nonce_function_test_fail(unsigned char *nonce32, const unsigned char 
    if (counter == 0) {
        return 0;
    }
-   return nonce_function_rfc6979(nonce32, msg32, key32, algo16, data, counter - 1);
+   return cosmos_nonce_function_rfc6979(nonce32, msg32, key32, algo16, data, counter - 1);
 }
 
 static int nonce_function_test_retry(unsigned char *nonce32, const unsigned char *msg32, const unsigned char *key32, const unsigned char *algo16, void *data, unsigned int counter) {
@@ -3416,7 +3416,7 @@ static int nonce_function_test_retry(unsigned char *nonce32, const unsigned char
    if (counter > 5) {
        return 0;
    }
-   return nonce_function_rfc6979(nonce32, msg32, key32, algo16, data, counter - 5);
+   return cosmos_nonce_function_rfc6979(nonce32, msg32, key32, algo16, data, counter - 5);
 }
 
 int is_empty_signature(const secp256k1_ecdsa_signature *sig) {
@@ -4241,7 +4241,7 @@ void test_ecdsa_edge_cases(void) {
         /* The retry loop successfully makes its way to the first good value. */
         CHECK(secp256k1_ecdsa_sign(ctx, &sig, msg, key, nonce_function_test_retry, extra) == 1);
         CHECK(!is_empty_signature(&sig));
-        CHECK(secp256k1_ecdsa_sign(ctx, &sig2, msg, key, nonce_function_rfc6979, extra) == 1);
+        CHECK(secp256k1_ecdsa_sign(ctx, &sig2, msg, key, cosmos_nonce_function_rfc6979, extra) == 1);
         CHECK(!is_empty_signature(&sig2));
         CHECK(memcmp(&sig, &sig2, sizeof(sig)) == 0);
         /* The default nonce function is deterministic. */
@@ -4286,13 +4286,13 @@ void test_ecdsa_edge_cases(void) {
         VG_UNDEF(nonce2,32);
         VG_UNDEF(nonce3,32);
         VG_UNDEF(nonce4,32);
-        CHECK(nonce_function_rfc6979(nonce, zeros, zeros, NULL, NULL, 0) == 1);
+        CHECK(cosmos_nonce_function_rfc6979(nonce, zeros, zeros, NULL, NULL, 0) == 1);
         VG_CHECK(nonce,32);
-        CHECK(nonce_function_rfc6979(nonce2, zeros, zeros, zeros, NULL, 0) == 1);
+        CHECK(cosmos_nonce_function_rfc6979(nonce2, zeros, zeros, zeros, NULL, 0) == 1);
         VG_CHECK(nonce2,32);
-        CHECK(nonce_function_rfc6979(nonce3, zeros, zeros, NULL, (void *)zeros, 0) == 1);
+        CHECK(cosmos_nonce_function_rfc6979(nonce3, zeros, zeros, NULL, (void *)zeros, 0) == 1);
         VG_CHECK(nonce3,32);
-        CHECK(nonce_function_rfc6979(nonce4, zeros, zeros, zeros, (void *)zeros, 0) == 1);
+        CHECK(cosmos_nonce_function_rfc6979(nonce4, zeros, zeros, zeros, (void *)zeros, 0) == 1);
         VG_CHECK(nonce4,32);
         CHECK(memcmp(nonce, nonce2, 32) != 0);
         CHECK(memcmp(nonce, nonce3, 32) != 0);

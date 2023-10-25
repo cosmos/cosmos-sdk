@@ -305,7 +305,7 @@ int secp256k1_ecdsa_verify(const secp256k1_context* ctx, const secp256k1_ecdsa_s
             secp256k1_ecdsa_sig_verify(&ctx->ecmult_ctx, &r, &s, &q, &m));
 }
 
-static int nonce_function_rfc6979(unsigned char *nonce32, const unsigned char *msg32, const unsigned char *key32, const unsigned char *algo16, void *data, unsigned int counter) {
+static int cosmos_nonce_function_rfc6979(unsigned char *nonce32, const unsigned char *msg32, const unsigned char *key32, const unsigned char *algo16, void *data, unsigned int counter) {
    unsigned char keydata[112];
    int keylen = 64;
    secp256k1_rfc6979_hmac_sha256_t rng;
@@ -337,10 +337,10 @@ static int nonce_function_rfc6979(unsigned char *nonce32, const unsigned char *m
    return 1;
 }
 
-const secp256k1_nonce_function secp256k1_nonce_function_rfc6979 = nonce_function_rfc6979;
-const secp256k1_nonce_function secp256k1_nonce_function_default = nonce_function_rfc6979;
+const cosmos_secp256k1_nonce_function cosmos_secp256k1_nonce_function_rfc6979 = cosmos_nonce_function_rfc6979;
+const cosmos_secp256k1_nonce_function cosmos_secp256k1_nonce_function_default = cosmos_nonce_function_rfc6979;
 
-int secp256k1_ecdsa_sign(const secp256k1_context* ctx, secp256k1_ecdsa_signature *signature, const unsigned char *msg32, const unsigned char *seckey, secp256k1_nonce_function noncefp, const void* noncedata) {
+int secp256k1_ecdsa_sign(const secp256k1_context* ctx, secp256k1_ecdsa_signature *signature, const unsigned char *msg32, const unsigned char *seckey, cosmos_secp256k1_nonce_function noncefp, const void* noncedata) {
     secp256k1_scalar r, s;
     secp256k1_scalar sec, non, msg;
     int ret = 0;
@@ -351,7 +351,7 @@ int secp256k1_ecdsa_sign(const secp256k1_context* ctx, secp256k1_ecdsa_signature
     ARG_CHECK(signature != NULL);
     ARG_CHECK(seckey != NULL);
     if (noncefp == NULL) {
-        noncefp = secp256k1_nonce_function_default;
+        noncefp = cosmos_secp256k1_nonce_function_default;
     }
 
     secp256k1_scalar_set_b32(&sec, seckey, &overflow);

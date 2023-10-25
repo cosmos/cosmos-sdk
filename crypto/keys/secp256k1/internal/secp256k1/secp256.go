@@ -81,7 +81,7 @@ func Sign(msg, seckey []byte) ([]byte, error) {
 
 	var (
 		msgdata   = (*C.uchar)(unsafe.Pointer(&msg[0]))
-		noncefunc = C.secp256k1_nonce_function_rfc6979
+		noncefunc = C.cosmos_secp256k1_nonce_function_rfc6979
 		sigstruct C.secp256k1_ecdsa_recoverable_signature
 	)
 	if C.secp256k1_ecdsa_sign_recoverable(context, &sigstruct, msgdata, seckeydata, noncefunc, nil) == 0 {

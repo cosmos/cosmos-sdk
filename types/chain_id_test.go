@@ -72,6 +72,11 @@ func TestParseChainIDFromGenesis(t *testing.T) {
 			"",
 		},
 		{
+			"whitespace chain_id",
+			`{"chain_id": "   "}`,
+			"",
+		},
+		{
 			"chain_id too long",
 			`{"chain_id": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"}`,
 			"",

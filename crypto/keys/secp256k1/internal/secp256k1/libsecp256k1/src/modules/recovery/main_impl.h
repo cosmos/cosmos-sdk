@@ -57,7 +57,7 @@ int secp256k1_ecdsa_recoverable_signature_parse_compact(const secp256k1_context*
     return ret;
 }
 
-int secp256k1_ecdsa_recoverable_signature_serialize_compact(const secp256k1_context* ctx, unsigned char *output64, int *recid, const secp256k1_ecdsa_recoverable_signature* sig) {
+int cosmos_secp256k1_ecdsa_recoverable_signature_serialize_compact(const secp256k1_context* ctx, unsigned char *output64, int *recid, const secp256k1_ecdsa_recoverable_signature* sig) {
     secp256k1_scalar r, s;
 
     (void)ctx;

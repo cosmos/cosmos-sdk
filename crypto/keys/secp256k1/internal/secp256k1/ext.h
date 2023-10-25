@@ -31,7 +31,7 @@ static int secp256k1_ext_ecdsa_recover(
 		return 0;
 	}
 	size_t outputlen = 65;
-	return secp256k1_ec_pubkey_serialize(ctx, pubkey_out, &outputlen, &pubkey, SECP256K1_EC_UNCOMPRESSED);
+	return cosmos_secp256k1_ec_pubkey_serialize(ctx, pubkey_out, &outputlen, &pubkey, SECP256K1_EC_UNCOMPRESSED);
 }
 
 // secp256k1_ext_ecdsa_verify verifies an encoded compact signature.
@@ -86,7 +86,7 @@ static int secp256k1_ext_reencode_pubkey(
 		return 0;
 	}
 	unsigned int flag = (outlen == 33) ? SECP256K1_EC_COMPRESSED : SECP256K1_EC_UNCOMPRESSED;
-	return secp256k1_ec_pubkey_serialize(ctx, out, &outlen, &pubkey, flag);
+	return cosmos_secp256k1_ec_pubkey_serialize(ctx, out, &outlen, &pubkey, flag);
 }
 
 // secp256k1_ext_scalar_mul multiplies a point by a scalar in constant time.

@@ -48,7 +48,7 @@ typedef struct secp256k1_context_struct secp256k1_context;
  *  guaranteed to be portable between different platforms or versions. It is
  *  however guaranteed to be 64 bytes in size, and can be safely copied/moved.
  *  If you need to convert to a format suitable for storage, transmission, or
- *  comparison, use secp256k1_ec_pubkey_serialize and secp256k1_ec_pubkey_parse.
+ *  comparison, use cosmos_secp256k1_ec_pubkey_serialize and secp256k1_ec_pubkey_parse.
  */
 typedef struct {
     unsigned char data[64];
@@ -155,7 +155,7 @@ typedef int (*secp256k1_nonce_function)(
 #define SECP256K1_CONTEXT_SIGN (SECP256K1_FLAGS_TYPE_CONTEXT | SECP256K1_FLAGS_BIT_CONTEXT_SIGN)
 #define SECP256K1_CONTEXT_NONE (SECP256K1_FLAGS_TYPE_CONTEXT)
 
-/** Flag to pass to secp256k1_ec_pubkey_serialize and secp256k1_ec_privkey_export. */
+/** Flag to pass to cosmos_secp256k1_ec_pubkey_serialize and secp256k1_ec_privkey_export. */
 #define SECP256K1_EC_COMPRESSED (SECP256K1_FLAGS_TYPE_COMPRESSION | SECP256K1_FLAGS_BIT_COMPRESSION)
 #define SECP256K1_EC_UNCOMPRESSED (SECP256K1_FLAGS_TYPE_COMPRESSION)
 
@@ -270,7 +270,7 @@ SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_pubkey_parse(
  *          flags:      SECP256K1_EC_COMPRESSED if serialization should be in
  *                      compressed format, otherwise SECP256K1_EC_UNCOMPRESSED.
  */
-SECP256K1_API int secp256k1_ec_pubkey_serialize(
+SECP256K1_API int cosmos_secp256k1_ec_pubkey_serialize(
     const secp256k1_context* ctx,
     unsigned char *output,
     size_t *outputlen,

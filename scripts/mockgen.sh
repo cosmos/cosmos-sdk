@@ -3,6 +3,7 @@
 mockgen_cmd="mockgen"
 $mockgen_cmd -source=baseapp/abci_utils.go -package mock -destination baseapp/testutil/mock/mocks.go
 $mockgen_cmd -source=client/account_retriever.go -package mock -destination testutil/mock/account_retriever.go
+$mockgen_cmd -package mock -destination store/mock/cosmos_cosmos_db_DB.go github.com/cosmos/cosmos-db DB
 $mockgen_cmd -source=types/module/module.go -package mock -destination testutil/mock/types_module_module.go
 $mockgen_cmd -source=types/module/mock_appmodule_test.go -package mock -destination testutil/mock/types_mock_appmodule.go
 $mockgen_cmd -source=types/invariant.go -package mock -destination testutil/mock/types_invariant.go

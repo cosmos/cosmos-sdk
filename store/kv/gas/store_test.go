@@ -52,3 +52,24 @@ func (s *StoreTestSuite) TestGet() {
 	s.Require().Equal(value, s.gasKVStore.Get(key))
 	s.Require().Equal(store.Gas(1024), s.gasMeter.GasConsumed())
 }
+
+func (s *StoreTestSuite) TestHas() {
+	key, value := []byte("key"), []byte("value")
+	s.parent.Set(key, value)
+
+	s.Require().True(s.gasKVStore.Has(key))
+	s.Require().Equal(store.Gas(1000), s.gasMeter.GasConsumed())
+}
+
+func (s *StoreTestSuite) TestSet() {
+	s.gasKVStore.Set([]byte("key"), []byte("value"))
+	s.Require().Equal(store.Gas(2240), s.gasMeter.GasConsumed())
+}
+
+func (s *StoreTestSuite) TestDelete() {
+	key, value := []byte("key"), []byte("value")
+	s.parent.Set(key, value)
+
+	s.gasKVStore.Delete(key)
+	s.Require().Equal(store.Gas(1500), s.gasMeter.GasConsumed())
+}

@@ -13,7 +13,7 @@
 
 #include <time.h>
 
-#include "secp256k1.c"
+#include "cosmos_secp256k1.c"
 #include "include/secp256k1.h"
 #include "testrand_impl.h"
 

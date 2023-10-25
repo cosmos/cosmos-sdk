@@ -1,7 +1,7 @@
 #ifndef _SECP256K1_ECDH_
 # define _SECP256K1_ECDH_
 
-# include "secp256k1.h"
+# include "cosmos_secp256k1.h"
 
 # ifdef __cplusplus
 extern "C" {

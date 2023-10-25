@@ -16,6 +16,8 @@ const ChainIDFieldName = "chain_id"
 // it still parses the values before the `chain_id` field, particularly if the `app_state` field is
 // before the `chain_id` field, it will parse the `app_state` value, user must make sure the `chain_id`
 // is put before `app_state` or other big entries to enjoy the efficiency.
+// If the `chain_id` field is not found, the function will return an error.
+func ParseChainIDFromGenesis(r io.Reader) (string, error) {
 func ParseChainIDFromGenesis(r io.Reader) (string, error) {
 	dec := json.NewDecoder(r)
 

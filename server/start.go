@@ -347,7 +347,7 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 		clientCtx := clientCtx.WithHomeDir(home).WithChainID(genDoc.ChainID)
 
 		if config.GRPC.Enable {
-			_, port, err := net.SplitHostPort(config.GRPC.Address)
+			_, _, err := net.SplitHostPort(config.GRPC.Address)
 			if err != nil {
 				return err
 			}
@@ -362,11 +362,9 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 				maxRecvMsgSize = serverconfig.DefaultGRPCMaxRecvMsgSize
 			}
 
-			grpcAddress := fmt.Sprintf("127.0.0.1:%s", port)
-
 			// If grpc is enabled, configure grpc client for grpc gateway.
 			grpcClient, err := grpc.Dial(
-				grpcAddress,
+				config.GRPC.Address,
 				grpc.WithTransportCredentials(insecure.NewCredentials()),
 				grpc.WithDefaultCallOptions(
 					grpc.ForceCodec(codec.NewProtoCodec(clientCtx.InterfaceRegistry).GRPCCodec()),
@@ -379,7 +377,7 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 			}
 
 			clientCtx = clientCtx.WithGRPCClient(grpcClient)
-			ctx.Logger.Debug("grpc client assigned to client context", "target", grpcAddress)
+			ctx.Logger.Debug("grpc client assigned to client context", "target", config.GRPC.Address)
 		}
 
 		apiSrv = api.New(clientCtx, ctx.Logger.With("module", "api-server"))

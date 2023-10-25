@@ -288,7 +288,7 @@ int secp256k1_ecdsa_signature_normalize(const cosmos_secp256k1_context* ctx, cos
     return ret;
 }
 
-int secp256k1_ecdsa_verify(const cosmos_secp256k1_context* ctx, const cosmos_secp256k1_ecdsa_signature *sig, const unsigned char *msg32, const cosmos_secp256k1_pubkey *pubkey) {
+int cosmos_secp256k1_ecdsa_verify(const cosmos_secp256k1_context* ctx, const cosmos_secp256k1_ecdsa_signature *sig, const unsigned char *msg32, const cosmos_secp256k1_pubkey *pubkey) {
     secp256k1_ge q;
     secp256k1_scalar r, s;
     secp256k1_scalar m;

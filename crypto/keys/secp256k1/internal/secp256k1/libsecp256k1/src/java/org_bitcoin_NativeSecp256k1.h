@@ -66,7 +66,7 @@ SECP256K1_API void JNICALL Java_org_bitcoin_NativeSecp256k1_secp256k1_1destroy_1
 
 /*
  * Class:     org_bitcoin_NativeSecp256k1
- * Method:    secp256k1_ecdsa_verify
+ * Method:    cosmos_secp256k1_ecdsa_verify
  * Signature: (Ljava/nio/ByteBuffer;JII)I
  */
 SECP256K1_API jint JNICALL Java_org_bitcoin_NativeSecp256k1_secp256k1_1ecdsa_1verify

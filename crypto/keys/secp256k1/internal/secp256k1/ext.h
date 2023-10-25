@@ -59,7 +59,7 @@ static int secp256k1_ext_ecdsa_verify(
 	if (!cosmos_secp256k1_ec_pubkey_parse(ctx, &pubkey, pubkeydata, pubkeylen)) {
 		return 0;
 	}
-	return secp256k1_ecdsa_verify(ctx, &sig, msgdata, &pubkey);
+	return cosmos_secp256k1_ecdsa_verify(ctx, &sig, msgdata, &pubkey);
 }
 
 // secp256k1_ext_reencode_pubkey decodes then encodes a public key. It can be used to

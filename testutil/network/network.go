@@ -240,10 +240,20 @@ type (
 		ValAddress sdk.ValAddress
 		RPCClient  tmclient.Client
 
+<<<<<<< HEAD
 		tmNode  *node.Node
 		api     *api.Server
 		grpc    *grpc.Server
 		grpcWeb *http.Server
+=======
+		app      servertypes.Application
+		tmNode   *node.Node
+		api      *api.Server
+		grpc     *grpc.Server
+		grpcWeb  *http.Server
+		errGroup *errgroup.Group
+		cancelFn context.CancelFunc
+>>>>>>> 139a29e7e (refactor(network): call `app.Close()` on network cleanup (#18249))
 	}
 
 	// ValidatorI expose a validator's context and configuration
@@ -581,8 +591,7 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 
 	l.Log("starting test network...")
 	for idx, v := range network.Validators {
-		err := startInProcess(cfg, v)
-		if err != nil {
+		if err := startInProcess(cfg, v); err != nil {
 			return nil, err
 		}
 		l.Log("started validator", idx)
@@ -732,6 +741,12 @@ func (n *Network) Cleanup() {
 			v.grpc.Stop()
 			if v.grpcWeb != nil {
 				_ = v.grpcWeb.Close()
+			}
+		}
+
+		if v.app != nil {
+			if err := v.app.Close(); err != nil {
+				n.Logger.Log("failed to stop validator ABCI application", "err", err)
 			}
 		}
 	}

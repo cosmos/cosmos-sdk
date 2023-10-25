@@ -15,6 +15,12 @@ import (
 	"github.com/cometbft/cometbft/types"
 	tmtime "github.com/cometbft/cometbft/types/time"
 
+<<<<<<< HEAD
+=======
+	"cosmossdk.io/log"
+
+	"github.com/cosmos/cosmos-sdk/server"
+>>>>>>> 139a29e7e (refactor(network): call `app.Close()` on network cleanup (#18249))
 	"github.com/cosmos/cosmos-sdk/server/api"
 	servergrpc "github.com/cosmos/cosmos-sdk/server/grpc"
 	srvtypes "github.com/cosmos/cosmos-sdk/server/types"
@@ -39,7 +45,17 @@ func startInProcess(cfg Config, val *Validator) error {
 	}
 
 	app := cfg.AppConstructor(*val)
+<<<<<<< HEAD
 	genDocProvider := node.DefaultGenesisDocProviderFunc(tmCfg)
+=======
+	val.app = app
+
+	appGenesisProvider := func() (*cmttypes.GenesisDoc, error) {
+		appGenesis, err := genutiltypes.AppGenesisFromFile(cmtCfg.GenesisFile())
+		if err != nil {
+			return nil, err
+		}
+>>>>>>> 139a29e7e (refactor(network): call `app.Close()` on network cleanup (#18249))
 
 	tmNode, err := node.NewNode( //resleak:notresource
 		tmCfg,
@@ -71,11 +87,40 @@ func startInProcess(cfg Config, val *Validator) error {
 
 		app.RegisterTxService(val.ClientCtx)
 		app.RegisterTendermintService(val.ClientCtx)
+<<<<<<< HEAD
 		app.RegisterNodeService(val.ClientCtx)
 	}
 
 	if val.APIAddress != "" {
 		apiSrv := api.New(val.ClientCtx, logger.With("module", "api-server"))
+=======
+		app.RegisterNodeService(val.ClientCtx, *val.AppConfig)
+	}
+
+	ctx := context.Background()
+	ctx, val.cancelFn = context.WithCancel(ctx)
+	val.errGroup, ctx = errgroup.WithContext(ctx)
+
+	grpcCfg := val.AppConfig.GRPC
+
+	if grpcCfg.Enable {
+		grpcSrv, err := servergrpc.NewGRPCServer(val.ClientCtx, app, grpcCfg)
+		if err != nil {
+			return err
+		}
+
+		// Start the gRPC server in a goroutine. Note, the provided ctx will ensure
+		// that the server is gracefully shut down.
+		val.errGroup.Go(func() error {
+			return servergrpc.StartGRPCServer(ctx, logger.With(log.ModuleKey, "grpc-server"), grpcCfg, grpcSrv)
+		})
+
+		val.grpc = grpcSrv
+	}
+
+	if val.APIAddress != "" {
+		apiSrv := api.New(val.ClientCtx, logger.With(log.ModuleKey, "api-server"), val.grpc)
+>>>>>>> 139a29e7e (refactor(network): call `app.Close()` on network cleanup (#18249))
 		app.RegisterAPIRoutes(apiSrv, val.AppConfig.API)
 
 		errCh := make(chan error)

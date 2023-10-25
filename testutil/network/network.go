@@ -273,6 +273,7 @@ type (
 		ValAddress sdk.ValAddress
 		RPCClient  cmtclient.Client
 
+		app      servertypes.Application
 		tmNode   *node.Node
 		api      *api.Server
 		grpc     *grpc.Server
@@ -611,8 +612,7 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 
 	l.Log("starting test network...")
 	for idx, v := range network.Validators {
-		err := startInProcess(cfg, v)
-		if err != nil {
+		if err := startInProcess(cfg, v); err != nil {
 			return nil, err
 		}
 		l.Log("started validator", idx)
@@ -802,6 +802,12 @@ func (n *Network) Cleanup() {
 
 		if v.grpcWeb != nil {
 			_ = v.grpcWeb.Close()
+		}
+
+		if v.app != nil {
+			if err := v.app.Close(); err != nil {
+				n.Logger.Log("failed to stop validator ABCI application", "err", err)
+			}
 		}
 	}
 

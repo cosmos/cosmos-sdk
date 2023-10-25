@@ -70,10 +70,10 @@ func TestImplementation(t *testing.T) {
 	// schemas
 	t.Run("decode init request - ok", func(t *testing.T) {
 		want := &wrapperspb.StringValue{Value: "test"}
-		req, err := impl.InitRequestSchema.TxEncode(want)
+		req, err := impl.InitHandlerSchema.ResponseSchema.TxEncode(want)
 		require.NoError(t, err)
 
-		got, err := impl.InitRequestSchema.TxDecode(req)
+		got, err := impl.InitHandlerSchema.RequestSchema.TxDecode(req)
 		require.NoError(t, err)
 		require.True(t, proto.Equal(want, got.(protoreflect.ProtoMessage)))
 	})
@@ -81,7 +81,7 @@ func TestImplementation(t *testing.T) {
 	t.Run("encode init response - ok", func(t *testing.T) {
 		want := &wrapperspb.StringValue{Value: "test"}
 
-		gotBytes, err := impl.InitResponseSchema.TxEncode(want)
+		gotBytes, err := impl.InitHandlerSchema.ResponseSchema.TxEncode(want)
 		require.NoError(t, err)
 
 		wantBytes, err := proto.Marshal(want)

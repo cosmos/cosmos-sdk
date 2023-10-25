@@ -28,7 +28,7 @@ func (m msgServer) Init(ctx context.Context, request *v1.MsgInit) (*v1.MsgInitRe
 	}
 
 	// decode message bytes into the concrete boxed message type
-	msg, err := impl.InitRequestSchema.TxDecode(request.Message)
+	msg, err := impl.InitHandlerSchema.RequestSchema.TxDecode(request.Message)
 	if err != nil {
 		return nil, err
 	}
@@ -40,7 +40,7 @@ func (m msgServer) Init(ctx context.Context, request *v1.MsgInit) (*v1.MsgInitRe
 	}
 
 	// encode the response
-	respBytes, err := impl.InitResponseSchema.TxEncode(resp)
+	respBytes, err := impl.InitHandlerSchema.ResponseSchema.TxEncode(resp)
 	if err != nil {
 		return nil, err
 	}

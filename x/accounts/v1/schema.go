@@ -5,6 +5,7 @@ import (
 
 	"cosmossdk.io/x/accounts/internal/implementation"
 	"golang.org/x/exp/slices"
+	"google.golang.org/grpc"
 )
 
 func MakeAccountsSchemas(impls map[string]implementation.Implementation) map[string]*SchemaResponse {
@@ -38,4 +39,8 @@ func makeHandlersSchema(handlers map[string]implementation.HandlerSchema) []*Sch
 		return strings.Compare(a.Request, b.Request)
 	})
 	return schemas
+}
+
+func MsgServiceDesc() *grpc.ServiceDesc {
+	return &_Msg_serviceDesc
 }

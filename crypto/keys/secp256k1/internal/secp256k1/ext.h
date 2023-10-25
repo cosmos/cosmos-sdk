@@ -89,7 +89,7 @@ static int secp256k1_ext_reencode_pubkey(
 	return cosmos_secp256k1_ec_pubkey_serialize(ctx, out, &outlen, &pubkey, flag);
 }
 
-// secp256k1_ext_scalar_mul multiplies a point by a scalar in constant time.
+// cosmos_secp256k1_ext_scalar_mul multiplies a point by a scalar in constant time.
 //
 // Returns: 1: multiplication was successful
 //          0: scalar was invalid (zero or overflow)
@@ -98,7 +98,7 @@ static int secp256k1_ext_reencode_pubkey(
 //  In:     point:    pointer to a 64-byte public point,
 //                    encoded as two 256bit big-endian numbers.
 //          scalar:   a 32-byte scalar with which to multiply the point
-int secp256k1_ext_scalar_mul(const secp256k1_context* ctx, unsigned char *point, const unsigned char *scalar) {
+int cosmos_secp256k1_ext_scalar_mul(const secp256k1_context* ctx, unsigned char *point, const unsigned char *scalar) {
 	int ret = 0;
 	int overflow = 0;
 	secp256k1_fe feX, feY;

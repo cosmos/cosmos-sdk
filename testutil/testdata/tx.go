@@ -3,6 +3,9 @@ package testdata
 import (
 	"testing"
 
+	"gotest.tools/v3/assert"
+	"pgregory.net/rapid"
+
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256r1"
@@ -10,8 +13,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	"gotest.tools/v3/assert"
-	"pgregory.net/rapid"
 )
 
 // AddressGenerator creates and returns a random address generator using rapid.

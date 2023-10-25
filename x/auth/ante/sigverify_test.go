@@ -394,7 +394,7 @@ func TestAnteHandlerChecks(t *testing.T) {
 	priv1, _, addr1 := testdata.KeyTestPubAddr()
 
 	secp256k1NotOnCurve, _ := secp256k1dcrd.GeneratePrivateKey()
-	secp256k1NotOnCurve.Key.SetInt(0)
+	secp256k1NotOnCurve.Key.SetInt(0) // Setting the key point to 0, results in an invalid point on the curve.
 	priv12 := &secp256k1.PrivKey{Key: secp256k1NotOnCurve.Serialize()}
 	addr12 := sdk.AccAddress(priv12.PubKey().Address())
 

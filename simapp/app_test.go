@@ -21,6 +21,7 @@ import (
 	feegrantmodule "cosmossdk.io/x/feegrant/module"
 	"cosmossdk.io/x/gov"
 	group "cosmossdk.io/x/group/module"
+	"cosmossdk.io/x/slashing"
 	"cosmossdk.io/x/upgrade"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -39,7 +40,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	"github.com/cosmos/cosmos-sdk/x/mint"
-	"github.com/cosmos/cosmos-sdk/x/slashing"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 

@@ -161,3 +161,5 @@ replace github.com/cosmos/cosmos-sdk => ../..
 replace cosmossdk.io/x/gov => ../gov
 
 replace cosmossdk.io/x/distribution => ../distribution
+
+replace cosmossdk.io/x/slashing => ../slashing

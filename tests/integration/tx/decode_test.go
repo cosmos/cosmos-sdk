@@ -16,6 +16,7 @@ import (
 	feegrantmodule "cosmossdk.io/x/feegrant/module"
 	"cosmossdk.io/x/gov"
 	groupmodule "cosmossdk.io/x/group/module"
+	"cosmossdk.io/x/slashing"
 	"cosmossdk.io/x/tx/decode"
 	txsigning "cosmossdk.io/x/tx/signing"
 	"cosmossdk.io/x/upgrade"
@@ -35,7 +36,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/consensus"
 	"github.com/cosmos/cosmos-sdk/x/mint"
-	"github.com/cosmos/cosmos-sdk/x/slashing"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 

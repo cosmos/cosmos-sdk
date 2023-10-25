@@ -112,6 +112,30 @@ func (mr *MockAppModuleWithAllExtensionsMockRecorder) InitGenesis(arg0, arg1, ar
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InitGenesis", reflect.TypeOf((*MockAppModuleWithAllExtensions)(nil).InitGenesis), arg0, arg1, arg2)
 }
 
+// IsAppModule mocks base method.
+func (m *MockAppModuleWithAllExtensions) IsAppModule() {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "IsAppModule")
+}
+
+// IsAppModule indicates an expected call of IsAppModule.
+func (mr *MockAppModuleWithAllExtensionsMockRecorder) IsAppModule() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsAppModule", reflect.TypeOf((*MockAppModuleWithAllExtensions)(nil).IsAppModule))
+}
+
+// IsOnePerModuleType mocks base method.
+func (m *MockAppModuleWithAllExtensions) IsOnePerModuleType() {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "IsOnePerModuleType")
+}
+
+// IsOnePerModuleType indicates an expected call of IsOnePerModuleType.
+func (mr *MockAppModuleWithAllExtensionsMockRecorder) IsOnePerModuleType() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsOnePerModuleType", reflect.TypeOf((*MockAppModuleWithAllExtensions)(nil).IsOnePerModuleType))
+}
+
 // Name mocks base method.
 func (m *MockAppModuleWithAllExtensions) Name() string {
 	m.ctrl.T.Helper()
@@ -292,6 +316,30 @@ func (m *MockAppModuleWithAllExtensionsABCI) InitGenesis(arg0 context.Context, a
 func (mr *MockAppModuleWithAllExtensionsABCIMockRecorder) InitGenesis(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InitGenesis", reflect.TypeOf((*MockAppModuleWithAllExtensionsABCI)(nil).InitGenesis), arg0, arg1, arg2)
+}
+
+// IsAppModule mocks base method.
+func (m *MockAppModuleWithAllExtensionsABCI) IsAppModule() {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "IsAppModule")
+}
+
+// IsAppModule indicates an expected call of IsAppModule.
+func (mr *MockAppModuleWithAllExtensionsABCIMockRecorder) IsAppModule() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsAppModule", reflect.TypeOf((*MockAppModuleWithAllExtensionsABCI)(nil).IsAppModule))
+}
+
+// IsOnePerModuleType mocks base method.
+func (m *MockAppModuleWithAllExtensionsABCI) IsOnePerModuleType() {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "IsOnePerModuleType")
+}
+
+// IsOnePerModuleType indicates an expected call of IsOnePerModuleType.
+func (mr *MockAppModuleWithAllExtensionsABCIMockRecorder) IsOnePerModuleType() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsOnePerModuleType", reflect.TypeOf((*MockAppModuleWithAllExtensionsABCI)(nil).IsOnePerModuleType))
 }
 
 // Name mocks base method.

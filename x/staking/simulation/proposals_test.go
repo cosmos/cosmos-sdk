@@ -9,11 +9,11 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 
+	"cosmossdk.io/x/staking/simulation"
+	"cosmossdk.io/x/staking/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/cosmos/cosmos-sdk/x/staking/simulation"
-	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 func TestProposalMsgs(t *testing.T) {

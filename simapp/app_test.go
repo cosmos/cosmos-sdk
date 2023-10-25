@@ -24,6 +24,7 @@ import (
 	"cosmossdk.io/x/slashing"
 	"cosmossdk.io/x/upgrade"
 
+	"cosmossdk.io/x/staking"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
@@ -40,7 +41,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	"github.com/cosmos/cosmos-sdk/x/mint"
-	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
 func TestSimAppExportAndBlockedAddrs(t *testing.T) {

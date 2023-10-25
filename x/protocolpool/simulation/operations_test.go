@@ -15,6 +15,7 @@ import (
 	pooltestutil "cosmossdk.io/x/protocolpool/testutil"
 	"cosmossdk.io/x/protocolpool/types"
 
+	stakingkeeper "cosmossdk.io/x/staking/keeper"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/runtime"
@@ -24,7 +25,6 @@ import (
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
-	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 )
 
 type suite struct {

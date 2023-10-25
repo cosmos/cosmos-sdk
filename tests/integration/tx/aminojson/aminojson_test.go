@@ -46,6 +46,8 @@ import (
 	signing_testutil "cosmossdk.io/x/tx/signing/testutil"
 	"cosmossdk.io/x/upgrade"
 
+	"cosmossdk.io/x/staking"
+	stakingtypes "cosmossdk.io/x/staking/types"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	ed25519types "github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
@@ -71,8 +73,6 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/consensus"
 	"github.com/cosmos/cosmos-sdk/x/mint"
-	"github.com/cosmos/cosmos-sdk/x/staking"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // TestAminoJSON_Equivalence tests that x/tx/Encoder encoding is equivalent to the legacy Encoder encoding.

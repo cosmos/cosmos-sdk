@@ -1,7 +1,7 @@
 syntax = "proto3";
 package cosmos.staking.v1beta1;
 
-option go_package = "github.com/cosmos/cosmos-sdk/x/staking/types";
+option go_package = "cosmossdk.io/x/staking/types";
 
 import "gogoproto/gogo.proto";
 import "cosmos/staking/v1beta1/staking.proto";

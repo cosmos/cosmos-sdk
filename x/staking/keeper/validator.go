@@ -16,8 +16,8 @@ import (
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 
+	"cosmossdk.io/x/staking/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 var timeBzKeySize = uint64(29) // time bytes key size is 29 by default

@@ -31,6 +31,8 @@ import (
 	"cosmossdk.io/math/unsafe"
 	pruningtypes "cosmossdk.io/store/pruning/types"
 
+	_ "cosmossdk.io/x/staking" // import staking as a blank
+	stakingtypes "cosmossdk.io/x/staking/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -59,8 +61,6 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	_ "github.com/cosmos/cosmos-sdk/x/consensus" // import consensus as a blank
 	"github.com/cosmos/cosmos-sdk/x/genutil"
-	_ "github.com/cosmos/cosmos-sdk/x/staking" // import staking as a blank
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // package-wide network lock to only allow one test network at a time

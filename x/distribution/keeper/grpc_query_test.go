@@ -11,8 +11,8 @@ import (
 	distrtestutil "cosmossdk.io/x/distribution/testutil"
 	"cosmossdk.io/x/distribution/types"
 
+	stakingtypes "cosmossdk.io/x/staking/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 func TestQueryParams(t *testing.T) {

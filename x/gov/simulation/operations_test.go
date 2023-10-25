@@ -21,6 +21,8 @@ import (
 	"cosmossdk.io/x/gov/types/v1beta1"
 	_ "cosmossdk.io/x/protocolpool"
 
+	_ "cosmossdk.io/x/staking"
+	stakingkeeper "cosmossdk.io/x/staking/keeper"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
@@ -34,8 +36,6 @@ import (
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	_ "github.com/cosmos/cosmos-sdk/x/consensus"
-	_ "github.com/cosmos/cosmos-sdk/x/staking"
-	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 )
 
 var (

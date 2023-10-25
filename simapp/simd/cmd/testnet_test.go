@@ -11,6 +11,7 @@ import (
 	"cosmossdk.io/log"
 	"cosmossdk.io/x/distribution"
 
+	"cosmossdk.io/x/staking"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server"
@@ -24,7 +25,6 @@ import (
 	genutiltest "github.com/cosmos/cosmos-sdk/x/genutil/client/testutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	"github.com/cosmos/cosmos-sdk/x/mint"
-	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
 func Test_TestnetCmd(t *testing.T) {

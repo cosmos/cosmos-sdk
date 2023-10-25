@@ -13,6 +13,7 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 
+	stakingcli "cosmossdk.io/x/staking/client/cli"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec/address"
@@ -25,7 +26,6 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	"github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
-	stakingcli "github.com/cosmos/cosmos-sdk/x/staking/client/cli"
 )
 
 type CLITestSuite struct {

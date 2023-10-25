@@ -14,11 +14,13 @@ import (
 	"strings"
 	"sync"
 	"syscall"
+	"testing"
 	"time"
 
 	"github.com/cometbft/cometbft/node"
 	cmtclient "github.com/cometbft/cometbft/rpc/client"
 	dbm "github.com/cosmos/cosmos-db"
+	"github.com/spf13/cobra"
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
 
@@ -265,7 +267,7 @@ type (
 	// to create networks. In addition, only the first validator will have a valid
 	// RPC and API server/client.
 	Network struct {
-		Logger     log.Logger
+		Logger     Logger
 		BaseDir    string
 		Validators []*Validator
 
@@ -313,7 +315,11 @@ type (
 	}
 )
 
-var _ ValidatorI = Validator{}
+var (
+	_ Logger     = (*testing.T)(nil)
+	_ Logger     = (*CLILogger)(nil)
+	_ ValidatorI = Validator{}
+)
 
 func (v Validator) GetCtx() *server.Context {
 	return v.Ctx
@@ -323,10 +329,30 @@ func (v Validator) GetAppConfig() *srvconfig.Config {
 	return v.AppConfig
 }
 
+// CLILogger wraps a cobra.Command and provides command logging methods.
+type CLILogger struct {
+	cmd *cobra.Command
+}
+
+// Log logs given args.
+func (s CLILogger) Log(args ...interface{}) {
+	s.cmd.Println(args...)
+}
+
+// Logf logs given args according to a format specifier.
+func (s CLILogger) Logf(format string, args ...interface{}) {
+	s.cmd.Printf(format, args...)
+}
+
+// NewCLILogger creates a new CLILogger.
+func NewCLILogger(cmd *cobra.Command) CLILogger {
+	return CLILogger{cmd}
+}
+
 // New creates a new Network for integration tests or in-process testnets run via the CLI
-func New(l log.Logger, baseDir string, cfg Config) (*Network, error) {
+func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 	// only one caller/test can create and use a network at a time
-	l.Info("acquiring test network lock")
+	l.Log("acquiring test network lock")
 	lock.Lock()
 
 	network := &Network{
@@ -336,7 +362,7 @@ func New(l log.Logger, baseDir string, cfg Config) (*Network, error) {
 		Config:     cfg,
 	}
 
-	l.Info(fmt.Sprintf("preparing test network with chain-id \"%s\"\n", cfg.ChainID))
+	l.Logf("preparing test network with chain-id \"%s\"\n", cfg.ChainID)
 
 	monikers := make([]string, cfg.NumValidators)
 	nodeIDs := make([]string, cfg.NumValidators)
@@ -609,12 +635,12 @@ func New(l log.Logger, baseDir string, cfg Config) (*Network, error) {
 		return nil, err
 	}
 
-	l.Info("starting test network...")
+	l.Log("starting test network...")
 	for idx, v := range network.Validators {
 		if err := startInProcess(cfg, v); err != nil {
 			return nil, err
 		}
-		l.Info("started validator", "validator", idx)
+		l.Log("started validator", "validator", idx)
 	}
 
 	height, err := network.LatestHeight()
@@ -622,7 +648,7 @@ func New(l log.Logger, baseDir string, cfg Config) (*Network, error) {
 		return nil, err
 	}
 
-	l.Info(fmt.Sprintf("started test network at height: %d", height))
+	l.Log(fmt.Sprintf("started test network at height: %d", height))
 
 	// Ensure we cleanup incase any test was abruptly halted (e.g. SIGINT) as any
 	// defer in a test would not be called.
@@ -779,10 +805,10 @@ func (n *Network) WaitForNextBlock() error {
 func (n *Network) Cleanup() {
 	defer func() {
 		lock.Unlock()
-		n.Logger.Info("released test network lock")
+		n.Logger.Log("released test network lock")
 	}()
 
-	n.Logger.Info("cleaning up test network...")
+	n.Logger.Log("cleaning up test network...")
 
 	for _, v := range n.Validators {
 		// cancel the validator's context which will signal to the gRPC and API
@@ -790,12 +816,12 @@ func (n *Network) Cleanup() {
 		v.cancelFn()
 
 		if err := v.errGroup.Wait(); err != nil {
-			n.Logger.Info("unexpected error waiting for validator gRPC and API processes to exit", "err", err)
+			n.Logger.Log("unexpected error waiting for validator gRPC and API processes to exit", "err", err)
 		}
 
 		if v.tmNode != nil && v.tmNode.IsRunning() {
 			if err := v.tmNode.Stop(); err != nil {
-				n.Logger.Info("failed to stop validator CometBFT node", "err", err)
+				n.Logger.Log("failed to stop validator CometBFT node", "err", err)
 			}
 		}
 
@@ -805,7 +831,7 @@ func (n *Network) Cleanup() {
 
 		if v.app != nil {
 			if err := v.app.Close(); err != nil {
-				n.Logger.Info("failed to stop validator ABCI application", "err", err)
+				n.Logger.Log("failed to stop validator ABCI application", "err", err)
 			}
 		}
 	}
@@ -816,12 +842,12 @@ func (n *Network) Cleanup() {
 		_ = os.RemoveAll(n.BaseDir)
 	}
 
-	n.Logger.Info("finished cleaning up test network")
+	n.Logger.Log("finished cleaning up test network")
 }
 
 // printMnemonic prints a provided mnemonic seed phrase on a network logger
 // for debugging and manual testing
-func printMnemonic(l log.Logger, secret string) {
+func printMnemonic(l Logger, secret string) {
 	lines := []string{
 		"THIS MNEMONIC IS FOR TESTING PURPOSES ONLY",
 		"DO NOT USE IN PRODUCTION",
@@ -843,13 +869,13 @@ func printMnemonic(l log.Logger, secret string) {
 		}
 	}
 
-	l.Info("\n")
-	l.Info(strings.Repeat("+", maxLineLength+8))
+	l.Log("\n")
+	l.Log(strings.Repeat("+", maxLineLength+8))
 	for _, line := range lines {
-		l.Info(fmt.Sprintf("++  %s  ++\n", centerText(line, maxLineLength)))
+		l.Log(fmt.Sprintf("++  %s  ++\n", centerText(line, maxLineLength)))
 	}
-	l.Info(strings.Repeat("+", maxLineLength+8))
-	l.Info("\n")
+	l.Log(strings.Repeat("+", maxLineLength+8))
+	l.Log("\n")
 }
 
 // centerText centers text across a fixed width, filling either side with whitespace buffers

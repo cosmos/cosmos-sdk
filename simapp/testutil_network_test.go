@@ -1,13 +1,11 @@
 package simapp_test
 
 import (
-	"os"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/suite"
 
-	"cosmossdk.io/log"
 	"cosmossdk.io/simapp"
 
 	"github.com/cosmos/cosmos-sdk/testutil/network"
@@ -23,7 +21,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
 
 	var err error
-	s.network, err = network.New(log.NewLogger(os.Stdout).With(log.ModuleKey, "network"), s.T().TempDir(), network.DefaultConfig(simapp.NewTestNetworkFixture))
+	s.network, err = network.New(s.T(), s.T().TempDir(), network.DefaultConfig(simapp.NewTestNetworkFixture))
 	s.Require().NoError(err)
 
 	h, err := s.network.WaitForHeight(1)

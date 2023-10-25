@@ -13,7 +13,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
-	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 	"cosmossdk.io/math/unsafe"
 	"cosmossdk.io/simapp"
@@ -516,7 +515,7 @@ func startTestnet(cmd *cobra.Command, args startArgs) error {
 	networkConfig.APIAddress = args.apiAddress
 	networkConfig.GRPCAddress = args.grpcAddress
 	networkConfig.PrintMnemonic = args.printMnemonic
-	networkLogger := log.NewLogger(cmd.OutOrStdout()).With(log.ModuleKey, "network")
+	networkLogger := network.NewCLILogger(cmd)
 
 	baseDir := fmt.Sprintf("%s/%s", args.outputDir, networkConfig.ChainID)
 	if _, err := os.Stat(baseDir); !os.IsNotExist(err) {

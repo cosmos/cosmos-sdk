@@ -640,7 +640,7 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 		if err := startInProcess(cfg, v); err != nil {
 			return nil, err
 		}
-		l.Log("started validator", "validator", idx)
+		l.Log("started validator", idx)
 	}
 
 	height, err := network.LatestHeight()
@@ -648,7 +648,7 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 		return nil, err
 	}
 
-	l.Log(fmt.Sprintf("started test network at height: %d", height))
+	l.Log("started test network at height:", height)
 
 	// Ensure we cleanup incase any test was abruptly halted (e.g. SIGINT) as any
 	// defer in a test would not be called.
@@ -872,7 +872,7 @@ func printMnemonic(l Logger, secret string) {
 	l.Log("\n")
 	l.Log(strings.Repeat("+", maxLineLength+8))
 	for _, line := range lines {
-		l.Log(fmt.Sprintf("++  %s  ++\n", centerText(line, maxLineLength)))
+		l.Logf("++  %s  ++\n", centerText(line, maxLineLength))
 	}
 	l.Log(strings.Repeat("+", maxLineLength+8))
 	l.Log("\n")

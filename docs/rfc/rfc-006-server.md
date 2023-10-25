@@ -41,6 +41,8 @@ func NewPolarisCometServer(..) {..}
 
 A server will consist of the following components, but is not limited to the ones included here. 
 
+> Note: this example is coupled to CometBFT, but the idea is to allow for custom implementations of the server.
+
 ```go
 type CometServer struct {
   // can load modules with either grpc, wasm, ffi or native. 
@@ -50,7 +52,9 @@ type CometServer struct {
   // handles message execution 
   AppManager app.Manager
   // starts, stops and interacts with the consensus engine
-  Consensus consensus.Engine
+  Comet comet.Server
+  // mempool defines an application based mempool
+  Mempool mempool.Mempool
   // manages storage of application state
   Store store.RootStore 
   // manages application state snapshots
@@ -64,13 +68,107 @@ type CometServer struct {
 
 #### AppManager
 
-#### Consensus
+The AppManager is responsible for loading the application and managing the application. The AppManager will be responsible for loading the application from a config file, loading the application from a genesis file, and managing the application. The AppManager will also be responsible for loading modules into the application.
+
+The AppManager is responsible for state execution after block inclusion or during a predefined step in consensus. Today there are two methods of executing state, Optimistic Execution & Delayed Execution, with Comet. In the future if a new execution method is developed the AppManager will be responsible for executing state in that manner.
+
+The AppManager is responsible for:
+
+* Loading the application from a config file
+* Loading the application state from a genesis file
+* Executing state after block inclusion or during a predefined step in consensus
+* Upgrades of the application
+* Syncing from genesis with a single binary that has many app configs loaded
+* Querying state from any height
+
+
+##### Upgrades
+
+The Appmanager will be responsible for handling upgrades. Today in the Cosmos SDK we have an upgrade method of node operators must be present at the time of the upgrade or use a external process (cosmovisor) to swap the binary at the upgrade height. With the AppManager the design will be to allow for upgrades to be done in a rolling manner. A rolling upgrade is done by upgradeing the binary ahead of the upgrade height. Doing this allows advanced features like syncing from genesis with a single binary that has many app configs loaded and operatoring an archive node that allows users to request state from any height.
+
+#### Comet
+
+In this example we are using CometBFT, but the idea is to allow for custom implementations of the consensus engine. The Comet interface will be responsible for starting, stopping, and interacting with the consensus engine. The Comet interface will also be responsible for connecting the consensus engine to the application.
+
+The responsability of the consensus engine is defined by the consensus engine, in our example the consensus engine componenet is responsible for: 
+
+* Serving and receiving snapshots chunks
+* Check transaction validity (CheckTX)
+* Providing Comet with transactions to be included in a block (Prepare Proposal)
+* Checking the validity of a block (Process Proposal)
+* Deliver transactions to the AppManager
+
+#### Mempool
+
+The Mempool is responsible for storing transactions that must be included in a block. These transactions would be entered into a block by the consensus engine. 
+
+The mempool is responsible for checking transaction validity, storing transactions and removing them after being included in a block. The mempool is modular and can be set by the application developer to use a custom mempool.
+
+```go
+type Mempool interface {
+  service.Service
+	// Insert attempts to insert a Tx into the app-side mempool returning
+	// an error upon failure.
+  // Validation of the transaction can be done at insertion or before dissemination
+	Insert(context.Context, [][]byte) error
+
+	// Select returns a list of transations from the mempool. The total size of the bytes which can be included is included in order for the mempool to handle ordering. If txs are specified,
+	// then they shall be incorporated into the returned txs.
+	Select(context.Context, [][]byte, int32) [][]byte
+
+	// CountTx returns the number of transactions currently in the mempool.
+	CountTx() int
+
+	// Remove attempts to remove transactions from the mempool, returning an error
+	// upon failure.
+	Remove([][]byte) error
+}
+```
 
 #### Storage
 
+The storage is responsible for storing the application state. The storage is modular and can be set by the application developer to use a custom storage. 
+
+The interface is being defined by the Storage working group and will be included in this RFC once it is completed.
+
 #### Transaction Validation
 
+The transaction validation is responsible for checking the validity of a transaction. In the current design this is handled by the antehandler. There is a blend of responsabilities currently with the anteHandler. Some useres use it for transaction hooks, some use it for custom transation validation. The transaction validation here is only to be used for validating if a transaction is valid or not. Separating the validation from the execution path allows us to check tx validation in a asynchronous manner.
+
+```go
+type TxValidation interface {
+  // ValidateBasicTx validates a transaction 
+  ValidateTx([]byte) error
+  // ValidateBasicTxs validates a batch of transactions
+  ValidateTxAsync([][]byte) error
+  // Cache is a map of txs that may have already been verified
+  Cache() TxCache
+}
+```
+
 #### Transaction Codec
+
+The transaction codec is responsible for encoding and decoding transactions. The transaction codec is modular and can be set by the application developer to use a custom transaction codec.
+
+```go 
+type TxCodec[T any] interface {
+  // Encode encodes a transaction
+  Encode(T) ([]byte, error)
+  // Decode decodes a transaction
+  Decode([]byte) (T, error)
+}
+```
+
+#### Service
+
+Service Defines an interface that will run in the background and can be started and stopped.
+
+```go
+type Service interface {
+  Start() error
+  Stop() error
+}
+```
 
 
 ## Abandoned Ideas (Optional)

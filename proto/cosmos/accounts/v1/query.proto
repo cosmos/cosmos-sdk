@@ -54,7 +54,7 @@ message SchemaResponse {
 }
 
 // AccountTypeRequest is the request type for the Query/AccountType RPC method.
-message QueryAccountTypeRequest {
+message AccountTypeRequest {
   // address defines the address to query the account type for.
   string address = 1;
 }

@@ -16,10 +16,10 @@ option go_package = "cosmossdk.io/store/types";
 message StoreKVPair {
   option deprecated = true;
 
-  string store_key = 1;  // the store key for the KVStore this pair originates from
-  bool delete = 2;  // true indicates a delete operation, false indicates a set operation
-  bytes key   = 3;
-  bytes value = 4;
+  string store_key = 1; // the store key for the KVStore this pair originates from
+  bool delete      = 2; // true indicates a delete operation, false indicates a set operation
+  bytes key        = 3;
+  bytes value      = 4;
 }
 
 // BlockMetadata contains all the abci event data of a block
@@ -30,10 +30,9 @@ message StoreKVPair {
 message BlockMetadata {
   option deprecated = true;
 
-  tendermint.abci.ResponseCommit        response_commit        = 6;
-  tendermint.abci.RequestFinalizeBlock  request_finalize_block = 7;
-  tendermint.abci.ResponseFinalizeBlock response_finalize_block =
-      8;  // TODO: should we renumber this?
+  tendermint.abci.ResponseCommit        response_commit         = 6;
+  tendermint.abci.RequestFinalizeBlock  request_finalize_block  = 7;
+  tendermint.abci.ResponseFinalizeBlock response_finalize_block = 8; // TODO: should we renumber this?
 
-  reserved 1, 2, 3, 4, 5;  // reserved for from previous use in comet <= 0.37
+  reserved 1, 2, 3, 4, 5; // reserved for from previous use in comet <= 0.37
 }

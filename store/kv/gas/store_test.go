@@ -1,6 +1,7 @@
 package gas_test
 
 import (
+	"fmt"
 	"testing"
 
 	"cosmossdk.io/store/v2"
@@ -72,4 +73,38 @@ func (s *StoreTestSuite) TestDelete() {
 
 	s.gasKVStore.Delete(key)
 	s.Require().Equal(store.Gas(1500), s.gasMeter.GasConsumed())
+}
+
+func (s *StoreTestSuite) TestIterator() {
+	for i := 0; i < 100; i++ {
+		key := fmt.Sprintf("key%03d", i) // key000, key001, ..., key099
+		val := fmt.Sprintf("val%03d", i) // val000, val001, ..., val099
+		s.parent.Set([]byte(key), []byte(val))
+	}
+
+	itr := s.gasKVStore.Iterator(nil, nil)
+	defer itr.Close()
+
+	for ; itr.Valid(); itr.Next() {
+		_ = itr.Key()
+		_ = itr.Value()
+	}
+	s.Require().Equal(store.Gas(6600), s.gasMeter.GasConsumed())
+}
+
+func (s *StoreTestSuite) TestReverseIterator() {
+	for i := 0; i < 100; i++ {
+		key := fmt.Sprintf("key%03d", i) // key000, key001, ..., key099
+		val := fmt.Sprintf("val%03d", i) // val000, val001, ..., val099
+		s.parent.Set([]byte(key), []byte(val))
+	}
+
+	itr := s.gasKVStore.ReverseIterator(nil, nil)
+	defer itr.Close()
+
+	for ; itr.Valid(); itr.Next() {
+		_ = itr.Key()
+		_ = itr.Value()
+	}
+	s.Require().Equal(store.Gas(6600), s.gasMeter.GasConsumed())
 }

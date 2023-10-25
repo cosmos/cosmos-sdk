@@ -240,20 +240,11 @@ type (
 		ValAddress sdk.ValAddress
 		RPCClient  tmclient.Client
 
-<<<<<<< HEAD
+		app     servertypes.Application
 		tmNode  *node.Node
 		api     *api.Server
 		grpc    *grpc.Server
 		grpcWeb *http.Server
-=======
-		app      servertypes.Application
-		tmNode   *node.Node
-		api      *api.Server
-		grpc     *grpc.Server
-		grpcWeb  *http.Server
-		errGroup *errgroup.Group
-		cancelFn context.CancelFunc
->>>>>>> 139a29e7e (refactor(network): call `app.Close()` on network cleanup (#18249))
 	}
 
 	// ValidatorI expose a validator's context and configuration

@@ -199,6 +199,8 @@ type HasABCIGenesis interface {
 // its functionality has been moved to extension interfaces.
 // Deprecated: use appmodule.AppModule with a combination of extension interfaes interfaces instead.
 type AppModule interface {
+	appmodule.AppModule
+
 	AppModuleBasic
 }
 
@@ -289,7 +291,7 @@ func NewManager(modules ...AppModule) *Manager {
 	preBlockModulesStr := make([]string, 0)
 	for _, module := range modules {
 		if _, ok := module.(appmodule.AppModule); !ok {
-			panic(fmt.Sprintf("module %s does not implement %T", module.Name(), (*appmodule.AppModule)(nil)))
+			panic(fmt.Sprintf("module %s does not implement appmodule.AppModule", module.Name()))
 		}
 
 		moduleMap[module.Name()] = module

@@ -9,8 +9,6 @@ import (
 // AppModuleWithAllExtensions is solely here for the purpose of generating
 // mocks to be used in module tests.
 type AppModuleWithAllExtensions interface {
-	appmodule.AppModule
-
 	module.AppModule
 	module.HasServices
 	module.HasGenesis
@@ -22,8 +20,6 @@ type AppModuleWithAllExtensions interface {
 
 // mocks to be used in module tests.
 type AppModuleWithAllExtensionsABCI interface {
-	appmodule.AppModule
-
 	module.AppModule
 	module.HasServices
 	module.HasABCIGenesis

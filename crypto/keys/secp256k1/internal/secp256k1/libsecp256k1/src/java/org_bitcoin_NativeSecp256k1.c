@@ -52,7 +52,7 @@ SECP256K1_API jint JNICALL Java_org_bitcoin_NativeSecp256k1_secp256k1_1ecdsa_1ve
   const unsigned char* sigdata = {  (unsigned char*) (data + 32) };
   const unsigned char* pubdata = { (unsigned char*) (data + siglen + 32) };
 
-  secp256k1_ecdsa_signature sig;
+    cosmos_secp256k1_ecdsa_signature sig;
   secp256k1_pubkey pubkey;
 
   int ret = secp256k1_ecdsa_signature_parse_der(ctx, &sig, sigdata, siglen);
@@ -81,7 +81,7 @@ SECP256K1_API jobjectArray JNICALL Java_org_bitcoin_NativeSecp256k1_secp256k1_1e
   jbyteArray sigArray, intsByteArray;
   unsigned char intsarray[2];
 
-  secp256k1_ecdsa_signature sig[72];
+    cosmos_secp256k1_ecdsa_signature sig[72];
 
   int ret = secp256k1_ecdsa_sign(ctx, sig, data, secKey, NULL, NULL );
 

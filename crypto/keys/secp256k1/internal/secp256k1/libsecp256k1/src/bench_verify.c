@@ -36,7 +36,7 @@ static void benchmark_verify(void* arg) {
 
     for (i = 0; i < 20000; i++) {
         secp256k1_pubkey pubkey;
-        secp256k1_ecdsa_signature sig;
+        cosmos_secp256k1_ecdsa_signature sig;
         data->sig[data->siglen - 1] ^= (i & 0xFF);
         data->sig[data->siglen - 2] ^= ((i >> 8) & 0xFF);
         data->sig[data->siglen - 3] ^= ((i >> 16) & 0xFF);
@@ -82,7 +82,7 @@ static void benchmark_verify_openssl(void* arg) {
 int main(void) {
     int i;
     secp256k1_pubkey pubkey;
-    secp256k1_ecdsa_signature sig;
+    cosmos_secp256k1_ecdsa_signature sig;
     benchmark_verify_t data;
 
     data.ctx = secp256k1_context_create(SECP256K1_CONTEXT_SIGN | SECP256K1_CONTEXT_VERIFY);

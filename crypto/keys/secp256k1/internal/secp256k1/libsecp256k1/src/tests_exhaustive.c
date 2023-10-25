@@ -199,7 +199,7 @@ void test_exhaustive_verify(const secp256k1_context *ctx, const secp256k1_ge *gr
             for (msg = 1; msg < order; msg++) {
                 for (key = 1; key < order; key++) {
                     secp256k1_ge nonconst_ge;
-                    secp256k1_ecdsa_signature sig;
+                    cosmos_secp256k1_ecdsa_signature sig;
                     secp256k1_pubkey pk;
                     secp256k1_scalar sk_s, msg_s, r_s, s_s;
                     secp256k1_scalar s_times_k_s, msg_plus_r_times_sk_s;
@@ -250,7 +250,7 @@ void test_exhaustive_sign(const secp256k1_context *ctx, const secp256k1_ge *grou
         for (j = 1; j < order; j++) {  /* key */
             for (k = 1; k < order; k++) {  /* nonce */
                 const int starting_k = k;
-                secp256k1_ecdsa_signature sig;
+                cosmos_secp256k1_ecdsa_signature sig;
                 secp256k1_scalar sk, msg, r, s, expected_r;
                 unsigned char sk32[32], msg32[32];
                 secp256k1_scalar_set_int(&msg, i);
@@ -298,7 +298,7 @@ void test_exhaustive_recovery_sign(const secp256k1_context *ctx, const secp256k1
                 const int starting_k = k;
                 secp256k1_fe r_dot_y_normalized;
                 secp256k1_ecdsa_recoverable_signature rsig;
-                secp256k1_ecdsa_signature sig;
+                cosmos_secp256k1_ecdsa_signature sig;
                 secp256k1_scalar sk, msg, r, s, expected_r;
                 unsigned char sk32[32], msg32[32];
                 int expected_recid;
@@ -360,7 +360,7 @@ void test_exhaustive_recovery_verify(const secp256k1_context *ctx, const secp256
                 for (key = 1; key < order; key++) {
                     secp256k1_ge nonconst_ge;
                     secp256k1_ecdsa_recoverable_signature rsig;
-                    secp256k1_ecdsa_signature sig;
+                    cosmos_secp256k1_ecdsa_signature sig;
                     secp256k1_pubkey pk;
                     secp256k1_scalar sk_s, msg_s, r_s, s_s;
                     secp256k1_scalar s_times_k_s, msg_plus_r_times_sk_s;

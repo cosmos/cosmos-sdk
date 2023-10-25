@@ -48,7 +48,7 @@ SECP256K1_API int secp256k1_ecdsa_recoverable_signature_parse_compact(
  */
 SECP256K1_API int secp256k1_ecdsa_recoverable_signature_convert(
     const secp256k1_context* ctx,
-    secp256k1_ecdsa_signature* sig,
+    cosmos_secp256k1_ecdsa_signature* sig,
     const secp256k1_ecdsa_recoverable_signature* sigin
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3);
 

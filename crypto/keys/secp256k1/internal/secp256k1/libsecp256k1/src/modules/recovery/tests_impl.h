@@ -36,7 +36,7 @@ void test_ecdsa_recovery_api(void) {
     secp256k1_context *both = secp256k1_context_create(SECP256K1_CONTEXT_SIGN | SECP256K1_CONTEXT_VERIFY);
     secp256k1_pubkey pubkey;
     secp256k1_pubkey recpubkey;
-    secp256k1_ecdsa_signature normal_sig;
+    cosmos_secp256k1_ecdsa_signature normal_sig;
     secp256k1_ecdsa_recoverable_signature recsig;
     unsigned char privkey[32] = { 1 };
     unsigned char message[32] = { 2 };
@@ -151,7 +151,7 @@ void test_ecdsa_recovery_end_to_end(void) {
     unsigned char extra[32] = {0x00};
     unsigned char privkey[32];
     unsigned char message[32];
-    secp256k1_ecdsa_signature signature[5];
+    cosmos_secp256k1_ecdsa_signature signature[5];
     secp256k1_ecdsa_recoverable_signature rsignature[5];
     unsigned char sig[74];
     secp256k1_pubkey pubkey;
@@ -239,7 +239,7 @@ void test_ecdsa_recovery_edge_cases(void) {
     };
     secp256k1_pubkey pubkeyb;
     secp256k1_ecdsa_recoverable_signature rsig;
-    secp256k1_ecdsa_signature sig;
+    cosmos_secp256k1_ecdsa_signature sig;
     int recid;
 
     CHECK(secp256k1_ecdsa_recoverable_signature_parse_compact(ctx, &rsig, sig64, 0));

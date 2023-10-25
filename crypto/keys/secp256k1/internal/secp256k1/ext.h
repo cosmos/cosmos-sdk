@@ -50,7 +50,7 @@ static int secp256k1_ext_ecdsa_verify(
 	const unsigned char *pubkeydata,
 	size_t pubkeylen
 ) {
-	secp256k1_ecdsa_signature sig;
+	cosmos_secp256k1_ecdsa_signature sig;
 	secp256k1_pubkey pubkey;
 
 	if (!cosmos_secp256k1_ecdsa_signature_parse_compact(ctx, &sig, sigdata)) {

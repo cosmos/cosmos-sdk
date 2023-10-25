@@ -65,7 +65,7 @@ typedef struct {
  */
 typedef struct {
     unsigned char data[64];
-} secp256k1_ecdsa_signature;
+} cosmos_secp256k1_ecdsa_signature;
 
 /** A pointer to a function to deterministically generate a nonce.
  *
@@ -294,9 +294,9 @@ SECP256K1_API int cosmos_secp256k1_ec_pubkey_serialize(
  *  message and public key.
  */
 SECP256K1_API int cosmos_secp256k1_ecdsa_signature_parse_compact(
-    const secp256k1_context* ctx,
-    secp256k1_ecdsa_signature* sig,
-    const unsigned char *input64
+        const secp256k1_context* ctx,
+        cosmos_secp256k1_ecdsa_signature* sig,
+        const unsigned char *input64
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3);
 
 /** Parse a DER ECDSA signature.
@@ -315,10 +315,10 @@ SECP256K1_API int cosmos_secp256k1_ecdsa_signature_parse_compact(
  *  guaranteed to fail for every message and public key.
  */
 SECP256K1_API int secp256k1_ecdsa_signature_parse_der(
-    const secp256k1_context* ctx,
-    secp256k1_ecdsa_signature* sig,
-    const unsigned char *input,
-    size_t inputlen
+        const secp256k1_context* ctx,
+        cosmos_secp256k1_ecdsa_signature* sig,
+        const unsigned char *input,
+        size_t inputlen
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3);
 
 /** Serialize an ECDSA signature in DER format.
@@ -336,7 +336,7 @@ SECP256K1_API int secp256k1_ecdsa_signature_serialize_der(
     const secp256k1_context* ctx,
     unsigned char *output,
     size_t *outputlen,
-    const secp256k1_ecdsa_signature* sig
+    const cosmos_secp256k1_ecdsa_signature* sig
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3) SECP256K1_ARG_NONNULL(4);
 
 /** Serialize an ECDSA signature in compact (64 byte) format.
@@ -348,10 +348,10 @@ SECP256K1_API int secp256k1_ecdsa_signature_serialize_der(
  *
  *  See cosmos_secp256k1_ecdsa_signature_parse_compact for details about the encoding.
  */
-SECP256K1_API int secp256k1_ecdsa_signature_serialize_compact(
+SECP256K1_API int cosmos_secp256k1_ecdsa_signature_serialize_compact(
     const secp256k1_context* ctx,
     unsigned char *output64,
-    const secp256k1_ecdsa_signature* sig
+    const cosmos_secp256k1_ecdsa_signature* sig
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3);
 
 /** Verify an ECDSA signature.
@@ -374,7 +374,7 @@ SECP256K1_API int secp256k1_ecdsa_signature_serialize_compact(
  */
 SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ecdsa_verify(
     const secp256k1_context* ctx,
-    const secp256k1_ecdsa_signature *sig,
+    const cosmos_secp256k1_ecdsa_signature *sig,
     const unsigned char *msg32,
     const secp256k1_pubkey *pubkey
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3) SECP256K1_ARG_NONNULL(4);
@@ -422,9 +422,9 @@ SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ecdsa_verify(
  *  secp256k1_ecdsa_signature_normalize must be called before verification.
  */
 SECP256K1_API int secp256k1_ecdsa_signature_normalize(
-    const secp256k1_context* ctx,
-    secp256k1_ecdsa_signature *sigout,
-    const secp256k1_ecdsa_signature *sigin
+        const secp256k1_context* ctx,
+        cosmos_secp256k1_ecdsa_signature *sigout,
+        const cosmos_secp256k1_ecdsa_signature *sigin
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(3);
 
 /** An implementation of RFC6979 (using HMAC-SHA256) as nonce generation function.
@@ -452,7 +452,7 @@ SECP256K1_API extern const cosmos_secp256k1_nonce_function cosmos_secp256k1_nonc
  */
 SECP256K1_API int secp256k1_ecdsa_sign(
         const secp256k1_context* ctx,
-        secp256k1_ecdsa_signature *sig,
+        cosmos_secp256k1_ecdsa_signature *sig,
         const unsigned char *msg32,
         const unsigned char *seckey,
         cosmos_secp256k1_nonce_function noncefp,

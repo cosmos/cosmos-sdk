@@ -135,7 +135,7 @@ void random_scalar_order(secp256k1_scalar *num) {
 
 void run_context_tests(void) {
     secp256k1_pubkey pubkey;
-    secp256k1_ecdsa_signature sig;
+    cosmos_secp256k1_ecdsa_signature sig;
     unsigned char ctmp[32];
     int32_t ecount;
     int32_t ecount2;
@@ -3419,7 +3419,7 @@ static int nonce_function_test_retry(unsigned char *nonce32, const unsigned char
    return cosmos_nonce_function_rfc6979(nonce32, msg32, key32, algo16, data, counter - 5);
 }
 
-int is_empty_signature(const secp256k1_ecdsa_signature *sig) {
+int is_empty_signature(const cosmos_secp256k1_ecdsa_signature *sig) {
     static const unsigned char res[sizeof(secp256k1_ecdsa_signature)] = {0};
     return memcmp(sig, res, sizeof(secp256k1_ecdsa_signature)) == 0;
 }
@@ -3429,7 +3429,7 @@ void test_ecdsa_end_to_end(void) {
     unsigned char privkey[32];
     unsigned char message[32];
     unsigned char privkey2[32];
-    secp256k1_ecdsa_signature signature[6];
+    cosmos_secp256k1_ecdsa_signature signature[6];
     secp256k1_scalar r, s;
     unsigned char sig[74];
     size_t siglen = 74;
@@ -3634,13 +3634,13 @@ int test_ecdsa_der_parse(const unsigned char *sig, size_t siglen, int certainly_
 
     int ret = 0;
 
-    secp256k1_ecdsa_signature sig_der;
+    cosmos_secp256k1_ecdsa_signature sig_der;
     unsigned char roundtrip_der[2048];
     unsigned char compact_der[64];
     size_t len_der = 2048;
     int parsed_der = 0, valid_der = 0, roundtrips_der = 0;
 
-    secp256k1_ecdsa_signature sig_der_lax;
+    cosmos_secp256k1_ecdsa_signature sig_der_lax;
     unsigned char roundtrip_der_lax[2048];
     unsigned char compact_der_lax[64];
     size_t len_der_lax = 2048;
@@ -3656,7 +3656,7 @@ int test_ecdsa_der_parse(const unsigned char *sig, size_t siglen, int certainly_
 
     parsed_der = secp256k1_ecdsa_signature_parse_der(ctx, &sig_der, sig, siglen);
     if (parsed_der) {
-        ret |= (!secp256k1_ecdsa_signature_serialize_compact(ctx, compact_der, &sig_der)) << 0;
+        ret |= (!cosmos_secp256k1_ecdsa_signature_serialize_compact(ctx, compact_der, &sig_der)) << 0;
         valid_der = (memcmp(compact_der, zeroes, 32) != 0) && (memcmp(compact_der + 32, zeroes, 32) != 0);
     }
     if (valid_der) {
@@ -3666,7 +3666,7 @@ int test_ecdsa_der_parse(const unsigned char *sig, size_t siglen, int certainly_
 
     parsed_der_lax = ecdsa_signature_parse_der_lax(ctx, &sig_der_lax, sig, siglen);
     if (parsed_der_lax) {
-        ret |= (!secp256k1_ecdsa_signature_serialize_compact(ctx, compact_der_lax, &sig_der_lax)) << 10;
+        ret |= (!cosmos_secp256k1_ecdsa_signature_serialize_compact(ctx, compact_der_lax, &sig_der_lax)) << 10;
         valid_der_lax = (memcmp(compact_der_lax, zeroes, 32) != 0) && (memcmp(compact_der_lax + 32, zeroes, 32) != 0);
     }
     if (valid_der_lax) {
@@ -3952,7 +3952,7 @@ void run_ecdsa_der_parse(void) {
 /* Tests several edge cases. */
 void test_ecdsa_edge_cases(void) {
     int t;
-    secp256k1_ecdsa_signature sig;
+    cosmos_secp256k1_ecdsa_signature sig;
 
     /* Test the case where ECDSA recomputes a point that is infinity. */
     {
@@ -4196,11 +4196,11 @@ void test_ecdsa_edge_cases(void) {
         ecount = 0;
         CHECK(secp256k1_ecdsa_signature_normalize(ctx, NULL, NULL) == 0);
         CHECK(ecount == 1);
-        CHECK(secp256k1_ecdsa_signature_serialize_compact(ctx, NULL, &sig) == 0);
+        CHECK(cosmos_secp256k1_ecdsa_signature_serialize_compact(ctx, NULL, &sig) == 0);
         CHECK(ecount == 2);
-        CHECK(secp256k1_ecdsa_signature_serialize_compact(ctx, signature, NULL) == 0);
+        CHECK(cosmos_secp256k1_ecdsa_signature_serialize_compact(ctx, signature, NULL) == 0);
         CHECK(ecount == 3);
-        CHECK(secp256k1_ecdsa_signature_serialize_compact(ctx, signature, &sig) == 1);
+        CHECK(cosmos_secp256k1_ecdsa_signature_serialize_compact(ctx, signature, &sig) == 1);
         CHECK(ecount == 3);
         CHECK(cosmos_secp256k1_ecdsa_signature_parse_compact(ctx, NULL, signature) == 0);
         CHECK(ecount == 4);
@@ -4220,7 +4220,7 @@ void test_ecdsa_edge_cases(void) {
         int i;
         unsigned char key[32];
         unsigned char msg[32];
-        secp256k1_ecdsa_signature sig2;
+        cosmos_secp256k1_ecdsa_signature sig2;
         secp256k1_scalar sr[512], ss;
         const unsigned char *extra;
         extra = t == 0 ? NULL : zero;

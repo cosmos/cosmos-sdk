@@ -91,7 +91,7 @@ static void secp256k1_ecmult_gen_context_build(secp256k1_ecmult_gen_context *ctx
     secp256k1_ecmult_gen_blind(ctx, NULL);
 }
 
-static int secp256k1_ecmult_gen_context_is_built(const secp256k1_ecmult_gen_context* ctx) {
+static int cosmos_secp256k1_ecmult_gen_context_is_built(const secp256k1_ecmult_gen_context* ctx) {
     return ctx->prec != NULL;
 }
 

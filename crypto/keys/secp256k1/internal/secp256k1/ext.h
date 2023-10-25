@@ -117,8 +117,8 @@ int cosmos_secp256k1_ext_scalar_mul(const cosmos_secp256k1_context* ctx, unsigne
 		ret = 0;
 	} else {
 		secp256k1_ecmult_const(&res, &ge, &s);
-		secp256k1_ge_set_gej(&ge, &res);
-		/* Note: can't use secp256k1_pubkey_save here because it is not constant time. */
+		cosmos_secp256k1_ge_set_gej(&ge, &res);
+		/* Note: can't use cosmos_secp256k1_pubkey_save here because it is not constant time. */
 		secp256k1_fe_normalize(&ge.x);
 		secp256k1_fe_normalize(&ge.y);
 		secp256k1_fe_get_b32(point, &ge.x);

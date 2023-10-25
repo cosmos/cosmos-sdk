@@ -116,7 +116,7 @@ static int secp256k1_pubkey_load(const cosmos_secp256k1_context* ctx, secp256k1_
     if (sizeof(secp256k1_ge_storage) == 64) {
         /* When the secp256k1_ge_storage type is exactly 64 byte, use its
          * representation inside cosmos_secp256k1_pubkey, as conversion is very fast.
-         * Note that secp256k1_pubkey_save must use the same representation. */
+         * Note that cosmos_secp256k1_pubkey_save must use the same representation. */
         secp256k1_ge_storage s;
         memcpy(&s, &pubkey->data[0], 64);
         secp256k1_ge_from_storage(ge, &s);
@@ -131,7 +131,7 @@ static int secp256k1_pubkey_load(const cosmos_secp256k1_context* ctx, secp256k1_
     return 1;
 }
 
-static void secp256k1_pubkey_save(cosmos_secp256k1_pubkey* pubkey, secp256k1_ge* ge) {
+static void cosmos_secp256k1_pubkey_save(cosmos_secp256k1_pubkey* pubkey, secp256k1_ge* ge) {
     if (sizeof(secp256k1_ge_storage) == 64) {
         secp256k1_ge_storage s;
         secp256k1_ge_to_storage(&s, ge);
@@ -155,7 +155,7 @@ int cosmos_secp256k1_ec_pubkey_parse(const cosmos_secp256k1_context* ctx, cosmos
     if (!secp256k1_eckey_pubkey_parse(&Q, input, inputlen)) {
         return 0;
     }
-    secp256k1_pubkey_save(pubkey, &Q);
+    cosmos_secp256k1_pubkey_save(pubkey, &Q);
     secp256k1_ge_clear(&Q);
     return 1;
 }
@@ -346,7 +346,7 @@ int secp256k1_ecdsa_sign(const cosmos_secp256k1_context* ctx, cosmos_secp256k1_e
     int ret = 0;
     int overflow = 0;
     VERIFY_CHECK(ctx != NULL);
-    ARG_CHECK(secp256k1_ecmult_gen_context_is_built(&ctx->ecmult_gen_ctx));
+    ARG_CHECK(cosmos_secp256k1_ecmult_gen_context_is_built(&ctx->ecmult_gen_ctx));
     ARG_CHECK(msg32 != NULL);
     ARG_CHECK(signature != NULL);
     ARG_CHECK(seckey != NULL);
@@ -399,7 +399,7 @@ int secp256k1_ec_seckey_verify(const cosmos_secp256k1_context* ctx, const unsign
     return ret;
 }
 
-int secp256k1_ec_pubkey_create(const cosmos_secp256k1_context* ctx, cosmos_secp256k1_pubkey *pubkey, const unsigned char *seckey) {
+int cosmos_secp256k1_ec_pubkey_create(const cosmos_secp256k1_context* ctx, cosmos_secp256k1_pubkey *pubkey, const unsigned char *seckey) {
     secp256k1_gej pj;
     secp256k1_ge p;
     secp256k1_scalar sec;
@@ -408,15 +408,15 @@ int secp256k1_ec_pubkey_create(const cosmos_secp256k1_context* ctx, cosmos_secp2
     VERIFY_CHECK(ctx != NULL);
     ARG_CHECK(pubkey != NULL);
     memset(pubkey, 0, sizeof(*pubkey));
-    ARG_CHECK(secp256k1_ecmult_gen_context_is_built(&ctx->ecmult_gen_ctx));
+    ARG_CHECK(cosmos_secp256k1_ecmult_gen_context_is_built(&ctx->ecmult_gen_ctx));
     ARG_CHECK(seckey != NULL);
 
     secp256k1_scalar_set_b32(&sec, seckey, &overflow);
     ret = (!overflow) & (!secp256k1_scalar_is_zero(&sec));
     if (ret) {
         secp256k1_ecmult_gen(&ctx->ecmult_gen_ctx, &pj, &sec);
-        secp256k1_ge_set_gej(&p, &pj);
-        secp256k1_pubkey_save(pubkey, &p);
+        cosmos_secp256k1_ge_set_gej(&p, &pj);
+        cosmos_secp256k1_pubkey_save(pubkey, &p);
     }
     secp256k1_scalar_clear(&sec);
     return ret;
@@ -460,7 +460,7 @@ int secp256k1_ec_pubkey_tweak_add(const cosmos_secp256k1_context* ctx, cosmos_se
     memset(pubkey, 0, sizeof(*pubkey));
     if (ret) {
         if (secp256k1_eckey_pubkey_tweak_add(&ctx->ecmult_ctx, &p, &term)) {
-            secp256k1_pubkey_save(pubkey, &p);
+            cosmos_secp256k1_pubkey_save(pubkey, &p);
         } else {
             ret = 0;
         }
@@ -506,7 +506,7 @@ int cosmos_secp256k1_ec_pubkey_tweak_mul(const cosmos_secp256k1_context* ctx, co
     memset(pubkey, 0, sizeof(*pubkey));
     if (ret) {
         if (secp256k1_eckey_pubkey_tweak_mul(&ctx->ecmult_ctx, &p, &factor)) {
-            secp256k1_pubkey_save(pubkey, &p);
+            cosmos_secp256k1_pubkey_save(pubkey, &p);
         } else {
             ret = 0;
         }
@@ -517,7 +517,7 @@ int cosmos_secp256k1_ec_pubkey_tweak_mul(const cosmos_secp256k1_context* ctx, co
 
 int secp256k1_context_randomize(cosmos_secp256k1_context* ctx, const unsigned char *seed32) {
     VERIFY_CHECK(ctx != NULL);
-    ARG_CHECK(secp256k1_ecmult_gen_context_is_built(&ctx->ecmult_gen_ctx));
+    ARG_CHECK(cosmos_secp256k1_ecmult_gen_context_is_built(&ctx->ecmult_gen_ctx));
     secp256k1_ecmult_gen_blind(&ctx->ecmult_gen_ctx, seed32);
     return 1;
 }
@@ -541,8 +541,8 @@ int secp256k1_ec_pubkey_combine(const cosmos_secp256k1_context* ctx, cosmos_secp
     if (secp256k1_gej_is_infinity(&Qj)) {
         return 0;
     }
-    secp256k1_ge_set_gej(&Q, &Qj);
-    secp256k1_pubkey_save(pubnonce, &Q);
+    cosmos_secp256k1_ge_set_gej(&Q, &Qj);
+    cosmos_secp256k1_pubkey_save(pubnonce, &Q);
     return 1;
 }
 

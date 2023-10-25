@@ -232,7 +232,7 @@ void test_exhaustive_verify(const secp256k1_context *ctx, const secp256k1_ge *gr
                     /* Verify by calling verify */
                     secp256k1_ecdsa_signature_save(&sig, &r_s, &s_s);
                     memcpy(&nonconst_ge, &group[sk_s], sizeof(nonconst_ge));
-                    secp256k1_pubkey_save(&pk, &nonconst_ge);
+                    cosmos_secp256k1_pubkey_save(&pk, &nonconst_ge);
                     secp256k1_scalar_get_b32(msg32, &msg_s);
                     CHECK(should_verify ==
                           cosmos_secp256k1_ecdsa_verify(ctx, &sig, msg32, &pk));
@@ -401,7 +401,7 @@ void test_exhaustive_recovery_verify(const secp256k1_context *ctx, const secp256
                     secp256k1_ecdsa_recoverable_signature_save(&rsig, &r_s, &s_s, recid);
                     secp256k1_ecdsa_recoverable_signature_convert(ctx, &sig, &rsig);
                     memcpy(&nonconst_ge, &group[sk_s], sizeof(nonconst_ge));
-                    secp256k1_pubkey_save(&pk, &nonconst_ge);
+                    cosmos_secp256k1_pubkey_save(&pk, &nonconst_ge);
                     CHECK(should_verify ==
                           secp256k1_ecdsa_verify(ctx, &sig, msg32, &pk));
                 }
@@ -423,14 +423,14 @@ int main(void) {
 
     /* Generate the entire group */
     secp256k1_gej_set_infinity(&groupj[0]);
-    secp256k1_ge_set_gej(&group[0], &groupj[0]);
+    cosmos_secp256k1_ge_set_gej(&group[0], &groupj[0]);
     for (i = 1; i < EXHAUSTIVE_TEST_ORDER; i++) {
         /* Set a different random z-value for each Jacobian point */
         secp256k1_fe z;
         random_fe(&z);
 
         secp256k1_gej_add_ge(&groupj[i], &groupj[i - 1], &secp256k1_ge_const_g);
-        secp256k1_ge_set_gej(&group[i], &groupj[i]);
+        cosmos_secp256k1_ge_set_gej(&group[i], &groupj[i]);
         secp256k1_gej_rescale(&groupj[i], &z);
 
         /* Verify against ecmult_gen */
@@ -441,7 +441,7 @@ int main(void) {
 
             secp256k1_scalar_set_int(&scalar_i, i);
             secp256k1_ecmult_gen(&ctx->ecmult_gen_ctx, &generatedj, &scalar_i);
-            secp256k1_ge_set_gej(&generated, &generatedj);
+            cosmos_secp256k1_ge_set_gej(&generated, &generatedj);
 
             CHECK(group[i].infinity == 0);
             CHECK(generated.infinity == 0);

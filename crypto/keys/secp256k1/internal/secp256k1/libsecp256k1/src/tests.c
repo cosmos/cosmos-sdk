@@ -176,14 +176,14 @@ void run_context_tests(void) {
     random_scalar_order_test(&msg);
     random_scalar_order_test(&key);
     secp256k1_ecmult_gen(&both->ecmult_gen_ctx, &pubj, &key);
-    secp256k1_ge_set_gej(&pub, &pubj);
+    cosmos_secp256k1_ge_set_gej(&pub, &pubj);
 
     /* Verify context-type checking illegal-argument errors. */
     memset(ctmp, 1, 32);
-    CHECK(secp256k1_ec_pubkey_create(vrfy, &pubkey, ctmp) == 0);
+    CHECK(cosmos_secp256k1_ec_pubkey_create(vrfy, &pubkey, ctmp) == 0);
     CHECK(ecount == 1);
     VG_UNDEF(&pubkey, sizeof(pubkey));
-    CHECK(secp256k1_ec_pubkey_create(sign, &pubkey, ctmp) == 1);
+    CHECK(cosmos_secp256k1_ec_pubkey_create(sign, &pubkey, ctmp) == 1);
     VG_CHECK(&pubkey, sizeof(pubkey));
     CHECK(secp256k1_ecdsa_sign(vrfy, &sig, ctmp, ctmp, NULL, NULL) == 0);
     CHECK(ecount == 2);
@@ -2121,18 +2121,18 @@ void test_add_neg_y_diff_x(void) {
     secp256k1_ge b;
     secp256k1_gej resj;
     secp256k1_ge res;
-    secp256k1_ge_set_gej(&b, &bj);
+    cosmos_secp256k1_ge_set_gej(&b, &bj);
 
     secp256k1_gej_add_var(&resj, &aj, &bj, NULL);
-    secp256k1_ge_set_gej(&res, &resj);
+    cosmos_secp256k1_ge_set_gej(&res, &resj);
     ge_equals_gej(&res, &sumj);
 
     secp256k1_gej_add_ge(&resj, &aj, &b);
-    secp256k1_ge_set_gej(&res, &resj);
+    cosmos_secp256k1_ge_set_gej(&res, &resj);
     ge_equals_gej(&res, &sumj);
 
     secp256k1_gej_add_ge_var(&resj, &aj, &b, NULL);
-    secp256k1_ge_set_gej(&res, &resj);
+    cosmos_secp256k1_ge_set_gej(&res, &resj);
     ge_equals_gej(&res, &sumj);
 }
 
@@ -2158,12 +2158,12 @@ void test_ec_combine(void) {
         random_scalar_order_test(&s);
         secp256k1_scalar_add(&sum, &sum, &s);
         secp256k1_ecmult_gen(&ctx->ecmult_gen_ctx, &Qj, &s);
-        secp256k1_ge_set_gej(&Q, &Qj);
-        secp256k1_pubkey_save(&data[i - 1], &Q);
+        cosmos_secp256k1_ge_set_gej(&Q, &Qj);
+        cosmos_secp256k1_pubkey_save(&data[i - 1], &Q);
         d[i - 1] = &data[i - 1];
         secp256k1_ecmult_gen(&ctx->ecmult_gen_ctx, &Qj, &sum);
-        secp256k1_ge_set_gej(&Q, &Qj);
-        secp256k1_pubkey_save(&sd, &Q);
+        cosmos_secp256k1_ge_set_gej(&Q, &Qj);
+        cosmos_secp256k1_pubkey_save(&sd, &Q);
         CHECK(secp256k1_ec_pubkey_combine(ctx, &sd2, d, i) == 1);
         CHECK(memcmp(&sd, &sd2, sizeof(sd)) == 0);
     }
@@ -2332,7 +2332,7 @@ void test_point_times_order(const secp256k1_gej *point) {
     secp256k1_gej_add_var(&res1, &res1, &res2, NULL);
     CHECK(secp256k1_gej_is_infinity(&res1));
     CHECK(secp256k1_gej_is_valid_var(&res1) == 0);
-    secp256k1_ge_set_gej(&res3, &res1);
+    cosmos_secp256k1_ge_set_gej(&res3, &res1);
     CHECK(secp256k1_ge_is_infinity(&res3));
     CHECK(secp256k1_ge_is_valid_var(&res3) == 0);
     CHECK(secp256k1_eckey_pubkey_serialize(&res3, pub, &psize, 0) == 0);
@@ -2340,13 +2340,13 @@ void test_point_times_order(const secp256k1_gej *point) {
     CHECK(secp256k1_eckey_pubkey_serialize(&res3, pub, &psize, 1) == 0);
     /* check zero/one edge cases */
     secp256k1_ecmult(&ctx->ecmult_ctx, &res1, point, &zero, &zero);
-    secp256k1_ge_set_gej(&res3, &res1);
+    cosmos_secp256k1_ge_set_gej(&res3, &res1);
     CHECK(secp256k1_ge_is_infinity(&res3));
     secp256k1_ecmult(&ctx->ecmult_ctx, &res1, point, &one, &zero);
-    secp256k1_ge_set_gej(&res3, &res1);
+    cosmos_secp256k1_ge_set_gej(&res3, &res1);
     ge_equals_gej(&res3, point);
     secp256k1_ecmult(&ctx->ecmult_ctx, &res1, point, &zero, &one);
-    secp256k1_ge_set_gej(&res3, &res1);
+    cosmos_secp256k1_ge_set_gej(&res3, &res1);
     ge_equals_ge(&res3, &secp256k1_ge_const_g);
 }
 
@@ -2411,12 +2411,12 @@ void ecmult_const_commutativity(void) {
 
     secp256k1_ecmult_const(&res1, &secp256k1_ge_const_g, &a);
     secp256k1_ecmult_const(&res2, &secp256k1_ge_const_g, &b);
-    secp256k1_ge_set_gej(&mid1, &res1);
-    secp256k1_ge_set_gej(&mid2, &res2);
+    cosmos_secp256k1_ge_set_gej(&mid1, &res1);
+    cosmos_secp256k1_ge_set_gej(&mid2, &res2);
     secp256k1_ecmult_const(&res1, &mid1, &b);
     secp256k1_ecmult_const(&res2, &mid2, &a);
-    secp256k1_ge_set_gej(&mid1, &res1);
-    secp256k1_ge_set_gej(&mid2, &res2);
+    cosmos_secp256k1_ge_set_gej(&mid1, &res1);
+    cosmos_secp256k1_ge_set_gej(&mid2, &res2);
     ge_equals_ge(&mid1, &mid2);
 }
 
@@ -2431,14 +2431,14 @@ void ecmult_const_mult_zero_one(void) {
 
     random_group_element_test(&point);
     secp256k1_ecmult_const(&res1, &point, &zero);
-    secp256k1_ge_set_gej(&res2, &res1);
+    cosmos_secp256k1_ge_set_gej(&res2, &res1);
     CHECK(secp256k1_ge_is_infinity(&res2));
     secp256k1_ecmult_const(&res1, &point, &one);
-    secp256k1_ge_set_gej(&res2, &res1);
+    cosmos_secp256k1_ge_set_gej(&res2, &res1);
     ge_equals_ge(&res2, &point);
     secp256k1_ecmult_const(&res1, &point, &negone);
     secp256k1_gej_neg(&res1, &res1);
-    secp256k1_ge_set_gej(&res2, &res1);
+    cosmos_secp256k1_ge_set_gej(&res2, &res1);
     ge_equals_ge(&res2, &point);
 }
 
@@ -2461,10 +2461,10 @@ void ecmult_const_chain_multiply(void) {
     secp256k1_gej_set_ge(&point, &secp256k1_ge_const_g);
     for (i = 0; i < 100; ++i) {
         secp256k1_ge tmp;
-        secp256k1_ge_set_gej(&tmp, &point);
+        cosmos_secp256k1_ge_set_gej(&tmp, &point);
         secp256k1_ecmult_const(&point, &tmp, &scalar);
     }
-    secp256k1_ge_set_gej(&res, &point);
+    cosmos_secp256k1_ge_set_gej(&res, &point);
     ge_equals_gej(&res, &expected_point);
 }
 
@@ -2643,7 +2643,7 @@ void test_ecmult_gen_blind(void) {
     secp256k1_ecmult_gen(&ctx->ecmult_gen_ctx, &pgej2, &key);
     CHECK(!gej_xyz_equals_gej(&pgej, &pgej2));
     CHECK(!gej_xyz_equals_gej(&i, &ctx->ecmult_gen_ctx.initial));
-    secp256k1_ge_set_gej(&pge, &pgej);
+    cosmos_secp256k1_ge_set_gej(&pge, &pgej);
     ge_equals_gej(&pge, &pgej2);
 }
 
@@ -2745,7 +2745,7 @@ void ec_pubkey_parse_pointtest(const unsigned char *input, int xvalid, int yvali
                     CHECK(secp256k1_pubkey_load(ctx, &ge, &pubkey) == 1);
                     memset(&pubkey, 0, sizeof(pubkey));
                     VG_UNDEF(&pubkey, sizeof(pubkey));
-                    secp256k1_pubkey_save(&pubkey, &ge);
+                    cosmos_secp256k1_pubkey_save(&pubkey, &ge);
                     VG_CHECK(&pubkey, sizeof(pubkey));
                     outl = 65;
                     VG_UNDEF(pubkeyo, 65);
@@ -3119,7 +3119,7 @@ void run_eckey_edge_case_test(void) {
     /* Group order is too large, reject. */
     CHECK(secp256k1_ec_seckey_verify(ctx, orderc) == 0);
     VG_UNDEF(&pubkey, sizeof(pubkey));
-    CHECK(secp256k1_ec_pubkey_create(ctx, &pubkey, orderc) == 0);
+    CHECK(cosmos_secp256k1_ec_pubkey_create(ctx, &pubkey, orderc) == 0);
     VG_CHECK(&pubkey, sizeof(pubkey));
     CHECK(memcmp(&pubkey, zeros, sizeof(secp256k1_pubkey)) == 0);
     /* Maximum value is too large, reject. */
@@ -3127,7 +3127,7 @@ void run_eckey_edge_case_test(void) {
     CHECK(secp256k1_ec_seckey_verify(ctx, ctmp) == 0);
     memset(&pubkey, 1, sizeof(pubkey));
     VG_UNDEF(&pubkey, sizeof(pubkey));
-    CHECK(secp256k1_ec_pubkey_create(ctx, &pubkey, ctmp) == 0);
+    CHECK(cosmos_secp256k1_ec_pubkey_create(ctx, &pubkey, ctmp) == 0);
     VG_CHECK(&pubkey, sizeof(pubkey));
     CHECK(memcmp(&pubkey, zeros, sizeof(secp256k1_pubkey)) == 0);
     /* Zero is too small, reject. */
@@ -3135,7 +3135,7 @@ void run_eckey_edge_case_test(void) {
     CHECK(secp256k1_ec_seckey_verify(ctx, ctmp) == 0);
     memset(&pubkey, 1, sizeof(pubkey));
     VG_UNDEF(&pubkey, sizeof(pubkey));
-    CHECK(secp256k1_ec_pubkey_create(ctx, &pubkey, ctmp) == 0);
+    CHECK(cosmos_secp256k1_ec_pubkey_create(ctx, &pubkey, ctmp) == 0);
     VG_CHECK(&pubkey, sizeof(pubkey));
     CHECK(memcmp(&pubkey, zeros, sizeof(secp256k1_pubkey)) == 0);
     /* One must be accepted. */
@@ -3143,7 +3143,7 @@ void run_eckey_edge_case_test(void) {
     CHECK(secp256k1_ec_seckey_verify(ctx, ctmp) == 1);
     memset(&pubkey, 0, sizeof(pubkey));
     VG_UNDEF(&pubkey, sizeof(pubkey));
-    CHECK(secp256k1_ec_pubkey_create(ctx, &pubkey, ctmp) == 1);
+    CHECK(cosmos_secp256k1_ec_pubkey_create(ctx, &pubkey, ctmp) == 1);
     VG_CHECK(&pubkey, sizeof(pubkey));
     CHECK(memcmp(&pubkey, zeros, sizeof(secp256k1_pubkey)) > 0);
     pubkey_one = pubkey;
@@ -3153,7 +3153,7 @@ void run_eckey_edge_case_test(void) {
     CHECK(secp256k1_ec_seckey_verify(ctx, ctmp) == 0);
     memset(&pubkey, 1, sizeof(pubkey));
     VG_UNDEF(&pubkey, sizeof(pubkey));
-    CHECK(secp256k1_ec_pubkey_create(ctx, &pubkey, ctmp) == 0);
+    CHECK(cosmos_secp256k1_ec_pubkey_create(ctx, &pubkey, ctmp) == 0);
     VG_CHECK(&pubkey, sizeof(pubkey));
     CHECK(memcmp(&pubkey, zeros, sizeof(secp256k1_pubkey)) == 0);
     /* -1 must be accepted. */
@@ -3161,7 +3161,7 @@ void run_eckey_edge_case_test(void) {
     CHECK(secp256k1_ec_seckey_verify(ctx, ctmp) == 1);
     memset(&pubkey, 0, sizeof(pubkey));
     VG_UNDEF(&pubkey, sizeof(pubkey));
-    CHECK(secp256k1_ec_pubkey_create(ctx, &pubkey, ctmp) == 1);
+    CHECK(cosmos_secp256k1_ec_pubkey_create(ctx, &pubkey, ctmp) == 1);
     VG_CHECK(&pubkey, sizeof(pubkey));
     CHECK(memcmp(&pubkey, zeros, sizeof(secp256k1_pubkey)) > 0);
     pubkey_negone = pubkey;
@@ -3210,7 +3210,7 @@ void run_eckey_edge_case_test(void) {
     ctmp2[31] = 2;
     CHECK(secp256k1_ec_pubkey_tweak_add(ctx, &pubkey, ctmp2) == 1);
     ctmp2[31] = 1;
-    CHECK(secp256k1_ec_pubkey_create(ctx, &pubkey2, ctmp2) == 1);
+    CHECK(cosmos_secp256k1_ec_pubkey_create(ctx, &pubkey2, ctmp2) == 1);
     CHECK(memcmp(&pubkey, &pubkey2, sizeof(pubkey)) == 0);
     /* Tweak mul * 2 = 1+1. */
     CHECK(secp256k1_ec_pubkey_tweak_add(ctx, &pubkey, ctmp2) == 1);
@@ -3265,10 +3265,10 @@ void run_eckey_edge_case_test(void) {
     CHECK(cosmos_secp256k1_ec_privkey_tweak_mul(ctx, ctmp, NULL) == 0);
     CHECK(ecount == 2);
     ecount = 0;
-    CHECK(secp256k1_ec_pubkey_create(ctx, NULL, ctmp) == 0);
+    CHECK(cosmos_secp256k1_ec_pubkey_create(ctx, NULL, ctmp) == 0);
     CHECK(ecount == 1);
     memset(&pubkey, 1, sizeof(pubkey));
-    CHECK(secp256k1_ec_pubkey_create(ctx, &pubkey, NULL) == 0);
+    CHECK(cosmos_secp256k1_ec_pubkey_create(ctx, &pubkey, NULL) == 0);
     CHECK(ecount == 2);
     CHECK(memcmp(&pubkey, zeros, sizeof(secp256k1_pubkey)) == 0);
     /* secp256k1_ec_pubkey_combine tests. */
@@ -3353,7 +3353,7 @@ void test_ecdsa_sign_verify(void) {
     random_scalar_order_test(&msg);
     random_scalar_order_test(&key);
     secp256k1_ecmult_gen(&ctx->ecmult_gen_ctx, &pubj, &key);
-    secp256k1_ge_set_gej(&pub, &pubj);
+    cosmos_secp256k1_ge_set_gej(&pub, &pubj);
     getrec = secp256k1_rand_bits(1);
     random_sign(&sigr, &sigs, &key, &msg, getrec?&recid:NULL);
     if (getrec) {
@@ -3450,7 +3450,7 @@ void test_ecdsa_end_to_end(void) {
 
     /* Construct and verify corresponding public key. */
     CHECK(secp256k1_ec_seckey_verify(ctx, privkey) == 1);
-    CHECK(secp256k1_ec_pubkey_create(ctx, &pubkey, privkey) == 1);
+    CHECK(cosmos_secp256k1_ec_pubkey_create(ctx, &pubkey, privkey) == 1);
 
     /* Verify exporting and importing public key. */
     CHECK(cosmos_secp256k1_ec_pubkey_serialize(ctx, pubkeyc, &pubkeyclen, &pubkey, secp256k1_rand_bits(1) == 1 ? SECP256K1_EC_COMPRESSED : SECP256K1_EC_UNCOMPRESSED));
@@ -3475,7 +3475,7 @@ void test_ecdsa_end_to_end(void) {
         if (ret1 == 0) {
             return;
         }
-        CHECK(secp256k1_ec_pubkey_create(ctx, &pubkey2, privkey) == 1);
+        CHECK(cosmos_secp256k1_ec_pubkey_create(ctx, &pubkey2, privkey) == 1);
         CHECK(memcmp(&pubkey, &pubkey2, sizeof(pubkey)) == 0);
     }
 
@@ -3492,7 +3492,7 @@ void test_ecdsa_end_to_end(void) {
         if (ret1 == 0) {
             return;
         }
-        CHECK(secp256k1_ec_pubkey_create(ctx, &pubkey2, privkey) == 1);
+        CHECK(cosmos_secp256k1_ec_pubkey_create(ctx, &pubkey2, privkey) == 1);
         CHECK(memcmp(&pubkey, &pubkey2, sizeof(pubkey)) == 0);
     }
 
@@ -3965,7 +3965,7 @@ void test_ecdsa_edge_cases(void) {
         secp256k1_scalar_inverse(&ss, &ss);
         secp256k1_scalar_set_int(&sr, 1);
         secp256k1_ecmult_gen(&ctx->ecmult_gen_ctx, &keyj, &sr);
-        secp256k1_ge_set_gej(&key, &keyj);
+        cosmos_secp256k1_ge_set_gej(&key, &keyj);
         msg = ss;
         CHECK(secp256k1_ecdsa_sig_verify(&ctx->ecmult_ctx, &sr, &ss, &key, &msg) == 0);
     }
@@ -4160,7 +4160,7 @@ void test_ecdsa_edge_cases(void) {
         CHECK(secp256k1_ecdsa_sign(ctx, &sig, msg, NULL, precomputed_nonce_function, nonce2) == 0);
         CHECK(ecount == 3);
         CHECK(secp256k1_ecdsa_sign(ctx, &sig, msg, key, precomputed_nonce_function, nonce2) == 1);
-        CHECK(secp256k1_ec_pubkey_create(ctx, &pubkey, key) == 1);
+        CHECK(cosmos_secp256k1_ec_pubkey_create(ctx, &pubkey, key) == 1);
         CHECK(cosmos_secp256k1_ecdsa_verify(ctx, NULL, msg, &pubkey) == 0);
         CHECK(ecount == 4);
         CHECK(cosmos_secp256k1_ecdsa_verify(ctx, &sig, NULL, &pubkey) == 0);
@@ -4169,7 +4169,7 @@ void test_ecdsa_edge_cases(void) {
         CHECK(ecount == 6);
         CHECK(cosmos_secp256k1_ecdsa_verify(ctx, &sig, msg, &pubkey) == 1);
         CHECK(ecount == 6);
-        CHECK(secp256k1_ec_pubkey_create(ctx, &pubkey, NULL) == 0);
+        CHECK(cosmos_secp256k1_ec_pubkey_create(ctx, &pubkey, NULL) == 0);
         CHECK(ecount == 7);
         /* That pubkeyload fails via an ARGCHECK is a little odd but makes sense because pubkeys are an opaque data type. */
         CHECK(cosmos_secp256k1_ecdsa_verify(ctx, &sig, msg, &pubkey) == 0);

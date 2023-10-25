@@ -40,7 +40,7 @@ static void benchmark_schnorr_init(void* arg) {
         }
         secp256k1_schnorr_sign(data->ctx, data->sigs[k].sig, data->msg, data->sigs[k].key, NULL, NULL);
         data->sigs[k].pubkeylen = 33;
-        CHECK(secp256k1_ec_pubkey_create(data->ctx, &pubkey, data->sigs[k].key));
+        CHECK(cosmos_secp256k1_ec_pubkey_create(data->ctx, &pubkey, data->sigs[k].key));
         CHECK(cosmos_secp256k1_ec_pubkey_serialize(data->ctx, data->sigs[k].pubkey, &data->sigs[k].pubkeylen, &pubkey, SECP256K1_EC_COMPRESSED));
     }
 }

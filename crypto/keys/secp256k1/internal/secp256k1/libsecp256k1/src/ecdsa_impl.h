@@ -226,7 +226,7 @@ static int secp256k1_ecdsa_sig_verify(const secp256k1_ecmult_context *ctx, const
 {
     secp256k1_scalar computed_r;
     secp256k1_ge pr_ge;
-    secp256k1_ge_set_gej(&pr_ge, &pr);
+    cosmos_secp256k1_ge_set_gej(&pr_ge, &pr);
     secp256k1_fe_normalize(&pr_ge.x);
 
     secp256k1_fe_get_b32(c, &pr_ge.x);
@@ -278,7 +278,7 @@ static int secp256k1_ecdsa_sig_sign(const secp256k1_ecmult_gen_context *ctx, sec
     int overflow = 0;
 
     secp256k1_ecmult_gen(ctx, &rp, nonce);
-    secp256k1_ge_set_gej(&r, &rp);
+    cosmos_secp256k1_ge_set_gej(&r, &rp);
     secp256k1_fe_normalize(&r.x);
     secp256k1_fe_normalize(&r.y);
     secp256k1_fe_get_b32(b, &r.x);

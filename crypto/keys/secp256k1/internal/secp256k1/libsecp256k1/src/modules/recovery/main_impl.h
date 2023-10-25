@@ -127,7 +127,7 @@ int secp256k1_ecdsa_sign_recoverable(const cosmos_secp256k1_context* ctx, secp25
     int ret = 0;
     int overflow = 0;
     VERIFY_CHECK(ctx != NULL);
-    ARG_CHECK(secp256k1_ecmult_gen_context_is_built(&ctx->ecmult_gen_ctx));
+    ARG_CHECK(cosmos_secp256k1_ecmult_gen_context_is_built(&ctx->ecmult_gen_ctx));
     ARG_CHECK(msg32 != NULL);
     ARG_CHECK(signature != NULL);
     ARG_CHECK(seckey != NULL);
@@ -182,7 +182,7 @@ int cosmos_secp256k1_ecdsa_recover(const cosmos_secp256k1_context* ctx, cosmos_s
     VERIFY_CHECK(recid >= 0 && recid < 4);  /* should have been caught in parse_compact */
     secp256k1_scalar_set_b32(&m, msg32, NULL);
     if (secp256k1_ecdsa_sig_recover(&ctx->ecmult_ctx, &r, &s, &q, &m, recid)) {
-        secp256k1_pubkey_save(pubkey, &q);
+        cosmos_secp256k1_pubkey_save(pubkey, &q);
         return 1;
     } else {
         memset(pubkey, 0, sizeof(*pubkey));

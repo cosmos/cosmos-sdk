@@ -69,7 +69,7 @@ static int secp256k1_eckey_pubkey_tweak_add(const secp256k1_ecmult_context *ctx,
     if (secp256k1_gej_is_infinity(&pt)) {
         return 0;
     }
-    secp256k1_ge_set_gej(key, &pt);
+    cosmos_secp256k1_ge_set_gej(key, &pt);
     return 1;
 }
 
@@ -92,7 +92,7 @@ static int secp256k1_eckey_pubkey_tweak_mul(const secp256k1_ecmult_context *ctx,
     secp256k1_scalar_set_int(&zero, 0);
     secp256k1_gej_set_ge(&pt, key);
     secp256k1_ecmult(ctx, &pt, &pt, tweak, &zero);
-    secp256k1_ge_set_gej(key, &pt);
+    cosmos_secp256k1_ge_set_gej(key, &pt);
     return 1;
 }
 

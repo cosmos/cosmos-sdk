@@ -251,7 +251,7 @@ func (s *KeeperTestSuite) TestLastTotalPowerMigrationToColls() {
 
 			s.ctx.KVStore(s.key).Set(getLastValidatorPowerKey(valAddrs[i]), bz)
 		},
-		"f28811f2b0a0ab9db60cdcae93680faff9dbadd4a3a8a2d088bb19b0428ad3a9",
+		"198aa9b8c1d9bc02308b7b2a48944f3e4b05c6b8312cb0bcc73518d1260f682d",
 	)
 	s.Require().NoError(err)
 
@@ -266,7 +266,7 @@ func (s *KeeperTestSuite) TestLastTotalPowerMigrationToColls() {
 			err = s.stakingKeeper.LastValidatorPower.Set(s.ctx, valAddrs[i], intV)
 			s.Require().NoError(err)
 		},
-		"f28811f2b0a0ab9db60cdcae93680faff9dbadd4a3a8a2d088bb19b0428ad3a9",
+		"198aa9b8c1d9bc02308b7b2a48944f3e4b05c6b8312cb0bcc73518d1260f682d",
 	)
 	s.Require().NoError(err)
 }
@@ -284,7 +284,7 @@ func (s *KeeperTestSuite) TestSrcRedelegationsMigrationToColls() {
 			// legacy method to set in the state
 			s.ctx.KVStore(s.key).Set(getREDByValSrcIndexKey(addrs[i], valAddrs[i], valAddrs[i+1]), []byte{})
 		},
-		"cb7b7086b1e03add24f85f894531fb36b3b9746f2e661e1640ec528a4f23a3d9",
+		"cae99e5c0498356a290f9478b7db73d522840b736878a9d4c00b56d1ddd7fd04",
 	)
 	s.Require().NoError(err)
 
@@ -297,7 +297,7 @@ func (s *KeeperTestSuite) TestSrcRedelegationsMigrationToColls() {
 			err := s.stakingKeeper.RedelegationsByValSrc.Set(s.ctx, collections.Join3(valAddrs[i].Bytes(), addrs[i].Bytes(), valAddrs[i+1].Bytes()), []byte{})
 			s.Require().NoError(err)
 		},
-		"cb7b7086b1e03add24f85f894531fb36b3b9746f2e661e1640ec528a4f23a3d9",
+		"cae99e5c0498356a290f9478b7db73d522840b736878a9d4c00b56d1ddd7fd04",
 	)
 
 	s.Require().NoError(err)
@@ -316,7 +316,7 @@ func (s *KeeperTestSuite) TestDstRedelegationsMigrationToColls() {
 			// legacy method to set in the state
 			s.ctx.KVStore(s.key).Set(getREDByValDstIndexKey(addrs[i], valAddrs[i], valAddrs[i+1]), []byte{})
 		},
-		"4beb77994beff3c8ad9cecca9ee3a74fb551356250f0b8bd3936c4e4f506443b", // this hash obtained when ran this test in main branch
+		"1b7687449a83f8176a60aeced7bcfc69a2b957b9eefad60c69a9fae9acfdaa81", // this hash obtained when ran this test in main branch
 	)
 	s.Require().NoError(err)
 
@@ -329,7 +329,7 @@ func (s *KeeperTestSuite) TestDstRedelegationsMigrationToColls() {
 			err := s.stakingKeeper.RedelegationsByValDst.Set(s.ctx, collections.Join3(valAddrs[i+1].Bytes(), addrs[i].Bytes(), valAddrs[i].Bytes()), []byte{})
 			s.Require().NoError(err)
 		},
-		"4beb77994beff3c8ad9cecca9ee3a74fb551356250f0b8bd3936c4e4f506443b",
+		"1b7687449a83f8176a60aeced7bcfc69a2b957b9eefad60c69a9fae9acfdaa81",
 	)
 
 	s.Require().NoError(err)
@@ -360,7 +360,7 @@ func (s *KeeperTestSuite) TestUnbondingDelegationsMigrationToColls() {
 			s.ctx.KVStore(s.key).Set(getUBDKey(delAddrs[i], valAddrs[i]), bz)
 			s.ctx.KVStore(s.key).Set(getUBDByValIndexKey(delAddrs[i], valAddrs[i]), []byte{})
 		},
-		"d03ca412f3f6849b5148a2ca49ac2555f65f90b7fab6a289575ed337f15c0f4b",
+		"70454ad98368368aaff32d207a7a115fba49133ecf2a225d8e3eca88c6b2324c",
 	)
 	s.Require().NoError(err)
 
@@ -384,7 +384,7 @@ func (s *KeeperTestSuite) TestUnbondingDelegationsMigrationToColls() {
 			err := s.stakingKeeper.SetUnbondingDelegation(s.ctx, ubd)
 			s.Require().NoError(err)
 		},
-		"d03ca412f3f6849b5148a2ca49ac2555f65f90b7fab6a289575ed337f15c0f4b",
+		"70454ad98368368aaff32d207a7a115fba49133ecf2a225d8e3eca88c6b2324c",
 	)
 	s.Require().NoError(err)
 }
@@ -401,7 +401,7 @@ func (s *KeeperTestSuite) TestUBDQueueMigrationToColls() {
 			// legacy Set method
 			s.ctx.KVStore(s.key).Set(getUnbondingDelegationTimeKey(date), []byte{})
 		},
-		"7b8965aacc97646d6766a5a53bae397fe149d1c98fed027bea8774a18621ce6a",
+		"2dd1dd08ea1cc2b0a076c420e3888b218647b9409b435f75e5730b0e4f25e890",
 	)
 	s.Require().NoError(err)
 
@@ -414,7 +414,7 @@ func (s *KeeperTestSuite) TestUBDQueueMigrationToColls() {
 			err := s.stakingKeeper.SetUBDQueueTimeSlice(s.ctx, date, nil)
 			s.Require().NoError(err)
 		},
-		"7b8965aacc97646d6766a5a53bae397fe149d1c98fed027bea8774a18621ce6a",
+		"2dd1dd08ea1cc2b0a076c420e3888b218647b9409b435f75e5730b0e4f25e890",
 	)
 	s.Require().NoError(err)
 }
@@ -448,7 +448,7 @@ func (s *KeeperTestSuite) TestValidatorsMigrationToColls() {
 			// legacy Set method
 			s.ctx.KVStore(s.key).Set(getValidatorKey(valAddrs[i]), valBz)
 		},
-		"6a8737af6309d53494a601e900832ec27763adefd7fe8ff104477d8130d7405f",
+		"aa495d55fb45df89fcf1d4326331bfc1244ef879764abe76f6ce2a41ccd4180d",
 	)
 	s.Require().NoError(err)
 
@@ -474,7 +474,7 @@ func (s *KeeperTestSuite) TestValidatorsMigrationToColls() {
 			err := s.stakingKeeper.SetValidator(s.ctx, val)
 			s.Require().NoError(err)
 		},
-		"6a8737af6309d53494a601e900832ec27763adefd7fe8ff104477d8130d7405f",
+		"aa495d55fb45df89fcf1d4326331bfc1244ef879764abe76f6ce2a41ccd4180d",
 	)
 	s.Require().NoError(err)
 }
@@ -497,7 +497,7 @@ func (s *KeeperTestSuite) TestValidatorQueueMigrationToColls() {
 			// legacy Set method
 			s.ctx.KVStore(s.key).Set(getValidatorQueueKey(endTime, endHeight), bz)
 		},
-		"8cf5fb4def683e83ea4cc4f14d8b2abc4c6af66709ad8af391dc749e63ef7524",
+		"b23a5905ced2b76c46ddd0f7d39e2ed7dcc68cd81993c497ee314b2e1a158595",
 	)
 	s.Require().NoError(err)
 
@@ -512,7 +512,7 @@ func (s *KeeperTestSuite) TestValidatorQueueMigrationToColls() {
 			err := s.stakingKeeper.SetUnbondingValidatorsQueue(s.ctx, endTime, endHeight, addrs)
 			s.Require().NoError(err)
 		},
-		"8cf5fb4def683e83ea4cc4f14d8b2abc4c6af66709ad8af391dc749e63ef7524",
+		"b23a5905ced2b76c46ddd0f7d39e2ed7dcc68cd81993c497ee314b2e1a158595",
 	)
 	s.Require().NoError(err)
 }
@@ -540,7 +540,7 @@ func (s *KeeperTestSuite) TestRedelegationQueueMigrationToColls() {
 			s.Require().NoError(err)
 			s.ctx.KVStore(s.key).Set(getRedelegationTimeKey(date), bz)
 		},
-		"de104dd19c7a72c6b0ad03d25c897313bb1473befc118952ad88e6a8726749c9",
+		"d6a1c46c7c5793ff7094b67252c82883aecb75c8359428a59aacd3657fa16235",
 	)
 	s.Require().NoError(err)
 
@@ -562,7 +562,7 @@ func (s *KeeperTestSuite) TestRedelegationQueueMigrationToColls() {
 			err := s.stakingKeeper.SetRedelegationQueueTimeSlice(s.ctx, date, dvvTriplets.Triplets)
 			s.Require().NoError(err)
 		},
-		"de104dd19c7a72c6b0ad03d25c897313bb1473befc118952ad88e6a8726749c9",
+		"d6a1c46c7c5793ff7094b67252c82883aecb75c8359428a59aacd3657fa16235",
 	)
 	s.Require().NoError(err)
 }

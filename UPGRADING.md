@@ -34,10 +34,6 @@ Refer to SimApp `root_v2.go` and `root.go` for an example with an app v2 and a l
 
 ### Modules
 
-#### Params
-
-A standalone Go module was created and it is accessible at "cosmossdk.io/x/params".
-
 #### `**all**`
 
 ##### Genesis Interface
@@ -62,9 +58,23 @@ Most of Cosmos SDK modules have migrated to [collections](https://docs.cosmos.ne
 Many functions have been removed due to this changes as the API can be smaller thanks to collections.
 For modules that have migrated, verify you are checking against `collections.ErrNotFound` when applicable.
 
+#### `x/group`
+
+Group was spun out into its own `go.mod`. To import it use `cosmossdk.io/x/group`
+
+#### `x/gov`
+
+Gov was spun out into its own `go.mod`. To import it use `cosmossdk.io/x/gov`
+
 #### `x/distribution`
 
+Distribution was spun out into its own `go.mod`. To import it use `cosmossdk.io/x/distribution`
+
 The existing chains using x/distribution module needs to add the new x/protocolpool module.
+
+#### `x/params`
+
+A standalone Go module was created and it is accessible at "cosmossdk.io/x/params".
 
 #### `x/protocolpool`
 
@@ -396,6 +406,56 @@ if err := app.RegisterStreamingServices(appOpts, app.kvStoreKeys()); err != nil 
 #### Client
 
 The return type of the interface method `TxConfig.SignModeHandler()` has been changed from `x/auth/signing.SignModeHandler` to `x/tx/signing.HandlerMap`. This change is transparent to most users as the `TxConfig` interface is typically implemented by private `x/auth/tx.config` struct (as returned by `auth.NewTxConfig`) which has been updated to return the new type. If users have implemented their own `TxConfig` interface, they will need to update their implementation to return the new type.
+
+##### Textual sign mode
+
+A new sign mode is available in the SDK that produces more human readable output, currently only available on Ledger
+devices but soon to be implemented in other UIs. 
+
+:::tip
+This sign mode does not allow offline signing
+:::
+
+When using (legacy) application wiring, the following must be added to `app.go` after setting the app's bank keeper:
+
+```go
+	enabledSignModes := append(tx.DefaultSignModes, sigtypes.SignMode_SIGN_MODE_TEXTUAL)
+	txConfigOpts := tx.ConfigOptions{
+		EnabledSignModes:           enabledSignModes,
+		TextualCoinMetadataQueryFn: txmodule.NewBankKeeperCoinMetadataQueryFn(app.BankKeeper),
+	}
+	txConfig, err := tx.NewTxConfigWithOptions(
+		appCodec,
+		txConfigOpts,
+	)
+	if err != nil {
+		log.Fatalf("Failed to create new TxConfig with options: %v", err)
+	}
+	app.txConfig = txConfig
+```
+
+When using `depinject` / `app v2`, **it's enabled by default** if there's a bank keeper present.
+
+And in the application client (usually `root.go`):
+
+```go
+	if !clientCtx.Offline {
+		txConfigOpts.EnabledSignModes = append(txConfigOpts.EnabledSignModes, signing.SignMode_SIGN_MODE_TEXTUAL)
+		txConfigOpts.TextualCoinMetadataQueryFn = txmodule.NewGRPCCoinMetadataQueryFn(clientCtx)
+		txConfigWithTextual, err := tx.NewTxConfigWithOptions(
+			codec.NewProtoCodec(clientCtx.InterfaceRegistry),
+			txConfigOpts,
+		)
+		if err != nil {
+			return err
+		}
+		clientCtx = clientCtx.WithTxConfig(txConfigWithTextual)
+	}
+```
+
+When using `depinject` / `app v2`, the a tx config should be recreated from the `txConfigOpts` to use `NewGRPCCoinMetadataQueryFn` instead of depending on the bank keeper (that is used in the server).
+
+To learn more see the [docs](https://docs.cosmos.network/main/learn/advanced/transactions#sign_mode_textual) and the [ADR-050](https://docs.cosmos.network/main/build/architecture/adr-050-sign-mode-textual).
 
 ### Modules
 

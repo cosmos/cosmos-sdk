@@ -108,6 +108,18 @@ func TestGetFromFields(t *testing.T) {
 		expectedErr string
 	}{
 		{
+			clientCtx: client.Context{}.WithAddressCodec(addresscodec.NewBech32Codec("cosmos")).WithKeyringDefaultKeyName("alice"),
+			keyring: func() keyring.Keyring {
+				kb := keyring.NewInMemory(cfg.Codec)
+
+				_, _, err := kb.NewMnemonic("alice", keyring.English, path, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
+				require.NoError(t, err)
+
+				return kb
+			},
+			from: "",
+		},
+		{
 			clientCtx: client.Context{}.WithAddressCodec(addresscodec.NewBech32Codec("cosmos")),
 			keyring: func() keyring.Keyring {
 				kb := keyring.NewInMemory(cfg.Codec)

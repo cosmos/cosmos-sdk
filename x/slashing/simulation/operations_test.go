@@ -16,6 +16,8 @@ import (
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
+	distributionkeeper "cosmossdk.io/x/distribution/keeper"
+	distrtypes "cosmossdk.io/x/distribution/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -28,8 +30,6 @@ import (
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
-	distributionkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
-	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	mintkeeper "github.com/cosmos/cosmos-sdk/x/mint/keeper"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	slashingkeeper "github.com/cosmos/cosmos-sdk/x/slashing/keeper"
@@ -166,7 +166,9 @@ func (suite *SimTestSuite) TestSimulateMsgUnjail() {
 
 	val0ConsAddress, err := validator0.GetConsAddr()
 	suite.Require().NoError(err)
-	info := types.NewValidatorSigningInfo(val0ConsAddress, int64(4), int64(3),
+	val0ConsAddressStr, err := suite.stakingKeeper.ConsensusAddressCodec().BytesToString(val0ConsAddress)
+	suite.Require().NoError(err)
+	info := types.NewValidatorSigningInfo(val0ConsAddressStr, int64(4), int64(3),
 		time.Unix(2, 0), false, int64(10))
 	err = suite.slashingKeeper.ValidatorSigningInfo.Set(ctx, val0ConsAddress, info)
 	suite.Require().NoError(err)

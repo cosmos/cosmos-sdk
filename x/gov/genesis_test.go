@@ -6,10 +6,10 @@ import (
 	"github.com/stretchr/testify/require"
 
 	sdkmath "cosmossdk.io/math"
+	"cosmossdk.io/x/gov"
+	v1 "cosmossdk.io/x/gov/types/v1"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/gov"
-	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 )
 
 func TestImportExportQueues_ErrorUnconsistentState(t *testing.T) {

@@ -83,7 +83,7 @@ func TestFeegrantPruning(t *testing.T) {
 	feegrant.RegisterQueryServer(queryHelper, feegrantKeeper)
 	queryClient := feegrant.NewQueryClient(queryHelper)
 
-	module.EndBlocker(testCtx.Ctx, feegrantKeeper)
+	require.NoError(t, module.EndBlocker(testCtx.Ctx, feegrantKeeper))
 
 	granteeStr, err := ac.BytesToString(grantee)
 	require.NoError(t, err)
@@ -95,7 +95,7 @@ func TestFeegrantPruning(t *testing.T) {
 	require.Len(t, res.Allowances, 2)
 
 	testCtx.Ctx = testCtx.Ctx.WithHeaderInfo(header.Info{Time: now.AddDate(0, 0, 2)})
-	module.EndBlocker(testCtx.Ctx, feegrantKeeper)
+	require.NoError(t, module.EndBlocker(testCtx.Ctx, feegrantKeeper))
 
 	res, err = queryClient.Allowances(testCtx.Ctx.Context(), &feegrant.QueryAllowancesRequest{
 		Grantee: granteeStr,

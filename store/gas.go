@@ -42,6 +42,18 @@ type (
 	}
 )
 
+func (e ErrorNegativeGasConsumed) Error() string {
+	return fmt.Sprintf("negative gas consumed: %s", e.Descriptor)
+}
+
+func (e ErrorOutOfGas) Error() string {
+	return fmt.Sprintf("out of gas: %s", e.Descriptor)
+}
+
+func (e ErrorGasOverflow) Error() string {
+	return fmt.Sprintf("gas overflow: %s", e.Descriptor)
+}
+
 // GasMeter defines an interface for gas consumption tracking.
 type GasMeter interface {
 	// GasConsumed returns the amount of gas consumed so far.

@@ -73,6 +73,7 @@ func DeterministicIterations[request, response proto.Message](
 	gasConsumed uint64,
 	gasOverwrite bool,
 ) {
+	t.Helper()
 	before := ctx.GasMeter().GasConsumed()
 	prevRes, err := grpcFn(ctx, req)
 	assert.NilError(t, err)

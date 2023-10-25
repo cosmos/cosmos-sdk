@@ -528,7 +528,7 @@ func startAPIserver(config serverconfig.Config, genDocProvider node.GenesisDocPr
 		clientCtx := clientCtx.WithHomeDir(home).WithChainID(genDoc.ChainID)
 
 		if config.GRPC.Enable {
-			_, port, err := net.SplitHostPort(config.GRPC.Address)
+			_, _, err := net.SplitHostPort(config.GRPC.Address)
 			if err != nil {
 				return nil, err
 			}
@@ -543,10 +543,8 @@ func startAPIserver(config serverconfig.Config, genDocProvider node.GenesisDocPr
 				maxRecvMsgSize = serverconfig.DefaultGRPCMaxRecvMsgSize
 			}
 
-			grpcAddress := fmt.Sprintf("127.0.0.1:%s", port)
-
 			grpcClient, err := grpc.Dial(
-				grpcAddress,
+				config.GRPC.Address,
 				grpc.WithTransportCredentials(insecure.NewCredentials()),
 				grpc.WithDefaultCallOptions(
 					grpc.ForceCodec(codec.NewProtoCodec(clientCtx.InterfaceRegistry).GRPCCodec()),
@@ -559,7 +557,7 @@ func startAPIserver(config serverconfig.Config, genDocProvider node.GenesisDocPr
 			}
 
 			clientCtx = clientCtx.WithGRPCClient(grpcClient)
-			ctx.Logger.Debug("grpc client assigned to client context", "target", grpcAddress)
+			ctx.Logger.Debug("grpc client assigned to client context", "target", config.GRPC.Address)
 		}
 
 		apiSrv = api.New(clientCtx, ctx.Logger.With("module", "api-server"))

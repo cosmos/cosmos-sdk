@@ -149,17 +149,17 @@ func (gm *defaultGasMeter) Limit() Gas {
 }
 
 func (gm *defaultGasMeter) ConsumeGas(amount Gas, descriptor string) {
-	var overflow bool
-
-	gm.consumed, overflow = addGasOverflow(gm.consumed, amount)
+	newConsumed, overflow := addGasOverflow(gm.consumed, amount)
 	if overflow {
-		gm.consumed = math.MaxUint64
 		panic(ErrorGasOverflow{descriptor})
 	}
 
-	if gm.consumed > gm.limit {
+	if newConsumed > gm.limit {
+		gm.consumed = math.MaxUint64
 		panic(ErrorOutOfGas{descriptor})
 	}
+
+	gm.consumed = newConsumed
 }
 
 func (gm *defaultGasMeter) RefundGas(amount Gas, descriptor string) {

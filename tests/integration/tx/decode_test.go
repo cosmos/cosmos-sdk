@@ -11,6 +11,7 @@ import (
 
 	msgv1 "cosmossdk.io/api/cosmos/msg/v1"
 	"cosmossdk.io/math"
+	"cosmossdk.io/x/distribution"
 	"cosmossdk.io/x/evidence"
 	feegrantmodule "cosmossdk.io/x/feegrant/module"
 	"cosmossdk.io/x/gov"
@@ -33,7 +34,6 @@ import (
 	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/consensus"
-	"github.com/cosmos/cosmos-sdk/x/distribution"
 	"github.com/cosmos/cosmos-sdk/x/mint"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	"github.com/cosmos/cosmos-sdk/x/staking"

@@ -45,6 +45,7 @@ A server will consist of the following components, but is not limited to the one
 
 ```go
 type CometServer struct {
+  Version version.Version
   // can load modules with either grpc, wasm, ffi or native. 
   // Depinject helps wire different configs
   // loaded from a config file that can compose different versions of apps
@@ -64,6 +65,19 @@ type CometServer struct {
   // decoder for trancations
   TxCodec core.TxCodec 
 }
+```
+
+#### Version
+
+Version defines the applications semantic version of the application
+
+```go
+type Version struct {
+  Major int
+  Minor int
+  Patch int
+}
+
 ```
 
 #### AppManager

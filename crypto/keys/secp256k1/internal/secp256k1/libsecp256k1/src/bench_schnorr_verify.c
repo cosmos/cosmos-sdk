@@ -52,7 +52,7 @@ static void benchmark_schnorr_verify(void* arg) {
     for (i = 0; i < 20000 / data->numsigs; i++) {
         secp256k1_pubkey pubkey;
         data->sigs[0].sig[(i >> 8) % 64] ^= (i & 0xFF);
-        CHECK(secp256k1_ec_pubkey_parse(data->ctx, &pubkey, data->sigs[0].pubkey, data->sigs[0].pubkeylen));
+        CHECK(cosmos_secp256k1_ec_pubkey_parse(data->ctx, &pubkey, data->sigs[0].pubkey, data->sigs[0].pubkeylen));
         CHECK(secp256k1_schnorr_verify(data->ctx, data->sigs[0].sig, data->msg, &pubkey) == ((i & 0xFF) == 0));
         data->sigs[0].sig[(i >> 8) % 64] ^= (i & 0xFF);
     }

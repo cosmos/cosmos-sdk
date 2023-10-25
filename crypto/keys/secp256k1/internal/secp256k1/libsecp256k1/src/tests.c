@@ -2730,7 +2730,7 @@ void ec_pubkey_parse_pointtest(const unsigned char *input, int xvalid, int yvali
                 memset(&pubkey, 0, sizeof(pubkey));
                 VG_UNDEF(&pubkey, sizeof(pubkey));
                 ecount = 0;
-                CHECK(secp256k1_ec_pubkey_parse(ctx, &pubkey, pubkeyc, pubkeyclen) == 1);
+                CHECK(cosmos_secp256k1_ec_pubkey_parse(ctx, &pubkey, pubkeyc, pubkeyclen) == 1);
                 VG_CHECK(&pubkey, sizeof(pubkey));
                 outl = 65;
                 VG_UNDEF(pubkeyo, 65);
@@ -2761,7 +2761,7 @@ void ec_pubkey_parse_pointtest(const unsigned char *input, int xvalid, int yvali
                 memset(&pubkey, 0xfe, sizeof(pubkey));
                 ecount = 0;
                 VG_UNDEF(&pubkey, sizeof(pubkey));
-                CHECK(secp256k1_ec_pubkey_parse(ctx, &pubkey, pubkeyc, pubkeyclen) == 0);
+                CHECK(cosmos_secp256k1_ec_pubkey_parse(ctx, &pubkey, pubkeyc, pubkeyclen) == 0);
                 VG_CHECK(&pubkey, sizeof(pubkey));
                 CHECK(ecount == 0);
                 CHECK(secp256k1_pubkey_load(ctx, &ge, &pubkey) == 0);
@@ -2968,7 +2968,7 @@ void run_ec_pubkey_parse_test(void) {
     ecount = 0;
     VG_UNDEF(shortkey, 2);
     VG_UNDEF(&pubkey, sizeof(pubkey));
-    CHECK(secp256k1_ec_pubkey_parse(ctx, &pubkey, shortkey, 0) == 0);
+    CHECK(cosmos_secp256k1_ec_pubkey_parse(ctx, &pubkey, shortkey, 0) == 0);
     VG_CHECK(&pubkey, sizeof(pubkey));
     CHECK(ecount == 0);
     CHECK(secp256k1_pubkey_load(ctx, &ge, &pubkey) == 0);
@@ -2980,7 +2980,7 @@ void run_ec_pubkey_parse_test(void) {
         shortkey[0] = i;
         VG_UNDEF(&shortkey[1], 1);
         VG_UNDEF(&pubkey, sizeof(pubkey));
-        CHECK(secp256k1_ec_pubkey_parse(ctx, &pubkey, shortkey, 1) == 0);
+        CHECK(cosmos_secp256k1_ec_pubkey_parse(ctx, &pubkey, shortkey, 1) == 0);
         VG_CHECK(&pubkey, sizeof(pubkey));
         CHECK(ecount == 0);
         CHECK(secp256k1_pubkey_load(ctx, &ge, &pubkey) == 0);
@@ -2993,7 +2993,7 @@ void run_ec_pubkey_parse_test(void) {
         shortkey[0] = i & 255;
         shortkey[1] = i >> 8;
         VG_UNDEF(&pubkey, sizeof(pubkey));
-        CHECK(secp256k1_ec_pubkey_parse(ctx, &pubkey, shortkey, 2) == 0);
+        CHECK(cosmos_secp256k1_ec_pubkey_parse(ctx, &pubkey, shortkey, 2) == 0);
         VG_CHECK(&pubkey, sizeof(pubkey));
         CHECK(ecount == 0);
         CHECK(secp256k1_pubkey_load(ctx, &ge, &pubkey) == 0);
@@ -3003,19 +3003,19 @@ void run_ec_pubkey_parse_test(void) {
     ecount = 0;
     VG_UNDEF(&pubkey, sizeof(pubkey));
     /* 33 bytes claimed on otherwise valid input starting with 0x04, fail, zeroize output, no illegal arg error. */
-    CHECK(secp256k1_ec_pubkey_parse(ctx, &pubkey, pubkeyc, 33) == 0);
+    CHECK(cosmos_secp256k1_ec_pubkey_parse(ctx, &pubkey, pubkeyc, 33) == 0);
     VG_CHECK(&pubkey, sizeof(pubkey));
     CHECK(ecount == 0);
     CHECK(secp256k1_pubkey_load(ctx, &ge, &pubkey) == 0);
     CHECK(ecount == 1);
     /* NULL pubkey, illegal arg error. Pubkey isn't rewritten before this step, since it's NULL into the parser. */
-    CHECK(secp256k1_ec_pubkey_parse(ctx, NULL, pubkeyc, 65) == 0);
+    CHECK(cosmos_secp256k1_ec_pubkey_parse(ctx, NULL, pubkeyc, 65) == 0);
     CHECK(ecount == 2);
     /* NULL input string. Illegal arg and zeroize output. */
     memset(&pubkey, 0xfe, sizeof(pubkey));
     ecount = 0;
     VG_UNDEF(&pubkey, sizeof(pubkey));
-    CHECK(secp256k1_ec_pubkey_parse(ctx, &pubkey, NULL, 65) == 0);
+    CHECK(cosmos_secp256k1_ec_pubkey_parse(ctx, &pubkey, NULL, 65) == 0);
     VG_CHECK(&pubkey, sizeof(pubkey));
     CHECK(ecount == 1);
     CHECK(secp256k1_pubkey_load(ctx, &ge, &pubkey) == 0);
@@ -3024,7 +3024,7 @@ void run_ec_pubkey_parse_test(void) {
     memset(&pubkey, 0xfe, sizeof(pubkey));
     ecount = 0;
     VG_UNDEF(&pubkey, sizeof(pubkey));
-    CHECK(secp256k1_ec_pubkey_parse(ctx, &pubkey, pubkeyc, 64) == 0);
+    CHECK(cosmos_secp256k1_ec_pubkey_parse(ctx, &pubkey, pubkeyc, 64) == 0);
     VG_CHECK(&pubkey, sizeof(pubkey));
     CHECK(ecount == 0);
     CHECK(secp256k1_pubkey_load(ctx, &ge, &pubkey) == 0);
@@ -3033,7 +3033,7 @@ void run_ec_pubkey_parse_test(void) {
     memset(&pubkey, 0xfe, sizeof(pubkey));
     ecount = 0;
     VG_UNDEF(&pubkey, sizeof(pubkey));
-    CHECK(secp256k1_ec_pubkey_parse(ctx, &pubkey, pubkeyc, 66) == 0);
+    CHECK(cosmos_secp256k1_ec_pubkey_parse(ctx, &pubkey, pubkeyc, 66) == 0);
     VG_CHECK(&pubkey, sizeof(pubkey));
     CHECK(ecount == 0);
     CHECK(secp256k1_pubkey_load(ctx, &ge, &pubkey) == 0);
@@ -3042,7 +3042,7 @@ void run_ec_pubkey_parse_test(void) {
     memset(&pubkey, 0, sizeof(pubkey));
     ecount = 0;
     VG_UNDEF(&pubkey, sizeof(pubkey));
-    CHECK(secp256k1_ec_pubkey_parse(ctx, &pubkey, pubkeyc, 65) == 1);
+    CHECK(cosmos_secp256k1_ec_pubkey_parse(ctx, &pubkey, pubkeyc, 65) == 1);
     VG_CHECK(&pubkey, sizeof(pubkey));
     CHECK(ecount == 0);
     VG_UNDEF(&ge, sizeof(ge));
@@ -3079,11 +3079,11 @@ void run_ec_pubkey_parse_test(void) {
     /* Multiple illegal args. Should still set arg error only once. */
     ecount = 0;
     ecount2 = 11;
-    CHECK(secp256k1_ec_pubkey_parse(ctx, NULL, NULL, 65) == 0);
+    CHECK(cosmos_secp256k1_ec_pubkey_parse(ctx, NULL, NULL, 65) == 0);
     CHECK(ecount == 1);
     /* Does the illegal arg callback actually change the behavior? */
     secp256k1_context_set_illegal_callback(ctx, uncounting_illegal_callback_fn, &ecount2);
-    CHECK(secp256k1_ec_pubkey_parse(ctx, NULL, NULL, 65) == 0);
+    CHECK(cosmos_secp256k1_ec_pubkey_parse(ctx, NULL, NULL, 65) == 0);
     CHECK(ecount == 1);
     CHECK(ecount2 == 10);
     secp256k1_context_set_illegal_callback(ctx, NULL, NULL);
@@ -3455,7 +3455,7 @@ void test_ecdsa_end_to_end(void) {
     /* Verify exporting and importing public key. */
     CHECK(cosmos_secp256k1_ec_pubkey_serialize(ctx, pubkeyc, &pubkeyclen, &pubkey, secp256k1_rand_bits(1) == 1 ? SECP256K1_EC_COMPRESSED : SECP256K1_EC_UNCOMPRESSED));
     memset(&pubkey, 0, sizeof(pubkey));
-    CHECK(secp256k1_ec_pubkey_parse(ctx, &pubkey, pubkeyc, pubkeyclen) == 1);
+    CHECK(cosmos_secp256k1_ec_pubkey_parse(ctx, &pubkey, pubkeyc, pubkeyclen) == 1);
 
     /* Verify private key import and export. */
     CHECK(ec_privkey_export_der(ctx, seckey, &seckeylen, privkey, secp256k1_rand_bits(1) == 1));

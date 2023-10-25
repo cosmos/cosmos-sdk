@@ -56,7 +56,7 @@ static int secp256k1_ext_ecdsa_verify(
 	if (!cosmos_secp256k1_ecdsa_signature_parse_compact(ctx, &sig, sigdata)) {
 		return 0;
 	}
-	if (!secp256k1_ec_pubkey_parse(ctx, &pubkey, pubkeydata, pubkeylen)) {
+	if (!cosmos_secp256k1_ec_pubkey_parse(ctx, &pubkey, pubkeydata, pubkeylen)) {
 		return 0;
 	}
 	return secp256k1_ecdsa_verify(ctx, &sig, msgdata, &pubkey);
@@ -82,7 +82,7 @@ static int secp256k1_ext_reencode_pubkey(
 ) {
     cosmos_secp256k1_pubkey pubkey;
 
-	if (!secp256k1_ec_pubkey_parse(ctx, &pubkey, pubkeydata, pubkeylen)) {
+	if (!cosmos_secp256k1_ec_pubkey_parse(ctx, &pubkey, pubkeydata, pubkeylen)) {
 		return 0;
 	}
 	unsigned int flag = (outlen == 33) ? SECP256K1_EC_COMPRESSED : SECP256K1_EC_UNCOMPRESSED;

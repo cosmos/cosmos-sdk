@@ -145,7 +145,7 @@ static void secp256k1_pubkey_save(cosmos_secp256k1_pubkey* pubkey, secp256k1_ge*
     }
 }
 
-int secp256k1_ec_pubkey_parse(const cosmos_secp256k1_context* ctx, cosmos_secp256k1_pubkey* pubkey, const unsigned char *input, size_t inputlen) {
+int cosmos_secp256k1_ec_pubkey_parse(const cosmos_secp256k1_context* ctx, cosmos_secp256k1_pubkey* pubkey, const unsigned char *input, size_t inputlen) {
     secp256k1_ge Q;
 
     VERIFY_CHECK(ctx != NULL);

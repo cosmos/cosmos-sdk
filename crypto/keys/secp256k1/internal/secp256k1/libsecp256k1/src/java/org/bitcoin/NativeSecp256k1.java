@@ -439,7 +439,7 @@ public class NativeSecp256k1 {
 
     private static native byte[][] secp256k1_ec_pubkey_create(ByteBuffer byteBuff, long context);
 
-    private static native byte[][] secp256k1_ec_pubkey_parse(ByteBuffer byteBuff, long context, int inputLen);
+    private static native byte[][] cosmos_secp256k1_ec_pubkey_parse(ByteBuffer byteBuff, long context, int inputLen);
 
     private static native byte[][] secp256k1_ecdh(ByteBuffer byteBuff, long context, int inputLen);
 

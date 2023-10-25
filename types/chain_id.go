@@ -19,7 +19,6 @@ const ChainIDFieldName = "chain_id"
 func ParseChainIDFromGenesis(r io.Reader) (string, error) {
 	dec := json.NewDecoder(r)
 
-	var t json.Token
 	t, err := dec.Token()
 	if err != nil {
 		return "", err
@@ -35,7 +34,7 @@ func ParseChainIDFromGenesis(r io.Reader) (string, error) {
 		}
 		key, ok := t.(string)
 		if !ok {
-			return "", fmt.Errorf("expected string, got %s", t)
+			return "", fmt.Errorf("expected string for the key type, got %s", t)
 		}
 
 		if key == ChainIDFieldName {

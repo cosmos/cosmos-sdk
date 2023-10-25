@@ -72,6 +72,21 @@ The AppManager is responsible for loading the application and managing the appli
 
 The AppManager is responsible for state execution after block inclusion or during a predefined step in consensus. Today there are two methods of executing state, Optimistic Execution & Delayed Execution, with Comet. In the future if a new execution method is developed the AppManager will be responsible for executing state in that manner.
 
+##### Transaction Hooks
+
+When a transaction is being executed the AppManager will provide a per transaction before and after hook. This will replace the current antehandler and posthandler methods of a transaction. The replacement allows transaction validation to be run in a parallel manner. 
+
+For example a module that would like to register a prehook on a message send would do so like this:
+
+```go
+func (m Module) HookMessages(hookRegistry) {
+     sdk.RegisterPreHook(hookRegistry, func(ctx context.Context, msg bank.MsgSend) error {
+          // business logic
+     }
+)}
+```
+
+
 The AppManager is responsible for:
 
 * Loading the application from a config file

@@ -3,9 +3,10 @@ package v1
 import (
 	"strings"
 
-	"cosmossdk.io/x/accounts/internal/implementation"
 	"golang.org/x/exp/slices"
 	"google.golang.org/grpc"
+
+	"cosmossdk.io/x/accounts/internal/implementation"
 )
 
 func MakeAccountsSchemas(impls map[string]implementation.Implementation) map[string]*SchemaResponse {

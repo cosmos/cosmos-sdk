@@ -7,15 +7,16 @@ import (
 	"errors"
 	"fmt"
 
-	"cosmossdk.io/x/accounts/accountstd"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/runtime/protoiface"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/store"
+	"cosmossdk.io/x/accounts/accountstd"
 	"cosmossdk.io/x/accounts/internal/implementation"
+
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 )
 
 var errAccountTypeNotFound = errors.New("account type not found")

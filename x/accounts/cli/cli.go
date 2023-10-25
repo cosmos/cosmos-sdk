@@ -3,16 +3,18 @@ package cli
 import (
 	"fmt"
 
-	v1 "cosmossdk.io/x/accounts/v1"
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/spf13/cobra"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
 	"google.golang.org/protobuf/types/known/anypb"
+
+	v1 "cosmossdk.io/x/accounts/v1"
+
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/client/tx"
 )
 
 func TxCmd(name string) *cobra.Command {
@@ -161,7 +163,7 @@ func getSchemaForAccount(clientCtx client.Context, addr string) (*v1.SchemaRespo
 	})
 }
 
-func handlerMsgBytes(handlersSchema []*v1.SchemaResponse_Handler, msgTypeURL string, msgString string) ([]byte, error) {
+func handlerMsgBytes(handlersSchema []*v1.SchemaResponse_Handler, msgTypeURL, msgString string) ([]byte, error) {
 	var msgSchema *v1.SchemaResponse_Handler
 	for _, handler := range handlersSchema {
 		if handler.Request == msgTypeURL {
@@ -201,7 +203,7 @@ func handlerResponseJSONBytes(handlerSchema []*v1.SchemaResponse_Handler, msgTyp
 	return decodeProtoToJSON(msgSchema.Response, anyMsg.Value)
 }
 
-func encodeJSONToProto(name string, jsonMsg string) ([]byte, error) {
+func encodeJSONToProto(name, jsonMsg string) ([]byte, error) {
 	jsonBytes := []byte(jsonMsg)
 	impl, err := protoregistry.GlobalTypes.FindMessageByName(protoreflect.FullName(name))
 	if err != nil {

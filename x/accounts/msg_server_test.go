@@ -4,7 +4,6 @@ import (
 	"context"
 	"testing"
 
-	"cosmossdk.io/x/accounts/accountstd"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/runtime/protoiface"
@@ -13,6 +12,7 @@ import (
 	"google.golang.org/protobuf/types/known/wrapperspb"
 
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
+	"cosmossdk.io/x/accounts/accountstd"
 	v1 "cosmossdk.io/x/accounts/v1"
 )
 

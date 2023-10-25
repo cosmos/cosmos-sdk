@@ -18,8 +18,10 @@ var (
 	AccountStatePrefix = collections.NewPrefix(255)
 )
 
-type ModuleExecFunc = func(ctx context.Context, msg, msgResp protoiface.MessageV1) error
-type ModuleQueryFunc = func(ctx context.Context, req, resp protoiface.MessageV1) error
+type (
+	ModuleExecFunc  = func(ctx context.Context, msg, msgResp protoiface.MessageV1) error
+	ModuleQueryFunc = func(ctx context.Context, req, resp protoiface.MessageV1) error
+)
 
 type contextKey struct{}
 

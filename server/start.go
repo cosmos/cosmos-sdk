@@ -304,7 +304,6 @@ func startStandAlone(ctx *Context, clientCtx client.Context, appCreator types.Ap
 
 	defer func() {
 		_ = svr.Stop()
-
 		_ = app.Close()
 
 		if apiSrv != nil {
@@ -437,6 +436,24 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 		}
 	}
 
+	defer func() {
+		if tmNode != nil && tmNode.IsRunning() {
+			_ = tmNode.Stop()
+		}
+
+		if traceWriterCleanup != nil {
+			traceWriterCleanup()
+		}
+
+		_ = app.Close()
+
+		if apiSrv != nil {
+			_ = apiSrv.Close()
+		}
+
+		ctx.Logger.Info("exiting...")
+	}()
+
 	// At this point it is safe to block the process if we're in gRPC only mode as
 	// we do not need to start Rosetta or handle any Tendermint related processes.
 	if gRPCOnly {
@@ -493,23 +510,6 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 		case <-time.After(types.ServerStartTime): // assume server started successfully
 		}
 	}
-
-	defer func() {
-		if tmNode != nil && tmNode.IsRunning() {
-			_ = tmNode.Stop()
-			_ = app.Close()
-		}
-
-		if traceWriterCleanup != nil {
-			traceWriterCleanup()
-		}
-
-		if apiSrv != nil {
-			_ = apiSrv.Close()
-		}
-
-		ctx.Logger.Info("exiting...")
-	}()
 
 	// wait for signal capture and gracefully return
 	return WaitForQuitSignals()

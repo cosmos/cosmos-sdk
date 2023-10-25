@@ -18,7 +18,6 @@ const ChainIDFieldName = "chain_id"
 // is put before `app_state` or other big entries to enjoy the efficiency.
 // If the `chain_id` field is not found, the function will return an error.
 func ParseChainIDFromGenesis(r io.Reader) (string, error) {
-func ParseChainIDFromGenesis(r io.Reader) (string, error) {
 	dec := json.NewDecoder(r)
 
 	t, err := dec.Token()

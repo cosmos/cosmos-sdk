@@ -3,9 +3,8 @@ package testdata
 import (
 	"fmt"
 
-	"github.com/cosmos/gogoproto/proto"
-
 	"github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/gogoproto/proto"
 )
 
 type Animal interface {

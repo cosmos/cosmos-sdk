@@ -1,0 +1,54 @@
+package gas_test
+
+import (
+	"testing"
+
+	"cosmossdk.io/store/v2"
+	"cosmossdk.io/store/v2/kv/gas"
+	"cosmossdk.io/store/v2/kv/mem"
+	"github.com/stretchr/testify/suite"
+)
+
+const (
+	storeKey = "storeKey"
+	gasLimit = store.Gas(1_000_000)
+)
+
+type StoreTestSuite struct {
+	suite.Suite
+
+	parent     store.KVStore
+	gasKVStore store.BranchedKVStore
+	gasMeter   store.GasMeter
+}
+
+func TestStorageTestSuite(t *testing.T) {
+	suite.Run(t, &StoreTestSuite{})
+}
+
+func (s *StoreTestSuite) SetupTest() {
+	s.parent = mem.New(storeKey)
+	s.gasMeter = store.NewGasMeter(gasLimit)
+	s.gasKVStore = gas.New(s.parent, s.gasMeter, store.DefaultGasConfig())
+}
+
+func (s *StoreTestSuite) TearDownTest() {
+	err := s.gasKVStore.Reset()
+	s.Require().NoError(err)
+}
+
+func (s *StoreTestSuite) TestGetStoreKey() {
+	s.Require().Equal(s.parent.GetStoreKey(), s.gasKVStore.GetStoreKey())
+}
+
+func (s *StoreTestSuite) TestGetStoreType() {
+	s.Require().Equal(s.parent.GetStoreType(), s.gasKVStore.GetStoreType())
+}
+
+func (s *StoreTestSuite) TestGet() {
+	key, value := []byte("key"), []byte("value")
+	s.parent.Set(key, value)
+
+	s.Require().Equal(value, s.gasKVStore.Get(key))
+	s.Require().Equal(store.Gas(1024), s.gasMeter.GasConsumed())
+}

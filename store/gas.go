@@ -190,11 +190,11 @@ func (gm *infiniteGasMeter) GasConsumedToLimit() Gas {
 	return gm.consumed
 }
 
-func (_ *infiniteGasMeter) GasRemaining() Gas {
+func (*infiniteGasMeter) GasRemaining() Gas {
 	return math.MaxUint64
 }
 
-func (_ *infiniteGasMeter) Limit() Gas {
+func (*infiniteGasMeter) Limit() Gas {
 	return math.MaxUint64
 }
 
@@ -215,11 +215,11 @@ func (gm *infiniteGasMeter) RefundGas(amount Gas, descriptor string) {
 	gm.consumed -= amount
 }
 
-func (_ *infiniteGasMeter) IsPastLimit() bool {
+func (*infiniteGasMeter) IsPastLimit() bool {
 	return false
 }
 
-func (_ *infiniteGasMeter) IsOutOfGas() bool {
+func (*infiniteGasMeter) IsOutOfGas() bool {
 	return false
 }
 

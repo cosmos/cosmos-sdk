@@ -4,10 +4,11 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/stretchr/testify/suite"
+
 	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/kv/gas"
 	"cosmossdk.io/store/v2/kv/mem"
-	"github.com/stretchr/testify/suite"
 )
 
 const (

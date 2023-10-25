@@ -15,12 +15,26 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
-func GeTxCmds() []*cobra.Command {
-	return []*cobra.Command{GetTxInitCmd(), GetExecuteCmd()}
+func TxCmd(name string) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:                name,
+		Short:              "Transactions command for the " + name + " module",
+		RunE:               client.ValidateCmd,
+		DisableFlagParsing: true,
+	}
+	cmd.AddCommand(GetTxInitCmd(), GetExecuteCmd())
+	return cmd
 }
 
-func GetQueryCmds() []*cobra.Command {
-	return []*cobra.Command{GetQueryAccountCmd()}
+func QueryCmd(name string) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:                name,
+		Short:              "Query command for the " + name + " module",
+		RunE:               client.ValidateCmd,
+		DisableFlagParsing: true,
+	}
+	cmd.AddCommand(GetQueryAccountCmd())
+	return cmd
 }
 
 func GetTxInitCmd() *cobra.Command {

@@ -15,7 +15,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const ModuleName = "accounts"
+const (
+	ModuleName = "accounts"
+	StoreKey   = "_" + ModuleName // unfortunately accounts collides with auth store key
+)
 
 var (
 	_ module.HasName     = AppModule{}
@@ -76,27 +79,9 @@ func (m AppModule) ExportGenesis(ctx context.Context, jsonCodec codec.JSONCodec)
 func (AppModule) Name() string { return ModuleName }
 
 func (AppModule) GetTxCmd() *cobra.Command {
-	cmds := cli.GeTxCmds()
-	cmd := &cobra.Command{
-		Use:                        ModuleName,
-		Short:                      "accounts module tx commands",
-		DisableFlagParsing:         true,
-		SuggestionsMinimumDistance: 2,
-		RunE:                       client.ValidateCmd,
-	}
-	cmd.AddCommand(cmds...)
-	return cmd
+	return cli.TxCmd(ModuleName)
 }
 
 func (AppModule) GetQueryCmd() *cobra.Command {
-	cmds := cli.GetQueryCmds()
-	cmd := &cobra.Command{
-		Use:                        ModuleName,
-		Short:                      "accounts module query commands",
-		DisableFlagParsing:         true,
-		SuggestionsMinimumDistance: 2,
-		RunE:                       client.ValidateCmd,
-	}
-	cmd.AddCommand(cmds...)
-	return cmd
+	return cli.QueryCmd(ModuleName)
 }

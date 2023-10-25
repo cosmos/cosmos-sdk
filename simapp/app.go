@@ -259,7 +259,7 @@ func NewSimApp(
 		govtypes.StoreKey, consensusparamtypes.StoreKey, upgradetypes.StoreKey, feegrant.StoreKey,
 		evidencetypes.StoreKey, circuittypes.StoreKey,
 		authzkeeper.StoreKey, nftkeeper.StoreKey, group.StoreKey, pooltypes.StoreKey,
-		"_"+accounts.ModuleName, // key collision with auth module acc => accounts
+		accounts.StoreKey,
 	)
 
 	// register streaming services
@@ -285,7 +285,7 @@ func NewSimApp(
 	app.AuthKeeper = authkeeper.NewAccountKeeper(appCodec, runtime.NewKVStoreService(keys[authtypes.StoreKey]), authtypes.ProtoBaseAccount, maccPerms, authcodec.NewBech32Codec(sdk.Bech32MainPrefix), sdk.Bech32MainPrefix, authtypes.NewModuleAddress(govtypes.ModuleName).String())
 
 	accountsKeeper, err := accounts.NewKeeper(
-		runtime.NewKVStoreService(keys["_"+accounts.ModuleName]),
+		runtime.NewKVStoreService(keys[accounts.StoreKey]),
 		app.AuthKeeper.AddressCodec(),
 		appCodec.InterfaceRegistry().SigningContext(),
 		app.MsgServiceRouter(),

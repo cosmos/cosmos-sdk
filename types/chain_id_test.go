@@ -17,6 +17,7 @@ func TestParseChainIDFromGenesis(t *testing.T) {
 		name       string
 		json       string
 		expChainID string
+		expError   string
 	}{
 		{
 			"success",
@@ -29,6 +30,7 @@ func TestParseChainIDFromGenesis(t *testing.T) {
 				"chain_id": "test-chain-id"
 			}`,
 			"test-chain-id",
+			"",
 		},
 		{
 			"nested",
@@ -41,6 +43,7 @@ func TestParseChainIDFromGenesis(t *testing.T) {
 				}
 			}`,
 			"",
+			"missing chain-id in genesis file",
 		},
 		{
 			"not exist",
@@ -53,33 +56,39 @@ func TestParseChainIDFromGenesis(t *testing.T) {
 				"chain-id": "test-chain-id"
 			}`,
 			"",
+			"missing chain-id in genesis file",
 		},
 		{
 			"invalid type",
 			`{
-				"chain-id":1,
+				"chain-id": 1,
 			}`,
 			"",
+			"invalid character '}' looking for beginning of object key string",
 		},
 		{
 			"invalid json",
 			`[ " ': }`,
 			"",
+			"expected {, got [",
 		},
 		{
 			"empty chain_id",
 			`{"chain_id": ""}`,
 			"",
+			"genesis doc must include non-empty chain_id",
 		},
 		{
 			"whitespace chain_id",
 			`{"chain_id": "   "}`,
 			"",
+			"genesis doc must include non-empty chain_id",
 		},
 		{
 			"chain_id too long",
 			`{"chain_id": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"}`,
 			"",
+			"chain_id in genesis doc is too long",
 		},
 	}
 
@@ -88,6 +97,7 @@ func TestParseChainIDFromGenesis(t *testing.T) {
 			chain_id, err := ParseChainIDFromGenesis(strings.NewReader(tc.json))
 			if tc.expChainID == "" {
 				require.Error(t, err)
+				require.Contains(t, err.Error(), tc.expError)
 			} else {
 				require.NoError(t, err)
 				require.Equal(t, tc.expChainID, chain_id)

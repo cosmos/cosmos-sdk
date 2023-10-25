@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"strings"
 
 	"github.com/cometbft/cometbft/types"
 )
@@ -59,7 +60,7 @@ func ParseChainIDFromGenesis(r io.Reader) (string, error) {
 }
 
 func validateChainID(chainID string) error {
-	if chainID == "" {
+	if strings.TrimSpace(chainID) == "" {
 		return errors.New("genesis doc must include non-empty chain_id")
 	}
 	if len(chainID) > types.MaxChainIDLen {

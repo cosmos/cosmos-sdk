@@ -293,7 +293,7 @@ SECP256K1_API int cosmos_secp256k1_ec_pubkey_serialize(
  *  S are zero, the resulting sig value is guaranteed to fail validation for any
  *  message and public key.
  */
-SECP256K1_API int secp256k1_ecdsa_signature_parse_compact(
+SECP256K1_API int cosmos_secp256k1_ecdsa_signature_parse_compact(
     const secp256k1_context* ctx,
     secp256k1_ecdsa_signature* sig,
     const unsigned char *input64
@@ -346,7 +346,7 @@ SECP256K1_API int secp256k1_ecdsa_signature_serialize_der(
  *  Out:    output64:  a pointer to a 64-byte array to store the compact serialization
  *  In:     sig:       a pointer to an initialized signature object
  *
- *  See secp256k1_ecdsa_signature_parse_compact for details about the encoding.
+ *  See cosmos_secp256k1_ecdsa_signature_parse_compact for details about the encoding.
  */
 SECP256K1_API int secp256k1_ecdsa_signature_serialize_compact(
     const secp256k1_context* ctx,

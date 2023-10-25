@@ -4202,14 +4202,14 @@ void test_ecdsa_edge_cases(void) {
         CHECK(ecount == 3);
         CHECK(secp256k1_ecdsa_signature_serialize_compact(ctx, signature, &sig) == 1);
         CHECK(ecount == 3);
-        CHECK(secp256k1_ecdsa_signature_parse_compact(ctx, NULL, signature) == 0);
+        CHECK(cosmos_secp256k1_ecdsa_signature_parse_compact(ctx, NULL, signature) == 0);
         CHECK(ecount == 4);
-        CHECK(secp256k1_ecdsa_signature_parse_compact(ctx, &sig, NULL) == 0);
+        CHECK(cosmos_secp256k1_ecdsa_signature_parse_compact(ctx, &sig, NULL) == 0);
         CHECK(ecount == 5);
-        CHECK(secp256k1_ecdsa_signature_parse_compact(ctx, &sig, signature) == 1);
+        CHECK(cosmos_secp256k1_ecdsa_signature_parse_compact(ctx, &sig, signature) == 1);
         CHECK(ecount == 5);
         memset(signature, 255, 64);
-        CHECK(secp256k1_ecdsa_signature_parse_compact(ctx, &sig, signature) == 0);
+        CHECK(cosmos_secp256k1_ecdsa_signature_parse_compact(ctx, &sig, signature) == 0);
         CHECK(ecount == 5);
         secp256k1_context_set_illegal_callback(ctx, NULL, NULL);
     }

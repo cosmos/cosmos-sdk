@@ -66,14 +66,6 @@ func (s *Store) Reset() error {
 	return s.parent.Reset()
 }
 
-func (s *Store) Iterator(start, end []byte) store.Iterator {
-	panic("not implemented!")
-}
-
-func (s *Store) ReverseIterator(start, end []byte) store.Iterator {
-	panic("not implemented!")
-}
-
 func (s *Store) Write() {
 	if b, ok := s.parent.(store.BranchedKVStore); ok {
 		b.Write()
@@ -86,4 +78,12 @@ func (s *Store) Branch() store.BranchedKVStore {
 
 func (s *Store) BranchWithTrace(_ io.Writer, _ store.TraceContext) store.BranchedKVStore {
 	panic(fmt.Sprintf("cannot call BranchWithTrace() on %T", s))
+}
+
+func (s *Store) Iterator(start, end []byte) store.Iterator {
+	return newIterator(s.parent.Iterator(start, end), s.gasMeter, s.gasConfig)
+}
+
+func (s *Store) ReverseIterator(start, end []byte) store.Iterator {
+	return newIterator(s.parent.ReverseIterator(start, end), s.gasMeter, s.gasConfig)
 }

@@ -26,7 +26,7 @@ void bench_recover(void* arg) {
         size_t pubkeylen = 33;
         secp256k1_ecdsa_recoverable_signature sig;
         CHECK(secp256k1_ecdsa_recoverable_signature_parse_compact(data->ctx, &sig, data->sig, i % 2));
-        CHECK(secp256k1_ecdsa_recover(data->ctx, &pubkey, &sig, data->msg));
+        CHECK(cosmos_secp256k1_ecdsa_recover(data->ctx, &pubkey, &sig, data->msg));
         CHECK(cosmos_secp256k1_ec_pubkey_serialize(data->ctx, pubkeyc, &pubkeylen, &pubkey, SECP256K1_EC_COMPRESSED));
         for (j = 0; j < 32; j++) {
             data->sig[j + 32] = data->msg[j];    /* Move former message to S. */

@@ -167,7 +167,7 @@ int secp256k1_ecdsa_sign_recoverable(const cosmos_secp256k1_context* ctx, secp25
     return ret;
 }
 
-int secp256k1_ecdsa_recover(const cosmos_secp256k1_context* ctx, cosmos_secp256k1_pubkey *pubkey, const secp256k1_ecdsa_recoverable_signature *signature, const unsigned char *msg32) {
+int cosmos_secp256k1_ecdsa_recover(const cosmos_secp256k1_context* ctx, cosmos_secp256k1_pubkey *pubkey, const secp256k1_ecdsa_recoverable_signature *signature, const unsigned char *msg32) {
     secp256k1_ge q;
     secp256k1_scalar r, s;
     secp256k1_scalar m;

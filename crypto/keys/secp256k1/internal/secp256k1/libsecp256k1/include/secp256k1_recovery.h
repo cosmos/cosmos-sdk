@@ -96,7 +96,7 @@ SECP256K1_API int secp256k1_ecdsa_sign_recoverable(
  *  In:      sig:        pointer to initialized signature that supports pubkey recovery (cannot be NULL)
  *           msg32:      the 32-byte message hash assumed to be signed (cannot be NULL)
  */
-SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ecdsa_recover(
+SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int cosmos_secp256k1_ecdsa_recover(
     const cosmos_secp256k1_context* ctx,
     cosmos_secp256k1_pubkey *pubkey,
     const secp256k1_ecdsa_recoverable_signature *sig,

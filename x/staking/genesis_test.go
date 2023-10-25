@@ -6,10 +6,10 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"cosmossdk.io/math"
-
 	"cosmossdk.io/x/staking"
 	"cosmossdk.io/x/staking/testutil"
 	"cosmossdk.io/x/staking/types"
+
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

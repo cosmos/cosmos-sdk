@@ -8,6 +8,7 @@ import (
 
 	"cosmossdk.io/x/staking/keeper"
 	"cosmossdk.io/x/staking/types"
+
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

@@ -13,8 +13,8 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 
 	"cosmossdk.io/math"
-
 	stakingtypes "cosmossdk.io/x/staking/types"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"

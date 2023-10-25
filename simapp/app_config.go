@@ -48,11 +48,11 @@ import (
 	pooltypes "cosmossdk.io/x/protocolpool/types"
 	_ "cosmossdk.io/x/slashing" // import for side-effects
 	slashingtypes "cosmossdk.io/x/slashing/types"
+	_ "cosmossdk.io/x/staking" // import for side-effects
+	stakingtypes "cosmossdk.io/x/staking/types"
 	_ "cosmossdk.io/x/upgrade" // import for side-effects
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 
-	_ "cosmossdk.io/x/staking" // import for side-effects
-	stakingtypes "cosmossdk.io/x/staking/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config" // import for side-effects

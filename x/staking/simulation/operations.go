@@ -6,9 +6,9 @@ import (
 	"math/rand"
 
 	"cosmossdk.io/math"
-
 	"cosmossdk.io/x/staking/keeper"
 	"cosmossdk.io/x/staking/types"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"

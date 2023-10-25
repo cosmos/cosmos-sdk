@@ -4,8 +4,8 @@ import (
 	"context"
 
 	"cosmossdk.io/x/slashing/types"
-
 	stakingtypes "cosmossdk.io/x/staking/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 

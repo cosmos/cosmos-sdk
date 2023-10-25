@@ -7,6 +7,7 @@ import (
 	abci "github.com/cometbft/cometbft/abci/types"
 
 	"cosmossdk.io/x/staking/types"
+
 	"github.com/cosmos/cosmos-sdk/telemetry"
 )
 

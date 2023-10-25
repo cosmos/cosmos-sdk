@@ -10,8 +10,8 @@ import (
 
 	"cosmossdk.io/log"
 	"cosmossdk.io/x/distribution"
-
 	"cosmossdk.io/x/staking"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server"

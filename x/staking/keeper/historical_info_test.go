@@ -6,7 +6,6 @@ import (
 	"cosmossdk.io/collections"
 	coreheader "cosmossdk.io/core/header"
 	"cosmossdk.io/math"
-
 	"cosmossdk.io/x/staking/testutil"
 	stakingtypes "cosmossdk.io/x/staking/types"
 )

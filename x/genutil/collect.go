@@ -13,6 +13,7 @@ import (
 	cfg "github.com/cometbft/cometbft/config"
 
 	stakingtypes "cosmossdk.io/x/staking/types"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdkruntime "github.com/cosmos/cosmos-sdk/runtime"

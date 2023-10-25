@@ -16,8 +16,8 @@ import (
 	"cosmossdk.io/x/group/keeper"
 	"cosmossdk.io/x/group/module"
 	grouptestutil "cosmossdk.io/x/group/testutil"
-
 	stakingkeeper "cosmossdk.io/x/staking/keeper"
+
 	codecaddress "github.com/cosmos/cosmos-sdk/codec/address"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/runtime"

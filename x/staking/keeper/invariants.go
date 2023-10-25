@@ -6,8 +6,8 @@ import (
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
-
 	"cosmossdk.io/x/staking/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 

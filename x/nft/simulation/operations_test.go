@@ -16,8 +16,8 @@ import (
 	nftkeeper "cosmossdk.io/x/nft/keeper"
 	"cosmossdk.io/x/nft/simulation"
 	"cosmossdk.io/x/nft/testutil"
-
 	stakingkeeper "cosmossdk.io/x/staking/keeper"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"

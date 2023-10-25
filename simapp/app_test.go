@@ -22,9 +22,9 @@ import (
 	"cosmossdk.io/x/gov"
 	group "cosmossdk.io/x/group/module"
 	"cosmossdk.io/x/slashing"
+	"cosmossdk.io/x/staking"
 	"cosmossdk.io/x/upgrade"
 
-	"cosmossdk.io/x/staking"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"

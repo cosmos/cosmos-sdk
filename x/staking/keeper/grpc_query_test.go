@@ -6,6 +6,7 @@ import (
 
 	"cosmossdk.io/x/staking/testutil"
 	"cosmossdk.io/x/staking/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 

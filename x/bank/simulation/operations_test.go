@@ -10,8 +10,8 @@ import (
 
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
-
 	_ "cosmossdk.io/x/staking"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/runtime"

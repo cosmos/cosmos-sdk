@@ -19,6 +19,7 @@ import (
 	"google.golang.org/grpc/codes"
 
 	_ "cosmossdk.io/x/staking"
+
 	"github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"

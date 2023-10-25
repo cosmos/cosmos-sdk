@@ -5,8 +5,8 @@ import (
 	cmttypes "github.com/cometbft/cometbft/types"
 
 	"cosmossdk.io/math"
-
 	"cosmossdk.io/x/staking/types"
+
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 )
 

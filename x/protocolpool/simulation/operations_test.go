@@ -14,8 +14,8 @@ import (
 	"cosmossdk.io/x/protocolpool/simulation"
 	pooltestutil "cosmossdk.io/x/protocolpool/testutil"
 	"cosmossdk.io/x/protocolpool/types"
-
 	stakingkeeper "cosmossdk.io/x/staking/keeper"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/runtime"

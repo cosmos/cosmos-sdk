@@ -22,9 +22,9 @@ import (
 	"cosmossdk.io/x/slashing/simulation"
 	"cosmossdk.io/x/slashing/testutil"
 	"cosmossdk.io/x/slashing/types"
-
 	stakingkeeper "cosmossdk.io/x/staking/keeper"
 	stakingtypes "cosmossdk.io/x/staking/types"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"

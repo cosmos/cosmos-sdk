@@ -15,11 +15,11 @@ import (
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
-
 	"cosmossdk.io/x/staking/client/cli"
 	"cosmossdk.io/x/staking/keeper"
 	"cosmossdk.io/x/staking/simulation"
 	"cosmossdk.io/x/staking/types"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"

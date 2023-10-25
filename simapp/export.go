@@ -10,9 +10,9 @@ import (
 	"cosmossdk.io/collections"
 	storetypes "cosmossdk.io/store/types"
 	slashingtypes "cosmossdk.io/x/slashing/types"
-
 	"cosmossdk.io/x/staking"
 	stakingtypes "cosmossdk.io/x/staking/types"
+
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

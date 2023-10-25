@@ -9,9 +9,9 @@ import (
 	"gotest.tools/v3/assert"
 
 	"cosmossdk.io/math"
-
 	"cosmossdk.io/x/staking"
 	"cosmossdk.io/x/staking/types"
+
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"

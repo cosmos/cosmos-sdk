@@ -9,8 +9,8 @@ import (
 	"cosmossdk.io/math"
 	"cosmossdk.io/simapp"
 	"cosmossdk.io/x/distribution/client/cli"
-
 	stakingtypes "cosmossdk.io/x/staking/types"
+
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"

@@ -7,8 +7,8 @@ import (
 	"time"
 
 	sdkmath "cosmossdk.io/math"
-
 	"cosmossdk.io/x/staking/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/types/simulation"

@@ -2,8 +2,8 @@ package testutil
 
 import (
 	_ "cosmossdk.io/x/nft/module" // import as blank for app wiring
+	_ "cosmossdk.io/x/staking"    // import as blank for app wiring
 
-	_ "cosmossdk.io/x/staking" // import as blank for app wiring
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
 	_ "github.com/cosmos/cosmos-sdk/x/auth"           // import as blank for app wiring
 	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config" // import as blank for app wiring

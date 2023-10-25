@@ -10,8 +10,8 @@ import (
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
-
 	"cosmossdk.io/x/staking/types"
+
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"

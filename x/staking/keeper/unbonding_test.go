@@ -4,9 +4,9 @@ import (
 	"time"
 
 	"cosmossdk.io/math"
-
 	"cosmossdk.io/x/staking/testutil"
 	"cosmossdk.io/x/staking/types"
+
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

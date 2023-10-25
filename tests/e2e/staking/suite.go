@@ -10,8 +10,8 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/math"
-
 	stakingtypes "cosmossdk.io/x/staking/types"
+
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"

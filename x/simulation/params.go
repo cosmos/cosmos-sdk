@@ -9,6 +9,7 @@ import (
 	"github.com/cometbft/cometbft/types"
 
 	stakingtypes "cosmossdk.io/x/staking/types"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 )

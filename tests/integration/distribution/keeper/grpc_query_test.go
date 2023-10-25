@@ -9,9 +9,9 @@ import (
 	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/distribution/types"
-
 	stakingtestutil "cosmossdk.io/x/staking/testutil"
 	stakingtypes "cosmossdk.io/x/staking/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 )

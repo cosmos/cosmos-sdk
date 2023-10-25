@@ -24,7 +24,7 @@ static int secp256k1_ext_ecdsa_recover(
 	secp256k1_ecdsa_recoverable_signature sig;
 	cosmos_secp256k1_pubkey pubkey;
 
-	if (!secp256k1_ecdsa_recoverable_signature_parse_compact(ctx, &sig, sigdata, (int)sigdata[64])) {
+	if (!cosmos_secp256k1_ecdsa_recoverable_signature_parse_compact(ctx, &sig, sigdata, (int)sigdata[64])) {
 		return 0;
 	}
 	if (!cosmos_secp256k1_ecdsa_recover(ctx, &pubkey, &sig, msgdata)) {

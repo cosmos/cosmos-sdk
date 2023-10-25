@@ -33,7 +33,7 @@ typedef struct {
  *  In:   input64: a pointer to a 64-byte compact signature
  *        recid:   the recovery id (0, 1, 2 or 3)
  */
-SECP256K1_API int secp256k1_ecdsa_recoverable_signature_parse_compact(
+SECP256K1_API int cosmos_secp256k1_ecdsa_recoverable_signature_parse_compact(
     const cosmos_secp256k1_context* ctx,
     secp256k1_ecdsa_recoverable_signature* sig,
     const unsigned char *input64,

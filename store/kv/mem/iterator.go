@@ -1,4 +1,4 @@
-package memkv
+package mem
 
 import (
 	"bytes"

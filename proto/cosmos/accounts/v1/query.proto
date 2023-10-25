@@ -10,6 +10,8 @@ service Query {
   rpc AccountQuery(AccountQueryRequest) returns (AccountQueryResponse) {};
   // Schema returns an x/account schema. Unstable.
   rpc Schema(SchemaRequest) returns (SchemaResponse) {};
+  // AccountType returns the account type for an address.
+  rpc AccountType(AccountTypeRequest) returns (AccountTypeResponse) {};
 }
 
 // AccountQueryRequest is the request type for the Query/AccountQuery RPC
@@ -49,4 +51,16 @@ message SchemaResponse {
   repeated Handler execute_handlers = 2;
   // query_handlers defines the schema descriptor for the Query account method.
   repeated Handler query_handlers = 3;
+}
+
+// AccountTypeRequest is the request type for the Query/AccountType RPC method.
+message QueryAccountTypeRequest {
+  // address defines the address to query the account type for.
+  string address = 1;
+}
+
+// AccountTypeResponse is the response type for the Query/AccountType RPC method.
+message AccountTypeResponse {
+  // account_type defines the account type for the address.
+  string account_type = 1;
 }

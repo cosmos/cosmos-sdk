@@ -4,6 +4,7 @@ import (
 	"context"
 
 	v1 "cosmossdk.io/x/accounts/v1"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 var _ v1.MsgServer = msgServer{}
@@ -51,6 +52,9 @@ func (m msgServer) Init(ctx context.Context, request *v1.MsgInit) (*v1.MsgInitRe
 		return nil, err
 	}
 
+	sdk.UnwrapSDKContext(ctx).EventManager().EmitEvent(
+		sdk.NewEvent("account_creation", sdk.NewAttribute("address", accAddrString)),
+	)
 	return &v1.MsgInitResponse{
 		AccountAddress: accAddrString,
 		Response:       respBytes,

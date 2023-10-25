@@ -68,3 +68,17 @@ func (q queryServer) Schema(_ context.Context, request *v1.SchemaRequest) (*v1.S
 	}
 	return schema, nil
 }
+
+func (q queryServer) AccountType(ctx context.Context, request *v1.AccountTypeRequest) (*v1.AccountTypeResponse, error) {
+	addr, err := q.k.addressCodec.StringToBytes(request.Address)
+	if err != nil {
+		return nil, err
+	}
+	accType, err := q.k.AccountsByType.Get(ctx, addr)
+	if err != nil {
+		return nil, err
+	}
+	return &v1.AccountTypeResponse{
+		AccountType: accType,
+	}, nil
+}

@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 
+	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/x/accounts/cli"
 	v1 "cosmossdk.io/x/accounts/v1"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -21,9 +22,10 @@ const (
 )
 
 var (
-	_ module.HasName     = AppModule{}
-	_ module.HasGenesis  = AppModule{}
-	_ module.HasServices = AppModule{}
+	_ appmodule.AppModule = AppModule{}
+	_ module.HasName      = AppModule{}
+	_ module.HasGenesis   = AppModule{}
+	_ module.HasServices  = AppModule{}
 )
 
 func NewAppModule(k Keeper) AppModule {
@@ -33,6 +35,10 @@ func NewAppModule(k Keeper) AppModule {
 type AppModule struct {
 	k Keeper
 }
+
+func (m AppModule) IsOnePerModuleType() {}
+
+func (m AppModule) IsAppModule() {}
 
 func (m AppModule) RegisterLegacyAminoCodec(_ *codec.LegacyAmino) {}
 

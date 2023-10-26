@@ -128,6 +128,38 @@ func (s *RootStoreTestSuite) TestBranch() {
 	s.Require().Equal([]byte("updated_bar"), bs.Get([]byte("foo")))
 }
 
+func (s *RootStoreTestSuite) TestLoadVersion() {
+	// write and commit a few changesets
+	for v := 1; v <= 5; v++ {
+		bs := s.rootStore.GetBranchedKVStore("")
+		val := fmt.Sprintf("val%03d", v) // val001, val002, ..., val005
+		bs.Set([]byte("key"), []byte(val))
+
+		workingHash, err := s.rootStore.WorkingHash()
+		s.Require().NoError(err)
+		s.Require().NotNil(workingHash)
+
+		commitHash, err := s.rootStore.Commit()
+		s.Require().NoError(err)
+		s.Require().NotNil(commitHash)
+		s.Require().Equal(workingHash, commitHash)
+	}
+
+	latest, err := s.rootStore.GetLatestVersion()
+	s.Require().NoError(err)
+	s.Require().Equal(uint64(5), latest)
+
+	err = s.rootStore.LoadVersion(6)
+	s.Require().Error(err)
+
+	err = s.rootStore.LoadVersion(3)
+	s.Require().NoError(err)
+
+	kvStore := s.rootStore.GetKVStore("")
+	val := kvStore.Get([]byte("key"))
+	s.Require().Equal([]byte("val003"), val)
+}
+
 func (s *RootStoreTestSuite) TestMultiBranch() {
 	// write and commit a changeset
 	bs := s.rootStore.GetKVStore("")

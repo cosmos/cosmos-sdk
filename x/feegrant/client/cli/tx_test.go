@@ -18,6 +18,9 @@ import (
 	"cosmossdk.io/x/feegrant"
 	"cosmossdk.io/x/feegrant/client/cli"
 	"cosmossdk.io/x/feegrant/module"
+	govcli "cosmossdk.io/x/gov/client/cli"
+	govv1 "cosmossdk.io/x/gov/types/v1"
+	govv1beta1 "cosmossdk.io/x/gov/types/v1beta1"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -28,9 +31,6 @@ import (
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	testutilmod "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
-	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
-	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
 const (
@@ -136,7 +136,7 @@ func (s *CLITestSuite) createGrant(granter, grantee sdk.Address) {
 		commonFlags...,
 	)
 
-	cmd := cli.NewCmdFeeGrant(addresscodec.NewBech32Codec("cosmos"))
+	cmd := cli.NewCmdFeeGrant()
 	out, err := clitestutil.ExecTestCLICmd(s.clientCtx, cmd, args)
 	s.Require().NoError(err)
 
@@ -423,100 +423,7 @@ func (s *CLITestSuite) TestNewCmdFeeGrant() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			cmd := cli.NewCmdFeeGrant(addresscodec.NewBech32Codec("cosmos"))
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
-
-			if tc.expectErr {
-				s.Require().Error(err)
-			} else {
-				s.Require().NoError(err)
-				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
-			}
-		})
-	}
-}
-
-func (s *CLITestSuite) TestNewCmdRevokeFeegrant() {
-	granter := s.addedGranter
-	grantee := s.addedGrantee
-	clientCtx := s.clientCtx
-
-	commonFlags := []string{
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(10))).String()),
-	}
-
-	addressCodec := addresscodec.NewBech32Codec("cosmos")
-	// Create new fee grant specifically to test amino.
-	encodedGrantee := "cosmos16ydaqh0fcnh4qt7a3jme4mmztm2qel5axcpw00"
-	aminoGrantee, err := addressCodec.StringToBytes(encodedGrantee)
-	s.Require().NoError(err)
-	s.createGrant(granter, sdk.AccAddress(aminoGrantee))
-
-	testCases := []struct {
-		name         string
-		args         []string
-		expectErr    bool
-		expectedCode uint32
-		respType     proto.Message
-	}{
-		{
-			"invalid granter",
-			append(
-				[]string{
-					"wrong_granter",
-					grantee.String(),
-					fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
-				},
-				commonFlags...,
-			),
-			true, 0, nil,
-		},
-		{
-			"invalid grantee",
-			append(
-				[]string{
-					granter.String(),
-					"wrong_grantee",
-					fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
-				},
-				commonFlags...,
-			),
-			true, 0, nil,
-		},
-		{
-			"Valid revoke",
-			append(
-				[]string{
-					granter.String(),
-					grantee.String(),
-					fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
-				},
-				commonFlags...,
-			),
-			false, 0, &sdk.TxResponse{},
-		},
-		{
-			"Valid revoke with amino",
-			append(
-				[]string{
-					granter.String(),
-					encodedGrantee,
-					fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
-					fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeLegacyAminoJSON),
-				},
-				commonFlags...,
-			),
-			false, 0, &sdk.TxResponse{},
-		},
-	}
-
-	for _, tc := range testCases {
-		tc := tc
-
-		s.Run(tc.name, func() {
-			cmd := cli.NewCmdRevokeFeegrant(addresscodec.NewBech32Codec("cosmos"))
+			cmd := cli.NewCmdFeeGrant()
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 
 			if tc.expectErr {
@@ -559,7 +466,7 @@ func (s *CLITestSuite) TestTxWithFeeGrant() {
 		commonFlags...,
 	)
 
-	cmd := cli.NewCmdFeeGrant(addresscodec.NewBech32Codec("cosmos"))
+	cmd := cli.NewCmdFeeGrant()
 
 	var res sdk.TxResponse
 	out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
@@ -712,7 +619,7 @@ func (s *CLITestSuite) TestFilteredFeeAllowance() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			cmd := cli.NewCmdFeeGrant(addresscodec.NewBech32Codec("cosmos"))
+			cmd := cli.NewCmdFeeGrant()
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErrMsg != "" {
 				s.Require().Error(err)
@@ -762,7 +669,7 @@ func (s *CLITestSuite) TestFilteredFeeAllowance() {
 					commonFlags...,
 				)
 
-				cmd := cli.NewCmdFeeGrant(addresscodec.NewBech32Codec("cosmos"))
+				cmd := cli.NewCmdFeeGrant()
 				out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &sdk.TxResponse{}), out.String())
 

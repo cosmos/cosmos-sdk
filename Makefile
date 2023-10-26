@@ -203,7 +203,6 @@ TEST_TARGETS := test-unit test-unit-amino test-unit-proto test-ledger-mock test-
 # a new rule, customise ARGS or TEST_PACKAGES ad libitum, and
 # append the new rule to the TEST_TARGETS list.
 test-unit: test_tags += cgo ledger test_ledger_mock norace
-test-unit-amino: test_tags += ledger test_ledger_mock test_amino norace
 test-ledger: test_tags += cgo ledger norace
 test-ledger-mock: test_tags += ledger test_ledger_mock norace
 test-race: test_tags += cgo ledger test_ledger_mock
@@ -215,7 +214,6 @@ $(TEST_TARGETS): run-tests
 # note: go test -c doesn't support multiple packages yet (https://github.com/golang/go/issues/15513)
 CHECK_TEST_TARGETS := check-test-unit check-test-unit-amino
 check-test-unit: test_tags += cgo ledger test_ledger_mock norace
-check-test-unit-amino: test_tags += ledger test_ledger_mock test_amino norace
 $(CHECK_TEST_TARGETS): EXTRA_ARGS=-run=none
 $(CHECK_TEST_TARGETS): run-tests
 
@@ -270,9 +268,9 @@ test-sim-nondeterminism-streaming:
 
 test-sim-custom-genesis-fast:
 	@echo "Running custom genesis simulation..."
-	@echo "By default, ${HOME}/.gaiad/config/genesis.json will be used."
-	@cd ${CURRENT_DIR}/simapp && go test -mod=readonly -run TestFullAppSimulation -Genesis=${HOME}/.gaiad/config/genesis.json \
-		-Enabled=true -NumBlocks=100 -BlockSize=200 -Commit=true -Seed=99 -Period=5 -v -timeout 24h
+	@echo "By default, ${HOME}/.simapp/config/genesis.json will be used."
+	@cd ${CURRENT_DIR}/simapp && go test -mod=readonly -run TestFullAppSimulation -Genesis=${HOME}/.simapp/config/genesis.json \
+		-Enabled=true -NumBlocks=100 -BlockSize=200 -Commit=true -Seed=99 -Period=5 -SigverifyTx=false -v -timeout 24h
 
 test-sim-import-export: runsim
 	@echo "Running application import/export simulation. This may take several minutes..."
@@ -284,8 +282,8 @@ test-sim-after-import: runsim
 
 test-sim-custom-genesis-multi-seed: runsim
 	@echo "Running multi-seed custom genesis simulation..."
-	@echo "By default, ${HOME}/.gaiad/config/genesis.json will be used."
-	@cd ${CURRENT_DIR}/simapp && $(BINDIR)/runsim -Genesis=${HOME}/.gaiad/config/genesis.json -SimAppPkg=. -ExitOnFail 400 5 TestFullAppSimulation
+	@echo "By default, ${HOME}/.simapp/config/genesis.json will be used."
+	@cd ${CURRENT_DIR}/simapp && $(BINDIR)/runsim -Genesis=${HOME}/.simapp/config/genesis.json -SigverifyTx=false -SimAppPkg=. -ExitOnFail 400 5 TestFullAppSimulation
 
 test-sim-multi-seed-long: runsim
 	@echo "Running long multi-seed application simulation. This may take awhile!"
@@ -364,7 +362,7 @@ benchmark:
 ###                                Linting                                  ###
 ###############################################################################
 
-golangci_version=v1.54.2
+golangci_version=v1.55.0
 
 lint-install:
 	@echo "--> Installing golangci-lint $(golangci_version)"
@@ -409,7 +407,7 @@ proto-lint:
 proto-check-breaking:
 	@$(protoImage) buf breaking --against $(HTTPS_GIT)#branch=main
 
-CMT_URL              = https://raw.githubusercontent.com/cometbft/cometbft/v0.38.0-alpha.2/proto/tendermint
+CMT_URL              = https://raw.githubusercontent.com/cometbft/cometbft/v0.38.0/proto/tendermint
 
 CMT_CRYPTO_TYPES     = proto/tendermint/crypto
 CMT_ABCI_TYPES       = proto/tendermint/abci

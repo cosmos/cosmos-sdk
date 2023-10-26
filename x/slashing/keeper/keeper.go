@@ -9,11 +9,11 @@ import (
 	storetypes "cosmossdk.io/core/store"
 	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
+	"cosmossdk.io/x/slashing/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
 
 // Keeper of the slashing store
@@ -115,11 +115,16 @@ func (k Keeper) SlashWithInfractionReason(ctx context.Context, consAddr sdk.Cons
 		reasonAttr = sdk.NewAttribute(types.AttributeKeyReason, types.AttributeValueMissingSignature)
 	}
 
+	consStr, err := k.sk.ConsensusAddressCodec().BytesToString(consAddr)
+	if err != nil {
+		return err
+	}
+
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	sdkCtx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			types.EventTypeSlash,
-			sdk.NewAttribute(types.AttributeKeyAddress, consAddr.String()),
+			sdk.NewAttribute(types.AttributeKeyAddress, consStr),
 			sdk.NewAttribute(types.AttributeKeyPower, fmt.Sprintf("%d", power)),
 			reasonAttr,
 			sdk.NewAttribute(types.AttributeKeyBurnedCoins, coinsBurned.String()),
@@ -136,10 +141,15 @@ func (k Keeper) Jail(ctx context.Context, consAddr sdk.ConsAddress) error {
 	if err != nil {
 		return err
 	}
+	consStr, err := k.sk.ConsensusAddressCodec().BytesToString(consAddr)
+	if err != nil {
+		return err
+	}
+
 	sdkCtx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			types.EventTypeSlash,
-			sdk.NewAttribute(types.AttributeKeyJailed, consAddr.String()),
+			sdk.NewAttribute(types.AttributeKeyJailed, consStr),
 		),
 	)
 	return nil

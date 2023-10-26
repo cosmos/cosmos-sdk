@@ -7,16 +7,16 @@ import (
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/log"
+	"cosmossdk.io/x/gov/keeper"
+	"cosmossdk.io/x/gov/types"
+	v1 "cosmossdk.io/x/gov/types/v1"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/gov/keeper"
-	"github.com/cosmos/cosmos-sdk/x/gov/types"
-	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 )
 
-// EndBlocker called every block, process inflation, update validator set.
+// EndBlocker is called every block.
 func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) error {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyEndBlocker)
 
@@ -65,7 +65,13 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) error {
 		}
 
 		// called when proposal become inactive
-		keeper.Hooks().AfterProposalFailedMinDeposit(ctx, proposal.Id)
+		cacheCtx, writeCache := ctx.CacheContext()
+		err = keeper.Hooks().AfterProposalFailedMinDeposit(cacheCtx, proposal.Id)
+		if err == nil { // purposely ignoring the error here not to halt the chain if the hook fails
+			writeCache()
+		} else {
+			keeper.Logger(ctx).Error("failed to execute AfterProposalFailedMinDeposit hook", "error", err)
+		}
 
 		ctx.EventManager().EmitEvent(
 			sdk.NewEvent(
@@ -228,7 +234,13 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) error {
 		}
 
 		// when proposal become active
-		keeper.Hooks().AfterProposalVotingPeriodEnded(ctx, proposal.Id)
+		cacheCtx, writeCache := ctx.CacheContext()
+		err = keeper.Hooks().AfterProposalVotingPeriodEnded(cacheCtx, proposal.Id)
+		if err == nil { // purposely ignoring the error here not to halt the chain if the hook fails
+			writeCache()
+		} else {
+			keeper.Logger(ctx).Error("failed to execute AfterProposalVotingPeriodEnded hook", "error", err)
+		}
 
 		logger.Info(
 			"proposal tallied",

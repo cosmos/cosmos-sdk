@@ -13,11 +13,15 @@ import (
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 	circuitkeeper "cosmossdk.io/x/circuit/keeper"
+	distrkeeper "cosmossdk.io/x/distribution/keeper"
 	evidencekeeper "cosmossdk.io/x/evidence/keeper"
 	feegrantkeeper "cosmossdk.io/x/feegrant/keeper"
+	govkeeper "cosmossdk.io/x/gov/keeper"
+	groupkeeper "cosmossdk.io/x/group/keeper"
 	nftkeeper "cosmossdk.io/x/nft/keeper"
 	_ "cosmossdk.io/x/protocolpool"
 	poolkeeper "cosmossdk.io/x/protocolpool/keeper"
+	slashingkeeper "cosmossdk.io/x/slashing/keeper"
 	upgradekeeper "cosmossdk.io/x/upgrade/keeper"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -39,11 +43,7 @@ import (
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	consensuskeeper "github.com/cosmos/cosmos-sdk/x/consensus/keeper"
 	crisiskeeper "github.com/cosmos/cosmos-sdk/x/crisis/keeper"
-	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
-	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
-	groupkeeper "github.com/cosmos/cosmos-sdk/x/group/keeper"
 	mintkeeper "github.com/cosmos/cosmos-sdk/x/mint/keeper"
-	slashingkeeper "github.com/cosmos/cosmos-sdk/x/slashing/keeper"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 )
 
@@ -256,7 +256,7 @@ func NewSimApp(
 	// However, when registering a module manually (i.e. that does not support app wiring), the module version map
 	// must be set manually as follow. The upgrade module will de-duplicate the module version map.
 	//
-	// app.SetInitChainer(func(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
+	// app.SetInitChainer(func(ctx sdk.Context, req *abci.RequestInitChain) (*abci.ResponseInitChain, error) {
 	// 	app.UpgradeKeeper.SetModuleVersionMap(ctx, app.ModuleManager.GetVersionMap())
 	// 	return app.App.InitChainer(ctx, req)
 	// })

@@ -3,7 +3,6 @@ package runtime
 import (
 	abci "github.com/cometbft/cometbft/abci/types"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -16,10 +15,6 @@ const ModuleName = "runtime"
 type AppI interface {
 	// The assigned name of the app.
 	Name() string
-
-	// The application types codec.
-	// NOTE: This should NOT be sealed before being returned.
-	LegacyAmino() *codec.LegacyAmino
 
 	// Application updates every begin block.
 	BeginBlocker(ctx sdk.Context) (sdk.BeginBlock, error)
@@ -35,7 +30,12 @@ type AppI interface {
 
 	// Exports the state of the application for a genesis file.
 	ExportAppStateAndValidators(forZeroHeight bool, jailAllowedAddrs, modulesToExport []string) (types.ExportedApp, error)
+}
 
+// AppSimI implements the common methods for a Cosmos SDK-based application
+// specific blockchain that chooses to utilize the sdk simulation framework.
+type AppSimI interface {
+	AppI
 	// Helper for the simulation framework.
 	SimulationManager() *module.SimulationManager
 }

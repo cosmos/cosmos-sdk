@@ -69,7 +69,7 @@ message Tx {
     repeated bytes signatures = 3;
 }
 
-// A variant of Tx that pins the signer's exact binary represenation of body and
+// A variant of Tx that pins the signer's exact binary representation of body and
 // auth_info. This is used for signing, broadcasting and verification. The binary
 // `serialize(tx: TxRaw)` is stored in Tendermint and the hash `sha256(serialize(tx: TxRaw))`
 // becomes the "txhash", commonly used as the transaction ID.
@@ -277,7 +277,7 @@ We propose that field numbers with bit 11 set (for most use cases this is
 the range of 1024-2047) be considered non-critical fields that can safely be
 ignored if unknown.
 
-To handle this we will need a unknown field filter that:
+To handle this we will need an unknown field filter that:
 
 * always rejects unknown fields in unsigned content (i.e. top-level `Tx` and
   unsigned parts of `AuthInfo` if present based on the signing mode)

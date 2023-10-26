@@ -148,7 +148,7 @@ to a production environment as is practical. Presently these tests are located a
 [tests/e2e](https://github.com/cosmos/cosmos-sdk/tree/main/tests/e2e) and rely on [testutil/network](https://github.com/cosmos/cosmos-sdk/tree/main/testutil/network) to start up an in-process Tendermint node.
 
 An application should be built as minimally as possible to exercise the desired functionality.
-The SDK uses an application will only the required modules for the tests. The application developer is adviced to use its own application for e2e tests.
+The SDK uses an application will only the required modules for the tests. The application developer is advised to use its own application for e2e tests.
 
 #### Limitations
 

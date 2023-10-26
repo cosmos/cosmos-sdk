@@ -6,6 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	govv1beta1 "cosmossdk.io/x/gov/types/v1beta1"
 	paramscutils "cosmossdk.io/x/params/client/utils"
 	paramproposal "cosmossdk.io/x/params/types/proposal"
 
@@ -13,7 +14,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
-	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
 // NewSubmitParamChangeProposalTxCmd returns a CLI command handler for creating

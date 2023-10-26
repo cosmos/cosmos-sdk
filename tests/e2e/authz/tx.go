@@ -10,9 +10,12 @@ import (
 	// without this import amino json encoding will fail when resolving any types
 	_ "cosmossdk.io/api/cosmos/authz/v1beta1"
 	"cosmossdk.io/math"
+	govcli "cosmossdk.io/x/gov/client/cli"
+	govtestutil "cosmossdk.io/x/gov/client/testutil"
+	govv1 "cosmossdk.io/x/gov/types/v1"
+	govv1beta1 "cosmossdk.io/x/gov/types/v1beta1"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -24,11 +27,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/authz/client/cli"
 	authzclitestutil "github.com/cosmos/cosmos-sdk/x/authz/client/testutil"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
-	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
-	govtestutil "github.com/cosmos/cosmos-sdk/x/gov/client/testutil"
-	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
-	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
-	stakingcli "github.com/cosmos/cosmos-sdk/x/staking/client/cli"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 type E2ETestSuite struct {
@@ -174,166 +173,9 @@ func (s *E2ETestSuite) TearDownSuite() {
 }
 
 var (
-	typeMsgSend           = bank.SendAuthorization{}.MsgTypeURL()
-	typeMsgVote           = sdk.MsgTypeURL(&govv1.MsgVote{})
-	typeMsgSubmitProposal = sdk.MsgTypeURL(&govv1.MsgSubmitProposal{})
+	typeMsgSend = bank.SendAuthorization{}.MsgTypeURL()
+	typeMsgVote = sdk.MsgTypeURL(&govv1.MsgVote{})
 )
-
-func execDelegate(val *network.Validator, args []string) (testutil.BufferWriter, error) {
-	cmd := stakingcli.NewDelegateCmd(addresscodec.NewBech32Codec("cosmosvaloper"), addresscodec.NewBech32Codec("cosmos"))
-	clientCtx := val.ClientCtx
-	return clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
-}
-
-func (s *E2ETestSuite) TestCmdRevokeAuthorizations() {
-	val := s.network.Validators[0]
-
-	grantee := s.grantee[0]
-	twoHours := time.Now().Add(time.Minute * time.Duration(120)).Unix()
-
-	// send-authorization
-	_, err := authzclitestutil.CreateGrant(
-		val.ClientCtx,
-		[]string{
-			grantee.String(),
-			"send",
-			fmt.Sprintf("--%s=100stake", cli.FlagSpendLimit),
-			fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-			fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address),
-			fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-			fmt.Sprintf("--%s=%d", cli.FlagExpiration, twoHours),
-			fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
-		},
-	)
-	s.Require().NoError(err)
-	s.Require().NoError(s.network.WaitForNextBlock())
-
-	// generic-authorization
-	_, err = authzclitestutil.CreateGrant(
-		val.ClientCtx,
-		[]string{
-			grantee.String(),
-			"generic",
-			fmt.Sprintf("--%s=%s", cli.FlagMsgType, typeMsgVote),
-			fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-			fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address),
-			fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-			fmt.Sprintf("--%s=%d", cli.FlagExpiration, twoHours),
-			fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
-		},
-	)
-	s.Require().NoError(err)
-	s.Require().NoError(s.network.WaitForNextBlock())
-
-	// generic-authorization used for amino testing
-	_, err = authzclitestutil.CreateGrant(
-		val.ClientCtx,
-		[]string{
-			grantee.String(),
-			"generic",
-			fmt.Sprintf("--%s=%s", cli.FlagMsgType, typeMsgSubmitProposal),
-			fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-			fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address),
-			fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-			fmt.Sprintf("--%s=%d", cli.FlagExpiration, twoHours),
-			fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
-			fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeLegacyAminoJSON),
-		},
-	)
-	s.Require().NoError(err)
-	s.Require().NoError(s.network.WaitForNextBlock())
-
-	testCases := []struct {
-		name         string
-		args         []string
-		respType     proto.Message
-		expectedCode uint32
-		expectErr    bool
-	}{
-		{
-			"invalid grantee address",
-			[]string{
-				"invalid grantee",
-				typeMsgSend,
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
-				fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
-			},
-			nil,
-			0,
-			true,
-		},
-		{
-			"invalid granter address",
-			[]string{
-				grantee.String(),
-				typeMsgSend,
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, "granter"),
-				fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
-			},
-			nil,
-			0,
-			true,
-		},
-		{
-			"Valid tx send authorization",
-			[]string{
-				grantee.String(),
-				typeMsgSend,
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
-			},
-			&sdk.TxResponse{}, 0,
-			false,
-		},
-		{
-			"Valid tx generic authorization",
-			[]string{
-				grantee.String(),
-				typeMsgVote,
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
-			},
-			&sdk.TxResponse{}, 0,
-			false,
-		},
-		{
-			"Valid tx with amino",
-			[]string{
-				grantee.String(),
-				typeMsgSubmitProposal,
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
-				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeLegacyAminoJSON),
-			},
-			&sdk.TxResponse{}, 0,
-			false,
-		},
-	}
-	for _, tc := range testCases {
-		tc := tc
-		s.Run(tc.name, func() {
-			cmd := cli.NewCmdRevokeAuthorization(addresscodec.NewBech32Codec("cosmos"))
-			clientCtx := val.ClientCtx
-
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
-			if tc.expectErr {
-				s.Require().Error(err)
-			} else {
-				s.Require().NoError(err)
-				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
-
-				txResp := tc.respType.(*sdk.TxResponse)
-				s.Require().NoError(clitestutil.CheckTxCode(s.network, val.ClientCtx, txResp.TxHash, tc.expectedCode))
-			}
-		})
-	}
-}
 
 func (s *E2ETestSuite) TestExecAuthorizationWithExpiration() {
 	val := s.network.Validators[0]
@@ -928,17 +770,14 @@ func (s *E2ETestSuite) TestExecUndelegateAuthorization() {
 	s.Require().NoError(s.network.WaitForNextBlock())
 
 	// delegating stakes to validator
-	_, err = execDelegate(
-		val,
-		[]string{
-			val.ValAddress.String(),
-			"100stake",
-			fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-			fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
-			fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-			fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
-		},
-	)
+	msg := &stakingtypes.MsgDelegate{
+		DelegatorAddress: val.Address.String(),
+		ValidatorAddress: val.ValAddress.String(),
+		Amount:           sdk.NewCoin("stake", math.NewInt(100)),
+	}
+
+	_, err = clitestutil.SubmitTestTx(val.ClientCtx, msg, val.Address, clitestutil.TestTxConfig{})
+
 	s.Require().NoError(err)
 
 	tokens := sdk.NewCoins(

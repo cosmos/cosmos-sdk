@@ -7,13 +7,15 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/x/slashing"
+	"cosmossdk.io/x/slashing/simulation"
+	"cosmossdk.io/x/slashing/types"
+
+	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	"github.com/cosmos/cosmos-sdk/x/slashing"
-	"github.com/cosmos/cosmos-sdk/x/slashing/simulation"
-	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
 
 var (
@@ -26,7 +28,10 @@ func TestDecodeStore(t *testing.T) {
 	cdc := encodingConfig.Codec
 	dec := simulation.NewDecodeStore(cdc)
 
-	info := types.NewValidatorSigningInfo(consAddr1, 0, 1, time.Now().UTC(), false, 0)
+	consAddrStr1, err := addresscodec.NewBech32Codec("cosmosvalcons").BytesToString(consAddr1)
+	require.NoError(t, err)
+
+	info := types.NewValidatorSigningInfo(consAddrStr1, 0, 1, time.Now().UTC(), false, 0)
 
 	kvPairs := kv.Pairs{
 		Pairs: []kv.Pair{

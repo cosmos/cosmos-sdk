@@ -129,19 +129,21 @@ func (k Keeper) getClaimableFunds(ctx context.Context, recipient sdk.AccAddress)
 	}
 
 	currentTime := sdkCtx.BlockTime().Unix()
-
+	startTime := budget.StartTime
+	if budget.StartTime == 0 {
+		startTime = sdkCtx.HeaderInfo().Time.Unix()
+	}
 	// Check if the start time is reached
-	if currentTime < budget.StartTime {
+	if currentTime < startTime {
 		return sdk.Coin{}, fmt.Errorf("distribution has not started yet")
 	}
 
-	// Calculate the number of blocks elapsed since the start time
-	blocksElapsed := sdkCtx.BlockHeight() - budget.Period
-
-	// Check if its time to distribute funds based on period intervals
-	if blocksElapsed > 0 {
+	// Calculate the time elapsed since the start time
+	timeElapsed := currentTime - startTime
+	// Check the time elapsed has passed period length
+	if timeElapsed >= budget.Period {
 		// Calculate how many periods have passed
-		periodsPassed := blocksElapsed / budget.Period
+		periodsPassed := timeElapsed / budget.Period
 
 		if periodsPassed > 0 {
 			// Calculate the amount to distribute for all passed periods
@@ -180,16 +182,16 @@ func (k Keeper) validateBudgetProposal(ctx context.Context, bp types.MsgSubmitBu
 		return err
 	}
 
-	if bp.StartTime <= 0 {
-		return fmt.Errorf("start time must be a positive value")
+	if bp.StartTime < 0 {
+		return fmt.Errorf("invalid start time")
 	}
 
 	if bp.Tranches <= 0 {
-		return fmt.Errorf("remaining tranches must be a positive value")
+		return fmt.Errorf("tranches must be a positive value")
 	}
 
 	if bp.Period <= 0 {
-		return fmt.Errorf("period should be a positive value")
+		return fmt.Errorf("period length should be a positive value")
 	}
 
 	return nil

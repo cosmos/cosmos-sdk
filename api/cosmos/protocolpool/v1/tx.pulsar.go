@@ -4001,12 +4001,19 @@ type MsgSubmitBudgetProposal struct {
 	unknownFields protoimpl.UnknownFields
 
 	// authority is the address that controls the module (defaults to x/gov unless overwritten).
-	Authority        string        `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
-	RecipientAddress string        `protobuf:"bytes,2,opt,name=recipient_address,json=recipientAddress,proto3" json:"recipient_address,omitempty"` // recipient address
-	TotalBudget      *v1beta1.Coin `protobuf:"bytes,3,opt,name=total_budget,json=totalBudget,proto3" json:"total_budget,omitempty"`                // total budget amount
-	StartTime        int64         `protobuf:"varint,4,opt,name=start_time,json=startTime,proto3" json:"start_time,omitempty"`                     // start_time in seconds
-	Tranches         int64         `protobuf:"varint,5,opt,name=tranches,proto3" json:"tranches,omitempty"`                                        // tranches are the no. of times the distribution needs to be done on the total amount.
-	Period           int64         `protobuf:"varint,6,opt,name=period,proto3" json:"period,omitempty"`                                            // period is the interval of blocks funds are distributed
+	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
+	// recipient_address is the address of the recipient who can claim the budget.
+	RecipientAddress string `protobuf:"bytes,2,opt,name=recipient_address,json=recipientAddress,proto3" json:"recipient_address,omitempty"`
+	// total_budget is the total amount allocated for the budget.
+	TotalBudget *v1beta1.Coin `protobuf:"bytes,3,opt,name=total_budget,json=totalBudget,proto3" json:"total_budget,omitempty"`
+	// start_time is the time when the budget becomes claimable, represented in seconds since the Unix epoch.
+	StartTime int64 `protobuf:"varint,4,opt,name=start_time,json=startTime,proto3" json:"start_time,omitempty"`
+	// tranches is the number of times the total budget amount is to be distributed.
+	Tranches int64 `protobuf:"varint,5,opt,name=tranches,proto3" json:"tranches,omitempty"`
+	// Period is the time interval(number of seconds) at which funds distribution should be performed.
+	// For example, if a period is set to 3600, it represents an action that
+	// should occur every hour (3600 seconds).
+	Period int64 `protobuf:"varint,6,opt,name=period,proto3" json:"period,omitempty"`
 }
 
 func (x *MsgSubmitBudgetProposal) Reset() {

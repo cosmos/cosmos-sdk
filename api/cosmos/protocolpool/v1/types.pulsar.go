@@ -684,7 +684,9 @@ type Budget struct {
 	StartTime int64 `protobuf:"varint,3,opt,name=start_time,json=startTime,proto3" json:"start_time,omitempty"`
 	// tranches is the number of times the total budget amount is to be distributed.
 	Tranches int64 `protobuf:"varint,4,opt,name=tranches,proto3" json:"tranches,omitempty"`
-	// period is the interval (in blocks) between each distribution of funds.
+	// Period is the time interval(number of seconds) at which funds distribution should be performed.
+	// For example, if a period is set to 3600, it represents an action that
+	// should occur every hour (3600 seconds).
 	Period int64 `protobuf:"varint,5,opt,name=period,proto3" json:"period,omitempty"`
 }
 

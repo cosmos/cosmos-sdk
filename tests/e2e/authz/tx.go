@@ -13,6 +13,7 @@ import (
 	"cosmossdk.io/x/authz"
 	"cosmossdk.io/x/authz/client/cli"
 	authzclitestutil "cosmossdk.io/x/authz/client/testutil"
+	bank "cosmossdk.io/x/bank/types"
 	govcli "cosmossdk.io/x/gov/client/cli"
 	govtestutil "cosmossdk.io/x/gov/client/testutil"
 	govv1 "cosmossdk.io/x/gov/types/v1"
@@ -27,7 +28,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authcli "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
-	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 type E2ETestSuite struct {

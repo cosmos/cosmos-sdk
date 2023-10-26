@@ -9,6 +9,7 @@ require (
 	cosmossdk.io/depinject v1.0.0-alpha.4
 	cosmossdk.io/errors v1.0.0
 	cosmossdk.io/store v1.0.0-rc.0
+	cosmossdk.io/x/bank v0.0.0-00010101000000-000000000000
 	github.com/cockroachdb/errors v1.11.1
 	github.com/cosmos/cosmos-sdk v0.51.0
 	github.com/cosmos/gogoproto v1.4.11
@@ -158,10 +159,10 @@ require (
 
 replace github.com/cosmos/cosmos-sdk => ../../.
 
-replace cosmossdk.io/x/gov => ../gov
-
-replace cosmossdk.io/x/distribution => ../distribution
-
-replace cosmossdk.io/x/slashing => ../slashing
-
-replace cosmossdk.io/x/staking => ../staking
+replace (
+	cosmossdk.io/x/bank => ../bank
+	cosmossdk.io/x/distribution => ../distribution
+	cosmossdk.io/x/gov => ../gov
+	cosmossdk.io/x/slashing => ../slashing
+	cosmossdk.io/x/staking => ../staking
+)

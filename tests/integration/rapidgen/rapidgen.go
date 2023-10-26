@@ -30,6 +30,7 @@ import (
 	upgradeapi "cosmossdk.io/api/cosmos/upgrade/v1beta1"
 	vestingapi "cosmossdk.io/api/cosmos/vesting/v1beta1"
 	authztypes "cosmossdk.io/x/authz"
+	banktypes "cosmossdk.io/x/bank/types"
 	disttypes "cosmossdk.io/x/distribution/types"
 	evidencetypes "cosmossdk.io/x/evidence/types"
 	feegranttypes "cosmossdk.io/x/feegrant"
@@ -43,7 +44,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	consensustypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )

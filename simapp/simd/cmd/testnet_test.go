@@ -9,6 +9,8 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/log"
+	"cosmossdk.io/x/bank"
+	banktypes "cosmossdk.io/x/bank/types"
 	"cosmossdk.io/x/distribution"
 	"cosmossdk.io/x/staking"
 
@@ -18,8 +20,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/bank"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/consensus"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltest "github.com/cosmos/cosmos-sdk/x/genutil/client/testutil"

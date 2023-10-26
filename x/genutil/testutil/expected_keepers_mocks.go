@@ -12,7 +12,7 @@ import (
 	types "github.com/cometbft/cometbft/abci/types"
 	codec "github.com/cosmos/cosmos-sdk/codec"
 	types0 "github.com/cosmos/cosmos-sdk/types"
-	exported "github.com/cosmos/cosmos-sdk/x/bank/exported"
+	exported "cosmossdk.io/x/bank/exported"
 	gomock "github.com/golang/mock/gomock"
 )
 

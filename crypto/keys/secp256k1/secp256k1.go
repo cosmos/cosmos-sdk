@@ -15,9 +15,10 @@ import (
 	errorsmod "cosmossdk.io/errors"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1/internal/secp256k1_go"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/types/errors"
+
+	secp256k1_voi "gitlab.com/yawning/secp256k1-voi"
 )
 
 var (
@@ -40,21 +41,11 @@ func (privKey *PrivKey) Bytes() []byte {
 // PubKey performs the point-scalar multiplication from the privKey on the
 // generator point to get the pubkey.
 func (privKey *PrivKey) PubKey() cryptotypes.PubKey {
-	privkeyObject := secp256k1.PrivKeyFromBytes(privKey.Key)
-	pubkeyObject := privkeyObject.PubKey()
+	scalar, _ := secp256k1_voi.NewScalarFromBytes((*[32]byte)(privKey.Key))
+	generatorPoint := secp256k1_voi.NewGeneratorPoint()
+	generatorPoint.ScalarBaseMult(scalar)
 
-	x, y := secp256k1_go.SECP256K1().ScalarBaseMult(privKey.Key)
-	parsedX := secp256k1.FieldVal{}
-	parsedX.SetByteSlice(x.Bytes())
-
-	parsedY := secp256k1.FieldVal{}
-	parsedY.SetByteSlice(y.Bytes())
-	parsedZ := secp256k1.FieldVal{}
-
-	result := secp256k1.JacobianPoint{X: parsedX, Y: parsedY, Z: parsedZ}
-	result.ToAffine()
-
-	pk := pubkeyObject.SerializeCompressed()
+	pk := generatorPoint.CompressedBytes()
 	return &PubKey{Key: pk}
 }
 

@@ -118,8 +118,13 @@ func (k Keeper) getClaimableFunds(ctx context.Context, recipient sdk.AccAddress)
 
 	// check if the distribution is completed
 	if budget.RemainingTranches <= 0 {
+		// remove the entry of budget ended recipient
+		err := k.BudgetProposal.Remove(ctx, recipient)
+		if err != nil {
+			return sdk.Coin{}, err
+		}
 		// Log the end of the budget
-		k.Logger(ctx).Info(fmt.Sprintf("Budget ended for recipient: %s", recipient.String()))
+		k.Logger(ctx).Debug(fmt.Sprintf("Budget ended for recipient: %s", recipient.String()))
 		return sdk.Coin{}, nil
 	}
 
@@ -167,11 +172,6 @@ func (k Keeper) getClaimableFunds(ctx context.Context, recipient sdk.AccAddress)
 }
 
 func (k Keeper) validateBudgetProposal(ctx context.Context, bp types.MsgSubmitBudgetProposal) error {
-	account := k.authKeeper.GetAccount(ctx, sdk.AccAddress(bp.RecipientAddress))
-	if account == nil {
-		return fmt.Errorf("account not found: %s", bp.RecipientAddress)
-	}
-
 	if bp.TotalBudget.IsZero() {
 		return fmt.Errorf("total budget cannot be zero")
 	}

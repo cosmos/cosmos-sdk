@@ -16,4 +16,4 @@ const (
 	GovModuleName = "gov"
 )
 
-var BudgetKey = collections.NewPrefix(0)
+var BudgetKey = collections.NewPrefix(2)

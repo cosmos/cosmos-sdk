@@ -2,7 +2,6 @@ package v2
 
 import (
 	"time"
-	"unsafe"
 
 	"cosmossdk.io/x/authz/internal/conv"
 
@@ -70,6 +69,5 @@ func ParseGrantKey(key []byte) (granterAddr, granteeAddr sdk.AccAddress, msgType
 	kv.AssertKeyAtLeastLength(key, 3+int(granterAddrLen+byte(granteeAddrLen)))
 	granteeAddr = sdk.AccAddress(key[2+granterAddrLen : 2+granterAddrLen+byte(granteeAddrLen)])
 
-	b := key[2+granterAddrLen+byte(granteeAddrLen):]
-	return granterAddr, granteeAddr, *(*string)(unsafe.Pointer(&b))
+	return granterAddr, granteeAddr, conv.UnsafeBytesToStr(key[2+granterAddrLen+byte(granteeAddrLen):])
 }

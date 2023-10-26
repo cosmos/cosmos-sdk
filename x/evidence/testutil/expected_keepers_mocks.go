@@ -14,7 +14,7 @@ import (
 	math "cosmossdk.io/math"
 	types "github.com/cosmos/cosmos-sdk/crypto/types"
 	types0 "github.com/cosmos/cosmos-sdk/types"
-	types1 "github.com/cosmos/cosmos-sdk/x/staking/types"
+	types1 "cosmossdk.io/x/staking/types"
 	gomock "github.com/golang/mock/gomock"
 )
 

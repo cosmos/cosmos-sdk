@@ -5,9 +5,9 @@ import (
 
 	addresscodec "cosmossdk.io/core/address"
 	"cosmossdk.io/math"
+	stakingtypes "cosmossdk.io/x/staking/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // StakingKeeper expected staking keeper (Validator and Delegator sets) (noalias)

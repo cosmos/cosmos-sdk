@@ -50,8 +50,7 @@ func (k MsgServer) SubmitBudgetProposal(ctx context.Context, msg *types.MsgSubmi
 		return nil, err
 	}
 
-	// set budget proposal in state
-	err = k.BudgetProposal.Set(ctx, recipient, *msg)
+	_, err = k.Keeper.SubmitBudgetProposal(ctx, recipient, *msg.TotalBudget, msg.StartTime, msg.Tranches, msg.Period)
 	if err != nil {
 		return nil, err
 	}

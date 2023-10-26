@@ -28,7 +28,7 @@ type Keeper struct {
 
 	// State
 	Schema         collections.Schema
-	BudgetProposal collections.Map[sdk.AccAddress, types.MsgSubmitBudgetProposal]
+	BudgetProposal collections.Map[sdk.AccAddress, types.Budget]
 }
 
 func NewKeeper(cdc codec.BinaryCodec, storeService storetypes.KVStoreService,
@@ -46,7 +46,7 @@ func NewKeeper(cdc codec.BinaryCodec, storeService storetypes.KVStoreService,
 		bankKeeper:     bk,
 		cdc:            cdc,
 		authority:      authority,
-		BudgetProposal: collections.NewMap(sb, types.BudgetKey, "budget", sdk.AccAddressKey, codec.CollValue[types.MsgSubmitBudgetProposal](cdc)),
+		BudgetProposal: collections.NewMap(sb, types.BudgetKey, "budget", sdk.AccAddressKey, codec.CollValue[types.Budget](cdc)),
 	}
 
 	schema, err := sb.Build()
@@ -105,6 +105,18 @@ func (k Keeper) ClaimFunds(ctx context.Context, recipient sdk.AccAddress) (amoun
 	return amount, nil
 }
 
+func (k Keeper) SubmitBudgetProposal(ctx context.Context, recipient sdk.AccAddress, totalBudget sdk.Coin, startTime, tranches, period int64) (types.Budget, error) {
+	budgetProposal := types.NewBudgetProposal(recipient, totalBudget, startTime, tranches, period)
+
+	// set budget proposal in state
+	err := k.BudgetProposal.Set(ctx, recipient, *budgetProposal)
+	if err != nil {
+		return types.Budget{}, err
+	}
+
+	return *budgetProposal, nil
+}
+
 func (k Keeper) getClaimableFunds(ctx context.Context, recipient sdk.AccAddress) (amount sdk.Coin, err error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
@@ -117,7 +129,7 @@ func (k Keeper) getClaimableFunds(ctx context.Context, recipient sdk.AccAddress)
 	}
 
 	// check if the distribution is completed
-	if budget.RemainingTranches <= 0 {
+	if budget.Tranches <= 0 {
 		// remove the entry of budget ended recipient
 		err := k.BudgetProposal.Remove(ctx, recipient)
 		if err != nil {
@@ -145,11 +157,11 @@ func (k Keeper) getClaimableFunds(ctx context.Context, recipient sdk.AccAddress)
 
 		if periodsPassed > 0 {
 			// Calculate the amount to distribute for all passed periods
-			coinsToDistribute := math.NewInt(periodsPassed).Mul(budget.TotalBudget.Amount.QuoRaw(budget.RemainingTranches))
+			coinsToDistribute := math.NewInt(periodsPassed).Mul(budget.TotalBudget.Amount.QuoRaw(budget.Tranches))
 			amount := sdk.NewCoin(budget.TotalBudget.Denom, coinsToDistribute)
 
 			// update the budget's remaining tranches
-			budget.RemainingTranches -= periodsPassed
+			budget.Tranches -= periodsPassed
 
 			// update the TotalBudget amount
 			budget.TotalBudget.Amount.Sub(coinsToDistribute)
@@ -184,7 +196,7 @@ func (k Keeper) validateBudgetProposal(ctx context.Context, bp types.MsgSubmitBu
 		return fmt.Errorf("start time must be a positive value")
 	}
 
-	if bp.RemainingTranches <= 0 {
+	if bp.Tranches <= 0 {
 		return fmt.Errorf("remaining tranches must be a positive value")
 	}
 

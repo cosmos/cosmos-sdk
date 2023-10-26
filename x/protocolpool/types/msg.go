@@ -27,3 +27,13 @@ func NewCommunityPoolSpend(amount sdk.Coins, authority, recipient string) *MsgCo
 		Amount:    amount,
 	}
 }
+
+func NewBudgetProposal(recipient sdk.AccAddress, totalBudget sdk.Coin, startTime, tranches, period int64) *Budget {
+	return &Budget{
+		RecipientAddress: recipient.String(),
+		TotalBudget:      &totalBudget,
+		StartTime:        startTime,
+		Tranches:         tranches,
+		Period:           period,
+	}
+}

@@ -157,9 +157,7 @@ func newAnteHandler(txConfig client.TxConfig, in ModuleInputs) (sdk.AnteHandler,
 // NewBankKeeperCoinMetadataQueryFn creates a new Textual struct using the given
 // BankKeeper to retrieve coin metadata.
 //
-// Note: Once we switch to ADR-033, and keepers become ADR-033 clients to each
-// other, this function could probably be deprecated in favor of
-// `NewTextualWithGRPCConn`.
+// This function should be used in the server (app.go) and is already injected thanks to app wiring for app_v2.
 func NewBankKeeperCoinMetadataQueryFn(bk BankKeeper) textual.CoinMetadataQueryFn {
 	return func(ctx context.Context, denom string) (*bankv1beta1.Metadata, error) {
 		res, err := bk.DenomMetadataV2(ctx, &bankv1beta1.QueryDenomMetadataRequest{Denom: denom})
@@ -178,7 +176,9 @@ func NewBankKeeperCoinMetadataQueryFn(bk BankKeeper) textual.CoinMetadataQueryFn
 // Example:
 //
 //	clientCtx := client.GetClientContextFromCmd(cmd)
-//	txt := tx.NewTextualWithGRPCConn(clientCtxx)
+//	txt := tx.NewTextualWithGRPCConn(clientCtx)
+//
+// This should be used in the client (root.go) of an application.
 func NewGRPCCoinMetadataQueryFn(grpcConn grpc.ClientConnInterface) textual.CoinMetadataQueryFn {
 	return func(ctx context.Context, denom string) (*bankv1beta1.Metadata, error) {
 		bankQueryClient := bankv1beta1.NewQueryClient(grpcConn)

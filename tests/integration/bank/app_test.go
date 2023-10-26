@@ -11,7 +11,12 @@ import (
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
+	_ "cosmossdk.io/x/distribution"
+	distrkeeper "cosmossdk.io/x/distribution/keeper"
+	_ "cosmossdk.io/x/gov"
+	govv1 "cosmossdk.io/x/gov/types/v1"
 	_ "cosmossdk.io/x/protocolpool"
+	_ "cosmossdk.io/x/staking"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -28,11 +33,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 	_ "github.com/cosmos/cosmos-sdk/x/consensus"
-	_ "github.com/cosmos/cosmos-sdk/x/distribution"
-	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
-	_ "github.com/cosmos/cosmos-sdk/x/gov"
-	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
-	_ "github.com/cosmos/cosmos-sdk/x/staking"
 )
 
 type (
@@ -377,14 +377,14 @@ func TestMsgSetSendEnabled(t *testing.T) {
 	s := createTestSuite(t, genAccs)
 
 	ctx := s.App.BaseApp.NewContext(false)
-	require.NoError(t, testutil.FundAccount(ctx, s.BankKeeper, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 101))))
+	require.NoError(t, testutil.FundAccount(ctx, s.BankKeeper, addr1, sdk.NewCoins(sdk.NewInt64Coin("stake", 101))))
 	addr1Str := addr1.String()
 	govAddr := s.BankKeeper.GetAuthority()
 	goodGovProp, err := govv1.NewMsgSubmitProposal(
 		[]sdk.Msg{
 			types.NewMsgSetSendEnabled(govAddr, nil, nil),
 		},
-		sdk.Coins{{Denom: "foocoin", Amount: sdkmath.NewInt(5)}},
+		sdk.Coins{{Denom: "stake", Amount: sdkmath.NewInt(5)}},
 		addr1Str,
 		"set default send enabled to true",
 		"Change send enabled",

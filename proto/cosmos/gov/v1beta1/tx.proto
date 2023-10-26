@@ -9,7 +9,7 @@ import "google/protobuf/any.proto";
 import "cosmos/msg/v1/msg.proto";
 import "amino/amino.proto";
 
-option go_package = "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1";
+option go_package = "cosmossdk.io/x/gov/types/v1beta1";
 
 // Msg defines the gov Msg service.
 service Msg {

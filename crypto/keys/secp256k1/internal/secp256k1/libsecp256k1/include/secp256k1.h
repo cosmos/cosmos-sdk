@@ -466,7 +466,7 @@ SECP256K1_API int secp256k1_ecdsa_sign(
  *  Args:    ctx: pointer to a context object (cannot be NULL)
  *  In:      seckey: pointer to a 32-byte secret key (cannot be NULL)
  */
-SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_seckey_verify(
+SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int cosmos_secp256k1_ec_seckey_verify(
     const cosmos_secp256k1_context* ctx,
     const unsigned char *seckey
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2);

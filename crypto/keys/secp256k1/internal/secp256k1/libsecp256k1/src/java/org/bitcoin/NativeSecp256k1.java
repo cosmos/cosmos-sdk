@@ -134,7 +134,7 @@ public class NativeSecp256k1 {
 
         r.lock();
         try {
-          return secp256k1_ec_seckey_verify(byteBuff,Secp256k1Context.getContext()) == 1;
+          return cosmos_secp256k1_ec_seckey_verify(byteBuff,Secp256k1Context.getContext()) == 1;
         } finally {
           r.unlock();
         }
@@ -435,7 +435,7 @@ public class NativeSecp256k1 {
 
     private static native byte[][] secp256k1_ecdsa_sign(ByteBuffer byteBuff, long context);
 
-    private static native int secp256k1_ec_seckey_verify(ByteBuffer byteBuff, long context);
+    private static native int cosmos_secp256k1_ec_seckey_verify(ByteBuffer byteBuff, long context);
 
     private static native byte[][] cosmos_secp256k1_ec_pubkey_create(ByteBuffer byteBuff, long context);
 

@@ -59,7 +59,7 @@ void test_ecdsa_recovery_api(void) {
     cosmos_secp256k1_context_set_illegal_callback(both, counting_illegal_callback_fn, &ecount);
 
     /* Construct and verify corresponding public key. */
-    CHECK(secp256k1_ec_seckey_verify(ctx, privkey) == 1);
+    CHECK(cosmos_secp256k1_ec_seckey_verify(ctx, privkey) == 1);
     CHECK(cosmos_secp256k1_ec_pubkey_create(ctx, &pubkey, privkey) == 1);
 
     /* Check bad contexts and NULLs for signing */
@@ -168,7 +168,7 @@ void test_ecdsa_recovery_end_to_end(void) {
     }
 
     /* Construct and verify corresponding public key. */
-    CHECK(secp256k1_ec_seckey_verify(ctx, privkey) == 1);
+    CHECK(cosmos_secp256k1_ec_seckey_verify(ctx, privkey) == 1);
     CHECK(cosmos_secp256k1_ec_pubkey_create(ctx, &pubkey, privkey) == 1);
 
     /* Serialize/parse compact and verify/recover. */

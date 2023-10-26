@@ -169,8 +169,10 @@ func (s *Store) LoadVersion(version uint64) (err error) {
 	return s.loadVersion(version, nil)
 }
 
-func (s *Store) LoadVersionAndUpgrade(version uint64, upgrades *store.StoreUpgrades) error {
-	return s.loadVersion(version, upgrades)
+// LoadVersionAndUpgrade behaves the same as LoadVersion, in that it ignores any
+// store upgrades since the store contains a single store key and SC tree.
+func (s *Store) LoadVersionAndUpgrade(version uint64, _ *store.StoreUpgrades) error {
+	return s.loadVersion(version, nil)
 }
 
 func (s *Store) LoadLatestVersion() error {
@@ -202,7 +204,7 @@ func (s *Store) GetBranchedKVStore(_ string) store.BranchedKVStore {
 	return s.rootKVStore
 }
 
-func (s *Store) loadVersion(v uint64, upgrades *store.StoreUpgrades) error {
+func (s *Store) loadVersion(v uint64, _ *store.StoreUpgrades) error {
 	s.logger.Debug("loading version", "version", v)
 
 	if err := s.stateCommitment.LoadVersion(v); err != nil {

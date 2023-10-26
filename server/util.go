@@ -37,6 +37,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/mempool"
 	"github.com/cosmos/cosmos-sdk/version"
+	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
 // ServerContextKey defines the context key used to retrieve a server.Context from
@@ -490,7 +491,7 @@ func DefaultBaseappOptions(appOpts types.AppOptions) []func(*baseapp.BaseApp) {
 		}
 		defer reader.Close()
 
-		chainID, err = sdk.ParseChainIDFromGenesis(reader)
+		chainID, err = genutiltypes.ParseChainIDFromGenesis(reader)
 		if err != nil {
 			panic(fmt.Errorf("failed to parse chain-id from genesis file: %w", err))
 		}

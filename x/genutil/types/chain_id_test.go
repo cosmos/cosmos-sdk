@@ -7,8 +7,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
+	"github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
 //go:embed testdata/parse_chain_id.json
@@ -96,7 +95,7 @@ func TestParseChainIDFromGenesis(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			chain_id, err := sdk.ParseChainIDFromGenesis(strings.NewReader(tc.json))
+			chain_id, err := types.ParseChainIDFromGenesis(strings.NewReader(tc.json))
 			if tc.expChainID == "" {
 				require.Error(t, err)
 				require.Contains(t, err.Error(), tc.expError)
@@ -114,7 +113,7 @@ func BenchmarkParseChainID(b *testing.B) {
 	b.Run("new", func(b *testing.B) {
 		b.ResetTimer()
 		for i := 0; i < b.N; i++ {
-			chainId, err := sdk.ParseChainIDFromGenesis(strings.NewReader(BenchmarkGenesis))
+			chainId, err := types.ParseChainIDFromGenesis(strings.NewReader(BenchmarkGenesis))
 			require.NoError(b, err)
 			require.Equal(b, expChainID, chainId)
 		}
@@ -123,7 +122,7 @@ func BenchmarkParseChainID(b *testing.B) {
 	b.Run("old", func(b *testing.B) {
 		b.ResetTimer()
 		for i := 0; i < b.N; i++ {
-			doc, err := genutiltypes.AppGenesisFromReader(strings.NewReader(BenchmarkGenesis))
+			doc, err := types.AppGenesisFromReader(strings.NewReader(BenchmarkGenesis))
 			require.NoError(b, err)
 			require.Equal(b, expChainID, doc.ChainID)
 		}

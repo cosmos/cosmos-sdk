@@ -46,6 +46,10 @@ Gov was spun out into its own `go.mod`. To import it use `cosmossdk.io/x/gov`
 
 Distribution was spun out into its own `go.mod`. To import it use `cosmossdk.io/x/distribution`
 
+#### `x/slashing`
+
+Slashing was spun out into its own `go.mod`. To import it use `cosmossdk.io/x/slashing`
+
 #### Params
 
 A standalone Go module was created and it is accessible at "cosmossdk.io/x/params".
@@ -74,9 +78,23 @@ Most of Cosmos SDK modules have migrated to [collections](https://docs.cosmos.ne
 Many functions have been removed due to this changes as the API can be smaller thanks to collections.
 For modules that have migrated, verify you are checking against `collections.ErrNotFound` when applicable.
 
+#### `x/group`
+
+Group was spun out into its own `go.mod`. To import it use `cosmossdk.io/x/group`
+
+#### `x/gov`
+
+Gov was spun out into its own `go.mod`. To import it use `cosmossdk.io/x/gov`
+
 #### `x/distribution`
 
+Distribution was spun out into its own `go.mod`. To import it use `cosmossdk.io/x/distribution`
+
 The existing chains using x/distribution module needs to add the new x/protocolpool module.
+
+#### `x/params`
+
+A standalone Go module was created and it is accessible at "cosmossdk.io/x/params".
 
 #### `x/protocolpool`
 
@@ -420,7 +438,7 @@ This sign mode does not allow offline signing
 
 When using (legacy) application wiring, the following must be added to `app.go` after setting the app's bank keeper:
 
-```golang
+```go
 	enabledSignModes := append(tx.DefaultSignModes, sigtypes.SignMode_SIGN_MODE_TEXTUAL)
 	txConfigOpts := tx.ConfigOptions{
 		EnabledSignModes:           enabledSignModes,
@@ -436,9 +454,11 @@ When using (legacy) application wiring, the following must be added to `app.go` 
 	app.txConfig = txConfig
 ```
 
+When using `depinject` / `app v2`, **it's enabled by default** if there's a bank keeper present.
+
 And in the application client (usually `root.go`):
 
-```golang
+```go
 	if !clientCtx.Offline {
 		txConfigOpts.EnabledSignModes = append(txConfigOpts.EnabledSignModes, signing.SignMode_SIGN_MODE_TEXTUAL)
 		txConfigOpts.TextualCoinMetadataQueryFn = txmodule.NewGRPCCoinMetadataQueryFn(clientCtx)
@@ -453,7 +473,7 @@ And in the application client (usually `root.go`):
 	}
 ```
 
-When using `depinject` / `app v2`, **it's enabled by default** if there's a bank keeper present.
+When using `depinject` / `app v2`, the a tx config should be recreated from the `txConfigOpts` to use `NewGRPCCoinMetadataQueryFn` instead of depending on the bank keeper (that is used in the server).
 
 To learn more see the [docs](https://docs.cosmos.network/main/learn/advanced/transactions#sign_mode_textual) and the [ADR-050](https://docs.cosmos.network/main/build/architecture/adr-050-sign-mode-textual).
 

@@ -207,29 +207,29 @@ func (mr *MockTxSelectorMockRecorder) Clear() *gomock.Call {
 }
 
 // SelectTxForProposal mocks base method.
-func (m *MockTxSelector) SelectTxForProposal(maxTxBytes, maxBlockGas uint64, memTx types.Tx, txBz []byte) bool {
+func (m *MockTxSelector) SelectTxForProposal(ctx context.Context, maxTxBytes, maxBlockGas uint64, memTx types.Tx, txBz []byte) bool {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SelectTxForProposal", maxTxBytes, maxBlockGas, memTx, txBz)
+	ret := m.ctrl.Call(m, "SelectTxForProposal", ctx, maxTxBytes, maxBlockGas, memTx, txBz)
 	ret0, _ := ret[0].(bool)
 	return ret0
 }
 
 // SelectTxForProposal indicates an expected call of SelectTxForProposal.
-func (mr *MockTxSelectorMockRecorder) SelectTxForProposal(maxTxBytes, maxBlockGas, memTx, txBz interface{}) *gomock.Call {
+func (mr *MockTxSelectorMockRecorder) SelectTxForProposal(ctx, maxTxBytes, maxBlockGas, memTx, txBz interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SelectTxForProposal", reflect.TypeOf((*MockTxSelector)(nil).SelectTxForProposal), maxTxBytes, maxBlockGas, memTx, txBz)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SelectTxForProposal", reflect.TypeOf((*MockTxSelector)(nil).SelectTxForProposal), ctx, maxTxBytes, maxBlockGas, memTx, txBz)
 }
 
 // SelectedTxs mocks base method.
-func (m *MockTxSelector) SelectedTxs() [][]byte {
+func (m *MockTxSelector) SelectedTxs(ctx context.Context) [][]byte {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SelectedTxs")
+	ret := m.ctrl.Call(m, "SelectedTxs", ctx)
 	ret0, _ := ret[0].([][]byte)
 	return ret0
 }
 
 // SelectedTxs indicates an expected call of SelectedTxs.
-func (mr *MockTxSelectorMockRecorder) SelectedTxs() *gomock.Call {
+func (mr *MockTxSelectorMockRecorder) SelectedTxs(ctx interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SelectedTxs", reflect.TypeOf((*MockTxSelector)(nil).SelectedTxs))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SelectedTxs", reflect.TypeOf((*MockTxSelector)(nil).SelectedTxs), ctx)
 }

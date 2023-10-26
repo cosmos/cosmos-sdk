@@ -15,6 +15,9 @@ type Uint struct {
 
 // BigInt converts Uint to big.Int
 func (u Uint) BigInt() *big.Int {
+	if u.IsNil() {
+		return nil
+	}
 	return new(big.Int).Set(u.i)
 }
 

@@ -90,9 +90,9 @@ func TestSlashingMsgs(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	header := header.Info{Height: app.LastBlockHeight() + 1}
+	headerInfo := header.Info{Height: app.LastBlockHeight() + 1}
 	txConfig := moduletestutil.MakeTestTxConfig()
-	_, _, err = sims.SignCheckDeliver(t, txConfig, app.BaseApp, header, []sdk.Msg{createValidatorMsg}, "", []uint64{0}, []uint64{0}, true, true, priv1)
+	_, _, err = sims.SignCheckDeliver(t, txConfig, app.BaseApp, headerInfo, []sdk.Msg{createValidatorMsg}, "", []uint64{0}, []uint64{0}, true, true, priv1)
 	require.NoError(t, err)
 	require.True(t, sdk.Coins{genCoin.Sub(bondCoin)}.Equal(bankKeeper.GetAllBalances(ctxCheck, addr1)))
 
@@ -110,8 +110,8 @@ func TestSlashingMsgs(t *testing.T) {
 	require.NoError(t, err)
 
 	// unjail should fail with unknown validator
-	header = header.Info{Height: app.LastBlockHeight() + 1}
-	_, _, err = sims.SignCheckDeliver(t, txConfig, app.BaseApp, header, []sdk.Msg{unjailMsg}, "", []uint64{0}, []uint64{1}, false, false, priv1)
+	headerInfo = header.Info{Height: app.LastBlockHeight() + 1}
+	_, _, err = sims.SignCheckDeliver(t, txConfig, app.BaseApp, headerInfo, []sdk.Msg{unjailMsg}, "", []uint64{0}, []uint64{1}, false, false, priv1)
 	require.Error(t, err)
 	require.True(t, errors.Is(types.ErrValidatorNotJailed, err))
 }

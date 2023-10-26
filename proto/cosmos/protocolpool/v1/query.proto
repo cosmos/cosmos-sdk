@@ -17,7 +17,7 @@ service Query {
 
   // UnclaimedBudget queries the remaining budget left to be claimed.
   rpc UnclaimedBudget(QueryUnclaimedBudgetRequest) returns (QueryUnclaimedBudgetResponse) {
-    option (google.api.http).get = "/cosmos/protocolpool/v1/unclaimed_budget";
+    option (google.api.http).get = "/cosmos/protocolpool/v1/unclaimed_budget/{address}";
   }
 }
 

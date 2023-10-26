@@ -670,6 +670,7 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+// Budget defines the fields of a budget proposal.
 type Budget struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

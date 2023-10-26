@@ -8,6 +8,9 @@ import (
 
 	"cosmossdk.io/core/header"
 	storetypes "cosmossdk.io/store/types"
+	"cosmossdk.io/x/authz"
+	v2 "cosmossdk.io/x/authz/migrations/v2"
+	authzmodule "cosmossdk.io/x/authz/module"
 	govtypes "cosmossdk.io/x/gov/types/v1beta1"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -16,9 +19,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	"github.com/cosmos/cosmos-sdk/x/authz"
-	v2 "github.com/cosmos/cosmos-sdk/x/authz/migrations/v2"
-	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )

@@ -21,7 +21,7 @@ use (
 	./tools/confix
 	./tools/hubl
 	./x/accounts
-	./x/accauthzounts
+	./x/authz
 	./x/circuit
 	./x/distribution
 	./x/evidence

@@ -18,7 +18,7 @@
 #include "eckey_impl.h"
 #include "hash_impl.h"
 
-#define ARG_CHECK(cond) do { \
+#define COSMOS_ARG_CHECK(cond) do { \
     if (EXPECT(!(cond), 0)) { \
         secp256k1_callback_call(&ctx->illegal_callback, #cond); \
         return 0; \
@@ -127,7 +127,7 @@ static int secp256k1_pubkey_load(const cosmos_secp256k1_context* ctx, secp256k1_
         secp256k1_fe_set_b32(&y, pubkey->data + 32);
         secp256k1_ge_set_xy(ge, &x, &y);
     }
-    ARG_CHECK(!secp256k1_fe_is_zero(&ge->x));
+    COSMOS_ARG_CHECK(!secp256k1_fe_is_zero(&ge->x));
     return 1;
 }
 
@@ -149,9 +149,9 @@ int cosmos_secp256k1_ec_pubkey_parse(const cosmos_secp256k1_context* ctx, cosmos
     secp256k1_ge Q;
 
     VERIFY_CHECK(ctx != NULL);
-    ARG_CHECK(pubkey != NULL);
+    COSMOS_ARG_CHECK(pubkey != NULL);
     memset(pubkey, 0, sizeof(*pubkey));
-    ARG_CHECK(input != NULL);
+    COSMOS_ARG_CHECK(input != NULL);
     if (!secp256k1_eckey_pubkey_parse(&Q, input, inputlen)) {
         return 0;
     }
@@ -166,14 +166,14 @@ int cosmos_secp256k1_ec_pubkey_serialize(const cosmos_secp256k1_context* ctx, un
     int ret = 0;
 
     VERIFY_CHECK(ctx != NULL);
-    ARG_CHECK(outputlen != NULL);
-    ARG_CHECK(*outputlen >= ((flags & SECP256K1_FLAGS_BIT_COMPRESSION) ? 33 : 65));
+    COSMOS_ARG_CHECK(outputlen != NULL);
+    COSMOS_ARG_CHECK(*outputlen >= ((flags & SECP256K1_FLAGS_BIT_COMPRESSION) ? 33 : 65));
     len = *outputlen;
     *outputlen = 0;
-    ARG_CHECK(output != NULL);
+    COSMOS_ARG_CHECK(output != NULL);
     memset(output, 0, len);
-    ARG_CHECK(pubkey != NULL);
-    ARG_CHECK((flags & SECP256K1_FLAGS_TYPE_MASK) == SECP256K1_FLAGS_TYPE_COMPRESSION);
+    COSMOS_ARG_CHECK(pubkey != NULL);
+    COSMOS_ARG_CHECK((flags & SECP256K1_FLAGS_TYPE_MASK) == SECP256K1_FLAGS_TYPE_COMPRESSION);
     if (secp256k1_pubkey_load(ctx, &Q, pubkey)) {
         ret = secp256k1_eckey_pubkey_serialize(&Q, output, &len, flags & SECP256K1_FLAGS_BIT_COMPRESSION);
         if (ret) {
@@ -211,8 +211,8 @@ int secp256k1_ecdsa_signature_parse_der(const cosmos_secp256k1_context* ctx, cos
     secp256k1_scalar r, s;
 
     VERIFY_CHECK(ctx != NULL);
-    ARG_CHECK(sig != NULL);
-    ARG_CHECK(input != NULL);
+    COSMOS_ARG_CHECK(sig != NULL);
+    COSMOS_ARG_CHECK(input != NULL);
 
     if (secp256k1_ecdsa_sig_parse(&r, &s, input, inputlen)) {
         secp256k1_ecdsa_signature_save(sig, &r, &s);
@@ -229,8 +229,8 @@ int cosmos_secp256k1_ecdsa_signature_parse_compact(const cosmos_secp256k1_contex
     int overflow = 0;
 
     VERIFY_CHECK(ctx != NULL);
-    ARG_CHECK(sig != NULL);
-    ARG_CHECK(input64 != NULL);
+    COSMOS_ARG_CHECK(sig != NULL);
+    COSMOS_ARG_CHECK(input64 != NULL);
 
     secp256k1_scalar_set_b32(&r, &input64[0], &overflow);
     ret &= !overflow;
@@ -244,13 +244,13 @@ int cosmos_secp256k1_ecdsa_signature_parse_compact(const cosmos_secp256k1_contex
     return ret;
 }
 
-int secp256k1_ecdsa_signature_serialize_der(const cosmos_secp256k1_context* ctx, unsigned char *output, size_t *outputlen, const cosmos_secp256k1_ecdsa_signature* sig) {
+int cosmos_secp256k1_ecdsa_signature_serialize_der(const cosmos_secp256k1_context* ctx, unsigned char *output, size_t *outputlen, const cosmos_secp256k1_ecdsa_signature* sig) {
     secp256k1_scalar r, s;
 
     VERIFY_CHECK(ctx != NULL);
-    ARG_CHECK(output != NULL);
-    ARG_CHECK(outputlen != NULL);
-    ARG_CHECK(sig != NULL);
+    COSMOS_ARG_CHECK(output != NULL);
+    COSMOS_ARG_CHECK(outputlen != NULL);
+    COSMOS_ARG_CHECK(sig != NULL);
 
     secp256k1_ecdsa_signature_load(ctx, &r, &s, sig);
     return secp256k1_ecdsa_sig_serialize(output, outputlen, &r, &s);
@@ -260,8 +260,8 @@ int cosmos_secp256k1_ecdsa_signature_serialize_compact(const cosmos_secp256k1_co
     secp256k1_scalar r, s;
 
     VERIFY_CHECK(ctx != NULL);
-    ARG_CHECK(output64 != NULL);
-    ARG_CHECK(sig != NULL);
+    COSMOS_ARG_CHECK(output64 != NULL);
+    COSMOS_ARG_CHECK(sig != NULL);
 
     secp256k1_ecdsa_signature_load(ctx, &r, &s, sig);
     secp256k1_scalar_get_b32(&output64[0], &r);
@@ -274,7 +274,7 @@ int secp256k1_ecdsa_signature_normalize(const cosmos_secp256k1_context* ctx, cos
     int ret = 0;
 
     VERIFY_CHECK(ctx != NULL);
-    ARG_CHECK(sigin != NULL);
+    COSMOS_ARG_CHECK(sigin != NULL);
 
     secp256k1_ecdsa_signature_load(ctx, &r, &s, sigin);
     ret = secp256k1_scalar_is_high(&s);
@@ -293,10 +293,10 @@ int cosmos_secp256k1_ecdsa_verify(const cosmos_secp256k1_context* ctx, const cos
     secp256k1_scalar r, s;
     secp256k1_scalar m;
     VERIFY_CHECK(ctx != NULL);
-    ARG_CHECK(secp256k1_ecmult_context_is_built(&ctx->ecmult_ctx));
-    ARG_CHECK(msg32 != NULL);
-    ARG_CHECK(sig != NULL);
-    ARG_CHECK(pubkey != NULL);
+    COSMOS_ARG_CHECK(secp256k1_ecmult_context_is_built(&ctx->ecmult_ctx));
+    COSMOS_ARG_CHECK(msg32 != NULL);
+    COSMOS_ARG_CHECK(sig != NULL);
+    COSMOS_ARG_CHECK(pubkey != NULL);
 
     secp256k1_scalar_set_b32(&m, msg32, NULL);
     secp256k1_ecdsa_signature_load(ctx, &r, &s, sig);
@@ -346,10 +346,10 @@ int secp256k1_ecdsa_sign(const cosmos_secp256k1_context* ctx, cosmos_secp256k1_e
     int ret = 0;
     int overflow = 0;
     VERIFY_CHECK(ctx != NULL);
-    ARG_CHECK(cosmos_secp256k1_ecmult_gen_context_is_built(&ctx->ecmult_gen_ctx));
-    ARG_CHECK(msg32 != NULL);
-    ARG_CHECK(signature != NULL);
-    ARG_CHECK(seckey != NULL);
+    COSMOS_ARG_CHECK(cosmos_secp256k1_ecmult_gen_context_is_built(&ctx->ecmult_gen_ctx));
+    COSMOS_ARG_CHECK(msg32 != NULL);
+    COSMOS_ARG_CHECK(signature != NULL);
+    COSMOS_ARG_CHECK(seckey != NULL);
     if (noncefp == NULL) {
         noncefp = cosmos_secp256k1_nonce_function_default;
     }
@@ -391,7 +391,7 @@ int secp256k1_ec_seckey_verify(const cosmos_secp256k1_context* ctx, const unsign
     int ret;
     int overflow;
     VERIFY_CHECK(ctx != NULL);
-    ARG_CHECK(seckey != NULL);
+    COSMOS_ARG_CHECK(seckey != NULL);
 
     secp256k1_scalar_set_b32(&sec, seckey, &overflow);
     ret = !overflow && !secp256k1_scalar_is_zero(&sec);
@@ -406,10 +406,10 @@ int cosmos_secp256k1_ec_pubkey_create(const cosmos_secp256k1_context* ctx, cosmo
     int overflow;
     int ret = 0;
     VERIFY_CHECK(ctx != NULL);
-    ARG_CHECK(pubkey != NULL);
+    COSMOS_ARG_CHECK(pubkey != NULL);
     memset(pubkey, 0, sizeof(*pubkey));
-    ARG_CHECK(cosmos_secp256k1_ecmult_gen_context_is_built(&ctx->ecmult_gen_ctx));
-    ARG_CHECK(seckey != NULL);
+    COSMOS_ARG_CHECK(cosmos_secp256k1_ecmult_gen_context_is_built(&ctx->ecmult_gen_ctx));
+    COSMOS_ARG_CHECK(seckey != NULL);
 
     secp256k1_scalar_set_b32(&sec, seckey, &overflow);
     ret = (!overflow) & (!secp256k1_scalar_is_zero(&sec));
@@ -428,8 +428,8 @@ int secp256k1_ec_privkey_tweak_add(const cosmos_secp256k1_context* ctx, unsigned
     int ret = 0;
     int overflow = 0;
     VERIFY_CHECK(ctx != NULL);
-    ARG_CHECK(seckey != NULL);
-    ARG_CHECK(tweak != NULL);
+    COSMOS_ARG_CHECK(seckey != NULL);
+    COSMOS_ARG_CHECK(tweak != NULL);
 
     secp256k1_scalar_set_b32(&term, tweak, &overflow);
     secp256k1_scalar_set_b32(&sec, seckey, NULL);
@@ -451,9 +451,9 @@ int secp256k1_ec_pubkey_tweak_add(const cosmos_secp256k1_context* ctx, cosmos_se
     int ret = 0;
     int overflow = 0;
     VERIFY_CHECK(ctx != NULL);
-    ARG_CHECK(secp256k1_ecmult_context_is_built(&ctx->ecmult_ctx));
-    ARG_CHECK(pubkey != NULL);
-    ARG_CHECK(tweak != NULL);
+    COSMOS_ARG_CHECK(secp256k1_ecmult_context_is_built(&ctx->ecmult_ctx));
+    COSMOS_ARG_CHECK(pubkey != NULL);
+    COSMOS_ARG_CHECK(tweak != NULL);
 
     secp256k1_scalar_set_b32(&term, tweak, &overflow);
     ret = !overflow && secp256k1_pubkey_load(ctx, &p, pubkey);
@@ -475,8 +475,8 @@ int cosmos_secp256k1_ec_privkey_tweak_mul(const cosmos_secp256k1_context* ctx, u
     int ret = 0;
     int overflow = 0;
     VERIFY_CHECK(ctx != NULL);
-    ARG_CHECK(seckey != NULL);
-    ARG_CHECK(tweak != NULL);
+    COSMOS_ARG_CHECK(seckey != NULL);
+    COSMOS_ARG_CHECK(tweak != NULL);
 
     secp256k1_scalar_set_b32(&factor, tweak, &overflow);
     secp256k1_scalar_set_b32(&sec, seckey, NULL);
@@ -497,9 +497,9 @@ int cosmos_secp256k1_ec_pubkey_tweak_mul(const cosmos_secp256k1_context* ctx, co
     int ret = 0;
     int overflow = 0;
     VERIFY_CHECK(ctx != NULL);
-    ARG_CHECK(secp256k1_ecmult_context_is_built(&ctx->ecmult_ctx));
-    ARG_CHECK(pubkey != NULL);
-    ARG_CHECK(tweak != NULL);
+    COSMOS_ARG_CHECK(secp256k1_ecmult_context_is_built(&ctx->ecmult_ctx));
+    COSMOS_ARG_CHECK(pubkey != NULL);
+    COSMOS_ARG_CHECK(tweak != NULL);
 
     secp256k1_scalar_set_b32(&factor, tweak, &overflow);
     ret = !overflow && secp256k1_pubkey_load(ctx, &p, pubkey);
@@ -517,7 +517,7 @@ int cosmos_secp256k1_ec_pubkey_tweak_mul(const cosmos_secp256k1_context* ctx, co
 
 int secp256k1_context_randomize(cosmos_secp256k1_context* ctx, const unsigned char *seed32) {
     VERIFY_CHECK(ctx != NULL);
-    ARG_CHECK(cosmos_secp256k1_ecmult_gen_context_is_built(&ctx->ecmult_gen_ctx));
+    COSMOS_ARG_CHECK(cosmos_secp256k1_ecmult_gen_context_is_built(&ctx->ecmult_gen_ctx));
     secp256k1_ecmult_gen_blind(&ctx->ecmult_gen_ctx, seed32);
     return 1;
 }
@@ -527,10 +527,10 @@ int secp256k1_ec_pubkey_combine(const cosmos_secp256k1_context* ctx, cosmos_secp
     secp256k1_gej Qj;
     secp256k1_ge Q;
 
-    ARG_CHECK(pubnonce != NULL);
+    COSMOS_ARG_CHECK(pubnonce != NULL);
     memset(pubnonce, 0, sizeof(*pubnonce));
-    ARG_CHECK(n >= 1);
-    ARG_CHECK(pubnonces != NULL);
+    COSMOS_ARG_CHECK(n >= 1);
+    COSMOS_ARG_CHECK(pubnonces != NULL);
 
     secp256k1_gej_set_infinity(&Qj);
 

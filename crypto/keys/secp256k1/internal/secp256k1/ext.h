@@ -105,8 +105,8 @@ int cosmos_secp256k1_ext_scalar_mul(const cosmos_secp256k1_context* ctx, unsigne
 	secp256k1_gej res;
 	secp256k1_ge ge;
 	secp256k1_scalar s;
-	ARG_CHECK(point != NULL);
-	ARG_CHECK(scalar != NULL);
+	COSMOS_ARG_CHECK(point != NULL);
+	COSMOS_ARG_CHECK(scalar != NULL);
 	(void)ctx;
 
 	secp256k1_fe_set_b32(&feX, point);

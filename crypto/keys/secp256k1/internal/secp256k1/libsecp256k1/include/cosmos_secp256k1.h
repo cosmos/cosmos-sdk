@@ -332,7 +332,7 @@ SECP256K1_API int secp256k1_ecdsa_signature_parse_der(
  *                     if 0 was returned).
  *  In:     sig:       a pointer to an initialized signature object
  */
-SECP256K1_API int secp256k1_ecdsa_signature_serialize_der(
+SECP256K1_API int cosmos_secp256k1_ecdsa_signature_serialize_der(
     const cosmos_secp256k1_context* ctx,
     unsigned char *output,
     size_t *outputlen,

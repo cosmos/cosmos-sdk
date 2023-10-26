@@ -34,7 +34,7 @@ static void secp256k1_num_get_bin(unsigned char *r, unsigned int rlen, const sec
         len = mpn_get_str(tmp, 256, (mp_limb_t*)a->data, a->limbs);
     }
     while (shift < len && tmp[shift] == 0) shift++;
-    VERIFY_CHECK(len-shift <= (int)rlen);
+    VERIFY_CHECK(len - shift <= (int)rlen);
     memset(r, 0, rlen - len + shift);
     if (len > shift) {
         memcpy(r + rlen - len + shift, tmp + shift, len - shift);
@@ -51,7 +51,7 @@ static void secp256k1_num_set_bin(secp256k1_num *r, const unsigned char *a, unsi
         r->data[0] = 0;
         len = 1;
     }
-    VERIFY_CHECK(len <= NUM_LIMBS*2);
+    VERIFY_CHECK(len <= NUM_LIMBS * 2);
     r->limbs = len;
     r->neg = 0;
     while (r->limbs > 1 && r->data[r->limbs-1]==0) {
@@ -63,7 +63,7 @@ static void secp256k1_num_add_abs(secp256k1_num *r, const secp256k1_num *a, cons
     mp_limb_t c = mpn_add(r->data, a->data, a->limbs, b->data, b->limbs);
     r->limbs = a->limbs;
     if (c != 0) {
-        VERIFY_CHECK(r->limbs < 2*NUM_LIMBS);
+        VERIFY_CHECK(r->limbs < 2 * NUM_LIMBS);
         r->data[r->limbs++] = c;
     }
 }
@@ -119,7 +119,7 @@ static void secp256k1_num_mod_inverse(secp256k1_num *r, const secp256k1_num *a, 
      *    S = 1/a mod m
      */
     VERIFY_CHECK(m->limbs <= NUM_LIMBS);
-    VERIFY_CHECK(m->data[m->limbs-1] != 0);
+    VERIFY_CHECK(m->data[m->limbs - 1] != 0);
     for (i = 0; i < m->limbs; i++) {
         u[i] = (i < a->limbs) ? a->data[i] : 0;
         v[i] = m->data[i];
@@ -237,7 +237,7 @@ static void secp256k1_num_mul(secp256k1_num *r, const secp256k1_num *a, const se
     secp256k1_num_sanity(a);
     secp256k1_num_sanity(b);
 
-    VERIFY_CHECK(a->limbs + b->limbs <= 2*NUM_LIMBS+1);
+    VERIFY_CHECK(a->limbs + b->limbs <= 2 * NUM_LIMBS + 1);
     if ((a->limbs==1 && a->data[0]==0) || (b->limbs==1 && b->data[0]==0)) {
         r->limbs = 1;
         r->neg = 0;
@@ -253,7 +253,7 @@ static void secp256k1_num_mul(secp256k1_num *r, const secp256k1_num *a, const se
     if (r->limbs > 1 && tmp[r->limbs - 1]==0) {
         r->limbs--;
     }
-    VERIFY_CHECK(r->limbs <= 2*NUM_LIMBS);
+    VERIFY_CHECK(r->limbs <= 2 * NUM_LIMBS);
     mpn_copyi(r->data, tmp, r->limbs);
     r->neg = a->neg ^ b->neg;
     memset(tmp, 0, sizeof(tmp));

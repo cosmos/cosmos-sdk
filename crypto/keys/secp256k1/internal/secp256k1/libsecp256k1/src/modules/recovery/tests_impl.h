@@ -78,10 +78,10 @@ void test_ecdsa_recovery_api(void) {
     CHECK(ecount == 4);
     CHECK(secp256k1_ecdsa_sign_recoverable(both, &recsig, message, NULL, NULL, NULL) == 0);
     CHECK(ecount == 5);
-    /* This will fail or succeed randomly, and in either case will not ARG_CHECK failure */
+    /* This will fail or succeed randomly, and in either case will not COSMOS_ARG_CHECK failure */
     secp256k1_ecdsa_sign_recoverable(both, &recsig, message, privkey, recovery_test_nonce_function, NULL);
     CHECK(ecount == 5);
-    /* These will all fail, but not in ARG_CHECK way */
+    /* These will all fail, but not in COSMOS_ARG_CHECK way */
     CHECK(secp256k1_ecdsa_sign_recoverable(both, &recsig, message, zero_privkey, NULL, NULL) == 0);
     CHECK(secp256k1_ecdsa_sign_recoverable(both, &recsig, message, over_privkey, NULL, NULL) == 0);
     /* This one will succeed. */

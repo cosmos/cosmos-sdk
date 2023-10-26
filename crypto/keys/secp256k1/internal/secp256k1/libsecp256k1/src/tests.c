@@ -1669,7 +1669,7 @@ void run_field_misc(void) {
             secp256k1_fe_negate(&z, &z, j+1);
             secp256k1_fe_normalize_var(&q);
             secp256k1_fe_cmov(&q, &z, (j&1));
-            VERIFY_CHECK(!q.normalized && q.magnitude == (j+2));
+            VERIFY_CHECK(!q.normalized && q.magnitude == (j + 2));
         }
         secp256k1_fe_normalize_var(&z);
         /* Test storage conversion and conditional moves. */
@@ -3535,13 +3535,13 @@ void test_ecdsa_end_to_end(void) {
     CHECK(memcmp(&signature[5], &signature[0], 64) == 0);
 
     /* Serialize/parse DER and verify again */
-    CHECK(secp256k1_ecdsa_signature_serialize_der(ctx, sig, &siglen, &signature[0]) == 1);
+    CHECK(cosmos_secp256k1_ecdsa_signature_serialize_der(ctx, sig, &siglen, &signature[0]) == 1);
     memset(&signature[0], 0, sizeof(signature[0]));
     CHECK(secp256k1_ecdsa_signature_parse_der(ctx, &signature[0], sig, siglen) == 1);
     CHECK(cosmos_secp256k1_ecdsa_verify(ctx, &signature[0], message, &pubkey) == 1);
     /* Serialize/destroy/parse DER and verify again. */
     siglen = 74;
-    CHECK(secp256k1_ecdsa_signature_serialize_der(ctx, sig, &siglen, &signature[0]) == 1);
+    CHECK(cosmos_secp256k1_ecdsa_signature_serialize_der(ctx, sig, &siglen, &signature[0]) == 1);
     sig[secp256k1_rand_int(siglen)] += 1 + secp256k1_rand_int(255);
     CHECK(secp256k1_ecdsa_signature_parse_der(ctx, &signature[0], sig, siglen) == 0 ||
           cosmos_secp256k1_ecdsa_verify(ctx, &signature[0], message, &pubkey) == 0);
@@ -3660,7 +3660,7 @@ int test_ecdsa_der_parse(const unsigned char *sig, size_t siglen, int certainly_
         valid_der = (memcmp(compact_der, zeroes, 32) != 0) && (memcmp(compact_der + 32, zeroes, 32) != 0);
     }
     if (valid_der) {
-        ret |= (!secp256k1_ecdsa_signature_serialize_der(ctx, roundtrip_der, &len_der, &sig_der)) << 1;
+        ret |= (!cosmos_secp256k1_ecdsa_signature_serialize_der(ctx, roundtrip_der, &len_der, &sig_der)) << 1;
         roundtrips_der = (len_der == siglen) && memcmp(roundtrip_der, sig, siglen) == 0;
     }
 
@@ -3670,7 +3670,7 @@ int test_ecdsa_der_parse(const unsigned char *sig, size_t siglen, int certainly_
         valid_der_lax = (memcmp(compact_der_lax, zeroes, 32) != 0) && (memcmp(compact_der_lax + 32, zeroes, 32) != 0);
     }
     if (valid_der_lax) {
-        ret |= (!secp256k1_ecdsa_signature_serialize_der(ctx, roundtrip_der_lax, &len_der_lax, &sig_der_lax)) << 11;
+        ret |= (!cosmos_secp256k1_ecdsa_signature_serialize_der(ctx, roundtrip_der_lax, &len_der_lax, &sig_der_lax)) << 11;
         roundtrips_der_lax = (len_der_lax == siglen) && memcmp(roundtrip_der_lax, sig, siglen) == 0;
     }
 
@@ -4175,13 +4175,13 @@ void test_ecdsa_edge_cases(void) {
         CHECK(cosmos_secp256k1_ecdsa_verify(ctx, &sig, msg, &pubkey) == 0);
         CHECK(ecount == 8);
         siglen = 72;
-        CHECK(secp256k1_ecdsa_signature_serialize_der(ctx, NULL, &siglen, &sig) == 0);
+        CHECK(cosmos_secp256k1_ecdsa_signature_serialize_der(ctx, NULL, &siglen, &sig) == 0);
         CHECK(ecount == 9);
-        CHECK(secp256k1_ecdsa_signature_serialize_der(ctx, signature, NULL, &sig) == 0);
+        CHECK(cosmos_secp256k1_ecdsa_signature_serialize_der(ctx, signature, NULL, &sig) == 0);
         CHECK(ecount == 10);
-        CHECK(secp256k1_ecdsa_signature_serialize_der(ctx, signature, &siglen, NULL) == 0);
+        CHECK(cosmos_secp256k1_ecdsa_signature_serialize_der(ctx, signature, &siglen, NULL) == 0);
         CHECK(ecount == 11);
-        CHECK(secp256k1_ecdsa_signature_serialize_der(ctx, signature, &siglen, &sig) == 1);
+        CHECK(cosmos_secp256k1_ecdsa_signature_serialize_der(ctx, signature, &siglen, &sig) == 1);
         CHECK(ecount == 11);
         CHECK(secp256k1_ecdsa_signature_parse_der(ctx, NULL, signature, siglen) == 0);
         CHECK(ecount == 12);
@@ -4191,7 +4191,7 @@ void test_ecdsa_edge_cases(void) {
         CHECK(ecount == 13);
         siglen = 10;
         /* Too little room for a signature does not fail via ARGCHECK. */
-        CHECK(secp256k1_ecdsa_signature_serialize_der(ctx, signature, &siglen, &sig) == 0);
+        CHECK(cosmos_secp256k1_ecdsa_signature_serialize_der(ctx, signature, &siglen, &sig) == 0);
         CHECK(ecount == 13);
         ecount = 0;
         CHECK(secp256k1_ecdsa_signature_normalize(ctx, NULL, NULL) == 0);

@@ -41,9 +41,9 @@ int cosmos_secp256k1_ecdsa_recoverable_signature_parse_compact(const cosmos_secp
     int overflow = 0;
 
     (void)ctx;
-    ARG_CHECK(sig != NULL);
-    ARG_CHECK(input64 != NULL);
-    ARG_CHECK(recid >= 0 && recid <= 3);
+    COSMOS_ARG_CHECK(sig != NULL);
+    COSMOS_ARG_CHECK(input64 != NULL);
+    COSMOS_ARG_CHECK(recid >= 0 && recid <= 3);
 
     secp256k1_scalar_set_b32(&r, &input64[0], &overflow);
     ret &= !overflow;
@@ -61,9 +61,9 @@ int cosmos_secp256k1_ecdsa_recoverable_signature_serialize_compact(const cosmos_
     secp256k1_scalar r, s;
 
     (void)ctx;
-    ARG_CHECK(output64 != NULL);
-    ARG_CHECK(sig != NULL);
-    ARG_CHECK(recid != NULL);
+    COSMOS_ARG_CHECK(output64 != NULL);
+    COSMOS_ARG_CHECK(sig != NULL);
+    COSMOS_ARG_CHECK(recid != NULL);
 
     secp256k1_ecdsa_recoverable_signature_load(ctx, &r, &s, recid, sig);
     secp256k1_scalar_get_b32(&output64[0], &r);
@@ -76,8 +76,8 @@ int secp256k1_ecdsa_recoverable_signature_convert(const cosmos_secp256k1_context
     int recid;
 
     (void)ctx;
-    ARG_CHECK(sig != NULL);
-    ARG_CHECK(sigin != NULL);
+    COSMOS_ARG_CHECK(sig != NULL);
+    COSMOS_ARG_CHECK(sigin != NULL);
 
     secp256k1_ecdsa_recoverable_signature_load(ctx, &r, &s, &recid, sigin);
     secp256k1_ecdsa_signature_save(sig, &r, &s);
@@ -127,10 +127,10 @@ int secp256k1_ecdsa_sign_recoverable(const cosmos_secp256k1_context* ctx, secp25
     int ret = 0;
     int overflow = 0;
     VERIFY_CHECK(ctx != NULL);
-    ARG_CHECK(cosmos_secp256k1_ecmult_gen_context_is_built(&ctx->ecmult_gen_ctx));
-    ARG_CHECK(msg32 != NULL);
-    ARG_CHECK(signature != NULL);
-    ARG_CHECK(seckey != NULL);
+    COSMOS_ARG_CHECK(cosmos_secp256k1_ecmult_gen_context_is_built(&ctx->ecmult_gen_ctx));
+    COSMOS_ARG_CHECK(msg32 != NULL);
+    COSMOS_ARG_CHECK(signature != NULL);
+    COSMOS_ARG_CHECK(seckey != NULL);
     if (noncefp == NULL) {
         noncefp = cosmos_secp256k1_nonce_function_default;
     }
@@ -173,10 +173,10 @@ int cosmos_secp256k1_ecdsa_recover(const cosmos_secp256k1_context* ctx, cosmos_s
     secp256k1_scalar m;
     int recid;
     VERIFY_CHECK(ctx != NULL);
-    ARG_CHECK(secp256k1_ecmult_context_is_built(&ctx->ecmult_ctx));
-    ARG_CHECK(msg32 != NULL);
-    ARG_CHECK(signature != NULL);
-    ARG_CHECK(pubkey != NULL);
+    COSMOS_ARG_CHECK(secp256k1_ecmult_context_is_built(&ctx->ecmult_ctx));
+    COSMOS_ARG_CHECK(msg32 != NULL);
+    COSMOS_ARG_CHECK(signature != NULL);
+    COSMOS_ARG_CHECK(pubkey != NULL);
 
     secp256k1_ecdsa_recoverable_signature_load(ctx, &r, &s, &recid, signature);
     VERIFY_CHECK(recid >= 0 && recid < 4);  /* should have been caught in parse_compact */

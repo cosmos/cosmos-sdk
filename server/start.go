@@ -483,7 +483,7 @@ func startGrpcServer(
 		// return grpcServer as nil if gRPC is disabled
 		return nil, clientCtx, nil
 	}
-	_, port, err := net.SplitHostPort(config.Address)
+	_, _, err := net.SplitHostPort(config.Address)
 	if err != nil {
 		return nil, clientCtx, err
 	}
@@ -498,11 +498,9 @@ func startGrpcServer(
 		maxRecvMsgSize = serverconfig.DefaultGRPCMaxRecvMsgSize
 	}
 
-	grpcAddress := fmt.Sprintf("127.0.0.1:%s", port)
-
 	// if gRPC is enabled, configure gRPC client for gRPC gateway
 	grpcClient, err := grpc.Dial(
-		grpcAddress,
+		config.Address,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithDefaultCallOptions(
 			grpc.ForceCodec(codec.NewProtoCodec(clientCtx.InterfaceRegistry).GRPCCodec()),
@@ -515,7 +513,7 @@ func startGrpcServer(
 	}
 
 	clientCtx = clientCtx.WithGRPCClient(grpcClient)
-	svrCtx.Logger.Debug("gRPC client assigned to client context", "target", grpcAddress)
+	svrCtx.Logger.Debug("gRPC client assigned to client context", "target", config.Address)
 
 	grpcSrv, err := servergrpc.NewGRPCServer(clientCtx, app, config)
 	if err != nil {

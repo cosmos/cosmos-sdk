@@ -94,7 +94,6 @@ func (m *Manager) pruneStore(height uint64) {
 	m.logger.Debug("pruning store", "height", height)
 
 	err := m.stateStore.Prune(height)
-
 	if err != nil {
 		m.logger.Error("failed to prune store", "err", err)
 	}
@@ -104,7 +103,6 @@ func (m *Manager) pruneCommitment(height uint64) {
 	m.logger.Debug("pruning commitment", "height", height)
 
 	err := m.stateCommitment.Prune(height)
-
 	if err != nil {
 		m.logger.Error("failed to prune commitment", "err", err)
 	}

@@ -55,7 +55,8 @@ func (s *PruningTestSuite) TestPruning() {
 		s.Require().NoError(err)
 		_, err = s.sc.Commit()
 		s.Require().NoError(err)
-		s.ss.ApplyChangeset(uint64(i+1), cs)
+		err = s.ss.ApplyChangeset(uint64(i+1), cs)
+		s.Require().NoError(err)
 		s.manager.Prune(uint64(i + 1))
 	}
 

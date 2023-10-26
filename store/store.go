@@ -52,7 +52,17 @@ type RootStore interface {
 	// TracingEnabled returns true if tracing is enabled on the RootStore.
 	TracingEnabled() bool
 
+	// LoadVersion loads the RootStore to the given version.
 	LoadVersion(version uint64) error
+	// LoadVersionAndUpgrade behaves identically to LoadVersion except it also
+	// accepts a StoreUpgrades object that defines a series of transformations to
+	// apply to store keys (if any).
+	//
+	// Note, handling StoreUpgrades is optional depending on the underlying RootStore
+	// implementation.
+	LoadVersionAndUpgrade(version int64, upgrades *StoreUpgrades) error
+	// LoadLatestVersion behaves identically to LoadVersion except it loads the
+	// latest version implicitly.
 	LoadLatestVersion() error
 
 	// GetLatestVersion returns the latest version, i.e. height, committed.
@@ -157,4 +167,20 @@ type QueryResult struct {
 	Value   []byte
 	Version uint64
 	Proof   *ics23.CommitmentProof
+}
+
+// StoreUpgrades defines a series of transformations to apply the RootStore upon
+// loading a version.
+type StoreUpgrades struct {
+	Added   []string      `json:"added"`
+	Renamed []StoreRename `json:"renamed"`
+	Deleted []string      `json:"deleted"`
+}
+
+// StoreRename defines a change in a store key. All data previously stored under
+// the current store key should be migrated to the new store key, while also
+// deleting the old store key.
+type StoreRename struct {
+	OldKey string `json:"old_key"`
+	NewKey string `json:"new_key"`
 }

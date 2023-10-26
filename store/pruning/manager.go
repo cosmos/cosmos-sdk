@@ -64,26 +64,22 @@ func (m *Manager) Stop() {
 // If pruning is needed, it will spawn a goroutine to do the actual pruning.
 func (m *Manager) Prune(height uint64) {
 	// storage pruning
-	if m.storeOpts.Interval > 0 && height%m.storeOpts.Interval == 0 {
+	if m.storeOpts.Interval > 0 && height > m.storeOpts.KeepRecent && height%m.storeOpts.Interval == 0 {
 		_, ok := <-m.chStore
 		if ok {
 			go func() {
-				if height > m.storeOpts.KeepRecent {
-					m.pruneStore(height - m.storeOpts.KeepRecent - 1)
-				}
+				m.pruneStore(height - m.storeOpts.KeepRecent - 1)
 				m.chStore <- struct{}{}
 			}()
 		}
 	}
 
 	// commitment pruning
-	if m.commitmentOpts.Interval > 0 && height%m.commitmentOpts.Interval == 0 {
+	if m.commitmentOpts.Interval > 0 && height > m.commitmentOpts.KeepRecent && height%m.commitmentOpts.Interval == 0 {
 		_, ok := <-m.chCommitment
 		if ok {
 			go func() {
-				if height > m.commitmentOpts.KeepRecent {
-					m.pruneCommitment(height - m.commitmentOpts.KeepRecent - 1)
-				}
+				m.pruneCommitment(height - m.commitmentOpts.KeepRecent - 1)
 				m.chCommitment <- struct{}{}
 			}()
 		}

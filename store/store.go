@@ -168,19 +168,3 @@ type QueryResult struct {
 	Version uint64
 	Proof   *ics23.CommitmentProof
 }
-
-// StoreUpgrades defines a series of transformations to apply the RootStore upon
-// loading a version.
-type StoreUpgrades struct {
-	Added   []string      `json:"added"`
-	Renamed []StoreRename `json:"renamed"`
-	Deleted []string      `json:"deleted"`
-}
-
-// StoreRename defines a change in a store key. All data previously stored under
-// the current store key should be migrated to the new store key, while also
-// deleting the old store key.
-type StoreRename struct {
-	OldKey string `json:"old_key"`
-	NewKey string `json:"new_key"`
-}

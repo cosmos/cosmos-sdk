@@ -209,11 +209,6 @@ func (s *Store) loadVersion(v uint64, upgrades *store.StoreUpgrades) error {
 		return fmt.Errorf("failed to load SS version %d: %w", v, err)
 	}
 
-	// TODO: Complete this method to handle upgrades. See legacy RMS loadVersion()
-	// for reference.
-	//
-	// Ref: https://github.com/cosmos/cosmos-sdk/issues/17314
-
 	return nil
 }
 

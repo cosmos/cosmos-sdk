@@ -8,13 +8,13 @@ import (
 	"github.com/stretchr/testify/require"
 
 	sdkmath "cosmossdk.io/math"
+	"cosmossdk.io/x/authz"
+	authzmodule "cosmossdk.io/x/authz/module"
+	"cosmossdk.io/x/authz/simulation"
 
 	"github.com/cosmos/cosmos-sdk/types/module"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/cosmos/cosmos-sdk/x/authz"
-	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
-	"github.com/cosmos/cosmos-sdk/x/authz/simulation"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 

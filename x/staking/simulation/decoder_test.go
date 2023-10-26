@@ -7,13 +7,13 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/math"
+	"cosmossdk.io/x/staking/simulation"
+	"cosmossdk.io/x/staking/types"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 	"github.com/cosmos/cosmos-sdk/types/module/testutil"
-	"github.com/cosmos/cosmos-sdk/x/staking/simulation"
-	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 var (

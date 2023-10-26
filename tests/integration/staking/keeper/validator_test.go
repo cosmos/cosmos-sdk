@@ -8,14 +8,14 @@ import (
 	"gotest.tools/v3/assert"
 
 	"cosmossdk.io/math"
+	"cosmossdk.io/x/staking/keeper"
+	"cosmossdk.io/x/staking/testutil"
+	"cosmossdk.io/x/staking/types"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
-	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
-	"github.com/cosmos/cosmos-sdk/x/staking/testutil"
-	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 func newMonikerValidator(tb testing.TB, operator sdk.ValAddress, pubKey cryptotypes.PubKey, moniker string) types.Validator {

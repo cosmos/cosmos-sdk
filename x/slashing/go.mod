@@ -14,6 +14,7 @@ require (
 	cosmossdk.io/x/distribution v0.0.0-20230925135524-a1bc045b3190
 	cosmossdk.io/x/gov v0.0.0-20230925135524-a1bc045b3190
 	cosmossdk.io/x/protocolpool v0.0.0-20230925135524-a1bc045b3190
+	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000
 	github.com/bits-and-blooms/bitset v1.10.0
 	github.com/cockroachdb/errors v1.11.1
 	github.com/cometbft/cometbft v0.38.0
@@ -166,4 +167,5 @@ replace (
 	cosmossdk.io/x/distribution => ../distribution
 	cosmossdk.io/x/gov => ../gov
 	cosmossdk.io/x/protocolpool => ../protocolpool
+	cosmossdk.io/x/staking => ../staking
 )

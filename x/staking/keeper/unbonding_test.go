@@ -4,11 +4,11 @@ import (
 	"time"
 
 	"cosmossdk.io/math"
+	"cosmossdk.io/x/staking/testutil"
+	"cosmossdk.io/x/staking/types"
 
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/staking/testutil"
-	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 func (s *KeeperTestSuite) TestIncrementUnbondingID() {

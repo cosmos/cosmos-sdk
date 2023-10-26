@@ -10,9 +10,9 @@ require (
 	cosmossdk.io/log v1.2.1
 	cosmossdk.io/math v1.1.3-rc.1
 	cosmossdk.io/store v1.0.0-rc.0
-	github.com/cometbft/cometbft v0.38.0
+	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000
 	github.com/cosmos/cosmos-proto v1.0.0-beta.3
-	github.com/cosmos/cosmos-sdk v0.47.5
+	github.com/cosmos/cosmos-sdk v0.51.0
 	github.com/cosmos/gogoproto v1.4.11
 	github.com/golang/mock v1.6.0
 	github.com/golang/protobuf v1.5.3
@@ -40,6 +40,7 @@ require (
 	github.com/cockroachdb/pebble v0.0.0-20230824192853-9bb0864bdb98 // indirect
 	github.com/cockroachdb/redact v1.1.5 // indirect
 	github.com/cockroachdb/tokenbucket v0.0.0-20230807174530-cc333fc44b06 // indirect
+	github.com/cometbft/cometbft v0.38.0 // indirect
 	github.com/cometbft/cometbft-db v0.8.0 // indirect
 	github.com/cosmos/btcutil v1.0.5 // indirect
 	github.com/cosmos/cosmos-db v1.0.0 // indirect
@@ -162,3 +163,5 @@ replace cosmossdk.io/x/gov => ../gov
 replace cosmossdk.io/x/distribution => ../distribution
 
 replace cosmossdk.io/x/slashing => ../slashing
+
+replace cosmossdk.io/x/staking => ../staking

@@ -159,7 +159,6 @@ require (
 replace github.com/cosmos/cosmos-sdk => ./../../
 
 replace (
-	cosmossdk.io/api => ./../../api
 	cosmossdk.io/x/distribution => ./../../x/distribution
 	cosmossdk.io/x/gov => ./../../x/gov
 	cosmossdk.io/x/slashing => ./../../x/slashing

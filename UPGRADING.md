@@ -54,6 +54,10 @@ Slashing was spun out into its own `go.mod`. To import it use `cosmossdk.io/x/sl
 
 Staking was spun out into its own `go.mod`. To import it use `cosmossdk.io/x/staking`
 
+#### `x/authz`
+
+Authz was spun out into its own `go.mod`. To import it use `cosmossdk.io/x/authz`
+
 #### Params
 
 A standalone Go module was created and it is accessible at "cosmossdk.io/x/params".

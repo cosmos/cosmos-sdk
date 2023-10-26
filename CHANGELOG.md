@@ -161,7 +161,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (baseapp) [#16244](https://github.com/cosmos/cosmos-sdk/pull/16244) `SetProtocolVersion` has been renamed to `SetAppVersion`. It now updates the consensus params in baseapp's `ParamStore`.
 * (types) [#17348](https://github.com/cosmos/cosmos-sdk/pull/17348) Remove the `WrapServiceResult` function.
     * The `*sdk.Result` returned by the msg server router will not contain the `.Data` field.
-* (x/staking) [#17335](https://github.com/cosmos/cosmos-sdk/pull/17335) Remove usage of `"github.com/cosmos/cosmos-sdk/x/staking/types".Infraction_*` in favour of `"cosmossdk.io/api/cosmos/staking/v1beta1".Infraction_` in order to remove dependency between modules on staking
+* (x/staking) [#17335](https://github.com/cosmos/cosmos-sdk/pull/17335) Remove usage of `"cosmossdk.io/x/staking/types".Infraction_*` in favour of `"cosmossdk.io/api/cosmos/staking/v1beta1".Infraction_` in order to remove dependency between modules on staking
 * (x/gov) [#17496](https://github.com/cosmos/cosmos-sdk/pull/17469) in `x/gov/types/v1beta1/vote.go` `NewVote` was removed, constructing the struct is required for this type
 * (types) [#17426](https://github.com/cosmos/cosmos-sdk/pull/17426) `NewContext` does not take a `cmtproto.Header{}` any longer. 
     * `WithChainID` / `WithBlockHeight` / `WithBlockHeader` must be used to set values on the context
@@ -178,6 +178,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/gov) [#18197](https://github.com/cosmos/cosmos-sdk/pull/18197) Gov module was moved to its own go.mod `cosmossdk.io/x/gov`
 * (x/distribution) [#18199](https://github.com/cosmos/cosmos-sdk/pull/18199) Distribution module was moved to its own go.mod `cosmossdk.io/x/distribution`
 * (x/slashing) [#18201](https://github.com/cosmos/cosmos-sdk/pull/18201) Slashing module was moved to its own go.mod `cosmossdk.io/x/slashing`
+* (x/staking) [#18257](https://github.com/cosmos/cosmos-sdk/pull/18257) Staking module was moved to its own go.mod `cosmossdk.io/x/staking`
 * (x/consensus) [#18041](https://github.com/cosmos/cosmos-sdk/pull/18041) `ToProtoConsensusParams()` returns an error 
 * (x/slashing) [#18115](https://github.com/cosmos/cosmos-sdk/pull/18115) `NewValidatorSigningInfo` takes strings instead of `sdk.AccAddress`
 

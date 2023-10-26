@@ -50,6 +50,10 @@ Distribution was spun out into its own `go.mod`. To import it use `cosmossdk.io/
 
 Slashing was spun out into its own `go.mod`. To import it use `cosmossdk.io/x/slashing`
 
+#### `x/staking`
+
+Staking was spun out into its own `go.mod`. To import it use `cosmossdk.io/x/staking`
+
 #### Params
 
 A standalone Go module was created and it is accessible at "cosmossdk.io/x/params".

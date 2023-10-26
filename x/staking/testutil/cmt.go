@@ -5,9 +5,9 @@ import (
 	cmttypes "github.com/cometbft/cometbft/types"
 
 	"cosmossdk.io/math"
+	"cosmossdk.io/x/staking/types"
 
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
-	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // GetCmtConsPubKey gets the validator's public key as a cmtcrypto.PubKey.

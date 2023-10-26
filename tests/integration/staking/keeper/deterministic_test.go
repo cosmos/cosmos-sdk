@@ -12,6 +12,9 @@ import (
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/distribution"
+	"cosmossdk.io/x/staking"
+	stakingkeeper "cosmossdk.io/x/staking/keeper"
+	stakingtypes "cosmossdk.io/x/staking/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
@@ -31,9 +34,6 @@ import (
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
-	"github.com/cosmos/cosmos-sdk/x/staking"
-	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 var (

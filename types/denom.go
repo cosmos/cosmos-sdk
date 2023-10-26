@@ -11,10 +11,12 @@ import (
 var denomUnits = map[string]math.LegacyDec{}
 
 // baseDenom is the denom of smallest unit registered
+// Deprecated: use BaseDenom from the staking module instead.
 var baseDenom string
 
 // RegisterDenom registers a denomination with a corresponding unit. If the
 // denomination is already registered, an error will be returned.
+// Deprecated: use BaseDenom from the staking module instead.
 func RegisterDenom(denom string, unit math.LegacyDec) error {
 	if err := ValidateDenom(denom); err != nil {
 		return err
@@ -34,6 +36,7 @@ func RegisterDenom(denom string, unit math.LegacyDec) error {
 
 // GetDenomUnit returns a unit for a given denomination if it exists. A boolean
 // is returned if the denomination is registered.
+// Deprecated: use BaseDenom from the staking module instead.
 func GetDenomUnit(denom string) (math.LegacyDec, bool) {
 	if err := ValidateDenom(denom); err != nil {
 		return math.LegacyZeroDec(), false
@@ -49,6 +52,7 @@ func GetDenomUnit(denom string) (math.LegacyDec, bool) {
 
 // SetBaseDenom allow overwritting the base denom
 // if the denom has registered before, otherwise return error
+// Deprecated: use BaseDenom from the staking module instead.
 func SetBaseDenom(denom string) error {
 	_, ok := denomUnits[denom]
 	if !ok {
@@ -59,6 +63,7 @@ func SetBaseDenom(denom string) error {
 }
 
 // GetBaseDenom returns the denom of smallest unit registered
+// Deprecated: use BaseDenom from the staking module instead.
 func GetBaseDenom() (string, error) {
 	if baseDenom == "" {
 		return "", fmt.Errorf("no denom is registered")

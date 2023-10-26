@@ -8,10 +8,8 @@ import (
 	"cosmossdk.io/store/v2"
 )
 
-const (
-	// degree defines the approximate number of items and children per B-tree node.
-	degree = 32
-)
+// degree defines the approximate number of items and children per B-tree node.
+const degree = 32
 
 var _ store.KVStore = (*Store)(nil)
 

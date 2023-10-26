@@ -10,6 +10,7 @@ require (
 	cosmossdk.io/log v1.2.1
 	cosmossdk.io/math v1.1.3-rc.1
 	cosmossdk.io/store v1.0.0-rc.0
+	cosmossdk.io/x/authz v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/gov v0.0.0-20230925135524-a1bc045b3190
 	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000
 	github.com/cockroachdb/apd/v2 v2.0.2
@@ -169,3 +170,5 @@ replace cosmossdk.io/x/distribution => ../distribution
 replace cosmossdk.io/x/slashing => ../slashing
 
 replace cosmossdk.io/x/staking => ../staking
+
+replace cosmossdk.io/x/authz => ../authz

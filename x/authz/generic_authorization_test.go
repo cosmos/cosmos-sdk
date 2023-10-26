@@ -5,7 +5,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/x/authz"
+	"cosmossdk.io/x/authz"
+
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 

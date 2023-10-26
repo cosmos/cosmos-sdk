@@ -96,7 +96,7 @@ void secp256k1_context_destroy(cosmos_secp256k1_context* ctx) {
     }
 }
 
-void secp256k1_context_set_illegal_callback(cosmos_secp256k1_context* ctx, void (*fun)(const char* message, void* data), const void* data) {
+void cosmos_secp256k1_context_set_illegal_callback(cosmos_secp256k1_context* ctx, void (*fun)(const char* message, void* data), const void* data) {
     if (fun == NULL) {
         fun = default_illegal_callback_fn;
     }

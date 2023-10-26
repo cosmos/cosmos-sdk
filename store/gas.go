@@ -83,12 +83,23 @@ type GasMeter interface {
 
 // GasConfig defines gas cost for each operation on a KVStore.
 type GasConfig struct {
-	HasCost          Gas
-	DeleteCost       Gas
-	ReadCostFlat     Gas
-	ReadCostPerByte  Gas
-	WriteCostFlat    Gas
+	// HasCost should reflect a fixed cost for a Has() call on a store.
+	HasCost Gas
+	// DeleteCost should reflect a fixed cost for a Delete() call on a store.
+	DeleteCost Gas
+	// ReadCostFlat should reflect a fixed cost for a Get() call on a store.
+	ReadCostFlat Gas
+	// ReadCostPerByte should reflect a fixed cost, per-byte on the key and value,
+	// for a Get() call on a store. Note, this cost can also be used on iteration
+	// seeks.
+	ReadCostPerByte Gas
+	// WriteCostFlat should reflect a fixed cost for a Set() call on a store.
+	WriteCostFlat Gas
+	// WriteCostPerByte should reflect a fixed cost, per-byte on the key and value,
+	// for a Set() call on a store.
 	WriteCostPerByte Gas
+	// IterNextCostFlat should reflect a fixed cost for each call to Next() on an
+	// iterator.
 	IterNextCostFlat Gas
 }
 

@@ -5,7 +5,6 @@ import (
 	"testing"
 	"time"
 
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
@@ -40,7 +39,7 @@ func (suite *GenesisTestSuite) SetupTest() {
 		&evidenceKeeper)
 	require.NoError(suite.T(), err)
 
-	suite.ctx = app.BaseApp.NewContextLegacy(false, cmtproto.Header{Height: 1})
+	suite.ctx = app.BaseApp.NewContext(false)
 	suite.keeper = evidenceKeeper
 }
 

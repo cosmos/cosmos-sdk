@@ -5,7 +5,7 @@ import (
 	"crypto/sha256"
 	"crypto/subtle"
 	"fmt"
-	"io"
+	"gitlab.com/yawning/secp256k1-voi/secec"
 	"math/big"
 
 	"github.com/cometbft/cometbft/crypto"
@@ -17,8 +17,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/types/errors"
-
-	secp256k1_voi "gitlab.com/yawning/secp256k1-voi"
 )
 
 var (
@@ -41,12 +39,12 @@ func (privKey *PrivKey) Bytes() []byte {
 // PubKey performs the point-scalar multiplication from the privKey on the
 // generator point to get the pubkey.
 func (privKey *PrivKey) PubKey() cryptotypes.PubKey {
-	scalar, _ := secp256k1_voi.NewScalarFromBytes((*[32]byte)(privKey.Key))
-	generatorPoint := secp256k1_voi.NewGeneratorPoint()
-	generatorPoint.ScalarBaseMult(scalar)
+	privateKeyObject, err := secec.NewPrivateKey(privKey.Key)
+	if err != nil {
+		panic(err)
+	}
 
-	pk := generatorPoint.CompressedBytes()
-	return &PubKey{Key: pk}
+	return &PubKey{Key: privateKeyObject.PublicKey().CompressedBytes()}
 }
 
 // Equals - you probably don't need to use this.
@@ -89,29 +87,17 @@ func (privKey *PrivKey) UnmarshalAminoJSON(bz []byte) error {
 // GenPrivKey generates a new ECDSA private key on curve secp256k1 private key.
 // It uses OS randomness to generate the private key.
 func GenPrivKey() *PrivKey {
-	return &PrivKey{Key: genPrivKey(crypto.CReader())}
+	return &PrivKey{Key: genPrivKey()}
 }
 
 // genPrivKey generates a new secp256k1 private key using the provided reader.
-func genPrivKey(rand io.Reader) []byte {
-	var privKeyBytes [PrivKeySize]byte
-	d := new(big.Int)
-	for {
-		privKeyBytes = [PrivKeySize]byte{}
-		_, err := io.ReadFull(rand, privKeyBytes[:])
-		if err != nil {
-			panic(err)
-		}
-
-		d.SetBytes(privKeyBytes[:])
-		// break if we found a valid point (i.e. > 0 and < N == curverOrder)
-		isValidFieldElement := 0 < d.Sign() && d.Cmp(secp256k1.S256().N) < 0
-		if isValidFieldElement {
-			break
-		}
+func genPrivKey() []byte {
+	privateKeyObject, err := secec.GenerateKey()
+	if err != nil {
+		panic(err)
 	}
 
-	return privKeyBytes[:]
+	return privateKeyObject.Bytes()
 }
 
 var one = new(big.Int).SetInt64(1)

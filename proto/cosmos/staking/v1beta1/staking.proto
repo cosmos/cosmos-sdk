@@ -12,7 +12,7 @@ import "amino/amino.proto";
 import "tendermint/types/types.proto";
 import "tendermint/abci/types.proto";
 
-option go_package = "github.com/cosmos/cosmos-sdk/x/staking/types";
+option go_package = "cosmossdk.io/x/staking/types";
 
 // HistoricalInfo contains header and validator information for a given block.
 // It is stored as part of staking module's state, which persists the `n` most

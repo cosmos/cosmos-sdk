@@ -22,6 +22,7 @@ import (
 	_ "cosmossdk.io/x/protocolpool"
 	poolkeeper "cosmossdk.io/x/protocolpool/keeper"
 	slashingkeeper "cosmossdk.io/x/slashing/keeper"
+	stakingkeeper "cosmossdk.io/x/staking/keeper"
 	upgradekeeper "cosmossdk.io/x/upgrade/keeper"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -44,7 +45,6 @@ import (
 	consensuskeeper "github.com/cosmos/cosmos-sdk/x/consensus/keeper"
 	crisiskeeper "github.com/cosmos/cosmos-sdk/x/crisis/keeper"
 	mintkeeper "github.com/cosmos/cosmos-sdk/x/mint/keeper"
-	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 )
 
 // DefaultNodeHome default home directories for the application daemon

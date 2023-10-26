@@ -15,6 +15,9 @@ import (
 	"cosmossdk.io/x/gov/types/v1beta1"
 	poolkeeper "cosmossdk.io/x/protocolpool/keeper"
 	pooltypes "cosmossdk.io/x/protocolpool/types"
+	"cosmossdk.io/x/staking"
+	stakingkeeper "cosmossdk.io/x/staking/keeper"
+	stakingtypes "cosmossdk.io/x/staking/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
@@ -30,9 +33,6 @@ import (
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
-	"github.com/cosmos/cosmos-sdk/x/staking"
-	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 type fixture struct {

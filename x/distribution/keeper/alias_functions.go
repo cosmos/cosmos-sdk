@@ -5,9 +5,9 @@ import (
 	"errors"
 
 	"cosmossdk.io/collections"
+	"cosmossdk.io/x/distribution/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
 // get outstanding rewards

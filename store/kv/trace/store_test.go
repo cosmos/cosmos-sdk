@@ -1,4 +1,4 @@
-package tracekv_test
+package trace_test
 
 import (
 	"bytes"
@@ -9,8 +9,8 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/store/v2"
-	"cosmossdk.io/store/v2/memkv"
-	"cosmossdk.io/store/v2/tracekv"
+	"cosmossdk.io/store/v2/kv/mem"
+	"cosmossdk.io/store/v2/kv/trace"
 )
 
 const storeKey = "storeKey"
@@ -32,10 +32,10 @@ func newTraceKVStore(w io.Writer) store.KVStore {
 }
 
 func newEmptyTraceKVStore(w io.Writer) store.KVStore {
-	memKVStore := memkv.New(storeKey)
+	memKVStore := mem.New(storeKey)
 	tc := store.TraceContext(map[string]any{"blockHeight": 64})
 
-	return tracekv.New(memKVStore, w, tc)
+	return trace.New(memKVStore, w, tc)
 }
 
 func TestTraceKVStoreGet(t *testing.T) {

@@ -5,9 +5,10 @@ import (
 
 	"github.com/golang/mock/gomock"
 
+	"cosmossdk.io/x/slashing/testutil"
+	"cosmossdk.io/x/slashing/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/slashing/testutil"
-	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
 
 func (s *KeeperTestSuite) TestExportAndInitGenesis() {

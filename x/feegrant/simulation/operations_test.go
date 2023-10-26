@@ -16,6 +16,7 @@ import (
 	"cosmossdk.io/x/feegrant/keeper"
 	_ "cosmossdk.io/x/feegrant/module"
 	"cosmossdk.io/x/feegrant/simulation"
+	_ "cosmossdk.io/x/staking"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -35,7 +36,6 @@ import (
 	_ "github.com/cosmos/cosmos-sdk/x/consensus"
 	_ "github.com/cosmos/cosmos-sdk/x/genutil"
 	_ "github.com/cosmos/cosmos-sdk/x/mint"
-	_ "github.com/cosmos/cosmos-sdk/x/staking"
 )
 
 type SimTestSuite struct {

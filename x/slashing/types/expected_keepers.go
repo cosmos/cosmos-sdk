@@ -6,9 +6,9 @@ import (
 	st "cosmossdk.io/api/cosmos/staking/v1beta1"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/math"
+	stakingtypes "cosmossdk.io/x/staking/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // AccountKeeper expected account keeper

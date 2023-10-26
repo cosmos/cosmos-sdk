@@ -20,7 +20,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	qtypes "github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/version"
-	_ "github.com/cosmos/cosmos-sdk/x/distribution"
 )
 
 type E2ETestSuite struct {

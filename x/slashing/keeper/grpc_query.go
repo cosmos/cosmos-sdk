@@ -7,10 +7,10 @@ import (
 	"google.golang.org/grpc/status"
 
 	"cosmossdk.io/store/prefix"
+	"cosmossdk.io/x/slashing/types"
 
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
 
 var _ types.QueryServer = Querier{}

@@ -230,7 +230,7 @@ import (
 	// so that module implementations are registered.
 	_ "github.com/cosmos/cosmos-sdk/x/auth/module"
 	_ "github.com/cosmos/cosmos-sdk/x/bank/module"
-	_ "github.com/cosmos/cosmos-sdk/x/staking/module"
+	_ "cosmossdk.io/x/staking/module"
 	"github.com/cosmos/cosmos-sdk/core/app"
 )
 

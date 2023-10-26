@@ -30,6 +30,8 @@ import (
 	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/math/unsafe"
 	pruningtypes "cosmossdk.io/store/pruning/types"
+	_ "cosmossdk.io/x/staking" // import staking as a blank
+	stakingtypes "cosmossdk.io/x/staking/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -59,8 +61,6 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	_ "github.com/cosmos/cosmos-sdk/x/consensus" // import consensus as a blank
 	"github.com/cosmos/cosmos-sdk/x/genutil"
-	_ "github.com/cosmos/cosmos-sdk/x/staking" // import staking as a blank
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // package-wide network lock to only allow one test network at a time
@@ -292,6 +292,7 @@ type (
 		ValAddress sdk.ValAddress
 		RPCClient  cmtclient.Client
 
+		app      servertypes.Application
 		tmNode   *node.Node
 		api      *api.Server
 		grpc     *grpc.Server
@@ -636,8 +637,7 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 
 	l.Log("starting test network...")
 	for idx, v := range network.Validators {
-		err := startInProcess(cfg, v)
-		if err != nil {
+		if err := startInProcess(cfg, v); err != nil {
 			return nil, err
 		}
 		l.Log("started validator", idx)
@@ -827,6 +827,12 @@ func (n *Network) Cleanup() {
 
 		if v.grpcWeb != nil {
 			_ = v.grpcWeb.Close()
+		}
+
+		if v.app != nil {
+			if err := v.app.Close(); err != nil {
+				n.Logger.Log("failed to stop validator ABCI application", "err", err)
+			}
 		}
 	}
 

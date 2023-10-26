@@ -8,10 +8,11 @@ import (
 	"encoding/binary"
 	"fmt"
 
-	"cosmossdk.io/store/v2"
-	"cosmossdk.io/store/v2/storage/util"
 	"github.com/linxGnu/grocksdb"
 	"golang.org/x/exp/slices"
+
+	"cosmossdk.io/store/v2"
+	"cosmossdk.io/store/v2/storage/util"
 )
 
 const (

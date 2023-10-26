@@ -47,7 +47,7 @@ type TestSuite struct {
 }
 
 func (s *TestSuite) SetupTest() {
-	s.blockTime = time.Now()
+	s.blockTime = time.Now().Round(0).UTC()
 	key := storetypes.NewKVStoreKey(group.StoreKey)
 
 	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))

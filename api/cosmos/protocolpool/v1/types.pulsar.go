@@ -16,7 +16,6 @@ import (
 
 var (
 	md_Budget                   protoreflect.MessageDescriptor
-	fd_Budget_id                protoreflect.FieldDescriptor
 	fd_Budget_recipient_address protoreflect.FieldDescriptor
 	fd_Budget_total_budget      protoreflect.FieldDescriptor
 	fd_Budget_start_time        protoreflect.FieldDescriptor
@@ -27,7 +26,6 @@ var (
 func init() {
 	file_cosmos_protocolpool_v1_types_proto_init()
 	md_Budget = File_cosmos_protocolpool_v1_types_proto.Messages().ByName("Budget")
-	fd_Budget_id = md_Budget.Fields().ByName("id")
 	fd_Budget_recipient_address = md_Budget.Fields().ByName("recipient_address")
 	fd_Budget_total_budget = md_Budget.Fields().ByName("total_budget")
 	fd_Budget_start_time = md_Budget.Fields().ByName("start_time")
@@ -100,12 +98,6 @@ func (x *fastReflection_Budget) Interface() protoreflect.ProtoMessage {
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
 func (x *fastReflection_Budget) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-	if x.Id != uint64(0) {
-		value := protoreflect.ValueOfUint64(x.Id)
-		if !f(fd_Budget_id, value) {
-			return
-		}
-	}
 	if x.RecipientAddress != "" {
 		value := protoreflect.ValueOfString(x.RecipientAddress)
 		if !f(fd_Budget_recipient_address, value) {
@@ -151,8 +143,6 @@ func (x *fastReflection_Budget) Range(f func(protoreflect.FieldDescriptor, proto
 // a repeated field is populated if it is non-empty.
 func (x *fastReflection_Budget) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "cosmos.protocolpool.v1.Budget.id":
-		return x.Id != uint64(0)
 	case "cosmos.protocolpool.v1.Budget.recipient_address":
 		return x.RecipientAddress != ""
 	case "cosmos.protocolpool.v1.Budget.total_budget":
@@ -179,8 +169,6 @@ func (x *fastReflection_Budget) Has(fd protoreflect.FieldDescriptor) bool {
 // Clear is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_Budget) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "cosmos.protocolpool.v1.Budget.id":
-		x.Id = uint64(0)
 	case "cosmos.protocolpool.v1.Budget.recipient_address":
 		x.RecipientAddress = ""
 	case "cosmos.protocolpool.v1.Budget.total_budget":
@@ -207,9 +195,6 @@ func (x *fastReflection_Budget) Clear(fd protoreflect.FieldDescriptor) {
 // of the value; to obtain a mutable reference, use Mutable.
 func (x *fastReflection_Budget) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "cosmos.protocolpool.v1.Budget.id":
-		value := x.Id
-		return protoreflect.ValueOfUint64(value)
 	case "cosmos.protocolpool.v1.Budget.recipient_address":
 		value := x.RecipientAddress
 		return protoreflect.ValueOfString(value)
@@ -245,8 +230,6 @@ func (x *fastReflection_Budget) Get(descriptor protoreflect.FieldDescriptor) pro
 // Set is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_Budget) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "cosmos.protocolpool.v1.Budget.id":
-		x.Id = value.Uint()
 	case "cosmos.protocolpool.v1.Budget.recipient_address":
 		x.RecipientAddress = value.Interface().(string)
 	case "cosmos.protocolpool.v1.Budget.total_budget":
@@ -282,8 +265,6 @@ func (x *fastReflection_Budget) Mutable(fd protoreflect.FieldDescriptor) protore
 			x.TotalBudget = new(v1beta1.Coin)
 		}
 		return protoreflect.ValueOfMessage(x.TotalBudget.ProtoReflect())
-	case "cosmos.protocolpool.v1.Budget.id":
-		panic(fmt.Errorf("field id of message cosmos.protocolpool.v1.Budget is not mutable"))
 	case "cosmos.protocolpool.v1.Budget.recipient_address":
 		panic(fmt.Errorf("field recipient_address of message cosmos.protocolpool.v1.Budget is not mutable"))
 	case "cosmos.protocolpool.v1.Budget.start_time":
@@ -305,8 +286,6 @@ func (x *fastReflection_Budget) Mutable(fd protoreflect.FieldDescriptor) protore
 // For lists, maps, and messages, this returns a new, empty, mutable value.
 func (x *fastReflection_Budget) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.protocolpool.v1.Budget.id":
-		return protoreflect.ValueOfUint64(uint64(0))
 	case "cosmos.protocolpool.v1.Budget.recipient_address":
 		return protoreflect.ValueOfString("")
 	case "cosmos.protocolpool.v1.Budget.total_budget":
@@ -387,9 +366,6 @@ func (x *fastReflection_Budget) ProtoMethods() *protoiface.Methods {
 		var n int
 		var l int
 		_ = l
-		if x.Id != 0 {
-			n += 1 + runtime.Sov(uint64(x.Id))
-		}
 		l = len(x.RecipientAddress)
 		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
@@ -439,17 +415,17 @@ func (x *fastReflection_Budget) ProtoMethods() *protoiface.Methods {
 		if x.Period != 0 {
 			i = runtime.EncodeVarint(dAtA, i, uint64(x.Period))
 			i--
-			dAtA[i] = 0x30
+			dAtA[i] = 0x28
 		}
 		if x.Tranches != 0 {
 			i = runtime.EncodeVarint(dAtA, i, uint64(x.Tranches))
 			i--
-			dAtA[i] = 0x28
+			dAtA[i] = 0x20
 		}
 		if x.StartTime != 0 {
 			i = runtime.EncodeVarint(dAtA, i, uint64(x.StartTime))
 			i--
-			dAtA[i] = 0x20
+			dAtA[i] = 0x18
 		}
 		if x.TotalBudget != nil {
 			encoded, err := options.Marshal(x.TotalBudget)
@@ -463,19 +439,14 @@ func (x *fastReflection_Budget) ProtoMethods() *protoiface.Methods {
 			copy(dAtA[i:], encoded)
 			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
 			i--
-			dAtA[i] = 0x1a
+			dAtA[i] = 0x12
 		}
 		if len(x.RecipientAddress) > 0 {
 			i -= len(x.RecipientAddress)
 			copy(dAtA[i:], x.RecipientAddress)
 			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.RecipientAddress)))
 			i--
-			dAtA[i] = 0x12
-		}
-		if x.Id != 0 {
-			i = runtime.EncodeVarint(dAtA, i, uint64(x.Id))
-			i--
-			dAtA[i] = 0x8
+			dAtA[i] = 0xa
 		}
 		if input.Buf != nil {
 			input.Buf = append(input.Buf, dAtA...)
@@ -527,25 +498,6 @@ func (x *fastReflection_Budget) ProtoMethods() *protoiface.Methods {
 			}
 			switch fieldNum {
 			case 1:
-				if wireType != 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Id", wireType)
-				}
-				x.Id = 0
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					x.Id |= uint64(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-			case 2:
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field RecipientAddress", wireType)
 				}
@@ -577,7 +529,7 @@ func (x *fastReflection_Budget) ProtoMethods() *protoiface.Methods {
 				}
 				x.RecipientAddress = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
-			case 3:
+			case 2:
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field TotalBudget", wireType)
 				}
@@ -613,7 +565,7 @@ func (x *fastReflection_Budget) ProtoMethods() *protoiface.Methods {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
 				}
 				iNdEx = postIndex
-			case 4:
+			case 3:
 				if wireType != 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field StartTime", wireType)
 				}
@@ -632,7 +584,7 @@ func (x *fastReflection_Budget) ProtoMethods() *protoiface.Methods {
 						break
 					}
 				}
-			case 5:
+			case 4:
 				if wireType != 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Tranches", wireType)
 				}
@@ -651,7 +603,7 @@ func (x *fastReflection_Budget) ProtoMethods() *protoiface.Methods {
 						break
 					}
 				}
-			case 6:
+			case 5:
 				if wireType != 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Period", wireType)
 				}
@@ -723,13 +675,16 @@ type Budget struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// id defines the unique id of the budget.
-	Id               uint64        `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
-	RecipientAddress string        `protobuf:"bytes,2,opt,name=recipient_address,json=recipientAddress,proto3" json:"recipient_address,omitempty"` // recipient address
-	TotalBudget      *v1beta1.Coin `protobuf:"bytes,3,opt,name=total_budget,json=totalBudget,proto3" json:"total_budget,omitempty"`                // total budget amount
-	StartTime        int64         `protobuf:"varint,4,opt,name=start_time,json=startTime,proto3" json:"start_time,omitempty"`                     // start_time in seconds
-	Tranches         int64         `protobuf:"varint,5,opt,name=tranches,proto3" json:"tranches,omitempty"`                                        // tranches are the no. of times the distribution needs to be done on the total amount.
-	Period           int64         `protobuf:"varint,6,opt,name=period,proto3" json:"period,omitempty"`                                            // period is the interval of blocks funds are distributed
+	// recipient_address is the address of the recipient who can claim the budget.
+	RecipientAddress string `protobuf:"bytes,1,opt,name=recipient_address,json=recipientAddress,proto3" json:"recipient_address,omitempty"`
+	// total_budget is the total amount allocated for the budget.
+	TotalBudget *v1beta1.Coin `protobuf:"bytes,2,opt,name=total_budget,json=totalBudget,proto3" json:"total_budget,omitempty"`
+	// start_time is the time when the budget becomes claimable, represented in seconds since the Unix epoch.
+	StartTime int64 `protobuf:"varint,3,opt,name=start_time,json=startTime,proto3" json:"start_time,omitempty"`
+	// tranches is the number of times the total budget amount is to be distributed.
+	Tranches int64 `protobuf:"varint,4,opt,name=tranches,proto3" json:"tranches,omitempty"`
+	// period is the interval (in blocks) between each distribution of funds.
+	Period int64 `protobuf:"varint,5,opt,name=period,proto3" json:"period,omitempty"`
 }
 
 func (x *Budget) Reset() {
@@ -750,13 +705,6 @@ func (*Budget) ProtoMessage() {}
 // Deprecated: Use Budget.ProtoReflect.Descriptor instead.
 func (*Budget) Descriptor() ([]byte, []int) {
 	return file_cosmos_protocolpool_v1_types_proto_rawDescGZIP(), []int{0}
-}
-
-func (x *Budget) GetId() uint64 {
-	if x != nil {
-		return x.Id
-	}
-	return 0
 }
 
 func (x *Budget) GetRecipientAddress() string {
@@ -804,21 +752,20 @@ var file_cosmos_protocolpool_v1_types_proto_rawDesc = []byte{
 	0x73, 0x6d, 0x6f, 0x73, 0x5f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
 	0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x1e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f,
 	0x62, 0x61, 0x73, 0x65, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x63, 0x6f, 0x69,
-	0x6e, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0xf0, 0x01, 0x0a, 0x06, 0x42, 0x75, 0x64, 0x67,
-	0x65, 0x74, 0x12, 0x0e, 0x0a, 0x02, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x02,
-	0x69, 0x64, 0x12, 0x45, 0x0a, 0x11, 0x72, 0x65, 0x63, 0x69, 0x70, 0x69, 0x65, 0x6e, 0x74, 0x5f,
-	0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2,
+	0x6e, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0xe0, 0x01, 0x0a, 0x06, 0x42, 0x75, 0x64, 0x67,
+	0x65, 0x74, 0x12, 0x45, 0x0a, 0x11, 0x72, 0x65, 0x63, 0x69, 0x70, 0x69, 0x65, 0x6e, 0x74, 0x5f,
+	0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2,
 	0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73,
 	0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x10, 0x72, 0x65, 0x63, 0x69, 0x70, 0x69, 0x65,
 	0x6e, 0x74, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x3c, 0x0a, 0x0c, 0x74, 0x6f, 0x74,
-	0x61, 0x6c, 0x5f, 0x62, 0x75, 0x64, 0x67, 0x65, 0x74, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0b, 0x32,
+	0x61, 0x6c, 0x5f, 0x62, 0x75, 0x64, 0x67, 0x65, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32,
 	0x19, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x76, 0x31,
 	0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x43, 0x6f, 0x69, 0x6e, 0x52, 0x0b, 0x74, 0x6f, 0x74, 0x61,
 	0x6c, 0x42, 0x75, 0x64, 0x67, 0x65, 0x74, 0x12, 0x1d, 0x0a, 0x0a, 0x73, 0x74, 0x61, 0x72, 0x74,
-	0x5f, 0x74, 0x69, 0x6d, 0x65, 0x18, 0x04, 0x20, 0x01, 0x28, 0x03, 0x52, 0x09, 0x73, 0x74, 0x61,
+	0x5f, 0x74, 0x69, 0x6d, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x03, 0x52, 0x09, 0x73, 0x74, 0x61,
 	0x72, 0x74, 0x54, 0x69, 0x6d, 0x65, 0x12, 0x1a, 0x0a, 0x08, 0x74, 0x72, 0x61, 0x6e, 0x63, 0x68,
-	0x65, 0x73, 0x18, 0x05, 0x20, 0x01, 0x28, 0x03, 0x52, 0x08, 0x74, 0x72, 0x61, 0x6e, 0x63, 0x68,
-	0x65, 0x73, 0x12, 0x16, 0x0a, 0x06, 0x70, 0x65, 0x72, 0x69, 0x6f, 0x64, 0x18, 0x06, 0x20, 0x01,
+	0x65, 0x73, 0x18, 0x04, 0x20, 0x01, 0x28, 0x03, 0x52, 0x08, 0x74, 0x72, 0x61, 0x6e, 0x63, 0x68,
+	0x65, 0x73, 0x12, 0x16, 0x0a, 0x06, 0x70, 0x65, 0x72, 0x69, 0x6f, 0x64, 0x18, 0x05, 0x20, 0x01,
 	0x28, 0x03, 0x52, 0x06, 0x70, 0x65, 0x72, 0x69, 0x6f, 0x64, 0x42, 0xda, 0x01, 0x0a, 0x1a, 0x63,
 	0x6f, 0x6d, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63,
 	0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x2e, 0x76, 0x31, 0x42, 0x0a, 0x54, 0x79, 0x70, 0x65, 0x73,

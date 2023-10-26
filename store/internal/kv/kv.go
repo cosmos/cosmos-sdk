@@ -5,6 +5,17 @@ import (
 	"sort"
 )
 
+type (
+	Pair struct {
+		Key   []byte
+		Value []byte
+	}
+
+	Pairs struct {
+		Pairs []Pair
+	}
+)
+
 func (kvs Pairs) Len() int { return len(kvs.Pairs) }
 func (kvs Pairs) Less(i, j int) bool {
 	switch bytes.Compare(kvs.Pairs[i].Key, kvs.Pairs[j].Key) {

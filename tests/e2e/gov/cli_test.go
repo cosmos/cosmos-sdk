@@ -7,13 +7,13 @@ import (
 	"testing"
 	"time"
 
-	"cosmossdk.io/simapp"
-
-	"github.com/cosmos/cosmos-sdk/testutil/network"
-	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
-
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
+
+	"cosmossdk.io/simapp"
+	v1 "cosmossdk.io/x/gov/types/v1"
+
+	"github.com/cosmos/cosmos-sdk/testutil/network"
 )
 
 func TestE2ETestSuite(t *testing.T) {

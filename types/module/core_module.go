@@ -19,18 +19,24 @@ import (
 )
 
 var (
+	_ appmodule.AppModule = coreAppModuleBasicAdaptor{}
+
 	_ AppModuleBasic = coreAppModuleBasicAdaptor{}
 	_ HasABCIGenesis = coreAppModuleBasicAdaptor{}
 	_ HasServices    = coreAppModuleBasicAdaptor{}
 )
 
-// CoreAppModuleBasicAdaptor wraps the core API module as an AppModule that this version
-// of the SDK can use.
-func CoreAppModuleBasicAdaptor(name string, module appmodule.AppModule) AppModuleBasic {
+// CoreAppModuleAdaptor wraps the core API module as an AppModule that this version of the SDK can use.
+func CoreAppModuleAdaptor(name string, module appmodule.AppModule) AppModule {
 	return coreAppModuleBasicAdaptor{
 		name:   name,
 		module: module,
 	}
+}
+
+// CoreAppModuleBasicAdaptor wraps the core API module as an AppModule that this version of the SDK can use.
+func CoreAppModuleBasicAdaptor(name string, module appmodule.AppModule) AppModule {
+	return CoreAppModuleAdaptor(name, module)
 }
 
 type coreAppModuleBasicAdaptor struct {
@@ -195,3 +201,7 @@ func (c coreAppModuleBasicAdaptor) RegisterServices(cfg Configurator) {
 		}
 	}
 }
+
+func (c coreAppModuleBasicAdaptor) IsOnePerModuleType() {}
+
+func (c coreAppModuleBasicAdaptor) IsAppModule() {}

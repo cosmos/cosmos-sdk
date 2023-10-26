@@ -6,8 +6,9 @@ import (
 
 	abci "github.com/cometbft/cometbft/abci/types"
 
+	"cosmossdk.io/x/staking/types"
+
 	"github.com/cosmos/cosmos-sdk/telemetry"
-	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // BeginBlocker will persist the current header and validator set as a historical entry

@@ -10,7 +10,6 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	sdkmath "cosmossdk.io/math"
-	"cosmossdk.io/x/bank"
 	"cosmossdk.io/x/distribution/client/cli"
 	distrtestutil "cosmossdk.io/x/distribution/testutil"
 
@@ -40,7 +39,7 @@ func TestCLITestSuite(t *testing.T) {
 }
 
 func (s *CLITestSuite) SetupSuite() {
-	s.encCfg = testutilmod.MakeTestEncodingConfig(bank.AppModuleBasic{})
+	s.encCfg = testutilmod.MakeTestEncodingConfig()
 	s.kr = keyring.NewInMemory(s.encCfg.Codec)
 	s.baseCtx = client.Context{}.
 		WithKeyring(s.kr).

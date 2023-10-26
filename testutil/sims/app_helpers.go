@@ -181,11 +181,6 @@ func SetupWithConfiguration(appConfig depinject.Config, startupConfig StartupCon
 	return app, nil
 }
 
-func AdvanceBlock(app *runtime.App, blockTime time.Time) error {
-	_, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: app.LastBlockHeight() + 1, Hash: app.LastCommitID().Hash, Time: blockTime})
-	return err
-}
-
 // GenesisStateWithValSet returns a new genesis state with the validator set
 func GenesisStateWithValSet(
 	codec codec.Codec,

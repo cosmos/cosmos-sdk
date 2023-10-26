@@ -60,7 +60,7 @@ type RootStore interface {
 	//
 	// Note, handling StoreUpgrades is optional depending on the underlying RootStore
 	// implementation.
-	LoadVersionAndUpgrade(version int64, upgrades *StoreUpgrades) error
+	LoadVersionAndUpgrade(version uint64, upgrades *StoreUpgrades) error
 	// LoadLatestVersion behaves identically to LoadVersion except it loads the
 	// latest version implicitly.
 	LoadLatestVersion() error

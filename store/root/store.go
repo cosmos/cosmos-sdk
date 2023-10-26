@@ -101,15 +101,6 @@ func (s *Store) GetSCStore(_ string) store.Tree {
 	return s.stateCommitment
 }
 
-func (s *Store) LoadLatestVersion() error {
-	lv, err := s.GetLatestVersion()
-	if err != nil {
-		return err
-	}
-
-	return s.loadVersion(lv, nil)
-}
-
 // LastCommitID returns a CommitID based off of the latest internal CommitInfo.
 // If an internal CommitInfo is not set, a new one will be returned with only the
 // latest version set, which is based off of the SS view.
@@ -174,8 +165,21 @@ func (s *Store) Query(storeKey string, version uint64, key []byte, prove bool) (
 }
 
 // LoadVersion loads a specific version returning an error upon failure.
-func (s *Store) LoadVersion(v uint64) (err error) {
-	return s.loadVersion(v, nil)
+func (s *Store) LoadVersion(version uint64) (err error) {
+	return s.loadVersion(version, nil)
+}
+
+func (s *Store) LoadVersionAndUpgrade(version uint64, upgrades *store.StoreUpgrades) error {
+	return s.loadVersion(version, upgrades)
+}
+
+func (s *Store) LoadLatestVersion() error {
+	lv, err := s.GetLatestVersion()
+	if err != nil {
+		return err
+	}
+
+	return s.loadVersion(lv, nil)
 }
 
 // GetKVStore returns the store's root KVStore. Any writes to this store without
@@ -198,7 +202,7 @@ func (s *Store) GetBranchedKVStore(_ string) store.BranchedKVStore {
 	return s.rootKVStore
 }
 
-func (s *Store) loadVersion(v uint64, upgrades any) error {
+func (s *Store) loadVersion(v uint64, upgrades *store.StoreUpgrades) error {
 	s.logger.Debug("loading version", "version", v)
 
 	if err := s.stateCommitment.LoadVersion(v); err != nil {

@@ -4,10 +4,10 @@ import (
 	"time"
 
 	"cosmossdk.io/collections"
+	"cosmossdk.io/x/staking/types"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // SetConsPubKeyRotationHistory sets the consensus key rotation of a validator into state

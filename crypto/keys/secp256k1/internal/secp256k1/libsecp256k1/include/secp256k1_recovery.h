@@ -78,7 +78,7 @@ SECP256K1_API int cosmos_secp256k1_ecdsa_recoverable_signature_serialize_compact
  *           noncefp:pointer to a nonce generation function. If NULL, cosmos_secp256k1_nonce_function_default is used
  *           ndata:  pointer to arbitrary data used by the nonce generation function (can be NULL)
  */
-SECP256K1_API int secp256k1_ecdsa_sign_recoverable(
+SECP256K1_API int cosmos_secp256k1_ecdsa_sign_recoverable(
         const cosmos_secp256k1_context* ctx,
         secp256k1_ecdsa_recoverable_signature *sig,
         const unsigned char *msg32,

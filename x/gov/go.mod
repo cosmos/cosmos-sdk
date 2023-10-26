@@ -12,6 +12,7 @@ require (
 	cosmossdk.io/math v1.1.3-rc.1
 	cosmossdk.io/store v1.0.0-rc.0
 	cosmossdk.io/x/protocolpool v0.0.0-20230925135524-a1bc045b3190
+	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000
 	github.com/chzyer/readline v1.5.1
 	github.com/cometbft/cometbft v0.38.0
 	github.com/cosmos/cosmos-proto v1.0.0-beta.3
@@ -164,3 +165,7 @@ replace github.com/cosmos/cosmos-sdk => ../../.
 replace cosmossdk.io/x/protocolpool => ../protocolpool
 
 replace cosmossdk.io/x/distribution => ../distribution
+
+replace cosmossdk.io/x/slashing => ../slashing
+
+replace cosmossdk.io/x/staking => ../staking

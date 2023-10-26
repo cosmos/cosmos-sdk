@@ -13,11 +13,10 @@ require (
 	cosmossdk.io/store v1.0.0-rc.0
 	cosmossdk.io/x/distribution v0.0.0-20230925135524-a1bc045b3190
 	cosmossdk.io/x/gov v0.0.0-20230925135524-a1bc045b3190
-	cosmossdk.io/x/protocolpool v0.0.0-20230925135524-a1bc045b3190
+	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/tx v0.11.0
 	github.com/99designs/keyring v1.2.1
 	github.com/bgentry/speakeasy v0.1.1-0.20220910012023-760eaf8b6816
-	github.com/bits-and-blooms/bitset v1.10.0
 	github.com/cockroachdb/errors v1.11.1
 	github.com/cometbft/cometbft v0.38.0
 	github.com/cosmos/btcutil v1.0.5
@@ -65,6 +64,7 @@ require (
 )
 
 require (
+	cosmossdk.io/x/protocolpool v0.0.0-20230925135524-a1bc045b3190 // indirect
 	filippo.io/edwards25519 v1.0.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/DataDog/zstd v1.5.5 // indirect
@@ -169,7 +169,12 @@ require (
 // replace (
 // 	<temporary replace>
 // )
-replace cosmossdk.io/x/protocolpool => ./x/protocolpool
+// TODO remove after all modules have their own go.mods
+replace (
+	cosmossdk.io/x/protocolpool => ./x/protocolpool
+	cosmossdk.io/x/slashing => ./x/slashing
+	cosmossdk.io/x/staking => ./x/staking
+)
 
 replace cosmossdk.io/x/gov => ./x/gov
 

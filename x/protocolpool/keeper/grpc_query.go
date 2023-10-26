@@ -33,6 +33,7 @@ func (k Querier) CommunityPool(ctx context.Context, req *types.QueryCommunityPoo
 	return &types.QueryCommunityPoolResponse{Pool: decCoins}, nil
 }
 
+// UnclaimedBudget queries the unclaimed budget for given recipient
 func (k Querier) UnclaimedBudget(ctx context.Context, req *types.QueryUnclaimedBudgetRequest) (*types.QueryUnclaimedBudgetResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")

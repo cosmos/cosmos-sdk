@@ -28,7 +28,7 @@ func (k MsgServer) ClaimBudget(ctx context.Context, msg *types.MsgClaimBudget) (
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid recipient address: %s", err)
 	}
 
-	amount, err := k.ClaimFunds(ctx, recipient)
+	amount, err := k.claimFunds(ctx, recipient)
 	if err != nil {
 		return nil, err
 	}
@@ -50,7 +50,10 @@ func (k MsgServer) SubmitBudgetProposal(ctx context.Context, msg *types.MsgSubmi
 		return nil, err
 	}
 
-	_, err = k.Keeper.SubmitBudgetProposal(ctx, recipient, *msg.TotalBudget, msg.StartTime, msg.Tranches, msg.Period)
+	budgetProposal := types.NewBudgetProposal(msg.RecipientAddress, *msg.TotalBudget, msg.StartTime, msg.Tranches, msg.Period)
+
+	// set budget proposal in state
+	err = k.BudgetProposal.Set(ctx, recipient, *budgetProposal)
 	if err != nil {
 		return nil, err
 	}

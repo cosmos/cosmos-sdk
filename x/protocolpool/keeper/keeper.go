@@ -89,7 +89,7 @@ func (k Keeper) GetCommunityPool(ctx context.Context) (sdk.Coins, error) {
 	return k.bankKeeper.GetAllBalances(ctx, moduleAccount.GetAddress()), nil
 }
 
-func (k Keeper) ClaimFunds(ctx context.Context, recipient sdk.AccAddress) (amount sdk.Coin, err error) {
+func (k Keeper) claimFunds(ctx context.Context, recipient sdk.AccAddress) (amount sdk.Coin, err error) {
 	// get claimable funds from distribution info
 	amount, err = k.getClaimableFunds(ctx, recipient)
 	if err != nil {
@@ -103,18 +103,6 @@ func (k Keeper) ClaimFunds(ctx context.Context, recipient sdk.AccAddress) (amoun
 	}
 
 	return amount, nil
-}
-
-func (k Keeper) SubmitBudgetProposal(ctx context.Context, recipient sdk.AccAddress, totalBudget sdk.Coin, startTime, tranches, period int64) (types.Budget, error) {
-	budgetProposal := types.NewBudgetProposal(recipient, totalBudget, startTime, tranches, period)
-
-	// set budget proposal in state
-	err := k.BudgetProposal.Set(ctx, recipient, *budgetProposal)
-	if err != nil {
-		return types.Budget{}, err
-	}
-
-	return *budgetProposal, nil
 }
 
 func (k Keeper) getClaimableFunds(ctx context.Context, recipient sdk.AccAddress) (amount sdk.Coin, err error) {

@@ -18,6 +18,7 @@ COPY x/gov/go.mod x/gov/go.sum /work/x/gov/
 COPY x/distribution/go.mod x/distribution/go.sum /work/x/distribution/
 COPY x/slashing/go.mod x/slashing/go.sum /work/x/slashing/
 COPY x/staking/go.mod x/staking/go.sum /work/x/staking/
+COPY x/authz/go.mod x/authz/go.sum /work/x/authz/
 RUN go mod download
 
 COPY ./ /work

@@ -3,9 +3,8 @@ package accounts
 import (
 	"context"
 
+	"cosmossdk.io/core/event"
 	v1 "cosmossdk.io/x/accounts/v1"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 var _ v1.MsgServer = msgServer{}
@@ -53,9 +52,18 @@ func (m msgServer) Init(ctx context.Context, request *v1.MsgInit) (*v1.MsgInitRe
 		return nil, err
 	}
 
-	sdk.UnwrapSDKContext(ctx).EventManager().EmitEvent(
-		sdk.NewEvent("account_creation", sdk.NewAttribute("address", accAddrString)),
+	eventManager := m.k.eventService.EventManager(ctx)
+	err = eventManager.EmitKV(
+		ctx,
+		"account_creation",
+		event.Attribute{
+			Key:   "address",
+			Value: accAddrString,
+		},
 	)
+	if err != nil {
+		return nil, err
+	}
 	return &v1.MsgInitResponse{
 		AccountAddress: accAddrString,
 		Response:       respBytes,

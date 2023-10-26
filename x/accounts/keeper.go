@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 
+	"cosmossdk.io/core/event"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/runtime/protoiface"
 
@@ -48,6 +49,7 @@ type SignerProvider interface {
 
 func NewKeeper(
 	ss store.KVStoreService,
+	es event.Service,
 	addressCodec address.Codec,
 	signerProvider SignerProvider,
 	execRouter MsgRouter,
@@ -57,6 +59,7 @@ func NewKeeper(
 	sb := collections.NewSchemaBuilder(ss)
 	keeper := Keeper{
 		storeService: ss,
+		eventService: es,
 		addressCodec: addressCodec,
 		getSenderFunc: func(msg proto.Message) ([]byte, error) {
 			signers, err := signerProvider.GetSigners(msg)
@@ -107,6 +110,7 @@ func NewKeeper(
 type Keeper struct {
 	// deps coming from the runtime
 	storeService    store.KVStoreService
+	eventService    event.Service
 	addressCodec    address.Codec
 	getSenderFunc   func(msg proto.Message) ([]byte, error)
 	execModuleFunc  implementation.ModuleExecFunc

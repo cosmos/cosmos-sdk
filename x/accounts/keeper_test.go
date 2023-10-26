@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	"cosmossdk.io/core/event"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/runtime/protoiface"
@@ -26,10 +27,24 @@ type addressCodec struct{}
 func (a addressCodec) StringToBytes(text string) ([]byte, error) { return []byte(text), nil }
 func (a addressCodec) BytesToString(bz []byte) (string, error)   { return string(bz), nil }
 
+type eventService struct{}
+
+func (e eventService) Emit(ctx context.Context, event protoiface.MessageV1) error { return nil }
+
+func (e eventService) EmitKV(ctx context.Context, eventType string, attrs ...event.Attribute) error {
+	return nil
+}
+
+func (e eventService) EmitNonConsensus(ctx context.Context, event protoiface.MessageV1) error {
+	return nil
+}
+
+func (e eventService) EventManager(ctx context.Context) event.Manager { return e }
+
 func newKeeper(t *testing.T, accounts ...implementation.AccountCreatorFunc) (Keeper, context.Context) {
 	t.Helper()
 	ss, ctx := colltest.MockStore()
-	m, err := NewKeeper(ss, addressCodec{}, nil, nil, nil, accounts...)
+	m, err := NewKeeper(ss, eventService{}, addressCodec{}, nil, nil, nil, accounts...)
 	require.NoError(t, err)
 	return m, ctx
 }

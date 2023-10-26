@@ -41,11 +41,7 @@ func (k Keeper) SetConsPubKeyRotationHistory(
 		return err
 	}
 
-	if err := k.SetConsKeyQueue(ctx, queueTime, valAddr); err != nil {
-		return err
-	}
-
-	return nil
+	return k.SetConsKeyQueue(ctx, queueTime, valAddr)
 }
 
 // CheckLimitOfMaxRotationsExceed returns bool, count of iterations made within the unbonding period.
@@ -71,9 +67,5 @@ func (k Keeper) SetConsKeyQueue(ctx sdk.Context, ts time.Time, valAddr sdk.ValAd
 	}
 
 	queueRec.Addresses = append(queueRec.Addresses, valAddr.String())
-	if err := k.ValidatorConsensusKeyRotationRecordQueue.Set(ctx, ts, queueRec); err != nil {
-		return err
-	}
-
-	return nil
+	return k.ValidatorConsensusKeyRotationRecordQueue.Set(ctx, ts, queueRec)
 }

@@ -619,7 +619,7 @@ func (k msgServer) RotateConsPubKey(goCtx context.Context, msg *types.MsgRotateC
 	// checks if NewPubKey is not duplicated on ValidatorsByConsAddr
 	validator, _ := k.Keeper.ValidatorByConsAddr(ctx, newConsAddr)
 	if validator != nil {
-		return nil, types.ErrConsensusPubKeyAlreadyUsedForAValidator
+		return nil, types.ErrConsensusPubKeyAlreadyUsedForValidator
 	}
 
 	valAddr, err := k.validatorAddressCodec.StringToBytes(validator.GetOperator())
@@ -638,12 +638,12 @@ func (k msgServer) RotateConsPubKey(goCtx context.Context, msg *types.MsgRotateC
 
 	// Check if the validator is exceeding parameter MaxConsPubKeyRotations within the
 	// unbonding period by iterating ConsPubKeyRotationHistory.
-	isExceedingLimit, err := k.CheckLimitOfMaxRotationsExceed(ctx, valAddr)
+	exceedsLimit, err := k.CheckLimitOfMaxRotationsExceed(ctx, valAddr)
 	if err != nil {
 		return nil, err
 	}
 
-	if isExceedingLimit {
+	if exceedsLimit {
 		return nil, types.ErrExceedingMaxConsPubKeyRotations
 	}
 
@@ -678,5 +678,5 @@ func (k msgServer) RotateConsPubKey(goCtx context.Context, msg *types.MsgRotateC
 		return nil, err
 	}
 
-	return res, err
+	return res, nil
 }

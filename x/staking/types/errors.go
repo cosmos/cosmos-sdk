@@ -49,6 +49,6 @@ var (
 	ErrNoUnbondingType                 = errors.Register(ModuleName, 45, "unbonding type not found")
 
 	// consensus key errors
-	ErrConsensusPubKeyAlreadyUsedForAValidator = errors.Register(ModuleName, 46, "consensus pubkey is already used for a validator")
-	ErrExceedingMaxConsPubKeyRotations         = errors.Register(ModuleName, 47, "exceeding maximum consensus pubkey rotations within unbonding period")
+	ErrConsensusPubKeyAlreadyUsedForValidator = errors.Register(ModuleName, 46, "consensus pubkey is already used for a validator")
+	ErrExceedingMaxConsPubKeyRotations        = errors.Register(ModuleName, 47, "exceeding maximum consensus pubkey rotations within unbonding period")
 )

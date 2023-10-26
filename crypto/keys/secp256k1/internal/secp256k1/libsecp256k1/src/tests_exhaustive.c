@@ -23,7 +23,7 @@
 
 #include "include/secp256k1.h"
 #include "group.h"
-#include "cosmos_secp256k1.c"
+#include "secp256k1.c"
 #include "testrand_impl.h"
 
 #ifdef ENABLE_MODULE_RECOVERY

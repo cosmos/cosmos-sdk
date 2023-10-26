@@ -16,7 +16,7 @@
 #include "ecmult_const_impl.h"
 #include "ecmult_impl.h"
 #include "bench.h"
-#include "cosmos_secp256k1.c"
+#include "secp256k1.c"
 
 typedef struct {
     secp256k1_scalar scalar_x, scalar_y;

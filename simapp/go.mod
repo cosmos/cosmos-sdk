@@ -34,8 +34,10 @@ require (
 )
 
 require (
-	cosmossdk.io/x/gov v0.0.0-00010101000000-000000000000
+	cosmossdk.io/x/distribution v0.0.0-20230925135524-a1bc045b3190
+	cosmossdk.io/x/gov v0.0.0-20230925135524-a1bc045b3190
 	cosmossdk.io/x/group v0.0.0-00010101000000-000000000000
+	cosmossdk.io/x/slashing v0.0.0-00010101000000-000000000000
 )
 
 require (
@@ -210,12 +212,14 @@ replace (
 	cosmossdk.io/client/v2 => ../client/v2
 	cosmossdk.io/tools/confix => ../tools/confix
 	cosmossdk.io/x/circuit => ../x/circuit
+	cosmossdk.io/x/distribution => ../x/distribution
 	cosmossdk.io/x/evidence => ../x/evidence
 	cosmossdk.io/x/feegrant => ../x/feegrant
 	cosmossdk.io/x/gov => ../x/gov
 	cosmossdk.io/x/group => ../x/group
 	cosmossdk.io/x/nft => ../x/nft
 	cosmossdk.io/x/protocolpool => ../x/protocolpool
+	cosmossdk.io/x/slashing => ../x/slashing
 	cosmossdk.io/x/upgrade => ../x/upgrade
 )
 

@@ -4,11 +4,11 @@ import (
 	"time"
 
 	sdkmath "cosmossdk.io/math"
+	slashingtypes "cosmossdk.io/x/slashing/types"
 
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 

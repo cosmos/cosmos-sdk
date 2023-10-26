@@ -19,5 +19,6 @@ func TestStorageTestSuite(t *testing.T) {
 			"TestStorageTestSuite/TestDatabase_Prune",
 		},
 	}
+
 	suite.Run(t, s)
 }

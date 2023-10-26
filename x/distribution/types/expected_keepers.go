@@ -44,7 +44,8 @@ type PoolKeeper interface {
 type StakingKeeper interface {
 	ValidatorAddressCodec() address.Codec
 	ConsensusAddressCodec() address.Codec
-	BondDenom() string
+	BondDenom(ctx context.Context) (string, error)
+
 	// iterate through validators by operator address, execute func for each validator
 	IterateValidators(context.Context,
 		func(index int64, validator stakingtypes.ValidatorI) (stop bool)) error

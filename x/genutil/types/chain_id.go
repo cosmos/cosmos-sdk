@@ -12,11 +12,9 @@ import (
 
 const ChainIDFieldName = "chain_id"
 
-// ParseChainIDFromGenesis parses the `chain_id` from the genesis json file and abort early,
-// it still parses the values before the `chain_id` field, particularly if the `app_state` field is
-// before the `chain_id` field, it will parse the `app_state` value, user must make sure the `chain_id`
-// is put before `app_state` or other big entries to enjoy the efficiency.
-// If the `chain_id` field is not found, the function will return an error.
+// ParseChainIDFromGenesis parses the `chain_id` from a genesis JSON file, aborting early after finding the `chain_id`.
+// For efficiency, it's recommended to place the `chain_id` field before any large entries in the JSON file.
+// Returns an error if the `chain_id` field is not found.
 func ParseChainIDFromGenesis(r io.Reader) (string, error) {
 	dec := json.NewDecoder(r)
 

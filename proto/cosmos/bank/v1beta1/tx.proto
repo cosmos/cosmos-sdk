@@ -8,7 +8,7 @@ import "cosmos_proto/cosmos.proto";
 import "cosmos/msg/v1/msg.proto";
 import "amino/amino.proto";
 
-option go_package = "github.com/cosmos/cosmos-sdk/x/bank/types";
+option go_package = "cosmossdk.io/x/bank/types";
 
 // Msg defines the bank Msg service.
 service Msg {

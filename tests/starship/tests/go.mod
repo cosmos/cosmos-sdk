@@ -15,6 +15,7 @@ replace (
 	cosmossdk.io/client/v2 => ../../../client/v2
 	cosmossdk.io/simapp => ../../../simapp
 	cosmossdk.io/x/authz => ../../../x/authz
+	cosmossdk.io/x/bank => ../../../x/bank
 	cosmossdk.io/x/circuit => ../../../x/circuit
 	cosmossdk.io/x/distribution => ../../../x/distribution
 	cosmossdk.io/x/evidence => ../../../x/evidence
@@ -32,6 +33,7 @@ require (
 	cosmossdk.io/log v1.2.1
 	cosmossdk.io/math v1.1.3-rc.1
 	cosmossdk.io/simapp v0.0.0-00010101000000-000000000000
+	cosmossdk.io/x/bank v0.0.0-00010101000000-000000000000
 	github.com/cosmos/cosmos-db v1.0.0
 	github.com/cosmos/cosmos-sdk v0.51.0
 	github.com/stretchr/testify v1.8.4

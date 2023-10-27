@@ -18,6 +18,7 @@ import (
 	feegrantmodule "cosmossdk.io/x/feegrant/module"
 	"cosmossdk.io/x/gov"
 	groupmodule "cosmossdk.io/x/group/module"
+	"cosmossdk.io/x/mint"
 	"cosmossdk.io/x/slashing"
 	"cosmossdk.io/x/staking"
 	"cosmossdk.io/x/tx/decode"
@@ -36,7 +37,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
 	"github.com/cosmos/cosmos-sdk/x/consensus"
-	"github.com/cosmos/cosmos-sdk/x/mint"
 )
 
 // TestDecode tests that the tx decoder can decode all the txs in the test suite.

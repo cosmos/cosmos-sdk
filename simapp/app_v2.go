@@ -20,6 +20,7 @@ import (
 	feegrantkeeper "cosmossdk.io/x/feegrant/keeper"
 	govkeeper "cosmossdk.io/x/gov/keeper"
 	groupkeeper "cosmossdk.io/x/group/keeper"
+	mintkeeper "cosmossdk.io/x/mint/keeper"
 	nftkeeper "cosmossdk.io/x/nft/keeper"
 	_ "cosmossdk.io/x/protocolpool"
 	poolkeeper "cosmossdk.io/x/protocolpool/keeper"
@@ -44,7 +45,6 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	consensuskeeper "github.com/cosmos/cosmos-sdk/x/consensus/keeper"
 	crisiskeeper "github.com/cosmos/cosmos-sdk/x/crisis/keeper"
-	mintkeeper "github.com/cosmos/cosmos-sdk/x/mint/keeper"
 )
 
 // DefaultNodeHome default home directories for the application daemon

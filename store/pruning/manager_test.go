@@ -43,8 +43,8 @@ func (s *PruningTestSuite) TearDownTest() {
 }
 
 func (s *PruningTestSuite) TestPruning() {
-	s.manager.SetCommitmentOptions(Option{4, 2})
-	s.manager.SetStoreOptions(Option{4, 3})
+	s.manager.SetCommitmentOptions(Option{4, 2, false})
+	s.manager.SetStoreOptions(Option{3, 3, true})
 	s.manager.Start()
 
 	// write 10 batches
@@ -63,15 +63,14 @@ func (s *PruningTestSuite) TestPruning() {
 	// wait for pruning to finish
 	s.manager.Stop()
 
-	// check the store for the version 5
-	val, err := s.ss.Get("", 5, []byte("key"))
+	// check the store for the version 6
+	val, err := s.ss.Get("", 6, []byte("key"))
 	s.Require().NoError(err)
 	s.Require().NotNil(val)
-	// check the store for the version 4
-	// TODO: sqlite store doesn't support parallel writes
-	_, err = s.ss.Get("", 4, []byte("key"))
+	// check the store for the version 5
+	val, err = s.ss.Get("", 5, []byte("key"))
 	s.Require().NoError(err)
-	// s.Require().Nil(val)
+	s.Require().Nil(val)
 
 	// check the commitment for the version 6
 	proof, err := s.sc.GetProof(6, []byte("key"))

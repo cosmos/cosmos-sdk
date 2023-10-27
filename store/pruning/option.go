@@ -7,6 +7,9 @@ type Option struct {
 	// Interval sets the number of how often to prune.
 	// If set to 0, no pruning will be done.
 	Interval uint64
+
+	// Sync is whether to sync pruning operation.
+	Sync bool
 }
 
 // DefaultOptions returns the default pruning options.

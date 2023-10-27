@@ -7,10 +7,8 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 
-	"cosmossdk.io/x/bank/types"
-
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/counter/types"
 )
 
 type fuzzSuite struct {
@@ -28,24 +26,21 @@ func (fz *fuzzSuite) FuzzQueryBalance(f *testing.F) {
 	fz.Require().Equal("hello", testRes.Message)
 
 	// 1. Generate some seeds.
-	bz, err := fz.cdc.Marshal(&types.QueryBalanceRequest{
-		Address: fz.genesisAccount.GetAddress().String(),
-		Denom:   sdk.DefaultBondDenom,
-	})
+	bz, err := fz.cdc.Marshal(&types.QueryCountRequest{})
 	fz.Require().NoError(err)
 	f.Add(bz)
 
 	// 2. Now fuzz it and ensure that we don't get any panics.
 	ctx := context.Background()
 	f.Fuzz(func(t *testing.T, in []byte) {
-		qbReq := new(types.QueryBalanceRequest)
+		qbReq := new(types.QueryCountRequest)
 		if err := fz.cdc.Unmarshal(in, qbReq); err != nil {
 			return
 		}
 
 		// gRPC query to bank service should work
 		var header metadata.MD
-		_, _ = fz.bankClient.Balance(
+		_, _ = fz.counterClient.GetCount(
 			ctx,
 			qbReq,
 			grpc.Header(&header),

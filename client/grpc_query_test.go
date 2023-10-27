@@ -27,6 +27,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	countertypes "github.com/cosmos/cosmos-sdk/x/counter/types"
 )
 
 type IntegrationTestSuite struct {
@@ -36,6 +37,7 @@ type IntegrationTestSuite struct {
 	cdc                   codec.Codec
 	genesisAccount        *authtypes.BaseAccount
 	bankClient            types.QueryClient
+	counterClient         countertypes.QueryClient
 	testClient            testdata.QueryClient
 	genesisAccountBalance int64
 }
@@ -106,6 +108,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	types.RegisterQueryServer(queryHelper, bankKeeper)
 	testdata.RegisterQueryServer(queryHelper, testdata.QueryImpl{})
 	s.bankClient = types.NewQueryClient(queryHelper)
+	s.counterClient = countertypes.NewQueryClient(queryHelper)
 	s.testClient = testdata.NewQueryClient(queryHelper)
 	s.genesisAccount = acc
 }

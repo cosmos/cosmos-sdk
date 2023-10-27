@@ -20,6 +20,7 @@ var (
 	_ sdk.Msg                            = &MsgBeginRedelegate{}
 	_ sdk.Msg                            = &MsgCancelUnbondingDelegation{}
 	_ sdk.Msg                            = &MsgUpdateParams{}
+	_ codectypes.UnpackInterfacesMessage = (*MsgRotateConsPubKey)(nil)
 )
 
 // NewMsgCreateValidator creates a new MsgCreateValidator instance.
@@ -141,4 +142,25 @@ func NewMsgCancelUnbondingDelegation(delAddr, valAddr string, creationHeight int
 		Amount:           amount,
 		CreationHeight:   creationHeight,
 	}
+}
+
+// NewMsgRotateConsPubKey creates a new MsgRotateConsPubKey instance.
+func NewMsgRotateConsPubKey(valAddr sdk.ValAddress, pubKey cryptotypes.PubKey) (*MsgRotateConsPubKey, error) {
+	var pkAny *codectypes.Any
+	if pubKey != nil {
+		var err error
+		if pkAny, err = codectypes.NewAnyWithValue(pubKey); err != nil {
+			return nil, err
+		}
+	}
+	return &MsgRotateConsPubKey{
+		ValidatorAddress: valAddr.String(),
+		NewPubkey:        pkAny,
+	}, nil
+}
+
+// UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
+func (msg MsgRotateConsPubKey) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+	var pubKey cryptotypes.PubKey
+	return unpacker.UnpackAny(msg.NewPubkey, &pubKey)
 }

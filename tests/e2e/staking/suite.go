@@ -3,6 +3,7 @@ package testutil
 import (
 	"context"
 	"errors"
+	"fmt"
 	"testing"
 
 	"github.com/cometbft/cometbft/proto/tendermint/crypto"
@@ -10,8 +11,10 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/math"
+	"cosmossdk.io/x/staking/client/cli"
 	stakingtypes "cosmossdk.io/x/staking/types"
 
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
@@ -120,4 +123,68 @@ func (s *E2ETestSuite) TestBlockResults() {
 
 		return nil
 	}, 10)
+}
+
+func (s *E2ETestSuite) TestNewRotateConsKeyCmd() {
+	val := s.network.Validators[0]
+
+	cmd := cli.NewRotateConsKeyCmd()
+	validPubKey := `{"@type":"/cosmos.crypto.ed25519.PubKey","key":"oWg2ISpLF405Jcm2vXV+2v4fnjodh6aafuIdeoW+rUw="}`
+
+	testCases := []struct {
+		name   string
+		args   []string
+		expErr bool
+	}{
+		{
+			"wrong pubkey",
+			[]string{
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address),
+				fmt.Sprintf("--%s=%s", cli.FlagPubKey, "wrongPubKey"),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(10))).String()),
+			},
+			true,
+		},
+		{
+			"missing pubkey",
+			[]string{
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(10))).String()),
+			},
+			true,
+		},
+		{
+			"valid case",
+			[]string{
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address),
+				fmt.Sprintf("--%s=%s", cli.FlagPubKey, validPubKey),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(10))).String()),
+			},
+			false,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			out, err := clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, tc.args)
+			fmt.Printf("out: %v\n", out)
+			fmt.Printf("err: %v\n", err)
+			if tc.expErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err, "test: %s\noutput: %s", tc.name, out.String())
+				resp := &sdk.TxResponse{}
+				err = val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), resp)
+				s.Require().NoError(err, out.String(), "test: %s, output\n:", tc.name, out.String())
+			}
+		})
+	}
 }

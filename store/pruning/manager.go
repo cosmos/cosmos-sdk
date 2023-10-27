@@ -13,8 +13,8 @@ type Manager struct {
 	stateCommitment store.Committer
 
 	logger         log.Logger
-	storeOpts      Option
-	commitmentOpts Option
+	storeOpts      Options
+	commitmentOpts Options
 
 	chStore      chan struct{}
 	chCommitment chan struct{}
@@ -38,12 +38,12 @@ func NewManager(
 }
 
 // SetStoreOptions sets the store options.
-func (m *Manager) SetStoreOptions(opts Option) {
+func (m *Manager) SetStoreOptions(opts Options) {
 	m.storeOpts = opts
 }
 
 // SetCommitmentOptions sets the commitment options.
-func (m *Manager) SetCommitmentOptions(opts Option) {
+func (m *Manager) SetCommitmentOptions(opts Options) {
 	m.commitmentOpts = opts
 }
 

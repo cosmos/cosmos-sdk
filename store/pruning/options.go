@@ -1,6 +1,6 @@
 package pruning
 
-type Option struct {
+type Options struct {
 	// KeepRecent sets the number of recent versions to keep.
 	KeepRecent uint64
 
@@ -14,8 +14,8 @@ type Option struct {
 
 // DefaultOptions returns the default pruning options.
 // Interval is set to 0, which means no pruning will be done.
-func DefaultOptions() Option {
-	return Option{
+func DefaultOptions() Options {
+	return Options{
 		KeepRecent: 0,
 		Interval:   0,
 	}

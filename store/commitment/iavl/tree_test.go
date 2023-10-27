@@ -13,9 +13,7 @@ import (
 func generateTree(treeType string) *IavlTree {
 	cfg := DefaultConfig()
 	db := dbm.NewMemDB()
-	tree := NewIavlTree(db, log.NewNopLogger(), cfg)
-
-	return tree
+	return NewIavlTree(db, log.NewNopLogger(), cfg)
 }
 
 func TestIavlTree(t *testing.T) {

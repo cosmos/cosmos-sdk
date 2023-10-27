@@ -1,6 +1,7 @@
 package pruning
 
 import (
+	"fmt"
 	"testing"
 
 	dbm "github.com/cosmos/cosmos-db"
@@ -43,14 +44,14 @@ func (s *PruningTestSuite) TearDownTest() {
 }
 
 func (s *PruningTestSuite) TestPruning() {
-	s.manager.SetCommitmentOptions(Option{4, 2, false})
-	s.manager.SetStoreOptions(Option{3, 3, true})
+	s.manager.SetCommitmentOptions(Options{4, 2, false})
+	s.manager.SetStoreOptions(Options{3, 3, true})
 	s.manager.Start()
 
 	// write 10 batches
 	for i := 0; i < 10; i++ {
 		cs := store.NewChangeset()
-		cs.Add([]byte("key"), []byte("value"))
+		cs.Add([]byte("key"), []byte(fmt.Sprintf("value%d", i+1)))
 		err := s.sc.WriteBatch(cs)
 		s.Require().NoError(err)
 		_, err = s.sc.Commit()
@@ -66,7 +67,7 @@ func (s *PruningTestSuite) TestPruning() {
 	// check the store for the version 6
 	val, err := s.ss.Get("", 6, []byte("key"))
 	s.Require().NoError(err)
-	s.Require().NotNil(val)
+	s.Require().Equal([]byte("value6"), val)
 	// check the store for the version 5
 	val, err = s.ss.Get("", 5, []byte("key"))
 	s.Require().NoError(err)

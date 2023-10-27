@@ -12,6 +12,7 @@ import (
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
+	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
 const (
@@ -168,6 +169,7 @@ func makeSignBatchCmd() func(cmd *cobra.Command, args []string) error {
 
 			cmd.Printf("%s\n", json)
 		} else {
+			signingTxs := make([]signing.Tx, 0)
 			// It will generate signed tx for each tx
 			for sequence := txFactory.Sequence(); scanner.Scan(); sequence++ {
 				unsignedStdTx := scanner.Tx()
@@ -189,12 +191,13 @@ func makeSignBatchCmd() func(cmd *cobra.Command, args []string) error {
 					}
 				}
 
-				json, err := marshalSignatureJSON(txCfg, txBuilder, printSignatureOnly)
-				if err != nil {
-					return err
-				}
-				cmd.Printf("%s\n", json)
+				signingTxs = append(signingTxs, txBuilder.GetTx())
 			}
+			json, err := marshalBatchJSON(txCfg, signingTxs, printSignatureOnly)
+			if err != nil {
+				return err
+			}
+			cmd.Printf("%s\n", json)
 		}
 
 		if err := scanner.UnmarshalErr(); err != nil {
@@ -432,4 +435,21 @@ func marshalSignatureJSON(txConfig client.TxConfig, txBldr client.TxBuilder, sig
 	}
 
 	return txConfig.TxJSONEncoder()(parsedTx)
+}
+
+func marshalBatchJSON(txConfig client.TxConfig, txs []signing.Tx, signatureOnly bool) ([]byte, error) {
+	if signatureOnly {
+		sigs, err := txs[0].GetSignaturesV2()
+		if err != nil {
+			return nil, err
+		}
+		return txConfig.MarshalSignatureJSON(sigs)
+	}
+	sdkTxs := make([]sdk.Tx, 0)
+	for _, tx := range txs {
+		fmt.Println("sdkTx", tx)
+		sdkTxs = append(sdkTxs, tx)
+	}
+
+	return txConfig.TxsJSONEncoder()(sdkTxs)
 }

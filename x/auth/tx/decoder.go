@@ -104,8 +104,9 @@ func DefaultJSONTxsDecoder(cdc codec.ProtoCodecMarshaler) sdk.TxsDecoder {
 		}
 
 		sdkTxs := make([]sdk.Tx, 0)
-		
-		for _, tx := range theTxs.Txs {
+
+		for _, theTx := range theTxs.Txs {
+			tx := theTx
 			sdkTxs = append(sdkTxs, &wrapper{
 				tx: &tx,
 			})

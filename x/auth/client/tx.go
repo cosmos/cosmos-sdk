@@ -115,7 +115,7 @@ func ReadTxFromFile(ctx client.Context, filename string) (tx sdk.Tx, err error) 
 	return ctx.TxConfig.TxJSONDecoder()(bytes)
 }
 
-// Read and decode a multi transactions (must be in Txs format) from the given filename. 
+// Read and decode a multi transactions (must be in Txs format) from the given filename.
 // Can pass "-" to read from stdin.
 func ReadTxsFromFile(ctx client.Context, filename string) (tx []sdk.Tx, err error) {
 	var bytes []byte

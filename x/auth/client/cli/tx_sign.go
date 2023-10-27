@@ -447,7 +447,6 @@ func marshalBatchJSON(txConfig client.TxConfig, txs []signing.Tx, signatureOnly 
 	}
 	sdkTxs := make([]sdk.Tx, 0)
 	for _, tx := range txs {
-		fmt.Println("sdkTx", tx)
 		sdkTxs = append(sdkTxs, tx)
 	}
 

@@ -9,9 +9,9 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // GetBroadcastCommand returns the tx broadcast command.
@@ -58,7 +58,10 @@ filename, the command reads from standard input.`),
 				if err != nil {
 					return err
 				}
-				clientCtx.PrintProto(res)
+				err = clientCtx.PrintProto(res)
+				if err != nil {
+					return err
+				}
 			}
 			return nil
 		},

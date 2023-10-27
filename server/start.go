@@ -2,23 +2,16 @@ package server
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"net"
 	"os"
 	"runtime/pprof"
 	"time"
 
-	"github.com/cometbft/cometbft/abci/server"
 	cmtcmd "github.com/cometbft/cometbft/cmd/cometbft/commands"
 	cmtcfg "github.com/cometbft/cometbft/config"
-	"github.com/cometbft/cometbft/node"
-	"github.com/cometbft/cometbft/p2p"
-	pvm "github.com/cometbft/cometbft/privval"
-	"github.com/cometbft/cometbft/proxy"
 	rpchttp "github.com/cometbft/cometbft/rpc/client/http"
 	"github.com/cometbft/cometbft/rpc/client/local"
-	cmttypes "github.com/cometbft/cometbft/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/hashicorp/go-metrics"
 	"github.com/spf13/cobra"
@@ -32,14 +25,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server/api"
+	"github.com/cosmos/cosmos-sdk/server/comet"
 	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
 	servergrpc "github.com/cosmos/cosmos-sdk/server/grpc"
-	servercmtlog "github.com/cosmos/cosmos-sdk/server/log"
 	"github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	"github.com/cosmos/cosmos-sdk/types/mempool"
 	"github.com/cosmos/cosmos-sdk/version"
-	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
 const (
@@ -268,13 +260,18 @@ func startStandAlone(svrCtx *Context, svrCfg serverconfig.Config, clientCtx clie
 	addr := svrCtx.Viper.GetString(flagAddress)
 	transport := svrCtx.Viper.GetString(flagTransport)
 
-	cmtApp := NewCometABCIWrapper(app)
-	svr, err := server.NewServer(addr, transport, cmtApp)
-	if err != nil {
-		return fmt.Errorf("error creating listener: %w", err)
-	}
-
-	svr.SetLogger(servercmtlog.CometLoggerWrapper{Logger: svrCtx.Logger.With("module", "abci-server")})
+	cometService := comet.New(comet.Config{
+		MinGasPrices:   svrCfg.MinGasPrices,
+		QueryGasLimit:  svrCfg.QueryGasLimit,
+		FlagHaltHeight: svrCfg.HaltHeight,
+		FlagHaltTime:   svrCfg.HaltTime,
+		App:            app,
+		Addr:           addr,
+		Transport:      transport,
+		Logger:         svrCtx.Logger.With("module", "abci-server"),
+		Standalone:     true,
+		CmtConfig:      svrCtx.Config,
+	})
 
 	g, ctx := getCtx(svrCtx, false)
 
@@ -294,7 +291,6 @@ func startStandAlone(svrCtx *Context, svrCfg serverconfig.Config, clientCtx clie
 
 		// use the provided clientCtx to register the services
 		app.RegisterTxService(clientCtx)
-		app.RegisterTendermintService(clientCtx)
 		app.RegisterNodeService(clientCtx, svrCfg)
 	}
 
@@ -312,7 +308,7 @@ func startStandAlone(svrCtx *Context, svrCfg serverconfig.Config, clientCtx clie
 	}
 
 	g.Go(func() error {
-		if err := svr.Start(); err != nil {
+		if err := cometService.Start(ctx); err != nil {
 			svrCtx.Logger.Error("failed to start out-of-process ABCI server", "err", err)
 			return err
 		}
@@ -321,7 +317,7 @@ func startStandAlone(svrCtx *Context, svrCfg serverconfig.Config, clientCtx clie
 		// so we can gracefully stop the ABCI server.
 		<-ctx.Done()
 		svrCtx.Logger.Info("stopping the ABCI server...")
-		return svr.Stop()
+		return cometService.Stop()
 	})
 
 	return g.Wait()
@@ -343,11 +339,19 @@ func startInProcess(svrCtx *Context, svrCfg serverconfig.Config, clientCtx clien
 		svrCfg.GRPC.Enable = true
 	} else {
 		svrCtx.Logger.Info("starting node with ABCI CometBFT in-process")
-		tmNode, cleanupFn, err := startCmtNode(ctx, cmtCfg, app, svrCtx)
-		if err != nil {
-			return err
-		}
-		defer cleanupFn()
+		cometService := comet.New(comet.Config{
+			MinGasPrices:   svrCfg.MinGasPrices,
+			QueryGasLimit:  svrCfg.QueryGasLimit,
+			FlagHaltHeight: svrCfg.HaltHeight,
+			FlagHaltTime:   svrCfg.HaltTime,
+			App:            app,
+			Addr:           "", // not needed when in-process
+			Transport:      "", // not needed when in-process
+			Logger:         svrCtx.Logger.With("module", "abci-server"),
+			CmtConfig:      svrCtx.Config,
+		})
+		cometService.Start(ctx)
+		defer cometService.Stop()
 
 		// Add the tx service to the gRPC router. We only need to register this
 		// service if API or gRPC is enabled, and avoid doing so in the general
@@ -355,10 +359,10 @@ func startInProcess(svrCtx *Context, svrCfg serverconfig.Config, clientCtx clien
 		if svrCfg.API.Enable || svrCfg.GRPC.Enable {
 			// Re-assign for making the client available below do not use := to avoid
 			// shadowing the clientCtx variable.
-			clientCtx = clientCtx.WithClient(local.New(tmNode))
+			// TODO: put this inside cometService somehow
+			clientCtx = clientCtx.WithClient(local.New(cometService.Node))
 
 			app.RegisterTxService(clientCtx)
-			app.RegisterTendermintService(clientCtx)
 			app.RegisterNodeService(clientCtx, svrCfg)
 		}
 	}
@@ -384,47 +388,6 @@ func startInProcess(svrCtx *Context, svrCfg serverconfig.Config, clientCtx clien
 	return g.Wait()
 }
 
-// TODO: Move nodeKey into being created within the function.
-func startCmtNode(
-	ctx context.Context,
-	cfg *cmtcfg.Config,
-	app types.Application,
-	svrCtx *Context,
-) (tmNode *node.Node, cleanupFn func(), err error) {
-	nodeKey, err := p2p.LoadOrGenNodeKey(cfg.NodeKeyFile())
-	if err != nil {
-		return nil, cleanupFn, err
-	}
-
-	cmtApp := NewCometABCIWrapper(app)
-	tmNode, err = node.NewNodeWithContext(
-		ctx,
-		cfg,
-		pvm.LoadOrGenFilePV(cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile()),
-		nodeKey,
-		proxy.NewLocalClientCreator(cmtApp),
-		getGenDocProvider(cfg),
-		cmtcfg.DefaultDBProvider,
-		node.DefaultMetricsProvider(cfg.Instrumentation),
-		servercmtlog.CometLoggerWrapper{Logger: svrCtx.Logger},
-	)
-	if err != nil {
-		return tmNode, cleanupFn, err
-	}
-
-	if err := tmNode.Start(); err != nil {
-		return tmNode, cleanupFn, err
-	}
-
-	cleanupFn = func() {
-		if tmNode != nil && tmNode.IsRunning() {
-			_ = tmNode.Stop()
-		}
-	}
-
-	return tmNode, cleanupFn, nil
-}
-
 func getAndValidateConfig(svrCtx *Context) (serverconfig.Config, error) {
 	config, err := serverconfig.GetConfig(svrCtx.Viper)
 	if err != nil {
@@ -435,18 +398,6 @@ func getAndValidateConfig(svrCtx *Context) (serverconfig.Config, error) {
 		return config, err
 	}
 	return config, nil
-}
-
-// returns a function which returns the genesis doc from the genesis file.
-func getGenDocProvider(cfg *cmtcfg.Config) func() (*cmttypes.GenesisDoc, error) {
-	return func() (*cmttypes.GenesisDoc, error) {
-		appGenesis, err := genutiltypes.AppGenesisFromFile(cfg.GenesisFile())
-		if err != nil {
-			return nil, err
-		}
-
-		return appGenesis.ToGenesisDoc()
-	}
 }
 
 func setupTraceWriter(svrCtx *Context) (traceWriter io.WriteCloser, cleanup func(), err error) {
@@ -547,7 +498,7 @@ func startAPIServer(
 	clientCtx = clientCtx.WithHomeDir(home)
 
 	apiSrv := api.New(clientCtx, svrCtx.Logger.With("module", "api-server"), grpcSrv)
-	app.RegisterAPIRoutes(apiSrv, svrCfg.API)
+	// app.RegisterAPIRoutes(apiSrv, svrCfg.API) // TODO: uncomment this once we solve the circular dep
 
 	if svrCfg.Telemetry.Enabled {
 		apiSrv.SetTelemetry(metrics)

@@ -1,4 +1,4 @@
-package server
+package log
 
 import (
 	cmtlog "github.com/cometbft/cometbft/libs/log"

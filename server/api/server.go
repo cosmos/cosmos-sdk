@@ -21,8 +21,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
+	servercmtlog "github.com/cosmos/cosmos-sdk/server/comet/log"
 	"github.com/cosmos/cosmos-sdk/server/config"
-	servercmtlog "github.com/cosmos/cosmos-sdk/server/log"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
 )

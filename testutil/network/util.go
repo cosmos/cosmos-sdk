@@ -22,8 +22,9 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/server/api"
+	"github.com/cosmos/cosmos-sdk/server/comet"
+	servercmtlog "github.com/cosmos/cosmos-sdk/server/comet/log"
 	servergrpc "github.com/cosmos/cosmos-sdk/server/grpc"
-	servercmtlog "github.com/cosmos/cosmos-sdk/server/log"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
@@ -86,7 +87,9 @@ func startInProcess(cfg Config, val *Validator) error {
 			WithClient(val.RPCClient)
 
 		app.RegisterTxService(val.ClientCtx)
-		app.RegisterTendermintService(val.ClientCtx)
+		if cometBftSvr, ok := app.(comet.HasCometBFTServer); ok {
+			cometBftSvr.RegisterTendermintService(val.ClientCtx)
+		}
 		app.RegisterNodeService(val.ClientCtx, *val.AppConfig)
 	}
 
@@ -113,7 +116,8 @@ func startInProcess(cfg Config, val *Validator) error {
 
 	if val.APIAddress != "" {
 		apiSrv := api.New(val.ClientCtx, logger.With(log.ModuleKey, "api-server"), val.grpc)
-		app.RegisterAPIRoutes(apiSrv, val.AppConfig.API)
+		// TODO: readd once the circular dependency has been solved
+		// app.RegisterAPIRoutes(apiSrv, val.AppConfig.API)
 
 		val.errGroup.Go(func() error {
 			return apiSrv.Start(ctx, *val.AppConfig)

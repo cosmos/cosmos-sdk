@@ -95,9 +95,9 @@ func NewGRPCServer(clientCtx client.Context, logger log.Logger, app GRPCService,
 
 			return modes
 		}(),
-		ChainID:           clientCtx.ChainID,
-		SdkConfig:         sdk.GetConfig(),
-		InterfaceRegistry: clientCtx.InterfaceRegistry,
+		ChainID:                    clientCtx.ChainID,
+		Bech32AccountAddressPrefix: sdk.GetConfig().GetBech32AccountAddrPrefix(),
+		InterfaceRegistry:          clientCtx.InterfaceRegistry,
 	})
 	if err != nil {
 		return GRPCServer{}, fmt.Errorf("failed to register reflection service: %w", err)

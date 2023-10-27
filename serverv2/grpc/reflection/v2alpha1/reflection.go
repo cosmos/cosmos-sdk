@@ -13,10 +13,10 @@ import (
 )
 
 type Config struct {
-	SigningModes      map[string]int32
-	ChainID           string
-	SdkConfig         *sdk.Config
-	InterfaceRegistry codectypes.InterfaceRegistry
+	SigningModes               map[string]int32
+	ChainID                    string
+	Bech32AccountAddressPrefix string
+	InterfaceRegistry          codectypes.InterfaceRegistry
 }
 
 // Register registers the cosmos sdk reflection service
@@ -63,7 +63,7 @@ func newReflectionServiceServer(grpcSrv *grpc.Server, conf Config) (reflectionSe
 	chainDescriptor := &ChainDescriptor{Id: conf.ChainID}
 	// set configuration descriptor
 	configurationDescriptor := &ConfigurationDescriptor{
-		Bech32AccountAddressPrefix: conf.SdkConfig.GetBech32AccountAddrPrefix(),
+		Bech32AccountAddressPrefix: conf.Bech32AccountAddressPrefix,
 	}
 	// set codec descriptor
 	codecDescriptor, err := newCodecDescriptor(conf.InterfaceRegistry)

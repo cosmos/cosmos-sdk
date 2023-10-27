@@ -92,8 +92,14 @@ type (
 // TxDecoder unmarshals transaction bytes
 type TxDecoder func(txBytes []byte) (Tx, error)
 
+// TxDecoder unmarshals transactions bytes
+type TxsDecoder func(txBytes []byte) ([]Tx, error)
+
 // TxEncoder marshals transaction to bytes
 type TxEncoder func(tx Tx) ([]byte, error)
+
+// TxsEncoder marshals transactions to bytes
+type TxsEncoder func(txs []Tx) ([]byte, error)
 
 // MsgTypeURL returns the TypeURL of a `sdk.Msg`.
 var MsgTypeURL = codectypes.MsgTypeURL

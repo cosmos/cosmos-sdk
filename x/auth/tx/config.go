@@ -22,6 +22,8 @@ type config struct {
 	encoder        sdk.TxEncoder
 	jsonDecoder    sdk.TxDecoder
 	jsonEncoder    sdk.TxEncoder
+	txsJsonDecoder sdk.TxsDecoder
+	txsJsonEncoder sdk.TxsEncoder
 	protoCodec     codec.Codec
 	signingContext *txsigning.Context
 }
@@ -54,6 +56,10 @@ type ConfigOptions struct {
 	JSONDecoder sdk.TxDecoder
 	// JSONEncoder is the encoder that will be used to encode json transactions.
 	JSONEncoder sdk.TxEncoder
+	// TxsJSONDecoder is the decoder that will be used to decode json transactions.
+	TxsJSONDecoder sdk.TxsDecoder
+	// TxsJSONEncoder is the encoder that will be used to encode json transactions.
+	TxsJSONEncoder sdk.TxsEncoder
 }
 
 // DefaultSignModes are the default sign modes enabled for protobuf transactions.
@@ -166,11 +172,13 @@ func NewSigningHandlerMap(configOpts ConfigOptions) (*txsigning.HandlerMap, erro
 // custom sign mode handlers. If ConfigOptions is an empty struct then default values will be used.
 func NewTxConfigWithOptions(protoCodec codec.Codec, configOptions ConfigOptions) (client.TxConfig, error) {
 	txConfig := &config{
-		protoCodec:  protoCodec,
-		decoder:     configOptions.ProtoDecoder,
-		encoder:     configOptions.ProtoEncoder,
-		jsonDecoder: configOptions.JSONDecoder,
-		jsonEncoder: configOptions.JSONEncoder,
+		protoCodec:     protoCodec,
+		decoder:        configOptions.ProtoDecoder,
+		encoder:        configOptions.ProtoEncoder,
+		jsonDecoder:    configOptions.JSONDecoder,
+		jsonEncoder:    configOptions.JSONEncoder,
+		txsJsonDecoder: configOptions.TxsJSONDecoder,
+		txsJsonEncoder: configOptions.TxsJSONEncoder,
 	}
 	if configOptions.ProtoDecoder == nil {
 		txConfig.decoder = DefaultTxDecoder(protoCodec)
@@ -183,6 +191,12 @@ func NewTxConfigWithOptions(protoCodec codec.Codec, configOptions ConfigOptions)
 	}
 	if configOptions.JSONEncoder == nil {
 		txConfig.jsonEncoder = DefaultJSONTxEncoder(protoCodec)
+	}
+	if configOptions.TxsJSONDecoder == nil {
+		txConfig.txsJsonDecoder = DefaultJSONTxsDecoder(protoCodec)
+	}
+	if configOptions.TxsJSONEncoder == nil {
+		txConfig.txsJsonEncoder = DefaultJSONTxsEncoder(protoCodec)
 	}
 
 	var err error
@@ -252,4 +266,12 @@ func (g config) TxJSONDecoder() sdk.TxDecoder {
 
 func (g config) SigningContext() *txsigning.Context {
 	return g.signingContext
+}
+
+func (g config) TxsJSONDecoder() sdk.TxsDecoder {
+	return g.txsJsonDecoder
+}
+
+func (g config) TxsJSONEncoder() sdk.TxsEncoder {
+	return g.txsJsonEncoder
 }

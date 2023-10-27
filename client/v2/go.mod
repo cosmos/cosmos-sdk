@@ -3,9 +3,10 @@ module cosmossdk.io/client/v2
 go 1.21
 
 require (
-	cosmossdk.io/api v0.7.2
+	cosmossdk.io/api v0.7.3-0.20231026121500-a755fefe3a55
 	cosmossdk.io/core v0.12.0
 	cosmossdk.io/depinject v1.0.0-alpha.4
+	cosmossdk.io/x/bank v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/tx v0.11.0
 	github.com/cockroachdb/errors v1.11.1
 	github.com/cosmos/cosmos-proto v1.0.0-beta.3
@@ -159,6 +160,7 @@ require (
 replace github.com/cosmos/cosmos-sdk => ./../../
 
 replace (
+	cosmossdk.io/x/bank => ./../../x/bank
 	cosmossdk.io/x/distribution => ./../../x/distribution
 	cosmossdk.io/x/gov => ./../../x/gov
 	cosmossdk.io/x/slashing => ./../../x/slashing

@@ -14,7 +14,6 @@ import (
 	cmtjson "github.com/cometbft/cometbft/libs/json"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	cmttypes "github.com/cometbft/cometbft/types"
-	cmttime "github.com/cometbft/cometbft/types/time"
 
 	"github.com/cosmos/cosmos-sdk/version"
 )
@@ -68,7 +67,7 @@ func (ag *AppGenesis) ValidateAndComplete() error {
 	}
 
 	if ag.GenesisTime.IsZero() {
-		ag.GenesisTime = cmttime.Now()
+		ag.GenesisTime = time.Now().Round(0).UTC()
 	}
 
 	if err := ag.Consensus.ValidateAndComplete(); err != nil {

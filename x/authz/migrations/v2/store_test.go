@@ -11,6 +11,8 @@ import (
 	"cosmossdk.io/x/authz"
 	v2 "cosmossdk.io/x/authz/migrations/v2"
 	authzmodule "cosmossdk.io/x/authz/module"
+	"cosmossdk.io/x/bank"
+	banktypes "cosmossdk.io/x/bank/types"
 	govtypes "cosmossdk.io/x/gov/types/v1beta1"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -19,8 +21,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	"github.com/cosmos/cosmos-sdk/x/bank"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 func TestMigration(t *testing.T) {

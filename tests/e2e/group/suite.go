@@ -10,6 +10,7 @@ import (
 	// without this import amino json encoding will fail when resolving any types
 	_ "cosmossdk.io/api/cosmos/group/v1"
 	"cosmossdk.io/math"
+	banktypes "cosmossdk.io/x/bank/types"
 	"cosmossdk.io/x/group"
 	client "cosmossdk.io/x/group/client/cli"
 
@@ -20,7 +21,6 @@ import (
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 type E2ETestSuite struct {

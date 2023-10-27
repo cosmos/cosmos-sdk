@@ -12,6 +12,7 @@ import (
 	"github.com/golang/mock/gomock"
 
 	"cosmossdk.io/core/header"
+	banktypes "cosmossdk.io/x/bank/types"
 	"cosmossdk.io/x/group"
 	"cosmossdk.io/x/group/internal/math"
 	"cosmossdk.io/x/group/keeper"
@@ -21,7 +22,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 

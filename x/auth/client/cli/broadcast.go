@@ -11,6 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/version"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // GetBroadcastCommand returns the tx broadcast command.
@@ -34,22 +35,32 @@ filename, the command reads from standard input.`),
 				return errors.New("cannot broadcast tx during offline mode")
 			}
 
-			stdTx, err := authclient.ReadTxFromFile(clientCtx, args[0])
-			if err != nil {
-				return err
+			txs := make([]sdk.Tx, 0)
+
+			// We check if file is tx batch format or single tx
+			stdTxs, err := authclient.ReadTxsFromFile(clientCtx, args[0])
+			if err == nil {
+				txs = append(txs, stdTxs...)
 			}
 
-			txBytes, err := clientCtx.TxConfig.TxEncoder()(stdTx)
-			if err != nil {
-				return err
+			singleStdTx, err := authclient.ReadTxFromFile(clientCtx, args[0])
+			if err == nil {
+				txs = append(txs, singleStdTx)
 			}
 
-			res, err := clientCtx.BroadcastTx(txBytes)
-			if err != nil {
-				return err
-			}
+			for _, tx := range txs {
+				txBytes, err := clientCtx.TxConfig.TxEncoder()(tx)
+				if err != nil {
+					return err
+				}
 
-			return clientCtx.PrintProto(res)
+				res, err := clientCtx.BroadcastTx(txBytes)
+				if err != nil {
+					return err
+				}
+				clientCtx.PrintProto(res)
+			}
+			return nil
 		},
 	}
 

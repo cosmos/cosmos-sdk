@@ -29,8 +29,12 @@ import (
 	vestingmodulev1 "cosmossdk.io/api/cosmos/vesting/module/v1"
 	"cosmossdk.io/core/appconfig"
 	"cosmossdk.io/depinject"
-	_ "cosmossdk.io/x/circuit" // import for side-effects
+	"cosmossdk.io/x/authz"
+	_ "cosmossdk.io/x/authz/module" // import for side-effects
+	_ "cosmossdk.io/x/circuit"      // import for side-effects
 	circuittypes "cosmossdk.io/x/circuit/types"
+	_ "cosmossdk.io/x/distribution" // import for side-effects
+	distrtypes "cosmossdk.io/x/distribution/types"
 	_ "cosmossdk.io/x/evidence" // import for side-effects
 	evidencetypes "cosmossdk.io/x/evidence/types"
 	"cosmossdk.io/x/feegrant"
@@ -44,6 +48,10 @@ import (
 	_ "cosmossdk.io/x/nft/module"   // import for side-effects
 	_ "cosmossdk.io/x/protocolpool" // import for side-effects
 	pooltypes "cosmossdk.io/x/protocolpool/types"
+	_ "cosmossdk.io/x/slashing" // import for side-effects
+	slashingtypes "cosmossdk.io/x/slashing/types"
+	_ "cosmossdk.io/x/staking" // import for side-effects
+	stakingtypes "cosmossdk.io/x/staking/types"
 	_ "cosmossdk.io/x/upgrade" // import for side-effects
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 
@@ -53,24 +61,16 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	_ "github.com/cosmos/cosmos-sdk/x/auth/vesting" // import for side-effects
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
-	"github.com/cosmos/cosmos-sdk/x/authz"
-	_ "github.com/cosmos/cosmos-sdk/x/authz/module" // import for side-effects
-	_ "github.com/cosmos/cosmos-sdk/x/bank"         // import for side-effects
+	_ "github.com/cosmos/cosmos-sdk/x/bank" // import for side-effects
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	_ "github.com/cosmos/cosmos-sdk/x/consensus" // import for side-effects
 	consensustypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
 	_ "github.com/cosmos/cosmos-sdk/x/crisis" // import for side-effects
 	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
-	_ "github.com/cosmos/cosmos-sdk/x/distribution" // import for side-effects
-	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	_ "github.com/cosmos/cosmos-sdk/x/mint" // import for side-effects
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
-	_ "github.com/cosmos/cosmos-sdk/x/slashing" // import for side-effects
-	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
-	_ "github.com/cosmos/cosmos-sdk/x/staking" // import for side-effects
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 var (

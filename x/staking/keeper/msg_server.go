@@ -11,13 +11,13 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
+	distrtypes "cosmossdk.io/x/distribution/types"
+	"cosmossdk.io/x/staking/types"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
-	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 type msgServer struct {
@@ -619,7 +619,7 @@ func (k msgServer) RotateConsPubKey(goCtx context.Context, msg *types.MsgRotateC
 	// checks if NewPubKey is not duplicated on ValidatorsByConsAddr
 	validator, _ := k.Keeper.ValidatorByConsAddr(ctx, newConsAddr)
 	if validator != nil {
-		return nil, types.ErrConsensusPubKeyAlreadyUsedForAValidator
+		return nil, types.ErrConsensusPubKeyAlreadyUsedForValidator
 	}
 
 	valAddr, err := k.validatorAddressCodec.StringToBytes(validator.GetOperator())
@@ -638,12 +638,12 @@ func (k msgServer) RotateConsPubKey(goCtx context.Context, msg *types.MsgRotateC
 
 	// Check if the validator is exceeding parameter MaxConsPubKeyRotations within the
 	// unbonding period by iterating ConsPubKeyRotationHistory.
-	isExceedingLimit, err := k.CheckLimitOfMaxRotationsExceed(ctx, valAddr)
+	exceedsLimit, err := k.CheckLimitOfMaxRotationsExceed(ctx, valAddr)
 	if err != nil {
 		return nil, err
 	}
 
-	if isExceedingLimit {
+	if exceedsLimit {
 		return nil, types.ErrExceedingMaxConsPubKeyRotations
 	}
 
@@ -678,5 +678,5 @@ func (k msgServer) RotateConsPubKey(goCtx context.Context, msg *types.MsgRotateC
 		return nil, err
 	}
 
-	return res, err
+	return res, nil
 }

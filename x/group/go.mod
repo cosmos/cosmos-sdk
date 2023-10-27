@@ -10,7 +10,9 @@ require (
 	cosmossdk.io/log v1.2.1
 	cosmossdk.io/math v1.1.3-rc.1
 	cosmossdk.io/store v1.0.0-rc.0
-	cosmossdk.io/x/gov v0.0.0-00010101000000-000000000000
+	cosmossdk.io/x/authz v0.0.0-00010101000000-000000000000
+	cosmossdk.io/x/gov v0.0.0-20230925135524-a1bc045b3190
+	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000
 	github.com/cockroachdb/apd/v2 v2.0.2
 	github.com/cometbft/cometbft v0.38.0
 	github.com/cosmos/cosmos-db v1.0.0
@@ -32,6 +34,7 @@ require (
 
 require (
 	cosmossdk.io/collections v0.4.0 // indirect
+	cosmossdk.io/x/distribution v0.0.0-20230925135524-a1bc045b3190 // indirect
 	cosmossdk.io/x/tx v0.11.0 // indirect
 	filippo.io/edwards25519 v1.0.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
@@ -162,3 +165,11 @@ require (
 replace github.com/cosmos/cosmos-sdk => ../../
 
 replace cosmossdk.io/x/gov => ../gov
+
+replace cosmossdk.io/x/distribution => ../distribution
+
+replace cosmossdk.io/x/slashing => ../slashing
+
+replace cosmossdk.io/x/staking => ../staking
+
+replace cosmossdk.io/x/authz => ../authz

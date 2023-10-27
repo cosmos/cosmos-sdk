@@ -4,12 +4,12 @@ import (
 	"math/rand"
 	"testing"
 
-	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
+	_ "cosmossdk.io/x/staking"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -26,7 +26,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 	_ "github.com/cosmos/cosmos-sdk/x/consensus"
-	_ "github.com/cosmos/cosmos-sdk/x/staking"
 )
 
 type SimTestSuite struct {
@@ -104,12 +103,6 @@ func (suite *SimTestSuite) TestSimulateMsgSend() {
 	r := rand.New(s)
 	accounts := suite.getTestingAccounts(r, 3)
 
-	_, err := suite.app.FinalizeBlock(&abci.RequestFinalizeBlock{
-		Height: suite.app.LastBlockHeight() + 1,
-		Hash:   suite.app.LastCommitID().Hash,
-	})
-	suite.Require().NoError(err)
-
 	// execute operation
 	op := simulation.SimulateMsgSend(suite.txConfig, suite.accountKeeper, suite.bankKeeper)
 	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
@@ -133,12 +126,6 @@ func (suite *SimTestSuite) TestSimulateMsgMultiSend() {
 	s := rand.NewSource(1)
 	r := rand.New(s)
 	accounts := suite.getTestingAccounts(r, 3)
-
-	_, err := suite.app.FinalizeBlock(&abci.RequestFinalizeBlock{
-		Height: suite.app.LastBlockHeight() + 1,
-		Hash:   suite.app.LastCommitID().Hash,
-	})
-	suite.Require().NoError(err)
 
 	// execute operation
 	op := simulation.SimulateMsgMultiSend(suite.txConfig, suite.accountKeeper, suite.bankKeeper)
@@ -170,13 +157,6 @@ func (suite *SimTestSuite) TestSimulateModuleAccountMsgSend() {
 	r := rand.New(s)
 	accounts := suite.getTestingAccounts(r, accCount)
 
-	_, err := suite.app.FinalizeBlock(&abci.RequestFinalizeBlock{
-		Height: suite.app.LastBlockHeight() + 1,
-		Hash:   suite.app.LastCommitID().Hash,
-	},
-	)
-	suite.Require().NoError(err)
-
 	// execute operation
 	op := simulation.SimulateMsgSendToModuleAccount(suite.txConfig, suite.accountKeeper, suite.bankKeeper, moduleAccCount)
 
@@ -204,12 +184,6 @@ func (suite *SimTestSuite) TestSimulateMsgMultiSendToModuleAccount() {
 	s := rand.NewSource(1)
 	r := rand.New(s)
 	accounts := suite.getTestingAccounts(r, accCount)
-
-	_, err := suite.app.FinalizeBlock(&abci.RequestFinalizeBlock{
-		Height: suite.app.LastBlockHeight() + 1,
-		Hash:   suite.app.LastCommitID().Hash,
-	})
-	suite.Require().NoError(err)
 
 	// execute operation
 	op := simulation.SimulateMsgMultiSendToModuleAccount(suite.txConfig, suite.accountKeeper, suite.bankKeeper, mAccCount)

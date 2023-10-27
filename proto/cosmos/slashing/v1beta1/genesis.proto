@@ -1,7 +1,7 @@
 syntax = "proto3";
 package cosmos.slashing.v1beta1;
 
-option go_package = "github.com/cosmos/cosmos-sdk/x/slashing/types";
+option go_package = "cosmossdk.io/x/slashing/types";
 
 import "gogoproto/gogo.proto";
 import "cosmos/slashing/v1beta1/slashing.proto";

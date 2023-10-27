@@ -21,7 +21,9 @@ use (
 	./tools/confix
 	./tools/hubl
 	./x/accounts
+	./x/authz
 	./x/circuit
+	./x/distribution
 	./x/evidence
 	./x/feegrant
   ./x/gov
@@ -29,6 +31,8 @@ use (
 	./x/nft
 	./x/params
 	./x/protocolpool
+	./x/slashing
+	./x/staking
 	./x/tx
 	./x/upgrade
 )

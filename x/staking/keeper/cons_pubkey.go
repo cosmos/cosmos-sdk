@@ -4,11 +4,11 @@ import (
 	"time"
 
 	"cosmossdk.io/collections"
+	"cosmossdk.io/x/staking/types"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // SetConsPubKeyRotationHistory sets the consensus key rotation of a validator into state
@@ -42,11 +42,7 @@ func (k Keeper) SetConsPubKeyRotationHistory(
 		return err
 	}
 
-	if err := k.SetConsKeyQueue(ctx, queueTime, valAddr); err != nil {
-		return err
-	}
-
-	return nil
+	return k.SetConsKeyQueue(ctx, queueTime, valAddr)
 }
 
 func (k Keeper) updateToNewPubkey(ctx sdk.Context, val types.Validator, oldPubKey, newPubKey *codectypes.Any, fee sdk.Coin) error {
@@ -84,17 +80,22 @@ func (k Keeper) updateToNewPubkey(ctx sdk.Context, val types.Validator, oldPubKe
 }
 
 // CheckLimitOfMaxRotationsExceed returns bool, count of iterations made within the unbonding period.
+// CheckLimitOfMaxRotationsExceed returns true if the key rotations exceed the limit, currently we are limiting one rotation for unbonding period.
 func (k Keeper) CheckLimitOfMaxRotationsExceed(ctx sdk.Context, valAddr sdk.ValAddress) (bool, error) {
-	isFound := false
+	count := 0
+	maxRotations := 1 // Define your maximum limit
 	rng := collections.NewPrefixUntilPairRange[[]byte, time.Time](valAddr)
 	if err := k.ValidatorConsensusKeyRotationRecordIndexKey.Walk(ctx, rng, func(key collections.Pair[[]byte, time.Time], value []byte) (stop bool, err error) {
-		isFound = true
-		return true, nil
+		count++
+		if count >= maxRotations {
+			return true, nil
+		}
+		return false, nil
 	}); err != nil {
 		return false, err
 	}
 
-	return isFound, nil
+	return count >= maxRotations, nil
 }
 
 // SetConsKeyQueue sets array of rotated validator addresses to a key of current block time + unbonding period
@@ -106,9 +107,5 @@ func (k Keeper) SetConsKeyQueue(ctx sdk.Context, ts time.Time, valAddr sdk.ValAd
 	}
 
 	queueRec.Addresses = append(queueRec.Addresses, valAddr.String())
-	if err := k.ValidatorConsensusKeyRotationRecordQueue.Set(ctx, ts, queueRec); err != nil {
-		return err
-	}
-
-	return nil
+	return k.ValidatorConsensusKeyRotationRecordQueue.Set(ctx, ts, queueRec)
 }

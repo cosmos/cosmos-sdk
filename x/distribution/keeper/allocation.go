@@ -7,10 +7,10 @@ import (
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/comet"
 	"cosmossdk.io/math"
+	"cosmossdk.io/x/distribution/types"
+	stakingtypes "cosmossdk.io/x/staking/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/distribution/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // AllocateTokens performs reward and fee distribution to all validators based

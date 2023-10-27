@@ -94,6 +94,27 @@ func DefaultJSONTxDecoder(cdc codec.Codec) sdk.TxDecoder {
 	}
 }
 
+// DefaultJSONTxDecoder returns a default protobuf JSON TxDecoder using the provided Marshaler.
+func DefaultJSONTxsDecoder(cdc codec.ProtoCodecMarshaler) sdk.TxsDecoder {
+	return func(txBytes []byte) ([]sdk.Tx, error) {
+		var theTxs tx.Txs
+		err := cdc.UnmarshalJSON(txBytes, &theTxs)
+		if err != nil {
+			return nil, errorsmod.Wrap(sdkerrors.ErrTxDecode, err.Error())
+		}
+
+		sdkTxs := make([]sdk.Tx, 0)
+		
+		for _, tx := range theTxs.Txs {
+			sdkTxs = append(sdkTxs, &wrapper{
+				tx: &tx,
+			})
+		}
+
+		return sdkTxs, nil
+	}
+}
+
 // rejectNonADR027TxRaw rejects txBytes that do not follow ADR-027. This is NOT
 // a generic ADR-027 checker, it only applies decoding TxRaw. Specifically, it
 // only checks that:

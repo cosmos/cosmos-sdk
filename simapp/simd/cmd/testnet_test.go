@@ -12,6 +12,7 @@ import (
 	"cosmossdk.io/x/bank"
 	banktypes "cosmossdk.io/x/bank/types"
 	"cosmossdk.io/x/distribution"
+	"cosmossdk.io/x/mint"
 	"cosmossdk.io/x/staking"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -24,7 +25,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltest "github.com/cosmos/cosmos-sdk/x/genutil/client/testutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
-	"github.com/cosmos/cosmos-sdk/x/mint"
 )
 
 func Test_TestnetCmd(t *testing.T) {

@@ -14,6 +14,7 @@ require (
 	cosmossdk.io/x/bank v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/distribution v0.0.0-20230925135524-a1bc045b3190
 	cosmossdk.io/x/gov v0.0.0-20230925135524-a1bc045b3190
+	cosmossdk.io/x/mint v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/protocolpool v0.0.0-20230925135524-a1bc045b3190
 	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000
 	github.com/bits-and-blooms/bitset v1.10.0
@@ -168,6 +169,7 @@ replace (
 	cosmossdk.io/x/bank => ../bank
 	cosmossdk.io/x/distribution => ../distribution
 	cosmossdk.io/x/gov => ../gov
+	cosmossdk.io/x/mint => ../mint
 	cosmossdk.io/x/protocolpool => ../protocolpool
 	cosmossdk.io/x/staking => ../staking
 )

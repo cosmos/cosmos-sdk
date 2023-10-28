@@ -6,8 +6,9 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/cosmos/cosmos-sdk/telemetry"
 	"github.com/gorilla/mux"
+
+	"github.com/cosmos/cosmos-sdk/telemetry"
 )
 
 type Server struct {

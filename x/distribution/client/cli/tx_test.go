@@ -12,6 +12,7 @@ import (
 	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/x/distribution/client/cli"
 	distrtestutil "cosmossdk.io/x/distribution/testutil"
+	minttypes "cosmossdk.io/x/mint/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -22,7 +23,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	testutilmod "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
 type CLITestSuite struct {

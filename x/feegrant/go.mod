@@ -13,6 +13,7 @@ require (
 	cosmossdk.io/store v1.0.0-rc.0
 	cosmossdk.io/x/bank v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/gov v0.0.0-20230925135524-a1bc045b3190
+	cosmossdk.io/x/mint v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000
 	github.com/cometbft/cometbft v0.38.0
 	github.com/cosmos/cosmos-proto v1.0.0-beta.3
@@ -166,6 +167,7 @@ replace (
 	cosmossdk.io/x/bank => ../bank
 	cosmossdk.io/x/distribution => ../distribution
 	cosmossdk.io/x/gov => ../gov
+	cosmossdk.io/x/mint => ../mint
 	cosmossdk.io/x/slashing => ../slashing
 	cosmossdk.io/x/staking => ../staking
 )

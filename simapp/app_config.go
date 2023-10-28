@@ -46,6 +46,8 @@ import (
 	govtypes "cosmossdk.io/x/gov/types"
 	"cosmossdk.io/x/group"
 	_ "cosmossdk.io/x/group/module" // import for side-effects
+	_ "cosmossdk.io/x/mint"         // import for side-effects
+	minttypes "cosmossdk.io/x/mint/types"
 	"cosmossdk.io/x/nft"
 	_ "cosmossdk.io/x/nft/module"   // import for side-effects
 	_ "cosmossdk.io/x/protocolpool" // import for side-effects
@@ -69,8 +71,6 @@ import (
 	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
-	_ "github.com/cosmos/cosmos-sdk/x/mint" // import for side-effects
-	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
 var (

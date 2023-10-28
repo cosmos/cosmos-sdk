@@ -16,6 +16,7 @@ import (
 	"cosmossdk.io/x/gov/types"
 	v1 "cosmossdk.io/x/gov/types/v1"
 	"cosmossdk.io/x/gov/types/v1beta1"
+	minttypes "cosmossdk.io/x/mint/types"
 	poolkeeper "cosmossdk.io/x/protocolpool/keeper"
 	pooltypes "cosmossdk.io/x/protocolpool/types"
 	"cosmossdk.io/x/staking"
@@ -32,7 +33,6 @@ import (
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authsims "github.com/cosmos/cosmos-sdk/x/auth/simulation"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
 type fixture struct {

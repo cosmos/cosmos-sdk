@@ -23,6 +23,7 @@ import (
 	"cosmossdk.io/x/evidence/exported"
 	"cosmossdk.io/x/evidence/keeper"
 	evidencetypes "cosmossdk.io/x/evidence/types"
+	minttypes "cosmossdk.io/x/mint/types"
 	"cosmossdk.io/x/slashing"
 	slashingkeeper "cosmossdk.io/x/slashing/keeper"
 	"cosmossdk.io/x/slashing/testutil"
@@ -46,7 +47,6 @@ import (
 	authsims "github.com/cosmos/cosmos-sdk/x/auth/simulation"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	consensusparamtypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
-	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
 var (

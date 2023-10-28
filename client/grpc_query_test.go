@@ -4,11 +4,12 @@ import (
 	"context"
 	"testing"
 
-	"cosmossdk.io/log"
-	storetypes "cosmossdk.io/store/types"
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
+
+	"cosmossdk.io/log"
+	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"

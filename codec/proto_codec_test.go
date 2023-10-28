@@ -189,7 +189,7 @@ func TestGetSigners(t *testing.T) {
 	testAddrStr := testAddr.String()
 
 	msgSendV1 := &countertypes.MsgCounter{Signer: testAddrStr, Count: 1}
-	msgSendV2 := &counterv1.MsgCounter{FromAddress: testAddrStr, Count: 1}
+	msgSendV2 := &counterv1.MsgCounter{Signer: testAddrStr, Count: 1}
 
 	signers, msgSendV2Copy, err := cdc.GetMsgV1Signers(msgSendV1)
 	require.NoError(t, err)

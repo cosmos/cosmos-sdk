@@ -20,6 +20,8 @@ import (
 	banktestutil "cosmossdk.io/x/bank/testutil"
 	distributionkeeper "cosmossdk.io/x/distribution/keeper"
 	distrtypes "cosmossdk.io/x/distribution/types"
+	mintkeeper "cosmossdk.io/x/mint/keeper"
+	minttypes "cosmossdk.io/x/mint/types"
 	slashingkeeper "cosmossdk.io/x/slashing/keeper"
 	"cosmossdk.io/x/slashing/simulation"
 	"cosmossdk.io/x/slashing/testutil"
@@ -36,8 +38,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	mintkeeper "github.com/cosmos/cosmos-sdk/x/mint/keeper"
-	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
 type SimTestSuite struct {

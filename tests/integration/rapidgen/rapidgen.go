@@ -37,6 +37,7 @@ import (
 	gov_v1_types "cosmossdk.io/x/gov/types/v1"
 	gov_v1beta1_types "cosmossdk.io/x/gov/types/v1beta1"
 	grouptypes "cosmossdk.io/x/group"
+	minttypes "cosmossdk.io/x/mint/types"
 	slashingtypes "cosmossdk.io/x/slashing/types"
 	stakingtypes "cosmossdk.io/x/staking/types"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
@@ -45,7 +46,6 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	consensustypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
-	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
 type GeneratedType struct {

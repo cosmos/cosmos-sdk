@@ -16,6 +16,7 @@ import (
 	store "cosmossdk.io/store/types"
 	bankkeeper "cosmossdk.io/x/bank/keeper"
 	banktypes "cosmossdk.io/x/bank/types"
+	minttypes "cosmossdk.io/x/mint/types"
 
 	baseapptestutil "github.com/cosmos/cosmos-sdk/baseapp/testutil"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -33,7 +34,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	xauthsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
-	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
 var blockMaxGas = uint64(simtestutil.DefaultConsensusParams.Block.MaxGas)

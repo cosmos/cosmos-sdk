@@ -24,6 +24,7 @@ import (
 	feegrantmodule "cosmossdk.io/x/feegrant/module"
 	"cosmossdk.io/x/gov"
 	group "cosmossdk.io/x/group/module"
+	"cosmossdk.io/x/mint"
 	"cosmossdk.io/x/slashing"
 	"cosmossdk.io/x/staking"
 	"cosmossdk.io/x/upgrade"
@@ -40,7 +41,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
-	"github.com/cosmos/cosmos-sdk/x/mint"
 )
 
 func TestSimAppExportAndBlockedAddrs(t *testing.T) {

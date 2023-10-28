@@ -39,6 +39,7 @@ require (
 	cosmossdk.io/x/distribution v0.0.0-20230925135524-a1bc045b3190
 	cosmossdk.io/x/gov v0.0.0-20230925135524-a1bc045b3190
 	cosmossdk.io/x/group v0.0.0-00010101000000-000000000000
+	cosmossdk.io/x/mint v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/slashing v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000
 )
@@ -222,6 +223,7 @@ replace (
 	cosmossdk.io/x/feegrant => ../x/feegrant
 	cosmossdk.io/x/gov => ../x/gov
 	cosmossdk.io/x/group => ../x/group
+	cosmossdk.io/x/mint => ../x/mint
 	cosmossdk.io/x/nft => ../x/nft
 	cosmossdk.io/x/protocolpool => ../x/protocolpool
 	cosmossdk.io/x/slashing => ../x/slashing

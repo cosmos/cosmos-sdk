@@ -28,6 +28,7 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	_ "cosmossdk.io/x/bank"
 	banktypes "cosmossdk.io/x/bank/types"
+	_ "cosmossdk.io/x/mint"
 	_ "cosmossdk.io/x/staking"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -49,7 +50,6 @@ import (
 	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	_ "github.com/cosmos/cosmos-sdk/x/consensus"
-	_ "github.com/cosmos/cosmos-sdk/x/mint"
 )
 
 var ParamStoreKey = []byte("paramstore")

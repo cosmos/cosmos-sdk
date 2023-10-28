@@ -26,6 +26,7 @@ require (
 	cosmossdk.io/log v1.2.1 // indirect
 	cosmossdk.io/math v1.1.3-rc.1 // indirect
 	cosmossdk.io/store v1.0.0-rc.0 // indirect
+	cosmossdk.io/x/mint v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000 // indirect
 	filippo.io/edwards25519 v1.0.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
@@ -163,6 +164,7 @@ replace (
 	cosmossdk.io/x/bank => ./../../x/bank
 	cosmossdk.io/x/distribution => ./../../x/distribution
 	cosmossdk.io/x/gov => ./../../x/gov
+	cosmossdk.io/x/mint => ./../../x/mint
 	cosmossdk.io/x/slashing => ./../../x/slashing
 	cosmossdk.io/x/staking => ./../../x/staking
 )

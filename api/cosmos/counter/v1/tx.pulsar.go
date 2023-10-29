@@ -905,7 +905,7 @@ type MsgIncreaseCounter struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// authority is the address that controls the module (defaults to x/gov unless overwritten).
+	// signer is the address that controls the module (defaults to x/gov unless overwritten).
 	Signer string `protobuf:"bytes,1,opt,name=signer,proto3" json:"signer,omitempty"`
 	// count is the number of times to increment the counter.
 	Count int64 `protobuf:"varint,2,opt,name=count,proto3" json:"count,omitempty"`
@@ -951,7 +951,7 @@ type MsgIncreaseCountResponse struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// count is the number of times the counter was incremented.
+	// new_count is the number of times the counter was incremented.
 	NewCount int64 `protobuf:"varint,1,opt,name=new_count,json=newCount,proto3" json:"new_count,omitempty"`
 }
 

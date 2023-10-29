@@ -5,7 +5,7 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/counter/types";
 
 // Query defines the gRPC querier service.
 service Query {
-  // Params queries the parameters of x/Mock module.
+  // GetCount queries the parameters of x/Counter module.
   rpc GetCount(QueryGetCountRequest) returns (QueryGetCountResponse);
 }
 

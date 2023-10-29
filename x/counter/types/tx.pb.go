@@ -31,7 +31,7 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // MsgIncreaseCounter defines a count Msg service counter.
 type MsgIncreaseCounter struct {
-	// authority is the address that controls the module (defaults to x/gov unless overwritten).
+	// signer is the address that controls the module (defaults to x/gov unless overwritten).
 	Signer string `protobuf:"bytes,1,opt,name=signer,proto3" json:"signer,omitempty"`
 	// count is the number of times to increment the counter.
 	Count int64 `protobuf:"varint,2,opt,name=count,proto3" json:"count,omitempty"`
@@ -86,7 +86,7 @@ func (m *MsgIncreaseCounter) GetCount() int64 {
 
 // MsgIncreaseCountResponse is the Msg/Counter response type.
 type MsgIncreaseCountResponse struct {
-	// count is the number of times the counter was incremented.
+	// new_count is the number of times the counter was incremented.
 	NewCount int64 `protobuf:"varint,1,opt,name=new_count,json=newCount,proto3" json:"new_count,omitempty"`
 }
 

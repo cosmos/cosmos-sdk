@@ -26,7 +26,7 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type QueryClient interface {
-	// Params queries the parameters of x/Mock module.
+	// GetCount queries the parameters of x/Counter module.
 	GetCount(ctx context.Context, in *QueryGetCountRequest, opts ...grpc.CallOption) (*QueryGetCountResponse, error)
 }
 
@@ -51,7 +51,7 @@ func (c *queryClient) GetCount(ctx context.Context, in *QueryGetCountRequest, op
 // All implementations must embed UnimplementedQueryServer
 // for forward compatibility
 type QueryServer interface {
-	// Params queries the parameters of x/Mock module.
+	// GetCount queries the parameters of x/Counter module.
 	GetCount(context.Context, *QueryGetCountRequest) (*QueryGetCountResponse, error)
 	mustEmbedUnimplementedQueryServer()
 }

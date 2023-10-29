@@ -19,7 +19,7 @@ service Msg {
 message MsgIncreaseCounter {
   option (cosmos.msg.v1.signer) = "signer";
 
-  // authority is the address that controls the module (defaults to x/gov unless overwritten).
+  // signer is the address that controls the module (defaults to x/gov unless overwritten).
   string signer = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
   // count is the number of times to increment the counter.
@@ -28,6 +28,6 @@ message MsgIncreaseCounter {
 
 // MsgIncreaseCountResponse is the Msg/Counter response type.
 message MsgIncreaseCountResponse {
-  // count is the number of times the counter was incremented.
+  // new_count is the number of times the counter was incremented.
   int64 new_count = 1;
 }

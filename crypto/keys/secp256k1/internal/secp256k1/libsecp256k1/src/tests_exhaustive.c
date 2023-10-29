@@ -230,7 +230,7 @@ void test_exhaustive_verify(const secp256k1_context *ctx, const cosmos_secp256k1
                     should_verify &= !secp256k1_scalar_is_high(&s_s);
 
                     /* Verify by calling verify */
-                    secp256k1_ecdsa_signature_save(&sig, &r_s, &s_s);
+                    cosmos_secp256k1_ecdsa_signature_save(&sig, &r_s, &s_s);
                     memcpy(&nonconst_ge, &group[sk_s], sizeof(nonconst_ge));
                     cosmos_secp256k1_pubkey_save(&pk, &nonconst_ge);
                     cosmos_secp256k1_scalar_get_b32(msg32, &msg_s);
@@ -311,7 +311,7 @@ void test_exhaustive_recovery_sign(const secp256k1_context *ctx, const secp256k1
                 cosmos_secp256k1_ecdsa_sign_recoverable(ctx, &rsig, msg32, sk32, secp256k1_nonce_function_smallint, &k);
 
                 /* Check directly */
-                secp256k1_ecdsa_recoverable_signature_load(ctx, &r, &s, &recid, &rsig);
+                cosmos_secp256k1_ecdsa_recoverable_signature_load(ctx, &r, &s, &recid, &rsig);
                 r_from_k(&expected_r, group, k);
                 CHECK(r == expected_r);
                 CHECK((k * s) % order == (i + r * j) % order ||
@@ -332,7 +332,7 @@ void test_exhaustive_recovery_sign(const secp256k1_context *ctx, const secp256k1
                 CHECK(recid == expected_recid);
 
                 /* Convert to a standard sig then check */
-                secp256k1_ecdsa_recoverable_signature_convert(ctx, &sig, &rsig);
+                cosmos_secp256k1_ecdsa_recoverable_signature_convert(ctx, &sig, &rsig);
                 secp256k1_ecdsa_signature_load(ctx, &r, &s, &sig);
                 /* Note that we compute expected_r *after* signing -- this is important
                  * because our nonce-computing function function might change k during
@@ -399,7 +399,7 @@ void test_exhaustive_recovery_verify(const secp256k1_context *ctx, const secp256
 
                     /* Verify by converting to a standard signature and calling verify */
                     secp256k1_ecdsa_recoverable_signature_save(&rsig, &r_s, &s_s, recid);
-                    secp256k1_ecdsa_recoverable_signature_convert(ctx, &sig, &rsig);
+                    cosmos_secp256k1_ecdsa_recoverable_signature_convert(ctx, &sig, &rsig);
                     memcpy(&nonconst_ge, &group[sk_s], sizeof(nonconst_ge));
                     cosmos_secp256k1_pubkey_save(&pk, &nonconst_ge);
                     CHECK(should_verify ==

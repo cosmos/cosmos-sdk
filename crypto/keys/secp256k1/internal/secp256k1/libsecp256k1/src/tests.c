@@ -3521,7 +3521,7 @@ void test_ecdsa_end_to_end(void) {
     CHECK(!cosmos_secp256k1_ecdsa_signature_normalize(ctx, NULL, &signature[0]));
     secp256k1_ecdsa_signature_load(ctx, &r, &s, &signature[0]);
     secp256k1_scalar_negate(&s, &s);
-    secp256k1_ecdsa_signature_save(&signature[5], &r, &s);
+    cosmos_secp256k1_ecdsa_signature_save(&signature[5], &r, &s);
     CHECK(cosmos_secp256k1_ecdsa_verify(ctx, &signature[5], message, &pubkey) == 0);
     CHECK(cosmos_secp256k1_ecdsa_signature_normalize(ctx, NULL, &signature[5]));
     CHECK(cosmos_secp256k1_ecdsa_signature_normalize(ctx, &signature[5], &signature[5]));
@@ -3529,7 +3529,7 @@ void test_ecdsa_end_to_end(void) {
     CHECK(!cosmos_secp256k1_ecdsa_signature_normalize(ctx, &signature[5], &signature[5]));
     CHECK(cosmos_secp256k1_ecdsa_verify(ctx, &signature[5], message, &pubkey) == 1);
     secp256k1_scalar_negate(&s, &s);
-    secp256k1_ecdsa_signature_save(&signature[5], &r, &s);
+    cosmos_secp256k1_ecdsa_signature_save(&signature[5], &r, &s);
     CHECK(!cosmos_secp256k1_ecdsa_signature_normalize(ctx, NULL, &signature[5]));
     CHECK(cosmos_secp256k1_ecdsa_verify(ctx, &signature[5], message, &pubkey) == 1);
     CHECK(memcmp(&signature[5], &signature[0], 64) == 0);

@@ -23,7 +23,7 @@ extern "C" {
  */
 typedef struct {
     unsigned char data[65];
-} secp256k1_ecdsa_recoverable_signature;
+} cosmos_secp256k1_ecdsa_recoverable_signature;
 
 /** Parse a compact ECDSA signature (64 bytes + recovery id).
  *
@@ -34,10 +34,10 @@ typedef struct {
  *        recid:   the recovery id (0, 1, 2 or 3)
  */
 SECP256K1_API int cosmos_secp256k1_ecdsa_recoverable_signature_parse_compact(
-    const cosmos_secp256k1_context* ctx,
-    secp256k1_ecdsa_recoverable_signature* sig,
-    const unsigned char *input64,
-    int recid
+        const cosmos_secp256k1_context* ctx,
+        cosmos_secp256k1_ecdsa_recoverable_signature* sig,
+        const unsigned char *input64,
+        int recid
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3);
 
 /** Convert a recoverable signature into a normal signature.
@@ -46,10 +46,10 @@ SECP256K1_API int cosmos_secp256k1_ecdsa_recoverable_signature_parse_compact(
  *  Out: sig:    a pointer to a normal signature (cannot be NULL).
  *  In:  sigin:  a pointer to a recoverable signature (cannot be NULL).
  */
-SECP256K1_API int secp256k1_ecdsa_recoverable_signature_convert(
+SECP256K1_API int cosmos_secp256k1_ecdsa_recoverable_signature_convert(
     const cosmos_secp256k1_context* ctx,
     cosmos_secp256k1_ecdsa_signature* sig,
-    const secp256k1_ecdsa_recoverable_signature* sigin
+    const cosmos_secp256k1_ecdsa_recoverable_signature* sigin
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3);
 
 /** Serialize an ECDSA signature in compact format (64 bytes + recovery id).
@@ -64,7 +64,7 @@ SECP256K1_API int cosmos_secp256k1_ecdsa_recoverable_signature_serialize_compact
     const cosmos_secp256k1_context* ctx,
     unsigned char *output64,
     int *recid,
-    const secp256k1_ecdsa_recoverable_signature* sig
+    const cosmos_secp256k1_ecdsa_recoverable_signature* sig
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3) SECP256K1_ARG_NONNULL(4);
 
 /** Create a recoverable ECDSA signature.
@@ -80,7 +80,7 @@ SECP256K1_API int cosmos_secp256k1_ecdsa_recoverable_signature_serialize_compact
  */
 SECP256K1_API int cosmos_secp256k1_ecdsa_sign_recoverable(
         const cosmos_secp256k1_context* ctx,
-        secp256k1_ecdsa_recoverable_signature *sig,
+        cosmos_secp256k1_ecdsa_recoverable_signature *sig,
         const unsigned char *msg32,
         const unsigned char *seckey,
         cosmos_secp256k1_nonce_function noncefp,
@@ -99,7 +99,7 @@ SECP256K1_API int cosmos_secp256k1_ecdsa_sign_recoverable(
 SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int cosmos_secp256k1_ecdsa_recover(
     const cosmos_secp256k1_context* ctx,
     cosmos_secp256k1_pubkey *pubkey,
-    const secp256k1_ecdsa_recoverable_signature *sig,
+    const cosmos_secp256k1_ecdsa_recoverable_signature *sig,
     const unsigned char *msg32
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3) SECP256K1_ARG_NONNULL(4);
 

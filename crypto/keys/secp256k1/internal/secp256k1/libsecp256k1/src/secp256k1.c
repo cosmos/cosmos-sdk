@@ -188,7 +188,7 @@ static void secp256k1_ecdsa_signature_load(const cosmos_secp256k1_context* ctx, 
     if (sizeof(cosmos_secp256k1_scalar) == 32) {
         /* When the cosmos_secp256k1_scalar type is exactly 32 byte, use its
          * representation inside cosmos_secp256k1_ecdsa_signature, as conversion is very fast.
-         * Note that secp256k1_ecdsa_signature_save must use the same representation. */
+         * Note that cosmos_secp256k1_ecdsa_signature_save must use the same representation. */
         memcpy(r, &sig->data[0], 32);
         memcpy(s, &sig->data[32], 32);
     } else {
@@ -197,7 +197,7 @@ static void secp256k1_ecdsa_signature_load(const cosmos_secp256k1_context* ctx, 
     }
 }
 
-static void secp256k1_ecdsa_signature_save(cosmos_secp256k1_ecdsa_signature* sig, const cosmos_secp256k1_scalar* r, const cosmos_secp256k1_scalar* s) {
+static void cosmos_secp256k1_ecdsa_signature_save(cosmos_secp256k1_ecdsa_signature* sig, const cosmos_secp256k1_scalar* r, const cosmos_secp256k1_scalar* s) {
     if (sizeof(cosmos_secp256k1_scalar) == 32) {
         memcpy(&sig->data[0], r, 32);
         memcpy(&sig->data[32], s, 32);
@@ -215,7 +215,7 @@ int secp256k1_ecdsa_signature_parse_der(const cosmos_secp256k1_context* ctx, cos
     COSMOS_ARG_CHECK(input != NULL);
 
     if (secp256k1_ecdsa_sig_parse(&r, &s, input, inputlen)) {
-        secp256k1_ecdsa_signature_save(sig, &r, &s);
+        cosmos_secp256k1_ecdsa_signature_save(sig, &r, &s);
         return 1;
     } else {
         memset(sig, 0, sizeof(*sig));
@@ -237,7 +237,7 @@ int cosmos_secp256k1_ecdsa_signature_parse_compact(const cosmos_secp256k1_contex
     cosmos_secp256k1_scalar_set_b32(&s, &input64[32], &overflow);
     ret &= !overflow;
     if (ret) {
-        secp256k1_ecdsa_signature_save(sig, &r, &s);
+        cosmos_secp256k1_ecdsa_signature_save(sig, &r, &s);
     } else {
         memset(sig, 0, sizeof(*sig));
     }
@@ -282,7 +282,7 @@ int cosmos_secp256k1_ecdsa_signature_normalize(const cosmos_secp256k1_context* c
         if (ret) {
             secp256k1_scalar_negate(&s, &s);
         }
-        secp256k1_ecdsa_signature_save(sigout, &r, &s);
+        cosmos_secp256k1_ecdsa_signature_save(sigout, &r, &s);
     }
 
     return ret;
@@ -379,7 +379,7 @@ int cosmos_secp256k1_ecdsa_sign(const cosmos_secp256k1_context* ctx, cosmos_secp
         cosmos_secp256k1_scalar_clear(&sec);
     }
     if (ret) {
-        secp256k1_ecdsa_signature_save(signature, &r, &s);
+        cosmos_secp256k1_ecdsa_signature_save(signature, &r, &s);
     } else {
         memset(signature, 0, sizeof(*signature));
     }

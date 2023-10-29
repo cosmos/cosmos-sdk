@@ -113,7 +113,7 @@ void random_scalar_order_test(secp256k1_scalar *num) {
         int overflow = 0;
         secp256k1_rand256_test(b32);
         cosmos_secp256k1_scalar_set_b32(num, b32, &overflow);
-        if (overflow || secp256k1_scalar_is_zero(num)) {
+        if (overflow || cosmos_secp256k1_scalar_is_zero(num)) {
             continue;
         }
         break;
@@ -126,7 +126,7 @@ void random_scalar_order(secp256k1_scalar *num) {
         int overflow = 0;
         secp256k1_rand256(b32);
         cosmos_secp256k1_scalar_set_b32(num, b32, &overflow);
-        if (overflow || secp256k1_scalar_is_zero(num)) {
+        if (overflow || cosmos_secp256k1_scalar_is_zero(num)) {
             continue;
         }
         break;
@@ -659,9 +659,9 @@ void scalar_test(void) {
             int j;
             secp256k1_scalar_set_int(&t, secp256k1_scalar_get_bits(&s, 256 - 4 - i, 4));
             for (j = 0; j < 4; j++) {
-                secp256k1_scalar_add(&n, &n, &n);
+                cosmos_secp256k1_scalar_add(&n, &n, &n);
             }
-            secp256k1_scalar_add(&n, &n, &t);
+            cosmos_secp256k1_scalar_add(&n, &n, &t);
         }
         CHECK(secp256k1_scalar_eq(&n, &s));
     }
@@ -680,9 +680,9 @@ void scalar_test(void) {
             }
             secp256k1_scalar_set_int(&t, secp256k1_scalar_get_bits_var(&s, 256 - now - i, now));
             for (j = 0; j < now; j++) {
-                secp256k1_scalar_add(&n, &n, &n);
+                cosmos_secp256k1_scalar_add(&n, &n, &n);
             }
-            secp256k1_scalar_add(&n, &n, &t);
+            cosmos_secp256k1_scalar_add(&n, &n, &t);
             i += now;
         }
         CHECK(secp256k1_scalar_eq(&n, &s));
@@ -696,7 +696,7 @@ void scalar_test(void) {
         secp256k1_scalar r;
         secp256k1_num_add(&rnum, &snum, &s2num);
         secp256k1_num_mod(&rnum, &order);
-        secp256k1_scalar_add(&r, &s, &s2);
+        cosmos_secp256k1_scalar_add(&r, &s, &s2);
         secp256k1_scalar_get_num(&r2num, &r);
         CHECK(secp256k1_num_eq(&rnum, &r2num));
     }
@@ -712,10 +712,10 @@ void scalar_test(void) {
         secp256k1_scalar_get_num(&r2num, &r);
         CHECK(secp256k1_num_eq(&rnum, &r2num));
         /* The result can only be zero if at least one of the factors was zero. */
-        CHECK(secp256k1_scalar_is_zero(&r) == (secp256k1_scalar_is_zero(&s) || secp256k1_scalar_is_zero(&s2)));
+        CHECK(cosmos_secp256k1_scalar_is_zero(&r) == (cosmos_secp256k1_scalar_is_zero(&s) || cosmos_secp256k1_scalar_is_zero(&s2)));
         /* The results can only be equal to one of the factors if that factor was zero, or the other factor was one. */
-        CHECK(secp256k1_num_eq(&rnum, &snum) == (secp256k1_scalar_is_zero(&s) || secp256k1_scalar_is_one(&s2)));
-        CHECK(secp256k1_num_eq(&rnum, &s2num) == (secp256k1_scalar_is_zero(&s2) || secp256k1_scalar_is_one(&s)));
+        CHECK(secp256k1_num_eq(&rnum, &snum) == (cosmos_secp256k1_scalar_is_zero(&s) || secp256k1_scalar_is_one(&s2)));
+        CHECK(secp256k1_num_eq(&rnum, &s2num) == (cosmos_secp256k1_scalar_is_zero(&s2) || secp256k1_scalar_is_one(&s)));
     }
 
     {
@@ -723,7 +723,7 @@ void scalar_test(void) {
         secp256k1_num negnum;
         secp256k1_num negnum2;
         /* Check that comparison with zero matches comparison with zero on the number. */
-        CHECK(secp256k1_num_is_zero(&snum) == secp256k1_scalar_is_zero(&s));
+        CHECK(secp256k1_num_is_zero(&snum) == cosmos_secp256k1_scalar_is_zero(&s));
         /* Check that comparison with the half order is equal to testing for high scalar. */
         CHECK(secp256k1_scalar_is_high(&s) == (secp256k1_num_cmp(&snum, &half_order) > 0));
         secp256k1_scalar_negate(&neg, &s);
@@ -732,16 +732,16 @@ void scalar_test(void) {
         /* Check that comparison with the half order is equal to testing for high scalar after negation. */
         CHECK(secp256k1_scalar_is_high(&neg) == (secp256k1_num_cmp(&negnum, &half_order) > 0));
         /* Negating should change the high property, unless the value was already zero. */
-        CHECK((secp256k1_scalar_is_high(&s) == secp256k1_scalar_is_high(&neg)) == secp256k1_scalar_is_zero(&s));
+        CHECK((secp256k1_scalar_is_high(&s) == secp256k1_scalar_is_high(&neg)) == cosmos_secp256k1_scalar_is_zero(&s));
         secp256k1_scalar_get_num(&negnum2, &neg);
         /* Negating a scalar should be equal to (order - n) mod order on the number. */
         CHECK(secp256k1_num_eq(&negnum, &negnum2));
-        secp256k1_scalar_add(&neg, &neg, &s);
+        cosmos_secp256k1_scalar_add(&neg, &neg, &s);
         /* Adding a number to its negation should result in zero. */
-        CHECK(secp256k1_scalar_is_zero(&neg));
+        CHECK(cosmos_secp256k1_scalar_is_zero(&neg));
         secp256k1_scalar_negate(&neg, &neg);
         /* Negating zero should still result in zero. */
-        CHECK(secp256k1_scalar_is_zero(&neg));
+        CHECK(cosmos_secp256k1_scalar_is_zero(&neg));
     }
 
     {
@@ -779,7 +779,7 @@ void scalar_test(void) {
 
     {
         /* Test that scalar inverses are equal to the inverse of their number modulo the order. */
-        if (!secp256k1_scalar_is_zero(&s)) {
+        if (!cosmos_secp256k1_scalar_is_zero(&s)) {
             secp256k1_scalar inv;
 #ifndef USE_NUM_NONE
             secp256k1_num invnum;
@@ -807,8 +807,8 @@ void scalar_test(void) {
     {
         /* Test commutativity of add. */
         secp256k1_scalar r1, r2;
-        secp256k1_scalar_add(&r1, &s1, &s2);
-        secp256k1_scalar_add(&r2, &s2, &s1);
+        cosmos_secp256k1_scalar_add(&r1, &s1, &s2);
+        cosmos_secp256k1_scalar_add(&r2, &s2, &s1);
         CHECK(secp256k1_scalar_eq(&r1, &r2));
     }
 
@@ -821,11 +821,11 @@ void scalar_test(void) {
         secp256k1_scalar_set_int(&b, 1);
         CHECK(secp256k1_scalar_is_one(&b));
         for (i = 0; i < bit; i++) {
-            secp256k1_scalar_add(&b, &b, &b);
+            cosmos_secp256k1_scalar_add(&b, &b, &b);
         }
         r1 = s1;
         r2 = s1;
-        if (!secp256k1_scalar_add(&r1, &r1, &b)) {
+        if (!cosmos_secp256k1_scalar_add(&r1, &r1, &b)) {
             /* No overflow happened. */
             secp256k1_scalar_cadd_bit(&r2, bit, 1);
             CHECK(secp256k1_scalar_eq(&r1, &r2));
@@ -846,10 +846,10 @@ void scalar_test(void) {
     {
         /* Test associativity of add. */
         secp256k1_scalar r1, r2;
-        secp256k1_scalar_add(&r1, &s1, &s2);
-        secp256k1_scalar_add(&r1, &r1, &s);
-        secp256k1_scalar_add(&r2, &s2, &s);
-        secp256k1_scalar_add(&r2, &s1, &r2);
+        cosmos_secp256k1_scalar_add(&r1, &s1, &s2);
+        cosmos_secp256k1_scalar_add(&r1, &r1, &s);
+        cosmos_secp256k1_scalar_add(&r2, &s2, &s);
+        cosmos_secp256k1_scalar_add(&r2, &s1, &r2);
         CHECK(secp256k1_scalar_eq(&r1, &r2));
     }
 
@@ -866,11 +866,11 @@ void scalar_test(void) {
     {
         /* Test distributitivity of mul over add. */
         secp256k1_scalar r1, r2, t;
-        secp256k1_scalar_add(&r1, &s1, &s2);
+        cosmos_secp256k1_scalar_add(&r1, &s1, &s2);
         secp256k1_scalar_mul(&r1, &r1, &s);
         secp256k1_scalar_mul(&r2, &s1, &s);
         secp256k1_scalar_mul(&t, &s2, &s);
-        secp256k1_scalar_add(&r2, &r2, &t);
+        cosmos_secp256k1_scalar_add(&r2, &r2, &t);
         CHECK(secp256k1_scalar_eq(&r1, &r2));
     }
 
@@ -894,7 +894,7 @@ void scalar_test(void) {
         /* Test additive identity. */
         secp256k1_scalar r1, v0;
         secp256k1_scalar_set_int(&v0,0);
-        secp256k1_scalar_add(&r1, &s1, &v0);
+        cosmos_secp256k1_scalar_add(&r1, &s1, &v0);
         CHECK(secp256k1_scalar_eq(&r1, &s1));
     }
 
@@ -920,10 +920,10 @@ void run_scalar_tests(void) {
         secp256k1_scalar_set_int(&s, 1);
         CHECK(secp256k1_scalar_is_one(&s));
         secp256k1_scalar_negate(&o, &s);
-        secp256k1_scalar_add(&o, &o, &s);
-        CHECK(secp256k1_scalar_is_zero(&o));
+        cosmos_secp256k1_scalar_add(&o, &o, &s);
+        CHECK(cosmos_secp256k1_scalar_is_zero(&o));
         secp256k1_scalar_negate(&o, &o);
-        CHECK(secp256k1_scalar_is_zero(&o));
+        CHECK(cosmos_secp256k1_scalar_is_zero(&o));
     }
 
 #ifndef USE_NUM_NONE
@@ -937,7 +937,7 @@ void run_scalar_tests(void) {
         secp256k1_num_get_bin(bin, 32, &order);
         cosmos_secp256k1_scalar_set_b32(&zero, bin, &overflow);
         CHECK(overflow == 1);
-        CHECK(secp256k1_scalar_is_zero(&zero));
+        CHECK(cosmos_secp256k1_scalar_is_zero(&zero));
     }
 #endif
 
@@ -1512,7 +1512,7 @@ void run_scalar_tests(void) {
             secp256k1_scalar_mul(&z, &x, &y);
             CHECK(!secp256k1_scalar_check_overflow(&z));
             CHECK(secp256k1_scalar_eq(&r1, &z));
-            if (!secp256k1_scalar_is_zero(&y)) {
+            if (!cosmos_secp256k1_scalar_is_zero(&y)) {
                 secp256k1_scalar_inverse(&zz, &y);
                 CHECK(!secp256k1_scalar_check_overflow(&zz));
 #if defined(USE_SCALAR_INV_NUM)
@@ -2156,7 +2156,7 @@ void test_ec_combine(void) {
     for (i = 1; i <= 6; i++) {
         secp256k1_scalar s;
         random_scalar_order_test(&s);
-        secp256k1_scalar_add(&sum, &sum, &s);
+        cosmos_secp256k1_scalar_add(&sum, &sum, &s);
         secp256k1_ecmult_gen(&ctx->ecmult_gen_ctx, &Qj, &s);
         cosmos_secp256k1_ge_set_gej(&Q, &Qj);
         cosmos_secp256k1_pubkey_save(&data[i - 1], &Q);
@@ -2288,7 +2288,7 @@ void run_ecmult_chain(void) {
         /* if X was (ae*A+ge*G), xn*X + gn*G results in (xn*ae*A + (xn*ge+gn)*G) */
         secp256k1_scalar_mul(&ae, &ae, &xn);
         secp256k1_scalar_mul(&ge, &ge, &xn);
-        secp256k1_scalar_add(&ge, &ge, &gn);
+        cosmos_secp256k1_scalar_add(&ge, &ge, &gn);
         /* modify xn and gn */
         secp256k1_scalar_mul(&xn, &xn, &xf);
         secp256k1_scalar_mul(&gn, &gn, &gf);
@@ -2504,7 +2504,7 @@ void test_wnaf(const secp256k1_scalar *number, int w) {
             secp256k1_scalar_set_int(&t, -v);
             secp256k1_scalar_negate(&t, &t);
         }
-        secp256k1_scalar_add(&x, &x, &t);
+        cosmos_secp256k1_scalar_add(&x, &x, &t);
     }
     CHECK(secp256k1_scalar_eq(&x, number)); /* check that wnaf represents number */
 }
@@ -2556,7 +2556,7 @@ void test_constant_wnaf(const secp256k1_scalar *number, int w) {
             secp256k1_scalar_set_int(&t, -v);
             secp256k1_scalar_negate(&t, &t);
         }
-        secp256k1_scalar_add(&x, &x, &t);
+        cosmos_secp256k1_scalar_add(&x, &x, &t);
     }
     /* Skew num because when encoding numbers as odd we use an offset */
     secp256k1_scalar_cadd_bit(&num, skew == 2, 1);
@@ -2582,9 +2582,9 @@ void run_wnaf(void) {
     }
     secp256k1_scalar_set_int(&n, 0);
     CHECK(secp256k1_scalar_cond_negate(&n, 1) == -1);
-    CHECK(secp256k1_scalar_is_zero(&n));
+    CHECK(cosmos_secp256k1_scalar_is_zero(&n));
     CHECK(secp256k1_scalar_cond_negate(&n, 0) == 1);
-    CHECK(secp256k1_scalar_is_zero(&n));
+    CHECK(cosmos_secp256k1_scalar_is_zero(&n));
 }
 
 void test_ecmult_constants(void) {
@@ -3167,7 +3167,7 @@ void run_eckey_edge_case_test(void) {
     pubkey_negone = pubkey;
     /* Tweak of zero leaves the value changed. */
     memset(ctmp2, 0, 32);
-    CHECK(secp256k1_ec_privkey_tweak_add(ctx, ctmp, ctmp2) == 1);
+    CHECK(cosmos_secp256k1_ec_privkey_tweak_add(ctx, ctmp, ctmp2) == 1);
     CHECK(memcmp(orderc, ctmp, 31) == 0 && ctmp[31] == 0x40);
     memcpy(&pubkey2, &pubkey, sizeof(pubkey));
     CHECK(secp256k1_ec_pubkey_tweak_add(ctx, &pubkey, ctmp2) == 1);
@@ -3181,7 +3181,7 @@ void run_eckey_edge_case_test(void) {
     /* Overflowing key tweak zeroizes. */
     memcpy(ctmp, orderc, 32);
     ctmp[31] = 0x40;
-    CHECK(secp256k1_ec_privkey_tweak_add(ctx, ctmp, orderc) == 0);
+    CHECK(cosmos_secp256k1_ec_privkey_tweak_add(ctx, ctmp, orderc) == 0);
     CHECK(memcmp(zeros, ctmp, 32) == 0);
     memcpy(ctmp, orderc, 32);
     ctmp[31] = 0x40;
@@ -3197,7 +3197,7 @@ void run_eckey_edge_case_test(void) {
     memcpy(&pubkey, &pubkey2, sizeof(pubkey));
     /* Private key tweaks results in a key of zero. */
     ctmp2[31] = 1;
-    CHECK(secp256k1_ec_privkey_tweak_add(ctx, ctmp2, ctmp) == 0);
+    CHECK(cosmos_secp256k1_ec_privkey_tweak_add(ctx, ctmp2, ctmp) == 0);
     CHECK(memcmp(zeros, ctmp2, 32) == 0);
     ctmp2[31] = 1;
     CHECK(secp256k1_ec_pubkey_tweak_add(ctx, &pubkey, ctmp2) == 0);
@@ -3205,7 +3205,7 @@ void run_eckey_edge_case_test(void) {
     memcpy(&pubkey, &pubkey2, sizeof(pubkey));
     /* Tweak computation wraps and results in a key of 1. */
     ctmp2[31] = 2;
-    CHECK(secp256k1_ec_privkey_tweak_add(ctx, ctmp2, ctmp) == 1);
+    CHECK(cosmos_secp256k1_ec_privkey_tweak_add(ctx, ctmp2, ctmp) == 1);
     CHECK(memcmp(ctmp2, zeros, 31) == 0 && ctmp2[31] == 1);
     ctmp2[31] = 2;
     CHECK(secp256k1_ec_pubkey_tweak_add(ctx, &pubkey, ctmp2) == 1);
@@ -3253,9 +3253,9 @@ void run_eckey_edge_case_test(void) {
     CHECK(ecount == 2);
     ecount = 0;
     memset(ctmp2, 0, 32);
-    CHECK(secp256k1_ec_privkey_tweak_add(ctx, NULL, ctmp2) == 0);
+    CHECK(cosmos_secp256k1_ec_privkey_tweak_add(ctx, NULL, ctmp2) == 0);
     CHECK(ecount == 1);
-    CHECK(secp256k1_ec_privkey_tweak_add(ctx, ctmp, NULL) == 0);
+    CHECK(cosmos_secp256k1_ec_privkey_tweak_add(ctx, ctmp, NULL) == 0);
     CHECK(ecount == 2);
     ecount = 0;
     memset(ctmp2, 0, 32);
@@ -3361,7 +3361,7 @@ void test_ecdsa_sign_verify(void) {
     }
     CHECK(secp256k1_ecdsa_sig_verify(&ctx->ecmult_ctx, &sigr, &sigs, &pub, &msg));
     secp256k1_scalar_set_int(&one, 1);
-    secp256k1_scalar_add(&msg, &msg, &one);
+    cosmos_secp256k1_scalar_add(&msg, &msg, &one);
     CHECK(!secp256k1_ecdsa_sig_verify(&ctx->ecmult_ctx, &sigr, &sigs, &pub, &msg));
 }
 
@@ -3469,7 +3469,7 @@ void test_ecdsa_end_to_end(void) {
         unsigned char rnd[32];
         secp256k1_pubkey pubkey2;
         secp256k1_rand256_test(rnd);
-        ret1 = secp256k1_ec_privkey_tweak_add(ctx, privkey, rnd);
+        ret1 = cosmos_secp256k1_ec_privkey_tweak_add(ctx, privkey, rnd);
         ret2 = secp256k1_ec_pubkey_tweak_add(ctx, &pubkey, rnd);
         CHECK(ret1 == ret2);
         if (ret1 == 0) {

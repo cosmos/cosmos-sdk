@@ -360,9 +360,9 @@ static void secp256k1_scalar_split_lambda(cosmos_secp256k1_scalar *r1, cosmos_se
     secp256k1_scalar_mul_shift_var(&c2, a, &g2, 272);
     secp256k1_scalar_mul(&c1, &c1, &minus_b1);
     secp256k1_scalar_mul(&c2, &c2, &minus_b2);
-    secp256k1_scalar_add(r2, &c1, &c2);
+    cosmos_secp256k1_scalar_add(r2, &c1, &c2);
     secp256k1_scalar_mul(r1, r2, &minus_lambda);
-    secp256k1_scalar_add(r1, r1, a);
+    cosmos_secp256k1_scalar_add(r1, r1, a);
 }
 #endif
 #endif

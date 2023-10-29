@@ -116,7 +116,7 @@ static void secp256k1_ecmult_gen_context_clear(secp256k1_ecmult_gen_context *ctx
 #ifndef USE_ECMULT_STATIC_PRECOMPUTATION
     free(ctx->prec);
 #endif
-    secp256k1_scalar_clear(&ctx->blind);
+    cosmos_secp256k1_scalar_clear(&ctx->blind);
     secp256k1_gej_clear(&ctx->initial);
     ctx->prec = NULL;
 }
@@ -130,7 +130,7 @@ static void secp256k1_ecmult_gen(const secp256k1_ecmult_gen_context *ctx, cosmos
     memset(&adds, 0, sizeof(adds));
     *r = ctx->initial;
     /* Blind scalar/point multiplication by computing (n-b)G + bG instead of nG. */
-    secp256k1_scalar_add(&gnb, gn, &ctx->blind);
+    cosmos_secp256k1_scalar_add(&gnb, gn, &ctx->blind);
     add.infinity = 0;
     for (j = 0; j < 64; j++) {
         bits = secp256k1_scalar_get_bits(&gnb, j * 4, 4);
@@ -152,7 +152,7 @@ static void secp256k1_ecmult_gen(const secp256k1_ecmult_gen_context *ctx, cosmos
     }
     bits = 0;
     secp256k1_ge_clear(&add);
-    secp256k1_scalar_clear(&gnb);
+    cosmos_secp256k1_scalar_clear(&gnb);
 }
 
 /* Setup blinding values for secp256k1_ecmult_gen. */
@@ -195,7 +195,7 @@ static void secp256k1_ecmult_gen_blind(secp256k1_ecmult_gen_context *ctx, const 
         secp256k1_rfc6979_hmac_sha256_generate(&rng, nonce32, 32);
         cosmos_secp256k1_scalar_set_b32(&b, nonce32, &retry);
         /* A blinding value of 0 works, but would undermine the projection hardening. */
-        retry |= secp256k1_scalar_is_zero(&b);
+        retry |= cosmos_secp256k1_scalar_is_zero(&b);
     } while (retry); /* This branch true is cryptographically unreachable. Requires sha256_hmac output > order. */
     secp256k1_rfc6979_hmac_sha256_finalize(&rng);
     memset(nonce32, 0, 32);
@@ -203,7 +203,7 @@ static void secp256k1_ecmult_gen_blind(secp256k1_ecmult_gen_context *ctx, const 
     secp256k1_scalar_negate(&b, &b);
     ctx->blind = b;
     ctx->initial = gb;
-    secp256k1_scalar_clear(&b);
+    cosmos_secp256k1_scalar_clear(&b);
     secp256k1_gej_clear(&gb);
 }
 

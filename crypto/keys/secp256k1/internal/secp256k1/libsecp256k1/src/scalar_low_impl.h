@@ -15,7 +15,7 @@ SECP256K1_INLINE static int secp256k1_scalar_is_even(const cosmos_secp256k1_scal
     return !(*a & 1);
 }
 
-SECP256K1_INLINE static void secp256k1_scalar_clear(cosmos_secp256k1_scalar *r) { *r = 0; }
+SECP256K1_INLINE static void cosmos_secp256k1_scalar_clear(cosmos_secp256k1_scalar *r) { *r = 0; }
 SECP256K1_INLINE static void secp256k1_scalar_set_int(cosmos_secp256k1_scalar *r, unsigned int v) { *r = v; }
 
 SECP256K1_INLINE static unsigned int secp256k1_scalar_get_bits(const cosmos_secp256k1_scalar *a, unsigned int offset, unsigned int count) {
@@ -31,7 +31,7 @@ SECP256K1_INLINE static unsigned int secp256k1_scalar_get_bits_var(const cosmos_
 
 SECP256K1_INLINE static int secp256k1_scalar_check_overflow(const cosmos_secp256k1_scalar *a) { return *a >= EXHAUSTIVE_TEST_ORDER; }
 
-static int secp256k1_scalar_add(cosmos_secp256k1_scalar *r, const cosmos_secp256k1_scalar *a, const cosmos_secp256k1_scalar *b) {
+static int cosmos_secp256k1_scalar_add(cosmos_secp256k1_scalar *r, const cosmos_secp256k1_scalar *a, const cosmos_secp256k1_scalar *b) {
     *r = (*a + *b) % EXHAUSTIVE_TEST_ORDER;
     return *r < *b;
 }
@@ -60,7 +60,7 @@ static void cosmos_secp256k1_scalar_get_b32(unsigned char *bin, const cosmos_sec
     bin[28] = *a >> 24; bin[29] = *a >> 16; bin[30] = *a >> 8; bin[31] = *a;
 }
 
-SECP256K1_INLINE static int secp256k1_scalar_is_zero(const cosmos_secp256k1_scalar *a) {
+SECP256K1_INLINE static int cosmos_secp256k1_scalar_is_zero(const cosmos_secp256k1_scalar *a) {
     return *a == 0;
 }
 

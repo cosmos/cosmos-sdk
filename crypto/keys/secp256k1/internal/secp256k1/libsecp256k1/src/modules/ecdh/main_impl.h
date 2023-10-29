@@ -23,7 +23,7 @@ int secp256k1_ecdh(const secp256k1_context* ctx, unsigned char *result, const se
 
     secp256k1_pubkey_load(ctx, &pt, point);
     cosmos_secp256k1_scalar_set_b32(&s, scalar, &overflow);
-    if (overflow || secp256k1_scalar_is_zero(&s)) {
+    if (overflow || cosmos_secp256k1_scalar_is_zero(&s)) {
         ret = 0;
     } else {
         unsigned char x[32];
@@ -47,7 +47,7 @@ int secp256k1_ecdh(const secp256k1_context* ctx, unsigned char *result, const se
         ret = 1;
     }
 
-    secp256k1_scalar_clear(&s);
+    cosmos_secp256k1_scalar_clear(&s);
     return ret;
 }
 

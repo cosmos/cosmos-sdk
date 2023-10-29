@@ -222,7 +222,7 @@ void test_exhaustive_verify(const secp256k1_context *ctx, const cosmos_secp256k1
                             secp256k1_scalar_set_int(&s_times_k_s, k);
                             secp256k1_scalar_mul(&s_times_k_s, &s_times_k_s, &s_s);
                             secp256k1_scalar_mul(&msg_plus_r_times_sk_s, &r_s, &sk_s);
-                            secp256k1_scalar_add(&msg_plus_r_times_sk_s, &msg_plus_r_times_sk_s, &msg_s);
+                            cosmos_secp256k1_scalar_add(&msg_plus_r_times_sk_s, &msg_plus_r_times_sk_s, &msg_s);
                             should_verify |= secp256k1_scalar_eq(&s_times_k_s, &msg_plus_r_times_sk_s);
                         }
                     }

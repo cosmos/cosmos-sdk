@@ -209,7 +209,7 @@ static int secp256k1_ecdsa_sig_verify(const secp256k1_ecmult_context *ctx, const
     cosmos_secp256k1_gej pubkeyj;
     cosmos_secp256k1_gej pr;
 
-    if (secp256k1_scalar_is_zero(sigr) || secp256k1_scalar_is_zero(sigs)) {
+    if (cosmos_secp256k1_scalar_is_zero(sigr) || cosmos_secp256k1_scalar_is_zero(sigs)) {
         return 0;
     }
 
@@ -284,7 +284,7 @@ static int secp256k1_ecdsa_sig_sign(const secp256k1_ecmult_gen_context *ctx, cos
     secp256k1_fe_get_b32(b, &r.x);
     cosmos_secp256k1_scalar_set_b32(sigr, b, &overflow);
     /* These two conditions should be checked before calling */
-    VERIFY_CHECK(!secp256k1_scalar_is_zero(sigr));
+    VERIFY_CHECK(!cosmos_secp256k1_scalar_is_zero(sigr));
     VERIFY_CHECK(overflow == 0);
 
     if (recid) {
@@ -294,13 +294,13 @@ static int secp256k1_ecdsa_sig_sign(const secp256k1_ecmult_gen_context *ctx, cos
         *recid = (overflow ? 2 : 0) | (secp256k1_fe_is_odd(&r.y) ? 1 : 0);
     }
     secp256k1_scalar_mul(&n, sigr, seckey);
-    secp256k1_scalar_add(&n, &n, message);
+    cosmos_secp256k1_scalar_add(&n, &n, message);
     secp256k1_scalar_inverse(sigs, nonce);
     secp256k1_scalar_mul(sigs, sigs, &n);
-    secp256k1_scalar_clear(&n);
+    cosmos_secp256k1_scalar_clear(&n);
     secp256k1_gej_clear(&rp);
     secp256k1_ge_clear(&r);
-    if (secp256k1_scalar_is_zero(sigs)) {
+    if (cosmos_secp256k1_scalar_is_zero(sigs)) {
         return 0;
     }
     if (secp256k1_scalar_is_high(sigs)) {

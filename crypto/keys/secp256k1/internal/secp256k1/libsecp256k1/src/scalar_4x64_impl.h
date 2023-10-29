@@ -24,7 +24,7 @@
 #define SECP256K1_N_H_2 ((uint64_t)0xFFFFFFFFFFFFFFFFULL)
 #define SECP256K1_N_H_3 ((uint64_t)0x7FFFFFFFFFFFFFFFULL)
 
-SECP256K1_INLINE static void secp256k1_scalar_clear(cosmos_secp256k1_scalar *r) {
+SECP256K1_INLINE static void cosmos_secp256k1_scalar_clear(cosmos_secp256k1_scalar *r) {
     r->d[0] = 0;
     r->d[1] = 0;
     r->d[2] = 0;
@@ -80,7 +80,7 @@ SECP256K1_INLINE static int secp256k1_scalar_reduce(cosmos_secp256k1_scalar *r, 
     return overflow;
 }
 
-static int secp256k1_scalar_add(cosmos_secp256k1_scalar *r, const cosmos_secp256k1_scalar *a, const cosmos_secp256k1_scalar *b) {
+static int cosmos_secp256k1_scalar_add(cosmos_secp256k1_scalar *r, const cosmos_secp256k1_scalar *a, const cosmos_secp256k1_scalar *b) {
     int overflow;
     uint128_t t = (uint128_t)a->d[0] + b->d[0];
     r->d[0] = t & 0xFFFFFFFFFFFFFFFFULL; t >>= 64;
@@ -133,12 +133,12 @@ static void cosmos_secp256k1_scalar_get_b32(unsigned char *bin, const cosmos_sec
     bin[24] = a->d[0] >> 56; bin[25] = a->d[0] >> 48; bin[26] = a->d[0] >> 40; bin[27] = a->d[0] >> 32; bin[28] = a->d[0] >> 24; bin[29] = a->d[0] >> 16; bin[30] = a->d[0] >> 8; bin[31] = a->d[0];
 }
 
-SECP256K1_INLINE static int secp256k1_scalar_is_zero(const cosmos_secp256k1_scalar *a) {
+SECP256K1_INLINE static int cosmos_secp256k1_scalar_is_zero(const cosmos_secp256k1_scalar *a) {
     return (a->d[0] | a->d[1] | a->d[2] | a->d[3]) == 0;
 }
 
 static void secp256k1_scalar_negate(cosmos_secp256k1_scalar *r, const cosmos_secp256k1_scalar *a) {
-    uint64_t nonzero = 0xFFFFFFFFFFFFFFFFULL * (secp256k1_scalar_is_zero(a) == 0);
+    uint64_t nonzero = 0xFFFFFFFFFFFFFFFFULL * (cosmos_secp256k1_scalar_is_zero(a) == 0);
     uint128_t t = (uint128_t)(~a->d[0]) + SECP256K1_N_0 + 1;
     r->d[0] = t & nonzero; t >>= 64;
     t += (uint128_t)(~a->d[1]) + SECP256K1_N_1;
@@ -169,7 +169,7 @@ static int secp256k1_scalar_cond_negate(cosmos_secp256k1_scalar *r, int flag) {
     /* If we are flag = 0, mask = 00...00 and this is a no-op;
      * if we are flag = 1, mask = 11...11 and this is identical to secp256k1_scalar_negate */
     uint64_t mask = !flag - 1;
-    uint64_t nonzero = (secp256k1_scalar_is_zero(r) != 0) - 1;
+    uint64_t nonzero = (cosmos_secp256k1_scalar_is_zero(r) != 0) - 1;
     uint128_t t = (uint128_t)(r->d[0] ^ mask) + ((SECP256K1_N_0 + 1) & mask);
     r->d[0] = t & nonzero; t >>= 64;
     t += (uint128_t)(r->d[1] ^ mask) + (SECP256K1_N_1 & mask);

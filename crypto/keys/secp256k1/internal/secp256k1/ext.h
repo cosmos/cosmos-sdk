@@ -113,7 +113,7 @@ int cosmos_secp256k1_ext_scalar_mul(const cosmos_secp256k1_context* ctx, unsigne
 	secp256k1_fe_set_b32(&feY, point+32);
 	secp256k1_ge_set_xy(&ge, &feX, &feY);
 	cosmos_secp256k1_scalar_set_b32(&s, scalar, &overflow);
-	if (overflow || secp256k1_scalar_is_zero(&s)) {
+	if (overflow || cosmos_secp256k1_scalar_is_zero(&s)) {
 		ret = 0;
 	} else {
 		secp256k1_ecmult_const(&res, &ge, &s);
@@ -125,6 +125,6 @@ int cosmos_secp256k1_ext_scalar_mul(const cosmos_secp256k1_context* ctx, unsigne
 		secp256k1_fe_get_b32(point+32, &ge.y);
 		ret = 1;
 	}
-	secp256k1_scalar_clear(&s);
+	cosmos_secp256k1_scalar_clear(&s);
 	return ret;
 }

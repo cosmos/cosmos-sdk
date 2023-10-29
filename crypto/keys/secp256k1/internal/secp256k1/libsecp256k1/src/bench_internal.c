@@ -61,7 +61,7 @@ void bench_scalar_add(void* arg) {
     bench_inv_t *data = (bench_inv_t*)arg;
 
     for (i = 0; i < 2000000; i++) {
-        secp256k1_scalar_add(&data->scalar_x, &data->scalar_x, &data->scalar_y);
+        cosmos_secp256k1_scalar_add(&data->scalar_x, &data->scalar_x, &data->scalar_y);
     }
 }
 
@@ -111,7 +111,7 @@ void bench_scalar_inverse(void* arg) {
 
     for (i = 0; i < 2000; i++) {
         secp256k1_scalar_inverse(&data->scalar_x, &data->scalar_x);
-        secp256k1_scalar_add(&data->scalar_x, &data->scalar_x, &data->scalar_y);
+        cosmos_secp256k1_scalar_add(&data->scalar_x, &data->scalar_x, &data->scalar_y);
     }
 }
 
@@ -121,7 +121,7 @@ void bench_scalar_inverse_var(void* arg) {
 
     for (i = 0; i < 2000; i++) {
         secp256k1_scalar_inverse_var(&data->scalar_x, &data->scalar_x);
-        secp256k1_scalar_add(&data->scalar_x, &data->scalar_x, &data->scalar_y);
+        cosmos_secp256k1_scalar_add(&data->scalar_x, &data->scalar_x, &data->scalar_y);
     }
 }
 
@@ -242,7 +242,7 @@ void bench_ecmult_wnaf(void* arg) {
 
     for (i = 0; i < 20000; i++) {
         secp256k1_ecmult_wnaf(data->wnaf, 256, &data->scalar_x, WINDOW_A);
-        secp256k1_scalar_add(&data->scalar_x, &data->scalar_x, &data->scalar_y);
+        cosmos_secp256k1_scalar_add(&data->scalar_x, &data->scalar_x, &data->scalar_y);
     }
 }
 
@@ -252,7 +252,7 @@ void bench_wnaf_const(void* arg) {
 
     for (i = 0; i < 20000; i++) {
         secp256k1_wnaf_const(data->wnaf, data->scalar_x, WINDOW_A);
-        secp256k1_scalar_add(&data->scalar_x, &data->scalar_x, &data->scalar_y);
+        cosmos_secp256k1_scalar_add(&data->scalar_x, &data->scalar_x, &data->scalar_y);
     }
 }
 

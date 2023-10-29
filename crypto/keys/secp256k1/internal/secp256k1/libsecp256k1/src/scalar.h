@@ -24,7 +24,7 @@
 #endif
 
 /** Clear a scalar to prevent the leak of sensitive data. */
-static void secp256k1_scalar_clear(cosmos_secp256k1_scalar *r);
+static void cosmos_secp256k1_scalar_clear(cosmos_secp256k1_scalar *r);
 
 /** Access bits from a scalar. All requested bits must belong to the same 32-bit limb. */
 static unsigned int secp256k1_scalar_get_bits(const cosmos_secp256k1_scalar *a, unsigned int offset, unsigned int count);
@@ -42,7 +42,7 @@ static void secp256k1_scalar_set_int(cosmos_secp256k1_scalar *r, unsigned int v)
 static void cosmos_secp256k1_scalar_get_b32(unsigned char *bin, const cosmos_secp256k1_scalar* a);
 
 /** Add two scalars together (modulo the group order). Returns whether it overflowed. */
-static int secp256k1_scalar_add(cosmos_secp256k1_scalar *r, const cosmos_secp256k1_scalar *a, const cosmos_secp256k1_scalar *b);
+static int cosmos_secp256k1_scalar_add(cosmos_secp256k1_scalar *r, const cosmos_secp256k1_scalar *a, const cosmos_secp256k1_scalar *b);
 
 /** Conditionally add a power of two to a scalar. The result is not allowed to overflow. */
 static void secp256k1_scalar_cadd_bit(cosmos_secp256k1_scalar *r, unsigned int bit, int flag);
@@ -67,7 +67,7 @@ static void secp256k1_scalar_inverse_var(cosmos_secp256k1_scalar *r, const cosmo
 static void secp256k1_scalar_negate(cosmos_secp256k1_scalar *r, const cosmos_secp256k1_scalar *a);
 
 /** Check whether a scalar equals zero. */
-static int secp256k1_scalar_is_zero(const cosmos_secp256k1_scalar *a);
+static int cosmos_secp256k1_scalar_is_zero(const cosmos_secp256k1_scalar *a);
 
 /** Check whether a scalar equals one. */
 static int secp256k1_scalar_is_one(const cosmos_secp256k1_scalar *a);

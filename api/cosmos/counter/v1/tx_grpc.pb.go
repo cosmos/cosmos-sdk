@@ -26,11 +26,8 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type MsgClient interface {
-	// UpdateParams defines a governance operation for updating the x/counter module parameters.
-	// The authority is defined in the keeper.
-	//
-	// Since: cosmos-sdk 0.47
-	IncreaseCount(ctx context.Context, in *MsgCounter, opts ...grpc.CallOption) (*MsgCountResponse, error)
+	// IncreaseCount increments the counter by the specified amount.
+	IncreaseCount(ctx context.Context, in *MsgIncreaseCounter, opts ...grpc.CallOption) (*MsgIncreaseCountResponse, error)
 }
 
 type msgClient struct {
@@ -41,8 +38,8 @@ func NewMsgClient(cc grpc.ClientConnInterface) MsgClient {
 	return &msgClient{cc}
 }
 
-func (c *msgClient) IncreaseCount(ctx context.Context, in *MsgCounter, opts ...grpc.CallOption) (*MsgCountResponse, error) {
-	out := new(MsgCountResponse)
+func (c *msgClient) IncreaseCount(ctx context.Context, in *MsgIncreaseCounter, opts ...grpc.CallOption) (*MsgIncreaseCountResponse, error) {
+	out := new(MsgIncreaseCountResponse)
 	err := c.cc.Invoke(ctx, Msg_IncreaseCount_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -54,11 +51,8 @@ func (c *msgClient) IncreaseCount(ctx context.Context, in *MsgCounter, opts ...g
 // All implementations must embed UnimplementedMsgServer
 // for forward compatibility
 type MsgServer interface {
-	// UpdateParams defines a governance operation for updating the x/counter module parameters.
-	// The authority is defined in the keeper.
-	//
-	// Since: cosmos-sdk 0.47
-	IncreaseCount(context.Context, *MsgCounter) (*MsgCountResponse, error)
+	// IncreaseCount increments the counter by the specified amount.
+	IncreaseCount(context.Context, *MsgIncreaseCounter) (*MsgIncreaseCountResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
 
@@ -66,7 +60,7 @@ type MsgServer interface {
 type UnimplementedMsgServer struct {
 }
 
-func (UnimplementedMsgServer) IncreaseCount(context.Context, *MsgCounter) (*MsgCountResponse, error) {
+func (UnimplementedMsgServer) IncreaseCount(context.Context, *MsgIncreaseCounter) (*MsgIncreaseCountResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method IncreaseCount not implemented")
 }
 func (UnimplementedMsgServer) mustEmbedUnimplementedMsgServer() {}
@@ -83,7 +77,7 @@ func RegisterMsgServer(s grpc.ServiceRegistrar, srv MsgServer) {
 }
 
 func _Msg_IncreaseCount_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgCounter)
+	in := new(MsgIncreaseCounter)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -95,7 +89,7 @@ func _Msg_IncreaseCount_Handler(srv interface{}, ctx context.Context, dec func(i
 		FullMethod: Msg_IncreaseCount_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).IncreaseCount(ctx, req.(*MsgCounter))
+		return srv.(MsgServer).IncreaseCount(ctx, req.(*MsgIncreaseCounter))
 	}
 	return interceptor(ctx, in, info, handler)
 }

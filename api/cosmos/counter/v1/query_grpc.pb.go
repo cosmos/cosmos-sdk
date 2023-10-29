@@ -27,7 +27,7 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type QueryClient interface {
 	// Params queries the parameters of x/Mock module.
-	GetCount(ctx context.Context, in *QueryCountRequest, opts ...grpc.CallOption) (*QueryCountResponse, error)
+	GetCount(ctx context.Context, in *QueryGetCountRequest, opts ...grpc.CallOption) (*QueryGetCountResponse, error)
 }
 
 type queryClient struct {
@@ -38,8 +38,8 @@ func NewQueryClient(cc grpc.ClientConnInterface) QueryClient {
 	return &queryClient{cc}
 }
 
-func (c *queryClient) GetCount(ctx context.Context, in *QueryCountRequest, opts ...grpc.CallOption) (*QueryCountResponse, error) {
-	out := new(QueryCountResponse)
+func (c *queryClient) GetCount(ctx context.Context, in *QueryGetCountRequest, opts ...grpc.CallOption) (*QueryGetCountResponse, error) {
+	out := new(QueryGetCountResponse)
 	err := c.cc.Invoke(ctx, Query_GetCount_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -52,7 +52,7 @@ func (c *queryClient) GetCount(ctx context.Context, in *QueryCountRequest, opts 
 // for forward compatibility
 type QueryServer interface {
 	// Params queries the parameters of x/Mock module.
-	GetCount(context.Context, *QueryCountRequest) (*QueryCountResponse, error)
+	GetCount(context.Context, *QueryGetCountRequest) (*QueryGetCountResponse, error)
 	mustEmbedUnimplementedQueryServer()
 }
 
@@ -60,7 +60,7 @@ type QueryServer interface {
 type UnimplementedQueryServer struct {
 }
 
-func (UnimplementedQueryServer) GetCount(context.Context, *QueryCountRequest) (*QueryCountResponse, error) {
+func (UnimplementedQueryServer) GetCount(context.Context, *QueryGetCountRequest) (*QueryGetCountResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetCount not implemented")
 }
 func (UnimplementedQueryServer) mustEmbedUnimplementedQueryServer() {}
@@ -77,7 +77,7 @@ func RegisterQueryServer(s grpc.ServiceRegistrar, srv QueryServer) {
 }
 
 func _Query_GetCount_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryCountRequest)
+	in := new(QueryGetCountRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -89,7 +89,7 @@ func _Query_GetCount_Handler(srv interface{}, ctx context.Context, dec func(inte
 		FullMethod: Query_GetCount_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).GetCount(ctx, req.(*QueryCountRequest))
+		return srv.(QueryServer).GetCount(ctx, req.(*QueryGetCountRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }

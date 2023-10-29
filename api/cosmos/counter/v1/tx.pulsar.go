@@ -15,27 +15,27 @@ import (
 )
 
 var (
-	md_MsgCounter        protoreflect.MessageDescriptor
-	fd_MsgCounter_signer protoreflect.FieldDescriptor
-	fd_MsgCounter_count  protoreflect.FieldDescriptor
+	md_MsgIncreaseCounter        protoreflect.MessageDescriptor
+	fd_MsgIncreaseCounter_signer protoreflect.FieldDescriptor
+	fd_MsgIncreaseCounter_count  protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_cosmos_counter_v1_tx_proto_init()
-	md_MsgCounter = File_cosmos_counter_v1_tx_proto.Messages().ByName("MsgCounter")
-	fd_MsgCounter_signer = md_MsgCounter.Fields().ByName("signer")
-	fd_MsgCounter_count = md_MsgCounter.Fields().ByName("count")
+	md_MsgIncreaseCounter = File_cosmos_counter_v1_tx_proto.Messages().ByName("MsgIncreaseCounter")
+	fd_MsgIncreaseCounter_signer = md_MsgIncreaseCounter.Fields().ByName("signer")
+	fd_MsgIncreaseCounter_count = md_MsgIncreaseCounter.Fields().ByName("count")
 }
 
-var _ protoreflect.Message = (*fastReflection_MsgCounter)(nil)
+var _ protoreflect.Message = (*fastReflection_MsgIncreaseCounter)(nil)
 
-type fastReflection_MsgCounter MsgCounter
+type fastReflection_MsgIncreaseCounter MsgIncreaseCounter
 
-func (x *MsgCounter) ProtoReflect() protoreflect.Message {
-	return (*fastReflection_MsgCounter)(x)
+func (x *MsgIncreaseCounter) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_MsgIncreaseCounter)(x)
 }
 
-func (x *MsgCounter) slowProtoReflect() protoreflect.Message {
+func (x *MsgIncreaseCounter) slowProtoReflect() protoreflect.Message {
 	mi := &file_cosmos_counter_v1_tx_proto_msgTypes[0]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -47,43 +47,43 @@ func (x *MsgCounter) slowProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-var _fastReflection_MsgCounter_messageType fastReflection_MsgCounter_messageType
-var _ protoreflect.MessageType = fastReflection_MsgCounter_messageType{}
+var _fastReflection_MsgIncreaseCounter_messageType fastReflection_MsgIncreaseCounter_messageType
+var _ protoreflect.MessageType = fastReflection_MsgIncreaseCounter_messageType{}
 
-type fastReflection_MsgCounter_messageType struct{}
+type fastReflection_MsgIncreaseCounter_messageType struct{}
 
-func (x fastReflection_MsgCounter_messageType) Zero() protoreflect.Message {
-	return (*fastReflection_MsgCounter)(nil)
+func (x fastReflection_MsgIncreaseCounter_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_MsgIncreaseCounter)(nil)
 }
-func (x fastReflection_MsgCounter_messageType) New() protoreflect.Message {
-	return new(fastReflection_MsgCounter)
+func (x fastReflection_MsgIncreaseCounter_messageType) New() protoreflect.Message {
+	return new(fastReflection_MsgIncreaseCounter)
 }
-func (x fastReflection_MsgCounter_messageType) Descriptor() protoreflect.MessageDescriptor {
-	return md_MsgCounter
+func (x fastReflection_MsgIncreaseCounter_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgIncreaseCounter
 }
 
 // Descriptor returns message descriptor, which contains only the protobuf
 // type information for the message.
-func (x *fastReflection_MsgCounter) Descriptor() protoreflect.MessageDescriptor {
-	return md_MsgCounter
+func (x *fastReflection_MsgIncreaseCounter) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgIncreaseCounter
 }
 
 // Type returns the message type, which encapsulates both Go and protobuf
 // type information. If the Go type information is not needed,
 // it is recommended that the message descriptor be used instead.
-func (x *fastReflection_MsgCounter) Type() protoreflect.MessageType {
-	return _fastReflection_MsgCounter_messageType
+func (x *fastReflection_MsgIncreaseCounter) Type() protoreflect.MessageType {
+	return _fastReflection_MsgIncreaseCounter_messageType
 }
 
 // New returns a newly allocated and mutable empty message.
-func (x *fastReflection_MsgCounter) New() protoreflect.Message {
-	return new(fastReflection_MsgCounter)
+func (x *fastReflection_MsgIncreaseCounter) New() protoreflect.Message {
+	return new(fastReflection_MsgIncreaseCounter)
 }
 
 // Interface unwraps the message reflection interface and
 // returns the underlying ProtoMessage interface.
-func (x *fastReflection_MsgCounter) Interface() protoreflect.ProtoMessage {
-	return (*MsgCounter)(x)
+func (x *fastReflection_MsgIncreaseCounter) Interface() protoreflect.ProtoMessage {
+	return (*MsgIncreaseCounter)(x)
 }
 
 // Range iterates over every populated field in an undefined order,
@@ -91,16 +91,16 @@ func (x *fastReflection_MsgCounter) Interface() protoreflect.ProtoMessage {
 // Range returns immediately if f returns false.
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
-func (x *fastReflection_MsgCounter) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+func (x *fastReflection_MsgIncreaseCounter) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
 	if x.Signer != "" {
 		value := protoreflect.ValueOfString(x.Signer)
-		if !f(fd_MsgCounter_signer, value) {
+		if !f(fd_MsgIncreaseCounter_signer, value) {
 			return
 		}
 	}
 	if x.Count != int64(0) {
 		value := protoreflect.ValueOfInt64(x.Count)
-		if !f(fd_MsgCounter_count, value) {
+		if !f(fd_MsgIncreaseCounter_count, value) {
 			return
 		}
 	}
@@ -117,17 +117,17 @@ func (x *fastReflection_MsgCounter) Range(f func(protoreflect.FieldDescriptor, p
 // In other cases (aside from the nullable cases above),
 // a proto3 scalar field is populated if it contains a non-zero value, and
 // a repeated field is populated if it is non-empty.
-func (x *fastReflection_MsgCounter) Has(fd protoreflect.FieldDescriptor) bool {
+func (x *fastReflection_MsgIncreaseCounter) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "cosmos.counter.v1.MsgCounter.signer":
+	case "cosmos.counter.v1.MsgIncreaseCounter.signer":
 		return x.Signer != ""
-	case "cosmos.counter.v1.MsgCounter.count":
+	case "cosmos.counter.v1.MsgIncreaseCounter.count":
 		return x.Count != int64(0)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.counter.v1.MsgCounter"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.counter.v1.MsgIncreaseCounter"))
 		}
-		panic(fmt.Errorf("message cosmos.counter.v1.MsgCounter does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.counter.v1.MsgIncreaseCounter does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -137,17 +137,17 @@ func (x *fastReflection_MsgCounter) Has(fd protoreflect.FieldDescriptor) bool {
 // associated with the given field number.
 //
 // Clear is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgCounter) Clear(fd protoreflect.FieldDescriptor) {
+func (x *fastReflection_MsgIncreaseCounter) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "cosmos.counter.v1.MsgCounter.signer":
+	case "cosmos.counter.v1.MsgIncreaseCounter.signer":
 		x.Signer = ""
-	case "cosmos.counter.v1.MsgCounter.count":
+	case "cosmos.counter.v1.MsgIncreaseCounter.count":
 		x.Count = int64(0)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.counter.v1.MsgCounter"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.counter.v1.MsgIncreaseCounter"))
 		}
-		panic(fmt.Errorf("message cosmos.counter.v1.MsgCounter does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.counter.v1.MsgIncreaseCounter does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -157,19 +157,19 @@ func (x *fastReflection_MsgCounter) Clear(fd protoreflect.FieldDescriptor) {
 // the default value of a bytes scalar is guaranteed to be a copy.
 // For unpopulated composite types, it returns an empty, read-only view
 // of the value; to obtain a mutable reference, use Mutable.
-func (x *fastReflection_MsgCounter) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_MsgIncreaseCounter) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "cosmos.counter.v1.MsgCounter.signer":
+	case "cosmos.counter.v1.MsgIncreaseCounter.signer":
 		value := x.Signer
 		return protoreflect.ValueOfString(value)
-	case "cosmos.counter.v1.MsgCounter.count":
+	case "cosmos.counter.v1.MsgIncreaseCounter.count":
 		value := x.Count
 		return protoreflect.ValueOfInt64(value)
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.counter.v1.MsgCounter"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.counter.v1.MsgIncreaseCounter"))
 		}
-		panic(fmt.Errorf("message cosmos.counter.v1.MsgCounter does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message cosmos.counter.v1.MsgIncreaseCounter does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -183,17 +183,17 @@ func (x *fastReflection_MsgCounter) Get(descriptor protoreflect.FieldDescriptor)
 // empty, read-only value, then it panics.
 //
 // Set is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgCounter) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+func (x *fastReflection_MsgIncreaseCounter) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "cosmos.counter.v1.MsgCounter.signer":
+	case "cosmos.counter.v1.MsgIncreaseCounter.signer":
 		x.Signer = value.Interface().(string)
-	case "cosmos.counter.v1.MsgCounter.count":
+	case "cosmos.counter.v1.MsgIncreaseCounter.count":
 		x.Count = value.Int()
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.counter.v1.MsgCounter"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.counter.v1.MsgIncreaseCounter"))
 		}
-		panic(fmt.Errorf("message cosmos.counter.v1.MsgCounter does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.counter.v1.MsgIncreaseCounter does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -207,44 +207,44 @@ func (x *fastReflection_MsgCounter) Set(fd protoreflect.FieldDescriptor, value p
 // It panics if the field does not contain a composite type.
 //
 // Mutable is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgCounter) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_MsgIncreaseCounter) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.counter.v1.MsgCounter.signer":
-		panic(fmt.Errorf("field signer of message cosmos.counter.v1.MsgCounter is not mutable"))
-	case "cosmos.counter.v1.MsgCounter.count":
-		panic(fmt.Errorf("field count of message cosmos.counter.v1.MsgCounter is not mutable"))
+	case "cosmos.counter.v1.MsgIncreaseCounter.signer":
+		panic(fmt.Errorf("field signer of message cosmos.counter.v1.MsgIncreaseCounter is not mutable"))
+	case "cosmos.counter.v1.MsgIncreaseCounter.count":
+		panic(fmt.Errorf("field count of message cosmos.counter.v1.MsgIncreaseCounter is not mutable"))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.counter.v1.MsgCounter"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.counter.v1.MsgIncreaseCounter"))
 		}
-		panic(fmt.Errorf("message cosmos.counter.v1.MsgCounter does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.counter.v1.MsgIncreaseCounter does not contain field %s", fd.FullName()))
 	}
 }
 
 // NewField returns a new value that is assignable to the field
 // for the given descriptor. For scalars, this returns the default value.
 // For lists, maps, and messages, this returns a new, empty, mutable value.
-func (x *fastReflection_MsgCounter) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_MsgIncreaseCounter) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.counter.v1.MsgCounter.signer":
+	case "cosmos.counter.v1.MsgIncreaseCounter.signer":
 		return protoreflect.ValueOfString("")
-	case "cosmos.counter.v1.MsgCounter.count":
+	case "cosmos.counter.v1.MsgIncreaseCounter.count":
 		return protoreflect.ValueOfInt64(int64(0))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.counter.v1.MsgCounter"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.counter.v1.MsgIncreaseCounter"))
 		}
-		panic(fmt.Errorf("message cosmos.counter.v1.MsgCounter does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.counter.v1.MsgIncreaseCounter does not contain field %s", fd.FullName()))
 	}
 }
 
 // WhichOneof reports which field within the oneof is populated,
 // returning nil if none are populated.
 // It panics if the oneof descriptor does not belong to this message.
-func (x *fastReflection_MsgCounter) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+func (x *fastReflection_MsgIncreaseCounter) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in cosmos.counter.v1.MsgCounter", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.counter.v1.MsgIncreaseCounter", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -252,7 +252,7 @@ func (x *fastReflection_MsgCounter) WhichOneof(d protoreflect.OneofDescriptor) p
 // GetUnknown retrieves the entire list of unknown fields.
 // The caller may only mutate the contents of the RawFields
 // if the mutated bytes are stored back into the message with SetUnknown.
-func (x *fastReflection_MsgCounter) GetUnknown() protoreflect.RawFields {
+func (x *fastReflection_MsgIncreaseCounter) GetUnknown() protoreflect.RawFields {
 	return x.unknownFields
 }
 
@@ -263,7 +263,7 @@ func (x *fastReflection_MsgCounter) GetUnknown() protoreflect.RawFields {
 // An empty RawFields may be passed to clear the fields.
 //
 // SetUnknown is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgCounter) SetUnknown(fields protoreflect.RawFields) {
+func (x *fastReflection_MsgIncreaseCounter) SetUnknown(fields protoreflect.RawFields) {
 	x.unknownFields = fields
 }
 
@@ -275,7 +275,7 @@ func (x *fastReflection_MsgCounter) SetUnknown(fields protoreflect.RawFields) {
 // message type, but the details are implementation dependent.
 // Validity is not part of the protobuf data model, and may not
 // be preserved in marshaling or other operations.
-func (x *fastReflection_MsgCounter) IsValid() bool {
+func (x *fastReflection_MsgIncreaseCounter) IsValid() bool {
 	return x != nil
 }
 
@@ -285,9 +285,9 @@ func (x *fastReflection_MsgCounter) IsValid() bool {
 // The returned methods type is identical to
 // "google.golang.org/protobuf/runtime/protoiface".Methods.
 // Consult the protoiface package documentation for details.
-func (x *fastReflection_MsgCounter) ProtoMethods() *protoiface.Methods {
+func (x *fastReflection_MsgIncreaseCounter) ProtoMethods() *protoiface.Methods {
 	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
-		x := input.Message.Interface().(*MsgCounter)
+		x := input.Message.Interface().(*MsgIncreaseCounter)
 		if x == nil {
 			return protoiface.SizeOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -316,7 +316,7 @@ func (x *fastReflection_MsgCounter) ProtoMethods() *protoiface.Methods {
 	}
 
 	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
-		x := input.Message.Interface().(*MsgCounter)
+		x := input.Message.Interface().(*MsgIncreaseCounter)
 		if x == nil {
 			return protoiface.MarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -358,7 +358,7 @@ func (x *fastReflection_MsgCounter) ProtoMethods() *protoiface.Methods {
 		}, nil
 	}
 	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
-		x := input.Message.Interface().(*MsgCounter)
+		x := input.Message.Interface().(*MsgIncreaseCounter)
 		if x == nil {
 			return protoiface.UnmarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -390,10 +390,10 @@ func (x *fastReflection_MsgCounter) ProtoMethods() *protoiface.Methods {
 			fieldNum := int32(wire >> 3)
 			wireType := int(wire & 0x7)
 			if wireType == 4 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgCounter: wiretype end group for non-group")
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgIncreaseCounter: wiretype end group for non-group")
 			}
 			if fieldNum <= 0 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgCounter: illegal tag %d (wire type %d)", fieldNum, wire)
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgIncreaseCounter: illegal tag %d (wire type %d)", fieldNum, wire)
 			}
 			switch fieldNum {
 			case 1:
@@ -483,25 +483,25 @@ func (x *fastReflection_MsgCounter) ProtoMethods() *protoiface.Methods {
 }
 
 var (
-	md_MsgCountResponse           protoreflect.MessageDescriptor
-	fd_MsgCountResponse_new_count protoreflect.FieldDescriptor
+	md_MsgIncreaseCountResponse           protoreflect.MessageDescriptor
+	fd_MsgIncreaseCountResponse_new_count protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_cosmos_counter_v1_tx_proto_init()
-	md_MsgCountResponse = File_cosmos_counter_v1_tx_proto.Messages().ByName("MsgCountResponse")
-	fd_MsgCountResponse_new_count = md_MsgCountResponse.Fields().ByName("new_count")
+	md_MsgIncreaseCountResponse = File_cosmos_counter_v1_tx_proto.Messages().ByName("MsgIncreaseCountResponse")
+	fd_MsgIncreaseCountResponse_new_count = md_MsgIncreaseCountResponse.Fields().ByName("new_count")
 }
 
-var _ protoreflect.Message = (*fastReflection_MsgCountResponse)(nil)
+var _ protoreflect.Message = (*fastReflection_MsgIncreaseCountResponse)(nil)
 
-type fastReflection_MsgCountResponse MsgCountResponse
+type fastReflection_MsgIncreaseCountResponse MsgIncreaseCountResponse
 
-func (x *MsgCountResponse) ProtoReflect() protoreflect.Message {
-	return (*fastReflection_MsgCountResponse)(x)
+func (x *MsgIncreaseCountResponse) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_MsgIncreaseCountResponse)(x)
 }
 
-func (x *MsgCountResponse) slowProtoReflect() protoreflect.Message {
+func (x *MsgIncreaseCountResponse) slowProtoReflect() protoreflect.Message {
 	mi := &file_cosmos_counter_v1_tx_proto_msgTypes[1]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -513,43 +513,43 @@ func (x *MsgCountResponse) slowProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-var _fastReflection_MsgCountResponse_messageType fastReflection_MsgCountResponse_messageType
-var _ protoreflect.MessageType = fastReflection_MsgCountResponse_messageType{}
+var _fastReflection_MsgIncreaseCountResponse_messageType fastReflection_MsgIncreaseCountResponse_messageType
+var _ protoreflect.MessageType = fastReflection_MsgIncreaseCountResponse_messageType{}
 
-type fastReflection_MsgCountResponse_messageType struct{}
+type fastReflection_MsgIncreaseCountResponse_messageType struct{}
 
-func (x fastReflection_MsgCountResponse_messageType) Zero() protoreflect.Message {
-	return (*fastReflection_MsgCountResponse)(nil)
+func (x fastReflection_MsgIncreaseCountResponse_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_MsgIncreaseCountResponse)(nil)
 }
-func (x fastReflection_MsgCountResponse_messageType) New() protoreflect.Message {
-	return new(fastReflection_MsgCountResponse)
+func (x fastReflection_MsgIncreaseCountResponse_messageType) New() protoreflect.Message {
+	return new(fastReflection_MsgIncreaseCountResponse)
 }
-func (x fastReflection_MsgCountResponse_messageType) Descriptor() protoreflect.MessageDescriptor {
-	return md_MsgCountResponse
+func (x fastReflection_MsgIncreaseCountResponse_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgIncreaseCountResponse
 }
 
 // Descriptor returns message descriptor, which contains only the protobuf
 // type information for the message.
-func (x *fastReflection_MsgCountResponse) Descriptor() protoreflect.MessageDescriptor {
-	return md_MsgCountResponse
+func (x *fastReflection_MsgIncreaseCountResponse) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgIncreaseCountResponse
 }
 
 // Type returns the message type, which encapsulates both Go and protobuf
 // type information. If the Go type information is not needed,
 // it is recommended that the message descriptor be used instead.
-func (x *fastReflection_MsgCountResponse) Type() protoreflect.MessageType {
-	return _fastReflection_MsgCountResponse_messageType
+func (x *fastReflection_MsgIncreaseCountResponse) Type() protoreflect.MessageType {
+	return _fastReflection_MsgIncreaseCountResponse_messageType
 }
 
 // New returns a newly allocated and mutable empty message.
-func (x *fastReflection_MsgCountResponse) New() protoreflect.Message {
-	return new(fastReflection_MsgCountResponse)
+func (x *fastReflection_MsgIncreaseCountResponse) New() protoreflect.Message {
+	return new(fastReflection_MsgIncreaseCountResponse)
 }
 
 // Interface unwraps the message reflection interface and
 // returns the underlying ProtoMessage interface.
-func (x *fastReflection_MsgCountResponse) Interface() protoreflect.ProtoMessage {
-	return (*MsgCountResponse)(x)
+func (x *fastReflection_MsgIncreaseCountResponse) Interface() protoreflect.ProtoMessage {
+	return (*MsgIncreaseCountResponse)(x)
 }
 
 // Range iterates over every populated field in an undefined order,
@@ -557,10 +557,10 @@ func (x *fastReflection_MsgCountResponse) Interface() protoreflect.ProtoMessage 
 // Range returns immediately if f returns false.
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
-func (x *fastReflection_MsgCountResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+func (x *fastReflection_MsgIncreaseCountResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
 	if x.NewCount != int64(0) {
 		value := protoreflect.ValueOfInt64(x.NewCount)
-		if !f(fd_MsgCountResponse_new_count, value) {
+		if !f(fd_MsgIncreaseCountResponse_new_count, value) {
 			return
 		}
 	}
@@ -577,15 +577,15 @@ func (x *fastReflection_MsgCountResponse) Range(f func(protoreflect.FieldDescrip
 // In other cases (aside from the nullable cases above),
 // a proto3 scalar field is populated if it contains a non-zero value, and
 // a repeated field is populated if it is non-empty.
-func (x *fastReflection_MsgCountResponse) Has(fd protoreflect.FieldDescriptor) bool {
+func (x *fastReflection_MsgIncreaseCountResponse) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "cosmos.counter.v1.MsgCountResponse.new_count":
+	case "cosmos.counter.v1.MsgIncreaseCountResponse.new_count":
 		return x.NewCount != int64(0)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.counter.v1.MsgCountResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.counter.v1.MsgIncreaseCountResponse"))
 		}
-		panic(fmt.Errorf("message cosmos.counter.v1.MsgCountResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.counter.v1.MsgIncreaseCountResponse does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -595,15 +595,15 @@ func (x *fastReflection_MsgCountResponse) Has(fd protoreflect.FieldDescriptor) b
 // associated with the given field number.
 //
 // Clear is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgCountResponse) Clear(fd protoreflect.FieldDescriptor) {
+func (x *fastReflection_MsgIncreaseCountResponse) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "cosmos.counter.v1.MsgCountResponse.new_count":
+	case "cosmos.counter.v1.MsgIncreaseCountResponse.new_count":
 		x.NewCount = int64(0)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.counter.v1.MsgCountResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.counter.v1.MsgIncreaseCountResponse"))
 		}
-		panic(fmt.Errorf("message cosmos.counter.v1.MsgCountResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.counter.v1.MsgIncreaseCountResponse does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -613,16 +613,16 @@ func (x *fastReflection_MsgCountResponse) Clear(fd protoreflect.FieldDescriptor)
 // the default value of a bytes scalar is guaranteed to be a copy.
 // For unpopulated composite types, it returns an empty, read-only view
 // of the value; to obtain a mutable reference, use Mutable.
-func (x *fastReflection_MsgCountResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_MsgIncreaseCountResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "cosmos.counter.v1.MsgCountResponse.new_count":
+	case "cosmos.counter.v1.MsgIncreaseCountResponse.new_count":
 		value := x.NewCount
 		return protoreflect.ValueOfInt64(value)
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.counter.v1.MsgCountResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.counter.v1.MsgIncreaseCountResponse"))
 		}
-		panic(fmt.Errorf("message cosmos.counter.v1.MsgCountResponse does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message cosmos.counter.v1.MsgIncreaseCountResponse does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -636,15 +636,15 @@ func (x *fastReflection_MsgCountResponse) Get(descriptor protoreflect.FieldDescr
 // empty, read-only value, then it panics.
 //
 // Set is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgCountResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+func (x *fastReflection_MsgIncreaseCountResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "cosmos.counter.v1.MsgCountResponse.new_count":
+	case "cosmos.counter.v1.MsgIncreaseCountResponse.new_count":
 		x.NewCount = value.Int()
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.counter.v1.MsgCountResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.counter.v1.MsgIncreaseCountResponse"))
 		}
-		panic(fmt.Errorf("message cosmos.counter.v1.MsgCountResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.counter.v1.MsgIncreaseCountResponse does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -658,40 +658,40 @@ func (x *fastReflection_MsgCountResponse) Set(fd protoreflect.FieldDescriptor, v
 // It panics if the field does not contain a composite type.
 //
 // Mutable is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgCountResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_MsgIncreaseCountResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.counter.v1.MsgCountResponse.new_count":
-		panic(fmt.Errorf("field new_count of message cosmos.counter.v1.MsgCountResponse is not mutable"))
+	case "cosmos.counter.v1.MsgIncreaseCountResponse.new_count":
+		panic(fmt.Errorf("field new_count of message cosmos.counter.v1.MsgIncreaseCountResponse is not mutable"))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.counter.v1.MsgCountResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.counter.v1.MsgIncreaseCountResponse"))
 		}
-		panic(fmt.Errorf("message cosmos.counter.v1.MsgCountResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.counter.v1.MsgIncreaseCountResponse does not contain field %s", fd.FullName()))
 	}
 }
 
 // NewField returns a new value that is assignable to the field
 // for the given descriptor. For scalars, this returns the default value.
 // For lists, maps, and messages, this returns a new, empty, mutable value.
-func (x *fastReflection_MsgCountResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_MsgIncreaseCountResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.counter.v1.MsgCountResponse.new_count":
+	case "cosmos.counter.v1.MsgIncreaseCountResponse.new_count":
 		return protoreflect.ValueOfInt64(int64(0))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.counter.v1.MsgCountResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.counter.v1.MsgIncreaseCountResponse"))
 		}
-		panic(fmt.Errorf("message cosmos.counter.v1.MsgCountResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.counter.v1.MsgIncreaseCountResponse does not contain field %s", fd.FullName()))
 	}
 }
 
 // WhichOneof reports which field within the oneof is populated,
 // returning nil if none are populated.
 // It panics if the oneof descriptor does not belong to this message.
-func (x *fastReflection_MsgCountResponse) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+func (x *fastReflection_MsgIncreaseCountResponse) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in cosmos.counter.v1.MsgCountResponse", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.counter.v1.MsgIncreaseCountResponse", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -699,7 +699,7 @@ func (x *fastReflection_MsgCountResponse) WhichOneof(d protoreflect.OneofDescrip
 // GetUnknown retrieves the entire list of unknown fields.
 // The caller may only mutate the contents of the RawFields
 // if the mutated bytes are stored back into the message with SetUnknown.
-func (x *fastReflection_MsgCountResponse) GetUnknown() protoreflect.RawFields {
+func (x *fastReflection_MsgIncreaseCountResponse) GetUnknown() protoreflect.RawFields {
 	return x.unknownFields
 }
 
@@ -710,7 +710,7 @@ func (x *fastReflection_MsgCountResponse) GetUnknown() protoreflect.RawFields {
 // An empty RawFields may be passed to clear the fields.
 //
 // SetUnknown is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgCountResponse) SetUnknown(fields protoreflect.RawFields) {
+func (x *fastReflection_MsgIncreaseCountResponse) SetUnknown(fields protoreflect.RawFields) {
 	x.unknownFields = fields
 }
 
@@ -722,7 +722,7 @@ func (x *fastReflection_MsgCountResponse) SetUnknown(fields protoreflect.RawFiel
 // message type, but the details are implementation dependent.
 // Validity is not part of the protobuf data model, and may not
 // be preserved in marshaling or other operations.
-func (x *fastReflection_MsgCountResponse) IsValid() bool {
+func (x *fastReflection_MsgIncreaseCountResponse) IsValid() bool {
 	return x != nil
 }
 
@@ -732,9 +732,9 @@ func (x *fastReflection_MsgCountResponse) IsValid() bool {
 // The returned methods type is identical to
 // "google.golang.org/protobuf/runtime/protoiface".Methods.
 // Consult the protoiface package documentation for details.
-func (x *fastReflection_MsgCountResponse) ProtoMethods() *protoiface.Methods {
+func (x *fastReflection_MsgIncreaseCountResponse) ProtoMethods() *protoiface.Methods {
 	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
-		x := input.Message.Interface().(*MsgCountResponse)
+		x := input.Message.Interface().(*MsgIncreaseCountResponse)
 		if x == nil {
 			return protoiface.SizeOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -759,7 +759,7 @@ func (x *fastReflection_MsgCountResponse) ProtoMethods() *protoiface.Methods {
 	}
 
 	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
-		x := input.Message.Interface().(*MsgCountResponse)
+		x := input.Message.Interface().(*MsgIncreaseCountResponse)
 		if x == nil {
 			return protoiface.MarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -794,7 +794,7 @@ func (x *fastReflection_MsgCountResponse) ProtoMethods() *protoiface.Methods {
 		}, nil
 	}
 	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
-		x := input.Message.Interface().(*MsgCountResponse)
+		x := input.Message.Interface().(*MsgIncreaseCountResponse)
 		if x == nil {
 			return protoiface.UnmarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -826,10 +826,10 @@ func (x *fastReflection_MsgCountResponse) ProtoMethods() *protoiface.Methods {
 			fieldNum := int32(wire >> 3)
 			wireType := int(wire & 0x7)
 			if wireType == 4 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgCountResponse: wiretype end group for non-group")
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgIncreaseCountResponse: wiretype end group for non-group")
 			}
 			if fieldNum <= 0 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgCountResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgIncreaseCountResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 			}
 			switch fieldNum {
 			case 1:
@@ -899,8 +899,8 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// MsgCounter defines a count Msg service counter.
-type MsgCounter struct {
+// MsgIncreaseCounter defines a count Msg service counter.
+type MsgIncreaseCounter struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -911,8 +911,8 @@ type MsgCounter struct {
 	Count int64 `protobuf:"varint,2,opt,name=count,proto3" json:"count,omitempty"`
 }
 
-func (x *MsgCounter) Reset() {
-	*x = MsgCounter{}
+func (x *MsgIncreaseCounter) Reset() {
+	*x = MsgIncreaseCounter{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_cosmos_counter_v1_tx_proto_msgTypes[0]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -920,33 +920,33 @@ func (x *MsgCounter) Reset() {
 	}
 }
 
-func (x *MsgCounter) String() string {
+func (x *MsgIncreaseCounter) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*MsgCounter) ProtoMessage() {}
+func (*MsgIncreaseCounter) ProtoMessage() {}
 
-// Deprecated: Use MsgCounter.ProtoReflect.Descriptor instead.
-func (*MsgCounter) Descriptor() ([]byte, []int) {
+// Deprecated: Use MsgIncreaseCounter.ProtoReflect.Descriptor instead.
+func (*MsgIncreaseCounter) Descriptor() ([]byte, []int) {
 	return file_cosmos_counter_v1_tx_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *MsgCounter) GetSigner() string {
+func (x *MsgIncreaseCounter) GetSigner() string {
 	if x != nil {
 		return x.Signer
 	}
 	return ""
 }
 
-func (x *MsgCounter) GetCount() int64 {
+func (x *MsgIncreaseCounter) GetCount() int64 {
 	if x != nil {
 		return x.Count
 	}
 	return 0
 }
 
-// MsgCounterResponse is the Msg/Counter response type.
-type MsgCountResponse struct {
+// MsgIncreaseCountResponse is the Msg/Counter response type.
+type MsgIncreaseCountResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -955,8 +955,8 @@ type MsgCountResponse struct {
 	NewCount int64 `protobuf:"varint,1,opt,name=new_count,json=newCount,proto3" json:"new_count,omitempty"`
 }
 
-func (x *MsgCountResponse) Reset() {
-	*x = MsgCountResponse{}
+func (x *MsgIncreaseCountResponse) Reset() {
+	*x = MsgIncreaseCountResponse{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_cosmos_counter_v1_tx_proto_msgTypes[1]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -964,18 +964,18 @@ func (x *MsgCountResponse) Reset() {
 	}
 }
 
-func (x *MsgCountResponse) String() string {
+func (x *MsgIncreaseCountResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*MsgCountResponse) ProtoMessage() {}
+func (*MsgIncreaseCountResponse) ProtoMessage() {}
 
-// Deprecated: Use MsgCountResponse.ProtoReflect.Descriptor instead.
-func (*MsgCountResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use MsgIncreaseCountResponse.ProtoReflect.Descriptor instead.
+func (*MsgIncreaseCountResponse) Descriptor() ([]byte, []int) {
 	return file_cosmos_counter_v1_tx_proto_rawDescGZIP(), []int{1}
 }
 
-func (x *MsgCountResponse) GetNewCount() int64 {
+func (x *MsgIncreaseCountResponse) GetNewCount() int64 {
 	if x != nil {
 		return x.NewCount
 	}
@@ -991,21 +991,23 @@ var file_cosmos_counter_v1_tx_proto_rawDesc = []byte{
 	0x19, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2f, 0x63, 0x6f,
 	0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x17, 0x63, 0x6f, 0x73, 0x6d,
 	0x6f, 0x73, 0x2f, 0x6d, 0x73, 0x67, 0x2f, 0x76, 0x31, 0x2f, 0x6d, 0x73, 0x67, 0x2e, 0x70, 0x72,
-	0x6f, 0x74, 0x6f, 0x22, 0x61, 0x0a, 0x0a, 0x4d, 0x73, 0x67, 0x43, 0x6f, 0x75, 0x6e, 0x74, 0x65,
-	0x72, 0x12, 0x30, 0x0a, 0x06, 0x73, 0x69, 0x67, 0x6e, 0x65, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28,
-	0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64,
-	0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x06, 0x73, 0x69, 0x67,
-	0x6e, 0x65, 0x72, 0x12, 0x14, 0x0a, 0x05, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x02, 0x20, 0x01,
-	0x28, 0x03, 0x52, 0x05, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x3a, 0x0b, 0x82, 0xe7, 0xb0, 0x2a, 0x06,
-	0x73, 0x69, 0x67, 0x6e, 0x65, 0x72, 0x22, 0x2f, 0x0a, 0x10, 0x4d, 0x73, 0x67, 0x43, 0x6f, 0x75,
+	0x6f, 0x74, 0x6f, 0x22, 0x69, 0x0a, 0x12, 0x4d, 0x73, 0x67, 0x49, 0x6e, 0x63, 0x72, 0x65, 0x61,
+	0x73, 0x65, 0x43, 0x6f, 0x75, 0x6e, 0x74, 0x65, 0x72, 0x12, 0x30, 0x0a, 0x06, 0x73, 0x69, 0x67,
+	0x6e, 0x65, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63,
+	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72,
+	0x69, 0x6e, 0x67, 0x52, 0x06, 0x73, 0x69, 0x67, 0x6e, 0x65, 0x72, 0x12, 0x14, 0x0a, 0x05, 0x63,
+	0x6f, 0x75, 0x6e, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x03, 0x52, 0x05, 0x63, 0x6f, 0x75, 0x6e,
+	0x74, 0x3a, 0x0b, 0x82, 0xe7, 0xb0, 0x2a, 0x06, 0x73, 0x69, 0x67, 0x6e, 0x65, 0x72, 0x22, 0x37,
+	0x0a, 0x18, 0x4d, 0x73, 0x67, 0x49, 0x6e, 0x63, 0x72, 0x65, 0x61, 0x73, 0x65, 0x43, 0x6f, 0x75,
 	0x6e, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x1b, 0x0a, 0x09, 0x6e, 0x65,
 	0x77, 0x5f, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x03, 0x52, 0x08, 0x6e,
-	0x65, 0x77, 0x43, 0x6f, 0x75, 0x6e, 0x74, 0x32, 0x61, 0x0a, 0x03, 0x4d, 0x73, 0x67, 0x12, 0x53,
+	0x65, 0x77, 0x43, 0x6f, 0x75, 0x6e, 0x74, 0x32, 0x71, 0x0a, 0x03, 0x4d, 0x73, 0x67, 0x12, 0x63,
 	0x0a, 0x0d, 0x49, 0x6e, 0x63, 0x72, 0x65, 0x61, 0x73, 0x65, 0x43, 0x6f, 0x75, 0x6e, 0x74, 0x12,
-	0x1d, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x65, 0x72,
-	0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x43, 0x6f, 0x75, 0x6e, 0x74, 0x65, 0x72, 0x1a, 0x23,
-	0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x65, 0x72, 0x2e,
-	0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x43, 0x6f, 0x75, 0x6e, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f,
+	0x25, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x65, 0x72,
+	0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x49, 0x6e, 0x63, 0x72, 0x65, 0x61, 0x73, 0x65, 0x43,
+	0x6f, 0x75, 0x6e, 0x74, 0x65, 0x72, 0x1a, 0x2b, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e,
+	0x63, 0x6f, 0x75, 0x6e, 0x74, 0x65, 0x72, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x49, 0x6e,
+	0x63, 0x72, 0x65, 0x61, 0x73, 0x65, 0x43, 0x6f, 0x75, 0x6e, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f,
 	0x6e, 0x73, 0x65, 0x1a, 0x05, 0x80, 0xe7, 0xb0, 0x2a, 0x01, 0x42, 0xb4, 0x01, 0x0a, 0x15, 0x63,
 	0x6f, 0x6d, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x65,
 	0x72, 0x2e, 0x76, 0x31, 0x42, 0x07, 0x54, 0x78, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a,
@@ -1035,12 +1037,12 @@ func file_cosmos_counter_v1_tx_proto_rawDescGZIP() []byte {
 
 var file_cosmos_counter_v1_tx_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
 var file_cosmos_counter_v1_tx_proto_goTypes = []interface{}{
-	(*MsgCounter)(nil),       // 0: cosmos.counter.v1.MsgCounter
-	(*MsgCountResponse)(nil), // 1: cosmos.counter.v1.MsgCountResponse
+	(*MsgIncreaseCounter)(nil),       // 0: cosmos.counter.v1.MsgIncreaseCounter
+	(*MsgIncreaseCountResponse)(nil), // 1: cosmos.counter.v1.MsgIncreaseCountResponse
 }
 var file_cosmos_counter_v1_tx_proto_depIdxs = []int32{
-	0, // 0: cosmos.counter.v1.Msg.IncreaseCount:input_type -> cosmos.counter.v1.MsgCounter
-	1, // 1: cosmos.counter.v1.Msg.IncreaseCount:output_type -> cosmos.counter.v1.MsgCountResponse
+	0, // 0: cosmos.counter.v1.Msg.IncreaseCount:input_type -> cosmos.counter.v1.MsgIncreaseCounter
+	1, // 1: cosmos.counter.v1.Msg.IncreaseCount:output_type -> cosmos.counter.v1.MsgIncreaseCountResponse
 	1, // [1:2] is the sub-list for method output_type
 	0, // [0:1] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name
@@ -1055,7 +1057,7 @@ func file_cosmos_counter_v1_tx_proto_init() {
 	}
 	if !protoimpl.UnsafeEnabled {
 		file_cosmos_counter_v1_tx_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgCounter); i {
+			switch v := v.(*MsgIncreaseCounter); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1067,7 +1069,7 @@ func file_cosmos_counter_v1_tx_proto_init() {
 			}
 		}
 		file_cosmos_counter_v1_tx_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgCountResponse); i {
+			switch v := v.(*MsgIncreaseCountResponse); i {
 			case 0:
 				return &v.state
 			case 1:

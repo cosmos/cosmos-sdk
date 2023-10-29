@@ -11,15 +11,12 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/counter/types";
 service Msg {
   option (cosmos.msg.v1.service) = true;
 
-  // UpdateParams defines a governance operation for updating the x/counter module parameters.
-  // The authority is defined in the keeper.
-  //
-  // Since: cosmos-sdk 0.47
-  rpc IncreaseCount(MsgCounter) returns (MsgCountResponse);
+  // IncreaseCount increments the counter by the specified amount.
+  rpc IncreaseCount(MsgIncreaseCounter) returns (MsgIncreaseCountResponse);
 }
 
-// MsgCounter defines a count Msg service counter.
-message MsgCounter {
+// MsgIncreaseCounter defines a count Msg service counter.
+message MsgIncreaseCounter {
   option (cosmos.msg.v1.signer) = "signer";
 
   // authority is the address that controls the module (defaults to x/gov unless overwritten).
@@ -29,8 +26,8 @@ message MsgCounter {
   int64 count = 2;
 }
 
-// MsgCounterResponse is the Msg/Counter response type.
-message MsgCountResponse {
+// MsgIncreaseCountResponse is the Msg/Counter response type.
+message MsgIncreaseCountResponse {
   // count is the number of times the counter was incremented.
   int64 new_count = 1;
 }

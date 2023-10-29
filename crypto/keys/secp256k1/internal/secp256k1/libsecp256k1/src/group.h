@@ -34,14 +34,14 @@ typedef struct {
 typedef struct {
     secp256k1_fe_storage x;
     secp256k1_fe_storage y;
-} secp256k1_ge_storage;
+} cosmos_secp256k1_ge_storage;
 
 #define SECP256K1_GE_STORAGE_CONST(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p) {SECP256K1_FE_STORAGE_CONST((a),(b),(c),(d),(e),(f),(g),(h)), SECP256K1_FE_STORAGE_CONST((i),(j),(k),(l),(m),(n),(o),(p))}
 
 #define SECP256K1_GE_STORAGE_CONST_GET(t) SECP256K1_FE_STORAGE_CONST_GET(t.x), SECP256K1_FE_STORAGE_CONST_GET(t.y)
 
 /** Set a group element equal to the point with given X and Y coordinates */
-static void secp256k1_ge_set_xy(cosmos_secp256k1_ge *r, const cosmos_secp256k1_fe *x, const cosmos_secp256k1_fe *y);
+static void cosmos_secp256k1_ge_set_xy(cosmos_secp256k1_ge *r, const cosmos_secp256k1_fe *x, const cosmos_secp256k1_fe *y);
 
 /** Set a group element (affine) equal to the point with the given X coordinate
  *  and a Y coordinate that is a quadratic residue modulo p. The return value
@@ -130,13 +130,13 @@ static void secp256k1_gej_clear(cosmos_secp256k1_gej *r);
 static void secp256k1_ge_clear(cosmos_secp256k1_ge *r);
 
 /** Convert a group element to the storage type. */
-static void secp256k1_ge_to_storage(secp256k1_ge_storage *r, const cosmos_secp256k1_ge *a);
+static void secp256k1_ge_to_storage(cosmos_secp256k1_ge_storage *r, const cosmos_secp256k1_ge *a);
 
 /** Convert a group element back from the storage type. */
-static void secp256k1_ge_from_storage(cosmos_secp256k1_ge *r, const secp256k1_ge_storage *a);
+static void secp256k1_ge_from_storage(cosmos_secp256k1_ge *r, const cosmos_secp256k1_ge_storage *a);
 
 /** If flag is true, set *r equal to *a; otherwise leave it. Constant-time. */
-static void secp256k1_ge_storage_cmov(secp256k1_ge_storage *r, const secp256k1_ge_storage *a, int flag);
+static void secp256k1_ge_storage_cmov(cosmos_secp256k1_ge_storage *r, const cosmos_secp256k1_ge_storage *a, int flag);
 
 /** Rescale a jacobian point by b which must be non-zero. Constant-time. */
 static void secp256k1_gej_rescale(cosmos_secp256k1_gej *r, const cosmos_secp256k1_fe *b);

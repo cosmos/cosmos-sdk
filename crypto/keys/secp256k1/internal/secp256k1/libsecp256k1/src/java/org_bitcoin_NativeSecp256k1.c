@@ -253,7 +253,7 @@ SECP256K1_API jobjectArray JNICALL Java_org_bitcoin_NativeSecp256k1_secp256k1_1p
   int ret = cosmos_secp256k1_ec_pubkey_parse(ctx, &pubkey, pkey, publen);
 
   if( ret ) {
-    ret = secp256k1_ec_pubkey_tweak_add(ctx, &pubkey, tweak);
+    ret = cosmos_secp256k1_ec_pubkey_tweak_add(ctx, &pubkey, tweak);
   }
 
   if( ret ) {

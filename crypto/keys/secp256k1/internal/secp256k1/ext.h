@@ -109,9 +109,9 @@ int cosmos_secp256k1_ext_scalar_mul(const cosmos_secp256k1_context* ctx, unsigne
 	COSMOS_ARG_CHECK(scalar != NULL);
 	(void)ctx;
 
-	secp256k1_fe_set_b32(&feX, point);
-	secp256k1_fe_set_b32(&feY, point+32);
-	secp256k1_ge_set_xy(&ge, &feX, &feY);
+	cosmos_secp256k1_fe_set_b32(&feX, point);
+	cosmos_secp256k1_fe_set_b32(&feY, point+32);
+	cosmos_secp256k1_ge_set_xy(&ge, &feX, &feY);
 	cosmos_secp256k1_scalar_set_b32(&s, scalar, &overflow);
 	if (overflow || cosmos_secp256k1_scalar_is_zero(&s)) {
 		ret = 0;

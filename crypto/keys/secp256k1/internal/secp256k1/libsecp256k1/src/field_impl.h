@@ -248,7 +248,7 @@ static void secp256k1_fe_inv_var(cosmos_secp256k1_fe *r, const cosmos_secp256k1_
     secp256k1_num_set_bin(&m, prime, 32);
     secp256k1_num_mod_inverse(&n, &n, &m);
     secp256k1_num_get_bin(b, 32, &n);
-    res = secp256k1_fe_set_b32(r, b);
+    res = cosmos_secp256k1_fe_set_b32(r, b);
     (void)res;
     VERIFY_CHECK(res);
     /* Verify the result is the (unique) valid inverse using non-GMP code. */

@@ -109,7 +109,7 @@ static void secp256k1_ecmult_odd_multiples_table_globalz_windowa(cosmos_secp256k
     secp256k1_ge_globalz_set_table_gej(ECMULT_TABLE_SIZE(WINDOW_A), pre, globalz, prej, zr);
 }
 
-static void secp256k1_ecmult_odd_multiples_table_storage_var(int n, secp256k1_ge_storage *pre, const cosmos_secp256k1_gej *a, const secp256k1_callback *cb) {
+static void secp256k1_ecmult_odd_multiples_table_storage_var(int n, cosmos_secp256k1_ge_storage *pre, const cosmos_secp256k1_gej *a, const secp256k1_callback *cb) {
     cosmos_secp256k1_gej *prej = (cosmos_secp256k1_gej*)checked_malloc(cb, sizeof(cosmos_secp256k1_gej) * n);
     cosmos_secp256k1_ge *prea = (cosmos_secp256k1_ge*)checked_malloc(cb, sizeof(cosmos_secp256k1_ge) * n);
     cosmos_secp256k1_fe *zr = (cosmos_secp256k1_fe*)checked_malloc(cb, sizeof(cosmos_secp256k1_fe) * n);
@@ -171,7 +171,7 @@ static void secp256k1_ecmult_context_build(secp256k1_ecmult_context *ctx, const 
     /* get the generator */
     secp256k1_gej_set_ge(&gj, &secp256k1_ge_const_g);
 
-    ctx->pre_g = (secp256k1_ge_storage (*)[])checked_malloc(cb, sizeof((*ctx->pre_g)[0]) * ECMULT_TABLE_SIZE(WINDOW_G));
+    ctx->pre_g = (cosmos_secp256k1_ge_storage (*)[])checked_malloc(cb, sizeof((*ctx->pre_g)[0]) * ECMULT_TABLE_SIZE(WINDOW_G));
 
     /* precompute the tables with odd multiples */
     secp256k1_ecmult_odd_multiples_table_storage_var(ECMULT_TABLE_SIZE(WINDOW_G), *ctx->pre_g, &gj, cb);
@@ -181,7 +181,7 @@ static void secp256k1_ecmult_context_build(secp256k1_ecmult_context *ctx, const 
         cosmos_secp256k1_gej g_128j;
         int i;
 
-        ctx->pre_g_128 = (secp256k1_ge_storage (*)[])checked_malloc(cb, sizeof((*ctx->pre_g_128)[0]) * ECMULT_TABLE_SIZE(WINDOW_G));
+        ctx->pre_g_128 = (cosmos_secp256k1_ge_storage (*)[])checked_malloc(cb, sizeof((*ctx->pre_g_128)[0]) * ECMULT_TABLE_SIZE(WINDOW_G));
 
         /* calculate 2^128*generator */
         g_128j = gj;
@@ -199,7 +199,7 @@ static void secp256k1_ecmult_context_clone(secp256k1_ecmult_context *dst,
         dst->pre_g = NULL;
     } else {
         size_t size = sizeof((*dst->pre_g)[0]) * ECMULT_TABLE_SIZE(WINDOW_G);
-        dst->pre_g = (secp256k1_ge_storage (*)[])checked_malloc(cb, size);
+        dst->pre_g = (cosmos_secp256k1_ge_storage (*)[])checked_malloc(cb, size);
         memcpy(dst->pre_g, src->pre_g, size);
     }
 #ifdef USE_ENDOMORPHISM
@@ -207,7 +207,7 @@ static void secp256k1_ecmult_context_clone(secp256k1_ecmult_context *dst,
         dst->pre_g_128 = NULL;
     } else {
         size_t size = sizeof((*dst->pre_g_128)[0]) * ECMULT_TABLE_SIZE(WINDOW_G);
-        dst->pre_g_128 = (secp256k1_ge_storage (*)[])checked_malloc(cb, size);
+        dst->pre_g_128 = (cosmos_secp256k1_ge_storage (*)[])checked_malloc(cb, size);
         memcpy(dst->pre_g_128, src->pre_g_128, size);
     }
 #endif

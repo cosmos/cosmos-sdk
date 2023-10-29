@@ -201,11 +201,11 @@ static void secp256k1_ecmult_const(cosmos_secp256k1_gej *r, const cosmos_secp256
     {
         /* Correct for wNAF skew */
         cosmos_secp256k1_ge correction = *a;
-        secp256k1_ge_storage correction_1_stor;
+        cosmos_secp256k1_ge_storage correction_1_stor;
 #ifdef USE_ENDOMORPHISM
-        secp256k1_ge_storage correction_lam_stor;
+        cosmos_secp256k1_ge_storage correction_lam_stor;
 #endif
-        secp256k1_ge_storage a2_stor;
+        cosmos_secp256k1_ge_storage a2_stor;
         cosmos_secp256k1_gej tmpj;
         secp256k1_gej_set_ge(&tmpj, &correction);
         secp256k1_gej_double_var(&tmpj, &tmpj, NULL);

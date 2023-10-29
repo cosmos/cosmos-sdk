@@ -113,27 +113,27 @@ void cosmos_secp256k1_context_set_error_callback(cosmos_secp256k1_context* ctx, 
 }
 
 static int secp256k1_pubkey_load(const cosmos_secp256k1_context* ctx, cosmos_secp256k1_ge* ge, const cosmos_secp256k1_pubkey* pubkey) {
-    if (sizeof(secp256k1_ge_storage) == 64) {
-        /* When the secp256k1_ge_storage type is exactly 64 byte, use its
+    if (sizeof(cosmos_secp256k1_ge_storage) == 64) {
+        /* When the cosmos_secp256k1_ge_storage type is exactly 64 byte, use its
          * representation inside cosmos_secp256k1_pubkey, as conversion is very fast.
          * Note that cosmos_secp256k1_pubkey_save must use the same representation. */
-        secp256k1_ge_storage s;
+        cosmos_secp256k1_ge_storage s;
         memcpy(&s, &pubkey->data[0], 64);
         secp256k1_ge_from_storage(ge, &s);
     } else {
         /* Otherwise, fall back to 32-byte big endian for X and Y. */
         cosmos_secp256k1_fe x, y;
-        secp256k1_fe_set_b32(&x, pubkey->data);
-        secp256k1_fe_set_b32(&y, pubkey->data + 32);
-        secp256k1_ge_set_xy(ge, &x, &y);
+        cosmos_secp256k1_fe_set_b32(&x, pubkey->data);
+        cosmos_secp256k1_fe_set_b32(&y, pubkey->data + 32);
+        cosmos_secp256k1_ge_set_xy(ge, &x, &y);
     }
     COSMOS_ARG_CHECK(!secp256k1_fe_is_zero(&ge->x));
     return 1;
 }
 
 static void cosmos_secp256k1_pubkey_save(cosmos_secp256k1_pubkey* pubkey, cosmos_secp256k1_ge* ge) {
-    if (sizeof(secp256k1_ge_storage) == 64) {
-        secp256k1_ge_storage s;
+    if (sizeof(cosmos_secp256k1_ge_storage) == 64) {
+        cosmos_secp256k1_ge_storage s;
         secp256k1_ge_to_storage(&s, ge);
         memcpy(&pubkey->data[0], &s, 64);
     } else {
@@ -445,7 +445,7 @@ int cosmos_secp256k1_ec_privkey_tweak_add(const cosmos_secp256k1_context* ctx, u
     return ret;
 }
 
-int secp256k1_ec_pubkey_tweak_add(const cosmos_secp256k1_context* ctx, cosmos_secp256k1_pubkey *pubkey, const unsigned char *tweak) {
+int cosmos_secp256k1_ec_pubkey_tweak_add(const cosmos_secp256k1_context* ctx, cosmos_secp256k1_pubkey *pubkey, const unsigned char *tweak) {
     cosmos_secp256k1_ge p;
     cosmos_secp256k1_scalar term;
     int ret = 0;

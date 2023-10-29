@@ -81,7 +81,7 @@ static void secp256k1_ge_set_gej_zinv(cosmos_secp256k1_ge *r, const cosmos_secp2
     r->infinity = a->infinity;
 }
 
-static void secp256k1_ge_set_xy(cosmos_secp256k1_ge *r, const cosmos_secp256k1_fe *x, const cosmos_secp256k1_fe *y) {
+static void cosmos_secp256k1_ge_set_xy(cosmos_secp256k1_ge *r, const cosmos_secp256k1_fe *x, const cosmos_secp256k1_fe *y) {
     r->infinity = 0;
     r->x = *x;
     r->y = *y;
@@ -650,7 +650,7 @@ static void secp256k1_gej_rescale(cosmos_secp256k1_gej *r, const cosmos_secp256k
     secp256k1_fe_mul(&r->z, &r->z, s);                  /* r->z *= s   */
 }
 
-static void secp256k1_ge_to_storage(secp256k1_ge_storage *r, const cosmos_secp256k1_ge *a) {
+static void secp256k1_ge_to_storage(cosmos_secp256k1_ge_storage *r, const cosmos_secp256k1_ge *a) {
     cosmos_secp256k1_fe x, y;
     VERIFY_CHECK(!a->infinity);
     x = a->x;
@@ -661,13 +661,13 @@ static void secp256k1_ge_to_storage(secp256k1_ge_storage *r, const cosmos_secp25
     secp256k1_fe_to_storage(&r->y, &y);
 }
 
-static void secp256k1_ge_from_storage(cosmos_secp256k1_ge *r, const secp256k1_ge_storage *a) {
+static void secp256k1_ge_from_storage(cosmos_secp256k1_ge *r, const cosmos_secp256k1_ge_storage *a) {
     secp256k1_fe_from_storage(&r->x, &a->x);
     secp256k1_fe_from_storage(&r->y, &a->y);
     r->infinity = 0;
 }
 
-static SECP256K1_INLINE void secp256k1_ge_storage_cmov(secp256k1_ge_storage *r, const secp256k1_ge_storage *a, int flag) {
+static SECP256K1_INLINE void secp256k1_ge_storage_cmov(cosmos_secp256k1_ge_storage *r, const cosmos_secp256k1_ge_storage *a, int flag) {
     secp256k1_fe_storage_cmov(&r->x, &a->x, flag);
     secp256k1_fe_storage_cmov(&r->y, &a->y, flag);
 }

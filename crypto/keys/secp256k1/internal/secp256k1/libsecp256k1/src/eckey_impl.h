@@ -17,13 +17,13 @@
 static int secp256k1_eckey_pubkey_parse(cosmos_secp256k1_ge *elem, const unsigned char *pub, size_t size) {
     if (size == 33 && (pub[0] == 0x02 || pub[0] == 0x03)) {
         cosmos_secp256k1_fe x;
-        return secp256k1_fe_set_b32(&x, pub+1) && secp256k1_ge_set_xo_var(elem, &x, pub[0] == 0x03);
+        return cosmos_secp256k1_fe_set_b32(&x, pub + 1) && secp256k1_ge_set_xo_var(elem, &x, pub[0] == 0x03);
     } else if (size == 65 && (pub[0] == 0x04 || pub[0] == 0x06 || pub[0] == 0x07)) {
         cosmos_secp256k1_fe x, y;
-        if (!secp256k1_fe_set_b32(&x, pub+1) || !secp256k1_fe_set_b32(&y, pub+33)) {
+        if (!cosmos_secp256k1_fe_set_b32(&x, pub + 1) || !cosmos_secp256k1_fe_set_b32(&y, pub + 33)) {
             return 0;
         }
-        secp256k1_ge_set_xy(elem, &x, &y);
+        cosmos_secp256k1_ge_set_xy(elem, &x, &y);
         if ((pub[0] == 0x06 || pub[0] == 0x07) && secp256k1_fe_is_odd(&y) != (pub[0] == 0x07)) {
             return 0;
         }

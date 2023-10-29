@@ -62,7 +62,7 @@ void random_fe(cosmos_secp256k1_fe *x) {
     unsigned char bin[32];
     do {
         secp256k1_rand256(bin);
-        if (secp256k1_fe_set_b32(x, bin)) {
+        if (cosmos_secp256k1_fe_set_b32(x, bin)) {
             return;
         }
     } while(1);

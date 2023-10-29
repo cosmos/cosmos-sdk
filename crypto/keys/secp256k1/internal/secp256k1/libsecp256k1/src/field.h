@@ -71,7 +71,7 @@ static int secp256k1_fe_equal_var(const cosmos_secp256k1_fe *a, const cosmos_sec
 static int secp256k1_fe_cmp_var(const cosmos_secp256k1_fe *a, const cosmos_secp256k1_fe *b);
 
 /** Set a field element equal to 32-byte big endian value. If successful, the resulting field element is normalized. */
-static int secp256k1_fe_set_b32(cosmos_secp256k1_fe *r, const unsigned char *a);
+static int cosmos_secp256k1_fe_set_b32(cosmos_secp256k1_fe *r, const unsigned char *a);
 
 /** Convert a field element to a 32-byte big endian value. Requires the input to be normalized */
 static void secp256k1_fe_get_b32(unsigned char *r, const cosmos_secp256k1_fe *a);

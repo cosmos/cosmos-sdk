@@ -235,7 +235,7 @@ static int secp256k1_ecdsa_sig_verify(const secp256k1_ecmult_context *ctx, const
 }
 #else
     cosmos_secp256k1_scalar_get_b32(c, sigr);
-    secp256k1_fe_set_b32(&xr, c);
+    cosmos_secp256k1_fe_set_b32(&xr, c);
 
     /** We now have the recomputed R point in pr, and its claimed x coordinate (modulo n)
      *  in xr. Naively, we would extract the x coordinate from pr (requiring a inversion modulo p),

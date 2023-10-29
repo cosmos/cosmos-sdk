@@ -283,7 +283,7 @@ static int secp256k1_fe_cmp_var(const cosmos_secp256k1_fe *a, const cosmos_secp2
     return 0;
 }
 
-static int secp256k1_fe_set_b32(cosmos_secp256k1_fe *r, const unsigned char *a) {
+static int cosmos_secp256k1_fe_set_b32(cosmos_secp256k1_fe *r, const unsigned char *a) {
     int i;
     r->n[0] = r->n[1] = r->n[2] = r->n[3] = r->n[4] = 0;
     for (i=0; i<32; i++) {

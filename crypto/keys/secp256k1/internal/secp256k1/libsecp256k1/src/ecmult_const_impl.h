@@ -54,7 +54,7 @@
  *
  *  Numbers reference steps of `Algorithm SPA-resistant Width-w NAF with Odd Scalar` on pp. 335
  */
-static int secp256k1_wnaf_const(int *wnaf, secp256k1_scalar s, int w) {
+static int secp256k1_wnaf_const(int *wnaf, cosmos_secp256k1_scalar s, int w) {
     int global_sign;
     int skew = 0;
     int word = 0;
@@ -65,7 +65,7 @@ static int secp256k1_wnaf_const(int *wnaf, secp256k1_scalar s, int w) {
 
     int flip;
     int bit;
-    secp256k1_scalar neg_s;
+    cosmos_secp256k1_scalar neg_s;
     int not_neg_one;
     /* Note that we cannot handle even numbers by negating them to be odd, as is
      * done in other implementations, since if our scalars were specified to have
@@ -119,7 +119,7 @@ static int secp256k1_wnaf_const(int *wnaf, secp256k1_scalar s, int w) {
 }
 
 
-static void secp256k1_ecmult_const(secp256k1_gej *r, const secp256k1_ge *a, const secp256k1_scalar *scalar) {
+static void secp256k1_ecmult_const(secp256k1_gej *r, const secp256k1_ge *a, const cosmos_secp256k1_scalar *scalar) {
     secp256k1_ge pre_a[ECMULT_TABLE_SIZE(WINDOW_A)];
     secp256k1_ge tmpa;
     secp256k1_fe Z;
@@ -130,11 +130,11 @@ static void secp256k1_ecmult_const(secp256k1_gej *r, const secp256k1_ge *a, cons
     secp256k1_ge pre_a_lam[ECMULT_TABLE_SIZE(WINDOW_A)];
     int wnaf_lam[1 + WNAF_SIZE(WINDOW_A - 1)];
     int skew_lam;
-    secp256k1_scalar q_1, q_lam;
+    cosmos_secp256k1_scalar q_1, q_lam;
 #endif
 
     int i;
-    secp256k1_scalar sc = *scalar;
+    cosmos_secp256k1_scalar sc = *scalar;
 
     /* build wnaf representation for q. */
 #ifdef USE_ENDOMORPHISM

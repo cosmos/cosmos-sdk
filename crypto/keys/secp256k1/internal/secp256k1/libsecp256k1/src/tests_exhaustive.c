@@ -72,7 +72,7 @@ void random_fe(secp256k1_fe *x) {
 int secp256k1_nonce_function_smallint(unsigned char *nonce32, const unsigned char *msg32,
                                       const unsigned char *key32, const unsigned char *algo16,
                                       void *data, unsigned int attempt) {
-    secp256k1_scalar s;
+    cosmos_secp256k1_scalar s;
     int *idata = data;
     (void)msg32;
     (void)key32;
@@ -166,7 +166,7 @@ void test_exhaustive_ecmult(const secp256k1_context *ctx, const secp256k1_ge *gr
         for (j = 0; j < order; j++) {
             for (i = 0; i < order; i++) {
                 secp256k1_gej tmp;
-                secp256k1_scalar na, ng;
+                cosmos_secp256k1_scalar na, ng;
                 secp256k1_scalar_set_int(&na, i);
                 secp256k1_scalar_set_int(&ng, j);
 
@@ -182,7 +182,7 @@ void test_exhaustive_ecmult(const secp256k1_context *ctx, const secp256k1_ge *gr
     }
 }
 
-void r_from_k(secp256k1_scalar *r, const secp256k1_ge *group, int k) {
+void r_from_k(cosmos_secp256k1_scalar *r, const secp256k1_ge *group, int k) {
     secp256k1_fe x;
     unsigned char x_bin[32];
     k %= EXHAUSTIVE_TEST_ORDER;
@@ -201,8 +201,8 @@ void test_exhaustive_verify(const secp256k1_context *ctx, const secp256k1_ge *gr
                     secp256k1_ge nonconst_ge;
                     cosmos_secp256k1_ecdsa_signature sig;
                     secp256k1_pubkey pk;
-                    secp256k1_scalar sk_s, msg_s, r_s, s_s;
-                    secp256k1_scalar s_times_k_s, msg_plus_r_times_sk_s;
+                    cosmos_secp256k1_scalar sk_s, msg_s, r_s, s_s;
+                    cosmos_secp256k1_scalar s_times_k_s, msg_plus_r_times_sk_s;
                     int k, should_verify;
                     unsigned char msg32[32];
 
@@ -216,7 +216,7 @@ void test_exhaustive_verify(const secp256k1_context *ctx, const secp256k1_ge *gr
                      * Note there could be none, there could be multiple, ECDSA is weird. */
                     should_verify = 0;
                     for (k = 0; k < order; k++) {
-                        secp256k1_scalar check_x_s;
+                        cosmos_secp256k1_scalar check_x_s;
                         r_from_k(&check_x_s, group, k);
                         if (r_s == check_x_s) {
                             secp256k1_scalar_set_int(&s_times_k_s, k);
@@ -251,7 +251,7 @@ void test_exhaustive_sign(const secp256k1_context *ctx, const secp256k1_ge *grou
             for (k = 1; k < order; k++) {  /* nonce */
                 const int starting_k = k;
                 cosmos_secp256k1_ecdsa_signature sig;
-                secp256k1_scalar sk, msg, r, s, expected_r;
+                cosmos_secp256k1_scalar sk, msg, r, s, expected_r;
                 unsigned char sk32[32], msg32[32];
                 secp256k1_scalar_set_int(&msg, i);
                 secp256k1_scalar_set_int(&sk, j);
@@ -435,7 +435,7 @@ int main(void) {
 
         /* Verify against ecmult_gen */
         {
-            secp256k1_scalar scalar_i;
+            cosmos_secp256k1_scalar scalar_i;
             secp256k1_gej generatedj;
             secp256k1_ge generated;
 

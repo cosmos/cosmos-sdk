@@ -15,7 +15,7 @@ int secp256k1_ecdh(const secp256k1_context* ctx, unsigned char *result, const se
     int overflow = 0;
     secp256k1_gej res;
     secp256k1_ge pt;
-    secp256k1_scalar s;
+    cosmos_secp256k1_scalar s;
     VERIFY_CHECK(ctx != NULL);
     COSMOS_ARG_CHECK(result != NULL);
     COSMOS_ARG_CHECK(point != NULL);

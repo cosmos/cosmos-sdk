@@ -98,7 +98,7 @@ static int secp256k1_der_read_len(const unsigned char **sigp, const unsigned cha
     return ret;
 }
 
-static int secp256k1_der_parse_integer(secp256k1_scalar *r, const unsigned char **sig, const unsigned char *sigend) {
+static int secp256k1_der_parse_integer(cosmos_secp256k1_scalar *r, const unsigned char **sig, const unsigned char *sigend) {
     int overflow = 0;
     unsigned char ra[32] = {0};
     int rlen;
@@ -144,7 +144,7 @@ static int secp256k1_der_parse_integer(secp256k1_scalar *r, const unsigned char 
     return 1;
 }
 
-static int secp256k1_ecdsa_sig_parse(secp256k1_scalar *rr, secp256k1_scalar *rs, const unsigned char *sig, size_t size) {
+static int secp256k1_ecdsa_sig_parse(cosmos_secp256k1_scalar *rr, cosmos_secp256k1_scalar *rs, const unsigned char *sig, size_t size) {
     const unsigned char *sigend = sig + size;
     int rlen;
     if (sig == sigend || *(sig++) != 0x30) {
@@ -176,7 +176,7 @@ static int secp256k1_ecdsa_sig_parse(secp256k1_scalar *rr, secp256k1_scalar *rs,
     return 1;
 }
 
-static int secp256k1_ecdsa_sig_serialize(unsigned char *sig, size_t *size, const secp256k1_scalar* ar, const secp256k1_scalar* as) {
+static int secp256k1_ecdsa_sig_serialize(unsigned char *sig, size_t *size, const cosmos_secp256k1_scalar* ar, const cosmos_secp256k1_scalar* as) {
     unsigned char r[33] = {0}, s[33] = {0};
     unsigned char *rp = r, *sp = s;
     size_t lenR = 33, lenS = 33;
@@ -200,9 +200,9 @@ static int secp256k1_ecdsa_sig_serialize(unsigned char *sig, size_t *size, const
     return 1;
 }
 
-static int secp256k1_ecdsa_sig_verify(const secp256k1_ecmult_context *ctx, const secp256k1_scalar *sigr, const secp256k1_scalar *sigs, const secp256k1_ge *pubkey, const secp256k1_scalar *message) {
+static int secp256k1_ecdsa_sig_verify(const secp256k1_ecmult_context *ctx, const cosmos_secp256k1_scalar *sigr, const cosmos_secp256k1_scalar *sigs, const secp256k1_ge *pubkey, const cosmos_secp256k1_scalar *message) {
     unsigned char c[32];
-    secp256k1_scalar sn, u1, u2;
+    cosmos_secp256k1_scalar sn, u1, u2;
 #if !defined(EXHAUSTIVE_TEST_ORDER)
     secp256k1_fe xr;
 #endif
@@ -224,7 +224,7 @@ static int secp256k1_ecdsa_sig_verify(const secp256k1_ecmult_context *ctx, const
 
 #if defined(EXHAUSTIVE_TEST_ORDER)
 {
-    secp256k1_scalar computed_r;
+    cosmos_secp256k1_scalar computed_r;
     secp256k1_ge pr_ge;
     cosmos_secp256k1_ge_set_gej(&pr_ge, &pr);
     secp256k1_fe_normalize(&pr_ge.x);
@@ -270,11 +270,11 @@ static int secp256k1_ecdsa_sig_verify(const secp256k1_ecmult_context *ctx, const
 #endif
 }
 
-static int secp256k1_ecdsa_sig_sign(const secp256k1_ecmult_gen_context *ctx, secp256k1_scalar *sigr, secp256k1_scalar *sigs, const secp256k1_scalar *seckey, const secp256k1_scalar *message, const secp256k1_scalar *nonce, int *recid) {
+static int secp256k1_ecdsa_sig_sign(const secp256k1_ecmult_gen_context *ctx, cosmos_secp256k1_scalar *sigr, cosmos_secp256k1_scalar *sigs, const cosmos_secp256k1_scalar *seckey, const cosmos_secp256k1_scalar *message, const cosmos_secp256k1_scalar *nonce, int *recid) {
     unsigned char b[32];
     secp256k1_gej rp;
     secp256k1_ge r;
-    secp256k1_scalar n;
+    cosmos_secp256k1_scalar n;
     int overflow = 0;
 
     secp256k1_ecmult_gen(ctx, &rp, nonce);

@@ -50,7 +50,7 @@ void test_ecdh_generator_basepoint(void) {
         unsigned char output_ser[32];
         unsigned char point_ser[33];
         size_t point_ser_len = sizeof(point_ser);
-        secp256k1_scalar s;
+        cosmos_secp256k1_scalar s;
 
         random_scalar_order(&s);
         secp256k1_scalar_get_b32(s_b32, &s);
@@ -80,7 +80,7 @@ void test_bad_scalar(void) {
     };
     unsigned char s_rand[32] = { 0 };
     unsigned char output[32];
-    secp256k1_scalar rand;
+    cosmos_secp256k1_scalar rand;
     secp256k1_pubkey point;
 
     /* Create random point */

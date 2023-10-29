@@ -51,7 +51,7 @@ static int secp256k1_eckey_pubkey_serialize(secp256k1_ge *elem, unsigned char *p
     return 1;
 }
 
-static int secp256k1_eckey_privkey_tweak_add(secp256k1_scalar *key, const secp256k1_scalar *tweak) {
+static int secp256k1_eckey_privkey_tweak_add(cosmos_secp256k1_scalar *key, const cosmos_secp256k1_scalar *tweak) {
     secp256k1_scalar_add(key, key, tweak);
     if (secp256k1_scalar_is_zero(key)) {
         return 0;
@@ -59,9 +59,9 @@ static int secp256k1_eckey_privkey_tweak_add(secp256k1_scalar *key, const secp25
     return 1;
 }
 
-static int secp256k1_eckey_pubkey_tweak_add(const secp256k1_ecmult_context *ctx, secp256k1_ge *key, const secp256k1_scalar *tweak) {
+static int secp256k1_eckey_pubkey_tweak_add(const secp256k1_ecmult_context *ctx, secp256k1_ge *key, const cosmos_secp256k1_scalar *tweak) {
     secp256k1_gej pt;
-    secp256k1_scalar one;
+    cosmos_secp256k1_scalar one;
     secp256k1_gej_set_ge(&pt, key);
     secp256k1_scalar_set_int(&one, 1);
     secp256k1_ecmult(ctx, &pt, &pt, &one, tweak);
@@ -73,7 +73,7 @@ static int secp256k1_eckey_pubkey_tweak_add(const secp256k1_ecmult_context *ctx,
     return 1;
 }
 
-static int secp256k1_eckey_privkey_tweak_mul(secp256k1_scalar *key, const secp256k1_scalar *tweak) {
+static int secp256k1_eckey_privkey_tweak_mul(cosmos_secp256k1_scalar *key, const cosmos_secp256k1_scalar *tweak) {
     if (secp256k1_scalar_is_zero(tweak)) {
         return 0;
     }
@@ -82,8 +82,8 @@ static int secp256k1_eckey_privkey_tweak_mul(secp256k1_scalar *key, const secp25
     return 1;
 }
 
-static int secp256k1_eckey_pubkey_tweak_mul(const secp256k1_ecmult_context *ctx, secp256k1_ge *key, const secp256k1_scalar *tweak) {
-    secp256k1_scalar zero;
+static int secp256k1_eckey_pubkey_tweak_mul(const secp256k1_ecmult_context *ctx, secp256k1_ge *key, const cosmos_secp256k1_scalar *tweak) {
+    cosmos_secp256k1_scalar zero;
     secp256k1_gej pt;
     if (secp256k1_scalar_is_zero(tweak)) {
         return 0;

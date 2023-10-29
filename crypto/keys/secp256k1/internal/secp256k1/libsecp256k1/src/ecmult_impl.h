@@ -232,8 +232,8 @@ static void secp256k1_ecmult_context_clear(secp256k1_ecmult_context *ctx) {
  *  - the number of set values in wnaf is returned. This number is at most 256, and at most one more
  *    than the number of bits in the (absolute value) of the input.
  */
-static int secp256k1_ecmult_wnaf(int *wnaf, int len, const secp256k1_scalar *a, int w) {
-    secp256k1_scalar s = *a;
+static int secp256k1_ecmult_wnaf(int *wnaf, int len, const cosmos_secp256k1_scalar *a, int w) {
+    cosmos_secp256k1_scalar s = *a;
     int last_set_bit = -1;
     int bit = 0;
     int sign = 1;
@@ -283,15 +283,15 @@ static int secp256k1_ecmult_wnaf(int *wnaf, int len, const secp256k1_scalar *a, 
     return last_set_bit + 1;
 }
 
-static void secp256k1_ecmult(const secp256k1_ecmult_context *ctx, secp256k1_gej *r, const secp256k1_gej *a, const secp256k1_scalar *na, const secp256k1_scalar *ng) {
+static void secp256k1_ecmult(const secp256k1_ecmult_context *ctx, secp256k1_gej *r, const secp256k1_gej *a, const cosmos_secp256k1_scalar *na, const cosmos_secp256k1_scalar *ng) {
     secp256k1_ge pre_a[ECMULT_TABLE_SIZE(WINDOW_A)];
     secp256k1_ge tmpa;
     secp256k1_fe Z;
 #ifdef USE_ENDOMORPHISM
     secp256k1_ge pre_a_lam[ECMULT_TABLE_SIZE(WINDOW_A)];
-    secp256k1_scalar na_1, na_lam;
+    cosmos_secp256k1_scalar na_1, na_lam;
     /* Splitted G factors. */
-    secp256k1_scalar ng_1, ng_128;
+    cosmos_secp256k1_scalar ng_1, ng_128;
     int wnaf_na_1[130];
     int wnaf_na_lam[130];
     int bits_na_1;

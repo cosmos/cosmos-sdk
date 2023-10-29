@@ -24,7 +24,7 @@ typedef struct {
      * the intermediate sums while computing a*G.
      */
     secp256k1_ge_storage (*prec)[64][16]; /* prec[j][i] = 16^j * i * G + U_i */
-    secp256k1_scalar blind;
+    cosmos_secp256k1_scalar blind;
     secp256k1_gej initial;
 } secp256k1_ecmult_gen_context;
 
@@ -36,7 +36,7 @@ static void secp256k1_ecmult_gen_context_clear(secp256k1_ecmult_gen_context* ctx
 static int cosmos_secp256k1_ecmult_gen_context_is_built(const secp256k1_ecmult_gen_context* ctx);
 
 /** Multiply with the generator: R = a*G */
-static void secp256k1_ecmult_gen(const secp256k1_ecmult_gen_context* ctx, secp256k1_gej *r, const secp256k1_scalar *a);
+static void secp256k1_ecmult_gen(const secp256k1_ecmult_gen_context* ctx, secp256k1_gej *r, const cosmos_secp256k1_scalar *a);
 
 static void secp256k1_ecmult_gen_blind(secp256k1_ecmult_gen_context *ctx, const unsigned char *seed32);
 

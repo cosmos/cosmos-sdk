@@ -21,21 +21,21 @@
 #error "Please select field implementation"
 #endif
 
-SECP256K1_INLINE static int secp256k1_fe_equal(const secp256k1_fe *a, const secp256k1_fe *b) {
-    secp256k1_fe na;
+SECP256K1_INLINE static int secp256k1_fe_equal(const cosmos_secp256k1_fe *a, const cosmos_secp256k1_fe *b) {
+    cosmos_secp256k1_fe na;
     secp256k1_fe_negate(&na, a, 1);
     secp256k1_fe_add(&na, b);
     return secp256k1_fe_normalizes_to_zero(&na);
 }
 
-SECP256K1_INLINE static int secp256k1_fe_equal_var(const secp256k1_fe *a, const secp256k1_fe *b) {
-    secp256k1_fe na;
+SECP256K1_INLINE static int secp256k1_fe_equal_var(const cosmos_secp256k1_fe *a, const cosmos_secp256k1_fe *b) {
+    cosmos_secp256k1_fe na;
     secp256k1_fe_negate(&na, a, 1);
     secp256k1_fe_add(&na, b);
     return secp256k1_fe_normalizes_to_zero_var(&na);
 }
 
-static int secp256k1_fe_sqrt(secp256k1_fe *r, const secp256k1_fe *a) {
+static int secp256k1_fe_sqrt(cosmos_secp256k1_fe *r, const cosmos_secp256k1_fe *a) {
     /** Given that p is congruent to 3 mod 4, we can compute the square root of
      *  a mod p as the (p+1)/4'th power of a.
      *
@@ -45,7 +45,7 @@ static int secp256k1_fe_sqrt(secp256k1_fe *r, const secp256k1_fe *a) {
      *  Also because (p+1)/4 is an even number, the computed square root is
      *  itself always a square (a ** ((p+1)/4) is the square of a ** ((p+1)/8)).
      */
-    secp256k1_fe x2, x3, x6, x9, x11, x22, x44, x88, x176, x220, x223, t1;
+    cosmos_secp256k1_fe x2, x3, x6, x9, x11, x22, x44, x88, x176, x220, x223, t1;
     int j;
 
     /** The binary representation of (p + 1)/4 has 3 blocks of 1s, with lengths in
@@ -133,8 +133,8 @@ static int secp256k1_fe_sqrt(secp256k1_fe *r, const secp256k1_fe *a) {
     return secp256k1_fe_equal(&t1, a);
 }
 
-static void secp256k1_fe_inv(secp256k1_fe *r, const secp256k1_fe *a) {
-    secp256k1_fe x2, x3, x6, x9, x11, x22, x44, x88, x176, x220, x223, t1;
+static void secp256k1_fe_inv(cosmos_secp256k1_fe *r, const cosmos_secp256k1_fe *a) {
+    cosmos_secp256k1_fe x2, x3, x6, x9, x11, x22, x44, x88, x176, x220, x223, t1;
     int j;
 
     /** The binary representation of (p - 2) has 5 blocks of 1s, with lengths in
@@ -223,12 +223,12 @@ static void secp256k1_fe_inv(secp256k1_fe *r, const secp256k1_fe *a) {
     secp256k1_fe_mul(r, a, &t1);
 }
 
-static void secp256k1_fe_inv_var(secp256k1_fe *r, const secp256k1_fe *a) {
+static void secp256k1_fe_inv_var(cosmos_secp256k1_fe *r, const cosmos_secp256k1_fe *a) {
 #if defined(USE_FIELD_INV_BUILTIN)
     secp256k1_fe_inv(r, a);
 #elif defined(USE_FIELD_INV_NUM)
     secp256k1_num n, m;
-    static const secp256k1_fe negone = SECP256K1_FE_CONST(
+    static const cosmos_secp256k1_fe negone = SECP256K1_FE_CONST(
         0xFFFFFFFFUL, 0xFFFFFFFFUL, 0xFFFFFFFFUL, 0xFFFFFFFFUL,
         0xFFFFFFFFUL, 0xFFFFFFFFUL, 0xFFFFFFFEUL, 0xFFFFFC2EUL
     );
@@ -241,7 +241,7 @@ static void secp256k1_fe_inv_var(secp256k1_fe *r, const secp256k1_fe *a) {
     };
     unsigned char b[32];
     int res;
-    secp256k1_fe c = *a;
+    cosmos_secp256k1_fe c = *a;
     secp256k1_fe_normalize_var(&c);
     secp256k1_fe_get_b32(b, &c);
     secp256k1_num_set_bin(&n, b, 32);
@@ -260,8 +260,8 @@ static void secp256k1_fe_inv_var(secp256k1_fe *r, const secp256k1_fe *a) {
 #endif
 }
 
-static void secp256k1_fe_inv_all_var(secp256k1_fe *r, const secp256k1_fe *a, size_t len) {
-    secp256k1_fe u;
+static void secp256k1_fe_inv_all_var(cosmos_secp256k1_fe *r, const cosmos_secp256k1_fe *a, size_t len) {
+    cosmos_secp256k1_fe u;
     size_t i;
     if (len < 1) {
         return;
@@ -287,7 +287,7 @@ static void secp256k1_fe_inv_all_var(secp256k1_fe *r, const secp256k1_fe *a, siz
     r[0] = u;
 }
 
-static int secp256k1_fe_is_quad_var(const secp256k1_fe *a) {
+static int secp256k1_fe_is_quad_var(const cosmos_secp256k1_fe *a) {
 #ifndef USE_NUM_NONE
     unsigned char b[32];
     secp256k1_num n;
@@ -300,14 +300,14 @@ static int secp256k1_fe_is_quad_var(const secp256k1_fe *a) {
         0xFF,0xFF,0xFF,0xFE,0xFF,0xFF,0xFC,0x2F
     };
 
-    secp256k1_fe c = *a;
+    cosmos_secp256k1_fe c = *a;
     secp256k1_fe_normalize_var(&c);
     secp256k1_fe_get_b32(b, &c);
     secp256k1_num_set_bin(&n, b, 32);
     secp256k1_num_set_bin(&m, prime, 32);
     return secp256k1_num_jacobi(&n, &m) >= 0;
 #else
-    secp256k1_fe r;
+    cosmos_secp256k1_fe r;
     return secp256k1_fe_sqrt(&r, a);
 #endif
 }

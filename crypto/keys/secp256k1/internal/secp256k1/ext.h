@@ -101,9 +101,9 @@ static int secp256k1_ext_reencode_pubkey(
 int cosmos_secp256k1_ext_scalar_mul(const cosmos_secp256k1_context* ctx, unsigned char *point, const unsigned char *scalar) {
 	int ret = 0;
 	int overflow = 0;
-	secp256k1_fe feX, feY;
-	secp256k1_gej res;
-	secp256k1_ge ge;
+	cosmos_secp256k1_fe feX, feY;
+	cosmos_secp256k1_gej res;
+	cosmos_secp256k1_ge ge;
 	cosmos_secp256k1_scalar s;
 	COSMOS_ARG_CHECK(point != NULL);
 	COSMOS_ARG_CHECK(scalar != NULL);

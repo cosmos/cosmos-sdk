@@ -57,7 +57,7 @@ static void uncounting_illegal_callback_fn(const char* str, void* data) {
     (*p)--;
 }
 
-void random_field_element_test(secp256k1_fe *fe) {
+void random_field_element_test(cosmos_secp256k1_fe *fe) {
     do {
         unsigned char b32[32];
         secp256k1_rand256_test(b32);
@@ -67,8 +67,8 @@ void random_field_element_test(secp256k1_fe *fe) {
     } while(1);
 }
 
-void random_field_element_magnitude(secp256k1_fe *fe) {
-    secp256k1_fe zero;
+void random_field_element_magnitude(cosmos_secp256k1_fe *fe) {
+    cosmos_secp256k1_fe zero;
     int n = secp256k1_rand_int(9);
     secp256k1_fe_normalize(fe);
     if (n == 0) {
@@ -81,8 +81,8 @@ void random_field_element_magnitude(secp256k1_fe *fe) {
     VERIFY_CHECK(fe->magnitude == n);
 }
 
-void random_group_element_test(secp256k1_ge *ge) {
-    secp256k1_fe fe;
+void random_group_element_test(cosmos_secp256k1_ge *ge) {
+    cosmos_secp256k1_fe fe;
     do {
         random_field_element_test(&fe);
         if (secp256k1_ge_set_xo_var(ge, &fe, secp256k1_rand_bits(1))) {
@@ -92,8 +92,8 @@ void random_group_element_test(secp256k1_ge *ge) {
     } while(1);
 }
 
-void random_group_element_jacobian_test(secp256k1_gej *gej, const secp256k1_ge *ge) {
-    secp256k1_fe z2, z3;
+void random_group_element_jacobian_test(cosmos_secp256k1_gej *gej, const cosmos_secp256k1_ge *ge) {
+    cosmos_secp256k1_fe z2, z3;
     do {
         random_field_element_test(&gej->z);
         if (!secp256k1_fe_is_zero(&gej->z)) {
@@ -144,8 +144,8 @@ void run_context_tests(void) {
     secp256k1_context *vrfy = cosmos_secp256k1_context_create(SECP256K1_CONTEXT_VERIFY);
     secp256k1_context *both = cosmos_secp256k1_context_create(SECP256K1_CONTEXT_SIGN | SECP256K1_CONTEXT_VERIFY);
 
-    secp256k1_gej pubj;
-    secp256k1_ge pub;
+    cosmos_secp256k1_gej pubj;
+    cosmos_secp256k1_ge pub;
     secp256k1_scalar msg, key, nonce;
     secp256k1_scalar sigr, sigs;
 
@@ -1538,7 +1538,7 @@ void run_scalar_tests(void) {
 
 /***** FIELD TESTS *****/
 
-void random_fe(secp256k1_fe *x) {
+void random_fe(cosmos_secp256k1_fe *x) {
     unsigned char bin[32];
     do {
         secp256k1_rand256(bin);
@@ -1548,7 +1548,7 @@ void random_fe(secp256k1_fe *x) {
     } while(1);
 }
 
-void random_fe_test(secp256k1_fe *x) {
+void random_fe_test(cosmos_secp256k1_fe *x) {
     unsigned char bin[32];
     do {
         secp256k1_rand256_test(bin);
@@ -1558,7 +1558,7 @@ void random_fe_test(secp256k1_fe *x) {
     } while(1);
 }
 
-void random_fe_non_zero(secp256k1_fe *nz) {
+void random_fe_non_zero(cosmos_secp256k1_fe *nz) {
     int tries = 10;
     while (--tries >= 0) {
         random_fe(nz);
@@ -1571,25 +1571,25 @@ void random_fe_non_zero(secp256k1_fe *nz) {
     CHECK(tries >= 0);
 }
 
-void random_fe_non_square(secp256k1_fe *ns) {
-    secp256k1_fe r;
+void random_fe_non_square(cosmos_secp256k1_fe *ns) {
+    cosmos_secp256k1_fe r;
     random_fe_non_zero(ns);
     if (secp256k1_fe_sqrt(&r, ns)) {
         secp256k1_fe_negate(ns, ns, 1);
     }
 }
 
-int check_fe_equal(const secp256k1_fe *a, const secp256k1_fe *b) {
-    secp256k1_fe an = *a;
-    secp256k1_fe bn = *b;
+int check_fe_equal(const cosmos_secp256k1_fe *a, const cosmos_secp256k1_fe *b) {
+    cosmos_secp256k1_fe an = *a;
+    cosmos_secp256k1_fe bn = *b;
     secp256k1_fe_normalize_weak(&an);
     secp256k1_fe_normalize_var(&bn);
     return secp256k1_fe_equal_var(&an, &bn);
 }
 
-int check_fe_inverse(const secp256k1_fe *a, const secp256k1_fe *ai) {
-    secp256k1_fe x;
-    secp256k1_fe one = SECP256K1_FE_CONST(0, 0, 0, 0, 0, 0, 0, 1);
+int check_fe_inverse(const cosmos_secp256k1_fe *a, const cosmos_secp256k1_fe *ai) {
+    cosmos_secp256k1_fe x;
+    cosmos_secp256k1_fe one = SECP256K1_FE_CONST(0, 0, 0, 0, 0, 0, 0, 1);
     secp256k1_fe_mul(&x, a, ai);
     return check_fe_equal(&x, &one);
 }
@@ -1605,11 +1605,11 @@ void run_field_convert(void) {
         0x00010203UL, 0x04050607UL, 0x11121314UL, 0x15161718UL,
         0x22232425UL, 0x26272829UL, 0x33343536UL, 0x37383940UL
     );
-    static const secp256k1_fe fe = SECP256K1_FE_CONST(
+    static const cosmos_secp256k1_fe fe = SECP256K1_FE_CONST(
         0x00010203UL, 0x04050607UL, 0x11121314UL, 0x15161718UL,
         0x22232425UL, 0x26272829UL, 0x33343536UL, 0x37383940UL
     );
-    secp256k1_fe fe2;
+    cosmos_secp256k1_fe fe2;
     unsigned char b322[32];
     secp256k1_fe_storage fes2;
     /* Check conversions to fe. */
@@ -1624,8 +1624,8 @@ void run_field_convert(void) {
     CHECK(memcmp(&fes2, &fes, sizeof(fes)) == 0);
 }
 
-int fe_memcmp(const secp256k1_fe *a, const secp256k1_fe *b) {
-    secp256k1_fe t = *b;
+int fe_memcmp(const cosmos_secp256k1_fe *a, const cosmos_secp256k1_fe *b) {
+    cosmos_secp256k1_fe t = *b;
 #ifdef VERIFY
     t.magnitude = a->magnitude;
     t.normalized = a->normalized;
@@ -1634,11 +1634,11 @@ int fe_memcmp(const secp256k1_fe *a, const secp256k1_fe *b) {
 }
 
 void run_field_misc(void) {
-    secp256k1_fe x;
-    secp256k1_fe y;
-    secp256k1_fe z;
-    secp256k1_fe q;
-    secp256k1_fe fe5 = SECP256K1_FE_CONST(0, 0, 0, 0, 0, 0, 0, 5);
+    cosmos_secp256k1_fe x;
+    cosmos_secp256k1_fe y;
+    cosmos_secp256k1_fe z;
+    cosmos_secp256k1_fe q;
+    cosmos_secp256k1_fe fe5 = SECP256K1_FE_CONST(0, 0, 0, 0, 0, 0, 0, 5);
     int i, j;
     for (i = 0; i < 5*count; i++) {
         secp256k1_fe_storage xs, ys, zs;
@@ -1706,7 +1706,7 @@ void run_field_misc(void) {
 }
 
 void run_field_inv(void) {
-    secp256k1_fe x, xi, xii;
+    cosmos_secp256k1_fe x, xi, xii;
     int i;
     for (i = 0; i < 10*count; i++) {
         random_fe_non_zero(&x);
@@ -1718,7 +1718,7 @@ void run_field_inv(void) {
 }
 
 void run_field_inv_var(void) {
-    secp256k1_fe x, xi, xii;
+    cosmos_secp256k1_fe x, xi, xii;
     int i;
     for (i = 0; i < 10*count; i++) {
         random_fe_non_zero(&x);
@@ -1730,7 +1730,7 @@ void run_field_inv_var(void) {
 }
 
 void run_field_inv_all_var(void) {
-    secp256k1_fe x[16], xi[16], xii[16];
+    cosmos_secp256k1_fe x[16], xi[16], xii[16];
     int i;
     /* Check it's safe to call for 0 elements */
     secp256k1_fe_inv_all_var(xi, x, 0);
@@ -1752,7 +1752,7 @@ void run_field_inv_all_var(void) {
 }
 
 void run_sqr(void) {
-    secp256k1_fe x, s;
+    cosmos_secp256k1_fe x, s;
 
     {
         int i;
@@ -1767,8 +1767,8 @@ void run_sqr(void) {
     }
 }
 
-void test_sqrt(const secp256k1_fe *a, const secp256k1_fe *k) {
-    secp256k1_fe r1, r2;
+void test_sqrt(const cosmos_secp256k1_fe *a, const cosmos_secp256k1_fe *k) {
+    cosmos_secp256k1_fe r1, r2;
     int v = secp256k1_fe_sqrt(&r1, a);
     CHECK((v == 0) == (k == NULL));
 
@@ -1782,7 +1782,7 @@ void test_sqrt(const secp256k1_fe *a, const secp256k1_fe *k) {
 }
 
 void run_sqrt(void) {
-    secp256k1_fe ns, x, s, t;
+    cosmos_secp256k1_fe ns, x, s, t;
     int i;
 
     /* Check sqrt(0) is 0 */
@@ -1817,7 +1817,7 @@ void run_sqrt(void) {
 
 /***** GROUP TESTS *****/
 
-void ge_equals_ge(const secp256k1_ge *a, const secp256k1_ge *b) {
+void ge_equals_ge(const cosmos_secp256k1_ge *a, const cosmos_secp256k1_ge *b) {
     CHECK(a->infinity == b->infinity);
     if (a->infinity) {
         return;
@@ -1827,9 +1827,9 @@ void ge_equals_ge(const secp256k1_ge *a, const secp256k1_ge *b) {
 }
 
 /* This compares jacobian points including their Z, not just their geometric meaning. */
-int gej_xyz_equals_gej(const secp256k1_gej *a, const secp256k1_gej *b) {
-    secp256k1_gej a2;
-    secp256k1_gej b2;
+int gej_xyz_equals_gej(const cosmos_secp256k1_gej *a, const cosmos_secp256k1_gej *b) {
+    cosmos_secp256k1_gej a2;
+    cosmos_secp256k1_gej b2;
     int ret = 1;
     ret &= a->infinity == b->infinity;
     if (ret && !a->infinity) {
@@ -1848,9 +1848,9 @@ int gej_xyz_equals_gej(const secp256k1_gej *a, const secp256k1_gej *b) {
     return ret;
 }
 
-void ge_equals_gej(const secp256k1_ge *a, const secp256k1_gej *b) {
-    secp256k1_fe z2s;
-    secp256k1_fe u1, u2, s1, s2;
+void ge_equals_gej(const cosmos_secp256k1_ge *a, const cosmos_secp256k1_gej *b) {
+    cosmos_secp256k1_fe z2s;
+    cosmos_secp256k1_fe u1, u2, s1, s2;
     CHECK(a->infinity == b->infinity);
     if (a->infinity) {
         return;
@@ -1879,18 +1879,18 @@ void test_ge(void) {
      *
      * When the endomorphism code is compiled in, p5 = lambda*p1 and p6 = lambda^2*p1 are added as well.
      */
-    secp256k1_ge *ge = (secp256k1_ge *)malloc(sizeof(secp256k1_ge) * (1 + 4 * runs));
-    secp256k1_gej *gej = (secp256k1_gej *)malloc(sizeof(secp256k1_gej) * (1 + 4 * runs));
-    secp256k1_fe *zinv = (secp256k1_fe *)malloc(sizeof(secp256k1_fe) * (1 + 4 * runs));
-    secp256k1_fe zf;
-    secp256k1_fe zfi2, zfi3;
+    cosmos_secp256k1_ge *ge = (cosmos_secp256k1_ge *)malloc(sizeof(cosmos_secp256k1_ge) * (1 + 4 * runs));
+    cosmos_secp256k1_gej *gej = (cosmos_secp256k1_gej *)malloc(sizeof(cosmos_secp256k1_gej) * (1 + 4 * runs));
+    cosmos_secp256k1_fe *zinv = (cosmos_secp256k1_fe *)malloc(sizeof(secp256k1_fe) * (1 + 4 * runs));
+    cosmos_secp256k1_fe zf;
+    cosmos_secp256k1_fe zfi2, zfi3;
 
     secp256k1_gej_set_infinity(&gej[0]);
     secp256k1_ge_clear(&ge[0]);
     secp256k1_ge_set_gej_var(&ge[0], &gej[0]);
     for (i = 0; i < runs; i++) {
         int j;
-        secp256k1_ge g;
+        cosmos_secp256k1_ge g;
         random_group_element_test(&g);
 #ifdef USE_ENDOMORPHISM
         if (i >= runs - 2) {
@@ -1919,7 +1919,7 @@ void test_ge(void) {
 
     /* Compute z inverses. */
     {
-        secp256k1_fe *zs = malloc(sizeof(secp256k1_fe) * (1 + 4 * runs));
+        cosmos_secp256k1_fe *zs = malloc(sizeof(secp256k1_fe) * (1 + 4 * runs));
         for (i = 0; i < 4 * runs + 1; i++) {
             if (i == 0) {
                 /* The point at infinity does not have a meaningful z inverse. Any should do. */
@@ -1947,13 +1947,13 @@ void test_ge(void) {
         int i2;
         for (i2 = 0; i2 < 1 + 4 * runs; i2++) {
             /* Compute reference result using gej + gej (var). */
-            secp256k1_gej refj, resj;
-            secp256k1_ge ref;
-            secp256k1_fe zr;
+            cosmos_secp256k1_gej refj, resj;
+            cosmos_secp256k1_ge ref;
+            cosmos_secp256k1_fe zr;
             secp256k1_gej_add_var(&refj, &gej[i1], &gej[i2], secp256k1_gej_is_infinity(&gej[i1]) ? NULL : &zr);
             /* Check Z ratio. */
             if (!secp256k1_gej_is_infinity(&gej[i1]) && !secp256k1_gej_is_infinity(&refj)) {
-                secp256k1_fe zrz; secp256k1_fe_mul(&zrz, &zr, &gej[i1].z);
+                cosmos_secp256k1_fe zrz; secp256k1_fe_mul(&zrz, &zr, &gej[i1].z);
                 CHECK(secp256k1_fe_equal_var(&zrz, &refj.z));
             }
             secp256k1_ge_set_gej_var(&ref, &refj);
@@ -1962,13 +1962,13 @@ void test_ge(void) {
             secp256k1_gej_add_ge_var(&resj, &gej[i1], &ge[i2], secp256k1_gej_is_infinity(&gej[i1]) ? NULL : &zr);
             ge_equals_gej(&ref, &resj);
             if (!secp256k1_gej_is_infinity(&gej[i1]) && !secp256k1_gej_is_infinity(&resj)) {
-                secp256k1_fe zrz; secp256k1_fe_mul(&zrz, &zr, &gej[i1].z);
+                cosmos_secp256k1_fe zrz; secp256k1_fe_mul(&zrz, &zr, &gej[i1].z);
                 CHECK(secp256k1_fe_equal_var(&zrz, &resj.z));
             }
 
             /* Test gej + ge (var, with additional Z factor). */
             {
-                secp256k1_ge ge2_zfi = ge[i2]; /* the second term with x and y rescaled for z = 1/zf */
+                cosmos_secp256k1_ge ge2_zfi = ge[i2]; /* the second term with x and y rescaled for z = 1/zf */
                 secp256k1_fe_mul(&ge2_zfi.x, &ge2_zfi.x, &zfi2);
                 secp256k1_fe_mul(&ge2_zfi.y, &ge2_zfi.y, &zfi3);
                 random_field_element_magnitude(&ge2_zfi.x);
@@ -1986,7 +1986,7 @@ void test_ge(void) {
 
             /* Test doubling (var). */
             if ((i1 == 0 && i2 == 0) || ((i1 + 3)/4 == (i2 + 3)/4 && ((i1 + 3)%4)/2 == ((i2 + 3)%4)/2)) {
-                secp256k1_fe zr2;
+                cosmos_secp256k1_fe zr2;
                 /* Normal doubling with Z ratio result. */
                 secp256k1_gej_double_var(&resj, &gej[i1], &zr2);
                 ge_equals_gej(&ref, &resj);
@@ -2019,15 +2019,15 @@ void test_ge(void) {
 
     /* Test adding all points together in random order equals infinity. */
     {
-        secp256k1_gej sum = SECP256K1_GEJ_CONST_INFINITY;
-        secp256k1_gej *gej_shuffled = (secp256k1_gej *)malloc((4 * runs + 1) * sizeof(secp256k1_gej));
+        cosmos_secp256k1_gej sum = SECP256K1_GEJ_CONST_INFINITY;
+        cosmos_secp256k1_gej *gej_shuffled = (cosmos_secp256k1_gej *)malloc((4 * runs + 1) * sizeof(cosmos_secp256k1_gej));
         for (i = 0; i < 4 * runs + 1; i++) {
             gej_shuffled[i] = gej[i];
         }
         for (i = 0; i < 4 * runs + 1; i++) {
             int swap = i + secp256k1_rand_int(4 * runs + 1 - i);
             if (swap != i) {
-                secp256k1_gej t = gej_shuffled[i];
+                cosmos_secp256k1_gej t = gej_shuffled[i];
                 gej_shuffled[i] = gej_shuffled[swap];
                 gej_shuffled[swap] = t;
             }
@@ -2041,9 +2041,9 @@ void test_ge(void) {
 
     /* Test batch gej -> ge conversion with and without known z ratios. */
     {
-        secp256k1_fe *zr = (secp256k1_fe *)malloc((4 * runs + 1) * sizeof(secp256k1_fe));
-        secp256k1_ge *ge_set_table = (secp256k1_ge *)malloc((4 * runs + 1) * sizeof(secp256k1_ge));
-        secp256k1_ge *ge_set_all = (secp256k1_ge *)malloc((4 * runs + 1) * sizeof(secp256k1_ge));
+        cosmos_secp256k1_fe *zr = (cosmos_secp256k1_fe *)malloc((4 * runs + 1) * sizeof(secp256k1_fe));
+        cosmos_secp256k1_ge *ge_set_table = (cosmos_secp256k1_ge *)malloc((4 * runs + 1) * sizeof(cosmos_secp256k1_ge));
+        cosmos_secp256k1_ge *ge_set_all = (cosmos_secp256k1_ge *)malloc((4 * runs + 1) * sizeof(cosmos_secp256k1_ge));
         for (i = 0; i < 4 * runs + 1; i++) {
             /* Compute gej[i + 1].z / gez[i].z (with gej[n].z taken to be 1). */
             if (i < 4 * runs) {
@@ -2053,7 +2053,7 @@ void test_ge(void) {
         secp256k1_ge_set_table_gej_var(ge_set_table, gej, zr, 4 * runs + 1);
         secp256k1_ge_set_all_gej_var(ge_set_all, gej, 4 * runs + 1, &ctx->error_callback);
         for (i = 0; i < 4 * runs + 1; i++) {
-            secp256k1_fe s;
+            cosmos_secp256k1_fe s;
             random_fe_non_zero(&s);
             secp256k1_gej_rescale(&gej[i], &s);
             ge_equals_gej(&ge_set_table[i], &gej[i]);
@@ -2100,27 +2100,27 @@ void test_add_neg_y_diff_x(void) {
      * print "    Q: %x %x" % Q.xy()
      * print "P + Q: %x %x" % (P + Q).xy()
      */
-    secp256k1_gej aj = SECP256K1_GEJ_CONST(
+    cosmos_secp256k1_gej aj = SECP256K1_GEJ_CONST(
         0x8d24cd95, 0x0a355af1, 0x3c543505, 0x44238d30,
         0x0643d79f, 0x05a59614, 0x2f8ec030, 0xd58977cb,
         0x001e337a, 0x38093dcd, 0x6c0f386d, 0x0b1293a8,
         0x4d72c879, 0xd7681924, 0x44e6d2f3, 0x9190117d
     );
-    secp256k1_gej bj = SECP256K1_GEJ_CONST(
+    cosmos_secp256k1_gej bj = SECP256K1_GEJ_CONST(
         0xc7b74206, 0x1f788cd9, 0xabd0937d, 0x164a0d86,
         0x95f6ff75, 0xf19a4ce9, 0xd013bd7b, 0xbf92d2a7,
         0xffe1cc85, 0xc7f6c232, 0x93f0c792, 0xf4ed6c57,
         0xb28d3786, 0x2897e6db, 0xbb192d0b, 0x6e6feab2
     );
-    secp256k1_gej sumj = SECP256K1_GEJ_CONST(
+    cosmos_secp256k1_gej sumj = SECP256K1_GEJ_CONST(
         0x671a63c0, 0x3efdad4c, 0x389a7798, 0x24356027,
         0xb3d69010, 0x278625c3, 0x5c86d390, 0x184a8f7a,
         0x5f6409c2, 0x2ce01f2b, 0x511fd375, 0x25071d08,
         0xda651801, 0x70e95caf, 0x8f0d893c, 0xbed8fbbe
     );
-    secp256k1_ge b;
-    secp256k1_gej resj;
-    secp256k1_ge res;
+    cosmos_secp256k1_ge b;
+    cosmos_secp256k1_gej resj;
+    cosmos_secp256k1_ge res;
     cosmos_secp256k1_ge_set_gej(&b, &bj);
 
     secp256k1_gej_add_var(&resj, &aj, &bj, NULL);
@@ -2150,8 +2150,8 @@ void test_ec_combine(void) {
     const cosmos_secp256k1_pubkey* d[6];
     secp256k1_pubkey sd;
     secp256k1_pubkey sd2;
-    secp256k1_gej Qj;
-    secp256k1_ge Q;
+    cosmos_secp256k1_gej Qj;
+    cosmos_secp256k1_ge Q;
     int i;
     for (i = 1; i <= 6; i++) {
         secp256k1_scalar s;
@@ -2164,7 +2164,7 @@ void test_ec_combine(void) {
         secp256k1_ecmult_gen(&ctx->ecmult_gen_ctx, &Qj, &sum);
         cosmos_secp256k1_ge_set_gej(&Q, &Qj);
         cosmos_secp256k1_pubkey_save(&sd, &Q);
-        CHECK(secp256k1_ec_pubkey_combine(ctx, &sd2, d, i) == 1);
+        CHECK(cosmos_secp256k1_ec_pubkey_combine(ctx, &sd2, d, i) == 1);
         CHECK(memcmp(&sd, &sd2, sizeof(sd)) == 0);
     }
 }
@@ -2178,11 +2178,11 @@ void run_ec_combine(void) {
 
 void test_group_decompress(const secp256k1_fe* x) {
     /* The input itself, normalized. */
-    secp256k1_fe fex = *x;
-    secp256k1_fe fez;
+    cosmos_secp256k1_fe fex = *x;
+    cosmos_secp256k1_fe fez;
     /* Results of set_xquad_var, set_xo_var(..., 0), set_xo_var(..., 1). */
-    secp256k1_ge ge_quad, ge_even, ge_odd;
-    secp256k1_gej gej_quad;
+    cosmos_secp256k1_ge ge_quad, ge_even, ge_odd;
+    cosmos_secp256k1_gej gej_quad;
     /* Return values of the above calls. */
     int res_quad, res_even, res_odd;
 
@@ -2243,7 +2243,7 @@ void test_group_decompress(const secp256k1_fe* x) {
 void run_group_decompress(void) {
     int i;
     for (i = 0; i < count * 4; i++) {
-        secp256k1_fe fe;
+        cosmos_secp256k1_fe fe;
         random_fe_test(&fe);
         test_group_decompress(&fe);
     }
@@ -2253,7 +2253,7 @@ void run_group_decompress(void) {
 
 void run_ecmult_chain(void) {
     /* random starting point A (on the curve) */
-    secp256k1_gej a = SECP256K1_GEJ_CONST(
+    cosmos_secp256k1_gej a = SECP256K1_GEJ_CONST(
         0x8b30bbe9, 0xae2a9906, 0x96b22f67, 0x0709dff3,
         0x727fd8bc, 0x04d3362c, 0x6c7bf458, 0xe2846004,
         0xa357ae91, 0x5c4a6528, 0x1309edf2, 0x0504740f,
@@ -2275,8 +2275,8 @@ void run_ecmult_chain(void) {
     secp256k1_scalar ae = SECP256K1_SCALAR_CONST(0, 0, 0, 0, 0, 0, 0, 1);
     secp256k1_scalar ge = SECP256K1_SCALAR_CONST(0, 0, 0, 0, 0, 0, 0, 0);
     /* actual points */
-    secp256k1_gej x;
-    secp256k1_gej x2;
+    cosmos_secp256k1_gej x;
+    cosmos_secp256k1_gej x2;
     int i;
 
     /* the point being computed */
@@ -2296,7 +2296,7 @@ void run_ecmult_chain(void) {
         /* verify */
         if (i == 19999) {
             /* expected result after 19999 iterations */
-            secp256k1_gej rp = SECP256K1_GEJ_CONST(
+            cosmos_secp256k1_gej rp = SECP256K1_GEJ_CONST(
                 0xD6E96687, 0xF9B10D09, 0x2A6F3543, 0x9D86CEBE,
                 0xA4535D0D, 0x409F5358, 0x6440BD74, 0xB933E830,
                 0xB95CBCA2, 0xC77DA786, 0x539BE8FD, 0x53354D2D,
@@ -2315,14 +2315,14 @@ void run_ecmult_chain(void) {
     CHECK(secp256k1_gej_is_infinity(&x2));
 }
 
-void test_point_times_order(const secp256k1_gej *point) {
+void test_point_times_order(const cosmos_secp256k1_gej *point) {
     /* X * (point + G) + (order-X) * (pointer + G) = 0 */
     secp256k1_scalar x;
     secp256k1_scalar nx;
     secp256k1_scalar zero = SECP256K1_SCALAR_CONST(0, 0, 0, 0, 0, 0, 0, 0);
     secp256k1_scalar one = SECP256K1_SCALAR_CONST(0, 0, 0, 0, 0, 0, 0, 1);
-    secp256k1_gej res1, res2;
-    secp256k1_ge res3;
+    cosmos_secp256k1_gej res1, res2;
+    cosmos_secp256k1_ge res3;
     unsigned char pub[65];
     size_t psize = 65;
     random_scalar_order_test(&x);
@@ -2352,15 +2352,15 @@ void test_point_times_order(const secp256k1_gej *point) {
 
 void run_point_times_order(void) {
     int i;
-    secp256k1_fe x = SECP256K1_FE_CONST(0, 0, 0, 0, 0, 0, 0, 2);
-    static const secp256k1_fe xr = SECP256K1_FE_CONST(
+    cosmos_secp256k1_fe x = SECP256K1_FE_CONST(0, 0, 0, 0, 0, 0, 0, 2);
+    static const cosmos_secp256k1_fe xr = SECP256K1_FE_CONST(
         0x7603CB59, 0xB0EF6C63, 0xFE608479, 0x2A0C378C,
         0xDB3233A8, 0x0F8A9A09, 0xA877DEAD, 0x31B38C45
     );
     for (i = 0; i < 500; i++) {
-        secp256k1_ge p;
+        cosmos_secp256k1_ge p;
         if (secp256k1_ge_set_xo_var(&p, &x, 1)) {
-            secp256k1_gej j;
+            cosmos_secp256k1_gej j;
             CHECK(secp256k1_ge_is_valid_var(&p));
             secp256k1_gej_set_ge(&j, &p);
             CHECK(secp256k1_gej_is_valid_var(&j));
@@ -2374,7 +2374,7 @@ void run_point_times_order(void) {
 
 void ecmult_const_random_mult(void) {
     /* random starting point A (on the curve) */
-    secp256k1_ge a = SECP256K1_GE_CONST(
+    cosmos_secp256k1_ge a = SECP256K1_GE_CONST(
         0x6d986544, 0x57ff52b8, 0xcf1b8126, 0x5b802a5b,
         0xa97f9263, 0xb1e88044, 0x93351325, 0x91bc450a,
         0x535c59f7, 0x325e5d2b, 0xc391fbe8, 0x3c12787c,
@@ -2386,13 +2386,13 @@ void ecmult_const_random_mult(void) {
         0xa31b876a, 0xd2d8ce2a, 0x2236d5c6, 0xd7b2029b
     );
     /* expected xn * A (from sage) */
-    secp256k1_ge expected_b = SECP256K1_GE_CONST(
+    cosmos_secp256k1_ge expected_b = SECP256K1_GE_CONST(
         0x23773684, 0x4d209dc7, 0x098a786f, 0x20d06fcd,
         0x070a38bf, 0xc11ac651, 0x03004319, 0x1e2a8786,
         0xed8c3b8e, 0xc06dd57b, 0xd06ea66e, 0x45492b0f,
         0xb84e4e1b, 0xfb77e21f, 0x96baae2a, 0x63dec956
     );
-    secp256k1_gej b;
+    cosmos_secp256k1_gej b;
     secp256k1_ecmult_const(&b, &a, &xn);
 
     CHECK(secp256k1_ge_is_valid_var(&a));
@@ -2402,10 +2402,10 @@ void ecmult_const_random_mult(void) {
 void ecmult_const_commutativity(void) {
     secp256k1_scalar a;
     secp256k1_scalar b;
-    secp256k1_gej res1;
-    secp256k1_gej res2;
-    secp256k1_ge mid1;
-    secp256k1_ge mid2;
+    cosmos_secp256k1_gej res1;
+    cosmos_secp256k1_gej res2;
+    cosmos_secp256k1_ge mid1;
+    cosmos_secp256k1_ge mid2;
     random_scalar_order_test(&a);
     random_scalar_order_test(&b);
 
@@ -2424,9 +2424,9 @@ void ecmult_const_mult_zero_one(void) {
     secp256k1_scalar zero = SECP256K1_SCALAR_CONST(0, 0, 0, 0, 0, 0, 0, 0);
     secp256k1_scalar one = SECP256K1_SCALAR_CONST(0, 0, 0, 0, 0, 0, 0, 1);
     secp256k1_scalar negone;
-    secp256k1_gej res1;
-    secp256k1_ge res2;
-    secp256k1_ge point;
+    cosmos_secp256k1_gej res1;
+    cosmos_secp256k1_ge res2;
+    cosmos_secp256k1_ge point;
     secp256k1_scalar_negate(&negone, &one);
 
     random_group_element_test(&point);
@@ -2448,19 +2448,19 @@ void ecmult_const_chain_multiply(void) {
         0x4968d524, 0x2abf9b7a, 0x466abbcf, 0x34b11b6d,
         0xcd83d307, 0x827bed62, 0x05fad0ce, 0x18fae63b
     );
-    const secp256k1_gej expected_point = SECP256K1_GEJ_CONST(
+    const cosmos_secp256k1_gej expected_point = SECP256K1_GEJ_CONST(
         0x5494c15d, 0x32099706, 0xc2395f94, 0x348745fd,
         0x757ce30e, 0x4e8c90fb, 0xa2bad184, 0xf883c69f,
         0x5d195d20, 0xe191bf7f, 0x1be3e55f, 0x56a80196,
         0x6071ad01, 0xf1462f66, 0xc997fa94, 0xdb858435
     );
-    secp256k1_gej point;
-    secp256k1_ge res;
+    cosmos_secp256k1_gej point;
+    cosmos_secp256k1_ge res;
     int i;
 
     secp256k1_gej_set_ge(&point, &secp256k1_ge_const_g);
     for (i = 0; i < 100; ++i) {
-        secp256k1_ge tmp;
+        cosmos_secp256k1_ge tmp;
         cosmos_secp256k1_ge_set_gej(&tmp, &point);
         secp256k1_ecmult_const(&point, &tmp, &scalar);
     }
@@ -2590,8 +2590,8 @@ void run_wnaf(void) {
 void test_ecmult_constants(void) {
     /* Test ecmult_gen() for [0..36) and [order-36..0). */
     secp256k1_scalar x;
-    secp256k1_gej r;
-    secp256k1_ge ng;
+    cosmos_secp256k1_gej r;
+    cosmos_secp256k1_ge ng;
     int i;
     int j;
     secp256k1_ge_neg(&ng, &secp256k1_ge_const_g);
@@ -2629,10 +2629,10 @@ void test_ecmult_gen_blind(void) {
     secp256k1_scalar key;
     secp256k1_scalar b;
     unsigned char seed32[32];
-    secp256k1_gej pgej;
-    secp256k1_gej pgej2;
-    secp256k1_gej i;
-    secp256k1_ge pge;
+    cosmos_secp256k1_gej pgej;
+    cosmos_secp256k1_gej pgej2;
+    cosmos_secp256k1_gej i;
+    cosmos_secp256k1_ge pge;
     random_scalar_order_test(&key);
     secp256k1_ecmult_gen(&ctx->ecmult_gen_ctx, &pgej, &key);
     secp256k1_rand256(seed32);
@@ -2650,7 +2650,7 @@ void test_ecmult_gen_blind(void) {
 void test_ecmult_gen_blind_reset(void) {
     /* Test ecmult_gen() blinding reset and confirm that the blinding is consistent. */
     secp256k1_scalar b;
-    secp256k1_gej initial;
+    cosmos_secp256k1_gej initial;
     secp256k1_ecmult_gen_blind(&ctx->ecmult_gen_ctx, 0);
     b = ctx->ecmult_gen_ctx.blind;
     initial = ctx->ecmult_gen_ctx.initial;
@@ -2700,7 +2700,7 @@ void run_endomorphism_tests(void) {
 void ec_pubkey_parse_pointtest(const unsigned char *input, int xvalid, int yvalid) {
     unsigned char pubkeyc[65];
     secp256k1_pubkey pubkey;
-    secp256k1_ge ge;
+    cosmos_secp256k1_ge ge;
     size_t pubkeyclen;
     int32_t ecount;
     ecount = 0;
@@ -2953,7 +2953,7 @@ void run_ec_pubkey_parse_test(void) {
     };
     unsigned char sout[65];
     unsigned char shortkey[2];
-    secp256k1_ge ge;
+    cosmos_secp256k1_ge ge;
     secp256k1_pubkey pubkey;
     size_t len;
     int32_t i;
@@ -3271,7 +3271,7 @@ void run_eckey_edge_case_test(void) {
     CHECK(cosmos_secp256k1_ec_pubkey_create(ctx, &pubkey, NULL) == 0);
     CHECK(ecount == 2);
     CHECK(memcmp(&pubkey, zeros, sizeof(secp256k1_pubkey)) == 0);
-    /* secp256k1_ec_pubkey_combine tests. */
+    /* cosmos_secp256k1_ec_pubkey_combine tests. */
     ecount = 0;
     pubkeys[0] = &pubkey_one;
     VG_UNDEF(&pubkeys[0], sizeof(secp256k1_pubkey *));
@@ -3279,23 +3279,23 @@ void run_eckey_edge_case_test(void) {
     VG_UNDEF(&pubkeys[2], sizeof(secp256k1_pubkey *));
     memset(&pubkey, 255, sizeof(secp256k1_pubkey));
     VG_UNDEF(&pubkey, sizeof(secp256k1_pubkey));
-    CHECK(secp256k1_ec_pubkey_combine(ctx, &pubkey, pubkeys, 0) == 0);
+    CHECK(cosmos_secp256k1_ec_pubkey_combine(ctx, &pubkey, pubkeys, 0) == 0);
     VG_CHECK(&pubkey, sizeof(secp256k1_pubkey));
     CHECK(memcmp(&pubkey, zeros, sizeof(secp256k1_pubkey)) == 0);
     CHECK(ecount == 1);
-    CHECK(secp256k1_ec_pubkey_combine(ctx, NULL, pubkeys, 1) == 0);
+    CHECK(cosmos_secp256k1_ec_pubkey_combine(ctx, NULL, pubkeys, 1) == 0);
     CHECK(memcmp(&pubkey, zeros, sizeof(secp256k1_pubkey)) == 0);
     CHECK(ecount == 2);
     memset(&pubkey, 255, sizeof(secp256k1_pubkey));
     VG_UNDEF(&pubkey, sizeof(secp256k1_pubkey));
-    CHECK(secp256k1_ec_pubkey_combine(ctx, &pubkey, NULL, 1) == 0);
+    CHECK(cosmos_secp256k1_ec_pubkey_combine(ctx, &pubkey, NULL, 1) == 0);
     VG_CHECK(&pubkey, sizeof(secp256k1_pubkey));
     CHECK(memcmp(&pubkey, zeros, sizeof(secp256k1_pubkey)) == 0);
     CHECK(ecount == 3);
     pubkeys[0] = &pubkey_negone;
     memset(&pubkey, 255, sizeof(secp256k1_pubkey));
     VG_UNDEF(&pubkey, sizeof(secp256k1_pubkey));
-    CHECK(secp256k1_ec_pubkey_combine(ctx, &pubkey, pubkeys, 1) == 1);
+    CHECK(cosmos_secp256k1_ec_pubkey_combine(ctx, &pubkey, pubkeys, 1) == 1);
     VG_CHECK(&pubkey, sizeof(secp256k1_pubkey));
     CHECK(memcmp(&pubkey, zeros, sizeof(secp256k1_pubkey)) > 0);
     CHECK(ecount == 3);
@@ -3308,7 +3308,7 @@ void run_eckey_edge_case_test(void) {
     pubkeys[1] = &pubkey_negone;
     memset(&pubkey, 255, sizeof(secp256k1_pubkey));
     VG_UNDEF(&pubkey, sizeof(secp256k1_pubkey));
-    CHECK(secp256k1_ec_pubkey_combine(ctx, &pubkey, pubkeys, 2) == 0);
+    CHECK(cosmos_secp256k1_ec_pubkey_combine(ctx, &pubkey, pubkeys, 2) == 0);
     VG_CHECK(&pubkey, sizeof(secp256k1_pubkey));
     CHECK(memcmp(&pubkey, zeros, sizeof(secp256k1_pubkey)) == 0);
     CHECK(ecount == 3);
@@ -3316,7 +3316,7 @@ void run_eckey_edge_case_test(void) {
     pubkeys[2] = &pubkey_one;
     memset(&pubkey, 255, sizeof(secp256k1_pubkey));
     VG_UNDEF(&pubkey, sizeof(secp256k1_pubkey));
-    CHECK(secp256k1_ec_pubkey_combine(ctx, &pubkey, pubkeys, 3) == 1);
+    CHECK(cosmos_secp256k1_ec_pubkey_combine(ctx, &pubkey, pubkeys, 3) == 1);
     VG_CHECK(&pubkey, sizeof(secp256k1_pubkey));
     CHECK(memcmp(&pubkey, zeros, sizeof(secp256k1_pubkey)) > 0);
     CHECK(ecount == 3);
@@ -3328,7 +3328,7 @@ void run_eckey_edge_case_test(void) {
     pubkeys[1] = &pubkey_one;
     memset(&pubkey, 255, sizeof(secp256k1_pubkey));
     VG_UNDEF(&pubkey, sizeof(secp256k1_pubkey));
-    CHECK(secp256k1_ec_pubkey_combine(ctx, &pubkey, pubkeys, 2) == 1);
+    CHECK(cosmos_secp256k1_ec_pubkey_combine(ctx, &pubkey, pubkeys, 2) == 1);
     VG_CHECK(&pubkey, sizeof(secp256k1_pubkey));
     CHECK(memcmp(&pubkey, zeros, sizeof(secp256k1_pubkey)) > 0);
     CHECK(ecount == 3);
@@ -3343,8 +3343,8 @@ void random_sign(secp256k1_scalar *sigr, secp256k1_scalar *sigs, const secp256k1
 }
 
 void test_ecdsa_sign_verify(void) {
-    secp256k1_gej pubj;
-    secp256k1_ge pub;
+    cosmos_secp256k1_gej pubj;
+    cosmos_secp256k1_ge pub;
     secp256k1_scalar one;
     secp256k1_scalar msg, key;
     secp256k1_scalar sigr, sigs;
@@ -3548,8 +3548,8 @@ void test_ecdsa_end_to_end(void) {
 }
 
 void test_random_pubkeys(void) {
-    secp256k1_ge elem;
-    secp256k1_ge elem2;
+    cosmos_secp256k1_ge elem;
+    cosmos_secp256k1_ge elem2;
     unsigned char in[65];
     /* Generate some randomly sized pubkeys. */
     size_t len = secp256k1_rand_bits(2) == 0 ? 65 : 33;
@@ -3956,8 +3956,8 @@ void test_ecdsa_edge_cases(void) {
 
     /* Test the case where ECDSA recomputes a point that is infinity. */
     {
-        secp256k1_gej keyj;
-        secp256k1_ge key;
+        cosmos_secp256k1_gej keyj;
+        cosmos_secp256k1_ge key;
         secp256k1_scalar msg;
         secp256k1_scalar sr, ss;
         secp256k1_scalar_set_int(&ss, 1);
@@ -3979,7 +3979,7 @@ void test_ecdsa_edge_cases(void) {
             0x3b, 0xbf, 0xd2, 0x5e, 0x8c, 0xd0, 0x36, 0x41,
             0x41
         };
-        secp256k1_ge key;
+        cosmos_secp256k1_ge key;
         secp256k1_scalar msg;
         secp256k1_scalar sr, ss;
         secp256k1_scalar_set_int(&ss, 1);
@@ -3998,7 +3998,7 @@ void test_ecdsa_edge_cases(void) {
             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
             0x01
         };
-        secp256k1_ge key;
+        cosmos_secp256k1_ge key;
         secp256k1_scalar msg;
         secp256k1_scalar sr, ss;
         secp256k1_scalar_set_int(&ss, 0);
@@ -4024,8 +4024,8 @@ void test_ecdsa_edge_cases(void) {
             0x3b, 0xbf, 0xd2, 0x5e, 0x8c, 0xd0, 0x36, 0x41,
             0x43
         };
-        secp256k1_ge key;
-        secp256k1_ge key2;
+        cosmos_secp256k1_ge key;
+        cosmos_secp256k1_ge key2;
         secp256k1_scalar msg;
         secp256k1_scalar sr, ss;
         secp256k1_scalar_set_int(&ss, 2);
@@ -4065,8 +4065,8 @@ void test_ecdsa_edge_cases(void) {
             0x45, 0x51, 0x23, 0x19, 0x50, 0xb7, 0x5f, 0xc4,
             0x40, 0x2d, 0xa1, 0x72, 0x2f, 0xc9, 0xba, 0xeb
         };
-        secp256k1_ge key;
-        secp256k1_ge key2;
+        cosmos_secp256k1_ge key;
+        cosmos_secp256k1_ge key2;
         secp256k1_scalar msg;
         secp256k1_scalar sr, ss;
         secp256k1_scalar_set_int(&ss, 1);
@@ -4100,7 +4100,7 @@ void test_ecdsa_edge_cases(void) {
             0x45, 0x51, 0x23, 0x19, 0x50, 0xb7, 0x5f, 0xc4,
             0x40, 0x2d, 0xa1, 0x72, 0x2f, 0xc9, 0xba, 0xee
         };
-        secp256k1_ge key;
+        cosmos_secp256k1_ge key;
         secp256k1_scalar msg;
         secp256k1_scalar sr, ss;
         secp256k1_scalar_set_int(&ss, 1);
@@ -4338,7 +4338,7 @@ EC_KEY *get_openssl_key(const unsigned char *key32) {
 
 void test_ecdsa_openssl(void) {
     secp256k1_gej qj;
-    secp256k1_ge q;
+    cosmos_secp256k1_ge q;
     secp256k1_scalar sigr, sigs;
     secp256k1_scalar one;
     secp256k1_scalar msg2;

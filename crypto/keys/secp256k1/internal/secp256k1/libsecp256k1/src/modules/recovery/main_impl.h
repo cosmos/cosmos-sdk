@@ -84,13 +84,13 @@ int secp256k1_ecdsa_recoverable_signature_convert(const cosmos_secp256k1_context
     return 1;
 }
 
-static int secp256k1_ecdsa_sig_recover(const secp256k1_ecmult_context *ctx, const cosmos_secp256k1_scalar *sigr, const cosmos_secp256k1_scalar* sigs, secp256k1_ge *pubkey, const cosmos_secp256k1_scalar *message, int recid) {
+static int secp256k1_ecdsa_sig_recover(const secp256k1_ecmult_context *ctx, const cosmos_secp256k1_scalar *sigr, const cosmos_secp256k1_scalar* sigs, cosmos_secp256k1_ge *pubkey, const cosmos_secp256k1_scalar *message, int recid) {
     unsigned char brx[32];
-    secp256k1_fe fx;
-    secp256k1_ge x;
-    secp256k1_gej xj;
+    cosmos_secp256k1_fe fx;
+    cosmos_secp256k1_ge x;
+    cosmos_secp256k1_gej xj;
     cosmos_secp256k1_scalar rn, u1, u2;
-    secp256k1_gej qj;
+    cosmos_secp256k1_gej qj;
     int r;
 
     if (secp256k1_scalar_is_zero(sigr) || secp256k1_scalar_is_zero(sigs)) {
@@ -168,7 +168,7 @@ int cosmos_secp256k1_ecdsa_sign_recoverable(const cosmos_secp256k1_context* ctx,
 }
 
 int cosmos_secp256k1_ecdsa_recover(const cosmos_secp256k1_context* ctx, cosmos_secp256k1_pubkey *pubkey, const secp256k1_ecdsa_recoverable_signature *signature, const unsigned char *msg32) {
-    secp256k1_ge q;
+    cosmos_secp256k1_ge q;
     cosmos_secp256k1_scalar r, s;
     cosmos_secp256k1_scalar m;
     int recid;

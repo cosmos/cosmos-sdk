@@ -24,7 +24,7 @@
     int m; \
     int abs_n = (n) * (((n) > 0) * 2 - 1); \
     int idx_n = abs_n / 2; \
-    secp256k1_fe neg_y; \
+    cosmos_secp256k1_fe neg_y; \
     VERIFY_CHECK(((n) & 1) == 1); \
     VERIFY_CHECK((n) >= -((1 << ((w)-1)) - 1)); \
     VERIFY_CHECK((n) <=  ((1 << ((w)-1)) - 1)); \
@@ -119,15 +119,15 @@ static int secp256k1_wnaf_const(int *wnaf, cosmos_secp256k1_scalar s, int w) {
 }
 
 
-static void secp256k1_ecmult_const(secp256k1_gej *r, const secp256k1_ge *a, const cosmos_secp256k1_scalar *scalar) {
-    secp256k1_ge pre_a[ECMULT_TABLE_SIZE(WINDOW_A)];
-    secp256k1_ge tmpa;
-    secp256k1_fe Z;
+static void secp256k1_ecmult_const(cosmos_secp256k1_gej *r, const cosmos_secp256k1_ge *a, const cosmos_secp256k1_scalar *scalar) {
+    cosmos_secp256k1_ge pre_a[ECMULT_TABLE_SIZE(WINDOW_A)];
+    cosmos_secp256k1_ge tmpa;
+    cosmos_secp256k1_fe Z;
 
     int skew_1;
     int wnaf_1[1 + WNAF_SIZE(WINDOW_A - 1)];
 #ifdef USE_ENDOMORPHISM
-    secp256k1_ge pre_a_lam[ECMULT_TABLE_SIZE(WINDOW_A)];
+    cosmos_secp256k1_ge pre_a_lam[ECMULT_TABLE_SIZE(WINDOW_A)];
     int wnaf_lam[1 + WNAF_SIZE(WINDOW_A - 1)];
     int skew_lam;
     cosmos_secp256k1_scalar q_1, q_lam;
@@ -200,13 +200,13 @@ static void secp256k1_ecmult_const(secp256k1_gej *r, const secp256k1_ge *a, cons
 
     {
         /* Correct for wNAF skew */
-        secp256k1_ge correction = *a;
+        cosmos_secp256k1_ge correction = *a;
         secp256k1_ge_storage correction_1_stor;
 #ifdef USE_ENDOMORPHISM
         secp256k1_ge_storage correction_lam_stor;
 #endif
         secp256k1_ge_storage a2_stor;
-        secp256k1_gej tmpj;
+        cosmos_secp256k1_gej tmpj;
         secp256k1_gej_set_ge(&tmpj, &correction);
         secp256k1_gej_double_var(&tmpj, &tmpj, NULL);
         cosmos_secp256k1_ge_set_gej(&correction, &tmpj);

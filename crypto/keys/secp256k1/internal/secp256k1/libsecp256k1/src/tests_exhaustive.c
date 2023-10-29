@@ -32,7 +32,7 @@
 #endif
 
 /** stolen from tests.c */
-void ge_equals_ge(const secp256k1_ge *a, const secp256k1_ge *b) {
+void ge_equals_ge(const cosmos_secp256k1_ge *a, const cosmos_secp256k1_ge *b) {
     CHECK(a->infinity == b->infinity);
     if (a->infinity) {
         return;
@@ -41,9 +41,9 @@ void ge_equals_ge(const secp256k1_ge *a, const secp256k1_ge *b) {
     CHECK(secp256k1_fe_equal_var(&a->y, &b->y));
 }
 
-void ge_equals_gej(const secp256k1_ge *a, const secp256k1_gej *b) {
-    secp256k1_fe z2s;
-    secp256k1_fe u1, u2, s1, s2;
+void ge_equals_gej(const cosmos_secp256k1_ge *a, const cosmos_secp256k1_gej *b) {
+    cosmos_secp256k1_fe z2s;
+    cosmos_secp256k1_fe u1, u2, s1, s2;
     CHECK(a->infinity == b->infinity);
     if (a->infinity) {
         return;
@@ -58,7 +58,7 @@ void ge_equals_gej(const secp256k1_ge *a, const secp256k1_gej *b) {
     CHECK(secp256k1_fe_equal_var(&s1, &s2));
 }
 
-void random_fe(secp256k1_fe *x) {
+void random_fe(cosmos_secp256k1_fe *x) {
     unsigned char bin[32];
     do {
         secp256k1_rand256(bin);
@@ -100,7 +100,7 @@ void test_exhaustive_endomorphism(const secp256k1_ge *group, int order) {
 }
 #endif
 
-void test_exhaustive_addition(const secp256k1_ge *group, const secp256k1_gej *groupj, int order) {
+void test_exhaustive_addition(const cosmos_secp256k1_ge *group, const cosmos_secp256k1_gej *groupj, int order) {
     int i, j;
 
     /* Sanity-check (and check infinity functions) */
@@ -113,11 +113,11 @@ void test_exhaustive_addition(const secp256k1_ge *group, const secp256k1_gej *gr
 
     /* Check all addition formulae */
     for (j = 0; j < order; j++) {
-        secp256k1_fe fe_inv;
+        cosmos_secp256k1_fe fe_inv;
         secp256k1_fe_inv(&fe_inv, &groupj[j].z);
         for (i = 0; i < order; i++) {
-            secp256k1_ge zless_gej;
-            secp256k1_gej tmp;
+            cosmos_secp256k1_ge zless_gej;
+            cosmos_secp256k1_gej tmp;
             /* add_var */
             secp256k1_gej_add_var(&tmp, &groupj[i], &groupj[j], NULL);
             ge_equals_gej(&group[(i + j) % order], &tmp);
@@ -140,7 +140,7 @@ void test_exhaustive_addition(const secp256k1_ge *group, const secp256k1_gej *gr
 
     /* Check doubling */
     for (i = 0; i < order; i++) {
-        secp256k1_gej tmp;
+        cosmos_secp256k1_gej tmp;
         if (i > 0) {
             secp256k1_gej_double_nonzero(&tmp, &groupj[i], NULL);
             ge_equals_gej(&group[(2 * i) % order], &tmp);
@@ -151,8 +151,8 @@ void test_exhaustive_addition(const secp256k1_ge *group, const secp256k1_gej *gr
 
     /* Check negation */
     for (i = 1; i < order; i++) {
-        secp256k1_ge tmp;
-        secp256k1_gej tmpj;
+        cosmos_secp256k1_ge tmp;
+        cosmos_secp256k1_gej tmpj;
         secp256k1_ge_neg(&tmp, &group[i]);
         ge_equals_ge(&group[order - i], &tmp);
         secp256k1_gej_neg(&tmpj, &groupj[i]);
@@ -160,12 +160,12 @@ void test_exhaustive_addition(const secp256k1_ge *group, const secp256k1_gej *gr
     }
 }
 
-void test_exhaustive_ecmult(const secp256k1_context *ctx, const secp256k1_ge *group, const secp256k1_gej *groupj, int order) {
+void test_exhaustive_ecmult(const secp256k1_context *ctx, const cosmos_secp256k1_ge *group, const cosmos_secp256k1_gej *groupj, int order) {
     int i, j, r_log;
     for (r_log = 1; r_log < order; r_log++) {
         for (j = 0; j < order; j++) {
             for (i = 0; i < order; i++) {
-                secp256k1_gej tmp;
+                cosmos_secp256k1_gej tmp;
                 cosmos_secp256k1_scalar na, ng;
                 secp256k1_scalar_set_int(&na, i);
                 secp256k1_scalar_set_int(&ng, j);
@@ -182,8 +182,8 @@ void test_exhaustive_ecmult(const secp256k1_context *ctx, const secp256k1_ge *gr
     }
 }
 
-void r_from_k(cosmos_secp256k1_scalar *r, const secp256k1_ge *group, int k) {
-    secp256k1_fe x;
+void r_from_k(cosmos_secp256k1_scalar *r, const cosmos_secp256k1_ge *group, int k) {
+    cosmos_secp256k1_fe x;
     unsigned char x_bin[32];
     k %= EXHAUSTIVE_TEST_ORDER;
     x = group[k].x;
@@ -192,13 +192,13 @@ void r_from_k(cosmos_secp256k1_scalar *r, const secp256k1_ge *group, int k) {
     secp256k1_scalar_set_b32(r, x_bin, NULL);
 }
 
-void test_exhaustive_verify(const secp256k1_context *ctx, const secp256k1_ge *group, int order) {
+void test_exhaustive_verify(const secp256k1_context *ctx, const cosmos_secp256k1_ge *group, int order) {
     int s, r, msg, key;
     for (s = 1; s < order; s++) {
         for (r = 1; r < order; r++) {
             for (msg = 1; msg < order; msg++) {
                 for (key = 1; key < order; key++) {
-                    secp256k1_ge nonconst_ge;
+                    cosmos_secp256k1_ge nonconst_ge;
                     cosmos_secp256k1_ecdsa_signature sig;
                     secp256k1_pubkey pk;
                     cosmos_secp256k1_scalar sk_s, msg_s, r_s, s_s;
@@ -242,7 +242,7 @@ void test_exhaustive_verify(const secp256k1_context *ctx, const secp256k1_ge *gr
     }
 }
 
-void test_exhaustive_sign(const secp256k1_context *ctx, const secp256k1_ge *group, int order) {
+void test_exhaustive_sign(const secp256k1_context *ctx, const cosmos_secp256k1_ge *group, int order) {
     int i, j, k;
 
     /* Loop */
@@ -296,7 +296,7 @@ void test_exhaustive_recovery_sign(const secp256k1_context *ctx, const secp256k1
         for (j = 1; j < order; j++) {  /* key */
             for (k = 1; k < order; k++) {  /* nonce */
                 const int starting_k = k;
-                secp256k1_fe r_dot_y_normalized;
+                cosmos_secp256k1_fe r_dot_y_normalized;
                 secp256k1_ecdsa_recoverable_signature rsig;
                 cosmos_secp256k1_ecdsa_signature sig;
                 secp256k1_scalar sk, msg, r, s, expected_r;
@@ -413,8 +413,8 @@ void test_exhaustive_recovery_verify(const secp256k1_context *ctx, const secp256
 
 int main(void) {
     int i;
-    secp256k1_gej groupj[EXHAUSTIVE_TEST_ORDER];
-    secp256k1_ge group[EXHAUSTIVE_TEST_ORDER];
+    cosmos_secp256k1_gej groupj[EXHAUSTIVE_TEST_ORDER];
+    cosmos_secp256k1_ge group[EXHAUSTIVE_TEST_ORDER];
 
     /* Build context */
     secp256k1_context *ctx = cosmos_secp256k1_context_create(SECP256K1_CONTEXT_SIGN | SECP256K1_CONTEXT_VERIFY);
@@ -426,7 +426,7 @@ int main(void) {
     cosmos_secp256k1_ge_set_gej(&group[0], &groupj[0]);
     for (i = 1; i < EXHAUSTIVE_TEST_ORDER; i++) {
         /* Set a different random z-value for each Jacobian point */
-        secp256k1_fe z;
+        cosmos_secp256k1_fe z;
         random_fe(&z);
 
         secp256k1_gej_add_ge(&groupj[i], &groupj[i - 1], &secp256k1_ge_const_g);
@@ -436,8 +436,8 @@ int main(void) {
         /* Verify against ecmult_gen */
         {
             cosmos_secp256k1_scalar scalar_i;
-            secp256k1_gej generatedj;
-            secp256k1_ge generated;
+            cosmos_secp256k1_gej generatedj;
+            cosmos_secp256k1_ge generated;
 
             secp256k1_scalar_set_int(&scalar_i, i);
             secp256k1_ecmult_gen(&ctx->ecmult_gen_ctx, &generatedj, &scalar_i);

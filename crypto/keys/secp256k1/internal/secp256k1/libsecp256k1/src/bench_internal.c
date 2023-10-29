@@ -20,9 +20,9 @@
 
 typedef struct {
     secp256k1_scalar scalar_x, scalar_y;
-    secp256k1_fe fe_x, fe_y;
-    secp256k1_ge ge_x, ge_y;
-    secp256k1_gej gej_x, gej_y;
+    cosmos_secp256k1_fe fe_x, fe_y;
+    cosmos_secp256k1_ge ge_x, ge_y;
+    cosmos_secp256k1_gej gej_x, gej_y;
     unsigned char data[64];
     int wnaf[256];
 } bench_inv_t;

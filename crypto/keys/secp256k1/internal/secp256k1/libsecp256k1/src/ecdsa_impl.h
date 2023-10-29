@@ -28,7 +28,7 @@
  *  sage: '%x' % (EllipticCurve ([F (a), F (b)]).order())
  *   'fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141'
  */
-static const secp256k1_fe secp256k1_ecdsa_const_order_as_fe = SECP256K1_FE_CONST(
+static const cosmos_secp256k1_fe secp256k1_ecdsa_const_order_as_fe = SECP256K1_FE_CONST(
     0xFFFFFFFFUL, 0xFFFFFFFFUL, 0xFFFFFFFFUL, 0xFFFFFFFEUL,
     0xBAAEDCE6UL, 0xAF48A03BUL, 0xBFD25E8CUL, 0xD0364141UL
 );
@@ -42,7 +42,7 @@ static const secp256k1_fe secp256k1_ecdsa_const_order_as_fe = SECP256K1_FE_CONST
  *  sage: '%x' % (p - EllipticCurve ([F (a), F (b)]).order())
  *   '14551231950b75fc4402da1722fc9baee'
  */
-static const secp256k1_fe secp256k1_ecdsa_const_p_minus_order = SECP256K1_FE_CONST(
+static const cosmos_secp256k1_fe secp256k1_ecdsa_const_p_minus_order = SECP256K1_FE_CONST(
     0, 0, 0, 1, 0x45512319UL, 0x50B75FC4UL, 0x402DA172UL, 0x2FC9BAEEUL
 );
 
@@ -200,14 +200,14 @@ static int secp256k1_ecdsa_sig_serialize(unsigned char *sig, size_t *size, const
     return 1;
 }
 
-static int secp256k1_ecdsa_sig_verify(const secp256k1_ecmult_context *ctx, const cosmos_secp256k1_scalar *sigr, const cosmos_secp256k1_scalar *sigs, const secp256k1_ge *pubkey, const cosmos_secp256k1_scalar *message) {
+static int secp256k1_ecdsa_sig_verify(const secp256k1_ecmult_context *ctx, const cosmos_secp256k1_scalar *sigr, const cosmos_secp256k1_scalar *sigs, const cosmos_secp256k1_ge *pubkey, const cosmos_secp256k1_scalar *message) {
     unsigned char c[32];
     cosmos_secp256k1_scalar sn, u1, u2;
 #if !defined(EXHAUSTIVE_TEST_ORDER)
-    secp256k1_fe xr;
+    cosmos_secp256k1_fe xr;
 #endif
-    secp256k1_gej pubkeyj;
-    secp256k1_gej pr;
+    cosmos_secp256k1_gej pubkeyj;
+    cosmos_secp256k1_gej pr;
 
     if (secp256k1_scalar_is_zero(sigr) || secp256k1_scalar_is_zero(sigs)) {
         return 0;
@@ -225,7 +225,7 @@ static int secp256k1_ecdsa_sig_verify(const secp256k1_ecmult_context *ctx, const
 #if defined(EXHAUSTIVE_TEST_ORDER)
 {
     cosmos_secp256k1_scalar computed_r;
-    secp256k1_ge pr_ge;
+    cosmos_secp256k1_ge pr_ge;
     cosmos_secp256k1_ge_set_gej(&pr_ge, &pr);
     secp256k1_fe_normalize(&pr_ge.x);
 
@@ -272,8 +272,8 @@ static int secp256k1_ecdsa_sig_verify(const secp256k1_ecmult_context *ctx, const
 
 static int secp256k1_ecdsa_sig_sign(const secp256k1_ecmult_gen_context *ctx, cosmos_secp256k1_scalar *sigr, cosmos_secp256k1_scalar *sigs, const cosmos_secp256k1_scalar *seckey, const cosmos_secp256k1_scalar *message, const cosmos_secp256k1_scalar *nonce, int *recid) {
     unsigned char b[32];
-    secp256k1_gej rp;
-    secp256k1_ge r;
+    cosmos_secp256k1_gej rp;
+    cosmos_secp256k1_ge r;
     cosmos_secp256k1_scalar n;
     int overflow = 0;
 

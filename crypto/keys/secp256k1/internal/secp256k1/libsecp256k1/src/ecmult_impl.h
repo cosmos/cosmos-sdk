@@ -49,9 +49,9 @@
  *  contain prej[0].z / a.z. The other zr[i] values = prej[i].z / prej[i-1].z.
  *  Prej's Z values are undefined, except for the last value.
  */
-static void secp256k1_ecmult_odd_multiples_table(int n, secp256k1_gej *prej, secp256k1_fe *zr, const secp256k1_gej *a) {
-    secp256k1_gej d;
-    secp256k1_ge a_ge, d_ge;
+static void secp256k1_ecmult_odd_multiples_table(int n, cosmos_secp256k1_gej *prej, cosmos_secp256k1_fe *zr, const cosmos_secp256k1_gej *a) {
+    cosmos_secp256k1_gej d;
+    cosmos_secp256k1_ge a_ge, d_ge;
     int i;
 
     VERIFY_CHECK(!a->infinity);
@@ -99,9 +99,9 @@ static void secp256k1_ecmult_odd_multiples_table(int n, secp256k1_gej *prej, sec
  *  and for G using the second (which requires an inverse, but it only needs to
  *  happen once).
  */
-static void secp256k1_ecmult_odd_multiples_table_globalz_windowa(secp256k1_ge *pre, secp256k1_fe *globalz, const secp256k1_gej *a) {
-    secp256k1_gej prej[ECMULT_TABLE_SIZE(WINDOW_A)];
-    secp256k1_fe zr[ECMULT_TABLE_SIZE(WINDOW_A)];
+static void secp256k1_ecmult_odd_multiples_table_globalz_windowa(cosmos_secp256k1_ge *pre, cosmos_secp256k1_fe *globalz, const cosmos_secp256k1_gej *a) {
+    cosmos_secp256k1_gej prej[ECMULT_TABLE_SIZE(WINDOW_A)];
+    cosmos_secp256k1_fe zr[ECMULT_TABLE_SIZE(WINDOW_A)];
 
     /* Compute the odd multiples in Jacobian form. */
     secp256k1_ecmult_odd_multiples_table(ECMULT_TABLE_SIZE(WINDOW_A), prej, zr, a);
@@ -109,10 +109,10 @@ static void secp256k1_ecmult_odd_multiples_table_globalz_windowa(secp256k1_ge *p
     secp256k1_ge_globalz_set_table_gej(ECMULT_TABLE_SIZE(WINDOW_A), pre, globalz, prej, zr);
 }
 
-static void secp256k1_ecmult_odd_multiples_table_storage_var(int n, secp256k1_ge_storage *pre, const secp256k1_gej *a, const secp256k1_callback *cb) {
-    secp256k1_gej *prej = (secp256k1_gej*)checked_malloc(cb, sizeof(secp256k1_gej) * n);
-    secp256k1_ge *prea = (secp256k1_ge*)checked_malloc(cb, sizeof(secp256k1_ge) * n);
-    secp256k1_fe *zr = (secp256k1_fe*)checked_malloc(cb, sizeof(secp256k1_fe) * n);
+static void secp256k1_ecmult_odd_multiples_table_storage_var(int n, secp256k1_ge_storage *pre, const cosmos_secp256k1_gej *a, const secp256k1_callback *cb) {
+    cosmos_secp256k1_gej *prej = (cosmos_secp256k1_gej*)checked_malloc(cb, sizeof(cosmos_secp256k1_gej) * n);
+    cosmos_secp256k1_ge *prea = (cosmos_secp256k1_ge*)checked_malloc(cb, sizeof(cosmos_secp256k1_ge) * n);
+    cosmos_secp256k1_fe *zr = (cosmos_secp256k1_fe*)checked_malloc(cb, sizeof(cosmos_secp256k1_fe) * n);
     int i;
 
     /* Compute the odd multiples in Jacobian form. */
@@ -162,7 +162,7 @@ static void secp256k1_ecmult_context_init(secp256k1_ecmult_context *ctx) {
 }
 
 static void secp256k1_ecmult_context_build(secp256k1_ecmult_context *ctx, const secp256k1_callback *cb) {
-    secp256k1_gej gj;
+    cosmos_secp256k1_gej gj;
 
     if (ctx->pre_g != NULL) {
         return;
@@ -178,7 +178,7 @@ static void secp256k1_ecmult_context_build(secp256k1_ecmult_context *ctx, const 
 
 #ifdef USE_ENDOMORPHISM
     {
-        secp256k1_gej g_128j;
+        cosmos_secp256k1_gej g_128j;
         int i;
 
         ctx->pre_g_128 = (secp256k1_ge_storage (*)[])checked_malloc(cb, sizeof((*ctx->pre_g_128)[0]) * ECMULT_TABLE_SIZE(WINDOW_G));
@@ -283,12 +283,12 @@ static int secp256k1_ecmult_wnaf(int *wnaf, int len, const cosmos_secp256k1_scal
     return last_set_bit + 1;
 }
 
-static void secp256k1_ecmult(const secp256k1_ecmult_context *ctx, secp256k1_gej *r, const secp256k1_gej *a, const cosmos_secp256k1_scalar *na, const cosmos_secp256k1_scalar *ng) {
-    secp256k1_ge pre_a[ECMULT_TABLE_SIZE(WINDOW_A)];
-    secp256k1_ge tmpa;
-    secp256k1_fe Z;
+static void secp256k1_ecmult(const secp256k1_ecmult_context *ctx, cosmos_secp256k1_gej *r, const cosmos_secp256k1_gej *a, const cosmos_secp256k1_scalar *na, const cosmos_secp256k1_scalar *ng) {
+    cosmos_secp256k1_ge pre_a[ECMULT_TABLE_SIZE(WINDOW_A)];
+    cosmos_secp256k1_ge tmpa;
+    cosmos_secp256k1_fe Z;
 #ifdef USE_ENDOMORPHISM
-    secp256k1_ge pre_a_lam[ECMULT_TABLE_SIZE(WINDOW_A)];
+    cosmos_secp256k1_ge pre_a_lam[ECMULT_TABLE_SIZE(WINDOW_A)];
     cosmos_secp256k1_scalar na_1, na_lam;
     /* Splitted G factors. */
     cosmos_secp256k1_scalar ng_1, ng_128;

@@ -14,12 +14,12 @@
 #include "group.h"
 #include "ecmult_gen.h"
 
-static int secp256k1_eckey_pubkey_parse(secp256k1_ge *elem, const unsigned char *pub, size_t size) {
+static int secp256k1_eckey_pubkey_parse(cosmos_secp256k1_ge *elem, const unsigned char *pub, size_t size) {
     if (size == 33 && (pub[0] == 0x02 || pub[0] == 0x03)) {
-        secp256k1_fe x;
+        cosmos_secp256k1_fe x;
         return secp256k1_fe_set_b32(&x, pub+1) && secp256k1_ge_set_xo_var(elem, &x, pub[0] == 0x03);
     } else if (size == 65 && (pub[0] == 0x04 || pub[0] == 0x06 || pub[0] == 0x07)) {
-        secp256k1_fe x, y;
+        cosmos_secp256k1_fe x, y;
         if (!secp256k1_fe_set_b32(&x, pub+1) || !secp256k1_fe_set_b32(&y, pub+33)) {
             return 0;
         }
@@ -33,7 +33,7 @@ static int secp256k1_eckey_pubkey_parse(secp256k1_ge *elem, const unsigned char 
     }
 }
 
-static int secp256k1_eckey_pubkey_serialize(secp256k1_ge *elem, unsigned char *pub, size_t *size, int compressed) {
+static int secp256k1_eckey_pubkey_serialize(cosmos_secp256k1_ge *elem, unsigned char *pub, size_t *size, int compressed) {
     if (secp256k1_ge_is_infinity(elem)) {
         return 0;
     }
@@ -59,8 +59,8 @@ static int secp256k1_eckey_privkey_tweak_add(cosmos_secp256k1_scalar *key, const
     return 1;
 }
 
-static int secp256k1_eckey_pubkey_tweak_add(const secp256k1_ecmult_context *ctx, secp256k1_ge *key, const cosmos_secp256k1_scalar *tweak) {
-    secp256k1_gej pt;
+static int secp256k1_eckey_pubkey_tweak_add(const secp256k1_ecmult_context *ctx, cosmos_secp256k1_ge *key, const cosmos_secp256k1_scalar *tweak) {
+    cosmos_secp256k1_gej pt;
     cosmos_secp256k1_scalar one;
     secp256k1_gej_set_ge(&pt, key);
     secp256k1_scalar_set_int(&one, 1);
@@ -82,9 +82,9 @@ static int secp256k1_eckey_privkey_tweak_mul(cosmos_secp256k1_scalar *key, const
     return 1;
 }
 
-static int secp256k1_eckey_pubkey_tweak_mul(const secp256k1_ecmult_context *ctx, secp256k1_ge *key, const cosmos_secp256k1_scalar *tweak) {
+static int secp256k1_eckey_pubkey_tweak_mul(const secp256k1_ecmult_context *ctx, cosmos_secp256k1_ge *key, const cosmos_secp256k1_scalar *tweak) {
     cosmos_secp256k1_scalar zero;
-    secp256k1_gej pt;
+    cosmos_secp256k1_gej pt;
     if (secp256k1_scalar_is_zero(tweak)) {
         return 0;
     }

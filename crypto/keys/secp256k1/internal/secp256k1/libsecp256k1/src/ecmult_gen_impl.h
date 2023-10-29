@@ -20,9 +20,9 @@ static void secp256k1_ecmult_gen_context_init(secp256k1_ecmult_gen_context *ctx)
 
 static void secp256k1_ecmult_gen_context_build(secp256k1_ecmult_gen_context *ctx, const secp256k1_callback* cb) {
 #ifndef USE_ECMULT_STATIC_PRECOMPUTATION
-    secp256k1_ge prec[1024];
-    secp256k1_gej gj;
-    secp256k1_gej nums_gej;
+    cosmos_secp256k1_ge prec[1024];
+    cosmos_secp256k1_gej gj;
+    cosmos_secp256k1_gej nums_gej;
     int i, j;
 #endif
 
@@ -38,8 +38,8 @@ static void secp256k1_ecmult_gen_context_build(secp256k1_ecmult_gen_context *ctx
     /* Construct a group element with no known corresponding scalar (nothing up my sleeve). */
     {
         static const unsigned char nums_b32[33] = "The scalar for this x is unknown";
-        secp256k1_fe nums_x;
-        secp256k1_ge nums_ge;
+        cosmos_secp256k1_fe nums_x;
+        cosmos_secp256k1_ge nums_ge;
         int r;
         r = secp256k1_fe_set_b32(&nums_x, nums_b32);
         (void)r;
@@ -54,9 +54,9 @@ static void secp256k1_ecmult_gen_context_build(secp256k1_ecmult_gen_context *ctx
 
     /* compute prec. */
     {
-        secp256k1_gej precj[1024]; /* Jacobian versions of prec. */
-        secp256k1_gej gbase;
-        secp256k1_gej numsbase;
+        cosmos_secp256k1_gej precj[1024]; /* Jacobian versions of prec. */
+        cosmos_secp256k1_gej gbase;
+        cosmos_secp256k1_gej numsbase;
         gbase = gj; /* 16^j * G */
         numsbase = nums_gej; /* 2^j * nums. */
         for (j = 0; j < 64; j++) {
@@ -121,8 +121,8 @@ static void secp256k1_ecmult_gen_context_clear(secp256k1_ecmult_gen_context *ctx
     ctx->prec = NULL;
 }
 
-static void secp256k1_ecmult_gen(const secp256k1_ecmult_gen_context *ctx, secp256k1_gej *r, const cosmos_secp256k1_scalar *gn) {
-    secp256k1_ge add;
+static void secp256k1_ecmult_gen(const secp256k1_ecmult_gen_context *ctx, cosmos_secp256k1_gej *r, const cosmos_secp256k1_scalar *gn) {
+    cosmos_secp256k1_ge add;
     secp256k1_ge_storage adds;
     cosmos_secp256k1_scalar gnb;
     int bits;
@@ -158,8 +158,8 @@ static void secp256k1_ecmult_gen(const secp256k1_ecmult_gen_context *ctx, secp25
 /* Setup blinding values for secp256k1_ecmult_gen. */
 static void secp256k1_ecmult_gen_blind(secp256k1_ecmult_gen_context *ctx, const unsigned char *seed32) {
     cosmos_secp256k1_scalar b;
-    secp256k1_gej gb;
-    secp256k1_fe s;
+    cosmos_secp256k1_gej gb;
+    cosmos_secp256k1_fe s;
     unsigned char nonce32[32];
     secp256k1_rfc6979_hmac_sha256_t rng;
     int retry;

@@ -76,7 +76,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/gov) [#17873](https://github.com/cosmos/cosmos-sdk/pull/17873) Fail any inactive and active proposals whose messages cannot be decoded.
 * (simulation) [#17911](https://github.com/cosmos/cosmos-sdk/pull/17911) Fix all problems with executing command `make test-sim-custom-genesis-fast` for simulation test.
 * (simulation) [#18196](https://github.com/cosmos/cosmos-sdk/pull/18196) Fix the problem of `validator set is empty after InitGenesis` in simulation test.
-* (snapshot) [#18294](https://github.com/cosmos/cosmos-sdk/pull/18294) Grant execution permissions to the snapshot dir for the owner.
 
 ### API Breaking Changes
 

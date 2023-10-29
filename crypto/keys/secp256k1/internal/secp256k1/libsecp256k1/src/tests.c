@@ -112,7 +112,7 @@ void random_scalar_order_test(secp256k1_scalar *num) {
         unsigned char b32[32];
         int overflow = 0;
         secp256k1_rand256_test(b32);
-        secp256k1_scalar_set_b32(num, b32, &overflow);
+        cosmos_secp256k1_scalar_set_b32(num, b32, &overflow);
         if (overflow || secp256k1_scalar_is_zero(num)) {
             continue;
         }
@@ -125,7 +125,7 @@ void random_scalar_order(secp256k1_scalar *num) {
         unsigned char b32[32];
         int overflow = 0;
         secp256k1_rand256(b32);
-        secp256k1_scalar_set_b32(num, b32, &overflow);
+        cosmos_secp256k1_scalar_set_b32(num, b32, &overflow);
         if (overflow || secp256k1_scalar_is_zero(num)) {
             continue;
         }
@@ -185,10 +185,10 @@ void run_context_tests(void) {
     VG_UNDEF(&pubkey, sizeof(pubkey));
     CHECK(cosmos_secp256k1_ec_pubkey_create(sign, &pubkey, ctmp) == 1);
     VG_CHECK(&pubkey, sizeof(pubkey));
-    CHECK(secp256k1_ecdsa_sign(vrfy, &sig, ctmp, ctmp, NULL, NULL) == 0);
+    CHECK(cosmos_secp256k1_ecdsa_sign(vrfy, &sig, ctmp, ctmp, NULL, NULL) == 0);
     CHECK(ecount == 2);
     VG_UNDEF(&sig, sizeof(sig));
-    CHECK(secp256k1_ecdsa_sign(sign, &sig, ctmp, ctmp, NULL, NULL) == 1);
+    CHECK(cosmos_secp256k1_ecdsa_sign(sign, &sig, ctmp, ctmp, NULL, NULL) == 1);
     VG_CHECK(&sig, sizeof(sig));
     CHECK(ecount2 == 10);
     CHECK(cosmos_secp256k1_ecdsa_verify(sign, &sig, ctmp, &pubkey) == 0);
@@ -637,7 +637,7 @@ void scalar_test(void) {
 
     /* Set 's2' to a random scalar, with value 'snum2', and byte array representation 'c'. */
     random_scalar_order_test(&s2);
-    secp256k1_scalar_get_b32(c, &s2);
+    cosmos_secp256k1_scalar_get_b32(c, &s2);
 
 #ifndef USE_NUM_NONE
     secp256k1_scalar_get_num(&snum, &s);
@@ -935,7 +935,7 @@ void run_scalar_tests(void) {
         int overflow = 0;
         secp256k1_scalar_order_get_num(&order);
         secp256k1_num_get_bin(bin, 32, &order);
-        secp256k1_scalar_set_b32(&zero, bin, &overflow);
+        cosmos_secp256k1_scalar_set_b32(&zero, bin, &overflow);
         CHECK(overflow == 1);
         CHECK(secp256k1_scalar_is_zero(&zero));
     }
@@ -1501,13 +1501,13 @@ void run_scalar_tests(void) {
         };
         secp256k1_scalar_set_int(&one, 1);
         for (i = 0; i < 33; i++) {
-            secp256k1_scalar_set_b32(&x, chal[i][0], &overflow);
+            cosmos_secp256k1_scalar_set_b32(&x, chal[i][0], &overflow);
             CHECK(!overflow);
-            secp256k1_scalar_set_b32(&y, chal[i][1], &overflow);
+            cosmos_secp256k1_scalar_set_b32(&y, chal[i][1], &overflow);
             CHECK(!overflow);
-            secp256k1_scalar_set_b32(&r1, res[i][0], &overflow);
+            cosmos_secp256k1_scalar_set_b32(&r1, res[i][0], &overflow);
             CHECK(!overflow);
-            secp256k1_scalar_set_b32(&r2, res[i][1], &overflow);
+            cosmos_secp256k1_scalar_set_b32(&r2, res[i][1], &overflow);
             CHECK(!overflow);
             secp256k1_scalar_mul(&z, &x, &y);
             CHECK(!secp256k1_scalar_check_overflow(&z));
@@ -2686,9 +2686,9 @@ void test_scalar_split(void) {
         secp256k1_scalar_negate(&slam, &slam);
     }
 
-    secp256k1_scalar_get_b32(tmp, &s1);
+    cosmos_secp256k1_scalar_get_b32(tmp, &s1);
     CHECK(memcmp(zero, tmp, 16) == 0);
-    secp256k1_scalar_get_b32(tmp, &slam);
+    cosmos_secp256k1_scalar_get_b32(tmp, &slam);
     CHECK(memcmp(zero, tmp, 16) == 0);
 }
 
@@ -3444,8 +3444,8 @@ void test_ecdsa_end_to_end(void) {
         secp256k1_scalar msg, key;
         random_scalar_order_test(&msg);
         random_scalar_order_test(&key);
-        secp256k1_scalar_get_b32(privkey, &key);
-        secp256k1_scalar_get_b32(message, &msg);
+        cosmos_secp256k1_scalar_get_b32(privkey, &key);
+        cosmos_secp256k1_scalar_get_b32(message, &msg);
     }
 
     /* Construct and verify corresponding public key. */
@@ -3497,14 +3497,14 @@ void test_ecdsa_end_to_end(void) {
     }
 
     /* Sign. */
-    CHECK(secp256k1_ecdsa_sign(ctx, &signature[0], message, privkey, NULL, NULL) == 1);
-    CHECK(secp256k1_ecdsa_sign(ctx, &signature[4], message, privkey, NULL, NULL) == 1);
-    CHECK(secp256k1_ecdsa_sign(ctx, &signature[1], message, privkey, NULL, extra) == 1);
+    CHECK(cosmos_secp256k1_ecdsa_sign(ctx, &signature[0], message, privkey, NULL, NULL) == 1);
+    CHECK(cosmos_secp256k1_ecdsa_sign(ctx, &signature[4], message, privkey, NULL, NULL) == 1);
+    CHECK(cosmos_secp256k1_ecdsa_sign(ctx, &signature[1], message, privkey, NULL, extra) == 1);
     extra[31] = 1;
-    CHECK(secp256k1_ecdsa_sign(ctx, &signature[2], message, privkey, NULL, extra) == 1);
+    CHECK(cosmos_secp256k1_ecdsa_sign(ctx, &signature[2], message, privkey, NULL, extra) == 1);
     extra[31] = 0;
     extra[0] = 1;
-    CHECK(secp256k1_ecdsa_sign(ctx, &signature[3], message, privkey, NULL, extra) == 1);
+    CHECK(cosmos_secp256k1_ecdsa_sign(ctx, &signature[3], message, privkey, NULL, extra) == 1);
     CHECK(memcmp(&signature[0], &signature[4], sizeof(signature[0])) == 0);
     CHECK(memcmp(&signature[0], &signature[1], sizeof(signature[0])) != 0);
     CHECK(memcmp(&signature[0], &signature[2], sizeof(signature[0])) != 0);
@@ -4071,7 +4071,7 @@ void test_ecdsa_edge_cases(void) {
         secp256k1_scalar sr, ss;
         secp256k1_scalar_set_int(&ss, 1);
         secp256k1_scalar_set_int(&msg, 1);
-        secp256k1_scalar_set_b32(&sr, csr, NULL);
+        cosmos_secp256k1_scalar_set_b32(&sr, csr, NULL);
         CHECK(secp256k1_eckey_pubkey_parse(&key, pubkey, 33));
         CHECK(secp256k1_eckey_pubkey_parse(&key2, pubkey2, 33));
         CHECK(secp256k1_ecdsa_sig_verify(&ctx->ecmult_ctx, &sr, &ss, &key, &msg) == 1);
@@ -4106,7 +4106,7 @@ void test_ecdsa_edge_cases(void) {
         secp256k1_scalar_set_int(&ss, 1);
         secp256k1_scalar_set_int(&msg, 1);
         secp256k1_scalar_negate(&msg, &msg);
-        secp256k1_scalar_set_b32(&sr, csr, NULL);
+        cosmos_secp256k1_scalar_set_b32(&sr, csr, NULL);
         CHECK(secp256k1_eckey_pubkey_parse(&key, pubkey, 33));
         CHECK(secp256k1_ecdsa_sig_verify(&ctx->ecmult_ctx, &sr, &ss, &key, &msg) == 1);
         secp256k1_scalar_negate(&ss, &ss);
@@ -4148,18 +4148,18 @@ void test_ecdsa_edge_cases(void) {
         };
         ecount = 0;
         cosmos_secp256k1_context_set_illegal_callback(ctx, counting_illegal_callback_fn, &ecount);
-        CHECK(secp256k1_ecdsa_sign(ctx, &sig, msg, key, precomputed_nonce_function, nonce) == 0);
-        CHECK(secp256k1_ecdsa_sign(ctx, &sig, msg, key, precomputed_nonce_function, nonce2) == 0);
+        CHECK(cosmos_secp256k1_ecdsa_sign(ctx, &sig, msg, key, precomputed_nonce_function, nonce) == 0);
+        CHECK(cosmos_secp256k1_ecdsa_sign(ctx, &sig, msg, key, precomputed_nonce_function, nonce2) == 0);
         msg[31] = 0xaa;
-        CHECK(secp256k1_ecdsa_sign(ctx, &sig, msg, key, precomputed_nonce_function, nonce) == 1);
+        CHECK(cosmos_secp256k1_ecdsa_sign(ctx, &sig, msg, key, precomputed_nonce_function, nonce) == 1);
         CHECK(ecount == 0);
-        CHECK(secp256k1_ecdsa_sign(ctx, NULL, msg, key, precomputed_nonce_function, nonce2) == 0);
+        CHECK(cosmos_secp256k1_ecdsa_sign(ctx, NULL, msg, key, precomputed_nonce_function, nonce2) == 0);
         CHECK(ecount == 1);
-        CHECK(secp256k1_ecdsa_sign(ctx, &sig, NULL, key, precomputed_nonce_function, nonce2) == 0);
+        CHECK(cosmos_secp256k1_ecdsa_sign(ctx, &sig, NULL, key, precomputed_nonce_function, nonce2) == 0);
         CHECK(ecount == 2);
-        CHECK(secp256k1_ecdsa_sign(ctx, &sig, msg, NULL, precomputed_nonce_function, nonce2) == 0);
+        CHECK(cosmos_secp256k1_ecdsa_sign(ctx, &sig, msg, NULL, precomputed_nonce_function, nonce2) == 0);
         CHECK(ecount == 3);
-        CHECK(secp256k1_ecdsa_sign(ctx, &sig, msg, key, precomputed_nonce_function, nonce2) == 1);
+        CHECK(cosmos_secp256k1_ecdsa_sign(ctx, &sig, msg, key, precomputed_nonce_function, nonce2) == 1);
         CHECK(cosmos_secp256k1_ec_pubkey_create(ctx, &pubkey, key) == 1);
         CHECK(cosmos_secp256k1_ecdsa_verify(ctx, NULL, msg, &pubkey) == 0);
         CHECK(ecount == 4);
@@ -4228,31 +4228,31 @@ void test_ecdsa_edge_cases(void) {
         msg[31] = 1;
         /* High key results in signature failure. */
         memset(key, 0xFF, 32);
-        CHECK(secp256k1_ecdsa_sign(ctx, &sig, msg, key, NULL, extra) == 0);
+        CHECK(cosmos_secp256k1_ecdsa_sign(ctx, &sig, msg, key, NULL, extra) == 0);
         CHECK(is_empty_signature(&sig));
         /* Zero key results in signature failure. */
         memset(key, 0, 32);
-        CHECK(secp256k1_ecdsa_sign(ctx, &sig, msg, key, NULL, extra) == 0);
+        CHECK(cosmos_secp256k1_ecdsa_sign(ctx, &sig, msg, key, NULL, extra) == 0);
         CHECK(is_empty_signature(&sig));
         /* Nonce function failure results in signature failure. */
         key[31] = 1;
-        CHECK(secp256k1_ecdsa_sign(ctx, &sig, msg, key, nonce_function_test_fail, extra) == 0);
+        CHECK(cosmos_secp256k1_ecdsa_sign(ctx, &sig, msg, key, nonce_function_test_fail, extra) == 0);
         CHECK(is_empty_signature(&sig));
         /* The retry loop successfully makes its way to the first good value. */
-        CHECK(secp256k1_ecdsa_sign(ctx, &sig, msg, key, nonce_function_test_retry, extra) == 1);
+        CHECK(cosmos_secp256k1_ecdsa_sign(ctx, &sig, msg, key, nonce_function_test_retry, extra) == 1);
         CHECK(!is_empty_signature(&sig));
-        CHECK(secp256k1_ecdsa_sign(ctx, &sig2, msg, key, cosmos_nonce_function_rfc6979, extra) == 1);
+        CHECK(cosmos_secp256k1_ecdsa_sign(ctx, &sig2, msg, key, cosmos_nonce_function_rfc6979, extra) == 1);
         CHECK(!is_empty_signature(&sig2));
         CHECK(memcmp(&sig, &sig2, sizeof(sig)) == 0);
         /* The default nonce function is deterministic. */
-        CHECK(secp256k1_ecdsa_sign(ctx, &sig2, msg, key, NULL, extra) == 1);
+        CHECK(cosmos_secp256k1_ecdsa_sign(ctx, &sig2, msg, key, NULL, extra) == 1);
         CHECK(!is_empty_signature(&sig2));
         CHECK(memcmp(&sig, &sig2, sizeof(sig)) == 0);
         /* The default nonce function changes output with different messages. */
         for(i = 0; i < 256; i++) {
             int j;
             msg[0] = i;
-            CHECK(secp256k1_ecdsa_sign(ctx, &sig2, msg, key, NULL, extra) == 1);
+            CHECK(cosmos_secp256k1_ecdsa_sign(ctx, &sig2, msg, key, NULL, extra) == 1);
             CHECK(!is_empty_signature(&sig2));
             secp256k1_ecdsa_signature_load(ctx, &sr[i], &ss, &sig2);
             for (j = 0; j < i; j++) {
@@ -4265,7 +4265,7 @@ void test_ecdsa_edge_cases(void) {
         for(i = 256; i < 512; i++) {
             int j;
             key[0] = i - 256;
-            CHECK(secp256k1_ecdsa_sign(ctx, &sig2, msg, key, NULL, extra) == 1);
+            CHECK(cosmos_secp256k1_ecdsa_sign(ctx, &sig2, msg, key, NULL, extra) == 1);
             CHECK(!is_empty_signature(&sig2));
             secp256k1_ecdsa_signature_load(ctx, &sr[i], &ss, &sig2);
             for (j = 0; j < i; j++) {
@@ -4352,7 +4352,7 @@ void test_ecdsa_openssl(void) {
     secp256k1_rand256_test(message);
     secp256k1_scalar_set_b32(&msg, message, NULL);
     random_scalar_order_test(&key);
-    secp256k1_scalar_get_b32(key32, &key);
+    cosmos_secp256k1_scalar_get_b32(key32, &key);
     secp256k1_ecmult_gen(&ctx->ecmult_gen_ctx, &qj, &key);
     secp256k1_ge_set_gej(&q, &qj);
     ec_key = get_openssl_key(key32);

@@ -114,7 +114,7 @@ static void secp256k1_scalar_cadd_bit(cosmos_secp256k1_scalar *r, unsigned int b
 #endif
 }
 
-static void secp256k1_scalar_set_b32(cosmos_secp256k1_scalar *r, const unsigned char *b32, int *overflow) {
+static void cosmos_secp256k1_scalar_set_b32(cosmos_secp256k1_scalar *r, const unsigned char *b32, int *overflow) {
     int over;
     r->d[0] = (uint64_t)b32[31] | (uint64_t)b32[30] << 8 | (uint64_t)b32[29] << 16 | (uint64_t)b32[28] << 24 | (uint64_t)b32[27] << 32 | (uint64_t)b32[26] << 40 | (uint64_t)b32[25] << 48 | (uint64_t)b32[24] << 56;
     r->d[1] = (uint64_t)b32[23] | (uint64_t)b32[22] << 8 | (uint64_t)b32[21] << 16 | (uint64_t)b32[20] << 24 | (uint64_t)b32[19] << 32 | (uint64_t)b32[18] << 40 | (uint64_t)b32[17] << 48 | (uint64_t)b32[16] << 56;
@@ -126,7 +126,7 @@ static void secp256k1_scalar_set_b32(cosmos_secp256k1_scalar *r, const unsigned 
     }
 }
 
-static void secp256k1_scalar_get_b32(unsigned char *bin, const cosmos_secp256k1_scalar* a) {
+static void cosmos_secp256k1_scalar_get_b32(unsigned char *bin, const cosmos_secp256k1_scalar* a) {
     bin[0] = a->d[3] >> 56; bin[1] = a->d[3] >> 48; bin[2] = a->d[3] >> 40; bin[3] = a->d[3] >> 32; bin[4] = a->d[3] >> 24; bin[5] = a->d[3] >> 16; bin[6] = a->d[3] >> 8; bin[7] = a->d[3];
     bin[8] = a->d[2] >> 56; bin[9] = a->d[2] >> 48; bin[10] = a->d[2] >> 40; bin[11] = a->d[2] >> 32; bin[12] = a->d[2] >> 24; bin[13] = a->d[2] >> 16; bin[14] = a->d[2] >> 8; bin[15] = a->d[2];
     bin[16] = a->d[1] >> 56; bin[17] = a->d[1] >> 48; bin[18] = a->d[1] >> 40; bin[19] = a->d[1] >> 32; bin[20] = a->d[1] >> 24; bin[21] = a->d[1] >> 16; bin[22] = a->d[1] >> 8; bin[23] = a->d[1];

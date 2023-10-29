@@ -192,8 +192,8 @@ static void secp256k1_ecdsa_signature_load(const cosmos_secp256k1_context* ctx, 
         memcpy(r, &sig->data[0], 32);
         memcpy(s, &sig->data[32], 32);
     } else {
-        secp256k1_scalar_set_b32(r, &sig->data[0], NULL);
-        secp256k1_scalar_set_b32(s, &sig->data[32], NULL);
+        cosmos_secp256k1_scalar_set_b32(r, &sig->data[0], NULL);
+        cosmos_secp256k1_scalar_set_b32(s, &sig->data[32], NULL);
     }
 }
 
@@ -202,8 +202,8 @@ static void secp256k1_ecdsa_signature_save(cosmos_secp256k1_ecdsa_signature* sig
         memcpy(&sig->data[0], r, 32);
         memcpy(&sig->data[32], s, 32);
     } else {
-        secp256k1_scalar_get_b32(&sig->data[0], r);
-        secp256k1_scalar_get_b32(&sig->data[32], s);
+        cosmos_secp256k1_scalar_get_b32(&sig->data[0], r);
+        cosmos_secp256k1_scalar_get_b32(&sig->data[32], s);
     }
 }
 
@@ -232,9 +232,9 @@ int cosmos_secp256k1_ecdsa_signature_parse_compact(const cosmos_secp256k1_contex
     COSMOS_ARG_CHECK(sig != NULL);
     COSMOS_ARG_CHECK(input64 != NULL);
 
-    secp256k1_scalar_set_b32(&r, &input64[0], &overflow);
+    cosmos_secp256k1_scalar_set_b32(&r, &input64[0], &overflow);
     ret &= !overflow;
-    secp256k1_scalar_set_b32(&s, &input64[32], &overflow);
+    cosmos_secp256k1_scalar_set_b32(&s, &input64[32], &overflow);
     ret &= !overflow;
     if (ret) {
         secp256k1_ecdsa_signature_save(sig, &r, &s);
@@ -264,8 +264,8 @@ int cosmos_secp256k1_ecdsa_signature_serialize_compact(const cosmos_secp256k1_co
     COSMOS_ARG_CHECK(sig != NULL);
 
     secp256k1_ecdsa_signature_load(ctx, &r, &s, sig);
-    secp256k1_scalar_get_b32(&output64[0], &r);
-    secp256k1_scalar_get_b32(&output64[32], &s);
+    cosmos_secp256k1_scalar_get_b32(&output64[0], &r);
+    cosmos_secp256k1_scalar_get_b32(&output64[32], &s);
     return 1;
 }
 
@@ -298,7 +298,7 @@ int cosmos_secp256k1_ecdsa_verify(const cosmos_secp256k1_context* ctx, const cos
     COSMOS_ARG_CHECK(sig != NULL);
     COSMOS_ARG_CHECK(pubkey != NULL);
 
-    secp256k1_scalar_set_b32(&m, msg32, NULL);
+    cosmos_secp256k1_scalar_set_b32(&m, msg32, NULL);
     secp256k1_ecdsa_signature_load(ctx, &r, &s, sig);
     return (!secp256k1_scalar_is_high(&s) &&
             secp256k1_pubkey_load(ctx, &q, pubkey) &&
@@ -340,7 +340,7 @@ static int cosmos_nonce_function_rfc6979(unsigned char *nonce32, const unsigned 
 const cosmos_secp256k1_nonce_function cosmos_secp256k1_nonce_function_rfc6979 = cosmos_nonce_function_rfc6979;
 const cosmos_secp256k1_nonce_function cosmos_secp256k1_nonce_function_default = cosmos_nonce_function_rfc6979;
 
-int secp256k1_ecdsa_sign(const cosmos_secp256k1_context* ctx, cosmos_secp256k1_ecdsa_signature *signature, const unsigned char *msg32, const unsigned char *seckey, cosmos_secp256k1_nonce_function noncefp, const void* noncedata) {
+int cosmos_secp256k1_ecdsa_sign(const cosmos_secp256k1_context* ctx, cosmos_secp256k1_ecdsa_signature *signature, const unsigned char *msg32, const unsigned char *seckey, cosmos_secp256k1_nonce_function noncefp, const void* noncedata) {
     cosmos_secp256k1_scalar r, s;
     cosmos_secp256k1_scalar sec, non, msg;
     int ret = 0;
@@ -354,18 +354,18 @@ int secp256k1_ecdsa_sign(const cosmos_secp256k1_context* ctx, cosmos_secp256k1_e
         noncefp = cosmos_secp256k1_nonce_function_default;
     }
 
-    secp256k1_scalar_set_b32(&sec, seckey, &overflow);
+    cosmos_secp256k1_scalar_set_b32(&sec, seckey, &overflow);
     /* Fail if the secret key is invalid. */
     if (!overflow && !secp256k1_scalar_is_zero(&sec)) {
         unsigned char nonce32[32];
         unsigned int count = 0;
-        secp256k1_scalar_set_b32(&msg, msg32, NULL);
+        cosmos_secp256k1_scalar_set_b32(&msg, msg32, NULL);
         while (1) {
             ret = noncefp(nonce32, msg32, seckey, NULL, (void*)noncedata, count);
             if (!ret) {
                 break;
             }
-            secp256k1_scalar_set_b32(&non, nonce32, &overflow);
+            cosmos_secp256k1_scalar_set_b32(&non, nonce32, &overflow);
             if (!overflow && !secp256k1_scalar_is_zero(&non)) {
                 if (secp256k1_ecdsa_sig_sign(&ctx->ecmult_gen_ctx, &r, &s, &sec, &msg, &non, NULL)) {
                     break;
@@ -393,7 +393,7 @@ int cosmos_secp256k1_ec_seckey_verify(const cosmos_secp256k1_context* ctx, const
     VERIFY_CHECK(ctx != NULL);
     COSMOS_ARG_CHECK(seckey != NULL);
 
-    secp256k1_scalar_set_b32(&sec, seckey, &overflow);
+    cosmos_secp256k1_scalar_set_b32(&sec, seckey, &overflow);
     ret = !overflow && !secp256k1_scalar_is_zero(&sec);
     secp256k1_scalar_clear(&sec);
     return ret;
@@ -411,7 +411,7 @@ int cosmos_secp256k1_ec_pubkey_create(const cosmos_secp256k1_context* ctx, cosmo
     COSMOS_ARG_CHECK(cosmos_secp256k1_ecmult_gen_context_is_built(&ctx->ecmult_gen_ctx));
     COSMOS_ARG_CHECK(seckey != NULL);
 
-    secp256k1_scalar_set_b32(&sec, seckey, &overflow);
+    cosmos_secp256k1_scalar_set_b32(&sec, seckey, &overflow);
     ret = (!overflow) & (!secp256k1_scalar_is_zero(&sec));
     if (ret) {
         secp256k1_ecmult_gen(&ctx->ecmult_gen_ctx, &pj, &sec);
@@ -431,13 +431,13 @@ int secp256k1_ec_privkey_tweak_add(const cosmos_secp256k1_context* ctx, unsigned
     COSMOS_ARG_CHECK(seckey != NULL);
     COSMOS_ARG_CHECK(tweak != NULL);
 
-    secp256k1_scalar_set_b32(&term, tweak, &overflow);
-    secp256k1_scalar_set_b32(&sec, seckey, NULL);
+    cosmos_secp256k1_scalar_set_b32(&term, tweak, &overflow);
+    cosmos_secp256k1_scalar_set_b32(&sec, seckey, NULL);
 
     ret = !overflow && secp256k1_eckey_privkey_tweak_add(&sec, &term);
     memset(seckey, 0, 32);
     if (ret) {
-        secp256k1_scalar_get_b32(seckey, &sec);
+        cosmos_secp256k1_scalar_get_b32(seckey, &sec);
     }
 
     secp256k1_scalar_clear(&sec);
@@ -455,7 +455,7 @@ int secp256k1_ec_pubkey_tweak_add(const cosmos_secp256k1_context* ctx, cosmos_se
     COSMOS_ARG_CHECK(pubkey != NULL);
     COSMOS_ARG_CHECK(tweak != NULL);
 
-    secp256k1_scalar_set_b32(&term, tweak, &overflow);
+    cosmos_secp256k1_scalar_set_b32(&term, tweak, &overflow);
     ret = !overflow && secp256k1_pubkey_load(ctx, &p, pubkey);
     memset(pubkey, 0, sizeof(*pubkey));
     if (ret) {
@@ -478,12 +478,12 @@ int cosmos_secp256k1_ec_privkey_tweak_mul(const cosmos_secp256k1_context* ctx, u
     COSMOS_ARG_CHECK(seckey != NULL);
     COSMOS_ARG_CHECK(tweak != NULL);
 
-    secp256k1_scalar_set_b32(&factor, tweak, &overflow);
-    secp256k1_scalar_set_b32(&sec, seckey, NULL);
+    cosmos_secp256k1_scalar_set_b32(&factor, tweak, &overflow);
+    cosmos_secp256k1_scalar_set_b32(&sec, seckey, NULL);
     ret = !overflow && secp256k1_eckey_privkey_tweak_mul(&sec, &factor);
     memset(seckey, 0, 32);
     if (ret) {
-        secp256k1_scalar_get_b32(seckey, &sec);
+        cosmos_secp256k1_scalar_get_b32(seckey, &sec);
     }
 
     secp256k1_scalar_clear(&sec);
@@ -501,7 +501,7 @@ int cosmos_secp256k1_ec_pubkey_tweak_mul(const cosmos_secp256k1_context* ctx, co
     COSMOS_ARG_CHECK(pubkey != NULL);
     COSMOS_ARG_CHECK(tweak != NULL);
 
-    secp256k1_scalar_set_b32(&factor, tweak, &overflow);
+    cosmos_secp256k1_scalar_set_b32(&factor, tweak, &overflow);
     ret = !overflow && secp256k1_pubkey_load(ctx, &p, pubkey);
     memset(pubkey, 0, sizeof(*pubkey));
     if (ret) {

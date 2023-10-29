@@ -53,7 +53,7 @@ void test_ecdh_generator_basepoint(void) {
         cosmos_secp256k1_scalar s;
 
         random_scalar_order(&s);
-        secp256k1_scalar_get_b32(s_b32, &s);
+        cosmos_secp256k1_scalar_get_b32(s_b32, &s);
 
         /* compute using ECDH function */
         CHECK(cosmos_secp256k1_ec_pubkey_create(ctx, &point[0], s_one) == 1);
@@ -85,7 +85,7 @@ void test_bad_scalar(void) {
 
     /* Create random point */
     random_scalar_order(&rand);
-    secp256k1_scalar_get_b32(s_rand, &rand);
+    cosmos_secp256k1_scalar_get_b32(s_rand, &rand);
     CHECK(cosmos_secp256k1_ec_pubkey_create(ctx, &point, s_rand) == 1);
 
     /* Try to multiply it by bad values */

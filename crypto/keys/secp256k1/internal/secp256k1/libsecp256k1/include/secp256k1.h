@@ -416,7 +416,7 @@ SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int cosmos_secp256k1_ecdsa_verify(
  *  accept various non-unique encodings, so care should be taken when this
  *  property is required for an application.
  *
- *  The secp256k1_ecdsa_sign function will by default create signatures in the
+ *  The cosmos_secp256k1_ecdsa_sign function will by default create signatures in the
  *  lower-S form, and cosmos_secp256k1_ecdsa_verify will not accept others. In case
  *  signatures come from a system that cannot enforce this property,
  *  cosmos_secp256k1_ecdsa_signature_normalize must be called before verification.
@@ -450,7 +450,7 @@ SECP256K1_API extern const cosmos_secp256k1_nonce_function cosmos_secp256k1_nonc
  * The created signature is always in lower-S form. See
  * cosmos_secp256k1_ecdsa_signature_normalize for more details.
  */
-SECP256K1_API int secp256k1_ecdsa_sign(
+SECP256K1_API int cosmos_secp256k1_ecdsa_sign(
         const cosmos_secp256k1_context* ctx,
         cosmos_secp256k1_ecdsa_signature *sig,
         const unsigned char *msg32,

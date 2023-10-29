@@ -94,7 +94,7 @@ int main(void) {
         data.key[i] = 33 + i;
     }
     data.siglen = 72;
-    CHECK(secp256k1_ecdsa_sign(data.ctx, &sig, data.msg, data.key, NULL, NULL));
+    CHECK(cosmos_secp256k1_ecdsa_sign(data.ctx, &sig, data.msg, data.key, NULL, NULL));
     CHECK(cosmos_secp256k1_ecdsa_signature_serialize_der(data.ctx, data.sig, &data.siglen, &sig));
     CHECK(cosmos_secp256k1_ec_pubkey_create(data.ctx, &pubkey, data.key));
     data.pubkeylen = 33;

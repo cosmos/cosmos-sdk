@@ -135,7 +135,7 @@ static int secp256k1_der_parse_integer(cosmos_secp256k1_scalar *r, const unsigne
     }
     if (!overflow) {
         memcpy(ra + 32 - rlen, *sig, rlen);
-        secp256k1_scalar_set_b32(r, ra, &overflow);
+        cosmos_secp256k1_scalar_set_b32(r, ra, &overflow);
     }
     if (overflow) {
         secp256k1_scalar_set_int(r, 0);
@@ -180,8 +180,8 @@ static int secp256k1_ecdsa_sig_serialize(unsigned char *sig, size_t *size, const
     unsigned char r[33] = {0}, s[33] = {0};
     unsigned char *rp = r, *sp = s;
     size_t lenR = 33, lenS = 33;
-    secp256k1_scalar_get_b32(&r[1], ar);
-    secp256k1_scalar_get_b32(&s[1], as);
+    cosmos_secp256k1_scalar_get_b32(&r[1], ar);
+    cosmos_secp256k1_scalar_get_b32(&s[1], as);
     while (lenR > 1 && rp[0] == 0 && rp[1] < 0x80) { lenR--; rp++; }
     while (lenS > 1 && sp[0] == 0 && sp[1] < 0x80) { lenS--; sp++; }
     if (*size < 6+lenS+lenR) {
@@ -234,7 +234,7 @@ static int secp256k1_ecdsa_sig_verify(const secp256k1_ecmult_context *ctx, const
     return secp256k1_scalar_eq(sigr, &computed_r);
 }
 #else
-    secp256k1_scalar_get_b32(c, sigr);
+    cosmos_secp256k1_scalar_get_b32(c, sigr);
     secp256k1_fe_set_b32(&xr, c);
 
     /** We now have the recomputed R point in pr, and its claimed x coordinate (modulo n)
@@ -282,7 +282,7 @@ static int secp256k1_ecdsa_sig_sign(const secp256k1_ecmult_gen_context *ctx, cos
     secp256k1_fe_normalize(&r.x);
     secp256k1_fe_normalize(&r.y);
     secp256k1_fe_get_b32(b, &r.x);
-    secp256k1_scalar_set_b32(sigr, b, &overflow);
+    cosmos_secp256k1_scalar_set_b32(sigr, b, &overflow);
     /* These two conditions should be checked before calling */
     VERIFY_CHECK(!secp256k1_scalar_is_zero(sigr));
     VERIFY_CHECK(overflow == 0);

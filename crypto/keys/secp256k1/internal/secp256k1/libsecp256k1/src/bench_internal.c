@@ -44,8 +44,8 @@ void bench_setup(void* arg) {
         0x11, 0x15, 0x17, 0x1b, 0x1d, 0xb1, 0xbf, 0xd3
     };
 
-    secp256k1_scalar_set_b32(&data->scalar_x, init_x, NULL);
-    secp256k1_scalar_set_b32(&data->scalar_y, init_y, NULL);
+    cosmos_secp256k1_scalar_set_b32(&data->scalar_x, init_x, NULL);
+    cosmos_secp256k1_scalar_set_b32(&data->scalar_y, init_y, NULL);
     secp256k1_fe_set_b32(&data->fe_x, init_x);
     secp256k1_fe_set_b32(&data->fe_y, init_y);
     CHECK(secp256k1_ge_set_xo_var(&data->ge_x, &data->fe_x, 0));

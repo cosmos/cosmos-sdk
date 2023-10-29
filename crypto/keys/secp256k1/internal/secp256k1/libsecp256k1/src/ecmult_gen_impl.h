@@ -171,7 +171,7 @@ static void secp256k1_ecmult_gen_blind(secp256k1_ecmult_gen_context *ctx, const 
         secp256k1_scalar_set_int(&ctx->blind, 1);
     }
     /* The prior blinding value (if not reset) is chained forward by including it in the hash. */
-    secp256k1_scalar_get_b32(nonce32, &ctx->blind);
+    cosmos_secp256k1_scalar_get_b32(nonce32, &ctx->blind);
     /** Using a CSPRNG allows a failure free interface, avoids needing large amounts of random data,
      *   and guards against weak or adversarial seeds.  This is a simpler and safer interface than
      *   asking the caller for blinding values directly and expecting them to retry on failure.
@@ -193,7 +193,7 @@ static void secp256k1_ecmult_gen_blind(secp256k1_ecmult_gen_context *ctx, const 
     secp256k1_fe_clear(&s);
     do {
         secp256k1_rfc6979_hmac_sha256_generate(&rng, nonce32, 32);
-        secp256k1_scalar_set_b32(&b, nonce32, &retry);
+        cosmos_secp256k1_scalar_set_b32(&b, nonce32, &retry);
         /* A blinding value of 0 works, but would undermine the projection hardening. */
         retry |= secp256k1_scalar_is_zero(&b);
     } while (retry); /* This branch true is cryptographically unreachable. Requires sha256_hmac output > order. */

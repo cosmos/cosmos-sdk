@@ -27,7 +27,7 @@
 #ifndef USE_NUM_NONE
 static void secp256k1_scalar_get_num(secp256k1_num *r, const cosmos_secp256k1_scalar *a) {
     unsigned char c[32];
-    secp256k1_scalar_get_b32(c, a);
+    cosmos_secp256k1_scalar_get_b32(c, a);
     secp256k1_num_set_bin(r, c, 32);
 }
 
@@ -266,7 +266,7 @@ static void secp256k1_scalar_inverse_var(cosmos_secp256k1_scalar *r, const cosmo
     unsigned char b[32];
     secp256k1_num n, m;
     cosmos_secp256k1_scalar t = *x;
-    secp256k1_scalar_get_b32(b, &t);
+    cosmos_secp256k1_scalar_get_b32(b, &t);
     secp256k1_num_set_bin(&n, b, 32);
     secp256k1_scalar_order_get_num(&m);
     secp256k1_num_mod_inverse(&n, &n, &m);

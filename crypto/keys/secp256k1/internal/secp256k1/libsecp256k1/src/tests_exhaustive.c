@@ -85,7 +85,7 @@ int secp256k1_nonce_function_smallint(unsigned char *nonce32, const unsigned cha
         *idata = (*idata + 1) % EXHAUSTIVE_TEST_ORDER;
     }
     secp256k1_scalar_set_int(&s, *idata);
-    secp256k1_scalar_get_b32(nonce32, &s);
+    cosmos_secp256k1_scalar_get_b32(nonce32, &s);
     return 1;
 }
 
@@ -189,7 +189,7 @@ void r_from_k(cosmos_secp256k1_scalar *r, const cosmos_secp256k1_ge *group, int 
     x = group[k].x;
     secp256k1_fe_normalize(&x);
     secp256k1_fe_get_b32(x_bin, &x);
-    secp256k1_scalar_set_b32(r, x_bin, NULL);
+    cosmos_secp256k1_scalar_set_b32(r, x_bin, NULL);
 }
 
 void test_exhaustive_verify(const secp256k1_context *ctx, const cosmos_secp256k1_ge *group, int order) {
@@ -233,7 +233,7 @@ void test_exhaustive_verify(const secp256k1_context *ctx, const cosmos_secp256k1
                     secp256k1_ecdsa_signature_save(&sig, &r_s, &s_s);
                     memcpy(&nonconst_ge, &group[sk_s], sizeof(nonconst_ge));
                     cosmos_secp256k1_pubkey_save(&pk, &nonconst_ge);
-                    secp256k1_scalar_get_b32(msg32, &msg_s);
+                    cosmos_secp256k1_scalar_get_b32(msg32, &msg_s);
                     CHECK(should_verify ==
                           cosmos_secp256k1_ecdsa_verify(ctx, &sig, msg32, &pk));
                 }
@@ -255,10 +255,10 @@ void test_exhaustive_sign(const secp256k1_context *ctx, const cosmos_secp256k1_g
                 unsigned char sk32[32], msg32[32];
                 secp256k1_scalar_set_int(&msg, i);
                 secp256k1_scalar_set_int(&sk, j);
-                secp256k1_scalar_get_b32(sk32, &sk);
-                secp256k1_scalar_get_b32(msg32, &msg);
+                cosmos_secp256k1_scalar_get_b32(sk32, &sk);
+                cosmos_secp256k1_scalar_get_b32(msg32, &msg);
 
-                secp256k1_ecdsa_sign(ctx, &sig, msg32, sk32, secp256k1_nonce_function_smallint, &k);
+                cosmos_secp256k1_ecdsa_sign(ctx, &sig, msg32, sk32, secp256k1_nonce_function_smallint, &k);
 
                 secp256k1_ecdsa_signature_load(ctx, &r, &s, &sig);
                 /* Note that we compute expected_r *after* signing -- this is important
@@ -305,8 +305,8 @@ void test_exhaustive_recovery_sign(const secp256k1_context *ctx, const secp256k1
                 int recid;
                 secp256k1_scalar_set_int(&msg, i);
                 secp256k1_scalar_set_int(&sk, j);
-                secp256k1_scalar_get_b32(sk32, &sk);
-                secp256k1_scalar_get_b32(msg32, &msg);
+                cosmos_secp256k1_scalar_get_b32(sk32, &sk);
+                cosmos_secp256k1_scalar_get_b32(msg32, &msg);
 
                 cosmos_secp256k1_ecdsa_sign_recoverable(ctx, &rsig, msg32, sk32, secp256k1_nonce_function_smallint, &k);
 
@@ -317,7 +317,7 @@ void test_exhaustive_recovery_sign(const secp256k1_context *ctx, const secp256k1
                 CHECK((k * s) % order == (i + r * j) % order ||
                       (k * (EXHAUSTIVE_TEST_ORDER - s)) % order == (i + r * j) % order);
                 /* In computing the recid, there is an overflow condition that is disabled in
-                 * scalar_low_impl.h `secp256k1_scalar_set_b32` because almost every r.y value
+                 * scalar_low_impl.h `cosmos_secp256k1_scalar_set_b32` because almost every r.y value
                  * will exceed the group order, and our signing code always holds out for r
                  * values that don't overflow, so with a proper overflow check the tests would
                  * loop indefinitely. */
@@ -372,7 +372,7 @@ void test_exhaustive_recovery_verify(const secp256k1_context *ctx, const secp256
                     secp256k1_scalar_set_int(&r_s, r);
                     secp256k1_scalar_set_int(&msg_s, msg);
                     secp256k1_scalar_set_int(&sk_s, key);
-                    secp256k1_scalar_get_b32(msg32, &msg_s);
+                    cosmos_secp256k1_scalar_get_b32(msg32, &msg_s);
 
                     /* Verify by hand */
                     /* Run through every k value that gives us this r and check that *one* works.

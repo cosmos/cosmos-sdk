@@ -33,13 +33,13 @@ static unsigned int secp256k1_scalar_get_bits(const cosmos_secp256k1_scalar *a, 
 static unsigned int secp256k1_scalar_get_bits_var(const cosmos_secp256k1_scalar *a, unsigned int offset, unsigned int count);
 
 /** Set a scalar from a big endian byte array. */
-static void secp256k1_scalar_set_b32(cosmos_secp256k1_scalar *r, const unsigned char *bin, int *overflow);
+static void cosmos_secp256k1_scalar_set_b32(cosmos_secp256k1_scalar *r, const unsigned char *bin, int *overflow);
 
 /** Set a scalar to an unsigned integer. */
 static void secp256k1_scalar_set_int(cosmos_secp256k1_scalar *r, unsigned int v);
 
 /** Convert a scalar to a byte array. */
-static void secp256k1_scalar_get_b32(unsigned char *bin, const cosmos_secp256k1_scalar* a);
+static void cosmos_secp256k1_scalar_get_b32(unsigned char *bin, const cosmos_secp256k1_scalar* a);
 
 /** Add two scalars together (modulo the group order). Returns whether it overflowed. */
 static int secp256k1_scalar_add(cosmos_secp256k1_scalar *r, const cosmos_secp256k1_scalar *a, const cosmos_secp256k1_scalar *b);

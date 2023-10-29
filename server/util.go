@@ -501,7 +501,7 @@ func DefaultBaseappOptions(appOpts types.AppOptions) []func(*baseapp.BaseApp) {
 func GetSnapshotStore(appOpts types.AppOptions) (*snapshots.Store, error) {
 	homeDir := cast.ToString(appOpts.Get(flags.FlagHome))
 	snapshotDir := filepath.Join(homeDir, "data", "snapshots")
-	if err := os.MkdirAll(snapshotDir, 0o644); err != nil {
+	if err := os.MkdirAll(snapshotDir, 0o744); err != nil {
 		return nil, fmt.Errorf("failed to create snapshots directory: %w", err)
 	}
 

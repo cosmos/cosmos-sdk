@@ -3101,6 +3101,2128 @@ func (x *fastReflection_MsgCreatePeriodicVestingAccountResponse) ProtoMethods() 
 	}
 }
 
+var _ protoreflect.List = (*_MsgCreateClawbackVestingAccount_4_list)(nil)
+
+type _MsgCreateClawbackVestingAccount_4_list struct {
+	list *[]*Period
+}
+
+func (x *_MsgCreateClawbackVestingAccount_4_list) Len() int {
+	if x.list == nil {
+		return 0
+	}
+	return len(*x.list)
+}
+
+func (x *_MsgCreateClawbackVestingAccount_4_list) Get(i int) protoreflect.Value {
+	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
+}
+
+func (x *_MsgCreateClawbackVestingAccount_4_list) Set(i int, value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*Period)
+	(*x.list)[i] = concreteValue
+}
+
+func (x *_MsgCreateClawbackVestingAccount_4_list) Append(value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*Period)
+	*x.list = append(*x.list, concreteValue)
+}
+
+func (x *_MsgCreateClawbackVestingAccount_4_list) AppendMutable() protoreflect.Value {
+	v := new(Period)
+	*x.list = append(*x.list, v)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_MsgCreateClawbackVestingAccount_4_list) Truncate(n int) {
+	for i := n; i < len(*x.list); i++ {
+		(*x.list)[i] = nil
+	}
+	*x.list = (*x.list)[:n]
+}
+
+func (x *_MsgCreateClawbackVestingAccount_4_list) NewElement() protoreflect.Value {
+	v := new(Period)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_MsgCreateClawbackVestingAccount_4_list) IsValid() bool {
+	return x.list != nil
+}
+
+var _ protoreflect.List = (*_MsgCreateClawbackVestingAccount_5_list)(nil)
+
+type _MsgCreateClawbackVestingAccount_5_list struct {
+	list *[]*Period
+}
+
+func (x *_MsgCreateClawbackVestingAccount_5_list) Len() int {
+	if x.list == nil {
+		return 0
+	}
+	return len(*x.list)
+}
+
+func (x *_MsgCreateClawbackVestingAccount_5_list) Get(i int) protoreflect.Value {
+	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
+}
+
+func (x *_MsgCreateClawbackVestingAccount_5_list) Set(i int, value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*Period)
+	(*x.list)[i] = concreteValue
+}
+
+func (x *_MsgCreateClawbackVestingAccount_5_list) Append(value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*Period)
+	*x.list = append(*x.list, concreteValue)
+}
+
+func (x *_MsgCreateClawbackVestingAccount_5_list) AppendMutable() protoreflect.Value {
+	v := new(Period)
+	*x.list = append(*x.list, v)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_MsgCreateClawbackVestingAccount_5_list) Truncate(n int) {
+	for i := n; i < len(*x.list); i++ {
+		(*x.list)[i] = nil
+	}
+	*x.list = (*x.list)[:n]
+}
+
+func (x *_MsgCreateClawbackVestingAccount_5_list) NewElement() protoreflect.Value {
+	v := new(Period)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_MsgCreateClawbackVestingAccount_5_list) IsValid() bool {
+	return x.list != nil
+}
+
+var (
+	md_MsgCreateClawbackVestingAccount                 protoreflect.MessageDescriptor
+	fd_MsgCreateClawbackVestingAccount_from_address    protoreflect.FieldDescriptor
+	fd_MsgCreateClawbackVestingAccount_to_address      protoreflect.FieldDescriptor
+	fd_MsgCreateClawbackVestingAccount_start_time      protoreflect.FieldDescriptor
+	fd_MsgCreateClawbackVestingAccount_lockup_periods  protoreflect.FieldDescriptor
+	fd_MsgCreateClawbackVestingAccount_vesting_periods protoreflect.FieldDescriptor
+	fd_MsgCreateClawbackVestingAccount_merge           protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_cosmos_vesting_v1beta1_tx_proto_init()
+	md_MsgCreateClawbackVestingAccount = File_cosmos_vesting_v1beta1_tx_proto.Messages().ByName("MsgCreateClawbackVestingAccount")
+	fd_MsgCreateClawbackVestingAccount_from_address = md_MsgCreateClawbackVestingAccount.Fields().ByName("from_address")
+	fd_MsgCreateClawbackVestingAccount_to_address = md_MsgCreateClawbackVestingAccount.Fields().ByName("to_address")
+	fd_MsgCreateClawbackVestingAccount_start_time = md_MsgCreateClawbackVestingAccount.Fields().ByName("start_time")
+	fd_MsgCreateClawbackVestingAccount_lockup_periods = md_MsgCreateClawbackVestingAccount.Fields().ByName("lockup_periods")
+	fd_MsgCreateClawbackVestingAccount_vesting_periods = md_MsgCreateClawbackVestingAccount.Fields().ByName("vesting_periods")
+	fd_MsgCreateClawbackVestingAccount_merge = md_MsgCreateClawbackVestingAccount.Fields().ByName("merge")
+}
+
+var _ protoreflect.Message = (*fastReflection_MsgCreateClawbackVestingAccount)(nil)
+
+type fastReflection_MsgCreateClawbackVestingAccount MsgCreateClawbackVestingAccount
+
+func (x *MsgCreateClawbackVestingAccount) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_MsgCreateClawbackVestingAccount)(x)
+}
+
+func (x *MsgCreateClawbackVestingAccount) slowProtoReflect() protoreflect.Message {
+	mi := &file_cosmos_vesting_v1beta1_tx_proto_msgTypes[6]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_MsgCreateClawbackVestingAccount_messageType fastReflection_MsgCreateClawbackVestingAccount_messageType
+var _ protoreflect.MessageType = fastReflection_MsgCreateClawbackVestingAccount_messageType{}
+
+type fastReflection_MsgCreateClawbackVestingAccount_messageType struct{}
+
+func (x fastReflection_MsgCreateClawbackVestingAccount_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_MsgCreateClawbackVestingAccount)(nil)
+}
+func (x fastReflection_MsgCreateClawbackVestingAccount_messageType) New() protoreflect.Message {
+	return new(fastReflection_MsgCreateClawbackVestingAccount)
+}
+func (x fastReflection_MsgCreateClawbackVestingAccount_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgCreateClawbackVestingAccount
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_MsgCreateClawbackVestingAccount) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgCreateClawbackVestingAccount
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_MsgCreateClawbackVestingAccount) Type() protoreflect.MessageType {
+	return _fastReflection_MsgCreateClawbackVestingAccount_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_MsgCreateClawbackVestingAccount) New() protoreflect.Message {
+	return new(fastReflection_MsgCreateClawbackVestingAccount)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_MsgCreateClawbackVestingAccount) Interface() protoreflect.ProtoMessage {
+	return (*MsgCreateClawbackVestingAccount)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_MsgCreateClawbackVestingAccount) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.FromAddress != "" {
+		value := protoreflect.ValueOfString(x.FromAddress)
+		if !f(fd_MsgCreateClawbackVestingAccount_from_address, value) {
+			return
+		}
+	}
+	if x.ToAddress != "" {
+		value := protoreflect.ValueOfString(x.ToAddress)
+		if !f(fd_MsgCreateClawbackVestingAccount_to_address, value) {
+			return
+		}
+	}
+	if x.StartTime != int64(0) {
+		value := protoreflect.ValueOfInt64(x.StartTime)
+		if !f(fd_MsgCreateClawbackVestingAccount_start_time, value) {
+			return
+		}
+	}
+	if len(x.LockupPeriods) != 0 {
+		value := protoreflect.ValueOfList(&_MsgCreateClawbackVestingAccount_4_list{list: &x.LockupPeriods})
+		if !f(fd_MsgCreateClawbackVestingAccount_lockup_periods, value) {
+			return
+		}
+	}
+	if len(x.VestingPeriods) != 0 {
+		value := protoreflect.ValueOfList(&_MsgCreateClawbackVestingAccount_5_list{list: &x.VestingPeriods})
+		if !f(fd_MsgCreateClawbackVestingAccount_vesting_periods, value) {
+			return
+		}
+	}
+	if x.Merge != false {
+		value := protoreflect.ValueOfBool(x.Merge)
+		if !f(fd_MsgCreateClawbackVestingAccount_merge, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_MsgCreateClawbackVestingAccount) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "cosmos.vesting.v1beta1.MsgCreateClawbackVestingAccount.from_address":
+		return x.FromAddress != ""
+	case "cosmos.vesting.v1beta1.MsgCreateClawbackVestingAccount.to_address":
+		return x.ToAddress != ""
+	case "cosmos.vesting.v1beta1.MsgCreateClawbackVestingAccount.start_time":
+		return x.StartTime != int64(0)
+	case "cosmos.vesting.v1beta1.MsgCreateClawbackVestingAccount.lockup_periods":
+		return len(x.LockupPeriods) != 0
+	case "cosmos.vesting.v1beta1.MsgCreateClawbackVestingAccount.vesting_periods":
+		return len(x.VestingPeriods) != 0
+	case "cosmos.vesting.v1beta1.MsgCreateClawbackVestingAccount.merge":
+		return x.Merge != false
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.vesting.v1beta1.MsgCreateClawbackVestingAccount"))
+		}
+		panic(fmt.Errorf("message cosmos.vesting.v1beta1.MsgCreateClawbackVestingAccount does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgCreateClawbackVestingAccount) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "cosmos.vesting.v1beta1.MsgCreateClawbackVestingAccount.from_address":
+		x.FromAddress = ""
+	case "cosmos.vesting.v1beta1.MsgCreateClawbackVestingAccount.to_address":
+		x.ToAddress = ""
+	case "cosmos.vesting.v1beta1.MsgCreateClawbackVestingAccount.start_time":
+		x.StartTime = int64(0)
+	case "cosmos.vesting.v1beta1.MsgCreateClawbackVestingAccount.lockup_periods":
+		x.LockupPeriods = nil
+	case "cosmos.vesting.v1beta1.MsgCreateClawbackVestingAccount.vesting_periods":
+		x.VestingPeriods = nil
+	case "cosmos.vesting.v1beta1.MsgCreateClawbackVestingAccount.merge":
+		x.Merge = false
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.vesting.v1beta1.MsgCreateClawbackVestingAccount"))
+		}
+		panic(fmt.Errorf("message cosmos.vesting.v1beta1.MsgCreateClawbackVestingAccount does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_MsgCreateClawbackVestingAccount) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "cosmos.vesting.v1beta1.MsgCreateClawbackVestingAccount.from_address":
+		value := x.FromAddress
+		return protoreflect.ValueOfString(value)
+	case "cosmos.vesting.v1beta1.MsgCreateClawbackVestingAccount.to_address":
+		value := x.ToAddress
+		return protoreflect.ValueOfString(value)
+	case "cosmos.vesting.v1beta1.MsgCreateClawbackVestingAccount.start_time":
+		value := x.StartTime
+		return protoreflect.ValueOfInt64(value)
+	case "cosmos.vesting.v1beta1.MsgCreateClawbackVestingAccount.lockup_periods":
+		if len(x.LockupPeriods) == 0 {
+			return protoreflect.ValueOfList(&_MsgCreateClawbackVestingAccount_4_list{})
+		}
+		listValue := &_MsgCreateClawbackVestingAccount_4_list{list: &x.LockupPeriods}
+		return protoreflect.ValueOfList(listValue)
+	case "cosmos.vesting.v1beta1.MsgCreateClawbackVestingAccount.vesting_periods":
+		if len(x.VestingPeriods) == 0 {
+			return protoreflect.ValueOfList(&_MsgCreateClawbackVestingAccount_5_list{})
+		}
+		listValue := &_MsgCreateClawbackVestingAccount_5_list{list: &x.VestingPeriods}
+		return protoreflect.ValueOfList(listValue)
+	case "cosmos.vesting.v1beta1.MsgCreateClawbackVestingAccount.merge":
+		value := x.Merge
+		return protoreflect.ValueOfBool(value)
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.vesting.v1beta1.MsgCreateClawbackVestingAccount"))
+		}
+		panic(fmt.Errorf("message cosmos.vesting.v1beta1.MsgCreateClawbackVestingAccount does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgCreateClawbackVestingAccount) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "cosmos.vesting.v1beta1.MsgCreateClawbackVestingAccount.from_address":
+		x.FromAddress = value.Interface().(string)
+	case "cosmos.vesting.v1beta1.MsgCreateClawbackVestingAccount.to_address":
+		x.ToAddress = value.Interface().(string)
+	case "cosmos.vesting.v1beta1.MsgCreateClawbackVestingAccount.start_time":
+		x.StartTime = value.Int()
+	case "cosmos.vesting.v1beta1.MsgCreateClawbackVestingAccount.lockup_periods":
+		lv := value.List()
+		clv := lv.(*_MsgCreateClawbackVestingAccount_4_list)
+		x.LockupPeriods = *clv.list
+	case "cosmos.vesting.v1beta1.MsgCreateClawbackVestingAccount.vesting_periods":
+		lv := value.List()
+		clv := lv.(*_MsgCreateClawbackVestingAccount_5_list)
+		x.VestingPeriods = *clv.list
+	case "cosmos.vesting.v1beta1.MsgCreateClawbackVestingAccount.merge":
+		x.Merge = value.Bool()
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.vesting.v1beta1.MsgCreateClawbackVestingAccount"))
+		}
+		panic(fmt.Errorf("message cosmos.vesting.v1beta1.MsgCreateClawbackVestingAccount does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgCreateClawbackVestingAccount) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "cosmos.vesting.v1beta1.MsgCreateClawbackVestingAccount.lockup_periods":
+		if x.LockupPeriods == nil {
+			x.LockupPeriods = []*Period{}
+		}
+		value := &_MsgCreateClawbackVestingAccount_4_list{list: &x.LockupPeriods}
+		return protoreflect.ValueOfList(value)
+	case "cosmos.vesting.v1beta1.MsgCreateClawbackVestingAccount.vesting_periods":
+		if x.VestingPeriods == nil {
+			x.VestingPeriods = []*Period{}
+		}
+		value := &_MsgCreateClawbackVestingAccount_5_list{list: &x.VestingPeriods}
+		return protoreflect.ValueOfList(value)
+	case "cosmos.vesting.v1beta1.MsgCreateClawbackVestingAccount.from_address":
+		panic(fmt.Errorf("field from_address of message cosmos.vesting.v1beta1.MsgCreateClawbackVestingAccount is not mutable"))
+	case "cosmos.vesting.v1beta1.MsgCreateClawbackVestingAccount.to_address":
+		panic(fmt.Errorf("field to_address of message cosmos.vesting.v1beta1.MsgCreateClawbackVestingAccount is not mutable"))
+	case "cosmos.vesting.v1beta1.MsgCreateClawbackVestingAccount.start_time":
+		panic(fmt.Errorf("field start_time of message cosmos.vesting.v1beta1.MsgCreateClawbackVestingAccount is not mutable"))
+	case "cosmos.vesting.v1beta1.MsgCreateClawbackVestingAccount.merge":
+		panic(fmt.Errorf("field merge of message cosmos.vesting.v1beta1.MsgCreateClawbackVestingAccount is not mutable"))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.vesting.v1beta1.MsgCreateClawbackVestingAccount"))
+		}
+		panic(fmt.Errorf("message cosmos.vesting.v1beta1.MsgCreateClawbackVestingAccount does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_MsgCreateClawbackVestingAccount) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "cosmos.vesting.v1beta1.MsgCreateClawbackVestingAccount.from_address":
+		return protoreflect.ValueOfString("")
+	case "cosmos.vesting.v1beta1.MsgCreateClawbackVestingAccount.to_address":
+		return protoreflect.ValueOfString("")
+	case "cosmos.vesting.v1beta1.MsgCreateClawbackVestingAccount.start_time":
+		return protoreflect.ValueOfInt64(int64(0))
+	case "cosmos.vesting.v1beta1.MsgCreateClawbackVestingAccount.lockup_periods":
+		list := []*Period{}
+		return protoreflect.ValueOfList(&_MsgCreateClawbackVestingAccount_4_list{list: &list})
+	case "cosmos.vesting.v1beta1.MsgCreateClawbackVestingAccount.vesting_periods":
+		list := []*Period{}
+		return protoreflect.ValueOfList(&_MsgCreateClawbackVestingAccount_5_list{list: &list})
+	case "cosmos.vesting.v1beta1.MsgCreateClawbackVestingAccount.merge":
+		return protoreflect.ValueOfBool(false)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.vesting.v1beta1.MsgCreateClawbackVestingAccount"))
+		}
+		panic(fmt.Errorf("message cosmos.vesting.v1beta1.MsgCreateClawbackVestingAccount does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_MsgCreateClawbackVestingAccount) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.vesting.v1beta1.MsgCreateClawbackVestingAccount", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_MsgCreateClawbackVestingAccount) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgCreateClawbackVestingAccount) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_MsgCreateClawbackVestingAccount) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_MsgCreateClawbackVestingAccount) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*MsgCreateClawbackVestingAccount)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		l = len(x.FromAddress)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.ToAddress)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.StartTime != 0 {
+			n += 1 + runtime.Sov(uint64(x.StartTime))
+		}
+		if len(x.LockupPeriods) > 0 {
+			for _, e := range x.LockupPeriods {
+				l = options.Size(e)
+				n += 1 + l + runtime.Sov(uint64(l))
+			}
+		}
+		if len(x.VestingPeriods) > 0 {
+			for _, e := range x.VestingPeriods {
+				l = options.Size(e)
+				n += 1 + l + runtime.Sov(uint64(l))
+			}
+		}
+		if x.Merge {
+			n += 2
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*MsgCreateClawbackVestingAccount)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if x.Merge {
+			i--
+			if x.Merge {
+				dAtA[i] = 1
+			} else {
+				dAtA[i] = 0
+			}
+			i--
+			dAtA[i] = 0x30
+		}
+		if len(x.VestingPeriods) > 0 {
+			for iNdEx := len(x.VestingPeriods) - 1; iNdEx >= 0; iNdEx-- {
+				encoded, err := options.Marshal(x.VestingPeriods[iNdEx])
+				if err != nil {
+					return protoiface.MarshalOutput{
+						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+						Buf:               input.Buf,
+					}, err
+				}
+				i -= len(encoded)
+				copy(dAtA[i:], encoded)
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+				i--
+				dAtA[i] = 0x2a
+			}
+		}
+		if len(x.LockupPeriods) > 0 {
+			for iNdEx := len(x.LockupPeriods) - 1; iNdEx >= 0; iNdEx-- {
+				encoded, err := options.Marshal(x.LockupPeriods[iNdEx])
+				if err != nil {
+					return protoiface.MarshalOutput{
+						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+						Buf:               input.Buf,
+					}, err
+				}
+				i -= len(encoded)
+				copy(dAtA[i:], encoded)
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+				i--
+				dAtA[i] = 0x22
+			}
+		}
+		if x.StartTime != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.StartTime))
+			i--
+			dAtA[i] = 0x18
+		}
+		if len(x.ToAddress) > 0 {
+			i -= len(x.ToAddress)
+			copy(dAtA[i:], x.ToAddress)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.ToAddress)))
+			i--
+			dAtA[i] = 0x12
+		}
+		if len(x.FromAddress) > 0 {
+			i -= len(x.FromAddress)
+			copy(dAtA[i:], x.FromAddress)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.FromAddress)))
+			i--
+			dAtA[i] = 0xa
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*MsgCreateClawbackVestingAccount)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgCreateClawbackVestingAccount: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgCreateClawbackVestingAccount: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field FromAddress", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.FromAddress = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 2:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field ToAddress", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.ToAddress = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 3:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field StartTime", wireType)
+				}
+				x.StartTime = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.StartTime |= int64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+			case 4:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field LockupPeriods", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.LockupPeriods = append(x.LockupPeriods, &Period{})
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.LockupPeriods[len(x.LockupPeriods)-1]); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			case 5:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field VestingPeriods", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.VestingPeriods = append(x.VestingPeriods, &Period{})
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.VestingPeriods[len(x.VestingPeriods)-1]); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			case 6:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Merge", wireType)
+				}
+				var v int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					v |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				x.Merge = bool(v != 0)
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var (
+	md_MsgCreateClawbackVestingAccountResponse protoreflect.MessageDescriptor
+)
+
+func init() {
+	file_cosmos_vesting_v1beta1_tx_proto_init()
+	md_MsgCreateClawbackVestingAccountResponse = File_cosmos_vesting_v1beta1_tx_proto.Messages().ByName("MsgCreateClawbackVestingAccountResponse")
+}
+
+var _ protoreflect.Message = (*fastReflection_MsgCreateClawbackVestingAccountResponse)(nil)
+
+type fastReflection_MsgCreateClawbackVestingAccountResponse MsgCreateClawbackVestingAccountResponse
+
+func (x *MsgCreateClawbackVestingAccountResponse) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_MsgCreateClawbackVestingAccountResponse)(x)
+}
+
+func (x *MsgCreateClawbackVestingAccountResponse) slowProtoReflect() protoreflect.Message {
+	mi := &file_cosmos_vesting_v1beta1_tx_proto_msgTypes[7]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_MsgCreateClawbackVestingAccountResponse_messageType fastReflection_MsgCreateClawbackVestingAccountResponse_messageType
+var _ protoreflect.MessageType = fastReflection_MsgCreateClawbackVestingAccountResponse_messageType{}
+
+type fastReflection_MsgCreateClawbackVestingAccountResponse_messageType struct{}
+
+func (x fastReflection_MsgCreateClawbackVestingAccountResponse_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_MsgCreateClawbackVestingAccountResponse)(nil)
+}
+func (x fastReflection_MsgCreateClawbackVestingAccountResponse_messageType) New() protoreflect.Message {
+	return new(fastReflection_MsgCreateClawbackVestingAccountResponse)
+}
+func (x fastReflection_MsgCreateClawbackVestingAccountResponse_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgCreateClawbackVestingAccountResponse
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_MsgCreateClawbackVestingAccountResponse) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgCreateClawbackVestingAccountResponse
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_MsgCreateClawbackVestingAccountResponse) Type() protoreflect.MessageType {
+	return _fastReflection_MsgCreateClawbackVestingAccountResponse_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_MsgCreateClawbackVestingAccountResponse) New() protoreflect.Message {
+	return new(fastReflection_MsgCreateClawbackVestingAccountResponse)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_MsgCreateClawbackVestingAccountResponse) Interface() protoreflect.ProtoMessage {
+	return (*MsgCreateClawbackVestingAccountResponse)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_MsgCreateClawbackVestingAccountResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_MsgCreateClawbackVestingAccountResponse) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.vesting.v1beta1.MsgCreateClawbackVestingAccountResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.vesting.v1beta1.MsgCreateClawbackVestingAccountResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgCreateClawbackVestingAccountResponse) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.vesting.v1beta1.MsgCreateClawbackVestingAccountResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.vesting.v1beta1.MsgCreateClawbackVestingAccountResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_MsgCreateClawbackVestingAccountResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.vesting.v1beta1.MsgCreateClawbackVestingAccountResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.vesting.v1beta1.MsgCreateClawbackVestingAccountResponse does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgCreateClawbackVestingAccountResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.vesting.v1beta1.MsgCreateClawbackVestingAccountResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.vesting.v1beta1.MsgCreateClawbackVestingAccountResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgCreateClawbackVestingAccountResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.vesting.v1beta1.MsgCreateClawbackVestingAccountResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.vesting.v1beta1.MsgCreateClawbackVestingAccountResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_MsgCreateClawbackVestingAccountResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.vesting.v1beta1.MsgCreateClawbackVestingAccountResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.vesting.v1beta1.MsgCreateClawbackVestingAccountResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_MsgCreateClawbackVestingAccountResponse) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.vesting.v1beta1.MsgCreateClawbackVestingAccountResponse", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_MsgCreateClawbackVestingAccountResponse) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgCreateClawbackVestingAccountResponse) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_MsgCreateClawbackVestingAccountResponse) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_MsgCreateClawbackVestingAccountResponse) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*MsgCreateClawbackVestingAccountResponse)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*MsgCreateClawbackVestingAccountResponse)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*MsgCreateClawbackVestingAccountResponse)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgCreateClawbackVestingAccountResponse: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgCreateClawbackVestingAccountResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var (
+	md_MsgClawback                protoreflect.MessageDescriptor
+	fd_MsgClawback_funder_address protoreflect.FieldDescriptor
+	fd_MsgClawback_address        protoreflect.FieldDescriptor
+	fd_MsgClawback_dest_address   protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_cosmos_vesting_v1beta1_tx_proto_init()
+	md_MsgClawback = File_cosmos_vesting_v1beta1_tx_proto.Messages().ByName("MsgClawback")
+	fd_MsgClawback_funder_address = md_MsgClawback.Fields().ByName("funder_address")
+	fd_MsgClawback_address = md_MsgClawback.Fields().ByName("address")
+	fd_MsgClawback_dest_address = md_MsgClawback.Fields().ByName("dest_address")
+}
+
+var _ protoreflect.Message = (*fastReflection_MsgClawback)(nil)
+
+type fastReflection_MsgClawback MsgClawback
+
+func (x *MsgClawback) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_MsgClawback)(x)
+}
+
+func (x *MsgClawback) slowProtoReflect() protoreflect.Message {
+	mi := &file_cosmos_vesting_v1beta1_tx_proto_msgTypes[8]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_MsgClawback_messageType fastReflection_MsgClawback_messageType
+var _ protoreflect.MessageType = fastReflection_MsgClawback_messageType{}
+
+type fastReflection_MsgClawback_messageType struct{}
+
+func (x fastReflection_MsgClawback_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_MsgClawback)(nil)
+}
+func (x fastReflection_MsgClawback_messageType) New() protoreflect.Message {
+	return new(fastReflection_MsgClawback)
+}
+func (x fastReflection_MsgClawback_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgClawback
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_MsgClawback) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgClawback
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_MsgClawback) Type() protoreflect.MessageType {
+	return _fastReflection_MsgClawback_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_MsgClawback) New() protoreflect.Message {
+	return new(fastReflection_MsgClawback)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_MsgClawback) Interface() protoreflect.ProtoMessage {
+	return (*MsgClawback)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_MsgClawback) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.FunderAddress != "" {
+		value := protoreflect.ValueOfString(x.FunderAddress)
+		if !f(fd_MsgClawback_funder_address, value) {
+			return
+		}
+	}
+	if x.Address != "" {
+		value := protoreflect.ValueOfString(x.Address)
+		if !f(fd_MsgClawback_address, value) {
+			return
+		}
+	}
+	if x.DestAddress != "" {
+		value := protoreflect.ValueOfString(x.DestAddress)
+		if !f(fd_MsgClawback_dest_address, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_MsgClawback) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "cosmos.vesting.v1beta1.MsgClawback.funder_address":
+		return x.FunderAddress != ""
+	case "cosmos.vesting.v1beta1.MsgClawback.address":
+		return x.Address != ""
+	case "cosmos.vesting.v1beta1.MsgClawback.dest_address":
+		return x.DestAddress != ""
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.vesting.v1beta1.MsgClawback"))
+		}
+		panic(fmt.Errorf("message cosmos.vesting.v1beta1.MsgClawback does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgClawback) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "cosmos.vesting.v1beta1.MsgClawback.funder_address":
+		x.FunderAddress = ""
+	case "cosmos.vesting.v1beta1.MsgClawback.address":
+		x.Address = ""
+	case "cosmos.vesting.v1beta1.MsgClawback.dest_address":
+		x.DestAddress = ""
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.vesting.v1beta1.MsgClawback"))
+		}
+		panic(fmt.Errorf("message cosmos.vesting.v1beta1.MsgClawback does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_MsgClawback) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "cosmos.vesting.v1beta1.MsgClawback.funder_address":
+		value := x.FunderAddress
+		return protoreflect.ValueOfString(value)
+	case "cosmos.vesting.v1beta1.MsgClawback.address":
+		value := x.Address
+		return protoreflect.ValueOfString(value)
+	case "cosmos.vesting.v1beta1.MsgClawback.dest_address":
+		value := x.DestAddress
+		return protoreflect.ValueOfString(value)
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.vesting.v1beta1.MsgClawback"))
+		}
+		panic(fmt.Errorf("message cosmos.vesting.v1beta1.MsgClawback does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgClawback) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "cosmos.vesting.v1beta1.MsgClawback.funder_address":
+		x.FunderAddress = value.Interface().(string)
+	case "cosmos.vesting.v1beta1.MsgClawback.address":
+		x.Address = value.Interface().(string)
+	case "cosmos.vesting.v1beta1.MsgClawback.dest_address":
+		x.DestAddress = value.Interface().(string)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.vesting.v1beta1.MsgClawback"))
+		}
+		panic(fmt.Errorf("message cosmos.vesting.v1beta1.MsgClawback does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgClawback) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "cosmos.vesting.v1beta1.MsgClawback.funder_address":
+		panic(fmt.Errorf("field funder_address of message cosmos.vesting.v1beta1.MsgClawback is not mutable"))
+	case "cosmos.vesting.v1beta1.MsgClawback.address":
+		panic(fmt.Errorf("field address of message cosmos.vesting.v1beta1.MsgClawback is not mutable"))
+	case "cosmos.vesting.v1beta1.MsgClawback.dest_address":
+		panic(fmt.Errorf("field dest_address of message cosmos.vesting.v1beta1.MsgClawback is not mutable"))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.vesting.v1beta1.MsgClawback"))
+		}
+		panic(fmt.Errorf("message cosmos.vesting.v1beta1.MsgClawback does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_MsgClawback) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "cosmos.vesting.v1beta1.MsgClawback.funder_address":
+		return protoreflect.ValueOfString("")
+	case "cosmos.vesting.v1beta1.MsgClawback.address":
+		return protoreflect.ValueOfString("")
+	case "cosmos.vesting.v1beta1.MsgClawback.dest_address":
+		return protoreflect.ValueOfString("")
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.vesting.v1beta1.MsgClawback"))
+		}
+		panic(fmt.Errorf("message cosmos.vesting.v1beta1.MsgClawback does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_MsgClawback) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.vesting.v1beta1.MsgClawback", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_MsgClawback) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgClawback) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_MsgClawback) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_MsgClawback) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*MsgClawback)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		l = len(x.FunderAddress)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.Address)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.DestAddress)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*MsgClawback)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if len(x.DestAddress) > 0 {
+			i -= len(x.DestAddress)
+			copy(dAtA[i:], x.DestAddress)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.DestAddress)))
+			i--
+			dAtA[i] = 0x1a
+		}
+		if len(x.Address) > 0 {
+			i -= len(x.Address)
+			copy(dAtA[i:], x.Address)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Address)))
+			i--
+			dAtA[i] = 0x12
+		}
+		if len(x.FunderAddress) > 0 {
+			i -= len(x.FunderAddress)
+			copy(dAtA[i:], x.FunderAddress)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.FunderAddress)))
+			i--
+			dAtA[i] = 0xa
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*MsgClawback)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgClawback: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgClawback: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field FunderAddress", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.FunderAddress = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 2:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Address", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Address = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 3:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field DestAddress", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.DestAddress = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var (
+	md_MsgClawbackResponse protoreflect.MessageDescriptor
+)
+
+func init() {
+	file_cosmos_vesting_v1beta1_tx_proto_init()
+	md_MsgClawbackResponse = File_cosmos_vesting_v1beta1_tx_proto.Messages().ByName("MsgClawbackResponse")
+}
+
+var _ protoreflect.Message = (*fastReflection_MsgClawbackResponse)(nil)
+
+type fastReflection_MsgClawbackResponse MsgClawbackResponse
+
+func (x *MsgClawbackResponse) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_MsgClawbackResponse)(x)
+}
+
+func (x *MsgClawbackResponse) slowProtoReflect() protoreflect.Message {
+	mi := &file_cosmos_vesting_v1beta1_tx_proto_msgTypes[9]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_MsgClawbackResponse_messageType fastReflection_MsgClawbackResponse_messageType
+var _ protoreflect.MessageType = fastReflection_MsgClawbackResponse_messageType{}
+
+type fastReflection_MsgClawbackResponse_messageType struct{}
+
+func (x fastReflection_MsgClawbackResponse_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_MsgClawbackResponse)(nil)
+}
+func (x fastReflection_MsgClawbackResponse_messageType) New() protoreflect.Message {
+	return new(fastReflection_MsgClawbackResponse)
+}
+func (x fastReflection_MsgClawbackResponse_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgClawbackResponse
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_MsgClawbackResponse) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgClawbackResponse
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_MsgClawbackResponse) Type() protoreflect.MessageType {
+	return _fastReflection_MsgClawbackResponse_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_MsgClawbackResponse) New() protoreflect.Message {
+	return new(fastReflection_MsgClawbackResponse)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_MsgClawbackResponse) Interface() protoreflect.ProtoMessage {
+	return (*MsgClawbackResponse)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_MsgClawbackResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_MsgClawbackResponse) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.vesting.v1beta1.MsgClawbackResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.vesting.v1beta1.MsgClawbackResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgClawbackResponse) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.vesting.v1beta1.MsgClawbackResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.vesting.v1beta1.MsgClawbackResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_MsgClawbackResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.vesting.v1beta1.MsgClawbackResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.vesting.v1beta1.MsgClawbackResponse does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgClawbackResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.vesting.v1beta1.MsgClawbackResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.vesting.v1beta1.MsgClawbackResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgClawbackResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.vesting.v1beta1.MsgClawbackResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.vesting.v1beta1.MsgClawbackResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_MsgClawbackResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.vesting.v1beta1.MsgClawbackResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.vesting.v1beta1.MsgClawbackResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_MsgClawbackResponse) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.vesting.v1beta1.MsgClawbackResponse", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_MsgClawbackResponse) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgClawbackResponse) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_MsgClawbackResponse) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_MsgClawbackResponse) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*MsgClawbackResponse)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*MsgClawbackResponse)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*MsgClawbackResponse)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgClawbackResponse: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgClawbackResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
 // Code generated by protoc-gen-go. DO NOT EDIT.
 // versions:
 // 	protoc-gen-go v1.27.0
@@ -3389,6 +5511,206 @@ func (*MsgCreatePeriodicVestingAccountResponse) Descriptor() ([]byte, []int) {
 	return file_cosmos_vesting_v1beta1_tx_proto_rawDescGZIP(), []int{5}
 }
 
+// MsgCreateClawbackVestingAccount defines a message that enables creating a ClawbackVestingAccount.
+type MsgCreateClawbackVestingAccount struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// from_address specifies the account to provide the funds and sign the
+	// clawback request
+	FromAddress string `protobuf:"bytes,1,opt,name=from_address,json=fromAddress,proto3" json:"from_address,omitempty"`
+	// to_address specifies the account to receive the funds
+	ToAddress string `protobuf:"bytes,2,opt,name=to_address,json=toAddress,proto3" json:"to_address,omitempty"`
+	// start_time defines the time at which the vesting period begins
+	StartTime int64 `protobuf:"varint,3,opt,name=start_time,json=startTime,proto3" json:"start_time,omitempty"`
+	// lockup_periods defines the unlocking schedule relative to the start_time
+	LockupPeriods []*Period `protobuf:"bytes,4,rep,name=lockup_periods,json=lockupPeriods,proto3" json:"lockup_periods,omitempty"`
+	// vesting_periods defines the vesting schedule relative to the start_time
+	VestingPeriods []*Period `protobuf:"bytes,5,rep,name=vesting_periods,json=vestingPeriods,proto3" json:"vesting_periods,omitempty"`
+	// merge specifies a creation mechanism for existing
+	// ClawbackVestingAccounts. If true, merge this new grant into an existing
+	// ClawbackVestingAccount, or create it if it does not exist. If false,
+	// creates a new account. New grants to an existing account must be from the
+	// same from_address.
+	Merge bool `protobuf:"varint,6,opt,name=merge,proto3" json:"merge,omitempty"`
+}
+
+func (x *MsgCreateClawbackVestingAccount) Reset() {
+	*x = MsgCreateClawbackVestingAccount{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_cosmos_vesting_v1beta1_tx_proto_msgTypes[6]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *MsgCreateClawbackVestingAccount) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MsgCreateClawbackVestingAccount) ProtoMessage() {}
+
+// Deprecated: Use MsgCreateClawbackVestingAccount.ProtoReflect.Descriptor instead.
+func (*MsgCreateClawbackVestingAccount) Descriptor() ([]byte, []int) {
+	return file_cosmos_vesting_v1beta1_tx_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *MsgCreateClawbackVestingAccount) GetFromAddress() string {
+	if x != nil {
+		return x.FromAddress
+	}
+	return ""
+}
+
+func (x *MsgCreateClawbackVestingAccount) GetToAddress() string {
+	if x != nil {
+		return x.ToAddress
+	}
+	return ""
+}
+
+func (x *MsgCreateClawbackVestingAccount) GetStartTime() int64 {
+	if x != nil {
+		return x.StartTime
+	}
+	return 0
+}
+
+func (x *MsgCreateClawbackVestingAccount) GetLockupPeriods() []*Period {
+	if x != nil {
+		return x.LockupPeriods
+	}
+	return nil
+}
+
+func (x *MsgCreateClawbackVestingAccount) GetVestingPeriods() []*Period {
+	if x != nil {
+		return x.VestingPeriods
+	}
+	return nil
+}
+
+func (x *MsgCreateClawbackVestingAccount) GetMerge() bool {
+	if x != nil {
+		return x.Merge
+	}
+	return false
+}
+
+// MsgCreateClawbackVestingAccountResponse defines the
+// MsgCreateClawbackVestingAccount response type.
+type MsgCreateClawbackVestingAccountResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+}
+
+func (x *MsgCreateClawbackVestingAccountResponse) Reset() {
+	*x = MsgCreateClawbackVestingAccountResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_cosmos_vesting_v1beta1_tx_proto_msgTypes[7]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *MsgCreateClawbackVestingAccountResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MsgCreateClawbackVestingAccountResponse) ProtoMessage() {}
+
+// Deprecated: Use MsgCreateClawbackVestingAccountResponse.ProtoReflect.Descriptor instead.
+func (*MsgCreateClawbackVestingAccountResponse) Descriptor() ([]byte, []int) {
+	return file_cosmos_vesting_v1beta1_tx_proto_rawDescGZIP(), []int{7}
+}
+
+// MsgClawback defines a message that removes unvested tokens from a
+// ClawbackVestingAccount.
+type MsgClawback struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// funder_address is the address which funded the account
+	FunderAddress string `protobuf:"bytes,1,opt,name=funder_address,json=funderAddress,proto3" json:"funder_address,omitempty"`
+	// address is the address of the ClawbackVestingAccount to claw back from.
+	Address string `protobuf:"bytes,2,opt,name=address,proto3" json:"address,omitempty"`
+	// dest_address specifies where the clawed-back tokens should be transferred
+	// to. If empty, the tokens will be transferred back to the original funder of
+	// the account.
+	DestAddress string `protobuf:"bytes,3,opt,name=dest_address,json=destAddress,proto3" json:"dest_address,omitempty"`
+}
+
+func (x *MsgClawback) Reset() {
+	*x = MsgClawback{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_cosmos_vesting_v1beta1_tx_proto_msgTypes[8]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *MsgClawback) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MsgClawback) ProtoMessage() {}
+
+// Deprecated: Use MsgClawback.ProtoReflect.Descriptor instead.
+func (*MsgClawback) Descriptor() ([]byte, []int) {
+	return file_cosmos_vesting_v1beta1_tx_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *MsgClawback) GetFunderAddress() string {
+	if x != nil {
+		return x.FunderAddress
+	}
+	return ""
+}
+
+func (x *MsgClawback) GetAddress() string {
+	if x != nil {
+		return x.Address
+	}
+	return ""
+}
+
+func (x *MsgClawback) GetDestAddress() string {
+	if x != nil {
+		return x.DestAddress
+	}
+	return ""
+}
+
+// MsgClawbackResponse defines the MsgClawback response type.
+type MsgClawbackResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+}
+
+func (x *MsgClawbackResponse) Reset() {
+	*x = MsgClawbackResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_cosmos_vesting_v1beta1_tx_proto_msgTypes[9]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *MsgClawbackResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MsgClawbackResponse) ProtoMessage() {}
+
+// Deprecated: Use MsgClawbackResponse.ProtoReflect.Descriptor instead.
+func (*MsgClawbackResponse) Descriptor() ([]byte, []int) {
+	return file_cosmos_vesting_v1beta1_tx_proto_rawDescGZIP(), []int{9}
+}
+
 var File_cosmos_vesting_v1beta1_tx_proto protoreflect.FileDescriptor
 
 var file_cosmos_vesting_v1beta1_tx_proto_rawDesc = []byte{
@@ -3474,49 +5796,97 @@ var file_cosmos_vesting_v1beta1_tx_proto_rawDesc = []byte{
 	0x6e, 0x67, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x22, 0x29, 0x0a, 0x27, 0x4d, 0x73, 0x67,
 	0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x50, 0x65, 0x72, 0x69, 0x6f, 0x64, 0x69, 0x63, 0x56, 0x65,
 	0x73, 0x74, 0x69, 0x6e, 0x67, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x52, 0x65, 0x73, 0x70,
-	0x6f, 0x6e, 0x73, 0x65, 0x32, 0xc5, 0x03, 0x0a, 0x03, 0x4d, 0x73, 0x67, 0x12, 0x80, 0x01, 0x0a,
-	0x14, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x56, 0x65, 0x73, 0x74, 0x69, 0x6e, 0x67, 0x41, 0x63,
-	0x63, 0x6f, 0x75, 0x6e, 0x74, 0x12, 0x2f, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x76,
-	0x65, 0x73, 0x74, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d,
-	0x73, 0x67, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x56, 0x65, 0x73, 0x74, 0x69, 0x6e, 0x67, 0x41,
-	0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x1a, 0x37, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e,
+	0x6f, 0x6e, 0x73, 0x65, 0x22, 0xd1, 0x02, 0x0a, 0x1f, 0x4d, 0x73, 0x67, 0x43, 0x72, 0x65, 0x61,
+	0x74, 0x65, 0x43, 0x6c, 0x61, 0x77, 0x62, 0x61, 0x63, 0x6b, 0x56, 0x65, 0x73, 0x74, 0x69, 0x6e,
+	0x67, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x12, 0x21, 0x0a, 0x0c, 0x66, 0x72, 0x6f, 0x6d,
+	0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0b,
+	0x66, 0x72, 0x6f, 0x6d, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x1d, 0x0a, 0x0a, 0x74,
+	0x6f, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52,
+	0x09, 0x74, 0x6f, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x34, 0x0a, 0x0a, 0x73, 0x74,
+	0x61, 0x72, 0x74, 0x5f, 0x74, 0x69, 0x6d, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x03, 0x42, 0x15,
+	0xf2, 0xde, 0x1f, 0x11, 0x79, 0x61, 0x6d, 0x6c, 0x3a, 0x22, 0x73, 0x74, 0x61, 0x72, 0x74, 0x5f,
+	0x74, 0x69, 0x6d, 0x65, 0x22, 0x52, 0x09, 0x73, 0x74, 0x61, 0x72, 0x74, 0x54, 0x69, 0x6d, 0x65,
+	0x12, 0x4b, 0x0a, 0x0e, 0x6c, 0x6f, 0x63, 0x6b, 0x75, 0x70, 0x5f, 0x70, 0x65, 0x72, 0x69, 0x6f,
+	0x64, 0x73, 0x18, 0x04, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x1e, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
+	0x73, 0x2e, 0x76, 0x65, 0x73, 0x74, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61,
+	0x31, 0x2e, 0x50, 0x65, 0x72, 0x69, 0x6f, 0x64, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x0d,
+	0x6c, 0x6f, 0x63, 0x6b, 0x75, 0x70, 0x50, 0x65, 0x72, 0x69, 0x6f, 0x64, 0x73, 0x12, 0x4d, 0x0a,
+	0x0f, 0x76, 0x65, 0x73, 0x74, 0x69, 0x6e, 0x67, 0x5f, 0x70, 0x65, 0x72, 0x69, 0x6f, 0x64, 0x73,
+	0x18, 0x05, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x1e, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e,
 	0x76, 0x65, 0x73, 0x74, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e,
-	0x4d, 0x73, 0x67, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x56, 0x65, 0x73, 0x74, 0x69, 0x6e, 0x67,
-	0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12,
-	0x98, 0x01, 0x0a, 0x1c, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x50, 0x65, 0x72, 0x6d, 0x61, 0x6e,
-	0x65, 0x6e, 0x74, 0x4c, 0x6f, 0x63, 0x6b, 0x65, 0x64, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74,
-	0x12, 0x37, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x76, 0x65, 0x73, 0x74, 0x69, 0x6e,
-	0x67, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x43, 0x72, 0x65,
+	0x50, 0x65, 0x72, 0x69, 0x6f, 0x64, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x0e, 0x76, 0x65,
+	0x73, 0x74, 0x69, 0x6e, 0x67, 0x50, 0x65, 0x72, 0x69, 0x6f, 0x64, 0x73, 0x12, 0x14, 0x0a, 0x05,
+	0x6d, 0x65, 0x72, 0x67, 0x65, 0x18, 0x06, 0x20, 0x01, 0x28, 0x08, 0x52, 0x05, 0x6d, 0x65, 0x72,
+	0x67, 0x65, 0x3a, 0x04, 0xe8, 0xa0, 0x1f, 0x00, 0x22, 0x29, 0x0a, 0x27, 0x4d, 0x73, 0x67, 0x43,
+	0x72, 0x65, 0x61, 0x74, 0x65, 0x43, 0x6c, 0x61, 0x77, 0x62, 0x61, 0x63, 0x6b, 0x56, 0x65, 0x73,
+	0x74, 0x69, 0x6e, 0x67, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f,
+	0x6e, 0x73, 0x65, 0x22, 0x71, 0x0a, 0x0b, 0x4d, 0x73, 0x67, 0x43, 0x6c, 0x61, 0x77, 0x62, 0x61,
+	0x63, 0x6b, 0x12, 0x25, 0x0a, 0x0e, 0x66, 0x75, 0x6e, 0x64, 0x65, 0x72, 0x5f, 0x61, 0x64, 0x64,
+	0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0d, 0x66, 0x75, 0x6e, 0x64,
+	0x65, 0x72, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x18, 0x0a, 0x07, 0x61, 0x64, 0x64,
+	0x72, 0x65, 0x73, 0x73, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x61, 0x64, 0x64, 0x72,
+	0x65, 0x73, 0x73, 0x12, 0x21, 0x0a, 0x0c, 0x64, 0x65, 0x73, 0x74, 0x5f, 0x61, 0x64, 0x64, 0x72,
+	0x65, 0x73, 0x73, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0b, 0x64, 0x65, 0x73, 0x74, 0x41,
+	0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x22, 0x15, 0x0a, 0x13, 0x4d, 0x73, 0x67, 0x43, 0x6c, 0x61,
+	0x77, 0x62, 0x61, 0x63, 0x6b, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x32, 0xbe, 0x05,
+	0x0a, 0x03, 0x4d, 0x73, 0x67, 0x12, 0x80, 0x01, 0x0a, 0x14, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65,
+	0x56, 0x65, 0x73, 0x74, 0x69, 0x6e, 0x67, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x12, 0x2f,
+	0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x76, 0x65, 0x73, 0x74, 0x69, 0x6e, 0x67, 0x2e,
+	0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x43, 0x72, 0x65, 0x61, 0x74,
+	0x65, 0x56, 0x65, 0x73, 0x74, 0x69, 0x6e, 0x67, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x1a,
+	0x37, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x76, 0x65, 0x73, 0x74, 0x69, 0x6e, 0x67,
+	0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x43, 0x72, 0x65, 0x61,
+	0x74, 0x65, 0x56, 0x65, 0x73, 0x74, 0x69, 0x6e, 0x67, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74,
+	0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x98, 0x01, 0x0a, 0x1c, 0x43, 0x72, 0x65,
 	0x61, 0x74, 0x65, 0x50, 0x65, 0x72, 0x6d, 0x61, 0x6e, 0x65, 0x6e, 0x74, 0x4c, 0x6f, 0x63, 0x6b,
-	0x65, 0x64, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x1a, 0x3f, 0x2e, 0x63, 0x6f, 0x73, 0x6d,
+	0x65, 0x64, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x12, 0x37, 0x2e, 0x63, 0x6f, 0x73, 0x6d,
 	0x6f, 0x73, 0x2e, 0x76, 0x65, 0x73, 0x74, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74,
 	0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x50, 0x65, 0x72, 0x6d,
 	0x61, 0x6e, 0x65, 0x6e, 0x74, 0x4c, 0x6f, 0x63, 0x6b, 0x65, 0x64, 0x41, 0x63, 0x63, 0x6f, 0x75,
-	0x6e, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x98, 0x01, 0x0a, 0x1c, 0x43,
-	0x72, 0x65, 0x61, 0x74, 0x65, 0x50, 0x65, 0x72, 0x69, 0x6f, 0x64, 0x69, 0x63, 0x56, 0x65, 0x73,
-	0x74, 0x69, 0x6e, 0x67, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x12, 0x37, 0x2e, 0x63, 0x6f,
-	0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x76, 0x65, 0x73, 0x74, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x62,
-	0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x50, 0x65,
+	0x6e, 0x74, 0x1a, 0x3f, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x76, 0x65, 0x73, 0x74,
+	0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x43,
+	0x72, 0x65, 0x61, 0x74, 0x65, 0x50, 0x65, 0x72, 0x6d, 0x61, 0x6e, 0x65, 0x6e, 0x74, 0x4c, 0x6f,
+	0x63, 0x6b, 0x65, 0x64, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f,
+	0x6e, 0x73, 0x65, 0x12, 0x98, 0x01, 0x0a, 0x1c, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x50, 0x65,
 	0x72, 0x69, 0x6f, 0x64, 0x69, 0x63, 0x56, 0x65, 0x73, 0x74, 0x69, 0x6e, 0x67, 0x41, 0x63, 0x63,
-	0x6f, 0x75, 0x6e, 0x74, 0x1a, 0x3f, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x76, 0x65,
+	0x6f, 0x75, 0x6e, 0x74, 0x12, 0x37, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x76, 0x65,
 	0x73, 0x74, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73,
 	0x67, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x50, 0x65, 0x72, 0x69, 0x6f, 0x64, 0x69, 0x63, 0x56,
-	0x65, 0x73, 0x74, 0x69, 0x6e, 0x67, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x52, 0x65, 0x73,
-	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x1a, 0x05, 0x80, 0xe7, 0xb0, 0x2a, 0x01, 0x42, 0xd7, 0x01, 0x0a,
-	0x1a, 0x63, 0x6f, 0x6d, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x76, 0x65, 0x73, 0x74,
-	0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x42, 0x07, 0x54, 0x78, 0x50,
-	0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x36, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64,
-	0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f,
-	0x76, 0x65, 0x73, 0x74, 0x69, 0x6e, 0x67, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x3b,
-	0x76, 0x65, 0x73, 0x74, 0x69, 0x6e, 0x67, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0xa2, 0x02,
-	0x03, 0x43, 0x56, 0x58, 0xaa, 0x02, 0x16, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x56, 0x65,
-	0x73, 0x74, 0x69, 0x6e, 0x67, 0x2e, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0xca, 0x02, 0x16,
-	0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x56, 0x65, 0x73, 0x74, 0x69, 0x6e, 0x67, 0x5c, 0x56,
-	0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0xe2, 0x02, 0x22, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c,
-	0x56, 0x65, 0x73, 0x74, 0x69, 0x6e, 0x67, 0x5c, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x5c,
-	0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x18, 0x43, 0x6f,
-	0x73, 0x6d, 0x6f, 0x73, 0x3a, 0x3a, 0x56, 0x65, 0x73, 0x74, 0x69, 0x6e, 0x67, 0x3a, 0x3a, 0x56,
-	0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x65, 0x73, 0x74, 0x69, 0x6e, 0x67, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x1a, 0x3f, 0x2e,
+	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x76, 0x65, 0x73, 0x74, 0x69, 0x6e, 0x67, 0x2e, 0x76,
+	0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65,
+	0x50, 0x65, 0x72, 0x69, 0x6f, 0x64, 0x69, 0x63, 0x56, 0x65, 0x73, 0x74, 0x69, 0x6e, 0x67, 0x41,
+	0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x98,
+	0x01, 0x0a, 0x1c, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x43, 0x6c, 0x61, 0x77, 0x62, 0x61, 0x63,
+	0x6b, 0x56, 0x65, 0x73, 0x74, 0x69, 0x6e, 0x67, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x12,
+	0x37, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x76, 0x65, 0x73, 0x74, 0x69, 0x6e, 0x67,
+	0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x43, 0x72, 0x65, 0x61,
+	0x74, 0x65, 0x43, 0x6c, 0x61, 0x77, 0x62, 0x61, 0x63, 0x6b, 0x56, 0x65, 0x73, 0x74, 0x69, 0x6e,
+	0x67, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x1a, 0x3f, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
+	0x73, 0x2e, 0x76, 0x65, 0x73, 0x74, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61,
+	0x31, 0x2e, 0x4d, 0x73, 0x67, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x43, 0x6c, 0x61, 0x77, 0x62,
+	0x61, 0x63, 0x6b, 0x56, 0x65, 0x73, 0x74, 0x69, 0x6e, 0x67, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e,
+	0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x5c, 0x0a, 0x08, 0x43, 0x6c, 0x61,
+	0x77, 0x62, 0x61, 0x63, 0x6b, 0x12, 0x23, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x76,
+	0x65, 0x73, 0x74, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d,
+	0x73, 0x67, 0x43, 0x6c, 0x61, 0x77, 0x62, 0x61, 0x63, 0x6b, 0x1a, 0x2b, 0x2e, 0x63, 0x6f, 0x73,
+	0x6d, 0x6f, 0x73, 0x2e, 0x76, 0x65, 0x73, 0x74, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x62, 0x65,
+	0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x43, 0x6c, 0x61, 0x77, 0x62, 0x61, 0x63, 0x6b, 0x52,
+	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x1a, 0x05, 0x80, 0xe7, 0xb0, 0x2a, 0x01, 0x42, 0xd7,
+	0x01, 0x0a, 0x1a, 0x63, 0x6f, 0x6d, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x76, 0x65,
+	0x73, 0x74, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x42, 0x07, 0x54,
+	0x78, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x36, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
+	0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
+	0x73, 0x2f, 0x76, 0x65, 0x73, 0x74, 0x69, 0x6e, 0x67, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61,
+	0x31, 0x3b, 0x76, 0x65, 0x73, 0x74, 0x69, 0x6e, 0x67, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31,
+	0xa2, 0x02, 0x03, 0x43, 0x56, 0x58, 0xaa, 0x02, 0x16, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e,
+	0x56, 0x65, 0x73, 0x74, 0x69, 0x6e, 0x67, 0x2e, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0xca,
+	0x02, 0x16, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x56, 0x65, 0x73, 0x74, 0x69, 0x6e, 0x67,
+	0x5c, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0xe2, 0x02, 0x22, 0x43, 0x6f, 0x73, 0x6d, 0x6f,
+	0x73, 0x5c, 0x56, 0x65, 0x73, 0x74, 0x69, 0x6e, 0x67, 0x5c, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61,
+	0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x18,
+	0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x3a, 0x3a, 0x56, 0x65, 0x73, 0x74, 0x69, 0x6e, 0x67, 0x3a,
+	0x3a, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -3531,7 +5901,7 @@ func file_cosmos_vesting_v1beta1_tx_proto_rawDescGZIP() []byte {
 	return file_cosmos_vesting_v1beta1_tx_proto_rawDescData
 }
 
-var file_cosmos_vesting_v1beta1_tx_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
+var file_cosmos_vesting_v1beta1_tx_proto_msgTypes = make([]protoimpl.MessageInfo, 10)
 var file_cosmos_vesting_v1beta1_tx_proto_goTypes = []interface{}{
 	(*MsgCreateVestingAccount)(nil),                 // 0: cosmos.vesting.v1beta1.MsgCreateVestingAccount
 	(*MsgCreateVestingAccountResponse)(nil),         // 1: cosmos.vesting.v1beta1.MsgCreateVestingAccountResponse
@@ -3539,24 +5909,34 @@ var file_cosmos_vesting_v1beta1_tx_proto_goTypes = []interface{}{
 	(*MsgCreatePermanentLockedAccountResponse)(nil), // 3: cosmos.vesting.v1beta1.MsgCreatePermanentLockedAccountResponse
 	(*MsgCreatePeriodicVestingAccount)(nil),         // 4: cosmos.vesting.v1beta1.MsgCreatePeriodicVestingAccount
 	(*MsgCreatePeriodicVestingAccountResponse)(nil), // 5: cosmos.vesting.v1beta1.MsgCreatePeriodicVestingAccountResponse
-	(*v1beta1.Coin)(nil),                            // 6: cosmos.base.v1beta1.Coin
-	(*Period)(nil),                                  // 7: cosmos.vesting.v1beta1.Period
+	(*MsgCreateClawbackVestingAccount)(nil),         // 6: cosmos.vesting.v1beta1.MsgCreateClawbackVestingAccount
+	(*MsgCreateClawbackVestingAccountResponse)(nil), // 7: cosmos.vesting.v1beta1.MsgCreateClawbackVestingAccountResponse
+	(*MsgClawback)(nil),                             // 8: cosmos.vesting.v1beta1.MsgClawback
+	(*MsgClawbackResponse)(nil),                     // 9: cosmos.vesting.v1beta1.MsgClawbackResponse
+	(*v1beta1.Coin)(nil),                            // 10: cosmos.base.v1beta1.Coin
+	(*Period)(nil),                                  // 11: cosmos.vesting.v1beta1.Period
 }
 var file_cosmos_vesting_v1beta1_tx_proto_depIdxs = []int32{
-	6, // 0: cosmos.vesting.v1beta1.MsgCreateVestingAccount.amount:type_name -> cosmos.base.v1beta1.Coin
-	6, // 1: cosmos.vesting.v1beta1.MsgCreatePermanentLockedAccount.amount:type_name -> cosmos.base.v1beta1.Coin
-	7, // 2: cosmos.vesting.v1beta1.MsgCreatePeriodicVestingAccount.vesting_periods:type_name -> cosmos.vesting.v1beta1.Period
-	0, // 3: cosmos.vesting.v1beta1.Msg.CreateVestingAccount:input_type -> cosmos.vesting.v1beta1.MsgCreateVestingAccount
-	2, // 4: cosmos.vesting.v1beta1.Msg.CreatePermanentLockedAccount:input_type -> cosmos.vesting.v1beta1.MsgCreatePermanentLockedAccount
-	4, // 5: cosmos.vesting.v1beta1.Msg.CreatePeriodicVestingAccount:input_type -> cosmos.vesting.v1beta1.MsgCreatePeriodicVestingAccount
-	1, // 6: cosmos.vesting.v1beta1.Msg.CreateVestingAccount:output_type -> cosmos.vesting.v1beta1.MsgCreateVestingAccountResponse
-	3, // 7: cosmos.vesting.v1beta1.Msg.CreatePermanentLockedAccount:output_type -> cosmos.vesting.v1beta1.MsgCreatePermanentLockedAccountResponse
-	5, // 8: cosmos.vesting.v1beta1.Msg.CreatePeriodicVestingAccount:output_type -> cosmos.vesting.v1beta1.MsgCreatePeriodicVestingAccountResponse
-	6, // [6:9] is the sub-list for method output_type
-	3, // [3:6] is the sub-list for method input_type
-	3, // [3:3] is the sub-list for extension type_name
-	3, // [3:3] is the sub-list for extension extendee
-	0, // [0:3] is the sub-list for field type_name
+	10, // 0: cosmos.vesting.v1beta1.MsgCreateVestingAccount.amount:type_name -> cosmos.base.v1beta1.Coin
+	10, // 1: cosmos.vesting.v1beta1.MsgCreatePermanentLockedAccount.amount:type_name -> cosmos.base.v1beta1.Coin
+	11, // 2: cosmos.vesting.v1beta1.MsgCreatePeriodicVestingAccount.vesting_periods:type_name -> cosmos.vesting.v1beta1.Period
+	11, // 3: cosmos.vesting.v1beta1.MsgCreateClawbackVestingAccount.lockup_periods:type_name -> cosmos.vesting.v1beta1.Period
+	11, // 4: cosmos.vesting.v1beta1.MsgCreateClawbackVestingAccount.vesting_periods:type_name -> cosmos.vesting.v1beta1.Period
+	0,  // 5: cosmos.vesting.v1beta1.Msg.CreateVestingAccount:input_type -> cosmos.vesting.v1beta1.MsgCreateVestingAccount
+	2,  // 6: cosmos.vesting.v1beta1.Msg.CreatePermanentLockedAccount:input_type -> cosmos.vesting.v1beta1.MsgCreatePermanentLockedAccount
+	4,  // 7: cosmos.vesting.v1beta1.Msg.CreatePeriodicVestingAccount:input_type -> cosmos.vesting.v1beta1.MsgCreatePeriodicVestingAccount
+	6,  // 8: cosmos.vesting.v1beta1.Msg.CreateClawbackVestingAccount:input_type -> cosmos.vesting.v1beta1.MsgCreateClawbackVestingAccount
+	8,  // 9: cosmos.vesting.v1beta1.Msg.Clawback:input_type -> cosmos.vesting.v1beta1.MsgClawback
+	1,  // 10: cosmos.vesting.v1beta1.Msg.CreateVestingAccount:output_type -> cosmos.vesting.v1beta1.MsgCreateVestingAccountResponse
+	3,  // 11: cosmos.vesting.v1beta1.Msg.CreatePermanentLockedAccount:output_type -> cosmos.vesting.v1beta1.MsgCreatePermanentLockedAccountResponse
+	5,  // 12: cosmos.vesting.v1beta1.Msg.CreatePeriodicVestingAccount:output_type -> cosmos.vesting.v1beta1.MsgCreatePeriodicVestingAccountResponse
+	7,  // 13: cosmos.vesting.v1beta1.Msg.CreateClawbackVestingAccount:output_type -> cosmos.vesting.v1beta1.MsgCreateClawbackVestingAccountResponse
+	9,  // 14: cosmos.vesting.v1beta1.Msg.Clawback:output_type -> cosmos.vesting.v1beta1.MsgClawbackResponse
+	10, // [10:15] is the sub-list for method output_type
+	5,  // [5:10] is the sub-list for method input_type
+	5,  // [5:5] is the sub-list for extension type_name
+	5,  // [5:5] is the sub-list for extension extendee
+	0,  // [0:5] is the sub-list for field type_name
 }
 
 func init() { file_cosmos_vesting_v1beta1_tx_proto_init() }
@@ -3638,6 +6018,54 @@ func file_cosmos_vesting_v1beta1_tx_proto_init() {
 				return nil
 			}
 		}
+		file_cosmos_vesting_v1beta1_tx_proto_msgTypes[6].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*MsgCreateClawbackVestingAccount); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_cosmos_vesting_v1beta1_tx_proto_msgTypes[7].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*MsgCreateClawbackVestingAccountResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_cosmos_vesting_v1beta1_tx_proto_msgTypes[8].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*MsgClawback); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_cosmos_vesting_v1beta1_tx_proto_msgTypes[9].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*MsgClawbackResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -3645,7 +6073,7 @@ func file_cosmos_vesting_v1beta1_tx_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_cosmos_vesting_v1beta1_tx_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   6,
+			NumMessages:   10,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

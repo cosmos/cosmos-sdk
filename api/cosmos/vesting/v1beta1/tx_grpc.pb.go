@@ -22,6 +22,8 @@ const (
 	Msg_CreateVestingAccount_FullMethodName         = "/cosmos.vesting.v1beta1.Msg/CreateVestingAccount"
 	Msg_CreatePermanentLockedAccount_FullMethodName = "/cosmos.vesting.v1beta1.Msg/CreatePermanentLockedAccount"
 	Msg_CreatePeriodicVestingAccount_FullMethodName = "/cosmos.vesting.v1beta1.Msg/CreatePeriodicVestingAccount"
+	Msg_CreateClawbackVestingAccount_FullMethodName = "/cosmos.vesting.v1beta1.Msg/CreateClawbackVestingAccount"
+	Msg_Clawback_FullMethodName                     = "/cosmos.vesting.v1beta1.Msg/Clawback"
 )
 
 // MsgClient is the client API for Msg service.
@@ -41,6 +43,11 @@ type MsgClient interface {
 	//
 	// Since: cosmos-sdk 0.46
 	CreatePeriodicVestingAccount(ctx context.Context, in *MsgCreatePeriodicVestingAccount, opts ...grpc.CallOption) (*MsgCreatePeriodicVestingAccountResponse, error)
+	// CreateClawbackVestingAccount creats a vesting account that is subject to
+	// clawback and the configuration of vesting and lockup schedules.
+	CreateClawbackVestingAccount(ctx context.Context, in *MsgCreateClawbackVestingAccount, opts ...grpc.CallOption) (*MsgCreateClawbackVestingAccountResponse, error)
+	// Clawback removes the unvested tokens from a ClawbackVestingAccount.
+	Clawback(ctx context.Context, in *MsgClawback, opts ...grpc.CallOption) (*MsgClawbackResponse, error)
 }
 
 type msgClient struct {
@@ -78,6 +85,24 @@ func (c *msgClient) CreatePeriodicVestingAccount(ctx context.Context, in *MsgCre
 	return out, nil
 }
 
+func (c *msgClient) CreateClawbackVestingAccount(ctx context.Context, in *MsgCreateClawbackVestingAccount, opts ...grpc.CallOption) (*MsgCreateClawbackVestingAccountResponse, error) {
+	out := new(MsgCreateClawbackVestingAccountResponse)
+	err := c.cc.Invoke(ctx, Msg_CreateClawbackVestingAccount_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) Clawback(ctx context.Context, in *MsgClawback, opts ...grpc.CallOption) (*MsgClawbackResponse, error) {
+	out := new(MsgClawbackResponse)
+	err := c.cc.Invoke(ctx, Msg_Clawback_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 // All implementations must embed UnimplementedMsgServer
 // for forward compatibility
@@ -95,6 +120,11 @@ type MsgServer interface {
 	//
 	// Since: cosmos-sdk 0.46
 	CreatePeriodicVestingAccount(context.Context, *MsgCreatePeriodicVestingAccount) (*MsgCreatePeriodicVestingAccountResponse, error)
+	// CreateClawbackVestingAccount creats a vesting account that is subject to
+	// clawback and the configuration of vesting and lockup schedules.
+	CreateClawbackVestingAccount(context.Context, *MsgCreateClawbackVestingAccount) (*MsgCreateClawbackVestingAccountResponse, error)
+	// Clawback removes the unvested tokens from a ClawbackVestingAccount.
+	Clawback(context.Context, *MsgClawback) (*MsgClawbackResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
 
@@ -110,6 +140,12 @@ func (UnimplementedMsgServer) CreatePermanentLockedAccount(context.Context, *Msg
 }
 func (UnimplementedMsgServer) CreatePeriodicVestingAccount(context.Context, *MsgCreatePeriodicVestingAccount) (*MsgCreatePeriodicVestingAccountResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreatePeriodicVestingAccount not implemented")
+}
+func (UnimplementedMsgServer) CreateClawbackVestingAccount(context.Context, *MsgCreateClawbackVestingAccount) (*MsgCreateClawbackVestingAccountResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateClawbackVestingAccount not implemented")
+}
+func (UnimplementedMsgServer) Clawback(context.Context, *MsgClawback) (*MsgClawbackResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Clawback not implemented")
 }
 func (UnimplementedMsgServer) mustEmbedUnimplementedMsgServer() {}
 
@@ -178,6 +214,42 @@ func _Msg_CreatePeriodicVestingAccount_Handler(srv interface{}, ctx context.Cont
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_CreateClawbackVestingAccount_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgCreateClawbackVestingAccount)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).CreateClawbackVestingAccount(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_CreateClawbackVestingAccount_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).CreateClawbackVestingAccount(ctx, req.(*MsgCreateClawbackVestingAccount))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_Clawback_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgClawback)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).Clawback(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_Clawback_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).Clawback(ctx, req.(*MsgClawback))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Msg_ServiceDesc is the grpc.ServiceDesc for Msg service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -196,6 +268,14 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CreatePeriodicVestingAccount",
 			Handler:    _Msg_CreatePeriodicVestingAccount_Handler,
+		},
+		{
+			MethodName: "CreateClawbackVestingAccount",
+			Handler:    _Msg_CreateClawbackVestingAccount_Handler,
+		},
+		{
+			MethodName: "Clawback",
+			Handler:    _Msg_Clawback_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

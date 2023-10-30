@@ -153,7 +153,10 @@ require (
 // REMOVE post v1 release.
 replace (
 	cosmossdk.io/api => ../../api
+	cosmossdk.io/x/bank => ../../x/bank
 	cosmossdk.io/x/distribution => ../../x/distribution
 	cosmossdk.io/x/gov => ../../x/gov
+	cosmossdk.io/x/mint => ../../x/mint
+	cosmossdk.io/x/staking => ../../x/staking
 	github.com/cosmos/cosmos-sdk => ../../.
 )

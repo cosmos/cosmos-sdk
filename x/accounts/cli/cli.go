@@ -63,7 +63,9 @@ func GetTxInitCmd() *cobra.Command {
 			}
 
 			msgBytes, err := encodeJSONToProto(schema.InitSchema.Request, args[1])
-
+			if err != nil {
+				return err
+			}
 			msg := v1.MsgInit{
 				Sender:      sender.String(),
 				AccountType: args[0],

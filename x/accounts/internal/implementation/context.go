@@ -20,7 +20,7 @@ var (
 
 type (
 	ModuleExecFunc  = func(ctx context.Context, msg, msgResp protoiface.MessageV1) error
-	ModuleQueryFunc = func(ctx context.Context, req, resp protoiface.MessageV1) error
+	ModuleQueryFunc = ModuleExecFunc
 )
 
 type contextKey struct{}

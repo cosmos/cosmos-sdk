@@ -51,6 +51,6 @@ int main(void) {
 
     run_benchmark("ecdsa_sign", bench_sign, bench_sign_setup, NULL, &data, 10, 20000);
 
-    secp256k1_context_destroy(data.ctx);
+    cosmos_secp256k1_context_destroy(data.ctx);
     return 0;
 }

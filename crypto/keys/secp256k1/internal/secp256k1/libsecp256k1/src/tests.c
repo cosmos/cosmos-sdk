@@ -160,10 +160,10 @@ void run_context_tests(void) {
     {
         secp256k1_context *ctx_tmp;
 
-        ctx_tmp = none; none = cosmos_secp256k1_context_clone(none); secp256k1_context_destroy(ctx_tmp);
-        ctx_tmp = sign; sign = cosmos_secp256k1_context_clone(sign); secp256k1_context_destroy(ctx_tmp);
-        ctx_tmp = vrfy; vrfy = cosmos_secp256k1_context_clone(vrfy); secp256k1_context_destroy(ctx_tmp);
-        ctx_tmp = both; both = cosmos_secp256k1_context_clone(both); secp256k1_context_destroy(ctx_tmp);
+        ctx_tmp = none; none = cosmos_secp256k1_context_clone(none); cosmos_secp256k1_context_destroy(ctx_tmp);
+        ctx_tmp = sign; sign = cosmos_secp256k1_context_clone(sign); cosmos_secp256k1_context_destroy(ctx_tmp);
+        ctx_tmp = vrfy; vrfy = cosmos_secp256k1_context_clone(vrfy); cosmos_secp256k1_context_destroy(ctx_tmp);
+        ctx_tmp = both; both = cosmos_secp256k1_context_clone(both); cosmos_secp256k1_context_destroy(ctx_tmp);
     }
 
     /* Verify that the error callback makes it across the clone. */
@@ -228,12 +228,12 @@ void run_context_tests(void) {
     CHECK(secp256k1_ecdsa_sig_verify(&both->ecmult_ctx, &sigr, &sigs, &pub, &msg));
 
     /* cleanup */
-    secp256k1_context_destroy(none);
-    secp256k1_context_destroy(sign);
-    secp256k1_context_destroy(vrfy);
-    secp256k1_context_destroy(both);
+    cosmos_secp256k1_context_destroy(none);
+    cosmos_secp256k1_context_destroy(sign);
+    cosmos_secp256k1_context_destroy(vrfy);
+    cosmos_secp256k1_context_destroy(both);
     /* Defined as no-op. */
-    secp256k1_context_destroy(NULL);
+    cosmos_secp256k1_context_destroy(NULL);
 }
 
 /***** HASH TESTS *****/
@@ -4518,7 +4518,7 @@ int main(int argc, char **argv) {
     printf("random run = %02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x\n", run32[0], run32[1], run32[2], run32[3], run32[4], run32[5], run32[6], run32[7], run32[8], run32[9], run32[10], run32[11], run32[12], run32[13], run32[14], run32[15]);
 
     /* shutdown */
-    secp256k1_context_destroy(ctx);
+    cosmos_secp256k1_context_destroy(ctx);
 
     printf("no problems found\n");
     return 0;

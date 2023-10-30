@@ -38,7 +38,7 @@ SECP256K1_API void JNICALL Java_org_bitcoin_NativeSecp256k1_secp256k1_1destroy_1
 {
   secp256k1_context *ctx = (secp256k1_context*)(uintptr_t)ctx_l;
 
-  secp256k1_context_destroy(ctx);
+  cosmos_secp256k1_context_destroy(ctx);
 
   (void)classObject;(void)env;
 }

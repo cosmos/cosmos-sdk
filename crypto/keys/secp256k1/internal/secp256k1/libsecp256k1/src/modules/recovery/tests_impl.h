@@ -141,10 +141,10 @@ void test_ecdsa_recovery_api(void) {
     CHECK(ecount == 7);
 
     /* cleanup */
-    secp256k1_context_destroy(none);
-    secp256k1_context_destroy(sign);
-    secp256k1_context_destroy(vrfy);
-    secp256k1_context_destroy(both);
+    cosmos_secp256k1_context_destroy(none);
+    cosmos_secp256k1_context_destroy(sign);
+    cosmos_secp256k1_context_destroy(vrfy);
+    cosmos_secp256k1_context_destroy(both);
 }
 
 void test_ecdsa_recovery_end_to_end(void) {

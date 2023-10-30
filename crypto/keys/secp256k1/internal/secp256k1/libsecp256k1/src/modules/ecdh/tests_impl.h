@@ -33,7 +33,7 @@ void test_ecdh_api(void) {
     CHECK(ecount == 3);
 
     /* Cleanup */
-    secp256k1_context_destroy(tctx);
+    cosmos_secp256k1_context_destroy(tctx);
 }
 
 void test_ecdh_generator_basepoint(void) {

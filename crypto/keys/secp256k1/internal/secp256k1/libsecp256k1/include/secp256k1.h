@@ -35,7 +35,7 @@ extern "C" {
  *  A constructed context can safely be used from multiple threads
  *  simultaneously, but API call that take a non-const pointer to a context
  *  need exclusive access to it. In particular this is the case for
- *  secp256k1_context_destroy and secp256k1_context_randomize.
+ *  cosmos_secp256k1_context_destroy and secp256k1_context_randomize.
  *
  *  Regarding randomization, either do it once at creation time (in which case
  *  you do not need any locking for the other calls), or use a read-write lock.
@@ -182,7 +182,7 @@ SECP256K1_API secp256k1_context* cosmos_secp256k1_context_clone(
  *  The context pointer may not be used afterwards.
  *  Args:   ctx: an existing context to destroy (cannot be NULL)
  */
-SECP256K1_API void secp256k1_context_destroy(
+SECP256K1_API void cosmos_secp256k1_context_destroy(
     secp256k1_context* ctx
 );
 

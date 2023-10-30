@@ -464,7 +464,7 @@ int main(void) {
     test_exhaustive_recovery_verify(ctx, group, EXHAUSTIVE_TEST_ORDER);
 #endif
 
-    secp256k1_context_destroy(ctx);
+    cosmos_secp256k1_context_destroy(ctx);
     return 0;
 }
 

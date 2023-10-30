@@ -68,6 +68,6 @@ int main(void) {
     data.numsigs = 1;
     run_benchmark("schnorr_verify", benchmark_schnorr_verify, benchmark_schnorr_init, NULL, &data, 10, 20000);
 
-    secp256k1_context_destroy(data.ctx);
+    cosmos_secp256k1_context_destroy(data.ctx);
     return 0;
 }

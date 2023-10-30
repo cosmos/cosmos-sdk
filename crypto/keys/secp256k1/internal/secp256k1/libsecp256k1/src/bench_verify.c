@@ -107,6 +107,6 @@ int main(void) {
     EC_GROUP_free(data.ec_group);
 #endif
 
-    secp256k1_context_destroy(data.ctx);
+    cosmos_secp256k1_context_destroy(data.ctx);
     return 0;
 }

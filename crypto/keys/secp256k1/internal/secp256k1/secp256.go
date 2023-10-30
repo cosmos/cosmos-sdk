@@ -75,7 +75,7 @@ func Sign(msg, seckey []byte) ([]byte, error) {
 		return nil, ErrInvalidKey
 	}
 	seckeydata := (*C.uchar)(unsafe.Pointer(&seckey[0]))
-	if C.secp256k1_ec_seckey_verify(context, seckeydata) != 1 {
+	if C.cosmos_secp256k1_ec_seckey_verify(context, seckeydata) != 1 {
 		return nil, ErrInvalidKey
 	}
 

@@ -3117,14 +3117,14 @@ void run_eckey_edge_case_test(void) {
     size_t len;
     int32_t ecount;
     /* Group order is too large, reject. */
-    CHECK(secp256k1_ec_seckey_verify(ctx, orderc) == 0);
+    CHECK(cosmos_secp256k1_ec_seckey_verify(ctx, orderc) == 0);
     VG_UNDEF(&pubkey, sizeof(pubkey));
     CHECK(secp256k1_ec_pubkey_create(ctx, &pubkey, orderc) == 0);
     VG_CHECK(&pubkey, sizeof(pubkey));
     CHECK(memcmp(&pubkey, zeros, sizeof(secp256k1_pubkey)) == 0);
     /* Maximum value is too large, reject. */
     memset(ctmp, 255, 32);
-    CHECK(secp256k1_ec_seckey_verify(ctx, ctmp) == 0);
+    CHECK(cosmos_secp256k1_ec_seckey_verify(ctx, ctmp) == 0);
     memset(&pubkey, 1, sizeof(pubkey));
     VG_UNDEF(&pubkey, sizeof(pubkey));
     CHECK(secp256k1_ec_pubkey_create(ctx, &pubkey, ctmp) == 0);
@@ -3132,7 +3132,7 @@ void run_eckey_edge_case_test(void) {
     CHECK(memcmp(&pubkey, zeros, sizeof(secp256k1_pubkey)) == 0);
     /* Zero is too small, reject. */
     memset(ctmp, 0, 32);
-    CHECK(secp256k1_ec_seckey_verify(ctx, ctmp) == 0);
+    CHECK(cosmos_secp256k1_ec_seckey_verify(ctx, ctmp) == 0);
     memset(&pubkey, 1, sizeof(pubkey));
     VG_UNDEF(&pubkey, sizeof(pubkey));
     CHECK(secp256k1_ec_pubkey_create(ctx, &pubkey, ctmp) == 0);
@@ -3140,7 +3140,7 @@ void run_eckey_edge_case_test(void) {
     CHECK(memcmp(&pubkey, zeros, sizeof(secp256k1_pubkey)) == 0);
     /* One must be accepted. */
     ctmp[31] = 0x01;
-    CHECK(secp256k1_ec_seckey_verify(ctx, ctmp) == 1);
+    CHECK(cosmos_secp256k1_ec_seckey_verify(ctx, ctmp) == 1);
     memset(&pubkey, 0, sizeof(pubkey));
     VG_UNDEF(&pubkey, sizeof(pubkey));
     CHECK(secp256k1_ec_pubkey_create(ctx, &pubkey, ctmp) == 1);
@@ -3150,7 +3150,7 @@ void run_eckey_edge_case_test(void) {
     /* Group order + 1 is too large, reject. */
     memcpy(ctmp, orderc, 32);
     ctmp[31] = 0x42;
-    CHECK(secp256k1_ec_seckey_verify(ctx, ctmp) == 0);
+    CHECK(cosmos_secp256k1_ec_seckey_verify(ctx, ctmp) == 0);
     memset(&pubkey, 1, sizeof(pubkey));
     VG_UNDEF(&pubkey, sizeof(pubkey));
     CHECK(secp256k1_ec_pubkey_create(ctx, &pubkey, ctmp) == 0);
@@ -3158,7 +3158,7 @@ void run_eckey_edge_case_test(void) {
     CHECK(memcmp(&pubkey, zeros, sizeof(secp256k1_pubkey)) == 0);
     /* -1 must be accepted. */
     ctmp[31] = 0x40;
-    CHECK(secp256k1_ec_seckey_verify(ctx, ctmp) == 1);
+    CHECK(cosmos_secp256k1_ec_seckey_verify(ctx, ctmp) == 1);
     memset(&pubkey, 0, sizeof(pubkey));
     VG_UNDEF(&pubkey, sizeof(pubkey));
     CHECK(secp256k1_ec_pubkey_create(ctx, &pubkey, ctmp) == 1);
@@ -3233,9 +3233,9 @@ void run_eckey_edge_case_test(void) {
     CHECK(memcmp(&pubkey2, zeros, sizeof(pubkey2)) == 0);
     /* Plain argument errors. */
     ecount = 0;
-    CHECK(secp256k1_ec_seckey_verify(ctx, ctmp) == 1);
+    CHECK(cosmos_secp256k1_ec_seckey_verify(ctx, ctmp) == 1);
     CHECK(ecount == 0);
-    CHECK(secp256k1_ec_seckey_verify(ctx, NULL) == 0);
+    CHECK(cosmos_secp256k1_ec_seckey_verify(ctx, NULL) == 0);
     CHECK(ecount == 1);
     ecount = 0;
     memset(ctmp2, 0, 32);
@@ -3449,7 +3449,7 @@ void test_ecdsa_end_to_end(void) {
     }
 
     /* Construct and verify corresponding public key. */
-    CHECK(secp256k1_ec_seckey_verify(ctx, privkey) == 1);
+    CHECK(cosmos_secp256k1_ec_seckey_verify(ctx, privkey) == 1);
     CHECK(secp256k1_ec_pubkey_create(ctx, &pubkey, privkey) == 1);
 
     /* Verify exporting and importing public key. */

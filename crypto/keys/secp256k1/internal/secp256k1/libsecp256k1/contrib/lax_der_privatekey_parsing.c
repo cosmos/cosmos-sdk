@@ -46,7 +46,7 @@ int ec_privkey_import_der(const secp256k1_context* ctx, unsigned char *out32, co
         return 0;
     }
     memcpy(out32 + 32 - privkey[1], privkey + 2, privkey[1]);
-    if (!secp256k1_ec_seckey_verify(ctx, out32)) {
+    if (!cosmos_secp256k1_ec_seckey_verify(ctx, out32)) {
         memset(out32, 0, 32);
         return 0;
     }

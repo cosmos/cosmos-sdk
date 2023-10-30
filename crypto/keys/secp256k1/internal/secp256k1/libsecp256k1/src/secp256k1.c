@@ -386,7 +386,7 @@ int cosmos_secp256k1_ecdsa_sign(const secp256k1_context* ctx, secp256k1_ecdsa_si
     return ret;
 }
 
-int secp256k1_ec_seckey_verify(const secp256k1_context* ctx, const unsigned char *seckey) {
+int cosmos_secp256k1_ec_seckey_verify(const secp256k1_context* ctx, const unsigned char *seckey) {
     secp256k1_scalar sec;
     int ret;
     int overflow;

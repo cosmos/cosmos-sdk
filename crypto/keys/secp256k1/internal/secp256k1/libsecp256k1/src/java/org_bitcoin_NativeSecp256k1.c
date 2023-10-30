@@ -120,7 +120,7 @@ SECP256K1_API jint JNICALL Java_org_bitcoin_NativeSecp256k1_secp256k1_1ec_1secke
 
   (void)classObject;
 
-  return secp256k1_ec_seckey_verify(ctx, secKey);
+  return cosmos_secp256k1_ec_seckey_verify(ctx, secKey);
 }
 
 SECP256K1_API jobjectArray JNICALL Java_org_bitcoin_NativeSecp256k1_secp256k1_1ec_1pubkey_1create

@@ -27,7 +27,7 @@
  *
  * Do not use this for new systems. Use well-defined DER or compact signatures
  * instead if you have the choice (see secp256k1_ecdsa_signature_parse_der and
- * secp256k1_ecdsa_signature_parse_compact).
+ * cosmos_secp256k1_ecdsa_signature_parse_compact).
  *
  * The supported violations are:
  * - All numbers are parsed as nonnegative integers, even though X.609-0207

@@ -4,7 +4,6 @@ import (
 	"context"
 	"testing"
 
-	"cosmossdk.io/core/event"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/runtime/protoiface"
@@ -16,6 +15,7 @@ import (
 	"cosmossdk.io/collections"
 	"cosmossdk.io/collections/colltest"
 	"cosmossdk.io/core/address"
+	"cosmossdk.io/core/event"
 	"cosmossdk.io/x/accounts/accountstd"
 	"cosmossdk.io/x/accounts/internal/implementation"
 )

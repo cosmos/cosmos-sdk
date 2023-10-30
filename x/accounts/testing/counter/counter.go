@@ -59,7 +59,7 @@ func (a Account) IncreaseCounter(ctx context.Context, msg *counterv1.MsgIncrease
 	if err != nil {
 		return nil, err
 	}
-	counter = counter + msg.Amount
+	counter += msg.Amount
 	err = a.Counter.Set(ctx, counter)
 	if err != nil {
 		return nil, err

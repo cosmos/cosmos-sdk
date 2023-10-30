@@ -11,12 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/telemetry"
 )
 
-type Server struct {
-	metrics *telemetry.Metrics
-	router  mux.Router
-}
-
-func NewServer(r mux.Router, cfg telemetry.Config) (*Server, error) {
+func RegisterMetrics(r mux.Router, cfg telemetry.Config) (*telemetry.Metrics, error) {
 	m, err := telemetry.New(cfg)
 	if err != nil {
 		return nil, err
@@ -44,10 +39,7 @@ func NewServer(r mux.Router, cfg telemetry.Config) (*Server, error) {
 
 	r.HandleFunc("/metrics", metricsHandler).Methods("GET")
 
-	return &Server{
-		metrics: m,
-		router:  r,
-	}, nil
+	return m, nil
 }
 
 // errorResponse defines the attributes of a JSON error response.

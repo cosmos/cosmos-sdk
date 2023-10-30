@@ -417,7 +417,7 @@ int main(void) {
     secp256k1_ge group[EXHAUSTIVE_TEST_ORDER];
 
     /* Build context */
-    secp256k1_context *ctx = secp256k1_context_create(SECP256K1_CONTEXT_SIGN | SECP256K1_CONTEXT_VERIFY);
+    secp256k1_context *ctx = cosmos_secp256k1_context_create(SECP256K1_CONTEXT_SIGN | SECP256K1_CONTEXT_VERIFY);
 
     /* TODO set z = 1, then do num_tests runs with random z values */
 

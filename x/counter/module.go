@@ -63,7 +63,7 @@ func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(cdc codec.Codec, keeper keeper.Keeper) AppModule {
+func NewAppModule(keeper keeper.Keeper) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{},
 		keeper:         keeper,
@@ -84,7 +84,6 @@ type ModuleInputs struct {
 	depinject.In
 
 	Config       *modulev1.Module
-	Cdc          codec.Codec
 	StoreService storetypes.KVStoreService
 	EventManager event.Service
 }
@@ -97,9 +96,8 @@ type ModuleOutputs struct {
 }
 
 func ProvideModule(in ModuleInputs) ModuleOutputs {
-
 	k := keeper.NewKeeper(in.StoreService, in.EventManager)
-	m := NewAppModule(in.Cdc, k)
+	m := NewAppModule(k)
 
 	return ModuleOutputs{
 		Keeper: k,

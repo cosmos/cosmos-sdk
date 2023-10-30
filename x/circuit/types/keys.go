@@ -2,8 +2,13 @@ package types
 
 import "cosmossdk.io/collections"
 
-// ModuleName defines the module name
-const ModuleName = "circuit"
+const (
+	// ModuleName defines the module name
+	ModuleName = "circuit"
+
+	// StoreKey defines the primary module store key
+	StoreKey = ModuleName
+)
 
 // KVStore keys
 var (

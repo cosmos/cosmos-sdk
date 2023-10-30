@@ -700,6 +700,86 @@ func TestTrackUndelegationPermLockedVestingAcc(t *testing.T) {
 	require.Equal(t, sdk.Coins{sdk.NewInt64Coin(stakeDenom, 25)}, plva.DelegatedVesting)
 }
 
+func TestGetVestedCoinsClawbackVestingAcc(t *testing.T) {
+	now := tmtime.Now()
+	endTime := now.Add(24 * time.Hour)
+	lockupPeriods := types.Periods{
+		types.Period{Length: int64(16 * 60 * 60), Amount: sdk.NewCoins(sdk.NewInt64Coin(feeDenom, 1000), sdk.NewInt64Coin(stakeDenom, 100))},
+	}
+	vestingPeriods := types.Periods{
+		types.Period{Length: int64(12 * 60 * 60), Amount: sdk.Coins{sdk.NewInt64Coin(feeDenom, 500), sdk.NewInt64Coin(stakeDenom, 50)}},
+		types.Period{Length: int64(6 * 60 * 60), Amount: sdk.Coins{sdk.NewInt64Coin(feeDenom, 250), sdk.NewInt64Coin(stakeDenom, 25)}},
+		types.Period{Length: int64(6 * 60 * 60), Amount: sdk.Coins{sdk.NewInt64Coin(feeDenom, 250), sdk.NewInt64Coin(stakeDenom, 25)}},
+	}
+
+	bacc, origCoins := initBaseAccount()
+	va := types.NewClawbackVestingAccount(bacc, sdk.AccAddress([]byte("funder")), origCoins, now.Unix(), lockupPeriods, vestingPeriods)
+
+	// require no coins vested at the beginning of the vesting schedule
+	vestedCoins := va.GetVestedCoins(now)
+	require.Nil(t, vestedCoins)
+
+	// require all coins vested at the end of the vesting schedule
+	vestedCoins = va.GetVestedCoins(endTime)
+	require.Equal(t, origCoins, vestedCoins)
+
+	// require no coins vested during first vesting period
+	vestedCoins = va.GetVestedCoins(now.Add(6 * time.Hour))
+	require.Nil(t, vestedCoins)
+
+	// require no coins vested after period1 before unlocking
+	vestedCoins = va.GetVestedCoins(now.Add(14 * time.Hour))
+	require.Nil(t, vestedCoins)
+
+	// require 50% of coins vested after period 1 at unlocking
+	vestedCoins = va.GetVestedCoins(now.Add(16 * time.Hour))
+	require.Equal(t, sdk.Coins{sdk.NewInt64Coin(feeDenom, 500), sdk.NewInt64Coin(stakeDenom, 50)}, vestedCoins)
+
+	// require period 2 coins don't vest until period is over
+	vestedCoins = va.GetVestedCoins(now.Add(17 * time.Hour))
+	require.Equal(t, sdk.Coins{sdk.NewInt64Coin(feeDenom, 500), sdk.NewInt64Coin(stakeDenom, 50)}, vestedCoins)
+
+	// require 75% of coins vested after period 2
+	vestedCoins = va.GetVestedCoins(now.Add(18 * time.Hour))
+	require.Equal(t,
+		sdk.Coins{
+			sdk.NewInt64Coin(feeDenom, 750), sdk.NewInt64Coin(stakeDenom, 75)}, vestedCoins)
+
+	// require 100% of coins vested
+	vestedCoins = va.GetVestedCoins(now.Add(48 * time.Hour))
+	require.Equal(t, origCoins, vestedCoins)
+}
+
+func TestSpendableCoinsClawbackVestingAcc(t *testing.T) {
+	now := tmtime.Now()
+	endTime := now.Add(24 * time.Hour)
+	lockupPeriods := types.Periods{
+		types.Period{Length: int64(16 * 60 * 60), Amount: sdk.NewCoins(sdk.NewInt64Coin(feeDenom, 1000), sdk.NewInt64Coin(stakeDenom, 100))},
+	}
+	vestingPeriods := types.Periods{
+		types.Period{Length: int64(12 * 60 * 60), Amount: sdk.Coins{sdk.NewInt64Coin(feeDenom, 500), sdk.NewInt64Coin(stakeDenom, 50)}},
+		types.Period{Length: int64(6 * 60 * 60), Amount: sdk.Coins{sdk.NewInt64Coin(feeDenom, 250), sdk.NewInt64Coin(stakeDenom, 25)}},
+		types.Period{Length: int64(6 * 60 * 60), Amount: sdk.Coins{sdk.NewInt64Coin(feeDenom, 250), sdk.NewInt64Coin(stakeDenom, 25)}},
+	}
+
+	bacc, origCoins := initBaseAccount()
+	va := types.NewClawbackVestingAccount(bacc, sdk.AccAddress([]byte("funder")), origCoins, now.Unix(), lockupPeriods, vestingPeriods)
+
+	// require that there exist no spendable coins at the beginning of the
+	// vesting schedule
+	lockedCoins := va.LockedCoins(now)
+	require.Equal(t, origCoins, lockedCoins)
+
+	// require that all original coins are spendable at the end of the vesting
+	// schedule
+	lockedCoins = va.LockedCoins(endTime)
+	require.Equal(t, sdk.NewCoins(), lockedCoins)
+
+	// require that all still vesting coins (50%) are locked
+	lockedCoins = va.LockedCoins(now.Add(17 * time.Hour))
+	require.Equal(t, sdk.Coins{sdk.NewInt64Coin(feeDenom, 500), sdk.NewInt64Coin(stakeDenom, 50)}, lockedCoins)
+}
+
 func TestGenesisAccountValidate(t *testing.T) {
 	pubkey := secp256k1.GenPrivKey().PubKey()
 	addr := sdk.AccAddress(pubkey.Address())

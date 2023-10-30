@@ -267,7 +267,7 @@ func (suite *KeeperTestSuite) TestQueryTotalSupplyOf() {
 	suite.Require().Equal(test1Supply, res2.Amount)
 
 	// try to make SupplyWithOffset negative, should return as 0
-	app.BankKeeper.AddSupplyOffset(ctx, "test1", sdk.NewInt(-100000000000))
+	suite.bankKeeper.AddSupplyOffset(ctx, "test1", sdk.NewInt(-100000000000))
 	res, err = queryClient.SupplyOf(gocontext.Background(), &types.QuerySupplyOfRequest{Denom: test1Supply.Denom})
 	suite.Require().NoError(err)
 	suite.Require().NotNil(res)

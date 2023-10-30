@@ -29,12 +29,14 @@ jobs:
       # - Port forward all ports to localhost for next steps to connect
       - name: Setup Test infra
         id: starship-action
-        uses: cosmology-tech/starship-action@0.2.18
+        uses: cosmology-tech/starship-action@0.2.19-rc0
         with:
           values: tests/starship/configs/ci.yaml
           port-forward: true
           version: 0.1.42
           timeout: 10m
+          cli-version: 8da948db87cc0ff819d81de3151eeb013b19152c
+
       - name: Run Tests
         run: |
           cd tests/starship/

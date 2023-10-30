@@ -348,7 +348,7 @@ SECP256K1_API int secp256k1_ecdsa_signature_serialize_der(
  *
  *  See cosmos_secp256k1_ecdsa_signature_parse_compact for details about the encoding.
  */
-SECP256K1_API int secp256k1_ecdsa_signature_serialize_compact(
+SECP256K1_API int cosmos_secp256k1_ecdsa_signature_serialize_compact(
     const secp256k1_context* ctx,
     unsigned char *output64,
     const secp256k1_ecdsa_signature* sig

@@ -18,8 +18,7 @@ import (
 var StoreKey = "Counter"
 
 type Keeper struct {
-	storeService storetypes.KVStoreService
-	event        event.Service
+	event event.Service
 
 	authority  string
 	CountStore collections.Item[int64]
@@ -28,10 +27,9 @@ type Keeper struct {
 func NewKeeper(cdc codec.BinaryCodec, storeService storetypes.KVStoreService, authority string, em event.Service) Keeper {
 	sb := collections.NewSchemaBuilder(storeService)
 	return Keeper{
-		storeService: storeService,
-		authority:    authority,
-		event:        em,
-		CountStore:   collections.NewItem(sb, collections.NewPrefix("Count"), "count", collections.Int64Value),
+		authority:  authority,
+		event:      em,
+		CountStore: collections.NewItem(sb, collections.NewPrefix("Count"), "count", collections.Int64Value),
 	}
 }
 

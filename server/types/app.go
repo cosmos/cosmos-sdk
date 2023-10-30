@@ -15,6 +15,7 @@ import (
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/server/api"
 	"github.com/cosmos/cosmos-sdk/server/config"
 )
 
@@ -36,7 +37,10 @@ type (
 	Application interface {
 		ABCI
 
-		// RegisterAPIRoutes(*api.Server, config.APIConfig)
+		RegisterAPIRoutes(*api.Server, config.APIConfig)
+
+		// RegisterTendermintService registers the gRPC Query service for CometBFT queries.
+		RegisterTendermintService(client.Context)
 
 		// RegisterGRPCServer registers gRPC services directly with the gRPC
 		// server.

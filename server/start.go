@@ -260,18 +260,20 @@ func startStandAlone(svrCtx *Context, svrCfg serverconfig.Config, clientCtx clie
 	addr := svrCtx.Viper.GetString(flagAddress)
 	transport := svrCtx.Viper.GetString(flagTransport)
 
-	cometService := comet.New(comet.Config{
-		MinGasPrices:   svrCfg.MinGasPrices,
-		QueryGasLimit:  svrCfg.QueryGasLimit,
-		FlagHaltHeight: svrCfg.HaltHeight,
-		FlagHaltTime:   svrCfg.HaltTime,
-		App:            app,
-		Addr:           addr,
-		Transport:      transport,
-		Logger:         svrCtx.Logger.With("module", "abci-server"),
-		Standalone:     true,
-		CmtConfig:      svrCtx.Config,
-	})
+	cometService := comet.NewCometBFTServer(
+		clientCtx,
+		svrCtx.Logger,
+		app,
+		comet.Config{
+			MinGasPrices:   svrCfg.MinGasPrices,
+			QueryGasLimit:  svrCfg.QueryGasLimit,
+			FlagHaltHeight: svrCfg.HaltHeight,
+			FlagHaltTime:   svrCfg.HaltTime,
+			Addr:           addr,
+			Transport:      transport,
+			Standalone:     true,
+			CmtConfig:      svrCtx.Config,
+		})
 
 	g, ctx := getCtx(svrCtx, false)
 
@@ -339,17 +341,19 @@ func startInProcess(svrCtx *Context, svrCfg serverconfig.Config, clientCtx clien
 		svrCfg.GRPC.Enable = true
 	} else {
 		svrCtx.Logger.Info("starting node with ABCI CometBFT in-process")
-		cometService := comet.New(comet.Config{
-			MinGasPrices:   svrCfg.MinGasPrices,
-			QueryGasLimit:  svrCfg.QueryGasLimit,
-			FlagHaltHeight: svrCfg.HaltHeight,
-			FlagHaltTime:   svrCfg.HaltTime,
-			App:            app,
-			Addr:           "", // not needed when in-process
-			Transport:      "", // not needed when in-process
-			Logger:         svrCtx.Logger.With("module", "abci-server"),
-			CmtConfig:      svrCtx.Config,
-		})
+		cometService := comet.NewCometBFTServer(
+			clientCtx,
+			svrCtx.Logger,
+			app,
+			comet.Config{
+				MinGasPrices:   svrCfg.MinGasPrices,
+				QueryGasLimit:  svrCfg.QueryGasLimit,
+				FlagHaltHeight: svrCfg.HaltHeight,
+				FlagHaltTime:   svrCfg.HaltTime,
+				Addr:           "", // not needed when in-process
+				Transport:      "", // not needed when in-process
+				CmtConfig:      svrCtx.Config,
+			})
 		cometService.Start(ctx)
 		defer cometService.Stop()
 
@@ -498,7 +502,7 @@ func startAPIServer(
 	clientCtx = clientCtx.WithHomeDir(home)
 
 	apiSrv := api.New(clientCtx, svrCtx.Logger.With("module", "api-server"), grpcSrv)
-	// app.RegisterAPIRoutes(apiSrv, svrCfg.API) // TODO: uncomment this once we solve the circular dep
+	app.RegisterAPIRoutes(apiSrv, svrCfg.API)
 
 	if svrCfg.Telemetry.Enabled {
 		apiSrv.SetTelemetry(metrics)

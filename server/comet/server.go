@@ -6,6 +6,7 @@ import (
 
 	"cosmossdk.io/log"
 	abciserver "github.com/cometbft/cometbft/abci/server"
+	abci "github.com/cometbft/cometbft/abci/types"
 	cmtcfg "github.com/cometbft/cometbft/config"
 	cometservice "github.com/cometbft/cometbft/libs/service"
 	"github.com/cometbft/cometbft/node"
@@ -15,12 +16,12 @@ import (
 	cmttypes "github.com/cometbft/cometbft/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	cometlog "github.com/cosmos/cosmos-sdk/server/comet/log"
-	"github.com/cosmos/cosmos-sdk/server/types"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
-	"github.com/spf13/cobra"
 )
 
 type HasCometBFTServer interface {
+	ABCI
+
 	// RegisterTendermintService registers the gRPC Query service for CometBFT queries.
 	RegisterTendermintService(client.Context)
 }
@@ -33,51 +34,41 @@ type Config struct {
 
 	Transport  string
 	Addr       string
-	App        types.Application
-	Logger     log.Logger
 	Standalone bool
 
 	CmtConfig *cmtcfg.Config
 }
 
 type CometBFTServer struct {
-	Node *node.Node
+	Node   *node.Node
+	app    abci.Application
+	logger log.Logger
 
 	config    Config
 	service   cometservice.Service
 	cleanupFn func()
 }
 
-func New(cfg Config) *CometBFTServer {
+func NewCometBFTServer(clientCtx client.Context, logger log.Logger, app HasCometBFTServer, cfg Config) *CometBFTServer {
+	logger = logger.With("module", "cometbft-server")
+	app.RegisterTendermintService(clientCtx) // not sure about this
+
 	return &CometBFTServer{
+		logger: logger,
+		app:    NewCometABCIWrapper(app),
 		config: cfg,
 	}
 }
 
-func (s *CometBFTServer) Config(config Config) error {
-	return nil
-}
-
 func (s *CometBFTServer) Start(ctx context.Context) error {
-	// lazyyy TODO: refactor this to get the client and server ctx from context.Context directly
-	cmd := &cobra.Command{}
-	cmd.SetContext(ctx)
-	clientCtx := client.GetClientContextFromCmd(cmd)
-	// serverCtx := server.GetServerContextFromCmd(cmd)
-
-	if cometBftSvr, ok := s.config.App.(HasCometBFTServer); ok {
-		cometBftSvr.RegisterTendermintService(clientCtx)
-	}
-
-	cmtApp := NewCometABCIWrapper(s.config.App)
-
+	wrappedLogger := cometlog.CometLoggerWrapper{Logger: s.logger}
 	if s.config.Standalone {
-		svr, err := abciserver.NewServer(s.config.Addr, s.config.Transport, cmtApp)
+		svr, err := abciserver.NewServer(s.config.Addr, s.config.Transport, s.app)
 		if err != nil {
 			return fmt.Errorf("error creating listener: %w", err)
 		}
 
-		svr.SetLogger(cometlog.CometLoggerWrapper{Logger: s.config.Logger})
+		svr.SetLogger(wrappedLogger)
 
 		return svr.Start()
 	}
@@ -92,11 +83,11 @@ func (s *CometBFTServer) Start(ctx context.Context) error {
 		s.config.CmtConfig,
 		pvm.LoadOrGenFilePV(s.config.CmtConfig.PrivValidatorKeyFile(), s.config.CmtConfig.PrivValidatorStateFile()),
 		nodeKey,
-		proxy.NewLocalClientCreator(cmtApp),
+		proxy.NewLocalClientCreator(s.app),
 		getGenDocProvider(s.config.CmtConfig),
 		cmtcfg.DefaultDBProvider,
 		node.DefaultMetricsProvider(s.config.CmtConfig.Instrumentation),
-		cometlog.CometLoggerWrapper{Logger: s.config.Logger},
+		wrappedLogger,
 	)
 	if err != nil {
 		return err

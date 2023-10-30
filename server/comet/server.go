@@ -16,11 +16,12 @@ import (
 	cmttypes "github.com/cometbft/cometbft/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	cometlog "github.com/cosmos/cosmos-sdk/server/comet/log"
+	"github.com/cosmos/cosmos-sdk/server/comet/types"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
 type HasCometBFTServer interface {
-	ABCI
+	types.ABCI
 
 	// RegisterTendermintService registers the gRPC Query service for CometBFT queries.
 	RegisterTendermintService(client.Context)

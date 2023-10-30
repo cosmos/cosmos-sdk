@@ -32,6 +32,8 @@ func AddAccount[A Account](name string, constructor func(deps Dependencies) (A, 
 	}
 }
 
+// MakeAccountsMap creates a map of account names to account implementations
+// from a list of account creator functions.
 func MakeAccountsMap(addressCodec address.Codec, accounts []AccountCreatorFunc) (map[string]Implementation, error) {
 	accountsMap := make(map[string]Implementation, len(accounts))
 	for _, makeAccount := range accounts {
@@ -91,8 +93,8 @@ func NewImplementation(account Account) (Implementation, error) {
 		Query:                 queryHandler,
 		CollectionsSchema:     collections.Schema{},
 		InitHandlerSchema:     ir.schema,
-		QueryHandlersSchema:   qr.er.HandlerSchema,
-		ExecuteHandlersSchema: er.HandlerSchema,
+		QueryHandlersSchema:   qr.er.handlersSchema,
+		ExecuteHandlersSchema: er.handlersSchema,
 		DecodeExecuteRequest:  er.makeRequestDecoder(),
 		EncodeExecuteResponse: er.makeResponseEncoder(),
 		DecodeQueryRequest:    qr.er.makeRequestDecoder(),

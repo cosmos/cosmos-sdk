@@ -130,7 +130,7 @@ func (s *E2ETestSuite) TestNewCmdSubmitProposal() {
 	"summary": "My awesome description",
 	"metadata": "%s",
 	"deposit": "%s"
-}`, authtypes.NewModuleAddress(types.ModuleName), base64.StdEncoding.EncodeToString(propMetadata), sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10000)))
+}`, authtypes.NewModuleAddress(types.ModuleName), base64.StdEncoding.EncodeToString(propMetadata), sdk.NewCoin(s.cfg.BondDenom, math.NewInt(100000)))
 	validPropFile := testutil.WriteToNewTempFile(s.T(), validProp)
 	defer validPropFile.Close()
 

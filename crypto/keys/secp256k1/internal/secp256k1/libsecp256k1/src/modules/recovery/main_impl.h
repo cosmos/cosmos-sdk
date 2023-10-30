@@ -132,7 +132,7 @@ int cosmos_secp256k1_ecdsa_sign_recoverable(const secp256k1_context* ctx, secp25
     ARG_CHECK(signature != NULL);
     ARG_CHECK(seckey != NULL);
     if (noncefp == NULL) {
-        noncefp = secp256k1_nonce_function_default;
+        noncefp = cosmos_secp256k1_nonce_function_default;
     }
 
     secp256k1_scalar_set_b32(&sec, seckey, &overflow);

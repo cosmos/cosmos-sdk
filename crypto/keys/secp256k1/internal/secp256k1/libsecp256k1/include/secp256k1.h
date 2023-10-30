@@ -434,7 +434,7 @@ SECP256K1_API int cosmos_secp256k1_ecdsa_signature_normalize(
 SECP256K1_API extern const secp256k1_nonce_function cosmos_secp256k1_nonce_function_rfc6979;
 
 /** A default safe nonce generation function (currently equal to cosmos_secp256k1_nonce_function_rfc6979). */
-SECP256K1_API extern const secp256k1_nonce_function secp256k1_nonce_function_default;
+SECP256K1_API extern const secp256k1_nonce_function cosmos_secp256k1_nonce_function_default;
 
 /** Create an ECDSA signature.
  *
@@ -444,7 +444,7 @@ SECP256K1_API extern const secp256k1_nonce_function secp256k1_nonce_function_def
  *  Out:     sig:    pointer to an array where the signature will be placed (cannot be NULL)
  *  In:      msg32:  the 32-byte message hash being signed (cannot be NULL)
  *           seckey: pointer to a 32-byte secret key (cannot be NULL)
- *           noncefp:pointer to a nonce generation function. If NULL, secp256k1_nonce_function_default is used
+ *           noncefp:pointer to a nonce generation function. If NULL, cosmos_secp256k1_nonce_function_default is used
  *           ndata:  pointer to arbitrary data used by the nonce generation function (can be NULL)
  *
  * The created signature is always in lower-S form. See

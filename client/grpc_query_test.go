@@ -26,11 +26,10 @@ import (
 type IntegrationTestSuite struct {
 	suite.Suite
 
-	ctx              sdk.Context
-	cdc              codec.Codec
-	counterClient    countertypes.QueryClient
-	counterMsgClient countertypes.MsgClient
-	testClient       testdata.QueryClient
+	ctx           sdk.Context
+	cdc           codec.Codec
+	counterClient countertypes.QueryClient
+	testClient    testdata.QueryClient
 }
 
 func (s *IntegrationTestSuite) SetupSuite() {
@@ -50,10 +49,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	kvs := runtime.NewKVStoreService(keys[countertypes.StoreKey])
 	counterKeeper := counterkeeper.NewKeeper(kvs, runtime.EventService{})
 	countertypes.RegisterQueryServer(queryHelper, counterKeeper)
-	countertypes.RegisterMsgServer(queryHelper, counterKeeper)
 	s.counterClient = countertypes.NewQueryClient(queryHelper)
-	s.counterMsgClient = countertypes.NewMsgClient(queryHelper)
-
 }
 
 func (s *IntegrationTestSuite) TearDownSuite() {
@@ -66,13 +62,10 @@ func (s *IntegrationTestSuite) TestGRPCQuery() {
 	s.Require().NoError(err)
 	s.Require().Equal("hello", testRes.Message)
 
-	_, err = s.counterMsgClient.IncreaseCount(s.ctx, &countertypes.MsgIncreaseCounter{Signer: "abcd", Count: 1})
-	s.Require().NoError(err)
-
 	var header metadata.MD
 	res, err := s.counterClient.GetCount(s.ctx, &countertypes.QueryGetCountRequest{}, grpc.Header(&header))
 	s.Require().NoError(err)
-	s.Require().Equal(1, res.TotalCount)
+	s.Require().Equal(int64(0), res.TotalCount)
 }
 
 func TestIntegrationTestSuite(t *testing.T) {

@@ -39,7 +39,11 @@ var _ types.QueryServer = Keeper{}
 func (k Keeper) GetCount(ctx context.Context, _ *types.QueryGetCountRequest) (*types.QueryGetCountResponse, error) {
 	count, err := k.CountStore.Get(ctx)
 	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
+		if errors.Is(err, collections.ErrNotFound) {
+			return &types.QueryGetCountResponse{TotalCount: 0}, nil
+		} else {
+			return nil, status.Error(codes.Internal, err.Error())
+		}
 	}
 
 	return &types.QueryGetCountResponse{TotalCount: count}, nil

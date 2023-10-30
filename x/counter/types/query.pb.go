@@ -27,22 +27,22 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// QueryParamsRequest defines the request type for querying x/mock count.
-type QueryCountRequest struct {
+// QueryGetCountRequest defines the request type for querying x/mock count.
+type QueryGetCountRequest struct {
 }
 
-func (m *QueryCountRequest) Reset()         { *m = QueryCountRequest{} }
-func (m *QueryCountRequest) String() string { return proto.CompactTextString(m) }
-func (*QueryCountRequest) ProtoMessage()    {}
-func (*QueryCountRequest) Descriptor() ([]byte, []int) {
+func (m *QueryGetCountRequest) Reset()         { *m = QueryGetCountRequest{} }
+func (m *QueryGetCountRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryGetCountRequest) ProtoMessage()    {}
+func (*QueryGetCountRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_bd21727562626c9f, []int{0}
 }
-func (m *QueryCountRequest) XXX_Unmarshal(b []byte) error {
+func (m *QueryGetCountRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryCountRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QueryGetCountRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryCountRequest.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QueryGetCountRequest.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -52,35 +52,35 @@ func (m *QueryCountRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, e
 		return b[:n], nil
 	}
 }
-func (m *QueryCountRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryCountRequest.Merge(m, src)
+func (m *QueryGetCountRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryGetCountRequest.Merge(m, src)
 }
-func (m *QueryCountRequest) XXX_Size() int {
+func (m *QueryGetCountRequest) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryCountRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryCountRequest.DiscardUnknown(m)
+func (m *QueryGetCountRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryGetCountRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryCountRequest proto.InternalMessageInfo
+var xxx_messageInfo_QueryGetCountRequest proto.InternalMessageInfo
 
-// QueryCountResponse defines the response type for querying x/mock count.
-type QueryCountResponse struct {
+// QueryGetCountResponse defines the response type for querying x/mock count.
+type QueryGetCountResponse struct {
 	TotalCount int64 `protobuf:"varint,1,opt,name=total_count,json=totalCount,proto3" json:"total_count,omitempty"`
 }
 
-func (m *QueryCountResponse) Reset()         { *m = QueryCountResponse{} }
-func (m *QueryCountResponse) String() string { return proto.CompactTextString(m) }
-func (*QueryCountResponse) ProtoMessage()    {}
-func (*QueryCountResponse) Descriptor() ([]byte, []int) {
+func (m *QueryGetCountResponse) Reset()         { *m = QueryGetCountResponse{} }
+func (m *QueryGetCountResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryGetCountResponse) ProtoMessage()    {}
+func (*QueryGetCountResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_bd21727562626c9f, []int{1}
 }
-func (m *QueryCountResponse) XXX_Unmarshal(b []byte) error {
+func (m *QueryGetCountResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryCountResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QueryGetCountResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryCountResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QueryGetCountResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -90,19 +90,19 @@ func (m *QueryCountResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, 
 		return b[:n], nil
 	}
 }
-func (m *QueryCountResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryCountResponse.Merge(m, src)
+func (m *QueryGetCountResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryGetCountResponse.Merge(m, src)
 }
-func (m *QueryCountResponse) XXX_Size() int {
+func (m *QueryGetCountResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryCountResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryCountResponse.DiscardUnknown(m)
+func (m *QueryGetCountResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryGetCountResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryCountResponse proto.InternalMessageInfo
+var xxx_messageInfo_QueryGetCountResponse proto.InternalMessageInfo
 
-func (m *QueryCountResponse) GetTotalCount() int64 {
+func (m *QueryGetCountResponse) GetTotalCount() int64 {
 	if m != nil {
 		return m.TotalCount
 	}
@@ -110,8 +110,8 @@ func (m *QueryCountResponse) GetTotalCount() int64 {
 }
 
 func init() {
-	proto.RegisterType((*QueryCountRequest)(nil), "cosmos.counter.v1.QueryCountRequest")
-	proto.RegisterType((*QueryCountResponse)(nil), "cosmos.counter.v1.QueryCountResponse")
+	proto.RegisterType((*QueryGetCountRequest)(nil), "cosmos.counter.v1.QueryGetCountRequest")
+	proto.RegisterType((*QueryGetCountResponse)(nil), "cosmos.counter.v1.QueryGetCountResponse")
 }
 
 func init() { proto.RegisterFile("cosmos/counter/v1/query.proto", fileDescriptor_bd21727562626c9f) }
@@ -121,16 +121,16 @@ var fileDescriptor_bd21727562626c9f = []byte{
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x92, 0x4d, 0xce, 0x2f, 0xce,
 	0xcd, 0x2f, 0xd6, 0x4f, 0xce, 0x2f, 0xcd, 0x2b, 0x49, 0x2d, 0xd2, 0x2f, 0x33, 0xd4, 0x2f, 0x2c,
 	0x4d, 0x2d, 0xaa, 0xd4, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x12, 0x84, 0x48, 0xeb, 0x41, 0xa5,
-	0xf5, 0xca, 0x0c, 0x95, 0x84, 0xb9, 0x04, 0x03, 0x41, 0x2a, 0x9c, 0x41, 0x42, 0x41, 0xa9, 0x85,
-	0xa5, 0xa9, 0xc5, 0x25, 0x4a, 0xa6, 0x5c, 0x42, 0xc8, 0x82, 0xc5, 0x05, 0xf9, 0x79, 0xc5, 0xa9,
-	0x42, 0xf2, 0x5c, 0xdc, 0x25, 0xf9, 0x25, 0x89, 0x39, 0xf1, 0x60, 0xed, 0x12, 0x8c, 0x0a, 0x8c,
-	0x1a, 0xcc, 0x41, 0x5c, 0x60, 0x21, 0xb0, 0x42, 0xa3, 0x04, 0x2e, 0x56, 0xb0, 0x36, 0xa1, 0x70,
-	0x2e, 0x0e, 0xf7, 0xd4, 0x12, 0xb0, 0xa0, 0x90, 0x8a, 0x1e, 0x86, 0xa5, 0x7a, 0x18, 0x36, 0x4a,
-	0xa9, 0x12, 0x50, 0x05, 0x71, 0x82, 0x93, 0xdb, 0x89, 0x47, 0x72, 0x8c, 0x17, 0x1e, 0xc9, 0x31,
-	0x3e, 0x78, 0x24, 0xc7, 0x38, 0xe1, 0xb1, 0x1c, 0xc3, 0x85, 0xc7, 0x72, 0x0c, 0x37, 0x1e, 0xcb,
-	0x31, 0x44, 0xe9, 0xa4, 0x67, 0x96, 0x64, 0x94, 0x26, 0xe9, 0x25, 0xe7, 0xe7, 0xea, 0xc3, 0x03,
-	0x01, 0x44, 0xe9, 0x16, 0xa7, 0x64, 0xeb, 0x57, 0xc0, 0x43, 0xa4, 0xa4, 0xb2, 0x20, 0xb5, 0x38,
-	0x89, 0x0d, 0x1c, 0x1e, 0xc6, 0x80, 0x00, 0x00, 0x00, 0xff, 0xff, 0x81, 0x4d, 0x40, 0xe8, 0x30,
+	0xf5, 0xca, 0x0c, 0x95, 0xc4, 0xb8, 0x44, 0x02, 0x41, 0x2a, 0xdc, 0x53, 0x4b, 0x9c, 0x41, 0xa2,
+	0x41, 0xa9, 0x85, 0xa5, 0xa9, 0xc5, 0x25, 0x4a, 0x16, 0x5c, 0xa2, 0x68, 0xe2, 0xc5, 0x05, 0xf9,
+	0x79, 0xc5, 0xa9, 0x42, 0xf2, 0x5c, 0xdc, 0x25, 0xf9, 0x25, 0x89, 0x39, 0xf1, 0x60, 0x43, 0x24,
+	0x18, 0x15, 0x18, 0x35, 0x98, 0x83, 0xb8, 0xc0, 0x42, 0x60, 0x85, 0x46, 0x69, 0x5c, 0xac, 0x60,
+	0x9d, 0x42, 0xb1, 0x5c, 0x1c, 0x30, 0xdd, 0x42, 0xea, 0x7a, 0x18, 0x56, 0xeb, 0x61, 0xb3, 0x57,
+	0x4a, 0x83, 0xb0, 0x42, 0x88, 0x43, 0x9c, 0xdc, 0x4e, 0x3c, 0x92, 0x63, 0xbc, 0xf0, 0x48, 0x8e,
+	0xf1, 0xc1, 0x23, 0x39, 0xc6, 0x09, 0x8f, 0xe5, 0x18, 0x2e, 0x3c, 0x96, 0x63, 0xb8, 0xf1, 0x58,
+	0x8e, 0x21, 0x4a, 0x27, 0x3d, 0xb3, 0x24, 0xa3, 0x34, 0x49, 0x2f, 0x39, 0x3f, 0x57, 0x1f, 0x1e,
+	0x20, 0x20, 0x4a, 0xb7, 0x38, 0x25, 0x5b, 0xbf, 0x02, 0x1e, 0x3a, 0x25, 0x95, 0x05, 0xa9, 0xc5,
+	0x49, 0x6c, 0xe0, 0xb0, 0x31, 0x06, 0x04, 0x00, 0x00, 0xff, 0xff, 0x22, 0x18, 0xa2, 0xf4, 0x3c,
 	0x01, 0x00, 0x00,
 }
 
@@ -146,8 +146,8 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type QueryClient interface {
-	// Params queries the parameters of x/Mock module.
-	GetCount(ctx context.Context, in *QueryCountRequest, opts ...grpc.CallOption) (*QueryCountResponse, error)
+	// GetCount queries the parameters of x/Counter module.
+	GetCount(ctx context.Context, in *QueryGetCountRequest, opts ...grpc.CallOption) (*QueryGetCountResponse, error)
 }
 
 type queryClient struct {
@@ -158,8 +158,8 @@ func NewQueryClient(cc grpc1.ClientConn) QueryClient {
 	return &queryClient{cc}
 }
 
-func (c *queryClient) GetCount(ctx context.Context, in *QueryCountRequest, opts ...grpc.CallOption) (*QueryCountResponse, error) {
-	out := new(QueryCountResponse)
+func (c *queryClient) GetCount(ctx context.Context, in *QueryGetCountRequest, opts ...grpc.CallOption) (*QueryGetCountResponse, error) {
+	out := new(QueryGetCountResponse)
 	err := c.cc.Invoke(ctx, "/cosmos.counter.v1.Query/GetCount", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -169,15 +169,15 @@ func (c *queryClient) GetCount(ctx context.Context, in *QueryCountRequest, opts 
 
 // QueryServer is the server API for Query service.
 type QueryServer interface {
-	// Params queries the parameters of x/Mock module.
-	GetCount(context.Context, *QueryCountRequest) (*QueryCountResponse, error)
+	// GetCount queries the parameters of x/Counter module.
+	GetCount(context.Context, *QueryGetCountRequest) (*QueryGetCountResponse, error)
 }
 
 // UnimplementedQueryServer can be embedded to have forward compatible implementations.
 type UnimplementedQueryServer struct {
 }
 
-func (*UnimplementedQueryServer) GetCount(ctx context.Context, req *QueryCountRequest) (*QueryCountResponse, error) {
+func (*UnimplementedQueryServer) GetCount(ctx context.Context, req *QueryGetCountRequest) (*QueryGetCountResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetCount not implemented")
 }
 
@@ -186,7 +186,7 @@ func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
 }
 
 func _Query_GetCount_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryCountRequest)
+	in := new(QueryGetCountRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -198,7 +198,7 @@ func _Query_GetCount_Handler(srv interface{}, ctx context.Context, dec func(inte
 		FullMethod: "/cosmos.counter.v1.Query/GetCount",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).GetCount(ctx, req.(*QueryCountRequest))
+		return srv.(QueryServer).GetCount(ctx, req.(*QueryGetCountRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -216,7 +216,7 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 	Metadata: "cosmos/counter/v1/query.proto",
 }
 
-func (m *QueryCountRequest) Marshal() (dAtA []byte, err error) {
+func (m *QueryGetCountRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -226,12 +226,12 @@ func (m *QueryCountRequest) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *QueryCountRequest) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryGetCountRequest) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryCountRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryGetCountRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -239,7 +239,7 @@ func (m *QueryCountRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryCountResponse) Marshal() (dAtA []byte, err error) {
+func (m *QueryGetCountResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -249,12 +249,12 @@ func (m *QueryCountResponse) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *QueryCountResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryGetCountResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryCountResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryGetCountResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -278,7 +278,7 @@ func encodeVarintQuery(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
-func (m *QueryCountRequest) Size() (n int) {
+func (m *QueryGetCountRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -287,7 +287,7 @@ func (m *QueryCountRequest) Size() (n int) {
 	return n
 }
 
-func (m *QueryCountResponse) Size() (n int) {
+func (m *QueryGetCountResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -305,7 +305,7 @@ func sovQuery(x uint64) (n int) {
 func sozQuery(x uint64) (n int) {
 	return sovQuery(uint64((x << 1) ^ uint64((int64(x) >> 63))))
 }
-func (m *QueryCountRequest) Unmarshal(dAtA []byte) error {
+func (m *QueryGetCountRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -328,10 +328,10 @@ func (m *QueryCountRequest) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryCountRequest: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryGetCountRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryCountRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryGetCountRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:
@@ -355,7 +355,7 @@ func (m *QueryCountRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *QueryCountResponse) Unmarshal(dAtA []byte) error {
+func (m *QueryGetCountResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -378,10 +378,10 @@ func (m *QueryCountResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryCountResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryGetCountResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryCountResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryGetCountResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:

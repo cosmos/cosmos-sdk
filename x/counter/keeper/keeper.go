@@ -44,20 +44,20 @@ func (k *Keeper) GetAuthority() string {
 var _ types.QueryServer = Keeper{}
 
 // Params queries params of consensus module
-func (k Keeper) GetCount(ctx context.Context, _ *types.QueryCountRequest) (*types.QueryCountResponse, error) {
+func (k Keeper) GetCount(ctx context.Context, _ *types.QueryGetCountRequest) (*types.QueryGetCountResponse, error) {
 	count, err := k.CountStore.Get(ctx)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	return &types.QueryCountResponse{TotalCount: count}, nil
+	return &types.QueryGetCountResponse{TotalCount: count}, nil
 }
 
 // MsgServer
 
 var _ types.MsgServer = Keeper{}
 
-func (k Keeper) IncreaseCount(ctx context.Context, msg *types.MsgCounter) (*types.MsgCountResponse, error) {
+func (k Keeper) IncreaseCount(ctx context.Context, msg *types.MsgIncreaseCounter) (*types.MsgIncreaseCountResponse, error) {
 	value, err := k.CountStore.Get(ctx)
 	if err != nil {
 		return nil, err
@@ -74,5 +74,7 @@ func (k Keeper) IncreaseCount(ctx context.Context, msg *types.MsgCounter) (*type
 		return nil, err
 	}
 
-	return &types.MsgCountResponse{}, nil
+	return &types.MsgIncreaseCountResponse{
+		NewCount: value + msg.Count,
+	}, nil
 }

@@ -14,7 +14,7 @@ var (
 	_, pub1, addr1 = testdata.KeyTestPubAddr()
 	_, _, addr2    = testdata.KeyTestPubAddr()
 	rawSig         = []byte("dummy")
-	msg1           = &countertypes.MsgCounter{Signer: addr1.String(), Count: 1}
+	msg1           = &countertypes.MsgIncreaseCounter{Signer: addr1.String(), Count: 1}
 
 	chainID = "test-chain"
 )

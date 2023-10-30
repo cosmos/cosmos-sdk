@@ -111,7 +111,7 @@ func TestProtoCodecMarshal(t *testing.T) {
 	require.NoError(t, err)
 
 	// test typed nil input shouldn't panic
-	var v *countertypes.QueryCountRequest
+	var v *countertypes.QueryGetCountRequest
 	bz, err = grpcServerEncode(cartoonCdc.GRPCCodec(), v)
 	require.NoError(t, err)
 	require.Empty(t, bz)
@@ -188,8 +188,8 @@ func TestGetSigners(t *testing.T) {
 	testAddr := sdk.AccAddress("test")
 	testAddrStr := testAddr.String()
 
-	msgSendV1 := &countertypes.MsgCounter{Signer: testAddrStr, Count: 1}
-	msgSendV2 := &counterv1.MsgCounter{Signer: testAddrStr, Count: 1}
+	msgSendV1 := &countertypes.MsgIncreaseCounter{Signer: testAddrStr, Count: 1}
+	msgSendV2 := &counterv1.MsgIncreaseCounter{Signer: testAddrStr, Count: 1}
 
 	signers, msgSendV2Copy, err := cdc.GetMsgV1Signers(msgSendV1)
 	require.NoError(t, err)

@@ -26,14 +26,14 @@ func (fz *fuzzSuite) FuzzQueryBalance(f *testing.F) {
 	fz.Require().Equal("hello", testRes.Message)
 
 	// 1. Generate some seeds.
-	bz, err := fz.cdc.Marshal(&types.QueryCountRequest{})
+	bz, err := fz.cdc.Marshal(&types.QueryGetCountRequest{})
 	fz.Require().NoError(err)
 	f.Add(bz)
 
 	// 2. Now fuzz it and ensure that we don't get any panics.
 	ctx := context.Background()
 	f.Fuzz(func(t *testing.T, in []byte) {
-		qbReq := new(types.QueryCountRequest)
+		qbReq := new(types.QueryGetCountRequest)
 		if err := fz.cdc.Unmarshal(in, qbReq); err != nil {
 			return
 		}

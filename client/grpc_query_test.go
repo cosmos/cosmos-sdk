@@ -62,7 +62,7 @@ func (s *IntegrationTestSuite) TestGRPCQuery() {
 	s.Require().Equal("hello", testRes.Message)
 
 	var header metadata.MD
-	res, err := s.counterClient.GetCount(s.ctx, &countertypes.QueryCountRequest{}, grpc.Header(&header))
+	res, err := s.counterClient.GetCount(s.ctx, &countertypes.QueryGetCountRequest{}, grpc.Header(&header))
 	s.Require().NoError(err)
 	s.Require().Equal(0, res.TotalCount)
 }

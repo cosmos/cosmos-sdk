@@ -17,7 +17,7 @@ import (
 )
 
 type msgCounterWrapper struct {
-	*countertypes.MsgCounter
+	*countertypes.MsgIncreaseCounter
 }
 
 func (msg msgCounterWrapper) GetSigners() []sdk.AccAddress {
@@ -27,7 +27,7 @@ func (msg msgCounterWrapper) GetSigners() []sdk.AccAddress {
 
 func BenchmarkLegacyGetSigners(b *testing.B) {
 	_, _, addr := testdata.KeyTestPubAddr()
-	msg := msgCounterWrapper{&countertypes.MsgCounter{
+	msg := msgCounterWrapper{&countertypes.MsgIncreaseCounter{
 		Signer: addr.String(),
 		Count:  2,
 	}}
@@ -43,7 +43,7 @@ func BenchmarkProtoreflectGetSigners(b *testing.B) {
 	signingCtx := cdc.InterfaceRegistry().SigningContext()
 	_, _, addr := testdata.KeyTestPubAddr()
 	// use a pulsar message
-	msg := &counterv1.MsgCounter{
+	msg := &counterv1.MsgIncreaseCounter{
 		Signer: addr.String(),
 		Count:  1,
 	}
@@ -61,7 +61,7 @@ func BenchmarkProtoreflectGetSignersWithUnmarshal(b *testing.B) {
 	cdc := codectestutil.CodecOptions{}.NewCodec()
 	_, _, addr := testdata.KeyTestPubAddr()
 	// start with a protoreflect message
-	msg := &countertypes.MsgCounter{
+	msg := &countertypes.MsgIncreaseCounter{
 		Signer: addr.String(),
 		Count:  1,
 	}
@@ -82,7 +82,7 @@ func BenchmarkProtoreflectGetSignersDynamicpb(b *testing.B) {
 	cdc := codectestutil.CodecOptions{}.NewCodec()
 	signingCtx := cdc.InterfaceRegistry().SigningContext()
 	_, _, addr := testdata.KeyTestPubAddr()
-	msg := &counterv1.MsgCounter{
+	msg := &counterv1.MsgIncreaseCounter{
 		Signer: addr.String(),
 		Count:  1,
 	}

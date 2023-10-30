@@ -9,7 +9,7 @@ import (
 func RegisterInterfaces(registry types.InterfaceRegistry) {
 	registry.RegisterImplementations(
 		(*sdk.Msg)(nil),
-		&MsgCounter{},
+		&MsgIncreaseCounter{},
 	)
 
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)

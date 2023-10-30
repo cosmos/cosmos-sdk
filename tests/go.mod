@@ -3,7 +3,7 @@ module github.com/cosmos/cosmos-sdk/tests
 go 1.21
 
 require (
-	cosmossdk.io/api v0.7.3-0.20231026121500-a755fefe3a55
+	cosmossdk.io/api v0.7.3-0.20231029200940-6af7f30bfd54
 	cosmossdk.io/collections v0.4.0
 	cosmossdk.io/core v0.12.0
 	cosmossdk.io/depinject v1.0.0-alpha.4
@@ -42,6 +42,7 @@ require (
 	cosmossdk.io/x/mint v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/slashing v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000
+	github.com/google/go-cmp v0.6.0
 )
 
 require (
@@ -104,7 +105,6 @@ require (
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/btree v1.1.2 // indirect
-	github.com/google/go-cmp v0.6.0 // indirect
 	github.com/google/orderedcode v0.0.1 // indirect
 	github.com/google/s2a-go v0.1.7 // indirect
 	github.com/google/uuid v1.3.1 // indirect

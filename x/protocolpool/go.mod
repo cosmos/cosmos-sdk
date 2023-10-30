@@ -3,7 +3,7 @@ module cosmossdk.io/x/protocolpool
 go 1.21
 
 require (
-	cosmossdk.io/api v0.7.3-0.20231026121500-a755fefe3a55
+	cosmossdk.io/api v0.7.3-0.20231029200940-6af7f30bfd54
 	cosmossdk.io/core v0.12.0
 	cosmossdk.io/depinject v1.0.0-alpha.4
 	cosmossdk.io/errors v1.0.0

@@ -244,7 +244,7 @@ int cosmos_secp256k1_ecdsa_signature_parse_compact(const secp256k1_context* ctx,
     return ret;
 }
 
-int secp256k1_ecdsa_signature_serialize_der(const secp256k1_context* ctx, unsigned char *output, size_t *outputlen, const secp256k1_ecdsa_signature* sig) {
+int cosmos_secp256k1_ecdsa_signature_serialize_der(const secp256k1_context* ctx, unsigned char *output, size_t *outputlen, const secp256k1_ecdsa_signature* sig) {
     secp256k1_scalar r, s;
 
     VERIFY_CHECK(ctx != NULL);

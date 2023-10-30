@@ -381,7 +381,7 @@ func TestMsgSetSendEnabled(t *testing.T) {
 		[]sdk.Msg{
 			types.NewMsgSetSendEnabled(govAddr, nil, nil),
 		},
-		sdk.Coins{{Denom: "stake", Amount: sdkmath.NewInt(10000)}},
+		sdk.Coins{{Denom: "stake", Amount: sdkmath.NewInt(100000)}},
 		addr1Str,
 		"set default send enabled to true",
 		"Change send enabled",

@@ -198,7 +198,7 @@ func (s *E2ETestSuite) TestNewCmdSubmitLegacyProposal() {
 		"description": "Hello, World!",
 		"type": "Text",
 	  "deposit": "%s"
-	}`, sdk.NewCoin(s.cfg.BondDenom, math.NewInt(15431)))
+	}`, sdk.NewCoin(s.cfg.BondDenom, math.NewInt(154310)))
 	validPropFile := testutil.WriteToNewTempFile(s.T(), validProp)
 	defer validPropFile.Close()
 
@@ -249,7 +249,7 @@ func (s *E2ETestSuite) TestNewCmdSubmitLegacyProposal() {
 				fmt.Sprintf("--%s='Text Proposal'", cli.FlagTitle),
 				fmt.Sprintf("--%s='Where is the title!?'", cli.FlagDescription),        //nolint:staticcheck // we are intentionally using a deprecated flag here.
 				fmt.Sprintf("--%s=%s", cli.FlagProposalType, v1beta1.ProposalTypeText), //nolint:staticcheck // we are intentionally using a deprecated flag here.
-				fmt.Sprintf("--%s=%s", cli.FlagDeposit, sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10000)).String()),
+				fmt.Sprintf("--%s=%s", cli.FlagDeposit, sdk.NewCoin(s.cfg.BondDenom, math.NewInt(100000)).String()),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),

@@ -18,9 +18,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/counter/types"
 )
 
-// ConsensusVersion defines the current x/consensus module consensus version.
-const ConsensusVersion = 1
-
 var (
 	_ module.AppModuleBasic = AppModule{}
 
@@ -76,7 +73,7 @@ func NewAppModule(cdc codec.Codec, keeper keeper.Keeper) AppModule {
 }
 
 // ConsensusVersion implements AppModule/ConsensusVersion.
-func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
+func (AppModule) ConsensusVersion() uint64 { return 1 }
 
 func init() {
 	appmodule.Register(

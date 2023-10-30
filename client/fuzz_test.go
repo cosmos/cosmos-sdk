@@ -31,7 +31,7 @@ func (fz *fuzzSuite) FuzzQuery(f *testing.F) {
 	f.Add(bz)
 
 	// 2. Now fuzz it and ensure that we don't get any panics.
-	// ctx := context.Background()
+	ctx := context.Background()
 	f.Fuzz(func(t *testing.T, in []byte) {
 		qbReq := new(types.QueryGetCountRequest)
 		if err := fz.cdc.Unmarshal(in, qbReq); err != nil {
@@ -41,7 +41,7 @@ func (fz *fuzzSuite) FuzzQuery(f *testing.F) {
 		// gRPC query to bank service should work
 		var header metadata.MD
 		_, _ = fz.counterClient.GetCount(
-			fz.ctx,
+			ctx,
 			qbReq,
 			grpc.Header(&header),
 		)

@@ -60,7 +60,6 @@ func (k Keeper) IncreaseCount(ctx context.Context, msg *types.MsgIncreaseCounter
 		if errors.Is(err, collections.ErrNotFound) {
 			num = 0
 		} else {
-			fmt.Println("here")
 			return nil, err
 		}
 	}

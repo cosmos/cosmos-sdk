@@ -10,11 +10,12 @@ import (
 	"sort"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/storage/pebbledb"
 	"cosmossdk.io/store/v2/storage/rocksdb"
 	"cosmossdk.io/store/v2/storage/sqlite"
-	"github.com/stretchr/testify/require"
 )
 
 var (

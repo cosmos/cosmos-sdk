@@ -6,11 +6,12 @@ import (
 
 	"gotest.tools/v3/assert"
 
+	"cosmossdk.io/x/bank/simulation"
+	"cosmossdk.io/x/bank/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/cosmos/cosmos-sdk/x/bank/simulation"
-	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 func TestProposalMsgs(t *testing.T) {

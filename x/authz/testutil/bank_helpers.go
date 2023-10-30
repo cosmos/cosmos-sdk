@@ -3,7 +3,7 @@ package testutil
 import (
 	"context"
 
-	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
+	bank "cosmossdk.io/x/bank/types"
 )
 
 var _ bank.MsgServer = MockBankKeeper{}

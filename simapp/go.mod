@@ -210,10 +210,13 @@ require (
 // replace (
 // 	<temporary replace>
 // )
+replace (
+	cosmossdk.io/api => ../api
+	cosmossdk.io/x/tx => ../x/tx
+)
 
 // SimApp on main always tests the latest extracted SDK modules importing the sdk
 replace (
-	cosmossdk.io/api => ../api
 	cosmossdk.io/client/v2 => ../client/v2
 	cosmossdk.io/tools/confix => ../tools/confix
 	cosmossdk.io/x/authz => ../x/authz

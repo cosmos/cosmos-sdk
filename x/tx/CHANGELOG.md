@@ -31,6 +31,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+## v0.12.0
+
+### Improvements
+
+* []() Update encoder so that amino types defauls to msg type url.
+
 ## v0.11.0
 
 ### Improvements

@@ -171,7 +171,7 @@ func (enc Encoder) Marshal(message proto.Message) ([]byte, error) {
 }
 
 func (enc Encoder) beginMarshal(msg protoreflect.Message, writer io.Writer) error {
-	name, named := getMessageAminoName(msg.Descriptor().Options())
+	name, named := getMessageAminoName(msg)
 	if named {
 		_, err := fmt.Fprintf(writer, `{"type":"%s","value":`, name)
 		if err != nil {

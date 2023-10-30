@@ -2,6 +2,7 @@ package aminojson
 
 import (
 	cosmos_proto "github.com/cosmos/cosmos-proto"
+	gogoproto "github.com/cosmos/gogoproto/proto"
 	"github.com/iancoleman/strcase"
 	"github.com/pkg/errors"
 	"google.golang.org/protobuf/proto"
@@ -11,12 +12,24 @@ import (
 )
 
 // getMessageAminoName returns the amino name of a message if it has been set by the `amino.name` option.
-// If the message does not have an amino name, then the function returns false.
-func getMessageAminoName(messageOptions proto.Message) (string, bool) {
+// If the message does not have an amino name, then it returns the msg url.
+// If it cannot get the msg url, then it returns false.
+func getMessageAminoName(msg protoreflect.Message) (string, bool) {
+	messageOptions := msg.Descriptor().Options()
 	if proto.HasExtension(messageOptions, amino.E_Name) {
 		name := proto.GetExtension(messageOptions, amino.E_Name)
 		return name.(string), true
 	}
+
+	msgURL := "/" + string(msg.Descriptor().FullName())
+	if msgURL != "/" {
+		return msgURL, true
+	}
+
+	if m, ok := msg.(gogoproto.Message); ok {
+		return "/" + gogoproto.MessageName(m), true
+	}
+
 	return "", false
 }
 

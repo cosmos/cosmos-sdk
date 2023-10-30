@@ -411,7 +411,7 @@ public class NativeSecp256k1 {
 
         w.lock();
         try {
-          return secp256k1_context_randomize(byteBuff, Secp256k1Context.getContext()) == 1;
+          return cosmos_secp256k1_context_randomize(byteBuff, Secp256k1Context.getContext()) == 1;
         } finally {
           w.unlock();
         }
@@ -419,7 +419,7 @@ public class NativeSecp256k1 {
 
     private static native long secp256k1_ctx_clone(long context);
 
-    private static native int secp256k1_context_randomize(ByteBuffer byteBuff, long context);
+    private static native int cosmos_secp256k1_context_randomize(ByteBuffer byteBuff, long context);
 
     private static native byte[][] secp256k1_privkey_tweak_add(ByteBuffer byteBuff, long context);
 

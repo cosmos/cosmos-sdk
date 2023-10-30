@@ -29,7 +29,7 @@ SECP256K1_API jint JNICALL Java_org_bitcoin_NativeSecp256k1_secp256k1_1context_1
 
   (void)classObject;
 
-  return secp256k1_context_randomize(ctx, seed);
+  return cosmos_secp256k1_context_randomize(ctx, seed);
 
 }
 

@@ -203,9 +203,9 @@ void run_context_tests(void) {
     CHECK(ecount2 == 13);
     CHECK(cosmos_secp256k1_ec_pubkey_tweak_mul(vrfy, &pubkey, ctmp) == 1);
     CHECK(ecount == 2);
-    CHECK(secp256k1_context_randomize(vrfy, ctmp) == 0);
+    CHECK(cosmos_secp256k1_context_randomize(vrfy, ctmp) == 0);
     CHECK(ecount == 3);
-    CHECK(secp256k1_context_randomize(sign, NULL) == 1);
+    CHECK(cosmos_secp256k1_context_randomize(sign, NULL) == 1);
     CHECK(ecount2 == 13);
     cosmos_secp256k1_context_set_illegal_callback(vrfy, NULL, NULL);
     cosmos_secp256k1_context_set_illegal_callback(sign, NULL, NULL);
@@ -4438,7 +4438,7 @@ int main(int argc, char **argv) {
     ctx = cosmos_secp256k1_context_create(SECP256K1_CONTEXT_SIGN | SECP256K1_CONTEXT_VERIFY);
     if (secp256k1_rand_bits(1)) {
         secp256k1_rand256(run32);
-        CHECK(secp256k1_context_randomize(ctx, secp256k1_rand_bits(1) ? run32 : NULL));
+        CHECK(cosmos_secp256k1_context_randomize(ctx, secp256k1_rand_bits(1) ? run32 : NULL));
     }
 
     run_rand_bits();

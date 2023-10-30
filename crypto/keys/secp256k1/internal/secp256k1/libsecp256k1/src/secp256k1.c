@@ -515,7 +515,7 @@ int cosmos_secp256k1_ec_pubkey_tweak_mul(const secp256k1_context* ctx, secp256k1
     return ret;
 }
 
-int secp256k1_context_randomize(secp256k1_context* ctx, const unsigned char *seed32) {
+int cosmos_secp256k1_context_randomize(secp256k1_context* ctx, const unsigned char *seed32) {
     VERIFY_CHECK(ctx != NULL);
     ARG_CHECK(secp256k1_ecmult_gen_context_is_built(&ctx->ecmult_gen_ctx));
     secp256k1_ecmult_gen_blind(&ctx->ecmult_gen_ctx, seed32);

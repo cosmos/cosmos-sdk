@@ -18,7 +18,7 @@ SECP256K1_API jlong JNICALL Java_org_bitcoin_NativeSecp256k1_secp256k1_1ctx_1clo
 
 /*
  * Class:     org_bitcoin_NativeSecp256k1
- * Method:    secp256k1_context_randomize
+ * Method:    cosmos_secp256k1_context_randomize
  * Signature: (Ljava/nio/ByteBuffer;J)I
  */
 SECP256K1_API jint JNICALL Java_org_bitcoin_NativeSecp256k1_secp256k1_1context_1randomize

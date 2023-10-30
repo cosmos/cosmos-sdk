@@ -15,7 +15,7 @@ type fuzzSuite struct {
 	IntegrationTestSuite
 }
 
-func (fz *fuzzSuite) FuzzQueryBalance(f *testing.F) {
+func (fz *fuzzSuite) FuzzQuery(f *testing.F) {
 	if testing.Short() {
 		f.Skip("In -short mode")
 	}
@@ -31,7 +31,7 @@ func (fz *fuzzSuite) FuzzQueryBalance(f *testing.F) {
 	f.Add(bz)
 
 	// 2. Now fuzz it and ensure that we don't get any panics.
-	ctx := context.Background()
+	// ctx := context.Background()
 	f.Fuzz(func(t *testing.T, in []byte) {
 		qbReq := new(types.QueryGetCountRequest)
 		if err := fz.cdc.Unmarshal(in, qbReq); err != nil {
@@ -41,16 +41,16 @@ func (fz *fuzzSuite) FuzzQueryBalance(f *testing.F) {
 		// gRPC query to bank service should work
 		var header metadata.MD
 		_, _ = fz.counterClient.GetCount(
-			ctx,
+			fz.ctx,
 			qbReq,
 			grpc.Header(&header),
 		)
 	})
 }
 
-func FuzzQueryBalance(f *testing.F) {
+func FuzzQuery(f *testing.F) {
 	fzs := new(fuzzSuite)
 	fzs.SetT(new(testing.T))
 	fzs.SetupSuite()
-	fzs.FuzzQueryBalance(f)
+	fzs.FuzzQuery(f)
 }

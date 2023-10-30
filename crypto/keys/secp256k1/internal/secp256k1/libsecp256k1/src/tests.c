@@ -160,10 +160,10 @@ void run_context_tests(void) {
     {
         secp256k1_context *ctx_tmp;
 
-        ctx_tmp = none; none = secp256k1_context_clone(none); secp256k1_context_destroy(ctx_tmp);
-        ctx_tmp = sign; sign = secp256k1_context_clone(sign); secp256k1_context_destroy(ctx_tmp);
-        ctx_tmp = vrfy; vrfy = secp256k1_context_clone(vrfy); secp256k1_context_destroy(ctx_tmp);
-        ctx_tmp = both; both = secp256k1_context_clone(both); secp256k1_context_destroy(ctx_tmp);
+        ctx_tmp = none; none = cosmos_secp256k1_context_clone(none); secp256k1_context_destroy(ctx_tmp);
+        ctx_tmp = sign; sign = cosmos_secp256k1_context_clone(sign); secp256k1_context_destroy(ctx_tmp);
+        ctx_tmp = vrfy; vrfy = cosmos_secp256k1_context_clone(vrfy); secp256k1_context_destroy(ctx_tmp);
+        ctx_tmp = both; both = cosmos_secp256k1_context_clone(both); secp256k1_context_destroy(ctx_tmp);
     }
 
     /* Verify that the error callback makes it across the clone. */

@@ -12,7 +12,7 @@ SECP256K1_API jlong JNICALL Java_org_bitcoin_NativeSecp256k1_secp256k1_1ctx_1clo
 {
   const secp256k1_context *ctx = (secp256k1_context*)(uintptr_t)ctx_l;
 
-  jlong ctx_clone_l = (uintptr_t) secp256k1_context_clone(ctx);
+  jlong ctx_clone_l = (uintptr_t) cosmos_secp256k1_context_clone(ctx);
 
   (void)classObject;(void)env;
 

@@ -108,7 +108,7 @@ void test_ecdsa_recovery_api(void) {
     CHECK(ecount == 5);
 
     /* Check NULLs for conversion */
-    CHECK(secp256k1_ecdsa_sign(both, &normal_sig, message, privkey, NULL, NULL) == 1);
+    CHECK(cosmos_secp256k1_ecdsa_sign(both, &normal_sig, message, privkey, NULL, NULL) == 1);
     ecount = 0;
     CHECK(cosmos_secp256k1_ecdsa_recoverable_signature_convert(both, NULL, &recsig) == 0);
     CHECK(ecount == 1);
@@ -174,7 +174,7 @@ void test_ecdsa_recovery_end_to_end(void) {
     /* Serialize/parse compact and verify/recover. */
     extra[0] = 0;
     CHECK(secp256k1_ecdsa_sign_recoverable(ctx, &rsignature[0], message, privkey, NULL, NULL) == 1);
-    CHECK(secp256k1_ecdsa_sign(ctx, &signature[0], message, privkey, NULL, NULL) == 1);
+    CHECK(cosmos_secp256k1_ecdsa_sign(ctx, &signature[0], message, privkey, NULL, NULL) == 1);
     CHECK(secp256k1_ecdsa_sign_recoverable(ctx, &rsignature[4], message, privkey, NULL, NULL) == 1);
     CHECK(secp256k1_ecdsa_sign_recoverable(ctx, &rsignature[1], message, privkey, NULL, extra) == 1);
     extra[31] = 1;

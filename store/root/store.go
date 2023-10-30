@@ -207,6 +207,7 @@ func (s *Store) GetBranchedKVStore(_ string) store.BranchedKVStore {
 func (s *Store) loadVersion(v uint64, _ *store.StoreUpgrades) error {
 	s.logger.Debug("loading version", "version", v)
 
+	// reset the root KVStore s.t. the latest version is v (any writes will overwrite existing versions)
 	if err := s.rootKVStore.Reset(v); err != nil {
 		return err
 	}

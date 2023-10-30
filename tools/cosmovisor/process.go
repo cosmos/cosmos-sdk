@@ -101,7 +101,7 @@ func (l Launcher) Run(args []string, stdout, stderr io.Writer) (bool, error) {
 // It returns (true, nil) if an upgrade should be initiated (and we killed the process)
 // It returns (false, err) if the process died by itself
 // It returns (false, nil) if the process exited normally without triggering an upgrade. This is very unlikely
-// to happen with "start" but may happen with short-lived commands like `simd genesis export ...`
+// to happen with "start" but may happen with short-lived commands like `simd export ...`
 func (l Launcher) WaitForUpgradeOrExit(cmd *exec.Cmd) (bool, error) {
 	currentUpgrade, err := l.cfg.UpgradeInfo()
 	if err != nil {

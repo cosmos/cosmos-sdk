@@ -47,7 +47,7 @@ func (k Keeper) SetConsPubKeyRotationHistory(
 // CheckLimitOfMaxRotationsExceed returns true if the key rotations exceed the limit, currently we are limiting one rotation for unbonding period.
 func (k Keeper) CheckLimitOfMaxRotationsExceed(ctx sdk.Context, valAddr sdk.ValAddress) (bool, error) {
 	count := 0
-	maxRotations := 1 // Define your maximum limit
+	maxRotations := 1 // arbitrary value
 	rng := collections.NewPrefixUntilPairRange[[]byte, time.Time](valAddr)
 	if err := k.ValidatorConsensusKeyRotationRecordIndexKey.Walk(ctx, rng, func(key collections.Pair[[]byte, time.Time], value []byte) (stop bool, err error) {
 		count++

@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"errors"
 	"strconv"
 	"time"
 
@@ -9,6 +10,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"cosmossdk.io/collections"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
 	distrtypes "cosmossdk.io/x/distribution/types"
@@ -609,9 +611,15 @@ func (k msgServer) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams)
 func (k msgServer) RotateConsPubKey(goCtx context.Context, msg *types.MsgRotateConsPubKey) (res *types.MsgRotateConsPubKeyResponse, err error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	pk, ok := msg.NewPubkey.GetCachedValue().(cryptotypes.PubKey)
+	cv := msg.NewPubkey.GetCachedValue()
+	pk, ok := cv.(cryptotypes.PubKey)
 	if !ok {
-		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidType, "expecting cryptotypes.PubKey, got %T", pk)
+		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidType, "expecting cryptotypes.PubKey, got %T", cv)
+	}
+
+	_, err = k.RotatedConsKeyMapIndex.Get(ctx, pk.Address())
+	if err != nil && !errors.Is(err, collections.ErrNotFound) {
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidAddress, "the address is already rotated, please try with new one")
 	}
 
 	newConsAddr := sdk.ConsAddress(pk.Address())
@@ -632,8 +640,8 @@ func (k msgServer) RotateConsPubKey(goCtx context.Context, msg *types.MsgRotateC
 		return nil, types.ErrNoValidatorFound
 	}
 
-	if validator.GetStatus() != types.Bonded {
-		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidType, "invalid validator status: %s", validator.GetStatus())
+	if status := validator.GetStatus(); status != types.Bonded {
+		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidType, "validator status is not bonded, got %q", status)
 	}
 
 	// Check if the validator is exceeding parameter MaxConsPubKeyRotations within the

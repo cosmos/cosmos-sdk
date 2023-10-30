@@ -160,7 +160,8 @@ func (suite *KeeperTestSuite) TestMsgClaimBudget() {
 					Tranches:         2,
 					Period:           60,
 				}
-				suite.poolKeeper.BudgetProposal.Set(suite.ctx, recipientAddr, budget)
+				err := suite.poolKeeper.BudgetProposal.Set(suite.ctx, recipientAddr, budget)
+				suite.Require().NoError(err)
 			},
 			recipientAddress: recipientAddr,
 			expErr:           true,
@@ -176,7 +177,8 @@ func (suite *KeeperTestSuite) TestMsgClaimBudget() {
 					Tranches:         1,
 					Period:           60,
 				}
-				suite.poolKeeper.BudgetProposal.Set(suite.ctx, recipientAddr, budget)
+				err := suite.poolKeeper.BudgetProposal.Set(suite.ctx, recipientAddr, budget)
+				suite.Require().NoError(err)
 			},
 			recipientAddress: recipientAddr,
 			expErr:           true,
@@ -192,7 +194,8 @@ func (suite *KeeperTestSuite) TestMsgClaimBudget() {
 					Tranches:         2,
 					Period:           60,
 				}
-				suite.poolKeeper.BudgetProposal.Set(suite.ctx, recipientAddr, budget)
+				err := suite.poolKeeper.BudgetProposal.Set(suite.ctx, recipientAddr, budget)
+				suite.Require().NoError(err)
 			},
 			recipientAddress: recipientAddr,
 			expErr:           false,

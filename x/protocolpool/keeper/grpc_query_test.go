@@ -41,7 +41,8 @@ func (suite *KeeperTestSuite) TestUnclaimedBudget() {
 					Tranches:         2,
 					Period:           60,
 				}
-				suite.poolKeeper.BudgetProposal.Set(suite.ctx, recipientAddr, budget)
+				err := suite.poolKeeper.BudgetProposal.Set(suite.ctx, recipientAddr, budget)
+				suite.Require().NoError(err)
 			},
 			req: &types.QueryUnclaimedBudgetRequest{
 				Address: recipientAddr.String(),

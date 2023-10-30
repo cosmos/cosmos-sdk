@@ -399,7 +399,7 @@ int cosmos_secp256k1_ec_seckey_verify(const secp256k1_context* ctx, const unsign
     return ret;
 }
 
-int secp256k1_ec_pubkey_create(const secp256k1_context* ctx, secp256k1_pubkey *pubkey, const unsigned char *seckey) {
+int cosmos_secp256k1_ec_pubkey_create(const secp256k1_context* ctx, secp256k1_pubkey *pubkey, const unsigned char *seckey) {
     secp256k1_gej pj;
     secp256k1_ge p;
     secp256k1_scalar sec;

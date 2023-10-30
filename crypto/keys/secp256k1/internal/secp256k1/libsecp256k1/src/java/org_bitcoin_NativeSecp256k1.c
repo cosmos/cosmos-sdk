@@ -135,7 +135,7 @@ SECP256K1_API jobjectArray JNICALL Java_org_bitcoin_NativeSecp256k1_secp256k1_1e
   jbyteArray pubkeyArray, intsByteArray;
   unsigned char intsarray[2];
 
-  int ret = secp256k1_ec_pubkey_create(ctx, &pubkey, secKey);
+  int ret = cosmos_secp256k1_ec_pubkey_create(ctx, &pubkey, secKey);
 
   unsigned char outputSer[65];
   size_t outputLen = 65;

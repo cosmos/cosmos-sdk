@@ -18,7 +18,7 @@ void test_ecdh_api(void) {
 
     secp256k1_context_set_error_callback(tctx, counting_illegal_callback_fn, &ecount);
     cosmos_secp256k1_context_set_illegal_callback(tctx, counting_illegal_callback_fn, &ecount);
-    CHECK(secp256k1_ec_pubkey_create(tctx, &point, s_one) == 1);
+    CHECK(cosmos_secp256k1_ec_pubkey_create(tctx, &point, s_one) == 1);
 
     /* Check all NULLs are detected */
     CHECK(secp256k1_ecdh(tctx, res, &point, s_one) == 1);
@@ -56,10 +56,10 @@ void test_ecdh_generator_basepoint(void) {
         secp256k1_scalar_get_b32(s_b32, &s);
 
         /* compute using ECDH function */
-        CHECK(secp256k1_ec_pubkey_create(ctx, &point[0], s_one) == 1);
+        CHECK(cosmos_secp256k1_ec_pubkey_create(ctx, &point[0], s_one) == 1);
         CHECK(secp256k1_ecdh(ctx, output_ecdh, &point[0], s_b32) == 1);
         /* compute "explicitly" */
-        CHECK(secp256k1_ec_pubkey_create(ctx, &point[1], s_b32) == 1);
+        CHECK(cosmos_secp256k1_ec_pubkey_create(ctx, &point[1], s_b32) == 1);
         CHECK(cosmos_secp256k1_ec_pubkey_serialize(ctx, point_ser, &point_ser_len, &point[1], SECP256K1_EC_COMPRESSED) == 1);
         CHECK(point_ser_len == sizeof(point_ser));
         secp256k1_sha256_initialize(&sha);
@@ -86,7 +86,7 @@ void test_bad_scalar(void) {
     /* Create random point */
     random_scalar_order(&rand);
     secp256k1_scalar_get_b32(s_rand, &rand);
-    CHECK(secp256k1_ec_pubkey_create(ctx, &point, s_rand) == 1);
+    CHECK(cosmos_secp256k1_ec_pubkey_create(ctx, &point, s_rand) == 1);
 
     /* Try to multiply it by bad values */
     CHECK(secp256k1_ecdh(ctx, output, &point, s_zero) == 0);

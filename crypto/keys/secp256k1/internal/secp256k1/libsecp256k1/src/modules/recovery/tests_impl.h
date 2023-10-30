@@ -60,7 +60,7 @@ void test_ecdsa_recovery_api(void) {
 
     /* Construct and verify corresponding public key. */
     CHECK(cosmos_secp256k1_ec_seckey_verify(ctx, privkey) == 1);
-    CHECK(secp256k1_ec_pubkey_create(ctx, &pubkey, privkey) == 1);
+    CHECK(cosmos_secp256k1_ec_pubkey_create(ctx, &pubkey, privkey) == 1);
 
     /* Check bad contexts and NULLs for signing */
     ecount = 0;
@@ -169,7 +169,7 @@ void test_ecdsa_recovery_end_to_end(void) {
 
     /* Construct and verify corresponding public key. */
     CHECK(cosmos_secp256k1_ec_seckey_verify(ctx, privkey) == 1);
-    CHECK(secp256k1_ec_pubkey_create(ctx, &pubkey, privkey) == 1);
+    CHECK(cosmos_secp256k1_ec_pubkey_create(ctx, &pubkey, privkey) == 1);
 
     /* Serialize/parse compact and verify/recover. */
     extra[0] = 0;

@@ -90,7 +90,7 @@ SECP256K1_API jint JNICALL Java_org_bitcoin_NativeSecp256k1_secp256k1_1ec_1secke
 
 /*
  * Class:     org_bitcoin_NativeSecp256k1
- * Method:    secp256k1_ec_pubkey_create
+ * Method:    cosmos_secp256k1_ec_pubkey_create
  * Signature: (Ljava/nio/ByteBuffer;J)[[B
  */
 SECP256K1_API jobjectArray JNICALL Java_org_bitcoin_NativeSecp256k1_secp256k1_1ec_1pubkey_1create

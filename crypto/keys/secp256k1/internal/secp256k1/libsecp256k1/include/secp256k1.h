@@ -479,7 +479,7 @@ SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int cosmos_secp256k1_ec_seckey_verify
  *  Out:    pubkey:     pointer to the created public key (cannot be NULL)
  *  In:     seckey:     pointer to a 32-byte private key (cannot be NULL)
  */
-SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_pubkey_create(
+SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int cosmos_secp256k1_ec_pubkey_create(
     const secp256k1_context* ctx,
     secp256k1_pubkey *pubkey,
     const unsigned char *seckey

@@ -84,17 +84,12 @@ func (s *Store) GetChangeset() *store.Changeset {
 	return store.NewChangeset(pairs...)
 }
 
-func (s *Store) Reset() error {
+func (s *Store) Reset(v uint64) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	latestVersion, err := s.storage.GetLatestVersion()
-	if err != nil {
-		return err
-	}
-
 	clear(s.changeset)
-	s.version = latestVersion
+	s.version = v
 
 	return nil
 }

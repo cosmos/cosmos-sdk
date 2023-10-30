@@ -26,9 +26,7 @@ var (
 )
 
 // AppModuleBasic defines the basic application module used by the consensus module.
-type AppModuleBasic struct {
-	cdc codec.Codec
-}
+type AppModuleBasic struct{}
 
 // Name returns the consensus module's name.
 func (AppModuleBasic) Name() string { return types.ModuleName }
@@ -67,7 +65,7 @@ func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
 // NewAppModule creates a new AppModule object
 func NewAppModule(cdc codec.Codec, keeper keeper.Keeper) AppModule {
 	return AppModule{
-		AppModuleBasic: AppModuleBasic{cdc: cdc},
+		AppModuleBasic: AppModuleBasic{},
 		keeper:         keeper,
 	}
 }

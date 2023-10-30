@@ -1,13 +1,14 @@
 package authz
 
 import (
+	bank "cosmossdk.io/x/bank/types"
+	staking "cosmossdk.io/x/staking/types"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	types "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
-	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
-	staking "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // RegisterLegacyAminoCodec registers the necessary x/authz interfaces and concrete types

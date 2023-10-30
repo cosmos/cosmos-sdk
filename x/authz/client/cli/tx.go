@@ -8,15 +8,16 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"cosmossdk.io/x/authz"
+	bank "cosmossdk.io/x/bank/types"
+	staking "cosmossdk.io/x/staking/types"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
-	"github.com/cosmos/cosmos-sdk/x/authz"
-	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
-	staking "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // Flag names and values

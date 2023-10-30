@@ -7,7 +7,7 @@ import "cosmos/app/v1alpha1/module.proto";
 // Module is the config object of the bank module.
 message Module {
   option (cosmos.app.v1alpha1.module) = {
-    go_import: "github.com/cosmos/cosmos-sdk/x/bank"
+    go_import: "cosmossdk.io/x/bank"
   };
 
   // blocked_module_accounts_override configures exceptional module accounts which should be blocked from receiving

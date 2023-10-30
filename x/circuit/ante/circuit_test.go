@@ -16,7 +16,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/bank"
 )
 
 type fixture struct {
@@ -38,7 +37,7 @@ func (m MockCircuitBreaker) IsAllowed(ctx context.Context, typeURL string) (bool
 func initFixture(t *testing.T) *fixture {
 	t.Helper()
 	mockStoreKey := storetypes.NewKVStoreKey("test")
-	encCfg := moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{}, bank.AppModuleBasic{})
+	encCfg := moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{})
 	mockclientCtx := client.Context{}.
 		WithTxConfig(encCfg.TxConfig)
 

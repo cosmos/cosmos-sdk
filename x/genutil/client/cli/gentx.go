@@ -13,6 +13,7 @@ import (
 
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/errors"
+	"cosmossdk.io/x/staking/client/cli"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -25,7 +26,6 @@ import (
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
-	"github.com/cosmos/cosmos-sdk/x/staking/client/cli"
 )
 
 // GenTxCmd builds the application's gentx command.

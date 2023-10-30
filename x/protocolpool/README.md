@@ -8,6 +8,8 @@ sidebar_position: 1
 
 Protopool is a module that handle functionality around community pool funds. This provides a separate module account for community pool making it easier to track the pool assets. We no longer track community pool assets in distribution module, but instead in this protocolpool module. Funds are migrated from the distribution module's community pool to protocolpool's module account.
 
+The module is also designed with a lazy "claim-based" system, which means that users are required to actively claim allocated funds from allocated budget if any budget proposal has been submitted and passed. The module does not automatically distribute funds to recipients. This design choice allows for more flexibility and control over fund distribution.
+
 ## State Transitions
 
 ### FundCommunityPool
@@ -32,6 +34,27 @@ CommunityPoolSpend can be called by the module authority (default governance mod
   rpc CommunityPoolSpend(MsgCommunityPoolSpend) returns (MsgCommunityPoolSpendResponse);
 ```
 
+### SubmitBudgetProposal
+
+SubmitBudgetProposal is a message used to propose a budget allocation for a specific recipient. The proposed funds will be distributed periodically over a specified time frame.
+
+It's the responsibility of users to actively claim their allocated funds based on the terms of the approved budget proposals.
+
+```protobuf
+  // SubmitBudgetProposal defines a method to set a budget proposal.
+  rpc SubmitBudgetProposal(MsgSubmitBudgetProposal) returns (MsgSubmitBudgetProposalResponse);
+```
+
+### ClaimBudget
+
+ClaimBudget is a message used to claim funds from a previously submitted budget proposal. When a budget proposal is approved and funds are allocated, recipients can use this message to claim their share of the budget. Funds are distributed in tranches over specific periods, and users can claim their share of budget at the appropriate time.
+
+```protobuf
+  // ClaimBudget defines a method to claim the distributed budget.
+  rpc ClaimBudget(MsgClaimBudget) returns (MsgClaimBudgetResponse);
+
+```
+
 ## Messages
 
 ### MsgFundCommunityPool
@@ -43,7 +66,7 @@ If you know the protocolpool module account address, you can directly use bank `
 ::::
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/9dd34510e27376005e7e7ff3628eab9dbc8ad6dc/proto/cosmos/protocolpool/v1/tx.proto#L31-L41
+https://github.com/cosmos/cosmos-sdk/blob/97724493d792517ba2be8969078b5f92ad04d79c/proto/cosmos/protocolpool/v1/tx.proto#L32-L42
 ```
 
 * The msg will fail if the amount cannot be transferred from the sender to the protocolpool module account.
@@ -59,7 +82,7 @@ func (k Keeper) FundCommunityPool(ctx context.Context, amount sdk.Coins, sender 
 This message distributes funds from the protocolpool module account to the recipient using `DistributeFromFeePool` keeper method.
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/9dd34510e27376005e7e7ff3628eab9dbc8ad6dc/proto/cosmos/protocolpool/v1/tx.proto#L46-L59
+https://github.com/cosmos/cosmos-sdk/blob/97724493d792517ba2be8969078b5f92ad04d79c/proto/cosmos/protocolpool/v1/tx.proto#L47-L58
 ```
 
 The message will fail under the following conditions:
@@ -72,6 +95,46 @@ func (k Keeper) DistributeFromFeePool(ctx context.Context, amount sdk.Coins, rec
 	return k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, receiveAddr, amount)
 }
 ```
+
+### MsgSubmitBudgetProposal
+
+This message is used to submit a budget proposal to allocate funds for a specific recipient. The proposed funds will be distributed periodically over a specified time frame.
+
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/97724493d792517ba2be8969078b5f92ad04d79c/proto/cosmos/protocolpool/v1/tx.proto#L64-L82
+```
+
+The message will fail under the following conditions:
+
+* The total budget is zero.
+* The recipient address is empty or restricted.
+* The start time is negative.
+* The number of tranches is not a positive value.
+* The period length is not a positive value.
+
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/97724493d792517ba2be8969078b5f92ad04d79c/x/protocolpool/keeper/msg_server.go#L39-l61
+```
+
+### MsgClaimBudget
+
+This message is used to claim funds from a previously submitted budget proposal. When a budget proposal is passed and funds are allocated, recipients can use this message to claim their share of the budget.
+
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/97724493d792517ba2be8969078b5f92ad04d79c/proto/cosmos/protocolpool/v1/tx.proto#L88-L92
+```
+
+The message will fail under the following conditions:
+
+- The recipient address is empty or restricted.
+- The budget proposal for the recipient does not exist.
+- The budget proposal has not reached its distribution start time.
+- The budget proposal's distribution period has not passed yet.
+
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/97724493d792517ba2be8969078b5f92ad04d79c/x/protocolpool/keeper/msg_server.go#L25-L37
+```
+
 
 ## Client
 

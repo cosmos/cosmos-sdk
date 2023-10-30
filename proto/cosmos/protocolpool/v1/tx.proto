@@ -72,6 +72,7 @@ message MsgSubmitBudgetProposal {
   // total_budget is the total amount allocated for the budget.
   cosmos.base.v1beta1.Coin total_budget = 3;
   // start_time is the time when the budget becomes claimable, represented in seconds since the Unix epoch.
+  // A value of `0` means the budget becomes claimable at the time of the first claim or governance proposal execution.
   int64 start_time = 4;
   // tranches is the number of times the total budget amount is to be distributed.
   int64 tranches = 5;

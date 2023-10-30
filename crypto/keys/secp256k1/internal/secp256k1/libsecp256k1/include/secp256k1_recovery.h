@@ -46,7 +46,7 @@ SECP256K1_API int secp256k1_ecdsa_recoverable_signature_parse_compact(
  *  Out: sig:    a pointer to a normal signature (cannot be NULL).
  *  In:  sigin:  a pointer to a recoverable signature (cannot be NULL).
  */
-SECP256K1_API int secp256k1_ecdsa_recoverable_signature_convert(
+SECP256K1_API int cosmos_secp256k1_ecdsa_recoverable_signature_convert(
     const secp256k1_context* ctx,
     secp256k1_ecdsa_signature* sig,
     const secp256k1_ecdsa_recoverable_signature* sigin

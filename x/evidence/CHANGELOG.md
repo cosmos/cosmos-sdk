@@ -25,6 +25,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+## [v0.1.0](https://github.com/cosmos/cosmos-sdk/releases/tag/x/evidence/v0.1.0) - Soon™️
+
 ### Features
 
 * (x/evidence) [14724](https://github.com/cosmos/cosmos-sdk/pull/14724) The `x/evidence` module is extracted to have a separate go.mod file which allows it be a standalone module.
@@ -35,8 +37,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [#16008](https://github.com/cosmos/cosmos-sdk/pull/16008) NewKeeper now takes in a KVStoreService instead of KVStoreKey, most functions use context.Context instead of sdk.Context and `IterateEvidence` callback function now returns an error to stop interation (`errors.ErrStopIterating`).
 * (keeper) [#15825](https://github.com/cosmos/cosmos-sdk/pull/15825) Evidence constructor now requires an `address.Codec` (`import "cosmossdk.io/core/address"`)
 * [#16336](https://github.com/cosmos/cosmos-sdk/pull/16336) Use collections for state management:
-    * Removed: keeper `SetEvidence`, `GetEvidence`, `IterateEvidences`, `GetAllEvidences`, `MustMarshalEvidence`, `MustUnmarshalEvidence`, `MarshalEvidence`, `UnmarshalEvidence`
-* [#17688](https://github.com/cosmos/cosmos-sdk/pull/17688) Remove `comet.Info` as an arg to evidence
+  * Removed: keeper `SetEvidence`, `GetEvidence`, `IterateEvidences`, `GetAllEvidences`, `MustMarshalEvidence`, `MustUnmarshalEvidence`, `MarshalEvidence`, `UnmarshalEvidence`
 
 ### Client Breaking Changes
 

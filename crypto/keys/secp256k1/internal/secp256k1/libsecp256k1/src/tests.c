@@ -3537,13 +3537,13 @@ void test_ecdsa_end_to_end(void) {
     /* Serialize/parse DER and verify again */
     CHECK(secp256k1_ecdsa_signature_serialize_der(ctx, sig, &siglen, &signature[0]) == 1);
     memset(&signature[0], 0, sizeof(signature[0]));
-    CHECK(secp256k1_ecdsa_signature_parse_der(ctx, &signature[0], sig, siglen) == 1);
+    CHECK(cosmos_secp256k1_ecdsa_signature_parse_der(ctx, &signature[0], sig, siglen) == 1);
     CHECK(cosmos_secp256k1_ecdsa_verify(ctx, &signature[0], message, &pubkey) == 1);
     /* Serialize/destroy/parse DER and verify again. */
     siglen = 74;
     CHECK(secp256k1_ecdsa_signature_serialize_der(ctx, sig, &siglen, &signature[0]) == 1);
     sig[secp256k1_rand_int(siglen)] += 1 + secp256k1_rand_int(255);
-    CHECK(secp256k1_ecdsa_signature_parse_der(ctx, &signature[0], sig, siglen) == 0 ||
+    CHECK(cosmos_secp256k1_ecdsa_signature_parse_der(ctx, &signature[0], sig, siglen) == 0 ||
           cosmos_secp256k1_ecdsa_verify(ctx, &signature[0], message, &pubkey) == 0);
 }
 
@@ -3654,7 +3654,7 @@ int test_ecdsa_der_parse(const unsigned char *sig, size_t siglen, int certainly_
     int parsed_openssl, valid_openssl = 0, roundtrips_openssl = 0;
 #endif
 
-    parsed_der = secp256k1_ecdsa_signature_parse_der(ctx, &sig_der, sig, siglen);
+    parsed_der = cosmos_secp256k1_ecdsa_signature_parse_der(ctx, &sig_der, sig, siglen);
     if (parsed_der) {
         ret |= (!cosmos_secp256k1_ecdsa_signature_serialize_compact(ctx, compact_der, &sig_der)) << 0;
         valid_der = (memcmp(compact_der, zeroes, 32) != 0) && (memcmp(compact_der + 32, zeroes, 32) != 0);
@@ -4183,11 +4183,11 @@ void test_ecdsa_edge_cases(void) {
         CHECK(ecount == 11);
         CHECK(secp256k1_ecdsa_signature_serialize_der(ctx, signature, &siglen, &sig) == 1);
         CHECK(ecount == 11);
-        CHECK(secp256k1_ecdsa_signature_parse_der(ctx, NULL, signature, siglen) == 0);
+        CHECK(cosmos_secp256k1_ecdsa_signature_parse_der(ctx, NULL, signature, siglen) == 0);
         CHECK(ecount == 12);
-        CHECK(secp256k1_ecdsa_signature_parse_der(ctx, &sig, NULL, siglen) == 0);
+        CHECK(cosmos_secp256k1_ecdsa_signature_parse_der(ctx, &sig, NULL, siglen) == 0);
         CHECK(ecount == 13);
-        CHECK(secp256k1_ecdsa_signature_parse_der(ctx, &sig, signature, siglen) == 1);
+        CHECK(cosmos_secp256k1_ecdsa_signature_parse_der(ctx, &sig, signature, siglen) == 1);
         CHECK(ecount == 13);
         siglen = 10;
         /* Too little room for a signature does not fail via ARGCHECK. */

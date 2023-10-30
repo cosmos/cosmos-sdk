@@ -207,7 +207,7 @@ static void secp256k1_ecdsa_signature_save(secp256k1_ecdsa_signature* sig, const
     }
 }
 
-int secp256k1_ecdsa_signature_parse_der(const secp256k1_context* ctx, secp256k1_ecdsa_signature* sig, const unsigned char *input, size_t inputlen) {
+int cosmos_secp256k1_ecdsa_signature_parse_der(const secp256k1_context* ctx, secp256k1_ecdsa_signature* sig, const unsigned char *input, size_t inputlen) {
     secp256k1_scalar r, s;
 
     VERIFY_CHECK(ctx != NULL);

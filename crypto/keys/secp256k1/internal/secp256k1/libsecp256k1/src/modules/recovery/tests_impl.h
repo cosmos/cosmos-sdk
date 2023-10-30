@@ -296,38 +296,38 @@ void test_ecdsa_recovery_edge_cases(void) {
         };
         CHECK(cosmos_secp256k1_ecdsa_recoverable_signature_parse_compact(ctx, &rsig, sigb64, recid) == 1);
         CHECK(cosmos_secp256k1_ecdsa_recover(ctx, &pubkeyb, &rsig, msg32) == 1);
-        CHECK(secp256k1_ecdsa_signature_parse_der(ctx, &sig, sigbder, sizeof(sigbder)) == 1);
+        CHECK(cosmos_secp256k1_ecdsa_signature_parse_der(ctx, &sig, sigbder, sizeof(sigbder)) == 1);
         CHECK(cosmos_secp256k1_ecdsa_verify(ctx, &sig, msg32, &pubkeyb) == 1);
         for (recid2 = 0; recid2 < 4; recid2++) {
             secp256k1_pubkey pubkey2b;
             CHECK(cosmos_secp256k1_ecdsa_recoverable_signature_parse_compact(ctx, &rsig, sigb64, recid2) == 1);
             CHECK(cosmos_secp256k1_ecdsa_recover(ctx, &pubkey2b, &rsig, msg32) == 1);
             /* Verifying with (order + r,4) should always fail. */
-            CHECK(secp256k1_ecdsa_signature_parse_der(ctx, &sig, sigbderlong, sizeof(sigbderlong)) == 1);
+            CHECK(cosmos_secp256k1_ecdsa_signature_parse_der(ctx, &sig, sigbderlong, sizeof(sigbderlong)) == 1);
             CHECK(cosmos_secp256k1_ecdsa_verify(ctx, &sig, msg32, &pubkeyb) == 0);
         }
         /* DER parsing tests. */
         /* Zero length r/s. */
-        CHECK(secp256k1_ecdsa_signature_parse_der(ctx, &sig, sigcder_zr, sizeof(sigcder_zr)) == 0);
-        CHECK(secp256k1_ecdsa_signature_parse_der(ctx, &sig, sigcder_zs, sizeof(sigcder_zs)) == 0);
+        CHECK(cosmos_secp256k1_ecdsa_signature_parse_der(ctx, &sig, sigcder_zr, sizeof(sigcder_zr)) == 0);
+        CHECK(cosmos_secp256k1_ecdsa_signature_parse_der(ctx, &sig, sigcder_zs, sizeof(sigcder_zs)) == 0);
         /* Leading zeros. */
-        CHECK(secp256k1_ecdsa_signature_parse_der(ctx, &sig, sigbderalt1, sizeof(sigbderalt1)) == 0);
-        CHECK(secp256k1_ecdsa_signature_parse_der(ctx, &sig, sigbderalt2, sizeof(sigbderalt2)) == 0);
-        CHECK(secp256k1_ecdsa_signature_parse_der(ctx, &sig, sigbderalt3, sizeof(sigbderalt3)) == 0);
-        CHECK(secp256k1_ecdsa_signature_parse_der(ctx, &sig, sigbderalt4, sizeof(sigbderalt4)) == 0);
+        CHECK(cosmos_secp256k1_ecdsa_signature_parse_der(ctx, &sig, sigbderalt1, sizeof(sigbderalt1)) == 0);
+        CHECK(cosmos_secp256k1_ecdsa_signature_parse_der(ctx, &sig, sigbderalt2, sizeof(sigbderalt2)) == 0);
+        CHECK(cosmos_secp256k1_ecdsa_signature_parse_der(ctx, &sig, sigbderalt3, sizeof(sigbderalt3)) == 0);
+        CHECK(cosmos_secp256k1_ecdsa_signature_parse_der(ctx, &sig, sigbderalt4, sizeof(sigbderalt4)) == 0);
         sigbderalt3[4] = 1;
-        CHECK(secp256k1_ecdsa_signature_parse_der(ctx, &sig, sigbderalt3, sizeof(sigbderalt3)) == 1);
+        CHECK(cosmos_secp256k1_ecdsa_signature_parse_der(ctx, &sig, sigbderalt3, sizeof(sigbderalt3)) == 1);
         CHECK(cosmos_secp256k1_ecdsa_verify(ctx, &sig, msg32, &pubkeyb) == 0);
         sigbderalt4[7] = 1;
-        CHECK(secp256k1_ecdsa_signature_parse_der(ctx, &sig, sigbderalt4, sizeof(sigbderalt4)) == 1);
+        CHECK(cosmos_secp256k1_ecdsa_signature_parse_der(ctx, &sig, sigbderalt4, sizeof(sigbderalt4)) == 1);
         CHECK(cosmos_secp256k1_ecdsa_verify(ctx, &sig, msg32, &pubkeyb) == 0);
         /* Damage signature. */
         sigbder[7]++;
-        CHECK(secp256k1_ecdsa_signature_parse_der(ctx, &sig, sigbder, sizeof(sigbder)) == 1);
+        CHECK(cosmos_secp256k1_ecdsa_signature_parse_der(ctx, &sig, sigbder, sizeof(sigbder)) == 1);
         CHECK(cosmos_secp256k1_ecdsa_verify(ctx, &sig, msg32, &pubkeyb) == 0);
         sigbder[7]--;
-        CHECK(secp256k1_ecdsa_signature_parse_der(ctx, &sig, sigbder, 6) == 0);
-        CHECK(secp256k1_ecdsa_signature_parse_der(ctx, &sig, sigbder, sizeof(sigbder) - 1) == 0);
+        CHECK(cosmos_secp256k1_ecdsa_signature_parse_der(ctx, &sig, sigbder, 6) == 0);
+        CHECK(cosmos_secp256k1_ecdsa_signature_parse_der(ctx, &sig, sigbder, sizeof(sigbder) - 1) == 0);
         for(i = 0; i < 8; i++) {
             int c;
             unsigned char orig = sigbder[i];
@@ -337,7 +337,7 @@ void test_ecdsa_recovery_edge_cases(void) {
                     continue;
                 }
                 sigbder[i] = c;
-                CHECK(secp256k1_ecdsa_signature_parse_der(ctx, &sig, sigbder, sizeof(sigbder)) == 0 || cosmos_secp256k1_ecdsa_verify(ctx, &sig, msg32, &pubkeyb) == 0);
+                CHECK(cosmos_secp256k1_ecdsa_signature_parse_der(ctx, &sig, sigbder, sizeof(sigbder)) == 0 || cosmos_secp256k1_ecdsa_verify(ctx, &sig, msg32, &pubkeyb) == 0);
             }
             sigbder[i] = orig;
         }
@@ -360,13 +360,13 @@ void test_ecdsa_recovery_edge_cases(void) {
         secp256k1_pubkey pubkeyc;
         CHECK(cosmos_secp256k1_ecdsa_recoverable_signature_parse_compact(ctx, &rsig, sigc64, 0) == 1);
         CHECK(cosmos_secp256k1_ecdsa_recover(ctx, &pubkeyc, &rsig, msg32) == 1);
-        CHECK(secp256k1_ecdsa_signature_parse_der(ctx, &sig, sigcder, sizeof(sigcder)) == 1);
+        CHECK(cosmos_secp256k1_ecdsa_signature_parse_der(ctx, &sig, sigcder, sizeof(sigcder)) == 1);
         CHECK(cosmos_secp256k1_ecdsa_verify(ctx, &sig, msg32, &pubkeyc) == 1);
         sigcder[4] = 0;
         sigc64[31] = 0;
         CHECK(cosmos_secp256k1_ecdsa_recoverable_signature_parse_compact(ctx, &rsig, sigc64, 0) == 1);
         CHECK(cosmos_secp256k1_ecdsa_recover(ctx, &pubkeyb, &rsig, msg32) == 0);
-        CHECK(secp256k1_ecdsa_signature_parse_der(ctx, &sig, sigcder, sizeof(sigcder)) == 1);
+        CHECK(cosmos_secp256k1_ecdsa_signature_parse_der(ctx, &sig, sigcder, sizeof(sigcder)) == 1);
         CHECK(cosmos_secp256k1_ecdsa_verify(ctx, &sig, msg32, &pubkeyc) == 0);
         sigcder[4] = 1;
         sigcder[7] = 0;
@@ -374,7 +374,7 @@ void test_ecdsa_recovery_edge_cases(void) {
         sigc64[63] = 0;
         CHECK(cosmos_secp256k1_ecdsa_recoverable_signature_parse_compact(ctx, &rsig, sigc64, 0) == 1);
         CHECK(cosmos_secp256k1_ecdsa_recover(ctx, &pubkeyb, &rsig, msg32) == 0);
-        CHECK(secp256k1_ecdsa_signature_parse_der(ctx, &sig, sigcder, sizeof(sigcder)) == 1);
+        CHECK(cosmos_secp256k1_ecdsa_signature_parse_der(ctx, &sig, sigcder, sizeof(sigcder)) == 1);
         CHECK(cosmos_secp256k1_ecdsa_verify(ctx, &sig, msg32, &pubkeyc) == 0);
     }
 }

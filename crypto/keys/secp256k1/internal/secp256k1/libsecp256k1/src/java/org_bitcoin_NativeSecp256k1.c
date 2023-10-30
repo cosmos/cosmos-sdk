@@ -55,7 +55,7 @@ SECP256K1_API jint JNICALL Java_org_bitcoin_NativeSecp256k1_secp256k1_1ecdsa_1ve
   secp256k1_ecdsa_signature sig;
   secp256k1_pubkey pubkey;
 
-  int ret = secp256k1_ecdsa_signature_parse_der(ctx, &sig, sigdata, siglen);
+  int ret = cosmos_secp256k1_ecdsa_signature_parse_der(ctx, &sig, sigdata, siglen);
 
   if( ret ) {
     ret = cosmos_secp256k1_ec_pubkey_parse(ctx, &pubkey, pubdata, publen);

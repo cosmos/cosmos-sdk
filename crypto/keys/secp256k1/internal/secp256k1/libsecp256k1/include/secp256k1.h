@@ -314,7 +314,7 @@ SECP256K1_API int cosmos_secp256k1_ecdsa_signature_parse_compact(
  *  encoded numbers are out of range, signature validation with it is
  *  guaranteed to fail for every message and public key.
  */
-SECP256K1_API int secp256k1_ecdsa_signature_parse_der(
+SECP256K1_API int cosmos_secp256k1_ecdsa_signature_parse_der(
     const secp256k1_context* ctx,
     secp256k1_ecdsa_signature* sig,
     const unsigned char *input,

@@ -26,7 +26,7 @@
  * certain violations are easily supported. You may need to adapt it.
  *
  * Do not use this for new systems. Use well-defined DER or compact signatures
- * instead if you have the choice (see secp256k1_ecdsa_signature_parse_der and
+ * instead if you have the choice (see cosmos_secp256k1_ecdsa_signature_parse_der and
  * cosmos_secp256k1_ecdsa_signature_parse_compact).
  *
  * The supported violations are:

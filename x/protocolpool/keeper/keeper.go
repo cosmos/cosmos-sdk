@@ -130,9 +130,6 @@ func (k Keeper) getClaimableFunds(ctx context.Context, recipient sdk.AccAddress)
 
 	currentTime := sdkCtx.BlockTime().Unix()
 	startTime := budget.StartTime
-	if budget.StartTime == 0 {
-		startTime = sdkCtx.HeaderInfo().Time.Unix()
-	}
 	// Check if the start time is reached
 	if currentTime < startTime {
 		return sdk.Coin{}, fmt.Errorf("distribution has not started yet")
@@ -154,9 +151,12 @@ func (k Keeper) getClaimableFunds(ctx context.Context, recipient sdk.AccAddress)
 			budget.Tranches -= periodsPassed
 
 			// update the TotalBudget amount
-			budget.TotalBudget.Amount.Sub(coinsToDistribute)
+			budget.TotalBudget.Amount = budget.TotalBudget.Amount.Sub(coinsToDistribute)
 
-			k.Logger(ctx).Info(fmt.Sprintf("Processing budget for recipient: %s. Amount: %s", budget.RecipientAddress, coinsToDistribute.String()))
+			// Update the start time for the budget
+			budget.StartTime = budget.StartTime + budget.Period
+
+			k.Logger(ctx).Debug(fmt.Sprintf("Processing budget for recipient: %s. Amount: %s", budget.RecipientAddress, coinsToDistribute.String()))
 
 			// Save the updated budget in the state
 			err = k.BudgetProposal.Set(ctx, recipient, budget)
@@ -182,8 +182,8 @@ func (k Keeper) validateBudgetProposal(ctx context.Context, bp types.MsgSubmitBu
 		return err
 	}
 
-	if bp.StartTime < 0 {
-		return fmt.Errorf("invalid start time")
+	if bp.StartTime <= sdk.UnwrapSDKContext(ctx).BlockTime().Unix() {
+		return fmt.Errorf("start time cannot be less than current block time")
 	}
 
 	if bp.Tranches <= 0 {

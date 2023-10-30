@@ -51,12 +51,12 @@ func initRootCmd(
 		snapshot.Cmd(newApp),
 	)
 
-	server.AddCommands(rootCmd, newApp, appExport, addModuleInitFlags)
+	server.AddCommands(rootCmd, newApp, addModuleInitFlags)
 
 	// add keybase, auxiliary RPC, query, genesis, and tx child commands
 	rootCmd.AddCommand(
 		server.StatusCommand(),
-		genesisCommand(txConfig, basicManager),
+		genesisCommand(txConfig, basicManager, appExport),
 		queryCommand(),
 		txCommand(),
 		keys.Commands(),
@@ -68,8 +68,8 @@ func addModuleInitFlags(startCmd *cobra.Command) {
 }
 
 // genesisCommand builds genesis-related `simd genesis` command. Users may provide application specific commands as a parameter
-func genesisCommand(txConfig client.TxConfig, basicManager module.BasicManager, cmds ...*cobra.Command) *cobra.Command {
-	cmd := genutilcli.Commands(txConfig, basicManager)
+func genesisCommand(txConfig client.TxConfig, basicManager module.BasicManager, appExport servertypes.AppExporter, cmds ...*cobra.Command) *cobra.Command {
+	cmd := genutilcli.Commands(txConfig, basicManager, appExport)
 
 	for _, subCmd := range cmds {
 		cmd.AddCommand(subCmd)

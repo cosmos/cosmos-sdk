@@ -109,7 +109,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		authority = authtypes.NewModuleAddressOrBech32Address(in.Config.Authority)
 	}
 
-	k := keeper.NewKeeper(in.Cdc, in.StoreService, authority.String(), in.EventManager)
+	k := keeper.NewKeeper(in.StoreService, authority.String(), in.EventManager)
 	m := NewAppModule(in.Cdc, k)
 
 	return ModuleOutputs{

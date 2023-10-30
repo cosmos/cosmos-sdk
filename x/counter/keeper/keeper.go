@@ -11,7 +11,6 @@ import (
 	"cosmossdk.io/core/event"
 	storetypes "cosmossdk.io/core/store"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/x/counter/types"
 )
 
@@ -24,7 +23,7 @@ type Keeper struct {
 	CountStore collections.Item[int64]
 }
 
-func NewKeeper(cdc codec.BinaryCodec, storeService storetypes.KVStoreService, authority string, em event.Service) Keeper {
+func NewKeeper(storeService storetypes.KVStoreService, authority string, em event.Service) Keeper {
 	sb := collections.NewSchemaBuilder(storeService)
 	return Keeper{
 		authority:  authority,

@@ -68,17 +68,15 @@ func (b *Builder) buildMethodCommandCommon(descriptor protoreflect.MethodDescrip
 
 		// signer related logic, triggers only when there is a signer defined
 		if binder.SignerInfo.FieldName != "" {
-			// mark the signer flag as required if defined
-			// TODO(@julienrbrt): UX improvement by only marking the flag as required when there is more than one key in the keyring;
-			// when there is only one key, use that key by default.
 			if binder.SignerInfo.IsFlag {
-				if err := cmd.MarkFlagRequired(binder.SignerInfo.FieldName); err != nil {
-					return err
-				}
-
 				// the client context uses the from flag to determine the signer.
 				// this sets the signer flags to the from flag value if a custom signer flag is set.
+				// marks the custom flag as required.
 				if binder.SignerInfo.FieldName != flags.FlagFrom {
+					if err := cmd.MarkFlagRequired(binder.SignerInfo.FieldName); err != nil {
+						return err
+					}
+
 					signer, err := cmd.Flags().GetString(binder.SignerInfo.FieldName)
 					if err != nil {
 						return fmt.Errorf("failed to get signer flag: %w", err)

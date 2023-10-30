@@ -10,11 +10,11 @@ import (
 	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 	"cosmossdk.io/store/prefix"
+	"cosmossdk.io/x/bank/types"
 
 	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 type Querier struct {

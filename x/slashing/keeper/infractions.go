@@ -8,10 +8,10 @@ import (
 
 	st "cosmossdk.io/api/cosmos/staking/v1beta1"
 	"cosmossdk.io/core/comet"
+	"cosmossdk.io/x/slashing/types"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
 
 // HandleValidatorSignature handles a validator signature, must be called once per validator per block.
@@ -87,11 +87,16 @@ func (k Keeper) HandleValidatorSignature(ctx context.Context, addr cryptotypes.A
 		return err
 	}
 
+	consStr, err := k.sk.ConsensusAddressCodec().BytesToString(consAddr)
+	if err != nil {
+		return err
+	}
+
 	if missed {
 		sdkCtx.EventManager().EmitEvent(
 			sdk.NewEvent(
 				types.EventTypeLiveness,
-				sdk.NewAttribute(types.AttributeKeyAddress, consAddr.String()),
+				sdk.NewAttribute(types.AttributeKeyAddress, consStr),
 				sdk.NewAttribute(types.AttributeKeyMissedBlocks, fmt.Sprintf("%d", signInfo.MissedBlocksCounter)),
 				sdk.NewAttribute(types.AttributeKeyHeight, fmt.Sprintf("%d", height)),
 			),
@@ -100,7 +105,7 @@ func (k Keeper) HandleValidatorSignature(ctx context.Context, addr cryptotypes.A
 		logger.Debug(
 			"absent validator",
 			"height", height,
-			"validator", consAddr.String(),
+			"validator", consStr,
 			"missed", signInfo.MissedBlocksCounter,
 			"threshold", minSignedPerWindow,
 		)
@@ -137,10 +142,10 @@ func (k Keeper) HandleValidatorSignature(ctx context.Context, addr cryptotypes.A
 			sdkCtx.EventManager().EmitEvent(
 				sdk.NewEvent(
 					types.EventTypeSlash,
-					sdk.NewAttribute(types.AttributeKeyAddress, consAddr.String()),
+					sdk.NewAttribute(types.AttributeKeyAddress, consStr),
 					sdk.NewAttribute(types.AttributeKeyPower, fmt.Sprintf("%d", power)),
 					sdk.NewAttribute(types.AttributeKeyReason, types.AttributeValueMissingSignature),
-					sdk.NewAttribute(types.AttributeKeyJailed, consAddr.String()),
+					sdk.NewAttribute(types.AttributeKeyJailed, consStr),
 					sdk.NewAttribute(types.AttributeKeyBurnedCoins, coinsBurned.String()),
 				),
 			)
@@ -166,7 +171,7 @@ func (k Keeper) HandleValidatorSignature(ctx context.Context, addr cryptotypes.A
 			logger.Info(
 				"slashing and jailing validator due to liveness fault",
 				"height", height,
-				"validator", consAddr.String(),
+				"validator", consStr,
 				"min_height", minHeight,
 				"threshold", minSignedPerWindow,
 				"slashed", slashFractionDowntime.String(),
@@ -176,7 +181,7 @@ func (k Keeper) HandleValidatorSignature(ctx context.Context, addr cryptotypes.A
 			// validator was (a) not found or (b) already jailed so we do not slash
 			logger.Info(
 				"validator would have been slashed for downtime, but was either not found in store or already jailed",
-				"validator", consAddr.String(),
+				"validator", consStr,
 			)
 		}
 	}

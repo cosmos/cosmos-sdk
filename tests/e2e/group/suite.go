@@ -10,6 +10,9 @@ import (
 	// without this import amino json encoding will fail when resolving any types
 	_ "cosmossdk.io/api/cosmos/group/v1"
 	"cosmossdk.io/math"
+	banktypes "cosmossdk.io/x/bank/types"
+	"cosmossdk.io/x/group"
+	client "cosmossdk.io/x/group/client/cli"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
@@ -18,9 +21,6 @@ import (
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/cosmos/cosmos-sdk/x/group"
-	client "github.com/cosmos/cosmos-sdk/x/group/client/cli"
 )
 
 type E2ETestSuite struct {
@@ -171,18 +171,14 @@ func (s *E2ETestSuite) SetupSuite() {
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
 	s.Require().NoError(clitestutil.CheckTxCode(s.network, val.ClientCtx, txResp.TxHash, 0))
 
+	msg := &group.MsgVote{
+		ProposalId: uint64(1),
+		Voter:      val.Address.String(),
+		Option:     group.VOTE_OPTION_YES,
+	}
+
 	// vote
-	out, err = clitestutil.ExecTestCLICmd(val.ClientCtx, client.MsgVoteCmd(),
-		append(
-			[]string{
-				"1",
-				val.Address.String(),
-				"VOTE_OPTION_YES",
-				"",
-			},
-			s.commonFlags...,
-		),
-	)
+	out, err = clitestutil.SubmitTestTx(val.ClientCtx, msg, val.Address, clitestutil.TestTxConfig{})
 	s.Require().NoError(err, out.String())
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
 	s.Require().NoError(clitestutil.CheckTxCode(s.network, val.ClientCtx, txResp.TxHash, 0))

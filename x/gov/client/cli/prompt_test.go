@@ -17,7 +17,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/x/gov/client/cli"
+	"cosmossdk.io/x/gov/client/cli"
 )
 
 type st struct {

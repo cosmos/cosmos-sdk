@@ -1,9 +1,10 @@
 package keeper_test
 
 import (
+	stakingtypes "cosmossdk.io/x/staking/types"
+
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 func (s *KeeperTestSuite) TestAfterValidatorBonded() {
@@ -24,7 +25,9 @@ func (s *KeeperTestSuite) TestAfterValidatorCreatedOrRemoved() {
 	_, pubKey, addr := testdata.KeyTestPubAddr()
 	valAddr := sdk.ValAddress(addr)
 
-	validator, err := stakingtypes.NewValidator(sdk.ValAddress(addr).String(), pubKey, stakingtypes.Description{})
+	addStr, err := s.stakingKeeper.ValidatorAddressCodec().BytesToString(addr)
+	require.NoError(err)
+	validator, err := stakingtypes.NewValidator(addStr, pubKey, stakingtypes.Description{})
 	require.NoError(err)
 
 	s.stakingKeeper.EXPECT().Validator(ctx, valAddr).Return(validator, nil)

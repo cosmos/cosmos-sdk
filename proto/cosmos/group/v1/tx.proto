@@ -3,7 +3,7 @@ syntax = "proto3";
 
 package cosmos.group.v1;
 
-option go_package = "github.com/cosmos/cosmos-sdk/x/group";
+option go_package = "cosmossdk.io/x/group";
 
 import "gogoproto/gogo.proto";
 import "cosmos_proto/cosmos.proto";

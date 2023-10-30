@@ -8,17 +8,19 @@ import (
 
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
+	"cosmossdk.io/x/mint"
+	"cosmossdk.io/x/mint/keeper"
+	minttestutil "cosmossdk.io/x/mint/testutil"
+	"cosmossdk.io/x/mint/types"
 
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/cosmos/cosmos-sdk/x/mint"
-	"github.com/cosmos/cosmos-sdk/x/mint/keeper"
-	minttestutil "github.com/cosmos/cosmos-sdk/x/mint/testutil"
-	"github.com/cosmos/cosmos-sdk/x/mint/types"
 )
+
+const govModuleNameStr = "cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn"
 
 type IntegrationTestSuite struct {
 	suite.Suite
@@ -56,7 +58,7 @@ func (s *IntegrationTestSuite) SetupTest() {
 		accountKeeper,
 		bankKeeper,
 		authtypes.FeeCollectorName,
-		authtypes.NewModuleAddress(types.GovModuleName).String(),
+		govModuleNameStr,
 	)
 	s.stakingKeeper = stakingKeeper
 	s.bankKeeper = bankKeeper

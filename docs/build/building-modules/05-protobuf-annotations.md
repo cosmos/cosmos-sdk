@@ -110,7 +110,7 @@ https://github.com/cosmos/cosmos-sdk/blob/e8f28bf5db18b8d6b7e0d94b542ce4cf48fed9
 
 ### Encoding 
 
-Encoding specifies the amino encoding that should be used when encoding to amino. 
+Encoding instructs the amino json marshaler how to encode certain fields that may differ from the standard encoding behaviour. The most common example of this is how `repeated cosmos.base.v1beta1.Coin` is encoded when using the amino json encoding format. The `legacy_coins` option tells the json marshaler [how to encode a null slice](https://github.com/cosmos/cosmos-sdk/blob/e8f28bf5db18b8d6b7e0d94b542ce4cf48fed9d6/x/tx/signing/aminojson/json_marshal.go#L65) of `cosmos.base.v1beta1.Coin`.
 
 ```proto
 (amino.encoding)         = "legacy_coins",

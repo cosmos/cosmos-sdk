@@ -10,6 +10,15 @@ import (
 	// without this import amino json encoding will fail when resolving any types
 	_ "cosmossdk.io/api/cosmos/authz/v1beta1"
 	"cosmossdk.io/math"
+	"cosmossdk.io/x/authz"
+	"cosmossdk.io/x/authz/client/cli"
+	authzclitestutil "cosmossdk.io/x/authz/client/testutil"
+	bank "cosmossdk.io/x/bank/types"
+	govcli "cosmossdk.io/x/gov/client/cli"
+	govtestutil "cosmossdk.io/x/gov/client/testutil"
+	govv1 "cosmossdk.io/x/gov/types/v1"
+	govv1beta1 "cosmossdk.io/x/gov/types/v1beta1"
+	stakingtypes "cosmossdk.io/x/staking/types"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
@@ -19,15 +28,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authcli "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
-	"github.com/cosmos/cosmos-sdk/x/authz"
-	"github.com/cosmos/cosmos-sdk/x/authz/client/cli"
-	authzclitestutil "github.com/cosmos/cosmos-sdk/x/authz/client/testutil"
-	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
-	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
-	govtestutil "github.com/cosmos/cosmos-sdk/x/gov/client/testutil"
-	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
-	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 type E2ETestSuite struct {

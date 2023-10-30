@@ -9,9 +9,9 @@ import (
 
 	"cosmossdk.io/collections"
 	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/x/slashing/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
 
 // HasValidatorSigningInfo returns if a given validator has signing information
@@ -62,11 +62,7 @@ func (k Keeper) IsTombstoned(ctx context.Context, consAddr sdk.ConsAddress) bool
 // getMissedBlockBitmapChunk gets the bitmap chunk at the given chunk index for
 // a validator's missed block signing window.
 func (k Keeper) getMissedBlockBitmapChunk(ctx context.Context, addr sdk.ConsAddress, chunkIndex int64) ([]byte, error) {
-	consAddr, err := k.sk.ConsensusAddressCodec().StringToBytes(addr.String())
-	if err != nil {
-		return nil, err
-	}
-	chunk, err := k.ValidatorMissedBlockBitmap.Get(ctx, collections.Join(consAddr, uint64(chunkIndex)))
+	chunk, err := k.ValidatorMissedBlockBitmap.Get(ctx, collections.Join(addr.Bytes(), uint64(chunkIndex)))
 	if err != nil && !errors.Is(err, collections.ErrNotFound) {
 		return nil, err
 	}
@@ -76,11 +72,7 @@ func (k Keeper) getMissedBlockBitmapChunk(ctx context.Context, addr sdk.ConsAddr
 // SetMissedBlockBitmapChunk sets the bitmap chunk at the given chunk index for
 // a validator's missed block signing window.
 func (k Keeper) SetMissedBlockBitmapChunk(ctx context.Context, addr sdk.ConsAddress, chunkIndex int64, chunk []byte) error {
-	consAddr, err := k.sk.ConsensusAddressCodec().StringToBytes(addr.String())
-	if err != nil {
-		return err
-	}
-	return k.ValidatorMissedBlockBitmap.Set(ctx, collections.Join(consAddr, uint64(chunkIndex)), chunk)
+	return k.ValidatorMissedBlockBitmap.Set(ctx, collections.Join(addr.Bytes(), uint64(chunkIndex)), chunk)
 }
 
 // GetMissedBlockBitmapValue returns true if a validator missed signing a block
@@ -152,12 +144,8 @@ func (k Keeper) SetMissedBlockBitmapValue(ctx context.Context, addr sdk.ConsAddr
 
 // DeleteMissedBlockBitmap removes a validator's missed block bitmap from state.
 func (k Keeper) DeleteMissedBlockBitmap(ctx context.Context, addr sdk.ConsAddress) error {
-	consAddr, err := k.sk.ConsensusAddressCodec().StringToBytes(addr.String())
-	if err != nil {
-		return err
-	}
-	rng := collections.NewPrefixedPairRange[[]byte, uint64](consAddr)
-	err = k.ValidatorMissedBlockBitmap.Walk(ctx, rng, func(key collections.Pair[[]byte, uint64], value []byte) (bool, error) {
+	rng := collections.NewPrefixedPairRange[[]byte, uint64](addr.Bytes())
+	err := k.ValidatorMissedBlockBitmap.Walk(ctx, rng, func(key collections.Pair[[]byte, uint64], value []byte) (bool, error) {
 		err := k.ValidatorMissedBlockBitmap.Remove(ctx, key)
 		if err != nil {
 			return true, err
@@ -178,13 +166,9 @@ func (k Keeper) DeleteMissedBlockBitmap(ctx context.Context, addr sdk.ConsAddres
 // Note: A callback will only be executed over all bitmap chunks that exist in
 // state.
 func (k Keeper) IterateMissedBlockBitmap(ctx context.Context, addr sdk.ConsAddress, cb func(index int64, missed bool) (stop bool)) error {
-	consAddr, err := k.sk.ConsensusAddressCodec().StringToBytes(addr.String())
-	if err != nil {
-		return err
-	}
 	var index int64
-	rng := collections.NewPrefixedPairRange[[]byte, uint64](consAddr)
-	err = k.ValidatorMissedBlockBitmap.Walk(ctx, rng, func(key collections.Pair[[]byte, uint64], value []byte) (bool, error) {
+	rng := collections.NewPrefixedPairRange[[]byte, uint64](addr.Bytes())
+	err := k.ValidatorMissedBlockBitmap.Walk(ctx, rng, func(key collections.Pair[[]byte, uint64], value []byte) (bool, error) {
 		bs := bitset.New(uint(types.MissedBlockBitmapChunkSize))
 
 		if err := bs.UnmarshalBinary(value); err != nil {

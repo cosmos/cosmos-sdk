@@ -14,6 +14,10 @@ import (
 	"github.com/stretchr/testify/require"
 
 	sdkmath "cosmossdk.io/math"
+	banktypes "cosmossdk.io/x/bank/types"
+	v1 "cosmossdk.io/x/gov/types/v1"
+	"cosmossdk.io/x/gov/types/v1beta1"
+	stakingtypes "cosmossdk.io/x/staking/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -21,10 +25,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
-	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+)
+
+const (
+	strPlus   = ` string\s+`
+	startStr  = `(?m:^\s+--`
+	strDollar = `$)`
+	strHelp   = "help output"
 )
 
 func TestParseSubmitLegacyProposal(t *testing.T) {
@@ -280,10 +287,10 @@ func TestAddGovPropFlagsToCmd(t *testing.T) {
 	expSummaryDesc := "The summary to include with the governance proposal"
 	// Regexp notes: (?m:...) = multi-line mode so ^ and $ match the beginning and end of each line.
 	// Each regexp assertion checks for a line containing only a specific flag and its description.
-	assert.Regexp(t, `(?m:^\s+--`+FlagDeposit+` string\s+`+expDepositDesc+`$)`, help, "help output")
-	assert.Regexp(t, `(?m:^\s+--`+FlagMetadata+` string\s+`+expMetadataDesc+`$)`, help, "help output")
-	assert.Regexp(t, `(?m:^\s+--`+FlagTitle+` string\s+`+expTitleDesc+`$)`, help, "help output")
-	assert.Regexp(t, `(?m:^\s+--`+FlagSummary+` string\s+`+expSummaryDesc+`$)`, help, "help output")
+	assert.Regexp(t, startStr+FlagDeposit+strPlus+expDepositDesc+strDollar, help, strHelp)
+	assert.Regexp(t, startStr+FlagMetadata+strPlus+expMetadataDesc+strDollar, help, strHelp)
+	assert.Regexp(t, startStr+FlagTitle+strPlus+expTitleDesc+strDollar, help, strHelp)
+	assert.Regexp(t, startStr+FlagSummary+strPlus+expSummaryDesc+strDollar, help, strHelp)
 }
 
 func TestReadGovPropFlags(t *testing.T) {

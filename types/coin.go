@@ -882,6 +882,7 @@ func ParseCoinNormalized(coinStr string) (coin Coin, err error) {
 	}
 
 	coin, _ = normalizeDecCoin(decCoin).TruncateDecimal()
+
 	return coin, nil
 }
 
@@ -904,10 +905,10 @@ func ParseCoinsNormalized(coinStr string) (Coins, error) {
 // ----------------------------------------------------------------------------
 // Functions used for testing purposes.
 
-// NormalizeDecCoin try to convert a decimal coin to the smallest unit registered,
+// normalizeDecCoin try to convert a decimal coin to the smallest unit registered,
 // returns original one if failed.
 func normalizeDecCoin(coin DecCoin) DecCoin {
-	newCoin, err := convertDecCoin(coin, coin.Denom)
+	newCoin, err := convertDecCoin(coin)
 	if err != nil {
 		return coin
 	}
@@ -932,43 +933,10 @@ func NormalizeCoins(coins []DecCoin) Coins {
 // ConvertDecCoin attempts to convert a decimal coin to a given denomination. If the given
 // denomination is invalid or if neither denomination is registered, an error
 // is returned.
-func convertDecCoin(coin DecCoin, denom string) (DecCoin, error) {
-	if err := ValidateDenom(denom); err != nil {
+func convertDecCoin(coin DecCoin) (DecCoin, error) {
+	if err := ValidateDenom(coin.Denom); err != nil {
 		return DecCoin{}, err
 	}
 
-	srcUnit, ok := getDenomUnit(coin.Denom)
-	if !ok {
-		return DecCoin{}, fmt.Errorf("source denom not registered: %s", coin.Denom)
-	}
-
-	dstUnit, ok := getDenomUnit(denom)
-	if !ok {
-		return DecCoin{}, fmt.Errorf("destination denom not registered: %s", denom)
-	}
-
-	if srcUnit.Equal(dstUnit) {
-		return NewDecCoinFromDec(denom, coin.Amount), nil
-	}
-
-	return NewDecCoinFromDec(denom, coin.Amount.Mul(srcUnit).Quo(dstUnit)), nil
-}
-
-// denomUnits contains a mapping of denomination mapped to their respective unit
-// multipliers (e.g. 1atom = 10^-6uatom).
-var denomUnits = map[string]math.LegacyDec{}
-
-// getDenomUnit returns a unit for a given denomination if it exists. A boolean
-// is returned if the denomination is registered.
-func getDenomUnit(denom string) (math.LegacyDec, bool) {
-	if err := ValidateDenom(denom); err != nil {
-		return math.LegacyZeroDec(), false
-	}
-
-	unit, ok := denomUnits[denom]
-	if !ok {
-		return math.LegacyZeroDec(), false
-	}
-
-	return unit, true
+	return NewDecCoinFromDec(coin.Denom, coin.Amount), nil
 }

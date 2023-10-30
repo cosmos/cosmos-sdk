@@ -881,7 +881,7 @@ func ParseCoinNormalized(coinStr string) (coin Coin, err error) {
 		return Coin{}, err
 	}
 
-	coin, _ = normalizeDecCoin(decCoin).TruncateDecimal()
+	coin, _ = NewDecCoinFromDec(decCoin.Denom, decCoin.Amount).TruncateDecimal()
 
 	return coin, nil
 }
@@ -903,17 +903,6 @@ func ParseCoinsNormalized(coinStr string) (Coins, error) {
 }
 
 // ----------------------------------------------------------------------------
-// Functions used for testing purposes.
-
-// normalizeDecCoin try to convert a decimal coin to the smallest unit registered,
-// returns original one if failed.
-func normalizeDecCoin(coin DecCoin) DecCoin {
-	newCoin, err := convertDecCoin(coin)
-	if err != nil {
-		return coin
-	}
-	return newCoin
-}
 
 // NormalizeCoins normalize and truncate a list of decimal coins
 func NormalizeCoins(coins []DecCoin) Coins {
@@ -923,20 +912,9 @@ func NormalizeCoins(coins []DecCoin) Coins {
 	result := make([]Coin, 0, len(coins))
 
 	for _, coin := range coins {
-		newCoin, _ := normalizeDecCoin(coin).TruncateDecimal()
+		newCoin, _ := NewDecCoinFromDec(coin.Denom, coin.Amount).TruncateDecimal()
 		result = append(result, newCoin)
 	}
 
 	return result
-}
-
-// ConvertDecCoin attempts to convert a decimal coin to a given denomination. If the given
-// denomination is invalid or if neither denomination is registered, an error
-// is returned.
-func convertDecCoin(coin DecCoin) (DecCoin, error) {
-	if err := ValidateDenom(coin.Denom); err != nil {
-		return DecCoin{}, err
-	}
-
-	return NewDecCoinFromDec(coin.Denom, coin.Amount), nil
 }

@@ -197,7 +197,7 @@ func makeSignBatchCmd() func(cmd *cobra.Command, args []string) error {
 			if err != nil {
 				return fmt.Errorf("error marshalling batch txs: %w", err)
 			}
-			cmd.Printf("%s\n", json)
+			cmd.Printf("%s", json)
 		}
 
 		if err := scanner.UnmarshalErr(); err != nil {
@@ -439,11 +439,23 @@ func marshalSignatureJSON(txConfig client.TxConfig, txBldr client.TxBuilder, sig
 
 func marshalBatchJSON(txConfig client.TxConfig, txs []signing.Tx, signatureOnly bool) ([]byte, error) {
 	if signatureOnly {
-		sigs, err := txs[0].GetSignaturesV2()
-		if err != nil {
-			return nil, err
+		var b []byte
+		for _, tx := range txs {
+			sigs, err := tx.GetSignaturesV2()
+			if err != nil {
+				return nil, err
+			}
+			sigsByte, err := txConfig.MarshalSignatureJSON(sigs)
+			if err != nil {
+				return nil, err
+			}
+			sigsStr:= fmt.Sprintf("%s\n", sigsByte)
+			if err != nil {
+				return nil, err
+			}
+			b = append(b, []byte(sigsStr)...)
 		}
-		return txConfig.MarshalSignatureJSON(sigs)
+		return b, nil
 	}
 	sdkTxs := make([]sdk.Tx, len(txs))
 	for i, tx := range txs {

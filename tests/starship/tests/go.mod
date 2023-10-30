@@ -14,12 +14,15 @@ replace (
 replace (
 	cosmossdk.io/client/v2 => ../../../client/v2
 	cosmossdk.io/simapp => ../../../simapp
+	cosmossdk.io/x/authz => ../../../x/authz
+	cosmossdk.io/x/bank => ../../../x/bank
 	cosmossdk.io/x/circuit => ../../../x/circuit
 	cosmossdk.io/x/distribution => ../../../x/distribution
 	cosmossdk.io/x/evidence => ../../../x/evidence
 	cosmossdk.io/x/feegrant => ../../../x/feegrant
 	cosmossdk.io/x/gov => ../../../x/gov
 	cosmossdk.io/x/group => ../../../x/group
+	cosmossdk.io/x/mint => ../../../x/mint
 	cosmossdk.io/x/nft => ../../../x/nft
 	cosmossdk.io/x/protocolpool => ../../../x/protocolpool
 	cosmossdk.io/x/slashing => ../../../x/slashing
@@ -31,6 +34,7 @@ require (
 	cosmossdk.io/log v1.2.1
 	cosmossdk.io/math v1.1.3-rc.1
 	cosmossdk.io/simapp v0.0.0-00010101000000-000000000000
+	cosmossdk.io/x/bank v0.0.0-00010101000000-000000000000
 	github.com/cosmos/cosmos-db v1.0.0
 	github.com/cosmos/cosmos-sdk v0.51.0
 	github.com/stretchr/testify v1.8.4
@@ -51,12 +55,14 @@ require (
 	cosmossdk.io/depinject v1.0.0-alpha.4 // indirect
 	cosmossdk.io/errors v1.0.0 // indirect
 	cosmossdk.io/store v1.0.0-rc.0 // indirect
+	cosmossdk.io/x/authz v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/x/circuit v0.0.0-20230613133644-0a778132a60f // indirect
 	cosmossdk.io/x/distribution v0.0.0-20230925135524-a1bc045b3190 // indirect
 	cosmossdk.io/x/evidence v0.0.0-20230613133644-0a778132a60f // indirect
 	cosmossdk.io/x/feegrant v0.0.0-20230613133644-0a778132a60f // indirect
 	cosmossdk.io/x/gov v0.0.0-20230925135524-a1bc045b3190 // indirect
 	cosmossdk.io/x/group v0.0.0-00010101000000-000000000000 // indirect
+	cosmossdk.io/x/mint v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/x/nft v0.0.0-20230613133644-0a778132a60f // indirect
 	cosmossdk.io/x/protocolpool v0.0.0-20230925135524-a1bc045b3190 // indirect
 	cosmossdk.io/x/slashing v0.0.0-00010101000000-000000000000 // indirect

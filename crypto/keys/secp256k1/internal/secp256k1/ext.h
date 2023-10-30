@@ -27,7 +27,7 @@ static int secp256k1_ext_ecdsa_recover(
 	if (!secp256k1_ecdsa_recoverable_signature_parse_compact(ctx, &sig, sigdata, (int)sigdata[64])) {
 		return 0;
 	}
-	if (!secp256k1_ecdsa_recover(ctx, &pubkey, &sig, msgdata)) {
+	if (!cosmos_secp256k1_ecdsa_recover(ctx, &pubkey, &sig, msgdata)) {
 		return 0;
 	}
 	size_t outputlen = 65;

@@ -92,19 +92,19 @@ void test_ecdsa_recovery_api(void) {
 
     /* Check bad contexts and NULLs for recovery */
     ecount = 0;
-    CHECK(secp256k1_ecdsa_recover(none, &recpubkey, &recsig, message) == 0);
+    CHECK(cosmos_secp256k1_ecdsa_recover(none, &recpubkey, &recsig, message) == 0);
     CHECK(ecount == 1);
-    CHECK(secp256k1_ecdsa_recover(sign, &recpubkey, &recsig, message) == 0);
+    CHECK(cosmos_secp256k1_ecdsa_recover(sign, &recpubkey, &recsig, message) == 0);
     CHECK(ecount == 2);
-    CHECK(secp256k1_ecdsa_recover(vrfy, &recpubkey, &recsig, message) == 1);
+    CHECK(cosmos_secp256k1_ecdsa_recover(vrfy, &recpubkey, &recsig, message) == 1);
     CHECK(ecount == 2);
-    CHECK(secp256k1_ecdsa_recover(both, &recpubkey, &recsig, message) == 1);
+    CHECK(cosmos_secp256k1_ecdsa_recover(both, &recpubkey, &recsig, message) == 1);
     CHECK(ecount == 2);
-    CHECK(secp256k1_ecdsa_recover(both, NULL, &recsig, message) == 0);
+    CHECK(cosmos_secp256k1_ecdsa_recover(both, NULL, &recsig, message) == 0);
     CHECK(ecount == 3);
-    CHECK(secp256k1_ecdsa_recover(both, &recpubkey, NULL, message) == 0);
+    CHECK(cosmos_secp256k1_ecdsa_recover(both, &recpubkey, NULL, message) == 0);
     CHECK(ecount == 4);
-    CHECK(secp256k1_ecdsa_recover(both, &recpubkey, &recsig, NULL) == 0);
+    CHECK(cosmos_secp256k1_ecdsa_recover(both, &recpubkey, &recsig, NULL) == 0);
     CHECK(ecount == 5);
 
     /* Check NULLs for conversion */
@@ -192,7 +192,7 @@ void test_ecdsa_recovery_end_to_end(void) {
     CHECK(secp256k1_ecdsa_verify(ctx, &signature[4], message, &pubkey) == 1);
     /* Parse compact (with recovery id) and recover. */
     CHECK(secp256k1_ecdsa_recoverable_signature_parse_compact(ctx, &rsignature[4], sig, recid) == 1);
-    CHECK(secp256k1_ecdsa_recover(ctx, &recpubkey, &rsignature[4], message) == 1);
+    CHECK(cosmos_secp256k1_ecdsa_recover(ctx, &recpubkey, &rsignature[4], message) == 1);
     CHECK(memcmp(&pubkey, &recpubkey, sizeof(pubkey)) == 0);
     /* Serialize/destroy/parse signature and verify again. */
     CHECK(secp256k1_ecdsa_recoverable_signature_serialize_compact(ctx, sig, &recid, &rsignature[4]) == 1);
@@ -201,7 +201,7 @@ void test_ecdsa_recovery_end_to_end(void) {
     CHECK(cosmos_secp256k1_ecdsa_recoverable_signature_convert(ctx, &signature[4], &rsignature[4]) == 1);
     CHECK(secp256k1_ecdsa_verify(ctx, &signature[4], message, &pubkey) == 0);
     /* Recover again */
-    CHECK(secp256k1_ecdsa_recover(ctx, &recpubkey, &rsignature[4], message) == 0 ||
+    CHECK(cosmos_secp256k1_ecdsa_recover(ctx, &recpubkey, &rsignature[4], message) == 0 ||
           memcmp(&pubkey, &recpubkey, sizeof(pubkey)) != 0);
 }
 
@@ -243,13 +243,13 @@ void test_ecdsa_recovery_edge_cases(void) {
     int recid;
 
     CHECK(secp256k1_ecdsa_recoverable_signature_parse_compact(ctx, &rsig, sig64, 0));
-    CHECK(!secp256k1_ecdsa_recover(ctx, &pubkey, &rsig, msg32));
+    CHECK(!cosmos_secp256k1_ecdsa_recover(ctx, &pubkey, &rsig, msg32));
     CHECK(secp256k1_ecdsa_recoverable_signature_parse_compact(ctx, &rsig, sig64, 1));
-    CHECK(secp256k1_ecdsa_recover(ctx, &pubkey, &rsig, msg32));
+    CHECK(cosmos_secp256k1_ecdsa_recover(ctx, &pubkey, &rsig, msg32));
     CHECK(secp256k1_ecdsa_recoverable_signature_parse_compact(ctx, &rsig, sig64, 2));
-    CHECK(!secp256k1_ecdsa_recover(ctx, &pubkey, &rsig, msg32));
+    CHECK(!cosmos_secp256k1_ecdsa_recover(ctx, &pubkey, &rsig, msg32));
     CHECK(secp256k1_ecdsa_recoverable_signature_parse_compact(ctx, &rsig, sig64, 3));
-    CHECK(!secp256k1_ecdsa_recover(ctx, &pubkey, &rsig, msg32));
+    CHECK(!cosmos_secp256k1_ecdsa_recover(ctx, &pubkey, &rsig, msg32));
 
     for (recid = 0; recid < 4; recid++) {
         int i;
@@ -295,13 +295,13 @@ void test_ecdsa_recovery_edge_cases(void) {
             0x8C, 0xD0, 0x36, 0x41, 0x45, 0x02, 0x01, 0x04
         };
         CHECK(secp256k1_ecdsa_recoverable_signature_parse_compact(ctx, &rsig, sigb64, recid) == 1);
-        CHECK(secp256k1_ecdsa_recover(ctx, &pubkeyb, &rsig, msg32) == 1);
+        CHECK(cosmos_secp256k1_ecdsa_recover(ctx, &pubkeyb, &rsig, msg32) == 1);
         CHECK(secp256k1_ecdsa_signature_parse_der(ctx, &sig, sigbder, sizeof(sigbder)) == 1);
         CHECK(secp256k1_ecdsa_verify(ctx, &sig, msg32, &pubkeyb) == 1);
         for (recid2 = 0; recid2 < 4; recid2++) {
             secp256k1_pubkey pubkey2b;
             CHECK(secp256k1_ecdsa_recoverable_signature_parse_compact(ctx, &rsig, sigb64, recid2) == 1);
-            CHECK(secp256k1_ecdsa_recover(ctx, &pubkey2b, &rsig, msg32) == 1);
+            CHECK(cosmos_secp256k1_ecdsa_recover(ctx, &pubkey2b, &rsig, msg32) == 1);
             /* Verifying with (order + r,4) should always fail. */
             CHECK(secp256k1_ecdsa_signature_parse_der(ctx, &sig, sigbderlong, sizeof(sigbderlong)) == 1);
             CHECK(secp256k1_ecdsa_verify(ctx, &sig, msg32, &pubkeyb) == 0);
@@ -359,13 +359,13 @@ void test_ecdsa_recovery_edge_cases(void) {
         };
         secp256k1_pubkey pubkeyc;
         CHECK(secp256k1_ecdsa_recoverable_signature_parse_compact(ctx, &rsig, sigc64, 0) == 1);
-        CHECK(secp256k1_ecdsa_recover(ctx, &pubkeyc, &rsig, msg32) == 1);
+        CHECK(cosmos_secp256k1_ecdsa_recover(ctx, &pubkeyc, &rsig, msg32) == 1);
         CHECK(secp256k1_ecdsa_signature_parse_der(ctx, &sig, sigcder, sizeof(sigcder)) == 1);
         CHECK(secp256k1_ecdsa_verify(ctx, &sig, msg32, &pubkeyc) == 1);
         sigcder[4] = 0;
         sigc64[31] = 0;
         CHECK(secp256k1_ecdsa_recoverable_signature_parse_compact(ctx, &rsig, sigc64, 0) == 1);
-        CHECK(secp256k1_ecdsa_recover(ctx, &pubkeyb, &rsig, msg32) == 0);
+        CHECK(cosmos_secp256k1_ecdsa_recover(ctx, &pubkeyb, &rsig, msg32) == 0);
         CHECK(secp256k1_ecdsa_signature_parse_der(ctx, &sig, sigcder, sizeof(sigcder)) == 1);
         CHECK(secp256k1_ecdsa_verify(ctx, &sig, msg32, &pubkeyc) == 0);
         sigcder[4] = 1;
@@ -373,7 +373,7 @@ void test_ecdsa_recovery_edge_cases(void) {
         sigc64[31] = 1;
         sigc64[63] = 0;
         CHECK(secp256k1_ecdsa_recoverable_signature_parse_compact(ctx, &rsig, sigc64, 0) == 1);
-        CHECK(secp256k1_ecdsa_recover(ctx, &pubkeyb, &rsig, msg32) == 0);
+        CHECK(cosmos_secp256k1_ecdsa_recover(ctx, &pubkeyb, &rsig, msg32) == 0);
         CHECK(secp256k1_ecdsa_signature_parse_der(ctx, &sig, sigcder, sizeof(sigcder)) == 1);
         CHECK(secp256k1_ecdsa_verify(ctx, &sig, msg32, &pubkeyc) == 0);
     }

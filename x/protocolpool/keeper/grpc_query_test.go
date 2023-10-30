@@ -37,7 +37,7 @@ func (suite *KeeperTestSuite) TestUnclaimedBudget() {
 				budget := types.Budget{
 					RecipientAddress: recipientAddr.String(),
 					TotalBudget:      &fooCoin,
-					StartTime:        suite.ctx.BlockTime().Unix() - 70,
+					StartTime:        uint64(suite.ctx.BlockTime().Unix() - 70),
 					Tranches:         2,
 					Period:           60,
 				}

@@ -84,7 +84,7 @@ func Sign(msg, seckey []byte) ([]byte, error) {
 		noncefunc = C.cosmos_secp256k1_nonce_function_rfc6979
 		sigstruct C.secp256k1_ecdsa_recoverable_signature
 	)
-	if C.secp256k1_ecdsa_sign_recoverable(context, &sigstruct, msgdata, seckeydata, noncefunc, nil) == 0 {
+	if C.cosmos_secp256k1_ecdsa_sign_recoverable(context, &sigstruct, msgdata, seckeydata, noncefunc, nil) == 0 {
 		return nil, ErrSignFailed
 	}
 

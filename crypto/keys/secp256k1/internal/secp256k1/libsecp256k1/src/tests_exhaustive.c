@@ -308,7 +308,7 @@ void test_exhaustive_recovery_sign(const secp256k1_context *ctx, const secp256k1
                 secp256k1_scalar_get_b32(sk32, &sk);
                 secp256k1_scalar_get_b32(msg32, &msg);
 
-                secp256k1_ecdsa_sign_recoverable(ctx, &rsig, msg32, sk32, secp256k1_nonce_function_smallint, &k);
+                cosmos_secp256k1_ecdsa_sign_recoverable(ctx, &rsig, msg32, sk32, secp256k1_nonce_function_smallint, &k);
 
                 /* Check directly */
                 secp256k1_ecdsa_recoverable_signature_load(ctx, &r, &s, &recid, &rsig);

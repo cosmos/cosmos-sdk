@@ -17,8 +17,6 @@ import (
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 )
 
-// TRIGGER LINT COSMOVISOR
-
 // environment variable names
 const (
 	EnvHome                     = "DAEMON_HOME"

@@ -19,17 +19,19 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	Query_Balance_FullMethodName                 = "/cosmos.bank.v1beta1.Query/Balance"
-	Query_AllBalances_FullMethodName             = "/cosmos.bank.v1beta1.Query/AllBalances"
-	Query_SpendableBalances_FullMethodName       = "/cosmos.bank.v1beta1.Query/SpendableBalances"
-	Query_SpendableBalanceByDenom_FullMethodName = "/cosmos.bank.v1beta1.Query/SpendableBalanceByDenom"
-	Query_TotalSupply_FullMethodName             = "/cosmos.bank.v1beta1.Query/TotalSupply"
-	Query_SupplyOf_FullMethodName                = "/cosmos.bank.v1beta1.Query/SupplyOf"
-	Query_Params_FullMethodName                  = "/cosmos.bank.v1beta1.Query/Params"
-	Query_DenomMetadata_FullMethodName           = "/cosmos.bank.v1beta1.Query/DenomMetadata"
-	Query_DenomsMetadata_FullMethodName          = "/cosmos.bank.v1beta1.Query/DenomsMetadata"
-	Query_DenomOwners_FullMethodName             = "/cosmos.bank.v1beta1.Query/DenomOwners"
-	Query_SendEnabled_FullMethodName             = "/cosmos.bank.v1beta1.Query/SendEnabled"
+	Query_Balance_FullMethodName                  = "/cosmos.bank.v1beta1.Query/Balance"
+	Query_AllBalances_FullMethodName              = "/cosmos.bank.v1beta1.Query/AllBalances"
+	Query_SpendableBalances_FullMethodName        = "/cosmos.bank.v1beta1.Query/SpendableBalances"
+	Query_SpendableBalanceByDenom_FullMethodName  = "/cosmos.bank.v1beta1.Query/SpendableBalanceByDenom"
+	Query_TotalSupply_FullMethodName              = "/cosmos.bank.v1beta1.Query/TotalSupply"
+	Query_SupplyOf_FullMethodName                 = "/cosmos.bank.v1beta1.Query/SupplyOf"
+	Query_TotalSupplyWithoutOffset_FullMethodName = "/cosmos.bank.v1beta1.Query/TotalSupplyWithoutOffset"
+	Query_SupplyOfWithoutOffset_FullMethodName    = "/cosmos.bank.v1beta1.Query/SupplyOfWithoutOffset"
+	Query_Params_FullMethodName                   = "/cosmos.bank.v1beta1.Query/Params"
+	Query_DenomMetadata_FullMethodName            = "/cosmos.bank.v1beta1.Query/DenomMetadata"
+	Query_DenomsMetadata_FullMethodName           = "/cosmos.bank.v1beta1.Query/DenomsMetadata"
+	Query_DenomOwners_FullMethodName              = "/cosmos.bank.v1beta1.Query/DenomOwners"
+	Query_SendEnabled_FullMethodName              = "/cosmos.bank.v1beta1.Query/SendEnabled"
 )
 
 // QueryClient is the client API for Query service.
@@ -69,6 +71,10 @@ type QueryClient interface {
 	// When called from another module, this query might consume a high amount of
 	// gas if the pagination field is incorrectly set.
 	SupplyOf(ctx context.Context, in *QuerySupplyOfRequest, opts ...grpc.CallOption) (*QuerySupplyOfResponse, error)
+	// TotalSupplyWithoutOffset queries the total supply of all coins.
+	TotalSupplyWithoutOffset(ctx context.Context, in *QueryTotalSupplyWithoutOffsetRequest, opts ...grpc.CallOption) (*QueryTotalSupplyWithoutOffsetResponse, error)
+	// SupplyOf queries the supply of a single coin.
+	SupplyOfWithoutOffset(ctx context.Context, in *QuerySupplyOfWithoutOffsetRequest, opts ...grpc.CallOption) (*QuerySupplyOfWithoutOffsetResponse, error)
 	// Params queries the parameters of x/bank module.
 	Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error)
 	// DenomsMetadata queries the client metadata of a given coin denomination.
@@ -150,6 +156,24 @@ func (c *queryClient) TotalSupply(ctx context.Context, in *QueryTotalSupplyReque
 func (c *queryClient) SupplyOf(ctx context.Context, in *QuerySupplyOfRequest, opts ...grpc.CallOption) (*QuerySupplyOfResponse, error) {
 	out := new(QuerySupplyOfResponse)
 	err := c.cc.Invoke(ctx, Query_SupplyOf_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) TotalSupplyWithoutOffset(ctx context.Context, in *QueryTotalSupplyWithoutOffsetRequest, opts ...grpc.CallOption) (*QueryTotalSupplyWithoutOffsetResponse, error) {
+	out := new(QueryTotalSupplyWithoutOffsetResponse)
+	err := c.cc.Invoke(ctx, Query_TotalSupplyWithoutOffset_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) SupplyOfWithoutOffset(ctx context.Context, in *QuerySupplyOfWithoutOffsetRequest, opts ...grpc.CallOption) (*QuerySupplyOfWithoutOffsetResponse, error) {
+	out := new(QuerySupplyOfWithoutOffsetResponse)
+	err := c.cc.Invoke(ctx, Query_SupplyOfWithoutOffset_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -238,6 +262,10 @@ type QueryServer interface {
 	// When called from another module, this query might consume a high amount of
 	// gas if the pagination field is incorrectly set.
 	SupplyOf(context.Context, *QuerySupplyOfRequest) (*QuerySupplyOfResponse, error)
+	// TotalSupplyWithoutOffset queries the total supply of all coins.
+	TotalSupplyWithoutOffset(context.Context, *QueryTotalSupplyWithoutOffsetRequest) (*QueryTotalSupplyWithoutOffsetResponse, error)
+	// SupplyOf queries the supply of a single coin.
+	SupplyOfWithoutOffset(context.Context, *QuerySupplyOfWithoutOffsetRequest) (*QuerySupplyOfWithoutOffsetResponse, error)
 	// Params queries the parameters of x/bank module.
 	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
 	// DenomsMetadata queries the client metadata of a given coin denomination.
@@ -285,6 +313,12 @@ func (UnimplementedQueryServer) TotalSupply(context.Context, *QueryTotalSupplyRe
 }
 func (UnimplementedQueryServer) SupplyOf(context.Context, *QuerySupplyOfRequest) (*QuerySupplyOfResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SupplyOf not implemented")
+}
+func (UnimplementedQueryServer) TotalSupplyWithoutOffset(context.Context, *QueryTotalSupplyWithoutOffsetRequest) (*QueryTotalSupplyWithoutOffsetResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method TotalSupplyWithoutOffset not implemented")
+}
+func (UnimplementedQueryServer) SupplyOfWithoutOffset(context.Context, *QuerySupplyOfWithoutOffsetRequest) (*QuerySupplyOfWithoutOffsetResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SupplyOfWithoutOffset not implemented")
 }
 func (UnimplementedQueryServer) Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Params not implemented")
@@ -422,6 +456,42 @@ func _Query_SupplyOf_Handler(srv interface{}, ctx context.Context, dec func(inte
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_TotalSupplyWithoutOffset_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryTotalSupplyWithoutOffsetRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).TotalSupplyWithoutOffset(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Query_TotalSupplyWithoutOffset_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).TotalSupplyWithoutOffset(ctx, req.(*QueryTotalSupplyWithoutOffsetRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_SupplyOfWithoutOffset_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QuerySupplyOfWithoutOffsetRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).SupplyOfWithoutOffset(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Query_SupplyOfWithoutOffset_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).SupplyOfWithoutOffset(ctx, req.(*QuerySupplyOfWithoutOffsetRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Query_Params_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(QueryParamsRequest)
 	if err := dec(in); err != nil {
@@ -542,6 +612,14 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SupplyOf",
 			Handler:    _Query_SupplyOf_Handler,
+		},
+		{
+			MethodName: "TotalSupplyWithoutOffset",
+			Handler:    _Query_TotalSupplyWithoutOffset_Handler,
+		},
+		{
+			MethodName: "SupplyOfWithoutOffset",
+			Handler:    _Query_SupplyOfWithoutOffset_Handler,
 		},
 		{
 			MethodName: "Params",

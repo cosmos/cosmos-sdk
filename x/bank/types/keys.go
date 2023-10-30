@@ -25,6 +25,7 @@ var (
 	SupplyKey           = []byte{0x00}
 	DenomMetadataPrefix = []byte{0x1}
 	DenomAddressPrefix  = []byte{0x03}
+	SupplyOffsetKey     = []byte{0x88}
 
 	// BalancesPrefix is the prefix for the account balances store. We use a byte
 	// (instead of `[]byte("balances")` to save some disk space).

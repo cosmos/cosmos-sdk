@@ -15,6 +15,7 @@ var (
 	SupplyKey           = []byte{0x00}
 	BalancesPrefix      = []byte{0x02}
 	DenomMetadataPrefix = []byte{0x1}
+	SupplyOffsetKey     = []byte{0x88}
 
 	ErrInvalidKey = errors.New("invalid key")
 )

@@ -86,8 +86,8 @@ message MsgCreatePeriodicVestingAccount {
 
   option (gogoproto.equal) = false;
 
-  string          from_address    = 1;
-  string          to_address      = 2;
+  string from_address = 1;
+  string to_address   = 2;
   // start of vesting as unix time (in seconds).
   int64           start_time      = 3;
   repeated Period vesting_periods = 4 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];

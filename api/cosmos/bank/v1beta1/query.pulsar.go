@@ -5865,6 +5865,1869 @@ func (x *fastReflection_QuerySupplyOfResponse) ProtoMethods() *protoiface.Method
 }
 
 var (
+	md_QueryTotalSupplyWithoutOffsetRequest            protoreflect.MessageDescriptor
+	fd_QueryTotalSupplyWithoutOffsetRequest_pagination protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_cosmos_bank_v1beta1_query_proto_init()
+	md_QueryTotalSupplyWithoutOffsetRequest = File_cosmos_bank_v1beta1_query_proto.Messages().ByName("QueryTotalSupplyWithoutOffsetRequest")
+	fd_QueryTotalSupplyWithoutOffsetRequest_pagination = md_QueryTotalSupplyWithoutOffsetRequest.Fields().ByName("pagination")
+}
+
+var _ protoreflect.Message = (*fastReflection_QueryTotalSupplyWithoutOffsetRequest)(nil)
+
+type fastReflection_QueryTotalSupplyWithoutOffsetRequest QueryTotalSupplyWithoutOffsetRequest
+
+func (x *QueryTotalSupplyWithoutOffsetRequest) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_QueryTotalSupplyWithoutOffsetRequest)(x)
+}
+
+func (x *QueryTotalSupplyWithoutOffsetRequest) slowProtoReflect() protoreflect.Message {
+	mi := &file_cosmos_bank_v1beta1_query_proto_msgTypes[12]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_QueryTotalSupplyWithoutOffsetRequest_messageType fastReflection_QueryTotalSupplyWithoutOffsetRequest_messageType
+var _ protoreflect.MessageType = fastReflection_QueryTotalSupplyWithoutOffsetRequest_messageType{}
+
+type fastReflection_QueryTotalSupplyWithoutOffsetRequest_messageType struct{}
+
+func (x fastReflection_QueryTotalSupplyWithoutOffsetRequest_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_QueryTotalSupplyWithoutOffsetRequest)(nil)
+}
+func (x fastReflection_QueryTotalSupplyWithoutOffsetRequest_messageType) New() protoreflect.Message {
+	return new(fastReflection_QueryTotalSupplyWithoutOffsetRequest)
+}
+func (x fastReflection_QueryTotalSupplyWithoutOffsetRequest_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryTotalSupplyWithoutOffsetRequest
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_QueryTotalSupplyWithoutOffsetRequest) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryTotalSupplyWithoutOffsetRequest
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_QueryTotalSupplyWithoutOffsetRequest) Type() protoreflect.MessageType {
+	return _fastReflection_QueryTotalSupplyWithoutOffsetRequest_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_QueryTotalSupplyWithoutOffsetRequest) New() protoreflect.Message {
+	return new(fastReflection_QueryTotalSupplyWithoutOffsetRequest)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_QueryTotalSupplyWithoutOffsetRequest) Interface() protoreflect.ProtoMessage {
+	return (*QueryTotalSupplyWithoutOffsetRequest)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_QueryTotalSupplyWithoutOffsetRequest) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.Pagination != nil {
+		value := protoreflect.ValueOfMessage(x.Pagination.ProtoReflect())
+		if !f(fd_QueryTotalSupplyWithoutOffsetRequest_pagination, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_QueryTotalSupplyWithoutOffsetRequest) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "cosmos.bank.v1beta1.QueryTotalSupplyWithoutOffsetRequest.pagination":
+		return x.Pagination != nil
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.bank.v1beta1.QueryTotalSupplyWithoutOffsetRequest"))
+		}
+		panic(fmt.Errorf("message cosmos.bank.v1beta1.QueryTotalSupplyWithoutOffsetRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryTotalSupplyWithoutOffsetRequest) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "cosmos.bank.v1beta1.QueryTotalSupplyWithoutOffsetRequest.pagination":
+		x.Pagination = nil
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.bank.v1beta1.QueryTotalSupplyWithoutOffsetRequest"))
+		}
+		panic(fmt.Errorf("message cosmos.bank.v1beta1.QueryTotalSupplyWithoutOffsetRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_QueryTotalSupplyWithoutOffsetRequest) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "cosmos.bank.v1beta1.QueryTotalSupplyWithoutOffsetRequest.pagination":
+		value := x.Pagination
+		return protoreflect.ValueOfMessage(value.ProtoReflect())
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.bank.v1beta1.QueryTotalSupplyWithoutOffsetRequest"))
+		}
+		panic(fmt.Errorf("message cosmos.bank.v1beta1.QueryTotalSupplyWithoutOffsetRequest does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryTotalSupplyWithoutOffsetRequest) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "cosmos.bank.v1beta1.QueryTotalSupplyWithoutOffsetRequest.pagination":
+		x.Pagination = value.Message().Interface().(*v1beta11.PageRequest)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.bank.v1beta1.QueryTotalSupplyWithoutOffsetRequest"))
+		}
+		panic(fmt.Errorf("message cosmos.bank.v1beta1.QueryTotalSupplyWithoutOffsetRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryTotalSupplyWithoutOffsetRequest) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "cosmos.bank.v1beta1.QueryTotalSupplyWithoutOffsetRequest.pagination":
+		if x.Pagination == nil {
+			x.Pagination = new(v1beta11.PageRequest)
+		}
+		return protoreflect.ValueOfMessage(x.Pagination.ProtoReflect())
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.bank.v1beta1.QueryTotalSupplyWithoutOffsetRequest"))
+		}
+		panic(fmt.Errorf("message cosmos.bank.v1beta1.QueryTotalSupplyWithoutOffsetRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_QueryTotalSupplyWithoutOffsetRequest) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "cosmos.bank.v1beta1.QueryTotalSupplyWithoutOffsetRequest.pagination":
+		m := new(v1beta11.PageRequest)
+		return protoreflect.ValueOfMessage(m.ProtoReflect())
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.bank.v1beta1.QueryTotalSupplyWithoutOffsetRequest"))
+		}
+		panic(fmt.Errorf("message cosmos.bank.v1beta1.QueryTotalSupplyWithoutOffsetRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_QueryTotalSupplyWithoutOffsetRequest) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.bank.v1beta1.QueryTotalSupplyWithoutOffsetRequest", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_QueryTotalSupplyWithoutOffsetRequest) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryTotalSupplyWithoutOffsetRequest) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_QueryTotalSupplyWithoutOffsetRequest) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_QueryTotalSupplyWithoutOffsetRequest) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*QueryTotalSupplyWithoutOffsetRequest)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		if x.Pagination != nil {
+			l = options.Size(x.Pagination)
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*QueryTotalSupplyWithoutOffsetRequest)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if x.Pagination != nil {
+			encoded, err := options.Marshal(x.Pagination)
+			if err != nil {
+				return protoiface.MarshalOutput{
+					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+					Buf:               input.Buf,
+				}, err
+			}
+			i -= len(encoded)
+			copy(dAtA[i:], encoded)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+			i--
+			dAtA[i] = 0xa
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*QueryTotalSupplyWithoutOffsetRequest)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryTotalSupplyWithoutOffsetRequest: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryTotalSupplyWithoutOffsetRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Pagination", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if x.Pagination == nil {
+					x.Pagination = &v1beta11.PageRequest{}
+				}
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Pagination); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var _ protoreflect.List = (*_QueryTotalSupplyWithoutOffsetResponse_1_list)(nil)
+
+type _QueryTotalSupplyWithoutOffsetResponse_1_list struct {
+	list *[]*v1beta1.Coin
+}
+
+func (x *_QueryTotalSupplyWithoutOffsetResponse_1_list) Len() int {
+	if x.list == nil {
+		return 0
+	}
+	return len(*x.list)
+}
+
+func (x *_QueryTotalSupplyWithoutOffsetResponse_1_list) Get(i int) protoreflect.Value {
+	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
+}
+
+func (x *_QueryTotalSupplyWithoutOffsetResponse_1_list) Set(i int, value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*v1beta1.Coin)
+	(*x.list)[i] = concreteValue
+}
+
+func (x *_QueryTotalSupplyWithoutOffsetResponse_1_list) Append(value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*v1beta1.Coin)
+	*x.list = append(*x.list, concreteValue)
+}
+
+func (x *_QueryTotalSupplyWithoutOffsetResponse_1_list) AppendMutable() protoreflect.Value {
+	v := new(v1beta1.Coin)
+	*x.list = append(*x.list, v)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_QueryTotalSupplyWithoutOffsetResponse_1_list) Truncate(n int) {
+	for i := n; i < len(*x.list); i++ {
+		(*x.list)[i] = nil
+	}
+	*x.list = (*x.list)[:n]
+}
+
+func (x *_QueryTotalSupplyWithoutOffsetResponse_1_list) NewElement() protoreflect.Value {
+	v := new(v1beta1.Coin)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_QueryTotalSupplyWithoutOffsetResponse_1_list) IsValid() bool {
+	return x.list != nil
+}
+
+var (
+	md_QueryTotalSupplyWithoutOffsetResponse            protoreflect.MessageDescriptor
+	fd_QueryTotalSupplyWithoutOffsetResponse_supply     protoreflect.FieldDescriptor
+	fd_QueryTotalSupplyWithoutOffsetResponse_pagination protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_cosmos_bank_v1beta1_query_proto_init()
+	md_QueryTotalSupplyWithoutOffsetResponse = File_cosmos_bank_v1beta1_query_proto.Messages().ByName("QueryTotalSupplyWithoutOffsetResponse")
+	fd_QueryTotalSupplyWithoutOffsetResponse_supply = md_QueryTotalSupplyWithoutOffsetResponse.Fields().ByName("supply")
+	fd_QueryTotalSupplyWithoutOffsetResponse_pagination = md_QueryTotalSupplyWithoutOffsetResponse.Fields().ByName("pagination")
+}
+
+var _ protoreflect.Message = (*fastReflection_QueryTotalSupplyWithoutOffsetResponse)(nil)
+
+type fastReflection_QueryTotalSupplyWithoutOffsetResponse QueryTotalSupplyWithoutOffsetResponse
+
+func (x *QueryTotalSupplyWithoutOffsetResponse) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_QueryTotalSupplyWithoutOffsetResponse)(x)
+}
+
+func (x *QueryTotalSupplyWithoutOffsetResponse) slowProtoReflect() protoreflect.Message {
+	mi := &file_cosmos_bank_v1beta1_query_proto_msgTypes[13]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_QueryTotalSupplyWithoutOffsetResponse_messageType fastReflection_QueryTotalSupplyWithoutOffsetResponse_messageType
+var _ protoreflect.MessageType = fastReflection_QueryTotalSupplyWithoutOffsetResponse_messageType{}
+
+type fastReflection_QueryTotalSupplyWithoutOffsetResponse_messageType struct{}
+
+func (x fastReflection_QueryTotalSupplyWithoutOffsetResponse_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_QueryTotalSupplyWithoutOffsetResponse)(nil)
+}
+func (x fastReflection_QueryTotalSupplyWithoutOffsetResponse_messageType) New() protoreflect.Message {
+	return new(fastReflection_QueryTotalSupplyWithoutOffsetResponse)
+}
+func (x fastReflection_QueryTotalSupplyWithoutOffsetResponse_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryTotalSupplyWithoutOffsetResponse
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_QueryTotalSupplyWithoutOffsetResponse) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryTotalSupplyWithoutOffsetResponse
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_QueryTotalSupplyWithoutOffsetResponse) Type() protoreflect.MessageType {
+	return _fastReflection_QueryTotalSupplyWithoutOffsetResponse_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_QueryTotalSupplyWithoutOffsetResponse) New() protoreflect.Message {
+	return new(fastReflection_QueryTotalSupplyWithoutOffsetResponse)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_QueryTotalSupplyWithoutOffsetResponse) Interface() protoreflect.ProtoMessage {
+	return (*QueryTotalSupplyWithoutOffsetResponse)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_QueryTotalSupplyWithoutOffsetResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if len(x.Supply) != 0 {
+		value := protoreflect.ValueOfList(&_QueryTotalSupplyWithoutOffsetResponse_1_list{list: &x.Supply})
+		if !f(fd_QueryTotalSupplyWithoutOffsetResponse_supply, value) {
+			return
+		}
+	}
+	if x.Pagination != nil {
+		value := protoreflect.ValueOfMessage(x.Pagination.ProtoReflect())
+		if !f(fd_QueryTotalSupplyWithoutOffsetResponse_pagination, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_QueryTotalSupplyWithoutOffsetResponse) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "cosmos.bank.v1beta1.QueryTotalSupplyWithoutOffsetResponse.supply":
+		return len(x.Supply) != 0
+	case "cosmos.bank.v1beta1.QueryTotalSupplyWithoutOffsetResponse.pagination":
+		return x.Pagination != nil
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.bank.v1beta1.QueryTotalSupplyWithoutOffsetResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.bank.v1beta1.QueryTotalSupplyWithoutOffsetResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryTotalSupplyWithoutOffsetResponse) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "cosmos.bank.v1beta1.QueryTotalSupplyWithoutOffsetResponse.supply":
+		x.Supply = nil
+	case "cosmos.bank.v1beta1.QueryTotalSupplyWithoutOffsetResponse.pagination":
+		x.Pagination = nil
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.bank.v1beta1.QueryTotalSupplyWithoutOffsetResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.bank.v1beta1.QueryTotalSupplyWithoutOffsetResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_QueryTotalSupplyWithoutOffsetResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "cosmos.bank.v1beta1.QueryTotalSupplyWithoutOffsetResponse.supply":
+		if len(x.Supply) == 0 {
+			return protoreflect.ValueOfList(&_QueryTotalSupplyWithoutOffsetResponse_1_list{})
+		}
+		listValue := &_QueryTotalSupplyWithoutOffsetResponse_1_list{list: &x.Supply}
+		return protoreflect.ValueOfList(listValue)
+	case "cosmos.bank.v1beta1.QueryTotalSupplyWithoutOffsetResponse.pagination":
+		value := x.Pagination
+		return protoreflect.ValueOfMessage(value.ProtoReflect())
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.bank.v1beta1.QueryTotalSupplyWithoutOffsetResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.bank.v1beta1.QueryTotalSupplyWithoutOffsetResponse does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryTotalSupplyWithoutOffsetResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "cosmos.bank.v1beta1.QueryTotalSupplyWithoutOffsetResponse.supply":
+		lv := value.List()
+		clv := lv.(*_QueryTotalSupplyWithoutOffsetResponse_1_list)
+		x.Supply = *clv.list
+	case "cosmos.bank.v1beta1.QueryTotalSupplyWithoutOffsetResponse.pagination":
+		x.Pagination = value.Message().Interface().(*v1beta11.PageResponse)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.bank.v1beta1.QueryTotalSupplyWithoutOffsetResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.bank.v1beta1.QueryTotalSupplyWithoutOffsetResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryTotalSupplyWithoutOffsetResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "cosmos.bank.v1beta1.QueryTotalSupplyWithoutOffsetResponse.supply":
+		if x.Supply == nil {
+			x.Supply = []*v1beta1.Coin{}
+		}
+		value := &_QueryTotalSupplyWithoutOffsetResponse_1_list{list: &x.Supply}
+		return protoreflect.ValueOfList(value)
+	case "cosmos.bank.v1beta1.QueryTotalSupplyWithoutOffsetResponse.pagination":
+		if x.Pagination == nil {
+			x.Pagination = new(v1beta11.PageResponse)
+		}
+		return protoreflect.ValueOfMessage(x.Pagination.ProtoReflect())
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.bank.v1beta1.QueryTotalSupplyWithoutOffsetResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.bank.v1beta1.QueryTotalSupplyWithoutOffsetResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_QueryTotalSupplyWithoutOffsetResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "cosmos.bank.v1beta1.QueryTotalSupplyWithoutOffsetResponse.supply":
+		list := []*v1beta1.Coin{}
+		return protoreflect.ValueOfList(&_QueryTotalSupplyWithoutOffsetResponse_1_list{list: &list})
+	case "cosmos.bank.v1beta1.QueryTotalSupplyWithoutOffsetResponse.pagination":
+		m := new(v1beta11.PageResponse)
+		return protoreflect.ValueOfMessage(m.ProtoReflect())
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.bank.v1beta1.QueryTotalSupplyWithoutOffsetResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.bank.v1beta1.QueryTotalSupplyWithoutOffsetResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_QueryTotalSupplyWithoutOffsetResponse) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.bank.v1beta1.QueryTotalSupplyWithoutOffsetResponse", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_QueryTotalSupplyWithoutOffsetResponse) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryTotalSupplyWithoutOffsetResponse) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_QueryTotalSupplyWithoutOffsetResponse) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_QueryTotalSupplyWithoutOffsetResponse) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*QueryTotalSupplyWithoutOffsetResponse)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		if len(x.Supply) > 0 {
+			for _, e := range x.Supply {
+				l = options.Size(e)
+				n += 1 + l + runtime.Sov(uint64(l))
+			}
+		}
+		if x.Pagination != nil {
+			l = options.Size(x.Pagination)
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*QueryTotalSupplyWithoutOffsetResponse)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if x.Pagination != nil {
+			encoded, err := options.Marshal(x.Pagination)
+			if err != nil {
+				return protoiface.MarshalOutput{
+					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+					Buf:               input.Buf,
+				}, err
+			}
+			i -= len(encoded)
+			copy(dAtA[i:], encoded)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+			i--
+			dAtA[i] = 0x12
+		}
+		if len(x.Supply) > 0 {
+			for iNdEx := len(x.Supply) - 1; iNdEx >= 0; iNdEx-- {
+				encoded, err := options.Marshal(x.Supply[iNdEx])
+				if err != nil {
+					return protoiface.MarshalOutput{
+						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+						Buf:               input.Buf,
+					}, err
+				}
+				i -= len(encoded)
+				copy(dAtA[i:], encoded)
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+				i--
+				dAtA[i] = 0xa
+			}
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*QueryTotalSupplyWithoutOffsetResponse)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryTotalSupplyWithoutOffsetResponse: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryTotalSupplyWithoutOffsetResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Supply", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Supply = append(x.Supply, &v1beta1.Coin{})
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Supply[len(x.Supply)-1]); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			case 2:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Pagination", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if x.Pagination == nil {
+					x.Pagination = &v1beta11.PageResponse{}
+				}
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Pagination); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var (
+	md_QuerySupplyOfWithoutOffsetRequest       protoreflect.MessageDescriptor
+	fd_QuerySupplyOfWithoutOffsetRequest_denom protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_cosmos_bank_v1beta1_query_proto_init()
+	md_QuerySupplyOfWithoutOffsetRequest = File_cosmos_bank_v1beta1_query_proto.Messages().ByName("QuerySupplyOfWithoutOffsetRequest")
+	fd_QuerySupplyOfWithoutOffsetRequest_denom = md_QuerySupplyOfWithoutOffsetRequest.Fields().ByName("denom")
+}
+
+var _ protoreflect.Message = (*fastReflection_QuerySupplyOfWithoutOffsetRequest)(nil)
+
+type fastReflection_QuerySupplyOfWithoutOffsetRequest QuerySupplyOfWithoutOffsetRequest
+
+func (x *QuerySupplyOfWithoutOffsetRequest) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_QuerySupplyOfWithoutOffsetRequest)(x)
+}
+
+func (x *QuerySupplyOfWithoutOffsetRequest) slowProtoReflect() protoreflect.Message {
+	mi := &file_cosmos_bank_v1beta1_query_proto_msgTypes[14]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_QuerySupplyOfWithoutOffsetRequest_messageType fastReflection_QuerySupplyOfWithoutOffsetRequest_messageType
+var _ protoreflect.MessageType = fastReflection_QuerySupplyOfWithoutOffsetRequest_messageType{}
+
+type fastReflection_QuerySupplyOfWithoutOffsetRequest_messageType struct{}
+
+func (x fastReflection_QuerySupplyOfWithoutOffsetRequest_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_QuerySupplyOfWithoutOffsetRequest)(nil)
+}
+func (x fastReflection_QuerySupplyOfWithoutOffsetRequest_messageType) New() protoreflect.Message {
+	return new(fastReflection_QuerySupplyOfWithoutOffsetRequest)
+}
+func (x fastReflection_QuerySupplyOfWithoutOffsetRequest_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_QuerySupplyOfWithoutOffsetRequest
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_QuerySupplyOfWithoutOffsetRequest) Descriptor() protoreflect.MessageDescriptor {
+	return md_QuerySupplyOfWithoutOffsetRequest
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_QuerySupplyOfWithoutOffsetRequest) Type() protoreflect.MessageType {
+	return _fastReflection_QuerySupplyOfWithoutOffsetRequest_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_QuerySupplyOfWithoutOffsetRequest) New() protoreflect.Message {
+	return new(fastReflection_QuerySupplyOfWithoutOffsetRequest)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_QuerySupplyOfWithoutOffsetRequest) Interface() protoreflect.ProtoMessage {
+	return (*QuerySupplyOfWithoutOffsetRequest)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_QuerySupplyOfWithoutOffsetRequest) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.Denom != "" {
+		value := protoreflect.ValueOfString(x.Denom)
+		if !f(fd_QuerySupplyOfWithoutOffsetRequest_denom, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_QuerySupplyOfWithoutOffsetRequest) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "cosmos.bank.v1beta1.QuerySupplyOfWithoutOffsetRequest.denom":
+		return x.Denom != ""
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.bank.v1beta1.QuerySupplyOfWithoutOffsetRequest"))
+		}
+		panic(fmt.Errorf("message cosmos.bank.v1beta1.QuerySupplyOfWithoutOffsetRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QuerySupplyOfWithoutOffsetRequest) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "cosmos.bank.v1beta1.QuerySupplyOfWithoutOffsetRequest.denom":
+		x.Denom = ""
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.bank.v1beta1.QuerySupplyOfWithoutOffsetRequest"))
+		}
+		panic(fmt.Errorf("message cosmos.bank.v1beta1.QuerySupplyOfWithoutOffsetRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_QuerySupplyOfWithoutOffsetRequest) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "cosmos.bank.v1beta1.QuerySupplyOfWithoutOffsetRequest.denom":
+		value := x.Denom
+		return protoreflect.ValueOfString(value)
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.bank.v1beta1.QuerySupplyOfWithoutOffsetRequest"))
+		}
+		panic(fmt.Errorf("message cosmos.bank.v1beta1.QuerySupplyOfWithoutOffsetRequest does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QuerySupplyOfWithoutOffsetRequest) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "cosmos.bank.v1beta1.QuerySupplyOfWithoutOffsetRequest.denom":
+		x.Denom = value.Interface().(string)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.bank.v1beta1.QuerySupplyOfWithoutOffsetRequest"))
+		}
+		panic(fmt.Errorf("message cosmos.bank.v1beta1.QuerySupplyOfWithoutOffsetRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QuerySupplyOfWithoutOffsetRequest) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "cosmos.bank.v1beta1.QuerySupplyOfWithoutOffsetRequest.denom":
+		panic(fmt.Errorf("field denom of message cosmos.bank.v1beta1.QuerySupplyOfWithoutOffsetRequest is not mutable"))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.bank.v1beta1.QuerySupplyOfWithoutOffsetRequest"))
+		}
+		panic(fmt.Errorf("message cosmos.bank.v1beta1.QuerySupplyOfWithoutOffsetRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_QuerySupplyOfWithoutOffsetRequest) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "cosmos.bank.v1beta1.QuerySupplyOfWithoutOffsetRequest.denom":
+		return protoreflect.ValueOfString("")
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.bank.v1beta1.QuerySupplyOfWithoutOffsetRequest"))
+		}
+		panic(fmt.Errorf("message cosmos.bank.v1beta1.QuerySupplyOfWithoutOffsetRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_QuerySupplyOfWithoutOffsetRequest) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.bank.v1beta1.QuerySupplyOfWithoutOffsetRequest", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_QuerySupplyOfWithoutOffsetRequest) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QuerySupplyOfWithoutOffsetRequest) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_QuerySupplyOfWithoutOffsetRequest) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_QuerySupplyOfWithoutOffsetRequest) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*QuerySupplyOfWithoutOffsetRequest)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		l = len(x.Denom)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*QuerySupplyOfWithoutOffsetRequest)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if len(x.Denom) > 0 {
+			i -= len(x.Denom)
+			copy(dAtA[i:], x.Denom)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Denom)))
+			i--
+			dAtA[i] = 0xa
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*QuerySupplyOfWithoutOffsetRequest)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QuerySupplyOfWithoutOffsetRequest: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QuerySupplyOfWithoutOffsetRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Denom", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Denom = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var (
+	md_QuerySupplyOfWithoutOffsetResponse        protoreflect.MessageDescriptor
+	fd_QuerySupplyOfWithoutOffsetResponse_amount protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_cosmos_bank_v1beta1_query_proto_init()
+	md_QuerySupplyOfWithoutOffsetResponse = File_cosmos_bank_v1beta1_query_proto.Messages().ByName("QuerySupplyOfWithoutOffsetResponse")
+	fd_QuerySupplyOfWithoutOffsetResponse_amount = md_QuerySupplyOfWithoutOffsetResponse.Fields().ByName("amount")
+}
+
+var _ protoreflect.Message = (*fastReflection_QuerySupplyOfWithoutOffsetResponse)(nil)
+
+type fastReflection_QuerySupplyOfWithoutOffsetResponse QuerySupplyOfWithoutOffsetResponse
+
+func (x *QuerySupplyOfWithoutOffsetResponse) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_QuerySupplyOfWithoutOffsetResponse)(x)
+}
+
+func (x *QuerySupplyOfWithoutOffsetResponse) slowProtoReflect() protoreflect.Message {
+	mi := &file_cosmos_bank_v1beta1_query_proto_msgTypes[15]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_QuerySupplyOfWithoutOffsetResponse_messageType fastReflection_QuerySupplyOfWithoutOffsetResponse_messageType
+var _ protoreflect.MessageType = fastReflection_QuerySupplyOfWithoutOffsetResponse_messageType{}
+
+type fastReflection_QuerySupplyOfWithoutOffsetResponse_messageType struct{}
+
+func (x fastReflection_QuerySupplyOfWithoutOffsetResponse_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_QuerySupplyOfWithoutOffsetResponse)(nil)
+}
+func (x fastReflection_QuerySupplyOfWithoutOffsetResponse_messageType) New() protoreflect.Message {
+	return new(fastReflection_QuerySupplyOfWithoutOffsetResponse)
+}
+func (x fastReflection_QuerySupplyOfWithoutOffsetResponse_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_QuerySupplyOfWithoutOffsetResponse
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_QuerySupplyOfWithoutOffsetResponse) Descriptor() protoreflect.MessageDescriptor {
+	return md_QuerySupplyOfWithoutOffsetResponse
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_QuerySupplyOfWithoutOffsetResponse) Type() protoreflect.MessageType {
+	return _fastReflection_QuerySupplyOfWithoutOffsetResponse_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_QuerySupplyOfWithoutOffsetResponse) New() protoreflect.Message {
+	return new(fastReflection_QuerySupplyOfWithoutOffsetResponse)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_QuerySupplyOfWithoutOffsetResponse) Interface() protoreflect.ProtoMessage {
+	return (*QuerySupplyOfWithoutOffsetResponse)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_QuerySupplyOfWithoutOffsetResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.Amount != nil {
+		value := protoreflect.ValueOfMessage(x.Amount.ProtoReflect())
+		if !f(fd_QuerySupplyOfWithoutOffsetResponse_amount, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_QuerySupplyOfWithoutOffsetResponse) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "cosmos.bank.v1beta1.QuerySupplyOfWithoutOffsetResponse.amount":
+		return x.Amount != nil
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.bank.v1beta1.QuerySupplyOfWithoutOffsetResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.bank.v1beta1.QuerySupplyOfWithoutOffsetResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QuerySupplyOfWithoutOffsetResponse) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "cosmos.bank.v1beta1.QuerySupplyOfWithoutOffsetResponse.amount":
+		x.Amount = nil
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.bank.v1beta1.QuerySupplyOfWithoutOffsetResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.bank.v1beta1.QuerySupplyOfWithoutOffsetResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_QuerySupplyOfWithoutOffsetResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "cosmos.bank.v1beta1.QuerySupplyOfWithoutOffsetResponse.amount":
+		value := x.Amount
+		return protoreflect.ValueOfMessage(value.ProtoReflect())
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.bank.v1beta1.QuerySupplyOfWithoutOffsetResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.bank.v1beta1.QuerySupplyOfWithoutOffsetResponse does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QuerySupplyOfWithoutOffsetResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "cosmos.bank.v1beta1.QuerySupplyOfWithoutOffsetResponse.amount":
+		x.Amount = value.Message().Interface().(*v1beta1.Coin)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.bank.v1beta1.QuerySupplyOfWithoutOffsetResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.bank.v1beta1.QuerySupplyOfWithoutOffsetResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QuerySupplyOfWithoutOffsetResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "cosmos.bank.v1beta1.QuerySupplyOfWithoutOffsetResponse.amount":
+		if x.Amount == nil {
+			x.Amount = new(v1beta1.Coin)
+		}
+		return protoreflect.ValueOfMessage(x.Amount.ProtoReflect())
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.bank.v1beta1.QuerySupplyOfWithoutOffsetResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.bank.v1beta1.QuerySupplyOfWithoutOffsetResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_QuerySupplyOfWithoutOffsetResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "cosmos.bank.v1beta1.QuerySupplyOfWithoutOffsetResponse.amount":
+		m := new(v1beta1.Coin)
+		return protoreflect.ValueOfMessage(m.ProtoReflect())
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.bank.v1beta1.QuerySupplyOfWithoutOffsetResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.bank.v1beta1.QuerySupplyOfWithoutOffsetResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_QuerySupplyOfWithoutOffsetResponse) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.bank.v1beta1.QuerySupplyOfWithoutOffsetResponse", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_QuerySupplyOfWithoutOffsetResponse) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QuerySupplyOfWithoutOffsetResponse) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_QuerySupplyOfWithoutOffsetResponse) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_QuerySupplyOfWithoutOffsetResponse) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*QuerySupplyOfWithoutOffsetResponse)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		if x.Amount != nil {
+			l = options.Size(x.Amount)
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*QuerySupplyOfWithoutOffsetResponse)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if x.Amount != nil {
+			encoded, err := options.Marshal(x.Amount)
+			if err != nil {
+				return protoiface.MarshalOutput{
+					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+					Buf:               input.Buf,
+				}, err
+			}
+			i -= len(encoded)
+			copy(dAtA[i:], encoded)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+			i--
+			dAtA[i] = 0xa
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*QuerySupplyOfWithoutOffsetResponse)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QuerySupplyOfWithoutOffsetResponse: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QuerySupplyOfWithoutOffsetResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Amount", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if x.Amount == nil {
+					x.Amount = &v1beta1.Coin{}
+				}
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Amount); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var (
 	md_QueryParamsRequest protoreflect.MessageDescriptor
 )
 
@@ -5882,7 +7745,7 @@ func (x *QueryParamsRequest) ProtoReflect() protoreflect.Message {
 }
 
 func (x *QueryParamsRequest) slowProtoReflect() protoreflect.Message {
-	mi := &file_cosmos_bank_v1beta1_query_proto_msgTypes[12]
+	mi := &file_cosmos_bank_v1beta1_query_proto_msgTypes[16]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6240,7 +8103,7 @@ func (x *QueryParamsResponse) ProtoReflect() protoreflect.Message {
 }
 
 func (x *QueryParamsResponse) slowProtoReflect() protoreflect.Message {
-	mi := &file_cosmos_bank_v1beta1_query_proto_msgTypes[13]
+	mi := &file_cosmos_bank_v1beta1_query_proto_msgTypes[17]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6675,7 +8538,7 @@ func (x *QueryDenomsMetadataRequest) ProtoReflect() protoreflect.Message {
 }
 
 func (x *QueryDenomsMetadataRequest) slowProtoReflect() protoreflect.Message {
-	mi := &file_cosmos_bank_v1beta1_query_proto_msgTypes[14]
+	mi := &file_cosmos_bank_v1beta1_query_proto_msgTypes[18]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7163,7 +9026,7 @@ func (x *QueryDenomsMetadataResponse) ProtoReflect() protoreflect.Message {
 }
 
 func (x *QueryDenomsMetadataResponse) slowProtoReflect() protoreflect.Message {
-	mi := &file_cosmos_bank_v1beta1_query_proto_msgTypes[15]
+	mi := &file_cosmos_bank_v1beta1_query_proto_msgTypes[19]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7683,7 +9546,7 @@ func (x *QueryDenomMetadataRequest) ProtoReflect() protoreflect.Message {
 }
 
 func (x *QueryDenomMetadataRequest) slowProtoReflect() protoreflect.Message {
-	mi := &file_cosmos_bank_v1beta1_query_proto_msgTypes[16]
+	mi := &file_cosmos_bank_v1beta1_query_proto_msgTypes[20]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -8103,7 +9966,7 @@ func (x *QueryDenomMetadataResponse) ProtoReflect() protoreflect.Message {
 }
 
 func (x *QueryDenomMetadataResponse) slowProtoReflect() protoreflect.Message {
-	mi := &file_cosmos_bank_v1beta1_query_proto_msgTypes[17]
+	mi := &file_cosmos_bank_v1beta1_query_proto_msgTypes[21]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -8540,7 +10403,7 @@ func (x *QueryDenomOwnersRequest) ProtoReflect() protoreflect.Message {
 }
 
 func (x *QueryDenomOwnersRequest) slowProtoReflect() protoreflect.Message {
-	mi := &file_cosmos_bank_v1beta1_query_proto_msgTypes[18]
+	mi := &file_cosmos_bank_v1beta1_query_proto_msgTypes[22]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -9039,7 +10902,7 @@ func (x *DenomOwner) ProtoReflect() protoreflect.Message {
 }
 
 func (x *DenomOwner) slowProtoReflect() protoreflect.Message {
-	mi := &file_cosmos_bank_v1beta1_query_proto_msgTypes[19]
+	mi := &file_cosmos_bank_v1beta1_query_proto_msgTypes[23]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -9589,7 +11452,7 @@ func (x *QueryDenomOwnersResponse) ProtoReflect() protoreflect.Message {
 }
 
 func (x *QueryDenomOwnersResponse) slowProtoReflect() protoreflect.Message {
-	mi := &file_cosmos_bank_v1beta1_query_proto_msgTypes[20]
+	mi := &file_cosmos_bank_v1beta1_query_proto_msgTypes[24]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -10157,7 +12020,7 @@ func (x *QuerySendEnabledRequest) ProtoReflect() protoreflect.Message {
 }
 
 func (x *QuerySendEnabledRequest) slowProtoReflect() protoreflect.Message {
-	mi := &file_cosmos_bank_v1beta1_query_proto_msgTypes[21]
+	mi := &file_cosmos_bank_v1beta1_query_proto_msgTypes[25]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -10723,7 +12586,7 @@ func (x *QuerySendEnabledResponse) ProtoReflect() protoreflect.Message {
 }
 
 func (x *QuerySendEnabledResponse) slowProtoReflect() protoreflect.Message {
-	mi := &file_cosmos_bank_v1beta1_query_proto_msgTypes[22]
+	mi := &file_cosmos_bank_v1beta1_query_proto_msgTypes[26]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -11764,6 +13627,169 @@ func (x *QuerySupplyOfResponse) GetAmount() *v1beta1.Coin {
 	return nil
 }
 
+// QueryTotalSupplyWithoutOffsetRequest is the request type for the Query/TotalSupplyWithoutOffset RPC
+// method.
+type QueryTotalSupplyWithoutOffsetRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// pagination defines an optional pagination for the request.
+	//
+	// Since: cosmos-sdk 0.43
+	Pagination *v1beta11.PageRequest `protobuf:"bytes,1,opt,name=pagination,proto3" json:"pagination,omitempty"`
+}
+
+func (x *QueryTotalSupplyWithoutOffsetRequest) Reset() {
+	*x = QueryTotalSupplyWithoutOffsetRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_cosmos_bank_v1beta1_query_proto_msgTypes[12]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *QueryTotalSupplyWithoutOffsetRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*QueryTotalSupplyWithoutOffsetRequest) ProtoMessage() {}
+
+// Deprecated: Use QueryTotalSupplyWithoutOffsetRequest.ProtoReflect.Descriptor instead.
+func (*QueryTotalSupplyWithoutOffsetRequest) Descriptor() ([]byte, []int) {
+	return file_cosmos_bank_v1beta1_query_proto_rawDescGZIP(), []int{12}
+}
+
+func (x *QueryTotalSupplyWithoutOffsetRequest) GetPagination() *v1beta11.PageRequest {
+	if x != nil {
+		return x.Pagination
+	}
+	return nil
+}
+
+// QueryTotalSupplyWithoutOffsetResponse is the response type for the Query/TotalSupplyWithoutOffset RPC
+// method
+type QueryTotalSupplyWithoutOffsetResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// supply is the supply of the coins
+	Supply []*v1beta1.Coin `protobuf:"bytes,1,rep,name=supply,proto3" json:"supply,omitempty"`
+	// pagination defines the pagination in the response.
+	//
+	// Since: cosmos-sdk 0.43
+	Pagination *v1beta11.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
+}
+
+func (x *QueryTotalSupplyWithoutOffsetResponse) Reset() {
+	*x = QueryTotalSupplyWithoutOffsetResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_cosmos_bank_v1beta1_query_proto_msgTypes[13]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *QueryTotalSupplyWithoutOffsetResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*QueryTotalSupplyWithoutOffsetResponse) ProtoMessage() {}
+
+// Deprecated: Use QueryTotalSupplyWithoutOffsetResponse.ProtoReflect.Descriptor instead.
+func (*QueryTotalSupplyWithoutOffsetResponse) Descriptor() ([]byte, []int) {
+	return file_cosmos_bank_v1beta1_query_proto_rawDescGZIP(), []int{13}
+}
+
+func (x *QueryTotalSupplyWithoutOffsetResponse) GetSupply() []*v1beta1.Coin {
+	if x != nil {
+		return x.Supply
+	}
+	return nil
+}
+
+func (x *QueryTotalSupplyWithoutOffsetResponse) GetPagination() *v1beta11.PageResponse {
+	if x != nil {
+		return x.Pagination
+	}
+	return nil
+}
+
+// QuerySupplyOfWithoutOffsetRequest is the request type for the Query/SupplyOfWithoutOffset RPC method.
+type QuerySupplyOfWithoutOffsetRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// denom is the coin denom to query balances for.
+	Denom string `protobuf:"bytes,1,opt,name=denom,proto3" json:"denom,omitempty"`
+}
+
+func (x *QuerySupplyOfWithoutOffsetRequest) Reset() {
+	*x = QuerySupplyOfWithoutOffsetRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_cosmos_bank_v1beta1_query_proto_msgTypes[14]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *QuerySupplyOfWithoutOffsetRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*QuerySupplyOfWithoutOffsetRequest) ProtoMessage() {}
+
+// Deprecated: Use QuerySupplyOfWithoutOffsetRequest.ProtoReflect.Descriptor instead.
+func (*QuerySupplyOfWithoutOffsetRequest) Descriptor() ([]byte, []int) {
+	return file_cosmos_bank_v1beta1_query_proto_rawDescGZIP(), []int{14}
+}
+
+func (x *QuerySupplyOfWithoutOffsetRequest) GetDenom() string {
+	if x != nil {
+		return x.Denom
+	}
+	return ""
+}
+
+// QuerySupplyOfWithoutOffsetResponse is the response type for the Query/SupplyOfWithoutOffset RPC method.
+type QuerySupplyOfWithoutOffsetResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// amount is the supply of the coin.
+	Amount *v1beta1.Coin `protobuf:"bytes,1,opt,name=amount,proto3" json:"amount,omitempty"`
+}
+
+func (x *QuerySupplyOfWithoutOffsetResponse) Reset() {
+	*x = QuerySupplyOfWithoutOffsetResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_cosmos_bank_v1beta1_query_proto_msgTypes[15]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *QuerySupplyOfWithoutOffsetResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*QuerySupplyOfWithoutOffsetResponse) ProtoMessage() {}
+
+// Deprecated: Use QuerySupplyOfWithoutOffsetResponse.ProtoReflect.Descriptor instead.
+func (*QuerySupplyOfWithoutOffsetResponse) Descriptor() ([]byte, []int) {
+	return file_cosmos_bank_v1beta1_query_proto_rawDescGZIP(), []int{15}
+}
+
+func (x *QuerySupplyOfWithoutOffsetResponse) GetAmount() *v1beta1.Coin {
+	if x != nil {
+		return x.Amount
+	}
+	return nil
+}
+
 // QueryParamsRequest defines the request type for querying x/bank parameters.
 type QueryParamsRequest struct {
 	state         protoimpl.MessageState
@@ -11774,7 +13800,7 @@ type QueryParamsRequest struct {
 func (x *QueryParamsRequest) Reset() {
 	*x = QueryParamsRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_cosmos_bank_v1beta1_query_proto_msgTypes[12]
+		mi := &file_cosmos_bank_v1beta1_query_proto_msgTypes[16]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -11788,7 +13814,7 @@ func (*QueryParamsRequest) ProtoMessage() {}
 
 // Deprecated: Use QueryParamsRequest.ProtoReflect.Descriptor instead.
 func (*QueryParamsRequest) Descriptor() ([]byte, []int) {
-	return file_cosmos_bank_v1beta1_query_proto_rawDescGZIP(), []int{12}
+	return file_cosmos_bank_v1beta1_query_proto_rawDescGZIP(), []int{16}
 }
 
 // QueryParamsResponse defines the response type for querying x/bank parameters.
@@ -11803,7 +13829,7 @@ type QueryParamsResponse struct {
 func (x *QueryParamsResponse) Reset() {
 	*x = QueryParamsResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_cosmos_bank_v1beta1_query_proto_msgTypes[13]
+		mi := &file_cosmos_bank_v1beta1_query_proto_msgTypes[17]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -11817,7 +13843,7 @@ func (*QueryParamsResponse) ProtoMessage() {}
 
 // Deprecated: Use QueryParamsResponse.ProtoReflect.Descriptor instead.
 func (*QueryParamsResponse) Descriptor() ([]byte, []int) {
-	return file_cosmos_bank_v1beta1_query_proto_rawDescGZIP(), []int{13}
+	return file_cosmos_bank_v1beta1_query_proto_rawDescGZIP(), []int{17}
 }
 
 func (x *QueryParamsResponse) GetParams() *Params {
@@ -11840,7 +13866,7 @@ type QueryDenomsMetadataRequest struct {
 func (x *QueryDenomsMetadataRequest) Reset() {
 	*x = QueryDenomsMetadataRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_cosmos_bank_v1beta1_query_proto_msgTypes[14]
+		mi := &file_cosmos_bank_v1beta1_query_proto_msgTypes[18]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -11854,7 +13880,7 @@ func (*QueryDenomsMetadataRequest) ProtoMessage() {}
 
 // Deprecated: Use QueryDenomsMetadataRequest.ProtoReflect.Descriptor instead.
 func (*QueryDenomsMetadataRequest) Descriptor() ([]byte, []int) {
-	return file_cosmos_bank_v1beta1_query_proto_rawDescGZIP(), []int{14}
+	return file_cosmos_bank_v1beta1_query_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *QueryDenomsMetadataRequest) GetPagination() *v1beta11.PageRequest {
@@ -11880,7 +13906,7 @@ type QueryDenomsMetadataResponse struct {
 func (x *QueryDenomsMetadataResponse) Reset() {
 	*x = QueryDenomsMetadataResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_cosmos_bank_v1beta1_query_proto_msgTypes[15]
+		mi := &file_cosmos_bank_v1beta1_query_proto_msgTypes[19]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -11894,7 +13920,7 @@ func (*QueryDenomsMetadataResponse) ProtoMessage() {}
 
 // Deprecated: Use QueryDenomsMetadataResponse.ProtoReflect.Descriptor instead.
 func (*QueryDenomsMetadataResponse) Descriptor() ([]byte, []int) {
-	return file_cosmos_bank_v1beta1_query_proto_rawDescGZIP(), []int{15}
+	return file_cosmos_bank_v1beta1_query_proto_rawDescGZIP(), []int{19}
 }
 
 func (x *QueryDenomsMetadataResponse) GetMetadatas() []*Metadata {
@@ -11924,7 +13950,7 @@ type QueryDenomMetadataRequest struct {
 func (x *QueryDenomMetadataRequest) Reset() {
 	*x = QueryDenomMetadataRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_cosmos_bank_v1beta1_query_proto_msgTypes[16]
+		mi := &file_cosmos_bank_v1beta1_query_proto_msgTypes[20]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -11938,7 +13964,7 @@ func (*QueryDenomMetadataRequest) ProtoMessage() {}
 
 // Deprecated: Use QueryDenomMetadataRequest.ProtoReflect.Descriptor instead.
 func (*QueryDenomMetadataRequest) Descriptor() ([]byte, []int) {
-	return file_cosmos_bank_v1beta1_query_proto_rawDescGZIP(), []int{16}
+	return file_cosmos_bank_v1beta1_query_proto_rawDescGZIP(), []int{20}
 }
 
 func (x *QueryDenomMetadataRequest) GetDenom() string {
@@ -11962,7 +13988,7 @@ type QueryDenomMetadataResponse struct {
 func (x *QueryDenomMetadataResponse) Reset() {
 	*x = QueryDenomMetadataResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_cosmos_bank_v1beta1_query_proto_msgTypes[17]
+		mi := &file_cosmos_bank_v1beta1_query_proto_msgTypes[21]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -11976,7 +14002,7 @@ func (*QueryDenomMetadataResponse) ProtoMessage() {}
 
 // Deprecated: Use QueryDenomMetadataResponse.ProtoReflect.Descriptor instead.
 func (*QueryDenomMetadataResponse) Descriptor() ([]byte, []int) {
-	return file_cosmos_bank_v1beta1_query_proto_rawDescGZIP(), []int{17}
+	return file_cosmos_bank_v1beta1_query_proto_rawDescGZIP(), []int{21}
 }
 
 func (x *QueryDenomMetadataResponse) GetMetadata() *Metadata {
@@ -12003,7 +14029,7 @@ type QueryDenomOwnersRequest struct {
 func (x *QueryDenomOwnersRequest) Reset() {
 	*x = QueryDenomOwnersRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_cosmos_bank_v1beta1_query_proto_msgTypes[18]
+		mi := &file_cosmos_bank_v1beta1_query_proto_msgTypes[22]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -12017,7 +14043,7 @@ func (*QueryDenomOwnersRequest) ProtoMessage() {}
 
 // Deprecated: Use QueryDenomOwnersRequest.ProtoReflect.Descriptor instead.
 func (*QueryDenomOwnersRequest) Descriptor() ([]byte, []int) {
-	return file_cosmos_bank_v1beta1_query_proto_rawDescGZIP(), []int{18}
+	return file_cosmos_bank_v1beta1_query_proto_rawDescGZIP(), []int{22}
 }
 
 func (x *QueryDenomOwnersRequest) GetDenom() string {
@@ -12053,7 +14079,7 @@ type DenomOwner struct {
 func (x *DenomOwner) Reset() {
 	*x = DenomOwner{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_cosmos_bank_v1beta1_query_proto_msgTypes[19]
+		mi := &file_cosmos_bank_v1beta1_query_proto_msgTypes[23]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -12067,7 +14093,7 @@ func (*DenomOwner) ProtoMessage() {}
 
 // Deprecated: Use DenomOwner.ProtoReflect.Descriptor instead.
 func (*DenomOwner) Descriptor() ([]byte, []int) {
-	return file_cosmos_bank_v1beta1_query_proto_rawDescGZIP(), []int{19}
+	return file_cosmos_bank_v1beta1_query_proto_rawDescGZIP(), []int{23}
 }
 
 func (x *DenomOwner) GetAddress() string {
@@ -12100,7 +14126,7 @@ type QueryDenomOwnersResponse struct {
 func (x *QueryDenomOwnersResponse) Reset() {
 	*x = QueryDenomOwnersResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_cosmos_bank_v1beta1_query_proto_msgTypes[20]
+		mi := &file_cosmos_bank_v1beta1_query_proto_msgTypes[24]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -12114,7 +14140,7 @@ func (*QueryDenomOwnersResponse) ProtoMessage() {}
 
 // Deprecated: Use QueryDenomOwnersResponse.ProtoReflect.Descriptor instead.
 func (*QueryDenomOwnersResponse) Descriptor() ([]byte, []int) {
-	return file_cosmos_bank_v1beta1_query_proto_rawDescGZIP(), []int{20}
+	return file_cosmos_bank_v1beta1_query_proto_rawDescGZIP(), []int{24}
 }
 
 func (x *QueryDenomOwnersResponse) GetDenomOwners() []*DenomOwner {
@@ -12149,7 +14175,7 @@ type QuerySendEnabledRequest struct {
 func (x *QuerySendEnabledRequest) Reset() {
 	*x = QuerySendEnabledRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_cosmos_bank_v1beta1_query_proto_msgTypes[21]
+		mi := &file_cosmos_bank_v1beta1_query_proto_msgTypes[25]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -12163,7 +14189,7 @@ func (*QuerySendEnabledRequest) ProtoMessage() {}
 
 // Deprecated: Use QuerySendEnabledRequest.ProtoReflect.Descriptor instead.
 func (*QuerySendEnabledRequest) Descriptor() ([]byte, []int) {
-	return file_cosmos_bank_v1beta1_query_proto_rawDescGZIP(), []int{21}
+	return file_cosmos_bank_v1beta1_query_proto_rawDescGZIP(), []int{25}
 }
 
 func (x *QuerySendEnabledRequest) GetDenoms() []string {
@@ -12197,7 +14223,7 @@ type QuerySendEnabledResponse struct {
 func (x *QuerySendEnabledResponse) Reset() {
 	*x = QuerySendEnabledResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_cosmos_bank_v1beta1_query_proto_msgTypes[22]
+		mi := &file_cosmos_bank_v1beta1_query_proto_msgTypes[26]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -12211,7 +14237,7 @@ func (*QuerySendEnabledResponse) ProtoMessage() {}
 
 // Deprecated: Use QuerySendEnabledResponse.ProtoReflect.Descriptor instead.
 func (*QuerySendEnabledResponse) Descriptor() ([]byte, []int) {
-	return file_cosmos_bank_v1beta1_query_proto_rawDescGZIP(), []int{22}
+	return file_cosmos_bank_v1beta1_query_proto_rawDescGZIP(), []int{26}
 }
 
 func (x *QuerySendEnabledResponse) GetSendEnabled() []*SendEnabled {
@@ -12349,214 +14375,270 @@ var file_cosmos_bank_v1beta1_query_proto_rawDesc = []byte{
 	0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e,
 	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x76, 0x31, 0x62, 0x65,
 	0x74, 0x61, 0x31, 0x2e, 0x43, 0x6f, 0x69, 0x6e, 0x42, 0x09, 0xc8, 0xde, 0x1f, 0x00, 0xa8, 0xe7,
-	0xb0, 0x2a, 0x01, 0x52, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x22, 0x14, 0x0a, 0x12, 0x51,
-	0x75, 0x65, 0x72, 0x79, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
-	0x74, 0x22, 0x55, 0x0a, 0x13, 0x51, 0x75, 0x65, 0x72, 0x79, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73,
-	0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x3e, 0x0a, 0x06, 0x70, 0x61, 0x72, 0x61,
-	0x6d, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1b, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
-	0x73, 0x2e, 0x62, 0x61, 0x6e, 0x6b, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x50,
-	0x61, 0x72, 0x61, 0x6d, 0x73, 0x42, 0x09, 0xc8, 0xde, 0x1f, 0x00, 0xa8, 0xe7, 0xb0, 0x2a, 0x01,
-	0x52, 0x06, 0x70, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x22, 0x64, 0x0a, 0x1a, 0x51, 0x75, 0x65, 0x72,
-	0x79, 0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x73, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x52,
-	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x46, 0x0a, 0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61,
-	0x74, 0x69, 0x6f, 0x6e, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x26, 0x2e, 0x63, 0x6f, 0x73,
-	0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x71, 0x75, 0x65, 0x72, 0x79, 0x2e, 0x76,
-	0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x50, 0x61, 0x67, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65,
-	0x73, 0x74, 0x52, 0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x22, 0xae,
-	0x01, 0x0a, 0x1b, 0x51, 0x75, 0x65, 0x72, 0x79, 0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x73, 0x4d, 0x65,
-	0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x46,
-	0x0a, 0x09, 0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28,
-	0x0b, 0x32, 0x1d, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x6e, 0x6b, 0x2e,
-	0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61,
-	0x42, 0x09, 0xc8, 0xde, 0x1f, 0x00, 0xa8, 0xe7, 0xb0, 0x2a, 0x01, 0x52, 0x09, 0x6d, 0x65, 0x74,
-	0x61, 0x64, 0x61, 0x74, 0x61, 0x73, 0x12, 0x47, 0x0a, 0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61,
-	0x74, 0x69, 0x6f, 0x6e, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x27, 0x2e, 0x63, 0x6f, 0x73,
-	0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x71, 0x75, 0x65, 0x72, 0x79, 0x2e, 0x76,
-	0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x50, 0x61, 0x67, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f,
-	0x6e, 0x73, 0x65, 0x52, 0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x22,
-	0x31, 0x0a, 0x19, 0x51, 0x75, 0x65, 0x72, 0x79, 0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x4d, 0x65, 0x74,
-	0x61, 0x64, 0x61, 0x74, 0x61, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x14, 0x0a, 0x05,
-	0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x64, 0x65, 0x6e,
-	0x6f, 0x6d, 0x22, 0x62, 0x0a, 0x1a, 0x51, 0x75, 0x65, 0x72, 0x79, 0x44, 0x65, 0x6e, 0x6f, 0x6d,
-	0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
-	0x12, 0x44, 0x0a, 0x08, 0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x18, 0x01, 0x20, 0x01,
-	0x28, 0x0b, 0x32, 0x1d, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x6e, 0x6b,
-	0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74,
-	0x61, 0x42, 0x09, 0xc8, 0xde, 0x1f, 0x00, 0xa8, 0xe7, 0xb0, 0x2a, 0x01, 0x52, 0x08, 0x6d, 0x65,
-	0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x22, 0x77, 0x0a, 0x17, 0x51, 0x75, 0x65, 0x72, 0x79, 0x44,
-	0x65, 0x6e, 0x6f, 0x6d, 0x4f, 0x77, 0x6e, 0x65, 0x72, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
-	0x74, 0x12, 0x14, 0x0a, 0x05, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09,
-	0x52, 0x05, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x12, 0x46, 0x0a, 0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e,
-	0x61, 0x74, 0x69, 0x6f, 0x6e, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x26, 0x2e, 0x63, 0x6f,
-	0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x71, 0x75, 0x65, 0x72, 0x79, 0x2e,
-	0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x50, 0x61, 0x67, 0x65, 0x52, 0x65, 0x71, 0x75,
-	0x65, 0x73, 0x74, 0x52, 0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x22,
-	0x80, 0x01, 0x0a, 0x0a, 0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x4f, 0x77, 0x6e, 0x65, 0x72, 0x12, 0x32,
-	0x0a, 0x07, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42,
-	0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72,
-	0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x07, 0x61, 0x64, 0x64, 0x72, 0x65,
-	0x73, 0x73, 0x12, 0x3e, 0x0a, 0x07, 0x62, 0x61, 0x6c, 0x61, 0x6e, 0x63, 0x65, 0x18, 0x02, 0x20,
-	0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73,
-	0x65, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x43, 0x6f, 0x69, 0x6e, 0x42, 0x09,
-	0xc8, 0xde, 0x1f, 0x00, 0xa8, 0xe7, 0xb0, 0x2a, 0x01, 0x52, 0x07, 0x62, 0x61, 0x6c, 0x61, 0x6e,
-	0x63, 0x65, 0x22, 0xa7, 0x01, 0x0a, 0x18, 0x51, 0x75, 0x65, 0x72, 0x79, 0x44, 0x65, 0x6e, 0x6f,
-	0x6d, 0x4f, 0x77, 0x6e, 0x65, 0x72, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12,
-	0x42, 0x0a, 0x0c, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x5f, 0x6f, 0x77, 0x6e, 0x65, 0x72, 0x73, 0x18,
-	0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x1f, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62,
-	0x61, 0x6e, 0x6b, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x44, 0x65, 0x6e, 0x6f,
-	0x6d, 0x4f, 0x77, 0x6e, 0x65, 0x72, 0x52, 0x0b, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x4f, 0x77, 0x6e,
-	0x65, 0x72, 0x73, 0x12, 0x47, 0x0a, 0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f,
-	0x6e, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x27, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
+	0xb0, 0x2a, 0x01, 0x52, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x22, 0x78, 0x0a, 0x24, 0x51,
+	0x75, 0x65, 0x72, 0x79, 0x54, 0x6f, 0x74, 0x61, 0x6c, 0x53, 0x75, 0x70, 0x70, 0x6c, 0x79, 0x57,
+	0x69, 0x74, 0x68, 0x6f, 0x75, 0x74, 0x4f, 0x66, 0x66, 0x73, 0x65, 0x74, 0x52, 0x65, 0x71, 0x75,
+	0x65, 0x73, 0x74, 0x12, 0x46, 0x0a, 0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f,
+	0x6e, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x26, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
 	0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x71, 0x75, 0x65, 0x72, 0x79, 0x2e, 0x76, 0x31, 0x62, 0x65,
-	0x74, 0x61, 0x31, 0x2e, 0x50, 0x61, 0x67, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
-	0x52, 0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x22, 0x79, 0x0a, 0x17,
-	0x51, 0x75, 0x65, 0x72, 0x79, 0x53, 0x65, 0x6e, 0x64, 0x45, 0x6e, 0x61, 0x62, 0x6c, 0x65, 0x64,
-	0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x16, 0x0a, 0x06, 0x64, 0x65, 0x6e, 0x6f, 0x6d,
-	0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x09, 0x52, 0x06, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x73, 0x12,
-	0x46, 0x0a, 0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x18, 0x63, 0x20,
-	0x01, 0x28, 0x0b, 0x32, 0x26, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73,
+	0x74, 0x61, 0x31, 0x2e, 0x50, 0x61, 0x67, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x52,
+	0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x3a, 0x08, 0x88, 0xa0, 0x1f,
+	0x00, 0xe8, 0xa0, 0x1f, 0x00, 0x22, 0xd5, 0x01, 0x0a, 0x25, 0x51, 0x75, 0x65, 0x72, 0x79, 0x54,
+	0x6f, 0x74, 0x61, 0x6c, 0x53, 0x75, 0x70, 0x70, 0x6c, 0x79, 0x57, 0x69, 0x74, 0x68, 0x6f, 0x75,
+	0x74, 0x4f, 0x66, 0x66, 0x73, 0x65, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12,
+	0x63, 0x0a, 0x06, 0x73, 0x75, 0x70, 0x70, 0x6c, 0x79, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32,
+	0x19, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x76, 0x31,
+	0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x43, 0x6f, 0x69, 0x6e, 0x42, 0x30, 0xc8, 0xde, 0x1f, 0x00,
+	0xaa, 0xdf, 0x1f, 0x28, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x63,
+	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2d, 0x73, 0x64, 0x6b,
+	0x2f, 0x74, 0x79, 0x70, 0x65, 0x73, 0x2e, 0x43, 0x6f, 0x69, 0x6e, 0x73, 0x52, 0x06, 0x73, 0x75,
+	0x70, 0x70, 0x6c, 0x79, 0x12, 0x47, 0x0a, 0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61, 0x74, 0x69,
+	0x6f, 0x6e, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x27, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
+	0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x71, 0x75, 0x65, 0x72, 0x79, 0x2e, 0x76, 0x31, 0x62,
+	0x65, 0x74, 0x61, 0x31, 0x2e, 0x50, 0x61, 0x67, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
+	0x65, 0x52, 0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x22, 0x39, 0x0a,
+	0x21, 0x51, 0x75, 0x65, 0x72, 0x79, 0x53, 0x75, 0x70, 0x70, 0x6c, 0x79, 0x4f, 0x66, 0x57, 0x69,
+	0x74, 0x68, 0x6f, 0x75, 0x74, 0x4f, 0x66, 0x66, 0x73, 0x65, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65,
+	0x73, 0x74, 0x12, 0x14, 0x0a, 0x05, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x18, 0x01, 0x20, 0x01, 0x28,
+	0x09, 0x52, 0x05, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x22, 0x5d, 0x0a, 0x22, 0x51, 0x75, 0x65, 0x72,
+	0x79, 0x53, 0x75, 0x70, 0x70, 0x6c, 0x79, 0x4f, 0x66, 0x57, 0x69, 0x74, 0x68, 0x6f, 0x75, 0x74,
+	0x4f, 0x66, 0x66, 0x73, 0x65, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x37,
+	0x0a, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x19,
+	0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x76, 0x31, 0x62,
+	0x65, 0x74, 0x61, 0x31, 0x2e, 0x43, 0x6f, 0x69, 0x6e, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52,
+	0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x22, 0x14, 0x0a, 0x12, 0x51, 0x75, 0x65, 0x72, 0x79,
+	0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x22, 0x55, 0x0a,
+	0x13, 0x51, 0x75, 0x65, 0x72, 0x79, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x52, 0x65, 0x73, 0x70,
+	0x6f, 0x6e, 0x73, 0x65, 0x12, 0x3e, 0x0a, 0x06, 0x70, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x18, 0x01,
+	0x20, 0x01, 0x28, 0x0b, 0x32, 0x1b, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61,
+	0x6e, 0x6b, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x50, 0x61, 0x72, 0x61, 0x6d,
+	0x73, 0x42, 0x09, 0xc8, 0xde, 0x1f, 0x00, 0xa8, 0xe7, 0xb0, 0x2a, 0x01, 0x52, 0x06, 0x70, 0x61,
+	0x72, 0x61, 0x6d, 0x73, 0x22, 0x64, 0x0a, 0x1a, 0x51, 0x75, 0x65, 0x72, 0x79, 0x44, 0x65, 0x6e,
+	0x6f, 0x6d, 0x73, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x52, 0x65, 0x71, 0x75, 0x65,
+	0x73, 0x74, 0x12, 0x46, 0x0a, 0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e,
+	0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x26, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e,
+	0x62, 0x61, 0x73, 0x65, 0x2e, 0x71, 0x75, 0x65, 0x72, 0x79, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74,
+	0x61, 0x31, 0x2e, 0x50, 0x61, 0x67, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x52, 0x0a,
+	0x70, 0x61, 0x67, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x22, 0xae, 0x01, 0x0a, 0x1b, 0x51,
+	0x75, 0x65, 0x72, 0x79, 0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x73, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61,
+	0x74, 0x61, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x46, 0x0a, 0x09, 0x6d, 0x65,
+	0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x1d, 0x2e,
+	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x6e, 0x6b, 0x2e, 0x76, 0x31, 0x62, 0x65,
+	0x74, 0x61, 0x31, 0x2e, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x42, 0x09, 0xc8, 0xde,
+	0x1f, 0x00, 0xa8, 0xe7, 0xb0, 0x2a, 0x01, 0x52, 0x09, 0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74,
+	0x61, 0x73, 0x12, 0x47, 0x0a, 0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e,
+	0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x27, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e,
+	0x62, 0x61, 0x73, 0x65, 0x2e, 0x71, 0x75, 0x65, 0x72, 0x79, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74,
+	0x61, 0x31, 0x2e, 0x50, 0x61, 0x67, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x52,
+	0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x22, 0x31, 0x0a, 0x19, 0x51,
+	0x75, 0x65, 0x72, 0x79, 0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74,
+	0x61, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x14, 0x0a, 0x05, 0x64, 0x65, 0x6e, 0x6f,
+	0x6d, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x22, 0x62,
+	0x0a, 0x1a, 0x51, 0x75, 0x65, 0x72, 0x79, 0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x4d, 0x65, 0x74, 0x61,
+	0x64, 0x61, 0x74, 0x61, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x44, 0x0a, 0x08,
+	0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1d,
+	0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x6e, 0x6b, 0x2e, 0x76, 0x31, 0x62,
+	0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x42, 0x09, 0xc8,
+	0xde, 0x1f, 0x00, 0xa8, 0xe7, 0xb0, 0x2a, 0x01, 0x52, 0x08, 0x6d, 0x65, 0x74, 0x61, 0x64, 0x61,
+	0x74, 0x61, 0x22, 0x77, 0x0a, 0x17, 0x51, 0x75, 0x65, 0x72, 0x79, 0x44, 0x65, 0x6e, 0x6f, 0x6d,
+	0x4f, 0x77, 0x6e, 0x65, 0x72, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x14, 0x0a,
+	0x05, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x64, 0x65,
+	0x6e, 0x6f, 0x6d, 0x12, 0x46, 0x0a, 0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f,
+	0x6e, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x26, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
+	0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x71, 0x75, 0x65, 0x72, 0x79, 0x2e, 0x76, 0x31, 0x62, 0x65,
+	0x74, 0x61, 0x31, 0x2e, 0x50, 0x61, 0x67, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x52,
+	0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x22, 0x80, 0x01, 0x0a, 0x0a,
+	0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x4f, 0x77, 0x6e, 0x65, 0x72, 0x12, 0x32, 0x0a, 0x07, 0x61, 0x64,
+	0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d,
+	0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53,
+	0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x07, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x3e,
+	0x0a, 0x07, 0x62, 0x61, 0x6c, 0x61, 0x6e, 0x63, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32,
+	0x19, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x76, 0x31,
+	0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x43, 0x6f, 0x69, 0x6e, 0x42, 0x09, 0xc8, 0xde, 0x1f, 0x00,
+	0xa8, 0xe7, 0xb0, 0x2a, 0x01, 0x52, 0x07, 0x62, 0x61, 0x6c, 0x61, 0x6e, 0x63, 0x65, 0x22, 0xa7,
+	0x01, 0x0a, 0x18, 0x51, 0x75, 0x65, 0x72, 0x79, 0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x4f, 0x77, 0x6e,
+	0x65, 0x72, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x42, 0x0a, 0x0c, 0x64,
+	0x65, 0x6e, 0x6f, 0x6d, 0x5f, 0x6f, 0x77, 0x6e, 0x65, 0x72, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28,
+	0x0b, 0x32, 0x1f, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x6e, 0x6b, 0x2e,
+	0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x4f, 0x77, 0x6e,
+	0x65, 0x72, 0x52, 0x0b, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x4f, 0x77, 0x6e, 0x65, 0x72, 0x73, 0x12,
+	0x47, 0x0a, 0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x18, 0x02, 0x20,
+	0x01, 0x28, 0x0b, 0x32, 0x27, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73,
 	0x65, 0x2e, 0x71, 0x75, 0x65, 0x72, 0x79, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e,
-	0x50, 0x61, 0x67, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x52, 0x0a, 0x70, 0x61, 0x67,
-	0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x22, 0xa8, 0x01, 0x0a, 0x18, 0x51, 0x75, 0x65, 0x72,
-	0x79, 0x53, 0x65, 0x6e, 0x64, 0x45, 0x6e, 0x61, 0x62, 0x6c, 0x65, 0x64, 0x52, 0x65, 0x73, 0x70,
-	0x6f, 0x6e, 0x73, 0x65, 0x12, 0x43, 0x0a, 0x0c, 0x73, 0x65, 0x6e, 0x64, 0x5f, 0x65, 0x6e, 0x61,
-	0x62, 0x6c, 0x65, 0x64, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x20, 0x2e, 0x63, 0x6f, 0x73,
-	0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x6e, 0x6b, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31,
-	0x2e, 0x53, 0x65, 0x6e, 0x64, 0x45, 0x6e, 0x61, 0x62, 0x6c, 0x65, 0x64, 0x52, 0x0b, 0x73, 0x65,
-	0x6e, 0x64, 0x45, 0x6e, 0x61, 0x62, 0x6c, 0x65, 0x64, 0x12, 0x47, 0x0a, 0x0a, 0x70, 0x61, 0x67,
-	0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x18, 0x63, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x27, 0x2e,
-	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x71, 0x75, 0x65, 0x72,
-	0x79, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x50, 0x61, 0x67, 0x65, 0x52, 0x65,
-	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x52, 0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61, 0x74, 0x69,
-	0x6f, 0x6e, 0x32, 0xb2, 0x0e, 0x0a, 0x05, 0x51, 0x75, 0x65, 0x72, 0x79, 0x12, 0x9d, 0x01, 0x0a,
-	0x07, 0x42, 0x61, 0x6c, 0x61, 0x6e, 0x63, 0x65, 0x12, 0x28, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
-	0x73, 0x2e, 0x62, 0x61, 0x6e, 0x6b, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51,
-	0x75, 0x65, 0x72, 0x79, 0x42, 0x61, 0x6c, 0x61, 0x6e, 0x63, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65,
-	0x73, 0x74, 0x1a, 0x29, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x6e, 0x6b,
-	0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x42, 0x61,
-	0x6c, 0x61, 0x6e, 0x63, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x3d, 0x88,
-	0xe7, 0xb0, 0x2a, 0x01, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x32, 0x12, 0x30, 0x2f, 0x63, 0x6f, 0x73,
-	0x6d, 0x6f, 0x73, 0x2f, 0x62, 0x61, 0x6e, 0x6b, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31,
-	0x2f, 0x62, 0x61, 0x6c, 0x61, 0x6e, 0x63, 0x65, 0x73, 0x2f, 0x7b, 0x61, 0x64, 0x64, 0x72, 0x65,
-	0x73, 0x73, 0x7d, 0x2f, 0x62, 0x79, 0x5f, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x12, 0xa0, 0x01, 0x0a,
-	0x0b, 0x41, 0x6c, 0x6c, 0x42, 0x61, 0x6c, 0x61, 0x6e, 0x63, 0x65, 0x73, 0x12, 0x2c, 0x2e, 0x63,
-	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x6e, 0x6b, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74,
-	0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x41, 0x6c, 0x6c, 0x42, 0x61, 0x6c, 0x61, 0x6e,
-	0x63, 0x65, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x2d, 0x2e, 0x63, 0x6f, 0x73,
-	0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x6e, 0x6b, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31,
-	0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x41, 0x6c, 0x6c, 0x42, 0x61, 0x6c, 0x61, 0x6e, 0x63, 0x65,
-	0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x34, 0x88, 0xe7, 0xb0, 0x2a, 0x01,
-	0x82, 0xd3, 0xe4, 0x93, 0x02, 0x29, 0x12, 0x27, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f,
-	0x62, 0x61, 0x6e, 0x6b, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x62, 0x61, 0x6c,
-	0x61, 0x6e, 0x63, 0x65, 0x73, 0x2f, 0x7b, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x7d, 0x12,
-	0xbc, 0x01, 0x0a, 0x11, 0x53, 0x70, 0x65, 0x6e, 0x64, 0x61, 0x62, 0x6c, 0x65, 0x42, 0x61, 0x6c,
-	0x61, 0x6e, 0x63, 0x65, 0x73, 0x12, 0x32, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62,
-	0x61, 0x6e, 0x6b, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72,
-	0x79, 0x53, 0x70, 0x65, 0x6e, 0x64, 0x61, 0x62, 0x6c, 0x65, 0x42, 0x61, 0x6c, 0x61, 0x6e, 0x63,
-	0x65, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x33, 0x2e, 0x63, 0x6f, 0x73, 0x6d,
-	0x6f, 0x73, 0x2e, 0x62, 0x61, 0x6e, 0x6b, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e,
-	0x51, 0x75, 0x65, 0x72, 0x79, 0x53, 0x70, 0x65, 0x6e, 0x64, 0x61, 0x62, 0x6c, 0x65, 0x42, 0x61,
-	0x6c, 0x61, 0x6e, 0x63, 0x65, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x3e,
-	0x88, 0xe7, 0xb0, 0x2a, 0x01, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x33, 0x12, 0x31, 0x2f, 0x63, 0x6f,
-	0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x62, 0x61, 0x6e, 0x6b, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61,
-	0x31, 0x2f, 0x73, 0x70, 0x65, 0x6e, 0x64, 0x61, 0x62, 0x6c, 0x65, 0x5f, 0x62, 0x61, 0x6c, 0x61,
-	0x6e, 0x63, 0x65, 0x73, 0x2f, 0x7b, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x7d, 0x12, 0xd7,
-	0x01, 0x0a, 0x17, 0x53, 0x70, 0x65, 0x6e, 0x64, 0x61, 0x62, 0x6c, 0x65, 0x42, 0x61, 0x6c, 0x61,
-	0x6e, 0x63, 0x65, 0x42, 0x79, 0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x12, 0x38, 0x2e, 0x63, 0x6f, 0x73,
-	0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x6e, 0x6b, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31,
-	0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x53, 0x70, 0x65, 0x6e, 0x64, 0x61, 0x62, 0x6c, 0x65, 0x42,
-	0x61, 0x6c, 0x61, 0x6e, 0x63, 0x65, 0x42, 0x79, 0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x52, 0x65, 0x71,
-	0x75, 0x65, 0x73, 0x74, 0x1a, 0x39, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61,
+	0x50, 0x61, 0x67, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x52, 0x0a, 0x70, 0x61,
+	0x67, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x22, 0x79, 0x0a, 0x17, 0x51, 0x75, 0x65, 0x72,
+	0x79, 0x53, 0x65, 0x6e, 0x64, 0x45, 0x6e, 0x61, 0x62, 0x6c, 0x65, 0x64, 0x52, 0x65, 0x71, 0x75,
+	0x65, 0x73, 0x74, 0x12, 0x16, 0x0a, 0x06, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x73, 0x18, 0x01, 0x20,
+	0x03, 0x28, 0x09, 0x52, 0x06, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x73, 0x12, 0x46, 0x0a, 0x0a, 0x70,
+	0x61, 0x67, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x18, 0x63, 0x20, 0x01, 0x28, 0x0b, 0x32,
+	0x26, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x71, 0x75,
+	0x65, 0x72, 0x79, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x50, 0x61, 0x67, 0x65,
+	0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x52, 0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61, 0x74,
+	0x69, 0x6f, 0x6e, 0x22, 0xa8, 0x01, 0x0a, 0x18, 0x51, 0x75, 0x65, 0x72, 0x79, 0x53, 0x65, 0x6e,
+	0x64, 0x45, 0x6e, 0x61, 0x62, 0x6c, 0x65, 0x64, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
+	0x12, 0x43, 0x0a, 0x0c, 0x73, 0x65, 0x6e, 0x64, 0x5f, 0x65, 0x6e, 0x61, 0x62, 0x6c, 0x65, 0x64,
+	0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x20, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e,
+	0x62, 0x61, 0x6e, 0x6b, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x53, 0x65, 0x6e,
+	0x64, 0x45, 0x6e, 0x61, 0x62, 0x6c, 0x65, 0x64, 0x52, 0x0b, 0x73, 0x65, 0x6e, 0x64, 0x45, 0x6e,
+	0x61, 0x62, 0x6c, 0x65, 0x64, 0x12, 0x47, 0x0a, 0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61, 0x74,
+	0x69, 0x6f, 0x6e, 0x18, 0x63, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x27, 0x2e, 0x63, 0x6f, 0x73, 0x6d,
+	0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x71, 0x75, 0x65, 0x72, 0x79, 0x2e, 0x76, 0x31,
+	0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x50, 0x61, 0x67, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
+	0x73, 0x65, 0x52, 0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x32, 0xc1,
+	0x11, 0x0a, 0x05, 0x51, 0x75, 0x65, 0x72, 0x79, 0x12, 0x9d, 0x01, 0x0a, 0x07, 0x42, 0x61, 0x6c,
+	0x61, 0x6e, 0x63, 0x65, 0x12, 0x28, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61,
 	0x6e, 0x6b, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79,
-	0x53, 0x70, 0x65, 0x6e, 0x64, 0x61, 0x62, 0x6c, 0x65, 0x42, 0x61, 0x6c, 0x61, 0x6e, 0x63, 0x65,
-	0x42, 0x79, 0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22,
-	0x47, 0x88, 0xe7, 0xb0, 0x2a, 0x01, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x3c, 0x12, 0x3a, 0x2f, 0x63,
-	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x62, 0x61, 0x6e, 0x6b, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74,
-	0x61, 0x31, 0x2f, 0x73, 0x70, 0x65, 0x6e, 0x64, 0x61, 0x62, 0x6c, 0x65, 0x5f, 0x62, 0x61, 0x6c,
+	0x42, 0x61, 0x6c, 0x61, 0x6e, 0x63, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x29,
+	0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x6e, 0x6b, 0x2e, 0x76, 0x31, 0x62,
+	0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x42, 0x61, 0x6c, 0x61, 0x6e, 0x63,
+	0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x3d, 0x88, 0xe7, 0xb0, 0x2a, 0x01,
+	0x82, 0xd3, 0xe4, 0x93, 0x02, 0x32, 0x12, 0x30, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f,
+	0x62, 0x61, 0x6e, 0x6b, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x62, 0x61, 0x6c,
 	0x61, 0x6e, 0x63, 0x65, 0x73, 0x2f, 0x7b, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x7d, 0x2f,
-	0x62, 0x79, 0x5f, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x12, 0x94, 0x01, 0x0a, 0x0b, 0x54, 0x6f, 0x74,
-	0x61, 0x6c, 0x53, 0x75, 0x70, 0x70, 0x6c, 0x79, 0x12, 0x2c, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
+	0x62, 0x79, 0x5f, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x12, 0xa0, 0x01, 0x0a, 0x0b, 0x41, 0x6c, 0x6c,
+	0x42, 0x61, 0x6c, 0x61, 0x6e, 0x63, 0x65, 0x73, 0x12, 0x2c, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
 	0x73, 0x2e, 0x62, 0x61, 0x6e, 0x6b, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51,
-	0x75, 0x65, 0x72, 0x79, 0x54, 0x6f, 0x74, 0x61, 0x6c, 0x53, 0x75, 0x70, 0x70, 0x6c, 0x79, 0x52,
+	0x75, 0x65, 0x72, 0x79, 0x41, 0x6c, 0x6c, 0x42, 0x61, 0x6c, 0x61, 0x6e, 0x63, 0x65, 0x73, 0x52,
 	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x2d, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e,
 	0x62, 0x61, 0x6e, 0x6b, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65,
-	0x72, 0x79, 0x54, 0x6f, 0x74, 0x61, 0x6c, 0x53, 0x75, 0x70, 0x70, 0x6c, 0x79, 0x52, 0x65, 0x73,
-	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x28, 0x88, 0xe7, 0xb0, 0x2a, 0x01, 0x82, 0xd3, 0xe4, 0x93,
-	0x02, 0x1d, 0x12, 0x1b, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x62, 0x61, 0x6e, 0x6b,
-	0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x73, 0x75, 0x70, 0x70, 0x6c, 0x79, 0x12,
-	0x94, 0x01, 0x0a, 0x08, 0x53, 0x75, 0x70, 0x70, 0x6c, 0x79, 0x4f, 0x66, 0x12, 0x29, 0x2e, 0x63,
+	0x72, 0x79, 0x41, 0x6c, 0x6c, 0x42, 0x61, 0x6c, 0x61, 0x6e, 0x63, 0x65, 0x73, 0x52, 0x65, 0x73,
+	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x34, 0x88, 0xe7, 0xb0, 0x2a, 0x01, 0x82, 0xd3, 0xe4, 0x93,
+	0x02, 0x29, 0x12, 0x27, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x62, 0x61, 0x6e, 0x6b,
+	0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x62, 0x61, 0x6c, 0x61, 0x6e, 0x63, 0x65,
+	0x73, 0x2f, 0x7b, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x7d, 0x12, 0xbc, 0x01, 0x0a, 0x11,
+	0x53, 0x70, 0x65, 0x6e, 0x64, 0x61, 0x62, 0x6c, 0x65, 0x42, 0x61, 0x6c, 0x61, 0x6e, 0x63, 0x65,
+	0x73, 0x12, 0x32, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x6e, 0x6b, 0x2e,
+	0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x53, 0x70, 0x65,
+	0x6e, 0x64, 0x61, 0x62, 0x6c, 0x65, 0x42, 0x61, 0x6c, 0x61, 0x6e, 0x63, 0x65, 0x73, 0x52, 0x65,
+	0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x33, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62,
+	0x61, 0x6e, 0x6b, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72,
+	0x79, 0x53, 0x70, 0x65, 0x6e, 0x64, 0x61, 0x62, 0x6c, 0x65, 0x42, 0x61, 0x6c, 0x61, 0x6e, 0x63,
+	0x65, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x3e, 0x88, 0xe7, 0xb0, 0x2a,
+	0x01, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x33, 0x12, 0x31, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
+	0x2f, 0x62, 0x61, 0x6e, 0x6b, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x73, 0x70,
+	0x65, 0x6e, 0x64, 0x61, 0x62, 0x6c, 0x65, 0x5f, 0x62, 0x61, 0x6c, 0x61, 0x6e, 0x63, 0x65, 0x73,
+	0x2f, 0x7b, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x7d, 0x12, 0xd7, 0x01, 0x0a, 0x17, 0x53,
+	0x70, 0x65, 0x6e, 0x64, 0x61, 0x62, 0x6c, 0x65, 0x42, 0x61, 0x6c, 0x61, 0x6e, 0x63, 0x65, 0x42,
+	0x79, 0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x12, 0x38, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e,
+	0x62, 0x61, 0x6e, 0x6b, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65,
+	0x72, 0x79, 0x53, 0x70, 0x65, 0x6e, 0x64, 0x61, 0x62, 0x6c, 0x65, 0x42, 0x61, 0x6c, 0x61, 0x6e,
+	0x63, 0x65, 0x42, 0x79, 0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
+	0x1a, 0x39, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x6e, 0x6b, 0x2e, 0x76,
+	0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x53, 0x70, 0x65, 0x6e,
+	0x64, 0x61, 0x62, 0x6c, 0x65, 0x42, 0x61, 0x6c, 0x61, 0x6e, 0x63, 0x65, 0x42, 0x79, 0x44, 0x65,
+	0x6e, 0x6f, 0x6d, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x47, 0x88, 0xe7, 0xb0,
+	0x2a, 0x01, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x3c, 0x12, 0x3a, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
+	0x73, 0x2f, 0x62, 0x61, 0x6e, 0x6b, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x73,
+	0x70, 0x65, 0x6e, 0x64, 0x61, 0x62, 0x6c, 0x65, 0x5f, 0x62, 0x61, 0x6c, 0x61, 0x6e, 0x63, 0x65,
+	0x73, 0x2f, 0x7b, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x7d, 0x2f, 0x62, 0x79, 0x5f, 0x64,
+	0x65, 0x6e, 0x6f, 0x6d, 0x12, 0x94, 0x01, 0x0a, 0x0b, 0x54, 0x6f, 0x74, 0x61, 0x6c, 0x53, 0x75,
+	0x70, 0x70, 0x6c, 0x79, 0x12, 0x2c, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61,
+	0x6e, 0x6b, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79,
+	0x54, 0x6f, 0x74, 0x61, 0x6c, 0x53, 0x75, 0x70, 0x70, 0x6c, 0x79, 0x52, 0x65, 0x71, 0x75, 0x65,
+	0x73, 0x74, 0x1a, 0x2d, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x6e, 0x6b,
+	0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x54, 0x6f,
+	0x74, 0x61, 0x6c, 0x53, 0x75, 0x70, 0x70, 0x6c, 0x79, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
+	0x65, 0x22, 0x28, 0x88, 0xe7, 0xb0, 0x2a, 0x01, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x1d, 0x12, 0x1b,
+	0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x62, 0x61, 0x6e, 0x6b, 0x2f, 0x76, 0x31, 0x62,
+	0x65, 0x74, 0x61, 0x31, 0x2f, 0x73, 0x75, 0x70, 0x70, 0x6c, 0x79, 0x12, 0x94, 0x01, 0x0a, 0x08,
+	0x53, 0x75, 0x70, 0x70, 0x6c, 0x79, 0x4f, 0x66, 0x12, 0x29, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
+	0x73, 0x2e, 0x62, 0x61, 0x6e, 0x6b, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51,
+	0x75, 0x65, 0x72, 0x79, 0x53, 0x75, 0x70, 0x70, 0x6c, 0x79, 0x4f, 0x66, 0x52, 0x65, 0x71, 0x75,
+	0x65, 0x73, 0x74, 0x1a, 0x2a, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x6e,
+	0x6b, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x53,
+	0x75, 0x70, 0x70, 0x6c, 0x79, 0x4f, 0x66, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22,
+	0x31, 0x88, 0xe7, 0xb0, 0x2a, 0x01, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x26, 0x12, 0x24, 0x2f, 0x63,
+	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x62, 0x61, 0x6e, 0x6b, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74,
+	0x61, 0x31, 0x2f, 0x73, 0x75, 0x70, 0x70, 0x6c, 0x79, 0x2f, 0x62, 0x79, 0x5f, 0x64, 0x65, 0x6e,
+	0x6f, 0x6d, 0x12, 0xc5, 0x01, 0x0a, 0x18, 0x54, 0x6f, 0x74, 0x61, 0x6c, 0x53, 0x75, 0x70, 0x70,
+	0x6c, 0x79, 0x57, 0x69, 0x74, 0x68, 0x6f, 0x75, 0x74, 0x4f, 0x66, 0x66, 0x73, 0x65, 0x74, 0x12,
+	0x39, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x6e, 0x6b, 0x2e, 0x76, 0x31,
+	0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x54, 0x6f, 0x74, 0x61, 0x6c,
+	0x53, 0x75, 0x70, 0x70, 0x6c, 0x79, 0x57, 0x69, 0x74, 0x68, 0x6f, 0x75, 0x74, 0x4f, 0x66, 0x66,
+	0x73, 0x65, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x3a, 0x2e, 0x63, 0x6f, 0x73,
+	0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x6e, 0x6b, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31,
+	0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x54, 0x6f, 0x74, 0x61, 0x6c, 0x53, 0x75, 0x70, 0x70, 0x6c,
+	0x79, 0x57, 0x69, 0x74, 0x68, 0x6f, 0x75, 0x74, 0x4f, 0x66, 0x66, 0x73, 0x65, 0x74, 0x52, 0x65,
+	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x32, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x2c, 0x12, 0x2a,
+	0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x62, 0x61, 0x6e, 0x6b, 0x2f, 0x76, 0x31, 0x62,
+	0x65, 0x74, 0x61, 0x31, 0x2f, 0x73, 0x75, 0x70, 0x70, 0x6c, 0x79, 0x5f, 0x77, 0x69, 0x74, 0x68,
+	0x6f, 0x75, 0x74, 0x5f, 0x6f, 0x66, 0x66, 0x73, 0x65, 0x74, 0x12, 0xc4, 0x01, 0x0a, 0x15, 0x53,
+	0x75, 0x70, 0x70, 0x6c, 0x79, 0x4f, 0x66, 0x57, 0x69, 0x74, 0x68, 0x6f, 0x75, 0x74, 0x4f, 0x66,
+	0x66, 0x73, 0x65, 0x74, 0x12, 0x36, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61,
+	0x6e, 0x6b, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79,
+	0x53, 0x75, 0x70, 0x70, 0x6c, 0x79, 0x4f, 0x66, 0x57, 0x69, 0x74, 0x68, 0x6f, 0x75, 0x74, 0x4f,
+	0x66, 0x66, 0x73, 0x65, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x37, 0x2e, 0x63,
 	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x6e, 0x6b, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74,
 	0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x53, 0x75, 0x70, 0x70, 0x6c, 0x79, 0x4f, 0x66,
-	0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x2a, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
-	0x2e, 0x62, 0x61, 0x6e, 0x6b, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75,
-	0x65, 0x72, 0x79, 0x53, 0x75, 0x70, 0x70, 0x6c, 0x79, 0x4f, 0x66, 0x52, 0x65, 0x73, 0x70, 0x6f,
-	0x6e, 0x73, 0x65, 0x22, 0x31, 0x88, 0xe7, 0xb0, 0x2a, 0x01, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x26,
-	0x12, 0x24, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x62, 0x61, 0x6e, 0x6b, 0x2f, 0x76,
-	0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x73, 0x75, 0x70, 0x70, 0x6c, 0x79, 0x2f, 0x62, 0x79,
-	0x5f, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x12, 0x85, 0x01, 0x0a, 0x06, 0x50, 0x61, 0x72, 0x61, 0x6d,
-	0x73, 0x12, 0x27, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x6e, 0x6b, 0x2e,
-	0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x50, 0x61, 0x72,
-	0x61, 0x6d, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x28, 0x2e, 0x63, 0x6f, 0x73,
-	0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x6e, 0x6b, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31,
-	0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x52, 0x65, 0x73, 0x70,
-	0x6f, 0x6e, 0x73, 0x65, 0x22, 0x28, 0x88, 0xe7, 0xb0, 0x2a, 0x01, 0x82, 0xd3, 0xe4, 0x93, 0x02,
-	0x1d, 0x12, 0x1b, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x62, 0x61, 0x6e, 0x6b, 0x2f,
-	0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x70, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x12, 0xab,
-	0x01, 0x0a, 0x0d, 0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61,
-	0x12, 0x2e, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x6e, 0x6b, 0x2e, 0x76,
-	0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x44, 0x65, 0x6e, 0x6f,
-	0x6d, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
-	0x1a, 0x2f, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x6e, 0x6b, 0x2e, 0x76,
-	0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x44, 0x65, 0x6e, 0x6f,
-	0x6d, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
-	0x65, 0x22, 0x39, 0x88, 0xe7, 0xb0, 0x2a, 0x01, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x2e, 0x12, 0x2c,
-	0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x62, 0x61, 0x6e, 0x6b, 0x2f, 0x76, 0x31, 0x62,
-	0x65, 0x74, 0x61, 0x31, 0x2f, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x73, 0x5f, 0x6d, 0x65, 0x74, 0x61,
-	0x64, 0x61, 0x74, 0x61, 0x2f, 0x7b, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x7d, 0x12, 0xa6, 0x01, 0x0a,
-	0x0e, 0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x73, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x12,
-	0x2f, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x6e, 0x6b, 0x2e, 0x76, 0x31,
-	0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x44, 0x65, 0x6e, 0x6f, 0x6d,
-	0x73, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
-	0x1a, 0x30, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x6e, 0x6b, 0x2e, 0x76,
-	0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x44, 0x65, 0x6e, 0x6f,
-	0x6d, 0x73, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
-	0x73, 0x65, 0x22, 0x31, 0x88, 0xe7, 0xb0, 0x2a, 0x01, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x26, 0x12,
-	0x24, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x62, 0x61, 0x6e, 0x6b, 0x2f, 0x76, 0x31,
-	0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x73, 0x5f, 0x6d, 0x65, 0x74,
-	0x61, 0x64, 0x61, 0x74, 0x61, 0x12, 0xa2, 0x01, 0x0a, 0x0b, 0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x4f,
-	0x77, 0x6e, 0x65, 0x72, 0x73, 0x12, 0x2c, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62,
+	0x57, 0x69, 0x74, 0x68, 0x6f, 0x75, 0x74, 0x4f, 0x66, 0x66, 0x73, 0x65, 0x74, 0x52, 0x65, 0x73,
+	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x3a, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x34, 0x12, 0x32, 0x2f,
+	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x62, 0x61, 0x6e, 0x6b, 0x2f, 0x76, 0x31, 0x62, 0x65,
+	0x74, 0x61, 0x31, 0x2f, 0x73, 0x75, 0x70, 0x70, 0x6c, 0x79, 0x5f, 0x77, 0x69, 0x74, 0x68, 0x6f,
+	0x75, 0x74, 0x5f, 0x6f, 0x66, 0x66, 0x73, 0x65, 0x74, 0x2f, 0x7b, 0x64, 0x65, 0x6e, 0x6f, 0x6d,
+	0x7d, 0x12, 0x85, 0x01, 0x0a, 0x06, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x12, 0x27, 0x2e, 0x63,
+	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x6e, 0x6b, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74,
+	0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x52, 0x65,
+	0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x28, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62,
 	0x61, 0x6e, 0x6b, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72,
-	0x79, 0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x4f, 0x77, 0x6e, 0x65, 0x72, 0x73, 0x52, 0x65, 0x71, 0x75,
-	0x65, 0x73, 0x74, 0x1a, 0x2d, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x6e,
-	0x6b, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x44,
-	0x65, 0x6e, 0x6f, 0x6d, 0x4f, 0x77, 0x6e, 0x65, 0x72, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
-	0x73, 0x65, 0x22, 0x36, 0x88, 0xe7, 0xb0, 0x2a, 0x01, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x2b, 0x12,
-	0x29, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x62, 0x61, 0x6e, 0x6b, 0x2f, 0x76, 0x31,
-	0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x5f, 0x6f, 0x77, 0x6e, 0x65,
-	0x72, 0x73, 0x2f, 0x7b, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x7d, 0x12, 0x9a, 0x01, 0x0a, 0x0b, 0x53,
-	0x65, 0x6e, 0x64, 0x45, 0x6e, 0x61, 0x62, 0x6c, 0x65, 0x64, 0x12, 0x2c, 0x2e, 0x63, 0x6f, 0x73,
+	0x79, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22,
+	0x28, 0x88, 0xe7, 0xb0, 0x2a, 0x01, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x1d, 0x12, 0x1b, 0x2f, 0x63,
+	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x62, 0x61, 0x6e, 0x6b, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74,
+	0x61, 0x31, 0x2f, 0x70, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x12, 0xab, 0x01, 0x0a, 0x0d, 0x44, 0x65,
+	0x6e, 0x6f, 0x6d, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x12, 0x2e, 0x2e, 0x63, 0x6f,
+	0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x6e, 0x6b, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61,
+	0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x4d, 0x65, 0x74, 0x61,
+	0x64, 0x61, 0x74, 0x61, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x2f, 0x2e, 0x63, 0x6f,
+	0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x6e, 0x6b, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61,
+	0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x4d, 0x65, 0x74, 0x61,
+	0x64, 0x61, 0x74, 0x61, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x39, 0x88, 0xe7,
+	0xb0, 0x2a, 0x01, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x2e, 0x12, 0x2c, 0x2f, 0x63, 0x6f, 0x73, 0x6d,
+	0x6f, 0x73, 0x2f, 0x62, 0x61, 0x6e, 0x6b, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f,
+	0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x73, 0x5f, 0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x2f,
+	0x7b, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x7d, 0x12, 0xa6, 0x01, 0x0a, 0x0e, 0x44, 0x65, 0x6e, 0x6f,
+	0x6d, 0x73, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x12, 0x2f, 0x2e, 0x63, 0x6f, 0x73,
 	0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x6e, 0x6b, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31,
-	0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x53, 0x65, 0x6e, 0x64, 0x45, 0x6e, 0x61, 0x62, 0x6c, 0x65,
-	0x64, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x2d, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
-	0x73, 0x2e, 0x62, 0x61, 0x6e, 0x6b, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51,
-	0x75, 0x65, 0x72, 0x79, 0x53, 0x65, 0x6e, 0x64, 0x45, 0x6e, 0x61, 0x62, 0x6c, 0x65, 0x64, 0x52,
-	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x2e, 0x88, 0xe7, 0xb0, 0x2a, 0x01, 0x82, 0xd3,
-	0xe4, 0x93, 0x02, 0x23, 0x12, 0x21, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x62, 0x61,
-	0x6e, 0x6b, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x73, 0x65, 0x6e, 0x64, 0x5f,
-	0x65, 0x6e, 0x61, 0x62, 0x6c, 0x65, 0x64, 0x42, 0xc5, 0x01, 0x0a, 0x17, 0x63, 0x6f, 0x6d, 0x2e,
-	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x6e, 0x6b, 0x2e, 0x76, 0x31, 0x62, 0x65,
-	0x74, 0x61, 0x31, 0x42, 0x0a, 0x51, 0x75, 0x65, 0x72, 0x79, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50,
-	0x01, 0x5a, 0x30, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f,
-	0x61, 0x70, 0x69, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x62, 0x61, 0x6e, 0x6b, 0x2f,
-	0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x3b, 0x62, 0x61, 0x6e, 0x6b, 0x76, 0x31, 0x62, 0x65,
-	0x74, 0x61, 0x31, 0xa2, 0x02, 0x03, 0x43, 0x42, 0x58, 0xaa, 0x02, 0x13, 0x43, 0x6f, 0x73, 0x6d,
-	0x6f, 0x73, 0x2e, 0x42, 0x61, 0x6e, 0x6b, 0x2e, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0xca,
-	0x02, 0x13, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x42, 0x61, 0x6e, 0x6b, 0x5c, 0x56, 0x31,
-	0x62, 0x65, 0x74, 0x61, 0x31, 0xe2, 0x02, 0x1f, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x42,
-	0x61, 0x6e, 0x6b, 0x5c, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d,
-	0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x15, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
-	0x3a, 0x3a, 0x42, 0x61, 0x6e, 0x6b, 0x3a, 0x3a, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x62,
-	0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x73, 0x4d, 0x65, 0x74, 0x61,
+	0x64, 0x61, 0x74, 0x61, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x30, 0x2e, 0x63, 0x6f,
+	0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x6e, 0x6b, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61,
+	0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x73, 0x4d, 0x65, 0x74,
+	0x61, 0x64, 0x61, 0x74, 0x61, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x31, 0x88,
+	0xe7, 0xb0, 0x2a, 0x01, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x26, 0x12, 0x24, 0x2f, 0x63, 0x6f, 0x73,
+	0x6d, 0x6f, 0x73, 0x2f, 0x62, 0x61, 0x6e, 0x6b, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31,
+	0x2f, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x73, 0x5f, 0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61,
+	0x12, 0xa2, 0x01, 0x0a, 0x0b, 0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x4f, 0x77, 0x6e, 0x65, 0x72, 0x73,
+	0x12, 0x2c, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x6e, 0x6b, 0x2e, 0x76,
+	0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x44, 0x65, 0x6e, 0x6f,
+	0x6d, 0x4f, 0x77, 0x6e, 0x65, 0x72, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x2d,
+	0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x6e, 0x6b, 0x2e, 0x76, 0x31, 0x62,
+	0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x4f,
+	0x77, 0x6e, 0x65, 0x72, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x36, 0x88,
+	0xe7, 0xb0, 0x2a, 0x01, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x2b, 0x12, 0x29, 0x2f, 0x63, 0x6f, 0x73,
+	0x6d, 0x6f, 0x73, 0x2f, 0x62, 0x61, 0x6e, 0x6b, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31,
+	0x2f, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x5f, 0x6f, 0x77, 0x6e, 0x65, 0x72, 0x73, 0x2f, 0x7b, 0x64,
+	0x65, 0x6e, 0x6f, 0x6d, 0x7d, 0x12, 0x9a, 0x01, 0x0a, 0x0b, 0x53, 0x65, 0x6e, 0x64, 0x45, 0x6e,
+	0x61, 0x62, 0x6c, 0x65, 0x64, 0x12, 0x2c, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62,
+	0x61, 0x6e, 0x6b, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72,
+	0x79, 0x53, 0x65, 0x6e, 0x64, 0x45, 0x6e, 0x61, 0x62, 0x6c, 0x65, 0x64, 0x52, 0x65, 0x71, 0x75,
+	0x65, 0x73, 0x74, 0x1a, 0x2d, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x6e,
+	0x6b, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x53,
+	0x65, 0x6e, 0x64, 0x45, 0x6e, 0x61, 0x62, 0x6c, 0x65, 0x64, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
+	0x73, 0x65, 0x22, 0x2e, 0x88, 0xe7, 0xb0, 0x2a, 0x01, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x23, 0x12,
+	0x21, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x62, 0x61, 0x6e, 0x6b, 0x2f, 0x76, 0x31,
+	0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x73, 0x65, 0x6e, 0x64, 0x5f, 0x65, 0x6e, 0x61, 0x62, 0x6c,
+	0x65, 0x64, 0x42, 0xc5, 0x01, 0x0a, 0x17, 0x63, 0x6f, 0x6d, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
+	0x73, 0x2e, 0x62, 0x61, 0x6e, 0x6b, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x42, 0x0a,
+	0x51, 0x75, 0x65, 0x72, 0x79, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x30, 0x63, 0x6f,
+	0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x63,
+	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x62, 0x61, 0x6e, 0x6b, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74,
+	0x61, 0x31, 0x3b, 0x62, 0x61, 0x6e, 0x6b, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0xa2, 0x02,
+	0x03, 0x43, 0x42, 0x58, 0xaa, 0x02, 0x13, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x42, 0x61,
+	0x6e, 0x6b, 0x2e, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0xca, 0x02, 0x13, 0x43, 0x6f, 0x73,
+	0x6d, 0x6f, 0x73, 0x5c, 0x42, 0x61, 0x6e, 0x6b, 0x5c, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31,
+	0xe2, 0x02, 0x1f, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x42, 0x61, 0x6e, 0x6b, 0x5c, 0x56,
+	0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61,
+	0x74, 0x61, 0xea, 0x02, 0x15, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x3a, 0x3a, 0x42, 0x61, 0x6e,
+	0x6b, 0x3a, 0x3a, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74,
+	0x6f, 0x33,
 }
 
 var (
@@ -12571,90 +14653,102 @@ func file_cosmos_bank_v1beta1_query_proto_rawDescGZIP() []byte {
 	return file_cosmos_bank_v1beta1_query_proto_rawDescData
 }
 
-var file_cosmos_bank_v1beta1_query_proto_msgTypes = make([]protoimpl.MessageInfo, 23)
+var file_cosmos_bank_v1beta1_query_proto_msgTypes = make([]protoimpl.MessageInfo, 27)
 var file_cosmos_bank_v1beta1_query_proto_goTypes = []interface{}{
-	(*QueryBalanceRequest)(nil),                  // 0: cosmos.bank.v1beta1.QueryBalanceRequest
-	(*QueryBalanceResponse)(nil),                 // 1: cosmos.bank.v1beta1.QueryBalanceResponse
-	(*QueryAllBalancesRequest)(nil),              // 2: cosmos.bank.v1beta1.QueryAllBalancesRequest
-	(*QueryAllBalancesResponse)(nil),             // 3: cosmos.bank.v1beta1.QueryAllBalancesResponse
-	(*QuerySpendableBalancesRequest)(nil),        // 4: cosmos.bank.v1beta1.QuerySpendableBalancesRequest
-	(*QuerySpendableBalancesResponse)(nil),       // 5: cosmos.bank.v1beta1.QuerySpendableBalancesResponse
-	(*QuerySpendableBalanceByDenomRequest)(nil),  // 6: cosmos.bank.v1beta1.QuerySpendableBalanceByDenomRequest
-	(*QuerySpendableBalanceByDenomResponse)(nil), // 7: cosmos.bank.v1beta1.QuerySpendableBalanceByDenomResponse
-	(*QueryTotalSupplyRequest)(nil),              // 8: cosmos.bank.v1beta1.QueryTotalSupplyRequest
-	(*QueryTotalSupplyResponse)(nil),             // 9: cosmos.bank.v1beta1.QueryTotalSupplyResponse
-	(*QuerySupplyOfRequest)(nil),                 // 10: cosmos.bank.v1beta1.QuerySupplyOfRequest
-	(*QuerySupplyOfResponse)(nil),                // 11: cosmos.bank.v1beta1.QuerySupplyOfResponse
-	(*QueryParamsRequest)(nil),                   // 12: cosmos.bank.v1beta1.QueryParamsRequest
-	(*QueryParamsResponse)(nil),                  // 13: cosmos.bank.v1beta1.QueryParamsResponse
-	(*QueryDenomsMetadataRequest)(nil),           // 14: cosmos.bank.v1beta1.QueryDenomsMetadataRequest
-	(*QueryDenomsMetadataResponse)(nil),          // 15: cosmos.bank.v1beta1.QueryDenomsMetadataResponse
-	(*QueryDenomMetadataRequest)(nil),            // 16: cosmos.bank.v1beta1.QueryDenomMetadataRequest
-	(*QueryDenomMetadataResponse)(nil),           // 17: cosmos.bank.v1beta1.QueryDenomMetadataResponse
-	(*QueryDenomOwnersRequest)(nil),              // 18: cosmos.bank.v1beta1.QueryDenomOwnersRequest
-	(*DenomOwner)(nil),                           // 19: cosmos.bank.v1beta1.DenomOwner
-	(*QueryDenomOwnersResponse)(nil),             // 20: cosmos.bank.v1beta1.QueryDenomOwnersResponse
-	(*QuerySendEnabledRequest)(nil),              // 21: cosmos.bank.v1beta1.QuerySendEnabledRequest
-	(*QuerySendEnabledResponse)(nil),             // 22: cosmos.bank.v1beta1.QuerySendEnabledResponse
-	(*v1beta1.Coin)(nil),                         // 23: cosmos.base.v1beta1.Coin
-	(*v1beta11.PageRequest)(nil),                 // 24: cosmos.base.query.v1beta1.PageRequest
-	(*v1beta11.PageResponse)(nil),                // 25: cosmos.base.query.v1beta1.PageResponse
-	(*Params)(nil),                               // 26: cosmos.bank.v1beta1.Params
-	(*Metadata)(nil),                             // 27: cosmos.bank.v1beta1.Metadata
-	(*SendEnabled)(nil),                          // 28: cosmos.bank.v1beta1.SendEnabled
+	(*QueryBalanceRequest)(nil),                   // 0: cosmos.bank.v1beta1.QueryBalanceRequest
+	(*QueryBalanceResponse)(nil),                  // 1: cosmos.bank.v1beta1.QueryBalanceResponse
+	(*QueryAllBalancesRequest)(nil),               // 2: cosmos.bank.v1beta1.QueryAllBalancesRequest
+	(*QueryAllBalancesResponse)(nil),              // 3: cosmos.bank.v1beta1.QueryAllBalancesResponse
+	(*QuerySpendableBalancesRequest)(nil),         // 4: cosmos.bank.v1beta1.QuerySpendableBalancesRequest
+	(*QuerySpendableBalancesResponse)(nil),        // 5: cosmos.bank.v1beta1.QuerySpendableBalancesResponse
+	(*QuerySpendableBalanceByDenomRequest)(nil),   // 6: cosmos.bank.v1beta1.QuerySpendableBalanceByDenomRequest
+	(*QuerySpendableBalanceByDenomResponse)(nil),  // 7: cosmos.bank.v1beta1.QuerySpendableBalanceByDenomResponse
+	(*QueryTotalSupplyRequest)(nil),               // 8: cosmos.bank.v1beta1.QueryTotalSupplyRequest
+	(*QueryTotalSupplyResponse)(nil),              // 9: cosmos.bank.v1beta1.QueryTotalSupplyResponse
+	(*QuerySupplyOfRequest)(nil),                  // 10: cosmos.bank.v1beta1.QuerySupplyOfRequest
+	(*QuerySupplyOfResponse)(nil),                 // 11: cosmos.bank.v1beta1.QuerySupplyOfResponse
+	(*QueryTotalSupplyWithoutOffsetRequest)(nil),  // 12: cosmos.bank.v1beta1.QueryTotalSupplyWithoutOffsetRequest
+	(*QueryTotalSupplyWithoutOffsetResponse)(nil), // 13: cosmos.bank.v1beta1.QueryTotalSupplyWithoutOffsetResponse
+	(*QuerySupplyOfWithoutOffsetRequest)(nil),     // 14: cosmos.bank.v1beta1.QuerySupplyOfWithoutOffsetRequest
+	(*QuerySupplyOfWithoutOffsetResponse)(nil),    // 15: cosmos.bank.v1beta1.QuerySupplyOfWithoutOffsetResponse
+	(*QueryParamsRequest)(nil),                    // 16: cosmos.bank.v1beta1.QueryParamsRequest
+	(*QueryParamsResponse)(nil),                   // 17: cosmos.bank.v1beta1.QueryParamsResponse
+	(*QueryDenomsMetadataRequest)(nil),            // 18: cosmos.bank.v1beta1.QueryDenomsMetadataRequest
+	(*QueryDenomsMetadataResponse)(nil),           // 19: cosmos.bank.v1beta1.QueryDenomsMetadataResponse
+	(*QueryDenomMetadataRequest)(nil),             // 20: cosmos.bank.v1beta1.QueryDenomMetadataRequest
+	(*QueryDenomMetadataResponse)(nil),            // 21: cosmos.bank.v1beta1.QueryDenomMetadataResponse
+	(*QueryDenomOwnersRequest)(nil),               // 22: cosmos.bank.v1beta1.QueryDenomOwnersRequest
+	(*DenomOwner)(nil),                            // 23: cosmos.bank.v1beta1.DenomOwner
+	(*QueryDenomOwnersResponse)(nil),              // 24: cosmos.bank.v1beta1.QueryDenomOwnersResponse
+	(*QuerySendEnabledRequest)(nil),               // 25: cosmos.bank.v1beta1.QuerySendEnabledRequest
+	(*QuerySendEnabledResponse)(nil),              // 26: cosmos.bank.v1beta1.QuerySendEnabledResponse
+	(*v1beta1.Coin)(nil),                          // 27: cosmos.base.v1beta1.Coin
+	(*v1beta11.PageRequest)(nil),                  // 28: cosmos.base.query.v1beta1.PageRequest
+	(*v1beta11.PageResponse)(nil),                 // 29: cosmos.base.query.v1beta1.PageResponse
+	(*Params)(nil),                                // 30: cosmos.bank.v1beta1.Params
+	(*Metadata)(nil),                              // 31: cosmos.bank.v1beta1.Metadata
+	(*SendEnabled)(nil),                           // 32: cosmos.bank.v1beta1.SendEnabled
 }
 var file_cosmos_bank_v1beta1_query_proto_depIdxs = []int32{
-	23, // 0: cosmos.bank.v1beta1.QueryBalanceResponse.balance:type_name -> cosmos.base.v1beta1.Coin
-	24, // 1: cosmos.bank.v1beta1.QueryAllBalancesRequest.pagination:type_name -> cosmos.base.query.v1beta1.PageRequest
-	23, // 2: cosmos.bank.v1beta1.QueryAllBalancesResponse.balances:type_name -> cosmos.base.v1beta1.Coin
-	25, // 3: cosmos.bank.v1beta1.QueryAllBalancesResponse.pagination:type_name -> cosmos.base.query.v1beta1.PageResponse
-	24, // 4: cosmos.bank.v1beta1.QuerySpendableBalancesRequest.pagination:type_name -> cosmos.base.query.v1beta1.PageRequest
-	23, // 5: cosmos.bank.v1beta1.QuerySpendableBalancesResponse.balances:type_name -> cosmos.base.v1beta1.Coin
-	25, // 6: cosmos.bank.v1beta1.QuerySpendableBalancesResponse.pagination:type_name -> cosmos.base.query.v1beta1.PageResponse
-	23, // 7: cosmos.bank.v1beta1.QuerySpendableBalanceByDenomResponse.balance:type_name -> cosmos.base.v1beta1.Coin
-	24, // 8: cosmos.bank.v1beta1.QueryTotalSupplyRequest.pagination:type_name -> cosmos.base.query.v1beta1.PageRequest
-	23, // 9: cosmos.bank.v1beta1.QueryTotalSupplyResponse.supply:type_name -> cosmos.base.v1beta1.Coin
-	25, // 10: cosmos.bank.v1beta1.QueryTotalSupplyResponse.pagination:type_name -> cosmos.base.query.v1beta1.PageResponse
-	23, // 11: cosmos.bank.v1beta1.QuerySupplyOfResponse.amount:type_name -> cosmos.base.v1beta1.Coin
-	26, // 12: cosmos.bank.v1beta1.QueryParamsResponse.params:type_name -> cosmos.bank.v1beta1.Params
-	24, // 13: cosmos.bank.v1beta1.QueryDenomsMetadataRequest.pagination:type_name -> cosmos.base.query.v1beta1.PageRequest
-	27, // 14: cosmos.bank.v1beta1.QueryDenomsMetadataResponse.metadatas:type_name -> cosmos.bank.v1beta1.Metadata
-	25, // 15: cosmos.bank.v1beta1.QueryDenomsMetadataResponse.pagination:type_name -> cosmos.base.query.v1beta1.PageResponse
-	27, // 16: cosmos.bank.v1beta1.QueryDenomMetadataResponse.metadata:type_name -> cosmos.bank.v1beta1.Metadata
-	24, // 17: cosmos.bank.v1beta1.QueryDenomOwnersRequest.pagination:type_name -> cosmos.base.query.v1beta1.PageRequest
-	23, // 18: cosmos.bank.v1beta1.DenomOwner.balance:type_name -> cosmos.base.v1beta1.Coin
-	19, // 19: cosmos.bank.v1beta1.QueryDenomOwnersResponse.denom_owners:type_name -> cosmos.bank.v1beta1.DenomOwner
-	25, // 20: cosmos.bank.v1beta1.QueryDenomOwnersResponse.pagination:type_name -> cosmos.base.query.v1beta1.PageResponse
-	24, // 21: cosmos.bank.v1beta1.QuerySendEnabledRequest.pagination:type_name -> cosmos.base.query.v1beta1.PageRequest
-	28, // 22: cosmos.bank.v1beta1.QuerySendEnabledResponse.send_enabled:type_name -> cosmos.bank.v1beta1.SendEnabled
-	25, // 23: cosmos.bank.v1beta1.QuerySendEnabledResponse.pagination:type_name -> cosmos.base.query.v1beta1.PageResponse
-	0,  // 24: cosmos.bank.v1beta1.Query.Balance:input_type -> cosmos.bank.v1beta1.QueryBalanceRequest
-	2,  // 25: cosmos.bank.v1beta1.Query.AllBalances:input_type -> cosmos.bank.v1beta1.QueryAllBalancesRequest
-	4,  // 26: cosmos.bank.v1beta1.Query.SpendableBalances:input_type -> cosmos.bank.v1beta1.QuerySpendableBalancesRequest
-	6,  // 27: cosmos.bank.v1beta1.Query.SpendableBalanceByDenom:input_type -> cosmos.bank.v1beta1.QuerySpendableBalanceByDenomRequest
-	8,  // 28: cosmos.bank.v1beta1.Query.TotalSupply:input_type -> cosmos.bank.v1beta1.QueryTotalSupplyRequest
-	10, // 29: cosmos.bank.v1beta1.Query.SupplyOf:input_type -> cosmos.bank.v1beta1.QuerySupplyOfRequest
-	12, // 30: cosmos.bank.v1beta1.Query.Params:input_type -> cosmos.bank.v1beta1.QueryParamsRequest
-	16, // 31: cosmos.bank.v1beta1.Query.DenomMetadata:input_type -> cosmos.bank.v1beta1.QueryDenomMetadataRequest
-	14, // 32: cosmos.bank.v1beta1.Query.DenomsMetadata:input_type -> cosmos.bank.v1beta1.QueryDenomsMetadataRequest
-	18, // 33: cosmos.bank.v1beta1.Query.DenomOwners:input_type -> cosmos.bank.v1beta1.QueryDenomOwnersRequest
-	21, // 34: cosmos.bank.v1beta1.Query.SendEnabled:input_type -> cosmos.bank.v1beta1.QuerySendEnabledRequest
-	1,  // 35: cosmos.bank.v1beta1.Query.Balance:output_type -> cosmos.bank.v1beta1.QueryBalanceResponse
-	3,  // 36: cosmos.bank.v1beta1.Query.AllBalances:output_type -> cosmos.bank.v1beta1.QueryAllBalancesResponse
-	5,  // 37: cosmos.bank.v1beta1.Query.SpendableBalances:output_type -> cosmos.bank.v1beta1.QuerySpendableBalancesResponse
-	7,  // 38: cosmos.bank.v1beta1.Query.SpendableBalanceByDenom:output_type -> cosmos.bank.v1beta1.QuerySpendableBalanceByDenomResponse
-	9,  // 39: cosmos.bank.v1beta1.Query.TotalSupply:output_type -> cosmos.bank.v1beta1.QueryTotalSupplyResponse
-	11, // 40: cosmos.bank.v1beta1.Query.SupplyOf:output_type -> cosmos.bank.v1beta1.QuerySupplyOfResponse
-	13, // 41: cosmos.bank.v1beta1.Query.Params:output_type -> cosmos.bank.v1beta1.QueryParamsResponse
-	17, // 42: cosmos.bank.v1beta1.Query.DenomMetadata:output_type -> cosmos.bank.v1beta1.QueryDenomMetadataResponse
-	15, // 43: cosmos.bank.v1beta1.Query.DenomsMetadata:output_type -> cosmos.bank.v1beta1.QueryDenomsMetadataResponse
-	20, // 44: cosmos.bank.v1beta1.Query.DenomOwners:output_type -> cosmos.bank.v1beta1.QueryDenomOwnersResponse
-	22, // 45: cosmos.bank.v1beta1.Query.SendEnabled:output_type -> cosmos.bank.v1beta1.QuerySendEnabledResponse
-	35, // [35:46] is the sub-list for method output_type
-	24, // [24:35] is the sub-list for method input_type
-	24, // [24:24] is the sub-list for extension type_name
-	24, // [24:24] is the sub-list for extension extendee
-	0,  // [0:24] is the sub-list for field type_name
+	27, // 0: cosmos.bank.v1beta1.QueryBalanceResponse.balance:type_name -> cosmos.base.v1beta1.Coin
+	28, // 1: cosmos.bank.v1beta1.QueryAllBalancesRequest.pagination:type_name -> cosmos.base.query.v1beta1.PageRequest
+	27, // 2: cosmos.bank.v1beta1.QueryAllBalancesResponse.balances:type_name -> cosmos.base.v1beta1.Coin
+	29, // 3: cosmos.bank.v1beta1.QueryAllBalancesResponse.pagination:type_name -> cosmos.base.query.v1beta1.PageResponse
+	28, // 4: cosmos.bank.v1beta1.QuerySpendableBalancesRequest.pagination:type_name -> cosmos.base.query.v1beta1.PageRequest
+	27, // 5: cosmos.bank.v1beta1.QuerySpendableBalancesResponse.balances:type_name -> cosmos.base.v1beta1.Coin
+	29, // 6: cosmos.bank.v1beta1.QuerySpendableBalancesResponse.pagination:type_name -> cosmos.base.query.v1beta1.PageResponse
+	27, // 7: cosmos.bank.v1beta1.QuerySpendableBalanceByDenomResponse.balance:type_name -> cosmos.base.v1beta1.Coin
+	28, // 8: cosmos.bank.v1beta1.QueryTotalSupplyRequest.pagination:type_name -> cosmos.base.query.v1beta1.PageRequest
+	27, // 9: cosmos.bank.v1beta1.QueryTotalSupplyResponse.supply:type_name -> cosmos.base.v1beta1.Coin
+	29, // 10: cosmos.bank.v1beta1.QueryTotalSupplyResponse.pagination:type_name -> cosmos.base.query.v1beta1.PageResponse
+	27, // 11: cosmos.bank.v1beta1.QuerySupplyOfResponse.amount:type_name -> cosmos.base.v1beta1.Coin
+	28, // 12: cosmos.bank.v1beta1.QueryTotalSupplyWithoutOffsetRequest.pagination:type_name -> cosmos.base.query.v1beta1.PageRequest
+	27, // 13: cosmos.bank.v1beta1.QueryTotalSupplyWithoutOffsetResponse.supply:type_name -> cosmos.base.v1beta1.Coin
+	29, // 14: cosmos.bank.v1beta1.QueryTotalSupplyWithoutOffsetResponse.pagination:type_name -> cosmos.base.query.v1beta1.PageResponse
+	27, // 15: cosmos.bank.v1beta1.QuerySupplyOfWithoutOffsetResponse.amount:type_name -> cosmos.base.v1beta1.Coin
+	30, // 16: cosmos.bank.v1beta1.QueryParamsResponse.params:type_name -> cosmos.bank.v1beta1.Params
+	28, // 17: cosmos.bank.v1beta1.QueryDenomsMetadataRequest.pagination:type_name -> cosmos.base.query.v1beta1.PageRequest
+	31, // 18: cosmos.bank.v1beta1.QueryDenomsMetadataResponse.metadatas:type_name -> cosmos.bank.v1beta1.Metadata
+	29, // 19: cosmos.bank.v1beta1.QueryDenomsMetadataResponse.pagination:type_name -> cosmos.base.query.v1beta1.PageResponse
+	31, // 20: cosmos.bank.v1beta1.QueryDenomMetadataResponse.metadata:type_name -> cosmos.bank.v1beta1.Metadata
+	28, // 21: cosmos.bank.v1beta1.QueryDenomOwnersRequest.pagination:type_name -> cosmos.base.query.v1beta1.PageRequest
+	27, // 22: cosmos.bank.v1beta1.DenomOwner.balance:type_name -> cosmos.base.v1beta1.Coin
+	23, // 23: cosmos.bank.v1beta1.QueryDenomOwnersResponse.denom_owners:type_name -> cosmos.bank.v1beta1.DenomOwner
+	29, // 24: cosmos.bank.v1beta1.QueryDenomOwnersResponse.pagination:type_name -> cosmos.base.query.v1beta1.PageResponse
+	28, // 25: cosmos.bank.v1beta1.QuerySendEnabledRequest.pagination:type_name -> cosmos.base.query.v1beta1.PageRequest
+	32, // 26: cosmos.bank.v1beta1.QuerySendEnabledResponse.send_enabled:type_name -> cosmos.bank.v1beta1.SendEnabled
+	29, // 27: cosmos.bank.v1beta1.QuerySendEnabledResponse.pagination:type_name -> cosmos.base.query.v1beta1.PageResponse
+	0,  // 28: cosmos.bank.v1beta1.Query.Balance:input_type -> cosmos.bank.v1beta1.QueryBalanceRequest
+	2,  // 29: cosmos.bank.v1beta1.Query.AllBalances:input_type -> cosmos.bank.v1beta1.QueryAllBalancesRequest
+	4,  // 30: cosmos.bank.v1beta1.Query.SpendableBalances:input_type -> cosmos.bank.v1beta1.QuerySpendableBalancesRequest
+	6,  // 31: cosmos.bank.v1beta1.Query.SpendableBalanceByDenom:input_type -> cosmos.bank.v1beta1.QuerySpendableBalanceByDenomRequest
+	8,  // 32: cosmos.bank.v1beta1.Query.TotalSupply:input_type -> cosmos.bank.v1beta1.QueryTotalSupplyRequest
+	10, // 33: cosmos.bank.v1beta1.Query.SupplyOf:input_type -> cosmos.bank.v1beta1.QuerySupplyOfRequest
+	12, // 34: cosmos.bank.v1beta1.Query.TotalSupplyWithoutOffset:input_type -> cosmos.bank.v1beta1.QueryTotalSupplyWithoutOffsetRequest
+	14, // 35: cosmos.bank.v1beta1.Query.SupplyOfWithoutOffset:input_type -> cosmos.bank.v1beta1.QuerySupplyOfWithoutOffsetRequest
+	16, // 36: cosmos.bank.v1beta1.Query.Params:input_type -> cosmos.bank.v1beta1.QueryParamsRequest
+	20, // 37: cosmos.bank.v1beta1.Query.DenomMetadata:input_type -> cosmos.bank.v1beta1.QueryDenomMetadataRequest
+	18, // 38: cosmos.bank.v1beta1.Query.DenomsMetadata:input_type -> cosmos.bank.v1beta1.QueryDenomsMetadataRequest
+	22, // 39: cosmos.bank.v1beta1.Query.DenomOwners:input_type -> cosmos.bank.v1beta1.QueryDenomOwnersRequest
+	25, // 40: cosmos.bank.v1beta1.Query.SendEnabled:input_type -> cosmos.bank.v1beta1.QuerySendEnabledRequest
+	1,  // 41: cosmos.bank.v1beta1.Query.Balance:output_type -> cosmos.bank.v1beta1.QueryBalanceResponse
+	3,  // 42: cosmos.bank.v1beta1.Query.AllBalances:output_type -> cosmos.bank.v1beta1.QueryAllBalancesResponse
+	5,  // 43: cosmos.bank.v1beta1.Query.SpendableBalances:output_type -> cosmos.bank.v1beta1.QuerySpendableBalancesResponse
+	7,  // 44: cosmos.bank.v1beta1.Query.SpendableBalanceByDenom:output_type -> cosmos.bank.v1beta1.QuerySpendableBalanceByDenomResponse
+	9,  // 45: cosmos.bank.v1beta1.Query.TotalSupply:output_type -> cosmos.bank.v1beta1.QueryTotalSupplyResponse
+	11, // 46: cosmos.bank.v1beta1.Query.SupplyOf:output_type -> cosmos.bank.v1beta1.QuerySupplyOfResponse
+	13, // 47: cosmos.bank.v1beta1.Query.TotalSupplyWithoutOffset:output_type -> cosmos.bank.v1beta1.QueryTotalSupplyWithoutOffsetResponse
+	15, // 48: cosmos.bank.v1beta1.Query.SupplyOfWithoutOffset:output_type -> cosmos.bank.v1beta1.QuerySupplyOfWithoutOffsetResponse
+	17, // 49: cosmos.bank.v1beta1.Query.Params:output_type -> cosmos.bank.v1beta1.QueryParamsResponse
+	21, // 50: cosmos.bank.v1beta1.Query.DenomMetadata:output_type -> cosmos.bank.v1beta1.QueryDenomMetadataResponse
+	19, // 51: cosmos.bank.v1beta1.Query.DenomsMetadata:output_type -> cosmos.bank.v1beta1.QueryDenomsMetadataResponse
+	24, // 52: cosmos.bank.v1beta1.Query.DenomOwners:output_type -> cosmos.bank.v1beta1.QueryDenomOwnersResponse
+	26, // 53: cosmos.bank.v1beta1.Query.SendEnabled:output_type -> cosmos.bank.v1beta1.QuerySendEnabledResponse
+	41, // [41:54] is the sub-list for method output_type
+	28, // [28:41] is the sub-list for method input_type
+	28, // [28:28] is the sub-list for extension type_name
+	28, // [28:28] is the sub-list for extension extendee
+	0,  // [0:28] is the sub-list for field type_name
 }
 
 func init() { file_cosmos_bank_v1beta1_query_proto_init() }
@@ -12809,7 +14903,7 @@ func file_cosmos_bank_v1beta1_query_proto_init() {
 			}
 		}
 		file_cosmos_bank_v1beta1_query_proto_msgTypes[12].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*QueryParamsRequest); i {
+			switch v := v.(*QueryTotalSupplyWithoutOffsetRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -12821,7 +14915,7 @@ func file_cosmos_bank_v1beta1_query_proto_init() {
 			}
 		}
 		file_cosmos_bank_v1beta1_query_proto_msgTypes[13].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*QueryParamsResponse); i {
+			switch v := v.(*QueryTotalSupplyWithoutOffsetResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -12833,7 +14927,7 @@ func file_cosmos_bank_v1beta1_query_proto_init() {
 			}
 		}
 		file_cosmos_bank_v1beta1_query_proto_msgTypes[14].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*QueryDenomsMetadataRequest); i {
+			switch v := v.(*QuerySupplyOfWithoutOffsetRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -12845,7 +14939,7 @@ func file_cosmos_bank_v1beta1_query_proto_init() {
 			}
 		}
 		file_cosmos_bank_v1beta1_query_proto_msgTypes[15].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*QueryDenomsMetadataResponse); i {
+			switch v := v.(*QuerySupplyOfWithoutOffsetResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -12857,7 +14951,7 @@ func file_cosmos_bank_v1beta1_query_proto_init() {
 			}
 		}
 		file_cosmos_bank_v1beta1_query_proto_msgTypes[16].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*QueryDenomMetadataRequest); i {
+			switch v := v.(*QueryParamsRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -12869,7 +14963,7 @@ func file_cosmos_bank_v1beta1_query_proto_init() {
 			}
 		}
 		file_cosmos_bank_v1beta1_query_proto_msgTypes[17].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*QueryDenomMetadataResponse); i {
+			switch v := v.(*QueryParamsResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -12881,7 +14975,7 @@ func file_cosmos_bank_v1beta1_query_proto_init() {
 			}
 		}
 		file_cosmos_bank_v1beta1_query_proto_msgTypes[18].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*QueryDenomOwnersRequest); i {
+			switch v := v.(*QueryDenomsMetadataRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -12893,7 +14987,7 @@ func file_cosmos_bank_v1beta1_query_proto_init() {
 			}
 		}
 		file_cosmos_bank_v1beta1_query_proto_msgTypes[19].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*DenomOwner); i {
+			switch v := v.(*QueryDenomsMetadataResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -12905,7 +14999,7 @@ func file_cosmos_bank_v1beta1_query_proto_init() {
 			}
 		}
 		file_cosmos_bank_v1beta1_query_proto_msgTypes[20].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*QueryDenomOwnersResponse); i {
+			switch v := v.(*QueryDenomMetadataRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -12917,7 +15011,7 @@ func file_cosmos_bank_v1beta1_query_proto_init() {
 			}
 		}
 		file_cosmos_bank_v1beta1_query_proto_msgTypes[21].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*QuerySendEnabledRequest); i {
+			switch v := v.(*QueryDenomMetadataResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -12929,6 +15023,54 @@ func file_cosmos_bank_v1beta1_query_proto_init() {
 			}
 		}
 		file_cosmos_bank_v1beta1_query_proto_msgTypes[22].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*QueryDenomOwnersRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_cosmos_bank_v1beta1_query_proto_msgTypes[23].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*DenomOwner); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_cosmos_bank_v1beta1_query_proto_msgTypes[24].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*QueryDenomOwnersResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_cosmos_bank_v1beta1_query_proto_msgTypes[25].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*QuerySendEnabledRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_cosmos_bank_v1beta1_query_proto_msgTypes[26].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*QuerySendEnabledResponse); i {
 			case 0:
 				return &v.state
@@ -12947,7 +15089,7 @@ func file_cosmos_bank_v1beta1_query_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_cosmos_bank_v1beta1_query_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   23,
+			NumMessages:   27,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

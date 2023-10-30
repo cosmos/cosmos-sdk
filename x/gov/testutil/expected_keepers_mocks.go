@@ -130,6 +130,18 @@ func (m *MockBankKeeper) EXPECT() *MockBankKeeperMockRecorder {
 	return m.recorder
 }
 
+// AddSupplyOffset mocks base method.
+func (m *MockBankKeeper) AddSupplyOffset(ctx types.Context, denom string, offsetAmount types.Int) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "AddSupplyOffset", ctx, denom, offsetAmount)
+}
+
+// AddSupplyOffset indicates an expected call of AddSupplyOffset.
+func (mr *MockBankKeeperMockRecorder) AddSupplyOffset(ctx, denom, offsetAmount interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddSupplyOffset", reflect.TypeOf((*MockBankKeeper)(nil).AddSupplyOffset), ctx, denom, offsetAmount)
+}
+
 // AllBalances mocks base method.
 func (m *MockBankKeeper) AllBalances(arg0 context.Context, arg1 *types1.QueryAllBalancesRequest) (*types1.QueryAllBalancesResponse, error) {
 	m.ctrl.T.Helper()
@@ -421,6 +433,22 @@ func (mr *MockBankKeeperMockRecorder) GetPaginatedTotalSupply(ctx, pagination in
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPaginatedTotalSupply", reflect.TypeOf((*MockBankKeeper)(nil).GetPaginatedTotalSupply), ctx, pagination)
 }
 
+// GetPaginatedTotalSupplyWithOffsets mocks base method.
+func (m *MockBankKeeper) GetPaginatedTotalSupplyWithOffsets(ctx types.Context, pagination *query.PageRequest) (types.Coins, *query.PageResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetPaginatedTotalSupplyWithOffsets", ctx, pagination)
+	ret0, _ := ret[0].(types.Coins)
+	ret1, _ := ret[1].(*query.PageResponse)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// GetPaginatedTotalSupplyWithOffsets indicates an expected call of GetPaginatedTotalSupplyWithOffsets.
+func (mr *MockBankKeeperMockRecorder) GetPaginatedTotalSupplyWithOffsets(ctx, pagination interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPaginatedTotalSupplyWithOffsets", reflect.TypeOf((*MockBankKeeper)(nil).GetPaginatedTotalSupplyWithOffsets), ctx, pagination)
+}
+
 // GetParams mocks base method.
 func (m *MockBankKeeper) GetParams(ctx types.Context) types1.Params {
 	m.ctrl.T.Helper()
@@ -462,6 +490,34 @@ func (m *MockBankKeeper) GetSupply(ctx types.Context, denom string) types.Coin {
 func (mr *MockBankKeeperMockRecorder) GetSupply(ctx, denom interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSupply", reflect.TypeOf((*MockBankKeeper)(nil).GetSupply), ctx, denom)
+}
+
+// GetSupplyOffset mocks base method.
+func (m *MockBankKeeper) GetSupplyOffset(ctx types.Context, denom string) types.Int {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetSupplyOffset", ctx, denom)
+	ret0, _ := ret[0].(types.Int)
+	return ret0
+}
+
+// GetSupplyOffset indicates an expected call of GetSupplyOffset.
+func (mr *MockBankKeeperMockRecorder) GetSupplyOffset(ctx, denom interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSupplyOffset", reflect.TypeOf((*MockBankKeeper)(nil).GetSupplyOffset), ctx, denom)
+}
+
+// GetSupplyWithOffset mocks base method.
+func (m *MockBankKeeper) GetSupplyWithOffset(ctx types.Context, denom string) types.Coin {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetSupplyWithOffset", ctx, denom)
+	ret0, _ := ret[0].(types.Coin)
+	return ret0
+}
+
+// GetSupplyWithOffset indicates an expected call of GetSupplyWithOffset.
+func (mr *MockBankKeeperMockRecorder) GetSupplyWithOffset(ctx, denom interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSupplyWithOffset", reflect.TypeOf((*MockBankKeeper)(nil).GetSupplyWithOffset), ctx, denom)
 }
 
 // HasBalance mocks base method.
@@ -637,6 +693,18 @@ func (m *MockBankKeeper) IterateTotalSupply(ctx types.Context, cb func(types.Coi
 func (mr *MockBankKeeperMockRecorder) IterateTotalSupply(ctx, cb interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IterateTotalSupply", reflect.TypeOf((*MockBankKeeper)(nil).IterateTotalSupply), ctx, cb)
+}
+
+// IterateTotalSupplyWithOffsets mocks base method.
+func (m *MockBankKeeper) IterateTotalSupplyWithOffsets(ctx types.Context, cb func(types.Coin) bool) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "IterateTotalSupplyWithOffsets", ctx, cb)
+}
+
+// IterateTotalSupplyWithOffsets indicates an expected call of IterateTotalSupplyWithOffsets.
+func (mr *MockBankKeeperMockRecorder) IterateTotalSupplyWithOffsets(ctx, cb interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IterateTotalSupplyWithOffsets", reflect.TypeOf((*MockBankKeeper)(nil).IterateTotalSupplyWithOffsets), ctx, cb)
 }
 
 // LockedCoins mocks base method.
@@ -876,6 +944,21 @@ func (mr *MockBankKeeperMockRecorder) SupplyOf(arg0, arg1 interface{}) *gomock.C
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SupplyOf", reflect.TypeOf((*MockBankKeeper)(nil).SupplyOf), arg0, arg1)
 }
 
+// SupplyOfWithoutOffset mocks base method.
+func (m *MockBankKeeper) SupplyOfWithoutOffset(arg0 context.Context, arg1 *types1.QuerySupplyOfWithoutOffsetRequest) (*types1.QuerySupplyOfWithoutOffsetResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SupplyOfWithoutOffset", arg0, arg1)
+	ret0, _ := ret[0].(*types1.QuerySupplyOfWithoutOffsetResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SupplyOfWithoutOffset indicates an expected call of SupplyOfWithoutOffset.
+func (mr *MockBankKeeperMockRecorder) SupplyOfWithoutOffset(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SupplyOfWithoutOffset", reflect.TypeOf((*MockBankKeeper)(nil).SupplyOfWithoutOffset), arg0, arg1)
+}
+
 // TotalSupply mocks base method.
 func (m *MockBankKeeper) TotalSupply(arg0 context.Context, arg1 *types1.QueryTotalSupplyRequest) (*types1.QueryTotalSupplyResponse, error) {
 	m.ctrl.T.Helper()
@@ -889,6 +972,21 @@ func (m *MockBankKeeper) TotalSupply(arg0 context.Context, arg1 *types1.QueryTot
 func (mr *MockBankKeeperMockRecorder) TotalSupply(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TotalSupply", reflect.TypeOf((*MockBankKeeper)(nil).TotalSupply), arg0, arg1)
+}
+
+// TotalSupplyWithoutOffset mocks base method.
+func (m *MockBankKeeper) TotalSupplyWithoutOffset(arg0 context.Context, arg1 *types1.QueryTotalSupplyWithoutOffsetRequest) (*types1.QueryTotalSupplyWithoutOffsetResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "TotalSupplyWithoutOffset", arg0, arg1)
+	ret0, _ := ret[0].(*types1.QueryTotalSupplyWithoutOffsetResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// TotalSupplyWithoutOffset indicates an expected call of TotalSupplyWithoutOffset.
+func (mr *MockBankKeeperMockRecorder) TotalSupplyWithoutOffset(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TotalSupplyWithoutOffset", reflect.TypeOf((*MockBankKeeper)(nil).TotalSupplyWithoutOffset), arg0, arg1)
 }
 
 // UndelegateCoins mocks base method.

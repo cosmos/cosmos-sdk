@@ -58,7 +58,7 @@ SECP256K1_API jint JNICALL Java_org_bitcoin_NativeSecp256k1_secp256k1_1ecdsa_1ve
   int ret = secp256k1_ecdsa_signature_parse_der(ctx, &sig, sigdata, siglen);
 
   if( ret ) {
-    ret = secp256k1_ec_pubkey_parse(ctx, &pubkey, pubdata, publen);
+    ret = cosmos_secp256k1_ec_pubkey_parse(ctx, &pubkey, pubdata, publen);
 
     if( ret ) {
       ret = secp256k1_ecdsa_verify(ctx, &sig, data, &pubkey);
@@ -250,7 +250,7 @@ SECP256K1_API jobjectArray JNICALL Java_org_bitcoin_NativeSecp256k1_secp256k1_1p
   size_t outputLen = 65;
 
   secp256k1_pubkey pubkey;
-  int ret = secp256k1_ec_pubkey_parse(ctx, &pubkey, pkey, publen);
+  int ret = cosmos_secp256k1_ec_pubkey_parse(ctx, &pubkey, pkey, publen);
 
   if( ret ) {
     ret = secp256k1_ec_pubkey_tweak_add(ctx, &pubkey, tweak);
@@ -294,7 +294,7 @@ SECP256K1_API jobjectArray JNICALL Java_org_bitcoin_NativeSecp256k1_secp256k1_1p
   size_t outputLen = 65;
 
   secp256k1_pubkey pubkey;
-  int ret = secp256k1_ec_pubkey_parse(ctx, &pubkey, pkey, publen);
+  int ret = cosmos_secp256k1_ec_pubkey_parse(ctx, &pubkey, pkey, publen);
 
   if ( ret ) {
     ret = secp256k1_ec_pubkey_tweak_mul(ctx, &pubkey, tweak);
@@ -346,7 +346,7 @@ SECP256K1_API jobjectArray JNICALL Java_org_bitcoin_NativeSecp256k1_secp256k1_1e
   unsigned char nonce_res[32];
   size_t outputLen = 32;
 
-  int ret = secp256k1_ec_pubkey_parse(ctx, &pubkey, pubdata, publen);
+  int ret = cosmos_secp256k1_ec_pubkey_parse(ctx, &pubkey, pubdata, publen);
 
   if (ret) {
     ret = secp256k1_ecdh(

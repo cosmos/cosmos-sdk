@@ -33,7 +33,7 @@ static void bench_ecdh_setup(void* arg) {
     for (i = 0; i < 32; i++) {
         data->scalar[i] = i + 1;
     }
-    CHECK(secp256k1_ec_pubkey_parse(data->ctx, &data->point, point, sizeof(point)) == 1);
+    CHECK(cosmos_secp256k1_ec_pubkey_parse(data->ctx, &data->point, point, sizeof(point)) == 1);
 }
 
 static void bench_ecdh(void* arg) {

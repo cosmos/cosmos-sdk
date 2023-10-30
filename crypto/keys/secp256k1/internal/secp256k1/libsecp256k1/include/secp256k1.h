@@ -48,7 +48,7 @@ typedef struct secp256k1_context_struct secp256k1_context;
  *  guaranteed to be portable between different platforms or versions. It is
  *  however guaranteed to be 64 bytes in size, and can be safely copied/moved.
  *  If you need to convert to a format suitable for storage, transmission, or
- *  comparison, use cosmos_secp256k1_ec_pubkey_serialize and secp256k1_ec_pubkey_parse.
+ *  comparison, use cosmos_secp256k1_ec_pubkey_serialize and cosmos_secp256k1_ec_pubkey_parse.
  */
 typedef struct {
     unsigned char data[64];
@@ -248,7 +248,7 @@ SECP256K1_API void secp256k1_context_set_error_callback(
  *  0x03), uncompressed (65 bytes, header byte 0x04), or hybrid (65 bytes, header
  *  byte 0x06 or 0x07) format public keys.
  */
-SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_pubkey_parse(
+SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int cosmos_secp256k1_ec_pubkey_parse(
     const secp256k1_context* ctx,
     secp256k1_pubkey* pubkey,
     const unsigned char *input,

@@ -39,6 +39,8 @@ jobs:
           port-forward: true
           version: 0.1.42
           timeout: 10m
+          cli-version: 0a19cce796f521beb81bb693e39a9ee79b56cf62
+
       - name: Run Tests
         run: |
           cd tests/starship/

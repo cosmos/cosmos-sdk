@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"cosmossdk.io/collections"
@@ -35,13 +36,13 @@ func (keeper Keeper) SubmitProposal(ctx context.Context, messages []sdk.Msg, met
 		return v1.Proposal{}, err
 	}
 
-	// Will hold a comma-separated string of all Msg type URLs.
-	msgsStr := ""
+	// Will hold a string slice of all Msg type URLs.
+	msgs := []string{}
 
 	// Loop through all messages and confirm that each has a handler and the gov module account
 	// as the only signer
 	for _, msg := range messages {
-		msgsStr += fmt.Sprintf(",%s", sdk.MsgTypeURL(msg))
+		msgs = append(msgs, sdk.MsgTypeURL(msg))
 
 		// perform a basic validation of the message
 		if m, ok := msg.(sdk.HasValidateBasic); ok {
@@ -123,7 +124,7 @@ func (keeper Keeper) SubmitProposal(ctx context.Context, messages []sdk.Msg, met
 		sdk.NewEvent(
 			types.EventTypeSubmitProposal,
 			sdk.NewAttribute(types.AttributeKeyProposalID, fmt.Sprintf("%d", proposalID)),
-			sdk.NewAttribute(types.AttributeKeyProposalMessages, msgsStr),
+			sdk.NewAttribute(types.AttributeKeyProposalMessages, strings.Join(msgs, ",")),
 		),
 	)
 

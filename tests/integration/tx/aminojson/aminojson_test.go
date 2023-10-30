@@ -34,6 +34,8 @@ import (
 	"cosmossdk.io/math"
 	authztypes "cosmossdk.io/x/authz"
 	authzmodule "cosmossdk.io/x/authz/module"
+	"cosmossdk.io/x/bank"
+	banktypes "cosmossdk.io/x/bank/types"
 	"cosmossdk.io/x/distribution"
 	disttypes "cosmossdk.io/x/distribution/types"
 	"cosmossdk.io/x/evidence"
@@ -42,6 +44,7 @@ import (
 	gov_v1_types "cosmossdk.io/x/gov/types/v1"
 	gov_v1beta1_types "cosmossdk.io/x/gov/types/v1beta1"
 	groupmodule "cosmossdk.io/x/group/module"
+	"cosmossdk.io/x/mint"
 	"cosmossdk.io/x/slashing"
 	slashingtypes "cosmossdk.io/x/slashing/types"
 	"cosmossdk.io/x/staking"
@@ -69,10 +72,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
-	"github.com/cosmos/cosmos-sdk/x/bank"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/consensus"
-	"github.com/cosmos/cosmos-sdk/x/mint"
 )
 
 // TestAminoJSON_Equivalence tests that x/tx/Encoder encoding is equivalent to the legacy Encoder encoding.

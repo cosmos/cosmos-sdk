@@ -9,6 +9,11 @@ import (
 
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
+	_ "cosmossdk.io/x/bank"
+	"cosmossdk.io/x/bank/keeper"
+	"cosmossdk.io/x/bank/simulation"
+	"cosmossdk.io/x/bank/testutil"
+	"cosmossdk.io/x/bank/types"
 	_ "cosmossdk.io/x/staking"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -20,11 +25,6 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	_ "github.com/cosmos/cosmos-sdk/x/auth"
 	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
-	_ "github.com/cosmos/cosmos-sdk/x/bank"
-	"github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	"github.com/cosmos/cosmos-sdk/x/bank/simulation"
-	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
-	"github.com/cosmos/cosmos-sdk/x/bank/types"
 	_ "github.com/cosmos/cosmos-sdk/x/consensus"
 )
 

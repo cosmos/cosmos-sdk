@@ -103,13 +103,13 @@ func DefaultJSONTxsDecoder(cdc codec.ProtoCodecMarshaler) sdk.TxsDecoder {
 			return nil, errorsmod.Wrap(sdkerrors.ErrTxDecode, err.Error())
 		}
 
-		sdkTxs := make([]sdk.Tx, 0)
+		sdkTxs := make([]sdk.Tx, len(theTxs.Txs))
 
-		for _, theTx := range theTxs.Txs {
+		for i, theTx := range theTxs.Txs {
 			tx := theTx
-			sdkTxs = append(sdkTxs, &wrapper{
+			sdkTxs[i] = &wrapper{
 				tx: &tx,
-			})
+			}
 		}
 
 		return sdkTxs, nil

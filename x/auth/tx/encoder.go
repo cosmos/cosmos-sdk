@@ -46,9 +46,10 @@ func DefaultJSONTxsEncoder(cdc codec.ProtoCodecMarshaler) sdk.TxsEncoder {
 		var wrappedTxs txtypes.Txs
 		for _, tx := range txs {
 			txWrapper, ok := tx.(*wrapper)
-			if ok {
-				wrappedTxs.Txs = append(wrappedTxs.Txs, *txWrapper.tx)
+			if !ok {
+				return nil, fmt.Errorf("expected %T, got %T", &wrapper{}, tx)
 			}
+			wrappedTxs.Txs = append(wrappedTxs.Txs, *txWrapper.tx)
 		}
 		return cdc.MarshalJSON(&wrappedTxs)
 	}

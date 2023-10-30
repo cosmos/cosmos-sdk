@@ -127,7 +127,7 @@ func ReadTxsFromFile(ctx client.Context, filename string) (tx []sdk.Tx, err erro
 	}
 
 	if err != nil {
-		return
+		return nil, fmt.Errorf("failed to read batch txs from file %s: %w", filename, err)
 	}
 
 	return ctx.TxConfig.TxsJSONDecoder()(bytes)

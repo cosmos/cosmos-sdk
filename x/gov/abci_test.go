@@ -8,6 +8,7 @@ import (
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
+	banktypes "cosmossdk.io/x/bank/types"
 	"cosmossdk.io/x/gov"
 	"cosmossdk.io/x/gov/keeper"
 	"cosmossdk.io/x/gov/types"
@@ -18,7 +19,6 @@ import (
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 func TestUnregisteredProposal_InactiveProposalFails(t *testing.T) {

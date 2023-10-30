@@ -3167,7 +3167,7 @@ void run_eckey_edge_case_test(void) {
     pubkey_negone = pubkey;
     /* Tweak of zero leaves the value changed. */
     memset(ctmp2, 0, 32);
-    CHECK(secp256k1_ec_privkey_tweak_add(ctx, ctmp, ctmp2) == 1);
+    CHECK(cosmos_secp256k1_ec_privkey_tweak_add(ctx, ctmp, ctmp2) == 1);
     CHECK(memcmp(orderc, ctmp, 31) == 0 && ctmp[31] == 0x40);
     memcpy(&pubkey2, &pubkey, sizeof(pubkey));
     CHECK(cosmos_secp256k1_ec_pubkey_tweak_add(ctx, &pubkey, ctmp2) == 1);
@@ -3181,7 +3181,7 @@ void run_eckey_edge_case_test(void) {
     /* Overflowing key tweak zeroizes. */
     memcpy(ctmp, orderc, 32);
     ctmp[31] = 0x40;
-    CHECK(secp256k1_ec_privkey_tweak_add(ctx, ctmp, orderc) == 0);
+    CHECK(cosmos_secp256k1_ec_privkey_tweak_add(ctx, ctmp, orderc) == 0);
     CHECK(memcmp(zeros, ctmp, 32) == 0);
     memcpy(ctmp, orderc, 32);
     ctmp[31] = 0x40;
@@ -3197,7 +3197,7 @@ void run_eckey_edge_case_test(void) {
     memcpy(&pubkey, &pubkey2, sizeof(pubkey));
     /* Private key tweaks results in a key of zero. */
     ctmp2[31] = 1;
-    CHECK(secp256k1_ec_privkey_tweak_add(ctx, ctmp2, ctmp) == 0);
+    CHECK(cosmos_secp256k1_ec_privkey_tweak_add(ctx, ctmp2, ctmp) == 0);
     CHECK(memcmp(zeros, ctmp2, 32) == 0);
     ctmp2[31] = 1;
     CHECK(cosmos_secp256k1_ec_pubkey_tweak_add(ctx, &pubkey, ctmp2) == 0);
@@ -3205,7 +3205,7 @@ void run_eckey_edge_case_test(void) {
     memcpy(&pubkey, &pubkey2, sizeof(pubkey));
     /* Tweak computation wraps and results in a key of 1. */
     ctmp2[31] = 2;
-    CHECK(secp256k1_ec_privkey_tweak_add(ctx, ctmp2, ctmp) == 1);
+    CHECK(cosmos_secp256k1_ec_privkey_tweak_add(ctx, ctmp2, ctmp) == 1);
     CHECK(memcmp(ctmp2, zeros, 31) == 0 && ctmp2[31] == 1);
     ctmp2[31] = 2;
     CHECK(cosmos_secp256k1_ec_pubkey_tweak_add(ctx, &pubkey, ctmp2) == 1);
@@ -3253,9 +3253,9 @@ void run_eckey_edge_case_test(void) {
     CHECK(ecount == 2);
     ecount = 0;
     memset(ctmp2, 0, 32);
-    CHECK(secp256k1_ec_privkey_tweak_add(ctx, NULL, ctmp2) == 0);
+    CHECK(cosmos_secp256k1_ec_privkey_tweak_add(ctx, NULL, ctmp2) == 0);
     CHECK(ecount == 1);
-    CHECK(secp256k1_ec_privkey_tweak_add(ctx, ctmp, NULL) == 0);
+    CHECK(cosmos_secp256k1_ec_privkey_tweak_add(ctx, ctmp, NULL) == 0);
     CHECK(ecount == 2);
     ecount = 0;
     memset(ctmp2, 0, 32);
@@ -3469,7 +3469,7 @@ void test_ecdsa_end_to_end(void) {
         unsigned char rnd[32];
         secp256k1_pubkey pubkey2;
         secp256k1_rand256_test(rnd);
-        ret1 = secp256k1_ec_privkey_tweak_add(ctx, privkey, rnd);
+        ret1 = cosmos_secp256k1_ec_privkey_tweak_add(ctx, privkey, rnd);
         ret2 = cosmos_secp256k1_ec_pubkey_tweak_add(ctx, &pubkey, rnd);
         CHECK(ret1 == ret2);
         if (ret1 == 0) {

@@ -178,7 +178,7 @@ SECP256K1_API jobjectArray JNICALL Java_org_bitcoin_NativeSecp256k1_secp256k1_1p
 
   int privkeylen = 32;
 
-  int ret = secp256k1_ec_privkey_tweak_add(ctx, privkey, tweak);
+  int ret = cosmos_ secp256k1_ec_privkey_tweak_add(ctx, privkey, tweak);
 
   intsarray[0] = privkeylen;
   intsarray[1] = ret;

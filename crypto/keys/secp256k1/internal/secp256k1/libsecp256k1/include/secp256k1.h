@@ -494,7 +494,7 @@ SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_pubkey_create(
  * In/Out:  seckey: pointer to a 32-byte private key.
  * In:      tweak:  pointer to a 32-byte tweak.
  */
-SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_privkey_tweak_add(
+SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int cosmos_secp256k1_ec_privkey_tweak_add(
     const secp256k1_context* ctx,
     unsigned char *seckey,
     const unsigned char *tweak

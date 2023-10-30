@@ -13,6 +13,15 @@ import (
 	_ "cosmossdk.io/api/cosmos/authz/v1beta1"
 	"cosmossdk.io/core/address"
 	sdkmath "cosmossdk.io/math"
+	"cosmossdk.io/x/authz/client/cli"
+	authzclitestutil "cosmossdk.io/x/authz/client/testutil"
+	"cosmossdk.io/x/bank"
+	banktypes "cosmossdk.io/x/bank/types"
+	"cosmossdk.io/x/gov"
+	govcli "cosmossdk.io/x/gov/client/cli"
+	govclitestutil "cosmossdk.io/x/gov/client/testutil"
+	govv1 "cosmossdk.io/x/gov/types/v1"
+	govv1beta1 "cosmossdk.io/x/gov/types/v1beta1"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -23,15 +32,6 @@ import (
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	testutilmod "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	"github.com/cosmos/cosmos-sdk/x/authz/client/cli"
-	authzclitestutil "github.com/cosmos/cosmos-sdk/x/authz/client/testutil"
-	"github.com/cosmos/cosmos-sdk/x/bank"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/cosmos/cosmos-sdk/x/gov"
-	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
-	govclitestutil "github.com/cosmos/cosmos-sdk/x/gov/client/testutil"
-	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
-	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
 var typeMsgVote = sdk.MsgTypeURL(&govv1.MsgVote{})

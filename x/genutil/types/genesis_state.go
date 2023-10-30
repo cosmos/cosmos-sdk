@@ -5,9 +5,10 @@ import (
 	"fmt"
 	"os"
 
+	stakingtypes "cosmossdk.io/x/staking/types"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // NewGenesisState creates a new GenesisState object

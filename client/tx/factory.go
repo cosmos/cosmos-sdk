@@ -57,10 +57,8 @@ func NewFactoryCLI(clientCtx client.Context, flagSet *pflag.FlagSet) (Factory, e
 		return Factory{}, fmt.Errorf("failed to bind flags to viper: %w", err)
 	}
 
-	signModeStr := clientCtx.SignModeStr
-
 	signMode := signing.SignMode_SIGN_MODE_UNSPECIFIED
-	switch signModeStr {
+	switch clientCtx.SignModeStr {
 	case flags.SignModeDirect:
 		signMode = signing.SignMode_SIGN_MODE_DIRECT
 	case flags.SignModeLegacyAminoJSON:
@@ -467,7 +465,7 @@ func (f Factory) Prepare(clientCtx client.Context) (Factory, error) {
 	}
 
 	fc := f
-	from := clientCtx.GetFromAddress()
+	from := clientCtx.FromAddress
 
 	if err := fc.accountRetriever.EnsureExists(clientCtx, from); err != nil {
 		return fc, err

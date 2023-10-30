@@ -1,10 +1,6 @@
 name: Starship E2E Tests
 # E2E tests using Starship, run on a schedule
 on:
-  ## debug gh-action in PR
-  pull_request:
-    branches:
-      - main
   schedule:
     - cron: "0 */6 * * *" # every 6 hours
 

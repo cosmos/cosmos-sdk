@@ -19,6 +19,9 @@ import (
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
+	"cosmossdk.io/x/bank/keeper"
+	banktestutil "cosmossdk.io/x/bank/testutil"
+	banktypes "cosmossdk.io/x/bank/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec/address"
@@ -30,9 +33,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/query"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	vesting "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
-	"github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 const (

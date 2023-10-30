@@ -1129,3 +1129,65 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
           projectBaseDir: x/authz/
+
+  test-x-bank:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v4
+        with:
+          go-version: "1.21"
+          check-latest: true
+          cache: true
+          cache-dependency-path: x/bank/go.sum
+      - uses: technote-space/get-diff-action@v6.1.2
+        id: git_diff
+        with:
+          PATTERNS: |
+            x/bank/**/*.go
+            x/bank/go.mod
+            x/bank/go.sum
+      - name: tests
+        if: env.GIT_DIFF
+        run: |
+          cd x/bank
+          go test -mod=readonly -timeout 30m -coverprofile=coverage.out -covermode=atomic -tags='norace ledger test_ledger_mock rocksdb_build' ./...
+      - name: sonarcloud
+        if: ${{ env.GIT_DIFF && !github.event.pull_request.draft && env.SONAR_TOKEN != null }}
+        uses: SonarSource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          projectBaseDir: x/bank/
+
+  test-x-mint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v4
+        with:
+          go-version: "1.21"
+          check-latest: true
+          cache: true
+          cache-dependency-path: x/mint/go.sum
+      - uses: technote-space/get-diff-action@v6.1.2
+        id: git_diff
+        with:
+          PATTERNS: |
+            x/mint/**/*.go
+            x/mint/go.mod
+            x/mint/go.sum
+      - name: tests
+        if: env.GIT_DIFF
+        run: |
+          cd x/mint
+          go test -mod=readonly -timeout 30m -coverprofile=coverage.out -covermode=atomic -tags='norace ledger test_ledger_mock rocksdb_build' ./...
+      - name: sonarcloud
+        if: ${{ env.GIT_DIFF && !github.event.pull_request.draft && env.SONAR_TOKEN != null }}
+        uses: SonarSource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          projectBaseDir: x/mint/

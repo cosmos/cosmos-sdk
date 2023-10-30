@@ -10,6 +10,7 @@ import (
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
+	bankkeeper "cosmossdk.io/x/bank/keeper"
 	"cosmossdk.io/x/slashing/keeper"
 	"cosmossdk.io/x/slashing/types"
 	stakingkeeper "cosmossdk.io/x/staking/keeper"
@@ -23,7 +24,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 )
 
 var (

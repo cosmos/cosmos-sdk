@@ -30,12 +30,14 @@ import (
 	upgradeapi "cosmossdk.io/api/cosmos/upgrade/v1beta1"
 	vestingapi "cosmossdk.io/api/cosmos/vesting/v1beta1"
 	authztypes "cosmossdk.io/x/authz"
+	banktypes "cosmossdk.io/x/bank/types"
 	disttypes "cosmossdk.io/x/distribution/types"
 	evidencetypes "cosmossdk.io/x/evidence/types"
 	feegranttypes "cosmossdk.io/x/feegrant"
 	gov_v1_types "cosmossdk.io/x/gov/types/v1"
 	gov_v1beta1_types "cosmossdk.io/x/gov/types/v1beta1"
 	grouptypes "cosmossdk.io/x/group"
+	minttypes "cosmossdk.io/x/mint/types"
 	slashingtypes "cosmossdk.io/x/slashing/types"
 	stakingtypes "cosmossdk.io/x/staking/types"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
@@ -43,9 +45,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	consensustypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
-	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
 type GeneratedType struct {

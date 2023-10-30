@@ -7,7 +7,7 @@ import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/msg/v1/msg.proto";
 import "amino/amino.proto";
 
-option go_package = "github.com/cosmos/cosmos-sdk/x/bank/types";
+option go_package = "cosmossdk.io/x/bank/types";
 
 // Params defines the parameters for the bank module.
 message Params {

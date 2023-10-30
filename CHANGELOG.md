@@ -79,6 +79,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### API Breaking Changes
 
+* (server) [#18303](https://github.com/cosmos/cosmos-sdk/pull/18303) `x/genutil` now handles the application export. `server.AddCommands` does not take an `AppExporter` but instead `genutilcli.Commands` does.
 * (x/gov) [#18173](https://github.com/cosmos/cosmos-sdk/pull/18173) Gov Hooks now returns error and are "blocking" if they fail. Expect for `AfterProposalFailedMinDeposit` and `AfterProposalVotingPeriodEnded` that will log the error and continue.
 * (x/gov/testutil) [#17986](https://github.com/cosmos/cosmos-sdk/pull/18036) `MsgDeposit` has been removed because of AutoCLI migration.
 * (x/staking/testutil) [#17986](https://github.com/cosmos/cosmos-sdk/pull/17986) `MsgRedelegateExec`, `MsgUnbondExec` has been removed because of AutoCLI migration.
@@ -187,6 +188,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### CLI Breaking Changes
 
+* (server) [#18303](https://github.com/cosmos/cosmos-sdk/pull/18303) `appd export` has moved with other genesis commands, use `appd genesis export` instead.
 * (x/auth/vesting) [#18100](https://github.com/cosmos/cosmos-sdk/pull/18100) `appd tx vesting create-vesting-account` takes an amount of coin as last argument instead of second. Coins are space separated.
 * (x/distribution) [#17963](https://github.com/cosmos/cosmos-sdk/pull/17963) `appd tx distribution withdraw-rewards` now only withdraws rewards for the delegator's own delegations. For withdrawing validators commission, use `appd tx distribution withdraw-validator-commission`.
 

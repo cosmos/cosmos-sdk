@@ -8,7 +8,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -150,7 +149,7 @@ func Test_runVersionCmd(t *testing.T) {
 	})
 
 	require.NoError(t, cmd.Execute())
-	assert.Equal(t, "\n", mockOut.String())
+	require.Equal(t, "\n", mockOut.String())
 	mockOut.Reset()
 
 	cmd.SetArgs([]string{
@@ -167,13 +166,13 @@ func Test_runVersionCmd(t *testing.T) {
 	require.NoError(t, cmd.Execute())
 
 	extraInfoFromContext := ctx.Value(version.ContextKey{})
-	assert.NotNil(t, extraInfoFromContext)
+	require.NotNil(t, extraInfoFromContext)
 
 	castedExtraInfo, ok := extraInfoFromContext.(*version.ExtraInfo)
-	assert.True(t, ok)
+	require.True(t, ok)
 
 	key1Value := (*castedExtraInfo)["key1"]
-	assert.Equal(t, "value1", key1Value)
+	require.Equal(t, "value1", key1Value)
 
-	assert.Equal(t, string(stringInfo)+"\n", mockOut.String())
+	require.Equal(t, string(stringInfo)+"\n", mockOut.String())
 }

@@ -12,6 +12,7 @@ import (
 	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/kv/branch"
 	"cosmossdk.io/store/v2/kv/trace"
+	"cosmossdk.io/store/v2/pruning"
 )
 
 // defaultStoreKey defines the default store key used for the single SC backend.
@@ -53,6 +54,9 @@ type Store struct {
 
 	// traceContext defines the tracing context, if any, for trace operations
 	traceContext store.TraceContext
+
+	// pruningManager manages pruning of the SS and SC backends
+	pruningManager *pruning.Manager
 }
 
 func New(
@@ -66,12 +70,15 @@ func New(
 		return nil, err
 	}
 
+	pruningManager := pruning.NewManager(ss, sc, logger)
+
 	return &Store{
 		logger:          logger.With("module", "root_store"),
 		initialVersion:  initVersion,
 		stateStore:      ss,
 		stateCommitment: sc,
 		rootKVStore:     rootKVStore,
+		pruningManager:  pruningManager,
 	}, nil
 }
 
@@ -87,6 +94,12 @@ func (s *Store) Close() (err error) {
 	s.commitHeader = nil
 
 	return err
+}
+
+// SetPruningOptions sets the pruning options on the SS and SC backends.
+func (s *Store) SetPruningOptions(scOpts, ssOpts pruning.Options) {
+	s.pruningManager.SetCommitmentOptions(scOpts)
+	s.pruningManager.SetStoreOptions(ssOpts)
 }
 
 // MountSCStore performs a no-op as a SC backend must be provided at initialization.
@@ -309,6 +322,9 @@ func (s *Store) Commit() ([]byte, error) {
 	}
 
 	s.workingHash = nil
+
+	// prune SS and SC
+	s.pruningManager.Prune(version)
 
 	return s.lastCommitInfo.Hash(), nil
 }

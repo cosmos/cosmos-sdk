@@ -35,7 +35,7 @@ static void secp256k1_ecdsa_recoverable_signature_save(secp256k1_ecdsa_recoverab
     sig->data[64] = recid;
 }
 
-int secp256k1_ecdsa_recoverable_signature_parse_compact(const secp256k1_context* ctx, secp256k1_ecdsa_recoverable_signature* sig, const unsigned char *input64, int recid) {
+int cosmos_secp256k1_ecdsa_recoverable_signature_parse_compact(const secp256k1_context* ctx, secp256k1_ecdsa_recoverable_signature* sig, const unsigned char *input64, int recid) {
     secp256k1_scalar r, s;
     int ret = 1;
     int overflow = 0;

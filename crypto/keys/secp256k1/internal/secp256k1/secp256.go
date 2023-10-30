@@ -48,7 +48,7 @@ func init() {
 	// around 20 ms on a modern CPU.
 	context = C.secp256k1_context_create_sign_verify()
 	C.cosmos_secp256k1_context_set_illegal_callback(context, C.callbackFunc(C.cosmos_secp256k1GoPanicIllegal), nil)
-	C.secp256k1_context_set_error_callback(context, C.callbackFunc(C.cosmos_secp256k1GoPanicError), nil)
+	C.cosmos_secp256k1_context_set_error_callback(context, C.callbackFunc(C.cosmos_secp256k1GoPanicError), nil)
 }
 
 var (

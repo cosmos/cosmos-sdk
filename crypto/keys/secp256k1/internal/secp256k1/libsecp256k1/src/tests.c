@@ -153,7 +153,7 @@ void run_context_tests(void) {
     ecount2 = 10;
     cosmos_secp256k1_context_set_illegal_callback(vrfy, counting_illegal_callback_fn, &ecount);
     cosmos_secp256k1_context_set_illegal_callback(sign, counting_illegal_callback_fn, &ecount2);
-    secp256k1_context_set_error_callback(sign, counting_illegal_callback_fn, NULL);
+    cosmos_secp256k1_context_set_error_callback(sign, counting_illegal_callback_fn, NULL);
     CHECK(vrfy->error_callback.fn != sign->error_callback.fn);
 
     /*** clone and destroy all of them to make sure cloning was complete ***/
@@ -169,7 +169,7 @@ void run_context_tests(void) {
     /* Verify that the error callback makes it across the clone. */
     CHECK(vrfy->error_callback.fn != sign->error_callback.fn);
     /* And that it resets back to default. */
-    secp256k1_context_set_error_callback(sign, NULL, NULL);
+    cosmos_secp256k1_context_set_error_callback(sign, NULL, NULL);
     CHECK(vrfy->error_callback.fn == sign->error_callback.fn);
 
     /*** attempt to use them ***/

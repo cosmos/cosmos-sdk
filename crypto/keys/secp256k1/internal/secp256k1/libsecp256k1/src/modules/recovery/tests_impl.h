@@ -49,10 +49,10 @@ void test_ecdsa_recovery_api(void) {
                                        0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
                                        0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
 
-    secp256k1_context_set_error_callback(none, counting_illegal_callback_fn, &ecount);
-    secp256k1_context_set_error_callback(sign, counting_illegal_callback_fn, &ecount);
-    secp256k1_context_set_error_callback(vrfy, counting_illegal_callback_fn, &ecount);
-    secp256k1_context_set_error_callback(both, counting_illegal_callback_fn, &ecount);
+    cosmos_secp256k1_context_set_error_callback(none, counting_illegal_callback_fn, &ecount);
+    cosmos_secp256k1_context_set_error_callback(sign, counting_illegal_callback_fn, &ecount);
+    cosmos_secp256k1_context_set_error_callback(vrfy, counting_illegal_callback_fn, &ecount);
+    cosmos_secp256k1_context_set_error_callback(both, counting_illegal_callback_fn, &ecount);
     cosmos_secp256k1_context_set_illegal_callback(none, counting_illegal_callback_fn, &ecount);
     cosmos_secp256k1_context_set_illegal_callback(sign, counting_illegal_callback_fn, &ecount);
     cosmos_secp256k1_context_set_illegal_callback(vrfy, counting_illegal_callback_fn, &ecount);

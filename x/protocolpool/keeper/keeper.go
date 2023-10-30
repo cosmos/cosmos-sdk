@@ -165,11 +165,11 @@ func (k Keeper) getClaimableFunds(ctx context.Context, recipient sdk.AccAddress)
 			}
 
 			return amount, nil
-		} else {
-			return sdk.Coin{}, fmt.Errorf("budget period has not passed yet")
 		}
-
+	} else {
+		return sdk.Coin{}, fmt.Errorf("budget period has not passed yet")
 	}
+
 	return sdk.Coin{}, nil
 }
 

@@ -40,7 +40,7 @@ func (k Querier) UnclaimedBudget(ctx context.Context, req *types.QueryUnclaimedB
 	}
 	address, err := k.Keeper.authKeeper.AddressCodec().StringToBytes(req.Address)
 	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid address: %s", err.Error())
+		return nil, status.Errorf(codes.InvalidArgument, "invalid recipient address: %s", err.Error())
 	}
 	budget, err := k.Keeper.BudgetProposal.Get(ctx, address)
 	if err != nil {

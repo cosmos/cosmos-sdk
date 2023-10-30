@@ -119,13 +119,13 @@ void test_ecdsa_recovery_api(void) {
     /* Check NULLs for de/serialization */
     CHECK(cosmos_secp256k1_ecdsa_sign_recoverable(both, &recsig, message, privkey, NULL, NULL) == 1);
     ecount = 0;
-    CHECK(secp256k1_ecdsa_recoverable_signature_serialize_compact(both, NULL, &recid, &recsig) == 0);
+    CHECK(cosmos_secp256k1_ecdsa_recoverable_signature_serialize_compact(both, NULL, &recid, &recsig) == 0);
     CHECK(ecount == 1);
-    CHECK(secp256k1_ecdsa_recoverable_signature_serialize_compact(both, sig, NULL, &recsig) == 0);
+    CHECK(cosmos_secp256k1_ecdsa_recoverable_signature_serialize_compact(both, sig, NULL, &recsig) == 0);
     CHECK(ecount == 2);
-    CHECK(secp256k1_ecdsa_recoverable_signature_serialize_compact(both, sig, &recid, NULL) == 0);
+    CHECK(cosmos_secp256k1_ecdsa_recoverable_signature_serialize_compact(both, sig, &recid, NULL) == 0);
     CHECK(ecount == 3);
-    CHECK(secp256k1_ecdsa_recoverable_signature_serialize_compact(both, sig, &recid, &recsig) == 1);
+    CHECK(cosmos_secp256k1_ecdsa_recoverable_signature_serialize_compact(both, sig, &recid, &recsig) == 1);
 
     CHECK(cosmos_secp256k1_ecdsa_recoverable_signature_parse_compact(both, NULL, sig, recid) == 0);
     CHECK(ecount == 4);
@@ -182,7 +182,7 @@ void test_ecdsa_recovery_end_to_end(void) {
     extra[31] = 0;
     extra[0] = 1;
     CHECK(cosmos_secp256k1_ecdsa_sign_recoverable(ctx, &rsignature[3], message, privkey, NULL, extra) == 1);
-    CHECK(secp256k1_ecdsa_recoverable_signature_serialize_compact(ctx, sig, &recid, &rsignature[4]) == 1);
+    CHECK(cosmos_secp256k1_ecdsa_recoverable_signature_serialize_compact(ctx, sig, &recid, &rsignature[4]) == 1);
     CHECK(cosmos_secp256k1_ecdsa_recoverable_signature_convert(ctx, &signature[4], &rsignature[4]) == 1);
     CHECK(memcmp(&signature[4], &signature[0], 64) == 0);
     CHECK(cosmos_secp256k1_ecdsa_verify(ctx, &signature[4], message, &pubkey) == 1);
@@ -195,7 +195,7 @@ void test_ecdsa_recovery_end_to_end(void) {
     CHECK(cosmos_secp256k1_ecdsa_recover(ctx, &recpubkey, &rsignature[4], message) == 1);
     CHECK(memcmp(&pubkey, &recpubkey, sizeof(pubkey)) == 0);
     /* Serialize/destroy/parse signature and verify again. */
-    CHECK(secp256k1_ecdsa_recoverable_signature_serialize_compact(ctx, sig, &recid, &rsignature[4]) == 1);
+    CHECK(cosmos_secp256k1_ecdsa_recoverable_signature_serialize_compact(ctx, sig, &recid, &rsignature[4]) == 1);
     sig[secp256k1_rand_bits(6)] += 1 + secp256k1_rand_int(255);
     CHECK(cosmos_secp256k1_ecdsa_recoverable_signature_parse_compact(ctx, &rsignature[4], sig, recid) == 1);
     CHECK(cosmos_secp256k1_ecdsa_recoverable_signature_convert(ctx, &signature[4], &rsignature[4]) == 1);

@@ -60,7 +60,7 @@ SECP256K1_API int cosmos_secp256k1_ecdsa_recoverable_signature_convert(
  *        recid:    a pointer to an integer to hold the recovery id (can be NULL).
  *  In:   sig:      a pointer to an initialized signature object (cannot be NULL)
  */
-SECP256K1_API int secp256k1_ecdsa_recoverable_signature_serialize_compact(
+SECP256K1_API int cosmos_secp256k1_ecdsa_recoverable_signature_serialize_compact(
     const secp256k1_context* ctx,
     unsigned char *output64,
     int *recid,

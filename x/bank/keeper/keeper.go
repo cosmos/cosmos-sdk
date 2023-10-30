@@ -12,6 +12,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	vestexported "github.com/cosmos/cosmos-sdk/x/auth/vesting/exported"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
@@ -148,6 +149,12 @@ func (k BaseKeeper) DelegateCoins(ctx sdk.Context, delegatorAddr, moduleAccAddr 
 	moduleAcc := k.ak.GetAccount(ctx, moduleAccAddr)
 	if moduleAcc == nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", moduleAccAddr)
+	}
+
+	// do not allow delegation if clawback vesting account
+	acc := k.ak.GetAccount(ctx, delegatorAddr)
+	if _, ok := acc.(vestexported.ClawbackVestingAccountI); ok {
+		return fmt.Errorf("clawback vesting account (%s) is restricted for delegation", delegatorAddr)
 	}
 
 	if !amt.IsValid() {

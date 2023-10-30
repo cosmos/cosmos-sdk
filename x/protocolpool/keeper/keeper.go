@@ -154,7 +154,7 @@ func (k Keeper) getClaimableFunds(ctx context.Context, recipient sdk.AccAddress)
 			budget.TotalBudget.Amount = budget.TotalBudget.Amount.Sub(coinsToDistribute)
 
 			// Update the start time for the budget
-			budget.StartTime = budget.StartTime + budget.Period
+			budget.StartTime += budget.Period
 
 			k.Logger(ctx).Debug(fmt.Sprintf("Processing budget for recipient: %s. Amount: %s", budget.RecipientAddress, coinsToDistribute.String()))
 

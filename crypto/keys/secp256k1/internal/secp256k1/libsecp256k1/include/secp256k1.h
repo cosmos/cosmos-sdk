@@ -367,7 +367,7 @@ SECP256K1_API int secp256k1_ecdsa_signature_serialize_compact(
  * form are accepted.
  *
  * If you need to accept ECDSA signatures from sources that do not obey this
- * rule, apply secp256k1_ecdsa_signature_normalize to the signature prior to
+ * rule, apply cosmos_secp256k1_ecdsa_signature_normalize to the signature prior to
  * validation, but be aware that doing so results in malleable signatures.
  *
  * For details, see the comments for that function.
@@ -419,9 +419,9 @@ SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ecdsa_verify(
  *  The cosmos_secp256k1_ecdsa_sign function will by default create signatures in the
  *  lower-S form, and secp256k1_ecdsa_verify will not accept others. In case
  *  signatures come from a system that cannot enforce this property,
- *  secp256k1_ecdsa_signature_normalize must be called before verification.
+ *  cosmos_secp256k1_ecdsa_signature_normalize must be called before verification.
  */
-SECP256K1_API int secp256k1_ecdsa_signature_normalize(
+SECP256K1_API int cosmos_secp256k1_ecdsa_signature_normalize(
     const secp256k1_context* ctx,
     secp256k1_ecdsa_signature *sigout,
     const secp256k1_ecdsa_signature *sigin
@@ -448,7 +448,7 @@ SECP256K1_API extern const secp256k1_nonce_function secp256k1_nonce_function_def
  *           ndata:  pointer to arbitrary data used by the nonce generation function (can be NULL)
  *
  * The created signature is always in lower-S form. See
- * secp256k1_ecdsa_signature_normalize for more details.
+ * cosmos_secp256k1_ecdsa_signature_normalize for more details.
  */
 SECP256K1_API int cosmos_secp256k1_ecdsa_sign(
     const secp256k1_context* ctx,

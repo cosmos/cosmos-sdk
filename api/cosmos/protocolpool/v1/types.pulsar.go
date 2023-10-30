@@ -110,20 +110,20 @@ func (x *fastReflection_Budget) Range(f func(protoreflect.FieldDescriptor, proto
 			return
 		}
 	}
-	if x.StartTime != int64(0) {
-		value := protoreflect.ValueOfInt64(x.StartTime)
+	if x.StartTime != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.StartTime)
 		if !f(fd_Budget_start_time, value) {
 			return
 		}
 	}
-	if x.Tranches != int64(0) {
-		value := protoreflect.ValueOfInt64(x.Tranches)
+	if x.Tranches != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.Tranches)
 		if !f(fd_Budget_tranches, value) {
 			return
 		}
 	}
-	if x.Period != int64(0) {
-		value := protoreflect.ValueOfInt64(x.Period)
+	if x.Period != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.Period)
 		if !f(fd_Budget_period, value) {
 			return
 		}
@@ -148,11 +148,11 @@ func (x *fastReflection_Budget) Has(fd protoreflect.FieldDescriptor) bool {
 	case "cosmos.protocolpool.v1.Budget.total_budget":
 		return x.TotalBudget != nil
 	case "cosmos.protocolpool.v1.Budget.start_time":
-		return x.StartTime != int64(0)
+		return x.StartTime != uint64(0)
 	case "cosmos.protocolpool.v1.Budget.tranches":
-		return x.Tranches != int64(0)
+		return x.Tranches != uint64(0)
 	case "cosmos.protocolpool.v1.Budget.period":
-		return x.Period != int64(0)
+		return x.Period != uint64(0)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.Budget"))
@@ -174,11 +174,11 @@ func (x *fastReflection_Budget) Clear(fd protoreflect.FieldDescriptor) {
 	case "cosmos.protocolpool.v1.Budget.total_budget":
 		x.TotalBudget = nil
 	case "cosmos.protocolpool.v1.Budget.start_time":
-		x.StartTime = int64(0)
+		x.StartTime = uint64(0)
 	case "cosmos.protocolpool.v1.Budget.tranches":
-		x.Tranches = int64(0)
+		x.Tranches = uint64(0)
 	case "cosmos.protocolpool.v1.Budget.period":
-		x.Period = int64(0)
+		x.Period = uint64(0)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.Budget"))
@@ -203,13 +203,13 @@ func (x *fastReflection_Budget) Get(descriptor protoreflect.FieldDescriptor) pro
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
 	case "cosmos.protocolpool.v1.Budget.start_time":
 		value := x.StartTime
-		return protoreflect.ValueOfInt64(value)
+		return protoreflect.ValueOfUint64(value)
 	case "cosmos.protocolpool.v1.Budget.tranches":
 		value := x.Tranches
-		return protoreflect.ValueOfInt64(value)
+		return protoreflect.ValueOfUint64(value)
 	case "cosmos.protocolpool.v1.Budget.period":
 		value := x.Period
-		return protoreflect.ValueOfInt64(value)
+		return protoreflect.ValueOfUint64(value)
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.Budget"))
@@ -235,11 +235,11 @@ func (x *fastReflection_Budget) Set(fd protoreflect.FieldDescriptor, value proto
 	case "cosmos.protocolpool.v1.Budget.total_budget":
 		x.TotalBudget = value.Message().Interface().(*v1beta1.Coin)
 	case "cosmos.protocolpool.v1.Budget.start_time":
-		x.StartTime = value.Int()
+		x.StartTime = value.Uint()
 	case "cosmos.protocolpool.v1.Budget.tranches":
-		x.Tranches = value.Int()
+		x.Tranches = value.Uint()
 	case "cosmos.protocolpool.v1.Budget.period":
-		x.Period = value.Int()
+		x.Period = value.Uint()
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.Budget"))
@@ -292,11 +292,11 @@ func (x *fastReflection_Budget) NewField(fd protoreflect.FieldDescriptor) protor
 		m := new(v1beta1.Coin)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	case "cosmos.protocolpool.v1.Budget.start_time":
-		return protoreflect.ValueOfInt64(int64(0))
+		return protoreflect.ValueOfUint64(uint64(0))
 	case "cosmos.protocolpool.v1.Budget.tranches":
-		return protoreflect.ValueOfInt64(int64(0))
+		return protoreflect.ValueOfUint64(uint64(0))
 	case "cosmos.protocolpool.v1.Budget.period":
-		return protoreflect.ValueOfInt64(int64(0))
+		return protoreflect.ValueOfUint64(uint64(0))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.Budget"))
@@ -579,7 +579,7 @@ func (x *fastReflection_Budget) ProtoMethods() *protoiface.Methods {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					x.StartTime |= int64(b&0x7F) << shift
+					x.StartTime |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
@@ -598,7 +598,7 @@ func (x *fastReflection_Budget) ProtoMethods() *protoiface.Methods {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					x.Tranches |= int64(b&0x7F) << shift
+					x.Tranches |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
@@ -617,7 +617,7 @@ func (x *fastReflection_Budget) ProtoMethods() *protoiface.Methods {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					x.Period |= int64(b&0x7F) << shift
+					x.Period |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
@@ -681,13 +681,13 @@ type Budget struct {
 	// total_budget is the total amount allocated for the budget.
 	TotalBudget *v1beta1.Coin `protobuf:"bytes,2,opt,name=total_budget,json=totalBudget,proto3" json:"total_budget,omitempty"`
 	// start_time is the time when the budget becomes claimable, represented in seconds since the Unix epoch.
-	StartTime int64 `protobuf:"varint,3,opt,name=start_time,json=startTime,proto3" json:"start_time,omitempty"`
+	StartTime uint64 `protobuf:"varint,3,opt,name=start_time,json=startTime,proto3" json:"start_time,omitempty"`
 	// tranches is the number of times the total budget amount is to be distributed.
-	Tranches int64 `protobuf:"varint,4,opt,name=tranches,proto3" json:"tranches,omitempty"`
+	Tranches uint64 `protobuf:"varint,4,opt,name=tranches,proto3" json:"tranches,omitempty"`
 	// Period is the time interval(number of seconds) at which funds distribution should be performed.
 	// For example, if a period is set to 3600, it represents an action that
 	// should occur every hour (3600 seconds).
-	Period int64 `protobuf:"varint,5,opt,name=period,proto3" json:"period,omitempty"`
+	Period uint64 `protobuf:"varint,5,opt,name=period,proto3" json:"period,omitempty"`
 }
 
 func (x *Budget) Reset() {
@@ -724,21 +724,21 @@ func (x *Budget) GetTotalBudget() *v1beta1.Coin {
 	return nil
 }
 
-func (x *Budget) GetStartTime() int64 {
+func (x *Budget) GetStartTime() uint64 {
 	if x != nil {
 		return x.StartTime
 	}
 	return 0
 }
 
-func (x *Budget) GetTranches() int64 {
+func (x *Budget) GetTranches() uint64 {
 	if x != nil {
 		return x.Tranches
 	}
 	return 0
 }
 
-func (x *Budget) GetPeriod() int64 {
+func (x *Budget) GetPeriod() uint64 {
 	if x != nil {
 		return x.Period
 	}
@@ -765,11 +765,11 @@ var file_cosmos_protocolpool_v1_types_proto_rawDesc = []byte{
 	0x19, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x76, 0x31,
 	0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x43, 0x6f, 0x69, 0x6e, 0x52, 0x0b, 0x74, 0x6f, 0x74, 0x61,
 	0x6c, 0x42, 0x75, 0x64, 0x67, 0x65, 0x74, 0x12, 0x1d, 0x0a, 0x0a, 0x73, 0x74, 0x61, 0x72, 0x74,
-	0x5f, 0x74, 0x69, 0x6d, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x03, 0x52, 0x09, 0x73, 0x74, 0x61,
+	0x5f, 0x74, 0x69, 0x6d, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x04, 0x52, 0x09, 0x73, 0x74, 0x61,
 	0x72, 0x74, 0x54, 0x69, 0x6d, 0x65, 0x12, 0x1a, 0x0a, 0x08, 0x74, 0x72, 0x61, 0x6e, 0x63, 0x68,
-	0x65, 0x73, 0x18, 0x04, 0x20, 0x01, 0x28, 0x03, 0x52, 0x08, 0x74, 0x72, 0x61, 0x6e, 0x63, 0x68,
+	0x65, 0x73, 0x18, 0x04, 0x20, 0x01, 0x28, 0x04, 0x52, 0x08, 0x74, 0x72, 0x61, 0x6e, 0x63, 0x68,
 	0x65, 0x73, 0x12, 0x16, 0x0a, 0x06, 0x70, 0x65, 0x72, 0x69, 0x6f, 0x64, 0x18, 0x05, 0x20, 0x01,
-	0x28, 0x03, 0x52, 0x06, 0x70, 0x65, 0x72, 0x69, 0x6f, 0x64, 0x42, 0xda, 0x01, 0x0a, 0x1a, 0x63,
+	0x28, 0x04, 0x52, 0x06, 0x70, 0x65, 0x72, 0x69, 0x6f, 0x64, 0x42, 0xda, 0x01, 0x0a, 0x1a, 0x63,
 	0x6f, 0x6d, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63,
 	0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x2e, 0x76, 0x31, 0x42, 0x0a, 0x54, 0x79, 0x70, 0x65, 0x73,
 	0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x36, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73,

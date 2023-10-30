@@ -13,11 +13,11 @@ message Budget {
   // total_budget is the total amount allocated for the budget.
   cosmos.base.v1beta1.Coin total_budget = 2;
   // start_time is the time when the budget becomes claimable, represented in seconds since the Unix epoch.
-  int64 start_time = 3;
+  uint64 start_time = 3;
   // tranches is the number of times the total budget amount is to be distributed.
-  int64 tranches = 4;
+  uint64 tranches = 4;
   // Period is the time interval(number of seconds) at which funds distribution should be performed.
   // For example, if a period is set to 3600, it represents an action that
   // should occur every hour (3600 seconds).
-  int64 period = 5;
+  uint64 period = 5;
 }

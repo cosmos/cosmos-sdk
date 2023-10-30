@@ -14,7 +14,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/counter/keeper"
 	"github.com/cosmos/cosmos-sdk/x/counter/types"
 )
@@ -103,13 +102,8 @@ type ModuleOutputs struct {
 }
 
 func ProvideModule(in ModuleInputs) ModuleOutputs {
-	// default to governance authority if not provided
-	authority := authtypes.NewModuleAddress("gov")
-	if in.Config.Authority != "" {
-		authority = authtypes.NewModuleAddressOrBech32Address(in.Config.Authority)
-	}
 
-	k := keeper.NewKeeper(in.StoreService, authority.String(), in.EventManager)
+	k := keeper.NewKeeper(in.StoreService, in.EventManager)
 	m := NewAppModule(in.Cdc, k)
 
 	return ModuleOutputs{

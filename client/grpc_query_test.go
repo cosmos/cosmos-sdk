@@ -13,6 +13,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil/integration"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -25,26 +26,34 @@ import (
 type IntegrationTestSuite struct {
 	suite.Suite
 
-	ctx           sdk.Context
-	cdc           codec.Codec
-	counterClient countertypes.QueryClient
-	testClient    testdata.QueryClient
+	ctx              sdk.Context
+	cdc              codec.Codec
+	counterClient    countertypes.QueryClient
+	counterMsgClient countertypes.MsgClient
+	testClient       testdata.QueryClient
 }
 
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
 
 	logger := log.NewNopLogger()
-	cms := integration.CreateMultiStore(storetypes.NewKVStoreKeys(countertypes.StoreKey), logger)
+	keys := storetypes.NewKVStoreKeys(countertypes.StoreKey)
+	cms := integration.CreateMultiStore(keys, logger)
 	s.ctx = sdk.NewContext(cms, true, logger)
 	cfg := moduletestutil.MakeTestEncodingConfig(counter.AppModuleBasic{})
 	s.cdc = cfg.Codec
 
 	queryHelper := baseapp.NewQueryServerTestHelper(s.ctx, cfg.InterfaceRegistry)
 	testdata.RegisterQueryServer(queryHelper, testdata.QueryImpl{})
-	countertypes.RegisterQueryServer(queryHelper, counterkeeper.Keeper{})
-	s.counterClient = countertypes.NewQueryClient(queryHelper)
 	s.testClient = testdata.NewQueryClient(queryHelper)
+
+	kvs := runtime.NewKVStoreService(keys[countertypes.StoreKey])
+	counterKeeper := counterkeeper.NewKeeper(kvs, runtime.EventService{})
+	countertypes.RegisterQueryServer(queryHelper, counterKeeper)
+	countertypes.RegisterMsgServer(queryHelper, counterKeeper)
+	s.counterClient = countertypes.NewQueryClient(queryHelper)
+	s.counterMsgClient = countertypes.NewMsgClient(queryHelper)
+
 }
 
 func (s *IntegrationTestSuite) TearDownSuite() {
@@ -57,10 +66,13 @@ func (s *IntegrationTestSuite) TestGRPCQuery() {
 	s.Require().NoError(err)
 	s.Require().Equal("hello", testRes.Message)
 
+	_, err = s.counterMsgClient.IncreaseCount(s.ctx, &countertypes.MsgIncreaseCounter{Signer: "abcd", Count: 1})
+	s.Require().NoError(err)
+
 	var header metadata.MD
 	res, err := s.counterClient.GetCount(s.ctx, &countertypes.QueryGetCountRequest{}, grpc.Header(&header))
 	s.Require().NoError(err)
-	s.Require().Equal(0, res.TotalCount)
+	s.Require().Equal(1, res.TotalCount)
 }
 
 func TestIntegrationTestSuite(t *testing.T) {

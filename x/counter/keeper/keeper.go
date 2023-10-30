@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"google.golang.org/grpc/codes"
@@ -19,21 +20,15 @@ var StoreKey = "Counter"
 type Keeper struct {
 	event event.Service
 
-	authority  string
 	CountStore collections.Item[int64]
 }
 
-func NewKeeper(storeService storetypes.KVStoreService, authority string, em event.Service) Keeper {
+func NewKeeper(storeService storetypes.KVStoreService, em event.Service) Keeper {
 	sb := collections.NewSchemaBuilder(storeService)
 	return Keeper{
-		authority:  authority,
 		event:      em,
-		CountStore: collections.NewItem(sb, collections.NewPrefix("Count"), "count", collections.Int64Value),
+		CountStore: collections.NewItem(sb, collections.NewPrefix(0), "count", collections.Int64Value),
 	}
-}
-
-func (k *Keeper) GetAuthority() string {
-	return k.authority
 }
 
 // Querier
@@ -55,11 +50,17 @@ func (k Keeper) GetCount(ctx context.Context, _ *types.QueryGetCountRequest) (*t
 var _ types.MsgServer = Keeper{}
 
 func (k Keeper) IncreaseCount(ctx context.Context, msg *types.MsgIncreaseCounter) (*types.MsgIncreaseCountResponse, error) {
-	value, err := k.CountStore.Get(ctx)
+	var num int64
+	num, err := k.CountStore.Get(ctx)
 	if err != nil {
-		return nil, err
+		if errors.Is(err, collections.ErrNotFound) {
+			num = 0
+		} else {
+			fmt.Println("here")
+			return nil, err
+		}
 	}
-	if err := k.CountStore.Set(ctx, value+msg.Count); err != nil {
+	if err := k.CountStore.Set(ctx, num+msg.Count); err != nil {
 		return nil, err
 	}
 
@@ -67,11 +68,11 @@ func (k Keeper) IncreaseCount(ctx context.Context, msg *types.MsgIncreaseCounter
 		ctx,
 		"increase_counter",
 		event.Attribute{Key: "signer", Value: msg.Signer},
-		event.Attribute{Key: "new count", Value: fmt.Sprint(value + msg.Count)}); err != nil {
+		event.Attribute{Key: "new count", Value: fmt.Sprint(num + msg.Count)}); err != nil {
 		return nil, err
 	}
 
 	return &types.MsgIncreaseCountResponse{
-		NewCount: value + msg.Count,
+		NewCount: num + msg.Count,
 	}, nil
 }

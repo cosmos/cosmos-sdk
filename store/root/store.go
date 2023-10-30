@@ -207,7 +207,8 @@ func (s *Store) GetBranchedKVStore(_ string) store.BranchedKVStore {
 func (s *Store) loadVersion(v uint64, _ *store.StoreUpgrades) error {
 	s.logger.Debug("loading version", "version", v)
 
-	// reset the root KVStore s.t. the latest version is v (any writes will overwrite existing versions)
+	// Reset the root KVStore s.t. the latest version is v. Any writes will
+	// overwrite existing versions.
 	if err := s.rootKVStore.Reset(v); err != nil {
 		return err
 	}
@@ -215,6 +216,12 @@ func (s *Store) loadVersion(v uint64, _ *store.StoreUpgrades) error {
 	if err := s.stateCommitment.LoadVersion(v); err != nil {
 		return fmt.Errorf("failed to load SS version %d: %w", v, err)
 	}
+
+	s.workingHash = nil
+	s.commitHeader = nil
+
+	// set lastCommitInfo explicitly s.t. Commit commits the correct version, i.e. v+1
+	s.lastCommitInfo = &store.CommitInfo{Version: v}
 
 	return nil
 }
@@ -347,8 +354,6 @@ func (s *Store) writeSC() error {
 		version = previousHeight + 1
 	}
 
-	workingHash := s.stateCommitment.WorkingHash()
-
 	s.lastCommitInfo = &store.CommitInfo{
 		Version: version,
 		StoreInfos: []store.StoreInfo{
@@ -356,7 +361,7 @@ func (s *Store) writeSC() error {
 				Name: defaultStoreKey,
 				CommitID: store.CommitID{
 					Version: version,
-					Hash:    workingHash,
+					Hash:    s.stateCommitment.WorkingHash(),
 				},
 			},
 		},

@@ -1,6 +1,7 @@
 package branch
 
 import (
+	"fmt"
 	"io"
 	"slices"
 	"sync"
@@ -87,6 +88,10 @@ func (s *Store) GetChangeset() *store.Changeset {
 func (s *Store) Reset(v uint64) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+
+	if err := s.storage.SetLatestVersion(v); err != nil {
+		return fmt.Errorf("failed to set SS latest version %d: %w", v, err)
+	}
 
 	clear(s.changeset)
 	s.version = v

@@ -13,8 +13,8 @@ import "unsafe"
 // Callbacks for converting libsecp256k1 internal faults into
 // recoverable Go panics.
 
-//export secp256k1GoPanicIllegal
-func secp256k1GoPanicIllegal(msg *C.char, data unsafe.Pointer) {
+//export cosmos_secp256k1GoPanicIllegal
+func cosmos_secp256k1GoPanicIllegal(msg *C.char, data unsafe.Pointer) {
 	panic("illegal argument: " + C.GoString(msg))
 }
 

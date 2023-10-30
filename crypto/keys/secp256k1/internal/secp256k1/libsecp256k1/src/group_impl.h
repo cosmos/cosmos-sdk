@@ -14,7 +14,7 @@
 /* These points can be generated in sage as follows:
  *
  * 0. Setup a worksheet with the following parameters.
- *   b = 4  # whatever CURVE_B will be set to
+ *   b = 4  # whatever COSMOS_CURVE_B will be set to
  *   F = FiniteField (0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F)
  *   C = EllipticCurve ([F (0), F (b)])
  *
@@ -45,7 +45,7 @@ const secp256k1_ge secp256k1_ge_const_g = SECP256K1_GE_CONST(
     0x48DF246C, 0x808DAE72, 0xCFE52572, 0x7F0501ED
 );
 
-const int CURVE_B = 4;
+const int COSMOS_CURVE_B = 4;
 #  elif EXHAUSTIVE_TEST_ORDER == 13
 const secp256k1_ge secp256k1_ge_const_g = SECP256K1_GE_CONST(
     0xedc60018, 0xa51a786b, 0x2ea91f4d, 0x4c9416c0,
@@ -53,7 +53,7 @@ const secp256k1_ge secp256k1_ge_const_g = SECP256K1_GE_CONST(
     0x54cb1b6b, 0xdc8c1273, 0x087844ea, 0x43f4603e,
     0x0eaf9a43, 0xf6effe55, 0x939f806d, 0x37adf8ac
 );
-const int CURVE_B = 2;
+const int COSMOS_CURVE_B = 2;
 #  else
 #    error No known generator for the specified exhaustive test group order.
 #  endif
@@ -68,7 +68,7 @@ static const secp256k1_ge secp256k1_ge_const_g = SECP256K1_GE_CONST(
     0xFD17B448UL, 0xA6855419UL, 0x9C47D08FUL, 0xFB10D4B8UL
 );
 
-const int CURVE_B = 7;
+const int COSMOS_CURVE_B = 7;
 #endif
 
 static void secp256k1_ge_set_gej_zinv(secp256k1_ge *r, const secp256k1_gej *a, const secp256k1_fe *zi) {
@@ -219,7 +219,7 @@ static int secp256k1_ge_set_xquad(secp256k1_ge *r, const secp256k1_fe *x) {
     secp256k1_fe_sqr(&x2, x);
     secp256k1_fe_mul(&x3, x, &x2);
     r->infinity = 0;
-    secp256k1_fe_set_int(&c, CURVE_B);
+    secp256k1_fe_set_int(&c, COSMOS_CURVE_B);
     secp256k1_fe_add(&c, &x3);
     return secp256k1_fe_sqrt(&r->y, &c);
 }
@@ -278,7 +278,7 @@ static int secp256k1_gej_is_valid_var(const secp256k1_gej *a) {
     secp256k1_fe_sqr(&x3, &a->x); secp256k1_fe_mul(&x3, &x3, &a->x);
     secp256k1_fe_sqr(&z2, &a->z);
     secp256k1_fe_sqr(&z6, &z2); secp256k1_fe_mul(&z6, &z6, &z2);
-    secp256k1_fe_mul_int(&z6, CURVE_B);
+    secp256k1_fe_mul_int(&z6, COSMOS_CURVE_B);
     secp256k1_fe_add(&x3, &z6);
     secp256k1_fe_normalize_weak(&x3);
     return secp256k1_fe_equal_var(&y2, &x3);
@@ -292,7 +292,7 @@ static int secp256k1_ge_is_valid_var(const secp256k1_ge *a) {
     /* y^2 = x^3 + 7 */
     secp256k1_fe_sqr(&y2, &a->y);
     secp256k1_fe_sqr(&x3, &a->x); secp256k1_fe_mul(&x3, &x3, &a->x);
-    secp256k1_fe_set_int(&c, CURVE_B);
+    secp256k1_fe_set_int(&c, COSMOS_CURVE_B);
     secp256k1_fe_add(&x3, &c);
     secp256k1_fe_normalize_weak(&x3);
     return secp256k1_fe_equal_var(&y2, &x3);

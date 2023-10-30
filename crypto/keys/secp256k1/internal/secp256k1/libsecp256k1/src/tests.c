@@ -151,8 +151,8 @@ void run_context_tests(void) {
 
     ecount = 0;
     ecount2 = 10;
-    secp256k1_context_set_illegal_callback(vrfy, counting_illegal_callback_fn, &ecount);
-    secp256k1_context_set_illegal_callback(sign, counting_illegal_callback_fn, &ecount2);
+    cosmos_secp256k1_context_set_illegal_callback(vrfy, counting_illegal_callback_fn, &ecount);
+    cosmos_secp256k1_context_set_illegal_callback(sign, counting_illegal_callback_fn, &ecount2);
     secp256k1_context_set_error_callback(sign, counting_illegal_callback_fn, NULL);
     CHECK(vrfy->error_callback.fn != sign->error_callback.fn);
 
@@ -207,8 +207,8 @@ void run_context_tests(void) {
     CHECK(ecount == 3);
     CHECK(secp256k1_context_randomize(sign, NULL) == 1);
     CHECK(ecount2 == 13);
-    secp256k1_context_set_illegal_callback(vrfy, NULL, NULL);
-    secp256k1_context_set_illegal_callback(sign, NULL, NULL);
+    cosmos_secp256k1_context_set_illegal_callback(vrfy, NULL, NULL);
+    cosmos_secp256k1_context_set_illegal_callback(sign, NULL, NULL);
 
     /* This shouldn't leak memory, due to already-set tests. */
     secp256k1_ecmult_gen_context_build(&sign->ecmult_gen_ctx, NULL);
@@ -2704,7 +2704,7 @@ void ec_pubkey_parse_pointtest(const unsigned char *input, int xvalid, int yvali
     size_t pubkeyclen;
     int32_t ecount;
     ecount = 0;
-    secp256k1_context_set_illegal_callback(ctx, counting_illegal_callback_fn, &ecount);
+    cosmos_secp256k1_context_set_illegal_callback(ctx, counting_illegal_callback_fn, &ecount);
     for (pubkeyclen = 3; pubkeyclen <= 65; pubkeyclen++) {
         /* Smaller sizes are tested exhaustively elsewhere. */
         int32_t i;
@@ -2769,7 +2769,7 @@ void ec_pubkey_parse_pointtest(const unsigned char *input, int xvalid, int yvali
             }
         }
     }
-    secp256k1_context_set_illegal_callback(ctx, NULL, NULL);
+    cosmos_secp256k1_context_set_illegal_callback(ctx, NULL, NULL);
 }
 
 void run_ec_pubkey_parse_test(void) {
@@ -2962,7 +2962,7 @@ void run_ec_pubkey_parse_test(void) {
     ecount = 0;
     /* Nothing should be reading this far into pubkeyc. */
     VG_UNDEF(&pubkeyc[65], 1);
-    secp256k1_context_set_illegal_callback(ctx, counting_illegal_callback_fn, &ecount);
+    cosmos_secp256k1_context_set_illegal_callback(ctx, counting_illegal_callback_fn, &ecount);
     /* Zero length claimed, fail, zeroize, no illegal arg error. */
     memset(&pubkey, 0xfe, sizeof(pubkey));
     ecount = 0;
@@ -3082,11 +3082,11 @@ void run_ec_pubkey_parse_test(void) {
     CHECK(cosmos_secp256k1_ec_pubkey_parse(ctx, NULL, NULL, 65) == 0);
     CHECK(ecount == 1);
     /* Does the illegal arg callback actually change the behavior? */
-    secp256k1_context_set_illegal_callback(ctx, uncounting_illegal_callback_fn, &ecount2);
+    cosmos_secp256k1_context_set_illegal_callback(ctx, uncounting_illegal_callback_fn, &ecount2);
     CHECK(cosmos_secp256k1_ec_pubkey_parse(ctx, NULL, NULL, 65) == 0);
     CHECK(ecount == 1);
     CHECK(ecount2 == 10);
-    secp256k1_context_set_illegal_callback(ctx, NULL, NULL);
+    cosmos_secp256k1_context_set_illegal_callback(ctx, NULL, NULL);
     /* Try a bunch of prefabbed points with all possible encodings. */
     for (i = 0; i < SECP256K1_EC_PARSE_TEST_NVALID; i++) {
         ec_pubkey_parse_pointtest(valid[i], 1, 1);
@@ -3219,7 +3219,7 @@ void run_eckey_edge_case_test(void) {
     CHECK(memcmp(&pubkey, &pubkey2, sizeof(pubkey)) == 0);
     /* Test argument errors. */
     ecount = 0;
-    secp256k1_context_set_illegal_callback(ctx, counting_illegal_callback_fn, &ecount);
+    cosmos_secp256k1_context_set_illegal_callback(ctx, counting_illegal_callback_fn, &ecount);
     CHECK(ecount == 0);
     /* Zeroize pubkey on parse error. */
     memset(&pubkey, 0, 32);
@@ -3332,7 +3332,7 @@ void run_eckey_edge_case_test(void) {
     VG_CHECK(&pubkey, sizeof(secp256k1_pubkey));
     CHECK(memcmp(&pubkey, zeros, sizeof(secp256k1_pubkey)) > 0);
     CHECK(ecount == 3);
-    secp256k1_context_set_illegal_callback(ctx, NULL, NULL);
+    cosmos_secp256k1_context_set_illegal_callback(ctx, NULL, NULL);
 }
 
 void random_sign(secp256k1_scalar *sigr, secp256k1_scalar *sigs, const secp256k1_scalar *key, const secp256k1_scalar *msg, int *recid) {
@@ -4147,7 +4147,7 @@ void test_ecdsa_edge_cases(void) {
             0x65, 0xdf, 0xdd, 0x31, 0xb9, 0x3e, 0x29, 0xa9,
         };
         ecount = 0;
-        secp256k1_context_set_illegal_callback(ctx, counting_illegal_callback_fn, &ecount);
+        cosmos_secp256k1_context_set_illegal_callback(ctx, counting_illegal_callback_fn, &ecount);
         CHECK(cosmos_secp256k1_ecdsa_sign(ctx, &sig, msg, key, precomputed_nonce_function, nonce) == 0);
         CHECK(cosmos_secp256k1_ecdsa_sign(ctx, &sig, msg, key, precomputed_nonce_function, nonce2) == 0);
         msg[31] = 0xaa;
@@ -4211,7 +4211,7 @@ void test_ecdsa_edge_cases(void) {
         memset(signature, 255, 64);
         CHECK(cosmos_secp256k1_ecdsa_signature_parse_compact(ctx, &sig, signature) == 0);
         CHECK(ecount == 5);
-        secp256k1_context_set_illegal_callback(ctx, NULL, NULL);
+        cosmos_secp256k1_context_set_illegal_callback(ctx, NULL, NULL);
     }
 
     /* Nonce function corner cases. */

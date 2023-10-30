@@ -206,7 +206,7 @@ SECP256K1_API void secp256k1_context_destroy(
  *              (NULL restores a default handler that calls abort).
  *        data: the opaque pointer to pass to fun above.
  */
-SECP256K1_API void secp256k1_context_set_illegal_callback(
+SECP256K1_API void cosmos_secp256k1_context_set_illegal_callback(
     secp256k1_context* ctx,
     void (*fun)(const char* message, void* data),
     const void* data
@@ -218,7 +218,7 @@ SECP256K1_API void secp256k1_context_set_illegal_callback(
  *  This can only trigger in case of a hardware failure, miscompilation,
  *  memory corruption, serious bug in the library, or other error would can
  *  otherwise result in undefined behaviour. It will not trigger due to mere
- *  incorrect usage of the API (see secp256k1_context_set_illegal_callback
+ *  incorrect usage of the API (see cosmos_secp256k1_context_set_illegal_callback
  *  for that). After this callback returns, anything may happen, including
  *  crashing.
  *

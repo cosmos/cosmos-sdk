@@ -17,7 +17,7 @@ void test_ecdh_api(void) {
     s_one[31] = 1;
 
     secp256k1_context_set_error_callback(tctx, counting_illegal_callback_fn, &ecount);
-    secp256k1_context_set_illegal_callback(tctx, counting_illegal_callback_fn, &ecount);
+    cosmos_secp256k1_context_set_illegal_callback(tctx, counting_illegal_callback_fn, &ecount);
     CHECK(secp256k1_ec_pubkey_create(tctx, &point, s_one) == 1);
 
     /* Check all NULLs are detected */

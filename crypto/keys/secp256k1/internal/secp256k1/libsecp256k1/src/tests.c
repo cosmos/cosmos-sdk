@@ -191,9 +191,9 @@ void run_context_tests(void) {
     CHECK(cosmos_secp256k1_ecdsa_sign(sign, &sig, ctmp, ctmp, NULL, NULL) == 1);
     VG_CHECK(&sig, sizeof(sig));
     CHECK(ecount2 == 10);
-    CHECK(secp256k1_ecdsa_verify(sign, &sig, ctmp, &pubkey) == 0);
+    CHECK(cosmos_secp256k1_ecdsa_verify(sign, &sig, ctmp, &pubkey) == 0);
     CHECK(ecount2 == 11);
-    CHECK(secp256k1_ecdsa_verify(vrfy, &sig, ctmp, &pubkey) == 1);
+    CHECK(cosmos_secp256k1_ecdsa_verify(vrfy, &sig, ctmp, &pubkey) == 1);
     CHECK(ecount == 2);
     CHECK(cosmos_secp256k1_ec_pubkey_tweak_add(sign, &pubkey, ctmp) == 0);
     CHECK(ecount2 == 12);
@@ -3513,38 +3513,38 @@ void test_ecdsa_end_to_end(void) {
     CHECK(memcmp(&signature[1], &signature[3], sizeof(signature[0])) != 0);
     CHECK(memcmp(&signature[2], &signature[3], sizeof(signature[0])) != 0);
     /* Verify. */
-    CHECK(secp256k1_ecdsa_verify(ctx, &signature[0], message, &pubkey) == 1);
-    CHECK(secp256k1_ecdsa_verify(ctx, &signature[1], message, &pubkey) == 1);
-    CHECK(secp256k1_ecdsa_verify(ctx, &signature[2], message, &pubkey) == 1);
-    CHECK(secp256k1_ecdsa_verify(ctx, &signature[3], message, &pubkey) == 1);
+    CHECK(cosmos_secp256k1_ecdsa_verify(ctx, &signature[0], message, &pubkey) == 1);
+    CHECK(cosmos_secp256k1_ecdsa_verify(ctx, &signature[1], message, &pubkey) == 1);
+    CHECK(cosmos_secp256k1_ecdsa_verify(ctx, &signature[2], message, &pubkey) == 1);
+    CHECK(cosmos_secp256k1_ecdsa_verify(ctx, &signature[3], message, &pubkey) == 1);
     /* Test lower-S form, malleate, verify and fail, test again, malleate again */
     CHECK(!cosmos_secp256k1_ecdsa_signature_normalize(ctx, NULL, &signature[0]));
     secp256k1_ecdsa_signature_load(ctx, &r, &s, &signature[0]);
     secp256k1_scalar_negate(&s, &s);
     secp256k1_ecdsa_signature_save(&signature[5], &r, &s);
-    CHECK(secp256k1_ecdsa_verify(ctx, &signature[5], message, &pubkey) == 0);
+    CHECK(cosmos_secp256k1_ecdsa_verify(ctx, &signature[5], message, &pubkey) == 0);
     CHECK(cosmos_secp256k1_ecdsa_signature_normalize(ctx, NULL, &signature[5]));
     CHECK(cosmos_secp256k1_ecdsa_signature_normalize(ctx, &signature[5], &signature[5]));
     CHECK(!cosmos_secp256k1_ecdsa_signature_normalize(ctx, NULL, &signature[5]));
     CHECK(!cosmos_secp256k1_ecdsa_signature_normalize(ctx, &signature[5], &signature[5]));
-    CHECK(secp256k1_ecdsa_verify(ctx, &signature[5], message, &pubkey) == 1);
+    CHECK(cosmos_secp256k1_ecdsa_verify(ctx, &signature[5], message, &pubkey) == 1);
     secp256k1_scalar_negate(&s, &s);
     secp256k1_ecdsa_signature_save(&signature[5], &r, &s);
     CHECK(!cosmos_secp256k1_ecdsa_signature_normalize(ctx, NULL, &signature[5]));
-    CHECK(secp256k1_ecdsa_verify(ctx, &signature[5], message, &pubkey) == 1);
+    CHECK(cosmos_secp256k1_ecdsa_verify(ctx, &signature[5], message, &pubkey) == 1);
     CHECK(memcmp(&signature[5], &signature[0], 64) == 0);
 
     /* Serialize/parse DER and verify again */
     CHECK(secp256k1_ecdsa_signature_serialize_der(ctx, sig, &siglen, &signature[0]) == 1);
     memset(&signature[0], 0, sizeof(signature[0]));
     CHECK(secp256k1_ecdsa_signature_parse_der(ctx, &signature[0], sig, siglen) == 1);
-    CHECK(secp256k1_ecdsa_verify(ctx, &signature[0], message, &pubkey) == 1);
+    CHECK(cosmos_secp256k1_ecdsa_verify(ctx, &signature[0], message, &pubkey) == 1);
     /* Serialize/destroy/parse DER and verify again. */
     siglen = 74;
     CHECK(secp256k1_ecdsa_signature_serialize_der(ctx, sig, &siglen, &signature[0]) == 1);
     sig[secp256k1_rand_int(siglen)] += 1 + secp256k1_rand_int(255);
     CHECK(secp256k1_ecdsa_signature_parse_der(ctx, &signature[0], sig, siglen) == 0 ||
-          secp256k1_ecdsa_verify(ctx, &signature[0], message, &pubkey) == 0);
+          cosmos_secp256k1_ecdsa_verify(ctx, &signature[0], message, &pubkey) == 0);
 }
 
 void test_random_pubkeys(void) {
@@ -4161,18 +4161,18 @@ void test_ecdsa_edge_cases(void) {
         CHECK(ecount == 3);
         CHECK(cosmos_secp256k1_ecdsa_sign(ctx, &sig, msg, key, precomputed_nonce_function, nonce2) == 1);
         CHECK(secp256k1_ec_pubkey_create(ctx, &pubkey, key) == 1);
-        CHECK(secp256k1_ecdsa_verify(ctx, NULL, msg, &pubkey) == 0);
+        CHECK(cosmos_secp256k1_ecdsa_verify(ctx, NULL, msg, &pubkey) == 0);
         CHECK(ecount == 4);
-        CHECK(secp256k1_ecdsa_verify(ctx, &sig, NULL, &pubkey) == 0);
+        CHECK(cosmos_secp256k1_ecdsa_verify(ctx, &sig, NULL, &pubkey) == 0);
         CHECK(ecount == 5);
-        CHECK(secp256k1_ecdsa_verify(ctx, &sig, msg, NULL) == 0);
+        CHECK(cosmos_secp256k1_ecdsa_verify(ctx, &sig, msg, NULL) == 0);
         CHECK(ecount == 6);
-        CHECK(secp256k1_ecdsa_verify(ctx, &sig, msg, &pubkey) == 1);
+        CHECK(cosmos_secp256k1_ecdsa_verify(ctx, &sig, msg, &pubkey) == 1);
         CHECK(ecount == 6);
         CHECK(secp256k1_ec_pubkey_create(ctx, &pubkey, NULL) == 0);
         CHECK(ecount == 7);
         /* That pubkeyload fails via an ARGCHECK is a little odd but makes sense because pubkeys are an opaque data type. */
-        CHECK(secp256k1_ecdsa_verify(ctx, &sig, msg, &pubkey) == 0);
+        CHECK(cosmos_secp256k1_ecdsa_verify(ctx, &sig, msg, &pubkey) == 0);
         CHECK(ecount == 8);
         siglen = 72;
         CHECK(secp256k1_ecdsa_signature_serialize_der(ctx, NULL, &siglen, &sig) == 0);

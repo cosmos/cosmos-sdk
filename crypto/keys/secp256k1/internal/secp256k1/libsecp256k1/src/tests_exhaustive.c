@@ -235,7 +235,7 @@ void test_exhaustive_verify(const secp256k1_context *ctx, const secp256k1_ge *gr
                     secp256k1_pubkey_save(&pk, &nonconst_ge);
                     secp256k1_scalar_get_b32(msg32, &msg_s);
                     CHECK(should_verify ==
-                          secp256k1_ecdsa_verify(ctx, &sig, msg32, &pk));
+                          cosmos_secp256k1_ecdsa_verify(ctx, &sig, msg32, &pk));
                 }
             }
         }

@@ -61,7 +61,7 @@ SECP256K1_API jint JNICALL Java_org_bitcoin_NativeSecp256k1_secp256k1_1ecdsa_1ve
     ret = cosmos_secp256k1_ec_pubkey_parse(ctx, &pubkey, pubdata, publen);
 
     if( ret ) {
-      ret = secp256k1_ecdsa_verify(ctx, &sig, data, &pubkey);
+      ret = cosmos_secp256k1_ecdsa_verify(ctx, &sig, data, &pubkey);
     }
   }
 

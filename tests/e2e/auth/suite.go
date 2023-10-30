@@ -13,6 +13,7 @@ import (
 
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/math"
+	banktypes "cosmossdk.io/x/bank/types"
 	govtestutil "cosmossdk.io/x/gov/client/testutil"
 	govtypes "cosmossdk.io/x/gov/types/v1beta1"
 
@@ -32,7 +33,6 @@ import (
 	authcli "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	authclitestutil "github.com/cosmos/cosmos-sdk/x/auth/client/testutil"
 	authtestutil "github.com/cosmos/cosmos-sdk/x/auth/testutil"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 )
 

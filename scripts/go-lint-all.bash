@@ -15,6 +15,7 @@ lint_module() {
   else
     golangci-lint run ./... -c "${REPO_ROOT}/.golangci.yml" "$@" --build-tags=rocksdb,e2e,ledger,test_ledger_mock
   fi
+  # always lint simapp with app_v1 build tag, otherwise it never gets linted
   if [[ "$(grep "^module" go.mod)" == "module cosmossdk.io/simapp" ]]; then
     golangci-lint run ./... -c "${REPO_ROOT}/.golangci.yml" "$@" --build-tags=app_v1
   fi
@@ -38,14 +39,16 @@ else
   for f in $(dirname $(echo "$GIT_DIFF" | tr -d "'") | uniq); do
     echo "linting $f [$(date -Iseconds -u)]" &&
     cd $f &&
-     if [[ -z "${NIX:-}" ]]; then 
-    golangci-lint run ./... -c "${REPO_ROOT}/.golangci.yml" "$@" --build-tags=e2e,ledger,test_ledger_mock
-  else
-    golangci-lint run ./... -c "${REPO_ROOT}/.golangci.yml" "$@" --build-tags=rocksdb,e2e,ledger,test_ledger_mock
-  fi
+    if [[ -z "${NIX:-}" && $f != store ]]; then 
+      golangci-lint run ./... -c "${REPO_ROOT}/.golangci.yml" "$@" --build-tags=e2e,ledger,test_ledger_mock
+    else
+      golangci-lint run ./... -c "${REPO_ROOT}/.golangci.yml" "$@" --build-tags=rocksdb,e2e,ledger,test_ledger_mock
+    fi
+
     if [[ $f == simapp || $f == simapp/simd/cmd ]]; then
       golangci-lint run ./... -c "${REPO_ROOT}/.golangci.yml" "$@" --build-tags=app_v1
     fi
+    
     cd $REPO_ROOT
   done
 fi

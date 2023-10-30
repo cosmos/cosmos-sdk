@@ -78,7 +78,7 @@ cosmos_secp256k1_context* cosmos_secp256k1_context_create(unsigned int flags) {
     return ret;
 }
 
-cosmos_secp256k1_context* secp256k1_context_clone(const cosmos_secp256k1_context* ctx) {
+cosmos_secp256k1_context* _cosmos_secp256k1_context_clone(const cosmos_secp256k1_context* ctx) {
     cosmos_secp256k1_context* ret = (cosmos_secp256k1_context*)checked_malloc(&ctx->error_callback, sizeof(cosmos_secp256k1_context));
     ret->illegal_callback = ctx->illegal_callback;
     ret->error_callback = ctx->error_callback;

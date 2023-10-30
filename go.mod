@@ -1,7 +1,5 @@
 go 1.21
 
-toolchain go1.21.0
-
 module github.com/cosmos/cosmos-sdk
 
 require (
@@ -13,13 +11,14 @@ require (
 	cosmossdk.io/log v1.2.1
 	cosmossdk.io/math v1.1.3-rc.1
 	cosmossdk.io/store v1.0.0-rc.0
-	cosmossdk.io/x/protocolpool v0.0.0-20230925135524-a1bc045b3190
+	cosmossdk.io/x/bank v0.0.0-00010101000000-000000000000
+	cosmossdk.io/x/distribution v0.0.0-20230925135524-a1bc045b3190
+	cosmossdk.io/x/gov v0.0.0-20230925135524-a1bc045b3190
+	cosmossdk.io/x/mint v0.0.0-00010101000000-000000000000
+	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/tx v0.11.0
 	github.com/99designs/keyring v1.2.1
 	github.com/bgentry/speakeasy v0.1.1-0.20220910012023-760eaf8b6816
-	github.com/bits-and-blooms/bitset v1.10.0
-	github.com/chzyer/readline v1.5.1
-	github.com/cockroachdb/apd/v2 v2.0.2
 	github.com/cockroachdb/errors v1.11.1
 	github.com/cometbft/cometbft v0.38.0
 	github.com/cosmos/btcutil v1.0.5
@@ -45,11 +44,9 @@ require (
 	github.com/improbable-eng/grpc-web v0.15.0
 	github.com/jhump/protoreflect v1.15.3
 	github.com/magiconair/properties v1.8.7
-	github.com/manifoldco/promptui v0.9.0
-	github.com/mattn/go-isatty v0.0.19
-	github.com/pkg/errors v0.9.1
+	github.com/mattn/go-isatty v0.0.20
 	github.com/prometheus/client_golang v1.17.0
-	github.com/prometheus/common v0.44.0
+	github.com/prometheus/common v0.45.0
 	github.com/rs/zerolog v1.31.0
 	github.com/spf13/cast v1.5.1
 	github.com/spf13/cobra v1.7.0
@@ -61,7 +58,7 @@ require (
 	golang.org/x/exp v0.0.0-20231006140011-7918f672742d
 	golang.org/x/sync v0.4.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20231002182017-d307bd883b97
-	google.golang.org/grpc v1.58.3
+	google.golang.org/grpc v1.59.0
 	google.golang.org/protobuf v1.31.0
 	gotest.tools/v3 v3.5.1
 	pgregory.net/rapid v1.1.0
@@ -69,6 +66,7 @@ require (
 )
 
 require (
+	cosmossdk.io/x/protocolpool v0.0.0-20230925135524-a1bc045b3190 // indirect
 	filippo.io/edwards25519 v1.0.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/DataDog/zstd v1.5.5 // indirect
@@ -104,7 +102,7 @@ require (
 	github.com/godbus/dbus v0.0.0-20190726142602-4481cbc300e2 // indirect
 	github.com/gogo/googleapis v1.4.1 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
-	github.com/golang/glog v1.1.0 // indirect
+	github.com/golang/glog v1.1.2 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/btree v1.1.2 // indirect
 	github.com/google/orderedcode v0.0.1 // indirect
@@ -123,9 +121,9 @@ require (
 	github.com/kr/text v0.2.0 // indirect
 	github.com/lib/pq v1.10.7 // indirect
 	github.com/libp2p/go-buffer-pool v0.1.0 // indirect
-	github.com/linxGnu/grocksdb v1.8.0 // indirect
+	github.com/linxGnu/grocksdb v1.8.4 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
-	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
+	github.com/matttproud/golang_protobuf_extensions/v2 v2.0.0 // indirect
 	github.com/minio/highwayhash v1.0.2 // indirect
 	github.com/mitchellh/go-testing-interface v1.14.1 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
@@ -135,6 +133,7 @@ require (
 	github.com/oklog/run v1.1.0 // indirect
 	github.com/pelletier/go-toml/v2 v2.1.0 // indirect
 	github.com/petermattis/goid v0.0.0-20230808133559-b036b712a89b // indirect
+	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/prometheus/client_model v0.4.1-0.20230718164431-9a2bf3000d16 // indirect
 	github.com/prometheus/procfs v0.11.1 // indirect
@@ -170,7 +169,16 @@ require (
 // replace (
 // 	<temporary replace>
 // )
-replace cosmossdk.io/x/protocolpool => ./x/protocolpool
+// TODO remove after all modules have their own go.mods
+replace (
+	cosmossdk.io/x/bank => ./x/bank
+	cosmossdk.io/x/distribution => ./x/distribution
+	cosmossdk.io/x/gov => ./x/gov
+	cosmossdk.io/x/mint => ./x/mint
+	cosmossdk.io/x/protocolpool => ./x/protocolpool
+	cosmossdk.io/x/slashing => ./x/slashing
+	cosmossdk.io/x/staking => ./x/staking
+)
 
 // Below are the long-lived replace of the Cosmos SDK
 replace (

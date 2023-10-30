@@ -11,14 +11,14 @@ import (
 	"gotest.tools/v3/assert"
 
 	"cosmossdk.io/math"
+	"cosmossdk.io/x/staking/testutil"
+	stakingtypes "cosmossdk.io/x/staking/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	ed25519 "github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/staking/testutil"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 func TestValidateVoteExtensions(t *testing.T) {

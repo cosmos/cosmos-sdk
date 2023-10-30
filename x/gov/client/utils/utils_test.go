@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/x/gov/client/utils"
+	"cosmossdk.io/x/gov/client/utils"
 )
 
 func TestNormalizeWeightedVoteOptions(t *testing.T) {

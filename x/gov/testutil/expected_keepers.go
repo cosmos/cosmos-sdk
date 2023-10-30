@@ -6,10 +6,10 @@ import (
 	context "context"
 
 	"cosmossdk.io/math"
+	bankkeeper "cosmossdk.io/x/bank/keeper"
+	"cosmossdk.io/x/gov/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 // AccountKeeper extends gov's actual expected AccountKeeper with additional

@@ -8,6 +8,8 @@ import (
 	"cosmossdk.io/collections"
 	"cosmossdk.io/errors"
 	sdkmath "cosmossdk.io/math"
+	"cosmossdk.io/x/gov/types"
+	v1 "cosmossdk.io/x/gov/types/v1"
 	pooltypes "cosmossdk.io/x/protocolpool/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -72,6 +74,7 @@ func (keeper Keeper) AddDeposit(ctx context.Context, proposalID uint64, deposito
 		return false, errors.Wrapf(types.ErrInactiveProposal, "%d", proposalID)
 	}
 
+	// Check coins to be deposited match the proposal's deposit params
 	params, err := keeper.Params.Get(ctx)
 	if err != nil {
 		return false, err
@@ -84,8 +87,8 @@ func (keeper Keeper) AddDeposit(ctx context.Context, proposalID uint64, deposito
 	}
 
 	// the deposit must only contain valid denoms (listed in the min deposit param)
-	if !depositAmount.DenomsSubsetOf(minDepositAmount) {
-		return false, errors.Wrapf(types.ErrInvalidDepositDenom, "deposit contains invalid denom(s): %s; accepted denom(s): %s", depositAmount.Denoms(), minDepositAmount.Denoms())
+	if err := keeper.validateDepositDenom(ctx, params, depositAmount); err != nil {
+		return false, err
 	}
 
 	// If minDepositRatio is set, the deposit must be equal or greater than minDepositAmount*minDepositRatio
@@ -156,7 +159,10 @@ func (keeper Keeper) AddDeposit(ctx context.Context, proposalID uint64, deposito
 	}
 
 	// called when deposit has been added to a proposal, however the proposal may not be active
-	keeper.Hooks().AfterProposalDeposit(ctx, proposalID, depositorAddr)
+	err = keeper.Hooks().AfterProposalDeposit(ctx, proposalID, depositorAddr)
+	if err != nil {
+		return false, err
+	}
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	sdkCtx.EventManager().EmitEvent(
@@ -275,14 +281,9 @@ func (keeper Keeper) RefundAndDeleteDeposits(ctx context.Context, proposalID uin
 // validateInitialDeposit validates if initial deposit is greater than or equal to the minimum
 // required at the time of proposal submission. This threshold amount is determined by
 // the deposit parameters. Returns nil on success, error otherwise.
-func (keeper Keeper) validateInitialDeposit(ctx context.Context, initialDeposit sdk.Coins, expedited bool) error {
+func (keeper Keeper) validateInitialDeposit(ctx context.Context, params v1.Params, initialDeposit sdk.Coins, expedited bool) error {
 	if !initialDeposit.IsValid() || initialDeposit.IsAnyNegative() {
 		return errors.Wrap(sdkerrors.ErrInvalidCoins, initialDeposit.String())
-	}
-
-	params, err := keeper.Params.Get(ctx)
-	if err != nil {
-		return err
 	}
 
 	minInitialDepositRatio, err := sdkmath.LegacyNewDecFromStr(params.MinInitialDepositRatio)
@@ -306,5 +307,23 @@ func (keeper Keeper) validateInitialDeposit(ctx context.Context, initialDeposit 
 	if !initialDeposit.IsAllGTE(minDepositCoins) {
 		return errors.Wrapf(types.ErrMinDepositTooSmall, "was (%s), need (%s)", initialDeposit, minDepositCoins)
 	}
+	return nil
+}
+
+// validateDepositDenom validates if the deposit denom is accepted by the governance module.
+func (keeper Keeper) validateDepositDenom(ctx context.Context, params v1.Params, depositAmount sdk.Coins) error {
+	denoms := []string{}
+	acceptedDenoms := make(map[string]bool, len(params.MinDeposit))
+	for _, coin := range params.MinDeposit {
+		acceptedDenoms[coin.Denom] = true
+		denoms = append(denoms, coin.Denom)
+	}
+
+	for _, coin := range depositAmount {
+		if _, ok := acceptedDenoms[coin.Denom]; !ok {
+			return errors.Wrapf(types.ErrInvalidDepositDenom, "deposited %s, but gov accepts only the following denom(s): %v", coin, denoms)
+		}
+	}
+
 	return nil
 }

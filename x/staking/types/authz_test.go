@@ -7,10 +7,10 @@ import (
 
 	coreheader "cosmossdk.io/core/header"
 	storetypes "cosmossdk.io/store/types"
+	stakingtypes "cosmossdk.io/x/staking/types"
 
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 var (

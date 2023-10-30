@@ -40,9 +40,9 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Use:       "authorize [grantee] [permissions_json] --from [granter]",
 					Short:     "Authorize an account to trip the circuit breaker.",
 					Long: `Authorize an account to trip the circuit breaker.
-		"SOME_MSGS" =     1,
-		"ALL_MSGS" =      2,
-		"SUPER_ADMIN" =   3,`,
+"SOME_MSGS" =     1,
+"ALL_MSGS" =      2,
+"SUPER_ADMIN" =   3,`,
 					Example: fmt.Sprintf(`%s circuit authorize [address] '{"level":1,"limit_type_urls":["cosmos.bank.v1beta1.MsgSend,cosmos.bank.v1beta1.MsgMultiSend"]}'"`, version.AppName),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
 						{ProtoField: "grantee"},

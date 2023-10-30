@@ -16,6 +16,7 @@ import (
 	"github.com/cometbft/cometbft/p2p"
 	pvm "github.com/cometbft/cometbft/privval"
 	"github.com/cometbft/cometbft/proxy"
+	rpchttp "github.com/cometbft/cometbft/rpc/client/http"
 	"github.com/cometbft/cometbft/rpc/client/local"
 	cmttypes "github.com/cometbft/cometbft/types"
 	dbm "github.com/cosmos/cosmos-db"
@@ -258,12 +259,12 @@ func start(svrCtx *Context, clientCtx client.Context, appCreator types.AppCreato
 	emitServerInfoMetrics()
 
 	if !withCmt {
-		return startStandAlone(svrCtx, app, opts)
+		return startStandAlone(svrCtx, svrCfg, clientCtx, app, metrics, opts)
 	}
 	return startInProcess(svrCtx, svrCfg, clientCtx, app, metrics, opts)
 }
 
-func startStandAlone(svrCtx *Context, app types.Application, opts StartCmdOptions) error {
+func startStandAlone(svrCtx *Context, svrCfg serverconfig.Config, clientCtx client.Context, app types.Application, metrics *telemetry.Metrics, opts StartCmdOptions) error {
 	addr := svrCtx.Viper.GetString(flagAddress)
 	transport := svrCtx.Viper.GetString(flagTransport)
 
@@ -276,6 +277,39 @@ func startStandAlone(svrCtx *Context, app types.Application, opts StartCmdOption
 	svr.SetLogger(servercmtlog.CometLoggerWrapper{Logger: svrCtx.Logger.With("module", "abci-server")})
 
 	g, ctx := getCtx(svrCtx, false)
+
+	// Add the tx service to the gRPC router. We only need to register this
+	// service if API or gRPC is enabled, and avoid doing so in the general
+	// case, because it spawns a new local CometBFT RPC client.
+	if svrCfg.API.Enable || svrCfg.GRPC.Enable {
+		// create tendermint client
+		// assumes the rpc listen address is where tendermint has its rpc server
+		rpcclient, err := rpchttp.New(svrCtx.Config.RPC.ListenAddress, "/websocket")
+		if err != nil {
+			return err
+		}
+		// re-assign for making the client available below
+		// do not use := to avoid shadowing clientCtx
+		clientCtx = clientCtx.WithClient(rpcclient)
+
+		// use the provided clientCtx to register the services
+		app.RegisterTxService(clientCtx)
+		app.RegisterTendermintService(clientCtx)
+		app.RegisterNodeService(clientCtx, svrCfg)
+	}
+
+	grpcSrv, clientCtx, err := startGrpcServer(ctx, g, svrCfg.GRPC, clientCtx, svrCtx, app)
+	if err != nil {
+		return err
+	}
+
+	cmtCfg := svrCtx.Config
+	home := cmtCfg.RootDir
+
+	err = startAPIServer(ctx, g, cmtCfg, svrCfg, clientCtx, svrCtx, app, home, grpcSrv, metrics)
+	if err != nil {
+		return err
+	}
 
 	g.Go(func() error {
 		if err := svr.Start(); err != nil {
@@ -449,7 +483,7 @@ func startGrpcServer(
 		// return grpcServer as nil if gRPC is disabled
 		return nil, clientCtx, nil
 	}
-	_, port, err := net.SplitHostPort(config.Address)
+	_, _, err := net.SplitHostPort(config.Address)
 	if err != nil {
 		return nil, clientCtx, err
 	}
@@ -464,11 +498,9 @@ func startGrpcServer(
 		maxRecvMsgSize = serverconfig.DefaultGRPCMaxRecvMsgSize
 	}
 
-	grpcAddress := fmt.Sprintf("127.0.0.1:%s", port)
-
 	// if gRPC is enabled, configure gRPC client for gRPC gateway
 	grpcClient, err := grpc.Dial(
-		grpcAddress,
+		config.Address,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithDefaultCallOptions(
 			grpc.ForceCodec(codec.NewProtoCodec(clientCtx.InterfaceRegistry).GRPCCodec()),
@@ -481,7 +513,7 @@ func startGrpcServer(
 	}
 
 	clientCtx = clientCtx.WithGRPCClient(grpcClient)
-	svrCtx.Logger.Debug("gRPC client assigned to client context", "target", grpcAddress)
+	svrCtx.Logger.Debug("gRPC client assigned to client context", "target", config.Address)
 
 	grpcSrv, err := servergrpc.NewGRPCServer(clientCtx, app, config)
 	if err != nil {

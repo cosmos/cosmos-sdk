@@ -1,12 +1,12 @@
 package keeper
 
 import (
+	"cosmossdk.io/x/distribution/migrations/funds"
+	v4 "cosmossdk.io/x/distribution/migrations/v4"
+	"cosmossdk.io/x/distribution/types"
 	pooltypes "cosmossdk.io/x/protocolpool/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/distribution/migrations/funds"
-	v4 "github.com/cosmos/cosmos-sdk/x/distribution/migrations/v4"
-	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
 // Migrator is a struct for handling in-place store migrations.

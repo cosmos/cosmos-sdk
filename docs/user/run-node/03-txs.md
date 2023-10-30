@@ -152,7 +152,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/client/tx_config.go#L3
 
 ```go
 import (
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	banktypes "cosmossdk.io/x/bank/types"
 )
 
 func sendTx() error {

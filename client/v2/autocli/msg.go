@@ -114,19 +114,26 @@ func (b *Builder) BuildMsgMethodCommand(descriptor protoreflect.MethodDescriptor
 			return err
 		}
 
-		// enable sign mode textual and config tx options
-		b.TxConfigOpts.EnabledSignModes = append(b.TxConfigOpts.EnabledSignModes, signing.SignMode_SIGN_MODE_TEXTUAL)
-		b.TxConfigOpts.TextualCoinMetadataQueryFn = authtxconfig.NewGRPCCoinMetadataQueryFn(clientCtx)
+		clientCtx = clientCtx.WithCmdContext(cmd.Context())
+		clientCtx = clientCtx.WithOutput(cmd.OutOrStdout())
 
-		txConfigWithTextual, err := authtx.NewTxConfigWithOptions(
-			codec.NewProtoCodec(clientCtx.InterfaceRegistry),
-			b.TxConfigOpts,
-		)
-		if err != nil {
-			return err
+		// enable sign mode textual
+		// the config is always overwritten as we need to have set the flags to the client context
+		// this ensures that the context has the correct client.
+		if !clientCtx.Offline {
+			b.TxConfigOpts.EnabledSignModes = append(b.TxConfigOpts.EnabledSignModes, signing.SignMode_SIGN_MODE_TEXTUAL)
+			b.TxConfigOpts.TextualCoinMetadataQueryFn = authtxconfig.NewGRPCCoinMetadataQueryFn(clientCtx)
+
+			txConfig, err := authtx.NewTxConfigWithOptions(
+				codec.NewProtoCodec(clientCtx.InterfaceRegistry),
+				b.TxConfigOpts,
+			)
+			if err != nil {
+				return err
+			}
+
+			clientCtx = clientCtx.WithTxConfig(txConfig)
 		}
-		clientCtx = clientCtx.WithTxConfig(txConfigWithTextual)
-		clientCtx.Output = cmd.OutOrStdout()
 
 		// set signer to signer field if empty
 		fd := input.Descriptor().Fields().ByName(protoreflect.Name(flag.GetSignerFieldName(input.Descriptor())))

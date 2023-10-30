@@ -9,10 +9,11 @@ require (
 	cosmossdk.io/errors v1.0.0
 	cosmossdk.io/log v1.2.1
 	cosmossdk.io/store v1.0.0-rc.0
+	cosmossdk.io/x/gov v0.0.0-20230925135524-a1bc045b3190
 	github.com/cometbft/cometbft v0.38.0
 	github.com/cosmos/cosmos-db v1.0.0
 	github.com/cosmos/cosmos-proto v1.0.0-beta.3
-	github.com/cosmos/cosmos-sdk v0.47.5
+	github.com/cosmos/cosmos-sdk v0.51.0
 	github.com/cosmos/gogoproto v1.4.11
 	github.com/golang/protobuf v1.5.3
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
@@ -23,7 +24,7 @@ require (
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.8.4
 	google.golang.org/genproto/googleapis/api v0.0.0-20231012201019-e917dd12ba7a
-	google.golang.org/grpc v1.58.3
+	google.golang.org/grpc v1.59.0
 	google.golang.org/protobuf v1.31.0
 )
 
@@ -35,6 +36,9 @@ require (
 	cloud.google.com/go/storage v1.33.0 // indirect
 	cosmossdk.io/collections v0.4.0 // indirect
 	cosmossdk.io/math v1.1.3-rc.1 // indirect
+	cosmossdk.io/x/bank v0.0.0-00010101000000-000000000000 // indirect
+	cosmossdk.io/x/mint v0.0.0-00010101000000-000000000000 // indirect
+	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/x/tx v0.11.0 // indirect
 	filippo.io/edwards25519 v1.0.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
@@ -81,7 +85,7 @@ require (
 	github.com/godbus/dbus v0.0.0-20190726142602-4481cbc300e2 // indirect
 	github.com/gogo/googleapis v1.4.1 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
-	github.com/golang/glog v1.1.0 // indirect
+	github.com/golang/glog v1.1.2 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/mock v1.6.0 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
@@ -118,12 +122,12 @@ require (
 	github.com/kr/text v0.2.0 // indirect
 	github.com/lib/pq v1.10.7 // indirect
 	github.com/libp2p/go-buffer-pool v0.1.0 // indirect
-	github.com/linxGnu/grocksdb v1.8.0 // indirect
+	github.com/linxGnu/grocksdb v1.8.4 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
 	github.com/manifoldco/promptui v0.9.0 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
-	github.com/mattn/go-isatty v0.0.19 // indirect
-	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
+	github.com/mattn/go-isatty v0.0.20 // indirect
+	github.com/matttproud/golang_protobuf_extensions/v2 v2.0.0 // indirect
 	github.com/minio/highwayhash v1.0.2 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/mitchellh/go-testing-interface v1.14.1 // indirect
@@ -137,7 +141,7 @@ require (
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/prometheus/client_golang v1.17.0 // indirect
 	github.com/prometheus/client_model v0.4.1-0.20230718164431-9a2bf3000d16 // indirect
-	github.com/prometheus/common v0.44.0 // indirect
+	github.com/prometheus/common v0.45.0 // indirect
 	github.com/prometheus/procfs v0.11.1 // indirect
 	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475 // indirect
 	github.com/rogpeppe/go-internal v1.11.0 // indirect
@@ -185,6 +189,12 @@ require (
 // TODO Remove it: https://github.com/cosmos/cosmos-sdk/issues/10409
 
 replace (
+	cosmossdk.io/x/bank => ../bank
+	cosmossdk.io/x/distribution => ../distribution
+	cosmossdk.io/x/gov => ../gov
+	cosmossdk.io/x/mint => ../mint
+	cosmossdk.io/x/slashing => ../slashing
+	cosmossdk.io/x/staking => ../staking
 	github.com/cosmos/cosmos-sdk => ../../.
 	github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.9.1
 )

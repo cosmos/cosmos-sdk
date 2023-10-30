@@ -14,6 +14,10 @@ import (
 	// without this import amino json encoding will fail when resolving any types
 	_ "cosmossdk.io/api/cosmos/group/v1"
 	sdkmath "cosmossdk.io/math"
+	banktypes "cosmossdk.io/x/bank/types"
+	"cosmossdk.io/x/group"
+	groupcli "cosmossdk.io/x/group/client/cli"
+	groupmodule "cosmossdk.io/x/group/module"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -25,10 +29,6 @@ import (
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	testutilmod "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/cosmos/cosmos-sdk/x/group"
-	groupcli "github.com/cosmos/cosmos-sdk/x/group/client/cli"
-	groupmodule "github.com/cosmos/cosmos-sdk/x/group/module"
 )
 
 var validMetadata = "metadata"

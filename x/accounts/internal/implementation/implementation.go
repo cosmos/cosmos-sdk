@@ -18,6 +18,8 @@ type Dependencies struct {
 type AccountCreatorFunc = func(deps Dependencies) (string, Implementation, error)
 
 // AddAccount is a helper function to add a smart account to the list of smart accounts.
+// It returns a function that given an Account implementer, returns the name of the account
+// and the Implementation instance.
 func AddAccount[A Account](name string, constructor func(deps Dependencies) (A, error)) func(deps Dependencies) (string, Implementation, error) {
 	return func(deps Dependencies) (string, Implementation, error) {
 		acc, err := constructor(deps)

@@ -3,7 +3,7 @@ module cosmossdk.io/simapp
 go 1.21
 
 require (
-	cosmossdk.io/api v0.7.2
+	cosmossdk.io/api v0.7.3-0.20231029200940-6af7f30bfd54
 	cosmossdk.io/client/v2 v2.0.0-20230630094428-02b760776860
 	cosmossdk.io/collections v0.4.0
 	cosmossdk.io/core v0.12.0
@@ -213,6 +213,7 @@ require (
 
 // SimApp on main always tests the latest extracted SDK modules importing the sdk
 replace (
+	cosmossdk.io/api => ../api
 	cosmossdk.io/client/v2 => ../client/v2
 	cosmossdk.io/tools/confix => ../tools/confix
 	cosmossdk.io/x/authz => ../x/authz

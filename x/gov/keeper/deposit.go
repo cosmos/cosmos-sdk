@@ -94,8 +94,10 @@ func (keeper Keeper) AddDeposit(ctx context.Context, proposalID uint64, deposito
 	// If minDepositRatio is set, the deposit must be equal or greater than minDepositAmount*minDepositRatio
 	// for at least one denom. If minDepositRatio is zero we skip this check.
 	if !minDepositRatio.IsZero() {
-		depositThresholdMet := false
-		thresholds := []string{}
+		var (
+			depositThresholdMet bool
+			thresholds          []string
+		)
 		for _, minDep := range minDepositAmount {
 			// calculate the threshold for this denom, and hold a list to later return a useful error message
 			threshold := sdk.NewCoin(minDep.GetDenom(), minDep.Amount.ToLegacyDec().Mul(minDepositRatio).TruncateInt())
@@ -106,7 +108,7 @@ func (keeper Keeper) AddDeposit(ctx context.Context, proposalID uint64, deposito
 				continue
 			}
 
-			// once we know at least one threshold has been met, we can break. The deposit
+			// Once we know at least one threshold has been met, we can break. The deposit
 			// might contain other denoms but we don't care.
 			if deposit.IsGTE(threshold) {
 				depositThresholdMet = true

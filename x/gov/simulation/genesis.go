@@ -97,8 +97,7 @@ func GenVeto(r *rand.Rand) sdkmath.LegacyDec {
 
 // GenMinDepositRatio returns randomized DepositMinRatio
 func GenMinDepositRatio(r *rand.Rand) sdkmath.LegacyDec {
-	return sdkmath.LegacyMustNewDecFromStr("0.001")
-	// return sdkmath.LegacyNewDec(int64(simulation.RandIntBetween(r, 1, 50))).Quo(sdkmath.LegacyNewDec(1000)) // TODO: re-add once I figure out why it doesn't work
+	return sdkmath.LegacyMustNewDecFromStr("0.01")
 }
 
 // RandomizedGenState generates a random GenesisState for gov

@@ -221,7 +221,7 @@ func TestDepositAmount(t *testing.T) {
 
 			params, _ := govKeeper.Params.Get(ctx)
 			params.MinDepositRatio = tc.minDepositRatio
-			params.MinDeposit = append(params.MinDeposit, sdk.NewCoin("zcoin", sdkmath.NewInt(10000))) // coins must be sorted by denom
+			params.MinDeposit = sdk.NewCoins(params.MinDeposit...).Add(sdk.NewCoin("zcoin", sdkmath.NewInt(10000))) // coins must be sorted by denom
 			err := govKeeper.Params.Set(ctx, params)
 			require.NoError(t, err)
 

@@ -8,7 +8,9 @@ import (
 
 	"cosmossdk.io/math"
 	"cosmossdk.io/simapp"
+	banktypes "cosmossdk.io/x/bank/types"
 	"cosmossdk.io/x/distribution/client/cli"
+	stakingtypes "cosmossdk.io/x/staking/types"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
@@ -16,8 +18,6 @@ import (
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 type WithdrawAllTestSuite struct {

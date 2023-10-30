@@ -7,8 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/math"
-
-	"github.com/cosmos/cosmos-sdk/x/staking/types"
+	"cosmossdk.io/x/staking/types"
 )
 
 func TestCommissionValidate(t *testing.T) {

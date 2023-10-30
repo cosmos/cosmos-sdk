@@ -7,11 +7,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cometbft/cometbft/crypto"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
-
-	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -188,11 +185,6 @@ func TestDeductFeesNoDelegation(t *testing.T) {
 			}
 		})
 	}
-}
-
-// don't consume any gas
-func SigGasNoConsumer(meter storetypes.GasMeter, sig []byte, pubkey crypto.PubKey, params authtypes.Params) error {
-	return nil
 }
 
 func genTxWithFeeGranter(gen client.TxConfig, msgs []sdk.Msg, feeAmt sdk.Coins, gas uint64, chainID string, accNums,

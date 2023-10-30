@@ -131,7 +131,7 @@ import (
 
     "github.com/cosmos/cosmos-sdk/codec"
     sdk "github.com/cosmos/cosmos-sdk/types"
-    banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+    banktypes "cosmossdk.io/x/bank/types"
 )
 
 func queryState() error {
@@ -194,7 +194,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	banktypes "cosmossdk.io/x/bank/types"
 )
 
 func queryState() error {

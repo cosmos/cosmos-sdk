@@ -250,7 +250,7 @@ endif
 test-sim-nondeterminism:
 	@echo "Running non-determinism test..."
 	@cd ${CURRENT_DIR}/simapp && go test -mod=readonly -run TestAppStateDeterminism -Enabled=true \
-		-NumBlocks=100 -BlockSize=200 -Commit=true -Period=0 -v -timeout 24h
+		-NumBlocks=100 -BlockSize=200 -Commit=true -Period=0 -v -timeout 24h -Seed=6425865534782297734
 
 # Requires an exported plugin. See store/streaming/README.md for documentation.
 #

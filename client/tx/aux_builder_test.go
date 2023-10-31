@@ -5,8 +5,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/x/bank"
-
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -16,16 +14,17 @@ import (
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	typestx "github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	"github.com/cosmos/cosmos-sdk/x/counter"
 )
 
 func TestAuxTxBuilder(t *testing.T) {
-	bankModule := bank.AppModuleBasic{}
-	cdc := moduletestutil.MakeTestEncodingConfig(bankModule).Codec
+	counterModule := counter.AppModuleBasic{}
+	cdc := moduletestutil.MakeTestEncodingConfig(counterModule).Codec
 	reg := codectypes.NewInterfaceRegistry()
 
 	testdata.RegisterInterfaces(reg)
 	// required for test case: "GetAuxSignerData works for DIRECT_AUX"
-	bankModule.RegisterInterfaces(reg)
+	counterModule.RegisterInterfaces(reg)
 
 	var b tx.AuxTxBuilder
 

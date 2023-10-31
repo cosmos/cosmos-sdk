@@ -1,4 +1,4 @@
-package server_test
+package cli_test
 
 import (
 	"context"
@@ -25,7 +25,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/testutil/cmdtest"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
+	"github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
@@ -58,8 +58,8 @@ func NewExportSystem(t *testing.T, exporter types.AppExporter) *ExportSystem {
 
 	sys := cmdtest.NewSystem()
 	sys.AddCommands(
-		server.ExportCmd(exporter),
-		genutilcli.InitCmd(module.NewBasicManager()),
+		cli.ExportCmd(exporter),
+		cli.InitCmd(module.NewBasicManager()),
 	)
 
 	tw := zerolog.NewTestWriter(t)

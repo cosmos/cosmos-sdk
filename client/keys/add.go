@@ -7,6 +7,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"sort"
 
 	"github.com/cosmos/go-bip39"
@@ -16,7 +18,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/input"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
@@ -217,8 +218,9 @@ func runAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *buf
 		}
 
 		var pk cryptotypes.PubKey
-		// create an empty pubkey in order to get the algo TypeUrl.
-		tempAny, err := codectypes.NewAnyWithValue(algo.Generate()([]byte{}).PubKey())
+
+		// create an empty seckp256k1 pubkey since it is the key returned by algo Generate function.
+		enotySecpPubKey, err := codectypes.NewAnyWithValue(&secp256k1.PubKey{})
 		if err != nil {
 			return err
 		}
@@ -226,7 +228,7 @@ func runAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *buf
 		jsonPub, err := json.Marshal(struct {
 			Type string `json:"@type,omitempty"`
 			Key  string `json:"key,omitempty"`
-		}{tempAny.TypeUrl, string(b64)})
+		}{enotySecpPubKey.TypeUrl, string(b64)})
 		if err != nil {
 			return fmt.Errorf("failed to JSON marshal typeURL and base64 key: %w", err)
 		}

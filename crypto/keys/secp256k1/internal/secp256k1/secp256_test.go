@@ -9,9 +9,9 @@ package secp256k1
 
 import (
 	"bytes"
-	"crypto/ecdsa"
 	"crypto/rand"
 	"encoding/hex"
+	"gitlab.com/yawning/secp256k1-voi/secec"
 	"io"
 	"testing"
 )
@@ -19,18 +19,13 @@ import (
 const TestCount = 1000
 
 func generateKeyPair() (pubkey, privkey []byte) {
-	key, err := ecdsa.GenerateKey(S256(), rand.Reader)
+	privateKeyObject, err := secec.GenerateKey()
 	if err != nil {
 		panic(err)
 	}
-	publicKeyEcdh, err := key.PublicKey.ECDH()
-	if err != nil {
-		panic(err)
-	}
-	pubkey = publicKeyEcdh.Bytes()
-	privkey = make([]byte, 32)
-	blob := key.D.Bytes()
-	copy(privkey[32-len(blob):], blob)
+
+	privkey = privateKeyObject.Bytes()
+	pubkey = privateKeyObject.PublicKey().Bytes()
 
 	return pubkey, privkey
 }

@@ -9,7 +9,7 @@ import (
 	"math/big"
 
 	"github.com/cometbft/cometbft/crypto"
-	secp256k1 "github.com/decred/dcrd/dcrec/secp256k1/v4"
+	dcred "github.com/decred/dcrd/dcrec/secp256k1/v4"
 	"golang.org/x/crypto/ripemd160" //nolint: staticcheck // keep around for backwards compatibility
 
 	errorsmod "cosmossdk.io/errors"
@@ -119,7 +119,7 @@ func GenPrivKeyFromSecret(secret []byte) *PrivKey {
 	// https://apps.nsa.gov/iaarchive/library/ia-guidance/ia-solutions-for-classified/algorithm-guidance/suite-b-implementers-guide-to-fips-186-3-ecdsa.cfm
 	// see also https://github.com/golang/go/blob/0380c9ad38843d523d9c9804fe300cb7edd7cd3c/src/crypto/ecdsa/ecdsa.go#L89-L101
 	fe := new(big.Int).SetBytes(secHash[:])
-	n := new(big.Int).Sub(secp256k1.S256().N, one)
+	n := new(big.Int).Sub(dcred.S256().N, one)
 	fe.Mod(fe, n)
 	fe.Add(fe, one)
 

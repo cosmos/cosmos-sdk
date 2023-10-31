@@ -3,6 +3,7 @@ package ledger
 import (
 	"errors"
 	"fmt"
+	"gitlab.com/yawning/secp256k1-voi/secec"
 	"math/big"
 	"os"
 
@@ -320,13 +321,13 @@ func getPubKeyUnsafe(device SECP256K1, path hd.BIP44Params) (types.PubKey, error
 	}
 
 	// re-serialize in the 33-byte compressed format
-	cmp, err := secp.ParsePubKey(publicKey)
+	cmp, err := secec.NewPublicKey(publicKey)
 	if err != nil {
 		return nil, fmt.Errorf("error parsing public key: %w", err)
 	}
 
 	compressedPublicKey := make([]byte, secp256k1.PubKeySize)
-	copy(compressedPublicKey, cmp.SerializeCompressed())
+	copy(compressedPublicKey, cmp.CompressedBytes())
 
 	return options.createPubkey(compressedPublicKey), nil
 }
@@ -344,13 +345,13 @@ func getPubKeyAddrSafe(device SECP256K1, path hd.BIP44Params, hrp string) (types
 	}
 
 	// re-serialize in the 33-byte compressed format
-	cmp, err := secp.ParsePubKey(publicKey)
+	cmp, err := secec.NewPublicKey(publicKey)
 	if err != nil {
 		return nil, "", fmt.Errorf("error parsing public key: %w", err)
 	}
 
 	compressedPublicKey := make([]byte, secp256k1.PubKeySize)
-	copy(compressedPublicKey, cmp.SerializeCompressed())
+	copy(compressedPublicKey, cmp.Bytes())
 
 	return options.createPubkey(compressedPublicKey), addr, nil
 }

@@ -13,7 +13,6 @@ require (
 	github.com/cosmos/gogoproto v1.4.11
 	github.com/cosmos/iavl v1.0.0-rc.1
 	github.com/cosmos/ics23/go v0.10.0
-	github.com/golang/mock v1.6.0
 	github.com/linxGnu/grocksdb v1.8.4
 	github.com/stretchr/testify v1.8.4
 	github.com/tidwall/btree v1.7.0

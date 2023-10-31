@@ -7,42 +7,43 @@ import (
 	"cosmossdk.io/store/v2"
 )
 
-// Manager is an abstraction to handle the pruning logic.
+// Manager is an abstraction to handle pruning of SS and SC backends.
 type Manager struct {
-	stateStore      store.VersionedDatabase
+	mtx       sync.Mutex
+	isStarted bool
+
+	stateStorage    store.VersionedDatabase
 	stateCommitment store.Committer
 
 	logger         log.Logger
-	storeOpts      Options
+	storageOpts    Options
 	commitmentOpts Options
 
-	chStore      chan struct{}
+	chStorage    chan struct{}
 	chCommitment chan struct{}
-
-	mtx sync.Mutex
 }
 
 // NewManager creates a new Manager instance.
 func NewManager(
-	stateStore store.VersionedDatabase,
-	stateCommitment store.Committer,
 	logger log.Logger,
+	ss store.VersionedDatabase,
+	sc store.Committer,
 ) *Manager {
 	return &Manager{
-		stateStore:      stateStore,
-		stateCommitment: stateCommitment,
+		stateStorage:    ss,
+		stateCommitment: sc,
 		logger:          logger,
-		storeOpts:       DefaultOptions(),
+		storageOpts:     DefaultOptions(),
 		commitmentOpts:  DefaultOptions(),
 	}
 }
 
-// SetStoreOptions sets the store options.
-func (m *Manager) SetStoreOptions(opts Options) {
-	m.storeOpts = opts
+// SetStorageOptions sets the state storage options.
+func (m *Manager) SetStorageOptions(opts Options) {
+	m.storageOpts = opts
 }
 
-// SetCommitmentOptions sets the commitment options.
+// SetCommitmentOptions sets the state commitment options.
 func (m *Manager) SetCommitmentOptions(opts Options) {
 	m.commitmentOpts = opts
 }
@@ -52,9 +53,14 @@ func (m *Manager) Start() {
 	m.mtx.Lock()
 	defer m.mtx.Unlock()
 
-	if !m.storeOpts.Sync {
-		m.chStore = make(chan struct{}, 1)
-		m.chStore <- struct{}{}
+	if m.isStarted {
+		return
+	}
+	m.isStarted = true
+
+	if !m.storageOpts.Sync {
+		m.chStorage = make(chan struct{}, 1)
+		m.chStorage <- struct{}{}
 	}
 	if !m.commitmentOpts.Sync {
 		m.chCommitment = make(chan struct{}, 1)
@@ -67,9 +73,14 @@ func (m *Manager) Stop() {
 	m.mtx.Lock()
 	defer m.mtx.Unlock()
 
-	if !m.storeOpts.Sync {
-		<-m.chStore
-		close(m.chStore)
+	if !m.isStarted {
+		return
+	}
+	m.isStarted = false
+
+	if !m.storageOpts.Sync {
+		<-m.chStorage
+		close(m.chStorage)
 	}
 	if !m.commitmentOpts.Sync {
 		<-m.chCommitment
@@ -77,24 +88,28 @@ func (m *Manager) Stop() {
 	}
 }
 
-// Prune prunes the state store and state commitment.
+// Prune prunes the state storage and state commitment.
 // It will not block the caller and just check if pruning is needed.
 // If pruning is needed, it will spawn a goroutine to do the actual pruning.
 func (m *Manager) Prune(height uint64) {
 	m.mtx.Lock()
 	defer m.mtx.Unlock()
 
+	if !m.isStarted {
+		return
+	}
+
 	// storage pruning
-	if m.storeOpts.Interval > 0 && height > m.storeOpts.KeepRecent && height%m.storeOpts.Interval == 0 {
-		pruneHeight := height - m.storeOpts.KeepRecent - 1
-		if m.storeOpts.Sync {
-			m.pruneStore(pruneHeight)
+	if m.storageOpts.Interval > 0 && height > m.storageOpts.KeepRecent && height%m.storageOpts.Interval == 0 {
+		pruneHeight := height - m.storageOpts.KeepRecent - 1
+		if m.storageOpts.Sync {
+			m.pruneStorage(pruneHeight)
 		} else {
-			_, ok := <-m.chStore
+			_, ok := <-m.chStorage
 			if ok {
 				go func() {
-					m.pruneStore(pruneHeight)
-					m.chStore <- struct{}{}
+					m.pruneStorage(pruneHeight)
+					m.chStorage <- struct{}{}
 				}()
 			}
 		}
@@ -118,12 +133,12 @@ func (m *Manager) Prune(height uint64) {
 	}
 }
 
-func (m *Manager) pruneStore(height uint64) {
-	m.logger.Debug("pruning store", "height", height)
+func (m *Manager) pruneStorage(height uint64) {
+	m.logger.Debug("pruning state storage", "height", height)
 
-	err := m.stateStore.Prune(height)
+	err := m.stateStorage.Prune(height)
 	if err != nil {
-		m.logger.Error("failed to prune store", "err", err)
+		m.logger.Error("failed to prune state storage", "err", err)
 	}
 }
 

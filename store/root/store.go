@@ -70,7 +70,7 @@ func New(
 		return nil, err
 	}
 
-	pruningManager := pruning.NewManager(ss, sc, logger)
+	pruningManager := pruning.NewManager(logger, ss, sc)
 
 	return &Store{
 		logger:          logger.With("module", "root_store"),
@@ -93,13 +93,18 @@ func (s *Store) Close() (err error) {
 	s.lastCommitInfo = nil
 	s.commitHeader = nil
 
+	s.pruningManager.Stop()
+
 	return err
 }
 
 // SetPruningOptions sets the pruning options on the SS and SC backends.
-func (s *Store) SetPruningOptions(scOpts, ssOpts pruning.Options) {
+// NOTE: It will also start the pruning manager.
+func (s *Store) SetPruningOptions(ssOpts, scOpts pruning.Options) {
+	s.pruningManager.SetStorageOptions(ssOpts)
 	s.pruningManager.SetCommitmentOptions(scOpts)
-	s.pruningManager.SetStoreOptions(ssOpts)
+
+	s.pruningManager.Start()
 }
 
 // MountSCStore performs a no-op as a SC backend must be provided at initialization.

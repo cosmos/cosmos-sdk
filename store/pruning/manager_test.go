@@ -33,7 +33,7 @@ func (s *PruningTestSuite) SetupTest() {
 
 	sc := iavl.NewIavlTree(dbm.NewMemDB(), noopLog, iavl.DefaultConfig())
 
-	s.manager = NewManager(ss, sc, noopLog)
+	s.manager = NewManager(noopLog, ss, sc)
 	s.ss = ss
 	s.sc = sc
 }
@@ -45,7 +45,7 @@ func (s *PruningTestSuite) TearDownTest() {
 
 func (s *PruningTestSuite) TestPruning() {
 	s.manager.SetCommitmentOptions(Options{4, 2, false})
-	s.manager.SetStoreOptions(Options{3, 3, true})
+	s.manager.SetStorageOptions(Options{3, 3, true})
 	s.manager.Start()
 
 	// write 10 batches

@@ -1,5 +1,6 @@
 package pruning
 
+// Options defines the pruning configuration.
 type Options struct {
 	// KeepRecent sets the number of recent versions to keep.
 	KeepRecent uint64

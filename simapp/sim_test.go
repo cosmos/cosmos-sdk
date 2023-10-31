@@ -294,6 +294,9 @@ func TestAppSimulationAfterImport(t *testing.T) {
 	}()
 
 	newApp := NewSimApp(log.NewNopLogger(), newDB, nil, true, appOptions, fauxMerkleModeOpt, baseapp.SetChainID(SimAppChainID))
+	if !simcli.FlagSigverifyTxValue {
+		newApp.SetNotSigverifyTx()
+	}
 	require.Equal(t, "SimApp", newApp.Name())
 
 	_, err = newApp.InitChain(&abci.RequestInitChain{

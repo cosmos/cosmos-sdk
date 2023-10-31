@@ -8,13 +8,13 @@ import (
 	"github.com/stretchr/testify/require"
 
 	storetypes "cosmossdk.io/store/types"
+	"cosmossdk.io/x/slashing"
+	v4 "cosmossdk.io/x/slashing/migrations/v4"
+	slashingtypes "cosmossdk.io/x/slashing/types"
 
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	"github.com/cosmos/cosmos-sdk/x/slashing"
-	v4 "github.com/cosmos/cosmos-sdk/x/slashing/migrations/v4"
-	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
 
 var consAddr = sdk.ConsAddress(sdk.AccAddress([]byte("addr1_______________")))
@@ -40,10 +40,6 @@ func TestMigrate(t *testing.T) {
 
 	err := v4.Migrate(ctx, cdc, store, params)
 	require.NoError(t, err)
-
-	// ensure old entries no longer exist and new bitmap chunk entries exist
-	entries := v4.GetValidatorMissedBlocks(ctx, cdc, store, consAddr, params)
-	require.Empty(t, entries)
 
 	for i := int64(0); i < params.SignedBlocksWindow; i++ {
 		chunkIndex := i / v4.MissedBlockBitmapChunkSize

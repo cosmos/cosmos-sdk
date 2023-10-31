@@ -10,9 +10,8 @@ import (
 	"sigs.k8s.io/yaml"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
+	"cosmossdk.io/client/v2/internal/flags"
 	"cosmossdk.io/client/v2/internal/util"
-
-	"github.com/cosmos/cosmos-sdk/client/flags"
 )
 
 type cmdType int
@@ -65,6 +64,35 @@ func (b *Builder) buildMethodCommandCommon(descriptor protoreflect.MethodDescrip
 		input, err := binder.BuildMessage(args)
 		if err != nil {
 			return err
+		}
+
+		// signer related logic, triggers only when there is a signer defined
+		if binder.SignerInfo.FieldName != "" {
+			if binder.SignerInfo.IsFlag {
+				// the client context uses the from flag to determine the signer.
+				// this sets the signer flags to the from flag value if a custom signer flag is set.
+				// marks the custom flag as required.
+				if binder.SignerInfo.FieldName != flags.FlagFrom {
+					if err := cmd.MarkFlagRequired(binder.SignerInfo.FieldName); err != nil {
+						return err
+					}
+
+					signer, err := cmd.Flags().GetString(binder.SignerInfo.FieldName)
+					if err != nil {
+						return fmt.Errorf("failed to get signer flag: %w", err)
+					}
+
+					if err := cmd.Flags().Set(flags.FlagFrom, signer); err != nil {
+						return err
+					}
+				}
+			} else {
+				// if the signer is not a flag, it is a positional argument
+				// we need to get the correct positional arguments
+				if err := cmd.Flags().Set(flags.FlagFrom, args[binder.SignerInfo.PositionalArgIndex]); err != nil {
+					return err
+				}
+			}
 		}
 
 		return exec(cmd, input)

@@ -21,26 +21,26 @@ func (k Keeper) Mint(ctx context.Context, token nft.NFT, receiver sdk.AccAddress
 		return errors.Wrap(nft.ErrNFTExists, token.Id)
 	}
 
-	k.mintWithNoCheck(ctx, token, receiver)
-	return nil
+	return k.mintWithNoCheck(ctx, token, receiver)
 }
 
 // mintWithNoCheck defines a method for minting a new nft
 // Note: this method does not check whether the class already exists in nft.
 // The upper-layer application needs to check it when it needs to use it.
-func (k Keeper) mintWithNoCheck(ctx context.Context, token nft.NFT, receiver sdk.AccAddress) {
+func (k Keeper) mintWithNoCheck(ctx context.Context, token nft.NFT, receiver sdk.AccAddress) error {
 	k.setNFT(ctx, token)
 	k.setOwner(ctx, token.ClassId, token.Id, receiver)
 	k.incrTotalSupply(ctx, token.ClassId)
 
-	err := sdk.UnwrapSDKContext(ctx).EventManager().EmitTypedEvent(&nft.EventMint{
+	recStr, err := k.ac.BytesToString(receiver.Bytes())
+	if err != nil {
+		return err
+	}
+	return sdk.UnwrapSDKContext(ctx).EventManager().EmitTypedEvent(&nft.EventMint{
 		ClassId: token.ClassId,
 		Id:      token.Id,
-		Owner:   receiver.String(),
+		Owner:   recStr,
 	})
-	if err != nil {
-		panic(err)
-	}
 }
 
 // Burn defines a method for burning a nft from a specific account.
@@ -71,15 +71,16 @@ func (k Keeper) burnWithNoCheck(ctx context.Context, classID, nftID string) erro
 
 	k.deleteOwner(ctx, classID, nftID, owner)
 	k.decrTotalSupply(ctx, classID)
-	err := sdk.UnwrapSDKContext(ctx).EventManager().EmitTypedEvent(&nft.EventBurn{
-		ClassId: classID,
-		Id:      nftID,
-		Owner:   owner.String(),
-	})
+	ownerStr, err := k.ac.BytesToString(owner.Bytes())
 	if err != nil {
 		return err
 	}
-	return nil
+
+	return sdk.UnwrapSDKContext(ctx).EventManager().EmitTypedEvent(&nft.EventBurn{
+		ClassId: classID,
+		Id:      nftID,
+		Owner:   ownerStr,
+	})
 }
 
 // Update defines a method for updating an exist nft

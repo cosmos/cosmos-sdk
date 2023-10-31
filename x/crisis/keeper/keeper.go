@@ -95,16 +95,17 @@ func (k *Keeper) Invariants() []sdk.Invariant {
 
 // AssertInvariants asserts all registered invariants. If any invariant fails,
 // the method panics.
-func (k *Keeper) AssertInvariants(ctx sdk.Context) {
+func (k *Keeper) AssertInvariants(ctx context.Context) {
 	logger := k.Logger(ctx)
 
 	start := time.Now()
 	invarRoutes := k.Routes()
 	n := len(invarRoutes)
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	for i, ir := range invarRoutes {
 		logger.Info("asserting crisis invariants", "inv", fmt.Sprint(i+1, "/", n), "name", ir.FullRoute())
 
-		invCtx, _ := ctx.CacheContext()
+		invCtx, _ := sdkCtx.CacheContext()
 		if res, stop := ir.Invar(invCtx); stop {
 			// TODO: Include app name as part of context to allow for this to be
 			// variable.
@@ -115,7 +116,7 @@ func (k *Keeper) AssertInvariants(ctx sdk.Context) {
 	}
 
 	diff := time.Since(start)
-	logger.Info("asserted all invariants", "duration", diff, "height", ctx.BlockHeight())
+	logger.Info("asserted all invariants", "duration", diff, "height", sdkCtx.BlockHeight())
 }
 
 // InvCheckPeriod returns the invariant checks period.

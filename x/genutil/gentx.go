@@ -1,6 +1,7 @@
 package genutil
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"strings"
@@ -8,13 +9,13 @@ import (
 	abci "github.com/cometbft/cometbft/abci/types"
 
 	"cosmossdk.io/core/genesis"
+	bankexported "cosmossdk.io/x/bank/exported"
+	stakingtypes "cosmossdk.io/x/staking/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	bankexported "github.com/cosmos/cosmos-sdk/x/bank/exported"
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // SetGenTxsInAppGenesisState - sets the genesis transactions in the app genesis state
@@ -90,7 +91,7 @@ func ValidateAccountInGenesis(
 // invokes the provided deliverTxfn with the decoded Tx. It returns the result
 // of the staking module's ApplyAndReturnValidatorSetUpdates.
 func DeliverGenTxs(
-	ctx sdk.Context, genTxs []json.RawMessage,
+	ctx context.Context, genTxs []json.RawMessage,
 	stakingKeeper types.StakingKeeper, deliverTx genesis.TxHandler,
 	txEncodingConfig client.TxEncodingConfig,
 ) ([]abci.ValidatorUpdate, error) {

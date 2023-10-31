@@ -184,6 +184,10 @@ func (app *BaseApp) SetInitChainer(initChainer sdk.InitChainer) {
 	app.initChainer = initChainer
 }
 
+func (app *BaseApp) PreBlocker() sdk.PreBlocker {
+	return app.preBlocker
+}
+
 func (app *BaseApp) SetPreBlocker(preBlocker sdk.PreBlocker) {
 	if app.sealed {
 		panic("SetPreBlocker() on sealed BaseApp")
@@ -262,6 +266,11 @@ func (app *BaseApp) SetFauxMerkleMode() {
 	}
 
 	app.fauxMerkleMode = true
+}
+
+// SetNotSigverify during simulation testing, transaction signature verification needs to be ignored.
+func (app *BaseApp) SetNotSigverifyTx() {
+	app.sigverifyTx = false
 }
 
 // SetCommitMultiStoreTracer sets the store tracer on the BaseApp's underlying

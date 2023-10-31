@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
-	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 
 	modulev1 "cosmossdk.io/api/cosmos/nft/module/v1"
@@ -15,14 +14,12 @@ import (
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/errors"
 	"cosmossdk.io/x/nft"
-	"cosmossdk.io/x/nft/client/cli"
 	"cosmossdk.io/x/nft/keeper"
 	"cosmossdk.io/x/nft/simulation"
 
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 )
@@ -86,11 +83,6 @@ func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx sdkclient.Context, mux
 	}
 }
 
-// GetTxCmd returns the transaction commands for the nft module
-func (AppModuleBasic) GetTxCmd() *cobra.Command {
-	return cli.GetTxCmd()
-}
-
 // AppModule implements the sdk.AppModule interface
 type AppModule struct {
 	AppModuleBasic
@@ -120,7 +112,7 @@ func (am AppModule) IsAppModule() {}
 
 // InitGenesis performs genesis initialization for the nft module. It returns
 // no validator updates.
-func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.RawMessage) {
+func (am AppModule) InitGenesis(ctx context.Context, cdc codec.JSONCodec, data json.RawMessage) {
 	var genesisState nft.GenesisState
 	cdc.MustUnmarshalJSON(data, &genesisState)
 	am.keeper.InitGenesis(ctx, &genesisState)
@@ -128,7 +120,7 @@ func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.
 
 // ExportGenesis returns the exported genesis state as raw bytes for the nft
 // module.
-func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.RawMessage {
+func (am AppModule) ExportGenesis(ctx context.Context, cdc codec.JSONCodec) json.RawMessage {
 	gs := am.keeper.ExportGenesis(ctx)
 	return cdc.MustMarshalJSON(gs)
 }
@@ -141,8 +133,8 @@ func (AppModule) ConsensusVersion() uint64 { return 1 }
 // AppModuleSimulation functions
 
 // GenerateGenesisState creates a randomized GenState of the nft module.
-func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
-	simulation.RandomizedGenState(simState)
+func (am AppModule) GenerateGenesisState(simState *module.SimulationState) {
+	simulation.RandomizedGenState(simState, am.accountKeeper.AddressCodec())
 }
 
 // RegisterStoreDecoder registers a decoder for nft module's types

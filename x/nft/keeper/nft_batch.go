@@ -25,7 +25,9 @@ func (k Keeper) BatchMint(ctx context.Context,
 		}
 
 		checked[token.ClassId] = true
-		k.mintWithNoCheck(ctx, token, receiver)
+		if err := k.mintWithNoCheck(ctx, token, receiver); err != nil {
+			return err
+		}
 	}
 	return nil
 }

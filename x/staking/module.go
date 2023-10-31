@@ -15,6 +15,10 @@ import (
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
+	"cosmossdk.io/x/staking/client/cli"
+	"cosmossdk.io/x/staking/keeper"
+	"cosmossdk.io/x/staking/simulation"
+	"cosmossdk.io/x/staking/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -24,10 +28,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/cosmos/cosmos-sdk/x/staking/client/cli"
-	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
-	"github.com/cosmos/cosmos-sdk/x/staking/simulation"
-	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 const (
@@ -49,7 +49,6 @@ var (
 // AppModuleBasic defines the basic application module used by the staking module.
 type AppModuleBasic struct {
 	cdc codec.Codec
-	ak  types.AccountKeeper
 }
 
 // Name returns the staking module's name.
@@ -92,7 +91,7 @@ func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *g
 
 // GetTxCmd returns the root tx command for the staking module.
 func (amb AppModuleBasic) GetTxCmd() *cobra.Command {
-	return cli.NewTxCmd(amb.cdc.InterfaceRegistry().SigningContext().ValidatorAddressCodec(), amb.cdc.InterfaceRegistry().SigningContext().AddressCodec())
+	return cli.NewTxCmd()
 }
 
 // AppModule implements an application module for the staking module.
@@ -112,7 +111,7 @@ func NewAppModule(
 	bk types.BankKeeper,
 ) AppModule {
 	return AppModule{
-		AppModuleBasic: AppModuleBasic{cdc: cdc, ak: ak},
+		AppModuleBasic: AppModuleBasic{cdc: cdc},
 		keeper:         keeper,
 		accountKeeper:  ak,
 		bankKeeper:     bk,
@@ -152,7 +151,7 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 }
 
 // InitGenesis performs genesis initialization for the staking module.
-func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.RawMessage) []abci.ValidatorUpdate {
+func (am AppModule) InitGenesis(ctx context.Context, cdc codec.JSONCodec, data json.RawMessage) []abci.ValidatorUpdate {
 	var genesisState types.GenesisState
 
 	cdc.MustUnmarshalJSON(data, &genesisState)
@@ -162,7 +161,7 @@ func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.
 
 // ExportGenesis returns the exported genesis state as raw bytes for the staking
 // module.
-func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.RawMessage {
+func (am AppModule) ExportGenesis(ctx context.Context, cdc codec.JSONCodec) json.RawMessage {
 	return cdc.MustMarshalJSON(am.keeper.ExportGenesis(ctx))
 }
 

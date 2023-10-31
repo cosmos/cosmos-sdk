@@ -17,6 +17,7 @@ import (
 	"cosmossdk.io/x/upgrade/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -24,20 +25,23 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
+
+const govModuleName = "gov"
 
 type KeeperTestSuite struct {
 	suite.Suite
 
-	key           *storetypes.KVStoreKey
-	baseApp       *baseapp.BaseApp
-	upgradeKeeper *keeper.Keeper
-	homeDir       string
-	ctx           sdk.Context
-	msgSrvr       types.MsgServer
-	addrs         []sdk.AccAddress
-	encCfg        moduletestutil.TestEncodingConfig
+	key              *storetypes.KVStoreKey
+	baseApp          *baseapp.BaseApp
+	upgradeKeeper    *keeper.Keeper
+	homeDir          string
+	ctx              sdk.Context
+	msgSrvr          types.MsgServer
+	addrs            []sdk.AccAddress
+	encodedAddrs     []string
+	encodedAuthority string
+	encCfg           moduletestutil.TestEncodingConfig
 }
 
 func (s *KeeperTestSuite) SetupTest() {
@@ -62,7 +66,11 @@ func (s *KeeperTestSuite) SetupTest() {
 	skipUpgradeHeights := make(map[int64]bool)
 
 	homeDir := filepath.Join(s.T().TempDir(), "x_upgrade_keeper_test")
-	s.upgradeKeeper = keeper.NewKeeper(skipUpgradeHeights, storeService, s.encCfg.Codec, homeDir, s.baseApp, authtypes.NewModuleAddress(govtypes.ModuleName).String())
+	ac := addresscodec.NewBech32Codec("cosmos")
+	authority, err := ac.BytesToString(authtypes.NewModuleAddress(govModuleName))
+	s.Require().NoError(err)
+	s.encodedAuthority = authority
+	s.upgradeKeeper = keeper.NewKeeper(skipUpgradeHeights, storeService, s.encCfg.Codec, homeDir, s.baseApp, authority)
 
 	s.Require().Equal(testCtx.Ctx.Logger().With("module", "x/"+types.ModuleName), s.upgradeKeeper.Logger(testCtx.Ctx))
 	s.T().Log("home dir:", homeDir)
@@ -70,6 +78,9 @@ func (s *KeeperTestSuite) SetupTest() {
 
 	s.msgSrvr = keeper.NewMsgServerImpl(s.upgradeKeeper)
 	s.addrs = simtestutil.CreateIncrementalAccounts(1)
+	encodedAddr, err := ac.BytesToString(s.addrs[0].Bytes())
+	s.Require().NoError(err)
+	s.encodedAddrs = []string{encodedAddr}
 }
 
 func (s *KeeperTestSuite) TestReadUpgradeInfoFromDisk() {
@@ -89,6 +100,12 @@ func (s *KeeperTestSuite) TestReadUpgradeInfoFromDisk() {
 	s.Require().NoError(err)
 	expected.Height = 101
 	s.Require().Equal(expected, ui)
+
+	// create invalid upgrade plan (with empty name)
+	expected.Name = ""
+	s.Require().NoError(s.upgradeKeeper.DumpUpgradeInfoToDisk(101, expected))
+	_, err = s.upgradeKeeper.ReadUpgradeInfoFromDisk()
+	s.Require().ErrorContains(err, "name cannot be empty: invalid request")
 }
 
 func (s *KeeperTestSuite) TestScheduleUpgrade() {
@@ -237,7 +254,7 @@ func (s *KeeperTestSuite) TestIsSkipHeight() {
 	s.Require().False(ok)
 	skip := map[int64]bool{skipOne: true}
 	storeService := runtime.NewKVStoreService(s.key)
-	upgradeKeeper := keeper.NewKeeper(skip, storeService, s.encCfg.Codec, s.T().TempDir(), s.baseApp, authtypes.NewModuleAddress(govtypes.ModuleName).String())
+	upgradeKeeper := keeper.NewKeeper(skip, storeService, s.encCfg.Codec, s.T().TempDir(), s.baseApp, s.encodedAuthority)
 	s.Require().True(upgradeKeeper.IsSkipHeight(9))
 	s.Require().False(upgradeKeeper.IsSkipHeight(10))
 }

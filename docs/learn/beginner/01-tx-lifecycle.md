@@ -110,7 +110,7 @@ Read [RFC 001](https://docs.cosmos.network/main/rfc/rfc-001-tx-validation) for m
 
 A copy of the cached context is provided to the `AnteHandler`, which performs limited checks specified for the transaction type. Using a copy allows the `AnteHandler` to do stateful checks for `Tx` without modifying the last committed state, and revert back to the original if the execution fails.
 
-For example, the [`auth`](https://github.com/cosmos/cosmos-sdk/tree/main/x/auth/spec) module `AnteHandler` checks and increments sequence numbers, checks signatures and account numbers, and deducts fees from the first signer of the transaction - all state changes are made using the `checkState`.
+For example, the [`auth`](https://github.com/cosmos/cosmos-sdk/tree/main/x/auth) module `AnteHandler` checks and increments sequence numbers, checks signatures and account numbers, and deducts fees from the first signer of the transaction - all state changes are made using the `checkState`.
 
 ### Gas
 

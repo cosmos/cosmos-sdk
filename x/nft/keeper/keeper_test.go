@@ -40,6 +40,7 @@ type TestSuite struct {
 
 	ctx           sdk.Context
 	addrs         []sdk.AccAddress
+	encodedAddrs  []string
 	queryClient   nft.QueryClient
 	nftKeeper     keeper.Keeper
 	accountKeeper *nfttestutil.MockAccountKeeper
@@ -63,6 +64,12 @@ func (s *TestSuite) SetupTest() {
 	bankKeeper := nfttestutil.NewMockBankKeeper(ctrl)
 	accountKeeper.EXPECT().GetModuleAddress("nft").Return(s.addrs[0]).AnyTimes()
 	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
+
+	for _, addr := range s.addrs {
+		st, err := accountKeeper.AddressCodec().BytesToString(addr.Bytes())
+		s.Require().NoError(err)
+		s.encodedAddrs = append(s.encodedAddrs, st)
+	}
 
 	s.accountKeeper = accountKeeper
 
@@ -348,7 +355,7 @@ func (s *TestSuite) TestExportGenesis() {
 	expGenesis := &nft.GenesisState{
 		Classes: []*nft.Class{&class},
 		Entries: []*nft.Entry{{
-			Owner: s.addrs[0].String(),
+			Owner: s.encodedAddrs[0],
 			Nfts:  []*nft.NFT{&expNFT},
 		}},
 	}
@@ -373,7 +380,7 @@ func (s *TestSuite) TestInitGenesis() {
 	expGenesis := &nft.GenesisState{
 		Classes: []*nft.Class{&expClass},
 		Entries: []*nft.Entry{{
-			Owner: s.addrs[0].String(),
+			Owner: s.encodedAddrs[0],
 			Nfts:  []*nft.NFT{&expNFT},
 		}},
 	}

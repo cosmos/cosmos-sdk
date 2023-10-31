@@ -8,6 +8,20 @@ import (
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
+	"cosmossdk.io/x/bank"
+	bankkeeper "cosmossdk.io/x/bank/keeper"
+	banktypes "cosmossdk.io/x/bank/types"
+	"cosmossdk.io/x/gov"
+	"cosmossdk.io/x/gov/keeper"
+	"cosmossdk.io/x/gov/types"
+	v1 "cosmossdk.io/x/gov/types/v1"
+	"cosmossdk.io/x/gov/types/v1beta1"
+	minttypes "cosmossdk.io/x/mint/types"
+	poolkeeper "cosmossdk.io/x/protocolpool/keeper"
+	pooltypes "cosmossdk.io/x/protocolpool/types"
+	"cosmossdk.io/x/staking"
+	stakingkeeper "cosmossdk.io/x/staking/keeper"
+	stakingtypes "cosmossdk.io/x/staking/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
@@ -19,21 +33,6 @@ import (
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authsims "github.com/cosmos/cosmos-sdk/x/auth/simulation"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/cosmos/cosmos-sdk/x/bank"
-	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/cosmos/cosmos-sdk/x/distribution"
-	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
-	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
-	"github.com/cosmos/cosmos-sdk/x/gov"
-	"github.com/cosmos/cosmos-sdk/x/gov/keeper"
-	"github.com/cosmos/cosmos-sdk/x/gov/types"
-	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
-	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
-	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
-	"github.com/cosmos/cosmos-sdk/x/staking"
-	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 type fixture struct {
@@ -50,7 +49,7 @@ type fixture struct {
 func initFixture(tb testing.TB) *fixture {
 	tb.Helper()
 	keys := storetypes.NewKVStoreKeys(
-		authtypes.StoreKey, banktypes.StoreKey, distrtypes.StoreKey, stakingtypes.StoreKey, types.StoreKey,
+		authtypes.StoreKey, banktypes.StoreKey, stakingtypes.StoreKey, pooltypes.StoreKey, types.StoreKey,
 	)
 	cdc := moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{}, bank.AppModuleBasic{}, gov.AppModuleBasic{}).Codec
 
@@ -62,7 +61,7 @@ func initFixture(tb testing.TB) *fixture {
 	authority := authtypes.NewModuleAddress(types.ModuleName)
 
 	maccPerms := map[string][]string{
-		distrtypes.ModuleName:          nil,
+		pooltypes.ModuleName:           {},
 		minttypes.ModuleName:           {authtypes.Minter},
 		stakingtypes.BondedPoolName:    {authtypes.Burner, authtypes.Staking},
 		stakingtypes.NotBondedPoolName: {authtypes.Burner, authtypes.Staking},
@@ -93,12 +92,11 @@ func initFixture(tb testing.TB) *fixture {
 
 	stakingKeeper := stakingkeeper.NewKeeper(cdc, runtime.NewKVStoreService(keys[stakingtypes.StoreKey]), accountKeeper, bankKeeper, authority.String(), addresscodec.NewBech32Codec(sdk.Bech32PrefixValAddr), addresscodec.NewBech32Codec(sdk.Bech32PrefixConsAddr))
 
+	poolKeeper := poolkeeper.NewKeeper(cdc, runtime.NewKVStoreService(keys[pooltypes.StoreKey]), accountKeeper, bankKeeper, authority.String())
+
 	// set default staking params
 	err := stakingKeeper.Params.Set(newCtx, stakingtypes.DefaultParams())
 	assert.NilError(tb, err)
-	distrKeeper := distrkeeper.NewKeeper(
-		cdc, runtime.NewKVStoreService(keys[distrtypes.StoreKey]), accountKeeper, bankKeeper, stakingKeeper, distrtypes.ModuleName, authority.String(),
-	)
 
 	// Create MsgServiceRouter, but don't populate it before creating the gov
 	// keeper.
@@ -111,7 +109,7 @@ func initFixture(tb testing.TB) *fixture {
 		accountKeeper,
 		bankKeeper,
 		stakingKeeper,
-		distrKeeper,
+		poolKeeper,
 		router,
 		types.DefaultConfig(),
 		authority.String(),
@@ -126,13 +124,11 @@ func initFixture(tb testing.TB) *fixture {
 	authModule := auth.NewAppModule(cdc, accountKeeper, authsims.RandomGenesisAccounts)
 	bankModule := bank.NewAppModule(cdc, bankKeeper, accountKeeper)
 	stakingModule := staking.NewAppModule(cdc, stakingKeeper, accountKeeper, bankKeeper)
-	distrModule := distribution.NewAppModule(cdc, distrKeeper, accountKeeper, bankKeeper, stakingKeeper)
-	govModule := gov.NewAppModule(cdc, govKeeper, accountKeeper, bankKeeper)
+	govModule := gov.NewAppModule(cdc, govKeeper, accountKeeper, bankKeeper, poolKeeper)
 
 	integrationApp := integration.NewIntegrationApp(newCtx, logger, keys, cdc, map[string]appmodule.AppModule{
 		authtypes.ModuleName:    authModule,
 		banktypes.ModuleName:    bankModule,
-		distrtypes.ModuleName:   distrModule,
 		stakingtypes.ModuleName: stakingModule,
 		types.ModuleName:        govModule,
 	})

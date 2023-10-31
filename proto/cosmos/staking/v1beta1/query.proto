@@ -9,7 +9,7 @@ import "cosmos_proto/cosmos.proto";
 import "cosmos/query/v1/query.proto";
 import "amino/amino.proto";
 
-option go_package = "github.com/cosmos/cosmos-sdk/x/staking/types";
+option go_package = "cosmossdk.io/x/staking/types";
 
 // Query defines the gRPC querier service.
 service Query {

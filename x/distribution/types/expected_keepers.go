@@ -4,9 +4,9 @@ import (
 	context "context"
 
 	"cosmossdk.io/core/address"
+	stakingtypes "cosmossdk.io/x/staking/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // AccountKeeper defines the expected account keeper used for simulations (noalias)
@@ -21,6 +21,7 @@ type AccountKeeper interface {
 
 // BankKeeper defines the expected interface needed to retrieve account balances.
 type BankKeeper interface {
+	MintCoins(ctx context.Context, moduleName string, amt sdk.Coins) error
 	GetAllBalances(ctx context.Context, addr sdk.AccAddress) sdk.Coins
 
 	SpendableCoins(ctx context.Context, addr sdk.AccAddress) sdk.Coins
@@ -32,10 +33,19 @@ type BankKeeper interface {
 	BlockedAddr(addr sdk.AccAddress) bool
 }
 
+// PoolKeeper defines the expected interface needed to fund & distribute pool balances.
+type PoolKeeper interface {
+	FundCommunityPool(ctx context.Context, amount sdk.Coins, sender sdk.AccAddress) error
+	DistributeFromFeePool(ctx context.Context, amount sdk.Coins, receiveAddr sdk.AccAddress) error
+	GetCommunityPool(ctx context.Context) (sdk.Coins, error)
+}
+
 // StakingKeeper expected staking keeper (noalias)
 type StakingKeeper interface {
 	ValidatorAddressCodec() address.Codec
 	ConsensusAddressCodec() address.Codec
+	BondDenom(ctx context.Context) (string, error)
+
 	// iterate through validators by operator address, execute func for each validator
 	IterateValidators(context.Context,
 		func(index int64, validator stakingtypes.ValidatorI) (stop bool)) error

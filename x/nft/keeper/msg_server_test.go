@@ -37,7 +37,7 @@ func (s *TestSuite) TestSend() {
 	expGenesis := &nft.GenesisState{
 		Classes: []*nft.Class{&ExpClass},
 		Entries: []*nft.Entry{{
-			Owner: s.addrs[0].String(),
+			Owner: s.encodedAddrs[0],
 			Nfts:  []*nft.NFT{&ExpNFT},
 		}},
 	}
@@ -55,8 +55,8 @@ func (s *TestSuite) TestSend() {
 			req: &nft.MsgSend{
 				ClassId:  testClassID,
 				Id:       "",
-				Sender:   s.addrs[0].String(),
-				Receiver: s.addrs[1].String(),
+				Sender:   s.encodedAddrs[0],
+				Receiver: s.encodedAddrs[1],
 			},
 			expErr: true,
 			errMsg: "empty nft id",
@@ -66,8 +66,8 @@ func (s *TestSuite) TestSend() {
 			req: &nft.MsgSend{
 				ClassId:  "",
 				Id:       testID,
-				Sender:   s.addrs[0].String(),
-				Receiver: s.addrs[1].String(),
+				Sender:   s.encodedAddrs[0],
+				Receiver: s.encodedAddrs[1],
 			},
 			expErr: true,
 			errMsg: "empty class id",
@@ -77,8 +77,8 @@ func (s *TestSuite) TestSend() {
 			req: &nft.MsgSend{
 				ClassId:  "invalid ClassId",
 				Id:       testID,
-				Sender:   s.addrs[0].String(),
-				Receiver: s.addrs[1].String(),
+				Sender:   s.encodedAddrs[0],
+				Receiver: s.encodedAddrs[1],
 			},
 			expErr: true,
 			errMsg: "unauthorized",
@@ -88,8 +88,8 @@ func (s *TestSuite) TestSend() {
 			req: &nft.MsgSend{
 				ClassId:  testClassID,
 				Id:       "invalid Id",
-				Sender:   s.addrs[0].String(),
-				Receiver: s.addrs[1].String(),
+				Sender:   s.encodedAddrs[0],
+				Receiver: s.encodedAddrs[1],
 			},
 			expErr: true,
 			errMsg: "unauthorized",
@@ -99,19 +99,19 @@ func (s *TestSuite) TestSend() {
 			req: &nft.MsgSend{
 				ClassId:  testClassID,
 				Id:       testID,
-				Sender:   s.addrs[1].String(),
-				Receiver: s.addrs[2].String(),
+				Sender:   s.encodedAddrs[1],
+				Receiver: s.encodedAddrs[2],
 			},
 			expErr: true,
-			errMsg: fmt.Sprintf("%s is not the owner of nft %s", s.addrs[1].String(), testID),
+			errMsg: fmt.Sprintf("%s is not the owner of nft %s", s.encodedAddrs[1], testID),
 		},
 		{
 			name: "valid transaction",
 			req: &nft.MsgSend{
 				ClassId:  testClassID,
 				Id:       testID,
-				Sender:   s.addrs[0].String(),
-				Receiver: s.addrs[1].String(),
+				Sender:   s.encodedAddrs[0],
+				Receiver: s.encodedAddrs[1],
 			},
 			expErr: false,
 			errMsg: "",

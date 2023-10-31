@@ -2,7 +2,6 @@ package module
 
 import (
 	"fmt"
-	"strings"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	feegrantv1beta1 "cosmossdk.io/api/cosmos/feegrant/v1beta1"
@@ -19,10 +18,8 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					RpcMethod: "Allowance",
 					Use:       "grant [granter] [grantee]",
 					Short:     "Query details of a single grant",
-					Long: strings.TrimSpace(
-						`Query details for a grant. 
-You can find the fee-grant of a granter and grantee.`),
-					Example: fmt.Sprintf(`$ %s query feegrant grant [granter] [grantee]`, version.AppName),
+					Long:      "Query details for a grant. You can find the fee-grant of a granter and grantee.",
+					Example:   fmt.Sprintf(`$ %s query feegrant grant [granter] [grantee]`, version.AppName),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
 						{ProtoField: "granter"},
 						{ProtoField: "grantee"},
@@ -51,6 +48,27 @@ You can find the fee-grant of a granter and grantee.`),
 		},
 		Tx: &autocliv1.ServiceCommandDescriptor{
 			Service: feegrantv1beta1.Msg_ServiceDesc.ServiceName,
+			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
+				{
+					RpcMethod: "RevokeAllowance",
+					Use:       "revoke [granter] [grantee]",
+					Short:     "Revoke a fee grant",
+					Long:      "Revoke fee grant from a granter to a grantee. Note, the '--from' flag is ignored as it is implied from [granter]",
+					Example:   fmt.Sprintf(`$ %s tx feegrant revoke [granter] [grantee]`, version.AppName),
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "granter"},
+						{ProtoField: "grantee"},
+					},
+				},
+				{
+					RpcMethod: "PruneAllowances",
+					Use:       "prune",
+					Short:     "Prune expired allowances",
+					Long:      "Prune up to 75 expired allowances in order to reduce the size of the store when the number of expired allowances is large.",
+					Example:   fmt.Sprintf(`$ %s tx feegrant prune --from [mykey]`, version.AppName),
+				},
+			},
+			EnhanceCustomCommand: true,
 		},
 	}
 }

@@ -6,13 +6,24 @@ import (
 	"testing"
 	"time"
 
-	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
+	_ "cosmossdk.io/x/bank"
+	bankkeeper "cosmossdk.io/x/bank/keeper"
+	"cosmossdk.io/x/bank/testutil"
+	_ "cosmossdk.io/x/gov"
+	"cosmossdk.io/x/gov/keeper"
+	"cosmossdk.io/x/gov/simulation"
+	"cosmossdk.io/x/gov/types"
+	v1 "cosmossdk.io/x/gov/types/v1"
+	"cosmossdk.io/x/gov/types/v1beta1"
+	_ "cosmossdk.io/x/protocolpool"
+	_ "cosmossdk.io/x/staking"
+	stakingkeeper "cosmossdk.io/x/staking/keeper"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/runtime"
@@ -23,20 +34,7 @@ import (
 	_ "github.com/cosmos/cosmos-sdk/x/auth"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
-	_ "github.com/cosmos/cosmos-sdk/x/bank"
-	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	_ "github.com/cosmos/cosmos-sdk/x/consensus"
-	_ "github.com/cosmos/cosmos-sdk/x/distribution"
-	dk "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
-	_ "github.com/cosmos/cosmos-sdk/x/gov"
-	"github.com/cosmos/cosmos-sdk/x/gov/keeper"
-	"github.com/cosmos/cosmos-sdk/x/gov/simulation"
-	"github.com/cosmos/cosmos-sdk/x/gov/types"
-	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
-	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
-	_ "github.com/cosmos/cosmos-sdk/x/staking"
-	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 )
 
 var (
@@ -143,12 +141,6 @@ func TestSimulateMsgSubmitProposal(t *testing.T) {
 	r := rand.New(s)
 	accounts := getTestingAccounts(t, r, suite.AccountKeeper, suite.BankKeeper, suite.StakingKeeper, ctx, 3)
 
-	_, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{
-		Height: app.LastBlockHeight() + 1,
-		Hash:   app.LastCommitID().Hash,
-	})
-	require.NoError(t, err)
-
 	// execute operation
 	op := simulation.SimulateMsgSubmitProposal(suite.TxConfig, suite.AccountKeeper, suite.BankKeeper, suite.GovKeeper, MockWeightedProposals{3}.MsgSimulatorFn())
 	operationMsg, _, err := op(r, app.BaseApp, ctx, accounts, "")
@@ -174,12 +166,6 @@ func TestSimulateMsgSubmitLegacyProposal(t *testing.T) {
 	s := rand.NewSource(1)
 	r := rand.New(s)
 	accounts := getTestingAccounts(t, r, suite.AccountKeeper, suite.BankKeeper, suite.StakingKeeper, ctx, 3)
-
-	_, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{
-		Height: app.LastBlockHeight() + 1,
-		Hash:   app.LastCommitID().Hash,
-	})
-	require.NoError(t, err)
 
 	// execute operation
 	op := simulation.SimulateMsgSubmitLegacyProposal(suite.TxConfig, suite.AccountKeeper, suite.BankKeeper, suite.GovKeeper, MockWeightedProposals{3}.ContentSimulatorFn())
@@ -235,12 +221,6 @@ func TestSimulateMsgCancelProposal(t *testing.T) {
 	err = suite.GovKeeper.SetProposal(ctx, proposal)
 	require.NoError(t, err)
 
-	_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{
-		Height: app.LastBlockHeight() + 1,
-		Hash:   app.LastCommitID().Hash,
-	})
-	require.NoError(t, err)
-
 	// execute operation
 	op := simulation.SimulateMsgCancelProposal(suite.TxConfig, suite.AccountKeeper, suite.BankKeeper, suite.GovKeeper)
 	operationMsg, _, err := op(r, app.BaseApp, ctx, accounts, "")
@@ -282,12 +262,6 @@ func TestSimulateMsgDeposit(t *testing.T) {
 	require.NoError(t, err)
 
 	err = suite.GovKeeper.SetProposal(ctx, proposal)
-	require.NoError(t, err)
-
-	_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{
-		Height: app.LastBlockHeight() + 1,
-		Hash:   app.LastCommitID().Hash,
-	})
 	require.NoError(t, err)
 
 	// execute operation
@@ -334,12 +308,6 @@ func TestSimulateMsgVote(t *testing.T) {
 	err = suite.GovKeeper.ActivateVotingPeriod(ctx, proposal)
 	require.NoError(t, err)
 
-	_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{
-		Height: app.LastBlockHeight() + 1,
-		Hash:   app.LastCommitID().Hash,
-	})
-	require.NoError(t, err)
-
 	// execute operation
 	op := simulation.SimulateMsgVote(suite.TxConfig, suite.AccountKeeper, suite.BankKeeper, suite.GovKeeper)
 	operationMsg, _, err := op(r, app.BaseApp, ctx, accounts, "")
@@ -382,12 +350,6 @@ func TestSimulateMsgVoteWeighted(t *testing.T) {
 	err = suite.GovKeeper.ActivateVotingPeriod(ctx, proposal)
 	require.NoError(t, err)
 
-	_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{
-		Height: app.LastBlockHeight() + 1,
-		Hash:   app.LastCommitID().Hash,
-	})
-	require.NoError(t, err)
-
 	// execute operation
 	op := simulation.SimulateMsgVoteWeighted(suite.TxConfig, suite.AccountKeeper, suite.BankKeeper, suite.GovKeeper)
 	operationMsg, _, err := op(r, app.BaseApp, ctx, accounts, "")
@@ -404,13 +366,12 @@ func TestSimulateMsgVoteWeighted(t *testing.T) {
 }
 
 type suite struct {
-	TxConfig           client.TxConfig
-	AccountKeeper      authkeeper.AccountKeeper
-	BankKeeper         bankkeeper.Keeper
-	GovKeeper          *keeper.Keeper
-	StakingKeeper      *stakingkeeper.Keeper
-	DistributionKeeper dk.Keeper
-	App                *runtime.App
+	TxConfig      client.TxConfig
+	AccountKeeper authkeeper.AccountKeeper
+	BankKeeper    bankkeeper.Keeper
+	GovKeeper     *keeper.Keeper
+	StakingKeeper *stakingkeeper.Keeper
+	App           *runtime.App
 }
 
 // returns context and an app with updated mint keeper
@@ -426,12 +387,12 @@ func createTestSuite(t *testing.T, isCheckTx bool) (suite, sdk.Context) {
 				configurator.BankModule(),
 				configurator.StakingModule(),
 				configurator.ConsensusModule(),
-				configurator.DistributionModule(),
 				configurator.GovModule(),
+				configurator.ProtocolPoolModule(),
 			),
 			depinject.Supply(log.NewNopLogger()),
 		),
-		&res.TxConfig, &res.AccountKeeper, &res.BankKeeper, &res.GovKeeper, &res.StakingKeeper, &res.DistributionKeeper)
+		&res.TxConfig, &res.AccountKeeper, &res.BankKeeper, &res.GovKeeper, &res.StakingKeeper)
 	require.NoError(t, err)
 
 	ctx := app.BaseApp.NewContext(isCheckTx)

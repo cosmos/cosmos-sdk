@@ -4,7 +4,6 @@ import (
 	"math/rand"
 	"testing"
 
-	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/suite"
 
@@ -12,6 +11,14 @@ import (
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
+	bankkeeper "cosmossdk.io/x/bank/keeper"
+	banktestutil "cosmossdk.io/x/bank/testutil"
+	"cosmossdk.io/x/distribution/keeper"
+	"cosmossdk.io/x/distribution/simulation"
+	distrtestutil "cosmossdk.io/x/distribution/testutil"
+	"cosmossdk.io/x/distribution/types"
+	stakingkeeper "cosmossdk.io/x/staking/keeper"
+	stakingtypes "cosmossdk.io/x/staking/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -21,14 +28,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
-	"github.com/cosmos/cosmos-sdk/x/distribution/keeper"
-	"github.com/cosmos/cosmos-sdk/x/distribution/simulation"
-	distrtestutil "github.com/cosmos/cosmos-sdk/x/distribution/testutil"
-	"github.com/cosmos/cosmos-sdk/x/distribution/types"
-	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // TestWeightedOperations tests the weights of the operations.
@@ -51,7 +50,6 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 		{simulation.DefaultWeightMsgSetWithdrawAddress, types.ModuleName, sdk.MsgTypeURL(&types.MsgSetWithdrawAddress{})},
 		{simulation.DefaultWeightMsgWithdrawDelegationReward, types.ModuleName, sdk.MsgTypeURL(&types.MsgWithdrawDelegatorReward{})},
 		{simulation.DefaultWeightMsgWithdrawValidatorCommission, types.ModuleName, sdk.MsgTypeURL(&types.MsgWithdrawValidatorCommission{})},
-		{simulation.DefaultWeightMsgFundCommunityPool, types.ModuleName, sdk.MsgTypeURL(&types.MsgFundCommunityPool{})},
 	}
 
 	for i, w := range weightedOps {
@@ -75,11 +73,6 @@ func (suite *SimTestSuite) TestSimulateMsgSetWithdrawAddress() {
 	r := rand.New(s)
 	accounts := suite.getTestingAccounts(r, 3)
 
-	_, err := suite.app.FinalizeBlock(&abci.RequestFinalizeBlock{
-		Height: suite.app.LastBlockHeight() + 1,
-		Hash:   suite.app.LastCommitID().Hash,
-	})
-	suite.Require().NoError(err)
 	// execute operation
 	op := simulation.SimulateMsgSetWithdrawAddress(suite.txConfig, suite.accountKeeper, suite.bankKeeper, suite.distrKeeper)
 	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
@@ -119,12 +112,6 @@ func (suite *SimTestSuite) TestSimulateMsgWithdrawDelegatorReward() {
 	suite.Require().NoError(suite.distrKeeper.DelegatorStartingInfo.Set(suite.ctx, collections.Join(sdk.ValAddress(valBz), delegator.Address), types.NewDelegatorStartingInfo(2, math.LegacyOneDec(), 200)))
 
 	suite.setupValidatorRewards(valBz)
-
-	_, err = suite.app.FinalizeBlock(&abci.RequestFinalizeBlock{
-		Height: suite.app.LastBlockHeight() + 1,
-		Hash:   suite.app.LastCommitID().Hash,
-	})
-	suite.Require().NoError(err)
 
 	// execute operation
 	op := simulation.SimulateMsgWithdrawDelegatorReward(suite.txConfig, suite.accountKeeper, suite.bankKeeper, suite.distrKeeper, suite.stakingKeeper)
@@ -187,11 +174,6 @@ func (suite *SimTestSuite) testSimulateMsgWithdrawValidatorCommission(tokenName 
 	suite.Require().NoError(suite.distrKeeper.ValidatorsAccumulatedCommission.Set(suite.ctx, val0, types.ValidatorAccumulatedCommission{Commission: valCommission}))
 	suite.Require().NoError(suite.distrKeeper.ValidatorsAccumulatedCommission.Set(suite.ctx, genVal0, types.ValidatorAccumulatedCommission{Commission: valCommission}))
 
-	_, err = suite.app.FinalizeBlock(&abci.RequestFinalizeBlock{
-		Height: suite.app.LastBlockHeight() + 1,
-		Hash:   suite.app.LastCommitID().Hash,
-	})
-	suite.Require().NoError(err)
 	// execute operation
 	op := simulation.SimulateMsgWithdrawValidatorCommission(suite.txConfig, suite.accountKeeper, suite.bankKeeper, suite.distrKeeper, suite.stakingKeeper)
 	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
@@ -208,35 +190,6 @@ func (suite *SimTestSuite) testSimulateMsgWithdrawValidatorCommission(tokenName 
 		suite.Require().Equal(sdk.MsgTypeURL(&types.MsgWithdrawValidatorCommission{}), sdk.MsgTypeURL(&msg))
 		suite.Require().Len(futureOperations, 0)
 	}
-}
-
-// TestSimulateMsgFundCommunityPool tests the normal scenario of a valid message of type TypeMsgFundCommunityPool.
-// Abonormal scenarios, where the message is created by an errors, are not tested here.
-func (suite *SimTestSuite) TestSimulateMsgFundCommunityPool() {
-	// setup 3 accounts
-	s := rand.NewSource(1)
-	r := rand.New(s)
-	accounts := suite.getTestingAccounts(r, 3)
-
-	_, err := suite.app.FinalizeBlock(&abci.RequestFinalizeBlock{
-		Height: suite.app.LastBlockHeight() + 1,
-		Hash:   suite.app.LastCommitID().Hash,
-	})
-	suite.Require().NoError(err)
-
-	// execute operation
-	op := simulation.SimulateMsgFundCommunityPool(suite.txConfig, suite.accountKeeper, suite.bankKeeper, suite.distrKeeper, suite.stakingKeeper)
-	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
-	suite.Require().NoError(err)
-
-	var msg types.MsgFundCommunityPool
-	err = proto.Unmarshal(operationMsg.Msg, &msg)
-	suite.Require().NoError(err)
-	suite.Require().True(operationMsg.OK)
-	suite.Require().Equal("4896096stake", msg.Amount.String())
-	suite.Require().Equal("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r", msg.Depositor)
-	suite.Require().Equal(sdk.MsgTypeURL(&types.MsgFundCommunityPool{}), sdk.MsgTypeURL(&msg))
-	suite.Require().Len(futureOperations, 0)
 }
 
 type SimTestSuite struct {

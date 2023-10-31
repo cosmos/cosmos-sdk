@@ -76,6 +76,14 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				},
 			},
 		},
-		// Tx is purposely left empty, as the only tx is MsgUpdateParams which is gov gated.
+		Tx: &autocliv1.ServiceCommandDescriptor{
+			Service: authv1beta1.Msg_ServiceDesc.ServiceName,
+			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
+				{
+					RpcMethod: "UpdateParams",
+					Skip:      true, // skipped because authority gated
+				},
+			},
+		},
 	}
 }

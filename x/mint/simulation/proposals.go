@@ -4,11 +4,11 @@ import (
 	"math/rand"
 
 	sdkmath "cosmossdk.io/math"
+	"cosmossdk.io/x/mint/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/cosmos/cosmos-sdk/x/mint/types"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
 

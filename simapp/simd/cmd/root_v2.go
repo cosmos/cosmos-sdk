@@ -18,25 +18,22 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/config"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/server"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
-	txmodule "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
+	authtxconfig "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // NewRootCmd creates a new root command for simd. It is called once in the main function.
 func NewRootCmd() *cobra.Command {
 	var (
-		interfaceRegistry  codectypes.InterfaceRegistry
-		appCodec           codec.Codec
-		txConfig           client.TxConfig
 		autoCliOpts        autocli.AppOptions
 		moduleBasicManager module.BasicManager
-		clientCtx          *client.Context
+		clientCtx          client.Context
 	)
 
 	if err := depinject.Inject(
@@ -50,9 +47,6 @@ func NewRootCmd() *cobra.Command {
 				ProvideKeyring,
 			),
 		),
-		&interfaceRegistry,
-		&appCodec,
-		&txConfig,
 		&autoCliOpts,
 		&moduleBasicManager,
 		&clientCtx,
@@ -69,35 +63,19 @@ func NewRootCmd() *cobra.Command {
 			cmd.SetOut(cmd.OutOrStdout())
 			cmd.SetErr(cmd.ErrOrStderr())
 
-			initClientCtx := *clientCtx
-			initClientCtx = initClientCtx.WithCmdContext(cmd.Context())
-			initClientCtx, err := client.ReadPersistentCommandFlags(initClientCtx, cmd.Flags())
+			clientCtx = clientCtx.WithCmdContext(cmd.Context())
+			clientCtx, err := client.ReadPersistentCommandFlags(clientCtx, cmd.Flags())
 			if err != nil {
 				return err
 			}
 
 			customClientTemplate, customClientConfig := initClientConfig()
-			initClientCtx, err = config.CreateClientConfig(initClientCtx, customClientTemplate, customClientConfig)
+			clientCtx, err = config.CreateClientConfig(clientCtx, customClientTemplate, customClientConfig)
 			if err != nil {
 				return err
 			}
 
-			// This needs to go after CreateClientConfig, as that function
-			// sets the RPC client needed for SIGN_MODE_TEXTUAL.
-			enabledSignModes := append(tx.DefaultSignModes, signing.SignMode_SIGN_MODE_TEXTUAL)
-			txConfigOpts := tx.ConfigOptions{
-				EnabledSignModes:           enabledSignModes,
-				TextualCoinMetadataQueryFn: txmodule.NewGRPCCoinMetadataQueryFn(initClientCtx),
-			}
-			txConfigWithTextual, err := tx.NewTxConfigWithOptions(
-				codec.NewProtoCodec(interfaceRegistry),
-				txConfigOpts,
-			)
-			if err != nil {
-				return err
-			}
-			initClientCtx = initClientCtx.WithTxConfig(txConfigWithTextual)
-			if err := client.SetCmdClientContextHandler(initClientCtx, cmd); err != nil {
+			if err := client.SetCmdClientContextHandler(clientCtx, cmd); err != nil {
 				return err
 			}
 
@@ -108,7 +86,7 @@ func NewRootCmd() *cobra.Command {
 		},
 	}
 
-	initRootCmd(rootCmd, txConfig, interfaceRegistry, appCodec, moduleBasicManager)
+	initRootCmd(rootCmd, clientCtx.TxConfig, clientCtx.InterfaceRegistry, clientCtx.Codec, moduleBasicManager)
 
 	if err := autoCliOpts.EnhanceRootCommand(rootCmd); err != nil {
 		panic(err)
@@ -120,14 +98,15 @@ func NewRootCmd() *cobra.Command {
 func ProvideClientContext(
 	appCodec codec.Codec,
 	interfaceRegistry codectypes.InterfaceRegistry,
+	txConfigOpts tx.ConfigOptions,
 	legacyAmino *codec.LegacyAmino,
 	addressCodec address.Codec,
 	validatorAddressCodec runtime.ValidatorAddressCodec,
 	consensusAddressCodec runtime.ConsensusAddressCodec,
-) *client.Context {
+) client.Context {
 	var err error
 
-	initClientCtx := client.Context{}.
+	clientCtx := client.Context{}.
 		WithCodec(appCodec).
 		WithInterfaceRegistry(interfaceRegistry).
 		WithLegacyAmino(legacyAmino).
@@ -141,19 +120,27 @@ func ProvideClientContext(
 
 	// Read the config to overwrite the default values with the values from the config file
 	customClientTemplate, customClientConfig := initClientConfig()
-	initClientCtx, err = config.CreateClientConfig(initClientCtx, customClientTemplate, customClientConfig)
+	clientCtx, err = config.CreateClientConfig(clientCtx, customClientTemplate, customClientConfig)
 	if err != nil {
 		panic(err)
 	}
 
-	return &initClientCtx
+	// re-create the tx config grpc instead of bank keeper
+	txConfigOpts.TextualCoinMetadataQueryFn = authtxconfig.NewGRPCCoinMetadataQueryFn(clientCtx)
+	txConfig, err := tx.NewTxConfigWithOptions(clientCtx.Codec, txConfigOpts)
+	if err != nil {
+		panic(err)
+	}
+	clientCtx = clientCtx.WithTxConfig(txConfig)
+
+	return clientCtx
 }
 
-func ProvideKeyring(clientCtx *client.Context, addressCodec address.Codec) (clientv2keyring.Keyring, error) {
-	kb, err := client.NewKeyringFromBackend(*clientCtx, clientCtx.Keyring.Backend())
+func ProvideKeyring(clientCtx client.Context, addressCodec address.Codec) (clientv2keyring.Keyring, error) {
+	kb, err := client.NewKeyringFromBackend(clientCtx, clientCtx.Keyring.Backend())
 	if err != nil {
 		return nil, err
 	}
 
-	return kb, nil
+	return keyring.NewAutoCLIKeyring(kb)
 }

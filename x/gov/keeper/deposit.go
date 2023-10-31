@@ -7,11 +7,11 @@ import (
 	"cosmossdk.io/collections"
 	"cosmossdk.io/errors"
 	sdkmath "cosmossdk.io/math"
+	"cosmossdk.io/x/gov/types"
+	v1 "cosmossdk.io/x/gov/types/v1"
+	pooltypes "cosmossdk.io/x/protocolpool/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	disttypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
-	"github.com/cosmos/cosmos-sdk/x/gov/types"
-	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 )
 
 // SetDeposit sets a Deposit to the gov store
@@ -70,6 +70,16 @@ func (keeper Keeper) AddDeposit(ctx context.Context, proposalID uint64, deposito
 		return false, errors.Wrapf(types.ErrInactiveProposal, "%d", proposalID)
 	}
 
+	// Check coins to be deposited match the proposal's deposit params
+	params, err := keeper.Params.Get(ctx)
+	if err != nil {
+		return false, err
+	}
+
+	if err := keeper.validateDepositDenom(ctx, params, depositAmount); err != nil {
+		return false, err
+	}
+
 	// update the governance module's account coins pool
 	err = keeper.bankKeeper.SendCoinsFromAccountToModule(ctx, depositorAddr, types.ModuleName, depositAmount)
 	if err != nil {
@@ -84,13 +94,9 @@ func (keeper Keeper) AddDeposit(ctx context.Context, proposalID uint64, deposito
 	}
 
 	// Check if deposit has provided sufficient total funds to transition the proposal into the voting period
-	activatedVotingPeriod := false
-	params, err := keeper.Params.Get(ctx)
-	if err != nil {
-		return false, err
-	}
 	minDepositAmount := proposal.GetMinDepositFromParams(params)
 
+	activatedVotingPeriod := false
 	if proposal.Status == v1.StatusDepositPeriod && sdk.NewCoins(proposal.TotalDeposit...).IsAllGTE(minDepositAmount) {
 		err = keeper.ActivateVotingPeriod(ctx, proposal)
 		if err != nil {
@@ -115,7 +121,10 @@ func (keeper Keeper) AddDeposit(ctx context.Context, proposalID uint64, deposito
 	}
 
 	// called when deposit has been added to a proposal, however the proposal may not be active
-	keeper.Hooks().AfterProposalDeposit(ctx, proposalID, depositorAddr)
+	err = keeper.Hooks().AfterProposalDeposit(ctx, proposalID, depositorAddr)
+	if err != nil {
+		return false, err
+	}
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	sdkCtx.EventManager().EmitEvent(
@@ -185,10 +194,10 @@ func (keeper Keeper) ChargeDeposit(ctx context.Context, proposalID uint64, destA
 		}
 	}
 
-	// burn the cancellation fee or sent the cancellation charges to destination address.
+	// burn the cancellation fee or send the cancellation charges to destination address.
 	if !cancellationCharges.IsZero() {
-		// get the distribution module account address
-		distributionAddress := keeper.authKeeper.GetModuleAddress(disttypes.ModuleName)
+		// get the pool module account address
+		poolAddress := keeper.authKeeper.GetModuleAddress(pooltypes.ModuleName)
 		switch {
 		case destAddress == "":
 			// burn the cancellation charges from deposits
@@ -196,8 +205,8 @@ func (keeper Keeper) ChargeDeposit(ctx context.Context, proposalID uint64, destA
 			if err != nil {
 				return err
 			}
-		case distributionAddress.String() == destAddress:
-			err := keeper.distrKeeper.FundCommunityPool(ctx, cancellationCharges, keeper.ModuleAccountAddress())
+		case poolAddress.String() == destAddress:
+			err := keeper.poolKeeper.FundCommunityPool(ctx, cancellationCharges, keeper.ModuleAccountAddress())
 			if err != nil {
 				return err
 			}
@@ -234,12 +243,7 @@ func (keeper Keeper) RefundAndDeleteDeposits(ctx context.Context, proposalID uin
 // validateInitialDeposit validates if initial deposit is greater than or equal to the minimum
 // required at the time of proposal submission. This threshold amount is determined by
 // the deposit parameters. Returns nil on success, error otherwise.
-func (keeper Keeper) validateInitialDeposit(ctx context.Context, initialDeposit sdk.Coins, expedited bool) error {
-	params, err := keeper.Params.Get(ctx)
-	if err != nil {
-		return err
-	}
-
+func (keeper Keeper) validateInitialDeposit(ctx context.Context, params v1.Params, initialDeposit sdk.Coins, expedited bool) error {
 	minInitialDepositRatio, err := sdkmath.LegacyNewDecFromStr(params.MinInitialDepositRatio)
 	if err != nil {
 		return err
@@ -261,5 +265,23 @@ func (keeper Keeper) validateInitialDeposit(ctx context.Context, initialDeposit 
 	if !initialDeposit.IsAllGTE(minDepositCoins) {
 		return errors.Wrapf(types.ErrMinDepositTooSmall, "was (%s), need (%s)", initialDeposit, minDepositCoins)
 	}
+	return nil
+}
+
+// validateDepositDenom validates if the deposit denom is accepted by the governance module.
+func (keeper Keeper) validateDepositDenom(ctx context.Context, params v1.Params, depositAmount sdk.Coins) error {
+	denoms := []string{}
+	acceptedDenoms := make(map[string]bool, len(params.MinDeposit))
+	for _, coin := range params.MinDeposit {
+		acceptedDenoms[coin.Denom] = true
+		denoms = append(denoms, coin.Denom)
+	}
+
+	for _, coin := range depositAmount {
+		if _, ok := acceptedDenoms[coin.Denom]; !ok {
+			return errors.Wrapf(types.ErrInvalidDepositDenom, "deposited %s, but gov accepts only the following denom(s): %v", coin, denoms)
+		}
+	}
+
 	return nil
 }

@@ -10,6 +10,8 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/math"
+	"cosmossdk.io/x/staking/testutil"
+	"cosmossdk.io/x/staking/types"
 
 	"github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
@@ -17,8 +19,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/staking/testutil"
-	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 func TestValidatorTestEquivalent(t *testing.T) {

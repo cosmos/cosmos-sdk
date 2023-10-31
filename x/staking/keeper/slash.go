@@ -8,9 +8,9 @@ import (
 	st "cosmossdk.io/api/cosmos/staking/v1beta1"
 	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
+	types "cosmossdk.io/x/staking/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	types "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // Slash a validator for an infraction committed at a known height
@@ -147,12 +147,26 @@ func (k Keeper) Slash(ctx context.Context, consAddr sdk.ConsAddress, infractionH
 	tokensToBurn := math.MinInt(remainingSlashAmount, validator.Tokens)
 	tokensToBurn = math.MaxInt(tokensToBurn, math.ZeroInt()) // defensive.
 
+	if tokensToBurn.IsZero() {
+		// Nothing to burn, we can end this route immediately! We also don't
+		// need to call the k.Hooks().BeforeValidatorSlashed hook as we won't
+		// be slashing at all.
+		logger.Info(
+			"no validator slashing because slash amount is zero",
+			"validator", validator.GetOperator(),
+			"slash_factor", slashFactor.String(),
+			"burned", tokensToBurn,
+			"validatorTokens", validator.Tokens,
+		)
+		return math.NewInt(0), nil
+	}
+
 	// we need to calculate the *effective* slash fraction for distribution
 	if validator.Tokens.IsPositive() {
 		effectiveFraction := math.LegacyNewDecFromInt(tokensToBurn).QuoRoundUp(math.LegacyNewDecFromInt(validator.Tokens))
 		// possible if power has changed
-		if effectiveFraction.GT(math.LegacyOneDec()) {
-			effectiveFraction = math.LegacyOneDec()
+		if oneDec := math.LegacyOneDec(); effectiveFraction.GT(oneDec) {
+			effectiveFraction = oneDec
 		}
 		// call the before-slashed hook
 		if err := k.Hooks().BeforeValidatorSlashed(ctx, operatorAddress, effectiveFraction); err != nil {
@@ -287,6 +301,16 @@ func (k Keeper) SlashRedelegation(ctx context.Context, srcValidator types.Valida
 	totalSlashAmount = math.ZeroInt()
 	bondedBurnedAmount, notBondedBurnedAmount := math.ZeroInt(), math.ZeroInt()
 
+	valDstAddr, err := k.validatorAddressCodec.StringToBytes(redelegation.ValidatorDstAddress)
+	if err != nil {
+		return math.ZeroInt(), fmt.Errorf("SlashRedelegation: could not parse validator destination address: %w", err)
+	}
+
+	delegatorAddress, err := k.authKeeper.AddressCodec().StringToBytes(redelegation.DelegatorAddress)
+	if err != nil {
+		return math.ZeroInt(), fmt.Errorf("SlashRedelegation: could not parse delegator address: %w", err)
+	}
+
 	// perform slashing on all entries within the redelegation
 	for _, entry := range redelegation.Entries {
 		// If redelegation started before this height, stake didn't contribute to infraction
@@ -310,16 +334,7 @@ func (k Keeper) SlashRedelegation(ctx context.Context, srcValidator types.Valida
 			continue
 		}
 
-		valDstAddr, err := k.validatorAddressCodec.StringToBytes(redelegation.ValidatorDstAddress)
-		if err != nil {
-			panic(err)
-		}
-
-		delegatorAddress, err := k.authKeeper.AddressCodec().StringToBytes(redelegation.DelegatorAddress)
-		if err != nil {
-			panic(err)
-		}
-
+		// Delegations can be dynamic hence need to be looked up on every redelegation entry loop.
 		delegation, err := k.Delegations.Get(ctx, collections.Join(sdk.AccAddress(delegatorAddress), sdk.ValAddress(valDstAddr)))
 		if err != nil {
 			// If deleted, delegation has zero shares, and we can't unbond any more

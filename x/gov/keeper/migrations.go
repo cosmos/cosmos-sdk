@@ -1,8 +1,9 @@
 package keeper
 
 import (
+	v5 "cosmossdk.io/x/gov/migrations/v5"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	v5 "github.com/cosmos/cosmos-sdk/x/gov/migrations/v5"
 )
 
 // Migrator is a struct for handling in-place store migrations.
@@ -34,5 +35,5 @@ func (m Migrator) Migrate3to4(ctx sdk.Context) error {
 
 // Migrate4to5 migrates from version 4 to 5.
 func (m Migrator) Migrate4to5(ctx sdk.Context) error {
-	return v5.MigrateStore(ctx, m.keeper.storeService, m.keeper.cdc)
+	return v5.MigrateStore(ctx, m.keeper.storeService, m.keeper.cdc, m.keeper.Constitution)
 }

@@ -85,7 +85,7 @@ Now that you have created a local account, go ahead and grant it some `stake` to
 simd genesis add-genesis-account $MY_VALIDATOR_ADDRESS 100000000000stake
 ```
 
-Recall that `$MY_VALIDATOR_ADDRESS` is a variable that holds the address of the `my_validator` key in the [keyring](./00-keyring.md#adding-keys-to-the-keyring). Also note that the tokens in the Cosmos SDK have the `{amount}{denom}` format: `amount` is is a 18-digit-precision decimal number, and `denom` is the unique token identifier with its denomination key (e.g. `atom` or `uatom`). Here, we are granting `stake` tokens, as `stake` is the token identifier used for staking in [`simapp`](https://github.com/cosmos/cosmos-sdk/tree/main/simapp). For your own chain with its own staking denom, that token identifier should be used instead.
+Recall that `$MY_VALIDATOR_ADDRESS` is a variable that holds the address of the `my_validator` key in the [keyring](./00-keyring.md#adding-keys-to-the-keyring). Also note that the tokens in the Cosmos SDK have the `{amount}{denom}` format: `amount` is an 18-digit-precision decimal number, and `denom` is the unique token identifier with its denomination key (e.g. `atom` or `uatom`). Here, we are granting `stake` tokens, as `stake` is the token identifier used for staking in [`simapp`](https://github.com/cosmos/cosmos-sdk/tree/main/simapp). For your own chain with its own staking denom, that token identifier should be used instead.
 
 Now that your account has some tokens, you need to add a validator to your chain. Validators are special full-nodes that participate in the consensus process (implemented in the [underlying consensus engine](../../learn/intro/02-sdk-app-architecture.md#cometbft)) in order to add new blocks to the chain. Any account can declare its intention to become a validator operator, but only those with sufficient delegation get to enter the active set (for example, only the top 125 validator candidates with the most delegation get to be validators in the Cosmos Hub). For this guide, you will add your local node (created via the `init` command above) as a validator of your chain. Validators can be declared before a chain is first started via a special transaction included in the genesis file called a `gentx`:
 
@@ -156,6 +156,13 @@ You should see blocks come in.
 The previous command allow you to run a single node. This is enough for the next section on interacting with this node, but you may wish to run multiple nodes at the same time, and see how consensus happens between them.
 
 The naive way would be to run the same commands again in separate terminal windows. This is possible, however in the Cosmos SDK, we leverage the power of [Docker Compose](https://docs.docker.com/compose/) to run a localnet. If you need inspiration on how to set up your own localnet with Docker Compose, you can have a look at the Cosmos SDK's [`docker-compose.yml`](https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/docker-compose.yml).
+
+### Standalone App/CometBFT
+
+By default, the Cosmos SDK runs CometBFT in-process with the application
+If you want to run the application and CometBFT in separate processes,
+start the application with the `--with-comet=false` flag
+and set `rpc.laddr` in `config.toml` to the CometBFT node's RPC address.
 
 ## Logging
 

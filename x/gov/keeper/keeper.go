@@ -8,20 +8,20 @@ import (
 	"cosmossdk.io/collections"
 	corestoretypes "cosmossdk.io/core/store"
 	"cosmossdk.io/log"
+	"cosmossdk.io/x/gov/types"
+	v1 "cosmossdk.io/x/gov/types/v1"
+	"cosmossdk.io/x/gov/types/v1beta1"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/gov/types"
-	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
-	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
 // Keeper defines the governance module Keeper
 type Keeper struct {
-	authKeeper  types.AccountKeeper
-	bankKeeper  types.BankKeeper
-	distrKeeper types.DistributionKeeper
+	authKeeper types.AccountKeeper
+	bankKeeper types.BankKeeper
+	poolKeeper types.PoolKeeper
 
 	// The reference to the DelegationSet and ValidatorSet to get information about validators and delegators
 	sk types.StakingKeeper
@@ -79,7 +79,7 @@ func (k Keeper) GetAuthority() string {
 // CONTRACT: the parameter Subspace must have the param key table already initialized
 func NewKeeper(
 	cdc codec.Codec, storeService corestoretypes.KVStoreService, authKeeper types.AccountKeeper,
-	bankKeeper types.BankKeeper, sk types.StakingKeeper, distrKeeper types.DistributionKeeper,
+	bankKeeper types.BankKeeper, sk types.StakingKeeper, pk types.PoolKeeper,
 	router baseapp.MessageRouter, config types.Config, authority string,
 ) *Keeper {
 	// ensure governance module account is set
@@ -101,8 +101,8 @@ func NewKeeper(
 		storeService:           storeService,
 		authKeeper:             authKeeper,
 		bankKeeper:             bankKeeper,
-		distrKeeper:            distrKeeper,
 		sk:                     sk,
+		poolKeeper:             pk,
 		cdc:                    cdc,
 		router:                 router,
 		config:                 config,

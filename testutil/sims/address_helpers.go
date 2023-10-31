@@ -10,13 +10,14 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
 	bankkeeper "cosmossdk.io/x/bank/keeper"
-	minttypes "cosmossdk.io/x/mint/types"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
+
+const mintModuleName = "mint"
 
 type GenerateAccountStrategy func(int) []sdk.AccAddress
 
@@ -67,11 +68,11 @@ func addTestAddrs(bankKeeper bankkeeper.Keeper, stakingKeeper BondDenomProvider,
 }
 
 func initAccountWithCoins(bankKeeper bankkeeper.Keeper, ctx sdk.Context, addr sdk.AccAddress, coins sdk.Coins) {
-	if err := bankKeeper.MintCoins(ctx, minttypes.ModuleName, coins); err != nil {
+	if err := bankKeeper.MintCoins(ctx, mintModuleName, coins); err != nil {
 		panic(err)
 	}
 
-	if err := bankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, addr, coins); err != nil {
+	if err := bankKeeper.SendCoinsFromModuleToAccount(ctx, mintModuleName, addr, coins); err != nil {
 		panic(err)
 	}
 }

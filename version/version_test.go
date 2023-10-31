@@ -1,13 +1,13 @@
 package version_test
 
 import (
+	context "context"
 	"encoding/json"
 	"fmt"
 	"runtime"
 	"strings"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -149,7 +149,7 @@ func Test_runVersionCmd(t *testing.T) {
 	})
 
 	require.NoError(t, cmd.Execute())
-	assert.Equal(t, "\n", mockOut.String())
+	require.Equal(t, "\n", mockOut.String())
 	mockOut.Reset()
 
 	cmd.SetArgs([]string{
@@ -158,7 +158,21 @@ func Test_runVersionCmd(t *testing.T) {
 
 	info := version.NewInfo()
 	stringInfo, err := json.Marshal(info)
+
+	extraInfo := &version.ExtraInfo{"key1": "value1"}
+	ctx := context.WithValue(context.Background(), version.ContextKey{}, extraInfo)
+
 	require.NoError(t, err)
 	require.NoError(t, cmd.Execute())
-	assert.Equal(t, string(stringInfo)+"\n", mockOut.String())
+
+	extraInfoFromContext := ctx.Value(version.ContextKey{})
+	require.NotNil(t, extraInfoFromContext)
+
+	castedExtraInfo, ok := extraInfoFromContext.(*version.ExtraInfo)
+	require.True(t, ok)
+
+	key1Value := (*castedExtraInfo)["key1"]
+	require.Equal(t, "value1", key1Value)
+
+	require.Equal(t, string(stringInfo)+"\n", mockOut.String())
 }

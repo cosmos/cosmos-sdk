@@ -54,7 +54,10 @@ func (k Keeper) updateToNewPubkey(ctx sdk.Context, val types.Validator, oldPubKe
 	if err := k.ValidatorByConsensusAddress.Remove(ctx, consAddr); err != nil {
 		return err
 	}
-	k.DeleteValidatorByPowerIndex(ctx, val)
+
+	if err := k.DeleteValidatorByPowerIndex(ctx, val); err != nil {
+		return err
+	}
 
 	val.ConsensusPubkey = newPubKey
 	if err := k.SetValidator(ctx, val); err != nil {
@@ -63,20 +66,19 @@ func (k Keeper) updateToNewPubkey(ctx sdk.Context, val types.Validator, oldPubKe
 	if err := k.SetValidatorByConsAddr(ctx, val); err != nil {
 		return err
 	}
-
-	k.SetValidatorByPowerIndex(ctx, val)
+	if err := k.SetValidatorByPowerIndex(ctx, val); err != nil {
+		return err
+	}
 
 	oldPk := oldPubKey.GetCachedValue().(cryptotypes.PubKey)
 	newPk := newPubKey.GetCachedValue().(cryptotypes.PubKey)
 
 	// Sets a map to newly rotated consensus key with old consensus key
-	k.RotatedConsKeyMapIndex.Set(ctx, oldPk.Address(), newPk.Address())
-
-	if err := k.Hooks().AfterConsensusPubKeyUpdate(ctx, oldPk, newPk, fee); err != nil {
+	if err := k.RotatedConsKeyMapIndex.Set(ctx, oldPk.Address(), newPk.Address()); err != nil {
 		return err
 	}
 
-	return nil
+	return k.Hooks().AfterConsensusPubKeyUpdate(ctx, oldPk, newPk, fee)
 }
 
 // CheckLimitOfMaxRotationsExceed returns bool, count of iterations made within the unbonding period.

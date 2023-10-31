@@ -196,6 +196,5 @@ func (h Hooks) AfterConsensusPubKeyUpdate(ctx sdk.Context, _, _ cryptotypes.PubK
 	}
 
 	feePool.CommunityPool = feePool.CommunityPool.Add(sdk.NewDecCoinsFromCoins(rotationFee)...)
-	h.k.FeePool.Set(ctx, feePool)
-	return nil
+	return h.k.FeePool.Set(ctx, feePool)
 }

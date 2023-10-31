@@ -21,7 +21,7 @@ type Manager struct {
 	opts             types.PruningOptions
 	snapshotInterval uint64
 	// Snapshots are taken in a separate goroutine from the regular execution
-	// and can be delivered asynchrounously via HandleHeightSnapshot.
+	// and can be delivered asynchrounously via HandleSnapshotHeight.
 	// Therefore, we sync access to pruneSnapshotHeights with this mutex.
 	pruneSnapshotHeightsMx sync.RWMutex
 	// These are the heights that are multiples of snapshotInterval and kept for state sync snapshots.
@@ -65,11 +65,11 @@ func (m *Manager) GetOptions() types.PruningOptions {
 	return m.opts
 }
 
-// HandleHeightSnapshot persists the snapshot height to be pruned at the next appropriate
-// height defined by the pruning strategy. Flushes the update to disk and panics if the flush fails.
-// The input height must be greater than 0 and pruning strategy any but pruning nothing.
-// If one of these conditions is not met, this function does nothing.
-func (m *Manager) HandleHeightSnapshot(height int64) {
+// HandleSnapshotHeight persists the snapshot height to be pruned at the next appropriate
+// height defined by the pruning strategy. It flushes the update to disk and panics if the flush fails.
+// The input height must be greater than 0, and the pruning strategy must not be set to pruning nothing.
+// If either of these conditions is not met, this function does nothing.
+func (m *Manager) HandleSnapshotHeight(height int64) {
 	if m.opts.GetPruningStrategy() == types.PruningNothing || height <= 0 {
 		return
 	}
@@ -77,7 +77,7 @@ func (m *Manager) HandleHeightSnapshot(height int64) {
 	m.pruneSnapshotHeightsMx.Lock()
 	defer m.pruneSnapshotHeightsMx.Unlock()
 
-	m.logger.Debug("HandleHeightSnapshot", "height", height)
+	m.logger.Debug("HandleSnapshotHeight", "height", height)
 	m.pruneSnapshotHeights = append(m.pruneSnapshotHeights, height)
 	sort.Slice(m.pruneSnapshotHeights, func(i, j int) bool { return m.pruneSnapshotHeights[i] < m.pruneSnapshotHeights[j] })
 	k := 1
@@ -118,7 +118,7 @@ func (m *Manager) GetPruningHeight(height int64) int64 {
 	m.pruneSnapshotHeightsMx.RLock()
 	defer m.pruneSnapshotHeightsMx.RUnlock()
 
-	// - snapshotInterval is zero as that means that all heights can be pruned.
+	// snapshotInterval is zero, indicating that all heights can be pruned
 	if m.snapshotInterval <= 0 {
 		return pruneHeight
 	}

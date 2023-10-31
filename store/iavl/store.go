@@ -216,7 +216,10 @@ func (st *Store) Has(key []byte) (exists bool) {
 // Implements types.KVStore.
 func (st *Store) Delete(key []byte) {
 	defer st.metrics.MeasureSince("store", "iavl", "delete")
-	st.tree.Remove(key)
+	_, _, err := st.tree.Remove(key)
+	if err != nil {
+		panic(err)
+	}
 }
 
 // DeleteVersionsTo deletes versions upto the given version from the MutableTree. An error
@@ -360,7 +363,9 @@ func (st *Store) Query(req *types.RequestQuery) (res *types.ResponseQuery, err e
 		for ; iterator.Valid(); iterator.Next() {
 			pairs.Pairs = append(pairs.Pairs, kv.Pair{Key: iterator.Key(), Value: iterator.Value()})
 		}
-		iterator.Close()
+		if err := iterator.Close(); err != nil {
+			panic(fmt.Errorf("failed to close iterator: %w", err))
+		}
 
 		bz, err := pairs.Marshal()
 		if err != nil {

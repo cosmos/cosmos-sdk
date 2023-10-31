@@ -27,16 +27,21 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Features
 
+* [#17294](https://github.com/cosmos/cosmos-sdk/pull/17294) Add snapshot manager Close method.
 * [#15568](https://github.com/cosmos/cosmos-sdk/pull/15568) Migrate the `iavl` to the new key format.
-    * Remove `DeleteVersion`, `DeleteVersions`, `LazyLoadVersionForOverwriting` from `iavl` tree API.
-    * Add `DeleteVersionsTo` and `SaveChangeSet`, since it will keep versions sequentially like `fromVersion` to `toVersion`.
-    * Refactor the pruning manager to use `DeleteVersionsTo`.
+  * Remove `DeleteVersion`, `DeleteVersions`, `LazyLoadVersionForOverwriting` from `iavl` tree API.
+  * Add `DeleteVersionsTo` and `SaveChangeSet`, since it will keep versions sequentially like `fromVersion` to `toVersion`.
+  * Refactor the pruning manager to use `DeleteVersionsTo`.
 * [#15712](https://github.com/cosmos/cosmos-sdk/pull/15712) Add `WorkingHash` function to the store interface  to get the current app hash before commit.
 * [#14645](https://github.com/cosmos/cosmos-sdk/pull/14645) Add limit to the length of key and value.
 * [#15683](https://github.com/cosmos/cosmos-sdk/pull/15683) `rootmulti.Store.CacheMultiStoreWithVersion` now can handle loading archival states that don't persist any of the module stores the current state has.
 * [#16060](https://github.com/cosmos/cosmos-sdk/pull/16060) Support saving restoring snapshot locally.
 * [#14746](https://github.com/cosmos/cosmos-sdk/pull/14746) The `store` module is extracted to have a separate go.mod file which allows it be a standalone module.
 * [#14410](https://github.com/cosmos/cosmos-sdk/pull/14410) `rootmulti.Store.loadVersion` has validation to check if all the module stores' height is correct, it will error if any module store has incorrect height.
+
+### Improvements
+
+* [#17158](https://github.com/cosmos/cosmos-sdk/pull/17158) Start the goroutine after need to create a snapshot.
 
 ### API Breaking Changes
 

@@ -28,7 +28,6 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	_ "cosmossdk.io/x/bank"
 	banktypes "cosmossdk.io/x/bank/types"
-	_ "cosmossdk.io/x/mint"
 	_ "cosmossdk.io/x/staking"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"

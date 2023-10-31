@@ -10,18 +10,17 @@ import (
 	// without this import amino json encoding will fail when resolving any types
 	_ "cosmossdk.io/api/cosmos/group/v1"
 	"cosmossdk.io/math"
+	banktypes "cosmossdk.io/x/bank/types"
+	"cosmossdk.io/x/group"
+	client "cosmossdk.io/x/group/client/cli"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/cosmos/cosmos-sdk/x/group"
-	client "github.com/cosmos/cosmos-sdk/x/group/client/cli"
 )
 
 type E2ETestSuite struct {
@@ -68,16 +67,21 @@ func (s *E2ETestSuite) SetupSuite() {
 	s.Require().NoError(err)
 
 	account := sdk.AccAddress(pk.Address())
-	_, err = clitestutil.MsgSendExec(
+	msgSend := &banktypes.MsgSend{
+		FromAddress: val.Address.String(),
+		ToAddress:   account.String(),
+		Amount:      sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(2000))),
+	}
+
+	_, err = clitestutil.SubmitTestTx(
 		val.ClientCtx,
+		msgSend,
 		val.Address,
-		account,
-		sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(2000))),
-		address.NewBech32Codec("cosmos"),
-		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
+		clitestutil.TestTxConfig{
+			GenOnly: true,
+		},
 	)
+
 	s.Require().NoError(err)
 	s.Require().NoError(s.network.WaitForNextBlock())
 
@@ -167,18 +171,14 @@ func (s *E2ETestSuite) SetupSuite() {
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
 	s.Require().NoError(clitestutil.CheckTxCode(s.network, val.ClientCtx, txResp.TxHash, 0))
 
+	msg := &group.MsgVote{
+		ProposalId: uint64(1),
+		Voter:      val.Address.String(),
+		Option:     group.VOTE_OPTION_YES,
+	}
+
 	// vote
-	out, err = clitestutil.ExecTestCLICmd(val.ClientCtx, client.MsgVoteCmd(),
-		append(
-			[]string{
-				"1",
-				val.Address.String(),
-				"VOTE_OPTION_YES",
-				"",
-			},
-			s.commonFlags...,
-		),
-	)
+	out, err = clitestutil.SubmitTestTx(val.ClientCtx, msg, val.Address, clitestutil.TestTxConfig{})
 	s.Require().NoError(err, out.String())
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
 	s.Require().NoError(clitestutil.CheckTxCode(s.network, val.ClientCtx, txResp.TxHash, 0))
@@ -269,11 +269,22 @@ func (s *E2ETestSuite) createGroupThresholdPolicyWithBalance(adminAddress, group
 
 	addr, err := sdk.AccAddressFromBech32(groupPolicyAddress)
 	s.Require().NoError(err)
-	_, err = clitestutil.MsgSendExec(clientCtx, val.Address, addr,
-		sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(tokens))),
-		address.NewBech32Codec("cosmos"),
-		s.commonFlags...,
+
+	msgSend := &banktypes.MsgSend{
+		FromAddress: val.Address.String(),
+		ToAddress:   addr.String(),
+		Amount:      sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(tokens))),
+	}
+
+	_, err = clitestutil.SubmitTestTx(
+		val.ClientCtx,
+		msgSend,
+		val.Address,
+		clitestutil.TestTxConfig{
+			GenOnly: true,
+		},
 	)
 	s.Require().NoError(err)
+
 	return groupPolicyAddress
 }

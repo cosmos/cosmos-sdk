@@ -10,6 +10,13 @@ run:
     - ".*\\.pb\\.go$"
     - ".*\\.pb\\.gw\\.go$"
     - ".*\\.pulsar\\.go$"
+    - crypto/keys/secp256k1/internal/*
+
+build-tags:
+  - e2e
+  - ledger
+  - test_ledger_mock
+
 
 linters:
   disable-all: true

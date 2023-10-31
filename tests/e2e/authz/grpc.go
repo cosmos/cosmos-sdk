@@ -5,14 +5,14 @@ import (
 	"time"
 
 	"cosmossdk.io/math"
+	"cosmossdk.io/x/authz"
+	"cosmossdk.io/x/authz/client/cli"
+	authzclitestutil "cosmossdk.io/x/authz/client/testutil"
+	banktypes "cosmossdk.io/x/bank/types"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/authz"
-	"github.com/cosmos/cosmos-sdk/x/authz/client/cli"
-	authzclitestutil "github.com/cosmos/cosmos-sdk/x/authz/client/testutil"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 func (s *E2ETestSuite) TestQueryGrantGRPC() {

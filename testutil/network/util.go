@@ -18,12 +18,14 @@ import (
 	cmttime "github.com/cometbft/cometbft/types/time"
 	"golang.org/x/sync/errgroup"
 
+	"cosmossdk.io/log"
+	banktypes "cosmossdk.io/x/bank/types"
+
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/server/api"
 	servergrpc "github.com/cosmos/cosmos-sdk/server/grpc"
 	servercmtlog "github.com/cosmos/cosmos-sdk/server/log"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
@@ -43,6 +45,8 @@ func startInProcess(cfg Config, val *Validator) error {
 	}
 
 	app := cfg.AppConstructor(*val)
+	val.app = app
+
 	appGenesisProvider := func() (*cmttypes.GenesisDoc, error) {
 		appGenesis, err := genutiltypes.AppGenesisFromFile(cmtCfg.GenesisFile())
 		if err != nil {
@@ -101,14 +105,14 @@ func startInProcess(cfg Config, val *Validator) error {
 		// Start the gRPC server in a goroutine. Note, the provided ctx will ensure
 		// that the server is gracefully shut down.
 		val.errGroup.Go(func() error {
-			return servergrpc.StartGRPCServer(ctx, logger.With("module", "grpc-server"), grpcCfg, grpcSrv)
+			return servergrpc.StartGRPCServer(ctx, logger.With(log.ModuleKey, "grpc-server"), grpcCfg, grpcSrv)
 		})
 
 		val.grpc = grpcSrv
 	}
 
 	if val.APIAddress != "" {
-		apiSrv := api.New(val.ClientCtx, logger.With("module", "api-server"), val.grpc)
+		apiSrv := api.New(val.ClientCtx, logger.With(log.ModuleKey, "api-server"), val.grpc)
 		app.RegisterAPIRoutes(apiSrv, val.AppConfig.API)
 
 		val.errGroup.Go(func() error {
@@ -122,7 +126,10 @@ func startInProcess(cfg Config, val *Validator) error {
 }
 
 func collectGenFiles(cfg Config, vals []*Validator, outputDir string) error {
-	genTime := cmttime.Now()
+	genTime := cfg.GenesisTime
+	if genTime.IsZero() {
+		genTime = cmttime.Now()
+	}
 
 	for i := 0; i < cfg.NumValidators; i++ {
 		cmtCfg := vals[i].Ctx.Config

@@ -7,9 +7,9 @@ import (
 	"github.com/cometbft/cometbft/crypto"
 
 	sdkmath "cosmossdk.io/math"
+	"cosmossdk.io/x/slashing/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
 
 var _ types.StakingHooks = Hooks{}
@@ -31,8 +31,12 @@ func (h Hooks) AfterValidatorBonded(ctx context.Context, consAddr sdk.ConsAddres
 	if err == nil {
 		signingInfo.StartHeight = sdkCtx.BlockHeight()
 	} else {
+		consStr, err := h.k.sk.ConsensusAddressCodec().BytesToString(consAddr)
+		if err != nil {
+			return err
+		}
 		signingInfo = types.NewValidatorSigningInfo(
-			consAddr,
+			consStr,
 			sdkCtx.BlockHeight(),
 			0,
 			time.Unix(0, 0),

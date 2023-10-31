@@ -7,10 +7,10 @@ import (
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
+	"cosmossdk.io/x/distribution/types"
+	stakingtypes "cosmossdk.io/x/staking/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/distribution/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // initialize starting info for a new delegation
@@ -301,9 +301,9 @@ func (k Keeper) withdrawDelegationRewards(ctx context.Context, val stakingtypes.
 	}
 
 	if finalRewards.IsZero() {
-		baseDenom, _ := sdk.GetBaseDenom()
-		if baseDenom == "" {
-			baseDenom = sdk.DefaultBondDenom
+		baseDenom, err := k.stakingKeeper.BondDenom(ctx)
+		if err != nil {
+			return nil, err
 		}
 
 		// Note, we do not call the NewCoins constructor as we do not want the zero

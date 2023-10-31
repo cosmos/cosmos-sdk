@@ -17,6 +17,13 @@ import (
 	"cosmossdk.io/core/appmodule"
 	store "cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
+	govclient "cosmossdk.io/x/gov/client"
+	"cosmossdk.io/x/gov/client/cli"
+	"cosmossdk.io/x/gov/keeper"
+	"cosmossdk.io/x/gov/simulation"
+	govtypes "cosmossdk.io/x/gov/types"
+	v1 "cosmossdk.io/x/gov/types/v1"
+	"cosmossdk.io/x/gov/types/v1beta1"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -26,13 +33,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	govclient "github.com/cosmos/cosmos-sdk/x/gov/client"
-	"github.com/cosmos/cosmos-sdk/x/gov/client/cli"
-	"github.com/cosmos/cosmos-sdk/x/gov/keeper"
-	"github.com/cosmos/cosmos-sdk/x/gov/simulation"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
-	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
 const ConsensusVersion = 5
@@ -104,12 +104,6 @@ func (ab AppModuleBasic) GetTxCmd() *cobra.Command {
 	legacyProposalCLIHandlers := getProposalCLIHandlers(ab.legacyProposalHandlers)
 
 	return cli.NewTxCmd(legacyProposalCLIHandlers)
-}
-
-// GetQueryCmd returns the custom query commands for the gov modules.
-// This command will be enhanced by AutoCLI as defined in the AutoCLIOptions() method.
-func (ab AppModuleBasic) GetQueryCmd() *cobra.Command {
-	return cli.GetCustomQueryCmd(ab.ac)
 }
 
 func getProposalCLIHandlers(handlers []govclient.ProposalHandler) []*cobra.Command {

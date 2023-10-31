@@ -5,9 +5,9 @@ import (
 
 	authzv1beta1 "cosmossdk.io/api/cosmos/authz/v1beta1"
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
+	bank "cosmossdk.io/x/bank/types"
 
 	"github.com/cosmos/cosmos-sdk/version"
-	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 // AutoCLIOptions implements the autocli.HasAutoCLIConfig interface.
@@ -47,7 +47,30 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 			},
 		},
 		Tx: &autocliv1.ServiceCommandDescriptor{
-			Service: authzv1beta1.Msg_ServiceDesc.ServiceName,
+			Service:              authzv1beta1.Msg_ServiceDesc.ServiceName,
+			EnhanceCustomCommand: true,
+			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
+				{
+					RpcMethod: "Exec",
+					Use:       "exec [msg-json-file] --from [grantee]",
+					Short:     "Execute tx on behalf of granter account",
+					Example:   fmt.Sprintf("$ %s tx authz exec msg.json --from grantee\n $ %[1]s tx bank send [granter] [recipient] [amount] --generate-only | jq .body.messages > msg.json && %[1]s tx authz exec msg.json --from grantee", version.AppName),
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "msgs", Varargs: true},
+					},
+				},
+				{
+					RpcMethod: "Revoke",
+					Use:       "revoke [grantee] [msg-type-url] --from [granter]",
+					Short:     `Revoke authorization from a granter to a grantee`,
+					Example: fmt.Sprintf(`%s tx authz revoke cosmos1skj.. %s --from=cosmos1skj..`,
+						version.AppName, bank.SendAuthorization{}.MsgTypeURL()),
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "grantee"},
+						{ProtoField: "msg_type_url"},
+					},
+				},
+			},
 		},
 	}
 }

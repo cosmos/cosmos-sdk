@@ -10,11 +10,14 @@ import (
 	"github.com/spf13/cobra"
 
 	modulev1 "cosmossdk.io/api/cosmos/bank/module/v1"
-	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
+	"cosmossdk.io/x/bank/client/cli"
+	"cosmossdk.io/x/bank/keeper"
+	"cosmossdk.io/x/bank/simulation"
+	"cosmossdk.io/x/bank/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -24,10 +27,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/cosmos/cosmos-sdk/x/bank/client/cli"
-	"github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	"github.com/cosmos/cosmos-sdk/x/bank/simulation"
-	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 // ConsensusVersion defines the current x/bank module consensus version.
@@ -46,7 +45,6 @@ var (
 // AppModuleBasic defines the basic application module used by the bank module.
 type AppModuleBasic struct {
 	cdc codec.Codec
-	ac  address.Codec
 }
 
 // Name returns the bank module's name.
@@ -82,7 +80,7 @@ func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *g
 
 // GetTxCmd returns the root tx command for the bank module.
 func (ab AppModuleBasic) GetTxCmd() *cobra.Command {
-	return cli.NewTxCmd(ab.ac)
+	return cli.NewTxCmd()
 }
 
 // RegisterInterfaces registers interfaces and implementations of the bank module.
@@ -127,7 +125,7 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 // NewAppModule creates a new AppModule object
 func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, accountKeeper types.AccountKeeper) AppModule {
 	return AppModule{
-		AppModuleBasic: AppModuleBasic{cdc: cdc, ac: accountKeeper.AddressCodec()},
+		AppModuleBasic: AppModuleBasic{cdc: cdc},
 		keeper:         keeper,
 		accountKeeper:  accountKeeper,
 	}

@@ -2,24 +2,21 @@ package client
 
 import (
 	"fmt"
-	"io"
-	"os"
 
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/math"
+	"cosmossdk.io/x/bank/client/cli"
+	"cosmossdk.io/x/bank/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/bank/client/cli"
-	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 type E2ETestSuite struct {
@@ -98,23 +95,29 @@ func (s *E2ETestSuite) TearDownSuite() {
 func (s *E2ETestSuite) TestNewSendTxCmdGenOnly() {
 	val := s.network.Validators[0]
 
-	clientCtx := val.ClientCtx
-
 	from := val.Address
 	to := val.Address
 	amount := sdk.NewCoins(
 		sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), math.NewInt(10)),
 		sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10)),
 	)
-	args := []string{
-		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
-		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
+
+	msgSend := &types.MsgSend{
+		FromAddress: from.String(),
+		ToAddress:   to.String(),
+		Amount:      amount,
 	}
 
-	bz, err := clitestutil.MsgSendExec(clientCtx, from, to, amount, addresscodec.NewBech32Codec("cosmos"), args...)
+	bz, err := clitestutil.SubmitTestTx(
+		val.ClientCtx,
+		msgSend,
+		from,
+		clitestutil.TestTxConfig{
+			GenOnly: true,
+		},
+	)
 	s.Require().NoError(err)
+
 	tx, err := s.cfg.TxConfig.TxJSONDecoder()(bz.Bytes())
 	s.Require().NoError(err)
 	s.Require().Equal([]sdk.Msg{types.NewMsgSend(from, to, amount)}, tx.GetMsgs())
@@ -123,33 +126,30 @@ func (s *E2ETestSuite) TestNewSendTxCmdGenOnly() {
 func (s *E2ETestSuite) TestNewSendTxCmdDryRun() {
 	val := s.network.Validators[0]
 
-	clientCtx := val.ClientCtx
-
 	from := val.Address
 	to := val.Address
 	amount := sdk.NewCoins(
 		sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), math.NewInt(10)),
 		sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10)),
 	)
-	args := []string{
-		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
-		fmt.Sprintf("--%s=true", flags.FlagDryRun),
+
+	msgSend := &types.MsgSend{
+		FromAddress: from.String(),
+		ToAddress:   to.String(),
+		Amount:      amount,
 	}
 
-	oldSterr := os.Stderr
-	r, w, _ := os.Pipe()
-	os.Stderr = w
-
-	_, err := clitestutil.MsgSendExec(clientCtx, from, to, amount, addresscodec.NewBech32Codec("cosmos"), args...)
+	out, err := clitestutil.SubmitTestTx(
+		val.ClientCtx,
+		msgSend,
+		from,
+		clitestutil.TestTxConfig{
+			Simulate: true,
+		},
+	)
 	s.Require().NoError(err)
-
-	w.Close()
-	out, _ := io.ReadAll(r)
-	os.Stderr = oldSterr
-
-	s.Require().Regexp("gas estimate: [0-9]+", string(out))
+	s.Require().Regexp("\"gas_info\"", out.String())
+	s.Require().Regexp("\"gas_used\":\"[0-9]+\"", out.String())
 }
 
 func (s *E2ETestSuite) TestNewSendTxCmd() {
@@ -159,7 +159,7 @@ func (s *E2ETestSuite) TestNewSendTxCmd() {
 		name         string
 		from, to     sdk.AccAddress
 		amount       sdk.Coins
-		args         []string
+		config       clitestutil.TestTxConfig
 		expectErr    bool
 		expectedCode uint32
 		respType     proto.Message
@@ -172,29 +172,10 @@ func (s *E2ETestSuite) TestNewSendTxCmd() {
 				sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), math.NewInt(10)),
 				sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10)),
 			),
-			[]string{
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
+			clitestutil.TestTxConfig{
+				Fee: sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))),
 			},
 			false, 0, &sdk.TxResponse{},
-		},
-		{
-			"chain-id shouldn't be used with offline and generate-only flags",
-			val.Address,
-			val.Address,
-			sdk.NewCoins(
-				sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), math.NewInt(10)),
-				sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10)),
-			),
-			[]string{
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
-				fmt.Sprintf("--%s=true", flags.FlagOffline),
-				fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
-			},
-			true, 0, &sdk.TxResponse{},
 		},
 		{
 			"not enough fees",
@@ -204,11 +185,10 @@ func (s *E2ETestSuite) TestNewSendTxCmd() {
 				sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), math.NewInt(10)),
 				sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10)),
 			),
-			[]string{
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(1))).String()),
+			clitestutil.TestTxConfig{
+				Fee: sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(1))),
 			},
+
 			false,
 			sdkerrors.ErrInsufficientFee.ABCICode(),
 			&sdk.TxResponse{},
@@ -221,11 +201,9 @@ func (s *E2ETestSuite) TestNewSendTxCmd() {
 				sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), math.NewInt(10)),
 				sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10)),
 			),
-			[]string{
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
-				"--gas=10",
+			clitestutil.TestTxConfig{
+				Gas: 10,
+				Fee: sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))),
 			},
 			false,
 			sdkerrors.ErrOutOfGas.ABCICode(),
@@ -240,7 +218,12 @@ func (s *E2ETestSuite) TestNewSendTxCmd() {
 		s.Run(tc.name, func() {
 			clientCtx := val.ClientCtx
 
-			bz, err := clitestutil.MsgSendExec(clientCtx, tc.from, tc.to, tc.amount, addresscodec.NewBech32Codec("cosmos"), tc.args...)
+			msgSend := types.MsgSend{
+				FromAddress: tc.from.String(),
+				ToAddress:   tc.to.String(),
+				Amount:      tc.amount,
+			}
+			bz, err := clitestutil.SubmitTestTx(val.ClientCtx, &msgSend, tc.from, tc.config)
 			if tc.expectErr {
 				s.Require().Error(err)
 			} else {
@@ -403,5 +386,5 @@ func MsgMultiSendExec(clientCtx client.Context, from sdk.AccAddress, to []sdk.Ac
 	args = append(args, amount.String())
 	args = append(args, extraArgs...)
 
-	return clitestutil.ExecTestCLICmd(clientCtx, cli.NewMultiSendTxCmd(addresscodec.NewBech32Codec("cosmos")), args)
+	return clitestutil.ExecTestCLICmd(clientCtx, cli.NewMultiSendTxCmd(), args)
 }

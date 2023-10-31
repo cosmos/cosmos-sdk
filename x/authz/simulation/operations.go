@@ -4,6 +4,10 @@ import (
 	"math/rand"
 	"time"
 
+	"cosmossdk.io/x/authz"
+	"cosmossdk.io/x/authz/keeper"
+	banktype "cosmossdk.io/x/bank/types"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -12,9 +16,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/cosmos/cosmos-sdk/x/authz"
-	"github.com/cosmos/cosmos-sdk/x/authz/keeper"
-	banktype "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
@@ -141,7 +142,7 @@ func SimulateMsgGrant(
 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgGrant, "unable to generate mock tx"), nil, err
 		}
 
-		_, _, err = app.SimTxFinalizeBlock(txCfg.TxEncoder(), tx)
+		_, _, err = app.SimDeliver(txCfg.TxEncoder(), tx)
 		if err != nil {
 			return simtypes.NoOpMsg(authz.ModuleName, sdk.MsgTypeURL(msg), "unable to deliver tx"), nil, err
 		}
@@ -218,7 +219,7 @@ func SimulateMsgRevoke(
 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgRevoke, err.Error()), nil, err
 		}
 
-		_, _, err = app.SimTxFinalizeBlock(txCfg.TxEncoder(), tx)
+		_, _, err = app.SimDeliver(txCfg.TxEncoder(), tx)
 		if err != nil {
 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgRevoke, "unable to execute tx: "+err.Error()), nil, err
 		}
@@ -318,7 +319,7 @@ func SimulateMsgExec(
 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, err.Error()), nil, err
 		}
 
-		_, _, err = app.SimTxFinalizeBlock(txCfg.TxEncoder(), tx)
+		_, _, err = app.SimDeliver(txCfg.TxEncoder(), tx)
 		if err != nil {
 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, err.Error()), nil, err
 		}

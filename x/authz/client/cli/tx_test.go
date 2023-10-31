@@ -8,12 +8,20 @@ import (
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	rpcclientmock "github.com/cometbft/cometbft/rpc/client/mock"
-	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/suite"
 
 	_ "cosmossdk.io/api/cosmos/authz/v1beta1"
 	"cosmossdk.io/core/address"
 	sdkmath "cosmossdk.io/math"
+	"cosmossdk.io/x/authz/client/cli"
+	authzclitestutil "cosmossdk.io/x/authz/client/testutil"
+	"cosmossdk.io/x/bank"
+	banktypes "cosmossdk.io/x/bank/types"
+	"cosmossdk.io/x/gov"
+	govcli "cosmossdk.io/x/gov/client/cli"
+	govclitestutil "cosmossdk.io/x/gov/client/testutil"
+	govv1 "cosmossdk.io/x/gov/types/v1"
+	govv1beta1 "cosmossdk.io/x/gov/types/v1beta1"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -24,22 +32,9 @@ import (
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	testutilmod "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	"github.com/cosmos/cosmos-sdk/x/authz/client/cli"
-	authzclitestutil "github.com/cosmos/cosmos-sdk/x/authz/client/testutil"
-	"github.com/cosmos/cosmos-sdk/x/bank"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/cosmos/cosmos-sdk/x/gov"
-	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
-	govclitestutil "github.com/cosmos/cosmos-sdk/x/gov/client/testutil"
-	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
-	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
-var (
-	typeMsgSend           = banktypes.SendAuthorization{}.MsgTypeURL()
-	typeMsgVote           = sdk.MsgTypeURL(&govv1.MsgVote{})
-	typeMsgSubmitProposal = sdk.MsgTypeURL(&govv1.MsgSubmitProposal{})
-)
+var typeMsgVote = sdk.MsgTypeURL(&govv1.MsgVote{})
 
 type CLITestSuite struct {
 	suite.Suite
@@ -61,6 +56,7 @@ func TestCLITestSuite(t *testing.T) {
 func (s *CLITestSuite) SetupSuite() {
 	s.encCfg = testutilmod.MakeTestEncodingConfig(gov.AppModuleBasic{}, bank.AppModuleBasic{})
 	s.kr = keyring.NewInMemory(s.encCfg.Codec)
+
 	s.baseCtx = client.Context{}.
 		WithKeyring(s.kr).
 		WithTxConfig(s.encCfg.TxConfig).
@@ -180,18 +176,16 @@ func (s *CLITestSuite) msgSendExec(grantee sdk.AccAddress) {
 	_, err := s.ac.StringToBytes("cosmos16zex22087zs656t0vedytv5wqhm6axxd5679ry")
 	s.Require().NoError(err)
 
-	out, err := clitestutil.MsgSendExec(
-		s.clientCtx,
-		val[0].Address,
-		grantee,
-		sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(200))),
-		s.ac,
-		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(10))).String()),
-	)
+	coins := sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(200)))
+	from := val[0].Address
+	msgSend := &banktypes.MsgSend{
+		FromAddress: from.String(),
+		ToAddress:   grantee.String(),
+		Amount:      coins,
+	}
+
+	_, err = clitestutil.SubmitTestTx(s.clientCtx, msgSend, from, clitestutil.TestTxConfig{})
 	s.Require().NoError(err)
-	s.Require().Contains(out.String(), `"code":0`)
 }
 
 func (s *CLITestSuite) TestCLITxGrantAuthorization() {
@@ -474,452 +468,4 @@ func (s *CLITestSuite) TestCLITxGrantAuthorization() {
 			}
 		})
 	}
-}
-
-func (s *CLITestSuite) TestCmdRevokeAuthorizations() {
-	val := testutil.CreateKeyringAccounts(s.T(), s.kr, 1)
-
-	grantee := s.grantee[0]
-	twoHours := time.Now().Add(time.Minute * time.Duration(120)).Unix()
-
-	// send-authorization
-	_, err := authzclitestutil.CreateGrant(s.clientCtx,
-		[]string{
-			grantee.String(),
-			"send",
-			fmt.Sprintf("--%s=100stake", cli.FlagSpendLimit),
-			fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-			fmt.Sprintf("--%s=%s", flags.FlagFrom, val[0].Address),
-			fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-			fmt.Sprintf("--%s=%d", cli.FlagExpiration, twoHours),
-			fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(10))).String()),
-		},
-	)
-	s.Require().NoError(err)
-
-	// generic-authorization
-	_, err = authzclitestutil.CreateGrant(s.clientCtx,
-		[]string{
-			grantee.String(),
-			"generic",
-			fmt.Sprintf("--%s=%s", cli.FlagMsgType, typeMsgVote),
-			fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-			fmt.Sprintf("--%s=%s", flags.FlagFrom, val[0].Address),
-			fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-			fmt.Sprintf("--%s=%d", cli.FlagExpiration, twoHours),
-			fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(10))).String()),
-		},
-	)
-	s.Require().NoError(err)
-
-	// generic-authorization used for amino testing
-	_, err = authzclitestutil.CreateGrant(s.clientCtx,
-		[]string{
-			grantee.String(),
-			"generic",
-			fmt.Sprintf("--%s=%s", cli.FlagMsgType, typeMsgSubmitProposal),
-			fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-			fmt.Sprintf("--%s=%s", flags.FlagFrom, val[0].Address),
-			fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-			fmt.Sprintf("--%s=%d", cli.FlagExpiration, twoHours),
-			fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(10))).String()),
-			fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeLegacyAminoJSON),
-		},
-	)
-	s.Require().NoError(err)
-	testCases := []struct {
-		name      string
-		args      []string
-		respType  proto.Message
-		expectErr bool
-	}{
-		{
-			"invalid grantee address",
-			[]string{
-				"invalid grantee",
-				typeMsgSend,
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, val[0].Address.String()),
-				fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
-			},
-			nil,
-			true,
-		},
-		{
-			"invalid granter address",
-			[]string{
-				grantee.String(),
-				typeMsgSend,
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, "granter"),
-				fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
-			},
-			nil,
-			true,
-		},
-		{
-			"Valid tx send authorization",
-			[]string{
-				grantee.String(),
-				typeMsgSend,
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, val[0].Address.String()),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(10))).String()),
-			},
-			&sdk.TxResponse{},
-			false,
-		},
-		{
-			"Valid tx generic authorization",
-			[]string{
-				grantee.String(),
-				typeMsgVote,
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, val[0].Address.String()),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(10))).String()),
-			},
-			&sdk.TxResponse{},
-			false,
-		},
-		{
-			"Valid tx with amino",
-			[]string{
-				grantee.String(),
-				typeMsgSubmitProposal,
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, val[0].Address.String()),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(10))).String()),
-				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeLegacyAminoJSON),
-			},
-			&sdk.TxResponse{},
-			false,
-		},
-	}
-	for _, tc := range testCases {
-		tc := tc
-		s.Run(tc.name, func() {
-			cmd := cli.NewCmdRevokeAuthorization(addresscodec.NewBech32Codec("cosmos"))
-
-			out, err := clitestutil.ExecTestCLICmd(s.clientCtx, cmd, tc.args)
-			if tc.expectErr {
-				s.Require().Error(err)
-			} else {
-				s.Require().NoError(err)
-				s.Require().NoError(s.clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
-			}
-		})
-	}
-}
-
-func (s *CLITestSuite) TestExecAuthorizationWithExpiration() {
-	val := testutil.CreateKeyringAccounts(s.T(), s.kr, 1)
-
-	grantee := s.grantee[0]
-	tenSeconds := time.Now().Add(time.Second * time.Duration(10)).Unix()
-
-	_, err := authzclitestutil.CreateGrant(s.clientCtx,
-		[]string{
-			grantee.String(),
-			"generic",
-			fmt.Sprintf("--%s=%s", cli.FlagMsgType, typeMsgVote),
-			fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-			fmt.Sprintf("--%s=%s", flags.FlagFrom, val[0].Address.String()),
-			fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-			fmt.Sprintf("--%s=%d", cli.FlagExpiration, tenSeconds),
-			fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(10))).String()),
-		},
-	)
-	s.Require().NoError(err)
-	// msg vote
-	voteTx := fmt.Sprintf(`{"body":{"messages":[{"@type":"/cosmos.gov.v1.MsgVote","proposal_id":"1","voter":"%s","option":"VOTE_OPTION_YES"}],"memo":"","timeout_height":"0","extension_options":[],"non_critical_extension_options":[]},"auth_info":{"signer_infos":[],"fee":{"amount":[],"gas_limit":"200000","payer":"","granter":""}},"signatures":[]}`, val[0].Address.String())
-	execMsg := testutil.WriteToNewTempFile(s.T(), voteTx)
-	defer execMsg.Close()
-
-	// waiting for authorization to expire
-	time.Sleep(12 * time.Second)
-
-	cmd := cli.NewCmdExecAuthorization()
-
-	out, err := clitestutil.ExecTestCLICmd(s.clientCtx, cmd, []string{
-		execMsg.Name(),
-		fmt.Sprintf("--%s=%s", flags.FlagFrom, grantee.String()),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(10))).String()),
-		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-	})
-	s.Require().NoError(err)
-	var response sdk.TxResponse
-	s.Require().NoError(s.clientCtx.Codec.UnmarshalJSON(out.Bytes(), &response), out.String())
-}
-
-func (s *CLITestSuite) TestNewExecGenericAuthorized() {
-	val := testutil.CreateKeyringAccounts(s.T(), s.kr, 1)
-	grantee := s.grantee[0]
-	twoHours := time.Now().Add(time.Minute * time.Duration(120)).Unix()
-
-	_, err := authzclitestutil.CreateGrant(s.clientCtx,
-		[]string{
-			grantee.String(),
-			"generic",
-			fmt.Sprintf("--%s=%s", cli.FlagMsgType, typeMsgVote),
-			fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-			fmt.Sprintf("--%s=%s", flags.FlagFrom, val[0].Address.String()),
-			fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-			fmt.Sprintf("--%s=%d", cli.FlagExpiration, twoHours),
-			fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(10))).String()),
-		},
-	)
-	s.Require().NoError(err)
-
-	// msg vote
-	voteTx := fmt.Sprintf(`{"body":{"messages":[{"@type":"/cosmos.gov.v1.MsgVote","proposal_id":"1","voter":"%s","option":"VOTE_OPTION_YES"}],"memo":"","timeout_height":"0","extension_options":[],"non_critical_extension_options":[]},"auth_info":{"signer_infos":[],"fee":{"amount":[],"gas_limit":"200000","payer":"","granter":""}},"signatures":[]}`, val[0].Address.String())
-	execMsg := testutil.WriteToNewTempFile(s.T(), voteTx)
-	defer execMsg.Close()
-
-	testCases := []struct {
-		name      string
-		args      []string
-		respType  proto.Message
-		expectErr bool
-	}{
-		{
-			"fail invalid grantee",
-			[]string{
-				execMsg.Name(),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, "grantee"),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-				fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
-			},
-			nil,
-			true,
-		},
-		{
-			"fail invalid json path",
-			[]string{
-				"/invalid/file.txt",
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, grantee.String()),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-			},
-			nil,
-			true,
-		},
-		{
-			"valid txn",
-			[]string{
-				execMsg.Name(),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, grantee.String()),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(10))).String()),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-			},
-			&sdk.TxResponse{},
-			false,
-		},
-		{
-			"valid tx with amino",
-			[]string{
-				execMsg.Name(),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, grantee.String()),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(10))).String()),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeLegacyAminoJSON),
-			},
-			&sdk.TxResponse{},
-			false,
-		},
-	}
-
-	for _, tc := range testCases {
-		tc := tc
-		s.Run(tc.name, func() {
-			cmd := cli.NewCmdExecAuthorization()
-
-			out, err := clitestutil.ExecTestCLICmd(s.clientCtx, cmd, tc.args)
-			if tc.expectErr {
-				s.Require().Error(err)
-			} else {
-				s.Require().NoError(err)
-				s.Require().NoError(s.clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
-			}
-		})
-	}
-}
-
-func (s *CLITestSuite) TestNewExecGrantAuthorized() {
-	val := testutil.CreateKeyringAccounts(s.T(), s.kr, 1)
-	grantee := s.grantee[0]
-	twoHours := time.Now().Add(time.Minute * time.Duration(120)).Unix()
-
-	_, err := authzclitestutil.CreateGrant(s.clientCtx,
-		[]string{
-			grantee.String(),
-			"send",
-			fmt.Sprintf("--%s=12testtoken", cli.FlagSpendLimit),
-			fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-			fmt.Sprintf("--%s=%s", flags.FlagFrom, val[0].Address.String()),
-			fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-			fmt.Sprintf("--%s=%d", cli.FlagExpiration, twoHours),
-			fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(10))).String()),
-		},
-	)
-	s.Require().NoError(err)
-
-	tokens := sdk.NewCoins(
-		sdk.NewCoin("testtoken", sdkmath.NewInt(12)),
-	)
-	normalGeneratedTx, err := clitestutil.MsgSendExec(
-		s.clientCtx,
-		val[0].Address,
-		grantee,
-		tokens,
-		s.ac,
-		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(10))).String()),
-		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
-	)
-	s.Require().NoError(err)
-	execMsg := testutil.WriteToNewTempFile(s.T(), normalGeneratedTx.String())
-	defer execMsg.Close()
-
-	testCases := []struct {
-		name         string
-		args         []string
-		expectErr    bool
-		expectErrMsg string
-	}{
-		{
-			"valid txn",
-			[]string{
-				execMsg.Name(),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, grantee.String()),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(10))).String()),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-			},
-			false,
-			"",
-		},
-		{
-			"error over spent",
-			[]string{
-				execMsg.Name(),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, grantee.String()),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(10))).String()),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-			},
-			false,
-			"",
-		},
-	}
-
-	for _, tc := range testCases {
-		tc := tc
-		s.Run(tc.name, func() {
-			cmd := cli.NewCmdExecAuthorization()
-			clientCtx := s.clientCtx
-
-			var response sdk.TxResponse
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
-			switch {
-			case tc.expectErrMsg != "":
-				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &response), out.String())
-				s.Require().Contains(response.RawLog, tc.expectErrMsg)
-
-			case tc.expectErr:
-				s.Require().Error(err)
-
-			default:
-				s.Require().NoError(err)
-				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &response), out.String())
-			}
-		})
-	}
-}
-
-func (s *CLITestSuite) TestExecSendAuthzWithAllowList() {
-	val := testutil.CreateKeyringAccounts(s.T(), s.kr, 1)
-	grantee := s.grantee[3]
-
-	allowedAddr := s.grantee[4]
-	notAllowedAddr := s.grantee[5]
-	twoHours := time.Now().Add(time.Minute * time.Duration(120)).Unix()
-
-	_, err := authzclitestutil.CreateGrant(s.clientCtx,
-		[]string{
-			grantee.String(),
-			"send",
-			fmt.Sprintf("--%s=100stake", cli.FlagSpendLimit),
-			fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-			fmt.Sprintf("--%s=%s", flags.FlagFrom, val[0].Address.String()),
-			fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-			fmt.Sprintf("--%s=%d", cli.FlagExpiration, twoHours),
-			fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(10))).String()),
-			fmt.Sprintf("--%s=%s", cli.FlagAllowList, allowedAddr),
-		},
-	)
-	s.Require().NoError(err)
-
-	tokens := sdk.NewCoins(
-		sdk.NewCoin("stake", sdkmath.NewInt(12)),
-	)
-
-	validGeneratedTx, err := clitestutil.MsgSendExec(
-		s.clientCtx,
-		val[0].Address,
-		allowedAddr,
-		tokens,
-		s.ac,
-		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(10))).String()),
-		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
-	)
-	s.Require().NoError(err)
-	execMsg := testutil.WriteToNewTempFile(s.T(), validGeneratedTx.String())
-	defer execMsg.Close()
-
-	invalidGeneratedTx, err := clitestutil.MsgSendExec(
-		s.clientCtx,
-		val[0].Address,
-		notAllowedAddr,
-		tokens,
-		s.ac,
-		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(10))).String()),
-		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
-	)
-	s.Require().NoError(err)
-	execMsg1 := testutil.WriteToNewTempFile(s.T(), invalidGeneratedTx.String())
-	defer execMsg1.Close()
-
-	// test sending to allowed address
-	args := []string{
-		execMsg.Name(),
-		fmt.Sprintf("--%s=%s", flags.FlagFrom, grantee.String()),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(10))).String()),
-		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-	}
-	var response sdk.TxResponse
-	cmd := cli.NewCmdExecAuthorization()
-	out, err := clitestutil.ExecTestCLICmd(s.clientCtx, cmd, args)
-	s.Require().NoError(err)
-	s.Require().NoError(s.clientCtx.Codec.UnmarshalJSON(out.Bytes(), &response), out.String())
-
-	// test sending to not allowed address
-	args = []string{
-		execMsg1.Name(),
-		fmt.Sprintf("--%s=%s", flags.FlagFrom, grantee.String()),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(10))).String()),
-		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-	}
-	out, err = clitestutil.ExecTestCLICmd(s.clientCtx, cmd, args)
-	s.Require().NoError(err)
-	s.Require().NoError(s.clientCtx.Codec.UnmarshalJSON(out.Bytes(), &response), out.String())
 }

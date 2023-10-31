@@ -43,6 +43,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
+const (
+	failStr    = "&failOnAnte=false"
+	fooStr     = "foo"
+	counterStr = "counter="
+)
+
 func TestABCI_Info(t *testing.T) {
 	suite := NewBaseAppSuite(t)
 	ctx := suite.baseApp.NewContext(true)
@@ -242,7 +248,7 @@ func TestABCI_FinalizeBlock_WithBeginAndEndBlocker(t *testing.T) {
 					Type: "sometype",
 					Attributes: []abci.EventAttribute{
 						{
-							Key:   "foo",
+							Key:   fooStr,
 							Value: "bar",
 						},
 					},
@@ -258,7 +264,7 @@ func TestABCI_FinalizeBlock_WithBeginAndEndBlocker(t *testing.T) {
 					Type: "anothertype",
 					Attributes: []abci.EventAttribute{
 						{
-							Key:   "foo",
+							Key:   fooStr,
 							Value: "bar",
 						},
 					},
@@ -280,13 +286,13 @@ func TestABCI_FinalizeBlock_WithBeginAndEndBlocker(t *testing.T) {
 	require.Len(t, res.Events, 2)
 
 	require.Equal(t, "sometype", res.Events[0].Type)
-	require.Equal(t, "foo", res.Events[0].Attributes[0].Key)
+	require.Equal(t, fooStr, res.Events[0].Attributes[0].Key)
 	require.Equal(t, "bar", res.Events[0].Attributes[0].Value)
 	require.Equal(t, "mode", res.Events[0].Attributes[1].Key)
 	require.Equal(t, "BeginBlock", res.Events[0].Attributes[1].Value)
 
 	require.Equal(t, "anothertype", res.Events[1].Type)
-	require.Equal(t, "foo", res.Events[1].Attributes[0].Key)
+	require.Equal(t, fooStr, res.Events[1].Attributes[0].Key)
 	require.Equal(t, "bar", res.Events[1].Attributes[0].Value)
 	require.Equal(t, "mode", res.Events[1].Attributes[1].Key)
 	require.Equal(t, "EndBlock", res.Events[1].Attributes[1].Value)
@@ -303,13 +309,13 @@ func TestABCI_ExtendVote(t *testing.T) {
 	app := baseapp.NewBaseApp(name, log.NewTestLogger(t), db, nil)
 
 	app.SetExtendVoteHandler(func(ctx sdk.Context, req *abci.RequestExtendVote) (*abci.ResponseExtendVote, error) {
-		voteExt := "foo" + hex.EncodeToString(req.Hash) + strconv.FormatInt(req.Height, 10)
+		voteExt := fooStr + hex.EncodeToString(req.Hash) + strconv.FormatInt(req.Height, 10)
 		return &abci.ResponseExtendVote{VoteExtension: []byte(voteExt)}, nil
 	})
 
 	app.SetVerifyVoteExtensionHandler(func(ctx sdk.Context, req *abci.RequestVerifyVoteExtension) (*abci.ResponseVerifyVoteExtension, error) {
 		// do some kind of verification here
-		expectedVoteExt := "foo" + hex.EncodeToString(req.Hash) + strconv.FormatInt(req.Height, 10)
+		expectedVoteExt := fooStr + hex.EncodeToString(req.Hash) + strconv.FormatInt(req.Height, 10)
 		if !bytes.Equal(req.VoteExtension, []byte(expectedVoteExt)) {
 			return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_REJECT}, nil
 		}
@@ -387,7 +393,7 @@ func TestABCI_OnlyVerifyVoteExtension(t *testing.T) {
 
 	app.SetVerifyVoteExtensionHandler(func(ctx sdk.Context, req *abci.RequestVerifyVoteExtension) (*abci.ResponseVerifyVoteExtension, error) {
 		// do some kind of verification here
-		expectedVoteExt := "foo" + hex.EncodeToString(req.Hash) + strconv.FormatInt(req.Height, 10)
+		expectedVoteExt := fooStr + hex.EncodeToString(req.Hash) + strconv.FormatInt(req.Height, 10)
 		if !bytes.Equal(req.VoteExtension, []byte(expectedVoteExt)) {
 			return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_REJECT}, nil
 		}
@@ -450,7 +456,7 @@ func TestABCI_GRPCQuery(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	req := testdata.SayHelloRequest{Name: "foo"}
+	req := testdata.SayHelloRequest{Name: fooStr}
 	reqBz, err := req.Marshal()
 	require.NoError(t, err)
 
@@ -1482,7 +1488,7 @@ func TestABCI_Proposal_Read_State_PrepareProposal(t *testing.T) {
 
 	setInitChainerOpt := func(bapp *baseapp.BaseApp) {
 		bapp.SetInitChainer(func(ctx sdk.Context, req *abci.RequestInitChain) (*abci.ResponseInitChain, error) {
-			ctx.KVStore(capKey1).Set(someKey, []byte("foo"))
+			ctx.KVStore(capKey1).Set(someKey, []byte(fooStr))
 			return &abci.ResponseInitChain{}, nil
 		})
 	}
@@ -1491,7 +1497,7 @@ func TestABCI_Proposal_Read_State_PrepareProposal(t *testing.T) {
 		bapp.SetPrepareProposal(func(ctx sdk.Context, req *abci.RequestPrepareProposal) (*abci.ResponsePrepareProposal, error) {
 			value := ctx.KVStore(capKey1).Get(someKey)
 			// We should be able to access any state written in InitChain
-			require.Equal(t, "foo", string(value))
+			require.Equal(t, fooStr, string(value))
 			return &abci.ResponsePrepareProposal{Txs: req.Txs}, nil
 		})
 	}
@@ -1666,7 +1672,7 @@ func TestABCI_PrepareProposal_OverGasUnderBytes(t *testing.T) {
 		builder := suite.txConfig.NewTxBuilder()
 		err = builder.SetMsgs(msgs...)
 		require.NoError(t, err)
-		builder.SetMemo("counter=" + strconv.FormatInt(i, 10) + "&failOnAnte=false")
+		builder.SetMemo(counterStr + strconv.FormatInt(i, 10) + failStr)
 		builder.SetGasLimit(10)
 		setTxSignature(t, builder, uint64(i))
 
@@ -1706,7 +1712,7 @@ func TestABCI_PrepareProposal_MaxGas(t *testing.T) {
 		builder := suite.txConfig.NewTxBuilder()
 		err = builder.SetMsgs(msgs...)
 		require.NoError(t, err)
-		builder.SetMemo("counter=" + strconv.FormatInt(i, 10) + "&failOnAnte=false")
+		builder.SetMemo(counterStr + strconv.FormatInt(i, 10) + failStr)
 		builder.SetGasLimit(10)
 		setTxSignature(t, builder, uint64(i))
 
@@ -2294,6 +2300,43 @@ func TestBaseApp_VoteExtensions(t *testing.T) {
 	// check if avgPrice was committed
 	committedAvgPrice := suite.baseApp.NewContext(true).KVStore(capKey1).Get([]byte("avgPrice"))
 	require.Equal(t, avgPrice, committedAvgPrice)
+}
+
+func TestABCI_PrepareProposal_Panic(t *testing.T) {
+	prepareOpt := func(bapp *baseapp.BaseApp) {
+		bapp.SetPrepareProposal(func(ctx sdk.Context, req *abci.RequestPrepareProposal) (*abci.ResponsePrepareProposal, error) {
+			if len(req.Txs) == 3 {
+				panic("i don't like number 3, panic")
+			}
+			// return empty if no panic
+			return &abci.ResponsePrepareProposal{}, nil
+		})
+	}
+
+	suite := NewBaseAppSuite(t, prepareOpt)
+
+	_, err := suite.baseApp.InitChain(&abci.RequestInitChain{
+		InitialHeight:   1,
+		ConsensusParams: &cmtproto.ConsensusParams{},
+	})
+	require.NoError(t, err)
+
+	txs := [][]byte{{1}, {2}}
+	reqPrepareProposal := abci.RequestPrepareProposal{
+		MaxTxBytes: 1000,
+		Height:     1, // this value can't be 0
+		Txs:        txs,
+	}
+	resPrepareProposal, err := suite.baseApp.PrepareProposal(&reqPrepareProposal)
+	require.NoError(t, err)
+	require.Equal(t, 0, len(resPrepareProposal.Txs))
+
+	// make it panic, and check if it returns 3 txs (because of panic recovery)
+	txs = [][]byte{{1}, {2}, {3}}
+	reqPrepareProposal.Txs = txs
+	resPrepareProposal, err = suite.baseApp.PrepareProposal(&reqPrepareProposal)
+	require.NoError(t, err)
+	require.Equal(t, 3, len(resPrepareProposal.Txs))
 }
 
 func TestOptimisticExecution(t *testing.T) {

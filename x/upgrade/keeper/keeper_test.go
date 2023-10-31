@@ -12,7 +12,6 @@ import (
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
-	govtypes "cosmossdk.io/x/gov/types"
 	"cosmossdk.io/x/upgrade"
 	"cosmossdk.io/x/upgrade/keeper"
 	"cosmossdk.io/x/upgrade/types"
@@ -27,6 +26,8 @@ import (
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
+
+const govModuleName = "gov"
 
 type KeeperTestSuite struct {
 	suite.Suite
@@ -66,7 +67,7 @@ func (s *KeeperTestSuite) SetupTest() {
 
 	homeDir := filepath.Join(s.T().TempDir(), "x_upgrade_keeper_test")
 	ac := addresscodec.NewBech32Codec("cosmos")
-	authority, err := ac.BytesToString(authtypes.NewModuleAddress(govtypes.ModuleName))
+	authority, err := ac.BytesToString(authtypes.NewModuleAddress(govModuleName))
 	s.Require().NoError(err)
 	s.encodedAuthority = authority
 	s.upgradeKeeper = keeper.NewKeeper(skipUpgradeHeights, storeService, s.encCfg.Codec, homeDir, s.baseApp, authority)

@@ -35,7 +35,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
-* []() Update encoder so that amino types defauls to msg type url.
+* [#18309](https://github.com/cosmos/cosmos-sdk/pull/18309) Update encoder so that amino types defauls to msg type url.
 
 ## v0.11.0
 

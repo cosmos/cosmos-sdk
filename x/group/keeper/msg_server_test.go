@@ -16,13 +16,13 @@ import (
 	"cosmossdk.io/x/group"
 	"cosmossdk.io/x/group/internal/math"
 	"cosmossdk.io/x/group/keeper"
+	minttypes "cosmossdk.io/x/mint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec/address"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
 var EventProposalPruned = "cosmos.group.v1.EventProposalPruned"

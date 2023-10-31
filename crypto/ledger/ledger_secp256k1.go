@@ -351,7 +351,7 @@ func getPubKeyAddrSafe(device SECP256K1, path hd.BIP44Params, hrp string) (types
 	}
 
 	compressedPublicKey := make([]byte, secp256k1.PubKeySize)
-	copy(compressedPublicKey, cmp.Bytes())
+	copy(compressedPublicKey, cmp.CompressedBytes())
 
 	return options.createPubkey(compressedPublicKey), addr, nil
 }

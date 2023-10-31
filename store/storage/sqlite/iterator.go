@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	"golang.org/x/exp/slices"
-	_ "modernc.org/sqlite"
 
 	"cosmossdk.io/store/v2"
 )

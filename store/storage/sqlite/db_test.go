@@ -2,7 +2,9 @@ package sqlite
 
 import (
 	"fmt"
+	"sync"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -86,4 +88,77 @@ func TestDatabase_ReverseIterator(t *testing.T) {
 	iter3, err := db.ReverseIterator(storeKey1, 1, []byte("key020"), []byte("key019"))
 	require.Error(t, err)
 	require.Nil(t, iter3)
+}
+
+func TestParallelWrites(t *testing.T) {
+	db, err := New(t.TempDir())
+	require.NoError(t, err)
+	defer db.Close()
+
+	wg := sync.WaitGroup{}
+
+	// start 10 goroutines that write to the database
+	for i := 0; i < 10; i++ {
+		wg.Add(1)
+		go func(i int) {
+			t.Log("start time", i, time.Now())
+			defer wg.Done()
+			cs := new(store.Changeset)
+			for j := 0; j < 100; j++ {
+				key := fmt.Sprintf("key-%d-%03d", i, j)
+				val := fmt.Sprintf("val-%d-%03d", i, j)
+
+				cs.AddKVPair(store.KVPair{StoreKey: storeKey1, Key: []byte(key), Value: []byte(val)})
+			}
+
+			require.NoError(t, db.ApplyChangeset(uint64(i+1), cs))
+			t.Log("end time", i, time.Now())
+		}(i)
+
+	}
+
+	wg.Wait()
+}
+
+func TestParallelWriteAndPruning(t *testing.T) {
+	db, err := New(t.TempDir())
+	require.NoError(t, err)
+	defer db.Close()
+
+	latestVersion := 100
+
+	wg := sync.WaitGroup{}
+	wg.Add(2)
+	// start a goroutine that write to the database
+	go func() {
+		defer wg.Done()
+		for i := 0; i < latestVersion; i++ {
+			cs := new(store.Changeset)
+			for j := 0; j < 100; j++ {
+				key := fmt.Sprintf("key-%d-%03d", i, j)
+				val := fmt.Sprintf("val-%d-%03d", i, j)
+
+				cs.AddKVPair(store.KVPair{StoreKey: storeKey1, Key: []byte(key), Value: []byte(val)})
+			}
+
+			require.NoError(t, db.ApplyChangeset(uint64(i+1), cs))
+		}
+	}()
+	// start a goroutine that prunes the database
+	go func() {
+		defer wg.Done()
+		for i := 10; i < latestVersion; i += 5 {
+			for {
+				v, err := db.GetLatestVersion()
+				require.NoError(t, err)
+				if v > uint64(i) {
+					t.Log("pruning version", v-1)
+					require.NoError(t, db.Prune(v-1))
+					break
+				}
+			}
+		}
+	}()
+
+	wg.Wait()
 }

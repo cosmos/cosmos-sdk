@@ -1,6 +1,9 @@
 package keeper_test
 
 import (
+	"time"
+
+	"cosmossdk.io/core/header"
 	"cosmossdk.io/x/protocolpool/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -149,7 +152,7 @@ func (suite *KeeperTestSuite) TestMsgClaimBudget() {
 		"no budget found": {
 			recipientAddress: sdk.AccAddress([]byte("acc1__________")),
 			expErr:           true,
-			expErrMsg:        "no claimable funds are present for recipient",
+			expErrMsg:        "no budget found for recipient",
 		},
 		"claiming before start time": {
 			preRun: func() {
@@ -226,6 +229,76 @@ func (suite *KeeperTestSuite) TestMsgClaimBudget() {
 			recipientAddress: recipientAddr,
 			expErr:           true,
 			expErrMsg:        "budget period has not passed yet",
+		},
+		"valid double claim attempt": {
+			preRun: func() {
+				// Prepare the budget proposal with valid start time and period
+				budget := types.Budget{
+					RecipientAddress: recipientAddr.String(),
+					TotalBudget:      &fooCoin,
+					StartTime:        uint64(suite.ctx.BlockTime().Unix() - 70),
+					Tranches:         2,
+					Period:           60,
+				}
+				err := suite.poolKeeper.BudgetProposal.Set(suite.ctx, recipientAddr, budget)
+				suite.Require().NoError(err)
+
+				// Claim the funds once
+				msg := &types.MsgClaimBudget{
+					RecipientAddress: recipientAddr.String(),
+				}
+				suite.mockSendCoinsFromModuleToAccount(recipientAddr)
+				_, err = suite.msgServer.ClaimBudget(suite.ctx, msg)
+				suite.Require().NoError(err)
+
+				// Create a new context with an updated block time to simulate a delay
+				newBlockTime := suite.ctx.BlockTime().Add(60 * time.Second)
+				suite.ctx = suite.ctx.WithHeaderInfo(header.Info{
+					Time: newBlockTime,
+				})
+			},
+			recipientAddress: recipientAddr,
+			expErr:           false,
+			claimableFunds:   sdk.NewInt64Coin("foo", 50),
+		},
+		"budget ended for recipient": {
+			preRun: func() {
+				// Prepare the budget proposal with valid start time and period
+				budget := types.Budget{
+					RecipientAddress: recipientAddr.String(),
+					TotalBudget:      &fooCoin,
+					StartTime:        uint64(suite.ctx.BlockTime().Unix() - 70),
+					Tranches:         2,
+					Period:           60,
+				}
+				err := suite.poolKeeper.BudgetProposal.Set(suite.ctx, recipientAddr, budget)
+				suite.Require().NoError(err)
+
+				// Claim the funds once
+				msg := &types.MsgClaimBudget{
+					RecipientAddress: recipientAddr.String(),
+				}
+				suite.mockSendCoinsFromModuleToAccount(recipientAddr)
+				_, err = suite.msgServer.ClaimBudget(suite.ctx, msg)
+				suite.Require().NoError(err)
+
+				// Create a new context with an updated block time to simulate a delay
+				newBlockTime := suite.ctx.BlockTime().Add(60 * time.Second)
+				suite.ctx = suite.ctx.WithHeaderInfo(header.Info{
+					Time: newBlockTime,
+				})
+
+				// Claim the funds twitce
+				msg = &types.MsgClaimBudget{
+					RecipientAddress: recipientAddr.String(),
+				}
+				suite.mockSendCoinsFromModuleToAccount(recipientAddr)
+				_, err = suite.msgServer.ClaimBudget(suite.ctx, msg)
+				suite.Require().NoError(err)
+			},
+			recipientAddress: recipientAddr,
+			expErr:           true,
+			expErrMsg:        "budget ended for recipient",
 		},
 	}
 

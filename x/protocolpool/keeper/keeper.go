@@ -111,7 +111,7 @@ func (k Keeper) getClaimableFunds(ctx context.Context, recipient sdk.AccAddress)
 	budget, err := k.BudgetProposal.Get(ctx, recipient)
 	if err != nil {
 		if errors.Is(err, collections.ErrNotFound) {
-			return sdk.Coin{}, fmt.Errorf("no claimable funds are present for recipient: %s", recipient.String())
+			return sdk.Coin{}, fmt.Errorf("no budget found for recipient: %s", recipient.String())
 		}
 		return sdk.Coin{}, err
 	}
@@ -123,9 +123,8 @@ func (k Keeper) getClaimableFunds(ctx context.Context, recipient sdk.AccAddress)
 		if err != nil {
 			return sdk.Coin{}, err
 		}
-		// Log the end of the budget
-		k.Logger(ctx).Debug(fmt.Sprintf("Budget ended for recipient: %s", recipient.String()))
-		return sdk.Coin{}, nil
+		// Return the end of the budget
+		return sdk.Coin{}, fmt.Errorf("budget ended for recipient: %s", recipient.String())
 	}
 
 	currentTime := sdkCtx.BlockTime().Unix()

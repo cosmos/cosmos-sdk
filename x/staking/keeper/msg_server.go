@@ -617,9 +617,15 @@ func (k msgServer) RotateConsPubKey(goCtx context.Context, msg *types.MsgRotateC
 		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidType, "expecting cryptotypes.PubKey, got %T", cv)
 	}
 
-	_, err = k.RotatedConsKeyMapIndex.Get(ctx, pk.Address())
+	// check cons key is already present in the key rotation history.
+	rotatedTo, err := k.RotatedConsKeyMapIndex.Get(ctx, pk.Address())
 	if err != nil && !errors.Is(err, collections.ErrNotFound) {
-		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidAddress, "the address is already rotated, please try with new one")
+		return nil, err
+	}
+
+	if rotatedTo != nil {
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidAddress,
+			"the address is already present in rotation history, please try with new one")
 	}
 
 	newConsAddr := sdk.ConsAddress(pk.Address())

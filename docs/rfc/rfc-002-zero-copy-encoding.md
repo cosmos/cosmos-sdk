@@ -120,6 +120,16 @@ size and return errors.
 The term `Root` is used to refer to the main 64kb buffer plus any additional large `string`/`bytes` buffers that are
 allocated.
 
+#### Buffer Extent
+
+The first two bytes of a 64kb encoding buffer represent a 16-bit unsigned little-endian integer that indicates the extent of the buffer that has been written to. This is updated when writing the buffer.
+The offset of the extent from the start of the buffer is the value of the extent + 2 since the extent
+value itself takes two bytes and is not included.
+
+#### Buffer Alignment
+
+All buffers must be aligned to 64kb boundaries. This allows for the safe use of relative pointers with proper bounds checking. At any memory location, `I`, within a buffer, we can know that the start of the buffer, `S`, is `I & ~0xFF` and that the end of the buffer is `S + 0xFF` because the buffer is aligned to a 64kb boundary.
+
 #### Scalar Encoding
 
 * `bool`s are encoded as 1 byte - `0` or `1`
@@ -158,7 +168,7 @@ A discriminant of `0` indicates that the field is not set.
 #### Pointer Types: Bytes and Strings and Repeated fields
 
 A pointer is an 16-bit unsigned integer that points to an offset in the current memory buffer or to another memory
-buffer.  If the bit mask `0xFF00` on the is unset, then the pointer points to an offset in the main 64kb memory buffer.
+buffer.  If the bit mask `0xFF00` on the pointer is unset, then the pointer points to an offset in the main 64kb memory buffer.
 If that bit mask is set, then the pointer points to a large `string` or `bytes` buffer.  Up to 256 such buffers
 can be referenced in a single `Root`. The pointer `0` indicates that a field is not defined.
 

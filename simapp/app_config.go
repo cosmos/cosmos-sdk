@@ -31,7 +31,9 @@ import (
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/x/authz"
 	_ "cosmossdk.io/x/authz/module" // import for side-effects
-	_ "cosmossdk.io/x/circuit"      // import for side-effects
+	_ "cosmossdk.io/x/bank"         // import for side-effects
+	banktypes "cosmossdk.io/x/bank/types"
+	_ "cosmossdk.io/x/circuit" // import for side-effects
 	circuittypes "cosmossdk.io/x/circuit/types"
 	_ "cosmossdk.io/x/distribution" // import for side-effects
 	distrtypes "cosmossdk.io/x/distribution/types"
@@ -44,6 +46,8 @@ import (
 	govtypes "cosmossdk.io/x/gov/types"
 	"cosmossdk.io/x/group"
 	_ "cosmossdk.io/x/group/module" // import for side-effects
+	_ "cosmossdk.io/x/mint"         // import for side-effects
+	minttypes "cosmossdk.io/x/mint/types"
 	"cosmossdk.io/x/nft"
 	_ "cosmossdk.io/x/nft/module"   // import for side-effects
 	_ "cosmossdk.io/x/protocolpool" // import for side-effects
@@ -61,16 +65,12 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	_ "github.com/cosmos/cosmos-sdk/x/auth/vesting" // import for side-effects
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
-	_ "github.com/cosmos/cosmos-sdk/x/bank" // import for side-effects
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	_ "github.com/cosmos/cosmos-sdk/x/consensus" // import for side-effects
 	consensustypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
 	_ "github.com/cosmos/cosmos-sdk/x/crisis" // import for side-effects
 	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
-	_ "github.com/cosmos/cosmos-sdk/x/mint" // import for side-effects
-	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
 var (

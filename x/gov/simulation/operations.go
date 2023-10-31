@@ -592,6 +592,7 @@ func randomDeposit(
 		return nil, false, err
 	}
 	amount = amount.Add(minAmount)
+	amount = amount.MulRaw(3) // 3x what's required // TODO: this is a hack, we need to be able to calculate the correct amount using params
 
 	if amount.GT(spendableBalance) || amount.LT(threshold) {
 		return nil, true, nil

@@ -137,8 +137,8 @@ func (k Keeper) getClaimableFunds(ctx context.Context, recipient sdk.AccAddress)
 		return sdk.Coin{}, fmt.Errorf("distribution has not started yet")
 	}
 
-	if budget.LastClaimTime == 0 {
-		budget.LastClaimTime = budget.StartTime
+	if budget.NextClaimFrom == 0 {
+		budget.NextClaimFrom = budget.StartTime
 	}
 	if budget.TranchesLeft == 0 && budget.ClaimedAmount == nil {
 		budget.TranchesLeft = budget.Tranches
@@ -147,7 +147,7 @@ func (k Keeper) getClaimableFunds(ctx context.Context, recipient sdk.AccAddress)
 	}
 
 	// Calculate the time elapsed since the last claim time
-	timeElapsed := uint64(currentTime) - budget.LastClaimTime
+	timeElapsed := uint64(currentTime) - budget.NextClaimFrom
 
 	// Check the time elapsed has passed period length
 	if timeElapsed >= budget.Period {
@@ -167,7 +167,7 @@ func (k Keeper) getClaimableFunds(ctx context.Context, recipient sdk.AccAddress)
 			budget.ClaimedAmount = &claimedAmount
 
 			// Update the last claim time for the budget
-			budget.LastClaimTime += budget.Period
+			budget.NextClaimFrom += budget.Period
 
 			k.Logger(ctx).Debug(fmt.Sprintf("Processing budget for recipient: %s. Amount: %s", budget.RecipientAddress, coinsToDistribute.String()))
 

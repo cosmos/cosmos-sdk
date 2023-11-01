@@ -16,10 +16,10 @@ message Budget {
   cosmos.base.v1beta1.Coin claimed_amount = 3;
   // start_time is the time when the budget becomes claimable, represented in seconds since the Unix epoch.
   uint64 start_time = 4;
-  // last_claim_time is the time when the budget was last successfully claimed or distributed,
-  // represented in seconds since the Unix epoch. It is used to track the last claim time for fund distribution.
-  // If set, it cannot be less than start_time.
-  uint64 last_claim_time = 5;
+  // next_claim_from is the time when the budget was last successfully claimed or distributed,
+  // represented in seconds since the Unix epoch. It is used to track the next starting claim time for fund
+  // distribution. If set, it cannot be less than start_time.
+  uint64 next_claim_from = 5;
   // tranches is the number of times the total budget amount is to be distributed.
   uint64 tranches = 6;
   // tranches_left is the number of tranches left for the amount to be distributed.

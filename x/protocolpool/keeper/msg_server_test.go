@@ -233,13 +233,14 @@ func (suite *KeeperTestSuite) TestMsgClaimBudget() {
 		},
 		"valid double claim attempt": {
 			preRun: func() {
-				// Prepare the budget proposal with valid start time and period
+				oneMonthInSeconds := int64(30 * 24 * 60 * 60) // Approximate number of seconds in 1 month
+				// Prepare the budget proposal with valid start time and period of 1 month (in seconds)
 				budget := types.Budget{
 					RecipientAddress: recipientAddr.String(),
 					TotalBudget:      &fooCoin,
-					StartTime:        uint64(suite.ctx.BlockTime().Unix() - 70),
+					StartTime:        uint64(suite.ctx.BlockTime().Unix() - oneMonthInSeconds),
 					Tranches:         2,
-					Period:           60,
+					Period:           uint64(oneMonthInSeconds),
 				}
 				err := suite.poolKeeper.BudgetProposal.Set(suite.ctx, recipientAddr, budget)
 				suite.Require().NoError(err)
@@ -253,7 +254,7 @@ func (suite *KeeperTestSuite) TestMsgClaimBudget() {
 				suite.Require().NoError(err)
 
 				// Create a new context with an updated block time to simulate a delay
-				newBlockTime := suite.ctx.BlockTime().Add(60 * time.Second)
+				newBlockTime := suite.ctx.BlockTime().Add(time.Duration(oneMonthInSeconds) * time.Second)
 				suite.ctx = suite.ctx.WithHeaderInfo(header.Info{
 					Time: newBlockTime,
 				})

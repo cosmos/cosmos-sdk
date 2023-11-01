@@ -9,7 +9,6 @@ import (
 
 	"cosmossdk.io/core/header"
 	storetypes "cosmossdk.io/store/types"
-	govtypes "cosmossdk.io/x/gov/types"
 	"cosmossdk.io/x/upgrade"
 	"cosmossdk.io/x/upgrade/keeper"
 	"cosmossdk.io/x/upgrade/types"
@@ -42,7 +41,7 @@ func (suite *UpgradeTestSuite) SetupTest() {
 	suite.ctx = testCtx.Ctx
 
 	skipUpgradeHeights := make(map[int64]bool)
-	authority, err := addresscodec.NewBech32Codec("cosmos").BytesToString(authtypes.NewModuleAddress(govtypes.ModuleName))
+	authority, err := addresscodec.NewBech32Codec("cosmos").BytesToString(authtypes.NewModuleAddress(govModuleName))
 	suite.Require().NoError(err)
 	suite.encodedAuthority = authority
 	suite.upgradeKeeper = keeper.NewKeeper(skipUpgradeHeights, storeService, suite.encCfg.Codec, suite.T().TempDir(), nil, authority)

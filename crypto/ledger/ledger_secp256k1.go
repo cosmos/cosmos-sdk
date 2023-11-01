@@ -6,8 +6,6 @@ import (
 	"math/big"
 	"os"
 
-	"gitlab.com/yawning/secp256k1-voi/secec"
-
 	secp "github.com/decred/dcrd/dcrec/secp256k1/v4"
 	"github.com/decred/dcrd/dcrec/secp256k1/v4/ecdsa"
 	"gitlab.com/yawning/secp256k1-voi/secec"

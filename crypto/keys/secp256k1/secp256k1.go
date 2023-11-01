@@ -6,6 +6,7 @@ import (
 	"crypto/subtle"
 	"fmt"
 	"math/big"
+
 	"github.com/cometbft/cometbft/crypto"
 	dcred "github.com/decred/dcrd/dcrec/secp256k1/v4"
 	"gitlab.com/yawning/secp256k1-voi/secec"

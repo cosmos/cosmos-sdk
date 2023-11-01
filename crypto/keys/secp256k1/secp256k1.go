@@ -5,11 +5,10 @@ import (
 	"crypto/sha256"
 	"crypto/subtle"
 	"fmt"
-	"gitlab.com/yawning/secp256k1-voi/secec"
 	"math/big"
-
 	"github.com/cometbft/cometbft/crypto"
 	dcred "github.com/decred/dcrd/dcrec/secp256k1/v4"
+	"gitlab.com/yawning/secp256k1-voi/secec"
 	"golang.org/x/crypto/ripemd160" //nolint: staticcheck // keep around for backwards compatibility
 
 	errorsmod "cosmossdk.io/errors"

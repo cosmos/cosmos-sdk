@@ -193,7 +193,7 @@ func (s *Store) LoadLatestVersion() error {
 	return s.loadVersion(lv, nil)
 }
 
-func (s *Store) LoadVersion(version uint64) (err error) {
+func (s *Store) LoadVersion(version uint64) error {
 	return s.loadVersion(version, nil)
 }
 

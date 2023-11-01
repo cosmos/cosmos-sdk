@@ -165,17 +165,21 @@ message Foo {
 
 A discriminant of `0` indicates that the field is not set.
 
-#### Pointer Types: Bytes and Strings and Repeated fields
+#### Pointer Types: Bytes, Strings and Repeated fields
 
-A pointer is an 16-bit unsigned integer that points to an offset in the current memory buffer or to another memory
-buffer.  If the bit mask `0xFF00` on the pointer is unset, then the pointer points to an offset in the main 64kb memory buffer.
-If that bit mask is set, then the pointer points to a large `string` or `bytes` buffer.  Up to 256 such buffers
-can be referenced in a single `Root`. The pointer `0` indicates that a field is not defined.
+`bytes`, `string`s and repeated fields are encoded in messages with 4 bytes that represent:
+* a 16-bit signed integer which is pointer relative to start of the pointer to the memory location in the buffer containing the actual value, with zero representing an empty value
+* a 16-bit unsigned integer representing the length of the `bytes`, `string` or repeated value
 
-`bytes`, `string`s and repeated fields are encoded as pointers to a memory location that is prefixed with the
-length of the `bytes`, `string` or repeated field value. If the referenced memory location is in the main 64kb memory
-buffer, then this length prefix will be a 16-bit unsigned integer. If the referenced memory location is a large
-`string` or `bytes` buffer, then this length prefix will be a 32-bit unsigned integer.
+`bytes` and `string` values are encoded as a single continuous array starting from the memory location referenced in the relative pointer.
+
+Repeated fields are be encoded by multiple array segments which can allow for implementations which allow dynamically resizing the array to support a push API. Each segment in a repeated field array is prefixed by 4 bytes which represent:
+* a 16-bit signed integer relative pointer to the next segment if there is one. If the value is zero, then there is no next segment. If there is a next segment, then it is assumed that the full capacity of the current segment is used.
+* an 16-bit unsigned integer representing the capacity of the segment. The amount of the segment which has been used must be inferred from the length of the array and the capacities of previous segments (which are assumed to all be used).
+
+TODO: large string and bytes values
+
+#### Repeated Fields
 
 #### `Any`s
 
@@ -393,17 +397,17 @@ Example usage (which does the exact same thing as the go example above) would be
 ```rust!
 let mut root = Root<Foo>::new();
 let mut foo = root.get_mut();
-foo.x = 1.into();
+foo.x = 1.into(); // needed to make sure encoding is little-endian
 foo.y = Some(2.into());
 foo.z.set(root.new_string("hello")?); // could return an allocation error
 
 foo.bar.baz = Baz::X(3.into());
 
-foo.bar.xs.init_with_size(&mut root, 2)?; // could return an allocation error
+foo.bar.xs.init_with_size(2)?; // could return an allocation error
 foo.bar.xs[0] = 0.into();
 foo.bar.xs[1] = 2.into();
 
-foo.bars.init_with_size(&mut root, 3)?; // could return an allocation error
+foo.bars.init_with_size(3)?; // could return an allocation error
 foo.bars[0].baz = Baz::Y(root.new_string("hello")?); // could return an allocation error
 foo.bars[1].abc = ABC::B;
 foo.bars[2].baz = Baz::X(4.into());

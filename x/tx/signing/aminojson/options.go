@@ -12,8 +12,7 @@ import (
 )
 
 // getMessageAminoName returns the amino name of a message if it has been set by the `amino.name` option.
-// If the message does not have an amino name, then it returns the msg url.
-// If it cannot get the msg url, then it returns false.
+// If the message does not have an amino name, then the function returns false.
 func getMessageAminoName(msg protoreflect.Message) (string, bool) {
 	messageOptions := msg.Descriptor().Options()
 	if proto.HasExtension(messageOptions, amino.E_Name) {
@@ -21,16 +20,29 @@ func getMessageAminoName(msg protoreflect.Message) (string, bool) {
 		return name.(string), true
 	}
 
+	return "", false
+}
+
+// getMessageAminoName returns the amino name of a message if it has been set by the `amino.name` option.
+// If the message does not have an amino name, then it returns the msg url.
+// If it cannot get the msg url, then it returns false.
+func getMessageAminoNameAny(msg protoreflect.Message) string {
+	messageOptions := msg.Descriptor().Options()
+	if proto.HasExtension(messageOptions, amino.E_Name) {
+		name := proto.GetExtension(messageOptions, amino.E_Name)
+		return name.(string)
+	}
+
 	msgURL := "/" + string(msg.Descriptor().FullName())
 	if msgURL != "/" {
-		return msgURL, true
+		return msgURL
 	}
 
 	if m, ok := msg.(gogoproto.Message); ok {
-		return "/" + gogoproto.MessageName(m), true
+		return "/" + gogoproto.MessageName(m)
 	}
 
-	return "", false
+	return ""
 }
 
 // omitEmpty returns true if the field should be omitted if empty. Empty field omission is the default behavior.

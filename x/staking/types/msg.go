@@ -142,3 +142,18 @@ func NewMsgCancelUnbondingDelegation(delAddr, valAddr string, creationHeight int
 		CreationHeight:   creationHeight,
 	}
 }
+
+// NewMsgRotateConsPubKey creates a new MsgRotateConsPubKey instance.
+func NewMsgRotateConsPubKey(valAddr string, pubKey cryptotypes.PubKey) (*MsgRotateConsPubKey, error) {
+	var pkAny *codectypes.Any
+	if pubKey != nil {
+		var err error
+		if pkAny, err = codectypes.NewAnyWithValue(pubKey); err != nil {
+			return nil, err
+		}
+	}
+	return &MsgRotateConsPubKey{
+		ValidatorAddress: valAddr,
+		NewPubkey:        pkAny,
+	}, nil
+}

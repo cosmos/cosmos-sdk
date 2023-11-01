@@ -3,16 +3,19 @@ package keeper_test
 import (
 	"cosmossdk.io/x/protocolpool/keeper"
 	"cosmossdk.io/x/protocolpool/types"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func (suite *KeeperTestSuite) TestUnclaimedBudget() {
 	queryServer := keeper.NewQuerier(suite.poolKeeper)
 	testCases := []struct {
-		name      string
-		preRun    func()
-		req       *types.QueryUnclaimedBudgetRequest
-		expErr    bool
-		expErrMsg string
+		name           string
+		preRun         func()
+		req            *types.QueryUnclaimedBudgetRequest
+		expErr         bool
+		expErrMsg      string
+		unclaimedFunds *sdk.Coin
 	}{
 		{
 			name: "empty recipient address",
@@ -47,7 +50,37 @@ func (suite *KeeperTestSuite) TestUnclaimedBudget() {
 			req: &types.QueryUnclaimedBudgetRequest{
 				Address: recipientAddr.String(),
 			},
-			expErr: false,
+			expErr:         false,
+			unclaimedFunds: &fooCoin,
+		},
+		{
+			name: "valid case with claim",
+			preRun: func() {
+				// Prepare a valid budget proposal
+				budget := types.Budget{
+					RecipientAddress: recipientAddr.String(),
+					TotalBudget:      &fooCoin,
+					StartTime:        uint64(suite.ctx.BlockTime().Unix() - 70),
+					Tranches:         2,
+					Period:           60,
+				}
+				err := suite.poolKeeper.BudgetProposal.Set(suite.ctx, recipientAddr, budget)
+				suite.Require().NoError(err)
+
+				// Claim the funds once
+				msg := &types.MsgClaimBudget{
+					RecipientAddress: recipientAddr.String(),
+				}
+				suite.mockSendCoinsFromModuleToAccount(recipientAddr)
+				_, err = suite.msgServer.ClaimBudget(suite.ctx, msg)
+				suite.Require().NoError(err)
+			},
+
+			req: &types.QueryUnclaimedBudgetRequest{
+				Address: recipientAddr.String(),
+			},
+			expErr:         false,
+			unclaimedFunds: &fooCoin2,
 		},
 	}
 	for _, tc := range testCases {
@@ -61,7 +94,7 @@ func (suite *KeeperTestSuite) TestUnclaimedBudget() {
 				suite.Require().Contains(err.Error(), tc.expErrMsg)
 			} else {
 				suite.Require().NoError(err)
-				suite.Require().Equal(resp.UnclaimedAmount, &fooCoin)
+				suite.Require().Equal(tc.unclaimedFunds, resp.UnclaimedAmount)
 			}
 		})
 	}

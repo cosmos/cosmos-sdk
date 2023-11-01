@@ -117,14 +117,17 @@ func (k Keeper) getClaimableFunds(ctx context.Context, recipient sdk.AccAddress)
 	}
 
 	// check if the distribution is completed
-	if budget.Tranches <= 0 {
-		// remove the entry of budget ended recipient
-		err := k.BudgetProposal.Remove(ctx, recipient)
-		if err != nil {
-			return sdk.Coin{}, err
+	if budget.TranchesLeft == 0 && budget.ClaimedAmount != nil {
+		// check that claimed amount is equal to total budget
+		if budget.ClaimedAmount.Equal(budget.TotalBudget) {
+			// remove the entry of budget ended recipient
+			err := k.BudgetProposal.Remove(ctx, recipient)
+			if err != nil {
+				return sdk.Coin{}, err
+			}
+			// Return the end of the budget
+			return sdk.Coin{}, fmt.Errorf("budget ended for recipient: %s", recipient.String())
 		}
-		// Return the end of the budget
-		return sdk.Coin{}, fmt.Errorf("budget ended for recipient: %s", recipient.String())
 	}
 
 	currentTime := sdkCtx.BlockTime().Unix()
@@ -136,6 +139,11 @@ func (k Keeper) getClaimableFunds(ctx context.Context, recipient sdk.AccAddress)
 
 	if budget.LastClaimTime == 0 {
 		budget.LastClaimTime = budget.StartTime
+	}
+	if budget.TranchesLeft == 0 && budget.ClaimedAmount == nil {
+		budget.TranchesLeft = budget.Tranches
+		zeroCoin := sdk.NewCoin(budget.TotalBudget.Denom, math.ZeroInt())
+		budget.ClaimedAmount = &zeroCoin
 	}
 
 	// Calculate the time elapsed since the last claim time
@@ -152,10 +160,11 @@ func (k Keeper) getClaimableFunds(ctx context.Context, recipient sdk.AccAddress)
 			amount := sdk.NewCoin(budget.TotalBudget.Denom, coinsToDistribute)
 
 			// update the budget's remaining tranches
-			budget.Tranches -= periodsPassed
+			budget.TranchesLeft -= periodsPassed
 
-			// update the TotalBudget amount
-			budget.TotalBudget.Amount = budget.TotalBudget.Amount.Sub(coinsToDistribute)
+			// update the ClaimedAmount
+			claimedAmount := budget.ClaimedAmount.Add(amount)
+			budget.ClaimedAmount = &claimedAmount
 
 			// Update the last claim time for the budget
 			budget.LastClaimTime += budget.Period

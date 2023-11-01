@@ -12,7 +12,8 @@ import (
 var (
 	recipientAddr = sdk.AccAddress([]byte("to1__________________"))
 
-	fooCoin = sdk.NewInt64Coin("foo", 100)
+	fooCoin  = sdk.NewInt64Coin("foo", 100)
+	fooCoin2 = sdk.NewInt64Coin("foo", 50)
 )
 
 func (suite *KeeperTestSuite) TestMsgSubmitBudgetProposal() {

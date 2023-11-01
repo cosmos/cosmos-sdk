@@ -5,9 +5,9 @@ import "golang.org/x/exp/slices"
 // StoreUpgrades defines a series of transformations to apply the RootStore upon
 // loading a version.
 type StoreUpgrades struct {
-	Added   []string      `json:"added"`
-	Renamed []StoreRename `json:"renamed"`
-	Deleted []string      `json:"deleted"`
+	Add    []string      `json:"add"`
+	Rename []StoreRename `json:"rename"`
+	Delete []string      `json:"delete"`
 }
 
 // StoreRename defines a change in a store key. All data previously stored under
@@ -24,7 +24,7 @@ func (s *StoreUpgrades) IsAdded(key string) bool {
 		return false
 	}
 
-	return slices.Contains(s.Added, key)
+	return slices.Contains(s.Add, key)
 }
 
 // IsDeleted returns true if the given key should be deleted.
@@ -33,7 +33,7 @@ func (s *StoreUpgrades) IsDeleted(key string) bool {
 		return false
 	}
 
-	return slices.Contains(s.Deleted, key)
+	return slices.Contains(s.Delete, key)
 }
 
 // RenamedFrom returns the oldKey if it was renamed. It returns an empty string
@@ -43,7 +43,7 @@ func (s *StoreUpgrades) RenamedFrom(key string) string {
 		return ""
 	}
 
-	for _, re := range s.Renamed {
+	for _, re := range s.Rename {
 		if re.NewKey == key {
 			return re.OldKey
 		}

@@ -127,7 +127,7 @@ type KVStore interface {
 	GetChangeset() *Changeset
 
 	// Reset resets the store, which is implementation dependent.
-	Reset(v uint64) error
+	Reset(toVersion uint64) error
 
 	// Iterator creates a new Iterator over the domain [start, end). Note:
 	//

@@ -8,10 +8,13 @@ import (
 	"cosmossdk.io/client/v2/internal/strcase"
 )
 
+// DescriptorName returns the name of the descriptor in kebab case.
 func DescriptorKebabName(descriptor protoreflect.Descriptor) string {
 	return strcase.ToKebab(string(descriptor.Name()))
 }
 
+// DescriptorDocs returns the leading comments of the descriptor.
+// TODO this does not work, to fix.
 func DescriptorDocs(descriptor protoreflect.Descriptor) string {
 	return descriptor.ParentFile().SourceLocations().ByDescriptor(descriptor).LeadingComments
 }

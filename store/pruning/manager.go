@@ -104,12 +104,16 @@ func (m *Manager) Prune(height uint64) {
 		if m.storageOpts.Sync {
 			m.pruneStorage(pruneHeight)
 		} else {
-			// it will wait for the previous pruning to finish
-			if _, isFinished := <-m.chStorage; isFinished {
-				go func() {
-					m.pruneStorage(pruneHeight)
-					m.chStorage <- struct{}{}
-				}()
+			// it will not block if the previous pruning is still running
+			select {
+			case _, stillOpen := <-m.chStorage:
+				if stillOpen {
+					go func() {
+						m.pruneStorage(pruneHeight)
+						m.chStorage <- struct{}{}
+					}()
+				}
+			default:
 			}
 		}
 	}
@@ -120,12 +124,16 @@ func (m *Manager) Prune(height uint64) {
 		if m.commitmentOpts.Sync {
 			m.pruneCommitment(pruneHeight)
 		} else {
-			// it will wait for the previous pruning to finish
-			if _, isFinished := <-m.chCommitment; isFinished {
-				go func() {
-					m.pruneCommitment(height - m.commitmentOpts.KeepRecent - 1)
-					m.chCommitment <- struct{}{}
-				}()
+			// it will not block if the previous pruning is still running
+			select {
+			case _, stillOpen := <-m.chCommitment:
+				if stillOpen {
+					go func() {
+						m.pruneCommitment(pruneHeight)
+						m.chCommitment <- struct{}{}
+					}()
+				}
+			default:
 			}
 		}
 	}

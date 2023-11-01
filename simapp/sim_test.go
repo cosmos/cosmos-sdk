@@ -9,8 +9,6 @@ import (
 	"runtime/debug"
 	"strings"
 	"testing"
-	"time"
-
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
@@ -60,10 +58,6 @@ func interBlockCacheOpt() func(*baseapp.BaseApp) {
 func TestFullAppSimulation(t *testing.T) {
 	config := simcli.NewConfigFromFlags()
 	config.ChainID = SimAppChainID
-	config.GenesisTime = time.Now().Unix()
-	if simcli.FlagGenesisTimeValue != 0 {
-		config.GenesisTime = simcli.FlagGenesisTimeValue
-	}
 
 	db, dir, logger, skip, err := simtestutil.SetupSimulation(config, "leveldb-app-sim", "Simulation", simcli.FlagVerboseValue, simcli.FlagEnabledValue)
 	if skip {
@@ -112,10 +106,6 @@ func TestFullAppSimulation(t *testing.T) {
 func TestAppImportExport(t *testing.T) {
 	config := simcli.NewConfigFromFlags()
 	config.ChainID = SimAppChainID
-	config.GenesisTime = time.Now().Unix()
-	if simcli.FlagGenesisTimeValue != 0 {
-		config.GenesisTime = simcli.FlagGenesisTimeValue
-	}
 
 	db, dir, logger, skip, err := simtestutil.SetupSimulation(config, "leveldb-app-sim", "Simulation", simcli.FlagVerboseValue, simcli.FlagEnabledValue)
 	if skip {
@@ -238,10 +228,6 @@ func TestAppImportExport(t *testing.T) {
 func TestAppSimulationAfterImport(t *testing.T) {
 	config := simcli.NewConfigFromFlags()
 	config.ChainID = SimAppChainID
-	config.GenesisTime = time.Now().Unix()
-	if simcli.FlagGenesisTimeValue != 0 {
-		config.GenesisTime = simcli.FlagGenesisTimeValue
-	}
 
 	db, dir, logger, skip, err := simtestutil.SetupSimulation(config, "leveldb-app-sim", "Simulation", simcli.FlagVerboseValue, simcli.FlagEnabledValue)
 	if skip {
@@ -373,11 +359,6 @@ func TestAppStateDeterminism(t *testing.T) {
 	for i := 0; i < numSeeds; i++ {
 		if config.Seed == simcli.DefaultSeedValue {
 			config.Seed = rand.Int63()
-		}
-
-		config.GenesisTime = time.Now().Unix()
-		if simcli.FlagGenesisTimeValue != 0 {
-			config.GenesisTime = simcli.FlagGenesisTimeValue
 		}
 
 		fmt.Println("config.Seed: ", config.Seed)

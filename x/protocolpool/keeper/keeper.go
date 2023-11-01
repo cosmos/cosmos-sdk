@@ -121,8 +121,7 @@ func (k Keeper) getClaimableFunds(ctx context.Context, recipient sdk.AccAddress)
 		// check that claimed amount is equal to total budget
 		if budget.ClaimedAmount.Equal(budget.TotalBudget) {
 			// remove the entry of budget ended recipient
-			err := k.BudgetProposal.Remove(ctx, recipient)
-			if err != nil {
+			if err := k.BudgetProposal.Remove(ctx, recipient); err != nil {
 				return sdk.Coin{}, err
 			}
 			// Return the end of the budget
@@ -132,6 +131,7 @@ func (k Keeper) getClaimableFunds(ctx context.Context, recipient sdk.AccAddress)
 
 	currentTime := sdkCtx.BlockTime().Unix()
 	startTime := budget.StartTime
+
 	// Check if the start time is reached
 	if uint64(currentTime) < startTime {
 		return sdk.Coin{}, fmt.Errorf("distribution has not started yet")
@@ -140,50 +140,50 @@ func (k Keeper) getClaimableFunds(ctx context.Context, recipient sdk.AccAddress)
 	if budget.NextClaimFrom == 0 {
 		budget.NextClaimFrom = budget.StartTime
 	}
+
 	if budget.TranchesLeft == 0 && budget.ClaimedAmount == nil {
 		budget.TranchesLeft = budget.Tranches
 		zeroCoin := sdk.NewCoin(budget.TotalBudget.Denom, math.ZeroInt())
 		budget.ClaimedAmount = &zeroCoin
 	}
 
+	return k.calculateClaimableFunds(ctx, recipient, budget, currentTime)
+}
+
+func (k Keeper) calculateClaimableFunds(ctx context.Context, recipient sdk.AccAddress, budget types.Budget, currentTime int64) (amount sdk.Coin, err error) {
 	// Calculate the time elapsed since the last claim time
 	timeElapsed := uint64(currentTime) - budget.NextClaimFrom
 
 	// Check the time elapsed has passed period length
-	if timeElapsed >= budget.Period {
-		// Calculate how many periods have passed
-		periodsPassed := timeElapsed / budget.Period
-
-		if periodsPassed > 0 {
-			// Calculate the amount to distribute for all passed periods
-			coinsToDistribute := math.NewInt(int64(periodsPassed)).Mul(budget.TotalBudget.Amount.QuoRaw(int64(budget.Tranches)))
-			amount := sdk.NewCoin(budget.TotalBudget.Denom, coinsToDistribute)
-
-			// update the budget's remaining tranches
-			budget.TranchesLeft -= periodsPassed
-
-			// update the ClaimedAmount
-			claimedAmount := budget.ClaimedAmount.Add(amount)
-			budget.ClaimedAmount = &claimedAmount
-
-			// Update the last claim time for the budget
-			budget.NextClaimFrom += budget.Period
-
-			k.Logger(ctx).Debug(fmt.Sprintf("Processing budget for recipient: %s. Amount: %s", budget.RecipientAddress, coinsToDistribute.String()))
-
-			// Save the updated budget in the state
-			err = k.BudgetProposal.Set(ctx, recipient, budget)
-			if err != nil {
-				return sdk.Coin{}, fmt.Errorf("error while updating the budget for recipient %s", budget.RecipientAddress)
-			}
-
-			return amount, nil
-		}
-	} else {
+	if timeElapsed < budget.Period {
 		return sdk.Coin{}, fmt.Errorf("budget period has not passed yet")
 	}
 
-	return sdk.Coin{}, nil
+	// Calculate how many periods have passed
+	periodsPassed := timeElapsed / budget.Period
+
+	// Calculate the amount to distribute for all passed periods
+	coinsToDistribute := math.NewInt(int64(periodsPassed)).Mul(budget.TotalBudget.Amount.QuoRaw(int64(budget.Tranches)))
+	amount = sdk.NewCoin(budget.TotalBudget.Denom, coinsToDistribute)
+
+	// update the budget's remaining tranches
+	budget.TranchesLeft -= periodsPassed
+
+	// update the ClaimedAmount
+	claimedAmount := budget.ClaimedAmount.Add(amount)
+	budget.ClaimedAmount = &claimedAmount
+
+	// Update the last claim time for the budget
+	budget.NextClaimFrom += budget.Period
+
+	k.Logger(ctx).Debug(fmt.Sprintf("Processing budget for recipient: %s. Amount: %s", budget.RecipientAddress, coinsToDistribute.String()))
+
+	// Save the updated budget in the state
+	if err := k.BudgetProposal.Set(ctx, recipient, budget); err != nil {
+		return sdk.Coin{}, fmt.Errorf("error while updating the budget for recipient %s", budget.RecipientAddress)
+	}
+
+	return amount, nil
 }
 
 func (k Keeper) validateBudgetProposal(ctx context.Context, bp types.MsgSubmitBudgetProposal) error {

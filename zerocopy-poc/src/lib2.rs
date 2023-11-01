@@ -1,3 +1,4 @@
+extern crate alloc;
 use alloc::slice::from_raw_parts;
 
 #[repr(C)]

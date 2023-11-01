@@ -24,101 +24,13 @@ impl<T> Root<T> {
     }
 }
 
-#[repr(C)]
-struct RawRelPtr {
-    offset: i16,
-    _phantom: PhantomPinned,
-}
-
 fn resolve_rel_ptr(base: usize, offset: i16, min_len: u16) -> usize {
     let buf_start = base as usize & !0xFFFF;
     let target = (base as isize + offset as isize) as usize;
     assert!(target >= buf_start);
     let buf_end = buf_start + 0xFFFF;
-    assert!((target + min_len) < buf_end);
+    assert!((target + min_len as usize) < buf_end);
     target
-}
-
-impl RawRelPtr {
-    /// Attempts to create a new `RawRelPtr` in-place between the given `from` and `to` positions.
-    ///
-    /// # Safety
-    ///
-    /// - `out` must be located at position `from`
-    /// - `to` must be a position within the archive
-    // #[inline]
-    // pub unsafe fn try_emplace(from: usize, to: usize, out: *mut Self) -> Result<(), OffsetError> {
-    //     let offset = O::between(from, to)?;
-    //     ptr::addr_of_mut!((*out).offset).write(offset);
-    //     Ok(())
-    // }
-
-    /// Creates a new `RawRelPtr` in-place between the given `from` and `to` positions.
-    ///
-    /// # Safety
-    ///
-    /// - `out` must be located at position `from`
-    /// - `to` must be a position within the archive
-    /// - The offset between `from` and `to` must fit in an `isize` and not exceed the offset
-    ///   storage
-    #[inline]
-    pub unsafe fn emplace(from: usize, to: usize, out: *mut Self) {
-        Self::try_emplace(from, to, out).unwrap();
-    }
-
-    /// Gets the base pointer for the relative pointer.
-    #[inline]
-    pub fn base(&self) -> (*const u8, usize) {
-        let base = (self as *const Self).cast::<u8>();
-        let base_start = base as usize & !0xFFFF;
-        (base, base_start)
-    }
-
-    /// Gets the mutable base pointer for the relative pointer.
-    #[inline]
-    pub fn base_mut(&mut self) -> (*mut u8, usize) {
-        let base = (self as *mut Self).cast::<u8>();
-        let base_start = base as usize & !0xFFFF;
-        (base, base_start)
-    }
-
-    /// Gets the offset of the relative pointer from its base.
-    #[inline]
-    pub fn offset(&self) -> isize {
-        self.offset.to_isize()
-    }
-
-    /// Gets whether the offset of the relative pointer is 0.
-    #[inline]
-    pub fn is_null(&self) -> bool {
-        self.offset() == 0
-    }
-
-    /// Calculates the memory address being pointed to by this relative pointer.
-    #[inline]
-    pub fn as_ptr(&self) -> *const () {
-        unsafe {
-            let (base, buf_start) = self.base();
-            let offset = self.offset();
-            let target = base.offset(offset).cast();
-            let buf_end = buf_start + 0xFFFF;
-            assert!((target as usize) >= buf_start);
-            assert!((target as usize) < buf_end);
-            target
-        }
-    }
-
-    /// Returns an unsafe mutable pointer to the memory address being pointed to
-    /// by this relative pointer.
-    #[inline]
-    pub fn as_mut_ptr(&mut self) -> *mut () {
-        unsafe { self.base_mut().offset(self.offset()).cast() }
-    }
-}
-
-#[repr(C)]
-struct RelLenPtr {
-    _phantom: PhantomPinned,
 }
 
 #[repr(C)]
@@ -128,7 +40,7 @@ pub struct BytesPtr {
     _phantom: PhantomData<[u8]>,
 }
 
-impl <'a> Deref for BytesPtr {
+impl<'a> Deref for BytesPtr {
     type Target = [u8];
 
     fn deref(&self) -> &Self::Target {
@@ -148,7 +60,7 @@ pub struct StringPtr {
     _phantom: PhantomData<str>,
 }
 
-impl <'a> Deref for StringPtr {
+impl<'a> Deref for StringPtr {
     type Target = str;
 
     fn deref(&self) -> &Self::Target {
@@ -170,10 +82,6 @@ pub struct RepeatedPtr<T> {
 struct RepeatedSegmentHeader {
     capacity: u16,
     next_offset: i16,
-}
-
-struct RepeatedSegment<T> {
-
 }
 
 // #[repr(C)]
@@ -224,10 +132,33 @@ struct RepeatedSegment<T> {
 
 #[cfg(test)]
 mod tests {
-    use crate::Root;
+    use crate::{BytesPtr, Root};
 
     #[test]
     fn test_root() {
         let r = Root::<()>::new();
+    }
+
+    struct Test1 {
+        bytes: BytesPtr,
+    }
+
+    #[test]
+    fn no_copy() {
+        let mut t1 = Test1 {
+            bytes: BytesPtr {
+                offset: 0,
+                length: 0,
+                _phantom: Default::default(),
+            }
+        };
+        let mut t2 = Test1 {
+            bytes: BytesPtr {
+                offset: 0,
+                length: 0,
+                _phantom: Default::default(),
+            }
+        };
+        t1.bytes = t2.bytes;
     }
 }

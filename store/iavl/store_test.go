@@ -4,6 +4,7 @@ import (
 	"bytes"
 	crand "crypto/rand"
 	"fmt"
+	"math"
 	"sort"
 	"testing"
 
@@ -35,16 +36,19 @@ func randBytes(numBytes int) []byte {
 
 // make a tree with data from above and save it
 func newAlohaTree(t *testing.T, db dbm.DB) (*iavl.MutableTree, types.CommitID) {
+	t.Helper()
 	tree := iavl.NewMutableTree(db, cacheSize, false, log.NewNopLogger())
 
 	for k, v := range treeData {
-		tree.Set([]byte(k), []byte(v))
+		_, err := tree.Set([]byte(k), []byte(v))
+		require.NoError(t, err)
 	}
 
 	for i := 0; i < nMoreData; i++ {
 		key := randBytes(12)
 		value := randBytes(50)
-		tree.Set(key, value)
+		_, err := tree.Set(key, value)
+		require.NoError(t, err)
 	}
 
 	hash, ver, err := tree.SaveVersion()
@@ -294,6 +298,7 @@ func TestIAVLReverseIterator(t *testing.T) {
 	iavlStore.Set([]byte{0x01}, []byte("1"))
 
 	testReverseIterator := func(t *testing.T, start, end []byte, expected []string) {
+		t.Helper()
 		iter := iavlStore.ReverseIterator(start, end)
 		var i int
 		for i = 0; iter.Valid(); iter.Next() {
@@ -581,7 +586,8 @@ func BenchmarkIAVLIteratorNext(b *testing.B) {
 	for i := 0; i < treeSize; i++ {
 		key := randBytes(4)
 		value := randBytes(50)
-		tree.Set(key, value)
+		_, err := tree.Set(key, value)
+		require.NoError(b, err)
 	}
 
 	iavlStore := UnsafeNewStore(tree)
@@ -666,7 +672,7 @@ func TestChangeSets(t *testing.T) {
 	treeSize := 1000
 	treeVersion := int64(10)
 	targetVersion := int64(6)
-	tree := iavl.NewMutableTree(db, cacheSize, false, log.NewNopLogger())
+	tree := iavl.NewMutableTree(db, cacheSize, false, log.NewNopLogger(), iavl.FlushThresholdOption(math.MaxInt))
 
 	for j := int64(0); j < treeVersion; j++ {
 		keys := [][]byte{}

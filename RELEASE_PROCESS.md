@@ -240,3 +240,9 @@ Those modules can be considered as part of the Cosmos SDK, but features and impr
 ### Modules that do not depend on the Cosmos SDK
 
 Modules that do not depend on the Cosmos SDK can be released at any time from the `main` branch of the Cosmos SDK repository.
+
+#### Branches For Go Modules
+
+Branches that go modules are released from:
+
+* Store v1 is released from `release/v0.50.x` branch.

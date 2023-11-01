@@ -314,7 +314,9 @@ func deleteKVStore(kv types.KVStore) error {
 		keys = append(keys, itr.Key())
 		itr.Next()
 	}
-	itr.Close()
+	if err := itr.Close(); err != nil {
+		return err
+	}
 
 	for _, k := range keys {
 		kv.Delete(k)
@@ -330,17 +332,19 @@ func moveKVStoreData(oldDB, newDB types.KVStore) error {
 		newDB.Set(itr.Key(), itr.Value())
 		itr.Next()
 	}
-	itr.Close()
+	if err := itr.Close(); err != nil {
+		return err
+	}
 
 	// then delete the old store
 	return deleteKVStore(oldDB)
 }
 
 // PruneSnapshotHeight prunes the given height according to the prune strategy.
-// If PruneNothing, this is a no-op.
-// If other strategy, this height is persisted until the snapshot is operated.
+// If the strategy is PruneNothing, this is a no-op.
+// For other strategies, this height is persisted until the snapshot is operated.
 func (rs *Store) PruneSnapshotHeight(height int64) {
-	rs.pruningManager.HandleHeightSnapshot(height)
+	rs.pruningManager.HandleSnapshotHeight(height)
 }
 
 // SetInterBlockCache sets the Store's internal inter-block (persistent) cache.
@@ -646,15 +650,15 @@ func (rs *Store) GetKVStore(key types.StoreKey) types.KVStore {
 
 func (rs *Store) handlePruning(version int64) error {
 	pruneHeight := rs.pruningManager.GetPruningHeight(version)
-	rs.logger.Info("prune start", "height", version)
-	defer rs.logger.Info("prune end", "height", version)
+	rs.logger.Debug("prune start", "height", version)
+	defer rs.logger.Debug("prune end", "height", version)
 	return rs.PruneStores(pruneHeight)
 }
 
 // PruneStores prunes all history upto the specific height of the multi store.
 func (rs *Store) PruneStores(pruningHeight int64) (err error) {
 	if pruningHeight <= 0 {
-		rs.logger.Debug("pruning skipped, height is smaller than 0")
+		rs.logger.Debug("pruning skipped, height is less than or equal to 0")
 		return nil
 	}
 
@@ -676,9 +680,11 @@ func (rs *Store) PruneStores(pruningHeight int64) (err error) {
 			continue
 		}
 
-		if errors.Is(err, iavltree.ErrVersionDoesNotExist) && err != nil {
+		if errors.Is(err, iavltree.ErrVersionDoesNotExist) {
 			return err
 		}
+
+		rs.logger.Error("failed to prune store", "key", key, "err", err)
 	}
 	return nil
 }
@@ -1104,7 +1110,9 @@ func (rs *Store) GetCommitInfo(ver int64) (*types.CommitInfo, error) {
 func (rs *Store) flushMetadata(db dbm.DB, version int64, cInfo *types.CommitInfo) {
 	rs.logger.Debug("flushing metadata", "height", version)
 	batch := db.NewBatch()
-	defer batch.Close()
+	defer func() {
+		_ = batch.Close()
+	}()
 
 	if cInfo != nil {
 		flushCommitInfo(batch, version, cInfo)
@@ -1203,7 +1211,10 @@ func flushCommitInfo(batch dbm.Batch, version int64, cInfo *types.CommitInfo) {
 	}
 
 	cInfoKey := fmt.Sprintf(commitInfoKeyFmt, version)
-	batch.Set([]byte(cInfoKey), bz)
+	err = batch.Set([]byte(cInfoKey), bz)
+	if err != nil {
+		panic(err)
+	}
 }
 
 func flushLatestVersion(batch dbm.Batch, version int64) {
@@ -1212,5 +1223,8 @@ func flushLatestVersion(batch dbm.Batch, version int64) {
 		panic(err)
 	}
 
-	batch.Set([]byte(latestVersionKey), bz)
+	err = batch.Set([]byte(latestVersionKey), bz)
+	if err != nil {
+		panic(err)
+	}
 }

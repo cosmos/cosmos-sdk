@@ -54,13 +54,6 @@ type RootStore interface {
 
 	// LoadVersion loads the RootStore to the given version.
 	LoadVersion(version uint64) error
-	// LoadVersionAndUpgrade behaves identically to LoadVersion except it also
-	// accepts a StoreUpgrades object that defines a series of transformations to
-	// apply to store keys (if any).
-	//
-	// Note, handling StoreUpgrades is optional depending on the underlying RootStore
-	// implementation.
-	LoadVersionAndUpgrade(version uint64, upgrades *StoreUpgrades) error
 	// LoadLatestVersion behaves identically to LoadVersion except it loads the
 	// latest version implicitly.
 	LoadLatestVersion() error
@@ -88,6 +81,20 @@ type RootStore interface {
 	Commit() ([]byte, error)
 
 	io.Closer
+}
+
+// UpgradeableRootStore extends the RootStore interface to support loading versions
+// with upgrades.
+type UpgradeableRootStore interface {
+	RootStore
+
+	// LoadVersionAndUpgrade behaves identically to LoadVersion except it also
+	// accepts a StoreUpgrades object that defines a series of transformations to
+	// apply to store keys (if any).
+	//
+	// Note, handling StoreUpgrades is optional depending on the underlying RootStore
+	// implementation.
+	LoadVersionAndUpgrade(version uint64, upgrades *StoreUpgrades) error
 }
 
 // BranchedRootStore defines an extension of the RootStore interface that allows

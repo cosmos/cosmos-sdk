@@ -164,26 +164,6 @@ func (s *Store) Query(storeKey string, version uint64, key []byte, prove bool) (
 	return result, nil
 }
 
-// LoadVersion loads a specific version returning an error upon failure.
-func (s *Store) LoadVersion(version uint64) (err error) {
-	return s.loadVersion(version, nil)
-}
-
-// LoadVersionAndUpgrade behaves the same as LoadVersion, in that it ignores any
-// store upgrades since the store contains a single store key and SC tree.
-func (s *Store) LoadVersionAndUpgrade(version uint64, _ *store.StoreUpgrades) error {
-	return s.loadVersion(version, nil)
-}
-
-func (s *Store) LoadLatestVersion() error {
-	lv, err := s.GetLatestVersion()
-	if err != nil {
-		return err
-	}
-
-	return s.loadVersion(lv, nil)
-}
-
 // GetKVStore returns the store's root KVStore. Any writes to this store without
 // branching will be committed to SC and SS upon Commit(). Branching will create
 // a branched KVStore that allow writes to be discarded and propagated to the
@@ -202,6 +182,19 @@ func (s *Store) GetBranchedKVStore(_ string) store.BranchedKVStore {
 	}
 
 	return s.rootKVStore
+}
+
+func (s *Store) LoadLatestVersion() error {
+	lv, err := s.GetLatestVersion()
+	if err != nil {
+		return err
+	}
+
+	return s.loadVersion(lv, nil)
+}
+
+func (s *Store) LoadVersion(version uint64) (err error) {
+	return s.loadVersion(version, nil)
 }
 
 func (s *Store) loadVersion(v uint64, _ *store.StoreUpgrades) error {

@@ -1,6 +1,7 @@
 package autocli
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"time"
@@ -8,6 +9,7 @@ import (
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	"cosmossdk.io/x/tx/signing/aminojson"
 	"github.com/cockroachdb/errors"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/spf13/cobra"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
@@ -112,6 +114,8 @@ func (b *Builder) BuildQueryMethodCommand(descriptor protoreflect.MethodDescript
 	}
 
 	cmd, err := b.buildMethodCommandCommon(descriptor, options, func(cmd *cobra.Command, input protoreflect.Message) error {
+		cmd.SetContext(context.WithValue(context.Background(), client.ClientContextKey, &b.ClientCtx))
+
 		if noIndent, _ := cmd.Flags().GetBool(flags.FlagNoIndent); noIndent {
 			encoderOptions.Indent = ""
 		}

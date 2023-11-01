@@ -11,9 +11,10 @@ import (
 	"bytes"
 	"crypto/rand"
 	"encoding/hex"
-	"gitlab.com/yawning/secp256k1-voi/secec"
 	"io"
 	"testing"
+
+	"gitlab.com/yawning/secp256k1-voi/secec"
 )
 
 const TestCount = 1000

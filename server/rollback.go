@@ -27,7 +27,7 @@ application.
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx := GetServerContextFromCmd(cmd)
 
-			db, err := openDB(ctx.Config.RootDir, GetAppDBBackend(ctx.Viper))
+			db, err := OpenDB(ctx.Config.RootDir, GetAppDBBackend(ctx.Viper))
 			if err != nil {
 				return err
 			}

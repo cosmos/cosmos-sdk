@@ -74,12 +74,16 @@ message MsgSubmitBudgetProposal {
   // start_time is the time when the budget becomes claimable, represented in seconds since the Unix epoch.
   // If start_time is less than the current block time, proposal will not be accepted.
   uint64 start_time = 4;
+  // last_claim_time is the time when the budget was last successfully claimed or distributed,
+  // represented in seconds since the Unix epoch. It is used to track the last claim time for fund distribution.
+  // If set, it cannot be less than start_time.
+  uint64 last_claim_time = 5;
   // tranches is the number of times the total budget amount is to be distributed.
-  uint64 tranches = 5;
+  uint64 tranches = 6;
   // Period is the time interval(number of seconds) at which funds distribution should be performed.
   // For example, if a period is set to 3600, it represents an action that
   // should occur every hour (3600 seconds).
-  uint64 period = 6;
+  uint64 period = 7;
 }
 
 // MsgSubmitBudgetProposalResponse defines the response to executing a

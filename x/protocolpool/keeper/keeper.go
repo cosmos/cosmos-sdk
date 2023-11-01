@@ -93,13 +93,13 @@ func (k Keeper) claimFunds(ctx context.Context, recipient sdk.AccAddress) (amoun
 	// get claimable funds from distribution info
 	amount, err = k.getClaimableFunds(ctx, recipient)
 	if err != nil {
-		return sdk.Coin{}, err
+		return sdk.Coin{}, fmt.Errorf("error getting claimable funds: %w", err)
 	}
 
 	// distribute amount from feepool
 	err = k.DistributeFromFeePool(ctx, sdk.NewCoins(amount), recipient)
 	if err != nil {
-		return sdk.Coin{}, err
+		return sdk.Coin{}, fmt.Errorf("error distributing from fee pool: %w", err)
 	}
 
 	return amount, nil
@@ -188,23 +188,23 @@ func (k Keeper) getClaimableFunds(ctx context.Context, recipient sdk.AccAddress)
 
 func (k Keeper) validateBudgetProposal(ctx context.Context, bp types.MsgSubmitBudgetProposal) error {
 	if bp.TotalBudget.IsZero() {
-		return fmt.Errorf("total budget cannot be zero")
+		return fmt.Errorf("invalid budget proposal: total budget cannot be zero")
 	}
 
 	if err := validateAmount(sdk.NewCoins(*bp.TotalBudget)); err != nil {
-		return err
+		return fmt.Errorf("invalid budget proposal: %w", err)
 	}
 
 	if int64(bp.StartTime) <= sdk.UnwrapSDKContext(ctx).BlockTime().Unix() {
-		return fmt.Errorf("start time cannot be less than current block time")
+		return fmt.Errorf("invalid budget proposal: start time cannot be less than current block time")
 	}
 
 	if bp.Tranches == 0 {
-		return fmt.Errorf("tranches must be greater than zero")
+		return fmt.Errorf("invalid budget proposal: tranches must be greater than zero")
 	}
 
 	if bp.Period == 0 {
-		return fmt.Errorf("period length should be greater than zero")
+		return fmt.Errorf("invalid budget proposal: period length should be greater than zero")
 	}
 
 	return nil

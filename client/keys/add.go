@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"sort"
+
 	"github.com/cosmos/go-bip39"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"

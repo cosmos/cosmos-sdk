@@ -108,9 +108,9 @@ The message will fail under the following conditions:
 
 * The total budget is zero.
 * The recipient address is empty or restricted.
-* The start time is negative.
-* The number of tranches is not a positive value.
-* The period length is not a positive value.
+* The start time is less than current block time.
+* The number of tranches is not a positive integer.
+* The period length is not a positive integer.
 
 ```go reference
 https://github.com/cosmos/cosmos-sdk/blob/97724493d792517ba2be8969078b5f92ad04d79c/x/protocolpool/keeper/msg_server.go#L39-l61

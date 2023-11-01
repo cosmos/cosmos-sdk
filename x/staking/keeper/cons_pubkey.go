@@ -111,3 +111,35 @@ func (k Keeper) SetConsKeyQueue(ctx sdk.Context, ts time.Time, valAddr sdk.ValAd
 	queueRec.Addresses = append(queueRec.Addresses, valAddr.String())
 	return k.ValidatorConsensusKeyRotationRecordQueue.Set(ctx, ts, queueRec)
 }
+
+// GetValidatorConsPubKeyRotationHistory iterates over all the rotated history objects in the state with the given valAddr and returns.
+func (k Keeper) GetValidatorConsPubKeyRotationHistory(ctx sdk.Context, valAddr sdk.ValAddress) ([]types.ConsPubKeyRotationHistory, error) {
+	var historyObjects []types.ConsPubKeyRotationHistory
+	rng := collections.NewPrefixUntilPairRange[[]byte, uint64](valAddr)
+	err := k.ValidatorConsPubKeyRotationHistory.Walk(ctx, rng, func(key collections.Pair[[]byte, uint64], value types.ConsPubKeyRotationHistory) (stop bool, err error) {
+		historyObjects = append(historyObjects, value)
+		return
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return historyObjects, nil
+}
+
+// GetBlockConsPubKeyRotationHistory iterator over the rotation history for the given height.
+func (k Keeper) GetBlockConsPubKeyRotationHistory(ctx sdk.Context, height uint64) ([]types.ConsPubKeyRotationHistory, error) {
+	var historyObjects []types.ConsPubKeyRotationHistory
+
+	rng := new(collections.Range[uint64]).Prefix(height)
+	err := k.BlockConsPubKeyRotationHistory.Walk(ctx, rng, func(key uint64, value types.ConsPubKeyRotationHistory) (stop bool, err error) {
+		historyObjects = append(historyObjects, value)
+		return
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return historyObjects, nil
+}

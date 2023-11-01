@@ -128,10 +128,10 @@ func (k Keeper) GetValidatorConsPubKeyRotationHistory(ctx sdk.Context, valAddr s
 }
 
 // GetBlockConsPubKeyRotationHistory iterator over the rotation history for the given height.
-func (k Keeper) GetBlockConsPubKeyRotationHistory(ctx sdk.Context, height uint64) ([]types.ConsPubKeyRotationHistory, error) {
+func (k Keeper) GetBlockConsPubKeyRotationHistory(ctx sdk.Context, height int64) ([]types.ConsPubKeyRotationHistory, error) {
 	var historyObjects []types.ConsPubKeyRotationHistory
 
-	rng := new(collections.Range[uint64]).Prefix(height)
+	rng := new(collections.Range[uint64]).Prefix(uint64(height))
 	err := k.BlockConsPubKeyRotationHistory.Walk(ctx, rng, func(key uint64, value types.ConsPubKeyRotationHistory) (stop bool, err error) {
 		historyObjects = append(historyObjects, value)
 		return

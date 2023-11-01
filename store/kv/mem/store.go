@@ -88,7 +88,7 @@ func (s *Store) GetChangeset() *store.Changeset {
 	return store.NewChangeset(kvPairs...)
 }
 
-func (s *Store) Reset() error {
+func (s *Store) Reset(_ uint64) error {
 	s.tree.Clear()
 	return nil
 }

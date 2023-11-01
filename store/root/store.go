@@ -190,14 +190,14 @@ func (s *Store) LoadLatestVersion() error {
 		return err
 	}
 
-	return s.loadVersion(lv, nil)
+	return s.loadVersion(lv)
 }
 
 func (s *Store) LoadVersion(version uint64) error {
-	return s.loadVersion(version, nil)
+	return s.loadVersion(version)
 }
 
-func (s *Store) loadVersion(v uint64, _ *store.StoreUpgrades) error {
+func (s *Store) loadVersion(v uint64) error {
 	s.logger.Debug("loading version", "version", v)
 
 	// Reset the root KVStore s.t. the latest version is v. Any writes will

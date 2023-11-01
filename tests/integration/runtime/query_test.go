@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/cosmos/gogoproto/proto"
+	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
 	"google.golang.org/protobuf/types/descriptorpb"
@@ -83,10 +84,8 @@ func TestQueryAppConfig(t *testing.T) {
 	// has all expected modules
 	for _, modName := range []string{"auth", "bank", "tx", "consensus", "runtime", "staking"} {
 		modConfig := moduleConfigs[modName]
-		if modConfig == nil {
-			t.Fatalf("missing %s", modName)
-		}
-		assert.Assert(t, modConfig.Config != nil)
+		require.NotNil(t, modConfig, "Missing moddName: "+modName)
+		require.NotNil(t, modConfig.Config)
 	}
 }
 

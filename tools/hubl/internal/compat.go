@@ -42,6 +42,7 @@ func loadFileDescriptorsGRPCReflection(ctx context.Context, client *grpc.ClientC
 	}
 
 	fdMap := map[string]*descriptorpb.FileDescriptorProto{}
+	// nolint // marked as deprecated
 	waitListServiceRes := make(chan *grpc_reflection_v1alpha.ListServiceResponse)
 	waitc := make(chan struct{})
 	go func() {
@@ -60,6 +61,7 @@ func loadFileDescriptorsGRPCReflection(ctx context.Context, client *grpc.ClientC
 			case *grpc_reflection_v1alpha.ServerReflectionResponse_ErrorResponse:
 				panic(err)
 			case *grpc_reflection_v1alpha.ServerReflectionResponse_ListServicesResponse:
+				// nolint // marked as deprecated
 				waitListServiceRes <- res.ListServicesResponse
 			case *grpc_reflection_v1alpha.ServerReflectionResponse_FileDescriptorResponse:
 				processFileDescriptorsResponse(res, fdMap)
@@ -67,6 +69,7 @@ func loadFileDescriptorsGRPCReflection(ctx context.Context, client *grpc.ClientC
 		}
 	}()
 
+	// nolint // marked as deprecated
 	if err = reflectClient.Send(&grpc_reflection_v1alpha.ServerReflectionRequest{
 		MessageRequest: &grpc_reflection_v1alpha.ServerReflectionRequest_ListServices{},
 	}); err != nil {
@@ -75,9 +78,12 @@ func loadFileDescriptorsGRPCReflection(ctx context.Context, client *grpc.ClientC
 
 	listServiceRes := <-waitListServiceRes
 
+	// nolint // marked as deprecated
 	for _, response := range listServiceRes.Service {
+		// nolint // marked as deprecated
 		err = reflectClient.Send(&grpc_reflection_v1alpha.ServerReflectionRequest{
 			MessageRequest: &grpc_reflection_v1alpha.ServerReflectionRequest_FileContainingSymbol{
+				// nolint // marked as deprecated
 				FileContainingSymbol: response.Name,
 			},
 		})
@@ -87,6 +93,7 @@ func loadFileDescriptorsGRPCReflection(ctx context.Context, client *grpc.ClientC
 	}
 
 	for _, msgName := range interfaceImplNames {
+		// nolint // marked as deprecated
 		err = reflectClient.Send(&grpc_reflection_v1alpha.ServerReflectionRequest{
 			MessageRequest: &grpc_reflection_v1alpha.ServerReflectionRequest_FileContainingSymbol{
 				FileContainingSymbol: msgName,
@@ -137,6 +144,7 @@ func loadFileDescriptorsGRPCReflection(ctx context.Context, client *grpc.ClientC
 }
 
 func processFileDescriptorsResponse(res *grpc_reflection_v1alpha.ServerReflectionResponse_FileDescriptorResponse, fdMap map[string]*descriptorpb.FileDescriptorProto) {
+	// nolint // marked as deprecated
 	for _, bz := range res.FileDescriptorResponse.FileDescriptorProto {
 		fd := &descriptorpb.FileDescriptorProto{}
 		err := proto.Unmarshal(bz, fd)
@@ -186,6 +194,7 @@ func addMissingFileDescriptors(ctx context.Context, client *grpc.ClientConn, fdM
 	}()
 
 	for _, file := range missingFiles {
+		// nolint // marked as deprecated
 		err = reflectClient.Send(&grpc_reflection_v1alpha.ServerReflectionRequest{
 			MessageRequest: &grpc_reflection_v1alpha.ServerReflectionRequest_FileByFilename{
 				FileByFilename: file,

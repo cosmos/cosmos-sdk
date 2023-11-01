@@ -129,8 +129,8 @@ schema = 3
     version = "v0.10.0"
     hash = "sha256-KYEv727BO/ht63JO02xiKFGFAddg41Ve9l2vSSZZBq0="
   [mod."github.com/cosmos/ledger-cosmos-go"]
-    version = "v0.13.2"
-    hash = "sha256-TMVkC8rKVR7zzXVdcMnnK9FZhcHE1KIfIZ7KGMVqYpg="
+    version = "v0.13.3"
+    hash = "sha256-4f73odipfgWku0/gK2UtXbrBXvj8kT9sg4IhnfAP/S0="
   [mod."github.com/creachadair/atomicfile"]
     version = "v0.3.2"
     hash = "sha256-oklAvdJrNFKNcCHvQdLVrLyLf0LG5ipusTXKSVycc64="
@@ -490,14 +490,14 @@ schema = 3
     version = "v1.6.8"
     hash = "sha256-decMa0MiWfW/Bzr8QPPzzpeya0YWGHhZAt4Cr/bD1wQ="
   [mod."google.golang.org/genproto"]
-    version = "v0.0.0-20231012201019-e917dd12ba7a"
-    hash = "sha256-t7EtLGl9yOIHvkgAK97pMN1agzhcjdpG9zZewsurEnQ="
+    version = "v0.0.0-20231016165738-49dd2c1f3d0b"
+    hash = "sha256-Ox7pEtADMijVdlrKvF4lJLsZ1wHqU9mDqvihUL/NJZs="
   [mod."google.golang.org/genproto/googleapis/api"]
     version = "v0.0.0-20231012201019-e917dd12ba7a"
     hash = "sha256-2qUA/93JajYpDybsde+BciLncSYO2Qv5Eh+MG06HSfM="
   [mod."google.golang.org/genproto/googleapis/rpc"]
-    version = "v0.0.0-20231016165738-49dd2c1f3d0b"
-    hash = "sha256-ntiSoQBTSUfcdkolvYVXWD3BgF+0yur6ZqW+bxtxVlY="
+    version = "v0.0.0-20231030173426-d783a09b4405"
+    hash = "sha256-p89tCPYHtZie5nvKP9bS6G2nqhWPYr8H8+D29tzNbcc="
   [mod."google.golang.org/grpc"]
     version = "v1.59.0"
     hash = "sha256-IcwmXyeroUg742wqU4Zikwxm7y0i7x4axOPdWOGPkzE="

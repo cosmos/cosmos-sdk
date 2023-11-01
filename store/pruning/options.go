@@ -9,7 +9,8 @@ type Options struct {
 	// If set to 0, no pruning will be done.
 	Interval uint64
 
-	// Sync is whether to sync pruning operation.
+	// Sync when set to true ensure that pruning will be performed
+	// synchronously, otherwise by default it will be done asynchronously.
 	Sync bool
 }
 
@@ -19,5 +20,6 @@ func DefaultOptions() Options {
 	return Options{
 		KeepRecent: 0,
 		Interval:   0,
+		Sync:       false,
 	}
 }

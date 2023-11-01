@@ -50,13 +50,14 @@ func (s *PruningTestSuite) TestPruning() {
 
 	// write 10 batches
 	for i := 0; i < 10; i++ {
+		version := uint64(i + 1)
 		cs := store.NewChangeset()
-		cs.Add([]byte("key"), []byte(fmt.Sprintf("value%d", i+1)))
+		cs.Add([]byte("key"), []byte(fmt.Sprintf("value%d", version)))
 		err := s.sc.WriteBatch(cs)
 		s.Require().NoError(err)
 		_, err = s.sc.Commit()
 		s.Require().NoError(err)
-		err = s.ss.ApplyChangeset(uint64(i+1), cs)
+		err = s.ss.ApplyChangeset(version, cs)
 		s.Require().NoError(err)
 		s.manager.Prune(uint64(i + 1))
 	}

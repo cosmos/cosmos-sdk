@@ -89,8 +89,7 @@ func (m *Manager) Stop() {
 }
 
 // Prune prunes the state storage and state commitment.
-// It will not block the caller and just check if pruning is needed.
-// If pruning is needed, it will spawn a goroutine to do the actual pruning.
+// It will check the pruning conditions and prune if necessary.
 func (m *Manager) Prune(height uint64) {
 	m.mtx.Lock()
 	defer m.mtx.Unlock()
@@ -105,8 +104,8 @@ func (m *Manager) Prune(height uint64) {
 		if m.storageOpts.Sync {
 			m.pruneStorage(pruneHeight)
 		} else {
-			_, ok := <-m.chStorage
-			if ok {
+			// it will wait for the previous pruning to finish
+			if _, isFinished := <-m.chStorage; isFinished {
 				go func() {
 					m.pruneStorage(pruneHeight)
 					m.chStorage <- struct{}{}
@@ -121,9 +120,8 @@ func (m *Manager) Prune(height uint64) {
 		if m.commitmentOpts.Sync {
 			m.pruneCommitment(pruneHeight)
 		} else {
-
-			_, ok := <-m.chCommitment
-			if ok {
+			// it will wait for the previous pruning to finish
+			if _, isFinished := <-m.chCommitment; isFinished {
 				go func() {
 					m.pruneCommitment(height - m.commitmentOpts.KeepRecent - 1)
 					m.chCommitment <- struct{}{}
@@ -136,17 +134,15 @@ func (m *Manager) Prune(height uint64) {
 func (m *Manager) pruneStorage(height uint64) {
 	m.logger.Debug("pruning state storage", "height", height)
 
-	err := m.stateStorage.Prune(height)
-	if err != nil {
+	if err := m.stateStorage.Prune(height); err != nil {
 		m.logger.Error("failed to prune state storage", "err", err)
 	}
 }
 
 func (m *Manager) pruneCommitment(height uint64) {
-	m.logger.Debug("pruning commitment", "height", height)
+	m.logger.Debug("pruning state commitment", "height", height)
 
-	err := m.stateCommitment.Prune(height)
-	if err != nil {
-		m.logger.Error("failed to prune commitment", "err", err)
+	if err := m.stateCommitment.Prune(height); err != nil {
+		m.logger.Error("failed to prune state commitment", "err", err)
 	}
 }

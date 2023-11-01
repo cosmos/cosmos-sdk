@@ -20,7 +20,7 @@ var (
 	fd_Budget_total_budget      protoreflect.FieldDescriptor
 	fd_Budget_claimed_amount    protoreflect.FieldDescriptor
 	fd_Budget_start_time        protoreflect.FieldDescriptor
-	fd_Budget_last_claim_time   protoreflect.FieldDescriptor
+	fd_Budget_next_claim_from   protoreflect.FieldDescriptor
 	fd_Budget_tranches          protoreflect.FieldDescriptor
 	fd_Budget_tranches_left     protoreflect.FieldDescriptor
 	fd_Budget_period            protoreflect.FieldDescriptor
@@ -33,7 +33,7 @@ func init() {
 	fd_Budget_total_budget = md_Budget.Fields().ByName("total_budget")
 	fd_Budget_claimed_amount = md_Budget.Fields().ByName("claimed_amount")
 	fd_Budget_start_time = md_Budget.Fields().ByName("start_time")
-	fd_Budget_last_claim_time = md_Budget.Fields().ByName("last_claim_time")
+	fd_Budget_next_claim_from = md_Budget.Fields().ByName("next_claim_from")
 	fd_Budget_tranches = md_Budget.Fields().ByName("tranches")
 	fd_Budget_tranches_left = md_Budget.Fields().ByName("tranches_left")
 	fd_Budget_period = md_Budget.Fields().ByName("period")
@@ -128,9 +128,9 @@ func (x *fastReflection_Budget) Range(f func(protoreflect.FieldDescriptor, proto
 			return
 		}
 	}
-	if x.LastClaimTime != uint64(0) {
-		value := protoreflect.ValueOfUint64(x.LastClaimTime)
-		if !f(fd_Budget_last_claim_time, value) {
+	if x.NextClaimFrom != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.NextClaimFrom)
+		if !f(fd_Budget_next_claim_from, value) {
 			return
 		}
 	}
@@ -175,8 +175,8 @@ func (x *fastReflection_Budget) Has(fd protoreflect.FieldDescriptor) bool {
 		return x.ClaimedAmount != nil
 	case "cosmos.protocolpool.v1.Budget.start_time":
 		return x.StartTime != uint64(0)
-	case "cosmos.protocolpool.v1.Budget.last_claim_time":
-		return x.LastClaimTime != uint64(0)
+	case "cosmos.protocolpool.v1.Budget.next_claim_from":
+		return x.NextClaimFrom != uint64(0)
 	case "cosmos.protocolpool.v1.Budget.tranches":
 		return x.Tranches != uint64(0)
 	case "cosmos.protocolpool.v1.Budget.tranches_left":
@@ -207,8 +207,8 @@ func (x *fastReflection_Budget) Clear(fd protoreflect.FieldDescriptor) {
 		x.ClaimedAmount = nil
 	case "cosmos.protocolpool.v1.Budget.start_time":
 		x.StartTime = uint64(0)
-	case "cosmos.protocolpool.v1.Budget.last_claim_time":
-		x.LastClaimTime = uint64(0)
+	case "cosmos.protocolpool.v1.Budget.next_claim_from":
+		x.NextClaimFrom = uint64(0)
 	case "cosmos.protocolpool.v1.Budget.tranches":
 		x.Tranches = uint64(0)
 	case "cosmos.protocolpool.v1.Budget.tranches_left":
@@ -243,8 +243,8 @@ func (x *fastReflection_Budget) Get(descriptor protoreflect.FieldDescriptor) pro
 	case "cosmos.protocolpool.v1.Budget.start_time":
 		value := x.StartTime
 		return protoreflect.ValueOfUint64(value)
-	case "cosmos.protocolpool.v1.Budget.last_claim_time":
-		value := x.LastClaimTime
+	case "cosmos.protocolpool.v1.Budget.next_claim_from":
+		value := x.NextClaimFrom
 		return protoreflect.ValueOfUint64(value)
 	case "cosmos.protocolpool.v1.Budget.tranches":
 		value := x.Tranches
@@ -283,8 +283,8 @@ func (x *fastReflection_Budget) Set(fd protoreflect.FieldDescriptor, value proto
 		x.ClaimedAmount = value.Message().Interface().(*v1beta1.Coin)
 	case "cosmos.protocolpool.v1.Budget.start_time":
 		x.StartTime = value.Uint()
-	case "cosmos.protocolpool.v1.Budget.last_claim_time":
-		x.LastClaimTime = value.Uint()
+	case "cosmos.protocolpool.v1.Budget.next_claim_from":
+		x.NextClaimFrom = value.Uint()
 	case "cosmos.protocolpool.v1.Budget.tranches":
 		x.Tranches = value.Uint()
 	case "cosmos.protocolpool.v1.Budget.tranches_left":
@@ -325,8 +325,8 @@ func (x *fastReflection_Budget) Mutable(fd protoreflect.FieldDescriptor) protore
 		panic(fmt.Errorf("field recipient_address of message cosmos.protocolpool.v1.Budget is not mutable"))
 	case "cosmos.protocolpool.v1.Budget.start_time":
 		panic(fmt.Errorf("field start_time of message cosmos.protocolpool.v1.Budget is not mutable"))
-	case "cosmos.protocolpool.v1.Budget.last_claim_time":
-		panic(fmt.Errorf("field last_claim_time of message cosmos.protocolpool.v1.Budget is not mutable"))
+	case "cosmos.protocolpool.v1.Budget.next_claim_from":
+		panic(fmt.Errorf("field next_claim_from of message cosmos.protocolpool.v1.Budget is not mutable"))
 	case "cosmos.protocolpool.v1.Budget.tranches":
 		panic(fmt.Errorf("field tranches of message cosmos.protocolpool.v1.Budget is not mutable"))
 	case "cosmos.protocolpool.v1.Budget.tranches_left":
@@ -356,7 +356,7 @@ func (x *fastReflection_Budget) NewField(fd protoreflect.FieldDescriptor) protor
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	case "cosmos.protocolpool.v1.Budget.start_time":
 		return protoreflect.ValueOfUint64(uint64(0))
-	case "cosmos.protocolpool.v1.Budget.last_claim_time":
+	case "cosmos.protocolpool.v1.Budget.next_claim_from":
 		return protoreflect.ValueOfUint64(uint64(0))
 	case "cosmos.protocolpool.v1.Budget.tranches":
 		return protoreflect.ValueOfUint64(uint64(0))
@@ -448,8 +448,8 @@ func (x *fastReflection_Budget) ProtoMethods() *protoiface.Methods {
 		if x.StartTime != 0 {
 			n += 1 + runtime.Sov(uint64(x.StartTime))
 		}
-		if x.LastClaimTime != 0 {
-			n += 1 + runtime.Sov(uint64(x.LastClaimTime))
+		if x.NextClaimFrom != 0 {
+			n += 1 + runtime.Sov(uint64(x.NextClaimFrom))
 		}
 		if x.Tranches != 0 {
 			n += 1 + runtime.Sov(uint64(x.Tranches))
@@ -504,8 +504,8 @@ func (x *fastReflection_Budget) ProtoMethods() *protoiface.Methods {
 			i--
 			dAtA[i] = 0x30
 		}
-		if x.LastClaimTime != 0 {
-			i = runtime.EncodeVarint(dAtA, i, uint64(x.LastClaimTime))
+		if x.NextClaimFrom != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.NextClaimFrom))
 			i--
 			dAtA[i] = 0x28
 		}
@@ -723,9 +723,9 @@ func (x *fastReflection_Budget) ProtoMethods() *protoiface.Methods {
 				}
 			case 5:
 				if wireType != 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field LastClaimTime", wireType)
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field NextClaimFrom", wireType)
 				}
-				x.LastClaimTime = 0
+				x.NextClaimFrom = 0
 				for shift := uint(0); ; shift += 7 {
 					if shift >= 64 {
 						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
@@ -735,7 +735,7 @@ func (x *fastReflection_Budget) ProtoMethods() *protoiface.Methods {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					x.LastClaimTime |= uint64(b&0x7F) << shift
+					x.NextClaimFrom |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
@@ -859,10 +859,10 @@ type Budget struct {
 	ClaimedAmount *v1beta1.Coin `protobuf:"bytes,3,opt,name=claimed_amount,json=claimedAmount,proto3" json:"claimed_amount,omitempty"`
 	// start_time is the time when the budget becomes claimable, represented in seconds since the Unix epoch.
 	StartTime uint64 `protobuf:"varint,4,opt,name=start_time,json=startTime,proto3" json:"start_time,omitempty"`
-	// last_claim_time is the time when the budget was last successfully claimed or distributed,
-	// represented in seconds since the Unix epoch. It is used to track the last claim time for fund distribution.
-	// If set, it cannot be less than start_time.
-	LastClaimTime uint64 `protobuf:"varint,5,opt,name=last_claim_time,json=lastClaimTime,proto3" json:"last_claim_time,omitempty"`
+	// next_claim_from is the time when the budget was last successfully claimed or distributed,
+	// represented in seconds since the Unix epoch. It is used to track the next starting claim time for fund
+	// distribution. If set, it cannot be less than start_time.
+	NextClaimFrom uint64 `protobuf:"varint,5,opt,name=next_claim_from,json=nextClaimFrom,proto3" json:"next_claim_from,omitempty"`
 	// tranches is the number of times the total budget amount is to be distributed.
 	Tranches uint64 `protobuf:"varint,6,opt,name=tranches,proto3" json:"tranches,omitempty"`
 	// tranches_left is the number of tranches left for the amount to be distributed.
@@ -921,9 +921,9 @@ func (x *Budget) GetStartTime() uint64 {
 	return 0
 }
 
-func (x *Budget) GetLastClaimTime() uint64 {
+func (x *Budget) GetNextClaimFrom() uint64 {
 	if x != nil {
-		return x.LastClaimTime
+		return x.NextClaimFrom
 	}
 	return 0
 }
@@ -974,9 +974,9 @@ var file_cosmos_protocolpool_v1_types_proto_rawDesc = []byte{
 	0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x43, 0x6f, 0x69, 0x6e, 0x52, 0x0d, 0x63, 0x6c, 0x61, 0x69,
 	0x6d, 0x65, 0x64, 0x41, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x12, 0x1d, 0x0a, 0x0a, 0x73, 0x74, 0x61,
 	0x72, 0x74, 0x5f, 0x74, 0x69, 0x6d, 0x65, 0x18, 0x04, 0x20, 0x01, 0x28, 0x04, 0x52, 0x09, 0x73,
-	0x74, 0x61, 0x72, 0x74, 0x54, 0x69, 0x6d, 0x65, 0x12, 0x26, 0x0a, 0x0f, 0x6c, 0x61, 0x73, 0x74,
-	0x5f, 0x63, 0x6c, 0x61, 0x69, 0x6d, 0x5f, 0x74, 0x69, 0x6d, 0x65, 0x18, 0x05, 0x20, 0x01, 0x28,
-	0x04, 0x52, 0x0d, 0x6c, 0x61, 0x73, 0x74, 0x43, 0x6c, 0x61, 0x69, 0x6d, 0x54, 0x69, 0x6d, 0x65,
+	0x74, 0x61, 0x72, 0x74, 0x54, 0x69, 0x6d, 0x65, 0x12, 0x26, 0x0a, 0x0f, 0x6e, 0x65, 0x78, 0x74,
+	0x5f, 0x63, 0x6c, 0x61, 0x69, 0x6d, 0x5f, 0x66, 0x72, 0x6f, 0x6d, 0x18, 0x05, 0x20, 0x01, 0x28,
+	0x04, 0x52, 0x0d, 0x6e, 0x65, 0x78, 0x74, 0x43, 0x6c, 0x61, 0x69, 0x6d, 0x46, 0x72, 0x6f, 0x6d,
 	0x12, 0x1a, 0x0a, 0x08, 0x74, 0x72, 0x61, 0x6e, 0x63, 0x68, 0x65, 0x73, 0x18, 0x06, 0x20, 0x01,
 	0x28, 0x04, 0x52, 0x08, 0x74, 0x72, 0x61, 0x6e, 0x63, 0x68, 0x65, 0x73, 0x12, 0x23, 0x0a, 0x0d,
 	0x74, 0x72, 0x61, 0x6e, 0x63, 0x68, 0x65, 0x73, 0x5f, 0x6c, 0x65, 0x66, 0x74, 0x18, 0x07, 0x20,

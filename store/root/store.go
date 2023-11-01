@@ -118,15 +118,6 @@ func (s *Store) GetSCStore(_ string) store.Committer {
 	return s.stateCommitment
 }
 
-func (s *Store) LoadLatestVersion() error {
-	lv, err := s.GetLatestVersion()
-	if err != nil {
-		return err
-	}
-
-	return s.loadVersion(lv, nil)
-}
-
 // LastCommitID returns a CommitID based off of the latest internal CommitInfo.
 // If an internal CommitInfo is not set, a new one will be returned with only the
 // latest version set, which is based off of the SS view.
@@ -190,11 +181,6 @@ func (s *Store) Query(storeKey string, version uint64, key []byte, prove bool) (
 	return result, nil
 }
 
-// LoadVersion loads a specific version returning an error upon failure.
-func (s *Store) LoadVersion(v uint64) (err error) {
-	return s.loadVersion(v, nil)
-}
-
 // GetKVStore returns the store's root KVStore. Any writes to this store without
 // branching will be committed to SC and SS upon Commit(). Branching will create
 // a branched KVStore that allow writes to be discarded and propagated to the
@@ -215,17 +201,37 @@ func (s *Store) GetBranchedKVStore(_ string) store.BranchedKVStore {
 	return s.rootKVStore
 }
 
-func (s *Store) loadVersion(v uint64, upgrades any) error {
+func (s *Store) LoadLatestVersion() error {
+	lv, err := s.GetLatestVersion()
+	if err != nil {
+		return err
+	}
+
+	return s.loadVersion(lv)
+}
+
+func (s *Store) LoadVersion(version uint64) error {
+	return s.loadVersion(version)
+}
+
+func (s *Store) loadVersion(v uint64) error {
 	s.logger.Debug("loading version", "version", v)
+
+	// Reset the root KVStore s.t. the latest version is v. Any writes will
+	// overwrite existing versions.
+	if err := s.rootKVStore.Reset(v); err != nil {
+		return err
+	}
 
 	if err := s.stateCommitment.LoadVersion(v); err != nil {
 		return fmt.Errorf("failed to load SS version %d: %w", v, err)
 	}
 
-	// TODO: Complete this method to handle upgrades. See legacy RMS loadVersion()
-	// for reference.
-	//
-	// Ref: https://github.com/cosmos/cosmos-sdk/issues/17314
+	s.workingHash = nil
+	s.commitHeader = nil
+
+	// set lastCommitInfo explicitly s.t. Commit commits the correct version, i.e. v+1
+	s.lastCommitInfo = &store.CommitInfo{Version: v}
 
 	return nil
 }
@@ -322,7 +328,7 @@ func (s *Store) Commit() ([]byte, error) {
 		s.lastCommitInfo.Timestamp = s.commitHeader.GetTime()
 	}
 
-	if err := s.rootKVStore.Reset(); err != nil {
+	if err := s.rootKVStore.Reset(version); err != nil {
 		return nil, fmt.Errorf("failed to reset root KVStore: %w", err)
 	}
 
@@ -361,8 +367,6 @@ func (s *Store) writeSC() error {
 		version = previousHeight + 1
 	}
 
-	workingHash := s.stateCommitment.WorkingHash()
-
 	s.lastCommitInfo = &store.CommitInfo{
 		Version: version,
 		StoreInfos: []store.StoreInfo{
@@ -370,7 +374,7 @@ func (s *Store) writeSC() error {
 				Name: defaultStoreKey,
 				CommitID: store.CommitID{
 					Version: version,
-					Hash:    workingHash,
+					Hash:    s.stateCommitment.WorkingHash(),
 				},
 			},
 		},

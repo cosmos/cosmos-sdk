@@ -5,13 +5,13 @@ import (
 	"time"
 
 	sdkmath "cosmossdk.io/math"
+	banktypes "cosmossdk.io/x/bank/types"
+	v1 "cosmossdk.io/x/gov/types/v1"
+	"cosmossdk.io/x/gov/types/v1beta1"
 
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
-	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
 const (
@@ -206,6 +206,36 @@ func (suite *KeeperTestSuite) TestMsgSubmitProposal() {
 			},
 			expErr:    true,
 			expErrMsg: "proposal message not recognized by router",
+		},
+		"invalid deposited coin": {
+			preRun: func() (*v1.MsgSubmitProposal, error) {
+				return v1.NewMsgSubmitProposal(
+					[]sdk.Msg{bankMsg},
+					[]sdk.Coin{sdk.NewCoin("invalid", sdkmath.NewInt(100))},
+					proposer.String(),
+					"",
+					"Proposal",
+					"description of proposal",
+					false,
+				)
+			},
+			expErr:    true,
+			expErrMsg: "deposited 100invalid, but gov accepts only the following denom(s): [stake]: invalid deposit denom",
+		},
+		"invalid deposited coin (multiple)": {
+			preRun: func() (*v1.MsgSubmitProposal, error) {
+				return v1.NewMsgSubmitProposal(
+					[]sdk.Msg{bankMsg},
+					append(initialDeposit, sdk.NewCoin("invalid", sdkmath.NewInt(100))),
+					proposer.String(),
+					"",
+					"Proposal",
+					"description of proposal",
+					false,
+				)
+			},
+			expErr:    true,
+			expErrMsg: "deposited 100invalid, but gov accepts only the following denom(s): [stake]: invalid deposit denom",
 		},
 		"all good": {
 			preRun: func() (*v1.MsgSubmitProposal, error) {
@@ -791,6 +821,24 @@ func (suite *KeeperTestSuite) TestMsgDeposit() {
 			deposit:   minDeposit,
 			expErr:    true,
 			expErrMsg: "invalid depositor address",
+		},
+		"invalid deposited coin ": {
+			preRun: func() uint64 {
+				return pID
+			},
+			depositor: proposer,
+			deposit:   []sdk.Coin{sdk.NewCoin("ibc/badcoin", sdkmath.NewInt(1000))},
+			expErr:    true,
+			expErrMsg: "deposited 1000ibc/badcoin, but gov accepts only the following denom(s): [stake]",
+		},
+		"invalid deposited coin (multiple)": {
+			preRun: func() uint64 {
+				return pID
+			},
+			depositor: proposer,
+			deposit:   append(minDeposit, sdk.NewCoin("ibc/badcoin", sdkmath.NewInt(1000))),
+			expErr:    true,
+			expErrMsg: "deposited 1000ibc/badcoin, but gov accepts only the following denom(s): [stake]",
 		},
 		"all good": {
 			preRun: func() uint64 {

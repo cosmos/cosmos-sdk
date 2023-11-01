@@ -27,6 +27,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
+	"cosmossdk.io/log"
 	pruningtypes "cosmossdk.io/store/pruning/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -113,7 +114,7 @@ func StartCmd(appCreator types.AppCreator) *cobra.Command {
 // CometBFT.
 func StartCmdWithOptions(appCreator types.AppCreator, opts StartCmdOptions) *cobra.Command {
 	if opts.DBOpener == nil {
-		opts.DBOpener = openDB
+		opts.DBOpener = OpenDB
 	}
 
 	cmd := &cobra.Command{
@@ -437,7 +438,7 @@ func getAndValidateConfig(svrCtx *Context) (serverconfig.Config, error) {
 	return config, nil
 }
 
-// returns a function which returns the genesis doc from the genesis file.
+// getGenDocProvider returns a function which returns the genesis doc from the genesis file.
 func getGenDocProvider(cfg *cmtcfg.Config) func() (*cmttypes.GenesisDoc, error) {
 	return func() (*cmttypes.GenesisDoc, error) {
 		appGenesis, err := genutiltypes.AppGenesisFromFile(cfg.GenesisFile())
@@ -449,11 +450,11 @@ func getGenDocProvider(cfg *cmtcfg.Config) func() (*cmttypes.GenesisDoc, error) 
 	}
 }
 
-func setupTraceWriter(svrCtx *Context) (traceWriter io.WriteCloser, cleanup func(), err error) {
+// SetupTraceWriter sets up the trace writer and returns a cleanup function.
+func SetupTraceWriter(logger log.Logger, traceWriterFile string) (traceWriter io.WriteCloser, cleanup func(), err error) {
 	// clean up the traceWriter when the server is shutting down
 	cleanup = func() {}
 
-	traceWriterFile := svrCtx.Viper.GetString(flagTraceStore)
 	traceWriter, err = openTraceWriter(traceWriterFile)
 	if err != nil {
 		return traceWriter, cleanup, err
@@ -463,7 +464,7 @@ func setupTraceWriter(svrCtx *Context) (traceWriter io.WriteCloser, cleanup func
 	if traceWriter != nil {
 		cleanup = func() {
 			if err = traceWriter.Close(); err != nil {
-				svrCtx.Logger.Error("failed to close trace writer", "err", err)
+				logger.Error("failed to close trace writer", "err", err)
 			}
 		}
 	}
@@ -483,7 +484,7 @@ func startGrpcServer(
 		// return grpcServer as nil if gRPC is disabled
 		return nil, clientCtx, nil
 	}
-	_, port, err := net.SplitHostPort(config.Address)
+	_, _, err := net.SplitHostPort(config.Address)
 	if err != nil {
 		return nil, clientCtx, err
 	}
@@ -498,11 +499,9 @@ func startGrpcServer(
 		maxRecvMsgSize = serverconfig.DefaultGRPCMaxRecvMsgSize
 	}
 
-	grpcAddress := fmt.Sprintf("127.0.0.1:%s", port)
-
 	// if gRPC is enabled, configure gRPC client for gRPC gateway
 	grpcClient, err := grpc.Dial(
-		grpcAddress,
+		config.Address,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithDefaultCallOptions(
 			grpc.ForceCodec(codec.NewProtoCodec(clientCtx.InterfaceRegistry).GRPCCodec()),
@@ -515,7 +514,7 @@ func startGrpcServer(
 	}
 
 	clientCtx = clientCtx.WithGRPCClient(grpcClient)
-	svrCtx.Logger.Debug("gRPC client assigned to client context", "target", grpcAddress)
+	svrCtx.Logger.Debug("gRPC client assigned to client context", "target", config.Address)
 
 	grpcSrv, err := servergrpc.NewGRPCServer(clientCtx, app, config)
 	if err != nil {
@@ -628,7 +627,7 @@ func getCtx(svrCtx *Context, block bool) (*errgroup.Group, context.Context) {
 }
 
 func startApp(svrCtx *Context, appCreator types.AppCreator, opts StartCmdOptions) (app types.Application, cleanupFn func(), err error) {
-	traceWriter, traceCleanupFn, err := setupTraceWriter(svrCtx)
+	traceWriter, traceCleanupFn, err := SetupTraceWriter(svrCtx.Logger, svrCtx.Viper.GetString(flagTraceStore))
 	if err != nil {
 		return app, traceCleanupFn, err
 	}

@@ -7,20 +7,19 @@ import (
 	"github.com/cometbft/cometbft/crypto/tmhash"
 	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 
-	"cosmossdk.io/store/v2/internal/kv"
 	"cosmossdk.io/store/v2/internal/tree"
 )
 
 // merkleMap defines a merkle-ized tree from a map. Leave values are treated as
 // hash(key) | hash(value). Leaves are sorted before Merkle hashing.
 type merkleMap struct {
-	kvs    kv.Pairs
+	kvs    KVPairs
 	sorted bool
 }
 
 func newMerkleMap() *merkleMap {
 	return &merkleMap{
-		kvs:    kv.Pairs{},
+		kvs:    KVPairs{},
 		sorted: false,
 	}
 }
@@ -38,7 +37,7 @@ func (sm *merkleMap) set(key string, value []byte) {
 	// and make a determination to fetch or not.
 	vhash := tmhash.Sum(value)
 
-	sm.kvs.Pairs = append(sm.kvs.Pairs, kv.Pair{
+	sm.kvs.Pairs = append(sm.kvs.Pairs, KVPair{
 		Key:   byteKey,
 		Value: vhash,
 	})
@@ -61,7 +60,7 @@ func (sm *merkleMap) sort() {
 
 // hashKVPairs hashes a kvPair and creates a merkle tree where the leaves are
 // byte slices.
-func hashKVPairs(kvs kv.Pairs) []byte {
+func hashKVPairs(kvs KVPairs) []byte {
 	kvsH := make([][]byte, len(kvs.Pairs))
 	for i, kvp := range kvs.Pairs {
 		kvsH[i] = KVPair(kvp).Bytes()
@@ -76,13 +75,13 @@ func hashKVPairs(kvs kv.Pairs) []byte {
 // Leaves are `hash(key) | hash(value)`.
 // Leaves are sorted before Merkle hashing.
 type simpleMap struct {
-	Kvs    kv.Pairs
+	Kvs    KVPairs
 	sorted bool
 }
 
 func newSimpleMap() *simpleMap {
 	return &simpleMap{
-		Kvs:    kv.Pairs{},
+		Kvs:    KVPairs{},
 		sorted: false,
 	}
 }
@@ -99,7 +98,7 @@ func (sm *simpleMap) Set(key string, value []byte) {
 	// and make a determination to fetch or not.
 	vhash := tmhash.Sum(value)
 
-	sm.Kvs.Pairs = append(sm.Kvs.Pairs, kv.Pair{
+	sm.Kvs.Pairs = append(sm.Kvs.Pairs, KVPair{
 		Key:   byteKey,
 		Value: vhash,
 	})
@@ -122,30 +121,14 @@ func (sm *simpleMap) Sort() {
 
 // Returns a copy of sorted KVPairs.
 // NOTE these contain the hashed key and value.
-func (sm *simpleMap) KVPairs() kv.Pairs {
+func (sm *simpleMap) KVPairs() KVPairs {
 	sm.Sort()
-	kvs := kv.Pairs{
-		Pairs: make([]kv.Pair, len(sm.Kvs.Pairs)),
+	kvs := KVPairs{
+		Pairs: make([]KVPair, len(sm.Kvs.Pairs)),
 	}
 
 	copy(kvs.Pairs, sm.Kvs.Pairs)
 	return kvs
-}
-
-//----------------------------------------
-
-// A local extension to KVPair that can be hashed.
-// Key and value are length prefixed and concatenated,
-// then hashed.
-type KVPair kv.Pair
-
-// NewKVPair takes in a key and value and creates a kv.Pair
-// wrapped in the local extension KVPair
-func NewKVPair(key, value []byte) KVPair {
-	return KVPair(kv.Pair{
-		Key:   key,
-		Value: value,
-	})
 }
 
 // Bytes returns key || value, with both the

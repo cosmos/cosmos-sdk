@@ -251,24 +251,24 @@ type Foo interface {
     SetX(int32) 
     Y() zpb.Option[uint32]
     SetY(zpb.Option[uint32])
-    Z() (string, error)
-    SetZ(string) error
+    Z() string
+    SetZ(string)
     Bar() Bar
-    Bars() (zpb.Array[Bar], error)
+    Bars() zpb.Array[Bar]
 }
 
 type Bar interface {
     Abc() ABC
     SetAbc(ABC) Bar
     Baz() Baz
-    Xs() (zpb.ScalarArray[uint32], error)
+    Xs() zpb.ScalarArray[uint32]
 }
 
 type Baz interface {
     Case() Baz_case
     GetX() uint32
     SetX(uint32)
-    GetY() (string, error)
+    GetY() string
     SetY(string)
 }
 
@@ -298,14 +298,15 @@ type Option[T] interface {
 }
 
 type Array[T] interface {
-    InitWithLength(int) error
+    Reserve(int) error
     Len() int
     Get(int) T
+	Push() T
 }
 
 type ScalarArray[T] interface {
-    Array[T]
-    Set(int, T)
+	Array[T]
+    PushScalar(T)
 }
 ```
 
@@ -319,30 +320,20 @@ generated code might look like this:
 foo := NewFoo()
 foo.SetX(1)
 foo.SetY(zpb.NewOption[uint32](2))
-err := foo.SetZ("hello")
-if err != nil {
-    panic(err)
-}
+foo.SetZ("hello")
 
 bar := foo.Bar()
 bar.Baz().SetX(3)
 
-xs, err = bar.Xs()
-if err != nil {
-    panic(err)
-}
-xs.InitWithLength(2)
-xs.Set(0, 0)
-xs.Set(1, 2)
+xs = bar.Xs()
+xs.Reserve(2) // optional
+xs.PushScalar(0)
+xs.PushScalar(2)
 
-bars, err = foo.Bars()
-if err != nil {
-    panic(err)
-}
-bars.InitWithLength(3)
-bars.Get(0).Baz().SetY("hello")
-bars.Get(1).SetAbc(ABC_B)
-bars.Get(2).Baz().SetX(4)
+bars := foo.Bars()
+bars.Push().Baz().SetY("hello")
+bars.Push().SetAbc(ABC_B)
+bars.Push().Baz().SetX(4)
 ```
 
 Under the hood the generated code would manage memory buffers on its own. The usage of `oneof`s is a bit easier than

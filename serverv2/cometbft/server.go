@@ -15,8 +15,8 @@ import (
 	"github.com/cometbft/cometbft/proxy"
 	cmttypes "github.com/cometbft/cometbft/types"
 	"github.com/cosmos/cosmos-sdk/client"
-	cometlog "github.com/cosmos/cosmos-sdk/server/comet/log"
-	"github.com/cosmos/cosmos-sdk/server/comet/types"
+	cometlog "github.com/cosmos/cosmos-sdk/serverv2/comet/log"
+	"github.com/cosmos/cosmos-sdk/serverv2/comet/types"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 

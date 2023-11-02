@@ -1,10 +1,10 @@
-package comet
+package cometbft
 
 import (
 	"context"
 
 	abci "github.com/cometbft/cometbft/abci/types"
-	"github.com/cosmos/cosmos-sdk/server/comet/types"
+	"github.com/cosmos/cosmos-sdk/serverv2/comet/types"
 )
 
 type cometABCIWrapper struct {

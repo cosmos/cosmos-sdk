@@ -79,6 +79,7 @@ func TestMigrateJSON(t *testing.T) {
 				"denom": "stake"
 			}
 		],
+		"min_deposit_ratio": "0.010000000000000000",
 		"min_initial_deposit_ratio": "0.000000000000000000",
 		"proposal_cancel_dest": "",
 		"proposal_cancel_ratio": "0.500000000000000000",

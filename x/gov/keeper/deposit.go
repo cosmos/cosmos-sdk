@@ -10,13 +10,10 @@ import (
 	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-<<<<<<< HEAD
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	disttypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
-=======
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
->>>>>>> 177e7f459 (feat(x/gov): implement a minimum amount per deposit (#18146))
 )
 
 // SetDeposit sets a Deposit to the gov store

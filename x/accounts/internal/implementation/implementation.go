@@ -140,16 +140,16 @@ type MessageSchema struct {
 	// Name identifies the message name, this must be queriable from some reflection service.
 	Name string
 	// TxDecode decodes into the message from transaction bytes.
-	// CONSENSUS SAFE.
+	// CONSENSUS SAFE: can be used in state machine logic.
 	TxDecode func([]byte) (any, error)
 	// TxEncode encodes the message into transaction bytes.
-	// CONSENSUS SAFE.
+	// CONSENSUS SAFE: can be used in state machine logic.
 	TxEncode func(any) ([]byte, error)
 	// HumanDecode decodes into the message from human-readable bytes.
-	// CONSENSUS UNSAFE.
+	// CONSENSUS UNSAFE: can be used only from clients, not state machine logic.
 	HumanDecode func([]byte) (any, error)
 	// HumanEncode encodes the message into human-readable bytes.
-	// CONSENSUS UNSAFE.
+	// CONSENSUS UNSAFE: can be used only from clients, not state machine logic.
 	HumanEncode func(any) ([]byte, error)
 }
 

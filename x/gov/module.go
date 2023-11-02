@@ -322,18 +322,18 @@ func (am AppModule) EndBlock(ctx context.Context) error {
 
 // GenerateGenesisState creates a randomized GenState of the gov module.
 func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
-	simulation.RandomizedGenState(simState)
+	simulation.RandomizedGenState(simState.Rand, simState.GenState, simState.Cdc, simState.BondDenom)
 }
 
 // ProposalContents returns all the gov content functions used to
 // simulate governance proposals.
 func (AppModule) ProposalContents(simState module.SimulationState) []simtypes.WeightedProposalContent { //nolint:staticcheck // used for legacy testing
-	return simulation.ProposalContents()
+	return nil
 }
 
 // ProposalMsgs returns all the gov msgs used to simulate governance proposals.
 func (AppModule) ProposalMsgs(simState module.SimulationState) []simtypes.WeightedProposalMsg {
-	return simulation.ProposalMsgs()
+	return nil
 }
 
 // RegisterStoreDecoder registers a decoder for gov module's types
@@ -343,9 +343,5 @@ func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
 
 // WeightedOperations returns the all the gov module operations with their respective weights.
 func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
-	return simulation.WeightedOperations(
-		simState.AppParams, simState.TxConfig,
-		am.accountKeeper, am.bankKeeper, am.keeper,
-		simState.ProposalMsgs, simState.LegacyProposalContents,
-	)
+	return nil
 }

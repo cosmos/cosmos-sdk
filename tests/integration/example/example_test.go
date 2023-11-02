@@ -11,7 +11,6 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/auth"
 	authkeeper "cosmossdk.io/x/auth/keeper"
-	authsims "cosmossdk.io/x/auth/simulation"
 	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/mint"
 	mintkeeper "cosmossdk.io/x/mint/keeper"
@@ -50,7 +49,7 @@ func Example() {
 	)
 
 	// subspace is nil because we don't test params (which is legacy anyway)
-	authModule := auth.NewAppModule(encodingCfg.Codec, accountKeeper, authsims.RandomGenesisAccounts)
+	authModule := auth.NewAppModule(encodingCfg.Codec, accountKeeper)
 
 	// here bankkeeper and staking keeper is nil because we are not testing them
 	// subspace is nil because we don't test params (which is legacy anyway)
@@ -139,7 +138,7 @@ func Example_oneModule() {
 	)
 
 	// subspace is nil because we don't test params (which is legacy anyway)
-	authModule := auth.NewAppModule(encodingCfg.Codec, accountKeeper, authsims.RandomGenesisAccounts)
+	authModule := auth.NewAppModule(encodingCfg.Codec, accountKeeper)
 
 	// create the application and register all the modules from the previous step
 	integrationApp := integration.NewIntegrationApp(

@@ -39,9 +39,6 @@ type (
 
 		RegisterAPIRoutes(*api.Server, config.APIConfig)
 
-		// RegisterTendermintService registers the gRPC Query service for CometBFT queries.
-		RegisterTendermintService(client.Context)
-
 		// RegisterGRPCServer registers gRPC services directly with the gRPC
 		// server.
 		RegisterGRPCServer(grpc.Server)
@@ -50,8 +47,8 @@ type (
 		// simulation, fetching txs by hash...).
 		RegisterTxService(client.Context)
 
-		// // RegisterTendermintService registers the gRPC Query service for CometBFT queries.
-		// RegisterTendermintService(client.Context)
+		// RegisterTendermintService registers the gRPC Query service for CometBFT queries.
+		RegisterTendermintService(client.Context)
 
 		// RegisterNodeService registers the node gRPC Query service.
 		RegisterNodeService(client.Context, config.Config)

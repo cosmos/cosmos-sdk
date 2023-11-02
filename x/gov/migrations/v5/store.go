@@ -41,6 +41,7 @@ func MigrateStore(ctx sdk.Context, storeService corestoretypes.KVStoreService, c
 	params.ExpeditedThreshold = defaultParams.ExpeditedThreshold
 	params.ProposalCancelRatio = defaultParams.ProposalCancelRatio
 	params.ProposalCancelDest = defaultParams.ProposalCancelDest
+	params.MinDepositRatio = defaultParams.MinDepositRatio
 
 	bz, err := cdc.Marshal(&params)
 	if err != nil {

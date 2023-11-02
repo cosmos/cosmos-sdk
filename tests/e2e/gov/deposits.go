@@ -71,6 +71,7 @@ func (s *DepositTestSuite) TearDownSuite() {
 	s.network.Cleanup()
 }
 
+<<<<<<< HEAD
 func (s *DepositTestSuite) TestQueryDepositsWithoutInitialDeposit() {
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx
@@ -98,6 +99,8 @@ func (s *DepositTestSuite) TestQueryDepositsWithoutInitialDeposit() {
 	s.Require().Equal(depositAmount, sdk.Coins(deposits.Deposits[0].Amount).String())
 }
 
+=======
+>>>>>>> 177e7f459 (feat(x/gov): implement a minimum amount per deposit (#18146))
 func (s *DepositTestSuite) TestQueryDepositsWithInitialDeposit() {
 	val := s.network.Validators[0]
 	depositAmount := sdk.NewCoin(s.cfg.BondDenom, v1.DefaultMinDepositTokens)

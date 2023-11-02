@@ -41,10 +41,6 @@ func (k msgServer) SubmitProposal(goCtx context.Context, msg *v1.MsgSubmitPropos
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid proposer address: %s", err)
 	}
 
-	if err := validateDeposit(sdk.NewCoins(msg.InitialDeposit...)); err != nil {
-		return nil, err
-	}
-
 	// check that either metadata or Msgs length is non nil.
 	if len(msg.Messages) == 0 && len(msg.Metadata) == 0 {
 		return nil, errors.Wrap(govtypes.ErrNoProposalMsgs, "either metadata or Msgs length must be non-nil")
@@ -248,7 +244,7 @@ func (k msgServer) Deposit(goCtx context.Context, msg *v1.MsgDeposit) (*v1.MsgDe
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid depositor address: %s", err)
 	}
 
-	if err := validateAmount(sdk.NewCoins(msg.Amount...)); err != nil {
+	if err := validateDeposit(msg.Amount); err != nil {
 		return nil, err
 	}
 
@@ -383,25 +379,10 @@ func (k legacyMsgServer) Deposit(goCtx context.Context, msg *v1beta1.MsgDeposit)
 	return &v1beta1.MsgDepositResponse{}, nil
 }
 
-func validateAmount(amount sdk.Coins) error {
-	if !amount.IsValid() {
+// validateDeposit validates the deposit amount, do not use for initial deposit.
+func validateDeposit(amount sdk.Coins) error {
+	if !amount.IsValid() || !amount.IsAllPositive() {
 		return sdkerrors.ErrInvalidCoins.Wrap(amount.String())
-	}
-
-	if !amount.IsAllPositive() {
-		return sdkerrors.ErrInvalidCoins.Wrap(amount.String())
-	}
-
-	return nil
-}
-
-func validateDeposit(deposit sdk.Coins) error {
-	if !deposit.IsValid() {
-		return errors.Wrap(sdkerrors.ErrInvalidCoins, deposit.String())
-	}
-
-	if deposit.IsAnyNegative() {
-		return errors.Wrap(sdkerrors.ErrInvalidCoins, deposit.String())
 	}
 
 	return nil

@@ -179,7 +179,7 @@ func TestEmptyState(t *testing.T) {
 	r, w, _ := os.Pipe()
 	os.Stdout = w
 
-	cmd = server.ExportCmd(nil)
+	cmd = genutilcli.ExportCmd(nil)
 	require.NoError(t, cmd.ExecuteContext(ctx))
 
 	outC := make(chan string)
@@ -273,7 +273,7 @@ func TestInitConfig(t *testing.T) {
 	r, w, _ := os.Pipe()
 	os.Stdout = w
 
-	cmd = server.ExportCmd(nil)
+	cmd = genutilcli.ExportCmd(nil)
 	require.NoError(t, cmd.ExecuteContext(ctx))
 
 	outC := make(chan string)

@@ -68,13 +68,9 @@ func AppStateFnWithExtendedCbs(
 		accs []simtypes.Account,
 		config simtypes.Config,
 	) (appState json.RawMessage, simAccs []simtypes.Account, chainID string, genesisTimestamp time.Time) {
-		if simcli.FlagGenesisTimeValue == 0 {
-			genesisTimestamp = simtypes.RandTimestamp(r)
-		} else {
-			genesisTimestamp = time.Unix(simcli.FlagGenesisTimeValue, 0)
-		}
-
+		genesisTimestamp = time.Unix(config.GenesisTime, 0)
 		chainID = config.ChainID
+
 		switch {
 		case config.ParamsFile != "" && config.GenesisFile != "":
 			panic("cannot provide both a genesis file and a params file")

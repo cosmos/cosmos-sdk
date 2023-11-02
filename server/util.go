@@ -17,7 +17,6 @@ import (
 	cmtcmd "github.com/cometbft/cometbft/cmd/cometbft/commands"
 	cmtcfg "github.com/cometbft/cometbft/config"
 	dbm "github.com/cosmos/cosmos-db"
-	"github.com/rs/zerolog"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -34,6 +33,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server/config"
 	"github.com/cosmos/cosmos-sdk/server/types"
+	"github.com/cosmos/cosmos-sdk/serverv2"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/mempool"
 	"github.com/cosmos/cosmos-sdk/version"
@@ -106,11 +106,11 @@ func InterceptConfigsPreRunHandler(cmd *cobra.Command, customAppConfigTemplate s
 	}
 
 	// overwrite default server logger
-	logger, err := CreateSDKLogger(serverCtx, cmd.OutOrStdout())
+	logger, err := serverv2.CreateSDKLogger(serverCtx.Viper, cmd.OutOrStdout())
 	if err != nil {
 		return err
 	}
-	serverCtx.Logger = logger.With(log.ModuleKey, "server")
+	serverCtx.Logger = logger
 
 	// set server context
 	return SetCmdServerContext(cmd, serverCtx)
@@ -164,40 +164,6 @@ func InterceptConfigsAndCreateContext(cmd *cobra.Command, customAppConfigTemplat
 	}
 
 	return serverCtx, nil
-}
-
-// CreateSDKLogger creates a the default SDK logger.
-// It reads the log level and format from the server context.
-func CreateSDKLogger(ctx *Context, out io.Writer) (log.Logger, error) {
-	var opts []log.Option
-	if ctx.Viper.GetString(flags.FlagLogFormat) == flags.OutputFormatJSON {
-		opts = append(opts, log.OutputJSONOption())
-	}
-
-	// check and set filter level or keys for the logger if any
-	logLvlStr := ctx.Viper.GetString(flags.FlagLogLevel)
-	if logLvlStr == "" {
-		return log.NewLogger(out, opts...), nil
-	}
-
-	logLvl, err := zerolog.ParseLevel(logLvlStr)
-	switch {
-	case err != nil:
-		// If the log level is not a valid zerolog level, then we try to parse it as a key filter.
-		filterFunc, err := log.ParseLogLevel(logLvlStr)
-		if err != nil {
-			return nil, err
-		}
-
-		opts = append(opts, log.FilterOption(filterFunc))
-	default:
-		opts = append(opts, log.LevelOption(logLvl))
-	}
-
-	// Check if the CometBFT flag for trace logging is set and enable stack traces if so.
-	opts = append(opts, log.TraceOption(ctx.Viper.GetBool("trace"))) // cmtcli.TraceFlag
-
-	return log.NewLogger(out, opts...), nil
 }
 
 // GetServerContextFromCmd returns a Context from a command or an empty Context

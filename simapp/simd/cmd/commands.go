@@ -25,6 +25,7 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/server"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
+	"github.com/cosmos/cosmos-sdk/serverv2"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
@@ -60,6 +61,15 @@ func initRootCmd(
 		queryCommand(),
 		txCommand(),
 		keys.Commands(),
+	)
+
+	// experimental commands
+	serverv2Cmd, err := serverv2.ServerCmd()
+	if err != nil {
+		panic(err)
+	}
+	rootCmd.AddCommand(
+		serverv2Cmd,
 	)
 }
 

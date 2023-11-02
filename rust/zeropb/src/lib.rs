@@ -10,6 +10,7 @@ use core::{
     str::from_utf8_unchecked,
     borrow::{Borrow, BorrowMut},
     mem::{size_of},
+    fmt::{Write},
     ptr,
 };
 use alloc::alloc::{alloc_zeroed, Layout};
@@ -96,47 +97,24 @@ fn resolve_rel_ptr(base: *const u8, offset: i16, min_len: u16) -> usize {
     target
 }
 
-struct AllocInfo {
-    extent_ptr: *mut u16,
-    write_head: *mut u8,
-    alloc_start: u16,
-    offset: i16,
-}
-
 #[inline]
-unsafe fn resolve_extent_ptr(base_ptr: *const u8) -> *mut u16 {
-    let base = base_ptr as usize;
-    let buf_start = base & !0xFFFF;
-    let buf_end = buf_start + MAX_EXTENT;
-    buf_end as *mut u16
-}
-
-#[inline]
-unsafe fn resolve_alloc_info(base_ptr: *const u8, align: usize) -> Result<AllocInfo, Error> {
-    let base = base_ptr as usize;
-    let buf_start = base & !0xFFFF;
-    let buf_end = buf_start + MAX_EXTENT;
-    let extent_ptr = buf_end as *mut u16;
-    let alloc_start = (*extent_ptr) as usize;
-    // align alloc_start to align
-    let alloc_start = (alloc_start + align - 1) & !(align - 1);
-    let target = buf_start + alloc_start;
-    let offset = target - base;
-    if offset > i16::MAX as usize {
-        return Err(Error::OutOfBounds);
-    }
-
-    Ok(AllocInfo{
-        extent_ptr,
-        alloc_start,
-        write_head: target as *mut u8,
-        offset,
-    })
+unsafe fn resolve_start_extent(base_ptr: *const u8) -> (usize, *mut u16) {
+    let start = (base_ptr as usize) & !0xFFFF;
+    (start, (start + MAX_EXTENT) as *mut u16)
 }
 
 #[inline]
 unsafe fn alloc_rel_ptr(base_ptr: *const u8, len: usize, align: usize) -> Result<(i16, *mut ()), Error> {
-    let (target, offset, extent_ptr) = resolve_alloc_start_and_extent(base_ptr, align)?;
+    let (start, extent_ptr) = resolve_start_extent(base_ptr);
+    let alloc_start = (*extent_ptr) as usize;
+    // align alloc_start to align
+    let alloc_start = (alloc_start + align - 1) & !(align - 1);
+    let target = start + alloc_start;
+    let base = base_ptr as usize;
+    let offset = target - base;
+    if offset > i16::MAX as usize {
+        return Err(Error::OutOfBounds);
+    }
 
     let next_extent = alloc_start + len;
     if next_extent > MAX_EXTENT {
@@ -144,7 +122,7 @@ unsafe fn alloc_rel_ptr(base_ptr: *const u8, len: usize, align: usize) -> Result
     }
 
     *extent_ptr = next_extent as u16;
-    Ok(((target - base) as i16, target as *mut ()))
+    Ok((offset as i16, target as *mut ()))
 }
 
 
@@ -182,14 +160,24 @@ impl Bytes {
         }
     }
 
-    fn new_writer(&mut self) -> BytesWriter {
-        let base = (self as *const Self).cast::<u8>();
+    fn new_writer(&mut self) -> Result<BytesWriter, Error> {
+        unsafe {
+            let base = (self as *const Self).cast::<u8>();
+            let (start, extent_ptr) = resolve_start_extent(base);
+            let last_extent = *extent_ptr;
+            if last_extent as usize == MAX_EXTENT {
+                return Err(Error::OutOfMemory);
+            }
 
-        BytesWriter{
-            bz: &mut self,
-            extent_ptr: (),
-            write_head: (),
-            last_extent: 0,
+            let write_head = (start + last_extent as usize) as *mut u8;
+            self.offset = (write_head as usize - base as usize) as i16;
+
+            Ok(BytesWriter {
+                bz: self,
+                extent_ptr,
+                write_head,
+                last_extent,
+            })
         }
     }
 }
@@ -216,6 +204,10 @@ impl Str {
     fn set(&mut self, content: &str) -> Result<(), Error> {
         self.ptr.set(content.as_bytes())
     }
+
+    fn new_writer(&mut self) -> Result<StrWriter, Error> {
+        self.ptr.new_writer().map(|bz| StrWriter { bz })
+    }
 }
 
 impl<'a> Borrow<str> for Str {
@@ -228,12 +220,12 @@ impl<'a> Borrow<str> for Str {
 
 pub struct BytesWriter<'a> {
     bz: &'a mut Bytes,
-    extent_ptr: *u16,
+    extent_ptr: *mut u16,
     write_head: *mut u8,
     last_extent: u16,
 }
 
-impl BytesWriter {
+impl <'a> BytesWriter<'a> {
     fn write(&mut self, content: &[u8]) -> Result<(), Error> {
         unsafe {
             let extent = *self.extent_ptr;
@@ -241,8 +233,30 @@ impl BytesWriter {
                 return Err(Error::InvalidState);
             }
 
+            let len = content.len();
+            self.bz.length += len as u16;
+            let next_extent = extent as usize + len;
+            if next_extent > MAX_EXTENT {
+                return Err(Error::OutOfMemory);
+            }
+
+            ptr::copy_nonoverlapping(content.as_ptr(), self.write_head, len);
+            self.write_head = self.write_head.add(len);
+            self.last_extent = next_extent as u16;
+            *self.extent_ptr = next_extent as u16;
+
             Ok(())
         }
+    }
+}
+
+pub struct StrWriter<'a> {
+    bz: BytesWriter<'a>,
+}
+
+impl <'a> Write for StrWriter<'a> {
+    fn write_str(&mut self, s: &str) -> core::fmt::Result {
+        self.bz.write(s.as_bytes()).map_err(|_| core::fmt::Error)
     }
 }
 
@@ -306,6 +320,7 @@ struct RepeatedSegmentHeader {
 
 #[cfg(test)]
 mod tests {
+    use core::fmt::Write;
     use std::borrow::Borrow;
     use crate::{Root, Str, ZeroCopy};
 
@@ -331,6 +346,15 @@ mod tests {
         let mut r = Root::<TestStruct>::new();
         r.s.set("hello").unwrap();
         assert_eq!(<Str as Borrow<str>>::borrow(&r.s), "hello");
+    }
+
+    #[test]
+    fn test_writer() {
+        let mut r = Root::<TestStruct>::new();
+        let mut w = r.s.new_writer().unwrap();
+        w.write_str("hello").unwrap();
+        w.write_str(" world").unwrap();
+        assert_eq!(<Str as Borrow<str>>::borrow(&r.s), "hello world");
     }
 
     #[test]

@@ -79,6 +79,10 @@ func (qrt *GRPCQueryRouter) RegisterService(sd *grpc.ServiceDesc, handler interf
 		if err != nil {
 			panic(err)
 		}
+		qrt.serviceData = append(qrt.serviceData, serviceData{
+			serviceDesc: sd,
+			handler:     handler,
+		})
 	}
 }
 
@@ -148,6 +152,7 @@ func (qrt *GRPCQueryRouter) registerHybridHandler(sd *grpc.ServiceDesc, method g
 func (qrt *GRPCQueryRouter) SetInterfaceRegistry(interfaceRegistry codectypes.InterfaceRegistry) {
 	// instantiate the codec
 	qrt.cdc = codec.NewProtoCodec(interfaceRegistry).GRPCCodec()
+	qrt.binaryCodec = codec.NewProtoCodec(interfaceRegistry)
 	// Once we have an interface registry, we can register the interface
 	// registry reflection gRPC service.
 	reflection.RegisterReflectionServiceServer(qrt, reflection.NewReflectionServiceServer(interfaceRegistry))

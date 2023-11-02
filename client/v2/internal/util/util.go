@@ -1,6 +1,9 @@
 package util
 
 import (
+	"regexp"
+	"strings"
+
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
 	"google.golang.org/protobuf/types/dynamicpb"
@@ -26,4 +29,22 @@ func ResolveMessageType(resolver protoregistry.MessageTypeResolver, descriptor p
 	}
 
 	return dynamicpb.NewMessageType(descriptor)
+}
+
+// ParseSinceComment parses the `// Since: cosmos-sdk v0.xx` comment on rpc.
+// It is used to determine in which version of a module / sdk a rpc was introduced.
+func ParseSinceComment(input string) (string, string) {
+	var (
+		moduleName string
+		version    string
+	)
+
+	re := regexp.MustCompile(`\/\/ since: (\S+) (\S+)`)
+	matches := re.FindStringSubmatch(strings.ToLower(input))
+	if len(matches) >= 3 {
+		moduleName = matches[1]
+		version = strings.TrimLeft(matches[2], "v")
+	}
+
+	return moduleName, version
 }

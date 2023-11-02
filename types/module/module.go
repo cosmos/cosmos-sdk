@@ -34,6 +34,8 @@ import (
 	"fmt"
 	"sort"
 
+	"github.com/cosmos/cosmos-sdk/telemetry"
+
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
@@ -282,6 +284,8 @@ type Manager struct {
 	OrderPrepareCheckStaters []string
 	OrderPrecommiters        []string
 	OrderMigrations          []string
+	beforeModuleEndBlock     func(moduleName string)
+	afterModuleEndBlock      func(moduleName string)
 }
 
 // NewManager creates a new Manager object.
@@ -451,6 +455,16 @@ func (m *Manager) RegisterInvariants(ir sdk.InvariantRegistry) {
 			module.RegisterInvariants(ir)
 		}
 	}
+}
+
+// RegisterBeforeModuleEndBlock registers beforeModuleEndBlock
+func (m *Manager) RegisterBeforeModuleEndBlock(cb func(moduleName string)) {
+	m.beforeModuleEndBlock = cb
+}
+
+// RegisterAfterModuleEndBlock registers afterModuleEndBlock
+func (m *Manager) RegisterAfterModuleEndBlock(cb func(moduleName string)) {
+	m.afterModuleEndBlock = cb
 }
 
 // RegisterServices registers all module services
@@ -777,6 +791,7 @@ func (m *Manager) BeginBlock(ctx sdk.Context) (sdk.BeginBlock, error) {
 	for _, moduleName := range m.OrderBeginBlockers {
 		if module, ok := m.Modules[moduleName].(appmodule.HasBeginBlocker); ok {
 			if err := module.BeginBlock(ctx); err != nil {
+				telemetry.ModuleMeasureSince(moduleName, startTime, telemetry.MetricKeyBeginBlocker)
 				return sdk.BeginBlock{}, err
 			}
 		}
@@ -801,9 +816,15 @@ func (m *Manager) EndBlock(ctx sdk.Context) (sdk.EndBlock, error) {
 				return sdk.EndBlock{}, err
 			}
 		} else if module, ok := m.Modules[moduleName].(HasABCIEndBlock); ok {
+			if m.beforeModuleEndBlock != nil {
+				m.beforeModuleEndBlock(moduleName)
+			}
 			moduleValUpdates, err := module.EndBlock(ctx)
 			if err != nil {
 				return sdk.EndBlock{}, err
+			}
+			if m.afterModuleEndBlock != nil {
+				m.afterModuleEndBlock(moduleName)
 			}
 			// use these validator updates if provided, the module manager assumes
 			// only one module will update the validator set

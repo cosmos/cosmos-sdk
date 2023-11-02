@@ -9,7 +9,8 @@ import (
 // zero fee pool
 func InitialFeePool() FeePool {
 	return FeePool{
-		CommunityPool: sdk.DecCoins{},
+		CommunityPool:         sdk.DecCoins{},
+		LiquidityProviderPool: sdk.DecCoins{},
 	}
 }
 
@@ -18,6 +19,10 @@ func (f FeePool) ValidateGenesis() error {
 	if f.CommunityPool.IsAnyNegative() {
 		return fmt.Errorf("negative CommunityPool in distribution fee pool, is %v",
 			f.CommunityPool)
+	}
+	if f.LiquidityProviderPool.IsAnyNegative() {
+		return fmt.Errorf("negative LiquidityProviderPool in distribution fee pool, is %v",
+			f.LiquidityProviderPool)
 	}
 
 	return nil

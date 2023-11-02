@@ -112,6 +112,10 @@ enable-service-label = {{ .Telemetry.EnableServiceLabel }}
 # PrometheusRetentionTime, when positive, enables a Prometheus metrics sink.
 prometheus-retention-time = {{ .Telemetry.PrometheusRetentionTime }}
 
+# MonitorStoreSizeInterval iterates store key-value, and monitor byte size, 
+# on every interval blocks (0 to disable). This operation is very IO intensive.
+monitor-store-size-interval = {{ .Telemetry.MonitorStoreSizeInterval }}
+
 # GlobalLabels defines a global set of name/value label tuples applied to all
 # metrics emitted using the wrapper functions defined in telemetry package.
 #
@@ -135,6 +139,9 @@ swagger = {{ .API.Swagger }}
 
 # Address defines the API server to listen on.
 address = "{{ .API.Address }}"
+
+# Oracle-address defines the API server to listen on for oracle service.
+oracle-address = "{{ .API.OracleAddress }}"
 
 # MaxOpenConnections defines the number of maximum open connections.
 max-open-connections = {{ .API.MaxOpenConnections }}

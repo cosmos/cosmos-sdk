@@ -14,6 +14,14 @@ type PrepareCheckStater func(ctx Context)
 // Precommiter runs code during commit immediately before the `deliverState` is written to the `rootMultiStore`.
 type Precommiter func(ctx Context)
 
+type DeliverTxer func(ctx Context, req abci.RequestDeliverTx, tx abci.ResponseDeliverTx)
+
+type BeforeCommitter func(ctx Context)
+
+type AfterCommitter func(ctx Context)
+
+type MsgHandlerMiddleware func(ctx Context, msg Msg, handler Handler) (*Result, error)
+
 // PeerFilter responds to p2p filtering queries from Tendermint
 type PeerFilter func(info string) *abci.ResponseQuery
 

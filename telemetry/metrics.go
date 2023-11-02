@@ -46,6 +46,10 @@ type Config struct {
 	// It defines the retention duration in seconds.
 	PrometheusRetentionTime int64 `mapstructure:"prometheus-retention-time"`
 
+	// MonitorStoreSizeInterval iterates store key-value, and monitor byte size,
+	// on every interval blocks (0 to disable). This operation is very IO intensive.
+	MonitorStoreSizeInterval uint64 `mapstructure:"monitor-store-size-interval"`
+
 	// GlobalLabels defines a global set of name/value label tuples applied to all
 	// metrics emitted using the wrapper functions defined in telemetry package.
 	//

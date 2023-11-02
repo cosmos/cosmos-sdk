@@ -29,3 +29,25 @@ var (
 	// AccountNumberStoreKeyPrefix prefix for account-by-id store
 	AccountNumberStoreKeyPrefix = collections.NewPrefix("accountNumber")
 )
+<<<<<<< HEAD
+=======
+
+const (
+	EthAddressToCosmosAddressKey = "EthAddressToCosmosAddressKey-value-"
+	CosmosAddressToEthAddressKey = "CosmosAddressToEthAddressKey-value-"
+)
+
+func KeyPrefix(p string) []byte {
+	return []byte(p)
+}
+
+// AddressStoreKey turn an address to key used to get it from the account store
+func AddressStoreKey(addr sdk.AccAddress) []byte {
+	return append(AddressStoreKeyPrefix, addr.Bytes()...)
+}
+
+// AccountNumberStoreKey turn an account number to key used to get the account address from account store
+func AccountNumberStoreKey(accountNumber uint64) []byte {
+	return append(AccountNumberStoreKeyPrefix, sdk.Uint64ToBigEndian(accountNumber)...)
+}
+>>>>>>> 7ccb8b4811 (Feat/cherry pick upgrade (#365))

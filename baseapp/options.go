@@ -210,6 +210,30 @@ func (app *BaseApp) SetPrecommiter(precommiter sdk.Precommiter) {
 	app.precommiter = precommiter
 }
 
+func (app *BaseApp) SetDeliverTxer(deliverTxer sdk.DeliverTxer) {
+	if app.sealed {
+		panic("SetDeliverTxer() on sealed BaseApp")
+	}
+
+	app.deliverTxer = deliverTxer
+}
+
+func (app *BaseApp) SetBeforeCommitter(beforeCommitter sdk.BeforeCommitter) {
+	if app.sealed {
+		panic("SetBeforeCommitter() on sealed BaseApp")
+	}
+
+	app.beforeCommitter = beforeCommitter
+}
+
+func (app *BaseApp) SetAfterCommitter(afterCommitter sdk.AfterCommitter) {
+	if app.sealed {
+		panic("SetBeforeCommitter() on sealed BaseApp")
+	}
+
+	app.afterCommitter = afterCommitter
+}
+
 func (app *BaseApp) SetAnteHandler(ah sdk.AnteHandler) {
 	if app.sealed {
 		panic("SetAnteHandler() on sealed BaseApp")
@@ -224,6 +248,22 @@ func (app *BaseApp) SetPostHandler(ph sdk.PostHandler) {
 	}
 
 	app.postHandler = ph
+}
+
+func (app *BaseApp) SetRefundHandler(rh sdk.AnteHandler) {
+	if app.sealed {
+		panic("SetRefundHandler() on sealed BaseApp")
+	}
+
+	app.refundHandler = rh
+}
+
+func (app *BaseApp) SetMsgHandlerMiddleware(msgHandlerMiddleware sdk.MsgHandlerMiddleware) {
+	if app.sealed {
+		panic("SetMsgHandlerMiddleware() on sealed BaseApp")
+	}
+
+	app.msgHandlerMiddleware = msgHandlerMiddleware
 }
 
 func (app *BaseApp) SetAddrPeerFilter(pf sdk.PeerFilter) {

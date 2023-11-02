@@ -470,6 +470,14 @@ func TestTxDecoder(t *testing.T) {
 	require.Equal(t, counter, dTxCounter)
 }
 
+// Interleave calls to Check and Deliver and ensure
+// that there is no cross-talk. Check sees results of the previous Check calls
+// and Deliver sees that of the previous Deliver calls, but they don't see eachother.
+func TestConcurrentCheckDeliver(t *testing.T) {
+	// TODO
+}
+
+// Test custom panic handling within app.DeliverTx method
 func TestCustomRunTxPanicHandler(t *testing.T) {
 	customPanicMsg := "test panic"
 	anteErr := errorsmod.Register("fakeModule", 100500, "fakeError")

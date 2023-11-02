@@ -70,6 +70,11 @@ service Query {
   rpc CommunityPool(QueryCommunityPoolRequest) returns (QueryCommunityPoolResponse) {
     option (google.api.http).get = "/cosmos/distribution/v1beta1/community_pool";
   }
+
+  // LiquidityProviderRewards queries the outstanding liquidity provider reward coins.
+  rpc LiquidityProviderRewards(QueryLiquidityProviderRewardsRequest) returns (QueryLiquidityProviderRewardsResponse) {
+    option (google.api.http).get = "/cosmos/distribution/v1beta1/liquidity_provider_rewards";
+  }
 }
 
 // QueryParamsRequest is the request type for the Query/Params RPC method.
@@ -252,4 +257,16 @@ message QueryCommunityPoolResponse {
     (gogoproto.nullable)     = false,
     (amino.dont_omitempty)   = true
   ];
+}
+
+// QueryLiquidityProviderRewardsRequest is the request type for the Query/LiquidityProviderRewardsRequest RPC
+// method.
+message QueryLiquidityProviderRewardsRequest {}
+
+// QueryLiquidityProviderRewardsResponse is the response type for the Query/LiquidityProviderRewardsRequest
+// RPC method.
+message QueryLiquidityProviderRewardsResponse {
+  // pool defines community pool's coins.
+  repeated cosmos.base.v1beta1.DecCoin pool = 1
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins", (gogoproto.nullable) = false];
 }

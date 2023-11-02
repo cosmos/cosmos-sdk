@@ -71,9 +71,10 @@ type BaseApp struct {
 	txDecoder         sdk.TxDecoder // unmarshal []byte into sdk.Tx
 	txEncoder         sdk.TxEncoder // marshal sdk.Tx into []byte
 
-	mempool     mempool.Mempool // application side mempool
-	anteHandler sdk.AnteHandler // ante handler for fee and auth
-	postHandler sdk.PostHandler // post handler, optional
+	mempool       mempool.Mempool // application side mempool
+	anteHandler   sdk.AnteHandler // ante handler for fee and auth
+	postHandler   sdk.PostHandler // post handler, optional
+	refundHandler sdk.AnteHandler // refund handler for failed tx
 
 	initChainer        sdk.InitChainer                // ABCI InitChain handler
 	preBlocker         sdk.PreBlocker                 // logic to run before BeginBlocker
@@ -89,6 +90,8 @@ type BaseApp struct {
 	addrPeerFilter sdk.PeerFilter // filter peers by address and port
 	idPeerFilter   sdk.PeerFilter // filter peers by node ID
 	fauxMerkleMode bool           // if true, IAVL MountStores uses MountStoresDB for simulation speed.
+
+	customMiddlewares
 
 	// manages snapshots, i.e. dumps of app state at certain intervals
 	snapshotManager *snapshots.Manager
@@ -184,6 +187,14 @@ type BaseApp struct {
 	// including the goroutine handling.This is experimental and must be enabled
 	// by developers.
 	optimisticExec *oe.OptimisticExecution
+}
+
+type customMiddlewares struct {
+	deliverTxer     sdk.DeliverTxer     // logic to run on any deliver tx
+	beforeCommitter sdk.BeforeCommitter // logic to run before committing state
+	afterCommitter  sdk.AfterCommitter  // logic to run after committing state
+
+	msgHandlerMiddleware sdk.MsgHandlerMiddleware // middleware that wraps msg handlers
 }
 
 // NewBaseApp returns a reference to an initialized BaseApp. It accepts a
@@ -725,6 +736,12 @@ func (app *BaseApp) deliverTx(tx []byte) *abci.ExecTxResult {
 	gInfo := sdk.GasInfo{}
 	resultStr := "successful"
 
+	defer func() {
+		if app.deliverTxer != nil {
+			app.deliverTxer(app.finalizeBlockState.ctx, req, res)
+		}
+	}()
+
 	var resp *abci.ExecTxResult
 
 	defer func() {
@@ -950,6 +967,23 @@ func (app *BaseApp) runTx(mode execMode, txBytes []byte) (gInfo sdk.GasInfo, res
 			// append the events in the order of occurrence
 			result.Events = append(anteEvents, result.Events...)
 		}
+	} else {
+		if app.refundHandler != nil {
+			refundCtx, msCache := app.cacheTxContext(ctx, txBytes)
+			refundCtx = refundCtx.WithEventManager(sdk.NewEventManager())
+			newCtx, err := app.refundHandler(refundCtx, tx, mode == execModeSimulate)
+			if err != nil {
+				return gInfo, result, anteEvents, err
+			}
+
+			if mode == execModeFinalize {
+				msCache.Write()
+			}
+
+			if len(anteEvents) > 0 && (mode == execModeFinalize || mode == execModeSimulate) {
+				anteEvents = append(anteEvents, newCtx.EventManager().ABCIEvents()...)
+			}
+		}
 	}
 
 	return gInfo, result, anteEvents, err
@@ -963,6 +997,11 @@ func (app *BaseApp) runTx(mode execMode, txBytes []byte) (gInfo sdk.GasInfo, res
 func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, msgsV2 []protov2.Message, mode execMode) (*sdk.Result, error) {
 	events := sdk.EmptyEvents()
 	var msgResponses []*codectypes.Any
+
+	middleware := app.msgHandlerMiddleware
+	if middleware == nil {
+		middleware = noopMiddleware
+	}
 
 	// NOTE: GasWanted is determined by the AnteHandler and GasUsed by the GasMeter.
 	for i, msg := range msgs {
@@ -1128,4 +1167,8 @@ func (app *BaseApp) Close() error {
 	}
 
 	return errors.Join(errs...)
+}
+
+var noopMiddleware sdk.MsgHandlerMiddleware = func(c sdk.Context, m sdk.Msg, h sdk.Handler) (*sdk.Result, error) {
+	return h(c, m)
 }

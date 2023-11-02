@@ -142,7 +142,8 @@ func (k BaseViewKeeper) GetAccountsBalances(ctx context.Context) []types.Balance
 // GetBalance returns the balance of a specific denomination for a given account
 // by address.
 func (k BaseViewKeeper) GetBalance(ctx context.Context, addr sdk.AccAddress, denom string) sdk.Coin {
-	amt, err := k.Balances.Get(ctx, collections.Join(addr, denom))
+	address := k.ak.GetMergedAccountAddressIfExists(ctx, addr)
+	amt, err := k.Balances.Get(ctx, collections.Join(address, denom))
 	if err != nil {
 		return sdk.NewCoin(denom, math.ZeroInt())
 	}
@@ -153,7 +154,8 @@ func (k BaseViewKeeper) GetBalance(ctx context.Context, addr sdk.AccAddress, den
 // provides the token balance to a callback. If true is returned from the
 // callback, iteration is halted.
 func (k BaseViewKeeper) IterateAccountBalances(ctx context.Context, addr sdk.AccAddress, cb func(sdk.Coin) bool) {
-	err := k.Balances.Walk(ctx, collections.NewPrefixedPairRange[sdk.AccAddress, string](addr), func(key collections.Pair[sdk.AccAddress, string], value math.Int) (stop bool, err error) {
+	address := k.ak.GetMergedAccountAddressIfExists(ctx, addr)
+	err := k.Balances.Walk(ctx, collections.NewPrefixedPairRange[sdk.AccAddress, string](address), func(key collections.Pair[sdk.AccAddress, string], value math.Int) (stop bool, err error) {
 		return cb(sdk.NewCoin(key.K2(), value)), nil
 	})
 	if err != nil {

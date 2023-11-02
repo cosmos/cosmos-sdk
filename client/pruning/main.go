@@ -84,8 +84,22 @@ Supported app-db-backend types include 'goleveldb', 'rocksdb', 'pebbledb'.`,
 				return fmt.Errorf("the database has no valid heights to prune, the latest height: %v", latestHeight)
 			}
 
+<<<<<<< HEAD
 			pruningHeight := latestHeight - int64(pruningOptions.KeepRecent)
 			cmd.Printf("pruning heights up to %v\n", pruningHeight)
+=======
+			var pruningHeights []int64
+			for height := int64(pruningOptions.PruningStartHeight); height < latestHeight; height++ {
+				if height < latestHeight-int64(pruningOptions.KeepRecent) {
+					pruningHeights = append(pruningHeights, height)
+				}
+			}
+			if len(pruningHeights) == 0 {
+				cmd.Println("no heights to prune")
+				return nil
+			}
+			cmd.Printf("pruning heights start from %v, end at %v\n", pruningHeights[0], pruningHeights[len(pruningHeights)-1])
+>>>>>>> 7ccb8b4811 (Feat/cherry pick upgrade (#365))
 
 			err = rootMultiStore.PruneStores(pruningHeight)
 			if err != nil {
@@ -99,6 +113,8 @@ Supported app-db-backend types include 'goleveldb', 'rocksdb', 'pebbledb'.`,
 
 	cmd.Flags().String(flags.FlagHome, defaultNodeHome, "The application home directory")
 	cmd.Flags().String(FlagAppDBBackend, "", "The type of database for application and snapshots databases")
+	cmd.Flags().Uint64(pruningtypes.PruningOptionStartHeight, 1, "Start height to prune from")
+	cmd.Flags().String(server.FlagPruning, pruningtypes.PruningOptionDefault, "Pruning strategy (default|nothing|everything|custom)")
 	cmd.Flags().Uint64(server.FlagPruningKeepRecent, 0, "Number of recent heights to keep on disk (ignored if pruning is not 'custom')")
 	cmd.Flags().Uint64(server.FlagPruningInterval, 10,
 		`Height interval at which pruned heights are removed from disk (ignored if pruning is not 'custom'), 

@@ -144,6 +144,12 @@ func (m *MockBankKeeper) EXPECT() *MockBankKeeperMockRecorder {
 	return m.recorder
 }
 
+func (m *MockBankKeeper) AfterMultiSend(ctx types.Context, inputs []types1.Input, outputs []types1.Output) error
+func (m *MockBankKeeper) AfterSend(ctx types.Context, fromAddr types.AccAddress, toAddr types.AccAddress, amt types.Coins) error
+func (m *MockBankKeeper) BeforeMultiSend(ctx types.Context, inputs []types1.Input, outputs []types1.Output) error
+func (m *MockBankKeeper) BeforeSend(ctx types.Context, fromAddr types.AccAddress, toAddr types.AccAddress, amt types.Coins) error
+func (m *MockBankKeeper) SetHooks(sh types1.SendHooks) *keeper.BaseSendKeeper
+
 // AllBalances mocks base method.
 func (m *MockBankKeeper) AllBalances(arg0 context.Context, arg1 *types0.QueryAllBalancesRequest) (*types0.QueryAllBalancesResponse, error) {
 	m.ctrl.T.Helper()

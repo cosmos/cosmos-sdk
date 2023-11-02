@@ -47,7 +47,12 @@ func (k Keeper) AllocateTokens(ctx context.Context, totalPreviousPower int64, bo
 		return err
 	}
 
-	voteMultiplier := math.LegacyOneDec().Sub(communityTax)
+	liquidityProviderReward, err := k.GetLiquidityProviderReward(ctx)
+	if err != nil {
+		return err
+	}
+
+	voteMultiplier := math.LegacyOneDec().Sub(communityTax).Sub(liquidityProviderReward)
 	feeMultiplier := feesCollected.MulDecTruncate(voteMultiplier)
 
 	// allocate tokens proportionally to voting power
@@ -74,6 +79,11 @@ func (k Keeper) AllocateTokens(ctx context.Context, totalPreviousPower int64, bo
 
 		remaining = remaining.Sub(reward)
 	}
+
+	// allocate lp rewards
+	reward := feesCollected.MulDec(liquidityProviderReward)
+	feePool.LiquidityProviderPool = feePool.LiquidityProviderPool.Add(reward...)
+	remaining = remaining.Sub(reward)
 
 	// allocate community funding
 	feePool.CommunityPool = feePool.CommunityPool.Add(remaining...)

@@ -30,7 +30,6 @@ func ResponseExecTxResultWithEvents(err error, gw, gu uint64, events []abci.Even
 		Log:       log,
 		GasWanted: int64(gw),
 		GasUsed:   int64(gu),
-		Events:    events,
 	}
 }
 

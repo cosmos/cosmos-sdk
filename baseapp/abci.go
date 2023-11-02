@@ -912,6 +912,9 @@ func (app *BaseApp) Commit() (*abci.ResponseCommit, error) {
 	if ok {
 		rms.SetCommitHeader(header)
 	}
+	if app.beforeCommitter != nil {
+		app.beforeCommitter(app.finalizeBlockState.ctx)
+	}
 
 	app.cms.Commit()
 
@@ -937,6 +940,10 @@ func (app *BaseApp) Commit() (*abci.ResponseCommit, error) {
 	// NOTE: This is safe because CometBFT holds a lock on the mempool for
 	// Commit. Use the header from this latest block.
 	app.setState(execModeCheck, header)
+
+	if app.afterCommitter != nil {
+		app.afterCommitter(app.finalizeBlockState.ctx)
+	}
 
 	app.finalizeBlockState = nil
 
@@ -1117,6 +1124,7 @@ func (app *BaseApp) getContextForProposal(ctx sdk.Context, height int64) sdk.Con
 }
 
 func (app *BaseApp) handleQueryGRPC(handler GRPCQueryHandler, req *abci.RequestQuery) *abci.ResponseQuery {
+	defer telemetry.ModuleMeasureSince(req.Path, time.Now(), "GRPC_query")
 	ctx, err := app.CreateQueryContext(req.Height, req.Prove)
 	if err != nil {
 		return sdkerrors.QueryResult(err, app.trace)

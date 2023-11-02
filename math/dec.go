@@ -1,6 +1,7 @@
 package math
 
 import (
+	"database/sql/driver"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -874,6 +875,28 @@ func (d *LegacyDec) Size() int {
 // Override Amino binary serialization by proxying to protobuf.
 func (d LegacyDec) MarshalAmino() ([]byte, error)   { return d.Marshal() }
 func (d *LegacyDec) UnmarshalAmino(bz []byte) error { return d.Unmarshal(bz) }
+
+// Scan implements the sql.Scanner interface
+func (d *LegacyDec) Scan(v interface{}) error {
+	if v == nil { // handle null values in columns
+		return nil
+	}
+
+	bz, ok := v.([]byte)
+	if !ok {
+		return fmt.Errorf("could not scan type %T into Dec ", v)
+	}
+	*d = LegacyMustNewDecFromStr(string(bz))
+	return nil
+}
+
+// Value implements the driver.Valuer interface
+func (d LegacyDec) Value() (driver.Value, error) {
+	if d == (LegacyDec{}) {
+		return nil, fmt.Errorf("nil value Dec")
+	}
+	return d.String(), nil
+}
 
 // helpers
 

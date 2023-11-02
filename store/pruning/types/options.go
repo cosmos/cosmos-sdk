@@ -16,16 +16,20 @@ type PruningOptions struct {
 
 	// Strategy defines the kind of pruning strategy. See below for more information on each.
 	Strategy PruningStrategy
+
+	// PruningStartHeight defines the start height to prune from.
+	PruningStartHeight uint64
 }
 
 type PruningStrategy int
 
 // Pruning option string constants
 const (
-	PruningOptionDefault    = "default"
-	PruningOptionEverything = "everything"
-	PruningOptionNothing    = "nothing"
-	PruningOptionCustom     = "custom"
+	PruningOptionDefault     = "default"
+	PruningOptionEverything  = "everything"
+	PruningOptionNothing     = "nothing"
+	PruningOptionCustom      = "custom"
+	PruningOptionStartHeight = "pruning-start-height"
 )
 
 const (

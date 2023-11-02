@@ -132,9 +132,10 @@ func (k BaseKeeper) DelegateCoins(ctx context.Context, delegatorAddr, moduleAccA
 	}
 
 	balances := sdk.NewCoins()
+	address := k.ak.GetMergedAccountAddressIfExists(ctx, delegatorAddr)
 
 	for _, coin := range amt {
-		balance := k.GetBalance(ctx, delegatorAddr, coin.GetDenom())
+		balance := k.GetBalance(ctx, address, coin.GetDenom())
 		if balance.IsLT(coin) {
 			return errorsmod.Wrapf(
 				sdkerrors.ErrInsufficientFunds, "failed to delegate; %s is smaller than %s", balance, amt,
@@ -142,7 +143,7 @@ func (k BaseKeeper) DelegateCoins(ctx context.Context, delegatorAddr, moduleAccA
 		}
 
 		balances = balances.Add(balance)
-		err := k.setBalance(ctx, delegatorAddr, balance.Sub(coin))
+		err := k.setBalance(ctx, address, balance.Sub(coin))
 		if err != nil {
 			return err
 		}
@@ -185,11 +186,13 @@ func (k BaseKeeper) UndelegateCoins(ctx context.Context, moduleAccAddr, delegato
 		return err
 	}
 
-	if err := k.trackUndelegation(ctx, delegatorAddr, amt); err != nil {
+	address := k.ak.GetMergedAccountAddressIfExists(ctx, delegatorAddr)
+
+	if err := k.trackUndelegation(ctx, address, amt); err != nil {
 		return errorsmod.Wrap(err, "failed to track undelegation")
 	}
 
-	err = k.addCoins(ctx, delegatorAddr, amt)
+	err = k.addCoins(ctx, address, amt)
 	if err != nil {
 		return err
 	}
@@ -256,6 +259,7 @@ func (k BaseKeeper) SetDenomMetaData(ctx context.Context, denomMetaData types.Me
 // SendCoinsFromModuleToAccount transfers coins from a ModuleAccount to an AccAddress.
 // It will panic if the module account does not exist. An error is returned if
 // the recipient address is black-listed or if sending the tokens fails.
+// Recipient address will be mapped to the corresponding cosmos acc if mapping is present for an eth address
 func (k BaseKeeper) SendCoinsFromModuleToAccount(
 	ctx context.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins,
 ) error {
@@ -264,11 +268,12 @@ func (k BaseKeeper) SendCoinsFromModuleToAccount(
 		panic(errorsmod.Wrapf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", senderModule))
 	}
 
+	address := k.ak.GetMergedAccountAddressIfExists(ctx, recipientAddr)
 	if k.BlockedAddr(recipientAddr) {
 		return errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "%s is not allowed to receive funds", recipientAddr)
 	}
 
-	return k.SendCoins(ctx, senderAddr, recipientAddr, amt)
+	return k.SendCoins(ctx, senderAddr, address, amt)
 }
 
 // SendCoinsFromModuleToModule transfers coins from a ModuleAccount to another.
@@ -291,6 +296,7 @@ func (k BaseKeeper) SendCoinsFromModuleToModule(
 
 // SendCoinsFromAccountToModule transfers coins from an AccAddress to a ModuleAccount.
 // It will panic if the module account does not exist.
+// Sender address will be mapped to the corresponding cosmos acc if mapping is present for an eth address
 func (k BaseKeeper) SendCoinsFromAccountToModule(
 	ctx context.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins,
 ) error {

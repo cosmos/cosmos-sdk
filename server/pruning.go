@@ -19,7 +19,9 @@ func GetPruningOptionsFromFlags(appOpts types.AppOptions) (pruningtypes.PruningO
 
 	switch strategy {
 	case pruningtypes.PruningOptionDefault, pruningtypes.PruningOptionNothing, pruningtypes.PruningOptionEverything:
-		return pruningtypes.NewPruningOptionsFromString(strategy), nil
+		opts := pruningtypes.NewPruningOptionsFromString(strategy)
+		opts.PruningStartHeight = cast.ToUint64(appOpts.Get(pruningtypes.PruningOptionStartHeight))
+		return opts, nil
 
 	case pruningtypes.PruningOptionCustom:
 		opts := pruningtypes.NewCustomPruningOptions(
@@ -30,6 +32,7 @@ func GetPruningOptionsFromFlags(appOpts types.AppOptions) (pruningtypes.PruningO
 		if err := opts.Validate(); err != nil {
 			return opts, fmt.Errorf("invalid custom pruning options: %w", err)
 		}
+		opts.PruningStartHeight = cast.ToUint64(appOpts.Get(pruningtypes.PruningOptionStartHeight))
 
 		return opts, nil
 

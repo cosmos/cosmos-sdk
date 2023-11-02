@@ -3,6 +3,10 @@ package keeper
 import (
 	"context"
 
+<<<<<<< HEAD
+=======
+	gogotypes "github.com/cosmos/gogoproto/types"
+>>>>>>> 7ccb8b4811 (Feat/cherry pick upgrade (#365))
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -27,6 +31,7 @@ func NewQuerier(keeper *BaseKeeper) Querier {
 }
 
 // Balance implements the Query/Balance gRPC method
+// Gets mapped account balance if mapping exists
 func (k BaseKeeper) Balance(ctx context.Context, req *types.QueryBalanceRequest) (*types.QueryBalanceResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
@@ -48,6 +53,7 @@ func (k BaseKeeper) Balance(ctx context.Context, req *types.QueryBalanceRequest)
 }
 
 // AllBalances implements the Query/AllBalances gRPC method
+// Gets mapped account balance if mapping exists
 func (k BaseKeeper) AllBalances(ctx context.Context, req *types.QueryAllBalancesRequest) (*types.QueryAllBalancesResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
@@ -59,6 +65,7 @@ func (k BaseKeeper) AllBalances(ctx context.Context, req *types.QueryAllBalances
 	}
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
+<<<<<<< HEAD
 	balances, pageRes, err := query.CollectionPaginate(
 		ctx,
 		k.Balances,
@@ -73,6 +80,22 @@ func (k BaseKeeper) AllBalances(ctx context.Context, req *types.QueryAllBalances
 		},
 		query.WithCollectionPaginationPairPrefix[sdk.AccAddress, string](addr),
 	)
+=======
+
+	balances := sdk.NewCoins()
+	address := k.ak.GetMergedAccountAddressIfExists(sdkCtx, addr)
+	accountStore := k.getAccountStore(sdkCtx, address)
+
+	pageRes, err := query.Paginate(accountStore, req.Pagination, func(key, value []byte) error {
+		denom := string(key)
+		balance, err := UnmarshalBalanceCompat(k.cdc, value, denom)
+		if err != nil {
+			return err
+		}
+		balances = append(balances, balance)
+		return nil
+	})
+>>>>>>> 7ccb8b4811 (Feat/cherry pick upgrade (#365))
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "paginate: %v", err)
 	}
@@ -82,6 +105,7 @@ func (k BaseKeeper) AllBalances(ctx context.Context, req *types.QueryAllBalances
 
 // SpendableBalances implements a gRPC query handler for retrieving an account's
 // spendable balances.
+// Gets mapped account balance if mapping exists
 func (k BaseKeeper) SpendableBalances(ctx context.Context, req *types.QuerySpendableBalancesRequest) (*types.QuerySpendableBalancesResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
@@ -94,7 +118,14 @@ func (k BaseKeeper) SpendableBalances(ctx context.Context, req *types.QuerySpend
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
+<<<<<<< HEAD
 	zeroAmt := math.ZeroInt()
+=======
+	balances := sdk.NewCoins()
+	address := k.ak.GetMergedAccountAddressIfExists(sdkCtx, addr)
+	accountStore := k.getAccountStore(sdkCtx, address)
+	zeroAmt := sdk.ZeroInt()
+>>>>>>> 7ccb8b4811 (Feat/cherry pick upgrade (#365))
 
 	balances, pageRes, err := query.CollectionPaginate(ctx, k.Balances, req.Pagination, func(key collections.Pair[sdk.AccAddress, string], _ math.Int) (coin sdk.Coin, err error) {
 		return sdk.NewCoin(key.K2(), zeroAmt), nil
@@ -104,6 +135,7 @@ func (k BaseKeeper) SpendableBalances(ctx context.Context, req *types.QuerySpend
 	}
 
 	result := sdk.NewCoins()
+	// Mapping to cosmos account is done within this method so is safe to pass in the original address
 	spendable := k.SpendableCoins(sdkCtx, addr)
 
 	for _, c := range balances {

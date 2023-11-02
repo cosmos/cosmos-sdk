@@ -2,7 +2,6 @@ package mint
 
 import (
 	"context"
-	"time"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -12,8 +11,6 @@ import (
 
 // BeginBlocker mints new tokens for the previous block.
 func BeginBlocker(ctx context.Context, k keeper.Keeper, ic types.InflationCalculationFn) error {
-	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyBeginBlocker)
-
 	// fetch stored minter & params
 	minter, err := k.Minter.Get(ctx)
 	if err != nil {

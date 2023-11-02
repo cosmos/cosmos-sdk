@@ -46,10 +46,11 @@ func TestGRPCParams(t *testing.T) {
 			name: "valid request",
 			malleate: func() {
 				params = types.Params{
-					CommunityTax:        math.LegacyNewDecWithPrec(3, 1),
-					BaseProposerReward:  math.LegacyZeroDec(),
-					BonusProposerReward: math.LegacyZeroDec(),
-					WithdrawAddrEnabled: true,
+					CommunityTax:            math.LegacyNewDecWithPrec(3, 1),
+					BaseProposerReward:      math.LegacyZeroDec(),
+					BonusProposerReward:     math.LegacyZeroDec(),
+					LiquidityProviderReward: math.LegacyZeroDec(),
+					WithdrawAddrEnabled:     true,
 				}
 
 				assert.NilError(t, f.distrKeeper.Params.Set(f.sdkCtx, params))

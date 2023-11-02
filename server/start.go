@@ -2,15 +2,23 @@ package server
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"net"
 	"os"
 	"runtime/pprof"
 	"time"
 
-	// cmtcmd "github.com/cometbft/cometbft/cmd/cometbft/commands"
+	"github.com/cometbft/cometbft/abci/server"
+	cmtcmd "github.com/cometbft/cometbft/cmd/cometbft/commands"
+	cmtcfg "github.com/cometbft/cometbft/config"
+	"github.com/cometbft/cometbft/node"
+	"github.com/cometbft/cometbft/p2p"
+	pvm "github.com/cometbft/cometbft/privval"
+	"github.com/cometbft/cometbft/proxy"
 	rpchttp "github.com/cometbft/cometbft/rpc/client/http"
 	"github.com/cometbft/cometbft/rpc/client/local"
+	cmttypes "github.com/cometbft/cometbft/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/hashicorp/go-metrics"
 	"github.com/spf13/cobra"
@@ -24,13 +32,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server/api"
-	"github.com/cosmos/cosmos-sdk/server/comet"
 	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
 	servergrpc "github.com/cosmos/cosmos-sdk/server/grpc"
+	servercmtlog "github.com/cosmos/cosmos-sdk/server/log"
 	"github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	"github.com/cosmos/cosmos-sdk/types/mempool"
 	"github.com/cosmos/cosmos-sdk/version"
+	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
 const (
@@ -221,6 +230,9 @@ is performed. Note, when enabled, gRPC will also be automatically enabled.
 		return pflag.NormalizedName(name)
 	})
 
+	// add support for all CometBFT-specific command line options
+	cmtcmd.AddNodeFlags(cmd)
+
 	if opts.AddFlags != nil {
 		opts.AddFlags(cmd)
 	}
@@ -256,16 +268,13 @@ func startStandAlone(svrCtx *Context, svrCfg serverconfig.Config, clientCtx clie
 	addr := svrCtx.Viper.GetString(flagAddress)
 	transport := svrCtx.Viper.GetString(flagTransport)
 
-	cometService := comet.NewCometBFTServer(
-		clientCtx,
-		svrCtx.Logger,
-		app,
-		comet.Config{
-			Addr:       addr,
-			Transport:  transport,
-			Standalone: true,
-			CmtConfig:  svrCtx.Config,
-		})
+	cmtApp := NewCometABCIWrapper(app)
+	svr, err := server.NewServer(addr, transport, cmtApp)
+	if err != nil {
+		return fmt.Errorf("error creating listener: %w", err)
+	}
+
+	svr.SetLogger(servercmtlog.CometLoggerWrapper{Logger: svrCtx.Logger.With("module", "abci-server")})
 
 	g, ctx := getCtx(svrCtx, false)
 
@@ -285,6 +294,7 @@ func startStandAlone(svrCtx *Context, svrCfg serverconfig.Config, clientCtx clie
 
 		// use the provided clientCtx to register the services
 		app.RegisterTxService(clientCtx)
+		app.RegisterTendermintService(clientCtx)
 		app.RegisterNodeService(clientCtx, svrCfg)
 	}
 
@@ -296,13 +306,13 @@ func startStandAlone(svrCtx *Context, svrCfg serverconfig.Config, clientCtx clie
 	cmtCfg := svrCtx.Config
 	home := cmtCfg.RootDir
 
-	err = startAPIServer(ctx, g, svrCfg, clientCtx, svrCtx, app, home, grpcSrv, metrics)
+	err = startAPIServer(ctx, g, cmtCfg, svrCfg, clientCtx, svrCtx, app, home, grpcSrv, metrics)
 	if err != nil {
 		return err
 	}
 
 	g.Go(func() error {
-		if err := cometService.Start(ctx); err != nil {
+		if err := svr.Start(); err != nil {
 			svrCtx.Logger.Error("failed to start out-of-process ABCI server", "err", err)
 			return err
 		}
@@ -311,7 +321,7 @@ func startStandAlone(svrCtx *Context, svrCfg serverconfig.Config, clientCtx clie
 		// so we can gracefully stop the ABCI server.
 		<-ctx.Done()
 		svrCtx.Logger.Info("stopping the ABCI server...")
-		return cometService.Stop()
+		return svr.Stop()
 	})
 
 	return g.Wait()
@@ -333,17 +343,11 @@ func startInProcess(svrCtx *Context, svrCfg serverconfig.Config, clientCtx clien
 		svrCfg.GRPC.Enable = true
 	} else {
 		svrCtx.Logger.Info("starting node with ABCI CometBFT in-process")
-		cometService := comet.NewCometBFTServer(
-			clientCtx,
-			svrCtx.Logger,
-			app,
-			comet.Config{
-				Addr:      "", // not needed when in-process
-				Transport: "", // not needed when in-process
-				CmtConfig: svrCtx.Config,
-			})
-		cometService.Start(ctx)
-		defer cometService.Stop()
+		tmNode, cleanupFn, err := startCmtNode(ctx, cmtCfg, app, svrCtx)
+		if err != nil {
+			return err
+		}
+		defer cleanupFn()
 
 		// Add the tx service to the gRPC router. We only need to register this
 		// service if API or gRPC is enabled, and avoid doing so in the general
@@ -351,10 +355,10 @@ func startInProcess(svrCtx *Context, svrCfg serverconfig.Config, clientCtx clien
 		if svrCfg.API.Enable || svrCfg.GRPC.Enable {
 			// Re-assign for making the client available below do not use := to avoid
 			// shadowing the clientCtx variable.
-			// TODO: put this inside cometService somehow
-			clientCtx = clientCtx.WithClient(local.New(cometService.Node))
+			clientCtx = clientCtx.WithClient(local.New(tmNode))
 
 			app.RegisterTxService(clientCtx)
+			app.RegisterTendermintService(clientCtx)
 			app.RegisterNodeService(clientCtx, svrCfg)
 		}
 	}
@@ -364,7 +368,7 @@ func startInProcess(svrCtx *Context, svrCfg serverconfig.Config, clientCtx clien
 		return err
 	}
 
-	err = startAPIServer(ctx, g, svrCfg, clientCtx, svrCtx, app, home, grpcSrv, metrics)
+	err = startAPIServer(ctx, g, cmtCfg, svrCfg, clientCtx, svrCtx, app, home, grpcSrv, metrics)
 	if err != nil {
 		return err
 	}
@@ -380,6 +384,47 @@ func startInProcess(svrCtx *Context, svrCfg serverconfig.Config, clientCtx clien
 	return g.Wait()
 }
 
+// TODO: Move nodeKey into being created within the function.
+func startCmtNode(
+	ctx context.Context,
+	cfg *cmtcfg.Config,
+	app types.Application,
+	svrCtx *Context,
+) (tmNode *node.Node, cleanupFn func(), err error) {
+	nodeKey, err := p2p.LoadOrGenNodeKey(cfg.NodeKeyFile())
+	if err != nil {
+		return nil, cleanupFn, err
+	}
+
+	cmtApp := NewCometABCIWrapper(app)
+	tmNode, err = node.NewNodeWithContext(
+		ctx,
+		cfg,
+		pvm.LoadOrGenFilePV(cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile()),
+		nodeKey,
+		proxy.NewLocalClientCreator(cmtApp),
+		getGenDocProvider(cfg),
+		cmtcfg.DefaultDBProvider,
+		node.DefaultMetricsProvider(cfg.Instrumentation),
+		servercmtlog.CometLoggerWrapper{Logger: svrCtx.Logger},
+	)
+	if err != nil {
+		return tmNode, cleanupFn, err
+	}
+
+	if err := tmNode.Start(); err != nil {
+		return tmNode, cleanupFn, err
+	}
+
+	cleanupFn = func() {
+		if tmNode != nil && tmNode.IsRunning() {
+			_ = tmNode.Stop()
+		}
+	}
+
+	return tmNode, cleanupFn, nil
+}
+
 func getAndValidateConfig(svrCtx *Context) (serverconfig.Config, error) {
 	config, err := serverconfig.GetConfig(svrCtx.Viper)
 	if err != nil {
@@ -390,6 +435,18 @@ func getAndValidateConfig(svrCtx *Context) (serverconfig.Config, error) {
 		return config, err
 	}
 	return config, nil
+}
+
+// returns a function which returns the genesis doc from the genesis file.
+func getGenDocProvider(cfg *cmtcfg.Config) func() (*cmttypes.GenesisDoc, error) {
+	return func() (*cmttypes.GenesisDoc, error) {
+		appGenesis, err := genutiltypes.AppGenesisFromFile(cfg.GenesisFile())
+		if err != nil {
+			return nil, err
+		}
+
+		return appGenesis.ToGenesisDoc()
+	}
 }
 
 func setupTraceWriter(svrCtx *Context) (traceWriter io.WriteCloser, cleanup func(), err error) {
@@ -474,6 +531,7 @@ func startGrpcServer(
 func startAPIServer(
 	ctx context.Context,
 	g *errgroup.Group,
+	cmtCfg *cmtcfg.Config,
 	svrCfg serverconfig.Config,
 	clientCtx client.Context,
 	svrCtx *Context,

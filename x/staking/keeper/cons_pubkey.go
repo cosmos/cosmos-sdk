@@ -74,6 +74,6 @@ func (k Keeper) SetConsKeyQueue(ctx context.Context, ts time.Time, valAddr sdk.V
 		return err
 	}
 
-	queueRec.Addresses = append(queueRec.Addresses, valAddr.String())
+	queueRec.Addresses = append(queueRec.Addresses, valAddr)
 	return k.ValidatorConsensusKeyRotationRecordQueue.Set(ctx, ts, queueRec)
 }

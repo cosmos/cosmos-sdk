@@ -35,7 +35,7 @@ func (s *StoreTestSuite) SetupTest() {
 }
 
 func (s *StoreTestSuite) TearDownTest() {
-	err := s.gasKVStore.Reset()
+	err := s.gasKVStore.Reset(1)
 	s.Require().NoError(err)
 }
 

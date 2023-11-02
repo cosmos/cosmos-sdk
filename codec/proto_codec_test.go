@@ -10,11 +10,17 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/encoding"
 	"google.golang.org/grpc/status"
+	protov2 "google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/reflect/protoregistry"
+
+	counterv1 "cosmossdk.io/api/cosmos/counter/v1"
+	"cosmossdk.io/x/tx/signing"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	countertypes "github.com/cosmos/cosmos-sdk/x/counter/types"
 )
 
 func createTestInterfaceRegistry() types.InterfaceRegistry {
@@ -105,7 +111,7 @@ func TestProtoCodecMarshal(t *testing.T) {
 	require.NoError(t, err)
 
 	// test typed nil input shouldn't panic
-	var v *banktypes.QueryBalanceResponse
+	var v *countertypes.QueryGetCountRequest
 	bz, err = grpcServerEncode(cartoonCdc.GRPCCodec(), v)
 	require.NoError(t, err)
 	require.Empty(t, bz)
@@ -167,4 +173,47 @@ func BenchmarkProtoCodecMarshalLengthPrefixed(b *testing.B) {
 		}
 		b.SetBytes(int64(len(blob)))
 	}
+}
+
+func TestGetSigners(t *testing.T) {
+	interfaceRegistry, err := types.NewInterfaceRegistryWithOptions(types.InterfaceRegistryOptions{
+		SigningOptions: signing.Options{
+			AddressCodec:          testAddressCodec{},
+			ValidatorAddressCodec: testAddressCodec{},
+		},
+		ProtoFiles: protoregistry.GlobalFiles,
+	})
+	require.NoError(t, err)
+	cdc := codec.NewProtoCodec(interfaceRegistry)
+	testAddr := sdk.AccAddress("test")
+	testAddrStr := testAddr.String()
+
+	msgSendV1 := &countertypes.MsgIncreaseCounter{Signer: testAddrStr, Count: 1}
+	msgSendV2 := &counterv1.MsgIncreaseCounter{Signer: testAddrStr, Count: 1}
+
+	signers, msgSendV2Copy, err := cdc.GetMsgV1Signers(msgSendV1)
+	require.NoError(t, err)
+	require.Equal(t, [][]byte{testAddr}, signers)
+	require.True(t, protov2.Equal(msgSendV2, msgSendV2Copy))
+
+	signers, err = cdc.GetMsgV2Signers(msgSendV2)
+	require.NoError(t, err)
+	require.Equal(t, [][]byte{testAddr}, signers)
+
+	msgSendAny, err := types.NewAnyWithValue(msgSendV1)
+	require.NoError(t, err)
+	signers, msgSendV2Copy, err = cdc.GetMsgAnySigners(msgSendAny)
+	require.NoError(t, err)
+	require.Equal(t, [][]byte{testAddr}, signers)
+	require.True(t, protov2.Equal(msgSendV2, msgSendV2Copy))
+}
+
+type testAddressCodec struct{}
+
+func (t testAddressCodec) StringToBytes(text string) ([]byte, error) {
+	return sdk.AccAddressFromBech32(text)
+}
+
+func (t testAddressCodec) BytesToString(bz []byte) (string, error) {
+	return sdk.AccAddress(bz).String(), nil
 }

@@ -4,9 +4,10 @@ package testpb
 
 import (
 	context "context"
-	ormlist "github.com/cosmos/cosmos-sdk/orm/model/ormlist"
-	ormtable "github.com/cosmos/cosmos-sdk/orm/model/ormtable"
-	ormerrors "github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
+	ormlist "cosmossdk.io/orm/model/ormlist"
+	ormtable "cosmossdk.io/orm/model/ormtable"
+	ormerrors "cosmossdk.io/orm/types/ormerrors"
+	durationpb "google.golang.org/protobuf/types/known/durationpb"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -216,6 +217,7 @@ func NewExampleTableTable(db ormtable.Schema) (ExampleTableTable, error) {
 type ExampleAutoIncrementTableTable interface {
 	Insert(ctx context.Context, exampleAutoIncrementTable *ExampleAutoIncrementTable) error
 	InsertReturningId(ctx context.Context, exampleAutoIncrementTable *ExampleAutoIncrementTable) (uint64, error)
+	LastInsertedSequence(ctx context.Context) (uint64, error)
 	Update(ctx context.Context, exampleAutoIncrementTable *ExampleAutoIncrementTable) error
 	Save(ctx context.Context, exampleAutoIncrementTable *ExampleAutoIncrementTable) error
 	Delete(ctx context.Context, exampleAutoIncrementTable *ExampleAutoIncrementTable) error
@@ -300,6 +302,10 @@ func (this exampleAutoIncrementTableTable) Delete(ctx context.Context, exampleAu
 
 func (this exampleAutoIncrementTableTable) InsertReturningId(ctx context.Context, exampleAutoIncrementTable *ExampleAutoIncrementTable) (uint64, error) {
 	return this.table.InsertReturningPKey(ctx, exampleAutoIncrementTable)
+}
+
+func (this exampleAutoIncrementTableTable) LastInsertedSequence(ctx context.Context) (uint64, error) {
+	return this.table.LastInsertedSequence(ctx)
 }
 
 func (this exampleAutoIncrementTableTable) Has(ctx context.Context, id uint64) (found bool, err error) {
@@ -401,6 +407,7 @@ func NewExampleSingletonTable(db ormtable.Schema) (ExampleSingletonTable, error)
 type ExampleTimestampTable interface {
 	Insert(ctx context.Context, exampleTimestamp *ExampleTimestamp) error
 	InsertReturningId(ctx context.Context, exampleTimestamp *ExampleTimestamp) (uint64, error)
+	LastInsertedSequence(ctx context.Context) (uint64, error)
 	Update(ctx context.Context, exampleTimestamp *ExampleTimestamp) error
 	Save(ctx context.Context, exampleTimestamp *ExampleTimestamp) error
 	Delete(ctx context.Context, exampleTimestamp *ExampleTimestamp) error
@@ -484,6 +491,10 @@ func (this exampleTimestampTable) InsertReturningId(ctx context.Context, example
 	return this.table.InsertReturningPKey(ctx, exampleTimestamp)
 }
 
+func (this exampleTimestampTable) LastInsertedSequence(ctx context.Context) (uint64, error) {
+	return this.table.LastInsertedSequence(ctx)
+}
+
 func (this exampleTimestampTable) Has(ctx context.Context, id uint64) (found bool, err error) {
 	return this.table.PrimaryKey().Has(ctx, id)
 }
@@ -528,6 +539,143 @@ func NewExampleTimestampTable(db ormtable.Schema) (ExampleTimestampTable, error)
 		return nil, ormerrors.TableNotFound.Wrap(string((&ExampleTimestamp{}).ProtoReflect().Descriptor().FullName()))
 	}
 	return exampleTimestampTable{table.(ormtable.AutoIncrementTable)}, nil
+}
+
+type ExampleDurationTable interface {
+	Insert(ctx context.Context, exampleDuration *ExampleDuration) error
+	InsertReturningId(ctx context.Context, exampleDuration *ExampleDuration) (uint64, error)
+	LastInsertedSequence(ctx context.Context) (uint64, error)
+	Update(ctx context.Context, exampleDuration *ExampleDuration) error
+	Save(ctx context.Context, exampleDuration *ExampleDuration) error
+	Delete(ctx context.Context, exampleDuration *ExampleDuration) error
+	Has(ctx context.Context, id uint64) (found bool, err error)
+	// Get returns nil and an error which responds true to ormerrors.IsNotFound() if the record was not found.
+	Get(ctx context.Context, id uint64) (*ExampleDuration, error)
+	List(ctx context.Context, prefixKey ExampleDurationIndexKey, opts ...ormlist.Option) (ExampleDurationIterator, error)
+	ListRange(ctx context.Context, from, to ExampleDurationIndexKey, opts ...ormlist.Option) (ExampleDurationIterator, error)
+	DeleteBy(ctx context.Context, prefixKey ExampleDurationIndexKey) error
+	DeleteRange(ctx context.Context, from, to ExampleDurationIndexKey) error
+
+	doNotImplement()
+}
+
+type ExampleDurationIterator struct {
+	ormtable.Iterator
+}
+
+func (i ExampleDurationIterator) Value() (*ExampleDuration, error) {
+	var exampleDuration ExampleDuration
+	err := i.UnmarshalMessage(&exampleDuration)
+	return &exampleDuration, err
+}
+
+type ExampleDurationIndexKey interface {
+	id() uint32
+	values() []interface{}
+	exampleDurationIndexKey()
+}
+
+// primary key starting index..
+type ExampleDurationPrimaryKey = ExampleDurationIdIndexKey
+
+type ExampleDurationIdIndexKey struct {
+	vs []interface{}
+}
+
+func (x ExampleDurationIdIndexKey) id() uint32               { return 0 }
+func (x ExampleDurationIdIndexKey) values() []interface{}    { return x.vs }
+func (x ExampleDurationIdIndexKey) exampleDurationIndexKey() {}
+
+func (this ExampleDurationIdIndexKey) WithId(id uint64) ExampleDurationIdIndexKey {
+	this.vs = []interface{}{id}
+	return this
+}
+
+type ExampleDurationDurIndexKey struct {
+	vs []interface{}
+}
+
+func (x ExampleDurationDurIndexKey) id() uint32               { return 1 }
+func (x ExampleDurationDurIndexKey) values() []interface{}    { return x.vs }
+func (x ExampleDurationDurIndexKey) exampleDurationIndexKey() {}
+
+func (this ExampleDurationDurIndexKey) WithDur(dur *durationpb.Duration) ExampleDurationDurIndexKey {
+	this.vs = []interface{}{dur}
+	return this
+}
+
+type exampleDurationTable struct {
+	table ormtable.AutoIncrementTable
+}
+
+func (this exampleDurationTable) Insert(ctx context.Context, exampleDuration *ExampleDuration) error {
+	return this.table.Insert(ctx, exampleDuration)
+}
+
+func (this exampleDurationTable) Update(ctx context.Context, exampleDuration *ExampleDuration) error {
+	return this.table.Update(ctx, exampleDuration)
+}
+
+func (this exampleDurationTable) Save(ctx context.Context, exampleDuration *ExampleDuration) error {
+	return this.table.Save(ctx, exampleDuration)
+}
+
+func (this exampleDurationTable) Delete(ctx context.Context, exampleDuration *ExampleDuration) error {
+	return this.table.Delete(ctx, exampleDuration)
+}
+
+func (this exampleDurationTable) InsertReturningId(ctx context.Context, exampleDuration *ExampleDuration) (uint64, error) {
+	return this.table.InsertReturningPKey(ctx, exampleDuration)
+}
+
+func (this exampleDurationTable) LastInsertedSequence(ctx context.Context) (uint64, error) {
+	return this.table.LastInsertedSequence(ctx)
+}
+
+func (this exampleDurationTable) Has(ctx context.Context, id uint64) (found bool, err error) {
+	return this.table.PrimaryKey().Has(ctx, id)
+}
+
+func (this exampleDurationTable) Get(ctx context.Context, id uint64) (*ExampleDuration, error) {
+	var exampleDuration ExampleDuration
+	found, err := this.table.PrimaryKey().Get(ctx, &exampleDuration, id)
+	if err != nil {
+		return nil, err
+	}
+	if !found {
+		return nil, ormerrors.NotFound
+	}
+	return &exampleDuration, nil
+}
+
+func (this exampleDurationTable) List(ctx context.Context, prefixKey ExampleDurationIndexKey, opts ...ormlist.Option) (ExampleDurationIterator, error) {
+	it, err := this.table.GetIndexByID(prefixKey.id()).List(ctx, prefixKey.values(), opts...)
+	return ExampleDurationIterator{it}, err
+}
+
+func (this exampleDurationTable) ListRange(ctx context.Context, from, to ExampleDurationIndexKey, opts ...ormlist.Option) (ExampleDurationIterator, error) {
+	it, err := this.table.GetIndexByID(from.id()).ListRange(ctx, from.values(), to.values(), opts...)
+	return ExampleDurationIterator{it}, err
+}
+
+func (this exampleDurationTable) DeleteBy(ctx context.Context, prefixKey ExampleDurationIndexKey) error {
+	return this.table.GetIndexByID(prefixKey.id()).DeleteBy(ctx, prefixKey.values()...)
+}
+
+func (this exampleDurationTable) DeleteRange(ctx context.Context, from, to ExampleDurationIndexKey) error {
+	return this.table.GetIndexByID(from.id()).DeleteRange(ctx, from.values(), to.values())
+}
+
+func (this exampleDurationTable) doNotImplement() {}
+
+var _ ExampleDurationTable = exampleDurationTable{}
+
+func NewExampleDurationTable(db ormtable.Schema) (ExampleDurationTable, error) {
+	table := db.GetTable(&ExampleDuration{})
+	if table == nil {
+		return nil, ormerrors.TableNotFound.Wrap(string((&ExampleDuration{}).ProtoReflect().Descriptor().FullName()))
+	}
+	return exampleDurationTable{table.(ormtable.AutoIncrementTable)}, nil
 }
 
 type SimpleExampleTable interface {
@@ -683,6 +831,7 @@ func NewSimpleExampleTable(db ormtable.Schema) (SimpleExampleTable, error) {
 type ExampleAutoIncFieldNameTable interface {
 	Insert(ctx context.Context, exampleAutoIncFieldName *ExampleAutoIncFieldName) error
 	InsertReturningFoo(ctx context.Context, exampleAutoIncFieldName *ExampleAutoIncFieldName) (uint64, error)
+	LastInsertedSequence(ctx context.Context) (uint64, error)
 	Update(ctx context.Context, exampleAutoIncFieldName *ExampleAutoIncFieldName) error
 	Save(ctx context.Context, exampleAutoIncFieldName *ExampleAutoIncFieldName) error
 	Delete(ctx context.Context, exampleAutoIncFieldName *ExampleAutoIncFieldName) error
@@ -753,6 +902,10 @@ func (this exampleAutoIncFieldNameTable) InsertReturningFoo(ctx context.Context,
 	return this.table.InsertReturningPKey(ctx, exampleAutoIncFieldName)
 }
 
+func (this exampleAutoIncFieldNameTable) LastInsertedSequence(ctx context.Context) (uint64, error) {
+	return this.table.LastInsertedSequence(ctx)
+}
+
 func (this exampleAutoIncFieldNameTable) Has(ctx context.Context, foo uint64) (found bool, err error) {
 	return this.table.PrimaryKey().Has(ctx, foo)
 }
@@ -804,6 +957,7 @@ type TestSchemaStore interface {
 	ExampleAutoIncrementTableTable() ExampleAutoIncrementTableTable
 	ExampleSingletonTable() ExampleSingletonTable
 	ExampleTimestampTable() ExampleTimestampTable
+	ExampleDurationTable() ExampleDurationTable
 	SimpleExampleTable() SimpleExampleTable
 	ExampleAutoIncFieldNameTable() ExampleAutoIncFieldNameTable
 
@@ -815,6 +969,7 @@ type testSchemaStore struct {
 	exampleAutoIncrementTable ExampleAutoIncrementTableTable
 	exampleSingleton          ExampleSingletonTable
 	exampleTimestamp          ExampleTimestampTable
+	exampleDuration           ExampleDurationTable
 	simpleExample             SimpleExampleTable
 	exampleAutoIncFieldName   ExampleAutoIncFieldNameTable
 }
@@ -833,6 +988,10 @@ func (x testSchemaStore) ExampleSingletonTable() ExampleSingletonTable {
 
 func (x testSchemaStore) ExampleTimestampTable() ExampleTimestampTable {
 	return x.exampleTimestamp
+}
+
+func (x testSchemaStore) ExampleDurationTable() ExampleDurationTable {
+	return x.exampleDuration
 }
 
 func (x testSchemaStore) SimpleExampleTable() SimpleExampleTable {
@@ -868,6 +1027,11 @@ func NewTestSchemaStore(db ormtable.Schema) (TestSchemaStore, error) {
 		return nil, err
 	}
 
+	exampleDurationTable, err := NewExampleDurationTable(db)
+	if err != nil {
+		return nil, err
+	}
+
 	simpleExampleTable, err := NewSimpleExampleTable(db)
 	if err != nil {
 		return nil, err
@@ -883,6 +1047,7 @@ func NewTestSchemaStore(db ormtable.Schema) (TestSchemaStore, error) {
 		exampleAutoIncrementTableTable,
 		exampleSingletonTable,
 		exampleTimestampTable,
+		exampleDurationTable,
 		simpleExampleTable,
 		exampleAutoIncFieldNameTable,
 	}, nil

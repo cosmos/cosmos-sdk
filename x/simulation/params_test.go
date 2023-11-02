@@ -5,7 +5,6 @@ import (
 	"math/rand"
 	"testing"
 
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -30,7 +29,7 @@ func TestNewWeightedProposalContent(t *testing.T) {
 	key := "theKey"
 	weight := 1
 	content := &testContent{}
-	f := func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) simtypes.Content { //nolint:staticcheck
+	f := func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) simtypes.Content { //nolint:staticcheck // used for legacy testing
 		return content
 	}
 
@@ -39,7 +38,7 @@ func TestNewWeightedProposalContent(t *testing.T) {
 	require.Equal(t, key, pContent.AppParamsKey())
 	require.Equal(t, weight, pContent.DefaultWeight())
 
-	ctx := sdk.NewContext(nil, cmtproto.Header{}, true, nil)
+	ctx := sdk.NewContext(nil, true, nil)
 	require.Equal(t, content, pContent.ContentSimulatorFn()(nil, ctx, nil))
 }
 

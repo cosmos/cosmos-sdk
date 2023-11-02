@@ -118,11 +118,11 @@ func Debug() DebugOption {
 	)
 }
 
-func (d *debugConfig) initLogBuf() {
-	if d.logBuf == nil {
-		d.logBuf = &[]string{}
-		d.loggers = append(d.loggers, func(s string) {
-			*d.logBuf = append(*d.logBuf, s)
+func (c *debugConfig) initLogBuf() {
+	if c.logBuf == nil {
+		c.logBuf = &[]string{}
+		c.loggers = append(c.loggers, func(s string) {
+			*c.logBuf = append(*c.logBuf, s)
 		})
 	}
 }
@@ -221,7 +221,7 @@ func newDebugConfig() (*debugConfig, error) {
 }
 
 func (c *debugConfig) indentLogger() {
-	c.indentStr = c.indentStr + " "
+	c.indentStr += " "
 }
 
 func (c *debugConfig) dedentLogger() {
@@ -261,7 +261,7 @@ func (c *debugConfig) enableLogVisualizer() {
 func (c *debugConfig) addFileVisualizer(filename string) {
 	c.visualizers = append(c.visualizers, func(_ string) {
 		dotStr := c.graph.String()
-		err := os.WriteFile(filename, []byte(dotStr), 0o644)
+		err := os.WriteFile(filename, []byte(dotStr), 0o600)
 		if err != nil {
 			c.logf("Error saving graphviz file %s: %+v", filename, err)
 		} else {
@@ -323,17 +323,17 @@ func (c *debugConfig) moduleSubGraph(key *moduleKey) *graphviz.Graph {
 	if key == nil {
 		// return the root graph
 		return c.graph
-	} else {
-		gname := fmt.Sprintf("cluster_%s", key.name)
-		graph, found := c.graph.FindOrCreateSubGraph(gname)
-		if !found {
-			graph.SetLabel(fmt.Sprintf("Module: %s", key.name))
-			graph.SetPenWidth("0.5")
-			graph.SetFontSize("12.0")
-			graph.SetStyle("rounded")
-		}
-		return graph
 	}
+
+	gname := fmt.Sprintf("cluster_%s", key.name)
+	graph, found := c.graph.FindOrCreateSubGraph(gname)
+	if !found {
+		graph.SetLabel(fmt.Sprintf("Module: %s", key.name))
+		graph.SetPenWidth("0.5")
+		graph.SetFontSize("12.0")
+		graph.SetStyle("rounded")
+	}
+	return graph
 }
 
 func (c *debugConfig) addGraphEdge(from, to *graphviz.Node) {

@@ -3,19 +3,15 @@ package ormtable
 import (
 	"context"
 
-	"github.com/cosmos/cosmos-sdk/orm/types/kv"
-
-	"github.com/cosmos/cosmos-sdk/orm/internal/fieldnames"
-
-	"github.com/cosmos/cosmos-sdk/orm/model/ormlist"
-
-	"github.com/cosmos/cosmos-sdk/orm/encoding/encodeutil"
-
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
-	"github.com/cosmos/cosmos-sdk/orm/encoding/ormkv"
-	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
+	"cosmossdk.io/orm/encoding/encodeutil"
+	"cosmossdk.io/orm/encoding/ormkv"
+	"cosmossdk.io/orm/internal/fieldnames"
+	"cosmossdk.io/orm/model/ormlist"
+	"cosmossdk.io/orm/types/kv"
+	"cosmossdk.io/orm/types/ormerrors"
 )
 
 type uniqueKeyIndex struct {
@@ -198,7 +194,7 @@ var (
 // isNonTrivialUniqueKey checks if unique key fields are non-trivial, meaning that they
 // don't contain the full primary key. If they contain the full primary key, then
 // we can just use a regular index because there is no new unique constraint.
-func isNonTrivialUniqueKey(fields []protoreflect.Name, primaryKeyFields []protoreflect.Name) bool {
+func isNonTrivialUniqueKey(fields, primaryKeyFields []protoreflect.Name) bool {
 	have := map[protoreflect.Name]bool{}
 	for _, field := range fields {
 		have[field] = true

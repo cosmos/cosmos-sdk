@@ -216,6 +216,12 @@ func (p pairKeyCodec[K1, K2]) DecodeJSON(b []byte) (Pair[K1, K2], error) {
 	return Join(k1, k2), nil
 }
 
+// NewPrefixUntilPairRange defines a collection query which ranges until the provided Pair prefix.
+// Unstable: this API might change in the future.
+func NewPrefixUntilPairRange[K1, K2 any](prefix K1) *PairRange[K1, K2] {
+	return &PairRange[K1, K2]{end: RangeKeyPrefixEnd(PairPrefix[K1, K2](prefix))}
+}
+
 // NewPrefixedPairRange creates a new PairRange which will prefix over all the keys
 // starting with the provided prefix.
 func NewPrefixedPairRange[K1, K2 any](prefix K1) *PairRange[K1, K2] {
@@ -261,7 +267,7 @@ func (p *PairRange[K1, K2]) Descending() *PairRange[K1, K2] {
 	return p
 }
 
-func (p *PairRange[K1, K2]) RangeValues() (start *RangeKey[Pair[K1, K2]], end *RangeKey[Pair[K1, K2]], order Order, err error) {
+func (p *PairRange[K1, K2]) RangeValues() (start, end *RangeKey[Pair[K1, K2]], order Order, err error) {
 	if p.err != nil {
 		return nil, nil, 0, err
 	}

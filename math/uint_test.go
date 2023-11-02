@@ -8,8 +8,9 @@ import (
 	"strings"
 	"testing"
 
-	sdkmath "cosmossdk.io/math"
 	"github.com/stretchr/testify/suite"
+
+	sdkmath "cosmossdk.io/math"
 )
 
 type uintTestSuite struct {
@@ -67,6 +68,8 @@ func (s *uintTestSuite) TestUintPanics() {
 	s.Require().Panics(func() { uintmax.Incr() })
 	s.Require().Panics(func() { uintmin.Sub(sdkmath.OneUint()) })
 	s.Require().Panics(func() { uintmin.Decr() })
+
+	s.Require().NotPanics(func() { sdkmath.Uint{}.BigInt() })
 
 	s.Require().Equal(uint64(0), sdkmath.MinUint(sdkmath.ZeroUint(), sdkmath.OneUint()).Uint64())
 	s.Require().Equal(uint64(1), sdkmath.MaxUint(sdkmath.ZeroUint(), sdkmath.OneUint()).Uint64())
@@ -260,6 +263,16 @@ func (s *uintTestSuite) TestParseUint() {
 	}
 }
 
+func (s *uintTestSuite) TestNewUintFromBigInt() {
+	r := big.NewInt(42)
+	i := sdkmath.NewUintFromBigInt(r)
+	s.Require().Equal(r, i.BigInt())
+
+	// modify r and ensure i doesn't change
+	r = r.SetInt64(100)
+	s.Require().NotEqual(r, i.BigInt())
+}
+
 func randuint() sdkmath.Uint {
 	return sdkmath.NewUint(rand.Uint64())
 }
@@ -270,7 +283,7 @@ func (s *uintTestSuite) TestRelativePow() {
 		want sdkmath.Uint
 	}{
 		{[]sdkmath.Uint{sdkmath.ZeroUint(), sdkmath.ZeroUint(), sdkmath.OneUint()}, sdkmath.OneUint()},
-		{[]sdkmath.Uint{sdkmath.ZeroUint(), sdkmath.ZeroUint(), sdkmath.NewUint(10)}, sdkmath.NewUint(10)},
+		{[]sdkmath.Uint{sdkmath.ZeroUint(), sdkmath.ZeroUint(), sdkmath.NewUint(10)}, sdkmath.NewUint(1)},
 		{[]sdkmath.Uint{sdkmath.ZeroUint(), sdkmath.OneUint(), sdkmath.NewUint(10)}, sdkmath.ZeroUint()},
 		{[]sdkmath.Uint{sdkmath.NewUint(10), sdkmath.NewUint(2), sdkmath.OneUint()}, sdkmath.NewUint(100)},
 		{[]sdkmath.Uint{sdkmath.NewUint(210), sdkmath.NewUint(2), sdkmath.NewUint(100)}, sdkmath.NewUint(441)},

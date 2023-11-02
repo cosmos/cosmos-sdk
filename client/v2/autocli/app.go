@@ -1,13 +1,20 @@
 package autocli
 
 import (
-	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
-	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/depinject"
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/gogoproto/proto"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
+	"google.golang.org/protobuf/reflect/protoregistry"
+
+	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
+	"cosmossdk.io/client/v2/autocli/flag"
+	"cosmossdk.io/client/v2/autocli/keyring"
+	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/depinject"
+
+	"github.com/cosmos/cosmos-sdk/client"
+	sdkflags "github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 )
 
 // AppOptions are autocli options for an app. These options can be built via depinject based on an app config. Ex:
@@ -16,8 +23,8 @@ import (
 //	var autoCliOpts autocli.AppOptions
 //	err := depinject.Inject(appConfig, &encodingConfig.InterfaceRegistry, &autoCliOpts)
 //
-// If depinject isn't used, options can be provided manually or extracted from modules. One method for extracting autocli
-// options is via the github.com/cosmos/cosmos-sdk/runtime/services.ExtractAutoCLIOptions function.
+// If depinject isn't used, options can be provided manually or extracted from modules and the address codec can be provided by the auth keeper.
+// One method for extracting autocli options is via the github.com/cosmos/cosmos-sdk/runtime/services.ExtractAutoCLIOptions function.
 type AppOptions struct {
 	depinject.In
 
@@ -29,23 +36,23 @@ type AppOptions struct {
 	// app to override module options if they are either not provided by a
 	// module or need to be improved.
 	ModuleOptions map[string]*autocliv1.ModuleOptions `optional:"true"`
-}
 
-// RootCmd generates a root command for an app based on the AppOptions. This
-// command currently only includes query commands but will be enhanced over
-// time to cover the full scope of an app CLI.
-func (appOptions AppOptions) RootCmd() (*cobra.Command, error) {
-	rootCmd := &cobra.Command{}
-	err := appOptions.EnhanceRootCommand(rootCmd)
-	return rootCmd, err
+	// Keyring is the keyring to use for client/v2.
+	Keyring keyring.Keyring `optional:"true"`
+
+	// ClientCtx contains the necessary information needed to execute the commands.
+	ClientCtx client.Context
+
+	// TxConfigOptions are the transactions config options.
+	TxConfigOpts tx.ConfigOptions
 }
 
 // EnhanceRootCommand enhances the provided root command with autocli AppOptions,
-// only adding missing query commands and doesn't override commands already
+// only adding missing commands and doesn't override commands already
 // in the root command. This allows for the graceful integration of autocli with
 // existing app CLI commands where autocli simply automatically adds things that
-// weren't manually provided. It does take into account custom query commands
-// provided by modules with the HasCustomQueryCommand extension interface.
+// weren't manually provided. It does take into account custom commands
+// provided by modules with the HasCustomQueryCommand or HasCustomTxCommand extension interface.
 // Example Usage:
 //
 //	var autoCliOpts autocli.AppOptions
@@ -57,50 +64,74 @@ func (appOptions AppOptions) RootCmd() (*cobra.Command, error) {
 //	err = autoCliOpts.EnhanceRootCommand(rootCmd)
 func (appOptions AppOptions) EnhanceRootCommand(rootCmd *cobra.Command) error {
 	builder := &Builder{
+		Builder: flag.Builder{
+			TypeResolver:          protoregistry.GlobalTypes,
+			FileResolver:          proto.HybridResolver,
+			Keyring:               appOptions.Keyring,
+			AddressCodec:          appOptions.ClientCtx.AddressCodec,
+			ValidatorAddressCodec: appOptions.ClientCtx.ValidatorAddressCodec,
+			ConsensusAddressCodec: appOptions.ClientCtx.ConsensusAddressCodec,
+		},
+		ClientCtx:    appOptions.ClientCtx,
+		TxConfigOpts: appOptions.TxConfigOpts,
 		GetClientConn: func(cmd *cobra.Command) (grpc.ClientConnInterface, error) {
 			return client.GetClientQueryContext(cmd)
 		},
-		AddQueryConnFlags: flags.AddQueryFlagsToCmd,
+		AddQueryConnFlags: sdkflags.AddQueryFlagsToCmd,
+		AddTxConnFlags:    sdkflags.AddTxFlagsToCmd,
 	}
 
 	return appOptions.EnhanceRootCommandWithBuilder(rootCmd, builder)
 }
 
 func (appOptions AppOptions) EnhanceRootCommandWithBuilder(rootCmd *cobra.Command, builder *Builder) error {
-	moduleOptions := appOptions.ModuleOptions
-	if moduleOptions == nil {
-		moduleOptions = map[string]*autocliv1.ModuleOptions{}
-
-		for name, module := range appOptions.Modules {
-			if module, ok := module.(HasAutoCLIConfig); ok {
-				moduleOptions[name] = module.AutoCLIOptions()
-			}
-		}
+	if err := builder.ValidateAndComplete(); err != nil {
+		return err
 	}
 
-	customQueryCmds := map[string]*cobra.Command{}
+	// extract any custom commands from modules
+	customQueryCmds, customMsgCmds := map[string]*cobra.Command{}, map[string]*cobra.Command{}
 	for name, module := range appOptions.Modules {
-		if module, ok := module.(HasCustomQueryCommand); ok {
-			cmd := module.GetQueryCmd()
+		if queryModule, ok := module.(HasCustomQueryCommand); ok {
+			queryCmd := queryModule.GetQueryCmd()
 			// filter any nil commands
-			if cmd != nil {
-				customQueryCmds[name] = cmd
+			if queryCmd != nil {
+				customQueryCmds[name] = queryCmd
+			}
+		}
+		if msgModule, ok := module.(HasCustomTxCommand); ok {
+			msgCmd := msgModule.GetTxCmd()
+			// filter any nil commands
+			if msgCmd != nil {
+				customMsgCmds[name] = msgCmd
 			}
 		}
 	}
 
-	// if we have an existing query command, enhance it or build a custom one
 	if queryCmd := findSubCommand(rootCmd, "query"); queryCmd != nil {
-		if err := builder.EnhanceQueryCommand(queryCmd, moduleOptions, customQueryCmds); err != nil {
+		if err := builder.enhanceCommandCommon(queryCmd, queryCmdType, appOptions, customQueryCmds); err != nil {
 			return err
 		}
 	} else {
-		queryCmd, err := builder.BuildQueryCommand(moduleOptions, customQueryCmds)
+		queryCmd, err := builder.BuildQueryCommand(appOptions, customQueryCmds)
 		if err != nil {
 			return err
 		}
 
 		rootCmd.AddCommand(queryCmd)
+	}
+
+	if msgCmd := findSubCommand(rootCmd, "tx"); msgCmd != nil {
+		if err := builder.enhanceCommandCommon(msgCmd, msgCmdType, appOptions, customMsgCmds); err != nil {
+			return err
+		}
+	} else {
+		subCmd, err := builder.BuildMsgCommand(appOptions, customMsgCmds)
+		if err != nil {
+			return err
+		}
+
+		rootCmd.AddCommand(subCmd)
 	}
 
 	return nil

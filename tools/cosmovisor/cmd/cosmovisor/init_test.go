@@ -9,12 +9,16 @@ import (
 	"testing"
 	"time"
 
-	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
+	"cosmossdk.io/log"
 	"cosmossdk.io/tools/cosmovisor"
+)
+
+const (
+	notset = " is not set"
 )
 
 type InitTestSuite struct {
@@ -27,15 +31,24 @@ func TestInitTestSuite(t *testing.T) {
 
 // cosmovisorInitEnv are some string values of environment variables used to configure Cosmovisor, and used by the init command.
 type cosmovisorInitEnv struct {
-	Home string
-	Name string
+	Home           string
+	Name           string
+	ColorLogs      string
+	TimeFormatLogs string
+}
+
+type envMap struct {
+	val        string
+	allowEmpty bool
 }
 
 // ToMap creates a map of the cosmovisorInitEnv where the keys are the env var names.
-func (c cosmovisorInitEnv) ToMap() map[string]string {
-	return map[string]string{
-		cosmovisor.EnvHome: c.Home,
-		cosmovisor.EnvName: c.Name,
+func (c cosmovisorInitEnv) ToMap() map[string]envMap {
+	return map[string]envMap{
+		cosmovisor.EnvHome:           {val: c.Home, allowEmpty: false},
+		cosmovisor.EnvName:           {val: c.Name, allowEmpty: false},
+		cosmovisor.EnvColorLogs:      {val: c.ColorLogs, allowEmpty: false},
+		cosmovisor.EnvTimeFormatLogs: {val: c.TimeFormatLogs, allowEmpty: true},
 	}
 }
 
@@ -45,6 +58,10 @@ func (c *cosmovisorInitEnv) Set(envVar, envVal string) {
 	case cosmovisor.EnvHome:
 		c.Home = envVal
 	case cosmovisor.EnvName:
+		c.Name = envVal
+	case cosmovisor.EnvColorLogs:
+		c.Name = envVal
+	case cosmovisor.EnvTimeFormatLogs:
 		c.Name = envVal
 	default:
 		panic(fmt.Errorf("Unknown environment variable [%s]. Cannot set field to [%s]. ", envVar, envVal))
@@ -69,16 +86,16 @@ func (s *InitTestSuite) clearEnv() *cosmovisorInitEnv {
 // setEnv sets environment variables to the values provided.
 // If t is not nil, and there's a problem, the test will fail immediately.
 // If t is nil, problems will just be logged using s.T().
-func (s *InitTestSuite) setEnv(t *testing.T, env *cosmovisorInitEnv) {
+func (s *InitTestSuite) setEnv(t *testing.T, env *cosmovisorInitEnv) { //nolint:thelper // false psotive
 	if t == nil {
 		s.T().Logf("Restoring environment variables.")
 	}
 	for envVar, envVal := range env.ToMap() {
 		var err error
 		var msg string
-		if len(envVal) != 0 {
-			err = os.Setenv(envVar, envVal)
-			msg = fmt.Sprintf("setting %s to %s", envVar, envVal)
+		if len(envVal.val) != 0 || envVal.allowEmpty {
+			err = os.Setenv(envVar, envVal.val)
+			msg = fmt.Sprintf("setting %s to %s", envVar, envVal.val)
 		} else {
 			err = os.Unsetenv(envVar)
 			msg = fmt.Sprintf("unsetting %s", envVar)
@@ -227,12 +244,11 @@ func (p *BufferedPipe) panicIfStarted(msg string) {
 }
 
 // NewCapturingLogger creates a buffered stdout pipe, and a logger that uses it.
-func (s *InitTestSuite) NewCapturingLogger() (*BufferedPipe, *zerolog.Logger) {
+func (s *InitTestSuite) NewCapturingLogger() (*BufferedPipe, log.Logger) {
 	bufferedStdOut, err := StartNewBufferedPipe("stdout", os.Stdout)
 	s.Require().NoError(err, "creating stdout buffered pipe")
-	output := zerolog.ConsoleWriter{Out: bufferedStdOut, TimeFormat: time.RFC3339Nano}
-	logger := zerolog.New(output).With().Str("module", "cosmovisor").Timestamp().Logger()
-	return &bufferedStdOut, &logger
+	logger := log.NewLogger(bufferedStdOut, log.ColorOption(false), log.TimeFormatOption(time.RFC3339Nano)).With(log.ModuleKey, "cosmovisor")
+	return &bufferedStdOut, logger
 }
 
 // CreateHelloWorld creates a shell script that outputs HELLO WORLD.
@@ -290,13 +306,13 @@ func (s *InitTestSuite) TestInitializeCosmovisorNegativeValidation() {
 			name:  "no name",
 			env:   cosmovisorInitEnv{Home: "/example", Name: ""},
 			args:  []string{tmpExe},
-			inErr: []string{cosmovisor.EnvName + " is not set"},
+			inErr: []string{cosmovisor.EnvName + notset},
 		},
 		{
 			name:  "no home",
 			env:   cosmovisorInitEnv{Home: "", Name: "foo"},
 			args:  []string{tmpExe},
-			inErr: []string{cosmovisor.EnvHome + " is not set"},
+			inErr: []string{cosmovisor.EnvHome + notset},
 		},
 		{
 			name:  "home is relative",
@@ -308,11 +324,13 @@ func (s *InitTestSuite) TestInitializeCosmovisorNegativeValidation() {
 			name:  "no name and no home",
 			env:   cosmovisorInitEnv{Home: "", Name: ""},
 			args:  []string{tmpExe},
-			inErr: []string{cosmovisor.EnvName + " is not set", cosmovisor.EnvHome + " is not set"},
+			inErr: []string{cosmovisor.EnvName + notset, cosmovisor.EnvHome + notset},
 		},
 	}
 
 	for _, tc := range tests {
+		tc := tc
+
 		s.T().Run(tc.name, func(t *testing.T) {
 			s.setEnv(t, &tc.env)
 			buffer, logger := s.NewCapturingLogger()
@@ -348,9 +366,9 @@ func (s *InitTestSuite) TestInitializeCosmovisorInvalidExisting() {
 		require.NoError(t, copyFile(hwExe, genBin), "copying exe to genesis/bin")
 
 		s.setEnv(t, env)
-		logger := zerolog.Nop()
+		logger := log.NewNopLogger()
 		expErr := fmt.Sprintf("the path %q already exists but is not a directory", genBin)
-		err := InitializeCosmovisor(&logger, []string{hwExe})
+		err := InitializeCosmovisor(logger, []string{hwExe})
 		require.EqualError(t, err, expErr, "invalid path to executable: must not be a directory", "calling InitializeCosmovisor")
 	})
 
@@ -379,7 +397,7 @@ func (s *InitTestSuite) TestInitializeCosmovisorInvalidExisting() {
 
 		s.setEnv(t, env)
 		buffer, logger := s.NewCapturingLogger()
-		logger.Info().Msgf("Calling InitializeCosmovisor: %s", t.Name())
+		logger.Info(fmt.Sprintf("Calling InitializeCosmovisor: %s", t.Name()))
 		err := InitializeCosmovisor(logger, []string{hwExe})
 		require.EqualError(t, err, expErr, "calling InitializeCosmovisor")
 		bufferBz := buffer.Collect()
@@ -407,7 +425,7 @@ func (s *InitTestSuite) TestInitializeCosmovisorInvalidExisting() {
 
 		s.setEnv(t, env)
 		buffer, logger := s.NewCapturingLogger()
-		logger.Info().Msgf("Calling InitializeCosmovisor: %s", t.Name())
+		logger.Info(fmt.Sprintf("Calling InitializeCosmovisor: %s", t.Name()))
 		err := InitializeCosmovisor(logger, []string{hwExe})
 		require.EqualError(t, err, expErr, "calling InitializeCosmovisor")
 		bufferBz := buffer.Collect()
@@ -462,7 +480,7 @@ func (s *InitTestSuite) TestInitializeCosmovisorValid() {
 
 		s.setEnv(s.T(), env)
 		buffer, logger := s.NewCapturingLogger()
-		logger.Info().Msgf("Calling InitializeCosmovisor: %s", t.Name())
+		logger.Info(fmt.Sprintf("Calling InitializeCosmovisor: %s", t.Name()))
 		err := InitializeCosmovisor(logger, []string{hwNonExe})
 		require.NoError(t, err, "calling InitializeCosmovisor")
 
@@ -514,7 +532,7 @@ func (s *InitTestSuite) TestInitializeCosmovisorValid() {
 
 		s.setEnv(t, env)
 		buffer, logger := s.NewCapturingLogger()
-		logger.Info().Msgf("Calling InitializeCosmovisor: %s", t.Name())
+		logger.Info(fmt.Sprintf("Calling InitializeCosmovisor: %s", t.Name()))
 		err := InitializeCosmovisor(logger, []string{hwExe})
 		require.NoError(t, err, "calling InitializeCosmovisor")
 		bufferBz := buffer.Collect()
@@ -546,7 +564,7 @@ func (s *InitTestSuite) TestInitializeCosmovisorValid() {
 
 		s.setEnv(t, env)
 		buffer, logger := s.NewCapturingLogger()
-		logger.Info().Msgf("Calling InitializeCosmovisor: %s", t.Name())
+		logger.Info(fmt.Sprintf("Calling InitializeCosmovisor: %s", t.Name()))
 		err := InitializeCosmovisor(logger, []string{hwExe})
 		require.NoError(t, err, "calling InitializeCosmovisor")
 		bufferBz := buffer.Collect()

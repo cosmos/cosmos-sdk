@@ -4,13 +4,15 @@ import (
 	"fmt"
 	"time"
 
+	"cosmossdk.io/math"
+	"cosmossdk.io/x/authz"
+	"cosmossdk.io/x/authz/client/cli"
+	authzclitestutil "cosmossdk.io/x/authz/client/testutil"
+	banktypes "cosmossdk.io/x/bank/types"
+
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/authz"
-	"github.com/cosmos/cosmos-sdk/x/authz/client/cli"
-	authzclitestutil "github.com/cosmos/cosmos-sdk/x/authz/client/testutil"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 func (s *E2ETestSuite) TestQueryGrantGRPC() {
@@ -72,7 +74,8 @@ func (s *E2ETestSuite) TestQueryGrantGRPC() {
 				err := val.ClientCtx.Codec.UnmarshalJSON(resp, &g)
 				require.NoError(err)
 				require.Len(g.Grants, 1)
-				g.Grants[0].UnpackInterfaces(val.ClientCtx.InterfaceRegistry)
+				err = g.Grants[0].UnpackInterfaces(val.ClientCtx.InterfaceRegistry)
+				require.NoError(err)
 				auth, err := g.Grants[0].GetAuthorization()
 				require.NoError(err)
 				require.Equal(auth.MsgTypeURL(), banktypes.SendAuthorization{}.MsgTypeURL())
@@ -116,7 +119,7 @@ func (s *E2ETestSuite) TestQueryGrantsGRPC() {
 					fmt.Sprintf("--%s=%s", cli.FlagMsgType, typeMsgVote),
 					fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 					fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-					fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))).String()),
+					fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(10))).String()),
 					fmt.Sprintf("--%s=%d", cli.FlagExpiration, time.Now().Add(time.Minute*time.Duration(120)).Unix()),
 				})
 				s.Require().NoError(err)
@@ -197,7 +200,7 @@ func (s *E2ETestSuite) TestQueryGranterGrantsGRPC() {
 			fmt.Sprintf("%s/cosmos/authz/v1beta1/grants/granter/%s", val.APIAddress, val.Address.String()),
 			false,
 			"",
-			8,
+			6,
 		},
 	}
 	for _, tc := range testCases {

@@ -23,9 +23,7 @@ var (
 	_ sdk.ModuleAccountI                 = (*ModuleAccount)(nil)
 )
 
-// NewBaseAccount creates a new BaseAccount object
-//
-//nolint:interfacer
+// NewBaseAccount creates a new BaseAccount object.
 func NewBaseAccount(address sdk.AccAddress, pubKey cryptotypes.PubKey, accountNumber, sequence uint64) *BaseAccount {
 	acc := &BaseAccount{
 		Address:       address.String(),
@@ -144,7 +142,7 @@ func (acc BaseAccount) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	return unpacker.UnpackAny(acc.PubKey, &pubKey)
 }
 
-// NewModuleAddressOrAddress gets an input string and returns an AccAddress.
+// NewModuleAddressOrBech32Address gets an input string and returns an AccAddress.
 // If the input is a valid address, it returns the address.
 // If the input is a module name, it returns the module address.
 func NewModuleAddressOrBech32Address(input string) sdk.AccAddress {
@@ -218,6 +216,10 @@ func (ma ModuleAccount) SetPubKey(pubKey cryptotypes.PubKey) error {
 func (ma ModuleAccount) Validate() error {
 	if strings.TrimSpace(ma.Name) == "" {
 		return errors.New("module account name cannot be blank")
+	}
+
+	if ma.BaseAccount == nil {
+		return errors.New("uninitialized ModuleAccount: BaseAccount is nil")
 	}
 
 	if ma.Address != sdk.AccAddress(crypto.AddressHash([]byte(ma.Name))).String() {

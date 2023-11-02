@@ -29,22 +29,22 @@ func (t timestampValue) Get(protoreflect.Value) (protoreflect.Value, error) {
 	return protoreflect.ValueOfMessage(t.value.ProtoReflect()), nil
 }
 
-func (v timestampValue) String() string {
-	if v.value == nil {
+func (t timestampValue) String() string {
+	if t.value == nil {
 		return ""
 	}
-	return v.value.AsTime().Format(time.RFC3339)
+	return t.value.AsTime().Format(time.RFC3339)
 }
 
-func (v *timestampValue) Set(s string) error {
-	t, err := time.Parse(time.RFC3339, s)
+func (t *timestampValue) Set(s string) error {
+	time, err := time.Parse(time.RFC3339, s)
 	if err != nil {
 		return err
 	}
-	v.value = timestamppb.New(t)
+	t.value = timestamppb.New(time)
 	return nil
 }
 
-func (v timestampValue) Type() string {
+func (t timestampValue) Type() string {
 	return "timestamp (RFC 3339)"
 }

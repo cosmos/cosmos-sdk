@@ -11,7 +11,7 @@ type PubKey interface {
 
 	Address() Address
 	Bytes() []byte
-	VerifySignature(msg []byte, sig []byte) bool
+	VerifySignature(msg, sig []byte) bool
 	Equals(PubKey) bool
 	Type() string
 }

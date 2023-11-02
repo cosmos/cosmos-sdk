@@ -6,19 +6,21 @@ import (
 	strings "strings"
 
 	"github.com/cosmos/gogoproto/proto"
+	protov2 "google.golang.org/protobuf/proto"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 )
 
 type (
-	// Msg defines the interface a transaction message must fulfill.
-	Msg interface {
-		proto.Message
+	// Msg defines the interface a transaction message needed to fulfill.
+	Msg = proto.Message
 
-		// ValidateBasic does a simple validation check that
-		// doesn't require access to any other information.
-		ValidateBasic() error
+	// LegacyMsg defines the interface a transaction message needed to fulfill up through
+	// v0.47.
+	LegacyMsg interface {
+		Msg
 
 		// GetSigners returns the addrs of signers that must sign.
 		// CONTRACT: All signatures must be present to be valid.
@@ -40,14 +42,18 @@ type (
 		GetSignature() []byte
 	}
 
-	// Tx defines the interface a transaction must fulfill.
-	Tx interface {
+	// HasMsgs defines an interface a transaction must fulfill.
+	HasMsgs interface {
 		// GetMsgs gets the all the transaction's messages.
 		GetMsgs() []Msg
+	}
 
-		// ValidateBasic does a simple and lightweight validation check that doesn't
-		// require access to any other information.
-		ValidateBasic() error
+	// Tx defines an interface a transaction must fulfill.
+	Tx interface {
+		HasMsgs
+
+		// GetMsgsV2 gets the transaction's messages as google.golang.org/protobuf/proto.Message's.
+		GetMsgsV2() ([]protov2.Message, error)
 	}
 
 	// FeeTx defines the interface to be implemented by Tx to use the FeeDecorators
@@ -55,8 +61,8 @@ type (
 		Tx
 		GetGas() uint64
 		GetFee() Coins
-		FeePayer() AccAddress
-		FeeGranter() AccAddress
+		FeePayer() []byte
+		FeeGranter() []byte
 	}
 
 	// TxWithMemo must have GetMemo() method to use ValidateMemoDecorator
@@ -72,6 +78,15 @@ type (
 
 		GetTimeoutHeight() uint64
 	}
+
+	// HasValidateBasic defines a type that has a ValidateBasic method.
+	// ValidateBasic is deprecated and now facultative.
+	// Prefer validating messages directly in the msg server.
+	HasValidateBasic interface {
+		// ValidateBasic does a simple validation check that
+		// doesn't require access to any other information.
+		ValidateBasic() error
+	}
 )
 
 // TxDecoder unmarshals transaction bytes
@@ -81,9 +96,7 @@ type TxDecoder func(txBytes []byte) (Tx, error)
 type TxEncoder func(tx Tx) ([]byte, error)
 
 // MsgTypeURL returns the TypeURL of a `sdk.Msg`.
-func MsgTypeURL(msg Msg) string {
-	return "/" + proto.MessageName(msg)
-}
+var MsgTypeURL = codectypes.MsgTypeURL
 
 // GetMsgFromTypeURL returns a `sdk.Msg` message type from a type URL
 func GetMsgFromTypeURL(cdc codec.Codec, input string) (Msg, error) {

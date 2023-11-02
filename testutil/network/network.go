@@ -9,30 +9,39 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"os/signal"
 	"path/filepath"
 	"strings"
 	"sync"
+	"syscall"
 	"testing"
 	"time"
 
-	"cosmossdk.io/depinject"
-	"cosmossdk.io/log"
-	sdkmath "cosmossdk.io/math"
-	"cosmossdk.io/math/unsafe"
-	cmtlog "github.com/cometbft/cometbft/libs/log"
 	"github.com/cometbft/cometbft/node"
 	cmtclient "github.com/cometbft/cometbft/rpc/client"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/spf13/cobra"
+	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
 
+	"cosmossdk.io/core/address"
+	"cosmossdk.io/depinject"
+	"cosmossdk.io/log"
+	sdkmath "cosmossdk.io/math"
+	"cosmossdk.io/math/unsafe"
 	pruningtypes "cosmossdk.io/store/pruning/types"
+	_ "cosmossdk.io/x/bank" // import bank as a blank
+	banktypes "cosmossdk.io/x/bank/types"
+	_ "cosmossdk.io/x/staking" // import staking as a blank
+	stakingtypes "cosmossdk.io/x/staking/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
+	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
@@ -50,13 +59,8 @@ import (
 	_ "github.com/cosmos/cosmos-sdk/x/auth"           // import auth as a blank
 	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config" // import auth tx config as a blank
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	_ "github.com/cosmos/cosmos-sdk/x/bank" // import bank as a blank
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	_ "github.com/cosmos/cosmos-sdk/x/consensus" // import consensus as a blank
 	"github.com/cosmos/cosmos-sdk/x/genutil"
-	_ "github.com/cosmos/cosmos-sdk/x/params"  // import params as a blank
-	_ "github.com/cosmos/cosmos-sdk/x/staking" // import staking as a blank
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // package-wide network lock to only allow one test network at a time
@@ -109,6 +113,7 @@ type Config struct {
 	AccountRetriever client.AccountRetriever
 	AppConstructor   AppConstructor             // the ABCI application constructor
 	GenesisState     map[string]json.RawMessage // custom genesis state to provide
+	GenesisTime      time.Time                  // the genesis time
 	TimeoutCommit    time.Duration              // the consensus commitment timeout
 	ChainID          string                     // the network chain-id
 	NumValidators    int                        // the total number of validators to create and bond
@@ -119,7 +124,7 @@ type Config struct {
 	StakingTokens    sdkmath.Int                // the amount of tokens each validator has available to stake
 	BondedTokens     sdkmath.Int                // the amount of tokens each validator stakes
 	PruningStrategy  string                     // the pruning strategy each validator will have
-	EnableTMLogging  bool                       // enable CometBFT logging to STDOUT
+	EnableLogging    bool                       // enable logging to STDOUT
 	CleanupDir       bool                       // remove base temporary directory during cleanup
 	SigningAlgo      string                     // signing algorithm for keys
 	KeyringOptions   []keyring.Option           // keyring configuration options
@@ -127,6 +132,11 @@ type Config struct {
 	APIAddress       string                     // REST API listen address (including port)
 	GRPCAddress      string                     // GRPC server listen address (including port)
 	PrintMnemonic    bool                       // print the mnemonic of first validator as log output for testing
+
+	// Address codecs
+	AddressCodec          address.Codec                 // address codec
+	ValidatorAddressCodec runtime.ValidatorAddressCodec // validator address codec
+	ConsensusAddressCodec runtime.ConsensusAddressCodec // consensus address codec
 }
 
 // DefaultConfig returns a sane default configuration suitable for nearly all
@@ -135,26 +145,29 @@ func DefaultConfig(factory TestFixtureFactory) Config {
 	fixture := factory()
 
 	return Config{
-		Codec:             fixture.EncodingConfig.Codec,
-		TxConfig:          fixture.EncodingConfig.TxConfig,
-		LegacyAmino:       fixture.EncodingConfig.Amino,
-		InterfaceRegistry: fixture.EncodingConfig.InterfaceRegistry,
-		AccountRetriever:  authtypes.AccountRetriever{},
-		AppConstructor:    fixture.AppConstructor,
-		GenesisState:      fixture.GenesisState,
-		TimeoutCommit:     2 * time.Second,
-		ChainID:           "chain-" + unsafe.Str(6),
-		NumValidators:     4,
-		BondDenom:         sdk.DefaultBondDenom,
-		MinGasPrices:      fmt.Sprintf("0.000006%s", sdk.DefaultBondDenom),
-		AccountTokens:     sdk.TokensFromConsensusPower(1000, sdk.DefaultPowerReduction),
-		StakingTokens:     sdk.TokensFromConsensusPower(500, sdk.DefaultPowerReduction),
-		BondedTokens:      sdk.TokensFromConsensusPower(100, sdk.DefaultPowerReduction),
-		PruningStrategy:   pruningtypes.PruningOptionNothing,
-		CleanupDir:        true,
-		SigningAlgo:       string(hd.Secp256k1Type),
-		KeyringOptions:    []keyring.Option{},
-		PrintMnemonic:     false,
+		Codec:                 fixture.EncodingConfig.Codec,
+		TxConfig:              fixture.EncodingConfig.TxConfig,
+		LegacyAmino:           fixture.EncodingConfig.Amino,
+		InterfaceRegistry:     fixture.EncodingConfig.InterfaceRegistry,
+		AccountRetriever:      authtypes.AccountRetriever{},
+		AppConstructor:        fixture.AppConstructor,
+		GenesisState:          fixture.GenesisState,
+		TimeoutCommit:         2 * time.Second,
+		ChainID:               "chain-" + unsafe.Str(6),
+		NumValidators:         4,
+		BondDenom:             sdk.DefaultBondDenom,
+		MinGasPrices:          fmt.Sprintf("0.000006%s", sdk.DefaultBondDenom),
+		AccountTokens:         sdk.TokensFromConsensusPower(1000, sdk.DefaultPowerReduction),
+		StakingTokens:         sdk.TokensFromConsensusPower(500, sdk.DefaultPowerReduction),
+		BondedTokens:          sdk.TokensFromConsensusPower(100, sdk.DefaultPowerReduction),
+		PruningStrategy:       pruningtypes.PruningOptionNothing,
+		CleanupDir:            true,
+		SigningAlgo:           string(hd.Secp256k1Type),
+		KeyringOptions:        []keyring.Option{},
+		PrintMnemonic:         false,
+		AddressCodec:          addresscodec.NewBech32Codec("cosmos"),
+		ValidatorAddressCodec: addresscodec.NewBech32Codec("cosmosvaloper"),
+		ConsensusAddressCodec: addresscodec.NewBech32Codec("cosmosvalcons"),
 	}
 }
 
@@ -162,7 +175,6 @@ func DefaultConfig(factory TestFixtureFactory) Config {
 func MinimumAppConfig() depinject.Config {
 	return configurator.NewAppConfig(
 		configurator.AuthModule(),
-		configurator.ParamsModule(),
 		configurator.BankModule(),
 		configurator.GenutilModule(),
 		configurator.StakingModule(),
@@ -173,19 +185,29 @@ func MinimumAppConfig() depinject.Config {
 
 func DefaultConfigWithAppConfig(appConfig depinject.Config) (Config, error) {
 	var (
-		appBuilder        *runtime.AppBuilder
-		txConfig          client.TxConfig
-		legacyAmino       *codec.LegacyAmino
-		cdc               codec.Codec
-		interfaceRegistry codectypes.InterfaceRegistry
+		appBuilder            *runtime.AppBuilder
+		txConfig              client.TxConfig
+		legacyAmino           *codec.LegacyAmino
+		cdc                   codec.Codec
+		interfaceRegistry     codectypes.InterfaceRegistry
+		addressCodec          address.Codec
+		validatorAddressCodec runtime.ValidatorAddressCodec
+		consensusAddressCodec runtime.ConsensusAddressCodec
 	)
 
-	if err := depinject.Inject(appConfig,
+	if err := depinject.Inject(
+		depinject.Configs(
+			appConfig,
+			depinject.Supply(log.NewNopLogger()),
+		),
 		&appBuilder,
 		&txConfig,
 		&cdc,
 		&legacyAmino,
 		&interfaceRegistry,
+		&addressCodec,
+		&validatorAddressCodec,
+		&consensusAddressCodec,
 	); err != nil {
 		return Config{}, err
 	}
@@ -201,15 +223,20 @@ func DefaultConfigWithAppConfig(appConfig depinject.Config) (Config, error) {
 	cfg.AppConstructor = func(val ValidatorI) servertypes.Application {
 		// we build a unique app instance for every validator here
 		var appBuilder *runtime.AppBuilder
-		if err := depinject.Inject(appConfig, &appBuilder); err != nil {
+		if err := depinject.Inject(
+			depinject.Configs(
+				appConfig,
+				depinject.Supply(val.GetCtx().Logger),
+			),
+			&appBuilder); err != nil {
 			panic(err)
 		}
 		app := appBuilder.Build(
-			val.GetCtx().Logger,
 			dbm.NewMemDB(),
 			nil,
 			baseapp.SetPruning(pruningtypes.NewPruningOptionsFromString(val.GetAppConfig().Pruning)),
 			baseapp.SetMinGasPrices(val.GetAppConfig().MinGasPrices),
+			baseapp.SetChainID(cfg.ChainID),
 		)
 
 		testdata.RegisterQueryServer(app.GRPCQueryRouter(), testdata.QueryImpl{})
@@ -220,6 +247,10 @@ func DefaultConfigWithAppConfig(appConfig depinject.Config) (Config, error) {
 
 		return app
 	}
+
+	cfg.AddressCodec = addressCodec
+	cfg.ValidatorAddressCodec = validatorAddressCodec
+	cfg.ConsensusAddressCodec = consensusAddressCodec
 
 	return cfg, nil
 }
@@ -261,10 +292,13 @@ type (
 		ValAddress sdk.ValAddress
 		RPCClient  cmtclient.Client
 
-		tmNode  *node.Node
-		api     *api.Server
-		grpc    *grpc.Server
-		grpcWeb *http.Server
+		app      servertypes.Application
+		tmNode   *node.Node
+		api      *api.Server
+		grpc     *grpc.Server
+		grpcWeb  *http.Server
+		errGroup *errgroup.Group
+		cancelFn context.CancelFunc
 	}
 
 	// ValidatorI expose a validator's context and configuration
@@ -370,7 +404,7 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 					return nil, fmt.Errorf("failed to get port for API server")
 				}
 				port := <-portPool
-				apiListenAddr = fmt.Sprintf("tcp://0.0.0.0:%s", port)
+				apiListenAddr = fmt.Sprintf("tcp://127.0.0.1:%s", port)
 			}
 
 			appCfg.API.Address = apiListenAddr
@@ -387,7 +421,7 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 					return nil, fmt.Errorf("failed to get port for RPC server")
 				}
 				port := <-portPool
-				cmtCfg.RPC.ListenAddress = fmt.Sprintf("tcp://0.0.0.0:%s", port)
+				cmtCfg.RPC.ListenAddress = fmt.Sprintf("tcp://127.0.0.1:%s", port)
 			}
 
 			if cfg.GRPCAddress != "" {
@@ -397,15 +431,15 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 					return nil, fmt.Errorf("failed to get port for GRPC server")
 				}
 				port := <-portPool
-				appCfg.GRPC.Address = fmt.Sprintf("0.0.0.0:%s", port)
+				appCfg.GRPC.Address = fmt.Sprintf("127.0.0.1:%s", port)
 			}
 			appCfg.GRPC.Enable = true
 			appCfg.GRPCWeb.Enable = true
 		}
 
 		logger := log.NewNopLogger()
-		if cfg.EnableTMLogging {
-			logger = cmtlog.NewTMLogger(cmtlog.NewSyncWriter(os.Stdout))
+		if cfg.EnableLogging {
+			logger = log.NewLogger(os.Stdout) // TODO(mr): enable selection of log destination.
 		}
 
 		ctx.Logger = logger
@@ -433,19 +467,24 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 			return nil, fmt.Errorf("failed to get port for Proxy server")
 		}
 		port := <-portPool
-		proxyAddr := fmt.Sprintf("tcp://0.0.0.0:%s", port)
+		proxyAddr := fmt.Sprintf("tcp://127.0.0.1:%s", port)
 		cmtCfg.ProxyApp = proxyAddr
 
 		if len(portPool) == 0 {
 			return nil, fmt.Errorf("failed to get port for Proxy server")
 		}
 		port = <-portPool
-		p2pAddr := fmt.Sprintf("tcp://0.0.0.0:%s", port)
+		p2pAddr := fmt.Sprintf("tcp://127.0.0.1:%s", port)
 		cmtCfg.P2P.ListenAddress = p2pAddr
 		cmtCfg.P2P.AddrBookStrict = false
 		cmtCfg.P2P.AllowDuplicateIP = true
 
-		nodeID, pubKey, err := genutil.InitializeNodeValidatorFiles(cmtCfg)
+		var mnemonic string
+		if i < len(cfg.Mnemonics) {
+			mnemonic = cfg.Mnemonics[i]
+		}
+
+		nodeID, pubKey, err := genutil.InitializeNodeValidatorFilesFromMnemonic(cmtCfg, mnemonic)
 		if err != nil {
 			return nil, err
 		}
@@ -462,11 +501,6 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 		algo, err := keyring.NewSigningAlgoFromString(cfg.SigningAlgo, keyringAlgos)
 		if err != nil {
 			return nil, err
-		}
-
-		var mnemonic string
-		if i < len(cfg.Mnemonics) {
-			mnemonic = cfg.Mnemonics[i]
 		}
 
 		addr, secret, err := testutil.GenerateSaveCoinKey(kb, nodeDirName, mnemonic, true, algo)
@@ -507,7 +541,7 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 		}
 
 		createValMsg, err := stakingtypes.NewMsgCreateValidator(
-			sdk.ValAddress(addr),
+			sdk.ValAddress(addr).String(),
 			valPubKeys[i],
 			sdk.NewCoin(cfg.BondDenom, cfg.BondedTokens),
 			stakingtypes.NewDescription(nodeDirName, "", "", "", ""),
@@ -541,8 +575,7 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 			WithKeybase(kb).
 			WithTxConfig(cfg.TxConfig)
 
-		// When Textual is wired up, the context argument should be retrieved from the client context.
-		err = tx.Sign(context.TODO(), txFactory, nodeDirName, txBuilder, true)
+		err = tx.Sign(context.Background(), txFactory, nodeDirName, txBuilder, true)
 		if err != nil {
 			return nil, err
 		}
@@ -555,7 +588,10 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 		if err != nil {
 			return nil, err
 		}
-		srvconfig.WriteConfigFile(filepath.Join(nodeDir, "config", "app.toml"), appCfg)
+		err = srvconfig.WriteConfigFile(filepath.Join(nodeDir, "config", "app.toml"), appCfg)
+		if err != nil {
+			return nil, err
+		}
 
 		clientCtx := client.Context{}.
 			WithKeyringDir(clientDir).
@@ -566,7 +602,13 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 			WithCodec(cfg.Codec).
 			WithLegacyAmino(cfg.LegacyAmino).
 			WithTxConfig(cfg.TxConfig).
-			WithAccountRetriever(cfg.AccountRetriever)
+			WithAccountRetriever(cfg.AccountRetriever).
+			WithAddressCodec(cfg.AddressCodec).
+			WithValidatorAddressCodec(cfg.ValidatorAddressCodec).
+			WithConsensusAddressCodec(cfg.ValidatorAddressCodec)
+
+		// Provide ChainID here since we can't modify it in the Comet config.
+		ctx.Viper.Set(flags.FlagChainID, cfg.ChainID)
 
 		network.Validators[i] = &Validator{
 			AppConfig:  appCfg,
@@ -595,8 +637,7 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 
 	l.Log("starting test network...")
 	for idx, v := range network.Validators {
-		err := startInProcess(cfg, v)
-		if err != nil {
+		if err := startInProcess(cfg, v); err != nil {
 			return nil, err
 		}
 		l.Log("started validator", idx)
@@ -611,9 +652,33 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 
 	// Ensure we cleanup incase any test was abruptly halted (e.g. SIGINT) as any
 	// defer in a test would not be called.
-	server.TrapSignal(network.Cleanup)
+	trapSignal(network.Cleanup)
 
 	return network, nil
+}
+
+// trapSignal traps SIGINT and SIGTERM and calls os.Exit once a signal is received.
+func trapSignal(cleanupFunc func()) {
+	sigs := make(chan os.Signal, 1)
+	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+
+	go func() {
+		sig := <-sigs
+
+		if cleanupFunc != nil {
+			cleanupFunc()
+		}
+		exitCode := 128
+
+		switch sig {
+		case syscall.SIGINT:
+			exitCode += int(syscall.SIGINT)
+		case syscall.SIGTERM:
+			exitCode += int(syscall.SIGTERM)
+		}
+
+		os.Exit(exitCode)
+	}()
 }
 
 // LatestHeight returns the latest height of the network or an error if the
@@ -638,9 +703,21 @@ func (n *Network) LatestHeight() (int64, error) {
 		case <-timeout.C:
 			return latestHeight, errors.New("timeout exceeded waiting for block")
 		case <-ticker.C:
-			res, err := queryClient.GetLatestBlock(context.Background(), &cmtservice.GetLatestBlockRequest{})
-			if err == nil && res != nil {
-				return res.SdkBlock.Header.Height, nil
+			done := make(chan struct{})
+			go func() {
+				res, err := queryClient.GetLatestBlock(context.Background(), &cmtservice.GetLatestBlockRequest{})
+				if err == nil && res != nil {
+					latestHeight = res.SdkBlock.Header.Height
+				}
+				done <- struct{}{}
+			}()
+			select {
+			case <-timeout.C:
+				return latestHeight, errors.New("timeout exceeded waiting for block")
+			case <-done:
+				if latestHeight != 0 {
+					return latestHeight, nil
+				}
 			}
 		}
 	}
@@ -692,7 +769,7 @@ func (n *Network) WaitForHeightWithTimeout(h int64, t time.Duration) (int64, err
 // blocks has been reached.
 func (n *Network) RetryForBlocks(retryFunc func() error, blocks int) error {
 	for i := 0; i < blocks; i++ {
-		n.WaitForNextBlock()
+		_ = n.WaitForNextBlock()
 		err := retryFunc()
 		if err == nil {
 			return nil
@@ -734,24 +811,31 @@ func (n *Network) Cleanup() {
 	n.Logger.Log("cleaning up test network...")
 
 	for _, v := range n.Validators {
+		// cancel the validator's context which will signal to the gRPC and API
+		// goroutines that they should gracefully exit.
+		v.cancelFn()
+
+		if err := v.errGroup.Wait(); err != nil {
+			n.Logger.Log("unexpected error waiting for validator gRPC and API processes to exit", "err", err)
+		}
+
 		if v.tmNode != nil && v.tmNode.IsRunning() {
-			_ = v.tmNode.Stop()
+			if err := v.tmNode.Stop(); err != nil {
+				n.Logger.Log("failed to stop validator CometBFT node", "err", err)
+			}
 		}
 
-		if v.api != nil {
-			_ = v.api.Close()
+		if v.grpcWeb != nil {
+			_ = v.grpcWeb.Close()
 		}
 
-		if v.grpc != nil {
-			v.grpc.Stop()
-			if v.grpcWeb != nil {
-				_ = v.grpcWeb.Close()
+		if v.app != nil {
+			if err := v.app.Close(); err != nil {
+				n.Logger.Log("failed to stop validator ABCI application", "err", err)
 			}
 		}
 	}
 
-	// Give a brief pause for things to finish closing in other processes. Hopefully this helps with the address-in-use errors.
-	// 100ms chosen randomly.
 	time.Sleep(100 * time.Millisecond)
 
 	if n.Config.CleanupDir {

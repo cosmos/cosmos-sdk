@@ -3,21 +3,21 @@ package keeper_test
 import (
 	"testing"
 
+	dbm "github.com/cosmos/cosmos-db"
+	"github.com/stretchr/testify/suite"
+
 	"cosmossdk.io/log"
 	"cosmossdk.io/store"
 	"cosmossdk.io/store/metrics"
 	storetypes "cosmossdk.io/store/types"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	dbm "github.com/cosmos/cosmos-db"
-	"github.com/stretchr/testify/suite"
+	"cosmossdk.io/x/group"
+	"cosmossdk.io/x/group/internal/orm"
+	"cosmossdk.io/x/group/keeper"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/group"
-	"github.com/cosmos/cosmos-sdk/x/group/internal/orm"
-	"github.com/cosmos/cosmos-sdk/x/group/keeper"
 )
 
 type invariantTestSuite struct {
@@ -41,7 +41,7 @@ func (s *invariantTestSuite) SetupSuite() {
 	cms := store.NewCommitMultiStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
 	cms.MountStoreWithDB(key, storetypes.StoreTypeIAVL, db)
 	_ = cms.LoadLatestVersion()
-	sdkCtx := sdk.NewContext(cms, cmtproto.Header{}, false, log.NewNopLogger())
+	sdkCtx := sdk.NewContext(cms, false, log.NewNopLogger())
 
 	s.ctx = sdkCtx
 	s.cdc = cdc

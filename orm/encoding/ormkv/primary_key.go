@@ -4,11 +4,10 @@ import (
 	"bytes"
 	"io"
 
-	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
-
 	"google.golang.org/protobuf/proto"
-
 	"google.golang.org/protobuf/reflect/protoreflect"
+
+	"cosmossdk.io/orm/types/ormerrors"
 )
 
 // PrimaryKeyCodec is the codec for primary keys.

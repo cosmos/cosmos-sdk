@@ -3,16 +3,17 @@ package distribution
 import (
 	"fmt"
 
-	"cosmossdk.io/simapp"
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/suite"
+
+	"cosmossdk.io/simapp"
+	"cosmossdk.io/x/distribution/types"
 
 	sdktestutil "github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
 type GRPCQueryTestSuite struct {
@@ -311,7 +312,7 @@ func (s *GRPCQueryTestSuite) TestQueryDelegatorRewardsGRPC() {
 			&types.QueryDelegationTotalRewardsResponse{},
 			&types.QueryDelegationTotalRewardsResponse{
 				Rewards: []types.DelegationDelegatorReward{
-					types.NewDelegationDelegatorReward(val.ValAddress, rewards),
+					types.NewDelegationDelegatorReward(val.ValAddress.String(), rewards),
 				},
 				Total: rewards,
 			},
@@ -449,51 +450,6 @@ func (s *GRPCQueryTestSuite) TestQueryWithdrawAddressGRPC() {
 		s.Run(tc.name, func() {
 			if tc.expErr {
 				s.Require().Error(val.ClientCtx.Codec.UnmarshalJSON(resp, tc.respType))
-			} else {
-				s.Require().NoError(err)
-				s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(resp, tc.respType))
-				s.Require().Equal(tc.expected.String(), tc.respType.String())
-			}
-		})
-	}
-}
-
-func (s *GRPCQueryTestSuite) TestQueryValidatorCommunityPoolGRPC() {
-	val := s.network.Validators[0]
-	baseURL := val.APIAddress
-
-	communityPool, err := sdk.ParseDecCoins("0.4stake")
-	s.Require().NoError(err)
-
-	testCases := []struct {
-		name     string
-		url      string
-		headers  map[string]string
-		expErr   bool
-		respType proto.Message
-		expected proto.Message
-	}{
-		{
-			"gRPC request params with wrong validator address",
-			fmt.Sprintf("%s/cosmos/distribution/v1beta1/community_pool", baseURL),
-			map[string]string{
-				grpctypes.GRPCBlockHeightHeader: "2",
-			},
-			false,
-			&types.QueryCommunityPoolResponse{},
-			&types.QueryCommunityPoolResponse{
-				Pool: communityPool,
-			},
-		},
-	}
-
-	for _, tc := range testCases {
-		tc := tc
-		resp, err := sdktestutil.GetRequestWithHeaders(tc.url, tc.headers)
-
-		s.Run(tc.name, func() {
-			if tc.expErr {
-				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err)
 				s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(resp, tc.respType))

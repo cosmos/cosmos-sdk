@@ -2,22 +2,17 @@ package types_test
 
 import (
 	"encoding/hex"
-	"fmt"
 	"strings"
 	"testing"
 	"time"
 
 	abci "github.com/cometbft/cometbft/abci/types"
-	"github.com/cometbft/cometbft/libs/bytes"
+	cmtt "github.com/cometbft/cometbft/proto/tendermint/types"
 	coretypes "github.com/cometbft/cometbft/rpc/core/types"
-	"github.com/golang/protobuf/proto" //nolint:staticcheck // grpc-gateway uses deprecated golang/protobuf
-	"github.com/stretchr/testify/require"
+	cmt "github.com/cometbft/cometbft/types"
 	"github.com/stretchr/testify/suite"
 
-	cmtt "github.com/cometbft/cometbft/proto/tendermint/types"
-	cmt "github.com/cometbft/cometbft/types"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -71,7 +66,7 @@ func (s *resultTestSuite) TestNewSearchTxsResult() {
 }
 
 func (s *resultTestSuite) TestResponseResultTx() {
-	deliverTxResult := abci.ResponseDeliverTx{
+	deliverTxResult := abci.ExecTxResult{
 		Codespace: "codespace",
 		Code:      1,
 		Data:      []byte("data"),
@@ -81,7 +76,7 @@ func (s *resultTestSuite) TestResponseResultTx() {
 		GasUsed:   90,
 	}
 	resultTx := &coretypes.ResultTx{
-		Hash:     bytes.HexBytes([]byte("test")),
+		Hash:     []byte("test"),
 		Height:   10,
 		TxResult: deliverTxResult,
 	}
@@ -128,7 +123,7 @@ txhash: "74657374"
 		Codespace: "codespace",
 		Data:      []byte("data"),
 		Log:       `[]`,
-		Hash:      bytes.HexBytes([]byte("test")),
+		Hash:      []byte("test"),
 	}
 
 	s.Require().Equal(&sdk.TxResponse{
@@ -178,34 +173,4 @@ func (s *resultTestSuite) TestResponseResultBlock() {
 	}
 
 	s.Require().Equal(want, sdk.NewResponseResultBlock(resultBlock, timestampStr))
-}
-
-func TestWrapServiceResult(t *testing.T) {
-	ctx := sdk.Context{}
-
-	res, err := sdk.WrapServiceResult(ctx, nil, fmt.Errorf("test"))
-	require.Nil(t, res)
-	require.NotNil(t, err)
-
-	res, err = sdk.WrapServiceResult(ctx, &testdata.Dog{}, nil)
-	require.NotNil(t, res)
-	require.Nil(t, err)
-	require.Empty(t, res.Events)
-
-	ctx = ctx.WithEventManager(sdk.NewEventManager())
-	ctx.EventManager().EmitEvent(sdk.NewEvent("test"))
-	res, err = sdk.WrapServiceResult(ctx, &testdata.Dog{}, nil)
-	require.NotNil(t, res)
-	require.Nil(t, err)
-	require.Len(t, res.Events, 1)
-
-	spot := testdata.Dog{Name: "spot"}
-	res, err = sdk.WrapServiceResult(ctx, &spot, nil)
-	require.NotNil(t, res)
-	require.Nil(t, err)
-	require.Len(t, res.Events, 1)
-	var spot2 testdata.Dog
-	err = proto.Unmarshal(res.Data, &spot2)
-	require.NoError(t, err)
-	require.Equal(t, spot, spot2)
 }

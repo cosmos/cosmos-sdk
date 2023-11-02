@@ -7,8 +7,7 @@ import (
 	"github.com/cockroachdb/apd/v2"
 
 	errorsmod "cosmossdk.io/errors"
-
-	"github.com/cosmos/cosmos-sdk/x/group/errors"
+	"cosmossdk.io/x/group/errors"
 )
 
 // Dec is a wrapper struct around apd.Decimal that does no mutation of apd.Decimal's when performing
@@ -105,7 +104,7 @@ func (x Dec) IsNegative() bool {
 }
 
 // Add adds x and y
-func Add(x Dec, y Dec) (Dec, error) {
+func Add(x, y Dec) (Dec, error) {
 	return x.Add(y)
 }
 
@@ -130,7 +129,7 @@ func (x Dec) IsZero() bool {
 
 // SubNonNegative subtracts the value of y from x and returns the result with
 // arbitrary precision. Returns an error if the result is negative.
-func SubNonNegative(x Dec, y Dec) (Dec, error) {
+func SubNonNegative(x, y Dec) (Dec, error) {
 	z, err := x.Sub(y)
 	if err != nil {
 		return Dec{}, err

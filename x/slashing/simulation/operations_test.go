@@ -7,12 +7,29 @@ import (
 	"time"
 
 	abci "github.com/cometbft/cometbft/abci/types"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	cmttypes "github.com/cometbft/cometbft/types"
+	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/suite"
 
+	"cosmossdk.io/collections"
+	"cosmossdk.io/core/header"
+	"cosmossdk.io/depinject"
+	"cosmossdk.io/log"
 	"cosmossdk.io/math"
+	bankkeeper "cosmossdk.io/x/bank/keeper"
+	banktestutil "cosmossdk.io/x/bank/testutil"
+	distributionkeeper "cosmossdk.io/x/distribution/keeper"
+	distrtypes "cosmossdk.io/x/distribution/types"
+	mintkeeper "cosmossdk.io/x/mint/keeper"
+	minttypes "cosmossdk.io/x/mint/types"
+	slashingkeeper "cosmossdk.io/x/slashing/keeper"
+	"cosmossdk.io/x/slashing/simulation"
+	"cosmossdk.io/x/slashing/testutil"
+	"cosmossdk.io/x/slashing/types"
+	stakingkeeper "cosmossdk.io/x/staking/keeper"
+	stakingtypes "cosmossdk.io/x/staking/types"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
@@ -21,18 +38,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
-	distributionkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
-	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
-	mintkeeper "github.com/cosmos/cosmos-sdk/x/mint/keeper"
-	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
-	slashingkeeper "github.com/cosmos/cosmos-sdk/x/slashing/keeper"
-	"github.com/cosmos/cosmos-sdk/x/slashing/simulation"
-	"github.com/cosmos/cosmos-sdk/x/slashing/testutil"
-	"github.com/cosmos/cosmos-sdk/x/slashing/types"
-	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 type SimTestSuite struct {
@@ -46,6 +51,7 @@ type SimTestSuite struct {
 	legacyAmino       *codec.LegacyAmino
 	codec             codec.Codec
 	interfaceRegistry codectypes.InterfaceRegistry
+	txConfig          client.TxConfig
 	accountKeeper     authkeeper.AccountKeeper
 	bankKeeper        bankkeeper.Keeper
 	stakingKeeper     *stakingkeeper.Keeper
@@ -76,11 +82,15 @@ func (suite *SimTestSuite) SetupTest() {
 	startupCfg.ValidatorSet = createValidator
 
 	app, err := simtestutil.SetupWithConfiguration(
-		testutil.AppConfig,
+		depinject.Configs(
+			testutil.AppConfig,
+			depinject.Supply(log.NewNopLogger()),
+		),
 		startupCfg,
 		&suite.legacyAmino,
 		&suite.codec,
 		&suite.interfaceRegistry,
+		&suite.txConfig,
 		&suite.accountKeeper,
 		&suite.bankKeeper,
 		&suite.stakingKeeper,
@@ -91,7 +101,7 @@ func (suite *SimTestSuite) SetupTest() {
 
 	suite.Require().NoError(err)
 	suite.app = app
-	suite.ctx = app.BaseApp.NewContext(false, cmtproto.Header{})
+	suite.ctx = app.BaseApp.NewContext(false)
 
 	// remove genesis validator account
 	suite.accounts = accounts[1:]
@@ -103,11 +113,10 @@ func (suite *SimTestSuite) SetupTest() {
 	for _, account := range suite.accounts {
 		acc := suite.accountKeeper.NewAccountWithAddress(suite.ctx, account.Address)
 		suite.accountKeeper.SetAccount(suite.ctx, acc)
-		suite.Require().NoError(banktestutil.FundAccount(suite.bankKeeper, suite.ctx, account.Address, initCoins))
+		suite.Require().NoError(banktestutil.FundAccount(suite.ctx, suite.bankKeeper, account.Address, initCoins))
 	}
-
-	suite.mintKeeper.SetParams(suite.ctx, minttypes.DefaultParams())
-	suite.mintKeeper.SetMinter(suite.ctx, minttypes.DefaultInitialMinter())
+	suite.Require().NoError(suite.mintKeeper.Params.Set(suite.ctx, minttypes.DefaultParams()))
+	suite.Require().NoError(suite.mintKeeper.Minter.Set(suite.ctx, minttypes.DefaultInitialMinter()))
 }
 
 func TestSimTestSuite(t *testing.T) {
@@ -127,8 +136,8 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 		{simulation.DefaultWeightMsgUnjail, types.ModuleName, sdk.MsgTypeURL(&types.MsgUnjail{})},
 	}
 
-	weightesOps := simulation.WeightedOperations(appParams, suite.codec, suite.accountKeeper, suite.bankKeeper, suite.slashingKeeper, suite.stakingKeeper)
-	for i, w := range weightesOps {
+	weightedOps := simulation.WeightedOperations(suite.interfaceRegistry, appParams, suite.codec, suite.txConfig, suite.accountKeeper, suite.bankKeeper, suite.slashingKeeper, suite.stakingKeeper)
+	for i, w := range weightedOps {
 		operationMsg, _, err := w.Op()(suite.r, suite.app.BaseApp, ctx, suite.accounts, ctx.ChainID())
 		suite.Require().NoError(err)
 
@@ -145,43 +154,48 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 // Abonormal scenarios, where the message is created by an errors, are not tested here.
 func (suite *SimTestSuite) TestSimulateMsgUnjail() {
 	blockTime := time.Now().UTC()
-	ctx := suite.ctx.WithBlockTime(blockTime)
+	ctx := suite.ctx.WithHeaderInfo(header.Info{Time: blockTime})
 
 	// setup accounts[0] as validator0
 	validator0, err := getTestingValidator0(ctx, suite.stakingKeeper, suite.accounts)
 	suite.Require().NoError(err)
 
 	// setup validator0 by consensus address
-	suite.stakingKeeper.SetValidatorByConsAddr(ctx, validator0)
+	err = suite.stakingKeeper.SetValidatorByConsAddr(ctx, validator0)
+	suite.Require().NoError(err)
+
 	val0ConsAddress, err := validator0.GetConsAddr()
 	suite.Require().NoError(err)
-	info := types.NewValidatorSigningInfo(val0ConsAddress, int64(4), int64(3),
+	val0ConsAddressStr, err := suite.stakingKeeper.ConsensusAddressCodec().BytesToString(val0ConsAddress)
+	suite.Require().NoError(err)
+	info := types.NewValidatorSigningInfo(val0ConsAddressStr, int64(4), int64(3),
 		time.Unix(2, 0), false, int64(10))
-	suite.slashingKeeper.SetValidatorSigningInfo(ctx, val0ConsAddress, info)
-
+	err = suite.slashingKeeper.ValidatorSigningInfo.Set(ctx, val0ConsAddress, info)
+	suite.Require().NoError(err)
 	// put validator0 in jail
-	suite.stakingKeeper.Jail(ctx, val0ConsAddress)
+	suite.Require().NoError(suite.stakingKeeper.Jail(ctx, val0ConsAddress))
 
 	// setup self delegation
 	delTokens := suite.stakingKeeper.TokensFromConsensusPower(ctx, 2)
 	validator0, issuedShares := validator0.AddTokensFromDel(delTokens)
 	val0AccAddress, err := sdk.ValAddressFromBech32(validator0.OperatorAddress)
 	suite.Require().NoError(err)
-	selfDelegation := stakingtypes.NewDelegation(val0AccAddress.Bytes(), validator0.GetOperator(), issuedShares)
-	suite.stakingKeeper.SetDelegation(ctx, selfDelegation)
-	suite.distrKeeper.SetDelegatorStartingInfo(ctx, validator0.GetOperator(), val0AccAddress.Bytes(), distrtypes.NewDelegatorStartingInfo(2, math.LegacyOneDec(), 200))
+	selfDelegation := stakingtypes.NewDelegation(suite.accounts[0].Address.String(), validator0.GetOperator(), issuedShares)
+	suite.Require().NoError(suite.stakingKeeper.SetDelegation(ctx, selfDelegation))
+	suite.Require().NoError(suite.distrKeeper.DelegatorStartingInfo.Set(ctx, collections.Join(val0AccAddress, sdk.AccAddress(val0AccAddress)), distrtypes.NewDelegatorStartingInfo(2, math.LegacyOneDec(), 200)))
 
 	// begin a new block
-	suite.app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: suite.app.LastBlockHeight() + 1, AppHash: suite.app.LastCommitID().Hash, Time: blockTime}})
+	_, err = suite.app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: suite.app.LastBlockHeight() + 1, Hash: suite.app.LastCommitID().Hash, Time: blockTime})
+	suite.Require().NoError(err)
 
 	// execute operation
-	op := simulation.SimulateMsgUnjail(codec.NewProtoCodec(suite.interfaceRegistry), suite.accountKeeper, suite.bankKeeper, suite.slashingKeeper, suite.stakingKeeper)
+	op := simulation.SimulateMsgUnjail(codec.NewProtoCodec(suite.interfaceRegistry), suite.txConfig, suite.accountKeeper, suite.bankKeeper, suite.slashingKeeper, suite.stakingKeeper)
 	operationMsg, futureOperations, err := op(suite.r, suite.app.BaseApp, ctx, suite.accounts, "")
 	suite.Require().NoError(err)
 
 	var msg types.MsgUnjail
-	types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
-
+	err = proto.Unmarshal(operationMsg.Msg, &msg)
+	suite.Require().NoError(err)
 	suite.Require().True(operationMsg.OK)
 	suite.Require().Equal("cosmosvaloper1p8wcgrjr4pjju90xg6u9cgq55dxwq8j7epjs3u", msg.ValidatorAddr)
 	suite.Require().Len(futureOperations, 0)
@@ -196,7 +210,7 @@ func getTestingValidator(ctx sdk.Context, stakingKeeper *stakingkeeper.Keeper, a
 	account := accounts[n]
 	valPubKey := account.ConsKey.PubKey()
 	valAddr := sdk.ValAddress(account.PubKey.Address().Bytes())
-	validator, err := stakingtypes.NewValidator(valAddr, valPubKey, stakingtypes.Description{})
+	validator, err := stakingtypes.NewValidator(valAddr.String(), valPubKey, stakingtypes.Description{})
 	if err != nil {
 		return stakingtypes.Validator{}, fmt.Errorf("failed to create validator: %w", err)
 	}
@@ -207,9 +221,11 @@ func getTestingValidator(ctx sdk.Context, stakingKeeper *stakingkeeper.Keeper, a
 	}
 
 	validator.DelegatorShares = math.LegacyNewDec(100)
-	validator.Tokens = sdk.NewInt(1000000)
+	validator.Tokens = math.NewInt(1000000)
 
-	stakingKeeper.SetValidator(ctx, validator)
-
+	err = stakingKeeper.SetValidator(ctx, validator)
+	if err != nil {
+		return stakingtypes.Validator{}, err
+	}
 	return validator, nil
 }

@@ -34,7 +34,7 @@ func (ms multiStore) CacheWrapWithTrace(_ io.Writer, _ storetypes.TraceContext) 
 	panic("not implemented")
 }
 
-func (ms multiStore) CacheWrapWithListeners(_ storetypes.StoreKey, _ []storetypes.WriteListener) storetypes.CacheWrap {
+func (ms multiStore) CacheWrapWithListeners(_ storetypes.StoreKey, _ []storetypes.MemoryListener) storetypes.CacheWrap {
 	panic("not implemented")
 }
 
@@ -50,7 +50,7 @@ func (ms multiStore) SetTracer(w io.Writer) storetypes.MultiStore {
 	panic("not implemented")
 }
 
-func (ms multiStore) AddListeners(key storetypes.StoreKey, listeners []storetypes.WriteListener) {
+func (ms multiStore) AddListeners(keys []storetypes.StoreKey) {
 	panic("not implemented")
 }
 
@@ -59,6 +59,10 @@ func (ms multiStore) SetMetrics(metrics.StoreMetrics) {
 }
 
 func (ms multiStore) ListeningEnabled(key storetypes.StoreKey) bool {
+	panic("not implemented")
+}
+
+func (ms multiStore) PopStateCache() []*storetypes.StoreKVPair {
 	panic("not implemented")
 }
 
@@ -138,10 +142,6 @@ func (ms multiStore) SetIAVLDisableFastNode(disable bool) {
 	panic("not implemented")
 }
 
-func (ms multiStore) SetLazyLoading(bool) {
-	panic("not implemented")
-}
-
 func (ms multiStore) SetInitialVersion(version int64) error {
 	panic("not implemented")
 }
@@ -164,6 +164,10 @@ func (ms multiStore) LatestVersion() int64 {
 	panic("not implemented")
 }
 
+func (ms multiStore) WorkingHash() []byte {
+	panic("not implemented")
+}
+
 var _ storetypes.KVStore = kvStore{}
 
 type kvStore struct {
@@ -178,7 +182,7 @@ func (kv kvStore) CacheWrapWithTrace(w io.Writer, tc storetypes.TraceContext) st
 	panic("not implemented")
 }
 
-func (kv kvStore) CacheWrapWithListeners(_ storetypes.StoreKey, _ []storetypes.WriteListener) storetypes.CacheWrap {
+func (kv kvStore) CacheWrapWithListeners(_ storetypes.StoreKey, _ []storetypes.MemoryListener) storetypes.CacheWrap {
 	panic("not implemented")
 }
 

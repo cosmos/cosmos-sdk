@@ -9,7 +9,6 @@ import (
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	cryptoenc "github.com/cometbft/cometbft/crypto/encoding"
-	cmtbytes "github.com/cometbft/cometbft/libs/bytes"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 )
 
@@ -60,7 +59,7 @@ func (vals mockValidators) getKeys() []string {
 }
 
 // randomProposer picks a random proposer from the current validator set
-func (vals mockValidators) randomProposer(r *rand.Rand) cmtbytes.HexBytes {
+func (vals mockValidators) randomProposer(r *rand.Rand) []byte {
 	keys := vals.getKeys()
 	if len(keys) == 0 {
 		return nil
@@ -70,7 +69,7 @@ func (vals mockValidators) randomProposer(r *rand.Rand) cmtbytes.HexBytes {
 
 	proposer := vals[key].val
 	pk, err := cryptoenc.PubKeyFromProto(proposer.PubKey)
-	if err != nil { //nolint:wsl
+	if err != nil {
 		panic(err)
 	}
 
@@ -86,6 +85,7 @@ func updateValidators(
 	updates []abci.ValidatorUpdate,
 	event func(route, op, evResult string),
 ) map[string]mockValidator {
+	tb.Helper()
 	for _, update := range updates {
 		str := fmt.Sprintf("%X", update.PubKey.GetEd25519())
 
@@ -112,16 +112,24 @@ func updateValidators(
 	return current
 }
 
-// RandomRequestBeginBlock generates a list of signing validators according to
+// RandomRequestFinalizeBlock generates a list of signing validators according to
 // the provided list of validators, signing fraction, and evidence fraction
-func RandomRequestBeginBlock(r *rand.Rand, params Params,
-	validators mockValidators, pastTimes []time.Time,
+func RandomRequestFinalizeBlock(
+	r *rand.Rand,
+	params Params,
+	validators mockValidators,
+	pastTimes []time.Time,
 	pastVoteInfos [][]abci.VoteInfo,
-	event func(route, op, evResult string), header cmtproto.Header,
-) abci.RequestBeginBlock {
+	event func(route, op, evResult string),
+	blockHeight int64,
+	time time.Time,
+	proposer []byte,
+) *abci.RequestFinalizeBlock {
 	if len(validators) == 0 {
-		return abci.RequestBeginBlock{
-			Header: header,
+		return &abci.RequestFinalizeBlock{
+			Height:          blockHeight,
+			Time:            time,
+			ProposerAddress: proposer,
 		}
 	}
 
@@ -158,15 +166,17 @@ func RandomRequestBeginBlock(r *rand.Rand, params Params,
 				Address: pubkey.Address(),
 				Power:   mVal.val.Power,
 			},
-			SignedLastBlock: signed,
+			BlockIdFlag: cmtproto.BlockIDFlagCommit,
 		}
 	}
 
 	// return if no past times
 	if len(pastTimes) == 0 {
-		return abci.RequestBeginBlock{
-			Header: header,
-			LastCommitInfo: abci.CommitInfo{
+		return &abci.RequestFinalizeBlock{
+			Height:          blockHeight,
+			Time:            time,
+			ProposerAddress: proposer,
+			DecidedLastCommit: abci.CommitInfo{
 				Votes: voteInfos,
 			},
 		}
@@ -174,16 +184,21 @@ func RandomRequestBeginBlock(r *rand.Rand, params Params,
 
 	// TODO: Determine capacity before allocation
 	evidence := make([]abci.Misbehavior, 0)
+	// If the evidenceFraction value is to close to 1.0,
+	// the following loop will most likely never end
+	if params.EvidenceFraction() > 0.9 {
+		// Reduce the evidenceFraction to a more sane value
+		params.evidenceFraction = 0.9
+	}
 
 	for r.Float64() < params.EvidenceFraction() {
-		height := header.Height
-		time := header.Time
 		vals := voteInfos
-
-		if r.Float64() < params.PastEvidenceFraction() && header.Height > 1 {
-			height = int64(r.Intn(int(header.Height)-1)) + 1 // CometBFT starts at height 1
+		height := blockHeight
+		misbehaviorTime := time
+		if r.Float64() < params.PastEvidenceFraction() && height > 1 {
+			height = int64(r.Intn(int(height)-1)) + 1 // CometBFT starts at height 1
 			// array indices offset by one
-			time = pastTimes[height-1]
+			misbehaviorTime = pastTimes[height-1]
 			vals = pastVoteInfos[height-1]
 		}
 
@@ -199,7 +214,7 @@ func RandomRequestBeginBlock(r *rand.Rand, params Params,
 				Type:             abci.MisbehaviorType_DUPLICATE_VOTE,
 				Validator:        validator,
 				Height:           height,
-				Time:             time,
+				Time:             misbehaviorTime,
 				TotalVotingPower: totalVotingPower,
 			},
 		)
@@ -207,11 +222,13 @@ func RandomRequestBeginBlock(r *rand.Rand, params Params,
 		event("begin_block", "evidence", "ok")
 	}
 
-	return abci.RequestBeginBlock{
-		Header: header,
-		LastCommitInfo: abci.CommitInfo{
+	return &abci.RequestFinalizeBlock{
+		Height:          blockHeight,
+		Time:            time,
+		ProposerAddress: proposer,
+		DecidedLastCommit: abci.CommitInfo{
 			Votes: voteInfos,
 		},
-		ByzantineValidators: evidence,
+		Misbehavior: evidence,
 	}
 }

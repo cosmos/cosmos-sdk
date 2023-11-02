@@ -1,7 +1,7 @@
 syntax = "proto3";
 package cosmos.distribution.v1beta1;
 
-option go_package            = "github.com/cosmos/cosmos-sdk/x/distribution/types";
+option go_package            = "cosmossdk.io/x/distribution/types";
 option (gogoproto.equal_all) = true;
 
 import "gogoproto/gogo.proto";
@@ -29,7 +29,12 @@ service Msg {
 
   // FundCommunityPool defines a method to allow an account to directly
   // fund the community pool.
-  rpc FundCommunityPool(MsgFundCommunityPool) returns (MsgFundCommunityPoolResponse);
+  //
+  // Deprecated: Use x/protocolpool module's FundCommunityPool instead.
+  // Since: cosmos-sdk 0.50
+  rpc FundCommunityPool(MsgFundCommunityPool) returns (MsgFundCommunityPoolResponse) {
+    option deprecated = true;
+  };
 
   // UpdateParams defines a governance operation for updating the x/distribution
   // module parameters. The authority is defined in the keeper.
@@ -42,13 +47,14 @@ service Msg {
   // could be the governance module itself. The authority is defined in the
   // keeper.
   //
-  // Since: cosmos-sdk 0.47
+  // Deprecated: Use x/protocolpool module's CommunityPoolSpend instead.
+  // Since: cosmos-sdk 0.50
   rpc CommunityPoolSpend(MsgCommunityPoolSpend) returns (MsgCommunityPoolSpendResponse);
 
   // DepositValidatorRewardsPool defines a method to provide additional rewards
   // to delegators to a specific validator.
   //
-  // Since: cosmos-sdk 0.48
+  // Since: cosmos-sdk 0.50
   rpc DepositValidatorRewardsPool(MsgDepositValidatorRewardsPool) returns (MsgDepositValidatorRewardsPoolResponse);
 }
 
@@ -79,7 +85,7 @@ message MsgWithdrawDelegatorReward {
   option (gogoproto.goproto_getters) = false;
 
   string delegator_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  string validator_address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string validator_address = 2 [(cosmos_proto.scalar) = "cosmos.ValidatorAddressString"];
 }
 
 // MsgWithdrawDelegatorRewardResponse defines the Msg/WithdrawDelegatorReward
@@ -103,7 +109,7 @@ message MsgWithdrawValidatorCommission {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
-  string validator_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string validator_address = 1 [(cosmos_proto.scalar) = "cosmos.ValidatorAddressString"];
 }
 
 // MsgWithdrawValidatorCommissionResponse defines the
@@ -120,7 +126,11 @@ message MsgWithdrawValidatorCommissionResponse {
 
 // MsgFundCommunityPool allows an account to directly
 // fund the community pool.
+//
+// Deprecated: Use x/protocolpool module's MsgFundCommunityPool instead.
+// Since: cosmos-sdk 0.50
 message MsgFundCommunityPool {
+  option deprecated             = true;
   option (cosmos.msg.v1.signer) = "depositor";
   option (amino.name)           = "cosmos-sdk/MsgFundCommunityPool";
 
@@ -137,7 +147,12 @@ message MsgFundCommunityPool {
 }
 
 // MsgFundCommunityPoolResponse defines the Msg/FundCommunityPool response type.
-message MsgFundCommunityPoolResponse {}
+//
+// Deprecated
+// Since: cosmos-sdk 0.50
+message MsgFundCommunityPoolResponse {
+  option deprecated = true;
+}
 
 // MsgUpdateParams is the Msg/UpdateParams request type.
 //
@@ -164,9 +179,11 @@ message MsgUpdateParamsResponse {}
 // MsgCommunityPoolSpend defines a message for sending tokens from the community
 // pool to another account. This message is typically executed via a governance
 // proposal with the governance module being the executing authority.
-//
-// Since: cosmos-sdk 0.47
+
+// Deprecated: Use x/protocolpool module's MsgCommunityPoolSpend instead
+// Since: cosmos-sdk 0.50
 message MsgCommunityPoolSpend {
+  option deprecated             = true;
   option (cosmos.msg.v1.signer) = "authority";
   option (amino.name)           = "cosmos-sdk/distr/MsgCommunityPoolSpend";
 
@@ -184,22 +201,25 @@ message MsgCommunityPoolSpend {
 // MsgCommunityPoolSpendResponse defines the response to executing a
 // MsgCommunityPoolSpend message.
 //
-// Since: cosmos-sdk 0.47
-message MsgCommunityPoolSpendResponse {}
+// Deprecated
+// Since: cosmos-sdk 0.50
+message MsgCommunityPoolSpendResponse {
+  option deprecated = true;
+}
 
 // DepositValidatorRewardsPool defines the request structure to provide
 // additional rewards to delegators from a specific validator.
 //
-// Since: cosmos-sdk 0.48
+// Since: cosmos-sdk 0.50
 message MsgDepositValidatorRewardsPool {
-  option (amino.name) = "cosmos-sdk/distr/MsgDepositValRewards";
-  option (cosmos.msg.v1.signer) = "authority";
+  option (amino.name)           = "cosmos-sdk/distr/MsgDepositValRewards";
+  option (cosmos.msg.v1.signer) = "depositor";
 
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
-  string authority         = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  string validator_address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string   depositor                       = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string   validator_address               = 2 [(cosmos_proto.scalar) = "cosmos.ValidatorAddressString"];
   repeated cosmos.base.v1beta1.Coin amount = 3 [
     (gogoproto.nullable)     = false,
     (amino.encoding)         = "legacy_coins",
@@ -211,5 +231,5 @@ message MsgDepositValidatorRewardsPool {
 // MsgDepositValidatorRewardsPoolResponse defines the response to executing a
 // MsgDepositValidatorRewardsPool message.
 //
-// Since: cosmos-sdk 0.48
+// Since: cosmos-sdk 0.50
 message MsgDepositValidatorRewardsPoolResponse {}

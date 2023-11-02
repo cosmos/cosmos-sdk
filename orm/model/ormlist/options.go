@@ -5,8 +5,7 @@ import (
 	"google.golang.org/protobuf/proto"
 
 	queryv1beta1 "cosmossdk.io/api/cosmos/base/query/v1beta1"
-
-	"github.com/cosmos/cosmos-sdk/orm/internal/listinternal"
+	"cosmossdk.io/orm/internal/listinternal"
 )
 
 // Option represents a list option.

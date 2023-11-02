@@ -3,8 +3,9 @@ package authz
 import (
 	"time"
 
-	errorsmod "cosmossdk.io/errors"
 	proto "github.com/cosmos/gogoproto/proto"
+
+	errorsmod "cosmossdk.io/errors"
 
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -53,6 +54,10 @@ func (g Grant) GetAuthorization() (Authorization, error) {
 }
 
 func (g Grant) ValidateBasic() error {
+	if g.Authorization == nil {
+		return sdkerrors.ErrInvalidType.Wrap("authorization is nil")
+	}
+
 	av := g.Authorization.GetCachedValue()
 	a, ok := av.(Authorization)
 	if !ok {

@@ -119,7 +119,7 @@ func (g *FileGen) TypeExpr(typ reflect.Type) (ast.Expr, error) {
 
 var genericTypeNameRegex = regexp.MustCompile(`(\w+)\[(.*)]`)
 
-func (g *FileGen) importGenericTypeParams(typeName string, pkgPath string) (newTypeName string) {
+func (g *FileGen) importGenericTypeParams(typeName, pkgPath string) (newTypeName string) {
 	// a generic type parameter from the same package the generic type is defined won't have the
 	// full package name so we need to compare it with the final package part (the default import prefix)
 	// ex: for a/b.C in package a/b, we'll just see the type param b.C.

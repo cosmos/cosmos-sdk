@@ -8,10 +8,7 @@ import (
 	"strings"
 
 	"cosmossdk.io/core/appmodule"
-
 	"cosmossdk.io/core/store"
-
-	"github.com/hashicorp/go-multierror"
 )
 
 // SchemaBuilder is used for building schemas. The Build method should always
@@ -19,20 +16,25 @@ import (
 // collections with the builder after initialization will result in panics.
 type SchemaBuilder struct {
 	schema *Schema
-	err    *multierror.Error
+	err    error
+}
+
+// NewSchemaBuilderFromAccessor creates a new schema builder from the provided store accessor function.
+func NewSchemaBuilderFromAccessor(accessorFunc func(ctx context.Context) store.KVStore) *SchemaBuilder {
+	return &SchemaBuilder{
+		schema: &Schema{
+			storeAccessor:       accessorFunc,
+			collectionsByName:   map[string]Collection{},
+			collectionsByPrefix: map[string]Collection{},
+		},
+	}
 }
 
 // NewSchemaBuilder creates a new schema builder from the provided store key.
 // Callers should always call the SchemaBuilder.Build method when they are
 // done adding collections to the schema.
 func NewSchemaBuilder(service store.KVStoreService) *SchemaBuilder {
-	return &SchemaBuilder{
-		schema: &Schema{
-			storeAccessor:       service.OpenKVStore,
-			collectionsByName:   map[string]collection{},
-			collectionsByPrefix: map[string]collection{},
-		},
-	}
+	return NewSchemaBuilderFromAccessor(service.OpenKVStore)
 }
 
 // Build should be called after all collections that are part of the schema
@@ -81,27 +83,35 @@ func (s *SchemaBuilder) Build() (Schema, error) {
 	return schema, nil
 }
 
-func (s *SchemaBuilder) addCollection(collection collection) {
-	prefix := collection.getPrefix()
-	name := collection.getName()
+func (s *SchemaBuilder) addCollection(collection Collection) {
+	prefix := collection.GetPrefix()
+	name := collection.GetName()
 
 	if _, ok := s.schema.collectionsByPrefix[string(prefix)]; ok {
-		s.err = multierror.Append(s.err, fmt.Errorf("prefix %v already taken within schema", prefix))
+		s.appendError(fmt.Errorf("prefix %v already taken within schema", prefix))
 		return
 	}
 
 	if _, ok := s.schema.collectionsByName[name]; ok {
-		s.err = multierror.Append(s.err, fmt.Errorf("name %s already taken within schema", name))
+		s.appendError(fmt.Errorf("name %s already taken within schema", name))
 		return
 	}
 
 	if !nameRegex.MatchString(name) {
-		s.err = multierror.Append(s.err, fmt.Errorf("name must match regex %s, got %s", NameRegex, name))
+		s.appendError(fmt.Errorf("name must match regex %s, got %s", NameRegex, name))
 		return
 	}
 
 	s.schema.collectionsByPrefix[string(prefix)] = collection
 	s.schema.collectionsByName[name] = collection
+}
+
+func (s *SchemaBuilder) appendError(err error) {
+	if s.err == nil {
+		s.err = err
+		return
+	}
+	s.err = fmt.Errorf("%w\n%w", s.err, err)
 }
 
 // NameRegex is the regular expression that all valid collection names must match.
@@ -117,8 +127,8 @@ var nameRegex = regexp.MustCompile("^" + NameRegex + "$")
 type Schema struct {
 	storeAccessor       func(context.Context) store.KVStore
 	collectionsOrdered  []string
-	collectionsByPrefix map[string]collection
-	collectionsByName   map[string]collection
+	collectionsByPrefix map[string]Collection
+	collectionsByName   map[string]Collection
 }
 
 // NewSchema creates a new schema for the provided KVStoreService.
@@ -146,10 +156,16 @@ func NewMemoryStoreSchema(service store.MemoryStoreService) Schema {
 func NewSchemaFromAccessor(accessor func(context.Context) store.KVStore) Schema {
 	return Schema{
 		storeAccessor:       accessor,
-		collectionsByName:   map[string]collection{},
-		collectionsByPrefix: map[string]collection{},
+		collectionsByName:   map[string]Collection{},
+		collectionsByPrefix: map[string]Collection{},
 	}
 }
+
+// IsOnePerModuleType implements the depinject.OnePerModuleType interface.
+func (s Schema) IsOnePerModuleType() {}
+
+// IsAppModule implements the appmodule.AppModule interface.
+func (s Schema) IsAppModule() {}
 
 // DefaultGenesis implements the appmodule.HasGenesis.DefaultGenesis method.
 func (s Schema) DefaultGenesis(target appmodule.GenesisTarget) error {
@@ -268,10 +284,18 @@ func (s Schema) exportGenesis(ctx context.Context, target appmodule.GenesisTarge
 	return coll.exportGenesis(ctx, wc)
 }
 
-func (s Schema) getCollection(name string) (collection, error) {
+func (s Schema) getCollection(name string) (Collection, error) {
 	coll, ok := s.collectionsByName[name]
 	if !ok {
 		return nil, fmt.Errorf("unknown collection: %s", name)
 	}
 	return coll, nil
+}
+
+func (s Schema) ListCollections() []Collection {
+	colls := make([]Collection, len(s.collectionsOrdered))
+	for i, name := range s.collectionsOrdered {
+		colls[i] = s.collectionsByName[name]
+	}
+	return colls
 }

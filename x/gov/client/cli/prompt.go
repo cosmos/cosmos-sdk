@@ -12,12 +12,13 @@ import (
 	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
 
+	"cosmossdk.io/x/gov/types"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 const (
@@ -34,7 +35,7 @@ var suggestedProposalTypes = []proposalType{
 	},
 	{
 		Name:    "community-pool-spend",
-		MsgType: "/cosmos.distribution.v1beta1.MsgCommunityPoolSpend",
+		MsgType: "/cosmos.protocolpool.v1.MsgCommunityPoolSpend",
 	},
 	{
 		Name:    "software-upgrade",
@@ -76,15 +77,11 @@ func Prompt[T any](data T, namePrefix string) (T, error) {
 
 		// create prompts
 		prompt := promptui.Prompt{
-			Label:    fmt.Sprintf("Enter %s's %s", namePrefix, strings.ToLower(client.CamelCaseToString(v.Type().Field(i).Name))),
+			Label:    fmt.Sprintf("Enter %s %s", namePrefix, strings.ToLower(client.CamelCaseToString(v.Type().Field(i).Name))),
 			Validate: client.ValidatePromptNotEmpty,
 		}
 
 		fieldName := strings.ToLower(v.Type().Field(i).Name)
-		// validation per field name
-		if strings.Contains(fieldName, "url") {
-			prompt.Validate = client.ValidatePromptURL
-		}
 
 		if strings.EqualFold(fieldName, "authority") {
 			// pre-fill with gov address
@@ -92,6 +89,7 @@ func Prompt[T any](data T, namePrefix string) (T, error) {
 			prompt.Validate = client.ValidatePromptAddress
 		}
 
+		// TODO(@julienrbrt) use scalar annotation instead of dumb string name matching
 		if strings.Contains(fieldName, "addr") ||
 			strings.Contains(fieldName, "sender") ||
 			strings.Contains(fieldName, "voter") ||
@@ -150,9 +148,8 @@ type proposalType struct {
 }
 
 // Prompt the proposal type values and return the proposal and its metadata
-func (p *proposalType) Prompt(cdc codec.Codec) (*proposal, types.ProposalMetadata, error) {
-	// set metadata
-	metadata, err := Prompt(types.ProposalMetadata{}, "proposal")
+func (p *proposalType) Prompt(cdc codec.Codec, skipMetadata bool) (*proposal, types.ProposalMetadata, error) {
+	metadata, err := PromptMetadata(skipMetadata)
 	if err != nil {
 		return nil, metadata, fmt.Errorf("failed to set proposal metadata: %w", err)
 	}
@@ -201,8 +198,45 @@ func getProposalSuggestions() []string {
 	return types
 }
 
+// PromptMetadata prompts for proposal metadata or only title and summary if skip is true
+func PromptMetadata(skip bool) (types.ProposalMetadata, error) {
+	if !skip {
+		metadata, err := Prompt(types.ProposalMetadata{}, "proposal")
+		if err != nil {
+			return metadata, fmt.Errorf("failed to set proposal metadata: %w", err)
+		}
+
+		return metadata, nil
+	}
+
+	// prompt for title and summary
+	titlePrompt := promptui.Prompt{
+		Label:    "Enter proposal title",
+		Validate: client.ValidatePromptNotEmpty,
+	}
+
+	title, err := titlePrompt.Run()
+	if err != nil {
+		return types.ProposalMetadata{}, fmt.Errorf("failed to set proposal title: %w", err)
+	}
+
+	summaryPrompt := promptui.Prompt{
+		Label:    "Enter proposal summary",
+		Validate: client.ValidatePromptNotEmpty,
+	}
+
+	summary, err := summaryPrompt.Run()
+	if err != nil {
+		return types.ProposalMetadata{}, fmt.Errorf("failed to set proposal summary: %w", err)
+	}
+
+	return types.ProposalMetadata{Title: title, Summary: summary}, nil
+}
+
 // NewCmdDraftProposal let a user generate a draft proposal.
 func NewCmdDraftProposal() *cobra.Command {
+	flagSkipMetadata := "skip-metadata"
+
 	cmd := &cobra.Command{
 		Use:          "draft-proposal",
 		Short:        "Generate a draft proposal json file. The generated proposal json contains only one message (skeleton).",
@@ -260,7 +294,9 @@ func NewCmdDraftProposal() *cobra.Command {
 				}
 			}
 
-			result, metadata, err := proposal.Prompt(clientCtx.Codec)
+			skipMetadataPrompt, _ := cmd.Flags().GetBool(flagSkipMetadata)
+
+			result, metadata, err := proposal.Prompt(clientCtx.Codec, skipMetadataPrompt)
 			if err != nil {
 				return err
 			}
@@ -269,17 +305,20 @@ func NewCmdDraftProposal() *cobra.Command {
 				return err
 			}
 
-			if err := writeFile(draftMetadataFileName, metadata); err != nil {
-				return err
+			if !skipMetadataPrompt {
+				if err := writeFile(draftMetadataFileName, metadata); err != nil {
+					return err
+				}
 			}
 
-			fmt.Printf("The draft proposal has successfully been generated.\nProposals should contain off-chain metadata, please upload the metadata JSON to IPFS.\nThen, replace the generated metadata field with the IPFS CID.\n")
+			cmd.Println("The draft proposal has successfully been generated.\nProposals should contain off-chain metadata, please upload the metadata JSON to IPFS.\nThen, replace the generated metadata field with the IPFS CID.")
 
 			return nil
 		},
 	}
 
 	flags.AddTxFlagsToCmd(cmd)
+	cmd.Flags().Bool(flagSkipMetadata, false, "skip metadata prompt")
 
 	return cmd
 }

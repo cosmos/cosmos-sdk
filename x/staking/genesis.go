@@ -4,25 +4,32 @@ import (
 	"fmt"
 
 	cmttypes "github.com/cometbft/cometbft/types"
+	gogotypes "github.com/cosmos/gogoproto/types"
+
+	"cosmossdk.io/x/staking/keeper"
+	"cosmossdk.io/x/staking/types"
 
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
-	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // WriteValidators returns a slice of bonded genesis validators.
 func WriteValidators(ctx sdk.Context, keeper *keeper.Keeper) (vals []cmttypes.GenesisValidator, returnErr error) {
-	keeper.IterateLastValidators(ctx, func(_ int64, validator types.ValidatorI) (stop bool) {
+	err := keeper.LastValidatorPower.Walk(ctx, nil, func(key []byte, _ gogotypes.Int64Value) (bool, error) {
+		validator, err := keeper.GetValidator(ctx, key)
+		if err != nil {
+			return true, err
+		}
+
 		pk, err := validator.ConsPubKey()
 		if err != nil {
 			returnErr = err
-			return true
+			return true, err
 		}
 		cmtPk, err := cryptocodec.ToCmtPubKeyInterface(pk)
 		if err != nil {
 			returnErr = err
-			return true
+			return true, err
 		}
 
 		vals = append(vals, cmttypes.GenesisValidator{
@@ -32,10 +39,13 @@ func WriteValidators(ctx sdk.Context, keeper *keeper.Keeper) (vals []cmttypes.Ge
 			Name:    validator.GetMoniker(),
 		})
 
-		return false
+		return false, nil
 	})
+	if err != nil {
+		return nil, err
+	}
 
-	return
+	return vals, returnErr
 }
 
 // ValidateGenesis validates the provided staking genesis state to ensure the

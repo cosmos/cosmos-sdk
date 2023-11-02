@@ -6,7 +6,7 @@ import "cosmos_proto/cosmos.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "amino/amino.proto";
 
-option go_package = "github.com/cosmos/cosmos-sdk/x/staking/types";
+option go_package = "cosmossdk.io/x/staking/types";
 
 // StakeAuthorization defines authorization for delegate/undelegate/redelegate.
 //
@@ -46,4 +46,6 @@ enum AuthorizationType {
   AUTHORIZATION_TYPE_UNDELEGATE = 2;
   // AUTHORIZATION_TYPE_REDELEGATE defines an authorization type for Msg/BeginRedelegate
   AUTHORIZATION_TYPE_REDELEGATE = 3;
+  // AUTHORIZATION_TYPE_CANCEL_UNBONDING_DELEGATION defines an authorization type for Msg/MsgCancelUnbondingDelegation
+  AUTHORIZATION_TYPE_CANCEL_UNBONDING_DELEGATION = 4;
 }

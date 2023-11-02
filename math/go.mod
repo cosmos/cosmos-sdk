@@ -1,9 +1,9 @@
 module cosmossdk.io/math
 
-go 1.19
+go 1.20
 
 require (
-	github.com/stretchr/testify v1.8.1
+	github.com/stretchr/testify v1.8.4
 	golang.org/x/exp v0.0.0-20221205204356-47842c84f3db
 	sigs.k8s.io/yaml v1.3.0
 )
@@ -16,3 +16,6 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
+
+// Issue with math.Int{}.Size() implementation.
+retract [v1.1.0, v1.1.1]

@@ -66,7 +66,7 @@ func (m *TestAnyResponse) UnpackInterfaces(unpacker types.AnyUnpacker) error {
 // 2. That the gas consumption of the query is the same. When
 // `gasOverwrite` is set to true, we also check that this consumed
 // gas value is equal to the hardcoded `gasConsumed`.
-func DeterministicIterations[request proto.Message, response proto.Message](
+func DeterministicIterations[request, response proto.Message](
 	ctx sdk.Context,
 	t *testing.T,
 	req request,

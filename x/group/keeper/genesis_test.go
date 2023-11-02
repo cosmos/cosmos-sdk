@@ -6,24 +6,25 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cometbft/cometbft/libs/log"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 
+	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
+	banktypes "cosmossdk.io/x/bank/types"
+	"cosmossdk.io/x/group"
+	"cosmossdk.io/x/group/keeper"
+	"cosmossdk.io/x/group/module"
+	grouptestutil "cosmossdk.io/x/group/testutil"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/cosmos/cosmos-sdk/x/group"
-	"github.com/cosmos/cosmos-sdk/x/group/keeper"
-	"github.com/cosmos/cosmos-sdk/x/group/module"
-	grouptestutil "github.com/cosmos/cosmos-sdk/x/group/testutil"
 )
 
 type GenesisTestSuite struct {
@@ -55,6 +56,7 @@ func (s *GenesisTestSuite) SetupTest() {
 	accountKeeper := grouptestutil.NewMockAccountKeeper(ctrl)
 	accountKeeper.EXPECT().GetAccount(gomock.Any(), accAddr).Return(authtypes.NewBaseAccountWithAddress(accAddr)).AnyTimes()
 	accountKeeper.EXPECT().GetAccount(gomock.Any(), memberAddr).Return(authtypes.NewBaseAccountWithAddress(memberAddr)).AnyTimes()
+	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
 
 	bApp := baseapp.NewBaseApp(
 		"group",
@@ -210,7 +212,7 @@ func (s *GenesisTestSuite) TestInitExportGenesis() {
 	s.Require().Equal(genesisState.ProposalSeq, exportedGenesisState.ProposalSeq)
 }
 
-func (s *GenesisTestSuite) assertGroupPoliciesEqual(g *group.GroupPolicyInfo, other *group.GroupPolicyInfo) {
+func (s *GenesisTestSuite) assertGroupPoliciesEqual(g, other *group.GroupPolicyInfo) {
 	require := s.Require()
 	require.Equal(g.Address, other.Address)
 	require.Equal(g.GroupId, other.GroupId)
@@ -224,7 +226,7 @@ func (s *GenesisTestSuite) assertGroupPoliciesEqual(g *group.GroupPolicyInfo, ot
 	require.Equal(dp1, dp2)
 }
 
-func (s *GenesisTestSuite) assertProposalsEqual(g *group.Proposal, other *group.Proposal) {
+func (s *GenesisTestSuite) assertProposalsEqual(g, other *group.Proposal) {
 	require := s.Require()
 	require.Equal(g.Id, other.Id)
 	require.Equal(g.GroupPolicyAddress, other.GroupPolicyAddress)

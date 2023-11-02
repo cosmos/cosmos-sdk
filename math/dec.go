@@ -42,6 +42,7 @@ var (
 	zeroInt              = big.NewInt(0)
 	oneInt               = big.NewInt(1)
 	tenInt               = big.NewInt(10)
+	smallestDec          = LegacySmallestDec()
 )
 
 // Decimal errors
@@ -220,6 +221,7 @@ func (d LegacyDec) LTE(d2 LegacyDec) bool      { return (d.i).Cmp(d2.i) <= 0 }  
 func (d LegacyDec) Neg() LegacyDec             { return LegacyDec{new(big.Int).Neg(d.i)} } // reverse the decimal sign
 func (d LegacyDec) NegMut() LegacyDec          { d.i.Neg(d.i); return d }                  // reverse the decimal sign, mutable
 func (d LegacyDec) Abs() LegacyDec             { return LegacyDec{new(big.Int).Abs(d.i)} } // absolute value
+func (d LegacyDec) AbsMut() LegacyDec          { d.i.Abs(d.i); return d }                  // absolute value, mutable
 func (d LegacyDec) Set(d2 LegacyDec) LegacyDec { d.i.Set(d2.i); return d }                 // set to existing dec value
 func (d LegacyDec) Clone() LegacyDec           { return LegacyDec{new(big.Int).Set(d.i)} } // clone new dec
 
@@ -310,6 +312,22 @@ func (d LegacyDec) MulTruncate(d2 LegacyDec) LegacyDec {
 func (d LegacyDec) MulTruncateMut(d2 LegacyDec) LegacyDec {
 	d.i.Mul(d.i, d2.i)
 	chopPrecisionAndTruncate(d.i)
+
+	if d.i.BitLen() > maxDecBitLen {
+		panic("Int overflow")
+	}
+	return d
+}
+
+// multiplication round up at precision end.
+func (d LegacyDec) MulRoundUp(d2 LegacyDec) LegacyDec {
+	return d.ImmutOp(LegacyDec.MulRoundUpMut, d2)
+}
+
+// mutable multiplication with round up at precision end.
+func (d LegacyDec) MulRoundUpMut(d2 LegacyDec) LegacyDec {
+	d.i.Mul(d.i, d2.i)
+	chopPrecisionAndRoundUp(d.i)
 
 	if d.i.BitLen() > maxDecBitLen {
 		panic("Int overflow")
@@ -442,20 +460,22 @@ func (d LegacyDec) ApproxRoot(root uint64) (guess LegacyDec, err error) {
 		return absRoot.NegMut(), err
 	}
 
-	if root == 1 || d.IsZero() || d.Equal(LegacyOneDec()) {
+	// One decimal, that we invalidate later. Helps us save a heap allocation.
+	scratchOneDec := LegacyOneDec()
+	if root == 1 || d.IsZero() || d.Equal(scratchOneDec) {
 		return d, nil
 	}
 
 	if root == 0 {
-		return LegacyOneDec(), nil
+		return scratchOneDec, nil
 	}
 
-	guess, delta := LegacyOneDec(), LegacyOneDec()
+	guess, delta := scratchOneDec, LegacyOneDec()
 
-	for iter := 0; delta.Abs().GT(LegacySmallestDec()) && iter < maxApproxRootIterations; iter++ {
+	for iter := 0; iter < maxApproxRootIterations && delta.Abs().GT(smallestDec); iter++ {
 		prev := guess.Power(root - 1)
 		if prev.IsZero() {
-			prev = LegacySmallestDec()
+			prev = smallestDec
 		}
 		delta.Set(d).QuoMut(prev)
 		delta.SubMut(guess)
@@ -475,7 +495,8 @@ func (d LegacyDec) Power(power uint64) LegacyDec {
 
 func (d LegacyDec) PowerMut(power uint64) LegacyDec {
 	if power == 0 {
-		d.SetInt64(1)
+		// Set to 1 with the correct precision.
+		d.i.Set(precisionReuse)
 		return d
 	}
 	tmp := LegacyOneDec()
@@ -715,7 +736,7 @@ func (d LegacyDec) Ceil() LegacyDec {
 	return LegacyNewDecFromBigInt(quo.Add(quo, oneInt))
 }
 
-// MaxSortableDec is the largest Dec that can be passed into SortableDecBytes()
+// LegacyMaxSortableDec is the largest Dec that can be passed into SortableDecBytes()
 // Its negative form is the least Dec that can be passed in.
 var LegacyMaxSortableDec LegacyDec
 
@@ -799,19 +820,21 @@ func (d LegacyDec) MarshalYAML() (interface{}, error) {
 
 // Marshal implements the gogo proto custom type interface.
 func (d LegacyDec) Marshal() ([]byte, error) {
-	if d.i == nil {
-		d.i = new(big.Int)
+	i := d.i
+	if i == nil {
+		i = new(big.Int)
 	}
-	return d.i.MarshalText()
+	return i.MarshalText()
 }
 
 // MarshalTo implements the gogo proto custom type interface.
 func (d *LegacyDec) MarshalTo(data []byte) (n int, err error) {
-	if d.i == nil {
-		d.i = new(big.Int)
+	i := d.i
+	if i == nil {
+		i = new(big.Int)
 	}
 
-	if d.i.Cmp(zeroInt) == 0 {
+	if i.Cmp(zeroInt) == 0 {
 		copy(data, []byte{0x30})
 		return 1, nil
 	}
@@ -891,10 +914,12 @@ func LegacyMaxDec(d1, d2 LegacyDec) LegacyDec {
 
 // intended to be used with require/assert:  require.True(DecEq(...))
 func LegacyDecEq(t *testing.T, exp, got LegacyDec) (*testing.T, bool, string, string, string) {
+	t.Helper()
 	return t, exp.Equal(got), "expected:\t%v\ngot:\t\t%v", exp.String(), got.String()
 }
 
-func LegacyDecApproxEq(t *testing.T, d1 LegacyDec, d2 LegacyDec, tol LegacyDec) (*testing.T, bool, string, string, string) {
+func LegacyDecApproxEq(t *testing.T, d1, d2, tol LegacyDec) (*testing.T, bool, string, string, string) {
+	t.Helper()
 	diff := d1.Sub(d2).Abs()
 	return t, diff.LTE(tol), "expected |d1 - d2| <:\t%v\ngot |d1 - d2| = \t\t%v", tol.String(), diff.String()
 }

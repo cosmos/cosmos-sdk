@@ -7,14 +7,14 @@ import (
 	"fmt"
 	"io"
 	"math"
+	"os"
 	"sort"
 	"sync"
 
-	"cosmossdk.io/log"
-
 	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/store/snapshots/types"
-	storetypes "cosmossdk.io/store/types"
+	"cosmossdk.io/log"
+	"cosmossdk.io/store/v2"
+	"cosmossdk.io/store/v2/snapshots/types"
 )
 
 // Manager manages snapshot and restore operations for an app, making sure only a single
@@ -39,12 +39,12 @@ type Manager struct {
 	multistore types.Snapshotter
 	logger     log.Logger
 
-	mtx                sync.Mutex
-	operation          operation
-	chRestore          chan<- io.ReadCloser
-	chRestoreDone      <-chan restoreDone
-	restoreChunkHashes [][]byte
-	restoreChunkIndex  uint32
+	mtx               sync.Mutex
+	operation         operation
+	chRestore         chan<- uint32
+	chRestoreDone     <-chan restoreDone
+	restoreSnapshot   *types.Snapshot
+	restoreChunkIndex uint32
 }
 
 // operation represents a Manager operation. Only one operation can be in progress at a time.
@@ -62,7 +62,8 @@ const (
 	opPrune    operation = "prune"
 	opRestore  operation = "restore"
 
-	chunkBufferSize = 4
+	chunkBufferSize   = 4
+	chunkIDBufferSize = 1024
 
 	snapshotMaxItemSize = int(64e6) // SDK has no key/value size limit, so we set an arbitrary limit
 )
@@ -111,10 +112,10 @@ func (m *Manager) begin(op operation) error {
 // beginLocked begins an operation while already holding the mutex.
 func (m *Manager) beginLocked(op operation) error {
 	if op == opNone {
-		return errorsmod.Wrap(storetypes.ErrLogic, "can't begin a none operation")
+		return errorsmod.Wrap(store.ErrLogic, "can't begin a none operation")
 	}
 	if m.operation != opNone {
-		return errorsmod.Wrapf(storetypes.ErrConflict, "a %v operation is in progress", m.operation)
+		return errorsmod.Wrapf(store.ErrConflict, "a %v operation is in progress", m.operation)
 	}
 	m.operation = op
 	return nil
@@ -135,7 +136,7 @@ func (m *Manager) endLocked() {
 		m.chRestore = nil
 	}
 	m.chRestoreDone = nil
-	m.restoreChunkHashes = nil
+	m.restoreSnapshot = nil
 	m.restoreChunkIndex = 0
 }
 
@@ -160,7 +161,7 @@ func (m *Manager) GetSnapshotBlockRetentionHeights() int64 {
 // Create creates a snapshot and returns its metadata.
 func (m *Manager) Create(height uint64) (*types.Snapshot, error) {
 	if m == nil {
-		return nil, errorsmod.Wrap(storetypes.ErrLogic, "no snapshot store configured")
+		return nil, errorsmod.Wrap(store.ErrLogic, "no snapshot store configured")
 	}
 
 	defer m.multistore.PruneSnapshotHeight(int64(height))
@@ -176,7 +177,7 @@ func (m *Manager) Create(height uint64) (*types.Snapshot, error) {
 		return nil, errorsmod.Wrap(err, "failed to examine latest snapshot")
 	}
 	if latest != nil && latest.Height >= height {
-		return nil, errorsmod.Wrapf(storetypes.ErrConflict,
+		return nil, errorsmod.Wrapf(store.ErrConflict,
 			"a more recent snapshot already exists at height %v", latest.Height)
 	}
 
@@ -236,7 +237,7 @@ func (m *Manager) List() ([]*types.Snapshot, error) {
 
 // LoadChunk loads a chunk into a byte slice, mirroring ABCI LoadChunk. It can be called
 // concurrently with other operations. If the chunk does not exist, nil is returned.
-func (m *Manager) LoadChunk(height uint64, format uint32, chunk uint32) ([]byte, error) {
+func (m *Manager) LoadChunk(height uint64, format, chunk uint32) ([]byte, error) {
 	reader, err := m.store.LoadChunk(height, format, chunk)
 	if err != nil {
 		return nil, err
@@ -278,7 +279,7 @@ func (m *Manager) Restore(snapshot types.Snapshot) error {
 		return errorsmod.Wrapf(types.ErrUnknownFormat, "snapshot format %v", snapshot.Format)
 	}
 	if snapshot.Height == 0 {
-		return errorsmod.Wrap(storetypes.ErrLogic, "cannot restore snapshot at height 0")
+		return errorsmod.Wrap(store.ErrLogic, "cannot restore snapshot at height 0")
 	}
 	if snapshot.Height > uint64(math.MaxInt64) {
 		return errorsmod.Wrapf(types.ErrInvalidMetadata,
@@ -291,11 +292,18 @@ func (m *Manager) Restore(snapshot types.Snapshot) error {
 	}
 
 	// Start an asynchronous snapshot restoration, passing chunks and completion status via channels.
-	chChunks := make(chan io.ReadCloser, chunkBufferSize)
+	chChunkIDs := make(chan uint32, chunkIDBufferSize)
 	chDone := make(chan restoreDone, 1)
 
+	dir := m.store.pathSnapshot(snapshot.Height, snapshot.Format)
+	if err := os.MkdirAll(dir, 0o750); err != nil {
+		return errorsmod.Wrapf(err, "failed to create snapshot directory %q", dir)
+	}
+
+	chChunks := m.loadChunkStream(snapshot.Height, snapshot.Format, chChunkIDs)
+
 	go func() {
-		err := m.restoreSnapshot(snapshot, chChunks)
+		err := m.doRestoreSnapshot(snapshot, chChunks)
 		chDone <- restoreDone{
 			complete: err == nil,
 			err:      err,
@@ -303,17 +311,39 @@ func (m *Manager) Restore(snapshot types.Snapshot) error {
 		close(chDone)
 	}()
 
-	m.chRestore = chChunks
+	m.chRestore = chChunkIDs
 	m.chRestoreDone = chDone
-	m.restoreChunkHashes = snapshot.Metadata.ChunkHashes
+	m.restoreSnapshot = &snapshot
 	m.restoreChunkIndex = 0
 	return nil
 }
 
-// restoreSnapshot do the heavy work of snapshot restoration after preliminary checks on request have passed.
-func (m *Manager) restoreSnapshot(snapshot types.Snapshot, chChunks <-chan io.ReadCloser) error {
-	var nextItem types.SnapshotItem
+func (m *Manager) loadChunkStream(height uint64, format uint32, chunkIDs <-chan uint32) <-chan io.ReadCloser {
+	chunks := make(chan io.ReadCloser, chunkBufferSize)
+	go func() {
+		defer close(chunks)
 
+		for chunkID := range chunkIDs {
+			chunk, err := m.store.loadChunkFile(height, format, chunkID)
+			if err != nil {
+				m.logger.Error("load chunk file failed", "height", height, "format", format, "chunk", chunkID, "err", err)
+				break
+			}
+			chunks <- chunk
+		}
+	}()
+
+	return chunks
+}
+
+// doRestoreSnapshot do the heavy work of snapshot restoration after preliminary checks on request have passed.
+func (m *Manager) doRestoreSnapshot(snapshot types.Snapshot, chChunks <-chan io.ReadCloser) error {
+	dir := m.store.pathSnapshot(snapshot.Height, snapshot.Format)
+	if err := os.MkdirAll(dir, 0o750); err != nil {
+		return errorsmod.Wrapf(err, "failed to create snapshot directory %q", dir)
+	}
+
+	var nextItem types.SnapshotItem
 	streamReader, err := NewStreamReader(chChunks)
 	if err != nil {
 		return err
@@ -345,11 +375,11 @@ func (m *Manager) restoreSnapshot(snapshot types.Snapshot, chChunks <-chan io.Re
 		}
 		metadata := nextItem.GetExtension()
 		if metadata == nil {
-			return errorsmod.Wrapf(storetypes.ErrLogic, "unknown snapshot item %T", nextItem.Item)
+			return errorsmod.Wrapf(store.ErrLogic, "unknown snapshot item %T", nextItem.Item)
 		}
 		extension, ok := m.extensions[metadata.Name]
 		if !ok {
-			return errorsmod.Wrapf(storetypes.ErrLogic, "unknown extension snapshotter %s", metadata.Name)
+			return errorsmod.Wrapf(store.ErrLogic, "unknown extension snapshotter %s", metadata.Name)
 		}
 		if !IsFormatSupported(extension, metadata.Format) {
 			return errorsmod.Wrapf(types.ErrUnknownFormat, "format %v for extension %s", metadata.Format, metadata.Name)
@@ -372,11 +402,11 @@ func (m *Manager) RestoreChunk(chunk []byte) (bool, error) {
 	m.mtx.Lock()
 	defer m.mtx.Unlock()
 	if m.operation != opRestore {
-		return false, errorsmod.Wrap(storetypes.ErrLogic, "no restore operation in progress")
+		return false, errorsmod.Wrap(store.ErrLogic, "no restore operation in progress")
 	}
 
-	if int(m.restoreChunkIndex) >= len(m.restoreChunkHashes) {
-		return false, errorsmod.Wrap(storetypes.ErrLogic, "received unexpected chunk")
+	if int(m.restoreChunkIndex) >= len(m.restoreSnapshot.Metadata.ChunkHashes) {
+		return false, errorsmod.Wrap(store.ErrLogic, "received unexpected chunk")
 	}
 
 	// Check if any errors have occurred yet.
@@ -386,36 +416,71 @@ func (m *Manager) RestoreChunk(chunk []byte) (bool, error) {
 		if done.err != nil {
 			return false, done.err
 		}
-		return false, errorsmod.Wrap(storetypes.ErrLogic, "restore ended unexpectedly")
+		return false, errorsmod.Wrap(store.ErrLogic, "restore ended unexpectedly")
 	default:
 	}
 
 	// Verify the chunk hash.
 	hash := sha256.Sum256(chunk)
-	expected := m.restoreChunkHashes[m.restoreChunkIndex]
+	expected := m.restoreSnapshot.Metadata.ChunkHashes[m.restoreChunkIndex]
 	if !bytes.Equal(hash[:], expected) {
 		return false, errorsmod.Wrapf(types.ErrChunkHashMismatch,
 			"expected %x, got %x", hash, expected)
 	}
 
+	if err := m.store.saveChunkContent(chunk, m.restoreChunkIndex, m.restoreSnapshot); err != nil {
+		return false, errorsmod.Wrapf(err, "save chunk content %d", m.restoreChunkIndex)
+	}
+
 	// Pass the chunk to the restore, and wait for completion if it was the final one.
-	m.chRestore <- io.NopCloser(bytes.NewReader(chunk))
+	m.chRestore <- m.restoreChunkIndex
 	m.restoreChunkIndex++
 
-	if int(m.restoreChunkIndex) >= len(m.restoreChunkHashes) {
+	if int(m.restoreChunkIndex) >= len(m.restoreSnapshot.Metadata.ChunkHashes) {
 		close(m.chRestore)
 		m.chRestore = nil
+
+		// the chunks are all written into files, we can save the snapshot to the db,
+		// even if the restoration may not completed yet.
+		if err := m.store.saveSnapshot(m.restoreSnapshot); err != nil {
+			return false, errorsmod.Wrap(err, "save restoring snapshot")
+		}
+
 		done := <-m.chRestoreDone
 		m.endLocked()
 		if done.err != nil {
 			return false, done.err
 		}
 		if !done.complete {
-			return false, errorsmod.Wrap(storetypes.ErrLogic, "restore ended prematurely")
+			return false, errorsmod.Wrap(store.ErrLogic, "restore ended prematurely")
 		}
+
 		return true, nil
 	}
 	return false, nil
+}
+
+// RestoreLocalSnapshot restores app state from a local snapshot.
+func (m *Manager) RestoreLocalSnapshot(height uint64, format uint32) error {
+	snapshot, ch, err := m.store.Load(height, format)
+	if err != nil {
+		return err
+	}
+
+	if snapshot == nil {
+		return fmt.Errorf("snapshot doesn't exist, height: %d, format: %d", height, format)
+	}
+
+	m.mtx.Lock()
+	defer m.mtx.Unlock()
+
+	err = m.beginLocked(opRestore)
+	if err != nil {
+		return err
+	}
+	defer m.endLocked()
+
+	return m.doRestoreSnapshot(*snapshot, ch)
 }
 
 // sortedExtensionNames sort extension names for deterministic iteration.
@@ -449,7 +514,8 @@ func (m *Manager) SnapshotIfApplicable(height int64) {
 		m.logger.Debug("snapshot is skipped", "height", height)
 		return
 	}
-	m.snapshot(height)
+	// start the routine after need to create a snapshot
+	go m.snapshot(height)
 }
 
 // shouldTakeSnapshot returns true is snapshot should be taken at height.
@@ -484,4 +550,10 @@ func (m *Manager) snapshot(height int64) {
 
 		m.logger.Debug("pruned state snapshots", "pruned", pruned)
 	}
+}
+
+// Close the snapshot database.
+func (m *Manager) Close() error {
+	m.logger.Info("snapshotManager Close Database")
+	return m.store.db.Close()
 }

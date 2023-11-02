@@ -4,22 +4,32 @@ import (
 	"testing"
 	"time"
 
-	"cosmossdk.io/log"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 
+	"cosmossdk.io/core/header"
+	"cosmossdk.io/log"
+	sdkmath "cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
-	"github.com/golang/mock/gomock"
+	"cosmossdk.io/x/authz/keeper"
+	authzmodule "cosmossdk.io/x/authz/module"
+	authztestutil "cosmossdk.io/x/authz/testutil"
+	bank "cosmossdk.io/x/bank/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	"github.com/cosmos/cosmos-sdk/x/authz/keeper"
-	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
-	authztestutil "github.com/cosmos/cosmos-sdk/x/authz/testutil"
-	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
+)
+
+var (
+	granteePub  = secp256k1.GenPrivKey().PubKey()
+	granterPub  = secp256k1.GenPrivKey().PubKey()
+	granteeAddr = sdk.AccAddress(granteePub.Address())
+	granterAddr = sdk.AccAddress(granterPub.Address())
 )
 
 type GenesisTestSuite struct {
@@ -34,13 +44,16 @@ type GenesisTestSuite struct {
 
 func (suite *GenesisTestSuite) SetupTest() {
 	key := storetypes.NewKVStoreKey(keeper.StoreKey)
+	storeService := runtime.NewKVStoreService(key)
 	testCtx := testutil.DefaultContextWithDB(suite.T(), key, storetypes.NewTransientStoreKey("transient_test"))
-	suite.ctx = testCtx.Ctx.WithBlockHeader(cmtproto.Header{Height: 1})
+	suite.ctx = testCtx.Ctx.WithHeaderInfo(header.Info{Height: 1})
+
 	suite.encCfg = moduletestutil.MakeTestEncodingConfig(authzmodule.AppModuleBasic{})
 
 	// gomock initializations
 	ctrl := gomock.NewController(suite.T())
 	suite.accountKeeper = authztestutil.NewMockAccountKeeper(ctrl)
+	suite.accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
 
 	suite.baseApp = baseapp.NewBaseApp(
 		"authz",
@@ -55,20 +68,13 @@ func (suite *GenesisTestSuite) SetupTest() {
 	msr := suite.baseApp.MsgServiceRouter()
 	msr.SetInterfaceRegistry(suite.encCfg.InterfaceRegistry)
 
-	suite.keeper = keeper.NewKeeper(key, suite.encCfg.Codec, msr, suite.accountKeeper)
+	suite.keeper = keeper.NewKeeper(storeService, suite.encCfg.Codec, msr, suite.accountKeeper)
 }
 
-var (
-	granteePub  = secp256k1.GenPrivKey().PubKey()
-	granterPub  = secp256k1.GenPrivKey().PubKey()
-	granteeAddr = sdk.AccAddress(granteePub.Address())
-	granterAddr = sdk.AccAddress(granterPub.Address())
-)
-
 func (suite *GenesisTestSuite) TestImportExportGenesis() {
-	coins := sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(1_000)))
+	coins := sdk.NewCoins(sdk.NewCoin("foo", sdkmath.NewInt(1_000)))
 
-	now := suite.ctx.BlockTime()
+	now := suite.ctx.HeaderInfo().Time
 	expires := now.Add(time.Hour)
 	grant := &bank.SendAuthorization{SpendLimit: coins}
 	err := suite.keeper.SaveGrant(suite.ctx, granteeAddr, granterAddr, grant, &expires)
@@ -77,10 +83,14 @@ func (suite *GenesisTestSuite) TestImportExportGenesis() {
 
 	// TODO, recheck!
 	// Clear keeper
-	suite.keeper.DeleteGrant(suite.ctx, granteeAddr, granterAddr, grant.MsgTypeURL())
+	err = suite.keeper.DeleteGrant(suite.ctx, granteeAddr, granterAddr, grant.MsgTypeURL())
+	suite.Require().NoError(err)
+	newGenesis := suite.keeper.ExportGenesis(suite.ctx)
+	suite.Require().NotEqual(genesis, newGenesis)
+	suite.Require().Empty(newGenesis)
 
 	suite.keeper.InitGenesis(suite.ctx, genesis)
-	newGenesis := suite.keeper.ExportGenesis(suite.ctx)
+	newGenesis = suite.keeper.ExportGenesis(suite.ctx)
 	suite.Require().Equal(genesis, newGenesis)
 }
 

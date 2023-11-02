@@ -5,13 +5,12 @@ import (
 
 	"github.com/cosmos/gogoproto/proto"
 
+	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/store/prefix"
 	"cosmossdk.io/store/types"
-
-	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/x/group/errors"
 
 	"github.com/cosmos/cosmos-sdk/types/query"
-	"github.com/cosmos/cosmos-sdk/x/group/errors"
 )
 
 // indexer creates and modifies the second MultiKeyIndex based on the operations and changes on the primary object.
@@ -74,11 +73,12 @@ func newIndex(tb Indexable, prefix byte, indexer *Indexer, indexerF IndexerFunc,
 
 // Has checks if a key exists. Returns an error on nil key.
 func (i MultiKeyIndex) Has(store types.KVStore, key interface{}) (bool, error) {
-	pStore := prefix.NewStore(store, []byte{i.prefix})
 	encodedKey, err := keyPartBytes(key, false)
 	if err != nil {
 		return false, err
 	}
+
+	pStore := prefix.NewStore(store, []byte{i.prefix})
 	it := pStore.Iterator(PrefixRange(encodedKey))
 	defer it.Close()
 	return it.Valid(), nil
@@ -86,11 +86,12 @@ func (i MultiKeyIndex) Has(store types.KVStore, key interface{}) (bool, error) {
 
 // Get returns a result iterator for the searchKey. Parameters must not be nil.
 func (i MultiKeyIndex) Get(store types.KVStore, searchKey interface{}) (Iterator, error) {
-	pStore := prefix.NewStore(store, []byte{i.prefix})
 	encodedKey, err := keyPartBytes(searchKey, false)
 	if err != nil {
 		return nil, err
 	}
+
+	pStore := prefix.NewStore(store, []byte{i.prefix})
 	it := pStore.Iterator(PrefixRange(encodedKey))
 	return indexIterator{store: store, it: it, rowGetter: i.rowGetter, indexKey: i.indexKey}, nil
 }
@@ -99,7 +100,6 @@ func (i MultiKeyIndex) Get(store types.KVStore, searchKey interface{}) (Iterator
 // starting from pageRequest.Key if provided.
 // The pageRequest.Key is the rowID while searchKey is a MultiKeyIndex key.
 func (i MultiKeyIndex) GetPaginated(store types.KVStore, searchKey interface{}, pageRequest *query.PageRequest) (Iterator, error) {
-	pStore := prefix.NewStore(store, []byte{i.prefix})
 	encodedKey, err := keyPartBytes(searchKey, false)
 	if err != nil {
 		return nil, err
@@ -113,6 +113,8 @@ func (i MultiKeyIndex) GetPaginated(store types.KVStore, searchKey interface{}, 
 			return nil, err
 		}
 	}
+
+	pStore := prefix.NewStore(store, []byte{i.prefix})
 	it := pStore.Iterator(start, end)
 	return indexIterator{store: store, it: it, rowGetter: i.rowGetter, indexKey: i.indexKey}, nil
 }
@@ -134,7 +136,7 @@ func (i MultiKeyIndex) GetPaginated(store types.KVStore, searchKey interface{}, 
 //	it = LimitIterator(it, defaultLimit)
 //
 // CONTRACT: No writes may happen within a domain while an iterator exists over it.
-func (i MultiKeyIndex) PrefixScan(store types.KVStore, startI interface{}, endI interface{}) (Iterator, error) {
+func (i MultiKeyIndex) PrefixScan(store types.KVStore, startI, endI interface{}) (Iterator, error) {
 	start, end, err := getStartEndBz(startI, endI)
 	if err != nil {
 		return nil, err
@@ -154,7 +156,7 @@ func (i MultiKeyIndex) PrefixScan(store types.KVStore, startI interface{}, endI 
 // this as an endpoint to the public without further limits. See `LimitIterator`
 //
 // CONTRACT: No writes may happen within a domain while an iterator exists over it.
-func (i MultiKeyIndex) ReversePrefixScan(store types.KVStore, startI interface{}, endI interface{}) (Iterator, error) {
+func (i MultiKeyIndex) ReversePrefixScan(store types.KVStore, startI, endI interface{}) (Iterator, error) {
 	start, end, err := getStartEndBz(startI, endI)
 	if err != nil {
 		return nil, err
@@ -167,7 +169,7 @@ func (i MultiKeyIndex) ReversePrefixScan(store types.KVStore, startI interface{}
 
 // getStartEndBz gets the start and end bytes to be passed into the SDK store
 // iterator.
-func getStartEndBz(startI interface{}, endI interface{}) ([]byte, []byte, error) {
+func getStartEndBz(startI, endI interface{}) ([]byte, []byte, error) {
 	start, err := getPrefixScanKeyBytes(startI)
 	if err != nil {
 		return nil, nil, err

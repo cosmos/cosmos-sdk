@@ -117,7 +117,7 @@ func (ctx Context) BroadcastTxAsync(txBytes []byte) (*sdk.TxResponse, error) {
 
 // TxServiceBroadcast is a helper function to broadcast a Tx with the correct gRPC types
 // from the tx service. Calls `clientCtx.BroadcastTx` under the hood.
-func TxServiceBroadcast(grpcCtx context.Context, clientCtx Context, req *tx.BroadcastTxRequest) (*tx.BroadcastTxResponse, error) {
+func TxServiceBroadcast(_ context.Context, clientCtx Context, req *tx.BroadcastTxRequest) (*tx.BroadcastTxResponse, error) {
 	if req == nil || req.TxBytes == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid empty tx")
 	}

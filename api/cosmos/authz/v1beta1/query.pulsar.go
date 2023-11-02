@@ -3573,7 +3573,7 @@ func (x *QueryGranterGrantsResponse) GetPagination() *v1beta1.PageResponse {
 	return nil
 }
 
-// QueryGranteeGrantsRequest is the request type for the Query/IssuedGrants RPC method.
+// QueryGranteeGrantsRequest is the request type for the Query/GranteeGrants RPC method.
 type QueryGranteeGrantsRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

@@ -1,20 +1,19 @@
 package tx_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/depinject"
-	"github.com/cosmos/cosmos-sdk/client"
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
+	_ "github.com/cosmos/cosmos-sdk/testutil/testdata/testpb"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
+	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
-	"github.com/cosmos/cosmos-sdk/x/auth/testutil"
 )
 
 var (
@@ -23,9 +22,9 @@ var (
 	aux2Priv, aux2Pk, aux2Addr             = testdata.KeyTestPubAddr()
 	feepayerPriv, feepayerPk, feepayerAddr = testdata.KeyTestPubAddr()
 
-	msg     = testdata.NewTestMsg(tipperAddr, aux2Addr)
-	memo    = "test-memo"
-	tip     = &txtypes.Tip{Tipper: tipperAddr.String(), Amount: sdk.NewCoins(sdk.NewCoin("tip-denom", sdk.NewIntFromUint64(123)))}
+	msg  = testdata.NewTestMsg(tipperAddr, aux2Addr)
+	memo = "test-memo"
+
 	chainID = "test-chain"
 	gas     = testdata.NewTestGasLimit()
 	fee     = testdata.NewTestFeeAmount()
@@ -38,22 +37,15 @@ var (
 // Then it tests integrating the 2 AuxSignerData into a
 // client.TxBuilder created by the fee payer.
 func TestBuilderWithAux(t *testing.T) {
-	var (
-		interfaceRegistry codectypes.InterfaceRegistry
-		txConfig          client.TxConfig
-	)
-
-	err := depinject.Inject(testutil.AppConfig,
-		&interfaceRegistry,
-		&txConfig,
-	)
-	require.NoError(t, err)
+	encodingConfig := moduletestutil.MakeTestEncodingConfig()
+	interfaceRegistry := encodingConfig.InterfaceRegistry
+	txConfig := encodingConfig.TxConfig
 
 	testdata.RegisterInterfaces(interfaceRegistry)
 
 	// Create an AuxTxBuilder for tipper (1st signer)
-	tipperBuilder, tipperSig := makeTipperTxBuilder(t)
-	tipperSignerData, err := tipperBuilder.GetAuxSignerData()
+	txBuilder, txSig := makeTxBuilder(t)
+	txSignerData, err := txBuilder.GetAuxSignerData()
 	require.NoError(t, err)
 
 	// Create an AuxTxBuilder for aux2 (2nd signer)
@@ -64,9 +56,10 @@ func TestBuilderWithAux(t *testing.T) {
 	aux2Builder.SetTimeoutHeight(3)
 	aux2Builder.SetMemo(memo)
 	aux2Builder.SetChainID(chainID)
-	aux2Builder.SetMsgs(msg)
-	aux2Builder.SetPubKey(aux2Pk)
-	aux2Builder.SetTip(tip)
+	err = aux2Builder.SetMsgs(msg)
+	require.NoError(t, err)
+	err = aux2Builder.SetPubKey(aux2Pk)
+	require.NoError(t, err)
 	extOptAny, err := codectypes.NewAnyWithValue(extOpt)
 	require.NoError(t, err)
 	aux2Builder.SetExtensionOptions(extOptAny)
@@ -95,30 +88,28 @@ func TestBuilderWithAux(t *testing.T) {
 		malleate func()
 		expErr   bool
 	}{
-		{"address and msg signer mistacher", func() { tipperBuilder.SetAddress("foobar") }, true},
-		{"memo mismatch", func() { tipperBuilder.SetMemo("mismatch") }, true},
-		{"timeout height mismatch", func() { tipperBuilder.SetTimeoutHeight(98) }, true},
-		{"extension options length mismatch", func() { tipperBuilder.SetExtensionOptions() }, true},
-		{"extension options member mismatch", func() { tipperBuilder.SetExtensionOptions(&codectypes.Any{}) }, true},
-		{"non-critical extension options length mismatch", func() { tipperBuilder.SetNonCriticalExtensionOptions() }, true},
-		{"non-critical extension options member mismatch", func() { tipperBuilder.SetNonCriticalExtensionOptions(&codectypes.Any{}) }, true},
-		{"tip amount mismatch", func() { tipperBuilder.SetTip(&txtypes.Tip{Tipper: tip.Tipper, Amount: sdk.NewCoins()}) }, true},
-		{"tipper mismatch", func() { tipperBuilder.SetTip(&txtypes.Tip{Tipper: "mismatch", Amount: tip.Amount}) }, true},
+		{"address and msg signer mistacher", func() { txBuilder.SetAddress("foobar") }, true},
+		{"memo mismatch", func() { txBuilder.SetMemo("mismatch") }, true},
+		{"timeout height mismatch", func() { txBuilder.SetTimeoutHeight(98) }, true},
+		{"extension options length mismatch", func() { txBuilder.SetExtensionOptions() }, true},
+		{"extension options member mismatch", func() { txBuilder.SetExtensionOptions(&codectypes.Any{}) }, true},
+		{"non-critical extension options length mismatch", func() { txBuilder.SetNonCriticalExtensionOptions() }, true},
+		{"non-critical extension options member mismatch", func() { txBuilder.SetNonCriticalExtensionOptions(&codectypes.Any{}) }, true},
 		{"happy case", func() {}, false},
 	}
 	for _, tc := range testcases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-			tipperBuilder, tipperSig = makeTipperTxBuilder(t)
+			txBuilder, txSig = makeTxBuilder(t)
 
 			tc.malleate()
 
-			_, err := tipperBuilder.GetSignBytes()
+			_, err := txBuilder.GetSignBytes()
 			require.NoError(t, err)
-			tipperSignerData, err = tipperBuilder.GetAuxSignerData()
+			txSignerData, err = txBuilder.GetAuxSignerData()
 			require.NoError(t, err)
 
-			err = w.AddAuxSignerData(tipperSignerData)
+			err = w.AddAuxSignerData(txSignerData)
 			if tc.expErr {
 				require.Error(t, err)
 			} else {
@@ -132,29 +123,32 @@ func TestBuilderWithAux(t *testing.T) {
 	w.SetGasLimit(gas)
 	sigs, err := w.(authsigning.SigVerifiableTx).GetSignaturesV2()
 	require.NoError(t, err)
-	tipperSigV2 := sigs[0]
+	txSigV2 := sigs[0]
 	aux2SigV2 := sigs[1]
 	// Set all signer infos.
-	w.SetSignatures(tipperSigV2, aux2SigV2, signing.SignatureV2{
+	err = w.SetSignatures(txSigV2, aux2SigV2, signing.SignatureV2{
 		PubKey:   feepayerPk,
 		Sequence: 15,
 	})
-	signBz, err = txConfig.SignModeHandler().GetSignBytes(
-		signing.SignMode_SIGN_MODE_DIRECT,
-		authsigning.SignerData{
-			Address:       feepayerAddr.String(),
-			ChainID:       chainID,
-			AccountNumber: 11,
-			Sequence:      15,
-			PubKey:        feepayerPk,
-		},
-		w.GetTx(),
-	)
+	require.NoError(t, err)
+
+	signerData := authsigning.SignerData{
+		Address:       feepayerAddr.String(),
+		ChainID:       chainID,
+		AccountNumber: 11,
+		Sequence:      15,
+		PubKey:        feepayerPk,
+	}
+
+	signBz, err = authsigning.GetSignBytesAdapter(
+		context.Background(), txConfig.SignModeHandler(), signing.SignMode_SIGN_MODE_DIRECT,
+		signerData, w.GetTx())
+
 	require.NoError(t, err)
 	feepayerSig, err := feepayerPriv.Sign(signBz)
 	require.NoError(t, err)
 	// Set all signatures.
-	w.SetSignatures(tipperSigV2, aux2SigV2, signing.SignatureV2{
+	err = w.SetSignatures(txSigV2, aux2SigV2, signing.SignatureV2{
 		PubKey: feepayerPk,
 		Data: &signing.SingleSignatureData{
 			SignMode:  signing.SignMode_SIGN_MODE_DIRECT,
@@ -162,16 +156,16 @@ func TestBuilderWithAux(t *testing.T) {
 		},
 		Sequence: 22,
 	})
+	require.NoError(t, err)
 
 	// Make sure tx is correct.
 	txBz, err := txConfig.TxEncoder()(w.GetTx())
 	require.NoError(t, err)
 	tx, err := txConfig.TxDecoder()(txBz)
 	require.NoError(t, err)
-	require.Equal(t, tx.(sdk.FeeTx).FeePayer(), feepayerAddr)
+	require.Equal(t, tx.(sdk.FeeTx).FeePayer(), []byte(feepayerAddr))
 	require.Equal(t, tx.(sdk.FeeTx).GetFee(), fee)
 	require.Equal(t, tx.(sdk.FeeTx).GetGas(), gas)
-	require.Equal(t, tip, tx.(txtypes.TipTx).GetTip())
 	require.Equal(t, msg, tx.GetMsgs()[0])
 	require.Equal(t, memo, tx.(sdk.TxWithMemo).GetMemo())
 	require.Equal(t, uint64(3), tx.(sdk.TxWithTimeoutHeight).GetTimeoutHeight())
@@ -180,7 +174,7 @@ func TestBuilderWithAux(t *testing.T) {
 	require.Len(t, sigs, 3)
 	require.Equal(t, signing.SignatureV2{
 		PubKey:   tipperPk,
-		Data:     &signing.SingleSignatureData{SignMode: signing.SignMode_SIGN_MODE_DIRECT_AUX, Signature: tipperSig},
+		Data:     &signing.SingleSignatureData{SignMode: signing.SignMode_SIGN_MODE_DIRECT_AUX, Signature: txSig},
 		Sequence: 2,
 	}, sigs[0])
 	require.Equal(t, signing.SignatureV2{
@@ -195,28 +189,30 @@ func TestBuilderWithAux(t *testing.T) {
 	}, sigs[2])
 }
 
-func makeTipperTxBuilder(t *testing.T) (clienttx.AuxTxBuilder, []byte) {
-	tipperBuilder := clienttx.NewAuxTxBuilder()
-	tipperBuilder.SetAddress(tipperAddr.String())
-	tipperBuilder.SetAccountNumber(1)
-	tipperBuilder.SetSequence(2)
-	tipperBuilder.SetTimeoutHeight(3)
-	tipperBuilder.SetMemo(memo)
-	tipperBuilder.SetChainID(chainID)
-	tipperBuilder.SetMsgs(msg)
-	tipperBuilder.SetPubKey(tipperPk)
-	tipperBuilder.SetTip(tip)
+func makeTxBuilder(t *testing.T) (clienttx.AuxTxBuilder, []byte) {
+	t.Helper()
+	txBuilder := clienttx.NewAuxTxBuilder()
+	txBuilder.SetAddress(tipperAddr.String())
+	txBuilder.SetAccountNumber(1)
+	txBuilder.SetSequence(2)
+	txBuilder.SetTimeoutHeight(3)
+	txBuilder.SetMemo(memo)
+	txBuilder.SetChainID(chainID)
+	err := txBuilder.SetMsgs(msg)
+	require.NoError(t, err)
+	err = txBuilder.SetPubKey(tipperPk)
+	require.NoError(t, err)
 	extOptAny, err := codectypes.NewAnyWithValue(extOpt)
 	require.NoError(t, err)
-	tipperBuilder.SetExtensionOptions(extOptAny)
-	tipperBuilder.SetNonCriticalExtensionOptions(extOptAny)
-	err = tipperBuilder.SetSignMode(signing.SignMode_SIGN_MODE_DIRECT_AUX)
+	txBuilder.SetExtensionOptions(extOptAny)
+	txBuilder.SetNonCriticalExtensionOptions(extOptAny)
+	err = txBuilder.SetSignMode(signing.SignMode_SIGN_MODE_DIRECT_AUX)
 	require.NoError(t, err)
-	signBz, err := tipperBuilder.GetSignBytes()
+	signBz, err := txBuilder.GetSignBytes()
 	require.NoError(t, err)
 	tipperSig, err := tipperPriv.Sign(signBz)
 	require.NoError(t, err)
-	tipperBuilder.SetSignature(tipperSig)
+	txBuilder.SetSignature(tipperSig)
 
-	return tipperBuilder, tipperSig
+	return txBuilder, tipperSig
 }

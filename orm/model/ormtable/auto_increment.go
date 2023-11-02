@@ -9,9 +9,9 @@ import (
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
-	"github.com/cosmos/cosmos-sdk/orm/encoding/ormkv"
-	"github.com/cosmos/cosmos-sdk/orm/types/kv"
-	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
+	"cosmossdk.io/orm/encoding/ormkv"
+	"cosmossdk.io/orm/types/kv"
+	"cosmossdk.io/orm/types/ormerrors"
 )
 
 // autoIncrementTable is a Table implementation for tables with an
@@ -59,6 +59,15 @@ func (t autoIncrementTable) Update(ctx context.Context, message proto.Message) e
 
 	_, err = t.save(ctx, backend, message, saveModeUpdate)
 	return err
+}
+
+func (t autoIncrementTable) LastInsertedSequence(ctx context.Context) (uint64, error) {
+	backend, err := t.getBackend(ctx)
+	if err != nil {
+		return 0, err
+	}
+
+	return t.curSeqValue(backend.IndexStoreReader())
 }
 
 func (t *autoIncrementTable) save(ctx context.Context, backend Backend, message proto.Message, mode saveMode) (newPK uint64, err error) {
@@ -121,7 +130,7 @@ func (t autoIncrementTable) EncodeEntry(entry ormkv.Entry) (k, v []byte, err err
 }
 
 func (t autoIncrementTable) ValidateJSON(reader io.Reader) error {
-	return t.decodeAutoIncJson(nil, reader, func(message proto.Message, maxSeq uint64) error {
+	return t.decodeAutoIncJSON(nil, reader, func(message proto.Message, maxSeq uint64) error {
 		messageRef := message.ProtoReflect()
 		pkey := messageRef.Get(t.autoIncField).Uint()
 		if pkey > maxSeq {
@@ -131,9 +140,9 @@ func (t autoIncrementTable) ValidateJSON(reader io.Reader) error {
 
 		if t.customJSONValidator != nil {
 			return t.customJSONValidator(message)
-		} else {
-			return DefaultJSONValidator(message)
 		}
+
+		return DefaultJSONValidator(message)
 	})
 }
 
@@ -143,7 +152,7 @@ func (t autoIncrementTable) ImportJSON(ctx context.Context, reader io.Reader) er
 		return err
 	}
 
-	return t.decodeAutoIncJson(backend, reader, func(message proto.Message, maxSeq uint64) error {
+	return t.decodeAutoIncJSON(backend, reader, func(message proto.Message, maxSeq uint64) error {
 		messageRef := message.ProtoReflect()
 		pkey := messageRef.Get(t.autoIncField).Uint()
 		if pkey == 0 {
@@ -151,29 +160,29 @@ func (t autoIncrementTable) ImportJSON(ctx context.Context, reader io.Reader) er
 			// generate one
 			_, err = t.save(ctx, backend, message, saveModeInsert)
 			return err
-		} else {
-			if pkey > maxSeq {
-				return fmt.Errorf("invalid auto increment primary key %d, expected a value <= %d, the highest "+
-					"sequence number", pkey, maxSeq)
-			}
-			// we do have a primary key and calling Save will fail because it expects
-			// either no primary key or SAVE_MODE_UPDATE. So instead we drop one level
-			// down and insert using tableImpl which doesn't know about
-			// auto-incrementing primary keys.
-			return t.tableImpl.save(ctx, backend, message, saveModeInsert)
 		}
+
+		if pkey > maxSeq {
+			return fmt.Errorf("invalid auto increment primary key %d, expected a value <= %d, the highest "+
+				"sequence number", pkey, maxSeq)
+		}
+		// we do have a primary key and calling Save will fail because it expects
+		// either no primary key or SAVE_MODE_UPDATE. So instead we drop one level
+		// down and insert using tableImpl which doesn't know about
+		// auto-incrementing primary keys.
+		return t.tableImpl.save(ctx, backend, message, saveModeInsert)
 	})
 }
 
-func (t autoIncrementTable) decodeAutoIncJson(backend Backend, reader io.Reader, onMsg func(message proto.Message, maxID uint64) error) error {
-	decoder, err := t.startDecodeJson(reader)
+func (t autoIncrementTable) decodeAutoIncJSON(backend Backend, reader io.Reader, onMsg func(message proto.Message, maxID uint64) error) error {
+	decoder, err := t.startDecodeJSON(reader)
 	if err != nil {
 		return err
 	}
 
 	var seq uint64
 
-	return t.doDecodeJson(decoder,
+	return t.doDecodeJSON(decoder,
 		func(message json.RawMessage) bool {
 			err = json.Unmarshal(message, &seq)
 			if err == nil {

@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"encoding/binary"
 
-	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
-
 	"google.golang.org/protobuf/reflect/protoreflect"
+
+	"cosmossdk.io/orm/types/ormerrors"
 )
 
 // SeqCodec is the codec for auto-incrementing uint64 primary key sequences.

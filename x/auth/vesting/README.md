@@ -256,7 +256,7 @@ func (k Keeper) LockedCoins(ctx Context, addr AccAddress) Coins {
     acc := k.GetAccount(ctx, addr)
     if acc != nil {
         if acc.IsVesting() {
-            return acc.LockedCoins(ctx.BlockTime())
+            return acc.LockedCoins(ctx.HeaderInfo().Time)
         }
     }
 

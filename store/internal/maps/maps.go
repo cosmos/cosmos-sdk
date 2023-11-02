@@ -7,7 +7,8 @@ import (
 	"github.com/cometbft/cometbft/crypto/tmhash"
 	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 
-	"cosmossdk.io/store/internal/kv"
+	"cosmossdk.io/store/v2/internal/kv"
+	"cosmossdk.io/store/v2/internal/tree"
 )
 
 // merkleMap defines a merkle-ized tree from a map. Leave values are treated as
@@ -66,7 +67,7 @@ func hashKVPairs(kvs kv.Pairs) []byte {
 		kvsH[i] = KVPair(kvp).Bytes()
 	}
 
-	return merkle.HashFromByteSlices(kvsH)
+	return tree.HashFromByteSlices(kvsH)
 }
 
 // ---------------------------------------------

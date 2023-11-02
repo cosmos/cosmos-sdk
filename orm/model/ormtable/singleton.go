@@ -37,9 +37,9 @@ func (t singleton) ValidateJSON(reader io.Reader) error {
 
 	if t.customJSONValidator != nil {
 		return t.customJSONValidator(msg)
-	} else {
-		return DefaultJSONValidator(msg)
 	}
+
+	return DefaultJSONValidator(msg)
 }
 
 func (t singleton) ImportJSON(ctx context.Context, reader io.Reader) error {

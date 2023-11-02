@@ -4,24 +4,25 @@ import (
 	"testing"
 	"time"
 
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	cmttime "github.com/cometbft/cometbft/types/time"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 
+	"cosmossdk.io/core/header"
+	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
-	"github.com/cometbft/cometbft/libs/log"
+	"cosmossdk.io/x/authz"
+	authzkeeper "cosmossdk.io/x/authz/keeper"
+	authzmodule "cosmossdk.io/x/authz/module"
+	authztestutil "cosmossdk.io/x/authz/testutil"
+	banktypes "cosmossdk.io/x/bank/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/codec/address"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	"github.com/cosmos/cosmos-sdk/x/authz"
-	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
-	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
-	authztestutil "github.com/cosmos/cosmos-sdk/x/authz/testutil"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 var (
@@ -47,8 +48,9 @@ type TestSuite struct {
 
 func (s *TestSuite) SetupTest() {
 	key := storetypes.NewKVStoreKey(authzkeeper.StoreKey)
+	storeService := runtime.NewKVStoreService(key)
 	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
-	s.ctx = testCtx.Ctx.WithBlockHeader(cmtproto.Header{Time: cmttime.Now()})
+	s.ctx = testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now().Round(0).UTC()})
 	s.encCfg = moduletestutil.MakeTestEncodingConfig(authzmodule.AppModuleBasic{})
 
 	s.baseApp = baseapp.NewBaseApp(
@@ -65,11 +67,14 @@ func (s *TestSuite) SetupTest() {
 	// gomock initializations
 	ctrl := gomock.NewController(s.T())
 	s.accountKeeper = authztestutil.NewMockAccountKeeper(ctrl)
+
+	s.accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
+
 	s.bankKeeper = authztestutil.NewMockBankKeeper(ctrl)
 	banktypes.RegisterInterfaces(s.encCfg.InterfaceRegistry)
 	banktypes.RegisterMsgServer(s.baseApp.MsgServiceRouter(), s.bankKeeper)
 
-	s.authzKeeper = authzkeeper.NewKeeper(key, s.encCfg.Codec, s.baseApp.MsgServiceRouter(), s.accountKeeper)
+	s.authzKeeper = authzkeeper.NewKeeper(storeService, s.encCfg.Codec, s.baseApp.MsgServiceRouter(), s.accountKeeper)
 
 	queryHelper := baseapp.NewQueryServerTestHelper(s.ctx, s.encCfg.InterfaceRegistry)
 	authz.RegisterQueryServer(queryHelper, s.authzKeeper)
@@ -81,7 +86,7 @@ func (s *TestSuite) SetupTest() {
 
 func (s *TestSuite) TestKeeper() {
 	ctx, addrs := s.ctx, s.addrs
-	now := ctx.BlockTime()
+	now := ctx.HeaderInfo().Time
 	require := s.Require()
 
 	granterAddr := addrs[0]
@@ -139,11 +144,14 @@ func (s *TestSuite) TestKeeperIter() {
 	granterAddr := addrs[0]
 	granteeAddr := addrs[1]
 	granter2Addr := addrs[2]
-	e := ctx.BlockTime().AddDate(1, 0, 0)
+	e := ctx.HeaderInfo().Time.AddDate(1, 0, 0)
 	sendAuthz := banktypes.NewSendAuthorization(coins100, nil)
 
-	s.authzKeeper.SaveGrant(ctx, granteeAddr, granterAddr, sendAuthz, &e)
-	s.authzKeeper.SaveGrant(ctx, granteeAddr, granter2Addr, sendAuthz, &e)
+	err := s.authzKeeper.SaveGrant(ctx, granteeAddr, granterAddr, sendAuthz, &e)
+	s.Require().NoError(err)
+
+	err = s.authzKeeper.SaveGrant(ctx, granteeAddr, granter2Addr, sendAuthz, &e)
+	s.Require().NoError(err)
 
 	s.authzKeeper.IterateGrants(ctx, func(granter, grantee sdk.AccAddress, grant authz.Grant) bool {
 		s.Require().Equal(granteeAddr, grantee)
@@ -155,7 +163,7 @@ func (s *TestSuite) TestKeeperIter() {
 func (s *TestSuite) TestDispatchAction() {
 	addrs := s.addrs
 	require := s.Require()
-	now := s.ctx.BlockTime()
+	now := s.ctx.HeaderInfo().Time
 
 	granterAddr := addrs[0]
 	granteeAddr := addrs[1]
@@ -183,7 +191,8 @@ func (s *TestSuite) TestDispatchAction() {
 			"authorization not found",
 			func() sdk.Context {
 				// remove any existing authorizations
-				s.authzKeeper.DeleteGrant(s.ctx, granteeAddr, granterAddr, bankSendAuthMsgType)
+				err := s.authzKeeper.DeleteGrant(s.ctx, granteeAddr, granterAddr, bankSendAuthMsgType)
+				require.Error(err)
 				return s.ctx
 			},
 			func() {},
@@ -203,7 +212,7 @@ func (s *TestSuite) TestDispatchAction() {
 				e := now.AddDate(0, 0, 1)
 				err := s.authzKeeper.SaveGrant(s.ctx, granteeAddr, granterAddr, a, &e)
 				require.NoError(err)
-				return s.ctx.WithBlockTime(s.ctx.BlockTime().AddDate(0, 0, 2))
+				return s.ctx.WithHeaderInfo(header.Info{Time: s.ctx.HeaderInfo().Time.AddDate(0, 0, 2)})
 			},
 			func() {},
 		},
@@ -304,7 +313,7 @@ func (s *TestSuite) TestDispatchedEvents() {
 	granterAddr := addrs[0]
 	granteeAddr := addrs[1]
 	recipientAddr := addrs[2]
-	expiration := s.ctx.BlockTime().Add(1 * time.Second) // must be in the future
+	expiration := s.ctx.HeaderInfo().Time.Add(1 * time.Second) // must be in the future
 
 	msgs := authz.NewMsgExec(granteeAddr, []sdk.Msg{
 		&banktypes.MsgSend{
@@ -353,7 +362,7 @@ func (s *TestSuite) TestDequeueAllGrantsQueue() {
 	granter := addrs[0]
 	grantee := addrs[1]
 	grantee1 := addrs[2]
-	exp := s.ctx.BlockTime().AddDate(0, 0, 1)
+	exp := s.ctx.HeaderInfo().Time.AddDate(0, 0, 1)
 	a := banktypes.SendAuthorization{SpendLimit: coins100}
 
 	// create few authorizations
@@ -371,7 +380,7 @@ func (s *TestSuite) TestDequeueAllGrantsQueue() {
 	err = s.authzKeeper.SaveGrant(s.ctx, granter, grantee, &a, &exp2)
 	require.NoError(err)
 
-	newCtx := s.ctx.WithBlockTime(exp.AddDate(1, 0, 0))
+	newCtx := s.ctx.WithHeaderInfo(header.Info{Time: exp.AddDate(1, 0, 0)})
 	err = s.authzKeeper.DequeueAndDeleteExpiredGrants(newCtx)
 	require.NoError(err)
 
@@ -403,7 +412,7 @@ func (s *TestSuite) TestGetAuthorization() {
 	genAuthSend := authz.NewGenericAuthorization(sdk.MsgTypeURL(&banktypes.MsgSend{}))
 	sendAuth := banktypes.NewSendAuthorization(coins10, nil)
 
-	start := s.ctx.BlockHeader().Time
+	start := s.ctx.HeaderInfo().Time
 	expired := start.Add(time.Duration(1) * time.Second)
 	notExpired := start.Add(time.Duration(5) * time.Hour)
 
@@ -411,7 +420,7 @@ func (s *TestSuite) TestGetAuthorization() {
 	s.Require().NoError(s.authzKeeper.SaveGrant(s.ctx, addr1, addr3, genAuthSend, &expired), "creating grant 1->3")
 	s.Require().NoError(s.authzKeeper.SaveGrant(s.ctx, addr1, addr4, sendAuth, &notExpired), "creating grant 1->4")
 	// Without access to private keeper methods, I don't know how to save a grant with an invalid authorization.
-	newCtx := s.ctx.WithBlockTime(start.Add(time.Duration(1) * time.Minute))
+	newCtx := s.ctx.WithHeaderInfo(header.Info{Time: start.Add(time.Duration(1) * time.Minute)})
 
 	tests := []struct {
 		name    string
@@ -470,6 +479,27 @@ func (s *TestSuite) TestGetAuthorization() {
 			s.Assert().Equal(tc.expExp, actExp, "expiration")
 		})
 	}
+}
+
+func (s *TestSuite) TestGetAuthorizations() {
+	require := s.Require()
+	addr1 := s.addrs[1]
+	addr2 := s.addrs[2]
+
+	genAuthMulti := authz.NewGenericAuthorization(sdk.MsgTypeURL(&banktypes.MsgMultiSend{}))
+	genAuthSend := authz.NewGenericAuthorization(sdk.MsgTypeURL(&banktypes.MsgSend{}))
+
+	start := s.ctx.HeaderInfo().Time
+	expired := start.Add(time.Duration(1) * time.Second)
+
+	s.Require().NoError(s.authzKeeper.SaveGrant(s.ctx, addr1, addr2, genAuthMulti, &expired), "creating multi send grant 1->2")
+	s.Require().NoError(s.authzKeeper.SaveGrant(s.ctx, addr1, addr2, genAuthSend, &expired), "creating send grant 1->2")
+
+	authzs, err := s.authzKeeper.GetAuthorizations(s.ctx, addr1, addr2)
+	require.NoError(err)
+	require.Len(authzs, 2)
+	require.Equal(sdk.MsgTypeURL(&banktypes.MsgMultiSend{}), authzs[0].MsgTypeURL())
+	require.Equal(sdk.MsgTypeURL(&banktypes.MsgSend{}), authzs[1].MsgTypeURL())
 }
 
 func TestTestSuite(t *testing.T) {

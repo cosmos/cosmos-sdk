@@ -7,20 +7,20 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/depinject"
 	sdkmath "cosmossdk.io/math"
-	"github.com/cosmos/cosmos-sdk/codec"
+	"cosmossdk.io/x/bank"
+	"cosmossdk.io/x/group"
+	groupmodule "cosmossdk.io/x/group/module"
+	"cosmossdk.io/x/group/simulation"
+
 	"github.com/cosmos/cosmos-sdk/types/module"
+	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/cosmos/cosmos-sdk/x/group"
-	"github.com/cosmos/cosmos-sdk/x/group/simulation"
-	"github.com/cosmos/cosmos-sdk/x/group/testutil"
 )
 
 func TestRandomizedGenState(t *testing.T) {
-	var cdc codec.Codec
-	err := depinject.Inject(testutil.AppConfig, &cdc)
-	require.NoError(t, err)
+	encodingConfig := moduletestutil.MakeTestEncodingConfig(groupmodule.AppModuleBasic{}, bank.AppModuleBasic{})
+	cdc := encodingConfig.Codec
 
 	s := rand.NewSource(1)
 	r := rand.New(s)

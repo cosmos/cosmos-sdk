@@ -1,14 +1,13 @@
 package authz
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/authz/keeper"
+	"context"
+
+	"cosmossdk.io/x/authz/keeper"
 )
 
 // BeginBlocker is called at the beginning of every block
-func BeginBlocker(ctx sdk.Context, keeper keeper.Keeper) {
+func BeginBlocker(ctx context.Context, keeper keeper.Keeper) error {
 	// delete all the mature grants
-	if err := keeper.DequeueAndDeleteExpiredGrants(ctx); err != nil {
-		panic(err)
-	}
+	return keeper.DequeueAndDeleteExpiredGrants(ctx)
 }

@@ -17,10 +17,6 @@ func DescriptorDocs(descriptor protoreflect.Descriptor) string {
 }
 
 func ResolveMessageType(resolver protoregistry.MessageTypeResolver, descriptor protoreflect.MessageDescriptor) protoreflect.MessageType {
-	if resolver == nil {
-		resolver = protoregistry.GlobalTypes
-	}
-
 	typ, err := resolver.FindMessageByName(descriptor.FullName())
 	if err == nil {
 		return typ

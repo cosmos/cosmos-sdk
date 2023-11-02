@@ -25,7 +25,7 @@ var (
 )
 
 // TokensToConsensusPower - convert input tokens to potential consensus-engine power
-func TokensToConsensusPower(tokens sdkmath.Int, powerReduction sdkmath.Int) int64 {
+func TokensToConsensusPower(tokens, powerReduction sdkmath.Int) int64 {
 	return (tokens.Quo(powerReduction)).Int64()
 }
 

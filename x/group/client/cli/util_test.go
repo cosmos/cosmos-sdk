@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func Test_ParseCLIProposal(t *testing.T) {
+func TestParseCLIProposal(t *testing.T) {
 	data := []byte(`{
 			"group_policy_address": "cosmos15r295x4994egvckteam9skazy9kvfvzpak4naf",
 			"messages": [

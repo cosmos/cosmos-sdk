@@ -9,10 +9,10 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/store/prefix"
 	"cosmossdk.io/store/types"
+	"cosmossdk.io/x/group/errors"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/group/errors"
 )
 
 var (
@@ -112,12 +112,14 @@ func (a table) Set(store types.KVStore, rowID RowID, newValue proto.Message) err
 		return err
 	}
 
-	pStore := prefix.NewStore(store, a.prefix[:])
-
 	var oldValue proto.Message
 	if a.Has(store, rowID) {
 		oldValue = reflect.New(a.model).Interface().(proto.Message)
-		a.GetOne(store, rowID, oldValue)
+		err := a.GetOne(store, rowID, oldValue)
+		if err != nil {
+			return err
+		}
+
 	}
 
 	newValueEncoded, err := a.cdc.Marshal(newValue)
@@ -125,6 +127,7 @@ func (a table) Set(store types.KVStore, rowID RowID, newValue proto.Message) err
 		return errorsmod.Wrapf(err, "failed to serialize %T", newValue)
 	}
 
+	pStore := prefix.NewStore(store, a.prefix[:])
 	pStore.Set(rowID, newValueEncoded)
 	for i, itc := range a.afterSet {
 		if err := itc(store, rowID, newValue, oldValue); err != nil {
@@ -150,12 +153,12 @@ func assertValid(obj proto.Message) error {
 // Delete iterates through the registered callbacks that remove secondary index
 // keys.
 func (a table) Delete(store types.KVStore, rowID RowID) error {
-	pStore := prefix.NewStore(store, a.prefix[:])
-
 	oldValue := reflect.New(a.model).Interface().(proto.Message)
 	if err := a.GetOne(store, rowID, oldValue); err != nil {
 		return errorsmod.Wrap(err, "load old value")
 	}
+
+	pStore := prefix.NewStore(store, a.prefix[:])
 	pStore.Delete(rowID)
 
 	for i, itc := range a.afterDelete {

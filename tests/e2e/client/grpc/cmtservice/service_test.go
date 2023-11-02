@@ -8,19 +8,18 @@ import (
 	"fmt"
 	"testing"
 
-	"cosmossdk.io/simapp"
 	"github.com/stretchr/testify/suite"
+
+	"cosmossdk.io/simapp"
+	_ "cosmossdk.io/x/gov"
 
 	"github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
-	"github.com/cosmos/cosmos-sdk/types"
 	qtypes "github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/version"
-	_ "github.com/cosmos/cosmos-sdk/x/distribution"
-	_ "github.com/cosmos/cosmos-sdk/x/gov"
 )
 
 type E2ETestSuite struct {
@@ -92,8 +91,7 @@ func (s *E2ETestSuite) TestQueryLatestBlock() {
 	s.Require().NoError(err)
 	var blockInfoRes cmtservice.GetLatestBlockResponse
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(restRes, &blockInfoRes))
-	s.Require().Equal(types.ValAddress(blockInfoRes.Block.Header.ProposerAddress).String(), blockInfoRes.SdkBlock.Header.ProposerAddress)
-	s.Require().Contains(blockInfoRes.SdkBlock.Header.ProposerAddress, "cosmosvaloper")
+	s.Require().Contains(blockInfoRes.SdkBlock.Header.ProposerAddress, "cosmosvalcons")
 }
 
 func (s *E2ETestSuite) TestQueryBlockByHeight() {
@@ -105,7 +103,7 @@ func (s *E2ETestSuite) TestQueryBlockByHeight() {
 	s.Require().NoError(err)
 	var blockInfoRes cmtservice.GetBlockByHeightResponse
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(restRes, &blockInfoRes))
-	s.Require().Contains(blockInfoRes.SdkBlock.Header.ProposerAddress, "cosmosvaloper")
+	s.Require().Contains(blockInfoRes.SdkBlock.Header.ProposerAddress, "cosmosvalcons")
 }
 
 func (s *E2ETestSuite) TestQueryLatestValidatorSet() {

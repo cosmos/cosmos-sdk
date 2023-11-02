@@ -3,9 +3,6 @@ package authz
 import (
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
-	authzcodec "github.com/cosmos/cosmos-sdk/x/authz/codec"
-
 	"github.com/cosmos/gogoproto/proto"
 
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -18,19 +15,12 @@ var (
 	_ sdk.Msg = &MsgRevoke{}
 	_ sdk.Msg = &MsgExec{}
 
-	// For amino support.
-	_ legacytx.LegacyMsg = &MsgGrant{}
-	_ legacytx.LegacyMsg = &MsgRevoke{}
-	_ legacytx.LegacyMsg = &MsgExec{}
-
 	_ cdctypes.UnpackInterfacesMessage = &MsgGrant{}
 	_ cdctypes.UnpackInterfacesMessage = &MsgExec{}
 )
 
 // NewMsgGrant creates a new MsgGrant
-//
-//nolint:interfacer
-func NewMsgGrant(granter sdk.AccAddress, grantee sdk.AccAddress, a Authorization, expiration *time.Time) (*MsgGrant, error) {
+func NewMsgGrant(granter, grantee sdk.AccAddress, a Authorization, expiration *time.Time) (*MsgGrant, error) {
 	m := &MsgGrant{
 		Granter: granter.String(),
 		Grantee: grantee.String(),
@@ -41,34 +31,6 @@ func NewMsgGrant(granter sdk.AccAddress, grantee sdk.AccAddress, a Authorization
 		return nil, err
 	}
 	return m, nil
-}
-
-// GetSigners implements Msg
-func (msg MsgGrant) GetSigners() []sdk.AccAddress {
-	granter, _ := sdk.AccAddressFromBech32(msg.Granter)
-	return []sdk.AccAddress{granter}
-}
-
-// ValidateBasic implements Msg
-func (msg MsgGrant) ValidateBasic() error {
-	granter, err := sdk.AccAddressFromBech32(msg.Granter)
-	if err != nil {
-		return sdkerrors.ErrInvalidAddress.Wrapf("invalid granter address: %s", err)
-	}
-	grantee, err := sdk.AccAddressFromBech32(msg.Grantee)
-	if err != nil {
-		return sdkerrors.ErrInvalidAddress.Wrapf("invalid grantee address: %s", err)
-	}
-
-	if granter.Equals(grantee) {
-		return ErrGranteeIsGranter
-	}
-	return msg.Grant.ValidateBasic()
-}
-
-// GetSignBytes implements the LegacyMsg.GetSignBytes method.
-func (msg MsgGrant) GetSignBytes() []byte {
-	return sdk.MustSortJSON(authzcodec.ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetAuthorization returns the cache value from the MsgGrant.Authorization if present.
@@ -109,9 +71,7 @@ func (msg MsgGrant) UnpackInterfaces(unpacker cdctypes.AnyUnpacker) error {
 }
 
 // NewMsgRevoke creates a new MsgRevoke
-//
-//nolint:interfacer
-func NewMsgRevoke(granter sdk.AccAddress, grantee sdk.AccAddress, msgTypeURL string) MsgRevoke {
+func NewMsgRevoke(granter, grantee sdk.AccAddress, msgTypeURL string) MsgRevoke {
 	return MsgRevoke{
 		Granter:    granter.String(),
 		Grantee:    grantee.String(),
@@ -119,42 +79,7 @@ func NewMsgRevoke(granter sdk.AccAddress, grantee sdk.AccAddress, msgTypeURL str
 	}
 }
 
-// GetSigners implements Msg
-func (msg MsgRevoke) GetSigners() []sdk.AccAddress {
-	granter, _ := sdk.AccAddressFromBech32(msg.Granter)
-	return []sdk.AccAddress{granter}
-}
-
-// ValidateBasic implements MsgRequest.ValidateBasic
-func (msg MsgRevoke) ValidateBasic() error {
-	granter, err := sdk.AccAddressFromBech32(msg.Granter)
-	if err != nil {
-		return sdkerrors.ErrInvalidAddress.Wrapf("invalid granter address: %s", err)
-	}
-	grantee, err := sdk.AccAddressFromBech32(msg.Grantee)
-	if err != nil {
-		return sdkerrors.ErrInvalidAddress.Wrapf("invalid grantee address: %s", err)
-	}
-
-	if granter.Equals(grantee) {
-		return ErrGranteeIsGranter
-	}
-
-	if msg.MsgTypeUrl == "" {
-		return sdkerrors.ErrInvalidRequest.Wrap("missing method name")
-	}
-
-	return nil
-}
-
-// GetSignBytes implements the LegacyMsg.GetSignBytes method.
-func (msg MsgRevoke) GetSignBytes() []byte {
-	return sdk.MustSortJSON(authzcodec.ModuleCdc.MustMarshalJSON(&msg))
-}
-
 // NewMsgExec creates a new MsgExecAuthorized
-//
-//nolint:interfacer
 func NewMsgExec(grantee sdk.AccAddress, msgs []sdk.Msg) MsgExec {
 	msgsAny := make([]*cdctypes.Any, len(msgs))
 	for i, msg := range msgs {
@@ -184,38 +109,4 @@ func (msg MsgExec) GetMessages() ([]sdk.Msg, error) {
 	}
 
 	return msgs, nil
-}
-
-// GetSigners implements Msg
-func (msg MsgExec) GetSigners() []sdk.AccAddress {
-	grantee, _ := sdk.AccAddressFromBech32(msg.Grantee)
-	return []sdk.AccAddress{grantee}
-}
-
-// ValidateBasic implements Msg
-func (msg MsgExec) ValidateBasic() error {
-	if _, err := sdk.AccAddressFromBech32(msg.Grantee); err != nil {
-		return sdkerrors.ErrInvalidAddress.Wrapf("invalid grantee address: %s", err)
-	}
-
-	if len(msg.Msgs) == 0 {
-		return sdkerrors.ErrInvalidRequest.Wrapf("messages cannot be empty")
-	}
-
-	msgs, err := msg.GetMessages()
-	if err != nil {
-		return err
-	}
-	for _, msg := range msgs {
-		if err = msg.ValidateBasic(); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// GetSignBytes implements the LegacyMsg.GetSignBytes method.
-func (msg MsgExec) GetSignBytes() []byte {
-	return sdk.MustSortJSON(authzcodec.ModuleCdc.MustMarshalJSON(&msg))
 }

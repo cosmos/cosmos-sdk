@@ -11,7 +11,7 @@ import "cosmos/staking/v1beta1/staking.proto";
 import "cosmos/msg/v1/msg.proto";
 import "amino/amino.proto";
 
-option go_package = "github.com/cosmos/cosmos-sdk/x/staking/types";
+option go_package = "cosmossdk.io/x/staking/types";
 
 // Msg defines the staking Msg service.
 service Msg {
@@ -45,6 +45,11 @@ service Msg {
   // parameters.
   // Since: cosmos-sdk 0.47
   rpc UpdateParams(MsgUpdateParams) returns (MsgUpdateParamsResponse);
+
+  // RotateConsPubKey defines an operation for rotating the consensus keys
+  // of a validator.
+  // Since: cosmos-sdk 0.48
+  rpc RotateConsPubKey(MsgRotateConsPubKey) returns (MsgRotateConsPubKeyResponse);
 }
 
 // MsgCreateValidator defines a SDK message for creating a new validator.
@@ -59,7 +64,7 @@ message MsgCreateValidator {
   CommissionRates commission          = 2 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
   string          min_self_delegation = 3 [
     (cosmos_proto.scalar)  = "cosmos.Int",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.nullable)   = false,
     (amino.dont_omitempty) = true
   ];
@@ -67,7 +72,7 @@ message MsgCreateValidator {
   // The validator address bytes and delegator address bytes refer to the same account while creating validator (defer
   // only in bech32 notation).
   string                   delegator_address = 4 [(cosmos_proto.scalar) = "cosmos.AddressString", deprecated = true];
-  string                   validator_address = 5 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string                   validator_address = 5 [(cosmos_proto.scalar) = "cosmos.ValidatorAddressString"];
   google.protobuf.Any      pubkey            = 6 [(cosmos_proto.accepts_interface) = "cosmos.crypto.PubKey"];
   cosmos.base.v1beta1.Coin value             = 7 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 }
@@ -84,16 +89,16 @@ message MsgEditValidator {
   option (gogoproto.goproto_getters) = false;
 
   Description description       = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
-  string      validator_address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string      validator_address = 2 [(cosmos_proto.scalar) = "cosmos.ValidatorAddressString"];
 
   // We pass a reference to the new commission rate and min self delegation as
   // it's not mandatory to update. If not updated, the deserialized rate will be
   // zero with no way to distinguish if an update was intended.
   // REF: #2373
   string commission_rate = 3
-      [(cosmos_proto.scalar) = "cosmos.Dec", (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"];
+      [(cosmos_proto.scalar) = "cosmos.Dec", (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec"];
   string min_self_delegation = 4
-      [(cosmos_proto.scalar) = "cosmos.Int", (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int"];
+      [(cosmos_proto.scalar) = "cosmos.Int", (gogoproto.customtype) = "cosmossdk.io/math.Int"];
 }
 
 // MsgEditValidatorResponse defines the Msg/EditValidator response type.
@@ -109,7 +114,7 @@ message MsgDelegate {
   option (gogoproto.goproto_getters) = false;
 
   string                   delegator_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  string                   validator_address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string                   validator_address = 2 [(cosmos_proto.scalar) = "cosmos.ValidatorAddressString"];
   cosmos.base.v1beta1.Coin amount            = 3 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 }
 
@@ -126,8 +131,8 @@ message MsgBeginRedelegate {
   option (gogoproto.goproto_getters) = false;
 
   string                   delegator_address     = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  string                   validator_src_address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  string                   validator_dst_address = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string                   validator_src_address = 2 [(cosmos_proto.scalar) = "cosmos.ValidatorAddressString"];
+  string                   validator_dst_address = 3 [(cosmos_proto.scalar) = "cosmos.ValidatorAddressString"];
   cosmos.base.v1beta1.Coin amount                = 4 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 }
 
@@ -147,7 +152,7 @@ message MsgUndelegate {
   option (gogoproto.goproto_getters) = false;
 
   string                   delegator_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  string                   validator_address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string                   validator_address = 2 [(cosmos_proto.scalar) = "cosmos.ValidatorAddressString"];
   cosmos.base.v1beta1.Coin amount            = 3 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 }
 
@@ -158,8 +163,8 @@ message MsgUndelegateResponse {
 
   // amount returns the amount of undelegated coins
   //
-  // Since: cosmos-sdk 0.48
-  cosmos.base.v1beta1.Coin amount            = 2 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+  // Since: cosmos-sdk 0.50
+  cosmos.base.v1beta1.Coin amount = 2 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 }
 
 // MsgCancelUnbondingDelegation defines the SDK message for performing a cancel unbonding delegation for delegator
@@ -172,7 +177,7 @@ message MsgCancelUnbondingDelegation {
   option (gogoproto.goproto_getters) = false;
 
   string delegator_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  string validator_address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string validator_address = 2 [(cosmos_proto.scalar) = "cosmos.ValidatorAddressString"];
   // amount is always less than or equal to unbonding delegation entry balance
   cosmos.base.v1beta1.Coin amount = 3 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
   // creation_height is the height which the unbonding took place.
@@ -204,3 +209,23 @@ message MsgUpdateParams {
 //
 // Since: cosmos-sdk 0.47
 message MsgUpdateParamsResponse {};
+
+// MsgRotateConsPubKey is the Msg/RotateConsPubKey request type.
+//
+// Since: cosmos-sdk 0.51
+message MsgRotateConsPubKey {
+  option (cosmos.msg.v1.signer) = "validator_address";
+  option (amino.name)           = "cosmos-sdk/MsgRotateConsPubKey";
+
+  option (gogoproto.goproto_getters) = false;
+  option (gogoproto.equal)           = false;
+
+  string              validator_address = 1 [(cosmos_proto.scalar) = "cosmos.ValidatorAddressString"];
+  google.protobuf.Any new_pubkey        = 2 [(cosmos_proto.accepts_interface) = "cosmos.crypto.PubKey"];
+}
+
+// MsgRotateConsPubKeyResponse defines the response structure for executing a
+// MsgRotateConsPubKey message.
+//
+// Since: cosmos-sdk 0.51
+message MsgRotateConsPubKeyResponse {}

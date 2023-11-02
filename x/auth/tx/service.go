@@ -3,11 +3,10 @@ package tx
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"strings"
 
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
-	"github.com/golang/protobuf/proto" //nolint:staticcheck
+	"github.com/golang/protobuf/proto" //nolint:staticcheck // keep legacy for now
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -41,16 +40,7 @@ func NewTxServer(clientCtx client.Context, simulate baseAppSimulateFn, interface
 	}
 }
 
-var (
-	_ txtypes.ServiceServer = txServer{}
-
-	// EventRegex checks that an event string is formatted with {alphabetic}.{alphabetic}={value}
-	EventRegex = regexp.MustCompile(`^[a-zA-Z_]+\.[a-zA-Z_]+=\S+$`)
-)
-
-const (
-	eventFormat = "{eventType}.{eventAttribute}={value}"
-)
+var _ txtypes.ServiceServer = txServer{}
 
 // GetTxsEvent implements the ServiceServer.TxsByEvents RPC method.
 func (s txServer) GetTxsEvent(ctx context.Context, req *txtypes.GetTxsEventRequest) (*txtypes.GetTxsEventResponse, error) {
@@ -58,37 +48,14 @@ func (s txServer) GetTxsEvent(ctx context.Context, req *txtypes.GetTxsEventReque
 		return nil, status.Error(codes.InvalidArgument, "request cannot be nil")
 	}
 
-	page := int(req.Page)
-	// CometBFT node.TxSearch that is used for querying txs defines pages starting from 1,
-	// so we default to 1 if not provided in the request.
-	if page == 0 {
-		page = 1
-	}
-
-	limit := int(req.Limit)
-	if limit == 0 {
-		limit = query.DefaultLimit
-	}
 	orderBy := parseOrderBy(req.OrderBy)
 
-	if len(req.Events) == 0 {
-		return nil, status.Error(codes.InvalidArgument, "must declare at least one event to search")
-	}
-
-	for _, event := range req.Events {
-		if !EventRegex.Match([]byte(event)) {
-			return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("invalid event; event %s should be of the format: %s", event, eventFormat))
-		}
-	}
-
-	result, err := QueryTxsByEvents(s.clientCtx, req.Events, page, limit, orderBy)
+	result, err := QueryTxsByEvents(s.clientCtx, int(req.Page), int(req.Limit), req.Query, orderBy)
 	if err != nil {
-		return nil, err
+		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	// Create a proto codec, we need it to unmarshal the tx bytes.
 	txsList := make([]*txtypes.Tx, len(result.Txs))
-
 	for i, tx := range result.Txs {
 		protoTx, ok := tx.Tx.GetCachedValue().(*txtypes.Tx)
 		if !ok {
@@ -353,7 +320,10 @@ func RegisterTxService(
 // RegisterGRPCGatewayRoutes mounts the tx service's GRPC-gateway routes on the
 // given Mux.
 func RegisterGRPCGatewayRoutes(clientConn gogogrpc.ClientConn, mux *runtime.ServeMux) {
-	txtypes.RegisterServiceHandlerClient(context.Background(), mux, txtypes.NewServiceClient(clientConn))
+	err := txtypes.RegisterServiceHandlerClient(context.Background(), mux, txtypes.NewServiceClient(clientConn))
+	if err != nil {
+		panic(err)
+	}
 }
 
 func parseOrderBy(orderBy txtypes.OrderBy) string {

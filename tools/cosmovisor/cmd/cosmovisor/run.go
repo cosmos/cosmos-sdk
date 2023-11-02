@@ -1,30 +1,23 @@
 package main
 
 import (
-	"cosmossdk.io/log"
-	"cosmossdk.io/tools/cosmovisor"
-	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
-)
 
-func init() {
-	rootCmd.AddCommand(runCmd)
-}
+	"cosmossdk.io/tools/cosmovisor"
+)
 
 var runCmd = &cobra.Command{
 	Use:                "run",
 	Short:              "Run an APP command.",
 	SilenceUsage:       true,
 	DisableFlagParsing: true,
-	RunE: func(cmd *cobra.Command, args []string) error {
-		logger := cmd.Context().Value(log.ContextKey).(*zerolog.Logger)
-
-		return Run(logger, args)
+	RunE: func(_ *cobra.Command, args []string) error {
+		return run(args)
 	},
 }
 
-// Run runs the configured program with the given args and monitors it for upgrades.
-func Run(logger *zerolog.Logger, args []string, options ...RunOption) error {
+// run runs the configured program with the given args and monitors it for upgrades.
+func run(args []string, options ...RunOption) error {
 	cfg, err := cosmovisor.GetConfigFromEnv()
 	if err != nil {
 		return err
@@ -35,6 +28,7 @@ func Run(logger *zerolog.Logger, args []string, options ...RunOption) error {
 		opt(&runCfg)
 	}
 
+	logger := cfg.Logger(runCfg.StdOut)
 	launcher, err := cosmovisor.NewLauncher(logger, cfg)
 	if err != nil {
 		return err
@@ -43,12 +37,12 @@ func Run(logger *zerolog.Logger, args []string, options ...RunOption) error {
 	doUpgrade, err := launcher.Run(args, runCfg.StdOut, runCfg.StdErr)
 	// if RestartAfterUpgrade, we launch after a successful upgrade (given that condition launcher.Run returns nil)
 	for cfg.RestartAfterUpgrade && err == nil && doUpgrade {
-		logger.Info().Str("app", cfg.Name).Msg("upgrade detected, relaunching")
+		logger.Info("upgrade detected, relaunching", "app", cfg.Name)
 		doUpgrade, err = launcher.Run(args, runCfg.StdOut, runCfg.StdErr)
 	}
 
 	if doUpgrade && err == nil {
-		logger.Info().Msg("upgrade detected, DAEMON_RESTART_AFTER_UPGRADE is off. Verify new upgrade and start cosmovisor again.")
+		logger.Info("upgrade detected, DAEMON_RESTART_AFTER_UPGRADE is off. Verify new upgrade and start cosmovisor again.")
 	}
 
 	return err

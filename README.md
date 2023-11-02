@@ -2,7 +2,7 @@
   <h1> Cosmos SDK </h1>
 </div>
 
-![banner](docs/static/img/banner.jpg)
+![banner](https://github.com/cosmos/cosmos-sdk-docs/blob/main/static/img/banner.jpg)
 
 <div align="center">
   <a href="https://github.com/cosmos/cosmos-sdk/blob/main/LICENSE">
@@ -22,7 +22,7 @@
   </a>
 </div>
 <div align="center">
-  <a href="https://discord.gg/AzefAFd">
+  <a href="https://discord.gg/cosmosnetwork">
     <img alt="Discord" src="https://img.shields.io/discord/669268347736686612.svg" />
   </a>
   <a href="https://sourcegraph.com/github.com/cosmos/cosmos-sdk?badge">
@@ -36,11 +36,11 @@ The Cosmos SDK is a framework for building blockchain applications. [CometBFT (B
 
 **WARNING**: The Cosmos SDK has mostly stabilized, but we are still making some breaking changes.
 
-**Note**: Requires [Go 1.20+](https://go.dev/dl)
+**Note**: We advise to always use the latest maintained [Go](https://go.dev/dl) version for building Cosmos SDK applications.
 
 ## Quick Start
 
-To learn how the Cosmos SDK works from a high-level perspective, see the Cosmos SDK [High-Level Intro](https://docs.cosmos.network/main/intro/overview.html).
+To learn how the Cosmos SDK works from a high-level perspective, see the Cosmos SDK [High-Level Intro](https://docs.cosmos.network/main/learn/intro/overview).
 
 If you want to get started quickly and learn how to build on top of Cosmos SDK, visit [Cosmos SDK Tutorials](https://tutorials.cosmos.network). You can also fork the tutorial's repository to get started building your own Cosmos SDK application.
 
@@ -49,7 +49,7 @@ For more information, see the [Cosmos SDK Documentation](https://docs.cosmos.net
 ## Contributing
 
 See [CONTRIBUTING.md](./CONTRIBUTING.md) for details on how to contribute and participate in our [dev calls](./CONTRIBUTING.md#teams-dev-calls).
-If you want to follow the updates or learn more about the latest design then join our [Discord](https://discord.com/invite/cosmosnetwork).
+If you want to follow the updates or learn more about the latest design then join our [Discord](https://discord.gg/cosmosnetwork).
 
 ## Tools and Frameworks
 
@@ -63,10 +63,6 @@ The Cosmos Hub application, `gaia`, has its own [cosmos/gaia repository](https:/
 ### Inter-Blockchain Communication (IBC)
 
 The IBC module for the Cosmos SDK has its own [cosmos/ibc-go repository](https://github.com/cosmos/ibc-go). Go there to build and integrate with the IBC module.
-
-### Ignite CLI
-
-Ignite CLI is the all-in-one platform to build, launch, and maintain any crypto application on a sovereign and secured blockchain. If you are building a new app or a new module, use [Ignite CLI](https://github.com/ignite/cli) to get started and speed up development.
 
 ## Disambiguation
 

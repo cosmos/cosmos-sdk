@@ -6,10 +6,9 @@ package secp256k1
 import (
 	"errors"
 
+	"github.com/cometbft/cometbft/crypto"
 	secp256k1 "github.com/decred/dcrd/dcrec/secp256k1/v4"
 	"github.com/decred/dcrd/dcrec/secp256k1/v4/ecdsa"
-
-	"github.com/cometbft/cometbft/crypto"
 )
 
 // Sign creates an ECDSA signature on curve Secp256k1, using SHA256 on the msg.
@@ -24,7 +23,7 @@ func (privKey *PrivKey) Sign(msg []byte) ([]byte, error) {
 
 // VerifyBytes verifies a signature of the form R || S.
 // It rejects signatures which are not in lower-S form.
-func (pubKey *PubKey) VerifySignature(msg []byte, sigStr []byte) bool {
+func (pubKey *PubKey) VerifySignature(msg, sigStr []byte) bool {
 	if len(sigStr) != 64 {
 		return false
 	}

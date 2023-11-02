@@ -3,8 +3,9 @@ package cli_test
 import (
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	"github.com/stretchr/testify/require"
+
+	"github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 )
 
 func TestParseSigs(t *testing.T) {

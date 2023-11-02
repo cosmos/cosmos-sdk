@@ -3,10 +3,11 @@ package simulation
 import (
 	"math/rand"
 
+	"cosmossdk.io/x/bank/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
@@ -14,7 +15,7 @@ import (
 const (
 	DefaultWeightMsgUpdateParams int = 100
 
-	OpWeightMsgUpdateParams = "op_weight_msg_update_params" //nolint:gosec
+	OpWeightMsgUpdateParams = "op_weight_msg_update_params"
 )
 
 // ProposalMsgs defines the module weighted proposals' contents

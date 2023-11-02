@@ -4,14 +4,29 @@ import (
 	"context"
 	"time"
 
-	"cosmossdk.io/log"
 	abci "github.com/cometbft/cometbft/abci/types"
-	cmtbytes "github.com/cometbft/cometbft/libs/bytes"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/gogoproto/proto"
 
+	"cosmossdk.io/core/comet"
+	"cosmossdk.io/core/header"
+	"cosmossdk.io/log"
 	"cosmossdk.io/store/gaskv"
 	storetypes "cosmossdk.io/store/types"
+)
+
+// ExecMode defines the execution mode which can be set on a Context.
+type ExecMode uint8
+
+// All possible execution modes.
+const (
+	ExecModeCheck ExecMode = iota
+	ExecModeReCheck
+	ExecModeSimulate
+	ExecModePrepareProposal
+	ExecModeProcessProposal
+	ExecModeVoteExtension
+	ExecModeFinalize
 )
 
 /*
@@ -25,45 +40,55 @@ and standard additions here would be better just to add to the Context struct
 type Context struct {
 	baseCtx              context.Context
 	ms                   storetypes.MultiStore
-	header               cmtproto.Header
-	headerHash           cmtbytes.HexBytes
-	chainID              string
+	header               cmtproto.Header // Deprecated: Use HeaderService for height, time, and chainID and CometService for the rest
+	headerHash           []byte          // Deprecated: Use HeaderService for hash
+	chainID              string          // Deprecated: Use HeaderService for chainID and CometService for the rest
 	txBytes              []byte
 	logger               log.Logger
-	voteInfo             []abci.VoteInfo
+	voteInfo             []abci.VoteInfo // Deprecated: use Cometinfo.LastCommit.Votes instead, will be removed after 0.51
 	gasMeter             storetypes.GasMeter
 	blockGasMeter        storetypes.GasMeter
 	checkTx              bool
 	recheckTx            bool // if recheckTx == true, then checkTx must also be true
+	sigverifyTx          bool // when run simulation, because the private key corresponding to the account in the genesis.json randomly generated, we must skip the sigverify.
+	execMode             ExecMode
 	minGasPrice          DecCoins
-	consParams           *cmtproto.ConsensusParams
+	consParams           cmtproto.ConsensusParams
 	eventManager         EventManagerI
 	priority             int64 // The tx priority, only relevant in CheckTx
 	kvGasConfig          storetypes.GasConfig
 	transientKVGasConfig storetypes.GasConfig
+	streamingManager     storetypes.StreamingManager
+	cometInfo            comet.Info
+	headerInfo           header.Info
 }
 
 // Proposed rename, not done to avoid API breakage
 type Request = Context
 
 // Read-only accessors
-func (c Context) Context() context.Context                   { return c.baseCtx }
-func (c Context) MultiStore() storetypes.MultiStore          { return c.ms }
-func (c Context) BlockHeight() int64                         { return c.header.Height }
-func (c Context) BlockTime() time.Time                       { return c.header.Time }
-func (c Context) ChainID() string                            { return c.chainID }
-func (c Context) TxBytes() []byte                            { return c.txBytes }
-func (c Context) Logger() log.Logger                         { return c.logger }
-func (c Context) VoteInfos() []abci.VoteInfo                 { return c.voteInfo }
-func (c Context) GasMeter() storetypes.GasMeter              { return c.gasMeter }
-func (c Context) BlockGasMeter() storetypes.GasMeter         { return c.blockGasMeter }
-func (c Context) IsCheckTx() bool                            { return c.checkTx }
-func (c Context) IsReCheckTx() bool                          { return c.recheckTx }
-func (c Context) MinGasPrices() DecCoins                     { return c.minGasPrice }
-func (c Context) EventManager() EventManagerI                { return c.eventManager }
-func (c Context) Priority() int64                            { return c.priority }
-func (c Context) KVGasConfig() storetypes.GasConfig          { return c.kvGasConfig }
-func (c Context) TransientKVGasConfig() storetypes.GasConfig { return c.transientKVGasConfig }
+func (c Context) Context() context.Context                      { return c.baseCtx }
+func (c Context) MultiStore() storetypes.MultiStore             { return c.ms }
+func (c Context) BlockHeight() int64                            { return c.header.Height }
+func (c Context) BlockTime() time.Time                          { return c.headerInfo.Time } // Deprecated: use HeaderInfo().Time
+func (c Context) ChainID() string                               { return c.chainID }
+func (c Context) TxBytes() []byte                               { return c.txBytes }
+func (c Context) Logger() log.Logger                            { return c.logger }
+func (c Context) VoteInfos() []abci.VoteInfo                    { return c.voteInfo }
+func (c Context) GasMeter() storetypes.GasMeter                 { return c.gasMeter }
+func (c Context) BlockGasMeter() storetypes.GasMeter            { return c.blockGasMeter }
+func (c Context) IsCheckTx() bool                               { return c.checkTx }
+func (c Context) IsReCheckTx() bool                             { return c.recheckTx }
+func (c Context) IsSigverifyTx() bool                           { return c.sigverifyTx }
+func (c Context) ExecMode() ExecMode                            { return c.execMode }
+func (c Context) MinGasPrices() DecCoins                        { return c.minGasPrice }
+func (c Context) EventManager() EventManagerI                   { return c.eventManager }
+func (c Context) Priority() int64                               { return c.priority }
+func (c Context) KVGasConfig() storetypes.GasConfig             { return c.kvGasConfig }
+func (c Context) TransientKVGasConfig() storetypes.GasConfig    { return c.transientKVGasConfig }
+func (c Context) StreamingManager() storetypes.StreamingManager { return c.streamingManager }
+func (c Context) CometInfo() comet.Info                         { return c.cometInfo }
+func (c Context) HeaderInfo() header.Info                       { return c.headerInfo }
 
 // clone the header before returning
 func (c Context) BlockHeader() cmtproto.Header {
@@ -72,14 +97,14 @@ func (c Context) BlockHeader() cmtproto.Header {
 }
 
 // HeaderHash returns a copy of the header hash obtained during abci.RequestBeginBlock
-func (c Context) HeaderHash() cmtbytes.HexBytes {
+func (c Context) HeaderHash() []byte {
 	hash := make([]byte, len(c.headerHash))
 	copy(hash, c.headerHash)
 	return hash
 }
 
-func (c Context) ConsensusParams() *cmtproto.ConsensusParams {
-	return proto.Clone(c.consParams).(*cmtproto.ConsensusParams)
+func (c Context) ConsensusParams() cmtproto.ConsensusParams {
+	return c.consParams
 }
 
 func (c Context) Deadline() (deadline time.Time, ok bool) {
@@ -95,21 +120,25 @@ func (c Context) Err() error {
 }
 
 // create a new context
-func NewContext(ms storetypes.MultiStore, header cmtproto.Header, isCheckTx bool, logger log.Logger) Context {
-	// https://github.com/gogo/protobuf/issues/519
-	header.Time = header.Time.UTC()
+func NewContext(ms storetypes.MultiStore, isCheckTx bool, logger log.Logger) Context {
+	h := cmtproto.Header{}
+	h.Time = h.Time.UTC()
 	return Context{
 		baseCtx:              context.Background(),
 		ms:                   ms,
-		header:               header,
-		chainID:              header.ChainID,
+		header:               h,
+		chainID:              h.ChainID,
 		checkTx:              isCheckTx,
+		sigverifyTx:          true,
 		logger:               logger,
 		gasMeter:             storetypes.NewInfiniteGasMeter(),
 		minGasPrice:          DecCoins{},
 		eventManager:         NewEventManager(),
 		kvGasConfig:          storetypes.KVGasConfig(),
 		transientKVGasConfig: storetypes.TransientGasConfig(),
+		headerInfo: header.Info{
+			Time: h.Time.UTC(),
+		},
 	}
 }
 
@@ -130,6 +159,9 @@ func (c Context) WithBlockHeader(header cmtproto.Header) Context {
 	// https://github.com/gogo/protobuf/issues/519
 	header.Time = header.Time.UTC()
 	c.header = header
+
+	// when calling withBlockheader on a new context chainID in the struct is empty
+	c.chainID = header.ChainID
 	return c
 }
 
@@ -140,15 +172,6 @@ func (c Context) WithHeaderHash(hash []byte) Context {
 
 	c.headerHash = temp
 	return c
-}
-
-// WithBlockTime returns a Context with an updated CometBFT block header time in UTC with no monotonic component.
-// Stripping the monotonic component is for time equality.
-func (c Context) WithBlockTime(newTime time.Time) Context {
-	newHeader := c.BlockHeader()
-	// https://github.com/gogo/protobuf/issues/519
-	newHeader.Time = newTime.Round(0).UTC()
-	return c.WithBlockHeader(newHeader)
 }
 
 // WithProposer returns a Context with an updated proposer consensus address.
@@ -184,6 +207,7 @@ func (c Context) WithLogger(logger log.Logger) Context {
 }
 
 // WithVoteInfos returns a Context with an updated consensus VoteInfo.
+// Deprecated: use WithCometinfo() instead, will be removed after 0.51
 func (c Context) WithVoteInfos(voteInfo []abci.VoteInfo) Context {
 	c.voteInfo = voteInfo
 	return c
@@ -218,6 +242,7 @@ func (c Context) WithTransientKVGasConfig(gasConfig storetypes.GasConfig) Contex
 // WithIsCheckTx enables or disables CheckTx value for verifying transactions and returns an updated Context
 func (c Context) WithIsCheckTx(isCheckTx bool) Context {
 	c.checkTx = isCheckTx
+	c.execMode = ExecModeCheck
 	return c
 }
 
@@ -228,6 +253,19 @@ func (c Context) WithIsReCheckTx(isRecheckTx bool) Context {
 		c.checkTx = true
 	}
 	c.recheckTx = isRecheckTx
+	c.execMode = ExecModeReCheck
+	return c
+}
+
+// WithIsSigverifyTx called with true will sigverify in auth module
+func (c Context) WithIsSigverifyTx(isSigverifyTx bool) Context {
+	c.sigverifyTx = isSigverifyTx
+	return c
+}
+
+// WithExecMode returns a Context with an updated ExecMode.
+func (c Context) WithExecMode(m ExecMode) Context {
+	c.execMode = m
 	return c
 }
 
@@ -238,7 +276,7 @@ func (c Context) WithMinGasPrices(gasPrices DecCoins) Context {
 }
 
 // WithConsensusParams returns a Context with an updated consensus params
-func (c Context) WithConsensusParams(params *cmtproto.ConsensusParams) Context {
+func (c Context) WithConsensusParams(params cmtproto.ConsensusParams) Context {
 	c.consParams = params
 	return c
 }
@@ -252,6 +290,26 @@ func (c Context) WithEventManager(em EventManagerI) Context {
 // WithPriority returns a Context with an updated tx priority
 func (c Context) WithPriority(p int64) Context {
 	c.priority = p
+	return c
+}
+
+// WithStreamingManager returns a Context with an updated streaming manager
+func (c Context) WithStreamingManager(sm storetypes.StreamingManager) Context {
+	c.streamingManager = sm
+	return c
+}
+
+// WithCometInfo returns a Context with an updated comet info
+func (c Context) WithCometInfo(cometInfo comet.Info) Context {
+	c.cometInfo = cometInfo
+	return c
+}
+
+// WithHeaderInfo returns a Context with an updated header info
+func (c Context) WithHeaderInfo(headerInfo header.Info) Context {
+	// Set time to UTC
+	headerInfo.Time = headerInfo.Time.UTC()
+	c.headerInfo = headerInfo
 	return c
 }
 
@@ -303,7 +361,10 @@ func (c Context) CacheContext() (cc Context, writeCache func()) {
 	return cc, writeCache
 }
 
-var _ context.Context = Context{}
+var (
+	_ context.Context    = Context{}
+	_ storetypes.Context = Context{}
+)
 
 // ContextKey defines a type alias for a stdlib Context key.
 type ContextKey string
@@ -329,4 +390,59 @@ func UnwrapSDKContext(ctx context.Context) Context {
 		return sdkCtx
 	}
 	return ctx.Value(SdkContextKey).(Context)
+}
+
+// ToSDKEvidence takes comet evidence and returns sdk evidence
+func ToSDKEvidence(ev []abci.Misbehavior) []comet.Evidence {
+	evidence := make([]comet.Evidence, len(ev))
+	for i, e := range ev {
+		evidence[i] = comet.Evidence{
+			Type:             comet.MisbehaviorType(e.Type),
+			Height:           e.Height,
+			Time:             e.Time,
+			TotalVotingPower: e.TotalVotingPower,
+			Validator: comet.Validator{
+				Address: e.Validator.Address,
+				Power:   e.Validator.Power,
+			},
+		}
+	}
+	return evidence
+}
+
+// ToSDKDecidedCommitInfo takes comet commit info and returns sdk commit info
+func ToSDKCommitInfo(commit abci.CommitInfo) comet.CommitInfo {
+	ci := comet.CommitInfo{
+		Round: commit.Round,
+	}
+
+	for _, v := range commit.Votes {
+		ci.Votes = append(ci.Votes, comet.VoteInfo{
+			Validator: comet.Validator{
+				Address: v.Validator.Address,
+				Power:   v.Validator.Power,
+			},
+			BlockIDFlag: comet.BlockIDFlag(v.BlockIdFlag),
+		})
+	}
+	return ci
+}
+
+// ToSDKExtendedCommitInfo takes comet extended commit info and returns sdk commit info
+func ToSDKExtendedCommitInfo(commit abci.ExtendedCommitInfo) comet.CommitInfo {
+	ci := comet.CommitInfo{
+		Round: commit.Round,
+	}
+
+	for _, v := range commit.Votes {
+		ci.Votes = append(ci.Votes, comet.VoteInfo{
+			Validator: comet.Validator{
+				Address: v.Validator.Address,
+				Power:   v.Validator.Power,
+			},
+			BlockIDFlag: comet.BlockIDFlag(v.BlockIdFlag),
+		})
+	}
+
+	return ci
 }

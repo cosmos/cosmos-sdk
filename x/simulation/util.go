@@ -15,6 +15,7 @@ import (
 )
 
 func getTestingMode(tb testing.TB) (testingMode bool, t *testing.T, b *testing.B) {
+	tb.Helper()
 	testingMode = false
 
 	if _t, ok := tb.(*testing.T); ok {
@@ -89,7 +90,7 @@ func GenAndDeliverTxWithRandFees(txCtx OperationInput) (simtypes.OperationMsg, [
 		return simtypes.NoOpMsg(txCtx.ModuleName, sdk.MsgTypeURL(txCtx.Msg), "message doesn't leave room for fees"), nil, err
 	}
 
-	fees, err = simtypes.RandomFees(txCtx.R, txCtx.Context, coins)
+	fees, err = simtypes.RandomFees(txCtx.R, coins)
 	if err != nil {
 		return simtypes.NoOpMsg(txCtx.ModuleName, sdk.MsgTypeURL(txCtx.Msg), "unable to generate fees"), nil, err
 	}
@@ -119,5 +120,5 @@ func GenAndDeliverTx(txCtx OperationInput, fees sdk.Coins) (simtypes.OperationMs
 		return simtypes.NoOpMsg(txCtx.ModuleName, sdk.MsgTypeURL(txCtx.Msg), "unable to deliver tx"), nil, err
 	}
 
-	return simtypes.NewOperationMsg(txCtx.Msg, true, "", txCtx.Cdc), nil, nil
+	return simtypes.NewOperationMsg(txCtx.Msg, true, ""), nil, nil
 }

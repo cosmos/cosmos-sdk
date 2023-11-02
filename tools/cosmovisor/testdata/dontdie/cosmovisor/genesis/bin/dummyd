@@ -1,0 +1,17 @@
+#!/bin/sh
+
+
+warn() {
+    echo "WARN Need Flush"
+}
+
+trap warn INT
+echo Genesis $@
+sleep 1
+test -z $4 && exit 1001
+echo 'UPGRADE "Chain2" NEEDED at height: 49: {}'
+echo '{"name":"Chain2","height":49,"info":""}' > $4
+sleep 1
+echo 'Flushed'
+sleep 1
+echo Did not kill in time. Never should be printed!!!

@@ -4,30 +4,34 @@ import (
 	"testing"
 	"time"
 
-	"cosmossdk.io/log"
-	storetypes "cosmossdk.io/store/types"
-	"github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/core/header"
+	"cosmossdk.io/log"
+	storetypes "cosmossdk.io/store/types"
+	"cosmossdk.io/x/authz"
+	"cosmossdk.io/x/authz/keeper"
+	authzmodule "cosmossdk.io/x/authz/module"
+	authztestutil "cosmossdk.io/x/authz/testutil"
+	banktypes "cosmossdk.io/x/bank/types"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/codec/address"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/cosmos/cosmos-sdk/x/authz"
-	"github.com/cosmos/cosmos-sdk/x/authz/keeper"
-	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
-	authztestutil "github.com/cosmos/cosmos-sdk/x/authz/testutil"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 func TestExpiredGrantsQueue(t *testing.T) {
 	key := storetypes.NewKVStoreKey(keeper.StoreKey)
+	storeService := runtime.NewKVStoreService(key)
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
 	encCfg := moduletestutil.MakeTestEncodingConfig(authzmodule.AppModuleBasic{})
-	ctx := testCtx.Ctx.WithBlockHeader(types.Header{})
+	ctx := testCtx.Ctx
 
 	baseApp := baseapp.NewBaseApp(
 		"authz",
@@ -46,7 +50,7 @@ func TestExpiredGrantsQueue(t *testing.T) {
 	grantee2 := addrs[2]
 	grantee3 := addrs[3]
 	grantee4 := addrs[4]
-	expiration := ctx.BlockTime().AddDate(0, 1, 0)
+	expiration := ctx.HeaderInfo().Time.AddDate(0, 1, 0)
 	expiration2 := expiration.AddDate(1, 0, 0)
 	smallCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 10))
 	sendAuthz := banktypes.NewSendAuthorization(smallCoins, nil)
@@ -59,7 +63,9 @@ func TestExpiredGrantsQueue(t *testing.T) {
 	accountKeeper.EXPECT().GetAccount(gomock.Any(), grantee3).Return(authtypes.NewBaseAccountWithAddress(grantee3)).AnyTimes()
 	accountKeeper.EXPECT().GetAccount(gomock.Any(), grantee4).Return(authtypes.NewBaseAccountWithAddress(grantee4)).AnyTimes()
 
-	authzKeeper := keeper.NewKeeper(key, encCfg.Codec, baseApp.MsgServiceRouter(), accountKeeper)
+	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
+
+	authzKeeper := keeper.NewKeeper(storeService, encCfg.Codec, baseApp.MsgServiceRouter(), accountKeeper)
 
 	save := func(grantee sdk.AccAddress, exp *time.Time) {
 		err := authzKeeper.SaveGrant(ctx, grantee, granter, sendAuthz, exp)
@@ -75,7 +81,8 @@ func TestExpiredGrantsQueue(t *testing.T) {
 	queryClient := authz.NewQueryClient(queryHelper)
 
 	checkGrants := func(ctx sdk.Context, expectedNum int) {
-		authzmodule.BeginBlocker(ctx, authzKeeper)
+		err := authzmodule.BeginBlocker(ctx, authzKeeper)
+		require.NoError(t, err)
 
 		res, err := queryClient.GranterGrants(ctx.Context(), &authz.QueryGranterGrantsRequest{
 			Granter: granter.String(),
@@ -88,12 +95,12 @@ func TestExpiredGrantsQueue(t *testing.T) {
 	checkGrants(ctx, 4)
 
 	// expiration is exclusive!
-	ctx = ctx.WithBlockTime(expiration)
+	ctx = ctx.WithHeaderInfo(header.Info{Time: expiration})
 	checkGrants(ctx, 4)
 
-	ctx = ctx.WithBlockTime(expiration.AddDate(0, 0, 1))
+	ctx = ctx.WithHeaderInfo(header.Info{Time: expiration.AddDate(0, 0, 1)})
 	checkGrants(ctx, 2)
 
-	ctx = ctx.WithBlockTime(expiration2.AddDate(0, 0, 1))
+	ctx = ctx.WithHeaderInfo(header.Info{Time: expiration2.AddDate(0, 0, 1)})
 	checkGrants(ctx, 1)
 }

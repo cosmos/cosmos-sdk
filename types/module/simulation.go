@@ -7,6 +7,8 @@ import (
 	"time"
 
 	sdkmath "cosmossdk.io/math"
+
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 )
@@ -33,7 +35,7 @@ type HasProposalMsgs interface {
 // HasProposalContents defines the contents that can be used to simulate legacy governance (v1beta1) proposals
 type HasProposalContents interface {
 	// content functions used to simulate governance proposals
-	ProposalContents(simState SimulationState) []simulation.WeightedProposalContent //nolint:staticcheck
+	ProposalContents(simState SimulationState) []simulation.WeightedProposalContent //nolint:staticcheck // legacy v1beta1 governance
 }
 
 // SimulationManager defines a simulation manager that provides the high level utility
@@ -142,6 +144,7 @@ func (sm *SimulationManager) WeightedOperations(simState SimulationState) []simu
 type SimulationState struct {
 	AppParams         simulation.AppParams
 	Cdc               codec.JSONCodec                // application codec
+	TxConfig          client.TxConfig                // Shared TxConfig; this is expensive to create and stateless, so create it once up front.
 	Rand              *rand.Rand                     // random number
 	GenState          map[string]json.RawMessage     // genesis state
 	Accounts          []simulation.Account           // simulation accounts
@@ -151,7 +154,7 @@ type SimulationState struct {
 	GenTimestamp      time.Time                      // genesis timestamp
 	UnbondTime        time.Duration                  // staking unbond time stored to use it as the slashing maximum evidence duration
 	LegacyParamChange []simulation.LegacyParamChange // simulated parameter changes from modules
-	//nolint:staticcheck
+	//nolint:staticcheck //	legacy used for testing
 	LegacyProposalContents []simulation.WeightedProposalContent // proposal content generator functions with their default weight and app sim key
 	ProposalMsgs           []simulation.WeightedProposalMsg     // proposal msg generator functions with their default weight and app sim key
 }

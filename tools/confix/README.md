@@ -6,13 +6,13 @@ sidebar_position: 1
 
 `Confix` is a configuration management tool that allows you to manage your configuration via CLI.
 
-It is based on the [Tendermint RFC 019](https://github.com/tendermint/tendermint/blob/5013bc3f4a6d64dcc2bf02ccc002ebc9881c62e4/docs/rfc/rfc-019-config-version.md).
+It is based on the [CometBFT RFC 019](https://github.com/cometbft/cometbft/blob/5013bc3f4a6d64dcc2bf02ccc002ebc9881c62e4/docs/rfc/rfc-019-config-version.md).
 
 ## Installation
 
 ### Add Config Command
 
-To add the confix tool, it's required to add the `ConfigCommand` to your application's root command file (e.g. `simd/cmd/root.go`).
+To add the confix tool, it's required to add the `ConfigCommand` to your application's root command file (e.g. `<appd>/cmd/root.go`).
 
 Import the `confixCmd` package:
 
@@ -46,11 +46,6 @@ To use Confix standalone, without having to add it in your application, install 
 ```bash
 go install cosmossdk.io/tools/confix/cmd/confix@latest
 ```
-
-:::warning
-Currently, due to the replace directive in the Confix go.mod, it is not possible to use `go install`.
-Building from source or importing in an application is required until that replace directive is removed.
-:::
 
 Alternatively, for building from source, simply run `make confix`. The binary will be located in `tools/confix`.
 
@@ -120,6 +115,18 @@ simd config diff v0.47 # gets the diff between defaultHome/config/app.toml and t
 confix diff v0.47 ~/.simapp/config/app.toml # gets the diff between ~/.simapp/config/app.toml and the latest v0.47 config
 ```
 
+### View
+
+View a configuration file, e.g:
+
+```shell
+simd config view client # views the current app client config
+```
+
+```shell
+confix view ~/.simapp/config/client.toml # views the current app client conf
+```
+
 ### Maintainer
 
 At each SDK modification of the default configuration, add the default SDK config under `data/v0.XX-app.toml`.
@@ -127,4 +134,4 @@ This allows users to use the tool standalone.
 
 ## Credits
 
-This project is based on the [Tendermint RFC 019](https://github.com/tendermint/tendermint/blob/5013bc3f4a6d64dcc2bf02ccc002ebc9881c62e4/docs/rfc/rfc-019-config-version.md) and their own implementation of [confix](https://github.com/tendermint/tendermint/blob/v0.36.x/scripts/confix/confix.go).
+This project is based on the [CometBFT RFC 019](https://github.com/cometbft/cometbft/blob/5013bc3f4a6d64dcc2bf02ccc002ebc9881c62e4/docs/rfc/rfc-019-config-version.md) and their own implementation of [confix](https://github.com/cometbft/cometbft/blob/v0.36.x/scripts/confix/confix.go).

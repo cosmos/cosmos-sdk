@@ -13,7 +13,7 @@ private
 
 # Build
 vendor
-build
+/build
 dist
 tools-stamp
 buf-stamp
@@ -35,6 +35,7 @@ coverage.txt
 sim_log_file
 x/genutil/config
 x/genutil/data
+*.fail
 
 # Vagrant
 .vagrant/
@@ -45,6 +46,8 @@ vagrant
 # IDE
 .idea
 *.iml
+*.ipr
+*.iws
 .dir-locals.el
 .vscode
 
@@ -59,7 +62,3 @@ debug_container.log
 *.synctex.gz
 /x/genutil/config/priv_validator_key.json
 /x/genutil/data/priv_validator_state.json
-/zerocopy-ex1/target/
-/zerocopy-poc/target/debug/.fingerprint/
-/zerocopy-poc/target/debug/deps/
-/zerocopy-poc/target/debug/incremental/zerocopy_poc-18wgvaacle1d3/

@@ -1,8 +1,9 @@
 package ormerrors
 
 import (
-	"cosmossdk.io/errors"
 	"google.golang.org/grpc/codes"
+
+	"cosmossdk.io/errors"
 )
 
 var codespace = "orm"

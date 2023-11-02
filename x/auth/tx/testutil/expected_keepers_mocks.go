@@ -8,7 +8,7 @@ import (
 	context "context"
 	reflect "reflect"
 
-	types "github.com/cosmos/cosmos-sdk/x/bank/types"
+	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	gomock "github.com/golang/mock/gomock"
 )
 
@@ -35,17 +35,17 @@ func (m *MockBankKeeper) EXPECT() *MockBankKeeperMockRecorder {
 	return m.recorder
 }
 
-// DenomMetadata mocks base method.
-func (m *MockBankKeeper) DenomMetadata(c context.Context, req *types.QueryDenomMetadataRequest) (*types.QueryDenomMetadataResponse, error) {
+// DenomMetadataV2 mocks base method.
+func (m *MockBankKeeper) DenomMetadataV2(c context.Context, req *bankv1beta1.QueryDenomMetadataRequest) (*bankv1beta1.QueryDenomMetadataResponse, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DenomMetadata", c, req)
-	ret0, _ := ret[0].(*types.QueryDenomMetadataResponse)
+	ret := m.ctrl.Call(m, "DenomMetadataV2", c, req)
+	ret0, _ := ret[0].(*bankv1beta1.QueryDenomMetadataResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// DenomMetadata indicates an expected call of DenomMetadata.
-func (mr *MockBankKeeperMockRecorder) DenomMetadata(c, req interface{}) *gomock.Call {
+// DenomMetadataV2 indicates an expected call of DenomMetadataV2.
+func (mr *MockBankKeeperMockRecorder) DenomMetadataV2(c, req interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DenomMetadata", reflect.TypeOf((*MockBankKeeper)(nil).DenomMetadata), c, req)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DenomMetadataV2", reflect.TypeOf((*MockBankKeeper)(nil).DenomMetadataV2), c, req)
 }

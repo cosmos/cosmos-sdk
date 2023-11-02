@@ -1,39 +1,22 @@
 package types
 
 import (
+	"errors"
+
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	cmttypes "github.com/cometbft/cometbft/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 )
 
-var (
-	_ sdk.Msg            = &MsgUpdateParams{}
-	_ legacytx.LegacyMsg = &MsgUpdateParams{}
-)
+var _ sdk.Msg = &MsgUpdateParams{}
 
-// GetSigners returns the signer addresses that are expected to sign the result
-// of GetSignBytes.
-func (msg MsgUpdateParams) GetSigners() []sdk.AccAddress {
-	authority, _ := sdk.AccAddressFromBech32(msg.Authority)
-	return []sdk.AccAddress{authority}
-}
+func (msg MsgUpdateParams) ToProtoConsensusParams() (cmtproto.ConsensusParams, error) {
+	if msg.Evidence == nil || msg.Block == nil || msg.Validator == nil {
+		return cmtproto.ConsensusParams{}, errors.New("all parameters must be present")
+	}
 
-// GetSignBytes returns the raw bytes for a MsgUpdateParams message that
-// the expected signer needs to sign.
-func (msg MsgUpdateParams) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
-}
-
-// ValidateBasic performs basic MsgUpdateParams message validation.
-func (msg MsgUpdateParams) ValidateBasic() error {
-	params := cmttypes.ConsensusParamsFromProto(msg.ToProtoConsensusParams())
-	return params.ValidateBasic()
-}
-
-func (msg MsgUpdateParams) ToProtoConsensusParams() cmtproto.ConsensusParams {
-	return cmtproto.ConsensusParams{
+	cp := cmtproto.ConsensusParams{
 		Block: &cmtproto.BlockParams{
 			MaxBytes: msg.Block.MaxBytes,
 			MaxGas:   msg.Block.MaxGas,
@@ -48,4 +31,12 @@ func (msg MsgUpdateParams) ToProtoConsensusParams() cmtproto.ConsensusParams {
 		},
 		Version: cmttypes.DefaultConsensusParams().ToProto().Version, // Version is stored in x/upgrade
 	}
+
+	if msg.Abci != nil {
+		cp.Abci = &cmtproto.ABCIParams{
+			VoteExtensionsEnableHeight: msg.Abci.VoteExtensionsEnableHeight,
+		}
+	}
+
+	return cp, nil
 }

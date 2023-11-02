@@ -3,8 +3,6 @@ package runtime
 import (
 	"testing"
 
-	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/gogoproto/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
@@ -13,19 +11,20 @@ import (
 
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
+	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
+	"cosmossdk.io/depinject"
+	"cosmossdk.io/log"
+	_ "cosmossdk.io/x/bank"
+	_ "cosmossdk.io/x/staking"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	_ "github.com/cosmos/cosmos-sdk/x/auth"
 	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
-	_ "github.com/cosmos/cosmos-sdk/x/bank"
 	_ "github.com/cosmos/cosmos-sdk/x/consensus"
-	_ "github.com/cosmos/cosmos-sdk/x/params"
-	_ "github.com/cosmos/cosmos-sdk/x/staking"
 )
 
 type fixture struct {
@@ -41,19 +40,21 @@ func initFixture(t assert.TestingT) *fixture {
 	var interfaceRegistry codectypes.InterfaceRegistry
 
 	app, err := simtestutil.Setup(
-		configurator.NewAppConfig(
-			configurator.AuthModule(),
-			configurator.TxModule(),
-			configurator.ParamsModule(),
-			configurator.ConsensusModule(),
-			configurator.BankModule(),
-			configurator.StakingModule(),
+		depinject.Configs(
+			configurator.NewAppConfig(
+				configurator.AuthModule(),
+				configurator.TxModule(),
+				configurator.ConsensusModule(),
+				configurator.BankModule(),
+				configurator.StakingModule(),
+			),
+			depinject.Supply(log.NewNopLogger()),
 		),
 		&interfaceRegistry,
 	)
 	assert.NilError(t, err)
 
-	f.ctx = app.BaseApp.NewContext(false, cmtproto.Header{})
+	f.ctx = app.BaseApp.NewContext(false)
 	queryHelper := &baseapp.QueryServiceTestHelper{
 		GRPCQueryRouter: app.BaseApp.GRPCQueryRouter(),
 		Ctx:             f.ctx,
@@ -80,7 +81,7 @@ func TestQueryAppConfig(t *testing.T) {
 	}
 
 	// has all expected modules
-	for _, modName := range []string{"auth", "bank", "tx", "consensus", "runtime", "params", "staking"} {
+	for _, modName := range []string{"auth", "bank", "tx", "consensus", "runtime", "staking"} {
 		modConfig := moduleConfigs[modName]
 		if modConfig == nil {
 			t.Fatalf("missing %s", modName)

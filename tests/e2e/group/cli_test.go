@@ -6,14 +6,15 @@ package group
 import (
 	"testing"
 
-	"cosmossdk.io/simapp"
-	"github.com/cosmos/cosmos-sdk/testutil/network"
-
 	"github.com/stretchr/testify/suite"
+
+	"cosmossdk.io/simapp"
+
+	"github.com/cosmos/cosmos-sdk/testutil/network"
 )
 
 func TestE2ETestSuite(t *testing.T) {
 	cfg := network.DefaultConfig(simapp.NewTestNetworkFixture)
-	cfg.NumValidators = 2
+	cfg.NumValidators = 1
 	suite.Run(t, NewE2ETestSuite(cfg))
 }

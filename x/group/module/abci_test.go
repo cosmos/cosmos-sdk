@@ -5,21 +5,27 @@ import (
 	"testing"
 	"time"
 
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	cmttime "github.com/cometbft/cometbft/types/time"
+	"github.com/stretchr/testify/suite"
+
+	"cosmossdk.io/core/address"
+	"cosmossdk.io/core/header"
+	"cosmossdk.io/depinject"
+	"cosmossdk.io/log"
+	"cosmossdk.io/math"
+	bankkeeper "cosmossdk.io/x/bank/keeper"
+	"cosmossdk.io/x/bank/testutil"
+	banktypes "cosmossdk.io/x/bank/types"
+	"cosmossdk.io/x/group"
+	"cosmossdk.io/x/group/keeper"
+	"cosmossdk.io/x/group/module"
+	grouptestutil "cosmossdk.io/x/group/testutil"
+	stakingkeeper "cosmossdk.io/x/staking/keeper"
+
+	codecaddress "github.com/cosmos/cosmos-sdk/codec/address"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/cosmos/cosmos-sdk/x/group"
-	"github.com/cosmos/cosmos-sdk/x/group/keeper"
-	"github.com/cosmos/cosmos-sdk/x/group/module"
-	grouptestutil "github.com/cosmos/cosmos-sdk/x/group/testutil"
-	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
-	"github.com/stretchr/testify/suite"
 )
 
 type IntegrationTestSuite struct {
@@ -32,6 +38,8 @@ type IntegrationTestSuite struct {
 	bankKeeper        bankkeeper.Keeper
 	stakingKeeper     *stakingkeeper.Keeper
 	interfaceRegistry codectypes.InterfaceRegistry
+
+	addressCodec address.Codec
 }
 
 func TestIntegrationTestSuite(t *testing.T) {
@@ -40,7 +48,10 @@ func TestIntegrationTestSuite(t *testing.T) {
 
 func (s *IntegrationTestSuite) SetupTest() {
 	app, err := simtestutil.Setup(
-		grouptestutil.AppConfig,
+		depinject.Configs(
+			grouptestutil.AppConfig,
+			depinject.Supply(log.NewNopLogger()),
+		),
 		&s.interfaceRegistry,
 		&s.bankKeeper,
 		&s.stakingKeeper,
@@ -48,12 +59,15 @@ func (s *IntegrationTestSuite) SetupTest() {
 	)
 	s.Require().NoError(err)
 
-	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
+	ctx := app.BaseApp.NewContext(false)
 
-	ctx = ctx.WithBlockHeader(cmtproto.Header{Time: cmttime.Now()})
+	ctx = ctx.WithHeaderInfo(header.Info{Time: time.Now()})
 
 	s.ctx = ctx
-	s.addrs = simtestutil.AddTestAddrsIncremental(s.bankKeeper, s.stakingKeeper, ctx, 4, sdk.NewInt(30000000))
+
+	s.addrs = simtestutil.AddTestAddrsIncremental(s.bankKeeper, s.stakingKeeper, ctx, 4, math.NewInt(30000000))
+
+	s.addressCodec = codecaddress.NewBech32Codec("cosmos")
 }
 
 func (s *IntegrationTestSuite) TestEndBlockerPruning() {
@@ -62,13 +76,16 @@ func (s *IntegrationTestSuite) TestEndBlockerPruning() {
 	addr2 := s.addrs[1]
 	addr3 := s.addrs[2]
 
+	addr1st, err := s.addressCodec.BytesToString(addr1)
+	s.Require().NoError(err)
+
 	// Initial group, group policy and balance setup
 	members := []group.MemberRequest{
-		{Address: addr1.String(), Weight: "1"}, {Address: addr2.String(), Weight: "2"},
+		{Address: addr1st, Weight: "1"}, {Address: addr2.String(), Weight: "2"},
 	}
 
 	groupRes, err := s.groupKeeper.CreateGroup(ctx, &group.MsgCreateGroup{
-		Admin:   addr1.String(),
+		Admin:   addr1st,
 		Members: members,
 	})
 	s.Require().NoError(err)
@@ -114,23 +131,23 @@ func (s *IntegrationTestSuite) TestEndBlockerPruning() {
 	policyRes2, err := s.groupKeeper.CreateGroupPolicy(ctx, policyReq2)
 	s.Require().NoError(err)
 
-	groupPolicyAddr, err := sdk.AccAddressFromBech32(policyRes.Address)
+	groupPolicyAddr, err := s.addressCodec.StringToBytes(policyRes.Address)
 	s.Require().NoError(err)
-	s.Require().NoError(testutil.FundAccount(s.bankKeeper, ctx, groupPolicyAddr, sdk.Coins{sdk.NewInt64Coin("test", 10000)}))
+	s.Require().NoError(testutil.FundAccount(ctx, s.bankKeeper, groupPolicyAddr, sdk.Coins{sdk.NewInt64Coin("test", 10000)}))
 
-	groupPolicyAddr2, err := sdk.AccAddressFromBech32(policyRes2.Address)
+	groupPolicyAddr2, err := s.addressCodec.StringToBytes(policyRes2.Address)
 	s.Require().NoError(err)
-	s.Require().NoError(testutil.FundAccount(s.bankKeeper, ctx, groupPolicyAddr2, sdk.Coins{sdk.NewInt64Coin("test", 10000)}))
+	s.Require().NoError(testutil.FundAccount(ctx, s.bankKeeper, groupPolicyAddr2, sdk.Coins{sdk.NewInt64Coin("test", 10000)}))
 
 	votingPeriod := policy.GetVotingPeriod()
 
 	msgSend1 := &banktypes.MsgSend{
-		FromAddress: groupPolicyAddr.String(),
+		FromAddress: policyRes.Address,
 		ToAddress:   addr2.String(),
 		Amount:      sdk.Coins{sdk.NewInt64Coin("test", 100)},
 	}
 	msgSend2 := &banktypes.MsgSend{
-		FromAddress: groupPolicyAddr2.String(),
+		FromAddress: policyRes2.Address,
 		ToAddress:   addr2.String(),
 		Amount:      sdk.Coins{sdk.NewInt64Coin("test", 100)},
 	}
@@ -151,8 +168,7 @@ func (s *IntegrationTestSuite) TestEndBlockerPruning() {
 				s.Require().NoError(err)
 				_, err = s.groupKeeper.Exec(ctx, &group.MsgExec{Executor: addr3.String(), ProposalId: pID})
 				s.Require().NoError(err)
-				sdkCtx := sdk.UnwrapSDKContext(ctx)
-				s.Require().NoError(testutil.FundAccount(s.bankKeeper, sdkCtx, groupPolicyAddr, sdk.Coins{sdk.NewInt64Coin("test", 10002)}))
+				s.Require().NoError(testutil.FundAccount(ctx, s.bankKeeper, groupPolicyAddr, sdk.Coins{sdk.NewInt64Coin("test", 10002)}))
 
 				return pID
 			},
@@ -167,8 +183,7 @@ func (s *IntegrationTestSuite) TestEndBlockerPruning() {
 				s.Require().NoError(err)
 				_, err = s.groupKeeper.Exec(ctx, &group.MsgExec{Executor: addr3.String(), ProposalId: pID})
 				s.Require().NoError(err)
-				sdkCtx := sdk.UnwrapSDKContext(ctx)
-				s.Require().NoError(testutil.FundAccount(s.bankKeeper, sdkCtx, groupPolicyAddr, sdk.Coins{sdk.NewInt64Coin("test", 10002)}))
+				s.Require().NoError(testutil.FundAccount(ctx, s.bankKeeper, groupPolicyAddr, sdk.Coins{sdk.NewInt64Coin("test", 10002)}))
 
 				return pID
 			},
@@ -183,8 +198,8 @@ func (s *IntegrationTestSuite) TestEndBlockerPruning() {
 				s.Require().NoError(err)
 				_, err = s.groupKeeper.Exec(ctx, &group.MsgExec{Executor: addr3.String(), ProposalId: pID})
 				s.Require().NoError(err)
-				sdkCtx := sdk.UnwrapSDKContext(ctx)
-				s.Require().NoError(testutil.FundAccount(s.bankKeeper, sdkCtx, groupPolicyAddr, sdk.Coins{sdk.NewInt64Coin("test", 10002)}))
+
+				s.Require().NoError(testutil.FundAccount(ctx, s.bankKeeper, groupPolicyAddr, sdk.Coins{sdk.NewInt64Coin("test", 10002)}))
 
 				return pID
 			},
@@ -198,8 +213,7 @@ func (s *IntegrationTestSuite) TestEndBlockerPruning() {
 				s.Require().NoError(err)
 				_, err = s.groupKeeper.Exec(ctx, &group.MsgExec{Executor: addr3.String(), ProposalId: pID})
 				s.Require().NoError(err)
-				sdkCtx := sdk.UnwrapSDKContext(ctx)
-				s.Require().NoError(testutil.FundAccount(s.bankKeeper, sdkCtx, groupPolicyAddr, sdk.Coins{sdk.NewInt64Coin("test", 10002)}))
+				s.Require().NoError(testutil.FundAccount(ctx, s.bankKeeper, groupPolicyAddr, sdk.Coins{sdk.NewInt64Coin("test", 10002)}))
 
 				return pID
 			},
@@ -213,13 +227,12 @@ func (s *IntegrationTestSuite) TestEndBlockerPruning() {
 				s.Require().NoError(err)
 				_, err = s.groupKeeper.UpdateGroupPolicyMetadata(ctx, &group.MsgUpdateGroupPolicyMetadata{
 					Admin:              addr1.String(),
-					GroupPolicyAddress: groupPolicyAddr.String(),
+					GroupPolicyAddress: policyRes.Address,
 				})
 				s.Require().NoError(err)
 				_, err = s.groupKeeper.Exec(ctx, &group.MsgExec{Executor: addr3.String(), ProposalId: pID})
 				s.Require().Error(err) // since proposal with status Aborted cannot be executed
-				sdkCtx := sdk.UnwrapSDKContext(ctx)
-				s.Require().NoError(testutil.FundAccount(s.bankKeeper, sdkCtx, groupPolicyAddr, sdk.Coins{sdk.NewInt64Coin("test", 10002)}))
+				s.Require().NoError(testutil.FundAccount(ctx, s.bankKeeper, groupPolicyAddr, sdk.Coins{sdk.NewInt64Coin("test", 10002)}))
 
 				return pID
 			},
@@ -251,7 +264,7 @@ func (s *IntegrationTestSuite) TestEndBlockerPruning() {
 				s.Require().NoError(err)
 				return pID
 			},
-			newCtx:    ctx.WithBlockTime(ctx.BlockTime().Add(votingPeriod).Add(time.Hour)),
+			newCtx:    ctx.WithHeaderInfo(header.Info{Time: ctx.HeaderInfo().Time.Add(votingPeriod).Add(time.Hour)}),
 			expErrMsg: "load proposal: not found",
 			expStatus: group.PROPOSAL_STATUS_WITHDRAWN,
 		},
@@ -279,7 +292,7 @@ func (s *IntegrationTestSuite) TestEndBlockerPruning() {
 				policy := group.NewThresholdDecisionPolicy("3", time.Second, 0)
 				msg := &group.MsgUpdateGroupPolicyDecisionPolicy{
 					Admin:              s.addrs[1].String(),
-					GroupPolicyAddress: groupPolicyAddr2.String(),
+					GroupPolicyAddress: policyRes2.Address,
 				}
 				err = msg.SetDecisionPolicy(policy)
 				s.Require().NoError(err)
@@ -288,7 +301,7 @@ func (s *IntegrationTestSuite) TestEndBlockerPruning() {
 
 				return pID
 			},
-			newCtx:            ctx.WithBlockTime(ctx.BlockTime().Add(votingPeriod).Add(time.Hour)),
+			newCtx:            ctx.WithHeaderInfo(header.Info{Time: ctx.HeaderInfo().Time.Add(votingPeriod).Add(time.Hour)}),
 			expErrMsg:         "load proposal: not found",
 			expStatus:         group.PROPOSAL_STATUS_ABORTED,
 			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
@@ -301,7 +314,7 @@ func (s *IntegrationTestSuite) TestEndBlockerPruning() {
 				policy := group.NewThresholdDecisionPolicy("3", time.Second, 0)
 				msg := &group.MsgUpdateGroupPolicyDecisionPolicy{
 					Admin:              s.addrs[1].String(),
-					GroupPolicyAddress: groupPolicyAddr2.String(),
+					GroupPolicyAddress: policyRes2.Address,
 				}
 				err = msg.SetDecisionPolicy(policy)
 				s.Require().NoError(err)
@@ -321,7 +334,8 @@ func (s *IntegrationTestSuite) TestEndBlockerPruning() {
 		s.Run(msg, func() {
 			proposalID := spec.setupProposal(ctx)
 
-			module.EndBlocker(spec.newCtx, s.groupKeeper)
+			err := module.EndBlocker(spec.newCtx, s.groupKeeper)
+			s.Require().NoError(err)
 
 			if spec.expErrMsg != "" && spec.expExecutorResult != group.PROPOSAL_EXECUTOR_RESULT_SUCCESS {
 				_, err = s.groupKeeper.Proposal(spec.newCtx, &group.QueryProposalRequest{ProposalId: proposalID})
@@ -389,13 +403,13 @@ func (s *IntegrationTestSuite) TestEndBlockerTallying() {
 	policyRes, err := s.groupKeeper.CreateGroupPolicy(ctx, policyReq)
 	s.Require().NoError(err)
 
-	groupPolicyAddr, err := sdk.AccAddressFromBech32(policyRes.Address)
+	groupPolicyAddr, err := s.addressCodec.StringToBytes(policyRes.Address)
 	s.Require().NoError(err)
 
 	votingPeriod := policy.GetVotingPeriod()
 
 	msgSend := &banktypes.MsgSend{
-		FromAddress: groupPolicyAddr.String(),
+		FromAddress: policyRes.Address,
 		ToAddress:   addrs[3].String(),
 		Amount:      sdk.Coins{sdk.NewInt64Coin("test", 100)},
 	}
@@ -417,7 +431,7 @@ func (s *IntegrationTestSuite) TestEndBlockerTallying() {
 				return pID
 			},
 			admin:     proposers[0],
-			newCtx:    ctx.WithBlockTime(ctx.BlockTime().Add(votingPeriod).Add(time.Hour)),
+			newCtx:    ctx.WithHeaderInfo(header.Info{Time: ctx.HeaderInfo().Time.Add(votingPeriod).Add(time.Hour)}),
 			tallyRes:  group.DefaultTallyResult(),
 			expStatus: group.PROPOSAL_STATUS_REJECTED,
 		},
@@ -454,7 +468,7 @@ func (s *IntegrationTestSuite) TestEndBlockerTallying() {
 				return pID
 			},
 			admin:  proposers[0],
-			newCtx: ctx.WithBlockTime(ctx.BlockTime().Add(votingPeriod).Add(time.Hour)),
+			newCtx: ctx.WithHeaderInfo(header.Info{Time: ctx.HeaderInfo().Time.Add(votingPeriod).Add(time.Hour)}),
 			tallyRes: group.TallyResult{
 				YesCount:        "1",
 				NoCount:         "0",
@@ -471,7 +485,7 @@ func (s *IntegrationTestSuite) TestEndBlockerTallying() {
 				return pID
 			},
 			admin:  proposers[0],
-			newCtx: ctx.WithBlockTime(ctx.BlockTime().Add(votingPeriod).Add(time.Hour)),
+			newCtx: ctx.WithHeaderInfo(header.Info{Time: ctx.HeaderInfo().Time.Add(votingPeriod).Add(time.Hour)}),
 			tallyRes: group.TallyResult{
 				YesCount:        "2",
 				NoCount:         "0",
@@ -523,7 +537,8 @@ func (s *IntegrationTestSuite) TestEndBlockerTallying() {
 			spec := spec
 			pID := spec.preRun(ctx)
 
-			module.EndBlocker(spec.newCtx, s.groupKeeper)
+			err := module.EndBlocker(spec.newCtx, s.groupKeeper)
+			s.Require().NoError(err)
 			resp, err := s.groupKeeper.Proposal(spec.newCtx, &group.QueryProposalRequest{
 				ProposalId: pID,
 			})
@@ -541,7 +556,7 @@ func (s *IntegrationTestSuite) TestEndBlockerTallying() {
 	}
 }
 
-func submitProposal(s *IntegrationTestSuite, app *runtime.App, ctx context.Context, msgs []sdk.Msg, proposers []string, groupPolicyAddr sdk.AccAddress) (uint64, error) { //nolint:revive // context-as-argument: context.Context should be the first parameter of a function
+func submitProposal(s *IntegrationTestSuite, app *runtime.App, ctx context.Context, msgs []sdk.Msg, proposers []string, groupPolicyAddr sdk.AccAddress) (uint64, error) {
 	proposalReq := &group.MsgSubmitProposal{
 		GroupPolicyAddress: groupPolicyAddr.String(),
 		Proposers:          proposers,
@@ -560,7 +575,7 @@ func submitProposal(s *IntegrationTestSuite, app *runtime.App, ctx context.Conte
 }
 
 func submitProposalAndVote(
-	s *IntegrationTestSuite, app *runtime.App, ctx context.Context, msgs []sdk.Msg, //nolint:revive // context-as-argument: context.Context should be the first parameter of a function
+	s *IntegrationTestSuite, app *runtime.App, ctx context.Context, msgs []sdk.Msg,
 	proposers []string, groupPolicyAddr sdk.AccAddress, voteOption group.VoteOption,
 ) (uint64, error) {
 	myProposalID, err := submitProposal(s, app, ctx, msgs, proposers, groupPolicyAddr)

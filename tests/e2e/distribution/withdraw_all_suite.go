@@ -4,18 +4,20 @@ import (
 	"fmt"
 	"strings"
 
-	"cosmossdk.io/simapp"
 	"github.com/stretchr/testify/suite"
+
+	"cosmossdk.io/math"
+	"cosmossdk.io/simapp"
+	banktypes "cosmossdk.io/x/bank/types"
+	"cosmossdk.io/x/distribution/client/cli"
+	stakingtypes "cosmossdk.io/x/staking/types"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-	"github.com/cosmos/cosmos-sdk/testutil"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/distribution/client/cli"
-	stakingcli "github.com/cosmos/cosmos-sdk/x/staking/client/cli"
 )
 
 type WithdrawAllTestSuite struct {
@@ -59,54 +61,54 @@ func (s *WithdrawAllTestSuite) TestNewWithdrawAllRewardsGenerateOnly() {
 	require.NoError(err)
 
 	newAddr := sdk.AccAddress(pubkey.Address())
-	_, err = clitestutil.MsgSendExec(
+
+	msgSend := &banktypes.MsgSend{
+		FromAddress: val.Address.String(),
+		ToAddress:   newAddr.String(),
+		Amount:      sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(2000))),
+	}
+	_, err = clitestutil.SubmitTestTx(
 		val.ClientCtx,
+		msgSend,
 		val.Address,
-		newAddr,
-		sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(2000))), fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		clitestutil.TestTxConfig{},
 	)
+
 	require.NoError(err)
 	require.NoError(s.network.WaitForNextBlock())
 
 	// delegate 500 tokens to validator1
-	args := []string{
-		val.ValAddress.String(),
-		sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(500)).String(),
-		fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr.String()),
-		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+	msg := &stakingtypes.MsgDelegate{
+		DelegatorAddress: newAddr.String(),
+		ValidatorAddress: val.ValAddress.String(),
+		Amount:           sdk.NewCoin("stake", math.NewInt(500)),
 	}
-	cmd := stakingcli.NewDelegateCmd()
-	_, err = clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
+
+	_, err = clitestutil.SubmitTestTx(val.ClientCtx, msg, newAddr, clitestutil.TestTxConfig{})
 	require.NoError(err)
 	require.NoError(s.network.WaitForNextBlock())
 
 	// delegate 500 tokens to validator2
-	args = []string{
-		val1.ValAddress.String(),
-		sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(500)).String(),
-		fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr.String()),
-		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+	msg2 := &stakingtypes.MsgDelegate{
+		DelegatorAddress: newAddr.String(),
+		ValidatorAddress: val1.ValAddress.String(),
+		Amount:           sdk.NewCoin("stake", math.NewInt(500)),
 	}
-	_, err = clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
-	require.NoError(err)
 
-	var out testutil.BufferWriter
+	_, err = clitestutil.SubmitTestTx(val.ClientCtx, msg2, newAddr, clitestutil.TestTxConfig{})
+	require.NoError(err)
+	require.NoError(s.network.WaitForNextBlock())
+
 	err = s.network.RetryForBlocks(func() error {
-		args = []string{
+		args := []string{
 			fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr.String()),
 			fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 			fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
 			fmt.Sprintf("--%s=1", cli.FlagMaxMessagesPerTx),
 			fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-			fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
 		}
-		cmd = cli.NewWithdrawAllRewardsCmd()
+		cmd := cli.NewWithdrawAllRewardsCmd()
 		out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
 		if err != nil {
 			return err
@@ -121,16 +123,16 @@ func (s *WithdrawAllTestSuite) TestNewWithdrawAllRewardsGenerateOnly() {
 	}, 3)
 	require.NoError(err)
 
-	args = []string{
+	args := []string{
 		fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr.String()),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
 		fmt.Sprintf("--%s=2", cli.FlagMaxMessagesPerTx),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
 	}
-	cmd = cli.NewWithdrawAllRewardsCmd()
-	out, err = clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
+	cmd := cli.NewWithdrawAllRewardsCmd()
+	out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
 	require.NoError(err)
 	// expect 1 transaction in the generated file when --max-msgs in a tx set 2, since there are only delegations.
 	s.Require().Equal(1, len(strings.Split(strings.Trim(out.String(), "\n"), "\n")))

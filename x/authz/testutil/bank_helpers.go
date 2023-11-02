@@ -3,12 +3,16 @@ package testutil
 import (
 	"context"
 
-	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
+	bank "cosmossdk.io/x/bank/types"
 )
 
 var _ bank.MsgServer = MockBankKeeper{}
 
 func (k MockBankKeeper) Send(goCtx context.Context, msg *bank.MsgSend) (*bank.MsgSendResponse, error) {
+	return nil, nil
+}
+
+func (k MockBankKeeper) Burn(goCtx context.Context, msg *bank.MsgBurn) (*bank.MsgBurnResponse, error) {
 	return nil, nil
 }
 

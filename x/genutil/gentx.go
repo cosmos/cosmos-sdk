@@ -1,17 +1,21 @@
 package genutil
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	abci "github.com/cometbft/cometbft/abci/types"
+
+	"cosmossdk.io/core/genesis"
+	bankexported "cosmossdk.io/x/bank/exported"
+	stakingtypes "cosmossdk.io/x/staking/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	bankexported "github.com/cosmos/cosmos-sdk/x/bank/exported"
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // SetGenTxsInAppGenesisState - sets the genesis transactions in the app genesis state
@@ -52,9 +56,8 @@ func ValidateAccountInGenesis(
 		func(bal bankexported.GenesisBalance) (stop bool) {
 			accAddress := bal.GetAddress()
 			accCoins := bal.GetCoins()
-
 			// ensure that account is in genesis
-			if accAddress.Equals(addr) {
+			if strings.EqualFold(accAddress, addr.String()) {
 				// ensure account contains enough funds of default bond denom
 				if coins.AmountOf(bondDenom).GT(accCoins.AmountOf(bondDenom)) {
 					err = fmt.Errorf(
@@ -84,30 +87,28 @@ func ValidateAccountInGenesis(
 	return nil
 }
 
-type deliverTxfn func(abci.RequestDeliverTx) abci.ResponseDeliverTx
-
 // DeliverGenTxs iterates over all genesis txs, decodes each into a Tx and
 // invokes the provided deliverTxfn with the decoded Tx. It returns the result
 // of the staking module's ApplyAndReturnValidatorSetUpdates.
 func DeliverGenTxs(
-	ctx sdk.Context, genTxs []json.RawMessage,
-	stakingKeeper types.StakingKeeper, deliverTx deliverTxfn,
+	ctx context.Context, genTxs []json.RawMessage,
+	stakingKeeper types.StakingKeeper, deliverTx genesis.TxHandler,
 	txEncodingConfig client.TxEncodingConfig,
 ) ([]abci.ValidatorUpdate, error) {
 	for _, genTx := range genTxs {
 		tx, err := txEncodingConfig.TxJSONDecoder()(genTx)
 		if err != nil {
-			return nil, fmt.Errorf("failed to decode GenTx '%s': %s", genTx, err)
+			return nil, fmt.Errorf("failed to decode GenTx '%s': %w", genTx, err)
 		}
 
 		bz, err := txEncodingConfig.TxEncoder()(tx)
 		if err != nil {
-			return nil, fmt.Errorf("failed to encode GenTx '%s': %s", genTx, err)
+			return nil, fmt.Errorf("failed to encode GenTx '%s': %w", genTx, err)
 		}
 
-		res := deliverTx(abci.RequestDeliverTx{Tx: bz})
-		if !res.IsOK() {
-			return nil, fmt.Errorf("failed to execute DeliverTx for '%s': %s", genTx, res.Log)
+		err = deliverTx.ExecuteGenesisTx(bz)
+		if err != nil {
+			return nil, fmt.Errorf("failed to execute DeliverTx for '%s': %w", genTx, err)
 		}
 	}
 

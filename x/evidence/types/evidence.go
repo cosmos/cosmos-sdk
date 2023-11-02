@@ -4,10 +4,11 @@ import (
 	"fmt"
 	"time"
 
-	"cosmossdk.io/x/evidence/exported"
-	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/crypto/tmhash"
-	cmtbytes "github.com/cometbft/cometbft/libs/bytes"
+
+	"cosmossdk.io/core/address"
+	"cosmossdk.io/core/comet"
+	"cosmossdk.io/x/evidence/exported"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -21,7 +22,7 @@ var _ exported.Evidence = &Equivocation{}
 func (e *Equivocation) Route() string { return RouteEquivocation }
 
 // Hash returns the hash of an Equivocation object.
-func (e *Equivocation) Hash() cmtbytes.HexBytes {
+func (e *Equivocation) Hash() []byte {
 	bz, err := e.Marshal()
 	if err != nil {
 		panic(err)
@@ -49,8 +50,8 @@ func (e *Equivocation) ValidateBasic() error {
 
 // GetConsensusAddress returns the validator's consensus address at time of the
 // Equivocation infraction.
-func (e Equivocation) GetConsensusAddress() sdk.ConsAddress {
-	addr, _ := sdk.ConsAddressFromBech32(e.ConsensusAddress)
+func (e Equivocation) GetConsensusAddress(consAc address.Codec) sdk.ConsAddress {
+	addr, _ := consAc.StringToBytes(e.ConsensusAddress)
 	return addr
 }
 
@@ -75,9 +76,8 @@ func (e Equivocation) GetTotalPower() int64 { return 0 }
 
 // FromABCIEvidence converts a CometBFT concrete Evidence type to
 // SDK Evidence using Equivocation as the concrete type.
-func FromABCIEvidence(e abci.Misbehavior) exported.Evidence {
-	bech32PrefixConsAddr := sdk.GetConfig().GetBech32ConsensusAddrPrefix()
-	consAddr, err := sdk.Bech32ifyAddressBytes(bech32PrefixConsAddr, e.Validator.Address)
+func FromABCIEvidence(e comet.Evidence, conAc address.Codec) *Equivocation {
+	consAddr, err := conAc.BytesToString(e.Validator.Address)
 	if err != nil {
 		panic(err)
 	}

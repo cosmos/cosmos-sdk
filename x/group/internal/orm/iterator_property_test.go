@@ -8,10 +8,10 @@ import (
 	"pgregory.net/rapid"
 
 	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/x/group/errors"
 
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	"github.com/cosmos/cosmos-sdk/x/group/errors"
 )
 
 func TestPaginationProperty(t *testing.T) {
@@ -42,7 +42,8 @@ func TestPaginationProperty(t *testing.T) {
 			}
 			dest := reconstructedTableModels[offset:end]
 			tableModelsIt := testTableModelIterator(tableModels, nil)
-			Paginate(tableModelsIt, pageRequest, &dest)
+			_, err := Paginate(tableModelsIt, pageRequest, &dest)
+			require.NoError(t, err)
 			reconstructedTableModels = append(reconstructedTableModels, dest...)
 		}
 

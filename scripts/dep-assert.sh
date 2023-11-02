@@ -9,7 +9,7 @@ CWD=$(pwd)
 find . -type f -name 'go.mod' -print0 | while IFS= read -r -d '' file
 do
   d=$(dirname "$file")
-  if [[ "$d" =~ \./simapp$|\./tests$ ]]; then
+  if [[ "$d" =~ \./simapp$|\./tests* ]]; then
     continue
   fi
 

@@ -6,6 +6,7 @@
 * Feb 07, 2022: Draft read and concept-ACKed by the Ledger team.
 * Dec 01, 2022: Remove `Object: ` prefix on Any header screen.
 * Dec 13, 2022: Sign over bytes hash when bytes length > 32.
+* Mar 27, 2023: Update `Any` value renderer to omit message header screen.
 
 ## Status
 
@@ -111,13 +112,12 @@ End of Allowed messages
 
 ### `message`
 
-* Applies to Protobuf messages whose name does not start with `Msg`
-    * For `sdk.Msg`s, please see [ADR-050](./adr-050-sign-mode-textual.md)
-    * alternatively, we can decide to add a protobuf option to denote messages that are `sdk.Msg`s.
+* Applies to all Protobuf messages that do not have a custom encoding.
 * Field names follow [sentence case](https://en.wiktionary.org/wiki/sentence_case)
-    * replace `_` with a spaces
-    * capitalize first letter of the setence
+    * replace each `_` with a space
+    * capitalize first letter of the sentence
 * Field names are ordered by their Protobuf field number
+* Screen title is the field name, and screen content is the value.
 * Nesting:
     * if a field contains a nested message, we value-render the underlying message using the template:
 
@@ -188,21 +188,31 @@ See example above with `message Vote{}`.
 > <value rendered underlying message>
 ```
 
+There is however one exception: when the underlying message is a Protobuf message that does not have a custom encoding, then the message header screen is omitted, and one level of indentation is removed.
+
+Messages that have a custom encoding, including `google.protobuf.Timestamp`, `google.protobuf.Duration`, `google.protobuf.Any`, `cosmos.base.v1beta1.Coin`, and messages that have an app-defined custom encoding, will preserve their header and indentation level.
+
 #### Examples
 
+Message header screen is stripped, one-level of indentation removed:
 ```
-type.googleapis.com/cosmos.gov.v1.Vote
-> Vote object
->> Proposal id: 4
->> Vote: cosmos1abc...def
->> Options: 2 WeightedVoteOptions
->> Options (1/2): WeightedVoteOption object
->>> Option: Yes
->>> Weight: 0.7
->> Options (2/2): WeightedVoteOption object
->>> Option: No
->>> Weight: 0.3
->> End of Options
+/cosmos.gov.v1.Vote
+> Proposal id: 4
+> Vote: cosmos1abc...def
+> Options: 2 WeightedVoteOptions
+> Options (1/2): WeightedVoteOption object
+>> Option: Yes
+>> Weight: 0.7
+> Options (2/2): WeightedVoteOption object
+>> Option: No
+>> Weight: 0.3
+> End of Options
+```
+
+Message with custom encoding:
+```
+/cosmos.base.v1beta1.Coin
+> 10uatom
 ```
 
 ### `google.protobuf.Timestamp`
@@ -309,6 +319,10 @@ We get the following encoding for the `TestData` message:
 TestData object
 > Signer: cosmos1abc
 ```
+
+### bool
+
+Boolean values are rendered as `True` or `False`.
 
 ### [ABANDONED] Custom `msg_title` instead of Msg `type_url`
 

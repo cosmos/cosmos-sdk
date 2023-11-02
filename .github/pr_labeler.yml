@@ -1,11 +1,11 @@
+"C:x/accounts":
+  - x/accounts/**/*
 "C:x/auth":
   - x/auth/**/*
 "C:x/authz":
   - x/authz/**/*
 "C:x/bank":
   - x/bank/**/*
-"C:x/capability":
-  - x/capability/**/*
 "C:x/crisis":
   - x/crisis/**/*
 "C:x/distribution":
@@ -39,15 +39,14 @@
   - x/consensus/**/*
 "C:x/circuit":
   - x/circuit/**/*
+"C:x/protocolpool":
+  - x/protocolpool/**/*
 "C:x/tx":
   - x/tx/**/*
 "C:collections":
   - collections/**/*
 "C:Cosmovisor":
   - tools/cosmovisor/**/*
-"C:Rosetta":
-  - contrib/rosetta/**/*
-  - tools/rosetta/**/*
 "C:Confix":
   - tools/confix/**/*
 "C:Hubl":
@@ -69,8 +68,6 @@
   - x/*/client/**/*
 "Type: ADR":
   - docs/architecture/**/*
-"C:container":
-  - container/**/*
 "C:Store":
   - store/**/*
 "C:orm":

@@ -6,21 +6,23 @@
 4. Add an entry to a list in the [README](./README.md) file.
 5. Create a Pull Request to propose a new ADR.
 
+## What is an ADR? 
+
+An ADR is a document to document an implementation and design that may or may not have been discussed in an RFC. While an RFC is meant to replace synchoronus communication in a distributed environment, an ADR is meant to document an already made decision. An ADR wont come with much of a communication overhead because the discussion was recorded in an RFC or a synchronous discussion. If the consensus came from a synchoronus discussion then a short excerpt should be added to the ADR to explain the goals. 
+
 ## ADR life cycle
 
-ADR creation is an **iterative** process. Instead of trying to solve all decisions in a single ADR pull request, we MUST firstly understand the problem and collect feedback through a GitHub Issue.
+ADR creation is an **iterative** process. Instead of having a high amount of communication overhead, an ADR is used when there is already a decision made and implementation details need to be added. The ADR should document what the collective consensus for the specific issue is and how to solve it. 
 
-1. Every proposal SHOULD start with a new GitHub Issue or be a result of existing Issues. The Issue should contain just a brief proposal summary.
+1. Every ADR should start with either an RFC or discussion where consensus has been met. 
 
-2. Once the motivation is validated, a GitHub Pull Request (PR) is created with a new document based on the `adr-template.md`.
+2. Once consensus is met, a GitHub Pull Request (PR) is created with a new document based on the `adr-template.md`.
 
-3. An ADR doesn't have to arrive to `main` with an _accepted_ status in a single PR. If the motivation is clear and the solution is sound, we SHOULD be able to merge it and keep a _proposed_ status. It's preferable to have an iterative approach rather than long, not merged Pull Requests.
+3. If a _proposed_ ADR is merged, then it should clearly document outstanding issues either in ADR document notes or in a GitHub Issue.
 
-4. If a _proposed_ ADR is merged, then it should clearly document outstanding issues either in ADR document notes or in a GitHub Issue.
+4. The PR SHOULD always be merged. In the case of a faulty ADR, we still prefer to  merge it with a _rejected_ status. The only time the ADR SHOULD NOT be merged is if the author abandons it.
 
-5. The PR SHOULD always be merged. In the case of a faulty ADR, we still prefer to  merge it with a _rejected_ status. The only time the ADR SHOULD NOT be merged is if the author abandons it.
-
-6. Merged ADRs SHOULD NOT be pruned.
+5. Merged ADRs SHOULD NOT be pruned.
 
 ### ADR status
 

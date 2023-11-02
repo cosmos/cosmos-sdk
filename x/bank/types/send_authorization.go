@@ -1,17 +1,17 @@
 package types
 
 import (
+	context "context"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/authz"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/authz"
 )
 
 // TODO: Revisit this once we have proper gas fee framework.
 // Ref: https://github.com/cosmos/cosmos-sdk/issues/9054
 // Ref: https://github.com/cosmos/cosmos-sdk/discussions/9072
 const gasCostPerIteration = uint64(10)
-
-var _ authz.Authorization = &SendAuthorization{}
 
 // NewSendAuthorization creates a new SendAuthorization object.
 func NewSendAuthorization(spendLimit sdk.Coins, allowed []sdk.AccAddress) *SendAuthorization {
@@ -27,7 +27,7 @@ func (a SendAuthorization) MsgTypeURL() string {
 }
 
 // Accept implements Authorization.Accept.
-func (a SendAuthorization) Accept(ctx sdk.Context, msg sdk.Msg) (authz.AcceptResponse, error) {
+func (a SendAuthorization) Accept(ctx context.Context, msg sdk.Msg) (authz.AcceptResponse, error) {
 	mSend, ok := msg.(*MsgSend)
 	if !ok {
 		return authz.AcceptResponse{}, sdkerrors.ErrInvalidType.Wrap("type mismatch")
@@ -41,8 +41,9 @@ func (a SendAuthorization) Accept(ctx sdk.Context, msg sdk.Msg) (authz.AcceptRes
 	isAddrExists := false
 	toAddr := mSend.ToAddress
 	allowedList := a.GetAllowList()
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	for _, addr := range allowedList {
-		ctx.GasMeter().ConsumeGas(gasCostPerIteration, "send authorization")
+		sdkCtx.GasMeter().ConsumeGas(gasCostPerIteration, "send authorization")
 		if addr == toAddr {
 			isAddrExists = true
 			break

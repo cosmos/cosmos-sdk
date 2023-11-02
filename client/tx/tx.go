@@ -21,15 +21,18 @@ import (
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
-// GenerateOrBroadcastTxCLI will either generate and print and unsigned transaction
+// GenerateOrBroadcastTxCLI will either generate and print an unsigned transaction
 // or sign it and broadcast it returning an error upon failure.
 func GenerateOrBroadcastTxCLI(clientCtx client.Context, flagSet *pflag.FlagSet, msgs ...sdk.Msg) error {
-	txf := NewFactoryCLI(clientCtx, flagSet)
+	txf, err := NewFactoryCLI(clientCtx, flagSet)
+	if err != nil {
+		return err
+	}
 
 	return GenerateOrBroadcastTxWithFactory(clientCtx, txf, msgs...)
 }
 
-// GenerateOrBroadcastTxWithFactory will either generate and print and unsigned transaction
+// GenerateOrBroadcastTxWithFactory will either generate and print an unsigned transaction
 // or sign it and broadcast it returning an error upon failure.
 func GenerateOrBroadcastTxWithFactory(clientCtx client.Context, txf Factory, msgs ...sdk.Msg) error {
 	// Validate all msgs before generating or broadcasting the tx.
@@ -37,7 +40,12 @@ func GenerateOrBroadcastTxWithFactory(clientCtx client.Context, txf Factory, msg
 	// Right now, we're factorizing that call inside this function.
 	// ref: https://github.com/cosmos/cosmos-sdk/pull/9236#discussion_r623803504
 	for _, msg := range msgs {
-		if err := msg.ValidateBasic(); err != nil {
+		m, ok := msg.(sdk.HasValidateBasic)
+		if !ok {
+			continue
+		}
+
+		if err := m.ValidateBasic(); err != nil {
 			return err
 		}
 	}
@@ -69,6 +77,10 @@ func BroadcastTx(clientCtx client.Context, txf Factory, msgs ...sdk.Msg) error {
 	}
 
 	if txf.SimulateAndExecute() || clientCtx.Simulate {
+		if clientCtx.Offline {
+			return errors.New("cannot estimate gas in offline mode")
+		}
+
 		_, adjusted, err := CalculateGas(clientCtx, txf, msgs...)
 		if err != nil {
 			return err
@@ -88,9 +100,14 @@ func BroadcastTx(clientCtx client.Context, txf Factory, msgs ...sdk.Msg) error {
 	}
 
 	if !clientCtx.SkipConfirm {
-		txBytes, err := clientCtx.TxConfig.TxJSONEncoder()(tx.GetTx())
+		encoder := txf.txConfig.TxJSONEncoder()
+		if encoder == nil {
+			return errors.New("failed to encode transaction: tx json encoder is nil")
+		}
+
+		txBytes, err := encoder(tx.GetTx())
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to encode transaction: %w", err)
 		}
 
 		if err := clientCtx.PrintRaw(json.RawMessage(txBytes)); err != nil {
@@ -100,18 +117,16 @@ func BroadcastTx(clientCtx client.Context, txf Factory, msgs ...sdk.Msg) error {
 		buf := bufio.NewReader(os.Stdin)
 		ok, err := input.GetConfirmation("confirm transaction before signing and broadcasting", buf, os.Stderr)
 		if err != nil {
-			_, _ = fmt.Fprintf(os.Stderr, "error: %v\ncancelled transaction\n", err)
+			_, _ = fmt.Fprintf(os.Stderr, "error: %v\ncanceled transaction\n", err)
 			return err
 		}
 		if !ok {
-			_, _ = fmt.Fprintln(os.Stderr, "cancelled transaction")
+			_, _ = fmt.Fprintln(os.Stderr, "canceled transaction")
 			return nil
 		}
 	}
 
-	// When Textual is wired up, the context argument should be retrieved from the client context.
-	err = Sign(context.TODO(), txf, clientCtx.GetFromName(), tx, true)
-	if err != nil {
+	if err = Sign(clientCtx.CmdContext, txf, clientCtx.FromName, tx, true); err != nil {
 		return err
 	}
 
@@ -161,7 +176,8 @@ func SignWithPrivKey(
 	var sigV2 signing.SignatureV2
 
 	// Generate the bytes to be signed.
-	signBytes, err := authsigning.GetSignBytesWithContext(txConfig.SignModeHandler(), ctx, signMode, signerData, txBuilder.GetTx())
+	signBytes, err := authsigning.GetSignBytesAdapter(
+		ctx, txConfig.SignModeHandler(), signMode, signerData, txBuilder.GetTx())
 	if err != nil {
 		return sigV2, err
 	}
@@ -237,10 +253,14 @@ func Sign(ctx context.Context, txf Factory, name string, txBuilder client.TxBuil
 		return errors.New("keybase must be set prior to signing a transaction")
 	}
 
+	var err error
 	signMode := txf.signMode
 	if signMode == signing.SignMode_SIGN_MODE_UNSPECIFIED {
 		// use the SignModeHandler's default mode if unspecified
-		signMode = txf.txConfig.SignModeHandler().DefaultMode()
+		signMode, err = authsigning.APISignModeToInternal(txf.txConfig.SignModeHandler().DefaultMode())
+		if err != nil {
+			return err
+		}
 	}
 
 	k, err := txf.keybase.Key(name)
@@ -302,8 +322,7 @@ func Sign(ctx context.Context, txf Factory, name string, txBuilder client.TxBuil
 		return err
 	}
 
-	// Generate the bytes to be signed.
-	bytesToSign, err := authsigning.GetSignBytesWithContext(txf.txConfig.SignModeHandler(), ctx, signMode, signerData, txBuilder.GetTx())
+	bytesToSign, err := authsigning.GetSignBytesAdapter(ctx, txf.txConfig.SignModeHandler(), signMode, signerData, txBuilder.GetTx())
 	if err != nil {
 		return err
 	}
@@ -374,13 +393,6 @@ func makeAuxSignerData(clientCtx client.Context, f Factory, msgs ...sdk.Msg) (tx
 	err = b.SetMsgs(msgs...)
 	if err != nil {
 		return tx.AuxSignerData{}, err
-	}
-
-	if f.tip != nil {
-		if _, err := sdk.AccAddressFromBech32(f.tip.Tipper); err != nil {
-			return tx.AuxSignerData{}, sdkerrors.ErrInvalidAddress.Wrap("tipper must be a bech32 address")
-		}
-		b.SetTip(f.tip)
 	}
 
 	err = b.SetSignMode(f.SignMode())

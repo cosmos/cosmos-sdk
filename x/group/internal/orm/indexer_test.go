@@ -5,14 +5,13 @@ import (
 	"fmt"
 	"testing"
 
-	"cosmossdk.io/store/prefix"
-	storetypes "cosmossdk.io/store/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	errorsmod "cosmossdk.io/errors"
-
-	"github.com/cosmos/cosmos-sdk/x/group/errors"
+	"cosmossdk.io/store/prefix"
+	storetypes "cosmossdk.io/store/types"
+	"cosmossdk.io/x/group/errors"
 )
 
 func TestNewIndexer(t *testing.T) {

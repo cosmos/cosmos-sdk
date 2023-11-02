@@ -68,7 +68,7 @@ func TestRandomFees(t *testing.T) {
 		tt := tt
 
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := simulation.RandomFees(r, sdk.Context{}, tt.spendableCoins)
+			got, err := simulation.RandomFees(r, tt.spendableCoins)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("RandomFees() error = %v, wantErr %v", err, tt.wantErr)
 				return

@@ -14,8 +14,19 @@ type AppModuleWithAllExtensions interface {
 	module.HasGenesis
 	module.HasInvariants
 	module.HasConsensusVersion
-	module.BeginBlockAppModule
-	module.EndBlockAppModule
+	module.HasABCIEndBlock
+	module.HasName
+}
+
+// mocks to be used in module tests.
+type AppModuleWithAllExtensionsABCI interface {
+	module.AppModule
+	module.HasServices
+	module.HasABCIGenesis
+	module.HasInvariants
+	module.HasConsensusVersion
+	module.HasABCIEndBlock
+	module.HasName
 }
 
 // CoreAppModule is solely here for the purpose of generating
@@ -25,4 +36,11 @@ type CoreAppModule interface {
 	appmodule.HasGenesis
 	appmodule.HasBeginBlocker
 	appmodule.HasEndBlocker
+	appmodule.HasPrecommit
+	appmodule.HasPrepareCheckState
+}
+
+type CoreAppModuleWithPreBlock interface {
+	CoreAppModule
+	appmodule.HasPreBlocker
 }

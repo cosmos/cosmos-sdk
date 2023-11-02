@@ -3,6 +3,7 @@ package snapshots
 import (
 	"crypto/sha256"
 	"encoding/binary"
+	"hash"
 	"io"
 	"math"
 	"os"
@@ -14,8 +15,8 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 
 	"cosmossdk.io/errors"
-	"cosmossdk.io/store/snapshots/types"
-	storetypes "cosmossdk.io/store/types"
+	"cosmossdk.io/store/v2"
+	"cosmossdk.io/store/v2/snapshots/types"
 )
 
 const (
@@ -35,7 +36,7 @@ type Store struct {
 // NewStore creates a new snapshot store.
 func NewStore(db db.DB, dir string) (*Store, error) {
 	if dir == "" {
-		return nil, errors.Wrap(storetypes.ErrLogic, "snapshot directory not given")
+		return nil, errors.Wrap(store.ErrLogic, "snapshot directory not given")
 	}
 	err := os.MkdirAll(dir, 0o755)
 	if err != nil {
@@ -55,7 +56,7 @@ func (s *Store) Delete(height uint64, format uint32) error {
 	saving := s.saving[height]
 	s.mtx.Unlock()
 	if saving {
-		return errors.Wrapf(storetypes.ErrConflict,
+		return errors.Wrapf(store.ErrConflict,
 			"snapshot for height %v format %v is currently being saved", height, format)
 	}
 	err := s.db.DeleteSync(encodeKey(height, format))
@@ -165,8 +166,8 @@ func (s *Store) Load(height uint64, format uint32) (*types.Snapshot, <-chan io.R
 
 // LoadChunk loads a chunk from disk, or returns nil if it does not exist. The caller must call
 // Close() on it when done.
-func (s *Store) LoadChunk(height uint64, format uint32, chunk uint32) (io.ReadCloser, error) {
-	path := s.pathChunk(height, format, chunk)
+func (s *Store) LoadChunk(height uint64, format, chunk uint32) (io.ReadCloser, error) {
+	path := s.PathChunk(height, format, chunk)
 	file, err := os.Open(path)
 	if os.IsNotExist(err) {
 		return nil, nil
@@ -175,8 +176,8 @@ func (s *Store) LoadChunk(height uint64, format uint32, chunk uint32) (io.ReadCl
 }
 
 // loadChunkFile loads a chunk from disk, and errors if it does not exist.
-func (s *Store) loadChunkFile(height uint64, format uint32, chunk uint32) (io.ReadCloser, error) {
-	path := s.pathChunk(height, format, chunk)
+func (s *Store) loadChunkFile(height uint64, format, chunk uint32) (io.ReadCloser, error) {
+	path := s.PathChunk(height, format, chunk)
 	return os.Open(path)
 }
 
@@ -226,7 +227,7 @@ func (s *Store) Save(
 ) (*types.Snapshot, error) {
 	defer DrainChunks(chunks)
 	if height == 0 {
-		return nil, errors.Wrap(storetypes.ErrLogic, "snapshot height cannot be 0")
+		return nil, errors.Wrap(store.ErrLogic, "snapshot height cannot be 0")
 	}
 
 	s.mtx.Lock()
@@ -234,7 +235,7 @@ func (s *Store) Save(
 	s.saving[height] = true
 	s.mtx.Unlock()
 	if saving {
-		return nil, errors.Wrapf(storetypes.ErrConflict,
+		return nil, errors.Wrapf(store.ErrConflict,
 			"a snapshot for height %v is already being saved", height)
 	}
 	defer func() {
@@ -248,7 +249,7 @@ func (s *Store) Save(
 		return nil, err
 	}
 	if exists {
-		return nil, errors.Wrapf(storetypes.ErrConflict,
+		return nil, errors.Wrapf(store.ErrConflict,
 			"snapshot already exists for height %v format %v", height, format)
 	}
 
@@ -256,42 +257,68 @@ func (s *Store) Save(
 		Height: height,
 		Format: format,
 	}
+
+	dirCreated := false
 	index := uint32(0)
 	snapshotHasher := sha256.New()
 	chunkHasher := sha256.New()
 	for chunkBody := range chunks {
-		defer chunkBody.Close() //nolint:staticcheck
-		dir := s.pathSnapshot(height, format)
-		err = os.MkdirAll(dir, 0o755)
-		if err != nil {
-			return nil, errors.Wrapf(err, "failed to create snapshot directory %q", dir)
-		}
-		path := s.pathChunk(height, format, index)
-		file, err := os.Create(path)
-		if err != nil {
-			return nil, errors.Wrapf(err, "failed to create snapshot chunk file %q", path)
-		}
-		defer file.Close() //nolint:staticcheck
+		// Only create the snapshot directory on encountering the first chunk.
+		// If the directory disappears during chunk saving,
+		// the whole operation will fail anyway.
+		if !dirCreated {
+			dir := s.pathSnapshot(height, format)
+			if err := os.MkdirAll(dir, 0o755); err != nil {
+				return nil, errors.Wrapf(err, "failed to create snapshot directory %q", dir)
+			}
 
-		chunkHasher.Reset()
-		_, err = io.Copy(io.MultiWriter(file, chunkHasher, snapshotHasher), chunkBody)
-		if err != nil {
-			return nil, errors.Wrapf(err, "failed to generate snapshot chunk %v", index)
+			dirCreated = true
 		}
-		err = file.Close()
-		if err != nil {
-			return nil, errors.Wrapf(err, "failed to close snapshot chunk %v", index)
+
+		if err := s.saveChunk(chunkBody, index, snapshot, chunkHasher, snapshotHasher); err != nil {
+			return nil, err
 		}
-		err = chunkBody.Close()
-		if err != nil {
-			return nil, errors.Wrapf(err, "failed to close snapshot chunk %v", index)
-		}
-		snapshot.Metadata.ChunkHashes = append(snapshot.Metadata.ChunkHashes, chunkHasher.Sum(nil))
 		index++
 	}
 	snapshot.Chunks = index
 	snapshot.Hash = snapshotHasher.Sum(nil)
 	return snapshot, s.saveSnapshot(snapshot)
+}
+
+// saveChunk saves the given chunkBody with the given index to its appropriate path on disk.
+// The hash of the chunk is appended to the snapshot's metadata,
+// and the overall snapshot hash is updated with the chunk content too.
+func (s *Store) saveChunk(chunkBody io.ReadCloser, index uint32, snapshot *types.Snapshot, chunkHasher, snapshotHasher hash.Hash) error {
+	defer chunkBody.Close()
+
+	path := s.PathChunk(snapshot.Height, snapshot.Format, index)
+	chunkFile, err := os.Create(path)
+	if err != nil {
+		return errors.Wrapf(err, "failed to create snapshot chunk file %q", path)
+	}
+	defer chunkFile.Close()
+
+	chunkHasher.Reset()
+	if _, err := io.Copy(io.MultiWriter(chunkFile, chunkHasher, snapshotHasher), chunkBody); err != nil {
+		return errors.Wrapf(err, "failed to generate snapshot chunk %d", index)
+	}
+
+	if err := chunkFile.Close(); err != nil {
+		return errors.Wrapf(err, "failed to close snapshot chunk file %d", index)
+	}
+
+	if err := chunkBody.Close(); err != nil {
+		return errors.Wrapf(err, "failed to close snapshot chunk body %d", index)
+	}
+
+	snapshot.Metadata.ChunkHashes = append(snapshot.Metadata.ChunkHashes, chunkHasher.Sum(nil))
+	return nil
+}
+
+// saveChunkContent save the chunk to disk
+func (s *Store) saveChunkContent(chunk []byte, index uint32, snapshot *types.Snapshot) error {
+	path := s.PathChunk(snapshot.Height, snapshot.Format, index)
+	return os.WriteFile(path, chunk, 0o600)
 }
 
 // saveSnapshot saves snapshot metadata to the database.
@@ -314,19 +341,20 @@ func (s *Store) pathSnapshot(height uint64, format uint32) string {
 	return filepath.Join(s.pathHeight(height), strconv.FormatUint(uint64(format), 10))
 }
 
-// pathChunk generates a snapshot chunk path.
-func (s *Store) pathChunk(height uint64, format uint32, chunk uint32) string {
+// PathChunk generates a snapshot chunk path.
+func (s *Store) PathChunk(height uint64, format, chunk uint32) string {
 	return filepath.Join(s.pathSnapshot(height, format), strconv.FormatUint(uint64(chunk), 10))
 }
 
 // decodeKey decodes a snapshot key.
 func decodeKey(k []byte) (uint64, uint32, error) {
 	if len(k) != 13 {
-		return 0, 0, errors.Wrapf(storetypes.ErrLogic, "invalid snapshot key with length %v", len(k))
+		return 0, 0, errors.Wrapf(store.ErrLogic, "invalid snapshot key with length %v", len(k))
 	}
 	if k[0] != keyPrefixSnapshot {
-		return 0, 0, errors.Wrapf(storetypes.ErrLogic, "invalid snapshot key prefix %x", k[0])
+		return 0, 0, errors.Wrapf(store.ErrLogic, "invalid snapshot key prefix %x", k[0])
 	}
+
 	height := binary.BigEndian.Uint64(k[1:9])
 	format := binary.BigEndian.Uint32(k[9:13])
 	return height, format, nil

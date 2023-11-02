@@ -22,9 +22,3 @@ func FuzzLegacyNewDecFromStr(f *testing.F) {
 		}
 	})
 }
-
-func TestDecNegativePrecision(t *testing.T) {
-	t.Skip("https://github.com/cosmos/cosmos-sdk/issues/14004 is not yet addressed")
-
-	LegacyNewDecWithPrec(10, -1)
-}

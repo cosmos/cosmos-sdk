@@ -13,13 +13,10 @@ import (
 // This is used for efficient logical decoding of keys.
 func SkipPrefix(r *bytes.Reader, prefix []byte) error {
 	n := len(prefix)
-	if n > 0 {
-		// we skip checking the prefix for performance reasons because we assume
-		// that it was checked by the caller
-		_, err := r.Seek(int64(n), io.SeekCurrent)
-		return err
-	}
-	return nil
+	// we skip checking the prefix for performance reasons because we assume
+	// that it was checked by the caller
+	_, err := r.Seek(int64(n), io.SeekCurrent)
+	return err
 }
 
 // AppendVarUInt32 creates a new key prefix, by encoding and appending a
@@ -41,10 +38,9 @@ func ValuesOf(values ...interface{}) []protoreflect.Value {
 		// this allows us to use imported messages, such as timestamppb.Timestamp
 		// in iterators.
 		value := values[i]
-		switch value.(type) {
-		case protoreflect.ProtoMessage:
+		if v, ok := value.(protoreflect.ProtoMessage); ok {
 			if !reflect.ValueOf(value).IsNil() {
-				value = value.(protoreflect.ProtoMessage).ProtoReflect()
+				value = v.ProtoReflect()
 			} else {
 				value = nil
 			}

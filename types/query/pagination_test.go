@@ -5,11 +5,17 @@ import (
 	"fmt"
 	"testing"
 
-	"cosmossdk.io/math"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/suite"
 
+	"cosmossdk.io/depinject"
+	"cosmossdk.io/log"
+	"cosmossdk.io/math"
 	"cosmossdk.io/store/prefix"
+	_ "cosmossdk.io/x/bank"
+	bankkeeper "cosmossdk.io/x/bank/keeper"
+	"cosmossdk.io/x/bank/testutil"
+	"cosmossdk.io/x/bank/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -23,12 +29,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/query"
 	_ "github.com/cosmos/cosmos-sdk/x/auth"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	_ "github.com/cosmos/cosmos-sdk/x/bank"
-	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
-	"github.com/cosmos/cosmos-sdk/x/bank/types"
 	_ "github.com/cosmos/cosmos-sdk/x/consensus"
-	_ "github.com/cosmos/cosmos-sdk/x/params"
 )
 
 const (
@@ -65,18 +66,20 @@ func (s *paginationTestSuite) SetupTest() {
 	)
 
 	app, err := testutilsims.Setup(
-		configurator.NewAppConfig(
-			configurator.AuthModule(),
-			configurator.BankModule(),
-			configurator.ParamsModule(),
-			configurator.ConsensusModule(),
-			configurator.OmitInitGenesis(),
+		depinject.Configs(
+			configurator.NewAppConfig(
+				configurator.AuthModule(),
+				configurator.BankModule(),
+				configurator.ConsensusModule(),
+				configurator.OmitInitGenesis(),
+			),
+			depinject.Supply(log.NewNopLogger()),
 		),
 		&bankKeeper, &accountKeeper, &reg, &cdc)
 
 	s.NoError(err)
 
-	ctx := app.BaseApp.NewContext(false, cmtproto.Header{Height: 1})
+	ctx := app.BaseApp.NewContextLegacy(false, cmtproto.Header{Height: 1})
 
 	s.ctx, s.bankKeeper, s.accountKeeper, s.cdc, s.app, s.interfaceReg = ctx, bankKeeper, accountKeeper, cdc, app, reg
 }
@@ -116,7 +119,7 @@ func (s *paginationTestSuite) TestPagination() {
 	addr1 := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
 	acc1 := s.accountKeeper.NewAccountWithAddress(s.ctx, addr1)
 	s.accountKeeper.SetAccount(s.ctx, acc1)
-	s.Require().NoError(testutil.FundAccount(s.bankKeeper, s.ctx, addr1, balances))
+	s.Require().NoError(testutil.FundAccount(s.ctx, s.bankKeeper, addr1, balances))
 
 	s.T().Log("verify empty page request results a max of defaultLimit records and counts total records")
 	pageReq := &query.PageRequest{}
@@ -224,14 +227,14 @@ func (s *paginationTestSuite) TestReversePagination() {
 	addr1 := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
 	acc1 := s.accountKeeper.NewAccountWithAddress(s.ctx, addr1)
 	s.accountKeeper.SetAccount(s.ctx, acc1)
-	s.Require().NoError(testutil.FundAccount(s.bankKeeper, s.ctx, addr1, balances))
+	s.Require().NoError(testutil.FundAccount(s.ctx, s.bankKeeper, addr1, balances))
 
 	s.T().Log("verify paginate with custom limit and countTotal, Reverse false")
 	pageReq := &query.PageRequest{Limit: 2, CountTotal: true, Reverse: true, Key: nil}
 	request := types.NewQueryAllBalancesRequest(addr1, pageReq, false)
 	res1, err := queryClient.AllBalances(gocontext.Background(), request)
 	s.Require().NoError(err)
-	s.Require().Equal(res1.Balances.Len(), 2)
+	s.Require().Equal(2, res1.Balances.Len())
 	s.Require().NotNil(res1.Pagination.NextKey)
 
 	s.T().Log("verify paginate with custom limit and countTotal, Reverse false")
@@ -343,7 +346,7 @@ func (s *paginationTestSuite) TestPaginate() {
 	addr1 := sdk.AccAddress([]byte("addr1"))
 	acc1 := s.accountKeeper.NewAccountWithAddress(s.ctx, addr1)
 	s.accountKeeper.SetAccount(s.ctx, acc1)
-	err := testutil.FundAccount(s.bankKeeper, s.ctx, addr1, balances)
+	err := testutil.FundAccount(s.ctx, s.bankKeeper, addr1, balances)
 	if err != nil { // should return no error
 		fmt.Println(err)
 	}
@@ -354,7 +357,7 @@ func (s *paginationTestSuite) TestPaginate() {
 	authStore := s.ctx.KVStore(s.app.UnsafeFindStoreKey(types.StoreKey))
 	balancesStore := prefix.NewStore(authStore, types.BalancesPrefix)
 	accountStore := prefix.NewStore(balancesStore, address.MustLengthPrefix(addr1))
-	pageRes, err := query.Paginate(accountStore, request.Pagination, func(key []byte, value []byte) error {
+	pageRes, err := query.Paginate(accountStore, request.Pagination, func(key, value []byte) error {
 		var amount math.Int
 		err := amount.Unmarshal(value)
 		if err != nil {

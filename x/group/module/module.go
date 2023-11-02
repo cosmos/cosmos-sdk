@@ -5,15 +5,18 @@ import (
 	"encoding/json"
 	"fmt"
 
-	abci "github.com/cometbft/cometbft/abci/types"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 
 	modulev1 "cosmossdk.io/api/cosmos/group/module/v1"
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
-
 	store "cosmossdk.io/store/types"
+	"cosmossdk.io/x/group"
+	"cosmossdk.io/x/group/client/cli"
+	"cosmossdk.io/x/group/keeper"
+	"cosmossdk.io/x/group/simulation"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
@@ -22,19 +25,20 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/cosmos/cosmos-sdk/x/group"
-	"github.com/cosmos/cosmos-sdk/x/group/client/cli"
-	"github.com/cosmos/cosmos-sdk/x/group/keeper"
-	"github.com/cosmos/cosmos-sdk/x/group/simulation"
 )
 
 // ConsensusVersion defines the current x/group module consensus version.
 const ConsensusVersion = 2
 
 var (
-	_ module.EndBlockAppModule   = AppModule{}
-	_ module.AppModuleBasic      = AppModuleBasic{}
+	_ module.AppModuleBasic      = AppModule{}
 	_ module.AppModuleSimulation = AppModule{}
+	_ module.HasGenesis          = AppModule{}
+	_ module.HasServices         = AppModule{}
+	_ module.HasInvariants       = AppModule{}
+
+	_ appmodule.AppModule     = AppModule{}
+	_ appmodule.HasEndBlocker = AppModule{}
 )
 
 type AppModule struct {
@@ -48,15 +52,13 @@ type AppModule struct {
 // NewAppModule creates a new AppModule object
 func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, ak group.AccountKeeper, bk group.BankKeeper, registry cdctypes.InterfaceRegistry) AppModule {
 	return AppModule{
-		AppModuleBasic: AppModuleBasic{cdc: cdc},
+		AppModuleBasic: AppModuleBasic{cdc: cdc, ac: ak.AddressCodec()},
 		keeper:         keeper,
 		bankKeeper:     bk,
 		accKeeper:      ak,
 		registry:       registry,
 	}
 }
-
-var _ appmodule.AppModule = AppModule{}
 
 // IsOnePerModuleType implements the depinject.OnePerModuleType interface.
 func (am AppModule) IsOnePerModuleType() {}
@@ -66,6 +68,7 @@ func (am AppModule) IsAppModule() {}
 
 type AppModuleBasic struct {
 	cdc codec.Codec
+	ac  address.Codec
 }
 
 // Name returns the group module's name.
@@ -88,14 +91,9 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config sdkclient.TxEn
 	return data.Validate()
 }
 
-// GetQueryCmd returns the cli query commands for the group module
-func (a AppModuleBasic) GetQueryCmd() *cobra.Command {
-	return cli.QueryCmd(a.Name())
-}
-
 // GetTxCmd returns the transaction commands for the group module
 func (a AppModuleBasic) GetTxCmd() *cobra.Command {
-	return cli.TxCmd(a.Name())
+	return cli.TxCmd(a.Name(), a.ac)
 }
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the group module.
@@ -115,30 +113,20 @@ func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	group.RegisterLegacyAminoCodec(cdc)
 }
 
-// Name returns the group module's name.
-func (AppModule) Name() string {
-	return group.ModuleName
-}
-
 // RegisterInvariants does nothing, there are no invariants to enforce
 func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
 	keeper.RegisterInvariants(ir, am.keeper)
 }
 
-func (am AppModule) NewHandler() sdk.Handler {
-	return nil
-}
-
 // InitGenesis performs genesis initialization for the group module. It returns
 // no validator updates.
-func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.RawMessage) []abci.ValidatorUpdate {
+func (am AppModule) InitGenesis(ctx context.Context, cdc codec.JSONCodec, data json.RawMessage) {
 	am.keeper.InitGenesis(ctx, cdc, data)
-	return []abci.ValidatorUpdate{}
 }
 
 // ExportGenesis returns the exported genesis state as raw bytes for the group
 // module.
-func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.RawMessage {
+func (am AppModule) ExportGenesis(ctx context.Context, cdc codec.JSONCodec) json.RawMessage {
 	gs := am.keeper.ExportGenesis(ctx, cdc)
 	return cdc.MustMarshalJSON(gs)
 }
@@ -159,9 +147,9 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
 
 // EndBlock implements the group module's EndBlock.
-func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
-	EndBlocker(ctx, am.keeper)
-	return []abci.ValidatorUpdate{}
+func (am AppModule) EndBlock(ctx context.Context) error {
+	c := sdk.UnwrapSDKContext(ctx)
+	return EndBlocker(c, am.keeper)
 }
 
 // ____________________________________________________________________________
@@ -182,7 +170,7 @@ func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
 func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
 	return simulation.WeightedOperations(
 		am.registry,
-		simState.AppParams, simState.Cdc,
+		simState.AppParams, simState.Cdc, simState.TxConfig,
 		am.accKeeper, am.bankKeeper, am.keeper, am.cdc,
 	)
 }
@@ -207,7 +195,7 @@ type GroupInputs struct {
 	AccountKeeper    group.AccountKeeper
 	BankKeeper       group.BankKeeper
 	Registry         cdctypes.InterfaceRegistry
-	MsgServiceRouter *baseapp.MsgServiceRouter
+	MsgServiceRouter baseapp.MessageRouter
 }
 
 type GroupOutputs struct {

@@ -2,12 +2,12 @@ package keeper_test
 
 import (
 	"testing"
+	"time"
 
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	cmttime "github.com/cometbft/cometbft/types/time"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 
+	"cosmossdk.io/core/header"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/nft"
 	"cosmossdk.io/x/nft/keeper"
@@ -15,6 +15,8 @@ import (
 	nfttestutil "cosmossdk.io/x/nft/testutil"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/codec/address"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -36,10 +38,12 @@ const (
 type TestSuite struct {
 	suite.Suite
 
-	ctx         sdk.Context
-	addrs       []sdk.AccAddress
-	queryClient nft.QueryClient
-	nftKeeper   keeper.Keeper
+	ctx           sdk.Context
+	addrs         []sdk.AccAddress
+	encodedAddrs  []string
+	queryClient   nft.QueryClient
+	nftKeeper     keeper.Keeper
+	accountKeeper *nfttestutil.MockAccountKeeper
 
 	encCfg moduletestutil.TestEncodingConfig
 }
@@ -50,16 +54,26 @@ func (s *TestSuite) SetupTest() {
 	s.encCfg = moduletestutil.MakeTestEncodingConfig(module.AppModuleBasic{})
 
 	key := storetypes.NewKVStoreKey(nft.StoreKey)
+	storeService := runtime.NewKVStoreService(key)
 	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
-	ctx := testCtx.Ctx.WithBlockHeader(cmtproto.Header{Time: cmttime.Now()})
+	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now().Round(0).UTC()})
 
 	// gomock initializations
 	ctrl := gomock.NewController(s.T())
 	accountKeeper := nfttestutil.NewMockAccountKeeper(ctrl)
 	bankKeeper := nfttestutil.NewMockBankKeeper(ctrl)
 	accountKeeper.EXPECT().GetModuleAddress("nft").Return(s.addrs[0]).AnyTimes()
+	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
 
-	nftKeeper := keeper.NewKeeper(key, s.encCfg.Codec, accountKeeper, bankKeeper)
+	for _, addr := range s.addrs {
+		st, err := accountKeeper.AddressCodec().BytesToString(addr.Bytes())
+		s.Require().NoError(err)
+		s.encodedAddrs = append(s.encodedAddrs, st)
+	}
+
+	s.accountKeeper = accountKeeper
+
+	nftKeeper := keeper.NewKeeper(storeService, s.encCfg.Codec, accountKeeper, bankKeeper)
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, s.encCfg.InterfaceRegistry)
 	nft.RegisterQueryServer(queryHelper, nftKeeper)
 
@@ -341,7 +355,7 @@ func (s *TestSuite) TestExportGenesis() {
 	expGenesis := &nft.GenesisState{
 		Classes: []*nft.Class{&class},
 		Entries: []*nft.Entry{{
-			Owner: s.addrs[0].String(),
+			Owner: s.encodedAddrs[0],
 			Nfts:  []*nft.NFT{&expNFT},
 		}},
 	}
@@ -366,7 +380,7 @@ func (s *TestSuite) TestInitGenesis() {
 	expGenesis := &nft.GenesisState{
 		Classes: []*nft.Class{&expClass},
 		Entries: []*nft.Entry{{
-			Owner: s.addrs[0].String(),
+			Owner: s.encodedAddrs[0],
 			Nfts:  []*nft.NFT{&expNFT},
 		}},
 	}

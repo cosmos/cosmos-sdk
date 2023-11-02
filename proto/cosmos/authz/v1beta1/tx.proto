@@ -9,7 +9,7 @@ import "cosmos/authz/v1beta1/authz.proto";
 import "cosmos/msg/v1/msg.proto";
 import "amino/amino.proto";
 
-option go_package                      = "github.com/cosmos/cosmos-sdk/x/authz";
+option go_package                      = "cosmossdk.io/x/authz";
 option (gogoproto.goproto_getters_all) = false;
 
 // Msg defines the authz Msg service.
@@ -44,10 +44,8 @@ message MsgGrant {
   cosmos.authz.v1beta1.Grant grant = 3 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 }
 
-// MsgExecResponse defines the Msg/MsgExecResponse response type.
-message MsgExecResponse {
-  repeated bytes results = 1;
-}
+// MsgGrantResponse defines the Msg/MsgGrant response type.
+message MsgGrantResponse {}
 
 // MsgExec attempts to execute the provided messages using
 // authorizations granted to the grantee. Each message should have only
@@ -63,8 +61,10 @@ message MsgExec {
   repeated google.protobuf.Any msgs = 2 [(cosmos_proto.accepts_interface) = "cosmos.base.v1beta1.Msg"];
 }
 
-// MsgGrantResponse defines the Msg/MsgGrant response type.
-message MsgGrantResponse {}
+// MsgExecResponse defines the Msg/MsgExecResponse response type.
+message MsgExecResponse {
+  repeated bytes results = 1;
+}
 
 // MsgRevoke revokes any authorization with the provided sdk.Msg type on the
 // granter's account with that has been granted to the grantee.

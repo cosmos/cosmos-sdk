@@ -11,7 +11,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 )
 
@@ -19,7 +18,6 @@ const (
 	flagMultisig        = "multisig"
 	flagOverwrite       = "overwrite"
 	flagSigOnly         = "signature-only"
-	flagAmino           = "amino"
 	flagNoAutoIncrement = "no-auto-increment"
 	flagAppend          = "append"
 )
@@ -60,8 +58,6 @@ account key. It implies --signature-only.
 
 	flags.AddTxFlagsToCmd(cmd)
 
-	cmd.MarkFlagRequired(flags.FlagFrom)
-
 	return cmd
 }
 
@@ -71,7 +67,10 @@ func makeSignBatchCmd() func(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
-		txFactory := tx.NewFactoryCLI(clientCtx, cmd.Flags())
+		txFactory, err := tx.NewFactoryCLI(clientCtx, cmd.Flags())
+		if err != nil {
+			return err
+		}
 		txCfg := clientCtx.TxConfig
 		printSignatureOnly, _ := cmd.Flags().GetBool(flagSigOnly)
 
@@ -136,7 +135,10 @@ func makeSignBatchCmd() func(cmd *cobra.Command, args []string) error {
 				msgs = append(msgs, unsignedStdTx.GetMsgs()...)
 			}
 			// set the new appened msgs into builder
-			txBuilder.SetMsgs(msgs...)
+			err = txBuilder.SetMsgs(msgs...)
+			if err != nil {
+				return err
+			}
 
 			// set the memo,fees,feeGranter,feePayer from cmd flags
 			txBuilder.SetMemo(txFactory.Memo())
@@ -226,7 +228,7 @@ func multisigSign(clientCtx client.Context, txBuilder client.TxBuilder, txFactor
 		txFactory,
 		clientCtx,
 		multisigAddr,
-		clientCtx.GetFromName(),
+		clientCtx.FromName,
 		txBuilder,
 		clientCtx.Offline,
 		true,
@@ -281,10 +283,7 @@ be generated via the 'multisign' command.
 	cmd.Flags().Bool(flagOverwrite, false, "Overwrite existing signatures with a new one. If disabled, new signature will be appended")
 	cmd.Flags().Bool(flagSigOnly, false, "Print only the signatures")
 	cmd.Flags().String(flags.FlagOutputDocument, "", "The document will be written to the given file instead of STDOUT")
-	cmd.Flags().Bool(flagAmino, false, "Generate Amino encoded JSON suitable for submiting to the txs REST endpoint")
 	flags.AddTxFlagsToCmd(cmd)
-
-	cmd.MarkFlagRequired(flags.FlagFrom)
 
 	return cmd
 }
@@ -293,8 +292,14 @@ func preSignCmd(cmd *cobra.Command, _ []string) {
 	// Conditionally mark the account and sequence numbers required as no RPC
 	// query will be done.
 	if offline, _ := cmd.Flags().GetBool(flags.FlagOffline); offline {
-		cmd.MarkFlagRequired(flags.FlagAccountNumber)
-		cmd.MarkFlagRequired(flags.FlagSequence)
+		err := cmd.MarkFlagRequired(flags.FlagAccountNumber)
+		if err != nil {
+			panic(err)
+		}
+		err = cmd.MarkFlagRequired(flags.FlagSequence)
+		if err != nil {
+			panic(err)
+		}
 	}
 }
 
@@ -390,18 +395,8 @@ func signTx(cmd *cobra.Command, clientCtx client.Context, txF tx.Factory, newTx 
 		}
 		printSignatureOnly = true
 	} else {
-		err = authclient.SignTx(txF, clientCtx, clientCtx.GetFromName(), txBuilder, clientCtx.Offline, overwrite)
+		err = authclient.SignTx(txF, clientCtx, clientCtx.FromName, txBuilder, clientCtx.Offline, overwrite)
 	}
-	if err != nil {
-		return err
-	}
-
-	aminoJSON, err := f.GetBool(flagAmino)
-	if err != nil {
-		return err
-	}
-
-	bMode, err := f.GetString(flags.FlagBroadcastMode)
 	if err != nil {
 		return err
 	}
@@ -416,24 +411,9 @@ func signTx(cmd *cobra.Command, clientCtx client.Context, txF tx.Factory, newTx 
 	clientCtx.WithOutput(cmd.OutOrStdout())
 
 	var json []byte
-	if aminoJSON {
-		stdTx, err := tx.ConvertTxToStdTx(clientCtx.LegacyAmino, txBuilder.GetTx())
-		if err != nil {
-			return err
-		}
-		req := BroadcastReq{
-			Tx:   stdTx,
-			Mode: bMode,
-		}
-		json, err = clientCtx.LegacyAmino.MarshalJSON(req)
-		if err != nil {
-			return err
-		}
-	} else {
-		json, err = marshalSignatureJSON(txCfg, txBuilder, printSignatureOnly)
-		if err != nil {
-			return err
-		}
+	json, err = marshalSignatureJSON(txCfg, txBuilder, printSignatureOnly)
+	if err != nil {
+		return err
 	}
 
 	cmd.Printf("%s\n", json)

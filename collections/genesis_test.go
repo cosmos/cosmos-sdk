@@ -6,8 +6,9 @@ import (
 	"io"
 	"testing"
 
-	"cosmossdk.io/core/appmodule"
 	"github.com/stretchr/testify/require"
+
+	"cosmossdk.io/core/appmodule"
 )
 
 func TestDefaultGenesis(t *testing.T) {
@@ -90,6 +91,7 @@ type testFixture struct {
 }
 
 func initFixture(t *testing.T) *testFixture {
+	t.Helper()
 	sk, ctx := deps()
 	schemaBuilder := NewSchemaBuilder(sk)
 	m := NewMap(schemaBuilder, NewPrefix(1), "map", StringKey, Uint64Value)
@@ -109,6 +111,7 @@ func initFixture(t *testing.T) *testFixture {
 }
 
 func createTestGenesisSource(t *testing.T) appmodule.GenesisSource {
+	t.Helper()
 	expectedOrder := []string{"item", "key_set", "map", "sequence"}
 	currentIndex := 0
 	return func(field string) (io.ReadCloser, error) {
@@ -148,6 +151,7 @@ func (b *bufCloser) Close() error {
 }
 
 func newBufCloser(t *testing.T, str string) *bufCloser {
+	t.Helper()
 	b := &bufCloser{
 		Buffer: bytes.NewBufferString(str),
 		closed: false,

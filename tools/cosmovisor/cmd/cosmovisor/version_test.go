@@ -5,13 +5,15 @@ import (
 	"context"
 	"testing"
 
-	"cosmossdk.io/log"
 	"github.com/stretchr/testify/require"
+
+	"cosmossdk.io/log"
 )
 
 func TestVersionCommand_Error(t *testing.T) {
-	logger := log.NewZeroLogger(log.ModuleKey, "cosmovisor")
+	logger := log.NewTestLogger(t).With(log.ModuleKey, "cosmovisor")
 
+	rootCmd := NewRootCmd()
 	rootCmd.SetArgs([]string{"version"})
 
 	out := bytes.NewBufferString("")

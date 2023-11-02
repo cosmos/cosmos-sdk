@@ -4,14 +4,16 @@ import (
 	"bytes"
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/x/auth/signing"
+	protov2 "google.golang.org/protobuf/proto"
 
+	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	errorsmod "cosmossdk.io/errors"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	txsigning "github.com/cosmos/cosmos-sdk/types/tx/signing"
+	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
 // An sdk.Tx which is its own sdk.Msg.
@@ -37,7 +39,7 @@ func (t testPubKey) Address() cryptotypes.Address { return t.address.Bytes() }
 
 func (t testPubKey) Bytes() []byte { panic("not implemented") }
 
-func (t testPubKey) VerifySignature(msg []byte, sig []byte) bool { panic("not implemented") }
+func (t testPubKey) VerifySignature(msg, sig []byte) bool { panic("not implemented") }
 
 func (t testPubKey) Equals(key cryptotypes.PubKey) bool { panic("not implemented") }
 
@@ -53,7 +55,7 @@ func (msg *KVStoreTx) GetSignaturesV2() (res []txsigning.SignatureV2, err error)
 	return res, nil
 }
 
-func (msg *KVStoreTx) VerifySignature(msgByte []byte, sig []byte) bool {
+func (msg *KVStoreTx) VerifySignature(msgByte, sig []byte) bool {
 	panic("implement me")
 }
 
@@ -83,7 +85,7 @@ var (
 )
 
 func NewTx(key, value string, accAddress sdk.AccAddress) *KVStoreTx {
-	bytes := fmt.Sprintf("%s=%s", key, value)
+	bytes := fmt.Sprintf("%s=%s=%s", key, value, accAddress)
 	return &KVStoreTx{
 		key:     []byte(key),
 		value:   []byte(value),
@@ -100,6 +102,10 @@ func (msg *KVStoreTx) GetMsgs() []sdk.Msg {
 	return []sdk.Msg{msg}
 }
 
+func (msg *KVStoreTx) GetMsgsV2() ([]protov2.Message, error) {
+	return []protov2.Message{&bankv1beta1.MsgSend{FromAddress: msg.address.String()}}, nil // this is a hack for tests
+}
+
 func (msg *KVStoreTx) GetSignBytes() []byte {
 	return msg.bytes
 }
@@ -109,8 +115,8 @@ func (msg *KVStoreTx) ValidateBasic() error {
 	return nil
 }
 
-func (msg *KVStoreTx) GetSigners() []sdk.AccAddress {
-	return nil
+func (msg *KVStoreTx) GetSigners() ([][]byte, error) {
+	return nil, nil
 }
 
 func (msg *KVStoreTx) GetPubKeys() ([]cryptotypes.PubKey, error) { panic("GetPubKeys not implemented") }
@@ -121,13 +127,17 @@ func decodeTx(txBytes []byte) (sdk.Tx, error) {
 	var tx sdk.Tx
 
 	split := bytes.Split(txBytes, []byte("="))
-	if len(split) == 1 { //nolint:gocritic
+	switch len(split) {
+	case 1:
 		k := split[0]
 		tx = &KVStoreTx{k, k, txBytes, nil}
-	} else if len(split) == 2 {
+	case 2:
 		k, v := split[0], split[1]
 		tx = &KVStoreTx{k, v, txBytes, nil}
-	} else {
+	case 3:
+		k, v, addr := split[0], split[1], split[2]
+		tx = &KVStoreTx{k, v, txBytes, addr}
+	default:
 		return nil, errorsmod.Wrap(sdkerrors.ErrTxDecode, "too many '='")
 	}
 

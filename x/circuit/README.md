@@ -59,7 +59,7 @@ Authorize, is called by the module authority (default governance module account)
 
 ### Trip
 
-Trip, is called by an account to disable message execution for a specific msgURL. 
+Trip, is called by an authorized account to disable message execution for a specific msgURL. If empty, all the msgs will be disabled.
 
 ```protobuf
   // TripCircuitBreaker pauses processing of Msg's in the state machine.
@@ -68,7 +68,7 @@ Trip, is called by an account to disable message execution for a specific msgURL
 
 ### Reset
 
-Reset is called to enable execution of a previously disabled message. 
+Reset is called by an authorized account to enable execution for a specific msgURL of previously disabled message. If empty, all the disabled messages will be enabled.
 
 ```protobuf
   // ResetCircuitBreaker resumes processing of Msg's in the state machine that
@@ -87,7 +87,6 @@ https://github.com/cosmos/cosmos-sdk/blob/main/proto/cosmos/circuit/v1/tx.proto#
 This message is expected to fail if:
 
 * the granter is not an account with permission level `LEVEL_SUPER_ADMIN` or the module authority
-* if the type urls does not exist <!-- TODO: is this possible?-->
 
 ### MsgTripCircuitBreaker
 
@@ -98,7 +97,6 @@ https://github.com/cosmos/cosmos-sdk/blob/main/proto/cosmos/circuit/v1/tx.proto#
 This message is expected to fail if:
 
 * if the signer does not have a permission level with the ability to disable the specified type url message
-* if the type urls does not exist <!-- TODO: is this possible?-->
 
 ### MsgResetCircuitBreaker
 
@@ -108,8 +106,46 @@ https://github.com/cosmos/cosmos-sdk/blob/main/proto/cosmos/circuit/v1/tx.proto#
 
 This message is expected to fail if:
 
-* if the type urls does not exist <!-- TODO: is this possible?-->
 * if the type url is not disabled
 
-* `## Events` - list and describe event tags used
-* `## Client` - list and describe CLI commands and gRPC and REST endpoints
+## Events - list and describe event tags 
+
+The circuit module emits the following events:
+
+### Message Events
+
+#### MsgAuthorizeCircuitBreaker
+
+| Type    | Attribute Key | Attribute Value           |
+|---------|---------------|---------------------------|
+| string  | granter       | {granterAddress}          |
+| string  | grantee       | {granteeAddress}          |
+| string  | permission    | {granteePermissions}      |
+| message | module        | circuit                   |
+| message | action        | authorize_circuit_breaker |
+
+#### MsgTripCircuitBreaker
+
+| Type     | Attribute Key | Attribute Value    |
+|----------|---------------|--------------------|
+| string   | authority     | {authorityAddress} |
+| []string | msg_urls      | []string{msg_urls} |
+| message  | module        | circuit            |
+| message  | action        | trip_circuit_breaker |
+
+#### ResetCircuitBreaker
+
+| Type     | Attribute Key | Attribute Value    |
+|----------|---------------|--------------------|
+| string   | authority     | {authorityAddress} |
+| []string | msg_urls      | []string{msg_urls} |
+| message  | module        | circuit            |
+| message  | action        | reset_circuit_breaker |
+
+
+## Keys - list of key prefixes used by the circuit module
+
+* `AccountPermissionPrefix` - `0x01`
+* `DisableListPrefix` -  `0x02`
+
+## Client - list and describe CLI commands and gRPC and REST endpoints

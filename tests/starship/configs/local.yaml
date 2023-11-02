@@ -1,0 +1,30 @@
+chains:
+  - name: simapp
+    type: simapp
+    image: ghcr.io/cosmos/simapp:latest
+    numValidators: 4
+    ports:
+      rest: 1317
+      rpc: 26657
+      grpc: 9091
+      faucet: 8001
+    faucet:
+      # use v0.31.0-alpha.2 cosmjs-faucet for compatibility with simapp v0.47+
+      # todo: faucet seems to throw error with sdk version 0.50, still seems to work
+      image: ghcr.io/cosmology-tech/starship/cosmjs-faucet:v0.31.0
+      # concurrency defines number of addresses used for faucet
+      # higher number would result in longer startup time
+      concurrency: 4
+
+registry:
+  enabled: true
+  ports:
+    rest: 8081
+
+explorer:
+  enabled: true
+  ports:
+    rest: 8080
+
+exposer:
+  image: ghcr.io/cosmology-tech/starship/exposer:20230808-2333929

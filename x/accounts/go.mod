@@ -150,13 +150,16 @@ require (
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
 
-// REMOVE post v1 release.
 replace (
 	cosmossdk.io/api => ../../api
-	cosmossdk.io/x/bank => ../../x/bank
-	cosmossdk.io/x/distribution => ../../x/distribution
-	cosmossdk.io/x/gov => ../../x/gov
-	cosmossdk.io/x/mint => ../../x/mint
-	cosmossdk.io/x/staking => ../../x/staking
 	github.com/cosmos/cosmos-sdk => ../../.
+)
+
+replace (
+	cosmossdk.io/x/bank => ../bank
+	cosmossdk.io/x/distribution => ../distribution
+	cosmossdk.io/x/gov => ../gov
+	cosmossdk.io/x/mint => ../mint
+	cosmossdk.io/x/slashing => ../slashing
+	cosmossdk.io/x/staking => ../staking
 )

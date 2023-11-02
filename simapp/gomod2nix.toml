@@ -35,8 +35,8 @@ schema = 3
     version = "v1.1.3-rc.1"
     hash = "sha256-Er7UvO1SWqm675YraVUztX/Z8IYMN/78XW+2sIX5po0="
   [mod."cosmossdk.io/store"]
-    version = "v1.0.0-rc.0"
-    hash = "sha256-DgW4ZrDwmgsPtEXajPyAsrQuPjXekw5PfsYFvA5yuiE="
+    version = "v1.0.0"
+    hash = "sha256-AtMupjuK3ccb/GTtxa+NBTufvLjiGljb2RAxuDLkFaw="
   [mod."cosmossdk.io/x/tx"]
     version = "v0.11.0"
     hash = "sha256-8CYRI51ChKRonaK1lWWGGe/pvH1zEmrPzheTdE0C9hc="
@@ -93,8 +93,8 @@ schema = 3
     version = "v0.0.0-20230118201751-21c54148d20b"
     hash = "sha256-7dQH6j1o99fuxHKkw0RhNC5wJKkvRLMDJpUiVnDx6h8="
   [mod."github.com/cockroachdb/pebble"]
-    version = "v0.0.0-20230928194634-aa077af62593"
-    hash = "sha256-DDT/kTeJm3Wo6OHU6qx0HeixzWE+j2YTyiXpNEgVI28="
+    version = "v0.0.0-20231101195458-481da04154d6"
+    hash = "sha256-ib09GhKdvkFZ1KpZktC9eLqtz6wHjvfmeWbOctgd7Pg="
   [mod."github.com/cockroachdb/redact"]
     version = "v1.1.5"
     hash = "sha256-0rtT7LRO0wxf9XovOK8GXRrhmx8OcbdPK/mXOKbJdog="
@@ -126,8 +126,8 @@ schema = 3
     version = "v1.4.11"
     hash = "sha256-hXJIGN8Arg09ldCgrSyYZK+xMelYavEj2I3ltxJfAqE="
   [mod."github.com/cosmos/iavl"]
-    version = "v1.0.0-rc.1"
-    hash = "sha256-hb3RDt7Cyj5TIZp8socDzmJ+Pip8w6d4fXi0bJl5zHo="
+    version = "v1.0.0"
+    hash = "sha256-Zm1TfR7vBJ7zMT0whznStO42S0t6hyrwpbUnDmM3MlI="
   [mod."github.com/cosmos/ics23/go"]
     version = "v0.10.0"
     hash = "sha256-KYEv727BO/ht63JO02xiKFGFAddg41Ve9l2vSSZZBq0="
@@ -180,8 +180,8 @@ schema = 3
     version = "v1.6.0"
     hash = "sha256-DQesOCweQPEwmAn6s7DCP/Dwy8IypC+osbpfsvpkdP0="
   [mod."github.com/getsentry/sentry-go"]
-    version = "v0.24.1"
-    hash = "sha256-R4QLkZwdUNgtGCqLcihcOY/F5GOOxthkAIK6jlgBjw4="
+    version = "v0.25.0"
+    hash = "sha256-f6QhF1S9T+yYl+P+5bKz+5a0UDUY9UxhbtbI6kztBh0="
   [mod."github.com/go-kit/kit"]
     version = "v0.13.0"
     hash = "sha256-EncDzq0JVtY+NLlW5lD+nbVewNYTTrfzlOxI4PuwREw="
@@ -309,8 +309,8 @@ schema = 3
     version = "v1.0.0"
     hash = "sha256-xEd0mDBeq3eR/GYeXjoTVb2sPs8sTCosn5ayWkcgENI="
   [mod."github.com/klauspost/compress"]
-    version = "v1.17.1"
-    hash = "sha256-SO/uAUJ7thMmGhPdC4Df6sBtZ6IFK+hgIgK+Y2fw/80="
+    version = "v1.17.2"
+    hash = "sha256-LlMbNhqmgQwUe4KKFK03R17S+gUo0/wPqmIFiwUb6Tg="
   [mod."github.com/kr/pretty"]
     version = "v0.3.1"
     hash = "sha256-DlER7XM+xiaLjvebcIPiB12oVNjyZHuJHoRGITzzpKU="
@@ -378,8 +378,8 @@ schema = 3
     version = "v1.17.0"
     hash = "sha256-FIIzCuNqHdVzpbyH7yAp7Tcu+1tPxEMS5g6KfsGQBGE="
   [mod."github.com/prometheus/client_model"]
-    version = "v0.4.1-0.20230718164431-9a2bf3000d16"
-    hash = "sha256-t9LgImRW4h0XMSxfAazrGHqyDljDyl0YC5r9cYuXcKc="
+    version = "v0.5.0"
+    hash = "sha256-/sXlngf8AoEIeLIiaLg6Y7uYPVq7tI0qnLt0mUyKid4="
   [mod."github.com/prometheus/common"]
     version = "v0.45.0"
     hash = "sha256-N7CDcekAW8InquaVHHkuZ6gNCoW8J0yDlH5A+dj3cfE="

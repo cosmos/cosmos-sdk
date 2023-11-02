@@ -8,8 +8,7 @@ import (
 	"runtime/pprof"
 	"time"
 
-	cmtcmd "github.com/cometbft/cometbft/cmd/cometbft/commands"
-	cmtcfg "github.com/cometbft/cometbft/config"
+	// cmtcmd "github.com/cometbft/cometbft/cmd/cometbft/commands"
 	rpchttp "github.com/cometbft/cometbft/rpc/client/http"
 	"github.com/cometbft/cometbft/rpc/client/local"
 	dbm "github.com/cosmos/cosmos-db"
@@ -222,9 +221,6 @@ is performed. Note, when enabled, gRPC will also be automatically enabled.
 		return pflag.NormalizedName(name)
 	})
 
-	// add support for all CometBFT-specific command line options
-	cmtcmd.AddNodeFlags(cmd)
-
 	if opts.AddFlags != nil {
 		opts.AddFlags(cmd)
 	}
@@ -265,14 +261,10 @@ func startStandAlone(svrCtx *Context, svrCfg serverconfig.Config, clientCtx clie
 		svrCtx.Logger,
 		app,
 		comet.Config{
-			MinGasPrices:   svrCfg.MinGasPrices,
-			QueryGasLimit:  svrCfg.QueryGasLimit,
-			FlagHaltHeight: svrCfg.HaltHeight,
-			FlagHaltTime:   svrCfg.HaltTime,
-			Addr:           addr,
-			Transport:      transport,
-			Standalone:     true,
-			CmtConfig:      svrCtx.Config,
+			Addr:       addr,
+			Transport:  transport,
+			Standalone: true,
+			CmtConfig:  svrCtx.Config,
 		})
 
 	g, ctx := getCtx(svrCtx, false)
@@ -304,7 +296,7 @@ func startStandAlone(svrCtx *Context, svrCfg serverconfig.Config, clientCtx clie
 	cmtCfg := svrCtx.Config
 	home := cmtCfg.RootDir
 
-	err = startAPIServer(ctx, g, cmtCfg, svrCfg, clientCtx, svrCtx, app, home, grpcSrv, metrics)
+	err = startAPIServer(ctx, g, svrCfg, clientCtx, svrCtx, app, home, grpcSrv, metrics)
 	if err != nil {
 		return err
 	}
@@ -346,13 +338,9 @@ func startInProcess(svrCtx *Context, svrCfg serverconfig.Config, clientCtx clien
 			svrCtx.Logger,
 			app,
 			comet.Config{
-				MinGasPrices:   svrCfg.MinGasPrices,
-				QueryGasLimit:  svrCfg.QueryGasLimit,
-				FlagHaltHeight: svrCfg.HaltHeight,
-				FlagHaltTime:   svrCfg.HaltTime,
-				Addr:           "", // not needed when in-process
-				Transport:      "", // not needed when in-process
-				CmtConfig:      svrCtx.Config,
+				Addr:      "", // not needed when in-process
+				Transport: "", // not needed when in-process
+				CmtConfig: svrCtx.Config,
 			})
 		cometService.Start(ctx)
 		defer cometService.Stop()
@@ -376,7 +364,7 @@ func startInProcess(svrCtx *Context, svrCfg serverconfig.Config, clientCtx clien
 		return err
 	}
 
-	err = startAPIServer(ctx, g, cmtCfg, svrCfg, clientCtx, svrCtx, app, home, grpcSrv, metrics)
+	err = startAPIServer(ctx, g, svrCfg, clientCtx, svrCtx, app, home, grpcSrv, metrics)
 	if err != nil {
 		return err
 	}
@@ -486,7 +474,6 @@ func startGrpcServer(
 func startAPIServer(
 	ctx context.Context,
 	g *errgroup.Group,
-	cmtCfg *cmtcfg.Config,
 	svrCfg serverconfig.Config,
 	clientCtx client.Context,
 	svrCtx *Context,

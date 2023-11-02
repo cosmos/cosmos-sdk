@@ -28,11 +28,6 @@ type HasCometBFTServer interface {
 }
 
 type Config struct {
-	MinGasPrices   string
-	QueryGasLimit  uint64
-	FlagHaltHeight uint64
-	FlagHaltTime   uint64
-
 	Transport  string
 	Addr       string
 	Standalone bool

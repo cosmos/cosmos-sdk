@@ -63,7 +63,7 @@ func (s *StoreTestSuite) TestGetChangeset() {
 }
 
 func (s *StoreTestSuite) TestReset() {
-	s.Require().NoError(s.kvStore.Reset())
+	s.Require().NoError(s.kvStore.Reset(1))
 
 	cs := s.kvStore.GetChangeset()
 	s.Require().Zero(cs.Size())

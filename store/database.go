@@ -2,6 +2,8 @@ package store
 
 import (
 	"io"
+
+	ics23 "github.com/cosmos/ics23/go"
 )
 
 // Reader wraps the Has and Get method of a backing data store.
@@ -63,7 +65,21 @@ type VersionedDatabase interface {
 	io.Closer
 }
 
-// Committer defines a contract for committing state.
+// Committer defines an API for committing state.
 type Committer interface {
-	Commit() error
+	WriteBatch(cs *Changeset) error
+	WorkingHash() []byte
+	GetLatestVersion() uint64
+	LoadVersion(targetVersion uint64) error
+	Commit() ([]byte, error)
+	GetProof(version uint64, key []byte) (*ics23.CommitmentProof, error)
+
+	// Prune attempts to prune all versions up to and including the provided
+	// version argument. The operation should be idempotent. An error should be
+	// returned upon failure.
+	Prune(version uint64) error
+
+	// Close releases associated resources. It should NOT be idempotent. It must
+	// only be called once and any call after may panic.
+	io.Closer
 }

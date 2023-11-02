@@ -35,7 +35,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
-* [#18309](https://github.com/cosmos/cosmos-sdk/pull/18309) Update encoder so that amino types defauls to msg type url.
+* [#18309](https://github.com/cosmos/cosmos-sdk/pull/18309) Update encoder so that amino types default to msg type url.
 
 ## v0.11.0
 
@@ -93,18 +93,18 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Improvements
 
 * [#15871](https://github.com/cosmos/cosmos-sdk/pull/15871)
-    * `HandlerMap` now has a `DefaultMode()` getter method
-    * Textual types use `signing.ProtoFileResolver` instead of `protoregistry.Files`
+  * `HandlerMap` now has a `DefaultMode()` getter method
+  * Textual types use `signing.ProtoFileResolver` instead of `protoregistry.Files`
 
 ## v0.6.0
 
 ### API Breaking
 
 * [#15709](https://github.com/cosmos/cosmos-sdk/pull/15709):
-    * `GetSignersContext` has been renamed to `signing.Context`
-    * `GetSigners` now returns `[][]byte` instead of `[]string`
-    * `GetSignersOptions` has been renamed to `signing.Options` and requires `address.Codec`s for account and validator addresses
-    * `GetSignersOptions.ProtoFiles` has been renamed to `signing.Options.FileResolver`
+  * `GetSignersContext` has been renamed to `signing.Context`
+  * `GetSigners` now returns `[][]byte` instead of `[]string`
+  * `GetSignersOptions` has been renamed to `signing.Options` and requires `address.Codec`s for account and validator addresses
+  * `GetSignersOptions.ProtoFiles` has been renamed to `signing.Options.FileResolver`
 
 ### Bug Fixes
 

@@ -80,6 +80,9 @@ Group was spun out into its own `go.mod`. To import it use `cosmossdk.io/x/group
 
 Gov was spun out into its own `go.mod`. To import it use `cosmossdk.io/x/gov`
 
+#### `x/mint`
+
+Mint was spun out into its own `go.mod`. To import it use `cosmossdk.io/x/mint`
 
 #### `x/slashing`
 

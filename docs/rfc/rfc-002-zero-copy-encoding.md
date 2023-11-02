@@ -122,9 +122,8 @@ allocated.
 
 #### Buffer Extent
 
-The first two bytes of a 64kb encoding buffer represent a 16-bit unsigned little-endian integer that indicates the extent of the buffer that has been written to. This is updated when writing the buffer.
-The offset of the extent from the start of the buffer is the value of the extent + 2 since the extent
-value itself takes two bytes and is not included.
+The last two bytes of a 64kb encoding buffer represent a 16-bit unsigned little-endian integer that indicates the extent of the buffer that has been written to. This is updated whenever the buffer is written to. The actual max capacity of the
+buffer is thus 64kb - 2 bytes. The extent is encoded at the end of the buffer rather than the start so that structs at the beginning of the buffer will be aligned to a multiple of 8.
 
 #### Buffer Alignment
 

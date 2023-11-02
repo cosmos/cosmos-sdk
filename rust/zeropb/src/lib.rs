@@ -15,17 +15,17 @@ use core::{
 use alloc::alloc::{alloc_zeroed, Layout};
 use thiserror::Error;
 
-pub trait ZeroCopy {}
+pub unsafe trait ZeroCopy {}
 
-impl ZeroCopy for bool {}
+unsafe impl ZeroCopy for bool {}
 
-impl ZeroCopy for rend::i32_le {}
+unsafe impl ZeroCopy for rend::i32_le {}
 
-impl ZeroCopy for rend::u32_le {}
+unsafe impl ZeroCopy for rend::u32_le {}
 
-impl ZeroCopy for rend::i64_le {}
+unsafe impl ZeroCopy for rend::i64_le {}
 
-impl ZeroCopy for rend::u64_le {}
+unsafe impl ZeroCopy for rend::u64_le {}
 
 pub struct Root<T: ZeroCopy> {
     buf: *mut u8,
@@ -52,7 +52,7 @@ impl<T: ZeroCopy> Root<T> {
     }
 }
 
-impl<T: ZeroCopy> Borrow<T> for Root<T>  {
+impl<T: ZeroCopy> Borrow<T> for Root<T> {
     fn borrow(&self) -> &T {
         unsafe {
             &*self.buf.cast::<T>()
@@ -60,7 +60,7 @@ impl<T: ZeroCopy> Borrow<T> for Root<T>  {
     }
 }
 
-impl<T: ZeroCopy> BorrowMut<T> for Root<T>  {
+impl<T: ZeroCopy> BorrowMut<T> for Root<T> {
     fn borrow_mut(&mut self) -> &mut T {
         unsafe {
             &mut *self.buf.cast::<T>()
@@ -68,7 +68,7 @@ impl<T: ZeroCopy> BorrowMut<T> for Root<T>  {
     }
 }
 
-impl<T: ZeroCopy> Deref for Root<T>  {
+impl<T: ZeroCopy> Deref for Root<T> {
     type Target = T;
 
     fn deref(&self) -> &Self::Target {
@@ -78,7 +78,7 @@ impl<T: ZeroCopy> Deref for Root<T>  {
     }
 }
 
-impl<T: ZeroCopy> DerefMut for Root<T>  {
+impl<T: ZeroCopy> DerefMut for Root<T> {
     fn deref_mut(&mut self) -> &mut Self::Target {
         unsafe {
             &mut *self.buf.cast::<T>()
@@ -96,22 +96,54 @@ fn resolve_rel_ptr(base: *const u8, offset: i16, min_len: u16) -> usize {
     target
 }
 
+struct AllocInfo {
+    extent_ptr: *mut u16,
+    write_head: *mut u8,
+    alloc_start: u16,
+    offset: i16,
+}
+
 #[inline]
-unsafe fn alloc_rel_ptr(base_ptr: *const u8, len: usize, align: usize) -> Result<(i16, *mut ()), Error> {
+unsafe fn resolve_extent_ptr(base_ptr: *const u8) -> *mut u16 {
     let base = base_ptr as usize;
-    let start = base & !0xFFFF;
-    let end = start + MAX_EXTENT;
-    let extent_ptr = end as *mut u16;
+    let buf_start = base & !0xFFFF;
+    let buf_end = buf_start + MAX_EXTENT;
+    buf_end as *mut u16
+}
+
+#[inline]
+unsafe fn resolve_alloc_info(base_ptr: *const u8, align: usize) -> Result<AllocInfo, Error> {
+    let base = base_ptr as usize;
+    let buf_start = base & !0xFFFF;
+    let buf_end = buf_start + MAX_EXTENT;
+    let extent_ptr = buf_end as *mut u16;
     let alloc_start = (*extent_ptr) as usize;
     // align alloc_start to align
     let alloc_start = (alloc_start + align - 1) & !(align - 1);
+    let target = buf_start + alloc_start;
+    let offset = target - base;
+    if offset > i16::MAX as usize {
+        return Err(Error::OutOfBounds);
+    }
+
+    Ok(AllocInfo{
+        extent_ptr,
+        alloc_start,
+        write_head: target as *mut u8,
+        offset,
+    })
+}
+
+#[inline]
+unsafe fn alloc_rel_ptr(base_ptr: *const u8, len: usize, align: usize) -> Result<(i16, *mut ()), Error> {
+    let (target, offset, extent_ptr) = resolve_alloc_start_and_extent(base_ptr, align)?;
+
     let next_extent = alloc_start + len;
     if next_extent > MAX_EXTENT {
         return Err(Error::OutOfMemory);
     }
 
     *extent_ptr = next_extent as u16;
-    let target = start + alloc_start;
     Ok(((target - base) as i16, target as *mut ()))
 }
 
@@ -126,10 +158,16 @@ pub struct Bytes {
 #[derive(Error, Debug)]
 enum Error {
     #[error("out of memory")]
-    OutOfMemory
+    OutOfMemory,
+
+    #[error("out of bounds")]
+    OutOfBounds,
+
+    #[error("invalid state")]
+    InvalidState,
 }
 
-impl ZeroCopy for Bytes {}
+unsafe impl ZeroCopy for Bytes {}
 
 impl Bytes {
     fn set(&mut self, content: &[u8]) -> Result<(), Error> {
@@ -143,13 +181,24 @@ impl Bytes {
             Ok(())
         }
     }
+
+    fn new_writer(&mut self) -> BytesWriter {
+        let base = (self as *const Self).cast::<u8>();
+
+        BytesWriter{
+            bz: &mut self,
+            extent_ptr: (),
+            write_head: (),
+            last_extent: 0,
+        }
+    }
 }
 
 impl<'a> Borrow<[u8]> for Bytes {
     fn borrow(&self) -> &[u8] {
         unsafe {
             let base = (self as *const Self).cast::<u8>();
-            let target = resolve_rel_ptr(base , self.offset, self.length);
+            let target = resolve_rel_ptr(base, self.offset, self.length);
             from_raw_parts(target as *const u8, self.length as usize)
         }
     }
@@ -161,7 +210,7 @@ pub struct Str {
     _phantom: PhantomData<str>,
 }
 
-impl ZeroCopy for Str {}
+unsafe impl ZeroCopy for Str {}
 
 impl Str {
     fn set(&mut self, content: &str) -> Result<(), Error> {
@@ -172,9 +221,27 @@ impl Str {
 impl<'a> Borrow<str> for Str {
     fn borrow(&self) -> &str {
         unsafe {
-            unsafe {
-                from_utf8_unchecked(self.ptr.borrow())
+            from_utf8_unchecked(self.ptr.borrow())
+        }
+    }
+}
+
+pub struct BytesWriter<'a> {
+    bz: &'a mut Bytes,
+    extent_ptr: *u16,
+    write_head: *mut u8,
+    last_extent: u16,
+}
+
+impl BytesWriter {
+    fn write(&mut self, content: &[u8]) -> Result<(), Error> {
+        unsafe {
+            let extent = *self.extent_ptr;
+            if extent != self.last_extent {
+                return Err(Error::InvalidState);
             }
+
+            Ok(())
         }
     }
 }
@@ -240,7 +307,7 @@ struct RepeatedSegmentHeader {
 #[cfg(test)]
 mod tests {
     use std::borrow::Borrow;
-use crate::{Root, Str, ZeroCopy};
+    use crate::{Root, Str, ZeroCopy};
 
     #[repr(C, align(4))]
     struct A(u8);
@@ -254,10 +321,10 @@ use crate::{Root, Str, ZeroCopy};
 
     #[repr(C)]
     struct TestStruct {
-        s: Str
+        s: Str,
     }
 
-    impl ZeroCopy for TestStruct {}
+    unsafe impl ZeroCopy for TestStruct {}
 
     #[test]
     fn test1() {

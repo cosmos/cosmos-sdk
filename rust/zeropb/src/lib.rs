@@ -20,6 +20,7 @@ mod bytes;
 mod repeated;
 mod oneof;
 mod r#enum;
+mod ptr;
 
 
 #[cfg(test)]

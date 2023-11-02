@@ -8,7 +8,6 @@ import (
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/encoding"
-
 	"google.golang.org/protobuf/runtime/protoiface"
 
 	"github.com/cosmos/cosmos-sdk/baseapp/internal/protocompat"
@@ -79,11 +78,12 @@ func (qrt *GRPCQueryRouter) RegisterService(sd *grpc.ServiceDesc, handler interf
 		if err != nil {
 			panic(err)
 		}
-		qrt.serviceData = append(qrt.serviceData, serviceData{
-			serviceDesc: sd,
-			handler:     handler,
-		})
 	}
+
+	qrt.serviceData = append(qrt.serviceData, serviceData{
+		serviceDesc: sd,
+		handler:     handler,
+	})
 }
 
 func (qrt *GRPCQueryRouter) registerABCIQueryHandler(sd *grpc.ServiceDesc, method grpc.MethodDesc, handler interface{}) error {

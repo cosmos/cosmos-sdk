@@ -10,9 +10,9 @@ import (
 
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/v2"
-	"cosmossdk.io/store/v2/commitment"
 	"cosmossdk.io/store/v2/kv/branch"
 	"cosmossdk.io/store/v2/kv/trace"
+	"cosmossdk.io/store/v2/pruning"
 )
 
 // defaultStoreKey defines the default store key used for the single SC backend.
@@ -34,7 +34,7 @@ type Store struct {
 	stateStore store.VersionedDatabase
 
 	// stateCommitment reflects the state commitment (SC) backend
-	stateCommitment *commitment.Database
+	stateCommitment store.Committer
 
 	// rootKVStore reflects the root BranchedKVStore that is used to accumulate writes
 	// and branch off of.
@@ -54,18 +54,23 @@ type Store struct {
 
 	// traceContext defines the tracing context, if any, for trace operations
 	traceContext store.TraceContext
+
+	// pruningManager manages pruning of the SS and SC backends
+	pruningManager *pruning.Manager
 }
 
 func New(
 	logger log.Logger,
 	initVersion uint64,
 	ss store.VersionedDatabase,
-	sc *commitment.Database,
+	sc store.Committer,
 ) (store.RootStore, error) {
 	rootKVStore, err := branch.New(defaultStoreKey, ss)
 	if err != nil {
 		return nil, err
 	}
+
+	pruningManager := pruning.NewManager(logger, ss, sc)
 
 	return &Store{
 		logger:          logger.With("module", "root_store"),
@@ -73,6 +78,7 @@ func New(
 		stateStore:      ss,
 		stateCommitment: sc,
 		rootKVStore:     rootKVStore,
+		pruningManager:  pruningManager,
 	}, nil
 }
 
@@ -87,17 +93,28 @@ func (s *Store) Close() (err error) {
 	s.lastCommitInfo = nil
 	s.commitHeader = nil
 
+	s.pruningManager.Stop()
+
 	return err
 }
 
+// SetPruningOptions sets the pruning options on the SS and SC backends.
+// NOTE: It will also start the pruning manager.
+func (s *Store) SetPruningOptions(ssOpts, scOpts pruning.Options) {
+	s.pruningManager.SetStorageOptions(ssOpts)
+	s.pruningManager.SetCommitmentOptions(scOpts)
+
+	s.pruningManager.Start()
+}
+
 // MountSCStore performs a no-op as a SC backend must be provided at initialization.
-func (s *Store) MountSCStore(_ string, _ store.Tree) error {
+func (s *Store) MountSCStore(_ string, _ store.Committer) error {
 	return errors.New("cannot mount SC store; SC must be provided on initialization")
 }
 
 // GetSCStore returns the store's state commitment (SC) backend. Note, the store
 // key is ignored as there exists only a single SC tree.
-func (s *Store) GetSCStore(_ string) store.Tree {
+func (s *Store) GetSCStore(_ string) store.Committer {
 	return s.stateCommitment
 }
 
@@ -316,6 +333,9 @@ func (s *Store) Commit() ([]byte, error) {
 	}
 
 	s.workingHash = nil
+
+	// prune SS and SC
+	s.pruningManager.Prune(version)
 
 	return s.lastCommitInfo.Hash(), nil
 }

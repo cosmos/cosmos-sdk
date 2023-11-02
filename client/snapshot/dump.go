@@ -84,27 +84,9 @@ func DumpArchiveCmd() *cobra.Command {
 
 			for i := uint32(0); i < snapshot.Chunks; i++ {
 				path := snapshotStore.PathChunk(height, uint32(format), i)
-				file, err := os.Open(path)
-				if err != nil {
-					return fmt.Errorf("failed to open chunk file %s: %w", path, err)
-				}
-				defer file.Close()
-
-				st, err := file.Stat()
-				if err != nil {
-					return fmt.Errorf("failed to stat chunk file %s: %w", path, err)
-				}
-
-				if err := tarWriter.WriteHeader(&tar.Header{
-					Name: strconv.FormatUint(uint64(i), 10),
-					Mode: 0o644,
-					Size: st.Size(),
-				}); err != nil {
-					return fmt.Errorf("failed to write chunk header to tar: %w", err)
-				}
-
-				if _, err := io.Copy(tarWriter, file); err != nil {
-					return fmt.Errorf("failed to write chunk to tar: %w", err)
+				tarName := strconv.FormatUint(uint64(i), 10)
+				if err := processChunk(tarWriter, path, tarName); err != nil {
+					return err
 				}
 			}
 
@@ -123,4 +105,31 @@ func DumpArchiveCmd() *cobra.Command {
 	cmd.Flags().StringP("output", "o", "", "output file")
 
 	return cmd
+}
+
+func processChunk(tarWriter *tar.Writer, path, tarName string) error {
+	file, err := os.Open(path)
+	if err != nil {
+		return fmt.Errorf("failed to open chunk file %s: %w", path, err)
+	}
+	defer file.Close()
+
+	st, err := file.Stat()
+	if err != nil {
+		return fmt.Errorf("failed to stat chunk file %s: %w", path, err)
+	}
+
+	if err := tarWriter.WriteHeader(&tar.Header{
+		Name: tarName,
+		Mode: 0o644,
+		Size: st.Size(),
+	}); err != nil {
+		return fmt.Errorf("failed to write chunk header to tar: %w", err)
+	}
+
+	if _, err := io.Copy(tarWriter, file); err != nil {
+		return fmt.Errorf("failed to write chunk to tar: %w", err)
+	}
+
+	return nil
 }

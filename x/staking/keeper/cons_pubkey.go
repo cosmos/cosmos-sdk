@@ -20,7 +20,7 @@ func (k Keeper) setConsPubKeyRotationHistory(
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	height := uint64(sdkCtx.BlockHeight())
 	history := types.ConsPubKeyRotationHistory{
-		OperatorAddress: valAddr.String(),
+		OperatorAddress: valAddr.Bytes(),
 		OldConsPubkey:   oldPubKey,
 		NewConsPubkey:   newPubKey,
 		Height:          height,

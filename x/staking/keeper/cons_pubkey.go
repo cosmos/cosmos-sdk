@@ -11,6 +11,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// maxRotations is the value of max rotations can be made in unbonding period for a validator.
+const maxRotations = 1
+
 // setConsPubKeyRotationHistory sets the consensus key rotation of a validator into state
 func (k Keeper) setConsPubKeyRotationHistory(
 	ctx context.Context, valAddr sdk.ValAddress,
@@ -51,7 +54,6 @@ func (k Keeper) setConsPubKeyRotationHistory(
 // exceedsMaxRotations returns true if the key rotations exceed the limit, currently we are limiting one rotation for unbonding period.
 func (k Keeper) exceedsMaxRotations(ctx context.Context, valAddr sdk.ValAddress) (bool, error) {
 	count := 0
-	maxRotations := 1 // arbitrary value
 	rng := collections.NewPrefixUntilPairRange[[]byte, time.Time](valAddr)
 	if err := k.ValidatorConsensusKeyRotationRecordIndexKey.Walk(ctx, rng, func(key collections.Pair[[]byte, time.Time], value []byte) (stop bool, err error) {
 		count++

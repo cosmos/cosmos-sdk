@@ -42,6 +42,7 @@ func migrateParams(ctx sdk.Context, store storetypes.KVStore, legacySubspace exp
 		defaultParams.BurnProposalDepositPrevote,
 		defaultParams.BurnVoteQuorum,
 		defaultParams.BurnVoteVeto,
+		defaultParams.MinDepositRatio,
 	)
 
 	bz, err := cdc.Marshal(&params)

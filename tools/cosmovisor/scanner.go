@@ -189,7 +189,7 @@ func parseUpgradeInfoFile(filename string, disableRecase bool) (upgradetypes.Pla
 	}
 
 	if len(f) == 0 {
-		return upgradetypes.Plan{}, errors.New("empty upgrade-info.json")
+		return upgradetypes.Plan{}, fmt.Errorf("empty upgrade-info.json in %q", filename)
 	}
 
 	var upgradePlan upgradetypes.Plan
@@ -207,5 +207,5 @@ func parseUpgradeInfoFile(filename string, disableRecase bool) (upgradetypes.Pla
 		upgradePlan.Name = strings.ToLower(upgradePlan.Name)
 	}
 
-	return upgradePlan, err
+	return upgradePlan, nil
 }

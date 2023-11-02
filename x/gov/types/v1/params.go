@@ -30,6 +30,7 @@ var (
 	DefaultBurnProposalPrevote       = false // set to false to replicate behavior of when this change was made (0.47)
 	DefaultBurnVoteQuorom            = false // set to false to  replicate behavior of when this change was made (0.47)
 	DefaultBurnVoteVeto              = true  // set to true to replicate behavior of when this change was made (0.47)
+	DefaultMinDepositRatio           = sdkmath.LegacyMustNewDecFromStr("0.01")
 )
 
 // Deprecated: NewDepositParams creates a new DepositParams object
@@ -59,7 +60,8 @@ func NewVotingParams(votingPeriod *time.Duration) VotingParams {
 // NewParams creates a new Params instance with given values.
 func NewParams(
 	minDeposit, expeditedminDeposit sdk.Coins, maxDepositPeriod, votingPeriod, expeditedVotingPeriod time.Duration,
-	quorum, threshold, expeditedThreshold, vetoThreshold, minInitialDepositRatio, proposalCancelRatio, proposalCancelDest string, burnProposalDeposit, burnVoteQuorum, burnVoteVeto bool,
+	quorum, threshold, expeditedThreshold, vetoThreshold, minInitialDepositRatio, proposalCancelRatio, proposalCancelDest string,
+	burnProposalDeposit, burnVoteQuorum, burnVoteVeto bool, minDepositRatio string,
 ) Params {
 	return Params{
 		MinDeposit:                 minDeposit,
@@ -77,6 +79,7 @@ func NewParams(
 		BurnProposalDepositPrevote: burnProposalDeposit,
 		BurnVoteQuorum:             burnVoteQuorum,
 		BurnVoteVeto:               burnVoteVeto,
+		MinDepositRatio:            minDepositRatio,
 	}
 }
 
@@ -98,6 +101,7 @@ func DefaultParams() Params {
 		DefaultBurnProposalPrevote,
 		DefaultBurnVoteQuorom,
 		DefaultBurnVoteVeto,
+		DefaultMinDepositRatio.String(),
 	)
 }
 

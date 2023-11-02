@@ -1,7 +1,7 @@
 //go:build e2e
 // +build e2e
 
-package server_test
+package genutil_test
 
 import (
 	"bytes"
@@ -27,6 +27,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/server/types"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
+	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
@@ -76,14 +77,14 @@ func TestExportCmd_Height(t *testing.T) {
 		{
 			"should export correct height with --height",
 			[]string{
-				fmt.Sprintf("--%s=%d", server.FlagHeight, 3),
+				fmt.Sprintf("--height=%d", 3),
 			},
 			5, 4,
 		},
 		{
 			"should export height 0 with --for-zero-height",
 			[]string{
-				fmt.Sprintf("--%s=%s", server.FlagForZeroHeight, "true"),
+				fmt.Sprintf("--for-zero-height=%s", "true"),
 			},
 			2, 0,
 		},
@@ -196,7 +197,7 @@ func setupApp(t *testing.T, tempDir string) (*simapp.SimApp, context.Context, ge
 	_, err = app.Commit()
 	assert.NilError(t, err)
 
-	cmd := server.ExportCmd(func(_ log.Logger, _ dbm.DB, _ io.Writer, height int64, forZeroHeight bool, jailAllowedAddrs []string, appOptions types.AppOptions, modulesToExport []string) (types.ExportedApp, error) {
+	cmd := genutilcli.ExportCmd(func(_ log.Logger, _ dbm.DB, _ io.Writer, height int64, forZeroHeight bool, jailAllowedAddrs []string, appOptions types.AppOptions, modulesToExport []string) (types.ExportedApp, error) {
 		var simApp *simapp.SimApp
 		if height != -1 {
 			simApp = simapp.NewSimApp(logger, db, nil, false, appOptions)

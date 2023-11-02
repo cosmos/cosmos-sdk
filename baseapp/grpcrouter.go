@@ -5,13 +5,13 @@ import (
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
+	"github.com/cosmos/gogoproto/proto"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/encoding"
-<<<<<<< HEAD
-=======
-	"google.golang.org/protobuf/runtime/protoiface"
->>>>>>> 5edabb5cb (feat(baseapp): Add Hybrid Protobuf handlers to MsgServiceRouter (#18071))
 
+	"google.golang.org/protobuf/runtime/protoiface"
+
+	"github.com/cosmos/cosmos-sdk/baseapp/internal/protocompat"
 	"github.com/cosmos/cosmos-sdk/client/grpc/reflection"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -20,10 +20,6 @@ import (
 
 // GRPCQueryRouter routes ABCI Query requests to GRPC handlers
 type GRPCQueryRouter struct {
-<<<<<<< HEAD
-	routes      map[string]GRPCQueryHandler
-	cdc         encoding.Codec
-=======
 	// routes maps query handlers used in ABCIQuery.
 	routes map[string]GRPCQueryHandler
 	// hybridHandlers maps the request name to the handler. It is a hybrid handler which seamlessly
@@ -34,7 +30,6 @@ type GRPCQueryRouter struct {
 	// cdc is the gRPC codec used by the router to correctly unmarshal messages.
 	cdc encoding.Codec
 	// serviceData contains the gRPC services and their handlers.
->>>>>>> 5edabb5cb (feat(baseapp): Add Hybrid Protobuf handlers to MsgServiceRouter (#18071))
 	serviceData []serviceData
 }
 
@@ -49,12 +44,9 @@ var _ gogogrpc.Server = &GRPCQueryRouter{}
 // NewGRPCQueryRouter creates a new GRPCQueryRouter
 func NewGRPCQueryRouter() *GRPCQueryRouter {
 	return &GRPCQueryRouter{
-<<<<<<< HEAD
 		routes: map[string]GRPCQueryHandler{},
-=======
 		routes:         map[string]GRPCQueryHandler{},
 		hybridHandlers: map[string][]func(ctx context.Context, req, resp protoiface.MessageV1) error{},
->>>>>>> 5edabb5cb (feat(baseapp): Add Hybrid Protobuf handlers to MsgServiceRouter (#18071))
 	}
 }
 
@@ -97,7 +89,6 @@ func (qrt *GRPCQueryRouter) RegisterService(sd *grpc.ServiceDesc, handler interf
 				),
 			)
 		}
-<<<<<<< HEAD
 
 		qrt.routes[fqName] = func(ctx sdk.Context, req *abci.RequestQuery) (*abci.ResponseQuery, error) {
 			// call the method handler from the service description with the handler object,
@@ -121,11 +112,9 @@ func (qrt *GRPCQueryRouter) RegisterService(sd *grpc.ServiceDesc, handler interf
 				Height: req.Height,
 				Value:  resBytes,
 			}, nil
-=======
 		err = qrt.registerHybridHandler(sd, method, handler)
 		if err != nil {
 			panic(err)
->>>>>>> 5edabb5cb (feat(baseapp): Add Hybrid Protobuf handlers to MsgServiceRouter (#18071))
 		}
 	}
 
@@ -135,8 +124,6 @@ func (qrt *GRPCQueryRouter) RegisterService(sd *grpc.ServiceDesc, handler interf
 	})
 }
 
-<<<<<<< HEAD
-=======
 func (qrt *GRPCQueryRouter) registerABCIQueryHandler(sd *grpc.ServiceDesc, method grpc.MethodDesc, handler interface{}) error {
 	fqName := fmt.Sprintf("/%s/%s", sd.ServiceName, method.MethodName)
 	methodHandler := method.Handler
@@ -198,7 +185,6 @@ func (qrt *GRPCQueryRouter) registerHybridHandler(sd *grpc.ServiceDesc, method g
 	return nil
 }
 
->>>>>>> 5edabb5cb (feat(baseapp): Add Hybrid Protobuf handlers to MsgServiceRouter (#18071))
 // SetInterfaceRegistry sets the interface registry for the router. This will
 // also register the interface reflection gRPC service.
 func (qrt *GRPCQueryRouter) SetInterfaceRegistry(interfaceRegistry codectypes.InterfaceRegistry) {

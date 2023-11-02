@@ -53,8 +53,6 @@ func TestGRPCQueryRouter(t *testing.T) {
 	require.Equal(t, spot, res3.HasAnimal.Animal.GetCachedValue())
 }
 
-<<<<<<< HEAD
-=======
 func TestGRPCRouterHybridHandlers(t *testing.T) {
 	assertRouterBehaviour := func(helper *baseapp.QueryServiceTestHelper) {
 		// test getting the handler by name
@@ -99,7 +97,6 @@ func TestGRPCRouterHybridHandlers(t *testing.T) {
 	})
 }
 
->>>>>>> 5edabb5cb (feat(baseapp): Add Hybrid Protobuf handlers to MsgServiceRouter (#18071))
 func TestRegisterQueryServiceTwice(t *testing.T) {
 	// Setup baseapp.
 	var appBuilder *runtime.AppBuilder

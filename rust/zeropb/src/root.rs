@@ -5,6 +5,7 @@ use core::{
     mem::size_of,
     ops::{Deref, DerefMut},
 };
+use crate::error::Error;
 
 use crate::util::MAX_EXTENT;
 use crate::zerocopy::ZeroCopy;
@@ -29,6 +30,22 @@ impl<T: ZeroCopy> Root<T> {
                 _phantom: PhantomData,
             }
         }
+    }
+
+    pub fn wrap(buf: Box<[u8]>) -> Result<Self, Error> {
+        if buf.len() < 0x10000 {
+            return Err(Error::InvalidBuffer);
+        }
+
+        let ptr = Box::into_raw(buf) as *mut u8;
+        if (ptr as usize) & 0xFFFF != 0 {
+            return Err(Error::InvalidBuffer);
+        }
+
+        return Ok(Self {
+            buf: ptr,
+            _phantom: PhantomData,
+        })
     }
 }
 

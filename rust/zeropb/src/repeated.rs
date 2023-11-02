@@ -1,8 +1,6 @@
 use core::iter::Iterator;
 use core::marker::PhantomData;
-use core::mem::align_of;
 
-use crate::util::resolve_rel_ptr;
 use crate::zerocopy::ZeroCopy;
 
 #[repr(C)]

@@ -10,5 +10,8 @@ pub enum Error {
 
     #[error("invalid state")]
     InvalidState,
+
+    #[error("invalid buffer")]
+    InvalidBuffer,
 }
 

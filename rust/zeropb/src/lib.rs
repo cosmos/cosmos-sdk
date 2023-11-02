@@ -1,15 +1,8 @@
 #![feature(offset_of)]
+#![warn(missing_docs)]
 
 extern crate alloc;
 extern crate core;
-
-use core::{
-    borrow::{Borrow, BorrowMut},
-    fmt::Write,
-    ops::{Deref, DerefMut},
-};
-
-use zerocopy::ZeroCopy;
 
 mod zerocopy;
 mod root;

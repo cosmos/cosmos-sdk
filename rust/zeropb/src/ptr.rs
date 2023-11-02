@@ -1,6 +1,5 @@
 use core::marker::PhantomData;
-use core::ops::Deref;
-use crate::util::resolve_rel_ptr;
+
 use crate::zerocopy::ZeroCopy;
 
 struct Ptr<T: ZeroCopy> {

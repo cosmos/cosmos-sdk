@@ -9,7 +9,7 @@ pub struct Enum<T> {
 
 unsafe impl <T: ZeroCopyEnum> ZeroCopy for Enum<T> {}
 
-trait ZeroCopyEnum: Copy + Into<u8> + TryFrom<u8> {
+pub trait ZeroCopyEnum: Copy + Into<u8> + TryFrom<u8> {
     const MAX_VALUE: u8;
 }
 

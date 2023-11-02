@@ -75,66 +75,9 @@ func (msr *MsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler inter
 		if err != nil {
 			panic(err)
 		}
-<<<<<<< HEAD
-
-		// Check that each service is only registered once. If a service is
-		// registered more than once, then we should error. Since we can't
-		// return an error (`Server.RegisterService` interface restriction) we
-		// panic (at startup).
-		_, found := msr.routes[requestTypeName]
-		if found {
-			panic(
-				fmt.Errorf(
-					"msg service %s has already been registered. Please make sure to only register each service once. "+
-						"This usually means that there are conflicting modules registering the same msg service",
-					fqMethod,
-				),
-			)
-		}
-
-		msr.routes[requestTypeName] = func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
-			ctx = ctx.WithEventManager(sdk.NewEventManager())
-			interceptor := func(goCtx context.Context, _ interface{}, _ *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
-				goCtx = context.WithValue(goCtx, sdk.SdkContextKey, ctx)
-				return handler(goCtx, msg)
-			}
-
-			if m, ok := msg.(sdk.HasValidateBasic); ok {
-				if err := m.ValidateBasic(); err != nil {
-					return nil, err
-				}
-			}
-
-			if msr.circuitBreaker != nil {
-				msgURL := sdk.MsgTypeURL(msg)
-				isAllowed, err := msr.circuitBreaker.IsAllowed(ctx, msgURL)
-				if err != nil {
-					return nil, err
-				}
-
-				if !isAllowed {
-					return nil, fmt.Errorf("circuit breaker disables execution of this message: %s", msgURL)
-				}
-			}
-
-			// Call the method handler from the service description with the handler object.
-			// We don't do any decoding here because the decoding was already done.
-			res, err := methodHandler(handler, ctx, noopDecoder, interceptor)
-			if err != nil {
-				return nil, err
-			}
-
-			resMsg, ok := res.(proto.Message)
-			if !ok {
-				return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidType, "Expecting proto.Message, got %T", resMsg)
-			}
-
-			return sdk.WrapServiceResult(ctx, resMsg, err)
-=======
 		err = msr.registerHybridHandler(sd, method, handler)
 		if err != nil {
 			panic(err)
->>>>>>> 5edabb5cb (feat(baseapp): Add Hybrid Protobuf handlers to MsgServiceRouter (#18071))
 		}
 	}
 }
@@ -262,20 +205,7 @@ func (msr *MsgServiceRouter) registerMsgServiceHandler(sd *grpc.ServiceDesc, met
 			return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidType, "Expecting proto.Message, got %T", resMsg)
 		}
 
-		anyResp, err := codectypes.NewAnyWithValue(resMsg)
-		if err != nil {
-			return nil, err
-		}
-
-		var events []abci.Event
-		if evtMgr := ctx.EventManager(); evtMgr != nil {
-			events = evtMgr.ABCIEvents()
-		}
-
-		return &sdk.Result{
-			Events:       events,
-			MsgResponses: []*codectypes.Any{anyResp},
-		}, nil
+		return sdk.WrapServiceResult(ctx, resMsg, err)
 	}
 	return nil
 }

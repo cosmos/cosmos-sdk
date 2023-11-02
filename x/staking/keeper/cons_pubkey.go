@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"context"
 	"time"
 
 	"cosmossdk.io/collections"
@@ -10,11 +11,14 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// SetConsPubKeyRotationHistory sets the consensus key rotation of a validator into state
-func (k Keeper) SetConsPubKeyRotationHistory(
-	ctx sdk.Context, valAddr sdk.ValAddress,
-	oldPubKey, newPubKey *codectypes.Any, height uint64, fee sdk.Coin,
+// setConsPubKeyRotationHistory sets the consensus key rotation of a validator into state
+func (k Keeper) setConsPubKeyRotationHistory(
+	ctx context.Context, valAddr sdk.ValAddress,
+	oldPubKey, newPubKey *codectypes.Any, fee sdk.Coin,
 ) error {
+
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	height := uint64(sdkCtx.BlockHeight())
 	history := types.ConsPubKeyRotationHistory{
 		OperatorAddress: valAddr.String(),
 		OldConsPubkey:   oldPubKey,
@@ -36,7 +40,7 @@ func (k Keeper) SetConsPubKeyRotationHistory(
 		return err
 	}
 
-	queueTime := ctx.BlockHeader().Time.Add(ubdTime)
+	queueTime := sdkCtx.BlockHeader().Time.Add(ubdTime)
 	if err := k.ValidatorConsensusKeyRotationRecordIndexKey.Set(ctx, collections.Join(valAddr.Bytes(), queueTime), []byte{}); err != nil {
 		return err
 	}
@@ -44,8 +48,8 @@ func (k Keeper) SetConsPubKeyRotationHistory(
 	return k.SetConsKeyQueue(ctx, queueTime, valAddr)
 }
 
-// CheckLimitOfMaxRotationsExceed returns true if the key rotations exceed the limit, currently we are limiting one rotation for unbonding period.
-func (k Keeper) CheckLimitOfMaxRotationsExceed(ctx sdk.Context, valAddr sdk.ValAddress) (bool, error) {
+// exceedsMaxRotations returns true if the key rotations exceed the limit, currently we are limiting one rotation for unbonding period.
+func (k Keeper) exceedsMaxRotations(ctx context.Context, valAddr sdk.ValAddress) (bool, error) {
 	count := 0
 	maxRotations := 1 // arbitrary value
 	rng := collections.NewPrefixUntilPairRange[[]byte, time.Time](valAddr)
@@ -64,7 +68,7 @@ func (k Keeper) CheckLimitOfMaxRotationsExceed(ctx sdk.Context, valAddr sdk.ValA
 
 // SetConsKeyQueue sets array of rotated validator addresses to a key of current block time + unbonding period
 // this is to keep track of rotations made within the unbonding period
-func (k Keeper) SetConsKeyQueue(ctx sdk.Context, ts time.Time, valAddr sdk.ValAddress) error {
+func (k Keeper) SetConsKeyQueue(ctx context.Context, ts time.Time, valAddr sdk.ValAddress) error {
 	queueRec, err := k.ValidatorConsensusKeyRotationRecordQueue.Get(ctx, ts)
 	if err != nil {
 		return err

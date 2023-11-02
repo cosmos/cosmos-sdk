@@ -14035,7 +14035,7 @@ func (x *fastReflection_ConsPubKeyRotationHistory) ProtoMethods() *protoiface.Me
 var _ protoreflect.List = (*_ValAddrsOfRotatedConsKeys_1_list)(nil)
 
 type _ValAddrsOfRotatedConsKeys_1_list struct {
-	list *[]string
+	list *[][]byte
 }
 
 func (x *_ValAddrsOfRotatedConsKeys_1_list) Len() int {
@@ -14046,17 +14046,17 @@ func (x *_ValAddrsOfRotatedConsKeys_1_list) Len() int {
 }
 
 func (x *_ValAddrsOfRotatedConsKeys_1_list) Get(i int) protoreflect.Value {
-	return protoreflect.ValueOfString((*x.list)[i])
+	return protoreflect.ValueOfBytes((*x.list)[i])
 }
 
 func (x *_ValAddrsOfRotatedConsKeys_1_list) Set(i int, value protoreflect.Value) {
-	valueUnwrapped := value.String()
+	valueUnwrapped := value.Bytes()
 	concreteValue := valueUnwrapped
 	(*x.list)[i] = concreteValue
 }
 
 func (x *_ValAddrsOfRotatedConsKeys_1_list) Append(value protoreflect.Value) {
-	valueUnwrapped := value.String()
+	valueUnwrapped := value.Bytes()
 	concreteValue := valueUnwrapped
 	*x.list = append(*x.list, concreteValue)
 }
@@ -14070,8 +14070,8 @@ func (x *_ValAddrsOfRotatedConsKeys_1_list) Truncate(n int) {
 }
 
 func (x *_ValAddrsOfRotatedConsKeys_1_list) NewElement() protoreflect.Value {
-	v := ""
-	return protoreflect.ValueOfString(v)
+	var v []byte
+	return protoreflect.ValueOfBytes(v)
 }
 
 func (x *_ValAddrsOfRotatedConsKeys_1_list) IsValid() bool {
@@ -14263,7 +14263,7 @@ func (x *fastReflection_ValAddrsOfRotatedConsKeys) Mutable(fd protoreflect.Field
 	switch fd.FullName() {
 	case "cosmos.staking.v1beta1.ValAddrsOfRotatedConsKeys.addresses":
 		if x.Addresses == nil {
-			x.Addresses = []string{}
+			x.Addresses = [][]byte{}
 		}
 		value := &_ValAddrsOfRotatedConsKeys_1_list{list: &x.Addresses}
 		return protoreflect.ValueOfList(value)
@@ -14281,7 +14281,7 @@ func (x *fastReflection_ValAddrsOfRotatedConsKeys) Mutable(fd protoreflect.Field
 func (x *fastReflection_ValAddrsOfRotatedConsKeys) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
 	case "cosmos.staking.v1beta1.ValAddrsOfRotatedConsKeys.addresses":
-		list := []string{}
+		list := [][]byte{}
 		return protoreflect.ValueOfList(&_ValAddrsOfRotatedConsKeys_1_list{list: &list})
 	default:
 		if fd.IsExtension() {
@@ -14353,8 +14353,8 @@ func (x *fastReflection_ValAddrsOfRotatedConsKeys) ProtoMethods() *protoiface.Me
 		var l int
 		_ = l
 		if len(x.Addresses) > 0 {
-			for _, s := range x.Addresses {
-				l = len(s)
+			for _, b := range x.Addresses {
+				l = len(b)
 				n += 1 + l + runtime.Sov(uint64(l))
 			}
 		}
@@ -14449,7 +14449,7 @@ func (x *fastReflection_ValAddrsOfRotatedConsKeys) ProtoMethods() *protoiface.Me
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Addresses", wireType)
 				}
-				var stringLen uint64
+				var byteLen int
 				for shift := uint(0); ; shift += 7 {
 					if shift >= 64 {
 						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
@@ -14459,23 +14459,23 @@ func (x *fastReflection_ValAddrsOfRotatedConsKeys) ProtoMethods() *protoiface.Me
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					stringLen |= uint64(b&0x7F) << shift
+					byteLen |= int(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
 				}
-				intStringLen := int(stringLen)
-				if intStringLen < 0 {
+				if byteLen < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
-				postIndex := iNdEx + intStringLen
+				postIndex := iNdEx + byteLen
 				if postIndex < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.Addresses = append(x.Addresses, string(dAtA[iNdEx:postIndex]))
+				x.Addresses = append(x.Addresses, make([]byte, postIndex-iNdEx))
+				copy(x.Addresses[len(x.Addresses)-1], dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
 			default:
 				iNdEx = preIndex
@@ -16010,7 +16010,7 @@ type ValAddrsOfRotatedConsKeys struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Addresses []string `protobuf:"bytes,1,rep,name=addresses,proto3" json:"addresses,omitempty"`
+	Addresses [][]byte `protobuf:"bytes,1,rep,name=addresses,proto3" json:"addresses,omitempty"`
 }
 
 func (x *ValAddrsOfRotatedConsKeys) Reset() {
@@ -16033,7 +16033,7 @@ func (*ValAddrsOfRotatedConsKeys) Descriptor() ([]byte, []int) {
 	return file_cosmos_staking_v1beta1_staking_proto_rawDescGZIP(), []int{23}
 }
 
-func (x *ValAddrsOfRotatedConsKeys) GetAddresses() []string {
+func (x *ValAddrsOfRotatedConsKeys) GetAddresses() [][]byte {
 	if x != nil {
 		return x.Addresses
 	}
@@ -16439,7 +16439,7 @@ var file_cosmos_staking_v1beta1_staking_proto_rawDesc = []byte{
 	0xa0, 0x1f, 0x00, 0xe8, 0xa0, 0x1f, 0x00, 0x22, 0x53, 0x0a, 0x19, 0x56, 0x61, 0x6c, 0x41, 0x64,
 	0x64, 0x72, 0x73, 0x4f, 0x66, 0x52, 0x6f, 0x74, 0x61, 0x74, 0x65, 0x64, 0x43, 0x6f, 0x6e, 0x73,
 	0x4b, 0x65, 0x79, 0x73, 0x12, 0x36, 0x0a, 0x09, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x65,
-	0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73,
+	0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0c, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73,
 	0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e,
 	0x67, 0x52, 0x09, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x65, 0x73, 0x2a, 0xb6, 0x01, 0x0a,
 	0x0a, 0x42, 0x6f, 0x6e, 0x64, 0x53, 0x74, 0x61, 0x74, 0x75, 0x73, 0x12, 0x2c, 0x0a, 0x17, 0x42,

@@ -145,20 +145,20 @@ mod tests {
 
     #[test]
     fn no_copy() {
-        let mut t1 = Test1 {
-            bytes: BytesPtr {
-                offset: 0,
-                length: 0,
-                _phantom: Default::default(),
-            }
-        };
-        let mut t2 = Test1 {
-            bytes: BytesPtr {
-                offset: 0,
-                length: 0,
-                _phantom: Default::default(),
-            }
-        };
-        t1.bytes = t2.bytes;
+        // let t1 = &mut Test1 {
+        //     bytes: BytesPtr {
+        //         offset: 0,
+        //         length: 0,
+        //         _phantom: Default::default(),
+        //     }
+        // };
+        // let t2 = &mut Test1 {
+        //     bytes: BytesPtr {
+        //         offset: 0,
+        //         length: 0,
+        //         _phantom: Default::default(),
+        //     }
+        // };
+        // t1.bytes = t2.bytes;
     }
 }

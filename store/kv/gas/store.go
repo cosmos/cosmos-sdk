@@ -62,8 +62,8 @@ func (s *Store) GetChangeset() *store.Changeset {
 	return s.parent.GetChangeset()
 }
 
-func (s *Store) Reset() error {
-	return s.parent.Reset()
+func (s *Store) Reset(toVersion uint64) error {
+	return s.parent.Reset(toVersion)
 }
 
 func (s *Store) Write() {

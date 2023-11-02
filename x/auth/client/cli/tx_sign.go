@@ -195,7 +195,7 @@ func makeSignBatchCmd() func(cmd *cobra.Command, args []string) error {
 			}
 			json, err := marshalBatchJSON(txCfg, signingTxs, printSignatureOnly)
 			if err != nil {
-				return fmt.Errorf("error marshalling batch txs: %w", err)
+				return fmt.Errorf("error marshaling batch txs: %w", err)
 			}
 			cmd.Printf("%s", json)
 		}
@@ -449,7 +449,7 @@ func marshalBatchJSON(txConfig client.TxConfig, txs []signing.Tx, signatureOnly 
 			if err != nil {
 				return nil, err
 			}
-			sigsStr:= fmt.Sprintf("%s\n", sigsByte)
+			sigsStr := fmt.Sprintf("%s\n", sigsByte)
 			if err != nil {
 				return nil, err
 			}

@@ -23,11 +23,16 @@ const (
 	StoreKey   = "_" + ModuleName // unfortunately accounts collides with auth store key
 )
 
+const (
+	ConsensusVersion = 1
+)
+
 var (
-	_ appmodule.AppModule = AppModule{}
-	_ module.HasName      = AppModule{}
-	_ module.HasGenesis   = AppModule{}
-	_ module.HasServices  = AppModule{}
+	_ appmodule.AppModule        = AppModule{}
+	_ module.HasName             = AppModule{}
+	_ module.HasGenesis          = AppModule{}
+	_ module.HasServices         = AppModule{}
+	_ module.HasConsensusVersion = AppModule{}
 )
 
 func NewAppModule(k Keeper) AppModule {
@@ -93,3 +98,5 @@ func (AppModule) GetTxCmd() *cobra.Command {
 func (AppModule) GetQueryCmd() *cobra.Command {
 	return cli.QueryCmd(ModuleName)
 }
+
+func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }

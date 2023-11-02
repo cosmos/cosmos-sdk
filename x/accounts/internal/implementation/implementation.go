@@ -48,16 +48,15 @@ func MakeAccountsMap(addressCodec address.Codec, accounts []AccountCreatorFunc) 
 		if err != nil {
 			return nil, fmt.Errorf("failed to create account %s: %w", name, err)
 		}
+		if _, ok := accountsMap[name]; ok {
+			return nil, fmt.Errorf("account %s is already registered", name)
+		}
 		// build schema
 		schema, err := stateSchemaBuilder.Build()
 		if err != nil {
 			return nil, fmt.Errorf("failed to build schema for account %s: %w", name, err)
 		}
 		impl.CollectionsSchema = schema
-		// check if account name is already registered
-		if _, ok := accountsMap[name]; ok {
-			return nil, fmt.Errorf("account %s is already registered", name)
-		}
 		accountsMap[name] = impl
 	}
 

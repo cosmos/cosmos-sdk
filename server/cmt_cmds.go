@@ -372,7 +372,7 @@ func BootstrapStateCmd(appCreator types.AppCreator) *cobra.Command {
 			}
 			if height == 0 {
 				home := serverCtx.Viper.GetString(flags.FlagHome)
-				db, err := openDB(home, GetAppDBBackend(serverCtx.Viper))
+				db, err := OpenDB(home, GetAppDBBackend(serverCtx.Viper))
 				if err != nil {
 					return err
 				}

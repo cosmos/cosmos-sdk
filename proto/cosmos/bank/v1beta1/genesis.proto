@@ -7,7 +7,7 @@ import "cosmos/bank/v1beta1/bank.proto";
 import "cosmos_proto/cosmos.proto";
 import "amino/amino.proto";
 
-option go_package = "github.com/cosmos/cosmos-sdk/x/bank/types";
+option go_package = "cosmossdk.io/x/bank/types";
 
 // GenesisState defines the bank module's genesis state.
 message GenesisState {

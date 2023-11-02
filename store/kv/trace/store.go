@@ -3,6 +3,7 @@ package trace
 import (
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"io"
 
 	"github.com/cockroachdb/errors"
@@ -79,8 +80,8 @@ func (s *Store) Delete(key []byte) {
 	s.parent.Delete(key)
 }
 
-func (s *Store) Reset() error {
-	return s.parent.Reset()
+func (s *Store) Reset(toVersion uint64) error {
+	return s.parent.Reset(toVersion)
 }
 
 func (s *Store) Write() {
@@ -90,11 +91,11 @@ func (s *Store) Write() {
 }
 
 func (s *Store) Branch() store.BranchedKVStore {
-	panic("cannot call Branch() on tracekv.Store")
+	panic(fmt.Sprintf("cannot call Branch() on %T", s))
 }
 
 func (s *Store) BranchWithTrace(_ io.Writer, _ store.TraceContext) store.BranchedKVStore {
-	panic("cannot call BranchWithTrace() on tracekv.Store")
+	panic(fmt.Sprintf("cannot call BranchWithTrace() on %T", s))
 }
 
 func (s *Store) Iterator(start, end []byte) store.Iterator {

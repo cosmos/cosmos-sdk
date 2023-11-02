@@ -11,7 +11,7 @@ import (
 	"cosmossdk.io/store/v2"
 )
 
-var _ store.Tree = (*IavlTree)(nil)
+var _ store.Committer = (*IavlTree)(nil)
 
 // IavlTree is a wrapper around iavl.MutableTree.
 type IavlTree struct {
@@ -76,6 +76,11 @@ func (t *IavlTree) GetProof(version uint64, key []byte) (*ics23.CommitmentProof,
 // GetLatestVersion returns the latest version of the database.
 func (t *IavlTree) GetLatestVersion() uint64 {
 	return uint64(t.tree.Version())
+}
+
+// Prune prunes all versions up to and including the provided version.
+func (t *IavlTree) Prune(version uint64) error {
+	return t.tree.DeleteVersionsTo(int64(version))
 }
 
 // Close closes the iavl tree.

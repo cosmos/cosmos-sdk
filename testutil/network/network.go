@@ -30,6 +30,8 @@ import (
 	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/math/unsafe"
 	pruningtypes "cosmossdk.io/store/pruning/types"
+	_ "cosmossdk.io/x/bank" // import bank as a blank
+	banktypes "cosmossdk.io/x/bank/types"
 	_ "cosmossdk.io/x/staking" // import staking as a blank
 	stakingtypes "cosmossdk.io/x/staking/types"
 
@@ -57,8 +59,6 @@ import (
 	_ "github.com/cosmos/cosmos-sdk/x/auth"           // import auth as a blank
 	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config" // import auth tx config as a blank
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	_ "github.com/cosmos/cosmos-sdk/x/bank" // import bank as a blank
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	_ "github.com/cosmos/cosmos-sdk/x/consensus" // import consensus as a blank
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 )

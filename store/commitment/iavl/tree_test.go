@@ -1,4 +1,4 @@
-package commitment
+package iavl
 
 import (
 	"testing"
@@ -8,19 +8,12 @@ import (
 
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/v2"
-	"cosmossdk.io/store/v2/commitment/iavl"
 )
 
-func generateTree(treeType string) store.Tree {
-	if treeType == "iavl" {
-		cfg := iavl.DefaultConfig()
-		db := dbm.NewMemDB()
-		tree := iavl.NewIavlTree(db, log.NewNopLogger(), cfg)
-
-		return tree
-	}
-
-	return nil
+func generateTree(treeType string) *IavlTree {
+	cfg := DefaultConfig()
+	db := dbm.NewMemDB()
+	return NewIavlTree(db, log.NewNopLogger(), cfg)
 }
 
 func TestIavlTree(t *testing.T) {
@@ -49,7 +42,6 @@ func TestIavlTree(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, workingHash, commitHash)
 	require.Equal(t, uint64(1), tree.GetLatestVersion())
-	version1Hash := tree.WorkingHash()
 
 	// write a batch of version 2
 	cs2 := store.NewChangeset()
@@ -59,11 +51,11 @@ func TestIavlTree(t *testing.T) {
 	cs2.Add([]byte("key1"), nil) // delete key1
 	err = tree.WriteBatch(cs2)
 	require.NoError(t, err)
-	workingHash = tree.WorkingHash()
-	require.NotNil(t, workingHash)
+	version2Hash := tree.WorkingHash()
+	require.NotNil(t, version2Hash)
 	commitHash, err = tree.Commit()
 	require.NoError(t, err)
-	require.Equal(t, workingHash, commitHash)
+	require.Equal(t, version2Hash, commitHash)
 
 	// get proof for key1
 	proof, err := tree.GetProof(1, []byte("key1"))
@@ -74,10 +66,26 @@ func TestIavlTree(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, proof.GetNonexist())
 
-	// load version 1
-	err = tree.LoadVersion(1)
+	// write a batch of version 3
+	cs3 := store.NewChangeset()
+	cs3.Add([]byte("key7"), []byte("value7"))
+	cs3.Add([]byte("key8"), []byte("value8"))
+	err = tree.WriteBatch(cs3)
 	require.NoError(t, err)
-	require.Equal(t, version1Hash, tree.WorkingHash())
+	_, err = tree.Commit()
+	require.NoError(t, err)
+
+	// prune version 1
+	err = tree.Prune(1)
+	require.NoError(t, err)
+	require.Equal(t, uint64(3), tree.GetLatestVersion())
+	err = tree.LoadVersion(1)
+	require.Error(t, err)
+
+	// load version 2
+	err = tree.LoadVersion(2)
+	require.NoError(t, err)
+	require.Equal(t, version2Hash, tree.WorkingHash())
 
 	// close the db
 	require.NoError(t, tree.Close())

@@ -69,6 +69,11 @@ func (AppModule) DefaultGenesis(jsonCodec codec.JSONCodec) json.RawMessage {
 }
 
 func (AppModule) ValidateGenesis(jsonCodec codec.JSONCodec, config client.TxEncodingConfig, message json.RawMessage) error {
+	gs := &v1.GenesisState{}
+	if err := jsonCodec.UnmarshalJSON(message, gs); err != nil {
+		return err
+	}
+	// Add validation logic for gs here
 	return nil
 }
 

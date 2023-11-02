@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"bytes"
 	"context"
 	"time"
 
@@ -76,6 +77,19 @@ func (k Keeper) SetConsKeyQueue(ctx context.Context, ts time.Time, valAddr sdk.V
 		return err
 	}
 
-	queueRec.Addresses = append(queueRec.Addresses, valAddr)
+	if !bytesSliceExists(queueRec.Addresses, valAddr.Bytes()) {
+		// Address does not exist, so you can append it to the list
+		queueRec.Addresses = append(queueRec.Addresses, valAddr.Bytes())
+	}
+
 	return k.ValidatorConsensusKeyRotationRecordQueue.Set(ctx, ts, queueRec)
+}
+
+func bytesSliceExists(sliceList [][]byte, targetBytes []byte) bool {
+	for _, bytesSlice := range sliceList {
+		if bytes.Equal(bytesSlice, targetBytes) {
+			return true
+		}
+	}
+	return false
 }

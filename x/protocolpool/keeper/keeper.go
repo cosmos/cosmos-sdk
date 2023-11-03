@@ -186,7 +186,7 @@ func (k Keeper) calculateClaimableFunds(ctx context.Context, recipient sdk.AccAd
 	return amount, nil
 }
 
-func (k Keeper) validateBudgetProposal(ctx context.Context, bp types.MsgSubmitBudgetProposal) error {
+func (k Keeper) validateAndUpdateBudgetProposal(ctx context.Context, bp types.MsgSubmitBudgetProposal) error {
 	if bp.TotalBudget.IsZero() {
 		return fmt.Errorf("invalid budget proposal: total budget cannot be zero")
 	}
@@ -195,8 +195,13 @@ func (k Keeper) validateBudgetProposal(ctx context.Context, bp types.MsgSubmitBu
 		return fmt.Errorf("invalid budget proposal: %w", err)
 	}
 
-	if int64(bp.StartTime) <= sdk.UnwrapSDKContext(ctx).BlockTime().Unix() {
-		return fmt.Errorf("invalid budget proposal: start time cannot be less than current block time")
+	currentTime := sdk.UnwrapSDKContext(ctx).BlockTime().Unix()
+	if int64(bp.StartTime) == 0 {
+		bp.StartTime = uint64(currentTime)
+	}
+
+	if bp.StartTime < uint64(currentTime) {
+		return fmt.Errorf("invalid budget proposal: start time cannot be less than the current block time")
 	}
 
 	if bp.Tranches == 0 {

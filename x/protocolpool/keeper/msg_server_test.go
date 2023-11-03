@@ -82,7 +82,7 @@ func (suite *KeeperTestSuite) TestMsgSubmitBudgetProposal() {
 				Period:           60,
 			},
 			expErr:    true,
-			expErrMsg: "start time cannot be less than current block time",
+			expErrMsg: "start time cannot be less than the current block time",
 		},
 		"invalid tranches": {
 			input: &types.MsgSubmitBudgetProposal{

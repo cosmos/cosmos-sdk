@@ -322,7 +322,12 @@ func SimulateMsgDeposit(
 			return simtypes.NoOpMsg(types.ModuleName, TypeMsgDeposit, "unable to generate proposalID"), nil, nil
 		}
 
-		deposit, skip, err := randomDeposit(r, ctx, ak, bk, k, simAccount.Address, false, false)
+		p, err := k.Proposals.Get(ctx, proposalID)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, TypeMsgDeposit, "unable to get proposal"), nil, err
+		}
+
+		deposit, skip, err := randomDeposit(r, ctx, ak, bk, k, simAccount.Address, false, p.Expedited)
 		switch {
 		case skip:
 			return simtypes.NoOpMsg(types.ModuleName, TypeMsgDeposit, "skip deposit"), nil, nil
@@ -592,7 +597,6 @@ func randomDeposit(
 		return nil, false, err
 	}
 	amount = amount.Add(minAmount)
-	amount = amount.MulRaw(3) // 3x what's required // TODO: this is a hack, we need to be able to calculate the correct amount using params
 
 	if amount.GT(spendableBalance) || amount.LT(threshold) {
 		return nil, true, nil

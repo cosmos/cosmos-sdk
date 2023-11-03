@@ -18,7 +18,7 @@ import (
 
 const (
 	chainID   = "test-chain"
-	nodeEnv   = "NODE"
+	nodeEnv   = "CONFIG_TEST_NODE"
 	testNode1 = "http://localhost:1"
 	testNode2 = "http://localhost:2"
 )
@@ -44,13 +44,15 @@ func initClientContextWithTemplate(t *testing.T, envVar, customTemplate string, 
 		WithCodec(codec.NewProtoCodec(codectypes.NewInterfaceRegistry())).
 		WithChainID(chainID)
 
-	require.NoError(t, clientCtx.Viper.BindEnv(nodeEnv))
 	if envVar != "" {
 		require.NoError(t, os.Setenv(nodeEnv, envVar))
 	}
 
 	clientCtx, err := config.CreateClientConfig(clientCtx, customTemplate, customConfig)
-	return clientCtx, func() { _ = os.RemoveAll(home) }, err
+	return clientCtx, func() {
+		_ = os.RemoveAll(home)
+		_ = os.Unsetenv(nodeEnv)
+	}, err
 }
 
 func TestCustomTemplateAndConfig(t *testing.T) {
@@ -90,7 +92,6 @@ note = "{{ .Note }}"
 		clientCtx, cleanup, err := initClientContextWithTemplate(t, "", customClientConfigTemplate, customClientConfig)
 		defer func() {
 			cleanup()
-			_ = os.Unsetenv(nodeEnv)
 		}()
 
 		require.NoError(t, err)
@@ -103,7 +104,6 @@ note = "{{ .Note }}"
 		_, cleanup, err := initClientContextWithTemplate(t, "", "", customClientConfig)
 		defer func() {
 			cleanup()
-			_ = os.Unsetenv(nodeEnv)
 		}()
 
 		require.Error(t, err)
@@ -113,7 +113,6 @@ note = "{{ .Note }}"
 		clientCtx, cleanup, err := initClientContextWithTemplate(t, "", config.DefaultClientConfigTemplate, customClientConfig)
 		defer func() {
 			cleanup()
-			_ = os.Unsetenv(nodeEnv)
 		}()
 
 		require.NoError(t, err)
@@ -125,7 +124,6 @@ note = "{{ .Note }}"
 		clientCtx, cleanup, err := initClientContextWithTemplate(t, "", "", nil)
 		defer func() {
 			cleanup()
-			_ = os.Unsetenv(nodeEnv)
 		}()
 
 		require.NoError(t, err)
@@ -166,7 +164,6 @@ func TestConfigCmdEnvFlag(t *testing.T) {
 			clientCtx, cleanup := initClientContext(t, tc.envVar)
 			defer func() {
 				cleanup()
-				_ = os.Unsetenv(nodeEnv)
 			}()
 
 			/*

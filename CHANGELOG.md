@@ -38,37 +38,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+## [v0.50.0](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.50.0) - 2023-11-07
+
 ### Features
 
-* (server) [#18162](https://github.com/cosmos/cosmos-sdk/pull/18162) Start gRPC & API server in standalone mode.
-* (baseapp) [#16581](https://github.com/cosmos/cosmos-sdk/pull/16581) Implement Optimistic Execution as an experimental feature (not enabled by default).
 * (baseapp) [#18071](https://github.com/cosmos/cosmos-sdk/pull/18071) Add hybrid handlers to `MsgServiceRouter`.
-
-### Improvements
-
-* (x/gov) [#18189](https://github.com/cosmos/cosmos-sdk/pull/18189) Limit the accepted deposit coins for a proposal to the minimum proposal deposit denoms.
-* (x/staking) [#18049](https://github.com/cosmos/cosmos-sdk/pull/18049) Return early if Slash encounters zero tokens to burn.
-* (x/staking) [#18035](https://github.com/cosmos/cosmos-sdk/pull/18035) Hoisted out of the redelegation loop, the non-changing validator and delegator addresses parsing.
-* (keyring) [#17913](https://github.com/cosmos/cosmos-sdk/pull/17913) Add `NewAutoCLIKeyring` for creating an AutoCLI keyring from a SDK keyring.
-* (x/consensus) [#18041](https://github.com/cosmos/cosmos-sdk/pull/18041) Let `ToProtoConsensusParams()` return an error.
-* [#18204](https://github.com/cosmos/cosmos-sdk/pull/18204) Use streaming json parser to parse chain-id from genesis file.
-
-### Bug Fixes
-
-* (server) [#18254](https://github.com/cosmos/cosmos-sdk/pull/18254) Don't hardcode gRPC address to localhost.
-* (x/gov) [#18173](https://github.com/cosmos/cosmos-sdk/pull/18173) Gov hooks now return an error and are *blocking* when they fail. Expect for `AfterProposalFailedMinDeposit` and `AfterProposalVotingPeriodEnded` which log the error and continue.
-* (x/gov) [#17873](https://github.com/cosmos/cosmos-sdk/pull/17873) Fail any inactive and active proposals that cannot be decoded.
-* (x/slashing) [#18016](https://github.com/cosmos/cosmos-sdk/pull/18016) Fixed builder function for missed blocks key (`validatorMissedBlockBitArrayPrefixKey`) in slashing/migration/v4
-* (x/bank) [#18107](https://github.com/cosmos/cosmos-sdk/pull/18107) Add missing keypair of SendEnabled to restore legacy param set before migration.
-
-### Client Breaking Changes
-
-* (x/gov) [#17910](https://github.com/cosmos/cosmos-sdk/pull/17910) Remove telemetry for counting votes and proposals. It was incorrectly counting votes. Use alternatives, such as state streaming.
-
-## [v0.50.0-rc.1](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.50.0-rc.1) - 2023-09-25
-
-### Features
-
+* (server) [#18162](https://github.com/cosmos/cosmos-sdk/pull/18162) Start gRPC & API server in standalone mode.
 * (baseapp & types) [#17712](https://github.com/cosmos/cosmos-sdk/pull/17712) Introduce `PreBlock`, which runs before begin blocker other modules, and allows to modify consensus parameters, and the changes are visible to the following state machine logics. Additionally it can be used for vote extensions.
 * (genutil) [#17571](https://github.com/cosmos/cosmos-sdk/pull/17571) Allow creation of `AppGenesis` without a file lookup.
 * (keyring) [#17424](https://github.com/cosmos/cosmos-sdk/pull/17424) Allows to import private keys encoded in hex. 
@@ -78,6 +53,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (baseapp) [#16898](https://github.com/cosmos/cosmos-sdk/pull/16898) Add `preFinalizeBlockHook` to allow vote extensions persistence.
 * (cli) [#16887](https://github.com/cosmos/cosmos-sdk/pull/16887) Add two new CLI commands: `<appd> tx simulate` for simulating a transaction; `<appd> query block-results` for querying CometBFT RPC for block results.
 * (x/bank) [#16852](https://github.com/cosmos/cosmos-sdk/pull/16852) Add `DenomMetadataByQueryString` query in bank module to support metadata query by query string.
+* (baseapp) [#16581](https://github.com/cosmos/cosmos-sdk/pull/16581) Implement Optimistic Execution as an experimental feature (not enabled by default).
 * (types) [#16257](https://github.com/cosmos/cosmos-sdk/pull/16257) Allow setting the base denom in the denom registry.
 * (baseapp) [#16239](https://github.com/cosmos/cosmos-sdk/pull/16239) Add Gas Limits to allow node operators to resource bound queries.
 * (cli) [#16209](https://github.com/cosmos/cosmos-sdk/pull/16209) Make `StartCmd` more customizable.
@@ -111,6 +87,11 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
+* (x/gov) [#18189](https://github.com/cosmos/cosmos-sdk/pull/18189) Limit the accepted deposit coins for a proposal to the minimum proposal deposit denoms.
+* (x/staking) [#18049](https://github.com/cosmos/cosmos-sdk/pull/18049) Return early if Slash encounters zero tokens to burn.
+* (x/staking) [#18035](https://github.com/cosmos/cosmos-sdk/pull/18035) Hoisted out of the redelegation loop, the non-changing validator and delegator addresses parsing.
+* (keyring) [#17913](https://github.com/cosmos/cosmos-sdk/pull/17913) Add `NewAutoCLIKeyring` for creating an AutoCLI keyring from a SDK keyring.
+* (x/consensus) [#18041](https://github.com/cosmos/cosmos-sdk/pull/18041) Let `ToProtoConsensusParams()` return an error.
 * (x/gov) [#17780](https://github.com/cosmos/cosmos-sdk/pull/17780) Recover panics and turn them into errors when executing x/gov proposals.
 * (baseapp) [#17667](https://github.com/cosmos/cosmos-sdk/pull/17667) Close databases opened by SDK in `baseApp.Close()`.
 * (types/module) [#17554](https://github.com/cosmos/cosmos-sdk/pull/17554) Introduce `HasABCIGenesis` which is implemented by a module only when a validatorset update needs to be returned.
@@ -335,6 +316,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Client Breaking Changes
 
+* (x/gov) [#17910](https://github.com/cosmos/cosmos-sdk/pull/17910) Remove telemetry for counting votes and proposals. It was incorrectly counting votes. Use alternatives, such as state streaming.
 * (abci) [#15845](https://github.com/cosmos/cosmos-sdk/pull/15845) Remove duplicating events in `logs`.
 * (abci) [#15845](https://github.com/cosmos/cosmos-sdk/pull/15845) Add `msg_index` to all event attributes to associate events and messages.
 * (x/staking) [#15701](https://github.com/cosmos/cosmos-sdk/pull/15701) `HistoricalInfoKey` now has a binary format.
@@ -367,6 +349,11 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Bug Fixes
 
+* (server) [#18254](https://github.com/cosmos/cosmos-sdk/pull/18254) Don't hardcode gRPC address to localhost.
+* (x/gov) [#18173](https://github.com/cosmos/cosmos-sdk/pull/18173) Gov hooks now return an error and are *blocking* when they fail. Expect for `AfterProposalFailedMinDeposit` and `AfterProposalVotingPeriodEnded` which log the error and continue.
+* (x/gov) [#17873](https://github.com/cosmos/cosmos-sdk/pull/17873) Fail any inactive and active proposals that cannot be decoded.
+* (x/slashing) [#18016](https://github.com/cosmos/cosmos-sdk/pull/18016) Fixed builder function for missed blocks key (`validatorMissedBlockBitArrayPrefixKey`) in slashing/migration/v4.
+* (x/bank) [#18107](https://github.com/cosmos/cosmos-sdk/pull/18107) Add missing keypair of SendEnabled to restore legacy param set before migration.
 * (baseapp) [#17769](https://github.com/cosmos/cosmos-sdk/pull/17769) Ensure we respect block size constraints in the `DefaultProposalHandler`'s `PrepareProposal` handler when a nil or no-op mempool is used. We provide a `TxSelector` type to assist in making transaction selection generalized. We also fix a comparison bug in tx selection when `req.maxTxBytes` is reached.
 * (mempool) [#17668](https://github.com/cosmos/cosmos-sdk/pull/17668) Fix `PriorityNonceIterator.Next()` nil pointer ref for min priority at the end of iteration.
 * (config) [#17649](https://github.com/cosmos/cosmos-sdk/pull/17649) Fix `mempool.max-txs` configuration is invalid in `app.config`.

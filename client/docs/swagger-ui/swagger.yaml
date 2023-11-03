@@ -14235,6 +14235,19 @@ paths:
                   burn_vote_veto:
                     type: boolean
                     title: burn deposits if quorum with vote type no_veto is met
+                  min_deposit_ratio:
+                    type: string
+                    description: >-
+                      The ratio representing the proportion of the deposit value
+                      minimum that must be met when making a deposit.
+
+                      Default value: 0.01. Meaning that for a chain with a
+                      min_deposit of 100stake, a deposit of 1stake would be
+
+                      required.
+
+
+                      Since: cosmos-sdk 0.50
             description: >-
               QueryParamsResponse is the response type for the Query/Params RPC
               method.
@@ -49609,6 +49622,19 @@ definitions:
       burn_vote_veto:
         type: boolean
         title: burn deposits if quorum with vote type no_veto is met
+      min_deposit_ratio:
+        type: string
+        description: >-
+          The ratio representing the proportion of the deposit value minimum
+          that must be met when making a deposit.
+
+          Default value: 0.01. Meaning that for a chain with a min_deposit of
+          100stake, a deposit of 1stake would be
+
+          required.
+
+
+          Since: cosmos-sdk 0.50
     description: |-
       Params defines the parameters for the x/gov module.
 
@@ -50197,6 +50223,19 @@ definitions:
           burn_vote_veto:
             type: boolean
             title: burn deposits if quorum with vote type no_veto is met
+          min_deposit_ratio:
+            type: string
+            description: >-
+              The ratio representing the proportion of the deposit value minimum
+              that must be met when making a deposit.
+
+              Default value: 0.01. Meaning that for a chain with a min_deposit
+              of 100stake, a deposit of 1stake would be
+
+              required.
+
+
+              Since: cosmos-sdk 0.50
     description: QueryParamsResponse is the response type for the Query/Params RPC method.
   cosmos.gov.v1.QueryProposalResponse:
     type: object

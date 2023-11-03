@@ -461,7 +461,7 @@ func TestAnteHandlerChecks(t *testing.T) {
 				if tc.suported {
 					require.ErrorContains(t, err, "not on curve")
 				} else {
-					require.ErrorContains(t, err, "unsupported public key type")
+					require.ErrorContains(t, err, "unsupported key type")
 				}
 			} else {
 				require.Nil(t, err, "TestCase %d: %s errored unexpectedly. Err: %v", i, tc.name, err)

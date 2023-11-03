@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"sort"
 
+	corecomet "cosmossdk.io/core/comet"
 	coreheader "cosmossdk.io/core/header"
 	"cosmossdk.io/log"
 	snapshottypes "cosmossdk.io/store/snapshots/types"
@@ -15,6 +16,7 @@ import (
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/cosmos-sdk/serverv2/cometbft/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/gogoproto/proto"
 )
 
@@ -22,13 +24,14 @@ type cometABCIWrapper struct {
 	app    types.ProtoApp
 	logger log.Logger
 
-	// Comment this code later, now I'm avoiding noise (volatile states)
-	checkState           *state
-	prepareProposalState *state
-	processProposalState *state
-	finalizeBlockState   *state
+	// indexEvents defines the set of events in the form {eventType}.{attributeKey},
+	// which informs CometBFT what to index. If empty, all events will be indexed.
+	indexEvents map[string]struct{}
 
 	paramStore ParamStore
+
+	// TODO: these below here I don't know yet where to put
+	trace bool
 }
 
 func NewCometABCIWrapper(app types.ProtoApp, logger log.Logger) abci.Application {
@@ -63,7 +66,19 @@ func (w *cometABCIWrapper) Query(ctx context.Context, req *abci.RequestQuery) (*
 }
 
 func (w *cometABCIWrapper) CheckTx(_ context.Context, req *abci.RequestCheckTx) (*abci.ResponseCheckTx, error) {
-	return w.app.CheckTx(req)
+	// TODO: should we do something different for check and re-check tx?
+	gInfo, result, anteEvents, err := w.app.ValidateTX(req.Tx)
+	if err != nil {
+		return sdkerrors.ResponseCheckTxWithEvents(err, gInfo.GasWanted, gInfo.GasUsed, anteEvents, w.trace), nil
+	}
+
+	return &abci.ResponseCheckTx{
+		GasWanted: int64(gInfo.GasWanted),
+		GasUsed:   int64(gInfo.GasUsed),
+		Log:       result.Log,
+		Data:      result.Data,
+		Events:    sdk.MarkEventsToIndex(result.Events, w.indexEvents), // TODO: this event handling should be done on cometbft's package
+	}, nil
 }
 
 func (w *cometABCIWrapper) InitChain(_ context.Context, req *abci.RequestInitChain) (*abci.ResponseInitChain, error) {
@@ -91,39 +106,19 @@ func (w *cometABCIWrapper) InitChain(_ context.Context, req *abci.RequestInitCha
 		}
 	}
 
-	// initialize states with a correct header
-	w.setState(execModeFinalize, initHeader)
-	w.setState(execModeCheck, initHeader)
+	ms := w.app.CommitMultiStore().CacheMultiStore()
+	ctx := sdk.NewContext(ms, false, w.logger).WithStreamingManager(w.app.StreamingManager()).WithBlockHeader(initHeader)
+	defer ms.Write() // no need to keep InitChain changes in cache, we can write them immediately
 
 	// Store the consensus params in the BaseApp's param store. Note, this must be
 	// done after the finalizeBlockState and context have been set as it's persisted
 	// to state.
 	if req.ConsensusParams != nil {
-		err := w.StoreConsensusParams(w.finalizeBlockState.ctx, *req.ConsensusParams)
+		err := w.StoreConsensusParams(ctx, *req.ConsensusParams)
 		if err != nil {
 			return nil, err
 		}
 	}
-
-	defer func() {
-		// InitChain represents the state of the application BEFORE the first block,
-		// i.e. the genesis block. This means that when processing the app's InitChain
-		// handler, the block height is zero by default. However, after Commit is called
-		// the height needs to reflect the true block height.
-		initHeader.Height = req.InitialHeight
-		w.checkState.ctx = w.checkState.ctx.WithBlockHeader(initHeader).
-			WithHeaderInfo(coreheader.Info{
-				ChainID: req.ChainId,
-				Height:  req.InitialHeight,
-				Time:    req.Time,
-			})
-		w.finalizeBlockState.ctx = w.finalizeBlockState.ctx.WithBlockHeader(initHeader).
-			WithHeaderInfo(coreheader.Info{
-				ChainID: req.ChainId,
-				Height:  req.InitialHeight,
-				Time:    req.Time,
-			})
-	}()
 
 	// TODO: define this in the app
 	if w.app.InitChainer() == nil {
@@ -131,10 +126,10 @@ func (w *cometABCIWrapper) InitChain(_ context.Context, req *abci.RequestInitCha
 	}
 
 	// add block gas meter for any genesis transactions (allow infinite gas)
-	w.finalizeBlockState.ctx = w.finalizeBlockState.ctx.WithBlockGasMeter(storetypes.NewInfiniteGasMeter())
+	ctx = ctx.WithBlockGasMeter(storetypes.NewInfiniteGasMeter())
 
 	// TODO: define this in the app
-	res, err := w.app.InitChainer()(w.finalizeBlockState.ctx, req)
+	res, err := w.app.InitChainer()(ctx, req)
 	if err != nil {
 		return nil, err
 	}
@@ -179,15 +174,164 @@ func (w *cometABCIWrapper) InitChain(_ context.Context, req *abci.RequestInitCha
 }
 
 func (w *cometABCIWrapper) PrepareProposal(_ context.Context, req *abci.RequestPrepareProposal) (*abci.ResponsePrepareProposal, error) {
+	// TODO: do an interface check to see if app implements PrepareProposal
 	return w.app.PrepareProposal(req)
 }
 
 func (w *cometABCIWrapper) ProcessProposal(_ context.Context, req *abci.RequestProcessProposal) (*abci.ResponseProcessProposal, error) {
+	// TODO: do an interface check to see if app implements ProcessProposal
 	return w.app.ProcessProposal(req)
 }
 
-func (w *cometABCIWrapper) FinalizeBlock(_ context.Context, req *abci.RequestFinalizeBlock) (*abci.ResponseFinalizeBlock, error) {
-	return w.app.FinalizeBlock(req)
+func (w *cometABCIWrapper) FinalizeBlock(c context.Context, req *abci.RequestFinalizeBlock) (*abci.ResponseFinalizeBlock, error) {
+	var events []abci.Event
+
+	if err := w.app.CheckHalt(req.Height, req.Time); err != nil {
+		return nil, err
+	}
+
+	if err := w.validateFinalizeBlockHeight(req); err != nil {
+		return nil, err
+	}
+
+	if w.app.CommitMultiStore().TracingEnabled() {
+		w.app.CommitMultiStore().SetTracingContext(storetypes.TraceContext(
+			map[string]any{"blockHeight": req.Height},
+		))
+	}
+
+	header := cmtproto.Header{
+		ChainID:            w.app.ChainID(),
+		Height:             req.Height,
+		Time:               req.Time,
+		ProposerAddress:    req.ProposerAddress,
+		NextValidatorsHash: req.NextValidatorsHash,
+		AppHash:            w.app.CommitMultiStore().LastCommitID().Hash,
+	}
+
+	ms := w.app.CommitMultiStore().CacheMultiStore()
+
+	// Context is now updated with Header information.
+	ctx := sdk.NewContext(ms, false, w.logger).
+		WithContext(c).
+		WithStreamingManager(w.app.StreamingManager()).
+		WithBlockHeader(header).
+		WithHeaderHash(req.Hash).
+		WithHeaderInfo(coreheader.Info{
+			ChainID: w.app.ChainID(),
+			Height:  req.Height,
+			Time:    req.Time,
+			Hash:    req.Hash,
+			AppHash: w.app.CommitMultiStore().LastCommitID().Hash,
+		}).
+		WithVoteInfos(req.DecidedLastCommit.Votes).
+		WithExecMode(sdk.ExecModeFinalize).
+		WithCometInfo(corecomet.Info{
+			Evidence:        sdk.ToSDKEvidence(req.Misbehavior),
+			ValidatorsHash:  req.NextValidatorsHash,
+			ProposerAddress: req.ProposerAddress,
+			LastCommit:      sdk.ToSDKCommitInfo(req.DecidedLastCommit),
+		})
+
+		// GasMeter must be set after we get a context with updated consensus params.
+	ctx = ctx.WithConsensusParams(w.GetConsensusParams(ctx)).
+		WithBlockGasMeter(w.getBlockGasMeter(ctx))
+
+	// if w.checkState != nil {
+	// 	w.checkState.ctx = w.checkState.ctx.
+	// 		WithBlockGasMeter(gasMeter).
+	// 		WithHeaderHash(req.Hash)
+	// }
+
+	if err := w.app.PreBlock(req); err != nil {
+		return nil, err
+	}
+
+	beginBlock, err := w.app.BeginBlock(ctx)
+	if err != nil {
+		return nil, err
+	}
+	// TODO: Right now BeginBlock in baseapp is gathering events, maybe do it here idk
+
+	// First check for an abort signal after beginBlock, as it's the first place
+	// we spend any significant amount of time.
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	default:
+		// continue
+	}
+
+	events = append(events, beginBlock.Events...)
+
+	// Iterate over all raw transactions in the proposal and attempt to execute
+	// them, gathering the execution results.
+	//
+	// NOTE: Not all raw transactions may adhere to the sdk.Tx interface, e.g.
+	// vote extensions, so skip those.
+	txResults := make([]*abci.ExecTxResult, 0, len(req.Txs))
+	for _, rawTx := range req.Txs {
+		var response *abci.ExecTxResult
+
+		// TODO: figure out if ValidateTX should be used here or not?
+		if _, _, _, err := w.app.ValidateTX(rawTx); err == nil {
+			response = w.app.DeliverTx(rawTx)
+		} else {
+			// In the case where a transaction included in a block proposal is malformed,
+			// we still want to return a default response to comet. This is because comet
+			// expects a response for each transaction included in a block proposal.
+			response = sdkerrors.ResponseExecTxResultWithEvents(
+				sdkerrors.ErrTxDecode,
+				0,
+				0,
+				nil,
+				false,
+			)
+		}
+
+		// check after every tx if we should abort
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		default:
+			// continue
+		}
+
+		txResults = append(txResults, response)
+	}
+
+	if ms.TracingEnabled() {
+		ms = ms.SetTracingContext(nil).(storetypes.CacheMultiStore)
+	}
+
+	endBlock, err := w.app.EndBlock(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	// check after endBlock if we should abort, to avoid propagating the result
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	default:
+		// continue
+	}
+
+	events = append(events, endBlock.Events...)
+	cp := w.GetConsensusParams(ctx)
+
+	// write changes into the branched state and get working hash
+	ms.Write()
+	commitHash := w.app.CommitMultiStore().WorkingHash()
+	w.logger.Debug("hash of all writes", "workingHash", fmt.Sprintf("%X", commitHash))
+
+	return &abci.ResponseFinalizeBlock{
+		Events:                events,
+		TxResults:             txResults,
+		ValidatorUpdates:      endBlock.ValidatorUpdates,
+		ConsensusParamUpdates: &cp,
+		AppHash:               commitHash,
+	}, nil
 }
 
 func (w *cometABCIWrapper) ExtendVote(ctx context.Context, req *abci.RequestExtendVote) (*abci.ResponseExtendVote, error) {
@@ -326,6 +470,8 @@ func (w *cometABCIWrapper) ApplySnapshotChunk(_ context.Context, req *abci.Reque
 	}
 }
 
+// StoreConsensusParams sets the consensus parameters to the BaseApp's param
+// store.
 func (w *cometABCIWrapper) StoreConsensusParams(ctx sdk.Context, cp cmtproto.ConsensusParams) error {
 	if w.paramStore == nil {
 		return errors.New("cannot store consensus params with no params store set")
@@ -334,32 +480,54 @@ func (w *cometABCIWrapper) StoreConsensusParams(ctx sdk.Context, cp cmtproto.Con
 	return w.paramStore.Set(ctx, cp)
 }
 
-// TODO: maybe we can avoid this, I had some ideas about it
-// setState sets the BaseApp's state for the corresponding mode with a branched
-// multi-store (i.e. a CacheMultiStore) and a new Context with the same
-// multi-store branch, and provided header.
-func (w *cometABCIWrapper) setState(mode execMode, header cmtproto.Header) {
-	ms := w.app.CommitMultiStore().CacheMultiStore()
-	baseState := &state{
-		ms:  ms,
-		ctx: sdk.NewContext(ms, false, w.logger).WithStreamingManager(w.app.StreamingManager()).WithBlockHeader(header),
+// GetConsensusParams returns the current consensus parameters from the BaseApp's
+// ParamStore. If the BaseApp has no ParamStore defined, nil is returned.
+func (w *cometABCIWrapper) GetConsensusParams(ctx sdk.Context) cmtproto.ConsensusParams {
+	if w.paramStore == nil {
+		return cmtproto.ConsensusParams{}
 	}
 
-	switch mode {
-	case execModeCheck:
-		baseState.ctx = baseState.ctx.WithIsCheckTx(true).WithMinGasPrices(w.app.MinGasPrices())
-		w.checkState = baseState
-
-	case execModePrepareProposal:
-		w.prepareProposalState = baseState
-
-	case execModeProcessProposal:
-		w.processProposalState = baseState
-
-	case execModeFinalize:
-		w.finalizeBlockState = baseState
-
-	default:
-		panic(fmt.Sprintf("invalid runTxMode for setState: %d", mode))
+	cp, err := w.paramStore.Get(ctx)
+	if err != nil {
+		panic(fmt.Errorf("consensus key is nil: %w", err))
 	}
+
+	return cp
+}
+
+func (w *cometABCIWrapper) validateFinalizeBlockHeight(req *abci.RequestFinalizeBlock) error {
+	if req.Height < 1 {
+		return fmt.Errorf("invalid height: %d", req.Height)
+	}
+
+	lastBlockHeight := w.app.CommitMultiStore().LastCommitID().Version
+
+	// expectedHeight holds the expected height to validate
+	var expectedHeight int64
+	if lastBlockHeight == 0 && w.app.InitialHeight() > 1 {
+		// In this case, we're validating the first block of the chain, i.e no
+		// previous commit. The height we're expecting is the initial height.
+		expectedHeight = w.app.InitialHeight()
+	} else {
+		// This case can mean two things:
+		//
+		// - Either there was already a previous commit in the store, in which
+		// case we increment the version from there.
+		// - Or there was no previous commit, in which case we start at version 1.
+		expectedHeight = lastBlockHeight + 1
+	}
+
+	if req.Height != expectedHeight {
+		return fmt.Errorf("invalid height: %d; expected: %d", req.Height, expectedHeight)
+	}
+
+	return nil
+}
+
+func (w *cometABCIWrapper) getBlockGasMeter(ctx sdk.Context) storetypes.GasMeter {
+	if maxGas := w.app.GetMaximumBlockGas(ctx); maxGas > 0 {
+		return storetypes.NewGasMeter(maxGas)
+	}
+
+	return storetypes.NewInfiniteGasMeter()
 }

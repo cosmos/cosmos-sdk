@@ -2,9 +2,11 @@ package types
 
 import (
 	"context"
+	"time"
 
 	"cosmossdk.io/store/snapshots"
 	storetypes "cosmossdk.io/store/types"
+	abci "github.com/cometbft/cometbft/abci/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -24,8 +26,13 @@ type ProtoApp interface {
 	CommitMultiStore() storetypes.CommitMultiStore
 	StreamingManager() storetypes.StreamingManager
 
-	// TODO: Should this be a CometBFT specific thing?
+	// CachedMultiStore
+	// CachedMultiStore() storetypes.CacheMultiStore
+
+	// TODO: Should these be a CometBFT specific thing?
 	MinGasPrices() sdk.DecCoins
+	CheckHalt(height int64, time time.Time) error
+	GetMaximumBlockGas(sdk.Context) uint64
 
 	// TODO: figure out if these below here are going to be available
 	QueryMultiStore() storetypes.MultiStore
@@ -33,8 +40,11 @@ type ProtoApp interface {
 	AppVersion(ctx context.Context) (uint64, error)
 
 	// TODO: Define what methods the Cosmos SDK ABCI will have
-	InitChainer() sdk.InitChainer // InitChainer should not have Comet types
-	BeginBlock() error
-	EndBlock() error
-	DeliverTx() error
+	ValidateTX([]byte) (gInfo sdk.GasInfo, result *sdk.Result, anteEvents []abci.Event, err error) // TODO: I'm just replicating what runTx replies here
+
+	InitChainer() sdk.InitChainer                       // InitChainer should not have Comet types
+	PreBlock(req *abci.RequestFinalizeBlock) error      // TODO: Should preblock be only a Comet thing?
+	BeginBlock(context.Context) (sdk.BeginBlock, error) // TODO: create a new response type for this, we might not need it at all as we can access the EventManager()
+	EndBlock(context.Context) (sdk.EndBlock, error)     // TODO: sdk.EndBlock should not have Comet types
+	DeliverTx([]byte) *abci.ExecTxResult                // TODO: *abci.ExecTxResult should be an SDK type instead
 }

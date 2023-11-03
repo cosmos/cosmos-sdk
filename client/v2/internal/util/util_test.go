@@ -74,12 +74,12 @@ func TestIsSupportedVersion(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		resp := IsSupportedVersion(tc.input, mockBuildInfo)
+		resp := isSupportedVersion(tc.input, mockBuildInfo)
 		if resp != tc.expected {
 			t.Errorf("expected %v, got %v", tc.expected, resp)
 		}
 
-		resp = IsSupportedVersion(tc.input, &debug.BuildInfo{})
+		resp = isSupportedVersion(tc.input, &debug.BuildInfo{})
 		if !resp {
 			t.Errorf("expected %v, got %v", true, resp)
 		}

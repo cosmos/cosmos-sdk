@@ -12,6 +12,11 @@ import (
 	"cosmossdk.io/client/v2/internal/strcase"
 )
 
+// get build info to verify later if comment is supported
+// this is a hack in because of the global api module package
+// later versions unsupported by the current version can be added
+var buildInfo, _ = debug.ReadBuildInfo()
+
 // DescriptorName returns the name of the descriptor in kebab case.
 func DescriptorKebabName(descriptor protoreflect.Descriptor) string {
 	return strcase.ToKebab(string(descriptor.Name()))
@@ -34,9 +39,16 @@ func ResolveMessageType(resolver protoregistry.MessageTypeResolver, descriptor p
 
 // IsSupportedVersion is used to determine in which version of a module / sdk a rpc was introduced.
 // It returns false if the rpc has comment for an higher version than the current one.
-func IsSupportedVersion(input string, buildInfo *debug.BuildInfo) bool {
-	if input == "" {
-		return true // no comment mean it's supported since v0.0.0
+func IsSupportedVersion(input string) bool {
+	return isSupportedVersion(input, buildInfo)
+}
+
+// isSupportedVersion is used to determine in which version of a module / sdk a rpc was introduced.
+// It returns false if the rpc has comment for an higher version than the current one.
+// It takes a buildInfo as argument to be able to test it.
+func isSupportedVersion(input string, buildInfo *debug.BuildInfo) bool {
+	if input == "" || buildInfo == nil {
+		return true
 	}
 
 	moduleName, version := parseSinceComment(input)

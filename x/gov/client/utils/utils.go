@@ -3,7 +3,7 @@ package utils
 import (
 	"strings"
 
-	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
+	"cosmossdk.io/x/gov/types/v1beta1"
 )
 
 // NormalizeVoteOption - normalize user specified vote option
@@ -18,7 +18,7 @@ func NormalizeVoteOption(option string) string {
 	case "No", "no":
 		return v1beta1.OptionNo.String()
 
-	case "NoWithVeto", "no_with_veto":
+	case "NoWithVeto", "no_with_veto", "no-with-veto":
 		return v1beta1.OptionNoWithVeto.String()
 
 	default:

@@ -3,9 +3,10 @@ package keeper
 import (
 	"context"
 
+	"cosmossdk.io/x/slashing/types"
+	stakingtypes "cosmossdk.io/x/staking/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/slashing/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // InitGenesis initializes default parameters and the keeper's address to
@@ -69,7 +70,10 @@ func (keeper Keeper) ExportGenesis(ctx context.Context) (data *types.GenesisStat
 	signingInfos := make([]types.SigningInfo, 0)
 	missedBlocks := make([]types.ValidatorMissedBlocks, 0)
 	err = keeper.ValidatorSigningInfo.Walk(ctx, nil, func(address sdk.ConsAddress, info types.ValidatorSigningInfo) (stop bool, err error) {
-		bechAddr := address.String()
+		bechAddr, err := keeper.sk.ConsensusAddressCodec().BytesToString(address)
+		if err != nil {
+			panic(err)
+		}
 		signingInfos = append(signingInfos, types.SigningInfo{
 			Address:              bechAddr,
 			ValidatorSigningInfo: info,

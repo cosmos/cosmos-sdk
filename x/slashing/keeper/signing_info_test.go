@@ -3,17 +3,21 @@ package keeper_test
 import (
 	"time"
 
+	"cosmossdk.io/x/slashing/testutil"
+	slashingtypes "cosmossdk.io/x/slashing/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/slashing/testutil"
-	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
 
 func (s *KeeperTestSuite) TestValidatorSigningInfo() {
 	ctx, keeper := s.ctx, s.slashingKeeper
 	require := s.Require()
 
+	consStr, err := s.stakingKeeper.ConsensusAddressCodec().BytesToString(consAddr)
+	require.NoError(err)
+
 	signingInfo := slashingtypes.NewValidatorSigningInfo(
-		consAddr,
+		consStr,
 		ctx.BlockHeight(),
 		int64(3),
 		time.Unix(2, 0),

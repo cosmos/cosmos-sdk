@@ -11,6 +11,12 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	sdkmath "cosmossdk.io/math"
+	"cosmossdk.io/x/gov"
+	"cosmossdk.io/x/gov/client/cli"
+	govclitestutil "cosmossdk.io/x/gov/client/testutil"
+	"cosmossdk.io/x/gov/types"
+	v1 "cosmossdk.io/x/gov/types/v1"
+	"cosmossdk.io/x/gov/types/v1beta1"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -21,12 +27,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	testutilmod "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/cosmos/cosmos-sdk/x/gov"
-	"github.com/cosmos/cosmos-sdk/x/gov/client/cli"
-	govclitestutil "github.com/cosmos/cosmos-sdk/x/gov/client/testutil"
-	"github.com/cosmos/cosmos-sdk/x/gov/types"
-	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
-	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
 type CLITestSuite struct {
@@ -266,149 +266,6 @@ func (s *CLITestSuite) TestNewCmdSubmitLegacyProposal() {
 				s.Require().NoError(err)
 				msg := &sdk.TxResponse{}
 				s.Require().NoError(s.clientCtx.Codec.UnmarshalJSON(out.Bytes(), msg), out.String())
-			}
-		})
-	}
-}
-
-func (s *CLITestSuite) TestNewCmdDeposit() {
-	val := testutil.CreateKeyringAccounts(s.T(), s.kr, 1)
-
-	testCases := []struct {
-		name         string
-		args         []string
-		expectErrMsg string
-	}{
-		{
-			"invalid proposal id",
-			[]string{
-				"abc",
-				sdk.NewCoin("stake", sdkmath.NewInt(10)).String(), // 10stake
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, val[0].Address.String()),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(10))).String()),
-			},
-			"proposal-id abc not a valid uint, please input a valid proposal-id",
-		},
-		{
-			"without deposit amount",
-			[]string{
-				"1",
-				"invalidCoin",
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, val[0].Address.String()),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(10))).String()),
-			},
-			"invalid decimal coin expression: invalidCoin",
-		},
-		{
-			"deposit on a proposal",
-			[]string{
-				"10",
-				sdk.NewCoin("stake", sdkmath.NewInt(10)).String(), // 10stake
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, val[0].Address.String()),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(10))).String()),
-			},
-			"",
-		},
-	}
-
-	for _, tc := range testCases {
-		tc := tc
-
-		s.Run(tc.name, func() {
-			cmd := cli.NewCmdDeposit()
-
-			out, err := clitestutil.ExecTestCLICmd(s.clientCtx, cmd, tc.args)
-			if tc.expectErrMsg != "" {
-				s.Require().Error(err)
-				s.Require().Contains(err.Error(), tc.expectErrMsg)
-			} else {
-				s.Require().NoError(err)
-				resp := &sdk.TxResponse{}
-				s.Require().NoError(s.clientCtx.Codec.UnmarshalJSON(out.Bytes(), resp), out.String())
-			}
-		})
-	}
-}
-
-func (s *CLITestSuite) TestNewCmdVote() {
-	val := testutil.CreateKeyringAccounts(s.T(), s.kr, 1)
-
-	testCases := []struct {
-		name         string
-		args         []string
-		expectErrMsg string
-	}{
-		{
-			"vote for invalid proposal",
-			[]string{
-				"abc",
-				"yes",
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, val[0].Address.String()),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-				fmt.Sprintf("--metadata=%s", "AQ=="),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(10))).String()),
-			},
-			"proposal-id abc not a valid int, please input a valid proposal-id",
-		},
-		{
-			"invalid vote",
-			[]string{
-				"1",
-				"AYE",
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, val[0].Address.String()),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(10))).String()),
-			},
-			"'AYE' is not a valid vote option",
-		},
-		{
-			"valid vote",
-			[]string{
-				"1",
-				"yes",
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, val[0].Address.String()),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(10))).String()),
-			},
-			"",
-		},
-		{
-			"valid vote with metadata",
-			[]string{
-				"1",
-				"yes",
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, val[0].Address.String()),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-				fmt.Sprintf("--metadata=%s", "AQ=="),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(10))).String()),
-			},
-			"",
-		},
-	}
-
-	for _, tc := range testCases {
-		tc := tc
-		s.Run(tc.name, func() {
-			cmd := cli.NewCmdVote()
-			out, err := clitestutil.ExecTestCLICmd(s.clientCtx, cmd, tc.args)
-
-			if tc.expectErrMsg != "" {
-				s.Require().Error(err)
-				s.Require().Contains(err.Error(), tc.expectErrMsg)
-			} else {
-				s.Require().NoError(err)
-				resp := &sdk.TxResponse{}
-				s.Require().NoError(s.clientCtx.Codec.UnmarshalJSON(out.Bytes(), resp), out.String())
 			}
 		})
 	}

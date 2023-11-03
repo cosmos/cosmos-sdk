@@ -15,8 +15,8 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 
 	"cosmossdk.io/errors"
-	"cosmossdk.io/store/snapshots/types"
-	storetypes "cosmossdk.io/store/types"
+	"cosmossdk.io/store/v2"
+	"cosmossdk.io/store/v2/snapshots/types"
 )
 
 const (
@@ -36,7 +36,7 @@ type Store struct {
 // NewStore creates a new snapshot store.
 func NewStore(db db.DB, dir string) (*Store, error) {
 	if dir == "" {
-		return nil, errors.Wrap(storetypes.ErrLogic, "snapshot directory not given")
+		return nil, errors.Wrap(store.ErrLogic, "snapshot directory not given")
 	}
 	err := os.MkdirAll(dir, 0o755)
 	if err != nil {
@@ -56,7 +56,7 @@ func (s *Store) Delete(height uint64, format uint32) error {
 	saving := s.saving[height]
 	s.mtx.Unlock()
 	if saving {
-		return errors.Wrapf(storetypes.ErrConflict,
+		return errors.Wrapf(store.ErrConflict,
 			"snapshot for height %v format %v is currently being saved", height, format)
 	}
 	err := s.db.DeleteSync(encodeKey(height, format))
@@ -227,7 +227,7 @@ func (s *Store) Save(
 ) (*types.Snapshot, error) {
 	defer DrainChunks(chunks)
 	if height == 0 {
-		return nil, errors.Wrap(storetypes.ErrLogic, "snapshot height cannot be 0")
+		return nil, errors.Wrap(store.ErrLogic, "snapshot height cannot be 0")
 	}
 
 	s.mtx.Lock()
@@ -235,7 +235,7 @@ func (s *Store) Save(
 	s.saving[height] = true
 	s.mtx.Unlock()
 	if saving {
-		return nil, errors.Wrapf(storetypes.ErrConflict,
+		return nil, errors.Wrapf(store.ErrConflict,
 			"a snapshot for height %v is already being saved", height)
 	}
 	defer func() {
@@ -249,7 +249,7 @@ func (s *Store) Save(
 		return nil, err
 	}
 	if exists {
-		return nil, errors.Wrapf(storetypes.ErrConflict,
+		return nil, errors.Wrapf(store.ErrConflict,
 			"snapshot already exists for height %v format %v", height, format)
 	}
 
@@ -349,11 +349,12 @@ func (s *Store) PathChunk(height uint64, format, chunk uint32) string {
 // decodeKey decodes a snapshot key.
 func decodeKey(k []byte) (uint64, uint32, error) {
 	if len(k) != 13 {
-		return 0, 0, errors.Wrapf(storetypes.ErrLogic, "invalid snapshot key with length %v", len(k))
+		return 0, 0, errors.Wrapf(store.ErrLogic, "invalid snapshot key with length %v", len(k))
 	}
 	if k[0] != keyPrefixSnapshot {
-		return 0, 0, errors.Wrapf(storetypes.ErrLogic, "invalid snapshot key prefix %x", k[0])
+		return 0, 0, errors.Wrapf(store.ErrLogic, "invalid snapshot key prefix %x", k[0])
 	}
+
 	height := binary.BigEndian.Uint64(k[1:9])
 	format := binary.BigEndian.Uint32(k[9:13])
 	return height, format, nil

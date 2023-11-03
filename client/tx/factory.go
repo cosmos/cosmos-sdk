@@ -8,7 +8,6 @@ import (
 
 	"github.com/cosmos/go-bip39"
 	"github.com/spf13/pflag"
-	"github.com/spf13/viper"
 
 	"cosmossdk.io/math"
 
@@ -50,17 +49,15 @@ type Factory struct {
 // NewFactoryCLI creates a new Factory.
 func NewFactoryCLI(clientCtx client.Context, flagSet *pflag.FlagSet) (Factory, error) {
 	if clientCtx.Viper == nil {
-		clientCtx.Viper = viper.New()
+		clientCtx = clientCtx.WithViper("")
 	}
 
 	if err := clientCtx.Viper.BindPFlags(flagSet); err != nil {
 		return Factory{}, fmt.Errorf("failed to bind flags to viper: %w", err)
 	}
 
-	signModeStr := clientCtx.SignModeStr
-
 	signMode := signing.SignMode_SIGN_MODE_UNSPECIFIED
-	switch signModeStr {
+	switch clientCtx.SignModeStr {
 	case flags.SignModeDirect:
 		signMode = signing.SignMode_SIGN_MODE_DIRECT
 	case flags.SignModeLegacyAminoJSON:
@@ -298,10 +295,10 @@ func (f Factory) WithExtensionOptions(extOpts ...*codectypes.Any) Factory {
 func (f Factory) BuildUnsignedTx(msgs ...sdk.Msg) (client.TxBuilder, error) {
 	if f.offline && f.generateOnly {
 		if f.chainID != "" {
-			return nil, fmt.Errorf("chain ID cannot be used when offline and generate-only flags are set")
+			return nil, errors.New("chain ID cannot be used when offline and generate-only flags are set")
 		}
 	} else if f.chainID == "" {
-		return nil, fmt.Errorf("chain ID required but not specified")
+		return nil, errors.New("chain ID required but not specified")
 	}
 
 	fees := f.fees
@@ -379,7 +376,12 @@ func (f Factory) PrintUnsignedTx(clientCtx client.Context, msgs ...sdk.Msg) erro
 		return err
 	}
 
-	json, err := clientCtx.TxConfig.TxJSONEncoder()(unsignedTx.GetTx())
+	encoder := f.txConfig.TxJSONEncoder()
+	if encoder == nil {
+		return errors.New("cannot print unsigned tx: tx json encoder is nil")
+	}
+
+	json, err := encoder(unsignedTx.GetTx())
 	if err != nil {
 		return err
 	}
@@ -414,7 +416,12 @@ func (f Factory) BuildSimTx(msgs ...sdk.Msg) ([]byte, error) {
 		return nil, err
 	}
 
-	return f.txConfig.TxEncoder()(txb.GetTx())
+	encoder := f.txConfig.TxEncoder()
+	if encoder == nil {
+		return nil, fmt.Errorf("cannot simulate tx: tx encoder is nil")
+	}
+
+	return encoder(txb.GetTx())
 }
 
 // getSimPK gets the public key to use for building a simulation tx.
@@ -457,7 +464,7 @@ func (f Factory) Prepare(clientCtx client.Context) (Factory, error) {
 	}
 
 	fc := f
-	from := clientCtx.GetFromAddress()
+	from := clientCtx.FromAddress
 
 	if err := fc.accountRetriever.EnsureExists(clientCtx, from); err != nil {
 		return fc, err

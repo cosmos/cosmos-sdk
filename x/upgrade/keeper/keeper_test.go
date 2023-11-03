@@ -25,8 +25,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
+
+const govModuleName = "gov"
 
 type KeeperTestSuite struct {
 	suite.Suite
@@ -66,7 +67,7 @@ func (s *KeeperTestSuite) SetupTest() {
 
 	homeDir := filepath.Join(s.T().TempDir(), "x_upgrade_keeper_test")
 	ac := addresscodec.NewBech32Codec("cosmos")
-	authority, err := ac.BytesToString(authtypes.NewModuleAddress(govtypes.ModuleName))
+	authority, err := ac.BytesToString(authtypes.NewModuleAddress(govModuleName))
 	s.Require().NoError(err)
 	s.encodedAuthority = authority
 	s.upgradeKeeper = keeper.NewKeeper(skipUpgradeHeights, storeService, s.encCfg.Codec, homeDir, s.baseApp, authority)
@@ -99,6 +100,12 @@ func (s *KeeperTestSuite) TestReadUpgradeInfoFromDisk() {
 	s.Require().NoError(err)
 	expected.Height = 101
 	s.Require().Equal(expected, ui)
+
+	// create invalid upgrade plan (with empty name)
+	expected.Name = ""
+	s.Require().NoError(s.upgradeKeeper.DumpUpgradeInfoToDisk(101, expected))
+	_, err = s.upgradeKeeper.ReadUpgradeInfoFromDisk()
+	s.Require().ErrorContains(err, "name cannot be empty: invalid request")
 }
 
 func (s *KeeperTestSuite) TestScheduleUpgrade() {

@@ -31,6 +31,18 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+## v0.12.0
+
+### Improvements
+
+* [#18309](https://github.com/cosmos/cosmos-sdk/pull/18309) Update encoder so that amino types default to msg type url.
+
+## v0.11.0
+
+### Improvements
+
+* [#17787](https://github.com/cosmos/cosmos-sdk/pull/17787) Drop tip support.
+
 ## v0.10.0
 
 ### Features

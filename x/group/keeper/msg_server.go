@@ -9,15 +9,15 @@ import (
 	"strings"
 
 	errorsmod "cosmossdk.io/errors"
+	govtypes "cosmossdk.io/x/gov/types"
+	"cosmossdk.io/x/group"
+	"cosmossdk.io/x/group/errors"
+	"cosmossdk.io/x/group/internal/math"
+	"cosmossdk.io/x/group/internal/orm"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	"github.com/cosmos/cosmos-sdk/x/group"
-	"github.com/cosmos/cosmos-sdk/x/group/errors"
-	"github.com/cosmos/cosmos-sdk/x/group/internal/math"
-	"github.com/cosmos/cosmos-sdk/x/group/internal/orm"
 )
 
 var _ group.MsgServer = Keeper{}
@@ -427,6 +427,10 @@ func (k Keeper) CreateGroupPolicy(goCtx context.Context, msg *group.MsgCreateGro
 func (k Keeper) UpdateGroupPolicyAdmin(goCtx context.Context, msg *group.MsgUpdateGroupPolicyAdmin) (*group.MsgUpdateGroupPolicyAdminResponse, error) {
 	if strings.EqualFold(msg.Admin, msg.NewAdmin) {
 		return nil, errorsmod.Wrap(errors.ErrInvalid, "new and old admin are same")
+	}
+
+	if _, err := k.accKeeper.AddressCodec().StringToBytes(msg.NewAdmin); err != nil {
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidAddress, "new admin address")
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)

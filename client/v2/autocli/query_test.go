@@ -613,7 +613,7 @@ func TestOutputFormat(t *testing.T) {
 	assert.Assert(t, strings.Contains(out.String(), "  positional1: 1"))
 }
 
-func TestHelp(t *testing.T) {
+func TestHelpQuery(t *testing.T) {
 	fixture := initFixture(t)
 
 	out, err := runCmd(fixture.conn, fixture.b, buildModuleQueryCommand, "-h")
@@ -633,7 +633,7 @@ func TestHelp(t *testing.T) {
 	golden.Assert(t, out.String(), "help-skip.golden")
 }
 
-func TestDeprecated(t *testing.T) {
+func TestDeprecatedQuery(t *testing.T) {
 	fixture := initFixture(t)
 
 	out, err := runCmd(fixture.conn, fixture.b, buildModuleQueryCommand, "echo",
@@ -670,7 +670,7 @@ func TestBuildCustomQueryCommand(t *testing.T) {
 	assert.Assert(t, customCommandCalled)
 }
 
-func TestNotFoundErrors(t *testing.T) {
+func TestNotFoundErrorsQuery(t *testing.T) {
 	fixture := initFixture(t)
 	b := fixture.b
 	b.AddQueryConnFlags = nil

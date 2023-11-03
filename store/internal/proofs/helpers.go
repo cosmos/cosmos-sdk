@@ -7,7 +7,7 @@ import (
 	"golang.org/x/exp/maps"
 
 	"cosmossdk.io/math/unsafe"
-	sdkmaps "cosmossdk.io/store/internal/maps"
+	internalmaps "cosmossdk.io/store/v2/internal/maps"
 )
 
 // SimpleResult contains a merkle.SimpleProof along with all data needed to build the confio/proof
@@ -23,7 +23,7 @@ type SimpleResult struct {
 // returns a range proof and the root hash of the tree
 func GenerateRangeProof(size int, loc Where) *SimpleResult {
 	data := BuildMap(size)
-	root, proofs, allkeys := sdkmaps.ProofsFromMap(data)
+	root, proofs, allkeys := internalmaps.ProofsFromMap(data)
 
 	key := GetKey(allkeys, loc)
 	proof := proofs[key]
@@ -53,7 +53,7 @@ func SortedKeys(data map[string][]byte) []string {
 }
 
 func CalcRoot(data map[string][]byte) []byte {
-	root, _, _ := sdkmaps.ProofsFromMap(data)
+	root, _, _ := internalmaps.ProofsFromMap(data)
 	return root
 }
 

@@ -6,7 +6,7 @@ import (
 
 	ics23 "github.com/cosmos/ics23/go"
 
-	sdkmaps "cosmossdk.io/store/internal/maps"
+	"cosmossdk.io/store/v2/internal/maps"
 )
 
 var (
@@ -93,7 +93,7 @@ func createExistenceProof(data map[string][]byte, key []byte) (*ics23.ExistenceP
 		return nil, errors.New("cannot make existence proof if key is not in map")
 	}
 
-	_, proofs, _ := sdkmaps.ProofsFromMap(data)
+	_, proofs, _ := maps.ProofsFromMap(data)
 	proof := proofs[string(key)]
 	if proof == nil {
 		return nil, errors.New("returned no proof for key")

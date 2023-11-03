@@ -100,9 +100,14 @@ func BroadcastTx(clientCtx client.Context, txf Factory, msgs ...sdk.Msg) error {
 	}
 
 	if !clientCtx.SkipConfirm {
-		txBytes, err := clientCtx.TxConfig.TxJSONEncoder()(tx.GetTx())
+		encoder := txf.txConfig.TxJSONEncoder()
+		if encoder == nil {
+			return errors.New("failed to encode transaction: tx json encoder is nil")
+		}
+
+		txBytes, err := encoder(tx.GetTx())
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to encode transaction: %w", err)
 		}
 
 		if err := clientCtx.PrintRaw(json.RawMessage(txBytes)); err != nil {
@@ -121,8 +126,7 @@ func BroadcastTx(clientCtx client.Context, txf Factory, msgs ...sdk.Msg) error {
 		}
 	}
 
-	err = Sign(clientCtx.CmdContext, txf, clientCtx.GetFromName(), tx, true)
-	if err != nil {
+	if err = Sign(clientCtx.CmdContext, txf, clientCtx.FromName, tx, true); err != nil {
 		return err
 	}
 
@@ -318,9 +322,7 @@ func Sign(ctx context.Context, txf Factory, name string, txBuilder client.TxBuil
 		return err
 	}
 
-	bytesToSign, err := authsigning.GetSignBytesAdapter(
-		ctx, txf.txConfig.SignModeHandler(),
-		signMode, signerData, txBuilder.GetTx())
+	bytesToSign, err := authsigning.GetSignBytesAdapter(ctx, txf.txConfig.SignModeHandler(), signMode, signerData, txBuilder.GetTx())
 	if err != nil {
 		return err
 	}

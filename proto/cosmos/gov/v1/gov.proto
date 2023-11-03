@@ -10,7 +10,7 @@ import "google/protobuf/duration.proto";
 import "cosmos_proto/cosmos.proto";
 import "amino/amino.proto";
 
-option go_package = "github.com/cosmos/cosmos-sdk/x/gov/types/v1";
+option go_package = "cosmossdk.io/x/gov/types/v1";
 
 // VoteOption enumerates the valid vote options for a given governance proposal.
 enum VoteOption {
@@ -261,4 +261,11 @@ message Params {
 
   // burn deposits if quorum with vote type no_veto is met
   bool burn_vote_veto = 15;
+
+  // The ratio representing the proportion of the deposit value minimum that must be met when making a deposit.
+  // Default value: 0.01. Meaning that for a chain with a min_deposit of 100stake, a deposit of 1stake would be
+  // required.
+  //
+  // Since: cosmos-sdk 0.50
+  string min_deposit_ratio = 16 [(cosmos_proto.scalar) = "cosmos.Dec"];
 }

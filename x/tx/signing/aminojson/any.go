@@ -50,13 +50,7 @@ func marshalAny(enc *Encoder, message protoreflect.Message, writer io.Writer) er
 		protoMessage = valueMsg.ProtoReflect()
 	}
 
-	_, named := getMessageAminoName(protoMessage.Descriptor().Options())
-	if !named {
-		return fmt.Errorf("message %s is packed into an any field, so requires an amino.name annotation",
-			anyMsg.TypeUrl)
-	}
-
-	return enc.beginMarshal(protoMessage, writer)
+	return enc.beginMarshal(protoMessage, writer, true)
 }
 
 const (
@@ -73,17 +67,11 @@ func marshalDynamic(enc *Encoder, message protoreflect.Message, writer io.Writer
 		return errors.Wrapf(err, "can't resolve type URL %s", msgName)
 	}
 
-	_, named := getMessageAminoName(desc.Options())
-	if !named {
-		return fmt.Errorf("message %s is packed into an any field, so requires an amino.name annotation",
-			msgName)
-	}
-
 	valueMsg := dynamicpb.NewMessageType(desc.(protoreflect.MessageDescriptor)).New().Interface()
 	err = proto.Unmarshal(msgBytes, valueMsg)
 	if err != nil {
 		return err
 	}
 
-	return enc.beginMarshal(valueMsg.ProtoReflect(), writer)
+	return enc.beginMarshal(valueMsg.ProtoReflect(), writer, true)
 }

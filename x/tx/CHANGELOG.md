@@ -31,6 +31,46 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+<<<<<<< HEAD
+=======
+## v0.12.0
+
+### Improvements
+
+* [#18309](https://github.com/cosmos/cosmos-sdk/pull/18309) Update encoder so that amino types default to msg type url.
+
+## v0.11.0
+
+### Improvements
+
+* [#17787](https://github.com/cosmos/cosmos-sdk/pull/17787) Drop tip support.
+
+## v0.10.0
+
+### Features
+
+* [#17681](https://github.com/cosmos/cosmos-sdk/pull/17681) Add encoder `DefineTypeEncoding` method for defining custom type encodings.
+* [#17600](https://github.com/cosmos/cosmos-sdk/pull/17600) Add encoder `DefineScalarEncoding` method for defining custom scalar encodings.
+* [#17600](https://github.com/cosmos/cosmos-sdk/pull/17600) Add indent option to encoder.
+
+## v0.9.1
+
+### Improvements
+
+* [#16936](https://github.com/cosmos/cosmos-sdk/pull/16936) Remove extra whitespace when marshalling module accounts.
+
+## v0.9.0
+
+### Bug Fixes
+
+* [#16681](https://github.com/cosmos/cosmos-sdk/pull/16681): Catch and fix `(*Decoder).Decode` crash from invalid length prefix in Tx bytes.
+
+### Improvements
+
+* [#16846](https://github.com/cosmos/cosmos-sdk/pull/16846): Harmonize interface `signing.TypeResolver` with the rest of the codebase (orm and client/v2).
+* [#16684](https://github.com/cosmos/cosmos-sdk/pull/16684): Use `io.WriteString`+`fmt.Fprintf` to remove unnecessary `string`->`[]byte` roundtrip.
+
+>>>>>>> 2caf00deb (fix(client/v2): fix marshalling of queries with any (#18309))
 ## v0.8.0
 
 ### Improvements

@@ -1,7 +1,6 @@
 package autocli
 
 import (
-	"github.com/cosmos/gogoproto/proto"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/reflect/protoregistry"
@@ -73,10 +72,14 @@ func (appOptions AppOptions) EnhanceRootCommand(rootCmd *cobra.Command) error {
 	builder := &Builder{
 		Builder: flag.Builder{
 			TypeResolver:          protoregistry.GlobalTypes,
+<<<<<<< HEAD
 			FileResolver:          proto.HybridResolver,
 			AddressCodec:          appOptions.AddressCodec,
 			ValidatorAddressCodec: appOptions.ValidatorAddressCodec,
 			ConsensusAddressCodec: appOptions.ConsensusAddressCodec,
+=======
+			FileResolver:          appOptions.ClientCtx.InterfaceRegistry,
+>>>>>>> 2caf00deb (fix(client/v2): fix marshalling of queries with any (#18309))
 			Keyring:               appOptions.Keyring,
 		},
 		ClientCtx:    appOptions.ClientCtx,

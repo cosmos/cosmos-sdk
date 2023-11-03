@@ -429,6 +429,10 @@ func (k Keeper) UpdateGroupPolicyAdmin(goCtx context.Context, msg *group.MsgUpda
 		return nil, errorsmod.Wrap(errors.ErrInvalid, "new and old admin are same")
 	}
 
+	if _, err := k.accKeeper.AddressCodec().StringToBytes(msg.NewAdmin); err != nil {
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidAddress, "new admin address")
+	}
+
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	action := func(groupPolicy *group.GroupPolicyInfo) error {
 		groupPolicy.Admin = msg.NewAdmin

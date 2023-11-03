@@ -661,6 +661,15 @@ func (s *TestSuite) TestUpdateGroupAdmin() {
 				CreatedAt:   s.blockTime,
 			},
 		},
+		"with invalid new admin address": {
+			req: &group.MsgUpdateGroupAdmin{
+				GroupId:  groupID,
+				Admin:    oldAdmin,
+				NewAdmin: "%s",
+			},
+			expErr:    true,
+			expErrMsg: "new admin address",
+		},
 	}
 	for msg, spec := range specs {
 		spec := spec
@@ -1214,6 +1223,23 @@ func (s *TestSuite) TestUpdateGroupPolicyAdmin() {
 				CreatedAt:      s.blockTime,
 			},
 			expErr: false,
+		},
+		"with invalid new admin address": {
+			req: &group.MsgUpdateGroupPolicyAdmin{
+				Admin:              admin.String(),
+				GroupPolicyAddress: groupPolicyAddr,
+				NewAdmin:           "%s",
+			},
+			expGroupPolicy: &group.GroupPolicyInfo{
+				Admin:          admin.String(),
+				Address:        groupPolicyAddr,
+				GroupId:        myGroupID,
+				Version:        2,
+				DecisionPolicy: nil,
+				CreatedAt:      s.blockTime,
+			},
+			expErr:    true,
+			expErrMsg: "new admin address",
 		},
 	}
 	for msg, spec := range specs {

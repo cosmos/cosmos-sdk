@@ -18,6 +18,10 @@ var (
 
 func (suite *KeeperTestSuite) TestMsgSubmitBudgetProposal() {
 	invalidCoin := sdk.NewInt64Coin("foo", 0)
+	startTime := suite.ctx.BlockTime().Add(10 * time.Second)
+	invalidStartTime := suite.ctx.BlockTime().Add(-15 * time.Second)
+	period := time.Duration(60) * time.Second
+	zeroPeriod := time.Duration(0) * time.Second
 	testCases := map[string]struct {
 		preRun    func()
 		input     *types.MsgSubmitBudgetProposal
@@ -29,9 +33,9 @@ func (suite *KeeperTestSuite) TestMsgSubmitBudgetProposal() {
 				Authority:        suite.poolKeeper.GetAuthority(),
 				RecipientAddress: "",
 				TotalBudget:      &fooCoin,
-				StartTime:        uint64(suite.ctx.BlockTime().Unix()),
+				StartTime:        &startTime,
 				Tranches:         2,
-				Period:           60,
+				Period:           &period,
 			},
 			expErr:    true,
 			expErrMsg: "empty address string is not allowed",
@@ -41,9 +45,9 @@ func (suite *KeeperTestSuite) TestMsgSubmitBudgetProposal() {
 				Authority:        "",
 				RecipientAddress: recipientAddr.String(),
 				TotalBudget:      &fooCoin,
-				StartTime:        uint64(suite.ctx.BlockTime().Unix()),
+				StartTime:        &startTime,
 				Tranches:         2,
-				Period:           60,
+				Period:           &period,
 			},
 			expErr:    true,
 			expErrMsg: "empty address string is not allowed",
@@ -53,9 +57,9 @@ func (suite *KeeperTestSuite) TestMsgSubmitBudgetProposal() {
 				Authority:        "invalid_authority",
 				RecipientAddress: recipientAddr.String(),
 				TotalBudget:      &fooCoin,
-				StartTime:        uint64(suite.ctx.BlockTime().Unix()),
+				StartTime:        &startTime,
 				Tranches:         2,
-				Period:           60,
+				Period:           &period,
 			},
 			expErr:    true,
 			expErrMsg: "invalid authority",
@@ -65,9 +69,9 @@ func (suite *KeeperTestSuite) TestMsgSubmitBudgetProposal() {
 				Authority:        suite.poolKeeper.GetAuthority(),
 				RecipientAddress: recipientAddr.String(),
 				TotalBudget:      &invalidCoin,
-				StartTime:        uint64(suite.ctx.BlockTime().Unix()),
+				StartTime:        &startTime,
 				Tranches:         2,
-				Period:           60,
+				Period:           &period,
 			},
 			expErr:    true,
 			expErrMsg: "total budget cannot be zero",
@@ -77,9 +81,9 @@ func (suite *KeeperTestSuite) TestMsgSubmitBudgetProposal() {
 				Authority:        suite.poolKeeper.GetAuthority(),
 				RecipientAddress: recipientAddr.String(),
 				TotalBudget:      &fooCoin,
-				StartTime:        uint64(suite.ctx.BlockTime().Unix() - 5),
+				StartTime:        &invalidStartTime,
 				Tranches:         2,
-				Period:           60,
+				Period:           &period,
 			},
 			expErr:    true,
 			expErrMsg: "start time cannot be less than the current block time",
@@ -89,9 +93,9 @@ func (suite *KeeperTestSuite) TestMsgSubmitBudgetProposal() {
 				Authority:        suite.poolKeeper.GetAuthority(),
 				RecipientAddress: recipientAddr.String(),
 				TotalBudget:      &fooCoin,
-				StartTime:        uint64(suite.ctx.BlockTime().Unix() + 10),
+				StartTime:        &startTime,
 				Tranches:         0,
-				Period:           60,
+				Period:           &period,
 			},
 			expErr:    true,
 			expErrMsg: "tranches must be greater than zero",
@@ -101,9 +105,9 @@ func (suite *KeeperTestSuite) TestMsgSubmitBudgetProposal() {
 				Authority:        suite.poolKeeper.GetAuthority(),
 				RecipientAddress: recipientAddr.String(),
 				TotalBudget:      &fooCoin,
-				StartTime:        uint64(suite.ctx.BlockTime().Unix() + 10),
+				StartTime:        &startTime,
 				Tranches:         2,
-				Period:           0,
+				Period:           &zeroPeriod,
 			},
 			expErr:    true,
 			expErrMsg: "period length should be greater than zero",
@@ -113,9 +117,9 @@ func (suite *KeeperTestSuite) TestMsgSubmitBudgetProposal() {
 				Authority:        suite.poolKeeper.GetAuthority(),
 				RecipientAddress: recipientAddr.String(),
 				TotalBudget:      &fooCoin,
-				StartTime:        uint64(suite.ctx.BlockTime().Unix() + 10),
+				StartTime:        &startTime,
 				Tranches:         2,
-				Period:           60,
+				Period:           &period,
 			},
 			expErr: false,
 		},
@@ -123,6 +127,7 @@ func (suite *KeeperTestSuite) TestMsgSubmitBudgetProposal() {
 
 	for name, tc := range testCases {
 		suite.Run(name, func() {
+			suite.SetupTest()
 			if tc.preRun != nil {
 				tc.preRun()
 			}
@@ -138,6 +143,9 @@ func (suite *KeeperTestSuite) TestMsgSubmitBudgetProposal() {
 }
 
 func (suite *KeeperTestSuite) TestMsgClaimBudget() {
+	startTime := suite.ctx.BlockTime().Add(-70 * time.Second)
+	period := time.Duration(60) * time.Second
+
 	testCases := map[string]struct {
 		preRun           func()
 		recipientAddress sdk.AccAddress
@@ -157,13 +165,14 @@ func (suite *KeeperTestSuite) TestMsgClaimBudget() {
 		},
 		"claiming before start time": {
 			preRun: func() {
+				startTime := suite.ctx.BlockTime().Add(3600 * time.Second)
 				// Prepare the budget proposal with a future start time
 				budget := types.Budget{
 					RecipientAddress: recipientAddr.String(),
 					TotalBudget:      &fooCoin,
-					StartTime:        uint64(suite.ctx.BlockTime().Unix() + 3600),
+					StartTime:        &startTime,
 					Tranches:         2,
-					Period:           60,
+					Period:           &period,
 				}
 				err := suite.poolKeeper.BudgetProposal.Set(suite.ctx, recipientAddr, budget)
 				suite.Require().NoError(err)
@@ -174,13 +183,14 @@ func (suite *KeeperTestSuite) TestMsgClaimBudget() {
 		},
 		"budget period has not passed": {
 			preRun: func() {
+				startTime := suite.ctx.BlockTime().Add(-50 * time.Second)
 				// Prepare the budget proposal with start time and a short period
 				budget := types.Budget{
 					RecipientAddress: recipientAddr.String(),
 					TotalBudget:      &fooCoin,
-					StartTime:        uint64(suite.ctx.BlockTime().Unix() - 50),
+					StartTime:        &startTime,
 					Tranches:         1,
-					Period:           60,
+					Period:           &period,
 				}
 				err := suite.poolKeeper.BudgetProposal.Set(suite.ctx, recipientAddr, budget)
 				suite.Require().NoError(err)
@@ -195,9 +205,9 @@ func (suite *KeeperTestSuite) TestMsgClaimBudget() {
 				budget := types.Budget{
 					RecipientAddress: recipientAddr.String(),
 					TotalBudget:      &fooCoin,
-					StartTime:        uint64(suite.ctx.BlockTime().Unix() - 70),
+					StartTime:        &startTime,
 					Tranches:         2,
-					Period:           60,
+					Period:           &period,
 				}
 				err := suite.poolKeeper.BudgetProposal.Set(suite.ctx, recipientAddr, budget)
 				suite.Require().NoError(err)
@@ -212,9 +222,9 @@ func (suite *KeeperTestSuite) TestMsgClaimBudget() {
 				budget := types.Budget{
 					RecipientAddress: recipientAddr.String(),
 					TotalBudget:      &fooCoin,
-					StartTime:        uint64(suite.ctx.BlockTime().Unix() - 70),
+					StartTime:        &startTime,
 					Tranches:         2,
-					Period:           60,
+					Period:           &period,
 				}
 				err := suite.poolKeeper.BudgetProposal.Set(suite.ctx, recipientAddr, budget)
 				suite.Require().NoError(err)
@@ -234,13 +244,15 @@ func (suite *KeeperTestSuite) TestMsgClaimBudget() {
 		"valid double claim attempt": {
 			preRun: func() {
 				oneMonthInSeconds := int64(30 * 24 * 60 * 60) // Approximate number of seconds in 1 month
+				startTimeBeforeMonth := suite.ctx.BlockTime().Add(time.Duration(-oneMonthInSeconds) * time.Second)
+				oneMonthPeriod := time.Duration(oneMonthInSeconds) * time.Second
 				// Prepare the budget proposal with valid start time and period of 1 month (in seconds)
 				budget := types.Budget{
 					RecipientAddress: recipientAddr.String(),
 					TotalBudget:      &fooCoin,
-					StartTime:        uint64(suite.ctx.BlockTime().Unix() - oneMonthInSeconds),
+					StartTime:        &startTimeBeforeMonth,
 					Tranches:         2,
-					Period:           uint64(oneMonthInSeconds),
+					Period:           &oneMonthPeriod,
 				}
 				err := suite.poolKeeper.BudgetProposal.Set(suite.ctx, recipientAddr, budget)
 				suite.Require().NoError(err)
@@ -269,9 +281,9 @@ func (suite *KeeperTestSuite) TestMsgClaimBudget() {
 				budget := types.Budget{
 					RecipientAddress: recipientAddr.String(),
 					TotalBudget:      &fooCoin,
-					StartTime:        uint64(suite.ctx.BlockTime().Unix() - 70),
+					StartTime:        &startTime,
 					Tranches:         2,
-					Period:           60,
+					Period:           &period,
 				}
 				err := suite.poolKeeper.BudgetProposal.Set(suite.ctx, recipientAddr, budget)
 				suite.Require().NoError(err)
@@ -290,7 +302,7 @@ func (suite *KeeperTestSuite) TestMsgClaimBudget() {
 					Time: newBlockTime,
 				})
 
-				// Claim the funds twitce
+				// Claim the funds twice
 				msg = &types.MsgClaimBudget{
 					RecipientAddress: recipientAddr.String(),
 				}
@@ -306,6 +318,7 @@ func (suite *KeeperTestSuite) TestMsgClaimBudget() {
 
 	for name, tc := range testCases {
 		suite.Run(name, func() {
+			suite.SetupTest()
 			if tc.preRun != nil {
 				tc.preRun()
 			}

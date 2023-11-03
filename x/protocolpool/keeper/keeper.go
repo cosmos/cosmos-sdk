@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"cosmossdk.io/collections"
 	storetypes "cosmossdk.io/core/store"
@@ -129,15 +130,15 @@ func (k Keeper) getClaimableFunds(ctx context.Context, recipient sdk.AccAddress)
 		}
 	}
 
-	currentTime := sdkCtx.BlockTime().Unix()
+	currentTime := sdkCtx.BlockTime()
 	startTime := budget.StartTime
 
 	// Check if the start time is reached
-	if uint64(currentTime) < startTime {
+	if currentTime.Before(*startTime) {
 		return sdk.Coin{}, fmt.Errorf("distribution has not started yet")
 	}
 
-	if budget.NextClaimFrom == 0 {
+	if budget.NextClaimFrom == nil || budget.NextClaimFrom.IsZero() {
 		budget.NextClaimFrom = budget.StartTime
 	}
 
@@ -150,31 +151,32 @@ func (k Keeper) getClaimableFunds(ctx context.Context, recipient sdk.AccAddress)
 	return k.calculateClaimableFunds(ctx, recipient, budget, currentTime)
 }
 
-func (k Keeper) calculateClaimableFunds(ctx context.Context, recipient sdk.AccAddress, budget types.Budget, currentTime int64) (amount sdk.Coin, err error) {
+func (k Keeper) calculateClaimableFunds(ctx context.Context, recipient sdk.AccAddress, budget types.Budget, currentTime time.Time) (amount sdk.Coin, err error) {
 	// Calculate the time elapsed since the last claim time
-	timeElapsed := uint64(currentTime) - budget.NextClaimFrom
+	timeElapsed := currentTime.Sub(*budget.NextClaimFrom)
 
 	// Check the time elapsed has passed period length
-	if timeElapsed < budget.Period {
+	if timeElapsed < *budget.Period {
 		return sdk.Coin{}, fmt.Errorf("budget period has not passed yet")
 	}
 
 	// Calculate how many periods have passed
-	periodsPassed := timeElapsed / budget.Period
+	periodsPassed := int64(timeElapsed) / int64(*budget.Period)
 
 	// Calculate the amount to distribute for all passed periods
-	coinsToDistribute := math.NewInt(int64(periodsPassed)).Mul(budget.TotalBudget.Amount.QuoRaw(int64(budget.Tranches)))
+	coinsToDistribute := math.NewInt(periodsPassed).Mul(budget.TotalBudget.Amount.QuoRaw(int64(budget.Tranches)))
 	amount = sdk.NewCoin(budget.TotalBudget.Denom, coinsToDistribute)
 
 	// update the budget's remaining tranches
-	budget.TranchesLeft -= periodsPassed
+	budget.TranchesLeft -= uint64(periodsPassed)
 
 	// update the ClaimedAmount
 	claimedAmount := budget.ClaimedAmount.Add(amount)
 	budget.ClaimedAmount = &claimedAmount
 
 	// Update the last claim time for the budget
-	budget.NextClaimFrom += budget.Period
+	nextClaimFrom := budget.NextClaimFrom.Add(*budget.Period)
+	budget.NextClaimFrom = &nextClaimFrom
 
 	k.Logger(ctx).Debug(fmt.Sprintf("Processing budget for recipient: %s. Amount: %s", budget.RecipientAddress, coinsToDistribute.String()))
 
@@ -195,12 +197,13 @@ func (k Keeper) validateAndUpdateBudgetProposal(ctx context.Context, bp types.Ms
 		return fmt.Errorf("invalid budget proposal: %w", err)
 	}
 
-	currentTime := sdk.UnwrapSDKContext(ctx).BlockTime().Unix()
-	if int64(bp.StartTime) == 0 {
-		bp.StartTime = uint64(currentTime)
+	currentTime := sdk.UnwrapSDKContext(ctx).BlockTime()
+	if bp.StartTime.IsZero() || bp.StartTime == nil {
+		bp.StartTime = &currentTime
 	}
 
-	if bp.StartTime < uint64(currentTime) {
+	// if bp.StartTime < uint64(currentTime) {
+	if currentTime.After(*bp.StartTime) {
 		return fmt.Errorf("invalid budget proposal: start time cannot be less than the current block time")
 	}
 
@@ -208,7 +211,7 @@ func (k Keeper) validateAndUpdateBudgetProposal(ctx context.Context, bp types.Ms
 		return fmt.Errorf("invalid budget proposal: tranches must be greater than zero")
 	}
 
-	if bp.Period == 0 {
+	if bp.Period == nil || *bp.Period == 0 {
 		return fmt.Errorf("invalid budget proposal: period length should be greater than zero")
 	}
 

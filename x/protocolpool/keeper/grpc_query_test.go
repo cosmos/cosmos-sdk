@@ -1,6 +1,8 @@
 package keeper_test
 
 import (
+	"time"
+
 	"cosmossdk.io/x/protocolpool/keeper"
 	"cosmossdk.io/x/protocolpool/types"
 
@@ -9,6 +11,8 @@ import (
 
 func (suite *KeeperTestSuite) TestUnclaimedBudget() {
 	queryServer := keeper.NewQuerier(suite.poolKeeper)
+	startTime := suite.ctx.BlockTime().Add(-70 * time.Second)
+	period := time.Duration(60) * time.Second
 	testCases := []struct {
 		name           string
 		preRun         func()
@@ -40,9 +44,9 @@ func (suite *KeeperTestSuite) TestUnclaimedBudget() {
 				budget := types.Budget{
 					RecipientAddress: recipientAddr.String(),
 					TotalBudget:      &fooCoin,
-					StartTime:        uint64(suite.ctx.BlockTime().Unix() - 70),
+					StartTime:        &startTime,
 					Tranches:         2,
-					Period:           60,
+					Period:           &period,
 				}
 				err := suite.poolKeeper.BudgetProposal.Set(suite.ctx, recipientAddr, budget)
 				suite.Require().NoError(err)
@@ -60,9 +64,9 @@ func (suite *KeeperTestSuite) TestUnclaimedBudget() {
 				budget := types.Budget{
 					RecipientAddress: recipientAddr.String(),
 					TotalBudget:      &fooCoin,
-					StartTime:        uint64(suite.ctx.BlockTime().Unix() - 70),
+					StartTime:        &startTime,
 					Tranches:         2,
-					Period:           60,
+					Period:           &period,
 				}
 				err := suite.poolKeeper.BudgetProposal.Set(suite.ctx, recipientAddr, budget)
 				suite.Require().NoError(err)

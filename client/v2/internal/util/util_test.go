@@ -60,6 +60,14 @@ func TestIsSupportedVersion(t *testing.T) {
 			expected: true,
 		},
 		{
+			input:    "// since: feegrant v0.1",
+			expected: true,
+		},
+		{
+			input:    "// since: feegrant v0.1.1",
+			expected: false,
+		},
+		{
 			input:    "// since: feegrant v0.2.0",
 			expected: false,
 		},

@@ -34,6 +34,27 @@ func (k Keeper) Balance(goCtx context.Context, r *nft.QueryBalanceRequest) (*nft
 	return &nft.QueryBalanceResponse{Amount: balance}, nil
 }
 
+// BalanceByQueryString return the number of NFTs of a given class owned by the owner, same as balanceOf in ERC721
+// but receives request via query string.
+func (k Keeper) BalanceByQueryString(goCtx context.Context, r *nft.QueryBalanceByQueryStringRequest) (*nft.QueryBalanceByQueryStringResponse, error) {
+	if r == nil {
+		return nil, sdkerrors.ErrInvalidRequest.Wrap("empty request")
+	}
+
+	if len(r.ClassId) == 0 {
+		return nil, nft.ErrEmptyClassID
+	}
+
+	owner, err := k.ac.StringToBytes(r.Owner)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	balance := k.GetBalance(ctx, r.ClassId, owner)
+	return &nft.QueryBalanceByQueryStringResponse{Amount: balance}, nil
+}
+
 // Owner return the owner of the NFT based on its class and id, same as ownerOf in ERC721
 func (k Keeper) Owner(goCtx context.Context, r *nft.QueryOwnerRequest) (*nft.QueryOwnerResponse, error) {
 	if r == nil {
@@ -60,6 +81,33 @@ func (k Keeper) Owner(goCtx context.Context, r *nft.QueryOwnerRequest) (*nft.Que
 	return &nft.QueryOwnerResponse{Owner: ownerstr}, nil
 }
 
+// OwnerByQueryString return the owner of the NFT based on its class and id, same as ownerOf in ERC721
+// but receives request via query string.
+func (k Keeper) OwnerByQueryString(goCtx context.Context, r *nft.QueryOwnerByQueryStringRequest) (*nft.QueryOwnerByQueryStringResponse, error) {
+	if r == nil {
+		return nil, sdkerrors.ErrInvalidRequest.Wrap("empty request")
+	}
+
+	if len(r.ClassId) == 0 {
+		return nil, nft.ErrEmptyClassID
+	}
+
+	if len(r.Id) == 0 {
+		return nil, nft.ErrEmptyNFTID
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	owner := k.GetOwner(ctx, r.ClassId, r.Id)
+	if owner.Empty() {
+		return &nft.QueryOwnerByQueryStringResponse{Owner: ""}, nil
+	}
+	ownerstr, err := k.ac.BytesToString(owner.Bytes())
+	if err != nil {
+		return nil, err
+	}
+	return &nft.QueryOwnerByQueryStringResponse{Owner: ownerstr}, nil
+}
+
 // Supply return the number of NFTs from the given class, same as totalSupply of ERC721.
 func (k Keeper) Supply(goCtx context.Context, r *nft.QuerySupplyRequest) (*nft.QuerySupplyResponse, error) {
 	if r == nil {
@@ -72,6 +120,21 @@ func (k Keeper) Supply(goCtx context.Context, r *nft.QuerySupplyRequest) (*nft.Q
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	supply := k.GetTotalSupply(ctx, r.ClassId)
 	return &nft.QuerySupplyResponse{Amount: supply}, nil
+}
+
+// SupplyByQueryString return the number of NFTs from the given class, same as totalSupply of ERC721.
+// but receives request via query string.
+func (k Keeper) SupplyByQueryString(goCtx context.Context, r *nft.QuerySupplyByQueryStringRequest) (*nft.QuerySupplyByQueryStringResponse, error) {
+	if r == nil {
+		return nil, sdkerrors.ErrInvalidRequest.Wrap("empty request")
+	}
+
+	if len(r.ClassId) == 0 {
+		return nil, nft.ErrEmptyClassID
+	}
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	supply := k.GetTotalSupply(ctx, r.ClassId)
+	return &nft.QuerySupplyByQueryStringResponse{Amount: supply}, nil
 }
 
 // NFTs queries all NFTs of a given class or owner (at least one must be provided), similar to tokenByIndex in ERC721Enumerable
@@ -157,6 +220,28 @@ func (k Keeper) NFT(goCtx context.Context, r *nft.QueryNFTRequest) (*nft.QueryNF
 	return &nft.QueryNFTResponse{Nft: &n}, nil
 }
 
+// NFTByQueryString return an NFT based on its class and id.
+// but receives request via query string.
+func (k Keeper) NFTByQueryString(goCtx context.Context, r *nft.QueryNFTByQueryStringRequest) (*nft.QueryNFTByQueryStringResponse, error) {
+	if r == nil {
+		return nil, sdkerrors.ErrInvalidRequest.Wrap("empty request")
+	}
+
+	if len(r.ClassId) == 0 {
+		return nil, nft.ErrEmptyClassID
+	}
+	if len(r.Id) == 0 {
+		return nil, nft.ErrEmptyNFTID
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	n, has := k.GetNFT(ctx, r.ClassId, r.Id)
+	if !has {
+		return nil, nft.ErrNFTNotExists.Wrapf("not found nft: class: %s, id: %s", r.ClassId, r.Id)
+	}
+	return &nft.QueryNFTByQueryStringResponse{Nft: &n}, nil
+}
+
 // Class return an NFT class based on its id
 func (k Keeper) Class(goCtx context.Context, r *nft.QueryClassRequest) (*nft.QueryClassResponse, error) {
 	if r == nil {
@@ -173,6 +258,25 @@ func (k Keeper) Class(goCtx context.Context, r *nft.QueryClassRequest) (*nft.Que
 		return nil, nft.ErrClassNotExists.Wrapf("not found class: %s", r.ClassId)
 	}
 	return &nft.QueryClassResponse{Class: &class}, nil
+}
+
+// ClassByQueryString return an NFT class based on its id
+// but receives request via query string.
+func (k Keeper) ClassByQueryString(goCtx context.Context, r *nft.QueryClassByQueryStringRequest) (*nft.QueryClassByQueryStringResponse, error) {
+	if r == nil {
+		return nil, sdkerrors.ErrInvalidRequest.Wrap("empty request")
+	}
+
+	if len(r.ClassId) == 0 {
+		return nil, nft.ErrEmptyClassID
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	class, has := k.GetClass(ctx, r.ClassId)
+	if !has {
+		return nil, nft.ErrClassNotExists.Wrapf("not found class: %s", r.ClassId)
+	}
+	return &nft.QueryClassByQueryStringResponse{Class: &class}, nil
 }
 
 // Classes return all NFT classes

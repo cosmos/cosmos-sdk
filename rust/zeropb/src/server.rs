@@ -15,6 +15,7 @@ trait Server<Ctx, Err> {
 
 struct Responder<Res> {
     root: RawRoot,
+    _phantom: core::marker::PhantomData<Res>,
 }
 
 impl <Res: ZeroCopy> Responder<Res> {

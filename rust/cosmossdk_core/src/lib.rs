@@ -4,7 +4,7 @@
 mod wasm;
 
 use zeropb;
-use zeropb::ClientConn;
+use zeropb::{ClientConn, ZeroCopy};
 
 #[link(wasm_import_module = "CosmosSDK")]
 extern "C" {
@@ -31,4 +31,14 @@ impl ClientConn<i32, i32> for Client {
             Ok(())
         }
     }
+}
+
+trait Module {
+    type Config where Self: ZeroCopy;
+
+    fn init(config: Config, client: Client, service_registry: &mut zeropb::ServiceRegistry) -> anyhow::Result<()>;
+}
+
+struct ModuleSet {
+
 }

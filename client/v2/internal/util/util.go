@@ -2,6 +2,7 @@ package util
 
 import (
 	"regexp"
+	"runtime/debug"
 	"strings"
 
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -31,9 +32,31 @@ func ResolveMessageType(resolver protoregistry.MessageTypeResolver, descriptor p
 	return dynamicpb.NewMessageType(descriptor)
 }
 
-// ParseSinceComment parses the `// Since: cosmos-sdk v0.xx` comment on rpc.
-// It is used to determine in which version of a module / sdk a rpc was introduced.
-func ParseSinceComment(input string) (string, string) {
+// IsSupportedVersion is used to determine in which version of a module / sdk a rpc was introduced.
+// It returns false if the rpc has comment for an higher version than the current one.
+func IsSupportedVersion(input string) bool {
+	moduleName, version := parseSinceComment(input)
+
+	buildInfo, ok := debug.ReadBuildInfo()
+	if !ok {
+		return false
+	}
+
+	for _, dep := range buildInfo.Deps {
+		if !strings.Contains(dep.Path, moduleName) {
+			continue
+		}
+
+		if version <= dep.Version {
+			return false
+		}
+	}
+
+	return true
+}
+
+// parseSinceComment parses the `// Since: cosmos-sdk v0.xx` comment on rpc.
+func parseSinceComment(input string) (string, string) {
 	var (
 		moduleName string
 		version    string

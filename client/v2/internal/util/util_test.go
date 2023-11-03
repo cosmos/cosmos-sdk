@@ -1,9 +1,7 @@
-package util_test
+package util
 
 import (
 	"testing"
-
-	"cosmossdk.io/client/v2/internal/util"
 )
 
 func TestParseSinceComment(t *testing.T) {
@@ -50,7 +48,7 @@ func TestParseSinceComment(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		moduleName, version := util.ParseSinceComment(tc.input)
+		moduleName, version := parseSinceComment(tc.input)
 		if moduleName != tc.expectedModuleName {
 			t.Errorf("expected module name %s, got %s", tc.expectedModuleName, moduleName)
 		}

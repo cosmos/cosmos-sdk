@@ -28,6 +28,7 @@ mod tests {
     #[repr(C)]
     struct TestStruct {
         s: Str,
+        x: u32,
     }
 
     unsafe impl ZeroCopy for TestStruct {}
@@ -46,5 +47,24 @@ mod tests {
         w.write_str("hello").unwrap();
         w.write_str(" world").unwrap();
         assert_eq!(<Str as Borrow<str>>::borrow(&r.s), "hello world");
+    }
+
+    struct MsgSend {
+        from: Str,
+        to: Str,
+        denom: Str,
+        amount: u64,
+    }
+
+    unsafe impl ZeroCopy for MsgSend {}
+
+    struct MsgSendResponse {}
+
+    unsafe impl ZeroCopy for MsgSendResponse {}
+
+    enum Error {}
+
+    trait MsgServer {
+        fn send(&mut self, msg: &MsgSend, response: &mut MsgSendResponse) -> Result<(), Error>;
     }
 }

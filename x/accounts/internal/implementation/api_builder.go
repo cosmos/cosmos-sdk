@@ -28,11 +28,8 @@ type InitBuilder struct {
 	// with a typed version of it.
 	handler func(ctx context.Context, initRequest any) (initResponse any, err error)
 
-	// decodeRequest is the function that will be used to decode the init request from bytes.
-	decodeRequest func([]byte) (any, error)
-
-	// encodeResponse is the function that will be used to encode the init response to bytes.
-	encodeResponse func(any) ([]byte, error)
+	// schema is the schema of the message that will be passed to the handler function.
+	schema HandlerSchema
 }
 
 // makeHandler returns the handler function that will be called when the smart account is initialized.
@@ -47,7 +44,8 @@ func (i *InitBuilder) makeHandler() (func(ctx context.Context, initRequest any) 
 // NewExecuteBuilder creates a new ExecuteBuilder instance.
 func NewExecuteBuilder() *ExecuteBuilder {
 	return &ExecuteBuilder{
-		handlers: make(map[string]func(ctx context.Context, executeRequest any) (executeResponse any, err error)),
+		handlers:       make(map[string]func(ctx context.Context, executeRequest any) (executeResponse any, err error)),
+		handlersSchema: make(map[string]HandlerSchema),
 	}
 }
 
@@ -56,6 +54,11 @@ func NewExecuteBuilder() *ExecuteBuilder {
 type ExecuteBuilder struct {
 	// handlers is a map of handler functions that will be called when the smart account is executed.
 	handlers map[string]func(ctx context.Context, executeRequest any) (executeResponse any, err error)
+
+	// handlersSchema is a map of schemas for the messages that will be passed to the handler functions
+	// and the messages that will be returned by the handler functions.
+	handlersSchema map[string]HandlerSchema
+
 	// err is the error that occurred before building the handler function.
 	err error
 }

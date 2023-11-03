@@ -1,0 +1,15 @@
+[package]
+name = "example_module"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+cosmossdk_core = { path = "../cosmossdk_core" }
+zeropb = { path = "../zeropb" }
+
+[lib]
+crate-type = ["cdylib"]
+
+[build-dependencies]
+zeropb_codegen = { path = "../zeropb_codegen" }
+

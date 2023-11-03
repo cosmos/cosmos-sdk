@@ -1,3 +1,5 @@
+#![cfg(target_arch = "wasm32")]
+
 use alloc::alloc::{alloc_zeroed, dealloc, Layout};
 use lol_alloc::{FreeListAllocator, LockedAllocator};
 use crate::root::Root;

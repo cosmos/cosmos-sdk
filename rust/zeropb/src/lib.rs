@@ -24,7 +24,7 @@ mod server;
 mod wasm;
 mod status;
 mod client;
-pub use client::{ClientConn};
+pub use client::{ClientConn, Handler};
 
 #[cfg(test)]
 mod tests {

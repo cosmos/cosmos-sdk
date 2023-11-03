@@ -1,9 +1,9 @@
 use crate::root::RawRoot;
 
-type Handler<Ctx, Err> = fn(Ctx, &RawRoot, &mut RawRoot) -> Result<(), Err>;
+pub type Handler<'a, Ctx, Err> = fn(Ctx, &RawRoot, &mut RawRoot) -> Result<(), Err>;
 
-pub trait ClientConn<Ctx, Err> {
-    fn resolve_unary(&mut self, name: &'static str) -> &Handler<Ctx, Err>;
+pub trait ClientConn<'a, Ctx, Err> {
+    fn resolve_unary(&self, name: &'static str) -> Handler<'a, Ctx, Err>;
 }
 
 #[cfg(test)]

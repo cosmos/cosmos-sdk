@@ -38,8 +38,8 @@ schema = 3
     version = "v1.0.0"
     hash = "sha256-AtMupjuK3ccb/GTtxa+NBTufvLjiGljb2RAxuDLkFaw="
   [mod."cosmossdk.io/x/tx"]
-    version = "v0.11.0"
-    hash = "sha256-8CYRI51ChKRonaK1lWWGGe/pvH1zEmrPzheTdE0C9hc="
+    version = "v0.12.0"
+    hash = "sha256-Dc4Md7/ts5laFI/xnj+HUG5ynWDn/xAfIxCUc8ZOPHE="
   [mod."filippo.io/edwards25519"]
     version = "v1.0.0"
     hash = "sha256-APnPAcmItvtJ5Zsy863lzR2TjEBF9Y66TY1e4M1ap98="

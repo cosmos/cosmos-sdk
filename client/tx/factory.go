@@ -48,6 +48,17 @@ type Factory struct {
 
 // NewFactoryCLI creates a new Factory.
 func NewFactoryCLI(clientCtx client.Context, flagSet *pflag.FlagSet) (Factory, error) {
+<<<<<<< HEAD
+=======
+	if clientCtx.Viper == nil {
+		clientCtx = clientCtx.WithViper("")
+	}
+
+	if err := clientCtx.Viper.BindPFlags(flagSet); err != nil {
+		return Factory{}, fmt.Errorf("failed to bind flags to viper: %w", err)
+	}
+
+>>>>>>> 9e91c7b41 (fix(client,server): consistently set env prefix between client/server (#18345))
 	signMode := signing.SignMode_SIGN_MODE_UNSPECIFIED
 	switch clientCtx.SignModeStr {
 	case flags.SignModeDirect:

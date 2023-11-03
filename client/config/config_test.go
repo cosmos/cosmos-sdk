@@ -17,7 +17,12 @@ import (
 )
 
 const (
+<<<<<<< HEAD
 	nodeEnv   = "NODE"
+=======
+	chainID   = "test-chain"
+	nodeEnv   = "CONFIG_TEST_NODE"
+>>>>>>> 9e91c7b41 (fix(client,server): consistently set env prefix between client/server (#18345))
 	testNode1 = "http://localhost:1"
 	testNode2 = "http://localhost:2"
 )
@@ -32,16 +37,100 @@ func initClientContext(t *testing.T, envVar string) (client.Context, func()) {
 		WithCodec(codec.NewProtoCodec(codectypes.NewInterfaceRegistry())).
 		WithChainID(chainID)
 
-	require.NoError(t, clientCtx.Viper.BindEnv(nodeEnv))
 	if envVar != "" {
 		require.NoError(t, os.Setenv(nodeEnv, envVar))
 	}
 
+<<<<<<< HEAD
 	clientCtx, err := config.ReadFromClientConfig(clientCtx)
 	require.NoError(t, err)
 	require.Equal(t, clientCtx.ChainID, chainID)
 
 	return clientCtx, func() { _ = os.RemoveAll(home) }
+=======
+	clientCtx, err := config.CreateClientConfig(clientCtx, customTemplate, customConfig)
+	return clientCtx, func() {
+		_ = os.RemoveAll(home)
+		_ = os.Unsetenv(nodeEnv)
+	}, err
+}
+
+func TestCustomTemplateAndConfig(t *testing.T) {
+	type GasConfig struct {
+		GasAdjustment float64 `mapstructure:"gas-adjustment"`
+	}
+
+	type CustomClientConfig struct {
+		config.Config `mapstructure:",squash"`
+
+		GasConfig GasConfig `mapstructure:"gas"`
+
+		Note string `mapstructure:"note"`
+	}
+
+	clientCfg := config.DefaultConfig()
+	// Overwrite the default keyring backend.
+	clientCfg.KeyringBackend = "test"
+
+	customClientConfig := CustomClientConfig{
+		Config: *clientCfg,
+		GasConfig: GasConfig{
+			GasAdjustment: 1.5,
+		},
+		Note: "Sent from the CLI.",
+	}
+
+	customClientConfigTemplate := config.DefaultClientConfigTemplate + `
+# This is the gas adjustment factor used by the tx commands.
+# Sets the default and can be overwriten by the --gas-adjustment flag in tx commands.
+gas-adjustment = {{ .GasConfig.GasAdjustment }}
+# Memo to include in all transactions.
+note = "{{ .Note }}"
+`
+
+	t.Run("custom template and config provided", func(t *testing.T) {
+		clientCtx, cleanup, err := initClientContextWithTemplate(t, "", customClientConfigTemplate, customClientConfig)
+		defer func() {
+			cleanup()
+		}()
+
+		require.NoError(t, err)
+		require.Equal(t, customClientConfig.KeyringBackend, clientCtx.Viper.Get(flags.FlagKeyringBackend))
+		require.Equal(t, customClientConfig.GasConfig.GasAdjustment, clientCtx.Viper.GetFloat64(flags.FlagGasAdjustment))
+		require.Equal(t, customClientConfig.Note, clientCtx.Viper.GetString(flags.FlagNote))
+	})
+
+	t.Run("no template and custom config provided", func(t *testing.T) {
+		_, cleanup, err := initClientContextWithTemplate(t, "", "", customClientConfig)
+		defer func() {
+			cleanup()
+		}()
+
+		require.Error(t, err)
+	})
+
+	t.Run("default template and custom config provided", func(t *testing.T) {
+		clientCtx, cleanup, err := initClientContextWithTemplate(t, "", config.DefaultClientConfigTemplate, customClientConfig)
+		defer func() {
+			cleanup()
+		}()
+
+		require.NoError(t, err)
+		require.Equal(t, customClientConfig.KeyringBackend, clientCtx.Viper.Get(flags.FlagKeyringBackend))
+		require.Nil(t, clientCtx.Viper.Get(flags.FlagGasAdjustment)) // nil because we do not read the flags
+	})
+
+	t.Run("no template and no config provided", func(t *testing.T) {
+		clientCtx, cleanup, err := initClientContextWithTemplate(t, "", "", nil)
+		defer func() {
+			cleanup()
+		}()
+
+		require.NoError(t, err)
+		require.Equal(t, config.DefaultConfig().KeyringBackend, clientCtx.Viper.Get(flags.FlagKeyringBackend))
+		require.Nil(t, clientCtx.Viper.Get(flags.FlagGasAdjustment)) // nil because we do not read the flags
+	})
+>>>>>>> 9e91c7b41 (fix(client,server): consistently set env prefix between client/server (#18345))
 }
 
 func TestConfigCmdEnvFlag(t *testing.T) {
@@ -76,7 +165,6 @@ func TestConfigCmdEnvFlag(t *testing.T) {
 			clientCtx, cleanup := initClientContext(t, tc.envVar)
 			defer func() {
 				cleanup()
-				_ = os.Unsetenv(nodeEnv)
 			}()
 			/*
 				env var is set with a flag

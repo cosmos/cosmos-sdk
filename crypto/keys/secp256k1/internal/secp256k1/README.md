@@ -6,7 +6,9 @@
 
 ## Duplicate Symbols
 
-If a project makes use of go-ethereum and Cosmos's cgo secp256k1, C linker will fail with duplicated symbols. To avoid
+If a project is importing [go-ethereum](https://github.com/ethereum/go-ethereum) and the Cosmos SDK, cgo secp256k1 will only work on linux operating systems due to duplicated symbols. If you are testing on a mac, we recommend using a docker container or something similar. 
+
+To avoid duplicate symbol errors `ldflags` must be set to allow for multiple definitions. 
 this `ldflags` must set to allow multiple definitions. This only works with Linux machines.
 
 #### Gcc

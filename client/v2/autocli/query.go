@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"runtime/debug"
 	"time"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
@@ -71,6 +72,14 @@ func (b *Builder) AddQueryServiceCommands(cmd *cobra.Command, cmdDescriptor *aut
 		}
 	}
 
+	// get build info to verify later if comment is supported
+	// this is a hack in because of the global api module package
+	// later versions unsupported by the current version can be added
+	buildInfo, ok := debug.ReadBuildInfo()
+	if !ok {
+		buildInfo = &debug.BuildInfo{}
+	}
+
 	for i := 0; i < methods.Len(); i++ {
 		methodDescriptor := methods.Get(i)
 		methodOpts, ok := rpcOptMap[methodDescriptor.Name()]
@@ -79,6 +88,10 @@ func (b *Builder) AddQueryServiceCommands(cmd *cobra.Command, cmdDescriptor *aut
 		}
 
 		if methodOpts.Skip {
+			continue
+		}
+
+		if !util.IsSupportedVersion(util.DescriptorDocs(methodDescriptor), buildInfo) {
 			continue
 		}
 

@@ -1,8 +1,82 @@
 package util
 
 import (
+	"runtime/debug"
 	"testing"
 )
+
+func TestIsSupportedVersion(t *testing.T) {
+	mockBuildInfo := &debug.BuildInfo{
+		Deps: []*debug.Module{
+			{
+				Path:    "github.com/cosmos/cosmos-sdk",
+				Version: "v0.50.0",
+			},
+			{
+				Path:    "cosmossdk.io/feegrant",
+				Version: "v0.1.0",
+			},
+		},
+	}
+
+	cases := []struct {
+		input    string
+		expected bool
+	}{
+		{
+			input:    "",
+			expected: true,
+		},
+		{
+			input:    "not a since comment",
+			expected: true,
+		},
+		{
+			input:    "// Since: cosmos-sdk v0.47",
+			expected: true,
+		},
+		{
+			input:    "// since: Cosmos-SDK 0.50",
+			expected: true,
+		},
+		{
+			input:    "// Since: cosmos-sdk v0.51",
+			expected: false,
+		},
+		{
+			input:    "// Since: cosmos-sdk v1.0.0",
+			expected: false,
+		},
+		{
+			input:    "// since: x/feegrant v0.1.0",
+			expected: true,
+		},
+		{
+			input:    "// since: feegrant v0.0.1",
+			expected: true,
+		},
+		{
+			input:    "// since: feegrant v0.1.0",
+			expected: true,
+		},
+		{
+			input:    "// since: feegrant v0.2.0",
+			expected: false,
+		},
+	}
+
+	for _, tc := range cases {
+		resp := IsSupportedVersion(tc.input, mockBuildInfo)
+		if resp != tc.expected {
+			t.Errorf("expected %v, got %v", tc.expected, resp)
+		}
+
+		resp = IsSupportedVersion(tc.input, &debug.BuildInfo{})
+		if !resp {
+			t.Errorf("expected %v, got %v", true, resp)
+		}
+	}
+}
 
 func TestParseSinceComment(t *testing.T) {
 	cases := []struct {
@@ -21,29 +95,39 @@ func TestParseSinceComment(t *testing.T) {
 			expectedVersion:    "",
 		},
 		{
+			input:              "// since: Cosmos SDK 0.50",
+			expectedModuleName: "cosmos-sdk",
+			expectedVersion:    "v0.50",
+		},
+		{
+			input:              "// since: cosmos sdk 0.50",
+			expectedModuleName: "cosmos-sdk",
+			expectedVersion:    "v0.50",
+		},
+		{
 			input:              "// since: Cosmos-SDK 0.50",
 			expectedModuleName: "cosmos-sdk",
-			expectedVersion:    "0.50",
+			expectedVersion:    "v0.50",
 		},
 		{
 			input:              "// Since: cosmos-sdk v0.50",
 			expectedModuleName: "cosmos-sdk",
-			expectedVersion:    "0.50",
+			expectedVersion:    "v0.50",
 		},
 		{
-			input:              "// since: cosmos-sdk v0.50.1",
+			input:              "//since: cosmos-sdk v0.50.1",
 			expectedModuleName: "cosmos-sdk",
-			expectedVersion:    "0.50.1",
+			expectedVersion:    "v0.50.1",
 		},
 		{
 			input:              "// Since: x/feegrant v0.1.0",
 			expectedModuleName: "x/feegrant",
-			expectedVersion:    "0.1.0",
+			expectedVersion:    "v0.1.0",
 		},
 		{
 			input:              "// since: x/feegrant 0.1",
 			expectedModuleName: "x/feegrant",
-			expectedVersion:    "0.1",
+			expectedVersion:    "v0.1",
 		},
 	}
 

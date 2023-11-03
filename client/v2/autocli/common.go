@@ -35,7 +35,6 @@ func (b *Builder) buildMethodCommandCommon(descriptor protoreflect.MethodDescrip
 	long := options.Long
 	if long == "" {
 		long = util.DescriptorDocs(descriptor)
-		fmt.Println("comment", descriptor.Name(), long)
 	}
 
 	inputDesc := descriptor.Input()

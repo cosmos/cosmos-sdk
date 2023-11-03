@@ -34,25 +34,25 @@ func ResolveMessageType(resolver protoregistry.MessageTypeResolver, descriptor p
 
 // IsSupportedVersion is used to determine in which version of a module / sdk a rpc was introduced.
 // It returns false if the rpc has comment for an higher version than the current one.
-func IsSupportedVersion(input string) bool {
-	moduleName, version := parseSinceComment(input)
-
-	buildInfo, ok := debug.ReadBuildInfo()
-	if !ok {
-		return false
+func IsSupportedVersion(input string, buildInfo *debug.BuildInfo) bool {
+	if input == "" {
+		return true // no comment mean it's supported since v0.0.0
 	}
 
+	moduleName, version := parseSinceComment(input)
 	for _, dep := range buildInfo.Deps {
 		if !strings.Contains(dep.Path, moduleName) {
 			continue
 		}
 
 		if version <= dep.Version {
-			return false
+			return true
 		}
+
+		return false
 	}
 
-	return true
+	return true // if cannot find the module consider it's supported
 }
 
 // parseSinceComment parses the `// Since: cosmos-sdk v0.xx` comment on rpc.
@@ -62,11 +62,17 @@ func parseSinceComment(input string) (string, string) {
 		version    string
 	)
 
-	re := regexp.MustCompile(`\/\/ since: (\S+) (\S+)`)
-	matches := re.FindStringSubmatch(strings.ToLower(input))
+	input = strings.ToLower(input)
+	input = strings.ReplaceAll(input, "cosmos sdk", "cosmos-sdk")
+
+	re := regexp.MustCompile(`\/\/\s?since: (\S+) (\S+)`)
+	matches := re.FindStringSubmatch(input)
 	if len(matches) >= 3 {
-		moduleName = matches[1]
-		version = strings.TrimLeft(matches[2], "v")
+		moduleName, version = matches[1], matches[2]
+
+		if !strings.Contains(version, "v") {
+			version = "v" + version
+		}
 	}
 
 	return moduleName, version

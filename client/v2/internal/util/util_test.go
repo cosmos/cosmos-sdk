@@ -148,5 +148,4 @@ func TestParseSinceComment(t *testing.T) {
 			t.Errorf("expected version %s, got %s", tc.expectedVersion, version)
 		}
 	}
-
 }

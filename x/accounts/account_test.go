@@ -10,15 +10,16 @@ import (
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
 	"cosmossdk.io/collections"
+	"cosmossdk.io/x/accounts/accountstd"
 	"cosmossdk.io/x/accounts/internal/implementation"
 )
 
 var _ implementation.Account = (*TestAccount)(nil)
 
-func NewTestAccount(sb *collections.SchemaBuilder) *TestAccount {
+func NewTestAccount(d accountstd.Dependencies) (*TestAccount, error) {
 	return &TestAccount{
-		Counter: collections.NewSequence(sb, collections.NewPrefix(0), "counter"),
-	}
+		Counter: collections.NewSequence(d.SchemaBuilder, collections.NewPrefix(0), "counter"),
+	}, nil
 }
 
 type TestAccount struct {

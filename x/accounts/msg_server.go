@@ -3,6 +3,7 @@ package accounts
 import (
 	"context"
 
+	"cosmossdk.io/core/event"
 	v1 "cosmossdk.io/x/accounts/v1"
 )
 
@@ -28,7 +29,7 @@ func (m msgServer) Init(ctx context.Context, request *v1.MsgInit) (*v1.MsgInitRe
 	}
 
 	// decode message bytes into the concrete boxed message type
-	msg, err := impl.DecodeInitRequest(request.Message)
+	msg, err := impl.InitHandlerSchema.RequestSchema.TxDecode(request.Message)
 	if err != nil {
 		return nil, err
 	}
@@ -40,7 +41,7 @@ func (m msgServer) Init(ctx context.Context, request *v1.MsgInit) (*v1.MsgInitRe
 	}
 
 	// encode the response
-	respBytes, err := impl.EncodeInitResponse(resp)
+	respBytes, err := impl.InitHandlerSchema.ResponseSchema.TxEncode(resp)
 	if err != nil {
 		return nil, err
 	}
@@ -51,6 +52,18 @@ func (m msgServer) Init(ctx context.Context, request *v1.MsgInit) (*v1.MsgInitRe
 		return nil, err
 	}
 
+	eventManager := m.k.eventService.EventManager(ctx)
+	err = eventManager.EmitKV(
+		ctx,
+		"account_creation",
+		event.Attribute{
+			Key:   "address",
+			Value: accAddrString,
+		},
+	)
+	if err != nil {
+		return nil, err
+	}
 	return &v1.MsgInitResponse{
 		AccountAddress: accAddrString,
 		Response:       respBytes,

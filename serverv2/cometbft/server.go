@@ -15,13 +15,13 @@ import (
 	"github.com/cometbft/cometbft/proxy"
 	cmttypes "github.com/cometbft/cometbft/types"
 	"github.com/cosmos/cosmos-sdk/client"
-	cometlog "github.com/cosmos/cosmos-sdk/serverv2/comet/log"
-	"github.com/cosmos/cosmos-sdk/serverv2/comet/types"
+	cometlog "github.com/cosmos/cosmos-sdk/serverv2/cometbft/log"
+	"github.com/cosmos/cosmos-sdk/serverv2/cometbft/types"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
 type HasCometBFTServer interface {
-	types.ABCI
+	types.ProtoApp
 
 	// RegisterTendermintService registers the gRPC Query service for CometBFT queries.
 	RegisterTendermintService(client.Context)
@@ -51,7 +51,7 @@ func NewCometBFTServer(clientCtx client.Context, logger log.Logger, app HasComet
 
 	return &CometBFTServer{
 		logger: logger,
-		app:    NewCometABCIWrapper(app),
+		app:    NewCometABCIWrapper(app, logger),
 		config: cfg,
 	}
 }

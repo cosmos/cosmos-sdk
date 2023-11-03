@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"time"
 
+	"cosmossdk.io/math"
 	"cosmossdk.io/x/protocolpool/keeper"
 	"cosmossdk.io/x/protocolpool/types"
 
@@ -13,6 +14,8 @@ func (suite *KeeperTestSuite) TestUnclaimedBudget() {
 	queryServer := keeper.NewQuerier(suite.poolKeeper)
 	startTime := suite.ctx.BlockTime().Add(-70 * time.Second)
 	period := time.Duration(60) * time.Second
+	zeroCoin := sdk.NewCoin("foo", math.ZeroInt())
+	nextClaimFrom := startTime.Add(period)
 	testCases := []struct {
 		name           string
 		preRun         func()
@@ -20,6 +23,7 @@ func (suite *KeeperTestSuite) TestUnclaimedBudget() {
 		expErr         bool
 		expErrMsg      string
 		unclaimedFunds *sdk.Coin
+		resp           *types.QueryUnclaimedBudgetResponse
 	}{
 		{
 			name: "empty recipient address",
@@ -56,6 +60,14 @@ func (suite *KeeperTestSuite) TestUnclaimedBudget() {
 			},
 			expErr:         false,
 			unclaimedFunds: &fooCoin,
+			resp: &types.QueryUnclaimedBudgetResponse{
+				TotalBudget:     &fooCoin,
+				ClaimedAmount:   &zeroCoin,
+				UnclaimedAmount: &fooCoin,
+				NextClaimFrom:   &startTime,
+				Period:          &period,
+				TranchesLeft:    2,
+			},
 		},
 		{
 			name: "valid case with claim",
@@ -85,6 +97,14 @@ func (suite *KeeperTestSuite) TestUnclaimedBudget() {
 			},
 			expErr:         false,
 			unclaimedFunds: &fooCoin2,
+			resp: &types.QueryUnclaimedBudgetResponse{
+				TotalBudget:     &fooCoin,
+				ClaimedAmount:   &fooCoin2,
+				UnclaimedAmount: &fooCoin2,
+				NextClaimFrom:   &nextClaimFrom,
+				Period:          &period,
+				TranchesLeft:    1,
+			},
 		},
 	}
 	for _, tc := range testCases {
@@ -98,7 +118,7 @@ func (suite *KeeperTestSuite) TestUnclaimedBudget() {
 				suite.Require().Contains(err.Error(), tc.expErrMsg)
 			} else {
 				suite.Require().NoError(err)
-				suite.Require().Equal(tc.unclaimedFunds, resp.UnclaimedAmount)
+				suite.Require().Equal(tc.resp, resp)
 			}
 		})
 	}

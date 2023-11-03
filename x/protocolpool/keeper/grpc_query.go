@@ -8,6 +8,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	"cosmossdk.io/collections"
+	"cosmossdk.io/math"
 	"cosmossdk.io/x/protocolpool/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -55,5 +56,26 @@ func (k Querier) UnclaimedBudget(ctx context.Context, req *types.QueryUnclaimedB
 	} else {
 		unclaimedBudget = budget.TotalBudget.Sub(*budget.ClaimedAmount)
 	}
-	return &types.QueryUnclaimedBudgetResponse{UnclaimedAmount: &unclaimedBudget}, nil
+
+	if budget.ClaimedAmount == nil {
+		zeroCoin := sdk.NewCoin(budget.TotalBudget.Denom, math.ZeroInt())
+		budget.ClaimedAmount = &zeroCoin
+	}
+
+	if budget.NextClaimFrom == nil {
+		budget.NextClaimFrom = budget.StartTime
+	}
+
+	if budget.TranchesLeft == 0 {
+		budget.TranchesLeft = budget.Tranches
+	}
+
+	return &types.QueryUnclaimedBudgetResponse{
+		TotalBudget:     budget.TotalBudget,
+		ClaimedAmount:   budget.ClaimedAmount,
+		UnclaimedAmount: &unclaimedBudget,
+		NextClaimFrom:   budget.NextClaimFrom,
+		Period:          budget.Period,
+		TranchesLeft:    budget.TranchesLeft,
+	}, nil
 }

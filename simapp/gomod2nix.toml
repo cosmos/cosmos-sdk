@@ -93,8 +93,8 @@ schema = 3
     version = "v0.0.0-20230118201751-21c54148d20b"
     hash = "sha256-7dQH6j1o99fuxHKkw0RhNC5wJKkvRLMDJpUiVnDx6h8="
   [mod."github.com/cockroachdb/pebble"]
-    version = "v0.0.0-20231101195458-481da04154d6"
-    hash = "sha256-ib09GhKdvkFZ1KpZktC9eLqtz6wHjvfmeWbOctgd7Pg="
+    version = "v0.0.0-20231102162011-844f0582c2eb"
+    hash = "sha256-5yaWeYhBMPfXgb+cY+eVfCqvKJMSDMaptNg7cgYoEjc="
   [mod."github.com/cockroachdb/redact"]
     version = "v1.1.5"
     hash = "sha256-0rtT7LRO0wxf9XovOK8GXRrhmx8OcbdPK/mXOKbJdog="

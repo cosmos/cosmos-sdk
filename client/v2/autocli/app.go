@@ -10,10 +10,10 @@ import (
 	"cosmossdk.io/client/v2/autocli/keyring"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
+	"cosmossdk.io/x/auth/tx"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	sdkflags "github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 )
 
 // AppOptions are autocli options for an app. These options can be built via depinject based on an app config. Ex:

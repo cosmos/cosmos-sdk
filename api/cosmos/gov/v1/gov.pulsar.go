@@ -7726,7 +7726,7 @@ type Params struct {
 	// burn deposits if quorum with vote type no_veto is met
 	BurnVoteVeto bool `protobuf:"varint,15,opt,name=burn_vote_veto,json=burnVoteVeto,proto3" json:"burn_vote_veto,omitempty"`
 	// The ratio representing the proportion of the deposit value minimum that must be met when making a deposit.
-	// Default value: 0.01. Meaning that for a chain with a min_deposit of 1000stake, a deposit of 1stake would be
+	// Default value: 0.01. Meaning that for a chain with a min_deposit of 100stake, a deposit of 1stake would be
 	// required.
 	//
 	// Since: cosmos-sdk 0.50

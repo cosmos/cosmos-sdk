@@ -1,17 +1,24 @@
 use alloc::alloc::{alloc_zeroed, Layout};
+use alloc::boxed::Box;
 use core::{
     borrow::{Borrow, BorrowMut},
     marker::PhantomData,
     mem::size_of,
     ops::{Deref, DerefMut},
 };
-use crate::error::Error;
+use core::marker::PhantomPinned;
 
+use crate::error::Error;
 use crate::util::MAX_EXTENT;
 use crate::zerocopy::ZeroCopy;
 
+pub struct RawRoot {
+    pub(crate) buf: *mut u8,
+    _phantom: PhantomPinned,
+}
+
 pub struct Root<T: ZeroCopy> {
-    buf: *mut u8,
+    pub(crate) buf: *mut u8,
     _phantom: PhantomData<T>,
 }
 

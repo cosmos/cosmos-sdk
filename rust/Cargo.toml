@@ -1,0 +1,10 @@
+[workspace]
+resolver = "2"
+members = [
+    "zeropb",
+    "zeropb_derive",
+    "zeropb_codegen",
+    "cosmossdk_core",
+    "example_module",
+]
+

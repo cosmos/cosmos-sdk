@@ -1,25 +1,35 @@
 #![feature(offset_of)]
 #![warn(missing_docs)]
+#![no_std]
 
 extern crate alloc;
 extern crate core;
 
 mod zerocopy;
+pub use zerocopy::{ZeroCopy};
 mod root;
+pub use root::{Root};
 mod util;
 mod error;
+pub use error::{Error};
 mod str;
+pub use str::{Str, StrWriter};
 mod bytes;
+pub use bytes::{Bytes, BytesWriter};
 mod repeated;
 mod oneof;
 mod r#enum;
 mod ptr;
-
+mod server;
+mod wasm;
+mod status;
+mod client;
+pub use client::{ClientConn};
 
 #[cfg(test)]
 mod tests {
     use core::fmt::Write;
-    use std::borrow::Borrow;
+    use core::borrow::Borrow;
 
     use crate::root::Root;
     use crate::str::Str;

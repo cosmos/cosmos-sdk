@@ -1,23 +1,35 @@
+use std::io::Read;
+
+use prost::Message;
+use prost_types::FileDescriptorProto;
+use std::borrow::Borrow;
+use std::{env, fs};
+use std::path::Path;
+
+use crate::ctx::Context;
+use crate::file::gen_file;
+
 mod message;
 mod field;
 mod file;
 mod ctx;
 mod r#type;
 mod opts;
+mod service;
+mod method;
 
 #[cfg(test)]
 mod tests {
     use std::borrow::Borrow;
-use std::io::Read;
-    use prost_types::FileDescriptorProto;
-    use prost::Message;
-    use crate::ctx::Context;
-    use crate::file::gen_file;
 
     #[test]
     fn test1() {
-        // 298 bytes of a gzipped FileDescriptorProto
-        let bz: &[u8] = &[0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x92, 0x4e, 0xce, 0x2f, 0xce,
+    }
+}
+
+pub fn compile_protos() -> std::io::Result<()> {
+    // 298 bytes of a gzipped FileDescriptorProto
+    let bz: &[u8] = &[0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x92, 0x4e, 0xce, 0x2f, 0xce,
         0xcd, 0x2f, 0xd6, 0xcf, 0x4b, 0x2b, 0xd1, 0x2f, 0x33, 0x4c, 0x4a, 0x2d, 0x49, 0x34, 0xd4, 0x2f,
         0xa9, 0xd0, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x12, 0x82, 0x48, 0xea, 0xe5, 0xa5, 0x95, 0xe8,
         0x41, 0x25, 0xa5, 0x24, 0x21, 0x62, 0xf1, 0x60, 0x15, 0xfa, 0x50, 0x05, 0x60, 0x8e, 0x94, 0x38,
@@ -37,14 +49,17 @@ use std::io::Read;
         0xcb, 0xcc, 0xd7, 0xaf, 0x00, 0xc5, 0x4e, 0x12, 0x1b, 0x38, 0x2c, 0x8d, 0x01, 0x01, 0x00, 0x00,
         0xff, 0xff, 0x3f, 0x1d, 0xd6, 0x0c, 0xb2, 0x01, 0x00, 0x00];
 
-        let mut gz = flate2::read::GzDecoder::new(bz);
-        let mut res = vec![];
-        res.reserve(0x10000);
-        gz.read_to_end(&mut res).unwrap();
-        let fd = FileDescriptorProto::decode(res.borrow()).unwrap();
-        let mut ctx = Context::default();
-        gen_file(&fd, &mut ctx).unwrap();
-        println!("{:}", ctx.str);
-    }
-}
+    let mut gz = flate2::read::GzDecoder::new(bz);
+    let mut res = vec![];
+    res.reserve(0x10000);
+    gz.read_to_end(&mut res).unwrap();
+    let fd = FileDescriptorProto::decode(res.borrow()).unwrap();
 
+    let mut ctx = Context::default();
+    gen_file(&fd, &mut ctx).unwrap();
+    let out_dir = env::var_os("OUT_DIR").unwrap();
+    let dest_path = Path::new(&out_dir).join("out.rs");
+    fs::write(&dest_path, ctx.str).unwrap();
+    // println!("cargo:rerun-if-changed=build.rs");
+    Ok(())
+}

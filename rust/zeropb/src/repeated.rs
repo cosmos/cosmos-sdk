@@ -56,7 +56,7 @@ struct RepeatedSegmentHeader {
 
 #[cfg(test)]
 mod tests {
-    use std::alloc;
+    use alloc::alloc;
 
     #[repr(C)]
     struct TestStruct {

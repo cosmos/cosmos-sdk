@@ -3,7 +3,7 @@ use prost_types::FieldDescriptorProto;
 use crate::ctx::Context;
 use std::fmt::Write;
 
-pub(crate) fn gen_type(field: &FieldDescriptorProto, ctx: &mut Context) -> anyhow::Result<()> {
+pub(crate) fn gen_field_type(field: &FieldDescriptorProto, ctx: &mut Context) -> anyhow::Result<()> {
     match field.r#type() {
         Type::Double => { write!(ctx, "f64")? }
         Type::Float => { write!(ctx, "f32")? }
@@ -30,6 +30,13 @@ pub(crate) fn gen_type(field: &FieldDescriptorProto, ctx: &mut Context) -> anyho
             write!(ctx, "TODO")?;
         }
     }
+    Ok(())
+}
+
+pub(crate) fn gen_message_type(full_name: &str, ctx: &mut Context) -> anyhow::Result<()> {
+    // take last part of name after last dot
+    let name = full_name.split(".").last().unwrap();
+    write!(ctx, "{}", name)?;
     Ok(())
 }
 

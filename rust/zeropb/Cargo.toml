@@ -4,10 +4,10 @@ version = "0.1.0"
 edition = "2021"
 
 [lib]
-crate-type = ["cdylib"]
+crate-type = ["cdylib", "lib"]
 
 [dependencies]
-rend = "0.4.1"
-thiserror = "1.0.50"
-num_enum = "0.7.1"
-
+rend = { version = "0.4.1", default-features = false }
+num_enum = { version = "0.7.1", default-features = false }
+thiserror-no-std = "2.0.2"
+lol_alloc = "0.4.0"

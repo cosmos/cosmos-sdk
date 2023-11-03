@@ -9,7 +9,7 @@ pub struct Enum<T> {
 
 unsafe impl <T: ZeroCopyEnum> ZeroCopy for Enum<T> {}
 
-pub trait ZeroCopyEnum: Copy + Into<u8> + TryFrom<u8> {
+pub unsafe trait ZeroCopyEnum: Copy + Into<u8> + TryFrom<u8> {
     const MAX_VALUE: u8;
 }
 
@@ -31,7 +31,7 @@ impl<T: ZeroCopyEnum> Enum<T> {
 #[cfg(test)]
 mod tests {
     use core::marker::PhantomData;
-    use std::mem::transmute;
+    use core::mem::transmute;
     use num_enum::{IntoPrimitive, TryFromPrimitive};
     use crate::r#enum::{Enum, ZeroCopyEnum};
 
@@ -39,7 +39,7 @@ mod tests {
     #[derive(Clone, Copy, IntoPrimitive, TryFromPrimitive, Eq, PartialEq, Debug)]
     enum ABC { A, B, C }
 
-    impl ZeroCopyEnum for ABC {
+    unsafe impl ZeroCopyEnum for ABC {
         const MAX_VALUE: u8 = 2;
     }
 

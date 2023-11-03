@@ -29,7 +29,7 @@ const (
 type QueryClient interface {
 	// CommunityPool queries the community pool coins.
 	CommunityPool(ctx context.Context, in *QueryCommunityPoolRequest, opts ...grpc.CallOption) (*QueryCommunityPoolResponse, error)
-	// UnclaimedBudget queries the remaining budget left to be claimed.
+	// UnclaimedBudget queries the remaining budget left to be claimed and it gives overall budget allocation view.
 	UnclaimedBudget(ctx context.Context, in *QueryUnclaimedBudgetRequest, opts ...grpc.CallOption) (*QueryUnclaimedBudgetResponse, error)
 }
 
@@ -65,7 +65,7 @@ func (c *queryClient) UnclaimedBudget(ctx context.Context, in *QueryUnclaimedBud
 type QueryServer interface {
 	// CommunityPool queries the community pool coins.
 	CommunityPool(context.Context, *QueryCommunityPoolRequest) (*QueryCommunityPoolResponse, error)
-	// UnclaimedBudget queries the remaining budget left to be claimed.
+	// UnclaimedBudget queries the remaining budget left to be claimed and it gives overall budget allocation view.
 	UnclaimedBudget(context.Context, *QueryUnclaimedBudgetRequest) (*QueryUnclaimedBudgetResponse, error)
 	mustEmbedUnimplementedQueryServer()
 }

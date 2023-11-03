@@ -112,36 +112,12 @@ func (enc Encoder) DefineFieldEncoding(name string, encoder FieldEncoder) Encode
 // Marshal serializes a protobuf message to JSON.
 func (enc Encoder) Marshal(message proto.Message) ([]byte, error) {
 	buf := &bytes.Buffer{}
-<<<<<<< HEAD
 	err := enc.beginMarshal(message.ProtoReflect(), buf)
-=======
-	err := enc.beginMarshal(message.ProtoReflect(), buf, false)
-
-	if enc.indent != "" {
-		indentBuf := &bytes.Buffer{}
-		if err := json.Indent(indentBuf, buf.Bytes(), "", enc.indent); err != nil {
-			return nil, err
-		}
-
-		return indentBuf.Bytes(), err
-	}
-
->>>>>>> 2caf00deb (fix(client/v2): fix marshalling of queries with any (#18309))
 	return buf.Bytes(), err
 }
 
-func (enc Encoder) beginMarshal(msg protoreflect.Message, writer io.Writer, isAny bool) error {
-	var (
-		name  string
-		named bool
-	)
-
-	if isAny {
-		name, named = getMessageAminoNameAny(msg), true
-	} else {
-		name, named = getMessageAminoName(msg)
-	}
-
+func (enc Encoder) beginMarshal(msg protoreflect.Message, writer io.Writer) error {
+	name, named := getMessageAminoName(msg.Descriptor().Options())
 	if named {
 		_, err := writer.Write([]byte(fmt.Sprintf(`{"type":"%s","value":`, name)))
 		if err != nil {

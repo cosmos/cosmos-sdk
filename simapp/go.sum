@@ -189,8 +189,8 @@ cloud.google.com/go/workflows v1.6.0/go.mod h1:6t9F5h/unJz41YqfBmqSASJSXccBLtD1V
 cloud.google.com/go/workflows v1.7.0/go.mod h1:JhSrZuVZWuiDfKEFxU0/F1PQjmpnpcoISEXH2bcHC3M=
 cosmossdk.io/api v0.7.2 h1:BO3i5fvKMKvfaUiMkCznxViuBEfyWA/k6w2eAF6q1C4=
 cosmossdk.io/api v0.7.2/go.mod h1:IcxpYS5fMemZGqyYtErK7OqvdM0C8kdW3dq8Q/XIG38=
-cosmossdk.io/client/v2 v2.0.0-20231024213736-e269ea8c13d8 h1:awzWzBCbq4b6c/Z2gXWeaHg27ZJGT6Z9L/NDzazLPrw=
-cosmossdk.io/client/v2 v2.0.0-20231024213736-e269ea8c13d8/go.mod h1:sEokappqu0aTViimwanX5TJvcX04wXfUwPYRV6FIgko=
+cosmossdk.io/client/v2 v2.0.0-20231103103049-f73a17f75727 h1:w4xUROlGYwypZwh7i8fEmkzeuCRmJXonHEbkpyve5yo=
+cosmossdk.io/client/v2 v2.0.0-20231103103049-f73a17f75727/go.mod h1:HZbG3KK4esEs31qR9AjCG/OWDfqMGOA6iV8m3qzCnUc=
 cosmossdk.io/collections v0.4.0 h1:PFmwj2W8szgpD5nOd8GWH6AbYNi1f2J6akWXJ7P5t9s=
 cosmossdk.io/collections v0.4.0/go.mod h1:oa5lUING2dP+gdDquow+QjlF45eL1t4TJDypgGd+tv0=
 cosmossdk.io/core v0.11.0 h1:vtIafqUi+1ZNAE/oxLOQQ7Oek2n4S48SWLG8h/+wdbo=
@@ -215,8 +215,8 @@ cosmossdk.io/x/feegrant v0.0.0-20231023160833-026631cd833c h1:1DEtQYVuCI9hA5nCJS
 cosmossdk.io/x/feegrant v0.0.0-20231023160833-026631cd833c/go.mod h1:vmiW+2cIfGZULh6ReN03sawbhn8UUGrttNMxiIiduKI=
 cosmossdk.io/x/nft v0.0.0-20231023160833-026631cd833c h1:EFBlwazEIqkvKV5L1JfQZ6lhUJF9cMguAqQk1xSmbfM=
 cosmossdk.io/x/nft v0.0.0-20231023160833-026631cd833c/go.mod h1:PELWSey8Y7pq8iSgqEav82APBbgMb/SDbbjyuP8tvWc=
-cosmossdk.io/x/tx v0.11.0 h1:Ak2LIC06bXqPbpMIEorkQbwVddRvRys1sL3Cjm+KPfs=
-cosmossdk.io/x/tx v0.11.0/go.mod h1:tzuC7JlfGivYuIO32JbvvY3Ft9s6FK1+r0/nGHiHwtM=
+cosmossdk.io/x/tx v0.12.0 h1:Ry2btjQdrfrje9qZ3iZeZSmDArjgxUJMMcLMrX4wj5U=
+cosmossdk.io/x/tx v0.12.0/go.mod h1:qTth2coAGkwCwOCjqQ8EAQg+9udXNRzcnSbMgGKGEI0=
 cosmossdk.io/x/upgrade v0.0.0-20231023160833-026631cd833c h1:wqlSXbvd3SEX4cDJWamiARHtZHZxOzneJNNaSzHwwkw=
 cosmossdk.io/x/upgrade v0.0.0-20231023160833-026631cd833c/go.mod h1:OGcabvCst54+IOZQodvOAbAxEhhlhk6mvGQV8zRh7wI=
 dmitri.shuralyov.com/gpu/mtl v0.0.0-20190408044501-666a987793e9/go.mod h1:H6x//7gZCb22OMCxBHrMx7a5I7Hp++hsVxbQ4BYO7hU=

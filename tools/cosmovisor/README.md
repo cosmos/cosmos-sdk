@@ -5,7 +5,7 @@ sidebar_position: 1
 # Cosmovisor
 
 `cosmovisor` is a process manager for Cosmos SDK application binaries that automates application binary switch at chain upgrades.
-It polls the `upgrade-info.json` file that is created by the x/upgrade module in `BeginBlocker` when an upgrade is detected and the blockchain reaches the upgrade height.
+It polls the `upgrade-info.json` file that is created by the x/upgrade module at upgrade height, and then can automatically download the new binary, stop the current binary, switch from the old binary to the new one, and finally restart the node with the new binary.
 
 * [Design](#design)
 * [Contributing](#contributing)

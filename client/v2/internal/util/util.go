@@ -57,11 +57,7 @@ func isSupportedVersion(input string, buildInfo *debug.BuildInfo) bool {
 			continue
 		}
 
-		if version <= dep.Version {
-			return true
-		}
-
-		return false
+		return version <= dep.Version
 	}
 
 	return true // if cannot find the module consider it's supported
@@ -77,7 +73,7 @@ func parseSinceComment(input string) (string, string) {
 	input = strings.ToLower(input)
 	input = strings.ReplaceAll(input, "cosmos sdk", "cosmos-sdk")
 
-	re := regexp.MustCompile(`\/\/\s?since: (\S+) (\S+)`)
+	re := regexp.MustCompile(`\/\/\s*since: (\S+) (\S+)`)
 	matches := re.FindStringSubmatch(input)
 	if len(matches) >= 3 {
 		moduleName, version = matches[1], matches[2]

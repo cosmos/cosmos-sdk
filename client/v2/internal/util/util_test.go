@@ -103,6 +103,11 @@ func TestParseSinceComment(t *testing.T) {
 			expectedVersion:    "",
 		},
 		{
+			input:              "//            Since: Cosmos SDK 0.50",
+			expectedModuleName: "cosmos-sdk",
+			expectedVersion:    "v0.50",
+		},
+		{
 			input:              "// since: Cosmos SDK 0.50",
 			expectedModuleName: "cosmos-sdk",
 			expectedVersion:    "v0.50",

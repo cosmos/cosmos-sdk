@@ -63,6 +63,8 @@ func isSupportedVersion(input string, buildInfo *debug.BuildInfo) bool {
 	return true // if cannot find the module consider it's supported
 }
 
+var sinceCommentRegex = regexp.MustCompile(`\/\/\s*since: (\S+) (\S+)`)
+
 // parseSinceComment parses the `// Since: cosmos-sdk v0.xx` comment on rpc.
 func parseSinceComment(input string) (string, string) {
 	var (
@@ -73,12 +75,11 @@ func parseSinceComment(input string) (string, string) {
 	input = strings.ToLower(input)
 	input = strings.ReplaceAll(input, "cosmos sdk", "cosmos-sdk")
 
-	re := regexp.MustCompile(`\/\/\s*since: (\S+) (\S+)`)
-	matches := re.FindStringSubmatch(input)
+	matches := sinceCommentRegex.FindStringSubmatch(input)
 	if len(matches) >= 3 {
 		moduleName, version = matches[1], matches[2]
 
-		if !strings.Contains(version, "v") {
+		if !strings.HasPrefix(version, "v") {
 			version = "v" + version
 		}
 	}

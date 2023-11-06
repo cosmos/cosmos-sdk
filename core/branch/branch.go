@@ -5,9 +5,9 @@ import "context"
 
 // Service is the branch service interface.
 type Service interface {
-	// Execute executes the given function in an isolated context.
-	// If the function returns an error, the execution is considered failed,
-	// and every ste change made during the execution is rolled back.
+	// Execute executes the given function in an isolated context. If the
+	// `f` function returns an error, the execution is considered failed,
+	// and every change made affecting the execution context is rolled back.
 	// If the function returns nil, the execution is considered successful, and
 	// committed.
 	// The context.Context passed to the `f` function is a child of the context

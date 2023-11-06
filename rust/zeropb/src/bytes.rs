@@ -42,6 +42,7 @@ impl Bytes {
 
             let write_head = (start + last_extent as usize) as *mut u8;
             self.offset = (write_head as usize - base as usize) as i16;
+            self.length = 0;
 
             Ok(BytesWriter {
                 bz: self,

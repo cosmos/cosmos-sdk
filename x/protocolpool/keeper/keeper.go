@@ -188,7 +188,7 @@ func (k Keeper) calculateClaimableFunds(ctx context.Context, recipient sdk.AccAd
 	return amount, nil
 }
 
-func (k Keeper) validateAndUpdateBudgetProposal(ctx context.Context, bp *types.MsgSubmitBudgetProposal) (*types.Budget, error) {
+func (k Keeper) validateAndUpdateBudgetProposal(ctx context.Context, bp types.MsgSubmitBudgetProposal) (*types.Budget, error) {
 	if bp.TotalBudget.IsZero() {
 		return nil, fmt.Errorf("invalid budget proposal: total budget cannot be zero")
 	}

@@ -46,7 +46,7 @@ func (k MsgServer) SubmitBudgetProposal(ctx context.Context, msg *types.MsgSubmi
 		return nil, err
 	}
 
-	budgetProposal, err := k.validateAndUpdateBudgetProposal(ctx, msg)
+	budgetProposal, err := k.validateAndUpdateBudgetProposal(ctx, *msg)
 	if err != nil {
 		return nil, err
 	}

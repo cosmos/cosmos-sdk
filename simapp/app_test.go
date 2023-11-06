@@ -40,7 +40,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
-	"github.com/cosmos/cosmos-sdk/x/crisis"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 )
 
@@ -211,7 +210,6 @@ func TestRunMigrations(t *testing.T) {
 					"vesting":      vesting.AppModule{}.ConsensusVersion(),
 					"feegrant":     feegrantmodule.AppModule{}.ConsensusVersion(),
 					"evidence":     evidence.AppModule{}.ConsensusVersion(),
-					"crisis":       crisis.AppModule{}.ConsensusVersion(),
 					"genutil":      genutil.AppModule{}.ConsensusVersion(),
 				},
 			)
@@ -259,7 +257,6 @@ func TestInitGenesisOnMigration(t *testing.T) {
 			"vesting":      vesting.AppModule{}.ConsensusVersion(),
 			"feegrant":     feegrantmodule.AppModule{}.ConsensusVersion(),
 			"evidence":     evidence.AppModule{}.ConsensusVersion(),
-			"crisis":       crisis.AppModule{}.ConsensusVersion(),
 			"genutil":      genutil.AppModule{}.ConsensusVersion(),
 		},
 	)

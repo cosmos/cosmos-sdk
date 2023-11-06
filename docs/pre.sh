@@ -18,10 +18,16 @@ cp ../x/auth/tx/README.md ./docs/build/modules/auth/2-tx.md
 cat ../x/README.md | sed 's/\.\.\/docs\/build\/building-modules\/README\.md/\/building-modules\/intro\.html/g' > ./docs/modules/README.md
 
 ## Add tooling documentation
+<<<<<<< HEAD
 cp ../tools/cosmovisor/README.md ./docs/build/tooling/01-cosmovisor.md
 cp ../tools/confix/README.md ./docs/build/tooling/02-confix.md
 cp ../tools/hubl/README.md ./docs/build/tooling/03-hubl.md
 wget -O docs/user/run-node/04-rosetta.md https://raw.githubusercontent.com/cosmos/rosetta/main/README.md
+=======
+cp ../tools/cosmovisor/README.md ./build/tooling/01-cosmovisor.md
+cp ../tools/confix/README.md ./build/tooling/02-confix.md
+cp ../tools/hubl/README.md ./build/tooling/03-hubl.md
+>>>>>>> fb9dadc00 (refactor: remove user docs (#18373))
 
 ## Add package documentation
 cp ../client/v2/README.md ./docs/learn/advanced/17-autocli.md

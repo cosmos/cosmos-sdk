@@ -19,6 +19,7 @@ replace (
 	cosmossdk.io/x/authz => ../../../x/authz
 	cosmossdk.io/x/bank => ../../../x/bank
 	cosmossdk.io/x/circuit => ../../../x/circuit
+	cosmossdk.io/x/crisis => ../../../x/crisis
 	cosmossdk.io/x/distribution => ../../../x/distribution
 	cosmossdk.io/x/evidence => ../../../x/evidence
 	cosmossdk.io/x/feegrant => ../../../x/feegrant
@@ -60,6 +61,7 @@ require (
 	cosmossdk.io/x/accounts v0.0.0-20231013072015-ec9bcc41ef9c // indirect
 	cosmossdk.io/x/authz v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/x/circuit v0.0.0-20230613133644-0a778132a60f // indirect
+	cosmossdk.io/x/crisis v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/x/distribution v0.0.0-20230925135524-a1bc045b3190 // indirect
 	cosmossdk.io/x/evidence v0.0.0-20230613133644-0a778132a60f // indirect
 	cosmossdk.io/x/feegrant v0.0.0-20230613133644-0a778132a60f // indirect

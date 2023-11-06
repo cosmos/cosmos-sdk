@@ -1,9 +1,10 @@
-// Package branch contains the core branch service interface and implementation.
+// Package branch contains the core branch service interface.
 package branch
 
 import "context"
 
-// Service is the branch service interface.
+// Service is the branch service interface. It can be used to execute 
+// code paths in an isolated execution context that can be reverted.
 type Service interface {
 	// Execute executes the given function in an isolated context. If the
 	// `f` function returns an error, the execution is considered failed,

@@ -939,7 +939,7 @@ func (app *BaseApp) runTx(mode execMode, txBytes []byte) (gInfo sdk.GasInfo, res
 			// Note that the state is still preserved.
 			postCtx := runMsgCtx.WithEventManager(sdk.NewEventManager())
 
-			newCtx, err := app.postHandler(postCtx, tx, mode == execModeSimulate, err == nil)
+			newCtx, err := app.postHandler(postCtx, tx, result.Events, mode == execModeSimulate, err == nil)
 			if err != nil {
 				return gInfo, nil, anteEvents, err
 			}

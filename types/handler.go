@@ -1,12 +1,14 @@
 package types
 
+import abci "github.com/cometbft/cometbft/abci/types"
+
 // AnteHandler authenticates transactions, before their internal messages are handled.
 // If newCtx.IsZero(), ctx is used instead.
 type AnteHandler func(ctx Context, tx Tx, simulate bool) (newCtx Context, err error)
 
 // PostHandler like AnteHandler but it executes after RunMsgs. Runs on success
 // or failure and enables use cases like gas refunding.
-type PostHandler func(ctx Context, tx Tx, simulate, success bool) (newCtx Context, err error)
+type PostHandler func(ctx Context, tx Tx, txEvents []abci.Event, simulate, success bool) (newCtx Context, err error)
 
 // AnteDecorator wraps the next AnteHandler to perform custom pre-processing.
 type AnteDecorator interface {
@@ -15,7 +17,7 @@ type AnteDecorator interface {
 
 // PostDecorator wraps the next PostHandler to perform custom post-processing.
 type PostDecorator interface {
-	PostHandle(ctx Context, tx Tx, simulate, success bool, next PostHandler) (newCtx Context, err error)
+	PostHandle(ctx Context, tx Tx, txEvents []abci.Event, simulate, success bool, next PostHandler) (newCtx Context, err error)
 }
 
 // ChainAnteDecorators ChainDecorator chains AnteDecorators together with each AnteDecorator
@@ -67,13 +69,13 @@ func ChainPostDecorators(chain ...PostDecorator) PostHandler {
 
 	handlerChain := make([]PostHandler, len(chain)+1)
 	// set the terminal PostHandler decorator
-	handlerChain[len(chain)] = func(ctx Context, tx Tx, simulate, success bool) (Context, error) {
+	handlerChain[len(chain)] = func(ctx Context, tx Tx, txEvents []abci.Event, simulate, success bool) (Context, error) {
 		return ctx, nil
 	}
 	for i := 0; i < len(chain); i++ {
 		ii := i
-		handlerChain[ii] = func(ctx Context, tx Tx, simulate, success bool) (Context, error) {
-			return chain[ii].PostHandle(ctx, tx, simulate, success, handlerChain[ii+1])
+		handlerChain[ii] = func(ctx Context, tx Tx, txEvents []abci.Event, simulate, success bool) (Context, error) {
+			return chain[ii].PostHandle(ctx, tx, txEvents, simulate, success, handlerChain[ii+1])
 		}
 	}
 	return handlerChain[0]

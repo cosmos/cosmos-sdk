@@ -10,6 +10,7 @@ package mock
 import (
 	reflect "reflect"
 
+	abci "github.com/cometbft/cometbft/abci/types"
 	gomock "github.com/golang/mock/gomock"
 
 	types "github.com/cosmos/cosmos-sdk/types"
@@ -76,15 +77,15 @@ func (m *MockPostDecorator) EXPECT() *MockPostDecoratorMockRecorder {
 }
 
 // PostHandle mocks base method.
-func (m *MockPostDecorator) PostHandle(ctx types.Context, tx types.Tx, simulate, success bool, next types.PostHandler) (types.Context, error) {
+func (m *MockPostDecorator) PostHandle(ctx types.Context, tx types.Tx, txEvents []abci.Event, simulate, success bool, next types.PostHandler) (types.Context, error) {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "PostHandle", ctx, tx, simulate, success, next)
+	m.ctrl.Call(m, "PostHandle", ctx, tx, txEvents, simulate, success, next)
 	// NOTE: we need to edit the generated code to call the "next handler"
-	return next(ctx, tx, simulate, success)
+	return next(ctx, tx, txEvents, simulate, success)
 }
 
 // PostHandle indicates an expected call of PostHandle.
-func (mr *MockPostDecoratorMockRecorder) PostHandle(ctx, tx, simulate, success, next interface{}) *gomock.Call {
+func (mr *MockPostDecoratorMockRecorder) PostHandle(ctx, tx, txEvents, simulate, success, next interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PostHandle", reflect.TypeOf((*MockPostDecorator)(nil).PostHandle), ctx, tx, simulate, success, next)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PostHandle", reflect.TypeOf((*MockPostDecorator)(nil).PostHandle), ctx, tx, txEvents, simulate, success, next)
 }

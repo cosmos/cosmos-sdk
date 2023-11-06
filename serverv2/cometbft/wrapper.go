@@ -10,6 +10,7 @@ import (
 	corecomet "cosmossdk.io/core/comet"
 	coreheader "cosmossdk.io/core/header"
 	"cosmossdk.io/log"
+	"cosmossdk.io/store/rootmulti"
 	snapshottypes "cosmossdk.io/store/snapshots/types"
 	storetypes "cosmossdk.io/store/types"
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -19,6 +20,8 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/gogoproto/proto"
 )
+
+var _ abci.Application = (*cometABCIWrapper)(nil)
 
 type cometABCIWrapper struct {
 	app    types.ProtoApp
@@ -62,7 +65,9 @@ func (w *cometABCIWrapper) Info(_ context.Context, req *abci.RequestInfo) (*abci
 }
 
 func (w *cometABCIWrapper) Query(ctx context.Context, req *abci.RequestQuery) (*abci.ResponseQuery, error) {
-	return w.app.Query(ctx, req)
+	// return w.app.Query(ctx, req)
+	// TODO: handle query
+	return &abci.ResponseQuery{}, nil
 }
 
 func (w *cometABCIWrapper) CheckTx(_ context.Context, req *abci.RequestCheckTx) (*abci.ResponseCheckTx, error) {
@@ -175,12 +180,14 @@ func (w *cometABCIWrapper) InitChain(_ context.Context, req *abci.RequestInitCha
 
 func (w *cometABCIWrapper) PrepareProposal(_ context.Context, req *abci.RequestPrepareProposal) (*abci.ResponsePrepareProposal, error) {
 	// TODO: do an interface check to see if app implements PrepareProposal
-	return w.app.PrepareProposal(req)
+	// return w.app.PrepareProposal(req)
+	return &abci.ResponsePrepareProposal{}, nil
 }
 
 func (w *cometABCIWrapper) ProcessProposal(_ context.Context, req *abci.RequestProcessProposal) (*abci.ResponseProcessProposal, error) {
 	// TODO: do an interface check to see if app implements ProcessProposal
-	return w.app.ProcessProposal(req)
+	// return w.app.ProcessProposal(req)
+	return &abci.ResponseProcessProposal{}, nil
 }
 
 func (w *cometABCIWrapper) FinalizeBlock(c context.Context, req *abci.RequestFinalizeBlock) (*abci.ResponseFinalizeBlock, error) {
@@ -335,15 +342,66 @@ func (w *cometABCIWrapper) FinalizeBlock(c context.Context, req *abci.RequestFin
 }
 
 func (w *cometABCIWrapper) ExtendVote(ctx context.Context, req *abci.RequestExtendVote) (*abci.ResponseExtendVote, error) {
-	return w.app.ExtendVote(ctx, req)
+	// TODO: do an interface check to see if app implements ExtendVote
+	return &abci.ResponseExtendVote{}, nil
 }
 
 func (w *cometABCIWrapper) VerifyVoteExtension(_ context.Context, req *abci.RequestVerifyVoteExtension) (*abci.ResponseVerifyVoteExtension, error) {
-	return w.app.VerifyVoteExtension(req)
+	// TODO: do an interface check to see if app implements VerifyVoteExtension
+	return &abci.ResponseVerifyVoteExtension{}, nil
 }
 
 func (w *cometABCIWrapper) Commit(_ context.Context, _ *abci.RequestCommit) (*abci.ResponseCommit, error) {
-	return w.app.Commit()
+	ctx := sdk.NewContext(nil, false, w.logger)
+	header := ctx.BlockHeader() // TODO: how do I get the header here? //app.finalizeBlockState.ctx
+	retainHeight := w.app.GetBlockRetentionHeight(header.Height)
+
+	// TODO: readd
+	// if app.precommiter != nil {
+	// 	app.precommiter(app.finalizeBlockState.ctx)
+	// }
+
+	rms, ok := w.app.CommitMultiStore().(*rootmulti.Store)
+	if ok {
+		rms.SetCommitHeader(header)
+	}
+
+	w.app.CommitMultiStore().Commit()
+
+	resp := &abci.ResponseCommit{
+		RetainHeight: retainHeight,
+	}
+
+	abciListeners := w.app.StreamingManager().ABCIListeners
+	if len(abciListeners) > 0 {
+		// ctx := app.finalizeBlockState.ctx
+		blockHeight := ctx.BlockHeight()
+		changeSet := w.app.CommitMultiStore().PopStateCache()
+
+		for _, abciListener := range abciListeners {
+			if err := abciListener.ListenCommit(ctx, *resp, changeSet); err != nil {
+				w.logger.Error("Commit listening hook failed", "height", blockHeight, "err", err)
+			}
+		}
+	}
+
+	// Reset the CheckTx state to the latest committed.
+	//
+	// NOTE: This is safe because CometBFT holds a lock on the mempool for
+	// Commit. Use the header from this latest block.
+	// app.setState(execModeCheck, header)
+
+	// app.finalizeBlockState = nil
+
+	// TODO: re-add
+	// if app.prepareCheckStater != nil {
+	// 	app.prepareCheckStater(app.checkState.ctx)
+	// }
+
+	// The SnapshotIfApplicable method will create the snapshot by starting the goroutine
+	w.app.SnapshotManager().SnapshotIfApplicable(header.Height)
+
+	return resp, nil
 }
 
 func (w *cometABCIWrapper) ListSnapshots(_ context.Context, req *abci.RequestListSnapshots) (*abci.ResponseListSnapshots, error) {

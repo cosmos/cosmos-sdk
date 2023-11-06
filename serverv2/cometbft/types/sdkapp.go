@@ -12,9 +12,6 @@ import (
 
 // ProtoApp is what we would need to implement in the new BaseApp.
 type ProtoApp interface {
-	ABCI // Temporary, to be replaced by our own "ABCI" as baseapp should not
-	// implement Comet's ABCI interface.
-
 	ChainID() string
 	Name() string
 	Version() string
@@ -26,13 +23,11 @@ type ProtoApp interface {
 	CommitMultiStore() storetypes.CommitMultiStore
 	StreamingManager() storetypes.StreamingManager
 
-	// CachedMultiStore
-	// CachedMultiStore() storetypes.CacheMultiStore
-
 	// TODO: Should these be a CometBFT specific thing?
 	MinGasPrices() sdk.DecCoins
 	CheckHalt(height int64, time time.Time) error
 	GetMaximumBlockGas(sdk.Context) uint64
+	GetBlockRetentionHeight(commitHeight int64) int64
 
 	// TODO: figure out if these below here are going to be available
 	QueryMultiStore() storetypes.MultiStore

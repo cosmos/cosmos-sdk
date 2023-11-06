@@ -8,11 +8,16 @@ import (
 	"fmt"
 
 	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/runtime/protoiface"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/address"
+	"cosmossdk.io/core/event"
 	"cosmossdk.io/core/store"
+	"cosmossdk.io/x/accounts/accountstd"
 	"cosmossdk.io/x/accounts/internal/implementation"
+
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 )
 
 var errAccountTypeNotFound = errors.New("account type not found")
@@ -24,51 +29,92 @@ var (
 	AccountNumberKey = collections.NewPrefix(1)
 )
 
+// QueryRouter represents a router which can be used to route queries to the correct module.
+// It returns the handler given the message name, if multiple handlers are returned, then
+// it is up to the caller to choose which one to call.
+type QueryRouter interface {
+	HybridHandlerByRequestName(name string) []func(ctx context.Context, req, resp protoiface.MessageV1) error
+}
+
+// MsgRouter represents a router which can be used to route messages to the correct module.
+type MsgRouter interface {
+	HybridHandlerByMsgName(msgName string) func(ctx context.Context, req, resp protoiface.MessageV1) error
+}
+
+// SignerProvider defines an interface used to get the expected sender from a message.
+type SignerProvider interface {
+	// GetSigners returns the signers of the message.
+	GetSigners(msg proto.Message) ([][]byte, error)
+}
+
 func NewKeeper(
 	ss store.KVStoreService,
+	es event.Service,
 	addressCodec address.Codec,
-	getMsgSenderFunc func(msg proto.Message) ([]byte, error),
-	execModuleFunc func(ctx context.Context, msg proto.Message) (proto.Message, error),
-	queryModuleFunc func(ctx context.Context, msg proto.Message) (proto.Message, error),
-	accounts map[string]implementation.Account,
+	signerProvider SignerProvider,
+	execRouter MsgRouter,
+	queryRouter QueryRouter,
+	accounts ...accountstd.AccountCreatorFunc,
 ) (Keeper, error) {
 	sb := collections.NewSchemaBuilder(ss)
 	keeper := Keeper{
-		storeService:    ss,
-		addressCodec:    addressCodec,
-		getSenderFunc:   getMsgSenderFunc,
-		execModuleFunc:  execModuleFunc,
-		queryModuleFunc: queryModuleFunc,
-		accounts:        map[string]implementation.Implementation{},
-		Schema:          collections.Schema{},
-		AccountNumber:   collections.NewSequence(sb, AccountNumberKey, "account_number"),
-		AccountsByType:  collections.NewMap(sb, AccountTypeKeyPrefix, "accounts_by_type", collections.BytesKey, collections.StringValue),
-		AccountsState:   collections.NewMap(sb, implementation.AccountStatePrefix, "accounts_state", collections.BytesKey, collections.BytesValue),
+		storeService: ss,
+		eventService: es,
+		addressCodec: addressCodec,
+		getSenderFunc: func(msg proto.Message) ([]byte, error) {
+			signers, err := signerProvider.GetSigners(msg)
+			if err != nil {
+				return nil, err
+			}
+			if len(signers) != 1 {
+				return nil, fmt.Errorf("expected 1 signer, got %d", len(signers))
+			}
+			return signers[0], nil
+		},
+		execModuleFunc: func(ctx context.Context, msg, msgResp protoiface.MessageV1) error {
+			name := getMessageName(msg)
+			handler := execRouter.HybridHandlerByMsgName(name)
+			if handler == nil {
+				return fmt.Errorf("no handler found for message %s", name)
+			}
+			return handler(ctx, msg, msgResp)
+		},
+		queryModuleFunc: func(ctx context.Context, req, resp protoiface.MessageV1) error {
+			name := getMessageName(req)
+			handlers := queryRouter.HybridHandlerByRequestName(name)
+			if len(handlers) == 0 {
+				return fmt.Errorf("no handler found for query request %s", name)
+			}
+			if len(handlers) > 1 {
+				return fmt.Errorf("multiple handlers found for query request %s", name)
+			}
+			return handlers[0](ctx, req, resp)
+		},
+		AccountNumber:  collections.NewSequence(sb, AccountNumberKey, "account_number"),
+		AccountsByType: collections.NewMap(sb, AccountTypeKeyPrefix, "accounts_by_type", collections.BytesKey, collections.StringValue),
+		AccountsState:  collections.NewMap(sb, implementation.AccountStatePrefix, "accounts_state", collections.BytesKey, collections.BytesValue),
 	}
 
-	// make accounts implementation
-	for typ, acc := range accounts {
-		impl, err := implementation.NewImplementation(acc)
-		if err != nil {
-			return Keeper{}, err
-		}
-		keeper.accounts[typ] = impl
-	}
 	schema, err := sb.Build()
 	if err != nil {
 		return Keeper{}, err
 	}
 	keeper.Schema = schema
+	keeper.accounts, err = implementation.MakeAccountsMap(keeper.addressCodec, accounts)
+	if err != nil {
+		return Keeper{}, err
+	}
 	return keeper, nil
 }
 
 type Keeper struct {
 	// deps coming from the runtime
 	storeService    store.KVStoreService
+	eventService    event.Service
 	addressCodec    address.Codec
 	getSenderFunc   func(msg proto.Message) ([]byte, error)
-	execModuleFunc  func(ctx context.Context, msg proto.Message) (proto.Message, error)
-	queryModuleFunc func(ctx context.Context, msg proto.Message) (proto.Message, error)
+	execModuleFunc  implementation.ModuleExecFunc
+	queryModuleFunc implementation.ModuleQueryFunc
 
 	accounts map[string]implementation.Implementation
 
@@ -215,9 +261,13 @@ func (k Keeper) makeAccountContext(ctx context.Context, accountAddr, sender []by
 		func(_ proto.Message) ([]byte, error) {
 			return nil, fmt.Errorf("cannot get sender from query")
 		},
-		func(ctx context.Context, _ proto.Message) (proto.Message, error) {
-			return nil, fmt.Errorf("cannot execute module from query")
+		func(ctx context.Context, msg, msgResp protoiface.MessageV1) error {
+			return fmt.Errorf("cannot execute module from a query execution context")
 		},
 		k.queryModuleFunc,
 	)
+}
+
+func getMessageName(msg protoiface.MessageV1) string {
+	return codectypes.MsgTypeURL(msg)[1:]
 }

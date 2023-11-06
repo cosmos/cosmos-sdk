@@ -12,6 +12,7 @@ import (
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	"cosmossdk.io/client/v2/autocli/flag"
+	"cosmossdk.io/client/v2/internal/util"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
@@ -82,6 +83,10 @@ func (b *Builder) AddMsgServiceCommands(cmd *cobra.Command, cmdDescriptor *autoc
 		}
 
 		if methodOpts.Skip {
+			continue
+		}
+
+		if !util.IsSupportedVersion(util.DescriptorDocs(methodDescriptor)) {
 			continue
 		}
 

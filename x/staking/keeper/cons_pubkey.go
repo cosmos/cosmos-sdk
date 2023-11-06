@@ -58,10 +58,7 @@ func (k Keeper) exceedsMaxRotations(ctx context.Context, valAddr sdk.ValAddress)
 	rng := collections.NewPrefixUntilPairRange[[]byte, time.Time](valAddr)
 	if err := k.ValidatorConsensusKeyRotationRecordIndexKey.Walk(ctx, rng, func(key collections.Pair[[]byte, time.Time], value []byte) (stop bool, err error) {
 		count++
-		if count >= maxRotations {
-			return true, nil
-		}
-		return false, nil
+		return count >= maxRotations, nil
 	}); err != nil {
 		return false, err
 	}

@@ -82,6 +82,10 @@ func (b *Builder) AddQueryServiceCommands(cmd *cobra.Command, cmdDescriptor *aut
 			continue
 		}
 
+		if !util.IsSupportedVersion(util.DescriptorDocs(methodDescriptor)) {
+			continue
+		}
+
 		methodCmd, err := b.BuildQueryMethodCommand(methodDescriptor, methodOpts)
 		if err != nil {
 			return err

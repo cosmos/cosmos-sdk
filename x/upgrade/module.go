@@ -29,8 +29,6 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
-const govModuleName = "gov"
-
 func init() {
 	types.RegisterLegacyAminoCodec(codec.NewLegacyAmino())
 }
@@ -207,7 +205,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 	}
 
 	// default to governance authority if not provided
-	authority := authtypes.NewModuleAddress(govModuleName)
+	authority := authtypes.NewModuleAddress(types.GovModuleName)
 	if in.Config.Authority != "" {
 		authority = authtypes.NewModuleAddressOrBech32Address(in.Config.Authority)
 	}

@@ -174,8 +174,8 @@ schema = 3
     version = "v1.15.0"
     hash = "sha256-7b+scFVQeEUoXfeCDd8X2gS8GMoWA+HxjK8wfbypa5s="
   [mod."github.com/felixge/httpsnoop"]
-    version = "v1.0.3"
-    hash = "sha256-qV3UPYKKBQDTzAUzzsTpfdbGhFnkmTO/r5ylPL1SyfA="
+    version = "v1.0.4"
+    hash = "sha256-c1JKoRSndwwOyOxq9ddCe+8qn7mG9uRq2o/822x5O/c="
   [mod."github.com/fsnotify/fsnotify"]
     version = "v1.6.0"
     hash = "sha256-DQesOCweQPEwmAn6s7DCP/Dwy8IypC+osbpfsvpkdP0="
@@ -237,8 +237,8 @@ schema = 3
     version = "v2.12.0"
     hash = "sha256-ZcXS+1B11UaJHf8D15N3ZCh00fiMUncpHd+eNRffLZ4="
   [mod."github.com/gorilla/handlers"]
-    version = "v1.5.1"
-    hash = "sha256-GnBAARgOx1E+hDMQ63SI17hdhGtLQxb31lZOmn5j/pU="
+    version = "v1.5.2"
+    hash = "sha256-2WQeVCe7vQg+8MpNLMhOGsRdbrcWLpbtUhUX8mbiQrs="
   [mod."github.com/gorilla/mux"]
     version = "v1.8.1"
     hash = "sha256-nDABvAhlYgxUW2N/brrep7NkQXoSGcHhA+XI4+tK0F0="

@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"context"
 	"errors"
-	"fmt"
 
 	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/runtime/protoiface"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/store"
@@ -18,16 +18,21 @@ var (
 	AccountStatePrefix = collections.NewPrefix(255)
 )
 
+type (
+	ModuleExecFunc  = func(ctx context.Context, msg, msgResp protoiface.MessageV1) error
+	ModuleQueryFunc = ModuleExecFunc
+)
+
 type contextKey struct{}
 
 type contextValue struct {
-	store             store.KVStore                                                       // store is the prefixed store for the account.
-	sender            []byte                                                              // sender is the address of the entity invoking the account action.
-	whoami            []byte                                                              // whoami is the address of the account being invoked.
-	originalContext   context.Context                                                     // originalContext that was used to build the account context.
-	getExpectedSender func(msg proto.Message) ([]byte, error)                             // getExpectedSender is a function that returns the expected sender for a given message.
-	moduleExec        func(ctx context.Context, msg proto.Message) (proto.Message, error) // moduleExec is a function that executes a module message.
-	moduleQuery       func(ctx context.Context, msg proto.Message) (proto.Message, error) // moduleQuery is a function that queries a module.
+	store             store.KVStore                           // store is the prefixed store for the account.
+	sender            []byte                                  // sender is the address of the entity invoking the account action.
+	whoami            []byte                                  // whoami is the address of the account being invoked.
+	originalContext   context.Context                         // originalContext that was used to build the account context.
+	getExpectedSender func(msg proto.Message) ([]byte, error) // getExpectedSender is a function that returns the expected sender for a given message.
+	moduleExec        ModuleExecFunc                          // moduleExec is a function that executes a module message.
+	moduleQuery       ModuleQueryFunc                         // moduleQuery is a function that queries a module.
 }
 
 // MakeAccountContext creates a new account execution context given:
@@ -43,8 +48,8 @@ func MakeAccountContext(
 	accountAddr,
 	sender []byte,
 	getSenderFunc func(msg proto.Message) ([]byte, error),
-	moduleExec func(ctx context.Context, msg proto.Message) (proto.Message, error),
-	moduleQuery func(ctx context.Context, msg proto.Message) (proto.Message, error),
+	moduleExec ModuleExecFunc,
+	moduleQuery ModuleQueryFunc,
 ) context.Context {
 	return context.WithValue(ctx, contextKey{}, contextValue{
 		store:             prefixstore.New(storeSvc.OpenKVStore(ctx), append(AccountStatePrefix, accountAddr...)),
@@ -71,32 +76,26 @@ func ExecModule[Resp any, RespProto ProtoMsg[Resp], Req any, ReqProto ProtoMsg[R
 	}
 
 	// execute module, unwrapping the original context.
-	resp, err := v.moduleExec(v.originalContext, msg)
+	resp := RespProto(new(Resp))
+	err = v.moduleExec(v.originalContext, msg, resp)
 	if err != nil {
 		return nil, err
 	}
 
-	concreteResp, ok := resp.(RespProto)
-	if !ok {
-		return nil, fmt.Errorf("unexpected response type %T", resp)
-	}
-	return concreteResp, nil
+	return resp, nil
 }
 
 // QueryModule can be used by an account to execute a module query.
-func QueryModule[Resp any, RespProto ProtoMsg[Resp], Req any, ReqProto ProtoMsg[Req]](ctx context.Context, msg ReqProto) (RespProto, error) {
+func QueryModule[Resp any, RespProto ProtoMsg[Resp], Req any, ReqProto ProtoMsg[Req]](ctx context.Context, req ReqProto) (RespProto, error) {
 	// we do not need to check the sender in a query because it is not a state transition.
 	// we also unwrap the original context.
 	v := ctx.Value(contextKey{}).(contextValue)
-	resp, err := v.moduleQuery(v.originalContext, msg)
+	resp := RespProto(new(Resp))
+	err := v.moduleQuery(v.originalContext, req, resp)
 	if err != nil {
 		return nil, err
 	}
-	concreteResp, ok := resp.(RespProto)
-	if !ok {
-		return nil, fmt.Errorf("unexpected response type %T", resp)
-	}
-	return concreteResp, nil
+	return resp, nil
 }
 
 // OpenKVStore returns the prefixed store for the account given the context.

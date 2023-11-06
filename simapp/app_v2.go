@@ -66,7 +66,7 @@ type SimApp struct {
 	interfaceRegistry codectypes.InterfaceRegistry
 
 	// keepers
-	AccountKeeper         authkeeper.AccountKeeper
+	AuthKeeper            authkeeper.AccountKeeper
 	BankKeeper            bankkeeper.Keeper
 	StakingKeeper         *stakingkeeper.Keeper
 	SlashingKeeper        slashingkeeper.Keeper
@@ -168,7 +168,7 @@ func NewSimApp(
 		&app.legacyAmino,
 		&app.txConfig,
 		&app.interfaceRegistry,
-		&app.AccountKeeper,
+		&app.AuthKeeper,
 		&app.BankKeeper,
 		&app.StakingKeeper,
 		&app.SlashingKeeper,
@@ -244,7 +244,7 @@ func NewSimApp(
 	// NOTE: this is not required apps that don't use the simulator for fuzz testing
 	// transactions
 	overrideModules := map[string]module.AppModuleSimulation{
-		authtypes.ModuleName: auth.NewAppModule(app.appCodec, app.AccountKeeper, authsims.RandomGenesisAccounts),
+		authtypes.ModuleName: auth.NewAppModule(app.appCodec, app.AuthKeeper, authsims.RandomGenesisAccounts),
 	}
 	app.sm = module.NewSimulationManagerFromAppModules(app.ModuleManager.Modules, overrideModules)
 

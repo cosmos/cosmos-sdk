@@ -11,11 +11,10 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
-
-const mintModuleName = "mint"
 
 type GenerateAccountStrategy func(int) []sdk.AccAddress
 
@@ -59,11 +58,11 @@ func addTestAddrs(bankKeeper BankKeeper, stakingKeeper StakingKeeper, ctx sdk.Co
 }
 
 func initAccountWithCoins(bankKeeper BankKeeper, ctx sdk.Context, addr sdk.AccAddress, coins sdk.Coins) {
-	if err := bankKeeper.MintCoins(ctx, mintModuleName, coins); err != nil {
+	if err := bankKeeper.MintCoins(ctx, testutil.MintModuleName, coins); err != nil {
 		panic(err)
 	}
 
-	if err := bankKeeper.SendCoinsFromModuleToAccount(ctx, mintModuleName, addr, coins); err != nil {
+	if err := bankKeeper.SendCoinsFromModuleToAccount(ctx, testutil.MintModuleName, addr, coins); err != nil {
 		panic(err)
 	}
 }

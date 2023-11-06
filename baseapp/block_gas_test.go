@@ -24,6 +24,7 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
+	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -34,8 +35,6 @@ import (
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	xauthsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
-
-const mintModuleName = "mint"
 
 var blockMaxGas = uint64(simtestutil.DefaultConsensusParams.Block.MaxGas)
 
@@ -130,9 +129,9 @@ func TestBaseApp_BlockGas(t *testing.T) {
 
 			// test account and fund
 			priv1, _, addr1 := testdata.KeyTestPubAddr()
-			err = bankKeeper.MintCoins(ctx, mintModuleName, feeAmount)
+			err = bankKeeper.MintCoins(ctx, testutil.MintModuleName, feeAmount)
 			require.NoError(t, err)
-			err = bankKeeper.SendCoinsFromModuleToAccount(ctx, mintModuleName, addr1, feeAmount)
+			err = bankKeeper.SendCoinsFromModuleToAccount(ctx, testutil.MintModuleName, addr1, feeAmount)
 			require.NoError(t, err)
 			require.Equal(t, feeCoin.Amount, bankKeeper.GetBalance(ctx, addr1, feeCoin.Denom).Amount)
 			seq := accountKeeper.GetAccount(ctx, addr1).GetSequence()

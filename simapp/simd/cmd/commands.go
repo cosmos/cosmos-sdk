@@ -13,8 +13,8 @@ import (
 	"cosmossdk.io/simapp"
 	confixcmd "cosmossdk.io/tools/confix/cmd"
 	banktypes "cosmossdk.io/x/bank/types"
-
 	"cosmossdk.io/x/crisis"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/debug"
 	"github.com/cosmos/cosmos-sdk/client/flags"

@@ -6,6 +6,7 @@ import (
 
 	"cosmossdk.io/x/crisis/keeper"
 	"cosmossdk.io/x/crisis/types"
+
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

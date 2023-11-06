@@ -8,11 +8,11 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
-
 	"cosmossdk.io/x/crisis"
 	"cosmossdk.io/x/crisis/keeper"
 	crisistestutil "cosmossdk.io/x/crisis/testutil"
 	"cosmossdk.io/x/crisis/types"
+
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/runtime"

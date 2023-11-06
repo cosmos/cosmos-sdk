@@ -20,6 +20,7 @@ import (
 	authzmodule "cosmossdk.io/x/authz/module"
 	"cosmossdk.io/x/bank"
 	banktypes "cosmossdk.io/x/bank/types"
+	"cosmossdk.io/x/crisis"
 	"cosmossdk.io/x/distribution"
 	"cosmossdk.io/x/evidence"
 	feegrantmodule "cosmossdk.io/x/feegrant/module"
@@ -30,7 +31,6 @@ import (
 	"cosmossdk.io/x/staking"
 	"cosmossdk.io/x/upgrade"
 
-	"cosmossdk.io/x/crisis"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"

@@ -112,7 +112,7 @@ The message will fail under the following conditions:
 * The number of tranches is not a positive integer.
 * The period length is not a positive integer.
 
-*Disclaimer: The behavior described here is based on the current implementation and may be subject to changes in future versions.*
+*Disclaimer: If two budgets to the same address are created, the budget would be updated with the new budget.*
 ```go
 func (k MsgServer) SubmitBudgetProposal(ctx context.Context, msg *types.MsgSubmitBudgetProposal) (*types.MsgSubmitBudgetProposalResponse, error) {
     // ... (existing code)

@@ -8,6 +8,7 @@ import (
 	bankmodulev1 "cosmossdk.io/api/cosmos/bank/module/v1"
 	circuitmodulev1 "cosmossdk.io/api/cosmos/circuit/module/v1"
 	consensusmodulev1 "cosmossdk.io/api/cosmos/consensus/module/v1"
+	countermodulev1 "cosmossdk.io/api/cosmos/counter/module/v1"
 	distrmodulev1 "cosmossdk.io/api/cosmos/distribution/module/v1"
 	evidencemodulev1 "cosmossdk.io/api/cosmos/evidence/module/v1"
 	feegrantmodulev1 "cosmossdk.io/api/cosmos/feegrant/module/v1"
@@ -318,6 +319,15 @@ func ProtocolPoolModule() ModuleOption {
 		config.ModuleConfigs["protocolpool"] = &appv1alpha1.ModuleConfig{
 			Name:   "protocolpool",
 			Config: appconfig.WrapAny(&poolmodulev1.Module{}),
+		}
+	}
+}
+
+func CounterModule() ModuleOption {
+	return func(config *Config) {
+		config.ModuleConfigs["counter"] = &appv1alpha1.ModuleConfig{
+			Name:   "counter",
+			Config: appconfig.WrapAny(&countermodulev1.Module{}),
 		}
 	}
 }

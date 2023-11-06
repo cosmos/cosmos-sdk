@@ -4,28 +4,24 @@ sidebar_position: 1
 
 # Cosmovisor
 
-<<<<<<< HEAD
-`cosmovisor` is a small process manager for Cosmos SDK application binaries that monitors the governance module for incoming chain upgrade proposals. If it sees a proposal that gets approved, `cosmovisor` can automatically download the new binary, stop the current binary, switch from the old binary to the new one, and finally restart the node with the new binary.
-=======
 `cosmovisor` is a process manager for Cosmos SDK application binaries that automates application binary switch at chain upgrades.
 It polls the `upgrade-info.json` file that is created by the x/upgrade module at upgrade height, and then can automatically download the new binary, stop the current binary, switch from the old binary to the new one, and finally restart the node with the new binary.
->>>>>>> 8b666b6a5 (docs: clarify cosmovisor doc (#18359))
 
-* [Design](#design)
-* [Contributing](#contributing)
-* [Setup](#setup)
-  * [Installation](#installation)
-  * [Command Line Arguments And Environment Variables](#command-line-arguments-and-environment-variables)
-  * [Folder Layout](#folder-layout)
-* [Usage](#usage)
-  * [Initialization](#initialization)
-  * [Detecting Upgrades](#detecting-upgrades)
-  * [Adding Upgrade Binary](#adding-upgrade-binary)
-  * [Auto-Download](#auto-download)
-* [Example: SimApp Upgrade](#example-simapp-upgrade)
-  * [Chain Setup](#chain-setup)
-    * [Prepare Cosmovisor and Start the Chain](#prepare-cosmovisor-and-start-the-chain)
-  * [Update App](#update-app)
+* [Cosmovisor](#cosmovisor)
+  * [Design](#design)
+  * [Contributing](#contributing)
+  * [Setup](#setup)
+    * [Installation](#installation)
+    * [Command Line Arguments And Environment Variables](#command-line-arguments-and-environment-variables)
+    * [Folder Layout](#folder-layout)
+  * [Usage](#usage)
+    * [Initialization](#initialization)
+    * [Detecting Upgrades](#detecting-upgrades)
+    * [Auto-Download](#auto-download)
+  * [Example: SimApp Upgrade](#example-simapp-upgrade)
+    * [Chain Setup](#chain-setup)
+      * [Prepare Cosmovisor and Start the Chain](#prepare-cosmovisor-and-start-the-chain)
+      * [Update App](#update-app)
 
 ## Design
 
@@ -38,9 +34,6 @@ Cosmovisor is designed to be used as a wrapper for a `Cosmos SDK` app:
 
 *Note: If new versions of the application are not set up to run in-place store migrations, migrations will need to be run manually before restarting `cosmovisor` with the new binary. For this reason, we recommend applications adopt in-place store migrations.*
 
-<<<<<<< HEAD
-*Note: If validators would like to enable the auto-download option (which [we don't recommend](#auto-download)), and they are currently running an application using Cosmos SDK `v0.42`, they will need to use Cosmovisor [`v0.1`](https://github.com/cosmos/cosmos-sdk/releases/tag/cosmovisor%2Fv0.1.0). Later versions of Cosmovisor do not support Cosmos SDK `v0.44.3` or earlier if the auto-download option is enabled.*
-=======
 :::tip
 Only the lastest version of cosmovisor is actively developed/maintained.
 :::
@@ -48,7 +41,6 @@ Only the lastest version of cosmovisor is actively developed/maintained.
 :::warning
 Versions prior to v1.0.0 have a vulnerability that could lead to a DOS. Please upgrade to the latest version.
 :::
->>>>>>> 8b666b6a5 (docs: clarify cosmovisor doc (#18359))
 
 ## Contributing
 
@@ -348,9 +340,6 @@ Build the new version `simd` binary:
 make build
 ```
 
-<<<<<<< HEAD
-Create the folder for the upgrade binary and copy the `simd` binary:
-=======
 Add the new `simd` binary and the upgrade name:
 
 :::warning
@@ -358,7 +347,6 @@ Add the new `simd` binary and the upgrade name:
 The migration name must match the one defined in the migration plan.
 
 :::
->>>>>>> 8b666b6a5 (docs: clarify cosmovisor doc (#18359))
 
 ```shell
 mkdir -p $DAEMON_HOME/cosmovisor/upgrades/test1/bin

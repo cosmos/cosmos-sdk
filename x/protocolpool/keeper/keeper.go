@@ -188,13 +188,13 @@ func (k Keeper) calculateClaimableFunds(ctx context.Context, recipient sdk.AccAd
 	return amount, nil
 }
 
-func (k Keeper) validateAndUpdateBudgetProposal(ctx context.Context, bp types.MsgSubmitBudgetProposal) error {
+func (k Keeper) validateAndUpdateBudgetProposal(ctx context.Context, bp *types.MsgSubmitBudgetProposal) (*types.Budget, error) {
 	if bp.TotalBudget.IsZero() {
-		return fmt.Errorf("invalid budget proposal: total budget cannot be zero")
+		return nil, fmt.Errorf("invalid budget proposal: total budget cannot be zero")
 	}
 
 	if err := validateAmount(sdk.NewCoins(*bp.TotalBudget)); err != nil {
-		return fmt.Errorf("invalid budget proposal: %w", err)
+		return nil, fmt.Errorf("invalid budget proposal: %w", err)
 	}
 
 	currentTime := sdk.UnwrapSDKContext(ctx).BlockTime()
@@ -204,16 +204,25 @@ func (k Keeper) validateAndUpdateBudgetProposal(ctx context.Context, bp types.Ms
 
 	// if bp.StartTime < uint64(currentTime) {
 	if currentTime.After(*bp.StartTime) {
-		return fmt.Errorf("invalid budget proposal: start time cannot be less than the current block time")
+		return nil, fmt.Errorf("invalid budget proposal: start time cannot be less than the current block time")
 	}
 
 	if bp.Tranches == 0 {
-		return fmt.Errorf("invalid budget proposal: tranches must be greater than zero")
+		return nil, fmt.Errorf("invalid budget proposal: tranches must be greater than zero")
 	}
 
 	if bp.Period == nil || *bp.Period == 0 {
-		return fmt.Errorf("invalid budget proposal: period length should be greater than zero")
+		return nil, fmt.Errorf("invalid budget proposal: period length should be greater than zero")
 	}
 
-	return nil
+	// Create and return an updated budget proposal
+	updatedBudget := types.Budget{
+		RecipientAddress: bp.RecipientAddress,
+		TotalBudget:      bp.TotalBudget,
+		StartTime:        bp.StartTime,
+		Tranches:         bp.Tranches,
+		Period:           bp.Period,
+	}
+
+	return &updatedBudget, nil
 }

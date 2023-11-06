@@ -53,13 +53,10 @@ func (k Querier) UnclaimedBudget(ctx context.Context, req *types.QueryUnclaimedB
 	var unclaimedBudget sdk.Coin
 	if budget.ClaimedAmount == nil {
 		unclaimedBudget = *budget.TotalBudget
-	} else {
-		unclaimedBudget = budget.TotalBudget.Sub(*budget.ClaimedAmount)
-	}
-
-	if budget.ClaimedAmount == nil {
 		zeroCoin := sdk.NewCoin(budget.TotalBudget.Denom, math.ZeroInt())
 		budget.ClaimedAmount = &zeroCoin
+	} else {
+		unclaimedBudget = budget.TotalBudget.Sub(*budget.ClaimedAmount)
 	}
 
 	if budget.NextClaimFrom == nil {

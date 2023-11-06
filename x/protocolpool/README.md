@@ -112,6 +112,21 @@ The message will fail under the following conditions:
 * The number of tranches is not a positive integer.
 * The period length is not a positive integer.
 
+*Disclaimer: The behavior described here is based on the current implementation and may be subject to changes in future versions.*
+```go
+func (k MsgServer) SubmitBudgetProposal(ctx context.Context, msg *types.MsgSubmitBudgetProposal) (*types.MsgSubmitBudgetProposalResponse, error) {
+    // ... (existing code)
+
+    // Set the budget proposal in the state.
+    err = k.BudgetProposal.Set(ctx, recipient, *budgetProposal)
+    if err != nil {
+        return nil, err
+    }
+
+    // ... (rest of the code)
+}
+```
+
 ```go reference
 https://github.com/cosmos/cosmos-sdk/blob/97724493d792517ba2be8969078b5f92ad04d79c/x/protocolpool/keeper/msg_server.go#L39-l61
 ```

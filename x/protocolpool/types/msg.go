@@ -1,8 +1,6 @@
 package types
 
 import (
-	"time"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -27,15 +25,5 @@ func NewCommunityPoolSpend(amount sdk.Coins, authority, recipient string) *MsgCo
 		Authority: authority,
 		Recipient: recipient,
 		Amount:    amount,
-	}
-}
-
-func NewBudgetProposal(recipient string, totalBudget sdk.Coin, startTime *time.Time, tranches uint64, period *time.Duration) *Budget {
-	return &Budget{
-		RecipientAddress: recipient,
-		TotalBudget:      &totalBudget,
-		StartTime:        startTime,
-		Tranches:         tranches,
-		Period:           period,
 	}
 }

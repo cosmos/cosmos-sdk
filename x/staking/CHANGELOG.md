@@ -24,11 +24,3 @@ Ref: https://keepachangelog.com/en/1.0.0/
 # Changelog
 
 ## [Unreleased]
-
-### Features
-
-### Improvements
-
-### API Breaking Changes
-
-### Bug Fixes

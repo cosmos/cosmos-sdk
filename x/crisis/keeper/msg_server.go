@@ -6,9 +6,9 @@ import (
 	"cosmossdk.io/errors"
 	govtypes "cosmossdk.io/x/gov/types"
 
+	"cosmossdk.io/x/crisis/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/crisis/types"
 )
 
 var _ types.MsgServer = &Keeper{}

@@ -3,7 +3,7 @@ package keeper
 import (
 	"context"
 
-	"github.com/cosmos/cosmos-sdk/x/crisis/types"
+	"cosmossdk.io/x/crisis/types"
 )
 
 // new crisis genesis

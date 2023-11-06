@@ -17,6 +17,8 @@ import (
 	"cosmossdk.io/depinject"
 	govtypes "cosmossdk.io/x/gov/types"
 
+	"cosmossdk.io/x/crisis/keeper"
+	"cosmossdk.io/x/crisis/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -25,8 +27,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/cosmos/cosmos-sdk/x/crisis/keeper"
-	"github.com/cosmos/cosmos-sdk/x/crisis/types"
 )
 
 // ConsensusVersion defines the current x/crisis module consensus version.

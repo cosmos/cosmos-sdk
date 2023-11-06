@@ -24,10 +24,11 @@ use (
 	./x/authz
 	./x/bank
 	./x/circuit
+	./x/crisis
 	./x/distribution
 	./x/evidence
 	./x/feegrant
-  ./x/gov
+  	./x/gov
 	./x/group
 	./x/nft
 	./x/params

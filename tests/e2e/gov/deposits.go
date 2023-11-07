@@ -37,7 +37,7 @@ func (s *DepositTestSuite) SetupSuite() {
 	s.Require().NoError(err)
 }
 
-func (s *DepositTestSuite) submitProposal(val *network.Validator, initialDeposit sdk.Coin, name string) uint64 {
+func (s *DepositTestSuite) submitProposal(val network.ValidatorI, initialDeposit sdk.Coin, name string) uint64 {
 	var exactArgs []string
 
 	if !initialDeposit.IsZero() {
@@ -127,7 +127,7 @@ func (s *DepositTestSuite) TestQueryProposalAfterVotingPeriod() {
 	s.Require().Len(deposits.Deposits, 0)
 }
 
-func (s *DepositTestSuite) queryDeposits(val *network.Validator, proposalID string, exceptErr bool, message string) *v1.QueryDepositsResponse {
+func (s *DepositTestSuite) queryDeposits(val network.ValidatorI, proposalID string, exceptErr bool, message string) *v1.QueryDepositsResponse {
 	s.Require().NoError(s.network.WaitForNextBlock())
 
 	resp, err := testutil.GetRequest(fmt.Sprintf("%s/cosmos/gov/v1/proposals/%s/deposits", val.GetAPIAddress(), proposalID))
@@ -145,7 +145,7 @@ func (s *DepositTestSuite) queryDeposits(val *network.Validator, proposalID stri
 	return &depositsRes
 }
 
-func (s *DepositTestSuite) queryDeposit(val *network.Validator, proposalID string, exceptErr bool, message string) *v1.QueryDepositResponse {
+func (s *DepositTestSuite) queryDeposit(val network.ValidatorI, proposalID string, exceptErr bool, message string) *v1.QueryDepositResponse {
 	s.Require().NoError(s.network.WaitForNextBlock())
 
 	resp, err := testutil.GetRequest(fmt.Sprintf("%s/cosmos/gov/v1/proposals/%s/deposits/%s", val.GetAPIAddress(), proposalID, val.GetAddress().String()))

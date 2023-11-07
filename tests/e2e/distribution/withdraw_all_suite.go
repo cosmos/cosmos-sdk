@@ -80,7 +80,7 @@ func (s *WithdrawAllTestSuite) TestNewWithdrawAllRewardsGenerateOnly() {
 	// delegate 500 tokens to validator1
 	msg := &stakingtypes.MsgDelegate{
 		DelegatorAddress: newAddr.String(),
-		ValidatorAddress: val.ValAddress.String(),
+		ValidatorAddress: val.GetValAddress().String(),
 		Amount:           sdk.NewCoin("stake", math.NewInt(500)),
 	}
 
@@ -91,7 +91,7 @@ func (s *WithdrawAllTestSuite) TestNewWithdrawAllRewardsGenerateOnly() {
 	// delegate 500 tokens to validator2
 	msg2 := &stakingtypes.MsgDelegate{
 		DelegatorAddress: newAddr.String(),
-		ValidatorAddress: val1.ValAddress.String(),
+		ValidatorAddress: val1.GetValAddress().String(),
 		Amount:           sdk.NewCoin("stake", math.NewInt(500)),
 	}
 

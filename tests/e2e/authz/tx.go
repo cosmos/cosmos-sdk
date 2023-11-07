@@ -554,7 +554,7 @@ func (s *E2ETestSuite) TestExecDelegateAuthorization() {
 			fmt.Sprintf("--%s=%s", flags.FlagFrom, val.GetAddress().String()),
 			fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 			fmt.Sprintf("--%s=%d", cli.FlagExpiration, twoHours),
-			fmt.Sprintf("--%s=%s", cli.FlagAllowedValidators, val.ValAddress.String()),
+			fmt.Sprintf("--%s=%s", cli.FlagAllowedValidators, val.GetValAddress().String()),
 			fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
 		},
 	)
@@ -565,7 +565,7 @@ func (s *E2ETestSuite) TestExecDelegateAuthorization() {
 		sdk.NewCoin("stake", math.NewInt(50)),
 	)
 
-	delegateTx := fmt.Sprintf(`{"body":{"messages":[{"@type":"/cosmos.staking.v1beta1.MsgDelegate","delegator_address":"%s","validator_address":"%s","amount":{"denom":"%s","amount":"%s"}}],"memo":"","timeout_height":"0","extension_options":[],"non_critical_extension_options":[]},"auth_info":{"signer_infos":[],"fee":{"amount":[],"gas_limit":"200000","payer":"","granter":""}},"signatures":[]}`, val.GetAddress().String(), val.ValAddress.String(),
+	delegateTx := fmt.Sprintf(`{"body":{"messages":[{"@type":"/cosmos.staking.v1beta1.MsgDelegate","delegator_address":"%s","validator_address":"%s","amount":{"denom":"%s","amount":"%s"}}],"memo":"","timeout_height":"0","extension_options":[],"non_critical_extension_options":[]},"auth_info":{"signer_infos":[],"fee":{"amount":[],"gas_limit":"200000","payer":"","granter":""}},"signatures":[]}`, val.GetAddress().String(), val.GetValAddress().String(),
 		tokens.GetDenomByIndex(0), tokens[0].Amount)
 	execMsg := testutil.WriteToNewTempFile(s.T(), delegateTx)
 	defer execMsg.Close()
@@ -647,7 +647,7 @@ func (s *E2ETestSuite) TestExecDelegateAuthorization() {
 			fmt.Sprintf("--%s=%s", flags.FlagFrom, val.GetAddress().String()),
 			fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 			fmt.Sprintf("--%s=%d", cli.FlagExpiration, twoHours),
-			fmt.Sprintf("--%s=%s", cli.FlagAllowedValidators, val.ValAddress.String()),
+			fmt.Sprintf("--%s=%s", cli.FlagAllowedValidators, val.GetValAddress().String()),
 			fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
 		},
 	)
@@ -658,7 +658,7 @@ func (s *E2ETestSuite) TestExecDelegateAuthorization() {
 		sdk.NewCoin("stake", math.NewInt(50)),
 	)
 
-	delegateTx = fmt.Sprintf(`{"body":{"messages":[{"@type":"/cosmos.staking.v1beta1.MsgDelegate","delegator_address":"%s","validator_address":"%s","amount":{"denom":"%s","amount":"%s"}}],"memo":"","timeout_height":"0","extension_options":[],"non_critical_extension_options":[]},"auth_info":{"signer_infos":[],"fee":{"amount":[],"gas_limit":"200000","payer":"","granter":""}},"signatures":[]}`, val.GetAddress().String(), val.ValAddress.String(),
+	delegateTx = fmt.Sprintf(`{"body":{"messages":[{"@type":"/cosmos.staking.v1beta1.MsgDelegate","delegator_address":"%s","validator_address":"%s","amount":{"denom":"%s","amount":"%s"}}],"memo":"","timeout_height":"0","extension_options":[],"non_critical_extension_options":[]},"auth_info":{"signer_infos":[],"fee":{"amount":[],"gas_limit":"200000","payer":"","granter":""}},"signatures":[]}`, val.GetAddress().String(), val.GetValAddress().String(),
 		tokens.GetDenomByIndex(0), tokens[0].Amount)
 	execMsg = testutil.WriteToNewTempFile(s.T(), delegateTx)
 	defer execMsg.Close()
@@ -715,7 +715,7 @@ func (s *E2ETestSuite) TestExecDelegateAuthorization() {
 			fmt.Sprintf("--%s=%s", flags.FlagFrom, val.GetAddress().String()),
 			fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 			fmt.Sprintf("--%s=%d", cli.FlagExpiration, twoHours),
-			fmt.Sprintf("--%s=%s", cli.FlagDenyValidators, val.ValAddress.String()),
+			fmt.Sprintf("--%s=%s", cli.FlagDenyValidators, val.GetValAddress().String()),
 			fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
 		},
 	)
@@ -743,7 +743,7 @@ func (s *E2ETestSuite) TestExecDelegateAuthorization() {
 		return err
 	}, 3)
 	s.Require().NoError(err)
-	s.Contains(out.String(), fmt.Sprintf("cannot delegate/undelegate to %s validator", val.ValAddress.String()))
+	s.Contains(out.String(), fmt.Sprintf("cannot delegate/undelegate to %s validator", val.GetValAddress().String()))
 }
 
 func (s *E2ETestSuite) TestExecUndelegateAuthorization() {
@@ -762,7 +762,7 @@ func (s *E2ETestSuite) TestExecUndelegateAuthorization() {
 			fmt.Sprintf("--%s=%s", flags.FlagFrom, val.GetAddress().String()),
 			fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 			fmt.Sprintf("--%s=%d", cli.FlagExpiration, twoHours),
-			fmt.Sprintf("--%s=%s", cli.FlagAllowedValidators, val.ValAddress.String()),
+			fmt.Sprintf("--%s=%s", cli.FlagAllowedValidators, val.GetValAddress().String()),
 			fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
 		},
 	)
@@ -772,7 +772,7 @@ func (s *E2ETestSuite) TestExecUndelegateAuthorization() {
 	// delegating stakes to validator
 	msg := &stakingtypes.MsgDelegate{
 		DelegatorAddress: val.GetAddress().String(),
-		ValidatorAddress: val.ValAddress.String(),
+		ValidatorAddress: val.GetValAddress().String(),
 		Amount:           sdk.NewCoin("stake", math.NewInt(100)),
 	}
 
@@ -784,7 +784,7 @@ func (s *E2ETestSuite) TestExecUndelegateAuthorization() {
 		sdk.NewCoin("stake", math.NewInt(50)),
 	)
 
-	undelegateTx := fmt.Sprintf(`{"body":{"messages":[{"@type":"/cosmos.staking.v1beta1.MsgUndelegate","delegator_address":"%s","validator_address":"%s","amount":{"denom":"%s","amount":"%s"}}],"memo":"","timeout_height":"0","extension_options":[],"non_critical_extension_options":[]},"auth_info":{"signer_infos":[],"fee":{"amount":[],"gas_limit":"200000","payer":"","granter":""}},"signatures":[]}`, val.GetAddress().String(), val.ValAddress.String(),
+	undelegateTx := fmt.Sprintf(`{"body":{"messages":[{"@type":"/cosmos.staking.v1beta1.MsgUndelegate","delegator_address":"%s","validator_address":"%s","amount":{"denom":"%s","amount":"%s"}}],"memo":"","timeout_height":"0","extension_options":[],"non_critical_extension_options":[]},"auth_info":{"signer_infos":[],"fee":{"amount":[],"gas_limit":"200000","payer":"","granter":""}},"signatures":[]}`, val.GetAddress().String(), val.GetValAddress().String(),
 		tokens.GetDenomByIndex(0), tokens[0].Amount)
 	execMsg := testutil.WriteToNewTempFile(s.T(), undelegateTx)
 	defer execMsg.Close()
@@ -869,7 +869,7 @@ func (s *E2ETestSuite) TestExecUndelegateAuthorization() {
 			fmt.Sprintf("--%s=%s", flags.FlagFrom, val.GetAddress().String()),
 			fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 			fmt.Sprintf("--%s=%d", cli.FlagExpiration, twoHours),
-			fmt.Sprintf("--%s=%s", cli.FlagAllowedValidators, val.ValAddress.String()),
+			fmt.Sprintf("--%s=%s", cli.FlagAllowedValidators, val.GetValAddress().String()),
 			fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
 		},
 	)
@@ -880,7 +880,7 @@ func (s *E2ETestSuite) TestExecUndelegateAuthorization() {
 		sdk.NewCoin("stake", math.NewInt(50)),
 	)
 
-	undelegateTx = fmt.Sprintf(`{"body":{"messages":[{"@type":"/cosmos.staking.v1beta1.MsgUndelegate","delegator_address":"%s","validator_address":"%s","amount":{"denom":"%s","amount":"%s"}}],"memo":"","timeout_height":"0","extension_options":[],"non_critical_extension_options":[]},"auth_info":{"signer_infos":[],"fee":{"amount":[],"gas_limit":"200000","payer":"","granter":""}},"signatures":[]}`, val.GetAddress().String(), val.ValAddress.String(),
+	undelegateTx = fmt.Sprintf(`{"body":{"messages":[{"@type":"/cosmos.staking.v1beta1.MsgUndelegate","delegator_address":"%s","validator_address":"%s","amount":{"denom":"%s","amount":"%s"}}],"memo":"","timeout_height":"0","extension_options":[],"non_critical_extension_options":[]},"auth_info":{"signer_infos":[],"fee":{"amount":[],"gas_limit":"200000","payer":"","granter":""}},"signatures":[]}`, val.GetAddress().String(), val.GetValAddress().String(),
 		tokens.GetDenomByIndex(0), tokens[0].Amount)
 	execMsg = testutil.WriteToNewTempFile(s.T(), undelegateTx)
 	defer execMsg.Close()

@@ -682,8 +682,12 @@ func (n *Network) WaitForHeight(h int64) (int64, error) {
 	return n.WaitForHeightWithTimeout(h, 10*time.Second)
 }
 
-func (n *Network) GetValidators() []*Validator {
-	return n.Validators
+func (n *Network) GetValidators() []ValidatorI {
+	var vals []ValidatorI
+	for _, val := range n.Validators {
+		vals = append(vals, val)
+	}
+	return vals
 }
 
 // WaitForHeightWithTimeout is the same as WaitForHeight except the caller can

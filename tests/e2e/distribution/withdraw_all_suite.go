@@ -52,9 +52,9 @@ func (s *WithdrawAllTestSuite) TestNewWithdrawAllRewardsGenerateOnly() {
 	require := s.Require()
 	val := s.network.GetValidators()[0]
 	val1 := s.network.GetValidators()[1]
-	clientCtx := val.ClientCtx
+	clientCtx := val.GetClientCtx()
 
-	info, _, err := val.ClientCtx.Keyring.NewMnemonic("newAccount", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
+	info, _, err := val.GetClientCtx().Keyring.NewMnemonic("newAccount", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 	require.NoError(err)
 
 	pubkey, err := info.GetPubKey()
@@ -63,14 +63,14 @@ func (s *WithdrawAllTestSuite) TestNewWithdrawAllRewardsGenerateOnly() {
 	newAddr := sdk.AccAddress(pubkey.Address())
 
 	msgSend := &banktypes.MsgSend{
-		FromAddress: val.Address.String(),
+		FromAddress: val.GetAddress().String(),
 		ToAddress:   newAddr.String(),
 		Amount:      sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(2000))),
 	}
 	_, err = clitestutil.SubmitTestTx(
-		val.ClientCtx,
+		val.GetClientCtx(),
 		msgSend,
-		val.Address,
+		val.GetAddress(),
 		clitestutil.TestTxConfig{},
 	)
 
@@ -84,7 +84,7 @@ func (s *WithdrawAllTestSuite) TestNewWithdrawAllRewardsGenerateOnly() {
 		Amount:           sdk.NewCoin("stake", math.NewInt(500)),
 	}
 
-	_, err = clitestutil.SubmitTestTx(val.ClientCtx, msg, newAddr, clitestutil.TestTxConfig{})
+	_, err = clitestutil.SubmitTestTx(val.GetClientCtx(), msg, newAddr, clitestutil.TestTxConfig{})
 	require.NoError(err)
 	require.NoError(s.network.WaitForNextBlock())
 
@@ -95,7 +95,7 @@ func (s *WithdrawAllTestSuite) TestNewWithdrawAllRewardsGenerateOnly() {
 		Amount:           sdk.NewCoin("stake", math.NewInt(500)),
 	}
 
-	_, err = clitestutil.SubmitTestTx(val.ClientCtx, msg2, newAddr, clitestutil.TestTxConfig{})
+	_, err = clitestutil.SubmitTestTx(val.GetClientCtx(), msg2, newAddr, clitestutil.TestTxConfig{})
 	require.NoError(err)
 	require.NoError(s.network.WaitForNextBlock())
 

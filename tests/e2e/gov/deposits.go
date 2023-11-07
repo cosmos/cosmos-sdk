@@ -45,8 +45,8 @@ func (s *DepositTestSuite) submitProposal(val *network.Validator, initialDeposit
 	}
 
 	_, err := govclitestutil.MsgSubmitLegacyProposal(
-		val.ClientCtx,
-		val.Address.String(),
+		val.GetClientCtx(),
+		val.GetAddress().String(),
 		fmt.Sprintf("Text Proposal %s", name),
 		"Where is the title!?",
 		v1beta1.ProposalTypeText,
@@ -56,7 +56,7 @@ func (s *DepositTestSuite) submitProposal(val *network.Validator, initialDeposit
 	s.Require().NoError(s.network.WaitForNextBlock())
 
 	// query proposals, return the last's id
-	res, err := testutil.GetRequest(fmt.Sprintf("%s/cosmos/gov/v1/proposals", val.APIAddress))
+	res, err := testutil.GetRequest(fmt.Sprintf("%s/cosmos/gov/v1/proposals", val.GetAPIAddress()))
 	s.Require().NoError(err)
 	var proposals v1.QueryProposalsResponse
 	err = s.cfg.Codec.UnmarshalJSON(res, &proposals)
@@ -100,7 +100,7 @@ func (s *DepositTestSuite) TestQueryProposalAfterVotingPeriod() {
 	id := s.submitProposal(val, depositAmount, "TestQueryProposalAfterVotingPeriod")
 	proposalID := strconv.FormatUint(id, 10)
 
-	resp, err := testutil.GetRequest(fmt.Sprintf("%s/cosmos/gov/v1/proposals", val.APIAddress))
+	resp, err := testutil.GetRequest(fmt.Sprintf("%s/cosmos/gov/v1/proposals", val.GetAPIAddress()))
 	s.Require().NoError(err)
 	var proposals v1.QueryProposalsResponse
 	err = s.cfg.Codec.UnmarshalJSON(resp, &proposals)
@@ -108,7 +108,7 @@ func (s *DepositTestSuite) TestQueryProposalAfterVotingPeriod() {
 	s.Require().GreaterOrEqual(len(proposals.Proposals), 1)
 
 	// query proposal
-	resp, err = testutil.GetRequest(fmt.Sprintf("%s/cosmos/gov/v1/proposals/%s", val.APIAddress, proposalID))
+	resp, err = testutil.GetRequest(fmt.Sprintf("%s/cosmos/gov/v1/proposals/%s", val.GetAPIAddress(), proposalID))
 	s.Require().NoError(err)
 	var proposal v1.QueryProposalResponse
 	err = s.cfg.Codec.UnmarshalJSON(resp, &proposal)
@@ -118,7 +118,7 @@ func (s *DepositTestSuite) TestQueryProposalAfterVotingPeriod() {
 	time.Sleep(25 * time.Second)
 
 	// query proposal
-	resp, err = testutil.GetRequest(fmt.Sprintf("%s/cosmos/gov/v1/proposals/%s", val.APIAddress, proposalID))
+	resp, err = testutil.GetRequest(fmt.Sprintf("%s/cosmos/gov/v1/proposals/%s", val.GetAPIAddress(), proposalID))
 	s.Require().NoError(err)
 	s.Require().Contains(string(resp), fmt.Sprintf("proposal %s doesn't exist", proposalID))
 
@@ -130,7 +130,7 @@ func (s *DepositTestSuite) TestQueryProposalAfterVotingPeriod() {
 func (s *DepositTestSuite) queryDeposits(val *network.Validator, proposalID string, exceptErr bool, message string) *v1.QueryDepositsResponse {
 	s.Require().NoError(s.network.WaitForNextBlock())
 
-	resp, err := testutil.GetRequest(fmt.Sprintf("%s/cosmos/gov/v1/proposals/%s/deposits", val.APIAddress, proposalID))
+	resp, err := testutil.GetRequest(fmt.Sprintf("%s/cosmos/gov/v1/proposals/%s/deposits", val.GetAPIAddress(), proposalID))
 	s.Require().NoError(err)
 
 	if exceptErr {
@@ -139,7 +139,7 @@ func (s *DepositTestSuite) queryDeposits(val *network.Validator, proposalID stri
 	}
 
 	var depositsRes v1.QueryDepositsResponse
-	err = val.ClientCtx.Codec.UnmarshalJSON(resp, &depositsRes)
+	err = val.GetClientCtx().Codec.UnmarshalJSON(resp, &depositsRes)
 	s.Require().NoError(err)
 
 	return &depositsRes
@@ -148,7 +148,7 @@ func (s *DepositTestSuite) queryDeposits(val *network.Validator, proposalID stri
 func (s *DepositTestSuite) queryDeposit(val *network.Validator, proposalID string, exceptErr bool, message string) *v1.QueryDepositResponse {
 	s.Require().NoError(s.network.WaitForNextBlock())
 
-	resp, err := testutil.GetRequest(fmt.Sprintf("%s/cosmos/gov/v1/proposals/%s/deposits/%s", val.APIAddress, proposalID, val.Address.String()))
+	resp, err := testutil.GetRequest(fmt.Sprintf("%s/cosmos/gov/v1/proposals/%s/deposits/%s", val.GetAPIAddress(), proposalID, val.GetAddress().String()))
 	s.Require().NoError(err)
 
 	if exceptErr {
@@ -157,7 +157,7 @@ func (s *DepositTestSuite) queryDeposit(val *network.Validator, proposalID strin
 	}
 
 	var depositRes v1.QueryDepositResponse
-	err = val.ClientCtx.Codec.UnmarshalJSON(resp, &depositRes)
+	err = val.GetClientCtx().Codec.UnmarshalJSON(resp, &depositRes)
 	s.Require().NoError(err)
 
 	return &depositRes

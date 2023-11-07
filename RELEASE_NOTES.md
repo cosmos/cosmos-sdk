@@ -1,8 +1,8 @@
-# Cosmos SDK v0.50.0 Release Notes
+# Cosmos SDK v0.50.1 Release Notes
 
-✨ [**Official Release Announcenment**](https://blog.cosmos.network)
+✨ [**Official Release Announcement**](https://blog.cosmos.network)
 
-💬 [**Release Discussion**](https://github.com/cosmos/community)
+💬 [**Release Discussion**](https://github.com/orgs/cosmos/discussions/58)
 
 ## 🚀 Highlights
 

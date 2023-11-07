@@ -115,17 +115,14 @@ type Keeper struct {
 	LastValidatorPower collections.Map[[]byte, gogotypes.Int64Value]
 	// Params key: ParamsKeyPrefix | value: Params
 	Params collections.Item[types.Params]
-	// // ValidatorConsPubKeyRotationHistory: consPubkey rotation history by validator
-	// ValidatorConsPubKeyRotationHistory collections.Map[collections.Pair[[]byte, uint64], types.ConsPubKeyRotationHistory]
-	// // BlockConsPubKeyRotationHistory: consPubkey rotation history by height
-	// BlockConsPubKeyRotationHistory collections.Map[uint64, types.ConsPubKeyRotationHistory]
 	// ValidatorConsensusKeyRotationRecordIndexKey: this key is used to restrict the validator next rotation within waiting (unbonding) period
 	ValidatorConsensusKeyRotationRecordIndexKey collections.Map[collections.Pair[[]byte, time.Time], []byte]
 	// ValidatorConsensusKeyRotationRecordQueue: this key is used to set the unbonding period time on each rotation
 	ValidatorConsensusKeyRotationRecordQueue collections.Map[time.Time, types.ValAddrsOfRotatedConsKeys]
 	// RotatedConsKeyMapIndex: prefix for rotated cons address to new cons address
 	RotatedConsKeyMapIndex collections.Map[[]byte, []byte]
-
+	// ValidatorConsPubKeyRotationHistory: consPubkey rotation history by validator
+	// A index is being added with key `BlockConsPubKeyRotationHistory`: consPubkey rotation history by height
 	RotationHistory *collections.IndexedMap[[]byte, types.ConsPubKeyRotationHistory, rotationHistoryIndexes]
 }
 
@@ -261,22 +258,6 @@ func NewKeeper(
 		// key is: 113 (it's a direct prefix)
 		Params: collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
 
-		// // key format is: 101 | valAddr | uint64
-		// ValidatorConsPubKeyRotationHistory: collections.NewMap(
-		// 	sb, types.ValidatorConsPubKeyRotationHistoryKey,
-		// 	"cons_pub_rotation_history",
-		// 	collections.PairKeyCodec(collections.BytesKey, collections.Uint64Key),
-		// 	codec.CollValue[types.ConsPubKeyRotationHistory](cdc),
-		// ),
-
-		// // key format is: 102 | height
-		// BlockConsPubKeyRotationHistory: collections.NewMap(
-		// 	sb, types.BlockConsPubKeyRotationHistoryKey,
-		// 	"cons_pubkey_history_by_block",
-		// 	collections.Uint64Key,
-		// 	codec.CollValue[types.ConsPubKeyRotationHistory](cdc),
-		// ),
-
 		// key format is: 103 | valAddr | time
 		ValidatorConsensusKeyRotationRecordIndexKey: collections.NewMap(
 			sb, types.ValidatorConsensusKeyRotationRecordIndexKey,
@@ -301,6 +282,8 @@ func NewKeeper(
 			collections.BytesValue,
 		),
 
+		// key format is : 101 | rotation history
+		// index is : 102 | rotation history
 		RotationHistory: collections.NewIndexedMap(
 			sb,
 			types.ValidatorConsPubKeyRotationHistoryKey,

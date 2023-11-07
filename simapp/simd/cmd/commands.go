@@ -12,6 +12,7 @@ import (
 	"cosmossdk.io/log"
 	"cosmossdk.io/simapp"
 	confixcmd "cosmossdk.io/tools/confix/cmd"
+	authcmd "cosmossdk.io/x/auth/client/cli"
 	banktypes "cosmossdk.io/x/bank/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -27,7 +28,6 @@ import (
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 )
 

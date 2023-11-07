@@ -7,13 +7,14 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/x/auth"
+	authclient "cosmossdk.io/x/auth/client"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	"github.com/cosmos/cosmos-sdk/x/auth"
-	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 )
 
 func TestParseQueryResponse(t *testing.T) {

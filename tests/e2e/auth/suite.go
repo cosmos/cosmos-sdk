@@ -13,6 +13,9 @@ import (
 
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/math"
+	authcli "cosmossdk.io/x/auth/client/cli"
+	authclitestutil "cosmossdk.io/x/auth/client/testutil"
+	authtestutil "cosmossdk.io/x/auth/testutil"
 	banktypes "cosmossdk.io/x/bank/types"
 	govtestutil "cosmossdk.io/x/gov/client/testutil"
 	govtypes "cosmossdk.io/x/gov/types/v1beta1"
@@ -30,9 +33,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-	authcli "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
-	authclitestutil "github.com/cosmos/cosmos-sdk/x/auth/client/testutil"
-	authtestutil "github.com/cosmos/cosmos-sdk/x/auth/testutil"
 	"github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 )
 

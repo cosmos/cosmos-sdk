@@ -9,6 +9,12 @@ import (
 
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	storetypes "cosmossdk.io/store/types"
+	"cosmossdk.io/x/auth/ante"
+	"cosmossdk.io/x/auth/migrations/legacytx"
+	authsign "cosmossdk.io/x/auth/signing"
+	authtx "cosmossdk.io/x/auth/tx"
+	txmodule "cosmossdk.io/x/auth/tx/config"
+	"cosmossdk.io/x/auth/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
@@ -20,12 +26,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-	"github.com/cosmos/cosmos-sdk/x/auth/ante"
-	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
-	authsign "github.com/cosmos/cosmos-sdk/x/auth/signing"
-	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
-	txmodule "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 func TestSetPubKey(t *testing.T) {

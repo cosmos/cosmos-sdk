@@ -339,7 +339,9 @@ func AddCommands(rootCmd *cobra.Command, appCreator types.AppCreator, addStartFl
 	)
 
 	startCmd := StartCmd(appCreator)
-	addStartFlags(startCmd)
+	if addStartFlags != nil {
+		addStartFlags(startCmd)
+	}
 
 	rootCmd.AddCommand(
 		startCmd,

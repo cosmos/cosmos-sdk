@@ -30,12 +30,8 @@ func (k Keeper) setConsPubKeyRotationHistory(
 		Height:          height,
 		Fee:             fee,
 	}
-	err := k.ValidatorConsPubKeyRotationHistory.Set(ctx, collections.Join(valAddr.Bytes(), height), history)
+	err := k.RotationHistory.Set(ctx, valAddr, history)
 	if err != nil {
-		return err
-	}
-
-	if err := k.BlockConsPubKeyRotationHistory.Set(ctx, height, history); err != nil {
 		return err
 	}
 

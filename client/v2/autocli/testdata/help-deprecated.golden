@@ -1,4 +1,6 @@
 Command "echo" is deprecated, don't use this
+Execute the Echo RPC method
+
 Usage:
   test deprecatedecho echo [flags]
 

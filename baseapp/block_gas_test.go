@@ -14,6 +14,8 @@ import (
 	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
 	store "cosmossdk.io/store/types"
+	authkeeper "cosmossdk.io/x/auth/keeper"
+	xauthsigning "cosmossdk.io/x/auth/signing"
 	bankkeeper "cosmossdk.io/x/bank/keeper"
 	banktypes "cosmossdk.io/x/bank/types"
 
@@ -31,8 +33,6 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	xauthsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
 const mintModuleName = "mint"

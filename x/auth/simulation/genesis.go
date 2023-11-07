@@ -5,11 +5,12 @@ import (
 	"fmt"
 	"math/rand"
 
+	"cosmossdk.io/x/auth/types"
+	vestingtypes "cosmossdk.io/x/auth/vesting/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
-	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 )
 
 // Simulation parameter constants

@@ -12,13 +12,13 @@ import (
 	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
 
+	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/gov/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 const (
@@ -44,6 +44,10 @@ var suggestedProposalTypes = []proposalType{
 	{
 		Name:    "cancel-software-upgrade",
 		MsgType: "/cosmos.upgrade.v1beta1.MsgCancelUpgrade",
+	},
+	{
+		Name:    "submit-budget-proposal",
+		MsgType: "/cosmos.protocolpool.v1.MsgSubmitBudgetProposal",
 	},
 	{
 		Name:    proposalOther,

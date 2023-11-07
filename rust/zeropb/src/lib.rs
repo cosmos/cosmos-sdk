@@ -6,21 +6,34 @@ extern crate alloc;
 extern crate core;
 
 mod zerocopy;
+
 pub use zerocopy::ZeroCopy;
+
 mod root;
+
 pub use root::Root;
+
 mod error;
 mod util;
+
 pub use error::Error;
+
 mod str;
+
 pub use str::{Str, StrWriter};
+
 mod bytes;
+
 pub use bytes::{Bytes, BytesWriter};
+
 mod client;
 mod r#enum;
 mod oneof;
 mod ptr;
 mod repeated;
+
+pub use repeated::{Repeated, ScalarRepeated, RepeatedWriter, RepeatedIter, ScalarRepeatedWriter};
+
 mod server;
 mod status;
 mod wasm;

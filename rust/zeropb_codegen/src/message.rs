@@ -13,7 +13,11 @@ pub(crate) fn gen_message(message: &DescriptorProto, ctx: &mut Context) -> anyho
     }
 
     write!(ctx, "}}\n\n")?;
-    write!(ctx, "unsafe impl zeropb::ZeroCopy for {} {{}}\n\n", message.name.clone().unwrap())?;
+    write!(
+        ctx,
+        "unsafe impl zeropb::ZeroCopy for {} {{}}\n\n",
+        message.name.clone().unwrap()
+    )?;
     Ok(())
     // for nested in message.nested_type.iter() {
     //     gen_message(nested);

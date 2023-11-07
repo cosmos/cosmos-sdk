@@ -1,5 +1,5 @@
-use std::fmt::Write;
 use crate::opts::Options;
+use std::fmt::Write;
 
 #[derive(Default)]
 pub(crate) struct Context {

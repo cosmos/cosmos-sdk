@@ -1,8 +1,8 @@
-use std::fmt::Write;
-use prost_types::FileDescriptorProto;
 use crate::ctx::Context;
 use crate::message::gen_message;
 use crate::service::gen_service;
+use prost_types::FileDescriptorProto;
+use std::fmt::Write;
 
 pub(crate) fn gen_file(file: &FileDescriptorProto, ctx: &mut Context) -> anyhow::Result<()> {
     write!(ctx, "use zeropb;\n\n")?;

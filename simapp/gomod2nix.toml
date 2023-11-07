@@ -450,6 +450,12 @@ schema = 3
   [mod."github.com/zondax/ledger-go"]
     version = "v0.14.3"
     hash = "sha256-tldEok5ebZ4R4B7H8dSlYS5oVuLvh89n9wUaVlDjYwg="
+  [mod."gitlab.com/yawning/secp256k1-voi"]
+    version = "v0.0.0-20230925100816-f2616030848b"
+    hash = "sha256-X8INg01LTg13iOuwPI3uOhPN7r01sPZtmtwJ2sudjCA="
+  [mod."gitlab.com/yawning/tuplehash"]
+    version = "v0.0.0-20230713102510-df83abbf9a02"
+    hash = "sha256-pehQduoaJRLchebhgvMYacVvbuNIBA++XkiqCuqdato="
   [mod."go.etcd.io/bbolt"]
     version = "v1.3.7"
     hash = "sha256-poZk8tPLDWwW95oCOkTJcQtEvOJTD9UXAZ2TqGJutwk="

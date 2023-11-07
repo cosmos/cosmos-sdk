@@ -10,11 +10,6 @@ import (
 	"cosmossdk.io/x/tx/signing"
 )
 
-var (
-	_                  signing.SignModeHandler = SignModeHandler{}
-	protov2MarshalOpts                         = proto.MarshalOptions{Deterministic: true}
-)
-
 // SignModeHandler is the SIGN_MODE_DIRECT implementation of signing.SignModeHandler.
 type SignModeHandler struct{}
 
@@ -25,10 +20,12 @@ func (h SignModeHandler) Mode() signingv1beta1.SignMode {
 
 // GetSignBytes implements signing.SignModeHandler.GetSignBytes.
 func (SignModeHandler) GetSignBytes(_ context.Context, signerData signing.SignerData, txData signing.TxData) ([]byte, error) {
-	return protov2MarshalOpts.Marshal(&txv1beta1.SignDoc{
+	return proto.Marshal(&txv1beta1.SignDoc{
 		BodyBytes:     txData.BodyBytes,
 		AuthInfoBytes: txData.AuthInfoBytes,
 		ChainId:       signerData.ChainID,
 		AccountNumber: signerData.AccountNumber,
 	})
 }
+
+var _ signing.SignModeHandler = SignModeHandler{}

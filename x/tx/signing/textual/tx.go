@@ -281,12 +281,11 @@ func (vr txValueRenderer) Parse(ctx context.Context, screens []Screen) (protoref
 	// Note that we might not always get back the exact bodyBz and authInfoBz
 	// that was passed into, because protobuf is not deterministic.
 	// In tests, we don't check bytes equality, but protobuf object equality.
-	protov2MarshalOpts := proto.MarshalOptions{Deterministic: true}
-	bodyBz, err := protov2MarshalOpts.Marshal(txBody)
+	bodyBz, err := proto.Marshal(txBody)
 	if err != nil {
 		return nilValue, err
 	}
-	authInfoBz, err := protov2MarshalOpts.Marshal(authInfo)
+	authInfoBz, err := proto.Marshal(authInfo)
 	if err != nil {
 		return nilValue, err
 	}

@@ -27,7 +27,7 @@ type E2ETestSuite struct {
 	suite.Suite
 
 	cfg     network.Config
-	network *network.Network
+	network network.NetworkI
 
 	group         *group.GroupInfo
 	groupPolicies []*group.GroupPolicyInfo
@@ -57,7 +57,7 @@ func (s *E2ETestSuite) SetupSuite() {
 	s.Require().NoError(err)
 	s.Require().NoError(s.network.WaitForNextBlock())
 
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 
 	// create a new account
 	info, _, err := val.ClientCtx.Keyring.NewMnemonic("NewValidator", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
@@ -241,7 +241,7 @@ func (s *E2ETestSuite) createCLIProposal(groupPolicyAddress, proposer, sendFrom,
 func (s *E2ETestSuite) createGroupThresholdPolicyWithBalance(adminAddress, groupID string, threshold int, tokens int64) string {
 	s.Require().NoError(s.network.WaitForNextBlock())
 
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 	clientCtx := val.ClientCtx
 
 	out, err := clitestutil.ExecTestCLICmd(clientCtx, client.MsgCreateGroupPolicyCmd(),

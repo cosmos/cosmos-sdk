@@ -23,7 +23,7 @@ import (
 
 type E2EBenchmarkSuite struct {
 	cfg     network.Config
-	network *network.Network
+	network network.NetworkI
 
 	txHeight    int64
 	queryClient tx.ServiceClient
@@ -44,7 +44,7 @@ func BenchmarkTx(b *testing.B) {
 	s := NewE2EBenchmarkSuite(b)
 	b.Cleanup(s.Close)
 
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 	txBuilder := mkTxBuilder(b, s)
 	// Convert the txBuilder to a tx.Tx.
 	protoTx, err := txBuilderToProtoTx(txBuilder)
@@ -95,7 +95,7 @@ func NewE2EBenchmarkSuite(tb testing.TB) *E2EBenchmarkSuite {
 	s.network, err = network.New(tb, tb.TempDir(), s.cfg)
 	assert.NilError(tb, err)
 
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 	assert.NilError(tb, s.network.WaitForNextBlock())
 
 	s.queryClient = tx.NewServiceClient(val.ClientCtx)
@@ -158,7 +158,7 @@ func (s *E2EBenchmarkSuite) Close() {
 func mkTxBuilder(tb testing.TB, s *E2EBenchmarkSuite) client.TxBuilder {
 	tb.Helper()
 
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 	assert.NilError(tb, s.network.WaitForNextBlock())
 
 	// prepare txBuilder with msg

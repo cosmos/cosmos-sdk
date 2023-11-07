@@ -26,7 +26,7 @@ type E2ETestSuite struct {
 	suite.Suite
 
 	cfg         network.Config
-	network     *network.Network
+	network     network.NetworkI
 	queryClient cmtservice.ServiceClient
 }
 
@@ -47,7 +47,7 @@ func (s *E2ETestSuite) SetupSuite() {
 
 	s.Require().NoError(s.network.WaitForNextBlock())
 
-	s.queryClient = cmtservice.NewServiceClient(s.network.Validators[0].ClientCtx)
+	s.queryClient = cmtservice.NewServiceClient(s.network.GetValidators()[0].ClientCtx)
 }
 
 func (s *E2ETestSuite) TearDownSuite() {
@@ -56,7 +56,7 @@ func (s *E2ETestSuite) TearDownSuite() {
 }
 
 func (s *E2ETestSuite) TestQueryNodeInfo() {
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 
 	res, err := s.queryClient.GetNodeInfo(context.Background(), &cmtservice.GetNodeInfoRequest{})
 	s.Require().NoError(err)
@@ -70,7 +70,7 @@ func (s *E2ETestSuite) TestQueryNodeInfo() {
 }
 
 func (s *E2ETestSuite) TestQuerySyncing() {
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 
 	_, err := s.queryClient.GetSyncing(context.Background(), &cmtservice.GetSyncingRequest{})
 	s.Require().NoError(err)
@@ -82,7 +82,7 @@ func (s *E2ETestSuite) TestQuerySyncing() {
 }
 
 func (s *E2ETestSuite) TestQueryLatestBlock() {
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 
 	_, err := s.queryClient.GetLatestBlock(context.Background(), &cmtservice.GetLatestBlockRequest{})
 	s.Require().NoError(err)
@@ -95,7 +95,7 @@ func (s *E2ETestSuite) TestQueryLatestBlock() {
 }
 
 func (s *E2ETestSuite) TestQueryBlockByHeight() {
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 	_, err := s.queryClient.GetBlockByHeight(context.Background(), &cmtservice.GetBlockByHeightRequest{Height: 1})
 	s.Require().NoError(err)
 
@@ -107,7 +107,7 @@ func (s *E2ETestSuite) TestQueryBlockByHeight() {
 }
 
 func (s *E2ETestSuite) TestQueryLatestValidatorSet() {
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 
 	// nil pagination
 	res, err := s.queryClient.GetLatestValidatorSet(context.Background(), &cmtservice.GetLatestValidatorSetRequest{
@@ -142,7 +142,7 @@ func (s *E2ETestSuite) TestQueryLatestValidatorSet() {
 }
 
 func (s *E2ETestSuite) TestLatestValidatorSet_GRPC() {
-	vals := s.network.Validators
+	vals := s.network.GetValidators()
 	testCases := []struct {
 		name      string
 		req       *cmtservice.GetLatestValidatorSetRequest
@@ -173,7 +173,7 @@ func (s *E2ETestSuite) TestLatestValidatorSet_GRPC() {
 }
 
 func (s *E2ETestSuite) TestLatestValidatorSet_GRPCGateway() {
-	vals := s.network.Validators
+	vals := s.network.GetValidators()
 	testCases := []struct {
 		name      string
 		url       string
@@ -205,7 +205,7 @@ func (s *E2ETestSuite) TestLatestValidatorSet_GRPCGateway() {
 }
 
 func (s *E2ETestSuite) TestValidatorSetByHeight_GRPC() {
-	vals := s.network.Validators
+	vals := s.network.GetValidators()
 	testCases := []struct {
 		name      string
 		req       *cmtservice.GetValidatorSetByHeightRequest
@@ -234,7 +234,7 @@ func (s *E2ETestSuite) TestValidatorSetByHeight_GRPC() {
 }
 
 func (s *E2ETestSuite) TestValidatorSetByHeight_GRPCGateway() {
-	vals := s.network.Validators
+	vals := s.network.GetValidators()
 	testCases := []struct {
 		name      string
 		url       string

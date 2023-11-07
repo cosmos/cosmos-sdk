@@ -16,7 +16,7 @@ import (
 )
 
 func (s *E2ETestSuite) TestQueryGrantGRPC() {
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 	grantee := s.grantee[1]
 	grantsURL := val.APIAddress + "/cosmos/authz/v1beta1/grants?granter=%s&grantee=%s&msg_type_url=%s"
 	testCases := []struct {
@@ -85,7 +85,7 @@ func (s *E2ETestSuite) TestQueryGrantGRPC() {
 }
 
 func (s *E2ETestSuite) TestQueryGrantsGRPC() {
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 	grantee := s.grantee[1]
 	grantsURL := val.APIAddress + "/cosmos/authz/v1beta1/grants?granter=%s&grantee=%s"
 	testCases := []struct {
@@ -170,7 +170,7 @@ func (s *E2ETestSuite) TestQueryGrantsGRPC() {
 }
 
 func (s *E2ETestSuite) TestQueryGranterGrantsGRPC() {
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 	grantee := s.grantee[1]
 	require := s.Require()
 
@@ -221,7 +221,7 @@ func (s *E2ETestSuite) TestQueryGranterGrantsGRPC() {
 }
 
 func (s *E2ETestSuite) TestQueryGranteeGrantsGRPC() {
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 	grantee := s.grantee[1]
 	require := s.Require()
 

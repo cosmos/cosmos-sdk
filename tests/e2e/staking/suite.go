@@ -24,7 +24,7 @@ type E2ETestSuite struct {
 	suite.Suite
 
 	cfg     network.Config
-	network *network.Network
+	network network.NetworkI
 }
 
 func NewE2ETestSuite(cfg network.Config) *E2ETestSuite {
@@ -53,7 +53,7 @@ func (s *E2ETestSuite) TearDownSuite() {
 // ref: https://github.com/cosmos/cosmos-sdk/issues/7401.
 func (s *E2ETestSuite) TestBlockResults() {
 	require := s.Require()
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 
 	// Create new account in the keyring.
 	k, _, err := val.ClientCtx.Keyring.NewMnemonic("NewDelegator", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)

@@ -24,7 +24,7 @@ type WithdrawAllTestSuite struct {
 	suite.Suite
 
 	cfg     network.Config
-	network *network.Network
+	network network.NetworkI
 }
 
 func (s *WithdrawAllTestSuite) SetupSuite() {
@@ -50,8 +50,8 @@ func (s *WithdrawAllTestSuite) TearDownSuite() {
 // `NumValidators` the existing tests are leading to non-determnism so created new suite for this test.
 func (s *WithdrawAllTestSuite) TestNewWithdrawAllRewardsGenerateOnly() {
 	require := s.Require()
-	val := s.network.Validators[0]
-	val1 := s.network.Validators[1]
+	val := s.network.GetValidators()[0]
+	val1 := s.network.GetValidators()[1]
 	clientCtx := val.ClientCtx
 
 	info, _, err := val.ClientCtx.Keyring.NewMnemonic("newAccount", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)

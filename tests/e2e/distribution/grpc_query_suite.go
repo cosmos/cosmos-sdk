@@ -20,7 +20,7 @@ type GRPCQueryTestSuite struct {
 	suite.Suite
 
 	cfg     network.Config
-	network *network.Network
+	network network.NetworkI
 }
 
 func (s *GRPCQueryTestSuite) SetupSuite() {
@@ -44,7 +44,7 @@ func (s *GRPCQueryTestSuite) TearDownSuite() {
 }
 
 func (s *GRPCQueryTestSuite) TestQueryParamsGRPC() {
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 	baseURL := val.APIAddress
 
 	testCases := []struct {
@@ -75,7 +75,7 @@ func (s *GRPCQueryTestSuite) TestQueryParamsGRPC() {
 }
 
 func (s *GRPCQueryTestSuite) TestQueryValidatorDistributionInfoGRPC() {
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 	baseURL := val.APIAddress
 
 	testCases := []struct {
@@ -113,7 +113,7 @@ func (s *GRPCQueryTestSuite) TestQueryValidatorDistributionInfoGRPC() {
 }
 
 func (s *GRPCQueryTestSuite) TestQueryOutstandingRewardsGRPC() {
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 	baseURL := val.APIAddress
 
 	rewards, err := sdk.ParseDecCoins("19.6stake")
@@ -167,7 +167,7 @@ func (s *GRPCQueryTestSuite) TestQueryOutstandingRewardsGRPC() {
 }
 
 func (s *GRPCQueryTestSuite) TestQueryValidatorCommissionGRPC() {
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 	baseURL := val.APIAddress
 
 	commission, err := sdk.ParseDecCoins("9.8stake")
@@ -221,7 +221,7 @@ func (s *GRPCQueryTestSuite) TestQueryValidatorCommissionGRPC() {
 }
 
 func (s *GRPCQueryTestSuite) TestQuerySlashesGRPC() {
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 	baseURL := val.APIAddress
 
 	testCases := []struct {
@@ -280,7 +280,7 @@ func (s *GRPCQueryTestSuite) TestQuerySlashesGRPC() {
 }
 
 func (s *GRPCQueryTestSuite) TestQueryDelegatorRewardsGRPC() {
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 	baseURL := val.APIAddress
 
 	rewards, err := sdk.ParseDecCoins("9.8stake")
@@ -356,7 +356,7 @@ func (s *GRPCQueryTestSuite) TestQueryDelegatorRewardsGRPC() {
 }
 
 func (s *GRPCQueryTestSuite) TestQueryDelegatorValidatorsGRPC() {
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 	baseURL := val.APIAddress
 
 	testCases := []struct {
@@ -408,7 +408,7 @@ func (s *GRPCQueryTestSuite) TestQueryDelegatorValidatorsGRPC() {
 }
 
 func (s *GRPCQueryTestSuite) TestQueryWithdrawAddressGRPC() {
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 	baseURL := val.APIAddress
 
 	testCases := []struct {

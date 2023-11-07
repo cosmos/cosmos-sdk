@@ -40,7 +40,7 @@ type GRPCWebTestSuite struct {
 	suite.Suite
 
 	cfg      network.Config
-	network  *network.Network
+	network  network.NetworkI
 	protoCdc *codec.ProtoCodec
 }
 
@@ -68,7 +68,7 @@ func (s *GRPCWebTestSuite) TearDownSuite() {
 }
 
 func (s *GRPCWebTestSuite) Test_Latest_Validators() {
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 	for _, contentType := range []string{grpcWebContentType} {
 		headers, trailers, responses, err := s.makeGrpcRequest(
 			"/cosmos.base.tendermint.v1beta1.Service/GetLatestValidatorSet",
@@ -128,7 +128,7 @@ func serializeProtoMessages(messages []proto.Message) [][]byte {
 func (s *GRPCWebTestSuite) makeRequest(
 	verb, method string, headers http.Header, body io.Reader, isText bool,
 ) (*http.Response, error) {
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 	contentType := "application/grpc-web"
 	if isText {
 		// base64 encode the body

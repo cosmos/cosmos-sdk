@@ -40,7 +40,7 @@ type E2ETestSuite struct {
 	suite.Suite
 
 	cfg     network.Config
-	network *network.Network
+	network network.NetworkI
 }
 
 func NewE2ETestSuite(cfg network.Config) *E2ETestSuite {
@@ -53,7 +53,7 @@ func (s *E2ETestSuite) SetupSuite() {
 	s.network, err = network.New(s.T(), s.T().TempDir(), s.cfg)
 	s.Require().NoError(err)
 
-	kb := s.network.Validators[0].ClientCtx.Keyring
+	kb := s.network.GetValidators()[0].ClientCtx.Keyring
 	_, _, err = kb.NewMnemonic("newAccount", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 	s.Require().NoError(err)
 
@@ -83,8 +83,8 @@ func (s *E2ETestSuite) TearDownSuite() {
 }
 
 func (s *E2ETestSuite) TestCLISignGenOnly() {
-	val := s.network.Validators[0]
-	val2 := s.network.Validators[1]
+	val := s.network.GetValidators()[0]
+	val2 := s.network.GetValidators()[1]
 
 	k, err := val.ClientCtx.Keyring.KeyByAddress(val.Address)
 	s.Require().NoError(err)
@@ -205,7 +205,7 @@ func (s *E2ETestSuite) TestCLISignGenOnly() {
 }
 
 func (s *E2ETestSuite) TestCLISignBatch() {
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 	sendTokens := sdk.NewCoins(
 		sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), math.NewInt(10)),
 		sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10)),
@@ -298,7 +298,7 @@ func (s *E2ETestSuite) TestCLISignBatch() {
 }
 
 func (s *E2ETestSuite) TestCLIQueryTxCmdByHash() {
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 
 	account2, err := val.ClientCtx.Keyring.Key("newAccount2")
 	s.Require().NoError(err)
@@ -380,7 +380,7 @@ func (s *E2ETestSuite) TestCLIQueryTxCmdByHash() {
 }
 
 func (s *E2ETestSuite) TestCLIQueryTxCmdByEvents() {
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 
 	account2, err := val.ClientCtx.Keyring.Key("newAccount2")
 	s.Require().NoError(err)
@@ -504,7 +504,7 @@ func (s *E2ETestSuite) TestCLIQueryTxCmdByEvents() {
 }
 
 func (s *E2ETestSuite) TestCLIQueryTxsCmdByEvents() {
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 
 	account2, err := val.ClientCtx.Keyring.Key("newAccount2")
 	s.Require().NoError(err)
@@ -586,7 +586,7 @@ func (s *E2ETestSuite) TestCLIQueryTxsCmdByEvents() {
 }
 
 func (s *E2ETestSuite) TestCLISendGenerateSignAndBroadcast() {
-	val1 := s.network.Validators[0]
+	val1 := s.network.GetValidators()[0]
 
 	account, err := val1.ClientCtx.Keyring.Key("newAccount")
 	s.Require().NoError(err)
@@ -746,7 +746,7 @@ func (s *E2ETestSuite) TestCLISendGenerateSignAndBroadcast() {
 }
 
 func (s *E2ETestSuite) TestCLIMultisignInsufficientCosigners() {
-	val1 := s.network.Validators[0]
+	val1 := s.network.GetValidators()[0]
 
 	// Fetch account and a multisig info
 	account1, err := val1.ClientCtx.Keyring.Key("newAccount1")
@@ -813,7 +813,7 @@ func (s *E2ETestSuite) TestCLIMultisignInsufficientCosigners() {
 }
 
 func (s *E2ETestSuite) TestCLIEncode() {
-	val1 := s.network.Validators[0]
+	val1 := s.network.GetValidators()[0]
 
 	sendTokens := sdk.NewCoin(s.cfg.BondDenom, sdk.TokensFromConsensusPower(10, sdk.DefaultPowerReduction))
 
@@ -847,7 +847,7 @@ func (s *E2ETestSuite) TestCLIEncode() {
 }
 
 func (s *E2ETestSuite) TestCLIMultisignSortSignatures() {
-	val1 := s.network.Validators[0]
+	val1 := s.network.GetValidators()[0]
 
 	// Generate 2 accounts and a multisig.
 	account1, err := val1.ClientCtx.Keyring.Key("newAccount1")
@@ -957,7 +957,7 @@ func (s *E2ETestSuite) TestCLIMultisignSortSignatures() {
 }
 
 func (s *E2ETestSuite) TestSignWithMultisig() {
-	val1 := s.network.Validators[0]
+	val1 := s.network.GetValidators()[0]
 
 	// Generate a account for signing.
 	account1, err := val1.ClientCtx.Keyring.Key("newAccount1")
@@ -1004,7 +1004,7 @@ func (s *E2ETestSuite) TestSignWithMultisig() {
 }
 
 func (s *E2ETestSuite) TestCLIMultisign() {
-	val1 := s.network.Validators[0]
+	val1 := s.network.GetValidators()[0]
 
 	// Generate 2 accounts and a multisig.
 	account1, err := val1.ClientCtx.Keyring.Key("newAccount1")
@@ -1116,7 +1116,7 @@ func (s *E2ETestSuite) TestCLIMultisign() {
 }
 
 func (s *E2ETestSuite) TestSignBatchMultisig() {
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 
 	// Fetch 2 accounts and a multisig.
 	account1, err := val.ClientCtx.Keyring.Key("newAccount1")
@@ -1187,7 +1187,7 @@ func (s *E2ETestSuite) TestSignBatchMultisig() {
 }
 
 func (s *E2ETestSuite) TestMultisignBatch() {
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 
 	// Fetch 2 accounts and a multisig.
 	account1, err := val.ClientCtx.Keyring.Key("newAccount1")
@@ -1318,7 +1318,7 @@ func TestGetBroadcastCommandWithoutOfflineFlag(t *testing.T) {
 // public key doesn't cause any error in the RPC layer (broadcast).
 // See https://github.com/cosmos/cosmos-sdk/issues/7585 for more details.
 func (s *E2ETestSuite) TestTxWithoutPublicKey() {
-	val1 := s.network.Validators[0]
+	val1 := s.network.GetValidators()[0]
 	txCfg := val1.ClientCtx.TxConfig
 
 	// Create a txBuilder with an unsigned tx.
@@ -1380,7 +1380,7 @@ func (s *E2ETestSuite) TestTxWithoutPublicKey() {
 // transaction to the blockchain.
 func (s *E2ETestSuite) TestSignWithMultiSignersAminoJSON() {
 	require := s.Require()
-	val0, val1 := s.network.Validators[0], s.network.Validators[1]
+	val0, val1 := s.network.GetValidators()[0], s.network.GetValidators()[1]
 	val0Coin := sdk.NewCoin(fmt.Sprintf("%stoken", val0.Moniker), math.NewInt(10))
 	val1Coin := sdk.NewCoin(fmt.Sprintf("%stoken", val1.Moniker), math.NewInt(10))
 	_, _, addr1 := testdata.KeyTestPubAddr()
@@ -1453,7 +1453,7 @@ func (s *E2ETestSuite) TestSignWithMultiSignersAminoJSON() {
 
 func (s *E2ETestSuite) TestAuxSigner() {
 	require := s.Require()
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 	val0Coin := sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), math.NewInt(10))
 
 	testCases := []struct {
@@ -1512,9 +1512,9 @@ func (s *E2ETestSuite) TestAuxToFeeWithTips() {
 	s.T().Skip()
 
 	require := s.Require()
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 
-	kb := s.network.Validators[0].ClientCtx.Keyring
+	kb := s.network.GetValidators()[0].ClientCtx.Keyring
 	acc, _, err := kb.NewMnemonic("tipperAccount", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 	require.NoError(err)
 

@@ -13,7 +13,7 @@ import (
 )
 
 func (s *E2ETestSuite) TestQueryGRPC() {
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 	baseURL := val.APIAddress
 	testCases := []struct {
 		name     string

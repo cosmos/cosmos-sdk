@@ -34,7 +34,7 @@ type E2ETestSuite struct {
 	suite.Suite
 
 	cfg     network.Config
-	network *network.Network
+	network network.NetworkI
 	grantee []sdk.AccAddress
 }
 
@@ -49,7 +49,7 @@ func (s *E2ETestSuite) SetupSuite() {
 	s.network, err = network.New(s.T(), s.T().TempDir(), s.cfg)
 	s.Require().NoError(err)
 
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 	s.grantee = make([]sdk.AccAddress, 6)
 
 	// Send some funds to the new account.
@@ -132,7 +132,7 @@ func (s *E2ETestSuite) SetupSuite() {
 }
 
 func (s *E2ETestSuite) createAccount(uid string) sdk.AccAddress {
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 	// Create new account in the keyring.
 	k, _, err := val.ClientCtx.Keyring.NewMnemonic(uid, keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 	s.Require().NoError(err)
@@ -144,7 +144,7 @@ func (s *E2ETestSuite) createAccount(uid string) sdk.AccAddress {
 }
 
 func (s *E2ETestSuite) msgSendExec(grantee sdk.AccAddress) {
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 	// Send some funds to the new account.
 
 	from := val.Address
@@ -178,7 +178,7 @@ var (
 )
 
 func (s *E2ETestSuite) TestExecAuthorizationWithExpiration() {
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 	grantee := s.grantee[0]
 	tenSeconds := time.Now().Add(time.Second * time.Duration(10)).Unix()
 
@@ -221,7 +221,7 @@ func (s *E2ETestSuite) TestExecAuthorizationWithExpiration() {
 }
 
 func (s *E2ETestSuite) TestNewExecGenericAuthorized() {
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 	grantee := s.grantee[0]
 	twoHours := time.Now().Add(time.Minute * time.Duration(120)).Unix()
 
@@ -324,7 +324,7 @@ func (s *E2ETestSuite) TestNewExecGenericAuthorized() {
 }
 
 func (s *E2ETestSuite) TestNewExecGrantAuthorized() {
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 	grantee := s.grantee[0]
 	grantee1 := s.grantee[2]
 	twoHours := time.Now().Add(time.Minute * time.Duration(120)).Unix()
@@ -440,7 +440,7 @@ func (s *E2ETestSuite) TestNewExecGrantAuthorized() {
 }
 
 func (s *E2ETestSuite) TestExecSendAuthzWithAllowList() {
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 	grantee := s.grantee[3]
 	allowedAddr := s.grantee[4]
 	notAllowedAddr := s.grantee[5]
@@ -540,7 +540,7 @@ func (s *E2ETestSuite) TestExecSendAuthzWithAllowList() {
 }
 
 func (s *E2ETestSuite) TestExecDelegateAuthorization() {
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 	grantee := s.grantee[0]
 	twoHours := time.Now().Add(time.Minute * time.Duration(120)).Unix()
 
@@ -747,7 +747,7 @@ func (s *E2ETestSuite) TestExecDelegateAuthorization() {
 }
 
 func (s *E2ETestSuite) TestExecUndelegateAuthorization() {
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 	grantee := s.grantee[0]
 	twoHours := time.Now().Add(time.Minute * time.Duration(120)).Unix()
 

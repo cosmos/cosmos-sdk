@@ -42,7 +42,7 @@ type E2ETestSuite struct {
 	suite.Suite
 
 	cfg     network.Config
-	network *network.Network
+	network network.NetworkI
 
 	txHeight    int64
 	queryClient tx.ServiceClient
@@ -60,7 +60,7 @@ func (s *E2ETestSuite) SetupSuite() {
 	s.network, err = network.New(s.T(), s.T().TempDir(), s.cfg)
 	s.Require().NoError(err)
 
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 	s.Require().NoError(s.network.WaitForNextBlock())
 
 	s.queryClient = tx.NewServiceClient(val.ClientCtx)
@@ -155,7 +155,7 @@ func (s *E2ETestSuite) TestQueryBySig() {
 }
 
 func (s *E2ETestSuite) TestSimulateTx_GRPC() {
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 	txBuilder := s.mkTxBuilder()
 	// Convert the txBuilder to a tx.Tx.
 	protoTx, err := txBuilderToProtoTx(txBuilder)
@@ -202,7 +202,7 @@ func (s *E2ETestSuite) TestSimulateTx_GRPC() {
 }
 
 func (s *E2ETestSuite) TestSimulateTx_GRPCGateway() {
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 	txBuilder := s.mkTxBuilder()
 	// Convert the txBuilder to a tx.Tx.
 	protoTx, err := txBuilderToProtoTx(txBuilder)
@@ -336,7 +336,7 @@ func (s *E2ETestSuite) TestGetTxEvents_GRPC() {
 }
 
 func (s *E2ETestSuite) TestGetTxEvents_GRPCGateway() {
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 	testCases := []struct {
 		name      string
 		url       string
@@ -440,7 +440,7 @@ func (s *E2ETestSuite) TestGetTx_GRPC() {
 }
 
 func (s *E2ETestSuite) TestGetTx_GRPCGateway() {
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 	testCases := []struct {
 		name      string
 		url       string
@@ -487,7 +487,7 @@ func (s *E2ETestSuite) TestGetTx_GRPCGateway() {
 }
 
 func (s *E2ETestSuite) TestBroadcastTx_GRPC() {
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 	txBuilder := s.mkTxBuilder()
 	txBytes, err := val.ClientCtx.TxConfig.TxEncoder()(txBuilder.GetTx())
 	s.Require().NoError(err)
@@ -525,7 +525,7 @@ func (s *E2ETestSuite) TestBroadcastTx_GRPC() {
 }
 
 func (s *E2ETestSuite) TestBroadcastTx_GRPCGateway() {
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 	txBuilder := s.mkTxBuilder()
 	txBytes, err := val.ClientCtx.TxConfig.TxEncoder()(txBuilder.GetTx())
 	s.Require().NoError(err)
@@ -563,7 +563,7 @@ func (s *E2ETestSuite) TestBroadcastTx_GRPCGateway() {
 }
 
 func (s *E2ETestSuite) TestSimMultiSigTx() {
-	val1 := *s.network.Validators[0]
+	val1 := *s.network.GetValidators()[0]
 
 	kr := val1.ClientCtx.Keyring
 
@@ -715,7 +715,7 @@ func (s *E2ETestSuite) TestGetBlockWithTxs_GRPC() {
 }
 
 func (s *E2ETestSuite) TestGetBlockWithTxs_GRPCGateway() {
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 	testCases := []struct {
 		name      string
 		url       string
@@ -756,7 +756,7 @@ func (s *E2ETestSuite) TestGetBlockWithTxs_GRPCGateway() {
 }
 
 func (s *E2ETestSuite) TestTxEncode_GRPC() {
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 	txBuilder := s.mkTxBuilder()
 	protoTx, err := txBuilderToProtoTx(txBuilder)
 	s.Require().NoError(err)
@@ -793,7 +793,7 @@ func (s *E2ETestSuite) TestTxEncode_GRPC() {
 }
 
 func (s *E2ETestSuite) TestTxEncode_GRPCGateway() {
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 	txBuilder := s.mkTxBuilder()
 	protoTx, err := txBuilderToProtoTx(txBuilder)
 	s.Require().NoError(err)
@@ -831,7 +831,7 @@ func (s *E2ETestSuite) TestTxEncode_GRPCGateway() {
 }
 
 func (s *E2ETestSuite) TestTxDecode_GRPC() {
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 	txBuilder := s.mkTxBuilder()
 
 	encodedTx, err := val.ClientCtx.TxConfig.TxEncoder()(txBuilder.GetTx())
@@ -873,7 +873,7 @@ func (s *E2ETestSuite) TestTxDecode_GRPC() {
 }
 
 func (s *E2ETestSuite) TestTxDecode_GRPCGateway() {
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 	txBuilder := s.mkTxBuilder()
 
 	encodedTxBytes, err := val.ClientCtx.TxConfig.TxEncoder()(txBuilder.GetTx())
@@ -916,7 +916,7 @@ func (s *E2ETestSuite) TestTxDecode_GRPCGateway() {
 }
 
 func (s *E2ETestSuite) readTestAminoTxJSON() ([]byte, *legacytx.StdTx) {
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 	txJSONBytes, err := os.ReadFile("testdata/tx_amino1.json")
 	s.Require().NoError(err)
 	var stdTx legacytx.StdTx
@@ -926,7 +926,7 @@ func (s *E2ETestSuite) readTestAminoTxJSON() ([]byte, *legacytx.StdTx) {
 }
 
 func (s *E2ETestSuite) TestTxEncodeAmino_GRPC() {
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 	txJSONBytes, stdTx := s.readTestAminoTxJSON()
 
 	testCases := []struct {
@@ -963,7 +963,7 @@ func (s *E2ETestSuite) TestTxEncodeAmino_GRPC() {
 }
 
 func (s *E2ETestSuite) TestTxEncodeAmino_GRPCGateway() {
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 	txJSONBytes, stdTx := s.readTestAminoTxJSON()
 
 	testCases := []struct {
@@ -1001,7 +1001,7 @@ func (s *E2ETestSuite) TestTxEncodeAmino_GRPCGateway() {
 }
 
 func (s *E2ETestSuite) readTestAminoTxBinary() ([]byte, *legacytx.StdTx) {
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 	txJSONBytes, err := os.ReadFile("testdata/tx_amino1.bin")
 	s.Require().NoError(err)
 	var stdTx legacytx.StdTx
@@ -1040,7 +1040,7 @@ func (s *E2ETestSuite) TestTxDecodeAmino_GRPC() {
 				s.Require().NotEmpty(res.GetAminoJson())
 
 				var decodedTx legacytx.StdTx
-				err = s.network.Validators[0].ClientCtx.LegacyAmino.UnmarshalJSON([]byte(res.GetAminoJson()), &decodedTx)
+				err = s.network.GetValidators()[0].ClientCtx.LegacyAmino.UnmarshalJSON([]byte(res.GetAminoJson()), &decodedTx)
 				s.Require().NoError(err)
 				s.Require().Equal(stdTx.GetMsgs(), decodedTx.GetMsgs())
 			}
@@ -1049,7 +1049,7 @@ func (s *E2ETestSuite) TestTxDecodeAmino_GRPC() {
 }
 
 func (s *E2ETestSuite) TestTxDecodeAmino_GRPCGateway() {
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 	encodedTx, stdTx := s.readTestAminoTxBinary()
 
 	invalidTxBytes := append(encodedTx, byte(0o00))
@@ -1093,7 +1093,7 @@ func TestE2ETestSuite(t *testing.T) {
 }
 
 func (s *E2ETestSuite) mkTxBuilder() client.TxBuilder {
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 	s.Require().NoError(s.network.WaitForNextBlock())
 
 	// prepare txBuilder with msg

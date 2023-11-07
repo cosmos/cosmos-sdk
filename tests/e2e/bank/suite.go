@@ -23,7 +23,7 @@ type E2ETestSuite struct {
 	suite.Suite
 
 	cfg     network.Config
-	network *network.Network
+	network network.NetworkI
 }
 
 func NewE2ETestSuite(cfg network.Config) *E2ETestSuite {
@@ -93,7 +93,7 @@ func (s *E2ETestSuite) TearDownSuite() {
 }
 
 func (s *E2ETestSuite) TestNewSendTxCmdGenOnly() {
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 
 	from := val.Address
 	to := val.Address
@@ -124,7 +124,7 @@ func (s *E2ETestSuite) TestNewSendTxCmdGenOnly() {
 }
 
 func (s *E2ETestSuite) TestNewSendTxCmdDryRun() {
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 
 	from := val.Address
 	to := val.Address
@@ -153,7 +153,7 @@ func (s *E2ETestSuite) TestNewSendTxCmdDryRun() {
 }
 
 func (s *E2ETestSuite) TestNewSendTxCmd() {
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 
 	testCases := []struct {
 		name         string
@@ -238,7 +238,7 @@ func (s *E2ETestSuite) TestNewSendTxCmd() {
 }
 
 func (s *E2ETestSuite) TestNewMultiSendTxCmd() {
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 	testAddr := sdk.AccAddress("cosmos139f7kncmglres2nf3h4hc4tade85ekfr8sulz5")
 
 	testCases := []struct {

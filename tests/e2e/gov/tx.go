@@ -26,7 +26,7 @@ type E2ETestSuite struct {
 	suite.Suite
 
 	cfg     network.Config
-	network *network.Network
+	network network.NetworkI
 }
 
 func NewE2ETestSuite(cfg network.Config) *E2ETestSuite {
@@ -41,7 +41,7 @@ func (s *E2ETestSuite) SetupSuite() {
 	s.Require().NoError(err)
 	s.Require().NoError(s.network.WaitForNextBlock())
 
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 	clientCtx := val.ClientCtx
 	var resp sdk.TxResponse
 
@@ -98,7 +98,7 @@ func (s *E2ETestSuite) TearDownSuite() {
 }
 
 func (s *E2ETestSuite) TestNewCmdSubmitProposal() {
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 
 	// Create a legacy proposal JSON, make sure it doesn't pass this new CLI
 	// command.
@@ -184,7 +184,7 @@ func (s *E2ETestSuite) TestNewCmdSubmitProposal() {
 }
 
 func (s *E2ETestSuite) TestNewCmdSubmitLegacyProposal() {
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 	invalidProp := `{
 	  "title": "",
 		"description": "Where is the title!?",
@@ -280,7 +280,7 @@ func (s *E2ETestSuite) TestNewCmdSubmitLegacyProposal() {
 }
 
 func (s *E2ETestSuite) TestNewCmdWeightedVote() {
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 
 	testCases := []struct {
 		name         string

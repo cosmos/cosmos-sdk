@@ -22,7 +22,7 @@ type DepositTestSuite struct {
 	suite.Suite
 
 	cfg     network.Config
-	network *network.Network
+	network network.NetworkI
 }
 
 func NewDepositTestSuite(cfg network.Config) *DepositTestSuite {
@@ -72,7 +72,7 @@ func (s *DepositTestSuite) TearDownSuite() {
 }
 
 func (s *DepositTestSuite) TestQueryDepositsWithInitialDeposit() {
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 	depositAmount := sdk.NewCoin(s.cfg.BondDenom, v1.DefaultMinDepositTokens)
 
 	// submit proposal with an initial deposit
@@ -93,7 +93,7 @@ func (s *DepositTestSuite) TestQueryDepositsWithInitialDeposit() {
 }
 
 func (s *DepositTestSuite) TestQueryProposalAfterVotingPeriod() {
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 	depositAmount := sdk.NewCoin(s.cfg.BondDenom, v1.DefaultMinDepositTokens.Sub(math.NewInt(50)))
 
 	// submit proposal with an initial deposit

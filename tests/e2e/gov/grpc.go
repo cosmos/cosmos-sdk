@@ -13,7 +13,7 @@ import (
 )
 
 func (s *E2ETestSuite) TestGetProposalGRPC() {
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 
 	testCases := []struct {
 		name   string
@@ -57,7 +57,7 @@ func (s *E2ETestSuite) TestGetProposalGRPC() {
 }
 
 func (s *E2ETestSuite) TestGetProposalsGRPC() {
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 
 	testCases := []struct {
 		name             string
@@ -111,7 +111,7 @@ func (s *E2ETestSuite) TestGetProposalsGRPC() {
 }
 
 func (s *E2ETestSuite) TestGetProposalVoteGRPC() {
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 
 	voterAddressBech32 := val.Address.String()
 
@@ -183,7 +183,7 @@ func (s *E2ETestSuite) TestGetProposalVoteGRPC() {
 }
 
 func (s *E2ETestSuite) TestGetProposalVotesGRPC() {
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 
 	testCases := []struct {
 		name   string
@@ -222,7 +222,7 @@ func (s *E2ETestSuite) TestGetProposalVotesGRPC() {
 }
 
 func (s *E2ETestSuite) TestGetProposalDepositGRPC() {
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 
 	testCases := []struct {
 		name   string
@@ -271,7 +271,7 @@ func (s *E2ETestSuite) TestGetProposalDepositGRPC() {
 }
 
 func (s *E2ETestSuite) TestGetProposalDepositsGRPC() {
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 
 	testCases := []struct {
 		name   string
@@ -311,7 +311,7 @@ func (s *E2ETestSuite) TestGetProposalDepositsGRPC() {
 }
 
 func (s *E2ETestSuite) TestGetTallyGRPC() {
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 
 	testCases := []struct {
 		name   string
@@ -355,7 +355,7 @@ func (s *E2ETestSuite) TestGetTallyGRPC() {
 }
 
 func (s *E2ETestSuite) TestGetParamsGRPC() {
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 
 	params := v1.DefaultParams()
 	dp := v1.NewDepositParams(params.MinDeposit, params.MaxDepositPeriod)          //nolint:staticcheck // we use deprecated gov commands here, but we don't want to remove them

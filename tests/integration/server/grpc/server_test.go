@@ -33,7 +33,7 @@ type IntegrationTestSuite struct {
 	suite.Suite
 
 	cfg     network.Config
-	network *network.Network
+	network network.NetworkI
 	conn    *grpc.ClientConn
 }
 
@@ -51,7 +51,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	_, err = s.network.WaitForHeight(2)
 	s.Require().NoError(err)
 
-	val0 := s.network.Validators[0]
+	val0 := s.network.GetValidators()[0]
 	s.conn, err = grpc.Dial(
 		val0.AppConfig.GRPC.Address,
 		grpc.WithInsecure(), //nolint:staticcheck // ignore SA1019, we don't need to use a secure connection for tests
@@ -75,7 +75,7 @@ func (s *IntegrationTestSuite) TestGRPCServer_TestService() {
 }
 
 func (s *IntegrationTestSuite) TestGRPCServer_BankBalance() {
-	val0 := s.network.Validators[0]
+	val0 := s.network.GetValidators()[0]
 
 	// gRPC query to bank service should work
 	denom := fmt.Sprintf("%stoken", val0.Moniker)
@@ -88,7 +88,7 @@ func (s *IntegrationTestSuite) TestGRPCServer_BankBalance() {
 	)
 	s.Require().NoError(err)
 	s.Require().Equal(
-		sdk.NewCoin(denom, s.network.Config.AccountTokens),
+		sdk.NewCoin(denom, s.cfg.AccountTokens),
 		*bankRes.GetBalance(),
 	)
 	blockHeight := header.Get(grpctypes.GRPCBlockHeightHeader)
@@ -164,7 +164,7 @@ func (s *IntegrationTestSuite) TestGRPCServer_GetTxsEvent() {
 }
 
 func (s *IntegrationTestSuite) TestGRPCServer_BroadcastTx() {
-	val0 := s.network.Validators[0]
+	val0 := s.network.GetValidators()[0]
 
 	txBuilder := s.mkTxBuilder()
 
@@ -220,7 +220,7 @@ func (s *IntegrationTestSuite) TestGRPCUnpacker() {
 	ir := s.cfg.InterfaceRegistry
 	queryClient := stakingtypes.NewQueryClient(s.conn)
 	validator, err := queryClient.Validator(context.Background(),
-		&stakingtypes.QueryValidatorRequest{ValidatorAddr: s.network.Validators[0].ValAddress.String()})
+		&stakingtypes.QueryValidatorRequest{ValidatorAddr: s.network.GetValidators()[0].ValAddress.String()})
 	require.NoError(s.T(), err)
 
 	// no unpacked interfaces yet, so ConsAddr will be nil
@@ -238,7 +238,7 @@ func (s *IntegrationTestSuite) TestGRPCUnpacker() {
 
 // mkTxBuilder creates a TxBuilder containing a signed tx from validator 0.
 func (s *IntegrationTestSuite) mkTxBuilder() client.TxBuilder {
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 	s.Require().NoError(s.network.WaitForNextBlock())
 
 	// prepare txBuilder with msg

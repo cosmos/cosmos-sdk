@@ -350,7 +350,7 @@ func NewCLILogger(cmd *cobra.Command) CLILogger {
 }
 
 // New creates a new Network for integration tests or in-process testnets run via the CLI
-func New(l Logger, baseDir string, cfg Config) (*Network, error) {
+func New(l Logger, baseDir string, cfg Config) (NetworkI, error) {
 	// only one caller/test can create and use a network at a time
 	l.Log("acquiring test network lock")
 	lock.Lock()
@@ -728,6 +728,10 @@ func (n *Network) LatestHeight() (int64, error) {
 // an error is returned. Regardless, the latest height queried is returned.
 func (n *Network) WaitForHeight(h int64) (int64, error) {
 	return n.WaitForHeightWithTimeout(h, 10*time.Second)
+}
+
+func (n *Network) GetValidators() []*Validator {
+	return n.Validators
 }
 
 // WaitForHeightWithTimeout is the same as WaitForHeight except the caller can

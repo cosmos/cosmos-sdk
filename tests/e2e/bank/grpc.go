@@ -15,7 +15,7 @@ import (
 )
 
 func (s *E2ETestSuite) TestTotalSupplyGRPCHandler() {
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 	baseURL := val.APIAddress
 
 	testCases := []struct {
@@ -101,7 +101,7 @@ func (s *E2ETestSuite) TestTotalSupplyGRPCHandler() {
 }
 
 func (s *E2ETestSuite) TestDenomMetadataGRPCHandler() {
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 	baseURL := val.APIAddress
 
 	testCases := []struct {
@@ -226,7 +226,7 @@ func (s *E2ETestSuite) TestDenomMetadataGRPCHandler() {
 }
 
 func (s *E2ETestSuite) TestBalancesGRPCHandler() {
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 	baseURL := val.APIAddress
 
 	testCases := []struct {

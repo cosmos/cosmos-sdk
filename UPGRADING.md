@@ -58,6 +58,11 @@ Most of Cosmos SDK modules have migrated to [collections](https://docs.cosmos.ne
 Many functions have been removed due to this changes as the API can be smaller thanks to collections.
 For modules that have migrated, verify you are checking against `collections.ErrNotFound` when applicable.
 
+#### `x/auth`
+
+Auth was spun out into its own `go.mod`. To import it use `cosmossdk.io/x/auth`
+
+
 #### `x/authz`
 
 Authz was spun out into its own `go.mod`. To import it use `cosmossdk.io/x/authz`

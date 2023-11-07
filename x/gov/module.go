@@ -17,6 +17,7 @@ import (
 	"cosmossdk.io/core/appmodule"
 	store "cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
+	authtypes "cosmossdk.io/x/auth/types"
 	govclient "cosmossdk.io/x/gov/client"
 	"cosmossdk.io/x/gov/client/cli"
 	"cosmossdk.io/x/gov/keeper"
@@ -32,7 +33,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 const ConsensusVersion = 5

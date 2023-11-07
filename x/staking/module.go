@@ -15,6 +15,7 @@ import (
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
+	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/staking/client/cli"
 	"cosmossdk.io/x/staking/keeper"
 	"cosmossdk.io/x/staking/simulation"
@@ -27,7 +28,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 const (

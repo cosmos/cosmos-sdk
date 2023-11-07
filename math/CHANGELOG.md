@@ -36,9 +36,13 @@ Ref: https://github.com/commitizen/conventional-commit-types/blob/v3.0.0/index.j
 
 ## [Unreleased]
 
+## [math/v1.2.0](https://github.com/cosmos/cosmos-sdk/releases/tag/math/v1.2.0) - 2023-11-07
+
 ### Features
 
-* [#17803](https://github.com/cosmos/cosmos-sdk/pull/17803) Add mutative api for Int.BigInt()
+* [#18247](https://github.com/cosmos/cosmos-sdk/pull/18247) Add mutative api for `Uint.BigInt()`.
+* [#17803](https://github.com/cosmos/cosmos-sdk/pull/17803) Add mutative api for `Int.BigInt()`.
+* [#18030](https://github.com/cosmos/cosmos-sdk/pull/18030) Add mutative api for `NewIntFromBigInt`.
 
 ### Bug Fixes
 

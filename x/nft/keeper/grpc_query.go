@@ -39,7 +39,7 @@ func (k Keeper) Balance(goCtx context.Context, r *nft.QueryBalanceRequest) (*nft
 func (k Keeper) BalanceByQueryString(goCtx context.Context, r *nft.QueryBalanceByQueryStringRequest) (*nft.QueryBalanceByQueryStringResponse, error) {
 	res, err := k.Balance(goCtx, &nft.QueryBalanceRequest{
 		ClassId: r.ClassId,
-		Owner: r.Owner,
+		Owner:   r.Owner,
 	})
 	if err != nil {
 		return nil, err
@@ -78,7 +78,7 @@ func (k Keeper) Owner(goCtx context.Context, r *nft.QueryOwnerRequest) (*nft.Que
 func (k Keeper) OwnerByQueryString(goCtx context.Context, r *nft.QueryOwnerByQueryStringRequest) (*nft.QueryOwnerByQueryStringResponse, error) {
 	res, err := k.Owner(goCtx, &nft.QueryOwnerRequest{
 		ClassId: r.ClassId,
-		Id: r.Id,
+		Id:      r.Id,
 	})
 	if err != nil {
 		return nil, err
@@ -200,7 +200,7 @@ func (k Keeper) NFT(goCtx context.Context, r *nft.QueryNFTRequest) (*nft.QueryNF
 func (k Keeper) NFTByQueryString(goCtx context.Context, r *nft.QueryNFTByQueryStringRequest) (*nft.QueryNFTByQueryStringResponse, error) {
 	res, err := k.NFT(goCtx, &nft.QueryNFTRequest{
 		ClassId: r.ClassId,
-		Id: r.Id,
+		Id:      r.Id,
 	})
 	if err != nil {
 		return nil, err

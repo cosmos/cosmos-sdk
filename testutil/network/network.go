@@ -683,7 +683,11 @@ func (n *Network) WaitForHeight(h int64) (int64, error) {
 }
 
 func (n *Network) GetValidators() []ValidatorI {
-	return n.Validators
+	var vals []ValidatorI
+	for _, val := range n.Validators {
+		vals = append(vals, val)
+	}
+	return vals
 }
 
 // WaitForHeightWithTimeout is the same as WaitForHeight except the caller can

@@ -56,23 +56,23 @@ func (s *E2ETestSuite) TestBlockResults() {
 	val := s.network.GetValidators()[0]
 
 	// Create new account in the keyring.
-	k, _, err := val.ClientCtx.Keyring.NewMnemonic("NewDelegator", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
+	k, _, err := val.GetClientCtx().Keyring.NewMnemonic("NewDelegator", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 	require.NoError(err)
 	pub, err := k.GetPubKey()
 	require.NoError(err)
 	newAddr := sdk.AccAddress(pub.Address())
 
 	msgSend := &banktypes.MsgSend{
-		FromAddress: val.Address.String(),
+		FromAddress: val.GetAddress().String(),
 		ToAddress:   newAddr.String(),
 		Amount:      sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(200))),
 	}
 
 	// Send some funds to the new account.
 	_, err = clitestutil.SubmitTestTx(
-		val.ClientCtx,
+		val.GetClientCtx(),
 		msgSend,
-		val.Address,
+		val.GetAddress(),
 		clitestutil.TestTxConfig{},
 	)
 	require.NoError(err)
@@ -80,13 +80,13 @@ func (s *E2ETestSuite) TestBlockResults() {
 
 	msgDel := &stakingtypes.MsgDelegate{
 		DelegatorAddress: newAddr.String(),
-		ValidatorAddress: val.ValAddress.String(),
+		ValidatorAddress: val.GetValAddress().String(),
 		Amount:           sdk.NewCoin(s.cfg.BondDenom, math.NewInt(150)),
 	}
 
 	// create a delegation from the new account to validator `val`.
 	_, err = clitestutil.SubmitTestTx(
-		val.ClientCtx,
+		val.GetClientCtx(),
 		msgDel,
 		newAddr,
 		clitestutil.TestTxConfig{},
@@ -95,7 +95,7 @@ func (s *E2ETestSuite) TestBlockResults() {
 	require.NoError(s.network.WaitForNextBlock())
 
 	// Create a HTTP rpc client.
-	rpcClient, err := http.New(val.RPCAddress, "/websocket")
+	rpcClient, err := http.New(val.GetRPCAddress(), "/websocket")
 	require.NoError(err)
 
 	// Loop until we find a block result with the correct validator updates.
@@ -115,7 +115,7 @@ func (s *E2ETestSuite) TestBlockResults() {
 		valUpdate := res.ValidatorUpdates[0]
 		require.Equal(
 			valUpdate.GetPubKey().Sum.(*crypto.PublicKey_Ed25519).Ed25519,
-			val.PubKey.Bytes(),
+			val.GetPubKey().Bytes(),
 		)
 
 		return nil

@@ -46,33 +46,40 @@ type Validator struct {
 	cancelFn context.CancelFunc
 }
 
-// ValidatorI expose a validator's context and configuration
-type ValidatorI interface {
-	GetCtx() *server.Context
-	GetClientCtx() client.Context
-	GetAppConfig() *srvconfig.Config
-	GetAddress() sdk.AccAddress
-	GetValAddress() sdk.ValAddress
-}
+var _ ValidatorI = &Validator{}
 
-var _ ValidatorI = Validator{}
-
-func (v Validator) GetCtx() *server.Context {
+func (v *Validator) GetCtx() *server.Context {
 	return v.Ctx
 }
 
-func (v Validator) GetAppConfig() *srvconfig.Config {
-	return v.AppConfig
-}
-
-func (v Validator) GetClientCtx() client.Context {
+func (v *Validator) GetClientCtx() client.Context {
 	return v.ClientCtx
 }
 
-func (v Validator) GetAddress() sdk.AccAddress {
+func (v *Validator) GetAppConfig() *srvconfig.Config {
+	return v.AppConfig
+}
+
+func (v *Validator) GetAddress() sdk.AccAddress {
 	return v.Address
 }
 
-func (v Validator) GetValAddress() sdk.ValAddress {
+func (v *Validator) GetValAddress() sdk.ValAddress {
 	return v.ValAddress
+}
+
+func (v *Validator) GetAPIAddress() string {
+	return v.AppConfig.API.Address
+}
+
+func (v *Validator) GetRPCAddress() string {
+	return v.RPCAddress
+}
+
+func (v *Validator) GetPubKey() cryptotypes.PubKey {
+	return v.PubKey
+}
+
+func (v *Validator) GetMoniker() string {
+	return v.Moniker
 }

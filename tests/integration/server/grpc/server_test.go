@@ -78,7 +78,7 @@ func (s *IntegrationTestSuite) TestGRPCServer_BankBalance() {
 	val0 := s.network.GetValidators()[0]
 
 	// gRPC query to bank service should work
-	denom := fmt.Sprintf("%stoken", val0.Moniker)
+	denom := fmt.Sprintf("%stoken", val0.GetMoniker())
 	bankClient := banktypes.NewQueryClient(s.conn)
 	var header metadata.MD
 	bankRes, err := bankClient.Balance(
@@ -264,7 +264,7 @@ func (s *IntegrationTestSuite) mkTxBuilder() client.TxBuilder {
 		WithSignMode(signing.SignMode_SIGN_MODE_DIRECT)
 
 	// Sign Tx.
-	err := authclient.SignTx(txFactory, val.GetClientCtx(), val.Moniker, txBuilder, false, true)
+	err := authclient.SignTx(txFactory, val.GetClientCtx(), val.GetMoniker(), txBuilder, false, true)
 	s.Require().NoError(err)
 
 	return txBuilder

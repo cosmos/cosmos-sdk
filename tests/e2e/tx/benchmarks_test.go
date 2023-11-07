@@ -50,7 +50,7 @@ func BenchmarkTx(b *testing.B) {
 	protoTx, err := txBuilderToProtoTx(txBuilder)
 	assert.NilError(b, err)
 	// Encode the txBuilder to txBytes.
-	txBytes, err := val.ClientCtx.TxConfig.TxEncoder()(txBuilder.GetTx())
+	txBytes, err := val.GetClientCtx().TxConfig.TxEncoder()(txBuilder.GetTx())
 	assert.NilError(b, err)
 
 	testCases := []struct {
@@ -98,19 +98,19 @@ func NewE2EBenchmarkSuite(tb testing.TB) *E2EBenchmarkSuite {
 	val := s.network.GetValidators()[0]
 	assert.NilError(tb, s.network.WaitForNextBlock())
 
-	s.queryClient = tx.NewServiceClient(val.ClientCtx)
+	s.queryClient = tx.NewServiceClient(val.GetClientCtx())
 
 	msgSend := &banktypes.MsgSend{
-		FromAddress: val.Address.String(),
-		ToAddress:   val.Address.String(),
+		FromAddress: val.GetAddress().String(),
+		ToAddress:   val.GetAddress().String(),
 		Amount:      sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdkmath.NewInt(10))),
 	}
 
 	// Create a new MsgSend tx from val to itself.
 	out, err := cli.SubmitTestTx(
-		val.ClientCtx,
+		val.GetClientCtx(),
 		msgSend,
-		val.Address,
+		val.GetAddress(),
 		cli.TestTxConfig{
 			Memo: "foobar",
 		},
@@ -119,19 +119,19 @@ func NewE2EBenchmarkSuite(tb testing.TB) *E2EBenchmarkSuite {
 	assert.NilError(tb, err)
 
 	var txRes sdk.TxResponse
-	assert.NilError(tb, val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txRes))
+	assert.NilError(tb, val.GetClientCtx().Codec.UnmarshalJSON(out.Bytes(), &txRes))
 	assert.Equal(tb, uint32(0), txRes.Code, txRes)
 
 	msgSend1 := &banktypes.MsgSend{
-		FromAddress: val.Address.String(),
-		ToAddress:   val.Address.String(),
+		FromAddress: val.GetAddress().String(),
+		ToAddress:   val.GetAddress().String(),
 		Amount:      sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdkmath.NewInt(1))),
 	}
 
 	out, err = cli.SubmitTestTx(
-		val.ClientCtx,
+		val.GetClientCtx(),
 		msgSend1,
-		val.Address,
+		val.GetAddress(),
 		cli.TestTxConfig{
 			Offline: true,
 			AccNum:  0,
@@ -142,10 +142,10 @@ func NewE2EBenchmarkSuite(tb testing.TB) *E2EBenchmarkSuite {
 
 	assert.NilError(tb, err)
 	var tr sdk.TxResponse
-	assert.NilError(tb, val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &tr))
+	assert.NilError(tb, val.GetClientCtx().Codec.UnmarshalJSON(out.Bytes(), &tr))
 	assert.Equal(tb, uint32(0), tr.Code)
 
-	resp, err := cli.GetTxResponse(s.network, val.ClientCtx, tr.TxHash)
+	resp, err := cli.GetTxResponse(s.network, val.GetClientCtx(), tr.TxHash)
 	assert.NilError(tb, err)
 	s.txHeight = resp.Height
 	return s
@@ -162,13 +162,13 @@ func mkTxBuilder(tb testing.TB, s *E2EBenchmarkSuite) client.TxBuilder {
 	assert.NilError(tb, s.network.WaitForNextBlock())
 
 	// prepare txBuilder with msg
-	txBuilder := val.ClientCtx.TxConfig.NewTxBuilder()
+	txBuilder := val.GetClientCtx().TxConfig.NewTxBuilder()
 	feeAmount := sdk.Coins{sdk.NewInt64Coin(s.cfg.BondDenom, 10)}
 	gasLimit := testdata.NewTestGasLimit()
 	assert.NilError(tb,
 		txBuilder.SetMsgs(&banktypes.MsgSend{
-			FromAddress: val.Address.String(),
-			ToAddress:   val.Address.String(),
+			FromAddress: val.GetAddress().String(),
+			ToAddress:   val.GetAddress().String(),
 			Amount:      sdk.Coins{sdk.NewInt64Coin(s.cfg.BondDenom, 10)},
 		}),
 	)
@@ -178,13 +178,13 @@ func mkTxBuilder(tb testing.TB, s *E2EBenchmarkSuite) client.TxBuilder {
 
 	// setup txFactory
 	txFactory := clienttx.Factory{}.
-		WithChainID(val.ClientCtx.ChainID).
-		WithKeybase(val.ClientCtx.Keyring).
-		WithTxConfig(val.ClientCtx.TxConfig).
+		WithChainID(val.GetClientCtx().ChainID).
+		WithKeybase(val.GetClientCtx().Keyring).
+		WithTxConfig(val.GetClientCtx().TxConfig).
 		WithSignMode(signing.SignMode_SIGN_MODE_DIRECT)
 
 	// Sign Tx.
-	err := authclient.SignTx(txFactory, val.ClientCtx, val.Moniker, txBuilder, false, true)
+	err := authclient.SignTx(txFactory, val.GetClientCtx(), val.GetMoniker(), txBuilder, false, true)
 	assert.NilError(tb, err)
 
 	return txBuilder

@@ -47,7 +47,7 @@ func (s *IntegrationTestSuite) TestCLIQueryConn() {
 	s.T().Skip("data race in comet is causing this to fail")
 	var header metadata.MD
 
-	testClient := testdata.NewQueryClient(s.network.GetValidators()[0].ClientCtx)
+	testClient := testdata.NewQueryClient(s.network.GetValidators()[0].GetClientCtx())
 	res, err := testClient.Echo(context.Background(), &testdata.EchoRequest{Message: "hello"}, grpc.Header(&header))
 	s.NoError(err)
 
@@ -93,13 +93,13 @@ func (s *IntegrationTestSuite) TestQueryABCIHeight() {
 
 			val := s.network.GetValidators()[0]
 
-			clientCtx := val.ClientCtx
+			clientCtx := val.GetClientCtx()
 			clientCtx = clientCtx.WithHeight(tc.ctxHeight)
 
 			req := abci.RequestQuery{
 				Path:   fmt.Sprintf("store/%s/key", banktypes.StoreKey),
 				Height: tc.reqHeight,
-				Data:   address.MustLengthPrefix(val.Address),
+				Data:   address.MustLengthPrefix(val.GetAddress()),
 				Prove:  true,
 			}
 

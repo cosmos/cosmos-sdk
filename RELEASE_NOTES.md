@@ -11,7 +11,7 @@ Cosmos SDK v0.50 is a major release that includes a number of significant new fe
 * **ABCI 2.0 Integration:** Cosmos SDK v0.50 upgrades to CometBFT v0.38 and fully implements ABCI 2.0.
 * **Optimistic Execution:** Cosmos SDK v0.50 introduces Optimistic Execution, which allows transactions to be executed and committed without waiting for confirmation from all validators. This can significantly improve the performance of chains with a high volume of transactions.
 * **Modular SDK modules:** Cosmos SDK v0.50 starts to extract core modules away from the SDK. These are separately versioned and follow their own release cadence.
-* **IAVL v1:** Cosmos SDK v0.50 upgrades the IAVL Merkle tree implementation to v1, which provides a number of performance and security improvements.
+* **IAVL v1:** Cosmos SDK v0.50 upgrades the IAVL tree implementation to v1, which provides a number of performance and security improvements.
 * **AutoCLI:** Cosmos SDK v0.50 introduces AutoCLI, a library that makes it easier to create CLI commands for SDK applications.
 * **Sign Mode Textual:** Cosmos SDK v0.50 introduces a new sign mode that for hardware devices, as replacement of Amino JSON.
 * **Less boilerplate:** Cosmos SDK v0.50 requires less boilerplate in general for modules code and applications. Be sure to read the [UPGRADING.md](https://github.com/cosmos/cosmos-sdk/blob/release/v0.50.x/UPGRADING.md) to take advantage of these improvements.
@@ -44,7 +44,7 @@ The further decoupling of other core modules is planned for the next release.
 
 Cosmos SDK v0.50 has decoupled its store from the SDK. The store is now versionned separately and follows its own release cadence.
 
-Store v1 upgrades the IAVL Merkle tree implementation to v1. IAVL v1 provides a number of performance improvements.
+Store v1 upgrades the IAVL tree implementation to v1. IAVL v1 provides a number of performance improvements.
 Read more about it in the [IAVL repo](https://github.com/cosmos/iavl/releases/tag/v1.0.0).
 
 ### AutoCLI
@@ -55,7 +55,8 @@ Read more about it in the [AutoCLI docs](https://docs.cosmos.network/v0.50/learn
 
 ### Sign Mode Textual
 
-Cosmos SDK v0.50 introduces a new sign mode mainly for hardware devices, as replacement of Amino JSON.
+Cosmos SDK v0.50 introduces a new sign mode mainly for hardware wallets, as replacement of Amino JSON.
+Never leak again that you are signing from a Ledger device and sign with Sign Mode Textual everywhere.
 
 ### Less Boilerplate
 

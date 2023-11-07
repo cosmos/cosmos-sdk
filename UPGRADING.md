@@ -58,6 +58,20 @@ Most of Cosmos SDK modules have migrated to [collections](https://docs.cosmos.ne
 Many functions have been removed due to this changes as the API can be smaller thanks to collections.
 For modules that have migrated, verify you are checking against `collections.ErrNotFound` when applicable.
 
+#### `x/authz`
+
+Authz was spun out into its own `go.mod`. To import it use `cosmossdk.io/x/authz`
+
+#### `x/bank`
+
+Bank was spun out into its own `go.mod`. To import it use `cosmossdk.io/x/bank`
+
+#### `x/distribution`
+
+Distribution was spun out into its own `go.mod`. To import it use `cosmossdk.io/x/distribution`
+
+The existing chains using x/distribution module needs to add the new x/protocolpool module.
+
 #### `x/group`
 
 Group was spun out into its own `go.mod`. To import it use `cosmossdk.io/x/group`
@@ -66,11 +80,18 @@ Group was spun out into its own `go.mod`. To import it use `cosmossdk.io/x/group
 
 Gov was spun out into its own `go.mod`. To import it use `cosmossdk.io/x/gov`
 
-#### `x/distribution`
+#### `x/mint`
 
-Distribution was spun out into its own `go.mod`. To import it use `cosmossdk.io/x/distribution`
+Mint was spun out into its own `go.mod`. To import it use `cosmossdk.io/x/mint`
 
-The existing chains using x/distribution module needs to add the new x/protocolpool module.
+#### `x/slashing`
+
+Slashing was spun out into its own `go.mod`. To import it use `cosmossdk.io/x/slashing`
+
+#### `x/staking`
+
+Staking was spun out into its own `go.mod`. To import it use `cosmossdk.io/x/staking`
+
 
 #### `x/params`
 

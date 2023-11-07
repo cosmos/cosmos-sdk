@@ -6,13 +6,13 @@ import (
 	"github.com/spf13/cobra"
 
 	sdkmath "cosmossdk.io/math"
+	"cosmossdk.io/x/bank/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
-	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 var FlagSplit = "split"

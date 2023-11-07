@@ -81,6 +81,7 @@ func defaultConfig() *Config {
 			"upgrade",
 			"vesting",
 			"circuit",
+			"protocolpool",
 		},
 		InitGenesisOrder: []string{
 			"auth",
@@ -259,8 +260,8 @@ func MintModule() ModuleOption {
 			Config: appconfig.WrapAny(&mintmodulev1.Module{}),
 			GolangBindings: []*appv1alpha1.GolangBinding{
 				{
-					InterfaceType:  "github.com/cosmos/cosmos-sdk/x/mint/types/types.StakingKeeper",
-					Implementation: "github.com/cosmos/cosmos-sdk/x/staking/keeper/*keeper.Keeper",
+					InterfaceType:  "cosmossdk.io/x/mint/types/types.StakingKeeper",
+					Implementation: "cosmossdk.io/x/staking/keeper/*keeper.Keeper",
 				},
 			},
 		}

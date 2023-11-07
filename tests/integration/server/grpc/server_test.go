@@ -53,7 +53,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 	val0 := s.network.GetValidators()[0]
 	s.conn, err = grpc.Dial(
-		val0.AppConfig.GRPC.Address,
+		val0.GetAppConfig().GRPC.Address,
 		grpc.WithInsecure(), //nolint:staticcheck // ignore SA1019, we don't need to use a secure connection for tests
 		grpc.WithDefaultCallOptions(grpc.ForceCodec(codec.NewProtoCodec(s.cfg.InterfaceRegistry).GRPCCodec())),
 	)
@@ -83,7 +83,7 @@ func (s *IntegrationTestSuite) TestGRPCServer_BankBalance() {
 	var header metadata.MD
 	bankRes, err := bankClient.Balance(
 		context.Background(),
-		&banktypes.QueryBalanceRequest{Address: val0.Address.String(), Denom: denom},
+		&banktypes.QueryBalanceRequest{Address: val0.GetAddress().String(), Denom: denom},
 		grpc.Header(&header), // Also fetch grpc header
 	)
 	s.Require().NoError(err)
@@ -97,7 +97,7 @@ func (s *IntegrationTestSuite) TestGRPCServer_BankBalance() {
 	// Request metadata should work
 	_, err = bankClient.Balance(
 		metadata.AppendToOutgoingContext(context.Background(), grpctypes.GRPCBlockHeightHeader, "1"), // Add metadata to request
-		&banktypes.QueryBalanceRequest{Address: val0.Address.String(), Denom: denom},
+		&banktypes.QueryBalanceRequest{Address: val0.GetAddress().String(), Denom: denom},
 		grpc.Header(&header),
 	)
 	s.Require().NoError(err)
@@ -168,7 +168,7 @@ func (s *IntegrationTestSuite) TestGRPCServer_BroadcastTx() {
 
 	txBuilder := s.mkTxBuilder()
 
-	txBytes, err := val0.ClientCtx.TxConfig.TxEncoder()(txBuilder.GetTx())
+	txBytes, err := val0.GetClientCtx().TxConfig.TxEncoder()(txBuilder.GetTx())
 	s.Require().NoError(err)
 
 	// Broadcast the tx via gRPC.
@@ -220,7 +220,7 @@ func (s *IntegrationTestSuite) TestGRPCUnpacker() {
 	ir := s.cfg.InterfaceRegistry
 	queryClient := stakingtypes.NewQueryClient(s.conn)
 	validator, err := queryClient.Validator(context.Background(),
-		&stakingtypes.QueryValidatorRequest{ValidatorAddr: s.network.GetValidators()[0].ValAddress.String()})
+		&stakingtypes.QueryValidatorRequest{ValidatorAddr: s.network.GetValidators()[0].GetValAddress().String()})
 	require.NoError(s.T(), err)
 
 	// no unpacked interfaces yet, so ConsAddr will be nil
@@ -242,13 +242,13 @@ func (s *IntegrationTestSuite) mkTxBuilder() client.TxBuilder {
 	s.Require().NoError(s.network.WaitForNextBlock())
 
 	// prepare txBuilder with msg
-	txBuilder := val.ClientCtx.TxConfig.NewTxBuilder()
+	txBuilder := val.GetClientCtx().TxConfig.NewTxBuilder()
 	feeAmount := sdk.Coins{sdk.NewInt64Coin(s.cfg.BondDenom, 10)}
 	gasLimit := testdata.NewTestGasLimit()
 	s.Require().NoError(
 		txBuilder.SetMsgs(&banktypes.MsgSend{
-			FromAddress: val.Address.String(),
-			ToAddress:   val.Address.String(),
+			FromAddress: val.GetAddress().String(),
+			ToAddress:   val.GetAddress().String(),
 			Amount:      sdk.Coins{sdk.NewInt64Coin(s.cfg.BondDenom, 10)},
 		}),
 	)
@@ -258,13 +258,13 @@ func (s *IntegrationTestSuite) mkTxBuilder() client.TxBuilder {
 
 	// setup txFactory
 	txFactory := clienttx.Factory{}.
-		WithChainID(val.ClientCtx.ChainID).
-		WithKeybase(val.ClientCtx.Keyring).
-		WithTxConfig(val.ClientCtx.TxConfig).
+		WithChainID(val.GetClientCtx().ChainID).
+		WithKeybase(val.GetClientCtx().Keyring).
+		WithTxConfig(val.GetClientCtx().TxConfig).
 		WithSignMode(signing.SignMode_SIGN_MODE_DIRECT)
 
 	// Sign Tx.
-	err := authclient.SignTx(txFactory, val.ClientCtx, val.Moniker, txBuilder, false, true)
+	err := authclient.SignTx(txFactory, val.GetClientCtx(), val.Moniker, txBuilder, false, true)
 	s.Require().NoError(err)
 
 	return txBuilder

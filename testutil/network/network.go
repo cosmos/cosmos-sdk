@@ -682,7 +682,7 @@ func (n *Network) WaitForHeight(h int64) (int64, error) {
 	return n.WaitForHeightWithTimeout(h, 10*time.Second)
 }
 
-func (n *Network) GetValidators() []*Validator {
+func (n *Network) GetValidators() []ValidatorI {
 	return n.Validators
 }
 

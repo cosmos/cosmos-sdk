@@ -87,7 +87,7 @@ func (s *E2ETestSuite) TestQueryGrantGRPC() {
 func (s *E2ETestSuite) TestQueryGrantsGRPC() {
 	val := s.network.GetValidators()[0]
 	grantee := s.grantee[1]
-	grantsURL := val.APIAddress + "/cosmos/authz/v1beta1/grants?granter=%s&grantee=%s"
+	grantsURL := val.GetAppConfig().API.Address + "/cosmos/authz/v1beta1/grants?granter=%s&grantee=%s"
 	testCases := []struct {
 		name      string
 		url       string

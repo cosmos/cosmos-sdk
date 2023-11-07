@@ -49,6 +49,7 @@ type Validator struct {
 // ValidatorI expose a validator's context and configuration
 type ValidatorI interface {
 	GetCtx() *server.Context
+	GetClientCtx() client.Context
 	GetAppConfig() *srvconfig.Config
 	GetAddress() sdk.AccAddress
 	GetValAddress() sdk.ValAddress
@@ -62,6 +63,10 @@ func (v Validator) GetCtx() *server.Context {
 
 func (v Validator) GetAppConfig() *srvconfig.Config {
 	return v.AppConfig
+}
+
+func (v Validator) GetClientCtx() client.Context {
+	return v.ClientCtx
 }
 
 func (v Validator) GetAddress() sdk.AccAddress {

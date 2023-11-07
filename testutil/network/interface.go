@@ -7,7 +7,7 @@ import "time"
 // if used there is a requirement to expose query and tx client for the nodes
 type NetworkI interface {
 	// GetValidators returns the validators in the network
-	GetValidators() []*Validator
+	GetValidators() []ValidatorI
 	// WaitForHeight waits for the network to reach the given height
 	WaitForNextBlock() error
 	// WaitForHeight waits for the network to reach the given height

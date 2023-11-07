@@ -9,7 +9,7 @@ require (
 	cosmossdk.io/core v0.12.0
 	cosmossdk.io/depinject v1.0.0-alpha.4
 	cosmossdk.io/log v1.2.1
-	cosmossdk.io/math v1.1.3-rc.1
+	cosmossdk.io/math v1.2.0
 	cosmossdk.io/store v1.0.0
 	cosmossdk.io/tools/confix v0.0.0-20230613133644-0a778132a60f
 	cosmossdk.io/x/circuit v0.0.0-20230613133644-0a778132a60f
@@ -36,6 +36,7 @@ require (
 require cosmossdk.io/x/accounts v0.0.0-20231013072015-ec9bcc41ef9c
 
 require (
+	cosmossdk.io/x/auth v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/authz v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/bank v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/distribution v0.0.0-20230925135524-a1bc045b3190
@@ -219,6 +220,7 @@ replace (
 	cosmossdk.io/client/v2 => ../client/v2
 	cosmossdk.io/tools/confix => ../tools/confix
 	cosmossdk.io/x/accounts => ../x/accounts
+	cosmossdk.io/x/auth => ../x/auth
 	cosmossdk.io/x/authz => ../x/authz
 	cosmossdk.io/x/bank => ../x/bank
 	cosmossdk.io/x/circuit => ../x/circuit

@@ -13,6 +13,7 @@ import (
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
+	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/circuit/keeper"
 	"cosmossdk.io/x/circuit/types"
 
@@ -23,7 +24,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // ConsensusVersion defines the current circuit module consensus version.

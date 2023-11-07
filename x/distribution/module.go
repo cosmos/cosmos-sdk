@@ -12,6 +12,7 @@ import (
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
+	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/distribution/client/cli"
 	"cosmossdk.io/x/distribution/keeper"
 	"cosmossdk.io/x/distribution/simulation"
@@ -24,7 +25,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // ConsensusVersion defines the current x/distribution module consensus version.

@@ -8,8 +8,9 @@ require (
 	cosmossdk.io/depinject v1.0.0-alpha.4
 	cosmossdk.io/errors v1.0.0
 	cosmossdk.io/log v1.2.1
-	cosmossdk.io/math v1.1.3-rc.1
+	cosmossdk.io/math v1.2.0
 	cosmossdk.io/store v1.0.0
+	cosmossdk.io/x/auth v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/authz v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/bank v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/gov v0.0.0-20230925135524-a1bc045b3190
@@ -167,11 +168,13 @@ require (
 replace github.com/cosmos/cosmos-sdk => ../../
 
 replace (
+	cosmossdk.io/x/auth => ../auth
 	cosmossdk.io/x/authz => ../authz
 	cosmossdk.io/x/bank => ../bank
 	cosmossdk.io/x/distribution => ../distribution
 	cosmossdk.io/x/gov => ../gov
 	cosmossdk.io/x/mint => ../mint
+	cosmossdk.io/x/protocolpool => ../protocolpool
 	cosmossdk.io/x/slashing => ../slashing
 	cosmossdk.io/x/staking => ../staking
 )

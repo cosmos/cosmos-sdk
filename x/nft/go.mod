@@ -8,7 +8,7 @@ require (
 	cosmossdk.io/depinject v1.0.0-alpha.4
 	cosmossdk.io/errors v1.0.0
 	cosmossdk.io/log v1.2.1
-	cosmossdk.io/math v1.1.3-rc.1
+	cosmossdk.io/math v1.2.0
 	cosmossdk.io/store v1.0.0
 	cosmossdk.io/x/bank v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/mint v0.0.0-00010101000000-000000000000
@@ -27,6 +27,7 @@ require (
 require (
 	cosmossdk.io/collections v0.4.0 // indirect
 	cosmossdk.io/x/distribution v0.0.0-20230925135524-a1bc045b3190 // indirect
+	cosmossdk.io/x/auth v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/tx v0.12.0 // indirect
 	filippo.io/edwards25519 v1.0.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
@@ -162,10 +163,12 @@ require (
 replace github.com/cosmos/cosmos-sdk => ../../.
 
 replace (
+	cosmossdk.io/x/auth => ../auth
 	cosmossdk.io/x/bank => ../bank
 	cosmossdk.io/x/distribution => ../distribution
 	cosmossdk.io/x/gov => ../gov
 	cosmossdk.io/x/mint => ../mint
+	cosmossdk.io/x/protocolpool => ../protocolpool
 	cosmossdk.io/x/slashing => ../slashing
 	cosmossdk.io/x/staking => ../staking
 )

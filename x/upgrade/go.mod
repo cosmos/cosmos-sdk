@@ -36,7 +36,7 @@ require (
 	cloud.google.com/go/iam v1.1.3 // indirect
 	cloud.google.com/go/storage v1.33.0 // indirect
 	cosmossdk.io/collections v0.4.0 // indirect
-	cosmossdk.io/math v1.1.3-rc.1 // indirect
+	cosmossdk.io/math v1.2.0 // indirect
 	cosmossdk.io/x/bank v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/x/tx v0.12.0 // indirect

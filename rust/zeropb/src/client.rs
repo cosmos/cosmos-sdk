@@ -7,6 +7,4 @@ pub trait ClientConn<'a, Ctx, Err> {
 }
 
 #[cfg(test)]
-mod tests {
-
-}
+mod tests {}

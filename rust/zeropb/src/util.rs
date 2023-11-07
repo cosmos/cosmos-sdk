@@ -3,13 +3,13 @@ use crate::error::Error;
 pub(crate) const MAX_EXTENT: usize = 0x10000 - 2;
 
 #[inline]
-pub(crate) fn resolve_rel_ptr(base: *const u8, offset: i16, min_len: u16) -> usize {
+pub(crate) fn resolve_rel_ptr(base: *const u8, offset: i16, min_len: u16) -> *const u8 {
     let buf_start = base as usize & !0xFFFF;
     let target = (base as isize + offset as isize) as usize;
     assert!(target >= buf_start);
     let buf_end = buf_start + 0xFFFF - 2;
     assert!((target + min_len as usize) < buf_end);
-    target
+    target as *const u8
 }
 
 #[inline]
@@ -19,7 +19,11 @@ pub(crate) unsafe fn resolve_start_extent(base_ptr: *const u8) -> (usize, *mut u
 }
 
 #[inline]
-pub(crate) unsafe fn alloc_rel_ptr(base_ptr: *const u8, len: usize, align: usize) -> Result<(i16, *mut ()), Error> {
+pub(crate) unsafe fn alloc_rel_ptr(
+    base_ptr: *const u8,
+    len: usize,
+    align: usize,
+) -> Result<(i16, *mut ()), Error> {
     let (start, extent_ptr) = resolve_start_extent(base_ptr);
     let alloc_start = (*extent_ptr) as usize;
     // align alloc_start to align

@@ -1,5 +1,5 @@
-use core::marker::PhantomData;
 use crate::zerocopy::ZeroCopy;
+use core::marker::PhantomData;
 
 #[repr(C)]
 pub struct Enum<T> {
@@ -7,7 +7,7 @@ pub struct Enum<T> {
     _phantom: PhantomData<T>,
 }
 
-unsafe impl <T: ZeroCopyEnum> ZeroCopy for Enum<T> {}
+unsafe impl<T: ZeroCopyEnum> ZeroCopy for Enum<T> {}
 
 pub unsafe trait ZeroCopyEnum: Copy + Into<u8> + TryFrom<u8> {
     const MAX_VALUE: u8;
@@ -30,14 +30,18 @@ impl<T: ZeroCopyEnum> Enum<T> {
 
 #[cfg(test)]
 mod tests {
+    use crate::r#enum::{Enum, ZeroCopyEnum};
     use core::marker::PhantomData;
     use core::mem::transmute;
     use num_enum::{IntoPrimitive, TryFromPrimitive};
-    use crate::r#enum::{Enum, ZeroCopyEnum};
 
     #[repr(u8)]
     #[derive(Clone, Copy, IntoPrimitive, TryFromPrimitive, Eq, PartialEq, Debug)]
-    enum ABC { A, B, C }
+    enum ABC {
+        A,
+        B,
+        C,
+    }
 
     unsafe impl ZeroCopyEnum for ABC {
         const MAX_VALUE: u8 = 2;
@@ -45,7 +49,10 @@ mod tests {
 
     #[test]
     fn test_good() {
-        let mut e = Enum::<ABC> { value: ABC::A, _phantom: PhantomData };
+        let mut e = Enum::<ABC> {
+            value: ABC::A,
+            _phantom: PhantomData,
+        };
         assert_eq!(e.get(), Ok(ABC::A));
         e.set(ABC::B);
         assert_eq!(e.get(), Ok(ABC::B));

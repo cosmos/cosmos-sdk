@@ -6,30 +6,32 @@ extern crate alloc;
 extern crate core;
 
 mod zerocopy;
-pub use zerocopy::{ZeroCopy};
+pub use zerocopy::ZeroCopy;
 mod root;
-pub use root::{Root};
-mod util;
+pub use root::Root;
 mod error;
-pub use error::{Error};
+mod util;
+pub use error::Error;
 mod str;
 pub use str::{Str, StrWriter};
 mod bytes;
 pub use bytes::{Bytes, BytesWriter};
-mod repeated;
-mod oneof;
-mod r#enum;
-mod ptr;
-mod server;
-mod wasm;
-mod status;
 mod client;
+mod r#enum;
+mod oneof;
+mod ptr;
+mod repeated;
+mod server;
+mod status;
+mod wasm;
+mod std;
+
 pub use client::{ClientConn, Handler};
 
 #[cfg(test)]
 mod tests {
-    use core::fmt::Write;
     use core::borrow::Borrow;
+    use core::fmt::Write;
 
     use crate::root::Root;
     use crate::str::Str;

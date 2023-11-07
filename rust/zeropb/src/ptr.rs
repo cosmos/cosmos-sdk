@@ -8,7 +8,7 @@ struct Ptr<T: ZeroCopy> {
     _phantom: PhantomData<T>,
 }
 
-unsafe impl <T: ZeroCopy> ZeroCopy for Ptr<T> {}
+unsafe impl<T: ZeroCopy> ZeroCopy for Ptr<T> {}
 
 // impl <T:ZeroCopy> Deref for Ptr<T> {
 //     type Target = T;

@@ -1,7 +1,7 @@
-use num_enum::{IntoPrimitive, TryFromPrimitive};
 use crate::r#enum::{Enum, ZeroCopyEnum};
 use crate::str::Str;
 use crate::zerocopy::ZeroCopy;
+use num_enum::{IntoPrimitive, TryFromPrimitive};
 
 #[repr(u8)]
 #[derive(Clone, Copy, IntoPrimitive, TryFromPrimitive, Eq, PartialEq, Debug)]

@@ -1,6 +1,6 @@
 use crate::root::RawRoot;
-use crate::{Root, ZeroCopy};
 use crate::status::Status;
+use crate::{Root, ZeroCopy};
 
 type Handler<Ctx, Err> = fn(Ctx, &RawRoot, &mut RawRoot) -> Result<(), Err>;
 
@@ -18,7 +18,7 @@ struct Responder<Res> {
     _phantom: core::marker::PhantomData<Res>,
 }
 
-impl <Res: ZeroCopy> Responder<Res> {
+impl<Res: ZeroCopy> Responder<Res> {
     fn success(self) -> Root<Res> {
         todo!()
     }

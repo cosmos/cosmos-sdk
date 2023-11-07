@@ -1,9 +1,5 @@
 use core::marker::PhantomData;
-use core::{
-    borrow::Borrow,
-    fmt::Write,
-    str::from_utf8_unchecked,
-};
+use core::{borrow::Borrow, fmt::Write, str::from_utf8_unchecked};
 
 use crate::bytes::{Bytes, BytesWriter};
 use crate::error::Error;
@@ -29,20 +25,16 @@ impl Str {
 
 impl<'a> Borrow<str> for Str {
     fn borrow(&self) -> &str {
-        unsafe {
-            from_utf8_unchecked(self.ptr.borrow())
-        }
+        unsafe { from_utf8_unchecked(self.ptr.borrow()) }
     }
 }
-
 
 pub struct StrWriter<'a> {
     bz: BytesWriter<'a>,
 }
 
-impl <'a> Write for StrWriter<'a> {
+impl<'a> Write for StrWriter<'a> {
     fn write_str(&mut self, s: &str) -> core::fmt::Result {
         self.bz.write(s.as_bytes()).map_err(|_| core::fmt::Error)
     }
 }
-

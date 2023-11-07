@@ -1,12 +1,7 @@
-use core::{
-    borrow::Borrow,
-    marker::PhantomData,
-    ptr,
-    slice::from_raw_parts,
-};
+use core::{borrow::Borrow, marker::PhantomData, ptr, slice::from_raw_parts};
 
 use crate::error::Error;
-use crate::util::{alloc_rel_ptr, MAX_EXTENT, resolve_rel_ptr, resolve_start_extent};
+use crate::util::{alloc_rel_ptr, resolve_rel_ptr, resolve_start_extent, MAX_EXTENT};
 use crate::zerocopy::ZeroCopy;
 
 #[repr(C)]
@@ -59,7 +54,7 @@ impl<'a> Borrow<[u8]> for Bytes {
         unsafe {
             let base = (self as *const Self).cast::<u8>();
             let target = resolve_rel_ptr(base, self.offset, self.length);
-            from_raw_parts(target as *const u8, self.length as usize)
+            from_raw_parts(target, self.length as usize)
         }
     }
 }
@@ -71,7 +66,7 @@ pub struct BytesWriter<'a> {
     last_extent: u16,
 }
 
-impl <'a> BytesWriter<'a> {
+impl<'a> BytesWriter<'a> {
     pub fn write(&mut self, content: &[u8]) -> Result<(), Error> {
         unsafe {
             let extent = *self.extent_ptr;

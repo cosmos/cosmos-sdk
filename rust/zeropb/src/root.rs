@@ -1,12 +1,12 @@
 use alloc::alloc::{alloc_zeroed, Layout};
 use alloc::boxed::Box;
+use core::marker::PhantomPinned;
 use core::{
     borrow::{Borrow, BorrowMut},
     marker::PhantomData,
     mem::size_of,
     ops::{Deref, DerefMut},
 };
-use core::marker::PhantomPinned;
 
 use crate::error::Error;
 use crate::util::MAX_EXTENT;
@@ -52,23 +52,19 @@ impl<T: ZeroCopy> Root<T> {
         return Ok(Self {
             buf: ptr,
             _phantom: PhantomData,
-        })
+        });
     }
 }
 
 impl<T: ZeroCopy> Borrow<T> for Root<T> {
     fn borrow(&self) -> &T {
-        unsafe {
-            &*self.buf.cast::<T>()
-        }
+        unsafe { &*self.buf.cast::<T>() }
     }
 }
 
 impl<T: ZeroCopy> BorrowMut<T> for Root<T> {
     fn borrow_mut(&mut self) -> &mut T {
-        unsafe {
-            &mut *self.buf.cast::<T>()
-        }
+        unsafe { &mut *self.buf.cast::<T>() }
     }
 }
 
@@ -76,17 +72,12 @@ impl<T: ZeroCopy> Deref for Root<T> {
     type Target = T;
 
     fn deref(&self) -> &Self::Target {
-        unsafe {
-            &*self.buf.cast::<T>()
-        }
+        unsafe { &*self.buf.cast::<T>() }
     }
 }
 
 impl<T: ZeroCopy> DerefMut for Root<T> {
     fn deref_mut(&mut self) -> &mut Self::Target {
-        unsafe {
-            &mut *self.buf.cast::<T>()
-        }
+        unsafe { &mut *self.buf.cast::<T>() }
     }
 }
-

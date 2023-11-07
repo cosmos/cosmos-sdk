@@ -8,11 +8,11 @@ import (
 	"google.golang.org/grpc/status"
 
 	"cosmossdk.io/errors"
+	"cosmossdk.io/runtime"
 	"cosmossdk.io/store/prefix"
 	"cosmossdk.io/x/authz"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/types/query"
 )
 

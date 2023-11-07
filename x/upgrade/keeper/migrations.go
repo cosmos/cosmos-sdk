@@ -5,10 +5,10 @@ import (
 	"fmt"
 
 	storetypes "cosmossdk.io/core/store"
+	"cosmossdk.io/runtime"
 	"cosmossdk.io/store/prefix"
 	"cosmossdk.io/x/upgrade/types"
 
-	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 

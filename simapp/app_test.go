@@ -16,6 +16,7 @@ import (
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
+	"cosmossdk.io/runtime"
 	"cosmossdk.io/x/accounts"
 	"cosmossdk.io/x/auth"
 	"cosmossdk.io/x/auth/vesting"
@@ -33,7 +34,6 @@ import (
 	"cosmossdk.io/x/upgrade"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"

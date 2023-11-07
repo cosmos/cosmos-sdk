@@ -4,13 +4,13 @@ import (
 	"context"
 
 	corestoretypes "cosmossdk.io/core/store"
+	"cosmossdk.io/runtime"
 	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/authz"
 	"cosmossdk.io/x/authz/internal/conv"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 

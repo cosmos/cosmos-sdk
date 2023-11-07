@@ -7,7 +7,7 @@ import "cosmos/app/v1alpha1/module.proto";
 // Module is the config object for the runtime module.
 message Module {
   option (cosmos.app.v1alpha1.module) = {
-    go_import: "github.com/cosmos/cosmos-sdk/runtime"
+    go_import: "cosmossdk.io/runtime"
     use_package: {name: "cosmos.app.v1alpha1"}
   };
 

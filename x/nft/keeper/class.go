@@ -4,10 +4,9 @@ import (
 	"context"
 
 	"cosmossdk.io/errors"
+	"cosmossdk.io/runtime"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/nft"
-
-	"github.com/cosmos/cosmos-sdk/runtime"
 )
 
 // SaveClass defines a method for creating a new nft class

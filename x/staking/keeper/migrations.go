@@ -3,7 +3,8 @@ package keeper
 import (
 	v5 "cosmossdk.io/x/staking/migrations/v5"
 
-	"github.com/cosmos/cosmos-sdk/runtime"
+	"cosmossdk.io/runtime"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 

@@ -6,6 +6,7 @@ require (
 	cosmossdk.io/api v0.7.3-0.20231029200940-6af7f30bfd54
 	cosmossdk.io/core v0.12.0
 	cosmossdk.io/depinject v1.0.0-alpha.4
+	cosmossdk.io/runtime v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/bank v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/tx v0.12.0
 	github.com/cockroachdb/errors v1.11.1
@@ -160,6 +161,7 @@ require (
 replace github.com/cosmos/cosmos-sdk => ./../../
 
 replace (
+	cosmossdk.io/runtime => ./../../runtime
 	cosmossdk.io/x/auth => ./../../x/auth
 	cosmossdk.io/x/bank => ./../../x/bank
 	cosmossdk.io/x/distribution => ./../../x/distribution

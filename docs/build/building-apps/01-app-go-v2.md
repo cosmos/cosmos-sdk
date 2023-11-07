@@ -98,7 +98,7 @@ A more complete example of `app.yaml` can be found [here](https://github.com/cos
 ## `app_v2.go`
 
 `app_v2.go` is the place where `SimApp` is constructed. `depinject.Inject` facilitates that by automatically wiring the app modules and keepers, provided an application configuration `AppConfig` is provided. `SimApp` is constructed, when calling the injected `*runtime.AppBuilder`, with `appBuilder.Build(...)`.    
-In short `depinject` and the [`runtime` package](https://pkg.go.dev/github.com/cosmos/cosmos-sdk/runtime) abstract the wiring of the app, and the `AppBuilder` is the place where the app is constructed. [`runtime`](https://pkg.go.dev/github.com/cosmos/cosmos-sdk/runtime) takes care of registering the codecs, KV store, subspaces and instantiating `baseapp`.
+In short `depinject` and the [`runtime` package](https://pkg.go.dev/cosmossdk.io/runtime) abstract the wiring of the app, and the `AppBuilder` is the place where the app is constructed. [`runtime`](https://pkg.go.dev/cosmossdk.io/runtime) takes care of registering the codecs, KV store, subspaces and instantiating `baseapp`.
 
 ```go reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/simapp/app_v2.go#L101-L245

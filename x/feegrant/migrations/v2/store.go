@@ -4,11 +4,11 @@ import (
 	"context"
 
 	"cosmossdk.io/core/store"
+	"cosmossdk.io/runtime"
 	"cosmossdk.io/store/prefix"
 	"cosmossdk.io/x/feegrant"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/types"
 )
 

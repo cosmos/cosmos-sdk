@@ -28,6 +28,7 @@ import (
 	vestingmodulev1 "cosmossdk.io/api/cosmos/vesting/module/v1"
 	"cosmossdk.io/core/appconfig"
 	"cosmossdk.io/depinject"
+	"cosmossdk.io/runtime"
 	_ "cosmossdk.io/x/auth/tx/config" // import for side-effects
 	authtypes "cosmossdk.io/x/auth/types"
 	_ "cosmossdk.io/x/auth/vesting" // import for side-effects
@@ -62,7 +63,6 @@ import (
 	_ "cosmossdk.io/x/upgrade" // import for side-effects
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 
-	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	_ "github.com/cosmos/cosmos-sdk/x/consensus" // import for side-effects
 	consensustypes "github.com/cosmos/cosmos-sdk/x/consensus/types"

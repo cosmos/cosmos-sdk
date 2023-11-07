@@ -13,6 +13,7 @@ use (
 	./log
 	./math
 	./orm
+	./runtime
 	./simapp
 	./tests
 	./tests/starship/tests

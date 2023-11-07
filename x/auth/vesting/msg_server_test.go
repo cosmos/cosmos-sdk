@@ -9,6 +9,7 @@ import (
 
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/math"
+	"cosmossdk.io/runtime"
 	storetypes "cosmossdk.io/store/types"
 	authcodec "cosmossdk.io/x/auth/codec"
 	authkeeper "cosmossdk.io/x/auth/keeper"
@@ -17,7 +18,6 @@ import (
 	vestingtestutil "cosmossdk.io/x/auth/vesting/testutil"
 	vestingtypes "cosmossdk.io/x/auth/vesting/types"
 
-	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"

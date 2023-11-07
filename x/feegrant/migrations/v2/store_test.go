@@ -8,6 +8,7 @@ import (
 
 	"cosmossdk.io/core/header"
 	sdkmath "cosmossdk.io/math"
+	"cosmossdk.io/runtime"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/feegrant"
 	v2 "cosmossdk.io/x/feegrant/migrations/v2"
@@ -15,7 +16,6 @@ import (
 
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"

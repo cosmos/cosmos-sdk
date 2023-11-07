@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/core/header"
+	"cosmossdk.io/runtime"
 	storetypes "cosmossdk.io/store/types"
 	authcodec "cosmossdk.io/x/auth/codec"
 	"cosmossdk.io/x/auth/keeper"
@@ -16,7 +17,6 @@ import (
 	"cosmossdk.io/x/auth/vesting/types"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"

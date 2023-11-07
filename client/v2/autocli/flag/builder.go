@@ -19,8 +19,7 @@ import (
 	"cosmossdk.io/client/v2/internal/flags"
 	"cosmossdk.io/client/v2/internal/util"
 	"cosmossdk.io/core/address"
-
-	"github.com/cosmos/cosmos-sdk/runtime"
+	"cosmossdk.io/runtime"
 )
 
 const (

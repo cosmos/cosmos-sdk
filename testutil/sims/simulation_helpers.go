@@ -10,10 +10,10 @@ import (
 	dbm "github.com/cosmos/cosmos-db"
 
 	"cosmossdk.io/log"
+	"cosmossdk.io/runtime"
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 	"github.com/cosmos/cosmos-sdk/types/module"

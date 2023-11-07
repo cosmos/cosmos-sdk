@@ -34,6 +34,7 @@ require (
 )
 
 require (
+	cosmossdk.io/runtime v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/auth v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/authz v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/bank v0.0.0-00010101000000-000000000000
@@ -216,6 +217,7 @@ require (
 replace (
 	cosmossdk.io/api => ../api
 	cosmossdk.io/client/v2 => ../client/v2
+	cosmossdk.io/runtime => ../runtime
 	cosmossdk.io/x/accounts => ../x/accounts
 	cosmossdk.io/x/auth => ../x/auth
 	cosmossdk.io/x/authz => ../x/authz

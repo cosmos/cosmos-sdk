@@ -12,6 +12,7 @@ import (
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
+	"cosmossdk.io/runtime"
 	_ "cosmossdk.io/x/auth"
 	authkeeper "cosmossdk.io/x/auth/keeper"
 	_ "cosmossdk.io/x/auth/tx/config"
@@ -29,7 +30,6 @@ import (
 	stakingkeeper "cosmossdk.io/x/staking/keeper"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"

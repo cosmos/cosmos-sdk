@@ -10,6 +10,7 @@ import (
 	"sort"
 	"strings"
 
+	sdkruntime "cosmossdk.io/runtime"
 	cfg "github.com/cometbft/cometbft/config"
 
 	bankexported "cosmossdk.io/x/bank/exported"
@@ -17,7 +18,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
-	sdkruntime "github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
 )

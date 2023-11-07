@@ -9,11 +9,11 @@ import (
 	"google.golang.org/grpc/status"
 
 	"cosmossdk.io/collections"
+	"cosmossdk.io/runtime"
 	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/staking/types"
 
-	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 )

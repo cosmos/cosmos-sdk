@@ -407,6 +407,42 @@ jobs:
         with:
           projectBaseDir: math/
 
+  test-runtime:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v4
+        with:
+          go-version: "1.21"
+          check-latest: true
+          cache: true
+          cache-dependency-path: runtime/go.sum
+      - uses: technote-space/get-diff-action@v6.1.2
+        id: git_diff
+        with:
+          PATTERNS: |
+            **/*.go
+            runtime/go.mod
+            runtime/go.sum
+      - name: tests runtime
+        if: env.GIT_DIFF
+        run: |
+          cd runtime
+          go test -mod=readonly -timeout 30m -coverprofile=coverage.out -covermode=atomic -tags='norace ledger test_ledger_mock' ./...
+      - name: tests runtime
+        if: env.GIT_DIFF
+        run: |
+          cd runtime
+          go test -mod=readonly -timeout 30m -tags='app_v1 norace ledger test_ledger_mock' ./...
+      - name: sonarcloud
+        if: ${{ env.GIT_DIFF && !github.event.pull_request.draft && env.SONAR_TOKEN != null }}
+        uses: SonarSource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          projectBaseDir: runtime/
+
   test-simapp:
     runs-on: ubuntu-latest
     steps:

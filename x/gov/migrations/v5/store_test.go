@@ -7,13 +7,13 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/collections"
+	"cosmossdk.io/runtime"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/bank"
 	"cosmossdk.io/x/gov"
 	v5 "cosmossdk.io/x/gov/migrations/v5"
 	v1 "cosmossdk.io/x/gov/types/v1"
 
-	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 )

@@ -7,9 +7,9 @@ import (
 	"github.com/spf13/cobra"
 
 	"cosmossdk.io/errors"
+	"cosmossdk.io/runtime"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"

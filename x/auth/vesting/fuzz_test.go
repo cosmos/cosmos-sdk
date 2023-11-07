@@ -10,6 +10,7 @@ import (
 
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/log"
+	"cosmossdk.io/runtime"
 	storetypes "cosmossdk.io/store/types"
 	authkeeper "cosmossdk.io/x/auth/keeper"
 	authtypes "cosmossdk.io/x/auth/types"
@@ -19,7 +20,6 @@ import (
 	banktypes "cosmossdk.io/x/bank/types"
 
 	"github.com/cosmos/cosmos-sdk/codec/address"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"

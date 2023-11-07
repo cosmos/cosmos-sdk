@@ -29,6 +29,7 @@ import (
 	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/math/unsafe"
+	"cosmossdk.io/runtime"
 	pruningtypes "cosmossdk.io/store/pruning/types"
 	_ "cosmossdk.io/x/auth"           // import auth as a blank
 	_ "cosmossdk.io/x/auth/tx/config" // import auth tx config as a blank
@@ -49,7 +50,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/server/api"
 	srvconfig "github.com/cosmos/cosmos-sdk/server/config"

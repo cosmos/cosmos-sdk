@@ -474,7 +474,7 @@ A new semantically versioned module config type should be created for each of th
 1:1 correspondence between the go module and module config type. This is the same practice should be followed for every 
 semantically versioned Cosmos SDK module as described in [ADR 057: App Wiring](./adr-057-app-wiring.md).
 
-Currently, `github.com/cosmos/cosmos-sdk/runtime` uses the protobuf config type `cosmos.app.runtime.v1alpha1.Module`.
+Currently, `cosmossdk.io/runtime` uses the protobuf config type `cosmos.app.runtime.v1alpha1.Module`.
 When we have a standalone v1 comet runtime, we should use a dedicated protobuf module config type such as
 `cosmos.runtime.comet.v1.Module1`. When we release v2 of the comet runtime (`cosmossdk.io/runtime/comet/v2`) we should
 have a corresponding `cosmos.runtime.comet.v2.Module` protobuf type.

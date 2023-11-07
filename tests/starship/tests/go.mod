@@ -14,6 +14,7 @@ replace (
 replace (
 	cosmossdk.io/api => ../../../api
 	cosmossdk.io/client/v2 => ../../../client/v2
+	cosmossdk.io/runtime => ../../../runtime
 	cosmossdk.io/simapp => ../../../simapp
 	cosmossdk.io/x/accounts => ../../../x/accounts
 	cosmossdk.io/x/auth => ../../../x/auth
@@ -58,6 +59,7 @@ require (
 	cosmossdk.io/core v0.12.0 // indirect
 	cosmossdk.io/depinject v1.0.0-alpha.4 // indirect
 	cosmossdk.io/errors v1.0.0 // indirect
+	cosmossdk.io/runtime v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/store v1.0.0 // indirect
 	cosmossdk.io/x/accounts v0.0.0-20231013072015-ec9bcc41ef9c // indirect
 	cosmossdk.io/x/authz v0.0.0-00010101000000-000000000000 // indirect

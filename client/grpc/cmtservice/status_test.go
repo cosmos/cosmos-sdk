@@ -21,7 +21,7 @@ func TestStatusCommand(t *testing.T) {
 	require.NoError(t, err)
 	require.NoError(t, network.WaitForNextBlock())
 
-	val0 := network.Validators[0]
+	val0 := network.GetValidators()[0]
 	cmd := server.StatusCommand()
 
 	out, err := clitestutil.ExecTestCLICmd(val0.ClientCtx, cmd, []string{})

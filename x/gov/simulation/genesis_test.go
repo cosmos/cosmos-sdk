@@ -6,10 +6,12 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"gotest.tools/v3/assert"
 
 	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/gov/simulation"
@@ -31,6 +33,7 @@ func TestRandomizedGenState(t *testing.T) {
 		Cdc:          cdc,
 		Rand:         r,
 		NumBonded:    3,
+		BondDenom:    sdk.DefaultBondDenom,
 		Accounts:     simtypes.RandomAccounts(r, 3),
 		InitialStake: sdkmath.NewInt(1000),
 		GenState:     make(map[string]json.RawMessage),
@@ -42,18 +45,23 @@ func TestRandomizedGenState(t *testing.T) {
 	simState.Cdc.MustUnmarshalJSON(simState.GenState[types.ModuleName], &govGenesis)
 
 	const (
-		tallyQuorum          = "0.400000000000000000"
-		tallyThreshold       = "0.539000000000000000"
-		tallyVetoThreshold   = "0.314000000000000000"
-		minInitialDepositDec = "0.590000000000000000"
+		tallyQuorum             = "0.466000000000000000"
+		tallyThreshold          = "0.485000000000000000"
+		tallyExpeditedThreshold = "0.511000000000000000"
+		tallyVetoThreshold      = "0.291000000000000000"
+		minInitialDepositDec    = "0.880000000000000000"
 	)
 
-	require.Equal(t, "905stake", govGenesis.Params.MinDeposit[0].String())
-	require.Equal(t, "77h26m10s", govGenesis.Params.MaxDepositPeriod.String())
-	require.Equal(t, float64(275567), govGenesis.Params.VotingPeriod.Seconds())
+	assert.Equal(t, "272stake", govGenesis.Params.MinDeposit[0].String())
+	assert.Equal(t, "800stake", govGenesis.Params.ExpeditedMinDeposit[0].String())
+	assert.Equal(t, "41h11m36s", govGenesis.Params.MaxDepositPeriod.String())
+	assert.Equal(t, float64(307362), govGenesis.Params.VotingPeriod.Seconds())
+	assert.Equal(t, float64(115820), govGenesis.Params.ExpeditedVotingPeriod.Seconds())
 	require.Equal(t, tallyQuorum, govGenesis.Params.Quorum)
 	require.Equal(t, tallyThreshold, govGenesis.Params.Threshold)
+	assert.Equal(t, tallyExpeditedThreshold, govGenesis.Params.ExpeditedThreshold)
 	require.Equal(t, tallyVetoThreshold, govGenesis.Params.VetoThreshold)
+	require.Equal(t, minInitialDepositDec, govGenesis.Params.MinInitialDepositRatio)
 	require.Equal(t, uint64(0x28), govGenesis.StartingProposalId)
 	require.Equal(t, []*v1.Deposit{}, govGenesis.Deposits)
 	require.Equal(t, []*v1.Vote{}, govGenesis.Votes)

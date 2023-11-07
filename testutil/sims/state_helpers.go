@@ -234,6 +234,7 @@ func AppStateRandomizedFn(
 		Accounts:     accs,
 		InitialStake: initialStake,
 		NumBonded:    numInitiallyBonded,
+		BondDenom:    sdk.DefaultBondDenom,
 		GenTimestamp: genesisTimestamp,
 	}
 

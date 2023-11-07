@@ -250,16 +250,28 @@ func (m *MockBankHooks) EXPECT() *MockBankHooksMockRecorder {
 	return m.recorder
 }
 
-// BeforeSend mocks base method.
-func (m *MockBankHooks) BeforeSend(ctx types.Context, from, to types.AccAddress, amount types.Coins) error {
+// BlockBeforeSend mocks base method.
+func (m *MockBankHooks) BlockBeforeSend(ctx types.Context, from, to types.AccAddress, amount types.Coins) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "BeforeSend", ctx, from, to, amount)
+	ret := m.ctrl.Call(m, "BlockBeforeSend", ctx, from, to, amount)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// BeforeSend indicates an expected call of BeforeSend.
-func (mr *MockBankHooksMockRecorder) BeforeSend(ctx, from, to, amount interface{}) *gomock.Call {
+// BlockBeforeSend indicates an expected call of BlockBeforeSend.
+func (mr *MockBankHooksMockRecorder) BlockBeforeSend(ctx, from, to, amount interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BeforeSend", reflect.TypeOf((*MockBankHooks)(nil).BeforeSend), ctx, from, to, amount)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BlockBeforeSend", reflect.TypeOf((*MockBankHooks)(nil).BlockBeforeSend), ctx, from, to, amount)
+}
+
+// TrackBeforeSend mocks base method.
+func (m *MockBankHooks) TrackBeforeSend(ctx types.Context, from, to types.AccAddress, amount types.Coins) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "TrackBeforeSend", ctx, from, to, amount)
+}
+
+// TrackBeforeSend indicates an expected call of TrackBeforeSend.
+func (mr *MockBankHooksMockRecorder) TrackBeforeSend(ctx, from, to, amount interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TrackBeforeSend", reflect.TypeOf((*MockBankHooks)(nil).TrackBeforeSend), ctx, from, to, amount)
 }

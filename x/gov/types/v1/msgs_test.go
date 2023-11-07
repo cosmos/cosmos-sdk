@@ -144,26 +144,25 @@ func TestMsgSubmitProposal_ValidateBasic(t *testing.T) {
 	require.NoError(t, err)
 
 	tests := []struct {
-		name           string
-		proposer       string
-		initialDeposit sdk.Coins
-		messages       []sdk.Msg
-		metadata       string
-		title          string
-		summary        string
-		expErr         bool
+		name                     string
+		proposer                 string
+		initialDeposit           sdk.Coins
+		messages                 []sdk.Msg
+		metadata, title, summary string
+		expedited                bool
+		expErr                   bool
 	}{
-		{"invalid addr", "", coinsPos, []sdk.Msg{msg1}, metadata, "Title", "Summary", true},
-		{"empty msgs and metadata", addrs[0].String(), coinsPos, nil, "", "Title", "Summary", true},
-		{"empty title and summary", addrs[0].String(), coinsPos, nil, "", "", "", true},
-		{"invalid msg", addrs[0].String(), coinsPos, []sdk.Msg{msg1, msg2}, metadata, "Title", "Summary", true},
-		{"valid with no Msg", addrs[0].String(), coinsPos, nil, metadata, "Title", "Summary", false},
-		{"valid with no metadata", addrs[0].String(), coinsPos, []sdk.Msg{msg1}, "", "Title", "Summary", false},
-		{"valid with everything", addrs[0].String(), coinsPos, []sdk.Msg{msg1}, metadata, "Title", "Summary", false},
+		{"invalid addr", "", coinsPos, []sdk.Msg{msg1}, metadata, "Title", "Summary", false, true},
+		{"empty msgs and metadata", addrs[0].String(), coinsPos, nil, "", "Title", "Summary", false, true},
+		{"empty title and summary", addrs[0].String(), coinsPos, nil, "", "", "", false, true},
+		{"invalid msg", addrs[0].String(), coinsPos, []sdk.Msg{msg1, msg2}, metadata, "Title", "Summary", false, true},
+		{"valid with no Msg", addrs[0].String(), coinsPos, nil, metadata, "Title", "Summary", false, false},
+		{"valid with no metadata", addrs[0].String(), coinsPos, []sdk.Msg{msg1}, "", "Title", "Summary", false, false},
+		{"valid with everything", addrs[0].String(), coinsPos, []sdk.Msg{msg1}, metadata, "Title", "Summary", true, false},
 	}
 
 	for _, tc := range tests {
-		msg, err := v1.NewMsgSubmitProposal(tc.messages, tc.initialDeposit, tc.proposer, tc.metadata, tc.title, tc.summary)
+		msg, err := v1.NewMsgSubmitProposal(tc.messages, tc.initialDeposit, tc.proposer, tc.metadata, tc.title, tc.summary, tc.expedited)
 		require.NoError(t, err)
 		if tc.expErr {
 			require.Error(t, msg.ValidateBasic(), "test: %s", tc.name)
@@ -180,6 +179,7 @@ func TestMsgSubmitProposal_GetSignBytes(t *testing.T) {
 		proposal  []sdk.Msg
 		title     string
 		summary   string
+		expedited bool
 		expSignBz string
 	}{
 		{
@@ -187,6 +187,7 @@ func TestMsgSubmitProposal_GetSignBytes(t *testing.T) {
 			[]sdk.Msg{v1.NewMsgVote(addrs[0], 1, v1.OptionYes, "")},
 			"gov/MsgVote",
 			"Proposal for a governance vote msg",
+			false,
 			`{"type":"cosmos-sdk/v1/MsgSubmitProposal","value":{"initial_deposit":[],"messages":[{"type":"cosmos-sdk/v1/MsgVote","value":{"option":1,"proposal_id":"1","voter":"cosmos1w3jhxap3gempvr"}}],"summary":"Proposal for a governance vote msg","title":"gov/MsgVote"}}`,
 		},
 		{
@@ -194,13 +195,14 @@ func TestMsgSubmitProposal_GetSignBytes(t *testing.T) {
 			[]sdk.Msg{banktypes.NewMsgSend(addrs[0], addrs[0], sdk.NewCoins())},
 			"bank/MsgSend",
 			"Proposal for a bank msg send",
+			false,
 			fmt.Sprintf(`{"type":"cosmos-sdk/v1/MsgSubmitProposal","value":{"initial_deposit":[],"messages":[{"type":"cosmos-sdk/MsgSend","value":{"amount":[],"from_address":"%s","to_address":"%s"}}],"summary":"Proposal for a bank msg send","title":"bank/MsgSend"}}`, addrs[0], addrs[0]),
 		},
 	}
 
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
-			msg, err := v1.NewMsgSubmitProposal(tc.proposal, sdk.NewCoins(), sdk.AccAddress{}.String(), "", tc.title, tc.summary)
+			msg, err := v1.NewMsgSubmitProposal(tc.proposal, sdk.NewCoins(), sdk.AccAddress{}.String(), "", tc.title, tc.summary, tc.expedited)
 			require.NoError(t, err)
 			var bz []byte
 			require.NotPanics(t, func() {

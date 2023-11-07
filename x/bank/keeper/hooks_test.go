@@ -55,6 +55,7 @@ func createTestSuite(t *testing.T, genesisAccounts []authtypes.GenesisAccount) t
 		configurator.ConsensusModule(),
 		configurator.BankModule(),
 		configurator.GovModule(),
+		configurator.ConsensusModule(),
 	),
 		startupCfg, &res.BankKeeper, &res.AccountKeeper, &res.StakingKeeper)
 

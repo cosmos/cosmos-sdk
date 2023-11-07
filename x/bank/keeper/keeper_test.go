@@ -181,7 +181,7 @@ func (suite *KeeperTestSuite) mockDelegateCoins(ctx sdk.Context, acc authtypes.A
 	if ok {
 		suite.authKeeper.EXPECT().SetAccount(ctx, vacc)
 	}
-	suite.authKeeper.EXPECT().GetAccount(ctx, acc.GetAddress()).Return(acc)
+	suite.authKeeper.EXPECT().GetAccount(ctx, acc.GetAddress()).Return(acc).Times(2)
 	suite.authKeeper.EXPECT().GetAccount(ctx, mAcc.GetAddress()).Return(mAcc)
 }
 
@@ -1014,17 +1014,22 @@ func (suite *KeeperTestSuite) TestDelegateCoins_Invalid() {
 	origCoins := sdk.NewCoins(newFooCoin(100))
 	delCoins := sdk.NewCoins(newFooCoin(50))
 
+	acc0 := authtypes.NewBaseAccountWithAddress(accAddrs[0])
+
 	suite.authKeeper.EXPECT().GetAccount(ctx, holderAcc.GetAddress()).Return(nil)
 	require.Error(suite.bankKeeper.DelegateCoins(ctx, accAddrs[0], holderAcc.GetAddress(), delCoins))
 
 	suite.authKeeper.EXPECT().GetAccount(ctx, holderAcc.GetAddress()).Return(holderAcc)
+	suite.authKeeper.EXPECT().GetAccount(ctx, accAddrs[0]).Return(acc0)
 	invalidCoins := sdk.Coins{sdk.Coin{Denom: "fooDenom", Amount: sdk.NewInt(-50)}}
 	require.Error(suite.bankKeeper.DelegateCoins(ctx, accAddrs[0], holderAcc.GetAddress(), invalidCoins))
 
 	suite.authKeeper.EXPECT().GetAccount(ctx, holderAcc.GetAddress()).Return(holderAcc)
+	suite.authKeeper.EXPECT().GetAccount(ctx, accAddrs[0]).Return(acc0)
 	require.Error(suite.bankKeeper.DelegateCoins(ctx, accAddrs[0], holderAcc.GetAddress(), delCoins))
 
 	suite.authKeeper.EXPECT().GetAccount(ctx, holderAcc.GetAddress()).Return(holderAcc)
+	suite.authKeeper.EXPECT().GetAccount(ctx, accAddrs[0]).Return(acc0)
 	require.Error(suite.bankKeeper.DelegateCoins(ctx, accAddrs[0], holderAcc.GetAddress(), origCoins.Add(origCoins...)))
 }
 

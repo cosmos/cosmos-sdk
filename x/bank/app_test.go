@@ -361,6 +361,7 @@ func TestMsgSetSendEnabled(t *testing.T) {
 		"set default send enabled to true",
 		"Change send enabled",
 		"Modify send enabled and set to true",
+		false,
 	)
 	require.NoError(t, err, "making goodGovProp")
 	badGovProp, err := govv1.NewMsgSubmitProposal(
@@ -372,6 +373,7 @@ func TestMsgSetSendEnabled(t *testing.T) {
 		"set default send enabled to true",
 		"Change send enabled",
 		"Modify send enabled and set to true",
+		false,
 	)
 	require.NoError(t, err, "making badGovProp")
 

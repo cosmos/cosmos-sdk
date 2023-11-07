@@ -54,6 +54,7 @@ staking token of the chain.
     * [EndBlocker](#endblocker)
     * [Handlers](#handlers)
 * [Parameters](#parameters)
+    * [SubKeys](#subkeys)
 * [Client](#client)
     * [CLI](#cli)
     * [gRPC](#grpc)
@@ -188,6 +189,10 @@ For a weighted vote to be valid, the `options` field must not contain duplicate 
 Quorum is defined as the minimum percentage of voting power that needs to be
 cast on a proposal for the result to be valid.
 
+### Expedited Proposals
+
+A proposal can be expedited, making the proposal use shorter voting duration and a higher tally threshold by its default. If an expedited proposal fails to meet the threshold within the scope of shorter voting duration, the expedited proposal is then converted to a regular proposal and restarts voting under regular voting conditions.
+
 #### Threshold
 
 Threshold is defined as the minimum proportion of `Yes` votes (excluding
@@ -206,6 +211,8 @@ This means that proposals are accepted iff:
   `Abstain` votes.
 * The proportion of `Yes` votes, excluding `Abstain` votes, at the end of
   the voting period is superior to 1/2.
+
+For expedited proposals, by default, the threshold is higher than with a *normal proposal*, namely, 66.7%.
 
 #### Inheritance
 
@@ -693,13 +700,13 @@ The governance module emits the following events:
 
 #### MsgVoteWeighted
 
-| Type          | Attribute Key | Attribute Value          |
-| ------------- | ------------- | ------------------------ |
-| proposal_vote | option        | {weightedVoteOptions}    |
-| proposal_vote | proposal_id   | {proposalID}             |
-| message       | module        | governance               |
-| message       | action        | vote                     |
-| message       | sender        | {senderAddress}          |
+| Type          | Attribute Key | Attribute Value       |
+| ------------- | ------------- | --------------------- |
+| proposal_vote | option        | {weightedVoteOptions} |
+| proposal_vote | proposal_id   | {proposalID}          |
+| message       | module        | governance            |
+| message       | action        | vote                  |
+| message       | sender        | {senderAddress}       |
 
 #### MsgDeposit
 
@@ -726,6 +733,9 @@ The governance module contains the following parameters:
 | quorum                        | string (dec)     | "0.334000000000000000"                  |
 | threshold                     | string (dec)     | "0.500000000000000000"                  |
 | veto                          | string (dec)     | "0.334000000000000000"                  |
+| expedited_threshold           | string (time ns) | "0.667000000000000000"                  |
+| expedited_voting_period       | string (time ns) | "86400000000000" (8600s)                |
+| expedited_min_deposit         | array (coins)    | [{"denom":"uatom","amount":"50000000"}] |
 | burn_proposal_deposit_prevote | bool             | false                                   |
 | burn_vote_quorum              | bool             | false                                   |
 | burn_vote_veto                | bool             | true                                    |
@@ -842,6 +852,22 @@ deposit_params:
   min_deposit:
   - amount: "10000000"
     denom: stake
+params:
+  expedited_min_deposit:
+  - amount: "50000000"
+    denom: stake
+  expedited_threshold: "0.670000000000000000"
+  expedited_voting_period: 86400s
+  max_deposit_period: 172800s
+  min_deposit:
+  - amount: "10000000"
+    denom: stake
+  min_initial_deposit_ratio: "0.000000000000000000"
+  proposal_cancel_burn_rate: "0.500000000000000000"
+  quorum: "0.334000000000000000"
+  threshold: "0.500000000000000000"
+  veto_threshold: "0.334000000000000000"
+  voting_period: 172800s
 tally_params:
   quorum: "0.334000000000000000"
   threshold: "0.500000000000000000"

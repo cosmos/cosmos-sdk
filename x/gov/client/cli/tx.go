@@ -104,12 +104,11 @@ Where proposal.json contains:
       "amount":[{"denom": "stake","amount": "10"}]
     }
   ],
-  // metadata can be any of base64 encoded, raw text, stringified json, IPFS link to json
-  // see below for example metadata
-  "metadata": "4pIMOgIGx1vZGU=",
-  "deposit": "10stake",
-  "title": "My proposal",
-  "summary": "A short summary of my proposal"
+  "metadata: "4pIMOgIGx1vZGU=", // base64-encoded metadata
+  "deposit": "10stake"
+  "title: "My proposal"
+  "summary": "A short summary of my proposal",
+  "expedited": false
 }
 
 metadata example: 
@@ -131,12 +130,12 @@ metadata example:
 				return err
 			}
 
-			msgs, metadata, title, summary, deposit, err := parseSubmitProposal(clientCtx.Codec, args[0])
+			proposal, msgs, deposit, err := parseSubmitProposal(clientCtx.Codec, args[0])
 			if err != nil {
 				return err
 			}
 
-			msg, err := v1.NewMsgSubmitProposal(msgs, deposit, clientCtx.GetFromAddress().String(), metadata, title, summary)
+			msg, err := v1.NewMsgSubmitProposal(msgs, deposit, clientCtx.GetFromAddress().String(), proposal.Metadata, proposal.Title, proposal.Summary, proposal.Expedited)
 			if err != nil {
 				return fmt.Errorf("invalid message: %w", err)
 			}

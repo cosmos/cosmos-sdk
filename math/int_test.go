@@ -56,6 +56,24 @@ func (s *intTestSuite) TestNewIntFromBigInt() {
 	s.Require().NotEqual(r, i.BigInt())
 }
 
+func (s *intTestSuite) TestNewIntFromBigIntMut() {
+	im := math.NewIntFromBigIntMut(nil)
+	s.Require().True(im.IsNil())
+
+	r := big.NewInt(42)
+	im = math.NewIntFromBigIntMut(r)
+	s.Require().Equal(r, im.BigInt())
+
+	// Compare value of NewIntFromBigInt and NewIntFromBigIntMut
+	i := math.NewIntFromBigInt(r)
+	s.Require().Equal(i, im)
+
+	// modify r and ensure i doesn't change & im changes
+	r = r.SetInt64(100)
+	s.Require().NotEqual(r, i.BigInt())
+	s.Require().Equal(r, im.BigInt())
+}
+
 func (s *intTestSuite) TestConvertToBigIntMutative() {
 	r := big.NewInt(42)
 	i := math.NewIntFromBigInt(r)

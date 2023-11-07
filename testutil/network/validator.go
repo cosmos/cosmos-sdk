@@ -69,7 +69,7 @@ func (v *Validator) GetValAddress() sdk.ValAddress {
 }
 
 func (v *Validator) GetAPIAddress() string {
-	return v.AppConfig.API.Address
+	return v.APIAddress
 }
 
 func (v *Validator) GetRPCAddress() string {

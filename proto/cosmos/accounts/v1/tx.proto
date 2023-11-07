@@ -65,6 +65,7 @@ message MsgExecuteResponse {
 
 // MsgExecuteBundle defines the ExecuteBundle request type for the Msg/ExecuteBundle RPC method.
 message MsgExecuteBundle {
+  option (cosmos.msg.v1.signer) = "bundler";
   // bundler defines the entity going through the standard TX flow
   // to execute one or multiple UserOperations on behalf of others.
   string bundler = 1;

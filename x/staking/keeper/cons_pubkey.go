@@ -45,7 +45,7 @@ func (k Keeper) setConsPubKeyRotationHistory(
 		return err
 	}
 
-	return k.SetConsKeyQueue(ctx, queueTime, valAddr)
+	return k.setConsKeyQueue(ctx, queueTime, valAddr)
 }
 
 // exceedsMaxRotations returns true if the key rotations exceed the limit, currently we are limiting one rotation for unbonding period.
@@ -62,9 +62,9 @@ func (k Keeper) exceedsMaxRotations(ctx context.Context, valAddr sdk.ValAddress)
 	return count >= maxRotations, nil
 }
 
-// SetConsKeyQueue sets array of rotated validator addresses to a key of current block time + unbonding period
+// setConsKeyQueue sets array of rotated validator addresses to a key of current block time + unbonding period
 // this is to keep track of rotations made within the unbonding period
-func (k Keeper) SetConsKeyQueue(ctx context.Context, ts time.Time, valAddr sdk.ValAddress) error {
+func (k Keeper) setConsKeyQueue(ctx context.Context, ts time.Time, valAddr sdk.ValAddress) error {
 	queueRec, err := k.ValidatorConsensusKeyRotationRecordQueue.Get(ctx, ts)
 	if err != nil {
 		return err

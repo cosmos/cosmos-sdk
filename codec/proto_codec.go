@@ -31,7 +31,8 @@ type ProtoCodecMarshaler interface {
 // ProtoCodec defines a codec that utilizes Protobuf for both binary and JSON
 // encoding.
 type ProtoCodec struct {
-	interfaceRegistry types.InterfaceRegistry
+	interfaceRegistry  types.InterfaceRegistry
+	protov2MarshalOpts proto.MarshalOptions
 }
 
 var _ Codec = (*ProtoCodec)(nil)
@@ -39,7 +40,8 @@ var _ Codec = (*ProtoCodec)(nil)
 // NewProtoCodec returns a reference to a new ProtoCodec
 func NewProtoCodec(interfaceRegistry types.InterfaceRegistry) *ProtoCodec {
 	return &ProtoCodec{
-		interfaceRegistry: interfaceRegistry,
+		interfaceRegistry:  interfaceRegistry,
+		protov2MarshalOpts: proto.MarshalOptions{Deterministic: true},
 	}
 }
 
@@ -345,7 +347,7 @@ type grpcProtoCodec struct {
 func (g grpcProtoCodec) Marshal(v interface{}) ([]byte, error) {
 	switch m := v.(type) {
 	case proto.Message:
-		return proto.Marshal(m)
+		return g.cdc.protov2MarshalOpts.Marshal(m)
 	case gogoproto.Message:
 		return g.cdc.Marshal(m)
 	default:

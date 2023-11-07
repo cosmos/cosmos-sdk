@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"net/http"
 	"net/url"
 	"os"
 	"os/signal"
@@ -17,12 +16,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cometbft/cometbft/node"
-	cmtclient "github.com/cometbft/cometbft/rpc/client"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/spf13/cobra"
-	"golang.org/x/sync/errgroup"
-	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/depinject"
@@ -48,7 +43,6 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/server"
-	"github.com/cosmos/cosmos-sdk/server/api"
 	srvconfig "github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -274,39 +268,6 @@ type (
 		Config Config
 	}
 
-	// Validator defines an in-process CometBFT validator node. Through this object,
-	// a client can make RPC and API calls and interact with any client command
-	// or handler.
-	Validator struct {
-		AppConfig  *srvconfig.Config
-		ClientCtx  client.Context
-		Ctx        *server.Context
-		Dir        string
-		NodeID     string
-		PubKey     cryptotypes.PubKey
-		Moniker    string
-		APIAddress string
-		RPCAddress string
-		P2PAddress string
-		Address    sdk.AccAddress
-		ValAddress sdk.ValAddress
-		RPCClient  cmtclient.Client
-
-		app      servertypes.Application
-		tmNode   *node.Node
-		api      *api.Server
-		grpc     *grpc.Server
-		grpcWeb  *http.Server
-		errGroup *errgroup.Group
-		cancelFn context.CancelFunc
-	}
-
-	// ValidatorI expose a validator's context and configuration
-	ValidatorI interface {
-		GetCtx() *server.Context
-		GetAppConfig() *srvconfig.Config
-	}
-
 	// Logger is a network logger interface that exposes testnet-level Log() methods for an in-process testing network
 	// This is not to be confused with logging that may happen at an individual node or validator level
 	Logger interface {
@@ -316,18 +277,9 @@ type (
 )
 
 var (
-	_ Logger     = (*testing.T)(nil)
-	_ Logger     = (*CLILogger)(nil)
-	_ ValidatorI = Validator{}
+	_ Logger = (*testing.T)(nil)
+	_ Logger = (*CLILogger)(nil)
 )
-
-func (v Validator) GetCtx() *server.Context {
-	return v.Ctx
-}
-
-func (v Validator) GetAppConfig() *srvconfig.Config {
-	return v.AppConfig
-}
 
 // CLILogger wraps a cobra.Command and provides command logging methods.
 type CLILogger struct {

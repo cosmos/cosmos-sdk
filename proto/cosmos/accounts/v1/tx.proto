@@ -5,6 +5,7 @@ package cosmos.accounts.v1;
 option go_package = "cosmossdk.io/x/accounts/v1";
 
 import "cosmos/msg/v1/msg.proto";
+import "cosmos/accounts/v1/account_abstraction.proto";
 
 // Msg defines the Msg service for the x/accounts module.
 service Msg {
@@ -15,6 +16,10 @@ service Msg {
 
   // Execute executes a message to the target account.
   rpc Execute(MsgExecute) returns (MsgExecuteResponse);
+
+  // ExecuteBundle pertains account abstraction, it is used by the bundler
+  // to execute multiple UserOperations in a single transaction message.
+  rpc ExecuteBundle(MsgExecuteBundle) returns (MsgExecuteBundleResponse);
 }
 
 // MsgInit defines the Create request type for the Msg/Create RPC method.
@@ -54,4 +59,21 @@ message MsgExecute {
 message MsgExecuteResponse {
   // response is the response returned by the account implementation.
   bytes response = 1;
+}
+
+// -------- Account Abstraction ---------
+
+// MsgExecuteBundle defines the ExecuteBundle request type for the Msg/ExecuteBundle RPC method.
+message MsgExecuteBundle {
+  // bundler defines the entity going through the standard TX flow
+  // to execute one or multiple UserOperations on behalf of others.
+  string bundler = 1;
+  // operations is the list of operations to be executed.
+  repeated UserOperation operations = 2;
+}
+
+// MsgExecuteBundleResponse defines the ExecuteBundle response type for the Msg/ExecuteBundle RPC method.
+message MsgExecuteBundleResponse {
+  // responses is the list of responses returned by the account implementations.
+  repeated UserOperationResponse responses = 1;
 }

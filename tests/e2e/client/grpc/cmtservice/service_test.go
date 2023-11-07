@@ -47,7 +47,7 @@ func (s *E2ETestSuite) SetupSuite() {
 
 	s.Require().NoError(s.network.WaitForNextBlock())
 
-	s.queryClient = cmtservice.NewServiceClient(s.network.GetValidators()[0].ClientCtx)
+	s.queryClient = cmtservice.NewServiceClient(s.network.GetValidators()[0].GetClientCtx())
 }
 
 func (s *E2ETestSuite) TearDownSuite() {
@@ -117,7 +117,7 @@ func (s *E2ETestSuite) TestQueryLatestValidatorSet() {
 	s.Require().Equal(1, len(res.Validators))
 	content, ok := res.Validators[0].PubKey.GetCachedValue().(cryptotypes.PubKey)
 	s.Require().Equal(true, ok)
-	s.Require().Equal(content, val.PubKey)
+	s.Require().Equal(content, val.GetPubKey())
 
 	// with pagination
 	_, err = s.queryClient.GetLatestValidatorSet(context.Background(), &cmtservice.GetLatestValidatorSetRequest{Pagination: &qtypes.PageRequest{
@@ -136,7 +136,7 @@ func (s *E2ETestSuite) TestQueryLatestValidatorSet() {
 	var validatorSetRes cmtservice.GetLatestValidatorSetResponse
 	s.Require().NoError(val.GetClientCtx().Codec.UnmarshalJSON(restRes, &validatorSetRes))
 	s.Require().Equal(1, len(validatorSetRes.Validators))
-	anyPub, err := codectypes.NewAnyWithValue(val.PubKey)
+	anyPub, err := codectypes.NewAnyWithValue(val.GetPubKey())
 	s.Require().NoError(err)
 	s.Require().Equal(validatorSetRes.Validators[0].PubKey, anyPub)
 }
@@ -166,7 +166,7 @@ func (s *E2ETestSuite) TestLatestValidatorSet_GRPC() {
 				s.Require().Equal(grpcRes.Pagination.Total, uint64(len(vals)))
 				content, ok := grpcRes.Validators[0].PubKey.GetCachedValue().(cryptotypes.PubKey)
 				s.Require().Equal(true, ok)
-				s.Require().Equal(content, vals[0].PubKey)
+				s.Require().Equal(content, vals[0].GetPubKey())
 			}
 		})
 	}
@@ -180,9 +180,9 @@ func (s *E2ETestSuite) TestLatestValidatorSet_GRPCGateway() {
 		expErr    bool
 		expErrMsg string
 	}{
-		{"no pagination", fmt.Sprintf("%s/cosmos/base/tendermint/v1beta1/validatorsets/latest", vals[0].APIAddress), false, ""},
-		{"pagination invalid fields", fmt.Sprintf("%s/cosmos/base/tendermint/v1beta1/validatorsets/latest?pagination.offset=-1&pagination.limit=-2", vals[0].APIAddress), true, "strconv.ParseUint"},
-		{"with pagination", fmt.Sprintf("%s/cosmos/base/tendermint/v1beta1/validatorsets/latest?pagination.offset=0&pagination.limit=2", vals[0].APIAddress), false, ""},
+		{"no pagination", fmt.Sprintf("%s/cosmos/base/tendermint/v1beta1/validatorsets/latest", vals[0].GetAPIAddress()), false, ""},
+		{"pagination invalid fields", fmt.Sprintf("%s/cosmos/base/tendermint/v1beta1/validatorsets/latest?pagination.offset=-1&pagination.limit=-2", vals[0].GetAPIAddress()), true, "strconv.ParseUint"},
+		{"with pagination", fmt.Sprintf("%s/cosmos/base/tendermint/v1beta1/validatorsets/latest?pagination.offset=0&pagination.limit=2", vals[0].GetAPIAddress()), false, ""},
 	}
 	for _, tc := range testCases {
 		tc := tc
@@ -196,7 +196,7 @@ func (s *E2ETestSuite) TestLatestValidatorSet_GRPCGateway() {
 				err = vals[0].GetClientCtx().Codec.UnmarshalJSON(res, &result)
 				s.Require().NoError(err)
 				s.Require().Equal(uint64(len(vals)), result.Pagination.Total)
-				anyPub, err := codectypes.NewAnyWithValue(vals[0].PubKey)
+				anyPub, err := codectypes.NewAnyWithValue(vals[0].GetPubKey())
 				s.Require().NoError(err)
 				s.Require().Equal(result.Validators[0].PubKey, anyPub)
 			}

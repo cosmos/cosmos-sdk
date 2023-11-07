@@ -31,7 +31,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
-## [v0.1.0](https://github.com/cosmos/cosmos-sdk/releases/tag/tools/confix/v0.1.0) - Soon™️
+## [v0.1.0](https://github.com/cosmos/cosmos-sdk/releases/tag/tools/confix/v0.1.0) - 2023-10-07
 
 * [#17904](https://github.com/cosmos/cosmos-sdk/pull/17904) Add `view` command.
 * [#14568](https://github.com/cosmos/cosmos-sdk/pull/14568) Add `diff` and `home` commands.

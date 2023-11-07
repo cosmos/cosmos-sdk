@@ -72,7 +72,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
   
 ### Bug Fixes
 
-* (server) [#18254](https://github.com/cosmos/cosmos-sdk/pull/18254) Don't hardcode gRPC address to localhost.
 * (x/slashing) [#18016](https://github.com/cosmos/cosmos-sdk/pull/18016) Fixed builder function for missed blocks key (`validatorMissedBlockBitArrayPrefixKey`) in slashing/migration/v4
 * (x/gov) [#17873](https://github.com/cosmos/cosmos-sdk/pull/17873) Fail any inactive and active proposals whose messages cannot be decoded.
 * (simulation) [#17911](https://github.com/cosmos/cosmos-sdk/pull/17911) Fix all problems with executing command `make test-sim-custom-genesis-fast` for simulation test.
@@ -894,7 +893,7 @@ extension interfaces. `module.Manager.Modules` is now of type `map[string]interf
   Setting can be done using MsgSetSendEnabled as a governance proposal.
   A SendEnabled query has been added to both GRPC and CLI.
 
-## [v0.46.16](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.46.16) - 2023-10-30
+## [v0.46.16](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.46.16) - 2023-11-07
 
 EOL notice. This is the last release of the `v0.46.x` line. Per this version, the v0.46.x line reached its end-of-life.
 

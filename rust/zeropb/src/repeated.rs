@@ -42,7 +42,7 @@ impl<'a, T> Repeated<T> {
                 write_head: core::ptr::null_mut(),
             };
 
-            writer.new_segment(base as usize)?;
+            writer.new_segment(base)?;
 
             Ok(writer)
         }
@@ -70,7 +70,7 @@ impl<'a, T> IntoIterator for &'a Repeated<T> {
         };
 
         if self.length > 0 {
-            iter.load_next_segment(self.offset as u16);
+            iter.load_next_segment(base, self.offset);
         }
 
         iter
@@ -89,15 +89,18 @@ const REPEATED_SEGMENT_HEADER_SIZE: usize = size_of::<RepeatedSegmentHeader>();
 const REPEATED_SEGMENT_HEADER_ALIGN: usize = align_of::<RepeatedSegmentHeader>();
 
 impl<'a, T> RepeatedWriter<'a, T> {
-    fn new_segment(&mut self, base: usize) -> Result<(), Error> {
+    fn new_segment(&mut self, base: *const u8) -> Result<(), Error> {
         unsafe {
             let cur_extent = *self.extent_ptr;
             let write_head = self.buf_start + cur_extent as usize;
 
             // align write_head to RepeatedSegmentHeader
             let write_head = align_addr(write_head, REPEATED_SEGMENT_HEADER_ALIGN);
-            if self.cur_segment != core::ptr::null_mut() {
-                (*self.cur_segment).next_offset = (write_head - self.buf_start) as i16;
+            // update pointer
+            if self.cur_segment == core::ptr::null_mut() {
+                self.ptr.offset = (write_head - base as usize) as i16;
+            } else {
+                (*self.cur_segment).next_offset = (write_head - base as usize) as i16;
             }
             let cur_segment = write_head as *mut RepeatedSegmentHeader;
 
@@ -106,9 +109,10 @@ impl<'a, T> RepeatedWriter<'a, T> {
             let align_t: usize = align_of::<T>();
             let write_head = align_addr(write_head, align_t);
 
-            // set capacity to the number of Ts that can fit in 64 bytes or 1, whichever is greater
+            // set capacity to the number of Ts that can fit in 32 bytes or 1, whichever is greater
+            // 32 bytes is arbitrary and this could be tweaked depending on real world usage
             let size_t: usize = size_of::<T>();
-            let capacity = core::cmp::max(64 / size_t, 1) as u8;
+            let capacity = core::cmp::max(32 / size_t, 1) as u8;
             (*cur_segment).capacity = capacity;
 
             // update extent and check bounds
@@ -119,10 +123,6 @@ impl<'a, T> RepeatedWriter<'a, T> {
             }
             *self.extent_ptr = next_extent as u16;
 
-            // if this is the first segment set ptr.offset
-            if base != 0 {
-                self.ptr.offset = (cur_segment as usize - base) as i16;
-            }
             self.cur_segment = cur_segment;
             self.write_head = write_head as *mut T;
 
@@ -132,9 +132,10 @@ impl<'a, T> RepeatedWriter<'a, T> {
 
     pub fn append(&mut self) -> Result<&mut T, Error> {
         unsafe {
-            let cur_segment = &mut *self.cur_segment;
+            let mut cur_segment = &mut *self.cur_segment;
             if cur_segment.used == cur_segment.capacity {
-                self.new_segment(0)?;
+                self.new_segment(self.cur_segment as *const u8)?;
+                cur_segment = &mut *self.cur_segment;
             }
 
             let ret = &mut *self.write_head;
@@ -155,9 +156,9 @@ pub struct RepeatedIter<'a, T> {
 }
 
 impl<'a, T> RepeatedIter<'a, T> {
-    fn load_next_segment(&mut self, offset: u16) {
+    fn load_next_segment(&mut self, base: *const u8, offset: i16) {
         unsafe {
-            let read_head = resolve_rel_ptr(self.buf_start as *const u8, offset as i16, 0) as usize;
+            let read_head = resolve_rel_ptr(base, offset, 0) as usize;
             // align to RepeatedSegmentHeader
             let read_head = align_addr(read_head, REPEATED_SEGMENT_HEADER_ALIGN);
             self.cur_segment = read_head as *const RepeatedSegmentHeader;
@@ -198,7 +199,7 @@ impl<'a, T> Iterator for RepeatedIter<'a, T> {
                     return None;
                 }
 
-                self.load_next_segment(next_offset as u16);
+                self.load_next_segment(self.cur_segment as *const u8, next_offset);
             }
 
             let ret = &*self.read_head;
@@ -236,22 +237,21 @@ pub struct ScalarRepeatedWriter<'a, T> {
 
 impl<'a, T> ScalarRepeatedWriter<'a, T> {
     pub fn append(&mut self, value: T) -> Result<(), Error> {
-        unsafe {
-            let ptr = self.writer.append()?;
-            *ptr = value;
-            Ok(())
-        }
+        let ptr = self.writer.append()?;
+        *ptr = value;
+        Ok(())
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::repeated::Repeated;
-    use crate::{Root, ZeroCopy};
+    use crate::repeated::{Repeated, ScalarRepeated};
+    use crate::{Root, Str, ZeroCopy};
 
     #[repr(C)]
     struct A {
         repeated: Repeated<B>,
+        repeated_u64: ScalarRepeated<u64>,
     }
 
     unsafe impl ZeroCopy for A {}
@@ -259,34 +259,54 @@ mod tests {
     #[repr(C)]
     struct B {
         a: u32,
-        b: u16,
+        b: Str,
+        c: u64,
     }
 
     unsafe impl ZeroCopy for B {}
 
     #[test]
     fn repeated() {
+        // set data
         let mut a = Root::<A>::new();
         let mut writer = a.repeated.start_write().unwrap();
         let mut b = writer.append().unwrap();
         b.a = 1;
-        b.b = 2;
+        b.c = 2;
+        b.b.set("hello").unwrap();
         b = writer.append().unwrap();
         b.a = 3;
-        b.b = 4;
+        b.c = 4;
+        b.b.set("world").unwrap();
         b = writer.append().unwrap();
         b.a = 5;
-        b.b = 6;
+        b.c = 6;
+        b.b.set("foo").unwrap();
+
+        let mut writer = a.repeated_u64.start_write().unwrap();
+        for i in 0..100 {
+            writer.append(i).unwrap();
+        }
+
+        // check data
         let mut iter = a.repeated.into_iter();
         let b = iter.next().unwrap();
         assert_eq!(b.a, 1);
-        assert_eq!(b.b, 2);
+        assert_eq!(b.c, 2);
+        assert_eq!(<Str as core::borrow::Borrow<str>>::borrow(&b.b), "hello");
         let b = iter.next().unwrap();
         assert_eq!(b.a, 3);
-        assert_eq!(b.b, 4);
+        assert_eq!(b.c, 4);
+        assert_eq!(<Str as core::borrow::Borrow<str>>::borrow(&b.b), "world");
         let b = iter.next().unwrap();
         assert_eq!(b.a, 5);
-        assert_eq!(b.b, 6);
+        assert_eq!(b.c, 6);
+        assert_eq!(<Str as core::borrow::Borrow<str>>::borrow(&b.b), "foo");
         assert!(iter.next().is_none());
+
+        let mut iter = a.repeated_u64.into_iter();
+        for i in 0..100 {
+            assert_eq!(*iter.next().unwrap(), i as u64);
+        }
     }
 }

@@ -4,11 +4,10 @@ import (
 	"context"
 	"net/http"
 
-	"golang.org/x/sync/errgroup"
-	"google.golang.org/grpc"
-
 	"github.com/cometbft/cometbft/node"
 	cmtclient "github.com/cometbft/cometbft/rpc/client"
+	"golang.org/x/sync/errgroup"
+	"google.golang.org/grpc"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"

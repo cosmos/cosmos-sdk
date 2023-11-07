@@ -9,6 +9,7 @@ import (
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 
 	"github.com/cosmos/cosmos-sdk/types/module"
+	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
 )
 
 // UpgradeName defines the on-chain upgrade name for the sample SimApp upgrade
@@ -37,6 +38,9 @@ func (app SimApp) RegisterUpgradeHandlers() {
 			Added: []string{
 				accounts.ModuleName,
 				protocolpooltypes.ModuleName,
+			},
+			Deleted: []string{
+				crisistypes.ModuleName, // The SDK discontinued the crisis module in v0.51.0
 			},
 		}
 

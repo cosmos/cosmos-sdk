@@ -84,7 +84,7 @@ func (s *GRPCWebTestSuite) Test_Latest_Validators() {
 		s.Require().NoError(err)
 		pubKey, ok := valsSet.Validators[0].PubKey.GetCachedValue().(cryptotypes.PubKey)
 		s.Require().Equal(true, ok)
-		s.Require().Equal(pubKey, val.PubKey)
+		s.Require().Equal(pubKey, val.GetPubKey())
 	}
 }
 
@@ -146,7 +146,7 @@ func (s *GRPCWebTestSuite) makeRequest(
 		contentType = "application/grpc-web-text"
 	}
 
-	url := fmt.Sprintf("http://%s%s", strings.TrimPrefix(val.AppConfig.API.Address, "tcp://"), method)
+	url := fmt.Sprintf("http://%s%s", strings.TrimPrefix(val.GetAppConfig().API.Address, "tcp://"), method)
 	req, err := http.NewRequest(verb, url, body)
 	s.Require().NoError(err, "failed creating a request")
 	req.Header = headers

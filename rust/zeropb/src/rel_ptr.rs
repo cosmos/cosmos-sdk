@@ -27,7 +27,7 @@ pub(crate) unsafe fn alloc_rel_ptr(
     let (start, extent_ptr) = resolve_start_extent(base_ptr);
     let alloc_start = (*extent_ptr) as usize;
     // align alloc_start to align
-    let alloc_start = (alloc_start + align - 1) & !(align - 1);
+    let alloc_start = align_addr(alloc_start, align);
     let target = start + alloc_start;
     let base = base_ptr as usize;
     let offset = target - base;

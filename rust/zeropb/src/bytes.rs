@@ -1,7 +1,7 @@
 use core::{borrow::Borrow, marker::PhantomData, ptr, slice::from_raw_parts};
 
 use crate::error::Error;
-use crate::util::{alloc_rel_ptr, resolve_rel_ptr, resolve_start_extent, MAX_EXTENT};
+use crate::rel_ptr::{alloc_rel_ptr, resolve_rel_ptr, resolve_start_extent, MAX_EXTENT};
 use crate::zerocopy::ZeroCopy;
 
 #[repr(C)]
@@ -77,7 +77,7 @@ impl<'a> BytesWriter<'a> {
             let len = content.len();
             self.bz.length += len as u16;
             let next_extent = extent as usize + len;
-            if next_extent > crate::util::MAX_EXTENT {
+            if next_extent > crate::rel_ptr::MAX_EXTENT {
                 return Err(Error::OutOfMemory);
             }
 

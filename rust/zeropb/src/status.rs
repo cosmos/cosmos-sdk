@@ -29,6 +29,7 @@ unsafe impl ZeroCopyEnum for Code {
     const MAX_VALUE: u8 = 16;
 }
 
+#[repr(C)]
 pub struct Status {
     pub code: Enum<Code>,
     pub message: Str,

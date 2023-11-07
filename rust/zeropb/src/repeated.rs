@@ -1,5 +1,5 @@
 use core::iter::IntoIterator;
-use crate::util::{resolve_rel_ptr, resolve_start_extent, MAX_EXTENT, align_addr};
+use crate::rel_ptr::{resolve_rel_ptr, resolve_start_extent, MAX_EXTENT, align_addr};
 use crate::Error;
 use core::iter::Iterator;
 use core::marker::PhantomData;

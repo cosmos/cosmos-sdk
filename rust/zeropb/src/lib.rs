@@ -14,7 +14,7 @@ mod root;
 pub use root::Root;
 
 mod error;
-mod util;
+mod rel_ptr;
 
 pub use error::Error;
 
@@ -36,8 +36,6 @@ pub use repeated::{Repeated, ScalarRepeated, RepeatedWriter, RepeatedIter, Scala
 
 mod server;
 mod status;
-mod wasm;
-mod std;
 
 pub use client::{ClientConn, Handler};
 

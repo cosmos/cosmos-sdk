@@ -43,3 +43,8 @@ pub(crate) unsafe fn alloc_rel_ptr(
     *extent_ptr = next_extent as u16;
     Ok((offset as i16, target as *mut ()))
 }
+
+#[inline]
+pub(crate) fn align_addr(addr: usize, align: usize) -> usize {
+    (addr + align - 1) & !(align - 1)
+}

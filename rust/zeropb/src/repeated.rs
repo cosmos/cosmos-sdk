@@ -1,5 +1,5 @@
 use core::iter::IntoIterator;
-use crate::util::{resolve_rel_ptr, resolve_start_extent, MAX_EXTENT};
+use crate::util::{resolve_rel_ptr, resolve_start_extent, MAX_EXTENT, align_addr};
 use crate::Error;
 use core::iter::Iterator;
 use core::marker::PhantomData;
@@ -42,7 +42,7 @@ impl<'a, T> Repeated<T> {
                 write_head: core::ptr::null_mut(),
             };
 
-            writer.new_segment()?;
+            writer.new_segment(base as usize)?;
 
             Ok(writer)
         }
@@ -89,22 +89,22 @@ const REPEATED_SEGMENT_HEADER_SIZE: usize = size_of::<RepeatedSegmentHeader>();
 const REPEATED_SEGMENT_HEADER_ALIGN: usize = align_of::<RepeatedSegmentHeader>();
 
 impl<'a, T> RepeatedWriter<'a, T> {
-    fn new_segment(&mut self) -> Result<(), Error> {
+    fn new_segment(&mut self, base: usize) -> Result<(), Error> {
         unsafe {
             let cur_extent = *self.extent_ptr;
-            let write_head = (self.buf_start + cur_extent as usize) as *mut u8;
+            let write_head = self.buf_start + cur_extent as usize;
 
             // align write_head to RepeatedSegmentHeader
-            let write_head = write_head.add(REPEATED_SEGMENT_HEADER_ALIGN - (write_head as usize & (REPEATED_SEGMENT_HEADER_ALIGN - 1)));
+            let write_head = align_addr(write_head, REPEATED_SEGMENT_HEADER_ALIGN);
             if self.cur_segment != core::ptr::null_mut() {
-                (*self.cur_segment).next_offset = (write_head as usize - self.buf_start) as i16;
+                (*self.cur_segment).next_offset = (write_head - self.buf_start) as i16;
             }
             let cur_segment = write_head as *mut RepeatedSegmentHeader;
 
             // advance write_head and align to T
-            let write_head = write_head.add(REPEATED_SEGMENT_HEADER_SIZE);
+            let write_head = write_head + REPEATED_SEGMENT_HEADER_SIZE;
             let align_t: usize = align_of::<T>();
-            let write_head = write_head.add(align_t - (write_head as usize & (align_t - 1)));
+            let write_head = align_addr(write_head, align_t);
 
             // set capacity to the number of Ts that can fit in 64 bytes or 1, whichever is greater
             let size_t: usize = size_of::<T>();
@@ -112,13 +112,17 @@ impl<'a, T> RepeatedWriter<'a, T> {
             (*cur_segment).capacity = capacity;
 
             // update extent and check bounds
-            let write_limit = write_head.add(capacity as usize);
-            let next_extent = write_limit as usize - self.buf_start;
+            let write_limit = write_head + capacity as usize * size_t;
+            let next_extent = write_limit - self.buf_start;
             if next_extent > MAX_EXTENT {
                 return Err(Error::OutOfMemory);
             }
             *self.extent_ptr = next_extent as u16;
 
+            // if this is the first segment set ptr.offset
+            if base != 0 {
+                self.ptr.offset = (cur_segment as usize - base) as i16;
+            }
             self.cur_segment = cur_segment;
             self.write_head = write_head as *mut T;
 
@@ -130,7 +134,7 @@ impl<'a, T> RepeatedWriter<'a, T> {
         unsafe {
             let cur_segment = &mut *self.cur_segment;
             if cur_segment.used == cur_segment.capacity {
-                self.new_segment()?;
+                self.new_segment(0)?;
             }
 
             let ret = &mut *self.write_head;
@@ -153,24 +157,24 @@ pub struct RepeatedIter<'a, T> {
 impl<'a, T> RepeatedIter<'a, T> {
     fn load_next_segment(&mut self, offset: u16) {
         unsafe {
-            let read_head = resolve_rel_ptr(self.buf_start as *const u8, offset as i16, 0) as *const u8;
+            let read_head = resolve_rel_ptr(self.buf_start as *const u8, offset as i16, 0) as usize;
             // align to RepeatedSegmentHeader
-            let read_head = read_head.add(REPEATED_SEGMENT_HEADER_ALIGN - (read_head as usize & (REPEATED_SEGMENT_HEADER_ALIGN - 1)));
+            let read_head = align_addr(read_head, REPEATED_SEGMENT_HEADER_ALIGN);
             self.cur_segment = read_head as *const RepeatedSegmentHeader;
             // check buffer overflow
-            let read_head = read_head.add(REPEATED_SEGMENT_HEADER_SIZE);
-            assert!(read_head as usize <= self.buf_start + MAX_EXTENT);
+            let read_head = read_head + REPEATED_SEGMENT_HEADER_SIZE;
+            assert!(read_head <= self.buf_start + MAX_EXTENT);
 
             self.segment_i = 0;
 
             // align read head to T
             let align_t = align_of::<T>();
-            let read_head = read_head.add(align_t - (read_head as usize & (align_t - 1)));
+            let read_head = align_addr(read_head, align_t);
             self.read_head = read_head as *const T;
 
             // check buffer overflow
-            let read_limit = self.read_head.add((*self.cur_segment).capacity as usize);
-            assert!(read_limit as usize <= self.buf_start + MAX_EXTENT);
+            let read_limit = read_head + (*self.cur_segment).used as usize * size_of::<T>();
+            assert!(read_limit <= self.buf_start + MAX_EXTENT);
         }
     }
 }
@@ -198,7 +202,7 @@ impl<'a, T> Iterator for RepeatedIter<'a, T> {
             }
 
             let ret = &*self.read_head;
-            self.read_head = self.read_head.add(size_of::<T>());
+            self.read_head = self.read_head.add(1);
             self.segment_i += 1;
             Some(ret)
         }

@@ -102,5 +102,7 @@ func (h SignModeHandler) GetSignBytes(
 		Sequence:      signerData.Sequence,
 		Tip:           txData.AuthInfo.Tip, //nolint:staticcheck // keep it for compatibility
 	}
-	return proto.Marshal(signDocDirectAux)
+
+	protov2MarshalOpts := proto.MarshalOptions{Deterministic: true}
+	return protov2MarshalOpts.Marshal(signDocDirectAux)
 }

@@ -193,7 +193,7 @@ func (s *E2ETestSuite) TestLatestValidatorSet_GRPCGateway() {
 				s.Require().Contains(string(res), tc.expErrMsg)
 			} else {
 				var result cmtservice.GetLatestValidatorSetResponse
-				err = vals[0].ClientCtx.Codec.UnmarshalJSON(res, &result)
+				err = vals[0].GetClientCtx().Codec.UnmarshalJSON(res, &result)
 				s.Require().NoError(err)
 				s.Require().Equal(uint64(len(vals)), result.Pagination.Total)
 				anyPub, err := codectypes.NewAnyWithValue(vals[0].PubKey)
@@ -241,10 +241,10 @@ func (s *E2ETestSuite) TestValidatorSetByHeight_GRPCGateway() {
 		expErr    bool
 		expErrMsg string
 	}{
-		{"invalid height", fmt.Sprintf("%s/cosmos/base/tendermint/v1beta1/validatorsets/%d", vals[0].APIAddress, -1), true, "height must be greater than 0"},
-		{"no pagination", fmt.Sprintf("%s/cosmos/base/tendermint/v1beta1/validatorsets/%d", vals[0].APIAddress, 1), false, ""},
-		{"pagination invalid fields", fmt.Sprintf("%s/cosmos/base/tendermint/v1beta1/validatorsets/%d?pagination.offset=-1&pagination.limit=-2", vals[0].APIAddress, 1), true, "strconv.ParseUint"},
-		{"with pagination", fmt.Sprintf("%s/cosmos/base/tendermint/v1beta1/validatorsets/%d?pagination.offset=0&pagination.limit=2", vals[0].APIAddress, 1), false, ""},
+		{"invalid height", fmt.Sprintf("%s/cosmos/base/tendermint/v1beta1/validatorsets/%d", vals[0].GetAppConfig().API.Address, -1), true, "height must be greater than 0"},
+		{"no pagination", fmt.Sprintf("%s/cosmos/base/tendermint/v1beta1/validatorsets/%d", vals[0].GetAppConfig().API.Address, 1), false, ""},
+		{"pagination invalid fields", fmt.Sprintf("%s/cosmos/base/tendermint/v1beta1/validatorsets/%d?pagination.offset=-1&pagination.limit=-2", vals[0].GetAppConfig().API.Address, 1), true, "strconv.ParseUint"},
+		{"with pagination", fmt.Sprintf("%s/cosmos/base/tendermint/v1beta1/validatorsets/%d?pagination.offset=0&pagination.limit=2", vals[0].GetAppConfig().API.Address, 1), false, ""},
 	}
 	for _, tc := range testCases {
 		tc := tc
@@ -255,7 +255,7 @@ func (s *E2ETestSuite) TestValidatorSetByHeight_GRPCGateway() {
 				s.Require().Contains(string(res), tc.expErrMsg)
 			} else {
 				var result cmtservice.GetValidatorSetByHeightResponse
-				err = vals[0].ClientCtx.Codec.UnmarshalJSON(res, &result)
+				err = vals[0].GetClientCtx().Codec.UnmarshalJSON(res, &result)
 				s.Require().NoError(err)
 				s.Require().Equal(uint64(len(vals)), result.Pagination.Total)
 			}

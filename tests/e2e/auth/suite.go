@@ -606,7 +606,6 @@ func (s *E2ETestSuite) TestCLISendGenerateSignAndBroadcast() {
 		},
 	)
 	s.Require().NoError(err)
-
 	txCfg := clientCtx.TxConfig
 
 	normalGeneratedStdTx, err := txCfg.TxJSONDecoder()(normalGeneratedTx.Bytes())

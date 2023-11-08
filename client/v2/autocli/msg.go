@@ -12,13 +12,14 @@ import (
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	"cosmossdk.io/client/v2/autocli/flag"
+	"cosmossdk.io/client/v2/internal/util"
+	authtx "cosmossdk.io/x/auth/tx"
+	authtxconfig "cosmossdk.io/x/auth/tx/config"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
-	authtxconfig "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
 )
 
 // BuildMsgCommand builds the msg commands for all the provided modules. If a custom command is provided for a
@@ -82,6 +83,10 @@ func (b *Builder) AddMsgServiceCommands(cmd *cobra.Command, cmdDescriptor *autoc
 		}
 
 		if methodOpts.Skip {
+			continue
+		}
+
+		if !util.IsSupportedVersion(util.DescriptorDocs(methodDescriptor)) {
 			continue
 		}
 

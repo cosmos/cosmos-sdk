@@ -608,9 +608,7 @@ func (k msgServer) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams)
 	return &types.MsgUpdateParamsResponse{}, nil
 }
 
-func (k msgServer) RotateConsPubKey(goCtx context.Context, msg *types.MsgRotateConsPubKey) (res *types.MsgRotateConsPubKeyResponse, err error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
-
+func (k msgServer) RotateConsPubKey(ctx context.Context, msg *types.MsgRotateConsPubKey) (res *types.MsgRotateConsPubKeyResponse, err error) {
 	cv := msg.NewPubkey.GetCachedValue()
 	pk, ok := cv.(cryptotypes.PubKey)
 	if !ok {
@@ -647,12 +645,12 @@ func (k msgServer) RotateConsPubKey(goCtx context.Context, msg *types.MsgRotateC
 	}
 
 	if status := validator.GetStatus(); status != types.Bonded {
-		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidType, "validator status is not bonded, got %q", status)
+		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidType, "validator status is not bonded, got %s", status.String())
 	}
 
 	// Check if the validator is exceeding parameter MaxConsPubKeyRotations within the
 	// unbonding period by iterating ConsPubKeyRotationHistory.
-	exceedsLimit, err := k.CheckLimitOfMaxRotationsExceed(ctx, valAddr)
+	exceedsLimit, err := k.exceedsMaxRotations(ctx, valAddr)
 	if err != nil {
 		return nil, err
 	}
@@ -680,12 +678,11 @@ func (k msgServer) RotateConsPubKey(goCtx context.Context, msg *types.MsgRotateC
 	}
 
 	// Add ConsPubKeyRotationHistory for tracking rotation
-	err = k.SetConsPubKeyRotationHistory(
+	err = k.setConsPubKeyRotationHistory(
 		ctx,
 		valAddr,
 		val.ConsensusPubkey,
 		msg.NewPubkey,
-		uint64(ctx.BlockHeight()),
 		params.KeyRotationFee,
 	)
 	if err != nil {

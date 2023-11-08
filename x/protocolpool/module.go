@@ -9,6 +9,7 @@ import (
 	"cosmossdk.io/core/appmodule"
 	storetypes "cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
+	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/protocolpool/keeper"
 	"cosmossdk.io/x/protocolpool/simulation"
 	"cosmossdk.io/x/protocolpool/types"
@@ -18,7 +19,6 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // ConsensusVersion defines the current x/protocolpool module consensus version.

@@ -27,6 +27,11 @@ func (b *Builder) buildMethodCommandCommon(descriptor protoreflect.MethodDescrip
 		options = &autocliv1.RpcCommandOptions{}
 	}
 
+	short := options.Short
+	if short == "" {
+		short = fmt.Sprintf("Execute the %s RPC method", descriptor.Name())
+	}
+
 	long := options.Long
 	if long == "" {
 		long = util.DescriptorDocs(descriptor)
@@ -44,7 +49,7 @@ func (b *Builder) buildMethodCommandCommon(descriptor protoreflect.MethodDescrip
 		SilenceUsage: false,
 		Use:          use,
 		Long:         long,
-		Short:        options.Short,
+		Short:        short,
 		Example:      options.Example,
 		Aliases:      options.Alias,
 		SuggestFor:   options.SuggestFor,

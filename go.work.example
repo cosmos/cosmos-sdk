@@ -21,13 +21,14 @@ use (
 	./tools/confix
 	./tools/hubl
 	./x/accounts
+	./x/auth
 	./x/authz
 	./x/bank
 	./x/circuit
 	./x/distribution
 	./x/evidence
 	./x/feegrant
-  ./x/gov
+ 	./x/gov
 	./x/group
 	./x/nft
 	./x/params

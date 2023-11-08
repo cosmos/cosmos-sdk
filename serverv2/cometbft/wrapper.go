@@ -15,6 +15,7 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/serverv2/cometbft/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -33,8 +34,15 @@ type cometABCIWrapper struct {
 
 	paramStore ParamStore
 
+	defaultProposalHandler *baseapp.DefaultProposalHandler // move this struct to this package
+
 	// TODO: these below here I don't know yet where to put
 	trace bool
+
+	// currentHeader is set at FinalizeBlock and resetted at Commit. It's used
+	// by Commit to set the header on the store. We might want to have this in
+	// AppManager instead. (TODO)
+	currentHeader cmtproto.Header
 }
 
 func NewCometABCIWrapper(app types.ProtoApp, logger log.Logger) abci.Application {
@@ -125,7 +133,6 @@ func (w *cometABCIWrapper) InitChain(_ context.Context, req *abci.RequestInitCha
 		}
 	}
 
-	// TODO: define this in the app
 	if w.app.InitChainer() == nil {
 		return &abci.ResponseInitChain{}, nil
 	}
@@ -133,7 +140,6 @@ func (w *cometABCIWrapper) InitChain(_ context.Context, req *abci.RequestInitCha
 	// add block gas meter for any genesis transactions (allow infinite gas)
 	ctx = ctx.WithBlockGasMeter(storetypes.NewInfiniteGasMeter())
 
-	// TODO: define this in the app
 	res, err := w.app.InitChainer()(ctx, req)
 	if err != nil {
 		return nil, err
@@ -178,16 +184,23 @@ func (w *cometABCIWrapper) InitChain(_ context.Context, req *abci.RequestInitCha
 	}, nil
 }
 
-func (w *cometABCIWrapper) PrepareProposal(_ context.Context, req *abci.RequestPrepareProposal) (*abci.ResponsePrepareProposal, error) {
-	// TODO: do an interface check to see if app implements PrepareProposal
-	// return w.app.PrepareProposal(req)
-	return &abci.ResponsePrepareProposal{}, nil
+func (w *cometABCIWrapper) PrepareProposal(ctx context.Context, req *abci.RequestPrepareProposal) (*abci.ResponsePrepareProposal, error) {
+	if abciapp, ok := w.app.(types.HasProposal); ok {
+		return abciapp.PrepareProposal(ctx, req)
+	}
+
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	return w.defaultProposalHandler.PrepareProposalHandler()(sdkCtx, req)
+
 }
 
-func (w *cometABCIWrapper) ProcessProposal(_ context.Context, req *abci.RequestProcessProposal) (*abci.ResponseProcessProposal, error) {
-	// TODO: do an interface check to see if app implements ProcessProposal
-	// return w.app.ProcessProposal(req)
-	return &abci.ResponseProcessProposal{}, nil
+func (w *cometABCIWrapper) ProcessProposal(ctx context.Context, req *abci.RequestProcessProposal) (*abci.ResponseProcessProposal, error) {
+	if abciapp, ok := w.app.(types.HasProposal); ok {
+		return abciapp.ProcessProposal(ctx, req)
+	}
+
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	return w.defaultProposalHandler.ProcessProposalHandler()(sdkCtx, req)
 }
 
 func (w *cometABCIWrapper) FinalizeBlock(c context.Context, req *abci.RequestFinalizeBlock) (*abci.ResponseFinalizeBlock, error) {
@@ -332,6 +345,9 @@ func (w *cometABCIWrapper) FinalizeBlock(c context.Context, req *abci.RequestFin
 	commitHash := w.app.CommitMultiStore().WorkingHash()
 	w.logger.Debug("hash of all writes", "workingHash", fmt.Sprintf("%X", commitHash))
 
+	// Make the header available to Commit
+	w.currentHeader = header
+
 	return &abci.ResponseFinalizeBlock{
 		Events:                events,
 		TxResults:             txResults,
@@ -351,10 +367,8 @@ func (w *cometABCIWrapper) VerifyVoteExtension(_ context.Context, req *abci.Requ
 	return &abci.ResponseVerifyVoteExtension{}, nil
 }
 
-func (w *cometABCIWrapper) Commit(_ context.Context, _ *abci.RequestCommit) (*abci.ResponseCommit, error) {
-	ctx := sdk.NewContext(nil, false, w.logger)
-	header := ctx.BlockHeader() // TODO: how do I get the header here? //app.finalizeBlockState.ctx
-	retainHeight := w.app.GetBlockRetentionHeight(header.Height)
+func (w *cometABCIWrapper) Commit(ctx context.Context, _ *abci.RequestCommit) (*abci.ResponseCommit, error) {
+	retainHeight := w.app.GetBlockRetentionHeight(w.currentHeader.Height)
 
 	// TODO: readd
 	// if app.precommiter != nil {
@@ -363,7 +377,7 @@ func (w *cometABCIWrapper) Commit(_ context.Context, _ *abci.RequestCommit) (*ab
 
 	rms, ok := w.app.CommitMultiStore().(*rootmulti.Store)
 	if ok {
-		rms.SetCommitHeader(header)
+		rms.SetCommitHeader(w.currentHeader)
 	}
 
 	w.app.CommitMultiStore().Commit()
@@ -374,8 +388,7 @@ func (w *cometABCIWrapper) Commit(_ context.Context, _ *abci.RequestCommit) (*ab
 
 	abciListeners := w.app.StreamingManager().ABCIListeners
 	if len(abciListeners) > 0 {
-		// ctx := app.finalizeBlockState.ctx
-		blockHeight := ctx.BlockHeight()
+		blockHeight := w.currentHeader.Height
 		changeSet := w.app.CommitMultiStore().PopStateCache()
 
 		for _, abciListener := range abciListeners {
@@ -385,21 +398,16 @@ func (w *cometABCIWrapper) Commit(_ context.Context, _ *abci.RequestCommit) (*ab
 		}
 	}
 
-	// Reset the CheckTx state to the latest committed.
-	//
-	// NOTE: This is safe because CometBFT holds a lock on the mempool for
-	// Commit. Use the header from this latest block.
-	// app.setState(execModeCheck, header)
-
-	// app.finalizeBlockState = nil
-
 	// TODO: re-add
 	// if app.prepareCheckStater != nil {
 	// 	app.prepareCheckStater(app.checkState.ctx)
 	// }
 
 	// The SnapshotIfApplicable method will create the snapshot by starting the goroutine
-	w.app.SnapshotManager().SnapshotIfApplicable(header.Height)
+	w.app.SnapshotManager().SnapshotIfApplicable(w.currentHeader.Height)
+
+	// reset the current header
+	w.currentHeader = cmtproto.Header{}
 
 	return resp, nil
 }
@@ -583,7 +591,7 @@ func (w *cometABCIWrapper) validateFinalizeBlockHeight(req *abci.RequestFinalize
 }
 
 func (w *cometABCIWrapper) getBlockGasMeter(ctx sdk.Context) storetypes.GasMeter {
-	if maxGas := w.app.GetMaximumBlockGas(ctx); maxGas > 0 {
+	if maxGas := w.GetMaximumBlockGas(ctx); maxGas > 0 {
 		return storetypes.NewGasMeter(maxGas)
 	}
 

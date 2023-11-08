@@ -14,18 +14,10 @@ import (
 	pvm "github.com/cometbft/cometbft/privval"
 	"github.com/cometbft/cometbft/proxy"
 	cmttypes "github.com/cometbft/cometbft/types"
-	"github.com/cosmos/cosmos-sdk/client"
 	cometlog "github.com/cosmos/cosmos-sdk/serverv2/cometbft/log"
 	"github.com/cosmos/cosmos-sdk/serverv2/cometbft/types"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
-
-type HasCometBFTServer interface {
-	types.ProtoApp
-
-	// RegisterTendermintService registers the gRPC Query service for CometBFT queries.
-	RegisterTendermintService(client.Context)
-}
 
 type Config struct {
 	Transport  string
@@ -45,9 +37,8 @@ type CometBFTServer struct {
 	cleanupFn func()
 }
 
-func NewCometBFTServer(clientCtx client.Context, logger log.Logger, app HasCometBFTServer, cfg Config) *CometBFTServer {
+func NewCometBFTServer(logger log.Logger, app types.ProtoApp, cfg Config) *CometBFTServer {
 	logger = logger.With("module", "cometbft-server")
-	app.RegisterTendermintService(clientCtx) // not sure about this
 
 	return &CometBFTServer{
 		logger: logger,

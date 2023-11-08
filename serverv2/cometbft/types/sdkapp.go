@@ -26,7 +26,6 @@ type ProtoApp interface {
 	// TODO: Should these be a CometBFT specific thing?
 	MinGasPrices() sdk.DecCoins
 	CheckHalt(height int64, time time.Time) error
-	GetMaximumBlockGas(sdk.Context) uint64
 	GetBlockRetentionHeight(commitHeight int64) int64
 
 	// TODO: figure out if these below here are going to be available
@@ -42,4 +41,9 @@ type ProtoApp interface {
 	BeginBlock(context.Context) (sdk.BeginBlock, error) // TODO: create a new response type for this, we might not need it at all as we can access the EventManager()
 	EndBlock(context.Context) (sdk.EndBlock, error)     // TODO: sdk.EndBlock should not have Comet types
 	DeliverTx([]byte) *abci.ExecTxResult                // TODO: *abci.ExecTxResult should be an SDK type instead
+}
+
+type HasProposal interface {
+	PrepareProposal(context.Context, *abci.RequestPrepareProposal) (*abci.ResponsePrepareProposal, error)
+	ProcessProposal(context.Context, *abci.RequestProcessProposal) (*abci.ResponseProcessProposal, error)
 }

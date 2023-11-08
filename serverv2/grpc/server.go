@@ -5,7 +5,6 @@ import (
 	"net"
 
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
-	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/log"
@@ -114,9 +113,5 @@ func (g Server) Stop() error {
 	g.logger.Info("stopping gRPC server...", "address", g.config.Address)
 	g.grpcSrv.GracefulStop()
 
-	return nil
-}
-
-func (g Server) CLICommands() []*cobra.Command {
 	return nil
 }

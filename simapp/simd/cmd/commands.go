@@ -64,12 +64,12 @@ func initRootCmd(
 	)
 
 	// experimental commands
-	serverv2Cmd, err := serverv2.ServerCmd()
+	serverv2Cmds, err := serverv2.Commands()
 	if err != nil {
 		panic(err)
 	}
 	rootCmd.AddCommand(
-		serverv2Cmd,
+		serverv2Cmds...,
 	)
 }
 

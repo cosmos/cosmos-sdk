@@ -2,44 +2,45 @@ package serverv2
 
 import (
 	"errors"
-	"os"
+	"fmt"
 
 	"github.com/spf13/cobra"
 )
 
-func ServerCmd(services ...Service) (*cobra.Command, error) {
+func Commands(services ...Service) ([]*cobra.Command, error) {
 	if len(services) == 0 {
 		// TODO figure if we should define default services
 		// and if so it should be done here to avoid uncessary dependencies
 		return nil, errors.New("no services provided")
 	}
-
-	cfg := NewConfig()
-	logger, err := CreateSDKLogger(cfg.Viper, os.Stdout)
+	server := NewServer(services...)
+	v, err := server.Configs()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to build server config: %w", err)
 	}
 
-	server := NewServer(logger, services...)
-
-	baseCmd := &cobra.Command{
-		Use:   "server",
-		Short: "Experimental server v2",
-	}
-
-	baseCmd.AddCommand(startCmd(server))
-	baseCmd.AddCommand(server.CLICommands()...)
-
-	return baseCmd, nil
-}
-
-func startCmd(server *Server) *cobra.Command {
-	return &cobra.Command{
+	startCmd := &cobra.Command{
 		Use:   "start",
 		Short: "Run the full node",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			defer server.Stop()
+			if err := v.BindPFlags(cmd.Flags()); err != nil {
+				return err
+			}
+
+			logger, err := CreateSDKLogger(v, cmd.OutOrStdout())
+			if err != nil {
+				return err
+			}
+
+			defer func() {
+				logger.Info("shutting down")
+				server.Stop()
+			}()
+
+			logger.Info("starting servers...")
 			return server.Start()
 		},
 	}
+
+	return append(server.CLICommands(), startCmd), nil
 }

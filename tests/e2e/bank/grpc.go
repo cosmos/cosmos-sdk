@@ -15,8 +15,8 @@ import (
 )
 
 func (s *E2ETestSuite) TestTotalSupplyGRPCHandler() {
-	val := s.network.Validators[0]
-	baseURL := val.APIAddress
+	val := s.network.GetValidators()[0]
+	baseURL := val.GetAPIAddress()
 
 	testCases := []struct {
 		name     string
@@ -34,7 +34,7 @@ func (s *E2ETestSuite) TestTotalSupplyGRPCHandler() {
 			&types.QueryTotalSupplyResponse{},
 			&types.QueryTotalSupplyResponse{
 				Supply: sdk.NewCoins(
-					sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), s.cfg.AccountTokens),
+					sdk.NewCoin(fmt.Sprintf("%stoken", val.GetMoniker()), s.cfg.AccountTokens),
 					sdk.NewCoin(s.cfg.BondDenom, s.cfg.StakingTokens.Add(math.NewInt(10))),
 				),
 				Pagination: &query.PageResponse{
@@ -94,15 +94,15 @@ func (s *E2ETestSuite) TestTotalSupplyGRPCHandler() {
 			resp, err := testutil.GetRequestWithHeaders(tc.url, tc.headers)
 			s.Require().NoError(err)
 
-			s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(resp, tc.respType))
+			s.Require().NoError(val.GetClientCtx().Codec.UnmarshalJSON(resp, tc.respType))
 			s.Require().Equal(tc.expected.String(), tc.respType.String())
 		})
 	}
 }
 
 func (s *E2ETestSuite) TestDenomMetadataGRPCHandler() {
-	val := s.network.Validators[0]
-	baseURL := val.APIAddress
+	val := s.network.GetValidators()[0]
+	baseURL := val.GetAPIAddress()
 
 	testCases := []struct {
 		name     string
@@ -216,9 +216,9 @@ func (s *E2ETestSuite) TestDenomMetadataGRPCHandler() {
 			s.Require().NoError(err)
 
 			if tc.expErr {
-				s.Require().Error(val.ClientCtx.Codec.UnmarshalJSON(resp, tc.respType))
+				s.Require().Error(val.GetClientCtx().Codec.UnmarshalJSON(resp, tc.respType))
 			} else {
-				s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(resp, tc.respType))
+				s.Require().NoError(val.GetClientCtx().Codec.UnmarshalJSON(resp, tc.respType))
 				s.Require().Equal(tc.expected.String(), tc.respType.String())
 			}
 		})
@@ -226,8 +226,8 @@ func (s *E2ETestSuite) TestDenomMetadataGRPCHandler() {
 }
 
 func (s *E2ETestSuite) TestBalancesGRPCHandler() {
-	val := s.network.Validators[0]
-	baseURL := val.APIAddress
+	val := s.network.GetValidators()[0]
+	baseURL := val.GetAPIAddress()
 
 	testCases := []struct {
 		name     string
@@ -237,11 +237,11 @@ func (s *E2ETestSuite) TestBalancesGRPCHandler() {
 	}{
 		{
 			"gRPC total account balance",
-			fmt.Sprintf("%s/cosmos/bank/v1beta1/balances/%s", baseURL, val.Address.String()),
+			fmt.Sprintf("%s/cosmos/bank/v1beta1/balances/%s", baseURL, val.GetAddress().String()),
 			&types.QueryAllBalancesResponse{},
 			&types.QueryAllBalancesResponse{
 				Balances: sdk.NewCoins(
-					sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), s.cfg.AccountTokens),
+					sdk.NewCoin(fmt.Sprintf("%stoken", val.GetMoniker()), s.cfg.AccountTokens),
 					sdk.NewCoin(s.cfg.BondDenom, s.cfg.StakingTokens.Sub(s.cfg.BondedTokens)),
 				),
 				Pagination: &query.PageResponse{
@@ -251,7 +251,7 @@ func (s *E2ETestSuite) TestBalancesGRPCHandler() {
 		},
 		{
 			"gPRC account balance of a denom",
-			fmt.Sprintf("%s/cosmos/bank/v1beta1/balances/%s/by_denom?denom=%s", baseURL, val.Address.String(), s.cfg.BondDenom),
+			fmt.Sprintf("%s/cosmos/bank/v1beta1/balances/%s/by_denom?denom=%s", baseURL, val.GetAddress().String(), s.cfg.BondDenom),
 			&types.QueryBalanceResponse{},
 			&types.QueryBalanceResponse{
 				Balance: &sdk.Coin{
@@ -262,7 +262,7 @@ func (s *E2ETestSuite) TestBalancesGRPCHandler() {
 		},
 		{
 			"gPRC account balance of a bogus denom",
-			fmt.Sprintf("%s/cosmos/bank/v1beta1/balances/%s/by_denom?denom=foobar", baseURL, val.Address.String()),
+			fmt.Sprintf("%s/cosmos/bank/v1beta1/balances/%s/by_denom?denom=foobar", baseURL, val.GetAddress().String()),
 			&types.QueryBalanceResponse{},
 			&types.QueryBalanceResponse{
 				Balance: &sdk.Coin{
@@ -279,7 +279,7 @@ func (s *E2ETestSuite) TestBalancesGRPCHandler() {
 			resp, err := testutil.GetRequest(tc.url)
 			s.Require().NoError(err)
 
-			s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(resp, tc.respType))
+			s.Require().NoError(val.GetClientCtx().Codec.UnmarshalJSON(resp, tc.respType))
 			s.Require().Equal(tc.expected.String(), tc.respType.String())
 		})
 	}

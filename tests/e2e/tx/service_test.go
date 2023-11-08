@@ -42,7 +42,7 @@ type E2ETestSuite struct {
 	suite.Suite
 
 	cfg     network.Config
-	network *network.Network
+	network network.NetworkI
 
 	txHeight    int64
 	queryClient tx.ServiceClient
@@ -60,22 +60,22 @@ func (s *E2ETestSuite) SetupSuite() {
 	s.network, err = network.New(s.T(), s.T().TempDir(), s.cfg)
 	s.Require().NoError(err)
 
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 	s.Require().NoError(s.network.WaitForNextBlock())
 
-	s.queryClient = tx.NewServiceClient(val.ClientCtx)
+	s.queryClient = tx.NewServiceClient(val.GetClientCtx())
 
 	msgSend := &banktypes.MsgSend{
-		FromAddress: val.Address.String(),
-		ToAddress:   val.Address.String(),
+		FromAddress: val.GetAddress().String(),
+		ToAddress:   val.GetAddress().String(),
 		Amount:      sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))),
 	}
 
 	// Create a new MsgSend tx from val to itself.
 	out, err := cli.SubmitTestTx(
-		val.ClientCtx,
+		val.GetClientCtx(),
 		msgSend,
-		val.Address,
+		val.GetAddress(),
 		cli.TestTxConfig{
 			Memo: "foobar",
 		},
@@ -84,20 +84,20 @@ func (s *E2ETestSuite) SetupSuite() {
 	s.Require().NoError(err)
 
 	var txRes sdk.TxResponse
-	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txRes))
+	s.Require().NoError(val.GetClientCtx().Codec.UnmarshalJSON(out.Bytes(), &txRes))
 	s.Require().Equal(uint32(0), txRes.Code, txRes)
 	s.goodTxHash = txRes.TxHash
 
 	msgSend1 := &banktypes.MsgSend{
-		FromAddress: val.Address.String(),
-		ToAddress:   val.Address.String(),
+		FromAddress: val.GetAddress().String(),
+		ToAddress:   val.GetAddress().String(),
 		Amount:      sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(1))),
 	}
 
 	out1, err := cli.SubmitTestTx(
-		val.ClientCtx,
+		val.GetClientCtx(),
 		msgSend1,
-		val.Address,
+		val.GetAddress(),
 		cli.TestTxConfig{
 			Offline: true,
 			AccNum:  0,
@@ -108,10 +108,10 @@ func (s *E2ETestSuite) SetupSuite() {
 
 	s.Require().NoError(err)
 	var tr sdk.TxResponse
-	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out1.Bytes(), &tr))
+	s.Require().NoError(val.GetClientCtx().Codec.UnmarshalJSON(out1.Bytes(), &tr))
 	s.Require().Equal(uint32(0), tr.Code)
 
-	resp, err := cli.GetTxResponse(s.network, val.ClientCtx, tr.TxHash)
+	resp, err := cli.GetTxResponse(s.network, val.GetClientCtx(), tr.TxHash)
 	s.Require().NoError(err)
 	s.txHeight = resp.Height
 }
@@ -155,13 +155,13 @@ func (s *E2ETestSuite) TestQueryBySig() {
 }
 
 func (s *E2ETestSuite) TestSimulateTx_GRPC() {
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 	txBuilder := s.mkTxBuilder()
 	// Convert the txBuilder to a tx.Tx.
 	protoTx, err := txBuilderToProtoTx(txBuilder)
 	s.Require().NoError(err)
 	// Encode the txBuilder to txBytes.
-	txBytes, err := val.ClientCtx.TxConfig.TxEncoder()(txBuilder.GetTx())
+	txBytes, err := val.GetClientCtx().TxConfig.TxEncoder()(txBuilder.GetTx())
 	s.Require().NoError(err)
 
 	testCases := []struct {
@@ -202,13 +202,13 @@ func (s *E2ETestSuite) TestSimulateTx_GRPC() {
 }
 
 func (s *E2ETestSuite) TestSimulateTx_GRPCGateway() {
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 	txBuilder := s.mkTxBuilder()
 	// Convert the txBuilder to a tx.Tx.
 	protoTx, err := txBuilderToProtoTx(txBuilder)
 	s.Require().NoError(err)
 	// Encode the txBuilder to txBytes.
-	txBytes, err := val.ClientCtx.TxConfig.TxEncoder()(txBuilder.GetTx())
+	txBytes, err := val.GetClientCtx().TxConfig.TxEncoder()(txBuilder.GetTx())
 	s.Require().NoError(err)
 
 	testCases := []struct {
@@ -224,15 +224,15 @@ func (s *E2ETestSuite) TestSimulateTx_GRPCGateway() {
 
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
-			req, err := val.ClientCtx.Codec.MarshalJSON(tc.req)
+			req, err := val.GetClientCtx().Codec.MarshalJSON(tc.req)
 			s.Require().NoError(err)
-			res, err := testutil.PostRequest(fmt.Sprintf("%s/cosmos/tx/v1beta1/simulate", val.APIAddress), "application/json", req)
+			res, err := testutil.PostRequest(fmt.Sprintf("%s/cosmos/tx/v1beta1/simulate", val.GetAPIAddress()), "application/json", req)
 			s.Require().NoError(err)
 			if tc.expErr {
 				s.Require().Contains(string(res), tc.expErrMsg)
 			} else {
 				var result tx.SimulateResponse
-				err = val.ClientCtx.Codec.UnmarshalJSON(res, &result)
+				err = val.GetClientCtx().Codec.UnmarshalJSON(res, &result)
 				s.Require().NoError(err)
 				// Check the result and gas used are correct.
 				s.Require().Len(result.GetResult().MsgResponses, 1)
@@ -336,7 +336,7 @@ func (s *E2ETestSuite) TestGetTxEvents_GRPC() {
 }
 
 func (s *E2ETestSuite) TestGetTxEvents_GRPCGateway() {
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 	testCases := []struct {
 		name      string
 		url       string
@@ -346,49 +346,49 @@ func (s *E2ETestSuite) TestGetTxEvents_GRPCGateway() {
 	}{
 		{
 			"empty params",
-			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs", val.APIAddress),
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs", val.GetAPIAddress()),
 			true,
 			"query cannot be empty", 0,
 		},
 		{
 			"without pagination",
-			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?query=%s", val.APIAddress, bankMsgSendEventAction),
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?query=%s", val.GetAPIAddress(), bankMsgSendEventAction),
 			false,
 			"", 3,
 		},
 		{
 			"with pagination",
-			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?query=%s&page=%d&limit=%d", val.APIAddress, bankMsgSendEventAction, 1, 2),
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?query=%s&page=%d&limit=%d", val.GetAPIAddress(), bankMsgSendEventAction, 1, 2),
 			false,
 			"", 2,
 		},
 		{
 			"valid request: order by asc",
-			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?query=%s&query=%s&order_by=ORDER_BY_ASC", val.APIAddress, bankMsgSendEventAction, "message.module='bank'"),
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?query=%s&query=%s&order_by=ORDER_BY_ASC", val.GetAPIAddress(), bankMsgSendEventAction, "message.module='bank'"),
 			false,
 			"", 3,
 		},
 		{
 			"valid request: order by desc",
-			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?query=%s&query=%s&order_by=ORDER_BY_DESC", val.APIAddress, bankMsgSendEventAction, "message.module='bank'"),
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?query=%s&query=%s&order_by=ORDER_BY_DESC", val.GetAPIAddress(), bankMsgSendEventAction, "message.module='bank'"),
 			false,
 			"", 3,
 		},
 		{
 			"invalid request: invalid order by",
-			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?query=%s&query=%s&order_by=invalid_order", val.APIAddress, bankMsgSendEventAction, "message.module='bank'"),
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?query=%s&query=%s&order_by=invalid_order", val.GetAPIAddress(), bankMsgSendEventAction, "message.module='bank'"),
 			true,
 			"is not a valid tx.OrderBy", 0,
 		},
 		{
 			"expect pass with multiple-events",
-			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?query=%s&query=%s", val.APIAddress, bankMsgSendEventAction, "message.module='bank'"),
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?query=%s&query=%s", val.GetAPIAddress(), bankMsgSendEventAction, "message.module='bank'"),
 			false,
 			"", 3,
 		},
 		{
 			"expect pass with escape event",
-			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?query=%s", val.APIAddress, "message.action%3D'/cosmos.bank.v1beta1.MsgSend'"),
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?query=%s", val.GetAPIAddress(), "message.action%3D'/cosmos.bank.v1beta1.MsgSend'"),
 			false,
 			"", 3,
 		},
@@ -401,7 +401,7 @@ func (s *E2ETestSuite) TestGetTxEvents_GRPCGateway() {
 				s.Require().Contains(string(res), tc.expErrMsg)
 			} else {
 				var result tx.GetTxsEventResponse
-				err = val.ClientCtx.Codec.UnmarshalJSON(res, &result)
+				err = val.GetClientCtx().Codec.UnmarshalJSON(res, &result)
 				s.Require().NoError(err, "failed to unmarshal JSON: %s", res)
 				s.Require().GreaterOrEqual(len(result.Txs), 1)
 				s.Require().Equal("foobar", result.Txs[0].Body.Memo)
@@ -440,7 +440,7 @@ func (s *E2ETestSuite) TestGetTx_GRPC() {
 }
 
 func (s *E2ETestSuite) TestGetTx_GRPCGateway() {
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 	testCases := []struct {
 		name      string
 		url       string
@@ -449,17 +449,17 @@ func (s *E2ETestSuite) TestGetTx_GRPCGateway() {
 	}{
 		{
 			"empty params",
-			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs/", val.APIAddress),
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs/", val.GetAPIAddress()),
 			true, "tx hash cannot be empty",
 		},
 		{
 			"dummy hash",
-			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs/%s", val.APIAddress, "deadbeef"),
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs/%s", val.GetAPIAddress(), "deadbeef"),
 			true, "code = NotFound desc = tx not found: deadbeef",
 		},
 		{
 			"good hash",
-			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs/%s", val.APIAddress, s.goodTxHash),
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs/%s", val.GetAPIAddress(), s.goodTxHash),
 			false, "",
 		},
 	}
@@ -471,7 +471,7 @@ func (s *E2ETestSuite) TestGetTx_GRPCGateway() {
 				s.Require().Contains(string(res), tc.expErrMsg)
 			} else {
 				var result tx.GetTxResponse
-				err = val.ClientCtx.Codec.UnmarshalJSON(res, &result)
+				err = val.GetClientCtx().Codec.UnmarshalJSON(res, &result)
 				s.Require().NoError(err)
 				s.Require().Equal("foobar", result.Tx.Body.Memo)
 				s.Require().NotZero(result.TxResponse.Height)
@@ -487,9 +487,9 @@ func (s *E2ETestSuite) TestGetTx_GRPCGateway() {
 }
 
 func (s *E2ETestSuite) TestBroadcastTx_GRPC() {
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 	txBuilder := s.mkTxBuilder()
-	txBytes, err := val.ClientCtx.TxConfig.TxEncoder()(txBuilder.GetTx())
+	txBytes, err := val.GetClientCtx().TxConfig.TxEncoder()(txBuilder.GetTx())
 	s.Require().NoError(err)
 
 	testCases := []struct {
@@ -525,9 +525,9 @@ func (s *E2ETestSuite) TestBroadcastTx_GRPC() {
 }
 
 func (s *E2ETestSuite) TestBroadcastTx_GRPCGateway() {
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 	txBuilder := s.mkTxBuilder()
-	txBytes, err := val.ClientCtx.TxConfig.TxEncoder()(txBuilder.GetTx())
+	txBytes, err := val.GetClientCtx().TxConfig.TxEncoder()(txBuilder.GetTx())
 	s.Require().NoError(err)
 
 	testCases := []struct {
@@ -546,15 +546,15 @@ func (s *E2ETestSuite) TestBroadcastTx_GRPCGateway() {
 
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
-			req, err := val.ClientCtx.Codec.MarshalJSON(tc.req)
+			req, err := val.GetClientCtx().Codec.MarshalJSON(tc.req)
 			s.Require().NoError(err)
-			res, err := testutil.PostRequest(fmt.Sprintf("%s/cosmos/tx/v1beta1/txs", val.APIAddress), "application/json", req)
+			res, err := testutil.PostRequest(fmt.Sprintf("%s/cosmos/tx/v1beta1/txs", val.GetAPIAddress()), "application/json", req)
 			s.Require().NoError(err)
 			if tc.expErr {
 				s.Require().Contains(string(res), tc.expErrMsg)
 			} else {
 				var result tx.BroadcastTxResponse
-				err = val.ClientCtx.Codec.UnmarshalJSON(res, &result)
+				err = val.GetClientCtx().Codec.UnmarshalJSON(res, &result)
 				s.Require().NoError(err)
 				s.Require().Equal(uint32(0), result.TxResponse.Code, "rawlog", result.TxResponse.RawLog)
 			}
@@ -563,9 +563,10 @@ func (s *E2ETestSuite) TestBroadcastTx_GRPCGateway() {
 }
 
 func (s *E2ETestSuite) TestSimMultiSigTx() {
-	val1 := *s.network.Validators[0]
+	val1 := s.network.GetValidators()[0]
+	clientCtx := val1.GetClientCtx()
 
-	kr := val1.ClientCtx.Keyring
+	kr := clientCtx.Keyring
 
 	account1, _, err := kr.NewMnemonic("newAccount1", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 	s.Require().NoError(err)
@@ -585,7 +586,7 @@ func (s *E2ETestSuite) TestSimMultiSigTx() {
 
 	s.Require().NoError(s.network.WaitForNextBlock())
 
-	multisigRecord, err := val1.ClientCtx.Keyring.Key("multi")
+	multisigRecord, err := clientCtx.Keyring.Key("multi")
 	s.Require().NoError(err)
 
 	height, err := s.network.LatestHeight()
@@ -599,15 +600,15 @@ func (s *E2ETestSuite) TestSimMultiSigTx() {
 	// Send coins from validator to multisig.
 	coin := sdk.NewInt64Coin(s.cfg.BondDenom, 15)
 	msgSend := &banktypes.MsgSend{
-		FromAddress: val1.Address.String(),
+		FromAddress: val1.GetAddress().String(),
 		ToAddress:   addr.String(),
 		Amount:      sdk.NewCoins(coin),
 	}
 
 	_, err = cli.SubmitTestTx(
-		val1.ClientCtx,
+		clientCtx,
 		msgSend,
-		val1.Address,
+		val1.GetAddress(),
 		cli.TestTxConfig{},
 	)
 
@@ -620,16 +621,16 @@ func (s *E2ETestSuite) TestSimMultiSigTx() {
 
 	msgSend1 := &banktypes.MsgSend{
 		FromAddress: addr.String(),
-		ToAddress:   val1.Address.String(),
+		ToAddress:   val1.GetAddress().String(),
 		Amount: sdk.NewCoins(
 			sdk.NewInt64Coin(s.cfg.BondDenom, 5),
 		),
 	}
 	// Generate multisig transaction.
 	multiGeneratedTx, err := cli.SubmitTestTx(
-		val1.ClientCtx,
+		clientCtx,
 		msgSend1,
-		val1.Address,
+		val1.GetAddress(),
 		cli.TestTxConfig{
 			GenOnly: true,
 			Memo:    "foobar",
@@ -644,27 +645,27 @@ func (s *E2ETestSuite) TestSimMultiSigTx() {
 	// Sign with account1
 	addr1, err := account1.GetAddress()
 	s.Require().NoError(err)
-	val1.ClientCtx.HomeDir = strings.Replace(val1.ClientCtx.HomeDir, "simd", "simcli", 1)
-	account1Signature, err := authtest.TxSignExec(val1.ClientCtx, addr1, multiGeneratedTxFile.Name(), "--multisig", addr.String())
+	clientCtx.HomeDir = strings.Replace(clientCtx.HomeDir, "simd", "simcli", 1)
+	account1Signature, err := authtest.TxSignExec(clientCtx, addr1, multiGeneratedTxFile.Name(), "--multisig", addr.String())
 	s.Require().NoError(err)
 	sign1File := testutil.WriteToNewTempFile(s.T(), account1Signature.String())
 
 	// Sign with account2
 	addr2, err := account2.GetAddress()
 	s.Require().NoError(err)
-	account2Signature, err := authtest.TxSignExec(val1.ClientCtx, addr2, multiGeneratedTxFile.Name(), "--multisig", addr.String())
+	account2Signature, err := authtest.TxSignExec(clientCtx, addr2, multiGeneratedTxFile.Name(), "--multisig", addr.String())
 	s.Require().NoError(err)
 	sign2File := testutil.WriteToNewTempFile(s.T(), account2Signature.String())
 
 	// multisign tx
-	val1.ClientCtx.Offline = false
-	multiSigWith2Signatures, err := authtest.TxMultiSignExec(val1.ClientCtx, multisigRecord.Name, multiGeneratedTxFile.Name(), sign1File.Name(), sign2File.Name())
+	clientCtx.Offline = false
+	multiSigWith2Signatures, err := authtest.TxMultiSignExec(clientCtx, multisigRecord.Name, multiGeneratedTxFile.Name(), sign1File.Name(), sign2File.Name())
 	s.Require().NoError(err)
 
 	// convert from protoJSON to protoBinary for sim
-	sdkTx, err := val1.ClientCtx.TxConfig.TxJSONDecoder()(multiSigWith2Signatures.Bytes())
+	sdkTx, err := clientCtx.TxConfig.TxJSONDecoder()(multiSigWith2Signatures.Bytes())
 	s.Require().NoError(err)
-	txBytes, err := val1.ClientCtx.TxConfig.TxEncoder()(sdkTx)
+	txBytes, err := clientCtx.TxConfig.TxEncoder()(sdkTx)
 	s.Require().NoError(err)
 
 	// simulate tx
@@ -715,7 +716,7 @@ func (s *E2ETestSuite) TestGetBlockWithTxs_GRPC() {
 }
 
 func (s *E2ETestSuite) TestGetBlockWithTxs_GRPCGateway() {
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 	testCases := []struct {
 		name      string
 		url       string
@@ -724,17 +725,17 @@ func (s *E2ETestSuite) TestGetBlockWithTxs_GRPCGateway() {
 	}{
 		{
 			"empty params",
-			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs/block/0", val.APIAddress),
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs/block/0", val.GetAPIAddress()),
 			true, "height must not be less than 1 or greater than the current height",
 		},
 		{
 			"bad height",
-			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs/block/%d", val.APIAddress, 9999999),
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs/block/%d", val.GetAPIAddress(), 9999999),
 			true, "height must not be less than 1 or greater than the current height",
 		},
 		{
 			"good request",
-			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs/block/%d", val.APIAddress, s.txHeight),
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs/block/%d", val.GetAPIAddress(), s.txHeight),
 			false, "",
 		},
 	}
@@ -746,7 +747,7 @@ func (s *E2ETestSuite) TestGetBlockWithTxs_GRPCGateway() {
 				s.Require().Contains(string(res), tc.expErrMsg)
 			} else {
 				var result tx.GetBlockWithTxsResponse
-				err = val.ClientCtx.Codec.UnmarshalJSON(res, &result)
+				err = val.GetClientCtx().Codec.UnmarshalJSON(res, &result)
 				s.Require().NoError(err)
 				s.Require().Equal("foobar", result.Txs[0].Body.Memo)
 				s.Require().Equal(result.Block.Header.Height, s.txHeight)
@@ -756,7 +757,7 @@ func (s *E2ETestSuite) TestGetBlockWithTxs_GRPCGateway() {
 }
 
 func (s *E2ETestSuite) TestTxEncode_GRPC() {
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 	txBuilder := s.mkTxBuilder()
 	protoTx, err := txBuilderToProtoTx(txBuilder)
 	s.Require().NoError(err)
@@ -784,7 +785,7 @@ func (s *E2ETestSuite) TestTxEncode_GRPC() {
 				s.Require().NoError(err)
 				s.Require().NotEmpty(res.GetTxBytes())
 
-				tx, err := val.ClientCtx.TxConfig.TxDecoder()(res.TxBytes)
+				tx, err := val.GetClientCtx().TxConfig.TxDecoder()(res.TxBytes)
 				s.Require().NoError(err)
 				s.Require().Equal(protoTx.GetMsgs(), tx.GetMsgs())
 			}
@@ -793,7 +794,7 @@ func (s *E2ETestSuite) TestTxEncode_GRPC() {
 }
 
 func (s *E2ETestSuite) TestTxEncode_GRPCGateway() {
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 	txBuilder := s.mkTxBuilder()
 	protoTx, err := txBuilderToProtoTx(txBuilder)
 	s.Require().NoError(err)
@@ -810,19 +811,19 @@ func (s *E2ETestSuite) TestTxEncode_GRPCGateway() {
 
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
-			req, err := val.ClientCtx.Codec.MarshalJSON(tc.req)
+			req, err := val.GetClientCtx().Codec.MarshalJSON(tc.req)
 			s.Require().NoError(err)
 
-			res, err := testutil.PostRequest(fmt.Sprintf("%s/cosmos/tx/v1beta1/encode", val.APIAddress), "application/json", req)
+			res, err := testutil.PostRequest(fmt.Sprintf("%s/cosmos/tx/v1beta1/encode", val.GetAPIAddress()), "application/json", req)
 			s.Require().NoError(err)
 			if tc.expErr {
 				s.Require().Contains(string(res), tc.expErrMsg)
 			} else {
 				var result tx.TxEncodeResponse
-				err := val.ClientCtx.Codec.UnmarshalJSON(res, &result)
+				err := val.GetClientCtx().Codec.UnmarshalJSON(res, &result)
 				s.Require().NoError(err)
 
-				tx, err := val.ClientCtx.TxConfig.TxDecoder()(result.TxBytes)
+				tx, err := val.GetClientCtx().TxConfig.TxDecoder()(result.TxBytes)
 				s.Require().NoError(err)
 				s.Require().Equal(protoTx.GetMsgs(), tx.GetMsgs())
 			}
@@ -831,10 +832,10 @@ func (s *E2ETestSuite) TestTxEncode_GRPCGateway() {
 }
 
 func (s *E2ETestSuite) TestTxDecode_GRPC() {
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 	txBuilder := s.mkTxBuilder()
 
-	encodedTx, err := val.ClientCtx.TxConfig.TxEncoder()(txBuilder.GetTx())
+	encodedTx, err := val.GetClientCtx().TxConfig.TxEncoder()(txBuilder.GetTx())
 	s.Require().NoError(err)
 
 	invalidTxBytes := append(encodedTx, byte(0o00))
@@ -864,7 +865,7 @@ func (s *E2ETestSuite) TestTxDecode_GRPC() {
 				s.Require().NotEmpty(res.GetTx())
 
 				txb := authtx.WrapTx(res.Tx)
-				tx, err := val.ClientCtx.TxConfig.TxEncoder()(txb.GetTx())
+				tx, err := val.GetClientCtx().TxConfig.TxEncoder()(txb.GetTx())
 				s.Require().NoError(err)
 				s.Require().Equal(encodedTx, tx)
 			}
@@ -873,10 +874,10 @@ func (s *E2ETestSuite) TestTxDecode_GRPC() {
 }
 
 func (s *E2ETestSuite) TestTxDecode_GRPCGateway() {
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 	txBuilder := s.mkTxBuilder()
 
-	encodedTxBytes, err := val.ClientCtx.TxConfig.TxEncoder()(txBuilder.GetTx())
+	encodedTxBytes, err := val.GetClientCtx().TxConfig.TxEncoder()(txBuilder.GetTx())
 	s.Require().NoError(err)
 
 	invalidTxBytes := append(encodedTxBytes, byte(0o00))
@@ -894,20 +895,20 @@ func (s *E2ETestSuite) TestTxDecode_GRPCGateway() {
 
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
-			req, err := val.ClientCtx.Codec.MarshalJSON(tc.req)
+			req, err := val.GetClientCtx().Codec.MarshalJSON(tc.req)
 			s.Require().NoError(err)
 
-			res, err := testutil.PostRequest(fmt.Sprintf("%s/cosmos/tx/v1beta1/decode", val.APIAddress), "application/json", req)
+			res, err := testutil.PostRequest(fmt.Sprintf("%s/cosmos/tx/v1beta1/decode", val.GetAPIAddress()), "application/json", req)
 			s.Require().NoError(err)
 			if tc.expErr {
 				s.Require().Contains(string(res), tc.expErrMsg)
 			} else {
 				var result tx.TxDecodeResponse
-				err := val.ClientCtx.Codec.UnmarshalJSON(res, &result)
+				err := val.GetClientCtx().Codec.UnmarshalJSON(res, &result)
 				s.Require().NoError(err)
 
 				txb := authtx.WrapTx(result.Tx)
-				tx, err := val.ClientCtx.TxConfig.TxEncoder()(txb.GetTx())
+				tx, err := val.GetClientCtx().TxConfig.TxEncoder()(txb.GetTx())
 				s.Require().NoError(err)
 				s.Require().Equal(encodedTxBytes, tx)
 			}
@@ -916,17 +917,17 @@ func (s *E2ETestSuite) TestTxDecode_GRPCGateway() {
 }
 
 func (s *E2ETestSuite) readTestAminoTxJSON() ([]byte, *legacytx.StdTx) {
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 	txJSONBytes, err := os.ReadFile("testdata/tx_amino1.json")
 	s.Require().NoError(err)
 	var stdTx legacytx.StdTx
-	err = val.ClientCtx.LegacyAmino.UnmarshalJSON(txJSONBytes, &stdTx)
+	err = val.GetClientCtx().LegacyAmino.UnmarshalJSON(txJSONBytes, &stdTx)
 	s.Require().NoError(err)
 	return txJSONBytes, &stdTx
 }
 
 func (s *E2ETestSuite) TestTxEncodeAmino_GRPC() {
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 	txJSONBytes, stdTx := s.readTestAminoTxJSON()
 
 	testCases := []struct {
@@ -954,7 +955,7 @@ func (s *E2ETestSuite) TestTxEncodeAmino_GRPC() {
 				s.Require().NotEmpty(res.GetAminoBinary())
 
 				var decodedTx legacytx.StdTx
-				err = val.ClientCtx.LegacyAmino.Unmarshal(res.AminoBinary, &decodedTx)
+				err = val.GetClientCtx().LegacyAmino.Unmarshal(res.AminoBinary, &decodedTx)
 				s.Require().NoError(err)
 				s.Require().Equal(decodedTx.GetMsgs(), stdTx.GetMsgs())
 			}
@@ -963,7 +964,7 @@ func (s *E2ETestSuite) TestTxEncodeAmino_GRPC() {
 }
 
 func (s *E2ETestSuite) TestTxEncodeAmino_GRPCGateway() {
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 	txJSONBytes, stdTx := s.readTestAminoTxJSON()
 
 	testCases := []struct {
@@ -979,20 +980,20 @@ func (s *E2ETestSuite) TestTxEncodeAmino_GRPCGateway() {
 
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
-			req, err := val.ClientCtx.Codec.MarshalJSON(tc.req)
+			req, err := val.GetClientCtx().Codec.MarshalJSON(tc.req)
 			s.Require().NoError(err)
 
-			res, err := testutil.PostRequest(fmt.Sprintf("%s/cosmos/tx/v1beta1/encode/amino", val.APIAddress), "application/json", req)
+			res, err := testutil.PostRequest(fmt.Sprintf("%s/cosmos/tx/v1beta1/encode/amino", val.GetAPIAddress()), "application/json", req)
 			s.Require().NoError(err)
 			if tc.expErr {
 				s.Require().Contains(string(res), tc.expErrMsg)
 			} else {
 				var result tx.TxEncodeAminoResponse
-				err := val.ClientCtx.Codec.UnmarshalJSON(res, &result)
+				err := val.GetClientCtx().Codec.UnmarshalJSON(res, &result)
 				s.Require().NoError(err)
 
 				var decodedTx legacytx.StdTx
-				err = val.ClientCtx.LegacyAmino.Unmarshal(result.AminoBinary, &decodedTx)
+				err = val.GetClientCtx().LegacyAmino.Unmarshal(result.AminoBinary, &decodedTx)
 				s.Require().NoError(err)
 				s.Require().Equal(decodedTx.GetMsgs(), stdTx.GetMsgs())
 			}
@@ -1001,11 +1002,11 @@ func (s *E2ETestSuite) TestTxEncodeAmino_GRPCGateway() {
 }
 
 func (s *E2ETestSuite) readTestAminoTxBinary() ([]byte, *legacytx.StdTx) {
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 	txJSONBytes, err := os.ReadFile("testdata/tx_amino1.bin")
 	s.Require().NoError(err)
 	var stdTx legacytx.StdTx
-	err = val.ClientCtx.LegacyAmino.Unmarshal(txJSONBytes, &stdTx)
+	err = val.GetClientCtx().LegacyAmino.Unmarshal(txJSONBytes, &stdTx)
 	s.Require().NoError(err)
 	return txJSONBytes, &stdTx
 }
@@ -1040,7 +1041,7 @@ func (s *E2ETestSuite) TestTxDecodeAmino_GRPC() {
 				s.Require().NotEmpty(res.GetAminoJson())
 
 				var decodedTx legacytx.StdTx
-				err = s.network.Validators[0].ClientCtx.LegacyAmino.UnmarshalJSON([]byte(res.GetAminoJson()), &decodedTx)
+				err = s.network.GetValidators()[0].GetClientCtx().LegacyAmino.UnmarshalJSON([]byte(res.GetAminoJson()), &decodedTx)
 				s.Require().NoError(err)
 				s.Require().Equal(stdTx.GetMsgs(), decodedTx.GetMsgs())
 			}
@@ -1049,7 +1050,7 @@ func (s *E2ETestSuite) TestTxDecodeAmino_GRPC() {
 }
 
 func (s *E2ETestSuite) TestTxDecodeAmino_GRPCGateway() {
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 	encodedTx, stdTx := s.readTestAminoTxBinary()
 
 	invalidTxBytes := append(encodedTx, byte(0o00))
@@ -1067,20 +1068,20 @@ func (s *E2ETestSuite) TestTxDecodeAmino_GRPCGateway() {
 
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
-			req, err := val.ClientCtx.Codec.MarshalJSON(tc.req)
+			req, err := val.GetClientCtx().Codec.MarshalJSON(tc.req)
 			s.Require().NoError(err)
 
-			res, err := testutil.PostRequest(fmt.Sprintf("%s/cosmos/tx/v1beta1/decode/amino", val.APIAddress), "application/json", req)
+			res, err := testutil.PostRequest(fmt.Sprintf("%s/cosmos/tx/v1beta1/decode/amino", val.GetAPIAddress()), "application/json", req)
 			s.Require().NoError(err)
 			if tc.expErr {
 				s.Require().Contains(string(res), tc.expErrMsg)
 			} else {
 				var result tx.TxDecodeAminoResponse
-				err := val.ClientCtx.Codec.UnmarshalJSON(res, &result)
+				err := val.GetClientCtx().Codec.UnmarshalJSON(res, &result)
 				s.Require().NoError(err)
 
 				var decodedTx legacytx.StdTx
-				err = val.ClientCtx.LegacyAmino.UnmarshalJSON([]byte(result.AminoJson), &decodedTx)
+				err = val.GetClientCtx().LegacyAmino.UnmarshalJSON([]byte(result.AminoJson), &decodedTx)
 				s.Require().NoError(err)
 				s.Require().Equal(stdTx.GetMsgs(), decodedTx.GetMsgs())
 			}
@@ -1093,17 +1094,17 @@ func TestE2ETestSuite(t *testing.T) {
 }
 
 func (s *E2ETestSuite) mkTxBuilder() client.TxBuilder {
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 	s.Require().NoError(s.network.WaitForNextBlock())
 
 	// prepare txBuilder with msg
-	txBuilder := val.ClientCtx.TxConfig.NewTxBuilder()
+	txBuilder := val.GetClientCtx().TxConfig.NewTxBuilder()
 	feeAmount := sdk.Coins{sdk.NewInt64Coin(s.cfg.BondDenom, 10)}
 	gasLimit := testdata.NewTestGasLimit()
 	s.Require().NoError(
 		txBuilder.SetMsgs(&banktypes.MsgSend{
-			FromAddress: val.Address.String(),
-			ToAddress:   val.Address.String(),
+			FromAddress: val.GetAddress().String(),
+			ToAddress:   val.GetAddress().String(),
 			Amount:      sdk.Coins{sdk.NewInt64Coin(s.cfg.BondDenom, 10)},
 		}),
 	)
@@ -1112,17 +1113,17 @@ func (s *E2ETestSuite) mkTxBuilder() client.TxBuilder {
 	txBuilder.SetMemo("foobar")
 	signers, err := txBuilder.GetTx().GetSigners()
 	s.Require().NoError(err)
-	s.Require().Equal([][]byte{val.Address}, signers)
+	s.Require().Equal([][]byte{val.GetAddress()}, signers)
 
 	// setup txFactory
 	txFactory := clienttx.Factory{}.
-		WithChainID(val.ClientCtx.ChainID).
-		WithKeybase(val.ClientCtx.Keyring).
-		WithTxConfig(val.ClientCtx.TxConfig).
+		WithChainID(val.GetClientCtx().ChainID).
+		WithKeybase(val.GetClientCtx().Keyring).
+		WithTxConfig(val.GetClientCtx().TxConfig).
 		WithSignMode(signing.SignMode_SIGN_MODE_DIRECT)
 
 	// Sign Tx.
-	err = authclient.SignTx(txFactory, val.ClientCtx, val.Moniker, txBuilder, false, true)
+	err = authclient.SignTx(txFactory, val.GetClientCtx(), val.GetMoniker(), txBuilder, false, true)
 	s.Require().NoError(err)
 
 	return txBuilder

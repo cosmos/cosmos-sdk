@@ -23,18 +23,18 @@ import (
 // or handler.
 type Validator struct {
 	AppConfig  *srvconfig.Config
-	ClientCtx  client.Context
-	Ctx        *server.Context
-	Dir        string
-	NodeID     string
-	PubKey     cryptotypes.PubKey
-	Moniker    string
-	APIAddress string
-	RPCAddress string
-	P2PAddress string
-	Address    sdk.AccAddress
-	ValAddress sdk.ValAddress
-	RPCClient  cmtclient.Client
+	clientCtx  client.Context
+	ctx        *server.Context
+	dir        string
+	nodeID     string
+	pubKey     cryptotypes.PubKey
+	moniker    string
+	aPIAddress string
+	rPCAddress string
+	p2PAddress string
+	address    sdk.AccAddress
+	valAddress sdk.ValAddress
+	rPCClient  cmtclient.Client
 
 	app      servertypes.Application
 	tmNode   *node.Node
@@ -48,11 +48,11 @@ type Validator struct {
 var _ ValidatorI = &Validator{}
 
 func (v *Validator) GetCtx() *server.Context {
-	return v.Ctx
+	return v.ctx
 }
 
 func (v *Validator) GetClientCtx() client.Context {
-	return v.ClientCtx
+	return v.clientCtx
 }
 
 func (v *Validator) GetAppConfig() *srvconfig.Config {
@@ -60,25 +60,25 @@ func (v *Validator) GetAppConfig() *srvconfig.Config {
 }
 
 func (v *Validator) GetAddress() sdk.AccAddress {
-	return v.Address
+	return v.address
 }
 
 func (v *Validator) GetValAddress() sdk.ValAddress {
-	return v.ValAddress
+	return v.valAddress
 }
 
 func (v *Validator) GetAPIAddress() string {
-	return v.APIAddress
+	return v.aPIAddress
 }
 
 func (v *Validator) GetRPCAddress() string {
-	return v.RPCAddress
+	return v.rPCAddress
 }
 
 func (v *Validator) GetPubKey() cryptotypes.PubKey {
-	return v.PubKey
+	return v.pubKey
 }
 
 func (v *Validator) GetMoniker() string {
-	return v.Moniker
+	return v.moniker
 }

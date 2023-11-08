@@ -564,17 +564,17 @@ func New(l Logger, baseDir string, cfg Config) (NetworkI, error) {
 
 		network.Validators[i] = &Validator{
 			AppConfig:  appCfg,
-			ClientCtx:  clientCtx,
-			Ctx:        ctx,
-			Dir:        filepath.Join(network.BaseDir, nodeDirName),
-			NodeID:     nodeID,
-			PubKey:     pubKey,
-			Moniker:    nodeDirName,
-			RPCAddress: cmtCfg.RPC.ListenAddress,
-			P2PAddress: cmtCfg.P2P.ListenAddress,
-			APIAddress: apiAddr,
-			Address:    addr,
-			ValAddress: sdk.ValAddress(addr),
+			clientCtx:  clientCtx,
+			ctx:        ctx,
+			dir:        filepath.Join(network.BaseDir, nodeDirName),
+			nodeID:     nodeID,
+			pubKey:     pubKey,
+			moniker:    nodeDirName,
+			rPCAddress: cmtCfg.RPC.ListenAddress,
+			p2PAddress: cmtCfg.P2P.ListenAddress,
+			aPIAddress: apiAddr,
+			address:    addr,
+			valAddress: sdk.ValAddress(addr),
 		}
 	}
 
@@ -648,7 +648,7 @@ func (n *Network) LatestHeight() (int64, error) {
 
 	var latestHeight int64
 	val := n.Validators[0]
-	queryClient := cmtservice.NewServiceClient(val.ClientCtx)
+	queryClient := cmtservice.NewServiceClient(val.clientCtx)
 
 	for {
 		select {
@@ -705,7 +705,7 @@ func (n *Network) WaitForHeightWithTimeout(h int64, t time.Duration) (int64, err
 
 	var latestHeight int64
 	val := n.Validators[0]
-	queryClient := cmtservice.NewServiceClient(val.ClientCtx)
+	queryClient := cmtservice.NewServiceClient(val.clientCtx)
 
 	for {
 		select {

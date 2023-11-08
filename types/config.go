@@ -202,6 +202,11 @@ func (config *Config) GetPurpose() uint32 {
 	return config.purpose
 }
 
+// GetCoinType returns the BIP-0044 CoinType code on the config.
+func (config *Config) GetCoinType() uint32 {
+	return config.coinType
+}
+
 // GetFullFundraiserPath returns the BIP44Prefix.
 //
 // Deprecated: This method is supported for backward compatibility only and will be removed in a future release. Use GetFullBIP44Path instead.

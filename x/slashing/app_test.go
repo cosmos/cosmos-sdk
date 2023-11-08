@@ -4,15 +4,18 @@ import (
 	"errors"
 	"testing"
 
-	abci "github.com/cometbft/cometbft/abci/types"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/core/header"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
+	authtypes "cosmossdk.io/x/auth/types"
+	bankkeeper "cosmossdk.io/x/bank/keeper"
 	"cosmossdk.io/x/slashing/keeper"
 	"cosmossdk.io/x/slashing/types"
+	stakingkeeper "cosmossdk.io/x/staking/keeper"
+	stakingtypes "cosmossdk.io/x/staking/types"
 
 	codecaddress "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
@@ -21,10 +24,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 var (
@@ -91,14 +90,12 @@ func TestSlashingMsgs(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	header := cmtproto.Header{Height: app.LastBlockHeight() + 1}
+	headerInfo := header.Info{Height: app.LastBlockHeight() + 1}
 	txConfig := moduletestutil.MakeTestTxConfig()
-	_, _, err = sims.SignCheckDeliver(t, txConfig, app.BaseApp, header, []sdk.Msg{createValidatorMsg}, "", []uint64{0}, []uint64{0}, true, true, priv1)
+	_, _, err = sims.SignCheckDeliver(t, txConfig, app.BaseApp, headerInfo, []sdk.Msg{createValidatorMsg}, "", []uint64{0}, []uint64{0}, true, true, priv1)
 	require.NoError(t, err)
 	require.True(t, sdk.Coins{genCoin.Sub(bondCoin)}.Equal(bankKeeper.GetAllBalances(ctxCheck, addr1)))
 
-	_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: app.LastBlockHeight() + 1})
-	require.NoError(t, err)
 	ctxCheck = baseApp.NewContext(true)
 	validator, err := stakingKeeper.GetValidator(ctxCheck, sdk.ValAddress(addr1))
 	require.NoError(t, err)
@@ -113,8 +110,8 @@ func TestSlashingMsgs(t *testing.T) {
 	require.NoError(t, err)
 
 	// unjail should fail with unknown validator
-	header = cmtproto.Header{Height: app.LastBlockHeight() + 1}
-	_, _, err = sims.SignCheckDeliver(t, txConfig, app.BaseApp, header, []sdk.Msg{unjailMsg}, "", []uint64{0}, []uint64{1}, false, false, priv1)
+	headerInfo = header.Info{Height: app.LastBlockHeight() + 1}
+	_, _, err = sims.SignCheckDeliver(t, txConfig, app.BaseApp, headerInfo, []sdk.Msg{unjailMsg}, "", []uint64{0}, []uint64{1}, false, false, priv1)
 	require.Error(t, err)
 	require.True(t, errors.Is(types.ErrValidatorNotJailed, err))
 }

@@ -4,16 +4,19 @@ import (
 	"math/rand"
 	"testing"
 
-	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
+	authkeeper "cosmossdk.io/x/auth/keeper"
+	bankkeeper "cosmossdk.io/x/bank/keeper"
+	banktestutil "cosmossdk.io/x/bank/testutil"
 	"cosmossdk.io/x/protocolpool/keeper"
 	"cosmossdk.io/x/protocolpool/simulation"
 	pooltestutil "cosmossdk.io/x/protocolpool/testutil"
 	"cosmossdk.io/x/protocolpool/types"
+	stakingkeeper "cosmossdk.io/x/staking/keeper"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -21,10 +24,6 @@ import (
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
-	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 )
 
 type suite struct {
@@ -112,12 +111,6 @@ func TestSimulateMsgFundCommunityPool(t *testing.T) {
 	s := rand.NewSource(1)
 	r := rand.New(s)
 	accounts := getTestingAccounts(t, r, suite.AccountKeeper, suite.BankKeeper, suite.StakingKeeper, suite.Ctx, 3)
-
-	_, err := suite.App.FinalizeBlock(&abci.RequestFinalizeBlock{
-		Height: suite.App.LastBlockHeight() + 1,
-		Hash:   suite.App.LastCommitID().Hash,
-	})
-	require.NoError(t, err)
 
 	// execute operation
 	op := simulation.SimulateMsgFundCommunityPool(suite.TxConfig, suite.AccountKeeper, suite.BankKeeper, suite.PoolKeeper)

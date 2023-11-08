@@ -9,7 +9,7 @@ import "cosmos/authz/v1beta1/authz.proto";
 import "cosmos/msg/v1/msg.proto";
 import "amino/amino.proto";
 
-option go_package                      = "github.com/cosmos/cosmos-sdk/x/authz";
+option go_package                      = "cosmossdk.io/x/authz";
 option (gogoproto.goproto_getters_all) = false;
 
 // Msg defines the authz Msg service.

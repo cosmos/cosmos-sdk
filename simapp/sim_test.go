@@ -19,18 +19,18 @@ import (
 	"cosmossdk.io/log"
 	"cosmossdk.io/store"
 	storetypes "cosmossdk.io/store/types"
+	authzkeeper "cosmossdk.io/x/authz/keeper"
 	"cosmossdk.io/x/feegrant"
 	slashingtypes "cosmossdk.io/x/slashing/types"
+	stakingtypes "cosmossdk.io/x/staking/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 	simcli "github.com/cosmos/cosmos-sdk/x/simulation/client/cli"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // SimAppChainID hardcoded chainID for simulation
@@ -294,6 +294,9 @@ func TestAppSimulationAfterImport(t *testing.T) {
 	}()
 
 	newApp := NewSimApp(log.NewNopLogger(), newDB, nil, true, appOptions, fauxMerkleModeOpt, baseapp.SetChainID(SimAppChainID))
+	if !simcli.FlagSigverifyTxValue {
+		newApp.SetNotSigverifyTx()
+	}
 	require.Equal(t, "SimApp", newApp.Name())
 
 	_, err = newApp.InitChain(&abci.RequestInitChain{

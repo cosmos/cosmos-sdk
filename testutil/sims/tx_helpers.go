@@ -7,10 +7,11 @@ import (
 	"time"
 
 	types2 "github.com/cometbft/cometbft/abci/types"
-	"github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/core/header"
 	"cosmossdk.io/errors"
+	authsign "cosmossdk.io/x/auth/signing"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -18,7 +19,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-	authsign "github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
 // GenSignedMockTx generates a signed mock transaction.
@@ -93,7 +93,7 @@ func GenSignedMockTx(r *rand.Rand, txConfig client.TxConfig, msgs []sdk.Msg, fee
 // the parameter 'expPass' against the result. A corresponding result is
 // returned.
 func SignCheckDeliver(
-	t *testing.T, txCfg client.TxConfig, app *baseapp.BaseApp, header types.Header, msgs []sdk.Msg,
+	t *testing.T, txCfg client.TxConfig, app *baseapp.BaseApp, header header.Info, msgs []sdk.Msg,
 	chainID string, accNums, accSeqs []uint64, expSimPass, expPass bool, priv ...cryptotypes.PrivKey,
 ) (sdk.GasInfo, *sdk.Result, error) {
 	t.Helper()

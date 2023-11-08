@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"net/http"
 	"net/url"
 	"os"
 	"os/signal"
@@ -17,12 +16,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cometbft/cometbft/node"
-	cmtclient "github.com/cometbft/cometbft/rpc/client"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/spf13/cobra"
-	"golang.org/x/sync/errgroup"
-	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/depinject"
@@ -30,6 +25,13 @@ import (
 	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/math/unsafe"
 	pruningtypes "cosmossdk.io/store/pruning/types"
+	_ "cosmossdk.io/x/auth"           // import auth as a blank
+	_ "cosmossdk.io/x/auth/tx/config" // import auth tx config as a blank
+	authtypes "cosmossdk.io/x/auth/types"
+	_ "cosmossdk.io/x/bank" // import bank as a blank
+	banktypes "cosmossdk.io/x/bank/types"
+	_ "cosmossdk.io/x/staking" // import staking as a blank
+	stakingtypes "cosmossdk.io/x/staking/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -44,7 +46,6 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/server"
-	"github.com/cosmos/cosmos-sdk/server/api"
 	srvconfig "github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -52,15 +53,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	_ "github.com/cosmos/cosmos-sdk/x/auth"           // import auth as a blank
-	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config" // import auth tx config as a blank
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	_ "github.com/cosmos/cosmos-sdk/x/bank" // import bank as a blank
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	_ "github.com/cosmos/cosmos-sdk/x/consensus" // import consensus as a blank
 	"github.com/cosmos/cosmos-sdk/x/genutil"
-	_ "github.com/cosmos/cosmos-sdk/x/staking" // import staking as a blank
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // package-wide network lock to only allow one test network at a time
@@ -274,39 +268,6 @@ type (
 		Config Config
 	}
 
-	// Validator defines an in-process CometBFT validator node. Through this object,
-	// a client can make RPC and API calls and interact with any client command
-	// or handler.
-	Validator struct {
-		AppConfig  *srvconfig.Config
-		ClientCtx  client.Context
-		Ctx        *server.Context
-		Dir        string
-		NodeID     string
-		PubKey     cryptotypes.PubKey
-		Moniker    string
-		APIAddress string
-		RPCAddress string
-		P2PAddress string
-		Address    sdk.AccAddress
-		ValAddress sdk.ValAddress
-		RPCClient  cmtclient.Client
-
-		app      servertypes.Application
-		tmNode   *node.Node
-		api      *api.Server
-		grpc     *grpc.Server
-		grpcWeb  *http.Server
-		errGroup *errgroup.Group
-		cancelFn context.CancelFunc
-	}
-
-	// ValidatorI expose a validator's context and configuration
-	ValidatorI interface {
-		GetCtx() *server.Context
-		GetAppConfig() *srvconfig.Config
-	}
-
 	// Logger is a network logger interface that exposes testnet-level Log() methods for an in-process testing network
 	// This is not to be confused with logging that may happen at an individual node or validator level
 	Logger interface {
@@ -316,18 +277,9 @@ type (
 )
 
 var (
-	_ Logger     = (*testing.T)(nil)
-	_ Logger     = (*CLILogger)(nil)
-	_ ValidatorI = Validator{}
+	_ Logger = (*testing.T)(nil)
+	_ Logger = (*CLILogger)(nil)
 )
-
-func (v Validator) GetCtx() *server.Context {
-	return v.Ctx
-}
-
-func (v Validator) GetAppConfig() *srvconfig.Config {
-	return v.AppConfig
-}
 
 // CLILogger wraps a cobra.Command and provides command logging methods.
 type CLILogger struct {
@@ -350,7 +302,7 @@ func NewCLILogger(cmd *cobra.Command) CLILogger {
 }
 
 // New creates a new Network for integration tests or in-process testnets run via the CLI
-func New(l Logger, baseDir string, cfg Config) (*Network, error) {
+func New(l Logger, baseDir string, cfg Config) (NetworkI, error) {
 	// only one caller/test can create and use a network at a time
 	l.Log("acquiring test network lock")
 	lock.Lock()
@@ -612,17 +564,17 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 
 		network.Validators[i] = &Validator{
 			AppConfig:  appCfg,
-			ClientCtx:  clientCtx,
-			Ctx:        ctx,
-			Dir:        filepath.Join(network.BaseDir, nodeDirName),
-			NodeID:     nodeID,
-			PubKey:     pubKey,
-			Moniker:    nodeDirName,
-			RPCAddress: cmtCfg.RPC.ListenAddress,
-			P2PAddress: cmtCfg.P2P.ListenAddress,
-			APIAddress: apiAddr,
-			Address:    addr,
-			ValAddress: sdk.ValAddress(addr),
+			clientCtx:  clientCtx,
+			ctx:        ctx,
+			dir:        filepath.Join(network.BaseDir, nodeDirName),
+			nodeID:     nodeID,
+			pubKey:     pubKey,
+			moniker:    nodeDirName,
+			rPCAddress: cmtCfg.RPC.ListenAddress,
+			p2PAddress: cmtCfg.P2P.ListenAddress,
+			aPIAddress: apiAddr,
+			address:    addr,
+			valAddress: sdk.ValAddress(addr),
 		}
 	}
 
@@ -696,7 +648,7 @@ func (n *Network) LatestHeight() (int64, error) {
 
 	var latestHeight int64
 	val := n.Validators[0]
-	queryClient := cmtservice.NewServiceClient(val.ClientCtx)
+	queryClient := cmtservice.NewServiceClient(val.clientCtx)
 
 	for {
 		select {
@@ -730,6 +682,14 @@ func (n *Network) WaitForHeight(h int64) (int64, error) {
 	return n.WaitForHeightWithTimeout(h, 10*time.Second)
 }
 
+func (n *Network) GetValidators() []ValidatorI {
+	var vals []ValidatorI
+	for _, val := range n.Validators {
+		vals = append(vals, val)
+	}
+	return vals
+}
+
 // WaitForHeightWithTimeout is the same as WaitForHeight except the caller can
 // provide a custom timeout.
 func (n *Network) WaitForHeightWithTimeout(h int64, t time.Duration) (int64, error) {
@@ -745,7 +705,7 @@ func (n *Network) WaitForHeightWithTimeout(h int64, t time.Duration) (int64, err
 
 	var latestHeight int64
 	val := n.Validators[0]
-	queryClient := cmtservice.NewServiceClient(val.ClientCtx)
+	queryClient := cmtservice.NewServiceClient(val.clientCtx)
 
 	for {
 		select {

@@ -321,7 +321,7 @@ func interceptConfigs(rootViper *viper.Viper, customAppTemplate string, customCo
 }
 
 // add server commands
-func AddCommands(rootCmd *cobra.Command, appCreator types.AppCreator, appExport types.AppExporter, addStartFlags types.ModuleInitFlags) {
+func AddCommands(rootCmd *cobra.Command, appCreator types.AppCreator, addStartFlags types.ModuleInitFlags) {
 	cometCmd := &cobra.Command{
 		Use:     "comet",
 		Aliases: []string{"cometbft", "tendermint"},
@@ -339,12 +339,13 @@ func AddCommands(rootCmd *cobra.Command, appCreator types.AppCreator, appExport 
 	)
 
 	startCmd := StartCmd(appCreator)
-	addStartFlags(startCmd)
+	if addStartFlags != nil {
+		addStartFlags(startCmd)
+	}
 
 	rootCmd.AddCommand(
 		startCmd,
 		cometCmd,
-		ExportCmd(appExport),
 		version.NewVersionCommand(),
 		NewRollbackCmd(appCreator),
 	)
@@ -452,7 +453,8 @@ func addrToIP(addr net.Addr) net.IP {
 	return ip
 }
 
-func openDB(rootDir string, backendType dbm.BackendType) (dbm.DB, error) {
+// OpenDB opens the application database using the appropriate driver.
+func OpenDB(rootDir string, backendType dbm.BackendType) (dbm.DB, error) {
 	dataDir := filepath.Join(rootDir, "data")
 	return dbm.NewDB("application", backendType, dataDir)
 }
@@ -485,12 +487,16 @@ func DefaultBaseappOptions(appOpts types.AppOptions) []func(*baseapp.BaseApp) {
 	chainID := cast.ToString(appOpts.Get(flags.FlagChainID))
 	if chainID == "" {
 		// fallback to genesis chain-id
-		appGenesis, err := genutiltypes.AppGenesisFromFile(filepath.Join(homeDir, "config", "genesis.json"))
+		reader, err := os.Open(filepath.Join(homeDir, "config", "genesis.json"))
 		if err != nil {
 			panic(err)
 		}
+		defer reader.Close()
 
-		chainID = appGenesis.ChainID
+		chainID, err = genutiltypes.ParseChainIDFromGenesis(reader)
+		if err != nil {
+			panic(fmt.Errorf("failed to parse chain-id from genesis file: %w", err))
+		}
 	}
 
 	snapshotStore, err := GetSnapshotStore(appOpts)
@@ -533,7 +539,7 @@ func DefaultBaseappOptions(appOpts types.AppOptions) []func(*baseapp.BaseApp) {
 func GetSnapshotStore(appOpts types.AppOptions) (*snapshots.Store, error) {
 	homeDir := cast.ToString(appOpts.Get(flags.FlagHome))
 	snapshotDir := filepath.Join(homeDir, "data", "snapshots")
-	if err := os.MkdirAll(snapshotDir, os.ModePerm); err != nil {
+	if err := os.MkdirAll(snapshotDir, 0o744); err != nil {
 		return nil, fmt.Errorf("failed to create snapshots directory: %w", err)
 	}
 

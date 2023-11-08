@@ -3,25 +3,24 @@ package staking_test
 import (
 	"testing"
 
-	abci "github.com/cometbft/cometbft/abci/types"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/collections"
+	"cosmossdk.io/core/header"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
+	authtypes "cosmossdk.io/x/auth/types"
+	bankKeeper "cosmossdk.io/x/bank/keeper"
+	stakingKeeper "cosmossdk.io/x/staking/keeper"
+	"cosmossdk.io/x/staking/testutil"
+	"cosmossdk.io/x/staking/types"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	bankKeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	stakingKeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
-	"github.com/cosmos/cosmos-sdk/x/staking/testutil"
-	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 var (
@@ -74,14 +73,12 @@ func TestStakingMsgs(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	header := cmtproto.Header{Height: app.LastBlockHeight() + 1}
+	headerInfo := header.Info{Height: app.LastBlockHeight() + 1}
 	txConfig := moduletestutil.MakeTestTxConfig()
-	_, _, err = simtestutil.SignCheckDeliver(t, txConfig, app.BaseApp, header, []sdk.Msg{createValidatorMsg}, "", []uint64{0}, []uint64{0}, true, true, priv1)
+	_, _, err = simtestutil.SignCheckDeliver(t, txConfig, app.BaseApp, headerInfo, []sdk.Msg{createValidatorMsg}, "", []uint64{0}, []uint64{0}, true, true, priv1)
 	require.NoError(t, err)
 	require.True(t, sdk.Coins{genCoin.Sub(bondCoin)}.Equal(bankKeeper.GetAllBalances(ctxCheck, addr1)))
 
-	_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: app.LastBlockHeight() + 1})
-	require.NoError(t, err)
 	ctxCheck = app.BaseApp.NewContext(true)
 	validator, err := stakingKeeper.GetValidator(ctxCheck, sdk.ValAddress(addr1))
 	require.NoError(t, err)
@@ -90,15 +87,12 @@ func TestStakingMsgs(t *testing.T) {
 	require.Equal(t, types.Bonded, validator.Status)
 	require.True(math.IntEq(t, bondTokens, validator.BondedTokens()))
 
-	_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: app.LastBlockHeight() + 1})
-	require.NoError(t, err)
-
 	// edit the validator
 	description = types.NewDescription("bar_moniker", "", "", "", "")
 	editValidatorMsg := types.NewMsgEditValidator(sdk.ValAddress(addr1).String(), description, nil, nil)
 
-	header = cmtproto.Header{Height: app.LastBlockHeight() + 1}
-	_, _, err = simtestutil.SignCheckDeliver(t, txConfig, app.BaseApp, header, []sdk.Msg{editValidatorMsg}, "", []uint64{0}, []uint64{1}, true, true, priv1)
+	headerInfo = header.Info{Height: app.LastBlockHeight() + 1}
+	_, _, err = simtestutil.SignCheckDeliver(t, txConfig, app.BaseApp, headerInfo, []sdk.Msg{editValidatorMsg}, "", []uint64{0}, []uint64{1}, true, true, priv1)
 	require.NoError(t, err)
 
 	ctxCheck = app.BaseApp.NewContext(true)
@@ -110,8 +104,8 @@ func TestStakingMsgs(t *testing.T) {
 	require.True(t, sdk.Coins{genCoin}.Equal(bankKeeper.GetAllBalances(ctxCheck, addr2)))
 	delegateMsg := types.NewMsgDelegate(addr2.String(), sdk.ValAddress(addr1).String(), bondCoin)
 
-	header = cmtproto.Header{Height: app.LastBlockHeight() + 1}
-	_, _, err = simtestutil.SignCheckDeliver(t, txConfig, app.BaseApp, header, []sdk.Msg{delegateMsg}, "", []uint64{1}, []uint64{0}, true, true, priv2)
+	headerInfo = header.Info{Height: app.LastBlockHeight() + 1}
+	_, _, err = simtestutil.SignCheckDeliver(t, txConfig, app.BaseApp, headerInfo, []sdk.Msg{delegateMsg}, "", []uint64{1}, []uint64{0}, true, true, priv2)
 	require.NoError(t, err)
 
 	ctxCheck = app.BaseApp.NewContext(true)
@@ -121,8 +115,8 @@ func TestStakingMsgs(t *testing.T) {
 
 	// begin unbonding
 	beginUnbondingMsg := types.NewMsgUndelegate(addr2.String(), sdk.ValAddress(addr1).String(), bondCoin)
-	header = cmtproto.Header{Height: app.LastBlockHeight() + 1}
-	_, _, err = simtestutil.SignCheckDeliver(t, txConfig, app.BaseApp, header, []sdk.Msg{beginUnbondingMsg}, "", []uint64{1}, []uint64{1}, true, true, priv2)
+	headerInfo = header.Info{Height: app.LastBlockHeight() + 1}
+	_, _, err = simtestutil.SignCheckDeliver(t, txConfig, app.BaseApp, headerInfo, []sdk.Msg{beginUnbondingMsg}, "", []uint64{1}, []uint64{1}, true, true, priv2)
 	require.NoError(t, err)
 
 	// delegation should exist anymore

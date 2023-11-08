@@ -6,6 +6,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/runtime/protoiface"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 
 	"cosmossdk.io/collections"
@@ -54,10 +55,11 @@ func TestMakeAccountContext(t *testing.T) {
 	// ensure calling ExecModule works
 	accountCtx = MakeAccountContext(originalContext, storeService, []byte("legit-exec-module"), []byte("invoker"), func(_ proto.Message) ([]byte, error) {
 		return []byte("legit-exec-module"), nil
-	}, func(ctx context.Context, msg proto.Message) (proto.Message, error) {
+	}, func(ctx context.Context, msg, msgResp protoiface.MessageV1) error {
 		// ensure we unwrapped the context when invoking a module call
 		require.Equal(t, originalContext, ctx)
-		return wrapperspb.String("module exec was called"), nil
+		proto.Merge(msgResp.(proto.Message), &wrapperspb.StringValue{Value: "module exec was called"})
+		return nil
 	}, nil)
 
 	resp, err := ExecModule[wrapperspb.StringValue](accountCtx, &wrapperspb.UInt64Value{Value: 1000})
@@ -66,9 +68,10 @@ func TestMakeAccountContext(t *testing.T) {
 
 	// ensure calling QueryModule works, also by setting everything else communication related to nil
 	// we can guarantee that exec paths do not impact query paths.
-	accountCtx = MakeAccountContext(originalContext, storeService, nil, nil, nil, nil, func(ctx context.Context, msg proto.Message) (proto.Message, error) {
+	accountCtx = MakeAccountContext(originalContext, storeService, nil, nil, nil, nil, func(ctx context.Context, req, resp protoiface.MessageV1) error {
 		require.Equal(t, originalContext, ctx)
-		return wrapperspb.String("module query was called"), nil
+		proto.Merge(resp.(proto.Message), wrapperspb.String("module query was called"))
+		return nil
 	})
 
 	resp, err = QueryModule[wrapperspb.StringValue](accountCtx, &wrapperspb.UInt64Value{Value: 1000})

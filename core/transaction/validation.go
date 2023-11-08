@@ -12,5 +12,5 @@ type Handler func(ctx context.Context, tx Tx, simulate bool) (newCtx context.Con
 // Validator is a transaction validator that validates transactions based off an existing set of handlers
 // Validators can be designed to be asynchronous or synchronous
 type Validator[T Tx] interface {
-	Validate(context.Context, []T) (context.Context, error)
+	Validate(context.Context, []T, bool) (context.Context, error)
 }

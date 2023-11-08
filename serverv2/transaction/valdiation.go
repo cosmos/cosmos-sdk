@@ -26,7 +26,7 @@ func (v TxValidator[T]) RegisterHandler(h tx.Handler) {
 
 // Validate validates the transaction
 // it returns the context to be used further for execution
-func (v TxValidator[T]) Validate(ctx context.Context, txs []T) (context.Context, error) {
+func (v TxValidator[T]) Validate(ctx context.Context, txs []T, simulate bool) (context.Context, error) {
 	for _, tx := range txs {
 		ctx, err := v.handler(ctx, tx, simulate)
 		return ctx, err

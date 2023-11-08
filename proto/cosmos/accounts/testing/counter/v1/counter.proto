@@ -1,0 +1,34 @@
+syntax = "proto3";
+
+package cosmos.accounts.testing.counter.v1;
+
+// MsgInit defines a message which initializes the counter with a given amount.
+message MsgInit {
+  // initial_value is the initial amount to set the counter to.
+  uint64 initial_value = 1;
+}
+
+// MsgInitResponse defines the MsgInit response type.
+message MsgInitResponse {}
+
+// MsgIncreaseCounter defines a message which increases the counter by a given amount.
+message MsgIncreaseCounter {
+  // amount is the amount to increase the counter by.
+  uint64 amount = 1;
+}
+
+// MsgIncreaseCounterResponse defines the MsgIncreaseCounter response type.
+// Returns the new counter value.
+message MsgIncreaseCounterResponse {
+  // new_amount defines the new counter value after the increase.
+  uint64 new_amount = 1;
+}
+
+// QueryCounterRequest is used to query the counter value.
+message QueryCounterRequest {}
+
+// QueryCounterResponse returns the counter value.
+message QueryCounterResponse {
+  // value defines the value of the counter.
+  uint64 value = 1;
+}

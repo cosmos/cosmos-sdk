@@ -9,7 +9,7 @@ import (
 	"math/big"
 
 	"github.com/cometbft/cometbft/crypto"
-	secp256k1 "github.com/decred/dcrd/dcrec/secp256k1/v4"
+	secp256k1dcrd "github.com/decred/dcrd/dcrec/secp256k1/v4"
 	"golang.org/x/crypto/ripemd160" //nolint: staticcheck // keep around for backwards compatibility
 
 	errorsmod "cosmossdk.io/errors"
@@ -39,7 +39,8 @@ func (privKey *PrivKey) Bytes() []byte {
 // PubKey performs the point-scalar multiplication from the privKey on the
 // generator point to get the pubkey.
 func (privKey *PrivKey) PubKey() cryptotypes.PubKey {
-	pubkeyObject := secp256k1.PrivKeyFromBytes(privKey.Key).PubKey()
+	pubkeyObject := secp256k1dcrd.PrivKeyFromBytes(privKey.Key).PubKey()
+
 	pk := pubkeyObject.SerializeCompressed()
 	return &PubKey{Key: pk}
 }
@@ -100,7 +101,7 @@ func genPrivKey(rand io.Reader) []byte {
 
 		d.SetBytes(privKeyBytes[:])
 		// break if we found a valid point (i.e. > 0 and < N == curverOrder)
-		isValidFieldElement := 0 < d.Sign() && d.Cmp(secp256k1.S256().N) < 0
+		isValidFieldElement := 0 < d.Sign() && d.Cmp(secp256k1dcrd.S256().N) < 0
 		if isValidFieldElement {
 			break
 		}
@@ -128,7 +129,7 @@ func GenPrivKeyFromSecret(secret []byte) *PrivKey {
 	// https://apps.nsa.gov/iaarchive/library/ia-guidance/ia-solutions-for-classified/algorithm-guidance/suite-b-implementers-guide-to-fips-186-3-ecdsa.cfm
 	// see also https://github.com/golang/go/blob/0380c9ad38843d523d9c9804fe300cb7edd7cd3c/src/crypto/ecdsa/ecdsa.go#L89-L101
 	fe := new(big.Int).SetBytes(secHash[:])
-	n := new(big.Int).Sub(secp256k1.S256().N, one)
+	n := new(big.Int).Sub(secp256k1dcrd.S256().N, one)
 	fe.Mod(fe, n)
 	fe.Add(fe, one)
 

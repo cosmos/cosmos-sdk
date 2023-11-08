@@ -1,19 +1,21 @@
 package serverv2
 
 import (
+	"context"
 	"errors"
 	"fmt"
 
 	"github.com/spf13/cobra"
+	"golang.org/x/sync/errgroup"
 )
 
-func Commands(services ...Service) ([]*cobra.Command, error) {
-	if len(services) == 0 {
-		// TODO figure if we should define default services
+func Commands(modules ...Module) ([]*cobra.Command, error) {
+	if len(modules) == 0 {
+		// TODO figure if we should define default modules
 		// and if so it should be done here to avoid uncessary dependencies
-		return nil, errors.New("no services provided")
+		return nil, errors.New("no modules provided")
 	}
-	server := NewServer(services...)
+	server := NewServer(modules...)
 	v, err := server.Configs()
 	if err != nil {
 		return nil, fmt.Errorf("failed to build server config: %w", err)
@@ -32,13 +34,25 @@ func Commands(services ...Service) ([]*cobra.Command, error) {
 				return err
 			}
 
-			defer func() {
-				logger.Info("shutting down")
-				server.Stop()
-			}()
+			ctx, cleanupFn := context.WithCancel(cmd.Context())
+			g, ctx := errgroup.WithContext(ctx)
 
-			logger.Info("starting servers...")
-			return server.Start()
+			ListenForQuitSignals(g, cleanupFn, logger)
+
+			g.Go(func() error {
+				logger.Info("starting servers...")
+				if err := server.Start(ctx); err != nil {
+					return fmt.Errorf("failed to start servers: %w", err)
+				}
+
+				// Wait for the calling process to be canceled or close the provided context.
+				<-ctx.Done()
+
+				logger.Info("shutting down servers...")
+				return server.Stop(ctx)
+			})
+
+			return g.Wait()
 		},
 	}
 

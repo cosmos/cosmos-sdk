@@ -26,6 +26,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/server"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/serverv2"
+	mockmoduleserver "github.com/cosmos/cosmos-sdk/serverv2/mock"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
@@ -52,7 +53,7 @@ func initRootCmd(
 		snapshot.Cmd(newApp),
 	)
 
-	server.AddCommands(rootCmd, newApp, addModuleInitFlags)
+	// server.AddCommands(rootCmd, newApp, addModuleInitFlags)
 
 	// add keybase, auxiliary RPC, query, genesis, and tx child commands
 	rootCmd.AddCommand(
@@ -64,7 +65,10 @@ func initRootCmd(
 	)
 
 	// experimental commands
-	serverv2Cmds, err := serverv2.Commands()
+	serverv2Cmds, err := serverv2.Commands(
+		mockmoduleserver.NewMockServer("foo"),
+		mockmoduleserver.NewMockServer("bar"),
+	)
 	if err != nil {
 		panic(err)
 	}

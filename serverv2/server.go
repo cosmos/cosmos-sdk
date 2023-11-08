@@ -1,15 +1,16 @@
 package serverv2
 
 import (
+	"context"
 	"errors"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
-type Service interface {
-	Start() error
-	Stop() error
+type Module interface {
+	Start(context.Context) error
+	Stop(context.Context) error
 }
 
 type HasCLICommands interface {
@@ -20,29 +21,34 @@ type HasConfig interface {
 	Config() *viper.Viper
 }
 
-var _ Service = (*Server)(nil)
+var _ Module = (*Server)(nil)
 
 type Server struct {
-	services []Service
+	modules []Module
 }
 
-func NewServer(services ...Service) *Server {
+func NewServer(modules ...Module) *Server {
 	return &Server{
-		services: services,
+		modules: modules,
 	}
 }
 
-func (s *Server) Start() error {
-	for _, service := range s.services {
-		go service.Start()
+// Start starts all modules concurrently.
+func (s *Server) Start(ctx context.Context) error {
+	var err error
+	for _, mod := range s.modules {
+		go func(mod Module) {
+			err = errors.Join(err, mod.Start(ctx))
+		}(mod)
 	}
 
-	return nil
+	return err
 }
 
-func (s *Server) Stop() error {
-	for _, service := range s.services {
-		if err := service.Stop(); err != nil {
+// Stop sequentially stops all modules.
+func (s *Server) Stop(ctx context.Context) error {
+	for _, mod := range s.modules {
+		if err := mod.Stop(ctx); err != nil {
 			return err
 		}
 	}
@@ -51,9 +57,9 @@ func (s *Server) Stop() error {
 
 func (s *Server) CLICommands() []*cobra.Command {
 	var commands []*cobra.Command
-	for _, service := range s.services {
-		if cliService, ok := service.(HasCLICommands); ok {
-			commands = append(commands, cliService.CLICommands()...)
+	for _, mod := range s.modules {
+		if climod, ok := mod.(HasCLICommands); ok {
+			commands = append(commands, climod.CLICommands()...)
 		}
 	}
 
@@ -64,9 +70,9 @@ func (s *Server) Configs() (*viper.Viper, error) {
 	v := viper.New()
 
 	var err error
-	for _, service := range s.services {
-		if configService, ok := service.(HasConfig); ok {
-			err = errors.Join(err, v.MergeConfigMap(configService.Config().AllSettings()))
+	for _, mod := range s.modules {
+		if configmod, ok := mod.(HasConfig); ok {
+			err = errors.Join(err, v.MergeConfigMap(configmod.Config().AllSettings()))
 		}
 	}
 	if err != nil {

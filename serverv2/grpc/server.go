@@ -18,7 +18,7 @@ import (
 	_ "github.com/cosmos/cosmos-sdk/types/tx/amino" // Import amino.proto file for reflection
 )
 
-var _ serverv2.Service = &Server{}
+var _ serverv2.Module = &Server{}
 
 type Server struct {
 	grpcSrv *grpc.Server

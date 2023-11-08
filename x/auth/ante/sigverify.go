@@ -60,7 +60,7 @@ func NewSetPubKeyDecorator(ak AccountKeeper) SetPubKeyDecorator {
 	}
 }
 
-func (spkd SetPubKeyDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
+func (spkd SetPubKeyDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, next sdk.AnteHandler) (sdk.Context, error) {
 	sigTx, ok := tx.(authsigning.SigVerifiableTx)
 	if !ok {
 		return ctx, errorsmod.Wrap(sdkerrors.ErrTxDecode, "invalid tx type")
@@ -86,13 +86,13 @@ func (spkd SetPubKeyDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 
 		// PublicKey was omitted from slice since it has already been set in context
 		if pk == nil {
-			if !simulate {
+			if ctx.ExecMode() != sdk.ExecModeSimulate {
 				continue
 			}
 			pk = simSecp256k1Pubkey
 		}
 		// Only make check if simulate=false
-		if !simulate && !bytes.Equal(pk.Address(), signers[i]) && ctx.IsSigverifyTx() {
+		if ctx.ExecMode() != sdk.ExecModeSimulate && !bytes.Equal(pk.Address(), signers[i]) && ctx.IsSigverifyTx() {
 			return ctx, errorsmod.Wrapf(sdkerrors.ErrInvalidPubKey,
 				"pubKey does not match signer address %s with signer index: %d", signerStrs[i], i)
 		}
@@ -143,7 +143,7 @@ func (spkd SetPubKeyDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 
 	ctx.EventManager().EmitEvents(events)
 
-	return next(ctx, tx, simulate)
+	return next(ctx, tx)
 }
 
 // Consume parameter-defined amount of gas for each signature according to the passed-in SignatureVerificationGasConsumer function
@@ -166,7 +166,7 @@ func NewSigGasConsumeDecorator(ak AccountKeeper, sigGasConsumer SignatureVerific
 	}
 }
 
-func (sgcd SigGasConsumeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
+func (sgcd SigGasConsumeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
 	sigTx, ok := tx.(authsigning.SigVerifiableTx)
 	if !ok {
 		return ctx, errorsmod.Wrap(sdkerrors.ErrTxDecode, "invalid transaction type")
@@ -192,7 +192,7 @@ func (sgcd SigGasConsumeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simula
 		}
 
 		pubKey := signerAcc.GetPubKey()
-		if !simulate && pubKey == nil {
+		if ctx.ExecMode() != sdk.ExecModeSimulate && pubKey == nil {
 			return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidPubKey, "pubkey on account is not set")
 		}
 		if err := verifyIsOnCurve(pubKey); err != nil {
@@ -203,7 +203,7 @@ func (sgcd SigGasConsumeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simula
 		// account's pubkey is nil, both signature verification and gasKVStore.Set()
 		// shall consume the largest amount, i.e. it takes more gas to verify
 		// secp256k1 keys than ed25519 ones.
-		if simulate && pubKey == nil {
+		if ctx.ExecMode() == sdk.ExecModeSimulate && pubKey == nil {
 			pubKey = simSecp256k1Pubkey
 		}
 
@@ -220,7 +220,7 @@ func (sgcd SigGasConsumeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simula
 		}
 	}
 
-	return next(ctx, tx, simulate)
+	return next(ctx, tx)
 }
 
 // SigVerificationDecorator verifies all signatures for a tx and return an error if any are invalid. Note,
@@ -301,7 +301,7 @@ func verifyIsOnCurve(pubKey cryptotypes.PubKey) (err error) {
 	return nil
 }
 
-func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
+func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
 	sigTx, ok := tx.(authsigning.Tx)
 	if !ok {
 		return ctx, errorsmod.Wrap(sdkerrors.ErrTxDecode, "invalid transaction type")
@@ -332,7 +332,7 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 
 		// retrieve pubkey
 		pubKey := acc.GetPubKey()
-		if !simulate && pubKey == nil {
+		if ctx.ExecMode() != sdk.ExecModeSimulate && pubKey == nil {
 			return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidPubKey, "pubkey on account is not set")
 		}
 
@@ -356,7 +356,7 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 		}
 
 		// no need to verify signatures on recheck tx
-		if !simulate && !ctx.IsReCheckTx() && ctx.IsSigverifyTx() {
+		if ctx.ExecMode() != sdk.ExecModeSimulate && !ctx.IsReCheckTx() && ctx.IsSigverifyTx() {
 			anyPk, _ := codectypes.NewAnyWithValue(pubKey)
 
 			signerData := txsigning.SignerData{
@@ -390,7 +390,7 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 		}
 	}
 
-	return next(ctx, tx, simulate)
+	return next(ctx, tx)
 }
 
 // IncrementSequenceDecorator handles incrementing sequences of all signers.
@@ -412,7 +412,7 @@ func NewIncrementSequenceDecorator(ak AccountKeeper) IncrementSequenceDecorator 
 	}
 }
 
-func (isd IncrementSequenceDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
+func (isd IncrementSequenceDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, next sdk.AnteHandler) (sdk.Context, error) {
 	sigTx, ok := tx.(authsigning.SigVerifiableTx)
 	if !ok {
 		return ctx, errorsmod.Wrap(sdkerrors.ErrTxDecode, "invalid transaction type")
@@ -431,7 +431,7 @@ func (isd IncrementSequenceDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, sim
 		}
 
 		pubKey := acc.GetPubKey()
-		if !simulate && pubKey == nil {
+		if ctx.ExecMode() != sdk.ExecModeSimulate && pubKey == nil {
 			return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidPubKey, "pubkey on account is not set")
 		}
 		if err := verifyIsOnCurve(pubKey); err != nil {
@@ -441,7 +441,7 @@ func (isd IncrementSequenceDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, sim
 		isd.ak.SetAccount(ctx, acc)
 	}
 
-	return next(ctx, tx, simulate)
+	return next(ctx, tx)
 }
 
 // ValidateSigCountDecorator takes in Params and returns errors if there are too many signatures in the tx for the given params
@@ -458,7 +458,7 @@ func NewValidateSigCountDecorator(ak AccountKeeper) ValidateSigCountDecorator {
 	}
 }
 
-func (vscd ValidateSigCountDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
+func (vscd ValidateSigCountDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, next sdk.AnteHandler) (sdk.Context, error) {
 	sigTx, ok := tx.(authsigning.SigVerifiableTx)
 	if !ok {
 		return ctx, errorsmod.Wrap(sdkerrors.ErrTxDecode, "Tx must be a sigTx")
@@ -479,7 +479,7 @@ func (vscd ValidateSigCountDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, sim
 		}
 	}
 
-	return next(ctx, tx, simulate)
+	return next(ctx, tx)
 }
 
 // DefaultSigVerificationGasConsumer is the default implementation of SignatureVerificationGasConsumer. It consumes gas

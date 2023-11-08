@@ -171,14 +171,14 @@ func TestDeductFeesNoDelegation(t *testing.T) {
 			require.NoError(t, err)
 			bytesCtx := suite.ctx.WithTxBytes(txBytes)
 			require.NoError(t, err)
-			_, err = feeAnteHandler(bytesCtx, tx, false) // tests only feegrant ante
+			_, err = feeAnteHandler(bytesCtx, tx) // tests only feegrant ante
 			if tc.valid {
 				require.NoError(t, err)
 			} else {
 				testutil.AssertError(t, err, tc.err, tc.errMsg)
 			}
 
-			_, err = anteHandlerStack(bytesCtx, tx, false) // tests whole stack
+			_, err = anteHandlerStack(bytesCtx, tx) // tests whole stack
 			if tc.valid {
 				require.NoError(t, err)
 			} else {

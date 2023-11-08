@@ -60,7 +60,7 @@ func TestSetPubKey(t *testing.T) {
 	spkd := ante.NewSetPubKeyDecorator(suite.accountKeeper)
 	antehandler := sdk.ChainAnteDecorators(spkd)
 
-	ctx, err := antehandler(suite.ctx, tx, false)
+	ctx, err := antehandler(suite.ctx, tx)
 	require.NoError(t, err)
 
 	// Require that all accounts have pubkey set after Decorator runs
@@ -239,7 +239,7 @@ func TestSigVerification(t *testing.T) {
 				txBytes, err := suite.clientCtx.TxConfig.TxEncoder()(tx)
 				require.NoError(t, err)
 				byteCtx := suite.ctx.WithTxBytes(txBytes)
-				_, err = antehandler(byteCtx, tx, false)
+				_, err = antehandler(byteCtx, tx)
 				if tc.shouldErr {
 					require.NotNil(t, err, "TestCase %d: %s did not error as expected", i, tc.name)
 				} else {
@@ -314,7 +314,7 @@ func runSigDecorators(t *testing.T, params types.Params, _ bool, privs ...crypto
 
 	// Determine gas consumption of antehandler with default params
 	before := suite.ctx.GasMeter().GasConsumed()
-	ctx, err := antehandler(suite.ctx, tx, false)
+	ctx, err := antehandler(suite.ctx, tx)
 	after := ctx.GasMeter().GasConsumed()
 
 	return after - before, err
@@ -360,7 +360,10 @@ func TestIncrementSequenceDecorator(t *testing.T) {
 
 	for i, tc := range testCases {
 		t.Run(fmt.Sprintf("%d test", i), func(t *testing.T) {
-			_, err = antehandler(tc.ctx, tx, tc.simulate)
+			if tc.simulate {
+				tc.ctx = tc.ctx.WithExecMode(sdk.ExecModeSimulate)
+			}
+			_, err = antehandler(tc.ctx, tx)
 			require.NoError(t, err, "unexpected error; tc #%d, %v", i, tc)
 			require.Equal(t, tc.expectedSeq, suite.accountKeeper.GetAccount(suite.ctx, addr).GetSequence())
 		})
@@ -455,7 +458,8 @@ func TestAnteHandlerChecks(t *testing.T) {
 			require.NoError(t, err)
 
 			byteCtx := suite.ctx.WithTxBytes(txBytes)
-			_, err = anteHandler(byteCtx, tx, true)
+			byteCtx = suite.ctx.WithExecMode(sdk.ExecModeSimulate)
+			_, err = anteHandler(byteCtx, tx)
 			if tc.shouldErr {
 				require.NotNil(t, err, "TestCase %d: %s did not error as expected", i, tc.name)
 				if tc.suported {

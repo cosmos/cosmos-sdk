@@ -2,7 +2,7 @@ package types
 
 // AnteHandler authenticates transactions, before their internal messages are handled.
 // If newCtx.IsZero(), ctx is used instead.
-type AnteHandler func(ctx Context, tx Tx, simulate bool) (newCtx Context, err error)
+type AnteHandler func(ctx Context, tx Tx) (newCtx Context, err error)
 
 // PostHandler like AnteHandler but it executes after RunMsgs. Runs on success
 // or failure and enables use cases like gas refunding.
@@ -10,7 +10,7 @@ type PostHandler func(ctx Context, tx Tx, simulate, success bool) (newCtx Contex
 
 // AnteDecorator wraps the next AnteHandler to perform custom pre-processing.
 type AnteDecorator interface {
-	AnteHandle(ctx Context, tx Tx, simulate bool, next AnteHandler) (newCtx Context, err error)
+	AnteHandle(ctx Context, tx Tx, next AnteHandler) (newCtx Context, err error)
 }
 
 // PostDecorator wraps the next PostHandler to perform custom post-processing.
@@ -39,13 +39,13 @@ func ChainAnteDecorators(chain ...AnteDecorator) AnteHandler {
 
 	handlerChain := make([]AnteHandler, len(chain)+1)
 	// set the terminal AnteHandler decorator
-	handlerChain[len(chain)] = func(ctx Context, tx Tx, simulate bool) (Context, error) {
+	handlerChain[len(chain)] = func(ctx Context, tx Tx) (Context, error) {
 		return ctx, nil
 	}
 	for i := 0; i < len(chain); i++ {
 		ii := i
-		handlerChain[ii] = func(ctx Context, tx Tx, simulate bool) (Context, error) {
-			return chain[ii].AnteHandle(ctx, tx, simulate, handlerChain[ii+1])
+		handlerChain[ii] = func(ctx Context, tx Tx) (Context, error) {
+			return chain[ii].AnteHandle(ctx, tx, handlerChain[ii+1])
 		}
 	}
 

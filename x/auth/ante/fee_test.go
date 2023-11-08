@@ -41,11 +41,11 @@ func TestDeductFeeDecorator_ZeroGas(t *testing.T) {
 	// Set IsCheckTx to true
 	s.ctx = s.ctx.WithIsCheckTx(true)
 
-	_, err = antehandler(s.ctx, tx, false)
+	_, err = antehandler(s.ctx, tx)
 	require.Error(t, err)
 
 	// zero gas is accepted in simulation mode
-	_, err = antehandler(s.ctx, tx, true)
+	_, err = antehandler(s.ctx, tx)
 	require.NoError(t, err)
 }
 
@@ -82,19 +82,19 @@ func TestEnsureMempoolFees(t *testing.T) {
 	s.ctx = s.ctx.WithIsCheckTx(true)
 
 	// antehandler errors with insufficient fees
-	_, err = antehandler(s.ctx, tx, false)
+	_, err = antehandler(s.ctx, tx)
 	require.NotNil(t, err, "Decorator should have errored on too low fee for local gasPrice")
 
 	// antehandler should not error since we do not check minGasPrice in simulation mode
 	cacheCtx, _ := s.ctx.CacheContext()
-	_, err = antehandler(cacheCtx, tx, true)
+	_, err = antehandler(cacheCtx, tx)
 	require.Nil(t, err, "Decorator should not have errored in simulation mode")
 
 	// Set IsCheckTx to false
 	s.ctx = s.ctx.WithIsCheckTx(false)
 
 	// antehandler should not error since we do not check minGasPrice in DeliverTx
-	_, err = antehandler(s.ctx, tx, false)
+	_, err = antehandler(s.ctx, tx)
 	require.Nil(t, err, "MempoolFeeDecorator returned error in DeliverTx")
 
 	// Set IsCheckTx back to true for testing sufficient mempool fee
@@ -104,7 +104,7 @@ func TestEnsureMempoolFees(t *testing.T) {
 	lowGasPrice := []sdk.DecCoin{atomPrice}
 	s.ctx = s.ctx.WithMinGasPrices(lowGasPrice)
 
-	newCtx, err := antehandler(s.ctx, tx, false)
+	newCtx, err := antehandler(s.ctx, tx)
 	require.Nil(t, err, "Decorator should not have errored on fee higher than local gasPrice")
 	// Priority is the smallest gas price amount in any denom. Since we have only 1 gas price
 	// of 10atom, the priority here is 10.
@@ -134,12 +134,12 @@ func TestDeductFees(t *testing.T) {
 	antehandler := sdk.ChainAnteDecorators(dfd)
 	s.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(sdkerrors.ErrInsufficientFunds)
 
-	_, err = antehandler(s.ctx, tx, false)
+	_, err = antehandler(s.ctx, tx)
 
 	require.NotNil(t, err, "Tx did not error when fee payer had insufficient funds")
 
 	s.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
-	_, err = antehandler(s.ctx, tx, false)
+	_, err = antehandler(s.ctx, tx)
 
 	require.Nil(t, err, "Tx errored after account has been set with sufficient funds")
 }

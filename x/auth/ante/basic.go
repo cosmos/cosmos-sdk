@@ -24,10 +24,10 @@ func NewValidateBasicDecorator() ValidateBasicDecorator {
 	return ValidateBasicDecorator{}
 }
 
-func (vbd ValidateBasicDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
+func (vbd ValidateBasicDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, next sdk.AnteHandler) (sdk.Context, error) {
 	// no need to validate basic on recheck tx, call next antehandler
 	if ctx.IsReCheckTx() {
-		return next(ctx, tx, simulate)
+		return next(ctx, tx)
 	}
 
 	if validateBasic, ok := tx.(sdk.HasValidateBasic); ok {
@@ -36,7 +36,7 @@ func (vbd ValidateBasicDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulat
 		}
 	}
 
-	return next(ctx, tx, simulate)
+	return next(ctx, tx)
 }
 
 // ValidateMemoDecorator will validate memo given the parameters passed in
@@ -52,7 +52,7 @@ func NewValidateMemoDecorator(ak AccountKeeper) ValidateMemoDecorator {
 	}
 }
 
-func (vmd ValidateMemoDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
+func (vmd ValidateMemoDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, next sdk.AnteHandler) (sdk.Context, error) {
 	memoTx, ok := tx.(sdk.TxWithMemo)
 	if !ok {
 		return ctx, errorsmod.Wrap(sdkerrors.ErrTxDecode, "invalid transaction type")
@@ -69,7 +69,7 @@ func (vmd ValidateMemoDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate
 		}
 	}
 
-	return next(ctx, tx, simulate)
+	return next(ctx, tx)
 }
 
 // ConsumeTxSizeGasDecorator will take in parameters and consume gas proportional
@@ -91,7 +91,7 @@ func NewConsumeGasForTxSizeDecorator(ak AccountKeeper) ConsumeTxSizeGasDecorator
 	}
 }
 
-func (cgts ConsumeTxSizeGasDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
+func (cgts ConsumeTxSizeGasDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, next sdk.AnteHandler) (sdk.Context, error) {
 	sigTx, ok := tx.(authsigning.SigVerifiableTx)
 	if !ok {
 		return ctx, errorsmod.Wrap(sdkerrors.ErrTxDecode, "invalid tx type")
@@ -101,7 +101,7 @@ func (cgts ConsumeTxSizeGasDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, sim
 	ctx.GasMeter().ConsumeGas(params.TxSizeCostPerByte*storetypes.Gas(len(ctx.TxBytes())), "txSize")
 
 	// simulate gas cost for signatures in simulate mode
-	if simulate {
+	if ctx.ExecMode() == sdk.ExecModeSimulate {
 		// in simulate mode, each element should be a nil signature
 		sigs, err := sigTx.GetSignaturesV2()
 		if err != nil {
@@ -150,7 +150,7 @@ func (cgts ConsumeTxSizeGasDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, sim
 		}
 	}
 
-	return next(ctx, tx, simulate)
+	return next(ctx, tx)
 }
 
 // isIncompleteSignature tests whether SignatureData is fully filled in for simulation purposes
@@ -200,7 +200,7 @@ func NewTxTimeoutHeightDecorator() TxTimeoutHeightDecorator {
 // type where the current block height is checked against the tx's height timeout.
 // If a height timeout is provided (non-zero) and is less than the current block
 // height, then an error is returned.
-func (txh TxTimeoutHeightDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
+func (txh TxTimeoutHeightDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, next sdk.AnteHandler) (sdk.Context, error) {
 	timeoutTx, ok := tx.(TxWithTimeoutHeight)
 	if !ok {
 		return ctx, errorsmod.Wrap(sdkerrors.ErrTxDecode, "expected tx to implement TxWithTimeoutHeight")
@@ -213,5 +213,5 @@ func (txh TxTimeoutHeightDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 		)
 	}
 
-	return next(ctx, tx, simulate)
+	return next(ctx, tx)
 }

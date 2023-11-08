@@ -1099,7 +1099,7 @@ func TestAnteHandlerSetPubKey(t *testing.T) {
 				require.NoError(t, txBuilder.SetSignatures())
 
 				// Run anteHandler manually, expect ErrNoSignatures.
-				_, err = suite.anteHandler(suite.ctx, txBuilder.GetTx(), false)
+				_, err = suite.anteHandler(suite.ctx, txBuilder.GetTx())
 				require.Error(t, err)
 				require.True(t, errors.Is(err, sdkerrors.ErrNoSignatures))
 
@@ -1146,7 +1146,7 @@ func TestAnteHandlerSetPubKey(t *testing.T) {
 				require.NoError(t, txBuilder.SetSignatures())
 
 				// Run anteHandler manually, expect ErrNoSignatures.
-				_, err = suite.anteHandler(suite.ctx, txBuilder.GetTx(), false)
+				_, err = suite.anteHandler(suite.ctx, txBuilder.GetTx())
 				require.Error(t, err)
 				require.True(t, errors.Is(err, sdkerrors.ErrNoSignatures))
 
@@ -1397,7 +1397,7 @@ func TestAnteHandlerReCheck(t *testing.T) {
 	require.NoError(t, err)
 
 	suite.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).Times(2)
-	_, err = suite.anteHandler(suite.ctx, txBuilder.GetTx(), false)
+	_, err = suite.anteHandler(suite.ctx, txBuilder.GetTx())
 	require.Nil(t, err, "AnteHandler errored on recheck unexpectedly: %v", err)
 
 	tx, err = suite.CreateTestTx(suite.ctx, privs, accNums, accSeqs, suite.ctx.ChainID(), signing.SignMode_SIGN_MODE_DIRECT)
@@ -1422,7 +1422,7 @@ func TestAnteHandlerReCheck(t *testing.T) {
 		err := suite.accountKeeper.Params.Set(suite.ctx, tc.params)
 		require.NoError(t, err)
 
-		_, err = suite.anteHandler(suite.ctx, tx, false)
+		_, err = suite.anteHandler(suite.ctx, tx)
 
 		require.NotNil(t, err, "tx does not fail on recheck with updated params in test case: %s", tc.name)
 
@@ -1438,7 +1438,7 @@ func TestAnteHandlerReCheck(t *testing.T) {
 		Denom:  "dnecoin", // fee does not have this denom
 		Amount: math.LegacyNewDec(5),
 	}})
-	_, err = suite.anteHandler(suite.ctx, tx, false)
+	_, err = suite.anteHandler(suite.ctx, tx)
 	require.NotNil(t, err, "antehandler on recheck did not fail when mingasPrice was changed")
 	// reset min gasprice
 	suite.ctx = suite.ctx.WithMinGasPrices(sdk.DecCoins{})
@@ -1446,6 +1446,6 @@ func TestAnteHandlerReCheck(t *testing.T) {
 	// remove funds for account so antehandler fails on recheck
 	suite.accountKeeper.SetAccount(suite.ctx, accs[0].acc)
 
-	_, err = suite.anteHandler(suite.ctx, tx, false)
+	_, err = suite.anteHandler(suite.ctx, tx)
 	require.NotNil(t, err, "antehandler on recheck did not fail once feePayer no longer has sufficient funds")
 }

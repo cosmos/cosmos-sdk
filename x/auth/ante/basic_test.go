@@ -38,7 +38,7 @@ func TestValidateBasic(t *testing.T) {
 
 	vbd := ante.NewValidateBasicDecorator()
 	antehandler := sdk.ChainAnteDecorators(vbd)
-	_, err = antehandler(suite.ctx, invalidTx, false)
+	_, err = antehandler(suite.ctx, invalidTx)
 
 	require.ErrorIs(t, err, sdkerrors.ErrNoSignatures, "Did not error on invalid tx")
 
@@ -46,14 +46,14 @@ func TestValidateBasic(t *testing.T) {
 	validTx, err := suite.CreateTestTx(suite.ctx, privs, accNums, accSeqs, suite.ctx.ChainID(), signing.SignMode_SIGN_MODE_DIRECT)
 	require.NoError(t, err)
 
-	_, err = antehandler(suite.ctx, validTx, false)
+	_, err = antehandler(suite.ctx, validTx)
 	require.Nil(t, err, "ValidateBasicDecorator returned error on valid tx. err: %v", err)
 
 	// test decorator skips on recheck
 	suite.ctx = suite.ctx.WithIsReCheckTx(true)
 
 	// decorator should skip processing invalidTx on recheck and thus return nil-error
-	_, err = antehandler(suite.ctx, invalidTx, false)
+	_, err = antehandler(suite.ctx, invalidTx)
 
 	require.Nil(t, err, "ValidateBasicDecorator ran on ReCheck")
 }
@@ -81,7 +81,7 @@ func TestValidateMemo(t *testing.T) {
 	// require that long memos get rejected
 	vmd := ante.NewValidateMemoDecorator(suite.accountKeeper)
 	antehandler := sdk.ChainAnteDecorators(vmd)
-	_, err = antehandler(suite.ctx, invalidTx, false)
+	_, err = antehandler(suite.ctx, invalidTx)
 
 	require.ErrorIs(t, err, sdkerrors.ErrMemoTooLarge, "Did not error on tx with high memo")
 
@@ -90,7 +90,7 @@ func TestValidateMemo(t *testing.T) {
 	require.NoError(t, err)
 
 	// require small memos pass ValidateMemo Decorator
-	_, err = antehandler(suite.ctx, validTx, false)
+	_, err = antehandler(suite.ctx, validTx)
 	require.Nil(t, err, "ValidateBasicDecorator returned error on valid tx. err: %v", err)
 }
 
@@ -144,7 +144,7 @@ func TestConsumeGasForTxSize(t *testing.T) {
 			expectedGas += afterGas - beforeGas
 
 			beforeGas = suite.ctx.GasMeter().GasConsumed()
-			suite.ctx, err = antehandler(suite.ctx, tx, false)
+			suite.ctx, err = antehandler(suite.ctx, tx)
 			require.Nil(t, err, "ConsumeTxSizeGasDecorator returned error: %v", err)
 
 			// require that decorator consumes expected amount of gas
@@ -168,7 +168,8 @@ func TestConsumeGasForTxSize(t *testing.T) {
 			beforeSimGas := suite.ctx.GasMeter().GasConsumed()
 
 			// run antehandler with simulate=true
-			suite.ctx, err = antehandler(suite.ctx, tx, true)
+			suite.ctx = suite.ctx.WithExecMode(sdk.ExecModeSimulate)
+			suite.ctx, err = antehandler(suite.ctx, tx)
 			consumedSimGas := suite.ctx.GasMeter().GasConsumed() - beforeSimGas
 
 			// require that antehandler passes and does not underestimate decorator cost
@@ -221,7 +222,8 @@ func TestTxHeightTimeoutDecorator(t *testing.T) {
 			require.NoError(t, err)
 
 			ctx := suite.ctx.WithBlockHeight(tc.height)
-			_, err = antehandler(ctx, tx, true)
+			ctx = ctx.WithExecMode(sdk.ExecModeSimulate)
+			_, err = antehandler(ctx, tx)
 			require.ErrorIs(t, err, tc.expectedErr)
 		})
 	}

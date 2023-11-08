@@ -34,7 +34,7 @@ func TestRejectExtensionOptionsDecorator(t *testing.T) {
 
 			// no extension options should not trigger an error
 			theTx := txBuilder.GetTx()
-			_, err := antehandler(suite.ctx, theTx, false)
+			_, err := antehandler(suite.ctx, theTx)
 			require.NoError(t, err)
 
 			extOptsTxBldr, ok := txBuilder.(tx.ExtensionOptionsTxBuilder)
@@ -48,7 +48,7 @@ func TestRejectExtensionOptionsDecorator(t *testing.T) {
 			require.NoError(t, err)
 			extOptsTxBldr.SetExtensionOptions(any)
 			theTx = txBuilder.GetTx()
-			_, err = antehandler(suite.ctx, theTx, false)
+			_, err = antehandler(suite.ctx, theTx)
 			if tc.allow {
 				require.NoError(t, err)
 			} else {

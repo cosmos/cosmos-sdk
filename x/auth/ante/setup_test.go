@@ -46,7 +46,7 @@ func TestSetupDecorator_BlockMaxGas(t *testing.T) {
 			},
 		})
 
-	_, err = antehandler(suite.ctx, tx, false)
+	_, err = antehandler(suite.ctx, tx)
 	require.Error(t, err)
 }
 
@@ -78,7 +78,7 @@ func TestSetup(t *testing.T) {
 	// Context GasMeter Limit not set
 	require.Equal(t, uint64(0), suite.ctx.GasMeter().Limit(), "GasMeter set with limit before setup")
 
-	newCtx, err := antehandler(suite.ctx, tx, false)
+	newCtx, err := antehandler(suite.ctx, tx)
 	require.Nil(t, err, "SetUpContextDecorator returned error")
 
 	// Context GasMeter Limit should be set after SetUpContextDecorator runs
@@ -110,7 +110,7 @@ func TestRecoverPanic(t *testing.T) {
 	// Set height to non-zero value for GasMeter to be set
 	suite.ctx = suite.ctx.WithBlockHeight(1)
 
-	newCtx, err := antehandler(suite.ctx, tx, false)
+	newCtx, err := antehandler(suite.ctx, tx)
 
 	require.NotNil(t, err, "Did not return error on OutOfGas panic")
 
@@ -118,24 +118,24 @@ func TestRecoverPanic(t *testing.T) {
 	require.Equal(t, gasLimit, newCtx.GasMeter().Limit())
 
 	antehandler = sdk.ChainAnteDecorators(sud, PanicDecorator{})
-	require.Panics(t, func() { _, _ = antehandler(suite.ctx, tx, false) }, "Recovered from non-Out-of-Gas panic")
+	require.Panics(t, func() { _, _ = antehandler(suite.ctx, tx) }, "Recovered from non-Out-of-Gas panic")
 }
 
 type OutOfGasDecorator struct{}
 
 // AnteDecorator that will throw OutOfGas panic
-func (ogd OutOfGasDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
+func (ogd OutOfGasDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, next sdk.AnteHandler) (sdk.Context, error) {
 	overLimit := ctx.GasMeter().Limit() + 1
 
 	// Should panic with outofgas error
 	ctx.GasMeter().ConsumeGas(overLimit, "test panic")
 
 	// not reached
-	return next(ctx, tx, simulate)
+	return next(ctx, tx)
 }
 
 type PanicDecorator struct{}
 
-func (pd PanicDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
+func (pd PanicDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
 	panic("random error")
 }

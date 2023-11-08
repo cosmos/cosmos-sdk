@@ -27,17 +27,17 @@ func NewSetUpContextDecorator() SetUpContextDecorator {
 	return SetUpContextDecorator{}
 }
 
-func (sud SetUpContextDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
+func (sud SetUpContextDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
 	// all transactions must implement GasTx
 	gasTx, ok := tx.(GasTx)
 	if !ok {
 		// Set a gas meter with limit 0 as to prevent an infinite gas meter attack
 		// during runTx.
-		newCtx = SetGasMeter(simulate, ctx, 0)
+		newCtx = SetGasMeter(ctx.ExecMode() == sdk.ExecModeSimulate, ctx, 0)
 		return newCtx, errorsmod.Wrap(sdkerrors.ErrTxDecode, "Tx must be GasTx")
 	}
 
-	newCtx = SetGasMeter(simulate, ctx, gasTx.GetGas())
+	newCtx = SetGasMeter(ctx.ExecMode() == sdk.ExecModeSimulate, ctx, gasTx.GetGas())
 
 	if cp := ctx.ConsensusParams(); cp.Block != nil {
 		// If there exists a maximum block gas limit, we must ensure that the tx
@@ -67,7 +67,7 @@ func (sud SetUpContextDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate
 		}
 	}()
 
-	return next(newCtx, tx, simulate)
+	return next(newCtx, tx)
 }
 
 // SetGasMeter returns a new context with a gas meter set from a given context.

@@ -170,7 +170,10 @@ func (suite *AnteTestSuite) DeliverMsgs(t *testing.T, privs []cryptotypes.PrivKe
 	txBytes, err := suite.clientCtx.TxConfig.TxEncoder()(tx)
 	bytesCtx := suite.ctx.WithTxBytes(txBytes)
 	require.NoError(t, err)
-	return suite.anteHandler(bytesCtx, tx, simulate)
+	if simulate {
+		bytesCtx = bytesCtx.WithExecMode(sdk.ExecModeSimulate)
+	}
+	return suite.anteHandler(bytesCtx, tx)
 }
 
 func (suite *AnteTestSuite) RunTestCase(t *testing.T, tc TestCase, args TestCaseArgs) {
@@ -186,7 +189,10 @@ func (suite *AnteTestSuite) RunTestCase(t *testing.T, tc TestCase, args TestCase
 	txBytes, err := suite.clientCtx.TxConfig.TxEncoder()(tx)
 	require.NoError(t, err)
 	bytesCtx := suite.ctx.WithTxBytes(txBytes)
-	newCtx, anteErr := suite.anteHandler(bytesCtx, tx, tc.simulate)
+	if tc.simulate {
+		bytesCtx = bytesCtx.WithExecMode(sdk.ExecModeSimulate)
+	}
+	newCtx, anteErr := suite.anteHandler(bytesCtx, tx)
 
 	if tc.expPass {
 		require.NoError(t, txErr)

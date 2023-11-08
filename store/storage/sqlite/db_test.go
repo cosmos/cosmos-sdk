@@ -95,16 +95,21 @@ func TestParallelWrites(t *testing.T) {
 	require.NoError(t, err)
 	defer db.Close()
 
+	latestVersion := 10
+	kvCount := 100
+
 	wg := sync.WaitGroup{}
+	triggerStartCh := make(chan bool)
 
 	// start 10 goroutines that write to the database
-	for i := 0; i < 10; i++ {
+	for i := 0; i < latestVersion; i++ {
 		wg.Add(1)
 		go func(i int) {
+			<-triggerStartCh
 			t.Log("start time", i, time.Now())
 			defer wg.Done()
 			cs := new(store.Changeset)
-			for j := 0; j < 100; j++ {
+			for j := 0; j < kvCount; j++ {
 				key := fmt.Sprintf("key-%d-%03d", i, j)
 				val := fmt.Sprintf("val-%d-%03d", i, j)
 
@@ -117,7 +122,22 @@ func TestParallelWrites(t *testing.T) {
 
 	}
 
+	// start the goroutines
+	close(triggerStartCh)
 	wg.Wait()
+
+	// check that all the data is there
+	for i := 0; i < latestVersion; i++ {
+		for j := 0; j < kvCount; j++ {
+			version := uint64(i + 1)
+			key := fmt.Sprintf("key-%d-%03d", i, j)
+			val := fmt.Sprintf("val-%d-%03d", i, j)
+
+			v, err := db.Get(storeKey1, version, []byte(key))
+			require.NoError(t, err)
+			require.Equal(t, []byte(val), v)
+		}
+	}
 }
 
 func TestParallelWriteAndPruning(t *testing.T) {
@@ -126,15 +146,20 @@ func TestParallelWriteAndPruning(t *testing.T) {
 	defer db.Close()
 
 	latestVersion := 100
+	kvCount := 100
+	prunePeriod := 5
 
 	wg := sync.WaitGroup{}
-	wg.Add(2)
+	triggerStartCh := make(chan bool)
+
 	// start a goroutine that write to the database
+	wg.Add(1)
 	go func() {
+		<-triggerStartCh
 		defer wg.Done()
 		for i := 0; i < latestVersion; i++ {
 			cs := new(store.Changeset)
-			for j := 0; j < 100; j++ {
+			for j := 0; j < kvCount; j++ {
 				key := fmt.Sprintf("key-%d-%03d", i, j)
 				val := fmt.Sprintf("val-%d-%03d", i, j)
 
@@ -145,9 +170,11 @@ func TestParallelWriteAndPruning(t *testing.T) {
 		}
 	}()
 	// start a goroutine that prunes the database
+	wg.Add(1)
 	go func() {
+		<-triggerStartCh
 		defer wg.Done()
-		for i := 10; i < latestVersion; i += 5 {
+		for i := 10; i < latestVersion; i += prunePeriod {
 			for {
 				v, err := db.GetLatestVersion()
 				require.NoError(t, err)
@@ -160,5 +187,18 @@ func TestParallelWriteAndPruning(t *testing.T) {
 		}
 	}()
 
+	// start the goroutines
+	close(triggerStartCh)
 	wg.Wait()
+
+	// check if the data is pruned
+	version := uint64(latestVersion - prunePeriod)
+	val, err := db.Get(storeKey1, version, []byte(fmt.Sprintf("key-%d-%03d", version-1, 0)))
+	require.NoError(t, err)
+	require.Nil(t, val)
+
+	version = uint64(latestVersion)
+	val, err = db.Get(storeKey1, version, []byte(fmt.Sprintf("key-%d-%03d", version-1, 0)))
+	require.NoError(t, err)
+	require.Equal(t, []byte(fmt.Sprintf("val-%d-%03d", version-1, 0)), val)
 }

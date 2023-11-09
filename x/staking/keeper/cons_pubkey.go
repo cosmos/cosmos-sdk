@@ -41,7 +41,7 @@ func (k Keeper) setConsPubKeyRotationHistory(
 	}
 
 	queueTime := sdkCtx.BlockHeader().Time.Add(ubdTime)
-	if err := k.ValidatorConsensusKeyRotationRecordIndexKey.Set(ctx, collections.Join(valAddr.Bytes(), queueTime), []byte{}); err != nil {
+	if err := k.ValidatorConsensusKeyRotationRecordIndexKey.Set(ctx, collections.Join(valAddr.Bytes(), queueTime)); err != nil {
 		return err
 	}
 
@@ -52,7 +52,8 @@ func (k Keeper) setConsPubKeyRotationHistory(
 func (k Keeper) exceedsMaxRotations(ctx context.Context, valAddr sdk.ValAddress) (bool, error) {
 	count := 0
 	rng := collections.NewPrefixedPairRange[[]byte, time.Time](valAddr)
-	if err := k.ValidatorConsensusKeyRotationRecordIndexKey.Walk(ctx, rng, func(key collections.Pair[[]byte, time.Time], value []byte) (stop bool, err error) {
+
+	if err := k.ValidatorConsensusKeyRotationRecordIndexKey.Walk(ctx, rng, func(key collections.Pair[[]byte, time.Time]) (stop bool, err error) {
 		count++
 		return count >= maxRotations, nil
 	}); err != nil {

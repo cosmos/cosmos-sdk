@@ -9,7 +9,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 )
@@ -35,17 +34,11 @@ filename, the command reads from standard input.`),
 				return errors.New("cannot broadcast tx during offline mode")
 			}
 
-			txs := make([]sdk.Tx, 0)
-
-			// We check if file is tx batch format or single tx
-			stdTxs, err := authclient.ReadTxsFromFile(clientCtx, args[0])
-			if err == nil {
-				txs = append(txs, stdTxs...)
-			}
-
-			singleStdTx, err := authclient.ReadTxFromFile(clientCtx, args[0])
-			if err == nil {
-				txs = append(txs, singleStdTx)
+			// Get transactions from input file
+			// Work for both only single tx or batch tx
+			txs, err := authclient.ReadTxsFromFile(clientCtx, args[0])
+			if err != nil {
+				return err
 			}
 
 			for _, tx := range txs {

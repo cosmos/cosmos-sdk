@@ -12,6 +12,10 @@ import (
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
+	"cosmossdk.io/x/auth"
+	authkeeper "cosmossdk.io/x/auth/keeper"
+	authsims "cosmossdk.io/x/auth/simulation"
+	authtypes "cosmossdk.io/x/auth/types"
 	authzkeeper "cosmossdk.io/x/authz/keeper"
 	bankkeeper "cosmossdk.io/x/bank/keeper"
 	circuitkeeper "cosmossdk.io/x/circuit/keeper"
@@ -39,12 +43,7 @@ import (
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	testdata_pulsar "github.com/cosmos/cosmos-sdk/testutil/testdata/testpb"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	"github.com/cosmos/cosmos-sdk/x/auth"
-	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	authsims "github.com/cosmos/cosmos-sdk/x/auth/simulation"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	consensuskeeper "github.com/cosmos/cosmos-sdk/x/consensus/keeper"
-	crisiskeeper "github.com/cosmos/cosmos-sdk/x/crisis/keeper"
 )
 
 // DefaultNodeHome default home directories for the application daemon
@@ -73,7 +72,6 @@ type SimApp struct {
 	MintKeeper            mintkeeper.Keeper
 	DistrKeeper           distrkeeper.Keeper
 	GovKeeper             *govkeeper.Keeper
-	CrisisKeeper          *crisiskeeper.Keeper
 	UpgradeKeeper         *upgradekeeper.Keeper
 	AuthzKeeper           authzkeeper.Keeper
 	EvidenceKeeper        evidencekeeper.Keeper
@@ -175,7 +173,6 @@ func NewSimApp(
 		&app.MintKeeper,
 		&app.DistrKeeper,
 		&app.GovKeeper,
-		&app.CrisisKeeper,
 		&app.UpgradeKeeper,
 		&app.AuthzKeeper,
 		&app.EvidenceKeeper,
@@ -230,8 +227,6 @@ func NewSimApp(
 	}
 
 	/****  Module Options ****/
-
-	app.ModuleManager.RegisterInvariants(app.CrisisKeeper)
 
 	// RegisterUpgradeHandlers is used for registering any on-chain upgrades.
 	app.RegisterUpgradeHandlers()

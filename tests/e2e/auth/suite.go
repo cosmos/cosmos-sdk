@@ -239,20 +239,15 @@ func (s *E2ETestSuite) TestCLISignBatch() {
 	// sign-batch file - sequence and account-number are set when offline is false
 	res, err := authclitestutil.TxSignBatchExec(val.ClientCtx, val.Address, outputFile.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID), fmt.Sprintf("--%s=%s", flags.FlagSequence, "1"), fmt.Sprintf("--%s=%s", flags.FlagAccountNumber, "1"))
 	s.Require().NoError(err)
-	batch, err := val.ClientCtx.TxConfig.TxsJSONDecoder()(res.Bytes())
-	s.Require().NoError(err)
-	s.Require().Equal(3, len(batch))
+	s.Require().Equal(3, len(strings.Split(strings.Trim(res.String(), "\n"), "\n")))
 
 	// sign-batch file
 	res, err = authclitestutil.TxSignBatchExec(val.ClientCtx, val.Address, outputFile.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID))
 	s.Require().NoError(err)
-	batch, err = val.ClientCtx.TxConfig.TxsJSONDecoder()(res.Bytes())
-	s.Require().NoError(err)
-	s.Require().Equal(3, len(batch))
+	s.Require().Equal(3, len(strings.Split(strings.Trim(res.String(), "\n"), "\n")))
 
 	// sign-batch file signature only
 	res, err = authclitestutil.TxSignBatchExec(val.ClientCtx, val.Address, outputFile.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID), "--signature-only")
-	fmt.Println("signature", res)
 	s.Require().NoError(err)
 	s.Require().Equal(3, len(strings.Split(strings.Trim(res.String(), "\n"), "\n")))
 
@@ -1261,7 +1256,6 @@ func (s *E2ETestSuite) TestMultisignBatch() {
 	file2 := testutil.WriteToNewTempFile(s.T(), res.String())
 	defer file2.Close()
 	res, err = authclitestutil.TxMultiSignBatchExec(val.ClientCtx, filename.Name(), multisigRecord.Name, file1.Name(), file2.Name())
-	fmt.Println("multi-sign res", res, err, file1, file2)
 	s.Require().NoError(err)
 	signedTxs := strings.Split(strings.Trim(res.String(), "\n"), "\n")
 

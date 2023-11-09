@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package cosmos.accounts.testing.counter.v1;
 
+import "cosmos/base/query/v1beta1/pagination.proto";
+
 // MsgInit defines a message which initializes the counter with a given amount.
 message MsgInit {
   // initial_value is the initial amount to set the counter to.
@@ -31,4 +33,18 @@ message QueryCounterRequest {}
 message QueryCounterResponse {
   // value defines the value of the counter.
   uint64 value = 1;
+}
+
+// QueryEnumerateCounterRequest is used to query the counter enumeration.
+message QueryEnumerateCounterRequest {
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+// QueryEnumerateCounterResponse returns the counter enumeration.
+message QueryEnumerateCounterResponse {
+  // counter defines the counter enumerated.
+  repeated uint64 step = 1;
+  // pagination defines the pagination in the response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }

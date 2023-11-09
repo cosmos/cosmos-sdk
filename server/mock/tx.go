@@ -106,15 +106,6 @@ func (msg *KVStoreTx) GetMsgsV2() ([]protov2.Message, error) {
 	return []protov2.Message{&bankv1beta1.MsgSend{FromAddress: msg.address.String()}}, nil // this is a hack for tests
 }
 
-func (msg *KVStoreTx) GetSignBytes() []byte {
-	return msg.bytes
-}
-
-// Should the app be calling this? Or only handlers?
-func (msg *KVStoreTx) ValidateBasic() error {
-	return nil
-}
-
 func (msg *KVStoreTx) GetSigners() ([][]byte, error) {
 	return nil, nil
 }

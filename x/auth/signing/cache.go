@@ -13,8 +13,13 @@ const (
 
 func init() {
 	// used for ut
+
+	cache, err := lru.New[string, []byte](500)
+	if err != nil {
+		panic(err)
+	}
 	defaultCache := &Cache{
-		data: &lru.Cache[string, []byte]{},
+		data: cache,
 	}
 	signatureCache = defaultCache
 }

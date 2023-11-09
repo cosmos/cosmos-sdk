@@ -2,7 +2,6 @@ package rootmulti
 
 import (
 	"fmt"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	"io"
 	"math"
 	"sort"
@@ -10,8 +9,8 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/cosmos/cosmos-sdk/pruning"
-	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+
 	iavltree "github.com/cosmos/iavl"
 	protoio "github.com/gogo/protobuf/io"
 	gogotypes "github.com/gogo/protobuf/types"
@@ -21,6 +20,8 @@ import (
 	"github.com/tendermint/tendermint/proto/tendermint/crypto"
 	dbm "github.com/tendermint/tm-db"
 
+	"github.com/cosmos/cosmos-sdk/pruning"
+	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
 	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
 	"github.com/cosmos/cosmos-sdk/store/cachemulti"
 	"github.com/cosmos/cosmos-sdk/store/dbadapter"
@@ -64,6 +65,7 @@ type Store struct {
 	keysByName     map[string]types.StoreKey
 	lazyLoading    bool
 	initialVersion int64
+	iavlV2Path     string
 
 	traceWriter  io.Writer
 	traceContext types.TraceContext
@@ -72,6 +74,10 @@ type Store struct {
 
 	listeners    map[types.StoreKey][]types.WriteListener
 	commitHeader tmproto.Header
+}
+
+type StoreOptions struct {
+	IavlV2RootPath string
 }
 
 var (
@@ -95,6 +101,12 @@ func NewStore(db dbm.DB, logger log.Logger) *Store {
 		listeners:      make(map[types.StoreKey][]types.WriteListener),
 		pruningManager: pruning.NewManager(db, logger),
 	}
+}
+
+func NewStoreWithOptions(db dbm.DB, logger log.Logger, options StoreOptions) *Store {
+	store := NewStore(db, logger)
+	store.iavlV2Path = options.IavlV2RootPath
+	return store
 }
 
 // GetPruning fetches the pruning strategy from the root store.
@@ -245,6 +257,8 @@ func (rs *Store) loadVersion(ver int64, upgrades *types.StoreUpgrades) error {
 		if upgrades.IsAdded(key.Name()) {
 			storeParams.initialVersion = uint64(ver) + 1
 		}
+
+		// TODO async load
 
 		store, err := rs.loadCommitStoreFromParams(key, commitID, storeParams)
 		if err != nil {
@@ -888,11 +902,15 @@ func (rs *Store) loadCommitStoreFromParams(key types.StoreKey, id types.CommitID
 		var store types.CommitKVStore
 		var err error
 
+		// IAVL v1
 		if params.initialVersion == 0 {
 			store, err = iavl.LoadStore(db, rs.logger, key, id, rs.lazyLoading, rs.iavlCacheSize)
 		} else {
 			store, err = iavl.LoadStoreWithInitialVersion(db, rs.logger, key, id, rs.lazyLoading, params.initialVersion, rs.iavlCacheSize)
 		}
+
+		// IAVL V2
+		//store, err = iavl_v2.LoadStoreWithInitialVersion(rs.iavlV2Path, key, id, params.initialVersion)
 
 		if err != nil {
 			return nil, err

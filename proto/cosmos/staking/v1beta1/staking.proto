@@ -424,6 +424,8 @@ message ConsPubKeyRotationHistory {
   uint64 height = 4;
   // fee holds the amount of fee deduced for the rotation.
   cosmos.base.v1beta1.Coin fee = 5 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+  // time is the last time the rotation has happened.
+  google.protobuf.Timestamp time = 6 [(gogoproto.stdtime) = true];
 }
 
 // ValAddrsOfRotatedConsKeys contains the array of validator addresses which rotated their keys

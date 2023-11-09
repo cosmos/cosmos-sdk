@@ -3,7 +3,10 @@ package baseapp_test
 import (
 	"encoding/json"
 	"fmt"
+	"os"
+	"os/signal"
 	"strings"
+	"syscall"
 	"testing"
 	"time"
 
@@ -2828,10 +2831,16 @@ func TestABCI_HaltChain(t *testing.T) {
 		{"halt-time", 0, 10, 1, 11, true},
 	}
 
+	sigs := make(chan os.Signal, 5)
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
+			if tc.expHalt {
+				signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+			}
+
 			defer func() {
 				rec := recover()
+				signal.Stop(sigs)
 				var err error
 				if rec != nil {
 					err = rec.(error)
@@ -2839,6 +2848,12 @@ func TestABCI_HaltChain(t *testing.T) {
 				if !tc.expHalt {
 					require.NoError(t, err)
 				} else {
+					// ensure that we received the correct signals
+					require.Equal(t, syscall.SIGINT, <-sigs)
+					require.Equal(t, syscall.SIGTERM, <-sigs)
+					require.Equal(t, len(sigs), 0)
+
+					// Check our error message.
 					require.Error(t, err)
 					require.True(t, strings.HasPrefix(err.Error(), "halt application"))
 				}

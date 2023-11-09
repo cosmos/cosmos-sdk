@@ -5,8 +5,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"os"
 	"sort"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/gogo/protobuf/proto"
@@ -312,21 +314,45 @@ func (app *BaseApp) deliverTxWithoutEventHistory(req abci.RequestDeliverTx) (res
 	}
 }
 
-// checkHalt checkes if height or time exceeds halt-height or halt-time respectively.
-func (app *BaseApp) checkHalt(height int64, time time.Time) {
+// checkHalt forces a state machine halt and attempts to kill the current
+// process if block height or timestamp exceeds halt-height or halt-time
+// respectively.
+func (app *BaseApp) checkHalt(blockHeight int64, blockTime time.Time) {
 	var halt bool
-	switch {
-	case app.haltHeight > 0 && uint64(height) > app.haltHeight:
+	if app.haltHeight > 0 && uint64(blockHeight) > app.haltHeight {
+		// height to halt has passed
 		halt = true
-
-	case app.haltTime > 0 && time.Unix() > int64(app.haltTime):
+	} else if app.haltTime > 0 && blockTime.Unix() > int64(app.haltTime) {
+		// time to halt has passed
 		halt = true
 	}
 
-	if halt {
-		app.logger.Info("halt per configuration", "height", app.haltHeight, "time", app.haltTime)
-		panic(errors.New("halt application"))
+	if !halt {
+		return
 	}
+
+	app.logger.Info(
+		"halt per configuration",
+		"haltHeight", app.haltHeight,
+		"haltTime", app.haltTime,
+		"blockHeight", blockHeight,
+		"blockTime", blockTime,
+	)
+
+	// [AGORIC] Make a best-effort attempt to kill our process.
+	p, err := os.FindProcess(os.Getpid())
+	if err == nil {
+		// attempt cascading signals in case SIGINT fails (os dependent)
+		_ = p.Signal(syscall.SIGINT)
+		_ = p.Signal(syscall.SIGTERM)
+		// Errors in these signal calls are not meaningful to us.  We tried our
+		// best, but we don't care (and can't tell) if or how the signal handler
+		// responds.
+	}
+
+	// Prevent the state machine from advancing to the next block, no matter how
+	// the signals were handled.
+	panic(errors.New("halt application"))
 }
 
 // Commit implements the ABCI interface. It will commit all state that exists in

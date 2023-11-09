@@ -27,8 +27,6 @@ import (
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 )
 
-const govModuleName = "gov"
-
 type KeeperTestSuite struct {
 	suite.Suite
 
@@ -67,7 +65,7 @@ func (s *KeeperTestSuite) SetupTest() {
 
 	homeDir := filepath.Join(s.T().TempDir(), "x_upgrade_keeper_test")
 	ac := addresscodec.NewBech32Codec("cosmos")
-	authority, err := ac.BytesToString(authtypes.NewModuleAddress(govModuleName))
+	authority, err := ac.BytesToString(authtypes.NewModuleAddress(types.GovModuleName))
 	s.Require().NoError(err)
 	s.encodedAuthority = authority
 	s.upgradeKeeper = keeper.NewKeeper(skipUpgradeHeights, storeService, s.encCfg.Codec, homeDir, s.baseApp, authority)

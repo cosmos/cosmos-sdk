@@ -49,7 +49,7 @@ func (k Keeper) setConsPubKeyRotationHistory(
 }
 
 // exceedsMaxRotations returns true if the key rotations exceed the limit, currently we are limiting one rotation for unbonding period.
-func (k Keeper) exceedsMaxRotations(ctx context.Context, valAddr sdk.ValAddress) (bool, error) {
+func (k Keeper) exceedsMaxRotations(ctx context.Context, valAddr sdk.ValAddress) error {
 	count := 0
 	rng := collections.NewPrefixedPairRange[[]byte, time.Time](valAddr)
 
@@ -57,10 +57,14 @@ func (k Keeper) exceedsMaxRotations(ctx context.Context, valAddr sdk.ValAddress)
 		count++
 		return count >= maxRotations, nil
 	}); err != nil {
-		return false, err
+		return err
 	}
 
-	return count >= maxRotations, nil
+	if count >= maxRotations {
+		return types.ErrExceedingMaxConsPubKeyRotations
+	}
+
+	return nil
 }
 
 // setConsKeyQueue sets array of rotated validator addresses to a key of current block time + unbonding period

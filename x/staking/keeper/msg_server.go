@@ -650,13 +650,9 @@ func (k msgServer) RotateConsPubKey(ctx context.Context, msg *types.MsgRotateCon
 
 	// Check if the validator is exceeding parameter MaxConsPubKeyRotations within the
 	// unbonding period by iterating ConsPubKeyRotationHistory.
-	exceedsLimit, err := k.exceedsMaxRotations(ctx, valAddr)
+	err = k.exceedsMaxRotations(ctx, valAddr)
 	if err != nil {
 		return nil, err
-	}
-
-	if exceedsLimit {
-		return nil, types.ErrExceedingMaxConsPubKeyRotations
 	}
 
 	// Check if the signing account has enough balance to pay KeyRotationFee

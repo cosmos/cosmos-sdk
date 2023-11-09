@@ -1,7 +1,9 @@
 package signing
 
 import (
+	"bytes"
 	"context"
+	"crypto/sha256"
 	"fmt"
 
 	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
@@ -57,6 +59,25 @@ func internalSignModeToAPI(mode signing.SignMode) (signingv1beta1.SignMode, erro
 	}
 }
 
+// VerifysignatureCache is a cache of verified signatures
+// If the cached item is not found, it will be verified and added to the cache
+func verifySig(signBytes, sig []byte, pubKey cryptotypes.PubKey) bool {
+	bz := sha256.Sum256(append(signBytes, sig...))
+	hash := bz[:]
+	cachePub, ok := SignatureCache().Get(hash)
+	if ok {
+		SignatureCache().Remove(hash)
+		return bytes.Equal(pubKey.Bytes(), cachePub)
+	}
+	if !pubKey.VerifySignature(signBytes, sig) {
+		return false
+	}
+
+	SignatureCache().Add(hash, pubKey.Bytes())
+
+	return true
+}
+
 // VerifySignature verifies a transaction signature contained in SignatureData abstracting over different signing
 // modes. It differs from VerifySignature in that it uses the new txsigning.TxData interface in x/tx.
 func VerifySignature(
@@ -77,7 +98,7 @@ func VerifySignature(
 		if err != nil {
 			return err
 		}
-		if !pubKey.VerifySignature(signBytes, data.Signature) {
+		if !verifySig(signBytes, data.Signature, pubKey) {
 			return fmt.Errorf("unable to verify single signer signature")
 		}
 		return nil

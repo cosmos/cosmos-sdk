@@ -19,6 +19,8 @@ require (
 	sigs.k8s.io/yaml v1.4.0
 )
 
+require github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect
+
 require (
 	cosmossdk.io/collections v0.4.0 // indirect
 	cosmossdk.io/errors v1.0.0 // indirect

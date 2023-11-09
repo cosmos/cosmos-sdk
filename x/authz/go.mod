@@ -29,6 +29,8 @@ require (
 	google.golang.org/protobuf v1.31.0
 )
 
+require github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect
+
 require (
 	cosmossdk.io/collections v0.4.0 // indirect
 	cosmossdk.io/x/auth v0.0.0-00010101000000-000000000000

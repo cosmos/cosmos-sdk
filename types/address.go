@@ -10,7 +10,7 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"github.com/hashicorp/golang-lru/simplelru"
+	"github.com/hashicorp/golang-lru/v2/simplelru"
 	"sigs.k8s.io/yaml"
 
 	errorsmod "cosmossdk.io/errors"
@@ -81,11 +81,11 @@ var (
 	// AccAddress.String() is expensive and if unoptimized dominantly showed up in profiles,
 	// yet has no mechanisms to trivially cache the result given that AccAddress is a []byte type.
 	accAddrMu     sync.Mutex
-	accAddrCache  *simplelru.LRU
+	accAddrCache  *simplelru.LRU[string, string]
 	consAddrMu    sync.Mutex
-	consAddrCache *simplelru.LRU
+	consAddrCache *simplelru.LRU[string, string]
 	valAddrMu     sync.Mutex
-	valAddrCache  *simplelru.LRU
+	valAddrCache  *simplelru.LRU[string, string]
 
 	isCachingEnabled atomic.Bool
 )
@@ -101,13 +101,13 @@ func init() {
 
 	// in total the cache size is 61k entries. Key is 32 bytes and value is around 50-70 bytes.
 	// That will make around 92 * 61k * 2 (LRU) bytes ~ 11 MB
-	if accAddrCache, err = simplelru.NewLRU(60000, nil); err != nil {
+	if accAddrCache, err = simplelru.NewLRU[string, string](60000, nil); err != nil {
 		panic(err)
 	}
-	if consAddrCache, err = simplelru.NewLRU(500, nil); err != nil {
+	if consAddrCache, err = simplelru.NewLRU[string, string](500, nil); err != nil {
 		panic(err)
 	}
-	if valAddrCache, err = simplelru.NewLRU(500, nil); err != nil {
+	if valAddrCache, err = simplelru.NewLRU[string, string](500, nil); err != nil {
 		panic(err)
 	}
 }
@@ -309,7 +309,7 @@ func (aa AccAddress) String() string {
 
 		addr, ok := accAddrCache.Get(key)
 		if ok {
-			return addr.(string)
+			return addr
 		}
 	}
 	return cacheBech32Addr(GetConfig().GetBech32AccountAddrPrefix(), aa, accAddrCache, key)
@@ -463,7 +463,7 @@ func (va ValAddress) String() string {
 
 		addr, ok := valAddrCache.Get(key)
 		if ok {
-			return addr.(string)
+			return addr
 		}
 	}
 	return cacheBech32Addr(GetConfig().GetBech32ValidatorAddrPrefix(), va, valAddrCache, key)
@@ -623,7 +623,7 @@ func (ca ConsAddress) String() string {
 
 		addr, ok := consAddrCache.Get(key)
 		if ok {
-			return addr.(string)
+			return addr
 		}
 	}
 	return cacheBech32Addr(GetConfig().GetBech32ConsensusAddrPrefix(), ca, consAddrCache, key)
@@ -699,7 +699,7 @@ func addressBytesFromHexString(address string) ([]byte, error) {
 }
 
 // cacheBech32Addr is not concurrency safe. Concurrent access to cache causes race condition.
-func cacheBech32Addr(prefix string, addr []byte, cache *simplelru.LRU, cacheKey string) string {
+func cacheBech32Addr(prefix string, addr []byte, cache *simplelru.LRU[string, string], cacheKey string) string {
 	bech32Addr, err := bech32.ConvertAndEncode(prefix, addr)
 	if err != nil {
 		panic(err)

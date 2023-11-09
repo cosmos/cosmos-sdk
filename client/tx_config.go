@@ -17,9 +17,7 @@ type (
 		TxEncoder() sdk.TxEncoder
 		TxDecoder() sdk.TxDecoder
 		TxJSONEncoder() sdk.TxEncoder
-		TxsJSONEncoder() sdk.TxsEncoder
 		TxJSONDecoder() sdk.TxDecoder
-		TxsJSONDecoder() sdk.TxsDecoder
 		MarshalSignatureJSON([]signingtypes.SignatureV2) ([]byte, error)
 		UnmarshalSignatureJSON([]byte) ([]signingtypes.SignatureV2, error)
 	}

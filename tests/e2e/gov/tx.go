@@ -26,7 +26,7 @@ type E2ETestSuite struct {
 	suite.Suite
 
 	cfg     network.Config
-	network *network.Network
+	network network.NetworkI
 }
 
 func NewE2ETestSuite(cfg network.Config) *E2ETestSuite {
@@ -41,12 +41,12 @@ func (s *E2ETestSuite) SetupSuite() {
 	s.Require().NoError(err)
 	s.Require().NoError(s.network.WaitForNextBlock())
 
-	val := s.network.Validators[0]
-	clientCtx := val.ClientCtx
+	val := s.network.GetValidators()[0]
+	clientCtx := val.GetClientCtx()
 	var resp sdk.TxResponse
 
 	// create a proposal with deposit
-	out, err := govclitestutil.MsgSubmitLegacyProposal(val.ClientCtx, val.Address.String(),
+	out, err := govclitestutil.MsgSubmitLegacyProposal(val.GetClientCtx(), val.GetAddress().String(),
 		"Text Proposal 1", "Where is the title!?", v1beta1.ProposalTypeText,
 		fmt.Sprintf("--%s=%s", cli.FlagDeposit, sdk.NewCoin(s.cfg.BondDenom, v1.DefaultMinDepositTokens).String()))
 	s.Require().NoError(err)
@@ -54,14 +54,14 @@ func (s *E2ETestSuite) SetupSuite() {
 	s.Require().NoError(clitestutil.CheckTxCode(s.network, clientCtx, resp.TxHash, 0))
 
 	// vote for proposal
-	out, err = govclitestutil.MsgVote(val.ClientCtx, val.Address.String(), "1", "yes")
+	out, err = govclitestutil.MsgVote(val.GetClientCtx(), val.GetAddress().String(), "1", "yes")
 	s.Require().NoError(err)
 	s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
 	s.Require().NoError(clitestutil.CheckTxCode(s.network, clientCtx, resp.TxHash, 0))
 
 	// create a proposal with a small deposit
 	minimumAcceptedDep := v1.DefaultMinDepositTokens.ToLegacyDec().Mul(v1.DefaultMinDepositRatio).Ceil().TruncateInt()
-	out, err = govclitestutil.MsgSubmitLegacyProposal(val.ClientCtx, val.Address.String(),
+	out, err = govclitestutil.MsgSubmitLegacyProposal(val.GetClientCtx(), val.GetAddress().String(),
 		"Text Proposal 2", "Where is the title!?", v1beta1.ProposalTypeText,
 		fmt.Sprintf("--%s=%s", cli.FlagDeposit, sdk.NewCoin(s.cfg.BondDenom, minimumAcceptedDep).String()))
 
@@ -70,7 +70,7 @@ func (s *E2ETestSuite) SetupSuite() {
 	s.Require().NoError(clitestutil.CheckTxCode(s.network, clientCtx, resp.TxHash, 0))
 
 	// create a proposal3 with deposit
-	out, err = govclitestutil.MsgSubmitLegacyProposal(val.ClientCtx, val.Address.String(),
+	out, err = govclitestutil.MsgSubmitLegacyProposal(val.GetClientCtx(), val.GetAddress().String(),
 		"Text Proposal 3", "Where is the title!?", v1beta1.ProposalTypeText,
 		fmt.Sprintf("--%s=%s", cli.FlagDeposit, sdk.NewCoin(s.cfg.BondDenom, v1.DefaultMinDepositTokens).String()))
 	s.Require().NoError(err)
@@ -78,7 +78,7 @@ func (s *E2ETestSuite) SetupSuite() {
 	s.Require().NoError(clitestutil.CheckTxCode(s.network, clientCtx, resp.TxHash, 0))
 
 	// create a proposal4 with deposit to check the cancel proposal cli tx
-	out, err = govclitestutil.MsgSubmitLegacyProposal(val.ClientCtx, val.Address.String(),
+	out, err = govclitestutil.MsgSubmitLegacyProposal(val.GetClientCtx(), val.GetAddress().String(),
 		"Text Proposal 4", "Where is the title!?", v1beta1.ProposalTypeText,
 		fmt.Sprintf("--%s=%s", cli.FlagDeposit, sdk.NewCoin(s.cfg.BondDenom, v1.DefaultMinDepositTokens).String()))
 	s.Require().NoError(err)
@@ -86,7 +86,7 @@ func (s *E2ETestSuite) SetupSuite() {
 	s.Require().NoError(clitestutil.CheckTxCode(s.network, clientCtx, resp.TxHash, 0))
 
 	// vote for proposal3 as val
-	out, err = govclitestutil.MsgVote(val.ClientCtx, val.Address.String(), "3", "yes=0.6,no=0.3,abstain=0.05,no_with_veto=0.05")
+	out, err = govclitestutil.MsgVote(val.GetClientCtx(), val.GetAddress().String(), "3", "yes=0.6,no=0.3,abstain=0.05,no_with_veto=0.05")
 	s.Require().NoError(err)
 	s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
 	s.Require().NoError(clitestutil.CheckTxCode(s.network, clientCtx, resp.TxHash, 0))
@@ -98,7 +98,7 @@ func (s *E2ETestSuite) TearDownSuite() {
 }
 
 func (s *E2ETestSuite) TestNewCmdSubmitProposal() {
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 
 	// Create a legacy proposal JSON, make sure it doesn't pass this new CLI
 	// command.
@@ -154,7 +154,7 @@ func (s *E2ETestSuite) TestNewCmdSubmitProposal() {
 			"valid proposal",
 			[]string{
 				validPropFile.Name(),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.GetAddress().String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
@@ -168,7 +168,7 @@ func (s *E2ETestSuite) TestNewCmdSubmitProposal() {
 
 		s.Run(tc.name, func() {
 			cmd := cli.NewCmdSubmitProposal()
-			clientCtx := val.ClientCtx
+			clientCtx := val.GetClientCtx()
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {
@@ -184,7 +184,7 @@ func (s *E2ETestSuite) TestNewCmdSubmitProposal() {
 }
 
 func (s *E2ETestSuite) TestNewCmdSubmitLegacyProposal() {
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 	invalidProp := `{
 	  "title": "",
 		"description": "Where is the title!?",
@@ -213,7 +213,7 @@ func (s *E2ETestSuite) TestNewCmdSubmitLegacyProposal() {
 			"invalid proposal (file)",
 			[]string{
 				fmt.Sprintf("--%s=%s", cli.FlagProposal, invalidPropFile.Name()), //nolint:staticcheck // we are intentionally using a deprecated flag here.
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.GetAddress().String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
 			},
@@ -225,7 +225,7 @@ func (s *E2ETestSuite) TestNewCmdSubmitLegacyProposal() {
 				fmt.Sprintf("--%s='Where is the title!?'", cli.FlagDescription),        //nolint:staticcheck // we are intentionally using a deprecated flag here.
 				fmt.Sprintf("--%s=%s", cli.FlagProposalType, v1beta1.ProposalTypeText), //nolint:staticcheck // we are intentionally using a deprecated flag here.
 				fmt.Sprintf("--%s=%s", cli.FlagDeposit, sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10000)).String()),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.GetAddress().String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
 			},
@@ -236,7 +236,7 @@ func (s *E2ETestSuite) TestNewCmdSubmitLegacyProposal() {
 			//nolint:staticcheck // we are intentionally using a deprecated flag here.
 			[]string{
 				fmt.Sprintf("--%s=%s", cli.FlagProposal, validPropFile.Name()),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.GetAddress().String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
@@ -250,7 +250,7 @@ func (s *E2ETestSuite) TestNewCmdSubmitLegacyProposal() {
 				fmt.Sprintf("--%s='Where is the title!?'", cli.FlagDescription),        //nolint:staticcheck // we are intentionally using a deprecated flag here.
 				fmt.Sprintf("--%s=%s", cli.FlagProposalType, v1beta1.ProposalTypeText), //nolint:staticcheck // we are intentionally using a deprecated flag here.
 				fmt.Sprintf("--%s=%s", cli.FlagDeposit, sdk.NewCoin(s.cfg.BondDenom, math.NewInt(100000)).String()),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.GetAddress().String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
@@ -264,7 +264,7 @@ func (s *E2ETestSuite) TestNewCmdSubmitLegacyProposal() {
 
 		s.Run(tc.name, func() {
 			cmd := cli.NewCmdSubmitLegacyProposal()
-			clientCtx := val.ClientCtx
+			clientCtx := val.GetClientCtx()
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {
@@ -280,7 +280,7 @@ func (s *E2ETestSuite) TestNewCmdSubmitLegacyProposal() {
 }
 
 func (s *E2ETestSuite) TestNewCmdWeightedVote() {
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 
 	testCases := []struct {
 		name         string
@@ -298,7 +298,7 @@ func (s *E2ETestSuite) TestNewCmdWeightedVote() {
 			[]string{
 				"10",
 				"yes",
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.GetAddress().String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
@@ -310,7 +310,7 @@ func (s *E2ETestSuite) TestNewCmdWeightedVote() {
 			[]string{
 				"1",
 				"yes",
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.GetAddress().String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
@@ -322,7 +322,7 @@ func (s *E2ETestSuite) TestNewCmdWeightedVote() {
 			[]string{
 				"1",
 				"yes",
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.GetAddress().String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--metadata=%s", "AQ=="),
@@ -335,7 +335,7 @@ func (s *E2ETestSuite) TestNewCmdWeightedVote() {
 			[]string{
 				"1",
 				"yes/0.6,no/0.3,abstain/0.05,no_with_veto/0.05",
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.GetAddress().String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
@@ -347,7 +347,7 @@ func (s *E2ETestSuite) TestNewCmdWeightedVote() {
 			[]string{
 				"1",
 				"yes=0.6,no=0.3,abstain=0.05,no_with_veto=0.05",
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.GetAddress().String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
@@ -360,7 +360,7 @@ func (s *E2ETestSuite) TestNewCmdWeightedVote() {
 		tc := tc
 		s.Run(tc.name, func() {
 			cmd := cli.NewCmdWeightedVote()
-			clientCtx := val.ClientCtx
+			clientCtx := val.GetClientCtx()
 			var txResp sdk.TxResponse
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)

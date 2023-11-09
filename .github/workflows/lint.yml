@@ -28,8 +28,8 @@ jobs:
       #       **/Makefile
       #       .golangci.yml
       - name: run linting (long)
-        if: env.GIT_DIFF
-        id: lint_long
+        # if: env.GIT_DIFF
+        # id: lint_long
         run: |
           nix develop -c make lint
         env:

@@ -13,7 +13,7 @@ import (
 )
 
 func (s *E2ETestSuite) TestGetProposalGRPC() {
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 
 	testCases := []struct {
 		name   string
@@ -22,17 +22,17 @@ func (s *E2ETestSuite) TestGetProposalGRPC() {
 	}{
 		{
 			"empty proposal",
-			fmt.Sprintf("%s/cosmos/gov/v1/proposals/%s", val.APIAddress, ""),
+			fmt.Sprintf("%s/cosmos/gov/v1/proposals/%s", val.GetAPIAddress(), ""),
 			true,
 		},
 		{
 			"get non existing proposal",
-			fmt.Sprintf("%s/cosmos/gov/v1/proposals/%s", val.APIAddress, "10"),
+			fmt.Sprintf("%s/cosmos/gov/v1/proposals/%s", val.GetAPIAddress(), "10"),
 			true,
 		},
 		{
 			"get proposal with id",
-			fmt.Sprintf("%s/cosmos/gov/v1/proposals/%s", val.APIAddress, "1"),
+			fmt.Sprintf("%s/cosmos/gov/v1/proposals/%s", val.GetAPIAddress(), "1"),
 			false,
 		},
 	}
@@ -44,7 +44,7 @@ func (s *E2ETestSuite) TestGetProposalGRPC() {
 			s.Require().NoError(err)
 
 			var proposal v1.QueryProposalResponse
-			err = val.ClientCtx.Codec.UnmarshalJSON(resp, &proposal)
+			err = val.GetClientCtx().Codec.UnmarshalJSON(resp, &proposal)
 
 			if tc.expErr {
 				s.Require().Error(err)
@@ -57,7 +57,7 @@ func (s *E2ETestSuite) TestGetProposalGRPC() {
 }
 
 func (s *E2ETestSuite) TestGetProposalsGRPC() {
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 
 	testCases := []struct {
 		name             string
@@ -68,7 +68,7 @@ func (s *E2ETestSuite) TestGetProposalsGRPC() {
 	}{
 		{
 			"get proposals with height 1",
-			fmt.Sprintf("%s/cosmos/gov/v1/proposals", val.APIAddress),
+			fmt.Sprintf("%s/cosmos/gov/v1/proposals", val.GetAPIAddress()),
 			map[string]string{
 				grpctypes.GRPCBlockHeightHeader: "1",
 			},
@@ -77,14 +77,14 @@ func (s *E2ETestSuite) TestGetProposalsGRPC() {
 		},
 		{
 			"valid request",
-			fmt.Sprintf("%s/cosmos/gov/v1/proposals", val.APIAddress),
+			fmt.Sprintf("%s/cosmos/gov/v1/proposals", val.GetAPIAddress()),
 			map[string]string{},
 			4,
 			false,
 		},
 		{
 			"valid request with filter by status",
-			fmt.Sprintf("%s/cosmos/gov/v1/proposals?proposal_status=1", val.APIAddress),
+			fmt.Sprintf("%s/cosmos/gov/v1/proposals?proposal_status=1", val.GetAPIAddress()),
 			map[string]string{},
 			1,
 			false,
@@ -98,7 +98,7 @@ func (s *E2ETestSuite) TestGetProposalsGRPC() {
 			s.Require().NoError(err)
 
 			var proposals v1.QueryProposalsResponse
-			err = val.ClientCtx.Codec.UnmarshalJSON(resp, &proposals)
+			err = val.GetClientCtx().Codec.UnmarshalJSON(resp, &proposals)
 
 			if tc.expErr {
 				s.Require().Empty(proposals.Proposals)
@@ -111,9 +111,9 @@ func (s *E2ETestSuite) TestGetProposalsGRPC() {
 }
 
 func (s *E2ETestSuite) TestGetProposalVoteGRPC() {
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 
-	voterAddressBech32 := val.Address.String()
+	voterAddressBech32 := val.GetAddress().String()
 
 	testCases := []struct {
 		name           string
@@ -123,31 +123,31 @@ func (s *E2ETestSuite) TestGetProposalVoteGRPC() {
 	}{
 		{
 			"empty proposal",
-			fmt.Sprintf("%s/cosmos/gov/v1/proposals/%s/votes/%s", val.APIAddress, "", voterAddressBech32),
+			fmt.Sprintf("%s/cosmos/gov/v1/proposals/%s/votes/%s", val.GetAPIAddress(), "", voterAddressBech32),
 			true,
 			v1.NewNonSplitVoteOption(v1.OptionYes),
 		},
 		{
 			"get non existing proposal",
-			fmt.Sprintf("%s/cosmos/gov/v1/proposals/%s/votes/%s", val.APIAddress, "10", voterAddressBech32),
+			fmt.Sprintf("%s/cosmos/gov/v1/proposals/%s/votes/%s", val.GetAPIAddress(), "10", voterAddressBech32),
 			true,
 			v1.NewNonSplitVoteOption(v1.OptionYes),
 		},
 		{
 			"get proposal with wrong voter address",
-			fmt.Sprintf("%s/cosmos/gov/v1/proposals/%s/votes/%s", val.APIAddress, "1", "wrongVoterAddress"),
+			fmt.Sprintf("%s/cosmos/gov/v1/proposals/%s/votes/%s", val.GetAPIAddress(), "1", "wrongVoterAddress"),
 			true,
 			v1.NewNonSplitVoteOption(v1.OptionYes),
 		},
 		{
 			"get proposal with id",
-			fmt.Sprintf("%s/cosmos/gov/v1/proposals/%s/votes/%s", val.APIAddress, "1", voterAddressBech32),
+			fmt.Sprintf("%s/cosmos/gov/v1/proposals/%s/votes/%s", val.GetAPIAddress(), "1", voterAddressBech32),
 			false,
 			v1.NewNonSplitVoteOption(v1.OptionYes),
 		},
 		{
 			"get proposal with id for split vote",
-			fmt.Sprintf("%s/cosmos/gov/v1/proposals/%s/votes/%s", val.APIAddress, "3", voterAddressBech32),
+			fmt.Sprintf("%s/cosmos/gov/v1/proposals/%s/votes/%s", val.GetAPIAddress(), "3", voterAddressBech32),
 			false,
 			v1.WeightedVoteOptions{
 				&v1.WeightedVoteOption{Option: v1.OptionYes, Weight: math.LegacyNewDecWithPrec(60, 2).String()},
@@ -165,7 +165,7 @@ func (s *E2ETestSuite) TestGetProposalVoteGRPC() {
 			s.Require().NoError(err)
 
 			var vote v1.QueryVoteResponse
-			err = val.ClientCtx.Codec.UnmarshalJSON(resp, &vote)
+			err = val.GetClientCtx().Codec.UnmarshalJSON(resp, &vote)
 
 			if tc.expErr {
 				s.Require().Error(err)
@@ -183,7 +183,7 @@ func (s *E2ETestSuite) TestGetProposalVoteGRPC() {
 }
 
 func (s *E2ETestSuite) TestGetProposalVotesGRPC() {
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 
 	testCases := []struct {
 		name   string
@@ -192,12 +192,12 @@ func (s *E2ETestSuite) TestGetProposalVotesGRPC() {
 	}{
 		{
 			"votes with empty proposal id",
-			fmt.Sprintf("%s/cosmos/gov/v1/proposals/%s/votes", val.APIAddress, ""),
+			fmt.Sprintf("%s/cosmos/gov/v1/proposals/%s/votes", val.GetAPIAddress(), ""),
 			true,
 		},
 		{
 			"get votes with valid id",
-			fmt.Sprintf("%s/cosmos/gov/v1/proposals/%s/votes", val.APIAddress, "1"),
+			fmt.Sprintf("%s/cosmos/gov/v1/proposals/%s/votes", val.GetAPIAddress(), "1"),
 			false,
 		},
 	}
@@ -209,7 +209,7 @@ func (s *E2ETestSuite) TestGetProposalVotesGRPC() {
 			s.Require().NoError(err)
 
 			var votes v1.QueryVotesResponse
-			err = val.ClientCtx.Codec.UnmarshalJSON(resp, &votes)
+			err = val.GetClientCtx().Codec.UnmarshalJSON(resp, &votes)
 
 			if tc.expErr {
 				s.Require().Error(err)
@@ -222,7 +222,7 @@ func (s *E2ETestSuite) TestGetProposalVotesGRPC() {
 }
 
 func (s *E2ETestSuite) TestGetProposalDepositGRPC() {
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 
 	testCases := []struct {
 		name   string
@@ -231,22 +231,22 @@ func (s *E2ETestSuite) TestGetProposalDepositGRPC() {
 	}{
 		{
 			"get deposit with empty proposal id",
-			fmt.Sprintf("%s/cosmos/gov/v1/proposals/%s/deposits/%s", val.APIAddress, "", val.Address.String()),
+			fmt.Sprintf("%s/cosmos/gov/v1/proposals/%s/deposits/%s", val.GetAPIAddress(), "", val.GetAddress().String()),
 			true,
 		},
 		{
 			"get deposit of non existing proposal",
-			fmt.Sprintf("%s/cosmos/gov/v1/proposals/%s/deposits/%s", val.APIAddress, "10", val.Address.String()),
+			fmt.Sprintf("%s/cosmos/gov/v1/proposals/%s/deposits/%s", val.GetAPIAddress(), "10", val.GetAddress().String()),
 			true,
 		},
 		{
 			"get deposit with wrong depositer address",
-			fmt.Sprintf("%s/cosmos/gov/v1/proposals/%s/deposits/%s", val.APIAddress, "1", "wrongDepositerAddress"),
+			fmt.Sprintf("%s/cosmos/gov/v1/proposals/%s/deposits/%s", val.GetAPIAddress(), "1", "wrongDepositerAddress"),
 			true,
 		},
 		{
 			"get deposit valid request",
-			fmt.Sprintf("%s/cosmos/gov/v1/proposals/%s/deposits/%s", val.APIAddress, "1", val.Address.String()),
+			fmt.Sprintf("%s/cosmos/gov/v1/proposals/%s/deposits/%s", val.GetAPIAddress(), "1", val.GetAddress().String()),
 			false,
 		},
 	}
@@ -258,7 +258,7 @@ func (s *E2ETestSuite) TestGetProposalDepositGRPC() {
 			s.Require().NoError(err)
 
 			var deposit v1.QueryDepositResponse
-			err = val.ClientCtx.Codec.UnmarshalJSON(resp, &deposit)
+			err = val.GetClientCtx().Codec.UnmarshalJSON(resp, &deposit)
 
 			if tc.expErr {
 				s.Require().Error(err)
@@ -271,7 +271,7 @@ func (s *E2ETestSuite) TestGetProposalDepositGRPC() {
 }
 
 func (s *E2ETestSuite) TestGetProposalDepositsGRPC() {
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 
 	testCases := []struct {
 		name   string
@@ -280,12 +280,12 @@ func (s *E2ETestSuite) TestGetProposalDepositsGRPC() {
 	}{
 		{
 			"get deposits with empty proposal id",
-			fmt.Sprintf("%s/cosmos/gov/v1/proposals/%s/deposits", val.APIAddress, ""),
+			fmt.Sprintf("%s/cosmos/gov/v1/proposals/%s/deposits", val.GetAPIAddress(), ""),
 			true,
 		},
 		{
 			"valid request",
-			fmt.Sprintf("%s/cosmos/gov/v1/proposals/%s/deposits", val.APIAddress, "1"),
+			fmt.Sprintf("%s/cosmos/gov/v1/proposals/%s/deposits", val.GetAPIAddress(), "1"),
 			false,
 		},
 	}
@@ -297,7 +297,7 @@ func (s *E2ETestSuite) TestGetProposalDepositsGRPC() {
 			s.Require().NoError(err)
 
 			var deposits v1.QueryDepositsResponse
-			err = val.ClientCtx.Codec.UnmarshalJSON(resp, &deposits)
+			err = val.GetClientCtx().Codec.UnmarshalJSON(resp, &deposits)
 
 			if tc.expErr {
 				s.Require().Error(err)
@@ -311,7 +311,7 @@ func (s *E2ETestSuite) TestGetProposalDepositsGRPC() {
 }
 
 func (s *E2ETestSuite) TestGetTallyGRPC() {
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 
 	testCases := []struct {
 		name   string
@@ -320,17 +320,17 @@ func (s *E2ETestSuite) TestGetTallyGRPC() {
 	}{
 		{
 			"get tally with no proposal id",
-			fmt.Sprintf("%s/cosmos/gov/v1/proposals/%s/tally", val.APIAddress, ""),
+			fmt.Sprintf("%s/cosmos/gov/v1/proposals/%s/tally", val.GetAPIAddress(), ""),
 			true,
 		},
 		{
 			"get tally with non existing proposal",
-			fmt.Sprintf("%s/cosmos/gov/v1/proposals/%s/tally", val.APIAddress, "10"),
+			fmt.Sprintf("%s/cosmos/gov/v1/proposals/%s/tally", val.GetAPIAddress(), "10"),
 			true,
 		},
 		{
 			"get tally valid request",
-			fmt.Sprintf("%s/cosmos/gov/v1/proposals/%s/tally", val.APIAddress, "1"),
+			fmt.Sprintf("%s/cosmos/gov/v1/proposals/%s/tally", val.GetAPIAddress(), "1"),
 			false,
 		},
 	}
@@ -342,7 +342,7 @@ func (s *E2ETestSuite) TestGetTallyGRPC() {
 			s.Require().NoError(err)
 
 			var tally v1.QueryTallyResultResponse
-			err = val.ClientCtx.Codec.UnmarshalJSON(resp, &tally)
+			err = val.GetClientCtx().Codec.UnmarshalJSON(resp, &tally)
 
 			if tc.expErr {
 				s.Require().Error(err)
@@ -355,7 +355,7 @@ func (s *E2ETestSuite) TestGetTallyGRPC() {
 }
 
 func (s *E2ETestSuite) TestGetParamsGRPC() {
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 
 	params := v1.DefaultParams()
 	dp := v1.NewDepositParams(params.MinDeposit, params.MaxDepositPeriod)          //nolint:staticcheck // we use deprecated gov commands here, but we don't want to remove them
@@ -371,26 +371,26 @@ func (s *E2ETestSuite) TestGetParamsGRPC() {
 	}{
 		{
 			"request params with empty params type",
-			fmt.Sprintf("%s/cosmos/gov/v1/params/%s", val.APIAddress, ""),
+			fmt.Sprintf("%s/cosmos/gov/v1/params/%s", val.GetAPIAddress(), ""),
 			true, nil, nil,
 		},
 		{
 			"get deposit params",
-			fmt.Sprintf("%s/cosmos/gov/v1/params/%s", val.APIAddress, v1.ParamDeposit),
+			fmt.Sprintf("%s/cosmos/gov/v1/params/%s", val.GetAPIAddress(), v1.ParamDeposit),
 			false,
 			&v1.QueryParamsResponse{},
 			&v1.QueryParamsResponse{DepositParams: &dp, Params: &params},
 		},
 		{
 			"get vote params",
-			fmt.Sprintf("%s/cosmos/gov/v1/params/%s", val.APIAddress, v1.ParamVoting),
+			fmt.Sprintf("%s/cosmos/gov/v1/params/%s", val.GetAPIAddress(), v1.ParamVoting),
 			false,
 			&v1.QueryParamsResponse{},
 			&v1.QueryParamsResponse{VotingParams: &vp, Params: &params},
 		},
 		{
 			"get tally params",
-			fmt.Sprintf("%s/cosmos/gov/v1/params/%s", val.APIAddress, v1.ParamTallying),
+			fmt.Sprintf("%s/cosmos/gov/v1/params/%s", val.GetAPIAddress(), v1.ParamTallying),
 			false,
 			&v1.QueryParamsResponse{},
 			&v1.QueryParamsResponse{TallyParams: &tp, Params: &params},
@@ -402,7 +402,7 @@ func (s *E2ETestSuite) TestGetParamsGRPC() {
 		s.Run(tc.name, func() {
 			resp, err := testutil.GetRequest(tc.url)
 			s.Require().NoError(err)
-			err = val.ClientCtx.Codec.UnmarshalJSON(resp, tc.respType)
+			err = val.GetClientCtx().Codec.UnmarshalJSON(resp, tc.respType)
 
 			if tc.expErr {
 				s.Require().Error(err)

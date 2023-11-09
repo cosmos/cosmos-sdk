@@ -35,6 +35,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 # Changelog (Agoric fork)
 
+## `v0.45.16-alpha.agoric.2` - 2023-11-08
+
+### Bug Fixes
+
+* (baseapp) [#337](https://github.com/agoric-labs/cosmos-sdk/pull/337) revert #305 which causes test failures in agoric-sdk
+
 ## `v0.45.16-alpha.agoric.1` - 2023-09-22
 
 ### Improvements

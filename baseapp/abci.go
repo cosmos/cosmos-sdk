@@ -5,8 +5,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"os"
 	"sort"
 	"strings"
+	"syscall"
 	"time"
 
 	abcitypes "github.com/cometbft/cometbft/abci/types"
@@ -178,8 +180,6 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 		))
 	}
 
-	app.checkHalt(req.Header.Height, req.Header.Time)
-
 	if err := app.validateHeight(req); err != nil {
 		panic(err)
 	}
@@ -349,23 +349,6 @@ func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) (res abci.ResponseDeliv
 	}
 }
 
-// checkHalt checkes if height or time exceeds halt-height or halt-time respectively.
-func (app *BaseApp) checkHalt(height int64, time time.Time) {
-	var halt bool
-	switch {
-	case app.haltHeight > 0 && uint64(height) > app.haltHeight:
-		halt = true
-
-	case app.haltTime > 0 && time.Unix() > int64(app.haltTime):
-		halt = true
-	}
-
-	if halt {
-		app.logger.Info("halt per configuration", "height", app.haltHeight, "time", app.haltTime)
-		panic(errors.New("halt application"))
-	}
-}
-
 // Commit implements the ABCI interface. It will commit all state that exists in
 // the deliver state's multi-store and includes the resulting commit ID in the
 // returned abci.ResponseCommit. Commit will set the check state based on the
@@ -409,12 +392,52 @@ func (app *BaseApp) Commit() abci.ResponseCommit {
 	// empty/reset the deliver state
 	app.deliverState = nil
 
+	var halt bool
+
+	switch {
+	case app.haltHeight > 0 && uint64(header.Height) >= app.haltHeight:
+		halt = true
+
+	case app.haltTime > 0 && header.Time.Unix() >= int64(app.haltTime):
+		halt = true
+	}
+
+	if halt {
+		// Halt the binary and allow Tendermint to receive the ResponseCommit
+		// response with the commit ID hash. This will allow the node to successfully
+		// restart and process blocks assuming the halt configuration has been
+		// reset or moved to a more distant value.
+		app.halt()
+	}
+
 	var snapshotHeight int64
 	if app.snapshotInterval > 0 && uint64(header.Height)%app.snapshotInterval == 0 {
 		snapshotHeight = header.Height
 	}
 
 	return res
+}
+
+// halt attempts to gracefully shutdown the node via SIGINT and SIGTERM falling
+// back on os.Exit if both fail.
+func (app *BaseApp) halt() {
+	app.logger.Info("halting node per configuration", "height", app.haltHeight, "time", app.haltTime)
+
+	p, err := os.FindProcess(os.Getpid())
+	if err == nil {
+		// attempt cascading signals in case SIGINT fails (os dependent)
+		sigIntErr := p.Signal(syscall.SIGINT)
+		sigTermErr := p.Signal(syscall.SIGTERM)
+
+		if sigIntErr == nil || sigTermErr == nil {
+			return
+		}
+	}
+
+	// Resort to exiting immediately if the process could not be found or killed
+	// via SIGINT/SIGTERM signals.
+	app.logger.Info("failed to send SIGINT/SIGTERM; exiting...")
+	os.Exit(0)
 }
 
 // Snapshot takes a snapshot of the current state and prunes any old snapshottypes.

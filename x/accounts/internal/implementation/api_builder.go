@@ -14,6 +14,8 @@ var (
 	errNoInitHandler    = errors.New("no init handler")
 	errNoExecuteHandler = errors.New("account does not accept messages")
 	errInvalidMessage   = errors.New("invalid message")
+
+	protov2MarshalOpts = proto.MarshalOptions{Deterministic: true}
 )
 
 // NewInitBuilder creates a new InitBuilder instance.
@@ -129,7 +131,7 @@ func (r *ExecuteBuilder) makeResponseEncoder() func(executeResponse any) ([]byte
 
 		// we do not check if it is part of an account's valid response message set
 		// as make handler will never allow for an invalid response to be returned.
-		return proto.Marshal(anyPB)
+		return protov2MarshalOpts.Marshal(anyPB)
 	}
 }
 

@@ -4,8 +4,10 @@ import (
 	"bytes"
 	"encoding/base64"
 	"encoding/hex"
+	"errors"
 	"fmt"
 
+	secp256k1dcrd "github.com/decred/dcrd/dcrec/secp256k1/v4"
 	"google.golang.org/protobuf/types/known/anypb"
 
 	errorsmod "cosmossdk.io/errors"
@@ -93,6 +95,9 @@ func (spkd SetPubKeyDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 		if !simulate && !bytes.Equal(pk.Address(), signers[i]) && ctx.IsSigverifyTx() {
 			return ctx, errorsmod.Wrapf(sdkerrors.ErrInvalidPubKey,
 				"pubKey does not match signer address %s with signer index: %d", signerStrs[i], i)
+		}
+		if err := verifyIsOnCurve(pk); err != nil {
+			return ctx, err
 		}
 
 		acc, err := GetSignerAcc(ctx, spkd.ak, signers[i])
@@ -187,6 +192,12 @@ func (sgcd SigGasConsumeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simula
 		}
 
 		pubKey := signerAcc.GetPubKey()
+		if !simulate && pubKey == nil {
+			return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidPubKey, "pubkey on account is not set")
+		}
+		if err := verifyIsOnCurve(pubKey); err != nil {
+			return ctx, err
+		}
 
 		// In simulate mode the transaction comes with no signatures, thus if the
 		// account's pubkey is nil, both signature verification and gasKVStore.Set()
@@ -250,6 +261,46 @@ func OnlyLegacyAminoSigners(sigData signing.SignatureData) bool {
 	}
 }
 
+func verifyIsOnCurve(pubKey cryptotypes.PubKey) (err error) {
+	switch typedPubKey := pubKey.(type) {
+	case *secp256k1.PubKey:
+		pubKeyObject, err := secp256k1dcrd.ParsePubKey(typedPubKey.Bytes())
+		if err != nil {
+			if errors.Is(err, secp256k1dcrd.ErrPubKeyNotOnCurve) {
+				return errorsmod.Wrap(sdkerrors.ErrInvalidPubKey, "secp256k1 key is not on curve")
+			}
+			return err
+		}
+		if !pubKeyObject.IsOnCurve() {
+			return errorsmod.Wrap(sdkerrors.ErrInvalidPubKey, "secp256k1 key is not on curve")
+		}
+
+	case *secp256r1.PubKey:
+		pubKeyObject := typedPubKey.Key.PublicKey
+		if !pubKeyObject.IsOnCurve(pubKeyObject.X, pubKeyObject.Y) {
+			return errorsmod.Wrap(sdkerrors.ErrInvalidPubKey, "secp256r1 key is not on curve")
+		}
+
+	case multisig.PubKey:
+		pubKeysObjects := typedPubKey.GetPubKeys()
+		ok := true
+		for _, pubKeyObject := range pubKeysObjects {
+			if err := verifyIsOnCurve(pubKeyObject); err != nil {
+				ok = false
+				break
+			}
+		}
+		if !ok {
+			return errorsmod.Wrap(sdkerrors.ErrInvalidPubKey, "some keys are not on curve")
+		}
+
+	default:
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidPubKey, "unsupported key type: %T", typedPubKey)
+	}
+
+	return nil
+}
+
 func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
 	sigTx, ok := tx.(authsigning.Tx)
 	if !ok {
@@ -285,7 +336,10 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 			return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidPubKey, "pubkey on account is not set")
 		}
 
-		// Check account sequence number.
+		if err := verifyIsOnCurve(pubKey); err != nil {
+			return ctx, err
+		}
+
 		if sig.Sequence != acc.GetSequence() {
 			return ctx, errorsmod.Wrapf(
 				sdkerrors.ErrWrongSequence,
@@ -374,6 +428,14 @@ func (isd IncrementSequenceDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, sim
 		acc := isd.ak.GetAccount(ctx, signer)
 		if err := acc.SetSequence(acc.GetSequence() + 1); err != nil {
 			panic(err)
+		}
+
+		pubKey := acc.GetPubKey()
+		if !simulate && pubKey == nil {
+			return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidPubKey, "pubkey on account is not set")
+		}
+		if err := verifyIsOnCurve(pubKey); err != nil {
+			return ctx, err
 		}
 
 		isd.ak.SetAccount(ctx, acc)

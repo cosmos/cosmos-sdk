@@ -27,7 +27,7 @@ type E2ETestSuite struct {
 	suite.Suite
 
 	cfg     network.Config
-	network *network.Network
+	network network.NetworkI
 
 	group         *group.GroupInfo
 	groupPolicies []*group.GroupPolicyInfo
@@ -57,10 +57,10 @@ func (s *E2ETestSuite) SetupSuite() {
 	s.Require().NoError(err)
 	s.Require().NoError(s.network.WaitForNextBlock())
 
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 
 	// create a new account
-	info, _, err := val.ClientCtx.Keyring.NewMnemonic("NewValidator", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
+	info, _, err := val.GetClientCtx().Keyring.NewMnemonic("NewValidator", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 	s.Require().NoError(err)
 
 	pk, err := info.GetPubKey()
@@ -68,15 +68,15 @@ func (s *E2ETestSuite) SetupSuite() {
 
 	account := sdk.AccAddress(pk.Address())
 	msgSend := &banktypes.MsgSend{
-		FromAddress: val.Address.String(),
+		FromAddress: val.GetAddress().String(),
 		ToAddress:   account.String(),
 		Amount:      sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(2000))),
 	}
 
 	_, err = clitestutil.SubmitTestTx(
-		val.ClientCtx,
+		val.GetClientCtx(),
 		msgSend,
-		val.Address,
+		val.GetAddress(),
 		clitestutil.TestTxConfig{
 			GenOnly: true,
 		},
@@ -96,12 +96,12 @@ func (s *E2ETestSuite) SetupSuite() {
 				"metadata": "%s"
 			}
 		]
-	}`, val.Address.String(), memberWeight, validMetadata)
+	}`, val.GetAddress().String(), memberWeight, validMetadata)
 	validMembersFile := testutil.WriteToNewTempFile(s.T(), validMembers)
-	out, err := clitestutil.ExecTestCLICmd(val.ClientCtx, client.MsgCreateGroupCmd(),
+	out, err := clitestutil.ExecTestCLICmd(val.GetClientCtx(), client.MsgCreateGroupCmd(),
 		append(
 			[]string{
-				val.Address.String(),
+				val.GetAddress().String(),
 				validMetadata,
 				validMembersFile.Name(),
 			},
@@ -110,10 +110,10 @@ func (s *E2ETestSuite) SetupSuite() {
 	)
 	s.Require().NoError(err, out.String())
 	txResp := sdk.TxResponse{}
-	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
-	s.Require().NoError(clitestutil.CheckTxCode(s.network, val.ClientCtx, txResp.TxHash, 0))
+	s.Require().NoError(val.GetClientCtx().Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
+	s.Require().NoError(clitestutil.CheckTxCode(s.network, val.GetClientCtx(), txResp.TxHash, 0))
 
-	s.group = &group.GroupInfo{Id: 1, Admin: val.Address.String(), Metadata: validMetadata, TotalWeight: "3", Version: 1}
+	s.group = &group.GroupInfo{Id: 1, Admin: val.GetAddress().String(), Metadata: validMetadata, TotalWeight: "3", Version: 1}
 
 	// create 5 group policies
 	for i := 0; i < 5; i++ {
@@ -122,20 +122,20 @@ func (s *E2ETestSuite) SetupSuite() {
 			threshold = 3
 		}
 
-		s.createGroupThresholdPolicyWithBalance(val.Address.String(), "1", threshold, 1000)
+		s.createGroupThresholdPolicyWithBalance(val.GetAddress().String(), "1", threshold, 1000)
 		s.Require().NoError(s.network.WaitForNextBlock())
-		resp, err := testutil.GetRequest(fmt.Sprintf("%s/cosmos/group/v1/group_policies_by_group/1", val.APIAddress))
+		resp, err := testutil.GetRequest(fmt.Sprintf("%s/cosmos/group/v1/group_policies_by_group/1", val.GetAPIAddress()))
 		s.Require().NoError(err)
 
 		var groupPoliciesResp group.QueryGroupPoliciesByGroupResponse
-		s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(resp, &groupPoliciesResp))
+		s.Require().NoError(val.GetClientCtx().Codec.UnmarshalJSON(resp, &groupPoliciesResp))
 		s.Require().Len(groupPoliciesResp.GroupPolicies, i+1)
 	}
 	// create group policy with percentage decision policy
-	out, err = clitestutil.ExecTestCLICmd(val.ClientCtx, client.MsgCreateGroupPolicyCmd(),
+	out, err = clitestutil.ExecTestCLICmd(val.GetClientCtx(), client.MsgCreateGroupPolicyCmd(),
 		append(
 			[]string{
-				val.Address.String(),
+				val.GetAddress().String(),
 				"1",
 				validMetadata,
 				testutil.WriteToNewTempFile(s.T(), fmt.Sprintf(`{"@type":"/cosmos.group.v1.PercentageDecisionPolicy", "percentage":"%f", "windows":{"voting_period":"30000s"}}`, 0.5)).Name(),
@@ -144,61 +144,61 @@ func (s *E2ETestSuite) SetupSuite() {
 		),
 	)
 	s.Require().NoError(err, out.String())
-	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
-	s.Require().NoError(clitestutil.CheckTxCode(s.network, val.ClientCtx, txResp.TxHash, 0))
+	s.Require().NoError(val.GetClientCtx().Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
+	s.Require().NoError(clitestutil.CheckTxCode(s.network, val.GetClientCtx(), txResp.TxHash, 0))
 
-	resp, err := testutil.GetRequest(fmt.Sprintf("%s/cosmos/group/v1/group_policies_by_group/1", val.APIAddress))
+	resp, err := testutil.GetRequest(fmt.Sprintf("%s/cosmos/group/v1/group_policies_by_group/1", val.GetAPIAddress()))
 	s.Require().NoError(err)
 
 	var groupPoliciesResp group.QueryGroupPoliciesByGroupResponse
-	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(resp, &groupPoliciesResp))
+	s.Require().NoError(val.GetClientCtx().Codec.UnmarshalJSON(resp, &groupPoliciesResp))
 	s.Require().Equal(len(groupPoliciesResp.GroupPolicies), 6)
 	s.groupPolicies = groupPoliciesResp.GroupPolicies
 
 	// create a proposal
-	out, err = clitestutil.ExecTestCLICmd(val.ClientCtx, client.MsgSubmitProposalCmd(),
+	out, err = clitestutil.ExecTestCLICmd(val.GetClientCtx(), client.MsgSubmitProposalCmd(),
 		append(
 			[]string{
 				s.createCLIProposal(
-					s.groupPolicies[0].Address, val.Address.String(),
-					s.groupPolicies[0].Address, val.Address.String(),
+					s.groupPolicies[0].Address, val.GetAddress().String(),
+					s.groupPolicies[0].Address, val.GetAddress().String(),
 					"", "title", "summary"),
 			},
 			s.commonFlags...,
 		),
 	)
 	s.Require().NoError(err, out.String())
-	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
-	s.Require().NoError(clitestutil.CheckTxCode(s.network, val.ClientCtx, txResp.TxHash, 0))
+	s.Require().NoError(val.GetClientCtx().Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
+	s.Require().NoError(clitestutil.CheckTxCode(s.network, val.GetClientCtx(), txResp.TxHash, 0))
 
 	msg := &group.MsgVote{
 		ProposalId: uint64(1),
-		Voter:      val.Address.String(),
+		Voter:      val.GetAddress().String(),
 		Option:     group.VOTE_OPTION_YES,
 	}
 
 	// vote
-	out, err = clitestutil.SubmitTestTx(val.ClientCtx, msg, val.Address, clitestutil.TestTxConfig{})
+	out, err = clitestutil.SubmitTestTx(val.GetClientCtx(), msg, val.GetAddress(), clitestutil.TestTxConfig{})
 	s.Require().NoError(err, out.String())
-	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
-	s.Require().NoError(clitestutil.CheckTxCode(s.network, val.ClientCtx, txResp.TxHash, 0))
+	s.Require().NoError(val.GetClientCtx().Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
+	s.Require().NoError(clitestutil.CheckTxCode(s.network, val.GetClientCtx(), txResp.TxHash, 0))
 
-	resp, err = testutil.GetRequest(fmt.Sprintf("%s/cosmos/group/v1/proposal/1", val.APIAddress))
+	resp, err = testutil.GetRequest(fmt.Sprintf("%s/cosmos/group/v1/proposal/1", val.GetAPIAddress()))
 	s.Require().NoError(err)
 
 	var proposalRes group.QueryProposalResponse
-	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(resp, &proposalRes))
+	s.Require().NoError(val.GetClientCtx().Codec.UnmarshalJSON(resp, &proposalRes))
 	s.proposal = proposalRes.Proposal
 
-	resp, err = testutil.GetRequest(fmt.Sprintf("%s/cosmos/group/v1/vote_by_proposal_voter/1/%s", val.APIAddress, val.Address.String()))
+	resp, err = testutil.GetRequest(fmt.Sprintf("%s/cosmos/group/v1/vote_by_proposal_voter/1/%s", val.GetAPIAddress(), val.GetAddress().String()))
 	s.Require().NoError(err)
 
 	var voteRes group.QueryVoteByProposalVoterResponse
-	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(resp, &voteRes))
+	s.Require().NoError(val.GetClientCtx().Codec.UnmarshalJSON(resp, &voteRes))
 	s.vote = voteRes.Vote
 
 	s.voter = &group.Member{
-		Address:  val.Address.String(),
+		Address:  val.GetAddress().String(),
 		Weight:   memberWeight,
 		Metadata: validMetadata,
 	}
@@ -241,8 +241,8 @@ func (s *E2ETestSuite) createCLIProposal(groupPolicyAddress, proposer, sendFrom,
 func (s *E2ETestSuite) createGroupThresholdPolicyWithBalance(adminAddress, groupID string, threshold int, tokens int64) string {
 	s.Require().NoError(s.network.WaitForNextBlock())
 
-	val := s.network.Validators[0]
-	clientCtx := val.ClientCtx
+	val := s.network.GetValidators()[0]
+	clientCtx := val.GetClientCtx()
 
 	out, err := clitestutil.ExecTestCLICmd(clientCtx, client.MsgCreateGroupPolicyCmd(),
 		append(
@@ -257,29 +257,29 @@ func (s *E2ETestSuite) createGroupThresholdPolicyWithBalance(adminAddress, group
 	)
 	txResp := sdk.TxResponse{}
 	s.Require().NoError(err, out.String())
-	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
-	s.Require().NoError(clitestutil.CheckTxCode(s.network, val.ClientCtx, txResp.TxHash, 0))
+	s.Require().NoError(val.GetClientCtx().Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
+	s.Require().NoError(clitestutil.CheckTxCode(s.network, val.GetClientCtx(), txResp.TxHash, 0))
 
-	resp, err := testutil.GetRequest(fmt.Sprintf("%s/cosmos/group/v1/group_policies_by_group/%s", val.APIAddress, groupID))
+	resp, err := testutil.GetRequest(fmt.Sprintf("%s/cosmos/group/v1/group_policies_by_group/%s", val.GetAPIAddress(), groupID))
 	s.Require().NoError(err)
 
 	var res group.QueryGroupPoliciesByGroupResponse
-	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(resp, &res))
+	s.Require().NoError(val.GetClientCtx().Codec.UnmarshalJSON(resp, &res))
 	groupPolicyAddress := res.GroupPolicies[0].Address
 
 	addr, err := sdk.AccAddressFromBech32(groupPolicyAddress)
 	s.Require().NoError(err)
 
 	msgSend := &banktypes.MsgSend{
-		FromAddress: val.Address.String(),
+		FromAddress: val.GetAddress().String(),
 		ToAddress:   addr.String(),
 		Amount:      sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(tokens))),
 	}
 
 	_, err = clitestutil.SubmitTestTx(
-		val.ClientCtx,
+		val.GetClientCtx(),
 		msgSend,
-		val.Address,
+		val.GetAddress(),
 		clitestutil.TestTxConfig{
 			GenOnly: true,
 		},

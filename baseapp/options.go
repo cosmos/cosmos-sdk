@@ -12,6 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/snapshots"
 	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
 	"github.com/cosmos/cosmos-sdk/store"
+	"github.com/cosmos/cosmos-sdk/store/rootmulti"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -21,6 +22,12 @@ import (
 // SetPruning sets a pruning option on the multistore associated with the app
 func SetPruning(opts pruningtypes.PruningOptions) func(*BaseApp) {
 	return func(bapp *BaseApp) { bapp.cms.SetPruning(opts) }
+}
+
+func SetIAVLV2(rootPath string) func(*BaseApp) {
+	fmt.Println("SetIAVLV2 rootPath:", rootPath)
+	opts := rootmulti.StoreOptions{IavlV2RootPath: rootPath}
+	return func(bapp *BaseApp) { bapp.cms = rootmulti.NewStoreWithOptions(bapp.db, bapp.logger, opts) }
 }
 
 // SetMinGasPrices returns an option that sets the minimum gas prices on the app.

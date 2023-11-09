@@ -16,6 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/snapshots"
 	"github.com/cosmos/cosmos-sdk/store"
+	"github.com/cosmos/cosmos-sdk/store/cachemulti"
 	"github.com/cosmos/cosmos-sdk/store/rootmulti"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -405,6 +406,7 @@ func (app *BaseApp) setCheckState(header tmproto.Header) {
 // Commit.
 func (app *BaseApp) setDeliverState(header tmproto.Header) {
 	ms := app.cms.CacheMultiStore()
+	ms = ms.(cachemulti.Store).SetConcurrentCommit(1)
 	app.deliverState = &state{
 		ms:  ms,
 		ctx: sdk.NewContext(ms, header, false, app.logger),
@@ -759,9 +761,16 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (*s
 		)
 
 		if handler := app.msgServiceRouter.Handler(msg); handler != nil {
+			eventMsgName = sdk.MsgTypeURL(msg)
+			//if eventMsgName == "/cosmwasm.wasm.v1.MsgExecuteContract" {
+			//fmt.Println("MsgExecuteContract")
+			//gaskv.StartLogging()
+			//}
 			// ADR 031 request type routing
 			msgResult, err = handler(ctx, msg)
-			eventMsgName = sdk.MsgTypeURL(msg)
+			//if eventMsgName == "/ibc.applications.transfer.v1.MsgTransfer" {
+			//gaskv.StopLogging()
+			//}
 		} else if legacyMsg, ok := msg.(legacytx.LegacyMsg); ok {
 			// legacy sdk.Msg routing
 			// Assuming that the app developer has migrated all their Msgs to

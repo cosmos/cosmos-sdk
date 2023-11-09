@@ -122,6 +122,8 @@ func (k BaseViewKeeper) IterateAccountBalances(ctx sdk.Context, addr sdk.AccAddr
 	for ; iterator.Valid(); iterator.Next() {
 		var balance sdk.Coin
 		k.cdc.MustUnmarshal(iterator.Value(), &balance)
+		fmt.Printf("IterateAccountBalances key=%s len(value)=%d balance=%v\n",
+			iterator.Key(), len(iterator.Value()), balance)
 
 		if cb(balance) {
 			break

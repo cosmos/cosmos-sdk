@@ -94,7 +94,7 @@ func (pc *ProtoCodec) Unmarshal(bz []byte, ptr ProtoMarshaler) error {
 // implements proto.Message. For interface please use the codec.UnmarshalInterface
 func (pc *ProtoCodec) MustUnmarshal(bz []byte, ptr ProtoMarshaler) {
 	if err := pc.Unmarshal(bz, ptr); err != nil {
-		panic(err)
+		panic(fmt.Errorf("failed to unmarshal bytes len=%d: %w", len(bz), err))
 	}
 }
 

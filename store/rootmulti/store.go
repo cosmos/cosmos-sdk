@@ -2,16 +2,17 @@ package rootmulti
 
 import (
 	"fmt"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	"io"
 	"math"
 	"sort"
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
-	"github.com/cosmos/cosmos-sdk/pruning"
-	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
+	iavl2 "github.com/cosmos/iavl/v2"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+
 	iavltree "github.com/cosmos/iavl"
 	protoio "github.com/gogo/protobuf/io"
 	gogotypes "github.com/gogo/protobuf/types"
@@ -21,15 +22,19 @@ import (
 	"github.com/tendermint/tendermint/proto/tendermint/crypto"
 	dbm "github.com/tendermint/tm-db"
 
+	"github.com/cosmos/cosmos-sdk/pruning"
+	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
 	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
 	"github.com/cosmos/cosmos-sdk/store/cachemulti"
 	"github.com/cosmos/cosmos-sdk/store/dbadapter"
 	"github.com/cosmos/cosmos-sdk/store/iavl"
+	"github.com/cosmos/cosmos-sdk/store/iavl_v2"
 	"github.com/cosmos/cosmos-sdk/store/listenkv"
 	"github.com/cosmos/cosmos-sdk/store/mem"
 	"github.com/cosmos/cosmos-sdk/store/tracekv"
 	"github.com/cosmos/cosmos-sdk/store/transient"
 	"github.com/cosmos/cosmos-sdk/store/types"
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	vm "github.com/cosmos/cosmos-sdk/x/upgrade/exported"
 )
@@ -72,6 +77,15 @@ type Store struct {
 
 	listeners    map[types.StoreKey][]types.WriteListener
 	commitHeader tmproto.Header
+
+	// experimental iavl v2 options
+	iavlV2Path   string
+	concurrentIO int
+	metadataKv   *iavl2.SqliteKVStore
+}
+
+type StoreOptions struct {
+	IavlV2RootPath string
 }
 
 var (
@@ -97,6 +111,24 @@ func NewStore(db dbm.DB, logger log.Logger) *Store {
 	}
 }
 
+func NewStoreWithOptions(db dbm.DB, logger log.Logger, options StoreOptions) *Store {
+	store := NewStore(db, logger)
+	store.iavlV2Path = options.IavlV2RootPath
+	if store.iavlV2Path != "" {
+		fmt.Println("NewStoreWithOptions iavlV2Path:", store.iavlV2Path)
+		store.concurrentIO = 8
+		var err error
+		store.metadataKv, err = iavl2.NewSqliteKVStore(iavl2.SqliteDbOptions{
+			Path: fmt.Sprintf("%s/metadata.sqlite", store.iavlV2Path),
+		})
+		if err != nil {
+			panic(err)
+		}
+
+	}
+	return store
+}
+
 // GetPruning fetches the pruning strategy from the root store.
 func (rs *Store) GetPruning() pruningtypes.PruningOptions {
 	return rs.pruningManager.GetOptions()
@@ -106,6 +138,7 @@ func (rs *Store) GetPruning() pruningtypes.PruningOptions {
 // Note, calling SetPruning on the root store prior to LoadVersion or
 // LoadLatestVersion performs a no-op as the stores aren't mounted yet.
 func (rs *Store) SetPruning(pruningOpts pruningtypes.PruningOptions) {
+	rs.logger.Info("setting pruning options", "strategy", pruningOpts.Strategy, "pruningOpts", pruningOpts)
 	rs.pruningManager.SetOptions(pruningOpts)
 }
 
@@ -181,7 +214,7 @@ func (rs *Store) GetStores() map[types.StoreKey]types.CommitKVStore {
 
 // LoadLatestVersionAndUpgrade implements CommitMultiStore
 func (rs *Store) LoadLatestVersionAndUpgrade(upgrades *types.StoreUpgrades) error {
-	ver := getLatestVersion(rs.db)
+	ver := rs.getLatestVersion()
 	return rs.loadVersion(ver, upgrades)
 }
 
@@ -192,7 +225,7 @@ func (rs *Store) LoadVersionAndUpgrade(ver int64, upgrades *types.StoreUpgrades)
 
 // LoadLatestVersion implements CommitMultiStore.
 func (rs *Store) LoadLatestVersion() error {
-	ver := getLatestVersion(rs.db)
+	ver := rs.getLatestVersion()
 	return rs.loadVersion(ver, nil)
 }
 
@@ -237,44 +270,94 @@ func (rs *Store) loadVersion(ver int64, upgrades *types.StoreUpgrades) error {
 		})
 	}
 
+	errCh := make(chan error)
+	storeCh := make(chan struct {
+		key   types.StoreKey
+		store types.CommitKVStore
+	})
+	maxAsync := 7
+	asyncLoadCount := 0
+	loadCh := make(chan struct{}, maxAsync)
+	for i := 0; i < maxAsync; i++ {
+		loadCh <- struct{}{}
+	}
+
 	for _, key := range storesKeys {
-		storeParams := rs.storesParams[key]
+		sParams := rs.storesParams[key]
 		commitID := rs.getCommitID(infos, key.Name())
 
 		// If it has been added, set the initial version
 		if upgrades.IsAdded(key.Name()) {
-			storeParams.initialVersion = uint64(ver) + 1
+			sParams.initialVersion = uint64(ver) + 1
 		}
 
-		store, err := rs.loadCommitStoreFromParams(key, commitID, storeParams)
-		if err != nil {
-			return errors.Wrap(err, "failed to load store")
-		}
-
-		newStores[key] = store
-
-		// If it was deleted, remove all data
-		if upgrades.IsDeleted(key.Name()) {
-			if err := deleteKVStore(store.(types.KVStore)); err != nil {
-				return errors.Wrapf(err, "failed to delete store %s", key.Name())
+		if rs.concurrentIO > 0 && sParams.typ == types.StoreTypeIAVL {
+			asyncLoadCount++
+			if upgrades.IsDeleted(key.Name()) {
+				return fmt.Errorf("async load does not support deleted stores")
 			}
-		} else if oldName := upgrades.RenamedFrom(key.Name()); oldName != "" {
-			// handle renames specially
-			// make an unregistered key to satify loadCommitStore params
-			oldKey := types.NewKVStoreKey(oldName)
-			oldParams := storeParams
-			oldParams.key = oldKey
-
-			// load from the old name
-			oldStore, err := rs.loadCommitStoreFromParams(oldKey, rs.getCommitID(infos, oldName), oldParams)
+			if oldName := upgrades.RenamedFrom(key.Name()); oldName != "" {
+				return fmt.Errorf("async load does not support renamed stores")
+			}
+			fmt.Println("async load", key.Name())
+			go func(k types.StoreKey, cid types.CommitID, sp storeParams) {
+				<-loadCh
+				store, err := rs.loadCommitStoreFromParams(k, cid, sp)
+				if err != nil {
+					errCh <- err
+					return
+				}
+				storeCh <- struct {
+					key   types.StoreKey
+					store types.CommitKVStore
+				}{
+					key:   k,
+					store: store,
+				}
+				loadCh <- struct{}{}
+			}(key, commitID, sParams)
+		} else {
+			fmt.Println("sync load", key.Name())
+			store, err := rs.loadCommitStoreFromParams(key, commitID, sParams)
 			if err != nil {
-				return errors.Wrapf(err, "failed to load old store %s", oldName)
+				return errors.Wrap(err, "failed to load store")
 			}
 
-			// move all data
-			if err := moveKVStoreData(oldStore.(types.KVStore), store.(types.KVStore)); err != nil {
-				return errors.Wrapf(err, "failed to move store %s -> %s", oldName, key.Name())
+			newStores[key] = store
+
+			// If it was deleted, remove all data
+			if upgrades.IsDeleted(key.Name()) {
+				if err := deleteKVStore(store.(types.KVStore)); err != nil {
+					return errors.Wrapf(err, "failed to delete store %s", key.Name())
+				}
+			} else if oldName := upgrades.RenamedFrom(key.Name()); oldName != "" {
+				// handle renames specially
+				// make an unregistered key to satify loadCommitStore params
+				oldKey := types.NewKVStoreKey(oldName)
+				oldParams := sParams
+				oldParams.key = oldKey
+
+				// load from the old name
+				oldStore, err := rs.loadCommitStoreFromParams(oldKey, rs.getCommitID(infos, oldName), oldParams)
+				if err != nil {
+					return errors.Wrapf(err, "failed to load old store %s", oldName)
+				}
+
+				// move all data
+				if err := moveKVStoreData(oldStore.(types.KVStore), store.(types.KVStore)); err != nil {
+					return errors.Wrapf(err, "failed to move store %s -> %s", oldName, key.Name())
+				}
 			}
+		}
+	}
+
+	for i := 0; i < asyncLoadCount; i++ {
+		select {
+		case err := <-errCh:
+			return err
+		case store := <-storeCh:
+			fmt.Println("async load done", store.key.Name())
+			newStores[store.key] = store.store
 		}
 	}
 
@@ -394,7 +477,7 @@ func (rs *Store) LastCommitID() types.CommitID {
 	defer rs.mx.RUnlock()
 	if rs.lastCommitInfo == nil {
 		return types.CommitID{
-			Version: getLatestVersion(rs.db),
+			Version: rs.getLatestVersion(),
 		}
 	}
 
@@ -403,6 +486,7 @@ func (rs *Store) LastCommitID() types.CommitID {
 
 // Commit implements Committer/CommitStore.
 func (rs *Store) Commit() types.CommitID {
+	defer telemetry.MeasureSince(time.Now(), "store", "rootmulti", "commit")
 	var previousHeight, version int64
 	if rs.lastCommitInfo.GetVersion() == 0 && rs.initialVersion > 1 {
 		// This case means that no commit has been made in the store, we
@@ -441,6 +525,8 @@ func (rs *Store) Commit() types.CommitID {
 
 // SetCommitHeader sets the commit block header of the store.
 func (rs *Store) SetCommitHeader(h tmproto.Header) {
+	//rs.logger.Info("SetCommitHeader", "header", h)
+	//rs.logger.Info("SetCommitHeader", "lastResultsHash", fmt.Sprintf("%x", h.LastResultsHash))
 	rs.commitHeader = h
 }
 
@@ -540,6 +626,7 @@ func (rs *Store) GetKVStore(key types.StoreKey) types.KVStore {
 func (rs *Store) handlePruning(version int64) error {
 	rs.pruningManager.HandleHeight(version - 1) // we should never prune the current version.
 	if !rs.pruningManager.ShouldPruneAtHeight(version) {
+		rs.logger.Info("pruning skipped", "height", version, "pruningOpts", rs.pruningManager.GetOptions())
 		return nil
 	}
 	rs.logger.Info("prune start", "height", version)
@@ -558,7 +645,7 @@ func (rs *Store) pruneStores() error {
 		return nil
 	}
 
-	rs.logger.Debug("pruning heights", "heights", pruningHeights)
+	rs.logger.Info("pruning heights", "heights", pruningHeights)
 
 	for key, store := range rs.stores {
 		// If the store is wrapped with an inter-block cache, we must first unwrap
@@ -569,7 +656,7 @@ func (rs *Store) pruneStores() error {
 
 		store = rs.GetCommitKVStore(key)
 
-		err := store.(*iavl.Store).DeleteVersions(pruningHeights...)
+		err := store.(*iavl_v2.Store).DeleteVersions(pruningHeights...)
 		if err == nil {
 			continue
 		}
@@ -691,7 +778,7 @@ func (rs *Store) Snapshot(height uint64, protoWriter protoio.Writer) error {
 	if height == 0 {
 		return sdkerrors.Wrap(sdkerrors.ErrLogic, "cannot snapshot height 0")
 	}
-	if height > uint64(getLatestVersion(rs.db)) {
+	if height > uint64(rs.getLatestVersion()) {
 		return sdkerrors.Wrapf(sdkerrors.ErrLogic, "cannot snapshot future height %v", height)
 	}
 
@@ -888,14 +975,22 @@ func (rs *Store) loadCommitStoreFromParams(key types.StoreKey, id types.CommitID
 		var store types.CommitKVStore
 		var err error
 
-		if params.initialVersion == 0 {
-			store, err = iavl.LoadStore(db, rs.logger, key, id, rs.lazyLoading, rs.iavlCacheSize)
+		fmt.Println("load store", key.Name(), "version", id.Version)
+
+		if rs.iavlV2Path == "" {
+			// IAVL v0
+			if params.initialVersion == 0 {
+				store, err = iavl.LoadStore(db, rs.logger, key, id, rs.lazyLoading, rs.iavlCacheSize)
+			} else {
+				store, err = iavl.LoadStoreWithInitialVersion(db, rs.logger, key, id, rs.lazyLoading, params.initialVersion, rs.iavlCacheSize)
+			}
 		} else {
-			store, err = iavl.LoadStoreWithInitialVersion(db, rs.logger, key, id, rs.lazyLoading, params.initialVersion, rs.iavlCacheSize)
+			// IAVL V2
+			store, err = iavl_v2.LoadStoreWithInitialVersion(rs.iavlV2Path, key, id, params.initialVersion)
 		}
 
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to load store %s: %w", key.Name(), err)
 		}
 
 		if rs.interBlockCache != nil {
@@ -947,22 +1042,68 @@ func (rs *Store) buildCommitInfo(version int64) *types.CommitInfo {
 	}
 }
 
+type concurrentCommitResult struct {
+	storeInfo *types.StoreInfo
+}
+
+var (
+	concurrencyLimit   = 10
+	commitLock         = make(chan struct{}, concurrencyLimit)
+	concurrentCommitCh = make(chan *concurrentCommitResult, concurrencyLimit)
+)
+
+func init() {
+	for i := 0; i < concurrencyLimit; i++ {
+		commitLock <- struct{}{}
+	}
+}
+
+func (rs *Store) commitStore(key types.StoreKey, store types.CommitKVStore) *types.StoreInfo {
+	commitID := store.Commit()
+	rs.logger.Debug("committed KVStore", "height", commitID.Version, "key", key.Name(), "commit_store_hash", fmt.Sprintf("%X", commitID.Hash))
+
+	if store.GetStoreType() == types.StoreTypeTransient {
+		return nil
+	}
+
+	si := &types.StoreInfo{}
+	si.Name = key.Name()
+	si.CommitId = commitID
+	return si
+}
+
 // Commits each store and returns a new commitInfo.
 func (rs *Store) commitStores(version int64, storeMap map[types.StoreKey]types.CommitKVStore) *types.CommitInfo {
 	storeInfos := make([]types.StoreInfo, 0, len(storeMap))
 
-	for key, store := range storeMap {
-		commitID := store.Commit()
-		rs.logger.Debug("committed KVStore", "height", commitID.Version, "key", key.Name(), "commit_store_hash", fmt.Sprintf("%X", commitID.Hash))
-
-		if store.GetStoreType() == types.StoreTypeTransient {
-			continue
+	if rs.concurrentIO > 0 {
+		var i int
+		for key, store := range storeMap {
+			if store.GetStoreType() == types.StoreTypeIAVL {
+				i++
+				go func(k types.StoreKey, s types.CommitKVStore) {
+					<-commitLock
+					si := rs.commitStore(k, s)
+					concurrentCommitCh <- &concurrentCommitResult{storeInfo: si}
+					commitLock <- struct{}{}
+				}(key, store)
+			} else {
+				si := rs.commitStore(key, store)
+				if si != nil {
+					storeInfos = append(storeInfos, *si)
+				}
+			}
 		}
-
-		si := types.StoreInfo{}
-		si.Name = key.Name()
-		si.CommitId = commitID
-		storeInfos = append(storeInfos, si)
+		for ; i > 0; i-- {
+			storeInfos = append(storeInfos, *(<-concurrentCommitCh).storeInfo)
+		}
+	} else {
+		for key, store := range storeMap {
+			si := rs.commitStore(key, store)
+			if si != nil {
+				storeInfos = append(storeInfos, *si)
+			}
+		}
 	}
 
 	return &types.CommitInfo{
@@ -979,14 +1120,33 @@ func (rs *Store) updateLatestCommitInfo(newCommitInfo *types.CommitInfo, version
 }
 
 func (rs *Store) flushLastCommitInfo(cInfo *types.CommitInfo) {
-	batch := rs.db.NewBatch()
-	defer batch.Close()
+	cInfoKey := fmt.Sprintf(commitInfoKeyFmt, cInfo.Version)
+	cInfoBz, err := cInfo.Marshal()
+	if err != nil {
+		panic(err)
+	}
+	versionBz, err := gogotypes.StdInt64Marshal(cInfo.Version)
+	if err != nil {
+		panic(err)
+	}
 
-	setCommitInfo(batch, cInfo)
-	setLatestVersion(batch, cInfo.Version)
+	if rs.iavlV2Path == "" {
+		batch := rs.db.NewBatch()
+		defer batch.Close()
 
-	if err := batch.WriteSync(); err != nil {
-		panic(fmt.Errorf("error on batch write %w", err))
+		batch.Set([]byte(cInfoKey), cInfoBz)
+		batch.Set([]byte(latestVersionKey), versionBz)
+
+		if err := batch.WriteSync(); err != nil {
+			panic(fmt.Errorf("error on batch write %w", err))
+		}
+	} else {
+		if err = rs.metadataKv.Set([]byte(cInfoKey), cInfoBz); err != nil {
+			panic(fmt.Errorf("flushLastCommitInfo: %w", err))
+		}
+		if err = rs.metadataKv.Set([]byte(latestVersionKey), versionBz); err != nil {
+			panic(fmt.Errorf("flushLastCommitInfo: %w", err))
+		}
 	}
 }
 
@@ -994,7 +1154,15 @@ func (rs *Store) flushLastCommitInfo(cInfo *types.CommitInfo) {
 func (rs *Store) GetCommitInfoFromDB(ver int64) (*types.CommitInfo, error) {
 	cInfoKey := fmt.Sprintf(commitInfoKeyFmt, ver)
 
-	bz, err := rs.db.Get([]byte(cInfoKey))
+	var (
+		bz  []byte
+		err error
+	)
+	if rs.iavlV2Path == "" {
+		bz, err = rs.db.Get([]byte(cInfoKey))
+	} else {
+		bz, err = rs.metadataKv.Get([]byte(cInfoKey))
+	}
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get commit info")
 	} else if bz == nil {
@@ -1010,14 +1178,29 @@ func (rs *Store) GetCommitInfoFromDB(ver int64) (*types.CommitInfo, error) {
 }
 
 func (rs *Store) SetAppVersion(appVersion uint64) error {
-	if err := rs.db.SetSync([]byte(appVersionKey), []byte(strconv.Itoa(int(appVersion)))); err != nil {
-		return fmt.Errorf("error on write %w", err)
+	if rs.iavlV2Path == "" {
+		if err := rs.db.SetSync([]byte(appVersionKey), []byte(strconv.Itoa(int(appVersion)))); err != nil {
+			return fmt.Errorf("error on write %w", err)
+		}
+	} else {
+		if err := rs.metadataKv.Set([]byte(appVersionKey), []byte(strconv.Itoa(int(appVersion)))); err != nil {
+			return err
+		}
 	}
 	return nil
 }
 
 func (rs *Store) GetAppVersion() (uint64, error) {
-	bz, err := rs.db.Get([]byte(appVersionKey))
+	var (
+		bz  []byte
+		err error
+	)
+	if rs.iavlV2Path == "" {
+		bz, err = rs.db.Get([]byte(appVersionKey))
+	} else {
+		bz, err = rs.metadataKv.Get([]byte(appVersionKey))
+	}
+
 	if err != nil {
 		return 0, errors.Wrap(err, "failed to get app version")
 	} else if bz == nil {
@@ -1050,38 +1233,29 @@ func (rs *Store) doProofsQuery(req abci.RequestQuery) abci.ResponseQuery {
 	return res
 }
 
-func getLatestVersion(db dbm.DB) int64 {
-	bz, err := db.Get([]byte(latestVersionKey))
+func (rs *Store) getLatestVersion() int64 {
+	var (
+		latestVersion int64
+		bz            []byte
+		err           error
+	)
+
+	if rs.iavlV2Path != "" {
+		bz, err = rs.metadataKv.Get([]byte(latestVersionKey))
+	} else {
+		bz, err = rs.db.Get([]byte(latestVersionKey))
+	}
 	if err != nil {
 		panic(err)
 	} else if bz == nil {
 		return 0
 	}
 
-	var latestVersion int64
-
 	if err := gogotypes.StdInt64Unmarshal(&latestVersion, bz); err != nil {
 		panic(err)
 	}
 
+	fmt.Printf("getLatestVersion: %d\n", latestVersion)
+
 	return latestVersion
-}
-
-func setCommitInfo(batch dbm.Batch, cInfo *types.CommitInfo) {
-	bz, err := cInfo.Marshal()
-	if err != nil {
-		panic(err)
-	}
-
-	cInfoKey := fmt.Sprintf(commitInfoKeyFmt, cInfo.Version)
-	batch.Set([]byte(cInfoKey), bz)
-}
-
-func setLatestVersion(batch dbm.Batch, version int64) {
-	bz, err := gogotypes.StdInt64Marshal(version)
-	if err != nil {
-		panic(err)
-	}
-
-	batch.Set([]byte(latestVersionKey), bz)
 }

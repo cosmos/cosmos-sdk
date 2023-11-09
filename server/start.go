@@ -262,6 +262,14 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 		return err
 	}
 
+	// create a standalone metrics server to collect metrics during block replay (if applicable)
+	//stadaloneMetrics, err := telemetry.NewStandaloneMetrics(config.Telemetry)
+	//if err != nil {
+	//	return err
+	//}
+	//metricsCtx, cancel := context.WithCancel(context.Background())
+	//stadaloneMetrics.StartServer(metricsCtx, ":1317")
+
 	genDocProvider := node.DefaultGenesisDocProviderFunc(cfg)
 	tmNode, err := node.NewNode(
 		cfg,
@@ -274,8 +282,10 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 		ctx.Logger,
 	)
 	if err != nil {
+		//cancel()
 		return err
 	}
+	//cancel()
 
 	ctx.Logger.Debug("initialization: tmNode created")
 	if err := tmNode.Start(); err != nil {
@@ -419,12 +429,12 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 	}
 
 	defer func() {
-		if tmNode.IsRunning() {
-			_ = tmNode.Stop()
-		}
-
 		if cpuProfileCleanup != nil {
 			cpuProfileCleanup()
+		}
+
+		if tmNode.IsRunning() {
+			_ = tmNode.Stop()
 		}
 
 		if apiSrv != nil {

@@ -140,7 +140,10 @@ func InterceptConfigsPreRunHandler(cmd *cobra.Command, customAppConfigTemplate s
 
 	var logWriter io.Writer
 	if strings.ToLower(serverCtx.Viper.GetString(flags.FlagLogFormat)) == tmcfg.LogFormatPlain {
-		logWriter = zerolog.ConsoleWriter{Out: os.Stderr}
+		logWriter = zerolog.ConsoleWriter{
+			Out:        os.Stderr,
+			TimeFormat: time.Stamp,
+		}
 	} else {
 		logWriter = os.Stderr
 	}

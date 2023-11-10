@@ -29,6 +29,12 @@ service Msg {
 
   // ClaimBudget defines a method to claim the distributed budget.
   rpc ClaimBudget(MsgClaimBudget) returns (MsgClaimBudgetResponse);
+
+  // AddContiguousFunds defines a method to add funds contiguously.
+  rpc AddContiguousFunds(MsgAddContiguousFunds) return (MsgAddContiguousFundsResponse);
+
+  // FundDispensationProposal defines a method for funds dispensation.
+  rpc FundDispensationProposal(MsgFundDispensationProposal) returns (MsgFundDispensationProposalResponse);
 }
 
 // MsgFundCommunityPool allows an account to directly
@@ -101,3 +107,43 @@ message MsgClaimBudgetResponse {
       [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
   ;
 }
+
+// MsgAddContiguousFunds defines a message for adding continuous 
+message MsgAddContiguousFunds {
+  option (cosmos.msg.v1.signer)      = "depositor";
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+  
+  // title is the title of the funds. 
+  string title = 1;
+  // description of the funds.
+  string description = 2;
+  // depositor address of the account adding funds.
+  string depositor = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // metadata is any arbitrary metadata attached.
+  string metadata = 4;
+  // percentage is the percentage of funds to be added to Community pool.
+  cosmos.base.v1beta1.DecCoin percentage = 5 [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins"]; 
+}
+
+// MsgAddContiguousFundsResponse defines the response to executing a
+// MsgAddContiguousFunds message.
+message MsgAddContiguousFundsResponse {}
+
+// MsgFundDispensationProposal defines a message for fund dispensation proposal.
+message MsgFundDispensationProposal {
+  option (cosmos.msg.v1.signer) = "authority";
+
+  // authority is the address that controls the module (defaults to x/gov unless overwritten).
+  string                      authority         = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string                      recipient_address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  cosmos.base.v1beta1.DecCoin percentage        = 3
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins"];
+  repeated cosmos.base.v1beta1.Coin cap = 4
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  int64 expiration = 5;
+}
+
+// MsgFundDispensationProposalResponse defines the response to executing a
+// MsgFundDispensationProposal message.
+message MsgFundDispensationProposalResponse {}

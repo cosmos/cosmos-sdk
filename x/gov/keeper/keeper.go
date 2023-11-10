@@ -209,7 +209,7 @@ func (k Keeper) validateProposalLengths(metadata, title, summary string) error {
 // is greater than a pre-defined MaxTitleLen.
 func (k Keeper) assertTitleLength(title string) error {
 	if title != "" && uint64(len(title)) > k.config.MaxTitleLen {
-		return types.ErrMetadataTooLong.Wrapf("got title with length %d", len(title))
+		return types.ErrTitleTooLong.Wrapf("got title with length %d", len(title))
 	}
 	return nil
 }

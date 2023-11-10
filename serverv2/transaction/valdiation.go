@@ -20,7 +20,7 @@ func NewTxValidator[T tx.Tx]() *TxValidator[T] {
 
 // RegisterHandler registers the handlers to the transaction verifier.
 // The order of the handlers is important. The order passed here is the order of execution
-func (v TxValidator[T]) RegisterHandler(h tx.Handler) {
+func (v *TxValidator[T]) RegisterHandler(h tx.Handler) {
 	v.handler = h
 }
 

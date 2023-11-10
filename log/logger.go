@@ -74,6 +74,20 @@ func NewLogger(dst io.Writer, options ...Option) Logger {
 	for _, opt := range options {
 		opt(&logCfg)
 	}
+	if logCfg.JSONMarshal != nil {
+		zerolog.InterfaceMarshalFunc = func(i interface{}) ([]byte, error) {
+			switch v := i.(type) {
+			case json.Marshaler:
+				return logCfg.JSONMarshal(i)
+			case encoding.TextMarshaler:
+				return logCfg.JSONMarshal(i)
+			case fmt.Stringer:
+				return logCfg.JSONMarshal(v.String())
+			default:
+				return logCfg.JSONMarshal(i)
+			}
+		}
+	}
 
 	output := dst
 	if !logCfg.OutputJSON {

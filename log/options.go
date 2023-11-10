@@ -1,6 +1,7 @@
 package log
 
 import (
+	"encoding/json"
 	"time"
 
 	"github.com/rs/zerolog"
@@ -8,22 +9,24 @@ import (
 
 // defaultConfig has all the options disabled, except Color and TimeFormat
 var defaultConfig = Config{
-	Level:      zerolog.NoLevel,
-	Filter:     nil,
-	OutputJSON: false,
-	Color:      true,
-	StackTrace: false,
-	TimeFormat: time.Kitchen,
+	Level:       zerolog.NoLevel,
+	Filter:      nil,
+	OutputJSON:  false,
+	Color:       true,
+	StackTrace:  false,
+	TimeFormat:  time.Kitchen,
+	JSONMarshal: json.Marshal,
 }
 
 // Config defines configuration for the logger.
 type Config struct {
-	Level      zerolog.Level
-	Filter     FilterFunc
-	OutputJSON bool
-	Color      bool
-	StackTrace bool
-	TimeFormat string
+	Level       zerolog.Level
+	Filter      FilterFunc
+	OutputJSON  bool
+	Color       bool
+	StackTrace  bool
+	TimeFormat  string
+	JSONMarshal func(v interface{}) ([]byte, error)
 }
 
 type Option func(*Config)
@@ -85,5 +88,12 @@ func TimeFormatOption(format string) Option {
 func TraceOption(val bool) Option {
 	return func(cfg *Config) {
 		cfg.StackTrace = val
+	}
+}
+
+// JSONMarshalOption add option to configure custom JSON encoding
+func JSONMarshalOption(f func(v interface{}) ([]byte, error)) Option {
+	return func(cfg *Config) {
+		cfg.JSONMarshal = f
 	}
 }

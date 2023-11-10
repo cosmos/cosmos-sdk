@@ -19,19 +19,23 @@ import (
 // SubmitProposal creates a new proposal given an array of messages
 func (keeper Keeper) SubmitProposal(ctx context.Context, messages []sdk.Msg, metadata, title, summary string, proposer sdk.AccAddress, expedited bool) (v1.Proposal, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	// check that the proposal has
+	// the expected metadata length
 	err := keeper.assertMetadataLength(metadata)
 	if err != nil {
 		return v1.Proposal{}, err
 	}
 
-	// assert summary is no longer than predefined max length of metadata
+	// check that the proposal has
+	// the expected summary length
 	err = keeper.assertSummaryLength(summary)
 	if err != nil {
 		return v1.Proposal{}, err
 	}
 
-	// assert title is no longer than predefined max length of metadata
-	err = keeper.assertMetadataLength(title)
+	// check that the proposal has
+	// the expected title length
+	err = keeper.assertTitleLength(title)
 	if err != nil {
 		return v1.Proposal{}, err
 	}

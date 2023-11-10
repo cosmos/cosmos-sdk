@@ -181,19 +181,28 @@ func (k Keeper) ModuleAccountAddress() sdk.AccAddress {
 	return k.authKeeper.GetModuleAddress(types.ModuleName)
 }
 
+// assertTitleLength returns an error if given title length
+// is greater than a pre-defined MaxTitleLen.
+func (k Keeper) assertTitleLength(title string) error {
+	if title != "" && len(title) > k.config.MaxTitleLen {
+		return types.ErrMetadataTooLong.Wrapf("got title with length %d", len(title))
+	}
+	return nil
+}
+
 // assertMetadataLength returns an error if given metadata length
 // is greater than a pre-defined MaxMetadataLen.
 func (k Keeper) assertMetadataLength(metadata string) error {
-	if metadata != "" && uint64(len(metadata)) > k.config.MaxMetadataLen {
+	if metadata != "" && len(metadata) > k.config.MaxMetadataLen {
 		return types.ErrMetadataTooLong.Wrapf("got metadata with length %d", len(metadata))
 	}
 	return nil
 }
 
 // assertSummaryLength returns an error if given summary length
-// is greater than a pre-defined 40*MaxMetadataLen.
-func (keeper Keeper) assertSummaryLength(summary string) error {
-	if summary != "" && uint64(len(summary)) > 40*keeper.config.MaxMetadataLen {
+// is greater than a pre-defined MaxSummaryLen.
+func (k Keeper) assertSummaryLength(summary string) error {
+	if summary != "" && len(summary) > k.config.MaxSummaryLen {
 		return types.ErrSummaryTooLong.Wrapf("got summary with length %d", len(summary))
 	}
 	return nil

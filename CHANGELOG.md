@@ -46,11 +46,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
-<<<<<<< HEAD
-=======
-* (x/gov) [#18428](https://github.com/cosmos/cosmos-sdk/pull/18428) Extend governance config 
-* (x/gov) [#18189](https://github.com/cosmos/cosmos-sdk/pull/18189) Limit the accepted deposit coins for a proposal to the minimum proposal deposit denoms.
->>>>>>> 89296ccdd (feat(x/gov): extend governance config (#18428))
 * (x/gov) [#18025](https://github.com/cosmos/cosmos-sdk/pull/18025) Improve `<appd> q gov proposer` by querying directly a proposal instead of tx events. It is an alias of `q gov proposal` as the proposer is a field of the proposal.
 * (version) [#18063](https://github.com/cosmos/cosmos-sdk/pull/18063) Allow to define extra info to be displayed in `<appd> version --long` command.
 

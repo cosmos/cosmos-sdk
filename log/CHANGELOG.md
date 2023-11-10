@@ -21,6 +21,7 @@ Each entry must include the Github issue reference in the following format:
 # Changelog
 
 ## [Unreleased]
+* [#18429](https://github.com/cosmos/cosmos-sdk/pull/18429) support customization of log json marshal.
 
 ## [v1.2.1](https://github.com/cosmos/cosmos-sdk/releases/tag/log/v1.2.1) - 2023-08-25
 

@@ -120,11 +120,6 @@ func (d *Decoder) Decode(txBytes []byte) (*DecodedTx, error) {
 	}, nil
 }
 
-// Encode encodes a DecodedTx into raw protobuf encoded transaction bytes.
-func (d *Decoder) Encode(tx *DecodedTx) ([]byte, error) {
-	return proto.Marshal(tx.TxRaw)
-}
-
 // Hash implements the interface for the Tx interface.
 func (dtx *DecodedTx) Hash() [32]byte {
 	bz, err := proto.Marshal(dtx.TxRaw)

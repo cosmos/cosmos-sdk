@@ -1,0 +1,66 @@
+syntax = "proto3";
+
+package cosmos.accounts.interfaces.account_abstraction.v1;
+
+import "google/protobuf/any.proto";
+import "cosmos/accounts/v1/account_abstraction.proto";
+
+// MsgAuthenticate is a message that an x/account account abstraction implementer
+// must handle to authenticate a state transition.
+message MsgAuthenticate {
+  // user_operation is the operation that the user is trying to perform.
+  // it also contains authentication information.
+  cosmos.accounts.v1.UserOperation user_operation = 1;
+  // chain_id defines the network identifier.
+  string chain_id = 2;
+  // account_number is the account number of the user_operation.
+  uint64 account_number = 3;
+}
+
+// MsgAuthenticateResponse is the response to MsgAuthenticate.
+// The authentication either fails or succeeds, this is why
+// there are no auxiliary fields to the response.
+message MsgAuthenticateResponse {}
+
+// MsgPayBundler is a message that an x/account account abstraction implementer
+// can optionally implement in case it wants to further refine control over
+// the bundler payment messages.
+// The account must ensure the caller of this message is the x/accounts module itself.
+message MsgPayBundler {
+  // bundler_payment_messages are the messages that the operation sender will execute.
+  // The account can modify the messages as it sees fit.
+  repeated google.protobuf.Any bundler_payment_messages = 1;
+}
+
+// MsgPayBundlerResponse is the response to MsgPayBundler.
+message MsgPayBundlerResponse {
+  // bundler_payment_messages_response are the messages that the bundler will pay for.
+  repeated google.protobuf.Any bundler_payment_messages_response = 1;
+}
+
+// MsgExecute is a message that an x/account account abstraction implementer
+// can optionally implement in case it wants to further refine control over
+// the execution messages. It can be used to extend the execution flow, possibly
+// block certain messages, or modify them.
+// The account must ensure the caller of this message is the x/accounts module itself.
+message MsgExecute {
+  // execution_messages are the messages that the operation sender will execute.
+  // The account can modify the messages as it sees fit.
+  repeated google.protobuf.Any execution_messages = 1;
+}
+
+// MsgExecuteResponse is the response to MsgExecute.
+message MsgExecuteResponse {
+  // execution_messages_response are the messages that the operation sender will execute.
+  repeated google.protobuf.Any execution_messages_response = 1;
+}
+
+// QueryAuthenticationMethods is a query that an x/account account abstraction implementer
+// must handle to return the authentication methods that the account supports.
+message QueryAuthenticationMethods {}
+
+// QueryAuthenticationMethodsResponse is the response to QueryAuthenticationMethods.
+message QueryAuthenticationMethodsResponse {
+  // authentication_methods are the authentication methods that the account supports.
+  repeated string authentication_methods = 1;
+}

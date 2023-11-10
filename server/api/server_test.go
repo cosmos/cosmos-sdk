@@ -40,7 +40,7 @@ type GRPCWebTestSuite struct {
 	suite.Suite
 
 	cfg      network.Config
-	network  *network.Network
+	network  network.NetworkI
 	protoCdc *codec.ProtoCodec
 }
 
@@ -68,7 +68,7 @@ func (s *GRPCWebTestSuite) TearDownSuite() {
 }
 
 func (s *GRPCWebTestSuite) Test_Latest_Validators() {
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 	for _, contentType := range []string{grpcWebContentType} {
 		headers, trailers, responses, err := s.makeGrpcRequest(
 			"/cosmos.base.tendermint.v1beta1.Service/GetLatestValidatorSet",
@@ -84,7 +84,7 @@ func (s *GRPCWebTestSuite) Test_Latest_Validators() {
 		s.Require().NoError(err)
 		pubKey, ok := valsSet.Validators[0].PubKey.GetCachedValue().(cryptotypes.PubKey)
 		s.Require().Equal(true, ok)
-		s.Require().Equal(pubKey, val.PubKey)
+		s.Require().Equal(pubKey, val.GetPubKey())
 	}
 }
 
@@ -128,7 +128,7 @@ func serializeProtoMessages(messages []proto.Message) [][]byte {
 func (s *GRPCWebTestSuite) makeRequest(
 	verb, method string, headers http.Header, body io.Reader, isText bool,
 ) (*http.Response, error) {
-	val := s.network.Validators[0]
+	val := s.network.GetValidators()[0]
 	contentType := "application/grpc-web"
 	if isText {
 		// base64 encode the body
@@ -146,7 +146,7 @@ func (s *GRPCWebTestSuite) makeRequest(
 		contentType = "application/grpc-web-text"
 	}
 
-	url := fmt.Sprintf("http://%s%s", strings.TrimPrefix(val.AppConfig.API.Address, "tcp://"), method)
+	url := fmt.Sprintf("http://%s%s", strings.TrimPrefix(val.GetAppConfig().API.Address, "tcp://"), method)
 	req, err := http.NewRequest(verb, url, body)
 	s.Require().NoError(err, "failed creating a request")
 	req.Header = headers

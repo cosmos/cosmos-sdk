@@ -92,7 +92,7 @@ func TraceOption(val bool) Option {
 }
 
 // JSONMarshalOption add option to configure custom JSON encoding
-func JSONMarshalOption(f func(v interface{}) ([]byte, error)) Option {
+func JSONMarshalOption(f func(v any}) ([]byte, error)) Option {
 	return func(cfg *Config) {
 		cfg.JSONMarshal = f
 	}

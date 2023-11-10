@@ -81,6 +81,7 @@ func getCodecInterfaceImpls() *cobra.Command {
 		Use:   "list-implementations [interface]",
 		Short: "List the registered type URLs for the provided interface",
 		Long:  "List the registered type URLs that can be used for the provided interface name using the application codec",
+		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 			impls := clientCtx.Codec.InterfaceRegistry().ListImplementations(args[0])

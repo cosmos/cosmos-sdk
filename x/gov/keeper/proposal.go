@@ -18,21 +18,12 @@ import (
 // SubmitProposal creates a new proposal given an array of messages
 func (keeper Keeper) SubmitProposal(ctx context.Context, messages []sdk.Msg, metadata, title, summary string, proposer sdk.AccAddress, expedited bool) (v1.Proposal, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	err := keeper.assertMetadataLength(metadata)
-	if err != nil {
-		return v1.Proposal{}, err
-	}
+	
 
-	// assert summary is no longer than predefined max length of metadata
-	err = keeper.assertSummaryLength(summary)
-	if err != nil {
-		return v1.Proposal{}, err
-	}
-
-	// assert title is no longer than predefined max length of metadata
-	err = keeper.assertMetadataLength(title)
-	if err != nil {
-		return v1.Proposal{}, err
+// This method checks that all message metadata, summary and title
+// has te expected length defined in the module configuration.
+	if err := keeper.validateProposalLengths(metadata, title, summary); err != nil {
+	     return v1.Proposal{}, err
 	}
 
 	// Will hold a comma-separated string of all Msg type URLs.

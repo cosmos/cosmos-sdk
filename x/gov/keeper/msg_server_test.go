@@ -48,7 +48,7 @@ func (suite *KeeperTestSuite) TestSubmitProposalReq() {
 					[]sdk.Msg{bankMsg},
 					initialDeposit,
 					"",
-					strings.Repeat("1", 300),
+					strings.Repeat("1", 100),
 					"Proposal",
 					"description of proposal",
 					false,
@@ -132,13 +132,28 @@ func (suite *KeeperTestSuite) TestSubmitProposalReq() {
 			expErr:    true,
 			expErrMsg: "metadata summary '' must equal proposal summary 'description'",
 		},
+		"title too long": {
+			preRun: func() (*v1.MsgSubmitProposal, error) {
+				return v1.NewMsgSubmitProposal(
+					[]sdk.Msg{bankMsg},
+					initialDeposit,
+					proposer.String(),
+					"Metadata",
+					strings.Repeat("1", 256),
+					"description of proposal",
+					false,
+				)
+			},
+			expErr:    true,
+			expErrMsg: "title too long",
+		},
 		"metadata too long": {
 			preRun: func() (*v1.MsgSubmitProposal, error) {
 				return v1.NewMsgSubmitProposal(
 					[]sdk.Msg{bankMsg},
 					initialDeposit,
 					proposer.String(),
-					strings.Repeat("1", 300),
+					strings.Repeat("1", 256),
 					"Proposal",
 					"description of proposal",
 					false,
@@ -155,7 +170,7 @@ func (suite *KeeperTestSuite) TestSubmitProposalReq() {
 					proposer.String(),
 					"",
 					"Proposal",
-					strings.Repeat("1", 300*40),
+					strings.Repeat("1", 10201),
 					false,
 				)
 			},

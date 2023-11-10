@@ -31,7 +31,7 @@ service Msg {
   rpc ClaimBudget(MsgClaimBudget) returns (MsgClaimBudgetResponse);
 
   // AddContinuousFunds defines a method to add funds continuously.
-  rpc AddContinuousFunds(MsgAddContinuousFunds) return (MsgAddContinuousFundsResponse);
+  rpc AddContinuousFunds(MsgAddContinuousFunds) returns (MsgAddContinuousFundsResponse);
 
   // FundDispensationProposal defines a method for funds dispensation.
   rpc FundDispensationProposal(MsgFundDispensationProposal) returns (MsgFundDispensationProposalResponse);
@@ -116,8 +116,8 @@ message MsgAddContinuousFunds {
   option (cosmos.msg.v1.signer)      = "depositor";
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
-  
-  // title is the title of the funds. 
+
+  // title is the title of the funds.
   string title = 1;
   // description of the funds.
   string description = 2;
@@ -126,7 +126,7 @@ message MsgAddContinuousFunds {
   // metadata is any arbitrary metadata attached.
   string metadata = 4;
   // percentage is the percentage of funds to be allocated from Community pool share on block by block.
-  string percentage           = 5 [
+  string percentage = 5 [
     (cosmos_proto.scalar)  = "cosmos.Dec",
     (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable)   = false

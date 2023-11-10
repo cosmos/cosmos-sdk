@@ -41,6 +41,7 @@ type QueryRouter interface {
 // MsgRouter represents a router which can be used to route messages to the correct module.
 type MsgRouter interface {
 	HybridHandlerByMsgName(msgName string) func(ctx context.Context, req, resp protoiface.MessageV1) error
+	ResponseByRequestName(name string) string
 }
 
 // SignerProvider defines an interface used to get the expected sender from a message.
@@ -92,11 +93,12 @@ func NewKeeper(
 			}
 			return handlers[0](ctx, req, resp)
 		},
-		Schema:          collections.Schema{},
-		AccountNumber:   collections.NewSequence(sb, AccountNumberKey, "account_number"),
-		AccountsByType:  collections.NewMap(sb, AccountTypeKeyPrefix, "accounts_by_type", collections.BytesKey, collections.StringValue),
-		AccountByNumber: collections.NewMap(sb, AccountByNumber, "account_by_number", collections.BytesKey, collections.Uint64Value),
-		AccountsState:   collections.NewMap(sb, implementation.AccountStatePrefix, "accounts_state", collections.BytesKey, collections.BytesValue),
+		msgResponseFromRequestName: execRouter.ResponseByRequestName,
+		Schema:                     collections.Schema{},
+		AccountNumber:              collections.NewSequence(sb, AccountNumberKey, "account_number"),
+		AccountsByType:             collections.NewMap(sb, AccountTypeKeyPrefix, "accounts_by_type", collections.BytesKey, collections.StringValue),
+		AccountByNumber:            collections.NewMap(sb, AccountByNumber, "account_by_number", collections.BytesKey, collections.Uint64Value),
+		AccountsState:              collections.NewMap(sb, implementation.AccountStatePrefix, "accounts_state", collections.BytesKey, collections.BytesValue),
 	}
 
 	schema, err := sb.Build()
@@ -113,12 +115,13 @@ func NewKeeper(
 
 type Keeper struct {
 	// deps coming from the runtime
-	storeService    store.KVStoreService
-	eventService    event.Service
-	addressCodec    address.Codec
-	getSenderFunc   func(msg proto.Message) ([]byte, error)
-	execModuleFunc  implementation.ModuleExecFunc
-	queryModuleFunc implementation.ModuleQueryFunc
+	storeService               store.KVStoreService
+	eventService               event.Service
+	addressCodec               address.Codec
+	getSenderFunc              func(msg proto.Message) ([]byte, error)
+	execModuleFunc             implementation.ModuleExecFunc
+	queryModuleFunc            implementation.ModuleQueryFunc
+	msgResponseFromRequestName func(name string) string // msgResponseFromRequestName returns the response name for a given request name.
 
 	accounts map[string]implementation.Implementation
 

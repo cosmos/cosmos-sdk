@@ -1,26 +1,31 @@
 package accounts
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 
 	account_abstractionv1 "cosmossdk.io/api/cosmos/accounts/interfaces/account_abstraction/v1"
+	accountsv1 "cosmossdk.io/api/cosmos/accounts/v1"
 	"cosmossdk.io/x/accounts/internal/implementation"
-	v1 "cosmossdk.io/x/accounts/v1"
+	"google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/reflect/protoregistry"
+	"google.golang.org/protobuf/runtime/protoiface"
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
 // ExecuteUserOperation handles the execution of an abstracted account UserOperation.
-func (k Keeper) ExecuteUserOperation(ctx context.Context, bundler string, op *v1.UserOperation) *v1.UserOperationResponse {
+func (k Keeper) ExecuteUserOperation(ctx context.Context, bundler string, op *accountsv1.UserOperation) *accountsv1.UserOperationResponse {
+	resp := &accountsv1.UserOperationResponse{}
+
+	// authenticate
 	authGas, err := k.Authenticate(ctx, bundler, op)
 	if err != nil {
-		return &v1.UserOperationResponse{
-			Error: fmt.Sprintf("authentication failed: %s", err.Error()),
-		}
+		resp.Error = fmt.Sprintf("authentication failed: %s", err.Error())
+		return resp
 	}
-	resp := &v1.UserOperationResponse{
-		AuthenticationGasUsed: authGas,
-	}
+	resp.AuthenticationGasUsed = authGas
+
 	// pay bundler
 	bundlerPayGas, bundlerPayResp, err := k.PayBundler(ctx, bundler, op)
 	if err != nil {
@@ -31,7 +36,16 @@ func (k Keeper) ExecuteUserOperation(ctx context.Context, bundler string, op *v1
 	resp.BundlerPaymentResponses = bundlerPayResp
 
 	// execute messages, the real operation intent
+	executeGas, executeResp, err := k.ExecuteMessages(ctx, bundler, op)
+	if err != nil {
+		resp.Error = fmt.Sprintf("execution failed: %s", err.Error())
+		return resp
+	}
+	resp.ExecutionGasUsed = executeGas
+	resp.ExecutionResponses = executeResp
 
+	// done!
+	return resp
 }
 
 // Authenticate handles the authentication flow of an abstracted account.
@@ -40,9 +54,9 @@ func (k Keeper) ExecuteUserOperation(ctx context.Context, bundler string, op *v1
 func (k Keeper) Authenticate(
 	ctx context.Context,
 	bundler string,
-	op *v1.UserOperation,
+	op *accountsv1.UserOperation,
 ) (gasUsed uint64, err error) {
-	opV2 := v1.GogoUserOpToProtoV2(op)
+	// TODO: add branch with gas limit
 	senderAddr, err := k.addressCodec.StringToBytes(op.Sender)
 	if err != nil {
 		return 0, err
@@ -50,10 +64,9 @@ func (k Keeper) Authenticate(
 	accountNumber, err := k.AccountByNumber.Get(ctx, senderAddr)
 	// create an isolated context in which we execute authentication
 	// without affecting the parent context and with the authentication gas limit.
-	// TODO: add branch with gas limit
 	_, err = k.Execute(ctx, senderAddr, ModuleAccountAddr, &account_abstractionv1.MsgAuthenticate{
 		Bundler:       bundler,
-		UserOperation: opV2,
+		UserOperation: op,
 		ChainId:       "chain-id", // TODO how to get chain id?
 		AccountNumber: accountNumber,
 	})
@@ -67,7 +80,8 @@ func (k Keeper) Authenticate(
 // Since for an abstracted account the bundler payment method is optional,
 // if the account does not handle bundler payment messages, then this method
 // will simply execute the provided messages on behalf of the sender and return.
-func (k Keeper) PayBundler(ctx context.Context, bundler string, op *v1.UserOperation) (gasUsed uint64, paymentResponses []*anypb.Any, err error) {
+func (k Keeper) PayBundler(ctx context.Context, bundler string, op *accountsv1.UserOperation) (gasUsed uint64, paymentResponses []*anypb.Any, err error) {
+	// TODO add branch with gas limit
 	senderAddr, err := k.addressCodec.StringToBytes(op.Sender)
 	if err != nil {
 		return 0, nil, err
@@ -97,18 +111,55 @@ func (k Keeper) PayBundler(ctx context.Context, bundler string, op *v1.UserOpera
 }
 
 // payBundlerFallback attempts to execute the provided messages on behalf of the op sender.
-// it checks that the op sender does not try to impersonate other accounts.
-func (k Keeper) payBundlerFallback(ctx context.Context, op *v1.UserOperation) ([]*anypb.Any, error) {
-	return nil, fmt.Errorf("not implemented")
+func (k Keeper) payBundlerFallback(ctx context.Context, op *accountsv1.UserOperation) ([]*anypb.Any, error) {
+	// TODO: execute in isolated context with gas limit
+	responses := make([]*anypb.Any, len(op.BundlerPaymentMessages))
+	sender, err := k.addressCodec.StringToBytes(op.Sender)
+	if err != nil {
+		return nil, err
+	}
+	for i, msg := range op.BundlerPaymentMessages {
+		resp, err := k.untypedExecute(ctx, sender, msg)
+		if err != nil {
+			return nil, fmt.Errorf("failed to execute bundler payment message %d: %s", i, err.Error())
+		}
+		responses[i] = resp
+	}
+	return responses, nil
 }
 
-func (k Keeper) untypedExecute(ctx context.Context, anyMsg *anypb.Any) (*anypb.Any, error) {
+// untypedExecute executes a protobuf message without knowing the response type.
+// It will check if the sender is allowed to execute the message and then execute it.
+func (k Keeper) untypedExecute(ctx context.Context, sender []byte, anyMsg *anypb.Any) (*anypb.Any, error) {
 	msg, err := anyMsg.UnmarshalNew()
 	if err != nil {
 		return nil, err
 	}
+	// we check if the sender is allowed to execute the message.
+	wantSender, err := k.getSenderFunc(msg)
+	if err != nil {
+		return nil, err
+	}
+	if !bytes.Equal(sender, wantSender) {
+		return nil, fmt.Errorf("sender %s is not allowed to execute message %T", sender, msg)
+	}
 	// we now need to fetch the response type from the request message type.
 	// this is because the response type is not known.
+	respName := k.msgResponseFromRequestName(string(msg.ProtoReflect().Descriptor().FullName()))
+	if respName == "" {
+		return nil, fmt.Errorf("could not find response type for message %T", msg)
+	}
+	// get response type
+	respType, err := protoregistry.GlobalTypes.FindMessageByName(protoreflect.FullName(respName))
+	if err != nil {
+		return nil, err
+	}
+	resp := respType.New().Interface()
+	err = k.execModuleFunc(ctx, msg.(protoiface.MessageV1), resp.(protoiface.MessageV1))
+	if err != nil {
+		return nil, err
+	}
+	return anypb.New(resp)
 }
 
 // parsePayBundlerResponse parses the bundler response as any into a slice of

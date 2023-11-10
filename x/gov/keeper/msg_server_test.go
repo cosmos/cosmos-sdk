@@ -145,7 +145,7 @@ func (suite *KeeperTestSuite) TestSubmitProposalReq() {
 				)
 			},
 			expErr:    true,
-			expErrMsg: "title too long",
+			expErrMsg: "metadata too long",
 		},
 		"metadata too long": {
 			preRun: func() (*v1.MsgSubmitProposal, error) {

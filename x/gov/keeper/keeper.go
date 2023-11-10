@@ -187,23 +187,25 @@ func (k Keeper) ModuleAccountAddress() sdk.AccAddress {
 // validateProposalLengths checks message metadata, summary and title
 // to have the expected length otherwise returns an error.
 func (k Keeper) validateProposalLengths(metadata, title, summary string) error {
-    if err := k.assertMetadataLength(metadata); err != nil {
-        return err
-    }
-    if err := k.assertSummaryLength(summary); err != nil {
-        return err
-    }
-    if err := k.assertTitleLength(title); err != nil {
-        return err
-    }
-    return nil
+	if err := k.assertMetadataLength(metadata); err != nil {
+		return err
+	}
+	if err := k.assertSummaryLength(summary); err != nil {
+		return err
+	}
+	if err := k.assertTitleLength(title); err != nil {
+		return err
+	}
+	return nil
 }
 
 // assertTitleLength returns an error if given title length
 // is greater than a pre-defined MaxTitleLen.
 func (k Keeper) assertTitleLength(title string) error {
 	if title != "" && uint64(len(title)) > k.config.MaxTitleLen {
-		return types.ErrTitleTooLong.Wrapf("got title with length %d", len(title))
+		// this message will specify title instead of metadata in v0.51.
+		// this is done in the backported PR like this to avoid breaking changes in v0.50
+		return types.ErrMetadataTooLong.Wrapf("got metadata with length %d", len(title))
 	}
 	return nil
 }
@@ -218,15 +220,9 @@ func (k Keeper) assertMetadataLength(metadata string) error {
 }
 
 // assertSummaryLength returns an error if given summary length
-<<<<<<< HEAD
-// is greater than a pre-defined 40*MaxMetadataLen.
-func (k Keeper) assertSummaryLength(summary string) error {
-	if summary != "" && uint64(len(summary)) > 40*k.config.MaxMetadataLen {
-=======
 // is greater than a pre-defined MaxSummaryLen.
 func (k Keeper) assertSummaryLength(summary string) error {
 	if summary != "" && uint64(len(summary)) > k.config.MaxSummaryLen {
->>>>>>> 89296ccdd (feat(x/gov): extend governance config (#18428))
 		return types.ErrSummaryTooLong.Wrapf("got summary with length %d", len(summary))
 	}
 	return nil

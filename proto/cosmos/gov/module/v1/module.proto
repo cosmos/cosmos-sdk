@@ -16,9 +16,6 @@ message Module {
 
   // authority defines the custom module authority. If not set, defaults to the governance module.
   string authority = 2;
-<<<<<<< HEAD
-}
-=======
 
   // max_title_len defines the maximum proposal title length.
   // Defaults to 255 if not explicitly set.
@@ -28,4 +25,3 @@ message Module {
   // Defaults to 10200 if not explicitly set.
   uint64 max_summary_len = 4;
 }
->>>>>>> 89296ccdd (feat(x/gov): extend governance config (#18428))

@@ -4584,11 +4584,10 @@ type RpcCommandOptions struct {
 	PositionalArgs []*PositionalArgDescriptor `protobuf:"bytes,11,rep,name=positional_args,json=positionalArgs,proto3" json:"positional_args,omitempty"`
 	// skip specifies whether to skip this rpc method when generating commands.
 	Skip bool `protobuf:"varint,12,opt,name=skip,proto3" json:"skip,omitempty"`
-	// gov_proposal specifies whether this rpc method is a gov proposal.
-	// this is used to generate the proposal command.
-	// instead of simply broadcasting the transaction, autocli will generate a proposal transaction
-	// containing the message and broadcast it.
-	// this option is ineffective for query rpc methods.
+	// gov_proposal specifies whether autocli should generate a gov proposal transaction for this rpc method.
+	// Normally autocli generates a transaction containing the message and broadcast it.
+	// However, when true, autocli generates a proposal transaction containing the message and broadcast it.
+	// This option is ineffective for query commands.
 	//
 	// Since: client/v2 v2.0.0-beta.2
 	GovProposal bool `protobuf:"varint,13,opt,name=gov_proposal,json=govProposal,proto3" json:"gov_proposal,omitempty"`

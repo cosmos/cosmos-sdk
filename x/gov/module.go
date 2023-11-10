@@ -182,9 +182,15 @@ type ModuleOutputs struct {
 
 func ProvideModule(in ModuleInputs) ModuleOutputs {
 	defaultConfig := govtypes.DefaultConfig()
-	defaultConfig.MaxTitleLen = max(in.Config.MaxTitleLen, defaultConfig.MaxTitleLen)
-	defaultConfig.MaxMetadataLen = max(in.Config.MaxMetadataLen, defaultConfig.MaxMetadataLen)
-	defaultConfig.MaxSummaryLen = max(in.Config.MaxSummaryLen, defaultConfig.MaxSummaryLen)
+	if in.Config.MaxTitleLen != 0 {
+		defaultConfig.MaxTitleLen = in.Config.MaxTitleLen
+	}
+	if in.Config.MaxMetadataLen != 0 {
+		defaultConfig.MaxMetadataLen = in.Config.MaxMetadataLen
+	}
+	if in.Config.MaxSummaryLen != 0 {
+		defaultConfig.MaxSummaryLen = in.Config.MaxSummaryLen
+	}
 
 	// default to governance authority if not provided
 	authority := authtypes.NewModuleAddress(govtypes.ModuleName)

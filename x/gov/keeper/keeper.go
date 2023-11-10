@@ -190,6 +190,8 @@ func (k Keeper) ModuleAccountAddress() sdk.AccAddress {
 	return k.authKeeper.GetModuleAddress(types.ModuleName)
 }
 
+// validateProposalLengths checks message metadata, summary and title
+// to have the expected length otherwise returns an error.
 func (k Keeper) validateProposalLengths(metadata, title, summary string) error {
     if err := k.assertMetadataLength(metadata); err != nil {
         return err

@@ -309,7 +309,7 @@ the following `JSON` template:
 This makes it far easier for clients to support multiple networks.
 
 Fields metadata, title and summary have a maximum length that is chosen by the app developer, and
-passed into the gov keeper as a config. The default maximum length are: for the title 100 characters, for the metadata 255 characters and for summary 10200 characters (40 times the one of the title).
+passed into the gov keeper as a config. The default maximum length are: for the title 255 characters, for the metadata 255 characters and for summary 10200 characters (40 times the one of the title).
 
 #### Writing a module that uses governance
 

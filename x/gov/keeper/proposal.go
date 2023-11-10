@@ -20,8 +20,9 @@ import (
 func (keeper Keeper) SubmitProposal(ctx context.Context, messages []sdk.Msg, metadata, title, summary string, proposer sdk.AccAddress, expedited bool) (v1.Proposal, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	
-	// This method checks that all the message metadata, summary and title
-	// has te expected length defined in the module configuration.
+
+// This method checks that all message metadata, summary and title
+// has te expected length defined in the module configuration.
 	if err := keeper.validateProposalLengths(metadata, title, summary); err != nil {
 	     return v1.Proposal{}, err
 	}

@@ -139,7 +139,7 @@ func (suite *KeeperTestSuite) TestMsgSubmitProposal() {
 					initialDeposit,
 					proposer.String(),
 					"Metadata",
-					strings.Repeat("1", 101),
+					strings.Repeat("1", 256),
 					"description of proposal",
 					false,
 				)

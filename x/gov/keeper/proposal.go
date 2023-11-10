@@ -19,25 +19,11 @@ import (
 // SubmitProposal creates a new proposal given an array of messages
 func (keeper Keeper) SubmitProposal(ctx context.Context, messages []sdk.Msg, metadata, title, summary string, proposer sdk.AccAddress, expedited bool) (v1.Proposal, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	// check that the proposal has
-	// the expected metadata length
-	err := keeper.assertMetadataLength(metadata)
-	if err != nil {
-		return v1.Proposal{}, err
-	}
-
-	// check that the proposal has
-	// the expected summary length
-	err = keeper.assertSummaryLength(summary)
-	if err != nil {
-		return v1.Proposal{}, err
-	}
-
-	// check that the proposal has
-	// the expected title length
-	err = keeper.assertTitleLength(title)
-	if err != nil {
-		return v1.Proposal{}, err
+	
+	// This method checks that all the message metadata, summary and title
+	// has te expected length defined in the module configuration.
+	if err := keeper.validateProposalLengths(metadata, title, summary); err != nil {
+	     return v1.Proposal{}, err
 	}
 
 	// Will hold a string slice of all Msg type URLs.

@@ -160,6 +160,29 @@ func QueryVoteByTxQuery(clientCtx client.Context, params v1.QueryVoteParams) ([]
 	return nil, fmt.Errorf("address '%s' did not vote on proposalID %d", params.Voter, params.ProposalID)
 }
 
+// QueryProposerByTxQuery will query for a proposer of a governance proposal by ID.
+func QueryProposerByTxQuery(clientCtx client.Context, proposalID uint64) (Proposer, error) {
+	q := fmt.Sprintf("%s.%s='%d'", types.EventTypeSubmitProposal, types.AttributeKeyProposalID, proposalID)
+	searchResult, err := authtx.QueryTxsByEvents(clientCtx, defaultPage, defaultLimit, q, "")
+	if err != nil {
+		return Proposer{}, err
+	}
+
+	for _, info := range searchResult.Txs {
+		for _, msg := range info.GetTx().GetMsgs() {
+			// there should only be a single proposal under the given conditions
+			if subMsg, ok := msg.(*v1beta1.MsgSubmitProposal); ok {
+				return NewProposer(proposalID, subMsg.Proposer), nil
+			}
+			if subMsg, ok := msg.(*v1.MsgSubmitProposal); ok {
+				return NewProposer(proposalID, subMsg.Proposer), nil
+			}
+		}
+	}
+
+	return Proposer{}, fmt.Errorf("failed to find the proposer for proposalID %d", proposalID)
+}
+
 // convertVote converts a MsgVoteWeighted into a *v1.Vote.
 func convertVote(v *v1beta1.MsgVoteWeighted) *v1.Vote {
 	opts := make([]*v1.WeightedVoteOption, len(v.Options))

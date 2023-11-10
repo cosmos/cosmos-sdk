@@ -25,6 +25,7 @@ import (
 	vestingmodulev1 "cosmossdk.io/api/cosmos/vesting/module/v1"
 	"cosmossdk.io/core/appconfig"
 	"cosmossdk.io/depinject"
+
 	"github.com/cosmos/cosmos-sdk/testutil"
 )
 

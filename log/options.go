@@ -26,7 +26,7 @@ type Config struct {
 	Color       bool
 	StackTrace  bool
 	TimeFormat  string
-	JSONMarshal func(v interface{}) ([]byte, error)
+	JSONMarshal func(v any) ([]byte, error)
 }
 
 type Option func(*Config)

@@ -15,14 +15,18 @@ import (
 
 var (
 	md_Module                  protoreflect.MessageDescriptor
+	fd_Module_max_title_len    protoreflect.FieldDescriptor
 	fd_Module_max_metadata_len protoreflect.FieldDescriptor
+	fd_Module_max_summary_len  protoreflect.FieldDescriptor
 	fd_Module_authority        protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_cosmos_gov_module_v1_module_proto_init()
 	md_Module = File_cosmos_gov_module_v1_module_proto.Messages().ByName("Module")
+	fd_Module_max_title_len = md_Module.Fields().ByName("max_title_len")
 	fd_Module_max_metadata_len = md_Module.Fields().ByName("max_metadata_len")
+	fd_Module_max_summary_len = md_Module.Fields().ByName("max_summary_len")
 	fd_Module_authority = md_Module.Fields().ByName("authority")
 }
 
@@ -91,9 +95,21 @@ func (x *fastReflection_Module) Interface() protoreflect.ProtoMessage {
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
 func (x *fastReflection_Module) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-	if x.MaxMetadataLen != uint64(0) {
-		value := protoreflect.ValueOfUint64(x.MaxMetadataLen)
+	if x.MaxTitleLen != int64(0) {
+		value := protoreflect.ValueOfInt64(x.MaxTitleLen)
+		if !f(fd_Module_max_title_len, value) {
+			return
+		}
+	}
+	if x.MaxMetadataLen != int64(0) {
+		value := protoreflect.ValueOfInt64(x.MaxMetadataLen)
 		if !f(fd_Module_max_metadata_len, value) {
+			return
+		}
+	}
+	if x.MaxSummaryLen != int64(0) {
+		value := protoreflect.ValueOfInt64(x.MaxSummaryLen)
+		if !f(fd_Module_max_summary_len, value) {
 			return
 		}
 	}
@@ -118,8 +134,12 @@ func (x *fastReflection_Module) Range(f func(protoreflect.FieldDescriptor, proto
 // a repeated field is populated if it is non-empty.
 func (x *fastReflection_Module) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
+	case "cosmos.gov.module.v1.Module.max_title_len":
+		return x.MaxTitleLen != int64(0)
 	case "cosmos.gov.module.v1.Module.max_metadata_len":
-		return x.MaxMetadataLen != uint64(0)
+		return x.MaxMetadataLen != int64(0)
+	case "cosmos.gov.module.v1.Module.max_summary_len":
+		return x.MaxSummaryLen != int64(0)
 	case "cosmos.gov.module.v1.Module.authority":
 		return x.Authority != ""
 	default:
@@ -138,8 +158,12 @@ func (x *fastReflection_Module) Has(fd protoreflect.FieldDescriptor) bool {
 // Clear is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_Module) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
+	case "cosmos.gov.module.v1.Module.max_title_len":
+		x.MaxTitleLen = int64(0)
 	case "cosmos.gov.module.v1.Module.max_metadata_len":
-		x.MaxMetadataLen = uint64(0)
+		x.MaxMetadataLen = int64(0)
+	case "cosmos.gov.module.v1.Module.max_summary_len":
+		x.MaxSummaryLen = int64(0)
 	case "cosmos.gov.module.v1.Module.authority":
 		x.Authority = ""
 	default:
@@ -158,9 +182,15 @@ func (x *fastReflection_Module) Clear(fd protoreflect.FieldDescriptor) {
 // of the value; to obtain a mutable reference, use Mutable.
 func (x *fastReflection_Module) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
+	case "cosmos.gov.module.v1.Module.max_title_len":
+		value := x.MaxTitleLen
+		return protoreflect.ValueOfInt64(value)
 	case "cosmos.gov.module.v1.Module.max_metadata_len":
 		value := x.MaxMetadataLen
-		return protoreflect.ValueOfUint64(value)
+		return protoreflect.ValueOfInt64(value)
+	case "cosmos.gov.module.v1.Module.max_summary_len":
+		value := x.MaxSummaryLen
+		return protoreflect.ValueOfInt64(value)
 	case "cosmos.gov.module.v1.Module.authority":
 		value := x.Authority
 		return protoreflect.ValueOfString(value)
@@ -184,8 +214,12 @@ func (x *fastReflection_Module) Get(descriptor protoreflect.FieldDescriptor) pro
 // Set is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_Module) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
+	case "cosmos.gov.module.v1.Module.max_title_len":
+		x.MaxTitleLen = value.Int()
 	case "cosmos.gov.module.v1.Module.max_metadata_len":
-		x.MaxMetadataLen = value.Uint()
+		x.MaxMetadataLen = value.Int()
+	case "cosmos.gov.module.v1.Module.max_summary_len":
+		x.MaxSummaryLen = value.Int()
 	case "cosmos.gov.module.v1.Module.authority":
 		x.Authority = value.Interface().(string)
 	default:
@@ -208,8 +242,12 @@ func (x *fastReflection_Module) Set(fd protoreflect.FieldDescriptor, value proto
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_Module) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
+	case "cosmos.gov.module.v1.Module.max_title_len":
+		panic(fmt.Errorf("field max_title_len of message cosmos.gov.module.v1.Module is not mutable"))
 	case "cosmos.gov.module.v1.Module.max_metadata_len":
 		panic(fmt.Errorf("field max_metadata_len of message cosmos.gov.module.v1.Module is not mutable"))
+	case "cosmos.gov.module.v1.Module.max_summary_len":
+		panic(fmt.Errorf("field max_summary_len of message cosmos.gov.module.v1.Module is not mutable"))
 	case "cosmos.gov.module.v1.Module.authority":
 		panic(fmt.Errorf("field authority of message cosmos.gov.module.v1.Module is not mutable"))
 	default:
@@ -225,8 +263,12 @@ func (x *fastReflection_Module) Mutable(fd protoreflect.FieldDescriptor) protore
 // For lists, maps, and messages, this returns a new, empty, mutable value.
 func (x *fastReflection_Module) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
+	case "cosmos.gov.module.v1.Module.max_title_len":
+		return protoreflect.ValueOfInt64(int64(0))
 	case "cosmos.gov.module.v1.Module.max_metadata_len":
-		return protoreflect.ValueOfUint64(uint64(0))
+		return protoreflect.ValueOfInt64(int64(0))
+	case "cosmos.gov.module.v1.Module.max_summary_len":
+		return protoreflect.ValueOfInt64(int64(0))
 	case "cosmos.gov.module.v1.Module.authority":
 		return protoreflect.ValueOfString("")
 	default:
@@ -298,8 +340,14 @@ func (x *fastReflection_Module) ProtoMethods() *protoiface.Methods {
 		var n int
 		var l int
 		_ = l
+		if x.MaxTitleLen != 0 {
+			n += 1 + runtime.Sov(uint64(x.MaxTitleLen))
+		}
 		if x.MaxMetadataLen != 0 {
 			n += 1 + runtime.Sov(uint64(x.MaxMetadataLen))
+		}
+		if x.MaxSummaryLen != 0 {
+			n += 1 + runtime.Sov(uint64(x.MaxSummaryLen))
 		}
 		l = len(x.Authority)
 		if l > 0 {
@@ -339,10 +387,20 @@ func (x *fastReflection_Module) ProtoMethods() *protoiface.Methods {
 			copy(dAtA[i:], x.Authority)
 			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Authority)))
 			i--
-			dAtA[i] = 0x12
+			dAtA[i] = 0x22
+		}
+		if x.MaxSummaryLen != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.MaxSummaryLen))
+			i--
+			dAtA[i] = 0x18
 		}
 		if x.MaxMetadataLen != 0 {
 			i = runtime.EncodeVarint(dAtA, i, uint64(x.MaxMetadataLen))
+			i--
+			dAtA[i] = 0x10
+		}
+		if x.MaxTitleLen != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.MaxTitleLen))
 			i--
 			dAtA[i] = 0x8
 		}
@@ -397,6 +455,25 @@ func (x *fastReflection_Module) ProtoMethods() *protoiface.Methods {
 			switch fieldNum {
 			case 1:
 				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field MaxTitleLen", wireType)
+				}
+				x.MaxTitleLen = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.MaxTitleLen |= int64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+			case 2:
+				if wireType != 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field MaxMetadataLen", wireType)
 				}
 				x.MaxMetadataLen = 0
@@ -409,12 +486,31 @@ func (x *fastReflection_Module) ProtoMethods() *protoiface.Methods {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					x.MaxMetadataLen |= uint64(b&0x7F) << shift
+					x.MaxMetadataLen |= int64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
 				}
-			case 2:
+			case 3:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field MaxSummaryLen", wireType)
+				}
+				x.MaxSummaryLen = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.MaxSummaryLen |= int64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+			case 4:
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Authority", wireType)
 				}
@@ -500,11 +596,17 @@ type Module struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
+	// max_title_len defines the maximum proposal title length.
+	// Defaults to 100 if not explicitly set.
+	MaxTitleLen int64 `protobuf:"varint,1,opt,name=max_title_len,json=maxTitleLen,proto3" json:"max_title_len,omitempty"`
 	// max_metadata_len defines the maximum proposal metadata length.
 	// Defaults to 255 if not explicitly set.
-	MaxMetadataLen uint64 `protobuf:"varint,1,opt,name=max_metadata_len,json=maxMetadataLen,proto3" json:"max_metadata_len,omitempty"`
+	MaxMetadataLen int64 `protobuf:"varint,2,opt,name=max_metadata_len,json=maxMetadataLen,proto3" json:"max_metadata_len,omitempty"`
+	// max_summary_len defines the maximum proposal summary length.
+	// Defaults to 10200 if not explicitly set.
+	MaxSummaryLen int64 `protobuf:"varint,3,opt,name=max_summary_len,json=maxSummaryLen,proto3" json:"max_summary_len,omitempty"`
 	// authority defines the custom module authority. If not set, defaults to the governance module.
-	Authority string `protobuf:"bytes,2,opt,name=authority,proto3" json:"authority,omitempty"`
+	Authority string `protobuf:"bytes,4,opt,name=authority,proto3" json:"authority,omitempty"`
 }
 
 func (x *Module) Reset() {
@@ -527,9 +629,23 @@ func (*Module) Descriptor() ([]byte, []int) {
 	return file_cosmos_gov_module_v1_module_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *Module) GetMaxMetadataLen() uint64 {
+func (x *Module) GetMaxTitleLen() int64 {
+	if x != nil {
+		return x.MaxTitleLen
+	}
+	return 0
+}
+
+func (x *Module) GetMaxMetadataLen() int64 {
 	if x != nil {
 		return x.MaxMetadataLen
+	}
+	return 0
+}
+
+func (x *Module) GetMaxSummaryLen() int64 {
+	if x != nil {
+		return x.MaxSummaryLen
 	}
 	return 0
 }
@@ -549,27 +665,32 @@ var file_cosmos_gov_module_v1_module_proto_rawDesc = []byte{
 	0x6f, 0x74, 0x6f, 0x12, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x6f, 0x76, 0x2e,
 	0x6d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x2e, 0x76, 0x31, 0x1a, 0x20, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
 	0x73, 0x2f, 0x61, 0x70, 0x70, 0x2f, 0x76, 0x31, 0x61, 0x6c, 0x70, 0x68, 0x61, 0x31, 0x2f, 0x6d,
-	0x6f, 0x64, 0x75, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0x6c, 0x0a, 0x06, 0x4d,
-	0x6f, 0x64, 0x75, 0x6c, 0x65, 0x12, 0x28, 0x0a, 0x10, 0x6d, 0x61, 0x78, 0x5f, 0x6d, 0x65, 0x74,
-	0x61, 0x64, 0x61, 0x74, 0x61, 0x5f, 0x6c, 0x65, 0x6e, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52,
-	0x0e, 0x6d, 0x61, 0x78, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x4c, 0x65, 0x6e, 0x12,
-	0x1c, 0x0a, 0x09, 0x61, 0x75, 0x74, 0x68, 0x6f, 0x72, 0x69, 0x74, 0x79, 0x18, 0x02, 0x20, 0x01,
-	0x28, 0x09, 0x52, 0x09, 0x61, 0x75, 0x74, 0x68, 0x6f, 0x72, 0x69, 0x74, 0x79, 0x3a, 0x1a, 0xba,
-	0xc0, 0x96, 0xda, 0x01, 0x14, 0x0a, 0x12, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b,
-	0x2e, 0x69, 0x6f, 0x2f, 0x78, 0x2f, 0x67, 0x6f, 0x76, 0x42, 0xca, 0x01, 0x0a, 0x18, 0x63, 0x6f,
-	0x6d, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x6f, 0x76, 0x2e, 0x6d, 0x6f, 0x64,
-	0x75, 0x6c, 0x65, 0x2e, 0x76, 0x31, 0x42, 0x0b, 0x4d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x50, 0x72,
-	0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b,
-	0x2e, 0x69, 0x6f, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x67,
-	0x6f, 0x76, 0x2f, 0x6d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x2f, 0x76, 0x31, 0x3b, 0x6d, 0x6f, 0x64,
-	0x75, 0x6c, 0x65, 0x76, 0x31, 0xa2, 0x02, 0x03, 0x43, 0x47, 0x4d, 0xaa, 0x02, 0x14, 0x43, 0x6f,
-	0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x47, 0x6f, 0x76, 0x2e, 0x4d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x2e,
-	0x56, 0x31, 0xca, 0x02, 0x14, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x47, 0x6f, 0x76, 0x5c,
-	0x4d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x5c, 0x56, 0x31, 0xe2, 0x02, 0x20, 0x43, 0x6f, 0x73, 0x6d,
-	0x6f, 0x73, 0x5c, 0x47, 0x6f, 0x76, 0x5c, 0x4d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x5c, 0x56, 0x31,
-	0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x17, 0x43,
-	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x3a, 0x3a, 0x47, 0x6f, 0x76, 0x3a, 0x3a, 0x4d, 0x6f, 0x64, 0x75,
-	0x6c, 0x65, 0x3a, 0x3a, 0x56, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x6f, 0x64, 0x75, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0xb8, 0x01, 0x0a, 0x06,
+	0x4d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x12, 0x22, 0x0a, 0x0d, 0x6d, 0x61, 0x78, 0x5f, 0x74, 0x69,
+	0x74, 0x6c, 0x65, 0x5f, 0x6c, 0x65, 0x6e, 0x18, 0x01, 0x20, 0x01, 0x28, 0x03, 0x52, 0x0b, 0x6d,
+	0x61, 0x78, 0x54, 0x69, 0x74, 0x6c, 0x65, 0x4c, 0x65, 0x6e, 0x12, 0x28, 0x0a, 0x10, 0x6d, 0x61,
+	0x78, 0x5f, 0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x5f, 0x6c, 0x65, 0x6e, 0x18, 0x02,
+	0x20, 0x01, 0x28, 0x03, 0x52, 0x0e, 0x6d, 0x61, 0x78, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74,
+	0x61, 0x4c, 0x65, 0x6e, 0x12, 0x26, 0x0a, 0x0f, 0x6d, 0x61, 0x78, 0x5f, 0x73, 0x75, 0x6d, 0x6d,
+	0x61, 0x72, 0x79, 0x5f, 0x6c, 0x65, 0x6e, 0x18, 0x03, 0x20, 0x01, 0x28, 0x03, 0x52, 0x0d, 0x6d,
+	0x61, 0x78, 0x53, 0x75, 0x6d, 0x6d, 0x61, 0x72, 0x79, 0x4c, 0x65, 0x6e, 0x12, 0x1c, 0x0a, 0x09,
+	0x61, 0x75, 0x74, 0x68, 0x6f, 0x72, 0x69, 0x74, 0x79, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x52,
+	0x09, 0x61, 0x75, 0x74, 0x68, 0x6f, 0x72, 0x69, 0x74, 0x79, 0x3a, 0x1a, 0xba, 0xc0, 0x96, 0xda,
+	0x01, 0x14, 0x0a, 0x12, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f,
+	0x2f, 0x78, 0x2f, 0x67, 0x6f, 0x76, 0x42, 0xca, 0x01, 0x0a, 0x18, 0x63, 0x6f, 0x6d, 0x2e, 0x63,
+	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x6f, 0x76, 0x2e, 0x6d, 0x6f, 0x64, 0x75, 0x6c, 0x65,
+	0x2e, 0x76, 0x31, 0x42, 0x0b, 0x4d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x50, 0x72, 0x6f, 0x74, 0x6f,
+	0x50, 0x01, 0x5a, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f,
+	0x2f, 0x61, 0x70, 0x69, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x67, 0x6f, 0x76, 0x2f,
+	0x6d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x2f, 0x76, 0x31, 0x3b, 0x6d, 0x6f, 0x64, 0x75, 0x6c, 0x65,
+	0x76, 0x31, 0xa2, 0x02, 0x03, 0x43, 0x47, 0x4d, 0xaa, 0x02, 0x14, 0x43, 0x6f, 0x73, 0x6d, 0x6f,
+	0x73, 0x2e, 0x47, 0x6f, 0x76, 0x2e, 0x4d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x2e, 0x56, 0x31, 0xca,
+	0x02, 0x14, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x47, 0x6f, 0x76, 0x5c, 0x4d, 0x6f, 0x64,
+	0x75, 0x6c, 0x65, 0x5c, 0x56, 0x31, 0xe2, 0x02, 0x20, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c,
+	0x47, 0x6f, 0x76, 0x5c, 0x4d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x5c, 0x56, 0x31, 0x5c, 0x47, 0x50,
+	0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x17, 0x43, 0x6f, 0x73, 0x6d,
+	0x6f, 0x73, 0x3a, 0x3a, 0x47, 0x6f, 0x76, 0x3a, 0x3a, 0x4d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x3a,
+	0x3a, 0x56, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (

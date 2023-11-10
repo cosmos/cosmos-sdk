@@ -91,9 +91,18 @@ func NewKeeper(
 		panic(fmt.Sprintf("invalid authority address: %s", authority))
 	}
 
+	defaultConfig := types.DefaultConfig()
+	// If MaxMetadataLen not set by app developer, set to default value.
+	if config.MaxTitleLen == 0 {
+		config.MaxTitleLen = defaultConfig.MaxTitleLen
+	}
 	// If MaxMetadataLen not set by app developer, set to default value.
 	if config.MaxMetadataLen == 0 {
-		config.MaxMetadataLen = types.DefaultConfig().MaxMetadataLen
+		config.MaxMetadataLen = defaultConfig.MaxMetadataLen
+	}
+	// If MaxMetadataLen not set by app developer, set to default value.
+	if config.MaxSummaryLen == 0 {
+		config.MaxSummaryLen = defaultConfig.MaxSummaryLen
 	}
 
 	sb := collections.NewSchemaBuilder(storeService)
@@ -184,7 +193,7 @@ func (k Keeper) ModuleAccountAddress() sdk.AccAddress {
 // assertTitleLength returns an error if given title length
 // is greater than a pre-defined MaxTitleLen.
 func (k Keeper) assertTitleLength(title string) error {
-	if title != "" && len(title) > k.config.MaxTitleLen {
+	if title != "" && int64(len(title)) > k.config.MaxTitleLen {
 		return types.ErrMetadataTooLong.Wrapf("got title with length %d", len(title))
 	}
 	return nil
@@ -193,7 +202,7 @@ func (k Keeper) assertTitleLength(title string) error {
 // assertMetadataLength returns an error if given metadata length
 // is greater than a pre-defined MaxMetadataLen.
 func (k Keeper) assertMetadataLength(metadata string) error {
-	if metadata != "" && len(metadata) > k.config.MaxMetadataLen {
+	if metadata != "" && int64(len(metadata)) > k.config.MaxMetadataLen {
 		return types.ErrMetadataTooLong.Wrapf("got metadata with length %d", len(metadata))
 	}
 	return nil
@@ -202,7 +211,7 @@ func (k Keeper) assertMetadataLength(metadata string) error {
 // assertSummaryLength returns an error if given summary length
 // is greater than a pre-defined MaxSummaryLen.
 func (k Keeper) assertSummaryLength(summary string) error {
-	if summary != "" && len(summary) > k.config.MaxSummaryLen {
+	if summary != "" && int64(len(summary)) > k.config.MaxSummaryLen {
 		return types.ErrSummaryTooLong.Wrapf("got summary with length %d", len(summary))
 	}
 	return nil

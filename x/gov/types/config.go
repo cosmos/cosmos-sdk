@@ -3,11 +3,11 @@ package types
 // Config is a config struct used for intialising the gov module to avoid using globals.
 type Config struct {
 	// MaxTitleLen defines the amount of characters that can be used for proposal title
-	MaxTitleLen int
+	MaxTitleLen int64
 	// MaxMetadataLen defines the amount of characters that can be used for proposal metadata.
-	MaxMetadataLen int
+	MaxMetadataLen int64
 	// MaxSummaryLen defines the amount of characters that can be used for proposal summary
-	MaxSummaryLen int
+	MaxSummaryLen int64
 }
 
 // DefaultConfig returns the default config for gov.

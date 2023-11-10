@@ -38,6 +38,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+### Features
+
+* (server) [#17094](https://github.com/cosmos/cosmos-sdk/pull/17094) Add a `shutdown-grace` flag for waiting a given time before exit.
+
 ### Improvements
 
 * (x/gov) [#18025](https://github.com/cosmos/cosmos-sdk/pull/18025) Improve `<appd> q gov proposer` by querying directly a proposal instead of tx events. It is an alias of `q gov proposal` as the proposer is a field of the proposal.

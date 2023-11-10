@@ -240,7 +240,7 @@ func runAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *buf
 			return fmt.Errorf("failed to save offline key: %w", err)
 		}
 
-		return printCreate(ctx, cmd, k, false, "", outputFormat)
+		return printCreate(cmd, k, false, "", outputFormat)
 	}
 
 	coinType, _ := cmd.Flags().GetUint32(flagCoinType)

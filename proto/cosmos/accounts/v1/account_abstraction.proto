@@ -48,6 +48,7 @@ message UserOperation {
 }
 
 // UserOperationResponse defines the response of a UserOperation.
+// If the operation fails the error field will be populated.
 message UserOperationResponse {
   // authentication_gas_used defines the gas used for the authentication part of the UserOperation.
   uint64 authentication_gas_used = 1;
@@ -60,4 +61,10 @@ message UserOperationResponse {
   uint64 execution_gas_used = 4;
   // execution_responses defines the responses of the execution messages.
   repeated google.protobuf.Any execution_responses = 5;
+  // error defines the error that occurred during the execution of the UserOperation.
+  // If the error is not empty, the UserOperation failed.
+  // Other fields might be populated even if the error is not empty, for example
+  // if the operation fails after the authentication step, the authentication_gas_used
+  // field will be populated.
+  string error = 6;
 }

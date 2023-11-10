@@ -3,12 +3,11 @@ package accounts
 import (
 	"context"
 
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
-
 	"cosmossdk.io/core/event"
 	v1 "cosmossdk.io/x/accounts/v1"
 )
+
+var ModuleAccountAddr = []byte{0x01}
 
 var _ v1.MsgServer = msgServer{}
 
@@ -121,5 +120,15 @@ func (m msgServer) Execute(ctx context.Context, execute *v1.MsgExecute) (*v1.Msg
 }
 
 func (m msgServer) ExecuteBundle(ctx context.Context, req *v1.MsgExecuteBundle) (*v1.MsgExecuteBundleResponse, error) {
-	return nil, status.New(codes.Unimplemented, "not implemented").Err()
+	// validate bundler addr
+	_, err := m.k.addressCodec.StringToBytes(req.Bundler)
+	if err != nil {
+		return nil, err
+	}
+	// execute operations
+	responses := make([]*v1.UserOperationResponse, len(req.Operations))
+	for i, op := range req.Operations {
+		responses[i] = m.k.ExecuteUserOperation(ctx, req.Bundler, op)
+	}
+	return &v1.MsgExecuteBundleResponse{Responses: responses}, nil
 }

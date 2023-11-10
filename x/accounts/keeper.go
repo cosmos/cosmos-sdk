@@ -27,6 +27,8 @@ var (
 	AccountTypeKeyPrefix = collections.NewPrefix(0)
 	// AccountNumberKey is the key for the account number.
 	AccountNumberKey = collections.NewPrefix(1)
+	// AccountByNumber is the key for the accounts by number.
+	AccountByNumber = collections.NewPrefix(2)
 )
 
 // QueryRouter represents a router which can be used to route queries to the correct module.
@@ -90,9 +92,11 @@ func NewKeeper(
 			}
 			return handlers[0](ctx, req, resp)
 		},
-		AccountNumber:  collections.NewSequence(sb, AccountNumberKey, "account_number"),
-		AccountsByType: collections.NewMap(sb, AccountTypeKeyPrefix, "accounts_by_type", collections.BytesKey, collections.StringValue),
-		AccountsState:  collections.NewMap(sb, implementation.AccountStatePrefix, "accounts_state", collections.BytesKey, collections.BytesValue),
+		Schema:          collections.Schema{},
+		AccountNumber:   collections.NewSequence(sb, AccountNumberKey, "account_number"),
+		AccountsByType:  collections.NewMap(sb, AccountTypeKeyPrefix, "accounts_by_type", collections.BytesKey, collections.StringValue),
+		AccountByNumber: collections.NewMap(sb, AccountByNumber, "account_by_number", collections.BytesKey, collections.Uint64Value),
+		AccountsState:   collections.NewMap(sb, implementation.AccountStatePrefix, "accounts_state", collections.BytesKey, collections.BytesValue),
 	}
 
 	schema, err := sb.Build()
@@ -124,6 +128,8 @@ type Keeper struct {
 	AccountNumber collections.Sequence
 	// AccountsByType maps account address to their implementation.
 	AccountsByType collections.Map[[]byte, string]
+	// AccountByNumber maps account number to their address.
+	AccountByNumber collections.Map[[]byte, uint64]
 
 	// AccountsState keeps track of the state of each account.
 	// NOTE: this is only used for genesis import and export.
@@ -144,8 +150,14 @@ func (k Keeper) Init(
 		return nil, nil, err
 	}
 
+	// get the next account number
+	num, err := k.AccountNumber.Next(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+
 	// make a new account address
-	accountAddr, err := k.makeAddress(ctx)
+	accountAddr, err := k.makeAddress(num)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -159,6 +171,10 @@ func (k Keeper) Init(
 
 	// map account address to account type
 	if err := k.AccountsByType.Set(ctx, accountAddr, accountType); err != nil {
+		return nil, nil, err
+	}
+	// map account number to account address
+	if err := k.AccountByNumber.Set(ctx, accountAddr, num); err != nil {
 		return nil, nil, err
 	}
 	return resp, accountAddr, nil
@@ -225,14 +241,9 @@ func (k Keeper) getImplementation(accountType string) (implementation.Implementa
 	return impl, nil
 }
 
-func (k Keeper) makeAddress(ctx context.Context) ([]byte, error) {
-	num, err := k.AccountNumber.Next(ctx)
-	if err != nil {
-		return nil, err
-	}
-
+func (k Keeper) makeAddress(accNum uint64) ([]byte, error) {
 	// TODO: better address scheme, ref: https://github.com/cosmos/cosmos-sdk/issues/17516
-	addr := sha256.Sum256(append([]byte("x/accounts"), binary.BigEndian.AppendUint64(nil, num)...))
+	addr := sha256.Sum256(append([]byte("x/accounts"), binary.BigEndian.AppendUint64(nil, accNum)...))
 	return addr[:], nil
 }
 

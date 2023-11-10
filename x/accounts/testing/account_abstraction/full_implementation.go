@@ -44,9 +44,9 @@ func (a PartialAccount) RotatePubKey(ctx context.Context, msg *rotationv1.MsgRot
 	return nil, fmt.Errorf("not implemented")
 }
 
-// Authenticate authenticates the account.
-func (a PartialAccount) Authenticate(ctx context.Context, msg *account_abstractionv1.MsgAuthenticate) (*account_abstractionv1.MsgAuthenticateResponse, error) {
-	return nil, fmt.Errorf("not implemented")
+// Authenticate authenticates the account, auth always passess.
+func (a PartialAccount) Authenticate(_ context.Context, _ *account_abstractionv1.MsgAuthenticate) (*account_abstractionv1.MsgAuthenticateResponse, error) {
+	return &account_abstractionv1.MsgAuthenticateResponse{}, nil
 }
 
 // QueryAuthenticateMethods queries the authentication methods of the account.

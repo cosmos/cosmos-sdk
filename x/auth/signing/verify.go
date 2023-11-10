@@ -3,7 +3,6 @@ package signing
 import (
 	"bytes"
 	"context"
-	"crypto/sha256"
 	"fmt"
 
 	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
@@ -62,18 +61,19 @@ func internalSignModeToAPI(mode signing.SignMode) (signingv1beta1.SignMode, erro
 // VerifysignatureCache is a cache of verified signatures
 // If the cached item is not found, it will be verified and added to the cache
 func verifySig(signBytes, sig []byte, pubKey cryptotypes.PubKey) bool {
-	bz := sha256.Sum256(append(signBytes, sig...))
-	hash := bz[:]
-	cachePub, ok := SignatureCache().Get(hash)
+	bz := string(append(signBytes, sig...))
+	cachePub, ok := SignatureCache().Get(bz)
+	// if the pubkey is in the cache, we know the signature is valid
+	// we remove the signature from the cache in the first lookup, as we assume this is when delivertx is being called
 	if ok {
-		SignatureCache().Remove(hash)
+		SignatureCache().Remove(bz)
 		return bytes.Equal(pubKey.Bytes(), cachePub)
 	}
 	if !pubKey.VerifySignature(signBytes, sig) {
 		return false
 	}
 
-	SignatureCache().Add(hash, pubKey.Bytes())
+	SignatureCache().Add(bz, pubKey.Bytes())
 
 	return true
 }

@@ -46,44 +46,37 @@ type Cache struct {
 	data *lru.Cache[string, []byte]
 }
 
-func (c *Cache) Get(key []byte) ([]byte, bool) {
+func (c *Cache) Get(key string) ([]byte, bool) {
 	// validate
 	if !c.validate(key) {
 		return nil, false
 	}
-	// get cache
-	value, ok := c.data.Get(string(key))
-	if ok {
-		return value, true
-	}
-	return nil, false
+
+	return c.data.Get(key)
 }
 
-func (c *Cache) Add(key, value []byte) {
+func (c *Cache) Add(key string, value []byte) {
 	// validate
 	if !c.validate(key) {
 		return
 	}
 	// add cache
-	c.data.Add(string(key), value)
+	c.data.Add(key, value)
 }
 
-func (c *Cache) Remove(key []byte) {
+func (c *Cache) Remove(key string) {
 	// validate
 	if !c.validate(key) {
 		return
 	}
-	c.data.Remove(string(key))
+	c.data.Remove(key)
 }
 
-func (c *Cache) validate(key []byte) bool {
+func (c *Cache) validate(key string) bool {
 	// validate key
 	if len(key) == 0 {
 		return false
 	}
-	// validate lru cache
-	if c.data == nil {
-		return false
-	}
-	return true
+
+	return c.data != nil
 }

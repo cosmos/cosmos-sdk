@@ -10,6 +10,7 @@ import (
 	"cosmossdk.io/x/group"
 	"cosmossdk.io/x/group/errors"
 	"cosmossdk.io/x/group/internal/orm"
+	grouptypes "cosmossdk.io/x/group/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -77,18 +78,32 @@ type Keeper struct {
 
 	router baseapp.MessageRouter
 
-	config group.Config
+	config grouptypes.Config
 
 	cdc codec.Codec
 }
 
 // NewKeeper creates a new group keeper.
-func NewKeeper(storeKey storetypes.StoreKey, cdc codec.Codec, router baseapp.MessageRouter, accKeeper group.AccountKeeper, config group.Config) Keeper {
+func NewKeeper(storeKey storetypes.StoreKey, cdc codec.Codec, router baseapp.MessageRouter, accKeeper group.AccountKeeper, config grouptypes.Config) Keeper {
 	k := Keeper{
 		key:       storeKey,
 		router:    router,
 		accKeeper: accKeeper,
 		cdc:       cdc,
+	}
+
+	defaultConfig := grouptypes.DefaultConfig()
+	// If MaxMetadataLen not set by app developer, set to default value.
+	if config.MaxMetadataLen == 0 {
+		config.MaxMetadataLen = defaultConfig.MaxMetadataLen
+	}
+	// If MaxMetadataLen not set by app developer, set to default value.
+	if config.MaxProposalTitleLen == 0 {
+		config.MaxProposalTitleLen = defaultConfig.MaxProposalTitleLen
+	}
+	// If MaxMetadataLen not set by app developer, set to default value.
+	if config.MaxProposalSummaryLen == 0 {
+		config.MaxProposalSummaryLen = defaultConfig.MaxProposalSummaryLen
 	}
 
 	groupTable, err := orm.NewAutoUInt64Table([2]byte{GroupTablePrefix}, GroupTableSeqPrefix, &group.GroupInfo{}, cdc)
@@ -204,14 +219,6 @@ func NewKeeper(storeKey storetypes.StoreKey, cdc codec.Codec, router baseapp.Mes
 		panic(err.Error())
 	}
 	k.voteTable = *voteTable
-
-	if config.MaxMetadataLen == 0 {
-		config.MaxMetadataLen = group.DefaultConfig().MaxMetadataLen
-	}
-	if config.MaxExecutionPeriod == 0 {
-		config.MaxExecutionPeriod = group.DefaultConfig().MaxExecutionPeriod
-	}
-	k.config = config
 
 	return k
 }
@@ -440,6 +447,33 @@ func (k Keeper) TallyProposalsAtVPEnd(ctx sdk.Context) error {
 		}
 		// Note: We do nothing if the proposal has been marked as ACCEPTED or
 		// REJECTED.
+	}
+	return nil
+}
+
+// assertMetadataLength returns an error if given metadata length
+// is greater than defined MaxMetadataLen in the module configuration
+func (k Keeper) assertMetadataLength(metadata, description string) error {
+	if metadata != "" && uint64(len(metadata)) > k.config.MaxMetadataLen {
+		return errors.ErrMetadataTooLong.Wrapf(description)
+	}
+	return nil
+}
+
+// assertSummaryLength returns an error if given summary length
+// is greater than defined MaxProposalSummaryLen in the module configuration
+func (k Keeper) assertSummaryLength(summary string) error {
+	if summary != "" && uint64(len(summary)) > k.config.MaxProposalSummaryLen {
+		return errors.ErrSummaryTooLong
+	}
+	return nil
+}
+
+// assertTitleLength returns an error if given summary length
+// is greater than defined MaxProposalTitleLen in the module configuration
+func (k Keeper) assertTitleLength(summary string) error {
+	if summary != "" && uint64(len(summary)) > k.config.MaxProposalTitleLen {
+		return errors.ErrTitleTooLong
 	}
 	return nil
 }

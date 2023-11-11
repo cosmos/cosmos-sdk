@@ -111,10 +111,6 @@ func (k MsgServer) CancelContinuousFundProposal(ctx context.Context, msg *types.
 	return &types.MsgCancelContinuousFundProposalResponse{}, nil
 }
 
-func (k MsgServer) FundDispensationProposal(ctx context.Context, msg *types.MsgFundDispensationProposal) (*types.MsgFundDispensationProposalResponse, error) {
-	return &types.MsgFundDispensationProposalResponse{}, nil
-}
-
 func (k *Keeper) validateAuthority(authority string) error {
 	if _, err := k.authKeeper.AddressCodec().StringToBytes(authority); err != nil {
 		return sdkerrors.ErrInvalidAddress.Wrapf("invalid authority address: %s", err)

@@ -66,9 +66,7 @@ func NewLogger(dst io.Writer, options ...Option) Logger {
 	}
 	zerolog.InterfaceMarshalFunc = func(i interface{}) ([]byte, error) {
 		switch v := i.(type) {
-		case json.Marshaler:
-			return jsonMarshaler(i)
-		case encoding.TextMarshaler:
+		case json.Marshaler, encoding.TextMarshaler:
 			return jsonMarshaler(i)
 		case fmt.Stringer:
 			return jsonMarshaler(v.String())

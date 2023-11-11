@@ -52,9 +52,9 @@ type Logger interface {
 	Impl() any
 }
 
-// WithJSONMarshal configure zerolog global json encoding
+// WithJSONMarshal configures zerolog global json encoding.
 func WithJSONMarshal(marshaler func(v any) ([]byte, error)) {
-	zerolog.InterfaceMarshalFunc = func(i interface{}) ([]byte, error) {
+	zerolog.InterfaceMarshalFunc = func(i any) ([]byte, error) {
 		switch v := i.(type) {
 		case fmt.Stringer:
 			return marshaler(v.String())

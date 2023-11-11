@@ -3,7 +3,9 @@ package rootmulti
 import (
 	"io"
 
+	"cosmossdk.io/log"
 	"cosmossdk.io/store/v2"
+	"cosmossdk.io/store/v2/pruning"
 )
 
 var _ store.UpgradeableRootStore = (*Store)(nil)
@@ -13,7 +15,29 @@ var _ store.UpgradeableRootStore = (*Store)(nil)
 // i.e. store key. This implementation is meant to be congruent with the store
 // v1 RootMultiStore and support existing application that DO NOT wish to migrate
 // to the SDK's default single tree RootStore variant.
-type Store struct{}
+type Store struct {
+	logger         log.Logger
+	initialVersion uint64
+
+	// stateStore reflects the state storage backend
+	stateStore store.VersionedDatabase
+
+	// commitHeader reflects the header used when committing state (note, this isn't required and only used for query purposes)
+	commitHeader store.CommitHeader
+
+	// lastCommitInfo reflects the last version/hash that has been committed
+	lastCommitInfo *store.CommitInfo
+	// workingHash defines the current (yet to be committed) hash
+	workingHash []byte
+
+	// traceWriter defines a writer for store tracing operation
+	traceWriter io.Writer
+	// traceContext defines the tracing context, if any, for trace operations
+	traceContext store.TraceContext
+
+	// pruningManager manages pruning of the SS and SC backends
+	pruningManager *pruning.Manager
+}
 
 func (s *Store) GetSCStore(storeKey string) store.Committer {
 	panic("not implemented!")

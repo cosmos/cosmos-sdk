@@ -11,21 +11,6 @@ import (
 	"github.com/rs/zerolog/pkgerrors"
 )
 
-func init() {
-	zerolog.InterfaceMarshalFunc = func(i interface{}) ([]byte, error) {
-		switch v := i.(type) {
-		case json.Marshaler:
-			return json.Marshal(i)
-		case encoding.TextMarshaler:
-			return json.Marshal(i)
-		case fmt.Stringer:
-			return json.Marshal(v.String())
-		default:
-			return json.Marshal(i)
-		}
-	}
-}
-
 // ModuleKey defines a module logging key.
 const ModuleKey = "module"
 
@@ -74,18 +59,21 @@ func NewLogger(dst io.Writer, options ...Option) Logger {
 	for _, opt := range options {
 		opt(&logCfg)
 	}
+	// set default jsonMarshaler to json.Marshal for compatibility
+	jsonMarshaler := json.Marshal
 	if logCfg.JSONMarshal != nil {
-		zerolog.InterfaceMarshalFunc = func(i interface{}) ([]byte, error) {
-			switch v := i.(type) {
-			case json.Marshaler:
-				return logCfg.JSONMarshal(i)
-			case encoding.TextMarshaler:
-				return logCfg.JSONMarshal(i)
-			case fmt.Stringer:
-				return logCfg.JSONMarshal(v.String())
-			default:
-				return logCfg.JSONMarshal(i)
-			}
+		jsonMarshaler = logCfg.JSONMarshal
+	}
+	zerolog.InterfaceMarshalFunc = func(i interface{}) ([]byte, error) {
+		switch v := i.(type) {
+		case json.Marshaler:
+			return jsonMarshaler(i)
+		case encoding.TextMarshaler:
+			return jsonMarshaler(i)
+		case fmt.Stringer:
+			return jsonMarshaler(v.String())
+		default:
+			return jsonMarshaler(i)
 		}
 	}
 

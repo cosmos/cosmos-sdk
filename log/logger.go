@@ -11,7 +11,7 @@ import (
 )
 
 func init() {
-	zerolog.InterfaceMarshalFunc = func(i interface{}) ([]byte, error) {
+	zerolog.InterfaceMarshalFunc = func(i any) ([]byte, error) {
 		switch v := i.(type) {
 		case fmt.Stringer:
 			return json.Marshal(v.String())

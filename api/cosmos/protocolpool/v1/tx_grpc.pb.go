@@ -24,7 +24,6 @@ const (
 	Msg_SubmitBudgetProposal_FullMethodName         = "/cosmos.protocolpool.v1.Msg/SubmitBudgetProposal"
 	Msg_ClaimBudget_FullMethodName                  = "/cosmos.protocolpool.v1.Msg/ClaimBudget"
 	Msg_AddContinuousFunds_FullMethodName           = "/cosmos.protocolpool.v1.Msg/AddContinuousFunds"
-	Msg_FundDispensationProposal_FullMethodName     = "/cosmos.protocolpool.v1.Msg/FundDispensationProposal"
 	Msg_CancelContinuousFundProposal_FullMethodName = "/cosmos.protocolpool.v1.Msg/CancelContinuousFundProposal"
 )
 
@@ -46,8 +45,6 @@ type MsgClient interface {
 	ClaimBudget(ctx context.Context, in *MsgClaimBudget, opts ...grpc.CallOption) (*MsgClaimBudgetResponse, error)
 	// AddContinuousFunds defines a method to add funds continuously.
 	AddContinuousFunds(ctx context.Context, in *MsgAddContinuousFunds, opts ...grpc.CallOption) (*MsgAddContinuousFundsResponse, error)
-	// FundDispensationProposal defines a method for funds dispensation.
-	FundDispensationProposal(ctx context.Context, in *MsgFundDispensationProposal, opts ...grpc.CallOption) (*MsgFundDispensationProposalResponse, error)
 	// CancelContinuousFundProposal defines a method for cancelling continuous fund proposal.
 	CancelContinuousFundProposal(ctx context.Context, in *MsgCancelContinuousFundProposal, opts ...grpc.CallOption) (*MsgCancelContinuousFundProposalResponse, error)
 }
@@ -105,15 +102,6 @@ func (c *msgClient) AddContinuousFunds(ctx context.Context, in *MsgAddContinuous
 	return out, nil
 }
 
-func (c *msgClient) FundDispensationProposal(ctx context.Context, in *MsgFundDispensationProposal, opts ...grpc.CallOption) (*MsgFundDispensationProposalResponse, error) {
-	out := new(MsgFundDispensationProposalResponse)
-	err := c.cc.Invoke(ctx, Msg_FundDispensationProposal_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *msgClient) CancelContinuousFundProposal(ctx context.Context, in *MsgCancelContinuousFundProposal, opts ...grpc.CallOption) (*MsgCancelContinuousFundProposalResponse, error) {
 	out := new(MsgCancelContinuousFundProposalResponse)
 	err := c.cc.Invoke(ctx, Msg_CancelContinuousFundProposal_FullMethodName, in, out, opts...)
@@ -141,8 +129,6 @@ type MsgServer interface {
 	ClaimBudget(context.Context, *MsgClaimBudget) (*MsgClaimBudgetResponse, error)
 	// AddContinuousFunds defines a method to add funds continuously.
 	AddContinuousFunds(context.Context, *MsgAddContinuousFunds) (*MsgAddContinuousFundsResponse, error)
-	// FundDispensationProposal defines a method for funds dispensation.
-	FundDispensationProposal(context.Context, *MsgFundDispensationProposal) (*MsgFundDispensationProposalResponse, error)
 	// CancelContinuousFundProposal defines a method for cancelling continuous fund proposal.
 	CancelContinuousFundProposal(context.Context, *MsgCancelContinuousFundProposal) (*MsgCancelContinuousFundProposalResponse, error)
 	mustEmbedUnimplementedMsgServer()
@@ -166,9 +152,6 @@ func (UnimplementedMsgServer) ClaimBudget(context.Context, *MsgClaimBudget) (*Ms
 }
 func (UnimplementedMsgServer) AddContinuousFunds(context.Context, *MsgAddContinuousFunds) (*MsgAddContinuousFundsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddContinuousFunds not implemented")
-}
-func (UnimplementedMsgServer) FundDispensationProposal(context.Context, *MsgFundDispensationProposal) (*MsgFundDispensationProposalResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method FundDispensationProposal not implemented")
 }
 func (UnimplementedMsgServer) CancelContinuousFundProposal(context.Context, *MsgCancelContinuousFundProposal) (*MsgCancelContinuousFundProposalResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CancelContinuousFundProposal not implemented")
@@ -276,24 +259,6 @@ func _Msg_AddContinuousFunds_Handler(srv interface{}, ctx context.Context, dec f
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Msg_FundDispensationProposal_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgFundDispensationProposal)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(MsgServer).FundDispensationProposal(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Msg_FundDispensationProposal_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).FundDispensationProposal(ctx, req.(*MsgFundDispensationProposal))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _Msg_CancelContinuousFundProposal_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(MsgCancelContinuousFundProposal)
 	if err := dec(in); err != nil {
@@ -338,10 +303,6 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "AddContinuousFunds",
 			Handler:    _Msg_AddContinuousFunds_Handler,
-		},
-		{
-			MethodName: "FundDispensationProposal",
-			Handler:    _Msg_FundDispensationProposal_Handler,
 		},
 		{
 			MethodName: "CancelContinuousFundProposal",

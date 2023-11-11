@@ -33,9 +33,6 @@ service Msg {
   // AddContinuousFunds defines a method to add funds continuously.
   rpc AddContinuousFunds(MsgAddContinuousFunds) returns (MsgAddContinuousFundsResponse);
 
-  // FundDispensationProposal defines a method for funds dispensation.
-  rpc FundDispensationProposal(MsgFundDispensationProposal) returns (MsgFundDispensationProposalResponse);
-
   // CancelContinuousFundProposal defines a method for cancelling continuous fund proposal.
   rpc CancelContinuousFundProposal(MsgCancelContinuousFundProposal) returns (MsgCancelContinuousFundProposalResponse);
 }
@@ -113,7 +110,7 @@ message MsgClaimBudgetResponse {
 
 // MsgAddContinuousFunds defines a message for adding continuous funds.
 message MsgAddContinuousFunds {
-  option (cosmos.msg.v1.signer)      = "recipient";
+  option (cosmos.msg.v1.signer)      = "authority";
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
@@ -121,41 +118,27 @@ message MsgAddContinuousFunds {
   string title = 1;
   // description of the funds.
   string description = 2;
+  // authority is the address that controls the module (defaults to x/gov unless overwritten).
+  string authority = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   // recipient address of the account receiving funds.
-  string recipient = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string recipient = 4 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   // metadata is any arbitrary metadata attached.
-  string metadata = 4;
+  string metadata = 5;
   // percentage is the percentage of funds to be allocated from Community pool share on block by block.
-  string percentage = 5 [
+  string percentage = 6 [
     (cosmos_proto.scalar)  = "cosmos.Dec",
     (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable)   = false
   ];
+  repeated cosmos.base.v1beta1.Coin cap = 7
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
   // Optional, if expiry is set, removes the state object when expired.
-  google.protobuf.Timestamp expiry = 6 [(gogoproto.stdtime) = true];
+  google.protobuf.Timestamp expiry = 8 [(gogoproto.stdtime) = true];
 }
 
 // MsgAddContinuousFundsResponse defines the response to executing a
 // MsgAddContinuousFunds message.
 message MsgAddContinuousFundsResponse {}
-
-// MsgFundDispensationProposal defines a message for fund dispensation proposal.
-message MsgFundDispensationProposal {
-  option (cosmos.msg.v1.signer) = "authority";
-
-  // authority is the address that controls the module (defaults to x/gov unless overwritten).
-  string                      authority         = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  string                      recipient_address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  cosmos.base.v1beta1.DecCoin percentage        = 3
-      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins"];
-  repeated cosmos.base.v1beta1.Coin cap = 4
-      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
-  int64 expiration = 5;
-}
-
-// MsgFundDispensationProposalResponse defines the response to executing a
-// MsgFundDispensationProposal message.
-message MsgFundDispensationProposalResponse {}
 
 // MsgCancelContinuousFundProposal
 message MsgCancelContinuousFundProposal {

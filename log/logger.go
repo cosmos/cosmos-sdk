@@ -1,7 +1,6 @@
 package log
 
 import (
-	"encoding"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -10,6 +9,17 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/pkgerrors"
 )
+
+func init() {
+	zerolog.InterfaceMarshalFunc = func(i interface{}) ([]byte, error) {
+		switch v := i.(type) {
+		case fmt.Stringer:
+			return json.Marshal(v.String())
+		default:
+			return json.Marshal(i)
+		}
+	}
+}
 
 // ModuleKey defines a module logging key.
 const ModuleKey = "module"
@@ -42,6 +52,18 @@ type Logger interface {
 	Impl() any
 }
 
+// WithJSONMarshal configure zerolog global json encoding
+func WithJSONMarshal(marshaler func(v any) ([]byte, error)) {
+	zerolog.InterfaceMarshalFunc = func(i interface{}) ([]byte, error) {
+		switch v := i.(type) {
+		case fmt.Stringer:
+			return marshaler(v.String())
+		default:
+			return marshaler(i)
+		}
+	}
+}
+
 type zeroLogWrapper struct {
 	*zerolog.Logger
 }
@@ -58,21 +80,6 @@ func NewLogger(dst io.Writer, options ...Option) Logger {
 	logCfg := defaultConfig
 	for _, opt := range options {
 		opt(&logCfg)
-	}
-	// set default jsonMarshaler to json.Marshal for compatibility
-	jsonMarshaler := json.Marshal
-	if logCfg.JSONMarshal != nil {
-		jsonMarshaler = logCfg.JSONMarshal
-	}
-	zerolog.InterfaceMarshalFunc = func(i interface{}) ([]byte, error) {
-		switch v := i.(type) {
-		case json.Marshaler, encoding.TextMarshaler:
-			return jsonMarshaler(i)
-		case fmt.Stringer:
-			return jsonMarshaler(v.String())
-		default:
-			return jsonMarshaler(i)
-		}
 	}
 
 	output := dst

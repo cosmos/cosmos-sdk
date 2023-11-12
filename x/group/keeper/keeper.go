@@ -93,18 +93,23 @@ func NewKeeper(storeKey storetypes.StoreKey, cdc codec.Codec, router baseapp.Mes
 	}
 
 	defaultConfig := grouptypes.DefaultConfig()
+	// Set the max execution period if not set by app developer.
+	if config.MaxExecutionPeriod == 0 {
+		config.MaxExecutionPeriod = defaultConfig.MaxExecutionPeriod
+	}
 	// If MaxMetadataLen not set by app developer, set to default value.
 	if config.MaxMetadataLen == 0 {
 		config.MaxMetadataLen = defaultConfig.MaxMetadataLen
 	}
-	// If MaxMetadataLen not set by app developer, set to default value.
+	// If MaxProposalTitleLen not set by app developer, set to default value.
 	if config.MaxProposalTitleLen == 0 {
 		config.MaxProposalTitleLen = defaultConfig.MaxProposalTitleLen
 	}
-	// If MaxMetadataLen not set by app developer, set to default value.
+	// If MaxProposalSummaryLen not set by app developer, set to default value.
 	if config.MaxProposalSummaryLen == 0 {
 		config.MaxProposalSummaryLen = defaultConfig.MaxProposalSummaryLen
 	}
+	k.config = config
 
 	groupTable, err := orm.NewAutoUInt64Table([2]byte{GroupTablePrefix}, GroupTableSeqPrefix, &group.GroupInfo{}, cdc)
 	if err != nil {
@@ -471,8 +476,8 @@ func (k Keeper) assertSummaryLength(summary string) error {
 
 // assertTitleLength returns an error if given summary length
 // is greater than defined MaxProposalTitleLen in the module configuration
-func (k Keeper) assertTitleLength(summary string) error {
-	if uint64(len(summary)) > k.config.MaxProposalTitleLen {
+func (k Keeper) assertTitleLength(title string) error {
+	if uint64(len(title)) > k.config.MaxProposalTitleLen {
 		return errors.ErrTitleTooLong
 	}
 	return nil

@@ -5,7 +5,6 @@ import (
 	_ "cosmossdk.io/x/auth/tx/config" // import as blank for app wiring
 	_ "cosmossdk.io/x/bank"           // import as blank for app wiring
 	_ "cosmossdk.io/x/distribution"   // import as blank for app wiring
-	_ "cosmossdk.io/x/gov"            // import as blank for app wiring
 	_ "cosmossdk.io/x/mint"           // import as blank for app wiring
 	_ "cosmossdk.io/x/protocolpool"   // import as blank for app wiring
 	_ "cosmossdk.io/x/staking"        // import as blank for app wiring
@@ -25,5 +24,4 @@ var AppConfig = configurator.NewAppConfig(
 	configurator.DistributionModule(),
 	configurator.MintModule(),
 	configurator.ProtocolPoolModule(),
-	configurator.GovModule(),
 )

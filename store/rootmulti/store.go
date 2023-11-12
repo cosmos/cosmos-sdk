@@ -26,6 +26,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/cachemulti"
 	"github.com/cosmos/cosmos-sdk/store/dbadapter"
 	"github.com/cosmos/cosmos-sdk/store/iavl"
+	"github.com/cosmos/cosmos-sdk/store/iavl_v2"
 	"github.com/cosmos/cosmos-sdk/store/listenkv"
 	"github.com/cosmos/cosmos-sdk/store/mem"
 	"github.com/cosmos/cosmos-sdk/store/tracekv"
@@ -65,7 +66,9 @@ type Store struct {
 	keysByName     map[string]types.StoreKey
 	lazyLoading    bool
 	initialVersion int64
-	iavlV2Path     string
+
+	iavlV2Path string
+	asyncLoad  bool
 
 	traceWriter  io.Writer
 	traceContext types.TraceContext
@@ -106,6 +109,10 @@ func NewStore(db dbm.DB, logger log.Logger) *Store {
 func NewStoreWithOptions(db dbm.DB, logger log.Logger, options StoreOptions) *Store {
 	store := NewStore(db, logger)
 	store.iavlV2Path = options.IavlV2RootPath
+	if store.iavlV2Path != "" {
+		fmt.Println("NewStoreWithOptions iavlV2Path:", store.iavlV2Path)
+		store.asyncLoad = true
+	}
 	return store
 }
 
@@ -249,46 +256,94 @@ func (rs *Store) loadVersion(ver int64, upgrades *types.StoreUpgrades) error {
 		})
 	}
 
+	errCh := make(chan error)
+	storeCh := make(chan struct {
+		key   types.StoreKey
+		store types.CommitKVStore
+	})
+	maxAsync := 7
+	asyncLoadCount := 0
+	loadCh := make(chan struct{}, maxAsync)
+	for i := 0; i < maxAsync; i++ {
+		loadCh <- struct{}{}
+	}
+
 	for _, key := range storesKeys {
-		storeParams := rs.storesParams[key]
+		sParams := rs.storesParams[key]
 		commitID := rs.getCommitID(infos, key.Name())
 
 		// If it has been added, set the initial version
 		if upgrades.IsAdded(key.Name()) {
-			storeParams.initialVersion = uint64(ver) + 1
+			sParams.initialVersion = uint64(ver) + 1
 		}
 
-		// TODO async load
-
-		store, err := rs.loadCommitStoreFromParams(key, commitID, storeParams)
-		if err != nil {
-			return errors.Wrap(err, "failed to load store")
-		}
-
-		newStores[key] = store
-
-		// If it was deleted, remove all data
-		if upgrades.IsDeleted(key.Name()) {
-			if err := deleteKVStore(store.(types.KVStore)); err != nil {
-				return errors.Wrapf(err, "failed to delete store %s", key.Name())
+		if rs.asyncLoad && sParams.typ == types.StoreTypeIAVL {
+			asyncLoadCount++
+			if upgrades.IsDeleted(key.Name()) {
+				return fmt.Errorf("async load does not support deleted stores")
 			}
-		} else if oldName := upgrades.RenamedFrom(key.Name()); oldName != "" {
-			// handle renames specially
-			// make an unregistered key to satify loadCommitStore params
-			oldKey := types.NewKVStoreKey(oldName)
-			oldParams := storeParams
-			oldParams.key = oldKey
-
-			// load from the old name
-			oldStore, err := rs.loadCommitStoreFromParams(oldKey, rs.getCommitID(infos, oldName), oldParams)
+			if oldName := upgrades.RenamedFrom(key.Name()); oldName != "" {
+				return fmt.Errorf("async load does not support renamed stores")
+			}
+			fmt.Println("async load", key.Name())
+			go func(k types.StoreKey, cid types.CommitID, sp storeParams) {
+				<-loadCh
+				store, err := rs.loadCommitStoreFromParams(k, cid, sp)
+				if err != nil {
+					errCh <- err
+					return
+				}
+				storeCh <- struct {
+					key   types.StoreKey
+					store types.CommitKVStore
+				}{
+					key:   k,
+					store: store,
+				}
+				loadCh <- struct{}{}
+			}(key, commitID, sParams)
+		} else {
+			fmt.Println("sync load", key.Name())
+			store, err := rs.loadCommitStoreFromParams(key, commitID, sParams)
 			if err != nil {
-				return errors.Wrapf(err, "failed to load old store %s", oldName)
+				return errors.Wrap(err, "failed to load store")
 			}
 
-			// move all data
-			if err := moveKVStoreData(oldStore.(types.KVStore), store.(types.KVStore)); err != nil {
-				return errors.Wrapf(err, "failed to move store %s -> %s", oldName, key.Name())
+			newStores[key] = store
+
+			// If it was deleted, remove all data
+			if upgrades.IsDeleted(key.Name()) {
+				if err := deleteKVStore(store.(types.KVStore)); err != nil {
+					return errors.Wrapf(err, "failed to delete store %s", key.Name())
+				}
+			} else if oldName := upgrades.RenamedFrom(key.Name()); oldName != "" {
+				// handle renames specially
+				// make an unregistered key to satify loadCommitStore params
+				oldKey := types.NewKVStoreKey(oldName)
+				oldParams := sParams
+				oldParams.key = oldKey
+
+				// load from the old name
+				oldStore, err := rs.loadCommitStoreFromParams(oldKey, rs.getCommitID(infos, oldName), oldParams)
+				if err != nil {
+					return errors.Wrapf(err, "failed to load old store %s", oldName)
+				}
+
+				// move all data
+				if err := moveKVStoreData(oldStore.(types.KVStore), store.(types.KVStore)); err != nil {
+					return errors.Wrapf(err, "failed to move store %s -> %s", oldName, key.Name())
+				}
 			}
+		}
+	}
+
+	for i := 0; i < asyncLoadCount; i++ {
+		select {
+		case err := <-errCh:
+			return err
+		case store := <-storeCh:
+			fmt.Println("async load done", store.key.Name())
+			newStores[store.key] = store.store
 		}
 	}
 
@@ -445,7 +500,7 @@ func (rs *Store) Commit() types.CommitID {
 	rs.mx.RLock()
 	defer rs.mx.RUnlock()
 	hash, keys := rs.lastCommitInfo.Hash()
-	rs.logger.Debug("calculated commit hash", "height", version, "commit_hash", fmt.Sprintf("%X", hash), "keys", keys)
+	rs.logger.Info("calculated commit hash", "height", version, "commit_hash", fmt.Sprintf("%X", hash), "keys", keys)
 
 	return types.CommitID{
 		Version: version,
@@ -455,6 +510,8 @@ func (rs *Store) Commit() types.CommitID {
 
 // SetCommitHeader sets the commit block header of the store.
 func (rs *Store) SetCommitHeader(h tmproto.Header) {
+	rs.logger.Info("SetCommitHeader", "header", h)
+	rs.logger.Info("SetCommitHeader", "lastResultsHash", fmt.Sprintf("%x", h.LastResultsHash))
 	rs.commitHeader = h
 }
 
@@ -902,18 +959,20 @@ func (rs *Store) loadCommitStoreFromParams(key types.StoreKey, id types.CommitID
 		var store types.CommitKVStore
 		var err error
 
-		// IAVL v1
-		if params.initialVersion == 0 {
-			store, err = iavl.LoadStore(db, rs.logger, key, id, rs.lazyLoading, rs.iavlCacheSize)
-		} else {
-			store, err = iavl.LoadStoreWithInitialVersion(db, rs.logger, key, id, rs.lazyLoading, params.initialVersion, rs.iavlCacheSize)
-		}
+		fmt.Println("load store", key.Name(), "initialVersion", params.initialVersion)
+
+		// IAVL v0
+		//if params.initialVersion == 0 {
+		//	store, err = iavl.LoadStore(db, rs.logger, key, id, rs.lazyLoading, rs.iavlCacheSize)
+		//} else {
+		//	store, err = iavl.LoadStoreWithInitialVersion(db, rs.logger, key, id, rs.lazyLoading, params.initialVersion, rs.iavlCacheSize)
+		//}
 
 		// IAVL V2
-		//store, err = iavl_v2.LoadStoreWithInitialVersion(rs.iavlV2Path, key, id, params.initialVersion)
+		store, err = iavl_v2.LoadStoreWithInitialVersion(rs.iavlV2Path, key, id, params.initialVersion)
 
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to load store %s: %w", key.Name(), err)
 		}
 
 		if rs.interBlockCache != nil {
@@ -971,7 +1030,7 @@ func (rs *Store) commitStores(version int64, storeMap map[types.StoreKey]types.C
 
 	for key, store := range storeMap {
 		commitID := store.Commit()
-		rs.logger.Debug("committed KVStore", "height", commitID.Version, "key", key.Name(), "commit_store_hash", fmt.Sprintf("%X", commitID.Hash))
+		rs.logger.Info("committed KVStore", "height", commitID.Version, "key", key.Name(), "commit_store_hash", fmt.Sprintf("%X", commitID.Hash))
 
 		if store.GetStoreType() == types.StoreTypeTransient {
 			continue

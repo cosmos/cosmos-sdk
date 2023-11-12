@@ -1,8 +1,11 @@
 package gaskv
 
 import (
+	"fmt"
 	"io"
 	"time"
+
+	"github.com/streadway/handy/atomic"
 
 	"github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -33,14 +36,38 @@ func (gs *Store) GetStoreType() types.StoreType {
 	return gs.parent.GetStoreType()
 }
 
+var DebugLogging atomic.Int
+
+var gasTotal uint64
+
+func StartLogging() {
+	DebugLogging.Add(1)
+}
+
+func StopLogging() {
+	DebugLogging.Add(-1)
+	fmt.Printf("GasKVStore DebugLog total=%d\n", gasTotal)
+	gasTotal = 0
+}
+
+func debugLog(op string, sub string, amount uint64) {
+	if DebugLogging.Get() == 1 {
+		fmt.Printf("GasKVStore DebugLog op=%s sub=%s amount=%d\n", op, sub, amount)
+		gasTotal += amount
+	}
+}
+
 // Implements KVStore.
 func (gs *Store) Get(key []byte) (value []byte) {
 	gs.gasMeter.ConsumeGas(gs.gasConfig.ReadCostFlat, types.GasReadCostFlatDesc)
 	value = gs.parent.Get(key)
+	debugLog("Get", "Flat", gs.gasConfig.ReadCostFlat)
 
 	// TODO overflow-safe math?
 	gs.gasMeter.ConsumeGas(gs.gasConfig.ReadCostPerByte*types.Gas(len(key)), types.GasReadPerByteDesc)
+	debugLog("Get", "PerByteKey", gs.gasConfig.ReadCostPerByte*types.Gas(len(key)))
 	gs.gasMeter.ConsumeGas(gs.gasConfig.ReadCostPerByte*types.Gas(len(value)), types.GasReadPerByteDesc)
+	debugLog("Get", "PerByteValue", gs.gasConfig.ReadCostPerByte*types.Gas(len(value)))
 
 	return value
 }
@@ -50,9 +77,12 @@ func (gs *Store) Set(key []byte, value []byte) {
 	types.AssertValidKey(key)
 	types.AssertValidValue(value)
 	gs.gasMeter.ConsumeGas(gs.gasConfig.WriteCostFlat, types.GasWriteCostFlatDesc)
+	debugLog("Set", "Flat", gs.gasConfig.WriteCostFlat)
 	// TODO overflow-safe math?
 	gs.gasMeter.ConsumeGas(gs.gasConfig.WriteCostPerByte*types.Gas(len(key)), types.GasWritePerByteDesc)
+	debugLog("Set", "PerByteKey", gs.gasConfig.WriteCostPerByte*types.Gas(len(key)))
 	gs.gasMeter.ConsumeGas(gs.gasConfig.WriteCostPerByte*types.Gas(len(value)), types.GasWritePerByteDesc)
+	debugLog("Set", "PerByteValue", gs.gasConfig.WriteCostPerByte*types.Gas(len(value)))
 	gs.parent.Set(key, value)
 }
 
@@ -60,6 +90,7 @@ func (gs *Store) Set(key []byte, value []byte) {
 func (gs *Store) Has(key []byte) bool {
 	defer telemetry.MeasureSince(time.Now(), "store", "gaskv", "has")
 	gs.gasMeter.ConsumeGas(gs.gasConfig.HasCost, types.GasHasDesc)
+	debugLog("Has", "Flat", gs.gasConfig.HasCost)
 	return gs.parent.Has(key)
 }
 
@@ -179,8 +210,11 @@ func (gi *gasIterator) consumeSeekGas() {
 		value := gi.Value()
 
 		gi.gasMeter.ConsumeGas(gi.gasConfig.ReadCostPerByte*types.Gas(len(key)), types.GasValuePerByteDesc)
+		debugLog("consumeSeekGas", "PerByteKey", gi.gasConfig.ReadCostPerByte*types.Gas(len(key)))
 		gi.gasMeter.ConsumeGas(gi.gasConfig.ReadCostPerByte*types.Gas(len(value)), types.GasValuePerByteDesc)
+		debugLog("consumeSeekGas", "PerByteValue", gi.gasConfig.ReadCostPerByte*types.Gas(len(value)))
 	}
 
 	gi.gasMeter.ConsumeGas(gi.gasConfig.IterNextCostFlat, types.GasIterNextCostFlatDesc)
+	debugLog("consumeSeekGas", "Flat", gi.gasConfig.IterNextCostFlat)
 }

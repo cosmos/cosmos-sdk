@@ -1,6 +1,7 @@
 package iavl_v2
 
 import (
+	"fmt"
 	io "io"
 	"path/filepath"
 	"time"
@@ -34,13 +35,15 @@ func LoadStoreWithInitialVersion(v2RootPath string, key types.StoreKey, id types
 	// i.e. not the happy path.
 	path := filepath.Join(v2RootPath, key.Name())
 	pool := iavl.NewNodePool()
+	fmt.Println("LoadStoreWithInitialVersion path:", path)
 	sql, err := iavl.NewSqliteDb(pool, iavl.SqliteDbOptions{Path: path})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to open sqlite db path=%s: %w", path, err)
 	}
 
-	tree := iavl.NewTree(sql, pool, iavl.TreeOptions{})
-	err = tree.LoadSnapshot(id.Version)
+	tree := iavl.NewTree(sql, pool, iavl.TreeOptions{StateStorage: true})
+	//err = tree.LoadSnapshot(id.Version)
+	err = tree.LoadVersion(id.Version)
 	if err != nil {
 		return nil, err
 	}
@@ -73,6 +76,7 @@ func (s *Store) Commit() types.CommitID {
 
 func (s *Store) LastCommitID() types.CommitID {
 	hash := s.Tree.Hash()
+	fmt.Printf("IAVLV2 Get LastCommitID: %x\n", hash)
 
 	return types.CommitID{
 		Version: s.Tree.Version(),

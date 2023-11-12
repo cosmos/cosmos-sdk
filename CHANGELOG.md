@@ -53,6 +53,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
+* (x/group) [#18448](https://github.com/cosmos/cosmos-sdk/pull/18448) Extend group config 
 * (types) [#18440](https://github.com/cosmos/cosmos-sdk/pull/18440) Add `AmountOfNoValidation` to `sdk.DecCoins`.
 * (x/gov) [#18428](https://github.com/cosmos/cosmos-sdk/pull/18428) Extend governance config 
 * (x/gov) [#18189](https://github.com/cosmos/cosmos-sdk/pull/18189) Limit the accepted deposit coins for a proposal to the minimum proposal deposit denoms.

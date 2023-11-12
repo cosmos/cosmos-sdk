@@ -15,6 +15,7 @@ import (
 	groupkeeper "cosmossdk.io/x/group/keeper"
 	"cosmossdk.io/x/group/module"
 	grouptestutil "cosmossdk.io/x/group/testutil"
+	grouptypes "cosmossdk.io/x/group/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec/address"
@@ -67,7 +68,7 @@ func initKeeper(t *testing.T) *fixture {
 	accountKeeper.EXPECT().NewAccount(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 	accountKeeper.EXPECT().SetAccount(gomock.Any(), gomock.Any()).AnyTimes()
 
-	groupKeeper = groupkeeper.NewKeeper(key, encCfg.Codec, bApp.MsgServiceRouter(), accountKeeper, group.DefaultConfig())
+	groupKeeper = groupkeeper.NewKeeper(key, encCfg.Codec, bApp.MsgServiceRouter(), accountKeeper, grouptypes.DefaultConfig())
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, interfaceRegistry)
 	group.RegisterQueryServer(queryHelper, groupKeeper)
 	queryClient := group.NewQueryClient(queryHelper)

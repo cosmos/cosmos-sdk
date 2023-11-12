@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	grouptypes "cosmossdk.io/x/group/types"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 
@@ -73,7 +74,7 @@ func (s *TestSuite) SetupTest() {
 	bApp.SetInterfaceRegistry(encCfg.InterfaceRegistry)
 	banktypes.RegisterMsgServer(bApp.MsgServiceRouter(), s.bankKeeper)
 
-	config := group.DefaultConfig()
+	config := grouptypes.DefaultConfig()
 	s.groupKeeper = keeper.NewKeeper(key, encCfg.Codec, bApp.MsgServiceRouter(), s.accountKeeper, config)
 	s.ctx = testCtx.Ctx.WithHeaderInfo(header.Info{Time: s.blockTime})
 	s.sdkCtx = sdk.UnwrapSDKContext(s.ctx)
@@ -407,7 +408,7 @@ func (s *TestSuite) TestTallyProposalsAtVPEnd() {
 	addr1 := addrs[0]
 	addr2 := addrs[1]
 	votingPeriod := 4 * time.Minute
-	minExecutionPeriod := votingPeriod + group.DefaultConfig().MaxExecutionPeriod
+	minExecutionPeriod := votingPeriod + grouptypes.DefaultConfig().MaxExecutionPeriod
 
 	groupMsg := &group.MsgCreateGroupWithPolicy{
 		Admin: addr1.String(),
@@ -471,7 +472,7 @@ func (s *TestSuite) TestTallyProposalsAtVPEnd_GroupMemberLeaving() {
 	addr2 := addrs[1]
 	addr3 := addrs[2]
 	votingPeriod := 4 * time.Minute
-	minExecutionPeriod := votingPeriod + group.DefaultConfig().MaxExecutionPeriod
+	minExecutionPeriod := votingPeriod + grouptypes.DefaultConfig().MaxExecutionPeriod
 
 	groupMsg := &group.MsgCreateGroupWithPolicy{
 		Admin: addr1.String(),

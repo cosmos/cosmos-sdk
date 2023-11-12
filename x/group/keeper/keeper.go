@@ -454,7 +454,7 @@ func (k Keeper) TallyProposalsAtVPEnd(ctx sdk.Context) error {
 // assertMetadataLength returns an error if given metadata length
 // is greater than defined MaxMetadataLen in the module configuration
 func (k Keeper) assertMetadataLength(metadata, description string) error {
-	if metadata != "" && uint64(len(metadata)) > k.config.MaxMetadataLen {
+	if uint64(len(metadata)) > k.config.MaxMetadataLen {
 		return errors.ErrMetadataTooLong.Wrapf(description)
 	}
 	return nil
@@ -463,7 +463,7 @@ func (k Keeper) assertMetadataLength(metadata, description string) error {
 // assertSummaryLength returns an error if given summary length
 // is greater than defined MaxProposalSummaryLen in the module configuration
 func (k Keeper) assertSummaryLength(summary string) error {
-	if summary != "" && uint64(len(summary)) > k.config.MaxProposalSummaryLen {
+	if uint64(len(summary)) > k.config.MaxProposalSummaryLen {
 		return errors.ErrSummaryTooLong
 	}
 	return nil
@@ -472,7 +472,7 @@ func (k Keeper) assertSummaryLength(summary string) error {
 // assertTitleLength returns an error if given summary length
 // is greater than defined MaxProposalTitleLen in the module configuration
 func (k Keeper) assertTitleLength(summary string) error {
-	if summary != "" && uint64(len(summary)) > k.config.MaxProposalTitleLen {
+	if uint64(len(summary)) > k.config.MaxProposalTitleLen {
 		return errors.ErrTitleTooLong
 	}
 	return nil

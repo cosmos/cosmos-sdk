@@ -26,14 +26,12 @@ func TestPruningTestSuite(t *testing.T) {
 }
 
 func (s *PruningTestSuite) SetupTest() {
-	noopLog := log.NewNopLogger()
-
 	ss, err := sqlite.New(s.T().TempDir())
 	s.Require().NoError(err)
 
-	sc := iavl.NewIavlTree(dbm.NewMemDB(), noopLog, "", iavl.DefaultConfig())
+	sc := iavl.NewIavlTree(dbm.NewMemDB(), log.NewNopLogger(), "", iavl.DefaultConfig())
 
-	s.manager = NewManager(noopLog, ss, sc)
+	s.manager = NewManager(log.NewTestLogger(s.T()), ss, sc)
 	s.ss = ss
 	s.sc = sc
 }
@@ -49,12 +47,16 @@ func (s *PruningTestSuite) TestPruning() {
 	s.manager.Start()
 
 	latestVersion := uint64(100)
+	kvCount := 10
 
-	// write 10 batches
+	// write batches
 	for i := uint64(0); i < latestVersion; i++ {
 		version := i + 1
 		cs := store.NewChangeset()
-		cs.Add([]byte("key"), []byte(fmt.Sprintf("value%d", version)))
+		for j := 0; j < kvCount; j++ {
+			cs.Add([]byte(fmt.Sprintf("key-%d", j)), []byte(fmt.Sprintf("value-%d-%d", version, j)))
+		}
+
 		err := s.sc.WriteBatch(cs)
 		s.Require().NoError(err)
 		_, err = s.sc.Commit()
@@ -68,20 +70,20 @@ func (s *PruningTestSuite) TestPruning() {
 	s.manager.Stop()
 
 	// check the store for the version 96
-	val, err := s.ss.Get("", latestVersion-4, []byte("key"))
+	val, err := s.ss.Get("", latestVersion-4, []byte("key-0"))
 	s.Require().NoError(err)
-	s.Require().Equal([]byte("value96"), val)
+	s.Require().Equal([]byte("value-96-0"), val)
 	// check the store for the version 50
 	val, err = s.ss.Get("", 50, []byte("key"))
 	s.Require().NoError(err)
 	s.Require().Nil(val)
 
 	// check the commitment for the version 96
-	proof, err := s.sc.GetProof(latestVersion-4, []byte("key"))
+	proof, err := s.sc.GetProof(latestVersion-4, []byte("key-0"))
 	s.Require().NoError(err)
 	s.Require().NotNil(proof.GetExist())
 	// check the commitment for the version 95
-	proof, err = s.sc.GetProof(latestVersion-5, []byte("key"))
+	proof, err = s.sc.GetProof(latestVersion-5, []byte("key-0"))
 	s.Require().Error(err)
 	s.Require().Nil(proof)
 }

@@ -1,6 +1,7 @@
 package rootmulti
 
 import (
+	"errors"
 	"io"
 
 	"cosmossdk.io/log"
@@ -22,6 +23,9 @@ type Store struct {
 	// stateStore reflects the state storage backend
 	stateStore store.VersionedDatabase
 
+	// stateCommitment reflects a state commitment (SC) backend per store key (i.e. module)
+	stateCommitment map[string]store.Committer
+
 	// commitHeader reflects the header used when committing state (note, this isn't required and only used for query purposes)
 	commitHeader store.CommitHeader
 
@@ -39,8 +43,50 @@ type Store struct {
 	pruningManager *pruning.Manager
 }
 
+// func New(
+// 	logger log.Logger,
+// 	initVersion uint64,
+// 	ss store.VersionedDatabase,
+// 	sc store.Committer,
+// ) (store.RootStore, error) {
+// 	rootKVStore, err := branch.New(defaultStoreKey, ss)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+
+// 	pruningManager := pruning.NewManager(logger, ss, sc)
+
+// 	return &Store{
+// 		logger:          logger.With("module", "root_store"),
+// 		initialVersion:  initVersion,
+// 		stateStore:      ss,
+// 		stateCommitment: sc,
+// 		rootKVStore:     rootKVStore,
+// 		pruningManager:  pruningManager,
+// 	}, nil
+// }
+
+// Close closes the store and resets all internal fields. Note, Close() is NOT
+// idempotent and should only be called once.
+func (s *Store) Close() (err error) {
+	err = errors.Join(err, s.stateStore.Close())
+
+	for _, sc := range s.stateCommitment {
+		err = errors.Join(err, sc.Close())
+	}
+
+	s.stateStore = nil
+	s.stateCommitment = nil
+	s.lastCommitInfo = nil
+	s.commitHeader = nil
+
+	s.pruningManager.Stop()
+
+	return err
+}
+
 func (s *Store) GetSCStore(storeKey string) store.Committer {
-	panic("not implemented!")
+	return s.stateCommitment[storeKey]
 }
 
 func (s *Store) MountSCStore(storeKey string, sc store.Committer) error {
@@ -100,9 +146,5 @@ func (s *Store) WorkingHash() ([]byte, error) {
 }
 
 func (s *Store) Commit() ([]byte, error) {
-	panic("not implemented!")
-}
-
-func (s *Store) Close() error {
 	panic("not implemented!")
 }

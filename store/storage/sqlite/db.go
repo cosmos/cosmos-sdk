@@ -20,6 +20,8 @@ const (
 	reservedStoreKey = "_RESERVED_"
 	keyLatestHeight  = "latest_height"
 
+	defaultBatchBufferSize = 100000
+
 	latestVersionStmt = `
 	INSERT INTO state_storage(store_key, key, value, version)
     VALUES(?, ?, ?, ?)
@@ -210,6 +212,40 @@ func (db *Database) ReverseIterator(storeKey string, version uint64, start, end 
 	}
 
 	return newIterator(db.storage, storeKey, version, start, end, true)
+}
+
+// Restore implements the StorageSnapshotter interface.
+func (db *Database) Restore(version uint64, chStorage <-chan *store.KVPair) error {
+	latestVersion, err := db.GetLatestVersion()
+	if err != nil {
+		return fmt.Errorf("failed to get latest version: %w", err)
+	}
+	if version <= latestVersion {
+		return fmt.Errorf("the snapshot version %d is not greater than latest version %d", version, latestVersion)
+	}
+
+	b, err := NewBatch(db.storage, version)
+	if err != nil {
+		return err
+	}
+
+	for kvPair := range chStorage {
+		if err := b.Set(kvPair.StoreKey, kvPair.Key, kvPair.Value); err != nil {
+			return err
+		}
+
+		if b.Size() > defaultBatchBufferSize {
+			if err := b.Write(); err != nil {
+				return err
+			}
+		}
+	}
+
+	if err := b.Write(); err != nil {
+		return err
+	}
+
+	return db.SetLatestVersion(version)
 }
 
 func (db *Database) PrintRowsDebug() {

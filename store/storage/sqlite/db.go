@@ -11,6 +11,7 @@ import (
 	_ "modernc.org/sqlite"
 
 	"cosmossdk.io/store/v2"
+	snapshottypes "cosmossdk.io/store/v2/snapshots/types"
 )
 
 const (
@@ -40,6 +41,8 @@ const (
 )
 
 var _ store.VersionedDatabase = (*Database)(nil)
+
+var _ snapshottypes.StorageSnapshotter = (*Database)(nil)
 
 type Database struct {
 	storage *sql.DB

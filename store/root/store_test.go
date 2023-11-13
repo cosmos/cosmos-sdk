@@ -30,7 +30,7 @@ func (s *RootStoreTestSuite) SetupTest() {
 	ss, err := sqlite.New(s.T().TempDir())
 	s.Require().NoError(err)
 
-	sc := iavl.NewIavlTree(dbm.NewMemDB(), noopLog, iavl.DefaultConfig())
+	sc := iavl.NewIavlTree(dbm.NewMemDB(), noopLog, defaultStoreKey, iavl.DefaultConfig())
 
 	rs, err := New(noopLog, 1, ss, sc)
 	s.Require().NoError(err)

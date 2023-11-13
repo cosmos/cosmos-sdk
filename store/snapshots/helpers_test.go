@@ -17,6 +17,7 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
+	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/snapshots"
 	snapshottypes "cosmossdk.io/store/v2/snapshots/types"
 )
@@ -105,14 +106,12 @@ func snapshotItems(items [][]byte, ext snapshottypes.ExtensionSnapshotter) [][]b
 	return chunks
 }
 
-type mockSnapshotter struct {
-	items            [][]byte
-	prunedHeights    map[int64]struct{}
-	snapshotInterval uint64
+type mockCommitSnapshotter struct {
+	items [][]byte
 }
 
-func (m *mockSnapshotter) Restore(
-	height uint64, format uint32, protoReader protoio.Reader,
+func (m *mockCommitSnapshotter) Restore(
+	height uint64, format uint32, protoReader protoio.Reader, chStorage chan<- *store.KVPair,
 ) (snapshottypes.SnapshotItem, error) {
 	if format == 0 {
 		return snapshottypes.SnapshotItem{}, snapshottypes.ErrUnknownFormat
@@ -141,7 +140,7 @@ func (m *mockSnapshotter) Restore(
 	return item, nil
 }
 
-func (m *mockSnapshotter) Snapshot(height uint64, protoWriter protoio.Writer) error {
+func (m *mockCommitSnapshotter) Snapshot(height uint64, protoWriter protoio.Writer) error {
 	for _, item := range m.items {
 		if err := snapshottypes.WriteExtensionPayload(protoWriter, item); err != nil {
 			return err
@@ -150,56 +149,40 @@ func (m *mockSnapshotter) Snapshot(height uint64, protoWriter protoio.Writer) er
 	return nil
 }
 
-func (m *mockSnapshotter) SnapshotFormat() uint32 {
+func (m *mockCommitSnapshotter) SnapshotFormat() uint32 {
 	return snapshottypes.CurrentFormat
 }
 
-func (m *mockSnapshotter) SupportedFormats() []uint32 {
+func (m *mockCommitSnapshotter) SupportedFormats() []uint32 {
 	return []uint32{snapshottypes.CurrentFormat}
 }
 
-func (m *mockSnapshotter) PruneSnapshotHeight(height int64) {
-	m.prunedHeights[height] = struct{}{}
+type mockStorageSnapshotter struct{}
+
+func (m *mockStorageSnapshotter) Restore(version uint64, chStorage <-chan *store.KVPair) error {
+	return nil
 }
 
-func (m *mockSnapshotter) GetSnapshotInterval() uint64 {
-	return m.snapshotInterval
-}
+type mockErrorCommitSnapshotter struct{}
 
-func (m *mockSnapshotter) SetSnapshotInterval(snapshotInterval uint64) {
-	m.snapshotInterval = snapshotInterval
-}
+var _ snapshottypes.CommitSnapshotter = (*mockErrorCommitSnapshotter)(nil)
 
-type mockErrorSnapshotter struct{}
-
-var _ snapshottypes.Snapshotter = (*mockErrorSnapshotter)(nil)
-
-func (m *mockErrorSnapshotter) Snapshot(height uint64, protoWriter protoio.Writer) error {
+func (m *mockErrorCommitSnapshotter) Snapshot(height uint64, protoWriter protoio.Writer) error {
 	return errors.New("mock snapshot error")
 }
 
-func (m *mockErrorSnapshotter) Restore(
-	height uint64, format uint32, protoReader protoio.Reader,
+func (m *mockErrorCommitSnapshotter) Restore(
+	height uint64, format uint32, protoReader protoio.Reader, chStorage chan<- *store.KVPair,
 ) (snapshottypes.SnapshotItem, error) {
 	return snapshottypes.SnapshotItem{}, errors.New("mock restore error")
 }
 
-func (m *mockErrorSnapshotter) SnapshotFormat() uint32 {
+func (m *mockErrorCommitSnapshotter) SnapshotFormat() uint32 {
 	return snapshottypes.CurrentFormat
 }
 
-func (m *mockErrorSnapshotter) SupportedFormats() []uint32 {
+func (m *mockErrorCommitSnapshotter) SupportedFormats() []uint32 {
 	return []uint32{snapshottypes.CurrentFormat}
-}
-
-func (m *mockErrorSnapshotter) PruneSnapshotHeight(height int64) {
-}
-
-func (m *mockErrorSnapshotter) GetSnapshotInterval() uint64 {
-	return 0
-}
-
-func (m *mockErrorSnapshotter) SetSnapshotInterval(snapshotInterval uint64) {
 }
 
 // setupBusyManager creates a manager with an empty store that is busy creating a snapshot at height 1.
@@ -208,10 +191,8 @@ func setupBusyManager(t *testing.T) *snapshots.Manager {
 	t.Helper()
 	store, err := snapshots.NewStore(db.NewMemDB(), t.TempDir())
 	require.NoError(t, err)
-	hung := newHungSnapshotter()
-	hung.SetSnapshotInterval(opts.Interval)
-	mgr := snapshots.NewManager(store, opts, hung, nil, log.NewNopLogger())
-	require.Equal(t, opts.Interval, hung.snapshotInterval)
+	hung := newHungCommitSnapshotter()
+	mgr := snapshots.NewManager(store, opts, hung, &mockStorageSnapshotter{}, nil, log.NewNopLogger())
 
 	// Channel to ensure the test doesn't finish until the goroutine is done.
 	// Without this, there are intermittent test failures about
@@ -222,8 +203,6 @@ func setupBusyManager(t *testing.T) *snapshots.Manager {
 		defer close(done)
 		_, err := mgr.Create(1)
 		require.NoError(t, err)
-		_, didPruneHeight := hung.prunedHeights[1]
-		require.True(t, didPruneHeight)
 	}()
 	time.Sleep(10 * time.Millisecond)
 
@@ -236,39 +215,28 @@ func setupBusyManager(t *testing.T) *snapshots.Manager {
 	return mgr
 }
 
-// hungSnapshotter can be used to test operations in progress. Call close to end the snapshot.
-type hungSnapshotter struct {
-	ch               chan struct{}
-	prunedHeights    map[int64]struct{}
-	snapshotInterval uint64
+// hungCommitSnapshotter can be used to test operations in progress. Call close to end the snapshot.
+type hungCommitSnapshotter struct {
+	ch chan struct{}
 }
 
-func newHungSnapshotter() *hungSnapshotter {
-	return &hungSnapshotter{
-		ch:            make(chan struct{}),
-		prunedHeights: make(map[int64]struct{}),
+func newHungCommitSnapshotter() *hungCommitSnapshotter {
+	return &hungCommitSnapshotter{
+		ch: make(chan struct{}),
 	}
 }
 
-func (m *hungSnapshotter) Close() {
+func (m *hungCommitSnapshotter) Close() {
 	close(m.ch)
 }
 
-func (m *hungSnapshotter) Snapshot(height uint64, protoWriter protoio.Writer) error {
+func (m *hungCommitSnapshotter) Snapshot(height uint64, protoWriter protoio.Writer) error {
 	<-m.ch
 	return nil
 }
 
-func (m *hungSnapshotter) PruneSnapshotHeight(height int64) {
-	m.prunedHeights[height] = struct{}{}
-}
-
-func (m *hungSnapshotter) SetSnapshotInterval(snapshotInterval uint64) {
-	m.snapshotInterval = snapshotInterval
-}
-
-func (m *hungSnapshotter) Restore(
-	height uint64, format uint32, protoReader protoio.Reader,
+func (m *hungCommitSnapshotter) Restore(
+	height uint64, format uint32, protoReader protoio.Reader, chStorage chan<- *store.KVPair,
 ) (snapshottypes.SnapshotItem, error) {
 	panic("not implemented")
 }

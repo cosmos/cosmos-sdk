@@ -31,7 +31,7 @@ func (s *PruningTestSuite) SetupTest() {
 	ss, err := sqlite.New(s.T().TempDir())
 	s.Require().NoError(err)
 
-	sc := iavl.NewIavlTree(dbm.NewMemDB(), noopLog, iavl.DefaultConfig())
+	sc := iavl.NewIavlTree(dbm.NewMemDB(), noopLog, "", iavl.DefaultConfig())
 
 	s.manager = NewManager(noopLog, ss, sc)
 	s.ss = ss

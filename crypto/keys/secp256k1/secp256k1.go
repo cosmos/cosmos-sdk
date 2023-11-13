@@ -5,12 +5,12 @@ import (
 	"crypto/sha256"
 	"crypto/subtle"
 	"fmt"
+	"io"
 	"math/big"
 
 	"github.com/cometbft/cometbft/crypto"
 	secp256k1dcrd "github.com/decred/dcrd/dcrec/secp256k1/v4"
 	"gitlab.com/yawning/secp256k1-voi/secec"
-
 	"golang.org/x/crypto/ripemd160" //nolint: staticcheck // keep around for backwards compatibility
 
 	errorsmod "cosmossdk.io/errors"
@@ -91,7 +91,7 @@ func GenPrivKey() *PrivKey {
 	return &PrivKey{Key: genPrivKey()}
 }
 
-// genPrivKey generates a new secp256k1 private key using the provided reader.
+// genPrivKey generates a new secp256k1 private key.
 func genPrivKey() []byte {
 	privateKeyObject, err := secec.GenerateKey()
 	if err != nil {
@@ -99,6 +99,28 @@ func genPrivKey() []byte {
 	}
 
 	return privateKeyObject.Bytes()
+}
+
+// genPrivKeyLegacy generates a new secp256k1 private key using the provided reader.
+func genPrivKeyLegacy(rand io.Reader) []byte {
+	var privKeyBytes [PrivKeySize]byte
+	d := new(big.Int)
+	for {
+		privKeyBytes = [PrivKeySize]byte{}
+		_, err := io.ReadFull(rand, privKeyBytes[:])
+		if err != nil {
+			panic(err)
+		}
+
+		d.SetBytes(privKeyBytes[:])
+		// break if we found a valid point (i.e. > 0 and < N == curverOrder)
+		isValidFieldElement := 0 < d.Sign() && d.Cmp(secp256k1dcrd.S256().N) < 0
+		if isValidFieldElement {
+			break
+		}
+	}
+
+	return privKeyBytes[:]
 }
 
 var one = new(big.Int).SetInt64(1)

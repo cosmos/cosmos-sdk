@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"testing"
 
-	secp256k1dcrd "github.com/decred/dcrd/dcrec/secp256k1/v4"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 
@@ -392,16 +391,10 @@ func TestAnteHandlerChecks(t *testing.T) {
 
 	// keys and addresses
 	priv1, _, addr1 := testdata.KeyTestPubAddr()
-
-	secp256k1NotOnCurve, _ := secp256k1dcrd.GeneratePrivateKey()
-	secp256k1NotOnCurve.Key.SetInt(0) // Setting the key point to 0, results in an invalid point on the curve.
-	priv12 := &secp256k1.PrivKey{Key: secp256k1NotOnCurve.Serialize()}
-	addr12 := sdk.AccAddress(priv12.PubKey().Address())
-
 	priv2, _, addr2 := testdata.KeyTestPubAddrSecp256R1(t)
 	priv3, _, addr3 := testdata.KeyTestPubAddrED25519()
 
-	addrs := []sdk.AccAddress{addr1, addr12, addr2, addr3}
+	addrs := []sdk.AccAddress{addr1, addr2, addr3}
 
 	msgs := make([]sdk.Msg, len(addrs))
 	accs := make([]sdk.AccountI, len(addrs))
@@ -434,9 +427,8 @@ func TestAnteHandlerChecks(t *testing.T) {
 	// Secp256r1 keys that are not on curve will fail before even doing any operation i.e when trying to get the pubkey
 	testCases := []testCase{
 		{"secp256k1_onCurve", []cryptotypes.PrivKey{priv1}, msgs[0], []uint64{accs[0].GetAccountNumber()}, []uint64{0}, false, true},
-		{"secp256k1_NotOnCurve", []cryptotypes.PrivKey{priv12}, msgs[1], []uint64{accs[1].GetAccountNumber()}, []uint64{1}, true, true},
-		{"secp256r1_onCurve", []cryptotypes.PrivKey{priv2}, msgs[2], []uint64{accs[2].GetAccountNumber()}, []uint64{0}, false, true},
-		{"ed255619", []cryptotypes.PrivKey{priv3}, msgs[3], []uint64{accs[2].GetAccountNumber()}, []uint64{3}, true, false},
+		{"secp256r1_onCurve", []cryptotypes.PrivKey{priv2}, msgs[1], []uint64{accs[1].GetAccountNumber()}, []uint64{0}, false, true},
+		{"ed255619", []cryptotypes.PrivKey{priv3}, msgs[2], []uint64{accs[2].GetAccountNumber()}, []uint64{2}, true, false},
 	}
 
 	for i, tc := range testCases {

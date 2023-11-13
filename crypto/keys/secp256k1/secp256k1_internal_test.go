@@ -1,6 +1,7 @@
 package secp256k1
 
 import (
+	"bytes"
 	"math/big"
 	"testing"
 
@@ -21,6 +22,8 @@ func Test_genPrivKey(t *testing.T) {
 		notSoRand   []byte
 		shouldPanic bool
 	}{
+		{"empty bytes (panics because 1st 32 bytes are zero and 0 is not a valid field element)", empty, true},
+		{"curve order: N", secp.S256().N.Bytes(), true},
 		{"valid because 0 < 1 < N", validOne, false},
 	}
 	for _, tt := range tests {
@@ -28,11 +31,11 @@ func Test_genPrivKey(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if tt.shouldPanic {
 				require.Panics(t, func() {
-					genPrivKey()
+					genPrivKeyLegacy(bytes.NewReader(tt.notSoRand))
 				})
 				return
 			}
-			got := genPrivKey()
+			got := genPrivKeyLegacy(bytes.NewReader(tt.notSoRand))
 			fe := new(big.Int).SetBytes(got)
 			require.True(t, fe.Cmp(secp.S256().N) < 0)
 			require.True(t, fe.Sign() > 0)

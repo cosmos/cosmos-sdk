@@ -2,11 +2,10 @@ package types
 
 import (
 	"context"
-	"time"
 
-	"cosmossdk.io/store/snapshots"
-	storetypes "cosmossdk.io/store/types"
+	coreheader "cosmossdk.io/core/header"
 	abci "github.com/cometbft/cometbft/abci/types"
+	tmtypes "github.com/cometbft/cometbft/proto/tendermint/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -17,33 +16,30 @@ type ProtoApp interface {
 	Version() string
 
 	InitialHeight() int64
-	SetInitialHeight(int64)
+	LastBlockHeight() int64
+	AppVersion() (uint64, error)
 
-	SnapshotManager() *snapshots.Manager
-	CommitMultiStore() storetypes.CommitMultiStore
-	StreamingManager() storetypes.StreamingManager
-
-	// TODO: Should these be a CometBFT specific thing?
-	MinGasPrices() sdk.DecCoins
-	CheckHalt(height int64, time time.Time) error
-	GetBlockRetentionHeight(commitHeight int64) int64
-
-	// TODO: figure out if these below here are going to be available
-	QueryMultiStore() storetypes.MultiStore
-	CreateQueryContext(height int64, prove bool) (sdk.Context, error)
-	AppVersion(ctx context.Context) (uint64, error)
-
-	// TODO: Define what methods the Cosmos SDK ABCI will have
+	// TODO: Replace this with Marko's TX validation
 	ValidateTX([]byte) (gInfo sdk.GasInfo, result *sdk.Result, anteEvents []abci.Event, err error) // TODO: I'm just replicating what runTx replies here
 
-	InitChainer() sdk.InitChainer                       // InitChainer should not have Comet types
-	PreBlock(req *abci.RequestFinalizeBlock) error      // TODO: Should preblock be only a Comet thing?
-	BeginBlock(context.Context) (sdk.BeginBlock, error) // TODO: create a new response type for this, we might not need it at all as we can access the EventManager()
-	EndBlock(context.Context) (sdk.EndBlock, error)     // TODO: sdk.EndBlock should not have Comet types
-	DeliverTx([]byte) *abci.ExecTxResult                // TODO: *abci.ExecTxResult should be an SDK type instead
+	// New interface
+	InitChain(RequestInitChain) (ResponseInitChain, error)
+	DeliverTxs(coreheader.Info, [][]byte) ([]interface{}, error)
+
+	// COMET BFT specific stuff below (tbd where to put them)
+	Validators() []abci.ValidatorUpdate
+	ConsensusParams() *tmtypes.ConsensusParams
+	AppHash() []byte
+	GetBlockRetentionHeight(commitHeight int64) int64
 }
 
 type HasProposal interface {
 	PrepareProposal(context.Context, *abci.RequestPrepareProposal) (*abci.ResponsePrepareProposal, error)
 	ProcessProposal(context.Context, *abci.RequestProcessProposal) (*abci.ResponseProcessProposal, error)
 }
+
+type RequestInitChain struct {
+	StateBytes []byte
+}
+
+type ResponseInitChain struct{}

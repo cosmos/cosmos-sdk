@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
+	"strings"
 
 	"github.com/linxGnu/grocksdb"
 	"golang.org/x/exp/slices"
@@ -32,11 +33,6 @@ var (
 type Database struct {
 	storage  *grocksdb.DB
 	cfHandle *grocksdb.ColumnFamilyHandle
-
-	// tsLow reflects the full_history_ts_low CF value. Since pruning is done in
-	// a lazy manner, we use this value to prevent reads for versions that will
-	// be purged in the next compaction.
-	tsLow uint64
 }
 
 func New(dataDir string) (*Database, error) {
@@ -45,39 +41,16 @@ func New(dataDir string) (*Database, error) {
 		return nil, fmt.Errorf("failed to open RocksDB: %w", err)
 	}
 
-	slice, err := storage.GetFullHistoryTsLow(cfHandle)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get full_history_ts_low: %w", err)
-	}
-
-	var tsLow uint64
-	tsLowBz := copyAndFreeSlice(slice)
-	if len(tsLowBz) > 0 {
-		tsLow = binary.LittleEndian.Uint64(tsLowBz)
-	}
-
 	return &Database{
 		storage:  storage,
 		cfHandle: cfHandle,
-		tsLow:    tsLow,
 	}, nil
 }
 
 func NewWithDB(storage *grocksdb.DB, cfHandle *grocksdb.ColumnFamilyHandle) (*Database, error) {
-	slice, err := storage.GetFullHistoryTsLow(cfHandle)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get full_history_ts_low: %w", err)
-	}
-
-	var tsLow uint64
-	tsLowBz := copyAndFreeSlice(slice)
-	if len(tsLowBz) > 0 {
-		tsLow = binary.LittleEndian.Uint64(tsLowBz)
-	}
 	return &Database{
 		storage:  storage,
 		cfHandle: cfHandle,
-		tsLow:    tsLow,
 	}, nil
 }
 
@@ -91,11 +64,18 @@ func (db *Database) Close() error {
 }
 
 func (db *Database) getSlice(storeKey string, version uint64, key []byte) (*grocksdb.Slice, error) {
-	return db.storage.GetCF(
+	slice, err := db.storage.GetCF(
 		newTSReadOptions(version),
 		db.cfHandle,
 		prependStoreKey(storeKey, key),
 	)
+	if err != nil && strings.Contains(err.Error(), "is smaller than full_history_ts_low") {
+		// In cases where we query for a version that has been pruned, we need to ensure
+		// we do not return an error.
+		return nil, nil
+	}
+
+	return slice, nil
 }
 
 func (db *Database) SetLatestVersion(version uint64) error {
@@ -120,12 +100,8 @@ func (db *Database) GetLatestVersion() (uint64, error) {
 }
 
 func (db *Database) Has(storeKey string, version uint64, key []byte) (bool, error) {
-	if version < db.tsLow {
-		return false, nil
-	}
-
 	slice, err := db.getSlice(storeKey, version, key)
-	if err != nil {
+	if err != nil || slice == nil {
 		return false, err
 	}
 
@@ -133,13 +109,12 @@ func (db *Database) Has(storeKey string, version uint64, key []byte) (bool, erro
 }
 
 func (db *Database) Get(storeKey string, version uint64, key []byte) ([]byte, error) {
-	if version < db.tsLow {
-		return nil, nil
-	}
-
 	slice, err := db.getSlice(storeKey, version, key)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get RocksDB slice: %w", err)
+	}
+	if slice == nil {
+		return nil, nil
 	}
 
 	return copyAndFreeSlice(slice), nil
@@ -181,7 +156,6 @@ func (db *Database) Prune(version uint64) error {
 		return fmt.Errorf("failed to update column family full_history_ts_low: %w", err)
 	}
 
-	db.tsLow = tsLow
 	return nil
 }
 

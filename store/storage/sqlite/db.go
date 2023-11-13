@@ -8,15 +8,15 @@ import (
 	"path/filepath"
 	"strings"
 
-	_ "modernc.org/sqlite"
+	_ "github.com/mattn/go-sqlite3"
 
 	"cosmossdk.io/store/v2"
 	snapshottypes "cosmossdk.io/store/v2/snapshots/types"
 )
 
 const (
-	driverName       = "sqlite"
-	dbName           = "ss.db"
+	driverName       = "sqlite3"
+	dbName           = "file:ss.db?cache=shared&mode=rwc&_journal_mode=WAL"
 	reservedStoreKey = "_RESERVED_"
 	keyLatestHeight  = "latest_height"
 

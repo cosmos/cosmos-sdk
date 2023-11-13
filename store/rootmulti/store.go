@@ -43,28 +43,23 @@ type Store struct {
 	pruningManager *pruning.Manager
 }
 
-// func New(
-// 	logger log.Logger,
-// 	initVersion uint64,
-// 	ss store.VersionedDatabase,
-// 	sc store.Committer,
-// ) (store.RootStore, error) {
-// 	rootKVStore, err := branch.New(defaultStoreKey, ss)
-// 	if err != nil {
-// 		return nil, err
-// 	}
+func New(logger log.Logger, initVersion uint64, ss store.VersionedDatabase) (store.RootStore, error) {
+	// rootKVStore, err := branch.New(defaultStoreKey, ss)
+	// if err != nil {
+	// 	return nil, err
+	// }
 
-// 	pruningManager := pruning.NewManager(logger, ss, sc)
+	pruningManager := pruning.NewManager(logger, ss, sc)
 
-// 	return &Store{
-// 		logger:          logger.With("module", "root_store"),
-// 		initialVersion:  initVersion,
-// 		stateStore:      ss,
-// 		stateCommitment: sc,
-// 		rootKVStore:     rootKVStore,
-// 		pruningManager:  pruningManager,
-// 	}, nil
-// }
+	return &Store{
+		logger:          logger.With("module", "root_store"),
+		initialVersion:  initVersion,
+		stateStore:      ss,
+		stateCommitment: make(map[string]store.Committer),
+		// rootKVStore:     rootKVStore,
+		pruningManager: pruningManager,
+	}, nil
+}
 
 // Close closes the store and resets all internal fields. Note, Close() is NOT
 // idempotent and should only be called once.

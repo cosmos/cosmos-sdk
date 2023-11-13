@@ -34,7 +34,7 @@ func TestMigradeCmd(t *testing.T) {
 
 
 	// this should work
-	out, err = clitestutil.ExecTestCLICmd(clientCtx, cmd.MigrateCommand(), []string{"v0.47", fmt.Sprintf("%s/config/client.toml", clientCtx.HomeDir),"client", "--verbose"})
+	out, err = clitestutil.ExecTestCLICmd(clientCtx, cmd.MigrateCommand(), []string{"v0.51", fmt.Sprintf("%s/config/client.toml", clientCtx.HomeDir),"client", "--verbose"})
 	assert.NilError(t, err)
-	assert.Assert(t, strings.Contains(out.String(), "add chain-id key"))
+	assert.Assert(t, strings.Contains(out.String(), "add gas-adjustment key"))
 }

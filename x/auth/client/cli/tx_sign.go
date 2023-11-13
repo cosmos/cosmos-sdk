@@ -95,26 +95,23 @@ func makeSignBatchCmd() func(cmd *cobra.Command, args []string) error {
 			return err
 		}
 
-		if !clientCtx.Offline {
-			txFactory = txFactory.WithAccountNumber(0).WithSequence(0)
-			if multisigKey == "" {
-				from, err := cmd.Flags().GetString(flags.FlagFrom)
-				if err != nil {
-					return err
-				}
-
-				fromAddr, _, _, err := client.GetFromFields(clientCtx, txFactory.Keybase(), from)
-				if err != nil {
-					return err
-				}
-
-				fromAcc, err := txFactory.AccountRetriever().GetAccount(clientCtx, fromAddr)
-				if err != nil {
-					return err
-				}
-
-				txFactory = txFactory.WithAccountNumber(fromAcc.GetAccountNumber()).WithSequence(fromAcc.GetSequence())
+		if !clientCtx.Offline && multisigKey == "" {
+			from, err := cmd.Flags().GetString(flags.FlagFrom)
+			if err != nil {
+				return err
 			}
+
+			fromAddr, _, _, err := client.GetFromFields(clientCtx, txFactory.Keybase(), from)
+			if err != nil {
+				return err
+			}
+
+			fromAcc, err := txFactory.AccountRetriever().GetAccount(clientCtx, fromAddr)
+			if err != nil {
+				return err
+			}
+
+			txFactory = txFactory.WithAccountNumber(fromAcc.GetAccountNumber()).WithSequence(fromAcc.GetSequence())
 		}
 
 		appendMessagesToSingleTx, _ := cmd.Flags().GetBool(flagAppend)

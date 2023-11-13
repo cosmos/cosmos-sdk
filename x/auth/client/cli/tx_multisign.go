@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/viper"
 	"google.golang.org/protobuf/types/known/anypb"
 
+	errorsmod "cosmossdk.io/errors"
 	authclient "cosmossdk.io/x/auth/client"
 	"cosmossdk.io/x/auth/signing"
 	txsigning "cosmossdk.io/x/tx/signing"
@@ -95,7 +96,7 @@ func makeMultiSignCmd() func(cmd *cobra.Command, args []string) (err error) {
 
 		k, err := clientCtx.Keyring.Key(name)
 		if err != nil {
-			return err
+			return errorsmod.Wrap(err, "error getting keybase multisig account")
 		}
 		pubKey, err := k.GetPubKey()
 		if err != nil {
@@ -260,7 +261,7 @@ func makeBatchMultisignCmd() func(cmd *cobra.Command, args []string) error {
 
 		k, err := clientCtx.Keyring.Key(name)
 		if err != nil {
-			return err
+			return errorsmod.Wrap(err, "error getting keybase multisig account")
 		}
 
 		var signatureBatch [][]signingtypes.SignatureV2

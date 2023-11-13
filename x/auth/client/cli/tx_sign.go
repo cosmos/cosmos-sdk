@@ -6,6 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	errorsmod "cosmossdk.io/errors"
 	authclient "cosmossdk.io/x/auth/client"
 	"cosmossdk.io/x/auth/signing"
 
@@ -356,7 +357,7 @@ func signTx(cmd *cobra.Command, clientCtx client.Context, txFactory tx.Factory, 
 		}
 		multisigkey, err := clientCtx.Keyring.Key(multisigName)
 		if err != nil {
-			return err
+			return errorsmod.Wrap(err, "error getting keybase multisig account")
 		}
 		multisigPubKey, err := multisigkey.GetPubKey()
 		if err != nil {

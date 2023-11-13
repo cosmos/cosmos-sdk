@@ -36,7 +36,7 @@ func (k Keeper) ExecuteUserOperation(ctx context.Context, bundler string, op *ac
 	resp.BundlerPaymentResponses = bundlerPayResp
 
 	// execute messages, the real operation intent
-	executeGas, executeResp, err := k.ExecuteMessages(ctx, bundler, op)
+	executeGas, executeResp, err := k.OpExecuteMessages(ctx, bundler, op)
 	if err != nil {
 		resp.Error = fmt.Sprintf("execution failed: %s", err.Error())
 		return resp
@@ -71,6 +71,28 @@ func (k Keeper) Authenticate(
 		AccountNumber: accountNumber,
 	})
 	return gasUsed, nil
+}
+
+func (k Keeper) OpExecuteMessages(ctx context.Context, bundler string, op *accountsv1.UserOperation) (gasUsed uint64, messagesResponse []*anypb.Any, err error) {
+	senderAddr, err := k.addressCodec.StringToBytes(op.Sender)
+	if err != nil {
+		return 0, nil, err
+	}
+	resp, err := k.Execute(ctx, senderAddr, ModuleAccountAddr, &account_abstractionv1.MsgExecute{
+		Bundler:           bundler,
+		ExecutionMessages: op.ExecutionMessages,
+	})
+	// here is where we check if the account handles execution messages
+	// if it does not, then we simply execute the provided messages on behalf of the sender
+	switch {
+	case err == nil:
+		// TODO get gas used.
+		executeResp, err := parseExecuteResponse(resp)
+		return gasUsed, executeResp, err
+	case implementation.IsRoutingError(err):
+		// TODO get gas used.
+
+	}
 }
 
 // PayBundler handles the payment of the bundler in a given v1.UserOperation.
@@ -171,4 +193,15 @@ func parsePayBundlerResponse(resp any) ([]*anypb.Any, error) {
 		return nil, fmt.Errorf("account does not implement account abstraction correctly: wanted %T, got %T", &account_abstractionv1.MsgPayBundlerResponse{}, resp)
 	}
 	return payBundlerResp.BundlerPaymentMessagesResponse, nil
+}
+
+// parseExecuteResponse parses the execute response as any into a slice of
+// responses on execution messages.
+func parseExecuteResponse(resp any) ([]*anypb.Any, error) {
+	executeResp, ok := resp.(*account_abstractionv1.MsgExecuteResponse)
+	// this means the account does not properly implement account abstraction.
+	if !ok {
+		return nil, fmt.Errorf("account does not implement account abstraction correctly: wanted %T, got %T", &account_abstractionv1.MsgExecuteResponse{}, resp)
+	}
+	return executeResp.ExecutionMessagesResponse, nil
 }

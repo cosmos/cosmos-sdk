@@ -20,6 +20,7 @@ const (
 	reservedStoreKey = "_RESERVED_"
 	keyLatestHeight  = "latest_height"
 
+	// TODO: it is a random number, need to be tuned
 	defaultBatchBufferSize = 100000
 
 	latestVersionStmt = `
@@ -241,8 +242,10 @@ func (db *Database) Restore(version uint64, chStorage <-chan *store.KVPair) erro
 		}
 	}
 
-	if err := b.Write(); err != nil {
-		return err
+	if b.Size() > 0 {
+		if err := b.Write(); err != nil {
+			return err
+		}
 	}
 
 	return db.SetLatestVersion(version)

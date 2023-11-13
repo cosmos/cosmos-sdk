@@ -165,10 +165,6 @@ func (m *Manager) GetSnapshotBlockRetentionHeights() int64 {
 
 // Create creates a snapshot and returns its metadata.
 func (m *Manager) Create(height uint64) (*types.Snapshot, error) {
-	if m == nil {
-		return nil, errorsmod.Wrap(store.ErrLogic, "no snapshot store configured")
-	}
-
 	err := m.begin(opSnapshot)
 	if err != nil {
 		return nil, err

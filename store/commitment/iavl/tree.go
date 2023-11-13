@@ -1,6 +1,7 @@
 package iavl
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"math"
@@ -93,12 +94,12 @@ func (t *IavlTree) Prune(version uint64) error {
 	return t.tree.DeleteVersionsTo(int64(version))
 }
 
-// Snapshot implements snapshottypes.CommitSnapshotter. The snapshot output for a given format must be
-// identical across nodes such that chunks from different sources fit together.
+// Snapshot implements snapshottypes.CommitSnapshotter.
 func (t *IavlTree) Snapshot(version uint64, protoWriter protoio.Writer) error {
 	if version == 0 {
 		return fmt.Errorf("the snapshot version must be greater than 0")
 	}
+
 	latestVersion := t.GetLatestVersion()
 	if version > latestVersion {
 		return fmt.Errorf("the snapshot version %d is greater than the latest version %d", version, latestVersion)
@@ -129,11 +130,12 @@ func (t *IavlTree) Snapshot(version uint64, protoWriter protoio.Writer) error {
 
 	for {
 		node, err := exporter.Next()
-		if err == iavl.ErrorExportDone {
+		if errors.Is(err, iavl.ErrorExportDone) {
 			break
 		} else if err != nil {
 			return fmt.Errorf("failed to get the next export node: %w", err)
 		}
+
 		if err = protoWriter.WriteMsg(&snapshottypes.SnapshotItem{
 			Item: &snapshottypes.SnapshotItem_IAVL{
 				IAVL: &snapshottypes.SnapshotIAVLItem{
@@ -152,15 +154,17 @@ func (t *IavlTree) Snapshot(version uint64, protoWriter protoio.Writer) error {
 }
 
 // Restore implements snapshottypes.CommitSnapshotter.
-// returns next snapshot item and error.
 func (t *IavlTree) Restore(version uint64, format uint32, protoReader protoio.Reader, chStorage chan<- *store.KVPair) (snapshottypes.SnapshotItem, error) {
-	var importer *iavl.Importer
-	var snapshotItem snapshottypes.SnapshotItem
+	var (
+		importer     *iavl.Importer
+		snapshotItem snapshottypes.SnapshotItem
+	)
+
 loop:
 	for {
 		snapshotItem = snapshottypes.SnapshotItem{}
 		err := protoReader.ReadMsg(&snapshotItem)
-		if err == io.EOF {
+		if errors.Is(err, io.EOF) {
 			break
 		} else if err != nil {
 			return snapshottypes.SnapshotItem{}, fmt.Errorf("invalid protobuf message: %w", err)
@@ -179,7 +183,7 @@ loop:
 			if importer == nil {
 				return snapshottypes.SnapshotItem{}, fmt.Errorf("received IAVL node item before store item")
 			}
-			if item.IAVL.Height > math.MaxInt8 {
+			if item.IAVL.Height > int32(math.MaxInt8) {
 				return snapshottypes.SnapshotItem{}, fmt.Errorf("node height %v cannot exceed %v",
 					item.IAVL.Height, math.MaxInt8)
 			}
@@ -219,7 +223,6 @@ loop:
 		if err != nil {
 			return snapshottypes.SnapshotItem{}, fmt.Errorf("failed to commit importer: %w", err)
 		}
-		importer.Close()
 	}
 
 	_, err := t.tree.LoadVersion(int64(version))

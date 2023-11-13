@@ -17,6 +17,3 @@ output = "text"
 node = "tcp://localhost:26657"
 # Transaction broadcasting mode (sync|async)
 broadcast-mode = "sync"
-# This is default the gas adjustment factor used in tx commands.
-# It can be overwriten by the --gas-adjustment flag in each tx command.
-gas-adjustment = 1.5

@@ -12,6 +12,11 @@ import (
 	"cosmossdk.io/tools/confix"
 )
 
+const (
+	AppConfigType    = "app"
+	ClientConfigType = "client"
+)
+
 var (
 	FlagStdOut       bool
 	FlagVerbose      bool
@@ -22,18 +27,18 @@ func MigrateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "migrate [target-version] <config-path> [config-type]",
 		Short: "Migrate Cosmos SDK configuration file to the specified version",
-		Long: `Migrate the contents of the Cosmos SDK configuration (app.toml or client.toml) to the specified version.
+		Long: `Migrate the contents of the Cosmos SDK configuration (app.toml or client.toml) to the specified version. Configuration type is app by default.
 The output is written in-place unless --stdout is provided.
 In case of any error in updating the file, no output is written.`,
 		Args: cobra.MinimumNArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			targetVersion := args[0]
 			configPath := args[1]
-			configType := "app" // Default to app configuration
+			configType := AppConfigType // Default to app configuration
 
 			if len(args) > 2 {
 				configType = strings.ToLower(args[2])
-				if configType != "app" && configType != "client" {
+				if configType != AppConfigType && configType != ClientConfigType {
 					return errors.New("config type must be 'app' or 'client'")
 				}
 			}
@@ -57,7 +62,6 @@ In case of any error in updating the file, no output is written.`,
 			if FlagStdOut {
 				outputPath = ""
 			}
-			
 
 			if err := confix.Upgrade(ctx, plan(rawFile, targetVersion, configType), configPath, outputPath, FlagSkipValidate); err != nil {
 				return fmt.Errorf("failed to migrate config: %w", err)
@@ -66,8 +70,7 @@ In case of any error in updating the file, no output is written.`,
 			return nil
 		},
 	}
-	
-	
+
 	cmd.Flags().BoolVar(&FlagStdOut, "stdout", false, "print the updated config to stdout")
 	cmd.Flags().BoolVar(&FlagVerbose, "verbose", false, "log changes to stderr")
 	cmd.Flags().BoolVar(&FlagSkipValidate, "skip-validate", false, "skip configuration validation (allows to migrate unknown configurations)")

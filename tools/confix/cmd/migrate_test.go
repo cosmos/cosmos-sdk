@@ -12,7 +12,7 @@ import (
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 )
 
-func TestMigradeCmd(t *testing.T) {
+func TestMigrateCmd(t *testing.T) {
 	clientCtx, cleanup := initClientContext(t)
 	defer cleanup()
 
@@ -28,7 +28,7 @@ func TestMigradeCmd(t *testing.T) {
 	assert.ErrorContains(t, err, "failed to migrate config")
 
 	// try to migrate from client.toml - it should work and give us a big diff
-	out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd.MigrateCommand(), []string{"v0.46", fmt.Sprintf("%s/config/client.toml", clientCtx.HomeDir),"app", "--skip-validate", "--verbose"})
+	out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd.MigrateCommand(), []string{"v0.46", fmt.Sprintf("%s/config/client.toml", clientCtx.HomeDir), "--skip-validate", "--verbose"})
 	assert.NilError(t, err)
 	assert.Assert(t, strings.Contains(out.String(), "add app-db-backend key"))
 
@@ -36,5 +36,5 @@ func TestMigradeCmd(t *testing.T) {
 	// this should work
 	out, err = clitestutil.ExecTestCLICmd(clientCtx, cmd.MigrateCommand(), []string{"v0.51", fmt.Sprintf("%s/config/client.toml", clientCtx.HomeDir),"client", "--verbose"})
 	assert.NilError(t, err)
-	assert.Assert(t, strings.Contains(out.String(), "add gas-adjustment key"))
+	assert.Assert(t, strings.Contains(out.String(), "add keyring-default-keyname key"))
 }

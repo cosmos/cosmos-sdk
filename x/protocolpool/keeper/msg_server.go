@@ -103,8 +103,8 @@ func (k MsgServer) CommunityPoolSpend(ctx context.Context, msg *types.MsgCommuni
 	return &types.MsgCommunityPoolSpendResponse{}, nil
 }
 
-func (k MsgServer) AddContinuousFunds(ctx context.Context, msg *types.MsgAddContinuousFunds) (*types.MsgAddContinuousFundsResponse, error) {
-	return &types.MsgAddContinuousFundsResponse{}, nil
+func (k MsgServer) CreateContinuousFund(ctx context.Context, msg *types.MsgCreateContinuousFund) (*types.MsgCreateContinuousFundResponse, error) {
+	return &types.MsgCreateContinuousFundResponse{}, nil
 }
 
 func (k MsgServer) CancelContinuousFundProposal(ctx context.Context, msg *types.MsgCancelContinuousFundProposal) (*types.MsgCancelContinuousFundProposalResponse, error) {

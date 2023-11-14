@@ -55,12 +55,6 @@ In case of any error in updating the file, no output is written.`,
 				return errors.New("must provide a path to the config file")	
 			}
 
-			if len(args) > 2 {
-				configType = strings.ToLower(args[2])
-				if configType != AppConfigType && configType != ClientConfigType {
-					return errors.New("config type must be 'app' or 'client'")
-				}
-			}
 
 			plan, ok := confix.Migrations[targetVersion]
 			if !ok {

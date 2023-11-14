@@ -508,6 +508,12 @@ func (s *StorageTestSuite) TestDatabase_Prune_KeepRecent() {
 	s.Require().NoError(err)
 	s.Require().Nil(bz)
 
+	itr, err := db.Iterator(storeKey1, 49, nil, nil)
+	s.Require().NoError(err)
+	s.Require().False(itr.Valid())
+
+	defer itr.Close()
+
 	// ensure the value previously at version 1 is still there for queries greater than 50
 	bz, err = db.Get(storeKey1, 51, key)
 	s.Require().NoError(err)

@@ -166,6 +166,7 @@ replace (
 	cosmossdk.io/x/auth => ./../../x/auth
 	cosmossdk.io/x/bank => ./../../x/bank
 	cosmossdk.io/x/distribution => ./../../x/distribution
+	cosmossdk.io/x/gov => ./../../x/gov
 	cosmossdk.io/x/mint => ./../../x/mint
 	cosmossdk.io/x/protocolpool => ./../../x/protocolpool
 	cosmossdk.io/x/slashing => ./../../x/slashing

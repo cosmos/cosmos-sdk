@@ -10,6 +10,9 @@ const (
 
 	// FlagNoIndent is the flag to not indent the output.
 	FlagNoIndent = "no-indent"
+
+	// FlagNoPrompt is the flag to not use a prompt for commands.
+	FlagNoPrompt = "no-prompt"
 )
 
 // List of supported output formats

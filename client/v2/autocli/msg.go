@@ -14,6 +14,7 @@ import (
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	"cosmossdk.io/client/v2/autocli/flag"
 	"cosmossdk.io/client/v2/internal/util"
+	addresscodec "cosmossdk.io/core/address"
 	authtx "cosmossdk.io/x/auth/tx"
 	authtxconfig "cosmossdk.io/x/auth/tx/config"
 
@@ -150,16 +151,13 @@ func (b *Builder) BuildMsgMethodCommand(descriptor protoreflect.MethodDescriptor
 		fd := input.Descriptor().Fields().ByName(protoreflect.Name(flag.GetSignerFieldName(input.Descriptor())))
 		addressCodec := b.Builder.AddressCodec
 
-		if options.GovProposal { // set message signer (authority) to gov module
-			govAuthority := authtypes.NewModuleAddress(govtypes.ModuleName)
+		// handle gov proposals commands
+		if options.GovProposal {
+			return b.handleGovProposal(options, cmd, input, clientCtx, addressCodec, fd)
+		}
 
-			signer, err := addressCodec.BytesToString(govAuthority.Bytes())
-			if err != nil {
-				return fmt.Errorf("failed to set authority on message: %w", err)
-			}
-
-			input.Set(fd, protoreflect.ValueOfString(signer))
-		} else if addr := input.Get(fd).String(); addr == "" { // set signer to signer field if empty
+		// set signer to signer field if empty
+		if addr := input.Get(fd).String(); addr == "" {
 			scalarType, ok := flag.GetScalarType(fd)
 			if ok {
 				// override address codec if validator or consensus address
@@ -185,20 +183,6 @@ func (b *Builder) BuildMsgMethodCommand(descriptor protoreflect.MethodDescriptor
 		// The SDK codec will handle protov2 -> protov1 (marshal)
 		msg := dynamicpb.NewMessage(input.Descriptor())
 		proto.Merge(msg, input.Interface())
-
-		// create a gov proposal if enabled
-		if options.GovProposal {
-			proposal, err := govcli.ReadGovPropFlags(clientCtx, cmd.Flags())
-			if err != nil {
-				return err
-			}
-
-			if err := proposal.SetMsgs([]gogoproto.Message{msg}); err != nil {
-				return fmt.Errorf("failed to set msg in proposal %w", err)
-			}
-
-			return clienttx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), proposal)
-		}
 
 		return clienttx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 	}
@@ -226,4 +210,44 @@ func (b *Builder) BuildMsgMethodCommand(descriptor protoreflect.MethodDescriptor
 	}
 
 	return cmd, err
+}
+
+// handleGovProposal sets the authority field of the message to the gov module address and creates a gov proposal.
+func (b *Builder) handleGovProposal(
+	options *autocliv1.RpcCommandOptions,
+	cmd *cobra.Command,
+	input protoreflect.Message,
+	clientCtx client.Context,
+	addressCodec addresscodec.Codec,
+	fd protoreflect.FieldDescriptor,
+) error {
+	govAuthority := authtypes.NewModuleAddress(govtypes.ModuleName)
+	authority, err := addressCodec.BytesToString(govAuthority.Bytes())
+	if err != nil {
+		return fmt.Errorf("failed to convert gov authority: %w", err)
+	}
+	input.Set(fd, protoreflect.ValueOfString(authority))
+
+	signerFromFlag := clientCtx.GetFromAddress()
+	signer, err := addressCodec.BytesToString(signerFromFlag.Bytes())
+	if err != nil {
+		return fmt.Errorf("failed to set signer on message, got %v: %w", signerFromFlag, err)
+	}
+
+	proposal, err := govcli.ReadGovPropCmdFlags(signer, cmd.Flags())
+	if err != nil {
+		return err
+	}
+
+	// AutoCLI uses protov2 messages, while the SDK only supports proto v1 messages.
+	// Here we use dynamicpb, to create a proto v1 compatible message.
+	// The SDK codec will handle protov2 -> protov1 (marshal)
+	msg := dynamicpb.NewMessage(input.Descriptor())
+	proto.Merge(msg, input.Interface())
+
+	if err := proposal.SetMsgs([]gogoproto.Message{msg}); err != nil {
+		return fmt.Errorf("failed to set msg in proposal %w", err)
+	}
+
+	return clienttx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), proposal)
 }

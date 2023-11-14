@@ -21,6 +21,14 @@ func (u Uint) BigInt() *big.Int {
 	return new(big.Int).Set(u.i)
 }
 
+// BigInt converts Uint to big.Int, mutative the input
+func (u Uint) BigIntMut() *big.Int {
+	if u.IsNil() {
+		return nil
+	}
+	return u.i
+}
+
 // IsNil returns true if Uint is uninitialized
 func (u Uint) IsNil() bool {
 	return u.i == nil

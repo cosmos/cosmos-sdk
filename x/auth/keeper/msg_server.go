@@ -4,8 +4,9 @@ import (
 	"context"
 	"fmt"
 
+	"cosmossdk.io/x/auth/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 var _ types.MsgServer = msgServer{}

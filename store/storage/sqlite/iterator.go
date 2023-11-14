@@ -23,11 +23,7 @@ type iterator struct {
 }
 
 func newIterator(db *Database, storeKey string, targetVersion uint64, start, end []byte, reverse bool) (*iterator, error) {
-	ph, err := db.getPruneHeight()
-	if err != nil {
-		return nil, err
-	}
-	if ph > 0 && targetVersion <= ph {
+	if targetVersion < db.earliestVersion {
 		return &iterator{
 			start: start,
 			end:   end,

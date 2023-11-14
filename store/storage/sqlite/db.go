@@ -44,10 +44,12 @@ var _ store.VersionedDatabase = (*Database)(nil)
 
 type Database struct {
 	storage *sql.DB
+
+	earliestVersion uint64
 }
 
 func New(dataDir string) (*Database, error) {
-	db, err := sql.Open(driverName, filepath.Join(dataDir, dbName))
+	storage, err := sql.Open(driverName, filepath.Join(dataDir, dbName))
 	if err != nil {
 		return nil, fmt.Errorf("failed to open sqlite DB: %w", err)
 	}
@@ -65,14 +67,23 @@ func New(dataDir string) (*Database, error) {
 
 	CREATE UNIQUE INDEX IF NOT EXISTS idx_store_key_version ON state_storage (store_key, key, version);
 	`
-	_, err = db.Exec(stmt)
+	_, err = storage.Exec(stmt)
 	if err != nil {
 		return nil, fmt.Errorf("failed to exec SQL statement: %w", err)
 	}
 
-	return &Database{
-		storage: db,
-	}, nil
+	db := &Database{
+		storage: storage,
+	}
+
+	pruneHeight, err := db.getPruneHeight()
+	if err != nil {
+		return nil, err
+	}
+
+	db.earliestVersion = pruneHeight + 1
+
+	return db, nil
 }
 
 func (db *Database) Close() error {
@@ -122,8 +133,7 @@ func (db *Database) Has(storeKey string, version uint64, key []byte) (bool, erro
 
 func (db *Database) Get(storeKey string, targetVersion uint64, key []byte) ([]byte, error) {
 	stmt, err := db.storage.Prepare(`
-	SELECT value, tombstone, coalesce((SELECT value from state_storage WHERE store_key = ? AND key = ?), 0) as prune_height
-	FROM state_storage
+	SELECT value, tombstone FROM state_storage
 	WHERE store_key = ? AND key = ? AND version <= ?
 	ORDER BY version DESC LIMIT 1;
 	`)
@@ -134,11 +144,10 @@ func (db *Database) Get(storeKey string, targetVersion uint64, key []byte) ([]by
 	defer stmt.Close()
 
 	var (
-		value       []byte
-		tomb        uint64
-		pruneHeight uint64
+		value []byte
+		tomb  uint64
 	)
-	if err := stmt.QueryRow(reservedStoreKey, keyPruneHeight, storeKey, key, targetVersion).Scan(&value, &tomb, &pruneHeight); err != nil {
+	if err := stmt.QueryRow(storeKey, key, targetVersion).Scan(&value, &tomb); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, nil
 		}
@@ -146,7 +155,7 @@ func (db *Database) Get(storeKey string, targetVersion uint64, key []byte) ([]by
 		return nil, fmt.Errorf("failed to query row: %w", err)
 	}
 
-	if pruneHeight > 0 && targetVersion <= pruneHeight {
+	if targetVersion < db.earliestVersion {
 		return nil, nil
 	}
 
@@ -213,6 +222,8 @@ func (db *Database) Prune(version uint64) error {
 	if err := tx.Commit(); err != nil {
 		return fmt.Errorf("failed to write SQL transaction: %w", err)
 	}
+
+	db.earliestVersion = version + 1
 
 	return nil
 }

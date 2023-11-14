@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/spf13/cobra"
 	"golang.org/x/exp/maps"
 
@@ -30,11 +31,29 @@ func MigrateCommand() *cobra.Command {
 		Long: `Migrate the contents of the Cosmos SDK configuration (app.toml or client.toml) to the specified version. Configuration type is app by default.
 The output is written in-place unless --stdout is provided.
 In case of any error in updating the file, no output is written.`,
-		Args: cobra.MinimumNArgs(2),
+		Args: cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			var configPath string
+			
+			clientCtx := client.GetClientContextFromCmd(cmd)
 			targetVersion := args[0]
-			configPath := args[1]
 			configType := AppConfigType // Default to app configuration
+
+			if len(args) > 2 {
+				configType = strings.ToLower(args[2])
+				if configType != AppConfigType && configType != ClientConfigType {
+					return errors.New("config type must be 'app' or 'client'")
+				}
+			}
+
+			switch  {
+			case len(args) > 1:
+				configPath = args[1]
+			case clientCtx.HomeDir != "":
+				configPath = fmt.Sprintf("%s/config/%s.toml",clientCtx.HomeDir, configType)
+			default:
+				return errors.New("must provide a path to the config file")	
+			}
 
 			if len(args) > 2 {
 				configType = strings.ToLower(args[2])

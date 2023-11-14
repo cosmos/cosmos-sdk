@@ -22,7 +22,7 @@ func DiffCommand() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			targetVersion := args[0]
 			configPath := args[1]
-			configType := "app" // Default to app configuration
+			configType := confix.AppConfigType // Default to app configuration
 			clientCtx := client.GetClientContextFromCmd(cmd)
 
 			if len(args) > 2 {

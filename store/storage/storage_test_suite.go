@@ -500,7 +500,7 @@ func (s *StorageTestSuite) TestDatabase_Prune_KeepRecent() {
 	s.Require().NoError(db.ApplyChangeset(100, store.NewChangeset(store.KVPair{StoreKey: storeKey1, Key: key, Value: []byte("val100")})))
 	s.Require().NoError(db.ApplyChangeset(200, store.NewChangeset(store.KVPair{StoreKey: storeKey1, Key: key, Value: []byte("val200")})))
 
-	// prune at version 50
+	// prune version 50
 	s.Require().NoError(db.Prune(50))
 
 	// ensure queries for versions 50 and older return nil
@@ -513,7 +513,7 @@ func (s *StorageTestSuite) TestDatabase_Prune_KeepRecent() {
 	s.Require().NoError(err)
 	s.Require().Equal([]byte("val001"), bz)
 
-	// ensure the correct version at a greater height
+	// ensure the correct value at a greater height
 	bz, err = db.Get(storeKey1, 200, key)
 	s.Require().NoError(err)
 	s.Require().Equal([]byte("val200"), bz)

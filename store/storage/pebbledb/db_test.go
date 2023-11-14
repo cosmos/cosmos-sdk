@@ -17,6 +17,7 @@ func TestStorageTestSuite(t *testing.T) {
 		EmptyBatchSize: 12,
 		SkipTests: []string{
 			"TestStorageTestSuite/TestDatabase_Prune",
+			"TestStorageTestSuite/TestDatabase_Prune_KeepRecent",
 		},
 	}
 

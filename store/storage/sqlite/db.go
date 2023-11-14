@@ -175,7 +175,14 @@ func (db *Database) ApplyChangeset(version uint64, cs *store.Changeset) error {
 }
 
 func (db *Database) Prune(version uint64) error {
-	stmt := "DELETE FROM state_storage WHERE version <= ? AND store_key != ?;"
+	stmt := `DELETE FROM state_storage
+	WHERE version < (
+		SELECT max(version) FROM state_storage t2 WHERE
+		t2.store_key = state_storage.store_key AND
+		t2.key = state_storage.key AND
+		t2.version <= ?
+	) AND store_key != ?;
+	`
 
 	_, err := db.storage.Exec(stmt, version, reservedStoreKey)
 	if err != nil {

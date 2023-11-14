@@ -176,7 +176,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				{
 					RpcMethod:      "UpdateParams",
 					Use:            "update-params-proposal [params]",
-					Short:          "Submit a proposal to update staking module params",
+					Short:          "Submit a proposal to update staking module params. Note: params are JSON encoded",
 					Example:        fmt.Sprintf(`%s tx staking update-params-proposal '{ params }'`, version.AppName),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "params"}},
 					GovProposal:    true,

@@ -3,7 +3,6 @@ package prompt
 import (
 	"fmt"
 	"net/url"
-	"unicode"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -27,26 +26,6 @@ func ValidatePromptURL(input string) error {
 	return nil
 }
 
-// ValidatePromptAddress validates that the input is a valid Bech32 address.
-func ValidatePromptAddress(input string) error { // TODO(@julienrbrt) remove and add prompts in AutoCLI
-	_, err := sdk.AccAddressFromBech32(input)
-	if err == nil {
-		return nil
-	}
-
-	_, err = sdk.ValAddressFromBech32(input)
-	if err == nil {
-		return nil
-	}
-
-	_, err = sdk.ConsAddressFromBech32(input)
-	if err == nil {
-		return nil
-	}
-
-	return fmt.Errorf("invalid address: %w", err)
-}
-
 // ValidatePromptYesNo validates that the input is valid sdk.COins
 func ValidatePromptCoins(input string) error {
 	if _, err := sdk.ParseCoinsNormalized(input); err != nil {
@@ -54,15 +33,4 @@ func ValidatePromptCoins(input string) error {
 	}
 
 	return nil
-}
-
-// CamelCaseToString converts a camel case string to a string with spaces.
-func CamelCaseToString(str string) string {
-	w := []rune(str)
-	for i := len(w) - 1; i > 1; i-- {
-		if unicode.IsUpper(w[i]) {
-			w = append(w[:i], append([]rune{' '}, w[i:]...)...)
-		}
-	}
-	return string(w)
 }

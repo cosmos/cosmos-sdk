@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
-	distirbuitonv1beta1 "cosmossdk.io/api/cosmos/distribution/v1beta1"
+	distributionv1beta1 "cosmossdk.io/api/cosmos/distribution/v1beta1"
 
 	"github.com/cosmos/cosmos-sdk/version"
 )
@@ -13,7 +13,7 @@ import (
 func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 	return &autocliv1.ModuleOptions{
 		Query: &autocliv1.ServiceCommandDescriptor{
-			Service: distirbuitonv1beta1.Query_ServiceDesc.ServiceName,
+			Service: distributionv1beta1.Query_ServiceDesc.ServiceName,
 			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
 				{
 					RpcMethod: "Params",
@@ -79,7 +79,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 			},
 		},
 		Tx: &autocliv1.ServiceCommandDescriptor{
-			Service: distirbuitonv1beta1.Msg_ServiceDesc.ServiceName,
+			Service: distributionv1beta1.Msg_ServiceDesc.ServiceName,
 			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
 				{
 					RpcMethod: "SetWithdrawAddress",
@@ -129,7 +129,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				{
 					RpcMethod:      "UpdateParams",
 					Use:            "update-params-proposal [params]",
-					Short:          "Submit a proposal to update distribution module params",
+					Short:          "Submit a proposal to update distribution module params. Note: params are JSON encoded",
 					Example:        fmt.Sprintf(`%s tx distribution update-params-proposal '{ params }'`, version.AppName),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "params"}},
 					GovProposal:    true,

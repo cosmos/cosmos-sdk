@@ -6717,7 +6717,7 @@ func (*MsgCreateContinuousFundResponse) Descriptor() ([]byte, []int) {
 	return file_cosmos_protocolpool_v1_tx_proto_rawDescGZIP(), []int{9}
 }
 
-// MsgCancelContinuousFundProposal
+// MsgCancelContinuousFundProposal defines a message to cancel continuous funds for a specific recipient.
 type MsgCancelContinuousFundProposal struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

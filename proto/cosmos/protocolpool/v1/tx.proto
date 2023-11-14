@@ -142,7 +142,7 @@ message MsgCreateContinuousFund {
 // MsgCreateContinuousFund message.
 message MsgCreateContinuousFundResponse {}
 
-// MsgCancelContinuousFundProposal
+// MsgCancelContinuousFundProposal defines a message to cancel continuous funds for a specific recipient.
 message MsgCancelContinuousFundProposal {
   option (cosmos.msg.v1.signer) = "authority";
 

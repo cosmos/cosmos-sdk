@@ -532,7 +532,7 @@ func (m *MsgCreateContinuousFundResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgCreateContinuousFundResponse proto.InternalMessageInfo
 
-// MsgCancelContinuousFundProposal
+// MsgCancelContinuousFundProposal defines a message to cancel continuous funds for a specific recipient.
 type MsgCancelContinuousFundProposal struct {
 	// Authority is the account address of authority.
 	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`

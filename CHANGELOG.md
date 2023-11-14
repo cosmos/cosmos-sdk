@@ -543,7 +543,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/staking) [#14567](https://github.com/cosmos/cosmos-sdk/pull/14567) The `delegator_address` field of `MsgCreateValidator` has been deprecated.
    The validator address bytes and delegator address bytes refer to the same account while creating validator (defer only in bech32 notation).
 
-## [v0.47.6](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.47.6) - 2023-11-13
+## [v0.47.6](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.47.6) - 2023-11-14
 
 ### Features
 

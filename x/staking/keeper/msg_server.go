@@ -13,7 +13,6 @@ import (
 	"cosmossdk.io/collections"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
-	distrtypes "cosmossdk.io/x/distribution/types"
 	"cosmossdk.io/x/staking/types"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -25,6 +24,11 @@ import (
 type msgServer struct {
 	*Keeper
 }
+
+// distributionModuleName duplicates the distribution module's name to avoid a cyclic dependency with x/distribution.
+// It should be synced with the distribution module's name if it is ever changed.
+// See: https://github.com/cosmos/cosmos-sdk/blob/912390d5fc4a32113ea1aacc98b77b2649aea4c2/x/distribution/types/keys.go#L15
+const distributionModuleName = "distribution"
 
 // NewMsgServerImpl returns an implementation of the staking MsgServer interface
 // for the provided Keeper.
@@ -662,7 +666,7 @@ func (k msgServer) RotateConsPubKey(ctx context.Context, msg *types.MsgRotateCon
 		return nil, err
 	}
 
-	err = k.Keeper.bankKeeper.SendCoinsFromAccountToModule(ctx, sdk.AccAddress(valAddr), distrtypes.ModuleName, sdk.NewCoins(params.KeyRotationFee))
+	err = k.Keeper.bankKeeper.SendCoinsFromAccountToModule(ctx, sdk.AccAddress(valAddr), distributionModuleName, sdk.NewCoins(params.KeyRotationFee))
 	if err != nil {
 		return nil, err
 	}

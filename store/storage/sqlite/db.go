@@ -175,6 +175,9 @@ func (db *Database) ApplyChangeset(version uint64, cs *store.Changeset) error {
 }
 
 func (db *Database) Prune(version uint64) error {
+	// delete all versions less than or equal to the target version, except we keep
+	// the last one to handle above the prune version. This is analogous to RocksDB
+	// full_history_ts_low.
 	stmt := `DELETE FROM state_storage
 	WHERE version < (
 		SELECT max(version) FROM state_storage t2 WHERE

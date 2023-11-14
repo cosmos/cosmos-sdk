@@ -18,8 +18,9 @@ const (
 	dbName           = "file:ss.db?cache=shared&mode=rwc&_journal_mode=WAL"
 	reservedStoreKey = "_RESERVED_"
 	keyLatestHeight  = "latest_height"
+	keyPruneHeight   = "prune_height"
 
-	latestVersionStmt = `
+	reservedUpsertStmt = `
 	INSERT INTO state_storage(store_key, key, value, version)
     VALUES(?, ?, ?, ?)
   ON CONFLICT(store_key, key, version) DO UPDATE SET
@@ -102,7 +103,7 @@ func (db *Database) GetLatestVersion() (uint64, error) {
 }
 
 func (db *Database) SetLatestVersion(version uint64) error {
-	_, err := db.storage.Exec(latestVersionStmt, reservedStoreKey, keyLatestHeight, version, 0, version)
+	_, err := db.storage.Exec(reservedUpsertStmt, reservedStoreKey, keyLatestHeight, version, 0, version)
 	if err != nil {
 		return fmt.Errorf("failed to exec SQL statement: %w", err)
 	}
@@ -122,7 +123,9 @@ func (db *Database) Has(storeKey string, version uint64, key []byte) (bool, erro
 func (db *Database) Get(storeKey string, targetVersion uint64, key []byte) ([]byte, error) {
 	stmt, err := db.storage.Prepare(`
 	SELECT value, tombstone FROM state_storage
-	WHERE store_key = ? AND key = ? AND version <= ?
+	WHERE store_key = ? AND key = ? AND version <= ? AND (
+		SELECT CAST(value as INTEGER) from state_storage WHERE store_key = ? AND key = ?
+	) < ?
 	ORDER BY version DESC LIMIT 1;
 	`)
 	if err != nil {
@@ -135,7 +138,7 @@ func (db *Database) Get(storeKey string, targetVersion uint64, key []byte) ([]by
 		value []byte
 		tomb  uint64
 	)
-	if err := stmt.QueryRow(storeKey, key, targetVersion).Scan(&value, &tomb); err != nil {
+	if err := stmt.QueryRow(storeKey, key, targetVersion, reservedStoreKey, keyPruneHeight, targetVersion).Scan(&value, &tomb); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, nil
 		}
@@ -175,10 +178,15 @@ func (db *Database) ApplyChangeset(version uint64, cs *store.Changeset) error {
 }
 
 func (db *Database) Prune(version uint64) error {
-	// delete all versions less than or equal to the target version, except we keep
+	tx, err := db.storage.Begin()
+	if err != nil {
+		return fmt.Errorf("failed to create SQL transaction: %w", err)
+	}
+
+	// Delete all versions less than or equal to the target version, except we keep
 	// the last one to handle above the prune version. This is analogous to RocksDB
 	// full_history_ts_low.
-	stmt := `DELETE FROM state_storage
+	pruneStmt := `DELETE FROM state_storage
 	WHERE version < (
 		SELECT max(version) FROM state_storage t2 WHERE
 		t2.store_key = state_storage.store_key AND
@@ -187,9 +195,19 @@ func (db *Database) Prune(version uint64) error {
 	) AND store_key != ?;
 	`
 
-	_, err := db.storage.Exec(stmt, version, reservedStoreKey)
+	_, err = tx.Exec(pruneStmt, version, reservedStoreKey)
 	if err != nil {
 		return fmt.Errorf("failed to exec SQL statement: %w", err)
+	}
+
+	// set the prune height so we can return <nil> for queries below this height
+	_, err = tx.Exec(reservedUpsertStmt, reservedStoreKey, keyPruneHeight, version, 0, version)
+	if err != nil {
+		return fmt.Errorf("failed to exec SQL statement: %w", err)
+	}
+
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("failed to write SQL transaction: %w", err)
 	}
 
 	return nil

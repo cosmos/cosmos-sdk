@@ -126,9 +126,6 @@ func (db *Database) Get(storeKey string, targetVersion uint64, key []byte) ([]by
 	if err != nil {
 		return nil, fmt.Errorf("failed to decode value tombstone: %w", err)
 	}
-	if tombstone > targetVersion {
-		return nil, fmt.Errorf("value tombstone too large: %d", tombstone)
-	}
 
 	// A tombstone of zero or a target version that is less than the tombstone
 	// version means the key is not deleted at the target version.

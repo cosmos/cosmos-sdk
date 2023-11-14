@@ -196,6 +196,8 @@ func (b *Builder) BuildMsgMethodCommand(descriptor protoreflect.MethodDescriptor
 			if err := proposal.SetMsgs([]gogoproto.Message{msg}); err != nil {
 				return fmt.Errorf("failed to set msg in proposal %w", err)
 			}
+
+			return clienttx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), proposal)
 		}
 
 		return clienttx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)

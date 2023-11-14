@@ -215,8 +215,7 @@ func (b *Builder) addMessageFlags(ctx context.Context, flagSet *pflag.FlagSet, m
 		flagOpts := commandOptions.FlagOptions[string(field.Name())]
 		name, hasValue, err := b.addFieldFlag(ctx, flagSet, field, flagOpts, options)
 		if err != nil {
-			// the flag does not exist in the message so we skip it
-			continue // todo better error handler, only skip if not found
+			return nil, err
 		}
 		flagOptsByFlagName[name] = flagOpts
 

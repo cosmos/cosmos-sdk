@@ -4,7 +4,7 @@
 
 ## 🚀 Highlights
 
-v0.50.0 is there, the v0.47.x line is now supported for bug fixes only, as per our release policy.
+v0.50 is there, the v0.47.x line is now supported for bug fixes only, as per our release policy.
 Start integrating with [Cosmos SDK Eden (v0.50)](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.50.1) and enjoy and the new features and performance improvements.
 
 For this 6th patch release of the `v0.47.x` line, some of the notable changes include:

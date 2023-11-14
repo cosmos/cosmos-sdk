@@ -27,7 +27,7 @@ func DiffCommand() *cobra.Command {
 
 			if len(args) > 2 {
 				configType = strings.ToLower(args[2])
-				if configType != "app" && configType != "client" {
+				if configType != confix.AppConfigType && configType != confix.ClientConfigType {
 					return errors.New("config type must be 'app' or 'client'")
 				}
 			}

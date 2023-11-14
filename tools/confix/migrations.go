@@ -12,7 +12,9 @@ import (
 
 const (
 	AppConfig    = "app.toml"
+	AppConfigType	= "app"
 	ClientConfig = "client.toml"
+	ClientConfigType	= "client"
 	CMTConfig    = "config.toml"
 )
 

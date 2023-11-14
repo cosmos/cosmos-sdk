@@ -13,10 +13,6 @@ import (
 	"cosmossdk.io/tools/confix"
 )
 
-const (
-	AppConfigType    = "app"
-	ClientConfigType = "client"
-)
 
 var (
 	FlagStdOut       bool
@@ -37,11 +33,11 @@ In case of any error in updating the file, no output is written.`,
 			
 			clientCtx := client.GetClientContextFromCmd(cmd)
 			targetVersion := args[0]
-			configType := AppConfigType // Default to app configuration
+			configType := confix.AppConfigType // Default to app configuration
 
 			if len(args) > 2 {
 				configType = strings.ToLower(args[2])
-				if configType != AppConfigType && configType != ClientConfigType {
+				if configType != confix.AppConfigType && configType != confix.ClientConfigType {
 					return errors.New("config type must be 'app' or 'client'")
 				}
 			}

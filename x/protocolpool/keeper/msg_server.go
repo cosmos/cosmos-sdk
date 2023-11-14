@@ -107,8 +107,8 @@ func (k MsgServer) CreateContinuousFund(ctx context.Context, msg *types.MsgCreat
 	return &types.MsgCreateContinuousFundResponse{}, nil
 }
 
-func (k MsgServer) CancelContinuousFundProposal(ctx context.Context, msg *types.MsgCancelContinuousFundProposal) (*types.MsgCancelContinuousFundProposalResponse, error) {
-	return &types.MsgCancelContinuousFundProposalResponse{}, nil
+func (k MsgServer) CancelContinuousFund(ctx context.Context, msg *types.MsgCancelContinuousFund) (*types.MsgCancelContinuousFundResponse, error) {
+	return &types.MsgCancelContinuousFundResponse{}, nil
 }
 
 func (k *Keeper) validateAuthority(authority string) error {

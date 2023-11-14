@@ -30,3 +30,5 @@ Ref: https://keepachangelog.com/en/1.0.0/
 # Changelog
 
 ## [Unreleased]
+
+## [v0.1.0](https://github.com/cosmos/cosmos-sdk/releases/tag/x/circuit/v0.1.0) - 2023-11-07

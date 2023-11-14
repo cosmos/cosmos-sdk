@@ -139,6 +139,7 @@ The `AutoCLIOptions()` method on your module allows to specify custom commands, 
 
 :::tip
 AutoCLI can create a gov proposal of any tx by simply setting the `GovProposal` field to `true` in the `autocli.RpcCommandOptions` struct.
+Users can however use the `--no-proposal` flag to disable the proposal creation (which is useful if the authority isn't the gov module on a chain).
 :::
 
 ### Specifying Subcommands

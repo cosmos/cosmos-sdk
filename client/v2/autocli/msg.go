@@ -13,6 +13,7 @@ import (
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	"cosmossdk.io/client/v2/autocli/flag"
+	"cosmossdk.io/client/v2/internal/flags"
 	"cosmossdk.io/client/v2/internal/util"
 	addresscodec "cosmossdk.io/core/address"
 	authtx "cosmossdk.io/x/auth/tx"
@@ -152,7 +153,8 @@ func (b *Builder) BuildMsgMethodCommand(descriptor protoreflect.MethodDescriptor
 		addressCodec := b.Builder.AddressCodec
 
 		// handle gov proposals commands
-		if options.GovProposal {
+		skipProposal, _ := cmd.Flags().GetBool(flags.FlagNoProposal)
+		if options.GovProposal && !skipProposal {
 			return b.handleGovProposal(options, cmd, input, clientCtx, addressCodec, fd)
 		}
 
@@ -204,9 +206,7 @@ func (b *Builder) BuildMsgMethodCommand(descriptor protoreflect.MethodDescriptor
 	// set gov proposal flags if command is a gov proposal
 	if options.GovProposal {
 		govcli.AddGovPropFlagsToCmd(cmd)
-		if err := cmd.MarkFlagRequired(govcli.FlagTitle); err != nil {
-			return nil, err
-		}
+		cmd.Flags().Bool(flags.FlagNoProposal, false, "Skip gov proposal and submit a normal transaction")
 	}
 
 	return cmd, err

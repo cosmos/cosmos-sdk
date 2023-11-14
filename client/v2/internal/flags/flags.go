@@ -13,6 +13,10 @@ const (
 
 	// FlagNoPrompt is the flag to not use a prompt for commands.
 	FlagNoPrompt = "no-prompt"
+
+	// FlagNoProposal is the flag convert a gov proposal command into a normal command.
+	// This is used to allow user of chains with custom authority to not use gov submit proposals for usual proposal commands.
+	FlagNoProposal = "no-proposal"
 )
 
 // List of supported output formats

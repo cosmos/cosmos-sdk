@@ -192,7 +192,6 @@ func (s *StorageTestSuite) TestDatabase_IteratorClose() {
 	iter.Close()
 
 	s.Require().False(iter.Valid())
-	s.Require().Panics(func() { iter.Close() })
 }
 
 func (s *StorageTestSuite) TestDatabase_IteratorDomain() {

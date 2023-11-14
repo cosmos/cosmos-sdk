@@ -22,7 +22,19 @@ type iterator struct {
 	err        error
 }
 
-func newIterator(storage *sql.DB, storeKey string, targetVersion uint64, start, end []byte, reverse bool) (*iterator, error) {
+func newIterator(db *Database, storeKey string, targetVersion uint64, start, end []byte, reverse bool) (*iterator, error) {
+	ph, err := db.getPruneHeight()
+	if err != nil {
+		return nil, err
+	}
+	if ph > 0 && targetVersion <= ph {
+		return &iterator{
+			start: start,
+			end:   end,
+			valid: false,
+		}, nil
+	}
+
 	var (
 		keyClause = []string{"store_key = ?", "version <= ?"}
 		queryArgs []any
@@ -52,7 +64,7 @@ func newIterator(storage *sql.DB, storeKey string, targetVersion uint64, start, 
 
 	// Note, this is not susceptible to SQL injection because placeholders are used
 	// for parts of the query outside the store's direct control.
-	stmt, err := storage.Prepare(fmt.Sprintf(`
+	stmt, err := db.storage.Prepare(fmt.Sprintf(`
 	SELECT x.key, x.value
 	FROM (
 		SELECT key, value, version, tombstone,
@@ -93,7 +105,10 @@ func newIterator(storage *sql.DB, storeKey string, targetVersion uint64, start, 
 }
 
 func (itr *iterator) Close() {
-	_ = itr.statement.Close()
+	if itr.statement != nil {
+		_ = itr.statement.Close()
+	}
+
 	itr.valid = false
 	itr.statement = nil
 	itr.rows = nil

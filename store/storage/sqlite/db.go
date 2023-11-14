@@ -122,10 +122,9 @@ func (db *Database) Has(storeKey string, version uint64, key []byte) (bool, erro
 
 func (db *Database) Get(storeKey string, targetVersion uint64, key []byte) ([]byte, error) {
 	stmt, err := db.storage.Prepare(`
-	SELECT value, tombstone FROM state_storage
-	WHERE store_key = ? AND key = ? AND version <= ? AND (
-		SELECT CAST(value as INTEGER) from state_storage WHERE store_key = ? AND key = ?
-	) < ?
+	SELECT value, tombstone, coalesce((SELECT value from state_storage WHERE store_key = ? AND key = ?), 0) as prune_height
+	FROM state_storage
+	WHERE store_key = ? AND key = ? AND version <= ?
 	ORDER BY version DESC LIMIT 1;
 	`)
 	if err != nil {
@@ -135,15 +134,20 @@ func (db *Database) Get(storeKey string, targetVersion uint64, key []byte) ([]by
 	defer stmt.Close()
 
 	var (
-		value []byte
-		tomb  uint64
+		value       []byte
+		tomb        uint64
+		pruneHeight uint64
 	)
-	if err := stmt.QueryRow(storeKey, key, targetVersion, reservedStoreKey, keyPruneHeight, targetVersion).Scan(&value, &tomb); err != nil {
+	if err := stmt.QueryRow(reservedStoreKey, keyPruneHeight, storeKey, key, targetVersion).Scan(&value, &tomb, &pruneHeight); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, nil
 		}
 
 		return nil, fmt.Errorf("failed to query row: %w", err)
+	}
+
+	if pruneHeight > 0 && targetVersion <= pruneHeight {
+		return nil, nil
 	}
 
 	// A tombstone of zero or a target version that is less than the tombstone
@@ -213,6 +217,26 @@ func (db *Database) Prune(version uint64) error {
 	return nil
 }
 
+func (db *Database) getPruneHeight() (uint64, error) {
+	stmt, err := db.storage.Prepare(`SELECT value FROM state_storage WHERE store_key = ? AND key = ?`)
+	if err != nil {
+		return 0, fmt.Errorf("failed to prepare SQL statement: %w", err)
+	}
+
+	defer stmt.Close()
+
+	var value uint64
+	if err := stmt.QueryRow(reservedStoreKey, keyPruneHeight).Scan(&value); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return 0, nil
+		}
+
+		return 0, fmt.Errorf("failed to query row: %w", err)
+	}
+
+	return value, nil
+}
+
 func (db *Database) Iterator(storeKey string, version uint64, start, end []byte) (store.Iterator, error) {
 	if (start != nil && len(start) == 0) || (end != nil && len(end) == 0) {
 		return nil, store.ErrKeyEmpty
@@ -222,7 +246,7 @@ func (db *Database) Iterator(storeKey string, version uint64, start, end []byte)
 		return nil, store.ErrStartAfterEnd
 	}
 
-	return newIterator(db.storage, storeKey, version, start, end, false)
+	return newIterator(db, storeKey, version, start, end, false)
 }
 
 func (db *Database) ReverseIterator(storeKey string, version uint64, start, end []byte) (store.Iterator, error) {
@@ -234,7 +258,7 @@ func (db *Database) ReverseIterator(storeKey string, version uint64, start, end 
 		return nil, store.ErrStartAfterEnd
 	}
 
-	return newIterator(db.storage, storeKey, version, start, end, true)
+	return newIterator(db, storeKey, version, start, end, true)
 }
 
 func (db *Database) PrintRowsDebug() {

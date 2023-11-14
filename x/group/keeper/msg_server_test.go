@@ -12,17 +12,17 @@ import (
 	"github.com/golang/mock/gomock"
 
 	"cosmossdk.io/core/header"
+	banktypes "cosmossdk.io/x/bank/types"
 	"cosmossdk.io/x/group"
 	"cosmossdk.io/x/group/internal/math"
 	"cosmossdk.io/x/group/keeper"
+	minttypes "cosmossdk.io/x/mint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec/address"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
 var EventProposalPruned = "cosmos.group.v1.EventProposalPruned"
@@ -663,6 +663,15 @@ func (s *TestSuite) TestUpdateGroupAdmin() {
 				CreatedAt:   s.blockTime,
 			},
 		},
+		"with invalid new admin address": {
+			req: &group.MsgUpdateGroupAdmin{
+				GroupId:  groupID,
+				Admin:    oldAdmin,
+				NewAdmin: "%s",
+			},
+			expErr:    true,
+			expErrMsg: "new admin address",
+		},
 	}
 	for msg, spec := range specs {
 		spec := spec
@@ -1216,6 +1225,23 @@ func (s *TestSuite) TestUpdateGroupPolicyAdmin() {
 				CreatedAt:      s.blockTime,
 			},
 			expErr: false,
+		},
+		"with invalid new admin address": {
+			req: &group.MsgUpdateGroupPolicyAdmin{
+				Admin:              admin.String(),
+				GroupPolicyAddress: groupPolicyAddr,
+				NewAdmin:           "%s",
+			},
+			expGroupPolicy: &group.GroupPolicyInfo{
+				Admin:          admin.String(),
+				Address:        groupPolicyAddr,
+				GroupId:        myGroupID,
+				Version:        2,
+				DecisionPolicy: nil,
+				CreatedAt:      s.blockTime,
+			},
+			expErr:    true,
+			expErrMsg: "new admin address",
 		},
 	}
 	for msg, spec := range specs {

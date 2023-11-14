@@ -4,24 +4,23 @@ import (
 	"testing"
 	"time"
 
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	cmttime "github.com/cometbft/cometbft/types/time"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 
+	"cosmossdk.io/core/header"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
+	authcodec "cosmossdk.io/x/auth/codec"
+	authkeeper "cosmossdk.io/x/auth/keeper"
+	authtypes "cosmossdk.io/x/auth/types"
+	"cosmossdk.io/x/auth/vesting"
+	vestingtestutil "cosmossdk.io/x/auth/vesting/testutil"
+	vestingtypes "cosmossdk.io/x/auth/vesting/types"
 
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
-	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
-	vestingtestutil "github.com/cosmos/cosmos-sdk/x/auth/vesting/testutil"
-	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 )
 
 var (
@@ -46,7 +45,8 @@ func (s *VestingTestSuite) SetupTest() {
 	key := storetypes.NewKVStoreKey(authtypes.StoreKey)
 	storeService := runtime.NewKVStoreService(key)
 	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
-	s.ctx = testCtx.Ctx.WithBlockHeader(cmtproto.Header{Time: cmttime.Now()})
+	s.ctx = testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now()})
+
 	encCfg := moduletestutil.MakeTestEncodingConfig()
 
 	maccPerms := map[string][]string{}

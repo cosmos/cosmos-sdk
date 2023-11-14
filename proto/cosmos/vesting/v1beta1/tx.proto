@@ -8,7 +8,7 @@ import "cosmos/vesting/v1beta1/vesting.proto";
 import "cosmos/msg/v1/msg.proto";
 import "amino/amino.proto";
 
-option go_package = "github.com/cosmos/cosmos-sdk/x/auth/vesting/types";
+option go_package = "cosmossdk.io/x/auth/vesting/types";
 
 // Msg defines the bank Msg service.
 service Msg {

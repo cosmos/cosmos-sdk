@@ -2,6 +2,7 @@ package accounts
 
 import (
 	"context"
+	"fmt"
 
 	v1 "cosmossdk.io/x/accounts/v1"
 )
@@ -54,5 +55,30 @@ func (q queryServer) AccountQuery(ctx context.Context, request *v1.AccountQueryR
 
 	return &v1.AccountQueryResponse{
 		Response: respBytes,
+	}, nil
+}
+
+func (q queryServer) Schema(_ context.Context, request *v1.SchemaRequest) (*v1.SchemaResponse, error) {
+	// TODO: maybe we should cache this, considering accounts types are not
+	// added on the fly as the chain is running.
+	schemas := v1.MakeAccountsSchemas(q.k.accounts)
+	schema, ok := schemas[request.AccountType]
+	if !ok {
+		return nil, fmt.Errorf("%w: %s", errAccountTypeNotFound, request.AccountType)
+	}
+	return schema, nil
+}
+
+func (q queryServer) AccountType(ctx context.Context, request *v1.AccountTypeRequest) (*v1.AccountTypeResponse, error) {
+	addr, err := q.k.addressCodec.StringToBytes(request.Address)
+	if err != nil {
+		return nil, err
+	}
+	accType, err := q.k.AccountsByType.Get(ctx, addr)
+	if err != nil {
+		return nil, err
+	}
+	return &v1.AccountTypeResponse{
+		AccountType: accType,
 	}, nil
 }

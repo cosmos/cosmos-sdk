@@ -13,6 +13,11 @@ import (
 
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/math"
+	"cosmossdk.io/x/auth"
+	authcli "cosmossdk.io/x/auth/client/cli"
+	authtestutil "cosmossdk.io/x/auth/client/testutil"
+	"cosmossdk.io/x/bank"
+	banktypes "cosmossdk.io/x/bank/types"
 	"cosmossdk.io/x/gov"
 	govtestutil "cosmossdk.io/x/gov/client/testutil"
 	govtypes "cosmossdk.io/x/gov/types/v1beta1"
@@ -30,11 +35,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	testutilmod "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/types/tx"
-	"github.com/cosmos/cosmos-sdk/x/auth"
-	authcli "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
-	authtestutil "github.com/cosmos/cosmos-sdk/x/auth/client/testutil"
-	"github.com/cosmos/cosmos-sdk/x/bank"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 )
 

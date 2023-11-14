@@ -296,19 +296,17 @@ func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) (res abci.ResponseDeliv
 	}
 }
 
-// PreprocessTxs fullfills the celestia-core version of the ACBI interface. It
+// PrepareProposal fullfills the celestia-core version of the ABCI interface. It
 // allows for arbitrary processing steps before transaction data is included in
 // the block.
 func (app *BaseApp) PrepareProposal(req abci.RequestPrepareProposal) abci.ResponsePrepareProposal {
-	// TODO(evan): fully implement
-	// pass through txs w/o processing for now
 	return abci.ResponsePrepareProposal{
 		BlockData: req.BlockData,
 	}
 }
 
 // ProcessProposal fulfills the celestia-core version of the ABCI++ interface.
-// It allows for arbitrary processing to occur after receiving a proposal block
+// It allows for arbitrary processing to occur after receiving a proposal block.
 func (app *BaseApp) ProcessProposal(req abci.RequestProcessProposal) abci.ResponseProcessProposal {
 	return abci.ResponseProcessProposal{
 		Result: abci.ResponseProcessProposal_ACCEPT,

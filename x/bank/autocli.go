@@ -107,8 +107,11 @@ Note: multiple coins can be send by space separated.`,
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "from_address"}, {ProtoField: "amount", Varargs: true}},
 				},
 				{
-					RpcMethod: "UpdateParams",
-					Skip:      true, // skipped because authority gated
+					RpcMethod:      "UpdateParams",
+					Use:            "update-params-proposal [params]",
+					Short:          "Submit a parameter change proposal for the bank module",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "params"}},
+					GovProposal:    true,
 				},
 				{
 					RpcMethod: "SetSendEnabled",

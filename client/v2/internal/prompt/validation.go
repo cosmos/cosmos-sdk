@@ -26,7 +26,7 @@ func ValidatePromptURL(input string) error {
 	return nil
 }
 
-// ValidatePromptYesNo validates that the input is valid sdk.COins
+// ValidatePromptCoins validates that the input is a valid sdk.Coins
 func ValidatePromptCoins(input string) error {
 	if _, err := sdk.ParseCoinsNormalized(input); err != nil {
 		return fmt.Errorf("invalid coins: %w", err)

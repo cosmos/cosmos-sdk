@@ -82,8 +82,8 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				{
 					RpcMethod:      "UpdateParams",
 					Use:            "update-params-proposal [params]",
-					Short:          "Submit a proposal to update auth module params. Note: params are JSON encoded",
-					Example:        fmt.Sprintf(`%s tx auth update-params-proposal '{ params }'`, version.AppName),
+					Short:          "Submit a proposal to update auth module params. Note: the entire params must be provided.",
+					Example:        fmt.Sprintf(`%s tx auth update-params-proposal '{ "max_memo_characters": 0, "tx_sig_limit": 0, "tx_size_cost_per_byte": 0, "sig_verify_cost_ed25519": 0, "sig_verify_cost_secp256k1": 0 }'`, version.AppName),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "params"}},
 					GovProposal:    true,
 				},

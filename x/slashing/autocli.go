@@ -48,8 +48,9 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				{
 					RpcMethod:      "UpdateParams",
 					Use:            "update-params-proposal [params]",
-					Short:          "Submit a proposal to update slashing module params. Note: params are JSON encoded",
-					Example:        fmt.Sprintf(`%s tx slashing update-params-proposal '{ params }'`, version.AppName),
+					Short:          "Submit a proposal to update slashing module params. Note: the entire params must be provided.",
+					Long:           fmt.Sprintf("Submit a proposal to update gov module params. Note: the entire params must be provided.\n See the fields to fill in by running `%s query slashing params --output json`", version.AppName),
+					Example:        fmt.Sprintf(`%s tx slashing update-params-proposal '{ "signed_blocks_window": "100", ... }'`, version.AppName),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "params"}},
 					GovProposal:    true,
 				},

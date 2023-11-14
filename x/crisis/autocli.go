@@ -26,8 +26,8 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				{
 					RpcMethod:      "UpdateParams",
 					Use:            "update-params-proposal [params]",
-					Short:          "Submit a proposal to update crisis module params. Note: params are JSON encoded",
-					Example:        fmt.Sprintf(`%s tx crisis update-params-proposal '{ params }'`, version.AppName),
+					Short:          "Submit a proposal to update crisis module params. Note: the entire params must be provided.",
+					Example:        fmt.Sprintf(`%s tx crisis update-params-proposal '{ "constant_fee": {"denom": "stake", "amount": "1000"} }'`, version.AppName),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "params"}},
 					GovProposal:    true,
 				},

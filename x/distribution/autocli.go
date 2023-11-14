@@ -129,8 +129,8 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				{
 					RpcMethod:      "UpdateParams",
 					Use:            "update-params-proposal [params]",
-					Short:          "Submit a proposal to update distribution module params. Note: params are JSON encoded",
-					Example:        fmt.Sprintf(`%s tx distribution update-params-proposal '{ params }'`, version.AppName),
+					Short:          "Submit a proposal to update distribution module params. Note: the entire params must be provided.",
+					Example:        fmt.Sprintf(`%s tx distribution update-params-proposal '{ "community_tax": "20000", "base_proposer_reward": "0", "bonus_proposer_reward": "0", "withdraw_addr_enabled": true }'`, version.AppName),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "params"}},
 					GovProposal:    true,
 				},

@@ -34,3 +34,4 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Features
 
 * [#17825](https://github.com/cosmos/cosmos-sdk/pull/17825) Add AutoCLI Options.
+* [#18355](https://github.com/cosmos/cosmos-sdk/pull/18355) Addes new versions for `Balance`, `Owner`, `Supply`, `NFT`, `Class` queries that receives request via query string.

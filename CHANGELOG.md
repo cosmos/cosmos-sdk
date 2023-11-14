@@ -52,7 +52,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (server) [#17094](https://github.com/cosmos/cosmos-sdk/pull/17094) Add duration `shutdown-grace` for resource clean up (closing database handles) before exit.
 * (x/auth/vesting) [#17810](https://github.com/cosmos/cosmos-sdk/pull/17810) Add the ability to specify a start time for continuous vesting accounts.
 * (baseapp) [#18071](https://github.com/cosmos/cosmos-sdk/pull/18071) Add hybrid handlers to `MsgServiceRouter`.
-* (x/nft) [#18355](https://github.com/cosmos/cosmos-sdk/pull/18355) Addes new versions for `Balance`, `Owner`, `Supply`, `NFT`, `Class` queries that receives request via query string.
 
 ### Improvements
 

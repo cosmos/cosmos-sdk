@@ -103,6 +103,14 @@ func (k MsgServer) CommunityPoolSpend(ctx context.Context, msg *types.MsgCommuni
 	return &types.MsgCommunityPoolSpendResponse{}, nil
 }
 
+func (k MsgServer) CreateContinuousFund(ctx context.Context, msg *types.MsgCreateContinuousFund) (*types.MsgCreateContinuousFundResponse, error) {
+	return &types.MsgCreateContinuousFundResponse{}, nil
+}
+
+func (k MsgServer) CancelContinuousFund(ctx context.Context, msg *types.MsgCancelContinuousFund) (*types.MsgCancelContinuousFundResponse, error) {
+	return &types.MsgCancelContinuousFundResponse{}, nil
+}
+
 func (k *Keeper) validateAuthority(authority string) error {
 	if _, err := k.authKeeper.AddressCodec().StringToBytes(authority); err != nil {
 		return sdkerrors.ErrInvalidAddress.Wrapf("invalid authority address: %s", err)

@@ -15,7 +15,6 @@ import (
 	authtypes "cosmossdk.io/x/auth/types"
 	slashingkeeper "cosmossdk.io/x/slashing/keeper"
 	slashingtestutil "cosmossdk.io/x/slashing/testutil"
-	"cosmossdk.io/x/slashing/types"
 	slashingtypes "cosmossdk.io/x/slashing/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -55,7 +54,7 @@ func (s *KeeperTestSuite) SetupTest() {
 	s.stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec("cosmosvaloper")).AnyTimes()
 	s.stakingKeeper.EXPECT().ConsensusAddressCodec().Return(address.NewBech32Codec("cosmosvalcons")).AnyTimes()
 
-	authStr, err := address.NewBech32Codec("cosmos").BytesToString(authtypes.NewModuleAddress(types.GovModuleName))
+	authStr, err := address.NewBech32Codec("cosmos").BytesToString(authtypes.NewModuleAddress(slashingtypes.GovModuleName))
 	s.Require().NoError(err)
 
 	s.ctx = ctx

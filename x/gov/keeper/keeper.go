@@ -193,22 +193,22 @@ func (k Keeper) ModuleAccountAddress() sdk.AccAddress {
 // validateProposalLengths checks message metadata, summary and title
 // to have the expected length otherwise returns an error.
 func (k Keeper) validateProposalLengths(metadata, title, summary string) error {
-    if err := k.assertMetadataLength(metadata); err != nil {
-        return err
-    }
-    if err := k.assertSummaryLength(summary); err != nil {
-        return err
-    }
-    if err := k.assertTitleLength(title); err != nil {
-        return err
-    }
-    return nil
+	if err := k.assertMetadataLength(metadata); err != nil {
+		return err
+	}
+	if err := k.assertSummaryLength(summary); err != nil {
+		return err
+	}
+	if err := k.assertTitleLength(title); err != nil {
+		return err
+	}
+	return nil
 }
 
 // assertTitleLength returns an error if given title length
 // is greater than a pre-defined MaxTitleLen.
 func (k Keeper) assertTitleLength(title string) error {
-	if title != "" && uint64(len(title)) > k.config.MaxTitleLen {
+	if uint64(len(title)) > k.config.MaxTitleLen {
 		return types.ErrTitleTooLong.Wrapf("got title with length %d", len(title))
 	}
 	return nil
@@ -217,7 +217,7 @@ func (k Keeper) assertTitleLength(title string) error {
 // assertMetadataLength returns an error if given metadata length
 // is greater than a pre-defined MaxMetadataLen.
 func (k Keeper) assertMetadataLength(metadata string) error {
-	if metadata != "" && uint64(len(metadata)) > k.config.MaxMetadataLen {
+	if uint64(len(metadata)) > k.config.MaxMetadataLen {
 		return types.ErrMetadataTooLong.Wrapf("got metadata with length %d", len(metadata))
 	}
 	return nil
@@ -226,7 +226,7 @@ func (k Keeper) assertMetadataLength(metadata string) error {
 // assertSummaryLength returns an error if given summary length
 // is greater than a pre-defined MaxSummaryLen.
 func (k Keeper) assertSummaryLength(summary string) error {
-	if summary != "" && uint64(len(summary)) > k.config.MaxSummaryLen {
+	if uint64(len(summary)) > k.config.MaxSummaryLen {
 		return types.ErrSummaryTooLong.Wrapf("got summary with length %d", len(summary))
 	}
 	return nil

@@ -44,13 +44,15 @@ func (s *PruningTestSuite) TearDownTest() {
 }
 
 func (s *PruningTestSuite) TestPruning() {
-	s.manager.SetCommitmentOptions(Options{4, 2, false})
-	s.manager.SetStorageOptions(Options{3, 3, true})
+	s.manager.SetCommitmentOptions(Options{4, 2, true})
+	s.manager.SetStorageOptions(Options{3, 3, false})
 	s.manager.Start()
 
+	latestVersion := uint64(100)
+
 	// write 10 batches
-	for i := 0; i < 10; i++ {
-		version := uint64(i + 1)
+	for i := uint64(0); i < latestVersion; i++ {
+		version := i + 1
 		cs := store.NewChangeset()
 		cs.Add([]byte("key"), []byte(fmt.Sprintf("value%d", version)))
 		err := s.sc.WriteBatch(cs)
@@ -59,27 +61,27 @@ func (s *PruningTestSuite) TestPruning() {
 		s.Require().NoError(err)
 		err = s.ss.ApplyChangeset(version, cs)
 		s.Require().NoError(err)
-		s.manager.Prune(uint64(i + 1))
+		s.manager.Prune(version)
 	}
 
 	// wait for pruning to finish
 	s.manager.Stop()
 
-	// check the store for the version 6
-	val, err := s.ss.Get("", 6, []byte("key"))
+	// check the store for the version 96
+	val, err := s.ss.Get("", latestVersion-4, []byte("key"))
 	s.Require().NoError(err)
-	s.Require().Equal([]byte("value6"), val)
-	// check the store for the version 5
-	val, err = s.ss.Get("", 5, []byte("key"))
+	s.Require().Equal([]byte("value96"), val)
+	// check the store for the version 50
+	val, err = s.ss.Get("", 50, []byte("key"))
 	s.Require().NoError(err)
 	s.Require().Nil(val)
 
-	// check the commitment for the version 6
-	proof, err := s.sc.GetProof(6, []byte("key"))
+	// check the commitment for the version 96
+	proof, err := s.sc.GetProof(latestVersion-4, []byte("key"))
 	s.Require().NoError(err)
 	s.Require().NotNil(proof.GetExist())
-	// check the commitment for the version 5
-	proof, err = s.sc.GetProof(5, []byte("key"))
+	// check the commitment for the version 95
+	proof, err = s.sc.GetProof(latestVersion-5, []byte("key"))
 	s.Require().Error(err)
 	s.Require().Nil(proof)
 }

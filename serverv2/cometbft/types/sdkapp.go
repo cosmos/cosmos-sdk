@@ -25,6 +25,7 @@ type ProtoApp interface {
 	// New interface
 	InitChain(RequestInitChain) (ResponseInitChain, error)
 	DeliverTxs(coreheader.Info, [][]byte) ([]interface{}, error)
+	Commit() error
 
 	// COMET BFT specific stuff below (tbd where to put them)
 	Validators() []abci.ValidatorUpdate

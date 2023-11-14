@@ -151,6 +151,11 @@ func (w *cometABCIWrapper) FinalizeBlock(c context.Context, req *abci.RequestFin
 	// 	LastCommit:      sdk.ToSDKCommitInfo(req.DecidedLastCommit),
 	// })
 
+	// LastCommit is used by upgrade, slashing, distribution, and simulation
+	// Evidence is used by x/evidence
+	// ValidatorsHash is used by x/staking
+	// ProposerAddress is used by x/distribution
+
 	// GasMeter must be set after we get a context with updated consensus params.
 	// ctx = ctx.WithConsensusParams(w.GetConsensusParams(ctx)).
 	// WithBlockGasMeter(w.getBlockGasMeter(ctx))
@@ -197,6 +202,11 @@ func (w *cometABCIWrapper) Commit(ctx context.Context, _ *abci.RequestCommit) (*
 
 	resp := &abci.ResponseCommit{
 		RetainHeight: retainHeight,
+	}
+
+	err := w.app.Commit()
+	if err != nil {
+		return nil, err
 	}
 
 	// TODO: revise streaming

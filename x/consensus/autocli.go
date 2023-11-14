@@ -30,12 +30,17 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 			Service: consensusv1.Msg_ServiceDesc.ServiceName,
 			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
 				{
-					RpcMethod:      "UpdateParams",
-					Use:            "update-params-proposal [params]",
-					Short:          "Submit a proposal to update consensus module params",
-					Example:        fmt.Sprintf(`%s tx consensus update-params-proposal '{ params }'`, version.AppName),
-					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "params"}},
-					GovProposal:    true,
+					RpcMethod: "UpdateParams",
+					Use:       "update-params-proposal [params]",
+					Short:     "Submit a proposal to update consensus module params",
+					Example:   fmt.Sprintf(`%s tx consensus update-params-proposal '{ params }'`, version.AppName),
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "block"},
+						{ProtoField: "evidence"},
+						{ProtoField: "validator"},
+						{ProtoField: "abci"},
+					},
+					GovProposal: true,
 				},
 			},
 		},

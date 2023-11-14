@@ -5204,27 +5204,27 @@ func (x *fastReflection_MsgCreateContinuousFundResponse) ProtoMethods() *protoif
 }
 
 var (
-	md_MsgCancelContinuousFundProposal                   protoreflect.MessageDescriptor
-	fd_MsgCancelContinuousFundProposal_authority         protoreflect.FieldDescriptor
-	fd_MsgCancelContinuousFundProposal_recipient_address protoreflect.FieldDescriptor
+	md_MsgCancelContinuousFund                   protoreflect.MessageDescriptor
+	fd_MsgCancelContinuousFund_authority         protoreflect.FieldDescriptor
+	fd_MsgCancelContinuousFund_recipient_address protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_cosmos_protocolpool_v1_tx_proto_init()
-	md_MsgCancelContinuousFundProposal = File_cosmos_protocolpool_v1_tx_proto.Messages().ByName("MsgCancelContinuousFundProposal")
-	fd_MsgCancelContinuousFundProposal_authority = md_MsgCancelContinuousFundProposal.Fields().ByName("authority")
-	fd_MsgCancelContinuousFundProposal_recipient_address = md_MsgCancelContinuousFundProposal.Fields().ByName("recipient_address")
+	md_MsgCancelContinuousFund = File_cosmos_protocolpool_v1_tx_proto.Messages().ByName("MsgCancelContinuousFund")
+	fd_MsgCancelContinuousFund_authority = md_MsgCancelContinuousFund.Fields().ByName("authority")
+	fd_MsgCancelContinuousFund_recipient_address = md_MsgCancelContinuousFund.Fields().ByName("recipient_address")
 }
 
-var _ protoreflect.Message = (*fastReflection_MsgCancelContinuousFundProposal)(nil)
+var _ protoreflect.Message = (*fastReflection_MsgCancelContinuousFund)(nil)
 
-type fastReflection_MsgCancelContinuousFundProposal MsgCancelContinuousFundProposal
+type fastReflection_MsgCancelContinuousFund MsgCancelContinuousFund
 
-func (x *MsgCancelContinuousFundProposal) ProtoReflect() protoreflect.Message {
-	return (*fastReflection_MsgCancelContinuousFundProposal)(x)
+func (x *MsgCancelContinuousFund) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_MsgCancelContinuousFund)(x)
 }
 
-func (x *MsgCancelContinuousFundProposal) slowProtoReflect() protoreflect.Message {
+func (x *MsgCancelContinuousFund) slowProtoReflect() protoreflect.Message {
 	mi := &file_cosmos_protocolpool_v1_tx_proto_msgTypes[10]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -5236,43 +5236,43 @@ func (x *MsgCancelContinuousFundProposal) slowProtoReflect() protoreflect.Messag
 	return mi.MessageOf(x)
 }
 
-var _fastReflection_MsgCancelContinuousFundProposal_messageType fastReflection_MsgCancelContinuousFundProposal_messageType
-var _ protoreflect.MessageType = fastReflection_MsgCancelContinuousFundProposal_messageType{}
+var _fastReflection_MsgCancelContinuousFund_messageType fastReflection_MsgCancelContinuousFund_messageType
+var _ protoreflect.MessageType = fastReflection_MsgCancelContinuousFund_messageType{}
 
-type fastReflection_MsgCancelContinuousFundProposal_messageType struct{}
+type fastReflection_MsgCancelContinuousFund_messageType struct{}
 
-func (x fastReflection_MsgCancelContinuousFundProposal_messageType) Zero() protoreflect.Message {
-	return (*fastReflection_MsgCancelContinuousFundProposal)(nil)
+func (x fastReflection_MsgCancelContinuousFund_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_MsgCancelContinuousFund)(nil)
 }
-func (x fastReflection_MsgCancelContinuousFundProposal_messageType) New() protoreflect.Message {
-	return new(fastReflection_MsgCancelContinuousFundProposal)
+func (x fastReflection_MsgCancelContinuousFund_messageType) New() protoreflect.Message {
+	return new(fastReflection_MsgCancelContinuousFund)
 }
-func (x fastReflection_MsgCancelContinuousFundProposal_messageType) Descriptor() protoreflect.MessageDescriptor {
-	return md_MsgCancelContinuousFundProposal
+func (x fastReflection_MsgCancelContinuousFund_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgCancelContinuousFund
 }
 
 // Descriptor returns message descriptor, which contains only the protobuf
 // type information for the message.
-func (x *fastReflection_MsgCancelContinuousFundProposal) Descriptor() protoreflect.MessageDescriptor {
-	return md_MsgCancelContinuousFundProposal
+func (x *fastReflection_MsgCancelContinuousFund) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgCancelContinuousFund
 }
 
 // Type returns the message type, which encapsulates both Go and protobuf
 // type information. If the Go type information is not needed,
 // it is recommended that the message descriptor be used instead.
-func (x *fastReflection_MsgCancelContinuousFundProposal) Type() protoreflect.MessageType {
-	return _fastReflection_MsgCancelContinuousFundProposal_messageType
+func (x *fastReflection_MsgCancelContinuousFund) Type() protoreflect.MessageType {
+	return _fastReflection_MsgCancelContinuousFund_messageType
 }
 
 // New returns a newly allocated and mutable empty message.
-func (x *fastReflection_MsgCancelContinuousFundProposal) New() protoreflect.Message {
-	return new(fastReflection_MsgCancelContinuousFundProposal)
+func (x *fastReflection_MsgCancelContinuousFund) New() protoreflect.Message {
+	return new(fastReflection_MsgCancelContinuousFund)
 }
 
 // Interface unwraps the message reflection interface and
 // returns the underlying ProtoMessage interface.
-func (x *fastReflection_MsgCancelContinuousFundProposal) Interface() protoreflect.ProtoMessage {
-	return (*MsgCancelContinuousFundProposal)(x)
+func (x *fastReflection_MsgCancelContinuousFund) Interface() protoreflect.ProtoMessage {
+	return (*MsgCancelContinuousFund)(x)
 }
 
 // Range iterates over every populated field in an undefined order,
@@ -5280,16 +5280,16 @@ func (x *fastReflection_MsgCancelContinuousFundProposal) Interface() protoreflec
 // Range returns immediately if f returns false.
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
-func (x *fastReflection_MsgCancelContinuousFundProposal) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+func (x *fastReflection_MsgCancelContinuousFund) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
 	if x.Authority != "" {
 		value := protoreflect.ValueOfString(x.Authority)
-		if !f(fd_MsgCancelContinuousFundProposal_authority, value) {
+		if !f(fd_MsgCancelContinuousFund_authority, value) {
 			return
 		}
 	}
 	if x.RecipientAddress != "" {
 		value := protoreflect.ValueOfString(x.RecipientAddress)
-		if !f(fd_MsgCancelContinuousFundProposal_recipient_address, value) {
+		if !f(fd_MsgCancelContinuousFund_recipient_address, value) {
 			return
 		}
 	}
@@ -5306,17 +5306,17 @@ func (x *fastReflection_MsgCancelContinuousFundProposal) Range(f func(protorefle
 // In other cases (aside from the nullable cases above),
 // a proto3 scalar field is populated if it contains a non-zero value, and
 // a repeated field is populated if it is non-empty.
-func (x *fastReflection_MsgCancelContinuousFundProposal) Has(fd protoreflect.FieldDescriptor) bool {
+func (x *fastReflection_MsgCancelContinuousFund) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "cosmos.protocolpool.v1.MsgCancelContinuousFundProposal.authority":
+	case "cosmos.protocolpool.v1.MsgCancelContinuousFund.authority":
 		return x.Authority != ""
-	case "cosmos.protocolpool.v1.MsgCancelContinuousFundProposal.recipient_address":
+	case "cosmos.protocolpool.v1.MsgCancelContinuousFund.recipient_address":
 		return x.RecipientAddress != ""
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.MsgCancelContinuousFundProposal"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.MsgCancelContinuousFund"))
 		}
-		panic(fmt.Errorf("message cosmos.protocolpool.v1.MsgCancelContinuousFundProposal does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.protocolpool.v1.MsgCancelContinuousFund does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -5326,17 +5326,17 @@ func (x *fastReflection_MsgCancelContinuousFundProposal) Has(fd protoreflect.Fie
 // associated with the given field number.
 //
 // Clear is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgCancelContinuousFundProposal) Clear(fd protoreflect.FieldDescriptor) {
+func (x *fastReflection_MsgCancelContinuousFund) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "cosmos.protocolpool.v1.MsgCancelContinuousFundProposal.authority":
+	case "cosmos.protocolpool.v1.MsgCancelContinuousFund.authority":
 		x.Authority = ""
-	case "cosmos.protocolpool.v1.MsgCancelContinuousFundProposal.recipient_address":
+	case "cosmos.protocolpool.v1.MsgCancelContinuousFund.recipient_address":
 		x.RecipientAddress = ""
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.MsgCancelContinuousFundProposal"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.MsgCancelContinuousFund"))
 		}
-		panic(fmt.Errorf("message cosmos.protocolpool.v1.MsgCancelContinuousFundProposal does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.protocolpool.v1.MsgCancelContinuousFund does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -5346,19 +5346,19 @@ func (x *fastReflection_MsgCancelContinuousFundProposal) Clear(fd protoreflect.F
 // the default value of a bytes scalar is guaranteed to be a copy.
 // For unpopulated composite types, it returns an empty, read-only view
 // of the value; to obtain a mutable reference, use Mutable.
-func (x *fastReflection_MsgCancelContinuousFundProposal) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_MsgCancelContinuousFund) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "cosmos.protocolpool.v1.MsgCancelContinuousFundProposal.authority":
+	case "cosmos.protocolpool.v1.MsgCancelContinuousFund.authority":
 		value := x.Authority
 		return protoreflect.ValueOfString(value)
-	case "cosmos.protocolpool.v1.MsgCancelContinuousFundProposal.recipient_address":
+	case "cosmos.protocolpool.v1.MsgCancelContinuousFund.recipient_address":
 		value := x.RecipientAddress
 		return protoreflect.ValueOfString(value)
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.MsgCancelContinuousFundProposal"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.MsgCancelContinuousFund"))
 		}
-		panic(fmt.Errorf("message cosmos.protocolpool.v1.MsgCancelContinuousFundProposal does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message cosmos.protocolpool.v1.MsgCancelContinuousFund does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -5372,17 +5372,17 @@ func (x *fastReflection_MsgCancelContinuousFundProposal) Get(descriptor protoref
 // empty, read-only value, then it panics.
 //
 // Set is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgCancelContinuousFundProposal) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+func (x *fastReflection_MsgCancelContinuousFund) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "cosmos.protocolpool.v1.MsgCancelContinuousFundProposal.authority":
+	case "cosmos.protocolpool.v1.MsgCancelContinuousFund.authority":
 		x.Authority = value.Interface().(string)
-	case "cosmos.protocolpool.v1.MsgCancelContinuousFundProposal.recipient_address":
+	case "cosmos.protocolpool.v1.MsgCancelContinuousFund.recipient_address":
 		x.RecipientAddress = value.Interface().(string)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.MsgCancelContinuousFundProposal"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.MsgCancelContinuousFund"))
 		}
-		panic(fmt.Errorf("message cosmos.protocolpool.v1.MsgCancelContinuousFundProposal does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.protocolpool.v1.MsgCancelContinuousFund does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -5396,44 +5396,44 @@ func (x *fastReflection_MsgCancelContinuousFundProposal) Set(fd protoreflect.Fie
 // It panics if the field does not contain a composite type.
 //
 // Mutable is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgCancelContinuousFundProposal) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_MsgCancelContinuousFund) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.protocolpool.v1.MsgCancelContinuousFundProposal.authority":
-		panic(fmt.Errorf("field authority of message cosmos.protocolpool.v1.MsgCancelContinuousFundProposal is not mutable"))
-	case "cosmos.protocolpool.v1.MsgCancelContinuousFundProposal.recipient_address":
-		panic(fmt.Errorf("field recipient_address of message cosmos.protocolpool.v1.MsgCancelContinuousFundProposal is not mutable"))
+	case "cosmos.protocolpool.v1.MsgCancelContinuousFund.authority":
+		panic(fmt.Errorf("field authority of message cosmos.protocolpool.v1.MsgCancelContinuousFund is not mutable"))
+	case "cosmos.protocolpool.v1.MsgCancelContinuousFund.recipient_address":
+		panic(fmt.Errorf("field recipient_address of message cosmos.protocolpool.v1.MsgCancelContinuousFund is not mutable"))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.MsgCancelContinuousFundProposal"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.MsgCancelContinuousFund"))
 		}
-		panic(fmt.Errorf("message cosmos.protocolpool.v1.MsgCancelContinuousFundProposal does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.protocolpool.v1.MsgCancelContinuousFund does not contain field %s", fd.FullName()))
 	}
 }
 
 // NewField returns a new value that is assignable to the field
 // for the given descriptor. For scalars, this returns the default value.
 // For lists, maps, and messages, this returns a new, empty, mutable value.
-func (x *fastReflection_MsgCancelContinuousFundProposal) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_MsgCancelContinuousFund) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.protocolpool.v1.MsgCancelContinuousFundProposal.authority":
+	case "cosmos.protocolpool.v1.MsgCancelContinuousFund.authority":
 		return protoreflect.ValueOfString("")
-	case "cosmos.protocolpool.v1.MsgCancelContinuousFundProposal.recipient_address":
+	case "cosmos.protocolpool.v1.MsgCancelContinuousFund.recipient_address":
 		return protoreflect.ValueOfString("")
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.MsgCancelContinuousFundProposal"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.MsgCancelContinuousFund"))
 		}
-		panic(fmt.Errorf("message cosmos.protocolpool.v1.MsgCancelContinuousFundProposal does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.protocolpool.v1.MsgCancelContinuousFund does not contain field %s", fd.FullName()))
 	}
 }
 
 // WhichOneof reports which field within the oneof is populated,
 // returning nil if none are populated.
 // It panics if the oneof descriptor does not belong to this message.
-func (x *fastReflection_MsgCancelContinuousFundProposal) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+func (x *fastReflection_MsgCancelContinuousFund) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in cosmos.protocolpool.v1.MsgCancelContinuousFundProposal", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.protocolpool.v1.MsgCancelContinuousFund", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -5441,7 +5441,7 @@ func (x *fastReflection_MsgCancelContinuousFundProposal) WhichOneof(d protorefle
 // GetUnknown retrieves the entire list of unknown fields.
 // The caller may only mutate the contents of the RawFields
 // if the mutated bytes are stored back into the message with SetUnknown.
-func (x *fastReflection_MsgCancelContinuousFundProposal) GetUnknown() protoreflect.RawFields {
+func (x *fastReflection_MsgCancelContinuousFund) GetUnknown() protoreflect.RawFields {
 	return x.unknownFields
 }
 
@@ -5452,7 +5452,7 @@ func (x *fastReflection_MsgCancelContinuousFundProposal) GetUnknown() protorefle
 // An empty RawFields may be passed to clear the fields.
 //
 // SetUnknown is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgCancelContinuousFundProposal) SetUnknown(fields protoreflect.RawFields) {
+func (x *fastReflection_MsgCancelContinuousFund) SetUnknown(fields protoreflect.RawFields) {
 	x.unknownFields = fields
 }
 
@@ -5464,7 +5464,7 @@ func (x *fastReflection_MsgCancelContinuousFundProposal) SetUnknown(fields proto
 // message type, but the details are implementation dependent.
 // Validity is not part of the protobuf data model, and may not
 // be preserved in marshaling or other operations.
-func (x *fastReflection_MsgCancelContinuousFundProposal) IsValid() bool {
+func (x *fastReflection_MsgCancelContinuousFund) IsValid() bool {
 	return x != nil
 }
 
@@ -5474,9 +5474,9 @@ func (x *fastReflection_MsgCancelContinuousFundProposal) IsValid() bool {
 // The returned methods type is identical to
 // "google.golang.org/protobuf/runtime/protoiface".Methods.
 // Consult the protoiface package documentation for details.
-func (x *fastReflection_MsgCancelContinuousFundProposal) ProtoMethods() *protoiface.Methods {
+func (x *fastReflection_MsgCancelContinuousFund) ProtoMethods() *protoiface.Methods {
 	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
-		x := input.Message.Interface().(*MsgCancelContinuousFundProposal)
+		x := input.Message.Interface().(*MsgCancelContinuousFund)
 		if x == nil {
 			return protoiface.SizeOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -5506,7 +5506,7 @@ func (x *fastReflection_MsgCancelContinuousFundProposal) ProtoMethods() *protoif
 	}
 
 	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
-		x := input.Message.Interface().(*MsgCancelContinuousFundProposal)
+		x := input.Message.Interface().(*MsgCancelContinuousFund)
 		if x == nil {
 			return protoiface.MarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -5550,7 +5550,7 @@ func (x *fastReflection_MsgCancelContinuousFundProposal) ProtoMethods() *protoif
 		}, nil
 	}
 	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
-		x := input.Message.Interface().(*MsgCancelContinuousFundProposal)
+		x := input.Message.Interface().(*MsgCancelContinuousFund)
 		if x == nil {
 			return protoiface.UnmarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -5582,10 +5582,10 @@ func (x *fastReflection_MsgCancelContinuousFundProposal) ProtoMethods() *protoif
 			fieldNum := int32(wire >> 3)
 			wireType := int(wire & 0x7)
 			if wireType == 4 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgCancelContinuousFundProposal: wiretype end group for non-group")
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgCancelContinuousFund: wiretype end group for non-group")
 			}
 			if fieldNum <= 0 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgCancelContinuousFundProposal: illegal tag %d (wire type %d)", fieldNum, wire)
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgCancelContinuousFund: illegal tag %d (wire type %d)", fieldNum, wire)
 			}
 			switch fieldNum {
 			case 1:
@@ -5688,29 +5688,29 @@ func (x *fastReflection_MsgCancelContinuousFundProposal) ProtoMethods() *protoif
 }
 
 var (
-	md_MsgCancelContinuousFundProposalResponse                   protoreflect.MessageDescriptor
-	fd_MsgCancelContinuousFundProposalResponse_canceled_time     protoreflect.FieldDescriptor
-	fd_MsgCancelContinuousFundProposalResponse_canceled_height   protoreflect.FieldDescriptor
-	fd_MsgCancelContinuousFundProposalResponse_recipient_address protoreflect.FieldDescriptor
+	md_MsgCancelContinuousFundResponse                   protoreflect.MessageDescriptor
+	fd_MsgCancelContinuousFundResponse_canceled_time     protoreflect.FieldDescriptor
+	fd_MsgCancelContinuousFundResponse_canceled_height   protoreflect.FieldDescriptor
+	fd_MsgCancelContinuousFundResponse_recipient_address protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_cosmos_protocolpool_v1_tx_proto_init()
-	md_MsgCancelContinuousFundProposalResponse = File_cosmos_protocolpool_v1_tx_proto.Messages().ByName("MsgCancelContinuousFundProposalResponse")
-	fd_MsgCancelContinuousFundProposalResponse_canceled_time = md_MsgCancelContinuousFundProposalResponse.Fields().ByName("canceled_time")
-	fd_MsgCancelContinuousFundProposalResponse_canceled_height = md_MsgCancelContinuousFundProposalResponse.Fields().ByName("canceled_height")
-	fd_MsgCancelContinuousFundProposalResponse_recipient_address = md_MsgCancelContinuousFundProposalResponse.Fields().ByName("recipient_address")
+	md_MsgCancelContinuousFundResponse = File_cosmos_protocolpool_v1_tx_proto.Messages().ByName("MsgCancelContinuousFundResponse")
+	fd_MsgCancelContinuousFundResponse_canceled_time = md_MsgCancelContinuousFundResponse.Fields().ByName("canceled_time")
+	fd_MsgCancelContinuousFundResponse_canceled_height = md_MsgCancelContinuousFundResponse.Fields().ByName("canceled_height")
+	fd_MsgCancelContinuousFundResponse_recipient_address = md_MsgCancelContinuousFundResponse.Fields().ByName("recipient_address")
 }
 
-var _ protoreflect.Message = (*fastReflection_MsgCancelContinuousFundProposalResponse)(nil)
+var _ protoreflect.Message = (*fastReflection_MsgCancelContinuousFundResponse)(nil)
 
-type fastReflection_MsgCancelContinuousFundProposalResponse MsgCancelContinuousFundProposalResponse
+type fastReflection_MsgCancelContinuousFundResponse MsgCancelContinuousFundResponse
 
-func (x *MsgCancelContinuousFundProposalResponse) ProtoReflect() protoreflect.Message {
-	return (*fastReflection_MsgCancelContinuousFundProposalResponse)(x)
+func (x *MsgCancelContinuousFundResponse) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_MsgCancelContinuousFundResponse)(x)
 }
 
-func (x *MsgCancelContinuousFundProposalResponse) slowProtoReflect() protoreflect.Message {
+func (x *MsgCancelContinuousFundResponse) slowProtoReflect() protoreflect.Message {
 	mi := &file_cosmos_protocolpool_v1_tx_proto_msgTypes[11]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -5722,43 +5722,43 @@ func (x *MsgCancelContinuousFundProposalResponse) slowProtoReflect() protoreflec
 	return mi.MessageOf(x)
 }
 
-var _fastReflection_MsgCancelContinuousFundProposalResponse_messageType fastReflection_MsgCancelContinuousFundProposalResponse_messageType
-var _ protoreflect.MessageType = fastReflection_MsgCancelContinuousFundProposalResponse_messageType{}
+var _fastReflection_MsgCancelContinuousFundResponse_messageType fastReflection_MsgCancelContinuousFundResponse_messageType
+var _ protoreflect.MessageType = fastReflection_MsgCancelContinuousFundResponse_messageType{}
 
-type fastReflection_MsgCancelContinuousFundProposalResponse_messageType struct{}
+type fastReflection_MsgCancelContinuousFundResponse_messageType struct{}
 
-func (x fastReflection_MsgCancelContinuousFundProposalResponse_messageType) Zero() protoreflect.Message {
-	return (*fastReflection_MsgCancelContinuousFundProposalResponse)(nil)
+func (x fastReflection_MsgCancelContinuousFundResponse_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_MsgCancelContinuousFundResponse)(nil)
 }
-func (x fastReflection_MsgCancelContinuousFundProposalResponse_messageType) New() protoreflect.Message {
-	return new(fastReflection_MsgCancelContinuousFundProposalResponse)
+func (x fastReflection_MsgCancelContinuousFundResponse_messageType) New() protoreflect.Message {
+	return new(fastReflection_MsgCancelContinuousFundResponse)
 }
-func (x fastReflection_MsgCancelContinuousFundProposalResponse_messageType) Descriptor() protoreflect.MessageDescriptor {
-	return md_MsgCancelContinuousFundProposalResponse
+func (x fastReflection_MsgCancelContinuousFundResponse_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgCancelContinuousFundResponse
 }
 
 // Descriptor returns message descriptor, which contains only the protobuf
 // type information for the message.
-func (x *fastReflection_MsgCancelContinuousFundProposalResponse) Descriptor() protoreflect.MessageDescriptor {
-	return md_MsgCancelContinuousFundProposalResponse
+func (x *fastReflection_MsgCancelContinuousFundResponse) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgCancelContinuousFundResponse
 }
 
 // Type returns the message type, which encapsulates both Go and protobuf
 // type information. If the Go type information is not needed,
 // it is recommended that the message descriptor be used instead.
-func (x *fastReflection_MsgCancelContinuousFundProposalResponse) Type() protoreflect.MessageType {
-	return _fastReflection_MsgCancelContinuousFundProposalResponse_messageType
+func (x *fastReflection_MsgCancelContinuousFundResponse) Type() protoreflect.MessageType {
+	return _fastReflection_MsgCancelContinuousFundResponse_messageType
 }
 
 // New returns a newly allocated and mutable empty message.
-func (x *fastReflection_MsgCancelContinuousFundProposalResponse) New() protoreflect.Message {
-	return new(fastReflection_MsgCancelContinuousFundProposalResponse)
+func (x *fastReflection_MsgCancelContinuousFundResponse) New() protoreflect.Message {
+	return new(fastReflection_MsgCancelContinuousFundResponse)
 }
 
 // Interface unwraps the message reflection interface and
 // returns the underlying ProtoMessage interface.
-func (x *fastReflection_MsgCancelContinuousFundProposalResponse) Interface() protoreflect.ProtoMessage {
-	return (*MsgCancelContinuousFundProposalResponse)(x)
+func (x *fastReflection_MsgCancelContinuousFundResponse) Interface() protoreflect.ProtoMessage {
+	return (*MsgCancelContinuousFundResponse)(x)
 }
 
 // Range iterates over every populated field in an undefined order,
@@ -5766,22 +5766,22 @@ func (x *fastReflection_MsgCancelContinuousFundProposalResponse) Interface() pro
 // Range returns immediately if f returns false.
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
-func (x *fastReflection_MsgCancelContinuousFundProposalResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+func (x *fastReflection_MsgCancelContinuousFundResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
 	if x.CanceledTime != nil {
 		value := protoreflect.ValueOfMessage(x.CanceledTime.ProtoReflect())
-		if !f(fd_MsgCancelContinuousFundProposalResponse_canceled_time, value) {
+		if !f(fd_MsgCancelContinuousFundResponse_canceled_time, value) {
 			return
 		}
 	}
 	if x.CanceledHeight != uint64(0) {
 		value := protoreflect.ValueOfUint64(x.CanceledHeight)
-		if !f(fd_MsgCancelContinuousFundProposalResponse_canceled_height, value) {
+		if !f(fd_MsgCancelContinuousFundResponse_canceled_height, value) {
 			return
 		}
 	}
 	if x.RecipientAddress != "" {
 		value := protoreflect.ValueOfString(x.RecipientAddress)
-		if !f(fd_MsgCancelContinuousFundProposalResponse_recipient_address, value) {
+		if !f(fd_MsgCancelContinuousFundResponse_recipient_address, value) {
 			return
 		}
 	}
@@ -5798,19 +5798,19 @@ func (x *fastReflection_MsgCancelContinuousFundProposalResponse) Range(f func(pr
 // In other cases (aside from the nullable cases above),
 // a proto3 scalar field is populated if it contains a non-zero value, and
 // a repeated field is populated if it is non-empty.
-func (x *fastReflection_MsgCancelContinuousFundProposalResponse) Has(fd protoreflect.FieldDescriptor) bool {
+func (x *fastReflection_MsgCancelContinuousFundResponse) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "cosmos.protocolpool.v1.MsgCancelContinuousFundProposalResponse.canceled_time":
+	case "cosmos.protocolpool.v1.MsgCancelContinuousFundResponse.canceled_time":
 		return x.CanceledTime != nil
-	case "cosmos.protocolpool.v1.MsgCancelContinuousFundProposalResponse.canceled_height":
+	case "cosmos.protocolpool.v1.MsgCancelContinuousFundResponse.canceled_height":
 		return x.CanceledHeight != uint64(0)
-	case "cosmos.protocolpool.v1.MsgCancelContinuousFundProposalResponse.recipient_address":
+	case "cosmos.protocolpool.v1.MsgCancelContinuousFundResponse.recipient_address":
 		return x.RecipientAddress != ""
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.MsgCancelContinuousFundProposalResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.MsgCancelContinuousFundResponse"))
 		}
-		panic(fmt.Errorf("message cosmos.protocolpool.v1.MsgCancelContinuousFundProposalResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.protocolpool.v1.MsgCancelContinuousFundResponse does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -5820,19 +5820,19 @@ func (x *fastReflection_MsgCancelContinuousFundProposalResponse) Has(fd protoref
 // associated with the given field number.
 //
 // Clear is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgCancelContinuousFundProposalResponse) Clear(fd protoreflect.FieldDescriptor) {
+func (x *fastReflection_MsgCancelContinuousFundResponse) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "cosmos.protocolpool.v1.MsgCancelContinuousFundProposalResponse.canceled_time":
+	case "cosmos.protocolpool.v1.MsgCancelContinuousFundResponse.canceled_time":
 		x.CanceledTime = nil
-	case "cosmos.protocolpool.v1.MsgCancelContinuousFundProposalResponse.canceled_height":
+	case "cosmos.protocolpool.v1.MsgCancelContinuousFundResponse.canceled_height":
 		x.CanceledHeight = uint64(0)
-	case "cosmos.protocolpool.v1.MsgCancelContinuousFundProposalResponse.recipient_address":
+	case "cosmos.protocolpool.v1.MsgCancelContinuousFundResponse.recipient_address":
 		x.RecipientAddress = ""
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.MsgCancelContinuousFundProposalResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.MsgCancelContinuousFundResponse"))
 		}
-		panic(fmt.Errorf("message cosmos.protocolpool.v1.MsgCancelContinuousFundProposalResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.protocolpool.v1.MsgCancelContinuousFundResponse does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -5842,22 +5842,22 @@ func (x *fastReflection_MsgCancelContinuousFundProposalResponse) Clear(fd protor
 // the default value of a bytes scalar is guaranteed to be a copy.
 // For unpopulated composite types, it returns an empty, read-only view
 // of the value; to obtain a mutable reference, use Mutable.
-func (x *fastReflection_MsgCancelContinuousFundProposalResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_MsgCancelContinuousFundResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "cosmos.protocolpool.v1.MsgCancelContinuousFundProposalResponse.canceled_time":
+	case "cosmos.protocolpool.v1.MsgCancelContinuousFundResponse.canceled_time":
 		value := x.CanceledTime
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
-	case "cosmos.protocolpool.v1.MsgCancelContinuousFundProposalResponse.canceled_height":
+	case "cosmos.protocolpool.v1.MsgCancelContinuousFundResponse.canceled_height":
 		value := x.CanceledHeight
 		return protoreflect.ValueOfUint64(value)
-	case "cosmos.protocolpool.v1.MsgCancelContinuousFundProposalResponse.recipient_address":
+	case "cosmos.protocolpool.v1.MsgCancelContinuousFundResponse.recipient_address":
 		value := x.RecipientAddress
 		return protoreflect.ValueOfString(value)
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.MsgCancelContinuousFundProposalResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.MsgCancelContinuousFundResponse"))
 		}
-		panic(fmt.Errorf("message cosmos.protocolpool.v1.MsgCancelContinuousFundProposalResponse does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message cosmos.protocolpool.v1.MsgCancelContinuousFundResponse does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -5871,19 +5871,19 @@ func (x *fastReflection_MsgCancelContinuousFundProposalResponse) Get(descriptor 
 // empty, read-only value, then it panics.
 //
 // Set is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgCancelContinuousFundProposalResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+func (x *fastReflection_MsgCancelContinuousFundResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "cosmos.protocolpool.v1.MsgCancelContinuousFundProposalResponse.canceled_time":
+	case "cosmos.protocolpool.v1.MsgCancelContinuousFundResponse.canceled_time":
 		x.CanceledTime = value.Message().Interface().(*timestamppb.Timestamp)
-	case "cosmos.protocolpool.v1.MsgCancelContinuousFundProposalResponse.canceled_height":
+	case "cosmos.protocolpool.v1.MsgCancelContinuousFundResponse.canceled_height":
 		x.CanceledHeight = value.Uint()
-	case "cosmos.protocolpool.v1.MsgCancelContinuousFundProposalResponse.recipient_address":
+	case "cosmos.protocolpool.v1.MsgCancelContinuousFundResponse.recipient_address":
 		x.RecipientAddress = value.Interface().(string)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.MsgCancelContinuousFundProposalResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.MsgCancelContinuousFundResponse"))
 		}
-		panic(fmt.Errorf("message cosmos.protocolpool.v1.MsgCancelContinuousFundProposalResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.protocolpool.v1.MsgCancelContinuousFundResponse does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -5897,52 +5897,52 @@ func (x *fastReflection_MsgCancelContinuousFundProposalResponse) Set(fd protoref
 // It panics if the field does not contain a composite type.
 //
 // Mutable is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgCancelContinuousFundProposalResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_MsgCancelContinuousFundResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.protocolpool.v1.MsgCancelContinuousFundProposalResponse.canceled_time":
+	case "cosmos.protocolpool.v1.MsgCancelContinuousFundResponse.canceled_time":
 		if x.CanceledTime == nil {
 			x.CanceledTime = new(timestamppb.Timestamp)
 		}
 		return protoreflect.ValueOfMessage(x.CanceledTime.ProtoReflect())
-	case "cosmos.protocolpool.v1.MsgCancelContinuousFundProposalResponse.canceled_height":
-		panic(fmt.Errorf("field canceled_height of message cosmos.protocolpool.v1.MsgCancelContinuousFundProposalResponse is not mutable"))
-	case "cosmos.protocolpool.v1.MsgCancelContinuousFundProposalResponse.recipient_address":
-		panic(fmt.Errorf("field recipient_address of message cosmos.protocolpool.v1.MsgCancelContinuousFundProposalResponse is not mutable"))
+	case "cosmos.protocolpool.v1.MsgCancelContinuousFundResponse.canceled_height":
+		panic(fmt.Errorf("field canceled_height of message cosmos.protocolpool.v1.MsgCancelContinuousFundResponse is not mutable"))
+	case "cosmos.protocolpool.v1.MsgCancelContinuousFundResponse.recipient_address":
+		panic(fmt.Errorf("field recipient_address of message cosmos.protocolpool.v1.MsgCancelContinuousFundResponse is not mutable"))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.MsgCancelContinuousFundProposalResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.MsgCancelContinuousFundResponse"))
 		}
-		panic(fmt.Errorf("message cosmos.protocolpool.v1.MsgCancelContinuousFundProposalResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.protocolpool.v1.MsgCancelContinuousFundResponse does not contain field %s", fd.FullName()))
 	}
 }
 
 // NewField returns a new value that is assignable to the field
 // for the given descriptor. For scalars, this returns the default value.
 // For lists, maps, and messages, this returns a new, empty, mutable value.
-func (x *fastReflection_MsgCancelContinuousFundProposalResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_MsgCancelContinuousFundResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.protocolpool.v1.MsgCancelContinuousFundProposalResponse.canceled_time":
+	case "cosmos.protocolpool.v1.MsgCancelContinuousFundResponse.canceled_time":
 		m := new(timestamppb.Timestamp)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
-	case "cosmos.protocolpool.v1.MsgCancelContinuousFundProposalResponse.canceled_height":
+	case "cosmos.protocolpool.v1.MsgCancelContinuousFundResponse.canceled_height":
 		return protoreflect.ValueOfUint64(uint64(0))
-	case "cosmos.protocolpool.v1.MsgCancelContinuousFundProposalResponse.recipient_address":
+	case "cosmos.protocolpool.v1.MsgCancelContinuousFundResponse.recipient_address":
 		return protoreflect.ValueOfString("")
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.MsgCancelContinuousFundProposalResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.MsgCancelContinuousFundResponse"))
 		}
-		panic(fmt.Errorf("message cosmos.protocolpool.v1.MsgCancelContinuousFundProposalResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.protocolpool.v1.MsgCancelContinuousFundResponse does not contain field %s", fd.FullName()))
 	}
 }
 
 // WhichOneof reports which field within the oneof is populated,
 // returning nil if none are populated.
 // It panics if the oneof descriptor does not belong to this message.
-func (x *fastReflection_MsgCancelContinuousFundProposalResponse) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+func (x *fastReflection_MsgCancelContinuousFundResponse) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in cosmos.protocolpool.v1.MsgCancelContinuousFundProposalResponse", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.protocolpool.v1.MsgCancelContinuousFundResponse", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -5950,7 +5950,7 @@ func (x *fastReflection_MsgCancelContinuousFundProposalResponse) WhichOneof(d pr
 // GetUnknown retrieves the entire list of unknown fields.
 // The caller may only mutate the contents of the RawFields
 // if the mutated bytes are stored back into the message with SetUnknown.
-func (x *fastReflection_MsgCancelContinuousFundProposalResponse) GetUnknown() protoreflect.RawFields {
+func (x *fastReflection_MsgCancelContinuousFundResponse) GetUnknown() protoreflect.RawFields {
 	return x.unknownFields
 }
 
@@ -5961,7 +5961,7 @@ func (x *fastReflection_MsgCancelContinuousFundProposalResponse) GetUnknown() pr
 // An empty RawFields may be passed to clear the fields.
 //
 // SetUnknown is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgCancelContinuousFundProposalResponse) SetUnknown(fields protoreflect.RawFields) {
+func (x *fastReflection_MsgCancelContinuousFundResponse) SetUnknown(fields protoreflect.RawFields) {
 	x.unknownFields = fields
 }
 
@@ -5973,7 +5973,7 @@ func (x *fastReflection_MsgCancelContinuousFundProposalResponse) SetUnknown(fiel
 // message type, but the details are implementation dependent.
 // Validity is not part of the protobuf data model, and may not
 // be preserved in marshaling or other operations.
-func (x *fastReflection_MsgCancelContinuousFundProposalResponse) IsValid() bool {
+func (x *fastReflection_MsgCancelContinuousFundResponse) IsValid() bool {
 	return x != nil
 }
 
@@ -5983,9 +5983,9 @@ func (x *fastReflection_MsgCancelContinuousFundProposalResponse) IsValid() bool 
 // The returned methods type is identical to
 // "google.golang.org/protobuf/runtime/protoiface".Methods.
 // Consult the protoiface package documentation for details.
-func (x *fastReflection_MsgCancelContinuousFundProposalResponse) ProtoMethods() *protoiface.Methods {
+func (x *fastReflection_MsgCancelContinuousFundResponse) ProtoMethods() *protoiface.Methods {
 	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
-		x := input.Message.Interface().(*MsgCancelContinuousFundProposalResponse)
+		x := input.Message.Interface().(*MsgCancelContinuousFundResponse)
 		if x == nil {
 			return protoiface.SizeOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -6018,7 +6018,7 @@ func (x *fastReflection_MsgCancelContinuousFundProposalResponse) ProtoMethods() 
 	}
 
 	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
-		x := input.Message.Interface().(*MsgCancelContinuousFundProposalResponse)
+		x := input.Message.Interface().(*MsgCancelContinuousFundResponse)
 		if x == nil {
 			return protoiface.MarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -6074,7 +6074,7 @@ func (x *fastReflection_MsgCancelContinuousFundProposalResponse) ProtoMethods() 
 		}, nil
 	}
 	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
-		x := input.Message.Interface().(*MsgCancelContinuousFundProposalResponse)
+		x := input.Message.Interface().(*MsgCancelContinuousFundResponse)
 		if x == nil {
 			return protoiface.UnmarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -6106,10 +6106,10 @@ func (x *fastReflection_MsgCancelContinuousFundProposalResponse) ProtoMethods() 
 			fieldNum := int32(wire >> 3)
 			wireType := int(wire & 0x7)
 			if wireType == 4 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgCancelContinuousFundProposalResponse: wiretype end group for non-group")
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgCancelContinuousFundResponse: wiretype end group for non-group")
 			}
 			if fieldNum <= 0 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgCancelContinuousFundProposalResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgCancelContinuousFundResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 			}
 			switch fieldNum {
 			case 1:
@@ -6717,8 +6717,8 @@ func (*MsgCreateContinuousFundResponse) Descriptor() ([]byte, []int) {
 	return file_cosmos_protocolpool_v1_tx_proto_rawDescGZIP(), []int{9}
 }
 
-// MsgCancelContinuousFundProposal defines a message to cancel continuous funds for a specific recipient.
-type MsgCancelContinuousFundProposal struct {
+// MsgCancelContinuousFund defines a message to cancel continuous funds for a specific recipient.
+type MsgCancelContinuousFund struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -6729,8 +6729,8 @@ type MsgCancelContinuousFundProposal struct {
 	RecipientAddress string `protobuf:"bytes,2,opt,name=recipient_address,json=recipientAddress,proto3" json:"recipient_address,omitempty"`
 }
 
-func (x *MsgCancelContinuousFundProposal) Reset() {
-	*x = MsgCancelContinuousFundProposal{}
+func (x *MsgCancelContinuousFund) Reset() {
+	*x = MsgCancelContinuousFund{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_cosmos_protocolpool_v1_tx_proto_msgTypes[10]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -6738,34 +6738,34 @@ func (x *MsgCancelContinuousFundProposal) Reset() {
 	}
 }
 
-func (x *MsgCancelContinuousFundProposal) String() string {
+func (x *MsgCancelContinuousFund) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*MsgCancelContinuousFundProposal) ProtoMessage() {}
+func (*MsgCancelContinuousFund) ProtoMessage() {}
 
-// Deprecated: Use MsgCancelContinuousFundProposal.ProtoReflect.Descriptor instead.
-func (*MsgCancelContinuousFundProposal) Descriptor() ([]byte, []int) {
+// Deprecated: Use MsgCancelContinuousFund.ProtoReflect.Descriptor instead.
+func (*MsgCancelContinuousFund) Descriptor() ([]byte, []int) {
 	return file_cosmos_protocolpool_v1_tx_proto_rawDescGZIP(), []int{10}
 }
 
-func (x *MsgCancelContinuousFundProposal) GetAuthority() string {
+func (x *MsgCancelContinuousFund) GetAuthority() string {
 	if x != nil {
 		return x.Authority
 	}
 	return ""
 }
 
-func (x *MsgCancelContinuousFundProposal) GetRecipientAddress() string {
+func (x *MsgCancelContinuousFund) GetRecipientAddress() string {
 	if x != nil {
 		return x.RecipientAddress
 	}
 	return ""
 }
 
-// MsgCancelContinuousFundProposalResponse defines the response to executing a
-// MsgCancelContinuousFundProposal message.
-type MsgCancelContinuousFundProposalResponse struct {
+// MsgCancelContinuousFundResponse defines the response to executing a
+// MsgCancelContinuousFund message.
+type MsgCancelContinuousFundResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -6778,8 +6778,8 @@ type MsgCancelContinuousFundProposalResponse struct {
 	RecipientAddress string `protobuf:"bytes,3,opt,name=recipient_address,json=recipientAddress,proto3" json:"recipient_address,omitempty"`
 }
 
-func (x *MsgCancelContinuousFundProposalResponse) Reset() {
-	*x = MsgCancelContinuousFundProposalResponse{}
+func (x *MsgCancelContinuousFundResponse) Reset() {
+	*x = MsgCancelContinuousFundResponse{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_cosmos_protocolpool_v1_tx_proto_msgTypes[11]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -6787,32 +6787,32 @@ func (x *MsgCancelContinuousFundProposalResponse) Reset() {
 	}
 }
 
-func (x *MsgCancelContinuousFundProposalResponse) String() string {
+func (x *MsgCancelContinuousFundResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*MsgCancelContinuousFundProposalResponse) ProtoMessage() {}
+func (*MsgCancelContinuousFundResponse) ProtoMessage() {}
 
-// Deprecated: Use MsgCancelContinuousFundProposalResponse.ProtoReflect.Descriptor instead.
-func (*MsgCancelContinuousFundProposalResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use MsgCancelContinuousFundResponse.ProtoReflect.Descriptor instead.
+func (*MsgCancelContinuousFundResponse) Descriptor() ([]byte, []int) {
 	return file_cosmos_protocolpool_v1_tx_proto_rawDescGZIP(), []int{11}
 }
 
-func (x *MsgCancelContinuousFundProposalResponse) GetCanceledTime() *timestamppb.Timestamp {
+func (x *MsgCancelContinuousFundResponse) GetCanceledTime() *timestamppb.Timestamp {
 	if x != nil {
 		return x.CanceledTime
 	}
 	return nil
 }
 
-func (x *MsgCancelContinuousFundProposalResponse) GetCanceledHeight() uint64 {
+func (x *MsgCancelContinuousFundResponse) GetCanceledHeight() uint64 {
 	if x != nil {
 		return x.CanceledHeight
 	}
 	return 0
 }
 
-func (x *MsgCancelContinuousFundProposalResponse) GetRecipientAddress() string {
+func (x *MsgCancelContinuousFundResponse) GetRecipientAddress() string {
 	if x != nil {
 		return x.RecipientAddress
 	}
@@ -6908,7 +6908,7 @@ var file_cosmos_protocolpool_v1_tx_proto_rawDesc = []byte{
 	0x42, 0x30, 0xc8, 0xde, 0x1f, 0x00, 0xaa, 0xdf, 0x1f, 0x28, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62,
 	0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x63, 0x6f, 0x73, 0x6d,
 	0x6f, 0x73, 0x2d, 0x73, 0x64, 0x6b, 0x2f, 0x74, 0x79, 0x70, 0x65, 0x73, 0x2e, 0x43, 0x6f, 0x69,
-	0x6e, 0x73, 0x52, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x22, 0xe1, 0x03, 0x0a, 0x17, 0x4d,
+	0x6e, 0x73, 0x52, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x22, 0xd9, 0x03, 0x0a, 0x17, 0x4d,
 	0x73, 0x67, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x43, 0x6f, 0x6e, 0x74, 0x69, 0x6e, 0x75, 0x6f,
 	0x75, 0x73, 0x46, 0x75, 0x6e, 0x64, 0x12, 0x14, 0x0a, 0x05, 0x74, 0x69, 0x74, 0x6c, 0x65, 0x18,
 	0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x74, 0x69, 0x74, 0x6c, 0x65, 0x12, 0x20, 0x0a, 0x0b,
@@ -6937,13 +6937,12 @@ var file_cosmos_protocolpool_v1_tx_proto_rawDesc = []byte{
 	0x65, 0x78, 0x70, 0x69, 0x72, 0x79, 0x18, 0x08, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1a, 0x2e, 0x67,
 	0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x54,
 	0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x42, 0x04, 0x90, 0xdf, 0x1f, 0x01, 0x52, 0x06,
-	0x65, 0x78, 0x70, 0x69, 0x72, 0x79, 0x3a, 0x16, 0x88, 0xa0, 0x1f, 0x00, 0xe8, 0xa0, 0x1f, 0x00,
-	0x82, 0xe7, 0xb0, 0x2a, 0x09, 0x61, 0x75, 0x74, 0x68, 0x6f, 0x72, 0x69, 0x74, 0x79, 0x22, 0x21,
-	0x0a, 0x1f, 0x4d, 0x73, 0x67, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x43, 0x6f, 0x6e, 0x74, 0x69,
-	0x6e, 0x75, 0x6f, 0x75, 0x73, 0x46, 0x75, 0x6e, 0x64, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
-	0x65, 0x22, 0xb0, 0x01, 0x0a, 0x1f, 0x4d, 0x73, 0x67, 0x43, 0x61, 0x6e, 0x63, 0x65, 0x6c, 0x43,
-	0x6f, 0x6e, 0x74, 0x69, 0x6e, 0x75, 0x6f, 0x75, 0x73, 0x46, 0x75, 0x6e, 0x64, 0x50, 0x72, 0x6f,
-	0x70, 0x6f, 0x73, 0x61, 0x6c, 0x12, 0x36, 0x0a, 0x09, 0x61, 0x75, 0x74, 0x68, 0x6f, 0x72, 0x69,
+	0x65, 0x78, 0x70, 0x69, 0x72, 0x79, 0x3a, 0x0e, 0x82, 0xe7, 0xb0, 0x2a, 0x09, 0x61, 0x75, 0x74,
+	0x68, 0x6f, 0x72, 0x69, 0x74, 0x79, 0x22, 0x21, 0x0a, 0x1f, 0x4d, 0x73, 0x67, 0x43, 0x72, 0x65,
+	0x61, 0x74, 0x65, 0x43, 0x6f, 0x6e, 0x74, 0x69, 0x6e, 0x75, 0x6f, 0x75, 0x73, 0x46, 0x75, 0x6e,
+	0x64, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0xa8, 0x01, 0x0a, 0x17, 0x4d, 0x73,
+	0x67, 0x43, 0x61, 0x6e, 0x63, 0x65, 0x6c, 0x43, 0x6f, 0x6e, 0x74, 0x69, 0x6e, 0x75, 0x6f, 0x75,
+	0x73, 0x46, 0x75, 0x6e, 0x64, 0x12, 0x36, 0x0a, 0x09, 0x61, 0x75, 0x74, 0x68, 0x6f, 0x72, 0x69,
 	0x74, 0x79, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f,
 	0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69,
 	0x6e, 0x67, 0x52, 0x09, 0x61, 0x75, 0x74, 0x68, 0x6f, 0x72, 0x69, 0x74, 0x79, 0x12, 0x45, 0x0a,
@@ -6952,69 +6951,67 @@ var file_cosmos_protocolpool_v1_tx_proto_rawDesc = []byte{
 	0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69,
 	0x6e, 0x67, 0x52, 0x10, 0x72, 0x65, 0x63, 0x69, 0x70, 0x69, 0x65, 0x6e, 0x74, 0x41, 0x64, 0x64,
 	0x72, 0x65, 0x73, 0x73, 0x3a, 0x0e, 0x82, 0xe7, 0xb0, 0x2a, 0x09, 0x61, 0x75, 0x74, 0x68, 0x6f,
-	0x72, 0x69, 0x74, 0x79, 0x22, 0xe4, 0x01, 0x0a, 0x27, 0x4d, 0x73, 0x67, 0x43, 0x61, 0x6e, 0x63,
+	0x72, 0x69, 0x74, 0x79, 0x22, 0xdc, 0x01, 0x0a, 0x1f, 0x4d, 0x73, 0x67, 0x43, 0x61, 0x6e, 0x63,
 	0x65, 0x6c, 0x43, 0x6f, 0x6e, 0x74, 0x69, 0x6e, 0x75, 0x6f, 0x75, 0x73, 0x46, 0x75, 0x6e, 0x64,
-	0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
-	0x12, 0x49, 0x0a, 0x0d, 0x63, 0x61, 0x6e, 0x63, 0x65, 0x6c, 0x65, 0x64, 0x5f, 0x74, 0x69, 0x6d,
-	0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1a, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65,
-	0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74,
-	0x61, 0x6d, 0x70, 0x42, 0x08, 0xc8, 0xde, 0x1f, 0x00, 0x90, 0xdf, 0x1f, 0x01, 0x52, 0x0c, 0x63,
-	0x61, 0x6e, 0x63, 0x65, 0x6c, 0x65, 0x64, 0x54, 0x69, 0x6d, 0x65, 0x12, 0x27, 0x0a, 0x0f, 0x63,
-	0x61, 0x6e, 0x63, 0x65, 0x6c, 0x65, 0x64, 0x5f, 0x68, 0x65, 0x69, 0x67, 0x68, 0x74, 0x18, 0x02,
-	0x20, 0x01, 0x28, 0x04, 0x52, 0x0e, 0x63, 0x61, 0x6e, 0x63, 0x65, 0x6c, 0x65, 0x64, 0x48, 0x65,
-	0x69, 0x67, 0x68, 0x74, 0x12, 0x45, 0x0a, 0x11, 0x72, 0x65, 0x63, 0x69, 0x70, 0x69, 0x65, 0x6e,
-	0x74, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x42,
-	0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72,
-	0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x10, 0x72, 0x65, 0x63, 0x69, 0x70,
-	0x69, 0x65, 0x6e, 0x74, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x32, 0x89, 0x06, 0x0a, 0x03,
-	0x4d, 0x73, 0x67, 0x12, 0x77, 0x0a, 0x11, 0x46, 0x75, 0x6e, 0x64, 0x43, 0x6f, 0x6d, 0x6d, 0x75,
-	0x6e, 0x69, 0x74, 0x79, 0x50, 0x6f, 0x6f, 0x6c, 0x12, 0x2c, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
-	0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x2e, 0x76,
-	0x31, 0x2e, 0x4d, 0x73, 0x67, 0x46, 0x75, 0x6e, 0x64, 0x43, 0x6f, 0x6d, 0x6d, 0x75, 0x6e, 0x69,
-	0x74, 0x79, 0x50, 0x6f, 0x6f, 0x6c, 0x1a, 0x34, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e,
-	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x2e, 0x76, 0x31, 0x2e,
-	0x4d, 0x73, 0x67, 0x46, 0x75, 0x6e, 0x64, 0x43, 0x6f, 0x6d, 0x6d, 0x75, 0x6e, 0x69, 0x74, 0x79,
-	0x50, 0x6f, 0x6f, 0x6c, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x7a, 0x0a, 0x12,
-	0x43, 0x6f, 0x6d, 0x6d, 0x75, 0x6e, 0x69, 0x74, 0x79, 0x50, 0x6f, 0x6f, 0x6c, 0x53, 0x70, 0x65,
-	0x6e, 0x64, 0x12, 0x2d, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74,
+	0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x49, 0x0a, 0x0d, 0x63, 0x61, 0x6e, 0x63,
+	0x65, 0x6c, 0x65, 0x64, 0x5f, 0x74, 0x69, 0x6d, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32,
+	0x1a, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75,
+	0x66, 0x2e, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x42, 0x08, 0xc8, 0xde, 0x1f,
+	0x00, 0x90, 0xdf, 0x1f, 0x01, 0x52, 0x0c, 0x63, 0x61, 0x6e, 0x63, 0x65, 0x6c, 0x65, 0x64, 0x54,
+	0x69, 0x6d, 0x65, 0x12, 0x27, 0x0a, 0x0f, 0x63, 0x61, 0x6e, 0x63, 0x65, 0x6c, 0x65, 0x64, 0x5f,
+	0x68, 0x65, 0x69, 0x67, 0x68, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x04, 0x52, 0x0e, 0x63, 0x61,
+	0x6e, 0x63, 0x65, 0x6c, 0x65, 0x64, 0x48, 0x65, 0x69, 0x67, 0x68, 0x74, 0x12, 0x45, 0x0a, 0x11,
+	0x72, 0x65, 0x63, 0x69, 0x70, 0x69, 0x65, 0x6e, 0x74, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73,
+	0x73, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73,
+	0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e,
+	0x67, 0x52, 0x10, 0x72, 0x65, 0x63, 0x69, 0x70, 0x69, 0x65, 0x6e, 0x74, 0x41, 0x64, 0x64, 0x72,
+	0x65, 0x73, 0x73, 0x32, 0xf1, 0x05, 0x0a, 0x03, 0x4d, 0x73, 0x67, 0x12, 0x77, 0x0a, 0x11, 0x46,
+	0x75, 0x6e, 0x64, 0x43, 0x6f, 0x6d, 0x6d, 0x75, 0x6e, 0x69, 0x74, 0x79, 0x50, 0x6f, 0x6f, 0x6c,
+	0x12, 0x2c, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63,
+	0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x46, 0x75, 0x6e,
+	0x64, 0x43, 0x6f, 0x6d, 0x6d, 0x75, 0x6e, 0x69, 0x74, 0x79, 0x50, 0x6f, 0x6f, 0x6c, 0x1a, 0x34,
+	0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c,
+	0x70, 0x6f, 0x6f, 0x6c, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x46, 0x75, 0x6e, 0x64, 0x43,
+	0x6f, 0x6d, 0x6d, 0x75, 0x6e, 0x69, 0x74, 0x79, 0x50, 0x6f, 0x6f, 0x6c, 0x52, 0x65, 0x73, 0x70,
+	0x6f, 0x6e, 0x73, 0x65, 0x12, 0x7a, 0x0a, 0x12, 0x43, 0x6f, 0x6d, 0x6d, 0x75, 0x6e, 0x69, 0x74,
+	0x79, 0x50, 0x6f, 0x6f, 0x6c, 0x53, 0x70, 0x65, 0x6e, 0x64, 0x12, 0x2d, 0x2e, 0x63, 0x6f, 0x73,
+	0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c,
+	0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x43, 0x6f, 0x6d, 0x6d, 0x75, 0x6e, 0x69, 0x74, 0x79,
+	0x50, 0x6f, 0x6f, 0x6c, 0x53, 0x70, 0x65, 0x6e, 0x64, 0x1a, 0x35, 0x2e, 0x63, 0x6f, 0x73, 0x6d,
+	0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x2e,
+	0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x43, 0x6f, 0x6d, 0x6d, 0x75, 0x6e, 0x69, 0x74, 0x79, 0x50,
+	0x6f, 0x6f, 0x6c, 0x53, 0x70, 0x65, 0x6e, 0x64, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
+	0x12, 0x80, 0x01, 0x0a, 0x14, 0x53, 0x75, 0x62, 0x6d, 0x69, 0x74, 0x42, 0x75, 0x64, 0x67, 0x65,
+	0x74, 0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x12, 0x2f, 0x2e, 0x63, 0x6f, 0x73, 0x6d,
+	0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x2e,
+	0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x53, 0x75, 0x62, 0x6d, 0x69, 0x74, 0x42, 0x75, 0x64, 0x67,
+	0x65, 0x74, 0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x1a, 0x37, 0x2e, 0x63, 0x6f, 0x73,
+	0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c,
+	0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x53, 0x75, 0x62, 0x6d, 0x69, 0x74, 0x42, 0x75, 0x64,
+	0x67, 0x65, 0x74, 0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x52, 0x65, 0x73, 0x70, 0x6f,
+	0x6e, 0x73, 0x65, 0x12, 0x65, 0x0a, 0x0b, 0x43, 0x6c, 0x61, 0x69, 0x6d, 0x42, 0x75, 0x64, 0x67,
+	0x65, 0x74, 0x12, 0x26, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74,
 	0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x43,
-	0x6f, 0x6d, 0x6d, 0x75, 0x6e, 0x69, 0x74, 0x79, 0x50, 0x6f, 0x6f, 0x6c, 0x53, 0x70, 0x65, 0x6e,
-	0x64, 0x1a, 0x35, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f,
-	0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x43, 0x6f,
-	0x6d, 0x6d, 0x75, 0x6e, 0x69, 0x74, 0x79, 0x50, 0x6f, 0x6f, 0x6c, 0x53, 0x70, 0x65, 0x6e, 0x64,
-	0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x80, 0x01, 0x0a, 0x14, 0x53, 0x75, 0x62,
-	0x6d, 0x69, 0x74, 0x42, 0x75, 0x64, 0x67, 0x65, 0x74, 0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61,
-	0x6c, 0x12, 0x2f, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f,
-	0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x53, 0x75,
-	0x62, 0x6d, 0x69, 0x74, 0x42, 0x75, 0x64, 0x67, 0x65, 0x74, 0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73,
-	0x61, 0x6c, 0x1a, 0x37, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74,
-	0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x53,
-	0x75, 0x62, 0x6d, 0x69, 0x74, 0x42, 0x75, 0x64, 0x67, 0x65, 0x74, 0x50, 0x72, 0x6f, 0x70, 0x6f,
-	0x73, 0x61, 0x6c, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x65, 0x0a, 0x0b, 0x43,
-	0x6c, 0x61, 0x69, 0x6d, 0x42, 0x75, 0x64, 0x67, 0x65, 0x74, 0x12, 0x26, 0x2e, 0x63, 0x6f, 0x73,
+	0x6c, 0x61, 0x69, 0x6d, 0x42, 0x75, 0x64, 0x67, 0x65, 0x74, 0x1a, 0x2e, 0x2e, 0x63, 0x6f, 0x73,
 	0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c,
 	0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x43, 0x6c, 0x61, 0x69, 0x6d, 0x42, 0x75, 0x64, 0x67,
-	0x65, 0x74, 0x1a, 0x2e, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74,
-	0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x43,
-	0x6c, 0x61, 0x69, 0x6d, 0x42, 0x75, 0x64, 0x67, 0x65, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
-	0x73, 0x65, 0x12, 0x80, 0x01, 0x0a, 0x14, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x43, 0x6f, 0x6e,
-	0x74, 0x69, 0x6e, 0x75, 0x6f, 0x75, 0x73, 0x46, 0x75, 0x6e, 0x64, 0x12, 0x2f, 0x2e, 0x63, 0x6f,
-	0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f,
-	0x6c, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x43, 0x6f,
-	0x6e, 0x74, 0x69, 0x6e, 0x75, 0x6f, 0x75, 0x73, 0x46, 0x75, 0x6e, 0x64, 0x1a, 0x37, 0x2e, 0x63,
-	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f,
-	0x6f, 0x6c, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x43,
-	0x6f, 0x6e, 0x74, 0x69, 0x6e, 0x75, 0x6f, 0x75, 0x73, 0x46, 0x75, 0x6e, 0x64, 0x52, 0x65, 0x73,
-	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x98, 0x01, 0x0a, 0x1c, 0x43, 0x61, 0x6e, 0x63, 0x65, 0x6c,
-	0x43, 0x6f, 0x6e, 0x74, 0x69, 0x6e, 0x75, 0x6f, 0x75, 0x73, 0x46, 0x75, 0x6e, 0x64, 0x50, 0x72,
-	0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x12, 0x37, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e,
+	0x65, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x80, 0x01, 0x0a, 0x14, 0x43,
+	0x72, 0x65, 0x61, 0x74, 0x65, 0x43, 0x6f, 0x6e, 0x74, 0x69, 0x6e, 0x75, 0x6f, 0x75, 0x73, 0x46,
+	0x75, 0x6e, 0x64, 0x12, 0x2f, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f,
+	0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67,
+	0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x43, 0x6f, 0x6e, 0x74, 0x69, 0x6e, 0x75, 0x6f, 0x75, 0x73,
+	0x46, 0x75, 0x6e, 0x64, 0x1a, 0x37, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x72,
+	0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73,
+	0x67, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x43, 0x6f, 0x6e, 0x74, 0x69, 0x6e, 0x75, 0x6f, 0x75,
+	0x73, 0x46, 0x75, 0x6e, 0x64, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x80, 0x01,
+	0x0a, 0x14, 0x43, 0x61, 0x6e, 0x63, 0x65, 0x6c, 0x43, 0x6f, 0x6e, 0x74, 0x69, 0x6e, 0x75, 0x6f,
+	0x75, 0x73, 0x46, 0x75, 0x6e, 0x64, 0x12, 0x2f, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e,
 	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x2e, 0x76, 0x31, 0x2e,
 	0x4d, 0x73, 0x67, 0x43, 0x61, 0x6e, 0x63, 0x65, 0x6c, 0x43, 0x6f, 0x6e, 0x74, 0x69, 0x6e, 0x75,
-	0x6f, 0x75, 0x73, 0x46, 0x75, 0x6e, 0x64, 0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x1a,
-	0x3f, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f,
-	0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x43, 0x61, 0x6e, 0x63,
-	0x65, 0x6c, 0x43, 0x6f, 0x6e, 0x74, 0x69, 0x6e, 0x75, 0x6f, 0x75, 0x73, 0x46, 0x75, 0x6e, 0x64,
-	0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
+	0x6f, 0x75, 0x73, 0x46, 0x75, 0x6e, 0x64, 0x1a, 0x37, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
+	0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x2e, 0x76, 0x31,
+	0x2e, 0x4d, 0x73, 0x67, 0x43, 0x61, 0x6e, 0x63, 0x65, 0x6c, 0x43, 0x6f, 0x6e, 0x74, 0x69, 0x6e,
+	0x75, 0x6f, 0x75, 0x73, 0x46, 0x75, 0x6e, 0x64, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
 	0x1a, 0x05, 0x80, 0xe7, 0xb0, 0x2a, 0x01, 0x42, 0xd7, 0x01, 0x0a, 0x1a, 0x63, 0x6f, 0x6d, 0x2e,
 	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70,
 	0x6f, 0x6f, 0x6c, 0x2e, 0x76, 0x31, 0x42, 0x07, 0x54, 0x78, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50,
@@ -7046,21 +7043,21 @@ func file_cosmos_protocolpool_v1_tx_proto_rawDescGZIP() []byte {
 
 var file_cosmos_protocolpool_v1_tx_proto_msgTypes = make([]protoimpl.MessageInfo, 12)
 var file_cosmos_protocolpool_v1_tx_proto_goTypes = []interface{}{
-	(*MsgFundCommunityPool)(nil),                    // 0: cosmos.protocolpool.v1.MsgFundCommunityPool
-	(*MsgFundCommunityPoolResponse)(nil),            // 1: cosmos.protocolpool.v1.MsgFundCommunityPoolResponse
-	(*MsgCommunityPoolSpend)(nil),                   // 2: cosmos.protocolpool.v1.MsgCommunityPoolSpend
-	(*MsgCommunityPoolSpendResponse)(nil),           // 3: cosmos.protocolpool.v1.MsgCommunityPoolSpendResponse
-	(*MsgSubmitBudgetProposal)(nil),                 // 4: cosmos.protocolpool.v1.MsgSubmitBudgetProposal
-	(*MsgSubmitBudgetProposalResponse)(nil),         // 5: cosmos.protocolpool.v1.MsgSubmitBudgetProposalResponse
-	(*MsgClaimBudget)(nil),                          // 6: cosmos.protocolpool.v1.MsgClaimBudget
-	(*MsgClaimBudgetResponse)(nil),                  // 7: cosmos.protocolpool.v1.MsgClaimBudgetResponse
-	(*MsgCreateContinuousFund)(nil),                 // 8: cosmos.protocolpool.v1.MsgCreateContinuousFund
-	(*MsgCreateContinuousFundResponse)(nil),         // 9: cosmos.protocolpool.v1.MsgCreateContinuousFundResponse
-	(*MsgCancelContinuousFundProposal)(nil),         // 10: cosmos.protocolpool.v1.MsgCancelContinuousFundProposal
-	(*MsgCancelContinuousFundProposalResponse)(nil), // 11: cosmos.protocolpool.v1.MsgCancelContinuousFundProposalResponse
-	(*v1beta1.Coin)(nil),                            // 12: cosmos.base.v1beta1.Coin
-	(*timestamppb.Timestamp)(nil),                   // 13: google.protobuf.Timestamp
-	(*durationpb.Duration)(nil),                     // 14: google.protobuf.Duration
+	(*MsgFundCommunityPool)(nil),            // 0: cosmos.protocolpool.v1.MsgFundCommunityPool
+	(*MsgFundCommunityPoolResponse)(nil),    // 1: cosmos.protocolpool.v1.MsgFundCommunityPoolResponse
+	(*MsgCommunityPoolSpend)(nil),           // 2: cosmos.protocolpool.v1.MsgCommunityPoolSpend
+	(*MsgCommunityPoolSpendResponse)(nil),   // 3: cosmos.protocolpool.v1.MsgCommunityPoolSpendResponse
+	(*MsgSubmitBudgetProposal)(nil),         // 4: cosmos.protocolpool.v1.MsgSubmitBudgetProposal
+	(*MsgSubmitBudgetProposalResponse)(nil), // 5: cosmos.protocolpool.v1.MsgSubmitBudgetProposalResponse
+	(*MsgClaimBudget)(nil),                  // 6: cosmos.protocolpool.v1.MsgClaimBudget
+	(*MsgClaimBudgetResponse)(nil),          // 7: cosmos.protocolpool.v1.MsgClaimBudgetResponse
+	(*MsgCreateContinuousFund)(nil),         // 8: cosmos.protocolpool.v1.MsgCreateContinuousFund
+	(*MsgCreateContinuousFundResponse)(nil), // 9: cosmos.protocolpool.v1.MsgCreateContinuousFundResponse
+	(*MsgCancelContinuousFund)(nil),         // 10: cosmos.protocolpool.v1.MsgCancelContinuousFund
+	(*MsgCancelContinuousFundResponse)(nil), // 11: cosmos.protocolpool.v1.MsgCancelContinuousFundResponse
+	(*v1beta1.Coin)(nil),                    // 12: cosmos.base.v1beta1.Coin
+	(*timestamppb.Timestamp)(nil),           // 13: google.protobuf.Timestamp
+	(*durationpb.Duration)(nil),             // 14: google.protobuf.Duration
 }
 var file_cosmos_protocolpool_v1_tx_proto_depIdxs = []int32{
 	12, // 0: cosmos.protocolpool.v1.MsgFundCommunityPool.amount:type_name -> cosmos.base.v1beta1.Coin
@@ -7071,19 +7068,19 @@ var file_cosmos_protocolpool_v1_tx_proto_depIdxs = []int32{
 	12, // 5: cosmos.protocolpool.v1.MsgClaimBudgetResponse.amount:type_name -> cosmos.base.v1beta1.Coin
 	12, // 6: cosmos.protocolpool.v1.MsgCreateContinuousFund.cap:type_name -> cosmos.base.v1beta1.Coin
 	13, // 7: cosmos.protocolpool.v1.MsgCreateContinuousFund.expiry:type_name -> google.protobuf.Timestamp
-	13, // 8: cosmos.protocolpool.v1.MsgCancelContinuousFundProposalResponse.canceled_time:type_name -> google.protobuf.Timestamp
+	13, // 8: cosmos.protocolpool.v1.MsgCancelContinuousFundResponse.canceled_time:type_name -> google.protobuf.Timestamp
 	0,  // 9: cosmos.protocolpool.v1.Msg.FundCommunityPool:input_type -> cosmos.protocolpool.v1.MsgFundCommunityPool
 	2,  // 10: cosmos.protocolpool.v1.Msg.CommunityPoolSpend:input_type -> cosmos.protocolpool.v1.MsgCommunityPoolSpend
 	4,  // 11: cosmos.protocolpool.v1.Msg.SubmitBudgetProposal:input_type -> cosmos.protocolpool.v1.MsgSubmitBudgetProposal
 	6,  // 12: cosmos.protocolpool.v1.Msg.ClaimBudget:input_type -> cosmos.protocolpool.v1.MsgClaimBudget
 	8,  // 13: cosmos.protocolpool.v1.Msg.CreateContinuousFund:input_type -> cosmos.protocolpool.v1.MsgCreateContinuousFund
-	10, // 14: cosmos.protocolpool.v1.Msg.CancelContinuousFundProposal:input_type -> cosmos.protocolpool.v1.MsgCancelContinuousFundProposal
+	10, // 14: cosmos.protocolpool.v1.Msg.CancelContinuousFund:input_type -> cosmos.protocolpool.v1.MsgCancelContinuousFund
 	1,  // 15: cosmos.protocolpool.v1.Msg.FundCommunityPool:output_type -> cosmos.protocolpool.v1.MsgFundCommunityPoolResponse
 	3,  // 16: cosmos.protocolpool.v1.Msg.CommunityPoolSpend:output_type -> cosmos.protocolpool.v1.MsgCommunityPoolSpendResponse
 	5,  // 17: cosmos.protocolpool.v1.Msg.SubmitBudgetProposal:output_type -> cosmos.protocolpool.v1.MsgSubmitBudgetProposalResponse
 	7,  // 18: cosmos.protocolpool.v1.Msg.ClaimBudget:output_type -> cosmos.protocolpool.v1.MsgClaimBudgetResponse
 	9,  // 19: cosmos.protocolpool.v1.Msg.CreateContinuousFund:output_type -> cosmos.protocolpool.v1.MsgCreateContinuousFundResponse
-	11, // 20: cosmos.protocolpool.v1.Msg.CancelContinuousFundProposal:output_type -> cosmos.protocolpool.v1.MsgCancelContinuousFundProposalResponse
+	11, // 20: cosmos.protocolpool.v1.Msg.CancelContinuousFund:output_type -> cosmos.protocolpool.v1.MsgCancelContinuousFundResponse
 	15, // [15:21] is the sub-list for method output_type
 	9,  // [9:15] is the sub-list for method input_type
 	9,  // [9:9] is the sub-list for extension type_name
@@ -7218,7 +7215,7 @@ func file_cosmos_protocolpool_v1_tx_proto_init() {
 			}
 		}
 		file_cosmos_protocolpool_v1_tx_proto_msgTypes[10].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgCancelContinuousFundProposal); i {
+			switch v := v.(*MsgCancelContinuousFund); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -7230,7 +7227,7 @@ func file_cosmos_protocolpool_v1_tx_proto_init() {
 			}
 		}
 		file_cosmos_protocolpool_v1_tx_proto_msgTypes[11].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgCancelContinuousFundProposalResponse); i {
+			switch v := v.(*MsgCancelContinuousFundResponse); i {
 			case 0:
 				return &v.state
 			case 1:

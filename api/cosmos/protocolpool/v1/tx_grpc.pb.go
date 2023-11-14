@@ -19,12 +19,12 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	Msg_FundCommunityPool_FullMethodName            = "/cosmos.protocolpool.v1.Msg/FundCommunityPool"
-	Msg_CommunityPoolSpend_FullMethodName           = "/cosmos.protocolpool.v1.Msg/CommunityPoolSpend"
-	Msg_SubmitBudgetProposal_FullMethodName         = "/cosmos.protocolpool.v1.Msg/SubmitBudgetProposal"
-	Msg_ClaimBudget_FullMethodName                  = "/cosmos.protocolpool.v1.Msg/ClaimBudget"
-	Msg_CreateContinuousFund_FullMethodName         = "/cosmos.protocolpool.v1.Msg/CreateContinuousFund"
-	Msg_CancelContinuousFundProposal_FullMethodName = "/cosmos.protocolpool.v1.Msg/CancelContinuousFundProposal"
+	Msg_FundCommunityPool_FullMethodName    = "/cosmos.protocolpool.v1.Msg/FundCommunityPool"
+	Msg_CommunityPoolSpend_FullMethodName   = "/cosmos.protocolpool.v1.Msg/CommunityPoolSpend"
+	Msg_SubmitBudgetProposal_FullMethodName = "/cosmos.protocolpool.v1.Msg/SubmitBudgetProposal"
+	Msg_ClaimBudget_FullMethodName          = "/cosmos.protocolpool.v1.Msg/ClaimBudget"
+	Msg_CreateContinuousFund_FullMethodName = "/cosmos.protocolpool.v1.Msg/CreateContinuousFund"
+	Msg_CancelContinuousFund_FullMethodName = "/cosmos.protocolpool.v1.Msg/CancelContinuousFund"
 )
 
 // MsgClient is the client API for Msg service.
@@ -45,8 +45,8 @@ type MsgClient interface {
 	ClaimBudget(ctx context.Context, in *MsgClaimBudget, opts ...grpc.CallOption) (*MsgClaimBudgetResponse, error)
 	// CreateContinuousFund defines a method to add funds continuously.
 	CreateContinuousFund(ctx context.Context, in *MsgCreateContinuousFund, opts ...grpc.CallOption) (*MsgCreateContinuousFundResponse, error)
-	// CancelContinuousFundProposal defines a method for cancelling continuous fund proposal.
-	CancelContinuousFundProposal(ctx context.Context, in *MsgCancelContinuousFundProposal, opts ...grpc.CallOption) (*MsgCancelContinuousFundProposalResponse, error)
+	// CancelContinuousFund defines a method for cancelling continuous fund.
+	CancelContinuousFund(ctx context.Context, in *MsgCancelContinuousFund, opts ...grpc.CallOption) (*MsgCancelContinuousFundResponse, error)
 }
 
 type msgClient struct {
@@ -102,9 +102,9 @@ func (c *msgClient) CreateContinuousFund(ctx context.Context, in *MsgCreateConti
 	return out, nil
 }
 
-func (c *msgClient) CancelContinuousFundProposal(ctx context.Context, in *MsgCancelContinuousFundProposal, opts ...grpc.CallOption) (*MsgCancelContinuousFundProposalResponse, error) {
-	out := new(MsgCancelContinuousFundProposalResponse)
-	err := c.cc.Invoke(ctx, Msg_CancelContinuousFundProposal_FullMethodName, in, out, opts...)
+func (c *msgClient) CancelContinuousFund(ctx context.Context, in *MsgCancelContinuousFund, opts ...grpc.CallOption) (*MsgCancelContinuousFundResponse, error) {
+	out := new(MsgCancelContinuousFundResponse)
+	err := c.cc.Invoke(ctx, Msg_CancelContinuousFund_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -129,8 +129,8 @@ type MsgServer interface {
 	ClaimBudget(context.Context, *MsgClaimBudget) (*MsgClaimBudgetResponse, error)
 	// CreateContinuousFund defines a method to add funds continuously.
 	CreateContinuousFund(context.Context, *MsgCreateContinuousFund) (*MsgCreateContinuousFundResponse, error)
-	// CancelContinuousFundProposal defines a method for cancelling continuous fund proposal.
-	CancelContinuousFundProposal(context.Context, *MsgCancelContinuousFundProposal) (*MsgCancelContinuousFundProposalResponse, error)
+	// CancelContinuousFund defines a method for cancelling continuous fund.
+	CancelContinuousFund(context.Context, *MsgCancelContinuousFund) (*MsgCancelContinuousFundResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
 
@@ -153,8 +153,8 @@ func (UnimplementedMsgServer) ClaimBudget(context.Context, *MsgClaimBudget) (*Ms
 func (UnimplementedMsgServer) CreateContinuousFund(context.Context, *MsgCreateContinuousFund) (*MsgCreateContinuousFundResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateContinuousFund not implemented")
 }
-func (UnimplementedMsgServer) CancelContinuousFundProposal(context.Context, *MsgCancelContinuousFundProposal) (*MsgCancelContinuousFundProposalResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method CancelContinuousFundProposal not implemented")
+func (UnimplementedMsgServer) CancelContinuousFund(context.Context, *MsgCancelContinuousFund) (*MsgCancelContinuousFundResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CancelContinuousFund not implemented")
 }
 func (UnimplementedMsgServer) mustEmbedUnimplementedMsgServer() {}
 
@@ -259,20 +259,20 @@ func _Msg_CreateContinuousFund_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Msg_CancelContinuousFundProposal_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgCancelContinuousFundProposal)
+func _Msg_CancelContinuousFund_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgCancelContinuousFund)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(MsgServer).CancelContinuousFundProposal(ctx, in)
+		return srv.(MsgServer).CancelContinuousFund(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: Msg_CancelContinuousFundProposal_FullMethodName,
+		FullMethod: Msg_CancelContinuousFund_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).CancelContinuousFundProposal(ctx, req.(*MsgCancelContinuousFundProposal))
+		return srv.(MsgServer).CancelContinuousFund(ctx, req.(*MsgCancelContinuousFund))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -305,8 +305,8 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Msg_CreateContinuousFund_Handler,
 		},
 		{
-			MethodName: "CancelContinuousFundProposal",
-			Handler:    _Msg_CancelContinuousFundProposal_Handler,
+			MethodName: "CancelContinuousFund",
+			Handler:    _Msg_CancelContinuousFund_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

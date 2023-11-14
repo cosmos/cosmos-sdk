@@ -18,9 +18,6 @@ require (
 	google.golang.org/protobuf v1.31.0
 	gotest.tools/v3 v3.5.1
 	sigs.k8s.io/yaml v1.4.0
-)
-
-require (
 	github.com/chzyer/readline v1.5.1 // indirect
 	github.com/manifoldco/promptui v0.9.0 // indirect
 )

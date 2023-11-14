@@ -1,8 +1,11 @@
 package mint
 
 import (
+	"fmt"
+
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	mintv1beta1 "cosmossdk.io/api/cosmos/mint/v1beta1"
+	"github.com/cosmos/cosmos-sdk/version"
 )
 
 func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
@@ -31,8 +34,12 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 			Service: mintv1beta1.Msg_ServiceDesc.ServiceName,
 			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
 				{
-					RpcMethod: "UpdateParams",
-					Skip:      true, // skipped because authority gated
+					RpcMethod:      "UpdateParams",
+					Use:            "update-params-proposal [params]",
+					Short:          "Submit a proposal to update mint module params",
+					Example:        fmt.Sprintf(`%s tx mint update-params-proposal '{ params }'`, version.AppName),
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "params"}},
+					GovProposal:    true,
 				},
 			},
 		},

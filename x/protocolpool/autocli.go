@@ -44,8 +44,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					RpcMethod: "SubmitBudgetProposal",
 					Use:       "submit-budget-proposal [recipient] [total-budget] [start-time] [tranches] [period]",
 					Short:     "Submit a budget proposal",
-					Example:   fmt.Sprintf(`$ %s tx protocolpool submit-budget-proposal cosmos1... 1000000uatom 1600000000 10 1000 --from mykey`, version.AppName),
-					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+					Example:   fmt.Sprintf(`$ %s tx protocolpool submit-budget-proposal cosmos1... 1000000uatom 2023-10-31T12:34:56.789Z 10 1000 --from mykey`, version.AppName), PositionalArgs: []*autocliv1.PositionalArgDescriptor{
 						{ProtoField: "recipient_address"},
 						{ProtoField: "total_budget"},
 						{ProtoField: "start_time"},
@@ -59,6 +58,30 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Short:          "Claim the distributed budget",
 					Example:        fmt.Sprintf(`$ %s tx protocolpool claim-budget cosmos1... --from mykey`, version.AppName),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "recipient_address"}},
+				},
+				{
+					RpcMethod: "CreateContinuousFund",
+					Use:       "create-continuous-fund [title] [description] [recipient] [percentage] [cap] <metadata> <expiry>",
+					Short:     "Create continuous fund for a recipient with optional metadata and expiry",
+					Example:   fmt.Sprintf(`$ %s tx protocolpool create-continuous-fund new_title new_description cosmos1... 0.2 1000000uatom AQ== 2023-11-31T12:34:56.789Z --from mykey`, version.AppName),
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "title"},
+						{ProtoField: "description"},
+						{ProtoField: "recipient"},
+						{ProtoField: "percentage"},
+						{ProtoField: "cap"},
+						{ProtoField: "metadata", Optional: true},
+						{ProtoField: "expiry", Optional: true},
+					},
+				},
+				{
+					RpcMethod: "CancelContinuousFund",
+					Use:       "cancel-continuous-fund [recipient_address]",
+					Short:     "Cancel continuous fund for a specific recipient",
+					Example:   fmt.Sprintf(`$ %s tx protocolpool cancel-continuous-fund cosmos1... --from mykey`, version.AppName),
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "recipient_address"},
+					},
 				},
 			},
 		},

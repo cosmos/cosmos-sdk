@@ -104,11 +104,52 @@ func (k MsgServer) CommunityPoolSpend(ctx context.Context, msg *types.MsgCommuni
 }
 
 func (k MsgServer) CreateContinuousFund(ctx context.Context, msg *types.MsgCreateContinuousFund) (*types.MsgCreateContinuousFundResponse, error) {
+	if err := k.validateAuthority(msg.Authority); err != nil {
+		return nil, err
+	}
+
+	recipient, err := k.Keeper.authKeeper.AddressCodec().StringToBytes(msg.Recipient)
+	if err != nil {
+		return nil, err
+	}
+
+	continuousFund, err := k.validateandUpdateContinuousFund(ctx, *msg)
+	// Validate the message fields
+	if err != nil {
+		return nil, err
+	}
+
+	// Set continuous fund to the state
+	k.ContinuousFund.Set(ctx, recipient, *continuousFund)
+
 	return &types.MsgCreateContinuousFundResponse{}, nil
 }
 
 func (k MsgServer) CancelContinuousFund(ctx context.Context, msg *types.MsgCancelContinuousFund) (*types.MsgCancelContinuousFundResponse, error) {
-	return &types.MsgCancelContinuousFundResponse{}, nil
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	if err := k.validateAuthority(msg.Authority); err != nil {
+		return nil, err
+	}
+
+	recipient, err := k.Keeper.authKeeper.AddressCodec().StringToBytes(msg.RecipientAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	canceledHeight := sdkCtx.BlockHeight()
+	canceledTime := sdkCtx.BlockTime()
+
+	err = k.ContinuousFund.Remove(ctx, recipient)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.MsgCancelContinuousFundResponse{
+		CanceledTime:     canceledTime,
+		CanceledHeight:   uint64(canceledHeight),
+		RecipientAddress: msg.RecipientAddress,
+	}, nil
 }
 
 func (k *Keeper) validateAuthority(authority string) error {

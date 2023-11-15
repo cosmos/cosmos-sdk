@@ -31,3 +31,27 @@ message Budget {
   // should occur every hour (3600 seconds).
   google.protobuf.Duration period = 8 [(gogoproto.stdduration) = true];
 }
+
+// ContinuousFund defines the fields of continuous fund proposal.
+message ContinuousFund {
+  // Title is the title of the funds.
+  string title = 1;
+  // Description of the funds.
+  string description = 2;
+  // Recipient address of the account receiving funds.
+  string recipient = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // Metadata is any arbitrary metadata attached.
+  string metadata = 4;
+  // Percentage is the percentage of funds to be allocated from Community pool share on block by block,
+  // till the `cap` is reached or expired.
+  string percentage = 5 [
+    (cosmos_proto.scalar)  = "cosmos.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
+    (gogoproto.nullable)   = false
+  ];
+  // Cap is the capital amount, which when its met funds are no longer distributed.
+  repeated cosmos.base.v1beta1.Coin cap = 6
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  // Optional, if expiry is set, removes the state object when expired.
+  google.protobuf.Timestamp expiry = 7 [(gogoproto.stdtime) = true];
+}

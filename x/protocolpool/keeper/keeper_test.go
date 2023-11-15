@@ -48,11 +48,14 @@ func (s *KeeperTestSuite) SetupTest() {
 	bankKeeper := pooltestutil.NewMockBankKeeper(ctrl)
 	s.bankKeeper = bankKeeper
 
+	distrKeeper := pooltestutil.NewMockDistributionKeeper(ctrl)
+
 	poolKeeper := poolkeeper.NewKeeper(
 		encCfg.Codec,
 		storeService,
 		accountKeeper,
 		bankKeeper,
+		distrKeeper,
 		authtypes.NewModuleAddress(pooltypes.GovModuleName).String(),
 	)
 	s.ctx = ctx

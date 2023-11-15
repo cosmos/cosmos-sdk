@@ -438,7 +438,11 @@ func (f Factory) getSimPK() (cryptotypes.PubKey, error) {
 	)
 
 	if f.simulateAndExecute && f.keybase != nil {
-		record, _ := f.keybase.Key(f.fromName)
+		record, err := f.keybase.Key(f.fromName)
+		if err != nil {
+			return nil, err
+		}
+
 		pk, ok = record.PubKey.GetCachedValue().(cryptotypes.PubKey)
 		if !ok {
 			return nil, errors.New("cannot build signature for simulation, failed to convert proto Any to public key")

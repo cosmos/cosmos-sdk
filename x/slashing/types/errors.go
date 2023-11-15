@@ -13,4 +13,5 @@ var (
 	ErrNoSigningInfoFound           = errors.Register(ModuleName, 8, "no validator signing info found")
 	ErrValidatorTombstoned          = errors.Register(ModuleName, 9, "validator already tombstoned")
 	ErrInvalidConsPubKey            = errors.Register(ModuleName, 10, "invalid consensus pubkey")
+	ErrInvalidSigner                = errors.Register(ModuleName, 11, "expected authority account as only signer for proposal message")
 )

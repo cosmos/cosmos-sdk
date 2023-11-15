@@ -42,7 +42,7 @@ func (k Keeper) setConsPubKeyRotationHistory(
 	}
 
 	queueTime := sdkCtx.BlockHeader().Time.Add(ubdTime)
-	if err := k.ValidatorConsensusKeyRotationRecordIndexKey.Set(ctx, collections.Join(valAddr.Bytes(), queueTime), []byte{}); err != nil {
+	if err := k.ValidatorConsensusKeyRotationRecordIndexKey.Set(ctx, collections.Join(valAddr.Bytes(), queueTime)); err != nil {
 		return err
 	}
 
@@ -86,17 +86,22 @@ func (k Keeper) updateToNewPubkey(ctx sdk.Context, val types.Validator, oldPubKe
 }
 
 // exceedsMaxRotations returns true if the key rotations exceed the limit, currently we are limiting one rotation for unbonding period.
-func (k Keeper) exceedsMaxRotations(ctx context.Context, valAddr sdk.ValAddress) (bool, error) {
+func (k Keeper) exceedsMaxRotations(ctx context.Context, valAddr sdk.ValAddress) error {
 	count := 0
 	rng := collections.NewPrefixedPairRange[[]byte, time.Time](valAddr)
-	if err := k.ValidatorConsensusKeyRotationRecordIndexKey.Walk(ctx, rng, func(key collections.Pair[[]byte, time.Time], value []byte) (stop bool, err error) {
+
+	if err := k.ValidatorConsensusKeyRotationRecordIndexKey.Walk(ctx, rng, func(key collections.Pair[[]byte, time.Time]) (stop bool, err error) {
 		count++
 		return count >= maxRotations, nil
 	}); err != nil {
-		return false, err
+		return err
 	}
 
-	return count >= maxRotations, nil
+	if count >= maxRotations {
+		return types.ErrExceedingMaxConsPubKeyRotations
+	}
+
+	return nil
 }
 
 // setConsKeyQueue sets array of rotated validator addresses to a key of current block time + unbonding period

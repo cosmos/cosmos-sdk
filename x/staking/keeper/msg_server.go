@@ -13,7 +13,6 @@ import (
 	"cosmossdk.io/collections"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
-	distrtypes "cosmossdk.io/x/distribution/types"
 	"cosmossdk.io/x/staking/types"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -623,40 +622,36 @@ func (k msgServer) RotateConsPubKey(ctx context.Context, msg *types.MsgRotateCon
 
 	if rotatedTo != nil {
 		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidAddress,
-			"the address is already present in rotation history, please try with new one")
+			"the new public key is already present in rotation history, please try with a different one")
 	}
 
 	newConsAddr := sdk.ConsAddress(pk.Address())
 
 	// checks if NewPubKey is not duplicated on ValidatorsByConsAddr
-	validator, _ := k.Keeper.ValidatorByConsAddr(ctx, newConsAddr)
-	if validator != nil {
+	validator1, _ := k.Keeper.ValidatorByConsAddr(ctx, newConsAddr)
+	if validator1 != nil {
 		return nil, types.ErrConsensusPubKeyAlreadyUsedForValidator
 	}
 
-	valAddr, err := k.validatorAddressCodec.StringToBytes(validator.GetOperator())
+	valAddr, err := k.validatorAddressCodec.StringToBytes(msg.ValidatorAddress)
 	if err != nil {
 		return nil, err
 	}
 
-	validator, err = k.Keeper.GetValidator(ctx, valAddr)
+	validator2, err := k.Keeper.GetValidator(ctx, valAddr)
 	if err != nil {
 		return nil, types.ErrNoValidatorFound
 	}
 
-	if status := validator.GetStatus(); status != types.Bonded {
+	if status := validator2.GetStatus(); status != types.Bonded {
 		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidType, "validator status is not bonded, got %s", status.String())
 	}
 
 	// Check if the validator is exceeding parameter MaxConsPubKeyRotations within the
 	// unbonding period by iterating ConsPubKeyRotationHistory.
-	exceedsLimit, err := k.exceedsMaxRotations(ctx, valAddr)
+	err = k.exceedsMaxRotations(ctx, valAddr)
 	if err != nil {
 		return nil, err
-	}
-
-	if exceedsLimit {
-		return nil, types.ErrExceedingMaxConsPubKeyRotations
 	}
 
 	// Check if the signing account has enough balance to pay KeyRotationFee
@@ -666,22 +661,16 @@ func (k msgServer) RotateConsPubKey(ctx context.Context, msg *types.MsgRotateCon
 		return nil, err
 	}
 
-	err = k.Keeper.bankKeeper.SendCoinsFromAccountToModule(ctx, sdk.AccAddress(valAddr), distrtypes.ModuleName, sdk.NewCoins(params.KeyRotationFee))
+	err = k.Keeper.bankKeeper.SendCoinsFromAccountToModule(ctx, sdk.AccAddress(valAddr), types.DistributionModuleName, sdk.NewCoins(params.KeyRotationFee))
 	if err != nil {
 		return nil, err
-	}
-
-	// overwrites NewPubKey in validator.ConsPubKey
-	val, ok := validator.(types.Validator)
-	if !ok {
-		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidType, "Expecting types.Validator, got %T", validator)
 	}
 
 	// Add ConsPubKeyRotationHistory for tracking rotation
 	err = k.setConsPubKeyRotationHistory(
 		ctx,
 		valAddr,
-		val.ConsensusPubkey,
+		validator2.ConsensusPubkey,
 		msg.NewPubkey,
 		params.KeyRotationFee,
 	)

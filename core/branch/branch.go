@@ -1,7 +1,14 @@
 // Package branch contains the core branch service interface.
 package branch
 
-import "context"
+import (
+	"context"
+	"errors"
+)
+
+// ErrGasLimitExceeded is returned when the gas limit is exceeded in a
+// Service.ExecuteWithGasLimit call.
+var ErrGasLimitExceeded = errors.New("branch: gas limit exceeded")
 
 // Service is the branch service interface. It can be used to execute
 // code paths in an isolated execution context that can be reverted.
@@ -16,4 +23,12 @@ type Service interface {
 	// passed to the Execute function, and is what should be used with other
 	// core services in order to ensure the execution remains isolated.
 	Execute(ctx context.Context, f func(ctx context.Context) error) error
+	// ExecuteWithGasLimit executes the given function `f` in an isolated context,
+	// with the provided gas limit, this is advanced usage and is used to disallow
+	// an execution path to consume an indefinite amount of gas.
+	// If the execution fails or succeeds the gas limit is still applied to the
+	// parent context, the function returns a gasUsed value which is the amount
+	// of gas used by the execution path. If the execution path exceeds the gas
+	// ErrGasLimitExceeded is returned.
+	ExecuteWithGasLimit(ctx context.Context, gasLimit uint64, f func(ctx context.Context) error) (gasUsed uint64, err error)
 }

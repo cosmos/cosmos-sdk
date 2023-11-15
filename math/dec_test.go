@@ -754,3 +754,23 @@ func TestNegativePrecisionPanic(t *testing.T) {
 		math.LegacyNewDecWithPrec(10, -1)
 	})
 }
+
+func (s *decimalTestSuite) TestConvertToBigIntMutativeForLegacyDec() {
+	r := big.NewInt(30)
+	i := math.LegacyNewDecFromBigInt(r)
+
+	// Compare value of BigInt & BigIntMut
+	s.Require().Equal(i.BigInt(), i.BigIntMut())
+
+	// Modify BigIntMut() pointer and ensure i.BigIntMut() & i.BigInt() change
+	p1 := i.BigIntMut()
+	p1.SetInt64(40)
+	s.Require().Equal(big.NewInt(40), i.BigIntMut())
+	s.Require().Equal(big.NewInt(40), i.BigInt())
+
+	// Modify big.Int() pointer and ensure i.BigIntMut() & i.BigInt() don't change
+	p2 := i.BigInt()
+	p2.SetInt64(50)
+	s.Require().NotEqual(big.NewInt(50), i.BigIntMut())
+	s.Require().NotEqual(big.NewInt(50), i.BigInt())
+}

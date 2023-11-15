@@ -22,8 +22,6 @@ cp ../tools/cosmovisor/README.md ./build/tooling/01-cosmovisor.md
 cp ../tools/confix/README.md ./build/tooling/02-confix.md
 cp ../tools/hubl/README.md ./build/tooling/03-hubl.md
 
-wget -x -O ./user/run-node/04-rosetta.md https://raw.githubusercontent.com/cosmos/rosetta/main/README.md
-
 ## Add package documentation
 cp ../client/v2/README.md ./learn/advanced/17-autocli.md
 cp ../depinject/README.md ./build/packages/01-depinject.md

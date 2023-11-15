@@ -4,6 +4,7 @@ package cosmos.counter.v1;
 
 import "cosmos_proto/cosmos.proto";
 import "cosmos/msg/v1/msg.proto";
+import "amino/amino.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/counter/types";
 
@@ -17,6 +18,7 @@ service Msg {
 
 // MsgIncreaseCounter defines a count Msg service counter.
 message MsgIncreaseCounter {
+  option (amino.name)           = "cosmos-sdk/increase_counter"; // TODO: remove amino
   option (cosmos.msg.v1.signer) = "signer";
 
   // signer is the address that controls the module (defaults to x/gov unless overwritten).

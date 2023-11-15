@@ -156,7 +156,7 @@ func (enc Encoder) DefineTypeEncoding(typeURL string, encoder MessageEncoder) En
 // Marshal serializes a protobuf message to JSON.
 func (enc Encoder) Marshal(message proto.Message) ([]byte, error) {
 	buf := &bytes.Buffer{}
-	err := enc.beginMarshal(message.ProtoReflect(), buf)
+	err := enc.beginMarshal(message.ProtoReflect(), buf, false)
 
 	if enc.indent != "" {
 		indentBuf := &bytes.Buffer{}
@@ -170,8 +170,18 @@ func (enc Encoder) Marshal(message proto.Message) ([]byte, error) {
 	return buf.Bytes(), err
 }
 
-func (enc Encoder) beginMarshal(msg protoreflect.Message, writer io.Writer) error {
-	name, named := getMessageAminoName(msg.Descriptor().Options())
+func (enc Encoder) beginMarshal(msg protoreflect.Message, writer io.Writer, isAny bool) error {
+	var (
+		name  string
+		named bool
+	)
+
+	if isAny {
+		name, named = getMessageAminoNameAny(msg), true
+	} else {
+		name, named = getMessageAminoName(msg)
+	}
+
 	if named {
 		_, err := fmt.Fprintf(writer, `{"type":"%s","value":`, name)
 		if err != nil {

@@ -37,9 +37,10 @@ In case of any error in updating the file, no output is written.`,
 
 			if len(args) > 2 {
 				configType = strings.ToLower(args[2])
-				if configType != confix.AppConfigType && configType != confix.ClientConfigType {
-					return errors.New("config type must be 'app' or 'client'")
-				}
+			}
+
+			if configType != confix.AppConfigType && configType != confix.ClientConfigType {
+				return errors.New("config type must be 'app' or 'client'")
 			}
 
 			switch  {

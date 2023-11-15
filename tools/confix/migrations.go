@@ -11,11 +11,11 @@ import (
 )
 
 const (
-	AppConfig    = "app.toml"
-	AppConfigType	= "app"
-	ClientConfig = "client.toml"
-	ClientConfigType	= "client"
-	CMTConfig    = "config.toml"
+	AppConfig        = "app.toml"
+	AppConfigType    = "app"
+	ClientConfig     = "client.toml"
+	ClientConfigType = "client"
+	CMTConfig        = "config.toml"
 )
 
 // MigrationMap defines a mapping from a version to a transformation plan.
@@ -35,7 +35,7 @@ func PlanBuilder(from *tomledit.Document, to string, planType string) transform.
 	plan := transform.Plan{}
 	deletedSections := map[string]bool{}
 
-	target, err := LoadLocalConfig(to,planType)
+	target, err := LoadLocalConfig(to, planType)
 	if err != nil {
 		panic(fmt.Errorf("failed to parse file: %w. This file should have been valid", err))
 	}

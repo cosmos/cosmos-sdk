@@ -4,6 +4,7 @@ import (
 	"embed"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/creachadair/tomledit"
@@ -19,7 +20,7 @@ func LoadLocalConfig(name string, configType string) (*tomledit.Document, error)
 		return nil, err
 	}
 
-	f, err := data.Open(fmt.Sprintf("data/%s", fileName))
+	f, err := data.Open(filepath.Join("data", fileName))
 	if err != nil {
 		return nil, fmt.Errorf("failed to read file: %w. This file should have been included in confix", err)
 	}
@@ -47,6 +48,6 @@ func getFileName(name string, configType string) (string, error) {
 	case "client":
 		return fmt.Sprintf("%s-client.toml", name), nil
 	default:
-		return "", fmt.Errorf("unsupported config type: %s", configType)
+		return "", fmt.Errorf("unsupported config type: %q", configType)
 	}
 }

@@ -1,7 +1,7 @@
 package cmd_test
 
 import (
-	"fmt"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -24,17 +24,17 @@ func TestMigrateCmd(t *testing.T) {
 	assert.ErrorContains(t, err, "no such file or directory")
 
 	// try to migrate from client.toml it should fail without --skip-validate
-	_, err = clitestutil.ExecTestCLICmd(clientCtx, cmd.MigrateCommand(), []string{"v0.46", fmt.Sprintf("%s/config/client.toml", clientCtx.HomeDir),"app"})
+	_, err = clitestutil.ExecTestCLICmd(clientCtx, cmd.MigrateCommand(), []string{"v0.46", filepath.Join(clientCtx.HomeDir, "config", "client.toml"), "app"})
 	assert.ErrorContains(t, err, "failed to migrate config")
 
 	// try to migrate from client.toml - it should work and give us a big diff
-	out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd.MigrateCommand(), []string{"v0.46", fmt.Sprintf("%s/config/client.toml", clientCtx.HomeDir), "--skip-validate", "--verbose"})
+	out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd.MigrateCommand(), []string{"v0.46", filepath.Join(clientCtx.HomeDir, "config", "client.toml"), "--skip-validate", "--verbose"})
 	assert.NilError(t, err)
 	assert.Assert(t, strings.Contains(out.String(), "add app-db-backend key"))
 
 
 	// this should work
-	out, err = clitestutil.ExecTestCLICmd(clientCtx, cmd.MigrateCommand(), []string{"v0.51", fmt.Sprintf("%s/config/client.toml", clientCtx.HomeDir),"client", "--verbose"})
+	out, err = clitestutil.ExecTestCLICmd(clientCtx, cmd.MigrateCommand(), []string{"v0.51", filepath.Join(clientCtx.HomeDir, "config", "client.toml"),"client", "--verbose"})
 	assert.NilError(t, err)
 	assert.Assert(t, strings.Contains(out.String(), "add keyring-default-keyname key"))
 }

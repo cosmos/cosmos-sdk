@@ -3,29 +3,14 @@ module cosmossdk.io/client/v2
 go 1.21
 
 require (
-<<<<<<< HEAD
-	cosmossdk.io/api v0.7.2
+	cosmossdk.io/api v0.7.3-0.20231113122742-912390d5fc4a
 	cosmossdk.io/core v0.11.0
 	cosmossdk.io/depinject v1.0.0-alpha.4
-=======
-	cosmossdk.io/api v0.7.3-0.20231113122742-912390d5fc4a
-	cosmossdk.io/core v0.12.0
-	cosmossdk.io/depinject v1.0.0-alpha.4
-	cosmossdk.io/x/bank v0.0.0-00010101000000-000000000000
-	cosmossdk.io/x/gov v0.0.0-20231113122742-912390d5fc4a
->>>>>>> 9c3386ffd (feat(client/v2): support gov proposals (#18461))
 	cosmossdk.io/x/tx v0.12.0
-	github.com/chzyer/readline v1.5.1 // indirect
 	github.com/cockroachdb/errors v1.11.1
 	github.com/cosmos/cosmos-proto v1.0.0-beta.3
-<<<<<<< HEAD
 	github.com/cosmos/cosmos-sdk v0.50.1
 	github.com/spf13/cobra v1.7.0
-=======
-	github.com/cosmos/cosmos-sdk v0.51.0
-	github.com/manifoldco/promptui v0.9.0 // indirect
-	github.com/spf13/cobra v1.8.0
->>>>>>> 9c3386ffd (feat(client/v2): support gov proposals (#18461))
 	github.com/spf13/pflag v1.0.5
 	google.golang.org/grpc v1.59.0
 	google.golang.org/protobuf v1.31.0
@@ -59,7 +44,7 @@ require (
 	github.com/cosmos/cosmos-db v1.0.0 // indirect
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
 	github.com/cosmos/gogogateway v1.2.0 // indirect
-	github.com/cosmos/gogoproto v1.4.11
+	github.com/cosmos/gogoproto v1.4.11 // indirect
 	github.com/cosmos/iavl v1.0.0 // indirect
 	github.com/cosmos/ics23/go v0.10.0 // indirect
 	github.com/cosmos/ledger-cosmos-go v0.13.3 // indirect
@@ -140,16 +125,10 @@ require (
 	github.com/sasha-s/go-deadlock v0.3.1 // indirect
 	github.com/spf13/afero v1.9.5 // indirect
 	github.com/spf13/cast v1.5.1 // indirect
-<<<<<<< HEAD
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/viper v1.16.0 // indirect
-	github.com/stretchr/testify v1.8.4 // indirect
-	github.com/subosito/gotenv v1.4.2 // indirect
-=======
-	github.com/spf13/viper v1.17.0 // indirect
 	github.com/stretchr/testify v1.8.4
-	github.com/subosito/gotenv v1.6.0 // indirect
->>>>>>> 9c3386ffd (feat(client/v2): support gov proposals (#18461))
+	github.com/subosito/gotenv v1.4.2 // indirect
 	github.com/syndtr/goleveldb v1.0.1-0.20220721030215-126854af5e6d // indirect
 	github.com/tecbot/gorocksdb v0.0.0-20191217155057-f0fad39f321c // indirect
 	github.com/tendermint/go-amino v0.16.0 // indirect
@@ -173,19 +152,3 @@ require (
 	nhooyr.io/websocket v1.8.6 // indirect
 	pgregory.net/rapid v1.1.0 // indirect
 )
-<<<<<<< HEAD
-=======
-
-replace github.com/cosmos/cosmos-sdk => ./../../
-
-replace (
-	cosmossdk.io/x/auth => ./../../x/auth
-	cosmossdk.io/x/bank => ./../../x/bank
-	cosmossdk.io/x/distribution => ./../../x/distribution
-	cosmossdk.io/x/gov => ./../../x/gov
-	cosmossdk.io/x/mint => ./../../x/mint
-	cosmossdk.io/x/protocolpool => ./../../x/protocolpool
-	cosmossdk.io/x/slashing => ./../../x/slashing
-	cosmossdk.io/x/staking => ./../../x/staking
-)
->>>>>>> 9c3386ffd (feat(client/v2): support gov proposals (#18461))

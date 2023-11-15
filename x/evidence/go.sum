@@ -35,13 +35,8 @@ cloud.google.com/go/storage v1.6.0/go.mod h1:N7U0C8pVQ/+NIKOBQyamJIeKQKkZ+mxpohl
 cloud.google.com/go/storage v1.8.0/go.mod h1:Wv1Oy7z6Yz3DshWRJFhqM/UCfaWIRTdp0RXyy7KQOVs=
 cloud.google.com/go/storage v1.10.0/go.mod h1:FLPqc6j+Ki4BU591ie1oL6qBQGu2Bl/tZ9ullr3+Kg0=
 cloud.google.com/go/storage v1.14.0/go.mod h1:GrKmX003DSIwi9o29oFT7YDnHYwZoctc3fOKtUw0Xmo=
-<<<<<<< HEAD
 cosmossdk.io/api v0.7.2 h1:BO3i5fvKMKvfaUiMkCznxViuBEfyWA/k6w2eAF6q1C4=
 cosmossdk.io/api v0.7.2/go.mod h1:IcxpYS5fMemZGqyYtErK7OqvdM0C8kdW3dq8Q/XIG38=
-=======
-cosmossdk.io/api v0.7.3-0.20231113122742-912390d5fc4a h1:Zr++x1RCJWi+K8bTZsQKdjtL4SzyHBLGM3Fcn75iWf0=
-cosmossdk.io/api v0.7.3-0.20231113122742-912390d5fc4a/go.mod h1:7B/5XWh1HYwJk3DzWeNoxOSI+nGx1m5UyYfHLFuKzkw=
->>>>>>> 9c3386ffd (feat(client/v2): support gov proposals (#18461))
 cosmossdk.io/collections v0.4.0 h1:PFmwj2W8szgpD5nOd8GWH6AbYNi1f2J6akWXJ7P5t9s=
 cosmossdk.io/collections v0.4.0/go.mod h1:oa5lUING2dP+gdDquow+QjlF45eL1t4TJDypgGd+tv0=
 cosmossdk.io/core v0.11.0 h1:vtIafqUi+1ZNAE/oxLOQQ7Oek2n4S48SWLG8h/+wdbo=

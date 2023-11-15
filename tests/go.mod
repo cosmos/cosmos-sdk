@@ -3,14 +3,8 @@ module github.com/cosmos/cosmos-sdk/tests
 go 1.21
 
 require (
-<<<<<<< HEAD
-	cosmossdk.io/api v0.7.2
-	cosmossdk.io/core v0.11.0
-=======
 	cosmossdk.io/api v0.7.3-0.20231113122742-912390d5fc4a
-	cosmossdk.io/collections v0.4.0
-	cosmossdk.io/core v0.12.0
->>>>>>> 9c3386ffd (feat(client/v2): support gov proposals (#18461))
+	cosmossdk.io/core v0.11.0
 	cosmossdk.io/depinject v1.0.0-alpha.4
 	cosmossdk.io/errors v1.0.0
 	cosmossdk.io/log v1.2.1
@@ -38,23 +32,6 @@ require (
 )
 
 require (
-<<<<<<< HEAD
-=======
-	cosmossdk.io/x/auth v0.0.0-00010101000000-000000000000
-	cosmossdk.io/x/authz v0.0.0-00010101000000-000000000000
-	cosmossdk.io/x/bank v0.0.0-00010101000000-000000000000
-	cosmossdk.io/x/distribution v0.0.0-20230925135524-a1bc045b3190
-	cosmossdk.io/x/gov v0.0.0-20231113122742-912390d5fc4a
-	cosmossdk.io/x/group v0.0.0-00010101000000-000000000000
-	cosmossdk.io/x/mint v0.0.0-00010101000000-000000000000
-	cosmossdk.io/x/slashing v0.0.0-00010101000000-000000000000
-	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000
-	github.com/google/go-cmp v0.6.0
-	github.com/jhump/protoreflect v1.15.3
-)
-
-require (
->>>>>>> 9c3386ffd (feat(client/v2): support gov proposals (#18461))
 	cloud.google.com/go v0.110.8 // indirect
 	cloud.google.com/go/compute v1.23.1 // indirect
 	cloud.google.com/go/compute/metadata v0.2.3 // indirect

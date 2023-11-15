@@ -709,3 +709,38 @@ func cacheBech32Addr(prefix string, addr []byte, cache *simplelru.LRU, cacheKey 
 	}
 	return bech32Addr
 }
+
+type AddressConfig struct {
+	coinType uint32
+}
+
+var (
+	sdkAddressConfig  *AddressConfig
+	initAddressConfig sync.Once
+)
+
+// GetAddressConfig returns theaddres instance for the SDK.
+func GetAddresConfig() *AddressConfig {
+	fmt.Println()
+	initAddressConfig.Do(func() {
+		sdkAddressConfig = NewAddressConfig()
+	})
+	return sdkAddressConfig
+}
+
+// New returns a new Config with default values.
+func NewAddressConfig() *AddressConfig {
+	return &AddressConfig{
+		coinType: CoinType,
+	}
+}
+
+// Set the BIP-0044 CoinType code on the config
+func (config *AddressConfig) SetCoinType(coinType uint32) {
+	config.coinType = coinType
+}
+
+// GetCoinType returns the BIP-0044 CoinType code on the config.
+func (config *AddressConfig) GetCoinType() uint32 {
+	return config.coinType
+}

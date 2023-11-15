@@ -30,14 +30,11 @@ func (s *contextTestSuite) TestConfig_SetPurpose() {
 }
 
 func (s *configTestSuite) TestConfig_SetCoinType() {
-	config := sdk.NewConfig()
+	config := sdk.NewAddressConfig()
 	config.SetCoinType(1)
 	s.Require().Equal(uint32(1), config.GetCoinType())
 	config.SetCoinType(99)
 	s.Require().Equal(uint32(99), config.GetCoinType())
-
-	config.Seal()
-	s.Require().Panics(func() { config.SetCoinType(99) })
 }
 
 func (s *configTestSuite) TestConfig_SetTxEncoder() {

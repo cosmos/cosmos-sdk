@@ -104,23 +104,12 @@ Note: multiple coins can be send by space separated.`,
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "from_address"}, {ProtoField: "to_address"}, {ProtoField: "amount", Varargs: true}},
 				},
 				{
-<<<<<<< HEAD
-					RpcMethod: "UpdateParams",
-					Skip:      true, // skipped because authority gated
-=======
-					RpcMethod:      "Burn",
-					Use:            "burn [from_key_or_address] [amount]",
-					Short:          "Burns the amount specified from the given account.",
-					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "from_address"}, {ProtoField: "amount", Varargs: true}},
-				},
-				{
 					RpcMethod:      "UpdateParams",
 					Use:            "update-params-proposal [params]",
 					Short:          "Submit a proposal to update bank module params. Note: the entire params must be provided.",
 					Example:        fmt.Sprintf(`%s tx bank update-params-proposal '{ "default_send_enabled": true }'`, version.AppName),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "params"}},
 					GovProposal:    true,
->>>>>>> 9c3386ffd (feat(client/v2): support gov proposals (#18461))
 				},
 				{
 					RpcMethod:      "SetSendEnabled",

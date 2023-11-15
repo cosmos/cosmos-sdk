@@ -102,13 +102,16 @@ func TestReadTxsFromFile(t *testing.T) {
 
 	tx1String := string(encodedTx1) + "\n"
 	tx2String := string(encodedTx2) + "\n"
-	jsonTxFile := testutil.WriteToNewTempFile(t, tx1String+tx2String)
+	jsonBatchTxsFile := testutil.WriteToNewTempFile(t, tx1String+tx2String)
+	jsonSingleTxFile := testutil.WriteToNewTempFile(t, tx1String)
 
 	// Read it back
-	decodedTxs, err := authclient.ReadTxsFromFile(clientCtx, jsonTxFile.Name())
+
+	// 2 txs case
+	decodedBatchTxs, err := authclient.ReadTxsFromFile(clientCtx, jsonBatchTxsFile.Name())
 	require.NoError(t, err)
-	require.Equal(t, len(decodedTxs), 2)
-	for i, decodedTx := range decodedTxs {
+	require.Equal(t, len(decodedBatchTxs), 2)
+	for i, decodedTx := range decodedBatchTxs {
 		txBldr, err := txConfig.WrapTxBuilder(decodedTx)
 		require.NoError(t, err)
 		t.Log(txBuilders[i].GetTx())
@@ -116,6 +119,15 @@ func TestReadTxsFromFile(t *testing.T) {
 		require.Equal(t, txBuilders[i].GetTx().GetMemo(), txBldr.GetTx().GetMemo())
 		require.Equal(t, txBuilders[i].GetTx().GetFee(), txBldr.GetTx().GetFee())
 	}
+
+	// single tx case
+	decodedSingleTx, err := authclient.ReadTxsFromFile(clientCtx, jsonSingleTxFile.Name())
+	require.NoError(t, err)
+	require.Equal(t, len(decodedSingleTx), 1)
+	txBldr, err := txConfig.WrapTxBuilder(decodedSingleTx[0])
+	require.NoError(t, err)
+	require.Equal(t, txBuilders[0].GetTx().GetMemo(), txBldr.GetTx().GetMemo())
+	require.Equal(t, txBuilders[0].GetTx().GetFee(), txBldr.GetTx().GetFee())
 }
 
 func TestBatchScanner_Scan(t *testing.T) {

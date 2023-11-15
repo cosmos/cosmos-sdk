@@ -4,17 +4,17 @@ pub mod nft {
     include!(concat!(env!("OUT_DIR"), "/out.rs"));
 }
 
-pub use cosmossdk_core;
+// pub use cosmossdk_core;
 
 #[no_mangle]
-pub extern fn add(left: usize, right: usize) -> usize {
+pub extern "C" fn add(left: usize, right: usize) -> usize {
     left + right
 }
 
 #[no_mangle]
-pub extern fn foo(a: *const u8) -> *const u8 {
-    cosmossdk_core::test1();
-    a
+pub extern "C" fn foo(a: *const u8) -> &'static str {
+    // cosmossdk_core::test1();
+    "abc"
 }
 
 #[cfg(test)]

@@ -1,5 +1,4 @@
 #![no_std]
-
 #![cfg(target_arch = "wasm32")]
 mod wasm;
 
@@ -14,7 +13,7 @@ extern "C" {
 
 pub fn test1() {
     unsafe {
-        invoke_unary(0, 0,0 as *const u8, 0 as *mut u8);
+        invoke_unary(0, 0, 0 as *const u8, 0 as *mut u8);
     }
 }
 
@@ -34,11 +33,15 @@ impl ClientConn<i32, i32> for Client {
 }
 
 trait Module {
-    type Config where Self: ZeroCopy;
+    type Config
+    where
+        Self: ZeroCopy;
 
-    fn init(config: Config, client: Client, service_registry: &mut zeropb::ServiceRegistry) -> anyhow::Result<()>;
+    fn init(
+        config: Config,
+        client: Client,
+        service_registry: &mut zeropb::ServiceRegistry,
+    ) -> anyhow::Result<()>;
 }
 
-struct ModuleSet {
-
-}
+struct ModuleSet {}

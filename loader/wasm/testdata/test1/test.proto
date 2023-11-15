@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package test1;
+
+option go_package = "cosmossdk.io/loader/wasm/testdata/test1";
+
+message Greet {
+  string name = 1;
+  uint64 value = 2;
+}
+
+message GreetResponse {
+  string message = 1;
+}

@@ -37,6 +37,8 @@ pub use repeated::{Repeated, ScalarRepeated, RepeatedWriter, RepeatedIter, Scala
 mod server;
 mod status;
 
+pub use status::{Status, Code};
+
 pub use client::{ClientConn, Handler};
 
 #[cfg(test)]

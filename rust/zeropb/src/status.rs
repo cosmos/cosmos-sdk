@@ -5,7 +5,7 @@ use num_enum::{IntoPrimitive, TryFromPrimitive};
 
 #[repr(u8)]
 #[derive(Clone, Copy, IntoPrimitive, TryFromPrimitive, Eq, PartialEq, Debug)]
-enum Code {
+pub enum Code {
     Ok = 0,
     Cancelled = 1,
     Unknown = 2,

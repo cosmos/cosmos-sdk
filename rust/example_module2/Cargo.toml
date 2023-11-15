@@ -1,0 +1,14 @@
+[package]
+name = "example_module2"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+prost = { version = "0.12.1", default-features = false, features = ["prost-derive"] }
+lol_alloc = "0.4.0"
+
+[build-dependencies]
+prost-build = "0.12.1"
+
+[lib]
+crate-type = ["cdylib"]

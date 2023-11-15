@@ -6,6 +6,10 @@ import (
 	"github.com/bytecodealliance/wasmtime-go/v14"
 )
 
+func AddSearchPaths(paths ...string) {
+
+}
+
 type fnType = func(caller *wasmtime.Caller, vals []wasmtime.Val) ([]wasmtime.Val, *wasmtime.Trap)
 
 func wrapClientInvoke(global globalContext, client intermodule.Client) fnType {

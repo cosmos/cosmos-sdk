@@ -9,14 +9,14 @@ pub(crate) fn gen_service(
     ctx: &mut Context,
 ) -> anyhow::Result<()> {
     gen_service_server(service, ctx)?;
-    gen_service_client(service, ctx)?;
+    // gen_service_client(service, ctx)?;
     Ok(())
 }
 
 fn gen_service_server(service: &ServiceDescriptorProto, ctx: &mut Context) -> anyhow::Result<()> {
     write!(
         ctx,
-        "trait {}Server<Ctx, Err> {{\n",
+        "trait {}Server<Ctx> {{\n",
         service.name.clone().unwrap()
     )?;
     for method in service.method.iter() {
@@ -35,9 +35,9 @@ pub(crate) fn gen_server_method(
     let output_type = method.output_type.clone().unwrap();
     write!(ctx, "    fn {}(&self, ctx: &Ctx, req: &", method_name)?;
     gen_message_type(&input_type, ctx)?;
-    write!(ctx, ", resp: &mut ")?;
+    write!(ctx, ") -> Result<");
     gen_message_type(&output_type, ctx)?;
-    write!(ctx, ") -> Result<(), Err>;\n")?;
+    write!(ctx, ", zeropb::Status>;\n")?;
     Ok(())
 }
 
@@ -55,7 +55,7 @@ fn gen_service_client(service: &ServiceDescriptorProto, ctx: &mut Context) -> an
     write!(ctx, "}}\n\n")?;
     write!(
         ctx,
-        "impl <'a, Client: ClientConn<i32, i32> {}Client<'a, Client> {{\n",
+        "impl <'a, Client: ClientConn> {}Client<'a, Client> {{\n",
         service.name.clone().unwrap()
     )?;
     write!(ctx, "    pub fn new(client_conn: Client) -> Self {{")?;
@@ -90,7 +90,7 @@ pub(crate) fn gen_client_method(
     gen_message_type(&input_type, ctx)?;
     write!(ctx, ") -> Result<")?;
     gen_message_type(&output_type, ctx)?;
-    write!(ctx, ", i32> {{\n")?;
+    write!(ctx, ", zeropb::Status> {{\n")?;
     write!(ctx, "        unimplemented!()\n")?;
     write!(ctx, "    }}\n")?;
     Ok(())

@@ -33,6 +33,7 @@ type Factory struct {
 	timeoutHeight      uint64
 	gasAdjustment      float64
 	chainID            string
+	fromName           string
 	offline            bool
 	generateOnly       bool
 	memo               string
@@ -92,6 +93,7 @@ func NewFactoryCLI(clientCtx client.Context, flagSet *pflag.FlagSet) (Factory, e
 		accountRetriever:   clientCtx.AccountRetriever,
 		keybase:            clientCtx.Keyring,
 		chainID:            clientCtx.ChainID,
+		fromName:           clientCtx.FromName,
 		offline:            clientCtx.Offline,
 		generateOnly:       clientCtx.GenerateOnly,
 		gas:                gasSetting.Gas,
@@ -435,16 +437,9 @@ func (f Factory) getSimPK() (cryptotypes.PubKey, error) {
 		pk cryptotypes.PubKey = &secp256k1.PubKey{} // use default public key type
 	)
 
-	// Use the first element from the list of keys in order to generate a valid
-	// pubkey that supports multiple algorithms.
 	if f.simulateAndExecute && f.keybase != nil {
-		records, _ := f.keybase.List()
-		if len(records) == 0 {
-			return nil, errors.New("cannot build signature for simulation, key records slice is empty")
-		}
-
-		// take the first record just for simulation purposes
-		pk, ok = records[0].PubKey.GetCachedValue().(cryptotypes.PubKey)
+		record, _ := f.keybase.Key(f.fromName)
+		pk, ok = record.PubKey.GetCachedValue().(cryptotypes.PubKey)
 		if !ok {
 			return nil, errors.New("cannot build signature for simulation, failed to convert proto Any to public key")
 		}

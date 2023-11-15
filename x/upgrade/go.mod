@@ -3,8 +3,13 @@ module cosmossdk.io/x/upgrade
 go 1.21
 
 require (
+<<<<<<< HEAD
 	cosmossdk.io/api v0.7.2
 	cosmossdk.io/core v0.11.0
+=======
+	cosmossdk.io/api v0.7.3-0.20231113122742-912390d5fc4a
+	cosmossdk.io/core v0.12.0
+>>>>>>> 9c3386ffd (feat(client/v2): support gov proposals (#18461))
 	cosmossdk.io/depinject v1.0.0-alpha.4
 	cosmossdk.io/errors v1.0.0
 	cosmossdk.io/log v1.2.1

@@ -36,15 +36,24 @@ func GetTxCmd(ac addresscodec.Codec) *cobra.Command {
 	}
 
 	cmd.AddCommand(
+<<<<<<< HEAD
 		NewCmdSubmitUpgradeProposal(ac),
 		NewCmdSubmitCancelUpgradeProposal(ac),
+=======
+		NewCmdSubmitUpgradeProposal(),
+>>>>>>> 9c3386ffd (feat(client/v2): support gov proposals (#18461))
 	)
 
 	return cmd
 }
 
 // NewCmdSubmitUpgradeProposal implements a command handler for submitting a software upgrade proposal transaction.
+<<<<<<< HEAD
 func NewCmdSubmitUpgradeProposal(ac addresscodec.Codec) *cobra.Command {
+=======
+// This commands is not migrated to autocli as it contains extra validation that is useful for submitting upgrade proposals.
+func NewCmdSubmitUpgradeProposal() *cobra.Command {
+>>>>>>> 9c3386ffd (feat(client/v2): support gov proposals (#18461))
 	cmd := &cobra.Command{
 		Use:   "software-upgrade [name] (--upgrade-height [height]) (--upgrade-info [info]) [flags]",
 		Args:  cobra.ExactArgs(1),
@@ -132,6 +141,7 @@ func NewCmdSubmitUpgradeProposal(ac addresscodec.Codec) *cobra.Command {
 	return cmd
 }
 
+<<<<<<< HEAD
 // NewCmdSubmitCancelUpgradeProposal implements a command handler for submitting a software upgrade cancel proposal transaction.
 func NewCmdSubmitCancelUpgradeProposal(ac addresscodec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
@@ -181,6 +191,8 @@ func NewCmdSubmitCancelUpgradeProposal(ac addresscodec.Codec) *cobra.Command {
 	return cmd
 }
 
+=======
+>>>>>>> 9c3386ffd (feat(client/v2): support gov proposals (#18461))
 // getDefaultDaemonName gets the default name to use for the daemon.
 // If a DAEMON_NAME env var is set, that is used.
 // Otherwise, the last part of the currently running executable is used.

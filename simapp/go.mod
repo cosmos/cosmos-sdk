@@ -3,10 +3,17 @@ module cosmossdk.io/simapp
 go 1.21
 
 require (
+<<<<<<< HEAD
 	cosmossdk.io/api v0.7.2
 	cosmossdk.io/client/v2 v2.0.0-beta.1
 	cosmossdk.io/collections v0.4.0 // indirect
 	cosmossdk.io/core v0.11.0
+=======
+	cosmossdk.io/api v0.7.3-0.20231113122742-912390d5fc4a
+	cosmossdk.io/client/v2 v2.0.0-20230630094428-02b760776860
+	cosmossdk.io/collections v0.4.0
+	cosmossdk.io/core v0.12.0
+>>>>>>> 9c3386ffd (feat(client/v2): support gov proposals (#18461))
 	cosmossdk.io/depinject v1.0.0-alpha.4
 	cosmossdk.io/log v1.2.1
 	cosmossdk.io/math v1.2.0
@@ -32,6 +39,23 @@ require (
 	google.golang.org/protobuf v1.31.0
 )
 
+<<<<<<< HEAD
+=======
+require cosmossdk.io/x/accounts v0.0.0-20231013072015-ec9bcc41ef9c
+
+require (
+	cosmossdk.io/x/auth v0.0.0-00010101000000-000000000000
+	cosmossdk.io/x/authz v0.0.0-00010101000000-000000000000
+	cosmossdk.io/x/bank v0.0.0-00010101000000-000000000000
+	cosmossdk.io/x/distribution v0.0.0-20230925135524-a1bc045b3190
+	cosmossdk.io/x/gov v0.0.0-20231113122742-912390d5fc4a
+	cosmossdk.io/x/group v0.0.0-00010101000000-000000000000
+	cosmossdk.io/x/mint v0.0.0-00010101000000-000000000000
+	cosmossdk.io/x/slashing v0.0.0-00010101000000-000000000000
+	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000
+)
+
+>>>>>>> 9c3386ffd (feat(client/v2): support gov proposals (#18461))
 require (
 	cloud.google.com/go v0.110.8 // indirect
 	cloud.google.com/go/compute v1.23.1 // indirect

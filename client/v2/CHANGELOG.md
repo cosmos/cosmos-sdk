@@ -36,6 +36,19 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+<<<<<<< HEAD
+=======
+<!-- ## [v2.1.0-beta.1] to be tagged after v0.51 final or in SDK agnostic version -->
+
+### Features
+
+* [#18461](https://github.com/cosmos/cosmos-sdk/pull/18461) Support governance proposals.
+
+### API Breaking Changes
+
+* [#17709](https://github.com/cosmos/cosmos-sdk/pull/17709) Address codecs have been removed from `autocli.AppOptions` and `flag.Builder`. Instead client/v2 uses the address codecs present in the context (introduced in [#17503](https://github.com/cosmos/cosmos-sdk/pull/17503)).
+
+>>>>>>> 9c3386ffd (feat(client/v2): support gov proposals (#18461))
 ## [v2.0.0-beta.1] - 2023-11-07
 
 This is the first tagged version of client/v2.

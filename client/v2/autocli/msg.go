@@ -209,7 +209,7 @@ func (b *Builder) BuildMsgMethodCommand(descriptor protoreflect.MethodDescriptor
 		cmd.Flags().Bool(flags.FlagNoProposal, false, "Skip gov proposal and submit a normal transaction")
 	}
 
-	return cmd, err
+	return cmd, nil
 }
 
 // handleGovProposal sets the authority field of the message to the gov module address and creates a gov proposal.
@@ -231,7 +231,7 @@ func (b *Builder) handleGovProposal(
 	signerFromFlag := clientCtx.GetFromAddress()
 	signer, err := addressCodec.BytesToString(signerFromFlag.Bytes())
 	if err != nil {
-		return fmt.Errorf("failed to set signer on message, got %v: %w", signerFromFlag, err)
+		return fmt.Errorf("failed to set signer on message, got %q: %w", signerFromFlag, err)
 	}
 
 	proposal, err := govcli.ReadGovPropCmdFlags(signer, cmd.Flags())

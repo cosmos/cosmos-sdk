@@ -47,7 +47,7 @@ func ValidatePromptAddress(input string) error { // TODO(@julienrbrt) remove and
 	return fmt.Errorf("invalid address: %w", err)
 }
 
-// ValidatePromptCoins validates that the input is a valid sdk.Coins
+// ValidatePromptCoins validates that the input contains valid sdk.Coins
 func ValidatePromptCoins(input string) error {
 	if _, err := sdk.ParseCoinsNormalized(input); err != nil {
 		return fmt.Errorf("invalid coins: %w", err)

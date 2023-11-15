@@ -12,13 +12,14 @@ import (
 func TestStorageTestSuite(t *testing.T) {
 	s := &storage.StorageTestSuite{
 		NewDB: func(dir string) (store.VersionedDatabase, error) {
-			return New(dir)
+			db, err := New(dir)
+			if err == nil && db != nil {
+				db.SetSync(false)
+			}
+
+			return db, err
 		},
 		EmptyBatchSize: 12,
-		SkipTests: []string{
-			"TestStorageTestSuite/TestDatabase_Prune",
-			"TestStorageTestSuite/TestDatabase_Prune_KeepRecent",
-		},
 	}
 
 	suite.Run(t, s)

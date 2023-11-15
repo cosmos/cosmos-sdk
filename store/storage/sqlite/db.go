@@ -45,6 +45,8 @@ var _ store.VersionedDatabase = (*Database)(nil)
 type Database struct {
 	storage *sql.DB
 
+	// earliestVersion defines the earliest version set in the database, which is
+	// only updated when the database is pruned.
 	earliestVersion uint64
 }
 
@@ -72,18 +74,15 @@ func New(dataDir string) (*Database, error) {
 		return nil, fmt.Errorf("failed to exec SQL statement: %w", err)
 	}
 
-	db := &Database{
-		storage: storage,
-	}
-
-	pruneHeight, err := db.getPruneHeight()
+	pruneHeight, err := getPruneHeight(storage)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get prune height: %w", err)
 	}
 
-	db.earliestVersion = pruneHeight + 1
-
-	return db, nil
+	return &Database{
+		storage:         storage,
+		earliestVersion: pruneHeight + 1,
+	}, nil
 }
 
 func (db *Database) Close() error {
@@ -228,26 +227,6 @@ func (db *Database) Prune(version uint64) error {
 	return nil
 }
 
-func (db *Database) getPruneHeight() (uint64, error) {
-	stmt, err := db.storage.Prepare(`SELECT value FROM state_storage WHERE store_key = ? AND key = ?`)
-	if err != nil {
-		return 0, fmt.Errorf("failed to prepare SQL statement: %w", err)
-	}
-
-	defer stmt.Close()
-
-	var value uint64
-	if err := stmt.QueryRow(reservedStoreKey, keyPruneHeight).Scan(&value); err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return 0, nil
-		}
-
-		return 0, fmt.Errorf("failed to query row: %w", err)
-	}
-
-	return value, nil
-}
-
 func (db *Database) Iterator(storeKey string, version uint64, start, end []byte) (store.Iterator, error) {
 	if (start != nil && len(start) == 0) || (end != nil && len(end) == 0) {
 		return nil, store.ErrKeyEmpty
@@ -305,4 +284,24 @@ func (db *Database) PrintRowsDebug() {
 	}
 
 	fmt.Println(strings.TrimSpace(sb.String()))
+}
+
+func getPruneHeight(storage *sql.DB) (uint64, error) {
+	stmt, err := storage.Prepare(`SELECT value FROM state_storage WHERE store_key = ? AND key = ?`)
+	if err != nil {
+		return 0, fmt.Errorf("failed to prepare SQL statement: %w", err)
+	}
+
+	defer stmt.Close()
+
+	var value uint64
+	if err := stmt.QueryRow(reservedStoreKey, keyPruneHeight).Scan(&value); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return 0, nil
+		}
+
+		return 0, fmt.Errorf("failed to query row: %w", err)
+	}
+
+	return value, nil
 }

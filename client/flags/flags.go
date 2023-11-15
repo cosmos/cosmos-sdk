@@ -88,6 +88,7 @@ const (
 	// Logging flags
 	FlagLogLevel  = "log_level"
 	FlagLogFormat = "log_format"
+	FlagColorLogs = "log_colored"
 )
 
 // List of supported output formats

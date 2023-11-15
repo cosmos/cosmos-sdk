@@ -712,6 +712,7 @@ func cacheBech32Addr(prefix string, addr []byte, cache *simplelru.LRU, cacheKey 
 
 type AddressConfig struct {
 	coinType uint32
+	purpose  uint32
 }
 
 var (
@@ -732,6 +733,7 @@ func GetAddresConfig() *AddressConfig {
 func NewAddressConfig() *AddressConfig {
 	return &AddressConfig{
 		coinType: CoinType,
+		purpose:  Purpose,
 	}
 }
 
@@ -743,4 +745,14 @@ func (config *AddressConfig) SetCoinType(coinType uint32) {
 // GetCoinType returns the BIP-0044 CoinType code on the config.
 func (config *AddressConfig) GetCoinType() uint32 {
 	return config.coinType
+}
+
+// Set the BIP-0044 Purpose code on the config
+func (config *AddressConfig) SetPurpose(purpose uint32) {
+	config.purpose = purpose
+}
+
+// GetPurpose returns the BIP-0044 Purpose code on the config.
+func (config *AddressConfig) GetPurpose() uint32 {
+	return config.purpose
 }

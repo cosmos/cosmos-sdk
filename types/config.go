@@ -128,12 +128,6 @@ func (config *Config) SetFullFundraiserPath(fullFundraiserPath string) {
 	config.fullFundraiserPath = fullFundraiserPath
 }
 
-// Set the BIP-0044 Purpose code on the config
-func (config *Config) SetPurpose(purpose uint32) {
-	config.assertNotSealed()
-	config.purpose = purpose
-}
-
 // Seal seals the config such that the config state could not be modified further
 func (config *Config) Seal() *Config {
 	config.mtx.Lock()
@@ -189,11 +183,6 @@ func (config *Config) GetTxEncoder() TxEncoder {
 // GetAddressVerifier returns the function to verify that addresses have the correct format
 func (config *Config) GetAddressVerifier() func([]byte) error {
 	return config.addressVerifier
-}
-
-// GetPurpose returns the BIP-0044 Purpose code on the config.
-func (config *Config) GetPurpose() uint32 {
-	return config.purpose
 }
 
 // GetFullFundraiserPath returns the BIP44Prefix.

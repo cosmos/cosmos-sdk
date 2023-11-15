@@ -18,15 +18,12 @@ func TestConfigTestSuite(t *testing.T) {
 }
 
 func (s *contextTestSuite) TestConfig_SetPurpose() {
-	config := sdk.NewConfig()
+	config := sdk.NewAddressConfig()
 	config.SetPurpose(44)
 	s.Require().Equal(uint32(44), config.GetPurpose())
 
 	config.SetPurpose(0)
 	s.Require().Equal(uint32(0), config.GetPurpose())
-
-	config.Seal()
-	s.Require().Panics(func() { config.SetPurpose(10) })
 }
 
 func (s *configTestSuite) TestConfig_SetCoinType() {

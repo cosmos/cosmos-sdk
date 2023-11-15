@@ -36,24 +36,14 @@ func GetTxCmd(ac addresscodec.Codec) *cobra.Command {
 	}
 
 	cmd.AddCommand(
-<<<<<<< HEAD
 		NewCmdSubmitUpgradeProposal(ac),
-		NewCmdSubmitCancelUpgradeProposal(ac),
-=======
-		NewCmdSubmitUpgradeProposal(),
->>>>>>> 9c3386ffd (feat(client/v2): support gov proposals (#18461))
 	)
 
 	return cmd
 }
 
 // NewCmdSubmitUpgradeProposal implements a command handler for submitting a software upgrade proposal transaction.
-<<<<<<< HEAD
 func NewCmdSubmitUpgradeProposal(ac addresscodec.Codec) *cobra.Command {
-=======
-// This commands is not migrated to autocli as it contains extra validation that is useful for submitting upgrade proposals.
-func NewCmdSubmitUpgradeProposal() *cobra.Command {
->>>>>>> 9c3386ffd (feat(client/v2): support gov proposals (#18461))
 	cmd := &cobra.Command{
 		Use:   "software-upgrade [name] (--upgrade-height [height]) (--upgrade-info [info]) [flags]",
 		Args:  cobra.ExactArgs(1),
@@ -141,58 +131,6 @@ func NewCmdSubmitUpgradeProposal() *cobra.Command {
 	return cmd
 }
 
-<<<<<<< HEAD
-// NewCmdSubmitCancelUpgradeProposal implements a command handler for submitting a software upgrade cancel proposal transaction.
-func NewCmdSubmitCancelUpgradeProposal(ac addresscodec.Codec) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "cancel-software-upgrade [flags]",
-		Args:  cobra.ExactArgs(0),
-		Short: "Cancel the current software upgrade proposal",
-		Long:  "Cancel a software upgrade along with an initial deposit.",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientTxContext(cmd)
-			if err != nil {
-				return err
-			}
-
-			proposal, err := cli.ReadGovPropFlags(clientCtx, cmd.Flags())
-			if err != nil {
-				return err
-			}
-
-			authority, _ := cmd.Flags().GetString(FlagAuthority)
-			if authority != "" {
-				if _, err = ac.StringToBytes(authority); err != nil {
-					return fmt.Errorf("invalid authority address: %w", err)
-				}
-			} else {
-				authority = sdk.AccAddress(address.Module("gov")).String()
-			}
-
-			if err := proposal.SetMsgs([]sdk.Msg{
-				&types.MsgCancelUpgrade{
-					Authority: authority,
-				},
-			}); err != nil {
-				return fmt.Errorf("failed to create cancel upgrade proposal message: %w", err)
-			}
-
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), proposal)
-		},
-	}
-
-	cmd.Flags().String(FlagAuthority, "", "The address of the upgrade module authority (defaults to gov)")
-
-	// add common proposal flags
-	flags.AddTxFlagsToCmd(cmd)
-	cli.AddGovPropFlagsToCmd(cmd)
-	cmd.MarkFlagRequired(cli.FlagTitle)
-
-	return cmd
-}
-
-=======
->>>>>>> 9c3386ffd (feat(client/v2): support gov proposals (#18461))
 // getDefaultDaemonName gets the default name to use for the daemon.
 // If a DAEMON_NAME env var is set, that is used.
 // Otherwise, the last part of the currently running executable is used.

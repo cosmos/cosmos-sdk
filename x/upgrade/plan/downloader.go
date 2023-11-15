@@ -148,15 +148,9 @@ func getFile(url, dst string) error {
 		XTerraformGetDisabled: true,
 	}
 
-	goGetterGetters := map[string]getter.Getter{
-		"file":  new(getter.FileGetter),
-		"gcs":   new(getter.GCSGetter),
-		"git":   new(getter.GitGetter),
-		"hg":    new(getter.HgGetter),
-		"s3":    new(getter.S3Getter),
-		"http":  httpGetter,
-		"https": httpGetter,
-	}
+	goGetterGetters := getter.Getters
+	goGetterGetters["http"] = httpGetter
+	goGetterGetters["https"] = httpGetter
 
 	// https://github.com/hashicorp/go-getter#security-options
 	getterClient := &getter.Client{
@@ -165,7 +159,6 @@ func getFile(url, dst string) error {
 		Src:             url,
 		Dst:             dst,
 		Pwd:             dst,
-		Mode:            getter.ClientModeAny,
 		Getters:         goGetterGetters,
 	}
 

@@ -42,7 +42,7 @@ func loadFileDescriptorsGRPCReflection(ctx context.Context, client *grpc.ClientC
 	}
 
 	fdMap := map[string]*descriptorpb.FileDescriptorProto{}
-	waitListServiceRes := make(chan *grpc_reflection_v1alpha.ListServiceResponse) //nolint:staticcheck // SA1019: we want to keep using v1alpha
+	waitListServiceRes := make(chan *grpc_reflection_v1alpha.ListServiceResponse)
 	waitc := make(chan struct{})
 	go func() {
 		for {
@@ -60,14 +60,14 @@ func loadFileDescriptorsGRPCReflection(ctx context.Context, client *grpc.ClientC
 			case *grpc_reflection_v1alpha.ServerReflectionResponse_ErrorResponse:
 				panic(err)
 			case *grpc_reflection_v1alpha.ServerReflectionResponse_ListServicesResponse:
-				waitListServiceRes <- res.ListServicesResponse //nolint:staticcheck // SA1019: we want to keep using v1alpha
+				waitListServiceRes <- res.ListServicesResponse
 			case *grpc_reflection_v1alpha.ServerReflectionResponse_FileDescriptorResponse:
 				processFileDescriptorsResponse(res, fdMap)
 			}
 		}
 	}()
 
-	if err = reflectClient.Send(&grpc_reflection_v1alpha.ServerReflectionRequest{ //nolint:staticcheck // SA1019: we want to keep using v1alpha
+	if err = reflectClient.Send(&grpc_reflection_v1alpha.ServerReflectionRequest{
 		MessageRequest: &grpc_reflection_v1alpha.ServerReflectionRequest_ListServices{},
 	}); err != nil {
 		return nil, err
@@ -75,10 +75,10 @@ func loadFileDescriptorsGRPCReflection(ctx context.Context, client *grpc.ClientC
 
 	listServiceRes := <-waitListServiceRes
 
-	for _, response := range listServiceRes.Service { //nolint:staticcheck // SA1019: we want to keep using v1alpha
-		err = reflectClient.Send(&grpc_reflection_v1alpha.ServerReflectionRequest{ //nolint:staticcheck // SA1019: we want to keep using v1alpha
+	for _, response := range listServiceRes.Service {
+		err = reflectClient.Send(&grpc_reflection_v1alpha.ServerReflectionRequest{
 			MessageRequest: &grpc_reflection_v1alpha.ServerReflectionRequest_FileContainingSymbol{
-				FileContainingSymbol: response.Name, //nolint:staticcheck // SA1019: we want to keep using v1alpha
+				FileContainingSymbol: response.Name,
 			},
 		})
 		if err != nil {
@@ -87,7 +87,7 @@ func loadFileDescriptorsGRPCReflection(ctx context.Context, client *grpc.ClientC
 	}
 
 	for _, msgName := range interfaceImplNames {
-		err = reflectClient.Send(&grpc_reflection_v1alpha.ServerReflectionRequest{ //nolint:staticcheck // SA1019: we want to keep using v1alpha
+		err = reflectClient.Send(&grpc_reflection_v1alpha.ServerReflectionRequest{
 			MessageRequest: &grpc_reflection_v1alpha.ServerReflectionRequest_FileContainingSymbol{
 				FileContainingSymbol: msgName,
 			},
@@ -137,7 +137,7 @@ func loadFileDescriptorsGRPCReflection(ctx context.Context, client *grpc.ClientC
 }
 
 func processFileDescriptorsResponse(res *grpc_reflection_v1alpha.ServerReflectionResponse_FileDescriptorResponse, fdMap map[string]*descriptorpb.FileDescriptorProto) {
-	for _, bz := range res.FileDescriptorResponse.FileDescriptorProto { //nolint:staticcheck // SA1019: we want to keep using v1alpha
+	for _, bz := range res.FileDescriptorResponse.FileDescriptorProto {
 		fd := &descriptorpb.FileDescriptorProto{}
 		err := proto.Unmarshal(bz, fd)
 		if err != nil {
@@ -186,7 +186,7 @@ func addMissingFileDescriptors(ctx context.Context, client *grpc.ClientConn, fdM
 	}()
 
 	for _, file := range missingFiles {
-		err = reflectClient.Send(&grpc_reflection_v1alpha.ServerReflectionRequest{ //nolint:staticcheck // SA1019: we want to keep using v1alpha
+		err = reflectClient.Send(&grpc_reflection_v1alpha.ServerReflectionRequest{
 			MessageRequest: &grpc_reflection_v1alpha.ServerReflectionRequest_FileByFilename{
 				FileByFilename: file,
 			},

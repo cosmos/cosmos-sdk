@@ -16,7 +16,7 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) error {
 	logger := ctx.Logger().With("module", "x/"+types.ModuleName)
 
 	// Iterate over all continuous fund proposals and perform continuous distribution
-	k.ContinuousFund.Walk(ctx, nil, func(key sdk.AccAddress, value types.ContinuousFund) (bool, error) {
+	err := k.ContinuousFund.Walk(ctx, nil, func(key sdk.AccAddress, value types.ContinuousFund) (bool, error) {
 		cf, err := k.ContinuousFund.Get(ctx, key)
 		if err != nil {
 			return false, err
@@ -33,6 +33,9 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) error {
 
 		return false, nil
 	})
+	if err != nil {
+		return err
+	}
 
 	return nil
 }

@@ -105,6 +105,7 @@ func defaultConfig() *Config {
 			testutil.UpgradeModuleName,
 			"vesting",
 			testutil.CircuitModuleName,
+			testutil.ProtocolPoolModuleName,
 		},
 		setInitGenesis: true,
 	}

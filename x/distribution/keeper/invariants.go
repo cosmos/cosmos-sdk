@@ -175,7 +175,11 @@ func ModuleAccountInvariant(k Keeper) sdk.Invariant {
 			panic(err)
 		}
 
-		liquidityProviderPool := k.GetFeePoolLiquidityProviderCoins(ctx)
+		liquidityProviderPool, err := k.GetFeePoolLiquidityProviderCoins(ctx)
+		if err != nil {
+			panic(err)
+		}
+
 		expectedInt, _ := expectedCoins.Add(communityPool.CommunityPool...).Add(liquidityProviderPool...).TruncateDecimal()
 
 		macc := k.GetDistributionAccount(ctx)

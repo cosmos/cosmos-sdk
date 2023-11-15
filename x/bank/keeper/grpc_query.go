@@ -3,10 +3,6 @@ package keeper
 import (
 	"context"
 
-<<<<<<< HEAD
-=======
-	gogotypes "github.com/cosmos/gogoproto/types"
->>>>>>> 7ccb8b4811 (Feat/cherry pick upgrade (#365))
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -65,7 +61,7 @@ func (k BaseKeeper) AllBalances(ctx context.Context, req *types.QueryAllBalances
 	}
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-<<<<<<< HEAD
+	address := k.ak.GetMergedAccountAddressIfExists(sdkCtx, addr)
 	balances, pageRes, err := query.CollectionPaginate(
 		ctx,
 		k.Balances,
@@ -78,24 +74,8 @@ func (k BaseKeeper) AllBalances(ctx context.Context, req *types.QueryAllBalances
 			}
 			return sdk.NewCoin(key.K2(), value), nil
 		},
-		query.WithCollectionPaginationPairPrefix[sdk.AccAddress, string](addr),
+		query.WithCollectionPaginationPairPrefix[sdk.AccAddress, string](address),
 	)
-=======
-
-	balances := sdk.NewCoins()
-	address := k.ak.GetMergedAccountAddressIfExists(sdkCtx, addr)
-	accountStore := k.getAccountStore(sdkCtx, address)
-
-	pageRes, err := query.Paginate(accountStore, req.Pagination, func(key, value []byte) error {
-		denom := string(key)
-		balance, err := UnmarshalBalanceCompat(k.cdc, value, denom)
-		if err != nil {
-			return err
-		}
-		balances = append(balances, balance)
-		return nil
-	})
->>>>>>> 7ccb8b4811 (Feat/cherry pick upgrade (#365))
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "paginate: %v", err)
 	}
@@ -117,15 +97,8 @@ func (k BaseKeeper) SpendableBalances(ctx context.Context, req *types.QuerySpend
 	}
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-
-<<<<<<< HEAD
+	addr = k.ak.GetMergedAccountAddressIfExists(sdkCtx, addr)
 	zeroAmt := math.ZeroInt()
-=======
-	balances := sdk.NewCoins()
-	address := k.ak.GetMergedAccountAddressIfExists(sdkCtx, addr)
-	accountStore := k.getAccountStore(sdkCtx, address)
-	zeroAmt := sdk.ZeroInt()
->>>>>>> 7ccb8b4811 (Feat/cherry pick upgrade (#365))
 
 	balances, pageRes, err := query.CollectionPaginate(ctx, k.Balances, req.Pagination, func(key collections.Pair[sdk.AccAddress, string], _ math.Int) (coin sdk.Coin, err error) {
 		return sdk.NewCoin(key.K2(), zeroAmt), nil

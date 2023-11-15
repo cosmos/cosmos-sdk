@@ -7,6 +7,8 @@ import (
 	"cosmossdk.io/collections"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 
+	storetypes "cosmossdk.io/store/types"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -116,7 +118,7 @@ func (ak AccountKeeper) IterateAccounts(ctx context.Context, cb func(account sdk
 	}
 }
 
-func (ak AccountKeeper) GetCorrespondingEthAddressIfExists(ctx sdk.Context, cosmosAddr sdk.AccAddress) (correspondingEthAddr sdk.AccAddress) {
+func (ak AccountKeeper) GetCorrespondingEthAddressIfExists(ctx context.Context, cosmosAddr sdk.AccAddress) (correspondingEthAddr sdk.AccAddress) {
 	if cosmosAddr == nil {
 		return nil
 	}
@@ -133,25 +135,26 @@ func (ak AccountKeeper) GetCorrespondingCosmosAddressIfExists(ctx context.Contex
 
 }
 
-func (ak AccountKeeper) SetCorrespondingAddresses(ctx sdk.Context, cosmosAddr sdk.AccAddress, ethAddr sdk.AccAddress) {
+func (ak AccountKeeper) SetCorrespondingAddresses(ctx context.Context, cosmosAddr sdk.AccAddress, ethAddr sdk.AccAddress) {
 	ak.AddToEthToCosmosAddressMap(ctx, ethAddr, cosmosAddr)
 	ak.AddToCosmosToEthAddressMap(ctx, cosmosAddr, ethAddr)
 
 }
 
-func (ak AccountKeeper) AddToCosmosToEthAddressMap(ctx sdk.Context, cosmosAddr sdk.AccAddress, ethAddr sdk.AccAddress) {
+func (ak AccountKeeper) AddToCosmosToEthAddressMap(ctx context.Context, cosmosAddr sdk.AccAddress, ethAddr sdk.AccAddress) {
 	cosmosAddrToEthAddrMapping := ak.Store(ctx, types.CosmosAddressToEthAddressKey)
 	cosmosAddrToEthAddrMapping.Set(cosmosAddr, ethAddr)
 }
 
-func (ak AccountKeeper) AddToEthToCosmosAddressMap(ctx sdk.Context, ethAddr sdk.AccAddress, cosmosAddr sdk.AccAddress) {
+func (ak AccountKeeper) AddToEthToCosmosAddressMap(ctx context.Context, ethAddr sdk.AccAddress, cosmosAddr sdk.AccAddress) {
 	ethAddrToCosmosAddrMapping := ak.Store(ctx, types.EthAddressToCosmosAddressKey)
 	ethAddrToCosmosAddrMapping.Set(ethAddr, cosmosAddr)
 }
 
-func (ak AccountKeeper) IterateEthToCosmosAddressMapping(ctx sdk.Context, cb func(ethAddress, cosmosAddress sdk.AccAddress) bool) {
-	store := ctx.KVStore(ak.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, types.KeyPrefix(types.EthAddressToCosmosAddressKey))
+func (ak AccountKeeper) IterateEthToCosmosAddressMapping(ctx context.Context, cb func(ethAddress, cosmosAddress sdk.AccAddress) bool) {
+	store := ak.storeService.OpenKVStore(ctx)
+
+	iterator := storetypes.KVStorePrefixIterator(runtime.KVStoreAdapter(store), types.KeyPrefix(types.EthAddressToCosmosAddressKey))
 
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
@@ -165,9 +168,9 @@ func (ak AccountKeeper) IterateEthToCosmosAddressMapping(ctx sdk.Context, cb fun
 	}
 
 }
-func (ak AccountKeeper) IterateCosmosToEthAddressMapping(ctx sdk.Context, cb func(cosmosAddress, ethAddress sdk.AccAddress) bool) {
-	store := ctx.KVStore(ak.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, types.KeyPrefix(types.CosmosAddressToEthAddressKey))
+func (ak AccountKeeper) IterateCosmosToEthAddressMapping(ctx context.Context, cb func(cosmosAddress, ethAddress sdk.AccAddress) bool) {
+	store := ak.storeService.OpenKVStore(ctx)
+	iterator := storetypes.KVStorePrefixIterator(runtime.KVStoreAdapter(store), types.KeyPrefix(types.CosmosAddressToEthAddressKey))
 
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
@@ -183,7 +186,7 @@ func (ak AccountKeeper) IterateCosmosToEthAddressMapping(ctx sdk.Context, cb fun
 }
 
 // GetMergedAccountAddressIfExists gets merged cosmos account address if exists , else returns address passed in
-func (ak AccountKeeper) GetMergedAccountAddressIfExists(ctx sdk.Context, addr sdk.AccAddress) sdk.AccAddress {
+func (ak AccountKeeper) GetMergedAccountAddressIfExists(ctx context.Context, addr sdk.AccAddress) sdk.AccAddress {
 	acct := ak.GetAccount(ctx, addr)
 	if acct == nil {
 		return addr
@@ -192,7 +195,7 @@ func (ak AccountKeeper) GetMergedAccountAddressIfExists(ctx sdk.Context, addr sd
 }
 
 // GetMappedAddress gets corresponding eth address if exists, else tries to get corresponding cosmos address. If both don't exist, it returns nil
-func (ak AccountKeeper) GetMappedAddress(ctx sdk.Context, addr sdk.AccAddress) sdk.AccAddress {
+func (ak AccountKeeper) GetMappedAddress(ctx context.Context, addr sdk.AccAddress) sdk.AccAddress {
 	if address := ak.GetCorrespondingEthAddressIfExists(ctx, addr); address != nil {
 		return address
 	}

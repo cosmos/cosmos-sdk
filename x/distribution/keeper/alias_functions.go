@@ -18,8 +18,12 @@ func (k Keeper) GetValidatorOutstandingRewardsCoins(ctx context.Context, val sdk
 }
 
 // GetFeePoolLiquidityProviderCoins gets the coins in the fee pool that is for liquidity providers.
-func (k Keeper) GetFeePoolLiquidityProviderCoins(ctx sdk.Context) sdk.DecCoins {
-	return k.GetFeePool(ctx).LiquidityProviderPool
+func (k Keeper) GetFeePoolLiquidityProviderCoins(ctx context.Context) (sdk.DecCoins, error) {
+	feePool, err := k.FeePool.Get(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return feePool.LiquidityProviderPool, nil
 }
 
 // GetDistributionAccount returns the distribution ModuleAccount

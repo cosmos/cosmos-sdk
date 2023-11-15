@@ -36,9 +36,9 @@ type Params struct {
 	BaseProposerReward cosmossdk_io_math.LegacyDec `protobuf:"bytes,2,opt,name=base_proposer_reward,json=baseProposerReward,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"base_proposer_reward"` // Deprecated: Do not use.
 	// Deprecated: The bonus_proposer_reward field is deprecated and is no longer used
 	// in the x/distribution module's reward mechanism.
-	BonusProposerReward     github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,3,opt,name=bonus_proposer_reward,json=bonusProposerReward,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"bonus_proposer_reward"` // Deprecated: Do not use.
+	BonusProposerReward     cosmossdk_io_math.LegacyDec `protobuf:"bytes,3,opt,name=bonus_proposer_reward,json=bonusProposerReward,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"bonus_proposer_reward"` // Deprecated: Do not use.
 	WithdrawAddrEnabled     bool                                   `protobuf:"varint,4,opt,name=withdraw_addr_enabled,json=withdrawAddrEnabled,proto3" json:"withdraw_addr_enabled,omitempty"`
-	LiquidityProviderReward github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,5,opt,name=liquidity_provider_reward,json=liquidityProviderReward,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"liquidity_provider_reward"`
+	LiquidityProviderReward cosmossdk_io_math.LegacyDec `protobuf:"bytes,5,opt,name=liquidity_provider_reward,json=liquidityProviderReward,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"liquidity_provider_reward"`
 }
 
 func (m *Params) Reset()         { *m = Params{} }

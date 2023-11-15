@@ -732,13 +732,16 @@ func (app *BaseApp) beginBlock(req *abci.RequestFinalizeBlock) (sdk.BeginBlock, 
 	return resp, nil
 }
 
-func (app *BaseApp) deliverTx(tx []byte) *abci.ExecTxResult {
+func (app *BaseApp) deliverTx(tx []byte) (res *abci.ExecTxResult) {
 	gInfo := sdk.GasInfo{}
 	resultStr := "successful"
 
 	defer func() {
 		if app.deliverTxer != nil {
-			app.deliverTxer(app.finalizeBlockState.ctx, req, res)
+			req := sdk.RequestDeliverTx{
+				Tx: tx,
+			}
+			app.deliverTxer(app.finalizeBlockState.ctx, req, *res)
 		}
 	}()
 

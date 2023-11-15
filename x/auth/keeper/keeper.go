@@ -11,9 +11,11 @@ import (
 	"cosmossdk.io/core/store"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
+	"cosmossdk.io/store/prefix"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -282,4 +284,10 @@ func (ak AccountKeeper) GetParams(ctx context.Context) (params types.Params) {
 		panic(err)
 	}
 	return params
+}
+
+// Store fetches the permanent store
+func (ak AccountKeeper) Store(ctx context.Context, key string) prefix.Store {
+	mainStore := ak.storeService.OpenKVStore(ctx)
+	return prefix.NewStore(runtime.KVStoreAdapter(mainStore), types.KeyPrefix(key))
 }

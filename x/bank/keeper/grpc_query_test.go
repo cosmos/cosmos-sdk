@@ -21,11 +21,7 @@ func (suite *KeeperTestSuite) TestQueryBalance() {
 
 	origCoins := sdk.NewCoins(newBarCoin(30))
 	suite.mockFundAccount(addr)
-<<<<<<< HEAD
-	suite.Require().NoError(testutil.FundAccount(ctx, suite.bankKeeper, addr, origCoins))
-=======
-	suite.Require().NoError(testutil.FundAccount(&suite.bankKeeper, ctx, addr, origCoins))
->>>>>>> 7ccb8b4811 (Feat/cherry pick upgrade (#365))
+	suite.Require().NoError(testutil.FundAccount(ctx, &suite.bankKeeper, addr, origCoins))
 
 	testCases := []struct {
 		name         string
@@ -124,13 +120,9 @@ func (suite *KeeperTestSuite) TestQueryAllBalances() {
 	origCoins := sdk.NewCoins(fooCoins, barCoins, ibcCoins)
 
 	suite.mockFundAccount(addr)
-<<<<<<< HEAD
-	suite.Require().NoError(testutil.FundAccount(ctx, suite.bankKeeper, addr, origCoins))
+	suite.Require().NoError(testutil.FundAccount(ctx, &suite.bankKeeper, addr, origCoins))
 
 	addIBCMetadata(ctx, suite.bankKeeper)
-=======
-	suite.Require().NoError(testutil.FundAccount(&suite.bankKeeper, ctx, addr, origCoins))
->>>>>>> 7ccb8b4811 (Feat/cherry pick upgrade (#365))
 
 	res, err = queryClient.AllBalances(gocontext.Background(), req)
 	suite.Require().NoError(err)
@@ -215,11 +207,7 @@ func (suite *KeeperTestSuite) TestSpendableBalances() {
 	suite.Require().NoError(err)
 
 	suite.mockFundAccount(addr)
-<<<<<<< HEAD
-	suite.Require().NoError(testutil.FundAccount(suite.ctx, suite.bankKeeper, addr, origCoins))
-=======
-	suite.Require().NoError(testutil.FundAccount(&suite.bankKeeper, suite.ctx, addr, origCoins))
->>>>>>> 7ccb8b4811 (Feat/cherry pick upgrade (#365))
+	suite.Require().NoError(testutil.FundAccount(suite.ctx, &suite.bankKeeper, addr, origCoins))
 
 	// move time forward for some tokens to vest
 	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(30 * time.Minute))
@@ -267,11 +255,7 @@ func (suite *KeeperTestSuite) TestSpendableBalanceByDenom() {
 	suite.Require().NoError(err)
 
 	suite.mockFundAccount(addr)
-<<<<<<< HEAD
-	suite.Require().NoError(testutil.FundAccount(suite.ctx, suite.bankKeeper, addr, origCoins))
-=======
-	suite.Require().NoError(testutil.FundAccount(&suite.bankKeeper, suite.ctx, addr, origCoins))
->>>>>>> 7ccb8b4811 (Feat/cherry pick upgrade (#365))
+	suite.Require().NoError(testutil.FundAccount(suite.ctx, &suite.bankKeeper, addr, origCoins))
 
 	// move time forward for half of the tokens to vest
 	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(30 * time.Minute))

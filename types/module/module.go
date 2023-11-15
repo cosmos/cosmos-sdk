@@ -33,6 +33,7 @@ import (
 	"errors"
 	"fmt"
 	"sort"
+	"time"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
 
@@ -791,6 +792,7 @@ func (m *Manager) BeginBlock(ctx sdk.Context) (sdk.BeginBlock, error) {
 	for _, moduleName := range m.OrderBeginBlockers {
 		if module, ok := m.Modules[moduleName].(appmodule.HasBeginBlocker); ok {
 			if err := module.BeginBlock(ctx); err != nil {
+				startTime := time.Now()
 				telemetry.ModuleMeasureSince(moduleName, startTime, telemetry.MetricKeyBeginBlocker)
 				return sdk.BeginBlock{}, err
 			}

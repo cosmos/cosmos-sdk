@@ -14,7 +14,11 @@ type PrepareCheckStater func(ctx Context)
 // Precommiter runs code during commit immediately before the `deliverState` is written to the `rootMultiStore`.
 type Precommiter func(ctx Context)
 
-type DeliverTxer func(ctx Context, req abci.RequestDeliverTx, tx abci.ResponseDeliverTx)
+type RequestDeliverTx struct {
+	Tx []byte `protobuf:"bytes,1,opt,name=tx,proto3" json:"tx,omitempty"`
+}
+
+type DeliverTxer func(ctx Context, req RequestDeliverTx, tx abci.ExecTxResult)
 
 type BeforeCommitter func(ctx Context)
 

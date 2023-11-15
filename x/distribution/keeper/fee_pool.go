@@ -35,8 +35,11 @@ func (k Keeper) DistributeFromFeePool(ctx context.Context, amount sdk.Coins, rec
 
 // DistributeLiquidityProviderReward sends funds from the liquidity provider reward pool to
 // a receiver address, and updates the remaining amount in the pool.
-func (k Keeper) DistributeLiquidityProviderReward(ctx sdk.Context, amount sdk.Coins, receiveAddr sdk.AccAddress) error {
-	feePool := k.GetFeePool(ctx)
+func (k Keeper) DistributeLiquidityProviderReward(ctx context.Context, amount sdk.Coins, receiveAddr sdk.AccAddress) error {
+	feePool, err := k.FeePool.Get(ctx)
+	if err != nil {
+		return err
+	}
 
 	// NOTE the lp reward pool isn't a module account, however its coins
 	// are held in the distribution module account. Thus the community pool
@@ -48,11 +51,14 @@ func (k Keeper) DistributeLiquidityProviderReward(ctx sdk.Context, amount sdk.Co
 
 	feePool.LiquidityProviderPool = newPool
 
-	err := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, receiveAddr, amount)
+	err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, receiveAddr, amount)
 	if err != nil {
 		return err
 	}
 
-	k.SetFeePool(ctx, feePool)
+	err = k.FeePool.Set(ctx, feePool)
+	if err != nil {
+		return err
+	}
 	return nil
 }

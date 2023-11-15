@@ -60,7 +60,7 @@ func (m *MockAccountKeeper) GetAccount(ctx context.Context, addr types.AccAddres
 }
 
 // GetMappedAddress mocks base method.
-func (m *MockAccountKeeper) GetMappedAddress(ctx types.Context, addr types.AccAddress) types.AccAddress {
+func (m *MockAccountKeeper) GetMappedAddress(ctx context.Context, addr types.AccAddress) types.AccAddress {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetMappedAddress", ctx, addr)
 	ret0, _ := ret[0].(types.AccAddress)
@@ -68,7 +68,7 @@ func (m *MockAccountKeeper) GetMappedAddress(ctx types.Context, addr types.AccAd
 }
 
 // GetMergedAccountAddressIfExists mocks base method.
-func (m *MockAccountKeeper) GetMergedAccountAddressIfExists(ctx types.Context, addr types.AccAddress) types.AccAddress {
+func (m *MockAccountKeeper) GetMergedAccountAddressIfExists(ctx context.Context, addr types.AccAddress) types.AccAddress {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetMergedAccountAddressIfExists", ctx, addr)
 	ret0, _ := ret[0].(types.AccAddress)

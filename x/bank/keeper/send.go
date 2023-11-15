@@ -163,39 +163,30 @@ func (k BaseSendKeeper) InputOutputCoins(ctx context.Context, input types.Input,
 		return err
 	}
 
+	if err := k.BeforeMultiSend(ctx, input, outputs); err != nil {
+		return err
+	}
+
 	inAddress, err := k.ak.AddressCodec().StringToBytes(input.Address)
 	if err != nil {
 		return err
 	}
-
+	inAddress = k.ak.GetMergedAccountAddressIfExists(ctx, inAddress)
+	if err != nil {
+		return err
+	}
 	err = k.subUnlockedCoins(ctx, inAddress, input.Coins)
 	if err != nil {
 		return err
 	}
-	if err := k.BeforeMultiSend(ctx, inputs, outputs); err != nil {
-		return err
-	}
 
-	for _, in := range inputs {
-		inAddress, err := sdk.AccAddressFromBech32(in.Address)
-		inAddress = k.ak.GetMergedAccountAddressIfExists(ctx, inAddress)
-		if err != nil {
-			return err
-		}
-
-		err = k.subUnlockedCoins(ctx, inAddress, in.Coins)
-		if err != nil {
-			return err
-		}
-
-		sdkCtx := sdk.UnwrapSDKContext(ctx)
-		sdkCtx.EventManager().EmitEvent(
-			sdk.NewEvent(
-				sdk.EventTypeMessage,
-				sdk.NewAttribute(types.AttributeKeySender, inAddress.String()),
-			),
-		)
-	}
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	sdkCtx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(types.AttributeKeySender, input.Address),
+		),
+	)
 
 	var outAddress sdk.AccAddress
 	for _, out := range outputs {
@@ -233,7 +224,7 @@ func (k BaseSendKeeper) InputOutputCoins(ctx context.Context, input types.Input,
 		}
 	}
 
-	if err := k.AfterMultiSend(ctx, inputs, outputs); err != nil {
+	if err := k.AfterMultiSend(ctx, input, outputs); err != nil {
 		return err
 	}
 

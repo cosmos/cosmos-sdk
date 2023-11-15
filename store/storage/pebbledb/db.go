@@ -205,7 +205,7 @@ func (db *Database) ApplyChangeset(version uint64, cs *store.Changeset) error {
 //
 // See: https://github.com/cockroachdb/cockroach/blob/33623e3ee420174a4fd3226d1284b03f0e3caaac/pkg/storage/mvcc.go#L3182
 func (db *Database) Prune(version uint64) error {
-	itr, err := db.storage.NewIter(nil)
+	itr, err := db.storage.NewIter(&pebble.IterOptions{LowerBound: []byte("s/k:")})
 	if err != nil {
 		return err
 	}
@@ -222,12 +222,6 @@ func (db *Database) Prune(version uint64) error {
 
 	for itr.First(); itr.Valid(); {
 		prefixedKey := slices.Clone(itr.Key())
-
-		// XXX: ignore reserved/metadata entries
-		if bytes.Equal(prefixedKey, []byte(latestVersionKey)) || bytes.Equal(prefixedKey, []byte(pruneHeightKey)) {
-			itr.Next()
-			continue
-		}
 
 		keyBz, verBz, ok := SplitMVCCKey(prefixedKey)
 		if !ok {

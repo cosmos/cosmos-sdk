@@ -6,7 +6,6 @@ import (
 	"os"
 
 	"cosmossdk.io/core/branch"
-	errorsmod "cosmossdk.io/errors"
 	storetypes "cosmossdk.io/store/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -61,7 +60,7 @@ func catchOutOfGas(ctx sdk.Context, f func(ctx context.Context) error) (err erro
 				_, _ = fmt.Fprintf(os.Stderr, "recovered: %#v", r) // log to stderr
 				panic(r)
 			}
-			err = errorsmod.Wrap(sdkerrors.ErrOutOfGas, "SubMsg hit gas limit")
+			err = sdkerrors.ErrOutOfGas
 		}
 	}()
 	return f(ctx)

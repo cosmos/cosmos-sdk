@@ -214,10 +214,10 @@ func (b *Builder) addMessageFlags(ctx context.Context, flagSet *pflag.FlagSet, m
 
 		flagOpts := commandOptions.FlagOptions[string(field.Name())]
 		name, hasValue, err := b.addFieldFlag(ctx, flagSet, field, flagOpts, options)
-		flagOptsByFlagName[name] = flagOpts
 		if err != nil {
 			return nil, err
 		}
+		flagOptsByFlagName[name] = flagOpts
 
 		messageBinder.flagBindings = append(messageBinder.flagBindings, fieldBinding{
 			hasValue: hasValue,

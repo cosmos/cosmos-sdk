@@ -4,7 +4,7 @@ go 1.21
 
 require (
 	cosmossdk.io/api v0.7.3-0.20231113122742-912390d5fc4a
-	cosmossdk.io/client/v2 v2.0.0-beta.1.0.20231115114720-56dfd6b3cacc
+	cosmossdk.io/client/v2 v2.0.0-beta.1.0.20231115120201-57df379c5ef3
 	cosmossdk.io/collections v0.4.0 // indirect
 	cosmossdk.io/core v0.11.0
 	cosmossdk.io/depinject v1.0.0-alpha.4
@@ -21,7 +21,7 @@ require (
 	github.com/cometbft/cometbft v0.38.0
 	github.com/cosmos/cosmos-db v1.0.0
 	// this version is not used as it is always replaced by the latest Cosmos SDK version
-	github.com/cosmos/cosmos-sdk v0.50.2-0.20231115114036-23c1ff759a99
+	github.com/cosmos/cosmos-sdk v0.50.2-0.20231115115609-f09d4dbf98bb
 	github.com/cosmos/gogoproto v1.4.11
 	github.com/golang/mock v1.6.0
 	github.com/spf13/cast v1.5.1

@@ -25,17 +25,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
-<<<<<<< HEAD
-=======
 ### Improvements
 
 * [#18470](https://github.com/cosmos/cosmos-sdk/pull/18470) Improve go-getter settings.
 
-### State Machine Breaking
-
-* (x/upgrade) [#16244](https://github.com/cosmos/cosmos-sdk/pull/16244) Upgrade module no longer stores the app version but gets and sets the app version stored in the `ParamStore` of baseapp.
-
->>>>>>> e64f3bc6d (refactor(x/upgrade): configure go-getter (#18470))
 ## [v0.1.0](https://github.com/cosmos/cosmos-sdk/releases/tag/x/upgrade/v0.1.0) - 2023-11-07
 
 ### Features

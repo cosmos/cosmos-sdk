@@ -24,6 +24,11 @@ const (
 
 	// GovModuleName is the name of the gov module
 	GovModuleName = "gov"
+
+	// distributionModuleName duplicates the distribution module's name to avoid a cyclic dependency with x/distribution.
+	// It should be synced with the distribution module's name if it is ever changed.
+	// See: https://github.com/cosmos/cosmos-sdk/blob/912390d5fc4a32113ea1aacc98b77b2649aea4c2/x/distribution/types/keys.go#L15
+	DistributionModuleName = "distribution"
 )
 
 var (

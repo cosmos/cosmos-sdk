@@ -10,7 +10,7 @@ require (
 	github.com/chzyer/readline v1.5.1 // indirect
 	github.com/cockroachdb/errors v1.11.1
 	github.com/cosmos/cosmos-proto v1.0.0-beta.3
-	github.com/cosmos/cosmos-sdk v0.50.2-0.20231115114036-23c1ff759a99
+	github.com/cosmos/cosmos-sdk v0.50.2-0.20231115115609-f09d4dbf98bb
 	github.com/manifoldco/promptui v0.9.0 // indirect
 	github.com/spf13/cobra v1.7.0
 	github.com/spf13/pflag v1.0.5

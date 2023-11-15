@@ -6,7 +6,7 @@ use std::fmt::Write;
 
 pub(crate) fn gen_field(field: &FieldDescriptorProto, writer: &mut Context) -> anyhow::Result<()> {
     write!(writer, "    ")?;
-    write!(writer, "{}", field.name.clone().unwrap())?;
+    write!(writer, "pub {}", field.name.clone().unwrap())?;
     write!(writer, " : ")?;
     gen_field_type(field, writer)?;
     writeln!(writer, ",")?;

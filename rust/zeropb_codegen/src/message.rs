@@ -6,7 +6,8 @@ use crate::ctx::Context;
 use crate::field::gen_field;
 
 pub(crate) fn gen_message(message: &DescriptorProto, ctx: &mut Context) -> anyhow::Result<()> {
-    write!(ctx, "struct {} {{\n", message.name.clone().unwrap())?;
+    writeln!(ctx, "#[repr(C)]")?;
+    writeln!(ctx, "pub struct {} {{", message.name.clone().unwrap())?;
 
     for field in message.field.iter() {
         gen_field(field, ctx)?;

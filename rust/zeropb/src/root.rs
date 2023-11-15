@@ -1,7 +1,6 @@
 #[cfg(not(target_arch = "wasm32"))]
 use alloc::alloc::{alloc_zeroed, Layout};
 
-use alloc::boxed::Box;
 use core::marker::PhantomPinned;
 use core::{
     borrow::{Borrow, BorrowMut},
@@ -42,20 +41,17 @@ impl<T: ZeroCopy> Root<T> {
         }
     }
 
-    pub fn wrap(buf: Box<[u8]>) -> Result<Self, Error> {
-        if buf.len() < 0x10000 {
-            return Err(Error::InvalidBuffer);
-        }
+    pub unsafe fn unsafe_wrap(ptr: *mut u8) -> Self {
+        assert!(ptr.is_null() || (ptr as usize) & 0xFFFF == 0);
 
-        let ptr = Box::into_raw(buf) as *mut u8;
-        if (ptr as usize) & 0xFFFF != 0 {
-            return Err(Error::InvalidBuffer);
-        }
-
-        return Ok(Self {
+        return Self {
             buf: ptr,
             _phantom: PhantomData,
-        });
+        };
+    }
+
+    pub unsafe fn unsafe_unwrap(&self) -> *mut u8 {
+        self.buf
     }
 }
 
@@ -148,7 +144,7 @@ pub extern "C" fn __zeropb_free_page(page: *mut u8) {
 
 #[cfg(target_arch = "wasm32")]
 unsafe fn alloc_page() -> *mut u8 {
-    let page = core::arch::wasm32::memory_grow(1) as *mut u8;
+    let page = (core::arch::wasm32::memory_grow(0, 1) * 0x10000usize) as *mut u8;
     // zero memory
     core::ptr::write_bytes(page, 0, 0x10000);
     page
@@ -175,4 +171,10 @@ unsafe fn free_page(page: *mut u8) {
         page,
         Layout::from_size_align(0x10000, 0x10000).unwrap(),
     )
+}
+
+#[cfg(target_arch = "wasm32")]
+#[panic_handler]
+fn panic(_info: &core::panic::PanicInfo) -> ! {
+    loop {}
 }

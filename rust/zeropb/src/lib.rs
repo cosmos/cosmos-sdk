@@ -2,7 +2,6 @@
 #![warn(missing_docs)]
 #![no_std]
 
-extern crate alloc;
 extern crate core;
 
 mod zerocopy;
@@ -12,6 +11,7 @@ pub use zerocopy::ZeroCopy;
 mod root;
 
 pub use root::Root;
+pub use root::{__zeropb_alloc_page, __zeropb_free_page};
 
 mod error;
 mod rel_ptr;

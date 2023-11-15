@@ -80,9 +80,9 @@ fn gen_scalar_type(ty: Type, ctx: &mut Context) -> anyhow::Result<()> {
         Type::Int32 | Type::Sfixed32 | Type::Sint32 => gen_i32(ctx)?,
         Type::Uint32 | Type::Fixed32 => gen_u32(ctx)?,
         Type::Bool => write!(ctx, "bool")?,
-        _ => {}
+        _ => {return Err(anyhow::anyhow!("unexpected"))}
     }
-    Err(anyhow::anyhow!("unexpected"))
+    Ok(())
 }
 
 fn gen_i32(ctx: &mut Context) -> anyhow::Result<()> {

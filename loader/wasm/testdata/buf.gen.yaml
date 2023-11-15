@@ -3,3 +3,6 @@ plugins:
   - name: go-pulsar
     out: .
     opt: paths=source_relative
+  - name: go
+    out: .
+    opt: paths=source_relative

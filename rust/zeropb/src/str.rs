@@ -1,5 +1,6 @@
 use core::marker::PhantomData;
 use core::{borrow::Borrow, fmt::Write, str::from_utf8_unchecked};
+use core::fmt::Display;
 
 use crate::bytes::{Bytes, BytesWriter};
 use crate::error::Error;
@@ -26,6 +27,12 @@ impl Str {
 impl<'a> Borrow<str> for Str {
     fn borrow(&self) -> &str {
         unsafe { from_utf8_unchecked(self.ptr.borrow()) }
+    }
+}
+
+impl Display for Str {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        f.write_str(self.borrow())
     }
 }
 

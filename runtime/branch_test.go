@@ -34,7 +34,7 @@ func TestBranchService(t *testing.T) {
 			t.Error("expected key to not exist")
 		}
 		if !shouldRollback && !store.Has([]byte("key")) {
-			t.Error("expected key to exist exist")
+			t.Error("expected key to exist")
 		}
 	}
 

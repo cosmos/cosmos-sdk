@@ -123,14 +123,14 @@ type ModuleInputs struct {
 
 	AccountKeeper types.AccountKeeper
 	BankKeeper    types.BankKeeper
+	DistrKeeper   types.DistributionKeeper
 }
 
 type ModuleOutputs struct {
 	depinject.Out
 
-	Keeper      keeper.Keeper
-	Module      appmodule.AppModule
-	DistrKeeper types.DistributionKeeper
+	Keeper keeper.Keeper
+	Module appmodule.AppModule
 }
 
 func ProvideModule(in ModuleInputs) ModuleOutputs {

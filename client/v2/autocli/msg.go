@@ -15,18 +15,13 @@ import (
 	"cosmossdk.io/client/v2/autocli/flag"
 	"cosmossdk.io/client/v2/internal/flags"
 	"cosmossdk.io/client/v2/internal/util"
-<<<<<<< HEAD
-=======
 	addresscodec "cosmossdk.io/core/address"
-	authtx "cosmossdk.io/x/auth/tx"
-	authtxconfig "cosmossdk.io/x/auth/tx/config"
->>>>>>> 9c3386ffd (feat(client/v2): support gov proposals (#18461))
 
 	// the following will be extracted to a separate module
 	// https://github.com/cosmos/cosmos-sdk/issues/14403
-	authtypes "cosmossdk.io/x/auth/types"
-	govcli "cosmossdk.io/x/gov/client/cli"
-	govtypes "cosmossdk.io/x/gov/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"

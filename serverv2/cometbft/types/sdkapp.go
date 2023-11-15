@@ -2,8 +2,8 @@ package types
 
 import (
 	"context"
+	"time"
 
-	coreheader "cosmossdk.io/core/header"
 	abci "github.com/cometbft/cometbft/abci/types"
 	tmtypes "github.com/cometbft/cometbft/proto/tendermint/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -24,7 +24,7 @@ type ProtoApp interface {
 
 	// New interface
 	InitChain(RequestInitChain) (ResponseInitChain, error)
-	DeliverTxs(coreheader.Info, [][]byte) ([]interface{}, error)
+	DeliverBlock(Header, [][]byte) ([]interface{}, error)
 	Commit() error
 
 	// COMET BFT specific stuff below (tbd where to put them)
@@ -44,3 +44,46 @@ type RequestInitChain struct {
 }
 
 type ResponseInitChain struct{}
+
+// Header defines a generic header interface.
+type Header interface {
+	GetHeight() uint64  // GetHeight returns the height of the block
+	GetHash() []byte    // GetHash returns the hash of the block header
+	GetTime() time.Time // GetTime returns the time of the block
+	GetChainID() string // GetChainID returns the chain ID of the chain
+	GetAppHash() []byte // GetAppHash used in the current block header
+}
+
+// CometBFTHeader
+type CometBFTHeader struct {
+	Height  int64     // Height returns the height of the block
+	Hash    []byte    // Hash returns the hash of the block header
+	Time    time.Time // Time returns the time of the block
+	ChainID string    // ChainId returns the chain ID of the block
+	AppHash []byte    // AppHash used in the current block header
+
+	NextValidatorsHash []byte
+	ProposerAddress    []byte
+	LastCommit         abci.CommitInfo
+	Misbehavior        []abci.Misbehavior
+}
+
+func (h CometBFTHeader) GetHeight() uint64 {
+	return uint64(h.Height)
+}
+
+func (h CometBFTHeader) GetHash() []byte {
+	return h.Hash
+}
+
+func (h CometBFTHeader) GetTime() time.Time {
+	return h.Time
+}
+
+func (h CometBFTHeader) GetChainID() string {
+	return h.ChainID
+}
+
+func (h CometBFTHeader) GetAppHash() []byte {
+	return h.AppHash
+}

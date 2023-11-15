@@ -8,8 +8,9 @@ import (
 
 	"github.com/huandu/skiplist"
 
+	"cosmossdk.io/x/auth/signing"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
 var (

@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"sort"
 
-	coreheader "cosmossdk.io/core/header"
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/snapshots"
 	snapshottypes "cosmossdk.io/store/snapshots/types"
@@ -142,34 +141,19 @@ func (w *cometABCIWrapper) FinalizeBlock(c context.Context, req *abci.RequestFin
 		return nil, err
 	}
 
-	// 	WithVoteInfos(req.DecidedLastCommit.Votes).
-	// 	WithExecMode(sdk.ExecModeFinalize).
-	// WithCometInfo(corecomet.Info{
-	// 	Evidence:        sdk.ToSDKEvidence(req.Misbehavior),
-	// 	ValidatorsHash:  req.NextValidatorsHash,
-	// 	ProposerAddress: req.ProposerAddress,
-	// 	LastCommit:      sdk.ToSDKCommitInfo(req.DecidedLastCommit),
-	// })
-
-	// LastCommit is used by upgrade, slashing, distribution, and simulation
-	// Evidence is used by x/evidence
-	// ValidatorsHash is used by x/staking
-	// ProposerAddress is used by x/distribution
-
-	// GasMeter must be set after we get a context with updated consensus params.
-	// ctx = ctx.WithConsensusParams(w.GetConsensusParams(ctx)).
-	// WithBlockGasMeter(w.getBlockGasMeter(ctx))
-
-	// TODO: missing a way to pass vote infos and the stuff that currently is in comet info
-
-	headerInfo := coreheader.Info{
-		ChainID: w.app.ChainID(),
-		Height:  req.Height,
-		Time:    req.Time,
-		Hash:    req.Hash,
-		AppHash: w.app.AppHash(),
+	header := types.CometBFTHeader{
+		Height:             req.Height,
+		Hash:               req.Hash,
+		Time:               req.Time,
+		ChainID:            w.app.ChainID(),
+		AppHash:            w.app.AppHash(),
+		NextValidatorsHash: req.NextValidatorsHash,
+		ProposerAddress:    req.ProposerAddress,
+		LastCommit:         req.DecidedLastCommit,
+		Misbehavior:        req.Misbehavior,
 	}
-	_, err := w.app.DeliverTxs(headerInfo, req.Txs)
+
+	_, err := w.app.DeliverBlock(header, req.Txs)
 	if err != nil {
 		return nil, err
 	}

@@ -60,8 +60,6 @@ func TestBranchService(t *testing.T) {
 
 	t.Run("execute with limit successful", func(t *testing.T) {
 		ctx := testutil.DefaultContext(sk, tsk)
-		gasMeter := storetypes.NewGasMeter(10_000)
-		ctx.WithGasMeter(gasMeter)
 		gasUsed, err := bs.ExecuteWithGasLimit(ctx, 4_000, func(ctx context.Context) error {
 			doStateChange(ctx)
 			return nil
@@ -76,8 +74,6 @@ func TestBranchService(t *testing.T) {
 
 	t.Run("execute with limit failed", func(t *testing.T) {
 		ctx := testutil.DefaultContext(sk, tsk)
-		gasMeter := storetypes.NewGasMeter(10_000)
-		ctx.WithGasMeter(gasMeter)
 		gasUsed, err := bs.ExecuteWithGasLimit(ctx, 4_000, func(ctx context.Context) error {
 			doStateChange(ctx)
 			return fmt.Errorf("failure")
@@ -92,8 +88,6 @@ func TestBranchService(t *testing.T) {
 
 	t.Run("execute with limit out of gas", func(t *testing.T) {
 		ctx := testutil.DefaultContext(sk, tsk)
-		gasMeter := storetypes.NewGasMeter(10_000)
-		ctx.WithGasMeter(gasMeter)
 		gasUsed, err := bs.ExecuteWithGasLimit(ctx, 2239, func(ctx context.Context) error {
 			doStateChange(ctx)
 			return nil
@@ -109,8 +103,6 @@ func TestBranchService(t *testing.T) {
 	t.Run("execute with gas limit other panic error", func(t *testing.T) {
 		// ensures other panic errors are not caught by the gas limit panic catcher
 		ctx := testutil.DefaultContext(sk, tsk)
-		gasMeter := storetypes.NewGasMeter(10_000)
-		ctx.WithGasMeter(gasMeter)
 		require.Panics(t, func() {
 			_, _ = bs.ExecuteWithGasLimit(ctx, 2239, func(ctx context.Context) error {
 				panic("other panic error")

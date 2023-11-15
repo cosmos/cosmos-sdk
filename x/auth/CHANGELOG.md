@@ -26,7 +26,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ## [Unreleased]
 
 ### Features
-* [#18281](https://github.com/cosmos/cosmos-sdk/pull/18281) Allow broadcast multi txs.
+
+* [#18281](https://github.com/cosmos/cosmos-sdk/pull/18281) Support broadcasting multiple transactions.
 
 ### Improvements
 

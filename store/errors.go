@@ -34,8 +34,8 @@ var (
 	ErrClosed          = errors.Register(StoreCodespace, 8, "closed")
 	ErrRecordNotFound  = errors.Register(StoreCodespace, 9, "record not found")
 	ErrUnknownStoreKey = errors.Register(StoreCodespace, 10, "unknown store key")
-	ErrKeyEmpty        = errors.Register(StoreCodespace, 12, "key empty")
-	ErrStartAfterEnd   = errors.Register(StoreCodespace, 13, "start key after end key")
+	ErrKeyEmpty        = errors.Register(StoreCodespace, 11, "key empty")
+	ErrStartAfterEnd   = errors.Register(StoreCodespace, 12, "start key after end key")
 )
 
 // ErrVersionPruned defines an error returned when a version queried is pruned

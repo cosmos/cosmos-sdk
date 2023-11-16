@@ -15,6 +15,8 @@ service Query {
   }
 
   // BalancebyQueryString queries the number of NFTs of a given class owned by the owner, same as balanceOf in ERC721
+  //
+  // Since: nft v0.1.1
   rpc BalanceByQueryString(QueryBalanceByQueryStringRequest) returns (QueryBalanceByQueryStringResponse) {
     option (google.api.http).get = "/cosmos/nft/v1beta1/balance";
   }
@@ -25,6 +27,8 @@ service Query {
   }
 
   // OwnerByQueryString queries the owner of the NFT based on its class and id, same as ownerOf in ERC721
+  //
+  // Since: nft v0.1.1
   rpc OwnerByQueryString(QueryOwnerByQueryStringRequest) returns (QueryOwnerByQueryStringResponse) {
     option (google.api.http).get = "/cosmos/nft/v1beta1/owner";
   }
@@ -35,6 +39,8 @@ service Query {
   }
 
   // SupplyByQueryString queries the number of NFTs from the given class, same as totalSupply of ERC721.
+  //
+  // Since: nft v0.1.1
   rpc SupplyByQueryString(QuerySupplyByQueryStringRequest) returns (QuerySupplyByQueryStringResponse) {
     option (google.api.http).get = "/cosmos/nft/v1beta1/supply";
   }
@@ -51,6 +57,8 @@ service Query {
   }
 
   // NFTByQueryString queries an NFT based on its class and id.
+  //
+  // Since: nft v0.1.1
   rpc NFTByQueryString(QueryNFTByQueryStringRequest) returns (QueryNFTByQueryStringResponse) {
     option (google.api.http).get = "/cosmos/nft/v1beta1/nft";
   }
@@ -61,6 +69,8 @@ service Query {
   }
 
   // Class queries an NFT class based on its id
+  //
+  // Since: nft v0.1.1
   rpc ClassByQueryString(QueryClassByQueryStringRequest) returns (QueryClassByQueryStringResponse) {
     option (google.api.http).get = "/cosmos/nft/v1beta1/class";
   }
@@ -81,6 +91,8 @@ message QueryBalanceRequest {
 }
 
 // QueryBalanceByQueryStringRequest is the request type for the Query/Balance RPC method
+//
+// Since: nft v0.1.1
 message QueryBalanceByQueryStringRequest {
   // class_id associated with the nft
   string class_id = 1;
@@ -96,6 +108,8 @@ message QueryBalanceResponse {
 }
 
 // QueryBalanceByQueryStringResponse is the response type for the Query/Balance RPC method
+//
+// Since: nft v0.1.1
 message QueryBalanceByQueryStringResponse {
   // amount is the number of all NFTs of a given class owned by the owner
   uint64 amount = 1;
@@ -111,6 +125,8 @@ message QueryOwnerRequest {
 }
 
 // QueryOwnerByQueryStringRequest is the request type for the Query/Owner RPC method
+//
+// Since: nft v0.1.1
 message QueryOwnerByQueryStringRequest {
   // class_id associated with the nft
   string class_id = 1;
@@ -126,6 +142,8 @@ message QueryOwnerResponse {
 }
 
 // QueryOwnerByQueryStringResponse is the response type for the Query/Owner RPC method
+//
+// Since: nft v0.1.1
 message QueryOwnerByQueryStringResponse {
   // owner is the owner address of the nft
   string owner = 1;
@@ -138,6 +156,8 @@ message QuerySupplyRequest {
 }
 
 // QuerySupplyByQueryStringRequest is the request type for the Query/Supply RPC method
+//
+// Since: nft v0.1.1
 message QuerySupplyByQueryStringRequest {
   // class_id associated with the nft
   string class_id = 1;
@@ -150,6 +170,8 @@ message QuerySupplyResponse {
 }
 
 // QuerySupplyByQueryStringResponse is the response type for the Query/Supply RPC method
+//
+// Since: nft v0.1.1
 message QuerySupplyByQueryStringResponse {
   // amount is the number of all NFTs from the given class
   uint64 amount = 1;
@@ -186,6 +208,8 @@ message QueryNFTRequest {
 }
 
 // QueryNFTByQueryStringRequest is the request type for the Query/NFT RPC method
+//
+// Since: nft v0.1.1
 message QueryNFTByQueryStringRequest {
   // class_id associated with the nft
   string class_id = 1;
@@ -201,6 +225,8 @@ message QueryNFTResponse {
 }
 
 // QueryNFTByQueryStringResponse is the response type for the Query/NFT RPC method
+//
+// Since: nft v0.1.1
 message QueryNFTByQueryStringResponse {
   // owner is the owner address of the nft
   cosmos.nft.v1beta1.NFT nft = 1;
@@ -213,6 +239,8 @@ message QueryClassRequest {
 }
 
 // QueryClassByQueryStringRequest is the request type for the Query/Class RPC method
+//
+// Since: nft v0.1.1
 message QueryClassByQueryStringRequest {
   // class_id associated with the nft
   string class_id = 1;
@@ -225,6 +253,8 @@ message QueryClassResponse {
 }
 
 // QueryClassByQueryStringResponse is the response type for the Query/Class RPC method
+//
+// Since: nft v0.1.1
 message QueryClassByQueryStringResponse {
   // class defines the class of the nft type.
   cosmos.nft.v1beta1.Class class = 1;

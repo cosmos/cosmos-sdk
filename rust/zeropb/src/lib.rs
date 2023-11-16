@@ -3,6 +3,8 @@
 #![no_std]
 
 extern crate core;
+#[cfg(not(target_arch = "wasm32"))]
+extern crate alloc;
 
 mod zerocopy;
 

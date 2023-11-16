@@ -2,7 +2,7 @@
 extern crate alloc;
 
 #[cfg(not(target_arch = "wasm32"))]
-use alloc::alloc::{alloc, dealloc, Layout};
+use alloc::alloc::{alloc_zeroed, dealloc, Layout};
 
 use core::marker::PhantomPinned;
 use core::{
@@ -13,7 +13,6 @@ use core::{
 };
 use core::ptr::{null_mut};
 
-use crate::error::Error;
 use crate::rel_ptr::{MAX_EXTENT, resolve_start_extent};
 use crate::zerocopy::ZeroCopy;
 
@@ -67,7 +66,7 @@ impl<T: ZeroCopy> Root<T> {
     }
 }
 
-impl <T: ZeroCopy> Drop for Root<T> {
+impl<T: ZeroCopy> Drop for Root<T> {
     fn drop(&mut self) {
         unsafe {
             __zeropb_free_page(self.buf);
@@ -127,6 +126,7 @@ unsafe fn do_alloc_page() -> *mut u8 {
         return ptr;
     }
 
+    ALLOCATIONS += 1;
     return alloc_page();
 }
 
@@ -149,6 +149,8 @@ pub extern "C" fn __zeropb_free_page(page: *mut u8) {
 #[cfg(target_arch = "wasm32")]
 unsafe fn alloc_page() -> *mut u8 {
     let page = (core::arch::wasm32::memory_grow(0, 1) * 0x10000usize) as *mut u8;
+    // zero memory
+    core::ptr::write_bytes(page, 0, 0x10000);
     page
 }
 
@@ -164,7 +166,7 @@ extern crate std;
 
 #[cfg(not(target_arch = "wasm32"))]
 unsafe fn alloc_page() -> *mut u8 {
-    alloc(Layout::from_size_align(0x10000, 0x10000).unwrap())
+    alloc_zeroed(Layout::from_size_align(0x10000, 0x10000).unwrap())
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -179,4 +181,11 @@ unsafe fn free_page(page: *mut u8) {
 #[panic_handler]
 fn panic(_info: &core::panic::PanicInfo) -> ! {
     loop {}
+}
+
+static mut ALLOCATIONS: i32 = 0;
+
+#[no_mangle]
+pub extern fn allocations() -> i32 {
+    unsafe { ALLOCATIONS }
 }

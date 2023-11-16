@@ -30,24 +30,23 @@ import (
 )
 
 type FFIModule struct {
-	Handle   unsafe.Pointer
-	ExecPtr  unsafe.Pointer
-	AllocPtr unsafe.Pointer
-	FreePtr  unsafe.Pointer
+	Handle unsafe.Pointer
+	exec   unsafe.Pointer
+	alloc  unsafe.Pointer
+	free   unsafe.Pointer
 }
 
 func (f FFIModule) Alloc(n int) unsafe.Pointer {
-	return unsafe.Pointer(C.__alloc(f.AllocPtr, C.size_t(n)))
+	return unsafe.Pointer(C.__alloc(f.alloc, C.size_t(n)))
 }
 
 func (f FFIModule) Free(ptr unsafe.Pointer, n int) {
-	C.__free(f.FreePtr, (*C.uint8_t)(ptr), C.size_t(n))
+	C.__free(f.free, (*C.uint8_t)(ptr), C.size_t(n))
 }
 
 func (f FFIModule) Exec(input []byte) []byte {
 	var outLen C.size_t
-	out := C.exec(f.ExecPtr, (*C.uint8_t)(&input[0]), C.size_t(len(input)), &outLen)
-	//return unsafe.Slice((*byte)(out), int(outLen))
+	out := C.exec(f.exec, (*C.uint8_t)(&input[0]), C.size_t(len(input)), &outLen)
 	res := C.GoBytes(unsafe.Pointer(out), C.int(outLen))
 	f.Free(unsafe.Pointer(out), int(outLen))
 	return res
@@ -57,11 +56,11 @@ func LoadFFIModule(b testing.TB, path string) FFIModule {
 	m := FFIModule{}
 	m.Handle = C.dlopen(C.CString(path), C.RTLD_LAZY)
 	require.NotNil(b, m.Handle)
-	m.ExecPtr = C.dlsym(m.Handle, C.CString("exec"))
-	require.NotNil(b, m.ExecPtr)
-	m.AllocPtr = C.dlsym(m.Handle, C.CString("__alloc"))
-	require.NotNil(b, m.AllocPtr)
-	m.FreePtr = C.dlsym(m.Handle, C.CString("__free"))
-	require.NotNil(b, m.FreePtr)
+	m.exec = C.dlsym(m.Handle, C.CString("exec"))
+	require.NotNil(b, m.exec)
+	m.alloc = C.dlsym(m.Handle, C.CString("__alloc"))
+	require.NotNil(b, m.alloc)
+	m.free = C.dlsym(m.Handle, C.CString("__free"))
+	require.NotNil(b, m.free)
 	return m
 }

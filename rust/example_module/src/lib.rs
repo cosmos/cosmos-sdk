@@ -15,12 +15,12 @@ pub extern fn exec(input: *mut u8, len: i32) -> i64 {
         let req = Root::<test1::Greet>::unsafe_wrap(input);
         let mut res = Root::<test1::GreetResponse>::new();
         write!(res.message.new_writer().unwrap(), "Hello, {}! You entered {}", &req.name, req.value).unwrap();
-        res.unsafe_unwrap() as i64
+        let res_ptr = res.unsafe_unwrap() as i64;
+        forget(req);
+        forget(res);
+        res_ptr
     }
 }
-
-extern crate std;
-use std::println;
 
 #[cfg(not(target_arch = "wasm32"))]
 #[no_mangle]

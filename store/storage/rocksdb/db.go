@@ -177,6 +177,7 @@ func (db *Database) Prune(version uint64) error {
 		return fmt.Errorf("failed to update column family full_history_ts_low: %w", err)
 	}
 
+	db.tsLow = tsLow
 	return nil
 }
 

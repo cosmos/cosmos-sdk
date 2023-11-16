@@ -891,6 +891,14 @@ func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (*abci.Respons
 	if res != nil {
 		res.AppHash = app.workingHash()
 	}
+
+	// call the streaming service hooks with the FinalizeBlock messages
+	for _, streamingListener := range app.streamingManager.ABCIListeners {
+		if err := streamingListener.ListenFinalizeBlock(app.finalizeBlockState.ctx, *req, *res); err != nil {
+			panic(fmt.Errorf("ListenFinalizeBlock listening hook failed, height: %d, err: %w", req.Height, err))
+		}
+	}
+
 	return res, err
 }
 

@@ -20,8 +20,15 @@ jobs:
         with:
           go-version: "1.21"
           check-latest: true
-      # - uses: technote-space/get-diff-action@v6.1.2
-      #   id: git_diff
+      - uses: technote-space/get-diff-action@v6.1.2
+        id: git_diff
+        with:
+          PATTERNS: |
+            **/*.go
+            go.mod
+            go.sum
+            **/go.mod
+            **/go.sum
       #   with:
       #     PATTERNS: |
       #       Makefile

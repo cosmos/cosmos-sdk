@@ -3,10 +3,10 @@ module cosmossdk.io/simapp
 go 1.21
 
 require (
-	cosmossdk.io/api v0.7.3-0.20231029200940-6af7f30bfd54
+	cosmossdk.io/api v0.7.3-0.20231113122742-912390d5fc4a
 	cosmossdk.io/client/v2 v2.0.0-20230630094428-02b760776860
 	cosmossdk.io/collections v0.4.0
-	cosmossdk.io/core v0.12.0
+	cosmossdk.io/core v0.12.1-0.20231114100755-569e3ff6a0d7
 	cosmossdk.io/depinject v1.0.0-alpha.4
 	cosmossdk.io/log v1.2.1
 	cosmossdk.io/math v1.2.0
@@ -40,7 +40,7 @@ require (
 	cosmossdk.io/x/authz v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/bank v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/distribution v0.0.0-20230925135524-a1bc045b3190
-	cosmossdk.io/x/gov v0.0.0-20230925135524-a1bc045b3190
+	cosmossdk.io/x/gov v0.0.0-20231113122742-912390d5fc4a
 	cosmossdk.io/x/group v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/mint v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/slashing v0.0.0-00010101000000-000000000000
@@ -125,7 +125,7 @@ require (
 	github.com/hashicorp/go-getter v1.7.3 // indirect
 	github.com/hashicorp/go-hclog v1.5.0 // indirect
 	github.com/hashicorp/go-immutable-radix v1.3.1 // indirect
-	github.com/hashicorp/go-metrics v0.5.1 // indirect
+	github.com/hashicorp/go-metrics v0.5.2 // indirect
 	github.com/hashicorp/go-plugin v1.5.2 // indirect
 	github.com/hashicorp/go-safetemp v1.0.0 // indirect
 	github.com/hashicorp/go-version v1.6.0 // indirect
@@ -144,7 +144,7 @@ require (
 	github.com/kr/text v0.2.0 // indirect
 	github.com/lib/pq v1.10.7 // indirect
 	github.com/libp2p/go-buffer-pool v0.1.0 // indirect
-	github.com/linxGnu/grocksdb v1.8.4 // indirect
+	github.com/linxGnu/grocksdb v1.8.5 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
 	github.com/manifoldco/promptui v0.9.0 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect

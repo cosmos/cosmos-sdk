@@ -20,8 +20,8 @@ schema = 3
     version = "v0.4.0"
     hash = "sha256-minFyzgO/D+Oda4E3B1qvOAN5qd65SjS6nmjca4cp/8="
   [mod."cosmossdk.io/core"]
-    version = "v0.12.0"
-    hash = "sha256-/BbjTNEoPUQaHf0j+QEp3rmCkrzlYqWhE9lpffGCib0="
+    version = "v0.12.1-0.20231114100755-569e3ff6a0d7"
+    hash = "sha256-I74lq2kZ9hOcvOU4uJZ8LhSoQ0RbgCvAvSXj1xI0iII="
   [mod."cosmossdk.io/depinject"]
     version = "v1.0.0-alpha.4"
     hash = "sha256-xpLH0K6ivQznFrLw2hmhWIIyYgqjstV47OhTEj/c1oQ="
@@ -267,8 +267,8 @@ schema = 3
     version = "v1.3.1"
     hash = "sha256-65+A2HiVfS/GV9G+6/TkXXjzXhI/V98e6RlJWjxy+mg="
   [mod."github.com/hashicorp/go-metrics"]
-    version = "v0.5.1"
-    hash = "sha256-nQ+qduNhVwj+YIyPTuq8rytQYT3zWcEQM3zQ7LTegdI="
+    version = "v0.5.2"
+    hash = "sha256-ZAEqFwqGJC8DgdI8FxHV3XW64tnfTexXl52Yk/b2MO8="
   [mod."github.com/hashicorp/go-plugin"]
     version = "v1.5.2"
     hash = "sha256-bdBT9TyHUJkUogQZWj0waniVv/Qauy/iKEbegyK2HZA="
@@ -324,8 +324,8 @@ schema = 3
     version = "v0.1.0"
     hash = "sha256-wQqGTtRWsfR9n0O/SXHVgECebbnNmHddxJIbG63OJBQ="
   [mod."github.com/linxGnu/grocksdb"]
-    version = "v1.8.4"
-    hash = "sha256-AGQ0YEuwUaev/mxOkiTNgAOLB9c7reHyTmNxXuaRah8="
+    version = "v1.8.5"
+    hash = "sha256-LDqE1VMd6z4eD47tlzhIOQ3vUySoli4MKUsihmi1g2I="
   [mod."github.com/magiconair/properties"]
     version = "v1.8.7"
     hash = "sha256-XQ2bnc2s7/IH3WxEO4GishZurMyKwEclZy1DXg+2xXc="

@@ -48,7 +48,7 @@ service Msg {
 
   // RotateConsPubKey defines an operation for rotating the consensus keys
   // of a validator.
-  // Since: cosmos-sdk 0.48
+  // Since: cosmos-sdk 0.51
   rpc RotateConsPubKey(MsgRotateConsPubKey) returns (MsgRotateConsPubKeyResponse);
 }
 

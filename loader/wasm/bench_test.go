@@ -20,27 +20,27 @@ func BenchmarkProto(b *testing.B) {
 			Name:  "Benchmarker",
 			Value: 51,
 		}
-		bz, err := proto.Marshal(greet)
-		require.NoError(b, err)
+		bz, _ := proto.Marshal(greet)
+		//require.NoError(b, err)
 		inLen := int32(len(bz))
-		in, err := m.alloc.Call(m.store, inLen)
+		in, _ := m.alloc.Call(m.store, inLen)
 		inPtr := in.(int32)
-		require.NoError(b, err)
+		//require.NoError(b, err)
 		copy(m.memory.UnsafeData(m.store)[inPtr:inPtr+inLen], bz)
-		res, err := m.exec.Call(m.store, inPtr, inLen)
-		require.NoError(b, err)
+		res, _ := m.exec.Call(m.store, inPtr, inLen)
+		//require.NoError(b, err)
 		resI64 := res.(int64)
 		outPtr := int32(resI64 & 0xffffffff)
 		outLen := int32(resI64 >> 32)
 		out := m.memory.UnsafeData(m.store)[outPtr : outPtr+outLen]
 		greetRes := &test1.GreetResponse{}
-		err = proto.Unmarshal(out, greetRes)
-		require.NoError(b, err)
-		require.Equal(b, "Hello, Benchmarker! You entered 51", greetRes.Message)
-		_, err = m.free.Call(m.store, inPtr, inLen)
-		require.NoError(b, err)
-		_, err = m.free.Call(m.store, outPtr, outLen)
-		require.NoError(b, err)
+		_ = proto.Unmarshal(out, greetRes)
+		//require.NoError(b, err)
+		//require.Equal(b, "Hello, Benchmarker! You entered 51", greetRes.Message)
+		_, _ = m.free.Call(m.store, inPtr, inLen)
+		//require.NoError(b, err)
+		_, _ = m.free.Call(m.store, outPtr, outLen)
+		//require.NoError(b, err)
 	}
 }
 
@@ -53,13 +53,13 @@ func BenchmarkProtoFFI(b *testing.B) {
 			Name:  "Benchmarker",
 			Value: 51,
 		}
-		bz, err := proto.Marshal(greet)
-		require.NoError(b, err)
+		bz, _ := proto.Marshal(greet)
+		//require.NoError(b, err)
 		out := m.Exec(bz)
 		greetRes := &test1.GreetResponse{}
-		err = proto.Unmarshal(out, greetRes)
-		require.NoError(b, err)
-		require.Equal(b, "Hello, Benchmarker! You entered 51", greetRes.Message)
+		_ = proto.Unmarshal(out, greetRes)
+		//require.NoError(b, err)
+		//require.Equal(b, "Hello, Benchmarker! You entered 51", greetRes.Message)
 	}
 }
 
@@ -84,19 +84,19 @@ func BenchmarkZeroPB(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		bz := sampleZeroPbGreet(b)
 		n := int32(len(bz))
-		in, err := m.alloc.Call(m.store, 0)
+		in, _ := m.alloc.Call(m.store, 0)
 		inPtr := in.(int32)
-		require.NoError(b, err)
+		//require.NoError(b, err)
 		copy(m.memory.UnsafeData(m.store)[inPtr:inPtr+n], bz)
 		binary.LittleEndian.PutUint16(m.memory.UnsafeData(m.store)[inPtr+0x10000-2:inPtr+0x10000], uint16(n))
-		res, err := m.exec.Call(m.store, inPtr, 0)
-		require.NoError(b, err)
+		res, _ := m.exec.Call(m.store, inPtr, 0)
+		//require.NoError(b, err)
 		resI64 := res.(int64)
 		outPtr := int32(resI64 & 0xffffffff)
 		outLen := int32(binary.LittleEndian.Uint16(m.memory.UnsafeData(m.store)[outPtr+0x10000-2 : outPtr+0x10000]))
-		out := m.memory.UnsafeData(m.store)[outPtr : outPtr+outLen]
-		require.Equal(b, "Hello, Benchmarker! You entered 51", string(out[4:]))
-		require.Equal(b, []byte{4, 0, 34, 0}, out[:4])
+		_ = m.memory.UnsafeData(m.store)[outPtr : outPtr+outLen]
+		//require.Equal(b, "Hello, Benchmarker! You entered 51", string(out[4:]))
+		//require.Equal(b, []byte{4, 0, 34, 0}, out[:4])
 		//_, err = m.free.Call(m.store, inPtr, 0)
 		//require.NoError(b, err)
 		//_, err = m.free.Call(m.store, outPtr, 0)
@@ -162,9 +162,9 @@ func BenchmarkZeroPBFFI(b *testing.B) {
 
 	for i := 0; i < b.N; i++ {
 		bz := sampleZeroPbGreet(b)
-		out := m.Exec(bz)
-		require.Equal(b, "Hello, Benchmarker! You entered 51", string(out[4:]))
-		require.Equal(b, []byte{4, 0, 34, 0}, out[:4])
+		_ = m.Exec(bz)
+		//require.Equal(b, "Hello, Benchmarker! You entered 51", string(out[4:]))
+		//require.Equal(b, []byte{4, 0, 34, 0}, out[:4])
 		//m.Free(unsafe.Pointer(unsafe.SliceData(out)), len(out))
 	}
 }

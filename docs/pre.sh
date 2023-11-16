@@ -3,7 +3,6 @@
 ## Create modules pages
 for D in ../x/*; do
   if [ -d "${D}" ]; then
-    # Skip specific directories
     MODULE_DIRECTORY=docs/build/modules/$DIR_NAME
     rm -rf "$MODULE_DIRECTORY"
     mkdir -p "$MODULE_DIRECTORY" 

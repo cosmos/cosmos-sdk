@@ -9,10 +9,11 @@ import (
 	"google.golang.org/protobuf/proto"
 	"os"
 	"testing"
+	"unsafe"
 )
 
 func BenchmarkProto(b *testing.B) {
-	m := loadModule(b, "../../rust/target/wasm32-unknown-unknown/release/example_module2.wasm")
+	m := loadWasmModule(b, "../../rust/target/wasm32-unknown-unknown/release/example_module2.wasm")
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
@@ -44,17 +45,53 @@ func BenchmarkProto(b *testing.B) {
 	}
 }
 
+func BenchmarkProtoFFI(b *testing.B) {
+	m := LoadFFIModule(b, "../../rust/target/release/libexample_module2.dylib")
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		greet := &test1.Greet{
+			Name:  "Benchmarker",
+			Value: 51,
+		}
+		bz, err := proto.Marshal(greet)
+		require.NoError(b, err)
+		out := m.Exec(bz)
+		greetRes := &test1.GreetResponse{}
+		err = proto.Unmarshal(out, greetRes)
+		require.NoError(b, err)
+		require.Equal(b, "Hello, Benchmarker! You entered 51", greetRes.Message)
+	}
+}
+
+type GreetZeroPB struct {
+	Name  Str
+	Value uint64
+}
+
+type Str struct {
+	Ptr int16
+	Len uint16
+}
+
+type GreetResponseZeroPB struct {
+	Message Str
+}
+
 func BenchmarkZeroPB(b *testing.B) {
-	m := loadModule(b, "../../rust/target/wasm32-unknown-unknown/release/example_module.wasm")
+	m := loadWasmModule(b, "../../rust/target/wasm32-unknown-unknown/release/example_module.wasm")
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
 		buf := &bytes.Buffer{}
-		err := binary.Write(buf, binary.LittleEndian, uint16(16))
-		require.NoError(b, err)
-		err = binary.Write(buf, binary.LittleEndian, uint16(11))
-		err = binary.Write(buf, binary.LittleEndian, uint32(0)) //padding
-		err = binary.Write(buf, binary.LittleEndian, uint64(51))
+		name := "Benchmarker"
+		err := binary.Write(buf, binary.LittleEndian, GreetZeroPB{
+			Name: Str{
+				Ptr: int16(unsafe.Sizeof(GreetZeroPB{})),
+				Len: uint16(len(name)),
+			},
+			Value: 51,
+		})
 		require.NoError(b, err)
 		_, err = buf.WriteString("Benchmarker")
 		require.NoError(b, err)
@@ -81,7 +118,7 @@ func BenchmarkZeroPB(b *testing.B) {
 	}
 }
 
-type module struct {
+type wasmModule struct {
 	store  *wasmtime.Store
 	module *wasmtime.Module
 	inst   *wasmtime.Instance
@@ -91,8 +128,8 @@ type module struct {
 	memory *wasmtime.Memory
 }
 
-func loadModule(b testing.TB, path string) module {
-	m := module{}
+func loadWasmModule(b testing.TB, path string) wasmModule {
+	m := wasmModule{}
 	m.store = wasmtime.NewStore(wasmtime.NewEngine())
 	bz, err := os.ReadFile(path)
 	require.NoError(b, err)

@@ -1,4 +1,7 @@
 #[cfg(not(target_arch = "wasm32"))]
+extern crate alloc;
+
+#[cfg(not(target_arch = "wasm32"))]
 use alloc::alloc::{alloc_zeroed, Layout};
 
 use core::marker::PhantomPinned;

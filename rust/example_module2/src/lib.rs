@@ -17,6 +17,10 @@ use lol_alloc::{FreeListAllocator, LockedAllocator};
 #[global_allocator]
 static ALLOCATOR: LockedAllocator<FreeListAllocator> = LockedAllocator::new(FreeListAllocator::new());
 
+#[cfg(not(target_arch = "wasm32"))]
+extern crate std;
+
+#[cfg(target_arch = "wasm32")]
 #[panic_handler]
 fn panic(_info: &core::panic::PanicInfo) -> ! {
     loop {}
@@ -24,21 +28,37 @@ fn panic(_info: &core::panic::PanicInfo) -> ! {
 
 use prost::Message;
 
+#[cfg(target_arch = "wasm32")]
 #[no_mangle]
 pub extern fn exec(input: *const u8, len: i32) -> i64 {
     unsafe {
-        let bz = slice_from_raw_parts(input, len as usize);
-        let msg = test1::Greet::decode(&*bz).unwrap();
-        let res = test1::GreetResponse{
-            message: format!("Hello, {}! You entered {}", msg.name, msg.value),
-        };
-        let buf = res.encode_to_vec();
-        let len = buf.len();
-        let ptr = buf.as_ptr();
-        core::mem::forget(buf);
+        let (ptr, len) = do_exec(input, len as usize);
         let res: i64 = ptr as i64 | ((len as i64) << 32);
         res
     }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+#[no_mangle]
+pub extern fn exec(input: *const u8, len: usize, out_len: *mut usize) -> *const u8 {
+    unsafe {
+        let (ptr, len) = do_exec(input, len as usize);
+        *out_len = len;
+        ptr
+    }
+}
+
+unsafe fn do_exec(input: *const u8, len: usize) -> (*const u8, usize) {
+    let bz = slice_from_raw_parts(input, len );
+    let msg = test1::Greet::decode(&*bz).unwrap();
+    let res = test1::GreetResponse{
+        message: format!("Hello, {}! You entered {}", msg.name, msg.value),
+    };
+    let buf = res.encode_to_vec();
+    let len = buf.len();
+    let ptr = buf.as_ptr();
+    core::mem::forget(buf);
+    (ptr, len)
 }
 
 #[no_mangle]

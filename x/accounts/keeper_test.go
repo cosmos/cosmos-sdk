@@ -44,7 +44,7 @@ func (e eventService) EventManager(ctx context.Context) event.Manager { return e
 func newKeeper(t *testing.T, accounts ...implementation.AccountCreatorFunc) (Keeper, context.Context) {
 	t.Helper()
 	ss, ctx := colltest.MockStore()
-	m, err := NewKeeper(ss, eventService{}, addressCodec{}, nil, nil, nil, accounts...)
+	m, err := NewKeeper(ss, eventService{}, nil, addressCodec{}, nil, nil, nil, accounts...)
 	require.NoError(t, err)
 	return m, ctx
 }

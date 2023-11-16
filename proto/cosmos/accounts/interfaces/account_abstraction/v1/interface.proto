@@ -15,10 +15,6 @@ message MsgAuthenticate {
   // user_operation is the operation that the user is trying to perform.
   // it also contains authentication information.
   cosmos.accounts.v1.UserOperation user_operation = 2;
-  // chain_id defines the network identifier.
-  string chain_id = 3;
-  // account_number is the account number of the user_operation.
-  uint64 account_number = 4;
 }
 
 // MsgAuthenticateResponse is the response to MsgAuthenticate.

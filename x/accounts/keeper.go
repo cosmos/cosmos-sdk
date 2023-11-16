@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 
+	"cosmossdk.io/core/branch"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/runtime/protoiface"
 
@@ -50,9 +51,13 @@ type SignerProvider interface {
 	GetSigners(msg proto.Message) ([][]byte, error)
 }
 
+// BranchExecutor defines an interface used to execute ops in a branch.
+type BranchExecutor = branch.Service
+
 func NewKeeper(
 	ss store.KVStoreService,
 	es event.Service,
+	bs BranchExecutor,
 	addressCodec address.Codec,
 	signerProvider SignerProvider,
 	execRouter MsgRouter,
@@ -61,9 +66,10 @@ func NewKeeper(
 ) (Keeper, error) {
 	sb := collections.NewSchemaBuilder(ss)
 	keeper := Keeper{
-		storeService: ss,
-		eventService: es,
-		addressCodec: addressCodec,
+		storeService:   ss,
+		eventService:   es,
+		branchExecutor: bs,
+		addressCodec:   addressCodec,
 		getSenderFunc: func(msg proto.Message) ([]byte, error) {
 			signers, err := signerProvider.GetSigners(msg)
 			if err != nil {
@@ -93,7 +99,7 @@ func NewKeeper(
 			}
 			return handlers[0](ctx, req, resp)
 		},
-		msgResponseFromRequestName: execRouter.ResponseByRequestName,
+		msgResponseFromRequestName: func(name string) string { return execRouter.ResponseByRequestName(name) },
 		Schema:                     collections.Schema{},
 		AccountNumber:              collections.NewSequence(sb, AccountNumberKey, "account_number"),
 		AccountsByType:             collections.NewMap(sb, AccountTypeKeyPrefix, "accounts_by_type", collections.BytesKey, collections.StringValue),
@@ -121,6 +127,7 @@ type Keeper struct {
 	getSenderFunc              func(msg proto.Message) ([]byte, error)
 	execModuleFunc             implementation.ModuleExecFunc
 	queryModuleFunc            implementation.ModuleQueryFunc
+	branchExecutor             BranchExecutor
 	msgResponseFromRequestName func(name string) string // msgResponseFromRequestName returns the response name for a given request name.
 
 	accounts map[string]implementation.Implementation

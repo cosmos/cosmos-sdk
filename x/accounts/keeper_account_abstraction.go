@@ -15,7 +15,11 @@ import (
 )
 
 // ExecuteUserOperation handles the execution of an abstracted account UserOperation.
-func (k Keeper) ExecuteUserOperation(ctx context.Context, bundler string, op *accountsv1.UserOperation) *accountsv1.UserOperationResponse {
+func (k Keeper) ExecuteUserOperation(
+	ctx context.Context,
+	bundler string,
+	op *accountsv1.UserOperation,
+) *accountsv1.UserOperationResponse {
 	resp := &accountsv1.UserOperationResponse{}
 
 	// authenticate
@@ -56,27 +60,58 @@ func (k Keeper) Authenticate(
 	bundler string,
 	op *accountsv1.UserOperation,
 ) (gasUsed uint64, err error) {
-	// TODO: add branch with gas limit
+	// authenticate
+	return k.branchExecutor.ExecuteWithGasLimit(ctx, op.AuthenticationGasLimit, func(ctx context.Context) error {
+		return k.authenticate(ctx, bundler, op)
+	})
+}
+
+// authenticate handles the authentication flow of an abstracted account.
+func (k Keeper) authenticate(
+	ctx context.Context,
+	bundler string,
+	op *accountsv1.UserOperation,
+) error {
 	senderAddr, err := k.addressCodec.StringToBytes(op.Sender)
 	if err != nil {
-		return 0, err
+		return err
 	}
-	accountNumber, err := k.AccountByNumber.Get(ctx, senderAddr)
 	// create an isolated context in which we execute authentication
 	// without affecting the parent context and with the authentication gas limit.
 	_, err = k.Execute(ctx, senderAddr, ModuleAccountAddr, &account_abstractionv1.MsgAuthenticate{
 		Bundler:       bundler,
 		UserOperation: op,
-		ChainId:       "chain-id", // TODO how to get chain id?
-		AccountNumber: accountNumber,
 	})
-	return gasUsed, nil
+	return err
 }
 
-func (k Keeper) OpExecuteMessages(ctx context.Context, bundler string, op *accountsv1.UserOperation) (gasUsed uint64, messagesResponse []*anypb.Any, err error) {
+// OpExecuteMessages handles the execution of the messages in a given v1.UserOperation.
+// It executes in an isolated branch, in an atomic way, if all the messages pass then
+// the execution is deemed successful and the state is committed.
+// An account abstraction implementer can choose to handle execution messages or not,
+// if it does not expose the execution messages method, then this method will simply
+// execute the provided messages on behalf of the sender and return.
+func (k Keeper) OpExecuteMessages(
+	ctx context.Context,
+	bundler string,
+	op *accountsv1.UserOperation,
+) (gasUsed uint64, responses []*anypb.Any, err error) {
+	// execute messages, the real operation intent
+	gasUsed, err = k.branchExecutor.ExecuteWithGasLimit(ctx, op.ExecutionGasLimit, func(ctx context.Context) error {
+		responses, err = k.opExecuteMessages(ctx, bundler, op)
+		return err
+	})
+	return gasUsed, responses, err
+}
+
+func (k Keeper) opExecuteMessages(
+	ctx context.Context,
+	bundler string,
+	op *accountsv1.UserOperation,
+) (messagesResponse []*anypb.Any, err error) {
 	senderAddr, err := k.addressCodec.StringToBytes(op.Sender)
 	if err != nil {
-		return 0, nil, err
+		return nil, err
 	}
 	resp, err := k.Execute(ctx, senderAddr, ModuleAccountAddr, &account_abstractionv1.MsgExecute{
 		Bundler:           bundler,
@@ -86,12 +121,16 @@ func (k Keeper) OpExecuteMessages(ctx context.Context, bundler string, op *accou
 	// if it does not, then we simply execute the provided messages on behalf of the sender
 	switch {
 	case err == nil:
-		// TODO get gas used.
+		// all is ok, so parse responses.
 		executeResp, err := parseExecuteResponse(resp)
-		return gasUsed, executeResp, err
+		return executeResp, err
 	case implementation.IsRoutingError(err):
-		// TODO get gas used.
-
+		// if it is a routing error, it means the account does not handle execution messages,
+		// in this case we attempt to execute the provided messages on behalf of the op sender.
+		return k.sendMessages(ctx, senderAddr, op.ExecutionMessages)
+	default:
+		// some other error
+		return nil, err
 	}
 }
 
@@ -102,11 +141,27 @@ func (k Keeper) OpExecuteMessages(ctx context.Context, bundler string, op *accou
 // Since for an abstracted account the bundler payment method is optional,
 // if the account does not handle bundler payment messages, then this method
 // will simply execute the provided messages on behalf of the sender and return.
-func (k Keeper) PayBundler(ctx context.Context, bundler string, op *accountsv1.UserOperation) (gasUsed uint64, paymentResponses []*anypb.Any, err error) {
-	// TODO add branch with gas limit
+func (k Keeper) PayBundler(
+	ctx context.Context,
+	bundler string,
+	op *accountsv1.UserOperation,
+) (gasUsed uint64, responses []*anypb.Any, err error) {
+	// pay bundler
+	gasUsed, err = k.branchExecutor.ExecuteWithGasLimit(ctx, op.BundlerPaymentGasLimit, func(ctx context.Context) error {
+		responses, err = k.payBundler(ctx, bundler, op)
+		return err
+	})
+	return gasUsed, responses, err
+}
+
+func (k Keeper) payBundler(
+	ctx context.Context,
+	bundler string,
+	op *accountsv1.UserOperation,
+) (paymentResponses []*anypb.Any, err error) {
 	senderAddr, err := k.addressCodec.StringToBytes(op.Sender)
 	if err != nil {
-		return 0, nil, err
+		return nil, err
 	}
 	resp, err := k.Execute(ctx, senderAddr, ModuleAccountAddr, &account_abstractionv1.MsgPayBundler{
 		Bundler:                bundler,
@@ -116,31 +171,24 @@ func (k Keeper) PayBundler(ctx context.Context, bundler string, op *accountsv1.U
 	// if it does not, then we simply execute the provided messages on behalf of the sender
 	switch {
 	case err == nil:
-		// TODO: get gas used
+		// if no error, execution went fine, so parse responses.
 		payBundlerResp, err := parsePayBundlerResponse(resp)
-		return gasUsed, payBundlerResp, err
-	// if we get a routing message error it means the account does not handle bundler payment messages,
-	// in this case we attempt to execute the provided messages on behalf of the op sender.
+		return payBundlerResp, err
 	case implementation.IsRoutingError(err):
-		// TODO: get gas used
-		payBundlerResp, err := k.payBundlerFallback(ctx, op)
-		return gasUsed, payBundlerResp, err
-	// some other execution error.
+		// if we get a routing message error it means the account does not handle bundler payment messages,
+		// in this case we attempt to execute the provided messages on behalf of the op sender.
+		return k.sendMessages(ctx, senderAddr, op.BundlerPaymentMessages)
 	default:
-		// TODO: get gas used
-		return gasUsed, nil, err
+		// some other execution error.
+		return nil, err
 	}
 }
 
-// payBundlerFallback attempts to execute the provided messages on behalf of the op sender.
-func (k Keeper) payBundlerFallback(ctx context.Context, op *accountsv1.UserOperation) ([]*anypb.Any, error) {
-	// TODO: execute in isolated context with gas limit
-	responses := make([]*anypb.Any, len(op.BundlerPaymentMessages))
-	sender, err := k.addressCodec.StringToBytes(op.Sender)
-	if err != nil {
-		return nil, err
-	}
-	for i, msg := range op.BundlerPaymentMessages {
+// sendMessages attempts to execute the provided messages on behalf of the op sender.
+// It returns the responses of the messages in the same order as the provided messages.
+func (k Keeper) sendMessages(ctx context.Context, sender []byte, messages []*anypb.Any) ([]*anypb.Any, error) {
+	responses := make([]*anypb.Any, len(messages))
+	for i, msg := range messages {
 		resp, err := k.untypedExecute(ctx, sender, msg)
 		if err != nil {
 			return nil, fmt.Errorf("failed to execute bundler payment message %d: %s", i, err.Error())
@@ -152,7 +200,7 @@ func (k Keeper) payBundlerFallback(ctx context.Context, op *accountsv1.UserOpera
 
 // untypedExecute executes a protobuf message without knowing the response type.
 // It will check if the sender is allowed to execute the message and then execute it.
-func (k Keeper) untypedExecute(ctx context.Context, sender []byte, anyMsg *anypb.Any) (*anypb.Any, error) {
+func (k Keeper) untypedExecute(ctx context.Context, gotSender []byte, anyMsg *anypb.Any) (*anypb.Any, error) {
 	msg, err := anyMsg.UnmarshalNew()
 	if err != nil {
 		return nil, err
@@ -162,8 +210,8 @@ func (k Keeper) untypedExecute(ctx context.Context, sender []byte, anyMsg *anypb
 	if err != nil {
 		return nil, err
 	}
-	if !bytes.Equal(sender, wantSender) {
-		return nil, fmt.Errorf("sender %s is not allowed to execute message %T", sender, msg)
+	if !bytes.Equal(wantSender, gotSender) {
+		return nil, fmt.Errorf("not allowed to execute message: %s", anyMsg.TypeUrl)
 	}
 	// we now need to fetch the response type from the request message type.
 	// this is because the response type is not known.

@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"cosmossdk.io/x/accounts/testing/account_abstraction"
 	abci "github.com/cometbft/cometbft/abci/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/gogoproto/proto"
@@ -284,11 +285,13 @@ func NewSimApp(
 	accountsKeeper, err := accounts.NewKeeper(
 		runtime.NewKVStoreService(keys[accounts.StoreKey]),
 		runtime.EventService{},
+		runtime.BranchService{},
 		app.AuthKeeper.AddressCodec(),
 		appCodec.InterfaceRegistry().SigningContext(),
 		app.MsgServiceRouter(),
 		app.GRPCQueryRouter(),
 		accountstd.AddAccount("counter", counter.NewAccount),
+		accountstd.AddAccount("aa_full", account_abstraction.NewFullImpl),
 	)
 	if err != nil {
 		panic(err)

@@ -52,10 +52,10 @@ require (
 	cloud.google.com/go/compute/metadata v0.2.3 // indirect
 	cloud.google.com/go/iam v1.1.3 // indirect
 	cloud.google.com/go/storage v1.33.0 // indirect
-	cosmossdk.io/api v0.7.3-0.20231029200940-6af7f30bfd54 // indirect
+	cosmossdk.io/api v0.7.3-0.20231113122742-912390d5fc4a // indirect
 	cosmossdk.io/client/v2 v2.0.0-20230630094428-02b760776860 // indirect
 	cosmossdk.io/collections v0.4.0 // indirect
-	cosmossdk.io/core v0.12.0 // indirect
+	cosmossdk.io/core v0.12.1-0.20231114100755-569e3ff6a0d7 // indirect
 	cosmossdk.io/depinject v1.0.0-alpha.4 // indirect
 	cosmossdk.io/errors v1.0.0 // indirect
 	cosmossdk.io/store v1.0.0 // indirect
@@ -65,7 +65,7 @@ require (
 	cosmossdk.io/x/distribution v0.0.0-20230925135524-a1bc045b3190 // indirect
 	cosmossdk.io/x/evidence v0.0.0-20230613133644-0a778132a60f // indirect
 	cosmossdk.io/x/feegrant v0.0.0-20230613133644-0a778132a60f // indirect
-	cosmossdk.io/x/gov v0.0.0-20230925135524-a1bc045b3190 // indirect
+	cosmossdk.io/x/gov v0.0.0-20231113122742-912390d5fc4a // indirect
 	cosmossdk.io/x/group v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/x/mint v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/x/nft v0.0.0-20230613133644-0a778132a60f // indirect

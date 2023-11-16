@@ -18,7 +18,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
 
-func TestFactoryPrepate(t *testing.T) {
+func TestFactoryPrepare(t *testing.T) {
 	t.Parallel()
 
 	factory := Factory{}

@@ -1,4 +1,4 @@
-package tx_test
+package tx
 
 import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"

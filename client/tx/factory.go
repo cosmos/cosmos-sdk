@@ -15,6 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -408,10 +409,8 @@ func (f Factory) BuildSimTx(msgs ...sdk.Msg) ([]byte, error) {
 	// Create an empty signature literal as the ante handler will populate with a
 	// sentinel pubkey.
 	sig := signing.SignatureV2{
-		PubKey: pk,
-		Data: &signing.SingleSignatureData{
-			SignMode: f.signMode,
-		},
+		PubKey:   pk,
+		Data:     f.getSimSignatureData(pk),
 		Sequence: f.Sequence(),
 	}
 	if err := txb.SetSignatures(sig); err != nil {
@@ -450,6 +449,25 @@ func (f Factory) getSimPK() (cryptotypes.PubKey, error) {
 	}
 
 	return pk, nil
+}
+
+// getSimSignatureData based on the pubKey type gets the correct SignatureData type
+// to use for building a simulation tx.
+func (f Factory) getSimSignatureData(pk cryptotypes.PubKey) signing.SignatureData {
+	if multisigPubKey, ok := pk.(*multisig.LegacyAminoPubKey); ok {
+		multiSignatureData := make([]signing.SignatureData, 0, multisigPubKey.Threshold)
+		for i := uint32(0); i < multisigPubKey.Threshold; i++ {
+			multiSignatureData = append(multiSignatureData, &signing.SingleSignatureData{
+				SignMode: f.SignMode(),
+			})
+		}
+		return &signing.MultiSignatureData{
+			Signatures: multiSignatureData,
+		}
+	}
+	return &signing.SingleSignatureData{
+		SignMode: f.signMode,
+	}
 }
 
 // Prepare ensures the account defined by ctx.GetFromAddress() exists and

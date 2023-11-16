@@ -123,21 +123,6 @@ func sampleZeroPbGreet(b testing.TB) []byte {
 	greet.Value = 51
 	strBuf := unsafe.Slice((*byte)(unsafe.Add(zeroPbBuf, sizeOfGreetZeroPB)), len(name))
 	copy(strBuf, name)
-	//alignedBuf := unsafe.Slice((*byte)(unsafe.Pointer(alignedPtr)), 0x10000)
-	//buf := bytes.NewBuffer(alignedBuf)
-	//reusableBuf = reusableBuf[:0]
-	//name := "Benchmarker"
-	//err := binary.Write(buf, binary.LittleEndian, int16(0x10))
-	//require.NoError(b, err)
-	//err = binary.Write(buf, binary.LittleEndian, uint16(len(name)))
-	//require.NoError(b, err)
-	//err = binary.Write(buf, binary.LittleEndian, uint32(0)) // padding
-	//require.NoError(b, err)
-	//err = binary.Write(buf, binary.LittleEndian, uint64(51))
-	//require.NoError(b, err)
-	//_, err = buf.WriteString("Benchmarker")
-	//require.NoError(b, err)
-	//return buf.Bytes()
 	return unsafe.Slice((*byte)(zeroPbBuf), 0x10000)
 }
 
@@ -177,9 +162,9 @@ func BenchmarkZeroPBFFI(b *testing.B) {
 
 	for i := 0; i < b.N; i++ {
 		bz := sampleZeroPbGreet(b)
-		_ = m.Exec(bz)
-		//require.Equal(b, "Hello, Benchmarker! You entered 51", string(out[4:]))
-		//require.Equal(b, []byte{4, 0, 34, 0}, out[:4])
+		out := m.Exec(bz)
+		require.Equal(b, "Hello, Benchmarker! You entered 51", string(out[4:]))
+		require.Equal(b, []byte{4, 0, 34, 0}, out[:4])
 		//m.Free(unsafe.Pointer(unsafe.SliceData(out)), len(out))
 	}
 }

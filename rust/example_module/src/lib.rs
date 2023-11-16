@@ -19,6 +19,8 @@ pub extern fn exec(input: *mut u8, len: i32) -> i64 {
     }
 }
 
+extern crate std;
+use std::println;
 
 #[cfg(not(target_arch = "wasm32"))]
 #[no_mangle]
@@ -30,6 +32,7 @@ pub extern fn exec(input: *mut u8, len: usize, out_len: *mut usize) -> *const u8
         let out = res.as_slice();
         *out_len = out.len();
         let out = out.as_ptr();
+        forget(req);
         forget(res);
         out
     }

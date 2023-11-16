@@ -48,7 +48,9 @@ func (f FFIModule) Exec(input []byte) []byte {
 	var outLen C.size_t
 	out := C.exec(f.ExecPtr, (*C.uint8_t)(&input[0]), C.size_t(len(input)), &outLen)
 	//return unsafe.Slice((*byte)(out), int(outLen))
-	return C.GoBytes(unsafe.Pointer(out), C.int(outLen))
+	res := C.GoBytes(unsafe.Pointer(out), C.int(outLen))
+	f.Free(unsafe.Pointer(out), int(outLen))
+	return res
 }
 
 func LoadFFIModule(b testing.TB, path string) FFIModule {

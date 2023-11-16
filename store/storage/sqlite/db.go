@@ -189,15 +189,18 @@ func (db *Database) ApplyChangeset(version uint64, cs *store.Changeset) error {
 	return b.Write()
 }
 
+// Prune removes all versions of all keys that are <= the given version. It keeps
+// the latest (non-tombstoned) version of each key/value tuple to handle queries
+// above the prune version. This is analogous to RocksDB full_history_ts_low.
+//
+// We perform the prune by deleting all versions of a key, excluding reserved keys,
+// that are <= the given version, except for the latest version of the key.
 func (db *Database) Prune(version uint64) error {
 	tx, err := db.storage.Begin()
 	if err != nil {
 		return fmt.Errorf("failed to create SQL transaction: %w", err)
 	}
 
-	// Delete all versions less than or equal to the target version, except we keep
-	// the last one to handle above the prune version. This is analogous to RocksDB
-	// full_history_ts_low.
 	pruneStmt := `DELETE FROM state_storage
 	WHERE version < (
 		SELECT max(version) FROM state_storage t2 WHERE

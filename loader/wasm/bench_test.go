@@ -140,6 +140,18 @@ func sampleZeroPbGreet(b testing.TB) ([]byte, int32) {
 	return unsafe.Slice((*byte)(zeroPbBuf), 0x10000), int32(n)
 }
 
+func sampleZeroPbGreetCopy(b testing.TB, g test1.Greet) ([]byte, int32) {
+	greet := (*GreetZeroPB)(zeroPbBuf)
+	greet.Name.Ptr = int16(sizeOfGreetZeroPB)
+	greet.Name.Len = uint16(len(g.Name))
+	greet.Value = g.Value
+	n := len(g.Name)
+	strBuf := unsafe.Slice((*byte)(unsafe.Add(zeroPbBuf, sizeOfGreetZeroPB)), n)
+	copy(strBuf, g.Name)
+	n += int(sizeOfGreetZeroPB)
+	return unsafe.Slice((*byte)(zeroPbBuf), 0x10000), int32(n)
+}
+
 func BenchmarkZeroPBFFI(b *testing.B) {
 	m := LoadFFIModule(b, "../../rust/target/release/libexample_module.dylib")
 	zeroPBFFIRound(b, m, true)
@@ -450,4 +462,38 @@ var testMsgSendZeroPbBz = []byte{
 	0x33,
 	0x32,
 	0x31,
+}
+
+func BenchmarkZeroPBFFIMarshal(b *testing.B) {
+	m := LoadFFIModule(b, "../../rust/target/release/libexample_module.dylib")
+	zeroPBFFIRound(b, m, true)
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		zeroPBFFIMarshalRound(b, m, false)
+	}
+
+	b.StopTimer()
+	allocations := m.Allocations()
+	require.Equal(b, int32(1), allocations)
+}
+
+func zeroPBFFIMarshalRound(b testing.TB, m FFIModule, check bool) {
+	g := test1.Greet{
+		Value: 51,
+		Name:  "Benchmarker",
+	}
+	bz, n := sampleZeroPbGreetCopy(b, g)
+	binary.LittleEndian.PutUint16(bz[0x10000-2:0x10000], uint16(n))
+	out := m.Exec(bz)
+	greetRes := test1.GreetResponse{
+		Message: string(out[4:]),
+	}
+	if check && greetRes.Message != "Hello, Benchmarker! You entered 51" {
+		b.Fatal("message mismatch")
+	}
+	if check {
+		require.Equal(b, []byte{4, 0, 34, 0}, out[:4])
+		require.Equal(b, "Hello, Benchmarker! You entered 51", greetRes.Message)
+	}
 }

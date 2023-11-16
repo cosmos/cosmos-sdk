@@ -1,4 +1,3 @@
-#![feature(offset_of)]
 #![warn(missing_docs)]
 #![no_std]
 

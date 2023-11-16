@@ -176,6 +176,10 @@ func BenchmarkZeroPBFFI(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		zeroPBFFIRound(b, m, false)
 	}
+
+	b.StopTimer()
+	allocations := m.Allocations()
+	require.Equal(b, int32(1), allocations)
 }
 
 func zeroPBFFIRound(b testing.TB, m FFIModule, check bool) {

@@ -1,11 +1,5 @@
 package wasm
 
-import "C"
-import (
-	"github.com/stretchr/testify/require"
-	"unsafe"
-)
-
 // #cgo LDFLAGS: -ldl
 // #include <dlfcn.h>
 // #include <stdint.h>
@@ -24,9 +18,16 @@ import (
 // void __free(void* f, uint8_t* ptr, size_t size) {
 //     ((free_t)f)(ptr, size);
 // }
+//
+// typedef int32_t (*allocations_t)();
+// int32_t __allocations(void* f) {
+//     return ((allocations_t)f)();
+// }
 import "C"
 import (
+	"github.com/stretchr/testify/require"
 	"testing"
+	"unsafe"
 )
 
 type FFIModule struct {
@@ -50,6 +51,14 @@ func (f FFIModule) Exec(input []byte) []byte {
 	res := C.GoBytes(unsafe.Pointer(out), C.int(outLen))
 	f.Free(unsafe.Pointer(out), int(outLen))
 	return res
+}
+
+func (f FFIModule) Allocations() int32 {
+	allocationsPtr := C.dlsym(f.Handle, C.CString("allocations"))
+	if allocationsPtr == nil {
+		return -1
+	}
+	return int32(C.__allocations(allocationsPtr))
 }
 
 func LoadFFIModule(b testing.TB, path string) FFIModule {

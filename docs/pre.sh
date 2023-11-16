@@ -3,9 +3,14 @@
 ## Create modules pages
 for D in ../x/*; do
   if [ -d "${D}" ]; then
-    MODDOC=build/modules/$(echo $D | awk -F/ '{print $NF}')
-    rm -rf $MODDOC
-    mkdir -p $MODDOC && cp -r $D/README.md "$_"
+    DIR_NAME=$(echo $D | awk -F/ '{print $NF}')
+    
+    # Skip specific directories
+    if [ "$DIR_NAME" != "counter" ] && [ "$DIR_NAME" != "tx" ] && [ "$DIR_NAME" != "simulation" ]; then
+      MODDOC=build/modules/$DIR_NAME
+      rm -rf $MODDOC
+      mkdir -p $MODDOC && cp -r $D/README.md "$_"
+    fi
   fi
 done
 

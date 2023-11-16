@@ -261,7 +261,7 @@ func (db *Database) Prune(version uint64) error {
 		prevKey = keyBz
 		prevKeyVersion = keyVersion
 		prevKeyPrefixed = prefixedKey
-		prevPrefixedVal = itr.Value()
+		prevPrefixedVal = slices.Clone(itr.Value())
 
 		itr.Next()
 	}

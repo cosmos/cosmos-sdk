@@ -7,7 +7,6 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
-	"strings"
 
 	"github.com/linxGnu/grocksdb"
 	"golang.org/x/exp/slices"
@@ -33,6 +32,10 @@ var (
 type Database struct {
 	storage  *grocksdb.DB
 	cfHandle *grocksdb.ColumnFamilyHandle
+
+	// tsLow reflects the full_history_ts_low CF value, which is earliest version
+	// supported
+	tsLow uint64
 }
 
 func New(dataDir string) (*Database, error) {
@@ -41,16 +44,40 @@ func New(dataDir string) (*Database, error) {
 		return nil, fmt.Errorf("failed to open RocksDB: %w", err)
 	}
 
+	slice, err := storage.GetFullHistoryTsLow(cfHandle)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get full_history_ts_low: %w", err)
+	}
+
+	var tsLow uint64
+	tsLowBz := copyAndFreeSlice(slice)
+	if len(tsLowBz) > 0 {
+		tsLow = binary.LittleEndian.Uint64(tsLowBz)
+	}
+
 	return &Database{
 		storage:  storage,
 		cfHandle: cfHandle,
+		tsLow:    tsLow,
 	}, nil
 }
 
 func NewWithDB(storage *grocksdb.DB, cfHandle *grocksdb.ColumnFamilyHandle) (*Database, error) {
+	slice, err := storage.GetFullHistoryTsLow(cfHandle)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get full_history_ts_low: %w", err)
+	}
+
+	var tsLow uint64
+	tsLowBz := copyAndFreeSlice(slice)
+	if len(tsLowBz) > 0 {
+		tsLow = binary.LittleEndian.Uint64(tsLowBz)
+	}
+
 	return &Database{
 		storage:  storage,
 		cfHandle: cfHandle,
+		tsLow:    tsLow,
 	}, nil
 }
 
@@ -64,16 +91,15 @@ func (db *Database) Close() error {
 }
 
 func (db *Database) getSlice(storeKey string, version uint64, key []byte) (*grocksdb.Slice, error) {
-	slice, err := db.storage.GetCF(
+	if version < db.tsLow {
+		return nil, store.ErrVersionPruned{EarliestVersion: db.tsLow}
+	}
+
+	return db.storage.GetCF(
 		newTSReadOptions(version),
 		db.cfHandle,
 		prependStoreKey(storeKey, key),
 	)
-	if err != nil && strings.Contains(err.Error(), "is smaller than full_history_ts_low") {
-		return nil, store.ErrVersionPruned
-	}
-
-	return slice, err
 }
 
 func (db *Database) SetLatestVersion(version uint64) error {

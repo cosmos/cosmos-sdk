@@ -131,6 +131,10 @@ func (db *Database) Has(storeKey string, version uint64, key []byte) (bool, erro
 }
 
 func (db *Database) Get(storeKey string, targetVersion uint64, key []byte) ([]byte, error) {
+	if targetVersion < db.earliestVersion {
+		return nil, store.ErrVersionPruned
+	}
+
 	stmt, err := db.storage.Prepare(`
 	SELECT value, tombstone FROM state_storage
 	WHERE store_key = ? AND key = ? AND version <= ?
@@ -152,10 +156,6 @@ func (db *Database) Get(storeKey string, targetVersion uint64, key []byte) ([]by
 		}
 
 		return nil, fmt.Errorf("failed to query row: %w", err)
-	}
-
-	if targetVersion < db.earliestVersion {
-		return nil, nil
 	}
 
 	// A tombstone of zero or a target version that is less than the tombstone

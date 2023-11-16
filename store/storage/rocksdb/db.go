@@ -70,12 +70,10 @@ func (db *Database) getSlice(storeKey string, version uint64, key []byte) (*groc
 		prependStoreKey(storeKey, key),
 	)
 	if err != nil && strings.Contains(err.Error(), "is smaller than full_history_ts_low") {
-		// In cases where we query for a version that has been pruned, we need to ensure
-		// we do not return an error.
-		return nil, nil
+		return nil, store.ErrVersionPruned
 	}
 
-	return slice, nil
+	return slice, err
 }
 
 func (db *Database) SetLatestVersion(version uint64) error {

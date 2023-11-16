@@ -190,7 +190,7 @@ func TestParallelWriteAndPruning(t *testing.T) {
 	// check if the data is pruned
 	version := uint64(latestVersion - prunePeriod)
 	val, err := db.Get(storeKey1, version, []byte(fmt.Sprintf("key-%d-%03d", version-1, 0)))
-	require.NoError(t, err)
+	require.Error(t, err)
 	require.Nil(t, val)
 
 	version = uint64(latestVersion)

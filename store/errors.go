@@ -32,7 +32,7 @@ var (
 	ErrClosed          = errors.Register(StoreCodespace, 8, "closed")
 	ErrRecordNotFound  = errors.Register(StoreCodespace, 9, "record not found")
 	ErrUnknownStoreKey = errors.Register(StoreCodespace, 10, "unknown store key")
-	ErrInvalidVersion  = errors.Register(StoreCodespace, 11, "invalid version")
+	ErrVersionPruned   = errors.Register(StoreCodespace, 11, "version pruned")
 	ErrKeyEmpty        = errors.Register(StoreCodespace, 12, "key empty")
 	ErrStartAfterEnd   = errors.Register(StoreCodespace, 13, "start key after end key")
 )

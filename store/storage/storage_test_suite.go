@@ -456,10 +456,11 @@ func (s *StorageTestSuite) TestDatabase_Prune() {
 			val := fmt.Sprintf("val%03d-%03d", i, v)
 
 			bz, err := db.Get(storeKey1, v, []byte(key))
-			s.Require().NoError(err)
 			if v <= 25 {
+				s.Require().Error(err)
 				s.Require().Nil(bz)
 			} else {
+				s.Require().NoError(err)
 				s.Require().Equal([]byte(val), bz)
 			}
 		}
@@ -477,7 +478,7 @@ func (s *StorageTestSuite) TestDatabase_Prune() {
 			key := fmt.Sprintf("key%03d", i)
 
 			bz, err := db.Get(storeKey1, v, []byte(key))
-			s.Require().NoError(err)
+			s.Require().Error(err)
 			s.Require().Nil(bz)
 		}
 	}
@@ -504,7 +505,7 @@ func (s *StorageTestSuite) TestDatabase_Prune_KeepRecent() {
 
 	// ensure queries for versions 50 and older return nil
 	bz, err := db.Get(storeKey1, 49, key)
-	s.Require().NoError(err)
+	s.Require().Error(err)
 	s.Require().Nil(bz)
 
 	itr, err := db.Iterator(storeKey1, 49, nil, nil)

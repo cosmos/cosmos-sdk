@@ -137,7 +137,7 @@ func (db *Database) Has(storeKey string, version uint64, key []byte) (bool, erro
 
 func (db *Database) Get(storeKey string, targetVersion uint64, key []byte) ([]byte, error) {
 	if targetVersion < db.earliestVersion {
-		return nil, nil
+		return nil, store.ErrVersionPruned
 	}
 
 	prefixedVal, err := getMVCCSlice(db.storage, storeKey, key, targetVersion)

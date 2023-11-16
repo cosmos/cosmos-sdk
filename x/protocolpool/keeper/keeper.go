@@ -277,5 +277,40 @@ func (k Keeper) validateandUpdateContinuousFund(ctx context.Context, msg types.M
 }
 
 func (k Keeper) ContinuousDistribution(ctx sdk.Context, continuousFund types.ContinuousFund) error {
+	// Calculate the total pool amount
+	poolMAcc := k.authKeeper.GetModuleAccount(ctx, types.ModuleName)
+	totalPoolAmount := k.bankKeeper.GetAllBalances(ctx, poolMAcc.GetAddress())
+	poolDecAmount := sdk.NewDecCoinsFromCoins(totalPoolAmount...)
+
+	recipient, err := k.authKeeper.AddressCodec().StringToBytes(continuousFund.Recipient)
+	if err != nil {
+		return err
+	}
+
+	// Calculate the funds to be distributed based on the percentage
+	distributionAmount := poolDecAmount.MulDec(continuousFund.Percentage)
+
+	// Check for expiration
+	if continuousFund.Expiry != nil && ctx.BlockTime().After(*continuousFund.Expiry) {
+		if err := k.ContinuousFund.Remove(ctx, recipient); err != nil {
+			return fmt.Errorf("continuous funding expired for recipient: %s", continuousFund.Recipient)
+		}
+	}
+
+	for _, amount := range distributionAmount {
+		coins := sdk.NewCoins(sdk.NewCoin(amount.Denom, amount.Amount.TruncateInt()))
+		// Check if the distribution exceeds the cap
+		if coins.IsAllLT(continuousFund.Cap) {
+			// Distribute funds to the recipient
+			err := k.DistributeFromFeePool(ctx, coins, recipient)
+			if err != nil {
+				return err
+			}
+		} else {
+			if err := k.ContinuousFund.Remove(ctx, recipient); err != nil {
+				return fmt.Errorf("capital amount reached for recipient: %s", continuousFund.Recipient)
+			}
+		}
+	}
 	return nil
 }

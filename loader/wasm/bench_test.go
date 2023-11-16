@@ -1,7 +1,6 @@
 package wasm
 
 import (
-	"bytes"
 	"cosmossdk.io/loader/wasm/testdata/test1"
 	"encoding/binary"
 	"github.com/bytecodealliance/wasmtime-go/v14"
@@ -83,20 +82,7 @@ func BenchmarkZeroPB(b *testing.B) {
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
-		buf := &bytes.Buffer{}
-		name := "Benchmarker"
-		err := binary.Write(buf, binary.LittleEndian, GreetZeroPB{
-			Name: Str{
-				Ptr: int16(unsafe.Sizeof(GreetZeroPB{})),
-				Len: uint16(len(name)),
-			},
-			Value: 51,
-		})
-		require.NoError(b, err)
-		_, err = buf.WriteString("Benchmarker")
-		require.NoError(b, err)
-		bz := buf.Bytes()
-		//b.Logf("in: %s", bz)
+		bz := sampleZeroPbGreet(b)
 		n := int32(len(bz))
 		in, err := m.alloc.Call(m.store, 0)
 		inPtr := in.(int32)
@@ -108,13 +94,93 @@ func BenchmarkZeroPB(b *testing.B) {
 		resI64 := res.(int64)
 		outPtr := int32(resI64 & 0xffffffff)
 		outLen := int32(binary.LittleEndian.Uint16(m.memory.UnsafeData(m.store)[outPtr+0x10000-2 : outPtr+0x10000]))
-		//b.Logf("outPtr: %d, outLen: %d", outPtr, outLen)
-		_ = m.memory.UnsafeData(m.store)[outPtr : outPtr+outLen]
-		//b.Logf("out: %s", out)
+		out := m.memory.UnsafeData(m.store)[outPtr : outPtr+outLen]
+		require.Equal(b, "Hello, Benchmarker! You entered 51", string(out[4:]))
+		require.Equal(b, []byte{4, 0, 34, 0}, out[:4])
 		//_, err = m.free.Call(m.store, inPtr, 0)
 		//require.NoError(b, err)
 		//_, err = m.free.Call(m.store, outPtr, 0)
 		//require.NoError(b, err)
+	}
+}
+
+var zeroPbBuf unsafe.Pointer
+
+const sizeOfGreetZeroPB = unsafe.Sizeof(GreetZeroPB{})
+
+func init() {
+	writeBuf := make([]byte, 0x20000)
+	// find section of writeBuf aligned to 0x10000
+	rawPtr := uintptr(unsafe.Pointer(unsafe.SliceData(writeBuf)))
+	zeroPbBuf = unsafe.Pointer(rawPtr + (0x10000 - (rawPtr % 0x10000)))
+}
+
+func sampleZeroPbGreet(b testing.TB) []byte {
+	greet := (*GreetZeroPB)(zeroPbBuf)
+	name := "Benchmarker"
+	greet.Name.Ptr = int16(sizeOfGreetZeroPB)
+	greet.Name.Len = uint16(len(name))
+	greet.Value = 51
+	strBuf := unsafe.Slice((*byte)(unsafe.Add(zeroPbBuf, sizeOfGreetZeroPB)), len(name))
+	copy(strBuf, name)
+	//alignedBuf := unsafe.Slice((*byte)(unsafe.Pointer(alignedPtr)), 0x10000)
+	//buf := bytes.NewBuffer(alignedBuf)
+	//reusableBuf = reusableBuf[:0]
+	//name := "Benchmarker"
+	//err := binary.Write(buf, binary.LittleEndian, int16(0x10))
+	//require.NoError(b, err)
+	//err = binary.Write(buf, binary.LittleEndian, uint16(len(name)))
+	//require.NoError(b, err)
+	//err = binary.Write(buf, binary.LittleEndian, uint32(0)) // padding
+	//require.NoError(b, err)
+	//err = binary.Write(buf, binary.LittleEndian, uint64(51))
+	//require.NoError(b, err)
+	//_, err = buf.WriteString("Benchmarker")
+	//require.NoError(b, err)
+	//return buf.Bytes()
+	return unsafe.Slice((*byte)(zeroPbBuf), 0x10000)
+}
+
+func BenchmarkZeroPBFFI(b *testing.B) {
+	m := LoadFFIModule(b, "../../rust/target/release/libexample_module.dylib")
+	b.ResetTimer()
+
+	//zeroPbBz := []byte{
+	//	0x10,
+	//	0x0,
+	//	0xb,
+	//	0x0,
+	//	0x0,
+	//	0x0,
+	//	0x0,
+	//	0x0,
+	//	0x33,
+	//	0x0,
+	//	0x0,
+	//	0x0,
+	//	0x0,
+	//	0x0,
+	//	0x0,
+	//	0x0,
+	//	0x42,
+	//	0x65,
+	//	0x6e,
+	//	0x63,
+	//	0x68,
+	//	0x6d,
+	//	0x61,
+	//	0x72,
+	//	0x6b,
+	//	0x65,
+	//	0x72,
+	//}
+
+	for i := 0; i < b.N; i++ {
+		bz := sampleZeroPbGreet(b)
+		_ = m.Exec(bz)
+		//require.Equal(b, "Hello, Benchmarker! You entered 51", string(out[4:]))
+		//require.Equal(b, []byte{4, 0, 34, 0}, out[:4])
+		//m.Free(unsafe.Pointer(unsafe.SliceData(out)), len(out))
 	}
 }
 

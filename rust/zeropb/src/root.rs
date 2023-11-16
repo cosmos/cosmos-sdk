@@ -2,7 +2,7 @@
 extern crate alloc;
 
 #[cfg(not(target_arch = "wasm32"))]
-use alloc::alloc::{alloc_zeroed, Layout};
+use alloc::alloc::{alloc, dealloc, Layout};
 
 use core::marker::PhantomPinned;
 use core::{
@@ -14,7 +14,7 @@ use core::{
 use core::ptr::{null_mut};
 
 use crate::error::Error;
-use crate::rel_ptr::MAX_EXTENT;
+use crate::rel_ptr::{MAX_EXTENT, resolve_start_extent};
 use crate::zerocopy::ZeroCopy;
 
 pub struct RawRoot {
@@ -56,6 +56,15 @@ impl<T: ZeroCopy> Root<T> {
     pub unsafe fn unsafe_unwrap(&self) -> *mut u8 {
         self.buf
     }
+
+    pub fn as_slice(&self) -> &[u8] {
+        unsafe {
+            let buf = self.buf;
+            let (_, extent_ptr) = resolve_start_extent(buf);
+            let extent = *extent_ptr as usize;
+            core::slice::from_raw_parts(buf, extent)
+        }
+    }
 }
 
 impl <T: ZeroCopy> Drop for Root<T> {
@@ -92,32 +101,33 @@ impl<T: ZeroCopy> DerefMut for Root<T> {
     }
 }
 
-const STATIC_FREELIST_CAP: usize = 32;
+const STATIC_FREELIST_CAP: usize = 128;
 const EXTRA_FREELIST_CAP: usize = 0x10000;
-static mut STATIC_FREELIST: [*mut u8; 32] = [null_mut(); 32];
+static mut STATIC_FREELIST: [*mut u8; 128] = [null_mut(); 128];
 static mut STATIC_FREELIST_LEN: usize = 0;
 static mut EXTRA_FREELIST_LEN: usize = 0;
 
 #[no_mangle]
 pub extern "C" fn __zeropb_alloc_page() -> *mut u8 {
     unsafe {
-        if EXTRA_FREELIST_LEN > 0 {
-            let extra_free_list = STATIC_FREELIST[STATIC_FREELIST_CAP - 1] as *mut *mut u8;
-            if extra_free_list != null_mut() {
-                let ptr = extra_free_list.add(EXTRA_FREELIST_LEN - 1);
-                EXTRA_FREELIST_LEN -= 1;
-                return *ptr;
-            }
-        }
-
-        if STATIC_FREELIST_LEN > 0 {
-            let ptr = STATIC_FREELIST[STATIC_FREELIST_LEN - 1];
-            STATIC_FREELIST_LEN -= 1;
-            return ptr;
-        }
-
-        return alloc_page();
+        let page = unsafe { do_alloc_page() };
+        // zero memory
+        let extent_ptr = page.offset((MAX_EXTENT - 2) as isize) as *mut u16;
+        let extent = *extent_ptr as usize;
+        core::ptr::write_bytes(page, 0, extent);
+        *extent_ptr = 0;
+        page
     }
+}
+
+unsafe fn do_alloc_page() -> *mut u8 {
+    if STATIC_FREELIST_LEN > 0 {
+        let ptr = STATIC_FREELIST[STATIC_FREELIST_LEN - 1];
+        STATIC_FREELIST_LEN -= 1;
+        return ptr;
+    }
+
+    return alloc_page();
 }
 
 #[no_mangle]
@@ -127,20 +137,11 @@ pub extern "C" fn __zeropb_free_page(page: *mut u8) {
     }
 
     unsafe {
-        if STATIC_FREELIST_LEN < STATIC_FREELIST_CAP - 1 {
+        if STATIC_FREELIST_LEN < STATIC_FREELIST_CAP {
             STATIC_FREELIST[STATIC_FREELIST_LEN] = page;
             STATIC_FREELIST_LEN += 1;
         } else {
-            let extra_free_list = STATIC_FREELIST[STATIC_FREELIST_CAP - 1] as *mut *mut u8;
-            if extra_free_list == null_mut() {
-                STATIC_FREELIST[STATIC_FREELIST_CAP - 1] = page;
-            } else if EXTRA_FREELIST_LEN < EXTRA_FREELIST_CAP {
-                let extra_free_list = extra_free_list.add(EXTRA_FREELIST_LEN);
-                *extra_free_list = page;
-                EXTRA_FREELIST_LEN += 1;
-            } else {
-                free_page(page)
-            }
+            free_page(page)
         }
     }
 }
@@ -148,8 +149,6 @@ pub extern "C" fn __zeropb_free_page(page: *mut u8) {
 #[cfg(target_arch = "wasm32")]
 unsafe fn alloc_page() -> *mut u8 {
     let page = (core::arch::wasm32::memory_grow(0, 1) * 0x10000usize) as *mut u8;
-    // zero memory
-    core::ptr::write_bytes(page, 0, 0x10000);
     page
 }
 
@@ -165,12 +164,12 @@ extern crate std;
 
 #[cfg(not(target_arch = "wasm32"))]
 unsafe fn alloc_page() -> *mut u8 {
-    alloc_zeroed(Layout::from_size_align(0x10000, 0x10000).unwrap())
+    alloc(Layout::from_size_align(0x10000, 0x10000).unwrap())
 }
 
 #[cfg(not(target_arch = "wasm32"))]
 unsafe fn free_page(page: *mut u8) {
-    std::alloc::dealloc(
+    dealloc(
         page,
         Layout::from_size_align(0x10000, 0x10000).unwrap(),
     )

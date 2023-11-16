@@ -125,7 +125,7 @@ func (db *Database) GetLatestVersion() (uint64, error) {
 
 func (db *Database) Has(storeKey string, version uint64, key []byte) (bool, error) {
 	slice, err := db.getSlice(storeKey, version, key)
-	if err != nil || slice == nil {
+	if err != nil {
 		return false, err
 	}
 
@@ -136,9 +136,6 @@ func (db *Database) Get(storeKey string, version uint64, key []byte) ([]byte, er
 	slice, err := db.getSlice(storeKey, version, key)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get RocksDB slice: %w", err)
-	}
-	if slice == nil {
-		return nil, nil
 	}
 
 	return copyAndFreeSlice(slice), nil

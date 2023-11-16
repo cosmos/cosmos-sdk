@@ -71,7 +71,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 						{ProtoField: "recipient"},
 						{ProtoField: "percentage"},
 						{ProtoField: "cap"},
-						{ProtoField: "metadata", Optional: true},
+						{ProtoField: "metadata"},
 						{ProtoField: "expiry", Optional: true},
 					},
 				},

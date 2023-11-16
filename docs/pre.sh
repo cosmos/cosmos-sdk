@@ -3,14 +3,16 @@
 ## Create modules pages
 for D in ../x/*; do
   if [ -d "${D}" ]; then
-    MODULE_DIRECTORY=docs/build/modules/$DIR_NAME
-    rm -rf "$MODULE_DIRECTORY"
-    mkdir -p "$MODULE_DIRECTORY" 
-    if [ -f "$D"/README.md ]; then
-      cp -r "$D"/README.md "$MODULE_DIRECTORY"
+    DIR_NAME=$(echo $D | awk -F/ '{print $NF}')
+    MODDOC=docs/build/modules/$DIR_NAME
+    rm -rf $MODDOC
+    mkdir -p $MODDOC
+    if [ -f "$D/README.md" ]; then
+      cp -r $D/README.md $MODDOC/
     fi
   fi
 done
+
 
 ## Vesting is a submodule of auth, but we still want to display it in docs
 ## TODO to be removed in https://github.com/cosmos/cosmos-sdk/issues/9958

@@ -1,0 +1,201 @@
+# ADR 069: `x/gov` modularity, multiple choice and optimistic proposals
+
+## Changelog
+
+* 2023-11-17: Initial draft (@julienrbrt, @tac0turle)
+
+## Status
+
+PROPOSED
+
+## Abstract
+
+Governance is an important aspect of Cosmos SDK chains.
+
+This ADR aimed to extend the `x/gov` module functionalities by adding two different kinds of proposals, as well as making `x/gov` more composable and extendable.
+
+Those two types are, namely: multiple choice proposals and optimistic proposals.
+
+## Context
+
+`x/gov` is the center of Cosmos governance, and has already been improved from its first version `v1beta1`, with a second version [`v1`][5].
+This second iteration on gov unlocked many possibilities by letting governance proposals contain any number of proposals.
+The last addition of gov has been expedited proposals (proposals that have a shorter voting period and a higher quorum, approval threshold).
+
+The community requested ([1], [4]) two additional proposals for improving governance choices. Those proposals would be useful when having protocol decisions made on specific choices or simplifying regular proposals that do not require high community involvement.
+
+Additionally, the SDK should allow chains to customize the tallying method of proposals (if they want to count the votes in another way). Currently, the Cosmos SDK counts votes proportionally to the voting power/stake. However, custom tallying could allow counting votes with a quadratic function instead.
+
+## Alternatives
+
+N/A
+
+## Decision
+
+`x/gov` will integrate those functionalities and extract helpers and interfaces for extending the `x/gov` module capabilities.
+
+### Proposals
+
+Currently, all proposals are [`v1.Proposal`][5]. Optimistic and multiple choice proposals only require a different tally logic, but the rest of the proposal stays the same to not create other proposal types, `v1.Proposal` will have an extra field:
+
+```protobuf
+enum ProposalType {
+  // NORMAL defines a normal propo
+  NORMAL = 0;
+  // VOTE_OPTION_YES defines a yes vote option.
+  MULTIPLE_CHOICE = 1;
+  // VOTE_OPTION_ABSTAIN defines an abstain vote option.
+  OPTIMISTIC = 2;
+  // VOTE_OPTION_NO defines a no vote option.
+  EXPEDITED = 3;
+}
+```
+
+Note, that expedited becomes a proposal type itself instead of a boolean on the `v1.Proposal` struct.
+
+> An expedited proposal is by design a normal proposal with a quicker voting period and higher threshold. A expedited proposals if fail, gets converted to a normal proposal
+
+An expedited optimistic proposal and an expedited multiple choice proposal do not make sense based on the definition above and is a proposal type instead of a proposal characteristic.
+
+#### Optimistic Proposal
+
+An optimistic proposal is a proposal that automatically passes unless a threshold a NO votes is reached.
+
+Voter can only vote NO on the proposal. If the NO threshold is reached, the optimistic proposal is converted to a normal proposal.
+
+Two governance parameters will be in added [`v1.Params`][5] to support optimistic proposals:
+
+```protobuf
+// optimistic_authorized_addreses is an optional governance parameter that limits the authorized accounts than can submit optimisitc proposals
+repeated string optimistic_authorized_addreses = 17 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+// Optimistic rejected threshold defines at which percentage of NO votes, the optimistic proposal should fail and be converted to a normal proposal.
+string optimistic_rejected_threshold = 18 [(cosmos_proto.scalar) = "cosmos.Dec"];
+```
+
+#### Multiple Choice Proposal
+
+A multiple choice proposal is a proposal where the voting options can be defined by the proposer.
+
+The number of voting option will be limited to a maximum of 4. A new vote option `SPAM` will be added and distinguished of those voting options. 
+
+Multiple choice proposals, contrary to any other proposal type, cannot have messages to execute. They are only text proposals.
+
+Submitting a new multiple choice proposal will use a different message than the [`v1.MsgSubmitProposal`][5]. This is done in order to simplify the proposal submittion and allow defining the voting options directly.
+
+
+```protobuf
+message MsgSubmitMultipleChoiceProposal {
+  repeated cosmos.base.v1beta1.Coin initial_deposit = 1
+  string proposer = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string metadata = 3;
+  string title = 4;
+  string summary = 5;
+  VoteOption option_one = 6;
+  VoteOption option_two = 7;
+  VoteOption option_three = 8;
+  VoteOption option_four = 9;
+}
+```
+
+Voters can only vote on the defined options in the proposal.
+
+To maintain compatibility with the existing endpoints, the voting options will not be stored in the proposal itself. A multiple choice proposal will be stored as a [`v1.Proposal`][5]. A query will be available for multiple choice proposal types to get the voting options.
+
+Multiple choice proposals do not need additional governance parameters.
+
+### Votes
+
+As mentioned above [multiple choice proposal](#multiple-choice-proposal) will introduce an additional vote option: `SPAM`.
+
+This vote option will be supported by all proposal types.
+Voting `SPAM` will automatically burn the proposal deposit and mark the proposal as failed.
+
+`SPAM` differs from the `No with Veto` vote as its threshold is dynamic.
+A proposal is marked as `SPAM` when the total of weighted votes for all options is lower than the amount of weighted vote on `SPAM`
+(`spam` > `option_one + option_two + option_three + option_four` = proposal marked as spam).
+
+To avoid voters wrongfully voting down a proposal as `SPAM`, voter will be slashed 2% of their voting stake if they voted `SPAM` on a proposal that wasn't a spam proposal.
+
+Additionally, the current vote option will be renamed to better accommodate the multiple choice proposal:
+
+```protobuf
+// VoteOption enumerates the valid vote options for a given governance proposal.
+enum VoteOption {
+  VOTE_OPTION_UNSPECIFIED = 0;
+  VOTE_OPTION_ONE = 1;
+  VOTE_OPTION_TWO = 2;
+  VOTE_OPTION_THREE = 3;
+  VOTE_OPTION_FOUR = 4;
+  VOTE_OPTION_SPAM = 5;
+}
+```
+
+The order does not change for a normal proposal (1 = yes, 2 = abstain, 3 = no, 4 = no with veto as it was). We will attempt to make this change in a non-breaking way for clients (cli and wallets).
+
+Updating vote options means updating [`v1.TallyResult`][5] as well.
+
+#### Tally
+
+Due to the vote option change, each proposal can have the same tallying method.
+
+However, chains may want to change the tallying function (weighted vote per voting power) of `x/gov` for a different algorithm (using a quadratic function on the voter stake, for instance).
+
+The custom tallying function can be passed to the `x/gov` keeper with the following interface:
+
+```go
+type Tally interface{
+    // to be decided
+    Calculate() govv1.TallyResult
+    Pass() bool
+    BurnDeposit() bool
+}
+```
+
+## Consequences
+
+Changing voting possibilities has a direct consequence for the clients. Clients, like Keplr or Mintscan, need to implement logic for multiple choice proposals.
+
+That logic consists of querying multiple choice proposals vote mapping their vote options.
+
+### Backwards Compatibility
+
+Legacy proposals (`v1beta1`) endpoints will not be supporting the new proposal types.
+
+Voting on a gov v1 proposal having a different type than [`normal` or `expedited`](#proposals) via the `v1beta1` will not be supported.
+This is already the case for the expedited proposals.
+
+### Positive
+
+* Extended governance features
+* Extended governance customization
+
+### Negative
+
+* Increase gov wiring complexity
+
+### Neutral
+
+* Increases the number of parameters available
+
+## Further Discussions
+
+This ADR starts the `x/gov` overhaul for the `cosmossdk.io/x/gov` v1.0.0 release.
+Further internal improvements of `x/gov` will happen soon after, in order to simplify its state management and making gov calculation in a more "lazy"-fashion.
+
+Those improvements may change the tallying api.
+
+* https://github.com/cosmos/cosmos-sdk/issues/16270
+
+## References
+
+* [https://github.com/cosmos/cosmos-sdk/issues/16270][1]
+* [https://github.com/cosmos/cosmos-sdk/issues/17781][2]
+* [https://github.com/cosmos/cosmos-sdk/issues/14403][3]
+* [https://github.com/decentralists/DAO/issues/28][4]
+
+[1]: https://grants.osmosis.zone/blog/rfp-cosmos-sdk-governance-module-improvements
+[2]: https://github.com/cosmos/cosmos-sdk/issues/17781
+[3]: https://github.com/cosmos/cosmos-sdk/issues/14403
+[4]: https://github.com/decentralists/DAO/issues/28
+[5]: https://buf.build/cosmos/cosmos-sdk/docs/main:cosmos.gov.v1

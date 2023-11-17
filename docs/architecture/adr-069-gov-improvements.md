@@ -26,10 +26,6 @@ The community requested ([1], [4]) two additional proposals for improving govern
 
 Additionally, the SDK should allow chains to customize the tallying method of proposals (if they want to count the votes in another way). Currently, the Cosmos SDK counts votes proportionally to the voting power/stake. However, custom tallying could allow counting votes with a quadratic function instead.
 
-## Alternatives
-
-N/A
-
 ## Decision
 
 `x/gov` will integrate these functions and extract helpers and interfaces for extending the `x/gov` module capabilities.
@@ -40,13 +36,9 @@ Currently, all proposals are [`v1.Proposal`][5]. Optimistic and multiple choice 
 
 ```protobuf
 enum ProposalType {
-  // NORMAL defines a normal propo
   NORMAL = 0;
-  // VOTE_OPTION_YES defines a yes vote option.
   MULTIPLE_CHOICE = 1;
-  // VOTE_OPTION_ABSTAIN defines an abstain vote option.
   OPTIMISTIC = 2;
-  // VOTE_OPTION_NO defines a no vote option.
   EXPEDITED = 3;
 }
 ```

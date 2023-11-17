@@ -32,11 +32,11 @@ N/A
 
 ## Decision
 
-`x/gov` will integrate those functionalities and extract helpers and interfaces for extending the `x/gov` module capabilities.
+`x/gov` will integrate these functions and extract helpers and interfaces for extending the `x/gov` module capabilities.
 
 ### Proposals
 
-Currently, all proposals are [`v1.Proposal`][5]. Optimistic and multiple choice proposals only require a different tally logic, but the rest of the proposal stays the same to not create other proposal types, `v1.Proposal` will have an extra field:
+Currently, all proposals are [`v1.Proposal`][5]. Optimistic and multiple choice proposals require a different tally logic, but the rest of the proposal stays the same to not create other proposal types, `v1.Proposal` will have an extra field:
 
 ```protobuf
 enum ProposalType {

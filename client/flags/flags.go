@@ -86,9 +86,9 @@ const (
 	// This differs from FlagOutputDocument that is used to set the output file.
 	FlagOutput = "output"
 	// Logging flags
-	FlagLogLevel   = "log_level"
-	FlagLogFormat  = "log_format"
-	FlagLogColored = "log_colored"
+	FlagLogLevel      = "log_level"
+	FlagLogFormat     = "log_format"
+	FlagLogNotColored = "log_not_colored"
 )
 
 // List of supported output formats

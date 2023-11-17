@@ -115,7 +115,7 @@ Voting `SPAM` will automatically burn the proposal deposit and mark the proposal
 A proposal is marked as `SPAM` when the total of weighted votes for all options is lower than the amount of weighted vote on `SPAM`
 (`spam` > `option_one + option_two + option_three + option_four` = proposal marked as spam).
 
-To avoid voters wrongfully voting down a proposal as `SPAM`, voter will be slashed 2% of their voting stake if they voted `SPAM` on a proposal that wasn't a spam proposal.
+To avoid voters wrongfully voting down a proposal as `SPAM`, voters will be slashed 2% of their voting stake if they voted `SPAM` on a proposal that wasn't a spam proposal.
 
 Additionally, the current vote option will be renamed to better accommodate the multiple choice proposal:
 

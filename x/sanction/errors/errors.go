@@ -5,7 +5,7 @@ import (
 )
 
 // sanctionCodespace is the codespace for all errors defined in sanction package
-const sanctionCodespace = "sanction"
+const sanctionCodespace = "sanctionold"
 
 var (
 	ErrInvalidParams      = errors.Register(sanctionCodespace, 2, "invalid params")

@@ -1,10 +1,11 @@
-package tx
+package tx_test
 
 import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
 
+	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -14,6 +15,20 @@ import (
 	typestx "github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/counter"
+	countertypes "github.com/cosmos/cosmos-sdk/x/counter/types"
+)
+
+const (
+	memo          = "waboom"
+	timeoutHeight = uint64(5)
+)
+
+var (
+	_, pub1, addr1 = testdata.KeyTestPubAddr()
+	rawSig         = []byte("dummy")
+	msg1           = &countertypes.MsgIncreaseCounter{Signer: addr1.String(), Count: 1}
+
+	chainID = "test-chain"
 )
 
 func TestAuxTxBuilder(t *testing.T) {
@@ -25,7 +40,7 @@ func TestAuxTxBuilder(t *testing.T) {
 	// required for test case: "GetAuxSignerData works for DIRECT_AUX"
 	counterModule.RegisterInterfaces(reg)
 
-	var b AuxTxBuilder
+	var b tx.AuxTxBuilder
 
 	testcases := []struct {
 		name      string
@@ -199,7 +214,7 @@ func TestAuxTxBuilder(t *testing.T) {
 	for _, tc := range testcases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-			b = NewAuxTxBuilder()
+			b = tx.NewAuxTxBuilder()
 			err := tc.malleate()
 
 			if tc.expErr {

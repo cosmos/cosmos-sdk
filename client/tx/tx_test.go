@@ -369,6 +369,8 @@ func TestSign(t *testing.T) {
 }
 
 func TestPreprocessHook(t *testing.T) {
+	_, _, addr2 := testdata.KeyTestPubAddr()
+
 	txConfig, cdc := newTestTxConfig()
 	requireT := require.New(t)
 	path := hd.CreateHDPath(118, 0, 0).String()

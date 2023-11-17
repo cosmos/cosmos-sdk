@@ -174,7 +174,7 @@ func CreateSDKLogger(ctx *Context, out io.Writer) (log.Logger, error) {
 		opts = append(opts, log.OutputJSONOption())
 	}
 	opts = append(opts,
-		log.ColorOption(!ctx.Viper.GetBool(flags.FlagLogNotColored)),
+		log.ColorOption(!ctx.Viper.GetBool(flags.FlagLogNoColor)),
 		// We use CometBFT flag (cmtcli.TraceFlag) for trace logging.
 		log.TraceOption(ctx.Viper.GetBool(FlagTrace)))
 

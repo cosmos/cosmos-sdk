@@ -9,13 +9,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
 
-<<<<<<< HEAD
-=======
-	"cosmossdk.io/x/auth/ante"
-	"cosmossdk.io/x/auth/signing"
-	authtx "cosmossdk.io/x/auth/tx"
-
->>>>>>> 80e0c631c (fix(client/tx): simulate with correct pk (#18472))
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -32,6 +25,8 @@ import (
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
+
+var _, _, addr2 = testdata.KeyTestPubAddr()
 
 func newTestTxConfig() (client.TxConfig, codec.Codec) {
 	encodingConfig := moduletestutil.MakeTestEncodingConfig()

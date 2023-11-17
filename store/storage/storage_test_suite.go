@@ -192,7 +192,6 @@ func (s *StorageTestSuite) TestDatabase_IteratorClose() {
 	iter.Close()
 
 	s.Require().False(iter.Valid())
-	s.Require().Panics(func() { iter.Close() })
 }
 
 func (s *StorageTestSuite) TestDatabase_IteratorDomain() {
@@ -457,10 +456,11 @@ func (s *StorageTestSuite) TestDatabase_Prune() {
 			val := fmt.Sprintf("val%03d-%03d", i, v)
 
 			bz, err := db.Get(storeKey1, v, []byte(key))
-			s.Require().NoError(err)
 			if v <= 25 {
+				s.Require().Error(err)
 				s.Require().Nil(bz)
 			} else {
+				s.Require().NoError(err)
 				s.Require().Equal([]byte(val), bz)
 			}
 		}
@@ -478,8 +478,56 @@ func (s *StorageTestSuite) TestDatabase_Prune() {
 			key := fmt.Sprintf("key%03d", i)
 
 			bz, err := db.Get(storeKey1, v, []byte(key))
-			s.Require().NoError(err)
+			s.Require().Error(err)
 			s.Require().Nil(bz)
 		}
 	}
+}
+
+func (s *StorageTestSuite) TestDatabase_Prune_KeepRecent() {
+	if slices.Contains(s.SkipTests, s.T().Name()) {
+		s.T().SkipNow()
+	}
+
+	db, err := s.NewDB(s.T().TempDir())
+	s.Require().NoError(err)
+	defer db.Close()
+
+	key := []byte("key")
+
+	// write a key at three different versions
+	s.Require().NoError(db.ApplyChangeset(1, store.NewChangeset(store.KVPair{StoreKey: storeKey1, Key: key, Value: []byte("val001")})))
+	s.Require().NoError(db.ApplyChangeset(100, store.NewChangeset(store.KVPair{StoreKey: storeKey1, Key: key, Value: []byte("val100")})))
+	s.Require().NoError(db.ApplyChangeset(200, store.NewChangeset(store.KVPair{StoreKey: storeKey1, Key: key, Value: []byte("val200")})))
+
+	// prune version 50
+	s.Require().NoError(db.Prune(50))
+
+	// ensure queries for versions 50 and older return nil
+	bz, err := db.Get(storeKey1, 49, key)
+	s.Require().Error(err)
+	s.Require().Nil(bz)
+
+	itr, err := db.Iterator(storeKey1, 49, nil, nil)
+	s.Require().NoError(err)
+	s.Require().False(itr.Valid())
+
+	defer itr.Close()
+
+	// ensure the value previously at version 1 is still there for queries greater than 50
+	bz, err = db.Get(storeKey1, 51, key)
+	s.Require().NoError(err)
+	s.Require().Equal([]byte("val001"), bz)
+
+	// ensure the correct value at a greater height
+	bz, err = db.Get(storeKey1, 200, key)
+	s.Require().NoError(err)
+	s.Require().Equal([]byte("val200"), bz)
+
+	// prune latest height and ensure we have the previous version when querying above it
+	s.Require().NoError(db.Prune(200))
+
+	bz, err = db.Get(storeKey1, 201, key)
+	s.Require().NoError(err)
+	s.Require().Equal([]byte("val200"), bz)
 }

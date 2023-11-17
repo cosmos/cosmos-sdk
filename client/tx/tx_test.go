@@ -368,7 +368,7 @@ func TestSign(t *testing.T) {
 }
 
 func TestPreprocessHook(t *testing.T) {
-	var _, _, addr2 = testdata.KeyTestPubAddr()
+	_, _, addr2 := testdata.KeyTestPubAddr()
 
 	txConfig, cdc := newTestTxConfig()
 	requireT := require.New(t)

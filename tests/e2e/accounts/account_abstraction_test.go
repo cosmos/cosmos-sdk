@@ -11,6 +11,7 @@ import (
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -26,7 +27,7 @@ var (
 func TestAccountAbstraction(t *testing.T) {
 	app := simapp.NewSimApp(log.NewNopLogger(), dbm.NewMemDB(), nil, true, simtestutil.NewAppOptionsWithFlagHome(t.TempDir()))
 	ak := app.AccountsKeeper
-	ctx := app.NewContext(false)
+	ctx := sdk.NewContext(app.CommitMultiStore(), false, app.Logger())
 
 	_, aaAddr, err := ak.Init(ctx, "aa_full", accCreator, &rotationv1.MsgInit{
 		PubKeyBytes: privKey.PubKey().Bytes(),
@@ -43,13 +44,13 @@ func TestAccountAbstraction(t *testing.T) {
 			AuthenticationData:     []byte("signature"),
 			AuthenticationGasLimit: 10000,
 			BundlerPaymentMessages: nil,
-			BundlerPaymentGasLimit: 0,
+			BundlerPaymentGasLimit: 10000,
 			ExecutionMessages: intoAny(t, &bankv1beta1.MsgSend{
 				FromAddress: "",
 				ToAddress:   "",
 				Amount:      nil,
 			}),
-			ExecutionGasLimit: 0,
+			ExecutionGasLimit: 10000,
 		})
 		t.Log(resp.String())
 	})

@@ -3,8 +3,11 @@ package accountstd
 
 import (
 	"context"
+	"fmt"
 
 	"cosmossdk.io/x/accounts/internal/implementation"
+	"github.com/cosmos/cosmos-proto/anyutil"
+	"google.golang.org/protobuf/types/known/anypb"
 )
 
 // Interface is the exported interface of an Account.
@@ -71,4 +74,22 @@ func ExecModule[Resp any, RespProto implementation.ProtoMsg[Resp], Req any, ReqP
 // QueryModule can be used by an account to execute a module query.
 func QueryModule[Resp any, RespProto implementation.ProtoMsg[Resp], Req any, ReqProto implementation.ProtoMsg[Req]](ctx context.Context, req ReqProto) (RespProto, error) {
 	return implementation.QueryModule[Resp, RespProto, Req, ReqProto](ctx, req)
+}
+
+// UnpackAny unpacks a protobuf Any message generically.
+func UnpackAny[Msg any, ProtoMsg implementation.ProtoMsg[Msg]](any *anypb.Any) (*Msg, error) {
+	msg, err := any.UnmarshalNew()
+	if err != nil {
+		return nil, err
+	}
+	concrete, ok := msg.(ProtoMsg)
+	if !ok {
+		return nil, fmt.Errorf("expected %T, got %T", concrete, msg)
+	}
+	return concrete, nil
+}
+
+// PackAny packs a protobuf Any message generically.
+func PackAny[Msg any, ProtoMsg implementation.ProtoMsg[Msg]](msg *Msg) (*anypb.Any, error) {
+	return anyutil.New(ProtoMsg(msg))
 }

@@ -1,16 +1,12 @@
 package accounts
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 
 	account_abstractionv1 "cosmossdk.io/api/cosmos/accounts/interfaces/account_abstraction/v1"
 	accountsv1 "cosmossdk.io/api/cosmos/accounts/v1"
 	"cosmossdk.io/x/accounts/internal/implementation"
-	"google.golang.org/protobuf/reflect/protoreflect"
-	"google.golang.org/protobuf/reflect/protoregistry"
-	"google.golang.org/protobuf/runtime/protoiface"
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
@@ -127,7 +123,7 @@ func (k Keeper) opExecuteMessages(
 	case implementation.IsRoutingError(err):
 		// if it is a routing error, it means the account does not handle execution messages,
 		// in this case we attempt to execute the provided messages on behalf of the op sender.
-		return k.sendMessages(ctx, senderAddr, op.ExecutionMessages)
+		return k.sendAnyMessages(ctx, senderAddr, op.ExecutionMessages)
 	default:
 		// some other error
 		return nil, err
@@ -159,6 +155,11 @@ func (k Keeper) payBundler(
 	bundler string,
 	op *accountsv1.UserOperation,
 ) (paymentResponses []*anypb.Any, err error) {
+	// if messages are empty, then there is nothing to do
+	if len(op.BundlerPaymentMessages) == 0 {
+		return nil, nil
+	}
+	// pay bundler
 	senderAddr, err := k.addressCodec.StringToBytes(op.Sender)
 	if err != nil {
 		return nil, err
@@ -177,59 +178,11 @@ func (k Keeper) payBundler(
 	case implementation.IsRoutingError(err):
 		// if we get a routing message error it means the account does not handle bundler payment messages,
 		// in this case we attempt to execute the provided messages on behalf of the op sender.
-		return k.sendMessages(ctx, senderAddr, op.BundlerPaymentMessages)
+		return k.sendAnyMessages(ctx, senderAddr, op.BundlerPaymentMessages)
 	default:
 		// some other execution error.
 		return nil, err
 	}
-}
-
-// sendMessages attempts to execute the provided messages on behalf of the op sender.
-// It returns the responses of the messages in the same order as the provided messages.
-func (k Keeper) sendMessages(ctx context.Context, sender []byte, messages []*anypb.Any) ([]*anypb.Any, error) {
-	responses := make([]*anypb.Any, len(messages))
-	for i, msg := range messages {
-		resp, err := k.untypedExecute(ctx, sender, msg)
-		if err != nil {
-			return nil, fmt.Errorf("failed to execute bundler payment message %d: %s", i, err.Error())
-		}
-		responses[i] = resp
-	}
-	return responses, nil
-}
-
-// untypedExecute executes a protobuf message without knowing the response type.
-// It will check if the sender is allowed to execute the message and then execute it.
-func (k Keeper) untypedExecute(ctx context.Context, gotSender []byte, anyMsg *anypb.Any) (*anypb.Any, error) {
-	msg, err := anyMsg.UnmarshalNew()
-	if err != nil {
-		return nil, err
-	}
-	// we check if the sender is allowed to execute the message.
-	wantSender, err := k.getSenderFunc(msg)
-	if err != nil {
-		return nil, err
-	}
-	if !bytes.Equal(wantSender, gotSender) {
-		return nil, fmt.Errorf("not allowed to execute message: %s", anyMsg.TypeUrl)
-	}
-	// we now need to fetch the response type from the request message type.
-	// this is because the response type is not known.
-	respName := k.msgResponseFromRequestName(string(msg.ProtoReflect().Descriptor().FullName()))
-	if respName == "" {
-		return nil, fmt.Errorf("could not find response type for message %T", msg)
-	}
-	// get response type
-	respType, err := protoregistry.GlobalTypes.FindMessageByName(protoreflect.FullName(respName))
-	if err != nil {
-		return nil, err
-	}
-	resp := respType.New().Interface()
-	err = k.execModuleFunc(ctx, msg.(protoiface.MessageV1), resp.(protoiface.MessageV1))
-	if err != nil {
-		return nil, err
-	}
-	return anypb.New(resp)
 }
 
 // parsePayBundlerResponse parses the bundler response as any into a slice of
@@ -237,6 +190,9 @@ func (k Keeper) untypedExecute(ctx context.Context, gotSender []byte, anyMsg *an
 func parsePayBundlerResponse(resp any) ([]*anypb.Any, error) {
 	payBundlerResp, ok := resp.(*account_abstractionv1.MsgPayBundlerResponse)
 	// this means the account does not properly implement account abstraction.
+	if payBundlerResp == nil {
+		return nil, fmt.Errorf("account does not implement account abstraction correctly: wanted %T, got nil", &account_abstractionv1.MsgPayBundlerResponse{})
+	}
 	if !ok {
 		return nil, fmt.Errorf("account does not implement account abstraction correctly: wanted %T, got %T", &account_abstractionv1.MsgPayBundlerResponse{}, resp)
 	}
@@ -248,6 +204,9 @@ func parsePayBundlerResponse(resp any) ([]*anypb.Any, error) {
 func parseExecuteResponse(resp any) ([]*anypb.Any, error) {
 	executeResp, ok := resp.(*account_abstractionv1.MsgExecuteResponse)
 	// this means the account does not properly implement account abstraction.
+	if executeResp == nil {
+		return nil, fmt.Errorf("account does not implement account abstraction correctly: wanted %T, got nil", &account_abstractionv1.MsgExecuteResponse{})
+	}
 	if !ok {
 		return nil, fmt.Errorf("account does not implement account abstraction correctly: wanted %T, got %T", &account_abstractionv1.MsgExecuteResponse{}, resp)
 	}

@@ -1,6 +1,7 @@
 package accounts
 
 import (
+	"bytes"
 	"context"
 	"crypto/sha256"
 	"encoding/binary"
@@ -8,8 +9,12 @@ import (
 	"fmt"
 
 	"cosmossdk.io/core/branch"
+	"github.com/cosmos/cosmos-proto/anyutil"
 	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/reflect/protoregistry"
 	"google.golang.org/protobuf/runtime/protoiface"
+	"google.golang.org/protobuf/types/known/anypb"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/address"
@@ -66,45 +71,18 @@ func NewKeeper(
 ) (Keeper, error) {
 	sb := collections.NewSchemaBuilder(ss)
 	keeper := Keeper{
-		storeService:   ss,
-		eventService:   es,
-		branchExecutor: bs,
-		addressCodec:   addressCodec,
-		getSenderFunc: func(msg proto.Message) ([]byte, error) {
-			signers, err := signerProvider.GetSigners(msg)
-			if err != nil {
-				return nil, err
-			}
-			if len(signers) != 1 {
-				return nil, fmt.Errorf("expected 1 signer, got %d", len(signers))
-			}
-			return signers[0], nil
-		},
-		execModuleFunc: func(ctx context.Context, msg, msgResp protoiface.MessageV1) error {
-			name := getMessageName(msg)
-			handler := execRouter.HybridHandlerByMsgName(name)
-			if handler == nil {
-				return fmt.Errorf("no handler found for message %s", name)
-			}
-			return handler(ctx, msg, msgResp)
-		},
-		queryModuleFunc: func(ctx context.Context, req, resp protoiface.MessageV1) error {
-			name := getMessageName(req)
-			handlers := queryRouter.HybridHandlerByRequestName(name)
-			if len(handlers) == 0 {
-				return fmt.Errorf("no handler found for query request %s", name)
-			}
-			if len(handlers) > 1 {
-				return fmt.Errorf("multiple handlers found for query request %s", name)
-			}
-			return handlers[0](ctx, req, resp)
-		},
-		msgResponseFromRequestName: func(name string) string { return execRouter.ResponseByRequestName(name) },
-		Schema:                     collections.Schema{},
-		AccountNumber:              collections.NewSequence(sb, AccountNumberKey, "account_number"),
-		AccountsByType:             collections.NewMap(sb, AccountTypeKeyPrefix, "accounts_by_type", collections.BytesKey, collections.StringValue),
-		AccountByNumber:            collections.NewMap(sb, AccountByNumber, "account_by_number", collections.BytesKey, collections.Uint64Value),
-		AccountsState:              collections.NewMap(sb, implementation.AccountStatePrefix, "accounts_state", collections.BytesKey, collections.BytesValue),
+		storeService:    ss,
+		eventService:    es,
+		branchExecutor:  bs,
+		addressCodec:    addressCodec,
+		signerProvider:  signerProvider,
+		msgRouter:       execRouter,
+		queryRouter:     queryRouter,
+		Schema:          collections.Schema{},
+		AccountNumber:   collections.NewSequence(sb, AccountNumberKey, "account_number"),
+		AccountsByType:  collections.NewMap(sb, AccountTypeKeyPrefix, "accounts_by_type", collections.BytesKey, collections.StringValue),
+		AccountByNumber: collections.NewMap(sb, AccountByNumber, "account_by_number", collections.BytesKey, collections.Uint64Value),
+		AccountsState:   collections.NewMap(sb, implementation.AccountStatePrefix, "accounts_state", collections.BytesKey, collections.BytesValue),
 	}
 
 	schema, err := sb.Build()
@@ -121,14 +99,13 @@ func NewKeeper(
 
 type Keeper struct {
 	// deps coming from the runtime
-	storeService               store.KVStoreService
-	eventService               event.Service
-	addressCodec               address.Codec
-	getSenderFunc              func(msg proto.Message) ([]byte, error)
-	execModuleFunc             implementation.ModuleExecFunc
-	queryModuleFunc            implementation.ModuleQueryFunc
-	branchExecutor             BranchExecutor
-	msgResponseFromRequestName func(name string) string // msgResponseFromRequestName returns the response name for a given request name.
+	storeService   store.KVStoreService
+	eventService   event.Service
+	addressCodec   address.Codec
+	branchExecutor BranchExecutor
+	msgRouter      MsgRouter
+	signerProvider SignerProvider
+	queryRouter    QueryRouter
 
 	accounts map[string]implementation.Implementation
 
@@ -266,9 +243,9 @@ func (k Keeper) makeAccountContext(ctx context.Context, accountAddr, sender []by
 			k.storeService,
 			accountAddr,
 			sender,
-			k.getSenderFunc,
-			k.execModuleFunc,
-			k.queryModuleFunc,
+			k.sendModuleMessage,
+			k.sendModuleMessageUntyped,
+			k.queryModule,
 		)
 	}
 
@@ -279,14 +256,95 @@ func (k Keeper) makeAccountContext(ctx context.Context, accountAddr, sender []by
 		k.storeService,
 		accountAddr,
 		nil,
-		func(_ proto.Message) ([]byte, error) {
-			return nil, fmt.Errorf("cannot get sender from query")
+		func(ctx context.Context, sender []byte, msg, msgResp proto.Message) error {
+			return fmt.Errorf("cannot execute in query context")
 		},
-		func(ctx context.Context, msg, msgResp protoiface.MessageV1) error {
-			return fmt.Errorf("cannot execute module from a query execution context")
+		func(ctx context.Context, sender []byte, msg proto.Message) (proto.Message, error) {
+			return nil, fmt.Errorf("cannot execute in query context")
 		},
-		k.queryModuleFunc,
+		k.queryModule,
 	)
+}
+
+// sendAnyMessages it a helper function that executes untyped anypb.Any messages
+// The messages must all belong to a module.
+func (k Keeper) sendAnyMessages(ctx context.Context, sender []byte, anyMessages []*anypb.Any) ([]*anypb.Any, error) {
+	anyResponses := make([]*anypb.Any, len(anyMessages))
+	for i := range anyMessages {
+		msg, err := anyMessages[i].UnmarshalNew()
+		if err != nil {
+			return nil, err
+		}
+		resp, err := k.sendModuleMessageUntyped(ctx, sender, msg)
+		if err != nil {
+			return nil, fmt.Errorf("failed to execute message %d: %s", i, err.Error())
+		}
+		anyResp, err := anyutil.New(resp)
+		if err != nil {
+			return nil, err
+		}
+		anyResponses[i] = anyResp
+	}
+	return anyResponses, nil
+}
+
+// sendModuleMessageUntyped can be used to send a message towards a module.
+// It should be used when the response type is not known by the caller.
+func (k Keeper) sendModuleMessageUntyped(ctx context.Context, sender []byte, msg proto.Message) (proto.Message, error) {
+	// we need to fetch the response type from the request message type.
+	// this is because the response type is not known.
+	respName := k.msgRouter.ResponseByRequestName(string(msg.ProtoReflect().Descriptor().FullName()))
+	if respName == "" {
+		return nil, fmt.Errorf("could not find response type for message %T", msg)
+	}
+	// get response type
+	respType, err := protoregistry.GlobalTypes.FindMessageByName(protoreflect.FullName(respName))
+	if err != nil {
+		return nil, err
+	}
+	resp := respType.New().Interface()
+	// send the message
+	return resp, k.sendModuleMessage(ctx, sender, msg, resp)
+}
+
+// sendModuleMessage can be used to send a message towards a module. It expects the
+// response type to be known by the caller. It will also assert the sender has the right
+// is not trying to impersonate another account.
+func (k Keeper) sendModuleMessage(ctx context.Context, sender []byte, msg, msgResp proto.Message) error {
+	// do sender assertions.
+	wantSenders, err := k.signerProvider.GetSigners(msg)
+	if err != nil {
+		return fmt.Errorf("cannot get signers: %w", err)
+	}
+	if len(wantSenders) != 1 {
+		return fmt.Errorf("expected only one signer, got %d", len(wantSenders))
+	}
+	if !bytes.Equal(sender, wantSenders[0]) {
+		return fmt.Errorf("sender is not authorized to send this message")
+	}
+	msgV1, msgRespV1 := msg.(protoiface.MessageV1), msgResp.(protoiface.MessageV1)
+	messageName := getMessageName(msgV1)
+	handler := k.msgRouter.HybridHandlerByMsgName(messageName)
+	if handler == nil {
+		return fmt.Errorf("unknown message: %s", messageName)
+	}
+	return handler(ctx, msgV1, msgRespV1)
+}
+
+// queryModule is the entrypoint for an account to query a module.
+// It will try to find the query handler for the given query and execute it.
+// If multiple query handlers are found, it will return an error.
+func (k Keeper) queryModule(ctx context.Context, queryReq, queryResp proto.Message) error {
+	queryReqV1, queryRespV1 := queryReq.(protoiface.MessageV1), queryResp.(protoiface.MessageV1)
+	queryName := getMessageName(queryReqV1)
+	handlers := k.queryRouter.HybridHandlerByRequestName(queryName)
+	if len(handlers) == 0 {
+		return fmt.Errorf("unknown query: %s", queryName)
+	}
+	if len(handlers) > 1 {
+		return fmt.Errorf("multiple handlers for query: %s", queryName)
+	}
+	return handlers[0](ctx, queryReqV1, queryRespV1)
 }
 
 func getMessageName(msg protoiface.MessageV1) string {

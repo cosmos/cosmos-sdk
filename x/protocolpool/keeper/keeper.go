@@ -276,7 +276,7 @@ func (k Keeper) validateandUpdateContinuousFund(ctx context.Context, msg types.M
 	return &updatedCFP, nil
 }
 
-func (k Keeper) ContinuousDistribution(ctx sdk.Context, continuousFund types.ContinuousFund) error {
+func (k Keeper) continuousDistribution(ctx context.Context, continuousFund types.ContinuousFund) error {
 	// Calculate the total pool amount
 	poolMAcc := k.authKeeper.GetModuleAccount(ctx, types.ModuleName)
 	totalPoolAmount := k.bankKeeper.GetAllBalances(ctx, poolMAcc.GetAddress())
@@ -291,7 +291,8 @@ func (k Keeper) ContinuousDistribution(ctx sdk.Context, continuousFund types.Con
 	distributionAmount := poolDecAmount.MulDec(continuousFund.Percentage)
 
 	// Check for expiration
-	if continuousFund.Expiry != nil && ctx.BlockTime().After(*continuousFund.Expiry) {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	if continuousFund.Expiry != nil && sdkCtx.BlockTime().After(*continuousFund.Expiry) {
 		if err := k.ContinuousFund.Remove(ctx, recipient); err != nil {
 			return fmt.Errorf("continuous funding expired for recipient: %s", continuousFund.Recipient)
 		}

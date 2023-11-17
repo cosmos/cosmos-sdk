@@ -1,19 +1,19 @@
-package protocolpool
+package keeper
 
 import (
+	"context"
 	"time"
 
-	"cosmossdk.io/x/protocolpool/keeper"
 	"cosmossdk.io/x/protocolpool/types"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func EndBlocker(ctx sdk.Context, k keeper.Keeper) error {
+func (k *Keeper) EndBlocker(ctx context.Context) error {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyEndBlocker)
 
-	logger := ctx.Logger().With("module", "x/"+types.ModuleName)
+	logger := k.Logger(ctx).With("module", "x/"+types.ModuleName)
 
 	// Iterate over all continuous fund proposals and perform continuous distribution
 	err := k.ContinuousFund.Walk(ctx, nil, func(key sdk.AccAddress, value types.ContinuousFund) (bool, error) {
@@ -21,7 +21,7 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) error {
 		if err != nil {
 			return false, err
 		}
-		err = k.ContinuousDistribution(ctx, cf)
+		err = k.continuousDistribution(ctx, cf)
 		if err != nil {
 			return false, err
 		}

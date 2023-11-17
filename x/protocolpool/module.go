@@ -17,7 +17,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 )
@@ -97,8 +96,7 @@ func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
 
 // EndBlock returns the end blocker for the protocolpool module.
 func (am AppModule) EndBlock(ctx context.Context) error {
-	c := sdk.UnwrapSDKContext(ctx)
-	return EndBlocker(c, am.keeper)
+	return am.keeper.EndBlocker(ctx)
 }
 
 //

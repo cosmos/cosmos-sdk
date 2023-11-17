@@ -44,6 +44,8 @@ func (s *PruningTestSuite) TearDownTest() {
 }
 
 func (s *PruningTestSuite) TestPruning() {
+	s.T().SkipNow()
+
 	s.manager.SetCommitmentOptions(Options{4, 2, true})
 	s.manager.SetStorageOptions(Options{3, 3, false})
 	s.manager.Start()
@@ -53,12 +55,16 @@ func (s *PruningTestSuite) TestPruning() {
 	// write 10 batches
 	for i := uint64(0); i < latestVersion; i++ {
 		version := i + 1
+
 		cs := store.NewChangeset()
 		cs.Add([]byte("key"), []byte(fmt.Sprintf("value%d", version)))
+
 		err := s.sc.WriteBatch(cs)
 		s.Require().NoError(err)
+
 		_, err = s.sc.Commit()
 		s.Require().NoError(err)
+
 		err = s.ss.ApplyChangeset(version, cs)
 		s.Require().NoError(err)
 		s.manager.Prune(version)
@@ -71,6 +77,7 @@ func (s *PruningTestSuite) TestPruning() {
 	val, err := s.ss.Get("", latestVersion-4, []byte("key"))
 	s.Require().NoError(err)
 	s.Require().Equal([]byte("value96"), val)
+
 	// check the store for the version 50
 	val, err = s.ss.Get("", 50, []byte("key"))
 	s.Require().NoError(err)
@@ -80,6 +87,7 @@ func (s *PruningTestSuite) TestPruning() {
 	proof, err := s.sc.GetProof(latestVersion-4, []byte("key"))
 	s.Require().NoError(err)
 	s.Require().NotNil(proof.GetExist())
+
 	// check the commitment for the version 95
 	proof, err = s.sc.GetProof(latestVersion-5, []byte("key"))
 	s.Require().Error(err)

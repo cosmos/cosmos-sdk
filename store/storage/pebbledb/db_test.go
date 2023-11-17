@@ -14,6 +14,7 @@ func TestStorageTestSuite(t *testing.T) {
 		NewDB: func(dir string) (store.VersionedDatabase, error) {
 			db, err := New(dir)
 			if err == nil && db != nil {
+				// we set sync=false just to speed up CI tests
 				db.SetSync(false)
 			}
 

@@ -9,19 +9,10 @@ import (
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
 
-<<<<<<< HEAD
 	"cosmossdk.io/depinject"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	clienttestutil "github.com/cosmos/cosmos-sdk/client/testutil"
-	"github.com/cosmos/cosmos-sdk/client/tx"
-=======
-	"cosmossdk.io/x/auth/ante"
-	"cosmossdk.io/x/auth/signing"
-	authtx "cosmossdk.io/x/auth/tx"
-
-	"github.com/cosmos/cosmos-sdk/client"
->>>>>>> 80e0c631c (fix(client/tx): simulate with correct pk (#18472))
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
@@ -364,11 +355,7 @@ func TestSign(t *testing.T) {
 	var prevSigs []signingtypes.SignatureV2
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-<<<<<<< HEAD
-			err = tx.Sign(tc.txf, tc.from, tc.txb, tc.overwrite)
-=======
-			err = Sign(context.TODO(), tc.txf, tc.from, tc.txb, tc.overwrite)
->>>>>>> 80e0c631c (fix(client/tx): simulate with correct pk (#18472))
+			err = Sign(tc.txf, tc.from, tc.txb, tc.overwrite)
 			if len(tc.expectedPKs) == 0 {
 				requireT.Error(err)
 			} else {
@@ -384,6 +371,8 @@ func TestSign(t *testing.T) {
 }
 
 func TestPreprocessHook(t *testing.T) {
+	_, _, addr2 := testdata.KeyTestPubAddr()
+
 	txConfig, cdc := newTestTxConfig(t)
 	requireT := require.New(t)
 	path := hd.CreateHDPath(118, 0, 0).String()
@@ -432,11 +421,7 @@ func TestPreprocessHook(t *testing.T) {
 	msg2 := banktypes.NewMsgSend(addr2, sdk.AccAddress("to"), nil)
 	txb, err := txfDirect.BuildUnsignedTx(msg1, msg2)
 
-<<<<<<< HEAD
-	err = tx.Sign(txfDirect, from, txb, false)
-=======
-	err = Sign(context.TODO(), txfDirect, from, txb, false)
->>>>>>> 80e0c631c (fix(client/tx): simulate with correct pk (#18472))
+	err = Sign(txfDirect, from, txb, false)
 	requireT.NoError(err)
 
 	// Run preprocessing

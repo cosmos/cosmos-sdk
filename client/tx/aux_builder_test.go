@@ -1,17 +1,14 @@
-package tx
+package tx_test
 
 import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
 
-<<<<<<< HEAD
 	_ "cosmossdk.io/api/cosmos/bank/v1beta1"
 	"cosmossdk.io/depinject"
 	clienttestutil "github.com/cosmos/cosmos-sdk/client/testutil"
 	"github.com/cosmos/cosmos-sdk/client/tx"
-=======
->>>>>>> 80e0c631c (fix(client/tx): simulate with correct pk (#18472))
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -35,7 +32,7 @@ func TestAuxTxBuilder(t *testing.T) {
 	// required for test case: "GetAuxSignerData works for DIRECT_AUX"
 	bankModule.RegisterInterfaces(reg)
 
-	var b AuxTxBuilder
+	var b tx.AuxTxBuilder
 
 	testcases := []struct {
 		name      string
@@ -228,7 +225,7 @@ func TestAuxTxBuilder(t *testing.T) {
 	for _, tc := range testcases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-			b = NewAuxTxBuilder()
+			b = tx.NewAuxTxBuilder()
 			err := tc.malleate()
 
 			if tc.expErr {

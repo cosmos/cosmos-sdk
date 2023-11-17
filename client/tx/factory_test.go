@@ -3,14 +3,10 @@ package tx
 import (
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/client"
-<<<<<<< HEAD
-	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/stretchr/testify/require"
-=======
+
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
@@ -18,7 +14,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
->>>>>>> 80e0c631c (fix(client/tx): simulate with correct pk (#18472))
+
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 )
 
 func TestFactoryPrepare(t *testing.T) {

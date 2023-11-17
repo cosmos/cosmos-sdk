@@ -1,4 +1,4 @@
-package tx
+package tx_test
 
 import (
 	"testing"

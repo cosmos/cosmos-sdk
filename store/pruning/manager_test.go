@@ -26,14 +26,17 @@ func TestPruningTestSuite(t *testing.T) {
 }
 
 func (s *PruningTestSuite) SetupTest() {
-	noopLog := log.NewNopLogger()
+	logger := log.NewNopLogger()
+	if testing.Verbose() {
+		logger = log.NewTestLogger(s.T())
+	}
 
 	ss, err := sqlite.New(s.T().TempDir())
 	s.Require().NoError(err)
 
-	sc := iavl.NewIavlTree(dbm.NewMemDB(), noopLog, iavl.DefaultConfig())
+	sc := iavl.NewIavlTree(dbm.NewMemDB(), log.NewNopLogger(), iavl.DefaultConfig())
 
-	s.manager = NewManager(noopLog, ss, sc)
+	s.manager = NewManager(logger, ss, sc)
 	s.ss = ss
 	s.sc = sc
 }
@@ -44,10 +47,8 @@ func (s *PruningTestSuite) TearDownTest() {
 }
 
 func (s *PruningTestSuite) TestPruning() {
-	s.T().SkipNow()
-
 	s.manager.SetCommitmentOptions(Options{4, 2, true})
-	s.manager.SetStorageOptions(Options{3, 3, false})
+	s.manager.SetStorageOptions(Options{3, 3, true})
 	s.manager.Start()
 
 	latestVersion := uint64(100)
@@ -80,7 +81,7 @@ func (s *PruningTestSuite) TestPruning() {
 
 	// check the store for the version 50
 	val, err = s.ss.Get("", 50, []byte("key"))
-	s.Require().NoError(err)
+	s.Require().Error(err)
 	s.Require().Nil(val)
 
 	// check the commitment for the version 96

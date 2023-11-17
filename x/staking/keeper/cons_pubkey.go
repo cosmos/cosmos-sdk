@@ -21,7 +21,6 @@ func (k Keeper) setConsPubKeyRotationHistory(
 	ctx context.Context, valAddr sdk.ValAddress,
 	oldPubKey, newPubKey *codectypes.Any, fee sdk.Coin,
 ) error {
-
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	height := uint64(sdkCtx.BlockHeight())
 	history := types.ConsPubKeyRotationHistory{

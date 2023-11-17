@@ -76,7 +76,7 @@ func initAppConfig() (string, interface{}) {
 	// In summary:
 	// - if you leave srvCfg.MinGasPrices = "", all validators MUST tweak their
 	//   own app.toml config,
-	// - if you set srvCfg.MinGasPrices non-empty, validatorcan be used to extend the app.toml.s CAN tweak their
+	// - if you set srvCfg.MinGasPrices non-empty, validators CAN tweak their
 	//   own app.toml to override, or use this default value.
 	//
 	// In simapp, we set the min gas prices to 0.

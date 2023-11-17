@@ -1,8 +1,6 @@
 package transaction
 
 import (
-	"errors"
-
 	"github.com/cosmos/gogoproto/proto"
 
 	"cosmossdk.io/core/transaction"
@@ -45,7 +43,7 @@ func (c Codec[T]) Decode(txBytes []byte) (transaction.Tx, error) {
 func (c Codec[T]) Encode(tx transaction.Tx) ([]byte, error) {
 	dtx, ok := tx.(*txdecoder.DecodedTx)
 	if !ok {
-		return nil, errors.New("invalid transaction type")
+		return nil, ErrorInvalidTransaction
 	}
 
 	return proto.Marshal(dtx.TxRaw)

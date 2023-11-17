@@ -114,6 +114,7 @@ func (m *Manager) Prune(height uint64) {
 					}()
 				}
 			default:
+				m.logger.Debug("storage pruning is still running; skipping", "version", pruneHeight)
 			}
 		}
 	}

@@ -43,7 +43,7 @@ func TestFactoryPrepare(t *testing.T) {
 	require.Equal(t, output.Sequence(), uint64(1))
 }
 
-func TestFactory_getSimPK(t *testing.T) {
+func TestFactory_getSimPKType(t *testing.T) {
 	// setup keyring
 	registry := codectypes.NewInterfaceRegistry()
 	cryptocodec.RegisterInterfaces(registry)
@@ -53,7 +53,7 @@ func TestFactory_getSimPK(t *testing.T) {
 		name     string
 		fromName string
 		genKey   func(fromName string, k keyring.Keyring) error
-		want     types.PubKey
+		wantType types.PubKey
 	}{
 		{
 			name:     "simple key",
@@ -62,7 +62,7 @@ func TestFactory_getSimPK(t *testing.T) {
 				_, err := k.NewAccount(fromName, testdata.TestMnemonic, "", "", hd.Secp256k1)
 				return err
 			},
-			want: &secp256k1.PubKey{},
+			wantType: (*secp256k1.PubKey)(nil),
 		},
 		{
 			name:     "multisig key",
@@ -72,9 +72,10 @@ func TestFactory_getSimPK(t *testing.T) {
 				_, err := k.SaveMultisig(fromName, pk)
 				return err
 			},
-			want: &multisig.LegacyAminoPubKey{},
+			wantType: (*multisig.LegacyAminoPubKey)(nil),
 		},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := tt.genKey(tt.fromName, k)
@@ -86,32 +87,33 @@ func TestFactory_getSimPK(t *testing.T) {
 			}
 			got, err := f.getSimPK()
 			require.NoError(t, err)
-			require.IsType(t, tt.want, got)
+			require.IsType(t, tt.wantType, got)
 		})
 	}
 }
 
 func TestFactory_getSimSignatureData(t *testing.T) {
 	tests := []struct {
-		name string
-		pk   types.PubKey
-		want signing.SignatureData
+		name     string
+		pk       types.PubKey
+		wantType any
 	}{
 		{
-			name: "simple pubkey",
-			pk:   &secp256k1.PubKey{},
-			want: &signing.SingleSignatureData{},
+			name:     "simple pubkey",
+			pk:       &secp256k1.PubKey{},
+			wantType: (*signing.SingleSignatureData)(nil),
 		},
 		{
-			name: "multisig pubkey",
-			pk:   &multisig.LegacyAminoPubKey{},
-			want: &signing.MultiSignatureData{},
+			name:     "multisig pubkey",
+			pk:       &multisig.LegacyAminoPubKey{},
+			wantType: (*signing.MultiSignatureData)(nil),
 		},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got := Factory{}.getSimSignatureData(tt.pk)
-			require.IsType(t, tt.want, got)
+			require.IsType(t, tt.wantType, got)
 		})
 	}
 }

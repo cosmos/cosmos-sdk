@@ -454,19 +454,18 @@ func (f Factory) getSimPK() (cryptotypes.PubKey, error) {
 // getSimSignatureData based on the pubKey type gets the correct SignatureData type
 // to use for building a simulation tx.
 func (f Factory) getSimSignatureData(pk cryptotypes.PubKey) signing.SignatureData {
-	if multisigPubKey, ok := pk.(*multisig.LegacyAminoPubKey); ok {
-		multiSignatureData := make([]signing.SignatureData, 0, multisigPubKey.Threshold)
-		for i := uint32(0); i < multisigPubKey.Threshold; i++ {
-			multiSignatureData = append(multiSignatureData, &signing.SingleSignatureData{
-				SignMode: f.SignMode(),
-			})
-		}
-		return &signing.MultiSignatureData{
-			Signatures: multiSignatureData,
-		}
+	multisigPubKey, ok := pk.(*multisig.LegacyAminoPubKey)
+	if !ok {
+		return &signing.SingleSignatureData{SignMode: f.signMode}
 	}
-	return &signing.SingleSignatureData{
-		SignMode: f.signMode,
+	multiSignatureData := make([]signing.SignatureData, 0, multisigPubKey.Threshold)
+	for i := uint32(0); i < multisigPubKey.Threshold; i++ {
+		multiSignatureData = append(multiSignatureData, &signing.SingleSignatureData{
+			SignMode: f.SignMode(),
+		})
+	}
+	return &signing.MultiSignatureData{
+		Signatures: multiSignatureData,
 	}
 }
 

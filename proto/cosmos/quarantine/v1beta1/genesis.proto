@@ -7,14 +7,26 @@ import "gogoproto/gogo.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/quarantine";
 
+// Deprecated: This package has moved to provenance/quarantine/v1.
+
 // GenesisState defines the quarantine module's genesis state.
+//
+// Deprecated: Switch to provenance/quarantine/v1.
 message GenesisState {
+  option deprecated = true;
+
   // quarantined_addresses defines account addresses that are opted into quarantine.
-  repeated string quarantined_addresses = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  //
+  // Deprecated: Switch to provenance/quarantine/v1.
+  repeated string quarantined_addresses = 1 [(cosmos_proto.scalar) = "cosmos.AddressString", deprecated = true];
 
   // auto_responses defines the quarantine auto-responses for addresses.
-  repeated AutoResponseEntry auto_responses = 2;
+  //
+  // Deprecated: Switch to provenance/quarantine/v1.
+  repeated AutoResponseEntry auto_responses = 2 [deprecated = true];
 
   // quarantined_funds defines funds that are quarantined.
-  repeated QuarantinedFunds quarantined_funds = 3;
+  //
+  // Deprecated: Switch to provenance/quarantine/v1.
+  repeated QuarantinedFunds quarantined_funds = 3 [deprecated = true];
 }

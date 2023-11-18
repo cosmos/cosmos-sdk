@@ -10,98 +10,167 @@ import "gogoproto/gogo.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/quarantine";
 
+// Deprecated: This package has moved to provenance/quarantine/v1.
+
 // Query defines the quarantine gRPC msg service.
+//
+// Deprecated: Switch to provenance/quarantine/v1.
 service Msg {
   // OptIn defines a method for opting in to account quarantine.
   // Funds sent to a quarantined account must be approved before they can be received.
+  //
+  // Deprecated: Switch to provenance/quarantine/v1.
   rpc OptIn(MsgOptIn) returns (MsgOptInResponse);
 
   // OptOut defines a method for opting out of account quarantine.
   // Any pending funds for the account must still be accepted, but new sends will no longer be quarantined.
+  //
+  // Deprecated: Switch to provenance/quarantine/v1.
   rpc OptOut(MsgOptOut) returns (MsgOptOutResponse);
 
   // Accept defines a method for accepting quarantined funds.
+  //
+  // Deprecated: Switch to provenance/quarantine/v1.
   rpc Accept(MsgAccept) returns (MsgAcceptResponse);
 
   // Decline defines a method for declining quarantined funds.
+  //
+  // Deprecated: Switch to provenance/quarantine/v1.
   rpc Decline(MsgDecline) returns (MsgDeclineResponse);
 
   // UpdateAutoResponses defines a method for updating the auto-response settings for a quarantined address.
+  //
+  // Deprecated: Switch to provenance/quarantine/v1.
   rpc UpdateAutoResponses(MsgUpdateAutoResponses) returns (MsgUpdateAutoResponsesResponse);
 }
 
 // MsgOptIn represents a message for opting in to account quarantine.
+//
+// Deprecated: Switch to provenance/quarantine/v1.
 message MsgOptIn {
+  option deprecated = true;
   option (cosmos.msg.v1.signer) = "to_address";
 
-  string to_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // Deprecated: Switch to provenance/quarantine/v1.
+  string to_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString", deprecated = true];
 }
 
 // MsgOptInResponse defines the Msg/OptIn response type.
-message MsgOptInResponse {}
+//
+// Deprecated: Switch to provenance/quarantine/v1.
+message MsgOptInResponse {
+  option deprecated = true;
+}
 
 // MsgOptOut represents a message for opting in to account quarantine.
+//
+// Deprecated: Switch to provenance/quarantine/v1.
 message MsgOptOut {
+  option deprecated = true;
   option (cosmos.msg.v1.signer) = "to_address";
 
-  string to_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // Deprecated: Switch to provenance/quarantine/v1.
+  string to_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString", deprecated = true];
 }
 
 // MsgOptOutResponse defines the Msg/OptOut response type.
-message MsgOptOutResponse {}
+//
+// Deprecated: Switch to provenance/quarantine/v1.
+message MsgOptOutResponse {
+  option deprecated = true;
+}
 
 // MsgAccept represents a message for accepting quarantined funds.
+//
+// Deprecated: Switch to provenance/quarantine/v1.
 message MsgAccept {
+  option deprecated = true;
   option (cosmos.msg.v1.signer) = "to_address";
 
   // to_address is the address of the quarantined account that is accepting funds.
-  string to_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  //
+  // Deprecated: Switch to provenance/quarantine/v1.
+  string to_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString", deprecated = true];
   // from_addresses is one or more addresses that have sent funds to the quarantined account.
   // All funds quarantined for to_address from any from_addresses are marked as accepted and released if appropriate.
   // At least one is required.
-  repeated string from_addresses = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  //
+  // Deprecated: Switch to provenance/quarantine/v1.
+  repeated string from_addresses = 2 [(cosmos_proto.scalar) = "cosmos.AddressString", deprecated = true];
 
   // permanent, if true, sets up auto-accept for the to_address from each from_address.
   // If false (default), only the currently quarantined funds will be accepted.
-  bool permanent = 3;
+  //
+  // Deprecated: Switch to provenance/quarantine/v1.
+  bool permanent = 3 [deprecated = true];
 }
 
 // MsgAcceptResponse defines the Msg/Accept response type.
+//
+// Deprecated: Switch to provenance/quarantine/v1.
 message MsgAcceptResponse {
+  option deprecated = true;
+
   // funds_released is the amount that was quarantined but has now been released and sent to the requester.
+  //
+  // Deprecated: Switch to provenance/quarantine/v1.
   repeated cosmos.base.v1beta1.Coin funds_released = 1
-      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", deprecated = true];
 }
 
 // MsgDecline represents a message for declining quarantined funds.
+//
+// Deprecated: Switch to provenance/quarantine/v1.
 message MsgDecline {
+  option deprecated = true;
   option (cosmos.msg.v1.signer) = "to_address";
 
   // to_address is the address of the quarantined account that is accepting funds.
-  string to_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  //
+  // Deprecated: Switch to provenance/quarantine/v1.
+  string to_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString", deprecated = true];
   // from_addresses is one or more addresses that have sent funds to the quarantined account.
   // All funds quarantined for to_address from any from_addresses are marked as declined.
   // At least one is required.
-  repeated string from_addresses = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  //
+  // Deprecated: Switch to provenance/quarantine/v1.
+  repeated string from_addresses = 2 [(cosmos_proto.scalar) = "cosmos.AddressString", deprecated = true];
 
   // permanent, if true, sets up auto-decline for the to_address from each from_address.
   // If false (default), only the currently quarantined funds will be declined.
-  bool permanent = 3;
+  //
+  // Deprecated: Switch to provenance/quarantine/v1.
+  bool permanent = 3 [deprecated = true];
 }
 
 // MsgDeclineResponse defines the Msg/Decline response type.
-message MsgDeclineResponse {}
+//
+// Deprecated: Switch to provenance/quarantine/v1.
+message MsgDeclineResponse {
+  option deprecated = true;
+}
 
 // MsgUpdateAutoResponses represents a message for updating quarantine auto-responses for a receiving address.
+//
+// Deprecated: Switch to provenance/quarantine/v1.
 message MsgUpdateAutoResponses {
+  option deprecated = true;
   option (cosmos.msg.v1.signer) = "to_address";
 
   // to_address is the quarantined address that would be accepting or declining funds.
-  string to_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  //
+  // Deprecated: Switch to provenance/quarantine/v1.
+  string to_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString", deprecated = true];
 
   // updates is the list of addresses and auto-responses that should be updated for the to_address.
-  repeated AutoResponseUpdate updates = 2;
+  //
+  // Deprecated: Switch to provenance/quarantine/v1.
+  repeated AutoResponseUpdate updates = 2 [deprecated = true];
 }
 
 // MsgUpdateAutoResponsesResponse defines the Msg/UpdateAutoResponse response type.
-message MsgUpdateAutoResponsesResponse {}
+//
+// Deprecated: Switch to provenance/quarantine/v1.
+message MsgUpdateAutoResponsesResponse {
+  option deprecated = true;
+}

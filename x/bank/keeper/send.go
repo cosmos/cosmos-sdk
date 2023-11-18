@@ -222,9 +222,6 @@ func (k BaseSendKeeper) InputOutputCoins(ctx sdk.Context, inputs []types.Input, 
 }
 
 // SendCoins transfers amt coins from a sending account to a receiving account.
-// If the receiving account is quarantined, and not set to auto-accept funds from the sender,
-// the coins will be transferred from the fromAddr to the quarantine funds holder account and be recorded as quarantined.
-// Otherwise, the coins will be transferred from the fromAddr to the toAddr.
 // An error is returned upon failure.
 func (k BaseSendKeeper) SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) error {
 	var err error

@@ -5,25 +5,51 @@ import "cosmos_proto/cosmos.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/sanction";
 
+// Deprecated: This package has moved to provenance/sanction/v1.
+
 // EventAddressSanctioned is an event emitted when an address is sanctioned.
+//
+// Deprecated: Switch to provenance/sanction/v1.
 message EventAddressSanctioned {
-  string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  option deprecated = true;
+
+  // Deprecated: Switch to provenance/sanction/v1.
+  string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString", deprecated = true];
 }
 
 // EventAddressUnsanctioned is an event emitted when an address is unsanctioned.
+//
+// Deprecated: Switch to provenance/sanction/v1.
 message EventAddressUnsanctioned {
-  string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  option deprecated = true;
+
+  // Deprecated: Switch to provenance/sanction/v1.
+  string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString", deprecated = true];
 }
 
 // EventTempAddressSanctioned is an event emitted when an address is temporarily sanctioned.
+//
+// Deprecated: Switch to provenance/sanction/v1.
 message EventTempAddressSanctioned {
-  string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  option deprecated = true;
+
+  // Deprecated: Switch to provenance/sanction/v1.
+  string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString", deprecated = true];
 }
 
 // EventTempAddressUnsanctioned is an event emitted when an address is temporarily unsanctioned.
+//
+// Deprecated: Switch to provenance/sanction/v1.
 message EventTempAddressUnsanctioned {
-  string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  option deprecated = true;
+
+  // Deprecated: Switch to provenance/sanction/v1.
+  string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString", deprecated = true];
 }
 
 // EventParamsUpdated is an event emitted when the sanction module params are updated.
-message EventParamsUpdated {}
+//
+// Deprecated: Switch to provenance/sanction/v1.
+message EventParamsUpdated {
+  option deprecated = true;
+}

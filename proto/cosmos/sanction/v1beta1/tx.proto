@@ -7,59 +7,102 @@ import "cosmos_proto/cosmos.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/sanction";
 
+// Deprecated: This package has moved to provenance/sanction/v1.
+
 // Msg defines the sanction Msg service.
+//
+// Deprecated: Switch to provenance/sanction/v1.
 service Msg {
   // Sanction is a governance operation for sanctioning addresses.
+  //
+  // Deprecated: Switch to provenance/sanction/v1.
   rpc Sanction(MsgSanction) returns (MsgSanctionResponse);
 
   // Unsanction is a governance operation for unsanctioning addresses.
+  //
+  // Deprecated: Switch to provenance/sanction/v1.
   rpc Unsanction(MsgUnsanction) returns (MsgUnsanctionResponse);
 
   // UpdateParams is a governance operation for updating the sanction module params.
+  //
+  // Deprecated: Switch to provenance/sanction/v1.
   rpc UpdateParams(MsgUpdateParams) returns (MsgUpdateParamsResponse);
 }
 
 // MsgSanction represents a message for the governance operation of sanctioning addresses.
+//
+// Deprecated: Switch to provenance/sanction/v1.
 message MsgSanction {
+  option deprecated = true;
   option (cosmos.msg.v1.signer) = "authority";
 
   // addresses are the addresses to sanction.
-  repeated string addresses = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  //
+  // Deprecated: Switch to provenance/sanction/v1.
+  repeated string addresses = 1 [(cosmos_proto.scalar) = "cosmos.AddressString", deprecated = true];
 
   // authority is the address of the account with the authority to enact sanctions (most likely the governance module
   // account).
-  string authority = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  //
+  // Deprecated: Switch to provenance/sanction/v1.
+  string authority = 2 [(cosmos_proto.scalar) = "cosmos.AddressString", deprecated = true];
 }
 
 // MsgOptInResponse defines the Msg/Sanction response type.
-message MsgSanctionResponse {}
+//
+// Deprecated: Switch to provenance/sanction/v1.
+message MsgSanctionResponse {
+  option deprecated = true;
+}
 
 // MsgSanction represents a message for the governance operation of unsanctioning addresses.
+//
+// Deprecated: Switch to provenance/sanction/v1.
 message MsgUnsanction {
+  option deprecated = true;
   option (cosmos.msg.v1.signer) = "authority";
 
   // addresses are the addresses to unsanction.
-  repeated string addresses = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  //
+  // Deprecated: Switch to provenance/sanction/v1.
+  repeated string addresses = 1 [(cosmos_proto.scalar) = "cosmos.AddressString", deprecated = true];
 
   // authority is the address of the account with the authority to retract sanctions (most likely the governance module
   // account).
-  string authority = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  //
+  // Deprecated: Switch to provenance/sanction/v1.
+  string authority = 2 [(cosmos_proto.scalar) = "cosmos.AddressString", deprecated = true];
 }
 
 // MsgOptInResponse defines the Msg/Unsanction response type.
-message MsgUnsanctionResponse {}
+//
+// Deprecated: Switch to provenance/sanction/v1.
+message MsgUnsanctionResponse {
+  option deprecated = true;
+}
 
 // MsgUpdateParams represents a message for the governance operation of updating the sanction module params.
+//
+// Deprecated: Switch to provenance/sanction/v1.
 message MsgUpdateParams {
+  option deprecated = true;
   option (cosmos.msg.v1.signer) = "authority";
 
   // params are the sanction module parameters.
-  Params params = 1;
+  //
+  // Deprecated: Switch to provenance/sanction/v1.
+  Params params = 1 [deprecated = true];
 
   // authority is the address of the account with the authority to update params (most likely the governance module
   // account).
-  string authority = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  //
+  // Deprecated: Switch to provenance/sanction/v1.
+  string authority = 2 [(cosmos_proto.scalar) = "cosmos.AddressString", deprecated = true];
 }
 
 // MsgUpdateParamsResponse defined the Msg/UpdateParams response type.
-message MsgUpdateParamsResponse {}
+//
+// Deprecated: Switch to provenance/sanction/v1.
+message MsgUpdateParamsResponse {
+  option deprecated = true;
+}

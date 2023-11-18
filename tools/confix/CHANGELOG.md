@@ -31,8 +31,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
-* []() Remove invalid non SDK config from app.toml migration templates.
+* [#18496](https://github.com/cosmos/cosmos-sdk/pull/18496) Remove invalid non SDK config from app.toml migration templates.
  
+
 ## [v0.1.0](https://github.com/cosmos/cosmos-sdk/releases/tag/tools/confix/v0.1.0) - 2023-11-07
 
 * [#17904](https://github.com/cosmos/cosmos-sdk/pull/17904) Add `view` command.

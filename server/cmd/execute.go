@@ -27,6 +27,7 @@ func Execute(rootCmd *cobra.Command, envPrefix string, defaultHome string) error
 
 	rootCmd.PersistentFlags().String(flags.FlagLogLevel, tmcfg.DefaultLogLevel, "The logging level (trace|debug|info|warn|error|fatal|panic)")
 	rootCmd.PersistentFlags().String(flags.FlagLogFormat, tmcfg.LogFormatPlain, "The logging format (json|plain)")
+	rootCmd.PersistentFlags().Bool(flags.FlagLogNoColor, false, "Disable colored logs")
 
 	executor := tmcli.PrepareBaseCmd(rootCmd, envPrefix, defaultHome)
 	return executor.ExecuteContext(ctx)

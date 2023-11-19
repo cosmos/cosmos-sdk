@@ -39,10 +39,7 @@ jobs:
         with:
           PATTERNS: |
             **/*.go
-            go.mod
-            go.sum
-            **/go.mod
-            **/go.sum
+            *.go
       - name: run linting (short)
         if: steps.lint_long.outcome == 'skipped' && env.GIT_DIFF
         run: |

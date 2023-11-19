@@ -2,7 +2,7 @@
 
 ## Changelog
 
-* 2023-11-17: Initial draft (@julienrbrt, @tac0turle)
+* 2023-11-17: Initial draft (@julienrbrt, @tac0turtle)
 
 ## Status
 
@@ -45,13 +45,13 @@ enum ProposalType {
 
 Note, that expedited becomes a proposal type itself instead of a boolean on the `v1.Proposal` struct.
 
-> An expedited proposal is by design a normal proposal with a quicker voting period and higher threshold. A expedited proposals if fail, gets converted to a normal proposal
+> An expedited proposal is by design a normal proposal with a quicker voting period and higher threshold. When an expedited proposal fails, it gets converted to a normal proposal.   
 
 An expedited optimistic proposal and an expedited multiple choice proposal do not make sense based on the definition above and is a proposal type instead of a proposal characteristic.
 
 #### Optimistic Proposal
 
-An optimistic proposal is a proposal that automatically passes unless a threshold a NO votes is reached.
+An optimistic proposal is a proposal that passes unless a threshold a NO votes is reached.
 
 Voter can only vote NO on the proposal. If the NO threshold is reached, the optimistic proposal is converted to a normal proposal.
 
@@ -101,15 +101,15 @@ Multiple choice proposals do not need additional governance parameters.
 As mentioned above [multiple choice proposal](#multiple-choice-proposal) will introduce an additional vote option: `SPAM`.
 
 This vote option will be supported by all proposal types.
-Voting `SPAM` will automatically burn the proposal deposit and mark the proposal as failed.
+At the end of the voting period, if a proposal is voted as `SPAM`, its fails and its deposit is burned.
 
 `SPAM` differs from the `No with Veto` vote as its threshold is dynamic.
 A proposal is marked as `SPAM` when the total of weighted votes for all options is lower than the amount of weighted vote on `SPAM`
 (`spam` > `option_one + option_two + option_three + option_four` = proposal marked as spam).
 
-To avoid voters wrongfully voting down a proposal as `SPAM`, voters will be slashed 2% of their voting stake if they voted `SPAM` on a proposal that wasn't a spam proposal.
+To avoid voters wrongfully voting down a proposal as `SPAM`, voters will be slashed 2% of their voting stake if they voted `SPAM` on a proposal that wasn't a spam proposal. This is done to ensure that voters only vote `SPAM` on proposals that are actually spam and not use it as a way to vote `No with Veto` without the threshold.
 
-Additionally, the current vote option will be renamed to better accommodate the multiple choice proposal:
+Additionally, the current vote options will be renamed to better accommodate the multiple choice proposal:
 
 ```protobuf
 // VoteOption enumerates the valid vote options for a given governance proposal.

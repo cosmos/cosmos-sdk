@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/golang/mock/gomock"
 
 	"cosmossdk.io/collections"
@@ -14,6 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/address"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -39,6 +41,16 @@ func (s *KeeperTestSuite) TestMsgCreateValidator() {
 
 	pubkey, err := codectypes.NewAnyWithValue(pk1)
 	require.NoError(err)
+
+	var ed25519pk cryptotypes.PubKey = &ed25519.PubKey{Key: []byte{1, 2, 3, 4, 5, 6}}
+	pubkeyInvalidLen, err := codectypes.NewAnyWithValue(ed25519pk)
+	require.NoError(err)
+
+	ctx = ctx.WithConsensusParams(cmtproto.ConsensusParams{
+		Validator: &cmtproto.ValidatorParams{
+			PubKeyTypes: []string{"ed25519"},
+		},
+	})
 
 	testCases := []struct {
 		name      string
@@ -103,6 +115,26 @@ func (s *KeeperTestSuite) TestMsgCreateValidator() {
 			},
 			expErr:    true,
 			expErrMsg: "empty validator public key",
+		},
+		{
+			name: "validator pubkey len is invalid",
+			input: &stakingtypes.MsgCreateValidator{
+				Description: stakingtypes.Description{
+					Moniker: "NewValidator",
+				},
+				Commission: stakingtypes.CommissionRates{
+					Rate:          math.LegacyNewDecWithPrec(5, 1),
+					MaxRate:       math.LegacyNewDecWithPrec(5, 1),
+					MaxChangeRate: math.LegacyNewDec(0),
+				},
+				MinSelfDelegation: math.NewInt(1),
+				DelegatorAddress:  Addr.String(),
+				ValidatorAddress:  ValAddr.String(),
+				Pubkey:            pubkeyInvalidLen,
+				Value:             sdk.NewInt64Coin("stake", 10000),
+			},
+			expErr:    true,
+			expErrMsg: "consensus pubkey len is invalid",
 		},
 		{
 			name: "empty delegation amount",

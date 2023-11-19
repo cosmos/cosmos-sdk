@@ -15,6 +15,7 @@ import (
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/staking/types"
 
+	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -63,25 +64,6 @@ func (k msgServer) CreateValidator(ctx context.Context, msg *types.MsgCreateVali
 		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidType, "Expecting cryptotypes.PubKey, got %T", pk)
 	}
 
-	if _, err := k.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(pk)); err == nil {
-		return nil, types.ErrValidatorPubKeyExists
-	}
-
-	bondDenom, err := k.BondDenom(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	if msg.Value.Denom != bondDenom {
-		return nil, errorsmod.Wrapf(
-			sdkerrors.ErrInvalidRequest, "invalid coin denomination: got %s, expected %s", msg.Value.Denom, bondDenom,
-		)
-	}
-
-	if _, err := msg.Description.EnsureLength(); err != nil {
-		return nil, err
-	}
-
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	cp := sdkCtx.ConsensusParams()
 	if cp.Validator != nil {
@@ -99,6 +81,32 @@ func (k msgServer) CreateValidator(ctx context.Context, msg *types.MsgCreateVali
 				"got: %s, expected: %s", pk.Type(), cp.Validator.PubKeyTypes,
 			)
 		}
+
+		if pkType == "ed25519" && len(pk.Bytes()) != ed25519.PubKeySize {
+			return nil, errorsmod.Wrapf(
+				types.ErrConsensusPubKeyLenInvalid,
+				"got: %d, expected: %d", len(pk.Bytes()), ed25519.PubKeySize,
+			)
+		}
+	}
+
+	if _, err := k.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(pk)); err == nil {
+		return nil, types.ErrValidatorPubKeyExists
+	}
+
+	bondDenom, err := k.BondDenom(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	if msg.Value.Denom != bondDenom {
+		return nil, errorsmod.Wrapf(
+			sdkerrors.ErrInvalidRequest, "invalid coin denomination: got %s, expected %s", msg.Value.Denom, bondDenom,
+		)
+	}
+
+	if _, err := msg.Description.EnsureLength(); err != nil {
+		return nil, err
 	}
 
 	validator, err := types.NewValidator(msg.ValidatorAddress, pk, msg.Description)

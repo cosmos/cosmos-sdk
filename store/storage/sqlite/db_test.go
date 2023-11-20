@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"sync"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -106,7 +105,6 @@ func TestParallelWrites(t *testing.T) {
 		wg.Add(1)
 		go func(i int) {
 			<-triggerStartCh
-			t.Log("start time", i, time.Now())
 			defer wg.Done()
 			cs := new(store.Changeset)
 			for j := 0; j < kvCount; j++ {
@@ -117,7 +115,6 @@ func TestParallelWrites(t *testing.T) {
 			}
 
 			require.NoError(t, db.ApplyChangeset(uint64(i+1), cs))
-			t.Log("end time", i, time.Now())
 		}(i)
 
 	}
@@ -179,7 +176,6 @@ func TestParallelWriteAndPruning(t *testing.T) {
 				v, err := db.GetLatestVersion()
 				require.NoError(t, err)
 				if v > uint64(i) {
-					t.Log("pruning version", v-1)
 					require.NoError(t, db.Prune(v-1))
 					break
 				}
@@ -194,7 +190,7 @@ func TestParallelWriteAndPruning(t *testing.T) {
 	// check if the data is pruned
 	version := uint64(latestVersion - prunePeriod)
 	val, err := db.Get(storeKey1, version, []byte(fmt.Sprintf("key-%d-%03d", version-1, 0)))
-	require.NoError(t, err)
+	require.Error(t, err)
 	require.Nil(t, val)
 
 	version = uint64(latestVersion)

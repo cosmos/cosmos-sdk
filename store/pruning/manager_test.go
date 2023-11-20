@@ -91,7 +91,7 @@ func (s *PruningTestSuite) TestPruning() {
 
 	// check the store for the version 50
 	val, err = s.ss.Get(defaultStoreKey, 50, []byte("key"))
-	s.Require().NoError(err)
+	s.Require().Error(err)
 	s.Require().Nil(val)
 
 	// check the commitment for the version 96

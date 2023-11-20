@@ -54,4 +54,7 @@ message ContinuousFund {
       [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
   // Optional, if expiry is set, removes the state object when expired.
   google.protobuf.Timestamp expiry = 7 [(gogoproto.stdtime) = true];
+  // Distributed amount field is to track the distributed amount.
+  repeated cosmos.base.v1beta1.Coin distributed_amount = 8
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
 }

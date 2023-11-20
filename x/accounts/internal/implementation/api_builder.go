@@ -153,8 +153,8 @@ func (r *QueryBuilder) makeHandler() (func(ctx context.Context, queryRequest any
 	return r.er.makeHandler()
 }
 
-// IsRoutingError returns true if the error is a routing error.
-// which means that it was impossible to route the message to a handler.
+// IsRoutingError returns true if the error is a routing error,
+// which typically occurs when a message cannot be matched to a handler.
 func IsRoutingError(err error) bool {
 	if err == nil {
 		return false

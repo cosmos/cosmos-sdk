@@ -726,13 +726,25 @@ func (app *BaseApp) internalFinalizeBlock(ctx context.Context, req *abci.Request
 		))
 	}
 
+	// In the case of a new chain, AppHash will be the hash of an empty string.
+	// During an upgrade, it'll be the hash of the last committed block.
+	var appHash []byte
+	if !app.LastCommitID().IsZero() {
+		appHash = app.LastCommitID().Hash
+	} else {
+		// $ echo -n '' | sha256sum
+		// e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+		emptyHash := sha256.Sum256([]byte{})
+		appHash = emptyHash[:]
+	}
+
 	header := cmtproto.Header{
 		ChainID:            app.chainID,
 		Height:             req.Height,
 		Time:               req.Time,
 		ProposerAddress:    req.ProposerAddress,
 		NextValidatorsHash: req.NextValidatorsHash,
-		AppHash:            app.LastCommitID().Hash,
+		AppHash:            appHash,
 	}
 
 	// finalizeBlockState should be set on InitChain or ProcessProposal. If it is
@@ -751,7 +763,7 @@ func (app *BaseApp) internalFinalizeBlock(ctx context.Context, req *abci.Request
 			Height:  req.Height,
 			Time:    req.Time,
 			Hash:    req.Hash,
-			AppHash: app.LastCommitID().Hash,
+			AppHash: appHash,
 		}).
 		WithConsensusParams(app.GetConsensusParams(app.finalizeBlockState.ctx)).
 		WithVoteInfos(req.DecidedLastCommit.Votes).

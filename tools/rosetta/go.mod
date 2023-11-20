@@ -2,8 +2,6 @@ module cosmossdk.io/tools/rosetta
 
 go 1.21
 
-toolchain go1.21.4
-
 require (
 	cosmossdk.io/math v1.2.0
 	github.com/btcsuite/btcd/btcec/v2 v2.3.2

@@ -39,7 +39,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
-* (deps) [#18515](https://github.com/cosmos/cosmos-sdk/pull/18515) Bump of CometBFT to [`v0.37.3`](https://github.com/cometbft/cometbft/releases/tag/v0.37.3), which [forces](https://github.com/cometbft/cometbft/pull/1625) the Go minimum version and toolchain toolchain to be `>= 1.21.4`.
+* (deps) [#18515](https://github.com/cosmos/cosmos-sdk/pull/18515) Bump of CometBFT to [`v0.37.3`](https://github.com/cometbft/cometbft/releases/tag/v0.37.3), which [forces](https://github.com/cometbft/cometbft/pull/1625) the Go minimum version to `1.21`.
 * (server) [#18478](https://github.com/cosmos/cosmos-sdk/pull/18478) Add command flag to disable colored logs.
 
 ### Bug Fixes

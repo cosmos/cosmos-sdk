@@ -2,8 +2,6 @@ module cosmossdk.io/tools/cosmovisor
 
 go 1.21
 
-toolchain go1.21.4
-
 require (
 	github.com/cosmos/cosmos-sdk v0.47.0-rc3
 	github.com/hashicorp/go-getter v1.7.0

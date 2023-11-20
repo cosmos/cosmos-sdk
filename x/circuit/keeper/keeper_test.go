@@ -9,6 +9,7 @@ import (
 
 	"cosmossdk.io/core/address"
 	storetypes "cosmossdk.io/store/types"
+	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/circuit"
 	"cosmossdk.io/x/circuit/keeper"
 	"cosmossdk.io/x/circuit/types"
@@ -17,7 +18,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 var addresses = []string{

@@ -13,18 +13,23 @@ import (
 	_ "github.com/cosmos/gogoproto/gogoproto"
 	grpc1 "github.com/cosmos/gogoproto/grpc"
 	proto "github.com/cosmos/gogoproto/proto"
+	github_com_cosmos_gogoproto_types "github.com/cosmos/gogoproto/types"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
+	_ "google.golang.org/protobuf/types/known/durationpb"
+	_ "google.golang.org/protobuf/types/known/timestamppb"
 	io "io"
 	math "math"
 	math_bits "math/bits"
+	time "time"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
+var _ = time.Kitchen
 
 // This is a compile-time assertion to ensure that this generated file
 // is compatible with the proto package it is being compiled against.
@@ -112,8 +117,6 @@ var xxx_messageInfo_MsgFundCommunityPoolResponse proto.InternalMessageInfo
 // MsgCommunityPoolSpend defines a message for sending tokens from the community
 // pool to another account. This message is typically executed via a governance
 // proposal with the governance module being the executing authority.
-//
-// Since: cosmos-sdk 0.50
 type MsgCommunityPoolSpend struct {
 	// authority is the address that controls the module (defaults to x/gov unless overwritten).
 	Authority string                                   `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
@@ -177,8 +180,6 @@ func (m *MsgCommunityPoolSpend) GetAmount() github_com_cosmos_cosmos_sdk_types.C
 
 // MsgCommunityPoolSpendResponse defines the response to executing a
 // MsgCommunityPoolSpend message.
-//
-// Since: cosmos-sdk 0.50
 type MsgCommunityPoolSpendResponse struct {
 }
 
@@ -215,47 +216,290 @@ func (m *MsgCommunityPoolSpendResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgCommunityPoolSpendResponse proto.InternalMessageInfo
 
+// MsgSubmitBudgetProposal defines budget proposal type.
+type MsgSubmitBudgetProposal struct {
+	// authority is the address that controls the module (defaults to x/gov unless overwritten).
+	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
+	// recipient_address is the address of the recipient who can claim the budget.
+	RecipientAddress string `protobuf:"bytes,2,opt,name=recipient_address,json=recipientAddress,proto3" json:"recipient_address,omitempty"`
+	// total_budget is the total amount allocated for the budget.
+	TotalBudget *types.Coin `protobuf:"bytes,3,opt,name=total_budget,json=totalBudget,proto3" json:"total_budget,omitempty"`
+	// start_time is the time when the budget becomes claimable.
+	// If start_time is less than the current block time, proposal will not be accepted.
+	StartTime *time.Time `protobuf:"bytes,4,opt,name=start_time,json=startTime,proto3,stdtime" json:"start_time,omitempty"`
+	// tranches is the number of times the total budget amount is to be distributed.
+	Tranches uint64 `protobuf:"varint,5,opt,name=tranches,proto3" json:"tranches,omitempty"`
+	// Period is the time interval(number of seconds) at which funds distribution should be performed.
+	// For example, if a period is set to 3600, it represents an action that
+	// should occur every hour (3600 seconds).
+	Period *time.Duration `protobuf:"bytes,6,opt,name=period,proto3,stdduration" json:"period,omitempty"`
+}
+
+func (m *MsgSubmitBudgetProposal) Reset()         { *m = MsgSubmitBudgetProposal{} }
+func (m *MsgSubmitBudgetProposal) String() string { return proto.CompactTextString(m) }
+func (*MsgSubmitBudgetProposal) ProtoMessage()    {}
+func (*MsgSubmitBudgetProposal) Descriptor() ([]byte, []int) {
+	return fileDescriptor_09efe14517e7f6dc, []int{4}
+}
+func (m *MsgSubmitBudgetProposal) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgSubmitBudgetProposal) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgSubmitBudgetProposal.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgSubmitBudgetProposal) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgSubmitBudgetProposal.Merge(m, src)
+}
+func (m *MsgSubmitBudgetProposal) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgSubmitBudgetProposal) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgSubmitBudgetProposal.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgSubmitBudgetProposal proto.InternalMessageInfo
+
+func (m *MsgSubmitBudgetProposal) GetAuthority() string {
+	if m != nil {
+		return m.Authority
+	}
+	return ""
+}
+
+func (m *MsgSubmitBudgetProposal) GetRecipientAddress() string {
+	if m != nil {
+		return m.RecipientAddress
+	}
+	return ""
+}
+
+func (m *MsgSubmitBudgetProposal) GetTotalBudget() *types.Coin {
+	if m != nil {
+		return m.TotalBudget
+	}
+	return nil
+}
+
+func (m *MsgSubmitBudgetProposal) GetStartTime() *time.Time {
+	if m != nil {
+		return m.StartTime
+	}
+	return nil
+}
+
+func (m *MsgSubmitBudgetProposal) GetTranches() uint64 {
+	if m != nil {
+		return m.Tranches
+	}
+	return 0
+}
+
+func (m *MsgSubmitBudgetProposal) GetPeriod() *time.Duration {
+	if m != nil {
+		return m.Period
+	}
+	return nil
+}
+
+// MsgSubmitBudgetProposalResponse defines the response to executing a
+// MsgSubmitBudgetProposal message.
+type MsgSubmitBudgetProposalResponse struct {
+}
+
+func (m *MsgSubmitBudgetProposalResponse) Reset()         { *m = MsgSubmitBudgetProposalResponse{} }
+func (m *MsgSubmitBudgetProposalResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgSubmitBudgetProposalResponse) ProtoMessage()    {}
+func (*MsgSubmitBudgetProposalResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_09efe14517e7f6dc, []int{5}
+}
+func (m *MsgSubmitBudgetProposalResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgSubmitBudgetProposalResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgSubmitBudgetProposalResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgSubmitBudgetProposalResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgSubmitBudgetProposalResponse.Merge(m, src)
+}
+func (m *MsgSubmitBudgetProposalResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgSubmitBudgetProposalResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgSubmitBudgetProposalResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgSubmitBudgetProposalResponse proto.InternalMessageInfo
+
+// MsgClaimBudget defines a message for claiming the distributed budget.
+type MsgClaimBudget struct {
+	RecipientAddress string `protobuf:"bytes,1,opt,name=recipient_address,json=recipientAddress,proto3" json:"recipient_address,omitempty"`
+}
+
+func (m *MsgClaimBudget) Reset()         { *m = MsgClaimBudget{} }
+func (m *MsgClaimBudget) String() string { return proto.CompactTextString(m) }
+func (*MsgClaimBudget) ProtoMessage()    {}
+func (*MsgClaimBudget) Descriptor() ([]byte, []int) {
+	return fileDescriptor_09efe14517e7f6dc, []int{6}
+}
+func (m *MsgClaimBudget) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgClaimBudget) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgClaimBudget.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgClaimBudget) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgClaimBudget.Merge(m, src)
+}
+func (m *MsgClaimBudget) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgClaimBudget) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgClaimBudget.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgClaimBudget proto.InternalMessageInfo
+
+func (m *MsgClaimBudget) GetRecipientAddress() string {
+	if m != nil {
+		return m.RecipientAddress
+	}
+	return ""
+}
+
+// MsgClaimBudgetResponse defines the response to executing a
+// MsgClaimBudget message.
+type MsgClaimBudgetResponse struct {
+	Amount types.Coin `protobuf:"bytes,1,opt,name=amount,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"amount"`
+}
+
+func (m *MsgClaimBudgetResponse) Reset()         { *m = MsgClaimBudgetResponse{} }
+func (m *MsgClaimBudgetResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgClaimBudgetResponse) ProtoMessage()    {}
+func (*MsgClaimBudgetResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_09efe14517e7f6dc, []int{7}
+}
+func (m *MsgClaimBudgetResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgClaimBudgetResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgClaimBudgetResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgClaimBudgetResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgClaimBudgetResponse.Merge(m, src)
+}
+func (m *MsgClaimBudgetResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgClaimBudgetResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgClaimBudgetResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgClaimBudgetResponse proto.InternalMessageInfo
+
+func (m *MsgClaimBudgetResponse) GetAmount() types.Coin {
+	if m != nil {
+		return m.Amount
+	}
+	return types.Coin{}
+}
+
 func init() {
 	proto.RegisterType((*MsgFundCommunityPool)(nil), "cosmos.protocolpool.v1.MsgFundCommunityPool")
 	proto.RegisterType((*MsgFundCommunityPoolResponse)(nil), "cosmos.protocolpool.v1.MsgFundCommunityPoolResponse")
 	proto.RegisterType((*MsgCommunityPoolSpend)(nil), "cosmos.protocolpool.v1.MsgCommunityPoolSpend")
 	proto.RegisterType((*MsgCommunityPoolSpendResponse)(nil), "cosmos.protocolpool.v1.MsgCommunityPoolSpendResponse")
+	proto.RegisterType((*MsgSubmitBudgetProposal)(nil), "cosmos.protocolpool.v1.MsgSubmitBudgetProposal")
+	proto.RegisterType((*MsgSubmitBudgetProposalResponse)(nil), "cosmos.protocolpool.v1.MsgSubmitBudgetProposalResponse")
+	proto.RegisterType((*MsgClaimBudget)(nil), "cosmos.protocolpool.v1.MsgClaimBudget")
+	proto.RegisterType((*MsgClaimBudgetResponse)(nil), "cosmos.protocolpool.v1.MsgClaimBudgetResponse")
 }
 
 func init() { proto.RegisterFile("cosmos/protocolpool/v1/tx.proto", fileDescriptor_09efe14517e7f6dc) }
 
 var fileDescriptor_09efe14517e7f6dc = []byte{
-	// 466 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xb4, 0x53, 0xbf, 0x6f, 0xd3, 0x40,
-	0x18, 0xf5, 0x35, 0xa2, 0x52, 0x0e, 0x09, 0x09, 0x2b, 0x94, 0xd4, 0x2a, 0x76, 0xc9, 0x14, 0x55,
-	0xe4, 0x8e, 0x94, 0x1f, 0x43, 0x99, 0x48, 0x25, 0xb6, 0x48, 0x28, 0xdd, 0x58, 0x50, 0x62, 0x9f,
-	0xae, 0xa7, 0xc6, 0xf7, 0x59, 0xfe, 0xce, 0xa1, 0x61, 0x02, 0x26, 0x46, 0xfe, 0x84, 0xce, 0x4c,
-	0x1d, 0xf8, 0x23, 0x2a, 0xb1, 0x54, 0x4c, 0x4c, 0x80, 0x92, 0xa1, 0xfc, 0x19, 0x28, 0xf6, 0xa5,
-	0x49, 0x55, 0x0b, 0x94, 0x81, 0xc9, 0xd6, 0xf7, 0xde, 0xbd, 0xf7, 0xbe, 0x77, 0x36, 0x0d, 0x42,
-	0xc0, 0x18, 0x90, 0x27, 0x29, 0x18, 0x08, 0x61, 0x98, 0x00, 0x0c, 0xf9, 0xa8, 0xcd, 0xcd, 0x31,
-	0xcb, 0x47, 0xee, 0x46, 0x41, 0x60, 0xcb, 0x04, 0x36, 0x6a, 0x7b, 0x35, 0x09, 0x12, 0xf2, 0x21,
-	0x9f, 0xbd, 0x15, 0xb8, 0xe7, 0x5b, 0xb9, 0x41, 0x1f, 0x05, 0x1f, 0xb5, 0x07, 0xc2, 0xf4, 0xdb,
-	0x3c, 0x04, 0xa5, 0x2d, 0xbe, 0x59, 0xe0, 0xaf, 0x8b, 0x83, 0xcb, 0xd2, 0xde, 0x5d, 0x7b, 0x34,
-	0x46, 0x39, 0x0b, 0x10, 0xa3, 0x2c, 0x80, 0xc6, 0x57, 0x42, 0x6b, 0x5d, 0x94, 0x2f, 0x32, 0x1d,
-	0xed, 0x43, 0x1c, 0x67, 0x5a, 0x99, 0xf1, 0x4b, 0x80, 0xa1, 0x1b, 0xd2, 0xf5, 0x7e, 0x0c, 0x99,
-	0x36, 0x75, 0xb2, 0x5d, 0x69, 0xde, 0xdc, 0xdd, 0x64, 0x56, 0x70, 0xe6, 0xce, 0xac, 0x3b, 0xdb,
-	0x07, 0xa5, 0x3b, 0x0f, 0xcf, 0x7e, 0x04, 0xce, 0xe7, 0x9f, 0x41, 0x53, 0x2a, 0x73, 0x98, 0x0d,
-	0x58, 0x08, 0xb1, 0x75, 0xb7, 0x8f, 0x16, 0x46, 0x47, 0xdc, 0x8c, 0x13, 0x81, 0xf9, 0x01, 0xec,
-	0x59, 0x69, 0xf7, 0x29, 0xad, 0x46, 0x22, 0x01, 0x54, 0x06, 0xd2, 0xfa, 0xda, 0x36, 0x69, 0x56,
-	0x3b, 0xf5, 0x6f, 0x5f, 0x5a, 0x35, 0x6b, 0xf5, 0x3c, 0x8a, 0x52, 0x81, 0x78, 0x60, 0x52, 0xa5,
-	0x65, 0x6f, 0x41, 0xdd, 0xdb, 0xf8, 0x78, 0x12, 0x38, 0xbf, 0x4f, 0x02, 0xe7, 0xc3, 0xc5, 0xe9,
-	0xce, 0x62, 0xde, 0xf0, 0xe9, 0x56, 0xd9, 0x32, 0x3d, 0x81, 0x09, 0x68, 0x14, 0x8d, 0x09, 0xa1,
-	0x77, 0xba, 0x28, 0xaf, 0x80, 0x07, 0x89, 0xd0, 0xd1, 0x2c, 0x49, 0x3f, 0x33, 0x87, 0x90, 0x2a,
-	0x33, 0xae, 0x93, 0x7f, 0x25, 0xb9, 0xa4, 0xba, 0x5b, 0xb4, 0x9a, 0x8a, 0x50, 0x25, 0x4a, 0x68,
-	0x53, 0x6c, 0xd0, 0x5b, 0x0c, 0x96, 0x4a, 0xac, 0xfc, 0xb7, 0x12, 0xf7, 0x6e, 0xe5, 0x25, 0x5c,
-	0x46, 0x6a, 0x04, 0xf4, 0x5e, 0xe9, 0x8e, 0xf3, 0x16, 0x76, 0xdf, 0xaf, 0xd1, 0x4a, 0x17, 0xa5,
-	0xfb, 0x86, 0xde, 0xbe, 0x7e, 0xef, 0x0f, 0x58, 0xf9, 0x37, 0xc9, 0xca, 0x8a, 0xf5, 0x1e, 0xaf,
-	0xc2, 0x9e, 0x07, 0x70, 0xdf, 0x52, 0xb7, 0xe4, 0x0a, 0x5a, 0x7f, 0xd1, 0xba, 0x4e, 0xf7, 0x9e,
-	0xac, 0x44, 0x9f, 0x7b, 0x7b, 0x37, 0xde, 0x5d, 0x9c, 0xee, 0x90, 0xce, 0xb3, 0xb3, 0x89, 0x4f,
-	0xce, 0x27, 0x3e, 0xf9, 0x35, 0xf1, 0xc9, 0xa7, 0xa9, 0xef, 0x9c, 0x4f, 0x7d, 0xe7, 0xfb, 0xd4,
-	0x77, 0x5e, 0xdd, 0x2f, 0x64, 0x31, 0x3a, 0x62, 0x0a, 0xf8, 0xf1, 0xd5, 0x9f, 0x37, 0xef, 0x7f,
-	0xb0, 0x9e, 0xcf, 0x1e, 0xfd, 0x09, 0x00, 0x00, 0xff, 0xff, 0xe7, 0x54, 0x0b, 0xeb, 0xe0, 0x03,
-	0x00, 0x00,
+	// 721 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xb4, 0x55, 0xcf, 0x4f, 0xdb, 0x48,
+	0x14, 0xce, 0x90, 0x10, 0x6d, 0x86, 0x15, 0x5a, 0xac, 0x6c, 0x30, 0x16, 0x6b, 0x87, 0x1c, 0x56,
+	0x11, 0x5a, 0xec, 0x0d, 0xfb, 0x03, 0x89, 0x56, 0xaa, 0x1a, 0xda, 0xde, 0x22, 0xa1, 0xd0, 0x53,
+	0x2f, 0x91, 0x13, 0x4f, 0xcd, 0x88, 0xd8, 0xcf, 0xf2, 0x8c, 0x29, 0x54, 0xaa, 0x84, 0x7a, 0xea,
+	0x91, 0x63, 0x8f, 0x9c, 0x7b, 0xe2, 0xd0, 0x3f, 0x02, 0xa9, 0x17, 0xd4, 0x53, 0x4f, 0xa5, 0x0a,
+	0x07, 0x2a, 0xf5, 0x5f, 0xe8, 0xa1, 0xb2, 0x3d, 0x71, 0x12, 0xe2, 0x86, 0xa6, 0x12, 0xa7, 0x24,
+	0xef, 0x7d, 0xef, 0x7b, 0xdf, 0xfb, 0x66, 0xde, 0x04, 0x6b, 0x1d, 0x60, 0x0e, 0x30, 0xc3, 0xf3,
+	0x81, 0x43, 0x07, 0xba, 0x1e, 0x40, 0xd7, 0xd8, 0xaf, 0x19, 0xfc, 0x40, 0x8f, 0x42, 0x52, 0x29,
+	0x06, 0xe8, 0xc3, 0x00, 0x7d, 0xbf, 0xa6, 0x14, 0x6d, 0xb0, 0x21, 0x0a, 0x1a, 0xe1, 0xb7, 0x38,
+	0xaf, 0xa8, 0x82, 0xae, 0x6d, 0x32, 0x62, 0xec, 0xd7, 0xda, 0x84, 0x9b, 0x35, 0xa3, 0x03, 0xd4,
+	0x15, 0xf9, 0xa5, 0x38, 0xdf, 0x8a, 0x0b, 0x87, 0xa9, 0x95, 0x45, 0x51, 0xea, 0x30, 0x3b, 0x14,
+	0xe0, 0x30, 0x5b, 0x24, 0x34, 0x1b, 0xc0, 0xee, 0x92, 0x58, 0x62, 0x3b, 0x78, 0x6a, 0x70, 0xea,
+	0x10, 0xc6, 0x4d, 0xc7, 0xeb, 0x37, 0xbd, 0x0e, 0xb0, 0x02, 0xdf, 0xe4, 0x14, 0x44, 0xd3, 0xca,
+	0x3b, 0x84, 0x8b, 0x0d, 0x66, 0x3f, 0x0a, 0x5c, 0x6b, 0x0b, 0x1c, 0x27, 0x70, 0x29, 0x3f, 0xdc,
+	0x06, 0xe8, 0x4a, 0x1d, 0x9c, 0x37, 0x1d, 0x08, 0x5c, 0x2e, 0xa3, 0x72, 0xb6, 0x3a, 0xb7, 0xbe,
+	0xa4, 0x0b, 0x45, 0xa1, 0x7c, 0x5d, 0xc8, 0xd7, 0xb7, 0x80, 0xba, 0xf5, 0xbf, 0xcf, 0x3e, 0x6a,
+	0x99, 0x37, 0x17, 0x5a, 0xd5, 0xa6, 0x7c, 0x37, 0x68, 0xeb, 0x1d, 0x70, 0x84, 0x7c, 0xf1, 0xb1,
+	0xc6, 0xac, 0x3d, 0x83, 0x1f, 0x7a, 0x84, 0x45, 0x05, 0xac, 0x29, 0xa8, 0xa5, 0xff, 0x71, 0xc1,
+	0x22, 0x1e, 0x30, 0xca, 0xc1, 0x97, 0x67, 0xca, 0xa8, 0x5a, 0xa8, 0xcb, 0xef, 0xdf, 0xae, 0x15,
+	0x45, 0xab, 0xfb, 0x96, 0xe5, 0x13, 0xc6, 0x76, 0xb8, 0x4f, 0x5d, 0xbb, 0x39, 0x80, 0x6e, 0x96,
+	0x5e, 0x9d, 0x68, 0x99, 0xcf, 0x27, 0x5a, 0xe6, 0xe5, 0xd5, 0xe9, 0xea, 0x20, 0x5e, 0x51, 0xf1,
+	0x72, 0xda, 0x30, 0x4d, 0xc2, 0x3c, 0x70, 0x19, 0xa9, 0xf4, 0x10, 0xfe, 0xbd, 0xc1, 0xec, 0x91,
+	0xe4, 0x8e, 0x47, 0x5c, 0x2b, 0x54, 0x62, 0x06, 0x7c, 0x17, 0x7c, 0xca, 0x0f, 0x65, 0x74, 0x93,
+	0x92, 0x04, 0x2a, 0x2d, 0xe3, 0x82, 0x4f, 0x3a, 0xd4, 0xa3, 0xc4, 0xe5, 0xf1, 0x04, 0xcd, 0x41,
+	0x60, 0xc8, 0xc4, 0xec, 0xad, 0x99, 0xb8, 0x39, 0x1f, 0x99, 0x90, 0x48, 0xaa, 0x68, 0xf8, 0x8f,
+	0xd4, 0x19, 0x13, 0x17, 0xbe, 0xce, 0xe0, 0xc5, 0x06, 0xb3, 0x77, 0x82, 0xb6, 0x43, 0x79, 0x3d,
+	0xb0, 0x6c, 0xc2, 0xb7, 0x7d, 0xf0, 0x80, 0x99, 0xdd, 0x9f, 0xf6, 0xe1, 0x21, 0x5e, 0x48, 0xc6,
+	0x6e, 0x99, 0x31, 0xea, 0xc6, 0x13, 0xfd, 0x2d, 0x29, 0x11, 0x71, 0xe9, 0x2e, 0xfe, 0x95, 0x03,
+	0x37, 0xbb, 0xad, 0x76, 0x24, 0x4b, 0xce, 0x96, 0xd1, 0x44, 0xdb, 0x9a, 0x73, 0x11, 0x3c, 0x1e,
+	0x42, 0xba, 0x87, 0x31, 0xe3, 0xa6, 0xcf, 0x5b, 0xe1, 0x16, 0xc8, 0xb9, 0xa8, 0x56, 0xd1, 0xe3,
+	0x0d, 0xd0, 0xfb, 0x1b, 0xa0, 0x3f, 0xee, 0xaf, 0x48, 0x3d, 0x77, 0x7c, 0xa1, 0xa1, 0x66, 0x21,
+	0xaa, 0x09, 0xa3, 0x92, 0x82, 0x7f, 0xe1, 0xbe, 0xe9, 0x76, 0x76, 0x09, 0x93, 0x67, 0xcb, 0xa8,
+	0x9a, 0x6b, 0x26, 0xbf, 0xa5, 0x0d, 0x9c, 0xf7, 0x88, 0x4f, 0xc1, 0x92, 0xf3, 0x42, 0xd4, 0x75,
+	0xe2, 0x07, 0x62, 0xb5, 0xea, 0xb9, 0xd7, 0x21, 0xaf, 0x80, 0x8f, 0x9d, 0xcf, 0x0a, 0xd6, 0xbe,
+	0xe3, 0x7e, 0x72, 0x42, 0x80, 0xe7, 0xc3, 0x23, 0xec, 0x9a, 0xd4, 0x11, 0xa3, 0xa5, 0xfa, 0x8b,
+	0xa6, 0xf5, 0x77, 0xb3, 0x14, 0x6a, 0x19, 0x67, 0xaa, 0xbc, 0xc0, 0xa5, 0xd1, 0x86, 0x7d, 0x29,
+	0x23, 0xef, 0x00, 0xba, 0xa5, 0x2b, 0xbc, 0xfe, 0x25, 0x8b, 0xb3, 0x0d, 0x66, 0x4b, 0xcf, 0xf0,
+	0xc2, 0xf8, 0x4b, 0xf4, 0x97, 0x9e, 0xfe, 0xcc, 0xea, 0x69, 0xab, 0xae, 0xfc, 0x3b, 0x0d, 0x3a,
+	0x99, 0xf2, 0x39, 0x96, 0x52, 0x1e, 0x85, 0xb5, 0x09, 0x5c, 0xe3, 0x70, 0xe5, 0xbf, 0xa9, 0xe0,
+	0x49, 0xef, 0x23, 0x84, 0x8b, 0xa9, 0xbb, 0x68, 0x4c, 0xe0, 0x4b, 0x2b, 0x50, 0x36, 0xa6, 0x2c,
+	0x48, 0x24, 0x10, 0x3c, 0x37, 0x7c, 0xd9, 0xfe, 0x9c, 0x34, 0xc8, 0x00, 0xa7, 0xe8, 0x3f, 0x86,
+	0xeb, 0xb7, 0x51, 0x66, 0x8f, 0xae, 0x4e, 0x57, 0x51, 0xfd, 0xce, 0x59, 0x4f, 0x45, 0xe7, 0x3d,
+	0x15, 0x7d, 0xea, 0xa9, 0xe8, 0xf8, 0x52, 0xcd, 0x9c, 0x5f, 0xaa, 0x99, 0x0f, 0x97, 0x6a, 0xe6,
+	0xc9, 0x4a, 0xcc, 0xc7, 0xac, 0x3d, 0x9d, 0x82, 0x71, 0x30, 0xfa, 0xcf, 0x1b, 0x5d, 0x9c, 0x76,
+	0x3e, 0x8a, 0xfd, 0xf3, 0x2d, 0x00, 0x00, 0xff, 0xff, 0x0e, 0x57, 0x45, 0x9e, 0x9d, 0x07, 0x00,
+	0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -272,16 +516,16 @@ const _ = grpc.SupportPackageIsVersion4
 type MsgClient interface {
 	// FundCommunityPool defines a method to allow an account to directly
 	// fund the community pool.
-	//
-	// Since: cosmos-sdk 0.50
 	FundCommunityPool(ctx context.Context, in *MsgFundCommunityPool, opts ...grpc.CallOption) (*MsgFundCommunityPoolResponse, error)
 	// CommunityPoolSpend defines a governance operation for sending tokens from
 	// the community pool in the x/protocolpool module to another account, which
 	// could be the governance module itself. The authority is defined in the
 	// keeper.
-	//
-	// Since: cosmos-sdk 0.50
 	CommunityPoolSpend(ctx context.Context, in *MsgCommunityPoolSpend, opts ...grpc.CallOption) (*MsgCommunityPoolSpendResponse, error)
+	// SubmitBudgetProposal defines a method to set a budget proposal.
+	SubmitBudgetProposal(ctx context.Context, in *MsgSubmitBudgetProposal, opts ...grpc.CallOption) (*MsgSubmitBudgetProposalResponse, error)
+	// ClaimBudget defines a method to claim the distributed budget.
+	ClaimBudget(ctx context.Context, in *MsgClaimBudget, opts ...grpc.CallOption) (*MsgClaimBudgetResponse, error)
 }
 
 type msgClient struct {
@@ -310,20 +554,38 @@ func (c *msgClient) CommunityPoolSpend(ctx context.Context, in *MsgCommunityPool
 	return out, nil
 }
 
+func (c *msgClient) SubmitBudgetProposal(ctx context.Context, in *MsgSubmitBudgetProposal, opts ...grpc.CallOption) (*MsgSubmitBudgetProposalResponse, error) {
+	out := new(MsgSubmitBudgetProposalResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.protocolpool.v1.Msg/SubmitBudgetProposal", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) ClaimBudget(ctx context.Context, in *MsgClaimBudget, opts ...grpc.CallOption) (*MsgClaimBudgetResponse, error) {
+	out := new(MsgClaimBudgetResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.protocolpool.v1.Msg/ClaimBudget", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 type MsgServer interface {
 	// FundCommunityPool defines a method to allow an account to directly
 	// fund the community pool.
-	//
-	// Since: cosmos-sdk 0.50
 	FundCommunityPool(context.Context, *MsgFundCommunityPool) (*MsgFundCommunityPoolResponse, error)
 	// CommunityPoolSpend defines a governance operation for sending tokens from
 	// the community pool in the x/protocolpool module to another account, which
 	// could be the governance module itself. The authority is defined in the
 	// keeper.
-	//
-	// Since: cosmos-sdk 0.50
 	CommunityPoolSpend(context.Context, *MsgCommunityPoolSpend) (*MsgCommunityPoolSpendResponse, error)
+	// SubmitBudgetProposal defines a method to set a budget proposal.
+	SubmitBudgetProposal(context.Context, *MsgSubmitBudgetProposal) (*MsgSubmitBudgetProposalResponse, error)
+	// ClaimBudget defines a method to claim the distributed budget.
+	ClaimBudget(context.Context, *MsgClaimBudget) (*MsgClaimBudgetResponse, error)
 }
 
 // UnimplementedMsgServer can be embedded to have forward compatible implementations.
@@ -335,6 +597,12 @@ func (*UnimplementedMsgServer) FundCommunityPool(ctx context.Context, req *MsgFu
 }
 func (*UnimplementedMsgServer) CommunityPoolSpend(ctx context.Context, req *MsgCommunityPoolSpend) (*MsgCommunityPoolSpendResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CommunityPoolSpend not implemented")
+}
+func (*UnimplementedMsgServer) SubmitBudgetProposal(ctx context.Context, req *MsgSubmitBudgetProposal) (*MsgSubmitBudgetProposalResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SubmitBudgetProposal not implemented")
+}
+func (*UnimplementedMsgServer) ClaimBudget(ctx context.Context, req *MsgClaimBudget) (*MsgClaimBudgetResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ClaimBudget not implemented")
 }
 
 func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
@@ -377,6 +645,42 @@ func _Msg_CommunityPoolSpend_Handler(srv interface{}, ctx context.Context, dec f
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_SubmitBudgetProposal_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgSubmitBudgetProposal)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).SubmitBudgetProposal(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.protocolpool.v1.Msg/SubmitBudgetProposal",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).SubmitBudgetProposal(ctx, req.(*MsgSubmitBudgetProposal))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_ClaimBudget_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgClaimBudget)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).ClaimBudget(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.protocolpool.v1.Msg/ClaimBudget",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).ClaimBudget(ctx, req.(*MsgClaimBudget))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Msg_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "cosmos.protocolpool.v1.Msg",
 	HandlerType: (*MsgServer)(nil),
@@ -388,6 +692,14 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CommunityPoolSpend",
 			Handler:    _Msg_CommunityPoolSpend_Handler,
+		},
+		{
+			MethodName: "SubmitBudgetProposal",
+			Handler:    _Msg_SubmitBudgetProposal_Handler,
+		},
+		{
+			MethodName: "ClaimBudget",
+			Handler:    _Msg_ClaimBudget_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -535,6 +847,166 @@ func (m *MsgCommunityPoolSpendResponse) MarshalToSizedBuffer(dAtA []byte) (int, 
 	return len(dAtA) - i, nil
 }
 
+func (m *MsgSubmitBudgetProposal) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgSubmitBudgetProposal) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgSubmitBudgetProposal) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Period != nil {
+		n1, err1 := github_com_cosmos_gogoproto_types.StdDurationMarshalTo(*m.Period, dAtA[i-github_com_cosmos_gogoproto_types.SizeOfStdDuration(*m.Period):])
+		if err1 != nil {
+			return 0, err1
+		}
+		i -= n1
+		i = encodeVarintTx(dAtA, i, uint64(n1))
+		i--
+		dAtA[i] = 0x32
+	}
+	if m.Tranches != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.Tranches))
+		i--
+		dAtA[i] = 0x28
+	}
+	if m.StartTime != nil {
+		n2, err2 := github_com_cosmos_gogoproto_types.StdTimeMarshalTo(*m.StartTime, dAtA[i-github_com_cosmos_gogoproto_types.SizeOfStdTime(*m.StartTime):])
+		if err2 != nil {
+			return 0, err2
+		}
+		i -= n2
+		i = encodeVarintTx(dAtA, i, uint64(n2))
+		i--
+		dAtA[i] = 0x22
+	}
+	if m.TotalBudget != nil {
+		{
+			size, err := m.TotalBudget.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintTx(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x1a
+	}
+	if len(m.RecipientAddress) > 0 {
+		i -= len(m.RecipientAddress)
+		copy(dAtA[i:], m.RecipientAddress)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.RecipientAddress)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Authority) > 0 {
+		i -= len(m.Authority)
+		copy(dAtA[i:], m.Authority)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Authority)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgSubmitBudgetProposalResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgSubmitBudgetProposalResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgSubmitBudgetProposalResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgClaimBudget) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgClaimBudget) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgClaimBudget) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.RecipientAddress) > 0 {
+		i -= len(m.RecipientAddress)
+		copy(dAtA[i:], m.RecipientAddress)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.RecipientAddress)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgClaimBudgetResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgClaimBudgetResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgClaimBudgetResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size, err := m.Amount.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintTx(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintTx(dAtA []byte, offset int, v uint64) int {
 	offset -= sovTx(v)
 	base := offset
@@ -603,6 +1075,71 @@ func (m *MsgCommunityPoolSpendResponse) Size() (n int) {
 	}
 	var l int
 	_ = l
+	return n
+}
+
+func (m *MsgSubmitBudgetProposal) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Authority)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = len(m.RecipientAddress)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	if m.TotalBudget != nil {
+		l = m.TotalBudget.Size()
+		n += 1 + l + sovTx(uint64(l))
+	}
+	if m.StartTime != nil {
+		l = github_com_cosmos_gogoproto_types.SizeOfStdTime(*m.StartTime)
+		n += 1 + l + sovTx(uint64(l))
+	}
+	if m.Tranches != 0 {
+		n += 1 + sovTx(uint64(m.Tranches))
+	}
+	if m.Period != nil {
+		l = github_com_cosmos_gogoproto_types.SizeOfStdDuration(*m.Period)
+		n += 1 + l + sovTx(uint64(l))
+	}
+	return n
+}
+
+func (m *MsgSubmitBudgetProposalResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *MsgClaimBudget) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.RecipientAddress)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	return n
+}
+
+func (m *MsgClaimBudgetResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = m.Amount.Size()
+	n += 1 + l + sovTx(uint64(l))
 	return n
 }
 
@@ -955,6 +1492,462 @@ func (m *MsgCommunityPoolSpendResponse) Unmarshal(dAtA []byte) error {
 			return fmt.Errorf("proto: MsgCommunityPoolSpendResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgSubmitBudgetProposal) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgSubmitBudgetProposal: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgSubmitBudgetProposal: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Authority", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Authority = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RecipientAddress", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.RecipientAddress = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TotalBudget", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.TotalBudget == nil {
+				m.TotalBudget = &types.Coin{}
+			}
+			if err := m.TotalBudget.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field StartTime", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.StartTime == nil {
+				m.StartTime = new(time.Time)
+			}
+			if err := github_com_cosmos_gogoproto_types.StdTimeUnmarshal(m.StartTime, dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 5:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Tranches", wireType)
+			}
+			m.Tranches = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Tranches |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 6:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Period", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Period == nil {
+				m.Period = new(time.Duration)
+			}
+			if err := github_com_cosmos_gogoproto_types.StdDurationUnmarshal(m.Period, dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgSubmitBudgetProposalResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgSubmitBudgetProposalResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgSubmitBudgetProposalResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgClaimBudget) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgClaimBudget: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgClaimBudget: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RecipientAddress", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.RecipientAddress = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgClaimBudgetResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgClaimBudgetResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgClaimBudgetResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Amount", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Amount.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipTx(dAtA[iNdEx:])

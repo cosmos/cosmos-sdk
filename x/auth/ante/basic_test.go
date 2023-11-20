@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	storetypes "cosmossdk.io/store/types"
+	"cosmossdk.io/x/auth/ante"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
@@ -14,7 +15,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 )
 
 func TestValidateBasic(t *testing.T) {

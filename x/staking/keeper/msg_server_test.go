@@ -48,7 +48,7 @@ func (s *KeeperTestSuite) TestMsgCreateValidator() {
 
 	ctx = ctx.WithConsensusParams(cmtproto.ConsensusParams{
 		Validator: &cmtproto.ValidatorParams{
-			PubKeyTypes: []string{"ed25519"},
+			PubKeyTypes: []string{sdk.PubKeyEd25519Type},
 		},
 	})
 

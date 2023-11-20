@@ -82,7 +82,7 @@ func (k msgServer) CreateValidator(ctx context.Context, msg *types.MsgCreateVali
 			)
 		}
 
-		if pkType == "ed25519" && len(pk.Bytes()) != ed25519.PubKeySize {
+		if pkType == sdk.PubKeyEd25519Type && len(pk.Bytes()) != ed25519.PubKeySize {
 			return nil, errorsmod.Wrapf(
 				types.ErrConsensusPubKeyLenInvalid,
 				"got: %d, expected: %d", len(pk.Bytes()), ed25519.PubKeySize,

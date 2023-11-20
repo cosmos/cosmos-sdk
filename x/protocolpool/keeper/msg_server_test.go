@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"cosmossdk.io/core/header"
+	"cosmossdk.io/math"
 	"cosmossdk.io/x/protocolpool/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -23,7 +24,6 @@ func (suite *KeeperTestSuite) TestMsgSubmitBudgetProposal() {
 	period := time.Duration(60) * time.Second
 	zeroPeriod := time.Duration(0) * time.Second
 	testCases := map[string]struct {
-		preRun    func()
 		input     *types.MsgSubmitBudgetProposal
 		expErr    bool
 		expErrMsg string
@@ -128,9 +128,7 @@ func (suite *KeeperTestSuite) TestMsgSubmitBudgetProposal() {
 	for name, tc := range testCases {
 		suite.Run(name, func() {
 			suite.SetupTest()
-			if tc.preRun != nil {
-				tc.preRun()
-			}
+
 			_, err := suite.msgServer.SubmitBudgetProposal(suite.ctx, tc.input)
 			if tc.expErr {
 				suite.Require().Error(err)
@@ -333,6 +331,191 @@ func (suite *KeeperTestSuite) TestMsgClaimBudget() {
 			} else {
 				suite.Require().NoError(err)
 				suite.Require().Equal(tc.claimableFunds, resp.Amount)
+			}
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestCreateContinuousFund() {
+	cap := sdk.NewInt64Coin("uatom", 100000)
+	percentage, err := math.LegacyNewDecFromStr("0.2")
+	suite.Require().NoError(err)
+	negativePercentage, err := math.LegacyNewDecFromStr("-0.2")
+	suite.Require().NoError(err)
+	invalidCap := sdk.NewInt64Coin("foo", 0)
+	invalidExpirty := suite.ctx.BlockTime().Add(-15 * time.Second)
+	oneMonthInSeconds := time.Duration(30*24*60*60) * time.Second // Approximate number of seconds in 1 month
+	expiry := suite.ctx.BlockTime().Add(oneMonthInSeconds)
+	testCases := map[string]struct {
+		input     *types.MsgCreateContinuousFund
+		expErr    bool
+		expErrMsg string
+	}{
+		"empty recipient address": {
+			input: &types.MsgCreateContinuousFund{
+				Title:       "New title",
+				Description: "New description",
+				Authority:   suite.poolKeeper.GetAuthority(),
+				Recipient:   "",
+				Metadata:    "AQ==",
+				Percentage:  percentage,
+				Cap:         &cap,
+				Expiry:      &expiry,
+			},
+			expErr:    true,
+			expErrMsg: "empty address string is not allowed",
+		},
+		"empty authority": {
+			input: &types.MsgCreateContinuousFund{
+				Title:       "New title",
+				Description: "New description",
+				Authority:   "",
+				Recipient:   recipientAddr.String(),
+				Metadata:    "AQ==",
+				Percentage:  percentage,
+				Cap:         &cap,
+				Expiry:      &expiry,
+			},
+			expErr:    true,
+			expErrMsg: "empty address string is not allowed",
+		},
+		"invalid authority": {
+			input: &types.MsgCreateContinuousFund{
+				Title:       "New title",
+				Description: "New description",
+				Authority:   "invalid_authority",
+				Recipient:   recipientAddr.String(),
+				Metadata:    "AQ==",
+				Percentage:  percentage,
+				Cap:         &cap,
+				Expiry:      &expiry,
+			},
+			expErr:    true,
+			expErrMsg: "invalid authority",
+		},
+		"empty title": {
+			input: &types.MsgCreateContinuousFund{
+				Title:       "",
+				Description: "New description",
+				Authority:   suite.poolKeeper.GetAuthority(),
+				Recipient:   recipientAddr.String(),
+				Metadata:    "AQ==",
+				Percentage:  percentage,
+				Cap:         &cap,
+				Expiry:      &expiry,
+			},
+			expErr:    true,
+			expErrMsg: "title cannot be empty",
+		},
+		"empty description": {
+			input: &types.MsgCreateContinuousFund{
+				Title:       "New title",
+				Description: "",
+				Authority:   suite.poolKeeper.GetAuthority(),
+				Recipient:   recipientAddr.String(),
+				Metadata:    "AQ==",
+				Percentage:  percentage,
+				Cap:         &cap,
+				Expiry:      &expiry,
+			},
+			expErr:    true,
+			expErrMsg: "description cannot be empty",
+		},
+		"zero percentage": {
+			input: &types.MsgCreateContinuousFund{
+				Title:       "New title",
+				Description: "New description",
+				Authority:   suite.poolKeeper.GetAuthority(),
+				Recipient:   recipientAddr.String(),
+				Metadata:    "AQ==",
+				Percentage:  math.LegacyNewDec(0),
+				Cap:         &cap,
+				Expiry:      &expiry,
+			},
+			expErr:    true,
+			expErrMsg: "percentage cannot be zero or empty",
+		},
+		"negative percentage": {
+			input: &types.MsgCreateContinuousFund{
+				Title:       "New title",
+				Description: "New description",
+				Authority:   suite.poolKeeper.GetAuthority(),
+				Recipient:   recipientAddr.String(),
+				Metadata:    "AQ==",
+				Percentage:  negativePercentage,
+				Cap:         &cap,
+				Expiry:      &expiry,
+			},
+			expErr:    true,
+			expErrMsg: "percentage cannot be negative",
+		},
+		"invalid percentage": {
+			input: &types.MsgCreateContinuousFund{
+				Title:       "New title",
+				Description: "New description",
+				Authority:   suite.poolKeeper.GetAuthority(),
+				Recipient:   recipientAddr.String(),
+				Metadata:    "AQ==",
+				Percentage:  math.LegacyNewDec(1),
+				Cap:         &cap,
+				Expiry:      &expiry,
+			},
+			expErr:    true,
+			expErrMsg: "percentage cannot be greater than or equal to one",
+		},
+		"invalid cap": {
+			input: &types.MsgCreateContinuousFund{
+				Title:       "New title",
+				Description: "New description",
+				Authority:   suite.poolKeeper.GetAuthority(),
+				Recipient:   recipientAddr.String(),
+				Metadata:    "AQ==",
+				Percentage:  percentage,
+				Cap:         &invalidCap,
+				Expiry:      &expiry,
+			},
+			expErr:    true,
+			expErrMsg: "invalid capital: amount cannot be zero",
+		},
+		"invalid expiry": {
+			input: &types.MsgCreateContinuousFund{
+				Title:       "New title",
+				Description: "New description",
+				Authority:   suite.poolKeeper.GetAuthority(),
+				Recipient:   recipientAddr.String(),
+				Metadata:    "AQ==",
+				Percentage:  percentage,
+				Cap:         &cap,
+				Expiry:      &invalidExpirty,
+			},
+			expErr:    true,
+			expErrMsg: "expiry time cannot be less than the current block time",
+		},
+		"all good": {
+			input: &types.MsgCreateContinuousFund{
+				Title:       "New title",
+				Description: "New description",
+				Authority:   suite.poolKeeper.GetAuthority(),
+				Recipient:   recipientAddr.String(),
+				Metadata:    "AQ==",
+				Percentage:  percentage,
+				Cap:         &cap,
+				Expiry:      &expiry,
+			},
+			expErr: false,
+		},
+	}
+
+	for name, tc := range testCases {
+		suite.Run(name, func() {
+			suite.SetupTest()
+
+			_, err := suite.msgServer.CreateContinuousFund(suite.ctx, tc.input)
+			if tc.expErr {
+				suite.Require().Error(err)
+				suite.Require().Contains(err.Error(), tc.expErrMsg)
+			} else {
+				suite.Require().NoError(err)
 			}
 		})
 	}

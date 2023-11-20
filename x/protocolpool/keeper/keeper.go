@@ -245,12 +245,15 @@ func (k Keeper) validateandUpdateContinuousFund(ctx context.Context, msg types.M
 	if msg.Percentage.IsNegative() {
 		return nil, fmt.Errorf("percentage cannot be negative")
 	}
-	if msg.Percentage.GT(math.LegacyOneDec()) {
-		return nil, fmt.Errorf("percentage cannot be greater than one")
+	if msg.Percentage.GTE(math.LegacyOneDec()) {
+		return nil, fmt.Errorf("percentage cannot be greater than or equal to one")
 	}
 
 	// Validate cap
-	if err := validateAmount(msg.Cap); err != nil {
+	if msg.Cap.IsZero() {
+		return nil, fmt.Errorf("invalid capital: amount cannot be zero")
+	}
+	if err := validateAmount(sdk.NewCoins(*msg.Cap)); err != nil {
 		return nil, err
 	}
 
@@ -299,18 +302,28 @@ func (k Keeper) continuousDistribution(ctx context.Context, continuousFund types
 	}
 
 	for _, amount := range distributionAmount {
-		coins := sdk.NewCoins(sdk.NewCoin(amount.Denom, amount.Amount.TruncateInt()))
-		// Check if the distribution exceeds the cap
-		if coins.IsAllLT(continuousFund.Cap) {
+		if continuousFund.DistributedAmount.IsNil() || continuousFund.DistributedAmount.IsZero() {
+			zeroCoin := sdk.NewCoin(amount.Denom, math.ZeroInt())
+			continuousFund.DistributedAmount = &zeroCoin
+		}
+
+		coinsToDistribute := sdk.NewCoin(amount.Denom, amount.Amount.TruncateInt())
+		totalDistrAmount := continuousFund.DistributedAmount.Add(coinsToDistribute)
+		// check if distributed amount exceeds cap
+		if totalDistrAmount.IsLTE(*continuousFund.Cap) {
 			// Distribute funds to the recipient
-			err := k.DistributeFromFeePool(ctx, coins, recipient)
+			err := k.DistributeFromFeePool(ctx, sdk.NewCoins(coinsToDistribute), recipient)
 			if err != nil {
 				return err
 			}
 		} else {
+			// remove the entry of distribution ended recipient
 			if err := k.ContinuousFund.Remove(ctx, recipient); err != nil {
-				return fmt.Errorf("capital amount reached for recipient: %s", continuousFund.Recipient)
+				return err
 			}
+			// Return the end of the distribution
+			return fmt.Errorf("continuous funding ended for recipient: %s", continuousFund.Recipient)
+
 		}
 	}
 	return nil

@@ -2,7 +2,11 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 
+	errorspkg "errors"
+
+	"cosmossdk.io/collections"
 	"cosmossdk.io/errors"
 	"cosmossdk.io/x/protocolpool/types"
 
@@ -142,6 +146,14 @@ func (k MsgServer) CancelContinuousFund(ctx context.Context, msg *types.MsgCance
 
 	canceledHeight := sdkCtx.BlockHeight()
 	canceledTime := sdkCtx.BlockTime()
+
+	_, err = k.ContinuousFund.Get(ctx, recipient)
+	if err != nil {
+		if errorspkg.Is(err, collections.ErrNotFound) {
+			return nil, fmt.Errorf("no recipient found to cancel continuous fund: %s", msg.RecipientAddress)
+		}
+		return nil, err
+	}
 
 	err = k.ContinuousFund.Remove(ctx, recipient)
 	if err != nil {

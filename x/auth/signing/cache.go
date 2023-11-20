@@ -1,6 +1,8 @@
 package signing
 
 import (
+	"sync"
+
 	lru "github.com/hashicorp/golang-lru/v2"
 )
 
@@ -11,31 +13,24 @@ const (
 	AddressStringLen = 2 + 20*2
 )
 
-func init() {
-	// used for ut
+var initSigCacheOnce sync.Once
 
-	cache, err := lru.New[string, []byte](500)
-	if err != nil {
-		panic(err)
-	}
-	defaultCache := &Cache{
-		data: cache,
-	}
-	signatureCache = defaultCache
-}
-
-// InitSignatureCache initializes the signature cache.
+// NewSignatureCache initializes the signature cache.
 // signature verification is one of the most expensive parts in verification
 // by caching it we avoid needing to verify the same signature multiple times
 func NewSignatureCache() {
-	// 500 * (32 + 42) = 37.5KB
-	cache, err := lru.New[string, []byte](500)
-	if err != nil {
-		panic(err)
-	}
-	signatureCache = &Cache{
-		data: cache,
-	}
+	initSigCacheOnce.Do(func() {
+		// 500 * (32 + 42) = 37.5KB
+		cache, err := lru.New[string, []byte](500)
+		if err != nil {
+			panic(err)
+		}
+		signatureCache = &Cache{data: cache}
+	})
+}
+
+func init() {
+	NewSignatureCache()
 }
 
 func SignatureCache() *Cache {

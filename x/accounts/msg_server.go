@@ -9,8 +9,6 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-var ModuleAccountAddr = []byte{0x01}
-
 var _ v1.MsgServer = msgServer{}
 
 func NewMsgServer(k Keeper) v1.MsgServer {

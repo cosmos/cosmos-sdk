@@ -291,7 +291,8 @@ func NewSimApp(
 		app.MsgServiceRouter(),
 		app.GRPCQueryRouter(),
 		accountstd.AddAccount("counter", counter.NewAccount),
-		accountstd.AddAccount("aa_full", account_abstraction.NewMinimalAbstractedAccount),
+		accountstd.AddAccount("aa_minimal", account_abstraction.NewMinimalAbstractedAccount),
+		accountstd.AddAccount("aa_full", account_abstraction.NewFullAbstractedAccount),
 	)
 	if err != nil {
 		panic(err)

@@ -2,7 +2,6 @@ package implementation
 
 import (
 	"context"
-	"errors"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/store"
@@ -11,7 +10,6 @@ import (
 )
 
 var (
-	errUnauthorized    = errors.New("unauthorized")
 	AccountStatePrefix = collections.NewPrefix(255)
 )
 

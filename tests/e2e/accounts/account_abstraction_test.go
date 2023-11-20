@@ -10,9 +10,13 @@ import (
 	accountsv1 "cosmossdk.io/api/cosmos/accounts/v1"
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	v1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
+	nftv1beta1 "cosmossdk.io/api/cosmos/nft/v1beta1"
+	stakingv1beta1 "cosmossdk.io/api/cosmos/staking/v1beta1"
 	"cosmossdk.io/simapp"
 	"cosmossdk.io/x/accounts"
 	"cosmossdk.io/x/bank/testutil"
+	"cosmossdk.io/x/nft"
+	"github.com/cosmos/cosmos-proto/anyutil"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
@@ -32,7 +36,12 @@ func TestAccountAbstraction(t *testing.T) {
 	ak := app.AccountsKeeper
 	ctx := sdk.NewContext(app.CommitMultiStore(), false, app.Logger())
 
-	_, aaAddr, err := ak.Init(ctx, "aa_full", accCreator, &rotationv1.MsgInit{
+	_, aaAddr, err := ak.Init(ctx, "aa_minimal", accCreator, &rotationv1.MsgInit{
+		PubKeyBytes: privKey.PubKey().Bytes(),
+	})
+	require.NoError(t, err)
+
+	_, aaFullAddr, err := ak.Init(ctx, "aa_full", accCreator, &rotationv1.MsgInit{
 		PubKeyBytes: privKey.PubKey().Bytes(),
 	})
 	require.NoError(t, err)
@@ -40,8 +49,12 @@ func TestAccountAbstraction(t *testing.T) {
 	aaAddrStr, err := app.AuthKeeper.AddressCodec().BytesToString(aaAddr)
 	require.NoError(t, err)
 
+	aaFullAddrStr, err := app.AuthKeeper.AddressCodec().BytesToString(aaFullAddr)
+	require.NoError(t, err)
+
 	// let's give aa some coins.
 	require.NoError(t, testutil.FundAccount(ctx, app.BankKeeper, aaAddr, sdk.NewCoins(sdk.NewInt64Coin("stake", 100000000000))))
+	require.NoError(t, testutil.FundAccount(ctx, app.BankKeeper, aaFullAddr, sdk.NewCoins(sdk.NewInt64Coin("stake", 100000000000))))
 
 	bundlerAddrStr, err := app.AuthKeeper.AddressCodec().BytesToString(bundlerAddr)
 	require.NoError(t, err)
@@ -225,12 +238,90 @@ func TestAccountAbstraction(t *testing.T) {
 		require.NotZero(t, resp.BundlerPaymentGasUsed)                 // bundler payment gas used, even if the atomic exec failed
 		require.NotZero(t, resp.AuthenticationGasUsed)                 // authentication gas used, even if the atomic exec failed
 	})
+
+	t.Run("implements bundler payment - fail ", func(t *testing.T) {
+		// we assert that if an aa implements the bundler payment interface, then
+		// that is called.
+		resp := ak.ExecuteUserOperation(ctx, bundlerAddrStr, &accountsv1.UserOperation{
+			Sender:                 aaFullAddrStr,
+			AuthenticationMethod:   "secp256k1",
+			AuthenticationData:     []byte("signature"),
+			AuthenticationGasLimit: 10000,
+			BundlerPaymentMessages: intoAny(t, &bankv1beta1.MsgSend{
+				FromAddress: aaFullAddrStr,
+				ToAddress:   bundlerAddrStr,
+				Amount:      coins(t, "1stake"), // we expect this to fail since the account is implement in such a way not to allow bank sends.
+			}),
+			BundlerPaymentGasLimit: 50000,
+			ExecutionMessages: intoAny(t, &bankv1beta1.MsgSend{
+				FromAddress: aaFullAddrStr,
+				ToAddress:   aliceAddrStr,
+				Amount:      coins(t, "2000stake"),
+			}),
+			ExecutionGasLimit: 36000,
+		})
+		// in order to assert the call we expect an error to be returned.
+		require.Contains(t, resp.Error, accounts.ErrBundlerPayment.Error())               // error is bundler payment
+		require.Contains(t, resp.Error, "this account does not allow bank send messages") // error is bundler payment
+	})
+
+	t.Run("implements execution - fail", func(t *testing.T) {
+		resp := ak.ExecuteUserOperation(ctx, bundlerAddrStr, &accountsv1.UserOperation{
+			Sender:                 aaFullAddrStr,
+			AuthenticationMethod:   "secp256k1",
+			AuthenticationData:     []byte("signature"),
+			AuthenticationGasLimit: 10000,
+			BundlerPaymentMessages: nil,
+			BundlerPaymentGasLimit: 50000,
+			ExecutionMessages: intoAny(t, &stakingv1beta1.MsgDelegate{
+				DelegatorAddress: aaFullAddrStr,
+				ValidatorAddress: "some-validator",
+				Amount:           coins(t, "2000stake")[0],
+			}),
+			ExecutionGasLimit: 36000,
+		})
+		// in order to assert the call we expect an error to be returned.
+		require.Contains(t, resp.Error, accounts.ErrExecution.Error()) // error is in execution
+		require.Contains(t, resp.Error, "this account does not allow delegation messages")
+	})
+
+	t.Run("implements bundler payment and execution - success", func(t *testing.T) {
+		// we simulate the abstracted account pays the bundler using an NFT.
+		require.NoError(t, app.NFTKeeper.SaveClass(ctx, nft.Class{
+			Id: "omega-rare",
+		}))
+		require.NoError(t, app.NFTKeeper.Mint(ctx, nft.NFT{
+			ClassId: "omega-rare",
+			Id:      "the-most-rare",
+		}, aaFullAddr))
+
+		resp := ak.ExecuteUserOperation(ctx, bundlerAddrStr, &accountsv1.UserOperation{
+			Sender:                 aaFullAddrStr,
+			AuthenticationMethod:   "secp256k1",
+			AuthenticationData:     []byte("signature"),
+			AuthenticationGasLimit: 10000,
+			BundlerPaymentMessages: intoAny(t, &nftv1beta1.MsgSend{
+				ClassId:  "omega-rare",
+				Id:       "the-most-rare",
+				Sender:   aaFullAddrStr,
+				Receiver: bundlerAddrStr,
+			}),
+			BundlerPaymentGasLimit: 50000,
+			ExecutionMessages: intoAny(t, &bankv1beta1.MsgSend{
+				FromAddress: aaFullAddrStr,
+				ToAddress:   aliceAddrStr,
+				Amount:      coins(t, "2000stake"),
+			}),
+			ExecutionGasLimit: 36000,
+		})
+		require.Empty(t, resp.Error) // no error
+	})
 }
 
 func intoAny(t *testing.T, msgs ...proto.Message) (anys []*anypb.Any) {
 	t.Helper()
 	for _, msg := range msgs {
-		any, err := anypb.New(msg)
+		any, err := anyutil.New(msg)
 		require.NoError(t, err)
 		anys = append(anys, any)
 	}

@@ -88,7 +88,7 @@ func (k Keeper) authenticate(
 	}
 	// create an isolated context in which we execute authentication
 	// without affecting the parent context and with the authentication gas limit.
-	_, err = k.Execute(ctx, senderAddr, ModuleAccountAddr, &account_abstractionv1.MsgAuthenticate{
+	_, err = k.Execute(ctx, senderAddr, ModuleAccountAddress, &account_abstractionv1.MsgAuthenticate{
 		Bundler:       bundler,
 		UserOperation: op,
 	})
@@ -126,7 +126,7 @@ func (k Keeper) opExecuteMessages(
 	if err != nil {
 		return nil, err
 	}
-	resp, err := k.Execute(ctx, senderAddr, ModuleAccountAddr, &account_abstractionv1.MsgExecute{
+	resp, err := k.Execute(ctx, senderAddr, ModuleAccountAddress, &account_abstractionv1.MsgExecute{
 		Bundler:           bundler,
 		ExecutionMessages: op.ExecutionMessages,
 	})
@@ -184,7 +184,7 @@ func (k Keeper) payBundler(
 	if err != nil {
 		return nil, err
 	}
-	resp, err := k.Execute(ctx, senderAddr, ModuleAccountAddr, &account_abstractionv1.MsgPayBundler{
+	resp, err := k.Execute(ctx, senderAddr, ModuleAccountAddress, &account_abstractionv1.MsgPayBundler{
 		Bundler:                bundler,
 		BundlerPaymentMessages: op.BundlerPaymentMessages,
 	})

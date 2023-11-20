@@ -2,13 +2,17 @@
 package accountstd
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 
 	"cosmossdk.io/x/accounts/internal/implementation"
-	"github.com/cosmos/cosmos-proto/anyutil"
+	"github.com/cosmos/cosmos-sdk/types/address"
+	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 )
+
+var accountsModuleAddress = address.Module("accounts")
 
 // Interface is the exported interface of an Account.
 type Interface = implementation.Account
@@ -66,9 +70,18 @@ func Sender(ctx context.Context) []byte {
 	return implementation.Sender(ctx)
 }
 
+// SenderIsAccountsModule returns true if the sender of the execution request is the accounts module.
+func SenderIsAccountsModule(ctx context.Context) bool {
+	return bytes.Equal(Sender(ctx), accountsModuleAddress)
+}
+
 // ExecModule can be used to execute a message towards a module.
 func ExecModule[Resp any, RespProto implementation.ProtoMsg[Resp], Req any, ReqProto implementation.ProtoMsg[Req]](ctx context.Context, msg ReqProto) (RespProto, error) {
 	return implementation.ExecModule[Resp, RespProto, Req, ReqProto](ctx, msg)
+}
+
+func ExecModuleUntyped(ctx context.Context, msg proto.Message) (proto.Message, error) {
+	return implementation.ExecModuleUntyped(ctx, msg)
 }
 
 // QueryModule can be used by an account to execute a module query.
@@ -78,18 +91,34 @@ func QueryModule[Resp any, RespProto implementation.ProtoMsg[Resp], Req any, Req
 
 // UnpackAny unpacks a protobuf Any message generically.
 func UnpackAny[Msg any, ProtoMsg implementation.ProtoMsg[Msg]](any *anypb.Any) (*Msg, error) {
-	msg, err := any.UnmarshalNew()
-	if err != nil {
-		return nil, err
-	}
-	concrete, ok := msg.(ProtoMsg)
-	if !ok {
-		return nil, fmt.Errorf("expected %T, got %T", concrete, msg)
-	}
-	return concrete, nil
+	return implementation.UnpackAny[Msg, ProtoMsg](any)
 }
 
 // PackAny packs a protobuf Any message generically.
-func PackAny[Msg any, ProtoMsg implementation.ProtoMsg[Msg]](msg *Msg) (*anypb.Any, error) {
-	return anyutil.New(ProtoMsg(msg))
+func PackAny(msg proto.Message) (*anypb.Any, error) {
+	return implementation.PackAny(msg)
+}
+
+// ExecModuleAnys can be used to execute a list of messages towards a module
+// when those messages are packed in Any messages. The function returns a list
+// of responses packed in Any messages.
+func ExecModuleAnys(ctx context.Context, msgs []*anypb.Any) ([]*anypb.Any, error) {
+	responses := make([]*anypb.Any, len(msgs))
+	for i, msg := range msgs {
+		concreteMessage, err := implementation.UnpackAnyRaw(msg)
+		if err != nil {
+			return nil, fmt.Errorf("error unpacking message %d: %w", i, err)
+		}
+		resp, err := ExecModuleUntyped(ctx, concreteMessage)
+		if err != nil {
+			return nil, fmt.Errorf("error executing message %d: %w", i, err)
+		}
+		// pack again
+		respAnyPB, err := implementation.PackAny(resp)
+		if err != nil {
+			return nil, fmt.Errorf("error packing response %d: %w", i, err)
+		}
+		responses[i] = respAnyPB
+	}
+	return responses, nil
 }

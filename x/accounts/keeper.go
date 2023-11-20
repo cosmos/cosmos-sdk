@@ -9,7 +9,6 @@ import (
 	"fmt"
 
 	"cosmossdk.io/core/branch"
-	"github.com/cosmos/cosmos-proto/anyutil"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
@@ -283,7 +282,7 @@ func (k Keeper) sendAnyMessages(ctx context.Context, sender []byte, anyMessages 
 		if err != nil {
 			return nil, fmt.Errorf("failed to execute message %d: %s", i, err.Error())
 		}
-		anyResp, err := anyutil.New(resp)
+		anyResp, err := implementation.PackAny(resp)
 		if err != nil {
 			return nil, err
 		}

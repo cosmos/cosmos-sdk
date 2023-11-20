@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 
+	"github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 
@@ -22,6 +23,9 @@ const (
 	ModuleName = "accounts"
 	StoreKey   = "_" + ModuleName // unfortunately accounts collides with auth store key
 )
+
+// ModuleAccountAddress defines the x/accounts module address.
+var ModuleAccountAddress = address.Module(ModuleName)
 
 const (
 	ConsensusVersion = 1

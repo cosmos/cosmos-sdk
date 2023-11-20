@@ -10,6 +10,7 @@ import (
 
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/v2"
+	"cosmossdk.io/store/v2/commitment"
 	"cosmossdk.io/store/v2/commitment/iavl"
 	"cosmossdk.io/store/v2/storage/sqlite"
 )
@@ -30,7 +31,11 @@ func (s *RootStoreTestSuite) SetupTest() {
 	ss, err := sqlite.New(s.T().TempDir())
 	s.Require().NoError(err)
 
-	sc := iavl.NewIavlTree(dbm.NewMemDB(), noopLog, iavl.DefaultConfig())
+	scConfigs := map[string]interface{}{
+		defaultStoreKey: iavl.DefaultConfig(),
+	}
+	sc, err := commitment.NewCommitStore(scConfigs, dbm.NewMemDB(), noopLog)
+	s.Require().NoError(err)
 
 	rs, err := New(noopLog, 1, ss, sc)
 	s.Require().NoError(err)
@@ -85,7 +90,7 @@ func (s *RootStoreTestSuite) TestQuery() {
 	s.Require().Equal(workingHash, commitHash)
 
 	// ensure the proof is non-nil for the corresponding version
-	result, err := s.rootStore.Query("", 1, []byte("foo"), true)
+	result, err := s.rootStore.Query(defaultStoreKey, 1, []byte("foo"), true)
 	s.Require().NoError(err)
 	s.Require().NotNil(result.Proof)
 	s.Require().Equal([]byte("foo"), result.Proof.GetExist().Key)

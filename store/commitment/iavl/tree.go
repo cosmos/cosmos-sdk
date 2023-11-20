@@ -8,10 +8,10 @@ import (
 	ics23 "github.com/cosmos/ics23/go"
 
 	log "cosmossdk.io/log"
-	"cosmossdk.io/store/v2"
+	"cosmossdk.io/store/v2/commitment/types"
 )
 
-var _ store.Committer = (*IavlTree)(nil)
+var _ types.Tree = (*IavlTree)(nil)
 
 // IavlTree is a wrapper around iavl.MutableTree.
 type IavlTree struct {
@@ -26,25 +26,19 @@ func NewIavlTree(db dbm.DB, logger log.Logger, cfg *Config) *IavlTree {
 	}
 }
 
-// WriteBatch writes a batch of key-value pairs to the database.
-func (t *IavlTree) WriteBatch(cs *store.Changeset) error {
-	for _, kv := range cs.Pairs {
-		if kv.Value == nil {
-			_, res, err := t.tree.Remove(kv.Key)
-			if err != nil {
-				return err
-			}
-			if !res {
-				return fmt.Errorf("failed to delete key %X", kv.Key)
-			}
-		} else {
-			_, err := t.tree.Set(kv.Key, kv.Value)
-			if err != nil {
-				return err
-			}
-		}
+// Remove removes the given key from the tree.
+func (t *IavlTree) Remove(key []byte) error {
+	_, res, err := t.tree.Remove(key)
+	if !res {
+		return fmt.Errorf("key %s not found", key)
 	}
-	return nil
+	return err
+}
+
+// Set sets the given key-value pair in the tree.
+func (t *IavlTree) Set(key, value []byte) error {
+	_, err := t.tree.Set(key, value)
+	return err
 }
 
 // WorkingHash returns the working hash of the database.

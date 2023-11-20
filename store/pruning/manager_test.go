@@ -9,9 +9,12 @@ import (
 
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/v2"
+	"cosmossdk.io/store/v2/commitment"
 	"cosmossdk.io/store/v2/commitment/iavl"
 	"cosmossdk.io/store/v2/storage/sqlite"
 )
+
+const defaultStoreKey = "default"
 
 type PruningTestSuite struct {
 	suite.Suite
@@ -34,7 +37,11 @@ func (s *PruningTestSuite) SetupTest() {
 	ss, err := sqlite.New(s.T().TempDir())
 	s.Require().NoError(err)
 
-	sc := iavl.NewIavlTree(dbm.NewMemDB(), log.NewNopLogger(), iavl.DefaultConfig())
+	scConfigs := map[string]interface{}{
+		defaultStoreKey: iavl.DefaultConfig(),
+	}
+	sc, err := commitment.NewCommitStore(scConfigs, dbm.NewMemDB(), log.NewNopLogger())
+	s.Require().NoError(err)
 
 	s.manager = NewManager(logger, ss, sc)
 	s.ss = ss
@@ -58,8 +65,11 @@ func (s *PruningTestSuite) TestPruning() {
 		version := i + 1
 
 		cs := store.NewChangeset()
-		cs.Add([]byte("key"), []byte(fmt.Sprintf("value%d", version)))
-
+		cs.AddKVPair(store.KVPair{
+			StoreKey: defaultStoreKey,
+			Key:      []byte("key"),
+			Value:    []byte(fmt.Sprintf("value%d", version)),
+		})
 		err := s.sc.WriteBatch(cs)
 		s.Require().NoError(err)
 
@@ -75,22 +85,22 @@ func (s *PruningTestSuite) TestPruning() {
 	s.manager.Stop()
 
 	// check the store for the version 96
-	val, err := s.ss.Get("", latestVersion-4, []byte("key"))
+	val, err := s.ss.Get(defaultStoreKey, latestVersion-4, []byte("key"))
 	s.Require().NoError(err)
 	s.Require().Equal([]byte("value96"), val)
 
 	// check the store for the version 50
-	val, err = s.ss.Get("", 50, []byte("key"))
-	s.Require().Error(err)
+	val, err = s.ss.Get(defaultStoreKey, 50, []byte("key"))
+	s.Require().NoError(err)
 	s.Require().Nil(val)
 
 	// check the commitment for the version 96
-	proof, err := s.sc.GetProof(latestVersion-4, []byte("key"))
+	proof, err := s.sc.GetProof(defaultStoreKey, latestVersion-4, []byte("key"))
 	s.Require().NoError(err)
 	s.Require().NotNil(proof.GetExist())
 
 	// check the commitment for the version 95
-	proof, err = s.sc.GetProof(latestVersion-5, []byte("key"))
+	proof, err = s.sc.GetProof(defaultStoreKey, latestVersion-5, []byte("key"))
 	s.Require().Error(err)
 	s.Require().Nil(proof)
 }

@@ -83,16 +83,16 @@ message MsgSubmitMultipleChoiceProposal {
   string metadata = 3;
   string title = 4;
   string summary = 5;
-  VoteOption option_one = 6;
-  VoteOption option_two = 7;
-  VoteOption option_three = 8;
-  VoteOption option_four = 9;
+  string option_one = 6;
+  string option_two = 7;
+  string option_three = 8;
+  string option_four = 9;
 }
 ```
 
 Voters can only vote on the defined options in the proposal.
 
-To maintain compatibility with the existing endpoints, the voting options will not be stored in the proposal itself. A multiple choice proposal will be stored as a [`v1.Proposal`][5]. A query will be available for multiple choice proposal types to get the voting options.
+To maintain compatibility with the existing endpoints, the voting options will not be stored in the proposal itself and each option will be mapped to [`v1.VoteOption`][5]. A multiple choice proposal will be stored as a [`v1.Proposal`][5]. A query will be available for multiple choice proposal types to get the voting options.
 
 Multiple choice proposals do not need additional governance parameters.
 
@@ -107,7 +107,14 @@ At the end of the voting period, if a proposal is voted as `SPAM`, its fails and
 A proposal is marked as `SPAM` when the total of weighted votes for all options is lower than the amount of weighted vote on `SPAM`
 (`spam` > `option_one + option_two + option_three + option_four` = proposal marked as spam).
 
-To avoid voters wrongfully voting down a proposal as `SPAM`, voters will be slashed 2% of their voting stake if they voted `SPAM` on a proposal that wasn't a spam proposal. This is done to ensure that voters only vote `SPAM` on proposals that are actually spam and not use it as a way to vote `No with Veto` without the threshold.
+To avoid voters wrongfully voting down a proposal as `SPAM`, voters will be slashed `x`% (default 0%) of their voting stake if they voted `SPAM` on a proposal that wasn't a spam proposal. The parameter allows to incentivise voters to only vote `SPAM` on actual spam proposals and not use `SPAM` as a way to vote `No with Veto` with a different threshold.
+
+This leads to the addition of the following governance parameter in [`v1.Params`][5]:
+
+```protobuf
+// burn_spam_amount defines the percentage of the voting stake that will be burned if a voter votes SPAM on a proposal that is not marked as SPAM.
+string burn_spam_amount = 8 [(cosmos_proto.scalar) = "cosmos.Dec"];
+```
 
 Additionally, the current vote options will be renamed to better accommodate the multiple choice proposal:
 

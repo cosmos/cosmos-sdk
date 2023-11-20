@@ -928,108 +928,6 @@ func (x *fastReflection_Budget) ProtoMethods() *protoiface.Methods {
 	}
 }
 
-var _ protoreflect.List = (*_ContinuousFund_6_list)(nil)
-
-type _ContinuousFund_6_list struct {
-	list *[]*v1beta1.Coin
-}
-
-func (x *_ContinuousFund_6_list) Len() int {
-	if x.list == nil {
-		return 0
-	}
-	return len(*x.list)
-}
-
-func (x *_ContinuousFund_6_list) Get(i int) protoreflect.Value {
-	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
-}
-
-func (x *_ContinuousFund_6_list) Set(i int, value protoreflect.Value) {
-	valueUnwrapped := value.Message()
-	concreteValue := valueUnwrapped.Interface().(*v1beta1.Coin)
-	(*x.list)[i] = concreteValue
-}
-
-func (x *_ContinuousFund_6_list) Append(value protoreflect.Value) {
-	valueUnwrapped := value.Message()
-	concreteValue := valueUnwrapped.Interface().(*v1beta1.Coin)
-	*x.list = append(*x.list, concreteValue)
-}
-
-func (x *_ContinuousFund_6_list) AppendMutable() protoreflect.Value {
-	v := new(v1beta1.Coin)
-	*x.list = append(*x.list, v)
-	return protoreflect.ValueOfMessage(v.ProtoReflect())
-}
-
-func (x *_ContinuousFund_6_list) Truncate(n int) {
-	for i := n; i < len(*x.list); i++ {
-		(*x.list)[i] = nil
-	}
-	*x.list = (*x.list)[:n]
-}
-
-func (x *_ContinuousFund_6_list) NewElement() protoreflect.Value {
-	v := new(v1beta1.Coin)
-	return protoreflect.ValueOfMessage(v.ProtoReflect())
-}
-
-func (x *_ContinuousFund_6_list) IsValid() bool {
-	return x.list != nil
-}
-
-var _ protoreflect.List = (*_ContinuousFund_8_list)(nil)
-
-type _ContinuousFund_8_list struct {
-	list *[]*v1beta1.Coin
-}
-
-func (x *_ContinuousFund_8_list) Len() int {
-	if x.list == nil {
-		return 0
-	}
-	return len(*x.list)
-}
-
-func (x *_ContinuousFund_8_list) Get(i int) protoreflect.Value {
-	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
-}
-
-func (x *_ContinuousFund_8_list) Set(i int, value protoreflect.Value) {
-	valueUnwrapped := value.Message()
-	concreteValue := valueUnwrapped.Interface().(*v1beta1.Coin)
-	(*x.list)[i] = concreteValue
-}
-
-func (x *_ContinuousFund_8_list) Append(value protoreflect.Value) {
-	valueUnwrapped := value.Message()
-	concreteValue := valueUnwrapped.Interface().(*v1beta1.Coin)
-	*x.list = append(*x.list, concreteValue)
-}
-
-func (x *_ContinuousFund_8_list) AppendMutable() protoreflect.Value {
-	v := new(v1beta1.Coin)
-	*x.list = append(*x.list, v)
-	return protoreflect.ValueOfMessage(v.ProtoReflect())
-}
-
-func (x *_ContinuousFund_8_list) Truncate(n int) {
-	for i := n; i < len(*x.list); i++ {
-		(*x.list)[i] = nil
-	}
-	*x.list = (*x.list)[:n]
-}
-
-func (x *_ContinuousFund_8_list) NewElement() protoreflect.Value {
-	v := new(v1beta1.Coin)
-	return protoreflect.ValueOfMessage(v.ProtoReflect())
-}
-
-func (x *_ContinuousFund_8_list) IsValid() bool {
-	return x.list != nil
-}
-
 var (
 	md_ContinuousFund                    protoreflect.MessageDescriptor
 	fd_ContinuousFund_title              protoreflect.FieldDescriptor
@@ -1150,8 +1048,8 @@ func (x *fastReflection_ContinuousFund) Range(f func(protoreflect.FieldDescripto
 			return
 		}
 	}
-	if len(x.Cap) != 0 {
-		value := protoreflect.ValueOfList(&_ContinuousFund_6_list{list: &x.Cap})
+	if x.Cap != nil {
+		value := protoreflect.ValueOfMessage(x.Cap.ProtoReflect())
 		if !f(fd_ContinuousFund_cap, value) {
 			return
 		}
@@ -1162,8 +1060,8 @@ func (x *fastReflection_ContinuousFund) Range(f func(protoreflect.FieldDescripto
 			return
 		}
 	}
-	if len(x.DistributedAmount) != 0 {
-		value := protoreflect.ValueOfList(&_ContinuousFund_8_list{list: &x.DistributedAmount})
+	if x.DistributedAmount != nil {
+		value := protoreflect.ValueOfMessage(x.DistributedAmount.ProtoReflect())
 		if !f(fd_ContinuousFund_distributed_amount, value) {
 			return
 		}
@@ -1194,11 +1092,11 @@ func (x *fastReflection_ContinuousFund) Has(fd protoreflect.FieldDescriptor) boo
 	case "cosmos.protocolpool.v1.ContinuousFund.percentage":
 		return x.Percentage != ""
 	case "cosmos.protocolpool.v1.ContinuousFund.cap":
-		return len(x.Cap) != 0
+		return x.Cap != nil
 	case "cosmos.protocolpool.v1.ContinuousFund.expiry":
 		return x.Expiry != nil
 	case "cosmos.protocolpool.v1.ContinuousFund.distributed_amount":
-		return len(x.DistributedAmount) != 0
+		return x.DistributedAmount != nil
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.ContinuousFund"))
@@ -1263,20 +1161,14 @@ func (x *fastReflection_ContinuousFund) Get(descriptor protoreflect.FieldDescrip
 		value := x.Percentage
 		return protoreflect.ValueOfString(value)
 	case "cosmos.protocolpool.v1.ContinuousFund.cap":
-		if len(x.Cap) == 0 {
-			return protoreflect.ValueOfList(&_ContinuousFund_6_list{})
-		}
-		listValue := &_ContinuousFund_6_list{list: &x.Cap}
-		return protoreflect.ValueOfList(listValue)
+		value := x.Cap
+		return protoreflect.ValueOfMessage(value.ProtoReflect())
 	case "cosmos.protocolpool.v1.ContinuousFund.expiry":
 		value := x.Expiry
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
 	case "cosmos.protocolpool.v1.ContinuousFund.distributed_amount":
-		if len(x.DistributedAmount) == 0 {
-			return protoreflect.ValueOfList(&_ContinuousFund_8_list{})
-		}
-		listValue := &_ContinuousFund_8_list{list: &x.DistributedAmount}
-		return protoreflect.ValueOfList(listValue)
+		value := x.DistributedAmount
+		return protoreflect.ValueOfMessage(value.ProtoReflect())
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.ContinuousFund"))
@@ -1308,15 +1200,11 @@ func (x *fastReflection_ContinuousFund) Set(fd protoreflect.FieldDescriptor, val
 	case "cosmos.protocolpool.v1.ContinuousFund.percentage":
 		x.Percentage = value.Interface().(string)
 	case "cosmos.protocolpool.v1.ContinuousFund.cap":
-		lv := value.List()
-		clv := lv.(*_ContinuousFund_6_list)
-		x.Cap = *clv.list
+		x.Cap = value.Message().Interface().(*v1beta1.Coin)
 	case "cosmos.protocolpool.v1.ContinuousFund.expiry":
 		x.Expiry = value.Message().Interface().(*timestamppb.Timestamp)
 	case "cosmos.protocolpool.v1.ContinuousFund.distributed_amount":
-		lv := value.List()
-		clv := lv.(*_ContinuousFund_8_list)
-		x.DistributedAmount = *clv.list
+		x.DistributedAmount = value.Message().Interface().(*v1beta1.Coin)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.ContinuousFund"))
@@ -1339,10 +1227,9 @@ func (x *fastReflection_ContinuousFund) Mutable(fd protoreflect.FieldDescriptor)
 	switch fd.FullName() {
 	case "cosmos.protocolpool.v1.ContinuousFund.cap":
 		if x.Cap == nil {
-			x.Cap = []*v1beta1.Coin{}
+			x.Cap = new(v1beta1.Coin)
 		}
-		value := &_ContinuousFund_6_list{list: &x.Cap}
-		return protoreflect.ValueOfList(value)
+		return protoreflect.ValueOfMessage(x.Cap.ProtoReflect())
 	case "cosmos.protocolpool.v1.ContinuousFund.expiry":
 		if x.Expiry == nil {
 			x.Expiry = new(timestamppb.Timestamp)
@@ -1350,10 +1237,9 @@ func (x *fastReflection_ContinuousFund) Mutable(fd protoreflect.FieldDescriptor)
 		return protoreflect.ValueOfMessage(x.Expiry.ProtoReflect())
 	case "cosmos.protocolpool.v1.ContinuousFund.distributed_amount":
 		if x.DistributedAmount == nil {
-			x.DistributedAmount = []*v1beta1.Coin{}
+			x.DistributedAmount = new(v1beta1.Coin)
 		}
-		value := &_ContinuousFund_8_list{list: &x.DistributedAmount}
-		return protoreflect.ValueOfList(value)
+		return protoreflect.ValueOfMessage(x.DistributedAmount.ProtoReflect())
 	case "cosmos.protocolpool.v1.ContinuousFund.title":
 		panic(fmt.Errorf("field title of message cosmos.protocolpool.v1.ContinuousFund is not mutable"))
 	case "cosmos.protocolpool.v1.ContinuousFund.description":
@@ -1388,14 +1274,14 @@ func (x *fastReflection_ContinuousFund) NewField(fd protoreflect.FieldDescriptor
 	case "cosmos.protocolpool.v1.ContinuousFund.percentage":
 		return protoreflect.ValueOfString("")
 	case "cosmos.protocolpool.v1.ContinuousFund.cap":
-		list := []*v1beta1.Coin{}
-		return protoreflect.ValueOfList(&_ContinuousFund_6_list{list: &list})
+		m := new(v1beta1.Coin)
+		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	case "cosmos.protocolpool.v1.ContinuousFund.expiry":
 		m := new(timestamppb.Timestamp)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	case "cosmos.protocolpool.v1.ContinuousFund.distributed_amount":
-		list := []*v1beta1.Coin{}
-		return protoreflect.ValueOfList(&_ContinuousFund_8_list{list: &list})
+		m := new(v1beta1.Coin)
+		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.ContinuousFund"))
@@ -1485,21 +1371,17 @@ func (x *fastReflection_ContinuousFund) ProtoMethods() *protoiface.Methods {
 		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
-		if len(x.Cap) > 0 {
-			for _, e := range x.Cap {
-				l = options.Size(e)
-				n += 1 + l + runtime.Sov(uint64(l))
-			}
+		if x.Cap != nil {
+			l = options.Size(x.Cap)
+			n += 1 + l + runtime.Sov(uint64(l))
 		}
 		if x.Expiry != nil {
 			l = options.Size(x.Expiry)
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
-		if len(x.DistributedAmount) > 0 {
-			for _, e := range x.DistributedAmount {
-				l = options.Size(e)
-				n += 1 + l + runtime.Sov(uint64(l))
-			}
+		if x.DistributedAmount != nil {
+			l = options.Size(x.DistributedAmount)
+			n += 1 + l + runtime.Sov(uint64(l))
 		}
 		if x.unknownFields != nil {
 			n += len(x.unknownFields)
@@ -1530,21 +1412,19 @@ func (x *fastReflection_ContinuousFund) ProtoMethods() *protoiface.Methods {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
 		}
-		if len(x.DistributedAmount) > 0 {
-			for iNdEx := len(x.DistributedAmount) - 1; iNdEx >= 0; iNdEx-- {
-				encoded, err := options.Marshal(x.DistributedAmount[iNdEx])
-				if err != nil {
-					return protoiface.MarshalOutput{
-						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-						Buf:               input.Buf,
-					}, err
-				}
-				i -= len(encoded)
-				copy(dAtA[i:], encoded)
-				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
-				i--
-				dAtA[i] = 0x42
+		if x.DistributedAmount != nil {
+			encoded, err := options.Marshal(x.DistributedAmount)
+			if err != nil {
+				return protoiface.MarshalOutput{
+					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+					Buf:               input.Buf,
+				}, err
 			}
+			i -= len(encoded)
+			copy(dAtA[i:], encoded)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+			i--
+			dAtA[i] = 0x42
 		}
 		if x.Expiry != nil {
 			encoded, err := options.Marshal(x.Expiry)
@@ -1560,21 +1440,19 @@ func (x *fastReflection_ContinuousFund) ProtoMethods() *protoiface.Methods {
 			i--
 			dAtA[i] = 0x3a
 		}
-		if len(x.Cap) > 0 {
-			for iNdEx := len(x.Cap) - 1; iNdEx >= 0; iNdEx-- {
-				encoded, err := options.Marshal(x.Cap[iNdEx])
-				if err != nil {
-					return protoiface.MarshalOutput{
-						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-						Buf:               input.Buf,
-					}, err
-				}
-				i -= len(encoded)
-				copy(dAtA[i:], encoded)
-				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
-				i--
-				dAtA[i] = 0x32
+		if x.Cap != nil {
+			encoded, err := options.Marshal(x.Cap)
+			if err != nil {
+				return protoiface.MarshalOutput{
+					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+					Buf:               input.Buf,
+				}, err
 			}
+			i -= len(encoded)
+			copy(dAtA[i:], encoded)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+			i--
+			dAtA[i] = 0x32
 		}
 		if len(x.Percentage) > 0 {
 			i -= len(x.Percentage)
@@ -1849,8 +1727,10 @@ func (x *fastReflection_ContinuousFund) ProtoMethods() *protoiface.Methods {
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.Cap = append(x.Cap, &v1beta1.Coin{})
-				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Cap[len(x.Cap)-1]); err != nil {
+				if x.Cap == nil {
+					x.Cap = &v1beta1.Coin{}
+				}
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Cap); err != nil {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
 				}
 				iNdEx = postIndex
@@ -1919,8 +1799,10 @@ func (x *fastReflection_ContinuousFund) ProtoMethods() *protoiface.Methods {
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.DistributedAmount = append(x.DistributedAmount, &v1beta1.Coin{})
-				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.DistributedAmount[len(x.DistributedAmount)-1]); err != nil {
+				if x.DistributedAmount == nil {
+					x.DistributedAmount = &v1beta1.Coin{}
+				}
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.DistributedAmount); err != nil {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
 				}
 				iNdEx = postIndex
@@ -2093,11 +1975,11 @@ type ContinuousFund struct {
 	// till the `cap` is reached or expired.
 	Percentage string `protobuf:"bytes,5,opt,name=percentage,proto3" json:"percentage,omitempty"`
 	// Cap is the capital amount, which when its met funds are no longer distributed.
-	Cap []*v1beta1.Coin `protobuf:"bytes,6,rep,name=cap,proto3" json:"cap,omitempty"`
+	Cap *v1beta1.Coin `protobuf:"bytes,6,opt,name=cap,proto3" json:"cap,omitempty"`
 	// Optional, if expiry is set, removes the state object when expired.
 	Expiry *timestamppb.Timestamp `protobuf:"bytes,7,opt,name=expiry,proto3" json:"expiry,omitempty"`
 	// Distributed amount field is to track the distributed amount.
-	DistributedAmount []*v1beta1.Coin `protobuf:"bytes,8,rep,name=distributed_amount,json=distributedAmount,proto3" json:"distributed_amount,omitempty"`
+	DistributedAmount *v1beta1.Coin `protobuf:"bytes,8,opt,name=distributed_amount,json=distributedAmount,proto3" json:"distributed_amount,omitempty"`
 }
 
 func (x *ContinuousFund) Reset() {
@@ -2155,7 +2037,7 @@ func (x *ContinuousFund) GetPercentage() string {
 	return ""
 }
 
-func (x *ContinuousFund) GetCap() []*v1beta1.Coin {
+func (x *ContinuousFund) GetCap() *v1beta1.Coin {
 	if x != nil {
 		return x.Cap
 	}
@@ -2169,7 +2051,7 @@ func (x *ContinuousFund) GetExpiry() *timestamppb.Timestamp {
 	return nil
 }
 
-func (x *ContinuousFund) GetDistributedAmount() []*v1beta1.Coin {
+func (x *ContinuousFund) GetDistributedAmount() *v1beta1.Coin {
 	if x != nil {
 		return x.DistributedAmount
 	}
@@ -2221,7 +2103,7 @@ var file_cosmos_protocolpool_v1_types_proto_rawDesc = []byte{
 	0x70, 0x65, 0x72, 0x69, 0x6f, 0x64, 0x18, 0x08, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x67,
 	0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x44,
 	0x75, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x42, 0x04, 0x98, 0xdf, 0x1f, 0x01, 0x52, 0x06, 0x70,
-	0x65, 0x72, 0x69, 0x6f, 0x64, 0x22, 0x80, 0x04, 0x0a, 0x0e, 0x43, 0x6f, 0x6e, 0x74, 0x69, 0x6e,
+	0x65, 0x72, 0x69, 0x6f, 0x64, 0x22, 0xa0, 0x03, 0x0a, 0x0e, 0x43, 0x6f, 0x6e, 0x74, 0x69, 0x6e,
 	0x75, 0x6f, 0x75, 0x73, 0x46, 0x75, 0x6e, 0x64, 0x12, 0x14, 0x0a, 0x05, 0x74, 0x69, 0x74, 0x6c,
 	0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x74, 0x69, 0x74, 0x6c, 0x65, 0x12, 0x20,
 	0x0a, 0x0b, 0x64, 0x65, 0x73, 0x63, 0x72, 0x69, 0x70, 0x74, 0x69, 0x6f, 0x6e, 0x18, 0x02, 0x20,
@@ -2236,23 +2118,17 @@ var file_cosmos_protocolpool_v1_types_proto_rawDesc = []byte{
 	0x1f, 0x1b, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x6d,
 	0x61, 0x74, 0x68, 0x2e, 0x4c, 0x65, 0x67, 0x61, 0x63, 0x79, 0x44, 0x65, 0x63, 0xd2, 0xb4, 0x2d,
 	0x0a, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x44, 0x65, 0x63, 0x52, 0x0a, 0x70, 0x65, 0x72,
-	0x63, 0x65, 0x6e, 0x74, 0x61, 0x67, 0x65, 0x12, 0x5d, 0x0a, 0x03, 0x63, 0x61, 0x70, 0x18, 0x06,
-	0x20, 0x03, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61,
-	0x73, 0x65, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x43, 0x6f, 0x69, 0x6e, 0x42,
-	0x30, 0xc8, 0xde, 0x1f, 0x00, 0xaa, 0xdf, 0x1f, 0x28, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e,
-	0x63, 0x6f, 0x6d, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
-	0x73, 0x2d, 0x73, 0x64, 0x6b, 0x2f, 0x74, 0x79, 0x70, 0x65, 0x73, 0x2e, 0x43, 0x6f, 0x69, 0x6e,
-	0x73, 0x52, 0x03, 0x63, 0x61, 0x70, 0x12, 0x38, 0x0a, 0x06, 0x65, 0x78, 0x70, 0x69, 0x72, 0x79,
-	0x18, 0x07, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1a, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e,
-	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61,
-	0x6d, 0x70, 0x42, 0x04, 0x90, 0xdf, 0x1f, 0x01, 0x52, 0x06, 0x65, 0x78, 0x70, 0x69, 0x72, 0x79,
-	0x12, 0x76, 0x0a, 0x12, 0x64, 0x69, 0x73, 0x74, 0x72, 0x69, 0x62, 0x75, 0x74, 0x65, 0x64, 0x5f,
-	0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x08, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x63,
-	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74,
-	0x61, 0x31, 0x2e, 0x43, 0x6f, 0x69, 0x6e, 0x42, 0x2c, 0xaa, 0xdf, 0x1f, 0x28, 0x67, 0x69, 0x74,
-	0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x63,
-	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2d, 0x73, 0x64, 0x6b, 0x2f, 0x74, 0x79, 0x70, 0x65, 0x73, 0x2e,
-	0x43, 0x6f, 0x69, 0x6e, 0x73, 0x52, 0x11, 0x64, 0x69, 0x73, 0x74, 0x72, 0x69, 0x62, 0x75, 0x74,
+	0x63, 0x65, 0x6e, 0x74, 0x61, 0x67, 0x65, 0x12, 0x2b, 0x0a, 0x03, 0x63, 0x61, 0x70, 0x18, 0x06,
+	0x20, 0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61,
+	0x73, 0x65, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x43, 0x6f, 0x69, 0x6e, 0x52,
+	0x03, 0x63, 0x61, 0x70, 0x12, 0x38, 0x0a, 0x06, 0x65, 0x78, 0x70, 0x69, 0x72, 0x79, 0x18, 0x07,
+	0x20, 0x01, 0x28, 0x0b, 0x32, 0x1a, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72,
+	0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70,
+	0x42, 0x04, 0x90, 0xdf, 0x1f, 0x01, 0x52, 0x06, 0x65, 0x78, 0x70, 0x69, 0x72, 0x79, 0x12, 0x48,
+	0x0a, 0x12, 0x64, 0x69, 0x73, 0x74, 0x72, 0x69, 0x62, 0x75, 0x74, 0x65, 0x64, 0x5f, 0x61, 0x6d,
+	0x6f, 0x75, 0x6e, 0x74, 0x18, 0x08, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x63, 0x6f, 0x73,
+	0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31,
+	0x2e, 0x43, 0x6f, 0x69, 0x6e, 0x52, 0x11, 0x64, 0x69, 0x73, 0x74, 0x72, 0x69, 0x62, 0x75, 0x74,
 	0x65, 0x64, 0x41, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x42, 0xda, 0x01, 0x0a, 0x1a, 0x63, 0x6f, 0x6d,
 	0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c,
 	0x70, 0x6f, 0x6f, 0x6c, 0x2e, 0x76, 0x31, 0x42, 0x0a, 0x54, 0x79, 0x70, 0x65, 0x73, 0x50, 0x72,

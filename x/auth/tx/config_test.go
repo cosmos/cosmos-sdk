@@ -6,14 +6,15 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
+	"cosmossdk.io/x/auth/tx"
+	txtestutil "cosmossdk.io/x/auth/tx/testutil"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/std"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/tx"
-	txtestutil "github.com/cosmos/cosmos-sdk/x/auth/tx/testutil"
 )
 
 func TestGenerator(t *testing.T) {

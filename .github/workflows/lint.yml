@@ -36,7 +36,6 @@ jobs:
           NIX: 1
       - uses: technote-space/get-diff-action@v6.1.2
         if: steps.lint_long.outcome == 'skipped'
-        id: git_diff_all
         with:
           PATTERNS: |
             **/*.go

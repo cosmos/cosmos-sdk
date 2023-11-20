@@ -12,6 +12,10 @@ import (
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
+	"cosmossdk.io/x/auth"
+	authkeeper "cosmossdk.io/x/auth/keeper"
+	authsims "cosmossdk.io/x/auth/simulation"
+	authtypes "cosmossdk.io/x/auth/types"
 	authzkeeper "cosmossdk.io/x/authz/keeper"
 	bankkeeper "cosmossdk.io/x/bank/keeper"
 	circuitkeeper "cosmossdk.io/x/circuit/keeper"
@@ -39,12 +43,7 @@ import (
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	testdata_pulsar "github.com/cosmos/cosmos-sdk/testutil/testdata/testpb"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	"github.com/cosmos/cosmos-sdk/x/auth"
-	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	authsims "github.com/cosmos/cosmos-sdk/x/auth/simulation"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	consensuskeeper "github.com/cosmos/cosmos-sdk/x/consensus/keeper"
-	crisiskeeper "github.com/cosmos/cosmos-sdk/x/crisis/keeper"
 )
 
 // DefaultNodeHome default home directories for the application daemon
@@ -66,14 +65,13 @@ type SimApp struct {
 	interfaceRegistry codectypes.InterfaceRegistry
 
 	// keepers
-	AccountKeeper         authkeeper.AccountKeeper
+	AuthKeeper            authkeeper.AccountKeeper
 	BankKeeper            bankkeeper.Keeper
 	StakingKeeper         *stakingkeeper.Keeper
 	SlashingKeeper        slashingkeeper.Keeper
 	MintKeeper            mintkeeper.Keeper
 	DistrKeeper           distrkeeper.Keeper
 	GovKeeper             *govkeeper.Keeper
-	CrisisKeeper          *crisiskeeper.Keeper
 	UpgradeKeeper         *upgradekeeper.Keeper
 	AuthzKeeper           authzkeeper.Keeper
 	EvidenceKeeper        evidencekeeper.Keeper
@@ -168,14 +166,13 @@ func NewSimApp(
 		&app.legacyAmino,
 		&app.txConfig,
 		&app.interfaceRegistry,
-		&app.AccountKeeper,
+		&app.AuthKeeper,
 		&app.BankKeeper,
 		&app.StakingKeeper,
 		&app.SlashingKeeper,
 		&app.MintKeeper,
 		&app.DistrKeeper,
 		&app.GovKeeper,
-		&app.CrisisKeeper,
 		&app.UpgradeKeeper,
 		&app.AuthzKeeper,
 		&app.EvidenceKeeper,
@@ -231,8 +228,6 @@ func NewSimApp(
 
 	/****  Module Options ****/
 
-	app.ModuleManager.RegisterInvariants(app.CrisisKeeper)
-
 	// RegisterUpgradeHandlers is used for registering any on-chain upgrades.
 	app.RegisterUpgradeHandlers()
 
@@ -244,7 +239,7 @@ func NewSimApp(
 	// NOTE: this is not required apps that don't use the simulator for fuzz testing
 	// transactions
 	overrideModules := map[string]module.AppModuleSimulation{
-		authtypes.ModuleName: auth.NewAppModule(app.appCodec, app.AccountKeeper, authsims.RandomGenesisAccounts),
+		authtypes.ModuleName: auth.NewAppModule(app.appCodec, app.AuthKeeper, authsims.RandomGenesisAccounts),
 	}
 	app.sm = module.NewSimulationManagerFromAppModules(app.ModuleManager.Modules, overrideModules)
 

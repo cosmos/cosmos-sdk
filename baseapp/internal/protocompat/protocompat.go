@@ -16,8 +16,9 @@ import (
 )
 
 var (
-	gogoType    = reflect.TypeOf((*gogoproto.Message)(nil)).Elem()
-	protov2Type = reflect.TypeOf((*proto2.Message)(nil)).Elem()
+	gogoType           = reflect.TypeOf((*gogoproto.Message)(nil)).Elem()
+	protov2Type        = reflect.TypeOf((*proto2.Message)(nil)).Elem()
+	protov2MarshalOpts = proto2.MarshalOptions{Deterministic: true}
 )
 
 type Handler = func(ctx context.Context, request, response protoiface.MessageV1) error
@@ -97,7 +98,7 @@ func makeProtoV2HybridHandler(prefMethod protoreflect.MethodDescriptor, cdc code
 			// the response is a protov2 message, so we cannot just return it.
 			// since the request came as gogoproto, we expect the response
 			// to also be gogoproto.
-			respBytes, err := proto2.Marshal(resp.(proto2.Message))
+			respBytes, err := protov2MarshalOpts.Marshal(resp.(proto2.Message))
 			if err != nil {
 				return err
 			}
@@ -138,7 +139,7 @@ func makeGogoHybridHandler(prefMethod protoreflect.MethodDescriptor, cdc codec.B
 		switch m := inReq.(type) {
 		case proto2.Message:
 			// we need to marshal and unmarshal the request.
-			requestBytes, err := proto2.Marshal(m)
+			requestBytes, err := protov2MarshalOpts.Marshal(m)
 			if err != nil {
 				return err
 			}

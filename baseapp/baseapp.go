@@ -19,10 +19,12 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
-	"cosmossdk.io/store"
-	storemetrics "cosmossdk.io/store/metrics"
 	"cosmossdk.io/store/snapshots"
-	storetypes "cosmossdk.io/store/types"
+	"cosmossdk.io/store/v2"
+
+	// "cosmossdk.io/store"
+	// storemetrics "cosmossdk.io/store/metrics"
+	// storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp/oe"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -42,7 +44,7 @@ type (
 	// loading a datastore written with an older version of the software. In
 	// particular, if a module changed the substore key name (or removed a substore)
 	// between two versions of the software.
-	StoreLoader func(ms storetypes.CommitMultiStore) error
+	StoreLoader func(rs store.RootStore) error
 )
 
 const (
@@ -62,13 +64,13 @@ type BaseApp struct {
 	// initialized on creation
 	mu                sync.Mutex // mu protects the fields below.
 	logger            log.Logger
-	name              string                      // application name from abci.BlockInfo
-	db                dbm.DB                      // common DB backend
-	cms               storetypes.CommitMultiStore // Main (uncached) state
-	qms               storetypes.MultiStore       // Optional alternative multistore for querying only.
-	storeLoader       StoreLoader                 // function to handle store loading, may be overridden with SetStoreLoader()
-	grpcQueryRouter   *GRPCQueryRouter            // router for redirecting gRPC query calls
-	msgServiceRouter  *MsgServiceRouter           // router for redirecting Msg service messages
+	name              string            // application name from abci.BlockInfo
+	db                dbm.DB            // common DB backend
+	rs                store.RootStore   // Main (uncached) state
+	qs                store.RootStore   // Optional alternative RootStore for querying only.
+	storeLoader       StoreLoader       // function to handle store loading, may be overridden with SetStoreLoader()
+	grpcQueryRouter   *GRPCQueryRouter  // router for redirecting gRPC query calls
+	msgServiceRouter  *MsgServiceRouter // router for redirecting Msg service messages
 	interfaceRegistry codectypes.InterfaceRegistry
 	txDecoder         sdk.TxDecoder // unmarshal []byte into sdk.Tx
 	txEncoder         sdk.TxEncoder // marshal sdk.Tx into []byte
@@ -94,6 +96,8 @@ type BaseApp struct {
 	sigverifyTx    bool           // in the simulation test, since the account does not have a private key, we have to ignore the tx sigverify.
 
 	// manages snapshots, i.e. dumps of app state at certain intervals
+	//
+	// TODO(bez): Replace with store v2 SM
 	snapshotManager *snapshots.Manager
 
 	// volatile states:
@@ -119,10 +123,6 @@ type BaseApp struct {
 	prepareProposalState *state
 	processProposalState *state
 	finalizeBlockState   *state
-
-	// An inter-block write-through cache provided to the context during the ABCI
-	// FinalizeBlock call.
-	interBlockCache storetypes.MultiStorePersistentCache
 
 	// paramStore is used to query for ABCI consensus parameters from an
 	// application parameter store.
@@ -173,6 +173,10 @@ type BaseApp struct {
 	indexEvents map[string]struct{}
 
 	// streamingManager for managing instances and configuration of ABCIListener services
+	//
+	// TODO(bez): Replace with store v2 compatible streaming manager
+	//
+	// Ref:https://github.com/cosmos/cosmos-sdk/issues/18527
 	streamingManager storetypes.StreamingManager
 
 	chainID string
@@ -226,9 +230,6 @@ func NewBaseApp(
 	}
 	if app.verifyVoteExt == nil {
 		app.SetVerifyVoteExtensionHandler(NoOpVerifyVoteExtensionHandler())
-	}
-	if app.interBlockCache != nil {
-		app.cms.SetInterBlockCache(app.interBlockCache)
 	}
 
 	app.runTxRecoveryMiddleware = newDefaultRecoveryMiddleware()
@@ -286,7 +287,7 @@ func (app *BaseApp) SetMsgServiceRouter(msgServiceRouter *MsgServiceRouter) {
 
 // MountStores mounts all IAVL or DB stores to the provided keys in the BaseApp
 // multistore.
-func (app *BaseApp) MountStores(keys ...storetypes.StoreKey) {
+func (app *BaseApp) MountStores(keys ...store.StoreKey) {
 	for _, key := range keys {
 		switch key.(type) {
 		case *storetypes.KVStoreKey:
@@ -352,7 +353,7 @@ func (app *BaseApp) MountStore(key storetypes.StoreKey, typ storetypes.StoreType
 // LoadLatestVersion loads the latest application version. It will panic if
 // called more than once on a running BaseApp.
 func (app *BaseApp) LoadLatestVersion() error {
-	err := app.storeLoader(app.cms)
+	err := app.storeLoader(app.rs)
 	if err != nil {
 		return fmt.Errorf("failed to load latest version: %w", err)
 	}
@@ -390,14 +391,14 @@ func (app *BaseApp) LoadVersion(version int64) error {
 	return app.Init()
 }
 
-// LastCommitID returns the last CommitID of the multistore.
-func (app *BaseApp) LastCommitID() storetypes.CommitID {
-	return app.cms.LastCommitID()
+// LastCommitID returns the last CommitID of the RootStore.
+func (app *BaseApp) LastCommitID() store.CommitID {
+	return app.rs.LastCommitID()
 }
 
 // LastBlockHeight returns the last committed block height.
 func (app *BaseApp) LastBlockHeight() int64 {
-	return app.cms.LastCommitID().Version
+	return app.rs.LastCommitID().Version
 }
 
 // ChainID returns the chainID of the app.

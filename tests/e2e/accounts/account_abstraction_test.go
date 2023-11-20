@@ -1,16 +1,19 @@
+//go:build app_v1
+
 package accounts
 
 import (
+	"context"
 	"testing"
 
 	rotationv1 "cosmossdk.io/api/cosmos/accounts/testing/rotation/v1"
 	accountsv1 "cosmossdk.io/api/cosmos/accounts/v1"
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
-	"cosmossdk.io/log"
+	v1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
 	"cosmossdk.io/simapp"
-	dbm "github.com/cosmos/cosmos-db"
+	"cosmossdk.io/x/accounts"
+	"cosmossdk.io/x/bank/testutil"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/proto"
@@ -18,14 +21,14 @@ import (
 )
 
 var (
-	privKey    = secp256k1.GenPrivKey()
-	accCreator = []byte("creator")
-	bundler    = "bundler"
-	alice      = "alice"
+	privKey     = secp256k1.GenPrivKey()
+	accCreator  = []byte("creator")
+	bundlerAddr = secp256k1.GenPrivKey().PubKey().Address()
+	aliceAddr   = secp256k1.GenPrivKey().PubKey().Address()
 )
 
 func TestAccountAbstraction(t *testing.T) {
-	app := simapp.NewSimApp(log.NewNopLogger(), dbm.NewMemDB(), nil, true, simtestutil.NewAppOptionsWithFlagHome(t.TempDir()))
+	app := setupApp(t)
 	ak := app.AccountsKeeper
 	ctx := sdk.NewContext(app.CommitMultiStore(), false, app.Logger())
 
@@ -37,30 +40,186 @@ func TestAccountAbstraction(t *testing.T) {
 	aaAddrStr, err := app.AuthKeeper.AddressCodec().BytesToString(aaAddr)
 	require.NoError(t, err)
 
-	t.Run("ok", func(t *testing.T) {
-		resp := ak.ExecuteUserOperation(ctx, bundler, &accountsv1.UserOperation{
+	// let's give aa some coins.
+	require.NoError(t, testutil.FundAccount(ctx, app.BankKeeper, aaAddr, sdk.NewCoins(sdk.NewInt64Coin("stake", 100000000000))))
+
+	bundlerAddrStr, err := app.AuthKeeper.AddressCodec().BytesToString(bundlerAddr)
+	require.NoError(t, err)
+
+	aliceAddrStr, err := app.AuthKeeper.AddressCodec().BytesToString(aliceAddr)
+	require.NoError(t, err)
+
+	t.Run("ok - pay bundler and exec not implemented", func(t *testing.T) {
+		// we simulate executing an user operation in an abstracted account
+		// which only implements the authentication.
+		resp := ak.ExecuteUserOperation(ctx, bundlerAddrStr, &accountsv1.UserOperation{
 			Sender:                 aaAddrStr,
-			AuthenticationMethod:   "standard",
+			AuthenticationMethod:   "secp256k1",
 			AuthenticationData:     []byte("signature"),
 			AuthenticationGasLimit: 10000,
-			BundlerPaymentMessages: nil,
-			BundlerPaymentGasLimit: 10000,
-			ExecutionMessages: intoAny(t, &bankv1beta1.MsgSend{
-				FromAddress: "",
-				ToAddress:   "",
-				Amount:      nil,
+			BundlerPaymentMessages: intoAny(t, &bankv1beta1.MsgSend{
+				FromAddress: aaAddrStr,
+				ToAddress:   bundlerAddrStr,
+				Amount:      coins(t, "1stake"), // the sender is the AA, so it has the coins and wants to pay the bundler for the gas
 			}),
-			ExecutionGasLimit: 10000,
+			BundlerPaymentGasLimit: 50000,
+			ExecutionMessages: intoAny(t, &bankv1beta1.MsgSend{
+				FromAddress: aaAddrStr,
+				ToAddress:   aliceAddrStr,
+				Amount:      coins(t, "2000stake"), // as the real action the sender wants to send coins to alice
+			}),
+			ExecutionGasLimit: 36000,
 		})
-		t.Log(resp.String())
+		// todo assertions
+		require.Empty(t, resp.Error) // no error
+		// aa changed state
+		// funds were sent from aa to bundler
+		// funds were sent from aa to alice
 	})
-	t.Run("ok pay bundler not implemented", func(t *testing.T) {})
-	t.Run("ok exec messages not implemented", func(t *testing.T) {})
-	t.Run("pay bundle impersonation", func(t *testing.T) {})
-	t.Run("exec message impersonation", func(t *testing.T) {})
-	t.Run("auth failure", func(t *testing.T) {})
-	t.Run("pay bundle failure", func(t *testing.T) {})
-	t.Run("exec message failure", func(t *testing.T) {})
+	t.Run("pay bundle impersonation", func(t *testing.T) {
+		// we simulate the execution of an abstracted account
+		// which only implements authentication and tries in the pay
+		// bundler messages the account tries to impersonate another one.
+		resp := ak.ExecuteUserOperation(ctx, bundlerAddrStr, &accountsv1.UserOperation{
+			Sender:                 aaAddrStr,
+			AuthenticationMethod:   "secp256k1",
+			AuthenticationData:     []byte("signature"),
+			AuthenticationGasLimit: 10000,
+			BundlerPaymentMessages: intoAny(t, &bankv1beta1.MsgSend{
+				FromAddress: bundlerAddrStr, // abstracted account tries to send money from bundler to itself.
+				ToAddress:   aaAddrStr,
+				Amount:      coins(t, "1stake"),
+			}),
+			BundlerPaymentGasLimit: 50000,
+			ExecutionMessages: intoAny(t, &bankv1beta1.MsgSend{
+				FromAddress: aaAddrStr,
+				ToAddress:   aliceAddrStr,
+				Amount:      coins(t, "2000stake"), // as the real action the sender wants to send coins to alice
+			}),
+			ExecutionGasLimit: 36000,
+		})
+		require.Contains(t, resp.Error, accounts.ErrUnauthorized.Error()) // error is unauthorized
+		require.Empty(t, resp.BundlerPaymentResponses)                    // no bundler payment responses, since the atomic exec failed
+		require.Empty(t, resp.ExecutionResponses)                         // no execution responses, since the atomic exec failed
+		require.Zero(t, resp.ExecutionGasUsed)                            // no execution gas used, since the atomic exec failed
+		require.NotZero(t, resp.BundlerPaymentGasUsed)                    // bundler payment gas used, even if the atomic exec failed
+	})
+	t.Run("exec message impersonation", func(t *testing.T) {
+		// we simulate a case in which the abstracted account tries to impersonate
+		// someone else in the execution of messages.
+		resp := ak.ExecuteUserOperation(ctx, bundlerAddrStr, &accountsv1.UserOperation{
+			Sender:                 aaAddrStr,
+			AuthenticationMethod:   "secp256k1",
+			AuthenticationData:     []byte("signature"),
+			AuthenticationGasLimit: 10000,
+			BundlerPaymentMessages: intoAny(t, &bankv1beta1.MsgSend{
+				FromAddress: aaAddrStr,
+				ToAddress:   bundlerAddrStr,
+				Amount:      coins(t, "1stake"),
+			}),
+			BundlerPaymentGasLimit: 50000,
+			ExecutionMessages: intoAny(t, &bankv1beta1.MsgSend{
+				FromAddress: aliceAddrStr, // abstracted account attempts to send money from alice to itself
+				ToAddress:   aaAddrStr,
+				Amount:      coins(t, "2000stake"),
+			}),
+			ExecutionGasLimit: 36000,
+		})
+		require.Contains(t, resp.Error, accounts.ErrUnauthorized.Error()) // error is unauthorized
+		require.NotEmpty(t, resp.BundlerPaymentResponses)                 // bundler payment responses, since the bundler payment succeeded
+		require.Empty(t, resp.ExecutionResponses)                         // no execution responses, since the atomic exec failed
+		require.NotZero(t, resp.ExecutionGasUsed)                         // execution gas used, even if the atomic exec failed
+		require.NotZero(t, resp.BundlerPaymentGasUsed)                    // bundler payment gas used, even if the atomic exec failed
+	})
+	t.Run("auth failure", func(t *testing.T) {
+		// if auth fails nothing more should be attempted, the authentication
+		// should have spent gas and the error should be returned.
+		// we simulate a case in which the abstracted account tries to impersonate
+		// someone else in the execution of messages.
+		resp := ak.ExecuteUserOperation(ctx, bundlerAddrStr, &accountsv1.UserOperation{
+			Sender:                 aaAddrStr,
+			AuthenticationMethod:   "invalid",
+			AuthenticationData:     []byte("signature"),
+			AuthenticationGasLimit: 10000,
+			BundlerPaymentMessages: intoAny(t, &bankv1beta1.MsgSend{
+				FromAddress: aaAddrStr,
+				ToAddress:   bundlerAddrStr,
+				Amount:      coins(t, "1stake"),
+			}),
+			BundlerPaymentGasLimit: 50000,
+			ExecutionMessages: intoAny(t, &bankv1beta1.MsgSend{
+				FromAddress: aliceAddrStr, // abstracted account attempts to send money from alice to itself
+				ToAddress:   aaAddrStr,
+				Amount:      coins(t, "2000stake"),
+			}),
+			ExecutionGasLimit: 36000,
+		})
+		require.Contains(t, resp.Error, accounts.ErrAuthentication.Error()) // error is authentication
+		require.Empty(t, resp.BundlerPaymentResponses)                      // no bundler payment responses, since the atomic exec failed
+		require.Empty(t, resp.ExecutionResponses)                           // no execution responses, since the atomic exec failed
+		require.Zero(t, resp.ExecutionGasUsed)                              // no execution gas used, since the atomic exec failed
+		require.Zero(t, resp.BundlerPaymentGasUsed)                         // no bundler payment gas used, since the atomic exec failed
+		require.NotZero(t, resp.AuthenticationGasUsed)                      // authentication gas used, even if the atomic exec failed
+	})
+	t.Run("pay bundle failure", func(t *testing.T) {
+		// pay bundler fails, nothing more should be attempted, the authentication
+		// succeeded. We expect gas used in auth and pay bundler step.
+		// we simulate a case in which the abstracted account tries to impersonate
+		// someone else in the execution of messages.
+		resp := ak.ExecuteUserOperation(ctx, bundlerAddrStr, &accountsv1.UserOperation{
+			Sender:                 aaAddrStr,
+			AuthenticationMethod:   "secp256k1",
+			AuthenticationData:     []byte("signature"),
+			AuthenticationGasLimit: 10000,
+			BundlerPaymentMessages: intoAny(t, &bankv1beta1.MsgSend{
+				FromAddress: aaAddrStr,
+				ToAddress:   bundlerAddrStr,
+				Amount:      coins(t, "1atom"), // abstracted account does not have enough money to pay the bundler, since it does not hold atom
+			}),
+			BundlerPaymentGasLimit: 50000,
+			ExecutionMessages: intoAny(t, &bankv1beta1.MsgSend{
+				FromAddress: aliceAddrStr, // abstracted account attempts to send money from alice to itself
+				ToAddress:   aaAddrStr,
+				Amount:      coins(t, "2000stake"),
+			}),
+			ExecutionGasLimit: 36000,
+		})
+		require.Contains(t, resp.Error, accounts.ErrBundlerPayment.Error()) // error is bundler payment
+		require.Empty(t, resp.BundlerPaymentResponses)                      // no bundler payment responses, since the atomic exec failed
+		require.Empty(t, resp.ExecutionResponses)                           // no execution responses, since the atomic exec failed
+		require.Zero(t, resp.ExecutionGasUsed)                              // no execution gas used, since the atomic exec failed
+		require.NotZero(t, resp.BundlerPaymentGasUsed)                      // bundler payment gas used, even if the atomic exec failed
+		require.NotZero(t, resp.AuthenticationGasUsed)                      // authentication gas used, even if the atomic exec failed
+	})
+	t.Run("exec message failure", func(t *testing.T) {
+		// execution message fails, nothing more should be attempted, the authentication
+		// and pay bundler succeeded. We expect gas used in auth, pay bundler and
+		// execution step.
+		resp := ak.ExecuteUserOperation(ctx, bundlerAddrStr, &accountsv1.UserOperation{
+			Sender:                 aaAddrStr,
+			AuthenticationMethod:   "secp256k1",
+			AuthenticationData:     []byte("signature"),
+			AuthenticationGasLimit: 10000,
+			BundlerPaymentMessages: intoAny(t, &bankv1beta1.MsgSend{
+				FromAddress: aaAddrStr,
+				ToAddress:   bundlerAddrStr,
+				Amount:      coins(t, "1stake"),
+			}),
+			BundlerPaymentGasLimit: 50000,
+			ExecutionMessages: intoAny(t, &bankv1beta1.MsgSend{
+				FromAddress: aaAddrStr,
+				ToAddress:   aliceAddrStr,
+				Amount:      coins(t, "2000atom"), // abstracted account does not have enough money to pay alice, since it does not hold atom
+			}),
+			ExecutionGasLimit: 36000,
+		})
+		require.Contains(t, resp.Error, accounts.ErrExecution.Error()) // error is execution
+		require.Len(t, resp.BundlerPaymentResponses, 1)                // bundler payment response, since the pay bundler succeeded
+		require.Empty(t, resp.ExecutionResponses)                      // no execution responses, since the atomic exec failed
+		require.NotZero(t, resp.ExecutionGasUsed)                      // execution gas used, even if the atomic exec failed
+		require.NotZero(t, resp.BundlerPaymentGasUsed)                 // bundler payment gas used, even if the atomic exec failed
+		require.NotZero(t, resp.AuthenticationGasUsed)                 // authentication gas used, even if the atomic exec failed
+	})
 }
 
 func intoAny(t *testing.T, msgs ...proto.Message) (anys []*anypb.Any) {
@@ -71,4 +230,24 @@ func intoAny(t *testing.T, msgs ...proto.Message) (anys []*anypb.Any) {
 		anys = append(anys, any)
 	}
 	return
+}
+
+func coins(t *testing.T, s string) []*v1beta1.Coin {
+	t.Helper()
+	coins, err := sdk.ParseCoinsNormalized(s)
+	require.NoError(t, err)
+	coinsv2 := make([]*v1beta1.Coin, len(coins))
+	for i, coin := range coins {
+		coinsv2[i] = &v1beta1.Coin{
+			Denom:  coin.Denom,
+			Amount: coin.Amount.String(),
+		}
+	}
+	return coinsv2
+}
+
+func balanceIs(t *testing.T, ctx context.Context, app *simapp.SimApp, addr sdk.AccAddress, s string) {
+	t.Helper()
+	balance := app.BankKeeper.GetAllBalances(ctx, addr)
+	require.Equal(t, s, balance.String())
 }

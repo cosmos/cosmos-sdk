@@ -10,6 +10,15 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
+var (
+	// ErrAuthentication is returned when the authentication fails.
+	ErrAuthentication = fmt.Errorf("authentication failed")
+	// ErrBundlerPayment is returned when the bundler payment fails.
+	ErrBundlerPayment = fmt.Errorf("bundler payment failed")
+	// ErrExecution is returned when the execution fails.
+	ErrExecution = fmt.Errorf("execution failed")
+)
+
 // ExecuteUserOperation handles the execution of an abstracted account UserOperation.
 func (k Keeper) ExecuteUserOperation(
 	ctx context.Context,
@@ -20,28 +29,29 @@ func (k Keeper) ExecuteUserOperation(
 
 	// authenticate
 	authGas, err := k.Authenticate(ctx, bundler, op)
+	resp.AuthenticationGasUsed = authGas
 	if err != nil {
-		resp.Error = fmt.Sprintf("authentication failed: %s", err.Error())
+		resp.Error = err.Error()
 		return resp
 	}
 	resp.AuthenticationGasUsed = authGas
 
 	// pay bundler
 	bundlerPayGas, bundlerPayResp, err := k.PayBundler(ctx, bundler, op)
+	resp.BundlerPaymentGasUsed = bundlerPayGas
 	if err != nil {
-		resp.Error = fmt.Sprintf("bundler payment failed: %s", err.Error())
+		resp.Error = err.Error()
 		return resp
 	}
-	resp.BundlerPaymentGasUsed = bundlerPayGas
 	resp.BundlerPaymentResponses = bundlerPayResp
 
 	// execute messages, the real operation intent
 	executeGas, executeResp, err := k.OpExecuteMessages(ctx, bundler, op)
+	resp.ExecutionGasUsed = executeGas
 	if err != nil {
-		resp.Error = fmt.Sprintf("execution failed: %s", err.Error())
+		resp.Error = err.Error()
 		return resp
 	}
-	resp.ExecutionGasUsed = executeGas
 	resp.ExecutionResponses = executeResp
 
 	// done!
@@ -57,9 +67,13 @@ func (k Keeper) Authenticate(
 	op *accountsv1.UserOperation,
 ) (gasUsed uint64, err error) {
 	// authenticate
-	return k.branchExecutor.ExecuteWithGasLimit(ctx, op.AuthenticationGasLimit, func(ctx context.Context) error {
+	gasUsed, err = k.branchExecutor.ExecuteWithGasLimit(ctx, op.AuthenticationGasLimit, func(ctx context.Context) error {
 		return k.authenticate(ctx, bundler, op)
 	})
+	if err != nil {
+		return gasUsed, fmt.Errorf("%w: %w", ErrAuthentication, err)
+	}
+	return gasUsed, nil
 }
 
 // authenticate handles the authentication flow of an abstracted account.
@@ -97,7 +111,10 @@ func (k Keeper) OpExecuteMessages(
 		responses, err = k.opExecuteMessages(ctx, bundler, op)
 		return err
 	})
-	return gasUsed, responses, err
+	if err != nil {
+		return gasUsed, nil, fmt.Errorf("%w: %w", ErrExecution, err)
+	}
+	return gasUsed, responses, nil
 }
 
 func (k Keeper) opExecuteMessages(
@@ -147,7 +164,10 @@ func (k Keeper) PayBundler(
 		responses, err = k.payBundler(ctx, bundler, op)
 		return err
 	})
-	return gasUsed, responses, err
+	if err != nil {
+		return gasUsed, nil, fmt.Errorf("%w: %w", ErrBundlerPayment, err)
+	}
+	return gasUsed, responses, nil
 }
 
 func (k Keeper) payBundler(

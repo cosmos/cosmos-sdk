@@ -26,7 +26,11 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 )
 
-var errAccountTypeNotFound = errors.New("account type not found")
+var (
+	errAccountTypeNotFound = errors.New("account type not found")
+	// ErrUnauthorized is returned when a message sender is not allowed to perform the operation.
+	ErrUnauthorized = errors.New("unauthorized")
+)
 
 var (
 	// AccountTypeKeyPrefix is the prefix for the account type key.
@@ -320,7 +324,7 @@ func (k Keeper) sendModuleMessage(ctx context.Context, sender []byte, msg, msgRe
 		return fmt.Errorf("expected only one signer, got %d", len(wantSenders))
 	}
 	if !bytes.Equal(sender, wantSenders[0]) {
-		return fmt.Errorf("sender is not authorized to send this message")
+		return fmt.Errorf("%w: sender does not match expected sender", ErrUnauthorized)
 	}
 	msgV1, msgRespV1 := msg.(protoiface.MessageV1), msgResp.(protoiface.MessageV1)
 	messageName := getMessageName(msgV1)

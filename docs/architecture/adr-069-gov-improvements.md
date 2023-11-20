@@ -36,7 +36,7 @@ Currently, all proposals are [`v1.Proposal`][5]. Optimistic and multiple choice 
 
 ```protobuf
 enum ProposalType {
-  NORMAL = 0;
+  STANDARD = 0;
   MULTIPLE_CHOICE = 1;
   OPTIMISTIC = 2;
   EXPEDITED = 3;
@@ -45,7 +45,7 @@ enum ProposalType {
 
 Note, that expedited becomes a proposal type itself instead of a boolean on the `v1.Proposal` struct.
 
-> An expedited proposal is by design a normal proposal with a quicker voting period and higher threshold. When an expedited proposal fails, it gets converted to a normal proposal.   
+> An expedited proposal is by design a standard proposal with a quicker voting period and higher threshold. When an expedited proposal fails, it gets converted to a standard proposal.   
 
 An expedited optimistic proposal and an expedited multiple choice proposal do not make sense based on the definition above and is a proposal type instead of a proposal characteristic.
 
@@ -53,7 +53,7 @@ An expedited optimistic proposal and an expedited multiple choice proposal do no
 
 An optimistic proposal is a proposal that passes unless a threshold a NO votes is reached.
 
-Voter can only vote NO on the proposal. If the NO threshold is reached, the optimistic proposal is converted to a normal proposal.
+Voter can only vote NO on the proposal. If the NO threshold is reached, the optimistic proposal is converted to a standard proposal.
 
 Two governance parameters will be in added [`v1.Params`][5] to support optimistic proposals:
 
@@ -61,7 +61,7 @@ Two governance parameters will be in added [`v1.Params`][5] to support optimisti
 // optimistic_authorized_addreses is an optional governance parameter that limits the authorized accounts than can submit optimisitc proposals
 repeated string optimistic_authorized_addreses = 17 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
-// Optimistic rejected threshold defines at which percentage of NO votes, the optimistic proposal should fail and be converted to a normal proposal.
+// Optimistic rejected threshold defines at which percentage of NO votes, the optimistic proposal should fail and be converted to a standard proposal.
 string optimistic_rejected_threshold = 18 [(cosmos_proto.scalar) = "cosmos.Dec"];
 ```
 
@@ -69,7 +69,8 @@ string optimistic_rejected_threshold = 18 [(cosmos_proto.scalar) = "cosmos.Dec"]
 
 A multiple choice proposal is a proposal where the voting options can be defined by the proposer.
 
-The number of voting option will be limited to a maximum of 4. A new vote option `SPAM` will be added and distinguished of those voting options. 
+The number of voting option will be limited to a maximum of 4.
+A new vote option `SPAM` will be added and distinguished of those voting options. `SPAM` will be used to mark a proposal as spam and is explained further below.
 
 Multiple choice proposals, contrary to any other proposal type, cannot have messages to execute. They are only text proposals.
 
@@ -128,7 +129,7 @@ enum VoteOption {
 }
 ```
 
-The order does not change for a normal proposal (1 = yes, 2 = abstain, 3 = no, 4 = no with veto as it was). We will attempt to make this change in a non-breaking way for clients (cli and wallets).
+The order does not change for a standard proposal (1 = yes, 2 = abstain, 3 = no, 4 = no with veto as it was). We will attempt to make this change in a non-breaking way for clients (cli and wallets).
 
 Updating vote options means updating [`v1.TallyResult`][5] as well.
 
@@ -143,8 +144,12 @@ The custom tallying function can be passed to the `x/gov` keeper with the follow
 ```go
 type Tally interface{
     // to be decided
-    Calculate() govv1.TallyResult
-    Pass() bool
+
+    // Calculate calculates the tally result
+    Calculate(proposal v1.Proposal, govKeeper GovKeeper, stakingKeeper StakingKeeper) govv1.TallyResult
+    // IsAccepted returns true if the proposal passes/is accepted
+    IsAccepted() bool
+    // BurnDeposit returns true if the proposal deposit should be burned
     BurnDeposit() bool
 }
 ```
@@ -159,7 +164,7 @@ That logic consists of querying multiple choice proposals vote mapping their vot
 
 Legacy proposals (`v1beta1`) endpoints will not be supporting the new proposal types.
 
-Voting on a gov v1 proposal having a different type than [`normal` or `expedited`](#proposals) via the `v1beta1` will not be supported.
+Voting on a gov v1 proposal having a different type than [`standard` or `expedited`](#proposals) via the `v1beta1` will not be supported.
 This is already the case for the expedited proposals.
 
 ### Positive

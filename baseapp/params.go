@@ -18,6 +18,7 @@ var (
 	ParamStoreKeyBlockParams     = []byte("BlockParams")
 	ParamStoreKeyEvidenceParams  = []byte("EvidenceParams")
 	ParamStoreKeyValidatorParams = []byte("ValidatorParams")
+	ParamStoreKeyVersionParams   = []byte("VersionParams")
 )
 
 // ParamStore defines the interface the parameter store used by the BaseApp must
@@ -80,6 +81,21 @@ func ValidateValidatorParams(i interface{}) error {
 
 	if len(v.PubKeyTypes) == 0 {
 		return errors.New("validator allowed pubkey types must not be empty")
+	}
+
+	return nil
+}
+
+// ValidateVersionParams defines a stateless validation on VersionParams. This
+// function is called whenever the parameters are updated or stored.
+func ValidateVersionParams(i interface{}) error {
+	v, ok := i.(tmproto.VersionParams)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	if v.AppVersion == 0 {
+		return errors.New("application version must not be zero")
 	}
 
 	return nil

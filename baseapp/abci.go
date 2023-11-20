@@ -60,6 +60,9 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 	// to state.
 	if req.ConsensusParams != nil {
 		app.StoreConsensusParams(app.deliverState.ctx, req.ConsensusParams)
+		if req.ConsensusParams.Version != nil {
+			app.appVersion = req.ConsensusParams.Version.AppVersion
+		}
 	}
 
 	if app.initChainer == nil {
@@ -122,7 +125,15 @@ func (app *BaseApp) SetOption(req abci.RequestSetOption) (res abci.ResponseSetOp
 // Info implements the ABCI interface.
 func (app *BaseApp) Info(req abci.RequestInfo) abci.ResponseInfo {
 	lastCommitID := app.cms.LastCommitID()
-
+	// load the app version for a non zero height
+	if lastCommitID.Version > 0 {
+		ctx, err := app.createQueryContext(lastCommitID.Version, false)
+		if err != nil {
+			panic(err)
+		}
+		// get and set the app version
+		_ = app.AppVersion(ctx)
+	}
 	return abci.ResponseInfo{
 		Data:             app.name,
 		Version:          app.version,

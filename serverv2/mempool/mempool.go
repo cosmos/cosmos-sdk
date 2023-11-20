@@ -5,10 +5,10 @@ import (
 )
 
 // Mempool defines the required methods of an application's mempool.
-type Mempool interface {
+type Mempool[T any] interface {
 	// Insert attempts to insert a Tx into the app-side mempool returning
 	// an error upon failure. Insert will validate the transaction using the txValidator
-	Insert(ctx context.Context, txs any) error // TODO change from any
+	Insert(ctx context.Context, txs T) error
 
 	// GetTxs returns a list of transactions to add in a block
 	// size specifies the size of the block left for transactions
@@ -19,5 +19,5 @@ type Mempool interface {
 
 	// Remove attempts to remove a transaction from the mempool, returning an error
 	// upon failure.
-	Remove(txs any) error // TODO change from any
+	Remove(txs T) error
 }

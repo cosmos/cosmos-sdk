@@ -94,8 +94,6 @@ Voters can only vote on the defined options in the proposal.
 
 To maintain compatibility with the existing endpoints, the voting options will not be stored in the proposal itself and each option will be mapped to [`v1.VoteOption`][5]. A multiple choice proposal will be stored as a [`v1.Proposal`][5]. A query will be available for multiple choice proposal types to get the voting options.
 
-Multiple choice proposals do not need additional governance parameters.
-
 ### Votes
 
 As mentioned above [multiple choice proposal](#multiple-choice-proposal) will introduce an additional vote option: `SPAM`.

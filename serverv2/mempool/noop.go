@@ -5,38 +5,38 @@ import (
 )
 
 // TODO here until we rebase to get the txcodec items
-type TxValidator interface {
-	ValidateTx(ctx context.Context, tx any, simulate bool) (context.Context, error)
+type TxValidator[T any] interface {
+	ValidateTx(ctx context.Context, tx T, simulate bool) (context.Context, error)
 }
 
-var _ Mempool = (*NoOpMempool)(nil)
+var _ Mempool[any] = NoOpMempool[any]{}
 
-type NoOpMempool struct {
-	txValidator TxValidator
+type NoOpMempool[T any] struct {
+	txValidator TxValidator[T]
 }
 
-func NewNoopMempool(txv TxValidator) *NoOpMempool {
-	return &NoOpMempool{txValidator: txv}
+func NewNoopMempool[T any](txv TxValidator[T]) *NoOpMempool[T] {
+	return &NoOpMempool[T]{txValidator: txv}
 }
 
-func (s *NoOpMempool) Start() error {
-	// NoOpMempool does not require any initialization
+func (s *NoOpMempool[T]) Start() error {
+	// NoOpMempool[T] does not require any initialization
 	return nil
 }
 
-func (s *NoOpMempool) Stop() error {
-	// NoOpMempool does not require any cleanup
+func (s *NoOpMempool[T]) Stop() error {
+	// NoOpMempool[T] does not require any cleanup
 	return nil
 }
 
-func (npm NoOpMempool) Insert(ctx context.Context, tx any) error {
+func (npm NoOpMempool[T]) Insert(ctx context.Context, tx T) error {
 	_, err := npm.txValidator.ValidateTx(ctx, tx, false)
 	return err
 }
 
-func (NoOpMempool) GetTxs(ctx context.Context, size uint32) (any, error) {
+func (NoOpMempool[T]) GetTxs(ctx context.Context, size uint32) (any, error) {
 	return nil, nil
 }
 
-func (NoOpMempool) CountTx() uint32  { return 0 }
-func (NoOpMempool) Remove(any) error { return nil }
+func (NoOpMempool[T]) CountTx() uint32  { return 0 }
+func (NoOpMempool[T]) Remove(any) error { return nil }

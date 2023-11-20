@@ -2,9 +2,8 @@ package keeper
 
 import (
 	"context"
-	"fmt"
-
 	errorspkg "errors"
+	"fmt"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/errors"

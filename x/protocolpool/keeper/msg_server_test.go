@@ -344,8 +344,8 @@ func (suite *KeeperTestSuite) TestCreateContinuousFund() {
 	suite.Require().NoError(err)
 	invalidCap := sdk.NewInt64Coin("foo", 0)
 	invalidExpirty := suite.ctx.BlockTime().Add(-15 * time.Second)
-	oneMonthInSeconds := time.Duration(30*24*60*60) * time.Second // Approximate number of seconds in 1 month
-	expiry := suite.ctx.BlockTime().Add(oneMonthInSeconds)
+	oneMonthInSeconds := int64(30 * 24 * 60 * 60) // Approximate number of seconds in 1 month
+	expiry := suite.ctx.BlockTime().Add(time.Duration(oneMonthInSeconds) * time.Second)
 	testCases := map[string]struct {
 		input     *types.MsgCreateContinuousFund
 		expErr    bool

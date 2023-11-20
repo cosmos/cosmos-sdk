@@ -70,11 +70,16 @@ func TestAccountAbstraction(t *testing.T) {
 			}),
 			ExecutionGasLimit: 36000,
 		})
-		// todo assertions
 		require.Empty(t, resp.Error) // no error
-		// aa changed state
-		// funds were sent from aa to bundler
-		// funds were sent from aa to alice
+		require.Len(t, resp.BundlerPaymentResponses, 1)
+		require.Len(t, resp.ExecutionResponses, 1)
+		require.NotZero(t, resp.ExecutionGasUsed)
+		require.NotZero(t, resp.BundlerPaymentGasUsed)
+		require.NotZero(t, resp.AuthenticationGasUsed)
+		// assert there were state changes
+		balanceIs(t, ctx, app, bundlerAddr.Bytes(), "1stake")  // pay bundler state change
+		balanceIs(t, ctx, app, aliceAddr.Bytes(), "2000stake") // execute messages state change.
+
 	})
 	t.Run("pay bundle impersonation", func(t *testing.T) {
 		// we simulate the execution of an abstracted account

@@ -100,7 +100,7 @@ To maintain compatibility with the existing endpoints, the voting options will n
 As mentioned above [multiple choice proposal](#multiple-choice-proposal) will introduce an additional vote option: `SPAM`.
 
 This vote option will be supported by all proposal types.
-At the end of the voting period, if a proposal is voted as `SPAM`, its fails and its deposit is burned.
+At the end of the voting period, if a proposal is voted as `SPAM`, it fails and its deposit is burned.
 
 `SPAM` differs from the `No with Veto` vote as its threshold is dynamic.
 A proposal is marked as `SPAM` when the total of weighted votes for all options is lower than the amount of weighted vote on `SPAM`

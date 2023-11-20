@@ -7,6 +7,7 @@ import (
 )
 
 func setupApp(t *testing.T) *simapp.SimApp {
+	t.Helper()
 	app := simapp.Setup(t, false)
 	return app
 }

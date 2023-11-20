@@ -4,13 +4,14 @@ import (
 	"context"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/runtime/protoiface"
+
 	"cosmossdk.io/collections/colltest"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/event"
 	"cosmossdk.io/x/accounts/internal/implementation"
-	"github.com/stretchr/testify/require"
-	"google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/runtime/protoiface"
 )
 
 var _ address.Codec = (*addressCodec)(nil)
@@ -46,8 +47,8 @@ var _ QueryRouter = (*mockQuery)(nil)
 
 type mockQuery func(ctx context.Context, req, resp proto.Message) error
 
-func (m mockQuery) HybridHandlerByRequestName(_ string) []func(ctx context.Context, req protoiface.MessageV1, resp protoiface.MessageV1) error {
-	return []func(ctx context.Context, req protoiface.MessageV1, resp protoiface.MessageV1) error{func(ctx context.Context, req protoiface.MessageV1, resp protoiface.MessageV1) error {
+func (m mockQuery) HybridHandlerByRequestName(_ string) []func(ctx context.Context, req, resp protoiface.MessageV1) error {
+	return []func(ctx context.Context, req, resp protoiface.MessageV1) error{func(ctx context.Context, req, resp protoiface.MessageV1) error {
 		return m(ctx, req.(proto.Message), resp.(proto.Message))
 	}}
 }
@@ -66,10 +67,10 @@ func (m mockSigner) GetSigners(msg proto.Message) ([][]byte, error) {
 
 var _ MsgRouter = (*mockExec)(nil)
 
-type mockExec func(ctx context.Context, msg proto.Message, msgResp proto.Message) error
+type mockExec func(ctx context.Context, msg, msgResp proto.Message) error
 
-func (m mockExec) HybridHandlerByMsgName(_ string) func(ctx context.Context, req protoiface.MessageV1, resp protoiface.MessageV1) error {
-	return func(ctx context.Context, req protoiface.MessageV1, resp protoiface.MessageV1) error {
+func (m mockExec) HybridHandlerByMsgName(_ string) func(ctx context.Context, req, resp protoiface.MessageV1) error {
+	return func(ctx context.Context, req, resp protoiface.MessageV1) error {
 		return m(ctx, req.(proto.Message), resp.(proto.Message))
 	}
 }

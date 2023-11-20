@@ -185,7 +185,7 @@ func makeSignBatchCmd() func(cmd *cobra.Command, args []string) error {
 	}
 }
 
-func sigTxOrMultisig(clientCtx client.Context, txBuilder client.TxBuilder, txFactory tx.Factory, from string, multisigKey string) (err error) {
+func sigTxOrMultisig(clientCtx client.Context, txBuilder client.TxBuilder, txFactory tx.Factory, from, multisigKey string) (err error) {
 	if multisigKey == "" {
 		err = sign(clientCtx, txBuilder, txFactory, from)
 	} else {

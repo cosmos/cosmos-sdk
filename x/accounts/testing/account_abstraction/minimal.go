@@ -9,6 +9,7 @@ import (
 	"cosmossdk.io/api/cosmos/crypto/secp256k1"
 	"cosmossdk.io/collections"
 	"cosmossdk.io/x/accounts/accountstd"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 )
 

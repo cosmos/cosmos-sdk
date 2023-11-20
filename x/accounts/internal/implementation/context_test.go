@@ -47,7 +47,7 @@ func TestMakeAccountContext(t *testing.T) {
 	accountCtx = MakeAccountContext(originalContext, storeService, []byte("legit-exec-module"), []byte("invoker"), func(ctx context.Context, sender []byte, msg, msgResp proto.Message) error {
 		// ensure we unwrapped the context when invoking a module call
 		require.Equal(t, originalContext, ctx)
-		proto.Merge(msgResp.(proto.Message), &wrapperspb.StringValue{Value: "module exec was called"})
+		proto.Merge(msgResp, &wrapperspb.StringValue{Value: "module exec was called"})
 		return nil
 	}, nil, nil)
 
@@ -69,7 +69,7 @@ func TestMakeAccountContext(t *testing.T) {
 	// we can guarantee that exec paths do not impact query paths.
 	accountCtx = MakeAccountContext(originalContext, storeService, nil, nil, nil, nil, func(ctx context.Context, req, resp proto.Message) error {
 		require.Equal(t, originalContext, ctx)
-		proto.Merge(resp.(proto.Message), wrapperspb.String("module query was called"))
+		proto.Merge(resp, wrapperspb.String("module query was called"))
 		return nil
 	})
 

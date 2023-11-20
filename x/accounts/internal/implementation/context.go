@@ -3,15 +3,14 @@ package implementation
 import (
 	"context"
 
+	"google.golang.org/protobuf/proto"
+
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/x/accounts/internal/prefixstore"
-	"google.golang.org/protobuf/proto"
 )
 
-var (
-	AccountStatePrefix = collections.NewPrefix(255)
-)
+var AccountStatePrefix = collections.NewPrefix(255)
 
 type (
 	ModuleExecUntypedFunc = func(ctx context.Context, sender []byte, msg proto.Message) (proto.Message, error)

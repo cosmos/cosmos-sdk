@@ -20,7 +20,7 @@ func TestMsgServer(t *testing.T) {
 	k.queryRouter = mockQuery(func(ctx context.Context, req, resp proto.Message) error {
 		_, ok := req.(*bankv1beta1.QueryBalanceRequest)
 		require.True(t, ok)
-		proto.Merge(resp.(proto.Message), &bankv1beta1.QueryBalanceResponse{})
+		proto.Merge(resp, &bankv1beta1.QueryBalanceResponse{})
 		return nil
 	})
 

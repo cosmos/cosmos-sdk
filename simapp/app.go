@@ -9,7 +9,6 @@ import (
 	"os"
 	"path/filepath"
 
-	"cosmossdk.io/x/accounts/testing/account_abstraction"
 	abci "github.com/cometbft/cometbft/abci/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/gogoproto/proto"
@@ -23,6 +22,7 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/accounts"
 	"cosmossdk.io/x/accounts/accountstd"
+	"cosmossdk.io/x/accounts/testing/account_abstraction"
 	"cosmossdk.io/x/accounts/testing/counter"
 	"cosmossdk.io/x/auth"
 	"cosmossdk.io/x/auth/ante"

@@ -125,7 +125,7 @@ func TestKeeper_Query(t *testing.T) {
 				Denom:  "atom",
 				Amount: "1000",
 			}}
-			proto.Merge(resp.(proto.Message), copyResp)
+			proto.Merge(resp, copyResp)
 			return nil
 		})
 

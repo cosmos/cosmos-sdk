@@ -6,10 +6,12 @@ import (
 	"context"
 	"fmt"
 
-	"cosmossdk.io/x/accounts/internal/implementation"
-	"github.com/cosmos/cosmos-sdk/types/address"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
+
+	"cosmossdk.io/x/accounts/internal/implementation"
+
+	"github.com/cosmos/cosmos-sdk/types/address"
 )
 
 var accountsModuleAddress = address.Module("accounts")

@@ -3,10 +3,11 @@ package accounts
 import (
 	"context"
 
-	"cosmossdk.io/core/event"
-	v1 "cosmossdk.io/x/accounts/v1"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	"cosmossdk.io/core/event"
+	v1 "cosmossdk.io/x/accounts/v1"
 )
 
 var _ v1.MsgServer = msgServer{}

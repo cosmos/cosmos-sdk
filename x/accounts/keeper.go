@@ -8,7 +8,6 @@ import (
 	"errors"
 	"fmt"
 
-	"cosmossdk.io/core/branch"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
@@ -17,6 +16,7 @@ import (
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/address"
+	"cosmossdk.io/core/branch"
 	"cosmossdk.io/core/event"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/x/accounts/accountstd"

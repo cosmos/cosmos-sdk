@@ -4,10 +4,11 @@ import (
 	"context"
 	"fmt"
 
+	"google.golang.org/protobuf/types/known/anypb"
+
 	account_abstractionv1 "cosmossdk.io/api/cosmos/accounts/interfaces/account_abstraction/v1"
 	accountsv1 "cosmossdk.io/api/cosmos/accounts/v1"
 	"cosmossdk.io/x/accounts/internal/implementation"
-	"google.golang.org/protobuf/types/known/anypb"
 )
 
 var (

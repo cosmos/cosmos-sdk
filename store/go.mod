@@ -8,13 +8,13 @@ require (
 	cosmossdk.io/math v1.2.0
 	github.com/cockroachdb/errors v1.11.1
 	github.com/cockroachdb/pebble v0.0.0-20231102162011-844f0582c2eb
-	github.com/cometbft/cometbft v0.38.0
+	github.com/cometbft/cometbft v0.38.1
 	github.com/cosmos/cosmos-db v1.0.0
 	github.com/cosmos/gogoproto v1.4.11
 	github.com/cosmos/iavl v1.0.0
 	github.com/cosmos/ics23/go v0.10.0
 	github.com/linxGnu/grocksdb v1.8.5
-	github.com/mattn/go-sqlite3 v1.14.17
+	github.com/mattn/go-sqlite3 v1.14.18
 	github.com/stretchr/testify v1.8.4
 	github.com/tidwall/btree v1.7.0
 	golang.org/x/exp v0.0.0-20231006140011-7918f672742d

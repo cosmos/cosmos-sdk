@@ -149,7 +149,10 @@ func makeSignBatchCmd() func(cmd *cobra.Command, args []string) error {
 
 			// sign the txs
 			from, _ := cmd.Flags().GetString(flags.FlagFrom)
-			sigTxOrMultisig(clientCtx, txBuilder, txFactory, from, multisigKey)
+			err := sigTxOrMultisig(clientCtx, txBuilder, txFactory, from, multisigKey)
+			if err != nil {
+				return err
+			}
 
 			sigOnly, _ := cmd.Flags().GetBool(flagSigOnly)
 			json, err := marshalSignatureJSON(txCfg, txBuilder.GetTx(), sigOnly)
@@ -170,7 +173,10 @@ func makeSignBatchCmd() func(cmd *cobra.Command, args []string) error {
 
 				// sign the txs
 				from, _ := cmd.Flags().GetString(flags.FlagFrom)
-				sigTxOrMultisig(clientCtx, txBuilder, txFactory, from, multisigKey)
+				err = sigTxOrMultisig(clientCtx, txBuilder, txFactory, from, multisigKey)
+				if err != nil {
+					return err
+				}
 
 				printSigOnly, _ := cmd.Flags().GetBool(flagSigOnly)
 				json, err := marshalSignatureJSON(txCfg, txBuilder.GetTx(), printSigOnly)

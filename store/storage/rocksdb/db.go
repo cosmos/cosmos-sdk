@@ -33,9 +33,8 @@ type Database struct {
 	storage  *grocksdb.DB
 	cfHandle *grocksdb.ColumnFamilyHandle
 
-	// tsLow reflects the full_history_ts_low CF value. Since pruning is done in
-	// a lazy manner, we use this value to prevent reads for versions that will
-	// be purged in the next compaction.
+	// tsLow reflects the full_history_ts_low CF value, which is earliest version
+	// supported
 	tsLow uint64
 }
 
@@ -74,6 +73,7 @@ func NewWithDB(storage *grocksdb.DB, cfHandle *grocksdb.ColumnFamilyHandle) (*Da
 	if len(tsLowBz) > 0 {
 		tsLow = binary.LittleEndian.Uint64(tsLowBz)
 	}
+
 	return &Database{
 		storage:  storage,
 		cfHandle: cfHandle,
@@ -91,6 +91,10 @@ func (db *Database) Close() error {
 }
 
 func (db *Database) getSlice(storeKey string, version uint64, key []byte) (*grocksdb.Slice, error) {
+	if version < db.tsLow {
+		return nil, store.ErrVersionPruned{EarliestVersion: db.tsLow}
+	}
+
 	return db.storage.GetCF(
 		newTSReadOptions(version),
 		db.cfHandle,
@@ -120,10 +124,6 @@ func (db *Database) GetLatestVersion() (uint64, error) {
 }
 
 func (db *Database) Has(storeKey string, version uint64, key []byte) (bool, error) {
-	if version < db.tsLow {
-		return false, nil
-	}
-
 	slice, err := db.getSlice(storeKey, version, key)
 	if err != nil {
 		return false, err
@@ -133,10 +133,6 @@ func (db *Database) Has(storeKey string, version uint64, key []byte) (bool, erro
 }
 
 func (db *Database) Get(storeKey string, version uint64, key []byte) ([]byte, error) {
-	if version < db.tsLow {
-		return nil, nil
-	}
-
 	slice, err := db.getSlice(storeKey, version, key)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get RocksDB slice: %w", err)

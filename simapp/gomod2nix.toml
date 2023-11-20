@@ -102,8 +102,8 @@ schema = 3
     version = "v0.0.0-20230807174530-cc333fc44b06"
     hash = "sha256-yZdBXkTVzPxRYntI9I2Gu4gkI11m52Nwl8RNNdlXSrA="
   [mod."github.com/cometbft/cometbft"]
-    version = "v0.38.0"
-    hash = "sha256-suFF8ShqNfPErdtferLKwnY/VQ18h0vpoXh7bDXEM4U="
+    version = "v0.38.1"
+    hash = "sha256-xu/h6vNeRtBoskKBapKSIn61rLyV9KxcFLt36D5lTT4="
   [mod."github.com/cometbft/cometbft-db"]
     version = "v0.8.0"
     hash = "sha256-Tlm2V9zDs/wVoFvMmJSdCzCdZKiFRC7Qk8FS3FaqQyk="

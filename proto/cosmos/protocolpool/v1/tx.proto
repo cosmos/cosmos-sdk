@@ -130,8 +130,7 @@ message MsgCreateContinuousFund {
     (gogoproto.nullable)   = false
   ];
   // Cap is the capital amount, which when its met funds are no longer distributed.
-  repeated cosmos.base.v1beta1.Coin cap = 7
-      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  cosmos.base.v1beta1.Coin cap = 7;
   // Optional, if expiry is set, removes the state object when expired.
   google.protobuf.Timestamp expiry = 8 [(gogoproto.stdtime) = true];
 }

@@ -32,13 +32,17 @@ func Test_runAddCmdLedgerWithCustomCoinType(t *testing.T) {
 	bech32PrefixConsAddr := "terravalcons"
 	bech32PrefixConsPub := "terravalconspub"
 
-	config.SetPurpose(44)
-	sdk.GetAddresConfig().SetCoinType(330)
 	config.SetBech32PrefixForAccount(bech32PrefixAccAddr, bech32PrefixAccPub)
 	config.SetBech32PrefixForValidator(bech32PrefixValAddr, bech32PrefixValPub)
 	config.SetBech32PrefixForConsensusNode(bech32PrefixConsAddr, bech32PrefixConsPub)
 
-	cmd := AddKeyCommand()
+	clientContext := client.Context{}
+	addressConfig := sdk.NewAddressConfig()
+	addressConfig.SetPurpose(44)
+	addressConfig.SetCoinType(330)
+
+	clientContext = clientContext.WithAddressConfig(*addressConfig)
+	cmd := AddKeyCommand(clientContext)
 	cmd.Flags().AddFlagSet(Commands().PersistentFlags())
 
 	// Prepare a keybase
@@ -89,15 +93,22 @@ func Test_runAddCmdLedgerWithCustomCoinType(t *testing.T) {
 		"PubKeySecp256k1{03028F0D5A9FD41600191CDEFDEA05E77A68DFBCE286241C0190805B9346667D07}",
 		pub.String())
 
-	config.SetPurpose(44)
-	sdk.GetAddresConfig().SetCoinType(118)
+	addressConfig.SetPurpose(44)
+	addressConfig.SetCoinType(330)
+	clientContext = clientContext.WithAddressConfig(*addressConfig)
+
+	cmd = AddKeyCommand(clientContext)
 	config.SetBech32PrefixForAccount(sdk.Bech32PrefixAccAddr, sdk.Bech32PrefixAccPub)
 	config.SetBech32PrefixForValidator(sdk.Bech32PrefixValAddr, sdk.Bech32PrefixValPub)
 	config.SetBech32PrefixForConsensusNode(sdk.Bech32PrefixConsAddr, sdk.Bech32PrefixConsPub)
 }
 
 func Test_runAddCmdLedger(t *testing.T) {
-	cmd := AddKeyCommand()
+	clientContext := client.Context{}
+	addressConfig := sdk.NewAddressConfig()
+	clientContext = clientContext.WithAddressConfig(*addressConfig)
+
+	cmd := AddKeyCommand(clientContext)
 	cmd.Flags().AddFlagSet(Commands().PersistentFlags())
 
 	mockIn := testutil.ApplyMockIODiscardOutErr(cmd)
@@ -178,7 +189,11 @@ func Test_runAddCmdLedgerDryRun(t *testing.T) {
 	for _, tt := range testData {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			cmd := AddKeyCommand()
+			clientContext := client.Context{}
+			addressConfig := sdk.NewAddressConfig()
+			clientContext = clientContext.WithAddressConfig(*addressConfig)
+
+			cmd := AddKeyCommand(clientContext)
 			cmd.Flags().AddFlagSet(Commands().PersistentFlags())
 
 			kbHome := t.TempDir()

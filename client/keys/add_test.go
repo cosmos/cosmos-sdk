@@ -22,7 +22,10 @@ import (
 )
 
 func Test_runAddCmdBasic(t *testing.T) {
-	cmd := AddKeyCommand()
+	clientContext := client.Context{}
+	addressConfig := sdk.NewAddressConfig()
+	clientContext = clientContext.WithAddressConfig(*addressConfig)
+	cmd := AddKeyCommand(clientContext)
 	cmd.Flags().AddFlagSet(Commands().PersistentFlags())
 
 	mockIn := testutil.ApplyMockIODiscardOutErr(cmd)
@@ -212,7 +215,10 @@ func Test_runAddCmdDryRun(t *testing.T) {
 	for _, tt := range testData {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			cmd := AddKeyCommand()
+			clientContext := client.Context{}
+			addressConfig := sdk.NewAddressConfig()
+			clientContext = clientContext.WithAddressConfig(*addressConfig)
+			cmd := AddKeyCommand(clientContext)
 			cmd.Flags().AddFlagSet(Commands().PersistentFlags())
 
 			kbHome := t.TempDir()
@@ -261,7 +267,10 @@ func Test_runAddCmdDryRun(t *testing.T) {
 }
 
 func TestAddRecoverFileBackend(t *testing.T) {
-	cmd := AddKeyCommand()
+	clientContext := client.Context{}
+	addressConfig := sdk.NewAddressConfig()
+	clientContext.WithAddressConfig(*addressConfig)
+	cmd := AddKeyCommand(clientContext)
 	cmd.Flags().AddFlagSet(Commands().PersistentFlags())
 	cdc := moduletestutil.MakeTestEncodingConfig().Codec
 

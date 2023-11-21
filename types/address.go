@@ -721,8 +721,7 @@ var (
 )
 
 // GetAddressConfig returns theaddres instance for the SDK.
-func GetAddresConfig() *AddressConfig {
-	fmt.Println()
+func GetAddressConfig() *AddressConfig {
 	initAddressConfig.Do(func() {
 		sdkAddressConfig = NewAddressConfig()
 	})

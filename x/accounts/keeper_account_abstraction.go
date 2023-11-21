@@ -2,6 +2,7 @@ package accounts
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"google.golang.org/protobuf/types/known/anypb"
@@ -13,11 +14,11 @@ import (
 
 var (
 	// ErrAuthentication is returned when the authentication fails.
-	ErrAuthentication = fmt.Errorf("authentication failed")
+	ErrAuthentication = errors.New("authentication failed")
 	// ErrBundlerPayment is returned when the bundler payment fails.
-	ErrBundlerPayment = fmt.Errorf("bundler payment failed")
+	ErrBundlerPayment = errors.New("bundler payment failed")
 	// ErrExecution is returned when the execution fails.
-	ErrExecution = fmt.Errorf("execution failed")
+	ErrExecution = errors.New("execution failed")
 )
 
 // ExecuteUserOperation handles the execution of an abstracted account UserOperation.

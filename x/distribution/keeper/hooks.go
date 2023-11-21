@@ -189,12 +189,6 @@ func (h Hooks) AfterUnbondingInitiated(_ context.Context, _ uint64) error {
 	return nil
 }
 
-func (h Hooks) AfterConsensusPubKeyUpdate(ctx sdk.Context, _, _ cryptotypes.PubKey, rotationFee sdk.Coin) error {
-	feePool, err := h.k.FeePool.Get(ctx)
-	if err != nil {
-		return err
-	}
-
-	feePool.CommunityPool = feePool.CommunityPool.Add(sdk.NewDecCoinsFromCoins(rotationFee)...)
-	return h.k.FeePool.Set(ctx, feePool)
+func (h Hooks) AfterConsensusPubKeyUpdate(_ sdk.Context, _, _ cryptotypes.PubKey, _ sdk.Coin) error {
+	return nil
 }

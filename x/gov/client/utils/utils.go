@@ -3,6 +3,7 @@ package utils
 import (
 	"strings"
 
+	v1 "cosmossdk.io/x/gov/types/v1"
 	"cosmossdk.io/x/gov/types/v1beta1"
 )
 
@@ -10,16 +11,19 @@ import (
 func NormalizeVoteOption(option string) string {
 	switch option {
 	case "Yes", "yes":
-		return v1beta1.OptionYes.String()
+		return v1.OptionYes.String()
 
 	case "Abstain", "abstain":
-		return v1beta1.OptionAbstain.String()
+		return v1.OptionAbstain.String()
 
 	case "No", "no":
-		return v1beta1.OptionNo.String()
+		return v1.OptionNo.String()
 
 	case "NoWithVeto", "no_with_veto", "no-with-veto":
-		return v1beta1.OptionNoWithVeto.String()
+		return v1.OptionNoWithVeto.String()
+
+	case "Spam", "spam":
+		return v1.OptionSpam.String()
 
 	default:
 		return option

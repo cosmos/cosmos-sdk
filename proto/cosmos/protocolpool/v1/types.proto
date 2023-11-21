@@ -53,6 +53,4 @@ message ContinuousFund {
   cosmos.base.v1beta1.Coin cap = 6;
   // Optional, if expiry is set, removes the state object when expired.
   google.protobuf.Timestamp expiry = 7 [(gogoproto.stdtime) = true];
-  // Distributed amount field is to track the distributed amount.
-  cosmos.base.v1beta1.Coin distributed_amount = 8;
 }

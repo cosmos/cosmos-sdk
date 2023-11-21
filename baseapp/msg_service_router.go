@@ -90,7 +90,7 @@ func (msr *MsgServiceRouter) HybridHandlerByMsgName(msgName string) func(ctx con
 	return msr.hybridHandlers[msgName]
 }
 
-func (msr *MsgServiceRouter) ResponseByRequestName(msgName string) string {
+func (msr *MsgServiceRouter) ResponseNameByRequestName(msgName string) string {
 	return msr.responseByRequest[msgName]
 }
 

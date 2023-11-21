@@ -1,6 +1,7 @@
 package decode
 
 import (
+	"crypto/sha256"
 	"fmt"
 
 	"github.com/cosmos/cosmos-proto/anyutil"
@@ -117,4 +118,14 @@ func (d *Decoder) Decode(txBytes []byte) (*DecodedTx, error) {
 		TxBodyHasUnknownNonCriticals: txBodyHasUnknownNonCriticals,
 		Signers:                      signers,
 	}, nil
+}
+
+// Hash implements the interface for the Tx interface.
+func (dtx *DecodedTx) Hash() [32]byte {
+	bz, err := proto.Marshal(dtx.TxRaw)
+	if err != nil {
+		panic(err)
+	}
+
+	return sha256.Sum256(bz)
 }

@@ -29,16 +29,21 @@ func (v *TxValidator[T]) RegisterHandler(h tx.Handler) {
 func (v TxValidator[T]) Validate(ctx context.Context, txs []T, simulate bool) (context.Context, map[[32]byte]error) {
 	var (
 		errMap = make(map[[32]byte]error, len(txs)) // used to return a map of which txs failed
-		uctx   = ctx                                // retrun the context to be used further for execution
+		newctx = ctx                                // retrun the context to be used further for execution
 	)
 
 	for _, tx := range txs {
-		ctx, err := v.handler(ctx, tx, simulate)
+		// create a copy of the context for each transaction
+		cctx := newctx
+		ctx, err := v.handler(cctx, tx, simulate)
 		if err != nil {
 			errMap[tx.Hash()] = err
+		} else {
+			// if no error, set the context on the newctx variable
+			newctx = ctx
 		}
-		uctx = ctx
+
 	}
 
-	return uctx, errMap
+	return newctx, errMap
 }

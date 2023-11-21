@@ -73,7 +73,7 @@ func (k Keeper) Authenticate(
 		return k.authenticate(ctx, bundler, op)
 	})
 	if err != nil {
-		return gasUsed, fmt.Errorf("%w: %w", ErrAuthentication, err)
+		return gasUsed, fmt.Errorf("%v: %w", ErrAuthentication, err)
 	}
 	return gasUsed, nil
 }
@@ -114,7 +114,7 @@ func (k Keeper) OpExecuteMessages(
 		return err
 	})
 	if err != nil {
-		return gasUsed, nil, fmt.Errorf("%w: %w", ErrExecution, err)
+		return gasUsed, nil, fmt.Errorf("%v: %w", ErrExecution, err)
 	}
 	return gasUsed, responses, nil
 }
@@ -167,7 +167,7 @@ func (k Keeper) PayBundler(
 		return err
 	})
 	if err != nil {
-		return gasUsed, nil, fmt.Errorf("%w: %w", ErrBundlerPayment, err)
+		return gasUsed, nil, fmt.Errorf("%v: %w", ErrBundlerPayment, err)
 	}
 	return gasUsed, responses, nil
 }

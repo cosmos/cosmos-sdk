@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"time"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/protocolpool/types"
@@ -516,6 +517,94 @@ func (suite *KeeperTestSuite) TestCreateContinuousFund() {
 				suite.Require().Contains(err.Error(), tc.expErrMsg)
 			} else {
 				suite.Require().NoError(err)
+			}
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestCancelContinuousFund() {
+	testCases := map[string]struct {
+		preRun        func()
+		recipientAddr sdk.AccAddress
+		expErr        bool
+		expErrMsg     string
+		postRun       func()
+	}{
+		"empty recipient": {
+			preRun: func() {
+				percentage, err := math.LegacyNewDecFromStr("0.2")
+				suite.Require().NoError(err)
+				cap := sdk.NewInt64Coin("uatom", 100000)
+				oneMonthInSeconds := int64(30 * 24 * 60 * 60) // Approximate number of seconds in 1 month
+				expiry := suite.ctx.BlockTime().Add(time.Duration(oneMonthInSeconds) * time.Second)
+				cf := types.ContinuousFund{
+					Title:       "New Title",
+					Description: "New description",
+					Recipient:   "",
+					Metadata:    "AQ==",
+					Percentage:  percentage,
+					Cap:         &cap,
+					Expiry:      &expiry,
+				}
+				err = suite.poolKeeper.ContinuousFund.Set(suite.ctx, recipientAddr, cf)
+				suite.Require().NoError(err)
+			},
+			expErr:    true,
+			expErrMsg: "empty address string is not allowed",
+		},
+		"no recipient found": {
+			recipientAddr: recipientAddr,
+			expErr:        true,
+			expErrMsg:     "no recipient found to cancel continuous fund",
+		},
+		"all good": {
+			preRun: func() {
+				percentage, err := math.LegacyNewDecFromStr("0.2")
+				suite.Require().NoError(err)
+				cap := sdk.NewInt64Coin("uatom", 100000)
+				oneMonthInSeconds := int64(30 * 24 * 60 * 60) // Approximate number of seconds in 1 month
+				expiry := suite.ctx.BlockTime().Add(time.Duration(oneMonthInSeconds) * time.Second)
+				cf := types.ContinuousFund{
+					Title:       "New Title",
+					Description: "New description",
+					Recipient:   recipientAddr.String(),
+					Metadata:    "AQ==",
+					Percentage:  percentage,
+					Cap:         &cap,
+					Expiry:      &expiry,
+				}
+				err = suite.poolKeeper.ContinuousFund.Set(suite.ctx, recipientAddr, cf)
+				suite.Require().NoError(err)
+			},
+			recipientAddr: recipientAddr,
+			expErr:        false,
+			postRun: func() {
+				_, err := suite.poolKeeper.ContinuousFund.Get(suite.ctx, recipientAddr)
+				suite.Require().Error(err)
+				suite.Require().ErrorIs(err, collections.ErrNotFound)
+			},
+		},
+	}
+
+	for name, tc := range testCases {
+		suite.Run(name, func() {
+			suite.SetupTest()
+			if tc.preRun != nil {
+				tc.preRun()
+			}
+			msg := &types.MsgCancelContinuousFund{
+				Authority:        suite.poolKeeper.GetAuthority(),
+				RecipientAddress: tc.recipientAddr.String(),
+			}
+			_, err := suite.msgServer.CancelContinuousFund(suite.ctx, msg)
+			if tc.expErr {
+				suite.Require().Error(err)
+				suite.Require().Contains(err.Error(), tc.expErrMsg)
+			} else {
+				suite.Require().NoError(err)
+			}
+			if tc.postRun != nil {
+				tc.postRun()
 			}
 		})
 	}

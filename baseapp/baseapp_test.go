@@ -720,6 +720,17 @@ func TestGetMaximumBlockGas(t *testing.T) {
 	require.Panics(t, func() { suite.baseApp.GetMaximumBlockGas(ctx) })
 }
 
+func TestGetEmptyConsensusParmas(t *testing.T) {
+	suite := NewBaseAppSuite(t)
+	_, err := suite.baseApp.InitChain(&abci.RequestInitChain{})
+	require.NoError(t, err)
+	ctx := suite.baseApp.NewContext(true)
+
+	cp := suite.baseApp.GetConsensusParams(ctx)
+	require.Equal(t, cmtproto.ConsensusParams{}, cp)
+	require.Equal(t, uint64(0), suite.baseApp.GetMaximumBlockGas(ctx))
+}
+
 func TestLoadVersionPruning(t *testing.T) {
 	logger := log.NewNopLogger()
 	pruningOptions := pruningtypes.NewCustomPruningOptions(10, 15)

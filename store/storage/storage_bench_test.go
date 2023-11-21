@@ -59,7 +59,7 @@ func BenchmarkGet(b *testing.B) {
 
 		cs := store.NewChangeset(storeKey1)
 		for i := 0; i < numKeyVals; i++ {
-			cs.AddKVPair(store.KVPair{StoreKey: storeKey1, Key: keys[i], Value: vals[i]})
+			cs.AddKVPair(storeKey1, store.KVPair{Key: keys[i], Value: vals[i]})
 		}
 
 		require.NoError(b, db.ApplyChangeset(1, cs))
@@ -103,7 +103,7 @@ func BenchmarkApplyChangeset(b *testing.B) {
 					_, err = rng.Read(val)
 					require.NoError(b, err)
 
-					cs.AddKVPair(store.KVPair{StoreKey: storeKey1, Key: key, Value: val})
+					cs.AddKVPair(storeKey1, store.KVPair{Key: key, Value: val})
 				}
 
 				b.StartTimer()
@@ -142,7 +142,7 @@ func BenchmarkIterate(b *testing.B) {
 
 		cs := store.NewChangeset(storeKey1)
 		for i := 0; i < numKeyVals; i++ {
-			cs.AddKVPair(store.KVPair{StoreKey: storeKey1, Key: keys[i], Value: vals[i]})
+			cs.AddKVPair(storeKey1, store.KVPair{Key: keys[i], Value: vals[i]})
 		}
 
 		require.NoError(b, db.ApplyChangeset(1, cs))

@@ -38,7 +38,7 @@ func TestDatabase_ReverseIterator(t *testing.T) {
 		key := fmt.Sprintf("key%03d", i) // key000, key001, ..., key099
 		val := fmt.Sprintf("val%03d", i) // val000, val001, ..., val099
 
-		cs.AddKVPair(store.KVPair{StoreKey: storeKey1, Key: []byte(key), Value: []byte(val)})
+		cs.AddKVPair(storeKey1, store.KVPair{Key: []byte(key), Value: []byte(val)})
 	}
 
 	require.NoError(t, db.ApplyChangeset(1, cs))

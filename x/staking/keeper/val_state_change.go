@@ -13,6 +13,8 @@ import (
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/staking/types"
 
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -110,6 +112,11 @@ func (k Keeper) BlockValidatorUpdates(ctx context.Context) ([]abci.ValidatorUpda
 				sdk.NewAttribute(types.AttributeKeyDstValidator, dvvTriplet.ValidatorDstAddress),
 			),
 		)
+	}
+
+	err = k.UpdateAllMaturedConsKeyRotatedKeys(sdkCtx, sdkCtx.HeaderInfo().Time)
+	if err != nil {
+		return nil, err
 	}
 
 	return validatorUpdates, nil
@@ -234,6 +241,54 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx context.Context) (updates 
 
 		updates = append(updates, validator.ABCIValidatorUpdateZero())
 	}
+
+	// ApplyAndReturnValidatorSetUpdates checks if there is ConsPubKeyRotationHistory
+	// with ConsPubKeyRotationHistory.RotatedHeight == ctx.BlockHeight() and if so, generates 2 ValidatorUpdate,
+	// one for a remove validator and one for create new validator
+	historyObjects, err := k.GetBlockConsPubKeyRotationHistory(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, history := range historyObjects {
+		valAddr := history.OperatorAddress
+		if err != nil {
+			return nil, err
+		}
+
+		validator := k.mustGetValidator(ctx, valAddr)
+
+		oldPk := history.OldConsPubkey.GetCachedValue().(cryptotypes.PubKey)
+		oldTmPk, err := cryptocodec.ToCmtProtoPublicKey(oldPk)
+		if err != nil {
+			return nil, err
+		}
+
+		newPk := history.NewConsPubkey.GetCachedValue().(cryptotypes.PubKey)
+		newTmPk, err := cryptocodec.ToCmtProtoPublicKey(newPk)
+		if err != nil {
+			return nil, err
+		}
+
+		if !(validator.Jailed || validator.Status != types.Bonded) {
+			updates = append(updates, abci.ValidatorUpdate{
+				PubKey: oldTmPk,
+				Power:  0,
+			})
+
+			updates = append(updates, abci.ValidatorUpdate{
+				PubKey: newTmPk,
+				Power:  validator.ConsensusPower(powerReduction),
+			})
+
+			if err := k.updateToNewPubkey(ctx, validator, history.OldConsPubkey, history.NewConsPubkey, history.Fee); err != nil {
+				return nil, err
+			}
+		}
+	}
+
+	// TODO: at previousVotes Iteration logic of AllocateTokens, previousVote using OldConsPubKey
+	// match up with ConsPubKeyRotationHistory, and replace validator for token allocation
 
 	// Update the pools based on the recent updates in the validator set:
 	// - The tokens from the non-bonded candidates that enter the new validator set need to be transferred

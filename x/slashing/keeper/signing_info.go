@@ -211,6 +211,8 @@ func (k Keeper) GetValidatorMissedBlocks(ctx context.Context, addr sdk.ConsAddre
 	return missedBlocks, err
 }
 
+// PerformConsensusPubKeyUpdate updates cons address to its pub key relation
+// Updates signing info, missed blocks (removes old one, and sets new one)
 func (k Keeper) PerformConsensusPubKeyUpdate(ctx sdk.Context, oldPubKey, newPubKey cryptotypes.PubKey) error {
 
 	// Connect new consensus address with PubKey
@@ -221,7 +223,7 @@ func (k Keeper) PerformConsensusPubKeyUpdate(ctx sdk.Context, oldPubKey, newPubK
 	// Migrate ValidatorSigningInfo from oldPubKey to newPubKey
 	signingInfo, err := k.ValidatorSigningInfo.Get(ctx, sdk.ConsAddress(oldPubKey.Address()))
 	if err != nil {
-		return types.ErrInvalidConsPubKey
+		return types.ErrInvalidConsPubKey.Wrap("failed to get signing info for old public key")
 	}
 
 	if err := k.ValidatorSigningInfo.Set(ctx, sdk.ConsAddress(newPubKey.Address()), signingInfo); err != nil {

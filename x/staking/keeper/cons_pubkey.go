@@ -48,7 +48,12 @@ func (k Keeper) setConsPubKeyRotationHistory(
 	return k.setConsKeyQueue(ctx, queueTime, valAddr)
 }
 
-func (k Keeper) updateToNewPubkey(ctx sdk.Context, val types.Validator, oldPubKey, newPubKey *codectypes.Any, fee sdk.Coin) error {
+// This method gets called from the `ApplyAndReturnValidatorSetUpdates`(from endblocker) method.
+//
+// This method makes the relative state changes to update the keys,
+// also maintains a map with old to new conskey rotation which is needed to retrieve the old conskey.
+// And also triggers the hook to make changes required in slashing and distribution modules.
+func (k Keeper) updateToNewPubkey(ctx context.Context, val types.Validator, oldPubKey, newPubKey *codectypes.Any, fee sdk.Coin) error {
 	consAddr, err := val.GetConsAddr()
 	if err != nil {
 		return err
@@ -126,4 +131,89 @@ func bytesSliceExists(sliceList [][]byte, targetBytes []byte) bool {
 		}
 	}
 	return false
+}
+
+// UpdateAllMaturedConsKeyRotatedKeys udpates all the matured key rotations.
+func (k Keeper) UpdateAllMaturedConsKeyRotatedKeys(ctx sdk.Context, maturedTime time.Time) error {
+	maturedRotatedValAddrs, err := k.GetAllMaturedRotatedKeys(ctx, maturedTime)
+	if err != nil {
+		return err
+	}
+
+	for _, valAddr := range maturedRotatedValAddrs {
+		err := k.deleteConsKeyIndexKey(ctx, valAddr, maturedTime)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// deleteConsKeyIndexKey deletes the key which is formed with the given valAddr, time.
+func (k Keeper) deleteConsKeyIndexKey(ctx sdk.Context, valAddr sdk.ValAddress, ts time.Time) error {
+	rng := new(collections.Range[collections.Pair[[]byte, time.Time]]).
+		EndInclusive(collections.Join(valAddr.Bytes(), ts))
+
+	return k.ValidatorConsensusKeyRotationRecordIndexKey.Walk(ctx, rng, func(key collections.Pair[[]byte, time.Time]) (stop bool, err error) {
+		k.ValidatorConsensusKeyRotationRecordIndexKey.Remove(ctx, key)
+		return false, nil
+	})
+}
+
+// GetAllMaturedRotatedKeys returns all matured valaddresses .
+func (k Keeper) GetAllMaturedRotatedKeys(ctx sdk.Context, matureTime time.Time) ([][]byte, error) {
+	valAddrs := [][]byte{}
+
+	// get an iterator for all timeslices from time 0 until the current HeaderInfo time
+	rng := new(collections.Range[time.Time]).EndInclusive(matureTime)
+	iterator, err := k.ValidatorConsensusKeyRotationRecordQueue.Iterate(ctx, rng)
+	if err != nil {
+		return nil, err
+	}
+	defer iterator.Close()
+
+	for ; iterator.Valid(); iterator.Next() {
+		value, err := iterator.Value()
+		if err != nil {
+			return nil, err
+		}
+		valAddrs = append(valAddrs, value.Addresses...)
+		key, err := iterator.Key()
+		if err != nil {
+			return nil, err
+		}
+
+		k.ValidatorConsensusKeyRotationRecordQueue.Remove(ctx, key)
+	}
+
+	return valAddrs, nil
+}
+
+// GetBlockConsPubKeyRotationHistory iterator over the rotation history for the given height.
+func (k Keeper) GetBlockConsPubKeyRotationHistory(ctx context.Context) ([]types.ConsPubKeyRotationHistory, error) {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	var historyObjects []types.ConsPubKeyRotationHistory
+
+	iterator, err := k.RotationHistory.Indexes.Block.MatchExact(ctx, uint64(sdkCtx.BlockHeight()))
+	if err != nil {
+		return nil, err
+	}
+	defer iterator.Close()
+
+	keys, err := iterator.PrimaryKeys()
+	if err != nil {
+		return nil, err
+	}
+
+	for _, v := range keys {
+		history, err := k.RotationHistory.Get(ctx, v)
+		if err != nil {
+			return nil, err
+		}
+
+		historyObjects = append(historyObjects, history)
+	}
+
+	return historyObjects, nil
 }

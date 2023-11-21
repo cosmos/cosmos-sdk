@@ -43,7 +43,7 @@ func (k Keeper) handleEquivocationEvidence(ctx context.Context, evidence *types.
 		// get the consAddr again, this is because validator might've rotated it's key.
 		valConsAddr, err := validator.GetConsAddr()
 		if err != nil {
-			panic(err)
+			return err
 		}
 		consAddr = valConsAddr
 

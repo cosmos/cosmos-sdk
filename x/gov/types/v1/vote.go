@@ -11,11 +11,17 @@ import (
 )
 
 const (
-	OptionEmpty      = VoteOption_VOTE_OPTION_UNSPECIFIED
-	OptionYes        = VoteOption_VOTE_OPTION_YES
-	OptionNo         = VoteOption_VOTE_OPTION_NO
-	OptionNoWithVeto = VoteOption_VOTE_OPTION_NO_WITH_VETO
-	OptionAbstain    = VoteOption_VOTE_OPTION_ABSTAIN
+	OptionEmpty = VoteOption_VOTE_OPTION_UNSPECIFIED
+	OptionOne   = VoteOption_VOTE_OPTION_ONE
+	OptionTwo   = VoteOption_VOTE_OPTION_TWO
+	OptionThree = VoteOption_VOTE_OPTION_THREE
+	OptionFour  = VoteOption_VOTE_OPTION_FOUR
+	OptionSpam  = VoteOption_VOTE_OPTION_SPAM
+
+	OptionYes        = OptionOne
+	OptionNo         = OptionThree
+	OptionNoWithVeto = OptionFour
+	OptionAbstain    = OptionTwo
 )
 
 // NewVote creates a new Vote instance

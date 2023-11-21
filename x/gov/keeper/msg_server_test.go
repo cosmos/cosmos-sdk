@@ -436,7 +436,7 @@ func (suite *KeeperTestSuite) TestMsgVote() {
 			preRun: func() uint64 {
 				return proposalID
 			},
-			option:    v1.VoteOption_VOTE_OPTION_YES,
+			option:    v1.VoteOption_VOTE_OPTION_ONE,
 			voter:     sdk.AccAddress{},
 			metadata:  "",
 			expErr:    true,
@@ -470,7 +470,7 @@ func (suite *KeeperTestSuite) TestMsgVote() {
 				suite.Require().NotNil(res.ProposalId)
 				return res.ProposalId
 			},
-			option:    v1.VoteOption_VOTE_OPTION_YES,
+			option:    v1.VoteOption_VOTE_OPTION_ONE,
 			voter:     proposer,
 			metadata:  "",
 			expErr:    true,
@@ -480,7 +480,7 @@ func (suite *KeeperTestSuite) TestMsgVote() {
 			preRun: func() uint64 {
 				return proposalID
 			},
-			option:    v1.VoteOption_VOTE_OPTION_YES,
+			option:    v1.VoteOption_VOTE_OPTION_ONE,
 			voter:     proposer,
 			metadata:  strings.Repeat("a", 300),
 			expErr:    true,
@@ -490,7 +490,7 @@ func (suite *KeeperTestSuite) TestMsgVote() {
 			preRun: func() uint64 {
 				return proposalID
 			},
-			option:    v1.VoteOption_VOTE_OPTION_YES,
+			option:    v1.VoteOption_VOTE_OPTION_ONE,
 			voter:     sdk.AccAddress(strings.Repeat("a", 300)),
 			metadata:  "",
 			expErr:    true,
@@ -514,7 +514,7 @@ func (suite *KeeperTestSuite) TestMsgVote() {
 				suite.Require().NotNil(res.ProposalId)
 				return res.ProposalId
 			},
-			option:   v1.VoteOption_VOTE_OPTION_YES,
+			option:   v1.VoteOption_VOTE_OPTION_ONE,
 			voter:    proposer,
 			metadata: "",
 			expErr:   false,
@@ -688,7 +688,7 @@ func (suite *KeeperTestSuite) TestMsgVoteWeighted() {
 				suite.Require().NotNil(res.ProposalId)
 				return res.ProposalId
 			},
-			option:    v1.NewNonSplitVoteOption(v1.VoteOption_VOTE_OPTION_YES),
+			option:    v1.NewNonSplitVoteOption(v1.VoteOption_VOTE_OPTION_ONE),
 			voter:     proposer,
 			metadata:  "",
 			expErr:    true,
@@ -698,7 +698,7 @@ func (suite *KeeperTestSuite) TestMsgVoteWeighted() {
 			preRun: func() uint64 {
 				return proposalID
 			},
-			option:    v1.NewNonSplitVoteOption(v1.VoteOption_VOTE_OPTION_YES),
+			option:    v1.NewNonSplitVoteOption(v1.VoteOption_VOTE_OPTION_ONE),
 			voter:     proposer,
 			metadata:  strings.Repeat("a", 300),
 			expErr:    true,
@@ -708,7 +708,7 @@ func (suite *KeeperTestSuite) TestMsgVoteWeighted() {
 			preRun: func() uint64 {
 				return proposalID
 			},
-			option:    v1.NewNonSplitVoteOption(v1.VoteOption_VOTE_OPTION_YES),
+			option:    v1.NewNonSplitVoteOption(v1.VoteOption_VOTE_OPTION_ONE),
 			voter:     sdk.AccAddress(strings.Repeat("a", 300)),
 			metadata:  "",
 			expErr:    true,
@@ -732,7 +732,7 @@ func (suite *KeeperTestSuite) TestMsgVoteWeighted() {
 				suite.Require().NotNil(res.ProposalId)
 				return res.ProposalId
 			},
-			option:   v1.NewNonSplitVoteOption(v1.VoteOption_VOTE_OPTION_YES),
+			option:   v1.NewNonSplitVoteOption(v1.VoteOption_VOTE_OPTION_ONE),
 			voter:    proposer,
 			metadata: "",
 			expErr:   false,

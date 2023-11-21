@@ -96,7 +96,7 @@ func TestTally(t *testing.T) {
 			name: "one validator votes: prop fails/burn deposit",
 			setup: func(s suite) {
 				setTotalBonded(s, 10000000)
-				validatorVote(s, s.valAddrs[0], v1.VoteOption_VOTE_OPTION_NO)
+				validatorVote(s, s.valAddrs[0], v1.VoteOption_VOTE_OPTION_THREE)
 			},
 			expectedPass: false,
 			expectedBurn: true, // burn because quorum not reached
@@ -111,7 +111,7 @@ func TestTally(t *testing.T) {
 			name: "one account votes without delegation: prop fails/burn deposit",
 			setup: func(s suite) {
 				setTotalBonded(s, 10000000)
-				delegatorVote(s, s.delAddrs[0], nil, v1.VoteOption_VOTE_OPTION_YES)
+				delegatorVote(s, s.delAddrs[0], nil, v1.VoteOption_VOTE_OPTION_ONE)
 			},
 			expectedPass: false,
 			expectedBurn: true, // burn because quorum not reached
@@ -131,7 +131,7 @@ func TestTally(t *testing.T) {
 					ValidatorAddress: s.valAddrs[0].String(),
 					Shares:           sdkmath.LegacyNewDec(42),
 				}}
-				delegatorVote(s, s.delAddrs[0], delegations, v1.VoteOption_VOTE_OPTION_YES)
+				delegatorVote(s, s.delAddrs[0], delegations, v1.VoteOption_VOTE_OPTION_ONE)
 			},
 			expectedPass: false,
 			expectedBurn: true, // burn because quorum not reached
@@ -151,8 +151,8 @@ func TestTally(t *testing.T) {
 					ValidatorAddress: s.valAddrs[0].String(),
 					Shares:           sdkmath.LegacyNewDec(42),
 				}}
-				delegatorVote(s, s.delAddrs[0], delegations, v1.VoteOption_VOTE_OPTION_YES)
-				validatorVote(s, s.valAddrs[0], v1.VoteOption_VOTE_OPTION_YES)
+				delegatorVote(s, s.delAddrs[0], delegations, v1.VoteOption_VOTE_OPTION_ONE)
+				validatorVote(s, s.valAddrs[0], v1.VoteOption_VOTE_OPTION_ONE)
 			},
 			expectedPass: false,
 			expectedBurn: true, // burn because quorum not reached
@@ -172,8 +172,8 @@ func TestTally(t *testing.T) {
 					ValidatorAddress: s.valAddrs[0].String(),
 					Shares:           sdkmath.LegacyNewDec(42),
 				}}
-				delegatorVote(s, s.delAddrs[0], delegations, v1.VoteOption_VOTE_OPTION_YES)
-				validatorVote(s, s.valAddrs[0], v1.VoteOption_VOTE_OPTION_NO)
+				delegatorVote(s, s.delAddrs[0], delegations, v1.VoteOption_VOTE_OPTION_ONE)
+				validatorVote(s, s.valAddrs[0], v1.VoteOption_VOTE_OPTION_THREE)
 			},
 			expectedPass: false,
 			expectedBurn: true, // burn because quorum not reached
@@ -205,10 +205,10 @@ func TestTally(t *testing.T) {
 						Shares:           sdkmath.LegacyNewDec(21),
 					},
 				}
-				delegatorVote(s, s.delAddrs[0], delegations, v1.VoteOption_VOTE_OPTION_YES)
-				validatorVote(s, s.valAddrs[0], v1.VoteOption_VOTE_OPTION_NO)
-				validatorVote(s, s.valAddrs[1], v1.VoteOption_VOTE_OPTION_YES)
-				validatorVote(s, s.valAddrs[2], v1.VoteOption_VOTE_OPTION_ABSTAIN)
+				delegatorVote(s, s.delAddrs[0], delegations, v1.VoteOption_VOTE_OPTION_ONE)
+				validatorVote(s, s.valAddrs[0], v1.VoteOption_VOTE_OPTION_THREE)
+				validatorVote(s, s.valAddrs[1], v1.VoteOption_VOTE_OPTION_ONE)
+				validatorVote(s, s.valAddrs[2], v1.VoteOption_VOTE_OPTION_TWO)
 			},
 			expectedPass: false,
 			expectedBurn: true, // burn because quorum not reached
@@ -223,10 +223,10 @@ func TestTally(t *testing.T) {
 			name: "quorum reached with only abstain: prop fails",
 			setup: func(s suite) {
 				setTotalBonded(s, 10000000)
-				validatorVote(s, s.valAddrs[0], v1.VoteOption_VOTE_OPTION_ABSTAIN)
-				validatorVote(s, s.valAddrs[1], v1.VoteOption_VOTE_OPTION_ABSTAIN)
-				validatorVote(s, s.valAddrs[2], v1.VoteOption_VOTE_OPTION_ABSTAIN)
-				validatorVote(s, s.valAddrs[3], v1.VoteOption_VOTE_OPTION_ABSTAIN)
+				validatorVote(s, s.valAddrs[0], v1.VoteOption_VOTE_OPTION_TWO)
+				validatorVote(s, s.valAddrs[1], v1.VoteOption_VOTE_OPTION_TWO)
+				validatorVote(s, s.valAddrs[2], v1.VoteOption_VOTE_OPTION_TWO)
+				validatorVote(s, s.valAddrs[3], v1.VoteOption_VOTE_OPTION_TWO)
 			},
 			expectedPass: false,
 			expectedBurn: false,
@@ -241,13 +241,13 @@ func TestTally(t *testing.T) {
 			name: "quorum reached with veto>1/3: prop fails/burn deposit",
 			setup: func(s suite) {
 				setTotalBonded(s, 10000000)
-				validatorVote(s, s.valAddrs[0], v1.VoteOption_VOTE_OPTION_YES)
-				validatorVote(s, s.valAddrs[1], v1.VoteOption_VOTE_OPTION_YES)
-				validatorVote(s, s.valAddrs[2], v1.VoteOption_VOTE_OPTION_YES)
-				validatorVote(s, s.valAddrs[3], v1.VoteOption_VOTE_OPTION_YES)
-				validatorVote(s, s.valAddrs[4], v1.VoteOption_VOTE_OPTION_NO_WITH_VETO)
-				validatorVote(s, s.valAddrs[5], v1.VoteOption_VOTE_OPTION_NO_WITH_VETO)
-				validatorVote(s, s.valAddrs[6], v1.VoteOption_VOTE_OPTION_NO_WITH_VETO)
+				validatorVote(s, s.valAddrs[0], v1.VoteOption_VOTE_OPTION_ONE)
+				validatorVote(s, s.valAddrs[1], v1.VoteOption_VOTE_OPTION_ONE)
+				validatorVote(s, s.valAddrs[2], v1.VoteOption_VOTE_OPTION_ONE)
+				validatorVote(s, s.valAddrs[3], v1.VoteOption_VOTE_OPTION_ONE)
+				validatorVote(s, s.valAddrs[4], v1.VoteOption_VOTE_OPTION_FOUR)
+				validatorVote(s, s.valAddrs[5], v1.VoteOption_VOTE_OPTION_FOUR)
+				validatorVote(s, s.valAddrs[6], v1.VoteOption_VOTE_OPTION_FOUR)
 			},
 			expectedPass: false,
 			expectedBurn: true,
@@ -262,10 +262,10 @@ func TestTally(t *testing.T) {
 			name: "quorum reached with yes<=.5: prop fails",
 			setup: func(s suite) {
 				setTotalBonded(s, 10000000)
-				validatorVote(s, s.valAddrs[0], v1.VoteOption_VOTE_OPTION_YES)
-				validatorVote(s, s.valAddrs[1], v1.VoteOption_VOTE_OPTION_YES)
-				validatorVote(s, s.valAddrs[2], v1.VoteOption_VOTE_OPTION_NO)
-				validatorVote(s, s.valAddrs[3], v1.VoteOption_VOTE_OPTION_NO)
+				validatorVote(s, s.valAddrs[0], v1.VoteOption_VOTE_OPTION_ONE)
+				validatorVote(s, s.valAddrs[1], v1.VoteOption_VOTE_OPTION_ONE)
+				validatorVote(s, s.valAddrs[2], v1.VoteOption_VOTE_OPTION_THREE)
+				validatorVote(s, s.valAddrs[3], v1.VoteOption_VOTE_OPTION_THREE)
 			},
 			expectedPass: false,
 			expectedBurn: false,
@@ -280,13 +280,13 @@ func TestTally(t *testing.T) {
 			name: "quorum reached with yes>.5: prop succeeds",
 			setup: func(s suite) {
 				setTotalBonded(s, 10000000)
-				validatorVote(s, s.valAddrs[0], v1.VoteOption_VOTE_OPTION_YES)
-				validatorVote(s, s.valAddrs[1], v1.VoteOption_VOTE_OPTION_YES)
-				validatorVote(s, s.valAddrs[2], v1.VoteOption_VOTE_OPTION_YES)
-				validatorVote(s, s.valAddrs[3], v1.VoteOption_VOTE_OPTION_YES)
-				validatorVote(s, s.valAddrs[4], v1.VoteOption_VOTE_OPTION_NO)
-				validatorVote(s, s.valAddrs[5], v1.VoteOption_VOTE_OPTION_NO)
-				validatorVote(s, s.valAddrs[6], v1.VoteOption_VOTE_OPTION_NO_WITH_VETO)
+				validatorVote(s, s.valAddrs[0], v1.VoteOption_VOTE_OPTION_ONE)
+				validatorVote(s, s.valAddrs[1], v1.VoteOption_VOTE_OPTION_ONE)
+				validatorVote(s, s.valAddrs[2], v1.VoteOption_VOTE_OPTION_ONE)
+				validatorVote(s, s.valAddrs[3], v1.VoteOption_VOTE_OPTION_ONE)
+				validatorVote(s, s.valAddrs[4], v1.VoteOption_VOTE_OPTION_THREE)
+				validatorVote(s, s.valAddrs[5], v1.VoteOption_VOTE_OPTION_THREE)
+				validatorVote(s, s.valAddrs[6], v1.VoteOption_VOTE_OPTION_FOUR)
 			},
 			expectedPass: true,
 			expectedBurn: false,
@@ -301,12 +301,12 @@ func TestTally(t *testing.T) {
 			name: "quorum reached thanks to abstain, yes>.5: prop succeeds",
 			setup: func(s suite) {
 				setTotalBonded(s, 10000000)
-				validatorVote(s, s.valAddrs[0], v1.VoteOption_VOTE_OPTION_YES)
-				validatorVote(s, s.valAddrs[1], v1.VoteOption_VOTE_OPTION_YES)
-				validatorVote(s, s.valAddrs[2], v1.VoteOption_VOTE_OPTION_NO)
-				validatorVote(s, s.valAddrs[3], v1.VoteOption_VOTE_OPTION_ABSTAIN)
-				validatorVote(s, s.valAddrs[4], v1.VoteOption_VOTE_OPTION_ABSTAIN)
-				validatorVote(s, s.valAddrs[5], v1.VoteOption_VOTE_OPTION_ABSTAIN)
+				validatorVote(s, s.valAddrs[0], v1.VoteOption_VOTE_OPTION_ONE)
+				validatorVote(s, s.valAddrs[1], v1.VoteOption_VOTE_OPTION_ONE)
+				validatorVote(s, s.valAddrs[2], v1.VoteOption_VOTE_OPTION_THREE)
+				validatorVote(s, s.valAddrs[3], v1.VoteOption_VOTE_OPTION_TWO)
+				validatorVote(s, s.valAddrs[4], v1.VoteOption_VOTE_OPTION_TWO)
+				validatorVote(s, s.valAddrs[5], v1.VoteOption_VOTE_OPTION_TWO)
 			},
 			expectedPass: true,
 			expectedBurn: false,
@@ -322,13 +322,13 @@ func TestTally(t *testing.T) {
 			expedited: true,
 			setup: func(s suite) {
 				setTotalBonded(s, 10000000)
-				validatorVote(s, s.valAddrs[0], v1.VoteOption_VOTE_OPTION_YES)
-				validatorVote(s, s.valAddrs[1], v1.VoteOption_VOTE_OPTION_YES)
-				validatorVote(s, s.valAddrs[2], v1.VoteOption_VOTE_OPTION_YES)
-				validatorVote(s, s.valAddrs[3], v1.VoteOption_VOTE_OPTION_YES)
-				validatorVote(s, s.valAddrs[4], v1.VoteOption_VOTE_OPTION_NO)
-				validatorVote(s, s.valAddrs[5], v1.VoteOption_VOTE_OPTION_NO)
-				validatorVote(s, s.valAddrs[6], v1.VoteOption_VOTE_OPTION_NO_WITH_VETO)
+				validatorVote(s, s.valAddrs[0], v1.VoteOption_VOTE_OPTION_ONE)
+				validatorVote(s, s.valAddrs[1], v1.VoteOption_VOTE_OPTION_ONE)
+				validatorVote(s, s.valAddrs[2], v1.VoteOption_VOTE_OPTION_ONE)
+				validatorVote(s, s.valAddrs[3], v1.VoteOption_VOTE_OPTION_ONE)
+				validatorVote(s, s.valAddrs[4], v1.VoteOption_VOTE_OPTION_THREE)
+				validatorVote(s, s.valAddrs[5], v1.VoteOption_VOTE_OPTION_THREE)
+				validatorVote(s, s.valAddrs[6], v1.VoteOption_VOTE_OPTION_FOUR)
 			},
 			expectedPass: false,
 			expectedBurn: false,
@@ -344,13 +344,13 @@ func TestTally(t *testing.T) {
 			expedited: true,
 			setup: func(s suite) {
 				setTotalBonded(s, 10000000)
-				validatorVote(s, s.valAddrs[0], v1.VoteOption_VOTE_OPTION_YES)
-				validatorVote(s, s.valAddrs[1], v1.VoteOption_VOTE_OPTION_YES)
-				validatorVote(s, s.valAddrs[2], v1.VoteOption_VOTE_OPTION_YES)
-				validatorVote(s, s.valAddrs[3], v1.VoteOption_VOTE_OPTION_YES)
-				validatorVote(s, s.valAddrs[4], v1.VoteOption_VOTE_OPTION_YES)
-				validatorVote(s, s.valAddrs[5], v1.VoteOption_VOTE_OPTION_NO)
-				validatorVote(s, s.valAddrs[6], v1.VoteOption_VOTE_OPTION_NO_WITH_VETO)
+				validatorVote(s, s.valAddrs[0], v1.VoteOption_VOTE_OPTION_ONE)
+				validatorVote(s, s.valAddrs[1], v1.VoteOption_VOTE_OPTION_ONE)
+				validatorVote(s, s.valAddrs[2], v1.VoteOption_VOTE_OPTION_ONE)
+				validatorVote(s, s.valAddrs[3], v1.VoteOption_VOTE_OPTION_ONE)
+				validatorVote(s, s.valAddrs[4], v1.VoteOption_VOTE_OPTION_ONE)
+				validatorVote(s, s.valAddrs[5], v1.VoteOption_VOTE_OPTION_THREE)
+				validatorVote(s, s.valAddrs[6], v1.VoteOption_VOTE_OPTION_FOUR)
 			},
 			expectedPass: true,
 			expectedBurn: false,

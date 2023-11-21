@@ -125,8 +125,8 @@ func (app *BaseApp) SetOption(req abci.RequestSetOption) (res abci.ResponseSetOp
 // Info implements the ABCI interface.
 func (app *BaseApp) Info(req abci.RequestInfo) abci.ResponseInfo {
 	lastCommitID := app.cms.LastCommitID()
-	// load the app version for a non zero height
-	if lastCommitID.Version > 0 {
+	// load the app version for a non zero height and zero app hash
+	if lastCommitID.Version > 0 && app.appVersion == 0 {
 		ctx, err := app.createQueryContext(lastCommitID.Version, false)
 		if err != nil {
 			panic(err)

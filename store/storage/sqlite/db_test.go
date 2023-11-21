@@ -2,6 +2,7 @@ package sqlite
 
 import (
 	"fmt"
+	"sync"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -86,4 +87,114 @@ func TestDatabase_ReverseIterator(t *testing.T) {
 	iter3, err := db.ReverseIterator(storeKey1, 1, []byte("key020"), []byte("key019"))
 	require.Error(t, err)
 	require.Nil(t, iter3)
+}
+
+func TestParallelWrites(t *testing.T) {
+	db, err := New(t.TempDir())
+	require.NoError(t, err)
+	defer db.Close()
+
+	latestVersion := 10
+	kvCount := 100
+
+	wg := sync.WaitGroup{}
+	triggerStartCh := make(chan bool)
+
+	// start 10 goroutines that write to the database
+	for i := 0; i < latestVersion; i++ {
+		wg.Add(1)
+		go func(i int) {
+			<-triggerStartCh
+			defer wg.Done()
+			cs := new(store.Changeset)
+			for j := 0; j < kvCount; j++ {
+				key := fmt.Sprintf("key-%d-%03d", i, j)
+				val := fmt.Sprintf("val-%d-%03d", i, j)
+
+				cs.AddKVPair(store.KVPair{StoreKey: storeKey1, Key: []byte(key), Value: []byte(val)})
+			}
+
+			require.NoError(t, db.ApplyChangeset(uint64(i+1), cs))
+		}(i)
+
+	}
+
+	// start the goroutines
+	close(triggerStartCh)
+	wg.Wait()
+
+	// check that all the data is there
+	for i := 0; i < latestVersion; i++ {
+		for j := 0; j < kvCount; j++ {
+			version := uint64(i + 1)
+			key := fmt.Sprintf("key-%d-%03d", i, j)
+			val := fmt.Sprintf("val-%d-%03d", i, j)
+
+			v, err := db.Get(storeKey1, version, []byte(key))
+			require.NoError(t, err)
+			require.Equal(t, []byte(val), v)
+		}
+	}
+}
+
+func TestParallelWriteAndPruning(t *testing.T) {
+	db, err := New(t.TempDir())
+	require.NoError(t, err)
+	defer db.Close()
+
+	latestVersion := 100
+	kvCount := 100
+	prunePeriod := 5
+
+	wg := sync.WaitGroup{}
+	triggerStartCh := make(chan bool)
+
+	// start a goroutine that write to the database
+	wg.Add(1)
+	go func() {
+		<-triggerStartCh
+		defer wg.Done()
+		for i := 0; i < latestVersion; i++ {
+			cs := new(store.Changeset)
+			for j := 0; j < kvCount; j++ {
+				key := fmt.Sprintf("key-%d-%03d", i, j)
+				val := fmt.Sprintf("val-%d-%03d", i, j)
+
+				cs.AddKVPair(store.KVPair{StoreKey: storeKey1, Key: []byte(key), Value: []byte(val)})
+			}
+
+			require.NoError(t, db.ApplyChangeset(uint64(i+1), cs))
+		}
+	}()
+	// start a goroutine that prunes the database
+	wg.Add(1)
+	go func() {
+		<-triggerStartCh
+		defer wg.Done()
+		for i := 10; i < latestVersion; i += prunePeriod {
+			for {
+				v, err := db.GetLatestVersion()
+				require.NoError(t, err)
+				if v > uint64(i) {
+					require.NoError(t, db.Prune(v-1))
+					break
+				}
+			}
+		}
+	}()
+
+	// start the goroutines
+	close(triggerStartCh)
+	wg.Wait()
+
+	// check if the data is pruned
+	version := uint64(latestVersion - prunePeriod)
+	val, err := db.Get(storeKey1, version, []byte(fmt.Sprintf("key-%d-%03d", version-1, 0)))
+	require.Error(t, err)
+	require.Nil(t, val)
+
+	version = uint64(latestVersion)
+	val, err = db.Get(storeKey1, version, []byte(fmt.Sprintf("key-%d-%03d", version-1, 0)))
+	require.NoError(t, err)
+	require.Equal(t, []byte(fmt.Sprintf("val-%d-%03d", version-1, 0)), val)
 }

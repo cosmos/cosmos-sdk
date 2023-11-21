@@ -302,15 +302,10 @@ func (k Keeper) continuousDistribution(ctx context.Context, continuousFund types
 	}
 
 	for _, amount := range distributionAmount {
-		if continuousFund.DistributedAmount.IsNil() || continuousFund.DistributedAmount.IsZero() {
-			zeroCoin := sdk.NewCoin(amount.Denom, math.ZeroInt())
-			continuousFund.DistributedAmount = &zeroCoin
-		}
-
 		coinsToDistribute := sdk.NewCoin(amount.Denom, amount.Amount.TruncateInt())
-		totalDistrAmount := continuousFund.DistributedAmount.Add(coinsToDistribute)
-		// check if distributed amount exceeds cap
-		if totalDistrAmount.IsLTE(*continuousFund.Cap) {
+		recipientAmount := k.bankKeeper.GetAllBalances(ctx, recipient)
+		// check if the recipient account balance exceeds cap
+		if recipientAmount.IsAllLT(sdk.NewCoins(*continuousFund.Cap)) {
 			// Distribute funds to the recipient
 			err := k.DistributeFromFeePool(ctx, sdk.NewCoins(coinsToDistribute), recipient)
 			if err != nil {

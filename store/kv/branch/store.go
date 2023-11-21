@@ -76,13 +76,12 @@ func (s *Store) GetChangeset() *store.Changeset {
 	for i, key := range keys {
 		kvPair := s.changeset[key]
 		pairs[i] = store.KVPair{
-			Key:      []byte(key),
-			Value:    slices.Clone(kvPair.Value),
-			StoreKey: kvPair.StoreKey,
+			Key:   []byte(key),
+			Value: slices.Clone(kvPair.Value),
 		}
 	}
 
-	return store.NewChangeset(pairs...)
+	return store.NewChangeset(s.storeKey, pairs...)
 }
 
 func (s *Store) Reset(toVersion uint64) error {
@@ -170,7 +169,7 @@ func (s *Store) Set(key, value []byte) {
 	defer s.mu.Unlock()
 
 	// omit the key as that can be inferred from the map key
-	s.changeset[string(key)] = store.KVPair{Value: slices.Clone(value), StoreKey: s.storeKey}
+	s.changeset[string(key)] = store.KVPair{Value: slices.Clone(value)}
 }
 
 func (s *Store) Delete(key []byte) {
@@ -180,7 +179,7 @@ func (s *Store) Delete(key []byte) {
 	defer s.mu.Unlock()
 
 	// omit the key as that can be inferred from the map key
-	s.changeset[string(key)] = store.KVPair{Value: nil, StoreKey: s.storeKey}
+	s.changeset[string(key)] = store.KVPair{Value: nil}
 }
 
 func (s *Store) Write() {

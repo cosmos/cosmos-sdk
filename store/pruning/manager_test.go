@@ -64,11 +64,10 @@ func (s *PruningTestSuite) TestPruning() {
 	for i := uint64(0); i < latestVersion; i++ {
 		version := i + 1
 
-		cs := store.NewChangeset()
-		cs.AddKVPair(store.KVPair{
-			StoreKey: defaultStoreKey,
-			Key:      []byte("key"),
-			Value:    []byte(fmt.Sprintf("value%d", version)),
+		cs := store.NewChangeset(defaultStoreKey)
+		cs.AddKVPair(defaultStoreKey, store.KVPair{
+			Key:   []byte("key"),
+			Value: []byte(fmt.Sprintf("value%d", version)),
 		})
 		err := s.sc.WriteBatch(cs)
 		s.Require().NoError(err)

@@ -1,12 +1,13 @@
 package commitment
 
 import (
+	"errors"
 	"fmt"
 
-	"cosmossdk.io/log"
 	dbm "github.com/cosmos/cosmos-db"
 	ics23 "github.com/cosmos/ics23/go"
 
+	"cosmossdk.io/log"
 	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/commitment/iavl"
 	"cosmossdk.io/store/v2/commitment/types"
@@ -29,10 +30,10 @@ type CommitStore struct {
 func NewCommitStore(storeConfigs map[string]interface{}, db dbm.DB, logger log.Logger) (*CommitStore, error) {
 	multiTrees := make(map[string]types.Tree)
 	for storeKey, cfg := range storeConfigs {
-		switch cfg {
-		case cfg.(*iavl.Config):
+		switch config := cfg.(type) {
+		case *iavl.Config:
 			iavlDB := dbm.NewPrefixDB(db, []byte(storeKey))
-			multiTrees[storeKey] = iavl.NewIavlTree(iavlDB, logger, cfg.(*iavl.Config))
+			multiTrees[storeKey] = iavl.NewIavlTree(iavlDB, logger, config)
 		default:
 			return nil, fmt.Errorf("unknown tree type for store %s, config: %v", storeKey, cfg)
 		}
@@ -44,13 +45,19 @@ func NewCommitStore(storeConfigs map[string]interface{}, db dbm.DB, logger log.L
 }
 
 func (c *CommitStore) WriteBatch(cs *store.Changeset) error {
-	for _, kv := range cs.Pairs {
-		if kv.Value == nil {
-			if err := c.multiTrees[kv.StoreKey].Remove(kv.Key); err != nil {
+	for storeKey, pairs := range cs.Pairs {
+		tree, ok := c.multiTrees[storeKey]
+		if !ok {
+			return fmt.Errorf("store key %s not found in multiTrees", storeKey)
+		}
+		for _, kv := range pairs {
+			if kv.Value == nil {
+				if err := tree.Remove(kv.Key); err != nil {
+					return err
+				}
+			} else if err := tree.Set(kv.Key, kv.Value); err != nil {
 				return err
 			}
-		} else if err := c.multiTrees[kv.StoreKey].Set(kv.Key, kv.Value); err != nil {
-			return err
 		}
 	}
 
@@ -75,7 +82,7 @@ func (c *CommitStore) WorkingStoreInfos(version uint64) []store.StoreInfo {
 func (c *CommitStore) GetLatestVersion() (uint64, error) {
 	latestVersion := uint64(0)
 	for storeKey, tree := range c.multiTrees {
-		version := uint64(tree.GetLatestVersion())
+		version := tree.GetLatestVersion()
 		if latestVersion != 0 && version != latestVersion {
 			return 0, fmt.Errorf("store %s has version %d, not equal to latest version %d", storeKey, version, latestVersion)
 		}
@@ -105,7 +112,7 @@ func (c *CommitStore) Commit() ([]store.StoreInfo, error) {
 		storeInfos = append(storeInfos, store.StoreInfo{
 			Name: storeKey,
 			CommitID: store.CommitID{
-				Version: uint64(tree.GetLatestVersion()),
+				Version: tree.GetLatestVersion(),
 				Hash:    hash,
 			},
 		})
@@ -123,23 +130,22 @@ func (c *CommitStore) GetProof(storeKey string, version uint64, key []byte) (*ic
 	return tree.GetProof(version, key)
 }
 
-func (c *CommitStore) Prune(version uint64) error {
+func (c *CommitStore) Prune(version uint64) (ferr error) {
 	for _, tree := range c.multiTrees {
 		if err := tree.Prune(version); err != nil {
-			return err
+			ferr = errors.Join(ferr, err)
 		}
 	}
 
-	return nil
+	return ferr
 }
 
-func (c *CommitStore) Close() error {
+func (c *CommitStore) Close() (ferr error) {
 	for _, tree := range c.multiTrees {
-		err := tree.Close()
-		if err != nil {
-			return err
+		if err := tree.Close(); err != nil {
+			ferr = errors.Join(ferr, err)
 		}
 	}
 
-	return nil
+	return ferr
 }

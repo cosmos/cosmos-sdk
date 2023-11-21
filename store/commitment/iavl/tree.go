@@ -30,7 +30,7 @@ func NewIavlTree(db dbm.DB, logger log.Logger, cfg *Config) *IavlTree {
 func (t *IavlTree) Remove(key []byte) error {
 	_, res, err := t.tree.Remove(key)
 	if !res {
-		return fmt.Errorf("key %s not found", key)
+		return fmt.Errorf("key %x not found", key)
 	}
 	return err
 }

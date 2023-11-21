@@ -69,7 +69,7 @@ func (s *RootStoreTestSuite) TestGetKVStore() {
 func (s *RootStoreTestSuite) TestGetBranchedKVStore() {
 	bs := s.rootStore.GetBranchedKVStore("")
 	s.Require().NotNil(bs)
-	s.Require().Empty(bs.GetChangeset().Pairs)
+	s.Require().Empty(bs.GetChangeset().Size())
 }
 
 func (s *RootStoreTestSuite) TestQuery() {
@@ -276,7 +276,7 @@ func (s *RootStoreTestSuite) TestCommit() {
 	s.Require().Equal(uint64(1), lv)
 
 	// ensure the root KVStore is cleared
-	s.Require().Empty(s.rootStore.(*Store).rootKVStore.GetChangeset().Pairs)
+	s.Require().Empty(s.rootStore.(*Store).rootKVStore.GetChangeset().Size())
 
 	// perform reads on the updated root store
 	bs := s.rootStore.GetKVStore("")

@@ -30,7 +30,7 @@ func TestUnregisteredProposal_InactiveProposalFails(t *testing.T) {
 	startTime, endTime := time.Now().Add(-4*time.Hour), ctx.BlockHeader().Time
 	proposal, err := v1.NewProposal([]sdk.Msg{
 		&v1.Proposal{}, // invalid proposal message
-	}, 1, startTime, startTime, "", "Unsupported proposal", "Unsupported proposal", addrs[0], false)
+	}, 1, startTime, startTime, "", "Unsupported proposal", "Unsupported proposal", addrs[0], v1.ProposalType_PROPOSAL_TYPE_STANDARD)
 	require.NoError(t, err)
 
 	err = suite.GovKeeper.SetProposal(ctx, proposal)
@@ -58,7 +58,7 @@ func TestUnregisteredProposal_ActiveProposalFails(t *testing.T) {
 	startTime, endTime := time.Now().Add(-4*time.Hour), ctx.BlockHeader().Time
 	proposal, err := v1.NewProposal([]sdk.Msg{
 		&v1.Proposal{}, // invalid proposal message
-	}, 1, startTime, startTime, "", "Unsupported proposal", "Unsupported proposal", addrs[0], false)
+	}, 1, startTime, startTime, "", "Unsupported proposal", "Unsupported proposal", addrs[0], v1.ProposalType_PROPOSAL_TYPE_STANDARD)
 	require.NoError(t, err)
 	proposal.Status = v1.StatusVotingPeriod
 	proposal.VotingEndTime = &endTime
@@ -404,7 +404,7 @@ func TestEndBlockerProposalHandlerFailed(t *testing.T) {
 	_, err := suite.StakingKeeper.EndBlocker(ctx)
 	require.NoError(t, err)
 	msg := banktypes.NewMsgSend(authtypes.NewModuleAddress(types.ModuleName), addrs[0], sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100000))))
-	proposal, err := suite.GovKeeper.SubmitProposal(ctx, []sdk.Msg{msg}, "", "title", "summary", proposer, false)
+	proposal, err := suite.GovKeeper.SubmitProposal(ctx, []sdk.Msg{msg}, "", "title", "summary", proposer, v1.ProposalType_PROPOSAL_TYPE_STANDARD)
 	require.NoError(t, err)
 
 	proposalCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, suite.StakingKeeper.TokensFromConsensusPower(ctx, 10)))

@@ -27,4 +27,13 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Features
 
+* [#18532](https://github.com/cosmos/cosmos-sdk/pull/18532) Add SPAM vote proposals
+* [#18532](https://github.com/cosmos/cosmos-sdk/pull/18532) Add proposal types to proposals
+
 ### API Breaking Changes
+
+* [#18532](https://github.com/cosmos/cosmos-sdk/pull/18532) All functions that were taking an expedited bool parameter now take a ProposalType parameter instead.
+
+### Deprecated
+
+* [#18532](https://github.com/cosmos/cosmos-sdk/pull/18532) The field `v1.Proposal.Expedited` is deprecated and will be removed in the next release.

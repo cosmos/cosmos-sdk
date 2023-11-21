@@ -146,7 +146,7 @@ func TestDeposits(t *testing.T) {
 			require.Equal(t, addr1Initial, bankKeeper.GetAllBalances(ctx, TestAddrs[1]))
 
 			// Test delete and burn deposits
-			proposal, err = govKeeper.SubmitProposal(ctx, tp, "", "title", "summary", TestAddrs[0], true)
+			proposal, err = govKeeper.SubmitProposal(ctx, tp, "", "title", "summary", TestAddrs[0], v1.ProposalType_PROPOSAL_TYPE_EXPEDITED)
 			require.NoError(t, err)
 			proposalID = proposal.Id
 			_, err = govKeeper.AddDeposit(ctx, proposalID, TestAddrs[0], fourStake)
@@ -226,7 +226,7 @@ func TestDepositAmount(t *testing.T) {
 			require.NoError(t, err)
 
 			tp := TestProposal
-			proposal, err := govKeeper.SubmitProposal(ctx, tp, "", "title", "summary", testAddrs[0], false)
+			proposal, err := govKeeper.SubmitProposal(ctx, tp, "", "title", "summary", testAddrs[0], v1.ProposalType_PROPOSAL_TYPE_STANDARD)
 			require.NoError(t, err)
 			proposalID := proposal.Id
 
@@ -416,7 +416,7 @@ func TestChargeDeposit(t *testing.T) {
 				require.NoError(t, err)
 
 				tp := TestProposal
-				proposal, err := govKeeper.SubmitProposal(ctx, tp, "", "title", "summary", TestAddrs[0], false)
+				proposal, err := govKeeper.SubmitProposal(ctx, tp, "", "title", "summary", TestAddrs[0], v1.ProposalType_PROPOSAL_TYPE_STANDARD)
 				require.NoError(t, err)
 				proposalID := proposal.Id
 				// deposit to proposal

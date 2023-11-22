@@ -29,12 +29,12 @@ func (k Keeper) AllocateTokens(ctx context.Context, totalPreviousPower int64, bo
 		return err
 	}
 
-	if totalPreviousPower == 0 {
-		feePool, err := k.FeePool.Get(ctx)
-		if err != nil {
-			return err
-		}
+	feePool, err := k.FeePool.Get(ctx)
+	if err != nil {
+		return err
+	}
 
+	if totalPreviousPower == 0 {
 		if err := k.FeePool.Set(ctx, types.FeePool{DecimalPool: feePool.DecimalPool.Add(feesCollected...)}); err != nil {
 			return err
 		}
@@ -79,11 +79,6 @@ func (k Keeper) AllocateTokens(ctx context.Context, totalPreviousPower int64, bo
 	// send to community pool and set remainder in fee pool
 	amt, re := remaining.TruncateDecimal()
 	if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, protocolpooltypes.ModuleName, amt); err != nil {
-		return err
-	}
-
-	feePool, err := k.FeePool.Get(ctx)
-	if err != nil {
 		return err
 	}
 

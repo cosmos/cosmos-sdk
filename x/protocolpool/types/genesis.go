@@ -30,13 +30,6 @@ func ValidateGenesis(gs *GenesisState) error {
 }
 
 func validateContinuousFund(cf ContinuousFund) error {
-	if cf.Title == "" {
-		return fmt.Errorf("title cannot be empty")
-	}
-	if cf.Description == "" {
-		return fmt.Errorf("description cannot be empty")
-	}
-
 	if cf.Recipient == "" {
 		return fmt.Errorf("recipient cannot be empty")
 	}

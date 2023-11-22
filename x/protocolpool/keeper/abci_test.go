@@ -91,13 +91,10 @@ func TestContinuousFundEndBlocker(t *testing.T) {
 	oneMonthInSeconds := int64(30 * 24 * 60 * 60) // Approximate number of seconds in 1 month
 	expiry := ctx.BlockTime().Add(time.Duration(oneMonthInSeconds) * time.Second)
 	cf := types.ContinuousFund{
-		Title:       "New Title",
-		Description: "New description",
-		Recipient:   addrs[0].String(),
-		Metadata:    "AQ==",
-		Percentage:  percentage,
-		Cap:         &cap,
-		Expiry:      &expiry,
+		Recipient:  addrs[0].String(),
+		Percentage: percentage,
+		Cap:        &cap,
+		Expiry:     &expiry,
 	}
 	err = poolKeeper.ContinuousFund.Set(ctx, addrs[0], cf)
 	require.NoError(t, err)
@@ -108,13 +105,10 @@ func TestContinuousFundEndBlocker(t *testing.T) {
 	require.NoError(t, err)
 	cap = sdk.NewInt64Coin("test", 10000000)
 	cf = types.ContinuousFund{
-		Title:       "New Title",
-		Description: "New description",
-		Recipient:   addrs[1].String(),
-		Metadata:    "AQ==",
-		Percentage:  percentage,
-		Cap:         &cap,
-		Expiry:      &expiry,
+		Recipient:  addrs[1].String(),
+		Percentage: percentage,
+		Cap:        &cap,
+		Expiry:     &expiry,
 	}
 	err = poolKeeper.ContinuousFund.Set(ctx, addrs[1], cf)
 	require.NoError(t, err)
@@ -142,13 +136,10 @@ func TestContinuousFundEndBlocker(t *testing.T) {
 	// Add a continuous fund proposal to the store with a recipient, percentage, cap, and with exipired time.
 	expiry = ctx.BlockTime().AddDate(0, 0, 0)
 	cf = types.ContinuousFund{
-		Title:       "New Title",
-		Description: "New description",
-		Recipient:   addrs[2].String(),
-		Metadata:    "AQ==",
-		Percentage:  percentage,
-		Cap:         &cap,
-		Expiry:      &expiry,
+		Recipient:  addrs[2].String(),
+		Percentage: percentage,
+		Cap:        &cap,
+		Expiry:     &expiry,
 	}
 	ctx = ctx.WithHeaderInfo(header.Info{Time: time.Unix(10, 0)})
 	err = poolKeeper.ContinuousFund.Set(ctx, addrs[2], cf)

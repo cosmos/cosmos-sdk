@@ -27,13 +27,10 @@ func (k Keeper) ExportGenesis(ctx context.Context) *types.GenesisState {
 	var cf []types.ContinuousFund
 	err := k.ContinuousFund.Walk(ctx, nil, func(key sdk.AccAddress, value types.ContinuousFund) (stop bool, err error) {
 		cf = append(cf, types.ContinuousFund{
-			Title:       value.Title,
-			Description: value.Description,
-			Recipient:   key.String(),
-			Metadata:    value.Metadata,
-			Percentage:  value.Percentage,
-			Cap:         value.Cap,
-			Expiry:      value.Expiry,
+			Recipient:  key.String(),
+			Percentage: value.Percentage,
+			Cap:        value.Cap,
+			Expiry:     value.Expiry,
 		})
 		return false, nil
 	})

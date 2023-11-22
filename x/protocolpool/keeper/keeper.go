@@ -231,13 +231,6 @@ func (k Keeper) validateAndUpdateBudgetProposal(ctx context.Context, bp types.Ms
 
 // validateContinuousFund validates the fields of the CreateContinuousFund message.
 func (k Keeper) validateContinuousFund(ctx context.Context, msg types.MsgCreateContinuousFund) error {
-	if msg.Title == "" {
-		return fmt.Errorf("title cannot be empty")
-	}
-	if msg.Description == "" {
-		return fmt.Errorf("description cannot be empty")
-	}
-
 	// Validate percentage
 	if msg.Percentage.IsZero() || msg.Percentage.IsNil() {
 		return fmt.Errorf("percentage cannot be zero or empty")

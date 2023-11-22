@@ -29,7 +29,7 @@ import (
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 )
 
-func TestContinuousFund2(t *testing.T) {
+func TestContinuousFundEndBlocker(t *testing.T) {
 	keys := storetypes.NewKVStoreKeys(
 		authtypes.StoreKey, banktypes.StoreKey, types.StoreKey,
 	)

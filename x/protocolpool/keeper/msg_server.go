@@ -117,13 +117,24 @@ func (k MsgServer) CreateContinuousFund(ctx context.Context, msg *types.MsgCreat
 	}
 
 	// Validate the message fields
-	continuousFund, err := k.validateandUpdateContinuousFund(ctx, *msg)
+	err = k.validateContinuousFund(ctx, *msg)
 	if err != nil {
 		return nil, err
 	}
 
+	// Create continuous fund proposal
+	cf := types.ContinuousFund{
+		Title:       msg.Title,
+		Description: msg.Description,
+		Recipient:   msg.Recipient,
+		Metadata:    msg.Metadata,
+		Percentage:  msg.Percentage,
+		Cap:         msg.Cap,
+		Expiry:      msg.Expiry,
+	}
+
 	// Set continuous fund to the state
-	err = k.ContinuousFund.Set(ctx, recipient, *continuousFund)
+	err = k.ContinuousFund.Set(ctx, recipient, cf)
 	if err != nil {
 		return nil, err
 	}

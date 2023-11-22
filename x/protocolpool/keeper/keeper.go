@@ -229,54 +229,43 @@ func (k Keeper) validateAndUpdateBudgetProposal(ctx context.Context, bp types.Ms
 	return &updatedBudget, nil
 }
 
-// validateandUpdateContinuousFund validates the fields of the CreateContinuousFund message.
-func (k Keeper) validateandUpdateContinuousFund(ctx context.Context, msg types.MsgCreateContinuousFund) (*types.ContinuousFund, error) {
+// validateContinuousFund validates the fields of the CreateContinuousFund message.
+func (k Keeper) validateContinuousFund(ctx context.Context, msg types.MsgCreateContinuousFund) error {
 	if msg.Title == "" {
-		return nil, fmt.Errorf("title cannot be empty")
+		return fmt.Errorf("title cannot be empty")
 	}
 	if msg.Description == "" {
-		return nil, fmt.Errorf("description cannot be empty")
+		return fmt.Errorf("description cannot be empty")
 	}
 
 	// Validate percentage
 	if msg.Percentage.IsZero() || msg.Percentage.IsNil() {
-		return nil, fmt.Errorf("percentage cannot be zero or empty")
+		return fmt.Errorf("percentage cannot be zero or empty")
 	}
 	if msg.Percentage.IsNegative() {
-		return nil, fmt.Errorf("percentage cannot be negative")
+		return fmt.Errorf("percentage cannot be negative")
 	}
 	if msg.Percentage.GTE(math.LegacyOneDec()) {
-		return nil, fmt.Errorf("percentage cannot be greater than or equal to one")
+		return fmt.Errorf("percentage cannot be greater than or equal to one")
 	}
 
 	// Validate cap
 	if msg.Cap.IsZero() {
-		return nil, fmt.Errorf("invalid capital: amount cannot be zero")
+		return fmt.Errorf("invalid capital: amount cannot be zero")
 	}
 	if err := validateAmount(sdk.NewCoins(*msg.Cap)); err != nil {
-		return nil, err
+		return err
 	}
 
 	// Validate expiry
 	currentTime := sdk.UnwrapSDKContext(ctx).BlockTime()
 	if msg.Expiry != nil {
 		if msg.Expiry.Compare(currentTime) == -1 {
-			return nil, fmt.Errorf("expiry time cannot be less than the current block time")
+			return fmt.Errorf("expiry time cannot be less than the current block time")
 		}
 	}
 
-	// Create and return an updated continuous fund proposal
-	updatedCFP := types.ContinuousFund{
-		Title:       msg.Title,
-		Description: msg.Description,
-		Recipient:   msg.Recipient,
-		Metadata:    msg.Metadata,
-		Percentage:  msg.Percentage,
-		Cap:         msg.Cap,
-		Expiry:      msg.Expiry,
-	}
-
-	return &updatedCFP, nil
+	return nil
 }
 
 func (k Keeper) continuousDistribution(ctx context.Context, continuousFund types.ContinuousFund) error {

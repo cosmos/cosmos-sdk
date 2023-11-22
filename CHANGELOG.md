@@ -64,6 +64,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [#17733](https://github.com/cosmos/cosmos-sdk/pull/17733) Ensure `buf export` exports all proto dependencies
 * (version) [#18063](https://github.com/cosmos/cosmos-sdk/pull/18063) Include additional information in the Info struct. This change enhances the Info struct by adding support for additional information through the ExtraInfo field
 * (crypto | x/auth) [#14372](https://github.com/cosmos/cosmos-sdk/pull/18194) Key checks on signatures antehandle.
+* (codec/unknownproto)[#18541](https://github.com/cosmos/cosmos-sdk/pull/18541) Use descriptorpb types for unknown proto support.
 
 ### Bug Fixes
 

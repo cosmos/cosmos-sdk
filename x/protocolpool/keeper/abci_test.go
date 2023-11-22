@@ -78,7 +78,7 @@ func TestContinuousFundEndBlocker(t *testing.T) {
 	poolAcc := authtypes.NewEmptyModuleAccount(types.ModuleName)
 
 	// mint coins in protocolpool module account
-	poolModBal := sdk.NewCoins(sdk.NewInt64Coin("test", 10000000))
+	poolModBal := sdk.NewCoins(sdk.NewInt64Coin("test", 100000000))
 	err := bankKeeper.MintCoins(ctx, poolAcc.GetName(), poolModBal)
 	require.NoError(t, err)
 
@@ -87,7 +87,7 @@ func TestContinuousFundEndBlocker(t *testing.T) {
 	// Add a continuous fund proposal to the store with a recipient, percentage, cap, and expiry.
 	percentage, err := math.LegacyNewDecFromStr("0.2")
 	require.NoError(t, err)
-	cap := sdk.NewInt64Coin("test", 1000)
+	cap := sdk.NewInt64Coin("test", 100000000)
 	oneMonthInSeconds := int64(30 * 24 * 60 * 60) // Approximate number of seconds in 1 month
 	expiry := ctx.BlockTime().Add(time.Duration(oneMonthInSeconds) * time.Second)
 	cf := types.ContinuousFund{
@@ -102,10 +102,11 @@ func TestContinuousFundEndBlocker(t *testing.T) {
 	err = poolKeeper.ContinuousFund.Set(ctx, addrs[0], cf)
 	require.NoError(t, err)
 
-	// fund addrs[1]
+	// fund addrs[1] with an initial balance
 	// Add a continuous fund proposal to the store with a recipient account with more than cap funds, percentage, cap, and expiry.
-	err = bankKeeper.SendCoinsFromModuleToAccount(ctx, poolAcc.GetName(), addrs[1], sdk.NewCoins(sdk.NewInt64Coin("test", 10000)))
+	err = bankKeeper.SendCoinsFromModuleToAccount(ctx, poolAcc.GetName(), addrs[1], sdk.NewCoins(sdk.NewInt64Coin("test", 10000000)))
 	require.NoError(t, err)
+	cap = sdk.NewInt64Coin("test", 10000000)
 	cf = types.ContinuousFund{
 		Title:       "New Title",
 		Description: "New description",
@@ -122,7 +123,7 @@ func TestContinuousFundEndBlocker(t *testing.T) {
 	addr1Bal := bankKeeper.GetAllBalances(ctx, addrs[0])
 	require.Equal(t, addr1Bal, sdk.Coins{})
 	addr2Bal := bankKeeper.GetAllBalances(ctx, addrs[1])
-	require.Equal(t, addr2Bal, sdk.NewCoins(sdk.NewInt64Coin("test", 10000)))
+	require.Equal(t, addr2Bal, sdk.NewCoins(sdk.NewInt64Coin("test", 10000000)))
 
 	err = poolKeeper.EndBlocker(ctx)
 	require.NoError(t, err)
@@ -132,7 +133,7 @@ func TestContinuousFundEndBlocker(t *testing.T) {
 	check := addr1BalAfter.IsAllGT(addr1Bal)
 	require.True(t, check)
 	addr2BalAfter := bankKeeper.GetAllBalances(ctx, addrs[1])
-	require.Equal(t, addr2Bal, addr2BalAfter) // since addrs[1] has more account bal than cap
+	require.Equal(t, addr2Bal, addr2BalAfter) // since addrs[1] has more account bal than cap, no funds are distributed and balance remains same
 
 	_, err = poolKeeper.ContinuousFund.Get(ctx, addrs[1])
 	require.Error(t, err)

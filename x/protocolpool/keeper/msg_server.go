@@ -165,9 +165,8 @@ func (k MsgServer) CancelContinuousFund(ctx context.Context, msg *types.MsgCance
 		return nil, err
 	}
 
-	err = k.ContinuousFund.Remove(ctx, recipient)
-	if err != nil {
-		return nil, err
+	if err := k.ContinuousFund.Remove(ctx, recipient); err != nil {
+		return nil, fmt.Errorf("failed to remove continuous fund for recipient %s: %w", msg.RecipientAddress, err)
 	}
 
 	return &types.MsgCancelContinuousFundResponse{

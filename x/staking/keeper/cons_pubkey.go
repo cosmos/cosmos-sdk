@@ -6,11 +6,14 @@ import (
 	"time"
 
 	"cosmossdk.io/collections"
+	"cosmossdk.io/collections/indexes"
+	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/x/staking/types"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // maxRotations is the value of max rotations can be made in unbonding period for a validator.
@@ -78,8 +81,15 @@ func (k Keeper) updateToNewPubkey(ctx context.Context, val types.Validator, oldP
 		return err
 	}
 
-	oldPk := oldPubKey.GetCachedValue().(cryptotypes.PubKey)
-	newPk := newPubKey.GetCachedValue().(cryptotypes.PubKey)
+	oldPk, ok := oldPubKey.GetCachedValue().(cryptotypes.PubKey)
+	if !ok {
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidType, "Expecting cryptotypes.PubKey, got %T", oldPk)
+	}
+
+	newPk, ok := newPubKey.GetCachedValue().(cryptotypes.PubKey)
+	if !ok {
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidType, "Expecting cryptotypes.PubKey, got %T", newPk)
+	}
 
 	// Sets a map to newly rotated consensus key with old consensus key
 	if err := k.RotatedConsKeyMapIndex.Set(ctx, oldPk.Address(), newPk.Address()); err != nil {
@@ -166,29 +176,12 @@ func (k Keeper) GetAllMaturedRotatedKeys(ctx sdk.Context, matureTime time.Time) 
 
 	// get an iterator for all timeslices from time 0 until the current HeaderInfo time
 	rng := new(collections.Range[time.Time]).EndInclusive(matureTime)
-	iterator, err := k.ValidatorConsensusKeyRotationRecordQueue.Iterate(ctx, rng)
+	err := k.ValidatorConsensusKeyRotationRecordQueue.Walk(ctx, rng, func(key time.Time, value types.ValAddrsOfRotatedConsKeys) (stop bool, err error) {
+		valAddrs = append(valAddrs, value.Addresses...)
+		return false, k.ValidatorConsensusKeyRotationRecordQueue.Remove(ctx, key)
+	})
 	if err != nil {
 		return nil, err
-	}
-	defer iterator.Close()
-
-	// indexes.CollectValues(ctx, k.vaValidatorConsensusKeyRotationRecordQueue, iterator)
-
-	for ; iterator.Valid(); iterator.Next() {
-		value, err := iterator.Value()
-		if err != nil {
-			return nil, err
-		}
-		valAddrs = append(valAddrs, value.Addresses...)
-		key, err := iterator.Key()
-		if err != nil {
-			return nil, err
-		}
-
-		err = k.ValidatorConsensusKeyRotationRecordQueue.Remove(ctx, key)
-		if err != nil {
-			return nil, err
-		}
 	}
 
 	return valAddrs, nil
@@ -197,7 +190,6 @@ func (k Keeper) GetAllMaturedRotatedKeys(ctx sdk.Context, matureTime time.Time) 
 // GetBlockConsPubKeyRotationHistory iterator over the rotation history for the given height.
 func (k Keeper) GetBlockConsPubKeyRotationHistory(ctx context.Context) ([]types.ConsPubKeyRotationHistory, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	var historyObjects []types.ConsPubKeyRotationHistory
 
 	iterator, err := k.RotationHistory.Indexes.Block.MatchExact(ctx, uint64(sdkCtx.BlockHeight()))
 	if err != nil {
@@ -205,19 +197,5 @@ func (k Keeper) GetBlockConsPubKeyRotationHistory(ctx context.Context) ([]types.
 	}
 	defer iterator.Close()
 
-	keys, err := iterator.PrimaryKeys()
-	if err != nil {
-		return nil, err
-	}
-
-	for _, v := range keys {
-		history, err := k.RotationHistory.Get(ctx, v)
-		if err != nil {
-			return nil, err
-		}
-
-		historyObjects = append(historyObjects, history)
-	}
-
-	return historyObjects, nil
+	return indexes.CollectValues(ctx, k.RotationHistory, iterator)
 }

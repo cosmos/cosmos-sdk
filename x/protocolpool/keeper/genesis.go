@@ -15,9 +15,8 @@ func (k Keeper) InitGenesis(ctx context.Context, data *types.GenesisState) error
 		if err != nil {
 			return fmt.Errorf("failed to decode recipient address: %w", err)
 		}
-		err = k.ContinuousFund.Set(ctx, recipientAddress, *cf)
-		if err != nil {
-			return fmt.Errorf("failed to set continuous fund: %w", err)
+		if err := k.ContinuousFund.Set(ctx, recipientAddress, *cf); err != nil {
+			return fmt.Errorf("failed to set continuous fund for recipient %s: %w", recipientAddress, err)
 		}
 	}
 	for _, budget := range data.Budget {
@@ -25,12 +24,14 @@ func (k Keeper) InitGenesis(ctx context.Context, data *types.GenesisState) error
 		if err != nil {
 			return fmt.Errorf("failed to decode recipient address: %w", err)
 		}
-		err = k.BudgetProposal.Set(ctx, recipientAddress, *budget)
+		if err = k.BudgetProposal.Set(ctx, recipientAddress, *budget); err != nil {
+			return fmt.Errorf("failed to set budget for recipient %s: %w", recipientAddress, err)
+		}
 	}
 	return nil
 }
 
-func (k Keeper) ExportGenesis(ctx context.Context) *types.GenesisState {
+func (k Keeper) ExportGenesis(ctx context.Context) (*types.GenesisState, error) {
 	var cf []*types.ContinuousFund
 	err := k.ContinuousFund.Walk(ctx, nil, func(key sdk.AccAddress, value types.ContinuousFund) (stop bool, err error) {
 		cf = append(cf, &types.ContinuousFund{
@@ -42,7 +43,7 @@ func (k Keeper) ExportGenesis(ctx context.Context) *types.GenesisState {
 		return false, nil
 	})
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	var budget []*types.Budget
@@ -60,8 +61,8 @@ func (k Keeper) ExportGenesis(ctx context.Context) *types.GenesisState {
 		return false, nil
 	})
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
-	return types.NewGenesisState(cf, budget)
+	return types.NewGenesisState(cf, budget), nil
 }

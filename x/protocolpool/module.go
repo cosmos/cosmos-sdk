@@ -122,7 +122,10 @@ func (am AppModule) InitGenesis(ctx context.Context, cdc codec.JSONCodec, data j
 // ExportGenesis returns the exported genesis state as raw bytes for the protocolpool
 // module.
 func (am AppModule) ExportGenesis(ctx context.Context, cdc codec.JSONCodec) json.RawMessage {
-	gs := am.keeper.ExportGenesis(ctx)
+	gs, err := am.keeper.ExportGenesis(ctx)
+	if err != nil {
+		panic(err)
+	}
 	return cdc.MustMarshalJSON(gs)
 }
 

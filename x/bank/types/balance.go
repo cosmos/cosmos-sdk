@@ -51,7 +51,7 @@ func (b balanceByAddress) Swap(i, j int) {
 	b.balances[i], b.balances[j] = b.balances[j], b.balances[i]
 }
 
-// SanitizeGenesisBalances sorts addresses and coin sets.
+// SanitizeGenesisBalances checks for duplicates and sorts addresses and coin sets.
 func SanitizeGenesisBalances(balances []Balance) []Balance {
 	// Given that this function sorts balances, using the standard library's
 	// Quicksort based algorithms, we have algorithmic complexities of:
@@ -64,10 +64,16 @@ func SanitizeGenesisBalances(balances []Balance) []Balance {
 
 	// 1. Retrieve the address equivalents for each Balance's address.
 	addresses := make([]sdk.AccAddress, len(balances))
+	existingAddresses := map[string]bool{}
 	for i := range balances {
 		addr, _ := sdk.AccAddressFromBech32(balances[i].Address)
 		addresses[i] = addr
+		existingAddresses[string(addr)] = true
 	}
+
+	if len(existingAddresses) != len(balances) {
+		panic("duplicate account in genesis state")
+        }
 
 	// 2. Sort balances.
 	sort.Sort(balanceByAddress{addresses: addresses, balances: balances})

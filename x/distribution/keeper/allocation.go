@@ -29,6 +29,17 @@ func (k Keeper) AllocateTokens(ctx context.Context, totalPreviousPower int64, bo
 		return err
 	}
 
+	if totalPreviousPower == 0 {
+		feePool, err := k.FeePool.Get(ctx)
+		if err != nil {
+			return err
+		}
+
+		if err := k.FeePool.Set(ctx, types.FeePool{DecimalPool: feePool.DecimalPool.Add(feesCollected...)}); err != nil {
+			return err
+		}
+	}
+
 	// calculate fraction allocated to validators
 	remaining := feesCollected
 	communityTax, err := k.GetCommunityTax(ctx)
@@ -71,7 +82,12 @@ func (k Keeper) AllocateTokens(ctx context.Context, totalPreviousPower int64, bo
 		return err
 	}
 
-	if err := k.FeePool.Set(ctx, types.FeePool{DecimalPool: re}); err != nil {
+	feePool, err := k.FeePool.Get(ctx)
+	if err != nil {
+		return err
+	}
+
+	if err := k.FeePool.Set(ctx, types.FeePool{DecimalPool: feePool.DecimalPool.Add(re...)}); err != nil {
 		return err
 	}
 

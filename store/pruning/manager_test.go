@@ -37,10 +37,8 @@ func (s *PruningTestSuite) SetupTest() {
 	ss, err := sqlite.New(s.T().TempDir())
 	s.Require().NoError(err)
 
-	scConfigs := map[string]interface{}{
-		defaultStoreKey: iavl.DefaultConfig(),
-	}
-	sc, err := commitment.NewCommitStore(scConfigs, dbm.NewMemDB(), log.NewNopLogger())
+	tree := iavl.NewIavlTree(dbm.NewMemDB(), log.NewNopLogger(), iavl.DefaultConfig())
+	sc, err := commitment.NewCommitStore(map[string]commitment.Tree{"default": tree}, logger)
 	s.Require().NoError(err)
 
 	s.manager = NewManager(logger, ss, sc)
@@ -64,7 +62,7 @@ func (s *PruningTestSuite) TestPruning() {
 	for i := uint64(0); i < latestVersion; i++ {
 		version := i + 1
 
-		cs := store.NewChangeset(defaultStoreKey)
+		cs := store.NewChangeset(map[string]store.KVPairs{defaultStoreKey: {}})
 		cs.AddKVPair(defaultStoreKey, store.KVPair{
 			Key:   []byte("key"),
 			Value: []byte(fmt.Sprintf("value%d", version)),

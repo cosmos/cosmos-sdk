@@ -76,7 +76,7 @@ func (s *Store) GetChangeset() *store.Changeset {
 	itr := s.Iterator(nil, nil)
 	defer itr.Close()
 
-	var kvPairs []store.KVPair
+	var kvPairs store.KVPairs
 	for ; itr.Valid(); itr.Next() {
 		kvPairs = append(kvPairs, store.KVPair{
 			Key:   itr.Key(),
@@ -84,7 +84,7 @@ func (s *Store) GetChangeset() *store.Changeset {
 		})
 	}
 
-	return store.NewChangeset(s.storeKey, kvPairs...)
+	return store.NewChangeset(map[string]store.KVPairs{s.storeKey: kvPairs})
 }
 
 func (s *Store) Reset(_ uint64) error {

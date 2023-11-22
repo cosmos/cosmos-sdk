@@ -31,7 +31,7 @@ func TestDatabase_ReverseIterator(t *testing.T) {
 	require.NoError(t, err)
 	defer db.Close()
 
-	cs := store.NewChangeset(storeKey1)
+	cs := store.NewChangeset(map[string]store.KVPairs{storeKey1: {}})
 	for i := 0; i < 100; i++ {
 		key := fmt.Sprintf("key%03d", i) // key000, key001, ..., key099
 		val := fmt.Sprintf("val%03d", i) // val000, val001, ..., val099
@@ -106,7 +106,7 @@ func TestParallelWrites(t *testing.T) {
 		go func(i int) {
 			<-triggerStartCh
 			defer wg.Done()
-			cs := store.NewChangeset(storeKey1)
+			cs := store.NewChangeset(map[string]store.KVPairs{storeKey1: {}})
 			for j := 0; j < kvCount; j++ {
 				key := fmt.Sprintf("key-%d-%03d", i, j)
 				val := fmt.Sprintf("val-%d-%03d", i, j)
@@ -155,7 +155,7 @@ func TestParallelWriteAndPruning(t *testing.T) {
 		<-triggerStartCh
 		defer wg.Done()
 		for i := 0; i < latestVersion; i++ {
-			cs := store.NewChangeset(storeKey1)
+			cs := store.NewChangeset(map[string]store.KVPairs{storeKey1: {}})
 			for j := 0; j < kvCount; j++ {
 				key := fmt.Sprintf("key-%d-%03d", i, j)
 				val := fmt.Sprintf("val-%d-%03d", i, j)

@@ -8,15 +8,17 @@ type KVPair struct {
 	Value []byte
 }
 
-// Changeset defines a set of KVPair entries.
-// storeKey -> []KVPair
+type KVPairs []KVPair
+
+// Changeset defines a set of KVPair entries by maintaining a map
+// from store key to a slice of KVPair objects.
 type Changeset struct {
-	Pairs map[string][]KVPair
+	Pairs map[string]KVPairs
 }
 
-func NewChangeset(storeKey string, pairs ...KVPair) *Changeset {
+func NewChangeset(pairs map[string]KVPairs) *Changeset {
 	return &Changeset{
-		Pairs: map[string][]KVPair{storeKey: pairs},
+		Pairs: pairs,
 	}
 }
 

@@ -31,10 +31,8 @@ func (s *RootStoreTestSuite) SetupTest() {
 	ss, err := sqlite.New(s.T().TempDir())
 	s.Require().NoError(err)
 
-	scConfigs := map[string]interface{}{
-		defaultStoreKey: iavl.DefaultConfig(),
-	}
-	sc, err := commitment.NewCommitStore(scConfigs, dbm.NewMemDB(), noopLog)
+	tree := iavl.NewIavlTree(dbm.NewMemDB(), noopLog, iavl.DefaultConfig())
+	sc, err := commitment.NewCommitStore(map[string]commitment.Tree{"default": tree}, noopLog)
 	s.Require().NoError(err)
 
 	rs, err := New(noopLog, 1, ss, sc)

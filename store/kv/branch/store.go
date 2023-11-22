@@ -72,7 +72,7 @@ func (s *Store) GetChangeset() *store.Changeset {
 	keys := maps.Keys(s.changeset)
 	slices.Sort(keys)
 
-	pairs := make([]store.KVPair, len(keys))
+	pairs := make(store.KVPairs, len(keys))
 	for i, key := range keys {
 		kvPair := s.changeset[key]
 		pairs[i] = store.KVPair{
@@ -81,7 +81,7 @@ func (s *Store) GetChangeset() *store.Changeset {
 		}
 	}
 
-	return store.NewChangeset(s.storeKey, pairs...)
+	return store.NewChangeset(map[string]store.KVPairs{s.storeKey: pairs})
 }
 
 func (s *Store) Reset(toVersion uint64) error {
@@ -289,7 +289,7 @@ func (s *Store) newIterator(parentItr store.Iterator, start, end []byte, reverse
 		slices.Reverse(keys)
 	}
 
-	values := make([]store.KVPair, len(keys))
+	values := make(store.KVPairs, len(keys))
 	for i, key := range keys {
 		values[i] = s.changeset[key]
 	}

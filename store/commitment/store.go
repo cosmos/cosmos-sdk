@@ -4,42 +4,29 @@ import (
 	"errors"
 	"fmt"
 
-	dbm "github.com/cosmos/cosmos-db"
 	ics23 "github.com/cosmos/ics23/go"
 
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/v2"
-	"cosmossdk.io/store/v2/commitment/iavl"
-	"cosmossdk.io/store/v2/commitment/types"
-)
-
-const (
-	// DefaultTreeType is the default tree type.
-	DefaultTreeType = "default"
-	IavlTreeType    = "iavl"
 )
 
 var _ store.Committer = (*CommitStore)(nil)
 
-// CommitStore is a wrapper around the state Tree.
+// CommitStore is a wrapper around multiple Tree objects mapped by a unique store
+// key. Each store key reflects dedicated and unique usage within a module. A caller
+// can construct a CommitStore with one or more store keys. It is expected that a
+// RootStore use a CommitStore as an abstraction to handle multiple store keys
+// and trees.
 type CommitStore struct {
-	multiTrees map[string]types.Tree
+	logger log.Logger
+
+	multiTrees map[string]Tree
 }
 
 // NewCommitStore creates a new CommitStore instance.
-func NewCommitStore(storeConfigs map[string]interface{}, db dbm.DB, logger log.Logger) (*CommitStore, error) {
-	multiTrees := make(map[string]types.Tree)
-	for storeKey, cfg := range storeConfigs {
-		switch config := cfg.(type) {
-		case *iavl.Config:
-			iavlDB := dbm.NewPrefixDB(db, []byte(storeKey))
-			multiTrees[storeKey] = iavl.NewIavlTree(iavlDB, logger, config)
-		default:
-			return nil, fmt.Errorf("unknown tree type for store %s, config: %v", storeKey, cfg)
-		}
-	}
-
+func NewCommitStore(multiTrees map[string]Tree, logger log.Logger) (*CommitStore, error) {
 	return &CommitStore{
+		logger:     logger,
 		multiTrees: multiTrees,
 	}, nil
 }

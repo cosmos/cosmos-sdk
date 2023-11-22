@@ -141,6 +141,7 @@ func (s *Store) LastCommitID() (store.CommitID, error) {
 	if err != nil {
 		return store.CommitID{}, err
 	}
+
 	if scVersion != latestVersion {
 		return store.CommitID{}, fmt.Errorf("SC and SS version mismatch; got: %d, expected: %d", scVersion, latestVersion)
 	}

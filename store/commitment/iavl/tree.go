@@ -8,10 +8,10 @@ import (
 	ics23 "github.com/cosmos/ics23/go"
 
 	log "cosmossdk.io/log"
-	"cosmossdk.io/store/v2/commitment/types"
+	"cosmossdk.io/store/v2/commitment"
 )
 
-var _ types.Tree = (*IavlTree)(nil)
+var _ commitment.Tree = (*IavlTree)(nil)
 
 // IavlTree is a wrapper around iavl.MutableTree.
 type IavlTree struct {

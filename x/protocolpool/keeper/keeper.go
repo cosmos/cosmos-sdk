@@ -296,8 +296,9 @@ func (k Keeper) continuousDistribution(ctx context.Context, continuousFund types
 	// Check for expiration
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	if continuousFund.Expiry != nil && sdkCtx.BlockTime().After(*continuousFund.Expiry) {
-		if err := k.ContinuousFund.Remove(ctx, recipient); err != nil {
-			return fmt.Errorf("continuous funding expired for recipient: %s", continuousFund.Recipient)
+		err := k.ContinuousFund.Remove(ctx, recipient)
+		if err != nil {
+			return err
 		}
 	}
 
@@ -316,9 +317,6 @@ func (k Keeper) continuousDistribution(ctx context.Context, continuousFund types
 			if err := k.ContinuousFund.Remove(ctx, recipient); err != nil {
 				return err
 			}
-			// Return the end of the distribution
-			return fmt.Errorf("continuous funding ended for recipient: %s", continuousFund.Recipient)
-
 		}
 	}
 	return nil

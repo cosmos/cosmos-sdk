@@ -68,12 +68,11 @@ func SanitizeGenesisBalances(balances []Balance) []Balance {
 	for i := range balances {
 		addr, _ := sdk.AccAddressFromBech32(balances[i].Address)
 		addresses[i] = addr
+		if _, exists := existingAddresses[string(addr)]; exists {
+			panic("duplicate account in genesis state")
+		}
 		existingAddresses[string(addr)] = true
 	}
-
-	if len(existingAddresses) != len(balances) {
-		panic("duplicate account in genesis state")
-        }
 
 	// 2. Sort balances.
 	sort.Sort(balanceByAddress{addresses: addresses, balances: balances})

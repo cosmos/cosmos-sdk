@@ -163,6 +163,7 @@ func (k Keeper) UpdateAllMaturedConsKeyRotatedKeys(ctx sdk.Context, maturedTime 
 // deleteConsKeyIndexKey deletes the key which is formed with the given valAddr, time.
 func (k Keeper) deleteConsKeyIndexKey(ctx sdk.Context, valAddr sdk.ValAddress, ts time.Time) error {
 	rng := new(collections.Range[collections.Pair[[]byte, time.Time]]).
+		StartInclusive(collections.Join(valAddr.Bytes(), time.Time{})).
 		EndInclusive(collections.Join(valAddr.Bytes(), ts))
 
 	return k.ValidatorConsensusKeyRotationRecordIndexKey.Walk(ctx, rng, func(key collections.Pair[[]byte, time.Time]) (stop bool, err error) {

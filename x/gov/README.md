@@ -2,6 +2,8 @@
 sidebar_position: 1
 ---
 
+<!--- TODO(@julienrbrt), describe spam votes and vote options changes -->
+
 # `x/gov`
 
 ## Abstract
@@ -33,33 +35,33 @@ can be adapted to any Proof-Of-Stake blockchain by replacing *ATOM* with the nat
 staking token of the chain.
 
 * [Concepts](#concepts)
-    * [Proposal submission](#proposal-submission)
-    * [Deposit](#deposit)
-    * [Vote](#vote)
-    * [Software Upgrade](#software-upgrade)
+  * [Proposal submission](#proposal-submission)
+  * [Deposit](#deposit)
+  * [Vote](#vote)
+  * [Software Upgrade](#software-upgrade)
 * [State](#state)
-    * [Proposals](#proposals)
-    * [Parameters and base types](#parameters-and-base-types)
-    * [Deposit](#deposit-1)
-    * [ValidatorGovInfo](#validatorgovinfo)
-    * [Stores](#stores)
-    * [Proposal Processing Queue](#proposal-processing-queue)
-    * [Legacy Proposal](#legacy-proposal)
+  * [Proposals](#proposals)
+  * [Parameters and base types](#parameters-and-base-types)
+  * [Deposit](#deposit-1)
+  * [ValidatorGovInfo](#validatorgovinfo)
+  * [Stores](#stores)
+  * [Proposal Processing Queue](#proposal-processing-queue)
+  * [Legacy Proposal](#legacy-proposal)
 * [Messages](#messages)
-    * [Proposal Submission](#proposal-submission-1)
-    * [Deposit](#deposit-2)
-    * [Vote](#vote-1)
+  * [Proposal Submission](#proposal-submission-1)
+  * [Deposit](#deposit-2)
+  * [Vote](#vote-1)
 * [Events](#events)
-    * [EndBlocker](#endblocker)
-    * [Handlers](#handlers)
+  * [EndBlocker](#endblocker)
+  * [Handlers](#handlers)
 * [Parameters](#parameters)
 * [Client](#client)
-    * [CLI](#cli)
-    * [gRPC](#grpc)
-    * [REST](#rest)
+  * [CLI](#cli)
+  * [gRPC](#grpc)
+  * [REST](#rest)
 * [Metadata](#metadata)
-    * [Proposal](#proposal-3)
-    * [Vote](#vote-5)
+  * [Proposal](#proposal-3)
+  * [Vote](#vote-5)
 * [Future Improvements](#future-improvements)
 
 ## Concepts
@@ -231,13 +233,13 @@ Later, we may add permissioned keys that could only sign txs from certain module
 
 #### Burnable Params
 
-There are three parameters that define if the deposit of a proposal should be burned or returned to the depositors. 
+There are three parameters that define if the deposit of a proposal should be burned or returned to the depositors.
 
-* `BurnVoteVeto` burns the proposal deposit if the proposal gets vetoed. 
+* `BurnVoteVeto` burns the proposal deposit if the proposal gets vetoed.
 * `BurnVoteQuorum` burns the proposal deposit if the proposal deposit if the vote does not reach quorum.
-* `BurnProposalDepositPrevote` burns the proposal deposit if it does not enter the voting phase. 
+* `BurnProposalDepositPrevote` burns the proposal deposit if it does not enter the voting phase.
 
-> Note: These parameters are modifiable via governance. 
+> Note: These parameters are modifiable via governance.
 
 ## State
 
@@ -253,12 +255,12 @@ There are three parameters that define if the deposit of a proposal should be bu
 Since this is more of a social feature than a technical feature, we'll now get into some items that may have been useful to have in a genesis constitution:
 
 * What limitations on governance exist, if any?
-    * is it okay for the community to slash the wallet of a whale that they no longer feel that they want around? (viz: Juno Proposal 4 and 16)
-    * can governance "socially slash" a validator who is using unapproved MEV? (viz: commonwealth.im/osmosis)
-    * In the event of an economic emergency, what should validators do?
-        * Terra crash of May, 2022, saw validators choose to run a new binary with code that had not been approved by governance, because the governance token had been inflated to nothing.
+  * is it okay for the community to slash the wallet of a whale that they no longer feel that they want around? (viz: Juno Proposal 4 and 16)
+  * can governance "socially slash" a validator who is using unapproved MEV? (viz: commonwealth.im/osmosis)
+  * In the event of an economic emergency, what should validators do?
+    * Terra crash of May, 2022, saw validators choose to run a new binary with code that had not been approved by governance, because the governance token had been inflated to nothing.
 * What is the purpose of the chain, specifically?
-    * best example of this is the Cosmos hub, where different founding groups, have different interpertations of the purpose of the network.
+  * best example of this is the Cosmos hub, where different founding groups, have different interpertations of the purpose of the network.
 
 This genesis entry, "constitution" hasn't been designed for existing chains, who should likely just ratify a constitution using their governance system.  Instead, this is for new chains.  It will allow for validators to have a much clearer idea of purpose and the expecations placed on them while operating thier nodes.  Likewise, for community members, the constitution will give them some idea of what to expect from both the "chain team" and the validators, respectively.
 
@@ -358,13 +360,7 @@ const (
     VoteNo          = 0x2
     VoteNoWithVeto  = 0x3
     VoteAbstain     = 0x4
-)
-
-type ProposalType  string
-
-const (
-    ProposalTypePlainText       = "Text"
-    ProposalTypeSoftwareUpgrade = "SoftwareUpgrade"
+    VoteSpam        = 0x5
 )
 
 type ProposalStatus byte
@@ -527,7 +523,7 @@ The `initialDeposit` must be strictly positive and conform to the accepted denom
 * Initialise `Proposal`'s attributes
 * Decrease balance of sender by `InitialDeposit`
 * If `MinDeposit` is reached:
-    * Push `proposalID` in `ProposalProcessingQueue`
+  * Push `proposalID` in `ProposalProcessingQueue`
 * Transfer `InitialDeposit` from the `Proposer` to the governance `ModuleAccount`
 
 ### Deposit
@@ -551,7 +547,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/gov/v1/tx.pro
 * Add `deposit` of sender in `proposal.Deposits`
 * Increase `proposal.TotalDeposit` by sender's `deposit`
 * If `MinDeposit` is reached:
-    * Push `proposalID` in `ProposalProcessingQueueEnd`
+  * Push `proposalID` in `ProposalProcessingQueueEnd`
 * Transfer `Deposit` from the `proposer` to the governance `ModuleAccount`
 
 ### Vote
@@ -653,7 +649,6 @@ The governance module contains the following parameters:
 | burn_vote_quorum              | bool             | false                                   |
 | burn_vote_veto                | bool             | true                                    |
 | min_initial_deposit_ratio                | string             | "0.1"                                    |
-
 
 **NOTE**: The governance module contains parameters that are objects unlike other
 modules. If only a subset of parameters are desired to be changed, only they need

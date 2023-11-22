@@ -19,7 +19,10 @@ func MigrateStore(ctx sdk.Context, proposalCollection collections.Map[uint64, v1
 		} else {
 			proposal.ProposalType = v1.ProposalType_PROPOSAL_TYPE_STANDARD
 		}
-		proposalCollection.Set(ctx, key, proposal)
+
+		if err := proposalCollection.Set(ctx, key, proposal); err != nil {
+			return false, err
+		}
 
 		return false, nil
 	}); err != nil {

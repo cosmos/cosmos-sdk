@@ -1,30 +1,55 @@
 package types
 
 import (
-	fmt "fmt"
+	"fmt"
 
 	"cosmossdk.io/math"
 )
 
-func NewGenesisState(cf []ContinuousFund) *GenesisState {
+func NewGenesisState(cf []*ContinuousFund, budget []*Budget) *GenesisState {
 	return &GenesisState{
 		ContinuousFund: cf,
+		Budget:         budget,
 	}
 }
 
 func DefaultGenesisState() *GenesisState {
 	return &GenesisState{
-		ContinuousFund: []ContinuousFund{},
+		ContinuousFund: []*ContinuousFund{},
+		Budget:         []*Budget{},
 	}
 }
 
 // ValidateGenesis validates the genesis state of protocolpool genesis input
 func ValidateGenesis(gs *GenesisState) error {
 	for _, cf := range gs.ContinuousFund {
-		err := validateContinuousFund(cf)
-		if err != nil {
+		if err := validateContinuousFund(*cf); err != nil {
 			return err
 		}
+	}
+	for _, bp := range gs.Budget {
+		if err := validateBudget(*bp); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func validateBudget(bp Budget) error {
+	if bp.RecipientAddress == "" {
+		return fmt.Errorf("recipient cannot be empty")
+	}
+
+	if bp.TotalBudget.IsZero() {
+		return fmt.Errorf("invalid budget proposal: total budget cannot be zero")
+	}
+
+	if bp.Tranches == 0 {
+		return fmt.Errorf("invalid budget proposal: tranches must be greater than zero")
+	}
+
+	if bp.Period == nil || *bp.Period == 0 {
+		return fmt.Errorf("invalid budget proposal: period length should be greater than zero")
 	}
 	return nil
 }

@@ -2,8 +2,6 @@
 sidebar_position: 1
 ---
 
-// TODO REVIEW this whole doc
-
 # `x/distribution`
 
 ## Overview
@@ -127,6 +125,25 @@ Each time one object which previously needed to reference the historical record 
 count is decremented. If the reference count hits zero, the historical record is deleted.
 
 ## State
+
+### FeePool
+
+The `FeePool` is used to store decimal rewards to allow
+for fractions of coins to be received from operations like inflation.
+
+Once those rewards are big enough, they are sent as `sdk.Coins` to the community pool.
+
+* FeePool: `0x00 -> ProtocolBuffer(FeePool)`
+
+```go
+// coins with decimal
+type DecCoins []DecCoin
+
+type DecCoin struct {
+    Amount math.LegacyDec
+    Denom  string
+}
+```
 
 ### Validator Distribution
 

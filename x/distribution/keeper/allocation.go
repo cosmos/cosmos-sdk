@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 	"errors"
+	"sync"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/comet"
@@ -50,29 +51,49 @@ func (k Keeper) AllocateTokens(ctx context.Context, totalPreviousPower int64, bo
 	voteMultiplier := math.LegacyOneDec().Sub(communityTax)
 	feeMultiplier := feesCollected.MulDecTruncate(voteMultiplier)
 
-	// allocate tokens proportionally to voting power
-	//
-	// TODO: Consider parallelizing later
-	//
-	// Ref: https://github.com/cosmos/cosmos-sdk/pull/3099#discussion_r246276376
+	var wg sync.WaitGroup
+	// channel for errors
+	errc := make(chan error, len(bondedVotes))
+	// channel for remaining rewards
+	remainingc := make(chan sdk.DecCoins, len(bondedVotes))
+
 	for _, vote := range bondedVotes {
+		wg.Add(1)
+		go func(vote comet.VoteInfo) {
+			defer wg.Done()
 
-		validator, err := k.stakingKeeper.ValidatorByConsAddr(ctx, vote.Validator.Address)
+			validator, err := k.stakingKeeper.ValidatorByConsAddr(ctx, vote.Validator.Address)
+			if err != nil {
+				errc <- err
+				return
+			}
+
+			powerFraction := math.LegacyNewDec(vote.Validator.Power).QuoTruncate(math.LegacyNewDec(totalPreviousPower))
+			reward := feeMultiplier.MulDecTruncate(powerFraction)
+
+			err = k.AllocateTokensToValidator(ctx, validator, reward)
+			if err != nil {
+				errc <- err
+				return
+			}
+
+			remainingc <- reward
+		}(vote)
+	}
+	wg.Wait()
+
+	// Close the channels
+	close(errc)
+	close(remainingc)
+
+	for err := range errc {
 		if err != nil {
 			return err
 		}
+	}
 
-		// TODO: Consider micro-slashing for missing votes.
-		//
-		// Ref: https://github.com/cosmos/cosmos-sdk/issues/2525#issuecomment-430838701
-		powerFraction := math.LegacyNewDec(vote.Validator.Power).QuoTruncate(math.LegacyNewDec(totalPreviousPower))
-		reward := feeMultiplier.MulDecTruncate(powerFraction)
-
-		err = k.AllocateTokensToValidator(ctx, validator, reward)
-		if err != nil {
-			return err
-		}
-
+	// calculate the remaining rewards
+	for reward := range remainingc {
 		remaining = remaining.Sub(reward)
 	}
 

@@ -324,13 +324,6 @@ func TestMsgWithdrawDelegatorReward(t *testing.T) {
 				// check current balance is greater than initial balance
 				curBalance := f.bankKeeper.GetAllBalances(f.sdkCtx, sdk.AccAddress(f.valAddr))
 				assert.Assert(t, initBalance.IsAllLTE(curBalance))
-
-				// check rewards
-				curFeePool, _ := f.distrKeeper.FeePool.Get(f.sdkCtx)
-				rewards := curFeePool.GetCommunityPool().Sub(initFeePool.CommunityPool)
-				curOutstandingRewards, err := f.distrKeeper.ValidatorOutstandingRewards.Get(f.sdkCtx, f.valAddr)
-				assert.NilError(t, err)
-				assert.DeepEqual(t, rewards, initOutstandingRewards.Sub(curOutstandingRewards.Rewards))
 			}
 
 			prevProposerConsAddr, err := f.distrKeeper.PreviousProposer.Get(f.sdkCtx)

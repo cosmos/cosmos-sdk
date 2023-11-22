@@ -319,15 +319,16 @@ func TestTickPassedVotingPeriod(t *testing.T) {
 
 func TestProposalPassedEndblocker(t *testing.T) {
 	testcases := []struct {
-		name      string
-		expedited bool
+		name         string
+		proposalType v1.ProposalType
 	}{
 		{
-			name: "regular",
+			name:         "regular",
+			proposalType: v1.ProposalType_PROPOSAL_TYPE_STANDARD,
 		},
 		{
-			name:      "expedited",
-			expedited: true,
+			name:         "expedited",
+			proposalType: v1.ProposalType_PROPOSAL_TYPE_EXPEDITED,
 		},
 	}
 
@@ -336,7 +337,7 @@ func TestProposalPassedEndblocker(t *testing.T) {
 			suite := createTestSuite(t)
 			app := suite.App
 			ctx := app.BaseApp.NewContext(false)
-			depositMultiplier := getDepositMultiplier(tc.expedited)
+			depositMultiplier := getDepositMultiplier(tc.proposalType == v1.ProposalType_PROPOSAL_TYPE_EXPEDITED)
 			addrs := simtestutil.AddTestAddrs(suite.BankKeeper, suite.StakingKeeper, ctx, 10, valTokens.Mul(math.NewInt(depositMultiplier)))
 
 			SortAddresses(addrs)
@@ -353,7 +354,7 @@ func TestProposalPassedEndblocker(t *testing.T) {
 			require.NotNil(t, macc)
 			initialModuleAccCoins := suite.BankKeeper.GetAllBalances(ctx, macc.GetAddress())
 
-			proposal, err := suite.GovKeeper.SubmitProposal(ctx, []sdk.Msg{mkTestLegacyContent(t)}, "", "title", "summary", proposer, tc.expedited)
+			proposal, err := suite.GovKeeper.SubmitProposal(ctx, []sdk.Msg{mkTestLegacyContent(t)}, "", "title", "summary", proposer, tc.proposalType)
 			require.NoError(t, err)
 
 			proposalCoins := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, suite.StakingKeeper.TokensFromConsensusPower(ctx, 10*depositMultiplier))}

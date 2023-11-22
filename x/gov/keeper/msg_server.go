@@ -84,7 +84,13 @@ func (k msgServer) SubmitProposal(goCtx context.Context, msg *v1.MsgSubmitPropos
 		return nil, err
 	}
 
-	proposal, err := k.Keeper.SubmitProposal(ctx, proposalMsgs, msg.Metadata, msg.Title, msg.Summary, proposer, msg.Expedited)
+	// TODO(@julienrbt): will be modularized in subsequent PRs
+	proposalType := v1.ProposalType_PROPOSAL_TYPE_STANDARD
+	if msg.Expedited {
+		proposalType = v1.ProposalType_PROPOSAL_TYPE_EXPEDITED
+	}
+
+	proposal, err := k.Keeper.SubmitProposal(ctx, proposalMsgs, msg.Metadata, msg.Title, msg.Summary, proposer, proposalType)
 	if err != nil {
 		return nil, err
 	}

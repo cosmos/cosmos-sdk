@@ -57,7 +57,7 @@ func TestTally(t *testing.T) {
 	)
 	tests := []struct {
 		name          string
-		expedited     bool
+		proposalType  v1.ProposalType
 		setup         func(suite)
 		expectedPass  bool
 		expectedBurn  bool
@@ -318,8 +318,8 @@ func TestTally(t *testing.T) {
 			},
 		},
 		{
-			name:      "quorum reached with yes<=.667: expedited prop fails",
-			expedited: true,
+			name:         "quorum reached with yes<=.667: expedited prop fails",
+			proposalType: v1.ProposalType_PROPOSAL_TYPE_EXPEDITED,
 			setup: func(s suite) {
 				setTotalBonded(s, 10000000)
 				validatorVote(s, s.valAddrs[0], v1.VoteOption_VOTE_OPTION_ONE)
@@ -340,8 +340,8 @@ func TestTally(t *testing.T) {
 			},
 		},
 		{
-			name:      "quorum reached with yes>.667: expedited prop succeeds",
-			expedited: true,
+			name:         "quorum reached with yes>.667: expedited prop succeeds",
+			proposalType: v1.ProposalType_PROPOSAL_TYPE_EXPEDITED,
 			setup: func(s suite) {
 				setTotalBonded(s, 10000000)
 				validatorVote(s, s.valAddrs[0], v1.VoteOption_VOTE_OPTION_ONE)
@@ -394,7 +394,7 @@ func TestTally(t *testing.T) {
 						return nil
 					})
 			// Submit and activate a proposal
-			proposal, err := govKeeper.SubmitProposal(ctx, TestProposal, "", "title", "summary", delAddrs[0], tt.expedited)
+			proposal, err := govKeeper.SubmitProposal(ctx, TestProposal, "", "title", "summary", delAddrs[0], tt.proposalType)
 			require.NoError(t, err)
 			err = govKeeper.ActivateVotingPeriod(ctx, proposal)
 			require.NoError(t, err)

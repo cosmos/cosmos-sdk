@@ -24,15 +24,16 @@ const (
 
 func TestDeposits(t *testing.T) {
 	testcases := []struct {
-		name      string
-		expedited bool
+		name         string
+		proposalType v1.ProposalType
 	}{
 		{
-			name: "regular",
+			name:         "regular",
+			proposalType: v1.ProposalType_PROPOSAL_TYPE_STANDARD,
 		},
 		{
-			name:      "expedited",
-			expedited: true,
+			name:         "expedited",
+			proposalType: v1.ProposalType_PROPOSAL_TYPE_EXPEDITED,
 		},
 	}
 
@@ -46,7 +47,7 @@ func TestDeposits(t *testing.T) {
 			// initialize and deposit an amount depositMultiplier times larger
 			// than the regular min deposit amount.
 			depositMultiplier := int64(1)
-			if tc.expedited {
+			if tc.proposalType == v1.ProposalType_PROPOSAL_TYPE_EXPEDITED {
 				depositMultiplier = v1.DefaultMinExpeditedDepositTokensRatio
 			}
 
@@ -54,7 +55,7 @@ func TestDeposits(t *testing.T) {
 			authKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
 
 			tp := TestProposal
-			proposal, err := govKeeper.SubmitProposal(ctx, tp, "", "title", "summary", TestAddrs[0], tc.expedited)
+			proposal, err := govKeeper.SubmitProposal(ctx, tp, "", "title", "summary", TestAddrs[0], tc.proposalType)
 			require.NoError(t, err)
 			proposalID := proposal.Id
 

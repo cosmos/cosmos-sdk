@@ -51,7 +51,7 @@ func (suite *KeeperTestSuite) TestMsgSubmitProposal() {
 					strings.Repeat("1", 100),
 					"Proposal",
 					"description of proposal",
-					false,
+					v1.ProposalType_PROPOSAL_TYPE_STANDARD,
 				)
 			},
 			expErr:    true,
@@ -66,7 +66,7 @@ func (suite *KeeperTestSuite) TestMsgSubmitProposal() {
 					"",
 					"Proposal",
 					"description of proposal",
-					false,
+					v1.ProposalType_PROPOSAL_TYPE_STANDARD,
 				)
 			},
 			expErr:    true,
@@ -81,7 +81,7 @@ func (suite *KeeperTestSuite) TestMsgSubmitProposal() {
 					"",
 					"",
 					"description of proposal",
-					false,
+					v1.ProposalType_PROPOSAL_TYPE_STANDARD,
 				)
 			},
 			expErr:    true,
@@ -96,7 +96,7 @@ func (suite *KeeperTestSuite) TestMsgSubmitProposal() {
 					"",
 					"Proposal",
 					"",
-					false,
+					v1.ProposalType_PROPOSAL_TYPE_STANDARD,
 				)
 			},
 			expErr:    true,
@@ -111,7 +111,7 @@ func (suite *KeeperTestSuite) TestMsgSubmitProposal() {
 					"{\"title\":\"Proposal\", \"description\":\"description of proposal\"}",
 					"Proposal2",
 					"description of proposal",
-					false,
+					v1.ProposalType_PROPOSAL_TYPE_STANDARD,
 				)
 			},
 			expErr:    true,
@@ -126,7 +126,7 @@ func (suite *KeeperTestSuite) TestMsgSubmitProposal() {
 					"{\"title\":\"Proposal\", \"description\":\"description of proposal\"}",
 					"Proposal",
 					"description",
-					false,
+					v1.ProposalType_PROPOSAL_TYPE_STANDARD,
 				)
 			},
 			expErr:    true,
@@ -141,7 +141,7 @@ func (suite *KeeperTestSuite) TestMsgSubmitProposal() {
 					"Metadata",
 					strings.Repeat("1", 256),
 					"description of proposal",
-					false,
+					v1.ProposalType_PROPOSAL_TYPE_STANDARD,
 				)
 			},
 			expErr:    true,
@@ -156,7 +156,7 @@ func (suite *KeeperTestSuite) TestMsgSubmitProposal() {
 					strings.Repeat("1", 256),
 					"Proposal",
 					"description of proposal",
-					false,
+					v1.ProposalType_PROPOSAL_TYPE_STANDARD,
 				)
 			},
 			expErr:    true,
@@ -171,7 +171,7 @@ func (suite *KeeperTestSuite) TestMsgSubmitProposal() {
 					"",
 					"Proposal",
 					strings.Repeat("1", 10201),
-					false,
+					v1.ProposalType_PROPOSAL_TYPE_STANDARD,
 				)
 			},
 			expErr:    true,
@@ -186,7 +186,7 @@ func (suite *KeeperTestSuite) TestMsgSubmitProposal() {
 					"",
 					"Proposal",
 					"description of proposal",
-					false,
+					v1.ProposalType_PROPOSAL_TYPE_STANDARD,
 				)
 			},
 			expErr:    true,
@@ -201,7 +201,7 @@ func (suite *KeeperTestSuite) TestMsgSubmitProposal() {
 					"",
 					"Proposal",
 					"description of proposal",
-					false,
+					v1.ProposalType_PROPOSAL_TYPE_STANDARD,
 				)
 			},
 			expErr:    true,
@@ -216,7 +216,7 @@ func (suite *KeeperTestSuite) TestMsgSubmitProposal() {
 					"",
 					"Proposal",
 					"description of proposal",
-					false,
+					v1.ProposalType_PROPOSAL_TYPE_STANDARD,
 				)
 			},
 			expErr:    true,
@@ -231,7 +231,7 @@ func (suite *KeeperTestSuite) TestMsgSubmitProposal() {
 					"",
 					"Proposal",
 					"description of proposal",
-					false,
+					v1.ProposalType_PROPOSAL_TYPE_STANDARD,
 				)
 			},
 			expErr:    true,
@@ -246,7 +246,7 @@ func (suite *KeeperTestSuite) TestMsgSubmitProposal() {
 					"",
 					"Proposal",
 					"description of proposal",
-					false,
+					v1.ProposalType_PROPOSAL_TYPE_STANDARD,
 				)
 			},
 			expErr:    true,
@@ -261,7 +261,7 @@ func (suite *KeeperTestSuite) TestMsgSubmitProposal() {
 					"",
 					"Proposal",
 					"description of proposal",
-					false,
+					v1.ProposalType_PROPOSAL_TYPE_STANDARD,
 				)
 			},
 			expErr: false,
@@ -275,7 +275,7 @@ func (suite *KeeperTestSuite) TestMsgSubmitProposal() {
 					"",
 					"Proposal",
 					"description of proposal",
-					false,
+					v1.ProposalType_PROPOSAL_TYPE_STANDARD,
 				)
 			},
 			expErr: false,
@@ -315,7 +315,7 @@ func (suite *KeeperTestSuite) TestMsgCancelProposal() {
 		coins,
 		proposer.String(),
 		"", "title", "summary",
-		false,
+		v1.ProposalType_PROPOSAL_TYPE_STANDARD,
 	)
 	suite.Require().NoError(err)
 
@@ -364,7 +364,7 @@ func (suite *KeeperTestSuite) TestMsgCancelProposal() {
 					"",
 					"Proposal",
 					"description of proposal",
-					false,
+					v1.ProposalType_PROPOSAL_TYPE_STANDARD,
 				)
 				suite.Require().NoError(err)
 
@@ -415,7 +415,7 @@ func (suite *KeeperTestSuite) TestMsgVote() {
 		"",
 		"Proposal",
 		"description of proposal",
-		false,
+		v1.ProposalType_PROPOSAL_TYPE_STANDARD,
 	)
 	suite.Require().NoError(err)
 
@@ -461,7 +461,7 @@ func (suite *KeeperTestSuite) TestMsgVote() {
 					"",
 					"Proposal",
 					"description of proposal",
-					false,
+					v1.ProposalType_PROPOSAL_TYPE_STANDARD,
 				)
 				suite.Require().NoError(err)
 
@@ -505,7 +505,7 @@ func (suite *KeeperTestSuite) TestMsgVote() {
 					"",
 					"Proposal",
 					"description of proposal",
-					false,
+					v1.ProposalType_PROPOSAL_TYPE_STANDARD,
 				)
 				suite.Require().NoError(err)
 
@@ -558,7 +558,7 @@ func (suite *KeeperTestSuite) TestMsgVoteWeighted() {
 		"",
 		"Proposal",
 		"description of proposal",
-		false,
+		v1.ProposalType_PROPOSAL_TYPE_STANDARD,
 	)
 	suite.Require().NoError(err)
 
@@ -679,7 +679,7 @@ func (suite *KeeperTestSuite) TestMsgVoteWeighted() {
 					"",
 					"Proposal",
 					"description of proposal",
-					false,
+					v1.ProposalType_PROPOSAL_TYPE_STANDARD,
 				)
 				suite.Require().NoError(err)
 
@@ -723,7 +723,7 @@ func (suite *KeeperTestSuite) TestMsgVoteWeighted() {
 					"",
 					"Proposal",
 					"description of proposal",
-					false,
+					v1.ProposalType_PROPOSAL_TYPE_STANDARD,
 				)
 				suite.Require().NoError(err)
 
@@ -746,7 +746,7 @@ func (suite *KeeperTestSuite) TestMsgVoteWeighted() {
 					"",
 					"Proposal",
 					"description of proposal",
-					false,
+					v1.ProposalType_PROPOSAL_TYPE_STANDARD,
 				)
 				suite.Require().NoError(err)
 
@@ -802,7 +802,7 @@ func (suite *KeeperTestSuite) TestMsgDeposit() {
 		"",
 		"Proposal",
 		"description of proposal",
-		false,
+		v1.ProposalType_PROPOSAL_TYPE_STANDARD,
 	)
 	suite.Require().NoError(err)
 
@@ -1012,7 +1012,7 @@ func (suite *KeeperTestSuite) TestLegacyMsgVote() {
 		"",
 		"Proposal",
 		"description of proposal",
-		false,
+		v1.ProposalType_PROPOSAL_TYPE_STANDARD,
 	)
 	suite.Require().NoError(err)
 
@@ -1058,7 +1058,7 @@ func (suite *KeeperTestSuite) TestLegacyMsgVote() {
 					"",
 					"Proposal",
 					"description of proposal",
-					false,
+					v1.ProposalType_PROPOSAL_TYPE_STANDARD,
 				)
 				suite.Require().NoError(err)
 
@@ -1092,7 +1092,7 @@ func (suite *KeeperTestSuite) TestLegacyMsgVote() {
 					"",
 					"Proposal",
 					"description of proposal",
-					false,
+					v1.ProposalType_PROPOSAL_TYPE_STANDARD,
 				)
 				suite.Require().NoError(err)
 
@@ -1145,7 +1145,7 @@ func (suite *KeeperTestSuite) TestLegacyVoteWeighted() {
 		"",
 		"Proposal",
 		"description of proposal",
-		false,
+		v1.ProposalType_PROPOSAL_TYPE_STANDARD,
 	)
 	suite.Require().NoError(err)
 
@@ -1295,7 +1295,7 @@ func (suite *KeeperTestSuite) TestLegacyVoteWeighted() {
 					"",
 					"Proposal",
 					"description of proposal",
-					false,
+					v1.ProposalType_PROPOSAL_TYPE_STANDARD,
 				)
 				suite.Require().NoError(err)
 
@@ -1339,7 +1339,7 @@ func (suite *KeeperTestSuite) TestLegacyVoteWeighted() {
 					"",
 					"Proposal",
 					"description of proposal",
-					false,
+					v1.ProposalType_PROPOSAL_TYPE_STANDARD,
 				)
 				suite.Require().NoError(err)
 
@@ -1396,7 +1396,7 @@ func (suite *KeeperTestSuite) TestLegacyMsgDeposit() {
 		"",
 		"Proposal",
 		"description of proposal",
-		false,
+		v1.ProposalType_PROPOSAL_TYPE_STANDARD,
 	)
 	suite.Require().NoError(err)
 
@@ -1781,7 +1781,7 @@ func (suite *KeeperTestSuite) TestSubmitProposal_InitialDeposit() {
 			err := govKeeper.Params.Set(ctx, params)
 			suite.Require().NoError(err)
 
-			msg, err := v1.NewMsgSubmitProposal(TestProposal, tc.initialDeposit, address.String(), "test", "Proposal", "description of proposal", false)
+			msg, err := v1.NewMsgSubmitProposal(TestProposal, tc.initialDeposit, address.String(), "test", "Proposal", "description of proposal", v1.ProposalType_PROPOSAL_TYPE_STANDARD)
 			suite.Require().NoError(err)
 
 			// System under test

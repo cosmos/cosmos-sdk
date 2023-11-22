@@ -30,6 +30,20 @@ func NormalizeVoteOption(option string) string {
 	}
 }
 
+// NormalizeProposalType - normalize user specified proposal type.
+func NormalizeProposalType(proposalType string) v1.ProposalType {
+	switch proposalType {
+	case "Expidited", "expedited":
+		return v1.ProposalType_PROPOSAL_TYPE_EXPEDITED
+	case "MultipleChoice", "multiple_choice", "multiple-choice":
+		return v1.ProposalType_PROPOSAL_TYPE_MULTIPLE_CHOICE
+	case "Optimistic", "optimistic":
+		return v1.ProposalType_PROPOSAL_TYPE_OPTIMISTIC
+	default:
+		return v1.ProposalType_PROPOSAL_TYPE_STANDARD
+	}
+}
+
 // NormalizeWeightedVoteOptions - normalize vote options param string
 func NormalizeWeightedVoteOptions(options string) string {
 	newOptions := []string{}
@@ -42,17 +56,6 @@ func NormalizeWeightedVoteOptions(options string) string {
 		newOptions = append(newOptions, strings.Join(fields, "="))
 	}
 	return strings.Join(newOptions, ",")
-}
-
-// NormalizeProposalType - normalize user specified proposal type.
-func NormalizeProposalType(proposalType string) string {
-	switch proposalType {
-	case "Text", "text":
-		return v1beta1.ProposalTypeText
-
-	default:
-		return ""
-	}
 }
 
 // NormalizeProposalStatus - normalize user specified proposal status.

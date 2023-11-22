@@ -89,11 +89,6 @@ func (keeper Keeper) SubmitProposal(ctx context.Context, messages []sdk.Msg, met
 	submitTime := sdkCtx.HeaderInfo().Time
 	depositPeriod := params.MaxDepositPeriod
 
-	// fallback to standard proposal type if not specified
-	if proposalType == v1.ProposalType_PROPOSAL_TYPE_UNSPECIFIED {
-		proposalType = v1.ProposalType_PROPOSAL_TYPE_STANDARD
-	}
-
 	proposal, err := v1.NewProposal(messages, proposalID, submitTime, submitTime.Add(*depositPeriod), metadata, title, summary, proposer, proposalType)
 	if err != nil {
 		return v1.Proposal{}, err

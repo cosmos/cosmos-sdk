@@ -84,12 +84,10 @@ func (k msgServer) SubmitProposal(goCtx context.Context, msg *v1.MsgSubmitPropos
 		return nil, err
 	}
 
-	// TODO(@julienrbt): will be modularized in subsequent PRs
-	proposalType := v1.ProposalType_PROPOSAL_TYPE_STANDARD
+	proposalType := msg.ProposalType
 	if msg.Expedited {
 		proposalType = v1.ProposalType_PROPOSAL_TYPE_EXPEDITED
 	}
-
 	proposal, err := k.Keeper.SubmitProposal(ctx, proposalMsgs, msg.Metadata, msg.Title, msg.Summary, proposer, proposalType)
 	if err != nil {
 		return nil, err
@@ -327,7 +325,7 @@ func (k legacyMsgServer) SubmitProposal(goCtx context.Context, msg *v1beta1.MsgS
 		"",
 		msg.GetContent().GetTitle(),
 		msg.GetContent().GetDescription(),
-		false, // legacy proposals cannot be expedited
+		v1.ProposalType_PROPOSAL_TYPE_STANDARD, // legacy proposals can only be standard
 	)
 	if err != nil {
 		return nil, err

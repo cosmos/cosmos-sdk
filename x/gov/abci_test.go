@@ -97,7 +97,7 @@ func TestTickExpiredDepositPeriod(t *testing.T) {
 		"",
 		"Proposal",
 		"description of proposal",
-		false,
+		v1.ProposalType_PROPOSAL_TYPE_STANDARD,
 	)
 	require.NoError(t, err)
 
@@ -142,7 +142,7 @@ func TestTickMultipleExpiredDepositPeriod(t *testing.T) {
 		"",
 		"Proposal",
 		"description of proposal",
-		false,
+		v1.ProposalType_PROPOSAL_TYPE_STANDARD,
 	)
 	require.NoError(t, err)
 
@@ -165,7 +165,7 @@ func TestTickMultipleExpiredDepositPeriod(t *testing.T) {
 		"",
 		"Proposal",
 		"description of proposal",
-		false,
+		v1.ProposalType_PROPOSAL_TYPE_STANDARD,
 	)
 	require.NoError(t, err)
 
@@ -205,7 +205,7 @@ func TestTickPassedDepositPeriod(t *testing.T) {
 		"",
 		"Proposal",
 		"description of proposal",
-		false,
+		v1.ProposalType_PROPOSAL_TYPE_STANDARD,
 	)
 	require.NoError(t, err)
 
@@ -234,15 +234,15 @@ func TestTickPassedDepositPeriod(t *testing.T) {
 
 func TestTickPassedVotingPeriod(t *testing.T) {
 	testcases := []struct {
-		name      string
-		expedited bool
+		name         string
+		proposalType v1.ProposalType
 	}{
 		{
 			name: "regular - deleted",
 		},
 		{
-			name:      "expedited - converted to regular",
-			expedited: true,
+			name:         "expedited - converted to regular",
+			proposalType: v1.ProposalType_PROPOSAL_TYPE_EXPEDITED,
 		},
 	}
 
@@ -251,7 +251,7 @@ func TestTickPassedVotingPeriod(t *testing.T) {
 			suite := createTestSuite(t)
 			app := suite.App
 			ctx := app.BaseApp.NewContext(false)
-			depositMultiplier := getDepositMultiplier(tc.expedited)
+			depositMultiplier := getDepositMultiplier(tc.proposalType == v1.ProposalType_PROPOSAL_TYPE_EXPEDITED)
 			addrs := simtestutil.AddTestAddrs(suite.BankKeeper, suite.StakingKeeper, ctx, 10, valTokens.Mul(math.NewInt(depositMultiplier)))
 
 			SortAddresses(addrs)
@@ -261,7 +261,7 @@ func TestTickPassedVotingPeriod(t *testing.T) {
 			checkActiveProposalsQueue(t, ctx, suite.GovKeeper)
 
 			proposalCoins := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, suite.StakingKeeper.TokensFromConsensusPower(ctx, 5*depositMultiplier))}
-			newProposalMsg, err := v1.NewMsgSubmitProposal([]sdk.Msg{mkTestLegacyContent(t)}, proposalCoins, addrs[0].String(), "", "Proposal", "description of proposal", tc.expedited)
+			newProposalMsg, err := v1.NewMsgSubmitProposal([]sdk.Msg{mkTestLegacyContent(t)}, proposalCoins, addrs[0].String(), "", "Proposal", "description of proposal", tc.proposalType)
 			require.NoError(t, err)
 
 			res, err := govMsgSvr.SubmitProposal(ctx, newProposalMsg)
@@ -282,7 +282,7 @@ func TestTickPassedVotingPeriod(t *testing.T) {
 
 			params, _ := suite.GovKeeper.Params.Get(ctx)
 			votingPeriod := params.VotingPeriod
-			if tc.expedited {
+			if tc.proposalType == v1.ProposalType_PROPOSAL_TYPE_EXPEDITED {
 				votingPeriod = params.ExpeditedVotingPeriod
 			}
 
@@ -300,7 +300,7 @@ func TestTickPassedVotingPeriod(t *testing.T) {
 			err = gov.EndBlocker(ctx, suite.GovKeeper)
 			require.NoError(t, err)
 
-			if !tc.expedited {
+			if tc.proposalType != v1.ProposalType_PROPOSAL_TYPE_EXPEDITED {
 				checkActiveProposalsQueue(t, ctx, suite.GovKeeper)
 				return
 			}
@@ -494,7 +494,7 @@ func TestExpeditedProposal_PassAndConversionToRegular(t *testing.T) {
 			depositorInitialBalance := suite.BankKeeper.GetAllBalances(ctx, addrs[1])
 
 			proposalCoins := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, suite.StakingKeeper.TokensFromConsensusPower(ctx, 5*depositMultiplier))}
-			newProposalMsg, err := v1.NewMsgSubmitProposal([]sdk.Msg{}, proposalCoins, proposer.String(), "metadata", "title", "summary", true)
+			newProposalMsg, err := v1.NewMsgSubmitProposal([]sdk.Msg{}, proposalCoins, proposer.String(), "metadata", "title", "summary", v1.ProposalType_PROPOSAL_TYPE_EXPEDITED)
 			require.NoError(t, err)
 
 			res, err := govMsgSvr.SubmitProposal(ctx, newProposalMsg)

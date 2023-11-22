@@ -35,11 +35,19 @@ Additionally, the SDK should allow chains to customize the tallying method of pr
 Currently, all proposals are [`v1.Proposal`][5]. Optimistic and multiple choice proposals require a different tally logic, but the rest of the proposal stays the same to not create other proposal types, `v1.Proposal` will have an extra field:
 
 ```protobuf
+// ProposalType enumerates the valid proposal types.
+// All proposal types are v1.Proposal which have different voting periods or tallying logic.
 enum ProposalType {
-  STANDARD = 0;
-  MULTIPLE_CHOICE = 1;
-  OPTIMISTIC = 2;
-  EXPEDITED = 3;
+  // PROPOSAL_TYPE_UNSPECIFIED defines no proposal type, which fallback to PROPOSAL_TYPE_STANDARD.
+  PROPOSAL_TYPE_UNSPECIFIED = 0;
+  // PROPOSAL_TYPE_STANDARD defines the type for a standard proposal.
+  PROPOSAL_TYPE_STANDARD = 1;
+  // PROPOSAL_TYPE_MULTIPLE_CHOICE defines the type for a multiple choice proposal.
+  PROPOSAL_TYPE_MULTIPLE_CHOICE = 2;
+  // PROPOSAL_TYPE_OPTIMISTIC defines the type for an optimistic proposal.
+  PROPOSAL_TYPE_OPTIMISTIC = 3;
+  // PROPOSAL_TYPE_EXPEDITED defines the type for an expedited proposal.
+  PROPOSAL_TYPE_EXPEDITED = 4;
 }
 ```
 
@@ -115,21 +123,37 @@ This leads to the addition of the following governance parameter in [`v1.Params`
 string burn_spam_amount = 8 [(cosmos_proto.scalar) = "cosmos.Dec"];
 ```
 
-Additionally, the current vote options will be renamed to better accommodate the multiple choice proposal:
+Additionally, the current vote options will be aliased to better accommodate the multiple choice proposal:
 
 ```protobuf
 // VoteOption enumerates the valid vote options for a given governance proposal.
 enum VoteOption {
+  option allow_alias = true;
+
+  // VOTE_OPTION_UNSPECIFIED defines a no-op vote option.
   VOTE_OPTION_UNSPECIFIED = 0;
+  // VOTE_OPTION_ONE defines the first proposal vote option.
   VOTE_OPTION_ONE = 1;
+  // VOTE_OPTION_YES defines the yes proposal vote option.
+  VOTE_OPTION_YES = 1;
+  // VOTE_OPTION_TWO defines the second proposal vote option.
   VOTE_OPTION_TWO = 2;
+  // VOTE_OPTION_ABSTAIN defines the abstain proposal vote option.
+  VOTE_OPTION_ABSTAIN = 2;
+  // VOTE_OPTION_THREE defines the third proposal vote option.
   VOTE_OPTION_THREE = 3;
+  // VOTE_OPTION_NO defines the no proposal vote option.
+  VOTE_OPTION_NO = 3;
+  // VOTE_OPTION_FOUR defines the fourth proposal vote option.
   VOTE_OPTION_FOUR = 4;
+  // VOTE_OPTION_NO_WITH_VETO defines the no with veto proposal vote option.
+  VOTE_OPTION_NO_WITH_VETO = 4;
+  // VOTE_OPTION_SPAM defines the spam proposal vote option.
   VOTE_OPTION_SPAM = 5;
 }
 ```
 
-The order does not change for a standard proposal (1 = yes, 2 = abstain, 3 = no, 4 = no with veto as it was). We will attempt to make this change in a non-breaking way for clients (cli and wallets).
+The order does not change for a standard proposal (1 = yes, 2 = abstain, 3 = no, 4 = no with veto as it was) and the aliased enum can be used interchangeably.
 
 Updating vote options means updating [`v1.TallyResult`][5] as well.
 

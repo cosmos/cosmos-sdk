@@ -24,6 +24,7 @@ type ProtoApp interface {
 
 	// New interface
 	InitChain(RequestInitChain) (ResponseInitChain, error)
+	Query(abci.RequestQuery) (*abci.ResponseQuery, error) // TODO: replace queries req/res with something more generic
 	DeliverBlock(Header, [][]byte) ([]interface{}, error)
 	Commit() error
 

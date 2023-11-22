@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"sort"
 
+	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/snapshots"
 	snapshottypes "cosmossdk.io/store/snapshots/types"
@@ -19,6 +20,8 @@ import (
 )
 
 var _ abci.Application = (*cometABCIWrapper)(nil)
+
+var QueryPathBroadcastTx = "/cosmos.tx.v1beta1.Service/BroadcastTx"
 
 type cometABCIWrapper struct {
 	app    types.ProtoApp
@@ -58,9 +61,12 @@ func (w *cometABCIWrapper) Info(_ context.Context, req *abci.RequestInfo) (*abci
 }
 
 func (w *cometABCIWrapper) Query(ctx context.Context, req *abci.RequestQuery) (*abci.ResponseQuery, error) {
-	// return w.app.Query(ctx, req)
-	// TODO: handle query
-	return &abci.ResponseQuery{}, nil
+	// reject special cases
+	if req.Path == QueryPathBroadcastTx {
+		return sdkerrors.QueryResult(errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "can't route a broadcast tx message"), w.trace), nil
+	}
+
+	return w.app.Query(*req)
 }
 
 func (w *cometABCIWrapper) CheckTx(_ context.Context, req *abci.RequestCheckTx) (*abci.ResponseCheckTx, error) {

@@ -289,6 +289,7 @@ func (k Keeper) continuousDistribution(ctx context.Context, continuousFund types
 		if err != nil {
 			return err
 		}
+		return nil
 	}
 
 	for _, amount := range distributionAmount {
@@ -306,6 +307,7 @@ func (k Keeper) continuousDistribution(ctx context.Context, continuousFund types
 			if err := k.ContinuousFund.Remove(ctx, recipient); err != nil {
 				return err
 			}
+			return nil
 		}
 	}
 	return nil

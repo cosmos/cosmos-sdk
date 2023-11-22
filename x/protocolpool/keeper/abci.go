@@ -17,18 +17,14 @@ func (k *Keeper) EndBlocker(ctx context.Context) error {
 
 	// Iterate over all continuous fund proposals and perform continuous distribution
 	err := k.ContinuousFund.Walk(ctx, nil, func(key sdk.AccAddress, value types.ContinuousFund) (bool, error) {
-		cf, err := k.ContinuousFund.Get(ctx, key)
-		if err != nil {
-			return false, err
-		}
-		err = k.continuousDistribution(ctx, cf)
+		err := k.continuousDistribution(ctx, value)
 		if err != nil {
 			return false, err
 		}
 
 		logger.Info(
 			"recipient", key.String(),
-			"percentage", cf.Percentage,
+			"percentage", value.Percentage,
 		)
 
 		return false, nil

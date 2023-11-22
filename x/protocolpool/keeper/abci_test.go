@@ -118,8 +118,21 @@ func TestContinuousFundEndBlocker(t *testing.T) {
 	err = poolKeeper.ContinuousFund.Set(ctx, addrs[1], cf)
 	require.NoError(t, err)
 
+	// Check balances before running EndBlocker
+	addr1Bal := bankKeeper.GetAllBalances(ctx, addrs[0])
+	require.Equal(t, addr1Bal, sdk.Coins{})
+	addr2Bal := bankKeeper.GetAllBalances(ctx, addrs[1])
+	require.Equal(t, addr2Bal, sdk.NewCoins(sdk.NewInt64Coin("test", 10000)))
+
 	err = poolKeeper.EndBlocker(ctx)
 	require.NoError(t, err)
+
+	// Check balances after running EndBloker
+	addr1BalAfter := bankKeeper.GetAllBalances(ctx, addrs[0])
+	check := addr1BalAfter.IsAllGT(addr1Bal)
+	require.True(t, check)
+	addr2BalAfter := bankKeeper.GetAllBalances(ctx, addrs[1])
+	require.Equal(t, addr2Bal, addr2BalAfter) // since addrs[1] has more account bal than cap
 
 	_, err = poolKeeper.ContinuousFund.Get(ctx, addrs[1])
 	require.Error(t, err)
@@ -139,8 +152,18 @@ func TestContinuousFundEndBlocker(t *testing.T) {
 	ctx = ctx.WithHeaderInfo(header.Info{Time: time.Unix(10, 0)})
 	err = poolKeeper.ContinuousFund.Set(ctx, addrs[2], cf)
 	require.NoError(t, err)
+
+	// Check balance before running EndBlocker
+	addr3Bal := bankKeeper.GetAllBalances(ctx, addrs[2])
+	require.Equal(t, addr3Bal, sdk.Coins{})
+
 	err = poolKeeper.EndBlocker(ctx)
 	require.NoError(t, err)
+
+	// Check balance after running EndBloker
+	addr3BalAfter := bankKeeper.GetAllBalances(ctx, addrs[2])
+	require.Equal(t, addr3Bal, addr3BalAfter) // since addrs[2] is already expired
+
 	_, err = poolKeeper.ContinuousFund.Get(ctx, addrs[2])
 	require.Error(t, err)
 	require.ErrorIs(t, err, collections.ErrNotFound)

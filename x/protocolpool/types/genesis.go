@@ -48,8 +48,6 @@ func validateBudget(bp Budget) error {
 	amount := sdk.NewCoins(*bp.TotalBudget)
 	if amount.IsZero() {
 		return fmt.Errorf("total budget cannot be zero")
-	} else if amount == nil {
-		return fmt.Errorf("amount cannot be nil")
 	}
 	if err := amount.Validate(); err != nil {
 		return errors.Wrap(sdkerrors.ErrInvalidCoins, amount.String())
@@ -74,8 +72,6 @@ func validateContinuousFund(cf ContinuousFund) error {
 	cap := sdk.NewCoins(*cf.Cap)
 	if cap.IsZero() {
 		return fmt.Errorf("invalid capital: amount cannot be zero")
-	} else if cap == nil {
-		return fmt.Errorf("amount cannot be nil")
 	}
 	if err := cap.Validate(); err != nil {
 		return errors.Wrap(sdkerrors.ErrInvalidCoins, cap.String())

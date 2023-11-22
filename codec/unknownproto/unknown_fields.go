@@ -10,12 +10,13 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/gogoproto/jsonpb"
 	"github.com/cosmos/gogoproto/proto"
 	"google.golang.org/protobuf/encoding/protowire"
 	protov2 "google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/descriptorpb"
+
+	"github.com/cosmos/cosmos-sdk/codec/types"
 )
 
 const bit11NonCritical = 1 << 10

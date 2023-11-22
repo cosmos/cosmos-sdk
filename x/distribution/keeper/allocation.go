@@ -8,6 +8,7 @@ import (
 	"cosmossdk.io/core/comet"
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/distribution/types"
+	protocolpooltypes "cosmossdk.io/x/protocolpool/types"
 	stakingtypes "cosmossdk.io/x/staking/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -24,21 +25,8 @@ func (k Keeper) AllocateTokens(ctx context.Context, totalPreviousPower int64, bo
 	feesCollected := sdk.NewDecCoinsFromCoins(feesCollectedInt...)
 
 	// transfer collected fees to the distribution module account
-	err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, k.feeCollectorName, types.ModuleName, feesCollectedInt)
-	if err != nil {
+	if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, k.feeCollectorName, types.ModuleName, feesCollectedInt); err != nil {
 		return err
-	}
-
-	// temporary workaround to keep CanWithdrawInvariant happy
-	// general discussions here: https://github.com/cosmos/cosmos-sdk/issues/2906#issuecomment-441867634
-	feePool, err := k.FeePool.Get(ctx)
-	if err != nil {
-		return err
-	}
-
-	if totalPreviousPower == 0 {
-		feePool.CommunityPool = feePool.CommunityPool.Add(feesCollected...)
-		return k.FeePool.Set(ctx, feePool)
 	}
 
 	// calculate fraction allocated to validators
@@ -77,9 +65,12 @@ func (k Keeper) AllocateTokens(ctx context.Context, totalPreviousPower int64, bo
 		remaining = remaining.Sub(reward)
 	}
 
-	// allocate community funding
-	feePool.CommunityPool = feePool.CommunityPool.Add(remaining...)
-	return k.FeePool.Set(ctx, feePool)
+	// send to community pool
+	if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, protocolpooltypes.ModuleName, sdk.NormalizeCoins(remaining)); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // AllocateTokensToValidator allocate tokens to a particular validator,

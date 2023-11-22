@@ -1,4 +1,4 @@
-package funds
+package v4
 
 import (
 	"fmt"
@@ -17,8 +17,7 @@ func MigrateFunds(ctx sdk.Context, bankKeeper types.BankKeeper, feePool types.Fe
 	}
 
 	// transfer feepool funds from the distribution module account to pool module account
-	err := bankKeeper.SendCoinsFromModuleToModule(ctx, macc.GetName(), poolMacc.GetName(), poolBal)
-	if err != nil {
+	if err := bankKeeper.SendCoinsFromModuleToModule(ctx, macc.GetName(), poolMacc.GetName(), poolBal); err != nil {
 		return err
 	}
 

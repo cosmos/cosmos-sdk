@@ -43,7 +43,7 @@ and delegators to independently and lazily withdraw their rewards.
 
 As a part of the lazy computations, each delegator holds an accumulation term
 specific to each validator which is used to estimate what their approximate
-fair portion of tokens held in the global fee pool is owed to them.
+fair portion of tokens held in the fee pool is owed to them.
 
 ```text
 entitlement = delegator-accumulation / all-delegators-accumulation
@@ -81,7 +81,6 @@ to set up a script to periodically withdraw and rebond rewards.
 
 * [Concepts](#concepts)
 * [State](#state)
-    * [FeePool](#feepool)
     * [Validator Distribution](#validator-distribution)
     * [Delegation Distribution](#delegation-distribution)
     * [Params](#params)
@@ -126,33 +125,6 @@ Each time one object which previously needed to reference the historical record 
 count is decremented. If the reference count hits zero, the historical record is deleted.
 
 ## State
-
-### FeePool
-
-All globally tracked parameters for distribution are stored within
-`FeePool`. Rewards are collected and added to the reward pool and
-distributed to validators/delegators from here.
-
-Note that the reward pool holds decimal coins (`DecCoins`) to allow
-for fractions of coins to be received from operations like inflation.
-When coins are distributed from the pool they are truncated back to
-`sdk.Coins` which are non-decimal.
-
-* FeePool: `0x00 -> ProtocolBuffer(FeePool)`
-
-```go
-// coins with decimal
-type DecCoins []DecCoin
-
-type DecCoin struct {
-    Amount math.LegacyDec
-    Denom  string
-}
-```
-
-```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/distribution/v1beta1/distribution.proto#L116-L123
-```
 
 ### Validator Distribution
 
@@ -206,7 +178,6 @@ the distribution `ModuleAccount` account. When a delegator or validator
 withdraws their rewards, they are taken out of the `ModuleAccount`. During begin
 block, the different claims on the fees collected are updated as follows:
 
-* The reserve community tax is charged.
 * The remainder is distributed proportionally by voting power to all bonded validators
 
 ### The Distribution Scheme
@@ -218,12 +189,12 @@ inflationary rewards to the stake. All fees are collected in a specific module
 account during the block. During `BeginBlock`, they are sent to the
 `"distribution"` `ModuleAccount`. No other sending of tokens occurs. Instead, the
 rewards each account is entitled to are stored, and withdrawals can be triggered
-through the messages `FundCommunityPool`, `WithdrawValidatorCommission` and
+through the messages `WithdrawValidatorCommission` and
 `WithdrawDelegatorReward`.
 
 #### Reward to the Community Pool
 
-The community pool gets `community_tax * fees`, plus any remaining dust after
+The community pool (x/protocolpool) gets `community_tax * fees`, plus any remaining dust after
 validators get their rewards that are always rounded down to the nearest
 integer value.
 
@@ -344,33 +315,6 @@ The commission is calculated in every block during `BeginBlock`, so no iteration
 The amount withdrawn is deducted from the `ValidatorOutstandingRewards` variable for the validator.
 Only integer amounts can be sent. If the accumulated awards have decimals, the amount is truncated before the withdrawal is sent, and the remainder is left to be withdrawn later.
 
-### FundCommunityPool
-
-This message sends coins directly from the sender to the community pool.
-
-The transaction fails if the amount cannot be transferred from the sender to the distribution module account.
-
-```go
-func (k Keeper) FundCommunityPool(ctx context.Context, amount sdk.Coins, sender sdk.AccAddress) error {
-  if err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, sender, types.ModuleName, amount); err != nil {
-    return err
-  }
-
-  feePool, err := k.FeePool.Get(ctx)
-  if err != nil {
-    return err
-  }
-
-  feePool.CommunityPool = feePool.CommunityPool.Add(sdk.NewDecCoinsFromCoins(amount...)...)
-	
-  if err := k.FeePool.Set(ctx, feePool); err != nil {
-    return err
-  }
-
-  return nil
-}
-```
-
 ### Common distribution operations
 
 These operations take place during many different messages.
@@ -452,7 +396,7 @@ By default, all values are set to a `0`, except period, which is set to `1`.
 * triggered-by: `staking.RemoveValidator`
 
 Outstanding commission is sent to the validator's self-delegation withdrawal address.
-Remaining delegator rewards get sent to the community fee pool.
+Remaining delegator rewards get sent to the community pool.
 
 Note: The validator gets removed only when it has no remaining delegations.
 At that time, all outstanding delegator rewards will have been withdrawn.
@@ -525,13 +469,12 @@ The distribution module contains the following parameters:
 * `baseproposerreward` and `bonusproposerreward` were parameters that are deprecated in v0.47 and are not used.
 
 :::note
-The reserve pool is the pool of collected funds for use by governance taken via the `CommunityTax`.
-Currently with the Cosmos SDK, tokens collected by the CommunityTax are accounted for but unspendable.
+The community tax is collected and sent to the community pool (x/protocolpool).
 :::
 
 ## Client
 
-## CLI
+### CLI
 
 A user can query and interact with the `distribution` module using the CLI.
 
@@ -561,28 +504,6 @@ Example Output:
 
 ```yml
 commission:
-- amount: "1000000.000000000000000000"
-  denom: stake
-```
-
-##### community-pool
-
-The `community-pool` command allows users to query all coin balances within the community pool.
-
-```shell
-simd query distribution community-pool [flags]
-```
-
-Example:
-
-```shell
-simd query distribution community-pool
-```
-
-Example Output:
-
-```yml
-pool:
 - amount: "1000000.000000000000000000"
   denom: stake
 ```
@@ -688,7 +609,7 @@ rewards:
 
 The `validator-distribution-info` command allows users to query validator commission and self-delegation rewards for validator.
 
-````shell
+```shell
 simd query distribution validator-distribution-info cosmosvaloper1...
 ```
 
@@ -710,20 +631,6 @@ The `tx` commands allow users to interact with the `distribution` module.
 
 ```shell
 simd tx distribution --help
-```
-
-##### fund-community-pool
-
-The `fund-community-pool` command allows users to send funds to the community pool.
-
-```shell
-simd tx distribution fund-community-pool [amount] [flags]
-```
-
-Example:
-
-```shell
-simd tx distribution fund-community-pool 100stake --from cosmos1...
 ```
 
 ##### set-withdraw-addr
@@ -1020,30 +927,5 @@ Example Output:
 ```json
 {
   "withdrawAddress": "cosmos1..."
-}
-```
-
-#### CommunityPool
-
-The `CommunityPool` endpoint allows users to query the community pool coins.
-
-Example:
-
-```shell
-grpcurl -plaintext \
-    localhost:9090 \
-    cosmos.distribution.v1beta1.Query/CommunityPool
-```
-
-Example Output:
-
-```json
-{
-  "pool": [
-    {
-      "denom": "stake",
-      "amount": "1000000000000000000"
-    }
-  ]
 }
 ```

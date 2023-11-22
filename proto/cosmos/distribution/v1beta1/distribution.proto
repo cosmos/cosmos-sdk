@@ -116,6 +116,8 @@ message ValidatorSlashEvents {
 
 // FeePool is the global fee pool for distribution.
 message FeePool {
+  option deprecated = true;
+
   repeated cosmos.base.v1beta1.DecCoin community_pool = 1 [
     (gogoproto.nullable)     = false,
     (amino.dont_omitempty)   = true,

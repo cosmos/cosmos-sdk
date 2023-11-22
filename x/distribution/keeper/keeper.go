@@ -25,14 +25,15 @@ type Keeper struct {
 	authKeeper    types.AccountKeeper
 	bankKeeper    types.BankKeeper
 	stakingKeeper types.StakingKeeper
-	poolKeeper    types.PoolKeeper // TODO: Needs to be removed in v0.53
+	poolKeeper    types.PoolKeeper
 
 	// the address capable of executing a MsgUpdateParams message. Typically, this
 	// should be the x/gov module account.
 	authority string
 
-	Schema  collections.Schema
-	Params  collections.Item[types.Params]
+	Schema collections.Schema
+	Params collections.Item[types.Params]
+	// Deprecated: this is staying for the migration from distribution community pool to protocolpool.
 	FeePool collections.Item[types.FeePool]
 	// DelegatorsWithdrawAddress key: delAddr | value: withdrawAddr
 	DelegatorsWithdrawAddress collections.Map[sdk.AccAddress, sdk.AccAddress]

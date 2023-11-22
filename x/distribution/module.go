@@ -28,7 +28,7 @@ import (
 )
 
 // ConsensusVersion defines the current x/distribution module consensus version.
-const ConsensusVersion = 5
+const ConsensusVersion = 4
 
 var (
 	_ module.AppModuleBasic      = AppModule{}
@@ -142,10 +142,6 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 
 	if err := cfg.RegisterMigration(types.ModuleName, 3, m.Migrate3to4); err != nil {
 		panic(fmt.Sprintf("failed to migrate x/%s from version 3 to 4: %v", types.ModuleName, err))
-	}
-
-	if err := cfg.RegisterMigration(types.ModuleName, 4, m.MigrateFundsToPool); err != nil {
-		panic(fmt.Sprintf("failed to migrate funds from x/%s to x/protocolpool module", types.ModuleName))
 	}
 }
 

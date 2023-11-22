@@ -7,6 +7,7 @@ import (
 )
 
 // zero fee pool
+// Deperecated: FeePool is deprecated
 func InitialFeePool() FeePool {
 	return FeePool{
 		CommunityPool: sdk.DecCoins{},

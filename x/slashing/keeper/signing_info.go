@@ -213,7 +213,7 @@ func (k Keeper) GetValidatorMissedBlocks(ctx context.Context, addr sdk.ConsAddre
 
 // PerformConsensusPubKeyUpdate updates cons address to its pub key relation
 // Updates signing info, missed blocks (removes old one, and sets new one)
-func (k Keeper) PerformConsensusPubKeyUpdate(ctx sdk.Context, oldPubKey, newPubKey cryptotypes.PubKey) error {
+func (k Keeper) PerformConsensusPubKeyUpdate(ctx context.Context, oldPubKey, newPubKey cryptotypes.PubKey) error {
 	// Connect new consensus address with PubKey
 	if err := k.AddrPubkeyRelation.Set(ctx, newPubKey.Address(), newPubKey); err != nil {
 		return err

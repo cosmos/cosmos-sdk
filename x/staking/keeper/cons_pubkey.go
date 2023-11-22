@@ -156,8 +156,7 @@ func (k Keeper) deleteConsKeyIndexKey(ctx sdk.Context, valAddr sdk.ValAddress, t
 		EndInclusive(collections.Join(valAddr.Bytes(), ts))
 
 	return k.ValidatorConsensusKeyRotationRecordIndexKey.Walk(ctx, rng, func(key collections.Pair[[]byte, time.Time]) (stop bool, err error) {
-		k.ValidatorConsensusKeyRotationRecordIndexKey.Remove(ctx, key)
-		return false, nil
+		return false, k.ValidatorConsensusKeyRotationRecordIndexKey.Remove(ctx, key)
 	})
 }
 
@@ -173,6 +172,8 @@ func (k Keeper) GetAllMaturedRotatedKeys(ctx sdk.Context, matureTime time.Time) 
 	}
 	defer iterator.Close()
 
+	// indexes.CollectValues(ctx, k.vaValidatorConsensusKeyRotationRecordQueue, iterator)
+
 	for ; iterator.Valid(); iterator.Next() {
 		value, err := iterator.Value()
 		if err != nil {
@@ -184,7 +185,10 @@ func (k Keeper) GetAllMaturedRotatedKeys(ctx sdk.Context, matureTime time.Time) 
 			return nil, err
 		}
 
-		k.ValidatorConsensusKeyRotationRecordQueue.Remove(ctx, key)
+		err = k.ValidatorConsensusKeyRotationRecordQueue.Remove(ctx, key)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return valAddrs, nil

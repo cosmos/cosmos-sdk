@@ -2,7 +2,6 @@ package keeper
 
 import (
 	v4 "cosmossdk.io/x/distribution/migrations/v4"
-	"cosmossdk.io/x/distribution/types"
 	pooltypes "cosmossdk.io/x/protocolpool/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -50,10 +49,11 @@ func (m Migrator) migrateFunds(ctx sdk.Context) error {
 		return err
 	}
 
-	if err = v4.MigrateFunds(ctx, m.keeper.bankKeeper, feePool, macc, poolMacc); err != nil {
+	feelPool, err := v4.MigrateFunds(ctx, m.keeper.bankKeeper, feePool, macc, poolMacc)
+	if err != nil {
 		return err
 	}
 
-	// return FeePool as empty (since FeePool funds are migrated to pool module account)
-	return m.keeper.FeePool.Set(ctx, types.FeePool{})
+	// the feelpool has now an empty community pool and the remainder is stored in the DecimalPool
+	return m.keeper.FeePool.Set(ctx, feelPool)
 }

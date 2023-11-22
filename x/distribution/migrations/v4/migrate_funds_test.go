@@ -100,8 +100,8 @@ func TestFundsMigration(t *testing.T) {
 	// Set pool module account
 	poolAcc := authtypes.NewEmptyModuleAccount(pooltypes.ModuleName)
 
-	// migrate feepool funds from distribution module account to pool module accout
-	err = v4.MigrateFunds(ctx, bankKeeper, feepool, distrAcc, poolAcc)
+	// migrate feepool funds from distribution module account to pool module account
+	_, err = v4.MigrateFunds(ctx, bankKeeper, feepool, distrAcc, poolAcc)
 	require.NoError(t, err)
 
 	// set distrbution feepool as empty (since migration)

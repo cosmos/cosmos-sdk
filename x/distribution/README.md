@@ -2,6 +2,8 @@
 sidebar_position: 1
 ---
 
+// TODO REVIEW this whole doc
+
 # `x/distribution`
 
 ## Overview
@@ -81,17 +83,17 @@ to set up a script to periodically withdraw and rebond rewards.
 
 * [Concepts](#concepts)
 * [State](#state)
-    * [Validator Distribution](#validator-distribution)
-    * [Delegation Distribution](#delegation-distribution)
-    * [Params](#params)
+  * [Validator Distribution](#validator-distribution)
+  * [Delegation Distribution](#delegation-distribution)
+  * [Params](#params)
 * [Begin Block](#begin-block)
 * [Messages](#messages)
 * [Hooks](#hooks)
 * [Events](#events)
 * [Parameters](#parameters)
 * [Client](#client)
-    * [CLI](#cli)
-    * [gRPC](#grpc)
+  * [CLI](#cli)
+  * [gRPC](#grpc)
 
 ## Concepts
 
@@ -258,15 +260,15 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/distribution/
 
 ```go
 func (k Keeper) SetWithdrawAddr(ctx context.Context, delegatorAddr sdk.AccAddress, withdrawAddr sdk.AccAddress) error
-	if k.blockedAddrs[withdrawAddr.String()] {
-		fail with "`{withdrawAddr}` is not allowed to receive external funds"
-	}
+ if k.blockedAddrs[withdrawAddr.String()] {
+  fail with "`{withdrawAddr}` is not allowed to receive external funds"
+ }
 
-	if !k.GetWithdrawAddrEnabled(ctx) {
-		fail with `ErrSetWithdrawAddrDisabled`
-	}
+ if !k.GetWithdrawAddrEnabled(ctx) {
+  fail with `ErrSetWithdrawAddrDisabled`
+ }
 
-	k.SetDelegatorWithdrawAddr(ctx, delegatorAddr, withdrawAddr)
+ k.SetDelegatorWithdrawAddr(ctx, delegatorAddr, withdrawAddr)
 ```
 
 ### MsgWithdrawDelegatorReward
@@ -330,17 +332,17 @@ func (k Keeper) initializeDelegation(ctx context.Context, val sdk.ValAddress, de
     // period has already been incremented - we want to store the period ended by this delegation action
     previousPeriod := k.GetValidatorCurrentRewards(ctx, val).Period - 1
 
-	// increment reference count for the period we're going to track
-	k.incrementReferenceCount(ctx, val, previousPeriod)
+ // increment reference count for the period we're going to track
+ k.incrementReferenceCount(ctx, val, previousPeriod)
 
-	validator := k.stakingKeeper.Validator(ctx, val)
-	delegation := k.stakingKeeper.Delegation(ctx, del, val)
+ validator := k.stakingKeeper.Validator(ctx, val)
+ delegation := k.stakingKeeper.Delegation(ctx, del, val)
 
-	// calculate delegation stake in tokens
-	// we don't store directly, so multiply delegation shares * (tokens per share)
-	// note: necessary to truncate so we don't allow withdrawing more rewards than owed
-	stake := validator.TokensFromSharesTruncated(delegation.GetShares())
-	k.SetDelegatorStartingInfo(ctx, val, del, types.NewDelegatorStartingInfo(previousPeriod, stake, uint64(ctx.BlockHeight())))
+ // calculate delegation stake in tokens
+ // we don't store directly, so multiply delegation shares * (tokens per share)
+ // note: necessary to truncate so we don't allow withdrawing more rewards than owed
+ stake := validator.TokensFromSharesTruncated(delegation.GetShares())
+ k.SetDelegatorStartingInfo(ctx, val, del, types.NewDelegatorStartingInfo(previousPeriod, stake, uint64(ctx.BlockHeight())))
 }
 ```
 

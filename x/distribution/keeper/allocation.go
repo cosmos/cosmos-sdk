@@ -65,8 +65,13 @@ func (k Keeper) AllocateTokens(ctx context.Context, totalPreviousPower int64, bo
 		remaining = remaining.Sub(reward)
 	}
 
-	// send to community pool
-	if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, protocolpooltypes.ModuleName, sdk.NormalizeCoins(remaining)); err != nil {
+	// send to community pool and set remainder in fee pool
+	amt, re := remaining.TruncateDecimal()
+	if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, protocolpooltypes.ModuleName, amt); err != nil {
+		return err
+	}
+
+	if err := k.FeePool.Set(ctx, types.FeePool{DecimalPool: re}); err != nil {
 		return err
 	}
 
@@ -134,4 +139,24 @@ func (k Keeper) AllocateTokensToValidator(ctx context.Context, val stakingtypes.
 
 	outstanding.Rewards = outstanding.Rewards.Add(tokens...)
 	return k.ValidatorOutstandingRewards.Set(ctx, valBz, outstanding)
+}
+
+// SendDecimalPoolToCommunityPool sends the decimal pool to the community pool
+// Any remainer stays in the decimal pool
+func (k Keeper) SendDecimalPoolToCommunityPool(ctx context.Context) error {
+	feePool, err := k.FeePool.Get(ctx)
+	if err != nil {
+		return err
+	}
+
+	if feePool.DecimalPool.IsZero() {
+		return nil
+	}
+
+	amt, re := feePool.DecimalPool.TruncateDecimal()
+	if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, protocolpooltypes.ModuleName, amt); err != nil {
+		return err
+	}
+
+	return k.FeePool.Set(ctx, types.FeePool{DecimalPool: re})
 }

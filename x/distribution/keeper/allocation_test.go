@@ -150,7 +150,7 @@ func TestAllocateTokensToManyValidators(t *testing.T) {
 
 	feePool, err := distrKeeper.FeePool.Get(ctx)
 	require.NoError(t, err)
-	require.True(t, feePool.CommunityPool.IsZero())
+	require.True(t, feePool.DecimalPool.IsZero())
 
 	_, err = distrKeeper.ValidatorsAccumulatedCommission.Get(ctx, valAddr0)
 	require.ErrorIs(t, err, collections.ErrNotFound)
@@ -192,7 +192,7 @@ func TestAllocateTokensToManyValidators(t *testing.T) {
 	// 2 community pool coins
 	feePool, err = distrKeeper.FeePool.Get(ctx)
 	require.NoError(t, err)
-	require.Equal(t, sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: math.LegacyNewDec(2)}}, feePool.CommunityPool)
+	require.Equal(t, sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: math.LegacyNewDec(2)}}, feePool.DecimalPool)
 
 	// 50% commission for first proposer, (0.5 * 98%) * 100 / 2 = 23.25
 	val0Commission, err := distrKeeper.ValidatorsAccumulatedCommission.Get(ctx, valAddr0)
@@ -291,7 +291,7 @@ func TestAllocateTokensTruncation(t *testing.T) {
 
 	feePool, err := distrKeeper.FeePool.Get(ctx)
 	require.NoError(t, err)
-	require.True(t, feePool.CommunityPool.IsZero())
+	require.True(t, feePool.DecimalPool.IsZero())
 
 	_, err = distrKeeper.ValidatorsAccumulatedCommission.Get(ctx, valAddr0)
 	require.ErrorIs(t, err, collections.ErrNotFound)

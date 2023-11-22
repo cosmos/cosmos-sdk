@@ -27,6 +27,13 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper) error {
 		if err := k.AllocateTokens(ctx, previousTotalPower, ctx.CometInfo().LastCommit.Votes); err != nil {
 			return err
 		}
+
+		// every 1000 blocks send whole coins from decimal pool to community pool
+		if ctx.BlockHeight()%1000 == 0 {
+			if err := k.SendDecimalPoolToCommunityPool(ctx); err != nil {
+				return err
+			}
+		}
 	}
 
 	// record the proposer for when we payout on the next block

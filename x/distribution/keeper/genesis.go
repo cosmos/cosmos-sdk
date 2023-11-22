@@ -127,7 +127,7 @@ func (k Keeper) InitGenesis(ctx context.Context, data types.GenesisState) {
 		}
 	}
 
-	moduleHoldings = moduleHoldings.Add(data.FeePool.CommunityPool...)
+	moduleHoldings = moduleHoldings.Add(data.FeePool.DecimalPool...)
 	moduleHoldingsInt, _ := moduleHoldings.TruncateDecimal()
 
 	// check if the module account exists

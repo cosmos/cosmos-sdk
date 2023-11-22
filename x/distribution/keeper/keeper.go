@@ -33,7 +33,8 @@ type Keeper struct {
 
 	Schema collections.Schema
 	Params collections.Item[types.Params]
-	// Deprecated: this is staying for the migration from distribution community pool to protocolpool.
+	// FeePool stores decimal tokens that cannot be yet distributed.
+	// In the past it held the community pool, but it has been replaced by x/protocolpool.
 	FeePool collections.Item[types.FeePool]
 	// DelegatorsWithdrawAddress key: delAddr | value: withdrawAddr
 	DelegatorsWithdrawAddress collections.Map[sdk.AccAddress, sdk.AccAddress]

@@ -57,7 +57,21 @@ ClaimBudget is a message used to claim funds from a previously submitted budget 
 
 ### CreateContinuousFund
 
+CreateContinuousFund is a message used to initiate a continuous fund for a specific recipient. The proposed percentage of funds will be distributed at every end block until cap is reached or expiry time is reached or until continuous fund is canceled.
+
+```protobuf
+  // CreateContinuousFund defines a method to add funds continuously.
+  rpc CreateContinuousFund(MsgCreateContinuousFund) returns (MsgCreateContinuousFundResponse);
+```
+
 ### CancelContinuousFund
+
+CancelContinuousFund is a message used to cancel an existing continuous fund proposal for a specific recipient. Cancelling a continuous fund stops further distribution of funds, and the state object is removed from storage.
+
+```protobuf
+  // CancelContinuousFund defines a method for cancelling continuous fund.
+  rpc CancelContinuousFund(MsgCancelContinuousFund) returns (MsgCancelContinuousFundResponse);
+```
 
 ## Messages
 
@@ -145,7 +159,43 @@ https://github.com/cosmos/cosmos-sdk/blob/97724493d792517ba2be8969078b5f92ad04d7
 
 ### MsgCreateContinuousFund
 
+This message is used to create a continuous fund for a specific recipient. The proposed percentage of funds will be distributed at every end block until cap is reached or expiry time is reached or until continuous fund is canceled.
+
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/44985ec56557e2d5b763c8676fabbed971f157ba/proto/cosmos/protocolpool/v1/tx.proto#L111-L130
+```
+
+The message will fail under the following conditions:
+
+- The recipient address is empty or restricted.
+- The cap is zero.
+- The percentage is zero/negative/greater than one.
+- expiry time is less than the current block time.
+
+:::warning
+If two continuous fund proposals to the same address are created, the previous ContinuousFund would be updated with the new ContinuousFund.
+:::
+
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/44985ec56557e2d5b763c8676fabbed971f157ba/x/protocolpool/keeper/msg_server.go#L109-L140
+```
+
 ### MsgCancelContinuousFund
+
+This message is used to cancel an existing continuous fund proposal for a specific recipient. Once canceled, the continuous fund will no longer distribute funds at each end block, and the state object will be removed. Users should be cautious when canceling continuous funds, as it may affect the planned distribution for the recipient.
+
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/44985ec56557e2d5b763c8676fabbed971f157ba/proto/cosmos/protocolpool/v1/tx.proto#L136-L144
+```
+
+The message will fail under the following conditions:
+
+- The recipient address is empty or restricted.
+- The ContinuousFund for the recipient does not exist.
+
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/44985ec56557e2d5b763c8676fabbed971f157ba/x/protocolpool/keeper/msg_server.go#L142-L174
+```
 
 ## Client
 

@@ -204,7 +204,6 @@ func (k Keeper) validateAndUpdateBudgetProposal(ctx context.Context, bp types.Ms
 		bp.StartTime = &currentTime
 	}
 
-	// if bp.StartTime < uint64(currentTime) {
 	if currentTime.After(*bp.StartTime) {
 		return nil, fmt.Errorf("invalid budget proposal: start time cannot be less than the current block time")
 	}

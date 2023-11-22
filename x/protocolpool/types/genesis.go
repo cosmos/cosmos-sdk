@@ -44,12 +44,11 @@ func validateBudget(bp Budget) error {
 		return fmt.Errorf("recipient cannot be empty")
 	}
 
-	if bp.TotalBudget.IsZero() {
-		return fmt.Errorf("invalid budget proposal: total budget cannot be zero")
-	}
-
+	// Validate TotalBudget
 	amount := sdk.NewCoins(*bp.TotalBudget)
-	if amount == nil {
+	if amount.IsZero() {
+		return fmt.Errorf("total budget cannot be zero")
+	} else if amount == nil {
 		return fmt.Errorf("amount cannot be nil")
 	}
 	if err := amount.Validate(); err != nil {
@@ -71,8 +70,11 @@ func validateContinuousFund(cf ContinuousFund) error {
 		return fmt.Errorf("recipient cannot be empty")
 	}
 
+	// Validate cap
 	cap := sdk.NewCoins(*cf.Cap)
-	if cap == nil {
+	if cap.IsZero() {
+		return fmt.Errorf("invalid capital: amount cannot be zero")
+	} else if cap == nil {
 		return fmt.Errorf("amount cannot be nil")
 	}
 	if err := cap.Validate(); err != nil {

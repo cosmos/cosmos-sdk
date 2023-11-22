@@ -10,7 +10,17 @@ import (
 )
 
 func (k Keeper) InitGenesis(ctx context.Context, data *types.GenesisState) error {
+	// Perform data validation
+	if err := types.ValidateGenesis(data); err != nil {
+		return err
+	}
+	currentTime := sdk.UnwrapSDKContext(ctx).BlockTime()
 	for _, cf := range data.ContinuousFund {
+		// ignore expired ContinuousFunds
+		if cf.Expiry != nil && cf.Expiry.Before(currentTime) {
+			continue
+		}
+
 		recipientAddress, err := k.authKeeper.AddressCodec().StringToBytes(cf.Recipient)
 		if err != nil {
 			return fmt.Errorf("failed to decode recipient address: %w", err)
@@ -20,6 +30,16 @@ func (k Keeper) InitGenesis(ctx context.Context, data *types.GenesisState) error
 		}
 	}
 	for _, budget := range data.Budget {
+		// Validate StartTime
+		currentTime := sdk.UnwrapSDKContext(ctx).BlockTime()
+		if budget.StartTime.IsZero() || budget.StartTime == nil {
+			budget.StartTime = &currentTime
+		}
+		// ignore budget with start time < currentTime
+		if budget.StartTime != nil && budget.StartTime.Before(currentTime) {
+			continue
+		}
+
 		recipientAddress, err := k.authKeeper.AddressCodec().StringToBytes(budget.RecipientAddress)
 		if err != nil {
 			return fmt.Errorf("failed to decode recipient address: %w", err)

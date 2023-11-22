@@ -49,11 +49,11 @@ func (m Migrator) migrateFunds(ctx sdk.Context) error {
 		return err
 	}
 
-	feelPool, err := v4.MigrateFunds(ctx, m.keeper.bankKeeper, feePool, macc, poolMacc)
+	feePool, err = v4.MigrateFunds(ctx, m.keeper.bankKeeper, feePool, macc, poolMacc)
 	if err != nil {
 		return err
 	}
 
-	// the feelpool has now an empty community pool and the remainder is stored in the DecimalPool
-	return m.keeper.FeePool.Set(ctx, feelPool)
+	// the feePool has now an empty community pool and the remainder is stored in the DecimalPool
+	return m.keeper.FeePool.Set(ctx, feePool)
 }

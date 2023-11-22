@@ -100,7 +100,7 @@ func (k Keeper) claimFunds(ctx context.Context, recipient sdk.AccAddress) (amoun
 	// distribute amount from community pool
 	err = k.DistributeFromCommunityPool(ctx, sdk.NewCoins(amount), recipient)
 	if err != nil {
-		return sdk.Coin{}, fmt.Errorf("error distributing from fee pool: %w", err)
+		return sdk.Coin{}, fmt.Errorf("error distributing from community pool: %w", err)
 	}
 
 	return amount, nil

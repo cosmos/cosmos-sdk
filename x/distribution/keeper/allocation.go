@@ -71,8 +71,7 @@ func (k Keeper) AllocateTokens(ctx context.Context, totalPreviousPower int64, bo
 			powerFraction := math.LegacyNewDec(vote.Validator.Power).QuoTruncate(math.LegacyNewDec(totalPreviousPower))
 			reward := feeMultiplier.MulDecTruncate(powerFraction)
 
-			err = k.AllocateTokensToValidator(ctx, validator, reward)
-			if err != nil {
+			if err = k.AllocateTokensToValidator(ctx, validator, reward); err != nil {
 				errc <- err
 				return
 			}

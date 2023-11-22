@@ -3,12 +3,7 @@ package cosmos.protocolpool.v1;
 
 option go_package = "cosmossdk.io/x/protocolpool/types";
 
-import "gogoproto/gogo.proto";
 import "cosmos/protocolpool/v1/types.proto";
-import "cosmos/base/v1beta1/coin.proto";
-import "google/protobuf/timestamp.proto";
-import "google/protobuf/duration.proto";
-import "cosmos_proto/cosmos.proto";
 
 // GenesisState defines the protocolpool module's genesis state.
 message GenesisState {

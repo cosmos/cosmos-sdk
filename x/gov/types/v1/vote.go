@@ -138,10 +138,11 @@ func WeightedVoteOptionsFromString(str string) (WeightedVoteOptions, error) {
 
 // ValidVoteOption returns true if the vote option is valid and false otherwise.
 func ValidVoteOption(option VoteOption) bool {
-	if option == OptionYes ||
-		option == OptionAbstain ||
-		option == OptionNo ||
-		option == OptionNoWithVeto {
+	if option == OptionOne ||
+		option == OptionTwo ||
+		option == OptionThree ||
+		option == OptionFour ||
+		option == OptionSpam {
 		return true
 	}
 	return false

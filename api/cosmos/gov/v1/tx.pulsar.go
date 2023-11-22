@@ -7087,9 +7087,9 @@ type MsgSubmitProposal struct {
 	// expedited defines if the proposal is expedited or not
 	//
 	// Since: cosmos-sdk 0.50
-	// Deprecated: Use the PROPOSAL_TYPE_EXPDITED proposal type instead.
+	// Deprecated: Use the PROPOSAL_TYPE_EXPEDITED proposal type instead.
 	// When this field is set and no proposal_type is set, the proposal_type
-	// will be set to PROPOSAL_TYPE_EXPDITED for backwards compatibility.
+	// will be set to PROPOSAL_TYPE_EXPEDITED for backwards compatibility.
 	//
 	// Deprecated: Do not use.
 	Expedited bool `protobuf:"varint,7,opt,name=expedited,proto3" json:"expedited,omitempty"`

@@ -85,7 +85,7 @@ func (k msgServer) SubmitProposal(goCtx context.Context, msg *v1.MsgSubmitPropos
 	}
 
 	proposalType := msg.ProposalType
-	if msg.Expedited {
+	if msg.Expedited { // checking for backward compatibility
 		proposalType = v1.ProposalType_PROPOSAL_TYPE_EXPEDITED
 	}
 	proposal, err := k.Keeper.SubmitProposal(ctx, proposalMsgs, msg.Metadata, msg.Title, msg.Summary, proposer, proposalType)

@@ -34,8 +34,7 @@ func TestTally(t *testing.T) {
 		// handy functions
 		setTotalBonded = func(s suite, n int64) {
 			s.mocks.stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec("cosmosvaloper")).AnyTimes()
-			s.mocks.stakingKeeper.EXPECT().TotalBondedTokens(gomock.Any()).
-				Return(sdkmath.NewInt(n), nil)
+			s.mocks.stakingKeeper.EXPECT().TotalBondedTokens(gomock.Any()).Return(sdkmath.NewInt(n), nil)
 		}
 		delegatorVote = func(s suite, voter sdk.AccAddress, delegations []stakingtypes.Delegation, vote v1.VoteOption) {
 			err := s.keeper.AddVote(s.ctx, s.proposal.Id, voter, v1.NewNonSplitVoteOption(vote), "")
@@ -76,6 +75,7 @@ func TestTally(t *testing.T) {
 				AbstainCount:    "0",
 				NoCount:         "0",
 				NoWithVetoCount: "0",
+				SpamCount:       "0",
 			},
 		},
 		{
@@ -90,6 +90,7 @@ func TestTally(t *testing.T) {
 				AbstainCount:    "0",
 				NoCount:         "0",
 				NoWithVetoCount: "0",
+				SpamCount:       "0",
 			},
 		},
 		{
@@ -105,6 +106,7 @@ func TestTally(t *testing.T) {
 				AbstainCount:    "0",
 				NoCount:         "1000000",
 				NoWithVetoCount: "0",
+				SpamCount:       "0",
 			},
 		},
 		{
@@ -120,6 +122,7 @@ func TestTally(t *testing.T) {
 				AbstainCount:    "0",
 				NoCount:         "0",
 				NoWithVetoCount: "0",
+				SpamCount:       "0",
 			},
 		},
 		{
@@ -140,6 +143,7 @@ func TestTally(t *testing.T) {
 				AbstainCount:    "0",
 				NoCount:         "0",
 				NoWithVetoCount: "0",
+				SpamCount:       "0",
 			},
 		},
 		{
@@ -161,6 +165,7 @@ func TestTally(t *testing.T) {
 				AbstainCount:    "0",
 				NoCount:         "0",
 				NoWithVetoCount: "0",
+				SpamCount:       "0",
 			},
 		},
 		{
@@ -182,6 +187,7 @@ func TestTally(t *testing.T) {
 				AbstainCount:    "0",
 				NoCount:         "999958",
 				NoWithVetoCount: "0",
+				SpamCount:       "0",
 			},
 		},
 		{
@@ -217,6 +223,7 @@ func TestTally(t *testing.T) {
 				AbstainCount:    "1000000",
 				NoCount:         "999979",
 				NoWithVetoCount: "0",
+				SpamCount:       "0",
 			},
 		},
 		{
@@ -235,6 +242,7 @@ func TestTally(t *testing.T) {
 				AbstainCount:    "4000000",
 				NoCount:         "0",
 				NoWithVetoCount: "0",
+				SpamCount:       "0",
 			},
 		},
 		{
@@ -256,6 +264,7 @@ func TestTally(t *testing.T) {
 				AbstainCount:    "0",
 				NoCount:         "0",
 				NoWithVetoCount: "3000000",
+				SpamCount:       "0",
 			},
 		},
 		{
@@ -274,6 +283,7 @@ func TestTally(t *testing.T) {
 				AbstainCount:    "0",
 				NoCount:         "2000000",
 				NoWithVetoCount: "0",
+				SpamCount:       "0",
 			},
 		},
 		{
@@ -295,6 +305,7 @@ func TestTally(t *testing.T) {
 				AbstainCount:    "0",
 				NoCount:         "2000000",
 				NoWithVetoCount: "1000000",
+				SpamCount:       "0",
 			},
 		},
 		{
@@ -315,6 +326,7 @@ func TestTally(t *testing.T) {
 				AbstainCount:    "3000000",
 				NoCount:         "1000000",
 				NoWithVetoCount: "0",
+				SpamCount:       "0",
 			},
 		},
 		{
@@ -337,6 +349,7 @@ func TestTally(t *testing.T) {
 				AbstainCount:    "0",
 				NoCount:         "2000000",
 				NoWithVetoCount: "1000000",
+				SpamCount:       "0",
 			},
 		},
 		{
@@ -359,6 +372,30 @@ func TestTally(t *testing.T) {
 				AbstainCount:    "0",
 				NoCount:         "1000000",
 				NoWithVetoCount: "1000000",
+				SpamCount:       "0",
+			},
+		},
+		{
+			name: "quorum reached with spam > all other votes: prop fails/burn deposit",
+			setup: func(s suite) {
+				setTotalBonded(s, 10000000)
+				validatorVote(s, s.valAddrs[0], v1.VoteOption_VOTE_OPTION_ONE)
+				// spam votes
+				validatorVote(s, s.valAddrs[1], v1.VoteOption_VOTE_OPTION_SPAM)
+				validatorVote(s, s.valAddrs[2], v1.VoteOption_VOTE_OPTION_SPAM)
+				validatorVote(s, s.valAddrs[3], v1.VoteOption_VOTE_OPTION_SPAM)
+				validatorVote(s, s.valAddrs[4], v1.VoteOption_VOTE_OPTION_SPAM)
+				validatorVote(s, s.valAddrs[5], v1.VoteOption_VOTE_OPTION_SPAM)
+				validatorVote(s, s.valAddrs[6], v1.VoteOption_VOTE_OPTION_SPAM)
+			},
+			expectedPass: false,
+			expectedBurn: true,
+			expectedTally: v1.TallyResult{
+				YesCount:        "1000000",
+				AbstainCount:    "0",
+				NoCount:         "0",
+				NoWithVetoCount: "0",
+				SpamCount:       "6000000",
 			},
 		},
 	}

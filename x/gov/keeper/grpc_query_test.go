@@ -1502,6 +1502,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryTallyResult() {
 						AbstainCount:    "1",
 						NoCount:         "0",
 						NoWithVetoCount: "0",
+						SpamCount:       "0",
 					},
 					SubmitTime:      &propTime,
 					VotingStartTime: &propTime,
@@ -1518,6 +1519,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryTallyResult() {
 					AbstainCount:    "1",
 					NoCount:         "0",
 					NoWithVetoCount: "0",
+					SpamCount:       "0",
 				}
 			},
 			true,
@@ -1544,6 +1546,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryTallyResult() {
 					AbstainCount:    "0",
 					NoCount:         "0",
 					NoWithVetoCount: "0",
+					SpamCount:       "0",
 				}
 			},
 			true,
@@ -1570,6 +1573,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryTallyResult() {
 					AbstainCount:    "0",
 					NoCount:         "0",
 					NoWithVetoCount: "0",
+					SpamCount:       "0",
 				}
 			},
 			true,
@@ -1641,6 +1645,7 @@ func (suite *KeeperTestSuite) TestLegacyGRPCQueryTallyResult() {
 						AbstainCount:    "1",
 						NoCount:         "0",
 						NoWithVetoCount: "0",
+						SpamCount:       "0",
 					},
 					SubmitTime:      &propTime,
 					VotingStartTime: &propTime,

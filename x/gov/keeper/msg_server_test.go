@@ -624,7 +624,7 @@ func (suite *KeeperTestSuite) TestMsgVoteWeighted() {
 			voter:     proposer,
 			metadata:  "",
 			expErr:    true,
-			expErrMsg: `option:VOTE_OPTION_YES weight:"0.000000000000000000" : invalid vote option`,
+			expErrMsg: `option:VOTE_OPTION_ONE weight:"0.000000000000000000" : invalid vote option`,
 		},
 		"negative weight": {
 			preRun: func() uint64 {
@@ -636,7 +636,7 @@ func (suite *KeeperTestSuite) TestMsgVoteWeighted() {
 			voter:     proposer,
 			metadata:  "",
 			expErr:    true,
-			expErrMsg: `option:VOTE_OPTION_YES weight:"-1.000000000000000000" : invalid vote option`,
+			expErrMsg: `option:VOTE_OPTION_ONE weight:"-1.000000000000000000" : invalid vote option`,
 		},
 		"empty options": {
 			preRun: func() uint64 {
@@ -1229,7 +1229,7 @@ func (suite *KeeperTestSuite) TestLegacyVoteWeighted() {
 			voter:     proposer,
 			metadata:  "",
 			expErr:    true,
-			expErrMsg: `option:VOTE_OPTION_YES weight:"0.000000000000000000" : invalid vote option`,
+			expErrMsg: `option:VOTE_OPTION_ONE weight:"0.000000000000000000" : invalid vote option`,
 		},
 		"negative weight": {
 			preRun: func() uint64 {
@@ -1244,7 +1244,7 @@ func (suite *KeeperTestSuite) TestLegacyVoteWeighted() {
 			voter:     proposer,
 			metadata:  "",
 			expErr:    true,
-			expErrMsg: `option:VOTE_OPTION_YES weight:"-1.000000000000000000" : invalid vote option`,
+			expErrMsg: `option:VOTE_OPTION_ONE weight:"-1.000000000000000000" : invalid vote option`,
 		},
 		"empty options": {
 			preRun: func() uint64 {

@@ -107,9 +107,21 @@ func (v WeightedVoteOptions) String() string {
 // VoteOptionFromString returns a VoteOption from a string. It returns an error
 // if the string is invalid.
 func VoteOptionFromString(str string) (VoteOption, error) {
+	// backward compatibility with old strings
+	switch str {
+	case "VOTE_OPTION_YES":
+		str = OptionOne.String()
+	case "VOTE_OPTION_ABSTAIN":
+		str = OptionTwo.String()
+	case "VOTE_OPTION_NO":
+		str = OptionThree.String()
+	case "VOTE_OPTION_NO_WITH_VETO":
+		str = OptionFour.String()
+	}
+
 	option, ok := VoteOption_value[str]
 	if !ok {
-		return OptionEmpty, fmt.Errorf("'%s' is not a valid vote option, available options: yes/no/no_with_veto/abstain", str)
+		return OptionEmpty, fmt.Errorf("'%s' is not a valid vote option, available options: yes,option_one/no,option_three/no_with_veto,option_four/abstain,option_two/spam", str)
 	}
 	return VoteOption(option), nil
 }

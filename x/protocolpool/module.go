@@ -114,7 +114,9 @@ func NewAppModule(cdc codec.Codec, keeper keeper.Keeper,
 func (am AppModule) InitGenesis(ctx context.Context, cdc codec.JSONCodec, data json.RawMessage) {
 	var genesisState types.GenesisState
 	cdc.MustUnmarshalJSON(data, &genesisState)
-	am.keeper.InitGenesis(ctx, &genesisState)
+	if err := am.keeper.InitGenesis(ctx, &genesisState); err != nil {
+		panic(err)
+	}
 }
 
 // ExportGenesis returns the exported genesis state as raw bytes for the protocolpool

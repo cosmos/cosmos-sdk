@@ -128,7 +128,7 @@ func TestContinuousFundEndBlocker(t *testing.T) {
 	err = poolKeeper.EndBlocker(ctx)
 	require.NoError(t, err)
 
-	// Check balances after running EndBloker
+	// Check balances after running EndBlocker
 	addr1BalAfter := bankKeeper.GetAllBalances(ctx, addrs[0])
 	check := addr1BalAfter.IsAllGT(addr1Bal)
 	require.True(t, check)

@@ -74,6 +74,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 						{ProtoField: "metadata"},
 						{ProtoField: "expiry", Optional: true},
 					},
+					GovProposal: true,
 				},
 				{
 					RpcMethod: "CancelContinuousFund",

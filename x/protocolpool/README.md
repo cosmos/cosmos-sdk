@@ -55,6 +55,10 @@ ClaimBudget is a message used to claim funds from a previously submitted budget 
 
 ```
 
+### CreateContinuousFund
+
+### CancelContinuousFund
+
 ## Messages
 
 ### MsgFundCommunityPool
@@ -139,6 +143,9 @@ The message will fail under the following conditions:
 https://github.com/cosmos/cosmos-sdk/blob/97724493d792517ba2be8969078b5f92ad04d79c/x/protocolpool/keeper/msg_server.go#L25-L37
 ```
 
+### MsgCreateContinuousFund
+
+### MsgCancelContinuousFund
 
 ## Client
 

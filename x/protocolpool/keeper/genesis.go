@@ -2,23 +2,25 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 
 	"cosmossdk.io/x/protocolpool/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func (k Keeper) InitGenesis(ctx context.Context, data *types.GenesisState) {
+func (k Keeper) InitGenesis(ctx context.Context, data *types.GenesisState) error {
 	for _, cf := range data.ContinuousFund {
 		recipientAddress, err := k.authKeeper.AddressCodec().StringToBytes(cf.Recipient)
 		if err != nil {
-			panic(err)
+			return fmt.Errorf("failed to decode recipient address: %w", err)
 		}
 		err = k.ContinuousFund.Set(ctx, recipientAddress, cf)
 		if err != nil {
-			panic(err)
+			return fmt.Errorf("failed to set continuous fund: %w", err)
 		}
 	}
+	return nil
 }
 
 func (k Keeper) ExportGenesis(ctx context.Context) *types.GenesisState {

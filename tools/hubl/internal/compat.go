@@ -2,7 +2,6 @@ package internal
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"io"
 	"strings"
@@ -45,7 +44,6 @@ func loadFileDescriptorsGRPCReflection(ctx context.Context, client *grpc.ClientC
 	fdMap := map[string]*descriptorpb.FileDescriptorProto{}
 	waitListServiceRes := make(chan *grpc_reflection_v1alpha.ListServiceResponse)
 	waitc := make(chan struct{})
-	errc := make(chan error)
 	go func() {
 		for {
 			in, err := reflectClient.Recv()
@@ -55,12 +53,12 @@ func loadFileDescriptorsGRPCReflection(ctx context.Context, client *grpc.ClientC
 				return
 			}
 			if err != nil {
-				errc <- err
+				panic(err)
 			}
 
 			switch res := in.MessageResponse.(type) {
 			case *grpc_reflection_v1alpha.ServerReflectionResponse_ErrorResponse:
-				errc <- err
+				panic(err)
 			case *grpc_reflection_v1alpha.ServerReflectionResponse_ListServicesResponse:
 				waitListServiceRes <- res.ListServicesResponse
 			case *grpc_reflection_v1alpha.ServerReflectionResponse_FileDescriptorResponse:
@@ -68,11 +66,6 @@ func loadFileDescriptorsGRPCReflection(ctx context.Context, client *grpc.ClientC
 			}
 		}
 	}()
-
-	close(errc)
-	if err = <-errc; err != nil {
-		return nil, err
-	}
 
 	if err = reflectClient.Send(&grpc_reflection_v1alpha.ServerReflectionRequest{
 		MessageRequest: &grpc_reflection_v1alpha.ServerReflectionRequest_ListServices{},
@@ -143,18 +136,16 @@ func loadFileDescriptorsGRPCReflection(ctx context.Context, client *grpc.ClientC
 	return fdSet, nil
 }
 
-func processFileDescriptorsResponse(res *grpc_reflection_v1alpha.ServerReflectionResponse_FileDescriptorResponse, fdMap map[string]*descriptorpb.FileDescriptorProto) error {
-	var errs error
+func processFileDescriptorsResponse(res *grpc_reflection_v1alpha.ServerReflectionResponse_FileDescriptorResponse, fdMap map[string]*descriptorpb.FileDescriptorProto) {
 	for _, bz := range res.FileDescriptorResponse.FileDescriptorProto {
 		fd := &descriptorpb.FileDescriptorProto{}
-		if err := proto.Unmarshal(bz, fd); err != nil {
-			errs = errors.Join(err, fmt.Errorf("error unmarshalling file descriptor: %w", err))
+		err := proto.Unmarshal(bz, fd)
+		if err != nil {
+			panic(err)
 		}
 
 		fdMap[fd.GetName()] = fd
 	}
-
-	return errs
 }
 
 func missingFileDescriptors(fdMap map[string]*descriptorpb.FileDescriptorProto, cantFind map[string]bool) []string {
@@ -176,7 +167,6 @@ func addMissingFileDescriptors(ctx context.Context, client *grpc.ClientConn, fdM
 	}
 
 	waitc := make(chan struct{})
-	errc := make(chan error)
 	go func() {
 		for {
 			in, err := reflectClient.Recv()
@@ -186,19 +176,14 @@ func addMissingFileDescriptors(ctx context.Context, client *grpc.ClientConn, fdM
 				return
 			}
 			if err != nil {
-				errc <- err
+				panic(err)
 			}
 
 			if res, ok := in.MessageResponse.(*grpc_reflection_v1alpha.ServerReflectionResponse_FileDescriptorResponse); ok {
-				errc <- processFileDescriptorsResponse(res, fdMap)
+				processFileDescriptorsResponse(res, fdMap)
 			}
 		}
 	}()
-
-	close(errc)
-	if err = <-errc; err != nil {
-		return err
-	}
 
 	for _, file := range missingFiles {
 		err = reflectClient.Send(&grpc_reflection_v1alpha.ServerReflectionRequest{

@@ -18,21 +18,21 @@ type uintTestSuite struct {
 }
 
 func TestUnitTestSuite(t *testing.T) {
-	suite.Run(t, new(sdkmath.UintTestSuite))
+	suite.Run(t, new(uintTestSuite))
 }
 
-func (s *sdkmath.UintTestSuite) SetupSuite() {
+func (s *uintTestSuite) SetupSuite() {
 	s.T().Parallel()
 }
 
-func (s *sdkmath.UintTestSuite) TestUintPanics() {
+func (s *uintTestSuite) TestUintPanics() {
 	// Max Uint = 1.15e+77
 	// Min Uint = 0
 	u1 := sdkmath.NewUint(0)
 	u2 := sdkmath.OneUint()
 
-	s.Require().Equal(sdkmath.Uint64(0), u1.Uint64())
-	s.Require().Equal(sdkmath.Uint64(1), u2.Uint64())
+	s.Require().Equal(uint64(0), u1.Uint64())
+	s.Require().Equal(uint64(1), u2.Uint64())
 
 	s.Require().Panics(func() { sdkmath.NewUintFromBigInt(big.NewInt(-5)) })
 	s.Require().Panics(func() { sdkmath.NewUintFromString("-1") })
@@ -44,8 +44,8 @@ func (s *sdkmath.UintTestSuite) TestUintPanics() {
 	// Overflow check
 	s.Require().True(u1.Add(u1).Equal(sdkmath.ZeroUint()))
 	s.Require().True(u1.Add(sdkmath.OneUint()).Equal(sdkmath.OneUint()))
-	s.Require().Equal(sdkmath.Uint64(0), u1.Uint64())
-	s.Require().Equal(sdkmath.Uint64(1), sdkmath.OneUint().Uint64())
+	s.Require().Equal(uint64(0), u1.Uint64())
+	s.Require().Equal(uint64(1), sdkmath.OneUint().Uint64())
 	s.Require().Panics(func() { u1.SubUint64(2) })
 	s.Require().True(u1.SubUint64(0).Equal(sdkmath.ZeroUint()))
 	s.Require().True(u2.Add(sdkmath.OneUint()).Sub(sdkmath.OneUint()).Equal(sdkmath.OneUint()))    // i2 == 1
@@ -59,7 +59,7 @@ func (s *sdkmath.UintTestSuite) TestUintPanics() {
 	uintmin := sdkmath.ZeroUint()
 
 	// divs by zero
-	s.Require().Panics(func() { sdkmath.OneUint().Mul(sdkmath.ZeroUint().SubUint64(sdkmath.Uint64(1))) })
+	s.Require().Panics(func() { sdkmath.OneUint().Mul(sdkmath.ZeroUint().SubUint64(uint64(1))) })
 	s.Require().Panics(func() { sdkmath.OneUint().QuoUint64(0) })
 	s.Require().Panics(func() { sdkmath.OneUint().Quo(sdkmath.ZeroUint()) })
 	s.Require().Panics(func() { sdkmath.ZeroUint().QuoUint64(0) })
@@ -71,8 +71,8 @@ func (s *sdkmath.UintTestSuite) TestUintPanics() {
 
 	s.Require().NotPanics(func() { sdkmath.Uint{}.BigInt() })
 
-	s.Require().Equal(sdkmath.Uint64(0), sdkmath.MinUint(sdkmath.ZeroUint(), sdkmath.OneUint()).Uint64())
-	s.Require().Equal(sdkmath.Uint64(1), sdkmath.MaxUint(sdkmath.ZeroUint(), sdkmath.OneUint()).Uint64())
+	s.Require().Equal(uint64(0), sdkmath.MinUint(sdkmath.ZeroUint(), sdkmath.OneUint()).Uint64())
+	s.Require().Equal(uint64(1), sdkmath.MaxUint(sdkmath.ZeroUint(), sdkmath.OneUint()).Uint64())
 
 	// comparison ops
 	s.Require().True(
@@ -94,12 +94,12 @@ func (s *sdkmath.UintTestSuite) TestUintPanics() {
 	s.Require().True(sdkmath.ZeroUint().LTE(sdkmath.OneUint()))
 }
 
-func (s *sdkmath.UintTestSuite) TestIsNil() {
+func (s *uintTestSuite) TestIsNil() {
 	s.Require().False(sdkmath.OneUint().IsNil())
 	s.Require().True(sdkmath.Uint{}.IsNil())
 }
 
-func (s *sdkmath.UintTestSuite) TestConvertToBigIntMutativeForUint() {
+func (s *uintTestSuite) TestConvertToBigIntMutativeForUint() {
 	r := big.NewInt(30)
 	i := sdkmath.NewUintFromBigInt(r)
 
@@ -119,7 +119,7 @@ func (s *sdkmath.UintTestSuite) TestConvertToBigIntMutativeForUint() {
 	s.Require().NotEqual(big.NewInt(50), i.BigInt())
 }
 
-func (s *sdkmath.UintTestSuite) TestArithUint() {
+func (s *uintTestSuite) TestArithUint() {
 	for d := 0; d < 1000; d++ {
 		n1 := uint64(rand.Uint32())
 		u1 := sdkmath.NewUint(n1)
@@ -165,7 +165,7 @@ func (s *sdkmath.UintTestSuite) TestArithUint() {
 	}
 }
 
-func (s *sdkmath.UintTestSuite) TestCompUint() {
+func (s *uintTestSuite) TestCompUint() {
 	for d := 0; d < 10000; d++ {
 		n1 := rand.Uint64()
 		i1 := sdkmath.NewUint(n1)
@@ -191,7 +191,7 @@ func (s *sdkmath.UintTestSuite) TestCompUint() {
 	}
 }
 
-func (s *sdkmath.UintTestSuite) TestImmutabilityAllUint() {
+func (s *uintTestSuite) TestImmutabilityAllUint() {
 	ops := []func(*sdkmath.Uint){
 		func(i *sdkmath.Uint) { _ = i.Add(sdkmath.NewUint(rand.Uint64())) },
 		func(i *sdkmath.Uint) { _ = i.Sub(sdkmath.NewUint(rand.Uint64() % i.Uint64())) },
@@ -231,7 +231,7 @@ func (s *sdkmath.UintTestSuite) TestImmutabilityAllUint() {
 	}
 }
 
-func (s *sdkmath.UintTestSuite) TestSafeSub() {
+func (s *uintTestSuite) TestSafeSub() {
 	testCases := []struct {
 		x, y     sdkmath.Uint
 		expected uint64
@@ -256,7 +256,7 @@ func (s *sdkmath.UintTestSuite) TestSafeSub() {
 	}
 }
 
-func (s *sdkmath.UintTestSuite) TestParseUint() {
+func (s *uintTestSuite) TestParseUint() {
 	type args struct {
 		s string
 	}
@@ -268,7 +268,7 @@ func (s *sdkmath.UintTestSuite) TestParseUint() {
 	}{
 		{"malformed", args{"malformed"}, sdkmath.Uint{}, true},
 		{"empty", args{""}, sdkmath.Uint{}, true},
-		{"positive", args{"50"}, sdkmath.NewUint(sdkmath.Uint64(50)), false},
+		{"positive", args{"50"}, sdkmath.NewUint(uint64(50)), false},
 		{"negative", args{"-1"}, sdkmath.Uint{}, true},
 		{"zero", args{"0"}, sdkmath.ZeroUint(), false},
 	}
@@ -283,7 +283,7 @@ func (s *sdkmath.UintTestSuite) TestParseUint() {
 	}
 }
 
-func (s *sdkmath.UintTestSuite) TestNewUintFromBigInt() {
+func (s *uintTestSuite) TestNewUintFromBigInt() {
 	r := big.NewInt(42)
 	i := sdkmath.NewUintFromBigInt(r)
 	s.Require().Equal(r, i.BigInt())
@@ -297,7 +297,7 @@ func randuint() sdkmath.Uint {
 	return sdkmath.NewUint(rand.Uint64())
 }
 
-func (s *sdkmath.UintTestSuite) TestRelativePow() {
+func (s *uintTestSuite) TestRelativePow() {
 	tests := []struct {
 		args []sdkmath.Uint
 		want sdkmath.Uint
@@ -331,7 +331,7 @@ func maxuint(i1, i2 uint64) uint64 {
 }
 
 func TestRoundTripMarshalToUint(t *testing.T) {
-	values := []sdkmath.Uint64{
+	values := []uint64{
 		0,
 		1,
 		1 << 10,

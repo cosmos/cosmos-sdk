@@ -272,6 +272,16 @@ func (i Int) AddRaw(i2 int64) Int {
 	return i.Add(NewInt(i2))
 }
 
+// SafeAdd adds Int from another and returns an error if overflow
+func (i Int) SafeAdd(i2 Int) (res Int, err error) {
+	res = Int{add(i.i, i2.i)}
+	// Check overflow
+	if res.i.BitLen() > MaxBitLen {
+		return Int{}, ErrIntOverflow
+	}
+	return res, nil
+}
+
 // Sub subtracts Int from another
 func (i Int) Sub(i2 Int) (res Int) {
 	res = Int{sub(i.i, i2.i)}
@@ -285,6 +295,16 @@ func (i Int) Sub(i2 Int) (res Int) {
 // SubRaw subtracts int64 from Int
 func (i Int) SubRaw(i2 int64) Int {
 	return i.Sub(NewInt(i2))
+}
+
+// SafeSub subtracts Int from another and returns an error if overflow or underflow
+func (i Int) SafeSub(i2 Int) (res Int, err error) {
+	res = Int{sub(i.i, i2.i)}
+	// Check overflow/underflow
+	if res.i.BitLen() > MaxBitLen {
+		return Int{}, ErrIntOverflow
+	}
+	return res, nil
 }
 
 // Mul multiples two Ints
@@ -306,6 +326,20 @@ func (i Int) MulRaw(i2 int64) Int {
 	return i.Mul(NewInt(i2))
 }
 
+// SafeMul multiples Int from another and returns an error if overflow
+func (i Int) SafeMul(i2 Int) (res Int, err error) {
+	// Check overflow
+	if i.i.BitLen()+i2.i.BitLen()-1 > MaxBitLen {
+		return Int{}, ErrIntOverflow
+	}
+	res = Int{mul(i.i, i2.i)}
+	// Check overflow if sign of both are same
+	if res.i.BitLen() > MaxBitLen {
+		return Int{}, ErrIntOverflow
+	}
+	return res, nil
+}
+
 // Quo divides Int with Int
 func (i Int) Quo(i2 Int) (res Int) {
 	// Check division-by-zero
@@ -320,6 +354,15 @@ func (i Int) QuoRaw(i2 int64) Int {
 	return i.Quo(NewInt(i2))
 }
 
+// SafeQuo divides Int with Int and returns an error if division by zero
+func (i Int) SafeQuo(i2 Int) (res Int, err error) {
+	// Check division-by-zero
+	if i2.i.Sign() == 0 {
+		return Int{}, ErrDivideByZero
+	}
+	return Int{div(i.i, i2.i)}, nil
+}
+
 // Mod returns remainder after dividing with Int
 func (i Int) Mod(i2 Int) Int {
 	if i2.Sign() == 0 {
@@ -331,6 +374,14 @@ func (i Int) Mod(i2 Int) Int {
 // ModRaw returns remainder after dividing with int64
 func (i Int) ModRaw(i2 int64) Int {
 	return i.Mod(NewInt(i2))
+}
+
+// SafeMod returns remainder after dividing with Int and returns an error if division by zero
+func (i Int) SafeMod(i2 Int) (res Int, err error) {
+	if i2.Sign() == 0 {
+		return Int{}, ErrDivideByZero
+	}
+	return Int{mod(i.i, i2.i)}, nil
 }
 
 // Neg negates Int

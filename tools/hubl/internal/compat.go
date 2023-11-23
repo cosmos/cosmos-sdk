@@ -136,16 +136,18 @@ func loadFileDescriptorsGRPCReflection(ctx context.Context, client *grpc.ClientC
 	return fdSet, nil
 }
 
-func processFileDescriptorsResponse(res *grpc_reflection_v1alpha.ServerReflectionResponse_FileDescriptorResponse, fdMap map[string]*descriptorpb.FileDescriptorProto) {
+func processFileDescriptorsResponse(res *grpc_reflection_v1alpha.ServerReflectionResponse_FileDescriptorResponse, fdMap map[string]*descriptorpb.FileDescriptorProto) error {
 	for _, bz := range res.FileDescriptorResponse.FileDescriptorProto {
 		fd := &descriptorpb.FileDescriptorProto{}
 		err := proto.Unmarshal(bz, fd)
 		if err != nil {
-			panic(err)
+			return fmt.Errorf("error unmarshalling file descriptor: %w", err)
 		}
 
 		fdMap[fd.GetName()] = fd
 	}
+
+	return nil
 }
 
 func missingFileDescriptors(fdMap map[string]*descriptorpb.FileDescriptorProto, cantFind map[string]bool) []string {
@@ -180,7 +182,7 @@ func addMissingFileDescriptors(ctx context.Context, client *grpc.ClientConn, fdM
 			}
 
 			if res, ok := in.MessageResponse.(*grpc_reflection_v1alpha.ServerReflectionResponse_FileDescriptorResponse); ok {
-				processFileDescriptorsResponse(res, fdMap)
+				_ = processFileDescriptorsResponse(res, fdMap)
 			}
 		}
 	}()

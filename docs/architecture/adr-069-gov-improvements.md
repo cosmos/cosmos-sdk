@@ -113,6 +113,7 @@ At the end of the voting period, if a proposal is voted as `SPAM`, it fails and 
 `SPAM` differs from the `No with Veto` vote as its threshold is dynamic.
 A proposal is marked as `SPAM` when the total of weighted votes for all options is lower than the amount of weighted vote on `SPAM`
 (`spam` > `option_one + option_two + option_three + option_four` = proposal marked as spam).
+This allows clear spam proposals to be marked as spam easily, even with low participation from validators.
 
 To avoid voters wrongfully voting down a proposal as `SPAM`, voters will be slashed `x`% (default 0%) of their voting stake if they voted `SPAM` on a proposal that wasn't a spam proposal. The parameter allows to incentivise voters to only vote `SPAM` on actual spam proposals and not use `SPAM` as a way to vote `No with Veto` with a different threshold.
 

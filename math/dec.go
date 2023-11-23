@@ -45,9 +45,6 @@ var (
 	smallestDec          = LegacySmallestDec()
 )
 
-// Decimal errors
-var ()
-
 // Set precision multipliers
 func init() {
 	precisionMultipliers = make([]*big.Int, LegacyPrecision+1)

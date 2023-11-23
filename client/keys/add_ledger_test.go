@@ -36,14 +36,9 @@ func Test_runAddCmdLedgerWithCustomCoinType(t *testing.T) {
 	config.SetBech32PrefixForValidator(bech32PrefixValAddr, bech32PrefixValPub)
 	config.SetBech32PrefixForConsensusNode(bech32PrefixConsAddr, bech32PrefixConsPub)
 
-	clientContext := client.Context{}
-	addressConfig := sdk.NewAddressConfig()
+	addressConfig := sdk.GetAddressConfig()
 	addressConfig.SetPurpose(44)
 	addressConfig.SetCoinType(330)
-
-	clientContext = clientContext.WithAddressConfig(*addressConfig)
-	cmd := AddKeyCommand(clientContext)
-	cmd.Flags().AddFlagSet(Commands().PersistentFlags())
 
 	// Prepare a keybase
 	kbHome := t.TempDir()
@@ -54,10 +49,13 @@ func Test_runAddCmdLedgerWithCustomCoinType(t *testing.T) {
 		WithCodec(cdc).
 		WithAddressCodec(addresscodec.NewBech32Codec("cosmos")).
 		WithValidatorAddressCodec(addresscodec.NewBech32Codec("cosmosvaloper")).
-		WithConsensusAddressCodec(addresscodec.NewBech32Codec("cosmosvalcons"))
+		WithConsensusAddressCodec(addresscodec.NewBech32Codec("cosmosvalcons")).
+		WithAddressConfig(*addressConfig)
 
 	ctx := context.WithValue(context.Background(), client.ClientContextKey, &clientCtx)
 
+	cmd := AddKeyCommand()
+	cmd.Flags().AddFlagSet(Commands().PersistentFlags())
 	cmd.SetArgs([]string{
 		"keyname1",
 		fmt.Sprintf("--%s=true", flags.FlagUseLedger),
@@ -95,32 +93,32 @@ func Test_runAddCmdLedgerWithCustomCoinType(t *testing.T) {
 
 	addressConfig.SetPurpose(44)
 	addressConfig.SetCoinType(330)
-	clientContext = clientContext.WithAddressConfig(*addressConfig)
+	clientCtx = clientCtx.WithAddressConfig(*addressConfig)
 
-	cmd = AddKeyCommand(clientContext)
+	cmd = AddKeyCommand()
 	config.SetBech32PrefixForAccount(sdk.Bech32PrefixAccAddr, sdk.Bech32PrefixAccPub)
 	config.SetBech32PrefixForValidator(sdk.Bech32PrefixValAddr, sdk.Bech32PrefixValPub)
 	config.SetBech32PrefixForConsensusNode(sdk.Bech32PrefixConsAddr, sdk.Bech32PrefixConsPub)
 }
 
 func Test_runAddCmdLedger(t *testing.T) {
-	clientContext := client.Context{}
-	addressConfig := sdk.NewAddressConfig()
-	clientContext = clientContext.WithAddressConfig(*addressConfig)
-
-	cmd := AddKeyCommand(clientContext)
+	cmd := AddKeyCommand()
 	cmd.Flags().AddFlagSet(Commands().PersistentFlags())
 
 	mockIn := testutil.ApplyMockIODiscardOutErr(cmd)
 	kbHome := t.TempDir()
 	cdc := moduletestutil.MakeTestEncodingConfig().Codec
 
+	addressConfig := sdk.GetAddressConfig()
+	addressConfig.SetCoinType(sdk.CoinType)
+
 	clientCtx := client.Context{}.
 		WithKeyringDir(kbHome).
 		WithCodec(cdc).
 		WithAddressCodec(addresscodec.NewBech32Codec("cosmos")).
 		WithValidatorAddressCodec(addresscodec.NewBech32Codec("cosmosvaloper")).
-		WithConsensusAddressCodec(addresscodec.NewBech32Codec("cosmosvalcons"))
+		WithConsensusAddressCodec(addresscodec.NewBech32Codec("cosmosvalcons")).
+		WithAddressConfig(*addressConfig)
 
 	ctx := context.WithValue(context.Background(), client.ClientContextKey, &clientCtx)
 
@@ -193,7 +191,7 @@ func Test_runAddCmdLedgerDryRun(t *testing.T) {
 			addressConfig := sdk.NewAddressConfig()
 			clientContext = clientContext.WithAddressConfig(*addressConfig)
 
-			cmd := AddKeyCommand(clientContext)
+			cmd := AddKeyCommand()
 			cmd.Flags().AddFlagSet(Commands().PersistentFlags())
 
 			kbHome := t.TempDir()

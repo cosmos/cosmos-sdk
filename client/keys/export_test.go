@@ -90,8 +90,7 @@ func Test_runExportCmd(t *testing.T) {
 			require.NoError(t, err)
 			t.Cleanup(cleanupKeys(t, kb, "keyname1"))
 
-			path := sdk.GetConfig().GetFullBIP44Path()
-			_, err = kb.NewAccount("keyname1", testdata.TestMnemonic, "", path, hd.Secp256k1)
+			_, err = kb.NewAccount("keyname1", testdata.TestMnemonic, "", sdk.GetAddressConfig().GetFullBIP44Path(), hd.Secp256k1)
 			require.NoError(t, err)
 
 			clientCtx := client.Context{}.

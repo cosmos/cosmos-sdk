@@ -2,7 +2,6 @@ package testutil
 
 import (
 	"fmt"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -14,7 +13,7 @@ func GenerateCoinKey(algo keyring.SignatureAlgo, cdc codec.Codec) (sdk.AccAddres
 	info, secret, err := keyring.NewInMemory(cdc).NewMnemonic(
 		"name",
 		keyring.English,
-		sdk.GetConfig().GetFullBIP44Path(),
+		sdk.NewAddressConfig().GetFullBIP44Path(),
 		keyring.DefaultBIP39Passphrase,
 		algo,
 	)
@@ -63,9 +62,9 @@ func GenerateSaveCoinKey(
 	// generate or recover a new account
 	if mnemonic != "" {
 		secret = mnemonic
-		record, err = keybase.NewAccount(keyName, mnemonic, keyring.DefaultBIP39Passphrase, sdk.GetConfig().GetFullBIP44Path(), algo)
+		record, err = keybase.NewAccount(keyName, mnemonic, keyring.DefaultBIP39Passphrase, sdk.NewAddressConfig().GetFullBIP44Path(), algo)
 	} else {
-		record, secret, err = keybase.NewMnemonic(keyName, keyring.English, sdk.GetConfig().GetFullBIP44Path(), keyring.DefaultBIP39Passphrase, algo)
+		record, secret, err = keybase.NewMnemonic(keyName, keyring.English, sdk.NewAddressConfig().GetFullBIP44Path(), keyring.DefaultBIP39Passphrase, algo)
 	}
 	if err != nil {
 		return sdk.AccAddress{}, "", err

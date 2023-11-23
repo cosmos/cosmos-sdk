@@ -2,7 +2,6 @@ package types
 
 import (
 	"context"
-	"fmt"
 	"sync"
 
 	"github.com/cosmos/cosmos-sdk/version"
@@ -190,11 +189,6 @@ func (config *Config) GetAddressVerifier() func([]byte) error {
 // Deprecated: This method is supported for backward compatibility only and will be removed in a future release. Use GetFullBIP44Path instead.
 func (config *Config) GetFullFundraiserPath() string {
 	return config.fullFundraiserPath
-}
-
-// GetFullBIP44Path returns the BIP44Prefix.
-func (config *Config) GetFullBIP44Path() string {
-	return fmt.Sprintf("m/%d'/%d'/0'/0/0", config.purpose, config.coinType)
 }
 
 func KeyringServiceName() string {

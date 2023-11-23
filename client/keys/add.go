@@ -41,7 +41,7 @@ const (
 )
 
 // AddKeyCommand defines a keys command to add a generated or recovered private key to keybase.
-func AddKeyCommand(ctx client.Context) *cobra.Command {
+func AddKeyCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "add <name>",
 		Short: "Add an encrypted private key (either newly generated or recovered), encrypt it, and save to <name> file",
@@ -79,7 +79,7 @@ Example:
 	f.Bool(flagNoBackup, false, "Don't print out seed phrase (if others are watching the terminal)")
 	f.Bool(flags.FlagDryRun, false, "Perform action, but don't add key to local keystore")
 	f.String(flagHDPath, "", "Manual HD Path derivation (overrides BIP44 config)")
-	f.Uint32(flagCoinType, ctx.AddressConfigs.GetCoinType(), "coin type number for HD derivation")
+	f.Uint32(flagCoinType, sdk.GetAddressConfig().GetCoinType(), "coin type number for HD derivation")
 	f.Uint32(flagAccount, 0, "Account number for HD derivation (less than equal 2147483647)")
 	f.Uint32(flagIndex, 0, "Address index number for HD derivation (less than equal 2147483647)")
 	f.String(flags.FlagKeyType, string(hd.Secp256k1Type), "Key signing algorithm to generate keys for")

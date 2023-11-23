@@ -44,7 +44,7 @@ The pass backend requires GnuPG: https://gnupg.org/
 
 	cmd.AddCommand(
 		MnemonicKeyCommand(),
-		AddKeyCommand(clientContext),
+		AddKeyCommand(),
 		ExportKeyCommand(),
 		ImportKeyCommand(),
 		ImportKeyHexCommand(),

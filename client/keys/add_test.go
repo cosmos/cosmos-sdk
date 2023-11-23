@@ -25,7 +25,7 @@ func Test_runAddCmdBasic(t *testing.T) {
 	clientContext := client.Context{}
 	addressConfig := sdk.NewAddressConfig()
 	clientContext = clientContext.WithAddressConfig(*addressConfig)
-	cmd := AddKeyCommand(clientContext)
+	cmd := AddKeyCommand()
 	cmd.Flags().AddFlagSet(Commands().PersistentFlags())
 
 	mockIn := testutil.ApplyMockIODiscardOutErr(cmd)
@@ -218,7 +218,7 @@ func Test_runAddCmdDryRun(t *testing.T) {
 			clientContext := client.Context{}
 			addressConfig := sdk.NewAddressConfig()
 			clientContext = clientContext.WithAddressConfig(*addressConfig)
-			cmd := AddKeyCommand(clientContext)
+			cmd := AddKeyCommand()
 			cmd.Flags().AddFlagSet(Commands().PersistentFlags())
 
 			kbHome := t.TempDir()
@@ -236,7 +236,7 @@ func Test_runAddCmdDryRun(t *testing.T) {
 				WithConsensusAddressCodec(addresscodec.NewBech32Codec("cosmosvalcons"))
 			ctx := context.WithValue(context.Background(), client.ClientContextKey, &clientCtx)
 
-			path := sdk.GetConfig().GetFullBIP44Path()
+			path := sdk.GetAddressConfig().GetFullBIP44Path()
 			_, err = kb.NewAccount("subkey", testdata.TestMnemonic, "", path, hd.Secp256k1)
 			require.NoError(t, err)
 
@@ -270,7 +270,7 @@ func TestAddRecoverFileBackend(t *testing.T) {
 	clientContext := client.Context{}
 	addressConfig := sdk.NewAddressConfig()
 	clientContext.WithAddressConfig(*addressConfig)
-	cmd := AddKeyCommand(clientContext)
+	cmd := AddKeyCommand()
 	cmd.Flags().AddFlagSet(Commands().PersistentFlags())
 	cdc := moduletestutil.MakeTestEncodingConfig().Codec
 

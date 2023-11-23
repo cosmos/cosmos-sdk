@@ -755,3 +755,8 @@ func (config *AddressConfig) SetPurpose(purpose uint32) {
 func (config *AddressConfig) GetPurpose() uint32 {
 	return config.purpose
 }
+
+// GetFullBIP44Path returns the BIP44Prefix.
+func (config *AddressConfig) GetFullBIP44Path() string {
+	return fmt.Sprintf("m/%d'/%d'/0'/0/0", config.purpose, config.coinType)
+}

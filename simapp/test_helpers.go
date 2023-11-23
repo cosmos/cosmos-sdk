@@ -216,12 +216,6 @@ func initAccountWithCoins(app *SimApp, ctx sdk.Context, addr sdk.AccAddress, coi
 	}
 }
 
-// CheckBalance checks the balance of an account.
-func CheckBalance(t *testing.T, app *SimApp, addr sdk.AccAddress, balances sdk.Coins) {
-	ctxCheck := app.BaseApp.NewContext(true, tmproto.Header{})
-	require.True(t, balances.IsEqual(app.BankKeeper.GetAllBalances(ctxCheck, addr)))
-}
-
 // NewTestNetworkFixture returns a new simapp AppConstructor for network simulation tests
 func NewTestNetworkFixture() network.TestFixture {
 	dir, err := os.MkdirTemp("", "simapp")

@@ -1,4 +1,4 @@
-package math
+package math_test
 
 import (
 	"fmt"
@@ -9,6 +9,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/suite"
+
+	sdkmath "cosmossdk.io/math"
 )
 
 type uintTestSuite struct {
@@ -16,90 +18,90 @@ type uintTestSuite struct {
 }
 
 func TestUnitTestSuite(t *testing.T) {
-	suite.Run(t, new(uintTestSuite))
+	suite.Run(t, new(sdkmath.UintTestSuite))
 }
 
-func (s *uintTestSuite) SetupSuite() {
+func (s *sdkmath.UintTestSuite) SetupSuite() {
 	s.T().Parallel()
 }
 
-func (s *uintTestSuite) TestUintPanics() {
+func (s *sdkmath.UintTestSuite) TestUintPanics() {
 	// Max Uint = 1.15e+77
 	// Min Uint = 0
-	u1 := NewUint(0)
-	u2 := OneUint()
+	u1 := sdkmath.NewUint(0)
+	u2 := sdkmath.OneUint()
 
-	s.Require().Equal(uint64(0), u1.Uint64())
-	s.Require().Equal(uint64(1), u2.Uint64())
+	s.Require().Equal(sdkmath.Uint64(0), u1.Uint64())
+	s.Require().Equal(sdkmath.Uint64(1), u2.Uint64())
 
-	s.Require().Panics(func() { NewUintFromBigInt(big.NewInt(-5)) })
-	s.Require().Panics(func() { NewUintFromString("-1") })
+	s.Require().Panics(func() { sdkmath.NewUintFromBigInt(big.NewInt(-5)) })
+	s.Require().Panics(func() { sdkmath.NewUintFromString("-1") })
 	s.Require().NotPanics(func() {
-		s.Require().True(NewUintFromString("0").Equal(ZeroUint()))
-		s.Require().True(NewUintFromString("5").Equal(NewUint(5)))
+		s.Require().True(sdkmath.NewUintFromString("0").Equal(sdkmath.ZeroUint()))
+		s.Require().True(sdkmath.NewUintFromString("5").Equal(sdkmath.NewUint(5)))
 	})
 
 	// Overflow check
-	s.Require().True(u1.Add(u1).Equal(ZeroUint()))
-	s.Require().True(u1.Add(OneUint()).Equal(OneUint()))
-	s.Require().Equal(uint64(0), u1.Uint64())
-	s.Require().Equal(uint64(1), OneUint().Uint64())
+	s.Require().True(u1.Add(u1).Equal(sdkmath.ZeroUint()))
+	s.Require().True(u1.Add(sdkmath.OneUint()).Equal(sdkmath.OneUint()))
+	s.Require().Equal(sdkmath.Uint64(0), u1.Uint64())
+	s.Require().Equal(sdkmath.Uint64(1), sdkmath.OneUint().Uint64())
 	s.Require().Panics(func() { u1.SubUint64(2) })
-	s.Require().True(u1.SubUint64(0).Equal(ZeroUint()))
-	s.Require().True(u2.Add(OneUint()).Sub(OneUint()).Equal(OneUint()))    // i2 == 1
-	s.Require().True(u2.Add(OneUint()).Mul(NewUint(5)).Equal(NewUint(10))) // i2 == 10
-	s.Require().True(NewUint(7).Quo(NewUint(2)).Equal(NewUint(3)))
-	s.Require().True(NewUint(0).Quo(NewUint(2)).Equal(ZeroUint()))
-	s.Require().True(NewUint(5).MulUint64(4).Equal(NewUint(20)))
-	s.Require().True(NewUint(5).MulUint64(0).Equal(ZeroUint()))
+	s.Require().True(u1.SubUint64(0).Equal(sdkmath.ZeroUint()))
+	s.Require().True(u2.Add(sdkmath.OneUint()).Sub(sdkmath.OneUint()).Equal(sdkmath.OneUint()))    // i2 == 1
+	s.Require().True(u2.Add(sdkmath.OneUint()).Mul(sdkmath.NewUint(5)).Equal(sdkmath.NewUint(10))) // i2 == 10
+	s.Require().True(sdkmath.NewUint(7).Quo(sdkmath.NewUint(2)).Equal(sdkmath.NewUint(3)))
+	s.Require().True(sdkmath.NewUint(0).Quo(sdkmath.NewUint(2)).Equal(sdkmath.ZeroUint()))
+	s.Require().True(sdkmath.NewUint(5).MulUint64(4).Equal(sdkmath.NewUint(20)))
+	s.Require().True(sdkmath.NewUint(5).MulUint64(0).Equal(sdkmath.ZeroUint()))
 
-	uintmax := NewUintFromBigInt(new(big.Int).Sub(new(big.Int).Exp(big.NewInt(2), big.NewInt(256), nil), big.NewInt(1)))
-	uintmin := ZeroUint()
+	uintmax := sdkmath.NewUintFromBigInt(new(big.Int).Sub(new(big.Int).Exp(big.NewInt(2), big.NewInt(256), nil), big.NewInt(1)))
+	uintmin := sdkmath.ZeroUint()
 
 	// divs by zero
-	s.Require().Panics(func() { OneUint().Mul(ZeroUint().SubUint64(uint64(1))) })
-	s.Require().Panics(func() { OneUint().QuoUint64(0) })
-	s.Require().Panics(func() { OneUint().Quo(ZeroUint()) })
-	s.Require().Panics(func() { ZeroUint().QuoUint64(0) })
-	s.Require().Panics(func() { OneUint().Quo(ZeroUint().Sub(OneUint())) })
-	s.Require().Panics(func() { uintmax.Add(OneUint()) })
+	s.Require().Panics(func() { sdkmath.OneUint().Mul(sdkmath.ZeroUint().SubUint64(sdkmath.Uint64(1))) })
+	s.Require().Panics(func() { sdkmath.OneUint().QuoUint64(0) })
+	s.Require().Panics(func() { sdkmath.OneUint().Quo(sdkmath.ZeroUint()) })
+	s.Require().Panics(func() { sdkmath.ZeroUint().QuoUint64(0) })
+	s.Require().Panics(func() { sdkmath.OneUint().Quo(sdkmath.ZeroUint().Sub(sdkmath.OneUint())) })
+	s.Require().Panics(func() { uintmax.Add(sdkmath.OneUint()) })
 	s.Require().Panics(func() { uintmax.Incr() })
-	s.Require().Panics(func() { uintmin.Sub(OneUint()) })
+	s.Require().Panics(func() { uintmin.Sub(sdkmath.OneUint()) })
 	s.Require().Panics(func() { uintmin.Decr() })
 
-	s.Require().NotPanics(func() { Uint{}.BigInt() })
+	s.Require().NotPanics(func() { sdkmath.Uint{}.BigInt() })
 
-	s.Require().Equal(uint64(0), MinUint(ZeroUint(), OneUint()).Uint64())
-	s.Require().Equal(uint64(1), MaxUint(ZeroUint(), OneUint()).Uint64())
+	s.Require().Equal(sdkmath.Uint64(0), sdkmath.MinUint(sdkmath.ZeroUint(), sdkmath.OneUint()).Uint64())
+	s.Require().Equal(sdkmath.Uint64(1), sdkmath.MaxUint(sdkmath.ZeroUint(), sdkmath.OneUint()).Uint64())
 
 	// comparison ops
 	s.Require().True(
-		OneUint().GT(ZeroUint()),
+		sdkmath.OneUint().GT(sdkmath.ZeroUint()),
 	)
 	s.Require().False(
-		OneUint().LT(ZeroUint()),
+		sdkmath.OneUint().LT(sdkmath.ZeroUint()),
 	)
 	s.Require().True(
-		OneUint().GTE(ZeroUint()),
+		sdkmath.OneUint().GTE(sdkmath.ZeroUint()),
 	)
 	s.Require().False(
-		OneUint().LTE(ZeroUint()),
+		sdkmath.OneUint().LTE(sdkmath.ZeroUint()),
 	)
 
-	s.Require().False(ZeroUint().GT(OneUint()))
-	s.Require().True(ZeroUint().LT(OneUint()))
-	s.Require().False(ZeroUint().GTE(OneUint()))
-	s.Require().True(ZeroUint().LTE(OneUint()))
+	s.Require().False(sdkmath.ZeroUint().GT(sdkmath.OneUint()))
+	s.Require().True(sdkmath.ZeroUint().LT(sdkmath.OneUint()))
+	s.Require().False(sdkmath.ZeroUint().GTE(sdkmath.OneUint()))
+	s.Require().True(sdkmath.ZeroUint().LTE(sdkmath.OneUint()))
 }
 
-func (s *uintTestSuite) TestIsNil() {
-	s.Require().False(OneUint().IsNil())
-	s.Require().True(Uint{}.IsNil())
+func (s *sdkmath.UintTestSuite) TestIsNil() {
+	s.Require().False(sdkmath.OneUint().IsNil())
+	s.Require().True(sdkmath.Uint{}.IsNil())
 }
 
-func (s *uintTestSuite) TestConvertToBigIntMutativeForUint() {
+func (s *sdkmath.UintTestSuite) TestConvertToBigIntMutativeForUint() {
 	r := big.NewInt(30)
-	i := NewUintFromBigInt(r)
+	i := sdkmath.NewUintFromBigInt(r)
 
 	// Compare value of BigInt & BigIntMut
 	s.Require().Equal(i.BigInt(), i.BigIntMut())
@@ -117,15 +119,15 @@ func (s *uintTestSuite) TestConvertToBigIntMutativeForUint() {
 	s.Require().NotEqual(big.NewInt(50), i.BigInt())
 }
 
-func (s *uintTestSuite) TestArithUint() {
+func (s *sdkmath.UintTestSuite) TestArithUint() {
 	for d := 0; d < 1000; d++ {
 		n1 := uint64(rand.Uint32())
-		u1 := NewUint(n1)
+		u1 := sdkmath.NewUint(n1)
 		n2 := uint64(rand.Uint32())
-		u2 := NewUint(n2)
+		u2 := sdkmath.NewUint(n2)
 
 		cases := []struct {
-			ures Uint
+			ures sdkmath.Uint
 			nres uint64
 		}{
 			{u1.Add(u2), n1 + n2},
@@ -134,8 +136,8 @@ func (s *uintTestSuite) TestArithUint() {
 			{u1.AddUint64(n2), n1 + n2},
 			{u1.MulUint64(n2), n1 * n2},
 			{u1.QuoUint64(n2), n1 / n2},
-			{MinUint(u1, u2), minuint(n1, n2)},
-			{MaxUint(u1, u2), maxuint(n1, n2)},
+			{sdkmath.MinUint(u1, u2), minuint(n1, n2)},
+			{sdkmath.MaxUint(u1, u2), maxuint(n1, n2)},
 			{u1.Incr(), n1 + 1},
 		}
 
@@ -145,11 +147,11 @@ func (s *uintTestSuite) TestArithUint() {
 
 		if n2 > n1 {
 			n1, n2 = n2, n1
-			u1, u2 = NewUint(n1), NewUint(n2)
+			u1, u2 = sdkmath.NewUint(n1), sdkmath.NewUint(n2)
 		}
 
 		subs := []struct {
-			ures Uint
+			ures sdkmath.Uint
 			nres uint64
 		}{
 			{u1.Sub(u2), n1 - n2},
@@ -163,12 +165,12 @@ func (s *uintTestSuite) TestArithUint() {
 	}
 }
 
-func (s *uintTestSuite) TestCompUint() {
+func (s *sdkmath.UintTestSuite) TestCompUint() {
 	for d := 0; d < 10000; d++ {
 		n1 := rand.Uint64()
-		i1 := NewUint(n1)
+		i1 := sdkmath.NewUint(n1)
 		n2 := rand.Uint64()
-		i2 := NewUint(n2)
+		i2 := sdkmath.NewUint(n2)
 
 		cases := []struct {
 			ires bool
@@ -189,25 +191,25 @@ func (s *uintTestSuite) TestCompUint() {
 	}
 }
 
-func (s *uintTestSuite) TestImmutabilityAllUint() {
-	ops := []func(*Uint){
-		func(i *Uint) { _ = i.Add(NewUint(rand.Uint64())) },
-		func(i *Uint) { _ = i.Sub(NewUint(rand.Uint64() % i.Uint64())) },
-		func(i *Uint) { _ = i.Mul(randuint()) },
-		func(i *Uint) { _ = i.Quo(randuint()) },
-		func(i *Uint) { _ = i.AddUint64(rand.Uint64()) },
-		func(i *Uint) { _ = i.SubUint64(rand.Uint64() % i.Uint64()) },
-		func(i *Uint) { _ = i.MulUint64(rand.Uint64()) },
-		func(i *Uint) { _ = i.QuoUint64(rand.Uint64()) },
-		func(i *Uint) { _ = i.IsZero() },
-		func(i *Uint) { _ = i.Equal(randuint()) },
-		func(i *Uint) { _ = i.GT(randuint()) },
-		func(i *Uint) { _ = i.GTE(randuint()) },
-		func(i *Uint) { _ = i.LT(randuint()) },
-		func(i *Uint) { _ = i.LTE(randuint()) },
-		func(i *Uint) { _ = i.String() },
-		func(i *Uint) { _ = i.Incr() },
-		func(i *Uint) {
+func (s *sdkmath.UintTestSuite) TestImmutabilityAllUint() {
+	ops := []func(*sdkmath.Uint){
+		func(i *sdkmath.Uint) { _ = i.Add(sdkmath.NewUint(rand.Uint64())) },
+		func(i *sdkmath.Uint) { _ = i.Sub(sdkmath.NewUint(rand.Uint64() % i.Uint64())) },
+		func(i *sdkmath.Uint) { _ = i.Mul(randuint()) },
+		func(i *sdkmath.Uint) { _ = i.Quo(randuint()) },
+		func(i *sdkmath.Uint) { _ = i.AddUint64(rand.Uint64()) },
+		func(i *sdkmath.Uint) { _ = i.SubUint64(rand.Uint64() % i.Uint64()) },
+		func(i *sdkmath.Uint) { _ = i.MulUint64(rand.Uint64()) },
+		func(i *sdkmath.Uint) { _ = i.QuoUint64(rand.Uint64()) },
+		func(i *sdkmath.Uint) { _ = i.IsZero() },
+		func(i *sdkmath.Uint) { _ = i.Equal(randuint()) },
+		func(i *sdkmath.Uint) { _ = i.GT(randuint()) },
+		func(i *sdkmath.Uint) { _ = i.GTE(randuint()) },
+		func(i *sdkmath.Uint) { _ = i.LT(randuint()) },
+		func(i *sdkmath.Uint) { _ = i.LTE(randuint()) },
+		func(i *sdkmath.Uint) { _ = i.String() },
+		func(i *sdkmath.Uint) { _ = i.Incr() },
+		func(i *sdkmath.Uint) {
 			if i.IsZero() {
 				return
 			}
@@ -218,27 +220,27 @@ func (s *uintTestSuite) TestImmutabilityAllUint() {
 
 	for i := 0; i < 1000; i++ {
 		n := rand.Uint64()
-		ni := NewUint(n)
+		ni := sdkmath.NewUint(n)
 
 		for opnum, op := range ops {
 			op(&ni)
 
 			s.Require().Equal(n, ni.Uint64(), "Uint is modified by operation. #%d", opnum)
-			s.Require().Equal(NewUint(n), ni, "Uint is modified by operation. #%d", opnum)
+			s.Require().Equal(sdkmath.NewUint(n), ni, "Uint is modified by operation. #%d", opnum)
 		}
 	}
 }
 
-func (s *uintTestSuite) TestSafeSub() {
+func (s *sdkmath.UintTestSuite) TestSafeSub() {
 	testCases := []struct {
-		x, y     Uint
+		x, y     sdkmath.Uint
 		expected uint64
 		panic    bool
 	}{
-		{NewUint(0), NewUint(0), 0, false},
-		{NewUint(10), NewUint(5), 5, false},
-		{NewUint(5), NewUint(10), 5, true},
-		{NewUint(math.MaxUint64), NewUint(0), math.MaxUint64, false},
+		{sdkmath.NewUint(0), sdkmath.NewUint(0), 0, false},
+		{sdkmath.NewUint(10), sdkmath.NewUint(5), 5, false},
+		{sdkmath.NewUint(5), sdkmath.NewUint(10), 5, true},
+		{sdkmath.NewUint(math.MaxUint64), sdkmath.NewUint(0), math.MaxUint64, false},
 	}
 
 	for i, tc := range testCases {
@@ -254,24 +256,24 @@ func (s *uintTestSuite) TestSafeSub() {
 	}
 }
 
-func (s *uintTestSuite) TestParseUint() {
+func (s *sdkmath.UintTestSuite) TestParseUint() {
 	type args struct {
 		s string
 	}
 	tests := []struct {
 		name    string
 		args    args
-		want    Uint
+		want    sdkmath.Uint
 		wantErr bool
 	}{
-		{"malformed", args{"malformed"}, Uint{}, true},
-		{"empty", args{""}, Uint{}, true},
-		{"positive", args{"50"}, NewUint(uint64(50)), false},
-		{"negative", args{"-1"}, Uint{}, true},
-		{"zero", args{"0"}, ZeroUint(), false},
+		{"malformed", args{"malformed"}, sdkmath.Uint{}, true},
+		{"empty", args{""}, sdkmath.Uint{}, true},
+		{"positive", args{"50"}, sdkmath.NewUint(sdkmath.Uint64(50)), false},
+		{"negative", args{"-1"}, sdkmath.Uint{}, true},
+		{"zero", args{"0"}, sdkmath.ZeroUint(), false},
 	}
 	for _, tt := range tests {
-		got, err := ParseUint(tt.args.s)
+		got, err := sdkmath.ParseUint(tt.args.s)
 		if tt.wantErr {
 			s.Require().Error(err)
 			continue
@@ -281,9 +283,9 @@ func (s *uintTestSuite) TestParseUint() {
 	}
 }
 
-func (s *uintTestSuite) TestNewUintFromBigInt() {
+func (s *sdkmath.UintTestSuite) TestNewUintFromBigInt() {
 	r := big.NewInt(42)
-	i := NewUintFromBigInt(r)
+	i := sdkmath.NewUintFromBigInt(r)
 	s.Require().Equal(r, i.BigInt())
 
 	// modify r and ensure i doesn't change
@@ -291,25 +293,25 @@ func (s *uintTestSuite) TestNewUintFromBigInt() {
 	s.Require().NotEqual(r, i.BigInt())
 }
 
-func randuint() Uint {
-	return NewUint(rand.Uint64())
+func randuint() sdkmath.Uint {
+	return sdkmath.NewUint(rand.Uint64())
 }
 
-func (s *uintTestSuite) TestRelativePow() {
+func (s *sdkmath.UintTestSuite) TestRelativePow() {
 	tests := []struct {
-		args []Uint
-		want Uint
+		args []sdkmath.Uint
+		want sdkmath.Uint
 	}{
-		{[]Uint{ZeroUint(), ZeroUint(), OneUint()}, OneUint()},
-		{[]Uint{ZeroUint(), ZeroUint(), NewUint(10)}, NewUint(1)},
-		{[]Uint{ZeroUint(), OneUint(), NewUint(10)}, ZeroUint()},
-		{[]Uint{NewUint(10), NewUint(2), OneUint()}, NewUint(100)},
-		{[]Uint{NewUint(210), NewUint(2), NewUint(100)}, NewUint(441)},
-		{[]Uint{NewUint(2100), NewUint(2), NewUint(1000)}, NewUint(4410)},
-		{[]Uint{NewUint(1000000001547125958), NewUint(600), NewUint(1000000000000000000)}, NewUint(1000000928276004850)},
+		{[]sdkmath.Uint{sdkmath.ZeroUint(), sdkmath.ZeroUint(), sdkmath.OneUint()}, sdkmath.OneUint()},
+		{[]sdkmath.Uint{sdkmath.ZeroUint(), sdkmath.ZeroUint(), sdkmath.NewUint(10)}, sdkmath.NewUint(1)},
+		{[]sdkmath.Uint{sdkmath.ZeroUint(), sdkmath.OneUint(), sdkmath.NewUint(10)}, sdkmath.ZeroUint()},
+		{[]sdkmath.Uint{sdkmath.NewUint(10), sdkmath.NewUint(2), sdkmath.OneUint()}, sdkmath.NewUint(100)},
+		{[]sdkmath.Uint{sdkmath.NewUint(210), sdkmath.NewUint(2), sdkmath.NewUint(100)}, sdkmath.NewUint(441)},
+		{[]sdkmath.Uint{sdkmath.NewUint(2100), sdkmath.NewUint(2), sdkmath.NewUint(1000)}, sdkmath.NewUint(4410)},
+		{[]sdkmath.Uint{sdkmath.NewUint(1000000001547125958), sdkmath.NewUint(600), sdkmath.NewUint(1000000000000000000)}, sdkmath.NewUint(1000000928276004850)},
 	}
 	for i, tc := range tests {
-		res := RelativePow(tc.args[0], tc.args[1], tc.args[2])
+		res := sdkmath.RelativePow(tc.args[0], tc.args[1], tc.args[2])
 		s.Require().Equal(tc.want, res, "unexpected result for test case %d, input: %v, got: %v", i, tc.args, res)
 	}
 }
@@ -329,7 +331,7 @@ func maxuint(i1, i2 uint64) uint64 {
 }
 
 func TestRoundTripMarshalToUint(t *testing.T) {
-	values := []uint64{
+	values := []sdkmath.Uint64{
 		0,
 		1,
 		1 << 10,
@@ -346,12 +348,12 @@ func TestRoundTripMarshalToUint(t *testing.T) {
 			t.Parallel()
 
 			var scratch [20]byte
-			uv := NewUint(value)
+			uv := sdkmath.NewUint(value)
 			n, err := uv.MarshalTo(scratch[:])
 			if err != nil {
 				t.Fatal(err)
 			}
-			rt := new(Uint)
+			rt := new(sdkmath.Uint)
 			if err := rt.Unmarshal(scratch[:n]); err != nil {
 				t.Fatal(err)
 			}
@@ -369,7 +371,7 @@ func TestWeakUnmarshalNegativeSign(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	ui := new(Uint)
+	ui := new(sdkmath.Uint)
 	err = ui.Unmarshal(blob)
 	if err == nil {
 		t.Fatal("Failed to catch the negative value")
@@ -388,7 +390,7 @@ func TestWeakUnmarshalOverflow(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	ui := new(Uint)
+	ui := new(sdkmath.Uint)
 	err = ui.Unmarshal(blob)
 	if err == nil {
 		t.Fatal("Failed to catch the overflowed value")

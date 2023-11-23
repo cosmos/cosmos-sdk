@@ -1,4 +1,4 @@
-package math
+package math_test
 
 import (
 	"bytes"
@@ -12,6 +12,8 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"sigs.k8s.io/yaml"
+
+	"cosmossdk.io/math"
 )
 
 type decimalTestSuite struct {
@@ -371,13 +373,13 @@ func (s *decimalTestSuite) TestStringOverflow() {
 func (s *decimalTestSuite) TestDecMulInt() {
 	tests := []struct {
 		sdkDec LegacyDec
-		sdkInt Int
+		sdkInt math.Int
 		want   LegacyDec
 	}{
-		{LegacyNewDec(10), NewInt(2), LegacyNewDec(20)},
-		{LegacyNewDec(1000000), NewInt(100), LegacyNewDec(100000000)},
-		{LegacyNewDecWithPrec(1, 1), NewInt(10), LegacyNewDec(1)},
-		{LegacyNewDecWithPrec(1, 5), NewInt(20), LegacyNewDecWithPrec(2, 4)},
+		{LegacyNewDec(10), math.NewInt(2), LegacyNewDec(20)},
+		{LegacyNewDec(1000000), math.NewInt(100), LegacyNewDec(100000000)},
+		{LegacyNewDecWithPrec(1, 1), math.NewInt(10), LegacyNewDec(1)},
+		{LegacyNewDecWithPrec(1, 5), math.NewInt(20), LegacyNewDecWithPrec(2, 4)},
 	}
 	for i, tc := range tests {
 		got := tc.sdkDec.MulInt(tc.sdkInt)
@@ -420,13 +422,13 @@ func (s *decimalTestSuite) TestPower() {
 		power    uint64
 		expected LegacyDec
 	}{
-		{LegacyNewDec(100), 0, LegacyOneDec()},                                             // 10 ^ (0) => 1.0
-		{LegacyOneDec(), 10, LegacyOneDec()},                                               // 1.0 ^ (10) => 1.0
-		{LegacyNewDecWithPrec(5, 1), 2, LegacyNewDecWithPrec(25, 2)},                       // 0.5 ^ 2 => 0.25
-		{LegacyNewDecWithPrec(2, 1), 2, LegacyNewDecWithPrec(4, 2)},                        // 0.2 ^ 2 => 0.04
-		{LegacyNewDecFromInt(NewInt(3)), 3, LegacyNewDecFromInt(NewInt(27))},               // 3 ^ 3 => 27
-		{LegacyNewDecFromInt(NewInt(-3)), 4, LegacyNewDecFromInt(NewInt(81))},              // -3 ^ 4 = 81
-		{LegacyNewDecWithPrec(1414213562373095049, 18), 2, LegacyNewDecFromInt(NewInt(2))}, // 1.414213562373095049 ^ 2 = 2
+		{LegacyNewDec(100), 0, LegacyOneDec()},                                                  // 10 ^ (0) => 1.0
+		{LegacyOneDec(), 10, LegacyOneDec()},                                                    // 1.0 ^ (10) => 1.0
+		{LegacyNewDecWithPrec(5, 1), 2, LegacyNewDecWithPrec(25, 2)},                            // 0.5 ^ 2 => 0.25
+		{LegacyNewDecWithPrec(2, 1), 2, LegacyNewDecWithPrec(4, 2)},                             // 0.2 ^ 2 => 0.04
+		{LegacyNewDecFromInt(math.NewInt(3)), 3, LegacyNewDecFromInt(math.NewInt(27))},          // 3 ^ 3 => 27
+		{LegacyNewDecFromInt(math.NewInt(-3)), 4, LegacyNewDecFromInt(math.NewInt(81))},         // -3 ^ 4 = 81
+		{LegacyNewDecWithPrec(1414213562373095049, 18), 2, LegacyNewDecFromInt(math.NewInt(2))}, // 1.414213562373095049 ^ 2 = 2
 	}
 
 	for i, tc := range testCases {
@@ -450,9 +452,9 @@ func (s *decimalTestSuite) TestApproxRoot() {
 		{LegacyOneDec(), 10, LegacyOneDec()},                                                       // 1.0 ^ (0.1) => 1.0
 		{LegacyNewDecWithPrec(25, 2), 2, LegacyNewDecWithPrec(5, 1)},                               // 0.25 ^ (0.5) => 0.5
 		{LegacyNewDecWithPrec(4, 2), 2, LegacyNewDecWithPrec(2, 1)},                                // 0.04 ^ (0.5) => 0.2
-		{LegacyNewDecFromInt(NewInt(27)), 3, LegacyNewDecFromInt(NewInt(3))},                       // 27 ^ (1/3) => 3
-		{LegacyNewDecFromInt(NewInt(-81)), 4, LegacyNewDecFromInt(NewInt(-3))},                     // -81 ^ (0.25) => -3
-		{LegacyNewDecFromInt(NewInt(2)), 2, LegacyNewDecWithPrec(1414213562373095049, 18)},         // 2 ^ (0.5) => 1.414213562373095049
+		{LegacyNewDecFromInt(math.NewInt(27)), 3, LegacyNewDecFromInt(math.NewInt(3))},             // 27 ^ (1/3) => 3
+		{LegacyNewDecFromInt(math.NewInt(-81)), 4, LegacyNewDecFromInt(math.NewInt(-3))},           // -81 ^ (0.25) => -3
+		{LegacyNewDecFromInt(math.NewInt(2)), 2, LegacyNewDecWithPrec(1414213562373095049, 18)},    // 2 ^ (0.5) => 1.414213562373095049
 		{LegacyNewDecWithPrec(1005, 3), 31536000, LegacyMustNewDecFromStr("1.000000000158153904")}, // 1.005 ^ (1/31536000) ≈ 1.00000000016
 		{LegacySmallestDec(), 2, LegacyNewDecWithPrec(1, 9)},                                       // 1e-18 ^ (0.5) => 1e-9
 		{LegacySmallestDec(), 3, LegacyMustNewDecFromStr("0.000000999999999997")},                  // 1e-18 ^ (1/3) => 1e-6
@@ -479,8 +481,8 @@ func (s *decimalTestSuite) TestApproxSqrt() {
 		{LegacyOneDec(), LegacyOneDec()},                                 // 1.0 => 1.0
 		{LegacyNewDecWithPrec(25, 2), LegacyNewDecWithPrec(5, 1)},        // 0.25 => 0.5
 		{LegacyNewDecWithPrec(4, 2), LegacyNewDecWithPrec(2, 1)},         // 0.09 => 0.3
-		{LegacyNewDec(9), LegacyNewDecFromInt(NewInt(3))},                // 9 => 3
-		{LegacyNewDec(-9), LegacyNewDecFromInt(NewInt(-3))},              // -9 => -3
+		{LegacyNewDec(9), LegacyNewDecFromInt(math.NewInt(3))},           // 9 => 3
+		{LegacyNewDec(-9), LegacyNewDecFromInt(math.NewInt(-3))},         // -9 => -3
 		{LegacyNewDec(2), LegacyNewDecWithPrec(1414213562373095049, 18)}, // 2 => 1.414213562373095049
 		{ // 2^127 - 1 => 13043817825332782212.3495718062525083688 which rounds to 13043817825332782212.3495718062525083689
 			LegacyNewDec(2).Power(127).Sub(LegacyOneDec()),

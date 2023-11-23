@@ -259,12 +259,12 @@ func (i Int) LTE(i2 Int) bool {
 
 // Add adds Int from another
 func (i Int) Add(i2 Int) (res Int) {
-	res = Int{add(i.i, i2.i)}
 	// Check overflow
-	if res.i.BitLen() > MaxBitLen {
-		panic("Int overflow")
+	x, err := i.SafeAdd(i2)
+	if err != nil {
+		panic(err)
 	}
-	return
+	return x
 }
 
 // AddRaw adds int64 to Int
@@ -284,12 +284,12 @@ func (i Int) SafeAdd(i2 Int) (res Int, err error) {
 
 // Sub subtracts Int from another
 func (i Int) Sub(i2 Int) (res Int) {
-	res = Int{sub(i.i, i2.i)}
 	// Check overflow
-	if res.i.BitLen() > MaxBitLen {
-		panic("Int overflow")
+	x, err := i.SafeSub(i2)
+	if err != nil {
+		panic(err)
 	}
-	return
+	return x
 }
 
 // SubRaw subtracts int64 from Int
@@ -310,15 +310,11 @@ func (i Int) SafeSub(i2 Int) (res Int, err error) {
 // Mul multiples two Ints
 func (i Int) Mul(i2 Int) (res Int) {
 	// Check overflow
-	if i.i.BitLen()+i2.i.BitLen()-1 > MaxBitLen {
-		panic("Int overflow")
+	x, err := i.SafeMul(i2)
+	if err != nil {
+		panic(err)
 	}
-	res = Int{mul(i.i, i2.i)}
-	// Check overflow if sign of both are same
-	if res.i.BitLen() > MaxBitLen {
-		panic("Int overflow")
-	}
-	return
+	return x
 }
 
 // MulRaw multipies Int and int64
@@ -343,10 +339,11 @@ func (i Int) SafeMul(i2 Int) (res Int, err error) {
 // Quo divides Int with Int
 func (i Int) Quo(i2 Int) (res Int) {
 	// Check division-by-zero
-	if i2.i.Sign() == 0 {
+	x, err := i.SafeQuo(i2)
+	if err != nil {
 		panic("Division by zero")
 	}
-	return Int{div(i.i, i2.i)}
+	return x
 }
 
 // QuoRaw divides Int with int64
@@ -365,10 +362,12 @@ func (i Int) SafeQuo(i2 Int) (res Int, err error) {
 
 // Mod returns remainder after dividing with Int
 func (i Int) Mod(i2 Int) Int {
-	if i2.Sign() == 0 {
-		panic("division-by-zero")
+	x, err := i.SafeMod(i2)
+	if err != nil {
+		panic(err)
+	} else {
+		return x
 	}
-	return Int{mod(i.i, i2.i)}
 }
 
 // ModRaw returns remainder after dividing with int64

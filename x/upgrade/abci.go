@@ -35,6 +35,8 @@ func PreBlocker(ctx context.Context, k *keeper.Keeper) (appmodule.ResponsePreBlo
 	found := err == nil
 
 	if !k.DowngradeVerified() {
+		ctx := sdkCtx.WithBlockGasMeter(storetypes.NewInfiniteGasMeter()).WithGasMeter(storetypes.NewInfiniteGasMeter())
+
 		k.SetDowngradeVerified(true)
 		// This check will make sure that we are using a valid binary.
 		// It'll panic in these cases if there is no upgrade handler registered for the last applied upgrade.

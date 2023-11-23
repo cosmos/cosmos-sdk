@@ -95,7 +95,6 @@ func Test_runAddCmdLedgerWithCustomCoinType(t *testing.T) {
 	addressConfig.SetCoinType(330)
 	clientCtx = clientCtx.WithAddressConfig(*addressConfig)
 
-	cmd = AddKeyCommand()
 	config.SetBech32PrefixForAccount(sdk.Bech32PrefixAccAddr, sdk.Bech32PrefixAccPub)
 	config.SetBech32PrefixForValidator(sdk.Bech32PrefixValAddr, sdk.Bech32PrefixValPub)
 	config.SetBech32PrefixForConsensusNode(sdk.Bech32PrefixConsAddr, sdk.Bech32PrefixConsPub)
@@ -187,10 +186,6 @@ func Test_runAddCmdLedgerDryRun(t *testing.T) {
 	for _, tt := range testData {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			clientContext := client.Context{}
-			addressConfig := sdk.NewAddressConfig()
-			clientContext = clientContext.WithAddressConfig(*addressConfig)
-
 			cmd := AddKeyCommand()
 			cmd.Flags().AddFlagSet(Commands().PersistentFlags())
 

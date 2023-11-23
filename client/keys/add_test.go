@@ -22,9 +22,6 @@ import (
 )
 
 func Test_runAddCmdBasic(t *testing.T) {
-	clientContext := client.Context{}
-	addressConfig := sdk.NewAddressConfig()
-	clientContext = clientContext.WithAddressConfig(*addressConfig)
 	cmd := AddKeyCommand()
 	cmd.Flags().AddFlagSet(Commands().PersistentFlags())
 
@@ -215,9 +212,6 @@ func Test_runAddCmdDryRun(t *testing.T) {
 	for _, tt := range testData {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			clientContext := client.Context{}
-			addressConfig := sdk.NewAddressConfig()
-			clientContext = clientContext.WithAddressConfig(*addressConfig)
 			cmd := AddKeyCommand()
 			cmd.Flags().AddFlagSet(Commands().PersistentFlags())
 

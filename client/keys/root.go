@@ -1,8 +1,6 @@
 package keys
 
 import (
-	"github.com/cosmos/cosmos-sdk/client"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -37,10 +35,6 @@ information:
 The pass backend requires GnuPG: https://gnupg.org/
 `,
 	}
-
-	clientContext := client.Context{}
-	addressConfig := sdk.NewAddressConfig()
-	clientContext = clientContext.WithAddressConfig(*addressConfig)
 
 	cmd.AddCommand(
 		MnemonicKeyCommand(),

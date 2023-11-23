@@ -53,9 +53,9 @@ func (k Keeper) AllocateTokens(ctx context.Context, totalPreviousPower int64, bo
 
 	var wg sync.WaitGroup
 	// channel for errors
-	errc := make(chan error, len(bondedVotes))
+	errCh := make(chan error, len(bondedVotes))
 	// channel for remaining rewards
-	remainingc := make(chan sdk.DecCoins, len(bondedVotes))
+	remainingCh := make(chan sdk.DecCoins, len(bondedVotes))
 
 	for _, vote := range bondedVotes {
 		wg.Add(1)
@@ -64,7 +64,7 @@ func (k Keeper) AllocateTokens(ctx context.Context, totalPreviousPower int64, bo
 
 			validator, err := k.stakingKeeper.ValidatorByConsAddr(ctx, vote.Validator.Address)
 			if err != nil {
-				errc <- err
+				errCh <- err
 				return
 			}
 
@@ -72,27 +72,28 @@ func (k Keeper) AllocateTokens(ctx context.Context, totalPreviousPower int64, bo
 			reward := feeMultiplier.MulDecTruncate(powerFraction)
 
 			if err = k.AllocateTokensToValidator(ctx, validator, reward); err != nil {
-				errc <- err
+				errCh <- err
 				return
 			}
 
-			remainingc <- reward
+			remainingCh <- reward
 		}(vote)
 	}
-	wg.Wait()
 
-	// Close the channels
-	close(errc)
-	close(remainingc)
+	go func() {
+		wg.Wait()
+		close(errCh)
+		close(remainingCh)
+	}()
 
-	for err := range errc {
+	for err := range errCh {
 		if err != nil {
 			return err
 		}
 	}
 
 	// calculate the remaining rewards
-	for reward := range remainingc {
+	for reward := range remainingCh {
 		remaining = remaining.Sub(reward)
 	}
 

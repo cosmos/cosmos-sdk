@@ -64,7 +64,7 @@ func (s *intTestSuite) TestNewIntFromBigIntMut() {
 	im = math.NewIntFromBigIntMut(r)
 	s.Require().Equal(r, im.BigInt())
 
-	// Compare value of math.NewIntFromBigInt and math.NewIntFromBigIntMut
+	// Compare value of NewIntFromBigInt and NewIntFromBigIntMut
 	i := math.NewIntFromBigInt(r)
 	s.Require().Equal(i, im)
 

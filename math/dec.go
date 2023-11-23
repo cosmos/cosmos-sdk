@@ -1,4 +1,4 @@
-package math_test
+package math
 
 import (
 	"encoding/json"

@@ -111,12 +111,20 @@ func (s *intTestSuite) TestIntPanic() {
 	s.Require().NotPanics(func() { i1.Add(i1) })
 	s.Require().NotPanics(func() { i2.Add(i2) })
 	s.Require().Panics(func() { i3.Add(i3) })
-	_, err := i3.SafeAdd(i3)
+	_, err := i1.SafeAdd(i1)
+	s.Require().Nil(err)
+	_, err = i2.SafeAdd(i2)
+	s.Require().Nil(err)
+	_, err = i3.SafeAdd(i3)
 	s.Require().Error(err)
 
 	s.Require().NotPanics(func() { i1.Sub(i1.Neg()) })
 	s.Require().NotPanics(func() { i2.Sub(i2.Neg()) })
 	s.Require().Panics(func() { i3.Sub(i3.Neg()) })
+	_, err = i1.SafeSub(i1.Neg())
+	s.Require().Nil(err)
+	_, err = i2.SafeSub(i2.Neg())
+	s.Require().Nil(err)
 	_, err = i3.SafeSub(i3.Neg())
 	s.Require().Error(err)
 
@@ -140,7 +148,7 @@ func (s *intTestSuite) TestIntPanic() {
 	_, err = i3.Neg().SafeMul(i3.Neg())
 	s.Require().Error(err)
 
-	// // Underflow check
+	// Underflow check
 	i3n := i3.Neg()
 	s.Require().NotPanics(func() { i3n.Sub(i1) })
 	s.Require().NotPanics(func() { i3n.Sub(i2) })

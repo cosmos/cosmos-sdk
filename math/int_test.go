@@ -24,18 +24,18 @@ func TestIntTestSuite(t *testing.T) {
 	suite.Run(t, new(intTestSuite))
 }
 
-func (s *math.IntTestSuite) SetupSuite() {
+func (s *intTestSuite) SetupSuite() {
 	s.T().Parallel()
 }
 
-func (s *math.IntTestSuite) TestFromInt64() {
+func (s *intTestSuite) TestFromInt64() {
 	for n := 0; n < 20; n++ {
 		r := rand.Int63()
 		s.Require().Equal(r, math.NewInt(r).Int64())
 	}
 }
 
-func (s *math.IntTestSuite) TestFromUint64() {
+func (s *intTestSuite) TestFromUint64() {
 	for n := 0; n < 20; n++ {
 		r := rand.Uint64()
 		s.Require().True(math.NewIntFromUint64(r).IsUint64())
@@ -43,7 +43,7 @@ func (s *math.IntTestSuite) TestFromUint64() {
 	}
 }
 
-func (s *math.IntTestSuite) TestNewIntFromBigInt() {
+func (s *intTestSuite) TestNewIntFromBigInt() {
 	i := math.NewIntFromBigInt(nil)
 	s.Require().True(i.IsNil())
 
@@ -56,7 +56,7 @@ func (s *math.IntTestSuite) TestNewIntFromBigInt() {
 	s.Require().NotEqual(r, i.BigInt())
 }
 
-func (s *math.IntTestSuite) TestNewIntFromBigIntMut() {
+func (s *intTestSuite) TestNewIntFromBigIntMut() {
 	im := math.NewIntFromBigIntMut(nil)
 	s.Require().True(im.IsNil())
 
@@ -74,7 +74,7 @@ func (s *math.IntTestSuite) TestNewIntFromBigIntMut() {
 	s.Require().Equal(r, im.BigInt())
 }
 
-func (s *math.IntTestSuite) TestConvertToBigIntMutative() {
+func (s *intTestSuite) TestConvertToBigIntMutative() {
 	r := big.NewInt(42)
 	i := math.NewIntFromBigInt(r)
 
@@ -94,7 +94,7 @@ func (s *math.IntTestSuite) TestConvertToBigIntMutative() {
 	s.Require().NotEqual(big.NewInt(60), i.BigInt())
 }
 
-func (s *math.IntTestSuite) TestIntPanic() {
+func (s *intTestSuite) TestIntPanic() {
 	// Max Int = 2^256-1 = 1.1579209e+77
 	// Min Int = -(2^256-1) = -1.1579209e+77
 	s.Require().NotPanics(func() { math.NewIntWithDecimal(4, 76) })
@@ -191,7 +191,7 @@ func (s *math.IntTestSuite) TestIntPanic() {
 // Since we are using *big.Int as underlying value
 // and (U/)Int is immutable value(see TestImmutability(U/)Int)
 // it is safe to use randomness in the tests
-func (s *math.IntTestSuite) TestIdentInt() {
+func (s *intTestSuite) TestIdentInt() {
 	for d := 0; d < 1000; d++ {
 		n := rand.Int63()
 		i := math.NewInt(n)
@@ -227,7 +227,7 @@ func maxint(i1, i2 int64) int64 {
 	return i2
 }
 
-func (s *math.IntTestSuite) TestArithInt() {
+func (s *intTestSuite) TestArithInt() {
 	for d := 0; d < 1000; d++ {
 		n1 := int64(rand.Int31())
 		i1 := math.NewInt(n1)
@@ -259,7 +259,7 @@ func (s *math.IntTestSuite) TestArithInt() {
 	}
 }
 
-func (s *math.IntTestSuite) TestCompInt() {
+func (s *intTestSuite) TestCompInt() {
 	for d := 0; d < 1000; d++ {
 		n1 := int64(rand.Int31())
 		i1 := math.NewInt(n1)
@@ -286,7 +286,7 @@ func randint() math.Int {
 	return math.NewInt(rand.Int63())
 }
 
-func (s *math.IntTestSuite) TestImmutabilityAllInt() {
+func (s *intTestSuite) TestImmutabilityAllInt() {
 	ops := []func(*math.Int){
 		func(i *math.Int) { _ = i.Add(randint()) },
 		func(i *math.Int) { _ = i.Sub(randint()) },
@@ -319,7 +319,7 @@ func (s *math.IntTestSuite) TestImmutabilityAllInt() {
 	}
 }
 
-func (s *math.IntTestSuite) TestEncodingTableInt() {
+func (s *intTestSuite) TestEncodingTableInt() {
 	var i math.Int
 
 	cases := []struct {
@@ -393,7 +393,7 @@ func (s *math.IntTestSuite) TestEncodingTableInt() {
 	}
 }
 
-func (s *math.IntTestSuite) TestEncodingTableUint() {
+func (s *intTestSuite) TestEncodingTableUint() {
 	var i math.Uint
 
 	cases := []struct {
@@ -447,7 +447,7 @@ func (s *math.IntTestSuite) TestEncodingTableUint() {
 	}
 }
 
-func (s *math.IntTestSuite) TestIntMod() {
+func (s *intTestSuite) TestIntMod() {
 	tests := []struct {
 		name      string
 		x         int64
@@ -472,7 +472,7 @@ func (s *math.IntTestSuite) TestIntMod() {
 	}
 }
 
-func (s *math.IntTestSuite) TestIntEq() {
+func (s *intTestSuite) TestIntEq() {
 	_, resp, _, _, _ := math.IntEq(s.T(), math.ZeroInt(), math.ZeroInt())
 	s.Require().True(resp)
 	_, resp, _, _, _ = math.IntEq(s.T(), math.OneInt(), math.ZeroInt())

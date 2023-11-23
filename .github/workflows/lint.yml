@@ -36,14 +36,10 @@ jobs:
           NIX: 1
       - uses: technote-space/get-diff-action@v6.1.2
         if: steps.lint_long.outcome == 'skipped'
-        id: git_diff_all
         with:
           PATTERNS: |
             **/*.go
-            go.mod
-            go.sum
-            **/go.mod
-            **/go.sum
+            *.go
       - name: run linting (short)
         if: steps.lint_long.outcome == 'skipped' && env.GIT_DIFF
         run: |

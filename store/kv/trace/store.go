@@ -80,8 +80,8 @@ func (s *Store) Delete(key []byte) {
 	s.parent.Delete(key)
 }
 
-func (s *Store) Reset() error {
-	return s.parent.Reset()
+func (s *Store) Reset(toVersion uint64) error {
+	return s.parent.Reset(toVersion)
 }
 
 func (s *Store) Write() {

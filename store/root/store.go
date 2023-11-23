@@ -10,9 +10,9 @@ import (
 
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/v2"
-	"cosmossdk.io/store/v2/commitment"
 	"cosmossdk.io/store/v2/kv/branch"
 	"cosmossdk.io/store/v2/kv/trace"
+	"cosmossdk.io/store/v2/pruning"
 )
 
 // defaultStoreKey defines the default store key used for the single SC backend.
@@ -34,7 +34,7 @@ type Store struct {
 	stateStore store.VersionedDatabase
 
 	// stateCommitment reflects the state commitment (SC) backend
-	stateCommitment *commitment.Database
+	stateCommitment store.Committer
 
 	// rootKVStore reflects the root BranchedKVStore that is used to accumulate writes
 	// and branch off of.
@@ -54,18 +54,23 @@ type Store struct {
 
 	// traceContext defines the tracing context, if any, for trace operations
 	traceContext store.TraceContext
+
+	// pruningManager manages pruning of the SS and SC backends
+	pruningManager *pruning.Manager
 }
 
 func New(
 	logger log.Logger,
 	initVersion uint64,
 	ss store.VersionedDatabase,
-	sc *commitment.Database,
+	sc store.Committer,
 ) (store.RootStore, error) {
 	rootKVStore, err := branch.New(defaultStoreKey, ss)
 	if err != nil {
 		return nil, err
 	}
+
+	pruningManager := pruning.NewManager(logger, ss, sc)
 
 	return &Store{
 		logger:          logger.With("module", "root_store"),
@@ -73,6 +78,7 @@ func New(
 		stateStore:      ss,
 		stateCommitment: sc,
 		rootKVStore:     rootKVStore,
+		pruningManager:  pruningManager,
 	}, nil
 }
 
@@ -87,27 +93,29 @@ func (s *Store) Close() (err error) {
 	s.lastCommitInfo = nil
 	s.commitHeader = nil
 
+	s.pruningManager.Stop()
+
 	return err
 }
 
+// SetPruningOptions sets the pruning options on the SS and SC backends.
+// NOTE: It will also start the pruning manager.
+func (s *Store) SetPruningOptions(ssOpts, scOpts pruning.Options) {
+	s.pruningManager.SetStorageOptions(ssOpts)
+	s.pruningManager.SetCommitmentOptions(scOpts)
+
+	s.pruningManager.Start()
+}
+
 // MountSCStore performs a no-op as a SC backend must be provided at initialization.
-func (s *Store) MountSCStore(_ string, _ store.Tree) error {
+func (s *Store) MountSCStore(_ string, _ store.Committer) error {
 	return errors.New("cannot mount SC store; SC must be provided on initialization")
 }
 
 // GetSCStore returns the store's state commitment (SC) backend. Note, the store
 // key is ignored as there exists only a single SC tree.
-func (s *Store) GetSCStore(_ string) store.Tree {
+func (s *Store) GetSCStore(_ string) store.Committer {
 	return s.stateCommitment
-}
-
-func (s *Store) LoadLatestVersion() error {
-	lv, err := s.GetLatestVersion()
-	if err != nil {
-		return err
-	}
-
-	return s.loadVersion(lv, nil)
 }
 
 // LastCommitID returns a CommitID based off of the latest internal CommitInfo.
@@ -129,7 +137,11 @@ func (s *Store) LastCommitID() (store.CommitID, error) {
 	}
 
 	// sanity check: ensure integrity of latest version against SC
-	scVersion := s.stateCommitment.GetLatestVersion()
+	scVersion, err := s.stateCommitment.GetLatestVersion()
+	if err != nil {
+		return store.CommitID{}, err
+	}
+
 	if scVersion != latestVersion {
 		return store.CommitID{}, fmt.Errorf("SC and SS version mismatch; got: %d, expected: %d", scVersion, latestVersion)
 	}
@@ -162,7 +174,7 @@ func (s *Store) Query(storeKey string, version uint64, key []byte, prove bool) (
 	}
 
 	if prove {
-		proof, err := s.stateCommitment.GetProof(version, key)
+		proof, err := s.stateCommitment.GetProof(storeKey, version, key)
 		if err != nil {
 			return store.QueryResult{}, err
 		}
@@ -171,11 +183,6 @@ func (s *Store) Query(storeKey string, version uint64, key []byte, prove bool) (
 	}
 
 	return result, nil
-}
-
-// LoadVersion loads a specific version returning an error upon failure.
-func (s *Store) LoadVersion(v uint64) (err error) {
-	return s.loadVersion(v, nil)
 }
 
 // GetKVStore returns the store's root KVStore. Any writes to this store without
@@ -198,17 +205,37 @@ func (s *Store) GetBranchedKVStore(_ string) store.BranchedKVStore {
 	return s.rootKVStore
 }
 
-func (s *Store) loadVersion(v uint64, upgrades any) error {
+func (s *Store) LoadLatestVersion() error {
+	lv, err := s.GetLatestVersion()
+	if err != nil {
+		return err
+	}
+
+	return s.loadVersion(lv)
+}
+
+func (s *Store) LoadVersion(version uint64) error {
+	return s.loadVersion(version)
+}
+
+func (s *Store) loadVersion(v uint64) error {
 	s.logger.Debug("loading version", "version", v)
+
+	// Reset the root KVStore s.t. the latest version is v. Any writes will
+	// overwrite existing versions.
+	if err := s.rootKVStore.Reset(v); err != nil {
+		return err
+	}
 
 	if err := s.stateCommitment.LoadVersion(v); err != nil {
 		return fmt.Errorf("failed to load SS version %d: %w", v, err)
 	}
 
-	// TODO: Complete this method to handle upgrades. See legacy RMS loadVersion()
-	// for reference.
-	//
-	// Ref: https://github.com/cosmos/cosmos-sdk/issues/17314
+	s.workingHash = nil
+	s.commitHeader = nil
+
+	// set lastCommitInfo explicitly s.t. Commit commits the correct version, i.e. v+1
+	s.lastCommitInfo = &store.CommitInfo{Version: v}
 
 	return nil
 }
@@ -305,11 +332,14 @@ func (s *Store) Commit() ([]byte, error) {
 		s.lastCommitInfo.Timestamp = s.commitHeader.GetTime()
 	}
 
-	if err := s.rootKVStore.Reset(); err != nil {
+	if err := s.rootKVStore.Reset(version); err != nil {
 		return nil, fmt.Errorf("failed to reset root KVStore: %w", err)
 	}
 
 	s.workingHash = nil
+
+	// prune SS and SC
+	s.pruningManager.Prune(version)
 
 	return s.lastCommitInfo.Hash(), nil
 }
@@ -341,19 +371,9 @@ func (s *Store) writeSC() error {
 		version = previousHeight + 1
 	}
 
-	workingHash := s.stateCommitment.WorkingHash()
-
 	s.lastCommitInfo = &store.CommitInfo{
-		Version: version,
-		StoreInfos: []store.StoreInfo{
-			{
-				Name: defaultStoreKey,
-				CommitID: store.CommitID{
-					Version: version,
-					Hash:    workingHash,
-				},
-			},
-		},
+		Version:    version,
+		StoreInfos: s.stateCommitment.WorkingStoreInfos(version),
 	}
 
 	return nil
@@ -364,18 +384,23 @@ func (s *Store) writeSC() error {
 // solely commits that batch. An error is returned if commit fails or if the
 // resulting commit hash is not equivalent to the working hash.
 func (s *Store) commitSC() error {
-	commitBz, err := s.stateCommitment.Commit()
+	commitStoreInfos, err := s.stateCommitment.Commit()
 	if err != nil {
 		return fmt.Errorf("failed to commit SC store: %w", err)
 	}
+
+	commitHash := store.CommitInfo{
+		Version:    s.lastCommitInfo.Version,
+		StoreInfos: commitStoreInfos,
+	}.Hash()
 
 	workingHash, err := s.WorkingHash()
 	if err != nil {
 		return fmt.Errorf("failed to get working hash: %w", err)
 	}
 
-	if bytes.Equal(commitBz, workingHash) {
-		return fmt.Errorf("unexpected commit hash; got: %X, expected: %X", commitBz, workingHash)
+	if !bytes.Equal(commitHash, workingHash) {
+		return fmt.Errorf("unexpected commit hash; got: %X, expected: %X", commitHash, workingHash)
 	}
 
 	return nil

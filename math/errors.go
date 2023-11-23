@@ -4,9 +4,6 @@ import (
 	"errors"
 )
 
-// RootCodespace is the codespace for all errors defined in this package
-const RootCodespace = "math"
-
 var (
 	// ErrIntOverflow is the error returned when an integer overflow occurs
 	ErrIntOverflow = errors.New("Integer overflow")

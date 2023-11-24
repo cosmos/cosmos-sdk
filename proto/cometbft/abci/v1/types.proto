@@ -375,7 +375,7 @@ message ExtendedCommitInfo {
 }
 
 // Event allows application developers to attach additional information to
-// ResponseFinalizeBlock and ResponseCheckTx.
+// FinalizeBlockResponse and ResponseCheckTx.
 // Up to 0.37, this could also be used in ResponseBeginBlock, ResponseEndBlock,
 // and ResponseDeliverTx.
 // Later, transactions may be queried using these events.

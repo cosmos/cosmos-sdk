@@ -33,12 +33,12 @@ message MsgUpdateParams {
   // separarately in x/upgrade.
   //
   // NOTE: All parameters must be supplied.
-  tendermint.types.BlockParams     block     = 2;
-  tendermint.types.EvidenceParams  evidence  = 3;
-  tendermint.types.ValidatorParams validator = 4;
+  cometbft.types.v1.BlockParams     block     = 2;
+  cometbft.types.v1.EvidenceParams  evidence  = 3;
+  cometbft.types.v1.ValidatorParams validator = 4;
 
   // Since: cosmos-sdk 0.50
-  tendermint.types.ABCIParams abci = 5;
+  cometbft.types.v1.ABCIParams abci = 5;
 }
 
 // MsgUpdateParamsResponse defines the response structure for executing a

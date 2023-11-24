@@ -21,7 +21,7 @@ option go_package = "cosmossdk.io/x/staking/types";
 message HistoricalInfo {
   option deprecated = true;
 
-  tendermint.types.Header header = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+  cometbft.types.v1.Header header = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
   repeated Validator      valset = 2 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 }
 
@@ -406,7 +406,7 @@ enum Infraction {
 // ValidatorUpdates defines an array of abci.ValidatorUpdate objects.
 // TODO: explore moving this to proto/cosmos/base to separate modules from tendermint dependence
 message ValidatorUpdates {
-  repeated tendermint.abci.ValidatorUpdate updates = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+  repeated cometbft.abci.v1.ValidatorUpdate updates = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 }
 
 // ConsPubKeyRotationHistory contains a validator's consensus public key rotation history.

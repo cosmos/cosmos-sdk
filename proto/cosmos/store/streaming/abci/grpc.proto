@@ -14,8 +14,8 @@ option go_package = "cosmossdk.io/store/streaming/abci";
 message ListenFinalizeBlockRequest {
   option deprecated = true;
 
-  tendermint.abci.RequestFinalizeBlock  req = 1;
-  tendermint.abci.ResponseFinalizeBlock res = 2;
+  cometbft.abci.v1.RequestFinalizeBlock  req = 1;
+  cometbft.abci.v1.ResponseFinalizeBlock res = 2;
 }
 
 // ListenEndBlockResponse is the response type for the ListenEndBlock RPC method
@@ -36,7 +36,7 @@ message ListenCommitRequest {
   // explicitly pass in block height as ResponseCommit does not contain this
   // info
   int64                          block_height          = 1;
-  tendermint.abci.ResponseCommit res                   = 2;
+  cometbft.abci.v1.ResponseCommit res                   = 2;
   repeated cosmos.store.v1beta1.StoreKVPair change_set = 3;
 }
 

@@ -264,7 +264,7 @@ type SignDocDirectAux struct {
 	AccountNumber uint64 `protobuf:"varint,4,opt,name=account_number,json=accountNumber,proto3" json:"account_number,omitempty"`
 	// sequence is the sequence number of the signing account.
 	Sequence uint64 `protobuf:"varint,5,opt,name=sequence,proto3" json:"sequence,omitempty"`
-	// tips have been depreacted and should not be used
+	// tips have been deprecated and should not be used
 	Tip *Tip `protobuf:"bytes,6,opt,name=tip,proto3" json:"tip,omitempty"` // Deprecated: Do not use.
 }
 

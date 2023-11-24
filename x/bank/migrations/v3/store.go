@@ -6,7 +6,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/address"
 	v2 "github.com/cosmos/cosmos-sdk/x/bank/migrations/v2"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
@@ -19,59 +18,59 @@ import (
 // - Remove duplicate denom from denom metadata store key.
 func MigrateStore(ctx sdk.Context, storeKey storetypes.StoreKey, cdc codec.BinaryCodec) error {
 	store := ctx.KVStore(storeKey)
-	err := addDenomReverseIndex(store, cdc, ctx.Logger())
-	if err != nil {
-		return err
-	}
+	// err := addDenomReverseIndex(store, cdc, ctx.Logger())
+	// if err != nil {
+	// 	return err
+	// }
 
 	return migrateDenomMetadata(store, ctx.Logger())
 }
 
-func addDenomReverseIndex(store sdk.KVStore, cdc codec.BinaryCodec, logger log.Logger) error {
-	oldBalancesStore := prefix.NewStore(store, v2.BalancesPrefix)
+// func addDenomReverseIndex(store sdk.KVStore, cdc codec.BinaryCodec, logger log.Logger) error {
+// 	oldBalancesStore := prefix.NewStore(store, v2.BalancesPrefix)
 
-	oldBalancesIter := oldBalancesStore.Iterator(nil, nil)
-	defer sdk.LogDeferred(logger, func() error { return oldBalancesIter.Close() })
+// 	oldBalancesIter := oldBalancesStore.Iterator(nil, nil)
+// 	defer sdk.LogDeferred(logger, func() error { return oldBalancesIter.Close() })
 
-	denomPrefixStores := make(map[string]prefix.Store) // memoize prefix stores
+// 	denomPrefixStores := make(map[string]prefix.Store) // memoize prefix stores
 
-	for ; oldBalancesIter.Valid(); oldBalancesIter.Next() {
-		var balance sdk.Coin
-		if err := cdc.Unmarshal(oldBalancesIter.Value(), &balance); err != nil {
-			return err
-		}
+// 	for ; oldBalancesIter.Valid(); oldBalancesIter.Next() {
+// 		var balance sdk.Coin
+// 		if err := cdc.Unmarshal(oldBalancesIter.Value(), &balance); err != nil {
+// 			return err
+// 		}
 
-		addr, err := v2.AddressFromBalancesStore(oldBalancesIter.Key())
-		if err != nil {
-			return err
-		}
+// 		addr, err := v2.AddressFromBalancesStore(oldBalancesIter.Key())
+// 		if err != nil {
+// 			return err
+// 		}
 
-		var coin sdk.DecCoin
-		if err := cdc.Unmarshal(oldBalancesIter.Value(), &coin); err != nil {
-			return err
-		}
+// 		var coin sdk.DecCoin
+// 		if err := cdc.Unmarshal(oldBalancesIter.Value(), &coin); err != nil {
+// 			return err
+// 		}
 
-		bz, err := coin.Amount.Marshal()
-		if err != nil {
-			return err
-		}
+// 		bz, err := coin.Amount.Marshal()
+// 		if err != nil {
+// 			return err
+// 		}
 
-		newStore := prefix.NewStore(store, types.CreateAccountBalancesPrefix(addr))
-		newStore.Set([]byte(coin.Denom), bz)
+// 		newStore := prefix.NewStore(store, types.CreateAccountBalancesPrefix(addr))
+// 		newStore.Set([]byte(coin.Denom), bz)
 
-		denomPrefixStore, ok := denomPrefixStores[balance.Denom]
-		if !ok {
-			denomPrefixStore = prefix.NewStore(store, CreateDenomAddressPrefix(balance.Denom))
-			denomPrefixStores[balance.Denom] = denomPrefixStore
-		}
+// 		denomPrefixStore, ok := denomPrefixStores[balance.Denom]
+// 		if !ok {
+// 			denomPrefixStore = prefix.NewStore(store, CreateDenomAddressPrefix(balance.Denom))
+// 			denomPrefixStores[balance.Denom] = denomPrefixStore
+// 		}
 
-		// Store a reverse index from denomination to account address with a
-		// sentinel value.
-		denomPrefixStore.Set(address.MustLengthPrefix(addr), []byte{0})
-	}
+// 		// Store a reverse index from denomination to account address with a
+// 		// sentinel value.
+// 		denomPrefixStore.Set(address.MustLengthPrefix(addr), []byte{0})
+// 	}
 
-	return nil
-}
+// 	return nil
+// }
 
 func migrateDenomMetadata(store sdk.KVStore, logger log.Logger) error {
 	oldDenomMetaDataStore := prefix.NewStore(store, v2.DenomMetadataPrefix)

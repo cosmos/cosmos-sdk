@@ -409,12 +409,12 @@ proto-check-breaking:
 
 CMT_URL              = https://raw.githubusercontent.com/cometbft/cometbft/temp-proto-upgrade/proto/cometbft
 
-CMT_CRYPTO_TYPES     = proto/cometbft/crypto
-CMT_ABCI_TYPES       = proto/cometbft/abci
-CMT_TYPES            = proto/cometbft/types
-CMT_VERSION          = proto/cometbft/version
-CMT_LIBS             = proto/cometbft/libs/bits
-CMT_P2P              = proto/cometbft/p2p
+CMT_CRYPTO_TYPES     = proto/cometbft/crypto/v1
+CMT_ABCI_TYPES       = proto/cometbft/abci/v1
+CMT_TYPES            = proto/cometbft/types/v1
+CMT_VERSION          = proto/cometbft/version/v1
+CMT_LIBS             = proto/cometbft/libs/bits/v1
+CMT_P2P              = proto/cometbft/p2p/v1
 
 proto-update-deps:
 	@echo "Updating Protobuf dependencies"

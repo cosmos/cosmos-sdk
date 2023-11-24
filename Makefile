@@ -407,41 +407,41 @@ proto-lint:
 proto-check-breaking:
 	@$(protoImage) buf breaking --against $(HTTPS_GIT)#branch=main
 
-CMT_URL              = https://raw.githubusercontent.com/cometbft/cometbft/feature/proto-upgrade/proto/cometbft
+CMT_URL              = https://raw.githubusercontent.com/cometbft/cometbft/temp-proto-upgrade/proto/cometbft
 
-CMT_CRYPTO_TYPES     = proto/tendermint/crypto
-CMT_ABCI_TYPES       = proto/tendermint/abci
-CMT_TYPES            = proto/tendermint/types
-CMT_VERSION          = proto/tendermint/version
-CMT_LIBS             = proto/tendermint/libs/bits
-CMT_P2P              = proto/tendermint/p2p
+CMT_CRYPTO_TYPES     = proto/cometbft/crypto
+CMT_ABCI_TYPES       = proto/cometbft/abci
+CMT_TYPES            = proto/cometbft/types
+CMT_VERSION          = proto/cometbft/version
+CMT_LIBS             = proto/cometbft/libs/bits
+CMT_P2P              = proto/cometbft/p2p
 
 proto-update-deps:
 	@echo "Updating Protobuf dependencies"
 
 	@mkdir -p $(CMT_ABCI_TYPES)
-	@curl -sSL $(CMT_URL)/abci/v1beta4/types.proto > $(CMT_ABCI_TYPES)/types.proto
-	@curl -sSL $(CMT_URL)/abci/v1beta4/service.proto > $(CMT_ABCI_TYPES)/service.proto
+	@curl -sSL $(CMT_URL)/abci/v1/types.proto > $(CMT_ABCI_TYPES)/types.proto
+	@curl -sSL $(CMT_URL)/abci/v1/service.proto > $(CMT_ABCI_TYPES)/service.proto
 
 	@mkdir -p $(CMT_VERSION)
-	@curl -sSL $(CMT_URL)/version/v1beta1/types.proto > $(CMT_VERSION)/types.proto
+	@curl -sSL $(CMT_URL)/version/v1/types.proto > $(CMT_VERSION)/types.proto
 
 	@mkdir -p $(CMT_TYPES)
-	@curl -sSL $(CMT_URL)/types/v1beta3/types.proto > $(CMT_TYPES)/types.proto
-	@curl -sSL $(CMT_URL)/types/v1beta3/evidence.proto > $(CMT_TYPES)/evidence.proto
-	@curl -sSL $(CMT_URL)/types/v1beta3/params.proto > $(CMT_TYPES)/params.proto
-	@curl -sSL $(CMT_URL)/types/v1beta1/validator.proto > $(CMT_TYPES)/validator.proto
-	@curl -sSL $(CMT_URL)/types/v1beta3/block.proto > $(CMT_TYPES)/block.proto
+	@curl -sSL $(CMT_URL)/types/v1/types.proto > $(CMT_TYPES)/types.proto
+	@curl -sSL $(CMT_URL)/types/v1/evidence.proto > $(CMT_TYPES)/evidence.proto
+	@curl -sSL $(CMT_URL)/types/v1/params.proto > $(CMT_TYPES)/params.proto
+	@curl -sSL $(CMT_URL)/types/v1/validator.proto > $(CMT_TYPES)/validator.proto
+	@curl -sSL $(CMT_URL)/types/v1/block.proto > $(CMT_TYPES)/block.proto
 
 	@mkdir -p $(CMT_CRYPTO_TYPES)
-	@curl -sSL $(CMT_URL)/crypto/v1beta1/proof.proto > $(CMT_CRYPTO_TYPES)/proof.proto
-	@curl -sSL $(CMT_URL)/crypto/v1beta1/keys.proto > $(CMT_CRYPTO_TYPES)/keys.proto
+	@curl -sSL $(CMT_URL)/crypto/v1/proof.proto > $(CMT_CRYPTO_TYPES)/proof.proto
+	@curl -sSL $(CMT_URL)/crypto/v1/keys.proto > $(CMT_CRYPTO_TYPES)/keys.proto
 
 	@mkdir -p $(CMT_LIBS)
-	@curl -sSL $(CMT_URL)/libs/bits/v1beta1/types.proto > $(CMT_LIBS)/types.proto
+	@curl -sSL $(CMT_URL)/libs/bits/v1/types.proto > $(CMT_LIBS)/types.proto
 
 	@mkdir -p $(CMT_P2P)
-	@curl -sSL $(CMT_URL)/p2p/v1beta1/types.proto > $(CMT_P2P)/types.proto
+	@curl -sSL $(CMT_URL)/p2p/v1/types.proto > $(CMT_P2P)/types.proto
 
 	$(DOCKER) run --rm -v $(CURDIR)/proto:/workspace --workdir /workspace $(protoImageName) buf mod update
 

@@ -1,0 +1,25 @@
+syntax = "proto3";
+package cometbft.abci.v1;
+
+import "cometbft/abci/v1/types.proto";
+
+option go_package = "github.com/cometbft/cometbft/api/cometbft/abci/v1";
+
+service ABCIService {
+  rpc Echo(EchoRequest) returns (EchoResponse);
+  rpc Flush(FlushRequest) returns (FlushResponse);
+  rpc Info(InfoRequest) returns (InfoResponse);
+  rpc CheckTx(CheckTxRequest) returns (CheckTxResponse);
+  rpc Query(QueryRequest) returns (QueryResponse);
+  rpc Commit(CommitRequest) returns (CommitResponse);
+  rpc InitChain(InitChainRequest) returns (InitChainResponse);
+  rpc ListSnapshots(ListSnapshotsRequest) returns (ListSnapshotsResponse);
+  rpc OfferSnapshot(OfferSnapshotRequest) returns (OfferSnapshotResponse);
+  rpc LoadSnapshotChunk(LoadSnapshotChunkRequest) returns (LoadSnapshotChunkResponse);
+  rpc ApplySnapshotChunk(ApplySnapshotChunkRequest) returns (ApplySnapshotChunkResponse);
+  rpc PrepareProposal(PrepareProposalRequest) returns (PrepareProposalResponse);
+  rpc ProcessProposal(ProcessProposalRequest) returns (ProcessProposalResponse);
+  rpc ExtendVote(ExtendVoteRequest) returns (ExtendVoteResponse);
+  rpc VerifyVoteExtension(VerifyVoteExtensionRequest) returns (VerifyVoteExtensionResponse);
+  rpc FinalizeBlock(FinalizeBlockRequest) returns (FinalizeBlockResponse);
+}

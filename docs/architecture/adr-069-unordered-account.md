@@ -94,6 +94,7 @@ Proposed.
 
 ### Positive
 
+* Support concurrent transaction inclusion.
 * Only optional fields are added to `Account`, migration is easy.
 
 ### Negative

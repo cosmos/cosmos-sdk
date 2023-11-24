@@ -13,7 +13,7 @@ import (
 // Addition of new field in params to store types of proposals that can be submitted.
 func MigrateStore(ctx sdk.Context, proposalCollection collections.Map[uint64, v1.Proposal]) error {
 	// Migrate proposals
-	if err := proposalCollection.Walk(ctx, nil, func(key uint64, proposal v1.Proposal) (bool, error) {
+	return proposalCollection.Walk(ctx, nil, func(key uint64, proposal v1.Proposal) (bool, error) {
 		if proposal.Expedited {
 			proposal.ProposalType = v1.ProposalType_PROPOSAL_TYPE_EXPEDITED
 		} else {
@@ -25,9 +25,5 @@ func MigrateStore(ctx sdk.Context, proposalCollection collections.Map[uint64, v1
 		}
 
 		return false, nil
-	}); err != nil {
-		return err
-	}
-
-	return nil
+	})
 }

@@ -9,25 +9,29 @@ import (
 
 // NormalizeVoteOption - normalize user specified vote option
 func NormalizeVoteOption(option string) string {
-	switch option {
-	case "Yes", "yes":
+	switch {
+	case strings.EqualFold(option, "yes"):
 		return v1.OptionYes.String()
 
-	case "Abstain", "abstain":
+	case strings.EqualFold(option, "abstain"):
 		return v1.OptionAbstain.String()
 
-	case "No", "no":
+	case strings.EqualFold(option, "no"):
 		return v1.OptionNo.String()
 
-	case "NoWithVeto", "no_with_veto", "no-with-veto":
+	case strings.EqualFold(option, "nowithveto"):
 		return v1.OptionNoWithVeto.String()
 
-	case "Spam", "spam":
+	case strings.EqualFold(option, "spam"):
 		return v1.OptionSpam.String()
-
-	default:
-		return option
 	}
+
+	// extra check for no_with_veto
+	if option == "no_with_veto" || option == "no-with-veto" {
+		return v1.OptionNoWithVeto.String()
+	}
+
+	return option
 }
 
 // NormalizeProposalType - normalize user specified proposal type.

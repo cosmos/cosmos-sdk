@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -50,7 +51,7 @@ func parseSubmitLegacyProposal(fs *pflag.FlagSet) (*legacyProposal, error) {
 		proposal.Title, _ = fs.GetString(FlagTitle)
 		proposal.Description, _ = fs.GetString(FlagDescription)
 
-		if proposalType == "Text" || proposalType == "text" {
+		if strings.EqualFold(proposalType, "text") {
 			proposal.Type = v1beta1.ProposalTypeText
 		}
 		proposal.Deposit, _ = fs.GetString(FlagDeposit)

@@ -35,8 +35,8 @@ message ListenCommitRequest {
 
   // explicitly pass in block height as ResponseCommit does not contain this
   // info
-  int64                          block_height          = 1;
-  cometbft.abci.v1.ResponseCommit res                   = 2;
+  int64                           block_height         = 1;
+  cometbft.abci.v1.ResponseCommit res                  = 2;
   repeated cosmos.store.v1beta1.StoreKVPair change_set = 3;
 }
 

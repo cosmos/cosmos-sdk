@@ -13,7 +13,7 @@ option go_package = "github.com/cosmos/cosmos-sdk/client/grpc/cmtservice";
 // Block is tendermint type Block, with the Header proposer address
 // field converted to bech32 string.
 message Block {
-  Header                         header      = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+  Header                          header      = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
   .cometbft.types.v1.Data         data        = 2 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
   .cometbft.types.v1.EvidenceList evidence    = 3 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
   .cometbft.types.v1.Commit       last_commit = 4;
@@ -23,9 +23,9 @@ message Block {
 message Header {
   // basic block info
   .cometbft.version.v1.Consensus version  = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
-  string                        chain_id = 2 [(gogoproto.customname) = "ChainID"];
-  int64                         height   = 3;
-  google.protobuf.Timestamp     time     = 4
+  string                         chain_id = 2 [(gogoproto.customname) = "ChainID"];
+  int64                          height   = 3;
+  google.protobuf.Timestamp      time     = 4
       [(gogoproto.nullable) = false, (amino.dont_omitempty) = true, (gogoproto.stdtime) = true];
 
   // prev block info

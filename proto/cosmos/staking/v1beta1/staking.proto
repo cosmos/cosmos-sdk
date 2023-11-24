@@ -22,7 +22,7 @@ message HistoricalInfo {
   option deprecated = true;
 
   cometbft.types.v1.Header header = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
-  repeated Validator      valset = 2 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+  repeated Validator       valset = 2 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 }
 
 // Historical contains a set of minimum values needed for evaluating historical validator sets and blocks.

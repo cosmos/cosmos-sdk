@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/client/v2/internal/prompt"
+	"cosmossdk.io/client/v2/autocli/prompt"
 )
 
 func TestValidatePromptNotEmpty(t *testing.T) {

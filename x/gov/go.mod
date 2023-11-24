@@ -4,6 +4,7 @@ go 1.21
 
 require (
 	cosmossdk.io/api v0.7.3-0.20231113122742-912390d5fc4a
+	cosmossdk.io/client/v2 v2.0.0-00010101000000-000000000000
 	cosmossdk.io/collections v0.4.0
 	cosmossdk.io/core v0.12.1-0.20231114100755-569e3ff6a0d7
 	cosmossdk.io/depinject v1.0.0-alpha.4
@@ -14,7 +15,6 @@ require (
 	cosmossdk.io/x/bank v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/protocolpool v0.0.0-20230925135524-a1bc045b3190
 	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000
-	github.com/chzyer/readline v1.5.1
 	github.com/cometbft/cometbft v0.38.1
 	github.com/cosmos/cosmos-proto v1.0.0-beta.3
 	github.com/cosmos/cosmos-sdk v0.51.0
@@ -32,6 +32,8 @@ require (
 	google.golang.org/protobuf v1.31.0
 	gotest.tools/v3 v3.5.1
 )
+
+require github.com/chzyer/readline v1.5.1 // indirect
 
 require (
 	cosmossdk.io/x/auth v0.0.0-00010101000000-000000000000
@@ -164,6 +166,7 @@ replace github.com/cosmos/cosmos-sdk => ../../.
 
 replace (
 	cosmossdk.io/api => ../../api
+	cosmossdk.io/client/v2 => ../../client/v2
 	cosmossdk.io/x/auth => ../auth
 	cosmossdk.io/x/bank => ../bank
 	cosmossdk.io/x/distribution => ../distribution

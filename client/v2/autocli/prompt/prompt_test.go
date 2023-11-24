@@ -5,7 +5,7 @@
 // has a data race and this code exposes it, but fixing it would require
 // holding up the associated change to this.
 
-package cli_test
+package prompt_test
 
 import (
 	"fmt"
@@ -13,11 +13,10 @@ import (
 	"os"
 	"testing"
 
+	"cosmossdk.io/client/v2/autocli/prompt"
 	"github.com/chzyer/readline"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-
-	"cosmossdk.io/x/gov/client/cli"
 )
 
 type st struct {
@@ -50,7 +49,7 @@ func TestPromptIntegerOverflow(t *testing.T) {
 			_, err := fw.Write([]byte(overflowStr + "\n"))
 			assert.NoError(t, err)
 
-			v, err := cli.Prompt(st{}, "")
+			v, err := prompt.Prompt(mockAddressCodec{}, st{}, "")
 			assert.Equal(t, st{}, v, "expected a value of zero")
 			require.NotNil(t, err, "expected a report of an overflow")
 			require.Contains(t, err.Error(), "range")
@@ -81,9 +80,19 @@ func TestPromptParseInteger(t *testing.T) {
 			readline.Stdin = fin
 			_, err := fw.Write([]byte(tc.in + "\n"))
 			assert.NoError(t, err)
-			v, err := cli.Prompt(st{}, "")
+			v, err := prompt.Prompt(mockAddressCodec{}, st{}, "")
 			assert.Nil(t, err, "expected a nil error")
 			assert.Equal(t, tc.want, v.I, "expected %d = %d", tc.want, v.I)
 		})
 	}
+}
+
+type mockAddressCodec struct{}
+
+func (mockAddressCodec) BytesToString([]byte) (string, error) {
+	return "cosmos1y74p8wyy4enfhfn342njve6cjmj5c8dtl6emdk", nil
+}
+
+func (mockAddressCodec) StringToBytes(string) ([]byte, error) {
+	return nil, nil
 }

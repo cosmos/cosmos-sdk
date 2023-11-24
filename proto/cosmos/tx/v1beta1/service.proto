@@ -5,8 +5,8 @@ import "google/api/annotations.proto";
 import "cosmos/base/abci/v1beta1/abci.proto";
 import "cosmos/tx/v1beta1/tx.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
-import "tendermint/types/block.proto";
-import "tendermint/types/types.proto";
+import "cometbft/types/v1/block.proto";
+import "cometbft/types/v1/types.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/types/tx";
 

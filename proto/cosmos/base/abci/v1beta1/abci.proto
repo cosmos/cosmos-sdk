@@ -2,8 +2,8 @@ syntax = "proto3";
 package cosmos.base.abci.v1beta1;
 
 import "gogoproto/gogo.proto";
-import "tendermint/abci/types.proto";
-import "tendermint/types/block.proto";
+import "cometbft/abci/v1/types.proto";
+import "cometbft/types/v1/block.proto";
 import "google/protobuf/any.proto";
 
 option go_package                       = "github.com/cosmos/cosmos-sdk/types";

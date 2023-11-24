@@ -2,9 +2,9 @@ syntax = "proto3";
 package cosmos.base.tendermint.v1beta1;
 
 import "gogoproto/gogo.proto";
-import "tendermint/types/types.proto";
-import "tendermint/types/evidence.proto";
-import "tendermint/version/types.proto";
+import "cometbft/types/v1/types.proto";
+import "cometbft/types/v1/evidence.proto";
+import "cometbft/version/v1/types.proto";
 import "google/protobuf/timestamp.proto";
 import "amino/amino.proto";
 

@@ -3,7 +3,7 @@ syntax = "proto3";
 package cosmos.consensus.v1;
 
 import "google/api/annotations.proto";
-import "tendermint/types/params.proto";
+import "cometbft/types/v1/params.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/consensus/types";
 

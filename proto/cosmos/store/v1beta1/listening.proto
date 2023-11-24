@@ -1,7 +1,7 @@
 syntax = "proto3";
 package cosmos.store.v1beta1;
 
-import "tendermint/abci/types.proto";
+import "cometbft/abci/v1/types.proto";
 
 option go_package = "cosmossdk.io/store/types";
 

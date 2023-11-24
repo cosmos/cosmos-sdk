@@ -3,6 +3,7 @@ package math
 import (
 	"encoding"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"math/big"
 	"strings"
@@ -12,6 +13,14 @@ import (
 
 // MaxBitLen defines the maximum bit length supported bit Int and Uint types.
 const MaxBitLen = 256
+
+// Integer errors
+var (
+	// ErrIntOverflow is the error returned when an integer overflow occurs
+	ErrIntOverflow = errors.New("Integer overflow")
+	// ErrDivideByZero is the error returned when a divide by zero occurs
+	ErrDivideByZero = errors.New("Divide by zero")
+)
 
 func newIntegerFromString(s string) (*big.Int, bool) {
 	return new(big.Int).SetString(s, 0)
@@ -365,9 +374,8 @@ func (i Int) Mod(i2 Int) Int {
 	x, err := i.SafeMod(i2)
 	if err != nil {
 		panic(err)
-	} else {
-		return x
 	}
+	return x
 }
 
 // ModRaw returns remainder after dividing with int64

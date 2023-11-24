@@ -45,6 +45,13 @@ var (
 	smallestDec          = LegacySmallestDec()
 )
 
+// Decimal errors
+var (
+	ErrLegacyEmptyDecimalStr      = errors.New("decimal string cannot be empty")
+	ErrLegacyInvalidDecimalLength = errors.New("invalid decimal length")
+	ErrLegacyInvalidDecimalStr    = errors.New("invalid decimal string")
+)
+
 // Set precision multipliers
 func init() {
 	precisionMultipliers = make([]*big.Int, LegacyPrecision+1)

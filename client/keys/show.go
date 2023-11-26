@@ -51,7 +51,7 @@ consisting of all the keys provided by name and multisig threshold.`,
 	f.BoolP(FlagPublicKey, "p", false, "Output the public key only (overrides --output)")
 	f.BoolP(FlagDevice, "d", false, "Output the address in a ledger device")
 	f.Int(flagMultiSigThreshold, 1, "K out of N required signatures")
-	f.Bool(flagQRCode, false, "Display keys payment QR code, will be ignored if -a or --address is false")
+	f.Bool(flagQRCode, false, "Display keys address QR code, will be ignored if -a or --address is false")
 
 	return cmd
 }

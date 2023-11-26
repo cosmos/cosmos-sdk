@@ -13,14 +13,12 @@ type Config struct {
 	// with a metadata field
 	MaxMetadataLen uint64
 
-	// MaxProposalTitleLen defines the max chars allowed
-	// in string for the MsgSubmitProposal and Proposal
-	// summary field
+	// title field
+	// Defaults to 255 if not explicitly set.
 	MaxProposalTitleLen uint64
 
-	// MaxProposalSummaryLen defines the max chars allowed
-	// in string for the MsgSubmitProposal and Proposal
 	// summary field
+	// Defaults to 10200 if not explicitly set.
 	MaxProposalSummaryLen uint64
 }
 

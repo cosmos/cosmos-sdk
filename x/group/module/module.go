@@ -209,10 +209,10 @@ func ProvideModule(in GroupInputs) GroupOutputs {
 	defaultConfig := group.DefaultConfig()
 	/*
 		Example of setting group params:
-		in.Config.MaxMetadataLen = 1000
-		in.Config.MaxExecutionPeriod = "1209600s"
-		in.Config.MaxProposalTitleLen = "Title"
-		in.Config.MaxProposalSummaryLen = "Summary"
+		in.Config.MaxExecutionPeriod = "1209600s" 	// example execution period in seconds
+		in.Config.MaxMetadataLen = 1000 			// example metadata length in bytes
+		in.Config.MaxProposalTitleLen = 255 		// example max title length in characters
+		in.Config.MaxProposalSummaryLen = 10200 	// example max summary length in characters
 	*/
 
 	if in.Config.MaxMetadataLen != 0 {

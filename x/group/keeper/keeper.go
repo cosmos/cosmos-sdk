@@ -93,19 +93,19 @@ func NewKeeper(storeKey storetypes.StoreKey, cdc codec.Codec, router baseapp.Mes
 
 	defaultConfig := group.DefaultConfig()
 	// Set the max execution period if not set by app developer.
-	if config.MaxExecutionPeriod == 0 {
+	if config.MaxExecutionPeriod <= 0 {
 		config.MaxExecutionPeriod = defaultConfig.MaxExecutionPeriod
 	}
 	// If MaxMetadataLen not set by app developer, set to default value.
-	if config.MaxMetadataLen == 0 {
+	if config.MaxMetadataLen <= 0 {
 		config.MaxMetadataLen = defaultConfig.MaxMetadataLen
 	}
 	// If MaxProposalTitleLen not set by app developer, set to default value.
-	if config.MaxProposalTitleLen == 0 {
+	if config.MaxProposalTitleLen <= 0 {
 		config.MaxProposalTitleLen = defaultConfig.MaxProposalTitleLen
 	}
 	// If MaxProposalSummaryLen not set by app developer, set to default value.
-	if config.MaxProposalSummaryLen == 0 {
+	if config.MaxProposalSummaryLen <= 0 {
 		config.MaxProposalSummaryLen = defaultConfig.MaxProposalSummaryLen
 	}
 	k.config = config

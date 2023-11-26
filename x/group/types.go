@@ -11,7 +11,6 @@ import (
 	"cosmossdk.io/x/group/internal/math"
 	"cosmossdk.io/x/group/internal/orm"
 
-	grouptypes "cosmossdk.io/x/group/types"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -45,7 +44,7 @@ type DecisionPolicy interface {
 	Allow(tallyResult TallyResult, totalPower string) (DecisionPolicyResult, error)
 
 	ValidateBasic() error
-	Validate(g GroupInfo, config grouptypes.Config) error
+	Validate(g GroupInfo, config Config) error
 }
 
 // Implements DecisionPolicy Interface
@@ -137,7 +136,7 @@ func min(a, b math.Dec) math.Dec {
 // Validate validates the policy against the group. Note that the threshold
 // can actually be greater than the group's total weight: in the Allow method
 // we check the tally weight against `min(threshold,total_weight)`.
-func (p *ThresholdDecisionPolicy) Validate(g GroupInfo, config grouptypes.Config) error {
+func (p *ThresholdDecisionPolicy) Validate(g GroupInfo, config Config) error {
 	_, err := math.NewPositiveDecFromString(p.Threshold)
 	if err != nil {
 		return errorsmod.Wrap(err, "threshold")
@@ -189,7 +188,7 @@ func (p PercentageDecisionPolicy) ValidateBasic() error {
 }
 
 // Validate validates the policy against the group.
-func (p *PercentageDecisionPolicy) Validate(g GroupInfo, config grouptypes.Config) error {
+func (p *PercentageDecisionPolicy) Validate(g GroupInfo, config Config) error {
 	if p.Windows.MinExecutionPeriod > p.Windows.VotingPeriod+config.MaxExecutionPeriod {
 		return errorsmod.Wrap(errors.ErrInvalid, "min_execution_period should be smaller than voting_period + max_execution_period")
 	}

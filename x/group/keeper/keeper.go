@@ -10,7 +10,6 @@ import (
 	"cosmossdk.io/x/group"
 	"cosmossdk.io/x/group/errors"
 	"cosmossdk.io/x/group/internal/orm"
-	grouptypes "cosmossdk.io/x/group/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -78,13 +77,13 @@ type Keeper struct {
 
 	router baseapp.MessageRouter
 
-	config grouptypes.Config
+	config group.Config
 
 	cdc codec.Codec
 }
 
 // NewKeeper creates a new group keeper.
-func NewKeeper(storeKey storetypes.StoreKey, cdc codec.Codec, router baseapp.MessageRouter, accKeeper group.AccountKeeper, config grouptypes.Config) Keeper {
+func NewKeeper(storeKey storetypes.StoreKey, cdc codec.Codec, router baseapp.MessageRouter, accKeeper group.AccountKeeper, config group.Config) Keeper {
 	k := Keeper{
 		key:       storeKey,
 		router:    router,
@@ -92,7 +91,7 @@ func NewKeeper(storeKey storetypes.StoreKey, cdc codec.Codec, router baseapp.Mes
 		cdc:       cdc,
 	}
 
-	defaultConfig := grouptypes.DefaultConfig()
+	defaultConfig := group.DefaultConfig()
 	// Set the max execution period if not set by app developer.
 	if config.MaxExecutionPeriod == 0 {
 		config.MaxExecutionPeriod = defaultConfig.MaxExecutionPeriod

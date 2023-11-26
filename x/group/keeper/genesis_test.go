@@ -6,7 +6,6 @@ import (
 	"testing"
 	"time"
 
-	grouptypes "cosmossdk.io/x/group/types"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 
@@ -72,7 +71,7 @@ func (s *GenesisTestSuite) SetupTest() {
 	s.cdc = codec.NewProtoCodec(encCfg.InterfaceRegistry)
 	s.ctx = s.sdkCtx
 
-	s.keeper = keeper.NewKeeper(key, s.cdc, bApp.MsgServiceRouter(), accountKeeper, grouptypes.DefaultConfig())
+	s.keeper = keeper.NewKeeper(key, s.cdc, bApp.MsgServiceRouter(), accountKeeper, group.DefaultConfig())
 }
 
 func (s *GenesisTestSuite) TestInitExportGenesis() {

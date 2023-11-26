@@ -10,7 +10,6 @@ import (
 	"cosmossdk.io/x/group"
 	"cosmossdk.io/x/group/keeper"
 
-	grouptypes "cosmossdk.io/x/group/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -423,7 +422,7 @@ func SimulateMsgSubmitProposal(
 		if err != nil {
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgSubmitProposal, ""), nil, nil
 		}
-		err = policy.Validate(*g, grouptypes.DefaultConfig())
+		err = policy.Validate(*g, group.DefaultConfig())
 		if err != nil {
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgSubmitProposal, ""), nil, nil
 		}
@@ -891,7 +890,7 @@ func SimulateMsgWithdrawProposal(
 		if err != nil {
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgWithdrawProposal, err.Error()), nil, nil
 		}
-		err = policy.Validate(*g, grouptypes.DefaultConfig())
+		err = policy.Validate(*g, group.DefaultConfig())
 		if err != nil {
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgWithdrawProposal, err.Error()), nil, nil
 		}

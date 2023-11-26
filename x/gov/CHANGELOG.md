@@ -25,6 +25,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+## Improvements
+
+* [18449](https://github.com/cosmos/cosmos-sdk/pull/18449) Clean validationcode
+
 ### Features
 
 ### API Breaking Changes

@@ -7,14 +7,13 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/x/group"
-	grouptypes "cosmossdk.io/x/group/types"
 )
 
 func TestThresholdDecisionPolicyValidate(t *testing.T) {
 	g := group.GroupInfo{
 		TotalWeight: "10",
 	}
-	config := grouptypes.DefaultConfig()
+	config := group.DefaultConfig()
 	testCases := []struct {
 		name   string
 		policy group.ThresholdDecisionPolicy
@@ -57,7 +56,7 @@ func TestThresholdDecisionPolicyValidate(t *testing.T) {
 
 func TestPercentageDecisionPolicyValidate(t *testing.T) {
 	g := group.GroupInfo{}
-	config := grouptypes.DefaultConfig()
+	config := group.DefaultConfig()
 	testCases := []struct {
 		name   string
 		policy group.PercentageDecisionPolicy

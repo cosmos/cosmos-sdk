@@ -26,7 +26,7 @@ mod tests {
     fn test1() {}
 }
 
-pub fn compile_protos(bz: &[u8]) -> std::io::Result<()> {
+pub fn compile_fd(bz: &[u8]) -> std::io::Result<()> {
     // let mut gz = flate2::read::GzDecoder::new(bz);
     // let mut res = vec![];
     // res.reserve(0x10000);
@@ -36,7 +36,9 @@ pub fn compile_protos(bz: &[u8]) -> std::io::Result<()> {
     let mut ctx = Context::default();
     gen_file(&fd, &mut ctx).map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))?;
     let out_dir = env::var_os("OUT_DIR").unwrap();
-    let dest_path = Path::new(&out_dir).join("out.rs");
-    fs::write(&dest_path, ctx.str)?;
+    let dest_path = Path::new(&out_dir).join(fd.name.unwrap().replace(".proto", ".rs"));
+    fs::create_dir_all(dest_path.parent().unwrap()).unwrap();
+    let contents = ctx.header + "\n" + &ctx.body;
+    fs::write(&dest_path, contents)?;
     Ok(())
 }

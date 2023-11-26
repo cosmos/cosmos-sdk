@@ -1,5 +1,5 @@
 use crate::ctx::Context;
-use crate::r#type::gen_message_type;
+use crate::r#type::gen_message_name;
 use heck::ToSnakeCase;
 use prost_types::{MethodDescriptorProto, ServiceDescriptorProto};
 use std::fmt::Write;
@@ -34,9 +34,9 @@ pub(crate) fn gen_server_method(
     let input_type = method.input_type.clone().unwrap();
     let output_type = method.output_type.clone().unwrap();
     write!(ctx, "    fn {}(&self, ctx: &Ctx, req: &", method_name)?;
-    gen_message_type(&input_type, ctx)?;
+    gen_message_name(&input_type, ctx)?;
     write!(ctx, ") -> Result<");
-    gen_message_type(&output_type, ctx)?;
+    gen_message_name(&output_type, ctx)?;
     write!(ctx, ", zeropb::Status>;\n")?;
     Ok(())
 }
@@ -87,9 +87,9 @@ pub(crate) fn gen_client_method(
     let input_type = method.input_type.clone().unwrap();
     let output_type = method.output_type.clone().unwrap();
     write!(ctx, "    fn {}(&self, req: &", method_name)?;
-    gen_message_type(&input_type, ctx)?;
+    gen_message_name(&input_type, ctx)?;
     write!(ctx, ") -> Result<")?;
-    gen_message_type(&output_type, ctx)?;
+    gen_message_name(&output_type, ctx)?;
     write!(ctx, ", zeropb::Status> {{\n")?;
     write!(ctx, "        unimplemented!()\n")?;
     write!(ctx, "    }}\n")?;

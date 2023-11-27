@@ -9,7 +9,6 @@ import (
 	"os"
 	"path/filepath"
 
-	"cosmossdk.io/x/group"
 	abci "github.com/cometbft/cometbft/abci/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/gogoproto/proto"

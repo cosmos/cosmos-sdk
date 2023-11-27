@@ -3,6 +3,7 @@ package baseapp_test
 import (
 	"bytes"
 	"context"
+	"crypto/sha256"
 	"encoding/binary"
 	"encoding/hex"
 	"errors"
@@ -49,10 +50,12 @@ func TestABCI_Info(t *testing.T) {
 	res, err := suite.baseApp.Info(&reqInfo)
 	require.NoError(t, err)
 
+	emptyHash := sha256.Sum256([]byte{})
+	appHash := emptyHash[:]
 	require.Equal(t, "", res.Version)
 	require.Equal(t, t.Name(), res.GetData())
 	require.Equal(t, int64(0), res.LastBlockHeight)
-	require.Equal(t, []uint8(nil), res.LastBlockAppHash)
+	require.Equal(t, appHash, res.LastBlockAppHash)
 	require.Equal(t, suite.baseApp.AppVersion(), res.AppVersion)
 }
 
@@ -121,14 +124,11 @@ func TestABCI_InitChain(t *testing.T) {
 	// The AppHash returned by a new chain is the sha256 hash of "".
 	// $ echo -n '' | sha256sum
 	// e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
-	apphash, err := hex.DecodeString("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855")
+	emptyHash := sha256.Sum256([]byte{})
+	appHash := emptyHash[:]
 	require.NoError(t, err)
 
-	require.Equal(
-		t,
-		apphash,
-		initChainRes.AppHash,
-	)
+	require.Equal(t, appHash, initChainRes.AppHash)
 
 	// assert that chainID is set correctly in InitChain
 	chainID := getFinalizeBlockStateCtx(app).ChainID()

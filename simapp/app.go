@@ -348,8 +348,11 @@ func NewSimApp(
 
 	groupConfig := group.DefaultConfig()
 	/*
-		Example of setting group params:
-		groupConfig.MaxMetadataLen = 1000
+		Example of group params:
+		config.MaxExecutionPeriod = "1209600s" 	// example execution period in seconds
+		config.MaxMetadataLen = 1000 			// example metadata length in bytes
+		config.MaxProposalTitleLen = 255 		// example max title length in characters
+		config.MaxProposalSummaryLen = 10200 	// example max summary length in characters
 	*/
 	app.GroupKeeper = groupkeeper.NewKeeper(keys[group.StoreKey], appCodec, app.MsgServiceRouter(), app.AuthKeeper, groupConfig)
 

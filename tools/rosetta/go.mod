@@ -6,7 +6,7 @@ require (
 	cosmossdk.io/math v1.2.0
 	github.com/btcsuite/btcd/btcec/v2 v2.3.2
 	github.com/coinbase/rosetta-sdk-go/types v1.0.0
-	github.com/cometbft/cometbft v0.37.2
+	github.com/cometbft/cometbft v0.37.4
 	github.com/cosmos/cosmos-sdk v0.47.0-rc3
 	github.com/cosmos/rosetta-sdk-go v0.10.0
 	github.com/spf13/cobra v1.6.1
@@ -23,7 +23,7 @@ require (
 	filippo.io/edwards25519 v1.0.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/99designs/keyring v1.2.1 // indirect
-	github.com/ChainSafe/go-schnorrkel v0.0.0-20200405005733-88cbf1b4c40d // indirect
+	github.com/ChainSafe/go-schnorrkel v1.0.0 // indirect
 	github.com/armon/go-metrics v0.4.1 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bgentry/speakeasy v0.1.1-0.20220910012023-760eaf8b6816 // indirect

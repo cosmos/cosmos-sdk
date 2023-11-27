@@ -211,7 +211,7 @@ func ProvideModule(in GroupInputs) GroupOutputs {
 		in.MsgServiceRouter,
 		in.AccountKeeper,
 		group.Config{
-			MaxExecutionPeriod:    in.Config.MaxExecutionPeriod,
+			MaxExecutionPeriod:    in.Config.MaxExecutionPeriod.AsDuration(),
 			MaxMetadataLen:        in.Config.MaxMetadataLen,
 			MaxProposalTitleLen:   in.Config.MaxProposalTitleLen,
 			MaxProposalSummaryLen: in.Config.MaxProposalSummaryLen,

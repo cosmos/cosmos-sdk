@@ -1,6 +1,7 @@
 package metrics
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/hashicorp/go-metrics"
@@ -26,6 +27,10 @@ func NewMetrics(labels [][]string) Metrics {
 	if numGlobalLabels := len(labels); numGlobalLabels > 0 {
 		parsedGlobalLabels := make([]metrics.Label, numGlobalLabels)
 		for i, label := range labels {
+			if len(label) != 2 {
+				panic(fmt.Errorf("invalid global label length; expected 2, got %d", len(label)))
+			}
+
 			parsedGlobalLabels[i] = metrics.Label{Name: label[0], Value: label[1]}
 		}
 

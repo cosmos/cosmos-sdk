@@ -117,10 +117,10 @@ func makeSignBatchCmd() func(cmd *cobra.Command, args []string) error {
 		appendMessagesToSingleTx, _ := cmd.Flags().GetBool(flagAppend)
 		// Combines all tx msgs and create single signed transaction
 		if appendMessagesToSingleTx {
+			var feeAmount sdk.Coins
 			txBuilder := txCfg.NewTxBuilder()
 			msgs := make([]sdk.Msg, 0)
 			newGasLimit := uint64(0)
-			feeAmount := sdk.Coins{}
 
 			for scanner.Scan() {
 				unsignedStdTx := scanner.Tx()
@@ -131,8 +131,7 @@ func makeSignBatchCmd() func(cmd *cobra.Command, args []string) error {
 				// increment the gas
 				newGasLimit += fe.GetTx().GetGas()
 				// Add the fees
-				fees := fe.GetTx().GetFee()
-				for _, fee := range fees {
+				for _, fee := range fe.GetTx().GetFee() {
 					feeAmount = feeAmount.Add(fee)
 				}
 				// append messages

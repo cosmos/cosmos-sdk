@@ -27,49 +27,24 @@ import (
 var (
 	msg = []byte("I am become, the great destroyer of the worlds, and I have come to destroy all people. With the exception of you, all soldiers here on both sides will be slain")
 
-	sk1    = secp256k1.GenPrivKey()
-	pk1    = sk1.PubKey().(*secp256k1.PubKey)
-	pk1Any = must(anyutil.New(&protosecp256k1.PubKey{Key: must(pk1.Marshal())}))
+	protov2MarshalOpts = proto.MarshalOptions{Deterministic: true}
 
-	sr1    = must(secp256r1.GenPrivKey())
-	pr1    = sr1.PubKey().(*secp256r1.PubKey)
-	pr1Any = must(anyutil.New(&protosecp256r1.PubKey{Key: must(pr1.Marshal())}))
+	skK1    = secp256k1.GenPrivKey()
+	pkK1    = skK1.PubKey().(*secp256k1.PubKey)
+	pkK1Any = must(anyutil.New(&protosecp256k1.PubKey{Key: must(pkK1.Marshal())}))
 
-	sigK1     = must(sk1.Sign(msg))
-	sigK1Data = &signing.SingleSignatureData{
-		SignMode:  signing.SignMode_SIGN_MODE_DIRECT,
-		Signature: sigK1,
-	}
-	sigR1     = must(sr1.Sign(msg))
-	sigR1Data = &signing.SingleSignatureData{
-		SignMode:  signing.SignMode_SIGN_MODE_DIRECT,
-		Signature: sigR1,
-	}
+	skR1    = must(secp256r1.GenPrivKey())
+	pkR1    = skR1.PubKey().(*secp256r1.PubKey)
+	pkR1Any = must(anyutil.New(&protosecp256r1.PubKey{Key: must(pkR1.Marshal())}))
 
 	chainID = "cosmos-test"
 	seqNo   = uint64(7)
-
-	sdK1 = &signing.SingleSignatureData{
-		SignMode:  signing.SignMode_SIGN_MODE_DIRECT,
-		Signature: sigK1,
-	}
 
 	signerDataK1 = txsigning.SignerData{
 		ChainID:       chainID,
 		AccountNumber: 1,
 		Sequence:      seqNo,
-		PubKey:        pk1Any,
-	}
-
-	sdR1 = &signing.SingleSignatureData{
-		SignMode:  signing.SignMode_SIGN_MODE_DIRECT,
-		Signature: sigR1,
-	}
-	signerDataR1 = txsigning.SignerData{
-		ChainID:       chainID,
-		AccountNumber: 1,
-		Sequence:      seqNo,
-		PubKey:        pr1Any,
+		PubKey:        pkK1Any,
 	}
 
 	handlerMap = txsigning.NewHandlerMap(direct.SignModeHandler{})
@@ -84,7 +59,7 @@ var (
 
 	signerInfoK1 = []*txv1beta1.SignerInfo{
 		{
-			PublicKey: pk1Any,
+			PublicKey: pkK1Any,
 			ModeInfo: &txv1beta1.ModeInfo{
 				Sum: &txv1beta1.ModeInfo_Single_{
 					Single: &txv1beta1.ModeInfo_Single{
@@ -106,7 +81,7 @@ var (
 
 	signerInfoR1 = []*txv1beta1.SignerInfo{
 		{
-			PublicKey: pr1Any,
+			PublicKey: pkR1Any,
 			ModeInfo: &txv1beta1.ModeInfo{
 				Sum: &txv1beta1.ModeInfo_Single_{
 					Single: &txv1beta1.ModeInfo_Single{
@@ -135,11 +110,42 @@ var (
 		BodyBytes:     bodyBytes,
 	}
 
+	sigK1 = must(protov2MarshalOpts.Marshal(&txv1beta1.SignDoc{
+		BodyBytes:     must(skK1.Sign(msg)),
+		AuthInfoBytes: txDataK1.AuthInfoBytes,
+		ChainId:       signerDataK1.ChainID,
+		AccountNumber: signerDataK1.AccountNumber,
+	}))
+
+	signedK1 = &signing.SingleSignatureData{
+		SignMode:  signing.SignMode_SIGN_MODE_DIRECT,
+		Signature: sigK1,
+	}
+
 	txDataR1 = txsigning.TxData{
 		Body:          txBody,
 		AuthInfo:      authInfoR1,
 		AuthInfoBytes: must(proto.Marshal(authInfoR1)),
 		BodyBytes:     bodyBytes,
+	}
+
+	signerDataR1 = txsigning.SignerData{
+		ChainID:       chainID,
+		AccountNumber: 1,
+		Sequence:      seqNo,
+		PubKey:        pkR1Any,
+	}
+
+	sigR1 = must(protov2MarshalOpts.Marshal(&txv1beta1.SignDoc{
+		BodyBytes:     must(skR1.Sign(msg)),
+		AuthInfoBytes: txDataR1.AuthInfoBytes,
+		ChainId:       signerDataR1.ChainID,
+		AccountNumber: signerDataR1.AccountNumber,
+	}))
+
+	signedR1 = &signing.SingleSignatureData{
+		SignMode:  signing.SignMode_SIGN_MODE_DIRECT,
+		Signature: sigR1,
 	}
 )
 
@@ -154,33 +160,33 @@ var cases = []struct {
 }{
 	{
 		name:       "secp256k1 good signature",
-		pk:         pk1,
+		pk:         pkK1,
 		signerData: signerDataK1,
-		signature:  sdK1,
+		signature:  signedK1,
 		txData:     txDataK1,
 		wantErr:    "",
 	},
 	{
 		name:       "secp256r1 good signature",
-		pk:         pr1,
+		pk:         pkR1,
 		signerData: signerDataR1,
-		signature:  sdR1,
+		signature:  signedR1,
 		txData:     txDataR1,
 		wantErr:    "",
 	},
 	{
 		name:       "secp256k1 mismatched signature",
-		pk:         pk1,
+		pk:         pkK1,
 		signerData: signerDataK1,
-		signature:  sdR1,
+		signature:  signedK1,
 		txData:     txDataK1,
 		wantErr:    "unable to verify single signer signature",
 	},
 	{
 		name:       "secp256r1 mismatched signature",
-		pk:         pr1,
+		pk:         pkR1,
 		signerData: signerDataR1,
-		signature:  sdK1,
+		signature:  signedR1,
 		txData:     txDataR1,
 		wantErr:    "unable to verify single signer signature",
 	},

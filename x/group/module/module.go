@@ -206,29 +206,16 @@ type GroupOutputs struct {
 }
 
 func ProvideModule(in GroupInputs) GroupOutputs {
-	defaultConfig := group.DefaultConfig()
-	/*
-		Example of setting group params:
-		in.Config.MaxExecutionPeriod = "1209600s" 	// example execution period in seconds
-		in.Config.MaxMetadataLen = 1000 			// example metadata length in bytes
-		in.Config.MaxProposalTitleLen = 255 		// example max title length in characters
-		in.Config.MaxProposalSummaryLen = 10200 	// example max summary length in characters
-	*/
-
-	if in.Config.MaxMetadataLen != 0 {
-		defaultConfig.MaxMetadataLen = in.Config.MaxMetadataLen
-	}
-	if in.Config.MaxProposalTitleLen != 0 {
-		defaultConfig.MaxProposalTitleLen = in.Config.MaxProposalTitleLen
-	}
-	if in.Config.MaxProposalSummaryLen != 0 {
-		defaultConfig.MaxProposalSummaryLen = in.Config.MaxProposalSummaryLen
-	}
 	k := keeper.NewKeeper(in.Key,
 		in.Cdc,
 		in.MsgServiceRouter,
 		in.AccountKeeper,
-		defaultConfig,
+		group.Config{
+			MaxExecutionPeriod:    in.Config.MaxExecutionPeriod,
+			MaxMetadataLen:        in.Config.MaxMetadataLen,
+			MaxProposalTitleLen:   in.Config.MaxProposalTitleLen,
+			MaxProposalSummaryLen: in.Config.MaxProposalSummaryLen,
+		},
 	)
 	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.Registry)
 	return GroupOutputs{GroupKeeper: k, Module: m}

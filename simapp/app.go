@@ -9,7 +9,7 @@ import (
 	"os"
 	"path/filepath"
 
-	grouptypes "cosmossdk.io/x/group"
+	"cosmossdk.io/x/group"
 	abci "github.com/cometbft/cometbft/abci/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/gogoproto/proto"
@@ -347,10 +347,13 @@ func NewSimApp(
 
 	app.AuthzKeeper = authzkeeper.NewKeeper(runtime.NewKVStoreService(keys[authzkeeper.StoreKey]), appCodec, app.MsgServiceRouter(), app.AuthKeeper)
 
-	groupConfig := grouptypes.DefaultConfig()
+	groupConfig := group.DefaultConfig()
 	/*
-		Example of setting group params:
-		groupConfig.MaxMetadataLen = 1000
+		Example of group params:
+		config.MaxExecutionPeriod = "1209600s" 	// example execution period in seconds
+		config.MaxMetadataLen = 1000 			// example metadata length in bytes
+		config.MaxProposalTitleLen = 255 		// example max title length in characters
+		config.MaxProposalSummaryLen = 10200 	// example max summary length in characters
 	*/
 	app.GroupKeeper = groupkeeper.NewKeeper(keys[group.StoreKey], appCodec, app.MsgServiceRouter(), app.AuthKeeper, groupConfig)
 

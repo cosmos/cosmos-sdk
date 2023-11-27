@@ -620,12 +620,12 @@ type Module struct {
 	// MaxMetadataLen defines the max chars allowed in all
 	// messages that allows creating or updating a group
 	// with a metadata field
-	// Defaults to 140 if not explicitly set.
+	// Defaults to 255 if not explicitly set.
 	MaxMetadataLen uint64 `protobuf:"varint,2,opt,name=max_metadata_len,json=maxMetadataLen,proto3" json:"max_metadata_len,omitempty"`
 	// MaxProposalTitleLen defines the max chars allowed
 	// in string for the MsgSubmitProposal and Proposal
 	// summary field
-	// Defaults to 140 if not explicitly set.
+	// Defaults to 255 if not explicitly set.
 	MaxProposalTitleLen uint64 `protobuf:"varint,3,opt,name=max_proposal_title_len,json=maxProposalTitleLen,proto3" json:"max_proposal_title_len,omitempty"`
 	// MaxProposalSummaryLen defines the max chars allowed
 	// in string for the MsgSubmitProposal and Proposal

@@ -91,6 +91,14 @@ func NewKeeper(storeKey storetypes.StoreKey, cdc codec.Codec, router baseapp.Mes
 		cdc:       cdc,
 	}
 
+	/*
+		Example of group params:
+		config.MaxExecutionPeriod = "1209600s" 	// example execution period in seconds
+		config.MaxMetadataLen = 1000 			// example metadata length in bytes
+		config.MaxProposalTitleLen = 255 		// example max title length in characters
+		config.MaxProposalSummaryLen = 10200 	// example max summary length in characters
+	*/
+
 	defaultConfig := group.DefaultConfig()
 	// Set the max execution period if not set by app developer.
 	if config.MaxExecutionPeriod <= 0 {

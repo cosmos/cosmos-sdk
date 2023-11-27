@@ -125,7 +125,6 @@ func (app *BaseApp) InitChain(req *abci.RequestInitChain) (*abci.ResponseInitCha
 		}
 	}
 
-	fmt.Println(app.LastCommitID().Hash)
 	// NOTE: We don't commit, but FinalizeBlock for block InitialHeight starts from
 	// this FinalizeBlockState.
 	return &abci.ResponseInitChain{

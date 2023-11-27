@@ -120,6 +120,7 @@ func makeSignBatchCmd() func(cmd *cobra.Command, args []string) error {
 			txBuilder := txCfg.NewTxBuilder()
 			msgs := make([]sdk.Msg, 0)
 			newGasLimit := uint64(0)
+			feeAmount := sdk.Coins{}
 
 			for scanner.Scan() {
 				unsignedStdTx := scanner.Tx()
@@ -129,6 +130,11 @@ func makeSignBatchCmd() func(cmd *cobra.Command, args []string) error {
 				}
 				// increment the gas
 				newGasLimit += fe.GetTx().GetGas()
+				// Add the fees
+				fees := fe.GetTx().GetFee()
+				for _, fee := range fees {
+					feeAmount = feeAmount.Add(fee)
+				}
 				// append messages
 				msgs = append(msgs, unsignedStdTx.GetMsgs()...)
 			}
@@ -140,12 +146,14 @@ func makeSignBatchCmd() func(cmd *cobra.Command, args []string) error {
 
 			// set the memo,fees,feeGranter,feePayer from cmd flags
 			txBuilder.SetMemo(txFactory.Memo())
-			txBuilder.SetFeeAmount(txFactory.Fees())
 			txBuilder.SetFeeGranter(clientCtx.FeeGranter)
 			txBuilder.SetFeePayer(clientCtx.FeePayer)
 
 			// set the gasLimit
 			txBuilder.SetGasLimit(newGasLimit)
+
+			// set the feeAmount
+			txBuilder.SetFeeAmount(feeAmount)
 
 			// sign the txs
 			from, _ := cmd.Flags().GetString(flags.FlagFrom)

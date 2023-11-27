@@ -163,3 +163,22 @@ func (k Keeper) FundCommunityPool(ctx sdk.Context, amount sdk.Coins, sender sdk.
 
 	return nil
 }
+
+func (k Keeper) WithdrawSingleShareRecordReward(ctx sdk.Context, recordID uint64) error {
+	// TODO add LSM logic
+	return nil
+}
+
+// withdraw reward for owning TokenizeShareRecord
+func (k Keeper) WithdrawTokenizeShareRecordReward(ctx sdk.Context, ownerAddr sdk.AccAddress, recordID uint64) (sdk.Coins, error) {
+	rewards := sdk.Coins{}
+	// TODO add LSM logic
+	return rewards, nil
+}
+
+// withdraw reward for all owning TokenizeShareRecord
+func (k Keeper) WithdrawAllTokenizeShareRecordReward(ctx sdk.Context, ownerAddr sdk.AccAddress) (sdk.Coins, error) {
+	totalRewards := sdk.Coins{}
+	// TODO add LSM logic
+	return totalRewards, nil
+}

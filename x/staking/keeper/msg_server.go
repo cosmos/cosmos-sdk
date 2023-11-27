@@ -105,10 +105,11 @@ func (k msgServer) CreateValidator(goCtx context.Context, msg *types.MsgCreateVa
 		return nil, err
 	}
 
-	validator.MinSelfDelegation = msg.MinSelfDelegation
-
 	k.SetValidator(ctx, validator)
-	k.SetValidatorByConsAddr(ctx, validator)
+	err = k.SetValidatorByConsAddr(ctx, validator)
+	if err != nil {
+		return nil, err
+	}
 	k.SetNewValidatorByPowerIndex(ctx, validator)
 
 	// call the after-creation hook
@@ -170,25 +171,12 @@ func (k msgServer) EditValidator(goCtx context.Context, msg *types.MsgEditValida
 		validator.Commission = commission
 	}
 
-	if msg.MinSelfDelegation != nil {
-		if !msg.MinSelfDelegation.GT(validator.MinSelfDelegation) {
-			return nil, types.ErrMinSelfDelegationDecreased
-		}
-
-		if msg.MinSelfDelegation.GT(validator.Tokens) {
-			return nil, types.ErrSelfDelegationBelowMinimum
-		}
-
-		validator.MinSelfDelegation = *msg.MinSelfDelegation
-	}
-
 	k.SetValidator(ctx, validator)
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			types.EventTypeEditValidator,
 			sdk.NewAttribute(types.AttributeKeyCommissionRate, validator.Commission.String()),
-			sdk.NewAttribute(types.AttributeKeyMinSelfDelegation, validator.MinSelfDelegation.String()),
 		),
 	})
 
@@ -490,4 +478,59 @@ func (ms msgServer) UpdateParams(goCtx context.Context, msg *types.MsgUpdatePara
 	}
 
 	return &types.MsgUpdateParamsResponse{}, nil
+}
+
+// UnbondValidator defines a method for performing the status transition for
+// a validator from bonded to unbonding
+// This allows a validator to stop their services and jail themselves without
+// experiencing a slash
+func (k msgServer) UnbondValidator(goCtx context.Context, msg *types.MsgUnbondValidator) (*types.MsgUnbondValidatorResponse, error) {
+	// TODO add LSM logic
+	return &types.MsgUnbondValidatorResponse{}, nil
+}
+
+// Tokenizes shares associated with a delegation by creating a tokenize share record
+// and returning tokens with a denom of the format {validatorAddress}/{recordId}
+func (k msgServer) TokenizeShares(goCtx context.Context, msg *types.MsgTokenizeShares) (*types.MsgTokenizeSharesResponse, error) {
+	shareToken := sdk.Coin{}
+	// TODO add LSM logic
+	return &types.MsgTokenizeSharesResponse{
+		Amount: shareToken,
+	}, nil
+}
+
+// Converts tokenized shares back into a native delegation
+func (k msgServer) RedeemTokensForShares(goCtx context.Context, msg *types.MsgRedeemTokensForShares) (*types.MsgRedeemTokensForSharesResponse, error) {
+	returnCoin := sdk.Coin{}
+	// TODO add LSM logic
+	return &types.MsgRedeemTokensForSharesResponse{
+		Amount: returnCoin,
+	}, nil
+}
+
+// Transfers the ownership of rewards associated with a tokenize share record
+func (k msgServer) TransferTokenizeShareRecord(goCtx context.Context, msg *types.MsgTransferTokenizeShareRecord) (*types.MsgTransferTokenizeShareRecordResponse, error) {
+	// TODO add LSM logic
+	return &types.MsgTransferTokenizeShareRecordResponse{}, nil
+}
+
+// DisableTokenizeShares prevents an address from tokenizing any of their delegations
+func (k msgServer) DisableTokenizeShares(goCtx context.Context, msg *types.MsgDisableTokenizeShares) (*types.MsgDisableTokenizeSharesResponse, error) {
+	// TODO add LSM logic
+	return &types.MsgDisableTokenizeSharesResponse{}, nil
+}
+
+// EnableTokenizeShares begins the countdown after which tokenizing shares by the
+// sender address is re-allowed, which will complete after the unbonding period
+func (k msgServer) EnableTokenizeShares(goCtx context.Context, msg *types.MsgEnableTokenizeShares) (*types.MsgEnableTokenizeSharesResponse, error) {
+	completionTime := time.Time{}
+	// TODO add LSM logic
+	return &types.MsgEnableTokenizeSharesResponse{CompletionTime: completionTime}, nil
+}
+
+// Designates a delegation as a validator bond
+// This enables the validator to receive more liquid staking delegations
+func (k msgServer) ValidatorBond(goCtx context.Context, msg *types.MsgValidatorBond) (*types.MsgValidatorBondResponse, error) {
+	// TODO add LSM logic
+	return &types.MsgValidatorBondResponse{}, nil
 }

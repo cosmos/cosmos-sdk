@@ -104,11 +104,11 @@ func (k msgServer) WithdrawValidatorCommission(goCtx context.Context, msg *types
 func (k msgServer) FundCommunityPool(goCtx context.Context, msg *types.MsgFundCommunityPool) (*types.MsgFundCommunityPoolResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	depositer, err := sdk.AccAddressFromBech32(msg.Depositor)
+	depositor, err := sdk.AccAddressFromBech32(msg.Depositor)
 	if err != nil {
 		return nil, err
 	}
-	if err := k.Keeper.FundCommunityPool(ctx, msg.Amount, depositer); err != nil {
+	if err := k.Keeper.FundCommunityPool(ctx, msg.Amount, depositor); err != nil {
 		return nil, err
 	}
 
@@ -157,4 +157,16 @@ func (k msgServer) CommunityPoolSpend(goCtx context.Context, req *types.MsgCommu
 	logger.Info("transferred from the community pool to recipient", "amount", req.Amount.String(), "recipient", req.Recipient)
 
 	return &types.MsgCommunityPoolSpendResponse{}, nil
+}
+
+// WithdrawTokenizeShareRecordReward defines a method to withdraw reward for owning TokenizeShareRecord
+func (k msgServer) WithdrawTokenizeShareRecordReward(goCtx context.Context, msg *types.MsgWithdrawTokenizeShareRecordReward) (*types.MsgWithdrawTokenizeShareRecordRewardResponse, error) {
+	// TODO add LSM logic
+	return &types.MsgWithdrawTokenizeShareRecordRewardResponse{}, nil
+}
+
+// WithdrawAllTokenizeShareRecordReward defines a method to withdraw reward for owning TokenizeShareRecord
+func (k msgServer) WithdrawAllTokenizeShareRecordReward(goCtx context.Context, msg *types.MsgWithdrawAllTokenizeShareRecordReward) (*types.MsgWithdrawAllTokenizeShareRecordRewardResponse, error) {
+	// TODO add LSM logic
+	return &types.MsgWithdrawAllTokenizeShareRecordRewardResponse{}, nil
 }

@@ -42,7 +42,7 @@ func TestMsgDecode(t *testing.T) {
 	// now let's try to serialize the whole message
 
 	commission1 := types.NewCommissionRates(math.LegacyZeroDec(), math.LegacyZeroDec(), math.LegacyZeroDec())
-	msg, err := types.NewMsgCreateValidator(valAddr1, pk1, coinPos, types.Description{}, commission1, math.OneInt())
+	msg, err := types.NewMsgCreateValidator(valAddr1, pk1, coinPos, types.Description{}, commission1)
 	require.NoError(t, err)
 	msgSerialized, err := cdc.MarshalInterface(msg)
 	require.NoError(t, err)
@@ -84,7 +84,7 @@ func TestMsgCreateValidator(t *testing.T) {
 
 	for _, tc := range tests {
 		description := types.NewDescription(tc.moniker, tc.identity, tc.website, tc.securityContact, tc.details)
-		msg, err := types.NewMsgCreateValidator(tc.validatorAddr, tc.pubkey, tc.bond, description, tc.CommissionRates, tc.minSelfDelegation)
+		msg, err := types.NewMsgCreateValidator(tc.validatorAddr, tc.pubkey, tc.bond, description, tc.CommissionRates)
 		require.NoError(t, err)
 		if tc.expectPass {
 			require.Nil(t, msg.ValidateBasic(), "test: %v", tc.name)
@@ -113,7 +113,7 @@ func TestMsgEditValidator(t *testing.T) {
 		description := types.NewDescription(tc.moniker, tc.identity, tc.website, tc.securityContact, tc.details)
 		newRate := math.LegacyZeroDec()
 
-		msg := types.NewMsgEditValidator(tc.validatorAddr, description, &newRate, &tc.minSelfDelegation)
+		msg := types.NewMsgEditValidator(tc.validatorAddr, description, &newRate)
 		if tc.expectPass {
 			require.Nil(t, msg.ValidateBasic(), "test: %v", tc.name)
 		} else {

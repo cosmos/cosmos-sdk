@@ -4,6 +4,7 @@ import (
 	"context"
 	"strings"
 
+	"cosmossdk.io/math"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -610,4 +611,78 @@ func RedelegationsToRedelegationResponses(ctx sdk.Context, k *Keeper, redels typ
 	}
 
 	return resp, nil
+}
+
+// Query for individual tokenize share record information by share by id
+func (k Querier) TokenizeShareRecordById(c context.Context, req *types.QueryTokenizeShareRecordByIdRequest) (*types.QueryTokenizeShareRecordByIdResponse, error) { //nolint:revive // fixing this would require changing the .proto files, so we might as well leave it alone
+	record := types.TokenizeShareRecord{}
+	// TODO add LSM logic
+	return &types.QueryTokenizeShareRecordByIdResponse{
+		Record: record,
+	}, nil
+}
+
+// Query for individual tokenize share record information by share denom
+func (k Querier) TokenizeShareRecordByDenom(c context.Context, req *types.QueryTokenizeShareRecordByDenomRequest) (*types.QueryTokenizeShareRecordByDenomResponse, error) {
+	record := types.TokenizeShareRecord{}
+	// TODO add LSM logic
+	return &types.QueryTokenizeShareRecordByDenomResponse{
+		Record: record,
+	}, nil
+}
+
+// Query tokenize share records by address
+func (k Querier) TokenizeShareRecordsOwned(c context.Context, req *types.QueryTokenizeShareRecordsOwnedRequest) (*types.QueryTokenizeShareRecordsOwnedResponse, error) {
+	records := []types.TokenizeShareRecord{}
+	// TODO add LSM logic
+	return &types.QueryTokenizeShareRecordsOwnedResponse{
+		Records: records,
+	}, nil
+}
+
+// Query for all tokenize share records
+func (k Querier) AllTokenizeShareRecords(c context.Context, req *types.QueryAllTokenizeShareRecordsRequest) (*types.QueryAllTokenizeShareRecordsResponse, error) {
+	records := []types.TokenizeShareRecord{}
+	// TODO add LSM logic
+	return &types.QueryAllTokenizeShareRecordsResponse{
+		Records:    records,
+		Pagination: nil,
+	}, nil
+}
+
+// Query for last tokenize share record id
+func (k Querier) LastTokenizeShareRecordId(c context.Context, req *types.QueryLastTokenizeShareRecordIdRequest) (*types.QueryLastTokenizeShareRecordIdResponse, error) { //nolint:revive // fixing this would require changing the .proto files, so we might as well leave it alone
+	// TODO add LSM logic
+	return &types.QueryLastTokenizeShareRecordIdResponse{
+		Id: 0,
+	}, nil
+}
+
+// Query for total tokenized staked assets
+func (k Querier) TotalTokenizeSharedAssets(c context.Context, req *types.QueryTotalTokenizeSharedAssetsRequest) (*types.QueryTotalTokenizeSharedAssetsResponse, error) {
+	ctx := sdk.UnwrapSDKContext(c)
+	totalTokenizeShared := math.Int{}
+	// TODO add LSM logic
+	return &types.QueryTotalTokenizeSharedAssetsResponse{
+		Value: sdk.NewCoin(k.BondDenom(ctx), totalTokenizeShared),
+	}, nil
+}
+
+// Query for total tokenized staked tokens
+// Liquid staked tokens are either tokenized delegations or delegations
+// owned by a module account
+func (k Querier) TotalLiquidStaked(c context.Context, req *types.QueryTotalLiquidStaked) (*types.QueryTotalLiquidStakedResponse, error) {
+	// TODO add LSM logic
+	return &types.QueryTotalLiquidStakedResponse{
+		Tokens: "",
+	}, nil
+}
+
+// Query status of an account's tokenize share lock
+func (k Querier) TokenizeShareLockInfo(c context.Context, req *types.QueryTokenizeShareLockInfo) (*types.QueryTokenizeShareLockInfoResponse, error) {
+	// TODO add LSM logic
+	return &types.QueryTokenizeShareLockInfoResponse{
+		Status:         "",
+		ExpirationTime: "",
+	}, nil
 }

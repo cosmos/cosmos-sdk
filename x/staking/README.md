@@ -1560,7 +1560,7 @@ simd tx staking --help
 
 ##### create-validator
 
-The command `create-validator` allows users to create new validator initialized with a self-delegation to it.
+The command `create-validator` allows users to create new validator.
 
 Usage:
 
@@ -1581,7 +1581,6 @@ simd tx staking create-validator \
   --commission-rate="0.10" \
   --commission-max-rate="0.20" \
   --commission-max-change-rate="0.01" \
-  --min-self-delegation="1" \
   --gas="auto" \
   --gas-adjustment="1.2" \
   --gas-prices="0.025stake" \

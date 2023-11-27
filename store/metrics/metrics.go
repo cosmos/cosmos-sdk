@@ -21,14 +21,14 @@ type Metrics struct {
 
 // NewMetrics returns a new instance of the Metrics with labels set by the node
 // operator.
-func NewMetrics(labels [][]string) Metrics {
+func NewMetrics(labels [][]string) (Metrics, error) {
 	m := Metrics{}
 
 	if numGlobalLabels := len(labels); numGlobalLabels > 0 {
 		parsedGlobalLabels := make([]metrics.Label, numGlobalLabels)
 		for i, label := range labels {
 			if len(label) != 2 {
-				panic(fmt.Errorf("invalid global label length; expected 2, got %d", len(label)))
+				return Metrics{}, fmt.Errorf("invalid global label length; expected 2, got %d", len(label))
 			}
 
 			parsedGlobalLabels[i] = metrics.Label{Name: label[0], Value: label[1]}
@@ -37,7 +37,7 @@ func NewMetrics(labels [][]string) Metrics {
 		m.Labels = parsedGlobalLabels
 	}
 
-	return m
+	return m, nil
 }
 
 // MeasureSince provides a wrapper functionality for emitting a time measure

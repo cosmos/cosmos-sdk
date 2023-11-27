@@ -23,6 +23,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 # Changelog
 
+## Unreleased
+
+### Bug Fixes
+
+* [#18563](https://github.com/cosmos/cosmos-sdk/pull/18563) `LastCommitID().Hash` will always return `sha256([]byte{})` if the store is empty.
+
 ## v1.0.0 (October 31, 2023)
 
 ### Features
@@ -46,4 +52,3 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### API Breaking Changes
 
 * [#16321](https://github.com/cosmos/cosmos-sdk/pull/16321) QueryInterface defines its own request and response types instead of relying on comet/abci & returns an error
-* [#18563](https://github.com/cosmos/cosmos-sdk/pull/18563) `LastCommitID().Hash` will always return `sha256([]byte{})` if the store is empty.

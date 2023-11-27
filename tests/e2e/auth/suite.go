@@ -42,7 +42,6 @@ type E2ETestSuite struct {
 	suite.Suite
 
 	cfg     network.Config
-	network *network.Network
 	ac      address.Codec
 	network network.NetworkI
 }
@@ -1332,10 +1331,10 @@ func (s *E2ETestSuite) TestTxWithoutPublicKey() {
 
 	// Create a txBuilder with an unsigned tx.
 	txBuilder := txCfg.NewTxBuilder()
-	msg := banktypes.NewMsgSend(val1.GetAddress(), val1.GetAddress(), sdk.NewCoins(
+	msg := banktypes.NewMsgSend(val1.GetAddress().String(), val1.GetAddress().String(), sdk.NewCoins(
 		sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10)),
 	))
-	err = txBuilder.SetMsgs(msg)
+	err := txBuilder.SetMsgs(msg)
 	s.Require().NoError(err)
 	txBuilder.SetFeeAmount(sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(150))))
 	txBuilder.SetGasLimit(testdata.NewTestGasLimit())
@@ -1398,10 +1397,10 @@ func (s *E2ETestSuite) TestSignWithMultiSignersAminoJSON() {
 	// The validators need to sign with SIGN_MODE_LEGACY_AMINO_JSON,
 	// because DIRECT doesn't support multi signers via the CLI.
 	// Since we use amino, we don't need to pre-populate signer_infos.
-	txBuilder := val0.ClientCtx.TxConfig.NewTxBuilder()
-	val0Str, err := s.ac.BytesToString(val0.Address)
+	txBuilder := val0.GetClientCtx().TxConfig.NewTxBuilder()
+	val0Str, err := s.ac.BytesToString(val0.GetAddress())
 	s.Require().NoError(err)
-	val1Str, err := s.ac.BytesToString(val1.Address)
+	val1Str, err := s.ac.BytesToString(val1.GetAddress())
 	s.Require().NoError(err)
 	addrStr, err := s.ac.BytesToString(addr1)
 	s.Require().NoError(err)

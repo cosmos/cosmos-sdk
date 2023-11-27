@@ -408,7 +408,7 @@ func TestEndBlockerProposalHandlerFailed(t *testing.T) {
 	require.NoError(t, err)
 
 	createValidators(t, stakingMsgSvr, ctx, []sdk.ValAddress{valAddr}, []int64{10})
-	_, err := suite.StakingKeeper.EndBlocker(ctx)
+	_, err = suite.StakingKeeper.EndBlocker(ctx)
 	require.NoError(t, err)
 	msg := banktypes.NewMsgSend(addrStr, addrStr1, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100000))))
 	proposal, err := suite.GovKeeper.SubmitProposal(ctx, []sdk.Msg{msg}, "", "title", "summary", proposer, false)

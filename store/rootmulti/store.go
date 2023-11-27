@@ -533,14 +533,7 @@ func (rs *Store) WorkingHash() []byte {
 		return storeInfos[i].Name < storeInfos[j].Name
 	})
 
-	apphash := types.CommitInfo{StoreInfos: storeInfos}.Hash()
-
-	if len(apphash) == 0 {
-		emptyHash := sha256.Sum256([]byte{})
-		return emptyHash[:]
-	}
-
-	return apphash
+	return types.CommitInfo{StoreInfos: storeInfos}.Hash()
 }
 
 // CacheWrap implements CacheWrapper/Store/CommitStore.

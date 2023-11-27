@@ -1,6 +1,8 @@
 package types
 
 import (
+	"crypto/sha256"
+
 	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 
 	"cosmossdk.io/store/internal/maps"
@@ -34,6 +36,12 @@ func (ci CommitInfo) Hash() []byte {
 	}
 
 	rootHash, _, _ := maps.ProofsFromMap(ci.toMap())
+
+	if len(rootHash) == 0 {
+		emptyHash := sha256.Sum256([]byte{})
+		return emptyHash[:]
+	}
+
 	return rootHash
 }
 

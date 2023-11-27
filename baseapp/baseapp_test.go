@@ -729,7 +729,10 @@ func TestLoadVersionPruning(t *testing.T) {
 	err := app.LoadLatestVersion() // needed to make stores non-nil
 	require.Nil(t, err)
 
-	emptyCommitID := storetypes.CommitID{}
+	emptyHash := sha256.Sum256([]byte{})
+	emptyCommitID := storetypes.CommitID{
+		Hash: emptyHash[:],
+	}
 
 	// fresh store has zero/empty last commit
 	lastHeight := app.LastBlockHeight()

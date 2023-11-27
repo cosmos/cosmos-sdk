@@ -446,8 +446,7 @@ func (rs *Store) LastCommitID() types.CommitID {
 			Hash:    appHash, // set empty apphash to sha256([]byte{}) if info is nil
 		}
 	}
-
-	if rs.lastCommitInfo.CommitID().Hash == nil {
+	if len(rs.lastCommitInfo.CommitID().Hash) == 0 {
 		emptyHash := sha256.Sum256([]byte{})
 		appHash := emptyHash[:]
 		return types.CommitID{
@@ -534,7 +533,14 @@ func (rs *Store) WorkingHash() []byte {
 		return storeInfos[i].Name < storeInfos[j].Name
 	})
 
-	return types.CommitInfo{StoreInfos: storeInfos}.Hash()
+	apphash := types.CommitInfo{StoreInfos: storeInfos}.Hash()
+
+	if len(apphash) == 0 {
+		emptyHash := sha256.Sum256([]byte{})
+		return emptyHash[:]
+	}
+
+	return apphash
 }
 
 // CacheWrap implements CacheWrapper/Store/CommitStore.

@@ -42,6 +42,7 @@ require (
 	github.com/improbable-eng/grpc-web v0.15.0
 	github.com/magiconair/properties v1.8.7
 	github.com/mattn/go-isatty v0.0.20
+	github.com/mdp/qrterminal/v3 v3.2.0
 	github.com/prometheus/client_golang v1.17.0
 	github.com/prometheus/common v0.45.0
 	github.com/rs/zerolog v1.31.0
@@ -157,6 +158,7 @@ require (
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	nhooyr.io/websocket v1.8.6 // indirect
+	rsc.io/qr v0.2.0 // indirect
 )
 
 // Here are the short-lived replace from the Cosmos SDK

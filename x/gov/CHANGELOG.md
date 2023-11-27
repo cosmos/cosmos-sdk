@@ -27,7 +27,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Improvements
 
-* [18449](https://github.com/cosmos/cosmos-sdk/pull/18449) Clean validationcode
+* [#18445](https://github.com/cosmos/cosmos-sdk/pull/18445) Extend gov config 
 
 ### Features
 

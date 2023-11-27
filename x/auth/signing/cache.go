@@ -18,6 +18,7 @@ var initSigCacheOnce sync.Once
 // NewSignatureCache initializes the signature cache.
 // signature verification is one of the most expensive parts in verification
 // by caching it we avoid needing to verify the same signature multiple times
+// This is only initialized once.
 func NewSignatureCache() {
 	initSigCacheOnce.Do(func() {
 		// 500 * (32 + 42) = 37.5KB
@@ -37,12 +38,13 @@ func SignatureCache() *Cache {
 	return signatureCache
 }
 
+// Cache is a cache of verified signatures
 type Cache struct {
 	data *lru.Cache[string, []byte]
 }
 
+// Get returns the cached signature if it exists
 func (c *Cache) Get(key string) ([]byte, bool) {
-	// validate
 	if !c.validate(key) {
 		return nil, false
 	}

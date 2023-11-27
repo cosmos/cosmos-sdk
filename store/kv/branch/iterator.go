@@ -22,7 +22,7 @@ type iterator struct {
 	key       []byte
 	value     []byte
 	keys      []string
-	values    []store.KVPair
+	values    store.KVPairs
 	reverse   bool
 	exhausted bool // exhausted reflects if the parent iterator is exhausted or not
 }

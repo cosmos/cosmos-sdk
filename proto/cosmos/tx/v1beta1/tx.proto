@@ -88,7 +88,7 @@ message SignDocDirectAux {
   // sequence is the sequence number of the signing account.
   uint64 sequence = 5;
 
-  // tips have been depreacted and should not be used
+  // tips have been deprecated and should not be used
   Tip tip = 6 [deprecated = true];
 }
 

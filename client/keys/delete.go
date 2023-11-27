@@ -2,7 +2,6 @@ package keys
 
 import (
 	"bufio"
-
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -37,7 +36,8 @@ private keys stored in a ledger device cannot be deleted with the CLI.
 			for _, name := range args {
 				k, err := clientCtx.Keyring.Key(name)
 				if err != nil {
-					return err
+					cmd.PrintErrln("key not found")
+					continue
 				}
 
 				// confirm deletion, unless -y is passed

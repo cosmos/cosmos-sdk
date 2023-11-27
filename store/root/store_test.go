@@ -32,7 +32,7 @@ func (s *RootStoreTestSuite) SetupTest() {
 
 	sc := iavl.NewIavlTree(dbm.NewMemDB(), noopLog, iavl.DefaultConfig())
 
-	rs, err := New(noopLog, 1, ss, sc)
+	rs, err := New(noopLog, 1, ss, sc, nil)
 	s.Require().NoError(err)
 
 	rs.SetTracer(io.Discard)

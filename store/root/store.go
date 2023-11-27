@@ -9,12 +9,11 @@ import (
 
 	"github.com/cockroachdb/errors"
 
-	"github.com/cosmos/cosmos-sdk/telemetry"
-
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/kv/branch"
 	"cosmossdk.io/store/v2/kv/trace"
+	"cosmossdk.io/store/v2/metrics"
 	"cosmossdk.io/store/v2/pruning"
 )
 
@@ -60,6 +59,9 @@ type Store struct {
 
 	// pruningManager manages pruning of the SS and SC backends
 	pruningManager *pruning.Manager
+
+	// telemetry reflects a telemetry agent responsible for emitting metrics (if any)
+	telemetry metrics.StoreMetrics
 }
 
 func New(
@@ -67,6 +69,7 @@ func New(
 	initVersion uint64,
 	ss store.VersionedDatabase,
 	sc store.Committer,
+	m metrics.StoreMetrics,
 ) (store.RootStore, error) {
 	rootKVStore, err := branch.New(defaultStoreKey, ss)
 	if err != nil {
@@ -82,6 +85,7 @@ func New(
 		stateCommitment: sc,
 		rootKVStore:     rootKVStore,
 		pruningManager:  pruningManager,
+		telemetry:       m,
 	}, nil
 }
 
@@ -161,7 +165,10 @@ func (s *Store) GetLatestVersion() (uint64, error) {
 }
 
 func (s *Store) Query(storeKey string, version uint64, key []byte, prove bool) (store.QueryResult, error) {
-	defer telemetry.MeasureSince(time.Now(), "root_store", "query")
+	if s.telemetry != nil {
+		now := time.Now()
+		s.telemetry.MeasureSince(now, "root_store", "query")
+	}
 
 	val, err := s.stateStore.Get(storeKey, version, key)
 	if err != nil {
@@ -207,7 +214,10 @@ func (s *Store) GetBranchedKVStore(_ string) store.BranchedKVStore {
 }
 
 func (s *Store) LoadLatestVersion() error {
-	defer telemetry.MeasureSince(time.Now(), "root_store", "load_latest_version")
+	if s.telemetry != nil {
+		now := time.Now()
+		s.telemetry.MeasureSince(now, "root_store", "load_latest_version")
+	}
 
 	lv, err := s.GetLatestVersion()
 	if err != nil {
@@ -218,7 +228,10 @@ func (s *Store) LoadLatestVersion() error {
 }
 
 func (s *Store) LoadVersion(version uint64) error {
-	defer telemetry.MeasureSince(time.Now(), "root_store", "load_version")
+	if s.telemetry != nil {
+		now := time.Now()
+		s.telemetry.MeasureSince(now, "root_store", "load_version")
+	}
 
 	return s.loadVersion(version)
 }
@@ -287,7 +300,10 @@ func (s *Store) Branch() store.BranchedRootStore {
 // by constructing a CommitInfo object, which in turn creates and writes a batch
 // of the current changeset to the SC tree.
 func (s *Store) WorkingHash() ([]byte, error) {
-	defer telemetry.MeasureSince(time.Now(), "root_store", "working_hash")
+	if s.telemetry != nil {
+		now := time.Now()
+		s.telemetry.MeasureSince(now, "root_store", "working_hash")
+	}
 
 	if s.workingHash == nil {
 		if err := s.writeSC(); err != nil {
@@ -313,7 +329,10 @@ func (s *Store) Write() {
 //
 // Note, Commit() commits SC and SC synchronously.
 func (s *Store) Commit() ([]byte, error) {
-	defer telemetry.MeasureSince(time.Now(), "root_store", "commit")
+	if s.telemetry != nil {
+		now := time.Now()
+		s.telemetry.MeasureSince(now, "root_store", "commit")
+	}
 
 	if s.workingHash == nil {
 		return nil, fmt.Errorf("working hash is nil; must call WorkingHash() before Commit()")

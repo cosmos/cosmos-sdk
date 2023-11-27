@@ -38,7 +38,6 @@ func Test_runAddCmdLedgerWithCustomCoinType(t *testing.T) {
 
 	addressConfig := sdk.GetAddressConfig()
 	addressConfig.SetPurpose(44)
-	addressConfig.SetCoinType(330)
 
 	// Prepare a keybase
 	kbHome := t.TempDir()
@@ -92,7 +91,6 @@ func Test_runAddCmdLedgerWithCustomCoinType(t *testing.T) {
 		pub.String())
 
 	addressConfig.SetPurpose(44)
-	addressConfig.SetCoinType(330)
 	clientCtx = clientCtx.WithAddressConfig(*addressConfig)
 
 	config.SetBech32PrefixForAccount(sdk.Bech32PrefixAccAddr, sdk.Bech32PrefixAccPub)
@@ -109,7 +107,6 @@ func Test_runAddCmdLedger(t *testing.T) {
 	cdc := moduletestutil.MakeTestEncodingConfig().Codec
 
 	addressConfig := sdk.GetAddressConfig()
-	addressConfig.SetCoinType(sdk.CoinType)
 
 	clientCtx := client.Context{}.
 		WithKeyringDir(kbHome).

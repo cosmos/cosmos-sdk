@@ -32,7 +32,6 @@ const (
 	//	config.SetBech32PrefixForValidator(yourBech32PrefixValAddr, yourBech32PrefixValPub)
 	//	config.SetBech32PrefixForConsensusNode(yourBech32PrefixConsAddr, yourBech32PrefixConsPub)
 	//	config.SetPurpose(yourPurpose)
-	//	config.SetCoinType(yourCoinType)
 	//	config.Seal()
 
 	// Bech32MainPrefix defines the main SDK Bech32 prefix of an account's address
@@ -734,16 +733,6 @@ func NewAddressConfig() *AddressConfig {
 		coinType: CoinType,
 		purpose:  Purpose,
 	}
-}
-
-// Set the BIP-0044 CoinType code on the config
-func (config *AddressConfig) SetCoinType(coinType uint32) {
-	config.coinType = coinType
-}
-
-// GetCoinType returns the BIP-0044 CoinType code on the config.
-func (config *AddressConfig) GetCoinType() uint32 {
-	return config.coinType
 }
 
 // Set the BIP-0044 Purpose code on the config

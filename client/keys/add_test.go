@@ -221,16 +221,19 @@ func Test_runAddCmdDryRun(t *testing.T) {
 			kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, kbHome, mockIn, cdc)
 			require.NoError(t, err)
 
+			addressConfig := sdk.NewAddressConfig()
+
 			clientCtx := client.Context{}.
 				WithCodec(cdc).
 				WithKeyringDir(kbHome).
 				WithKeyring(kb).
 				WithAddressCodec(addresscodec.NewBech32Codec("cosmos")).
 				WithValidatorAddressCodec(addresscodec.NewBech32Codec("cosmosvaloper")).
-				WithConsensusAddressCodec(addresscodec.NewBech32Codec("cosmosvalcons"))
+				WithConsensusAddressCodec(addresscodec.NewBech32Codec("cosmosvalcons")).
+				WithAddressConfig(*addressConfig)
 			ctx := context.WithValue(context.Background(), client.ClientContextKey, &clientCtx)
 
-			path := sdk.GetAddressConfig().GetFullBIP44Path()
+			path := clientCtx.AddressConfigs.GetFullBIP44Path()
 			_, err = kb.NewAccount("subkey", testdata.TestMnemonic, "", path, hd.Secp256k1)
 			require.NoError(t, err)
 
@@ -261,9 +264,6 @@ func Test_runAddCmdDryRun(t *testing.T) {
 }
 
 func TestAddRecoverFileBackend(t *testing.T) {
-	clientContext := client.Context{}
-	addressConfig := sdk.NewAddressConfig()
-	clientContext.WithAddressConfig(*addressConfig)
 	cmd := AddKeyCommand()
 	cmd.Flags().AddFlagSet(Commands().PersistentFlags())
 	cdc := moduletestutil.MakeTestEncodingConfig().Codec

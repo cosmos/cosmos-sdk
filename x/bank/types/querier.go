@@ -31,7 +31,7 @@ func NewQuerySpendableBalancesRequest(addr sdk.AccAddress, req *query.PageReques
 
 // NewQuerySpendableBalanceByDenomRequest creates a new instance of a
 // QuerySpendableBalanceByDenomRequest.
-func NewQuerySpendableBalanceByDenomRequest(addr string, denom string) *QuerySpendableBalanceByDenomRequest {
+func NewQuerySpendableBalanceByDenomRequest(addr, denom string) *QuerySpendableBalanceByDenomRequest {
 	return &QuerySpendableBalanceByDenomRequest{Address: addr, Denom: denom}
 }
 

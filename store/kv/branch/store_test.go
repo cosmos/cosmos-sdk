@@ -28,12 +28,12 @@ func (s *StoreTestSuite) SetupTest() {
 	storage, err := sqlite.New(s.T().TempDir())
 	s.Require().NoError(err)
 
-	cs := new(store.Changeset)
+	cs := store.NewChangeset(map[string]store.KVPairs{storeKey: {}})
 	for i := 0; i < 100; i++ {
 		key := fmt.Sprintf("key%03d", i) // key000, key001, ..., key099
 		val := fmt.Sprintf("val%03d", i) // val000, val001, ..., val099
 
-		cs.AddKVPair(store.KVPair{StoreKey: storeKey, Key: []byte(key), Value: []byte(val)})
+		cs.AddKVPair(storeKey, store.KVPair{Key: []byte(key), Value: []byte(val)})
 	}
 
 	s.Require().NoError(storage.ApplyChangeset(1, cs))
@@ -63,7 +63,7 @@ func (s *StoreTestSuite) TestGetChangeset() {
 }
 
 func (s *StoreTestSuite) TestReset() {
-	s.Require().NoError(s.kvStore.Reset())
+	s.Require().NoError(s.kvStore.Reset(1))
 
 	cs := s.kvStore.GetChangeset()
 	s.Require().Zero(cs.Size())
@@ -128,7 +128,7 @@ func (s *StoreTestSuite) TestBranch() {
 	s.Require().Equal([]byte("updated_val001"), s.kvStore.Get([]byte("key001")))
 
 	s.Require().Equal(1, b.GetChangeset().Size())
-	s.Require().Equal([]byte("key001"), b.GetChangeset().Pairs[0].Key)
+	s.Require().Equal([]byte("key001"), b.GetChangeset().Pairs[storeKey][0].Key)
 
 	// write the branched store and ensure all writes are flushed to the parent
 	b.Write()

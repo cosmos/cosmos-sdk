@@ -32,5 +32,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ## [Unreleased]
 
 ### Features
+* [#18355](https://github.com/cosmos/cosmos-sdk/pull/18355) Addes new versions for `Balance`, `Owner`, `Supply`, `NFT`, `Class` queries that receives request via query string.
 
-* [#17825](https://github.com/cosmos/cosmos-sdk/pull/17825) Add AutoCLI Options.
+## [v0.1.0](https://github.com/cosmos/cosmos-sdk/releases/tag/x/nft/v0.1.0) - 2023-11-07

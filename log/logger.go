@@ -12,7 +12,7 @@ import (
 )
 
 func init() {
-	zerolog.InterfaceMarshalFunc = func(i interface{}) ([]byte, error) {
+	zerolog.InterfaceMarshalFunc = func(i any) ([]byte, error) {
 		switch v := i.(type) {
 		case json.Marshaler:
 			return json.Marshal(i)
@@ -55,6 +55,22 @@ type Logger interface {
 	// It is used to access the full functionalities of the underlying logger.
 	// Advanced users can type cast the returned value to the actual logger.
 	Impl() any
+}
+
+// WithJSONMarshal configures zerolog global json encoding.
+func WithJSONMarshal(marshaler func(v any) ([]byte, error)) {
+	zerolog.InterfaceMarshalFunc = func(i any) ([]byte, error) {
+		switch v := i.(type) {
+		case json.Marshaler:
+			return marshaler(i)
+		case encoding.TextMarshaler:
+			return marshaler(i)
+		case fmt.Stringer:
+			return marshaler(v.String())
+		default:
+			return marshaler(i)
+		}
+	}
 }
 
 type zeroLogWrapper struct {

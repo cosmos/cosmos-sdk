@@ -235,6 +235,15 @@ func (d LegacyDec) BigInt() *big.Int {
 	return cp.Set(d.i)
 }
 
+// BigIntMut converts LegacyDec to big.Int, mutative the input
+func (d LegacyDec) BigIntMut() *big.Int {
+	if d.IsNil() {
+		return nil
+	}
+
+	return d.i
+}
+
 func (d LegacyDec) ImmutOp(op func(LegacyDec, LegacyDec) LegacyDec, d2 LegacyDec) LegacyDec {
 	return op(d.Clone(), d2)
 }
@@ -731,6 +740,10 @@ func (d LegacyDec) Ceil() LegacyDec {
 
 	if rem.Sign() == -1 {
 		return LegacyNewDecFromBigInt(quo)
+	}
+
+	if d.i.BitLen() >= maxDecBitLen {
+		panic("Int overflow")
 	}
 
 	return LegacyNewDecFromBigInt(quo.Add(quo, oneInt))

@@ -43,6 +43,7 @@ require (
 	github.com/magiconair/properties v1.8.9
 	github.com/manifoldco/promptui v0.9.0
 	github.com/mattn/go-isatty v0.0.20
+<<<<<<< HEAD
 	github.com/prometheus/client_golang v1.21.0
 	github.com/prometheus/common v0.62.0
 	github.com/rs/zerolog v1.33.0
@@ -51,6 +52,17 @@ require (
 	github.com/spf13/pflag v1.0.6
 	github.com/spf13/viper v1.19.0
 	github.com/stretchr/testify v1.10.0
+=======
+	github.com/mdp/qrterminal/v3 v3.2.0
+	github.com/prometheus/client_golang v1.17.0
+	github.com/prometheus/common v0.45.0
+	github.com/rs/zerolog v1.31.0
+	github.com/spf13/cast v1.5.1
+	github.com/spf13/cobra v1.8.0
+	github.com/spf13/pflag v1.0.5
+	github.com/spf13/viper v1.17.0
+	github.com/stretchr/testify v1.8.4
+>>>>>>> 536bd3a95 (feat: add --qrcode flag to keys show command (#18557))
 	github.com/tendermint/go-amino v0.16.0
 	go.uber.org/mock v0.5.0
 	golang.org/x/crypto v0.35.0
@@ -169,6 +181,7 @@ require (
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	nhooyr.io/websocket v1.8.6 // indirect
+	rsc.io/qr v0.2.0 // indirect
 )
 
 // Here are the short-lived replace from the Cosmos SDK

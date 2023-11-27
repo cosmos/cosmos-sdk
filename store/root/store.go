@@ -144,7 +144,11 @@ func (s *Store) LastCommitID() (store.CommitID, error) {
 	}
 
 	// sanity check: ensure integrity of latest version against SC
-	scVersion := s.stateCommitment.GetLatestVersion()
+	scVersion, err := s.stateCommitment.GetLatestVersion()
+	if err != nil {
+		return store.CommitID{}, err
+	}
+
 	if scVersion != latestVersion {
 		return store.CommitID{}, fmt.Errorf("SC and SS version mismatch; got: %d, expected: %d", scVersion, latestVersion)
 	}
@@ -182,7 +186,7 @@ func (s *Store) Query(storeKey string, version uint64, key []byte, prove bool) (
 	}
 
 	if prove {
-		proof, err := s.stateCommitment.GetProof(version, key)
+		proof, err := s.stateCommitment.GetProof(storeKey, version, key)
 		if err != nil {
 			return store.QueryResult{}, err
 		}
@@ -400,16 +404,8 @@ func (s *Store) writeSC() error {
 	}
 
 	s.lastCommitInfo = &store.CommitInfo{
-		Version: version,
-		StoreInfos: []store.StoreInfo{
-			{
-				Name: defaultStoreKey,
-				CommitID: store.CommitID{
-					Version: version,
-					Hash:    s.stateCommitment.WorkingHash(),
-				},
-			},
-		},
+		Version:    version,
+		StoreInfos: s.stateCommitment.WorkingStoreInfos(version),
 	}
 
 	return nil
@@ -420,18 +416,23 @@ func (s *Store) writeSC() error {
 // solely commits that batch. An error is returned if commit fails or if the
 // resulting commit hash is not equivalent to the working hash.
 func (s *Store) commitSC() error {
-	commitBz, err := s.stateCommitment.Commit()
+	commitStoreInfos, err := s.stateCommitment.Commit()
 	if err != nil {
 		return fmt.Errorf("failed to commit SC store: %w", err)
 	}
+
+	commitHash := store.CommitInfo{
+		Version:    s.lastCommitInfo.Version,
+		StoreInfos: commitStoreInfos,
+	}.Hash()
 
 	workingHash, err := s.WorkingHash()
 	if err != nil {
 		return fmt.Errorf("failed to get working hash: %w", err)
 	}
 
-	if bytes.Equal(commitBz, workingHash) {
-		return fmt.Errorf("unexpected commit hash; got: %X, expected: %X", commitBz, workingHash)
+	if !bytes.Equal(commitHash, workingHash) {
+		return fmt.Errorf("unexpected commit hash; got: %X, expected: %X", commitHash, workingHash)
 	}
 
 	return nil

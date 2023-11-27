@@ -29,11 +29,12 @@ v1.0.0-beta1 → v1.0.0-beta2 → ... → v1.0.0-rc1 → v1.0.0-rc2 → ... → 
     * Create release notes, in `RELEASE_NOTES.md`, highlighting the new features and changes in the version. This is needed so the bot knows which entries to add to the release page on GitHub.
     * Additionally verify that the `UPGRADING.md` file is up to date and contains all the necessary information for upgrading to the new version.
 * Remove GitHub workflows that should not be in the release branch
-    * `deploy-docs.yml`: must be removed to avoid duplicate documentation deployment.
-    * `test.yml`: All standalone go module tests should be removed (expect `./simapp`, and `./tests` and SDK tests).
+    * `test.yml`: All standalone go module tests should be removed (expect `./simapp`, and `./tests`, SDK and modules tests).
         * These packages are tracked and tested directly on main.
     * `build.yml`: Only the SDK and SimApp needs to be built on release branches.
         * Tooling is tracked and tested directly on main.
+        * This does not apply for tooling depending on the SDK (e.g. `confix`)
+    * Update `Dockerfile` to not use latest go.mod and go.sum files.
 * Create a new annotated git tag for a release candidate (eg: `git tag -a v1.1.0-rc1`) in the release branch.
     * from this point we unfreeze main.
     * the SDK teams collaborate and do their best to run testnets in order to validate the release.

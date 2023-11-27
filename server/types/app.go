@@ -43,6 +43,10 @@ type (
 		// server.
 		RegisterGRPCServer(grpc.Server)
 
+		// RegisterGRPCServer registers gRPC services directly with the gRPC
+		// server and config if block time is included in every response header.
+		RegisterGRPCServerWitMDBlockTime(grpc.Server, bool)
+
 		// RegisterTxService registers the gRPC Query service for tx (such as tx
 		// simulation, fetching txs by hash...).
 		RegisterTxService(client.Context)

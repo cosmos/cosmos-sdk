@@ -24,6 +24,12 @@ func (app *BaseApp) GRPCQueryRouter() *GRPCQueryRouter { return app.grpcQueryRou
 
 // RegisterGRPCServer registers gRPC services directly with the gRPC server.
 func (app *BaseApp) RegisterGRPCServer(server gogogrpc.Server) {
+	app.RegisterGRPCServerWitMDBlockTime(server, false)
+}
+
+// RegisterGRPCServer registers gRPC services directly with the gRPC
+// server and config if block time is included in every response header.
+func (app *BaseApp) RegisterGRPCServerWitMDBlockTime(server gogogrpc.Server, mdWithBlockTime bool) {
 	// Define an interceptor for all gRPC queries: this interceptor will create
 	// a new sdk.Context, and pass it into the query handler.
 	interceptor := func(grpcCtx context.Context, req interface{}, _ *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp interface{}, err error) {
@@ -66,7 +72,13 @@ func (app *BaseApp) RegisterGRPCServer(server gogogrpc.Server) {
 		if err = grpc.SetHeader(grpcCtx, md); err != nil {
 			app.logger.Error("failed to set gRPC header", "err", err)
 		}
-
+		if mdWithBlockTime {
+			time := sdkCtx.BlockHeader().Time.Unix()
+			md = metadata.Pairs(grpctypes.GRPCBlockTimeHeader, strconv.FormatInt(time, 10))
+			if err = grpc.SetHeader(grpcCtx, md); err != nil {
+				app.logger.Error("failed to set gRPC header time", "err", err)
+			}
+		}
 		return handler(grpcCtx, req)
 	}
 

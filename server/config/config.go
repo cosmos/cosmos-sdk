@@ -29,6 +29,10 @@ const (
 	// DefaultGRPCMaxSendMsgSize defines the default gRPC max message size in
 	// bytes the server can send.
 	DefaultGRPCMaxSendMsgSize = math.MaxInt32
+
+	// DefaultMDWithBlockTime defines the default gRPC response including block time in
+	// header (i.e false)
+	DefaultMDWithBlockTime = false
 )
 
 // BaseConfig defines the server's basic configuration
@@ -139,6 +143,8 @@ type GRPCConfig struct {
 	// MaxSendMsgSize defines the max message size in bytes the server can send.
 	// The default value is math.MaxInt32.
 	MaxSendMsgSize int `mapstructure:"max-send-msg-size"`
+
+	MDWithBlockTime bool `mapstructure:"md-with-block-time"`
 }
 
 // GRPCWebConfig defines configuration for the gRPC-web server.
@@ -244,10 +250,11 @@ func DefaultConfig() *Config {
 			RPCMaxBodyBytes:    1000000,
 		},
 		GRPC: GRPCConfig{
-			Enable:         true,
-			Address:        DefaultGRPCAddress,
-			MaxRecvMsgSize: DefaultGRPCMaxRecvMsgSize,
-			MaxSendMsgSize: DefaultGRPCMaxSendMsgSize,
+			Enable:          true,
+			Address:         DefaultGRPCAddress,
+			MaxRecvMsgSize:  DefaultGRPCMaxRecvMsgSize,
+			MaxSendMsgSize:  DefaultGRPCMaxSendMsgSize,
+			MDWithBlockTime: DefaultMDWithBlockTime,
 		},
 		GRPCWeb: GRPCWebConfig{
 			Enable: true,

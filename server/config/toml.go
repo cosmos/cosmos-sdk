@@ -171,6 +171,9 @@ max-recv-msg-size = "{{ .GRPC.MaxRecvMsgSize }}"
 # The default value is math.MaxInt32.
 max-send-msg-size = "{{ .GRPC.MaxSendMsgSize }}"
 
+# MDWithBlockTime defines the gRPC response including block time in header or not.
+md-with-block-time = {{ .GRPC.MDWithBlockTime }}
+
 ###############################################################################
 ###                        gRPC Web Configuration                           ###
 ###############################################################################

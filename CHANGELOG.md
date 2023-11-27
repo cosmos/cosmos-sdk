@@ -51,6 +51,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/auth/vesting) [#17810](https://github.com/cosmos/cosmos-sdk/pull/17810) Add the ability to specify a start time for continuous vesting accounts.
 * (runtime) [#18475](https://github.com/cosmos/cosmos-sdk/pull/18475) Adds an implementation for core.branch.Service.
 * (server) [#18478](https://github.com/cosmos/cosmos-sdk/pull/18478) CMD flag to disable colored logs.
+* (server) [#](https://github.com/cosmos/cosmos-sdk/pull/) Add `md-with-block-time` config for grpc server to include block time in response header.
 
 ### Improvements
 

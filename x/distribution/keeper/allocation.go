@@ -3,7 +3,6 @@ package keeper
 import (
 	"context"
 	"errors"
-	"sync"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/comet"
@@ -11,6 +10,7 @@ import (
 	"cosmossdk.io/x/distribution/types"
 	protocolpooltypes "cosmossdk.io/x/protocolpool/types"
 	stakingtypes "cosmossdk.io/x/staking/types"
+	"golang.org/x/sync/errgroup"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -51,46 +51,36 @@ func (k Keeper) AllocateTokens(ctx context.Context, totalPreviousPower int64, bo
 	voteMultiplier := math.LegacyOneDec().Sub(communityTax)
 	feeMultiplier := feesCollected.MulDecTruncate(voteMultiplier)
 
-	var wg sync.WaitGroup
-	// channel for errors
-	errCh := make(chan error, len(bondedVotes))
+	// allocate tokens proportionally to voting power
+	var g errgroup.Group
 	// channel for remaining rewards
 	remainingCh := make(chan sdk.DecCoins, len(bondedVotes))
 
 	for _, vote := range bondedVotes {
-		wg.Add(1)
-		go func(vote comet.VoteInfo) {
-			defer wg.Done()
+		vote := vote
 
+		g.Go(func() error {
 			validator, err := k.stakingKeeper.ValidatorByConsAddr(ctx, vote.Validator.Address)
 			if err != nil {
-				errCh <- err
-				return
+				return err
 			}
 
 			powerFraction := math.LegacyNewDec(vote.Validator.Power).QuoTruncate(math.LegacyNewDec(totalPreviousPower))
 			reward := feeMultiplier.MulDecTruncate(powerFraction)
 
 			if err = k.AllocateTokensToValidator(ctx, validator, reward); err != nil {
-				errCh <- err
-				return
+				return err
 			}
 
 			remainingCh <- reward
-		}(vote)
+			return nil
+		})
 	}
 
-	go func() {
-		wg.Wait()
-		close(errCh)
-		close(remainingCh)
-	}()
-
-	for err := range errCh {
-		if err != nil {
-			return err
-		}
+	if err := g.Wait(); err != nil {
+		return err
 	}
+	close(remainingCh)
 
 	// calculate the remaining rewards
 	for reward := range remainingCh {

@@ -720,7 +720,7 @@ func TestGetMaximumBlockGas(t *testing.T) {
 	require.Panics(t, func() { suite.baseApp.GetMaximumBlockGas(ctx) })
 }
 
-func TestGetEmptyConsensusParmas(t *testing.T) {
+func TestGetEmptyConsensusParams(t *testing.T) {
 	suite := NewBaseAppSuite(t)
 	_, err := suite.baseApp.InitChain(&abci.RequestInitChain{})
 	require.NoError(t, err)

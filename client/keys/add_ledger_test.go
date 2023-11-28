@@ -37,7 +37,6 @@ func Test_runAddCmdLedgerWithCustomCoinType(t *testing.T) {
 	config.SetBech32PrefixForConsensusNode(bech32PrefixConsAddr, bech32PrefixConsPub)
 
 	addressConfig := sdk.GetAddressConfig()
-	addressConfig.SetPurpose(44)
 
 	// Prepare a keybase
 	kbHome := t.TempDir()
@@ -90,7 +89,6 @@ func Test_runAddCmdLedgerWithCustomCoinType(t *testing.T) {
 		"PubKeySecp256k1{03028F0D5A9FD41600191CDEFDEA05E77A68DFBCE286241C0190805B9346667D07}",
 		pub.String())
 
-	addressConfig.SetPurpose(44)
 	clientCtx = clientCtx.WithAddressConfig(*addressConfig)
 
 	config.SetBech32PrefixForAccount(sdk.Bech32PrefixAccAddr, sdk.Bech32PrefixAccPub)

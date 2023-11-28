@@ -735,11 +735,6 @@ func NewAddressConfig() *AddressConfig {
 	}
 }
 
-// Set the BIP-0044 Purpose code on the config
-func (config *AddressConfig) SetPurpose(purpose uint32) {
-	config.purpose = purpose
-}
-
 // GetFullBIP44Path returns the BIP44Prefix.
 func (config *AddressConfig) GetFullBIP44Path() string {
 	return fmt.Sprintf("m/%d'/%d'/0'/0/0", config.purpose, config.coinType)

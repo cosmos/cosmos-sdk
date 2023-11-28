@@ -4,13 +4,14 @@ import (
 	"context"
 	"errors"
 
+	"golang.org/x/sync/errgroup"
+
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/comet"
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/distribution/types"
 	protocolpooltypes "cosmossdk.io/x/protocolpool/types"
 	stakingtypes "cosmossdk.io/x/staking/types"
-	"golang.org/x/sync/errgroup"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

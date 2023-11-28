@@ -102,8 +102,8 @@ schema = 3
     version = "v0.0.0-20230807174530-cc333fc44b06"
     hash = "sha256-yZdBXkTVzPxRYntI9I2Gu4gkI11m52Nwl8RNNdlXSrA="
   [mod."github.com/cometbft/cometbft"]
-    version = "v0.38.1"
-    hash = "sha256-xu/h6vNeRtBoskKBapKSIn61rLyV9KxcFLt36D5lTT4="
+    version = "v0.38.2"
+    hash = "sha256-mCfJ/1W2ugD9d7JOjMlmkZpiljmFL/pU8hYtU6KYpGM="
   [mod."github.com/cometbft/cometbft-db"]
     version = "v0.8.0"
     hash = "sha256-Tlm2V9zDs/wVoFvMmJSdCzCdZKiFRC7Qk8FS3FaqQyk="
@@ -463,8 +463,8 @@ schema = 3
     version = "v1.11.0"
     hash = "sha256-Lb6rHHfR62Ozg2j2JZy3MKOMKdsfzd1IYTR57r3Mhp0="
   [mod."golang.org/x/crypto"]
-    version = "v0.15.0"
-    hash = "sha256-ABytl19ORbe9xcY4Ao76AcAkqqPduUCd8OrD4Sl5jyU="
+    version = "v0.16.0"
+    hash = "sha256-DgSVOnXRK8GF01p5rLtq4qPBcglwEoOk8qhW2EGfJfA="
   [mod."golang.org/x/exp"]
     version = "v0.0.0-20231006140011-7918f672742d"
     hash = "sha256-2SO1etTQ6UCUhADR5sgvDEDLHcj77pJKCIa/8mGDbAo="
@@ -478,11 +478,11 @@ schema = 3
     version = "v0.5.0"
     hash = "sha256-EAKeODSsct5HhXPmpWJfulKSCkuUu6kkDttnjyZMNcI="
   [mod."golang.org/x/sys"]
-    version = "v0.14.0"
-    hash = "sha256-ReIRQmONicRW9idzGVPCBx5TTcKacmQTF1vPC3L4SxY="
+    version = "v0.15.0"
+    hash = "sha256-n7TlABF6179RzGq3gctPDKDPRtDfnwPdjNCMm8ps2KY="
   [mod."golang.org/x/term"]
-    version = "v0.14.0"
-    hash = "sha256-C83bC2jW8cRkmBzAMECvv+9CsztMpZkGukD0B/uSrTo="
+    version = "v0.15.0"
+    hash = "sha256-rsvtsE7sKmBwtR+mhJ8iUq93ZT8fV2LU+Pd69sh2es8="
   [mod."golang.org/x/text"]
     version = "v0.14.0"
     hash = "sha256-yh3B0tom1RfzQBf1RNmfdNWF1PtiqxV41jW1GVS6JAg="

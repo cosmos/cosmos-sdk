@@ -10,7 +10,7 @@ Proposed
 
 ## Abstract
 
-Add an extra nonce "lane" to support un-ordered(concurrent) transaction incluion.
+Add an extra nonce "lane" to support un-ordered(concurrent) transaction inclusion.
 
 ## Context
 

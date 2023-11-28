@@ -62,6 +62,11 @@ require (
 	sigs.k8s.io/yaml v1.4.0
 )
 
+// TODO: remove once CometBFT v1 is released
+replace github.com/cometbft/cometbft v0.38.1 => github.com/cometbft/cometbft v0.0.0-20231127122035-337dc6534edc
+
+replace github.com/cometbft/cometbft v0.38.2 => github.com/cometbft/cometbft v0.0.0-20231127122035-337dc6534edc
+
 require (
 	filippo.io/edwards25519 v1.0.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect

@@ -33,6 +33,9 @@ service Msg {
   // CreateContinuousFund defines a method to add funds continuously.
   rpc CreateContinuousFund(MsgCreateContinuousFund) returns (MsgCreateContinuousFundResponse);
 
+  // WithdrawContinuousFund defines a method to withdraw continuous fund allocated.
+  rpc WithdrawContinuousFund(MsgWithdrawContinuousFund) returns (MsgWithdrawContinuousFundResponse);
+
   // CancelContinuousFund defines a method for cancelling continuous fund.
   rpc CancelContinuousFund(MsgCancelContinuousFund) returns (MsgCancelContinuousFundResponse);
 }
@@ -117,14 +120,15 @@ message MsgCreateContinuousFund {
   // Recipient address of the account receiving funds.
   string recipient = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   // Percentage is the percentage of funds to be allocated from Community pool share on block by block,
-  // till the `cap` is reached or expired.
+  // till the `maxDistributedCapital` is reached or expired.
   string percentage = 3 [
     (cosmos_proto.scalar)  = "cosmos.Dec",
     (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable)   = false
   ];
-  // Cap is the capital amount, which when its met funds are no longer distributed.
-  cosmos.base.v1beta1.Coin cap = 4;
+  // maxDistributedCapital is the threshold amount for distributing funds.
+  // Once maxDistributedCapital is reached, further fund distribution is halted.
+  cosmos.base.v1beta1.Coin maxDistributedCapital = 4;
   // Optional, if expiry is set, removes the state object when expired.
   google.protobuf.Timestamp expiry = 5 [(gogoproto.stdtime) = true];
 }
@@ -141,6 +145,20 @@ message MsgCancelContinuousFund {
   string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   // RecipientAddress is the account address of recipient whose funds are to be cancelled.
   string recipient_address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// MsgWithdrawContinuousFund defines a message for withdrawing the continuous fund allocated to it.
+message MsgWithdrawContinuousFund {
+  option (cosmos.msg.v1.signer) = "recipient_address";
+  string recipient_address      = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// MsgWithdrawContinuousFundResponse defines the response to executing a
+// MsgWithdrawContinuousFund message.
+message MsgWithdrawContinuousFundResponse {
+  cosmos.base.v1beta1.Coin amount = 1
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  ;
 }
 
 // MsgCancelContinuousFundResponse defines the response to executing a

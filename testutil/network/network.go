@@ -131,8 +131,6 @@ type Config struct {
 	AddressCodec          address.Codec                 // address codec
 	ValidatorAddressCodec runtime.ValidatorAddressCodec // validator address codec
 	ConsensusAddressCodec runtime.ConsensusAddressCodec // consensus address codec
-
-	AddressConfig sdk.AddressConfig
 }
 
 // DefaultConfig returns a sane default configuration suitable for nearly all
@@ -164,7 +162,6 @@ func DefaultConfig(factory TestFixtureFactory) Config {
 		AddressCodec:          addresscodec.NewBech32Codec("cosmos"),
 		ValidatorAddressCodec: addresscodec.NewBech32Codec("cosmosvaloper"),
 		ConsensusAddressCodec: addresscodec.NewBech32Codec("cosmosvalcons"),
-		AddressConfig:         *sdk.NewAddressConfig(),
 	}
 }
 
@@ -458,7 +455,7 @@ func New(l Logger, baseDir string, cfg Config) (NetworkI, error) {
 			return nil, err
 		}
 
-		addr, secret, err := testutil.GenerateSaveCoinKey(kb, nodeDirName, mnemonic, true, algo, cfg.AddressConfig.GetFullBIP44Path())
+		addr, secret, err := testutil.GenerateSaveCoinKey(kb, nodeDirName, mnemonic, true, algo, sdk.GetFullBIP44Path())
 		if err != nil {
 			return nil, err
 		}

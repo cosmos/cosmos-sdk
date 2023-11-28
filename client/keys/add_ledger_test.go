@@ -36,8 +36,6 @@ func Test_runAddCmdLedgerWithCustomCoinType(t *testing.T) {
 	config.SetBech32PrefixForValidator(bech32PrefixValAddr, bech32PrefixValPub)
 	config.SetBech32PrefixForConsensusNode(bech32PrefixConsAddr, bech32PrefixConsPub)
 
-	addressConfig := sdk.GetAddressConfig()
-
 	// Prepare a keybase
 	kbHome := t.TempDir()
 
@@ -47,8 +45,7 @@ func Test_runAddCmdLedgerWithCustomCoinType(t *testing.T) {
 		WithCodec(cdc).
 		WithAddressCodec(addresscodec.NewBech32Codec("cosmos")).
 		WithValidatorAddressCodec(addresscodec.NewBech32Codec("cosmosvaloper")).
-		WithConsensusAddressCodec(addresscodec.NewBech32Codec("cosmosvalcons")).
-		WithAddressConfig(*addressConfig)
+		WithConsensusAddressCodec(addresscodec.NewBech32Codec("cosmosvalcons"))
 
 	ctx := context.WithValue(context.Background(), client.ClientContextKey, &clientCtx)
 
@@ -89,8 +86,6 @@ func Test_runAddCmdLedgerWithCustomCoinType(t *testing.T) {
 		"PubKeySecp256k1{03028F0D5A9FD41600191CDEFDEA05E77A68DFBCE286241C0190805B9346667D07}",
 		pub.String())
 
-	clientCtx = clientCtx.WithAddressConfig(*addressConfig)
-
 	config.SetBech32PrefixForAccount(sdk.Bech32PrefixAccAddr, sdk.Bech32PrefixAccPub)
 	config.SetBech32PrefixForValidator(sdk.Bech32PrefixValAddr, sdk.Bech32PrefixValPub)
 	config.SetBech32PrefixForConsensusNode(sdk.Bech32PrefixConsAddr, sdk.Bech32PrefixConsPub)
@@ -104,15 +99,12 @@ func Test_runAddCmdLedger(t *testing.T) {
 	kbHome := t.TempDir()
 	cdc := moduletestutil.MakeTestEncodingConfig().Codec
 
-	addressConfig := sdk.GetAddressConfig()
-
 	clientCtx := client.Context{}.
 		WithKeyringDir(kbHome).
 		WithCodec(cdc).
 		WithAddressCodec(addresscodec.NewBech32Codec("cosmos")).
 		WithValidatorAddressCodec(addresscodec.NewBech32Codec("cosmosvaloper")).
-		WithConsensusAddressCodec(addresscodec.NewBech32Codec("cosmosvalcons")).
-		WithAddressConfig(*addressConfig)
+		WithConsensusAddressCodec(addresscodec.NewBech32Codec("cosmosvalcons"))
 
 	ctx := context.WithValue(context.Background(), client.ClientContextKey, &clientCtx)
 

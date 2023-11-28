@@ -14,7 +14,7 @@ func GenerateCoinKey(algo keyring.SignatureAlgo, cdc codec.Codec) (sdk.AccAddres
 	info, secret, err := keyring.NewInMemory(cdc).NewMnemonic(
 		"name",
 		keyring.English,
-		sdk.NewAddressConfig().GetFullBIP44Path(),
+		sdk.GetFullBIP44Path(),
 		keyring.DefaultBIP39Passphrase,
 		algo,
 	)

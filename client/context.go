@@ -75,8 +75,6 @@ type Context struct {
 	AddressCodec          address.Codec
 	ValidatorAddressCodec address.Codec
 	ConsensusAddressCodec address.Codec
-
-	AddressConfigs sdk.AddressConfig
 }
 
 // WithCmdContext returns a copy of the context with an updated context.Context,
@@ -332,12 +330,6 @@ func (ctx Context) WithValidatorAddressCodec(validatorAddressCodec address.Codec
 // WithConsensusAddressCodec returns the context with the provided consensus address codec.
 func (ctx Context) WithConsensusAddressCodec(consensusAddressCodec address.Codec) Context {
 	ctx.ConsensusAddressCodec = consensusAddressCodec
-	return ctx
-}
-
-// WithAddressConfig returns the context with the provided address config.
-func (ctx Context) WithAddressConfig(addressConfig sdk.AddressConfig) Context {
-	ctx.AddressConfigs = addressConfig
 	return ctx
 }
 

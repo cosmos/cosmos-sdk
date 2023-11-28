@@ -221,19 +221,16 @@ func Test_runAddCmdDryRun(t *testing.T) {
 			kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, kbHome, mockIn, cdc)
 			require.NoError(t, err)
 
-			addressConfig := sdk.NewAddressConfig()
-
 			clientCtx := client.Context{}.
 				WithCodec(cdc).
 				WithKeyringDir(kbHome).
 				WithKeyring(kb).
 				WithAddressCodec(addresscodec.NewBech32Codec("cosmos")).
 				WithValidatorAddressCodec(addresscodec.NewBech32Codec("cosmosvaloper")).
-				WithConsensusAddressCodec(addresscodec.NewBech32Codec("cosmosvalcons")).
-				WithAddressConfig(*addressConfig)
+				WithConsensusAddressCodec(addresscodec.NewBech32Codec("cosmosvalcons"))
 			ctx := context.WithValue(context.Background(), client.ClientContextKey, &clientCtx)
 
-			path := clientCtx.AddressConfigs.GetFullBIP44Path()
+			path := sdk.GetFullBIP44Path()
 			_, err = kb.NewAccount("subkey", testdata.TestMnemonic, "", path, hd.Secp256k1)
 			require.NoError(t, err)
 

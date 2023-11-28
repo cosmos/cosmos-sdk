@@ -709,33 +709,7 @@ func cacheBech32Addr(prefix string, addr []byte, cache *simplelru.LRU, cacheKey 
 	return bech32Addr
 }
 
-type AddressConfig struct {
-	coinType uint32
-	purpose  uint32
-}
-
-var (
-	sdkAddressConfig  *AddressConfig
-	initAddressConfig sync.Once
-)
-
-// GetAddressConfig returns theaddres instance for the SDK.
-func GetAddressConfig() *AddressConfig {
-	initAddressConfig.Do(func() {
-		sdkAddressConfig = NewAddressConfig()
-	})
-	return sdkAddressConfig
-}
-
-// New returns a new Config with default values.
-func NewAddressConfig() *AddressConfig {
-	return &AddressConfig{
-		coinType: CoinType,
-		purpose:  Purpose,
-	}
-}
-
 // GetFullBIP44Path returns the BIP44Prefix.
-func (config *AddressConfig) GetFullBIP44Path() string {
-	return fmt.Sprintf("m/%d'/%d'/0'/0/0", config.purpose, config.coinType)
+func GetFullBIP44Path() string {
+	return fmt.Sprintf("m/%d'/%d'/0'/0/0", Purpose, CoinType)
 }

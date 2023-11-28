@@ -525,7 +525,7 @@ func (app *BaseApp) GetConsensusParams(ctx sdk.Context) cmtproto.ConsensusParams
 		// This could happen while migrating from v0.45/v0.46 to v0.50, we should
 		// allow it to happen so during preblock the upgrade plan can be executed
 		// and the consensus params set for the first time in the new format.
-		app.logger.Error("couldn't get consensus params", "err", err)
+		app.logger.Error("failed to get consensus params", "err", err)
 		return cmtproto.ConsensusParams{}
 	}
 

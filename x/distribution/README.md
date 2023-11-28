@@ -81,17 +81,17 @@ to set up a script to periodically withdraw and rebond rewards.
 
 * [Concepts](#concepts)
 * [State](#state)
-  * [Validator Distribution](#validator-distribution)
-  * [Delegation Distribution](#delegation-distribution)
-  * [Params](#params)
+    * [Validator Distribution](#validator-distribution)
+    * [Delegation Distribution](#delegation-distribution)
+    * [Params](#params)
 * [Begin Block](#begin-block)
 * [Messages](#messages)
 * [Hooks](#hooks)
 * [Events](#events)
 * [Parameters](#parameters)
 * [Client](#client)
-  * [CLI](#cli)
-  * [gRPC](#grpc)
+    * [CLI](#cli)
+    * [gRPC](#grpc)
 
 ## Concepts
 
@@ -128,8 +128,7 @@ count is decremented. If the reference count hits zero, the historical record is
 
 ### FeePool
 
-The `FeePool` is used to store decimal rewards to allow
-for fractions of coins to be received from operations like inflation.
+The `FeePool` is used to store decimal rewards to allow for fractions of coins to be received from operations like inflation.
 
 Once those rewards are big enough, they are sent as `sdk.Coins` to the community pool.
 
@@ -197,6 +196,7 @@ the distribution `ModuleAccount` account. When a delegator or validator
 withdraws their rewards, they are taken out of the `ModuleAccount`. During begin
 block, the different claims on the fees collected are updated as follows:
 
+* The reserve community tax is charged.
 * The remainder is distributed proportionally by voting power to all bonded validators
 
 ### The Distribution Scheme

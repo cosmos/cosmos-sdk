@@ -2,7 +2,7 @@ package keeper
 
 import (
 	v4 "cosmossdk.io/x/distribution/migrations/v4"
-	pooltypes "cosmossdk.io/x/protocolpool/types"
+	"cosmossdk.io/x/distribution/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -42,7 +42,7 @@ func (m Migrator) Migrate3to4(ctx sdk.Context) error {
 
 func (m Migrator) migrateFunds(ctx sdk.Context) error {
 	macc := m.keeper.GetDistributionAccount(ctx)
-	poolMacc := m.keeper.authKeeper.GetModuleAccount(ctx, pooltypes.ModuleName)
+	poolMacc := m.keeper.authKeeper.GetModuleAccount(ctx, types.ProtocolPoolModuleName)
 
 	feePool, err := m.keeper.FeePool.Get(ctx)
 	if err != nil {

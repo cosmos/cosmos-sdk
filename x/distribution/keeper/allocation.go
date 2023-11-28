@@ -10,7 +10,6 @@ import (
 	"cosmossdk.io/core/comet"
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/distribution/types"
-	protocolpooltypes "cosmossdk.io/x/protocolpool/types"
 	stakingtypes "cosmossdk.io/x/staking/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -90,7 +89,7 @@ func (k Keeper) AllocateTokens(ctx context.Context, totalPreviousPower int64, bo
 
 	// send to community pool and set remainder in fee pool
 	amt, re := remaining.TruncateDecimal()
-	if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, protocolpooltypes.ModuleName, amt); err != nil {
+	if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, types.ProtocolPoolModuleName, amt); err != nil {
 		return err
 	}
 
@@ -164,9 +163,9 @@ func (k Keeper) AllocateTokensToValidator(ctx context.Context, val stakingtypes.
 	return k.ValidatorOutstandingRewards.Set(ctx, valBz, outstanding)
 }
 
-// SendDecimalPoolToCommunityPool sends the decimal pool to the community pool
+// sendDecimalPoolToCommunityPool sends the decimal pool to the community pool
 // Any remainer stays in the decimal pool
-func (k Keeper) SendDecimalPoolToCommunityPool(ctx context.Context) error {
+func (k Keeper) sendDecimalPoolToCommunityPool(ctx context.Context) error {
 	feePool, err := k.FeePool.Get(ctx)
 	if err != nil {
 		return err
@@ -177,7 +176,7 @@ func (k Keeper) SendDecimalPoolToCommunityPool(ctx context.Context) error {
 	}
 
 	amt, re := feePool.DecimalPool.TruncateDecimal()
-	if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, protocolpooltypes.ModuleName, amt); err != nil {
+	if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, types.ProtocolPoolModuleName, amt); err != nil {
 		return err
 	}
 

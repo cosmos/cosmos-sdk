@@ -1,9 +1,8 @@
-package distribution
+package keeper
 
 import (
 	"time"
 
-	"cosmossdk.io/x/distribution/keeper"
 	"cosmossdk.io/x/distribution/types"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -12,7 +11,7 @@ import (
 
 // BeginBlocker sets the proposer for determining distribution during endblock
 // and distribute rewards for the previous block.
-func BeginBlocker(ctx sdk.Context, k keeper.Keeper) error {
+func (k Keeper) BeginBlocker(ctx sdk.Context) error {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyBeginBlocker)
 
 	// determine the total power signing the block
@@ -30,7 +29,7 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper) error {
 
 		// every 1000 blocks send whole coins from decimal pool to community pool
 		if ctx.BlockHeight()%1000 == 0 {
-			if err := k.SendDecimalPoolToCommunityPool(ctx); err != nil {
+			if err := k.sendDecimalPoolToCommunityPool(ctx); err != nil {
 				return err
 			}
 		}

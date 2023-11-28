@@ -166,7 +166,7 @@ func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
 // BeginBlock returns the begin blocker for the distribution module.
 func (am AppModule) BeginBlock(ctx context.Context) error {
 	c := sdk.UnwrapSDKContext(ctx)
-	return BeginBlocker(c, am.keeper)
+	return am.keeper.BeginBlocker(c)
 }
 
 // AppModuleSimulation functions

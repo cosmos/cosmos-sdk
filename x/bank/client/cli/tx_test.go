@@ -54,10 +54,10 @@ func (s *CLITestSuite) SetupSuite() {
 func (s *CLITestSuite) TestMultiSendTxCmd() {
 	accounts := testutil.CreateKeyringAccounts(s.T(), s.kr, 3)
 	accountStr := make([]string, len(accounts))
-	for _, acc := range accounts {
+	for i, acc := range accounts {
 		addrStr, err := s.baseCtx.AddressCodec.BytesToString(acc.Address)
 		s.Require().NoError(err)
-		accountStr = append(accountStr, addrStr)
+		accountStr[i] = addrStr
 	}
 
 	cmd := cli.NewMultiSendTxCmd()
@@ -97,54 +97,54 @@ func (s *CLITestSuite) TestMultiSendTxCmd() {
 			extraArgs,
 			"",
 		},
-		// {
-		// 	"invalid from Address",
-		// 	func() client.Context {
-		// 		return s.baseCtx
-		// 	},
-		// 	"foo",
-		// 	[]string{
-		// 		accountStr[1],
-		// 		accountStr[2],
-		// 	},
-		// 	sdk.NewCoins(
-		// 		sdk.NewCoin("stake", sdkmath.NewInt(10)),
-		// 		sdk.NewCoin("photon", sdkmath.NewInt(40)),
-		// 	),
-		// 	extraArgs,
-		// 	"key not found",
-		// },
-		// {
-		// 	"invalid recipients",
-		// 	func() client.Context {
-		// 		return s.baseCtx
-		// 	},
-		// 	accountStr[0],
-		// 	[]string{
-		// 		accountStr[1],
-		// 		"bar",
-		// 	},
-		// 	sdk.NewCoins(
-		// 		sdk.NewCoin("stake", sdkmath.NewInt(10)),
-		// 		sdk.NewCoin("photon", sdkmath.NewInt(40)),
-		// 	),
-		// 	extraArgs,
-		// 	"invalid bech32 string",
-		// },
-		// {
-		// 	"invalid amount",
-		// 	func() client.Context {
-		// 		return s.baseCtx
-		// 	},
-		// 	accountStr[0],
-		// 	[]string{
-		// 		accountStr[1],
-		// 		accountStr[2],
-		// 	},
-		// 	nil,
-		// 	extraArgs,
-		// 	"must send positive amount",
-		// },
+		{
+			"invalid from Address",
+			func() client.Context {
+				return s.baseCtx
+			},
+			"foo",
+			[]string{
+				accountStr[1],
+				accountStr[2],
+			},
+			sdk.NewCoins(
+				sdk.NewCoin("stake", sdkmath.NewInt(10)),
+				sdk.NewCoin("photon", sdkmath.NewInt(40)),
+			),
+			extraArgs,
+			"key not found",
+		},
+		{
+			"invalid recipients",
+			func() client.Context {
+				return s.baseCtx
+			},
+			accountStr[0],
+			[]string{
+				accountStr[1],
+				"bar",
+			},
+			sdk.NewCoins(
+				sdk.NewCoin("stake", sdkmath.NewInt(10)),
+				sdk.NewCoin("photon", sdkmath.NewInt(40)),
+			),
+			extraArgs,
+			"invalid bech32 string",
+		},
+		{
+			"invalid amount",
+			func() client.Context {
+				return s.baseCtx
+			},
+			accountStr[0],
+			[]string{
+				accountStr[1],
+				accountStr[2],
+			},
+			nil,
+			extraArgs,
+			"must send positive amount",
+		},
 	}
 
 	for _, tc := range testCases {

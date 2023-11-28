@@ -24,7 +24,7 @@ One of the design goals is to keep minimal overhead and breakage to the existing
 
 ### Transaction Format
 
-It don't change the transaction format itself, but re-use the high bit of the exisitng 64bits nonce value to identify the lane, `0` being the default ordered lane, `1` being the new unordered lane.
+It doesn't change the transaction format itself, but re-use the high bit of the exisitng 64bits nonce value to identify the lane, `0` being the default ordered lane, `1` being the new unordered lane.
 
 ### Account State
 

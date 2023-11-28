@@ -1,4 +1,4 @@
-# ADR 069: Un-Ordered Account
+# ADR 069: Un-Ordered Nonce Lane
 
 ## Changelog
 

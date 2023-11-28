@@ -766,19 +766,15 @@ func TestNegativePrecisionPanic(t *testing.T) {
 func (s *decimalTestSuite) TestConvertToBigIntMutativeForLegacyDec() {
 	r := big.NewInt(30)
 	i := math.LegacyNewDecFromBigInt(r)
+	s.Require().Equal(math.LegacyNewDec(30), i)
 
-	// Compare value of BigInt & BigIntMut
-	s.Require().Equal(i.BigInt(), i.BigIntMut())
+	nonMut := i.BigInt()
+	mut := i.BigIntMut()
 
-	// Modify BigIntMut() pointer and ensure i.BigIntMut() & i.BigInt() change
-	p1 := i.BigIntMut()
-	p1.SetInt64(40)
-	s.Require().Equal(big.NewInt(40), i.BigIntMut())
-	s.Require().Equal(big.NewInt(40), i.BigInt())
+	s.Require().Equal(big.NewInt(30), nonMut)
+	s.Require().Equal(big.NewInt(30), mut)
 
-	// Modify big.Int() pointer and ensure i.BigIntMut() & i.BigInt() don't change
-	p2 := i.BigInt()
-	p2.SetInt64(50)
-	s.Require().NotEqual(big.NewInt(50), i.BigIntMut())
-	s.Require().NotEqual(big.NewInt(50), i.BigInt())
+	// the change of 'mut' results in the value of 'i' changing, because they share the same pointer
+	mut.SetInt64(40)
+	s.Require().NotEqual(math.LegacyNewDec(30), i)
 }

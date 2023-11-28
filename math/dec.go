@@ -231,8 +231,7 @@ func (d LegacyDec) BigInt() *big.Int {
 		return nil
 	}
 
-	cp := new(big.Int)
-	return cp.Set(d.i)
+	return new(big.Int).Quo(d.i, precisionReuse)
 }
 
 // BigIntMut converts LegacyDec to big.Int, mutative the input
@@ -241,7 +240,7 @@ func (d LegacyDec) BigIntMut() *big.Int {
 		return nil
 	}
 
-	return d.i
+	return d.i.Quo(d.i, precisionReuse)
 }
 
 func (d LegacyDec) ImmutOp(op func(LegacyDec, LegacyDec) LegacyDec, d2 LegacyDec) LegacyDec {

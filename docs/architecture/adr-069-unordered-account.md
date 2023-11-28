@@ -135,7 +135,8 @@ func (is *IntSet) Contains(n uint64) bool {
 
 * Support concurrent transaction inclusion.
 * Only optional fields are added to account state, no state migration is needed.
-* Don't need to change transaction format.
+* No runtime overhead when the new feature is not used.
+* No need to change transaction format.
 
 ### Negative
 

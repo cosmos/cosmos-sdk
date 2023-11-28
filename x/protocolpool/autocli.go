@@ -68,7 +68,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
 						{ProtoField: "recipient"},
 						{ProtoField: "percentage"},
-						{ProtoField: "maxDistributedCapital"},
+						{ProtoField: "max_distributed_capital"},
 						{ProtoField: "expiry", Optional: true},
 					},
 					GovProposal: true,

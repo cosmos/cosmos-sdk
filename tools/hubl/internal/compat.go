@@ -42,8 +42,7 @@ func loadFileDescriptorsGRPCReflection(ctx context.Context, client *grpc.ClientC
 	}
 
 	fdMap := map[string]*descriptorpb.FileDescriptorProto{}
-	// nolint // marked as deprecated
-	waitListServiceRes := make(chan *grpc_reflection_v1alpha.ListServiceResponse)
+	waitListServiceRes := make(chan *grpc_reflection_v1alpha.ListServiceResponse) //nolint:staticcheck // we want to use the deprecated field
 	waitc := make(chan struct{})
 	go func() {
 		for {
@@ -61,16 +60,14 @@ func loadFileDescriptorsGRPCReflection(ctx context.Context, client *grpc.ClientC
 			case *grpc_reflection_v1alpha.ServerReflectionResponse_ErrorResponse:
 				panic(err)
 			case *grpc_reflection_v1alpha.ServerReflectionResponse_ListServicesResponse:
-				// nolint // marked as deprecated
-				waitListServiceRes <- res.ListServicesResponse
+				waitListServiceRes <- res.ListServicesResponse //nolint:staticcheck // we want to use the deprecated field
 			case *grpc_reflection_v1alpha.ServerReflectionResponse_FileDescriptorResponse:
-				processFileDescriptorsResponse(res, fdMap)
+				_ = processFileDescriptorsResponse(res, fdMap)
 			}
 		}
 	}()
 
-	// nolint // marked as deprecated
-	if err = reflectClient.Send(&grpc_reflection_v1alpha.ServerReflectionRequest{
+	if err = reflectClient.Send(&grpc_reflection_v1alpha.ServerReflectionRequest{ //nolint:staticcheck // we want to use the deprecated field
 		MessageRequest: &grpc_reflection_v1alpha.ServerReflectionRequest_ListServices{},
 	}); err != nil {
 		return nil, err
@@ -78,13 +75,10 @@ func loadFileDescriptorsGRPCReflection(ctx context.Context, client *grpc.ClientC
 
 	listServiceRes := <-waitListServiceRes
 
-	// nolint // marked as deprecated
-	for _, response := range listServiceRes.Service {
-		// nolint // marked as deprecated
-		err = reflectClient.Send(&grpc_reflection_v1alpha.ServerReflectionRequest{
+	for _, response := range listServiceRes.Service { //nolint:staticcheck // we want to use the deprecated field
+		err = reflectClient.Send(&grpc_reflection_v1alpha.ServerReflectionRequest{ //nolint:staticcheck // we want to use the deprecated field
 			MessageRequest: &grpc_reflection_v1alpha.ServerReflectionRequest_FileContainingSymbol{
-				// nolint // marked as deprecated
-				FileContainingSymbol: response.Name,
+				FileContainingSymbol: response.Name, //nolint:staticcheck // we want to use the deprecated field
 			},
 		})
 		if err != nil {
@@ -93,8 +87,7 @@ func loadFileDescriptorsGRPCReflection(ctx context.Context, client *grpc.ClientC
 	}
 
 	for _, msgName := range interfaceImplNames {
-		// nolint // marked as deprecated
-		err = reflectClient.Send(&grpc_reflection_v1alpha.ServerReflectionRequest{
+		err = reflectClient.Send(&grpc_reflection_v1alpha.ServerReflectionRequest{ //nolint:staticcheck // we want to use the deprecated field
 			MessageRequest: &grpc_reflection_v1alpha.ServerReflectionRequest_FileContainingSymbol{
 				FileContainingSymbol: msgName,
 			},
@@ -143,17 +136,18 @@ func loadFileDescriptorsGRPCReflection(ctx context.Context, client *grpc.ClientC
 	return fdSet, nil
 }
 
-func processFileDescriptorsResponse(res *grpc_reflection_v1alpha.ServerReflectionResponse_FileDescriptorResponse, fdMap map[string]*descriptorpb.FileDescriptorProto) {
-	// nolint // marked as deprecated
-	for _, bz := range res.FileDescriptorResponse.FileDescriptorProto {
+func processFileDescriptorsResponse(res *grpc_reflection_v1alpha.ServerReflectionResponse_FileDescriptorResponse, fdMap map[string]*descriptorpb.FileDescriptorProto) error {
+	for _, bz := range res.FileDescriptorResponse.FileDescriptorProto { //nolint:staticcheck // we want to use the deprecated field
 		fd := &descriptorpb.FileDescriptorProto{}
 		err := proto.Unmarshal(bz, fd)
 		if err != nil {
-			panic(err)
+			return fmt.Errorf("error unmarshalling file descriptor: %w", err)
 		}
 
 		fdMap[fd.GetName()] = fd
 	}
+
+	return nil
 }
 
 func missingFileDescriptors(fdMap map[string]*descriptorpb.FileDescriptorProto, cantFind map[string]bool) []string {
@@ -188,14 +182,13 @@ func addMissingFileDescriptors(ctx context.Context, client *grpc.ClientConn, fdM
 			}
 
 			if res, ok := in.MessageResponse.(*grpc_reflection_v1alpha.ServerReflectionResponse_FileDescriptorResponse); ok {
-				processFileDescriptorsResponse(res, fdMap)
+				_ = processFileDescriptorsResponse(res, fdMap)
 			}
 		}
 	}()
 
 	for _, file := range missingFiles {
-		// nolint // marked as deprecated
-		err = reflectClient.Send(&grpc_reflection_v1alpha.ServerReflectionRequest{
+		err = reflectClient.Send(&grpc_reflection_v1alpha.ServerReflectionRequest{ //nolint:staticcheck // we want to use the deprecated field
 			MessageRequest: &grpc_reflection_v1alpha.ServerReflectionRequest_FileByFilename{
 				FileByFilename: file,
 			},

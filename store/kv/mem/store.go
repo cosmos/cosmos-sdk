@@ -45,7 +45,7 @@ func (s *Store) GetStoreType() store.StoreType {
 func (s *Store) Get(key []byte) []byte {
 	store.AssertValidKey(key)
 
-	kvPair, ok := s.tree.Get(store.KVPair{Key: key, StoreKey: s.storeKey})
+	kvPair, ok := s.tree.Get(store.KVPair{Key: key})
 	if !ok || kvPair.Value == nil {
 		return nil
 	}
@@ -63,29 +63,28 @@ func (s *Store) Set(key, value []byte) {
 	store.AssertValidKey(key)
 	store.AssertValidValue(value)
 
-	s.tree.Set(store.KVPair{Key: key, Value: value, StoreKey: s.storeKey})
+	s.tree.Set(store.KVPair{Key: key, Value: value})
 }
 
 func (s *Store) Delete(key []byte) {
 	store.AssertValidKey(key)
 
-	s.tree.Set(store.KVPair{Key: key, StoreKey: s.storeKey, Value: nil})
+	s.tree.Set(store.KVPair{Key: key, Value: nil})
 }
 
 func (s *Store) GetChangeset() *store.Changeset {
 	itr := s.Iterator(nil, nil)
 	defer itr.Close()
 
-	var kvPairs []store.KVPair
+	var kvPairs store.KVPairs
 	for ; itr.Valid(); itr.Next() {
 		kvPairs = append(kvPairs, store.KVPair{
-			StoreKey: s.storeKey,
-			Key:      itr.Key(),
-			Value:    itr.Value(),
+			Key:   itr.Key(),
+			Value: itr.Value(),
 		})
 	}
 
-	return store.NewChangeset(kvPairs...)
+	return store.NewChangeset(map[string]store.KVPairs{s.storeKey: kvPairs})
 }
 
 func (s *Store) Reset(_ uint64) error {

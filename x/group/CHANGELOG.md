@@ -27,6 +27,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
+* [#18448](https://github.com/cosmos/cosmos-sdk/pull/18448) Extend group config
 * [18286](https://github.com/cosmos/cosmos-sdk/pull/18286) Move prefix store creation down after error checks.
 
 ### Features

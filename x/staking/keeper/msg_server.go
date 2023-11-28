@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 	"errors"
+	"slices"
 	"strconv"
 	"time"
 
@@ -15,6 +16,7 @@ import (
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/staking/types"
 
+	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -60,7 +62,26 @@ func (k msgServer) CreateValidator(ctx context.Context, msg *types.MsgCreateVali
 
 	pk, ok := msg.Pubkey.GetCachedValue().(cryptotypes.PubKey)
 	if !ok {
-		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidType, "Expecting cryptotypes.PubKey, got %T", pk)
+		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidType, "Expecting cryptotypes.PubKey, got %T", msg.Pubkey.GetCachedValue())
+	}
+
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	cp := sdkCtx.ConsensusParams()
+	if cp.Validator != nil {
+		pkType := pk.Type()
+		if !slices.Contains(cp.Validator.PubKeyTypes, pkType) {
+			return nil, errorsmod.Wrapf(
+				types.ErrValidatorPubKeyTypeNotSupported,
+				"got: %s, expected: %s", pk.Type(), cp.Validator.PubKeyTypes,
+			)
+		}
+
+		if pkType == sdk.PubKeyEd25519Type && len(pk.Bytes()) != ed25519.PubKeySize {
+			return nil, errorsmod.Wrapf(
+				types.ErrConsensusPubKeyLenInvalid,
+				"got: %d, expected: %d", len(pk.Bytes()), ed25519.PubKeySize,
+			)
+		}
 	}
 
 	if _, err := k.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(pk)); err == nil {
@@ -80,25 +101,6 @@ func (k msgServer) CreateValidator(ctx context.Context, msg *types.MsgCreateVali
 
 	if _, err := msg.Description.EnsureLength(); err != nil {
 		return nil, err
-	}
-
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	cp := sdkCtx.ConsensusParams()
-	if cp.Validator != nil {
-		pkType := pk.Type()
-		hasKeyType := false
-		for _, keyType := range cp.Validator.PubKeyTypes {
-			if pkType == keyType {
-				hasKeyType = true
-				break
-			}
-		}
-		if !hasKeyType {
-			return nil, errorsmod.Wrapf(
-				types.ErrValidatorPubKeyTypeNotSupported,
-				"got: %s, expected: %s", pk.Type(), cp.Validator.PubKeyTypes,
-			)
-		}
 	}
 
 	validator, err := types.NewValidator(msg.ValidatorAddress, pk, msg.Description)

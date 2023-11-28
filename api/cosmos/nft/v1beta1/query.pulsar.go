@@ -10998,6 +10998,8 @@ func (x *QueryBalanceRequest) GetOwner() string {
 }
 
 // QueryBalanceByQueryStringRequest is the request type for the Query/Balance RPC method
+//
+// Since: nft v0.1.1
 type QueryBalanceByQueryStringRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -11081,6 +11083,8 @@ func (x *QueryBalanceResponse) GetAmount() uint64 {
 }
 
 // QueryBalanceByQueryStringResponse is the response type for the Query/Balance RPC method
+//
+// Since: nft v0.1.1
 type QueryBalanceByQueryStringResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -11164,6 +11168,8 @@ func (x *QueryOwnerRequest) GetId() string {
 }
 
 // QueryOwnerByQueryStringRequest is the request type for the Query/Owner RPC method
+//
+// Since: nft v0.1.1
 type QueryOwnerByQueryStringRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -11247,6 +11253,8 @@ func (x *QueryOwnerResponse) GetOwner() string {
 }
 
 // QueryOwnerByQueryStringResponse is the response type for the Query/Owner RPC method
+//
+// Since: nft v0.1.1
 type QueryOwnerByQueryStringResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -11321,6 +11329,8 @@ func (x *QuerySupplyRequest) GetClassId() string {
 }
 
 // QuerySupplyByQueryStringRequest is the request type for the Query/Supply RPC method
+//
+// Since: nft v0.1.1
 type QuerySupplyByQueryStringRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -11395,6 +11405,8 @@ func (x *QuerySupplyResponse) GetAmount() uint64 {
 }
 
 // QuerySupplyByQueryStringResponse is the response type for the Query/Supply RPC method
+//
+// Since: nft v0.1.1
 type QuerySupplyByQueryStringResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -11579,6 +11591,8 @@ func (x *QueryNFTRequest) GetId() string {
 }
 
 // QueryNFTByQueryStringRequest is the request type for the Query/NFT RPC method
+//
+// Since: nft v0.1.1
 type QueryNFTByQueryStringRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -11662,6 +11676,8 @@ func (x *QueryNFTResponse) GetNft() *NFT {
 }
 
 // QueryNFTByQueryStringResponse is the response type for the Query/NFT RPC method
+//
+// Since: nft v0.1.1
 type QueryNFTByQueryStringResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -11736,6 +11752,8 @@ func (x *QueryClassRequest) GetClassId() string {
 }
 
 // QueryClassByQueryStringRequest is the request type for the Query/Class RPC method
+//
+// Since: nft v0.1.1
 type QueryClassByQueryStringRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -11810,6 +11828,8 @@ func (x *QueryClassResponse) GetClass() *Class {
 }
 
 // QueryClassByQueryStringResponse is the response type for the Query/Class RPC method
+//
+// Since: nft v0.1.1
 type QueryClassByQueryStringResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

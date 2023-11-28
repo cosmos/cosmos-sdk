@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/mdp/qrterminal/v3"
 	"github.com/spf13/cobra"
 
 	"cosmossdk.io/core/address"
@@ -30,6 +31,7 @@ const (
 	FlagDevice = "device"
 
 	flagMultiSigThreshold = "multisig-threshold"
+	flagQRCode            = "qrcode"
 )
 
 // ShowKeysCmd shows key information for a given key name.
@@ -49,6 +51,7 @@ consisting of all the keys provided by name and multisig threshold.`,
 	f.BoolP(FlagPublicKey, "p", false, "Output the public key only (overrides --output)")
 	f.BoolP(FlagDevice, "d", false, "Output the address in a ledger device")
 	f.Int(flagMultiSigThreshold, 1, "K out of N required signatures")
+	f.Bool(flagQRCode, false, "Display key address QR code (will be ignored if -a or --address is false)")
 
 	return cmd
 }
@@ -96,6 +99,7 @@ func runShowCmd(cmd *cobra.Command, args []string) (err error) {
 	isShowAddr, _ := cmd.Flags().GetBool(FlagAddress)
 	isShowPubKey, _ := cmd.Flags().GetBool(FlagPublicKey)
 	isShowDevice, _ := cmd.Flags().GetBool(FlagDevice)
+	isShowQRCode, _ := cmd.Flags().GetBool(flagQRCode)
 
 	isOutputSet := false
 	tmp := cmd.Flag(flags.FlagOutput)
@@ -126,6 +130,8 @@ func runShowCmd(cmd *cobra.Command, args []string) (err error) {
 		out := ko.Address
 		if isShowPubKey {
 			out = ko.PubKey
+		} else if isShowQRCode {
+			qrterminal.GenerateHalfBlock(out, qrterminal.H, cmd.OutOrStdout())
 		}
 
 		if _, err := fmt.Fprintln(cmd.OutOrStdout(), out); err != nil {

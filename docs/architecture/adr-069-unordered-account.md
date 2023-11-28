@@ -4,58 +4,87 @@
 
 * Nov 24, 2023: Initial Draft
 
+## Status
+
+Proposed
+
 ## Abstract
 
-Support gaps in account nonce values to support un-ordered(concurrent) transaction inclusion.
+Add an extra nonce "lane" to support un-ordered(concurrent) transaction incluion.
 
 ## Context
 
-Right now the transactions from a particular sender must be included in strict order because of the nonce value requirement, which makes it tricky to send many transactions concurrently, for example, when a previous pending transaction fails or timeouts, all the following transactions are all blocked. Relayer and exchanges are some typical examples.
-
-The main purpose of nonce value is to protect against replay attack, but for that purpose we only need to make sure the nonce is unique, so we can relax the orderness requirement without lose the uniqueness, in that way we can improve the user experience of concurrent transaction sending.
+Right now the nonce value (account sequence number) prevents replay-attack and make sure the transactions from the same sender are included into blocks and executed in order. But it makes it tricky to send many transactions concurrently in a reliable way. IBC relayer and crypto exchanges would be typical examples of such use cases.
 
 ## Decision
 
-Change the nonce logic to allow gaps to exist, which can be filled by other transactions later, or never filled at all, the prototype implementation use a bitmap to record these gap values.
+Add an extra nonce lane to support optional un-ordered transaction inclusion, the default lane provides ordered semantic, the same as current behavior, the new one provides the un-ordered semantic. The transaction can choose which lane to use.
 
-It's debatable how we should configure the user accounts, for example, should we change the default behavior directly or let user to turn this feature on explicitly, or should we allow user to set different gap capacity for different accounts.
+One of the design goals is to keep minimal overhead and breakage to the existing users who don't use the new feature.
+
+### Transaction Format
+
+It don't change the transaction format itself, but re-use the high bit of the exisitng 64bits nonce value to identify the lane, `0` being the default ordered lane, `1` being the new unordered lane.
+
+### Account State
+
+The new nonce lane needs to add some optional fields to the account state:
 
 ```golang
-const MaxGap = 1024
+type UnOrderedNonce struct {
+  Sequence uint64
+  Gaps IntSet
+}
 
-  type Account struct {
-    ...
-    SequenceNumber int64
-+   Gaps *IntSet
-  }
-
-// CheckNonce checks if the input nonce is valid, if yes, modify internal state.
-func(acc *Account) CheckNonce(nonce int64) error {
-  switch {
-    case nonce == acct.SequenceNumber:
-    	return errors.New("nonce is occupied")
-    case nonce >= acct.SequenceNumber + 1:
-      gaps := nonce - acct.SequenceNumber - 1
-      if gaps > MaxGap {
-        return errors.New("max gap is exceeded")
-      }
-    	for i := 0; i < gaps; i++ {
-      	acct.Gaps.Add(i + acct.SequenceNumber + 1)
-    	}
-    	acct.SequenceNumber = nonce
-    case nonce < acct.SequenceNumber:
-    	if !acct.Gaps.Contains(nonce) {
-      	return errors.New("nonce is occupied")
-    	}
-    	acct.Gaps.Remove(nonce)
-  }
-  return nil
+type Account struct {
+  // default to `nil`, only initialized when the new feature is first used.
+  unorderedNonce *UnOrderedNonce
 }
 ```
 
-Prototype implementation of `IntSet`:
+The un-ordered nonce state includes a normal sequence value plus the gap values in recent history, the gap set has a maximum capacity to limit the resource usage, when the capacity is reached, the oldest gap value is simply dropped, which means the pending transaction with that value as nonce will not be accepted anymore.
+
+### Expiration
+
+It would be good to expire the gap nonces after certain timeout is reached, to mitigate the risk that a middleman  intercept an old transaction re-execute it in a long future, which might cause unexpected result.
+
+### Prototype Implementation
+
+The prototype implementation use a roaring bitmap to record these gap values.
 
 ```golang
+// MaxGap is the maximum gaps a new nonce value can introduce
+const MaxGap = 1024
+
+// CheckNonce checks if the nonce in tx is valid, if yes, also update the internal state.
+func(u *UnOrderedNonce) CheckNonce(nonce int64) error {
+  switch {
+    case nonce == u.Sequence:
+      // special case, the current sequence number must have been occupied
+    	return errors.New("nonce is occupied")
+    case nonce >= u.Sequence + 1:
+      // the number of gaps introduced by this nonce value, could be zero if it happens to be `u.Sequence + 1`
+      gaps := nonce - u.Sequence - 1
+      if gaps > MaxGap {
+        return errors.New("max gap is exceeded")
+      }
+      // record the gaps into the bitmap
+      for i := 0; i < gaps; i++ {
+        acct.Gaps.Add(i + u.Sequence + 1)
+      }
+      // record the latest nonce
+    	u.Sequence = nonce
+    case nonce < u.Sequence:
+      // try to use a gap value
+    	if !u.Gaps.Contains(nonce) {
+        return errors.New("nonce is occupied")
+    	}
+    	u.Gaps.Remove(nonce)
+  }
+  return nil
+}
+
+// IntSet is a set of integers with a capacity, when capacity reached, drop the smallest value
 type IntSet struct {
   capacity int
   bitmap roaringbitmap.BitMap
@@ -68,38 +97,49 @@ func NewIntSet(capacity int) *IntSet {
   }
 }
 
-func (is *IntSet) Add(n int) {
-  if is.bitmap.Length() >= is.capacity {
-    // pop the minimal one
-    is.Remove(is.bitmap.Minimal())
+func (is *IntSet) Add(n uint64) {
+  if is.bitmap.GetCardinality() >= is.capacity {
+    // drop the smallest one
+    is.bitmap.Remove(is.bitmap.Minimal())
   }
-  
+
   is.bitmap.Add(n)
 }
 
-func (is *IntSet) Remove(n int) {
+// AddRange adds the integers in [rangeStart, rangeEnd) to the bitmap.
+func (is *IntSet) AddRange(start, end uint64) {
+  n := end - start
+  if is.bitmap.GetCardinality() + n > is.capacity {
+    // drop the smallest ones
+    toDrop := is.bitmap.GetCardinality() + n - is.capacity
+    for i:= 0; i<toDrop; i++ {
+      is.bitmap.Remove(is.bitmap.Minimal())
+    }
+  }
+
+  is.bitmap.AddRange(start, end)
+}
+
+func (is *IntSet) Remove(n uint64) {
   is.bitmap.Remove(n)
 }
 
-func (is *IntSet) Contains(n int) bool {
+func (is *IntSet) Contains(n uint64) bool {
   return is.bitmap.Contains(n)
 }
 ```
-
-## Status
-
-Proposed.
 
 ## Consequences
 
 ### Positive
 
 * Support concurrent transaction inclusion.
-* Only optional fields are added to `Account`, migration is easy.
+* Only optional fields are added to account state, no state migration is needed.
+* Don't need to change transaction format.
 
 ### Negative
 
-- Limited runtime overhead.
+- Some runtime overhead when the new feature is used.
 
 ## References
 

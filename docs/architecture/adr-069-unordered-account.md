@@ -33,6 +33,7 @@ The new nonce lane needs to add some optional fields to the account state:
 ```golang
 type UnOrderedNonce struct {
   Sequence uint64
+  Timestamp uint64  // the block time when the Sequence is updated
   Gaps IntSet
 }
 
@@ -46,40 +47,63 @@ The un-ordered nonce state includes a normal sequence value plus the gap values 
 
 ### Expiration
 
-It would be good to expire the gap nonces after certain timeout is reached, to mitigate the risk that a middleman  intercept an old transaction re-execute it in a long future, which might cause unexpected result.
+It would be good to expire the gap nonces after certain timeout is reached, to mitigate the risk that a middleman intercept an old transaction and re-execute it in a longer future, which might cause unexpected result.
 
 ### Prototype Implementation
 
 The prototype implementation use a roaring bitmap to record these gap values.
 
 ```golang
-// MaxGap is the maximum gaps a new nonce value can introduce
-const MaxGap = 1024
+const (
+  // GapsCapacity is the capacity of the set of gap values.
+  GapsCapacity = 1024
+  // MaxGap is the maximum gaps a new nonce value can introduce
+  MaxGap = 1024
+  // GapsExpirationDuration is the duration in seconds for the gaps to expire
+  GapsExpirationDuration = 60 * 60 * 24
+)
+
+// getGaps returns the gap set, or create a new one if it's expired
+func(u *UnOrderedNonce) getGaps(timestamp uint64) *IntSet {
+  if timestamp > u.Timestamp + GapsExpirationDuration {
+    return NewIntSet(GapsCapacity)
+  }
+
+  return &u.Gaps
+}
 
 // CheckNonce checks if the nonce in tx is valid, if yes, also update the internal state.
-func(u *UnOrderedNonce) CheckNonce(nonce int64) error {
+func(u *UnOrderedNonce) CheckNonce(nonce uint64, timestamp uint64) error {
   switch {
     case nonce == u.Sequence:
       // special case, the current sequence number must have been occupied
       return errors.New("nonce is occupied")
+
     case nonce >= u.Sequence + 1:
       // the number of gaps introduced by this nonce value, could be zero if it happens to be `u.Sequence + 1`
       gaps := nonce - u.Sequence - 1
       if gaps > MaxGap {
         return errors.New("max gap is exceeded")
       }
+
+      gapSet := acct.getGaps(timestamp)
       // record the gaps into the bitmap
-      for i := 0; i < gaps; i++ {
-        acct.Gaps.Add(i + u.Sequence + 1)
-      }
-      // record the latest nonce
+      gapSet.AddRange(u.Sequence + 1, u.Sequence + gaps + 1)
+
+      // update the latest nonce
+      u.Gaps = *gapSet
       u.Sequence = nonce
-    case nonce < u.Sequence:
-      // try to use a gap value
-      if !u.Gaps.Contains(nonce) {
-        return errors.New("nonce is occupied")
+      u.Timestamp = timestamp
+
+    default:
+      // `nonce < u.Sequence`, the tx try to use a historical nonce
+      gapSet := acct.getGaps(timestamp)
+      if !gapSet.Contains(nonce) {
+        return errors.New("nonce is occupied or expired")
       }
-      u.Gaps.Remove(nonce)
+
+      gapSet.Remove(nonce)
+      u.Gaps = *gapSet
   }
   return nil
 }
@@ -110,9 +134,9 @@ func (is *IntSet) Add(n uint64) {
 func (is *IntSet) AddRange(start, end uint64) {
   n := end - start
   if is.bitmap.GetCardinality() + n > is.capacity {
-    // drop the smallest ones
+    // drop the smallest ones until the capacity is not exceeded
     toDrop := is.bitmap.GetCardinality() + n - is.capacity
-    for i:= 0; i<toDrop; i++ {
+    for i := uint64(0); i < toDrop; i++ {
       is.bitmap.Remove(is.bitmap.Minimal())
     }
   }

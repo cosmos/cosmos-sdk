@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"math"
-	"sort"
 	"strconv"
 	"sync"
 
@@ -14,7 +13,6 @@ import (
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/gogoproto/proto"
-	"golang.org/x/exp/maps"
 	protov2 "google.golang.org/protobuf/proto"
 
 	errorsmod "cosmossdk.io/errors"
@@ -193,13 +191,18 @@ type BaseApp struct {
 // variadic number of option functions, which act on the BaseApp to set
 // configuration choices.
 func NewBaseApp(
-	name string, logger log.Logger, db dbm.DB, txDecoder sdk.TxDecoder, options ...func(*BaseApp),
+	name string,
+	logger log.Logger,
+	db dbm.DB,
+	txDecoder sdk.TxDecoder,
+	rs store.RootStore,
+	options ...func(*BaseApp),
 ) *BaseApp {
 	app := &BaseApp{
 		logger:           logger,
 		name:             name,
 		db:               db,
-		cms:              store.NewCommitMultiStore(db, logger, storemetrics.NewNoOpMetrics()), // by default we use a no-op metric gather in store
+		rs:               rs,
 		storeLoader:      DefaultStoreLoader,
 		grpcQueryRouter:  NewGRPCQueryRouter(),
 		msgServiceRouter: NewMsgServiceRouter(),
@@ -285,70 +288,70 @@ func (app *BaseApp) SetMsgServiceRouter(msgServiceRouter *MsgServiceRouter) {
 	app.msgServiceRouter = msgServiceRouter
 }
 
-// MountStores mounts all IAVL or DB stores to the provided keys in the BaseApp
-// multistore.
-func (app *BaseApp) MountStores(keys ...store.StoreKey) {
-	for _, key := range keys {
-		switch key.(type) {
-		case *storetypes.KVStoreKey:
-			if !app.fauxMerkleMode {
-				app.MountStore(key, storetypes.StoreTypeIAVL)
-			} else {
-				// StoreTypeDB doesn't do anything upon commit, and it doesn't
-				// retain history, but it's useful for faster simulation.
-				app.MountStore(key, storetypes.StoreTypeDB)
-			}
+// // MountStores mounts all IAVL or DB stores to the provided keys in the BaseApp
+// // multistore.
+// func (app *BaseApp) MountStores(keys ...store.StoreKey) {
+// 	for _, key := range keys {
+// 		switch key.(type) {
+// 		case *storetypes.KVStoreKey:
+// 			if !app.fauxMerkleMode {
+// 				app.MountStore(key, storetypes.StoreTypeIAVL)
+// 			} else {
+// 				// StoreTypeDB doesn't do anything upon commit, and it doesn't
+// 				// retain history, but it's useful for faster simulation.
+// 				app.MountStore(key, storetypes.StoreTypeDB)
+// 			}
 
-		case *storetypes.TransientStoreKey:
-			app.MountStore(key, storetypes.StoreTypeTransient)
+// 		case *storetypes.TransientStoreKey:
+// 			app.MountStore(key, storetypes.StoreTypeTransient)
 
-		case *storetypes.MemoryStoreKey:
-			app.MountStore(key, storetypes.StoreTypeMemory)
+// 		case *storetypes.MemoryStoreKey:
+// 			app.MountStore(key, storetypes.StoreTypeMemory)
 
-		default:
-			panic(fmt.Sprintf("Unrecognized store key type :%T", key))
-		}
-	}
-}
+// 		default:
+// 			panic(fmt.Sprintf("Unrecognized store key type :%T", key))
+// 		}
+// 	}
+// }
 
-// MountKVStores mounts all IAVL or DB stores to the provided keys in the
-// BaseApp multistore.
-func (app *BaseApp) MountKVStores(keys map[string]*storetypes.KVStoreKey) {
-	for _, key := range keys {
-		if !app.fauxMerkleMode {
-			app.MountStore(key, storetypes.StoreTypeIAVL)
-		} else {
-			// StoreTypeDB doesn't do anything upon commit, and it doesn't
-			// retain history, but it's useful for faster simulation.
-			app.MountStore(key, storetypes.StoreTypeDB)
-		}
-	}
-}
+// // MountKVStores mounts all IAVL or DB stores to the provided keys in the
+// // BaseApp multistore.
+// func (app *BaseApp) MountKVStores(keys map[string]*storetypes.KVStoreKey) {
+// 	for _, key := range keys {
+// 		if !app.fauxMerkleMode {
+// 			app.MountStore(key, storetypes.StoreTypeIAVL)
+// 		} else {
+// 			// StoreTypeDB doesn't do anything upon commit, and it doesn't
+// 			// retain history, but it's useful for faster simulation.
+// 			app.MountStore(key, storetypes.StoreTypeDB)
+// 		}
+// 	}
+// }
 
-// MountTransientStores mounts all transient stores to the provided keys in
-// the BaseApp multistore.
-func (app *BaseApp) MountTransientStores(keys map[string]*storetypes.TransientStoreKey) {
-	for _, key := range keys {
-		app.MountStore(key, storetypes.StoreTypeTransient)
-	}
-}
+// // MountTransientStores mounts all transient stores to the provided keys in
+// // the BaseApp multistore.
+// func (app *BaseApp) MountTransientStores(keys map[string]*storetypes.TransientStoreKey) {
+// 	for _, key := range keys {
+// 		app.MountStore(key, storetypes.StoreTypeTransient)
+// 	}
+// }
 
-// MountMemoryStores mounts all in-memory KVStores with the BaseApp's internal
-// commit multi-store.
-func (app *BaseApp) MountMemoryStores(keys map[string]*storetypes.MemoryStoreKey) {
-	skeys := maps.Keys(keys)
-	sort.Strings(skeys)
-	for _, key := range skeys {
-		memKey := keys[key]
-		app.MountStore(memKey, storetypes.StoreTypeMemory)
-	}
-}
+// // MountMemoryStores mounts all in-memory KVStores with the BaseApp's internal
+// // commit multi-store.
+// func (app *BaseApp) MountMemoryStores(keys map[string]*storetypes.MemoryStoreKey) {
+// 	skeys := maps.Keys(keys)
+// 	sort.Strings(skeys)
+// 	for _, key := range skeys {
+// 		memKey := keys[key]
+// 		app.MountStore(memKey, storetypes.StoreTypeMemory)
+// 	}
+// }
 
-// MountStore mounts a store to the provided key in the BaseApp multistore,
-// using the default DB.
-func (app *BaseApp) MountStore(key storetypes.StoreKey, typ storetypes.StoreType) {
-	app.cms.MountStoreWithDB(key, typ, nil)
-}
+// // MountStore mounts a store to the provided key in the BaseApp multistore,
+// // using the default DB.
+// func (app *BaseApp) MountStore(key storetypes.StoreKey, typ storetypes.StoreType) {
+// 	app.cms.MountStoreWithDB(key, typ, nil)
+// }
 
 // LoadLatestVersion loads the latest application version. It will panic if
 // called more than once on a running BaseApp.
@@ -361,16 +364,15 @@ func (app *BaseApp) LoadLatestVersion() error {
 	return app.Init()
 }
 
-// DefaultStoreLoader will be used by default and loads the latest version
-func DefaultStoreLoader(ms storetypes.CommitMultiStore) error {
-	return ms.LoadLatestVersion()
+// DefaultStoreLoader will be used by default and loads the latest version from
+// the RootStore.
+func DefaultStoreLoader(rs store.RootStore) error {
+	return rs.LoadLatestVersion()
 }
 
-// CommitMultiStore returns the root multi-store.
-// App constructor can use this to access the `cms`.
-// UNSAFE: must not be used during the abci life cycle.
-func (app *BaseApp) CommitMultiStore() storetypes.CommitMultiStore {
-	return app.cms
+// RootStore returns BaseApp's RootStore. Callers must be sure to use this carefully.
+func (app *BaseApp) RootStore() store.RootStore {
+	return app.rs
 }
 
 // SnapshotManager returns the snapshot manager.
@@ -380,11 +382,9 @@ func (app *BaseApp) SnapshotManager() *snapshots.Manager {
 }
 
 // LoadVersion loads the BaseApp application version. It will panic if called
-// more than once on a running baseapp.
-func (app *BaseApp) LoadVersion(version int64) error {
-	app.logger.Info("NOTICE: this could take a long time to migrate IAVL store to fastnode if you enable Fast Node.\n")
-	err := app.cms.LoadVersion(version)
-	if err != nil {
+// more than once on a running BaseApp.
+func (app *BaseApp) LoadVersion(version uint64) error {
+	if err := app.rs.LoadVersion(version); err != nil {
 		return fmt.Errorf("failed to load version %d: %w", version, err)
 	}
 

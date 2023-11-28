@@ -117,7 +117,7 @@ func makeSignBatchCmd() func(cmd *cobra.Command, args []string) error {
 		appendMessagesToSingleTx, _ := cmd.Flags().GetBool(flagAppend)
 		// Combines all tx msgs and create single signed transaction
 		if appendMessagesToSingleTx {
-			var feeAmount sdk.Coins
+			var totalFees sdk.Coins
 			txBuilder := txCfg.NewTxBuilder()
 			msgs := make([]sdk.Msg, 0)
 			newGasLimit := uint64(0)
@@ -130,9 +130,11 @@ func makeSignBatchCmd() func(cmd *cobra.Command, args []string) error {
 				}
 				// increment the gas
 				newGasLimit += fe.GetTx().GetGas()
-				// Add the fees
-				for _, fee := range fe.GetTx().GetFee() {
-					feeAmount = feeAmount.Add(fee)
+				// Individual fee values from each transaction need to be aggregated to calculate the total fee for the batch of transactions.
+				// https://github.com/cosmos/cosmos-sdk/issues/18064
+				unmergedFees := fe.GetTx().GetFee()
+				for _, fee := range unmergedFees {
+					totalFees = totalFees.Add(fee)
 				}
 				// append messages
 				msgs = append(msgs, unsignedStdTx.GetMsgs()...)
@@ -152,7 +154,7 @@ func makeSignBatchCmd() func(cmd *cobra.Command, args []string) error {
 			txBuilder.SetGasLimit(newGasLimit)
 
 			// set the feeAmount
-			txBuilder.SetFeeAmount(feeAmount)
+			txBuilder.SetFeeAmount(totalFees)
 
 			// sign the txs
 			from, _ := cmd.Flags().GetString(flags.FlagFrom)

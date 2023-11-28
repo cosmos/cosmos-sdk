@@ -23,7 +23,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 # Changelog
 
-## Unreleased
+## v1.0.1 (November 28, 2023)
 
 ### Bug Fixes
 

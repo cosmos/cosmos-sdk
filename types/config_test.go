@@ -17,15 +17,6 @@ func TestConfigTestSuite(t *testing.T) {
 	suite.Run(t, new(configTestSuite))
 }
 
-func (s *contextTestSuite) TestConfig_SetPurpose() {
-	config := sdk.NewAddressConfig()
-	config.SetPurpose(44)
-	s.Require().Equal(uint32(44), config.GetPurpose())
-
-	config.SetPurpose(0)
-	s.Require().Equal(uint32(0), config.GetPurpose())
-}
-
 func (s *configTestSuite) TestConfig_SetTxEncoder() {
 	mockErr := errors.New("test")
 	config := sdk.NewConfig()

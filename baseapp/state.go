@@ -1,20 +1,20 @@
 package baseapp
 
 import (
-	storetypes "cosmossdk.io/store/types"
+	"cosmossdk.io/store/v2"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 type state struct {
-	ms  storetypes.CacheMultiStore
+	brs store.BranchedRootStore
 	ctx sdk.Context
 }
 
-// CacheMultiStore calls and returns a CacheMultiStore on the state's underling
-// CacheMultiStore.
-func (st *state) CacheMultiStore() storetypes.CacheMultiStore {
-	return st.ms.CacheMultiStore()
+// BranchRootStore returns a branched RootStore. Note, the underlying RootStore
+// is already branched.
+func (st *state) BranchRootStore() store.BranchedRootStore {
+	return st.brs.Branch()
 }
 
 // Context returns the Context of the state.

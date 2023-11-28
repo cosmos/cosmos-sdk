@@ -135,7 +135,7 @@ type BaseApp struct {
 	minGasPrices sdk.DecCoins
 
 	// initialHeight is the initial height at which we start the BaseApp
-	initialHeight int64
+	initialHeight uint64
 
 	// flag for sealing options and parameters to a BaseApp
 	sealed bool
@@ -484,9 +484,9 @@ func (app *BaseApp) IsSealed() bool { return app.sealed }
 // multi-store (i.e. a CacheMultiStore) and a new Context with the same
 // multi-store branch, and provided header.
 func (app *BaseApp) setState(mode execMode, header cmtproto.Header) {
-	ms := app.cms.CacheMultiStore()
+	branchedRS := app.rs.Branch()
 	baseState := &state{
-		ms:  ms,
+		brs: branchedRS,
 		ctx: sdk.NewContext(ms, false, app.logger).WithStreamingManager(app.streamingManager).WithBlockHeader(header),
 	}
 
@@ -581,7 +581,7 @@ func (app *BaseApp) validateFinalizeBlockHeight(req *abci.RequestFinalizeBlock) 
 	lastBlockHeight := app.LastBlockHeight()
 
 	// expectedHeight holds the expected height to validate
-	var expectedHeight int64
+	var expectedHeight uint64
 	if lastBlockHeight == 0 && app.initialHeight > 1 {
 		// In this case, we're validating the first block of the chain, i.e no
 		// previous commit. The height we're expecting is the initial height.
@@ -595,7 +595,7 @@ func (app *BaseApp) validateFinalizeBlockHeight(req *abci.RequestFinalizeBlock) 
 		expectedHeight = lastBlockHeight + 1
 	}
 
-	if req.Height != expectedHeight {
+	if uint64(req.Height) != expectedHeight {
 		return fmt.Errorf("invalid height: %d; expected: %d", req.Height, expectedHeight)
 	}
 

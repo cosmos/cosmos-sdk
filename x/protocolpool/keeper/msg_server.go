@@ -124,10 +124,10 @@ func (k MsgServer) CreateContinuousFund(ctx context.Context, msg *types.MsgCreat
 
 	// Create continuous fund proposal
 	cf := types.ContinuousFund{
-		Recipient:  msg.Recipient,
-		Percentage: msg.Percentage,
-		Cap:        msg.Cap,
-		Expiry:     msg.Expiry,
+		Recipient:             msg.Recipient,
+		Percentage:            msg.Percentage,
+		MaxDistributedCapital: msg.MaxDistributedCapital,
+		Expiry:                msg.Expiry,
 	}
 
 	// Set continuous fund to the state
@@ -137,6 +137,10 @@ func (k MsgServer) CreateContinuousFund(ctx context.Context, msg *types.MsgCreat
 	}
 
 	return &types.MsgCreateContinuousFundResponse{}, nil
+}
+
+func (k MsgServer) WithdrawContinuousFund(ctx context.Context, msg *types.MsgWithdrawContinuousFund) (*types.MsgWithdrawContinuousFundResponse, error) {
+	return &types.MsgWithdrawContinuousFundResponse{}, nil
 }
 
 func (k MsgServer) CancelContinuousFund(ctx context.Context, msg *types.MsgCancelContinuousFund) (*types.MsgCancelContinuousFundResponse, error) {

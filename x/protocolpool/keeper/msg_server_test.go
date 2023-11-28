@@ -338,7 +338,7 @@ func (suite *KeeperTestSuite) TestMsgClaimBudget() {
 }
 
 func (suite *KeeperTestSuite) TestCreateContinuousFund() {
-	cap := sdk.NewInt64Coin("uatom", 100000)
+	maxDistributedCapital := sdk.NewInt64Coin("uatom", 100000)
 	percentage, err := math.LegacyNewDecFromStr("0.2")
 	suite.Require().NoError(err)
 	negativePercentage, err := math.LegacyNewDecFromStr("-0.2")
@@ -354,99 +354,99 @@ func (suite *KeeperTestSuite) TestCreateContinuousFund() {
 	}{
 		"empty recipient address": {
 			input: &types.MsgCreateContinuousFund{
-				Authority:  suite.poolKeeper.GetAuthority(),
-				Recipient:  "",
-				Percentage: percentage,
-				Cap:        &cap,
-				Expiry:     &expiry,
+				Authority:             suite.poolKeeper.GetAuthority(),
+				Recipient:             "",
+				Percentage:            percentage,
+				MaxDistributedCapital: &maxDistributedCapital,
+				Expiry:                &expiry,
 			},
 			expErr:    true,
 			expErrMsg: "empty address string is not allowed",
 		},
 		"empty authority": {
 			input: &types.MsgCreateContinuousFund{
-				Authority:  "",
-				Recipient:  recipientAddr.String(),
-				Percentage: percentage,
-				Cap:        &cap,
-				Expiry:     &expiry,
+				Authority:             "",
+				Recipient:             recipientAddr.String(),
+				Percentage:            percentage,
+				MaxDistributedCapital: &maxDistributedCapital,
+				Expiry:                &expiry,
 			},
 			expErr:    true,
 			expErrMsg: "empty address string is not allowed",
 		},
 		"invalid authority": {
 			input: &types.MsgCreateContinuousFund{
-				Authority:  "invalid_authority",
-				Recipient:  recipientAddr.String(),
-				Percentage: percentage,
-				Cap:        &cap,
-				Expiry:     &expiry,
+				Authority:             "invalid_authority",
+				Recipient:             recipientAddr.String(),
+				Percentage:            percentage,
+				MaxDistributedCapital: &maxDistributedCapital,
+				Expiry:                &expiry,
 			},
 			expErr:    true,
 			expErrMsg: "invalid authority",
 		},
 		"zero percentage": {
 			input: &types.MsgCreateContinuousFund{
-				Authority:  suite.poolKeeper.GetAuthority(),
-				Recipient:  recipientAddr.String(),
-				Percentage: math.LegacyNewDec(0),
-				Cap:        &cap,
-				Expiry:     &expiry,
+				Authority:             suite.poolKeeper.GetAuthority(),
+				Recipient:             recipientAddr.String(),
+				Percentage:            math.LegacyNewDec(0),
+				MaxDistributedCapital: &maxDistributedCapital,
+				Expiry:                &expiry,
 			},
 			expErr:    true,
 			expErrMsg: "percentage cannot be zero or empty",
 		},
 		"negative percentage": {
 			input: &types.MsgCreateContinuousFund{
-				Authority:  suite.poolKeeper.GetAuthority(),
-				Recipient:  recipientAddr.String(),
-				Percentage: negativePercentage,
-				Cap:        &cap,
-				Expiry:     &expiry,
+				Authority:             suite.poolKeeper.GetAuthority(),
+				Recipient:             recipientAddr.String(),
+				Percentage:            negativePercentage,
+				MaxDistributedCapital: &maxDistributedCapital,
+				Expiry:                &expiry,
 			},
 			expErr:    true,
 			expErrMsg: "percentage cannot be negative",
 		},
 		"invalid percentage": {
 			input: &types.MsgCreateContinuousFund{
-				Authority:  suite.poolKeeper.GetAuthority(),
-				Recipient:  recipientAddr.String(),
-				Percentage: math.LegacyNewDec(1),
-				Cap:        &cap,
-				Expiry:     &expiry,
+				Authority:             suite.poolKeeper.GetAuthority(),
+				Recipient:             recipientAddr.String(),
+				Percentage:            math.LegacyNewDec(1),
+				MaxDistributedCapital: &maxDistributedCapital,
+				Expiry:                &expiry,
 			},
 			expErr:    true,
 			expErrMsg: "percentage cannot be greater than or equal to one",
 		},
-		"invalid cap": {
+		"invalid MaxDistributedCapital": {
 			input: &types.MsgCreateContinuousFund{
-				Authority:  suite.poolKeeper.GetAuthority(),
-				Recipient:  recipientAddr.String(),
-				Percentage: percentage,
-				Cap:        &invalidCap,
-				Expiry:     &expiry,
+				Authority:             suite.poolKeeper.GetAuthority(),
+				Recipient:             recipientAddr.String(),
+				Percentage:            percentage,
+				MaxDistributedCapital: &invalidCap,
+				Expiry:                &expiry,
 			},
 			expErr:    true,
-			expErrMsg: "invalid capital: amount cannot be zero",
+			expErrMsg: "invalid MaxDistributedCapital: amount cannot be zero",
 		},
 		"invalid expiry": {
 			input: &types.MsgCreateContinuousFund{
-				Authority:  suite.poolKeeper.GetAuthority(),
-				Recipient:  recipientAddr.String(),
-				Percentage: percentage,
-				Cap:        &cap,
-				Expiry:     &invalidExpirty,
+				Authority:             suite.poolKeeper.GetAuthority(),
+				Recipient:             recipientAddr.String(),
+				Percentage:            percentage,
+				MaxDistributedCapital: &maxDistributedCapital,
+				Expiry:                &invalidExpirty,
 			},
 			expErr:    true,
 			expErrMsg: "expiry time cannot be less than the current block time",
 		},
 		"all good": {
 			input: &types.MsgCreateContinuousFund{
-				Authority:  suite.poolKeeper.GetAuthority(),
-				Recipient:  recipientAddr.String(),
-				Percentage: percentage,
-				Cap:        &cap,
-				Expiry:     &expiry,
+				Authority:             suite.poolKeeper.GetAuthority(),
+				Recipient:             recipientAddr.String(),
+				Percentage:            percentage,
+				MaxDistributedCapital: &maxDistributedCapital,
+				Expiry:                &expiry,
 			},
 			expErr: false,
 		},
@@ -479,15 +479,14 @@ func (suite *KeeperTestSuite) TestCancelContinuousFund() {
 			preRun: func() {
 				percentage, err := math.LegacyNewDecFromStr("0.2")
 				suite.Require().NoError(err)
-				cap := sdk.NewInt64Coin("uatom", 100000)
+				maxDistributedCapital := sdk.NewInt64Coin("uatom", 100000)
 				oneMonthInSeconds := int64(30 * 24 * 60 * 60) // Approximate number of seconds in 1 month
 				expiry := suite.ctx.BlockTime().Add(time.Duration(oneMonthInSeconds) * time.Second)
 				cf := types.ContinuousFund{
-					Recipient: "",
-
-					Percentage: percentage,
-					Cap:        &cap,
-					Expiry:     &expiry,
+					Recipient:             "",
+					Percentage:            percentage,
+					MaxDistributedCapital: &maxDistributedCapital,
+					Expiry:                &expiry,
 				}
 				err = suite.poolKeeper.ContinuousFund.Set(suite.ctx, recipientAddr, cf)
 				suite.Require().NoError(err)
@@ -504,15 +503,14 @@ func (suite *KeeperTestSuite) TestCancelContinuousFund() {
 			preRun: func() {
 				percentage, err := math.LegacyNewDecFromStr("0.2")
 				suite.Require().NoError(err)
-				cap := sdk.NewInt64Coin("uatom", 100000)
+				maxDistributedCapital := sdk.NewInt64Coin("uatom", 100000)
 				oneMonthInSeconds := int64(30 * 24 * 60 * 60) // Approximate number of seconds in 1 month
 				expiry := suite.ctx.BlockTime().Add(time.Duration(oneMonthInSeconds) * time.Second)
 				cf := types.ContinuousFund{
-					Recipient: recipientAddr.String(),
-
-					Percentage: percentage,
-					Cap:        &cap,
-					Expiry:     &expiry,
+					Recipient:             recipientAddr.String(),
+					Percentage:            percentage,
+					MaxDistributedCapital: &maxDistributedCapital,
+					Expiry:                &expiry,
 				}
 				err = suite.poolKeeper.ContinuousFund.Set(suite.ctx, recipientAddr, cf)
 				suite.Require().NoError(err)

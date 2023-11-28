@@ -55,10 +55,10 @@ func (k Keeper) ExportGenesis(ctx context.Context) (*types.GenesisState, error) 
 	var cf []*types.ContinuousFund
 	err := k.ContinuousFund.Walk(ctx, nil, func(key sdk.AccAddress, value types.ContinuousFund) (stop bool, err error) {
 		cf = append(cf, &types.ContinuousFund{
-			Recipient:  key.String(),
-			Percentage: value.Percentage,
-			Cap:        value.Cap,
-			Expiry:     value.Expiry,
+			Recipient:             key.String(),
+			Percentage:            value.Percentage,
+			MaxDistributedCapital: value.MaxDistributedCapital,
+			Expiry:                value.Expiry,
 		})
 		return false, nil
 	})

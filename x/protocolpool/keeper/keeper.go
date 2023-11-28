@@ -241,11 +241,11 @@ func (k Keeper) validateContinuousFund(ctx context.Context, msg types.MsgCreateC
 		return fmt.Errorf("percentage cannot be greater than or equal to one")
 	}
 
-	// Validate cap
-	if msg.Cap.IsZero() {
-		return fmt.Errorf("invalid capital: amount cannot be zero")
+	// Validate maxDistributedCapital
+	if msg.MaxDistributedCapital.IsZero() {
+		return fmt.Errorf("invalid MaxDistributedCapital: amount cannot be zero")
 	}
-	if err := validateAmount(sdk.NewCoins(*msg.Cap)); err != nil {
+	if err := validateAmount(sdk.NewCoins(*msg.MaxDistributedCapital)); err != nil {
 		return err
 	}
 
@@ -288,8 +288,8 @@ func (k Keeper) continuousDistribution(ctx context.Context, continuousFund types
 		coinsToDistribute := sdk.NewCoin(amount.Denom, amount.Amount.TruncateInt())
 		recipientAmount := k.bankKeeper.GetAllBalances(ctx, recipient)
 		totalRecipientBal := recipientAmount.Add(coinsToDistribute)
-		// check if the recipient account balance exceeds cap after distribution
-		if totalRecipientBal.IsAllLT(sdk.NewCoins(*continuousFund.Cap)) {
+		// check if the recipient account balance exceeds maxDistributedCapital after distribution
+		if totalRecipientBal.IsAllLT(sdk.NewCoins(*continuousFund.MaxDistributedCapital)) {
 			// Distribute funds to the recipient
 			err := k.DistributeFromFeePool(ctx, sdk.NewCoins(coinsToDistribute), recipient)
 			if err != nil {

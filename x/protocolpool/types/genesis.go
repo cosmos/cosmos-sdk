@@ -68,13 +68,13 @@ func validateContinuousFund(cf ContinuousFund) error {
 		return fmt.Errorf("recipient cannot be empty")
 	}
 
-	// Validate cap
-	cap := sdk.NewCoins(*cf.Cap)
-	if cap.IsZero() {
-		return fmt.Errorf("invalid capital: amount cannot be zero")
+	// Validate maxDistributedCapital
+	maxDistributedCapital := sdk.NewCoins(*cf.MaxDistributedCapital)
+	if maxDistributedCapital.IsZero() {
+		return fmt.Errorf("invalid MaxDistributedCapital: amount cannot be zero")
 	}
-	if err := cap.Validate(); err != nil {
-		return errors.Wrap(sdkerrors.ErrInvalidCoins, cap.String())
+	if err := maxDistributedCapital.Validate(); err != nil {
+		return errors.Wrap(sdkerrors.ErrInvalidCoins, maxDistributedCapital.String())
 	}
 
 	// Validate percentage

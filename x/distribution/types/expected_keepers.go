@@ -26,6 +26,7 @@ type BankKeeper interface {
 	SendCoinsFromModuleToModule(ctx sdk.Context, senderModule string, recipientModule string, amt sdk.Coins) error
 	SendCoinsFromModuleToAccount(ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
 	SendCoinsFromAccountToModule(ctx sdk.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
+	SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) error
 
 	BlockedAddr(addr sdk.AccAddress) bool
 }
@@ -49,6 +50,10 @@ type StakingKeeper interface {
 	GetAllSDKDelegations(ctx sdk.Context) []stakingtypes.Delegation
 	GetAllValidators(ctx sdk.Context) (validators []stakingtypes.Validator)
 	GetAllDelegatorDelegations(ctx sdk.Context, delegator sdk.AccAddress) []stakingtypes.Delegation
+
+	GetTokenizeShareRecordsByOwner(ctx sdk.Context, owner sdk.AccAddress) (tokenizeShareRecords []stakingtypes.TokenizeShareRecord)
+	GetTokenizeShareRecord(ctx sdk.Context, id uint64) (tokenizeShareRecord stakingtypes.TokenizeShareRecord, err error)
+	GetAllTokenizeShareRecords(ctx sdk.Context) (tokenizeShareRecords []stakingtypes.TokenizeShareRecord)
 }
 
 // StakingHooks event hooks for staking validator object (noalias)

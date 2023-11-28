@@ -183,6 +183,20 @@ func (mr *MockBankKeeperMockRecorder) SendCoinsFromModuleToModule(ctx, senderMod
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendCoinsFromModuleToModule", reflect.TypeOf((*MockBankKeeper)(nil).SendCoinsFromModuleToModule), ctx, senderModule, recipientModule, amt)
 }
 
+// SendCoins mocks base method.
+func (m *MockBankKeeper) SendCoins(ctx types.Context, fromAddr types.AccAddress, toAddr types.AccAddress, amt types.Coins) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SendCoins", ctx, fromAddr, toAddr, amt)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SendCoins indicates an expected call of SendCoins.
+func (mr *MockBankKeeperMockRecorder) SendCoins(ctx, fromAddr, toAddr, amt interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendCoins", reflect.TypeOf((*MockBankKeeper)(nil).SendCoins), ctx, fromAddr, toAddr, amt)
+}
+
 // SpendableCoins mocks base method.
 func (m *MockBankKeeper) SpendableCoins(ctx types.Context, addr types.AccAddress) types.Coins {
 	m.ctrl.T.Helper()
@@ -326,6 +340,49 @@ func (m *MockStakingKeeper) ValidatorByConsAddr(arg0 types.Context, arg1 types.C
 func (mr *MockStakingKeeperMockRecorder) ValidatorByConsAddr(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ValidatorByConsAddr", reflect.TypeOf((*MockStakingKeeper)(nil).ValidatorByConsAddr), arg0, arg1)
+}
+
+// GetTokenizeShareRecordsByOwner mocks base method.
+func (m *MockStakingKeeper) GetTokenizeShareRecordsByOwner(ctx types.Context, owner types.AccAddress) (tokenizeShareRecords []types1.TokenizeShareRecord) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetTokenizeShareRecordsByOwner", ctx, owner)
+	ret0, _ := ret[0].([]types1.TokenizeShareRecord)
+	return ret0
+}
+
+// GetTokenizeShareRecordsByOwner indicates an expected call of GetTokenizeShareRecordsByOwner.
+func (mr *MockStakingKeeperMockRecorder) GetTokenizeShareRecordsByOwner(ctx, owner interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTokenizeShareRecordsByOwner", reflect.TypeOf((*MockStakingKeeper)(nil).GetTokenizeShareRecordsByOwner), ctx, owner)
+}
+
+// GetTokenizeShareRecord mocks base method.
+func (m *MockStakingKeeper) GetTokenizeShareRecord(ctx types.Context, id uint64) (tokenizeShareRecord types1.TokenizeShareRecord, err error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetTokenizeShareRecord", ctx, id)
+	ret0, _ := ret[0].(types1.TokenizeShareRecord)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetTokenizeShareRecord indicates an expected call of GetTokenizeShareRecord.
+func (mr *MockStakingKeeperMockRecorder) GetTokenizeShareRecord(ctx, id interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTokenizeShareRecord", reflect.TypeOf((*MockStakingKeeper)(nil).GetTokenizeShareRecord), ctx, id)
+}
+
+// GetAllTokenizeShareRecords mocks base method.
+func (m *MockStakingKeeper) GetAllTokenizeShareRecords(ctx types.Context) (tokenizeShareRecords []types1.TokenizeShareRecord) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAllTokenizeShareRecords", ctx)
+	ret0, _ := ret[0].([]types1.TokenizeShareRecord)
+	return ret0
+}
+
+// GetAllTokenizeShareRecords indicates an expected call of GetAllTokenizeShareRecords.
+func (mr *MockStakingKeeperMockRecorder) GetAllTokenizeShareRecords(ctx interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllTokenizeShareRecords", reflect.TypeOf((*MockStakingKeeper)(nil).GetAllTokenizeShareRecords), ctx)
 }
 
 // MockStakingHooks is a mock of StakingHooks interface.

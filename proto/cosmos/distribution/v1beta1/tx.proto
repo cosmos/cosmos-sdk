@@ -181,6 +181,9 @@ message MsgCommunityPoolSpend {
 
 // MsgWithdrawTokenizeShareRecordReward withdraws tokenize share rewards for a specific record
 message MsgWithdrawTokenizeShareRecordReward {
+  option (cosmos.msg.v1.signer) = "owner_address";
+  option (amino.name)           = "cosmos-sdk/distr/MsgWithdrawTokenizeShareRecordReward";
+
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
@@ -194,6 +197,9 @@ message MsgWithdrawTokenizeShareRecordRewardResponse {}
 // MsgWithdrawAllTokenizeShareRecordReward withdraws tokenize share rewards or all
 // records owned by the designated owner
 message MsgWithdrawAllTokenizeShareRecordReward {
+  option (cosmos.msg.v1.signer) = "owner_address";
+  option (amino.name)           = "cosmos-sdk/distr/MsgWithdrawAllTokenizeShareRecordReward";
+
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 

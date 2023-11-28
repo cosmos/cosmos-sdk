@@ -61,7 +61,7 @@ func(u *UnOrderedNonce) CheckNonce(nonce int64) error {
   switch {
     case nonce == u.Sequence:
       // special case, the current sequence number must have been occupied
-    	return errors.New("nonce is occupied")
+      return errors.New("nonce is occupied")
     case nonce >= u.Sequence + 1:
       // the number of gaps introduced by this nonce value, could be zero if it happens to be `u.Sequence + 1`
       gaps := nonce - u.Sequence - 1
@@ -73,13 +73,13 @@ func(u *UnOrderedNonce) CheckNonce(nonce int64) error {
         acct.Gaps.Add(i + u.Sequence + 1)
       }
       // record the latest nonce
-    	u.Sequence = nonce
+      u.Sequence = nonce
     case nonce < u.Sequence:
       // try to use a gap value
-    	if !u.Gaps.Contains(nonce) {
+      if !u.Gaps.Contains(nonce) {
         return errors.New("nonce is occupied")
-    	}
-    	u.Gaps.Remove(nonce)
+      }
+      u.Gaps.Remove(nonce)
   }
   return nil
 }
@@ -91,7 +91,7 @@ type IntSet struct {
 }
 
 func NewIntSet(capacity int) *IntSet {
-  return IntSet{
+  return &IntSet{
     capacity: capacity,
     bitmap: *roaringbitmap.New(),
   }

@@ -522,7 +522,11 @@ func (app *BaseApp) GetConsensusParams(ctx sdk.Context) cmtproto.ConsensusParams
 
 	cp, err := app.paramStore.Get(ctx)
 	if err != nil {
-		panic(fmt.Errorf("consensus key is nil: %w", err))
+		// This could happen while migrating from v0.45/v0.46 to v0.50, we should
+		// allow it to happen so during preblock the upgrade plan can be executed
+		// and the consensus params set for the first time in the new format.
+		app.logger.Error("failed to get consensus params", "err", err)
+		return cmtproto.ConsensusParams{}
 	}
 
 	return cp

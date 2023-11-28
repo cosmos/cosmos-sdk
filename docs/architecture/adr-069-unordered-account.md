@@ -55,6 +55,29 @@ The prototype implementation use a roaring bitmap to record these gap values.
 
 ```golang
 const (
+  MSBCheckMask = 1 << 63
+  MSBClearMask = ^(1 << 63)
+)
+
+// CheckNonce switches to un-ordered lane if the MSB of the nonce is set.
+func (acct *Account) CheckNonce(nonce uint64, blockTime uint64) error {
+  if nonce & MSBCheckMask != 0 {
+    nonce &= MSBClearMask
+
+    if acct.unorderedNonce == nil {
+      acct.unorderedNonce = NewUnOrderedNonce()
+    }
+    return acct.unorderedNonce.CheckNonce(nonce, blockTime)
+  }
+
+  // current nonce logic
+}
+```
+
+
+
+```golang
+const (
   // GapsCapacity is the capacity of the set of gap values.
   GapsCapacity = 1024
   // MaxGap is the maximum gaps a new nonce value can introduce
@@ -64,8 +87,8 @@ const (
 )
 
 // getGaps returns the gap set, or create a new one if it's expired
-func(u *UnOrderedNonce) getGaps(timestamp uint64) *IntSet {
-  if timestamp > u.Timestamp + GapsExpirationDuration {
+func(u *UnOrderedNonce) getGaps(blockTime uint64) *IntSet {
+  if blockTime > u.Timestamp + GapsExpirationDuration {
     return NewIntSet(GapsCapacity)
   }
 
@@ -73,7 +96,7 @@ func(u *UnOrderedNonce) getGaps(timestamp uint64) *IntSet {
 }
 
 // CheckNonce checks if the nonce in tx is valid, if yes, also update the internal state.
-func(u *UnOrderedNonce) CheckNonce(nonce uint64, timestamp uint64) error {
+func(u *UnOrderedNonce) CheckNonce(nonce uint64, blockTime uint64) error {
   switch {
     case nonce == u.Sequence:
       // special case, the current sequence number must have been occupied
@@ -86,18 +109,18 @@ func(u *UnOrderedNonce) CheckNonce(nonce uint64, timestamp uint64) error {
         return errors.New("max gap is exceeded")
       }
 
-      gapSet := acct.getGaps(timestamp)
+      gapSet := acct.getGaps(blockTime)
       // record the gaps into the bitmap
       gapSet.AddRange(u.Sequence + 1, u.Sequence + gaps + 1)
 
       // update the latest nonce
       u.Gaps = *gapSet
       u.Sequence = nonce
-      u.Timestamp = timestamp
+      u.Timestamp = blockTime
 
     default:
       // `nonce < u.Sequence`, the tx try to use a historical nonce
-      gapSet := acct.getGaps(timestamp)
+      gapSet := acct.getGaps(blockTime)
       if !gapSet.Contains(nonce) {
         return errors.New("nonce is occupied or expired")
       }

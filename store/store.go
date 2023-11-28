@@ -80,6 +80,9 @@ type RootStore interface {
 	// be the same as the hash returned by WorkingHash() prior to calling Commit().
 	Commit() ([]byte, error)
 
+	// LastCommitID returns a CommitID pertaining to the last commitment.
+	LastCommitID() (CommitID, error)
+
 	io.Closer
 }
 

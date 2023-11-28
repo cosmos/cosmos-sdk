@@ -18,6 +18,7 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/snapshots"
+	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/store/v2"
 
 	// "cosmossdk.io/store"
@@ -393,12 +394,17 @@ func (app *BaseApp) LoadVersion(version uint64) error {
 
 // LastCommitID returns the last CommitID of the RootStore.
 func (app *BaseApp) LastCommitID() store.CommitID {
-	return app.rs.LastCommitID()
+	cID, err := app.rs.LastCommitID()
+	if err != nil {
+		panic(err)
+	}
+
+	return cID
 }
 
 // LastBlockHeight returns the last committed block height.
-func (app *BaseApp) LastBlockHeight() int64 {
-	return app.rs.LastCommitID().Version
+func (app *BaseApp) LastBlockHeight() uint64 {
+	return app.LastCommitID().Version
 }
 
 // ChainID returns the chainID of the app.
@@ -416,10 +422,8 @@ func (app *BaseApp) Mempool() mempool.Mempool {
 	return app.mempool
 }
 
-// Init initializes the app. It seals the app, preventing any
-// further modifications. In addition, it validates the app against
-// the earlier provided settings. Returns an error if validation fails.
-// nil otherwise. Panics if the app is already sealed.
+// Init initializes the app. It seals the app, preventing any further modifications.
+// Panics if the app is already sealed.
 func (app *BaseApp) Init() error {
 	if app.sealed {
 		panic("cannot call initFromMainStore: baseapp already sealed")
@@ -427,15 +431,15 @@ func (app *BaseApp) Init() error {
 
 	emptyHeader := cmtproto.Header{ChainID: app.chainID}
 
-	// needed for the export command which inits from store but never calls initchain
+	// needed for the export command which inits from store but never calls InitChain
 	app.setState(execModeCheck, emptyHeader)
 	app.Seal()
 
-	if app.cms == nil {
-		return errors.New("commit multi-store must not be nil")
+	if app.rs == nil {
+		return errors.New("RootStore must not be nil")
 	}
 
-	return app.cms.GetPruning().Validate()
+	return nil
 }
 
 func (app *BaseApp) setMinGasPrices(gasPrices sdk.DecCoins) {
@@ -454,9 +458,9 @@ func (app *BaseApp) setMinRetainBlocks(minRetainBlocks uint64) {
 	app.minRetainBlocks = minRetainBlocks
 }
 
-func (app *BaseApp) setInterBlockCache(cache storetypes.MultiStorePersistentCache) {
-	app.interBlockCache = cache
-}
+// func (app *BaseApp) setInterBlockCache(cache storetypes.MultiStorePersistentCache) {
+// 	app.interBlockCache = cache
+// }
 
 func (app *BaseApp) setTrace(trace bool) {
 	app.trace = trace
@@ -634,12 +638,12 @@ func (app *BaseApp) getState(mode execMode) *state {
 	}
 }
 
-func (app *BaseApp) getBlockGasMeter(ctx sdk.Context) storetypes.GasMeter {
+func (app *BaseApp) getBlockGasMeter(ctx sdk.Context) store.GasMeter {
 	if maxGas := app.GetMaximumBlockGas(ctx); maxGas > 0 {
-		return storetypes.NewGasMeter(maxGas)
+		return store.NewGasMeter(store.Gas(maxGas))
 	}
 
-	return storetypes.NewInfiniteGasMeter()
+	return store.NewInfiniteGasMeter()
 }
 
 // retrieve the context for the tx w/ txBytes and other memoized values.

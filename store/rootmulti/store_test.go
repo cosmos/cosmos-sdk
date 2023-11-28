@@ -2,6 +2,7 @@ package rootmulti
 
 import (
 	"bytes"
+	"crypto/sha256"
 	"fmt"
 	"testing"
 	"time"
@@ -72,7 +73,9 @@ func TestCacheMultiStoreWithVersion(t *testing.T) {
 	err := ms.LoadLatestVersion()
 	require.Nil(t, err)
 
-	commitID := types.CommitID{}
+	emptyHash := sha256.Sum256([]byte{})
+	appHash := emptyHash[:]
+	commitID := types.CommitID{Hash: appHash}
 	checkStore(t, ms, commitID, commitID)
 
 	k, v := []byte("wind"), []byte("blows")
@@ -120,7 +123,9 @@ func TestHashStableWithEmptyCommit(t *testing.T) {
 	err := ms.LoadLatestVersion()
 	require.Nil(t, err)
 
-	commitID := types.CommitID{}
+	emptyHash := sha256.Sum256([]byte{})
+	appHash := emptyHash[:]
+	commitID := types.CommitID{Hash: appHash}
 	checkStore(t, ms, commitID, commitID)
 
 	k, v := []byte("wind"), []byte("blows")
@@ -148,8 +153,10 @@ func TestMultistoreCommitLoad(t *testing.T) {
 	err := store.LoadLatestVersion()
 	require.Nil(t, err)
 
+	emptyHash := sha256.Sum256([]byte{})
+	appHash := emptyHash[:]
 	// New store has empty last commit.
-	commitID := types.CommitID{}
+	commitID := types.CommitID{Hash: appHash}
 	checkStore(t, store, commitID, commitID)
 
 	// Make sure we can get stores by name.
@@ -744,7 +751,9 @@ func TestCommitOrdered(t *testing.T) {
 	err := multi.LoadLatestVersion()
 	require.Nil(t, err)
 
-	commitID := types.CommitID{}
+	emptyHash := sha256.Sum256([]byte{})
+	appHash := emptyHash[:]
+	commitID := types.CommitID{Hash: appHash}
 	checkStore(t, multi, commitID, commitID)
 
 	k, v := []byte("wind"), []byte("blows")

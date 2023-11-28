@@ -105,14 +105,14 @@ func (s *TestSuite) TestCreateGroup() {
 			},
 			expGroups: expGroups,
 		},
-		"group metadata too long": {
+		"group metadata: metadata too long": {
 			req: &group.MsgCreateGroup{
 				Admin:    addr1.String(),
 				Members:  members,
 				Metadata: strings.Repeat("a", 256),
 			},
 			expErr:    true,
-			expErrMsg: "group metadata: limit exceeded",
+			expErrMsg: "group metadata: metadata too long",
 		},
 		"invalid member address": {
 			req: &group.MsgCreateGroup{
@@ -135,7 +135,7 @@ func (s *TestSuite) TestCreateGroup() {
 				}},
 			},
 			expErr:    true,
-			expErrMsg: "metadata: limit exceeded",
+			expErrMsg: "metadata too long",
 		},
 		"zero member weight": {
 			req: &group.MsgCreateGroup{
@@ -307,12 +307,12 @@ func (s *TestSuite) TestUpdateGroupMembers() {
 					{
 						Address:  member2,
 						Weight:   "2",
-						Metadata: strings.Repeat("a", 256),
+						Metadata: strings.Repeat("a", 10240),
 					},
 				},
 			},
 			expErr:    true,
-			expErrMsg: "group member metadata: limit exceeded",
+			expErrMsg: "members updated: group member metadata: metadata too lon",
 		},
 		"add new member": {
 			req: &group.MsgUpdateGroupMembers{
@@ -836,9 +836,9 @@ func (s *TestSuite) TestCreateGroupWithPolicy() {
 				0,
 			),
 			expErr:    true,
-			expErrMsg: "group metadata: limit exceeded",
+			expErrMsg: "group response: group metadata: metadata too long",
 		},
-		"group policy metadata too long": {
+		"group policy metadata: metadata too long": {
 			req: &group.MsgCreateGroupWithPolicy{
 				Admin:               addr1.String(),
 				Members:             members,
@@ -851,7 +851,7 @@ func (s *TestSuite) TestCreateGroupWithPolicy() {
 				0,
 			),
 			expErr:    true,
-			expErrMsg: "group policy metadata: limit exceeded",
+			expErrMsg: "group policy metadata: metadata too long",
 		},
 		"member metadata too long": {
 			req: &group.MsgCreateGroupWithPolicy{
@@ -869,7 +869,7 @@ func (s *TestSuite) TestCreateGroupWithPolicy() {
 				0,
 			),
 			expErr:    true,
-			expErrMsg: "member metadata: limit exceeded",
+			expErrMsg: "group response: member metadata: metadata too long",
 		},
 		"zero member weight": {
 			req: &group.MsgCreateGroupWithPolicy{
@@ -1085,7 +1085,7 @@ func (s *TestSuite) TestCreateGroupPolicy() {
 				0,
 			),
 			expErr:    true,
-			expErrMsg: "limit exceeded",
+			expErrMsg: "group policy metadata: metadata too long",
 		},
 		"percentage decision policy with negative value": {
 			req: &group.MsgCreateGroupPolicy{
@@ -1478,7 +1478,7 @@ func (s *TestSuite) TestUpdateGroupPolicyMetadata() {
 			},
 			expGroupPolicy: &group.GroupPolicyInfo{},
 			expErr:         true,
-			expErrMsg:      "group policy metadata: limit exceeded",
+			expErrMsg:      "group policy metadata: metadata too long",
 		},
 		"correct data": {
 			req: &group.MsgUpdateGroupPolicyMetadata{
@@ -1767,7 +1767,7 @@ func (s *TestSuite) TestSubmitProposal() {
 				Metadata:           strings.Repeat("a", 256),
 			},
 			expErr:    true,
-			expErrMsg: "limit exceeded",
+			expErrMsg: "metadata: metadata too long",
 			postRun:   func(sdkCtx sdk.Context) {},
 		},
 		"summary too long": {
@@ -1778,7 +1778,7 @@ func (s *TestSuite) TestSubmitProposal() {
 				Summary:            strings.Repeat("a", 256*40),
 			},
 			expErr:    true,
-			expErrMsg: "limit exceeded",
+			expErrMsg: "summary too long",
 			postRun:   func(sdkCtx sdk.Context) {},
 		},
 		"group policy required": {
@@ -2319,7 +2319,7 @@ func (s *TestSuite) TestVote() {
 				Metadata:   strings.Repeat("a", 256),
 			},
 			expErr:    true,
-			expErrMsg: "metadata: limit exceeded",
+			expErrMsg: "metadata: metadata too long",
 			postRun:   func(sdkCtx sdk.Context) {},
 		},
 		"existing proposal required": {

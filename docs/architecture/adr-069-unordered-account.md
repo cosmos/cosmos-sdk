@@ -18,13 +18,13 @@ Right now the nonce value (account sequence number) prevents replay-attack and m
 
 ## Decision
 
-Add an extra nonce lane to support optional un-ordered transaction inclusion, the default lane provides ordered semantic, the same as current behavior, the new one provides the un-ordered semantic. The transaction can choose which lane to use.
+Add an extra nonce lane to support optional un-ordered transaction inclusion, the default lane provides ordered semantic the same as before, the new one will provide un-ordered semantic. The transaction can choose which lane to use.
 
 One of the design goals is to keep minimal overhead and breakage to the existing users who don't use the new feature.
 
 ### Transaction Format
 
-It doesn't change the transaction format itself, but re-use the high bit of the exisitng 64bits nonce value to identify the lane, `0` being the default ordered lane, `1` being the new unordered lane.
+It doesn't change the transaction format itself, but re-use the MSB(most significant bit) of the existing 64bits nonce value to identify the lane, `0` being the default ordered lane, `1` being the new un-ordered lane.
 
 ### Account State
 
@@ -43,7 +43,7 @@ type Account struct {
 }
 ```
 
-The un-ordered nonce state includes a normal sequence value plus the gap values in recent history, the gap set has a maximum capacity to limit the resource usage, when the capacity is reached, the oldest gap value is simply dropped, which means the pending transaction with that value as nonce will not be accepted anymore.
+The un-ordered nonce state includes a normal sequence value plus the set of unused(gap) values in recent history, these recorded gap values can be reused by future transactions, after used they are removed from the set and can't be used again, the gap set has a maximum capacity to limit the resource usage, when the capacity is reached, the oldest gap value is removed, which also makes the pending transaction using that value as nonce will not be accepted anymore.
 
 ### Expiration
 

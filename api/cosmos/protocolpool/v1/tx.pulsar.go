@@ -7202,7 +7202,7 @@ type MsgCreateContinuousFund struct {
 	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
 	// Recipient address of the account receiving funds.
 	Recipient string `protobuf:"bytes,2,opt,name=recipient,proto3" json:"recipient,omitempty"`
-	// Percentage is the percentage of funds to be allocated from Community pool share on block by block,
+	// Percentage is the percentage of funds to be allocated from Community pool,
 	// till the `MaxDistributedCapital` is reached or expired.
 	Percentage string `protobuf:"bytes,3,opt,name=percentage,proto3" json:"percentage,omitempty"`
 	// MaxDistributedCapital is the threshold amount for distributing funds.

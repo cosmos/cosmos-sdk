@@ -36,7 +36,7 @@ message Budget {
 message ContinuousFund {
   // Recipient address of the account receiving funds.
   string recipient = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  // Percentage is the percentage of funds to be allocated from Community pool share on block by block,
+  // Percentage is the percentage of funds to be allocated from Community pool,
   // till the `MaxDistributedCapital` is reached or expired.
   string percentage = 2 [
     (cosmos_proto.scalar)  = "cosmos.Dec",
@@ -48,4 +48,12 @@ message ContinuousFund {
   cosmos.base.v1beta1.Coin max_distributed_capital = 3;
   // Optional, if expiry is set, removes the state object when expired.
   google.protobuf.Timestamp expiry = 4 [(gogoproto.stdtime) = true];
+}
+
+message FundDistribution {
+  // Percentage is the percentage of funds allocated from Community pool,
+  // till the `MaxDistributedCapital` is reached or expired.
+  string percentage = 1 [(cosmos_proto.scalar) = "cosmos.Dec", (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec"];
+  // ToClaim is the amount of funds yet to be claimed.
+  cosmos.base.v1beta1.Coin ToClaim = 2;
 }

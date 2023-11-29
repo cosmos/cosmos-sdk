@@ -69,7 +69,7 @@ func RejectUnknownFields(bz []byte, msg proto.Message, allowUnknownNonCriticals 
 					Type:         reflect.ValueOf(msg).Type().String(),
 					TagNum:       tagNum,
 					GotWireType:  wireType,
-					WantWireType: fieldTypeToProtowireType(fieldDescProto.GetType()),
+					WantWireType: toProtowireType(fieldDescProto.GetType()),
 				}
 			}
 		default:
@@ -442,8 +442,8 @@ func (d DefaultAnyResolver) Resolve(typeURL string) (proto.Message, error) {
 	return reflect.New(mt.Elem()).Interface().(proto.Message), nil
 }
 
-// fieldTypeToProtowireType converts a descriptorpb.FieldDescriptorProto_Type to a protowire.Type.
-func fieldTypeToProtowireType(fieldType descriptorpb.FieldDescriptorProto_Type) protowire.Type {
+// toProtowireType converts a descriptorpb.FieldDescriptorProto_Type to a protowire.Type.
+func toProtowireType(fieldType descriptorpb.FieldDescriptorProto_Type) protowire.Type {
 	switch fieldType {
 	// varint encoded
 	case descriptorpb.FieldDescriptorProto_TYPE_INT64,
@@ -455,16 +455,19 @@ func fieldTypeToProtowireType(fieldType descriptorpb.FieldDescriptorProto_Type) 
 		descriptorpb.FieldDescriptorProto_TYPE_SINT32,
 		descriptorpb.FieldDescriptorProto_TYPE_SINT64:
 		return protowire.VarintType
+
 	// fixed64 encoded
 	case descriptorpb.FieldDescriptorProto_TYPE_DOUBLE,
 		descriptorpb.FieldDescriptorProto_TYPE_FIXED64,
 		descriptorpb.FieldDescriptorProto_TYPE_SFIXED64:
 		return protowire.Fixed64Type
+
 	// fixed32 encoded
 	case descriptorpb.FieldDescriptorProto_TYPE_FLOAT,
 		descriptorpb.FieldDescriptorProto_TYPE_FIXED32,
 		descriptorpb.FieldDescriptorProto_TYPE_SFIXED32:
 		return protowire.Fixed32Type
+
 	// bytes encoded
 	case descriptorpb.FieldDescriptorProto_TYPE_STRING,
 		descriptorpb.FieldDescriptorProto_TYPE_BYTES,
@@ -472,7 +475,7 @@ func fieldTypeToProtowireType(fieldType descriptorpb.FieldDescriptorProto_Type) 
 		descriptorpb.FieldDescriptorProto_TYPE_GROUP:
 		return protowire.BytesType
 	default:
-		panic(fmt.Sprintf("unknown field type %s", fieldType.String()))
+		panic(fmt.Sprintf("unknown field type %s", fieldType))
 	}
 }
 

@@ -158,7 +158,8 @@ func (k Keeper) iterateAndUpdateFundsDistribution(ctx context.Context) error {
 		// Add all the coins to be distributed to toDistribute
 		k.toDistribute += distrCoins.Amount.Uint64()
 		// Set funds to be claimed
-		err = k.RecipientFunds.Set(ctx, key, types.FundDistribution{ToClaim: &distrCoins})
+		claimableFunds := value.ToClaim.Add(distrCoins)
+		err = k.RecipientFunds.Set(ctx, key, types.FundDistribution{ToClaim: &claimableFunds})
 		if err != nil {
 			return false, err
 		}

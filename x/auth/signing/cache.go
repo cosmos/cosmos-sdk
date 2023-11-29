@@ -1,8 +1,6 @@
 package signing
 
 import (
-	"sync"
-
 	lru "github.com/hashicorp/golang-lru/v2"
 )
 
@@ -10,8 +8,6 @@ const (
 	TxHashLen        = 32
 	AddressStringLen = 2 + 20*2
 )
-
-var initSigCacheOnce sync.Once
 
 // Cache is a cache of verified signatures
 type Cache struct {
@@ -23,17 +19,13 @@ type Cache struct {
 // by caching it we avoid needing to verify the same signature multiple times
 // This is only initialized once.
 func NewSignatureCache() *Cache {
-	sc := &Cache{}
-	initSigCacheOnce.Do(func() {
-		// 500 * (32 + 42) = 37.5KB
-		cache, err := lru.New[string, []byte](500)
-		if err != nil {
-			panic(err)
-		}
-		sc = &Cache{data: cache}
-	})
+	// 500 * (32 + 42) = 37.5KB
+	cache, err := lru.New[string, []byte](500)
+	if err != nil {
+		panic(err)
+	}
 
-	return sc
+	return &Cache{data: cache}
 }
 
 // Get returns the cached signature if it exists

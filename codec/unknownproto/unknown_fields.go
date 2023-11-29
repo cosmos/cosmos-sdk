@@ -69,7 +69,7 @@ func RejectUnknownFields(bz []byte, msg proto.Message, allowUnknownNonCriticals 
 					Type:         reflect.ValueOf(msg).Type().String(),
 					TagNum:       tagNum,
 					GotWireType:  wireType,
-					WantWireType: findWireTypeFromFieldDescriptorProtoType(fieldDescProto.GetType()),
+					WantWireType: fieldTypeToProtowireType(fieldDescProto.GetType()),
 				}
 			}
 		default:
@@ -442,48 +442,42 @@ func (d DefaultAnyResolver) Resolve(typeURL string) (proto.Message, error) {
 	return reflect.New(mt.Elem()).Interface().(proto.Message), nil
 }
 
-func findWireTypeFromFieldDescriptorProtoType(fieldType descriptorpb.FieldDescriptorProto_Type) protowire.Type {
+// fieldTypeToProtowireType converts a descriptorpb.FieldDescriptorProto_Type to a protowire.Type.
+func fieldTypeToProtowireType(fieldType descriptorpb.FieldDescriptorProto_Type) protowire.Type {
 	switch fieldType {
-	case descriptorpb.FieldDescriptorProto_TYPE_DOUBLE:
-		return 1
-	case descriptorpb.FieldDescriptorProto_TYPE_FLOAT:
-		return 5
-	case descriptorpb.FieldDescriptorProto_TYPE_INT64:
-		return 0
-	case descriptorpb.FieldDescriptorProto_TYPE_UINT64:
-		return 0
-	case descriptorpb.FieldDescriptorProto_TYPE_INT32:
-		return 0
-	case descriptorpb.FieldDescriptorProto_TYPE_UINT32:
-		return 0
-	case descriptorpb.FieldDescriptorProto_TYPE_FIXED64:
-		return 1
-	case descriptorpb.FieldDescriptorProto_TYPE_FIXED32:
-		return 5
-	case descriptorpb.FieldDescriptorProto_TYPE_BOOL:
-		return 0
-	case descriptorpb.FieldDescriptorProto_TYPE_STRING:
-		return 2
-	case descriptorpb.FieldDescriptorProto_TYPE_GROUP:
-		return 2
-	case descriptorpb.FieldDescriptorProto_TYPE_MESSAGE:
-		return 2
-	case descriptorpb.FieldDescriptorProto_TYPE_BYTES:
-		return 2
-	case descriptorpb.FieldDescriptorProto_TYPE_ENUM:
-		return 0
-	case descriptorpb.FieldDescriptorProto_TYPE_SFIXED32:
-		return 5
-	case descriptorpb.FieldDescriptorProto_TYPE_SFIXED64:
-		return 1
-	case descriptorpb.FieldDescriptorProto_TYPE_SINT32:
-		return 0
-	case descriptorpb.FieldDescriptorProto_TYPE_SINT64:
-		return 0
+	// varint encoded
+	case descriptorpb.FieldDescriptorProto_TYPE_INT64,
+		descriptorpb.FieldDescriptorProto_TYPE_UINT64,
+		descriptorpb.FieldDescriptorProto_TYPE_INT32,
+		descriptorpb.FieldDescriptorProto_TYPE_UINT32,
+		descriptorpb.FieldDescriptorProto_TYPE_BOOL,
+		descriptorpb.FieldDescriptorProto_TYPE_ENUM,
+		descriptorpb.FieldDescriptorProto_TYPE_SINT32,
+		descriptorpb.FieldDescriptorProto_TYPE_SINT64:
+		return protowire.VarintType
+	// fixed64 encoded
+	case descriptorpb.FieldDescriptorProto_TYPE_DOUBLE,
+		descriptorpb.FieldDescriptorProto_TYPE_FIXED64,
+		descriptorpb.FieldDescriptorProto_TYPE_SFIXED64:
+		return protowire.Fixed64Type
+	// fixed32 encoded
+	case descriptorpb.FieldDescriptorProto_TYPE_FLOAT,
+		descriptorpb.FieldDescriptorProto_TYPE_FIXED32,
+		descriptorpb.FieldDescriptorProto_TYPE_SFIXED32:
+		return protowire.Fixed32Type
+	// bytes encoded
+	case descriptorpb.FieldDescriptorProto_TYPE_STRING,
+		descriptorpb.FieldDescriptorProto_TYPE_BYTES,
+		descriptorpb.FieldDescriptorProto_TYPE_MESSAGE,
+		descriptorpb.FieldDescriptorProto_TYPE_GROUP:
+		return protowire.BytesType
 	}
 	panic("unreachable")
 }
 
+// isScalar defines whether a field is a scalar type.
+// Copied from gogo/protobuf/protoc-gen-gogo
+// https://github.com/gogo/protobuf/blob/b03c65ea87cdc3521ede29f62fe3ce239267c1bc/protoc-gen-gogo/descriptor/descriptor.go#L95
 func isScalar(field *descriptorpb.FieldDescriptorProto) bool {
 	if field.Type == nil {
 		return false

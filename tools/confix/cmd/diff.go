@@ -34,7 +34,7 @@ func DiffCommand() *cobra.Command {
 
 			configType := confix.AppConfigType
 			if ok, _ := cmd.Flags().GetBool(confix.ClientConfigType); ok {
-				configPath = strings.ReplaceAll(configPath, "app.toml", "client.toml") // fir the case we are using the home dir of client ctx
+				configPath = strings.ReplaceAll(configPath, "app.toml", "client.toml") // for the case we are using the home dir of client ctx
 				configType = confix.ClientConfigType
 			} else if strings.HasSuffix(configPath, "client.toml") {
 				return errors.New("app.toml file expected, got client.toml, use --client flag to diff client.toml")

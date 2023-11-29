@@ -10,6 +10,7 @@ import (
 
 	"github.com/cockroachdb/errors"
 	abci "github.com/cometbft/cometbft/abci/types"
+	cmtcrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/gogoproto/proto"
 	"google.golang.org/grpc/codes"
@@ -18,9 +19,8 @@ import (
 	corecomet "cosmossdk.io/core/comet"
 	coreheader "cosmossdk.io/core/header"
 	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/store/rootmulti"
 	snapshottypes "cosmossdk.io/store/snapshots/types"
-	storetypes "cosmossdk.io/store/types"
+	"cosmossdk.io/store/v2"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -50,7 +50,7 @@ func (app *BaseApp) InitChain(req *abci.RequestInitChain) (*abci.ResponseInitCha
 
 	// Set the initial height, which will be used to determine if we are proposing
 	// or processing the first block or not.
-	app.initialHeight = req.InitialHeight
+	app.initialHeight = uint64(req.InitialHeight)
 	if app.initialHeight == 0 { // If initial height is 0, set it to 1
 		app.initialHeight = 1
 	}
@@ -58,7 +58,7 @@ func (app *BaseApp) InitChain(req *abci.RequestInitChain) (*abci.ResponseInitCha
 	// if req.InitialHeight is > 1, then we set the initial version on all stores
 	if req.InitialHeight > 1 {
 		initHeader.Height = req.InitialHeight
-		if err := app.cms.SetInitialVersion(req.InitialHeight); err != nil {
+		if err := app.rs.SetInitialVersion(uint64(req.InitialHeight)); err != nil {
 			return nil, err
 		}
 	}
@@ -102,7 +102,7 @@ func (app *BaseApp) InitChain(req *abci.RequestInitChain) (*abci.ResponseInitCha
 	}
 
 	// add block gas meter for any genesis transactions (allow infinite gas)
-	app.finalizeBlockState.ctx = app.finalizeBlockState.ctx.WithBlockGasMeter(storetypes.NewInfiniteGasMeter())
+	app.finalizeBlockState.ctx = app.finalizeBlockState.ctx.WithBlockGasMeter(store.NewInfiniteGasMeter())
 
 	res, err := app.initChainer(app.finalizeBlockState.ctx, req)
 	if err != nil {
@@ -149,7 +149,11 @@ func (app *BaseApp) InitChain(req *abci.RequestInitChain) (*abci.ResponseInitCha
 }
 
 func (app *BaseApp) Info(req *abci.RequestInfo) (*abci.ResponseInfo, error) {
-	lastCommitID := app.cms.LastCommitID()
+	lastCommitID, err := app.rs.LastCommitID()
+	if err != nil {
+		return nil, err
+	}
+
 	appVersion := InitialAppVersion
 	if lastCommitID.Version > 0 {
 		ctx, err := app.CreateQueryContext(lastCommitID.Version, false)
@@ -166,7 +170,7 @@ func (app *BaseApp) Info(req *abci.RequestInfo) (*abci.ResponseInfo, error) {
 		Data:             app.name,
 		Version:          app.version,
 		AppVersion:       appVersion,
-		LastBlockHeight:  lastCommitID.Version,
+		LastBlockHeight:  int64(lastCommitID.Version),
 		LastBlockAppHash: lastCommitID.Hash,
 	}, nil
 }
@@ -185,7 +189,7 @@ func (app *BaseApp) Query(_ context.Context, req *abci.RequestQuery) (resp *abci
 
 	// when a client did not provide a query height, manually inject the latest
 	if req.Height == 0 {
-		req.Height = app.LastBlockHeight()
+		req.Height = int64(app.LastBlockHeight())
 	}
 
 	telemetry.IncrCounter(1, "query", "count")
@@ -423,7 +427,7 @@ func (app *BaseApp) PrepareProposal(req *abci.RequestPrepareProposal) (resp *abc
 		return nil, errors.New("PrepareProposal called with invalid height")
 	}
 
-	app.prepareProposalState.ctx = app.getContextForProposal(app.prepareProposalState.ctx, req.Height).
+	app.prepareProposalState.ctx = app.getContextForProposal(app.prepareProposalState.ctx, uint64(req.Height)).
 		WithVoteInfos(toVoteInfo(req.LocalLastCommit.Votes)). // this is a set of votes that are not finalized yet, wait for commit
 		WithBlockHeight(req.Height).
 		WithProposer(req.ProposerAddress).
@@ -509,13 +513,13 @@ func (app *BaseApp) ProcessProposal(req *abci.RequestProcessProposal) (resp *abc
 	// again in a subsequent round. However, we only want to do this after we've
 	// processed the first block, as we want to avoid overwriting the finalizeState
 	// after state changes during InitChain.
-	if req.Height > app.initialHeight {
+	if uint64(req.Height) > app.initialHeight {
 		// abort any running OE
 		app.optimisticExec.Abort()
 		app.setState(execModeFinalize, header)
 	}
 
-	app.processProposalState.ctx = app.getContextForProposal(app.processProposalState.ctx, req.Height).
+	app.processProposalState.ctx = app.getContextForProposal(app.processProposalState.ctx, uint64(req.Height)).
 		WithVoteInfos(req.ProposedLastCommit.Votes). // this is a set of votes that are not finalized yet, wait for commit
 		WithBlockHeight(req.Height).
 		WithHeaderHash(req.Hash).
@@ -566,7 +570,7 @@ func (app *BaseApp) ProcessProposal(req *abci.RequestProcessProposal) (resp *abc
 	// can have a response ready.
 	if resp.Status == abci.ResponseProcessProposal_ACCEPT &&
 		app.optimisticExec.Enabled() &&
-		req.Height > app.initialHeight {
+		uint64(req.Height) > app.initialHeight {
 		app.optimisticExec.Execute(req)
 	}
 
@@ -590,11 +594,11 @@ func (app *BaseApp) ExtendVote(_ context.Context, req *abci.RequestExtendVote) (
 	// If we're extending the vote for the initial height, we need to use the
 	// finalizeBlockState context, otherwise we don't get the uncommitted data
 	// from InitChain.
-	if req.Height == app.initialHeight {
-		ctx, _ = app.finalizeBlockState.ctx.CacheContext()
+	if uint64(req.Height) == app.initialHeight {
+		ctx, _ = app.finalizeBlockState.ctx.BranchContext()
 	} else {
-		ms := app.cms.CacheMultiStore()
-		ctx = sdk.NewContext(ms, false, app.logger).WithStreamingManager(app.streamingManager).WithChainID(app.chainID).WithBlockHeight(req.Height)
+		branchedMS := app.rs.Branch()
+		ctx = sdk.NewContext(branchedMS, false, app.logger).WithStreamingManager(app.streamingManager).WithChainID(app.chainID).WithBlockHeight(req.Height)
 	}
 
 	if app.extendVote == nil {
@@ -616,7 +620,7 @@ func (app *BaseApp) ExtendVote(_ context.Context, req *abci.RequestExtendVote) (
 
 	ctx = ctx.
 		WithConsensusParams(cp).
-		WithBlockGasMeter(storetypes.NewInfiniteGasMeter()).
+		WithBlockGasMeter(store.NewInfiniteGasMeter()).
 		WithBlockHeight(req.Height).
 		WithHeaderHash(req.Hash).
 		WithExecMode(sdk.ExecModeVoteExtension).
@@ -664,11 +668,11 @@ func (app *BaseApp) VerifyVoteExtension(req *abci.RequestVerifyVoteExtension) (r
 	// If we're verifying the vote for the initial height, we need to use the
 	// finalizeBlockState context, otherwise we don't get the uncommitted data
 	// from InitChain.
-	if req.Height == app.initialHeight {
-		ctx, _ = app.finalizeBlockState.ctx.CacheContext()
+	if uint64(req.Height) == app.initialHeight {
+		ctx, _ = app.finalizeBlockState.ctx.BranchContext()
 	} else {
-		ms := app.cms.CacheMultiStore()
-		ctx = sdk.NewContext(ms, false, app.logger).WithStreamingManager(app.streamingManager).WithChainID(app.chainID).WithBlockHeight(req.Height)
+		branchedMS := app.rs.Branch()
+		ctx = sdk.NewContext(branchedMS, false, app.logger).WithStreamingManager(app.streamingManager).WithChainID(app.chainID).WithBlockHeight(req.Height)
 	}
 
 	// If vote extensions are not enabled, as a safety precaution, we return an
@@ -720,8 +724,8 @@ func (app *BaseApp) internalFinalizeBlock(ctx context.Context, req *abci.Request
 		return nil, err
 	}
 
-	if app.cms.TracingEnabled() {
-		app.cms.SetTracingContext(storetypes.TraceContext(
+	if app.rs.TracingEnabled() {
+		app.rs.SetTracingContext(store.TraceContext(
 			map[string]any{"blockHeight": req.Height},
 		))
 	}
@@ -828,8 +832,8 @@ func (app *BaseApp) internalFinalizeBlock(ctx context.Context, req *abci.Request
 		txResults = append(txResults, response)
 	}
 
-	if app.finalizeBlockState.ms.TracingEnabled() {
-		app.finalizeBlockState.ms = app.finalizeBlockState.ms.SetTracingContext(nil).(storetypes.CacheMultiStore)
+	if app.finalizeBlockState.brs.TracingEnabled() {
+		app.finalizeBlockState.brs.SetTracingContext(nil)
 	}
 
 	endBlock, err := app.endBlock(app.finalizeBlockState.ctx)
@@ -930,17 +934,12 @@ func (app *BaseApp) checkHalt(height int64, time time.Time) error {
 func (app *BaseApp) Commit() (*abci.ResponseCommit, error) {
 	header := app.finalizeBlockState.ctx.BlockHeader()
 	retainHeight := app.GetBlockRetentionHeight(header.Height)
-
 	if app.precommiter != nil {
 		app.precommiter(app.finalizeBlockState.ctx)
 	}
 
-	rms, ok := app.cms.(*rootmulti.Store)
-	if ok {
-		rms.SetCommitHeader(header)
-	}
-
-	app.cms.Commit()
+	app.rs.SetCommitHeader(&coreheader.Info{Height: header.Height, Time: header.Time})
+	app.rs.Commit()
 
 	resp := &abci.ResponseCommit{
 		RetainHeight: retainHeight,
@@ -948,15 +947,19 @@ func (app *BaseApp) Commit() (*abci.ResponseCommit, error) {
 
 	abciListeners := app.streamingManager.ABCIListeners
 	if len(abciListeners) > 0 {
-		ctx := app.finalizeBlockState.ctx
-		blockHeight := ctx.BlockHeight()
-		changeSet := app.cms.PopStateCache()
+		// TODO(bez): Handle state streaming
+		//
+		// Ref: https://github.com/cosmos/cosmos-sdk/issues/18466
+		//
+		// ctx := app.finalizeBlockState.ctx
+		// blockHeight := ctx.BlockHeight()
+		// changeSet := app.cms.PopStateCache()
 
-		for _, abciListener := range abciListeners {
-			if err := abciListener.ListenCommit(ctx, *resp, changeSet); err != nil {
-				app.logger.Error("Commit listening hook failed", "height", blockHeight, "err", err)
-			}
-		}
+		// for _, abciListener := range abciListeners {
+		// 	if err := abciListener.ListenCommit(ctx, *resp, changeSet); err != nil {
+		// 		app.logger.Error("Commit listening hook failed", "height", blockHeight, "err", err)
+		// 	}
+		// }
 	}
 
 	// Reset the CheckTx state to the latest committed.
@@ -977,7 +980,7 @@ func (app *BaseApp) Commit() (*abci.ResponseCommit, error) {
 	return resp, nil
 }
 
-// workingHash gets the apphash that will be finalized in commit.
+// workingHash gets the app hash that will be finalized in commit.
 // These writes will be persisted to the root multi-store (app.cms) and flushed to
 // disk in the Commit phase. This means when the ABCI client requests Commit(), the application
 // state transitions will be flushed to disk and as a result, but we already have
@@ -986,11 +989,15 @@ func (app *BaseApp) workingHash() []byte {
 	// Write the FinalizeBlock state into branched storage and commit the MultiStore.
 	// The write to the FinalizeBlock state writes all state transitions to the root
 	// MultiStore (app.cms) so when Commit() is called it persists those values.
-	app.finalizeBlockState.ms.Write()
+	app.finalizeBlockState.brs.Write()
 
 	// Get the hash of all writes in order to return the apphash to the comet in finalizeBlock.
-	commitHash := app.cms.WorkingHash()
-	app.logger.Debug("hash of all writes", "workingHash", fmt.Sprintf("%X", commitHash))
+	commitHash, err := app.rs.WorkingHash()
+	if err != nil {
+		panic(fmt.Errorf("failed to get working hash: %w", err))
+	}
+
+	app.logger.Debug("computed working hash on RootStore", "working_hash", fmt.Sprintf("%X", commitHash))
 
 	return commitHash
 }
@@ -1042,32 +1049,35 @@ func handleQueryApp(app *BaseApp, path []string, req *abci.RequestQuery) *abci.R
 }
 
 func handleQueryStore(app *BaseApp, path []string, req abci.RequestQuery) *abci.ResponseQuery {
-	// "/store" prefix for store queries
-	queryable, ok := app.cms.(storetypes.Queryable)
-	if !ok {
-		return sdkerrors.QueryResult(errorsmod.Wrap(sdkerrors.ErrUnknownRequest, "multi-store does not support queries"), app.trace)
-	}
-
-	req.Path = "/" + strings.Join(path[1:], "/")
-
 	if req.Height <= 1 && req.Prove {
-		return sdkerrors.QueryResult(
-			errorsmod.Wrap(
-				sdkerrors.ErrInvalidRequest,
-				"cannot query with proof when height <= 1; please provide a valid height",
-			), app.trace)
+		return sdkerrors.QueryResult(errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "cannot query with proof when height <= 1; please provide a valid height"), app.trace)
 	}
 
-	sdkReq := storetypes.RequestQuery(req)
-	resp, err := queryable.Query(&sdkReq)
+	// req.Path is expected to be in the format of: "<storeKey>/key", e.g. "bank/key"
+	//
+	// Note, store v1 supported sub-store queries but it's unclear if those are needed.
+	tokens := strings.Split(req.Path, "/")
+	if len(tokens) != 2 || tokens[1] != "key" {
+		return sdkerrors.QueryResult(errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "invalid path '%s'; expected format: <store-key>/key", req.Path), app.trace)
+	}
+
+	storeKey := tokens[0]
+	result, err := app.rs.Query(storeKey, uint64(req.Height), req.Data, req.Prove)
 	if err != nil {
-		return sdkerrors.QueryResult(err, app.trace)
+		return sdkerrors.QueryResult(errorsmod.Wrapf(err, "failed to query '%s'", storeKey), app.trace)
 	}
-	resp.Height = req.Height
 
-	abciResp := abci.ResponseQuery(*resp)
+	var proof *cmtcrypto.ProofOps
+	if req.Prove {
+		proof = &cmtcrypto.ProofOps{Ops: []cmtcrypto.ProofOp{result.Proof.ProofOp()}}
+	}
 
-	return &abciResp
+	return &abci.ResponseQuery{
+		Height:   req.Height,
+		Key:      result.Key,
+		Value:    result.Value,
+		ProofOps: proof,
+	}
 }
 
 func handleQueryP2P(app *BaseApp, path []string) *abci.ResponseQuery {
@@ -1131,9 +1141,9 @@ func (app *BaseApp) FilterPeerByID(info string) *abci.ResponseQuery {
 // getContextForProposal returns the correct Context for PrepareProposal and
 // ProcessProposal. We use finalizeBlockState on the first block to be able to
 // access any state changes made in InitChain.
-func (app *BaseApp) getContextForProposal(ctx sdk.Context, height int64) sdk.Context {
+func (app *BaseApp) getContextForProposal(ctx sdk.Context, height uint64) sdk.Context {
 	if height == app.initialHeight {
-		ctx, _ = app.finalizeBlockState.ctx.CacheContext()
+		ctx, _ = app.finalizeBlockState.ctx.BranchContext()
 
 		// clear all context data set during InitChain to avoid inconsistent behavior
 		ctx = ctx.WithHeaderInfo(coreheader.Info{}).WithBlockHeader(cmtproto.Header{})
@@ -1144,7 +1154,7 @@ func (app *BaseApp) getContextForProposal(ctx sdk.Context, height int64) sdk.Con
 }
 
 func (app *BaseApp) handleQueryGRPC(handler GRPCQueryHandler, req *abci.RequestQuery) *abci.ResponseQuery {
-	ctx, err := app.CreateQueryContext(req.Height, req.Prove)
+	ctx, err := app.CreateQueryContext(uint64(req.Height), req.Prove)
 	if err != nil {
 		return sdkerrors.QueryResult(err, app.trace)
 	}
@@ -1183,28 +1193,19 @@ func gRPCErrorToSDKError(err error) error {
 	}
 }
 
-func checkNegativeHeight(height int64) error {
-	if height < 0 {
-		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "cannot query with height < 0; please provide a valid height")
-	}
-
-	return nil
-}
-
 // createQueryContext creates a new sdk.Context for a query, taking as args
 // the block height and whether the query needs a proof or not.
-func (app *BaseApp) CreateQueryContext(height int64, prove bool) (sdk.Context, error) {
-	if err := checkNegativeHeight(height); err != nil {
-		return sdk.Context{}, err
-	}
-
+func (app *BaseApp) CreateQueryContext(height uint64, prove bool) (sdk.Context, error) {
 	// use custom query multi-store if provided
-	qms := app.qms
-	if qms == nil {
-		qms = app.cms.(storetypes.MultiStore)
+	qs := app.qs
+	if qs == nil {
+		qs = app.rs
 	}
 
-	lastBlockHeight := qms.LatestVersion()
+	lastBlockHeight, err := qs.GetLatestVersion()
+	if err != nil {
+		return sdk.Context{}, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "failed to get latest version: %s", err)
+	}
 	if lastBlockHeight == 0 {
 		return sdk.Context{}, errorsmod.Wrapf(sdkerrors.ErrInvalidHeight, "%s is not ready; please wait for first block", app.Name())
 	}
@@ -1230,29 +1231,25 @@ func (app *BaseApp) CreateQueryContext(height int64, prove bool) (sdk.Context, e
 			)
 	}
 
-	cacheMS, err := qms.CacheMultiStoreWithVersion(height)
-	if err != nil {
-		return sdk.Context{},
-			errorsmod.Wrapf(
-				sdkerrors.ErrInvalidRequest,
-				"failed to load state at height %d; %s (latest height: %d)", height, err, lastBlockHeight,
-			)
-	}
-
-	// branch the commit multi-store for safety
-	ctx := sdk.NewContext(cacheMS, true, app.logger).
+	// branch the RootStore for safety
+	branchedQS := qs.Branch()
+	ctx := sdk.NewContext(branchedQS, true, app.logger).
 		WithMinGasPrices(app.minGasPrices).
-		WithBlockHeight(height).
-		WithGasMeter(storetypes.NewGasMeter(app.queryGasLimit)).WithBlockHeader(app.checkState.ctx.BlockHeader())
+		WithBlockHeight(int64(height)).
+		WithGasMeter(store.NewGasMeter(app.queryGasLimit)).WithBlockHeader(app.checkState.ctx.BlockHeader())
 
 	if height != lastBlockHeight {
-		rms, ok := app.cms.(*rootmulti.Store)
-		if ok {
-			cInfo, err := rms.GetCommitInfo(height)
-			if cInfo != nil && err == nil {
-				ctx = ctx.WithHeaderInfo(coreheader.Info{Time: cInfo.Timestamp})
-			}
-		}
+		// TODO(bez): Handle getting CommitInfo
+		//
+		// ref: https://github.com/cosmos/cosmos-sdk/issues/18598
+		//
+		// rms, ok := app.cms.(*rootmulti.Store)
+		// if ok {
+		// 	cInfo, err := rms.GetCommitInfo(height)
+		// 	if cInfo != nil && err == nil {
+		// 		ctx = ctx.WithHeaderInfo(coreheader.Info{Time: cInfo.Timestamp})
+		// 	}
+		// }
 	}
 
 	return ctx, nil

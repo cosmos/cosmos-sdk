@@ -51,12 +51,8 @@ func (s *RootStoreTestSuite) TearDownTest() {
 	s.Require().NoError(err)
 }
 
-func (s *RootStoreTestSuite) TestMountSCStore() {
-	s.Require().Error(s.rootStore.MountSCStore("", nil))
-}
-
 func (s *RootStoreTestSuite) TestGetSCStore() {
-	s.Require().Equal(s.rootStore.GetSCStore(""), s.rootStore.(*Store).stateCommitment)
+	s.Require().Equal(s.rootStore.GetSCStore(), s.rootStore.(*Store).stateCommitment)
 }
 
 func (s *RootStoreTestSuite) TestGetKVStore() {

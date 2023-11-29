@@ -9,7 +9,6 @@ import (
 
 	dbm "github.com/cosmos/cosmos-db"
 
-	pruningtypes "cosmossdk.io/store/pruning/types"
 	"cosmossdk.io/store/snapshots"
 	snapshottypes "cosmossdk.io/store/snapshots/types"
 	storetypes "cosmossdk.io/store/types"
@@ -26,10 +25,10 @@ import (
 // File for storing in-package BaseApp optional functions,
 // for options that need access to non-exported fields of the BaseApp
 
-// SetPruning sets a pruning option on the multistore associated with the app
-func SetPruning(opts pruningtypes.PruningOptions) func(*BaseApp) {
-	return func(bapp *BaseApp) { bapp.cms.SetPruning(opts) }
-}
+// // SetPruning sets a pruning option on the multistore associated with the app
+// func SetPruning(opts pruningtypes.PruningOptions) func(*BaseApp) {
+// 	return func(bapp *BaseApp) { bapp.cms.SetPruning(opts) }
+// }
 
 // SetMinGasPrices returns an option that sets the minimum gas prices on the app.
 func SetMinGasPrices(gasPricesStr string) func(*BaseApp) {

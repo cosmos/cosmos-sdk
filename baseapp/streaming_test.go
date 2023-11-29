@@ -5,11 +5,10 @@ import (
 	"fmt"
 	"testing"
 
+	storetypes "cosmossdk.io/store/types"
 	abci "github.com/cometbft/cometbft/abci/types"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
-
-	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	baseapptestutil "github.com/cosmos/cosmos-sdk/baseapp/testutil"
@@ -116,8 +115,14 @@ func Test_Ctx_with_StreamingManager(t *testing.T) {
 	listeners := []storetypes.ABCIListener{&mockListener1, &mockListener2}
 	streamingManager := storetypes.StreamingManager{ABCIListeners: listeners, StopNodeOnErr: true}
 	streamingManagerOpt := func(bapp *baseapp.BaseApp) { bapp.SetStreamingManager(streamingManager) }
-	addListenerOpt := func(bapp *baseapp.BaseApp) { bapp.CommitMultiStore().AddListeners([]storetypes.StoreKey{distKey1}) }
-	suite := NewBaseAppSuite(t, streamingManagerOpt, addListenerOpt)
+
+	// TODO(bez): Handle SM correctly with respect to store v2.
+	//
+	// Ref: https://github.com/cosmos/cosmos-sdk/issues/18466
+	//
+	// addListenerOpt := func(bapp *baseapp.BaseApp) { bapp.CommitMultiStore().AddListeners([]storetypes.StoreKey{distKey1}) }
+	// suite := NewBaseAppSuite(t, streamingManagerOpt, addListenerOpt)
+	suite := NewBaseAppSuite(t, streamingManagerOpt, nil)
 
 	_, err := suite.baseApp.InitChain(&abci.RequestInitChain{
 		ConsensusParams: &tmproto.ConsensusParams{},

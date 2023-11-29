@@ -4,12 +4,16 @@ import (
 	"testing"
 	"time"
 
-	tmtime "github.com/cometbft/cometbft/types/time"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/core/header"
 	storetypes "cosmossdk.io/store/types"
+	authcodec "cosmossdk.io/x/auth/codec"
+	"cosmossdk.io/x/auth/keeper"
+	authtypes "cosmossdk.io/x/auth/types"
+	"cosmossdk.io/x/auth/vesting"
+	"cosmossdk.io/x/auth/vesting/types"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/runtime"
@@ -17,11 +21,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
-	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
-	"github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 )
 
 var (
@@ -66,7 +65,7 @@ func (s *VestingAccountTestSuite) SetupTest() {
 }
 
 func TestGetVestedCoinsContVestingAcc(t *testing.T) {
-	now := tmtime.Now()
+	now := time.Now()
 	startTime := now.Add(24 * time.Hour)
 	endTime := startTime.Add(24 * time.Hour)
 
@@ -102,7 +101,7 @@ func TestGetVestedCoinsContVestingAcc(t *testing.T) {
 }
 
 func TestGetVestingCoinsContVestingAcc(t *testing.T) {
-	now := tmtime.Now()
+	now := time.Now()
 	startTime := now.Add(24 * time.Hour)
 	endTime := startTime.Add(24 * time.Hour)
 
@@ -134,7 +133,7 @@ func TestGetVestingCoinsContVestingAcc(t *testing.T) {
 }
 
 func TestSpendableCoinsContVestingAcc(t *testing.T) {
-	now := tmtime.Now()
+	now := time.Now()
 	startTime := now.Add(24 * time.Hour)
 	endTime := startTime.Add(24 * time.Hour)
 
@@ -166,7 +165,7 @@ func TestSpendableCoinsContVestingAcc(t *testing.T) {
 }
 
 func TestTrackDelegationContVestingAcc(t *testing.T) {
-	now := tmtime.Now()
+	now := time.Now()
 	endTime := now.Add(24 * time.Hour)
 
 	bacc, origCoins := initBaseAccount()
@@ -207,7 +206,7 @@ func TestTrackDelegationContVestingAcc(t *testing.T) {
 }
 
 func TestTrackUndelegationContVestingAcc(t *testing.T) {
-	now := tmtime.Now()
+	now := time.Now()
 	endTime := now.Add(24 * time.Hour)
 
 	bacc, origCoins := initBaseAccount()
@@ -255,7 +254,7 @@ func TestTrackUndelegationContVestingAcc(t *testing.T) {
 }
 
 func TestGetVestedCoinsDelVestingAcc(t *testing.T) {
-	now := tmtime.Now()
+	now := time.Now()
 	endTime := now.Add(24 * time.Hour)
 
 	bacc, origCoins := initBaseAccount()
@@ -272,7 +271,7 @@ func TestGetVestedCoinsDelVestingAcc(t *testing.T) {
 }
 
 func TestGetVestingCoinsDelVestingAcc(t *testing.T) {
-	now := tmtime.Now()
+	now := time.Now()
 	endTime := now.Add(24 * time.Hour)
 
 	bacc, origCoins := initBaseAccount()
@@ -289,7 +288,7 @@ func TestGetVestingCoinsDelVestingAcc(t *testing.T) {
 }
 
 func TestSpendableCoinsDelVestingAcc(t *testing.T) {
-	now := tmtime.Now()
+	now := time.Now()
 	endTime := now.Add(24 * time.Hour)
 
 	bacc, origCoins := initBaseAccount()
@@ -319,7 +318,7 @@ func TestSpendableCoinsDelVestingAcc(t *testing.T) {
 }
 
 func TestTrackDelegationDelVestingAcc(t *testing.T) {
-	now := tmtime.Now()
+	now := time.Now()
 	endTime := now.Add(24 * time.Hour)
 
 	bacc, origCoins := initBaseAccount()
@@ -357,7 +356,7 @@ func TestTrackDelegationDelVestingAcc(t *testing.T) {
 }
 
 func TestTrackUndelegationDelVestingAcc(t *testing.T) {
-	now := tmtime.Now()
+	now := time.Now()
 	endTime := now.Add(24 * time.Hour)
 
 	bacc, origCoins := initBaseAccount()
@@ -406,7 +405,7 @@ func TestTrackUndelegationDelVestingAcc(t *testing.T) {
 }
 
 func TestGetVestedCoinsPeriodicVestingAcc(t *testing.T) {
-	now := tmtime.Now()
+	now := time.Now()
 	endTime := now.Add(24 * time.Hour)
 	periods := types.Periods{
 		types.Period{Length: int64(12 * 60 * 60), Amount: sdk.Coins{sdk.NewInt64Coin(feeDenom, 500), sdk.NewInt64Coin(stakeDenom, 50)}},
@@ -451,7 +450,7 @@ func TestGetVestedCoinsPeriodicVestingAcc(t *testing.T) {
 }
 
 func TestOverflowAndNegativeVestedCoinsPeriods(t *testing.T) {
-	now := tmtime.Now()
+	now := time.Now()
 	tests := []struct {
 		name    string
 		periods []types.Period
@@ -502,7 +501,7 @@ func TestOverflowAndNegativeVestedCoinsPeriods(t *testing.T) {
 }
 
 func TestGetVestingCoinsPeriodicVestingAcc(t *testing.T) {
-	now := tmtime.Now()
+	now := time.Now()
 	endTime := now.Add(24 * time.Hour)
 	periods := types.Periods{
 		types.Period{Length: int64(12 * 60 * 60), Amount: sdk.Coins{sdk.NewInt64Coin(feeDenom, 500), sdk.NewInt64Coin(stakeDenom, 50)}},
@@ -540,7 +539,7 @@ func TestGetVestingCoinsPeriodicVestingAcc(t *testing.T) {
 }
 
 func TestSpendableCoinsPeriodicVestingAcc(t *testing.T) {
-	now := tmtime.Now()
+	now := time.Now()
 	endTime := now.Add(24 * time.Hour)
 	periods := types.Periods{
 		types.Period{Length: int64(12 * 60 * 60), Amount: sdk.Coins{sdk.NewInt64Coin(feeDenom, 500), sdk.NewInt64Coin(stakeDenom, 50)}},
@@ -568,7 +567,7 @@ func TestSpendableCoinsPeriodicVestingAcc(t *testing.T) {
 }
 
 func TestTrackDelegationPeriodicVestingAcc(t *testing.T) {
-	now := tmtime.Now()
+	now := time.Now()
 	endTime := now.Add(24 * time.Hour)
 	periods := types.Periods{
 		types.Period{Length: int64(12 * 60 * 60), Amount: sdk.Coins{sdk.NewInt64Coin(feeDenom, 500), sdk.NewInt64Coin(stakeDenom, 50)}},
@@ -630,7 +629,7 @@ func TestTrackDelegationPeriodicVestingAcc(t *testing.T) {
 }
 
 func TestTrackUndelegationPeriodicVestingAcc(t *testing.T) {
-	now := tmtime.Now()
+	now := time.Now()
 	endTime := now.Add(24 * time.Hour)
 	periods := types.Periods{
 		types.Period{Length: int64(12 * 60 * 60), Amount: sdk.Coins{sdk.NewInt64Coin(feeDenom, 500), sdk.NewInt64Coin(stakeDenom, 50)}},
@@ -691,7 +690,7 @@ func TestTrackUndelegationPeriodicVestingAcc(t *testing.T) {
 }
 
 func TestGetVestedCoinsPermLockedVestingAcc(t *testing.T) {
-	now := tmtime.Now()
+	now := time.Now()
 	endTime := now.Add(1000 * 24 * time.Hour)
 
 	bacc, origCoins := initBaseAccount()
@@ -708,7 +707,7 @@ func TestGetVestedCoinsPermLockedVestingAcc(t *testing.T) {
 }
 
 func TestGetVestingCoinsPermLockedVestingAcc(t *testing.T) {
-	now := tmtime.Now()
+	now := time.Now()
 	endTime := now.Add(1000 * 24 * time.Hour)
 
 	bacc, origCoins := initBaseAccount()
@@ -725,7 +724,7 @@ func TestGetVestingCoinsPermLockedVestingAcc(t *testing.T) {
 }
 
 func TestSpendableCoinsPermLockedVestingAcc(t *testing.T) {
-	now := tmtime.Now()
+	now := time.Now()
 	endTime := now.Add(1000 * 24 * time.Hour)
 
 	bacc, origCoins := initBaseAccount()
@@ -750,7 +749,7 @@ func TestSpendableCoinsPermLockedVestingAcc(t *testing.T) {
 }
 
 func TestTrackDelegationPermLockedVestingAcc(t *testing.T) {
-	now := tmtime.Now()
+	now := time.Now()
 	endTime := now.Add(1000 * 24 * time.Hour)
 
 	bacc, origCoins := initBaseAccount()
@@ -780,7 +779,7 @@ func TestTrackDelegationPermLockedVestingAcc(t *testing.T) {
 }
 
 func TestTrackUndelegationPermLockedVestingAcc(t *testing.T) {
-	now := tmtime.Now()
+	now := time.Now()
 	endTime := now.Add(1000 * 24 * time.Hour)
 
 	bacc, origCoins := initBaseAccount()

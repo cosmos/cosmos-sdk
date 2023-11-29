@@ -73,11 +73,12 @@ func newIndex(tb Indexable, prefix byte, indexer *Indexer, indexerF IndexerFunc,
 
 // Has checks if a key exists. Returns an error on nil key.
 func (i MultiKeyIndex) Has(store types.KVStore, key interface{}) (bool, error) {
-	pStore := prefix.NewStore(store, []byte{i.prefix})
 	encodedKey, err := keyPartBytes(key, false)
 	if err != nil {
 		return false, err
 	}
+
+	pStore := prefix.NewStore(store, []byte{i.prefix})
 	it := pStore.Iterator(PrefixRange(encodedKey))
 	defer it.Close()
 	return it.Valid(), nil
@@ -85,11 +86,12 @@ func (i MultiKeyIndex) Has(store types.KVStore, key interface{}) (bool, error) {
 
 // Get returns a result iterator for the searchKey. Parameters must not be nil.
 func (i MultiKeyIndex) Get(store types.KVStore, searchKey interface{}) (Iterator, error) {
-	pStore := prefix.NewStore(store, []byte{i.prefix})
 	encodedKey, err := keyPartBytes(searchKey, false)
 	if err != nil {
 		return nil, err
 	}
+
+	pStore := prefix.NewStore(store, []byte{i.prefix})
 	it := pStore.Iterator(PrefixRange(encodedKey))
 	return indexIterator{store: store, it: it, rowGetter: i.rowGetter, indexKey: i.indexKey}, nil
 }
@@ -98,7 +100,6 @@ func (i MultiKeyIndex) Get(store types.KVStore, searchKey interface{}) (Iterator
 // starting from pageRequest.Key if provided.
 // The pageRequest.Key is the rowID while searchKey is a MultiKeyIndex key.
 func (i MultiKeyIndex) GetPaginated(store types.KVStore, searchKey interface{}, pageRequest *query.PageRequest) (Iterator, error) {
-	pStore := prefix.NewStore(store, []byte{i.prefix})
 	encodedKey, err := keyPartBytes(searchKey, false)
 	if err != nil {
 		return nil, err
@@ -112,6 +113,8 @@ func (i MultiKeyIndex) GetPaginated(store types.KVStore, searchKey interface{}, 
 			return nil, err
 		}
 	}
+
+	pStore := prefix.NewStore(store, []byte{i.prefix})
 	it := pStore.Iterator(start, end)
 	return indexIterator{store: store, it: it, rowGetter: i.rowGetter, indexKey: i.indexKey}, nil
 }

@@ -1,6 +1,7 @@
 package autocli
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"time"
@@ -8,6 +9,7 @@ import (
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	"cosmossdk.io/x/tx/signing/aminojson"
 	"github.com/cockroachdb/errors"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/spf13/cobra"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
@@ -80,6 +82,10 @@ func (b *Builder) AddQueryServiceCommands(cmd *cobra.Command, cmdDescriptor *aut
 			continue
 		}
 
+		if !util.IsSupportedVersion(util.DescriptorDocs(methodDescriptor)) {
+			continue
+		}
+
 		methodCmd, err := b.BuildQueryMethodCommand(methodDescriptor, methodOpts)
 		if err != nil {
 			return err
@@ -112,9 +118,7 @@ func (b *Builder) BuildQueryMethodCommand(descriptor protoreflect.MethodDescript
 	}
 
 	cmd, err := b.buildMethodCommandCommon(descriptor, options, func(cmd *cobra.Command, input protoreflect.Message) error {
-		if noIndent, _ := cmd.Flags().GetBool(flags.FlagNoIndent); noIndent {
-			encoderOptions.Indent = ""
-		}
+		cmd.SetContext(context.WithValue(context.Background(), client.ClientContextKey, &b.ClientCtx))
 
 		clientConn, err := getClientConn(cmd)
 		if err != nil {
@@ -124,6 +128,10 @@ func (b *Builder) BuildQueryMethodCommand(descriptor protoreflect.MethodDescript
 		output := outputType.New()
 		if err := clientConn.Invoke(cmd.Context(), methodName, input.Interface(), output.Interface()); err != nil {
 			return err
+		}
+
+		if noIndent, _ := cmd.Flags().GetBool(flags.FlagNoIndent); noIndent {
+			encoderOptions.Indent = ""
 		}
 
 		enc := encoder(aminojson.NewEncoder(encoderOptions))

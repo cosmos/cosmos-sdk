@@ -23,11 +23,12 @@ go get cosmossdk.io/collections
 ## Core types
 
 Collections offers 5 different APIs to work with state, which will be explored in the next sections, these APIs are:
-- ``Map``: to work with typed arbitrary KV pairings.
-- ``KeySet``: to work with just typed keys
-- ``Item``: to work with just one typed value
-- ``Sequence``: which is a monotonically increasing number.
-- ``IndexedMap``: which combines ``Map`` and `KeySet` to provide a `Map` with indexing capabilities.
+
+* ``Map``: to work with typed arbitrary KV pairings.
+* ``KeySet``: to work with just typed keys
+* ``Item``: to work with just one typed value
+* ``Sequence``: which is a monotonically increasing number.
+* ``IndexedMap``: which combines ``Map`` and `KeySet` to provide a `Map` with indexing capabilities.
 
 ## Preliminary components
 
@@ -82,8 +83,9 @@ The second argument passed to our ``KeySet`` is a `collections.Prefix`, a prefix
 where all the state of a specific collection will be saved. 
 
 Since a module can have multiple collections, the following is expected:
-- module params will become a `collections.Item`
-- the `AllowList` is a `collections.KeySet`
+
+* module params will become a `collections.Item`
+* the `AllowList` is a `collections.KeySet`
 
 We don't want a collection to write over the state of the other collection so we pass it a prefix, which defines a storage
 partition owned by the collection.
@@ -91,6 +93,7 @@ partition owned by the collection.
 If you already built modules, the prefix translates to the items you were creating in your ``types/keys.go`` file, example: https://github.com/cosmos/cosmos-sdk/blob/main/x/feegrant/key.go#L27
 
 your old:
+
 ```go
 var (
 	// FeeAllowanceKeyPrefix is the set of the kvstore for fee allowance data
@@ -102,7 +105,9 @@ var (
 	FeeAllowanceQueueKeyPrefix = []byte{0x01}
 )
 ```
+
 becomes:
+
 ```go
 var (
 	// FeeAllowanceKeyPrefix is the set of the kvstore for fee allowance data
@@ -130,6 +135,7 @@ prefix2 := collections.NewPrefix("prefix") // THIS IS BAD!
 prefix1 := collections.NewPrefix("a")
 prefix2 := collections.NewPrefix("aa") // prefix2 starts with the same as prefix1: BAD!!!
 ```
+
 ### Human-Readable Name
 
 The third parameter we pass to a collection is a string, which is a human-readable name.
@@ -202,7 +208,7 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	authtypes "cosmossdk.io/x/auth/types"
 )
 
 var AccountsPrefix = collections.NewPrefix(0)
@@ -251,7 +257,7 @@ import (
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	authtypes "cosmossdk.io/x/auth/types"
 )
 
 var AccountsPrefix = collections.NewPrefix(0)
@@ -390,6 +396,7 @@ func (k Keeper) RemoveValidator(ctx sdk.Context, validator sdk.ValAddress) error
 	return nil
 }
 ```
+
 The first difference we notice is that `KeySet` needs use to specify only one type parameter: the key (`sdk.ValAddress` in this case).
 The second difference we notice is that `KeySet` in its `NewKeySet` function does not require
 us to specify a `ValueCodec` but only a `KeyCodec`. This is because a `KeySet` only saves keys and not values.
@@ -431,7 +438,7 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	stakingtypes "cosmossdk.io/x/staking/types"
 )
 
 var ParamsPrefix = collections.NewPrefix(0)
@@ -501,7 +508,7 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	authtypes "cosmossdk.io/x/auth/types"
 )
 
 var AccountsPrefix = collections.NewPrefix(0)
@@ -679,6 +686,7 @@ func NewKeeper(storeKey *storetypes.KVStoreKey) Keeper {
 #### The Map Key definition
 
 First of all we can see that in order to define a composite key of two elements we use the `collections.Pair` type:
+
 ````go
 collections.Map[collections.Pair[sdk.AccAddress, string], math.Int]
 ````
@@ -918,7 +926,7 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	authtypes "cosmossdk.io/x/auth/types"
 )
 
 var AccountsNumberIndexPrefix = collections.NewPrefix(1)
@@ -977,7 +985,7 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	authtypes "cosmossdk.io/x/auth/types"
 )
 
 var AccountsNumberIndexPrefix = collections.NewPrefix(1)
@@ -1085,7 +1093,7 @@ import (
     storetypes "cosmossdk.io/store/types"
     "github.com/cosmos/cosmos-sdk/codec"
     sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	authtypes "cosmossdk.io/x/auth/types"
 )
 
 var AccountsPrefix = collections.NewPrefix(0)

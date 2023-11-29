@@ -8,9 +8,9 @@ import (
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
+	"cosmossdk.io/x/distribution/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
 // initialize rewards for a new validator

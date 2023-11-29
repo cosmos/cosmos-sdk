@@ -18,19 +18,21 @@ import (
 	cmttime "github.com/cometbft/cometbft/types/time"
 	"golang.org/x/sync/errgroup"
 
+	"cosmossdk.io/log"
+	authtypes "cosmossdk.io/x/auth/types"
+	banktypes "cosmossdk.io/x/bank/types"
+
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/server/api"
 	servergrpc "github.com/cosmos/cosmos-sdk/server/grpc"
 	servercmtlog "github.com/cosmos/cosmos-sdk/server/log"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
 func startInProcess(cfg Config, val *Validator) error {
-	logger := val.Ctx.Logger
-	cmtCfg := val.Ctx.Config
+	logger := val.ctx.Logger
+	cmtCfg := val.ctx.Config
 	cmtCfg.Instrumentation.Prometheus = false
 
 	if err := val.AppConfig.ValidateBasic(); err != nil {
@@ -42,7 +44,9 @@ func startInProcess(cfg Config, val *Validator) error {
 		return err
 	}
 
-	app := cfg.AppConstructor(*val)
+	app := cfg.AppConstructor(val)
+	val.app = app
+
 	appGenesisProvider := func() (*cmttypes.GenesisDoc, error) {
 		appGenesis, err := genutiltypes.AppGenesisFromFile(cmtCfg.GenesisFile())
 		if err != nil {
@@ -61,7 +65,7 @@ func startInProcess(cfg Config, val *Validator) error {
 		appGenesisProvider,
 		cmtcfg.DefaultDBProvider,
 		node.DefaultMetricsProvider(cmtCfg.Instrumentation),
-		servercmtlog.CometLoggerWrapper{Logger: logger.With("module", val.Moniker)},
+		servercmtlog.CometLoggerWrapper{Logger: logger.With("module", val.moniker)},
 	)
 	if err != nil {
 		return err
@@ -72,18 +76,18 @@ func startInProcess(cfg Config, val *Validator) error {
 	}
 	val.tmNode = tmNode
 
-	if val.RPCAddress != "" {
-		val.RPCClient = local.New(tmNode)
+	if val.rPCAddress != "" {
+		val.rPCClient = local.New(tmNode)
 	}
 
 	// We'll need a RPC client if the validator exposes a gRPC or REST endpoint.
-	if val.APIAddress != "" || val.AppConfig.GRPC.Enable {
-		val.ClientCtx = val.ClientCtx.
-			WithClient(val.RPCClient)
+	if val.aPIAddress != "" || val.AppConfig.GRPC.Enable {
+		val.clientCtx = val.clientCtx.
+			WithClient(val.rPCClient)
 
-		app.RegisterTxService(val.ClientCtx)
-		app.RegisterTendermintService(val.ClientCtx)
-		app.RegisterNodeService(val.ClientCtx, *val.AppConfig)
+		app.RegisterTxService(val.clientCtx)
+		app.RegisterTendermintService(val.clientCtx)
+		app.RegisterNodeService(val.clientCtx, *val.AppConfig)
 	}
 
 	ctx := context.Background()
@@ -93,7 +97,7 @@ func startInProcess(cfg Config, val *Validator) error {
 	grpcCfg := val.AppConfig.GRPC
 
 	if grpcCfg.Enable {
-		grpcSrv, err := servergrpc.NewGRPCServer(val.ClientCtx, app, grpcCfg)
+		grpcSrv, err := servergrpc.NewGRPCServer(val.clientCtx, app, grpcCfg)
 		if err != nil {
 			return err
 		}
@@ -101,14 +105,14 @@ func startInProcess(cfg Config, val *Validator) error {
 		// Start the gRPC server in a goroutine. Note, the provided ctx will ensure
 		// that the server is gracefully shut down.
 		val.errGroup.Go(func() error {
-			return servergrpc.StartGRPCServer(ctx, logger.With("module", "grpc-server"), grpcCfg, grpcSrv)
+			return servergrpc.StartGRPCServer(ctx, logger.With(log.ModuleKey, "grpc-server"), grpcCfg, grpcSrv)
 		})
 
 		val.grpc = grpcSrv
 	}
 
-	if val.APIAddress != "" {
-		apiSrv := api.New(val.ClientCtx, logger.With("module", "api-server"), val.grpc)
+	if val.aPIAddress != "" {
+		apiSrv := api.New(val.clientCtx, logger.With(log.ModuleKey, "api-server"), val.grpc)
 		app.RegisterAPIRoutes(apiSrv, val.AppConfig.API)
 
 		val.errGroup.Go(func() error {
@@ -122,18 +126,21 @@ func startInProcess(cfg Config, val *Validator) error {
 }
 
 func collectGenFiles(cfg Config, vals []*Validator, outputDir string) error {
-	genTime := cmttime.Now()
+	genTime := cfg.GenesisTime
+	if genTime.IsZero() {
+		genTime = cmttime.Now()
+	}
 
 	for i := 0; i < cfg.NumValidators; i++ {
-		cmtCfg := vals[i].Ctx.Config
+		cmtCfg := vals[i].ctx.Config
 
-		nodeDir := filepath.Join(outputDir, vals[i].Moniker, "simd")
+		nodeDir := filepath.Join(outputDir, vals[i].moniker, "simd")
 		gentxsDir := filepath.Join(outputDir, "gentxs")
 
-		cmtCfg.Moniker = vals[i].Moniker
+		cmtCfg.Moniker = vals[i].moniker
 		cmtCfg.SetRoot(nodeDir)
 
-		initCfg := genutiltypes.NewInitConfig(cfg.ChainID, gentxsDir, vals[i].NodeID, vals[i].PubKey)
+		initCfg := genutiltypes.NewInitConfig(cfg.ChainID, gentxsDir, vals[i].nodeID, vals[i].pubKey)
 
 		genFile := cmtCfg.GenesisFile()
 		appGenesis, err := genutiltypes.AppGenesisFromFile(genFile)

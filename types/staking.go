@@ -26,6 +26,9 @@ var (
 
 	// DefaultPowerReduction is the default amount of staking tokens required for 1 unit of consensus-engine power
 	DefaultPowerReduction = math.NewIntFromUint64(1000000)
+
+	// PubKeyEd25519Type is ed25519 for type the consensus params validator pub_key_types params
+	PubKeyEd25519Type = "ed25519"
 )
 
 // TokensToConsensusPower - convert input tokens to potential consensus-engine power

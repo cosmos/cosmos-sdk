@@ -3,34 +3,26 @@ package pebbledb
 import (
 	"testing"
 
-	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/storage"
 )
 
-const (
-	storeKey1 = "store1"
-)
-
 func TestStorageTestSuite(t *testing.T) {
 	s := &storage.StorageTestSuite{
 		NewDB: func(dir string) (store.VersionedDatabase, error) {
-			return New(dir)
+			db, err := New(dir)
+			if err == nil && db != nil {
+				// We set sync=false just to speed up CI tests. Operators should take
+				// careful consideration when setting this value in production environments.
+				db.SetSync(false)
+			}
+
+			return db, err
 		},
 		EmptyBatchSize: 12,
-		SkipTests: []string{
-			"TestStorageTestSuite/TestDatabase_Prune",
-		},
 	}
+
 	suite.Run(t, s)
-}
-
-func TestDatabase_ReverseIterator(t *testing.T) {
-	db, err := New(t.TempDir())
-	require.NoError(t, err)
-	defer db.Close()
-
-	require.Panics(t, func() { _, _ = db.ReverseIterator(storeKey1, 1, []byte("key000"), nil) })
 }

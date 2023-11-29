@@ -408,6 +408,14 @@ func (s *decimalTestSuite) TestDecCeil() {
 	}
 }
 
+func (s *decimalTestSuite) TestCeilOverflow() {
+	d, err := math.LegacyNewDecFromStr("66749594872528440074844428317798503581334516323645399060845050244444366430645.000000000000000001")
+	s.Require().NoError(err)
+	s.Require().True(d.BigInt().BitLen() <= 315, "d is too large")
+	// this call panics because the value is too large
+	s.Require().Panics(func() { d.Ceil() }, "Ceil should panic on overflow")
+}
+
 func (s *decimalTestSuite) TestPower() {
 	testCases := []struct {
 		input    math.LegacyDec
@@ -753,4 +761,24 @@ func TestNegativePrecisionPanic(t *testing.T) {
 	require.Panics(t, func() {
 		math.LegacyNewDecWithPrec(10, -1)
 	})
+}
+
+func (s *decimalTestSuite) TestConvertToBigIntMutativeForLegacyDec() {
+	r := big.NewInt(30)
+	i := math.LegacyNewDecFromBigInt(r)
+
+	// Compare value of BigInt & BigIntMut
+	s.Require().Equal(i.BigInt(), i.BigIntMut())
+
+	// Modify BigIntMut() pointer and ensure i.BigIntMut() & i.BigInt() change
+	p1 := i.BigIntMut()
+	p1.SetInt64(40)
+	s.Require().Equal(big.NewInt(40), i.BigIntMut())
+	s.Require().Equal(big.NewInt(40), i.BigInt())
+
+	// Modify big.Int() pointer and ensure i.BigIntMut() & i.BigInt() don't change
+	p2 := i.BigInt()
+	p2.SetInt64(50)
+	s.Require().NotEqual(big.NewInt(50), i.BigIntMut())
+	s.Require().NotEqual(big.NewInt(50), i.BigInt())
 }

@@ -5,9 +5,9 @@ import (
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
+	v1 "cosmossdk.io/x/gov/types/v1"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 )
 
 // TODO: Break into several smaller functions for clarity

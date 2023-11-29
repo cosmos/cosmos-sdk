@@ -4,10 +4,9 @@ import (
 	"context"
 
 	"cosmossdk.io/errors"
+	"cosmossdk.io/x/slashing/types"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
 
 var _ types.MsgServer = msgServer{}
@@ -26,7 +25,7 @@ func NewMsgServerImpl(keeper Keeper) types.MsgServer {
 // It defines a method to update the x/slashing module parameters.
 func (k msgServer) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams) (*types.MsgUpdateParamsResponse, error) {
 	if k.authority != msg.Authority {
-		return nil, errors.Wrapf(govtypes.ErrInvalidSigner, "invalid authority; expected %s, got %s", k.authority, msg.Authority)
+		return nil, errors.Wrapf(types.ErrInvalidSigner, "invalid authority; expected %s, got %s", k.authority, msg.Authority)
 	}
 
 	if err := msg.Params.Validate(); err != nil {

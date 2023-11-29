@@ -29,11 +29,12 @@ v1.0.0-beta1 → v1.0.0-beta2 → ... → v1.0.0-rc1 → v1.0.0-rc2 → ... → 
     * Create release notes, in `RELEASE_NOTES.md`, highlighting the new features and changes in the version. This is needed so the bot knows which entries to add to the release page on GitHub.
     * Additionally verify that the `UPGRADING.md` file is up to date and contains all the necessary information for upgrading to the new version.
 * Remove GitHub workflows that should not be in the release branch
-    * `deploy-docs.yml`: must be removed to avoid duplicate documentation deployment.
-    * `test.yml`: All standalone go module tests should be removed (expect `./simapp`, and `./tests` and SDK tests).
+    * `test.yml`: All standalone go module tests should be removed (expect `./simapp`, and `./tests`, SDK and modules tests).
         * These packages are tracked and tested directly on main.
     * `build.yml`: Only the SDK and SimApp needs to be built on release branches.
         * Tooling is tracked and tested directly on main.
+        * This does not apply for tooling depending on the SDK (e.g. `confix`)
+    * Update `Dockerfile` to not use latest go.mod and go.sum files.
 * Create a new annotated git tag for a release candidate (eg: `git tag -a v1.1.0-rc1`) in the release branch.
     * from this point we unfreeze main.
     * the SDK teams collaborate and do their best to run testnets in order to validate the release.
@@ -81,8 +82,8 @@ Major Release series is maintained in compliance with the **Stable Release Polic
 
 Only the following major release series have a stable release status:
 
-* **0.46** is the previous major release and is supported until the release of **0.50.0**. A fairly strict **bugfix-only** rule applies to pull requests that are requested to be included into a not latest stable point-release.
-* **0.47** is the last major release and is supported until the release of **0.51.0**.
+* **0.47** is the previous major release and is supported until the release of **0.51.0**. A fairly strict **bugfix-only** rule applies to pull requests that are requested to be included into a not latest stable point-release.
+* **0.50** is the last major release and is supported until the release of **0.52.0**.
 
 The SDK team maintains the last two major releases, any other major release is considered to have reached end of life.
 The SDK team will not backport any bug fixes to releases that are not supported.
@@ -240,3 +241,7 @@ Those modules can be considered as part of the Cosmos SDK, but features and impr
 ### Modules that do not depend on the Cosmos SDK
 
 Modules that do not depend on the Cosmos SDK can be released at any time from the `main` branch of the Cosmos SDK repository.
+
+#### Exception to the rule
+
+* Store v1 is released from `release/v0.50.x` branch.

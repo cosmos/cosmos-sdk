@@ -4,9 +4,9 @@ import (
 	context "context"
 
 	"cosmossdk.io/core/address"
+	stakingtypes "cosmossdk.io/x/staking/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // AccountKeeper defines the expected account keeper used for simulations (noalias)
@@ -44,6 +44,8 @@ type PoolKeeper interface {
 type StakingKeeper interface {
 	ValidatorAddressCodec() address.Codec
 	ConsensusAddressCodec() address.Codec
+	BondDenom(ctx context.Context) (string, error)
+
 	// iterate through validators by operator address, execute func for each validator
 	IterateValidators(context.Context,
 		func(index int64, validator sdk.ValidatorI) (stop bool)) error

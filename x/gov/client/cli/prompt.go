@@ -12,12 +12,13 @@ import (
 	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
 
+	authtypes "cosmossdk.io/x/auth/types"
+	"cosmossdk.io/x/gov/types"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 const (
@@ -45,6 +46,10 @@ var suggestedProposalTypes = []proposalType{
 		MsgType: "/cosmos.upgrade.v1beta1.MsgCancelUpgrade",
 	},
 	{
+		Name:    "submit-budget-proposal",
+		MsgType: "/cosmos.protocolpool.v1.MsgSubmitBudgetProposal",
+	},
+	{
 		Name:    proposalOther,
 		MsgType: "", // user will input the message type
 	},
@@ -53,6 +58,8 @@ var suggestedProposalTypes = []proposalType{
 // Prompt prompts the user for all values of the given type.
 // data is the struct to be filled
 // namePrefix is the name to be displayed as "Enter <namePrefix> <field>"
+// TODO: when bringing this in autocli, use proto message instead
+// this will simplify the get address logic
 func Prompt[T any](data T, namePrefix string) (T, error) {
 	v := reflect.ValueOf(&data).Elem()
 	if v.Kind() == reflect.Interface {

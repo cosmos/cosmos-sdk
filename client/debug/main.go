@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -34,6 +35,7 @@ func Cmd() *cobra.Command {
 		RunE:  client.ValidateCmd,
 	}
 
+	cmd.AddCommand(CodecCmd())
 	cmd.AddCommand(PubkeyCmd())
 	cmd.AddCommand(PubkeyRawCmd())
 	cmd.AddCommand(AddrCmd())
@@ -41,6 +43,61 @@ func Cmd() *cobra.Command {
 	cmd.AddCommand(PrefixesCmd())
 
 	return cmd
+}
+
+// CodecCmd creates and returns a new codec debug cmd.
+func CodecCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "codec",
+		Short: "Tool for helping with debugging your application codec",
+		RunE:  client.ValidateCmd,
+	}
+
+	cmd.AddCommand(getCodecInterfaces())
+	cmd.AddCommand(getCodecInterfaceImpls())
+
+	return cmd
+}
+
+// getCodecInterfaces creates and returns a new cmd used for listing all registered interfaces on the application codec.
+func getCodecInterfaces() *cobra.Command {
+	return &cobra.Command{
+		Use:     "list-interfaces",
+		Short:   "List all registered interface type URLs",
+		Long:    "List all registered interface type URLs using the application codec",
+		Example: fmt.Sprintf("%s debug codec list-interfaces", version.AppName),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			iFaces := clientCtx.Codec.InterfaceRegistry().ListAllInterfaces()
+
+			slices.Sort(iFaces)
+			for _, iFace := range iFaces {
+				cmd.Println(iFace)
+			}
+			return nil
+		},
+	}
+}
+
+// getCodecInterfaceImpls creates and returns a new cmd used for listing all registered implemenations of a given interface on the application codec.
+func getCodecInterfaceImpls() *cobra.Command {
+	return &cobra.Command{
+		Use:     "list-implementations [interface]",
+		Short:   "List the registered type URLs for the provided interface",
+		Long:    "List the registered type URLs that can be used for the provided interface name using the application codec",
+		Example: fmt.Sprintf("%s debug codec list-implementations cosmos.crypto.PubKey", version.AppName),
+		Args:    cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			impls := clientCtx.Codec.InterfaceRegistry().ListImplementations(args[0])
+
+			slices.Sort(impls)
+			for _, imp := range impls {
+				cmd.Println(imp)
+			}
+			return nil
+		},
+	}
 }
 
 // getPubKeyFromString decodes SDK PubKey using JSON marshaler.
@@ -52,14 +109,11 @@ func getPubKeyFromString(ctx client.Context, pkstr string) (cryptotypes.PubKey, 
 
 func PubkeyCmd() *cobra.Command {
 	return &cobra.Command{
-		Use:   "pubkey [pubkey]",
-		Short: "Decode a pubkey from proto JSON",
-		Long: fmt.Sprintf(`Decode a pubkey from proto JSON and display it's address.
-
-Example:
-$ %s debug pubkey '{"@type":"/cosmos.crypto.secp256k1.PubKey","key":"AurroA7jvfPd1AadmmOvWM2rJSwipXfRf8yD6pLbA2DJ"}'
-			`, version.AppName),
-		Args: cobra.ExactArgs(1),
+		Use:     "pubkey [pubkey]",
+		Short:   "Decode a pubkey from proto JSON",
+		Long:    "Decode a pubkey from proto JSON and display it's address.",
+		Example: fmt.Sprintf(`%s debug pubkey '{"@type":"/cosmos.crypto.secp256k1.PubKey","key":"AurroA7jvfPd1AadmmOvWM2rJSwipXfRf8yD6pLbA2DJ"}'`, version.AppName),
+		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 			pk, err := getPubKeyFromString(clientCtx, args[0])
@@ -129,10 +183,10 @@ func PubkeyRawCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "pubkey-raw [pubkey] -t [{ed25519, secp256k1}]",
 		Short: "Decode a ED25519 or secp256k1 pubkey from hex, base64, or bech32",
-		Long: fmt.Sprintf(`Decode a pubkey from hex, base64, or bech32.
-Example:
-$ %s debug pubkey-raw TWFuIGlzIGRpc3Rpbmd1aXNoZWQsIG5vdCBvbmx5IGJ5IGhpcyByZWFzb24sIGJ1dCBieSB0aGlz
-$ %s debug pubkey-raw cosmos1e0jnq2sun3dzjh8p2xq95kk0expwmd7shwjpfg
+		Long:  "Decode a pubkey from hex, base64, or bech32.",
+		Example: fmt.Sprintf(`
+%s debug pubkey-raw TWFuIGlzIGRpc3Rpbmd1aXNoZWQsIG5vdCBvbmx5IGJ5IGhpcyByZWFzb24sIGJ1dCBieSB0aGlz
+%s debug pubkey-raw cosmos1e0jnq2sun3dzjh8p2xq95kk0expwmd7shwjpfg
 			`, version.AppName, version.AppName),
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -233,14 +287,11 @@ func AddrCmd() *cobra.Command {
 
 func RawBytesCmd() *cobra.Command {
 	return &cobra.Command{
-		Use:   "raw-bytes [raw-bytes]",
-		Short: "Convert raw bytes output (eg. [10 21 13 255]) to hex",
-		Long: fmt.Sprintf(`Convert raw-bytes to hex.
-
-Example:
-$ %s debug raw-bytes [72 101 108 108 111 44 32 112 108 97 121 103 114 111 117 110 100]
-			`, version.AppName),
-		Args: cobra.ExactArgs(1),
+		Use:     "raw-bytes [raw-bytes]",
+		Short:   "Convert raw bytes output (eg. [10 21 13 255]) to hex",
+		Long:    "Convert raw-bytes to hex.",
+		Example: fmt.Sprintf("%s debug raw-bytes [72 101 108 108 111 44 32 112 108 97 121 103 114 111 117 110 100]", version.AppName),
+		Args:    cobra.ExactArgs(1),
 		RunE: func(_ *cobra.Command, args []string) error {
 			stringBytes := args[0]
 			stringBytes = strings.Trim(stringBytes, "[")

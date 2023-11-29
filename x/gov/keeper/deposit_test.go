@@ -8,13 +8,13 @@ import (
 
 	"cosmossdk.io/collections"
 	sdkmath "cosmossdk.io/math"
+	authtypes "cosmossdk.io/x/auth/types"
+	v1 "cosmossdk.io/x/gov/types/v1"
 	pooltypes "cosmossdk.io/x/protocolpool/types"
 
 	"github.com/cosmos/cosmos-sdk/codec/address"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 )
 
 const (
@@ -157,6 +157,86 @@ func TestDeposits(t *testing.T) {
 			deposits, _ = govKeeper.GetDeposits(ctx, proposalID)
 			require.Len(t, deposits, 0)
 			require.Equal(t, addr0Initial.Sub(fourStake...), bankKeeper.GetAllBalances(ctx, TestAddrs[0]))
+		})
+	}
+}
+
+func TestDepositAmount(t *testing.T) {
+	testcases := []struct {
+		name            string
+		deposit         sdk.Coins
+		minDepositRatio string
+		err             string
+	}{
+		{
+			name:            "good amount and denoms",
+			deposit:         sdk.NewCoins(sdk.NewInt64Coin("stake", 10000)),
+			minDepositRatio: "0.001",
+		},
+		{
+			name:            "good amount and denoms but not enough balance for zcoin",
+			deposit:         sdk.NewCoins(sdk.NewInt64Coin("stake", 10000), sdk.NewInt64Coin("zcoin", 1)),
+			minDepositRatio: "0.001",
+			err:             "not enough balance",
+		},
+		{
+			name:            "too small amount",
+			deposit:         sdk.NewCoins(sdk.NewInt64Coin("stake", 10)),
+			minDepositRatio: "0.001",
+			err:             "received 10stake but need at least one of the following: 10000stake,10zcoin: minimum deposit is too small",
+		},
+		{
+			name:            "too small amount with another coin",
+			deposit:         sdk.NewCoins(sdk.NewInt64Coin("zcoin", 1)),
+			minDepositRatio: "0.001",
+			err:             "received 1zcoin but need at least one of the following: 10000stake,10zcoin: minimum deposit is too small",
+		},
+		{
+			name:            "bad denom",
+			deposit:         sdk.NewCoins(sdk.NewInt64Coin("euro", 10000)),
+			minDepositRatio: "0.001",
+			err:             "deposited 10000euro, but gov accepts only the following denom(s): [stake zcoin]: invalid deposit denom",
+		},
+		{
+			name:            "mix containing bad and good denom",
+			deposit:         sdk.NewCoins(sdk.NewInt64Coin("stake", 10000), sdk.NewInt64Coin("euro", 10000)),
+			minDepositRatio: "0.001",
+			err:             "deposited 10000euro,10000stake, but gov accepts only the following denom(s): [stake zcoin]: invalid deposit denom",
+		},
+		{
+			name:            "minDepositRatio is zero",
+			deposit:         sdk.NewCoins(sdk.NewInt64Coin("stake", 10)),
+			minDepositRatio: "0.0",
+		},
+	}
+
+	for _, tc := range testcases {
+		t.Run(tc.name, func(t *testing.T) {
+			govKeeper, mocks, _, ctx := setupGovKeeper(t)
+			authKeeper, bankKeeper, stakingKeeper := mocks.acctKeeper, mocks.bankKeeper, mocks.stakingKeeper
+			trackMockBalances(bankKeeper)
+
+			testAddrs := simtestutil.AddTestAddrsIncremental(bankKeeper, stakingKeeper, ctx, 2, sdkmath.NewInt(1000000000000000))
+			authKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
+
+			params, _ := govKeeper.Params.Get(ctx)
+			params.MinDepositRatio = tc.minDepositRatio
+			params.MinDeposit = sdk.NewCoins(params.MinDeposit...).Add(sdk.NewCoin("zcoin", sdkmath.NewInt(10000))) // coins must be sorted by denom
+			err := govKeeper.Params.Set(ctx, params)
+			require.NoError(t, err)
+
+			tp := TestProposal
+			proposal, err := govKeeper.SubmitProposal(ctx, tp, "", "title", "summary", testAddrs[0], false)
+			require.NoError(t, err)
+			proposalID := proposal.Id
+
+			_, err = govKeeper.AddDeposit(ctx, proposalID, testAddrs[0], tc.deposit)
+			if tc.err != "" {
+				require.Error(t, err)
+				require.Equal(t, tc.err, err.Error())
+			} else {
+				require.NoError(t, err)
+			}
 		})
 	}
 }

@@ -149,48 +149,50 @@ var (
 	}
 )
 
-var sink any = nil
-var cases = []struct {
-	name       string
-	pk         cryptotypes.PubKey
-	signerData txsigning.SignerData
-	signature  signing.SignatureData
-	txData     txsigning.TxData
-	wantErr    string
-}{
-	{
-		name:       "secp256k1 good signature",
-		pk:         pkK1,
-		signerData: signerDataK1,
-		signature:  signedK1,
-		txData:     txDataK1,
-		wantErr:    "",
-	},
-	{
-		name:       "secp256r1 good signature",
-		pk:         pkR1,
-		signerData: signerDataR1,
-		signature:  signedR1,
-		txData:     txDataR1,
-		wantErr:    "",
-	},
-	{
-		name:       "secp256k1 mismatched signature",
-		pk:         pkK1,
-		signerData: signerDataK1,
-		signature:  signedK1,
-		txData:     txDataK1,
-		wantErr:    "unable to verify single signer signature",
-	},
-	{
-		name:       "secp256r1 mismatched signature",
-		pk:         pkR1,
-		signerData: signerDataR1,
-		signature:  signedR1,
-		txData:     txDataR1,
-		wantErr:    "unable to verify single signer signature",
-	},
-}
+var (
+	sink  any = nil
+	cases     = []struct {
+		name       string
+		pk         cryptotypes.PubKey
+		signerData txsigning.SignerData
+		signature  signing.SignatureData
+		txData     txsigning.TxData
+		wantErr    string
+	}{
+		{
+			name:       "secp256k1 good signature",
+			pk:         pkK1,
+			signerData: signerDataK1,
+			signature:  signedK1,
+			txData:     txDataK1,
+			wantErr:    "",
+		},
+		{
+			name:       "secp256r1 good signature",
+			pk:         pkR1,
+			signerData: signerDataR1,
+			signature:  signedR1,
+			txData:     txDataR1,
+			wantErr:    "",
+		},
+		{
+			name:       "secp256k1 mismatched signature",
+			pk:         pkK1,
+			signerData: signerDataK1,
+			signature:  signedK1,
+			txData:     txDataK1,
+			wantErr:    "unable to verify single signer signature",
+		},
+		{
+			name:       "secp256r1 mismatched signature",
+			pk:         pkR1,
+			signerData: signerDataR1,
+			signature:  signedR1,
+			txData:     txDataR1,
+			wantErr:    "unable to verify single signer signature",
+		},
+	}
+)
 
 func must[T any](res T, err error) T {
 	if err != nil {

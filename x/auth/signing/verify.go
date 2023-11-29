@@ -63,18 +63,18 @@ func internalSignModeToAPI(mode signing.SignMode) (signingv1beta1.SignMode, erro
 func verifySig(signBytes, sig []byte, pubKey cryptotypes.PubKey, cs *Cache) bool {
 	if cs != nil {
 		bz := newSigKey(signBytes, sig).string()
-		cachePub, ok := SignatureCache().Get(bz)
+		cachePub, ok := cs.Get(bz)
 		// if the pubkey is in the cache, we know the signature is valid
 		// we remove the signature from the cache in the first lookup, as we assume this is when delivertx is being called
 		if ok {
-			SignatureCache().Remove(bz)
+			cs.Remove(bz)
 			return bytes.Equal(pubKey.Bytes(), cachePub)
 		}
 		if !pubKey.VerifySignature(signBytes, sig) {
 			return false
 		}
-		SignatureCache().Add(bz, pubKey.Bytes())
-	} else {
+		cs.Add(bz, pubKey.Bytes())
+	} else if cs == nil {
 		if !pubKey.VerifySignature(signBytes, sig) {
 			return false
 		}

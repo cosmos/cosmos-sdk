@@ -235,7 +235,6 @@ type SigVerificationDecorator struct {
 }
 
 func NewSigVerificationDecorator(ak AccountKeeper, signModeHandler *txsigning.HandlerMap, cacheVerification bool) SigVerificationDecorator {
-
 	svd := SigVerificationDecorator{
 		ak:              ak,
 		signModeHandler: signModeHandler,

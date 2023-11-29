@@ -6,8 +6,6 @@ import (
 	lru "github.com/hashicorp/golang-lru/v2"
 )
 
-var signatureCache *Cache
-
 const (
 	TxHashLen        = 32
 	AddressStringLen = 2 + 20*2
@@ -36,10 +34,6 @@ func NewSignatureCache() *Cache {
 	})
 
 	return sc
-}
-
-func SignatureCache() *Cache {
-	return signatureCache
 }
 
 // Get returns the cached signature if it exists

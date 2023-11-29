@@ -14,7 +14,7 @@ func GenerateCoinKey(algo keyring.SignatureAlgo, cdc codec.Codec) (sdk.AccAddres
 	info, secret, err := keyring.NewInMemory(cdc).NewMnemonic(
 		"name",
 		keyring.English,
-		sdk.GetConfig().GetFullBIP44Path(),
+		sdk.GetFullBIP44Path(),
 		keyring.DefaultBIP39Passphrase,
 		algo,
 	)
@@ -37,6 +37,7 @@ func GenerateSaveCoinKey(
 	keyName, mnemonic string,
 	overwrite bool,
 	algo keyring.SignatureAlgo,
+	hdPath string,
 ) (sdk.AccAddress, string, error) {
 	exists := false
 	_, err := keybase.Key(keyName)
@@ -63,9 +64,9 @@ func GenerateSaveCoinKey(
 	// generate or recover a new account
 	if mnemonic != "" {
 		secret = mnemonic
-		record, err = keybase.NewAccount(keyName, mnemonic, keyring.DefaultBIP39Passphrase, sdk.GetConfig().GetFullBIP44Path(), algo)
+		record, err = keybase.NewAccount(keyName, mnemonic, keyring.DefaultBIP39Passphrase, hdPath, algo)
 	} else {
-		record, secret, err = keybase.NewMnemonic(keyName, keyring.English, sdk.GetConfig().GetFullBIP44Path(), keyring.DefaultBIP39Passphrase, algo)
+		record, secret, err = keybase.NewMnemonic(keyName, keyring.English, hdPath, keyring.DefaultBIP39Passphrase, algo)
 	}
 	if err != nil {
 		return sdk.AccAddress{}, "", err

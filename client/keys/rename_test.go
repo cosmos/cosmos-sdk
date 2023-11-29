@@ -30,7 +30,7 @@ func Test_runRenameCmd(t *testing.T) {
 	fakeKeyName1 := "runRenameCmd_Key1"
 	fakeKeyName2 := "runRenameCmd_Key2"
 
-	path := sdk.GetConfig().GetFullBIP44Path()
+	path := sdk.GetFullBIP44Path()
 
 	cdc := moduletestutil.MakeTestEncodingConfig().Codec
 	kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, kbHome, mockIn, cdc)

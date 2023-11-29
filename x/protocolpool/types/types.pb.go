@@ -211,6 +211,7 @@ func (m *ContinuousFund) GetExpiry() *time.Time {
 	return nil
 }
 
+// FundDistribution is used to keep track of distributed amount of recipients.
 type FundDistribution struct {
 	// Percentage is the percentage of funds allocated from Community pool,
 	// till the `MaxDistributedCapital` is reached or expired.

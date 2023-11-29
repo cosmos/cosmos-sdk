@@ -471,8 +471,9 @@ func fieldTypeToProtowireType(fieldType descriptorpb.FieldDescriptorProto_Type) 
 		descriptorpb.FieldDescriptorProto_TYPE_MESSAGE,
 		descriptorpb.FieldDescriptorProto_TYPE_GROUP:
 		return protowire.BytesType
+	default:
+		panic(fmt.Sprintf("unknown field type %s", fieldType.String()))
 	}
-	panic("unreachable")
 }
 
 // isScalar defines whether a field is a scalar type.

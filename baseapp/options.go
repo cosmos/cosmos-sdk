@@ -9,11 +9,11 @@ import (
 
 	dbm "github.com/cosmos/cosmos-db"
 
-	"cosmossdk.io/store/metrics"
 	pruningtypes "cosmossdk.io/store/pruning/types"
 	"cosmossdk.io/store/snapshots"
 	snapshottypes "cosmossdk.io/store/snapshots/types"
 	storetypes "cosmossdk.io/store/types"
+	storemetrics "cosmossdk.io/store/v2/metrics"
 
 	"github.com/cosmos/cosmos-sdk/baseapp/oe"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -368,7 +368,7 @@ func (app *BaseApp) SetVerifyVoteExtensionHandler(handler sdk.VerifyVoteExtensio
 }
 
 // SetStoreMetrics sets the prepare proposal function for the BaseApp.
-func (app *BaseApp) SetStoreMetrics(gatherer metrics.StoreMetrics) {
+func (app *BaseApp) SetStoreMetrics(gatherer storemetrics.Metrics) {
 	if app.sealed {
 		panic("SetStoreMetrics() on sealed BaseApp")
 	}

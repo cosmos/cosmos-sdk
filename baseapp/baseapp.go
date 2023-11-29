@@ -97,6 +97,7 @@ type BaseApp struct {
 	// manages snapshots, i.e. dumps of app state at certain intervals
 	//
 	// TODO(bez): Replace with store v2 SM
+	// Ref: https://github.com/cosmos/cosmos-sdk/issues/18466
 	snapshotManager *snapshots.Manager
 
 	// volatile states:
@@ -175,7 +176,7 @@ type BaseApp struct {
 	//
 	// TODO(bez): Replace with store v2 compatible streaming manager
 	//
-	// Ref:https://github.com/cosmos/cosmos-sdk/issues/18527
+	// Ref: https://github.com/cosmos/cosmos-sdk/issues/18466
 	streamingManager storetypes.StreamingManager
 
 	chainID string

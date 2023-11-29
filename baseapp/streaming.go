@@ -67,10 +67,15 @@ func (app *BaseApp) registerABCIListenerPlugin(
 ) {
 	stopNodeOnErrKey := fmt.Sprintf("%s.%s.%s", StreamingTomlKey, StreamingABCITomlKey, StreamingABCIStopNodeOnErrTomlKey)
 	stopNodeOnErr := cast.ToBool(appOpts.Get(stopNodeOnErrKey))
-	keysKey := fmt.Sprintf("%s.%s.%s", StreamingTomlKey, StreamingABCITomlKey, StreamingABCIKeysTomlKey)
-	exposeKeysStr := cast.ToStringSlice(appOpts.Get(keysKey))
-	exposedKeys := exposeStoreKeysSorted(exposeKeysStr, keys)
-	app.cms.AddListeners(exposedKeys)
+
+	// TODO(bez): Handle SM correctly with respect to store v2.
+	//
+	// Ref: https://github.com/cosmos/cosmos-sdk/issues/18466
+	// keysKey := fmt.Sprintf("%s.%s.%s", StreamingTomlKey, StreamingABCITomlKey, StreamingABCIKeysTomlKey)
+	// exposeKeysStr := cast.ToStringSlice(appOpts.Get(keysKey))
+	// exposedKeys := exposeStoreKeysSorted(exposeKeysStr, keys)
+	//
+	// app.cms.AddListeners(exposedKeys)
 	app.SetStreamingManager(
 		storetypes.StreamingManager{
 			ABCIListeners: []storetypes.ABCIListener{abciListener},

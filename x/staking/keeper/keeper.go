@@ -43,11 +43,11 @@ func HistoricalInfoCodec(cdc codec.BinaryCodec) collcodec.ValueCodec[types.Histo
 }
 
 type rotationHistoryIndexes struct {
-	Block *indexes.Multi[uint64, []byte, types.ConsPubKeyRotationHistory]
+	Block *indexes.Multi[uint64, collections.Pair[[]byte, uint64], types.ConsPubKeyRotationHistory]
 }
 
-func (a rotationHistoryIndexes) IndexesList() []collections.Index[[]byte, types.ConsPubKeyRotationHistory] {
-	return []collections.Index[[]byte, types.ConsPubKeyRotationHistory]{
+func (a rotationHistoryIndexes) IndexesList() []collections.Index[collections.Pair[[]byte, uint64], types.ConsPubKeyRotationHistory] {
+	return []collections.Index[collections.Pair[[]byte, uint64], types.ConsPubKeyRotationHistory]{
 		a.Block,
 	}
 }
@@ -55,8 +55,12 @@ func (a rotationHistoryIndexes) IndexesList() []collections.Index[[]byte, types.
 func NewRotationHistoryIndexes(sb *collections.SchemaBuilder) rotationHistoryIndexes {
 	return rotationHistoryIndexes{
 		Block: indexes.NewMulti(
-			sb, types.BlockConsPubKeyRotationHistoryKey, "cons_pubkey_history_by_block", collections.Uint64Key, collections.BytesKey,
-			func(_ []byte, v types.ConsPubKeyRotationHistory) (uint64, error) {
+			sb,
+			types.BlockConsPubKeyRotationHistoryKey,
+			"cons_pubkey_history_by_block",
+			collections.Uint64Key,
+			collections.PairKeyCodec(collections.BytesKey, collections.Uint64Key),
+			func(key collections.Pair[[]byte, uint64], v types.ConsPubKeyRotationHistory) (uint64, error) {
 				return v.Height, nil
 			},
 		),
@@ -123,7 +127,7 @@ type Keeper struct {
 	RotatedConsKeyMapIndex collections.Map[[]byte, []byte]
 	// ValidatorConsPubKeyRotationHistory: consPubkey rotation history by validator
 	// A index is being added with key `BlockConsPubKeyRotationHistory`: consPubkey rotation history by height
-	RotationHistory *collections.IndexedMap[[]byte, types.ConsPubKeyRotationHistory, rotationHistoryIndexes]
+	RotationHistory *collections.IndexedMap[collections.Pair[[]byte, uint64], types.ConsPubKeyRotationHistory, rotationHistoryIndexes]
 }
 
 // NewKeeper creates a new staking Keeper instance
@@ -287,7 +291,7 @@ func NewKeeper(
 			sb,
 			types.ValidatorConsPubKeyRotationHistoryKey,
 			"cons_pub_rotation_history",
-			collections.BytesKey,
+			collections.PairKeyCodec(collections.BytesKey, collections.Uint64Key),
 			codec.CollValue[types.ConsPubKeyRotationHistory](cdc),
 			NewRotationHistoryIndexes(sb),
 		),

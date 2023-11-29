@@ -628,8 +628,8 @@ func (k msgServer) RotateConsPubKey(ctx context.Context, msg *types.MsgRotateCon
 	newConsAddr := sdk.ConsAddress(pk.Address())
 
 	// checks if NewPubKey is not duplicated on ValidatorsByConsAddr
-	validator1, _ := k.Keeper.ValidatorByConsAddr(ctx, newConsAddr)
-	if validator1 != nil {
+	_, err = k.Keeper.ValidatorByConsAddr(ctx, newConsAddr)
+	if err == nil {
 		return nil, types.ErrConsensusPubKeyAlreadyUsedForValidator
 	}
 
@@ -640,6 +640,10 @@ func (k msgServer) RotateConsPubKey(ctx context.Context, msg *types.MsgRotateCon
 
 	validator2, err := k.Keeper.GetValidator(ctx, valAddr)
 	if err != nil {
+		return nil, err
+	}
+
+	if validator2.GetOperator() == "" {
 		return nil, types.ErrNoValidatorFound
 	}
 

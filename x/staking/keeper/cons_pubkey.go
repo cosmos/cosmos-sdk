@@ -3,6 +3,7 @@ package keeper
 import (
 	"bytes"
 	"context"
+	"errors"
 	"time"
 
 	"cosmossdk.io/collections"
@@ -33,7 +34,7 @@ func (k Keeper) setConsPubKeyRotationHistory(
 		Height:          height,
 		Fee:             fee,
 	}
-	err := k.RotationHistory.Set(ctx, valAddr, history)
+	err := k.RotationHistory.Set(ctx, collections.Join(valAddr.Bytes(), height), history)
 	if err != nil {
 		return err
 	}
@@ -122,7 +123,7 @@ func (k Keeper) exceedsMaxRotations(ctx context.Context, valAddr sdk.ValAddress)
 // this is to keep track of rotations made within the unbonding period
 func (k Keeper) setConsKeyQueue(ctx context.Context, ts time.Time, valAddr sdk.ValAddress) error {
 	queueRec, err := k.ValidatorConsensusKeyRotationRecordQueue.Get(ctx, ts)
-	if err != nil {
+	if err != nil && !errors.Is(err, collections.ErrNotFound) {
 		return err
 	}
 
@@ -188,7 +189,7 @@ func (k Keeper) GetAllMaturedRotatedKeys(ctx sdk.Context, matureTime time.Time) 
 	return valAddrs, nil
 }
 
-// GetBlockConsPubKeyRotationHistory iterator over the rotation history for the given height.
+// GetBlockConsPubKeyRotationHistory iterates over the rotation history for the current height.
 func (k Keeper) GetBlockConsPubKeyRotationHistory(ctx context.Context) ([]types.ConsPubKeyRotationHistory, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
@@ -199,4 +200,24 @@ func (k Keeper) GetBlockConsPubKeyRotationHistory(ctx context.Context) ([]types.
 	defer iterator.Close()
 
 	return indexes.CollectValues(ctx, k.RotationHistory, iterator)
+}
+
+// GetValidatorConsPubKeyRotationHistory iterates over all the rotated history objects in the state with the given valAddr and returns.
+func (k Keeper) GetValidatorConsPubKeyRotationHistory(ctx sdk.Context, operatorAddress sdk.ValAddress) ([]types.ConsPubKeyRotationHistory, error) {
+	var historyObjects []types.ConsPubKeyRotationHistory
+
+	rng := collections.NewPrefixedPairRange[[]byte, uint64](operatorAddress.Bytes())
+
+	index := 0
+	err := k.RotationHistory.Walk(ctx, rng, func(key collections.Pair[[]byte, uint64], history types.ConsPubKeyRotationHistory) (stop bool, err error) {
+		historyObjects = append(historyObjects, history)
+		index++
+		return false, nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return historyObjects, nil
 }

@@ -10,12 +10,14 @@ import (
 	gogotypes "github.com/cosmos/gogoproto/types"
 
 	"cosmossdk.io/core/address"
+	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/staking/types"
 
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // BlockValidatorUpdates calculates the ValidatorUpdates for the current block
@@ -256,15 +258,24 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx context.Context) (updates 
 			return nil, err
 		}
 
-		validator := k.mustGetValidator(ctx, valAddr)
+		validator, err := k.GetValidator(ctx, valAddr)
+		if err != nil {
+			return nil, err
+		}
 
-		oldPk := history.OldConsPubkey.GetCachedValue().(cryptotypes.PubKey)
+		oldPk, ok := history.OldConsPubkey.GetCachedValue().(cryptotypes.PubKey)
+		if !ok {
+			return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidType, "Expecting cryptotypes.PubKey, got %T", oldPk)
+		}
 		oldTmPk, err := cryptocodec.ToCmtProtoPublicKey(oldPk)
 		if err != nil {
 			return nil, err
 		}
 
-		newPk := history.NewConsPubkey.GetCachedValue().(cryptotypes.PubKey)
+		newPk, ok := history.NewConsPubkey.GetCachedValue().(cryptotypes.PubKey)
+		if !ok {
+			return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidType, "Expecting cryptotypes.PubKey, got %T", oldPk)
+		}
 		newTmPk, err := cryptocodec.ToCmtProtoPublicKey(newPk)
 		if err != nil {
 			return nil, err

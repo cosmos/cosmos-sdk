@@ -2251,6 +2251,7 @@ func (x *ContinuousFund) GetExpiry() *timestamppb.Timestamp {
 	return nil
 }
 
+// FundDistribution is used to keep track of distributed amount of recipients.
 type FundDistribution struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

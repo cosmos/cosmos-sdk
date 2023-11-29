@@ -50,6 +50,7 @@ message ContinuousFund {
   google.protobuf.Timestamp expiry = 4 [(gogoproto.stdtime) = true];
 }
 
+// FundDistribution is used to keep track of distributed amount of recipients.
 message FundDistribution {
   // Percentage is the percentage of funds allocated from Community pool,
   // till the `MaxDistributedCapital` is reached or expired.

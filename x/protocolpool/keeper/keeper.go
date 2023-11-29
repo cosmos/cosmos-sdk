@@ -158,7 +158,10 @@ func (k Keeper) iterateAndUpdateFundsDistribution(ctx context.Context) error {
 		// Add all the coins to be distributed to toDistribute
 		k.toDistribute += distrCoins.Amount.Uint64()
 		// Set funds to be claimed
-		k.RecipientFunds.Set(ctx, key, types.FundDistribution{ToClaim: &distrCoins})
+		err = k.RecipientFunds.Set(ctx, key, types.FundDistribution{ToClaim: &distrCoins})
+		if err != nil {
+			return false, err
+		}
 		return false, nil
 	})
 	return err
@@ -173,7 +176,7 @@ func (k Keeper) getDistributedFunds(ctx context.Context, recipient sdk.AccAddres
 		return sdk.Coin{}, err
 	}
 
-	k.toDistribute = k.toDistribute - fd.ToClaim.Amount.Uint64()
+	k.toDistribute -= fd.ToClaim.Amount.Uint64()
 	amount = *fd.ToClaim
 	fd.ToClaim = &sdk.Coin{}
 	return amount, nil

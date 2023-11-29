@@ -55,5 +55,5 @@ message FundDistribution {
   // till the `MaxDistributedCapital` is reached or expired.
   string percentage = 1 [(cosmos_proto.scalar) = "cosmos.Dec", (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec"];
   // ToClaim is the amount of funds yet to be claimed.
-  cosmos.base.v1beta1.Coin ToClaim = 2;
+  cosmos.base.v1beta1.Coin to_claim = 2;
 }

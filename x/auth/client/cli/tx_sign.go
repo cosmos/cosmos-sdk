@@ -130,7 +130,8 @@ func makeSignBatchCmd() func(cmd *cobra.Command, args []string) error {
 				}
 				// increment the gas
 				newGasLimit += fe.GetTx().GetGas()
-				// Individual fee values from each transaction need to be aggregated to calculate the total fee for the batch of transactions.
+				// Individual fee values from each transaction need to be
+				// aggregated to calculate the total fee for the batch of transactions.
 				// https://github.com/cosmos/cosmos-sdk/issues/18064
 				unmergedFees := fe.GetTx().GetFee()
 				for _, fee := range unmergedFees {

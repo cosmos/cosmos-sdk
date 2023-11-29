@@ -49,12 +49,3 @@ message ContinuousFund {
   // Optional, if expiry is set, removes the state object when expired.
   google.protobuf.Timestamp expiry = 4 [(gogoproto.stdtime) = true];
 }
-
-// FundDistribution is used to keep track of distributed amount of recipients.
-message FundDistribution {
-  // Percentage is the percentage of funds allocated from Community pool,
-  // till the `MaxDistributedCapital` is reached or expired.
-  string percentage = 1 [(cosmos_proto.scalar) = "cosmos.Dec", (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec"];
-  // ToClaim is the amount of funds yet to be claimed.
-  uint64 to_claim = 2;
-}

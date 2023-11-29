@@ -130,7 +130,17 @@ func RemoteCommand(config *config.Config, configDir string) ([]*cobra.Command, e
 		chainCmd.AddCommand(KeyringCmd(chainInfo.Chain))
 
 		if err := appOpts.EnhanceRootCommandWithBuilder(chainCmd, builder); err != nil {
-			return nil, err
+			// when enriching the command with autocli fails, we add a command that
+			// will print the error and allow the user to reconfigure the chain instead
+			chainCmd.RunE = func(cmd *cobra.Command, args []string) error {
+				cmd.Printf("Error while loading AutoCLI data for %s: %+v\n", chain, err)
+				cmd.Printf("Attempt to reconfigure the chain using the %s flag\n", flags.FlagConfig)
+				if cmd.Flags().Changed(flags.FlagConfig) {
+					return reconfigure(cmd, config, configDir, chain)
+				}
+
+				return nil
+			}
 		}
 
 		commands = append(commands, chainCmd)

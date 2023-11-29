@@ -85,6 +85,8 @@ func (m *QueryBalanceRequest) GetOwner() string {
 }
 
 // QueryBalanceByQueryStringRequest is the request type for the Query/Balance RPC method
+//
+// Since: nft v0.1.1
 type QueryBalanceByQueryStringRequest struct {
 	// class_id associated with the nft
 	ClassId string `protobuf:"bytes,1,opt,name=class_id,json=classId,proto3" json:"class_id,omitempty"`
@@ -186,6 +188,8 @@ func (m *QueryBalanceResponse) GetAmount() uint64 {
 }
 
 // QueryBalanceByQueryStringResponse is the response type for the Query/Balance RPC method
+//
+// Since: nft v0.1.1
 type QueryBalanceByQueryStringResponse struct {
 	// amount is the number of all NFTs of a given class owned by the owner
 	Amount uint64 `protobuf:"varint,1,opt,name=amount,proto3" json:"amount,omitempty"`
@@ -287,6 +291,8 @@ func (m *QueryOwnerRequest) GetId() string {
 }
 
 // QueryOwnerByQueryStringRequest is the request type for the Query/Owner RPC method
+//
+// Since: nft v0.1.1
 type QueryOwnerByQueryStringRequest struct {
 	// class_id associated with the nft
 	ClassId string `protobuf:"bytes,1,opt,name=class_id,json=classId,proto3" json:"class_id,omitempty"`
@@ -388,6 +394,8 @@ func (m *QueryOwnerResponse) GetOwner() string {
 }
 
 // QueryOwnerByQueryStringResponse is the response type for the Query/Owner RPC method
+//
+// Since: nft v0.1.1
 type QueryOwnerByQueryStringResponse struct {
 	// owner is the owner address of the nft
 	Owner string `protobuf:"bytes,1,opt,name=owner,proto3" json:"owner,omitempty"`
@@ -480,6 +488,8 @@ func (m *QuerySupplyRequest) GetClassId() string {
 }
 
 // QuerySupplyByQueryStringRequest is the request type for the Query/Supply RPC method
+//
+// Since: nft v0.1.1
 type QuerySupplyByQueryStringRequest struct {
 	// class_id associated with the nft
 	ClassId string `protobuf:"bytes,1,opt,name=class_id,json=classId,proto3" json:"class_id,omitempty"`
@@ -572,6 +582,8 @@ func (m *QuerySupplyResponse) GetAmount() uint64 {
 }
 
 // QuerySupplyByQueryStringResponse is the response type for the Query/Supply RPC method
+//
+// Since: nft v0.1.1
 type QuerySupplyByQueryStringResponse struct {
 	// amount is the number of all NFTs from the given class
 	Amount uint64 `protobuf:"varint,1,opt,name=amount,proto3" json:"amount,omitempty"`
@@ -792,6 +804,8 @@ func (m *QueryNFTRequest) GetId() string {
 }
 
 // QueryNFTByQueryStringRequest is the request type for the Query/NFT RPC method
+//
+// Since: nft v0.1.1
 type QueryNFTByQueryStringRequest struct {
 	// class_id associated with the nft
 	ClassId string `protobuf:"bytes,1,opt,name=class_id,json=classId,proto3" json:"class_id,omitempty"`
@@ -893,6 +907,8 @@ func (m *QueryNFTResponse) GetNft() *NFT {
 }
 
 // QueryNFTByQueryStringResponse is the response type for the Query/NFT RPC method
+//
+// Since: nft v0.1.1
 type QueryNFTByQueryStringResponse struct {
 	// owner is the owner address of the nft
 	Nft *NFT `protobuf:"bytes,1,opt,name=nft,proto3" json:"nft,omitempty"`
@@ -985,6 +1001,8 @@ func (m *QueryClassRequest) GetClassId() string {
 }
 
 // QueryClassByQueryStringRequest is the request type for the Query/Class RPC method
+//
+// Since: nft v0.1.1
 type QueryClassByQueryStringRequest struct {
 	// class_id associated with the nft
 	ClassId string `protobuf:"bytes,1,opt,name=class_id,json=classId,proto3" json:"class_id,omitempty"`
@@ -1077,6 +1095,8 @@ func (m *QueryClassResponse) GetClass() *Class {
 }
 
 // QueryClassByQueryStringResponse is the response type for the Query/Class RPC method
+//
+// Since: nft v0.1.1
 type QueryClassByQueryStringResponse struct {
 	// class defines the class of the nft type.
 	Class *Class `protobuf:"bytes,1,opt,name=class,proto3" json:"class,omitempty"`
@@ -1330,14 +1350,20 @@ type QueryClient interface {
 	// Balance queries the number of NFTs of a given class owned by the owner, same as balanceOf in ERC721
 	Balance(ctx context.Context, in *QueryBalanceRequest, opts ...grpc.CallOption) (*QueryBalanceResponse, error)
 	// BalancebyQueryString queries the number of NFTs of a given class owned by the owner, same as balanceOf in ERC721
+	//
+	// Since: nft v0.1.1
 	BalanceByQueryString(ctx context.Context, in *QueryBalanceByQueryStringRequest, opts ...grpc.CallOption) (*QueryBalanceByQueryStringResponse, error)
 	// Owner queries the owner of the NFT based on its class and id, same as ownerOf in ERC721
 	Owner(ctx context.Context, in *QueryOwnerRequest, opts ...grpc.CallOption) (*QueryOwnerResponse, error)
 	// OwnerByQueryString queries the owner of the NFT based on its class and id, same as ownerOf in ERC721
+	//
+	// Since: nft v0.1.1
 	OwnerByQueryString(ctx context.Context, in *QueryOwnerByQueryStringRequest, opts ...grpc.CallOption) (*QueryOwnerByQueryStringResponse, error)
 	// Supply queries the number of NFTs from the given class, same as totalSupply of ERC721.
 	Supply(ctx context.Context, in *QuerySupplyRequest, opts ...grpc.CallOption) (*QuerySupplyResponse, error)
 	// SupplyByQueryString queries the number of NFTs from the given class, same as totalSupply of ERC721.
+	//
+	// Since: nft v0.1.1
 	SupplyByQueryString(ctx context.Context, in *QuerySupplyByQueryStringRequest, opts ...grpc.CallOption) (*QuerySupplyByQueryStringResponse, error)
 	// NFTs queries all NFTs of a given class or owner,choose at least one of the two, similar to tokenByIndex in
 	// ERC721Enumerable
@@ -1345,10 +1371,14 @@ type QueryClient interface {
 	// NFT queries an NFT based on its class and id.
 	NFT(ctx context.Context, in *QueryNFTRequest, opts ...grpc.CallOption) (*QueryNFTResponse, error)
 	// NFTByQueryString queries an NFT based on its class and id.
+	//
+	// Since: nft v0.1.1
 	NFTByQueryString(ctx context.Context, in *QueryNFTByQueryStringRequest, opts ...grpc.CallOption) (*QueryNFTByQueryStringResponse, error)
 	// Class queries an NFT class based on its id
 	Class(ctx context.Context, in *QueryClassRequest, opts ...grpc.CallOption) (*QueryClassResponse, error)
 	// Class queries an NFT class based on its id
+	//
+	// Since: nft v0.1.1
 	ClassByQueryString(ctx context.Context, in *QueryClassByQueryStringRequest, opts ...grpc.CallOption) (*QueryClassByQueryStringResponse, error)
 	// Classes queries all NFT classes
 	Classes(ctx context.Context, in *QueryClassesRequest, opts ...grpc.CallOption) (*QueryClassesResponse, error)
@@ -1475,14 +1505,20 @@ type QueryServer interface {
 	// Balance queries the number of NFTs of a given class owned by the owner, same as balanceOf in ERC721
 	Balance(context.Context, *QueryBalanceRequest) (*QueryBalanceResponse, error)
 	// BalancebyQueryString queries the number of NFTs of a given class owned by the owner, same as balanceOf in ERC721
+	//
+	// Since: nft v0.1.1
 	BalanceByQueryString(context.Context, *QueryBalanceByQueryStringRequest) (*QueryBalanceByQueryStringResponse, error)
 	// Owner queries the owner of the NFT based on its class and id, same as ownerOf in ERC721
 	Owner(context.Context, *QueryOwnerRequest) (*QueryOwnerResponse, error)
 	// OwnerByQueryString queries the owner of the NFT based on its class and id, same as ownerOf in ERC721
+	//
+	// Since: nft v0.1.1
 	OwnerByQueryString(context.Context, *QueryOwnerByQueryStringRequest) (*QueryOwnerByQueryStringResponse, error)
 	// Supply queries the number of NFTs from the given class, same as totalSupply of ERC721.
 	Supply(context.Context, *QuerySupplyRequest) (*QuerySupplyResponse, error)
 	// SupplyByQueryString queries the number of NFTs from the given class, same as totalSupply of ERC721.
+	//
+	// Since: nft v0.1.1
 	SupplyByQueryString(context.Context, *QuerySupplyByQueryStringRequest) (*QuerySupplyByQueryStringResponse, error)
 	// NFTs queries all NFTs of a given class or owner,choose at least one of the two, similar to tokenByIndex in
 	// ERC721Enumerable
@@ -1490,10 +1526,14 @@ type QueryServer interface {
 	// NFT queries an NFT based on its class and id.
 	NFT(context.Context, *QueryNFTRequest) (*QueryNFTResponse, error)
 	// NFTByQueryString queries an NFT based on its class and id.
+	//
+	// Since: nft v0.1.1
 	NFTByQueryString(context.Context, *QueryNFTByQueryStringRequest) (*QueryNFTByQueryStringResponse, error)
 	// Class queries an NFT class based on its id
 	Class(context.Context, *QueryClassRequest) (*QueryClassResponse, error)
 	// Class queries an NFT class based on its id
+	//
+	// Since: nft v0.1.1
 	ClassByQueryString(context.Context, *QueryClassByQueryStringRequest) (*QueryClassByQueryStringResponse, error)
 	// Classes queries all NFT classes
 	Classes(context.Context, *QueryClassesRequest) (*QueryClassesResponse, error)

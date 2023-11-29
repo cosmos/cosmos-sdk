@@ -877,8 +877,8 @@ func (app *BaseApp) runTx(mode execMode, txBytes []byte) (gInfo sdk.GasInfo, res
 
 	if app.anteHandler != nil {
 		var (
-			anteCtx sdk.Context
-			msCache storetypes.CacheMultiStore
+			anteCtx    sdk.Context
+			branchedRS store.BranchedRootStore
 		)
 
 		// Branch context before AnteHandler call in case it aborts.
@@ -886,9 +886,9 @@ func (app *BaseApp) runTx(mode execMode, txBytes []byte) (gInfo sdk.GasInfo, res
 		// Ref: https://github.com/cosmos/cosmos-sdk/issues/2772
 		//
 		// NOTE: Alternatively, we could require that AnteHandler ensures that
-		// writes do not happen if aborted/failed.  This may have some
-		// performance benefits, but it'll be more difficult to get right.
-		anteCtx, msCache = app.cacheTxContext(ctx, txBytes)
+		// writes do not happen if aborted/failed. This may have some performance
+		// benefits, but it'll be more difficult to get right.
+		anteCtx, branchedRS = app.branchTxContext(ctx, txBytes)
 		anteCtx = anteCtx.WithEventManager(sdk.NewEventManager())
 		newCtx, err := app.anteHandler(anteCtx, tx, mode == execModeSimulate)
 
@@ -911,7 +911,7 @@ func (app *BaseApp) runTx(mode execMode, txBytes []byte) (gInfo sdk.GasInfo, res
 			return gInfo, nil, nil, err
 		}
 
-		msCache.Write()
+		branchedRS.Write()
 		anteEvents = events.ToABCIEvents()
 	}
 
@@ -928,10 +928,9 @@ func (app *BaseApp) runTx(mode execMode, txBytes []byte) (gInfo sdk.GasInfo, res
 		}
 	}
 
-	// Create a new Context based off of the existing Context with a MultiStore branch
-	// in case message processing fails. At this point, the MultiStore
-	// is a branch of a branch.
-	runMsgCtx, msCache := app.cacheTxContext(ctx, txBytes)
+	// Create a new Context based off of the existing Context with a branched RootStore
+	// in case message processing fails.
+	runMsgCtx, branchedRS := app.branchTxContext(ctx, txBytes)
 
 	// Attempt to execute all messages and only update state if all messages pass
 	// and we're in DeliverTx. Note, runMsgs will never return a reference to a
@@ -962,7 +961,7 @@ func (app *BaseApp) runTx(mode execMode, txBytes []byte) (gInfo sdk.GasInfo, res
 			// When block gas exceeds, it'll panic and won't commit the cached store.
 			consumeBlockGas()
 
-			msCache.Write()
+			branchedRS.Write()
 		}
 
 		if len(anteEvents) > 0 && (mode == execModeFinalize || mode == execModeSimulate) {

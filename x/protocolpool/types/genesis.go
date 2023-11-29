@@ -69,12 +69,8 @@ func validateContinuousFund(cf ContinuousFund) error {
 	}
 
 	// Validate maxDistributedCapital
-	maxDistributedCapital := sdk.NewCoins(*cf.MaxDistributedCapital)
-	if maxDistributedCapital.IsZero() {
+	if cf.MaxDistributedCapital == 0 {
 		return fmt.Errorf("invalid MaxDistributedCapital: amount cannot be zero")
-	}
-	if err := maxDistributedCapital.Validate(); err != nil {
-		return errors.Wrap(sdkerrors.ErrInvalidCoins, maxDistributedCapital.String())
 	}
 
 	// Validate percentage

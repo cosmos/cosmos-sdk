@@ -338,12 +338,12 @@ func (suite *KeeperTestSuite) TestMsgClaimBudget() {
 }
 
 func (suite *KeeperTestSuite) TestCreateContinuousFund() {
-	maxDistributedCapital := sdk.NewInt64Coin("uatom", 100000)
+	maxDistributedCapital := uint64(100000)
 	percentage, err := math.LegacyNewDecFromStr("0.2")
 	suite.Require().NoError(err)
 	negativePercentage, err := math.LegacyNewDecFromStr("-0.2")
 	suite.Require().NoError(err)
-	invalidCap := sdk.NewInt64Coin("foo", 0)
+	invalidCap := uint64(0)
 	invalidExpirty := suite.ctx.BlockTime().Add(-15 * time.Second)
 	oneMonthInSeconds := int64(30 * 24 * 60 * 60) // Approximate number of seconds in 1 month
 	expiry := suite.ctx.BlockTime().Add(time.Duration(oneMonthInSeconds) * time.Second)
@@ -357,7 +357,7 @@ func (suite *KeeperTestSuite) TestCreateContinuousFund() {
 				Authority:             suite.poolKeeper.GetAuthority(),
 				Recipient:             "",
 				Percentage:            percentage,
-				MaxDistributedCapital: &maxDistributedCapital,
+				MaxDistributedCapital: maxDistributedCapital,
 				Expiry:                &expiry,
 			},
 			expErr:    true,
@@ -368,7 +368,7 @@ func (suite *KeeperTestSuite) TestCreateContinuousFund() {
 				Authority:             "",
 				Recipient:             recipientAddr.String(),
 				Percentage:            percentage,
-				MaxDistributedCapital: &maxDistributedCapital,
+				MaxDistributedCapital: maxDistributedCapital,
 				Expiry:                &expiry,
 			},
 			expErr:    true,
@@ -379,7 +379,7 @@ func (suite *KeeperTestSuite) TestCreateContinuousFund() {
 				Authority:             "invalid_authority",
 				Recipient:             recipientAddr.String(),
 				Percentage:            percentage,
-				MaxDistributedCapital: &maxDistributedCapital,
+				MaxDistributedCapital: maxDistributedCapital,
 				Expiry:                &expiry,
 			},
 			expErr:    true,
@@ -390,7 +390,7 @@ func (suite *KeeperTestSuite) TestCreateContinuousFund() {
 				Authority:             suite.poolKeeper.GetAuthority(),
 				Recipient:             recipientAddr.String(),
 				Percentage:            math.LegacyNewDec(0),
-				MaxDistributedCapital: &maxDistributedCapital,
+				MaxDistributedCapital: maxDistributedCapital,
 				Expiry:                &expiry,
 			},
 			expErr:    true,
@@ -401,7 +401,7 @@ func (suite *KeeperTestSuite) TestCreateContinuousFund() {
 				Authority:             suite.poolKeeper.GetAuthority(),
 				Recipient:             recipientAddr.String(),
 				Percentage:            negativePercentage,
-				MaxDistributedCapital: &maxDistributedCapital,
+				MaxDistributedCapital: maxDistributedCapital,
 				Expiry:                &expiry,
 			},
 			expErr:    true,
@@ -412,7 +412,7 @@ func (suite *KeeperTestSuite) TestCreateContinuousFund() {
 				Authority:             suite.poolKeeper.GetAuthority(),
 				Recipient:             recipientAddr.String(),
 				Percentage:            math.LegacyNewDec(1),
-				MaxDistributedCapital: &maxDistributedCapital,
+				MaxDistributedCapital: maxDistributedCapital,
 				Expiry:                &expiry,
 			},
 			expErr:    true,
@@ -423,7 +423,7 @@ func (suite *KeeperTestSuite) TestCreateContinuousFund() {
 				Authority:             suite.poolKeeper.GetAuthority(),
 				Recipient:             recipientAddr.String(),
 				Percentage:            percentage,
-				MaxDistributedCapital: &invalidCap,
+				MaxDistributedCapital: invalidCap,
 				Expiry:                &expiry,
 			},
 			expErr:    true,
@@ -434,7 +434,7 @@ func (suite *KeeperTestSuite) TestCreateContinuousFund() {
 				Authority:             suite.poolKeeper.GetAuthority(),
 				Recipient:             recipientAddr.String(),
 				Percentage:            percentage,
-				MaxDistributedCapital: &maxDistributedCapital,
+				MaxDistributedCapital: maxDistributedCapital,
 				Expiry:                &invalidExpirty,
 			},
 			expErr:    true,
@@ -445,7 +445,7 @@ func (suite *KeeperTestSuite) TestCreateContinuousFund() {
 				Authority:             suite.poolKeeper.GetAuthority(),
 				Recipient:             recipientAddr.String(),
 				Percentage:            percentage,
-				MaxDistributedCapital: &maxDistributedCapital,
+				MaxDistributedCapital: maxDistributedCapital,
 				Expiry:                &expiry,
 			},
 			expErr: false,
@@ -479,13 +479,13 @@ func (suite *KeeperTestSuite) TestCancelContinuousFund() {
 			preRun: func() {
 				percentage, err := math.LegacyNewDecFromStr("0.2")
 				suite.Require().NoError(err)
-				maxDistributedCapital := sdk.NewInt64Coin("uatom", 100000)
+				maxDistributedCapital := uint64(100000)
 				oneMonthInSeconds := int64(30 * 24 * 60 * 60) // Approximate number of seconds in 1 month
 				expiry := suite.ctx.BlockTime().Add(time.Duration(oneMonthInSeconds) * time.Second)
 				cf := types.ContinuousFund{
 					Recipient:             "",
 					Percentage:            percentage,
-					MaxDistributedCapital: &maxDistributedCapital,
+					MaxDistributedCapital: maxDistributedCapital,
 					Expiry:                &expiry,
 				}
 				err = suite.poolKeeper.ContinuousFund.Set(suite.ctx, recipientAddr, cf)
@@ -503,13 +503,13 @@ func (suite *KeeperTestSuite) TestCancelContinuousFund() {
 			preRun: func() {
 				percentage, err := math.LegacyNewDecFromStr("0.2")
 				suite.Require().NoError(err)
-				maxDistributedCapital := sdk.NewInt64Coin("uatom", 100000)
+				maxDistributedCapital := uint64(100000)
 				oneMonthInSeconds := int64(30 * 24 * 60 * 60) // Approximate number of seconds in 1 month
 				expiry := suite.ctx.BlockTime().Add(time.Duration(oneMonthInSeconds) * time.Second)
 				cf := types.ContinuousFund{
 					Recipient:             recipientAddr.String(),
 					Percentage:            percentage,
-					MaxDistributedCapital: &maxDistributedCapital,
+					MaxDistributedCapital: maxDistributedCapital,
 					Expiry:                &expiry,
 				}
 				err = suite.poolKeeper.ContinuousFund.Set(suite.ctx, recipientAddr, cf)

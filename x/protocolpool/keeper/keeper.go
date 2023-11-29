@@ -116,12 +116,14 @@ func (k Keeper) withdrawContinuousFund(ctx context.Context, recipient sdk.AccAdd
 		return sdk.Coin{}, err
 	}
 
-	recipientAmount := k.bankKeeper.GetAllBalances(ctx, recipient)
-	totalRecipientBal := recipientAmount.Add(fundsAllocated)
+	recipientBal := k.bankKeeper.GetAllBalances(ctx, recipient)
+	denom := recipientBal.Denoms()[0]
+	recipientAmount := recipientBal.AmountOf(denom).Uint64()
+	totalRecipientBal := recipientAmount + fundsAllocated
 	// check if the recipient account balance exceeds maxDistributedCapital after distribution
-	if totalRecipientBal.IsAllLT(sdk.NewCoins(*cf.MaxDistributedCapital)) {
+	if totalRecipientBal < cf.MaxDistributedCapital {
 		// Distribute funds to the recipient
-		err := k.DistributeFromFeePool(ctx, sdk.NewCoins(fundsAllocated), recipient)
+		err := k.DistributeFromFeePool(ctx, sdk.NewCoins(sdk.NewCoin(denom, math.NewIntFromUint64(fundsAllocated))), recipient)
 		if err != nil {
 			return sdk.Coin{}, err
 		}
@@ -154,12 +156,12 @@ func (k Keeper) iterateAndUpdateFundsDistribution(ctx context.Context) error {
 		distributionAmount := poolDecAmount.MulDec(*value.Percentage)
 		denom := distributionAmount.GetDenomByIndex(0)
 		distrAmount := distributionAmount.AmountOf(denom)
-		distrCoins := sdk.NewCoin(denom, distrAmount.TruncateInt())
+		distrCoins := distrAmount.TruncateInt().Uint64()
 		// Add all the coins to be distributed to toDistribute
-		k.toDistribute += distrCoins.Amount.Uint64()
+		k.toDistribute += distrCoins
 		// Set funds to be claimed
-		claimableFunds := value.ToClaim.Add(distrCoins)
-		err = k.RecipientFunds.Set(ctx, key, types.FundDistribution{ToClaim: &claimableFunds})
+		claimableFunds := value.ToClaim + distrCoins
+		err = k.RecipientFunds.Set(ctx, key, types.FundDistribution{ToClaim: claimableFunds})
 		if err != nil {
 			return false, err
 		}
@@ -168,18 +170,18 @@ func (k Keeper) iterateAndUpdateFundsDistribution(ctx context.Context) error {
 	return err
 }
 
-func (k Keeper) getDistributedFunds(ctx context.Context, recipient sdk.AccAddress) (amount sdk.Coin, err error) {
+func (k Keeper) getDistributedFunds(ctx context.Context, recipient sdk.AccAddress) (amount uint64, err error) {
 	fd, err := k.RecipientFunds.Get(ctx, recipient)
 	if err != nil {
 		if errors.Is(err, collections.ErrNotFound) {
-			return sdk.Coin{}, fmt.Errorf("no recipient fund found for recipient: %s", recipient.String())
+			return 0, fmt.Errorf("no recipient fund found for recipient: %s", recipient.String())
 		}
-		return sdk.Coin{}, err
+		return 0, err
 	}
 
-	k.toDistribute -= fd.ToClaim.Amount.Uint64()
-	amount = *fd.ToClaim
-	fd.ToClaim = &sdk.Coin{}
+	k.toDistribute -= fd.ToClaim
+	amount = fd.ToClaim
+	fd.ToClaim = 0
 	return amount, nil
 }
 
@@ -333,11 +335,8 @@ func (k Keeper) validateContinuousFund(ctx context.Context, msg types.MsgCreateC
 	}
 
 	// Validate maxDistributedCapital
-	if msg.MaxDistributedCapital.IsZero() {
+	if msg.MaxDistributedCapital == 0 {
 		return fmt.Errorf("invalid MaxDistributedCapital: amount cannot be zero")
-	}
-	if err := validateAmount(sdk.NewCoins(*msg.MaxDistributedCapital)); err != nil {
-		return err
 	}
 
 	// Validate expiry
@@ -348,51 +347,5 @@ func (k Keeper) validateContinuousFund(ctx context.Context, msg types.MsgCreateC
 		}
 	}
 
-	return nil
-}
-
-func (k Keeper) continuousDistribution(ctx context.Context, continuousFund types.ContinuousFund) error {
-	// Calculate the total pool amount
-	poolMAcc := k.authKeeper.GetModuleAccount(ctx, types.ModuleName)
-	totalPoolAmount := k.bankKeeper.GetAllBalances(ctx, poolMAcc.GetAddress())
-	poolDecAmount := sdk.NewDecCoinsFromCoins(totalPoolAmount...)
-
-	recipient, err := k.authKeeper.AddressCodec().StringToBytes(continuousFund.Recipient)
-	if err != nil {
-		return err
-	}
-
-	// Calculate the funds to be distributed based on the percentage
-	distributionAmount := poolDecAmount.MulDec(continuousFund.Percentage)
-
-	// Check for expiration
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	if continuousFund.Expiry != nil && sdkCtx.BlockTime().After(*continuousFund.Expiry) {
-		err := k.ContinuousFund.Remove(ctx, recipient)
-		if err != nil {
-			return err
-		}
-		return nil
-	}
-
-	for _, amount := range distributionAmount {
-		coinsToDistribute := sdk.NewCoin(amount.Denom, amount.Amount.TruncateInt())
-		recipientAmount := k.bankKeeper.GetAllBalances(ctx, recipient)
-		totalRecipientBal := recipientAmount.Add(coinsToDistribute)
-		// check if the recipient account balance exceeds maxDistributedCapital after distribution
-		if totalRecipientBal.IsAllLT(sdk.NewCoins(*continuousFund.MaxDistributedCapital)) {
-			// Distribute funds to the recipient
-			err := k.DistributeFromFeePool(ctx, sdk.NewCoins(coinsToDistribute), recipient)
-			if err != nil {
-				return err
-			}
-		} else {
-			// remove the entry of distribution ended recipient
-			if err := k.ContinuousFund.Remove(ctx, recipient); err != nil {
-				return err
-			}
-			return nil
-		}
-	}
 	return nil
 }

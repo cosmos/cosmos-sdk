@@ -19,10 +19,6 @@ type Config struct {
 	addressVerifier     func([]byte) error
 	mtx                 sync.RWMutex
 
-	// SLIP-44 related
-	purpose  uint32
-	coinType uint32
-
 	sealed   bool
 	sealedch chan struct{}
 }
@@ -47,8 +43,6 @@ func NewConfig() *Config {
 		},
 		fullFundraiserPath: FullFundraiserPath,
 
-		purpose:   Purpose,
-		coinType:  CoinType,
 		txEncoder: nil,
 	}
 }
@@ -182,13 +176,6 @@ func (config *Config) GetTxEncoder() TxEncoder {
 // GetAddressVerifier returns the function to verify that addresses have the correct format
 func (config *Config) GetAddressVerifier() func([]byte) error {
 	return config.addressVerifier
-}
-
-// GetFullFundraiserPath returns the BIP44Prefix.
-//
-// Deprecated: This method is supported for backward compatibility only and will be removed in a future release. Use GetFullBIP44Path instead.
-func (config *Config) GetFullFundraiserPath() string {
-	return config.fullFundraiserPath
 }
 
 func KeyringServiceName() string {

@@ -19,7 +19,8 @@ const (
 )
 
 var (
-	BudgetKey         = collections.NewPrefix(2)
-	ContinuousFundKey = collections.NewPrefix(3)
-	RecipientFundsKey = collections.NewPrefix(4)
+	BudgetKey                    = collections.NewPrefix(2)
+	ContinuousFundKey            = collections.NewPrefix(3)
+	RecipientFundPercentageKey   = collections.NewPrefix(4)
+	RecipientFundDistributionKey = collections.NewPrefix(5)
 )

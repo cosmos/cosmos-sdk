@@ -23,6 +23,8 @@ var (
 
 type Handler = func(ctx context.Context, request, response protoiface.MessageV1) error
 
+// MakeHybridHandler returns a handler that can handle both gogo and protov2 messages, no matter
+// if the handler is a gogo or protov2 handler.
 func MakeHybridHandler(cdc codec.BinaryCodec, sd *grpc.ServiceDesc, method grpc.MethodDesc, handler interface{}) (Handler, error) {
 	methodFullName := protoreflect.FullName(fmt.Sprintf("%s.%s", sd.ServiceName, method.MethodName))
 	desc, err := gogoproto.HybridResolver.FindDescriptorByName(methodFullName)
@@ -222,6 +224,7 @@ func RequestFullNameFromMethodDesc(sd *grpc.ServiceDesc, method grpc.MethodDesc)
 	return methodDesc.Input().FullName(), nil
 }
 
+// ResponseFullNameFromMethodDesc returns the fully-qualified name of the response message of the provided service's method.
 func ResponseFullNameFromMethodDesc(sd *grpc.ServiceDesc, method grpc.MethodDesc) (protoreflect.FullName, error) {
 	methodFullName := protoreflect.FullName(fmt.Sprintf("%s.%s", sd.ServiceName, method.MethodName))
 	desc, err := gogoproto.HybridResolver.FindDescriptorByName(methodFullName)

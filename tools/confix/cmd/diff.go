@@ -47,7 +47,7 @@ func DiffCommand() *cobra.Command {
 
 			targetVersionFile, err := confix.LoadLocalConfig(targetVersion, configType)
 			if err != nil {
-				panic(fmt.Errorf("failed to load internal config: %w", err))
+				return fmt.Errorf("failed to load internal config: %w", err)
 			}
 
 			rawFile, err := confix.LoadConfig(configPath)

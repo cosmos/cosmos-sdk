@@ -686,6 +686,93 @@ func (app *BaseApp) VerifyVoteExtension(req *abci.RequestVerifyVoteExtension) (r
 	return resp, err
 }
 
+// BeginBlock implements the ABCI application interface.
+// kept just for testing purposes on carbon side
+func (app *BaseApp) BeginBlock(req *abci.RequestFinalizeBlock) (res sdk.BeginBlock, err error) {
+	if err := app.checkHalt(req.Height, req.Time); err != nil {
+		return res, err
+	}
+
+	if app.cms.TracingEnabled() {
+		app.cms.SetTracingContext(storetypes.TraceContext(
+			map[string]interface{}{"blockHeight": req.Height},
+		))
+	}
+
+	if err := app.validateFinalizeBlockHeight(req); err != nil {
+		panic(err)
+	}
+
+	header := cmtproto.Header{
+		ChainID:            app.chainID,
+		Height:             req.Height,
+		Time:               req.Time,
+		ProposerAddress:    req.ProposerAddress,
+		NextValidatorsHash: req.NextValidatorsHash,
+		AppHash:            app.LastCommitID().Hash,
+	}
+
+	// Initialize the DeliverTx state. If this is the first block, it should
+	// already be initialized in InitChain. Otherwise app.deliverState will be
+	// nil, since it is reset on Commit.
+	if app.finalizeBlockState == nil {
+		app.setState(execModeFinalize, header)
+	}
+
+	// Context is now updated with Header information.
+	app.finalizeBlockState.ctx = app.finalizeBlockState.ctx.
+		WithBlockHeader(header).
+		WithHeaderHash(req.Hash).
+		WithHeaderInfo(coreheader.Info{
+			ChainID: app.chainID,
+			Height:  req.Height,
+			Time:    req.Time,
+			Hash:    req.Hash,
+			AppHash: app.LastCommitID().Hash,
+		}).
+		WithConsensusParams(app.GetConsensusParams(app.finalizeBlockState.ctx)).
+		WithVoteInfos(req.DecidedLastCommit.Votes).
+		WithExecMode(sdk.ExecModeFinalize).
+		WithCometInfo(cometInfo{
+			Misbehavior:     req.Misbehavior,
+			ValidatorsHash:  req.NextValidatorsHash,
+			ProposerAddress: req.ProposerAddress,
+			LastCommit:      req.DecidedLastCommit,
+		})
+
+	// GasMeter must be set after we get a context with updated consensus params.
+	gasMeter := app.getBlockGasMeter(app.finalizeBlockState.ctx)
+	app.finalizeBlockState.ctx = app.finalizeBlockState.ctx.WithBlockGasMeter(gasMeter)
+
+	if app.checkState != nil {
+		app.checkState.ctx = app.checkState.ctx.
+			WithBlockGasMeter(gasMeter).
+			WithHeaderHash(req.Hash)
+	}
+
+	res, err = app.beginBlock(req)
+	if err != nil {
+		return res, err
+	}
+
+	return res, err
+}
+
+// EndBlock implements the ABCI interface.
+// kept just for testing purposes on carbon side
+func (app *BaseApp) EndBlock(req *abci.RequestFinalizeBlock) (res sdk.EndBlock, err error) {
+	if app.finalizeBlockState.ms.TracingEnabled() {
+		app.finalizeBlockState.ms = app.finalizeBlockState.ms.SetTracingContext(nil).(storetypes.CacheMultiStore)
+	}
+
+	res, err = app.endBlock(app.finalizeBlockState.ctx)
+	if err != nil {
+		return res, err
+	}
+
+	return res, err
+}
+
 // internalFinalizeBlock executes the block, called by the Optimistic
 // Execution flow or by the FinalizeBlock ABCI method. The context received is
 // only used to handle early cancellation, for anything related to state app.finalizeBlockState.ctx

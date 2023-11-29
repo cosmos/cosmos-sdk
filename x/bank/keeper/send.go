@@ -26,7 +26,7 @@ type SendKeeper interface {
 	PrependSendRestriction(restriction types.SendRestrictionFn)
 	ClearSendRestriction()
 
-	InputOutputCoins(ctx context.Context, input types.Input, outputs []types.Output) error
+	InputOutputCoins(ctx context.Context, input []types.Input, outputs []types.Output) error
 	SendCoins(ctx context.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) error
 
 	GetParams(ctx context.Context) types.Params
@@ -156,50 +156,54 @@ func (k BaseSendKeeper) SetParams(ctx context.Context, params types.Params) erro
 // InputOutputCoins performs multi-send functionality. It accepts an
 // input that corresponds to a series of outputs. It returns an error if the
 // input and outputs don't line up or if any single transfer of tokens fails.
-func (k BaseSendKeeper) InputOutputCoins(ctx context.Context, input types.Input, outputs []types.Output) error {
+func (k BaseSendKeeper) InputOutputCoins(ctx context.Context, inputs []types.Input, outputs []types.Output) error {
 	// Safety check ensuring that when sending coins the keeper must maintain the
 	// Check supply invariant and validity of Coins.
-	if err := types.ValidateInputOutputs(input, outputs); err != nil {
+	if err := types.ValidateInputOutputs(inputs, outputs); err != nil {
 		return err
 	}
 
-	if err := k.BeforeMultiSend(ctx, input, outputs); err != nil {
-		return err
-	}
-
-	inAddress, err := k.ak.AddressCodec().StringToBytes(input.Address)
-	if err != nil {
-		return err
-	}
-	inAddress = k.ak.GetMergedAccountAddressIfExists(ctx, inAddress)
-	if err != nil {
-		return err
-	}
-	err = k.subUnlockedCoins(ctx, inAddress, input.Coins)
-	if err != nil {
+	if err := k.BeforeMultiSend(ctx, inputs, outputs); err != nil {
 		return err
 	}
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	sdkCtx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(types.AttributeKeySender, input.Address),
-		),
-	)
 
-	var outAddress sdk.AccAddress
+	for _, in := range inputs {
+		inAddress, err := k.ak.AddressCodec().StringToBytes(in.Address)
+		if err != nil {
+			return err
+		}
+
+		inAddress = k.ak.GetMergedAccountAddressIfExists(ctx, inAddress)
+		if err != nil {
+			return err
+		}
+
+		err = k.subUnlockedCoins(ctx, inAddress, in.Coins)
+		if err != nil {
+			return err
+		}
+
+		sdkCtx.EventManager().EmitEvent(
+			sdk.NewEvent(
+				sdk.EventTypeMessage,
+				sdk.NewAttribute(types.AttributeKeySender, string(inAddress)),
+			),
+		)
+	}
+
 	for _, out := range outputs {
-		outAddress, err = k.ak.AddressCodec().StringToBytes(out.Address)
+		outAddress, err := k.ak.AddressCodec().StringToBytes(out.Address)
 		if err != nil {
 			return err
 		}
 
 		outAddress = k.ak.GetMergedAccountAddressIfExists(ctx, outAddress)
-		outAddress, err = k.sendRestriction.apply(ctx, inAddress, outAddress, out.Coins)
-		if err != nil {
-			return err
-		}
+		// outAddress, err = k.sendRestriction.apply(ctx, inAddress, outAddress, out.Coins)
+		// if err != nil {
+		// 	return err
+		// }
 
 		if err := k.addCoins(ctx, outAddress, out.Coins); err != nil {
 			return err
@@ -208,7 +212,7 @@ func (k BaseSendKeeper) InputOutputCoins(ctx context.Context, input types.Input,
 		sdkCtx.EventManager().EmitEvent(
 			sdk.NewEvent(
 				types.EventTypeTransfer,
-				sdk.NewAttribute(types.AttributeKeyRecipient, outAddress.String()),
+				sdk.NewAttribute(types.AttributeKeyRecipient, string(outAddress)),
 				sdk.NewAttribute(sdk.AttributeKeyAmount, out.Coins.String()),
 			),
 		)
@@ -224,7 +228,7 @@ func (k BaseSendKeeper) InputOutputCoins(ctx context.Context, input types.Input,
 		}
 	}
 
-	if err := k.AfterMultiSend(ctx, input, outputs); err != nil {
+	if err := k.AfterMultiSend(ctx, inputs, outputs); err != nil {
 		return err
 	}
 

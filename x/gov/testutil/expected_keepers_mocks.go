@@ -144,9 +144,9 @@ func (m *MockBankKeeper) EXPECT() *MockBankKeeperMockRecorder {
 	return m.recorder
 }
 
-func (m *MockBankKeeper) AfterMultiSend(ctx context.Context, input types0.Input, outputs []types0.Output) error
+func (m *MockBankKeeper) AfterMultiSend(ctx context.Context, input []types0.Input, outputs []types0.Output) error
 func (m *MockBankKeeper) AfterSend(ctx context.Context, fromAddr types.AccAddress, toAddr types.AccAddress, amt types.Coins) error
-func (m *MockBankKeeper) BeforeMultiSend(ctx context.Context, input types0.Input, outputs []types0.Output) error
+func (m *MockBankKeeper) BeforeMultiSend(ctx context.Context, input []types0.Input, outputs []types0.Output) error
 func (m *MockBankKeeper) BeforeSend(ctx context.Context, fromAddr types.AccAddress, toAddr types.AccAddress, amt types.Coins) error
 func (m *MockBankKeeper) SetHooks(sh types0.SendHooks) *keeper.BaseSendKeeper
 
@@ -578,9 +578,9 @@ func (mr *MockBankKeeperMockRecorder) InitGenesis(arg0, arg1 interface{}) *gomoc
 }
 
 // InputOutputCoins mocks base method.
-func (m *MockBankKeeper) InputOutputCoins(ctx context.Context, input types0.Input, outputs []types0.Output) error {
+func (m *MockBankKeeper) InputOutputCoins(ctx context.Context, inputs []types0.Input, outputs []types0.Output) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "InputOutputCoins", ctx, input, outputs)
+	ret := m.ctrl.Call(m, "InputOutputCoins", ctx, inputs, outputs)
 	ret0, _ := ret[0].(error)
 	return ret0
 }

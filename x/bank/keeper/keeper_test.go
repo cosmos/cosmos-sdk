@@ -647,8 +647,8 @@ func (suite *KeeperTestSuite) TestInputOutputNewAccount() {
 	require.Empty(suite.bankKeeper.GetAllBalances(ctx, accAddrs[1]))
 
 	suite.mockInputOutputCoins([]sdk.AccountI{authtypes.NewBaseAccountWithAddress(accAddrs[0])}, []sdk.AccAddress{accAddrs[1]})
-	input := banktypes.Input{
-		Address: accAddrs[0].String(), Coins: sdk.NewCoins(newFooCoin(30), newBarCoin(10)),
+	input := []banktypes.Input{
+		{Address: accAddrs[0].String(), Coins: sdk.NewCoins(newFooCoin(30), newBarCoin(10))},
 	}
 	outputs := []banktypes.Output{
 		{Address: accAddrs[1].String(), Coins: sdk.NewCoins(newFooCoin(30), newBarCoin(10))},
@@ -667,8 +667,8 @@ func (suite *KeeperTestSuite) TestInputOutputCoins() {
 	balances := sdk.NewCoins(newFooCoin(90), newBarCoin(30))
 
 	acc0 := authtypes.NewBaseAccountWithAddress(accAddrs[0])
-	input := banktypes.Input{
-		Address: accAddrs[0].String(), Coins: sdk.NewCoins(newFooCoin(60), newBarCoin(20)),
+	input := []banktypes.Input{
+		{Address: accAddrs[0].String(), Coins: sdk.NewCoins(newFooCoin(60), newBarCoin(20))},
 	}
 	outputs := []banktypes.Output{
 		{Address: accAddrs[1].String(), Coins: sdk.NewCoins(newFooCoin(30), newBarCoin(10))},
@@ -683,9 +683,8 @@ func (suite *KeeperTestSuite) TestInputOutputCoins() {
 	suite.mockFundAccount(accAddrs[0])
 	require.NoError(banktestutil.FundAccount(ctx, &suite.bankKeeper, accAddrs[0], balances))
 
-	insufficientInput := banktypes.Input{
-		Address: accAddrs[0].String(),
-		Coins:   sdk.NewCoins(newFooCoin(300), newBarCoin(100)),
+	insufficientInput := []banktypes.Input{
+		{Address: accAddrs[0].String(), Coins: sdk.NewCoins(newFooCoin(300), newBarCoin(100))},
 	}
 	insufficientOutputs := []banktypes.Output{
 		{Address: accAddrs[1].String(), Coins: sdk.NewCoins(newFooCoin(300), newBarCoin(100))},
@@ -961,9 +960,8 @@ func (suite *KeeperTestSuite) TestInputOutputCoinsWithRestrictions() {
 			suite.bankKeeper.SetSendRestriction(tc.fn)
 			ctx := suite.ctx
 			suite.mockInputOutputCoins(inputAccs, tc.outputAddrs)
-			input := banktypes.Input{
-				Address: fromAddr.String(),
-				Coins:   tc.inputCoins,
+			input := []banktypes.Input{
+				{Address: fromAddr.String(), Coins: tc.inputCoins},
 			}
 
 			var err error
@@ -1397,9 +1395,8 @@ func (suite *KeeperTestSuite) TestMsgMultiSendEvents() {
 	coins := sdk.NewCoins(sdk.NewInt64Coin(fooDenom, 50), sdk.NewInt64Coin(barDenom, 100))
 	newCoins := sdk.NewCoins(sdk.NewInt64Coin(fooDenom, 50))
 	newCoins2 := sdk.NewCoins(sdk.NewInt64Coin(barDenom, 100))
-	input := banktypes.Input{
-		Address: accAddrs[0].String(),
-		Coins:   coins,
+	input := []banktypes.Input{
+		{Address: accAddrs[0].String(), Coins: coins},
 	}
 	outputs := []banktypes.Output{
 		{Address: accAddrs[2].String(), Coins: newCoins},

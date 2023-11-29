@@ -31,9 +31,9 @@ func (keeper BaseSendKeeper) BeforeSend(ctx context.Context, fromAddr sdk.AccAdd
 
 }
 
-func (keeper BaseSendKeeper) BeforeMultiSend(ctx context.Context, input types.Input, outputs []types.Output) error {
+func (keeper BaseSendKeeper) BeforeMultiSend(ctx context.Context, inputs []types.Input, outputs []types.Output) error {
 	if keeper.hooks != nil {
-		err := keeper.hooks.BeforeMultiSend(ctx, input, outputs)
+		err := keeper.hooks.BeforeMultiSend(ctx, inputs, outputs)
 		if err != nil {
 			return err
 		}
@@ -41,9 +41,9 @@ func (keeper BaseSendKeeper) BeforeMultiSend(ctx context.Context, input types.In
 	return nil
 }
 
-func (keeper BaseSendKeeper) AfterMultiSend(ctx context.Context, input types.Input, outputs []types.Output) error {
+func (keeper BaseSendKeeper) AfterMultiSend(ctx context.Context, inputs []types.Input, outputs []types.Output) error {
 	if keeper.hooks != nil {
-		err := keeper.hooks.AfterMultiSend(ctx, input, outputs)
+		err := keeper.hooks.AfterMultiSend(ctx, inputs, outputs)
 		if err != nil {
 			return err
 		}

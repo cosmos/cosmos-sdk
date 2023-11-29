@@ -9,13 +9,16 @@ import (
 
 // ValidateInputOutputs validates that each respective input and output is
 // valid and that the sum of inputs is equal to the sum of outputs.
-func ValidateInputOutputs(input Input, outputs []Output) error {
+func ValidateInputOutputs(inputs []Input, outputs []Output) error {
 	var totalIn, totalOut sdk.Coins
 
-	if err := input.ValidateBasic(); err != nil {
-		return err
+	for _, in := range inputs {
+		if err := in.ValidateBasic(); err != nil {
+			return err
+		}
+
+		totalIn = totalIn.Add(in.Coins...)
 	}
-	totalIn = input.Coins
 
 	for _, out := range outputs {
 		if err := out.ValidateBasic(); err != nil {

@@ -197,8 +197,8 @@ func NewBaseApp(
 	name string,
 	logger log.Logger,
 	db dbm.DB,
-	txDecoder sdk.TxDecoder,
 	rs store.RootStore,
+	txDecoder sdk.TxDecoder,
 	options ...func(*BaseApp),
 ) *BaseApp {
 	app := &BaseApp{

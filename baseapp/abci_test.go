@@ -583,10 +583,10 @@ func TestABCI_CheckTx(t *testing.T) {
 	// current counter. This ensures changes to the KVStore persist across
 	// successive CheckTx runs.
 	counterKey := []byte("counter-key")
-	anteOpt := func(bapp *baseapp.BaseApp) { bapp.SetAnteHandler(anteHandlerTxTest(t, capKey1, counterKey)) }
+	anteOpt := func(bapp *baseapp.BaseApp) { bapp.SetAnteHandler(anteHandlerTxTest(t, storeKey1, counterKey)) }
 	suite := NewBaseAppSuite(t, anteOpt)
 
-	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), CounterServerImpl{t, capKey1, counterKey})
+	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), CounterServerImpl{t, storeKey1, counterKey})
 
 	nTxs := int64(5)
 	_, err := suite.baseApp.InitChain(&abci.RequestInitChain{
@@ -605,7 +605,7 @@ func TestABCI_CheckTx(t *testing.T) {
 		require.Empty(t, r.GetEvents())
 	}
 
-	checkStateStore := getCheckStateCtx(suite.baseApp).KVStore(capKey1)
+	checkStateStore := getCheckStateCtx(suite.baseApp).KVStore(storeKey1)
 	storedCounter := getIntFromStore(t, checkStateStore, counterKey)
 
 	// ensure AnteHandler ran
@@ -624,14 +624,14 @@ func TestABCI_CheckTx(t *testing.T) {
 	_, err = suite.baseApp.Commit()
 	require.NoError(t, err)
 
-	checkStateStore = getCheckStateCtx(suite.baseApp).KVStore(capKey1)
+	checkStateStore = getCheckStateCtx(suite.baseApp).KVStore(storeKey1)
 	storedBytes := checkStateStore.Get(counterKey)
 	require.Nil(t, storedBytes)
 }
 
 func TestABCI_FinalizeBlock_DeliverTx(t *testing.T) {
 	anteKey := []byte("ante-key")
-	anteOpt := func(bapp *baseapp.BaseApp) { bapp.SetAnteHandler(anteHandlerTxTest(t, capKey1, anteKey)) }
+	anteOpt := func(bapp *baseapp.BaseApp) { bapp.SetAnteHandler(anteHandlerTxTest(t, storeKey1, anteKey)) }
 	suite := NewBaseAppSuite(t, anteOpt)
 
 	_, err := suite.baseApp.InitChain(&abci.RequestInitChain{
@@ -640,7 +640,7 @@ func TestABCI_FinalizeBlock_DeliverTx(t *testing.T) {
 	require.NoError(t, err)
 
 	deliverKey := []byte("deliver-key")
-	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), CounterServerImpl{t, capKey1, deliverKey})
+	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), CounterServerImpl{t, storeKey1, deliverKey})
 
 	nBlocks := 3
 	txPerHeight := 5
@@ -682,7 +682,7 @@ func TestABCI_FinalizeBlock_DeliverTx(t *testing.T) {
 
 func TestABCI_FinalizeBlock_MultiMsg(t *testing.T) {
 	anteKey := []byte("ante-key")
-	anteOpt := func(bapp *baseapp.BaseApp) { bapp.SetAnteHandler(anteHandlerTxTest(t, capKey1, anteKey)) }
+	anteOpt := func(bapp *baseapp.BaseApp) { bapp.SetAnteHandler(anteHandlerTxTest(t, storeKey1, anteKey)) }
 	suite := NewBaseAppSuite(t, anteOpt)
 
 	_, err := suite.baseApp.InitChain(&abci.RequestInitChain{
@@ -691,10 +691,10 @@ func TestABCI_FinalizeBlock_MultiMsg(t *testing.T) {
 	require.NoError(t, err)
 
 	deliverKey := []byte("deliver-key")
-	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), CounterServerImpl{t, capKey1, deliverKey})
+	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), CounterServerImpl{t, storeKey1, deliverKey})
 
 	deliverKey2 := []byte("deliver-key2")
-	baseapptestutil.RegisterCounter2Server(suite.baseApp.MsgServiceRouter(), Counter2ServerImpl{t, capKey1, deliverKey2})
+	baseapptestutil.RegisterCounter2Server(suite.baseApp.MsgServiceRouter(), Counter2ServerImpl{t, storeKey1, deliverKey2})
 
 	// run a multi-msg tx
 	// with all msgs the same route
@@ -708,7 +708,7 @@ func TestABCI_FinalizeBlock_MultiMsg(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	store := getFinalizeBlockStateCtx(suite.baseApp).KVStore(capKey1)
+	store := getFinalizeBlockStateCtx(suite.baseApp).KVStore(storeKey1)
 
 	// tx counter only incremented once
 	txCounter := getIntFromStore(t, store, anteKey)
@@ -742,7 +742,7 @@ func TestABCI_FinalizeBlock_MultiMsg(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	store = getFinalizeBlockStateCtx(suite.baseApp).KVStore(capKey1)
+	store = getFinalizeBlockStateCtx(suite.baseApp).KVStore(storeKey1)
 
 	// tx counter only incremented once
 	txCounter = getIntFromStore(t, store, anteKey)
@@ -1198,7 +1198,7 @@ func TestABCI_Query(t *testing.T) {
 	key, value := []byte("hello"), []byte("goodbye")
 	anteOpt := func(bapp *baseapp.BaseApp) {
 		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
-			store := ctx.KVStore(capKey1)
+			store := ctx.KVStore(storeKey1)
 			store.Set(key, value)
 			return
 		})
@@ -1418,7 +1418,7 @@ func TestABCI_Proposal_HappyPath(t *testing.T) {
 	anteKey := []byte("ante-key")
 	pool := mempool.NewSenderNonceMempool()
 	anteOpt := func(bapp *baseapp.BaseApp) {
-		bapp.SetAnteHandler(anteHandlerTxTest(t, capKey1, anteKey))
+		bapp.SetAnteHandler(anteHandlerTxTest(t, storeKey1, anteKey))
 	}
 
 	suite := NewBaseAppSuite(t, anteOpt, baseapp.SetMempool(pool))
@@ -1488,14 +1488,14 @@ func TestABCI_Proposal_Read_State_PrepareProposal(t *testing.T) {
 
 	setInitChainerOpt := func(bapp *baseapp.BaseApp) {
 		bapp.SetInitChainer(func(ctx sdk.Context, req *abci.RequestInitChain) (*abci.ResponseInitChain, error) {
-			ctx.KVStore(capKey1).Set(someKey, []byte(fooStr))
+			ctx.KVStore(storeKey1).Set(someKey, []byte(fooStr))
 			return &abci.ResponseInitChain{}, nil
 		})
 	}
 
 	prepareOpt := func(bapp *baseapp.BaseApp) {
 		bapp.SetPrepareProposal(func(ctx sdk.Context, req *abci.RequestPrepareProposal) (*abci.ResponsePrepareProposal, error) {
-			value := ctx.KVStore(capKey1).Get(someKey)
+			value := ctx.KVStore(storeKey1).Get(someKey)
 			// We should be able to access any state written in InitChain
 			require.Equal(t, fooStr, string(value))
 			return &abci.ResponsePrepareProposal{Txs: req.Txs}, nil
@@ -1596,7 +1596,7 @@ func TestABCI_PrepareProposal_ReachedMaxBytes(t *testing.T) {
 	anteKey := []byte("ante-key")
 	pool := mempool.NewSenderNonceMempool()
 	anteOpt := func(bapp *baseapp.BaseApp) {
-		bapp.SetAnteHandler(anteHandlerTxTest(t, capKey1, anteKey))
+		bapp.SetAnteHandler(anteHandlerTxTest(t, storeKey1, anteKey))
 	}
 
 	suite := NewBaseAppSuite(t, anteOpt, baseapp.SetMempool(pool))
@@ -1626,7 +1626,7 @@ func TestABCI_PrepareProposal_BadEncoding(t *testing.T) {
 	anteKey := []byte("ante-key")
 	pool := mempool.NewSenderNonceMempool()
 	anteOpt := func(bapp *baseapp.BaseApp) {
-		bapp.SetAnteHandler(anteHandlerTxTest(t, capKey1, anteKey))
+		bapp.SetAnteHandler(anteHandlerTxTest(t, storeKey1, anteKey))
 	}
 
 	suite := NewBaseAppSuite(t, anteOpt, baseapp.SetMempool(pool))
@@ -1733,7 +1733,7 @@ func TestABCI_PrepareProposal_Failures(t *testing.T) {
 	anteKey := []byte("ante-key")
 	pool := mempool.NewSenderNonceMempool()
 	anteOpt := func(bapp *baseapp.BaseApp) {
-		bapp.SetAnteHandler(anteHandlerTxTest(t, capKey1, anteKey))
+		bapp.SetAnteHandler(anteHandlerTxTest(t, storeKey1, anteKey))
 	}
 
 	suite := NewBaseAppSuite(t, anteOpt, baseapp.SetMempool(pool))
@@ -1951,8 +1951,8 @@ func TestABCI_Proposal_Reset_State_Between_Calls(t *testing.T) {
 	prepareOpt := func(bapp *baseapp.BaseApp) {
 		bapp.SetPrepareProposal(func(ctx sdk.Context, req *abci.RequestPrepareProposal) (*abci.ResponsePrepareProposal, error) {
 			// This key should not exist given that we reset the state on every call.
-			require.False(t, ctx.KVStore(capKey1).Has(someKey))
-			ctx.KVStore(capKey1).Set(someKey, someKey)
+			require.False(t, ctx.KVStore(storeKey1).Has(someKey))
+			ctx.KVStore(storeKey1).Set(someKey, someKey)
 			return &abci.ResponsePrepareProposal{Txs: req.Txs}, nil
 		})
 	}
@@ -1960,8 +1960,8 @@ func TestABCI_Proposal_Reset_State_Between_Calls(t *testing.T) {
 	processOpt := func(bapp *baseapp.BaseApp) {
 		bapp.SetProcessProposal(func(ctx sdk.Context, req *abci.RequestProcessProposal) (*abci.ResponseProcessProposal, error) {
 			// This key should not exist given that we reset the state on every call.
-			require.False(t, ctx.KVStore(capKey1).Has(someKey))
-			ctx.KVStore(capKey1).Set(someKey, someKey)
+			require.False(t, ctx.KVStore(storeKey1).Has(someKey))
+			ctx.KVStore(storeKey1).Set(someKey, someKey)
 			return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_ACCEPT}, nil
 		})
 	}
@@ -2160,7 +2160,7 @@ func TestBaseApp_VoteExtensions(t *testing.T) {
 				avgPrice := pricesSum / count
 				buf := make([]byte, 8)
 				binary.BigEndian.PutUint64(buf, avgPrice)
-				ctx.KVStore(capKey1).Set([]byte("avgPrice"), buf)
+				ctx.KVStore(storeKey1).Set([]byte("avgPrice"), buf)
 			}
 
 			return &sdk.ResponsePreBlock{
@@ -2248,7 +2248,7 @@ func TestBaseApp_VoteExtensions(t *testing.T) {
 
 	// The average price will be nil during the first block, given that we don't have
 	// any vote extensions on block 1 in PrepareProposal
-	avgPrice := getFinalizeBlockStateCtx(suite.baseApp).KVStore(capKey1).Get([]byte("avgPrice"))
+	avgPrice := getFinalizeBlockStateCtx(suite.baseApp).KVStore(storeKey1).Get([]byte("avgPrice"))
 	require.Nil(t, avgPrice)
 	_, err = suite.baseApp.Commit()
 	require.NoError(t, err)
@@ -2289,7 +2289,7 @@ func TestBaseApp_VoteExtensions(t *testing.T) {
 	require.NoError(t, err)
 
 	// Check if the average price was available in FinalizeBlock's context
-	avgPrice = getFinalizeBlockStateCtx(suite.baseApp).KVStore(capKey1).Get([]byte("avgPrice"))
+	avgPrice = getFinalizeBlockStateCtx(suite.baseApp).KVStore(storeKey1).Get([]byte("avgPrice"))
 	require.NotNil(t, avgPrice)
 	require.GreaterOrEqual(t, binary.BigEndian.Uint64(avgPrice), uint64(10000000))
 	require.Less(t, binary.BigEndian.Uint64(avgPrice), uint64(11000000))
@@ -2298,7 +2298,7 @@ func TestBaseApp_VoteExtensions(t *testing.T) {
 	require.NoError(t, err)
 
 	// check if avgPrice was committed
-	committedAvgPrice := suite.baseApp.NewContext(true).KVStore(capKey1).Get([]byte("avgPrice"))
+	committedAvgPrice := suite.baseApp.NewContext(true).KVStore(storeKey1).Get([]byte("avgPrice"))
 	require.Equal(t, avgPrice, committedAvgPrice)
 }
 

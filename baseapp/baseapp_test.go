@@ -20,6 +20,10 @@ import (
 	"cosmossdk.io/store/snapshots"
 	snapshottypes "cosmossdk.io/store/snapshots/types"
 	storetypes "cosmossdk.io/store/types"
+	"cosmossdk.io/store/v2/commitment"
+	"cosmossdk.io/store/v2/commitment/iavl"
+	"cosmossdk.io/store/v2/root"
+	"cosmossdk.io/store/v2/storage/sqlite"
 	authtx "cosmossdk.io/x/auth/tx"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -34,8 +38,8 @@ import (
 )
 
 var (
-	capKey1 = storetypes.NewKVStoreKey("key1")
-	capKey2 = storetypes.NewKVStoreKey("key2")
+	storeKey1 = "key1"
+	storeKey2 = "key2"
 
 	// testTxPriority is the CheckTx priority that we set in the test
 	// AnteHandler.
@@ -65,13 +69,28 @@ func NewBaseAppSuite(t *testing.T, opts ...func(*baseapp.BaseApp)) *BaseAppSuite
 
 	txConfig := authtx.NewTxConfig(cdc, authtx.DefaultSignModes)
 	db := dbm.NewMemDB()
+	logger := log.NewTestLogger(t)
 
-	app := baseapp.NewBaseApp(t.Name(), log.NewTestLogger(t), db, txConfig.TxDecoder(), opts...)
+	ss, err := sqlite.New(t.TempDir())
+	require.NoError(t, err)
+
+	sc, err := commitment.NewCommitStore(
+		map[string]commitment.Tree{
+			storeKey1: iavl.NewIavlTree(db, logger, iavl.DefaultConfig()),
+			storeKey2: iavl.NewIavlTree(db, logger, iavl.DefaultConfig()),
+		},
+		logger,
+	)
+	require.NoError(t, err)
+
+	rs, err := root.New(logger, 1, ss, sc, nil)
+	require.NoError(t, err)
+
+	app := baseapp.NewBaseApp(t.Name(), logger, db, rs, txConfig.TxDecoder(), opts...)
 	require.Equal(t, t.Name(), app.Name())
 
 	app.SetInterfaceRegistry(cdc.InterfaceRegistry())
 	app.MsgServiceRouter().SetInterfaceRegistry(cdc.InterfaceRegistry())
-	app.MountStores(capKey1, capKey2)
 	app.SetParamStore(paramStore{db: dbm.NewMemDB()})
 	app.SetTxDecoder(txConfig.TxDecoder())
 	app.SetTxEncoder(txConfig.TxEncoder())
@@ -521,12 +540,12 @@ func TestCustomRunTxPanicHandler(t *testing.T) {
 func TestBaseAppAnteHandler(t *testing.T) {
 	anteKey := []byte("ante-key")
 	anteOpt := func(bapp *baseapp.BaseApp) {
-		bapp.SetAnteHandler(anteHandlerTxTest(t, capKey1, anteKey))
+		bapp.SetAnteHandler(anteHandlerTxTest(t, storeKey1, anteKey))
 	}
 	suite := NewBaseAppSuite(t, anteOpt)
 
 	deliverKey := []byte("deliver-key")
-	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), CounterServerImpl{t, capKey1, deliverKey})
+	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), CounterServerImpl{t, storeKey1, deliverKey})
 
 	_, err := suite.baseApp.InitChain(&abci.RequestInitChain{
 		ConsensusParams: &cmtproto.ConsensusParams{},
@@ -549,7 +568,7 @@ func TestBaseAppAnteHandler(t *testing.T) {
 	require.False(t, res.TxResults[0].IsOK(), fmt.Sprintf("%v", res))
 
 	ctx := getFinalizeBlockStateCtx(suite.baseApp)
-	store := ctx.KVStore(capKey1)
+	store := ctx.KVStore(storeKey1)
 	require.Equal(t, int64(0), getIntFromStore(t, store, anteKey))
 
 	// execute at tx that will pass the ante handler (the checkTx state should
@@ -566,7 +585,7 @@ func TestBaseAppAnteHandler(t *testing.T) {
 	require.False(t, res.TxResults[0].IsOK(), fmt.Sprintf("%v", res))
 
 	ctx = getFinalizeBlockStateCtx(suite.baseApp)
-	store = ctx.KVStore(capKey1)
+	store = ctx.KVStore(storeKey1)
 	require.Equal(t, int64(1), getIntFromStore(t, store, anteKey))
 	require.Equal(t, int64(0), getIntFromStore(t, store, deliverKey))
 
@@ -583,7 +602,7 @@ func TestBaseAppAnteHandler(t *testing.T) {
 	require.True(t, res.TxResults[0].IsOK(), fmt.Sprintf("%v", res))
 
 	ctx = getFinalizeBlockStateCtx(suite.baseApp)
-	store = ctx.KVStore(capKey1)
+	store = ctx.KVStore(storeKey1)
 	require.Equal(t, int64(2), getIntFromStore(t, store, anteKey))
 	require.Equal(t, int64(1), getIntFromStore(t, store, deliverKey))
 

@@ -110,7 +110,7 @@ type MsgKeyValueImpl struct{}
 
 func (m MsgKeyValueImpl) Set(ctx context.Context, msg *baseapptestutil.MsgKeyValue) (*baseapptestutil.MsgCreateKeyValueResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	sdkCtx.KVStore(capKey2).Set(msg.Key, msg.Value)
+	sdkCtx.KVStore(storeKey2).Set(msg.Key, msg.Value)
 	return &baseapptestutil.MsgCreateKeyValueResponse{}, nil
 }
 

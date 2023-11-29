@@ -37,11 +37,11 @@ func (m *MockABCIListener) ListenCommit(_ context.Context, _ abci.ResponseCommit
 	return nil
 }
 
-var distKey1 = storetypes.NewKVStoreKey("distKey1")
+var distKey1 = "distKey1"
 
 func TestABCI_MultiListener_StateChanges(t *testing.T) {
 	anteKey := []byte("ante-key")
-	anteOpt := func(bapp *baseapp.BaseApp) { bapp.SetAnteHandler(anteHandlerTxTest(t, capKey1, anteKey)) }
+	anteOpt := func(bapp *baseapp.BaseApp) { bapp.SetAnteHandler(anteHandlerTxTest(t, storeKey1, anteKey)) }
 	distOpt := func(bapp *baseapp.BaseApp) { bapp.MountStores(distKey1) }
 	mockListener1 := NewMockABCIListener("lis_1")
 	mockListener2 := NewMockABCIListener("lis_2")
@@ -57,7 +57,7 @@ func TestABCI_MultiListener_StateChanges(t *testing.T) {
 	)
 	require.NoError(t, err)
 	deliverKey := []byte("deliver-key")
-	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), CounterServerImpl{t, capKey1, deliverKey})
+	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), CounterServerImpl{t, storeKey1, deliverKey})
 
 	nBlocks := 3
 	txPerHeight := 5
@@ -84,7 +84,7 @@ func TestABCI_MultiListener_StateChanges(t *testing.T) {
 			store.Set(sKey, sVal)
 
 			expectedChangeSet = append(expectedChangeSet, &storetypes.StoreKVPair{
-				StoreKey: distKey1.Name(),
+				StoreKey: distKey1,
 				Delete:   false,
 				Key:      sKey,
 				Value:    sVal,

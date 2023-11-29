@@ -13,7 +13,6 @@ import (
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
-	store "cosmossdk.io/store/types"
 	authkeeper "cosmossdk.io/x/auth/keeper"
 	xauthsigning "cosmossdk.io/x/auth/signing"
 	bankkeeper "cosmossdk.io/x/bank/keeper"
@@ -41,12 +40,12 @@ var blockMaxGas = uint64(simtestutil.DefaultConsensusParams.Block.MaxGas)
 type BlockGasImpl struct {
 	panicTx      bool
 	gasToConsume uint64
-	key          store.StoreKey
+	storeKey     string
 }
 
 func (m BlockGasImpl) Set(ctx context.Context, msg *baseapptestutil.MsgKeyValue) (*baseapptestutil.MsgCreateKeyValueResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	sdkCtx.KVStore(m.key).Set(msg.Key, msg.Value)
+	sdkCtx.KVStore(m.storeKey).Set(msg.Key, msg.Value)
 	sdkCtx.GasMeter().ConsumeGas(m.gasToConsume, "TestMsg")
 	if m.panicTx {
 		panic("panic in tx execution")
@@ -108,7 +107,7 @@ func TestBaseApp_BlockGas(t *testing.T) {
 			baseapptestutil.RegisterKeyValueServer(bapp.MsgServiceRouter(), BlockGasImpl{
 				panicTx:      tc.panicTx,
 				gasToConsume: tc.gasToConsume,
-				key:          bapp.UnsafeFindStoreKey(banktypes.ModuleName),
+				storeKey:     banktypes.ModuleName,
 			})
 
 			genState := GenesisStateWithSingleValidator(t, cdc, appBuilder)
@@ -160,7 +159,7 @@ func TestBaseApp_BlockGas(t *testing.T) {
 
 			// check result
 			ctx = bapp.GetContextForFinalizeBlock(txBytes)
-			okValue := ctx.KVStore(bapp.UnsafeFindStoreKey(banktypes.ModuleName)).Get([]byte("ok"))
+			okValue := ctx.KVStore(banktypes.ModuleName).Get([]byte("ok"))
 
 			if tc.expErr {
 				if tc.panicTx {

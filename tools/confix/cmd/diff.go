@@ -14,25 +14,32 @@ import (
 
 // DiffCommand creates a new command for comparing configuration files
 func DiffCommand() *cobra.Command {
-	return &cobra.Command{
-		Use:   "diff [target-version] <config-path> [config-type]",
+	cmd := &cobra.Command{
+		Use:   "diff [target-version] <config-path>",
 		Short: "Outputs all config values that are different from the default.",
 		Long:  "This command compares the specified configuration file (app.toml or client.toml) with the defaults and outputs any differences.",
-		Args:  cobra.MinimumNArgs(2),
+		Args:  cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			targetVersion := args[0]
-			configPath := args[1]
-			configType := confix.AppConfigType // Default to app configuration
+			var configPath string
 			clientCtx := client.GetClientContextFromCmd(cmd)
-
-			if len(args) > 2 {
-				configType = strings.ToLower(args[2])
+			switch {
+			case len(args) > 1:
+				configPath = args[1]
+			case clientCtx.HomeDir != "":
+				configPath = fmt.Sprintf("%s/config/app.toml", clientCtx.HomeDir)
+			default:
+				return errors.New("must provide a path to the app.toml file")
 			}
 
-			if configType != confix.AppConfigType && configType != confix.ClientConfigType {
-				return errors.New("config type must be 'app' or 'client'")
+			configType := confix.AppConfigType
+			if ok, _ := cmd.Flags().GetBool(confix.ClientConfigType); ok {
+				configPath = strings.ReplaceAll(configPath, "app.toml", "client.toml") // fir the case we are using the home dir of client ctx
+				configType = confix.ClientConfigType
+			} else if strings.HasSuffix(configPath, "client.toml") {
+				return errors.New("app.toml file expected, got client.toml, use --client flag to diff client.toml")
 			}
 
+			targetVersion := args[0]
 			if _, ok := confix.Migrations[targetVersion]; !ok {
 				return fmt.Errorf("unknown version %q, supported versions are: %q", targetVersion, maps.Keys(confix.Migrations))
 			}
@@ -60,4 +67,8 @@ func DiffCommand() *cobra.Command {
 			return nil
 		},
 	}
+
+	cmd.Flags().Bool(confix.ClientConfigType, false, "diff client.toml instead of app.toml")
+
+	return cmd
 }

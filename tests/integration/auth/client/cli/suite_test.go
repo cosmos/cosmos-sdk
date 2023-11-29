@@ -156,16 +156,73 @@ func (s *CLITestSuite) TestCLISignBatch() {
 	s.clientCtx.HomeDir = strings.Replace(s.clientCtx.HomeDir, "simd", "simcli", 1)
 
 	// sign-batch file - offline is set but account-number and sequence are not
-	_, err = authtestutil.TxSignBatchExec(s.clientCtx, s.val, outputFile.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, s.clientCtx.ChainID), "--offline")
+	_, err = authtestutil.TxSignBatchExec(s.clientCtx, s.val, []string{outputFile.Name()}, fmt.Sprintf("--%s=%s", flags.FlagChainID, s.clientCtx.ChainID), "--offline")
 	s.Require().EqualError(err, "required flag(s) \"account-number\", \"sequence\" not set")
 
 	// sign-batch file - offline and sequence is set but account-number is not set
-	_, err = authtestutil.TxSignBatchExec(s.clientCtx, s.val, outputFile.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, s.clientCtx.ChainID), fmt.Sprintf("--%s=%s", flags.FlagSequence, "1"), "--offline")
+	_, err = authtestutil.TxSignBatchExec(s.clientCtx, s.val, []string{outputFile.Name()}, fmt.Sprintf("--%s=%s", flags.FlagChainID, s.clientCtx.ChainID), fmt.Sprintf("--%s=%s", flags.FlagSequence, "1"), "--offline")
 	s.Require().EqualError(err, "required flag(s) \"account-number\" not set")
 
 	// sign-batch file - offline and account-number is set but sequence is not set
-	_, err = authtestutil.TxSignBatchExec(s.clientCtx, s.val, outputFile.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, s.clientCtx.ChainID), fmt.Sprintf("--%s=%s", flags.FlagAccountNumber, "1"), "--offline")
+	_, err = authtestutil.TxSignBatchExec(s.clientCtx, s.val, []string{outputFile.Name()}, fmt.Sprintf("--%s=%s", flags.FlagChainID, s.clientCtx.ChainID), fmt.Sprintf("--%s=%s", flags.FlagAccountNumber, "1"), "--offline")
 	s.Require().EqualError(err, "required flag(s) \"sequence\" not set")
+}
+
+func (s *CLITestSuite) TestCLISignBatchTotalFees() {
+	txCfg := s.clientCtx.TxConfig
+	s.clientCtx.HomeDir = strings.Replace(s.clientCtx.HomeDir, "simd", "simcli", 1)
+
+	testCases := []struct {
+		name            string
+		args            []string
+		numTransactions int
+		denom           string
+	}{
+		{
+			"Offline batch-sign one transaction",
+			[]string{"--offline", "--account-number", "1", "--sequence", "1", "--append"},
+			1,
+			"stake",
+		},
+		{
+			"Offline batch-sign two transactions",
+			[]string{"--offline", "--account-number", "1", "--sequence", "1", "--append"},
+			2,
+			"stake",
+		},
+	}
+
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			// Create multiple transactions and write them to separate files
+			sendTokens := sdk.NewCoin(tc.denom, sdk.TokensFromConsensusPower(10, sdk.DefaultPowerReduction))
+			expectedBatchedTotalFee := int64(0)
+			txFiles := make([]string, tc.numTransactions)
+			for i := 0; i < tc.numTransactions; i++ {
+				tx, err := s.createBankMsg(s.clientCtx, s.val,
+					sdk.NewCoins(sendTokens), clitestutil.TestTxConfig{GenOnly: true})
+				s.Require().NoError(err)
+				txFile := testutil.WriteToNewTempFile(s.T(), tx.String()+"\n")
+				defer txFile.Close()
+				txFiles[i] = txFile.Name()
+
+				unsignedTx, err := txCfg.TxJSONDecoder()(tx.Bytes())
+				s.Require().NoError(err)
+				txBuilder, err := txCfg.WrapTxBuilder(unsignedTx)
+				expectedBatchedTotalFee += txBuilder.GetTx().GetFee().AmountOf(tc.denom).Int64()
+			}
+
+			// Test batch sign
+			signedTx, err := authtestutil.TxSignBatchExec(s.clientCtx, s.val, txFiles, tc.args...)
+			s.Require().NoError(err)
+			signedFinalTx, err := txCfg.TxJSONDecoder()(signedTx.Bytes())
+			s.Require().NoError(err)
+			txBuilder, err := txCfg.WrapTxBuilder(signedFinalTx)
+			s.Require().NoError(err)
+			finalTotalFee := txBuilder.GetTx().GetFee()
+			s.Require().Equal(expectedBatchedTotalFee, finalTotalFee.AmountOf(tc.denom).Int64())
+		})
+	}
 }
 
 func (s *CLITestSuite) TestCLIQueryTxCmdByHash() {
@@ -757,7 +814,7 @@ func (s *CLITestSuite) TestSignBatchMultisig() {
 	addr1, err := account1.GetAddress()
 	s.Require().NoError(err)
 	// sign-batch file
-	res, err := authtestutil.TxSignBatchExec(s.clientCtx, addr1, filename.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, s.clientCtx.ChainID), "--multisig", addr.String(), "--signature-only")
+	res, err := authtestutil.TxSignBatchExec(s.clientCtx, addr1, []string{filename.Name()}, fmt.Sprintf("--%s=%s", flags.FlagChainID, s.clientCtx.ChainID), "--multisig", addr.String(), "--signature-only")
 	s.Require().NoError(err)
 	s.Require().Equal(1, len(strings.Split(strings.Trim(res.String(), "\n"), "\n")))
 	// write sigs to file
@@ -767,7 +824,7 @@ func (s *CLITestSuite) TestSignBatchMultisig() {
 	addr2, err := account2.GetAddress()
 	s.Require().NoError(err)
 	// sign-batch file with account2
-	res, err = authtestutil.TxSignBatchExec(s.clientCtx, addr2, filename.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, s.clientCtx.ChainID), "--multisig", addr.String(), "--signature-only")
+	res, err = authtestutil.TxSignBatchExec(s.clientCtx, addr2, []string{filename.Name()}, fmt.Sprintf("--%s=%s", flags.FlagChainID, s.clientCtx.ChainID), "--multisig", addr.String(), "--signature-only")
 	s.Require().NoError(err)
 	s.Require().Equal(1, len(strings.Split(strings.Trim(res.String(), "\n"), "\n")))
 	// write sigs to file2

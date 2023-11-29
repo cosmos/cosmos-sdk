@@ -262,6 +262,51 @@ func zeroPBWasmMsgSendRound(b *testing.B, m WasmModule, check bool) {
 	outPtr, _ := m.ExecMsgSend(inPtr, int32(len(testMsgSendZeroPbBz)))
 	out, outLen := m.ReadZeroPBOutPtr(outPtr)
 	if check {
+		require.Equal(b, "cosmos1huydeevpz37sd9snkgul6070mstupukw00xkw9 sent to cosmos1xy4yqngt0nlkdcenxymg8tenrghmek4nmqm28k:  1234567 uatom  7654321 foo", string(out[4:]))
+		require.Equal(b, []byte{0x77, 0, 0xd, 0}, out[:4])
+		require.Equal(b, int32(132), outLen)
+	}
+	m.Free(inPtr, 0x10000)
+	m.Free(outPtr, 0x10000)
+}
+
+func BenchmarkZeroPBWasmMsgSendMarshal(b *testing.B) {
+	m := LoadWasmModule(b, "../../rust/target/wasm32-unknown-unknown/release/example_module.wasm")
+	zeroPBWasmMsgSendMarshalRound(b, m, true)
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		zeroPBWasmMsgSendMarshalRound(b, m, false)
+	}
+
+	checkWasmAllocations(b, m)
+}
+
+func zeroPBWasmMsgSendMarshalRound(b *testing.B, m WasmModule, check bool) {
+	msg := &test1.MsgSend{
+		FromAddress: "cosmos1huydeevpz37sd9snkgul6070mstupukw00xkw9",
+		ToAddress:   "cosmos1xy4yqngt0nlkdcenxymg8tenrghmek4nmqm28k",
+		Amount: []*test1.Coin{
+			{Amount: "1234567", Denom: "uatom"},
+			{Amount: "7654321", Denom: "foo"},
+		},
+	}
+	const size = 0x10000
+	inPtr, err := m.Alloc(size)
+	if check {
+		require.NoError(b, err)
+	}
+	inMem := m.memory.UnsafeData(m.store)
+	inMem = inMem[inPtr : inPtr+size]
+	n, err := msg.MarshalZeroPB(inMem)
+	if check {
+		require.NoError(b, err)
+	}
+	// write extent pointer
+	binary.LittleEndian.PutUint16(inMem[0x10000-2:0x10000], uint16(n))
+	outPtr, _ := m.ExecMsgSend(inPtr, int32(n))
+	out, outLen := m.ReadZeroPBOutPtr(outPtr)
+	if check {
 		checkMsgSendZeroPbRes(b, out)
 		require.Equal(b, int32(132), outLen)
 	}
@@ -292,6 +337,38 @@ func zeroPBFFIMsgSendRound(b testing.TB, m FFIModule, check bool) {
 	}
 }
 
+func BenchmarkZeroPBFFIMsgSendMarshal(b *testing.B) {
+	m := LoadFFIModule(b, "../../rust/target/release/libexample_module.dylib")
+	zeroPbMsgSendBz = unsafe.Slice((*byte)(zeroPbBuf), 0x10000)
+	zeroPBFFIMsgSendRoundMarshal(b, m, true)
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		zeroPBFFIMsgSendRoundMarshal(b, m, false)
+	}
+}
+
+func zeroPBFFIMsgSendRoundMarshal(b testing.TB, m FFIModule, check bool) {
+	msg := &test1.MsgSend{
+		FromAddress: "cosmos1huydeevpz37sd9snkgul6070mstupukw00xkw9",
+		ToAddress:   "cosmos1xy4yqngt0nlkdcenxymg8tenrghmek4nmqm28k",
+		Amount: []*test1.Coin{
+			{Amount: "1234567", Denom: "uatom"},
+			{Amount: "7654321", Denom: "foo"},
+		},
+	}
+	n, err := msg.MarshalZeroPB(zeroPbMsgSendBz)
+	if check {
+		require.NoError(b, err)
+	}
+	// write extent pointer
+	binary.LittleEndian.PutUint16(zeroPbMsgSendBz[0x10000-2:0x10000], uint16(n))
+	out := m.ExecMsgSend(zeroPbMsgSendBz)
+	if check {
+		checkMsgSendZeroPbRes(b, out)
+	}
+}
+
 func checkMsgSendRes(b testing.TB, msg string) {
 	require.Equal(b, "cosmos1huydeevpz37sd9snkgul6070mstupukw00xkw9 sent to cosmos1xy4yqngt0nlkdcenxymg8tenrghmek4nmqm28k:  1234567 uatom  7654321 foo", msg)
 }
@@ -299,6 +376,56 @@ func checkMsgSendRes(b testing.TB, msg string) {
 func checkMsgSendZeroPbRes(b testing.TB, out []byte) {
 	checkMsgSendRes(b, string(out[4:]))
 	require.Equal(b, []byte{0x77, 0, 0xd, 0}, out[:4])
+}
+
+func BenchmarkZeroPBMsgSendMarshal(b *testing.B) {
+	buf := make([]byte, 64*1024)
+	for i := 0; i < b.N; i++ {
+		s := &test1.MsgSend{
+			FromAddress: "cosmos1huydeevpz37sd9snkgul6070mstupukw00xkw9",
+			ToAddress:   "cosmos1xy4yqngt0nlkdcenxymg8tenrghmek4nmqm28k",
+			Amount: []*test1.Coin{
+				{Amount: "1234567", Denom: "uatom"},
+				{Amount: "7654321", Denom: "foo"},
+			},
+		}
+		_, err := s.MarshalZeroPB(buf)
+		require.NoError(b, err)
+	}
+}
+
+func BenchmarkZeroPBMsgSendUnmarshal(b *testing.B) {
+	buf := make([]byte, 64*1024)
+	n, err := (&test1.MsgSend{
+		FromAddress: "cosmos1huydeevpz37sd9snkgul6070mstupukw00xkw9",
+		ToAddress:   "cosmos1xy4yqngt0nlkdcenxymg8tenrghmek4nmqm28k",
+		Amount: []*test1.Coin{
+			{Amount: "1234567", Denom: "uatom"},
+			{Amount: "7654321", Denom: "foo"},
+		},
+	}).MarshalZeroPB(buf)
+	require.NoError(b, err)
+	buf = buf[:n]
+	for i := 0; i < b.N; i++ {
+		var m test1.MsgSend
+		err := m.UnmarshalZeroPB(buf)
+		require.NoError(b, err)
+	}
+}
+
+func TestZeroPBMarshalMatch(t *testing.T) {
+	s := &test1.MsgSend{
+		FromAddress: "cosmos1huydeevpz37sd9snkgul6070mstupukw00xkw9",
+		ToAddress:   "cosmos1xy4yqngt0nlkdcenxymg8tenrghmek4nmqm28k",
+		Amount: []*test1.Coin{
+			{Amount: "1234567", Denom: "uatom"},
+			{Amount: "7654321", Denom: "foo"},
+		},
+	}
+	buf := make([]byte, 64*1024)
+	n, err := s.MarshalZeroPB(buf)
+	require.NoError(t, err)
+	require.Equal(t, testMsgSendZeroPbBz, buf[:n])
 }
 
 var testMsgSendZeroPbBz = []byte{

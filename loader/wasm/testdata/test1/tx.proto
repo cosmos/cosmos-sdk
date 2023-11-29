@@ -1,10 +1,10 @@
 syntax = "proto3";
-package cosmos.bank.v1beta1;
+// package cosmos.bank.v1beta1;
 
 option go_package = "github.com/cosmos/cosmos-sdk/loader/wasm/testdata/test1";
 
-import "cosmos/base/v1beta1/coin.proto";
-
+// import "cosmos/base/v1beta1/coin.proto";
+import "test1/coin.proto";
 
 // Msg defines the bank Msg service.
 service Msg {
@@ -16,7 +16,7 @@ service Msg {
 message MsgSend {
   string   from_address                    = 1;
   string   to_address                      = 2;
-  repeated cosmos.base.v1beta1.Coin amount = 3;
+  repeated Coin amount = 3;
 }
 
 // MsgSendResponse defines the Msg/Send response type.

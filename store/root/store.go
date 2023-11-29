@@ -200,7 +200,7 @@ func (s *Store) Query(storeKey string, version uint64, key []byte, prove bool) (
 			return store.QueryResult{}, err
 		}
 
-		result.Proof = proof
+		result.Proof = store.NewIAVLCommitmentOp(key, proof)
 	}
 
 	return result, nil

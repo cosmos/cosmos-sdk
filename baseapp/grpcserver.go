@@ -34,16 +34,13 @@ func (app *BaseApp) RegisterGRPCServer(server gogogrpc.Server) {
 		}
 
 		// Get height header from the request context, if present.
-		var height int64
+		var height uint64
 		if heightHeaders := md.Get(grpctypes.GRPCBlockHeightHeader); len(heightHeaders) == 1 {
-			height, err = strconv.ParseInt(heightHeaders[0], 10, 64)
+			height, err = strconv.ParseUint(heightHeaders[0], 10, 64)
 			if err != nil {
 				return nil, errorsmod.Wrapf(
 					sdkerrors.ErrInvalidRequest,
 					"Baseapp.RegisterGRPCServer: invalid height header %q: %v", grpctypes.GRPCBlockHeightHeader, err)
-			}
-			if err := checkNegativeHeight(height); err != nil {
-				return nil, err
 			}
 		}
 
@@ -54,15 +51,15 @@ func (app *BaseApp) RegisterGRPCServer(server gogogrpc.Server) {
 			return nil, err
 		}
 
-		// Add relevant gRPC headers
 		if height == 0 {
-			height = sdkCtx.BlockHeight() // If height was not set in the request, set it to the latest
+			// if height was not set in the request, set it to the latest
+			height = uint64(sdkCtx.BlockHeight())
 		}
 
 		// Attach the sdk.Context into the gRPC's context.Context.
 		grpcCtx = context.WithValue(grpcCtx, sdk.SdkContextKey, sdkCtx)
 
-		md = metadata.Pairs(grpctypes.GRPCBlockHeightHeader, strconv.FormatInt(height, 10))
+		md = metadata.Pairs(grpctypes.GRPCBlockHeightHeader, strconv.FormatUint(height, 10))
 		if err = grpc.SetHeader(grpcCtx, md); err != nil {
 			app.logger.Error("failed to set gRPC header", "err", err)
 		}

@@ -93,8 +93,7 @@ func SimulateMsgSend(
 
 		msg := types.NewMsgSend(fromstr, tostr, coins)
 
-		err = sendMsgSend(r, app, txGen, bk, ak, msg, ctx, chainID, []cryptotypes.PrivKey{from.PrivKey})
-		if err != nil {
+		if err := sendMsgSend(r, app, txGen, bk, ak, msg, ctx, chainID, []cryptotypes.PrivKey{from.PrivKey}); err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), "invalid transfers"), nil, err
 		}
 
@@ -126,15 +125,15 @@ func SimulateMsgSendToModuleAccount(
 		}
 		// Check send_enabled status of each coin denom
 		if err := bk.IsSendEnabledCoins(ctx, coins...); err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, msgType, err.Error()), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, msgType, err.Error()), nil, nil
 		}
 		fromstr, err := ak.AddressCodec().BytesToString(from.Address)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, msgType, err.Error()), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, msgType, err.Error()), nil, nil
 		}
 		tostr, err := ak.AddressCodec().BytesToString(to.Address)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, msgType, err.Error()), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, msgType, err.Error()), nil, nil
 		}
 		msg := types.NewMsgSend(fromstr, tostr, coins)
 
@@ -157,7 +156,7 @@ func sendMsgSend(
 		err  error
 	)
 
-	from, err := sdk.AccAddressFromBech32(msg.FromAddress)
+	from, err := ak.AddressCodec().StringToBytes(msg.FromAddress)
 	if err != nil {
 		return err
 	}

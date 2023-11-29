@@ -27,10 +27,14 @@ type Keeper struct {
 
 	authority string
 
+	// Global variables
+	toDistribute uint64
+
 	// State
 	Schema         collections.Schema
 	BudgetProposal collections.Map[sdk.AccAddress, types.Budget]
 	ContinuousFund collections.Map[sdk.AccAddress, types.ContinuousFund]
+	RecipientFunds collections.Map[sdk.AccAddress, types.FundDistribution]
 }
 
 func NewKeeper(cdc codec.BinaryCodec, storeService storetypes.KVStoreService,
@@ -50,6 +54,7 @@ func NewKeeper(cdc codec.BinaryCodec, storeService storetypes.KVStoreService,
 		authority:      authority,
 		BudgetProposal: collections.NewMap(sb, types.BudgetKey, "budget", sdk.AccAddressKey, codec.CollValue[types.Budget](cdc)),
 		ContinuousFund: collections.NewMap(sb, types.ContinuousFundKey, "continuous_fund", sdk.AccAddressKey, codec.CollValue[types.ContinuousFund](cdc)),
+		RecipientFunds: collections.NewMap(sb, types.RecipientFundsKey, "recipient_funds", sdk.AccAddressKey, codec.CollValue[types.FundDistribution](cdc)),
 	}
 
 	schema, err := sb.Build()
@@ -90,6 +95,88 @@ func (k Keeper) GetCommunityPool(ctx context.Context) (sdk.Coins, error) {
 		return nil, errorsmod.Wrapf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", moduleAccount)
 	}
 	return k.bankKeeper.GetAllBalances(ctx, moduleAccount.GetAddress()), nil
+}
+
+func (k Keeper) withdrawContinuousFund(ctx context.Context, recipient sdk.AccAddress) (amount sdk.Coin, err error) {
+	err = k.iterateAndUpdateFundsDistribution(ctx)
+	if err != nil {
+		return sdk.Coin{}, fmt.Errorf("error while iterating all the continuous funds: %w", err)
+	}
+	// get allocated continuous fund
+	fundsAllocated, err := k.getDistributedFunds(ctx, recipient)
+	if err != nil {
+		return sdk.Coin{}, fmt.Errorf("error while getting distributed funds: %w", err)
+	}
+
+	cf, err := k.ContinuousFund.Get(ctx, recipient)
+	if err != nil {
+		if errors.Is(err, collections.ErrNotFound) {
+			return sdk.Coin{}, fmt.Errorf("no continuous fund found for recipient: %s", recipient.String())
+		}
+		return sdk.Coin{}, err
+	}
+
+	recipientAmount := k.bankKeeper.GetAllBalances(ctx, recipient)
+	totalRecipientBal := recipientAmount.Add(fundsAllocated)
+	// check if the recipient account balance exceeds maxDistributedCapital after distribution
+	if totalRecipientBal.IsAllLT(sdk.NewCoins(*cf.MaxDistributedCapital)) {
+		// Distribute funds to the recipient
+		err := k.DistributeFromFeePool(ctx, sdk.NewCoins(fundsAllocated), recipient)
+		if err != nil {
+			return sdk.Coin{}, err
+		}
+	}
+
+	return amount, nil
+}
+
+func (k Keeper) iterateAndUpdateFundsDistribution(ctx context.Context) error {
+	var totalPercentageToBeDistributed *math.LegacyDec
+	err := k.RecipientFunds.Walk(ctx, nil, func(key sdk.AccAddress, value types.FundDistribution) (stop bool, err error) {
+		totalPercentage := totalPercentageToBeDistributed.Add(*value.Percentage)
+		totalPercentageToBeDistributed = &totalPercentage
+		return false, nil
+	})
+	if err != nil {
+		return err
+	}
+	if totalPercentageToBeDistributed.GT(math.LegacyOneDec()) {
+		return fmt.Errorf("total funds percentage is greater than one")
+	}
+
+	// Calculate the total pool amount
+	poolMAcc := k.authKeeper.GetModuleAccount(ctx, types.ModuleName)
+	totalPoolAmount := k.bankKeeper.GetAllBalances(ctx, poolMAcc.GetAddress())
+	poolDecAmount := sdk.NewDecCoinsFromCoins(totalPoolAmount...)
+
+	err = k.RecipientFunds.Walk(ctx, nil, func(key sdk.AccAddress, value types.FundDistribution) (stop bool, err error) {
+		// Calculate the funds to be distributed based on the percentage
+		distributionAmount := poolDecAmount.MulDec(*value.Percentage)
+		denom := distributionAmount.GetDenomByIndex(0)
+		distrAmount := distributionAmount.AmountOf(denom)
+		distrCoins := sdk.NewCoin(denom, distrAmount.TruncateInt())
+		// Add all the coins to be distributed to toDistribute
+		k.toDistribute += distrCoins.Amount.Uint64()
+		// Set funds to be claimed
+		k.RecipientFunds.Set(ctx, key, types.FundDistribution{ToClaim: &distrCoins})
+		return false, nil
+	})
+	return err
+}
+
+func (k Keeper) getDistributedFunds(ctx context.Context, recipient sdk.AccAddress) (amount sdk.Coin, err error) {
+	fd, err := k.RecipientFunds.Get(ctx, recipient)
+	if err != nil {
+		if errors.Is(err, collections.ErrNotFound) {
+			return sdk.Coin{}, fmt.Errorf("no recipient fund found for recipient: %s", recipient.String())
+		}
+		return sdk.Coin{}, err
+	}
+
+	k.toDistribute = k.toDistribute - fd.ToClaim.Amount.Uint64()
+	amount = *fd.ToClaim
+	fd.ToClaim = &sdk.Coin{}
+	return amount, nil
 }
 
 func (k Keeper) claimFunds(ctx context.Context, recipient sdk.AccAddress) (amount sdk.Coin, err error) {

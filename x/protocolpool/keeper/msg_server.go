@@ -136,11 +136,27 @@ func (k MsgServer) CreateContinuousFund(ctx context.Context, msg *types.MsgCreat
 		return nil, err
 	}
 
+	// Set recipient fund percentage
+	err = k.RecipientFunds.Set(ctx, recipient, types.FundDistribution{Percentage: &cf.Percentage})
+	if err != nil {
+		return nil, err
+	}
+
 	return &types.MsgCreateContinuousFundResponse{}, nil
 }
 
 func (k MsgServer) WithdrawContinuousFund(ctx context.Context, msg *types.MsgWithdrawContinuousFund) (*types.MsgWithdrawContinuousFundResponse, error) {
-	return &types.MsgWithdrawContinuousFundResponse{}, nil
+	recipient, err := k.Keeper.authKeeper.AddressCodec().StringToBytes(msg.RecipientAddress)
+	if err != nil {
+		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid recipient address: %s", err)
+	}
+
+	amount, err := k.withdrawContinuousFund(ctx, recipient)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.MsgWithdrawContinuousFundResponse{Amount: amount}, nil
 }
 
 func (k MsgServer) CancelContinuousFund(ctx context.Context, msg *types.MsgCancelContinuousFund) (*types.MsgCancelContinuousFundResponse, error) {

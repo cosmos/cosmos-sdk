@@ -3,6 +3,7 @@ package store
 import (
 	"io"
 
+	"cosmossdk.io/store/v2/metrics"
 	ics23 "github.com/cosmos/ics23/go"
 )
 
@@ -82,6 +83,9 @@ type RootStore interface {
 
 	// LastCommitID returns a CommitID pertaining to the last commitment.
 	LastCommitID() (CommitID, error)
+
+	// SetMetrics sets the telemetry handler on the RootStore.
+	SetMetrics(m metrics.Metrics)
 
 	io.Closer
 }

@@ -105,6 +105,10 @@ func (s *Store) Close() (err error) {
 	return err
 }
 
+func (s *Store) SetMetrics(m metrics.Metrics) {
+	s.telemetry = m
+}
+
 // SetPruningOptions sets the pruning options on the SS and SC backends.
 // NOTE: It will also start the pruning manager.
 func (s *Store) SetPruningOptions(ssOpts, scOpts pruning.Options) {

@@ -13,6 +13,7 @@ import (
 	"cosmossdk.io/store/snapshots"
 	snapshottypes "cosmossdk.io/store/snapshots/types"
 	storetypes "cosmossdk.io/store/types"
+	"cosmossdk.io/store/v2"
 	storemetrics "cosmossdk.io/store/v2/metrics"
 
 	"github.com/cosmos/cosmos-sdk/baseapp/oe"
@@ -76,21 +77,21 @@ func SetIndexEvents(ie []string) func(*BaseApp) {
 	return func(app *BaseApp) { app.setIndexEvents(ie) }
 }
 
-// SetIAVLCacheSize provides a BaseApp option function that sets the size of IAVL cache.
-func SetIAVLCacheSize(size int) func(*BaseApp) {
-	return func(bapp *BaseApp) { bapp.cms.SetIAVLCacheSize(size) }
-}
+// // SetIAVLCacheSize provides a BaseApp option function that sets the size of IAVL cache.
+// func SetIAVLCacheSize(size int) func(*BaseApp) {
+// 	return func(bapp *BaseApp) { bapp.cms.SetIAVLCacheSize(size) }
+// }
 
-// SetIAVLDisableFastNode enables(false)/disables(true) fast node usage from the IAVL store.
-func SetIAVLDisableFastNode(disable bool) func(*BaseApp) {
-	return func(bapp *BaseApp) { bapp.cms.SetIAVLDisableFastNode(disable) }
-}
+// // SetIAVLDisableFastNode enables(false)/disables(true) fast node usage from the IAVL store.
+// func SetIAVLDisableFastNode(disable bool) func(*BaseApp) {
+// 	return func(bapp *BaseApp) { bapp.cms.SetIAVLDisableFastNode(disable) }
+// }
 
-// SetInterBlockCache provides a BaseApp option function that sets the
-// inter-block cache.
-func SetInterBlockCache(cache storetypes.MultiStorePersistentCache) func(*BaseApp) {
-	return func(app *BaseApp) { app.setInterBlockCache(cache) }
-}
+// // SetInterBlockCache provides a BaseApp option function that sets the
+// // inter-block cache.
+// func SetInterBlockCache(cache storetypes.MultiStorePersistentCache) func(*BaseApp) {
+// 	return func(app *BaseApp) { app.setInterBlockCache(cache) }
+// }
 
 // SetSnapshot sets the snapshot store.
 func SetSnapshot(snapshotStore *snapshots.Store, opts snapshottypes.SnapshotOptions) func(*BaseApp) {
@@ -168,12 +169,12 @@ func (app *BaseApp) SetDB(db dbm.DB) {
 	app.db = db
 }
 
-func (app *BaseApp) SetCMS(cms storetypes.CommitMultiStore) {
+func (app *BaseApp) SetRootStore(rs store.RootStore) {
 	if app.sealed {
-		panic("SetEndBlocker() on sealed BaseApp")
+		panic("SetRootStore() on sealed BaseApp")
 	}
 
-	app.cms = cms
+	app.rs = rs
 }
 
 func (app *BaseApp) SetInitChainer(initChainer sdk.InitChainer) {
@@ -276,7 +277,7 @@ func (app *BaseApp) SetNotSigverifyTx() {
 // SetCommitMultiStoreTracer sets the store tracer on the BaseApp's underlying
 // CommitMultiStore.
 func (app *BaseApp) SetCommitMultiStoreTracer(w io.Writer) {
-	app.cms.SetTracer(w)
+	app.rs.SetTracer(w)
 }
 
 // SetStoreLoader allows us to customize the rootMultiStore initialization.
@@ -297,8 +298,13 @@ func (app *BaseApp) SetSnapshot(snapshotStore *snapshots.Store, opts snapshottyp
 		app.snapshotManager = nil
 		return
 	}
-	app.cms.SetSnapshotInterval(opts.Interval)
-	app.snapshotManager = snapshots.NewManager(snapshotStore, opts, app.cms, nil, app.logger)
+
+	// TODO(bez): Handle state sync logic.
+	//
+	// Ref: https://github.com/cosmos/cosmos-sdk/issues/18466
+	// app.cms.SetSnapshotInterval(opts.Interval)
+
+	// app.snapshotManager = snapshots.NewManager(snapshotStore, opts, app.cms, nil, app.logger)
 }
 
 // SetInterfaceRegistry sets the InterfaceRegistry.
@@ -322,8 +328,8 @@ func (app *BaseApp) SetTxEncoder(txEncoder sdk.TxEncoder) {
 // SetQueryMultiStore set a alternative MultiStore implementation to support grpc query service.
 //
 // Ref: https://github.com/cosmos/cosmos-sdk/issues/13317
-func (app *BaseApp) SetQueryMultiStore(ms storetypes.MultiStore) {
-	app.qms = ms
+func (app *BaseApp) SetRootStoreQuerier(qs store.RootStore) {
+	app.qs = qs
 }
 
 // SetMempool sets the mempool for the BaseApp and is required for the app to start up.
@@ -373,7 +379,7 @@ func (app *BaseApp) SetStoreMetrics(gatherer storemetrics.Metrics) {
 		panic("SetStoreMetrics() on sealed BaseApp")
 	}
 
-	app.cms.SetMetrics(gatherer)
+	app.rs.SetMetrics(gatherer)
 }
 
 // SetStreamingManager sets the streaming manager for the BaseApp.

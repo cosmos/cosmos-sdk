@@ -97,6 +97,7 @@ type BaseApp struct {
 	// manages snapshots, i.e. dumps of app state at certain intervals
 	//
 	// TODO(bez): Replace with store v2 SM
+	//
 	// Ref: https://github.com/cosmos/cosmos-sdk/issues/18466
 	snapshotManager *snapshots.Manager
 

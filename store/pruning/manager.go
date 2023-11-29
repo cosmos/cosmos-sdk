@@ -40,11 +40,17 @@ func NewManager(
 
 // SetStorageOptions sets the state storage options.
 func (m *Manager) SetStorageOptions(opts Options) {
+	m.mtx.Lock()
+	defer m.mtx.Unlock()
+
 	m.storageOpts = opts
 }
 
 // SetCommitmentOptions sets the state commitment options.
 func (m *Manager) SetCommitmentOptions(opts Options) {
+	m.mtx.Lock()
+	defer m.mtx.Unlock()
+
 	m.commitmentOpts = opts
 }
 

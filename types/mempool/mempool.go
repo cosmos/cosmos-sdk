@@ -13,7 +13,7 @@ type Mempool interface {
 	Insert(context.Context, sdk.Tx) error
 
 	// Select returns an Iterator over the app-side mempool. If txs are specified,
-	// then they shall be incorporated into the Iterator. The Iterator must
+	// then they shall be incorporated into the Iterator. The Iterator must be
 	// closed by the caller.
 	Select(context.Context, [][]byte) Iterator
 

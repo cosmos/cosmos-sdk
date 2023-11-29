@@ -417,8 +417,8 @@ schema = 3
     version = "v1.10.0"
     hash = "sha256-2Rxy7ee8eQu/43uHqKoTScHA2yT4v/LyO/EzywKzv/w="
   [mod."github.com/spf13/cast"]
-    version = "v1.5.1"
-    hash = "sha256-/tQNGGQv+Osp+2jepQaQe6GlncZbqdxzSR82FieiUBU="
+    version = "v1.6.0"
+    hash = "sha256-hxioqRZfXE0AE5099wmn3YG0AZF8Wda2EB4c7zHF6zI="
   [mod."github.com/spf13/cobra"]
     version = "v1.8.0"
     hash = "sha256-oAE+fEaRfZPE541IPWE0GMeBBYgH2DMhtZNxzp7DFlY="

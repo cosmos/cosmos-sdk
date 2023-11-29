@@ -69,7 +69,7 @@ type Request = Context
 
 // Read-only accessors
 func (c Context) Context() context.Context      { return c.baseCtx }
-func (c Context) MultiStore() store.RootStore   { return c.rs }
+func (c Context) RootStore() store.RootStore    { return c.rs }
 func (c Context) BlockHeight() int64            { return c.header.Height }
 func (c Context) BlockTime() time.Time          { return c.headerInfo.Time } // Deprecated: use HeaderInfo().Time
 func (c Context) ChainID() string               { return c.chainID }

@@ -487,7 +487,7 @@ func (app *BaseApp) setState(mode execMode, header cmtproto.Header) {
 	branchedRS := app.rs.Branch()
 	baseState := &state{
 		brs: branchedRS,
-		ctx: sdk.NewContext(ms, false, app.logger).WithStreamingManager(app.streamingManager).WithBlockHeader(header),
+		ctx: sdk.NewContext(branchedRS, false, app.logger).WithStreamingManager(app.streamingManager).WithBlockHeader(header),
 	}
 
 	switch mode {
@@ -668,29 +668,30 @@ func (app *BaseApp) getContextForTx(mode execMode, txBytes []byte) sdk.Context {
 	}
 
 	if mode == execModeSimulate {
-		ctx, _ = ctx.CacheContext()
+		ctx, _ = ctx.BranchContext()
 	}
 
 	return ctx
 }
 
-// cacheTxContext returns a new context based off of the provided context with
-// a branched multi-store.
-func (app *BaseApp) cacheTxContext(ctx sdk.Context, txBytes []byte) (sdk.Context, storetypes.CacheMultiStore) {
-	ms := ctx.MultiStore()
+// branchTxContext returns a new context based off of the provided context with
+// a branched RootStore.
+func (app *BaseApp) branchTxContext(ctx sdk.Context, txBytes []byte) (sdk.Context, store.BranchedRootStore) {
+	rs := ctx.RootStore()
+
 	// TODO: https://github.com/cosmos/cosmos-sdk/issues/2824
-	msCache := ms.CacheMultiStore()
-	if msCache.TracingEnabled() {
-		msCache = msCache.SetTracingContext(
-			storetypes.TraceContext(
-				map[string]interface{}{
+	branchedRS := rs.Branch()
+	if branchedRS.TracingEnabled() {
+		branchedRS.SetTracingContext(
+			store.TraceContext(
+				map[string]any{
 					"txHash": fmt.Sprintf("%X", tmhash.Sum(txBytes)),
 				},
 			),
-		).(storetypes.CacheMultiStore)
+		)
 	}
 
-	return ctx.WithMultiStore(msCache), msCache
+	return ctx.WithRootStore(branchedRS), branchedRS
 }
 
 func (app *BaseApp) preBlock(req *abci.RequestFinalizeBlock) error {
@@ -816,7 +817,7 @@ func (app *BaseApp) runTx(mode execMode, txBytes []byte) (gInfo sdk.GasInfo, res
 	var gasWanted uint64
 
 	ctx := app.getContextForTx(mode, txBytes)
-	ms := ctx.MultiStore()
+	rs := ctx.RootStore()
 
 	// only run the tx if there is block gas remaining
 	if mode == execModeFinalize && ctx.BlockGasMeter().IsOutOfGas() {
@@ -898,7 +899,7 @@ func (app *BaseApp) runTx(mode execMode, txBytes []byte) (gInfo sdk.GasInfo, res
 			// Also, in the case of the tx aborting, we need to track gas consumed via
 			// the instantiated gas meter in the AnteHandler, so we update the context
 			// prior to returning.
-			ctx = newCtx.WithMultiStore(ms)
+			ctx = newCtx.WithRootStore(rs)
 		}
 
 		events := ctx.EventManager().Events()

@@ -33,4 +33,4 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Bug Fixes
 
-* (client/cli) [#18564](https://github.com/cosmos/cosmos-sdk/pull/18564) Fix total fees when batch signing
+* (client/cli) [#18564](https://github.com/cosmos/cosmos-sdk/pull/18564) Fix total fees calculation when batch signing

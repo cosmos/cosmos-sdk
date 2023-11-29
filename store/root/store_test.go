@@ -10,6 +10,7 @@ import (
 
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/v2"
+	"cosmossdk.io/store/v2/commitment"
 	"cosmossdk.io/store/v2/commitment/iavl"
 	"cosmossdk.io/store/v2/storage/sqlite"
 )
@@ -30,9 +31,11 @@ func (s *RootStoreTestSuite) SetupTest() {
 	ss, err := sqlite.New(s.T().TempDir())
 	s.Require().NoError(err)
 
-	sc := iavl.NewIavlTree(dbm.NewMemDB(), noopLog, iavl.DefaultConfig())
+	tree := iavl.NewIavlTree(dbm.NewMemDB(), noopLog, iavl.DefaultConfig())
+	sc, err := commitment.NewCommitStore(map[string]commitment.Tree{"default": tree}, noopLog)
+	s.Require().NoError(err)
 
-	rs, err := New(noopLog, 1, ss, sc)
+	rs, err := New(noopLog, 1, ss, sc, nil)
 	s.Require().NoError(err)
 
 	rs.SetTracer(io.Discard)
@@ -64,7 +67,7 @@ func (s *RootStoreTestSuite) TestGetKVStore() {
 func (s *RootStoreTestSuite) TestGetBranchedKVStore() {
 	bs := s.rootStore.GetBranchedKVStore("")
 	s.Require().NotNil(bs)
-	s.Require().Empty(bs.GetChangeset().Pairs)
+	s.Require().Empty(bs.GetChangeset().Size())
 }
 
 func (s *RootStoreTestSuite) TestQuery() {
@@ -85,7 +88,7 @@ func (s *RootStoreTestSuite) TestQuery() {
 	s.Require().Equal(workingHash, commitHash)
 
 	// ensure the proof is non-nil for the corresponding version
-	result, err := s.rootStore.Query("", 1, []byte("foo"), true)
+	result, err := s.rootStore.Query(defaultStoreKey, 1, []byte("foo"), true)
 	s.Require().NoError(err)
 	s.Require().NotNil(result.Proof)
 	s.Require().Equal([]byte("foo"), result.Proof.GetExist().Key)
@@ -271,7 +274,7 @@ func (s *RootStoreTestSuite) TestCommit() {
 	s.Require().Equal(uint64(1), lv)
 
 	// ensure the root KVStore is cleared
-	s.Require().Empty(s.rootStore.(*Store).rootKVStore.GetChangeset().Pairs)
+	s.Require().Empty(s.rootStore.(*Store).rootKVStore.GetChangeset().Size())
 
 	// perform reads on the updated root store
 	bs := s.rootStore.GetKVStore("")

@@ -60,20 +60,25 @@ func internalSignModeToAPI(mode signing.SignMode) (signingv1beta1.SignMode, erro
 
 // VerifysignatureCache is a cache of verified signatures
 // If the cached item is not found, it will be verified and added to the cache
-func verifySig(signBytes, sig []byte, pubKey cryptotypes.PubKey) bool {
-	bz := string(append(signBytes, sig...))
-	cachePub, ok := SignatureCache().Get(bz)
-	// if the pubkey is in the cache, we know the signature is valid
-	// we remove the signature from the cache in the first lookup, as we assume this is when delivertx is being called
-	if ok {
-		SignatureCache().Remove(bz)
-		return bytes.Equal(pubKey.Bytes(), cachePub)
+func verifySig(signBytes, sig []byte, pubKey cryptotypes.PubKey, cs *Cache) bool {
+	if cs != nil {
+		bz := newSigKey(signBytes, sig).string()
+		cachePub, ok := SignatureCache().Get(bz)
+		// if the pubkey is in the cache, we know the signature is valid
+		// we remove the signature from the cache in the first lookup, as we assume this is when delivertx is being called
+		if ok {
+			SignatureCache().Remove(bz)
+			return bytes.Equal(pubKey.Bytes(), cachePub)
+		}
+		if !pubKey.VerifySignature(signBytes, sig) {
+			return false
+		}
+		SignatureCache().Add(bz, pubKey.Bytes())
+	} else {
+		if !pubKey.VerifySignature(signBytes, sig) {
+			return false
+		}
 	}
-	if !pubKey.VerifySignature(signBytes, sig) {
-		return false
-	}
-
-	SignatureCache().Add(bz, pubKey.Bytes())
 
 	return true
 }
@@ -87,6 +92,7 @@ func VerifySignature(
 	signatureData signing.SignatureData,
 	handler *txsigning.HandlerMap,
 	txData txsigning.TxData,
+	cache *Cache,
 ) error {
 	switch data := signatureData.(type) {
 	case *signing.SingleSignatureData:
@@ -98,7 +104,7 @@ func VerifySignature(
 		if err != nil {
 			return err
 		}
-		if !verifySig(signBytes, data.Signature, pubKey) {
+		if !verifySig(signBytes, data.Signature, pubKey, cache) {
 			return fmt.Errorf("unable to verify single signer signature")
 		}
 		return nil

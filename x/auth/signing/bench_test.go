@@ -203,10 +203,11 @@ func BenchmarkVerifySignature(b *testing.B) {
 	b.ReportAllocs()
 	ctx := context.Background()
 	b.ResetTimer()
+	cache := NewSignatureCache()
 
 	for i := 0; i < b.N; i++ {
 		for _, tt := range cases {
-			err := VerifySignature(ctx, tt.pk, tt.signerData, tt.signature, handlerMap, tt.txData)
+			err := VerifySignature(ctx, tt.pk, tt.signerData, tt.signature, handlerMap, tt.txData, cache)
 			if g, w := err == nil, tt.wantErr == ""; g != w {
 				b.Errorf("%q: error mismatch:\n\tgot:  %v\n\twant: %q", tt.name, err, tt.wantErr)
 			} else if err != nil && !strings.Contains(err.Error(), tt.wantErr) {

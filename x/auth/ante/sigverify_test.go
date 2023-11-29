@@ -179,7 +179,7 @@ func TestSigVerification(t *testing.T) {
 		txConfigOpts,
 	)
 	require.NoError(t, err)
-	svd := ante.NewSigVerificationDecorator(suite.accountKeeper, anteTxConfig.SignModeHandler())
+	svd := ante.NewSigVerificationDecorator(suite.accountKeeper, anteTxConfig.SignModeHandler(), true)
 	antehandler := sdk.ChainAnteDecorators(spkd, svd)
 	defaultSignMode, err := authsign.APISignModeToInternal(anteTxConfig.SignModeHandler().DefaultMode())
 	require.NoError(t, err)
@@ -305,7 +305,7 @@ func runSigDecorators(t *testing.T, params types.Params, _ bool, privs ...crypto
 
 	spkd := ante.NewSetPubKeyDecorator(suite.accountKeeper)
 	svgc := ante.NewSigGasConsumeDecorator(suite.accountKeeper, ante.DefaultSigVerificationGasConsumer)
-	svd := ante.NewSigVerificationDecorator(suite.accountKeeper, suite.clientCtx.TxConfig.SignModeHandler())
+	svd := ante.NewSigVerificationDecorator(suite.accountKeeper, suite.clientCtx.TxConfig.SignModeHandler(), true)
 	antehandler := sdk.ChainAnteDecorators(spkd, svgc, svd)
 
 	txBytes, err := suite.clientCtx.TxConfig.TxEncoder()(tx)
@@ -416,7 +416,7 @@ func TestAnteHandlerChecks(t *testing.T) {
 
 	setPubKeyDecorator := ante.NewSetPubKeyDecorator(suite.accountKeeper)
 	sigGasConsumeDecorator := ante.NewSigGasConsumeDecorator(suite.accountKeeper, ante.DefaultSigVerificationGasConsumer)
-	sigVerificationDecorator := ante.NewSigVerificationDecorator(suite.accountKeeper, anteTxConfig.SignModeHandler())
+	sigVerificationDecorator := ante.NewSigVerificationDecorator(suite.accountKeeper, anteTxConfig.SignModeHandler(), true)
 	IncrementSequenceDecorator := ante.NewIncrementSequenceDecorator(suite.accountKeeper)
 
 	anteHandler := sdk.ChainAnteDecorators(setPubKeyDecorator, sigGasConsumeDecorator, sigVerificationDecorator, IncrementSequenceDecorator)

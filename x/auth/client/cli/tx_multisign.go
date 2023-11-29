@@ -150,7 +150,7 @@ func makeMultiSignCmd() func(cmd *cobra.Command, args []string) (err error) {
 				txData := adaptableTx.GetSigningTxData()
 
 				err = signing.VerifySignature(cmd.Context(), sig.PubKey, txSignerData, sig.Data,
-					txCfg.SignModeHandler(), txData)
+					txCfg.SignModeHandler(), txData, nil)
 				if err != nil {
 					addr, _ := sdk.AccAddressFromHexUnsafe(sig.PubKey.Address().String())
 					return fmt.Errorf("couldn't verify signature for address %s", addr)
@@ -327,7 +327,7 @@ func makeBatchMultisignCmd() func(cmd *cobra.Command, args []string) error {
 
 			for _, sig := range signatureBatch {
 				err = signing.VerifySignature(cmd.Context(), sig[i].PubKey, txSignerData, sig[i].Data,
-					txCfg.SignModeHandler(), txData)
+					txCfg.SignModeHandler(), txData, nil)
 				if err != nil {
 					return fmt.Errorf("couldn't verify signature: %w %v", err, sig)
 				}

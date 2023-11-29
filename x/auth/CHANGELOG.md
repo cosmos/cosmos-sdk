@@ -31,4 +31,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### API Breaking Changes
 
+* [#18422](https://github.com/cosmos/cosmos-sdk/issues/18422) `NewSigVerificationDecorator` takes a new parameter that allows applications to decide if they want to cache signatures or not.
+
 ### Bug Fixes

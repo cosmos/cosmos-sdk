@@ -229,15 +229,22 @@ func (sgcd SigGasConsumeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simula
 // CONTRACT: Pubkeys are set in context for all signers before this decorator runs
 // CONTRACT: Tx must implement SigVerifiableTx interface
 type SigVerificationDecorator struct {
-	ak              AccountKeeper
-	signModeHandler *txsigning.HandlerMap
+	ak                AccountKeeper
+	signModeHandler   *txsigning.HandlerMap
+	cacheVerification *authsigning.Cache
 }
 
-func NewSigVerificationDecorator(ak AccountKeeper, signModeHandler *txsigning.HandlerMap) SigVerificationDecorator {
-	return SigVerificationDecorator{
+func NewSigVerificationDecorator(ak AccountKeeper, signModeHandler *txsigning.HandlerMap, cacheVerification bool) SigVerificationDecorator {
+
+	svd := SigVerificationDecorator{
 		ak:              ak,
 		signModeHandler: signModeHandler,
 	}
+	if cacheVerification {
+		svd.cacheVerification = authsigning.NewSignatureCache()
+	}
+
+	return svd
 }
 
 // OnlyLegacyAminoSigners checks SignatureData to see if all
@@ -374,7 +381,7 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 				return ctx, fmt.Errorf("expected tx to implement V2AdaptableTx, got %T", tx)
 			}
 			txData := adaptableTx.GetSigningTxData()
-			err = authsigning.VerifySignature(ctx, pubKey, signerData, sig.Data, svd.signModeHandler, txData)
+			err = authsigning.VerifySignature(ctx, pubKey, signerData, sig.Data, svd.signModeHandler, txData, svd.cacheVerification)
 			if err != nil {
 				var errMsg string
 				if OnlyLegacyAminoSigners(sig.Data) {

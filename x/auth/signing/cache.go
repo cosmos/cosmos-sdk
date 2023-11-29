@@ -15,32 +15,31 @@ const (
 
 var initSigCacheOnce sync.Once
 
+// Cache is a cache of verified signatures
+type Cache struct {
+	data *lru.Cache[string, []byte]
+}
+
 // NewSignatureCache initializes the signature cache.
 // signature verification is one of the most expensive parts in verification
 // by caching it we avoid needing to verify the same signature multiple times
 // This is only initialized once.
-func NewSignatureCache() {
+func NewSignatureCache() *Cache {
+	sc := &Cache{}
 	initSigCacheOnce.Do(func() {
 		// 500 * (32 + 42) = 37.5KB
 		cache, err := lru.New[string, []byte](500)
 		if err != nil {
 			panic(err)
 		}
-		signatureCache = &Cache{data: cache}
+		sc = &Cache{data: cache}
 	})
-}
 
-func init() {
-	NewSignatureCache()
+	return sc
 }
 
 func SignatureCache() *Cache {
 	return signatureCache
-}
-
-// Cache is a cache of verified signatures
-type Cache struct {
-	data *lru.Cache[string, []byte]
 }
 
 // Get returns the cached signature if it exists
@@ -76,4 +75,21 @@ func (c *Cache) validate(key string) bool {
 	}
 
 	return c.data != nil
+}
+
+// sigkey is the key used to store the signature in the cache
+type sigkey struct {
+	signbytes []byte
+	sig       []byte
+}
+
+func newSigKey(signbytes, sig []byte) sigkey {
+	return sigkey{
+		signbytes: signbytes,
+		sig:       sig,
+	}
+}
+
+func (s sigkey) string() string {
+	return string(append(s.signbytes, s.sig...))
 }

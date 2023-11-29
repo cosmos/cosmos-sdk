@@ -44,7 +44,7 @@ func (k Keeper) setConsPubKeyRotationHistory(
 		return err
 	}
 
-	queueTime := sdkCtx.BlockHeader().Time.Add(ubdTime)
+	queueTime := sdkCtx.BlockTime().Add(ubdTime)
 	if err := k.ValidatorConsensusKeyRotationRecordIndexKey.Set(ctx, collections.Join(valAddr.Bytes(), queueTime)); err != nil {
 		return err
 	}

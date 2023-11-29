@@ -95,11 +95,11 @@ func (s *KeeperTestSuite) TestConsKeyRotn() {
 	stakingKeeper, ctx, accountKeeper, bankKeeper := s.stakingKeeper, s.ctx, s.accountKeeper, s.bankKeeper
 
 	msgServer := stakingkeeper.NewMsgServerImpl(stakingKeeper)
-	s.setValidators(4)
+	s.setValidators(6)
 	validators, err := stakingKeeper.GetAllValidators(ctx)
 	s.Require().NoError(err)
 
-	s.Require().Len(validators, 4)
+	s.Require().Len(validators, 6)
 
 	existingPubkey, ok := validators[1].ConsensusPubkey.GetCachedValue().(cryptotypes.PubKey)
 	s.Require().True(ok)
@@ -181,7 +181,7 @@ func (s *KeeperTestSuite) TestConsKeyRotn() {
 				s.Require().NoError(err)
 
 				// this shouldn't mature the recent rotation since unbonding period isn't reached
-				s.Require().NoError(stakingKeeper.UpdateAllMaturedConsKeyRotatedKeys(ctx, ctx.BlockHeader().Time))
+				s.Require().NoError(stakingKeeper.UpdateAllMaturedConsKeyRotatedKeys(ctx, ctx.BlockTime()))
 
 				// 2nd rotation should fail since limit exceeding
 				req, err = types.NewMsgRotateConsPubKey(validators[3].GetOperator(), PKs[493])
@@ -191,13 +191,63 @@ func (s *KeeperTestSuite) TestConsKeyRotn() {
 
 				// This should remove the keys from queue
 				// after setting the blocktime to reach the unbonding period
-				newCtx := ctx.WithHeaderInfo(header.Info{Time: ctx.BlockTime().Add(params.UnbondingTime).Add(time.Hour)})
+				newCtx := ctx.WithHeaderInfo(header.Info{Time: ctx.BlockTime().Add(params.UnbondingTime)})
 				s.Require().NoError(stakingKeeper.UpdateAllMaturedConsKeyRotatedKeys(newCtx, newCtx.BlockTime()))
 				return newCtx
 			},
 			isErr:     false,
 			newPubKey: PKs[493],
 			validator: validators[3].GetOperator(),
+		},
+		{
+			name: "verify other validator rotation blocker",
+			malleate: func() sdk.Context {
+				params, err := stakingKeeper.Params.Get(ctx)
+				s.Require().NoError(err)
+				valStr4 := validators[4].GetOperator()
+				valStr5 := validators[5].GetOperator()
+				valAddr4, err := stakingKeeper.ValidatorAddressCodec().StringToBytes(valStr4)
+				s.Require().NoError(err)
+
+				valAddr5, err := stakingKeeper.ValidatorAddressCodec().StringToBytes(valStr5)
+				s.Require().NoError(err)
+
+				bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), sdk.AccAddress(valAddr4), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+				bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), sdk.AccAddress(valAddr5), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+
+				// add 2 days to the current time and add rotate key, it should allow to rotate.
+				newCtx := ctx.WithHeaderInfo(header.Info{Time: ctx.BlockTime().Add(2 * 24 * time.Hour)})
+				req1, err := types.NewMsgRotateConsPubKey(valStr5, PKs[491])
+				s.Require().NoError(err)
+				_, err = msgServer.RotateConsPubKey(newCtx, req1)
+				s.Require().NoError(err)
+
+				// 1st rotation should pass, since limit is 1
+				req, err := types.NewMsgRotateConsPubKey(valStr4, PKs[490])
+				s.Require().NoError(err)
+				_, err = msgServer.RotateConsPubKey(ctx, req)
+				s.Require().NoError(err)
+
+				// this shouldn't mature the recent rotation since unbonding period isn't reached
+				s.Require().NoError(stakingKeeper.UpdateAllMaturedConsKeyRotatedKeys(ctx, ctx.BlockTime()))
+
+				// 2nd rotation should fail since limit exceeding
+				req, err = types.NewMsgRotateConsPubKey(valStr4, PKs[489])
+				s.Require().NoError(err)
+				_, err = msgServer.RotateConsPubKey(ctx, req)
+				s.Require().Error(err, "exceeding maximum consensus pubkey rotations within unbonding period")
+
+				// This should remove the keys from queue
+				// after setting the blocktime to reach the unbonding period,
+				// but other validator which rotated with addition of 2 days shouldn't be removed, so it should stop the rotation of valStr5.
+				newCtx1 := ctx.WithHeaderInfo(header.Info{Time: ctx.BlockTime().Add(params.UnbondingTime).Add(time.Hour)})
+				s.Require().NoError(stakingKeeper.UpdateAllMaturedConsKeyRotatedKeys(newCtx1, newCtx1.BlockTime()))
+				return newCtx1
+			},
+			isErr:     true,
+			newPubKey: PKs[492],
+			errMsg:    "exceeding maximum consensus pubkey rotations within unbonding period",
+			validator: validators[5].GetOperator(),
 		},
 	}
 

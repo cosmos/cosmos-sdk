@@ -44,7 +44,7 @@ func (k Querier) Validators(ctx context.Context, req *types.QueryValidatorsReque
 	valStore := prefix.NewStore(store, types.ValidatorsKey)
 
 	validators, pageRes, err := query.GenericFilteredPaginate(k.cdc, valStore, req.Pagination, func(key []byte, val *types.Validator) (*types.Validator, error) {
-		if req.Status != "" && !strings.EqualFold(string(val.GetStatus()), req.Status) { //TODO test
+		if req.Status != "" && !strings.EqualFold(string(val.GetStatus()), req.Status) { // TODO test
 			return nil, nil
 		}
 

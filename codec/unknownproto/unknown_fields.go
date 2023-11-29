@@ -72,6 +72,7 @@ func RejectUnknownFields(bz []byte, msg proto.Message, allowUnknownNonCriticals 
 					WantWireType: toProtowireType(fieldDescProto.GetType()),
 				}
 			}
+
 		default:
 			isCriticalField := tagNum&bit11NonCritical == 0
 

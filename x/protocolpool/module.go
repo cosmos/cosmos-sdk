@@ -32,8 +32,6 @@ var (
 	_ module.AppModule           = AppModule{}
 	_ module.AppModuleSimulation = AppModule{}
 	_ module.HasGenesis          = AppModule{}
-
-	_ appmodule.HasEndBlocker = AppModule{}
 )
 
 // AppModuleBasic defines the basic application module used by the pool module.
@@ -131,11 +129,6 @@ func (am AppModule) ExportGenesis(ctx context.Context, cdc codec.JSONCodec) json
 
 // ConsensusVersion implements AppModule/ConsensusVersion.
 func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
-
-// EndBlock returns the end blocker for the protocolpool module.
-func (am AppModule) EndBlock(ctx context.Context) error {
-	return am.keeper.EndBlocker(ctx)
-}
 
 //
 // App Wiring Setup

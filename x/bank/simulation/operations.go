@@ -84,11 +84,11 @@ func SimulateMsgSend(
 
 		fromstr, err := ak.AddressCodec().BytesToString(from.Address)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, msgType, err.Error()), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, msgType, err.Error()), nil, nil
 		}
 		tostr, err := ak.AddressCodec().BytesToString(to.Address)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, msgType, err.Error()), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, msgType, err.Error()), nil, nil
 		}
 
 		msg := types.NewMsgSend(fromstr, tostr, coins)

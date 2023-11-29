@@ -3,9 +3,9 @@ module cosmossdk.io/x/circuit
 go 1.21
 
 require (
-	cosmossdk.io/api v0.7.3-0.20231029200940-6af7f30bfd54
+	cosmossdk.io/api v0.7.3-0.20231113122742-912390d5fc4a
 	cosmossdk.io/collections v0.4.0
-	cosmossdk.io/core v0.12.0
+	cosmossdk.io/core v0.12.1-0.20231114100755-569e3ff6a0d7
 	cosmossdk.io/depinject v1.0.0-alpha.4
 	cosmossdk.io/errors v1.0.0
 	cosmossdk.io/store v1.0.0
@@ -40,7 +40,7 @@ require (
 	github.com/cockroachdb/pebble v0.0.0-20231102162011-844f0582c2eb // indirect
 	github.com/cockroachdb/redact v1.1.5 // indirect
 	github.com/cockroachdb/tokenbucket v0.0.0-20230807174530-cc333fc44b06 // indirect
-	github.com/cometbft/cometbft v0.38.0 // indirect
+	github.com/cometbft/cometbft v0.38.2 // indirect
 	github.com/cometbft/cometbft-db v0.8.0 // indirect
 	github.com/cosmos/btcutil v1.0.5 // indirect
 	github.com/cosmos/cosmos-db v1.0.0 // indirect
@@ -83,7 +83,7 @@ require (
 	github.com/gsterjov/go-libsecret v0.0.0-20161001094733-a6f4afe4910c // indirect
 	github.com/hashicorp/go-hclog v1.5.0 // indirect
 	github.com/hashicorp/go-immutable-radix v1.3.1 // indirect
-	github.com/hashicorp/go-metrics v0.5.1 // indirect
+	github.com/hashicorp/go-metrics v0.5.3 // indirect
 	github.com/hashicorp/go-plugin v1.5.2 // indirect
 	github.com/hashicorp/golang-lru v1.0.2 // indirect
 	github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect
@@ -100,7 +100,7 @@ require (
 	github.com/kr/text v0.2.0 // indirect
 	github.com/lib/pq v1.10.7 // indirect
 	github.com/libp2p/go-buffer-pool v0.1.0 // indirect
-	github.com/linxGnu/grocksdb v1.8.4 // indirect
+	github.com/linxGnu/grocksdb v1.8.5 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
@@ -140,12 +140,12 @@ require (
 	github.com/zondax/ledger-go v0.14.3 // indirect
 	go.etcd.io/bbolt v1.3.7 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
-	golang.org/x/crypto v0.15.0 // indirect
+	golang.org/x/crypto v0.16.0 // indirect
 	golang.org/x/exp v0.0.0-20231006140011-7918f672742d // indirect
 	golang.org/x/net v0.17.0 // indirect
 	golang.org/x/sync v0.5.0 // indirect
-	golang.org/x/sys v0.14.0 // indirect
-	golang.org/x/term v0.14.0 // indirect
+	golang.org/x/sys v0.15.0 // indirect
+	golang.org/x/term v0.15.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	google.golang.org/genproto v0.0.0-20231016165738-49dd2c1f3d0b // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20231030173426-d783a09b4405 // indirect
@@ -164,7 +164,6 @@ replace (
 	cosmossdk.io/x/auth => ../auth
 	cosmossdk.io/x/bank => ../bank
 	cosmossdk.io/x/distribution => ../distribution
-	cosmossdk.io/x/gov => ../gov
 	cosmossdk.io/x/mint => ../mint
 	cosmossdk.io/x/protocolpool => ../protocolpool
 	cosmossdk.io/x/slashing => ../slashing

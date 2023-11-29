@@ -174,8 +174,13 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "validator_address"}, {ProtoField: "amount"}, {ProtoField: "creation_height"}},
 				},
 				{
-					RpcMethod: "UpdateParams",
-					Skip:      true, // skipped because authority gated
+					RpcMethod:      "UpdateParams",
+					Use:            "update-params-proposal [params]",
+					Short:          "Submit a proposal to update staking module params. Note: the entire params must be provided.",
+					Long:           fmt.Sprintf("Submit a proposal to update staking module params. Note: the entire params must be provided.\n See the fields to fill in by running `%s query staking params --output json`", version.AppName),
+					Example:        fmt.Sprintf(`%s tx staking update-params-proposal '{ "unbonding_time": "504h0m0s", ... }'`, version.AppName),
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "params"}},
+					GovProposal:    true,
 				},
 			},
 			EnhanceCustomCommand: true,

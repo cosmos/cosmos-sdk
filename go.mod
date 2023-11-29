@@ -3,9 +3,9 @@ go 1.21
 module github.com/cosmos/cosmos-sdk
 
 require (
-	cosmossdk.io/api v0.7.3-0.20231029200940-6af7f30bfd54
+	cosmossdk.io/api v0.7.3-0.20231113122742-912390d5fc4a
 	cosmossdk.io/collections v0.4.0
-	cosmossdk.io/core v0.12.0
+	cosmossdk.io/core v0.12.1-0.20231114100755-569e3ff6a0d7
 	cosmossdk.io/depinject v1.0.0-alpha.4
 	cosmossdk.io/errors v1.0.0
 	cosmossdk.io/log v1.2.1
@@ -13,13 +13,12 @@ require (
 	cosmossdk.io/store v1.0.0
 	cosmossdk.io/x/auth v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/bank v0.0.0-00010101000000-000000000000
-	cosmossdk.io/x/gov v0.0.0-20230925135524-a1bc045b3190
 	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/tx v0.12.0
 	github.com/99designs/keyring v1.2.1
 	github.com/bgentry/speakeasy v0.1.1-0.20220910012023-760eaf8b6816
 	github.com/cockroachdb/errors v1.11.1
-	github.com/cometbft/cometbft v0.38.0
+	github.com/cometbft/cometbft v0.38.2
 	github.com/cosmos/btcutil v1.0.5
 	github.com/cosmos/cosmos-db v1.0.0
 	github.com/cosmos/cosmos-proto v1.0.0-beta.3
@@ -36,13 +35,14 @@ require (
 	github.com/gorilla/mux v1.8.1
 	github.com/grpc-ecosystem/go-grpc-middleware v1.4.0
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
-	github.com/hashicorp/go-metrics v0.5.1
+	github.com/hashicorp/go-metrics v0.5.3
 	github.com/hashicorp/golang-lru/v2 v2.0.7
 	github.com/hdevalence/ed25519consensus v0.1.0
 	github.com/huandu/skiplist v1.2.0
 	github.com/improbable-eng/grpc-web v0.15.0
 	github.com/magiconair/properties v1.8.7
 	github.com/mattn/go-isatty v0.0.20
+	github.com/mdp/qrterminal/v3 v3.2.0
 	github.com/prometheus/client_golang v1.17.0
 	github.com/prometheus/common v0.45.0
 	github.com/rs/zerolog v1.31.0
@@ -52,7 +52,7 @@ require (
 	github.com/spf13/viper v1.17.0
 	github.com/stretchr/testify v1.8.4
 	github.com/tendermint/go-amino v0.16.0
-	golang.org/x/crypto v0.15.0
+	golang.org/x/crypto v0.16.0
 	golang.org/x/exp v0.0.0-20231006140011-7918f672742d
 	golang.org/x/sync v0.5.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20231012201019-e917dd12ba7a
@@ -119,7 +119,7 @@ require (
 	github.com/kr/text v0.2.0 // indirect
 	github.com/lib/pq v1.10.7 // indirect
 	github.com/libp2p/go-buffer-pool v0.1.0 // indirect
-	github.com/linxGnu/grocksdb v1.8.4 // indirect
+	github.com/linxGnu/grocksdb v1.8.5 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/matttproud/golang_protobuf_extensions/v2 v2.0.0 // indirect
 	github.com/minio/highwayhash v1.0.2 // indirect
@@ -151,14 +151,15 @@ require (
 	go.etcd.io/bbolt v1.3.7 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/net v0.17.0 // indirect
-	golang.org/x/sys v0.14.0 // indirect
-	golang.org/x/term v0.14.0 // indirect
+	golang.org/x/sys v0.15.0 // indirect
+	golang.org/x/term v0.15.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	google.golang.org/genproto v0.0.0-20231016165738-49dd2c1f3d0b // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20231030173426-d783a09b4405 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	nhooyr.io/websocket v1.8.6 // indirect
+	rsc.io/qr v0.2.0 // indirect
 )
 
 // Here are the short-lived replace from the Cosmos SDK
@@ -171,7 +172,6 @@ replace (
 	cosmossdk.io/x/auth => ./x/auth
 	cosmossdk.io/x/bank => ./x/bank
 	cosmossdk.io/x/distribution => ./x/distribution
-	cosmossdk.io/x/gov => ./x/gov
 	cosmossdk.io/x/mint => ./x/mint
 	cosmossdk.io/x/protocolpool => ./x/protocolpool
 	cosmossdk.io/x/slashing => ./x/slashing

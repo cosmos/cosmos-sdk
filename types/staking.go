@@ -41,7 +41,7 @@ func TokensFromConsensusPower(power int64, powerReduction math.Int) math.Int {
 	return math.NewInt(power).Mul(powerReduction)
 }
 
-//______________________________________________________________________
+// ______________________________________________________________________
 // Delegation & Validator Interfaces are moved here to avoid direct dependency on the staking module
 
 // BondStatus is the status of a validator.

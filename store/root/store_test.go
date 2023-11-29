@@ -86,9 +86,9 @@ func (s *RootStoreTestSuite) TestQuery() {
 	// ensure the proof is non-nil for the corresponding version
 	result, err := s.rootStore.Query(defaultStoreKey, 1, []byte("foo"), true)
 	s.Require().NoError(err)
-	s.Require().NotNil(result.Proof)
-	s.Require().Equal([]byte("foo"), result.Proof.GetExist().Key)
-	s.Require().Equal([]byte("bar"), result.Proof.GetExist().Value)
+	s.Require().NotNil(result.Proof.Proof)
+	s.Require().Equal([]byte("foo"), result.Proof.Proof.GetExist().Key)
+	s.Require().Equal([]byte("bar"), result.Proof.Proof.GetExist().Value)
 }
 
 func (s *RootStoreTestSuite) TestBranch() {

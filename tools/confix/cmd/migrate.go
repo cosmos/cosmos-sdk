@@ -36,7 +36,7 @@ In case of any error in updating the file, no output is written.`,
 			case clientCtx.HomeDir != "":
 				configPath = fmt.Sprintf("%s/config/app.toml", clientCtx.HomeDir)
 			default:
-				return errors.New("must provide a path to the app.toml file")
+				return errors.New("must provide a path to the app.toml or client.toml")
 			}
 
 			targetVersion := args[0]

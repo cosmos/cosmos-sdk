@@ -1022,8 +1022,8 @@ func (x *fastReflection_ContinuousFund) Range(f func(protoreflect.FieldDescripto
 			return
 		}
 	}
-	if x.MaxDistributedCapital != nil {
-		value := protoreflect.ValueOfMessage(x.MaxDistributedCapital.ProtoReflect())
+	if x.MaxDistributedCapital != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.MaxDistributedCapital)
 		if !f(fd_ContinuousFund_max_distributed_capital, value) {
 			return
 		}
@@ -1054,7 +1054,7 @@ func (x *fastReflection_ContinuousFund) Has(fd protoreflect.FieldDescriptor) boo
 	case "cosmos.protocolpool.v1.ContinuousFund.percentage":
 		return x.Percentage != ""
 	case "cosmos.protocolpool.v1.ContinuousFund.max_distributed_capital":
-		return x.MaxDistributedCapital != nil
+		return x.MaxDistributedCapital != uint64(0)
 	case "cosmos.protocolpool.v1.ContinuousFund.expiry":
 		return x.Expiry != nil
 	default:
@@ -1078,7 +1078,7 @@ func (x *fastReflection_ContinuousFund) Clear(fd protoreflect.FieldDescriptor) {
 	case "cosmos.protocolpool.v1.ContinuousFund.percentage":
 		x.Percentage = ""
 	case "cosmos.protocolpool.v1.ContinuousFund.max_distributed_capital":
-		x.MaxDistributedCapital = nil
+		x.MaxDistributedCapital = uint64(0)
 	case "cosmos.protocolpool.v1.ContinuousFund.expiry":
 		x.Expiry = nil
 	default:
@@ -1105,7 +1105,7 @@ func (x *fastReflection_ContinuousFund) Get(descriptor protoreflect.FieldDescrip
 		return protoreflect.ValueOfString(value)
 	case "cosmos.protocolpool.v1.ContinuousFund.max_distributed_capital":
 		value := x.MaxDistributedCapital
-		return protoreflect.ValueOfMessage(value.ProtoReflect())
+		return protoreflect.ValueOfUint64(value)
 	case "cosmos.protocolpool.v1.ContinuousFund.expiry":
 		value := x.Expiry
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
@@ -1134,7 +1134,7 @@ func (x *fastReflection_ContinuousFund) Set(fd protoreflect.FieldDescriptor, val
 	case "cosmos.protocolpool.v1.ContinuousFund.percentage":
 		x.Percentage = value.Interface().(string)
 	case "cosmos.protocolpool.v1.ContinuousFund.max_distributed_capital":
-		x.MaxDistributedCapital = value.Message().Interface().(*v1beta1.Coin)
+		x.MaxDistributedCapital = value.Uint()
 	case "cosmos.protocolpool.v1.ContinuousFund.expiry":
 		x.Expiry = value.Message().Interface().(*timestamppb.Timestamp)
 	default:
@@ -1157,11 +1157,6 @@ func (x *fastReflection_ContinuousFund) Set(fd protoreflect.FieldDescriptor, val
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_ContinuousFund) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.protocolpool.v1.ContinuousFund.max_distributed_capital":
-		if x.MaxDistributedCapital == nil {
-			x.MaxDistributedCapital = new(v1beta1.Coin)
-		}
-		return protoreflect.ValueOfMessage(x.MaxDistributedCapital.ProtoReflect())
 	case "cosmos.protocolpool.v1.ContinuousFund.expiry":
 		if x.Expiry == nil {
 			x.Expiry = new(timestamppb.Timestamp)
@@ -1171,6 +1166,8 @@ func (x *fastReflection_ContinuousFund) Mutable(fd protoreflect.FieldDescriptor)
 		panic(fmt.Errorf("field recipient of message cosmos.protocolpool.v1.ContinuousFund is not mutable"))
 	case "cosmos.protocolpool.v1.ContinuousFund.percentage":
 		panic(fmt.Errorf("field percentage of message cosmos.protocolpool.v1.ContinuousFund is not mutable"))
+	case "cosmos.protocolpool.v1.ContinuousFund.max_distributed_capital":
+		panic(fmt.Errorf("field max_distributed_capital of message cosmos.protocolpool.v1.ContinuousFund is not mutable"))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.ContinuousFund"))
@@ -1189,8 +1186,7 @@ func (x *fastReflection_ContinuousFund) NewField(fd protoreflect.FieldDescriptor
 	case "cosmos.protocolpool.v1.ContinuousFund.percentage":
 		return protoreflect.ValueOfString("")
 	case "cosmos.protocolpool.v1.ContinuousFund.max_distributed_capital":
-		m := new(v1beta1.Coin)
-		return protoreflect.ValueOfMessage(m.ProtoReflect())
+		return protoreflect.ValueOfUint64(uint64(0))
 	case "cosmos.protocolpool.v1.ContinuousFund.expiry":
 		m := new(timestamppb.Timestamp)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
@@ -1271,9 +1267,8 @@ func (x *fastReflection_ContinuousFund) ProtoMethods() *protoiface.Methods {
 		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
-		if x.MaxDistributedCapital != nil {
-			l = options.Size(x.MaxDistributedCapital)
-			n += 1 + l + runtime.Sov(uint64(l))
+		if x.MaxDistributedCapital != 0 {
+			n += 1 + runtime.Sov(uint64(x.MaxDistributedCapital))
 		}
 		if x.Expiry != nil {
 			l = options.Size(x.Expiry)
@@ -1322,19 +1317,10 @@ func (x *fastReflection_ContinuousFund) ProtoMethods() *protoiface.Methods {
 			i--
 			dAtA[i] = 0x22
 		}
-		if x.MaxDistributedCapital != nil {
-			encoded, err := options.Marshal(x.MaxDistributedCapital)
-			if err != nil {
-				return protoiface.MarshalOutput{
-					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-					Buf:               input.Buf,
-				}, err
-			}
-			i -= len(encoded)
-			copy(dAtA[i:], encoded)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+		if x.MaxDistributedCapital != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.MaxDistributedCapital))
 			i--
-			dAtA[i] = 0x1a
+			dAtA[i] = 0x18
 		}
 		if len(x.Percentage) > 0 {
 			i -= len(x.Percentage)
@@ -1464,10 +1450,10 @@ func (x *fastReflection_ContinuousFund) ProtoMethods() *protoiface.Methods {
 				x.Percentage = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
 			case 3:
-				if wireType != 2 {
+				if wireType != 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field MaxDistributedCapital", wireType)
 				}
-				var msglen int
+				x.MaxDistributedCapital = 0
 				for shift := uint(0); ; shift += 7 {
 					if shift >= 64 {
 						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
@@ -1477,28 +1463,11 @@ func (x *fastReflection_ContinuousFund) ProtoMethods() *protoiface.Methods {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					msglen |= int(b&0x7F) << shift
+					x.MaxDistributedCapital |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
 				}
-				if msglen < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				postIndex := iNdEx + msglen
-				if postIndex < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if postIndex > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				if x.MaxDistributedCapital == nil {
-					x.MaxDistributedCapital = &v1beta1.Coin{}
-				}
-				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.MaxDistributedCapital); err != nil {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
-				}
-				iNdEx = postIndex
 			case 4:
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Expiry", wireType)
@@ -1654,8 +1623,8 @@ func (x *fastReflection_FundDistribution) Range(f func(protoreflect.FieldDescrip
 			return
 		}
 	}
-	if x.ToClaim != nil {
-		value := protoreflect.ValueOfMessage(x.ToClaim.ProtoReflect())
+	if x.ToClaim != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.ToClaim)
 		if !f(fd_FundDistribution_to_claim, value) {
 			return
 		}
@@ -1678,7 +1647,7 @@ func (x *fastReflection_FundDistribution) Has(fd protoreflect.FieldDescriptor) b
 	case "cosmos.protocolpool.v1.FundDistribution.percentage":
 		return x.Percentage != ""
 	case "cosmos.protocolpool.v1.FundDistribution.to_claim":
-		return x.ToClaim != nil
+		return x.ToClaim != uint64(0)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.FundDistribution"))
@@ -1698,7 +1667,7 @@ func (x *fastReflection_FundDistribution) Clear(fd protoreflect.FieldDescriptor)
 	case "cosmos.protocolpool.v1.FundDistribution.percentage":
 		x.Percentage = ""
 	case "cosmos.protocolpool.v1.FundDistribution.to_claim":
-		x.ToClaim = nil
+		x.ToClaim = uint64(0)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.FundDistribution"))
@@ -1720,7 +1689,7 @@ func (x *fastReflection_FundDistribution) Get(descriptor protoreflect.FieldDescr
 		return protoreflect.ValueOfString(value)
 	case "cosmos.protocolpool.v1.FundDistribution.to_claim":
 		value := x.ToClaim
-		return protoreflect.ValueOfMessage(value.ProtoReflect())
+		return protoreflect.ValueOfUint64(value)
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.FundDistribution"))
@@ -1744,7 +1713,7 @@ func (x *fastReflection_FundDistribution) Set(fd protoreflect.FieldDescriptor, v
 	case "cosmos.protocolpool.v1.FundDistribution.percentage":
 		x.Percentage = value.Interface().(string)
 	case "cosmos.protocolpool.v1.FundDistribution.to_claim":
-		x.ToClaim = value.Message().Interface().(*v1beta1.Coin)
+		x.ToClaim = value.Uint()
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.FundDistribution"))
@@ -1765,13 +1734,10 @@ func (x *fastReflection_FundDistribution) Set(fd protoreflect.FieldDescriptor, v
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_FundDistribution) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.protocolpool.v1.FundDistribution.to_claim":
-		if x.ToClaim == nil {
-			x.ToClaim = new(v1beta1.Coin)
-		}
-		return protoreflect.ValueOfMessage(x.ToClaim.ProtoReflect())
 	case "cosmos.protocolpool.v1.FundDistribution.percentage":
 		panic(fmt.Errorf("field percentage of message cosmos.protocolpool.v1.FundDistribution is not mutable"))
+	case "cosmos.protocolpool.v1.FundDistribution.to_claim":
+		panic(fmt.Errorf("field to_claim of message cosmos.protocolpool.v1.FundDistribution is not mutable"))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.FundDistribution"))
@@ -1788,8 +1754,7 @@ func (x *fastReflection_FundDistribution) NewField(fd protoreflect.FieldDescript
 	case "cosmos.protocolpool.v1.FundDistribution.percentage":
 		return protoreflect.ValueOfString("")
 	case "cosmos.protocolpool.v1.FundDistribution.to_claim":
-		m := new(v1beta1.Coin)
-		return protoreflect.ValueOfMessage(m.ProtoReflect())
+		return protoreflect.ValueOfUint64(uint64(0))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.FundDistribution"))
@@ -1863,9 +1828,8 @@ func (x *fastReflection_FundDistribution) ProtoMethods() *protoiface.Methods {
 		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
-		if x.ToClaim != nil {
-			l = options.Size(x.ToClaim)
-			n += 1 + l + runtime.Sov(uint64(l))
+		if x.ToClaim != 0 {
+			n += 1 + runtime.Sov(uint64(x.ToClaim))
 		}
 		if x.unknownFields != nil {
 			n += len(x.unknownFields)
@@ -1896,19 +1860,10 @@ func (x *fastReflection_FundDistribution) ProtoMethods() *protoiface.Methods {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
 		}
-		if x.ToClaim != nil {
-			encoded, err := options.Marshal(x.ToClaim)
-			if err != nil {
-				return protoiface.MarshalOutput{
-					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-					Buf:               input.Buf,
-				}, err
-			}
-			i -= len(encoded)
-			copy(dAtA[i:], encoded)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+		if x.ToClaim != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.ToClaim))
 			i--
-			dAtA[i] = 0x12
+			dAtA[i] = 0x10
 		}
 		if len(x.Percentage) > 0 {
 			i -= len(x.Percentage)
@@ -1999,10 +1954,10 @@ func (x *fastReflection_FundDistribution) ProtoMethods() *protoiface.Methods {
 				x.Percentage = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
 			case 2:
-				if wireType != 2 {
+				if wireType != 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field ToClaim", wireType)
 				}
-				var msglen int
+				x.ToClaim = 0
 				for shift := uint(0); ; shift += 7 {
 					if shift >= 64 {
 						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
@@ -2012,28 +1967,11 @@ func (x *fastReflection_FundDistribution) ProtoMethods() *protoiface.Methods {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					msglen |= int(b&0x7F) << shift
+					x.ToClaim |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
 				}
-				if msglen < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				postIndex := iNdEx + msglen
-				if postIndex < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if postIndex > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				if x.ToClaim == nil {
-					x.ToClaim = &v1beta1.Coin{}
-				}
-				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.ToClaim); err != nil {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
-				}
-				iNdEx = postIndex
 			default:
 				iNdEx = preIndex
 				skippy, err := runtime.Skip(dAtA[iNdEx:])
@@ -2198,7 +2136,7 @@ type ContinuousFund struct {
 	Percentage string `protobuf:"bytes,2,opt,name=percentage,proto3" json:"percentage,omitempty"`
 	// MaxDistributedCapital is the threshold amount for distributing funds.
 	// Once MaxDistributedCapital is reached, further fund distribution is halted.
-	MaxDistributedCapital *v1beta1.Coin `protobuf:"bytes,3,opt,name=max_distributed_capital,json=maxDistributedCapital,proto3" json:"max_distributed_capital,omitempty"`
+	MaxDistributedCapital uint64 `protobuf:"varint,3,opt,name=max_distributed_capital,json=maxDistributedCapital,proto3" json:"max_distributed_capital,omitempty"`
 	// Optional, if expiry is set, removes the state object when expired.
 	Expiry *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=expiry,proto3" json:"expiry,omitempty"`
 }
@@ -2237,11 +2175,11 @@ func (x *ContinuousFund) GetPercentage() string {
 	return ""
 }
 
-func (x *ContinuousFund) GetMaxDistributedCapital() *v1beta1.Coin {
+func (x *ContinuousFund) GetMaxDistributedCapital() uint64 {
 	if x != nil {
 		return x.MaxDistributedCapital
 	}
-	return nil
+	return 0
 }
 
 func (x *ContinuousFund) GetExpiry() *timestamppb.Timestamp {
@@ -2261,7 +2199,7 @@ type FundDistribution struct {
 	// till the `MaxDistributedCapital` is reached or expired.
 	Percentage string `protobuf:"bytes,1,opt,name=percentage,proto3" json:"percentage,omitempty"`
 	// ToClaim is the amount of funds yet to be claimed.
-	ToClaim *v1beta1.Coin `protobuf:"bytes,2,opt,name=to_claim,json=toClaim,proto3" json:"to_claim,omitempty"`
+	ToClaim uint64 `protobuf:"varint,2,opt,name=to_claim,json=toClaim,proto3" json:"to_claim,omitempty"`
 }
 
 func (x *FundDistribution) Reset() {
@@ -2291,11 +2229,11 @@ func (x *FundDistribution) GetPercentage() string {
 	return ""
 }
 
-func (x *FundDistribution) GetToClaim() *v1beta1.Coin {
+func (x *FundDistribution) GetToClaim() uint64 {
 	if x != nil {
 		return x.ToClaim
 	}
-	return nil
+	return 0
 }
 
 var File_cosmos_protocolpool_v1_types_proto protoreflect.FileDescriptor
@@ -2343,7 +2281,7 @@ var file_cosmos_protocolpool_v1_types_proto_rawDesc = []byte{
 	0x70, 0x65, 0x72, 0x69, 0x6f, 0x64, 0x18, 0x08, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x67,
 	0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x44,
 	0x75, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x42, 0x04, 0x98, 0xdf, 0x1f, 0x01, 0x52, 0x06, 0x70,
-	0x65, 0x72, 0x69, 0x6f, 0x64, 0x22, 0xa8, 0x02, 0x0a, 0x0e, 0x43, 0x6f, 0x6e, 0x74, 0x69, 0x6e,
+	0x65, 0x72, 0x69, 0x6f, 0x64, 0x22, 0x8d, 0x02, 0x0a, 0x0e, 0x43, 0x6f, 0x6e, 0x74, 0x69, 0x6e,
 	0x75, 0x6f, 0x75, 0x73, 0x46, 0x75, 0x6e, 0x64, 0x12, 0x36, 0x0a, 0x09, 0x72, 0x65, 0x63, 0x69,
 	0x70, 0x69, 0x65, 0x6e, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d,
 	0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53,
@@ -2353,39 +2291,36 @@ var file_cosmos_protocolpool_v1_types_proto_rawDesc = []byte{
 	0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x6d, 0x61, 0x74, 0x68, 0x2e,
 	0x4c, 0x65, 0x67, 0x61, 0x63, 0x79, 0x44, 0x65, 0x63, 0xd2, 0xb4, 0x2d, 0x0a, 0x63, 0x6f, 0x73,
 	0x6d, 0x6f, 0x73, 0x2e, 0x44, 0x65, 0x63, 0x52, 0x0a, 0x70, 0x65, 0x72, 0x63, 0x65, 0x6e, 0x74,
-	0x61, 0x67, 0x65, 0x12, 0x51, 0x0a, 0x17, 0x6d, 0x61, 0x78, 0x5f, 0x64, 0x69, 0x73, 0x74, 0x72,
+	0x61, 0x67, 0x65, 0x12, 0x36, 0x0a, 0x17, 0x6d, 0x61, 0x78, 0x5f, 0x64, 0x69, 0x73, 0x74, 0x72,
 	0x69, 0x62, 0x75, 0x74, 0x65, 0x64, 0x5f, 0x63, 0x61, 0x70, 0x69, 0x74, 0x61, 0x6c, 0x18, 0x03,
-	0x20, 0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61,
-	0x73, 0x65, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x43, 0x6f, 0x69, 0x6e, 0x52,
-	0x15, 0x6d, 0x61, 0x78, 0x44, 0x69, 0x73, 0x74, 0x72, 0x69, 0x62, 0x75, 0x74, 0x65, 0x64, 0x43,
-	0x61, 0x70, 0x69, 0x74, 0x61, 0x6c, 0x12, 0x38, 0x0a, 0x06, 0x65, 0x78, 0x70, 0x69, 0x72, 0x79,
-	0x18, 0x04, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1a, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e,
-	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61,
-	0x6d, 0x70, 0x42, 0x04, 0x90, 0xdf, 0x1f, 0x01, 0x52, 0x06, 0x65, 0x78, 0x70, 0x69, 0x72, 0x79,
-	0x22, 0x97, 0x01, 0x0a, 0x10, 0x46, 0x75, 0x6e, 0x64, 0x44, 0x69, 0x73, 0x74, 0x72, 0x69, 0x62,
-	0x75, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0x4d, 0x0a, 0x0a, 0x70, 0x65, 0x72, 0x63, 0x65, 0x6e, 0x74,
-	0x61, 0x67, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x2d, 0xda, 0xde, 0x1f, 0x1b, 0x63,
-	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x6d, 0x61, 0x74, 0x68,
-	0x2e, 0x4c, 0x65, 0x67, 0x61, 0x63, 0x79, 0x44, 0x65, 0x63, 0xd2, 0xb4, 0x2d, 0x0a, 0x63, 0x6f,
-	0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x44, 0x65, 0x63, 0x52, 0x0a, 0x70, 0x65, 0x72, 0x63, 0x65, 0x6e,
-	0x74, 0x61, 0x67, 0x65, 0x12, 0x34, 0x0a, 0x08, 0x74, 0x6f, 0x5f, 0x63, 0x6c, 0x61, 0x69, 0x6d,
-	0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e,
-	0x62, 0x61, 0x73, 0x65, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x43, 0x6f, 0x69,
-	0x6e, 0x52, 0x07, 0x74, 0x6f, 0x43, 0x6c, 0x61, 0x69, 0x6d, 0x42, 0xda, 0x01, 0x0a, 0x1a, 0x63,
-	0x6f, 0x6d, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63,
-	0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x2e, 0x76, 0x31, 0x42, 0x0a, 0x54, 0x79, 0x70, 0x65, 0x73,
-	0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x36, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73,
-	0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
-	0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x2f, 0x76, 0x31,
-	0x3b, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x76, 0x31, 0xa2,
-	0x02, 0x03, 0x43, 0x50, 0x58, 0xaa, 0x02, 0x16, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x50,
-	0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x2e, 0x56, 0x31, 0xca, 0x02,
-	0x16, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c,
-	0x70, 0x6f, 0x6f, 0x6c, 0x5c, 0x56, 0x31, 0xe2, 0x02, 0x22, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
+	0x20, 0x01, 0x28, 0x04, 0x52, 0x15, 0x6d, 0x61, 0x78, 0x44, 0x69, 0x73, 0x74, 0x72, 0x69, 0x62,
+	0x75, 0x74, 0x65, 0x64, 0x43, 0x61, 0x70, 0x69, 0x74, 0x61, 0x6c, 0x12, 0x38, 0x0a, 0x06, 0x65,
+	0x78, 0x70, 0x69, 0x72, 0x79, 0x18, 0x04, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1a, 0x2e, 0x67, 0x6f,
+	0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x54, 0x69,
+	0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x42, 0x04, 0x90, 0xdf, 0x1f, 0x01, 0x52, 0x06, 0x65,
+	0x78, 0x70, 0x69, 0x72, 0x79, 0x22, 0x7c, 0x0a, 0x10, 0x46, 0x75, 0x6e, 0x64, 0x44, 0x69, 0x73,
+	0x74, 0x72, 0x69, 0x62, 0x75, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0x4d, 0x0a, 0x0a, 0x70, 0x65, 0x72,
+	0x63, 0x65, 0x6e, 0x74, 0x61, 0x67, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x2d, 0xda,
+	0xde, 0x1f, 0x1b, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f,
+	0x6d, 0x61, 0x74, 0x68, 0x2e, 0x4c, 0x65, 0x67, 0x61, 0x63, 0x79, 0x44, 0x65, 0x63, 0xd2, 0xb4,
+	0x2d, 0x0a, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x44, 0x65, 0x63, 0x52, 0x0a, 0x70, 0x65,
+	0x72, 0x63, 0x65, 0x6e, 0x74, 0x61, 0x67, 0x65, 0x12, 0x19, 0x0a, 0x08, 0x74, 0x6f, 0x5f, 0x63,
+	0x6c, 0x61, 0x69, 0x6d, 0x18, 0x02, 0x20, 0x01, 0x28, 0x04, 0x52, 0x07, 0x74, 0x6f, 0x43, 0x6c,
+	0x61, 0x69, 0x6d, 0x42, 0xda, 0x01, 0x0a, 0x1a, 0x63, 0x6f, 0x6d, 0x2e, 0x63, 0x6f, 0x73, 0x6d,
+	0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x2e,
+	0x76, 0x31, 0x42, 0x0a, 0x54, 0x79, 0x70, 0x65, 0x73, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01,
+	0x5a, 0x36, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x61,
+	0x70, 0x69, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63,
+	0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x2f, 0x76, 0x31, 0x3b, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63,
+	0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x76, 0x31, 0xa2, 0x02, 0x03, 0x43, 0x50, 0x58, 0xaa, 0x02,
+	0x16, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c,
+	0x70, 0x6f, 0x6f, 0x6c, 0x2e, 0x56, 0x31, 0xca, 0x02, 0x16, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
 	0x5c, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x5c, 0x56, 0x31,
-	0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x18, 0x43,
-	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x3a, 0x3a, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70,
-	0x6f, 0x6f, 0x6c, 0x3a, 0x3a, 0x56, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0xe2, 0x02, 0x22, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x63,
+	0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x5c, 0x56, 0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74,
+	0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x18, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x3a, 0x3a,
+	0x50, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x3a, 0x3a, 0x56, 0x31,
+	0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -2415,14 +2350,12 @@ var file_cosmos_protocolpool_v1_types_proto_depIdxs = []int32{
 	4, // 2: cosmos.protocolpool.v1.Budget.start_time:type_name -> google.protobuf.Timestamp
 	4, // 3: cosmos.protocolpool.v1.Budget.next_claim_from:type_name -> google.protobuf.Timestamp
 	5, // 4: cosmos.protocolpool.v1.Budget.period:type_name -> google.protobuf.Duration
-	3, // 5: cosmos.protocolpool.v1.ContinuousFund.max_distributed_capital:type_name -> cosmos.base.v1beta1.Coin
-	4, // 6: cosmos.protocolpool.v1.ContinuousFund.expiry:type_name -> google.protobuf.Timestamp
-	3, // 7: cosmos.protocolpool.v1.FundDistribution.to_claim:type_name -> cosmos.base.v1beta1.Coin
-	8, // [8:8] is the sub-list for method output_type
-	8, // [8:8] is the sub-list for method input_type
-	8, // [8:8] is the sub-list for extension type_name
-	8, // [8:8] is the sub-list for extension extendee
-	0, // [0:8] is the sub-list for field type_name
+	4, // 5: cosmos.protocolpool.v1.ContinuousFund.expiry:type_name -> google.protobuf.Timestamp
+	6, // [6:6] is the sub-list for method output_type
+	6, // [6:6] is the sub-list for method input_type
+	6, // [6:6] is the sub-list for extension type_name
+	6, // [6:6] is the sub-list for extension extendee
+	0, // [0:6] is the sub-list for field type_name
 }
 
 func init() { file_cosmos_protocolpool_v1_types_proto_init() }

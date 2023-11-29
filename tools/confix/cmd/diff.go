@@ -5,11 +5,12 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/spf13/cobra"
 	"golang.org/x/exp/maps"
 
 	"cosmossdk.io/tools/confix"
+
+	"github.com/cosmos/cosmos-sdk/client"
 )
 
 // DiffCommand creates a new command for comparing configuration files

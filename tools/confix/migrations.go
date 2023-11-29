@@ -19,7 +19,7 @@ const (
 )
 
 // MigrationMap defines a mapping from a version to a transformation plan.
-type MigrationMap map[string]func(from *tomledit.Document, to string, planType string) transform.Plan
+type MigrationMap map[string]func(from *tomledit.Document, to, planType string) transform.Plan
 
 var Migrations = MigrationMap{
 	"v0.45": NoPlan, // Confix supports only the current supported SDK version. So we do not support v0.44 -> v0.45.
@@ -31,7 +31,7 @@ var Migrations = MigrationMap{
 }
 
 // PlanBuilder is a function that returns a transformation plan for a given diff between two files.
-func PlanBuilder(from *tomledit.Document, to string, planType string) transform.Plan {
+func PlanBuilder(from *tomledit.Document, to, planType string) transform.Plan {
 	plan := transform.Plan{}
 	deletedSections := map[string]bool{}
 
@@ -118,7 +118,7 @@ func PlanBuilder(from *tomledit.Document, to string, planType string) transform.
 }
 
 // NoPlan returns a no-op plan.
-func NoPlan(_ *tomledit.Document, to string, planType string) transform.Plan {
+func NoPlan(_ *tomledit.Document, to, planType string) transform.Plan {
 	fmt.Printf("no migration needed to %s\n", to)
 	return transform.Plan{}
 }

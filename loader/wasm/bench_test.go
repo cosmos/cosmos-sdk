@@ -5,6 +5,8 @@ import (
 	"testing"
 	"unsafe"
 
+	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
+	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/proto"
 
@@ -26,23 +28,12 @@ func protoWasmRound(b testing.TB, m WasmModule, check bool) {
 		Name:  "Benchmarker",
 		Value: 51,
 	}
-	bz, err := proto.Marshal(greet)
-	if check {
-		require.NoError(b, err)
-	}
-	inLen := int32(len(bz))
-	inPtr, err := m.Alloc(inLen)
-	if check {
-		require.NoError(b, err)
-	}
-	copy(m.memory.UnsafeData(m.store)[inPtr:inPtr+inLen], bz)
+	inPtr, inLen := m.WriteProto(greet)
 	outPtr, outLen := m.Exec(inPtr, inLen)
-	out := m.memory.UnsafeData(m.store)[outPtr : outPtr+outLen]
 	greetRes := &test1.GreetResponse{}
-	err = proto.Unmarshal(out, greetRes)
+	m.ReadProtoOut(outPtr, outLen, greetRes)
 	if check {
-		require.NoError(b, err)
-		require.Equal(b, "Hello, Benchmarker! You entered 51", greetRes.Message)
+		checkGreetRes(b, greetRes.Message)
 	}
 	m.Free(inPtr, inLen)
 	m.Free(outPtr, outLen)
@@ -72,7 +63,7 @@ func protoFFIRound(b testing.TB, m FFIModule, check bool) {
 	err = proto.Unmarshal(out, greetRes)
 	if check {
 		require.NoError(b, err)
-		require.Equal(b, "Hello, Benchmarker! You entered 51", greetRes.Message)
+		checkGreetRes(b, greetRes.Message)
 	}
 }
 
@@ -113,11 +104,11 @@ func checkWasmAllocations(b *testing.B, m WasmModule) {
 
 func zeroPBWasmRound(b testing.TB, m WasmModule, check bool) {
 	bz, n := sampleZeroPbGreet(b)
-	inPtr := m.WriteZeroPB(b, bz, n, check)
+	inPtr := m.WriteZeroPB(bz, n)
 	outPtr, _ := m.Exec(inPtr, n)
 	out, outLen := m.ReadZeroPBOutPtr(outPtr)
 	if check {
-		require.Equal(b, "Hello, Benchmarker! You entered 51", string(out[4:]))
+		checkGreetRes(b, string(out[4:]))
 		require.Equal(b, []byte{4, 0, 34, 0}, out[:4])
 		require.Equal(b, outLen, int32(4+34))
 	}
@@ -169,7 +160,76 @@ func zeroPBFFIRound(b testing.TB, m FFIModule, check bool) {
 	out := m.Exec(bz)
 	if check {
 		require.Equal(b, []byte{4, 0, 34, 0}, out[:4])
-		require.Equal(b, "Hello, Benchmarker! You entered 51", string(out[4:]))
+		checkGreetRes(b, string(out[4:]))
+	}
+}
+
+func checkGreetRes(b testing.TB, msg string) {
+	require.Equal(b, "Hello, Benchmarker! You entered 51", msg)
+}
+
+func BenchmarkProtoWasmMsgSend(b *testing.B) {
+	m := LoadWasmModule(b, "../../rust/target/wasm32-unknown-unknown/release/example_module2.wasm")
+	protoWasmMsgSendRound(b, m, true)
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		protoWasmMsgSendRound(b, m, false)
+	}
+}
+
+func protoWasmMsgSendRound(b *testing.B, m WasmModule, check bool) {
+	inPtr, inLen := m.WriteProto(exampleMsgSend())
+	outPtr, outLen := m.ExecMsgSend(inPtr, inLen)
+	greetRes := &test1.GreetResponse{}
+	m.ReadProtoOut(outPtr, outLen, greetRes)
+	if check {
+		checkMsgSendRes(b, greetRes.Message)
+	}
+	m.Free(inPtr, inLen)
+	m.Free(outPtr, outLen)
+}
+
+func exampleMsgSend() *bankv1beta1.MsgSend {
+	coins := []*basev1beta1.Coin{
+		{
+			Denom:  "uatom",
+			Amount: "1234567",
+		},
+		{
+			Denom:  "foo",
+			Amount: "7654321",
+		},
+	}
+	return &bankv1beta1.MsgSend{
+		FromAddress: "cosmos1huydeevpz37sd9snkgul6070mstupukw00xkw9",
+		ToAddress:   "cosmos1xy4yqngt0nlkdcenxymg8tenrghmek4nmqm28k",
+		Amount:      coins,
+	}
+}
+
+func BenchmarkProtoFFIMsgSend(b *testing.B) {
+	m := LoadFFIModule(b, "../../rust/target/release/libexample_module2.dylib")
+	protoFFIMsgSendRound(b, m, true)
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		protoFFIMsgSendRound(b, m, false)
+	}
+}
+
+func protoFFIMsgSendRound(b testing.TB, m FFIModule, check bool) {
+	msgSend := exampleMsgSend()
+	bz, err := proto.Marshal(msgSend)
+	if check {
+		require.NoError(b, err)
+	}
+	out := m.ExecMsgSend(bz)
+	greetRes := &test1.GreetResponse{}
+	err = proto.Unmarshal(out, greetRes)
+	if check {
+		require.NoError(b, err)
+		checkMsgSendRes(b, greetRes.Message)
 	}
 }
 
@@ -186,16 +246,47 @@ func BenchmarkZeroPBWasmMsgSend(b *testing.B) {
 }
 
 func zeroPBWasmMsgSendRound(b *testing.B, m WasmModule, check bool) {
-	inPtr := m.WriteZeroPB(b, testMsgSendZeroPbBz, int32(len(testMsgSendZeroPbBz)), check)
+	inPtr := m.WriteZeroPB(testMsgSendZeroPbBz, int32(len(testMsgSendZeroPbBz)))
 	outPtr, _ := m.ExecMsgSend(inPtr, int32(len(testMsgSendZeroPbBz)))
 	out, outLen := m.ReadZeroPBOutPtr(outPtr)
 	if check {
-		require.Equal(b, "cosmos1huydeevpz37sd9snkgul6070mstupukw00xkw9 sent to cosmos1xy4yqngt0nlkdcenxymg8tenrghmek4nmqm28k:  1234567 uatom  7654321 foo", string(out[4:]))
-		require.Equal(b, []byte{0x77, 0, 0xd, 0}, out[:4])
+		checkMsgSendZeroPbRes(b, out)
 		require.Equal(b, int32(132), outLen)
 	}
 	m.Free(inPtr, 0x10000)
 	m.Free(outPtr, 0x10000)
+}
+
+var zeroPbMsgSendBz []byte
+
+func BenchmarkZeroPBFFIMsgSend(b *testing.B) {
+	m := LoadFFIModule(b, "../../rust/target/release/libexample_module.dylib")
+	n := len(testMsgSendZeroPbBz)
+	zeroPbMsgSendBz = unsafe.Slice((*byte)(zeroPbBuf), 0x10000)
+	binary.LittleEndian.PutUint16(zeroPbMsgSendBz[0x10000-2:0x10000], uint16(n))
+	copy(zeroPbMsgSendBz, testMsgSendZeroPbBz)
+	zeroPBFFIMsgSendRound(b, m, true)
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		zeroPBFFIMsgSendRound(b, m, false)
+	}
+}
+
+func zeroPBFFIMsgSendRound(b testing.TB, m FFIModule, check bool) {
+	out := m.ExecMsgSend(zeroPbMsgSendBz)
+	if check {
+		checkMsgSendZeroPbRes(b, out)
+	}
+}
+
+func checkMsgSendRes(b testing.TB, msg string) {
+	require.Equal(b, "cosmos1huydeevpz37sd9snkgul6070mstupukw00xkw9 sent to cosmos1xy4yqngt0nlkdcenxymg8tenrghmek4nmqm28k:  1234567 uatom  7654321 foo", msg)
+}
+
+func checkMsgSendZeroPbRes(b testing.TB, out []byte) {
+	checkMsgSendRes(b, string(out[4:]))
+	require.Equal(b, []byte{0x77, 0, 0xd, 0}, out[:4])
 }
 
 var testMsgSendZeroPbBz = []byte{

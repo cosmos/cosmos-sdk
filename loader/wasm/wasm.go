@@ -7,6 +7,7 @@ import (
 
 	"github.com/bytecodealliance/wasmtime-go/v14"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/proto"
 )
 
 type WasmModule struct {
@@ -73,10 +74,24 @@ func (w WasmModule) doExec(f *wasmtime.Func, inPtr int32, inLen int32) (outPtr i
 	return
 }
 
-func (w WasmModule) WriteZeroPB(b testing.TB, bz []byte, n int32, check bool) int32 {
+func (w WasmModule) WriteProto(msg proto.Message) (int32, int32) {
+	bz, err := proto.Marshal(msg)
+	if err != nil {
+		panic(err)
+	}
+	inLen := int32(len(bz))
+	inPtr, err := w.Alloc(inLen)
+	if err != nil {
+		panic(err)
+	}
+	copy(w.memory.UnsafeData(w.store)[inPtr:inPtr+inLen], bz)
+	return inPtr, inLen
+}
+
+func (w WasmModule) WriteZeroPB(bz []byte, n int32) int32 {
 	inPtr, err := w.Alloc(0x10000)
-	if check {
-		require.NoError(b, err)
+	if err != nil {
+		panic(err)
 	}
 	inMem := w.memory.UnsafeData(w.store)
 	copy(inMem[inPtr:inPtr+n], bz)
@@ -89,4 +104,12 @@ func (w WasmModule) ReadZeroPBOutPtr(outPtr int32) ([]byte, int32) {
 	outMem := w.memory.UnsafeData(w.store)
 	outLen := int32(binary.LittleEndian.Uint16(outMem[outPtr+0x10000-2 : outPtr+0x10000]))
 	return outMem[outPtr : outPtr+outLen], outLen
+}
+
+func (w WasmModule) ReadProtoOut(outPtr, outLen int32, msg proto.Message) {
+	out := w.memory.UnsafeData(w.store)[outPtr : outPtr+outLen]
+	err := proto.Unmarshal(out, msg)
+	if err != nil {
+		panic(err)
+	}
 }

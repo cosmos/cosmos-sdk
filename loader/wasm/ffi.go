@@ -25,16 +25,18 @@ package wasm
 // }
 import "C"
 import (
-	"github.com/stretchr/testify/require"
 	"testing"
 	"unsafe"
+
+	"github.com/stretchr/testify/require"
 )
 
 type FFIModule struct {
-	Handle unsafe.Pointer
-	exec   unsafe.Pointer
-	alloc  unsafe.Pointer
-	free   unsafe.Pointer
+	Handle      unsafe.Pointer
+	exec        unsafe.Pointer
+	execMsgSend unsafe.Pointer
+	alloc       unsafe.Pointer
+	free        unsafe.Pointer
 }
 
 func (f FFIModule) Alloc(n int) unsafe.Pointer {
@@ -46,8 +48,16 @@ func (f FFIModule) Free(ptr unsafe.Pointer, n int) {
 }
 
 func (f FFIModule) Exec(input []byte) []byte {
+	return f.doExec(f.exec, input)
+}
+
+func (f FFIModule) ExecMsgSend(input []byte) []byte {
+	return f.doExec(f.execMsgSend, input)
+}
+
+func (f FFIModule) doExec(ptr unsafe.Pointer, input []byte) []byte {
 	var outLen C.size_t
-	out := C.exec(f.exec, (*C.uint8_t)(&input[0]), C.size_t(len(input)), &outLen)
+	out := C.exec(ptr, (*C.uint8_t)(&input[0]), C.size_t(len(input)), &outLen)
 	res := C.GoBytes(unsafe.Pointer(out), C.int(outLen))
 	f.Free(unsafe.Pointer(out), int(outLen))
 	return res
@@ -67,6 +77,8 @@ func LoadFFIModule(b testing.TB, path string) FFIModule {
 	require.NotNil(b, m.Handle)
 	m.exec = C.dlsym(m.Handle, C.CString("exec"))
 	require.NotNil(b, m.exec)
+	m.execMsgSend = C.dlsym(m.Handle, C.CString("exec_msg_send"))
+	require.NotNil(b, m.execMsgSend)
 	m.alloc = C.dlsym(m.Handle, C.CString("__alloc"))
 	require.NotNil(b, m.alloc)
 	m.free = C.dlsym(m.Handle, C.CString("__free"))

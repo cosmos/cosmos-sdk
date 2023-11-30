@@ -17,7 +17,6 @@ type Cache struct {
 // NewSignatureCache initializes the signature cache.
 // signature verification is one of the most expensive parts in verification
 // by caching it we avoid needing to verify the same signature multiple times
-// This is only initialized once.
 func NewSignatureCache() *Cache {
 	// 500 * (32 + 42) = 37.5KB
 	cache, err := lru.New[string, []byte](500)
@@ -37,6 +36,7 @@ func (c *Cache) Get(key string) ([]byte, bool) {
 	return c.data.Get(key)
 }
 
+// Add adds a signature to the cache
 func (c *Cache) Add(key string, value []byte) {
 	// validate
 	if !c.validate(key) {
@@ -46,6 +46,7 @@ func (c *Cache) Add(key string, value []byte) {
 	c.data.Add(key, value)
 }
 
+// Remove removes a signature from the cache
 func (c *Cache) Remove(key string) {
 	// validate
 	if !c.validate(key) {
@@ -54,6 +55,7 @@ func (c *Cache) Remove(key string) {
 	c.data.Remove(key)
 }
 
+// validate validates the key and cache
 func (c *Cache) validate(key string) bool {
 	// validate key
 	if len(key) == 0 {
@@ -76,6 +78,6 @@ func newSigKey(signbytes, sig []byte) sigkey {
 	}
 }
 
-func (s sigkey) string() string {
+func (s sigkey) String() string {
 	return string(append(s.signbytes, s.sig...))
 }

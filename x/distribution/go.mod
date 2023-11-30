@@ -27,12 +27,11 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/spf13/cobra v1.8.0
 	github.com/stretchr/testify v1.8.4
+	golang.org/x/sync v0.5.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20231106174013-bbf56f31fb17
 	google.golang.org/grpc v1.59.0
 	gotest.tools/v3 v3.5.1
 )
-
-require golang.org/x/sync v0.5.0 // indirect
 
 require (
 	cosmossdk.io/x/auth v0.0.0-00010101000000-000000000000

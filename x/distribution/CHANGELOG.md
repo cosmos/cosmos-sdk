@@ -29,6 +29,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 *
 
+### Improvements
+
+* []() Speed-up begin blocker by making `AllocateTokens` concurrent.
+
 ### API Breaking Changes
 
 * [#17115](https://github.com/cosmos/cosmos-sdk/pull/17115) Use collections for `PreviousProposer` and `ValidatorSlashEvents`:

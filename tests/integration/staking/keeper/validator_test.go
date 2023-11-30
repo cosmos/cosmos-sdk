@@ -155,7 +155,7 @@ func TestSlashToZeroPowerRemoved(t *testing.T) {
 	applyValidatorSetUpdates(t, f.sdkCtx, f.stakingKeeper, -1)
 	// validator should be unbonding
 	validator, _ = f.stakingKeeper.GetValidator(f.sdkCtx, addrVals[0])
-	assert.Equal(t, validator.GetStatus(), types.Unbonding)
+	assert.Equal(t, validator.GetStatus(), sdk.Unbonding)
 }
 
 // test how the validators are sorted, tests GetBondedValidatorsByPower

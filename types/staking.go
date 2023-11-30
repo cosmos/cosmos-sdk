@@ -58,6 +58,18 @@ const (
 	Bonded BondStatus = 3
 )
 
+// BondStatus_name is the string representation of BondStatus.
+var bondStatus_name = map[int32]string{
+	0: "BOND_STATUS_UNSPECIFIED",
+	1: "BOND_STATUS_UNBONDED",
+	2: "BOND_STATUS_UNBONDING",
+	3: "BOND_STATUS_BONDED",
+}
+
+func (x BondStatus) String() string {
+	return bondStatus_name[int32(x)]
+}
+
 // DelegationI delegation bond for a delegated proof of stake system
 type DelegationI interface {
 	GetDelegatorAddr() string  // delegator string for the bond

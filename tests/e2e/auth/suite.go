@@ -255,11 +255,11 @@ func (s *E2ETestSuite) TestCLISignBatch() {
 	// Sign batch malformed tx file.
 	malformedFile := testutil.WriteToNewTempFile(s.T(), fmt.Sprintf("malformed%s", generatedStd))
 	defer malformedFile.Close()
-	_, err = authclitestutil.TxSignBatchExec(clientCtx, val.GetAddress(), outputFile.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, clientCtx.ChainID))
+	_, err = authclitestutil.TxSignBatchExec(clientCtx, val.GetAddress(), malformedFile.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, clientCtx.ChainID))
 	s.Require().Error(err)
 
 	// Sign batch malformed tx file signature only.
-	_, err = authclitestutil.TxSignBatchExec(clientCtx, val.GetAddress(), outputFile.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, clientCtx.ChainID), "--signature-only")
+	_, err = authclitestutil.TxSignBatchExec(clientCtx, val.GetAddress(), malformedFile.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, clientCtx.ChainID), "--signature-only")
 	s.Require().Error(err)
 
 	// make a txn to increase the sequence of sender

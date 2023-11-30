@@ -111,7 +111,7 @@ func(unm *UnorderedNonceManager) CheckNonce(nonce uint64, blockTime uint64) erro
         return errors.New("max gap is exceeded")
       }
 
-      gapSet := acct.getGaps(blockTime)
+      gapSet := unm.getGaps(blockTime)
       // record the gaps into the bitmap
       gapSet.AddRange(unm.Sequence + 1, unm.Sequence + gaps + 1)
 

@@ -12,8 +12,7 @@ import (
 	math "cosmossdk.io/math"
 	keeper "cosmossdk.io/x/bank/keeper"
 	types "cosmossdk.io/x/bank/types"
-	types0 "cosmossdk.io/x/staking/types"
-	types1 "github.com/cosmos/cosmos-sdk/types"
+	types0 "github.com/cosmos/cosmos-sdk/types"
 	query "github.com/cosmos/cosmos-sdk/types/query"
 	gomock "github.com/golang/mock/gomock"
 )
@@ -56,10 +55,10 @@ func (mr *MockAccountKeeperMockRecorder) AddressCodec() *gomock.Call {
 }
 
 // GetAccount mocks base method.
-func (m *MockAccountKeeper) GetAccount(ctx context.Context, addr types1.AccAddress) types1.AccountI {
+func (m *MockAccountKeeper) GetAccount(ctx context.Context, addr types0.AccAddress) types0.AccountI {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAccount", ctx, addr)
-	ret0, _ := ret[0].(types1.AccountI)
+	ret0, _ := ret[0].(types0.AccountI)
 	return ret0
 }
 
@@ -70,10 +69,10 @@ func (mr *MockAccountKeeperMockRecorder) GetAccount(ctx, addr interface{}) *gomo
 }
 
 // GetModuleAccount mocks base method.
-func (m *MockAccountKeeper) GetModuleAccount(ctx context.Context, name string) types1.ModuleAccountI {
+func (m *MockAccountKeeper) GetModuleAccount(ctx context.Context, name string) types0.ModuleAccountI {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetModuleAccount", ctx, name)
-	ret0, _ := ret[0].(types1.ModuleAccountI)
+	ret0, _ := ret[0].(types0.ModuleAccountI)
 	return ret0
 }
 
@@ -84,10 +83,10 @@ func (mr *MockAccountKeeperMockRecorder) GetModuleAccount(ctx, name interface{})
 }
 
 // GetModuleAddress mocks base method.
-func (m *MockAccountKeeper) GetModuleAddress(name string) types1.AccAddress {
+func (m *MockAccountKeeper) GetModuleAddress(name string) types0.AccAddress {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetModuleAddress", name)
-	ret0, _ := ret[0].(types1.AccAddress)
+	ret0, _ := ret[0].(types0.AccAddress)
 	return ret0
 }
 
@@ -98,7 +97,7 @@ func (mr *MockAccountKeeperMockRecorder) GetModuleAddress(name interface{}) *gom
 }
 
 // IterateAccounts mocks base method.
-func (m *MockAccountKeeper) IterateAccounts(ctx context.Context, cb func(types1.AccountI) bool) {
+func (m *MockAccountKeeper) IterateAccounts(ctx context.Context, cb func(types0.AccountI) bool) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "IterateAccounts", ctx, cb)
 }
@@ -110,7 +109,7 @@ func (mr *MockAccountKeeperMockRecorder) IterateAccounts(ctx, cb interface{}) *g
 }
 
 // SetModuleAccount mocks base method.
-func (m *MockAccountKeeper) SetModuleAccount(arg0 context.Context, arg1 types1.ModuleAccountI) {
+func (m *MockAccountKeeper) SetModuleAccount(arg0 context.Context, arg1 types0.ModuleAccountI) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "SetModuleAccount", arg0, arg1)
 }
@@ -187,7 +186,7 @@ func (mr *MockBankKeeperMockRecorder) Balance(arg0, arg1 interface{}) *gomock.Ca
 }
 
 // BlockedAddr mocks base method.
-func (m *MockBankKeeper) BlockedAddr(addr types1.AccAddress) bool {
+func (m *MockBankKeeper) BlockedAddr(addr types0.AccAddress) bool {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "BlockedAddr", addr)
 	ret0, _ := ret[0].(bool)
@@ -201,7 +200,7 @@ func (mr *MockBankKeeperMockRecorder) BlockedAddr(addr interface{}) *gomock.Call
 }
 
 // BurnCoins mocks base method.
-func (m *MockBankKeeper) BurnCoins(ctx context.Context, address []byte, amt types1.Coins) error {
+func (m *MockBankKeeper) BurnCoins(ctx context.Context, address []byte, amt types0.Coins) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "BurnCoins", ctx, address, amt)
 	ret0, _ := ret[0].(error)
@@ -227,7 +226,7 @@ func (mr *MockBankKeeperMockRecorder) ClearSendRestriction() *gomock.Call {
 }
 
 // DelegateCoins mocks base method.
-func (m *MockBankKeeper) DelegateCoins(ctx context.Context, delegatorAddr, moduleAccAddr types1.AccAddress, amt types1.Coins) error {
+func (m *MockBankKeeper) DelegateCoins(ctx context.Context, delegatorAddr, moduleAccAddr types0.AccAddress, amt types0.Coins) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DelegateCoins", ctx, delegatorAddr, moduleAccAddr, amt)
 	ret0, _ := ret[0].(error)
@@ -241,7 +240,7 @@ func (mr *MockBankKeeperMockRecorder) DelegateCoins(ctx, delegatorAddr, moduleAc
 }
 
 // DelegateCoinsFromAccountToModule mocks base method.
-func (m *MockBankKeeper) DelegateCoinsFromAccountToModule(ctx context.Context, senderAddr types1.AccAddress, recipientModule string, amt types1.Coins) error {
+func (m *MockBankKeeper) DelegateCoinsFromAccountToModule(ctx context.Context, senderAddr types0.AccAddress, recipientModule string, amt types0.Coins) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DelegateCoinsFromAccountToModule", ctx, senderAddr, recipientModule, amt)
 	ret0, _ := ret[0].(error)
@@ -360,10 +359,10 @@ func (mr *MockBankKeeperMockRecorder) GetAccountsBalances(ctx interface{}) *gomo
 }
 
 // GetAllBalances mocks base method.
-func (m *MockBankKeeper) GetAllBalances(ctx context.Context, addr types1.AccAddress) types1.Coins {
+func (m *MockBankKeeper) GetAllBalances(ctx context.Context, addr types0.AccAddress) types0.Coins {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAllBalances", ctx, addr)
-	ret0, _ := ret[0].(types1.Coins)
+	ret0, _ := ret[0].(types0.Coins)
 	return ret0
 }
 
@@ -416,10 +415,10 @@ func (mr *MockBankKeeperMockRecorder) GetAuthority() *gomock.Call {
 }
 
 // GetBalance mocks base method.
-func (m *MockBankKeeper) GetBalance(ctx context.Context, addr types1.AccAddress, denom string) types1.Coin {
+func (m *MockBankKeeper) GetBalance(ctx context.Context, addr types0.AccAddress, denom string) types0.Coin {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetBalance", ctx, addr, denom)
-	ret0, _ := ret[0].(types1.Coin)
+	ret0, _ := ret[0].(types0.Coin)
 	return ret0
 }
 
@@ -459,10 +458,10 @@ func (mr *MockBankKeeperMockRecorder) GetDenomMetaData(ctx, denom interface{}) *
 }
 
 // GetPaginatedTotalSupply mocks base method.
-func (m *MockBankKeeper) GetPaginatedTotalSupply(ctx context.Context, pagination *query.PageRequest) (types1.Coins, *query.PageResponse, error) {
+func (m *MockBankKeeper) GetPaginatedTotalSupply(ctx context.Context, pagination *query.PageRequest) (types0.Coins, *query.PageResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetPaginatedTotalSupply", ctx, pagination)
-	ret0, _ := ret[0].(types1.Coins)
+	ret0, _ := ret[0].(types0.Coins)
 	ret1, _ := ret[1].(*query.PageResponse)
 	ret2, _ := ret[2].(error)
 	return ret0, ret1, ret2
@@ -504,10 +503,10 @@ func (mr *MockBankKeeperMockRecorder) GetSendEnabledEntry(ctx, denom interface{}
 }
 
 // GetSupply mocks base method.
-func (m *MockBankKeeper) GetSupply(ctx context.Context, denom string) types1.Coin {
+func (m *MockBankKeeper) GetSupply(ctx context.Context, denom string) types0.Coin {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetSupply", ctx, denom)
-	ret0, _ := ret[0].(types1.Coin)
+	ret0, _ := ret[0].(types0.Coin)
 	return ret0
 }
 
@@ -518,7 +517,7 @@ func (mr *MockBankKeeperMockRecorder) GetSupply(ctx, denom interface{}) *gomock.
 }
 
 // HasBalance mocks base method.
-func (m *MockBankKeeper) HasBalance(ctx context.Context, addr types1.AccAddress, amt types1.Coin) bool {
+func (m *MockBankKeeper) HasBalance(ctx context.Context, addr types0.AccAddress, amt types0.Coin) bool {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "HasBalance", ctx, addr, amt)
 	ret0, _ := ret[0].(bool)
@@ -586,7 +585,7 @@ func (mr *MockBankKeeperMockRecorder) InputOutputCoins(ctx, input, outputs inter
 }
 
 // IsSendEnabledCoin mocks base method.
-func (m *MockBankKeeper) IsSendEnabledCoin(ctx context.Context, coin types1.Coin) bool {
+func (m *MockBankKeeper) IsSendEnabledCoin(ctx context.Context, coin types0.Coin) bool {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "IsSendEnabledCoin", ctx, coin)
 	ret0, _ := ret[0].(bool)
@@ -600,7 +599,7 @@ func (mr *MockBankKeeperMockRecorder) IsSendEnabledCoin(ctx, coin interface{}) *
 }
 
 // IsSendEnabledCoins mocks base method.
-func (m *MockBankKeeper) IsSendEnabledCoins(ctx context.Context, coins ...types1.Coin) error {
+func (m *MockBankKeeper) IsSendEnabledCoins(ctx context.Context, coins ...types0.Coin) error {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{ctx}
 	for _, a := range coins {
@@ -633,7 +632,7 @@ func (mr *MockBankKeeperMockRecorder) IsSendEnabledDenom(ctx, denom interface{})
 }
 
 // IterateAccountBalances mocks base method.
-func (m *MockBankKeeper) IterateAccountBalances(ctx context.Context, addr types1.AccAddress, cb func(types1.Coin) bool) {
+func (m *MockBankKeeper) IterateAccountBalances(ctx context.Context, addr types0.AccAddress, cb func(types0.Coin) bool) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "IterateAccountBalances", ctx, addr, cb)
 }
@@ -645,7 +644,7 @@ func (mr *MockBankKeeperMockRecorder) IterateAccountBalances(ctx, addr, cb inter
 }
 
 // IterateAllBalances mocks base method.
-func (m *MockBankKeeper) IterateAllBalances(ctx context.Context, cb func(types1.AccAddress, types1.Coin) bool) {
+func (m *MockBankKeeper) IterateAllBalances(ctx context.Context, cb func(types0.AccAddress, types0.Coin) bool) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "IterateAllBalances", ctx, cb)
 }
@@ -681,7 +680,7 @@ func (mr *MockBankKeeperMockRecorder) IterateSendEnabledEntries(ctx, cb interfac
 }
 
 // IterateTotalSupply mocks base method.
-func (m *MockBankKeeper) IterateTotalSupply(ctx context.Context, cb func(types1.Coin) bool) {
+func (m *MockBankKeeper) IterateTotalSupply(ctx context.Context, cb func(types0.Coin) bool) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "IterateTotalSupply", ctx, cb)
 }
@@ -693,10 +692,10 @@ func (mr *MockBankKeeperMockRecorder) IterateTotalSupply(ctx, cb interface{}) *g
 }
 
 // LockedCoins mocks base method.
-func (m *MockBankKeeper) LockedCoins(ctx context.Context, addr types1.AccAddress) types1.Coins {
+func (m *MockBankKeeper) LockedCoins(ctx context.Context, addr types0.AccAddress) types0.Coins {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "LockedCoins", ctx, addr)
-	ret0, _ := ret[0].(types1.Coins)
+	ret0, _ := ret[0].(types0.Coins)
 	return ret0
 }
 
@@ -707,7 +706,7 @@ func (mr *MockBankKeeperMockRecorder) LockedCoins(ctx, addr interface{}) *gomock
 }
 
 // MintCoins mocks base method.
-func (m *MockBankKeeper) MintCoins(ctx context.Context, moduleName string, amt types1.Coins) error {
+func (m *MockBankKeeper) MintCoins(ctx context.Context, moduleName string, amt types0.Coins) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "MintCoins", ctx, moduleName, amt)
 	ret0, _ := ret[0].(error)
@@ -748,7 +747,7 @@ func (mr *MockBankKeeperMockRecorder) PrependSendRestriction(restriction interfa
 }
 
 // SendCoins mocks base method.
-func (m *MockBankKeeper) SendCoins(ctx context.Context, fromAddr, toAddr types1.AccAddress, amt types1.Coins) error {
+func (m *MockBankKeeper) SendCoins(ctx context.Context, fromAddr, toAddr types0.AccAddress, amt types0.Coins) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SendCoins", ctx, fromAddr, toAddr, amt)
 	ret0, _ := ret[0].(error)
@@ -762,7 +761,7 @@ func (mr *MockBankKeeperMockRecorder) SendCoins(ctx, fromAddr, toAddr, amt inter
 }
 
 // SendCoinsFromAccountToModule mocks base method.
-func (m *MockBankKeeper) SendCoinsFromAccountToModule(ctx context.Context, senderAddr types1.AccAddress, recipientModule string, amt types1.Coins) error {
+func (m *MockBankKeeper) SendCoinsFromAccountToModule(ctx context.Context, senderAddr types0.AccAddress, recipientModule string, amt types0.Coins) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SendCoinsFromAccountToModule", ctx, senderAddr, recipientModule, amt)
 	ret0, _ := ret[0].(error)
@@ -776,7 +775,7 @@ func (mr *MockBankKeeperMockRecorder) SendCoinsFromAccountToModule(ctx, senderAd
 }
 
 // SendCoinsFromModuleToAccount mocks base method.
-func (m *MockBankKeeper) SendCoinsFromModuleToAccount(ctx context.Context, senderModule string, recipientAddr types1.AccAddress, amt types1.Coins) error {
+func (m *MockBankKeeper) SendCoinsFromModuleToAccount(ctx context.Context, senderModule string, recipientAddr types0.AccAddress, amt types0.Coins) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SendCoinsFromModuleToAccount", ctx, senderModule, recipientAddr, amt)
 	ret0, _ := ret[0].(error)
@@ -790,7 +789,7 @@ func (mr *MockBankKeeperMockRecorder) SendCoinsFromModuleToAccount(ctx, senderMo
 }
 
 // SendCoinsFromModuleToModule mocks base method.
-func (m *MockBankKeeper) SendCoinsFromModuleToModule(ctx context.Context, senderModule, recipientModule string, amt types1.Coins) error {
+func (m *MockBankKeeper) SendCoinsFromModuleToModule(ctx context.Context, senderModule, recipientModule string, amt types0.Coins) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SendCoinsFromModuleToModule", ctx, senderModule, recipientModule, amt)
 	ret0, _ := ret[0].(error)
@@ -899,10 +898,10 @@ func (mr *MockBankKeeperMockRecorder) SpendableBalances(arg0, arg1 interface{}) 
 }
 
 // SpendableCoin mocks base method.
-func (m *MockBankKeeper) SpendableCoin(ctx context.Context, addr types1.AccAddress, denom string) types1.Coin {
+func (m *MockBankKeeper) SpendableCoin(ctx context.Context, addr types0.AccAddress, denom string) types0.Coin {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SpendableCoin", ctx, addr, denom)
-	ret0, _ := ret[0].(types1.Coin)
+	ret0, _ := ret[0].(types0.Coin)
 	return ret0
 }
 
@@ -913,10 +912,10 @@ func (mr *MockBankKeeperMockRecorder) SpendableCoin(ctx, addr, denom interface{}
 }
 
 // SpendableCoins mocks base method.
-func (m *MockBankKeeper) SpendableCoins(ctx context.Context, addr types1.AccAddress) types1.Coins {
+func (m *MockBankKeeper) SpendableCoins(ctx context.Context, addr types0.AccAddress) types0.Coins {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SpendableCoins", ctx, addr)
-	ret0, _ := ret[0].(types1.Coins)
+	ret0, _ := ret[0].(types0.Coins)
 	return ret0
 }
 
@@ -957,7 +956,7 @@ func (mr *MockBankKeeperMockRecorder) TotalSupply(arg0, arg1 interface{}) *gomoc
 }
 
 // UndelegateCoins mocks base method.
-func (m *MockBankKeeper) UndelegateCoins(ctx context.Context, moduleAccAddr, delegatorAddr types1.AccAddress, amt types1.Coins) error {
+func (m *MockBankKeeper) UndelegateCoins(ctx context.Context, moduleAccAddr, delegatorAddr types0.AccAddress, amt types0.Coins) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UndelegateCoins", ctx, moduleAccAddr, delegatorAddr, amt)
 	ret0, _ := ret[0].(error)
@@ -971,7 +970,7 @@ func (mr *MockBankKeeperMockRecorder) UndelegateCoins(ctx, moduleAccAddr, delega
 }
 
 // UndelegateCoinsFromModuleToAccount mocks base method.
-func (m *MockBankKeeper) UndelegateCoinsFromModuleToAccount(ctx context.Context, senderModule string, recipientAddr types1.AccAddress, amt types1.Coins) error {
+func (m *MockBankKeeper) UndelegateCoinsFromModuleToAccount(ctx context.Context, senderModule string, recipientAddr types0.AccAddress, amt types0.Coins) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UndelegateCoinsFromModuleToAccount", ctx, senderModule, recipientAddr, amt)
 	ret0, _ := ret[0].(error)
@@ -985,7 +984,7 @@ func (mr *MockBankKeeperMockRecorder) UndelegateCoinsFromModuleToAccount(ctx, se
 }
 
 // ValidateBalance mocks base method.
-func (m *MockBankKeeper) ValidateBalance(ctx context.Context, addr types1.AccAddress) error {
+func (m *MockBankKeeper) ValidateBalance(ctx context.Context, addr types0.AccAddress) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ValidateBalance", ctx, addr)
 	ret0, _ := ret[0].(error)
@@ -1036,7 +1035,7 @@ func (m *MockPoolKeeper) EXPECT() *MockPoolKeeperMockRecorder {
 }
 
 // FundCommunityPool mocks base method.
-func (m *MockPoolKeeper) FundCommunityPool(ctx context.Context, amount types1.Coins, sender types1.AccAddress) error {
+func (m *MockPoolKeeper) FundCommunityPool(ctx context.Context, amount types0.Coins, sender types0.AccAddress) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "FundCommunityPool", ctx, amount, sender)
 	ret0, _ := ret[0].(error)
@@ -1102,7 +1101,7 @@ func (mr *MockStakingKeeperMockRecorder) IterateBondedValidatorsByPower(arg0, ar
 }
 
 // IterateDelegations mocks base method.
-func (m *MockStakingKeeper) IterateDelegations(ctx context.Context, delegator types1.AccAddress, fn func(int64, types0.DelegationI) bool) error {
+func (m *MockStakingKeeper) IterateDelegations(ctx context.Context, delegator types0.AccAddress, fn func(int64, types0.DelegationI) bool) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "IterateDelegations", ctx, delegator, fn)
 	ret0, _ := ret[0].(error)

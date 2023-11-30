@@ -107,9 +107,9 @@ func TestUpdateBondedValidatorsDecreaseCliff(t *testing.T) {
 	nextCliffVal, _ = nextCliffVal.RemoveDelShares(math.LegacyNewDecFromInt(shares))
 	_ = keeper.TestingUpdateValidator(f.stakingKeeper, f.sdkCtx, nextCliffVal, true)
 
-	expectedValStatus := map[int]types.BondStatus{
-		9: types.Bonded, 8: types.Bonded, 7: types.Bonded, 5: types.Bonded, 4: types.Bonded,
-		0: types.Unbonding, 1: types.Unbonding, 2: types.Unbonding, 3: types.Unbonding, 6: types.Unbonding,
+	expectedValStatus := map[int]sdk.BondStatus{
+		9: sdk.Bonded, 8: sdk.Bonded, 7: sdk.Bonded, 5: sdk.Bonded, 4: sdk.Bonded,
+		0: sdk.Unbonding, 1: sdk.Unbonding, 2: sdk.Unbonding, 3: sdk.Unbonding, 6: sdk.Unbonding,
 	}
 
 	// require all the validators have their respective statuses
@@ -121,7 +121,7 @@ func TestUpdateBondedValidatorsDecreaseCliff(t *testing.T) {
 
 		assert.Equal(
 			t, status, val.GetStatus(),
-			fmt.Sprintf("expected validator at index %v to have status: %s", valIdx, status),
+			fmt.Sprintf("expected validator at index %v to have status: %x", valIdx, status),
 		)
 	}
 }
@@ -155,7 +155,7 @@ func TestSlashToZeroPowerRemoved(t *testing.T) {
 	applyValidatorSetUpdates(t, f.sdkCtx, f.stakingKeeper, -1)
 	// validator should be unbonding
 	validator, _ = f.stakingKeeper.GetValidator(f.sdkCtx, addrVals[0])
-	assert.Equal(t, validator.GetStatus(), types.Unbonding)
+	assert.Equal(t, validator.GetStatus(), sdk.Unbonding)
 }
 
 // test how the validators are sorted, tests GetBondedValidatorsByPower

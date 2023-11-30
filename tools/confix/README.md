@@ -93,14 +93,20 @@ confix set ~/.simapp/config/client.toml chain-id "foo-1" # sets the value chain-
 
 ### Migrate
 
-Migrate a configuration file to a new version, e.g.:
+Migrate a configuration file to a new version, config type defaults to `app.toml`, if you want to change it to `client.toml`, please indicate it by adding the optional parameter, e.g.:
 
 ```shell
-simd config migrate v0.47 # migrates defaultHome/config/app.toml to the latest v0.47 config
+simd config migrate v0.50 # migrates defaultHome/config/app.toml to the latest v0.47 config
 ```
 
 ```shell
-confix migrate v0.47 ~/.simapp/config/app.toml # migrate ~/.simapp/config/app.toml to the latest v0.47 config
+confix migrate v0.50 ~/.simapp/config/app.toml # migrate ~/.simapp/config/app.toml to the latest v0.47 config
+```
+
+or
+
+```shell
+confix migrate v0.50 ~/.simapp/config/client.toml client # migrate ~/.simapp/config/client.toml to the latest v0.47 config
 ```
 
 ### Diff

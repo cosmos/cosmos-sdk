@@ -83,9 +83,7 @@ func TestQueryAppConfig(t *testing.T) {
 	// has all expected modules
 	for _, modName := range []string{"auth", "bank", "tx", "consensus", "runtime", "staking"} {
 		modConfig := moduleConfigs[modName]
-		if modConfig == nil {
-			t.Fatalf("missing %s", modName)
-		}
+		assert.Assert(t, modConfig != nil)
 		assert.Assert(t, modConfig.Config != nil)
 	}
 }

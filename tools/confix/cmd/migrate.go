@@ -4,14 +4,15 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/spf13/cobra"
 	"golang.org/x/exp/maps"
 
 	"cosmossdk.io/tools/confix"
-
-	"github.com/cosmos/cosmos-sdk/client"
 )
+
 
 var (
 	FlagStdOut       bool
@@ -21,31 +22,43 @@ var (
 
 func MigrateCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "migrate [target-version] <app-toml-path> (options)",
-		Short: "Migrate Cosmos SDK app configuration file to the specified version",
-		Long: `Migrate the contents of the Cosmos SDK app configuration (app.toml) to the specified version.
+		Use:   "migrate [target-version] <config-path> [config-type]",
+		Short: "Migrate Cosmos SDK configuration file to the specified version",
+		Long: `Migrate the contents of the Cosmos SDK configuration (app.toml or client.toml) to the specified version. Configuration type is app by default.
 The output is written in-place unless --stdout is provided.
 In case of any error in updating the file, no output is written.`,
 		Args: cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			var filename string
+			var configPath string
+			
 			clientCtx := client.GetClientContextFromCmd(cmd)
-			switch {
-			case len(args) > 1:
-				filename = args[1]
-			case clientCtx.HomeDir != "":
-				filename = fmt.Sprintf("%s/config/app.toml", clientCtx.HomeDir)
-			default:
-				return errors.New("must provide a path to the app.toml file")
+			targetVersion := args[0]
+			configType := confix.AppConfigType // Default to app configuration
+
+			if len(args) > 2 {
+				configType = strings.ToLower(args[2])
 			}
 
-			targetVersion := args[0]
+			if configType != confix.AppConfigType && configType != confix.ClientConfigType {
+				return errors.New("config type must be 'app' or 'client'")
+			}
+
+			switch  {
+			case len(args) > 1:
+				configPath = args[1]
+			case clientCtx.HomeDir != "":
+				configPath = fmt.Sprintf("%s/config/%s.toml",clientCtx.HomeDir, configType)
+			default:
+				return errors.New("must provide a path to the config file")	
+			}
+
+
 			plan, ok := confix.Migrations[targetVersion]
 			if !ok {
 				return fmt.Errorf("unknown version %q, supported versions are: %q", targetVersion, maps.Keys(confix.Migrations))
 			}
 
-			rawFile, err := confix.LoadConfig(filename)
+			rawFile, err := confix.LoadConfig(configPath)
 			if err != nil {
 				return fmt.Errorf("failed to load config: %w", err)
 			}
@@ -55,12 +68,12 @@ In case of any error in updating the file, no output is written.`,
 				ctx = confix.WithLogWriter(ctx, cmd.ErrOrStderr())
 			}
 
-			outputPath := filename
+			outputPath := configPath
 			if FlagStdOut {
 				outputPath = ""
 			}
 
-			if err := confix.Upgrade(ctx, plan(rawFile, targetVersion), filename, outputPath, FlagSkipValidate); err != nil {
+			if err := confix.Upgrade(ctx, plan(rawFile, targetVersion, configType), configPath, outputPath, FlagSkipValidate); err != nil {
 				return fmt.Errorf("failed to migrate config: %w", err)
 			}
 

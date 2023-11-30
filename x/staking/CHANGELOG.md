@@ -31,4 +31,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### API Breaking Changes
 
+* [#18198](https://github.com/cosmos/cosmos-sdk/pull/18198): `Validator` and `Delegator` interfaces were moved to `github.com/cosmos/cosmos-sdk/types` to avoid interface dependency on staking in other modules. 
+
 ### Bug Fixes

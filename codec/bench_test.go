@@ -21,7 +21,7 @@ type msgCounterWrapper struct {
 }
 
 func (msg msgCounterWrapper) GetSigners() []sdk.AccAddress {
-	fromAddress, _ := sdk.AccAddressFromBech32(msg.Signer)
+	fromAddress, _ := sdk.AccAddressFromBech32(msg.Signer, nil)
 	return []sdk.AccAddress{fromAddress}
 }
 

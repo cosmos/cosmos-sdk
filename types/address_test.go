@@ -65,15 +65,15 @@ func (s *addressTestSuite) TestEmptyAddresses() {
 	s.Require().Equal((types.ValAddress{}).String(), "")
 	s.Require().Equal((types.ConsAddress{}).String(), "")
 
-	accAddr, err := types.AccAddressFromBech32("")
+	accAddr, err := types.AccAddressFromBech32("", nil)
 	s.Require().True(accAddr.Empty())
 	s.Require().Error(err)
 
-	valAddr, err := types.ValAddressFromBech32("")
+	valAddr, err := types.ValAddressFromBech32("", nil)
 	s.Require().True(valAddr.Empty())
 	s.Require().Error(err)
 
-	consAddr, err := types.ConsAddressFromBech32("")
+	consAddr, err := types.ConsAddressFromBech32("", nil)
 	s.Require().True(consAddr.Empty())
 	s.Require().Error(err)
 }
@@ -109,7 +109,7 @@ func (s *addressTestSuite) TestRandBech32AccAddrConsistency() {
 		s.testMarshal(&acc, &res, acc.Marshal, (&res).Unmarshal)
 
 		str := acc.String()
-		res, err = types.AccAddressFromBech32(str)
+		res, err = types.AccAddressFromBech32(str, nil)
 		s.Require().Nil(err)
 		s.Require().Equal(acc, res)
 
@@ -123,7 +123,7 @@ func (s *addressTestSuite) TestRandBech32AccAddrConsistency() {
 		_, err := types.AccAddressFromHexUnsafe(str)
 		s.Require().NotNil(err)
 
-		_, err = types.AccAddressFromBech32(str)
+		_, err = types.AccAddressFromBech32(str, nil)
 		s.Require().NotNil(err)
 
 		err = (*types.AccAddress)(nil).UnmarshalJSON([]byte("\"" + str + "\""))
@@ -219,7 +219,7 @@ func (s *addressTestSuite) TestValAddr() {
 		s.testMarshal(&acc, &res, acc.Marshal, (&res).Unmarshal)
 
 		str := acc.String()
-		res, err = types.ValAddressFromBech32(str)
+		res, err = types.ValAddressFromBech32(str, nil)
 		s.Require().Nil(err)
 		s.Require().Equal(acc, res)
 
@@ -234,7 +234,7 @@ func (s *addressTestSuite) TestValAddr() {
 		_, err := types.ValAddressFromHex(str)
 		s.Require().NotNil(err)
 
-		_, err = types.ValAddressFromBech32(str)
+		_, err = types.ValAddressFromBech32(str, nil)
 		s.Require().NotNil(err)
 
 		err = (*types.ValAddress)(nil).UnmarshalJSON([]byte("\"" + str + "\""))
@@ -260,7 +260,7 @@ func (s *addressTestSuite) TestConsAddress() {
 		s.testMarshal(&acc, &res, acc.Marshal, (&res).Unmarshal)
 
 		str := acc.String()
-		res, err = types.ConsAddressFromBech32(str)
+		res, err = types.ConsAddressFromBech32(str, nil)
 		s.Require().Nil(err)
 		s.Require().Equal(acc, res)
 
@@ -274,7 +274,7 @@ func (s *addressTestSuite) TestConsAddress() {
 		_, err := types.ConsAddressFromHex(str)
 		s.Require().NotNil(err)
 
-		_, err = types.ConsAddressFromBech32(str)
+		_, err = types.ConsAddressFromBech32(str, nil)
 		s.Require().NotNil(err)
 
 		err = (*types.ConsAddress)(nil).UnmarshalJSON([]byte("\"" + str + "\""))
@@ -367,13 +367,13 @@ func (s *addressTestSuite) TestAddressInterface() {
 	for _, addr := range addrs {
 		switch addr := addr.(type) {
 		case types.AccAddress:
-			_, err := types.AccAddressFromBech32(addr.String())
+			_, err := types.AccAddressFromBech32(addr.String(), nil)
 			s.Require().Nil(err)
 		case types.ValAddress:
-			_, err := types.ValAddressFromBech32(addr.String())
+			_, err := types.ValAddressFromBech32(addr.String(), nil)
 			s.Require().Nil(err)
 		case types.ConsAddress:
-			_, err := types.ConsAddressFromBech32(addr.String())
+			_, err := types.ConsAddressFromBech32(addr.String(), nil)
 			s.Require().Nil(err)
 		default:
 			s.T().Fail()
@@ -388,16 +388,24 @@ func (s *addressTestSuite) TestVerifyAddressFormat() {
 	addr32 := make([]byte, 32)
 	addr256 := make([]byte, 256)
 
-	err := types.VerifyAddressFormat(addr0)
+	err := types.VerifyAddressFormat(addr0, nil)
 	s.Require().EqualError(err, "addresses cannot be empty: unknown address")
-	err = types.VerifyAddressFormat(addr5)
+	err = types.VerifyAddressFormat(addr5, nil)
 	s.Require().NoError(err)
-	err = types.VerifyAddressFormat(addr20)
+	err = types.VerifyAddressFormat(addr20, nil)
 	s.Require().NoError(err)
-	err = types.VerifyAddressFormat(addr32)
+	err = types.VerifyAddressFormat(addr32, nil)
 	s.Require().NoError(err)
-	err = types.VerifyAddressFormat(addr256)
+	err = types.VerifyAddressFormat(addr256, nil)
 	s.Require().EqualError(err, "address max length is 255, got 256: unknown address")
+}
+
+func customVerifier(bz []byte) error {
+	n := len(bz)
+	if n == 20 {
+		return nil
+	}
+	return fmt.Errorf("incorrect address length %d", n)
 }
 
 func (s *addressTestSuite) TestCustomAddressVerifier() {
@@ -409,36 +417,24 @@ func (s *addressTestSuite) TestCustomAddressVerifier() {
 	// Verify that the default logic doesn't reject this 10 byte address
 	// The default verifier is nil, we're only checking address length is
 	// between 1-255 bytes.
-	err := types.VerifyAddressFormat(addr)
+	err := types.VerifyAddressFormat(addr, nil)
 	s.Require().Nil(err)
-	_, err = types.AccAddressFromBech32(accBech)
+	_, err = types.AccAddressFromBech32(accBech, nil)
 	s.Require().Nil(err)
-	_, err = types.ValAddressFromBech32(valBech)
+	_, err = types.ValAddressFromBech32(valBech, nil)
 	s.Require().Nil(err)
-	_, err = types.ConsAddressFromBech32(consBech)
+	_, err = types.ConsAddressFromBech32(consBech, nil)
 	s.Require().Nil(err)
-
-	// Set a custom address verifier only accepts 20 byte addresses
-	types.GetConfig().SetAddressVerifier(func(bz []byte) error {
-		n := len(bz)
-		if n == 20 {
-			return nil
-		}
-		return fmt.Errorf("incorrect address length %d", n)
-	})
 
 	// Verifiy that the custom logic rejects this 10 byte address
-	err = types.VerifyAddressFormat(addr)
+	err = types.VerifyAddressFormat(addr, customVerifier)
 	s.Require().NotNil(err)
-	_, err = types.AccAddressFromBech32(accBech)
+	_, err = types.AccAddressFromBech32(accBech, customVerifier)
 	s.Require().NotNil(err)
-	_, err = types.ValAddressFromBech32(valBech)
+	_, err = types.ValAddressFromBech32(valBech, customVerifier)
 	s.Require().NotNil(err)
-	_, err = types.ConsAddressFromBech32(consBech)
+	_, err = types.ConsAddressFromBech32(consBech, customVerifier)
 	s.Require().NotNil(err)
-
-	// Reinitialize the global config to default address verifier (nil)
-	types.GetConfig().SetAddressVerifier(nil)
 }
 
 func (s *addressTestSuite) TestBech32ifyAddressBytes() {

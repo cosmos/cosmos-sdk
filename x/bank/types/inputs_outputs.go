@@ -35,7 +35,7 @@ func ValidateInputOutputs(input Input, outputs []Output) error {
 
 // ValidateBasic - validate transaction input
 func (in Input) ValidateBasic() error {
-	if _, err := sdk.AccAddressFromBech32(in.Address); err != nil {
+	if _, err := sdk.AccAddressFromBech32(in.Address, nil); err != nil {
 		return sdkerrors.ErrInvalidAddress.Wrapf("invalid input address: %s", err)
 	}
 
@@ -60,7 +60,7 @@ func NewInput(addr sdk.AccAddress, coins sdk.Coins) Input {
 
 // ValidateBasic - validate transaction output
 func (out Output) ValidateBasic() error {
-	if _, err := sdk.AccAddressFromBech32(out.Address); err != nil {
+	if _, err := sdk.AccAddressFromBech32(out.Address, nil); err != nil {
 		return sdkerrors.ErrInvalidAddress.Wrapf("invalid output address: %s", err)
 	}
 

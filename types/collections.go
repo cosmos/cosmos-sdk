@@ -58,7 +58,7 @@ type addressUnion interface {
 }
 
 type genericAddressKey[T addressUnion] struct {
-	stringDecoder func(string) (T, error)
+	stringDecoder func(string, func([]byte) error) (T, error)
 	keyType       string
 }
 
@@ -83,7 +83,7 @@ func (a genericAddressKey[T]) DecodeJSON(b []byte) (v T, err error) {
 	if err != nil {
 		return
 	}
-	v, err = a.stringDecoder(s)
+	v, err = a.stringDecoder(s, nil)
 	return
 }
 

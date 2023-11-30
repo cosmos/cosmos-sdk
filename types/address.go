@@ -159,11 +159,8 @@ func AccAddressFromHexUnsafe(address string) (addr AccAddress, err error) {
 
 // VerifyAddressFormat verifies that the provided bytes form a valid address
 // according to the default address rules or a custom address verifier set by
-// GetConfig().SetAddressVerifier().
-// TODO make an issue to get rid of global Config
-// ref: https://github.com/cosmos/cosmos-sdk/issues/9690
-func VerifyAddressFormat(bz []byte) error {
-	verifier := GetConfig().GetAddressVerifier()
+// verifier
+func VerifyAddressFormat(bz []byte, verifier func([]byte) error) error {
 	if verifier != nil {
 		return verifier(bz)
 	}
@@ -180,8 +177,8 @@ func VerifyAddressFormat(bz []byte) error {
 }
 
 // MustAccAddressFromBech32 calls AccAddressFromBech32 and panics on error.
-func MustAccAddressFromBech32(address string) AccAddress {
-	addr, err := AccAddressFromBech32(address)
+func MustAccAddressFromBech32(address string, verifier func([]byte) error) AccAddress {
+	addr, err := AccAddressFromBech32(address, verifier)
 	if err != nil {
 		panic(err)
 	}
@@ -190,7 +187,7 @@ func MustAccAddressFromBech32(address string) AccAddress {
 }
 
 // AccAddressFromBech32 creates an AccAddress from a Bech32 string.
-func AccAddressFromBech32(address string) (addr AccAddress, err error) {
+func AccAddressFromBech32(address string, verifier func([]byte) error) (addr AccAddress, err error) {
 	if len(strings.TrimSpace(address)) == 0 {
 		return AccAddress{}, errors.New("empty address string is not allowed")
 	}
@@ -202,7 +199,7 @@ func AccAddressFromBech32(address string) (addr AccAddress, err error) {
 		return nil, err
 	}
 
-	err = VerifyAddressFormat(bz)
+	err = VerifyAddressFormat(bz, verifier)
 	if err != nil {
 		return nil, err
 	}
@@ -259,7 +256,7 @@ func (aa *AccAddress) UnmarshalJSON(data []byte) error {
 		return nil
 	}
 
-	aa2, err := AccAddressFromBech32(s)
+	aa2, err := AccAddressFromBech32(s, nil)
 	if err != nil {
 		return err
 	}
@@ -280,7 +277,7 @@ func (aa *AccAddress) UnmarshalYAML(data []byte) error {
 		return nil
 	}
 
-	aa2, err := AccAddressFromBech32(s)
+	aa2, err := AccAddressFromBech32(s, nil)
 	if err != nil {
 		return err
 	}
@@ -342,7 +339,7 @@ func ValAddressFromHex(address string) (addr ValAddress, err error) {
 }
 
 // ValAddressFromBech32 creates a ValAddress from a Bech32 string.
-func ValAddressFromBech32(address string) (addr ValAddress, err error) {
+func ValAddressFromBech32(address string, verifier func([]byte) error) (addr ValAddress, err error) {
 	if len(strings.TrimSpace(address)) == 0 {
 		return ValAddress{}, errors.New("empty address string is not allowed")
 	}
@@ -354,7 +351,7 @@ func ValAddressFromBech32(address string) (addr ValAddress, err error) {
 		return nil, err
 	}
 
-	err = VerifyAddressFormat(bz)
+	err = VerifyAddressFormat(bz, verifier)
 	if err != nil {
 		return nil, err
 	}
@@ -412,7 +409,7 @@ func (va *ValAddress) UnmarshalJSON(data []byte) error {
 		return nil
 	}
 
-	va2, err := ValAddressFromBech32(s)
+	va2, err := ValAddressFromBech32(s, nil)
 	if err != nil {
 		return err
 	}
@@ -434,7 +431,7 @@ func (va *ValAddress) UnmarshalYAML(data []byte) error {
 		return nil
 	}
 
-	va2, err := ValAddressFromBech32(s)
+	va2, err := ValAddressFromBech32(s, nil)
 	if err != nil {
 		return err
 	}
@@ -497,7 +494,7 @@ func ConsAddressFromHex(address string) (addr ConsAddress, err error) {
 }
 
 // ConsAddressFromBech32 creates a ConsAddress from a Bech32 string.
-func ConsAddressFromBech32(address string) (addr ConsAddress, err error) {
+func ConsAddressFromBech32(address string, verifier func([]byte) error) (addr ConsAddress, err error) {
 	if len(strings.TrimSpace(address)) == 0 {
 		return ConsAddress{}, errors.New("empty address string is not allowed")
 	}
@@ -509,7 +506,7 @@ func ConsAddressFromBech32(address string) (addr ConsAddress, err error) {
 		return nil, err
 	}
 
-	err = VerifyAddressFormat(bz)
+	err = VerifyAddressFormat(bz, verifier)
 	if err != nil {
 		return nil, err
 	}
@@ -572,7 +569,7 @@ func (ca *ConsAddress) UnmarshalJSON(data []byte) error {
 		return nil
 	}
 
-	ca2, err := ConsAddressFromBech32(s)
+	ca2, err := ConsAddressFromBech32(s, nil)
 	if err != nil {
 		return err
 	}
@@ -594,7 +591,7 @@ func (ca *ConsAddress) UnmarshalYAML(data []byte) error {
 		return nil
 	}
 
-	ca2, err := ConsAddressFromBech32(s)
+	ca2, err := ConsAddressFromBech32(s, nil)
 	if err != nil {
 		return err
 	}

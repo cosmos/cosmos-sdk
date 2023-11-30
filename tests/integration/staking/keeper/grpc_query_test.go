@@ -288,7 +288,7 @@ func TestGRPCQueryDelegation(t *testing.T) {
 
 	addrAcc, addrAcc1 := addrs[0], addrs[1]
 	addrVal := vals[0].OperatorAddress
-	valAddr, err := sdk.ValAddressFromBech32(addrVal)
+	valAddr, err := sdk.ValAddressFromBech32(addrVal, nil)
 	assert.NilError(t, err)
 	delegation, found := f.stakingKeeper.Delegations.Get(ctx, collections.Join(addrAcc, valAddr))
 	assert.Assert(t, found)
@@ -357,7 +357,7 @@ func TestGRPCQueryDelegatorDelegations(t *testing.T) {
 
 	addrAcc := addrs[0]
 	addrVal1 := vals[0].OperatorAddress
-	valAddr, err := sdk.ValAddressFromBech32(addrVal1)
+	valAddr, err := sdk.ValAddressFromBech32(addrVal1, nil)
 	assert.NilError(t, err)
 	delegation, found := f.stakingKeeper.Delegations.Get(ctx, collections.Join(addrAcc, valAddr))
 	assert.Assert(t, found)
@@ -437,7 +437,7 @@ func TestGRPCQueryValidatorDelegations(t *testing.T) {
 	addrVal1 := vals[1].OperatorAddress
 	valAddrs := simtestutil.ConvertAddrsToValAddrs(addrs)
 	addrVal2 := valAddrs[4]
-	valAddr, err := sdk.ValAddressFromBech32(addrVal1)
+	valAddr, err := sdk.ValAddressFromBech32(addrVal1, nil)
 	assert.NilError(t, err)
 	delegation, found := f.stakingKeeper.Delegations.Get(ctx, collections.Join(addrAcc, valAddr))
 	assert.Assert(t, found)
@@ -519,7 +519,7 @@ func TestGRPCQueryUnbondingDelegation(t *testing.T) {
 	addrVal2 := vals[1].OperatorAddress
 
 	unbondingTokens := f.stakingKeeper.TokensFromConsensusPower(ctx, 2)
-	valAddr, err1 := sdk.ValAddressFromBech32(addrVal2)
+	valAddr, err1 := sdk.ValAddressFromBech32(addrVal2, nil)
 	assert.NilError(t, err1)
 	_, _, err := f.stakingKeeper.Undelegate(ctx, addrAcc2, valAddr, math.LegacyNewDecFromInt(unbondingTokens))
 	assert.NilError(t, err)
@@ -622,11 +622,11 @@ func TestGRPCQueryDelegatorUnbondingDelegations(t *testing.T) {
 	addrVal, addrVal2 := vals[0].OperatorAddress, vals[1].OperatorAddress
 
 	unbondingTokens := f.stakingKeeper.TokensFromConsensusPower(ctx, 2)
-	valAddr1, err1 := sdk.ValAddressFromBech32(addrVal)
+	valAddr1, err1 := sdk.ValAddressFromBech32(addrVal, nil)
 	assert.NilError(t, err1)
 	_, _, err := f.stakingKeeper.Undelegate(ctx, addrAcc, valAddr1, math.LegacyNewDecFromInt(unbondingTokens))
 	assert.NilError(t, err)
-	valAddr2, err1 := sdk.ValAddressFromBech32(addrVal2)
+	valAddr2, err1 := sdk.ValAddressFromBech32(addrVal2, nil)
 	assert.NilError(t, err1)
 	_, _, err = f.stakingKeeper.Undelegate(ctx, addrAcc, valAddr2, math.LegacyNewDecFromInt(unbondingTokens))
 	assert.NilError(t, err)

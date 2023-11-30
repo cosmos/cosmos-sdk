@@ -986,7 +986,7 @@ func TestMsgDepositValidatorRewardsPool(t *testing.T) {
 				err = f.cdc.Unmarshal(res.Value, &result)
 				assert.NilError(t, err)
 
-				val, err := sdk.ValAddressFromBech32(tc.msg.ValidatorAddress)
+				val, err := sdk.ValAddressFromBech32(tc.msg.ValidatorAddress, nil)
 				assert.NilError(t, err)
 
 				// check validator outstanding rewards

@@ -492,7 +492,7 @@ func (s *TestSuite) TestTallyProposalsAtVPEnd_GroupMemberLeaving() {
 	groupRes, err := s.groupKeeper.CreateGroupWithPolicy(s.ctx, groupMsg)
 	s.Require().NoError(err)
 	accountAddr := groupRes.GetGroupPolicyAddress()
-	groupPolicy, err := sdk.AccAddressFromBech32(accountAddr)
+	groupPolicy, err := sdk.AccAddressFromBech32(accountAddr, nil)
 	s.Require().NoError(err)
 	s.Require().NotNil(groupPolicy)
 

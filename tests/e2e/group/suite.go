@@ -267,7 +267,7 @@ func (s *E2ETestSuite) createGroupThresholdPolicyWithBalance(adminAddress, group
 	s.Require().NoError(val.GetClientCtx().Codec.UnmarshalJSON(resp, &res))
 	groupPolicyAddress := res.GroupPolicies[0].Address
 
-	addr, err := sdk.AccAddressFromBech32(groupPolicyAddress)
+	addr, err := sdk.AccAddressFromBech32(groupPolicyAddress, nil)
 	s.Require().NoError(err)
 
 	msgSend := &banktypes.MsgSend{

@@ -79,7 +79,7 @@ func (t *Tx) ValidateBasic() error {
 	}
 
 	if fee.Payer != "" {
-		_, err := sdk.AccAddressFromBech32(fee.Payer)
+		_, err := sdk.AccAddressFromBech32(fee.Payer, nil)
 		if err != nil {
 			return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid fee payer address (%s)", err)
 		}

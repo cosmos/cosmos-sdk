@@ -16,7 +16,6 @@ type Config struct {
 	fullFundraiserPath  string
 	bech32AddressPrefix map[string]string
 	txEncoder           TxEncoder
-	addressVerifier     func([]byte) error
 	mtx                 sync.RWMutex
 
 	sealed   bool
@@ -106,13 +105,6 @@ func (config *Config) SetTxEncoder(encoder TxEncoder) {
 	config.txEncoder = encoder
 }
 
-// SetAddressVerifier builds the Config with the provided function for verifying that addresses
-// have the correct format
-func (config *Config) SetAddressVerifier(addressVerifier func([]byte) error) {
-	config.assertNotSealed()
-	config.addressVerifier = addressVerifier
-}
-
 // Set the FullFundraiserPath (BIP44Prefix) on the config.
 //
 // Deprecated: This method is supported for backward compatibility only and will be removed in a future release. Use SetPurpose and SetCoinType instead.
@@ -171,11 +163,6 @@ func (config *Config) GetBech32ConsensusPubPrefix() string {
 // GetTxEncoder return function to encode transactions
 func (config *Config) GetTxEncoder() TxEncoder {
 	return config.txEncoder
-}
-
-// GetAddressVerifier returns the function to verify that addresses have the correct format
-func (config *Config) GetAddressVerifier() func([]byte) error {
-	return config.addressVerifier
 }
 
 func KeyringServiceName() string {

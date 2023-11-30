@@ -25,7 +25,7 @@ func (b Balance) GetCoins() sdk.Coins {
 
 // Validate checks for address and coins correctness.
 func (b Balance) Validate() error {
-	if _, err := sdk.AccAddressFromBech32(b.Address); err != nil {
+	if _, err := sdk.AccAddressFromBech32(b.Address, nil); err != nil {
 		return err
 	}
 
@@ -65,7 +65,7 @@ func SanitizeGenesisBalances(balances []Balance) []Balance {
 	// 1. Retrieve the address equivalents for each Balance's address.
 	addresses := make([]sdk.AccAddress, len(balances))
 	for i := range balances {
-		addr, _ := sdk.AccAddressFromBech32(balances[i].Address)
+		addr, _ := sdk.AccAddressFromBech32(balances[i].Address, nil)
 		addresses[i] = addr
 	}
 

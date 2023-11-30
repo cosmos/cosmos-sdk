@@ -335,7 +335,7 @@ func makeBatchMultisignCmd() func(cmd *cobra.Command, args []string) error {
 				err = signing.VerifySignature(cmd.Context(), sig[i].PubKey, txSignerData, sig[i].Data,
 					txCfg.SignModeHandler(), txData, nil)
 				if err != nil {
-					return fmt.Errorf("couldn't verify signature: %w %v", err, sig)
+					return fmt.Errorf("couldn't verify signature for signature %v: %w", sig, err)
 				}
 
 				if err := multisig.AddSignatureV2(multisigSig, sig[i], multisigPub.GetPubKeys()); err != nil {

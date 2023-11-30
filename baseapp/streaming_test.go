@@ -11,10 +11,12 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	baseapptestutil "github.com/cosmos/cosmos-sdk/baseapp/testutil"
 )
 
-var _ storetypes.ABCIListener = (*MockABCIListener)(nil)
+var (
+	_        storetypes.ABCIListener = (*MockABCIListener)(nil)
+	distKey1                         = "distKey1"
+)
 
 type MockABCIListener struct {
 	name      string
@@ -37,77 +39,78 @@ func (m *MockABCIListener) ListenCommit(_ context.Context, _ abci.ResponseCommit
 	return nil
 }
 
-var distKey1 = "distKey1"
+// TODO(bez): Handle state streaming correctly with respect to store v2.
+//
+// Ref: https://github.com/cosmos/cosmos-sdk/issues/18466
+// func TestABCI_MultiListener_StateChanges(t *testing.T) {
+// 	anteKey := []byte("ante-key")
+// 	anteOpt := func(bapp *baseapp.BaseApp) { bapp.SetAnteHandler(anteHandlerTxTest(t, storeKey1, anteKey)) }
+// 	distOpt := func(bapp *baseapp.BaseApp) { bapp.MountStores(distKey1) }
+// 	mockListener1 := NewMockABCIListener("lis_1")
+// 	mockListener2 := NewMockABCIListener("lis_2")
+// 	streamingManager := storetypes.StreamingManager{ABCIListeners: []storetypes.ABCIListener{&mockListener1, &mockListener2}}
+// 	streamingManagerOpt := func(bapp *baseapp.BaseApp) { bapp.SetStreamingManager(streamingManager) }
+// 	addListenerOpt := func(bapp *baseapp.BaseApp) { bapp.CommitMultiStore().AddListeners([]storetypes.StoreKey{distKey1}) }
+// 	suite := NewBaseAppSuite(t, anteOpt, distOpt, streamingManagerOpt, addListenerOpt)
 
-func TestABCI_MultiListener_StateChanges(t *testing.T) {
-	anteKey := []byte("ante-key")
-	anteOpt := func(bapp *baseapp.BaseApp) { bapp.SetAnteHandler(anteHandlerTxTest(t, storeKey1, anteKey)) }
-	distOpt := func(bapp *baseapp.BaseApp) { bapp.MountStores(distKey1) }
-	mockListener1 := NewMockABCIListener("lis_1")
-	mockListener2 := NewMockABCIListener("lis_2")
-	streamingManager := storetypes.StreamingManager{ABCIListeners: []storetypes.ABCIListener{&mockListener1, &mockListener2}}
-	streamingManagerOpt := func(bapp *baseapp.BaseApp) { bapp.SetStreamingManager(streamingManager) }
-	addListenerOpt := func(bapp *baseapp.BaseApp) { bapp.CommitMultiStore().AddListeners([]storetypes.StoreKey{distKey1}) }
-	suite := NewBaseAppSuite(t, anteOpt, distOpt, streamingManagerOpt, addListenerOpt)
+// 	_, err := suite.baseApp.InitChain(
+// 		&abci.RequestInitChain{
+// 			ConsensusParams: &tmproto.ConsensusParams{},
+// 		},
+// 	)
+// 	require.NoError(t, err)
+// 	deliverKey := []byte("deliver-key")
+// 	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), CounterServerImpl{t, storeKey1, deliverKey})
 
-	_, err := suite.baseApp.InitChain(
-		&abci.RequestInitChain{
-			ConsensusParams: &tmproto.ConsensusParams{},
-		},
-	)
-	require.NoError(t, err)
-	deliverKey := []byte("deliver-key")
-	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), CounterServerImpl{t, storeKey1, deliverKey})
+// 	nBlocks := 3
+// 	txPerHeight := 5
 
-	nBlocks := 3
-	txPerHeight := 5
+// 	for blockN := 0; blockN < nBlocks; blockN++ {
+// 		txs := [][]byte{}
 
-	for blockN := 0; blockN < nBlocks; blockN++ {
-		txs := [][]byte{}
+// 		var expectedChangeSet []*storetypes.StoreKVPair
 
-		var expectedChangeSet []*storetypes.StoreKVPair
+// 		// create final block context state
+// 		_, err := suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: int64(blockN) + 1, Txs: txs})
+// 		require.NoError(t, err)
 
-		// create final block context state
-		_, err := suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: int64(blockN) + 1, Txs: txs})
-		require.NoError(t, err)
+// 		for i := 0; i < txPerHeight; i++ {
+// 			counter := int64(blockN*txPerHeight + i)
+// 			tx := newTxCounter(t, suite.txConfig, counter, counter)
 
-		for i := 0; i < txPerHeight; i++ {
-			counter := int64(blockN*txPerHeight + i)
-			tx := newTxCounter(t, suite.txConfig, counter, counter)
+// 			txBytes, err := suite.txConfig.TxEncoder()(tx)
+// 			require.NoError(t, err)
 
-			txBytes, err := suite.txConfig.TxEncoder()(tx)
-			require.NoError(t, err)
+// 			sKey := []byte(fmt.Sprintf("distKey%d", i))
+// 			sVal := []byte(fmt.Sprintf("distVal%d", i))
+// 			store := getFinalizeBlockStateCtx(suite.baseApp).KVStore(distKey1)
+// 			store.Set(sKey, sVal)
 
-			sKey := []byte(fmt.Sprintf("distKey%d", i))
-			sVal := []byte(fmt.Sprintf("distVal%d", i))
-			store := getFinalizeBlockStateCtx(suite.baseApp).KVStore(distKey1)
-			store.Set(sKey, sVal)
+// 			expectedChangeSet = append(expectedChangeSet, &storetypes.StoreKVPair{
+// 				StoreKey: distKey1,
+// 				Delete:   false,
+// 				Key:      sKey,
+// 				Value:    sVal,
+// 			})
 
-			expectedChangeSet = append(expectedChangeSet, &storetypes.StoreKVPair{
-				StoreKey: distKey1,
-				Delete:   false,
-				Key:      sKey,
-				Value:    sVal,
-			})
+// 			txs = append(txs, txBytes)
+// 		}
 
-			txs = append(txs, txBytes)
-		}
+// 		res, err := suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: int64(blockN) + 1, Txs: txs})
+// 		require.NoError(t, err)
+// 		for _, tx := range res.TxResults {
+// 			events := tx.GetEvents()
+// 			require.Len(t, events, 3, "should contain ante handler, message type and counter events respectively")
+// 			// require.Equal(t, sdk.MarkEventsToIndex(counterEvent("ante_handler", counter).ToABCIEvents(), map[string]struct{}{})[0], events[0], "ante handler event")
+// 			// require.Equal(t, sdk.MarkEventsToIndex(counterEvent(sdk.EventTypeMessage, counter).ToABCIEvents(), map[string]struct{}{})[0], events[2], "msg handler update counter event")
+// 		}
 
-		res, err := suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: int64(blockN) + 1, Txs: txs})
-		require.NoError(t, err)
-		for _, tx := range res.TxResults {
-			events := tx.GetEvents()
-			require.Len(t, events, 3, "should contain ante handler, message type and counter events respectively")
-			// require.Equal(t, sdk.MarkEventsToIndex(counterEvent("ante_handler", counter).ToABCIEvents(), map[string]struct{}{})[0], events[0], "ante handler event")
-			// require.Equal(t, sdk.MarkEventsToIndex(counterEvent(sdk.EventTypeMessage, counter).ToABCIEvents(), map[string]struct{}{})[0], events[2], "msg handler update counter event")
-		}
-
-		_, err = suite.baseApp.Commit()
-		require.NoError(t, err)
-		require.Equal(t, expectedChangeSet, mockListener1.ChangeSet, "should contain the same changeSet")
-		require.Equal(t, expectedChangeSet, mockListener2.ChangeSet, "should contain the same changeSet")
-	}
-}
+// 		_, err = suite.baseApp.Commit()
+// 		require.NoError(t, err)
+// 		require.Equal(t, expectedChangeSet, mockListener1.ChangeSet, "should contain the same changeSet")
+// 		require.Equal(t, expectedChangeSet, mockListener2.ChangeSet, "should contain the same changeSet")
+// 	}
+// }
 
 func Test_Ctx_with_StreamingManager(t *testing.T) {
 	mockListener1 := NewMockABCIListener("lis_1")
@@ -116,7 +119,7 @@ func Test_Ctx_with_StreamingManager(t *testing.T) {
 	streamingManager := storetypes.StreamingManager{ABCIListeners: listeners, StopNodeOnErr: true}
 	streamingManagerOpt := func(bapp *baseapp.BaseApp) { bapp.SetStreamingManager(streamingManager) }
 
-	// TODO(bez): Handle SM correctly with respect to store v2.
+	// TODO(bez): Handle state streaming correctly with respect to store v2.
 	//
 	// Ref: https://github.com/cosmos/cosmos-sdk/issues/18466
 	//

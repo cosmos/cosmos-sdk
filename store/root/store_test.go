@@ -12,6 +12,7 @@ import (
 	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/commitment"
 	"cosmossdk.io/store/v2/commitment/iavl"
+	"cosmossdk.io/store/v2/pruning"
 	"cosmossdk.io/store/v2/storage/sqlite"
 )
 
@@ -35,7 +36,7 @@ func (s *RootStoreTestSuite) SetupTest() {
 	sc, err := commitment.NewCommitStore(map[string]commitment.Tree{"default": tree}, noopLog)
 	s.Require().NoError(err)
 
-	rs, err := New(noopLog, 1, ss, sc, nil)
+	rs, err := New(noopLog, ss, sc, pruning.DefaultOptions(), pruning.DefaultOptions(), nil)
 	s.Require().NoError(err)
 
 	rs.SetTracer(io.Discard)

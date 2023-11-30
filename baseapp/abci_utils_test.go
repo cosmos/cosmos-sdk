@@ -15,6 +15,11 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/log"
+	"cosmossdk.io/store/v2/commitment"
+	"cosmossdk.io/store/v2/commitment/iavl"
+	"cosmossdk.io/store/v2/pruning"
+	"cosmossdk.io/store/v2/root"
+	"cosmossdk.io/store/v2/storage/sqlite"
 	authtx "cosmossdk.io/x/auth/tx"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -289,7 +294,25 @@ func (s *ABCIUtilsTestSuite) TestDefaultProposalHandler_NoOpMempoolTxSelection()
 
 	// create a baseapp along with a tx config for tx generation
 	txConfig := authtx.NewTxConfig(cdc, authtx.DefaultSignModes)
-	app := baseapp.NewBaseApp(s.T().Name(), log.NewNopLogger(), dbm.NewMemDB(), txConfig.TxDecoder())
+	logger := log.NewNopLogger()
+	db := dbm.NewMemDB()
+
+	ss, err := sqlite.New(s.T().TempDir())
+	s.Require().NoError(err)
+
+	sc, err := commitment.NewCommitStore(
+		map[string]commitment.Tree{
+			storeKey1: iavl.NewIavlTree(db, logger, iavl.DefaultConfig()),
+			storeKey2: iavl.NewIavlTree(db, logger, iavl.DefaultConfig()),
+		},
+		logger,
+	)
+	s.Require().NoError(err)
+
+	rs, err := root.New(logger, ss, sc, pruning.DefaultOptions(), pruning.DefaultOptions(), nil)
+	s.Require().NoError(err)
+
+	app := baseapp.NewBaseApp(s.T().Name(), logger, db, rs, txConfig.TxDecoder())
 
 	// create a proposal handler
 	ph := baseapp.NewDefaultProposalHandler(mempool.NoOpMempool{}, app)

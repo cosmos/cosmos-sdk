@@ -1053,15 +1053,14 @@ func handleQueryStore(app *BaseApp, path []string, req abci.RequestQuery) *abci.
 		return sdkerrors.QueryResult(errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "cannot query with proof when height <= 1; please provide a valid height"), app.trace)
 	}
 
-	// req.Path is expected to be in the format of: "<storeKey>/key", e.g. "bank/key"
+	// path is expected to be in the format of: "<storeKey>/key", e.g. ["bank", "key"]
 	//
 	// Note, store v1 supported sub-store queries but it's unclear if those are needed.
-	tokens := strings.Split(req.Path, "/")
-	if len(tokens) != 2 || tokens[1] != "key" {
+	if len(path) != 2 || path[1] != "key" {
 		return sdkerrors.QueryResult(errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "invalid path '%s'; expected format: <store-key>/key", req.Path), app.trace)
 	}
 
-	storeKey := tokens[0]
+	storeKey := path[0]
 	result, err := app.rs.Query(storeKey, uint64(req.Height), req.Data, req.Prove)
 	if err != nil {
 		return sdkerrors.QueryResult(errorsmod.Wrapf(err, "failed to query '%s'", storeKey), app.trace)

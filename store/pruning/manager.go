@@ -119,6 +119,7 @@ func (m *Manager) Prune(height uint64) {
 						m.chStorage <- struct{}{}
 					}()
 				}
+
 			default:
 				m.logger.Debug("storage pruning is still running; skipping", "version", pruneHeight)
 			}
@@ -140,7 +141,9 @@ func (m *Manager) Prune(height uint64) {
 						m.chCommitment <- struct{}{}
 					}()
 				}
+
 			default:
+				m.logger.Debug("commitment pruning is still running; skipping", "version", pruneHeight)
 			}
 		}
 	}

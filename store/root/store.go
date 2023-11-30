@@ -67,9 +67,9 @@ type Store struct {
 
 func New(
 	logger log.Logger,
-	initVersion uint64,
 	ss store.VersionedDatabase,
 	sc store.Committer,
+	ssOpts, scOpts pruning.Options,
 	m metrics.StoreMetrics,
 ) (store.RootStore, error) {
 	rootKVStore, err := branch.New(defaultStoreKey, ss)
@@ -78,10 +78,13 @@ func New(
 	}
 
 	pruningManager := pruning.NewManager(logger, ss, sc)
+	pruningManager.SetStorageOptions(ssOpts)
+	pruningManager.SetCommitmentOptions(scOpts)
+	pruningManager.Start()
 
 	return &Store{
 		logger:          logger.With("module", "root_store"),
-		initialVersion:  initVersion,
+		initialVersion:  1,
 		stateStore:      ss,
 		stateCommitment: sc,
 		rootKVStore:     rootKVStore,
@@ -118,15 +121,6 @@ func (s *Store) SetInitialVersion(v uint64) error {
 	// Ref: https://github.com/cosmos/cosmos-sdk/issues/18597
 
 	return nil
-}
-
-// SetPruningOptions sets the pruning options on the SS and SC backends.
-// NOTE: It will also start the pruning manager.
-func (s *Store) SetPruningOptions(ssOpts, scOpts pruning.Options) {
-	s.pruningManager.SetStorageOptions(ssOpts)
-	s.pruningManager.SetCommitmentOptions(scOpts)
-
-	s.pruningManager.Start()
 }
 
 // GetSCStore returns the store's state commitment (SC) backend.

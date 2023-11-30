@@ -22,6 +22,7 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/store/v2/commitment"
 	"cosmossdk.io/store/v2/commitment/iavl"
+	"cosmossdk.io/store/v2/pruning"
 	"cosmossdk.io/store/v2/root"
 	"cosmossdk.io/store/v2/storage/sqlite"
 	authtx "cosmossdk.io/x/auth/tx"
@@ -83,7 +84,7 @@ func NewBaseAppSuite(t *testing.T, opts ...func(*baseapp.BaseApp)) *BaseAppSuite
 	)
 	require.NoError(t, err)
 
-	rs, err := root.New(logger, 1, ss, sc, nil)
+	rs, err := root.New(logger, ss, sc, pruning.DefaultOptions(), pruning.DefaultOptions(), nil)
 	require.NoError(t, err)
 
 	app := baseapp.NewBaseApp(t.Name(), logger, db, rs, txConfig.TxDecoder(), opts...)
@@ -110,7 +111,8 @@ func getQueryBaseapp(t *testing.T) *baseapp.BaseApp {
 
 	db := dbm.NewMemDB()
 	name := t.Name()
-	app := baseapp.NewBaseApp(name, log.NewTestLogger(t), db, nil)
+
+	app := baseapp.NewBaseApp(name, log.NewTestLogger(t), db, nil, nil)
 
 	_, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1})
 	require.NoError(t, err)

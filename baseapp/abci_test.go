@@ -31,6 +31,11 @@ import (
 	"cosmossdk.io/store/snapshots"
 	snapshottypes "cosmossdk.io/store/snapshots/types"
 	storetypes "cosmossdk.io/store/types"
+	"cosmossdk.io/store/v2/commitment"
+	"cosmossdk.io/store/v2/commitment/iavl"
+	"cosmossdk.io/store/v2/pruning"
+	"cosmossdk.io/store/v2/root"
+	"cosmossdk.io/store/v2/storage/sqlite"
 	"cosmossdk.io/x/auth/signing"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -99,16 +104,31 @@ func TestABCI_InitChain(t *testing.T) {
 	name := t.Name()
 	db := dbm.NewMemDB()
 	logger := log.NewTestLogger(t)
-	app := baseapp.NewBaseApp(name, logger, db, nil, baseapp.SetChainID("test-chain-id"))
 
-	capKey := storetypes.NewKVStoreKey("main")
-	capKey2 := storetypes.NewKVStoreKey("key2")
-	app.MountStores(capKey, capKey2)
+	sk1 := "main"
+	sk2 := "key2"
+
+	ss, err := sqlite.New(t.TempDir())
+	require.NoError(t, err)
+
+	sc, err := commitment.NewCommitStore(
+		map[string]commitment.Tree{
+			sk1: iavl.NewIavlTree(db, logger, iavl.DefaultConfig()),
+			sk2: iavl.NewIavlTree(db, logger, iavl.DefaultConfig()),
+		},
+		logger,
+	)
+	require.NoError(t, err)
+
+	rs, err := root.New(logger, ss, sc, pruning.DefaultOptions(), pruning.DefaultOptions(), nil)
+	require.NoError(t, err)
+
+	app := baseapp.NewBaseApp(name, logger, db, rs, nil, baseapp.SetChainID("test-chain-id"))
 
 	// set a value in the store on init chain
 	key, value := []byte("hello"), []byte("goodbye")
 	var initChainer sdk.InitChainer = func(ctx sdk.Context, req *abci.RequestInitChain) (*abci.ResponseInitChain, error) {
-		store := ctx.KVStore(capKey)
+		store := ctx.KVStore(sk1)
 		store.Set(key, value)
 		return &abci.ResponseInitChain{}, nil
 	}
@@ -119,12 +139,13 @@ func TestABCI_InitChain(t *testing.T) {
 	}
 
 	// initChain is nil and chain ID is wrong - errors
-	_, err := app.InitChain(&abci.RequestInitChain{ChainId: "wrong-chain-id"})
+	_, err = app.InitChain(&abci.RequestInitChain{ChainId: "wrong-chain-id"})
 	require.Error(t, err)
 
 	// initChain is nil - nothing happens
 	_, err = app.InitChain(&abci.RequestInitChain{ChainId: "test-chain-id"})
 	require.NoError(t, err)
+
 	resQ, err := app.Query(context.TODO(), &query)
 	require.NoError(t, err)
 	require.Equal(t, 0, len(resQ.Value))
@@ -170,16 +191,16 @@ func TestABCI_InitChain(t *testing.T) {
 
 	resQ, err = app.Query(context.TODO(), &query)
 	require.NoError(t, err)
-	require.Equal(t, int64(1), app.LastBlockHeight())
+	require.Equal(t, uint64(1), app.LastBlockHeight())
 	require.Equal(t, value, resQ.Value)
 
 	// reload app
-	app = baseapp.NewBaseApp(name, logger, db, nil)
+	app = baseapp.NewBaseApp(name, logger, db, rs, nil)
 	app.SetInitChainer(initChainer)
-	app.MountStores(capKey, capKey2)
+
 	err = app.LoadLatestVersion() // needed to make stores non-nil
 	require.Nil(t, err)
-	require.Equal(t, int64(1), app.LastBlockHeight())
+	require.Equal(t, uint64(1), app.LastBlockHeight())
 
 	// ensure we can still query after reloading
 	resQ, err = app.Query(context.TODO(), &query)
@@ -187,7 +208,7 @@ func TestABCI_InitChain(t *testing.T) {
 	require.Equal(t, value, resQ.Value)
 
 	// commit and ensure we can still query
-	_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: app.LastBlockHeight() + 1})
+	_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: int64(app.LastBlockHeight()) + 1})
 	require.NoError(t, err)
 	_, err = app.Commit()
 	require.NoError(t, err)
@@ -200,9 +221,25 @@ func TestABCI_InitChain(t *testing.T) {
 func TestABCI_InitChain_WithInitialHeight(t *testing.T) {
 	name := t.Name()
 	db := dbm.NewMemDB()
-	app := baseapp.NewBaseApp(name, log.NewTestLogger(t), db, nil)
+	logger := log.NewTestLogger(t)
 
-	_, err := app.InitChain(
+	ss, err := sqlite.New(t.TempDir())
+	require.NoError(t, err)
+
+	sc, err := commitment.NewCommitStore(
+		map[string]commitment.Tree{
+			"main": iavl.NewIavlTree(db, logger, iavl.DefaultConfig()),
+		},
+		logger,
+	)
+	require.NoError(t, err)
+
+	rs, err := root.New(logger, ss, sc, pruning.DefaultOptions(), pruning.DefaultOptions(), nil)
+	require.NoError(t, err)
+
+	app := baseapp.NewBaseApp(name, logger, db, rs, nil)
+
+	_, err = app.InitChain(
 		&abci.RequestInitChain{
 			InitialHeight: 3,
 		},
@@ -217,9 +254,25 @@ func TestABCI_InitChain_WithInitialHeight(t *testing.T) {
 func TestABCI_FinalizeBlock_WithInitialHeight(t *testing.T) {
 	name := t.Name()
 	db := dbm.NewMemDB()
-	app := baseapp.NewBaseApp(name, log.NewTestLogger(t), db, nil)
+	logger := log.NewTestLogger(t)
 
-	_, err := app.InitChain(
+	ss, err := sqlite.New(t.TempDir())
+	require.NoError(t, err)
+
+	sc, err := commitment.NewCommitStore(
+		map[string]commitment.Tree{
+			"main": iavl.NewIavlTree(db, logger, iavl.DefaultConfig()),
+		},
+		logger,
+	)
+	require.NoError(t, err)
+
+	rs, err := root.New(logger, ss, sc, pruning.DefaultOptions(), pruning.DefaultOptions(), nil)
+	require.NoError(t, err)
+
+	app := baseapp.NewBaseApp(name, logger, db, rs, nil)
+
+	_, err = app.InitChain(
 		&abci.RequestInitChain{
 			InitialHeight: 3,
 		},
@@ -231,6 +284,7 @@ func TestABCI_FinalizeBlock_WithInitialHeight(t *testing.T) {
 
 	_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 3})
 	require.NoError(t, err)
+
 	_, err = app.Commit()
 	require.NoError(t, err)
 	require.Equal(t, int64(3), app.LastBlockHeight())
@@ -239,7 +293,23 @@ func TestABCI_FinalizeBlock_WithInitialHeight(t *testing.T) {
 func TestABCI_FinalizeBlock_WithBeginAndEndBlocker(t *testing.T) {
 	name := t.Name()
 	db := dbm.NewMemDB()
-	app := baseapp.NewBaseApp(name, log.NewTestLogger(t), db, nil)
+	logger := log.NewTestLogger(t)
+
+	ss, err := sqlite.New(t.TempDir())
+	require.NoError(t, err)
+
+	sc, err := commitment.NewCommitStore(
+		map[string]commitment.Tree{
+			"main": iavl.NewIavlTree(db, logger, iavl.DefaultConfig()),
+		},
+		logger,
+	)
+	require.NoError(t, err)
+
+	rs, err := root.New(logger, ss, sc, pruning.DefaultOptions(), pruning.DefaultOptions(), nil)
+	require.NoError(t, err)
+
+	app := baseapp.NewBaseApp(name, logger, db, rs, nil)
 
 	app.SetBeginBlocker(func(ctx sdk.Context) (sdk.BeginBlock, error) {
 		return sdk.BeginBlock{
@@ -273,7 +343,7 @@ func TestABCI_FinalizeBlock_WithBeginAndEndBlocker(t *testing.T) {
 		}, nil
 	})
 
-	_, err := app.InitChain(
+	_, err = app.InitChain(
 		&abci.RequestInitChain{
 			InitialHeight: 1,
 		},
@@ -306,7 +376,23 @@ func TestABCI_FinalizeBlock_WithBeginAndEndBlocker(t *testing.T) {
 func TestABCI_ExtendVote(t *testing.T) {
 	name := t.Name()
 	db := dbm.NewMemDB()
-	app := baseapp.NewBaseApp(name, log.NewTestLogger(t), db, nil)
+	logger := log.NewTestLogger(t)
+
+	ss, err := sqlite.New(t.TempDir())
+	require.NoError(t, err)
+
+	sc, err := commitment.NewCommitStore(
+		map[string]commitment.Tree{
+			"main": iavl.NewIavlTree(db, logger, iavl.DefaultConfig()),
+		},
+		logger,
+	)
+	require.NoError(t, err)
+
+	rs, err := root.New(logger, ss, sc, pruning.DefaultOptions(), pruning.DefaultOptions(), nil)
+	require.NoError(t, err)
+
+	app := baseapp.NewBaseApp(name, logger, db, rs, nil)
 
 	app.SetExtendVoteHandler(func(ctx sdk.Context, req *abci.RequestExtendVote) (*abci.ResponseExtendVote, error) {
 		voteExt := fooStr + hex.EncodeToString(req.Hash) + strconv.FormatInt(req.Height, 10)
@@ -324,7 +410,7 @@ func TestABCI_ExtendVote(t *testing.T) {
 	})
 
 	app.SetParamStore(&paramStore{db: dbm.NewMemDB()})
-	_, err := app.InitChain(
+	_, err = app.InitChain(
 		&abci.RequestInitChain{
 			InitialHeight: 1,
 			ConsensusParams: &cmtproto.ConsensusParams{
@@ -389,7 +475,23 @@ func TestABCI_ExtendVote(t *testing.T) {
 func TestABCI_OnlyVerifyVoteExtension(t *testing.T) {
 	name := t.Name()
 	db := dbm.NewMemDB()
-	app := baseapp.NewBaseApp(name, log.NewTestLogger(t), db, nil)
+	logger := log.NewTestLogger(t)
+
+	ss, err := sqlite.New(t.TempDir())
+	require.NoError(t, err)
+
+	sc, err := commitment.NewCommitStore(
+		map[string]commitment.Tree{
+			"main": iavl.NewIavlTree(db, logger, iavl.DefaultConfig()),
+		},
+		logger,
+	)
+	require.NoError(t, err)
+
+	rs, err := root.New(logger, ss, sc, pruning.DefaultOptions(), pruning.DefaultOptions(), nil)
+	require.NoError(t, err)
+
+	app := baseapp.NewBaseApp(name, logger, db, rs, nil)
 
 	app.SetVerifyVoteExtensionHandler(func(ctx sdk.Context, req *abci.RequestVerifyVoteExtension) (*abci.ResponseVerifyVoteExtension, error) {
 		// do some kind of verification here
@@ -402,7 +504,7 @@ func TestABCI_OnlyVerifyVoteExtension(t *testing.T) {
 	})
 
 	app.SetParamStore(&paramStore{db: dbm.NewMemDB()})
-	_, err := app.InitChain(
+	_, err = app.InitChain(
 		&abci.RequestInitChain{
 			InitialHeight: 1,
 			ConsensusParams: &cmtproto.ConsensusParams{
@@ -468,7 +570,7 @@ func TestABCI_GRPCQuery(t *testing.T) {
 	require.Equal(t, sdkerrors.ErrInvalidHeight.ABCICode(), resQuery.Code, resQuery)
 	require.Contains(t, resQuery.Log, "TestABCI_GRPCQuery is not ready; please wait for first block")
 
-	_, err = suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: suite.baseApp.LastBlockHeight() + 1})
+	_, err = suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: int64(suite.baseApp.LastBlockHeight()) + 1})
 	require.NoError(t, err)
 
 	_, err = suite.baseApp.Commit()
@@ -525,16 +627,30 @@ func TestBaseApp_PrepareCheckState(t *testing.T) {
 	name := t.Name()
 	logger := log.NewTestLogger(t)
 
-	cp := &cmtproto.ConsensusParams{
-		Block: &cmtproto.BlockParams{
-			MaxGas: 5000000,
-		},
-	}
+	ss, err := sqlite.New(t.TempDir())
+	require.NoError(t, err)
 
-	app := baseapp.NewBaseApp(name, logger, db, nil)
+	sc, err := commitment.NewCommitStore(
+		map[string]commitment.Tree{
+			"main": iavl.NewIavlTree(db, logger, iavl.DefaultConfig()),
+		},
+		logger,
+	)
+	require.NoError(t, err)
+
+	rs, err := root.New(logger, ss, sc, pruning.DefaultOptions(), pruning.DefaultOptions(), nil)
+	require.NoError(t, err)
+
+	app := baseapp.NewBaseApp(name, logger, db, rs, nil)
+
 	app.SetParamStore(&paramStore{db: dbm.NewMemDB()})
-	_, err := app.InitChain(&abci.RequestInitChain{
-		ConsensusParams: cp,
+
+	_, err = app.InitChain(&abci.RequestInitChain{
+		ConsensusParams: &cmtproto.ConsensusParams{
+			Block: &cmtproto.BlockParams{
+				MaxGas: 5000000,
+			},
+		},
 	})
 	require.NoError(t, err)
 
@@ -554,16 +670,29 @@ func TestBaseApp_Precommit(t *testing.T) {
 	name := t.Name()
 	logger := log.NewTestLogger(t)
 
-	cp := &cmtproto.ConsensusParams{
-		Block: &cmtproto.BlockParams{
-			MaxGas: 5000000,
-		},
-	}
+	ss, err := sqlite.New(t.TempDir())
+	require.NoError(t, err)
 
-	app := baseapp.NewBaseApp(name, logger, db, nil)
+	sc, err := commitment.NewCommitStore(
+		map[string]commitment.Tree{
+			"main": iavl.NewIavlTree(db, logger, iavl.DefaultConfig()),
+		},
+		logger,
+	)
+	require.NoError(t, err)
+
+	rs, err := root.New(logger, ss, sc, pruning.DefaultOptions(), pruning.DefaultOptions(), nil)
+	require.NoError(t, err)
+
+	app := baseapp.NewBaseApp(name, logger, db, rs, nil)
+
 	app.SetParamStore(&paramStore{db: dbm.NewMemDB()})
-	_, err := app.InitChain(&abci.RequestInitChain{
-		ConsensusParams: cp,
+	_, err = app.InitChain(&abci.RequestInitChain{
+		ConsensusParams: &cmtproto.ConsensusParams{
+			Block: &cmtproto.BlockParams{
+				MaxGas: 5000000,
+			},
+		},
 	})
 	require.NoError(t, err)
 
@@ -2355,8 +2484,8 @@ func TestOptimisticExecution(t *testing.T) {
 
 		reqProcProp := abci.RequestProcessProposal{
 			Txs:    [][]byte{txBytes},
-			Height: suite.baseApp.LastBlockHeight() + 1,
-			Hash:   []byte("some-hash" + strconv.FormatInt(suite.baseApp.LastBlockHeight()+1, 10)),
+			Height: int64(suite.baseApp.LastBlockHeight()) + 1,
+			Hash:   []byte("some-hash" + strconv.FormatUint(suite.baseApp.LastBlockHeight()+1, 10)),
 		}
 
 		respProcProp, err := suite.baseApp.ProcessProposal(&reqProcProp)

@@ -10,28 +10,41 @@ Proposed
 
 ## Abstract
 
-Add an extra nonce "lane" to support un-ordered(concurrent) transaction inclusion.
+We propose to add an extra nonce "lane" to support un-ordered (concurrent) transaction inclusion.
 
 ## Context
 
-Right now the nonce value (account sequence number) prevents replay-attack and make sure the transactions from the same sender are included into blocks and executed in order. But it makes it tricky to send many transactions concurrently in a reliable way. IBC relayer and crypto exchanges would be typical examples of such use cases.
+As of today, the nonce value (account sequence number) prevents replay-attack and ensures the transactions from the same sender are included into blocks and executed in sequential order. However it makes it tricky to send many transactions concurrently in a reliable way. IBC relayer and crypto exchanges would be typical examples of such use cases.
 
 ## Decision
 
-Add an extra nonce lane to support optional un-ordered transaction inclusion, the default lane provides ordered semantic the same as before, the new one will provide un-ordered semantic. The transaction can choose which lane to use.
+Add an extra un-ordered nonce lane to support un-ordered transaction inclusion, it works at the same time as the default ordered lane, the transaction builder can choose either lane to use.
 
-One of the design goals is to keep minimal overhead and breakage to the existing users who don't use the new feature.
+The un-ordered nonce lane accepts nonce values that is greater than the current sequence number plus 1, which effectively creates "gaps" of nonce values, those gap values are tracked in the account state, and can be filled by future transactions, thus allows transactions to be executed in a un-ordered way.
+
+It also tracks the last block time when the latest nonce is updated, and expire the gaps certain timeout reached, to mitigate the risk that a middleman intercept an old transaction and re-execute it in a longer future, which might cause unexpected result.
+
+The design introducs almost zero overhead for users who don't use the new feature.
 
 ### Transaction Format
 
-It doesn't change the transaction format itself, but re-use the MSB(most significant bit) of the existing 64bits nonce value to identify the lane, `0` being the default ordered lane, `1` being the new un-ordered lane.
+Add a boolean field `unordered` to the `BaseAccount` message, when it's set to `true`, the transaction will use the un-ordered lane, otherwise the default ordered lane.
+
+```protobuf
+message BaseAccount {
+  ...
+  uint64 account_number = 3;
+  uint64 sequence       = 4;
+  boolean unordered     = 5;
+}
+```
 
 ### Account State
 
-The new nonce lane needs to add some optional fields to the account state:
+Add some optional fields to the account state:
 
 ```golang
-type UnOrderedNonce struct {
+type UnorderedNonceManager struct {
   Sequence uint64
   Timestamp uint64  // the block time when the Sequence is updated
   Gaps IntSet
@@ -39,42 +52,31 @@ type UnOrderedNonce struct {
 
 type Account struct {
   // default to `nil`, only initialized when the new feature is first used.
-  unorderedNonce *UnOrderedNonce
+  unorderedNonceManager *UnorderedNonceManager
 }
 ```
 
 The un-ordered nonce state includes a normal sequence value plus the set of unused(gap) values in recent history, these recorded gap values can be reused by future transactions, after used they are removed from the set and can't be used again, the gap set has a maximum capacity to limit the resource usage, when the capacity is reached, the oldest gap value is removed, which also makes the pending transaction using that value as nonce will not be accepted anymore.
 
-### Expiration
+### Nonce Validation Logic
 
-It would be good to expire the gap nonces after certain timeout is reached, to mitigate the risk that a middleman intercept an old transaction and re-execute it in a longer future, which might cause unexpected result.
-
-### Prototype Implementation
-
-The prototype implementation use a roaring bitmap to record these gap values.
+The prototype implementation use a roaring bitmap to record these gap values, where the set bits represents the the gaps.
 
 ```golang
-const (
-  MSBCheckMask = 1 << 63
-  MSBClearMask = ^(1 << 63)
-)
-
 // CheckNonce switches to un-ordered lane if the MSB of the nonce is set.
-func (acct *Account) CheckNonce(nonce uint64, blockTime uint64) error {
-  if nonce & MSBCheckMask != 0 {
-    nonce &= MSBClearMask
-
-    if acct.unorderedNonce == nil {
-      acct.unorderedNonce = NewUnOrderedNonce()
+func (acct *Account) CheckNonce(nonce uint64, unordered bool, blockTime uint64) error {
+  if unordered {
+    if acct.unorderedNonceManager == nil {
+      acct.unorderedNonceManager = NewUnorderedNonceManager()
     }
-    return acct.unorderedNonce.CheckNonce(nonce, blockTime)
+    return acct.unorderedNonceManager.CheckNonce(nonce, blockTime)
   }
 
-  // current nonce logic
+  // current ordered nonce logic
 }
 ```
 
-
+### UnorderedNonceManager
 
 ```golang
 const (
@@ -87,46 +89,46 @@ const (
 )
 
 // getGaps returns the gap set, or create a new one if it's expired
-func(u *UnOrderedNonce) getGaps(blockTime uint64) *IntSet {
-  if blockTime > u.Timestamp + GapsExpirationDuration {
+func(unm *UnorderedNonceManager) getGaps(blockTime uint64) *IntSet {
+  if blockTime > unm.Timestamp + GapsExpirationDuration {
     return NewIntSet(GapsCapacity)
   }
 
-  return &u.Gaps
+  return &unm.Gaps
 }
 
 // CheckNonce checks if the nonce in tx is valid, if yes, also update the internal state.
-func(u *UnOrderedNonce) CheckNonce(nonce uint64, blockTime uint64) error {
+func(unm *UnorderedNonceManager) CheckNonce(nonce uint64, blockTime uint64) error {
   switch {
-    case nonce == u.Sequence:
+    case nonce == unm.Sequence:
       // special case, the current sequence number must have been occupied
       return errors.New("nonce is occupied")
 
-    case nonce >= u.Sequence + 1:
-      // the number of gaps introduced by this nonce value, could be zero if it happens to be `u.Sequence + 1`
-      gaps := nonce - u.Sequence - 1
+    case nonce > unm.Sequence:
+      // the number of gaps introduced by this nonce value, could be zero if it happens to be `unm.Sequence + 1`
+      gaps := nonce - unm.Sequence - 1
       if gaps > MaxGap {
         return errors.New("max gap is exceeded")
       }
 
       gapSet := acct.getGaps(blockTime)
       // record the gaps into the bitmap
-      gapSet.AddRange(u.Sequence + 1, u.Sequence + gaps + 1)
+      gapSet.AddRange(unm.Sequence + 1, unm.Sequence + gaps + 1)
 
       // update the latest nonce
-      u.Gaps = *gapSet
-      u.Sequence = nonce
-      u.Timestamp = blockTime
+      unm.Gaps = *gapSet
+      unm.Sequence = nonce
+      unm.Timestamp = blockTime
 
     default:
-      // `nonce < u.Sequence`, the tx try to use a historical nonce
+      // `nonce < unm.Sequence`, the tx try to use a historical nonce
       gapSet := acct.getGaps(blockTime)
       if !gapSet.Contains(nonce) {
         return errors.New("nonce is occupied or expired")
       }
 
       gapSet.Remove(nonce)
-      u.Gaps = *gapSet
+      unm.Gaps = *gapSet
   }
   return nil
 }
@@ -183,7 +185,6 @@ func (is *IntSet) Contains(n uint64) bool {
 * Support concurrent transaction inclusion.
 * Only optional fields are added to account state, no state migration is needed.
 * No runtime overhead when the new feature is not used.
-* No need to change transaction format.
 
 ### Negative
 

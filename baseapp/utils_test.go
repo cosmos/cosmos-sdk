@@ -26,6 +26,7 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
+	"cosmossdk.io/store/v2"
 	_ "cosmossdk.io/x/auth"
 	"cosmossdk.io/x/auth/signing"
 	_ "cosmossdk.io/x/auth/tx/config"
@@ -142,33 +143,33 @@ func (m NoopCounterServerImpl) IncrementCounter(
 
 type CounterServerImpl struct {
 	t          *testing.T
-	capKey     storetypes.StoreKey
+	storeKey   string
 	deliverKey []byte
 }
 
 func (m CounterServerImpl) IncrementCounter(ctx context.Context, msg *baseapptestutil.MsgCounter) (*baseapptestutil.MsgCreateCounterResponse, error) {
-	return incrementCounter(ctx, m.t, m.capKey, m.deliverKey, msg)
+	return incrementCounter(ctx, m.t, m.storeKey, m.deliverKey, msg)
 }
 
 type Counter2ServerImpl struct {
 	t          *testing.T
-	capKey     storetypes.StoreKey
+	storeKey   string
 	deliverKey []byte
 }
 
 func (m Counter2ServerImpl) IncrementCounter(ctx context.Context, msg *baseapptestutil.MsgCounter2) (*baseapptestutil.MsgCreateCounterResponse, error) {
-	return incrementCounter(ctx, m.t, m.capKey, m.deliverKey, msg)
+	return incrementCounter(ctx, m.t, m.storeKey, m.deliverKey, msg)
 }
 
 func incrementCounter(ctx context.Context,
 	t *testing.T,
-	capKey storetypes.StoreKey,
+	storeKey string,
 	deliverKey []byte,
 	msg sdk.Msg,
 ) (*baseapptestutil.MsgCreateCounterResponse, error) {
 	t.Helper()
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	store := sdkCtx.KVStore(capKey)
+	store := sdkCtx.KVStore(storeKey)
 
 	sdkCtx.GasMeter().ConsumeGas(5, "test")
 
@@ -208,7 +209,7 @@ func counterEvent(evType string, msgCount int64) sdk.Events {
 	}
 }
 
-func anteHandlerTxTest(t *testing.T, capKey storetypes.StoreKey, storeKey []byte) sdk.AnteHandler {
+func anteHandlerTxTest(t *testing.T, capKey string, counterKey []byte) sdk.AnteHandler {
 	t.Helper()
 	return func(ctx sdk.Context, tx sdk.Tx, simulate bool) (sdk.Context, error) {
 		store := ctx.KVStore(capKey)
@@ -218,7 +219,7 @@ func anteHandlerTxTest(t *testing.T, capKey storetypes.StoreKey, storeKey []byte
 			return ctx, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "ante handler failure")
 		}
 
-		_, err := incrementingCounter(t, store, storeKey, counter)
+		_, err := incrementingCounter(t, store, counterKey, counter)
 		if err != nil {
 			return ctx, err
 		}
@@ -232,7 +233,7 @@ func anteHandlerTxTest(t *testing.T, capKey storetypes.StoreKey, storeKey []byte
 	}
 }
 
-func incrementingCounter(t *testing.T, store storetypes.KVStore, counterKey []byte, counter int64) (*sdk.Result, error) {
+func incrementingCounter(t *testing.T, store store.KVStore, counterKey []byte, counter int64) (*sdk.Result, error) {
 	t.Helper()
 	storedCounter := getIntFromStore(t, store, counterKey)
 	require.Equal(t, storedCounter, counter)
@@ -240,7 +241,7 @@ func incrementingCounter(t *testing.T, store storetypes.KVStore, counterKey []by
 	return &sdk.Result{}, nil
 }
 
-func setIntOnStore(store storetypes.KVStore, key []byte, i int64) {
+func setIntOnStore(store store.KVStore, key []byte, i int64) {
 	bz := make([]byte, 8)
 	n := binary.PutVarint(bz, i)
 	store.Set(key, bz[:n])
@@ -353,7 +354,7 @@ func newTxCounter(t *testing.T, cfg client.TxConfig, counter int64, msgCounters 
 	return builder.GetTx()
 }
 
-func getIntFromStore(t *testing.T, store storetypes.KVStore, key []byte) int64 {
+func getIntFromStore(t *testing.T, store store.KVStore, key []byte) int64 {
 	t.Helper()
 	bz := store.Get(key)
 	if len(bz) == 0 {

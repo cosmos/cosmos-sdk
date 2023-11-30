@@ -249,18 +249,18 @@ func (m *MockPoolKeeper) EXPECT() *MockPoolKeeperMockRecorder {
 	return m.recorder
 }
 
-// DistributeFromFeePool mocks base method.
-func (m *MockPoolKeeper) DistributeFromFeePool(ctx context.Context, amount types0.Coins, receiveAddr types0.AccAddress) error {
+// DistributeFromCommunityPool mocks base method.
+func (m *MockPoolKeeper) DistributeFromCommunityPool(ctx context.Context, amount types0.Coins, receiveAddr types0.AccAddress) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DistributeFromFeePool", ctx, amount, receiveAddr)
+	ret := m.ctrl.Call(m, "DistributeFromCommunityPool", ctx, amount, receiveAddr)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// DistributeFromFeePool indicates an expected call of DistributeFromFeePool.
-func (mr *MockPoolKeeperMockRecorder) DistributeFromFeePool(ctx, amount, receiveAddr interface{}) *gomock.Call {
+// DistributeFromCommunityPool indicates an expected call of DistributeFromCommunityPool.
+func (mr *MockPoolKeeperMockRecorder) DistributeFromCommunityPool(ctx, amount, receiveAddr interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DistributeFromFeePool", reflect.TypeOf((*MockPoolKeeper)(nil).DistributeFromFeePool), ctx, amount, receiveAddr)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DistributeFromCommunityPool", reflect.TypeOf((*MockPoolKeeper)(nil).DistributeFromCommunityPool), ctx, amount, receiveAddr)
 }
 
 // FundCommunityPool mocks base method.

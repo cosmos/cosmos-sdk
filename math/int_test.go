@@ -111,32 +111,66 @@ func (s *intTestSuite) TestIntPanic() {
 	s.Require().NotPanics(func() { i1.Add(i1) })
 	s.Require().NotPanics(func() { i2.Add(i2) })
 	s.Require().Panics(func() { i3.Add(i3) })
+	_, err := i1.SafeAdd(i1)
+	s.Require().Nil(err)
+	_, err = i2.SafeAdd(i2)
+	s.Require().Nil(err)
+	_, err = i3.SafeAdd(i3)
+	s.Require().Error(err)
 
 	s.Require().NotPanics(func() { i1.Sub(i1.Neg()) })
 	s.Require().NotPanics(func() { i2.Sub(i2.Neg()) })
 	s.Require().Panics(func() { i3.Sub(i3.Neg()) })
+	_, err = i1.SafeSub(i1.Neg())
+	s.Require().Nil(err)
+	_, err = i2.SafeSub(i2.Neg())
+	s.Require().Nil(err)
+	_, err = i3.SafeSub(i3.Neg())
+	s.Require().Error(err)
 
 	s.Require().Panics(func() { i1.Mul(i1) })
 	s.Require().Panics(func() { i2.Mul(i2) })
 	s.Require().Panics(func() { i3.Mul(i3) })
+	_, err = i1.SafeMul(i1)
+	s.Require().Error(err)
+	_, err = i2.SafeMul(i2)
+	s.Require().Error(err)
+	_, err = i3.SafeMul(i3)
+	s.Require().Error(err)
 
 	s.Require().Panics(func() { i1.Neg().Mul(i1.Neg()) })
 	s.Require().Panics(func() { i2.Neg().Mul(i2.Neg()) })
 	s.Require().Panics(func() { i3.Neg().Mul(i3.Neg()) })
+	_, err = i1.Neg().SafeMul(i1.Neg())
+	s.Require().Error(err)
+	_, err = i2.Neg().SafeMul(i2.Neg())
+	s.Require().Error(err)
+	_, err = i3.Neg().SafeMul(i3.Neg())
+	s.Require().Error(err)
 
-	// // Underflow check
+	// Underflow check
 	i3n := i3.Neg()
 	s.Require().NotPanics(func() { i3n.Sub(i1) })
 	s.Require().NotPanics(func() { i3n.Sub(i2) })
 	s.Require().Panics(func() { i3n.Sub(i3) })
+	_, err = i3n.SafeSub(i3)
+	s.Require().Error(err)
 
 	s.Require().NotPanics(func() { i3n.Add(i1.Neg()) })
 	s.Require().NotPanics(func() { i3n.Add(i2.Neg()) })
 	s.Require().Panics(func() { i3n.Add(i3.Neg()) })
+	_, err = i3n.SafeAdd(i3.Neg())
+	s.Require().Error(err)
 
 	s.Require().Panics(func() { i1.Mul(i1.Neg()) })
 	s.Require().Panics(func() { i2.Mul(i2.Neg()) })
 	s.Require().Panics(func() { i3.Mul(i3.Neg()) })
+	_, err = i1.SafeMul(i1.Neg())
+	s.Require().Error(err)
+	_, err = i2.SafeMul(i2.Neg())
+	s.Require().Error(err)
+	_, err = i3.SafeMul(i3.Neg())
+	s.Require().Error(err)
 
 	// Bound check
 	intmax := math.NewIntFromBigInt(new(big.Int).Sub(new(big.Int).Exp(big.NewInt(2), big.NewInt(256), nil), big.NewInt(1)))
@@ -145,12 +179,18 @@ func (s *intTestSuite) TestIntPanic() {
 	s.Require().NotPanics(func() { intmin.Sub(math.ZeroInt()) })
 	s.Require().Panics(func() { intmax.Add(math.OneInt()) })
 	s.Require().Panics(func() { intmin.Sub(math.OneInt()) })
+	_, err = intmax.SafeAdd(math.OneInt())
+	s.Require().Error(err)
+	_, err = intmin.SafeSub(math.OneInt())
+	s.Require().Error(err)
 
 	s.Require().NotPanics(func() { math.NewIntFromBigInt(nil) })
 	s.Require().True(math.NewIntFromBigInt(nil).IsNil())
 
 	// Division-by-zero check
 	s.Require().Panics(func() { i1.Quo(math.NewInt(0)) })
+	_, err = i1.SafeQuo(math.NewInt(0))
+	s.Require().Error(err)
 
 	s.Require().NotPanics(func() { math.Int{}.BigInt() })
 }

@@ -2,7 +2,6 @@ package types
 
 import (
 	"context"
-	"fmt"
 	"sync"
 
 	"github.com/cosmos/cosmos-sdk/version"
@@ -128,18 +127,6 @@ func (config *Config) SetFullFundraiserPath(fullFundraiserPath string) {
 	config.fullFundraiserPath = fullFundraiserPath
 }
 
-// Set the BIP-0044 Purpose code on the config
-func (config *Config) SetPurpose(purpose uint32) {
-	config.assertNotSealed()
-	config.purpose = purpose
-}
-
-// Set the BIP-0044 CoinType code on the config
-func (config *Config) SetCoinType(coinType uint32) {
-	config.assertNotSealed()
-	config.coinType = coinType
-}
-
 // Seal seals the config such that the config state could not be modified further
 func (config *Config) Seal() *Config {
 	config.mtx.Lock()
@@ -197,26 +184,11 @@ func (config *Config) GetAddressVerifier() func([]byte) error {
 	return config.addressVerifier
 }
 
-// GetPurpose returns the BIP-0044 Purpose code on the config.
-func (config *Config) GetPurpose() uint32 {
-	return config.purpose
-}
-
-// GetCoinType returns the BIP-0044 CoinType code on the config.
-func (config *Config) GetCoinType() uint32 {
-	return config.coinType
-}
-
 // GetFullFundraiserPath returns the BIP44Prefix.
 //
 // Deprecated: This method is supported for backward compatibility only and will be removed in a future release. Use GetFullBIP44Path instead.
 func (config *Config) GetFullFundraiserPath() string {
 	return config.fullFundraiserPath
-}
-
-// GetFullBIP44Path returns the BIP44Prefix.
-func (config *Config) GetFullBIP44Path() string {
-	return fmt.Sprintf("m/%d'/%d'/0'/0/0", config.purpose, config.coinType)
 }
 
 func KeyringServiceName() string {

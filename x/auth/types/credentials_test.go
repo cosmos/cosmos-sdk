@@ -18,15 +18,15 @@ func TestNewModuleCrendentials(t *testing.T) {
 	_, err = authtypes.NewModuleCredential("group", [][]byte{{0x0, 0x30}, {}}...)
 	require.Error(t, err)
 
-	expected := sdk.MustAccAddressFromBech32("cosmos1fpn0w0yf4x300llf5r66jnfhgj4ul6cfahrvqsskwkhsw6sv84wsmz359y")
+	expected := sdk.MustAccAddressFromBech32("cosmos1fpn0w0yf4x300llf5r66jnfhgj4ul6cfahrvqsskwkhsw6sv84wsmz359y", nil)
 
 	credential, err := authtypes.NewModuleCredential("group")
 	require.NoError(t, err, "must be able to create a Root Module credential (see ADR-33)")
-	require.NoError(t, sdk.VerifyAddressFormat(credential.Address()))
+	require.NoError(t, sdk.VerifyAddressFormat(credential.Address(), nil))
 
 	credential, err = authtypes.NewModuleCredential("group", [][]byte{{0x20}, {0x0}}...)
 	require.NoError(t, err)
-	require.NoError(t, sdk.VerifyAddressFormat(credential.Address()))
+	require.NoError(t, sdk.VerifyAddressFormat(credential.Address(), nil))
 	addr, err := sdk.AccAddressFromHexUnsafe(credential.Address().String())
 	require.NoError(t, err)
 	require.Equal(t, expected.String(), addr.String())

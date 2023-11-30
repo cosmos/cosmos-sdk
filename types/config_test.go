@@ -17,29 +17,6 @@ func TestConfigTestSuite(t *testing.T) {
 	suite.Run(t, new(configTestSuite))
 }
 
-func (s *contextTestSuite) TestConfig_SetPurpose() {
-	config := sdk.NewConfig()
-	config.SetPurpose(44)
-	s.Require().Equal(uint32(44), config.GetPurpose())
-
-	config.SetPurpose(0)
-	s.Require().Equal(uint32(0), config.GetPurpose())
-
-	config.Seal()
-	s.Require().Panics(func() { config.SetPurpose(10) })
-}
-
-func (s *configTestSuite) TestConfig_SetCoinType() {
-	config := sdk.NewConfig()
-	config.SetCoinType(1)
-	s.Require().Equal(uint32(1), config.GetCoinType())
-	config.SetCoinType(99)
-	s.Require().Equal(uint32(99), config.GetCoinType())
-
-	config.Seal()
-	s.Require().Panics(func() { config.SetCoinType(99) })
-}
-
 func (s *configTestSuite) TestConfig_SetTxEncoder() {
 	mockErr := errors.New("test")
 	config := sdk.NewConfig()

@@ -79,6 +79,7 @@ func (k Keeper) InitGenesis(ctx context.Context, data *types.GenesisState) (res 
 			notBondedTokens = notBondedTokens.Add(validator.GetTokens())
 
 		default:
+			panic(fmt.Sprintf("invalid validator status: %v", validator.GetStatus()))
 			panic("invalid validator status")
 		}
 	}

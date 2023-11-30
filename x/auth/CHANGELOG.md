@@ -34,3 +34,5 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [#18422](https://github.com/cosmos/cosmos-sdk/issues/18422) `NewSigVerificationDecorator` takes a new parameter that allows applications to decide if they want to cache signatures or not.
 
 ### Bug Fixes
+
+* (client/cli) [#18564](https://github.com/cosmos/cosmos-sdk/pull/18564) Fix total fees calculation when batch signing

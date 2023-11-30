@@ -35,7 +35,7 @@ func (s *RootStoreTestSuite) SetupTest() {
 	sc, err := commitment.NewCommitStore(map[string]commitment.Tree{"default": tree}, noopLog)
 	s.Require().NoError(err)
 
-	rs, err := New(noopLog, 1, ss, sc)
+	rs, err := New(noopLog, 1, ss, sc, nil)
 	s.Require().NoError(err)
 
 	rs.SetTracer(io.Discard)

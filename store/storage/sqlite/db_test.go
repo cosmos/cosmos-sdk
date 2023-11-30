@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"sync"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -32,12 +31,12 @@ func TestDatabase_ReverseIterator(t *testing.T) {
 	require.NoError(t, err)
 	defer db.Close()
 
-	cs := new(store.Changeset)
+	cs := store.NewChangeset(map[string]store.KVPairs{storeKey1: {}})
 	for i := 0; i < 100; i++ {
 		key := fmt.Sprintf("key%03d", i) // key000, key001, ..., key099
 		val := fmt.Sprintf("val%03d", i) // val000, val001, ..., val099
 
-		cs.AddKVPair(store.KVPair{StoreKey: storeKey1, Key: []byte(key), Value: []byte(val)})
+		cs.AddKVPair(storeKey1, store.KVPair{Key: []byte(key), Value: []byte(val)})
 	}
 
 	require.NoError(t, db.ApplyChangeset(1, cs))
@@ -106,18 +105,16 @@ func TestParallelWrites(t *testing.T) {
 		wg.Add(1)
 		go func(i int) {
 			<-triggerStartCh
-			t.Log("start time", i, time.Now())
 			defer wg.Done()
-			cs := new(store.Changeset)
+			cs := store.NewChangeset(map[string]store.KVPairs{storeKey1: {}})
 			for j := 0; j < kvCount; j++ {
 				key := fmt.Sprintf("key-%d-%03d", i, j)
 				val := fmt.Sprintf("val-%d-%03d", i, j)
 
-				cs.AddKVPair(store.KVPair{StoreKey: storeKey1, Key: []byte(key), Value: []byte(val)})
+				cs.AddKVPair(storeKey1, store.KVPair{Key: []byte(key), Value: []byte(val)})
 			}
 
 			require.NoError(t, db.ApplyChangeset(uint64(i+1), cs))
-			t.Log("end time", i, time.Now())
 		}(i)
 
 	}
@@ -158,12 +155,12 @@ func TestParallelWriteAndPruning(t *testing.T) {
 		<-triggerStartCh
 		defer wg.Done()
 		for i := 0; i < latestVersion; i++ {
-			cs := new(store.Changeset)
+			cs := store.NewChangeset(map[string]store.KVPairs{storeKey1: {}})
 			for j := 0; j < kvCount; j++ {
 				key := fmt.Sprintf("key-%d-%03d", i, j)
 				val := fmt.Sprintf("val-%d-%03d", i, j)
 
-				cs.AddKVPair(store.KVPair{StoreKey: storeKey1, Key: []byte(key), Value: []byte(val)})
+				cs.AddKVPair(storeKey1, store.KVPair{Key: []byte(key), Value: []byte(val)})
 			}
 
 			require.NoError(t, db.ApplyChangeset(uint64(i+1), cs))
@@ -179,7 +176,6 @@ func TestParallelWriteAndPruning(t *testing.T) {
 				v, err := db.GetLatestVersion()
 				require.NoError(t, err)
 				if v > uint64(i) {
-					t.Log("pruning version", v-1)
 					require.NoError(t, db.Prune(v-1))
 					break
 				}
@@ -194,7 +190,7 @@ func TestParallelWriteAndPruning(t *testing.T) {
 	// check if the data is pruned
 	version := uint64(latestVersion - prunePeriod)
 	val, err := db.Get(storeKey1, version, []byte(fmt.Sprintf("key-%d-%03d", version-1, 0)))
-	require.NoError(t, err)
+	require.Error(t, err)
 	require.Nil(t, val)
 
 	version = uint64(latestVersion)

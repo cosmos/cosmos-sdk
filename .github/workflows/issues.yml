@@ -14,5 +14,5 @@ jobs:
       - uses: actions/add-to-project@v0.5.0
         with:
           project-url: https://github.com/orgs/cosmos/projects/26
+# add all issues opened to the issue board for triage and assignment
           github-token: ${{ secrets.PERSONAL_TOKEN }}
-          labeled: T:Sprint,needs-triage

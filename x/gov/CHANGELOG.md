@@ -25,6 +25,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+## Improvements
+
+* [#18445](https://github.com/cosmos/cosmos-sdk/pull/18445) Extend gov config 
+
 ### Features
 
 * [#18532](https://github.com/cosmos/cosmos-sdk/pull/18532) Add SPAM vote proposals.

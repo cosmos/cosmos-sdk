@@ -4,8 +4,6 @@ import (
 	"context"
 	"errors"
 
-	"golang.org/x/sync/errgroup"
-
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/comet"
 	"cosmossdk.io/math"
@@ -52,41 +50,29 @@ func (k Keeper) AllocateTokens(ctx context.Context, totalPreviousPower int64, bo
 	feeMultiplier := feesCollected.MulDecTruncate(voteMultiplier)
 
 	// allocate tokens proportionally to voting power
-	var g errgroup.Group
-	// channel for remaining rewards
-	remainingCh := make(chan sdk.DecCoins, len(bondedVotes))
-
+	//
+	// TODO: Consider parallelizing later
+	//
+	// Ref: https://github.com/cosmos/cosmos-sdk/pull/3099#discussion_r246276376
 	for _, vote := range bondedVotes {
-		vote := vote
 
-		g.Go(func() error {
-			validator, err := k.stakingKeeper.ValidatorByConsAddr(ctx, vote.Validator.Address)
-			if err != nil {
-				return err
-			}
+		validator, err := k.stakingKeeper.ValidatorByConsAddr(ctx, vote.Validator.Address)
+		if err != nil {
+			return err
+		}
 
-			powerFraction := math.LegacyNewDec(vote.Validator.Power).QuoTruncate(math.LegacyNewDec(totalPreviousPower))
-			reward := feeMultiplier.MulDecTruncate(powerFraction)
+		// TODO: Consider micro-slashing for missing votes.
+		//
+		// Ref: https://github.com/cosmos/cosmos-sdk/issues/2525#issuecomment-430838701
+		powerFraction := math.LegacyNewDec(vote.Validator.Power).QuoTruncate(math.LegacyNewDec(totalPreviousPower))
+		reward := feeMultiplier.MulDecTruncate(powerFraction)
 
-			if err = k.AllocateTokensToValidator(ctx, validator, reward); err != nil {
-				return err
-			}
+		if err = k.AllocateTokensToValidator(ctx, validator, reward); err != nil {
+			return err
+		}
 
-			remainingCh <- reward
-			return nil
-		})
-	}
-
-	if err := g.Wait(); err != nil {
-		return err
-	}
-	close(remainingCh)
-
-	// calculate the remaining rewards
-	for reward := range remainingCh {
 		remaining = remaining.Sub(reward)
 	}
-
 	// send to community pool and set remainder in fee pool
 	amt, re := remaining.TruncateDecimal()
 	if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, types.ProtocolPoolModuleName, amt); err != nil {

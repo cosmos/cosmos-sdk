@@ -42,7 +42,7 @@ func TokensFromConsensusPower(power int64, powerReduction math.Int) math.Int {
 }
 
 // ______________________________________________________________________
-// Delegation & Validator Interfaces are moved here to avoid direct dependency on the staking module
+// Delegation & Validator Interfaces are moved here to avoid direct dependency on the staking module in expected keeper interfaces 
 
 // BondStatus is the status of a validator.
 type BondStatus int32

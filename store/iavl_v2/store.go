@@ -35,15 +35,33 @@ func LoadStoreWithInitialVersion(v2RootPath string, key types.StoreKey, id types
 	// i.e. not the happy path.
 	path := filepath.Join(v2RootPath, key.Name())
 	pool := iavl.NewNodePool()
-	fmt.Println("LoadStoreWithInitialVersion path:", path)
-	sql, err := iavl.NewSqliteDb(pool, iavl.SqliteDbOptions{Path: path})
+	sqlOpts := iavl.SqliteDbOptions{Path: path}
+	var err error
+	sqlOpts.MmapSize, err = sqlOpts.EstimateMmapSize()
+	if err != nil {
+		return nil, fmt.Errorf("failed to estimate mmap size for sqlite db path=%s: %w", path, err)
+	}
+	sql, err := iavl.NewSqliteDb(pool, sqlOpts)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open sqlite db path=%s: %w", path, err)
 	}
 
-	tree := iavl.NewTree(sql, pool, iavl.TreeOptions{StateStorage: true})
-	//err = tree.LoadSnapshot(id.Version)
-	err = tree.LoadVersion(id.Version)
+	tree := iavl.NewTree(sql, pool, iavl.TreeOptions{
+		StateStorage: true,
+		MetricsProxy: &telemetry.GlobalMetricProxy{},
+		HeightFilter: 1,
+	})
+	if key.Name() == "ibc" {
+		err = tree.LoadVersion(id.Version)
+	} else {
+		err = tree.LoadVersion(id.Version)
+	}
+	if err != nil {
+		return nil, err
+	}
+	if err = sql.WarmLeaves(); err != nil {
+		return nil, err
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -127,6 +145,7 @@ func (s *Store) Has(key []byte) bool {
 }
 
 func (s *Store) Set(key, value []byte) {
+	defer telemetry.MeasureSince(time.Now(), "store", "iavl", "set")
 	types.AssertValidKey(key)
 	types.AssertValidValue(value)
 	_, err := s.Tree.Set(key, value)

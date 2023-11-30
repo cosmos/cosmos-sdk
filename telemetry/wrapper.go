@@ -69,3 +69,17 @@ func SetGaugeWithLabels(keys []string, val float32, labels []metrics.Label) {
 func MeasureSince(start time.Time, keys ...string) {
 	metrics.MeasureSinceWithLabels(keys, start.UTC(), globalLabels)
 }
+
+type GlobalMetricProxy struct{}
+
+func (GlobalMetricProxy) IncrCounter(val float32, keys ...string) {
+	IncrCounter(val, keys...)
+}
+
+func (GlobalMetricProxy) SetGauge(val float32, keys ...string) {
+	SetGauge(val, keys...)
+}
+
+func (GlobalMetricProxy) MeasureSince(start time.Time, keys ...string) {
+	MeasureSince(start, keys...)
+}

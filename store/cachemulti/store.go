@@ -3,12 +3,14 @@ package cachemulti
 import (
 	"fmt"
 	"io"
+	"time"
 
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/store/cachekv"
 	"github.com/cosmos/cosmos-sdk/store/dbadapter"
 	"github.com/cosmos/cosmos-sdk/store/types"
+	"github.com/cosmos/cosmos-sdk/telemetry"
 )
 
 //----------------------------------------
@@ -26,10 +28,26 @@ type Store struct {
 	traceWriter  io.Writer
 	traceContext types.TraceContext
 
-	listeners map[types.StoreKey][]types.WriteListener
+	listeners        map[types.StoreKey][]types.WriteListener
+	concurrentCommit int
 }
 
 var _ types.CacheMultiStore = Store{}
+
+type concurrentCommitResult struct {
+}
+
+var (
+	concurrencyLimit   = 10
+	commitLock         = make(chan struct{}, concurrencyLimit)
+	concurrentCommitCh = make(chan *concurrentCommitResult, concurrencyLimit)
+)
+
+func init() {
+	for i := 0; i < concurrencyLimit; i++ {
+		commitLock <- struct{}{}
+	}
+}
 
 // NewFromKVStore creates a new Store object from a mapping of store keys to
 // CacheWrapper objects and a KVStore as the database. Each CacheWrapper store
@@ -134,11 +152,37 @@ func (cms Store) GetStoreType() types.StoreType {
 	return types.StoreTypeMulti
 }
 
+func (cms Store) SetConcurrentCommit(concurrentCommit int) types.CacheMultiStore {
+	cms.concurrentCommit = concurrentCommit
+	return cms
+}
+
 // Write calls Write on each underlying store.
 func (cms Store) Write() {
+	if cms.concurrentCommit == -1 || cms.concurrentCommit == 1 {
+		defer telemetry.MeasureSince(time.Now(), "store", "cachemulti", "write")
+	}
 	cms.db.Write()
-	for _, store := range cms.stores {
-		store.Write()
+	if cms.concurrentCommit == 1 {
+		var i int
+		for _, store := range cms.stores {
+			//fmt.Println("cachemulti: commitLock", i)
+			i++
+			go func(s types.CacheWrap) {
+				<-commitLock
+				s.Write()
+				concurrentCommitCh <- &concurrentCommitResult{}
+				commitLock <- struct{}{}
+			}(store)
+		}
+		for ; i > 0; i-- {
+			<-concurrentCommitCh
+		}
+		//fmt.Println("cachemulti: concurrent write done")
+	} else {
+		for _, store := range cms.stores {
+			store.Write()
+		}
 	}
 }
 

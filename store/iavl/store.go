@@ -197,6 +197,7 @@ func (st *Store) CacheWrapWithListeners(storeKey types.StoreKey, listeners []typ
 
 // Implements types.KVStore.
 func (st *Store) Set(key, value []byte) {
+	defer telemetry.MeasureSince(time.Now(), "store", "iavl", "set")
 	types.AssertValidKey(key)
 	types.AssertValidValue(value)
 	st.tree.Set(key, value)

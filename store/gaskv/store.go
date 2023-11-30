@@ -66,6 +66,20 @@ func (gs *Store) Get(key []byte) (value []byte) {
 	// TODO overflow-safe math?
 	gs.gasMeter.ConsumeGas(gs.gasConfig.ReadCostPerByte*types.Gas(len(key)), types.GasReadPerByteDesc)
 	debugLog("Get", "PerByteKey", gs.gasConfig.ReadCostPerByte*types.Gas(len(key)))
+	if DebugLogging.Get() == 1 {
+		fmt.Printf("GasKVStore DebugLog Get %d*%d=%d len(key)=%d\n",
+			gs.gasConfig.ReadCostPerByte,
+			types.Gas(len(key)),
+			gs.gasConfig.ReadCostPerByte*types.Gas(len(key)),
+			len(key),
+		)
+		if gs.gasConfig.ReadCostPerByte*types.Gas(len(key)) == 63 || gs.gasConfig.ReadCostPerByte*types.Gas(len(key)) == 60 {
+			fmt.Printf("GasKVStore DebugLog key=%s\n", key)
+			if gs.gasConfig.ReadCostPerByte*types.Gas(len(value)) == 147 {
+				fmt.Println("found it")
+			}
+		}
+	}
 	gs.gasMeter.ConsumeGas(gs.gasConfig.ReadCostPerByte*types.Gas(len(value)), types.GasReadPerByteDesc)
 	debugLog("Get", "PerByteValue", gs.gasConfig.ReadCostPerByte*types.Gas(len(value)))
 
@@ -174,6 +188,7 @@ func (gi *gasIterator) Valid() bool {
 // in the iterator. It incurs a flat gas cost for seeking and a variable gas
 // cost based on the current value's length if the iterator is valid.
 func (gi *gasIterator) Next() {
+	defer telemetry.MeasureSince(time.Now(), "store", "gaskv", "iterator", "next")
 	gi.consumeSeekGas()
 	gi.parent.Next()
 }

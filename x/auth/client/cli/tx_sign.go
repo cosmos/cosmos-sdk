@@ -121,12 +121,8 @@ func makeSignBatchCmd() func(cmd *cobra.Command, args []string) error {
 		appendMessagesToSingleTx, _ := cmd.Flags().GetBool(flagAppend)
 		// Combines all tx msgs and create single signed transaction
 		if appendMessagesToSingleTx {
-<<<<<<< HEAD
-			txBuilder := clientCtx.TxConfig.NewTxBuilder()
-=======
 			var totalFees sdk.Coins
 			txBuilder := txCfg.NewTxBuilder()
->>>>>>> 7bdbc4629 (fix(x/auth): Add fees on batch sign (#18564))
 			msgs := make([]sdk.Msg, 0)
 			newGasLimit := uint64(0)
 

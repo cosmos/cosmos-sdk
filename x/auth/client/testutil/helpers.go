@@ -62,8 +62,12 @@ func TxMultiSignExec(clientCtx client.Context, from, filename string, extraArgs 
 	return clitestutil.ExecTestCLICmd(clientCtx, cli.GetMultiSignCommand(), append(args, extraArgs...))
 }
 
-func TxSignBatchExec(clientCtx client.Context, from fmt.Stringer, filenames []string, extraArgs ...string) (testutil.BufferWriter, error) {
-	args := append([]string{fmt.Sprintf("--from=%s", from.String())}, filenames...)
+func TxSignBatchExec(clientCtx client.Context, from fmt.Stringer, filename string, extraArgs ...string) (testutil.BufferWriter, error) {
+	args := []string{
+		fmt.Sprintf("--from=%s", from.String()),
+		filename,
+	}
+
 	return clitestutil.ExecTestCLICmd(clientCtx, cli.GetSignBatchCommand(), append(args, extraArgs...))
 }
 

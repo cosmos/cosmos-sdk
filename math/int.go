@@ -17,9 +17,9 @@ const MaxBitLen = 256
 // Integer errors
 var (
 	// ErrIntOverflow is the error returned when an integer overflow occurs
-	ErrIntOverflow = errors.New("Integer overflow")
+	ErrIntOverflow = errors.New("integer overflow")
 	// ErrDivideByZero is the error returned when a divide by zero occurs
-	ErrDivideByZero = errors.New("Divide by zero")
+	ErrDivideByZero = errors.New("divide by zero")
 )
 
 func newIntegerFromString(s string) (*big.Int, bool) {

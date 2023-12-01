@@ -31,7 +31,7 @@ func TestDecodeDistributionStore(t *testing.T) {
 
 	decCoins := sdk.DecCoins{sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, math.LegacyOneDec())}
 	feePool := types.InitialFeePool()
-	feePool.CommunityPool = decCoins
+	feePool.DecimalPool = decCoins
 	slashEvent := types.NewValidatorSlashEvent(10, math.LegacyOneDec())
 
 	kvPairs := kv.Pairs{

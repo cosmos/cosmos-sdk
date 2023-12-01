@@ -17,4 +17,7 @@ func TestValidateGenesis(t *testing.T) {
 
 	fp2 := types.FeePool{CommunityPool: sdk.DecCoins{{Denom: "stake", Amount: math.LegacyNewDec(-1)}}}
 	require.NotNil(t, fp2.ValidateGenesis())
+
+	fp3 := types.FeePool{DecimalPool: sdk.DecCoins{{Denom: "stake", Amount: math.LegacyNewDec(-1)}}}
+	require.NotNil(t, fp3.ValidateGenesis())
 }

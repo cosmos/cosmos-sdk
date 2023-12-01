@@ -75,9 +75,9 @@ func (k Keeper) FundCommunityPool(ctx context.Context, amount sdk.Coins, sender 
 	return k.bankKeeper.SendCoinsFromAccountToModule(ctx, sender, types.ModuleName, amount)
 }
 
-// DistributeFromFeePool distributes funds from the protocolpool module account to
+// DistributeFromCommunityPool distributes funds from the protocolpool module account to
 // a receiver address.
-func (k Keeper) DistributeFromFeePool(ctx context.Context, amount sdk.Coins, receiveAddr sdk.AccAddress) error {
+func (k Keeper) DistributeFromCommunityPool(ctx context.Context, amount sdk.Coins, receiveAddr sdk.AccAddress) error {
 	return k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, receiveAddr, amount)
 }
 
@@ -97,10 +97,10 @@ func (k Keeper) claimFunds(ctx context.Context, recipient sdk.AccAddress) (amoun
 		return sdk.Coin{}, fmt.Errorf("error getting claimable funds: %w", err)
 	}
 
-	// distribute amount from feepool
-	err = k.DistributeFromFeePool(ctx, sdk.NewCoins(amount), recipient)
+	// distribute amount from community pool
+	err = k.DistributeFromCommunityPool(ctx, sdk.NewCoins(amount), recipient)
 	if err != nil {
-		return sdk.Coin{}, fmt.Errorf("error distributing from fee pool: %w", err)
+		return sdk.Coin{}, fmt.Errorf("error distributing from community pool: %w", err)
 	}
 
 	return amount, nil

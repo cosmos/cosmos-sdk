@@ -86,6 +86,47 @@ The AppManager is responsible for loading the application and managing the appli
 
 The AppManager is responsible for state execution after block inclusion or during a predefined step in consensus. Today there are two methods of executing state, Optimistic Execution & Delayed Execution, with Comet. In the future if a new execution method is developed the AppManager will be responsible for executing state in that manner.
 
+```go
+type DeliverBlockReq struct {
+  Height int64
+	Hash []byte    
+	Time time.Time 
+	ChainID string 
+  Txs [][]byte
+}
+
+type ValidatorUpdate struct {
+  PubKey []byte // no need to specify pubkey type as the pubkey is only an identifier here
+  Power int64 // updated power of the validtor
+}
+
+type DeliverBlockResp struct {
+  Apphash []byte
+  ValidatorUpdates []core.ValidatorUpdate
+}
+
+type App interface {
+  ChainID() string
+	AppVersion() (uint64, error)
+
+	InitChain(RequestInitChain) (ResponseInitChain, error)
+	DeliverBlock(context.Context, DeliverBlockReq) (DeliverBlockResp, error)
+}
+```
+
+
+The consensus parameters that are required by COmetBFT are defined in a module. For this reason we will expose a secondary interface that will allow CometBFT to get updated consensus parameters, but other consensus engines can make it optional.
+
+```go
+type ConsensusParameter interface {
+  GetBlockParams() (int64, int64)
+  GetEvidenceParams() (int64, time.Duration, int64)
+  GetValidatorParams() ([]string)
+  GetVersion() (int64)
+  GetVoteExtensionsEnableHeight() (int64)
+}
+```
+
 ##### Transaction Hooks
 
 When a transaction is being executed the AppManager will provide a per transaction before and after hook. This will replace the current antehandler and posthandler methods of a transaction. The replacement allows transaction validation to be run in a parallel manner. 
@@ -107,7 +148,6 @@ The AppManager is responsible for:
 * Loading the application state from a genesis file
 * Executing state after block inclusion or during a predefined step in consensus
 * Upgrades of the application
-* Syncing from genesis with a single binary that has many app configs loaded
 * Querying state from any height
 
 
@@ -134,23 +174,19 @@ The Mempool is responsible for storing transactions that must be included in a b
 The mempool is responsible for checking transaction validity, storing transactions and removing them after being included in a block. The mempool is modular and can be set by the application developer to use a custom mempool.
 
 ```go
-type Mempool interface {
-  service.Service
+// Mempool defines the required methods of an application's mempool.
+type Mempool[T tx.Tx] interface {
 	// Insert attempts to insert a Tx into the app-side mempool returning
-	// an error upon failure.
-  // Validation of the transaction can be done at insertion or before dissemination
-	Insert(context.Context, [][]byte) error
+	// an error upon failure. Insert will validate the transaction using the txValidator
+	Insert(ctx context.Context, txs T) map[[32]byte]error
 
-	// Select returns a list of transations from the mempool. The total size of the bytes which can be included is included in order for the mempool to handle ordering. If txs are specified,
-	// then they shall be incorporated into the returned txs.
-	Select(context.Context, [][]byte, int32) [][]byte
+	// GetTxs returns a list of transactions to add in a block
+	// size specifies the size of the block left for transactions
+	GetTxs(ctx context.Context, size uint32) (ts any, err error)
 
-	// CountTx returns the number of transactions currently in the mempool.
-	CountTx() int
-
-	// Remove attempts to remove transactions from the mempool, returning an error
+	// Remove attempts to remove a transaction from the mempool, returning an error
 	// upon failure.
-	Remove([][]byte) error
+	Remove(txs []T) error
 }
 ```
 
@@ -160,18 +196,34 @@ The storage is responsible for storing the application state. The storage is mod
 
 The interface is being defined by the Storage working group and will be included in this RFC once it is completed.
 
-#### Transaction Validation
+#### Transaction
 
-The transaction validation is responsible for checking the validity of a transaction. In the current design this is handled by the antehandler. There is a blend of responsabilities currently with the anteHandler. Some useres use it for transaction hooks, some use it for custom transation validation. The transaction validation here is only to be used for validating if a transaction is valid or not. Separating the validation from the execution path allows us to check tx validation in a asynchronous manner.
+`Tx` is an interface that represents a transaction. The transaction is responsible for providing a hash of the transaction. The transaction is modular and can be set by the application developer to use a custom transaction.
 
 ```go
-type TxValidation interface {
-  // ValidateBasicTx validates a transaction 
-  ValidateTx([]byte) error
-  // ValidateBasicTxs validates a batch of transactions
-  ValidateTxAsync([][]byte) error
-  // Cache is a map of txs that may have already been verified
-  Cache() TxCache
+type Tx interface {
+	Hash() [32]byte // TODO evaluate if 32 bytes is the right size & benchmark overhead of hashing instead of using identifier
+}
+```
+
+#### Transaction Validation
+
+The transaction validation is responsible for checking the validity of a transaction. In the current design this is handled by the antehandler. There is a blend of responsabilities currently with the anteHandler. Some users use it for transaction hooks, some use it for custom transation validation. The transaction validation here is only to be used for validating if a transaction is valid or not. Separating the validation from the execution path allows us to check tx validation in a asynchronous manner.
+
+The transaction Validator only validates a transaction and does not execute the transaction. The transaction validator is modular and can be set by the application developer to use a custom transaction validator.
+
+The application developer is free to implement caching or other forms of optimization to speed up the validation process.
+
+Validate returns a map of which transactions failed and which transactions passed. This allows the application developer to decide what to do with the transactions that failed. If we combine errors via the golang `errors.Join` method we lose the ability to know which transactions failed and which transactions passed.
+
+```go
+// Validator is a transaction validator that validates transactions based off an existing set of handlers
+// Validators can be designed to be asynchronous or synchronous
+type Validator[T Tx] interface {
+	// Validate validates the transactions
+	// it returns the context used and a map of which txs failed.
+	// It does not take into account what information is needed to be returned to the consensus engine, this must be extracted from teh context
+	Validate(ctx context.Context, txs []T, simulate bool) (context.Context, map[[32]byte]error)
 }
 ```
 
@@ -180,11 +232,9 @@ type TxValidation interface {
 The transaction codec is responsible for encoding and decoding transactions. The transaction codec is modular and can be set by the application developer to use a custom transaction codec.
 
 ```go 
-type TxCodec[T any] interface {
-  // Encode encodes a transaction
-  Encode(T) ([]byte, error)
-  // Decode decodes a transaction
-  Decode([]byte) (T, error)
+type Codec[T Tx] interface {
+	Encode(tx T) ([]byte, error)
+	Decode([]byte) (T, error)
 }
 ```
 
@@ -194,8 +244,18 @@ Service Defines an interface that will run in the background and can be started 
 
 ```go
 type Service interface {
-  Start() error
-  Stop() error
+  Start(context.Context) error
+  Stop(context.Context) error
+}
+```
+
+#### Refresh
+
+Refresh is an interface that can be used to reload the application from a config file or other things. Since we can not determin what is dynamic and what is static, we will allow the application developer to define what is dynamic and what is static. 
+
+```go
+type Refresh interface {
+  Refresh(context.Context) error
 }
 ```
 

@@ -67,6 +67,49 @@ type CometServer struct {
 }
 ```
 
+Server has a few optional interfaces and one that is required. 
+
+#### Service
+
+Service Defines an interface that will run in the background and can be started and stopped. Not all services are required to be started. For example a service that is responsible for syncing state from a remote node can be started and stopped.
+
+```go
+type Service interface {
+  Start(context.Context) error
+  Stop(context.Context) error
+}
+```
+
+#### Refresh
+
+Refresh is an interface that can be used to reload the application from a config file or other things. Since we can not determin what is dynamic and what is static, we will allow the application developer to define what is dynamic and what is static. 
+
+```go
+type Refresh interface {
+  Refresh(context.Context) error
+}
+```
+
+#### HasCLICommands
+
+HasCLICommands defines an interface that will return a list of CLI commands that can be used to interact with the application the binary.
+
+```go
+type HasCLICommands interface {
+	CLICommands() []*cobra.Command
+}
+```
+
+#### HasConfig
+
+HasConfig defines an interface that will return the servic's config.
+
+```go
+type HasConfig interface {
+	Config() *viper.Viper
+}
+```
+
 #### Version
 
 Version defines the applications semantic version of the application
@@ -235,27 +278,6 @@ The transaction codec is responsible for encoding and decoding transactions. The
 type Codec[T Tx] interface {
 	Encode(tx T) ([]byte, error)
 	Decode([]byte) (T, error)
-}
-```
-
-#### Service
-
-Service Defines an interface that will run in the background and can be started and stopped.
-
-```go
-type Service interface {
-  Start(context.Context) error
-  Stop(context.Context) error
-}
-```
-
-#### Refresh
-
-Refresh is an interface that can be used to reload the application from a config file or other things. Since we can not determin what is dynamic and what is static, we will allow the application developer to define what is dynamic and what is static. 
-
-```go
-type Refresh interface {
-  Refresh(context.Context) error
 }
 ```
 

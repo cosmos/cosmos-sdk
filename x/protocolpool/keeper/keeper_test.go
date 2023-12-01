@@ -8,8 +8,10 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/core/header"
+	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 	authtypes "cosmossdk.io/x/auth/types"
+	distrtypes "cosmossdk.io/x/distribution/types"
 	poolkeeper "cosmossdk.io/x/protocolpool/keeper"
 	pooltestutil "cosmossdk.io/x/protocolpool/testutil"
 	"cosmossdk.io/x/protocolpool/types"
@@ -22,13 +24,17 @@ import (
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 )
 
-var poolAcc = authtypes.NewEmptyModuleAccount(types.ModuleName)
+var (
+	poolAcc  = authtypes.NewEmptyModuleAccount(types.ModuleName)
+	distrAcc = authtypes.NewEmptyModuleAccount(distrtypes.ModuleName)
+)
 
 type KeeperTestSuite struct {
 	suite.Suite
 
 	ctx         sdk.Context
 	poolKeeper  poolkeeper.Keeper
+	authKeeper  *pooltestutil.MockAccountKeeper
 	bankKeeper  *pooltestutil.MockBankKeeper
 	msgServer   types.MsgServer
 	queryServer types.QueryServer
@@ -46,6 +52,7 @@ func (s *KeeperTestSuite) SetupTest() {
 	accountKeeper := pooltestutil.NewMockAccountKeeper(ctrl)
 	accountKeeper.EXPECT().GetModuleAddress(types.ModuleName).Return(poolAcc.GetAddress())
 	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
+	s.authKeeper = accountKeeper
 
 	bankKeeper := pooltestutil.NewMockBankKeeper(ctrl)
 	s.bankKeeper = bankKeeper
@@ -69,6 +76,15 @@ func (s *KeeperTestSuite) SetupTest() {
 
 func (s *KeeperTestSuite) mockSendCoinsFromModuleToAccount(accAddr sdk.AccAddress) {
 	s.bankKeeper.EXPECT().SendCoinsFromModuleToAccount(s.ctx, types.ModuleName, accAddr, gomock.Any()).AnyTimes()
+}
+
+func (s *KeeperTestSuite) mockWithdrawContinuousFund() {
+	s.authKeeper.EXPECT().GetModuleAccount(s.ctx, types.ModuleName).Return(poolAcc).AnyTimes()
+	s.authKeeper.EXPECT().GetModuleAccount(s.ctx, distrtypes.ModuleName).Return(distrAcc).AnyTimes()
+	distrBal := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100000)))
+	s.bankKeeper.EXPECT().GetAllBalances(s.ctx, gomock.Any()).Return(distrBal).AnyTimes()
+	s.bankKeeper.EXPECT().SendCoinsFromModuleToModule(s.ctx, gomock.Any(), gomock.Any(), gomock.Any())
+	s.bankKeeper.EXPECT().SendCoinsFromModuleToAccount(s.ctx, gomock.Any(), gomock.Any(), gomock.Any())
 }
 
 func TestKeeperTestSuite(t *testing.T) {

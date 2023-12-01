@@ -337,6 +337,67 @@ func (suite *KeeperTestSuite) TestMsgClaimBudget() {
 	}
 }
 
+func (suite *KeeperTestSuite) TestWithdrawContinuousFund() {
+	recipient := sdk.AccAddress([]byte("recipientAddr__________________"))
+	testCases := map[string]struct {
+		preRun           func()
+		recipientAddress sdk.AccAddress
+		expErr           bool
+		expErrMsg        string
+		withdrawnAmount  sdk.Coin
+	}{
+		"valid case": {
+			preRun: func() {
+				percentage, err := math.LegacyNewDecFromStr("0.2")
+				suite.Require().NoError(err)
+				oneMonthInSeconds := int64(30 * 24 * 60 * 60) // Approximate number of seconds in 1 month
+				expiry := suite.ctx.BlockTime().Add(time.Duration(oneMonthInSeconds) * time.Second)
+				cf := types.ContinuousFund{
+					Recipient:             recipient.String(),
+					Percentage:            percentage,
+					MaxDistributedCapital: uint64(1000000),
+					Expiry:                &expiry,
+				}
+				// Set continuous fund
+				err = suite.poolKeeper.ContinuousFund.Set(suite.ctx, recipient, cf)
+				suite.Require().NoError(err)
+				// Set recipient fund percentage and recipient fund distribution
+				intPercentage := percentage.MulInt64(100)
+				err = suite.poolKeeper.RecipientFundPercentage.Set(suite.ctx, recipient, intPercentage.TruncateInt().Uint64())
+				suite.Require().NoError(err)
+				err = suite.poolKeeper.RecipientFundDistribution.Set(suite.ctx, recipient, 0)
+				suite.Require().NoError(err)
+			},
+			recipientAddress: recipient,
+			expErr:           false,
+			withdrawnAmount:  sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(20000)),
+		},
+	}
+
+	for name, tc := range testCases {
+		suite.Run(name, func() {
+			suite.SetupTest()
+			if tc.preRun != nil {
+				tc.preRun()
+			}
+			msg := &types.MsgWithdrawContinuousFund{
+				RecipientAddress: tc.recipientAddress.String(),
+			}
+
+			suite.mockWithdrawContinuousFund()
+
+			resp, err := suite.msgServer.WithdrawContinuousFund(suite.ctx, msg)
+			if tc.expErr {
+				suite.Require().Error(err)
+				suite.Require().Contains(err.Error(), tc.expErrMsg)
+			} else {
+				suite.Require().NoError(err)
+				suite.Require().Equal(tc.withdrawnAmount, resp.Amount)
+			}
+		})
+	}
+}
+
 func (suite *KeeperTestSuite) TestCreateContinuousFund() {
 	maxDistributedCapital := uint64(100000)
 	percentage, err := math.LegacyNewDecFromStr("0.2")

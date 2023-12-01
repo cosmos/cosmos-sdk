@@ -28,9 +28,6 @@ type Keeper struct {
 
 	authority string
 
-	// Global variables
-	toDistribute uint64
-
 	// State
 	Schema         collections.Schema
 	BudgetProposal collections.Map[sdk.AccAddress, types.Budget]
@@ -40,6 +37,9 @@ type Keeper struct {
 	// RecipientFundDistribution key: RecipientAddr | value: Claimable amount
 	RecipientFundDistribution collections.Map[sdk.AccAddress, uint64]
 }
+
+// Global variables
+var toDistribute uint64
 
 func NewKeeper(cdc codec.BinaryCodec, storeService storetypes.KVStoreService,
 	ak types.AccountKeeper, bk types.BankKeeper, authority string,
@@ -102,8 +102,8 @@ func (k Keeper) GetCommunityPool(ctx context.Context) (sdk.Coins, error) {
 	return k.bankKeeper.GetAllBalances(ctx, moduleAccount.GetAddress()), nil
 }
 
-func (k Keeper) withdrawContinuousFund(ctx context.Context, recipient sdk.AccAddress) (amount sdk.Coin, err error) {
-	err = k.iterateAndUpdateFundsDistribution(ctx)
+func (k Keeper) withdrawContinuousFund(ctx context.Context, recipient sdk.AccAddress) (sdk.Coin, error) {
+	denom, err := k.iterateAndUpdateFundsDistribution(ctx)
 	if err != nil {
 		return sdk.Coin{}, fmt.Errorf("error while iterating all the continuous funds: %w", err)
 	}
@@ -122,35 +122,36 @@ func (k Keeper) withdrawContinuousFund(ctx context.Context, recipient sdk.AccAdd
 	}
 
 	recipientBal := k.bankKeeper.GetAllBalances(ctx, recipient)
-	denom := recipientBal.Denoms()[0]
 	recipientAmount := recipientBal.AmountOf(denom).Uint64()
 	totalRecipientBal := recipientAmount + fundsAllocated
 	// check if the recipient account balance exceeds maxDistributedCapital after distribution
+	var withdrawnAmount sdk.Coin
 	if totalRecipientBal < cf.MaxDistributedCapital {
+		withdrawnAmount = sdk.NewCoin(denom, math.NewIntFromUint64(fundsAllocated))
 		// Distribute funds to the recipient from pool module account
-		err := k.DistributeFromCommunityPool(ctx, sdk.NewCoins(sdk.NewCoin(denom, math.NewIntFromUint64(fundsAllocated))), recipient)
+		err := k.DistributeFromCommunityPool(ctx, sdk.NewCoins(withdrawnAmount), recipient)
 		if err != nil {
 			return sdk.Coin{}, err
 		}
 
 		// decrement fundsAllocated from toDistribute
-		k.toDistribute -= fundsAllocated
+		toDistribute -= fundsAllocated
 	}
 
-	return amount, nil
+	return withdrawnAmount, nil
 }
 
-func (k Keeper) iterateAndUpdateFundsDistribution(ctx context.Context) error {
+func (k Keeper) iterateAndUpdateFundsDistribution(ctx context.Context) (string, error) {
 	var totalPercentageToBeDistributed uint64
 	err := k.RecipientFundPercentage.Walk(ctx, nil, func(key sdk.AccAddress, value uint64) (stop bool, err error) {
 		totalPercentageToBeDistributed += value
 		return false, nil
 	})
 	if err != nil {
-		return err
+		return "", err
 	}
 	if totalPercentageToBeDistributed > 100 {
-		return fmt.Errorf("total funds percentage is greater than one")
+		return "", fmt.Errorf("total funds percentage is greater than one")
 	}
 
 	poolMAcc := k.authKeeper.GetModuleAccount(ctx, types.ModuleName)
@@ -159,10 +160,11 @@ func (k Keeper) iterateAndUpdateFundsDistribution(ctx context.Context) error {
 	distrBal := k.bankKeeper.GetAllBalances(ctx, distrMAcc.GetAddress())
 	distrDecAmount := sdk.NewDecCoinsFromCoins(distrBal...)
 
+	var denom string
 	err = k.RecipientFundPercentage.Walk(ctx, nil, func(key sdk.AccAddress, value uint64) (stop bool, err error) {
 		// Calculate the funds to be distributed based on the percentage
 		distributionAmount := distrDecAmount.MulDec(math.LegacyNewDecWithPrec(int64(value), 2))
-		denom := distributionAmount.GetDenomByIndex(0)
+		denom = distributionAmount.GetDenomByIndex(0)
 		distrAmount := distributionAmount.AmountOf(denom)
 		distrCoins := distrAmount.TruncateInt().Uint64()
 
@@ -172,7 +174,7 @@ func (k Keeper) iterateAndUpdateFundsDistribution(ctx context.Context) error {
 			return false, err
 		}
 		// Add all the coins to be distributed to toDistribute
-		k.toDistribute += distrCoins
+		toDistribute += distrCoins
 
 		// Set funds to be claimed
 		toClaim, err := k.RecipientFundDistribution.Get(ctx, key)
@@ -186,7 +188,7 @@ func (k Keeper) iterateAndUpdateFundsDistribution(ctx context.Context) error {
 		}
 		return false, nil
 	})
-	return err
+	return denom, err
 }
 
 func (k Keeper) getDistributedFunds(ctx context.Context, recipient sdk.AccAddress) (amount uint64, err error) {

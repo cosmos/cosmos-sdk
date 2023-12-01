@@ -277,7 +277,7 @@ func TestHandleNewValidator(t *testing.T) {
 
 	// validator should be bonded still, should not have been jailed or slashed
 	validator, _ := f.stakingKeeper.GetValidatorByConsAddr(f.ctx, sdk.GetConsAddress(valpubkey))
-	assert.Equal(t, stakingtypes.Bonded, validator.GetStatus())
+	assert.Equal(t, sdk.Bonded, validator.GetStatus())
 	bondPool := f.stakingKeeper.GetBondedPool(f.ctx)
 	expTokens := f.stakingKeeper.TokensFromConsensusPower(f.ctx, 100)
 	assert.Assert(t, expTokens.Equal(f.bankKeeper.GetBalance(f.ctx, bondPool.GetAddress(), bondDenom).Amount))
@@ -335,7 +335,7 @@ func TestHandleAlreadyJailed(t *testing.T) {
 
 	// validator should have been jailed and slashed
 	validator, _ := f.stakingKeeper.GetValidatorByConsAddr(f.ctx, sdk.GetConsAddress(val))
-	assert.Equal(t, stakingtypes.Unbonding, validator.GetStatus())
+	assert.Equal(t, sdk.Unbonding, validator.GetStatus())
 
 	// validator should have been slashed
 	resultingTokens := amt.Sub(f.stakingKeeper.TokensFromConsensusPower(f.ctx, 1))

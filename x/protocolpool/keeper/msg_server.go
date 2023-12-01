@@ -96,12 +96,11 @@ func (k MsgServer) CommunityPoolSpend(ctx context.Context, msg *types.MsgCommuni
 	}
 
 	// distribute funds from community pool module account
-	if err := k.Keeper.DistributeFromFeePool(ctx, msg.Amount, recipient); err != nil {
+	if err := k.Keeper.DistributeFromCommunityPool(ctx, msg.Amount, recipient); err != nil {
 		return nil, err
 	}
 
-	logger := k.Logger(ctx)
-	logger.Info("transferred from the community pool to recipient", "amount", msg.Amount.String(), "recipient", msg.Recipient)
+	k.Logger(ctx).Info("transferred from the community pool to recipient", "amount", msg.Amount.String(), "recipient", msg.Recipient)
 
 	return &types.MsgCommunityPoolSpendResponse{}, nil
 }

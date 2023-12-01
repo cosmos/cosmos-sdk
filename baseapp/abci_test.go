@@ -27,7 +27,6 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
-	pruningtypes "cosmossdk.io/store/pruning/types"
 	"cosmossdk.io/store/snapshots"
 	snapshottypes "cosmossdk.io/store/snapshots/types"
 	storetypes "cosmossdk.io/store/types"
@@ -1390,86 +1389,139 @@ func TestABCI_GetBlockRetentionHeight(t *testing.T) {
 	db := dbm.NewMemDB()
 	name := t.Name()
 
+	ss, err := sqlite.New(t.TempDir())
+	require.NoError(t, err)
+
+	sc, err := commitment.NewCommitStore(
+		map[string]commitment.Tree{
+			"main": iavl.NewIavlTree(db, logger, iavl.DefaultConfig()),
+		},
+		logger,
+	)
+	require.NoError(t, err)
+
 	snapshotStore, err := snapshots.NewStore(dbm.NewMemDB(), testutil.GetTempDir(t))
 	require.NoError(t, err)
 
 	testCases := map[string]struct {
-		bapp         *baseapp.BaseApp
+		bapp         func() *baseapp.BaseApp
 		maxAgeBlocks int64
 		commitHeight int64
 		expected     int64
 	}{
 		"defaults": {
-			bapp:         baseapp.NewBaseApp(name, logger, db, nil),
+			bapp: func() *baseapp.BaseApp {
+				rs, err := root.New(logger, ss, sc, pruning.DefaultOptions(), pruning.DefaultOptions(), nil)
+				require.NoError(t, err)
+
+				return baseapp.NewBaseApp(name, logger, db, rs, nil)
+			},
 			maxAgeBlocks: 0,
 			commitHeight: 499000,
 			expected:     0,
 		},
 		"pruning unbonding time only": {
-			bapp:         baseapp.NewBaseApp(name, logger, db, nil, baseapp.SetMinRetainBlocks(1)),
+			bapp: func() *baseapp.BaseApp {
+				rs, err := root.New(logger, ss, sc, pruning.DefaultOptions(), pruning.DefaultOptions(), nil)
+				require.NoError(t, err)
+
+				return baseapp.NewBaseApp(name, logger, db, rs, nil, baseapp.SetMinRetainBlocks(1))
+			},
 			maxAgeBlocks: 362880,
 			commitHeight: 499000,
 			expected:     136120,
 		},
 		"pruning iavl snapshot only": {
-			bapp: baseapp.NewBaseApp(
-				name, logger, db, nil,
-				baseapp.SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningNothing)),
-				baseapp.SetMinRetainBlocks(1),
-				baseapp.SetSnapshot(snapshotStore, snapshottypes.NewSnapshotOptions(10000, 1)),
-			),
+			bapp: func() *baseapp.BaseApp {
+				rs, err := root.New(logger, ss, sc, pruning.DefaultOptions(), pruning.DefaultOptions(), nil)
+				require.NoError(t, err)
+
+				return baseapp.NewBaseApp(
+					name, logger, db, rs, nil,
+					baseapp.SetMinRetainBlocks(1),
+					baseapp.SetSnapshot(snapshotStore, snapshottypes.NewSnapshotOptions(10000, 1)),
+				)
+			},
 			maxAgeBlocks: 0,
 			commitHeight: 499000,
 			expected:     489000,
 		},
 		"pruning state sync snapshot only": {
-			bapp: baseapp.NewBaseApp(
-				name, logger, db, nil,
-				baseapp.SetSnapshot(snapshotStore, snapshottypes.NewSnapshotOptions(50000, 3)),
-				baseapp.SetMinRetainBlocks(1),
-			),
+			bapp: func() *baseapp.BaseApp {
+				rs, err := root.New(logger, ss, sc, pruning.DefaultOptions(), pruning.DefaultOptions(), nil)
+				require.NoError(t, err)
+
+				return baseapp.NewBaseApp(
+					name, logger, db, rs, nil,
+					baseapp.SetMinRetainBlocks(1),
+					baseapp.SetSnapshot(snapshotStore, snapshottypes.NewSnapshotOptions(50000, 3)),
+				)
+			},
 			maxAgeBlocks: 0,
 			commitHeight: 499000,
 			expected:     349000,
 		},
 		"pruning min retention only": {
-			bapp: baseapp.NewBaseApp(
-				name, logger, db, nil,
-				baseapp.SetMinRetainBlocks(400000),
-			),
+			bapp: func() *baseapp.BaseApp {
+				rs, err := root.New(logger, ss, sc, pruning.DefaultOptions(), pruning.DefaultOptions(), nil)
+				require.NoError(t, err)
+
+				return baseapp.NewBaseApp(
+					name, logger, db, rs, nil,
+					baseapp.SetMinRetainBlocks(400000),
+				)
+			},
 			maxAgeBlocks: 0,
 			commitHeight: 499000,
 			expected:     99000,
 		},
 		"pruning all conditions": {
-			bapp: baseapp.NewBaseApp(
-				name, logger, db, nil,
-				baseapp.SetPruning(pruningtypes.NewCustomPruningOptions(0, 0)),
-				baseapp.SetMinRetainBlocks(400000),
-				baseapp.SetSnapshot(snapshotStore, snapshottypes.NewSnapshotOptions(50000, 3)),
-			),
+			bapp: func() *baseapp.BaseApp {
+				pOpts := pruning.Options{KeepRecent: 0, Interval: 0}
+
+				rs, err := root.New(logger, ss, sc, pOpts, pOpts, nil)
+				require.NoError(t, err)
+
+				return baseapp.NewBaseApp(
+					name, logger, db, rs, nil,
+					baseapp.SetMinRetainBlocks(400000),
+					baseapp.SetSnapshot(snapshotStore, snapshottypes.NewSnapshotOptions(50000, 3)),
+				)
+			},
 			maxAgeBlocks: 362880,
 			commitHeight: 499000,
 			expected:     99000,
 		},
 		"no pruning due to no persisted state": {
-			bapp: baseapp.NewBaseApp(
-				name, logger, db, nil,
-				baseapp.SetPruning(pruningtypes.NewCustomPruningOptions(0, 0)),
-				baseapp.SetMinRetainBlocks(400000),
-				baseapp.SetSnapshot(snapshotStore, snapshottypes.NewSnapshotOptions(50000, 3)),
-			),
+			bapp: func() *baseapp.BaseApp {
+				pOpts := pruning.Options{KeepRecent: 0, Interval: 0}
+
+				rs, err := root.New(logger, ss, sc, pOpts, pOpts, nil)
+				require.NoError(t, err)
+
+				return baseapp.NewBaseApp(
+					name, logger, db, rs, nil,
+					baseapp.SetMinRetainBlocks(400000),
+					baseapp.SetSnapshot(snapshotStore, snapshottypes.NewSnapshotOptions(50000, 3)),
+				)
+			},
 			maxAgeBlocks: 362880,
 			commitHeight: 10000,
 			expected:     0,
 		},
 		"disable pruning": {
-			bapp: baseapp.NewBaseApp(
-				name, logger, db, nil,
-				baseapp.SetPruning(pruningtypes.NewCustomPruningOptions(0, 0)),
-				baseapp.SetMinRetainBlocks(0),
-				baseapp.SetSnapshot(snapshotStore, snapshottypes.NewSnapshotOptions(50000, 3)),
-			),
+			bapp: func() *baseapp.BaseApp {
+				pOpts := pruning.Options{KeepRecent: 0, Interval: 0}
+
+				rs, err := root.New(logger, ss, sc, pOpts, pOpts, nil)
+				require.NoError(t, err)
+
+				return baseapp.NewBaseApp(
+					name, logger, db, rs, nil,
+					baseapp.SetMinRetainBlocks(0),
+					baseapp.SetSnapshot(snapshotStore, snapshottypes.NewSnapshotOptions(50000, 3)),
+				)
+			},
 			maxAgeBlocks: 362880,
 			commitHeight: 499000,
 			expected:     0,
@@ -1478,9 +1530,10 @@ func TestABCI_GetBlockRetentionHeight(t *testing.T) {
 
 	for name, tc := range testCases {
 		tc := tc
+		bapp := tc.bapp()
 
-		tc.bapp.SetParamStore(&paramStore{db: dbm.NewMemDB()})
-		_, err := tc.bapp.InitChain(&abci.RequestInitChain{
+		bapp.SetParamStore(&paramStore{db: dbm.NewMemDB()})
+		_, err := bapp.InitChain(&abci.RequestInitChain{
 			ConsensusParams: &cmtproto.ConsensusParams{
 				Evidence: &cmtproto.EvidenceParams{
 					MaxAgeNumBlocks: tc.maxAgeBlocks,
@@ -1490,7 +1543,7 @@ func TestABCI_GetBlockRetentionHeight(t *testing.T) {
 		require.NoError(t, err)
 
 		t.Run(name, func(t *testing.T) {
-			require.Equal(t, tc.expected, tc.bapp.GetBlockRetentionHeight(tc.commitHeight))
+			require.Equal(t, tc.expected, bapp.GetBlockRetentionHeight(tc.commitHeight))
 		})
 	}
 }

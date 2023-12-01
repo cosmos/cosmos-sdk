@@ -34,7 +34,7 @@ func Migrate(ctx sdk.Context, cdc codec.BinaryCodec, store storetypes.KVStore, p
 	// For each missed blocks entry, of which there should only be one per validator,
 	// we clear all the old entries and insert the new chunked entry.
 	for _, mb := range missedBlocks {
-		addr, err := sdk.ConsAddressFromBech32(mb.Address, nil)
+		addr, err := sdk.ConsAddressFromBech32(mb.Address)
 		if err != nil {
 			return err
 		}

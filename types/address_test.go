@@ -65,15 +65,15 @@ func (s *addressTestSuite) TestEmptyAddresses() {
 	s.Require().Equal((types.ValAddress{}).String(), "")
 	s.Require().Equal((types.ConsAddress{}).String(), "")
 
-	accAddr, err := types.AccAddressFromBech32("", nil)
+	accAddr, err := types.AccAddressFromBech32("")
 	s.Require().True(accAddr.Empty())
 	s.Require().Error(err)
 
-	valAddr, err := types.ValAddressFromBech32("", nil)
+	valAddr, err := types.ValAddressFromBech32("")
 	s.Require().True(valAddr.Empty())
 	s.Require().Error(err)
 
-	consAddr, err := types.ConsAddressFromBech32("", nil)
+	consAddr, err := types.ConsAddressFromBech32("")
 	s.Require().True(consAddr.Empty())
 	s.Require().Error(err)
 }
@@ -109,7 +109,7 @@ func (s *addressTestSuite) TestRandBech32AccAddrConsistency() {
 		s.testMarshal(&acc, &res, acc.Marshal, (&res).Unmarshal)
 
 		str := acc.String()
-		res, err = types.AccAddressFromBech32(str, nil)
+		res, err = types.AccAddressFromBech32(str)
 		s.Require().Nil(err)
 		s.Require().Equal(acc, res)
 
@@ -123,7 +123,7 @@ func (s *addressTestSuite) TestRandBech32AccAddrConsistency() {
 		_, err := types.AccAddressFromHexUnsafe(str)
 		s.Require().NotNil(err)
 
-		_, err = types.AccAddressFromBech32(str, nil)
+		_, err = types.AccAddressFromBech32(str)
 		s.Require().NotNil(err)
 
 		err = (*types.AccAddress)(nil).UnmarshalJSON([]byte("\"" + str + "\""))
@@ -219,7 +219,7 @@ func (s *addressTestSuite) TestValAddr() {
 		s.testMarshal(&acc, &res, acc.Marshal, (&res).Unmarshal)
 
 		str := acc.String()
-		res, err = types.ValAddressFromBech32(str, nil)
+		res, err = types.ValAddressFromBech32(str)
 		s.Require().Nil(err)
 		s.Require().Equal(acc, res)
 
@@ -234,7 +234,7 @@ func (s *addressTestSuite) TestValAddr() {
 		_, err := types.ValAddressFromHex(str)
 		s.Require().NotNil(err)
 
-		_, err = types.ValAddressFromBech32(str, nil)
+		_, err = types.ValAddressFromBech32(str)
 		s.Require().NotNil(err)
 
 		err = (*types.ValAddress)(nil).UnmarshalJSON([]byte("\"" + str + "\""))
@@ -260,7 +260,7 @@ func (s *addressTestSuite) TestConsAddress() {
 		s.testMarshal(&acc, &res, acc.Marshal, (&res).Unmarshal)
 
 		str := acc.String()
-		res, err = types.ConsAddressFromBech32(str, nil)
+		res, err = types.ConsAddressFromBech32(str)
 		s.Require().Nil(err)
 		s.Require().Equal(acc, res)
 
@@ -274,7 +274,7 @@ func (s *addressTestSuite) TestConsAddress() {
 		_, err := types.ConsAddressFromHex(str)
 		s.Require().NotNil(err)
 
-		_, err = types.ConsAddressFromBech32(str, nil)
+		_, err = types.ConsAddressFromBech32(str)
 		s.Require().NotNil(err)
 
 		err = (*types.ConsAddress)(nil).UnmarshalJSON([]byte("\"" + str + "\""))
@@ -367,13 +367,13 @@ func (s *addressTestSuite) TestAddressInterface() {
 	for _, addr := range addrs {
 		switch addr := addr.(type) {
 		case types.AccAddress:
-			_, err := types.AccAddressFromBech32(addr.String(), nil)
+			_, err := types.AccAddressFromBech32(addr.String())
 			s.Require().Nil(err)
 		case types.ValAddress:
-			_, err := types.ValAddressFromBech32(addr.String(), nil)
+			_, err := types.ValAddressFromBech32(addr.String())
 			s.Require().Nil(err)
 		case types.ConsAddress:
-			_, err := types.ConsAddressFromBech32(addr.String(), nil)
+			_, err := types.ConsAddressFromBech32(addr.String())
 			s.Require().Nil(err)
 		default:
 			s.T().Fail()
@@ -419,21 +419,15 @@ func (s *addressTestSuite) TestCustomAddressVerifier() {
 	// between 1-255 bytes.
 	err := types.VerifyAddressFormat(addr, nil)
 	s.Require().Nil(err)
-	_, err = types.AccAddressFromBech32(accBech, nil)
+	_, err = types.AccAddressFromBech32(accBech)
 	s.Require().Nil(err)
-	_, err = types.ValAddressFromBech32(valBech, nil)
+	_, err = types.ValAddressFromBech32(valBech)
 	s.Require().Nil(err)
-	_, err = types.ConsAddressFromBech32(consBech, nil)
+	_, err = types.ConsAddressFromBech32(consBech)
 	s.Require().Nil(err)
 
 	// Verifiy that the custom logic rejects this 10 byte address
 	err = types.VerifyAddressFormat(addr, customVerifier)
-	s.Require().NotNil(err)
-	_, err = types.AccAddressFromBech32(accBech, customVerifier)
-	s.Require().NotNil(err)
-	_, err = types.ValAddressFromBech32(valBech, customVerifier)
-	s.Require().NotNil(err)
-	_, err = types.ConsAddressFromBech32(consBech, customVerifier)
 	s.Require().NotNil(err)
 }
 

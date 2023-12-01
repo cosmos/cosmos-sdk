@@ -12,12 +12,12 @@ import (
 // QueryDelegationRewards queries a delegation rewards between a delegator and a
 // validator.
 func QueryDelegationRewards(clientCtx client.Context, delAddr, valAddr string) ([]byte, int64, error) {
-	delegatorAddr, err := sdk.AccAddressFromBech32(delAddr, nil)
+	delegatorAddr, err := sdk.AccAddressFromBech32(delAddr)
 	if err != nil {
 		return nil, 0, err
 	}
 
-	validatorAddr, err := sdk.ValAddressFromBech32(valAddr, nil)
+	validatorAddr, err := sdk.ValAddressFromBech32(valAddr)
 	if err != nil {
 		return nil, 0, err
 	}

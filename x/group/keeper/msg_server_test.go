@@ -207,9 +207,9 @@ func (s *TestSuite) TestCreateGroup() {
 			s.Require().Equal(len(members), len(loadedMembers))
 			// we reorder members by address to be able to compare them
 			sort.Slice(members, func(i, j int) bool {
-				addri, err := sdk.AccAddressFromBech32(members[i].Address, nil)
+				addri, err := sdk.AccAddressFromBech32(members[i].Address)
 				s.Require().NoError(err)
-				addrj, err := sdk.AccAddressFromBech32(members[j].Address, nil)
+				addrj, err := sdk.AccAddressFromBech32(members[j].Address)
 				s.Require().NoError(err)
 				return bytes.Compare(addri, addrj) < 0
 			})
@@ -554,9 +554,9 @@ func (s *TestSuite) TestUpdateGroupMembers() {
 			s.Require().Equal(len(spec.expMembers), len(loadedMembers))
 			// we reorder group members by address to be able to compare them
 			sort.Slice(spec.expMembers, func(i, j int) bool {
-				addri, err := sdk.AccAddressFromBech32(spec.expMembers[i].Member.Address, nil)
+				addri, err := sdk.AccAddressFromBech32(spec.expMembers[i].Member.Address)
 				s.Require().NoError(err)
-				addrj, err := sdk.AccAddressFromBech32(spec.expMembers[j].Member.Address, nil)
+				addrj, err := sdk.AccAddressFromBech32(spec.expMembers[j].Member.Address)
 				s.Require().NoError(err)
 				return bytes.Compare(addri, addrj) < 0
 			})
@@ -960,9 +960,9 @@ func (s *TestSuite) TestCreateGroupWithPolicy() {
 			s.Require().Equal(len(members), len(loadedMembers))
 			// we reorder members by address to be able to compare them
 			sort.Slice(members, func(i, j int) bool {
-				addri, err := sdk.AccAddressFromBech32(members[i].Address, nil)
+				addri, err := sdk.AccAddressFromBech32(members[i].Address)
 				s.Require().NoError(err)
-				addrj, err := sdk.AccAddressFromBech32(members[j].Address, nil)
+				addrj, err := sdk.AccAddressFromBech32(members[j].Address)
 				s.Require().NoError(err)
 				return bytes.Compare(addri, addrj) < 0
 			})

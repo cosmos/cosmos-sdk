@@ -120,7 +120,7 @@ func TestAddr(addr, bech string) (sdk.AccAddress, error) {
 		return nil, fmt.Errorf("bech encoding doesn't match reference")
 	}
 
-	bechres, err := sdk.AccAddressFromBech32(bech, nil)
+	bechres, err := sdk.AccAddressFromBech32(bech)
 	if err != nil {
 		return nil, err
 	}

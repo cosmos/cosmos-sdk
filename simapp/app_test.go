@@ -55,7 +55,7 @@ func TestSimAppExportAndBlockedAddrs(t *testing.T) {
 	// BlockedAddresses returns a map of addresses in app v1 and a map of modules name in app v2.
 	for acc := range BlockedAddresses() {
 		var addr sdk.AccAddress
-		if modAddr, err := sdk.AccAddressFromBech32(acc, nil); err == nil {
+		if modAddr, err := sdk.AccAddressFromBech32(acc); err == nil {
 			addr = modAddr
 		} else {
 			addr = app.AuthKeeper.GetModuleAddress(acc)

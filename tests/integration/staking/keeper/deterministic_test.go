@@ -38,13 +38,13 @@ import (
 
 var (
 	validator1        = "cosmosvaloper1qqqryrs09ggeuqszqygqyqd2tgqmsqzewacjj7"
-	validatorAddr1, _ = sdk.ValAddressFromBech32(validator1, nil)
+	validatorAddr1, _ = sdk.ValAddressFromBech32(validator1)
 	validator2        = "cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj"
-	validatorAddr2, _ = sdk.ValAddressFromBech32(validator2, nil)
+	validatorAddr2, _ = sdk.ValAddressFromBech32(validator2)
 	delegator1        = "cosmos1nph3cfzk6trsmfxkeu943nvach5qw4vwstnvkl"
-	delegatorAddr1    = sdk.MustAccAddressFromBech32(delegator1, nil)
+	delegatorAddr1    = sdk.MustAccAddressFromBech32(delegator1)
 	delegator2        = "cosmos139f7kncmglres2nf3h4hc4tade85ekfr8sulz5"
-	delegatorAddr2    = sdk.MustAccAddressFromBech32(delegator2, nil)
+	delegatorAddr2    = sdk.MustAccAddressFromBech32(delegator2)
 )
 
 type deterministicFixture struct {
@@ -751,11 +751,11 @@ func TestGRPCRedelegations(t *testing.T) {
 
 	rapid.Check(t, func(rt *rapid.T) {
 		validator := createAndSetValidatorWithStatus(t, rt, f, stakingtypes.Bonded)
-		srcValAddr, err := sdk.ValAddressFromBech32(validator.OperatorAddress, nil)
+		srcValAddr, err := sdk.ValAddressFromBech32(validator.OperatorAddress)
 		assert.NilError(t, err)
 
 		validator2 := createAndSetValidatorWithStatus(t, rt, f, stakingtypes.Bonded)
-		dstValAddr, err := sdk.ValAddressFromBech32(validator2.OperatorAddress, nil)
+		dstValAddr, err := sdk.ValAddressFromBech32(validator2.OperatorAddress)
 		assert.NilError(t, err)
 
 		numDels := rapid.IntRange(1, 5).Draw(rt, "num-dels")

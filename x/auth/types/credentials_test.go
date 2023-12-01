@@ -18,7 +18,7 @@ func TestNewModuleCrendentials(t *testing.T) {
 	_, err = authtypes.NewModuleCredential("group", [][]byte{{0x0, 0x30}, {}}...)
 	require.Error(t, err)
 
-	expected := sdk.MustAccAddressFromBech32("cosmos1fpn0w0yf4x300llf5r66jnfhgj4ul6cfahrvqsskwkhsw6sv84wsmz359y", nil)
+	expected := sdk.MustAccAddressFromBech32("cosmos1fpn0w0yf4x300llf5r66jnfhgj4ul6cfahrvqsskwkhsw6sv84wsmz359y")
 
 	credential, err := authtypes.NewModuleCredential("group")
 	require.NoError(t, err, "must be able to create a Root Module credential (see ADR-33)")
@@ -45,7 +45,7 @@ func TestNewModuleCrendentials(t *testing.T) {
 }
 
 func TestNewBaseAccountWithPubKey(t *testing.T) {
-	expected := sdk.MustAccAddressFromBech32("cosmos1fpn0w0yf4x300llf5r66jnfhgj4ul6cfahrvqsskwkhsw6sv84wsmz359y", nil)
+	expected := sdk.MustAccAddressFromBech32("cosmos1fpn0w0yf4x300llf5r66jnfhgj4ul6cfahrvqsskwkhsw6sv84wsmz359y")
 
 	credential, err := authtypes.NewModuleCredential("group", [][]byte{{0x20}, {0x0}}...)
 	require.NoError(t, err)

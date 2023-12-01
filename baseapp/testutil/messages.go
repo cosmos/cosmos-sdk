@@ -51,7 +51,7 @@ func (msg *MsgKeyValue) GetSigners() []sdk.AccAddress {
 		return []sdk.AccAddress{}
 	}
 
-	return []sdk.AccAddress{sdk.MustAccAddressFromBech32(msg.Signer, nil)}
+	return []sdk.AccAddress{sdk.MustAccAddressFromBech32(msg.Signer)}
 }
 
 func (msg *MsgKeyValue) ValidateBasic() error {

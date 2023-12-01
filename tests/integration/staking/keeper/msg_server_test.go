@@ -46,7 +46,7 @@ func TestCancelUnbondingDelegation(t *testing.T) {
 	assert.NilError(t, err)
 	assert.NilError(t, f.stakingKeeper.SetValidator(ctx, validator))
 
-	validatorAddr, err := sdk.ValAddressFromBech32(validator.OperatorAddress, nil)
+	validatorAddr, err := sdk.ValAddressFromBech32(validator.OperatorAddress)
 	assert.NilError(t, err)
 
 	// setting the ubd entry

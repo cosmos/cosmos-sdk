@@ -8,8 +8,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/types"
 )
 
-func FuzzTypesVerifyAddressFormat(f *testing.F) {
+func FuzzTypesVerifyAddressBech32(f *testing.F) {
 	f.Fuzz(func(t *testing.T, data []byte) {
-		_ = types.VerifyAddressFormat(data, nil)
+		_ = types.VerifyAddressBech32(data)
 	})
 }

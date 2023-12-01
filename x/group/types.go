@@ -300,7 +300,7 @@ func (g GroupInfo) ValidateBasic() error {
 		return errorsmod.Wrap(errors.ErrEmpty, "group's GroupId")
 	}
 
-	_, err := sdk.AccAddressFromBech32(g.Admin, nil)
+	_, err := sdk.AccAddressFromBech32(g.Admin)
 	if err != nil {
 		return errorsmod.Wrap(err, "admin")
 	}
@@ -315,7 +315,7 @@ func (g GroupInfo) ValidateBasic() error {
 }
 
 func (g GroupPolicyInfo) PrimaryKeyFields() []interface{} {
-	addr := sdk.MustAccAddressFromBech32(g.Address, nil)
+	addr := sdk.MustAccAddressFromBech32(g.Address)
 
 	return []interface{}{addr.Bytes()}
 }
@@ -326,11 +326,11 @@ func (g Proposal) PrimaryKeyFields() []interface{} {
 
 // ValidateBasic does basic validation on group policy info.
 func (g GroupPolicyInfo) ValidateBasic() error {
-	_, err := sdk.AccAddressFromBech32(g.Admin, nil)
+	_, err := sdk.AccAddressFromBech32(g.Admin)
 	if err != nil {
 		return errorsmod.Wrap(err, "group policy admin")
 	}
-	_, err = sdk.AccAddressFromBech32(g.Address, nil)
+	_, err = sdk.AccAddressFromBech32(g.Address)
 	if err != nil {
 		return errorsmod.Wrap(err, "group policy account address")
 	}
@@ -353,7 +353,7 @@ func (g GroupPolicyInfo) ValidateBasic() error {
 }
 
 func (g GroupMember) PrimaryKeyFields() []interface{} {
-	addr := sdk.MustAccAddressFromBech32(g.Member.Address, nil)
+	addr := sdk.MustAccAddressFromBech32(g.Member.Address)
 
 	return []interface{}{g.GroupId, addr.Bytes()}
 }
@@ -364,7 +364,7 @@ func (g GroupMember) ValidateBasic() error {
 		return errorsmod.Wrap(errors.ErrEmpty, "group member's group id")
 	}
 
-	if _, err := sdk.AccAddressFromBech32(g.Member.Address, nil); err != nil {
+	if _, err := sdk.AccAddressFromBech32(g.Member.Address); err != nil {
 		return errorsmod.Wrap(err, "group member's address")
 	}
 
@@ -392,7 +392,7 @@ func (g Proposal) ValidateBasic() error {
 	if g.Id == 0 {
 		return errorsmod.Wrap(errors.ErrEmpty, "proposal id")
 	}
-	_, err := sdk.AccAddressFromBech32(g.GroupPolicyAddress, nil)
+	_, err := sdk.AccAddressFromBech32(g.GroupPolicyAddress)
 	if err != nil {
 		return errorsmod.Wrap(err, "proposal group policy address")
 	}
@@ -422,7 +422,7 @@ func (g Proposal) ValidateBasic() error {
 }
 
 func (v Vote) PrimaryKeyFields() []interface{} {
-	addr := sdk.MustAccAddressFromBech32(v.Voter, nil)
+	addr := sdk.MustAccAddressFromBech32(v.Voter)
 
 	return []interface{}{v.ProposalId, addr.Bytes()}
 }
@@ -431,7 +431,7 @@ var _ orm.Validateable = Vote{}
 
 // ValidateBasic does basic validation on vote.
 func (v Vote) ValidateBasic() error {
-	_, err := sdk.AccAddressFromBech32(v.Voter, nil)
+	_, err := sdk.AccAddressFromBech32(v.Voter)
 	if err != nil {
 		return errorsmod.Wrap(err, "voter")
 	}

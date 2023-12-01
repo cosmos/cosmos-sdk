@@ -44,12 +44,7 @@ func RejectUnknownFields(bz []byte, msg proto.Message, allowUnknownNonCriticals 
 		return hasUnknownNonCriticals, nil
 	}
 
-	desc, ok := msg.(descriptorIface)
-	if !ok {
-		return hasUnknownNonCriticals, fmt.Errorf("%T does not have a Descriptor() method", msg)
-	}
-
-	fieldDescProtoFromTagNum, _, err := getDescriptorInfo(desc, msg)
+	fieldDescProtoFromTagNum, _, err := getDescriptorInfo(msg)
 	if err != nil {
 		return hasUnknownNonCriticals, err
 	}
@@ -144,6 +139,9 @@ func RejectUnknownFields(bz []byte, msg proto.Message, allowUnknownNonCriticals 
 			fieldBytes = any.Value
 			msg, err = resolver.Resolve(protoMessageName)
 			if err != nil {
+				// here we've checked the interface registry, which is the most common case.
+				// now let's try to also check the merged registry.
+
 				return hasUnknownNonCriticals, err
 			}
 		} else {
@@ -391,7 +389,11 @@ var (
 )
 
 // getDescriptorInfo retrieves the mapping of field numbers to their respective field descriptors.
-func getDescriptorInfo(desc descriptorIface, msg proto.Message) (map[int32]*descriptorpb.FieldDescriptorProto, *descriptorpb.DescriptorProto, error) {
+func getDescriptorInfo(msg proto.Message) (map[int32]*descriptorpb.FieldDescriptorProto, *descriptorpb.DescriptorProto, error) {
+	desc, ok := msg.(descriptorIface)
+	if !ok {
+		return nil, nil, fmt.Errorf("%T does not have a Descriptor() method", msg)
+	}
 	key := reflect.ValueOf(msg).Type()
 
 	descprotoCacheMu.RLock()

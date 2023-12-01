@@ -1,4 +1,4 @@
-package wasm
+package wasmtime
 
 // #cgo LDFLAGS: -ldl
 // #include <dlfcn.h>

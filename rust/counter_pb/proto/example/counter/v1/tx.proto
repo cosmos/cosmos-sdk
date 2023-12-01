@@ -1,0 +1,20 @@
+syntax = "proto3";
+package example.counter.v1;
+
+import "cosmos/msg/v1/msg.proto";
+
+service Msg {
+  option (cosmos.msg.v1.service) = true;
+
+  rpc IncrementCounter(IncrementCounterRequest) returns (IncrementCounterResponse) {}
+}
+
+message IncrementCounterRequest {
+  option (cosmos.msg.v1.signer) = "sender";
+  
+  string sender = 1;
+}
+
+message IncrementCounterResponse {
+  uint64 current = 1;
+}

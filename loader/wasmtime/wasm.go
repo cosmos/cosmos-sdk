@@ -1,4 +1,4 @@
-package wasm
+package wasmtime
 
 import (
 	"encoding/binary"

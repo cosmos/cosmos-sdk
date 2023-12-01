@@ -8,4 +8,9 @@ crate-type = ["cdylib", "lib"]
 
 [dependencies]
 lol_alloc = "0.4.0"
+tonic = { version = "0.10.2", optional = true }
 zeropb = { path = "../zeropb" }
+
+[features]
+default = []
+tonic = ["dep:tonic"]

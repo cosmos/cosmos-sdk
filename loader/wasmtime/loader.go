@@ -1,7 +1,8 @@
-package wasm
+package wasmtime
 
 import (
 	"context"
+
 	"cosmossdk.io/core/intermodule"
 	"github.com/bytecodealliance/wasmtime-go/v14"
 )

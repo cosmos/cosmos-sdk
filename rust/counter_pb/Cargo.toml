@@ -1,0 +1,16 @@
+[package]
+name = "counter_pb"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+cosmossdk_core = { version = "0.1.0", path = "../cosmossdk_core" }
+prost = "0.12.3"
+prost-types = "0.12.3"
+tonic = "0.10.2"
+
+[build-dependencies]
+prost-build = "0.12.3"
+tonic-build = "0.10.2"

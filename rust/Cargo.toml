@@ -5,6 +5,6 @@ members = [
     "zeropb_derive",
     "zeropb_codegen",
     "cosmossdk_core",
-    "example_module", "example_module2",
+    "example_module", "example_module2", "counter_pb",
 ]
 

@@ -649,8 +649,8 @@ func (k msgServer) RotateConsPubKey(ctx context.Context, msg *types.MsgRotateCon
 		return nil, types.ErrNoValidatorFound
 	}
 
-	if status := validator2.GetStatus(); status != types.Bonded {
-		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidType, "validator status is not bonded, got %s", status.String())
+	if status := validator2.GetStatus(); status != sdk.Bonded {
+		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidType, "validator status is not bonded, got %x", status)
 	}
 
 	// Check if the validator is exceeding parameter MaxConsPubKeyRotations within the

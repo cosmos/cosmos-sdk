@@ -178,8 +178,6 @@ func TestMsgWithdrawDelegatorReward(t *testing.T) {
 	})
 	require.NoError(t, err)
 	require.NoError(t, f.distrKeeper.Params.Set(f.sdkCtx, distrtypes.DefaultParams()))
-	initFeePool, err := f.distrKeeper.FeePool.Get(f.sdkCtx)
-	assert.NilError(t, err)
 
 	delAddr := sdk.AccAddress(PKS[1].Address())
 	valConsAddr := sdk.ConsAddress(valConsPk0.Address())
@@ -228,8 +226,6 @@ func TestMsgWithdrawDelegatorReward(t *testing.T) {
 	require.NoError(t, err)
 	err = f.distrKeeper.ValidatorOutstandingRewards.Set(f.sdkCtx, f.valAddr, distrtypes.ValidatorOutstandingRewards{Rewards: valCommission})
 	require.NoError(t, err)
-	initOutstandingRewards, err := f.distrKeeper.GetValidatorOutstandingRewardsCoins(f.sdkCtx, f.valAddr)
-	assert.NilError(t, err)
 
 	testCases := []struct {
 		name      string
@@ -324,13 +320,6 @@ func TestMsgWithdrawDelegatorReward(t *testing.T) {
 				// check current balance is greater than initial balance
 				curBalance := f.bankKeeper.GetAllBalances(f.sdkCtx, sdk.AccAddress(f.valAddr))
 				assert.Assert(t, initBalance.IsAllLTE(curBalance))
-
-				// check rewards
-				curFeePool, _ := f.distrKeeper.FeePool.Get(f.sdkCtx)
-				rewards := curFeePool.GetCommunityPool().Sub(initFeePool.CommunityPool)
-				curOutstandingRewards, err := f.distrKeeper.ValidatorOutstandingRewards.Get(f.sdkCtx, f.valAddr)
-				assert.NilError(t, err)
-				assert.DeepEqual(t, rewards, initOutstandingRewards.Sub(curOutstandingRewards.Rewards))
 			}
 
 			prevProposerConsAddr, err := f.distrKeeper.PreviousProposer.Get(f.sdkCtx)

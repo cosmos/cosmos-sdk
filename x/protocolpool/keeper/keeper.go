@@ -128,7 +128,7 @@ func (k Keeper) withdrawContinuousFund(ctx context.Context, recipient sdk.AccAdd
 	// check if the recipient account balance exceeds maxDistributedCapital after distribution
 	if totalRecipientBal < cf.MaxDistributedCapital {
 		// Distribute funds to the recipient from pool module account
-		err := k.DistributeFromFeePool(ctx, sdk.NewCoins(sdk.NewCoin(denom, math.NewIntFromUint64(fundsAllocated))), recipient)
+		err := k.DistributeFromCommunityPool(ctx, sdk.NewCoins(sdk.NewCoin(denom, math.NewIntFromUint64(fundsAllocated))), recipient)
 		if err != nil {
 			return sdk.Coin{}, err
 		}

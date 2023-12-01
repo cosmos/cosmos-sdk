@@ -97,7 +97,7 @@ func (k Keeper) FundCommunityPool(ctx context.Context, amount sdk.Coins, sender 
 
 ### MsgCommunityPoolSpend
 
-This message distributes funds from the protocolpool module account to the recipient using `DistributeFromFeePool` keeper method.
+This message distributes funds from the protocolpool module account to the recipient using `DistributeFromCommunityPool` keeper method.
 
 ```protobuf reference
 https://github.com/cosmos/cosmos-sdk/blob/97724493d792517ba2be8969078b5f92ad04d79c/proto/cosmos/protocolpool/v1/tx.proto#L47-L58
@@ -109,7 +109,7 @@ The message will fail under the following conditions:
 * The `recipient` address is restricted
 
 ```go
-func (k Keeper) DistributeFromFeePool(ctx context.Context, amount sdk.Coins, receiveAddr sdk.AccAddress) error {
+func (k Keeper) DistributeFromCommunityPool(ctx context.Context, amount sdk.Coins, receiveAddr sdk.AccAddress) error {
 	return k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, receiveAddr, amount)
 }
 ```

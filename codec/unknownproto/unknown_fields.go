@@ -390,10 +390,7 @@ var (
 
 // getDescriptorInfo retrieves the mapping of field numbers to their respective field descriptors.
 func getDescriptorInfo(msg proto.Message) (map[int32]*descriptorpb.FieldDescriptorProto, *descriptorpb.DescriptorProto, error) {
-	desc, ok := msg.(descriptorIface)
-	if !ok {
-		return nil, nil, fmt.Errorf("%T does not have a Descriptor() method", msg)
-	}
+	// we immediately check if the desc is present in the desc
 	key := reflect.ValueOf(msg).Type()
 
 	descprotoCacheMu.RLock()
@@ -405,6 +402,10 @@ func getDescriptorInfo(msg proto.Message) (map[int32]*descriptorpb.FieldDescript
 	}
 
 	// Now compute and cache the index.
+	desc, ok := msg.(descriptorIface)
+	if !ok {
+		return nil, nil, fmt.Errorf("%T does not have a Descriptor() method", msg)
+	}
 	_, md, err := extractFileDescMessageDesc(desc)
 	if err != nil {
 		return nil, nil, err

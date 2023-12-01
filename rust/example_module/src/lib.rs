@@ -1,6 +1,6 @@
 #![no_std]
 
-use zeropb::{__zeropb_alloc_page, __zeropb_free_page, Root};
+use zeropb::root::{alloc_page, free_page, Root};
 use core::fmt::Write;
 use core::mem::forget;
 use core::iter::IntoIterator;
@@ -88,13 +88,13 @@ unsafe fn do_exec_msg_send(input: *mut u8) -> Root<GreetResponse> {
 }
 
 #[no_mangle]
-pub extern fn __alloc(size: usize) -> *mut u8 {
-    __zeropb_alloc_page()
+pub unsafe extern fn __alloc(size: usize) -> *mut u8 {
+    alloc_page()
 }
 
 #[no_mangle]
-pub extern fn __free(ptr: *mut u8, size: usize) {
-    __zeropb_free_page(ptr)
+pub unsafe extern fn __free(ptr: *mut u8, size: usize) {
+    free_page(ptr)
 }
 
 

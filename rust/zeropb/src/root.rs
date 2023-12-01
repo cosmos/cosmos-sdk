@@ -29,7 +29,7 @@ pub struct Root<T: ZeroCopy> {
 impl<T: ZeroCopy> Root<T> {
     pub fn new() -> Self {
         unsafe {
-            let buf = __zeropb_alloc_page();
+            let buf = alloc_page();
             assert!(!buf.is_null());
             assert_eq!((buf as usize) & 0xFFFF, 0);
             let extent_ptr = buf.offset(MAX_EXTENT as isize) as *mut u16;
@@ -69,7 +69,7 @@ impl<T: ZeroCopy> Root<T> {
 impl<T: ZeroCopy> Drop for Root<T> {
     fn drop(&mut self) {
         unsafe {
-            __zeropb_free_page(self.buf);
+            free_page(self.buf);
         }
     }
 }
@@ -107,16 +107,18 @@ static mut STATIC_FREELIST_LEN: usize = 0;
 static mut EXTRA_FREELIST_LEN: usize = 0;
 
 #[no_mangle]
-pub extern "C" fn __zeropb_alloc_page() -> *mut u8 {
-    unsafe {
-        let page = unsafe { do_alloc_page() };
-        // zero memory
-        let extent_ptr = page.offset((MAX_EXTENT - 2) as isize) as *mut u16;
-        let extent = *extent_ptr as usize;
-        core::ptr::write_bytes(page, 0, extent);
-        *extent_ptr = 0;
-        page
-    }
+unsafe extern "C" fn zeropb_alloc_page() -> *mut u8 {
+    return alloc_page();
+}
+
+pub unsafe fn alloc_page() -> *mut u8 {
+    let page = unsafe { do_alloc_page() };
+    // zero memory
+    let extent_ptr = page.offset((MAX_EXTENT - 2) as isize) as *mut u16;
+    let extent = *extent_ptr as usize;
+    core::ptr::write_bytes(page, 0, extent);
+    *extent_ptr = 0;
+    page
 }
 
 unsafe fn do_alloc_page() -> *mut u8 {
@@ -127,27 +129,29 @@ unsafe fn do_alloc_page() -> *mut u8 {
     }
 
     ALLOCATIONS += 1;
-    return alloc_page();
+    return alloc_new_page();
 }
 
 #[no_mangle]
-pub extern "C" fn __zeropb_free_page(page: *mut u8) {
+unsafe extern "C" fn zeropb_free_page(page: *mut u8) {
+ return free_page(page);
+}
+
+pub unsafe fn free_page(page: *mut u8) {
     if page.is_null() {
         return;
     }
 
-    unsafe {
-        if STATIC_FREELIST_LEN < STATIC_FREELIST_CAP {
-            STATIC_FREELIST[STATIC_FREELIST_LEN] = page;
-            STATIC_FREELIST_LEN += 1;
-        } else {
-            free_page(page)
-        }
+    if STATIC_FREELIST_LEN < STATIC_FREELIST_CAP {
+        STATIC_FREELIST[STATIC_FREELIST_LEN] = page;
+        STATIC_FREELIST_LEN += 1;
+    } else {
+        do_free_page(page)
     }
 }
 
 #[cfg(target_arch = "wasm32")]
-unsafe fn alloc_page() -> *mut u8 {
+unsafe fn alloc_new_page() -> *mut u8 {
     let page = (core::arch::wasm32::memory_grow(0, 1) * 0x10000usize) as *mut u8;
     // zero memory
     core::ptr::write_bytes(page, 0, 0x10000);
@@ -155,7 +159,7 @@ unsafe fn alloc_page() -> *mut u8 {
 }
 
 #[cfg(target_arch = "wasm32")]
-unsafe fn free_page(_page: *mut u8) {
+unsafe fn do_free_page(_page: *mut u8) {
     // leak memory because we can no longer deallocate pages
     // if we hit this point, we're probably in a bad state anyway
     // because over 4GB of memory has been allocated
@@ -165,12 +169,12 @@ unsafe fn free_page(_page: *mut u8) {
 extern crate std;
 
 #[cfg(not(target_arch = "wasm32"))]
-unsafe fn alloc_page() -> *mut u8 {
+unsafe fn alloc_new_page() -> *mut u8 {
     alloc_zeroed(Layout::from_size_align(0x10000, 0x10000).unwrap())
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-unsafe fn free_page(page: *mut u8) {
+unsafe fn do_free_page(page: *mut u8) {
     dealloc(
         page,
         Layout::from_size_align(0x10000, 0x10000).unwrap(),

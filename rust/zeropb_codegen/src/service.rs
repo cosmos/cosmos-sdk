@@ -14,6 +14,9 @@ pub(crate) fn gen_service(
 }
 
 fn gen_service_server(service: &ServiceDescriptorProto, ctx: &mut Context) -> anyhow::Result<()> {
+    // check if the cosmos.msg.v1.Service option is true
+    // if so all Server and Client methods are generated with &mut Context instead of &Context
+
     write!(
         ctx,
         "trait {}Server<Ctx> {{\n",

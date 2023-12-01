@@ -9,10 +9,8 @@ mod zerocopy;
 
 pub use zerocopy::ZeroCopy;
 
-mod root;
-
+pub mod root;
 pub use root::Root;
-pub use root::{__zeropb_alloc_page, __zeropb_free_page};
 
 mod error;
 mod rel_ptr;
@@ -37,6 +35,8 @@ pub use repeated::{Repeated, ScalarRepeated, RepeatedWriter, RepeatedIter, Scala
 
 mod server;
 mod status;
+mod context;
+pub use context::{Context};
 
 pub use status::{Status, Code};
 

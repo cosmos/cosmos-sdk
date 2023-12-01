@@ -1,4 +1,4 @@
-package signing
+package types
 
 import (
 	lru "github.com/hashicorp/golang-lru/v2"
@@ -71,7 +71,7 @@ type sigkey struct {
 	sig       []byte
 }
 
-func newSigKey(signbytes, sig []byte) sigkey {
+func NewSigKey(signbytes, sig []byte) sigkey {
 	return sigkey{
 		signbytes: signbytes,
 		sig:       sig,

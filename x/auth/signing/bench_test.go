@@ -205,7 +205,7 @@ func BenchmarkVerifySignature(b *testing.B) {
 	b.ReportAllocs()
 	ctx := context.Background()
 	b.ResetTimer()
-	cache := NewSignatureCache()
+	cache := cryptotypes.NewSignatureCache()
 
 	for i := 0; i < b.N; i++ {
 		for _, tt := range cases {

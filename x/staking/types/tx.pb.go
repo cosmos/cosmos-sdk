@@ -867,7 +867,7 @@ type MsgClient interface {
 	UpdateParams(ctx context.Context, in *MsgUpdateParams, opts ...grpc.CallOption) (*MsgUpdateParamsResponse, error)
 	// RotateConsPubKey defines an operation for rotating the consensus keys
 	// of a validator.
-	// Since: cosmos-sdk 0.48
+	// Since: cosmos-sdk 0.51
 	RotateConsPubKey(ctx context.Context, in *MsgRotateConsPubKey, opts ...grpc.CallOption) (*MsgRotateConsPubKeyResponse, error)
 }
 
@@ -977,7 +977,7 @@ type MsgServer interface {
 	UpdateParams(context.Context, *MsgUpdateParams) (*MsgUpdateParamsResponse, error)
 	// RotateConsPubKey defines an operation for rotating the consensus keys
 	// of a validator.
-	// Since: cosmos-sdk 0.48
+	// Since: cosmos-sdk 0.51
 	RotateConsPubKey(context.Context, *MsgRotateConsPubKey) (*MsgRotateConsPubKeyResponse, error)
 }
 

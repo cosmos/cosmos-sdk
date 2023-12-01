@@ -126,7 +126,6 @@ func newApp(
 	appOpts servertypes.AppOptions,
 ) servertypes.Application {
 	baseappOptions := server.DefaultBaseappOptions(appOpts)
-
 	return simapp.NewSimApp(
 		logger, db, traceStore, true,
 		appOpts,

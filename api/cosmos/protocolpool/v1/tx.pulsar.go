@@ -3890,6 +3890,2350 @@ func (x *fastReflection_MsgClaimBudgetResponse) ProtoMethods() *protoiface.Metho
 	}
 }
 
+var _ protoreflect.List = (*_MsgCreateContinuousFund_7_list)(nil)
+
+type _MsgCreateContinuousFund_7_list struct {
+	list *[]*v1beta1.Coin
+}
+
+func (x *_MsgCreateContinuousFund_7_list) Len() int {
+	if x.list == nil {
+		return 0
+	}
+	return len(*x.list)
+}
+
+func (x *_MsgCreateContinuousFund_7_list) Get(i int) protoreflect.Value {
+	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
+}
+
+func (x *_MsgCreateContinuousFund_7_list) Set(i int, value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*v1beta1.Coin)
+	(*x.list)[i] = concreteValue
+}
+
+func (x *_MsgCreateContinuousFund_7_list) Append(value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*v1beta1.Coin)
+	*x.list = append(*x.list, concreteValue)
+}
+
+func (x *_MsgCreateContinuousFund_7_list) AppendMutable() protoreflect.Value {
+	v := new(v1beta1.Coin)
+	*x.list = append(*x.list, v)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_MsgCreateContinuousFund_7_list) Truncate(n int) {
+	for i := n; i < len(*x.list); i++ {
+		(*x.list)[i] = nil
+	}
+	*x.list = (*x.list)[:n]
+}
+
+func (x *_MsgCreateContinuousFund_7_list) NewElement() protoreflect.Value {
+	v := new(v1beta1.Coin)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_MsgCreateContinuousFund_7_list) IsValid() bool {
+	return x.list != nil
+}
+
+var (
+	md_MsgCreateContinuousFund             protoreflect.MessageDescriptor
+	fd_MsgCreateContinuousFund_title       protoreflect.FieldDescriptor
+	fd_MsgCreateContinuousFund_description protoreflect.FieldDescriptor
+	fd_MsgCreateContinuousFund_authority   protoreflect.FieldDescriptor
+	fd_MsgCreateContinuousFund_recipient   protoreflect.FieldDescriptor
+	fd_MsgCreateContinuousFund_metadata    protoreflect.FieldDescriptor
+	fd_MsgCreateContinuousFund_percentage  protoreflect.FieldDescriptor
+	fd_MsgCreateContinuousFund_cap         protoreflect.FieldDescriptor
+	fd_MsgCreateContinuousFund_expiry      protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_cosmos_protocolpool_v1_tx_proto_init()
+	md_MsgCreateContinuousFund = File_cosmos_protocolpool_v1_tx_proto.Messages().ByName("MsgCreateContinuousFund")
+	fd_MsgCreateContinuousFund_title = md_MsgCreateContinuousFund.Fields().ByName("title")
+	fd_MsgCreateContinuousFund_description = md_MsgCreateContinuousFund.Fields().ByName("description")
+	fd_MsgCreateContinuousFund_authority = md_MsgCreateContinuousFund.Fields().ByName("authority")
+	fd_MsgCreateContinuousFund_recipient = md_MsgCreateContinuousFund.Fields().ByName("recipient")
+	fd_MsgCreateContinuousFund_metadata = md_MsgCreateContinuousFund.Fields().ByName("metadata")
+	fd_MsgCreateContinuousFund_percentage = md_MsgCreateContinuousFund.Fields().ByName("percentage")
+	fd_MsgCreateContinuousFund_cap = md_MsgCreateContinuousFund.Fields().ByName("cap")
+	fd_MsgCreateContinuousFund_expiry = md_MsgCreateContinuousFund.Fields().ByName("expiry")
+}
+
+var _ protoreflect.Message = (*fastReflection_MsgCreateContinuousFund)(nil)
+
+type fastReflection_MsgCreateContinuousFund MsgCreateContinuousFund
+
+func (x *MsgCreateContinuousFund) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_MsgCreateContinuousFund)(x)
+}
+
+func (x *MsgCreateContinuousFund) slowProtoReflect() protoreflect.Message {
+	mi := &file_cosmos_protocolpool_v1_tx_proto_msgTypes[8]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_MsgCreateContinuousFund_messageType fastReflection_MsgCreateContinuousFund_messageType
+var _ protoreflect.MessageType = fastReflection_MsgCreateContinuousFund_messageType{}
+
+type fastReflection_MsgCreateContinuousFund_messageType struct{}
+
+func (x fastReflection_MsgCreateContinuousFund_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_MsgCreateContinuousFund)(nil)
+}
+func (x fastReflection_MsgCreateContinuousFund_messageType) New() protoreflect.Message {
+	return new(fastReflection_MsgCreateContinuousFund)
+}
+func (x fastReflection_MsgCreateContinuousFund_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgCreateContinuousFund
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_MsgCreateContinuousFund) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgCreateContinuousFund
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_MsgCreateContinuousFund) Type() protoreflect.MessageType {
+	return _fastReflection_MsgCreateContinuousFund_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_MsgCreateContinuousFund) New() protoreflect.Message {
+	return new(fastReflection_MsgCreateContinuousFund)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_MsgCreateContinuousFund) Interface() protoreflect.ProtoMessage {
+	return (*MsgCreateContinuousFund)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_MsgCreateContinuousFund) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.Title != "" {
+		value := protoreflect.ValueOfString(x.Title)
+		if !f(fd_MsgCreateContinuousFund_title, value) {
+			return
+		}
+	}
+	if x.Description != "" {
+		value := protoreflect.ValueOfString(x.Description)
+		if !f(fd_MsgCreateContinuousFund_description, value) {
+			return
+		}
+	}
+	if x.Authority != "" {
+		value := protoreflect.ValueOfString(x.Authority)
+		if !f(fd_MsgCreateContinuousFund_authority, value) {
+			return
+		}
+	}
+	if x.Recipient != "" {
+		value := protoreflect.ValueOfString(x.Recipient)
+		if !f(fd_MsgCreateContinuousFund_recipient, value) {
+			return
+		}
+	}
+	if x.Metadata != "" {
+		value := protoreflect.ValueOfString(x.Metadata)
+		if !f(fd_MsgCreateContinuousFund_metadata, value) {
+			return
+		}
+	}
+	if x.Percentage != "" {
+		value := protoreflect.ValueOfString(x.Percentage)
+		if !f(fd_MsgCreateContinuousFund_percentage, value) {
+			return
+		}
+	}
+	if len(x.Cap) != 0 {
+		value := protoreflect.ValueOfList(&_MsgCreateContinuousFund_7_list{list: &x.Cap})
+		if !f(fd_MsgCreateContinuousFund_cap, value) {
+			return
+		}
+	}
+	if x.Expiry != nil {
+		value := protoreflect.ValueOfMessage(x.Expiry.ProtoReflect())
+		if !f(fd_MsgCreateContinuousFund_expiry, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_MsgCreateContinuousFund) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "cosmos.protocolpool.v1.MsgCreateContinuousFund.title":
+		return x.Title != ""
+	case "cosmos.protocolpool.v1.MsgCreateContinuousFund.description":
+		return x.Description != ""
+	case "cosmos.protocolpool.v1.MsgCreateContinuousFund.authority":
+		return x.Authority != ""
+	case "cosmos.protocolpool.v1.MsgCreateContinuousFund.recipient":
+		return x.Recipient != ""
+	case "cosmos.protocolpool.v1.MsgCreateContinuousFund.metadata":
+		return x.Metadata != ""
+	case "cosmos.protocolpool.v1.MsgCreateContinuousFund.percentage":
+		return x.Percentage != ""
+	case "cosmos.protocolpool.v1.MsgCreateContinuousFund.cap":
+		return len(x.Cap) != 0
+	case "cosmos.protocolpool.v1.MsgCreateContinuousFund.expiry":
+		return x.Expiry != nil
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.MsgCreateContinuousFund"))
+		}
+		panic(fmt.Errorf("message cosmos.protocolpool.v1.MsgCreateContinuousFund does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgCreateContinuousFund) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "cosmos.protocolpool.v1.MsgCreateContinuousFund.title":
+		x.Title = ""
+	case "cosmos.protocolpool.v1.MsgCreateContinuousFund.description":
+		x.Description = ""
+	case "cosmos.protocolpool.v1.MsgCreateContinuousFund.authority":
+		x.Authority = ""
+	case "cosmos.protocolpool.v1.MsgCreateContinuousFund.recipient":
+		x.Recipient = ""
+	case "cosmos.protocolpool.v1.MsgCreateContinuousFund.metadata":
+		x.Metadata = ""
+	case "cosmos.protocolpool.v1.MsgCreateContinuousFund.percentage":
+		x.Percentage = ""
+	case "cosmos.protocolpool.v1.MsgCreateContinuousFund.cap":
+		x.Cap = nil
+	case "cosmos.protocolpool.v1.MsgCreateContinuousFund.expiry":
+		x.Expiry = nil
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.MsgCreateContinuousFund"))
+		}
+		panic(fmt.Errorf("message cosmos.protocolpool.v1.MsgCreateContinuousFund does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_MsgCreateContinuousFund) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "cosmos.protocolpool.v1.MsgCreateContinuousFund.title":
+		value := x.Title
+		return protoreflect.ValueOfString(value)
+	case "cosmos.protocolpool.v1.MsgCreateContinuousFund.description":
+		value := x.Description
+		return protoreflect.ValueOfString(value)
+	case "cosmos.protocolpool.v1.MsgCreateContinuousFund.authority":
+		value := x.Authority
+		return protoreflect.ValueOfString(value)
+	case "cosmos.protocolpool.v1.MsgCreateContinuousFund.recipient":
+		value := x.Recipient
+		return protoreflect.ValueOfString(value)
+	case "cosmos.protocolpool.v1.MsgCreateContinuousFund.metadata":
+		value := x.Metadata
+		return protoreflect.ValueOfString(value)
+	case "cosmos.protocolpool.v1.MsgCreateContinuousFund.percentage":
+		value := x.Percentage
+		return protoreflect.ValueOfString(value)
+	case "cosmos.protocolpool.v1.MsgCreateContinuousFund.cap":
+		if len(x.Cap) == 0 {
+			return protoreflect.ValueOfList(&_MsgCreateContinuousFund_7_list{})
+		}
+		listValue := &_MsgCreateContinuousFund_7_list{list: &x.Cap}
+		return protoreflect.ValueOfList(listValue)
+	case "cosmos.protocolpool.v1.MsgCreateContinuousFund.expiry":
+		value := x.Expiry
+		return protoreflect.ValueOfMessage(value.ProtoReflect())
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.MsgCreateContinuousFund"))
+		}
+		panic(fmt.Errorf("message cosmos.protocolpool.v1.MsgCreateContinuousFund does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgCreateContinuousFund) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "cosmos.protocolpool.v1.MsgCreateContinuousFund.title":
+		x.Title = value.Interface().(string)
+	case "cosmos.protocolpool.v1.MsgCreateContinuousFund.description":
+		x.Description = value.Interface().(string)
+	case "cosmos.protocolpool.v1.MsgCreateContinuousFund.authority":
+		x.Authority = value.Interface().(string)
+	case "cosmos.protocolpool.v1.MsgCreateContinuousFund.recipient":
+		x.Recipient = value.Interface().(string)
+	case "cosmos.protocolpool.v1.MsgCreateContinuousFund.metadata":
+		x.Metadata = value.Interface().(string)
+	case "cosmos.protocolpool.v1.MsgCreateContinuousFund.percentage":
+		x.Percentage = value.Interface().(string)
+	case "cosmos.protocolpool.v1.MsgCreateContinuousFund.cap":
+		lv := value.List()
+		clv := lv.(*_MsgCreateContinuousFund_7_list)
+		x.Cap = *clv.list
+	case "cosmos.protocolpool.v1.MsgCreateContinuousFund.expiry":
+		x.Expiry = value.Message().Interface().(*timestamppb.Timestamp)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.MsgCreateContinuousFund"))
+		}
+		panic(fmt.Errorf("message cosmos.protocolpool.v1.MsgCreateContinuousFund does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgCreateContinuousFund) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "cosmos.protocolpool.v1.MsgCreateContinuousFund.cap":
+		if x.Cap == nil {
+			x.Cap = []*v1beta1.Coin{}
+		}
+		value := &_MsgCreateContinuousFund_7_list{list: &x.Cap}
+		return protoreflect.ValueOfList(value)
+	case "cosmos.protocolpool.v1.MsgCreateContinuousFund.expiry":
+		if x.Expiry == nil {
+			x.Expiry = new(timestamppb.Timestamp)
+		}
+		return protoreflect.ValueOfMessage(x.Expiry.ProtoReflect())
+	case "cosmos.protocolpool.v1.MsgCreateContinuousFund.title":
+		panic(fmt.Errorf("field title of message cosmos.protocolpool.v1.MsgCreateContinuousFund is not mutable"))
+	case "cosmos.protocolpool.v1.MsgCreateContinuousFund.description":
+		panic(fmt.Errorf("field description of message cosmos.protocolpool.v1.MsgCreateContinuousFund is not mutable"))
+	case "cosmos.protocolpool.v1.MsgCreateContinuousFund.authority":
+		panic(fmt.Errorf("field authority of message cosmos.protocolpool.v1.MsgCreateContinuousFund is not mutable"))
+	case "cosmos.protocolpool.v1.MsgCreateContinuousFund.recipient":
+		panic(fmt.Errorf("field recipient of message cosmos.protocolpool.v1.MsgCreateContinuousFund is not mutable"))
+	case "cosmos.protocolpool.v1.MsgCreateContinuousFund.metadata":
+		panic(fmt.Errorf("field metadata of message cosmos.protocolpool.v1.MsgCreateContinuousFund is not mutable"))
+	case "cosmos.protocolpool.v1.MsgCreateContinuousFund.percentage":
+		panic(fmt.Errorf("field percentage of message cosmos.protocolpool.v1.MsgCreateContinuousFund is not mutable"))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.MsgCreateContinuousFund"))
+		}
+		panic(fmt.Errorf("message cosmos.protocolpool.v1.MsgCreateContinuousFund does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_MsgCreateContinuousFund) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "cosmos.protocolpool.v1.MsgCreateContinuousFund.title":
+		return protoreflect.ValueOfString("")
+	case "cosmos.protocolpool.v1.MsgCreateContinuousFund.description":
+		return protoreflect.ValueOfString("")
+	case "cosmos.protocolpool.v1.MsgCreateContinuousFund.authority":
+		return protoreflect.ValueOfString("")
+	case "cosmos.protocolpool.v1.MsgCreateContinuousFund.recipient":
+		return protoreflect.ValueOfString("")
+	case "cosmos.protocolpool.v1.MsgCreateContinuousFund.metadata":
+		return protoreflect.ValueOfString("")
+	case "cosmos.protocolpool.v1.MsgCreateContinuousFund.percentage":
+		return protoreflect.ValueOfString("")
+	case "cosmos.protocolpool.v1.MsgCreateContinuousFund.cap":
+		list := []*v1beta1.Coin{}
+		return protoreflect.ValueOfList(&_MsgCreateContinuousFund_7_list{list: &list})
+	case "cosmos.protocolpool.v1.MsgCreateContinuousFund.expiry":
+		m := new(timestamppb.Timestamp)
+		return protoreflect.ValueOfMessage(m.ProtoReflect())
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.MsgCreateContinuousFund"))
+		}
+		panic(fmt.Errorf("message cosmos.protocolpool.v1.MsgCreateContinuousFund does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_MsgCreateContinuousFund) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.protocolpool.v1.MsgCreateContinuousFund", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_MsgCreateContinuousFund) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgCreateContinuousFund) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_MsgCreateContinuousFund) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_MsgCreateContinuousFund) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*MsgCreateContinuousFund)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		l = len(x.Title)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.Description)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.Authority)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.Recipient)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.Metadata)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.Percentage)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if len(x.Cap) > 0 {
+			for _, e := range x.Cap {
+				l = options.Size(e)
+				n += 1 + l + runtime.Sov(uint64(l))
+			}
+		}
+		if x.Expiry != nil {
+			l = options.Size(x.Expiry)
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*MsgCreateContinuousFund)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if x.Expiry != nil {
+			encoded, err := options.Marshal(x.Expiry)
+			if err != nil {
+				return protoiface.MarshalOutput{
+					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+					Buf:               input.Buf,
+				}, err
+			}
+			i -= len(encoded)
+			copy(dAtA[i:], encoded)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+			i--
+			dAtA[i] = 0x42
+		}
+		if len(x.Cap) > 0 {
+			for iNdEx := len(x.Cap) - 1; iNdEx >= 0; iNdEx-- {
+				encoded, err := options.Marshal(x.Cap[iNdEx])
+				if err != nil {
+					return protoiface.MarshalOutput{
+						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+						Buf:               input.Buf,
+					}, err
+				}
+				i -= len(encoded)
+				copy(dAtA[i:], encoded)
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+				i--
+				dAtA[i] = 0x3a
+			}
+		}
+		if len(x.Percentage) > 0 {
+			i -= len(x.Percentage)
+			copy(dAtA[i:], x.Percentage)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Percentage)))
+			i--
+			dAtA[i] = 0x32
+		}
+		if len(x.Metadata) > 0 {
+			i -= len(x.Metadata)
+			copy(dAtA[i:], x.Metadata)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Metadata)))
+			i--
+			dAtA[i] = 0x2a
+		}
+		if len(x.Recipient) > 0 {
+			i -= len(x.Recipient)
+			copy(dAtA[i:], x.Recipient)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Recipient)))
+			i--
+			dAtA[i] = 0x22
+		}
+		if len(x.Authority) > 0 {
+			i -= len(x.Authority)
+			copy(dAtA[i:], x.Authority)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Authority)))
+			i--
+			dAtA[i] = 0x1a
+		}
+		if len(x.Description) > 0 {
+			i -= len(x.Description)
+			copy(dAtA[i:], x.Description)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Description)))
+			i--
+			dAtA[i] = 0x12
+		}
+		if len(x.Title) > 0 {
+			i -= len(x.Title)
+			copy(dAtA[i:], x.Title)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Title)))
+			i--
+			dAtA[i] = 0xa
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*MsgCreateContinuousFund)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgCreateContinuousFund: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgCreateContinuousFund: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Title", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Title = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 2:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Description", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Description = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 3:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Authority", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Authority = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 4:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Recipient", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Recipient = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 5:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Metadata", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Metadata = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 6:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Percentage", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Percentage = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 7:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Cap", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Cap = append(x.Cap, &v1beta1.Coin{})
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Cap[len(x.Cap)-1]); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			case 8:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Expiry", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if x.Expiry == nil {
+					x.Expiry = &timestamppb.Timestamp{}
+				}
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Expiry); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var (
+	md_MsgCreateContinuousFundResponse protoreflect.MessageDescriptor
+)
+
+func init() {
+	file_cosmos_protocolpool_v1_tx_proto_init()
+	md_MsgCreateContinuousFundResponse = File_cosmos_protocolpool_v1_tx_proto.Messages().ByName("MsgCreateContinuousFundResponse")
+}
+
+var _ protoreflect.Message = (*fastReflection_MsgCreateContinuousFundResponse)(nil)
+
+type fastReflection_MsgCreateContinuousFundResponse MsgCreateContinuousFundResponse
+
+func (x *MsgCreateContinuousFundResponse) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_MsgCreateContinuousFundResponse)(x)
+}
+
+func (x *MsgCreateContinuousFundResponse) slowProtoReflect() protoreflect.Message {
+	mi := &file_cosmos_protocolpool_v1_tx_proto_msgTypes[9]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_MsgCreateContinuousFundResponse_messageType fastReflection_MsgCreateContinuousFundResponse_messageType
+var _ protoreflect.MessageType = fastReflection_MsgCreateContinuousFundResponse_messageType{}
+
+type fastReflection_MsgCreateContinuousFundResponse_messageType struct{}
+
+func (x fastReflection_MsgCreateContinuousFundResponse_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_MsgCreateContinuousFundResponse)(nil)
+}
+func (x fastReflection_MsgCreateContinuousFundResponse_messageType) New() protoreflect.Message {
+	return new(fastReflection_MsgCreateContinuousFundResponse)
+}
+func (x fastReflection_MsgCreateContinuousFundResponse_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgCreateContinuousFundResponse
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_MsgCreateContinuousFundResponse) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgCreateContinuousFundResponse
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_MsgCreateContinuousFundResponse) Type() protoreflect.MessageType {
+	return _fastReflection_MsgCreateContinuousFundResponse_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_MsgCreateContinuousFundResponse) New() protoreflect.Message {
+	return new(fastReflection_MsgCreateContinuousFundResponse)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_MsgCreateContinuousFundResponse) Interface() protoreflect.ProtoMessage {
+	return (*MsgCreateContinuousFundResponse)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_MsgCreateContinuousFundResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_MsgCreateContinuousFundResponse) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.MsgCreateContinuousFundResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.protocolpool.v1.MsgCreateContinuousFundResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgCreateContinuousFundResponse) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.MsgCreateContinuousFundResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.protocolpool.v1.MsgCreateContinuousFundResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_MsgCreateContinuousFundResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.MsgCreateContinuousFundResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.protocolpool.v1.MsgCreateContinuousFundResponse does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgCreateContinuousFundResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.MsgCreateContinuousFundResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.protocolpool.v1.MsgCreateContinuousFundResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgCreateContinuousFundResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.MsgCreateContinuousFundResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.protocolpool.v1.MsgCreateContinuousFundResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_MsgCreateContinuousFundResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.MsgCreateContinuousFundResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.protocolpool.v1.MsgCreateContinuousFundResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_MsgCreateContinuousFundResponse) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.protocolpool.v1.MsgCreateContinuousFundResponse", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_MsgCreateContinuousFundResponse) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgCreateContinuousFundResponse) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_MsgCreateContinuousFundResponse) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_MsgCreateContinuousFundResponse) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*MsgCreateContinuousFundResponse)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*MsgCreateContinuousFundResponse)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*MsgCreateContinuousFundResponse)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgCreateContinuousFundResponse: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgCreateContinuousFundResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var (
+	md_MsgCancelContinuousFund                   protoreflect.MessageDescriptor
+	fd_MsgCancelContinuousFund_authority         protoreflect.FieldDescriptor
+	fd_MsgCancelContinuousFund_recipient_address protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_cosmos_protocolpool_v1_tx_proto_init()
+	md_MsgCancelContinuousFund = File_cosmos_protocolpool_v1_tx_proto.Messages().ByName("MsgCancelContinuousFund")
+	fd_MsgCancelContinuousFund_authority = md_MsgCancelContinuousFund.Fields().ByName("authority")
+	fd_MsgCancelContinuousFund_recipient_address = md_MsgCancelContinuousFund.Fields().ByName("recipient_address")
+}
+
+var _ protoreflect.Message = (*fastReflection_MsgCancelContinuousFund)(nil)
+
+type fastReflection_MsgCancelContinuousFund MsgCancelContinuousFund
+
+func (x *MsgCancelContinuousFund) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_MsgCancelContinuousFund)(x)
+}
+
+func (x *MsgCancelContinuousFund) slowProtoReflect() protoreflect.Message {
+	mi := &file_cosmos_protocolpool_v1_tx_proto_msgTypes[10]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_MsgCancelContinuousFund_messageType fastReflection_MsgCancelContinuousFund_messageType
+var _ protoreflect.MessageType = fastReflection_MsgCancelContinuousFund_messageType{}
+
+type fastReflection_MsgCancelContinuousFund_messageType struct{}
+
+func (x fastReflection_MsgCancelContinuousFund_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_MsgCancelContinuousFund)(nil)
+}
+func (x fastReflection_MsgCancelContinuousFund_messageType) New() protoreflect.Message {
+	return new(fastReflection_MsgCancelContinuousFund)
+}
+func (x fastReflection_MsgCancelContinuousFund_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgCancelContinuousFund
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_MsgCancelContinuousFund) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgCancelContinuousFund
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_MsgCancelContinuousFund) Type() protoreflect.MessageType {
+	return _fastReflection_MsgCancelContinuousFund_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_MsgCancelContinuousFund) New() protoreflect.Message {
+	return new(fastReflection_MsgCancelContinuousFund)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_MsgCancelContinuousFund) Interface() protoreflect.ProtoMessage {
+	return (*MsgCancelContinuousFund)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_MsgCancelContinuousFund) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.Authority != "" {
+		value := protoreflect.ValueOfString(x.Authority)
+		if !f(fd_MsgCancelContinuousFund_authority, value) {
+			return
+		}
+	}
+	if x.RecipientAddress != "" {
+		value := protoreflect.ValueOfString(x.RecipientAddress)
+		if !f(fd_MsgCancelContinuousFund_recipient_address, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_MsgCancelContinuousFund) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "cosmos.protocolpool.v1.MsgCancelContinuousFund.authority":
+		return x.Authority != ""
+	case "cosmos.protocolpool.v1.MsgCancelContinuousFund.recipient_address":
+		return x.RecipientAddress != ""
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.MsgCancelContinuousFund"))
+		}
+		panic(fmt.Errorf("message cosmos.protocolpool.v1.MsgCancelContinuousFund does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgCancelContinuousFund) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "cosmos.protocolpool.v1.MsgCancelContinuousFund.authority":
+		x.Authority = ""
+	case "cosmos.protocolpool.v1.MsgCancelContinuousFund.recipient_address":
+		x.RecipientAddress = ""
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.MsgCancelContinuousFund"))
+		}
+		panic(fmt.Errorf("message cosmos.protocolpool.v1.MsgCancelContinuousFund does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_MsgCancelContinuousFund) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "cosmos.protocolpool.v1.MsgCancelContinuousFund.authority":
+		value := x.Authority
+		return protoreflect.ValueOfString(value)
+	case "cosmos.protocolpool.v1.MsgCancelContinuousFund.recipient_address":
+		value := x.RecipientAddress
+		return protoreflect.ValueOfString(value)
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.MsgCancelContinuousFund"))
+		}
+		panic(fmt.Errorf("message cosmos.protocolpool.v1.MsgCancelContinuousFund does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgCancelContinuousFund) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "cosmos.protocolpool.v1.MsgCancelContinuousFund.authority":
+		x.Authority = value.Interface().(string)
+	case "cosmos.protocolpool.v1.MsgCancelContinuousFund.recipient_address":
+		x.RecipientAddress = value.Interface().(string)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.MsgCancelContinuousFund"))
+		}
+		panic(fmt.Errorf("message cosmos.protocolpool.v1.MsgCancelContinuousFund does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgCancelContinuousFund) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "cosmos.protocolpool.v1.MsgCancelContinuousFund.authority":
+		panic(fmt.Errorf("field authority of message cosmos.protocolpool.v1.MsgCancelContinuousFund is not mutable"))
+	case "cosmos.protocolpool.v1.MsgCancelContinuousFund.recipient_address":
+		panic(fmt.Errorf("field recipient_address of message cosmos.protocolpool.v1.MsgCancelContinuousFund is not mutable"))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.MsgCancelContinuousFund"))
+		}
+		panic(fmt.Errorf("message cosmos.protocolpool.v1.MsgCancelContinuousFund does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_MsgCancelContinuousFund) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "cosmos.protocolpool.v1.MsgCancelContinuousFund.authority":
+		return protoreflect.ValueOfString("")
+	case "cosmos.protocolpool.v1.MsgCancelContinuousFund.recipient_address":
+		return protoreflect.ValueOfString("")
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.MsgCancelContinuousFund"))
+		}
+		panic(fmt.Errorf("message cosmos.protocolpool.v1.MsgCancelContinuousFund does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_MsgCancelContinuousFund) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.protocolpool.v1.MsgCancelContinuousFund", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_MsgCancelContinuousFund) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgCancelContinuousFund) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_MsgCancelContinuousFund) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_MsgCancelContinuousFund) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*MsgCancelContinuousFund)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		l = len(x.Authority)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.RecipientAddress)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*MsgCancelContinuousFund)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if len(x.RecipientAddress) > 0 {
+			i -= len(x.RecipientAddress)
+			copy(dAtA[i:], x.RecipientAddress)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.RecipientAddress)))
+			i--
+			dAtA[i] = 0x12
+		}
+		if len(x.Authority) > 0 {
+			i -= len(x.Authority)
+			copy(dAtA[i:], x.Authority)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Authority)))
+			i--
+			dAtA[i] = 0xa
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*MsgCancelContinuousFund)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgCancelContinuousFund: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgCancelContinuousFund: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Authority", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Authority = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 2:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field RecipientAddress", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.RecipientAddress = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var (
+	md_MsgCancelContinuousFundResponse                   protoreflect.MessageDescriptor
+	fd_MsgCancelContinuousFundResponse_canceled_time     protoreflect.FieldDescriptor
+	fd_MsgCancelContinuousFundResponse_canceled_height   protoreflect.FieldDescriptor
+	fd_MsgCancelContinuousFundResponse_recipient_address protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_cosmos_protocolpool_v1_tx_proto_init()
+	md_MsgCancelContinuousFundResponse = File_cosmos_protocolpool_v1_tx_proto.Messages().ByName("MsgCancelContinuousFundResponse")
+	fd_MsgCancelContinuousFundResponse_canceled_time = md_MsgCancelContinuousFundResponse.Fields().ByName("canceled_time")
+	fd_MsgCancelContinuousFundResponse_canceled_height = md_MsgCancelContinuousFundResponse.Fields().ByName("canceled_height")
+	fd_MsgCancelContinuousFundResponse_recipient_address = md_MsgCancelContinuousFundResponse.Fields().ByName("recipient_address")
+}
+
+var _ protoreflect.Message = (*fastReflection_MsgCancelContinuousFundResponse)(nil)
+
+type fastReflection_MsgCancelContinuousFundResponse MsgCancelContinuousFundResponse
+
+func (x *MsgCancelContinuousFundResponse) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_MsgCancelContinuousFundResponse)(x)
+}
+
+func (x *MsgCancelContinuousFundResponse) slowProtoReflect() protoreflect.Message {
+	mi := &file_cosmos_protocolpool_v1_tx_proto_msgTypes[11]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_MsgCancelContinuousFundResponse_messageType fastReflection_MsgCancelContinuousFundResponse_messageType
+var _ protoreflect.MessageType = fastReflection_MsgCancelContinuousFundResponse_messageType{}
+
+type fastReflection_MsgCancelContinuousFundResponse_messageType struct{}
+
+func (x fastReflection_MsgCancelContinuousFundResponse_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_MsgCancelContinuousFundResponse)(nil)
+}
+func (x fastReflection_MsgCancelContinuousFundResponse_messageType) New() protoreflect.Message {
+	return new(fastReflection_MsgCancelContinuousFundResponse)
+}
+func (x fastReflection_MsgCancelContinuousFundResponse_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgCancelContinuousFundResponse
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_MsgCancelContinuousFundResponse) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgCancelContinuousFundResponse
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_MsgCancelContinuousFundResponse) Type() protoreflect.MessageType {
+	return _fastReflection_MsgCancelContinuousFundResponse_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_MsgCancelContinuousFundResponse) New() protoreflect.Message {
+	return new(fastReflection_MsgCancelContinuousFundResponse)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_MsgCancelContinuousFundResponse) Interface() protoreflect.ProtoMessage {
+	return (*MsgCancelContinuousFundResponse)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_MsgCancelContinuousFundResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.CanceledTime != nil {
+		value := protoreflect.ValueOfMessage(x.CanceledTime.ProtoReflect())
+		if !f(fd_MsgCancelContinuousFundResponse_canceled_time, value) {
+			return
+		}
+	}
+	if x.CanceledHeight != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.CanceledHeight)
+		if !f(fd_MsgCancelContinuousFundResponse_canceled_height, value) {
+			return
+		}
+	}
+	if x.RecipientAddress != "" {
+		value := protoreflect.ValueOfString(x.RecipientAddress)
+		if !f(fd_MsgCancelContinuousFundResponse_recipient_address, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_MsgCancelContinuousFundResponse) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "cosmos.protocolpool.v1.MsgCancelContinuousFundResponse.canceled_time":
+		return x.CanceledTime != nil
+	case "cosmos.protocolpool.v1.MsgCancelContinuousFundResponse.canceled_height":
+		return x.CanceledHeight != uint64(0)
+	case "cosmos.protocolpool.v1.MsgCancelContinuousFundResponse.recipient_address":
+		return x.RecipientAddress != ""
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.MsgCancelContinuousFundResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.protocolpool.v1.MsgCancelContinuousFundResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgCancelContinuousFundResponse) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "cosmos.protocolpool.v1.MsgCancelContinuousFundResponse.canceled_time":
+		x.CanceledTime = nil
+	case "cosmos.protocolpool.v1.MsgCancelContinuousFundResponse.canceled_height":
+		x.CanceledHeight = uint64(0)
+	case "cosmos.protocolpool.v1.MsgCancelContinuousFundResponse.recipient_address":
+		x.RecipientAddress = ""
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.MsgCancelContinuousFundResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.protocolpool.v1.MsgCancelContinuousFundResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_MsgCancelContinuousFundResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "cosmos.protocolpool.v1.MsgCancelContinuousFundResponse.canceled_time":
+		value := x.CanceledTime
+		return protoreflect.ValueOfMessage(value.ProtoReflect())
+	case "cosmos.protocolpool.v1.MsgCancelContinuousFundResponse.canceled_height":
+		value := x.CanceledHeight
+		return protoreflect.ValueOfUint64(value)
+	case "cosmos.protocolpool.v1.MsgCancelContinuousFundResponse.recipient_address":
+		value := x.RecipientAddress
+		return protoreflect.ValueOfString(value)
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.MsgCancelContinuousFundResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.protocolpool.v1.MsgCancelContinuousFundResponse does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgCancelContinuousFundResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "cosmos.protocolpool.v1.MsgCancelContinuousFundResponse.canceled_time":
+		x.CanceledTime = value.Message().Interface().(*timestamppb.Timestamp)
+	case "cosmos.protocolpool.v1.MsgCancelContinuousFundResponse.canceled_height":
+		x.CanceledHeight = value.Uint()
+	case "cosmos.protocolpool.v1.MsgCancelContinuousFundResponse.recipient_address":
+		x.RecipientAddress = value.Interface().(string)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.MsgCancelContinuousFundResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.protocolpool.v1.MsgCancelContinuousFundResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgCancelContinuousFundResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "cosmos.protocolpool.v1.MsgCancelContinuousFundResponse.canceled_time":
+		if x.CanceledTime == nil {
+			x.CanceledTime = new(timestamppb.Timestamp)
+		}
+		return protoreflect.ValueOfMessage(x.CanceledTime.ProtoReflect())
+	case "cosmos.protocolpool.v1.MsgCancelContinuousFundResponse.canceled_height":
+		panic(fmt.Errorf("field canceled_height of message cosmos.protocolpool.v1.MsgCancelContinuousFundResponse is not mutable"))
+	case "cosmos.protocolpool.v1.MsgCancelContinuousFundResponse.recipient_address":
+		panic(fmt.Errorf("field recipient_address of message cosmos.protocolpool.v1.MsgCancelContinuousFundResponse is not mutable"))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.MsgCancelContinuousFundResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.protocolpool.v1.MsgCancelContinuousFundResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_MsgCancelContinuousFundResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "cosmos.protocolpool.v1.MsgCancelContinuousFundResponse.canceled_time":
+		m := new(timestamppb.Timestamp)
+		return protoreflect.ValueOfMessage(m.ProtoReflect())
+	case "cosmos.protocolpool.v1.MsgCancelContinuousFundResponse.canceled_height":
+		return protoreflect.ValueOfUint64(uint64(0))
+	case "cosmos.protocolpool.v1.MsgCancelContinuousFundResponse.recipient_address":
+		return protoreflect.ValueOfString("")
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.MsgCancelContinuousFundResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.protocolpool.v1.MsgCancelContinuousFundResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_MsgCancelContinuousFundResponse) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.protocolpool.v1.MsgCancelContinuousFundResponse", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_MsgCancelContinuousFundResponse) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgCancelContinuousFundResponse) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_MsgCancelContinuousFundResponse) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_MsgCancelContinuousFundResponse) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*MsgCancelContinuousFundResponse)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		if x.CanceledTime != nil {
+			l = options.Size(x.CanceledTime)
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.CanceledHeight != 0 {
+			n += 1 + runtime.Sov(uint64(x.CanceledHeight))
+		}
+		l = len(x.RecipientAddress)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*MsgCancelContinuousFundResponse)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if len(x.RecipientAddress) > 0 {
+			i -= len(x.RecipientAddress)
+			copy(dAtA[i:], x.RecipientAddress)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.RecipientAddress)))
+			i--
+			dAtA[i] = 0x1a
+		}
+		if x.CanceledHeight != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.CanceledHeight))
+			i--
+			dAtA[i] = 0x10
+		}
+		if x.CanceledTime != nil {
+			encoded, err := options.Marshal(x.CanceledTime)
+			if err != nil {
+				return protoiface.MarshalOutput{
+					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+					Buf:               input.Buf,
+				}, err
+			}
+			i -= len(encoded)
+			copy(dAtA[i:], encoded)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+			i--
+			dAtA[i] = 0xa
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*MsgCancelContinuousFundResponse)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgCancelContinuousFundResponse: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgCancelContinuousFundResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field CanceledTime", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if x.CanceledTime == nil {
+					x.CanceledTime = &timestamppb.Timestamp{}
+				}
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.CanceledTime); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			case 2:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field CanceledHeight", wireType)
+				}
+				x.CanceledHeight = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.CanceledHeight |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+			case 3:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field RecipientAddress", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.RecipientAddress = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
 // Code generated by protoc-gen-go. DO NOT EDIT.
 // versions:
 // 	protoc-gen-go v1.27.0
@@ -3983,7 +6327,7 @@ type MsgCommunityPoolSpend struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// authority is the address that controls the module (defaults to x/gov unless overwritten).
+	// Authority is the address that controls the module (defaults to x/gov unless overwritten).
 	Authority string          `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
 	Recipient string          `protobuf:"bytes,2,opt,name=recipient,proto3" json:"recipient,omitempty"`
 	Amount    []*v1beta1.Coin `protobuf:"bytes,3,rep,name=amount,proto3" json:"amount,omitempty"`
@@ -4064,16 +6408,16 @@ type MsgSubmitBudgetProposal struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// authority is the address that controls the module (defaults to x/gov unless overwritten).
+	// Authority is the address that controls the module (defaults to x/gov unless overwritten).
 	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
-	// recipient_address is the address of the recipient who can claim the budget.
+	// RecipientAddress is the address of the recipient who can claim the budget.
 	RecipientAddress string `protobuf:"bytes,2,opt,name=recipient_address,json=recipientAddress,proto3" json:"recipient_address,omitempty"`
-	// total_budget is the total amount allocated for the budget.
+	// TotalBudget is the total amount allocated for the budget.
 	TotalBudget *v1beta1.Coin `protobuf:"bytes,3,opt,name=total_budget,json=totalBudget,proto3" json:"total_budget,omitempty"`
-	// start_time is the time when the budget becomes claimable.
-	// If start_time is less than the current block time, proposal will not be accepted.
+	// StartTime is the time when the budget becomes claimable.
+	// If StartTime is less than the current block time, proposal will not be accepted.
 	StartTime *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=start_time,json=startTime,proto3" json:"start_time,omitempty"`
-	// tranches is the number of times the total budget amount is to be distributed.
+	// Tranches is the number of times the total budget amount is to be distributed.
 	Tranches uint64 `protobuf:"varint,5,opt,name=tranches,proto3" json:"tranches,omitempty"`
 	// Period is the time interval(number of seconds) at which funds distribution should be performed.
 	// For example, if a period is set to 3600, it represents an action that
@@ -4244,6 +6588,237 @@ func (x *MsgClaimBudgetResponse) GetAmount() *v1beta1.Coin {
 	return nil
 }
 
+// MsgCreateContinuousFund defines a message for adding continuous funds.
+type MsgCreateContinuousFund struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// Title is the title of the funds.
+	Title string `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
+	// Description of the funds.
+	Description string `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
+	// Authority is the address that controls the module (defaults to x/gov unless overwritten).
+	Authority string `protobuf:"bytes,3,opt,name=authority,proto3" json:"authority,omitempty"`
+	// Recipient address of the account receiving funds.
+	Recipient string `protobuf:"bytes,4,opt,name=recipient,proto3" json:"recipient,omitempty"`
+	// Metadata is any arbitrary metadata attached.
+	Metadata string `protobuf:"bytes,5,opt,name=metadata,proto3" json:"metadata,omitempty"`
+	// Percentage is the percentage of funds to be allocated from Community pool share on block by block,
+	// till the `cap` is reached or expired.
+	Percentage string `protobuf:"bytes,6,opt,name=percentage,proto3" json:"percentage,omitempty"`
+	// Cap is the capital amount, which when its met funds are no longer distributed.
+	Cap []*v1beta1.Coin `protobuf:"bytes,7,rep,name=cap,proto3" json:"cap,omitempty"`
+	// Optional, if expiry is set, removes the state object when expired.
+	Expiry *timestamppb.Timestamp `protobuf:"bytes,8,opt,name=expiry,proto3" json:"expiry,omitempty"`
+}
+
+func (x *MsgCreateContinuousFund) Reset() {
+	*x = MsgCreateContinuousFund{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_cosmos_protocolpool_v1_tx_proto_msgTypes[8]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *MsgCreateContinuousFund) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MsgCreateContinuousFund) ProtoMessage() {}
+
+// Deprecated: Use MsgCreateContinuousFund.ProtoReflect.Descriptor instead.
+func (*MsgCreateContinuousFund) Descriptor() ([]byte, []int) {
+	return file_cosmos_protocolpool_v1_tx_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *MsgCreateContinuousFund) GetTitle() string {
+	if x != nil {
+		return x.Title
+	}
+	return ""
+}
+
+func (x *MsgCreateContinuousFund) GetDescription() string {
+	if x != nil {
+		return x.Description
+	}
+	return ""
+}
+
+func (x *MsgCreateContinuousFund) GetAuthority() string {
+	if x != nil {
+		return x.Authority
+	}
+	return ""
+}
+
+func (x *MsgCreateContinuousFund) GetRecipient() string {
+	if x != nil {
+		return x.Recipient
+	}
+	return ""
+}
+
+func (x *MsgCreateContinuousFund) GetMetadata() string {
+	if x != nil {
+		return x.Metadata
+	}
+	return ""
+}
+
+func (x *MsgCreateContinuousFund) GetPercentage() string {
+	if x != nil {
+		return x.Percentage
+	}
+	return ""
+}
+
+func (x *MsgCreateContinuousFund) GetCap() []*v1beta1.Coin {
+	if x != nil {
+		return x.Cap
+	}
+	return nil
+}
+
+func (x *MsgCreateContinuousFund) GetExpiry() *timestamppb.Timestamp {
+	if x != nil {
+		return x.Expiry
+	}
+	return nil
+}
+
+// MsgCreateContinuousFundResponse defines the response to executing a
+// MsgCreateContinuousFund message.
+type MsgCreateContinuousFundResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+}
+
+func (x *MsgCreateContinuousFundResponse) Reset() {
+	*x = MsgCreateContinuousFundResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_cosmos_protocolpool_v1_tx_proto_msgTypes[9]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *MsgCreateContinuousFundResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MsgCreateContinuousFundResponse) ProtoMessage() {}
+
+// Deprecated: Use MsgCreateContinuousFundResponse.ProtoReflect.Descriptor instead.
+func (*MsgCreateContinuousFundResponse) Descriptor() ([]byte, []int) {
+	return file_cosmos_protocolpool_v1_tx_proto_rawDescGZIP(), []int{9}
+}
+
+// MsgCancelContinuousFund defines a message to cancel continuous funds for a specific recipient.
+type MsgCancelContinuousFund struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// Authority is the account address of authority.
+	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
+	// RecipientAddress is the account address of recipient whose funds are to be cancelled.
+	RecipientAddress string `protobuf:"bytes,2,opt,name=recipient_address,json=recipientAddress,proto3" json:"recipient_address,omitempty"`
+}
+
+func (x *MsgCancelContinuousFund) Reset() {
+	*x = MsgCancelContinuousFund{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_cosmos_protocolpool_v1_tx_proto_msgTypes[10]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *MsgCancelContinuousFund) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MsgCancelContinuousFund) ProtoMessage() {}
+
+// Deprecated: Use MsgCancelContinuousFund.ProtoReflect.Descriptor instead.
+func (*MsgCancelContinuousFund) Descriptor() ([]byte, []int) {
+	return file_cosmos_protocolpool_v1_tx_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *MsgCancelContinuousFund) GetAuthority() string {
+	if x != nil {
+		return x.Authority
+	}
+	return ""
+}
+
+func (x *MsgCancelContinuousFund) GetRecipientAddress() string {
+	if x != nil {
+		return x.RecipientAddress
+	}
+	return ""
+}
+
+// MsgCancelContinuousFundResponse defines the response to executing a
+// MsgCancelContinuousFund message.
+type MsgCancelContinuousFundResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// CanceledTime is the canceled time.
+	CanceledTime *timestamppb.Timestamp `protobuf:"bytes,1,opt,name=canceled_time,json=canceledTime,proto3" json:"canceled_time,omitempty"`
+	// CanceledHeight defines the canceled block height.
+	CanceledHeight uint64 `protobuf:"varint,2,opt,name=canceled_height,json=canceledHeight,proto3" json:"canceled_height,omitempty"`
+	// RecipientAddress is the account address of recipient whose funds are cancelled.
+	RecipientAddress string `protobuf:"bytes,3,opt,name=recipient_address,json=recipientAddress,proto3" json:"recipient_address,omitempty"`
+}
+
+func (x *MsgCancelContinuousFundResponse) Reset() {
+	*x = MsgCancelContinuousFundResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_cosmos_protocolpool_v1_tx_proto_msgTypes[11]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *MsgCancelContinuousFundResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MsgCancelContinuousFundResponse) ProtoMessage() {}
+
+// Deprecated: Use MsgCancelContinuousFundResponse.ProtoReflect.Descriptor instead.
+func (*MsgCancelContinuousFundResponse) Descriptor() ([]byte, []int) {
+	return file_cosmos_protocolpool_v1_tx_proto_rawDescGZIP(), []int{11}
+}
+
+func (x *MsgCancelContinuousFundResponse) GetCanceledTime() *timestamppb.Timestamp {
+	if x != nil {
+		return x.CanceledTime
+	}
+	return nil
+}
+
+func (x *MsgCancelContinuousFundResponse) GetCanceledHeight() uint64 {
+	if x != nil {
+		return x.CanceledHeight
+	}
+	return 0
+}
+
+func (x *MsgCancelContinuousFundResponse) GetRecipientAddress() string {
+	if x != nil {
+		return x.RecipientAddress
+	}
+	return ""
+}
+
 var File_cosmos_protocolpool_v1_tx_proto protoreflect.FileDescriptor
 
 var file_cosmos_protocolpool_v1_tx_proto_rawDesc = []byte{
@@ -4333,52 +6908,125 @@ var file_cosmos_protocolpool_v1_tx_proto_rawDesc = []byte{
 	0x42, 0x30, 0xc8, 0xde, 0x1f, 0x00, 0xaa, 0xdf, 0x1f, 0x28, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62,
 	0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x63, 0x6f, 0x73, 0x6d,
 	0x6f, 0x73, 0x2d, 0x73, 0x64, 0x6b, 0x2f, 0x74, 0x79, 0x70, 0x65, 0x73, 0x2e, 0x43, 0x6f, 0x69,
-	0x6e, 0x73, 0x52, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x32, 0xeb, 0x03, 0x0a, 0x03, 0x4d,
-	0x73, 0x67, 0x12, 0x77, 0x0a, 0x11, 0x46, 0x75, 0x6e, 0x64, 0x43, 0x6f, 0x6d, 0x6d, 0x75, 0x6e,
-	0x69, 0x74, 0x79, 0x50, 0x6f, 0x6f, 0x6c, 0x12, 0x2c, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
-	0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x2e, 0x76, 0x31,
-	0x2e, 0x4d, 0x73, 0x67, 0x46, 0x75, 0x6e, 0x64, 0x43, 0x6f, 0x6d, 0x6d, 0x75, 0x6e, 0x69, 0x74,
-	0x79, 0x50, 0x6f, 0x6f, 0x6c, 0x1a, 0x34, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x70,
-	0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x2e, 0x76, 0x31, 0x2e, 0x4d,
-	0x73, 0x67, 0x46, 0x75, 0x6e, 0x64, 0x43, 0x6f, 0x6d, 0x6d, 0x75, 0x6e, 0x69, 0x74, 0x79, 0x50,
-	0x6f, 0x6f, 0x6c, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x7a, 0x0a, 0x12, 0x43,
-	0x6f, 0x6d, 0x6d, 0x75, 0x6e, 0x69, 0x74, 0x79, 0x50, 0x6f, 0x6f, 0x6c, 0x53, 0x70, 0x65, 0x6e,
-	0x64, 0x12, 0x2d, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f,
-	0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x43, 0x6f,
-	0x6d, 0x6d, 0x75, 0x6e, 0x69, 0x74, 0x79, 0x50, 0x6f, 0x6f, 0x6c, 0x53, 0x70, 0x65, 0x6e, 0x64,
-	0x1a, 0x35, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63,
-	0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x43, 0x6f, 0x6d,
-	0x6d, 0x75, 0x6e, 0x69, 0x74, 0x79, 0x50, 0x6f, 0x6f, 0x6c, 0x53, 0x70, 0x65, 0x6e, 0x64, 0x52,
-	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x80, 0x01, 0x0a, 0x14, 0x53, 0x75, 0x62, 0x6d,
-	0x69, 0x74, 0x42, 0x75, 0x64, 0x67, 0x65, 0x74, 0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c,
-	0x12, 0x2f, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63,
-	0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x53, 0x75, 0x62,
-	0x6d, 0x69, 0x74, 0x42, 0x75, 0x64, 0x67, 0x65, 0x74, 0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61,
-	0x6c, 0x1a, 0x37, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f,
-	0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x53, 0x75,
-	0x62, 0x6d, 0x69, 0x74, 0x42, 0x75, 0x64, 0x67, 0x65, 0x74, 0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73,
-	0x61, 0x6c, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x65, 0x0a, 0x0b, 0x43, 0x6c,
-	0x61, 0x69, 0x6d, 0x42, 0x75, 0x64, 0x67, 0x65, 0x74, 0x12, 0x26, 0x2e, 0x63, 0x6f, 0x73, 0x6d,
-	0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x2e,
-	0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x43, 0x6c, 0x61, 0x69, 0x6d, 0x42, 0x75, 0x64, 0x67, 0x65,
-	0x74, 0x1a, 0x2e, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f,
-	0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x43, 0x6c,
-	0x61, 0x69, 0x6d, 0x42, 0x75, 0x64, 0x67, 0x65, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
-	0x65, 0x1a, 0x05, 0x80, 0xe7, 0xb0, 0x2a, 0x01, 0x42, 0xd7, 0x01, 0x0a, 0x1a, 0x63, 0x6f, 0x6d,
+	0x6e, 0x73, 0x52, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x22, 0xd9, 0x03, 0x0a, 0x17, 0x4d,
+	0x73, 0x67, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x43, 0x6f, 0x6e, 0x74, 0x69, 0x6e, 0x75, 0x6f,
+	0x75, 0x73, 0x46, 0x75, 0x6e, 0x64, 0x12, 0x14, 0x0a, 0x05, 0x74, 0x69, 0x74, 0x6c, 0x65, 0x18,
+	0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x74, 0x69, 0x74, 0x6c, 0x65, 0x12, 0x20, 0x0a, 0x0b,
+	0x64, 0x65, 0x73, 0x63, 0x72, 0x69, 0x70, 0x74, 0x69, 0x6f, 0x6e, 0x18, 0x02, 0x20, 0x01, 0x28,
+	0x09, 0x52, 0x0b, 0x64, 0x65, 0x73, 0x63, 0x72, 0x69, 0x70, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0x36,
+	0x0a, 0x09, 0x61, 0x75, 0x74, 0x68, 0x6f, 0x72, 0x69, 0x74, 0x79, 0x18, 0x03, 0x20, 0x01, 0x28,
+	0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64,
+	0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x09, 0x61, 0x75, 0x74,
+	0x68, 0x6f, 0x72, 0x69, 0x74, 0x79, 0x12, 0x36, 0x0a, 0x09, 0x72, 0x65, 0x63, 0x69, 0x70, 0x69,
+	0x65, 0x6e, 0x74, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63,
+	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72,
+	0x69, 0x6e, 0x67, 0x52, 0x09, 0x72, 0x65, 0x63, 0x69, 0x70, 0x69, 0x65, 0x6e, 0x74, 0x12, 0x1a,
+	0x0a, 0x08, 0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x18, 0x05, 0x20, 0x01, 0x28, 0x09,
+	0x52, 0x08, 0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x12, 0x51, 0x0a, 0x0a, 0x70, 0x65,
+	0x72, 0x63, 0x65, 0x6e, 0x74, 0x61, 0x67, 0x65, 0x18, 0x06, 0x20, 0x01, 0x28, 0x09, 0x42, 0x31,
+	0xc8, 0xde, 0x1f, 0x00, 0xda, 0xde, 0x1f, 0x1b, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64,
+	0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x6d, 0x61, 0x74, 0x68, 0x2e, 0x4c, 0x65, 0x67, 0x61, 0x63, 0x79,
+	0x44, 0x65, 0x63, 0xd2, 0xb4, 0x2d, 0x0a, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x44, 0x65,
+	0x63, 0x52, 0x0a, 0x70, 0x65, 0x72, 0x63, 0x65, 0x6e, 0x74, 0x61, 0x67, 0x65, 0x12, 0x5d, 0x0a,
+	0x03, 0x63, 0x61, 0x70, 0x18, 0x07, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x63, 0x6f, 0x73,
+	0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31,
+	0x2e, 0x43, 0x6f, 0x69, 0x6e, 0x42, 0x30, 0xc8, 0xde, 0x1f, 0x00, 0xaa, 0xdf, 0x1f, 0x28, 0x67,
+	0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
+	0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2d, 0x73, 0x64, 0x6b, 0x2f, 0x74, 0x79, 0x70, 0x65,
+	0x73, 0x2e, 0x43, 0x6f, 0x69, 0x6e, 0x73, 0x52, 0x03, 0x63, 0x61, 0x70, 0x12, 0x38, 0x0a, 0x06,
+	0x65, 0x78, 0x70, 0x69, 0x72, 0x79, 0x18, 0x08, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1a, 0x2e, 0x67,
+	0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x54,
+	0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x42, 0x04, 0x90, 0xdf, 0x1f, 0x01, 0x52, 0x06,
+	0x65, 0x78, 0x70, 0x69, 0x72, 0x79, 0x3a, 0x0e, 0x82, 0xe7, 0xb0, 0x2a, 0x09, 0x61, 0x75, 0x74,
+	0x68, 0x6f, 0x72, 0x69, 0x74, 0x79, 0x22, 0x21, 0x0a, 0x1f, 0x4d, 0x73, 0x67, 0x43, 0x72, 0x65,
+	0x61, 0x74, 0x65, 0x43, 0x6f, 0x6e, 0x74, 0x69, 0x6e, 0x75, 0x6f, 0x75, 0x73, 0x46, 0x75, 0x6e,
+	0x64, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0xa8, 0x01, 0x0a, 0x17, 0x4d, 0x73,
+	0x67, 0x43, 0x61, 0x6e, 0x63, 0x65, 0x6c, 0x43, 0x6f, 0x6e, 0x74, 0x69, 0x6e, 0x75, 0x6f, 0x75,
+	0x73, 0x46, 0x75, 0x6e, 0x64, 0x12, 0x36, 0x0a, 0x09, 0x61, 0x75, 0x74, 0x68, 0x6f, 0x72, 0x69,
+	0x74, 0x79, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f,
+	0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69,
+	0x6e, 0x67, 0x52, 0x09, 0x61, 0x75, 0x74, 0x68, 0x6f, 0x72, 0x69, 0x74, 0x79, 0x12, 0x45, 0x0a,
+	0x11, 0x72, 0x65, 0x63, 0x69, 0x70, 0x69, 0x65, 0x6e, 0x74, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65,
+	0x73, 0x73, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f,
+	0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69,
+	0x6e, 0x67, 0x52, 0x10, 0x72, 0x65, 0x63, 0x69, 0x70, 0x69, 0x65, 0x6e, 0x74, 0x41, 0x64, 0x64,
+	0x72, 0x65, 0x73, 0x73, 0x3a, 0x0e, 0x82, 0xe7, 0xb0, 0x2a, 0x09, 0x61, 0x75, 0x74, 0x68, 0x6f,
+	0x72, 0x69, 0x74, 0x79, 0x22, 0xdc, 0x01, 0x0a, 0x1f, 0x4d, 0x73, 0x67, 0x43, 0x61, 0x6e, 0x63,
+	0x65, 0x6c, 0x43, 0x6f, 0x6e, 0x74, 0x69, 0x6e, 0x75, 0x6f, 0x75, 0x73, 0x46, 0x75, 0x6e, 0x64,
+	0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x49, 0x0a, 0x0d, 0x63, 0x61, 0x6e, 0x63,
+	0x65, 0x6c, 0x65, 0x64, 0x5f, 0x74, 0x69, 0x6d, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32,
+	0x1a, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75,
+	0x66, 0x2e, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x42, 0x08, 0xc8, 0xde, 0x1f,
+	0x00, 0x90, 0xdf, 0x1f, 0x01, 0x52, 0x0c, 0x63, 0x61, 0x6e, 0x63, 0x65, 0x6c, 0x65, 0x64, 0x54,
+	0x69, 0x6d, 0x65, 0x12, 0x27, 0x0a, 0x0f, 0x63, 0x61, 0x6e, 0x63, 0x65, 0x6c, 0x65, 0x64, 0x5f,
+	0x68, 0x65, 0x69, 0x67, 0x68, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x04, 0x52, 0x0e, 0x63, 0x61,
+	0x6e, 0x63, 0x65, 0x6c, 0x65, 0x64, 0x48, 0x65, 0x69, 0x67, 0x68, 0x74, 0x12, 0x45, 0x0a, 0x11,
+	0x72, 0x65, 0x63, 0x69, 0x70, 0x69, 0x65, 0x6e, 0x74, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73,
+	0x73, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73,
+	0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e,
+	0x67, 0x52, 0x10, 0x72, 0x65, 0x63, 0x69, 0x70, 0x69, 0x65, 0x6e, 0x74, 0x41, 0x64, 0x64, 0x72,
+	0x65, 0x73, 0x73, 0x32, 0xf1, 0x05, 0x0a, 0x03, 0x4d, 0x73, 0x67, 0x12, 0x77, 0x0a, 0x11, 0x46,
+	0x75, 0x6e, 0x64, 0x43, 0x6f, 0x6d, 0x6d, 0x75, 0x6e, 0x69, 0x74, 0x79, 0x50, 0x6f, 0x6f, 0x6c,
+	0x12, 0x2c, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63,
+	0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x46, 0x75, 0x6e,
+	0x64, 0x43, 0x6f, 0x6d, 0x6d, 0x75, 0x6e, 0x69, 0x74, 0x79, 0x50, 0x6f, 0x6f, 0x6c, 0x1a, 0x34,
 	0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c,
-	0x70, 0x6f, 0x6f, 0x6c, 0x2e, 0x76, 0x31, 0x42, 0x07, 0x54, 0x78, 0x50, 0x72, 0x6f, 0x74, 0x6f,
-	0x50, 0x01, 0x5a, 0x36, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f,
-	0x2f, 0x61, 0x70, 0x69, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x70, 0x72, 0x6f, 0x74,
-	0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x2f, 0x76, 0x31, 0x3b, 0x70, 0x72, 0x6f, 0x74,
-	0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x76, 0x31, 0xa2, 0x02, 0x03, 0x43, 0x50, 0x58,
-	0xaa, 0x02, 0x16, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x63,
-	0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x2e, 0x56, 0x31, 0xca, 0x02, 0x16, 0x43, 0x6f, 0x73, 0x6d,
-	0x6f, 0x73, 0x5c, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x5c,
-	0x56, 0x31, 0xe2, 0x02, 0x22, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x50, 0x72, 0x6f, 0x74,
-	0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x5c, 0x56, 0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d,
-	0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x18, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
-	0x3a, 0x3a, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x3a, 0x3a,
-	0x56, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x70, 0x6f, 0x6f, 0x6c, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x46, 0x75, 0x6e, 0x64, 0x43,
+	0x6f, 0x6d, 0x6d, 0x75, 0x6e, 0x69, 0x74, 0x79, 0x50, 0x6f, 0x6f, 0x6c, 0x52, 0x65, 0x73, 0x70,
+	0x6f, 0x6e, 0x73, 0x65, 0x12, 0x7a, 0x0a, 0x12, 0x43, 0x6f, 0x6d, 0x6d, 0x75, 0x6e, 0x69, 0x74,
+	0x79, 0x50, 0x6f, 0x6f, 0x6c, 0x53, 0x70, 0x65, 0x6e, 0x64, 0x12, 0x2d, 0x2e, 0x63, 0x6f, 0x73,
+	0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c,
+	0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x43, 0x6f, 0x6d, 0x6d, 0x75, 0x6e, 0x69, 0x74, 0x79,
+	0x50, 0x6f, 0x6f, 0x6c, 0x53, 0x70, 0x65, 0x6e, 0x64, 0x1a, 0x35, 0x2e, 0x63, 0x6f, 0x73, 0x6d,
+	0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x2e,
+	0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x43, 0x6f, 0x6d, 0x6d, 0x75, 0x6e, 0x69, 0x74, 0x79, 0x50,
+	0x6f, 0x6f, 0x6c, 0x53, 0x70, 0x65, 0x6e, 0x64, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
+	0x12, 0x80, 0x01, 0x0a, 0x14, 0x53, 0x75, 0x62, 0x6d, 0x69, 0x74, 0x42, 0x75, 0x64, 0x67, 0x65,
+	0x74, 0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x12, 0x2f, 0x2e, 0x63, 0x6f, 0x73, 0x6d,
+	0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x2e,
+	0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x53, 0x75, 0x62, 0x6d, 0x69, 0x74, 0x42, 0x75, 0x64, 0x67,
+	0x65, 0x74, 0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x1a, 0x37, 0x2e, 0x63, 0x6f, 0x73,
+	0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c,
+	0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x53, 0x75, 0x62, 0x6d, 0x69, 0x74, 0x42, 0x75, 0x64,
+	0x67, 0x65, 0x74, 0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x52, 0x65, 0x73, 0x70, 0x6f,
+	0x6e, 0x73, 0x65, 0x12, 0x65, 0x0a, 0x0b, 0x43, 0x6c, 0x61, 0x69, 0x6d, 0x42, 0x75, 0x64, 0x67,
+	0x65, 0x74, 0x12, 0x26, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74,
+	0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x43,
+	0x6c, 0x61, 0x69, 0x6d, 0x42, 0x75, 0x64, 0x67, 0x65, 0x74, 0x1a, 0x2e, 0x2e, 0x63, 0x6f, 0x73,
+	0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c,
+	0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x43, 0x6c, 0x61, 0x69, 0x6d, 0x42, 0x75, 0x64, 0x67,
+	0x65, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x80, 0x01, 0x0a, 0x14, 0x43,
+	0x72, 0x65, 0x61, 0x74, 0x65, 0x43, 0x6f, 0x6e, 0x74, 0x69, 0x6e, 0x75, 0x6f, 0x75, 0x73, 0x46,
+	0x75, 0x6e, 0x64, 0x12, 0x2f, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f,
+	0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67,
+	0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x43, 0x6f, 0x6e, 0x74, 0x69, 0x6e, 0x75, 0x6f, 0x75, 0x73,
+	0x46, 0x75, 0x6e, 0x64, 0x1a, 0x37, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x72,
+	0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73,
+	0x67, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x43, 0x6f, 0x6e, 0x74, 0x69, 0x6e, 0x75, 0x6f, 0x75,
+	0x73, 0x46, 0x75, 0x6e, 0x64, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x80, 0x01,
+	0x0a, 0x14, 0x43, 0x61, 0x6e, 0x63, 0x65, 0x6c, 0x43, 0x6f, 0x6e, 0x74, 0x69, 0x6e, 0x75, 0x6f,
+	0x75, 0x73, 0x46, 0x75, 0x6e, 0x64, 0x12, 0x2f, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e,
+	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x2e, 0x76, 0x31, 0x2e,
+	0x4d, 0x73, 0x67, 0x43, 0x61, 0x6e, 0x63, 0x65, 0x6c, 0x43, 0x6f, 0x6e, 0x74, 0x69, 0x6e, 0x75,
+	0x6f, 0x75, 0x73, 0x46, 0x75, 0x6e, 0x64, 0x1a, 0x37, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
+	0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x2e, 0x76, 0x31,
+	0x2e, 0x4d, 0x73, 0x67, 0x43, 0x61, 0x6e, 0x63, 0x65, 0x6c, 0x43, 0x6f, 0x6e, 0x74, 0x69, 0x6e,
+	0x75, 0x6f, 0x75, 0x73, 0x46, 0x75, 0x6e, 0x64, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
+	0x1a, 0x05, 0x80, 0xe7, 0xb0, 0x2a, 0x01, 0x42, 0xd7, 0x01, 0x0a, 0x1a, 0x63, 0x6f, 0x6d, 0x2e,
+	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70,
+	0x6f, 0x6f, 0x6c, 0x2e, 0x76, 0x31, 0x42, 0x07, 0x54, 0x78, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50,
+	0x01, 0x5a, 0x36, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f,
+	0x61, 0x70, 0x69, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f,
+	0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x2f, 0x76, 0x31, 0x3b, 0x70, 0x72, 0x6f, 0x74, 0x6f,
+	0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x76, 0x31, 0xa2, 0x02, 0x03, 0x43, 0x50, 0x58, 0xaa,
+	0x02, 0x16, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f,
+	0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x2e, 0x56, 0x31, 0xca, 0x02, 0x16, 0x43, 0x6f, 0x73, 0x6d, 0x6f,
+	0x73, 0x5c, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x5c, 0x56,
+	0x31, 0xe2, 0x02, 0x22, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x50, 0x72, 0x6f, 0x74, 0x6f,
+	0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x5c, 0x56, 0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65,
+	0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x18, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x3a,
+	0x3a, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x3a, 0x3a, 0x56,
+	0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -4393,7 +7041,7 @@ func file_cosmos_protocolpool_v1_tx_proto_rawDescGZIP() []byte {
 	return file_cosmos_protocolpool_v1_tx_proto_rawDescData
 }
 
-var file_cosmos_protocolpool_v1_tx_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
+var file_cosmos_protocolpool_v1_tx_proto_msgTypes = make([]protoimpl.MessageInfo, 12)
 var file_cosmos_protocolpool_v1_tx_proto_goTypes = []interface{}{
 	(*MsgFundCommunityPool)(nil),            // 0: cosmos.protocolpool.v1.MsgFundCommunityPool
 	(*MsgFundCommunityPoolResponse)(nil),    // 1: cosmos.protocolpool.v1.MsgFundCommunityPoolResponse
@@ -4403,30 +7051,41 @@ var file_cosmos_protocolpool_v1_tx_proto_goTypes = []interface{}{
 	(*MsgSubmitBudgetProposalResponse)(nil), // 5: cosmos.protocolpool.v1.MsgSubmitBudgetProposalResponse
 	(*MsgClaimBudget)(nil),                  // 6: cosmos.protocolpool.v1.MsgClaimBudget
 	(*MsgClaimBudgetResponse)(nil),          // 7: cosmos.protocolpool.v1.MsgClaimBudgetResponse
-	(*v1beta1.Coin)(nil),                    // 8: cosmos.base.v1beta1.Coin
-	(*timestamppb.Timestamp)(nil),           // 9: google.protobuf.Timestamp
-	(*durationpb.Duration)(nil),             // 10: google.protobuf.Duration
+	(*MsgCreateContinuousFund)(nil),         // 8: cosmos.protocolpool.v1.MsgCreateContinuousFund
+	(*MsgCreateContinuousFundResponse)(nil), // 9: cosmos.protocolpool.v1.MsgCreateContinuousFundResponse
+	(*MsgCancelContinuousFund)(nil),         // 10: cosmos.protocolpool.v1.MsgCancelContinuousFund
+	(*MsgCancelContinuousFundResponse)(nil), // 11: cosmos.protocolpool.v1.MsgCancelContinuousFundResponse
+	(*v1beta1.Coin)(nil),                    // 12: cosmos.base.v1beta1.Coin
+	(*timestamppb.Timestamp)(nil),           // 13: google.protobuf.Timestamp
+	(*durationpb.Duration)(nil),             // 14: google.protobuf.Duration
 }
 var file_cosmos_protocolpool_v1_tx_proto_depIdxs = []int32{
-	8,  // 0: cosmos.protocolpool.v1.MsgFundCommunityPool.amount:type_name -> cosmos.base.v1beta1.Coin
-	8,  // 1: cosmos.protocolpool.v1.MsgCommunityPoolSpend.amount:type_name -> cosmos.base.v1beta1.Coin
-	8,  // 2: cosmos.protocolpool.v1.MsgSubmitBudgetProposal.total_budget:type_name -> cosmos.base.v1beta1.Coin
-	9,  // 3: cosmos.protocolpool.v1.MsgSubmitBudgetProposal.start_time:type_name -> google.protobuf.Timestamp
-	10, // 4: cosmos.protocolpool.v1.MsgSubmitBudgetProposal.period:type_name -> google.protobuf.Duration
-	8,  // 5: cosmos.protocolpool.v1.MsgClaimBudgetResponse.amount:type_name -> cosmos.base.v1beta1.Coin
-	0,  // 6: cosmos.protocolpool.v1.Msg.FundCommunityPool:input_type -> cosmos.protocolpool.v1.MsgFundCommunityPool
-	2,  // 7: cosmos.protocolpool.v1.Msg.CommunityPoolSpend:input_type -> cosmos.protocolpool.v1.MsgCommunityPoolSpend
-	4,  // 8: cosmos.protocolpool.v1.Msg.SubmitBudgetProposal:input_type -> cosmos.protocolpool.v1.MsgSubmitBudgetProposal
-	6,  // 9: cosmos.protocolpool.v1.Msg.ClaimBudget:input_type -> cosmos.protocolpool.v1.MsgClaimBudget
-	1,  // 10: cosmos.protocolpool.v1.Msg.FundCommunityPool:output_type -> cosmos.protocolpool.v1.MsgFundCommunityPoolResponse
-	3,  // 11: cosmos.protocolpool.v1.Msg.CommunityPoolSpend:output_type -> cosmos.protocolpool.v1.MsgCommunityPoolSpendResponse
-	5,  // 12: cosmos.protocolpool.v1.Msg.SubmitBudgetProposal:output_type -> cosmos.protocolpool.v1.MsgSubmitBudgetProposalResponse
-	7,  // 13: cosmos.protocolpool.v1.Msg.ClaimBudget:output_type -> cosmos.protocolpool.v1.MsgClaimBudgetResponse
-	10, // [10:14] is the sub-list for method output_type
-	6,  // [6:10] is the sub-list for method input_type
-	6,  // [6:6] is the sub-list for extension type_name
-	6,  // [6:6] is the sub-list for extension extendee
-	0,  // [0:6] is the sub-list for field type_name
+	12, // 0: cosmos.protocolpool.v1.MsgFundCommunityPool.amount:type_name -> cosmos.base.v1beta1.Coin
+	12, // 1: cosmos.protocolpool.v1.MsgCommunityPoolSpend.amount:type_name -> cosmos.base.v1beta1.Coin
+	12, // 2: cosmos.protocolpool.v1.MsgSubmitBudgetProposal.total_budget:type_name -> cosmos.base.v1beta1.Coin
+	13, // 3: cosmos.protocolpool.v1.MsgSubmitBudgetProposal.start_time:type_name -> google.protobuf.Timestamp
+	14, // 4: cosmos.protocolpool.v1.MsgSubmitBudgetProposal.period:type_name -> google.protobuf.Duration
+	12, // 5: cosmos.protocolpool.v1.MsgClaimBudgetResponse.amount:type_name -> cosmos.base.v1beta1.Coin
+	12, // 6: cosmos.protocolpool.v1.MsgCreateContinuousFund.cap:type_name -> cosmos.base.v1beta1.Coin
+	13, // 7: cosmos.protocolpool.v1.MsgCreateContinuousFund.expiry:type_name -> google.protobuf.Timestamp
+	13, // 8: cosmos.protocolpool.v1.MsgCancelContinuousFundResponse.canceled_time:type_name -> google.protobuf.Timestamp
+	0,  // 9: cosmos.protocolpool.v1.Msg.FundCommunityPool:input_type -> cosmos.protocolpool.v1.MsgFundCommunityPool
+	2,  // 10: cosmos.protocolpool.v1.Msg.CommunityPoolSpend:input_type -> cosmos.protocolpool.v1.MsgCommunityPoolSpend
+	4,  // 11: cosmos.protocolpool.v1.Msg.SubmitBudgetProposal:input_type -> cosmos.protocolpool.v1.MsgSubmitBudgetProposal
+	6,  // 12: cosmos.protocolpool.v1.Msg.ClaimBudget:input_type -> cosmos.protocolpool.v1.MsgClaimBudget
+	8,  // 13: cosmos.protocolpool.v1.Msg.CreateContinuousFund:input_type -> cosmos.protocolpool.v1.MsgCreateContinuousFund
+	10, // 14: cosmos.protocolpool.v1.Msg.CancelContinuousFund:input_type -> cosmos.protocolpool.v1.MsgCancelContinuousFund
+	1,  // 15: cosmos.protocolpool.v1.Msg.FundCommunityPool:output_type -> cosmos.protocolpool.v1.MsgFundCommunityPoolResponse
+	3,  // 16: cosmos.protocolpool.v1.Msg.CommunityPoolSpend:output_type -> cosmos.protocolpool.v1.MsgCommunityPoolSpendResponse
+	5,  // 17: cosmos.protocolpool.v1.Msg.SubmitBudgetProposal:output_type -> cosmos.protocolpool.v1.MsgSubmitBudgetProposalResponse
+	7,  // 18: cosmos.protocolpool.v1.Msg.ClaimBudget:output_type -> cosmos.protocolpool.v1.MsgClaimBudgetResponse
+	9,  // 19: cosmos.protocolpool.v1.Msg.CreateContinuousFund:output_type -> cosmos.protocolpool.v1.MsgCreateContinuousFundResponse
+	11, // 20: cosmos.protocolpool.v1.Msg.CancelContinuousFund:output_type -> cosmos.protocolpool.v1.MsgCancelContinuousFundResponse
+	15, // [15:21] is the sub-list for method output_type
+	9,  // [9:15] is the sub-list for method input_type
+	9,  // [9:9] is the sub-list for extension type_name
+	9,  // [9:9] is the sub-list for extension extendee
+	0,  // [0:9] is the sub-list for field type_name
 }
 
 func init() { file_cosmos_protocolpool_v1_tx_proto_init() }
@@ -4531,6 +7190,54 @@ func file_cosmos_protocolpool_v1_tx_proto_init() {
 				return nil
 			}
 		}
+		file_cosmos_protocolpool_v1_tx_proto_msgTypes[8].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*MsgCreateContinuousFund); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_cosmos_protocolpool_v1_tx_proto_msgTypes[9].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*MsgCreateContinuousFundResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_cosmos_protocolpool_v1_tx_proto_msgTypes[10].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*MsgCancelContinuousFund); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_cosmos_protocolpool_v1_tx_proto_msgTypes[11].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*MsgCancelContinuousFundResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -4538,7 +7245,7 @@ func file_cosmos_protocolpool_v1_tx_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_cosmos_protocolpool_v1_tx_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   8,
+			NumMessages:   12,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

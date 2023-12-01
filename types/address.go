@@ -32,7 +32,6 @@ const (
 	//	config.SetBech32PrefixForValidator(yourBech32PrefixValAddr, yourBech32PrefixValPub)
 	//	config.SetBech32PrefixForConsensusNode(yourBech32PrefixConsAddr, yourBech32PrefixConsPub)
 	//	config.SetPurpose(yourPurpose)
-	//	config.SetCoinType(yourCoinType)
 	//	config.Seal()
 
 	// Bech32MainPrefix defines the main SDK Bech32 prefix of an account's address
@@ -708,4 +707,9 @@ func cacheBech32Addr(prefix string, addr []byte, cache *simplelru.LRU, cacheKey 
 		cache.Add(cacheKey, bech32Addr)
 	}
 	return bech32Addr
+}
+
+// GetFullBIP44Path returns the BIP44Prefix.
+func GetFullBIP44Path() string {
+	return fmt.Sprintf("m/%d'/%d'/0'/0/0", Purpose, CoinType)
 }

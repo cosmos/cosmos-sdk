@@ -2,6 +2,7 @@ package baseapp_test
 
 import (
 	"context"
+	"crypto/sha256"
 	"fmt"
 	"math/rand"
 	"testing"
@@ -202,7 +203,9 @@ func TestLoadVersion(t *testing.T) {
 	err := app.LoadLatestVersion() // needed to make stores non-nil
 	require.Nil(t, err)
 
-	emptyCommitID := storetypes.CommitID{}
+	emptyHash := sha256.Sum256([]byte{})
+	appHash := emptyHash[:]
+	emptyCommitID := storetypes.CommitID{Hash: appHash}
 
 	// fresh store has zero/empty last commit
 	lastHeight := app.LastBlockHeight()
@@ -720,6 +723,17 @@ func TestGetMaximumBlockGas(t *testing.T) {
 	require.Panics(t, func() { suite.baseApp.GetMaximumBlockGas(ctx) })
 }
 
+func TestGetEmptyConsensusParams(t *testing.T) {
+	suite := NewBaseAppSuite(t)
+	_, err := suite.baseApp.InitChain(&abci.RequestInitChain{})
+	require.NoError(t, err)
+	ctx := suite.baseApp.NewContext(true)
+
+	cp := suite.baseApp.GetConsensusParams(ctx)
+	require.Equal(t, cmtproto.ConsensusParams{}, cp)
+	require.Equal(t, uint64(0), suite.baseApp.GetMaximumBlockGas(ctx))
+}
+
 func TestLoadVersionPruning(t *testing.T) {
 	logger := log.NewNopLogger()
 	pruningOptions := pruningtypes.NewCustomPruningOptions(10, 15)
@@ -735,7 +749,10 @@ func TestLoadVersionPruning(t *testing.T) {
 	err := app.LoadLatestVersion() // needed to make stores non-nil
 	require.Nil(t, err)
 
-	emptyCommitID := storetypes.CommitID{}
+	emptyHash := sha256.Sum256([]byte{})
+	emptyCommitID := storetypes.CommitID{
+		Hash: emptyHash[:],
+	}
 
 	// fresh store has zero/empty last commit
 	lastHeight := app.LastBlockHeight()

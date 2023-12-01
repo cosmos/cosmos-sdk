@@ -29,13 +29,9 @@ func TestIavlTree(t *testing.T) {
 	require.Equal(t, uint64(0), initVersion)
 
 	// write a batch of version 1
-	cs1 := store.NewChangeset()
-	cs1.Add([]byte("key1"), []byte("value1"))
-	cs1.Add([]byte("key2"), []byte("value2"))
-	cs1.Add([]byte("key3"), []byte("value3"))
-
-	err := tree.WriteBatch(cs1)
-	require.NoError(t, err)
+	require.NoError(t, tree.Set([]byte("key1"), []byte("value1")))
+	require.NoError(t, tree.Set([]byte("key2"), []byte("value2")))
+	require.NoError(t, tree.Set([]byte("key3"), []byte("value3")))
 
 	workingHash := tree.WorkingHash()
 	require.NotNil(t, workingHash)
@@ -48,13 +44,10 @@ func TestIavlTree(t *testing.T) {
 	require.Equal(t, uint64(1), tree.GetLatestVersion())
 
 	// write a batch of version 2
-	cs2 := store.NewChangeset()
-	cs2.Add([]byte("key4"), []byte("value4"))
-	cs2.Add([]byte("key5"), []byte("value5"))
-	cs2.Add([]byte("key6"), []byte("value6"))
-	cs2.Add([]byte("key1"), nil) // delete key1
-	err = tree.WriteBatch(cs2)
-	require.NoError(t, err)
+	require.NoError(t, tree.Set([]byte("key4"), []byte("value4")))
+	require.NoError(t, tree.Set([]byte("key5"), []byte("value5")))
+	require.NoError(t, tree.Set([]byte("key6"), []byte("value6")))
+	require.NoError(t, tree.Remove([]byte("key1"))) // delete key1
 	version2Hash := tree.WorkingHash()
 	require.NotNil(t, version2Hash)
 	commitHash, err = tree.Commit()
@@ -71,10 +64,8 @@ func TestIavlTree(t *testing.T) {
 	require.NotNil(t, proof.GetNonexist())
 
 	// write a batch of version 3
-	cs3 := store.NewChangeset()
-	cs3.Add([]byte("key7"), []byte("value7"))
-	cs3.Add([]byte("key8"), []byte("value8"))
-	err = tree.WriteBatch(cs3)
+	require.NoError(t, tree.Set([]byte("key7"), []byte("value7")))
+	require.NoError(t, tree.Set([]byte("key8"), []byte("value8")))
 	require.NoError(t, err)
 	_, err = tree.Commit()
 	require.NoError(t, err)

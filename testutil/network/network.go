@@ -455,7 +455,7 @@ func New(l Logger, baseDir string, cfg Config) (NetworkI, error) {
 			return nil, err
 		}
 
-		addr, secret, err := testutil.GenerateSaveCoinKey(kb, nodeDirName, mnemonic, true, algo)
+		addr, secret, err := testutil.GenerateSaveCoinKey(kb, nodeDirName, mnemonic, true, algo, sdk.GetFullBIP44Path())
 		if err != nil {
 			return nil, err
 		}

@@ -227,6 +227,20 @@ func (mr *MockBankKeeperMockRecorder) LockedCoins(ctx, addr interface{}) *gomock
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LockedCoins", reflect.TypeOf((*MockBankKeeper)(nil).LockedCoins), ctx, addr)
 }
 
+// SendCoinsFromAccountToModule mocks base method.
+func (m *MockBankKeeper) SendCoinsFromAccountToModule(ctx context.Context, senderAddr types0.AccAddress, recipientModule string, amt types0.Coins) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SendCoinsFromAccountToModule", ctx, senderAddr, recipientModule, amt)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SendCoinsFromAccountToModule indicates an expected call of SendCoinsFromAccountToModule.
+func (mr *MockBankKeeperMockRecorder) SendCoinsFromAccountToModule(ctx, senderAddr, recipientModule, amt interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendCoinsFromAccountToModule", reflect.TypeOf((*MockBankKeeper)(nil).SendCoinsFromAccountToModule), ctx, senderAddr, recipientModule, amt)
+}
+
 // SendCoinsFromModuleToModule mocks base method.
 func (m *MockBankKeeper) SendCoinsFromModuleToModule(ctx context.Context, senderPool, recipientPool string, amt types0.Coins) error {
 	m.ctrl.T.Helper()
@@ -293,10 +307,10 @@ func (m *MockValidatorSet) EXPECT() *MockValidatorSetMockRecorder {
 }
 
 // Delegation mocks base method.
-func (m *MockValidatorSet) Delegation(arg0 context.Context, arg1 types0.AccAddress, arg2 types0.ValAddress) (types.DelegationI, error) {
+func (m *MockValidatorSet) Delegation(arg0 context.Context, arg1 types0.AccAddress, arg2 types0.ValAddress) (types0.DelegationI, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Delegation", arg0, arg1, arg2)
-	ret0, _ := ret[0].(types.DelegationI)
+	ret0, _ := ret[0].(types0.DelegationI)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -323,7 +337,7 @@ func (mr *MockValidatorSetMockRecorder) GetPubKeyByConsAddr(arg0, arg1 interface
 }
 
 // IterateBondedValidatorsByPower mocks base method.
-func (m *MockValidatorSet) IterateBondedValidatorsByPower(arg0 context.Context, arg1 func(int64, types.ValidatorI) bool) error {
+func (m *MockValidatorSet) IterateBondedValidatorsByPower(arg0 context.Context, arg1 func(int64, types0.ValidatorI) bool) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "IterateBondedValidatorsByPower", arg0, arg1)
 	ret0, _ := ret[0].(error)
@@ -337,7 +351,7 @@ func (mr *MockValidatorSetMockRecorder) IterateBondedValidatorsByPower(arg0, arg
 }
 
 // IterateValidators mocks base method.
-func (m *MockValidatorSet) IterateValidators(arg0 context.Context, arg1 func(int64, types.ValidatorI) bool) error {
+func (m *MockValidatorSet) IterateValidators(arg0 context.Context, arg1 func(int64, types0.ValidatorI) bool) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "IterateValidators", arg0, arg1)
 	ret0, _ := ret[0].(error)
@@ -454,10 +468,10 @@ func (mr *MockValidatorSetMockRecorder) Unjail(arg0, arg1 interface{}) *gomock.C
 }
 
 // Validator mocks base method.
-func (m *MockValidatorSet) Validator(arg0 context.Context, arg1 types0.ValAddress) (types.ValidatorI, error) {
+func (m *MockValidatorSet) Validator(arg0 context.Context, arg1 types0.ValAddress) (types0.ValidatorI, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Validator", arg0, arg1)
-	ret0, _ := ret[0].(types.ValidatorI)
+	ret0, _ := ret[0].(types0.ValidatorI)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -469,10 +483,10 @@ func (mr *MockValidatorSetMockRecorder) Validator(arg0, arg1 interface{}) *gomoc
 }
 
 // ValidatorByConsAddr mocks base method.
-func (m *MockValidatorSet) ValidatorByConsAddr(arg0 context.Context, arg1 types0.ConsAddress) (types.ValidatorI, error) {
+func (m *MockValidatorSet) ValidatorByConsAddr(arg0 context.Context, arg1 types0.ConsAddress) (types0.ValidatorI, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ValidatorByConsAddr", arg0, arg1)
-	ret0, _ := ret[0].(types.ValidatorI)
+	ret0, _ := ret[0].(types0.ValidatorI)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -521,7 +535,7 @@ func (mr *MockDelegationSetMockRecorder) GetValidatorSet() *gomock.Call {
 }
 
 // IterateDelegations mocks base method.
-func (m *MockDelegationSet) IterateDelegations(ctx context.Context, delegator types0.AccAddress, fn func(int64, types.DelegationI) bool) error {
+func (m *MockDelegationSet) IterateDelegations(ctx context.Context, delegator types0.AccAddress, fn func(int64, types0.DelegationI) bool) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "IterateDelegations", ctx, delegator, fn)
 	ret0, _ := ret[0].(error)

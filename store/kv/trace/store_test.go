@@ -15,7 +15,7 @@ import (
 
 const storeKey = "storeKey"
 
-var kvPairs = []store.KVPair{
+var kvPairs = store.KVPairs{
 	{Key: []byte(fmt.Sprintf("key%0.8d", 1)), Value: []byte(fmt.Sprintf("value%0.8d", 1))},
 	{Key: []byte(fmt.Sprintf("key%0.8d", 2)), Value: []byte(fmt.Sprintf("value%0.8d", 2))},
 	{Key: []byte(fmt.Sprintf("key%0.8d", 3)), Value: []byte(fmt.Sprintf("value%0.8d", 3))},

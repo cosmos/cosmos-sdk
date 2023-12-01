@@ -206,13 +206,17 @@ type GroupOutputs struct {
 }
 
 func ProvideModule(in GroupInputs) GroupOutputs {
-	/*
-		Example of setting group params:
-		in.Config.MaxMetadataLen = 1000
-		in.Config.MaxExecutionPeriod = "1209600s"
-	*/
-
-	k := keeper.NewKeeper(in.Key, in.Cdc, in.MsgServiceRouter, in.AccountKeeper, group.Config{MaxExecutionPeriod: in.Config.MaxExecutionPeriod.AsDuration(), MaxMetadataLen: in.Config.MaxMetadataLen})
+	k := keeper.NewKeeper(in.Key,
+		in.Cdc,
+		in.MsgServiceRouter,
+		in.AccountKeeper,
+		group.Config{
+			MaxExecutionPeriod:    in.Config.MaxExecutionPeriod.AsDuration(),
+			MaxMetadataLen:        in.Config.MaxMetadataLen,
+			MaxProposalTitleLen:   in.Config.MaxProposalTitleLen,
+			MaxProposalSummaryLen: in.Config.MaxProposalSummaryLen,
+		},
+	)
 	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.Registry)
 	return GroupOutputs{GroupKeeper: k, Module: m}
 }

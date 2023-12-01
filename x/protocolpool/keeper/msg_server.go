@@ -93,14 +93,21 @@ func (k MsgServer) CommunityPoolSpend(ctx context.Context, msg *types.MsgCommuni
 	}
 
 	// distribute funds from community pool module account
-	if err := k.Keeper.DistributeFromFeePool(ctx, msg.Amount, recipient); err != nil {
+	if err := k.Keeper.DistributeFromCommunityPool(ctx, msg.Amount, recipient); err != nil {
 		return nil, err
 	}
 
-	logger := k.Logger(ctx)
-	logger.Info("transferred from the community pool to recipient", "amount", msg.Amount.String(), "recipient", msg.Recipient)
+	k.Logger(ctx).Info("transferred from the community pool to recipient", "amount", msg.Amount.String(), "recipient", msg.Recipient)
 
 	return &types.MsgCommunityPoolSpendResponse{}, nil
+}
+
+func (k MsgServer) CreateContinuousFund(ctx context.Context, msg *types.MsgCreateContinuousFund) (*types.MsgCreateContinuousFundResponse, error) {
+	return &types.MsgCreateContinuousFundResponse{}, nil
+}
+
+func (k MsgServer) CancelContinuousFund(ctx context.Context, msg *types.MsgCancelContinuousFund) (*types.MsgCancelContinuousFundResponse, error) {
+	return &types.MsgCancelContinuousFundResponse{}, nil
 }
 
 func (k *Keeper) validateAuthority(authority string) error {

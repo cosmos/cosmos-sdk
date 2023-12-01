@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"slices"
+	"time"
 
 	"github.com/cockroachdb/errors"
 
@@ -12,6 +13,7 @@ import (
 	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/kv/branch"
 	"cosmossdk.io/store/v2/kv/trace"
+	"cosmossdk.io/store/v2/metrics"
 	"cosmossdk.io/store/v2/pruning"
 )
 
@@ -57,6 +59,9 @@ type Store struct {
 
 	// pruningManager manages pruning of the SS and SC backends
 	pruningManager *pruning.Manager
+
+	// telemetry reflects a telemetry agent responsible for emitting metrics (if any)
+	telemetry metrics.StoreMetrics
 }
 
 func New(
@@ -64,6 +69,7 @@ func New(
 	initVersion uint64,
 	ss store.VersionedDatabase,
 	sc store.Committer,
+	m metrics.StoreMetrics,
 ) (store.RootStore, error) {
 	rootKVStore, err := branch.New(defaultStoreKey, ss)
 	if err != nil {
@@ -79,6 +85,7 @@ func New(
 		stateCommitment: sc,
 		rootKVStore:     rootKVStore,
 		pruningManager:  pruningManager,
+		telemetry:       m,
 	}, nil
 }
 
@@ -137,7 +144,11 @@ func (s *Store) LastCommitID() (store.CommitID, error) {
 	}
 
 	// sanity check: ensure integrity of latest version against SC
-	scVersion := s.stateCommitment.GetLatestVersion()
+	scVersion, err := s.stateCommitment.GetLatestVersion()
+	if err != nil {
+		return store.CommitID{}, err
+	}
+
 	if scVersion != latestVersion {
 		return store.CommitID{}, fmt.Errorf("SC and SS version mismatch; got: %d, expected: %d", scVersion, latestVersion)
 	}
@@ -158,6 +169,11 @@ func (s *Store) GetLatestVersion() (uint64, error) {
 }
 
 func (s *Store) Query(storeKey string, version uint64, key []byte, prove bool) (store.QueryResult, error) {
+	if s.telemetry != nil {
+		now := time.Now()
+		s.telemetry.MeasureSince(now, "root_store", "query")
+	}
+
 	val, err := s.stateStore.Get(storeKey, version, key)
 	if err != nil {
 		return store.QueryResult{}, err
@@ -170,7 +186,7 @@ func (s *Store) Query(storeKey string, version uint64, key []byte, prove bool) (
 	}
 
 	if prove {
-		proof, err := s.stateCommitment.GetProof(version, key)
+		proof, err := s.stateCommitment.GetProof(storeKey, version, key)
 		if err != nil {
 			return store.QueryResult{}, err
 		}
@@ -202,6 +218,11 @@ func (s *Store) GetBranchedKVStore(_ string) store.BranchedKVStore {
 }
 
 func (s *Store) LoadLatestVersion() error {
+	if s.telemetry != nil {
+		now := time.Now()
+		s.telemetry.MeasureSince(now, "root_store", "load_latest_version")
+	}
+
 	lv, err := s.GetLatestVersion()
 	if err != nil {
 		return err
@@ -211,6 +232,11 @@ func (s *Store) LoadLatestVersion() error {
 }
 
 func (s *Store) LoadVersion(version uint64) error {
+	if s.telemetry != nil {
+		now := time.Now()
+		s.telemetry.MeasureSince(now, "root_store", "load_version")
+	}
+
 	return s.loadVersion(version)
 }
 
@@ -278,6 +304,11 @@ func (s *Store) Branch() store.BranchedRootStore {
 // by constructing a CommitInfo object, which in turn creates and writes a batch
 // of the current changeset to the SC tree.
 func (s *Store) WorkingHash() ([]byte, error) {
+	if s.telemetry != nil {
+		now := time.Now()
+		s.telemetry.MeasureSince(now, "root_store", "working_hash")
+	}
+
 	if s.workingHash == nil {
 		if err := s.writeSC(); err != nil {
 			return nil, err
@@ -302,6 +333,11 @@ func (s *Store) Write() {
 //
 // Note, Commit() commits SC and SC synchronously.
 func (s *Store) Commit() ([]byte, error) {
+	if s.telemetry != nil {
+		now := time.Now()
+		s.telemetry.MeasureSince(now, "root_store", "commit")
+	}
+
 	if s.workingHash == nil {
 		return nil, fmt.Errorf("working hash is nil; must call WorkingHash() before Commit()")
 	}
@@ -368,16 +404,8 @@ func (s *Store) writeSC() error {
 	}
 
 	s.lastCommitInfo = &store.CommitInfo{
-		Version: version,
-		StoreInfos: []store.StoreInfo{
-			{
-				Name: defaultStoreKey,
-				CommitID: store.CommitID{
-					Version: version,
-					Hash:    s.stateCommitment.WorkingHash(),
-				},
-			},
-		},
+		Version:    version,
+		StoreInfos: s.stateCommitment.WorkingStoreInfos(version),
 	}
 
 	return nil
@@ -388,18 +416,23 @@ func (s *Store) writeSC() error {
 // solely commits that batch. An error is returned if commit fails or if the
 // resulting commit hash is not equivalent to the working hash.
 func (s *Store) commitSC() error {
-	commitBz, err := s.stateCommitment.Commit()
+	commitStoreInfos, err := s.stateCommitment.Commit()
 	if err != nil {
 		return fmt.Errorf("failed to commit SC store: %w", err)
 	}
+
+	commitHash := store.CommitInfo{
+		Version:    s.lastCommitInfo.Version,
+		StoreInfos: commitStoreInfos,
+	}.Hash()
 
 	workingHash, err := s.WorkingHash()
 	if err != nil {
 		return fmt.Errorf("failed to get working hash: %w", err)
 	}
 
-	if bytes.Equal(commitBz, workingHash) {
-		return fmt.Errorf("unexpected commit hash; got: %X, expected: %X", commitBz, workingHash)
+	if !bytes.Equal(commitHash, workingHash) {
+		return fmt.Errorf("unexpected commit hash; got: %X, expected: %X", commitHash, workingHash)
 	}
 
 	return nil

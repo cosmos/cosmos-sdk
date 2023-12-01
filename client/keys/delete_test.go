@@ -33,7 +33,7 @@ func Test_runDeleteCmd(t *testing.T) {
 	fakeKeyName1 := "runDeleteCmd_Key1"
 	fakeKeyName2 := "runDeleteCmd_Key2"
 
-	path := sdk.GetConfig().GetFullBIP44Path()
+	path := sdk.GetFullBIP44Path()
 	cdc := moduletestutil.MakeTestEncodingConfig().Codec
 
 	cmd.SetArgs([]string{"blah", fmt.Sprintf("--%s=%s", flags.FlagKeyringDir, kbHome)})
@@ -53,8 +53,7 @@ func Test_runDeleteCmd(t *testing.T) {
 	ctx := context.WithValue(context.Background(), client.ClientContextKey, &clientCtx)
 
 	err = cmd.ExecuteContext(ctx)
-	require.Error(t, err)
-	require.EqualError(t, err, "blah.info: key not found")
+	require.NoError(t, err)
 
 	// User confirmation missing
 	cmd.SetArgs([]string{

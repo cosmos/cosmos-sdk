@@ -13,9 +13,23 @@ import (
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
+	"cosmossdk.io/x/auth"
+	authkeeper "cosmossdk.io/x/auth/keeper"
+	authsims "cosmossdk.io/x/auth/simulation"
+	authtypes "cosmossdk.io/x/auth/types"
+	"cosmossdk.io/x/bank"
+	bankkeeper "cosmossdk.io/x/bank/keeper"
+	banktypes "cosmossdk.io/x/bank/types"
+	"cosmossdk.io/x/distribution"
+	distrkeeper "cosmossdk.io/x/distribution/keeper"
+	distrtypes "cosmossdk.io/x/distribution/types"
 	"cosmossdk.io/x/protocolpool"
 	poolkeeper "cosmossdk.io/x/protocolpool/keeper"
 	pooltypes "cosmossdk.io/x/protocolpool/types"
+	"cosmossdk.io/x/staking"
+	stakingkeeper "cosmossdk.io/x/staking/keeper"
+	stakingtestutil "cosmossdk.io/x/staking/testutil"
+	stakingtypes "cosmossdk.io/x/staking/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
@@ -23,20 +37,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/integration"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	"github.com/cosmos/cosmos-sdk/x/auth"
-	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	authsims "github.com/cosmos/cosmos-sdk/x/auth/simulation"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/cosmos/cosmos-sdk/x/bank"
-	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/cosmos/cosmos-sdk/x/distribution"
-	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
-	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
-	"github.com/cosmos/cosmos-sdk/x/staking"
-	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
-	stakingtestutil "github.com/cosmos/cosmos-sdk/x/staking/testutil"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 var (
@@ -178,8 +178,6 @@ func TestMsgWithdrawDelegatorReward(t *testing.T) {
 	})
 	require.NoError(t, err)
 	require.NoError(t, f.distrKeeper.Params.Set(f.sdkCtx, distrtypes.DefaultParams()))
-	initFeePool, err := f.distrKeeper.FeePool.Get(f.sdkCtx)
-	assert.NilError(t, err)
 
 	delAddr := sdk.AccAddress(PKS[1].Address())
 	valConsAddr := sdk.ConsAddress(valConsPk0.Address())
@@ -228,8 +226,6 @@ func TestMsgWithdrawDelegatorReward(t *testing.T) {
 	require.NoError(t, err)
 	err = f.distrKeeper.ValidatorOutstandingRewards.Set(f.sdkCtx, f.valAddr, distrtypes.ValidatorOutstandingRewards{Rewards: valCommission})
 	require.NoError(t, err)
-	initOutstandingRewards, err := f.distrKeeper.GetValidatorOutstandingRewardsCoins(f.sdkCtx, f.valAddr)
-	assert.NilError(t, err)
 
 	testCases := []struct {
 		name      string
@@ -324,13 +320,6 @@ func TestMsgWithdrawDelegatorReward(t *testing.T) {
 				// check current balance is greater than initial balance
 				curBalance := f.bankKeeper.GetAllBalances(f.sdkCtx, sdk.AccAddress(f.valAddr))
 				assert.Assert(t, initBalance.IsAllLTE(curBalance))
-
-				// check rewards
-				curFeePool, _ := f.distrKeeper.FeePool.Get(f.sdkCtx)
-				rewards := curFeePool.GetCommunityPool().Sub(initFeePool.CommunityPool)
-				curOutstandingRewards, err := f.distrKeeper.ValidatorOutstandingRewards.Get(f.sdkCtx, f.valAddr)
-				assert.NilError(t, err)
-				assert.DeepEqual(t, rewards, initOutstandingRewards.Sub(curOutstandingRewards.Rewards))
 			}
 
 			prevProposerConsAddr, err := f.distrKeeper.PreviousProposer.Get(f.sdkCtx)

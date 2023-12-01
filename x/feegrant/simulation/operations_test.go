@@ -5,18 +5,24 @@ import (
 	"testing"
 	"time"
 
-	abci "github.com/cometbft/cometbft/abci/types"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
+	_ "cosmossdk.io/x/auth"
+	authkeeper "cosmossdk.io/x/auth/keeper"
+	_ "cosmossdk.io/x/auth/tx/config"
+	_ "cosmossdk.io/x/bank"
+	bankkeeper "cosmossdk.io/x/bank/keeper"
+	banktestutil "cosmossdk.io/x/bank/testutil"
 	"cosmossdk.io/x/feegrant"
 	"cosmossdk.io/x/feegrant/keeper"
 	_ "cosmossdk.io/x/feegrant/module"
 	"cosmossdk.io/x/feegrant/simulation"
+	_ "cosmossdk.io/x/mint"
+	_ "cosmossdk.io/x/staking"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -27,16 +33,8 @@ import (
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	_ "github.com/cosmos/cosmos-sdk/x/auth"
-	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
-	_ "github.com/cosmos/cosmos-sdk/x/bank"
-	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	_ "github.com/cosmos/cosmos-sdk/x/consensus"
 	_ "github.com/cosmos/cosmos-sdk/x/genutil"
-	_ "github.com/cosmos/cosmos-sdk/x/mint"
-	_ "github.com/cosmos/cosmos-sdk/x/staking"
 )
 
 type SimTestSuite struct {
@@ -78,7 +76,7 @@ func (suite *SimTestSuite) SetupTest() {
 	)
 	suite.Require().NoError(err)
 
-	suite.ctx = suite.app.BaseApp.NewContextLegacy(false, cmtproto.Header{Time: time.Now()})
+	suite.ctx = suite.app.BaseApp.NewContext(false).WithHeaderInfo(header.Info{Time: time.Now()})
 }
 
 func (suite *SimTestSuite) getTestingAccounts(r *rand.Rand, n int) []simtypes.Account {
@@ -152,10 +150,6 @@ func (suite *SimTestSuite) TestSimulateMsgGrantAllowance() {
 	addr2, err := suite.accountKeeper.AddressCodec().BytesToString(accounts[2].Address)
 	require.NoError(err)
 
-	//  new block
-	_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: app.LastBlockHeight() + 1})
-	require.NoError(err)
-
 	// execute operation
 	op := simulation.SimulateMsgGrantAllowance(codec.NewProtoCodec(suite.interfaceRegistry), suite.txConfig, suite.accountKeeper, suite.bankKeeper, suite.feegrantKeeper)
 	operationMsg, futureOperations, err := op(r, app.BaseApp, ctx.WithHeaderInfo(header.Info{Time: time.Now()}), accounts, "")
@@ -178,16 +172,13 @@ func (suite *SimTestSuite) TestSimulateMsgRevokeAllowance() {
 	r := rand.New(s)
 	accounts := suite.getTestingAccounts(r, 3)
 
-	// begin a new block
-	_, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: suite.app.LastBlockHeight() + 1, Hash: suite.app.LastCommitID().Hash})
-	require.NoError(err)
 	feeAmt := sdk.TokensFromConsensusPower(200000, sdk.DefaultPowerReduction)
 	feeCoins := sdk.NewCoins(sdk.NewCoin("foo", feeAmt))
 
 	granter, grantee := accounts[0], accounts[1]
 
 	oneYear := ctx.HeaderInfo().Time.AddDate(1, 0, 0)
-	err = suite.feegrantKeeper.GrantAllowance(
+	err := suite.feegrantKeeper.GrantAllowance(
 		ctx,
 		granter.Address,
 		grantee.Address,

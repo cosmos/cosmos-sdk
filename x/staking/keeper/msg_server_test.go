@@ -4,18 +4,20 @@ import (
 	"testing"
 	"time"
 
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/golang/mock/gomock"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/math"
+	stakingtypes "cosmossdk.io/x/staking/types"
 
 	"github.com/cosmos/cosmos-sdk/codec/address"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 var (
@@ -40,6 +42,16 @@ func (s *KeeperTestSuite) TestMsgCreateValidator() {
 	pubkey, err := codectypes.NewAnyWithValue(pk1)
 	require.NoError(err)
 
+	var ed25519pk cryptotypes.PubKey = &ed25519.PubKey{Key: []byte{1, 2, 3, 4, 5, 6}}
+	pubkeyInvalidLen, err := codectypes.NewAnyWithValue(ed25519pk)
+	require.NoError(err)
+
+	ctx = ctx.WithConsensusParams(cmtproto.ConsensusParams{
+		Validator: &cmtproto.ValidatorParams{
+			PubKeyTypes: []string{sdk.PubKeyEd25519Type},
+		},
+	})
+
 	testCases := []struct {
 		name      string
 		input     *stakingtypes.MsgCreateValidator
@@ -59,7 +71,7 @@ func (s *KeeperTestSuite) TestMsgCreateValidator() {
 				DelegatorAddress:  Addr.String(),
 				ValidatorAddress:  ValAddr.String(),
 				Pubkey:            pubkey,
-				Value:             sdk.NewInt64Coin("stake", 10000),
+				Value:             sdk.NewInt64Coin(sdk.DefaultBondDenom, 10000),
 			},
 			expErr:    true,
 			expErrMsg: "empty description",
@@ -79,7 +91,7 @@ func (s *KeeperTestSuite) TestMsgCreateValidator() {
 				DelegatorAddress:  Addr.String(),
 				ValidatorAddress:  sdk.AccAddress([]byte("invalid")).String(),
 				Pubkey:            pubkey,
-				Value:             sdk.NewInt64Coin("stake", 10000),
+				Value:             sdk.NewInt64Coin(sdk.DefaultBondDenom, 10000),
 			},
 			expErr:    true,
 			expErrMsg: "invalid validator address",
@@ -99,10 +111,30 @@ func (s *KeeperTestSuite) TestMsgCreateValidator() {
 				DelegatorAddress:  Addr.String(),
 				ValidatorAddress:  ValAddr.String(),
 				Pubkey:            nil,
-				Value:             sdk.NewInt64Coin("stake", 10000),
+				Value:             sdk.NewInt64Coin(sdk.DefaultBondDenom, 10000),
 			},
 			expErr:    true,
 			expErrMsg: "empty validator public key",
+		},
+		{
+			name: "validator pubkey len is invalid",
+			input: &stakingtypes.MsgCreateValidator{
+				Description: stakingtypes.Description{
+					Moniker: "NewValidator",
+				},
+				Commission: stakingtypes.CommissionRates{
+					Rate:          math.LegacyNewDecWithPrec(5, 1),
+					MaxRate:       math.LegacyNewDecWithPrec(5, 1),
+					MaxChangeRate: math.LegacyNewDec(0),
+				},
+				MinSelfDelegation: math.NewInt(1),
+				DelegatorAddress:  Addr.String(),
+				ValidatorAddress:  ValAddr.String(),
+				Pubkey:            pubkeyInvalidLen,
+				Value:             sdk.NewInt64Coin(sdk.DefaultBondDenom, 10000),
+			},
+			expErr:    true,
+			expErrMsg: "consensus pubkey len is invalid",
 		},
 		{
 			name: "empty delegation amount",
@@ -119,7 +151,7 @@ func (s *KeeperTestSuite) TestMsgCreateValidator() {
 				DelegatorAddress:  Addr.String(),
 				ValidatorAddress:  ValAddr.String(),
 				Pubkey:            pubkey,
-				Value:             sdk.NewInt64Coin("stake", 0),
+				Value:             sdk.NewInt64Coin(sdk.DefaultBondDenom, 0),
 			},
 			expErr:    true,
 			expErrMsg: "invalid delegation amount",
@@ -159,7 +191,7 @@ func (s *KeeperTestSuite) TestMsgCreateValidator() {
 				DelegatorAddress:  Addr.String(),
 				ValidatorAddress:  ValAddr.String(),
 				Pubkey:            pubkey,
-				Value:             sdk.NewInt64Coin("stake", 10000),
+				Value:             sdk.NewInt64Coin(sdk.DefaultBondDenom, 10000),
 			},
 			expErr:    true,
 			expErrMsg: "minimum self delegation must be a positive integer",
@@ -179,7 +211,7 @@ func (s *KeeperTestSuite) TestMsgCreateValidator() {
 				DelegatorAddress:  Addr.String(),
 				ValidatorAddress:  ValAddr.String(),
 				Pubkey:            pubkey,
-				Value:             sdk.NewInt64Coin("stake", 10000),
+				Value:             sdk.NewInt64Coin(sdk.DefaultBondDenom, 10000),
 			},
 			expErr:    true,
 			expErrMsg: "minimum self delegation must be a positive integer",
@@ -199,7 +231,7 @@ func (s *KeeperTestSuite) TestMsgCreateValidator() {
 				DelegatorAddress:  Addr.String(),
 				ValidatorAddress:  ValAddr.String(),
 				Pubkey:            pubkey,
-				Value:             sdk.NewInt64Coin("stake", 10),
+				Value:             sdk.NewInt64Coin(sdk.DefaultBondDenom, 10),
 			},
 			expErr:    true,
 			expErrMsg: "validator's self delegation must be greater than their minimum self delegation",
@@ -223,7 +255,7 @@ func (s *KeeperTestSuite) TestMsgCreateValidator() {
 				DelegatorAddress:  Addr.String(),
 				ValidatorAddress:  ValAddr.String(),
 				Pubkey:            pubkey,
-				Value:             sdk.NewInt64Coin("stake", 10000),
+				Value:             sdk.NewInt64Coin(sdk.DefaultBondDenom, 10000),
 			},
 			expErr: false,
 		},
@@ -253,7 +285,7 @@ func (s *KeeperTestSuite) TestMsgEditValidator() {
 	require.NotNil(pk)
 
 	comm := stakingtypes.NewCommissionRates(math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0))
-	msg, err := stakingtypes.NewMsgCreateValidator(ValAddr.String(), pk, sdk.NewCoin("stake", math.NewInt(10)), stakingtypes.Description{Moniker: "NewVal"}, comm, math.OneInt())
+	msg, err := stakingtypes.NewMsgCreateValidator(ValAddr.String(), pk, sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(10)), stakingtypes.Description{Moniker: "NewVal"}, comm, math.OneInt())
 	require.NoError(err)
 
 	res, err := msgServer.CreateValidator(ctx, msg)
@@ -427,7 +459,7 @@ func (s *KeeperTestSuite) TestMsgDelegate() {
 
 	comm := stakingtypes.NewCommissionRates(math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0))
 
-	msg, err := stakingtypes.NewMsgCreateValidator(ValAddr.String(), pk, sdk.NewCoin("stake", math.NewInt(10)), stakingtypes.Description{Moniker: "NewVal"}, comm, math.OneInt())
+	msg, err := stakingtypes.NewMsgCreateValidator(ValAddr.String(), pk, sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(10)), stakingtypes.Description{Moniker: "NewVal"}, comm, math.OneInt())
 	require.NoError(err)
 
 	res, err := msgServer.CreateValidator(ctx, msg)

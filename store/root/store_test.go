@@ -32,9 +32,10 @@ func (s *RootStoreTestSuite) SetupTest() {
 	s.Require().NoError(err)
 
 	tree := iavl.NewIavlTree(dbm.NewMemDB(), noopLog, iavl.DefaultConfig())
-	sc := commitment.NewDatabase(tree)
+	sc, err := commitment.NewCommitStore(map[string]commitment.Tree{"default": tree}, noopLog)
+	s.Require().NoError(err)
 
-	rs, err := New(noopLog, 1, ss, sc)
+	rs, err := New(noopLog, 1, ss, sc, nil)
 	s.Require().NoError(err)
 
 	rs.SetTracer(io.Discard)
@@ -66,7 +67,7 @@ func (s *RootStoreTestSuite) TestGetKVStore() {
 func (s *RootStoreTestSuite) TestGetBranchedKVStore() {
 	bs := s.rootStore.GetBranchedKVStore("")
 	s.Require().NotNil(bs)
-	s.Require().Empty(bs.GetChangeset().Pairs)
+	s.Require().Empty(bs.GetChangeset().Size())
 }
 
 func (s *RootStoreTestSuite) TestQuery() {
@@ -87,7 +88,7 @@ func (s *RootStoreTestSuite) TestQuery() {
 	s.Require().Equal(workingHash, commitHash)
 
 	// ensure the proof is non-nil for the corresponding version
-	result, err := s.rootStore.Query("", 1, []byte("foo"), true)
+	result, err := s.rootStore.Query(defaultStoreKey, 1, []byte("foo"), true)
 	s.Require().NoError(err)
 	s.Require().NotNil(result.Proof)
 	s.Require().Equal([]byte("foo"), result.Proof.GetExist().Key)
@@ -126,6 +127,73 @@ func (s *RootStoreTestSuite) TestBranch() {
 
 	// ensure changes are reflected in the original root store
 	s.Require().Equal([]byte("updated_bar"), bs.Get([]byte("foo")))
+}
+
+func (s *RootStoreTestSuite) TestLoadVersion() {
+	// write and commit a few changesets
+	for v := 1; v <= 5; v++ {
+		bs := s.rootStore.GetBranchedKVStore("")
+		val := fmt.Sprintf("val%03d", v) // val001, val002, ..., val005
+		bs.Set([]byte("key"), []byte(val))
+
+		workingHash, err := s.rootStore.WorkingHash()
+		s.Require().NoError(err)
+		s.Require().NotNil(workingHash)
+
+		commitHash, err := s.rootStore.Commit()
+		s.Require().NoError(err)
+		s.Require().NotNil(commitHash)
+		s.Require().Equal(workingHash, commitHash)
+	}
+
+	// ensure the latest version is correct
+	latest, err := s.rootStore.GetLatestVersion()
+	s.Require().NoError(err)
+	s.Require().Equal(uint64(5), latest)
+
+	// attempt to load a non-existent version
+	err = s.rootStore.LoadVersion(6)
+	s.Require().Error(err)
+
+	// attempt to load a previously committed version
+	err = s.rootStore.LoadVersion(3)
+	s.Require().NoError(err)
+
+	// ensure the latest version is correct
+	latest, err = s.rootStore.GetLatestVersion()
+	s.Require().NoError(err)
+	s.Require().Equal(uint64(3), latest)
+
+	// query state and ensure values returned are based on the loaded version
+	kvStore := s.rootStore.GetKVStore("")
+	val := kvStore.Get([]byte("key"))
+	s.Require().Equal([]byte("val003"), val)
+
+	// attempt to write and commit a few changesets
+	for v := 4; v <= 5; v++ {
+		bs := s.rootStore.GetBranchedKVStore("")
+		val := fmt.Sprintf("overwritten_val%03d", v) // overwritten_val004, overwritten_val005
+		bs.Set([]byte("key"), []byte(val))
+
+		workingHash, err := s.rootStore.WorkingHash()
+		s.Require().NoError(err)
+		s.Require().NotNil(workingHash)
+
+		commitHash, err := s.rootStore.Commit()
+		s.Require().NoError(err)
+		s.Require().NotNil(commitHash)
+		s.Require().Equal(workingHash, commitHash)
+	}
+
+	// ensure the latest version is correct
+	latest, err = s.rootStore.GetLatestVersion()
+	s.Require().NoError(err)
+	s.Require().Equal(uint64(5), latest)
+
+	// query state and ensure values returned are based on the loaded version
+	kvStore = s.rootStore.GetKVStore("")
+	val = kvStore.Get([]byte("key"))
+	s.Require().Equal([]byte("overwritten_val005"), val)
 }
 
 func (s *RootStoreTestSuite) TestMultiBranch() {
@@ -206,7 +274,7 @@ func (s *RootStoreTestSuite) TestCommit() {
 	s.Require().Equal(uint64(1), lv)
 
 	// ensure the root KVStore is cleared
-	s.Require().Empty(s.rootStore.(*Store).rootKVStore.GetChangeset().Pairs)
+	s.Require().Empty(s.rootStore.(*Store).rootKVStore.GetChangeset().Size())
 
 	// perform reads on the updated root store
 	bs := s.rootStore.GetKVStore("")

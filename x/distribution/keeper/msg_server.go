@@ -4,14 +4,14 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/hashicorp/go-metrics"
+	metrics "github.com/hashicorp/go-metrics"
 
 	"cosmossdk.io/errors"
+	"cosmossdk.io/x/distribution/types"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
 type msgServer struct {
@@ -158,7 +158,7 @@ func (k msgServer) CommunityPoolSpend(ctx context.Context, msg *types.MsgCommuni
 		return nil, fmt.Errorf("invalid recipient address: %w", err)
 	}
 
-	if err := k.poolKeeper.DistributeFromFeePool(ctx, msg.Amount, recipient); err != nil {
+	if err := k.poolKeeper.DistributeFromCommunityPool(ctx, msg.Amount, recipient); err != nil {
 		return nil, err
 	}
 

@@ -5,11 +5,15 @@ package cmd
 import (
 	"os"
 
+	dbm "github.com/cosmos/cosmos-db"
+	"github.com/spf13/cobra"
+
 	"cosmossdk.io/log"
 	"cosmossdk.io/simapp"
 	"cosmossdk.io/simapp/params"
-	dbm "github.com/cosmos/cosmos-db"
-	"github.com/spf13/cobra"
+	"cosmossdk.io/x/auth/tx"
+	txmodule "cosmossdk.io/x/auth/tx/config"
+	"cosmossdk.io/x/auth/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/config"
@@ -19,9 +23,6 @@ import (
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-	"github.com/cosmos/cosmos-sdk/x/auth/tx"
-	txmodule "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // NewRootCmd creates a new root command for simd. It is called once in the
@@ -48,7 +49,7 @@ func NewRootCmd() *cobra.Command {
 		WithValidatorAddressCodec(addresscodec.NewBech32Codec(sdk.GetConfig().GetBech32ValidatorAddrPrefix())).
 		WithConsensusAddressCodec(addresscodec.NewBech32Codec(sdk.GetConfig().GetBech32ConsensusAddrPrefix())).
 		WithHomeDir(simapp.DefaultNodeHome).
-		WithViper("") // In simapp, we don't use any prefix for env variables.
+		WithViper("") // uses by default the binary name as prefix
 
 	rootCmd := &cobra.Command{
 		Use:           "simd",

@@ -7,11 +7,11 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/math"
+	authtypes "cosmossdk.io/x/auth/types"
+	"cosmossdk.io/x/distribution/keeper"
+	"cosmossdk.io/x/distribution/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/cosmos/cosmos-sdk/x/distribution/keeper"
-	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
 func TestMsgSetWithdrawAddress(t *testing.T) {
@@ -259,7 +259,7 @@ func TestMsgUpdateParams(t *testing.T) {
 
 func TestMsgCommunityPoolSpend(t *testing.T) {
 	ctx, addrs, distrKeeper, dep := initFixture(t)
-	dep.poolKeeper.EXPECT().DistributeFromFeePool(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+	dep.poolKeeper.EXPECT().DistributeFromCommunityPool(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 	msgServer := keeper.NewMsgServerImpl(distrKeeper)
 
 	cases := []struct {

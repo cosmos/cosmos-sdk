@@ -8,6 +8,7 @@ import (
 	"github.com/cometbft/cometbft/crypto/secp256k1"
 	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmttypes "github.com/cometbft/cometbft/types"
 	dbm "github.com/cosmos/cosmos-db"
 	protoio "github.com/cosmos/gogoproto/io"
 	"github.com/cosmos/gogoproto/proto"
@@ -15,6 +16,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/log"
+	authtx "cosmossdk.io/x/auth/tx"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	baseapptestutil "github.com/cosmos/cosmos-sdk/baseapp/testutil"
@@ -23,7 +25,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/mempool"
-	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 )
 
 const (
@@ -310,6 +311,9 @@ func (s *ABCIUtilsTestSuite) TestDefaultProposalHandler_NoOpMempoolTxSelection()
 	s.Require().NoError(err)
 	s.Require().Len(txBz, 152)
 
+	txDataSize := int(cmttypes.ComputeProtoSizeForTxs([]cmttypes.Tx{txBz}))
+	s.Require().Equal(txDataSize, 155)
+
 	testCases := map[string]struct {
 		ctx         sdk.Context
 		req         *abci.RequestPrepareProposal
@@ -331,7 +335,7 @@ func (s *ABCIUtilsTestSuite) TestDefaultProposalHandler_NoOpMempoolTxSelection()
 			}),
 			req: &abci.RequestPrepareProposal{
 				Txs:        [][]byte{txBz, txBz, txBz, txBz, txBz},
-				MaxTxBytes: 456,
+				MaxTxBytes: 465,
 			},
 			expectedTxs: 0,
 		},
@@ -339,9 +343,17 @@ func (s *ABCIUtilsTestSuite) TestDefaultProposalHandler_NoOpMempoolTxSelection()
 			ctx: s.ctx,
 			req: &abci.RequestPrepareProposal{
 				Txs:        [][]byte{txBz, txBz, txBz, txBz, txBz},
-				MaxTxBytes: 456,
+				MaxTxBytes: 465,
 			},
 			expectedTxs: 3,
+		},
+		"large max tx bytes len calculation": {
+			ctx: s.ctx,
+			req: &abci.RequestPrepareProposal{
+				Txs:        [][]byte{txBz, txBz, txBz, txBz, txBz},
+				MaxTxBytes: 456,
+			},
+			expectedTxs: 2,
 		},
 		"max gas and tx bytes": {
 			ctx: s.ctx.WithConsensusParams(cmtproto.ConsensusParams{
@@ -351,7 +363,7 @@ func (s *ABCIUtilsTestSuite) TestDefaultProposalHandler_NoOpMempoolTxSelection()
 			}),
 			req: &abci.RequestPrepareProposal{
 				Txs:        [][]byte{txBz, txBz, txBz, txBz, txBz},
-				MaxTxBytes: 456,
+				MaxTxBytes: 465,
 			},
 			expectedTxs: 2,
 		},
@@ -360,7 +372,7 @@ func (s *ABCIUtilsTestSuite) TestDefaultProposalHandler_NoOpMempoolTxSelection()
 	for name, tc := range testCases {
 		s.Run(name, func() {
 			// iterate multiple times to ensure the tx selector is cleared each time
-			for i := 0; i < 5; i++ {
+			for i := 0; i < 6; i++ {
 				resp, err := handler(tc.ctx, tc.req)
 				s.Require().NoError(err)
 				s.Require().Len(resp.Txs, tc.expectedTxs)

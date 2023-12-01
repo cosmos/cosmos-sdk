@@ -4,26 +4,26 @@ import (
 	"testing"
 	"time"
 
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/comet"
+	"cosmossdk.io/core/header"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
+	authtypes "cosmossdk.io/x/auth/types"
+	"cosmossdk.io/x/distribution"
+	"cosmossdk.io/x/distribution/keeper"
+	distrtestutil "cosmossdk.io/x/distribution/testutil"
+	disttypes "cosmossdk.io/x/distribution/types"
+	stakingtypes "cosmossdk.io/x/staking/types"
 
 	"github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/cosmos/cosmos-sdk/x/distribution"
-	"github.com/cosmos/cosmos-sdk/x/distribution/keeper"
-	distrtestutil "github.com/cosmos/cosmos-sdk/x/distribution/testutil"
-	disttypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 func TestAllocateTokensToValidatorWithCommission(t *testing.T) {
@@ -32,7 +32,7 @@ func TestAllocateTokensToValidatorWithCommission(t *testing.T) {
 	storeService := runtime.NewKVStoreService(key)
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
 	encCfg := moduletestutil.MakeTestEncodingConfig(distribution.AppModuleBasic{})
-	ctx := testCtx.Ctx.WithBlockHeader(cmtproto.Header{Time: time.Now()})
+	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now()})
 
 	bankKeeper := distrtestutil.NewMockBankKeeper(ctrl)
 	stakingKeeper := distrtestutil.NewMockStakingKeeper(ctrl)
@@ -91,7 +91,7 @@ func TestAllocateTokensToManyValidators(t *testing.T) {
 	storeService := runtime.NewKVStoreService(key)
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
 	encCfg := moduletestutil.MakeTestEncodingConfig(distribution.AppModuleBasic{})
-	ctx := testCtx.Ctx.WithBlockHeader(cmtproto.Header{Time: time.Now()})
+	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now()})
 
 	bankKeeper := distrtestutil.NewMockBankKeeper(ctrl)
 	stakingKeeper := distrtestutil.NewMockStakingKeeper(ctrl)
@@ -150,7 +150,7 @@ func TestAllocateTokensToManyValidators(t *testing.T) {
 
 	feePool, err := distrKeeper.FeePool.Get(ctx)
 	require.NoError(t, err)
-	require.True(t, feePool.CommunityPool.IsZero())
+	require.True(t, feePool.DecimalPool.IsZero())
 
 	_, err = distrKeeper.ValidatorsAccumulatedCommission.Get(ctx, valAddr0)
 	require.ErrorIs(t, err, collections.ErrNotFound)
@@ -168,6 +168,7 @@ func TestAllocateTokensToManyValidators(t *testing.T) {
 	fees := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100)))
 	bankKeeper.EXPECT().GetAllBalances(gomock.Any(), feeCollectorAcc.GetAddress()).Return(fees)
 	bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), "fee_collector", disttypes.ModuleName, fees)
+	bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), disttypes.ModuleName, disttypes.ProtocolPoolModuleName, sdk.Coins{{Denom: sdk.DefaultBondDenom, Amount: math.NewInt(2)}}) // 2 community pool coins
 
 	votes := []comet.VoteInfo{
 		{
@@ -189,10 +190,9 @@ func TestAllocateTokensToManyValidators(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: math.LegacyNewDecWithPrec(490, 1)}}, val1OutstandingRewards.Rewards)
 
-	// 2 community pool coins
 	feePool, err = distrKeeper.FeePool.Get(ctx)
 	require.NoError(t, err)
-	require.Equal(t, sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: math.LegacyNewDec(2)}}, feePool.CommunityPool)
+	require.True(t, feePool.DecimalPool.IsZero())
 
 	// 50% commission for first proposer, (0.5 * 98%) * 100 / 2 = 23.25
 	val0Commission, err := distrKeeper.ValidatorsAccumulatedCommission.Get(ctx, valAddr0)
@@ -221,7 +221,7 @@ func TestAllocateTokensTruncation(t *testing.T) {
 	storeService := runtime.NewKVStoreService(key)
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
 	encCfg := moduletestutil.MakeTestEncodingConfig(distribution.AppModuleBasic{})
-	ctx := testCtx.Ctx.WithBlockHeader(cmtproto.Header{Time: time.Now()})
+	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now()})
 
 	bankKeeper := distrtestutil.NewMockBankKeeper(ctrl)
 	stakingKeeper := distrtestutil.NewMockStakingKeeper(ctrl)
@@ -291,7 +291,7 @@ func TestAllocateTokensTruncation(t *testing.T) {
 
 	feePool, err := distrKeeper.FeePool.Get(ctx)
 	require.NoError(t, err)
-	require.True(t, feePool.CommunityPool.IsZero())
+	require.True(t, feePool.DecimalPool.IsZero())
 
 	_, err = distrKeeper.ValidatorsAccumulatedCommission.Get(ctx, valAddr0)
 	require.ErrorIs(t, err, collections.ErrNotFound)
@@ -309,6 +309,7 @@ func TestAllocateTokensTruncation(t *testing.T) {
 	fees := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(634195840)))
 	bankKeeper.EXPECT().GetAllBalances(gomock.Any(), feeCollectorAcc.GetAddress()).Return(fees)
 	bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), "fee_collector", disttypes.ModuleName, fees)
+	bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), disttypes.ModuleName, disttypes.ProtocolPoolModuleName, gomock.Any()) // something is sent to community pool
 
 	votes := []comet.VoteInfo{
 		{

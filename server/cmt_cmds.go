@@ -17,6 +17,7 @@ import (
 	"sigs.k8s.io/yaml"
 
 	"cosmossdk.io/log"
+	auth "cosmossdk.io/x/auth/client/cli"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -27,7 +28,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/version"
-	auth "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 )
 
 // StatusCommand returns the command to return the status of the network.
@@ -372,7 +372,7 @@ func BootstrapStateCmd(appCreator types.AppCreator) *cobra.Command {
 			}
 			if height == 0 {
 				home := serverCtx.Viper.GetString(flags.FlagHome)
-				db, err := openDB(home, GetAppDBBackend(serverCtx.Viper))
+				db, err := OpenDB(home, GetAppDBBackend(serverCtx.Viper))
 				if err != nil {
 					return err
 				}

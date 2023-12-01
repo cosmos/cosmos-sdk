@@ -12,7 +12,10 @@ import (
 	"cosmossdk.io/core/header"
 	sdkmath "cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
-	govtypes "cosmossdk.io/x/gov/types"
+	authtypes "cosmossdk.io/x/auth/types"
+	slashingkeeper "cosmossdk.io/x/slashing/keeper"
+	slashingtestutil "cosmossdk.io/x/slashing/testutil"
+	slashingtypes "cosmossdk.io/x/slashing/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec/address"
@@ -22,10 +25,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	addresstypes "github.com/cosmos/cosmos-sdk/types/address"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	slashingkeeper "github.com/cosmos/cosmos-sdk/x/slashing/keeper"
-	slashingtestutil "github.com/cosmos/cosmos-sdk/x/slashing/testutil"
-	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
 
 var consAddr = sdk.ConsAddress(sdk.AccAddress([]byte("addr1_______________")))
@@ -55,7 +54,7 @@ func (s *KeeperTestSuite) SetupTest() {
 	s.stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec("cosmosvaloper")).AnyTimes()
 	s.stakingKeeper.EXPECT().ConsensusAddressCodec().Return(address.NewBech32Codec("cosmosvalcons")).AnyTimes()
 
-	authStr, err := address.NewBech32Codec("cosmos").BytesToString(authtypes.NewModuleAddress(govtypes.ModuleName))
+	authStr, err := address.NewBech32Codec("cosmos").BytesToString(authtypes.NewModuleAddress(slashingtypes.GovModuleName))
 	s.Require().NoError(err)
 
 	s.ctx = ctx

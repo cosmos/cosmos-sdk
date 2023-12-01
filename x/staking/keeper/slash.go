@@ -8,9 +8,9 @@ import (
 	st "cosmossdk.io/api/cosmos/staking/v1beta1"
 	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
+	types "cosmossdk.io/x/staking/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	types "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // Slash a validator for an infraction committed at a known height
@@ -182,11 +182,11 @@ func (k Keeper) Slash(ctx context.Context, consAddr sdk.ConsAddress, infractionH
 	}
 
 	switch validator.GetStatus() {
-	case types.Bonded:
+	case sdk.Bonded:
 		if err := k.burnBondedTokens(ctx, tokensToBurn); err != nil {
 			return math.NewInt(0), err
 		}
-	case types.Unbonding, types.Unbonded:
+	case sdk.Unbonding, sdk.Unbonded:
 		if err := k.burnNotBondedTokens(ctx, tokensToBurn); err != nil {
 			return math.NewInt(0), err
 		}

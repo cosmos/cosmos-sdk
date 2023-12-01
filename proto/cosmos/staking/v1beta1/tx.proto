@@ -11,7 +11,7 @@ import "cosmos/staking/v1beta1/staking.proto";
 import "cosmos/msg/v1/msg.proto";
 import "amino/amino.proto";
 
-option go_package = "github.com/cosmos/cosmos-sdk/x/staking/types";
+option go_package = "cosmossdk.io/x/staking/types";
 
 // Msg defines the staking Msg service.
 service Msg {
@@ -48,7 +48,7 @@ service Msg {
 
   // RotateConsPubKey defines an operation for rotating the consensus keys
   // of a validator.
-  // Since: cosmos-sdk 0.48
+  // Since: cosmos-sdk 0.51
   rpc RotateConsPubKey(MsgRotateConsPubKey) returns (MsgRotateConsPubKeyResponse);
 }
 

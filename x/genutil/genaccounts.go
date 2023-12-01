@@ -5,11 +5,12 @@ import (
 	"errors"
 	"fmt"
 
+	authtypes "cosmossdk.io/x/auth/types"
+	authvesting "cosmossdk.io/x/auth/vesting/types"
+	banktypes "cosmossdk.io/x/bank/types"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	authvesting "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 

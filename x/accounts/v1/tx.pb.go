@@ -6,6 +6,7 @@ package v1
 import (
 	context "context"
 	fmt "fmt"
+	_ "github.com/cosmos/cosmos-sdk/types/msgservice"
 	grpc1 "github.com/cosmos/gogoproto/grpc"
 	proto "github.com/cosmos/gogoproto/proto"
 	grpc "google.golang.org/grpc"
@@ -258,37 +259,150 @@ func (m *MsgExecuteResponse) GetResponse() []byte {
 	return nil
 }
 
+// MsgExecuteBundle defines the ExecuteBundle request type for the Msg/ExecuteBundle RPC method.
+type MsgExecuteBundle struct {
+	// bundler defines the entity going through the standard TX flow
+	// to execute one or multiple UserOperations on behalf of others.
+	Bundler string `protobuf:"bytes,1,opt,name=bundler,proto3" json:"bundler,omitempty"`
+	// operations is the list of operations to be executed.
+	Operations []*UserOperation `protobuf:"bytes,2,rep,name=operations,proto3" json:"operations,omitempty"`
+}
+
+func (m *MsgExecuteBundle) Reset()         { *m = MsgExecuteBundle{} }
+func (m *MsgExecuteBundle) String() string { return proto.CompactTextString(m) }
+func (*MsgExecuteBundle) ProtoMessage()    {}
+func (*MsgExecuteBundle) Descriptor() ([]byte, []int) {
+	return fileDescriptor_29c2b6d8a13d4189, []int{4}
+}
+func (m *MsgExecuteBundle) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgExecuteBundle) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgExecuteBundle.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgExecuteBundle) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgExecuteBundle.Merge(m, src)
+}
+func (m *MsgExecuteBundle) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgExecuteBundle) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgExecuteBundle.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgExecuteBundle proto.InternalMessageInfo
+
+func (m *MsgExecuteBundle) GetBundler() string {
+	if m != nil {
+		return m.Bundler
+	}
+	return ""
+}
+
+func (m *MsgExecuteBundle) GetOperations() []*UserOperation {
+	if m != nil {
+		return m.Operations
+	}
+	return nil
+}
+
+// MsgExecuteBundleResponse defines the ExecuteBundle response type for the Msg/ExecuteBundle RPC method.
+type MsgExecuteBundleResponse struct {
+	// responses is the list of responses returned by the account implementations.
+	Responses []*UserOperationResponse `protobuf:"bytes,1,rep,name=responses,proto3" json:"responses,omitempty"`
+}
+
+func (m *MsgExecuteBundleResponse) Reset()         { *m = MsgExecuteBundleResponse{} }
+func (m *MsgExecuteBundleResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgExecuteBundleResponse) ProtoMessage()    {}
+func (*MsgExecuteBundleResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_29c2b6d8a13d4189, []int{5}
+}
+func (m *MsgExecuteBundleResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgExecuteBundleResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgExecuteBundleResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgExecuteBundleResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgExecuteBundleResponse.Merge(m, src)
+}
+func (m *MsgExecuteBundleResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgExecuteBundleResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgExecuteBundleResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgExecuteBundleResponse proto.InternalMessageInfo
+
+func (m *MsgExecuteBundleResponse) GetResponses() []*UserOperationResponse {
+	if m != nil {
+		return m.Responses
+	}
+	return nil
+}
+
 func init() {
 	proto.RegisterType((*MsgInit)(nil), "cosmos.accounts.v1.MsgInit")
 	proto.RegisterType((*MsgInitResponse)(nil), "cosmos.accounts.v1.MsgInitResponse")
 	proto.RegisterType((*MsgExecute)(nil), "cosmos.accounts.v1.MsgExecute")
 	proto.RegisterType((*MsgExecuteResponse)(nil), "cosmos.accounts.v1.MsgExecuteResponse")
+	proto.RegisterType((*MsgExecuteBundle)(nil), "cosmos.accounts.v1.MsgExecuteBundle")
+	proto.RegisterType((*MsgExecuteBundleResponse)(nil), "cosmos.accounts.v1.MsgExecuteBundleResponse")
 }
 
 func init() { proto.RegisterFile("cosmos/accounts/v1/tx.proto", fileDescriptor_29c2b6d8a13d4189) }
 
 var fileDescriptor_29c2b6d8a13d4189 = []byte{
-	// 319 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x7c, 0x92, 0xc1, 0x4a, 0xfb, 0x40,
-	0x10, 0xc6, 0xbb, 0xff, 0xfe, 0x69, 0x75, 0x2c, 0x16, 0xf6, 0x50, 0x42, 0x0a, 0x4b, 0xad, 0xa0,
-	0x3d, 0x6d, 0xac, 0xfa, 0x02, 0x0a, 0x82, 0x1e, 0x7a, 0x30, 0x48, 0x0f, 0x1e, 0x94, 0x98, 0x0c,
-	0xa1, 0x48, 0xb3, 0x21, 0xb3, 0x2d, 0xed, 0x5b, 0xf8, 0x0c, 0x3e, 0x8d, 0xc7, 0x1e, 0x3d, 0x4a,
-	0xf2, 0x22, 0x42, 0xb2, 0x89, 0x15, 0x69, 0x8e, 0xdf, 0x7c, 0x3b, 0xdf, 0xfc, 0x76, 0x18, 0xe8,
-	0xfb, 0x8a, 0xe6, 0x8a, 0x1c, 0xcf, 0xf7, 0xd5, 0x22, 0xd2, 0xe4, 0x2c, 0xc7, 0x8e, 0x5e, 0xc9,
-	0x38, 0x51, 0x5a, 0x71, 0x5e, 0x98, 0xb2, 0x34, 0xe5, 0x72, 0x3c, 0x7c, 0x82, 0xf6, 0x84, 0xc2,
-	0xbb, 0x68, 0xa6, 0x79, 0x0f, 0x5a, 0x84, 0x51, 0x80, 0x89, 0xc5, 0x06, 0x6c, 0xb4, 0xef, 0x1a,
-	0xc5, 0x8f, 0xa0, 0x63, 0x3a, 0x9e, 0xf5, 0x3a, 0x46, 0xeb, 0x5f, 0xee, 0x1e, 0x98, 0xda, 0xc3,
-	0x3a, 0x46, 0x6e, 0x41, 0x7b, 0x8e, 0x44, 0x5e, 0x88, 0x56, 0x73, 0xc0, 0x46, 0x1d, 0xb7, 0x94,
-	0xc3, 0x29, 0x74, 0x4d, 0xbe, 0x8b, 0x14, 0xab, 0x88, 0x90, 0x9f, 0x42, 0xb7, 0xcc, 0xf3, 0x82,
-	0x20, 0x41, 0x22, 0x33, 0xf0, 0xd0, 0x94, 0xaf, 0x8a, 0x2a, 0xb7, 0x61, 0x2f, 0x31, 0x4d, 0xf9,
-	0xd0, 0x8e, 0x5b, 0xe9, 0xe1, 0x14, 0x60, 0x42, 0xe1, 0xcd, 0x0a, 0xfd, 0x85, 0xc6, 0x9d, 0xe8,
-	0x3d, 0x68, 0x69, 0x2f, 0x09, 0x51, 0x1b, 0x68, 0xa3, 0x6a, 0x78, 0xcf, 0x80, 0xff, 0xe4, 0x56,
-	0xc8, 0xdb, 0x24, 0xec, 0x37, 0xc9, 0xf9, 0x3b, 0x83, 0xe6, 0x84, 0x42, 0x7e, 0x0b, 0xff, 0xf3,
-	0x35, 0xf6, 0xe5, 0xdf, 0x35, 0x4b, 0xb3, 0x03, 0xfb, 0xb8, 0xc6, 0xac, 0xa6, 0xdd, 0x43, 0xbb,
-	0xfc, 0x98, 0xd8, 0xf1, 0xde, 0xf8, 0xf6, 0x49, 0xbd, 0x5f, 0x46, 0x5e, 0x5f, 0x7e, 0xa4, 0x82,
-	0x6d, 0x52, 0xc1, 0xbe, 0x52, 0xc1, 0xde, 0x32, 0xd1, 0xd8, 0x64, 0xa2, 0xf1, 0x99, 0x89, 0xc6,
-	0xa3, 0x5d, 0x04, 0x50, 0xf0, 0x2a, 0x67, 0xca, 0x59, 0x6d, 0x5f, 0xce, 0x4b, 0x2b, 0xbf, 0x9b,
-	0x8b, 0xef, 0x00, 0x00, 0x00, 0xff, 0xff, 0x58, 0xc2, 0x24, 0xb3, 0x56, 0x02, 0x00, 0x00,
+	// 460 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x53, 0x4f, 0x6f, 0xd3, 0x30,
+	0x14, 0xaf, 0x5b, 0x68, 0xd9, 0x6b, 0x61, 0xc8, 0x87, 0x11, 0x79, 0x52, 0xd4, 0x05, 0x04, 0x65,
+	0x9a, 0x12, 0x36, 0x38, 0xed, 0xb6, 0x49, 0x08, 0x38, 0x54, 0x88, 0x08, 0x38, 0x70, 0x41, 0xa9,
+	0x63, 0x45, 0xd5, 0x48, 0x1c, 0xf9, 0xb9, 0x53, 0x77, 0x40, 0x42, 0x7c, 0x00, 0xc4, 0x47, 0xd9,
+	0xc7, 0xe0, 0xb8, 0x23, 0x47, 0xd4, 0x1e, 0xf6, 0x35, 0x50, 0x12, 0x3b, 0x2d, 0x63, 0xeb, 0x76,
+	0xcb, 0x7b, 0xef, 0xf7, 0xcf, 0x7e, 0x31, 0x6c, 0x72, 0x89, 0xa9, 0xc4, 0x20, 0xe2, 0x5c, 0x4e,
+	0x32, 0x8d, 0xc1, 0xf1, 0x6e, 0xa0, 0xa7, 0x7e, 0xae, 0xa4, 0x96, 0x94, 0x56, 0x43, 0xdf, 0x0e,
+	0xfd, 0xe3, 0x5d, 0xf6, 0xc0, 0x10, 0x52, 0x4c, 0x0a, 0x6c, 0x8a, 0x49, 0x05, 0x66, 0x3b, 0x97,
+	0x28, 0x99, 0xef, 0xcf, 0xd1, 0x08, 0xb5, 0x8a, 0xb8, 0x1e, 0xcb, 0xac, 0x42, 0x7b, 0x47, 0xd0,
+	0x19, 0x62, 0xf2, 0x26, 0x1b, 0x6b, 0xba, 0x01, 0x6d, 0x14, 0x59, 0x2c, 0x94, 0x43, 0xfa, 0x64,
+	0xb0, 0x16, 0x9a, 0x8a, 0x6e, 0x41, 0xcf, 0xf2, 0xf5, 0x49, 0x2e, 0x9c, 0x66, 0x39, 0xed, 0x9a,
+	0xde, 0xfb, 0x93, 0x5c, 0x50, 0x07, 0x3a, 0xa9, 0x40, 0x8c, 0x12, 0xe1, 0xb4, 0xfa, 0x64, 0xd0,
+	0x0b, 0x6d, 0xb9, 0xdf, 0xfd, 0x7e, 0x7e, 0xba, 0x6d, 0x94, 0xbc, 0x8f, 0xb0, 0x6e, 0xcc, 0x42,
+	0x81, 0xb9, 0xcc, 0x50, 0xd0, 0x27, 0xb0, 0x5e, 0x87, 0x8b, 0x63, 0x25, 0x10, 0x8d, 0xfb, 0x3d,
+	0xd3, 0x3e, 0xa8, 0xba, 0x94, 0xc1, 0x1d, 0x65, 0x48, 0x65, 0x82, 0x5e, 0x58, 0xd7, 0x1e, 0x07,
+	0x18, 0x62, 0xf2, 0x72, 0x2a, 0xf8, 0x44, 0x8b, 0x2b, 0xcf, 0xb1, 0x01, 0x6d, 0x1d, 0xa9, 0x44,
+	0x68, 0x73, 0x02, 0x53, 0xdd, 0x34, 0xfc, 0x33, 0xa0, 0x0b, 0x93, 0x3a, 0xff, 0x72, 0x2c, 0x72,
+	0x21, 0xd6, 0x57, 0xb8, 0xbf, 0x60, 0x1c, 0x4e, 0xb2, 0xf8, 0x4b, 0x79, 0x53, 0xa3, 0xf2, 0xcb,
+	0xa6, 0xb3, 0x25, 0x3d, 0x00, 0x90, 0xb9, 0x50, 0x51, 0xb1, 0x1c, 0x74, 0x9a, 0xfd, 0xd6, 0xa0,
+	0xbb, 0xb7, 0xe5, 0xff, 0xbf, 0x79, 0xff, 0x03, 0x0a, 0xf5, 0xd6, 0x22, 0xc3, 0x25, 0xd2, 0x7e,
+	0xaf, 0xc8, 0x6b, 0x05, 0x3d, 0x0e, 0xce, 0x45, 0xfb, 0x3a, 0xf6, 0x2b, 0x58, 0xb3, 0x31, 0x8b,
+	0x0b, 0x2f, 0xbc, 0x9e, 0x5e, 0xef, 0x65, 0x18, 0xe1, 0x82, 0xbb, 0xf7, 0xa3, 0x09, 0xad, 0x21,
+	0x26, 0xf4, 0x35, 0xdc, 0x2a, 0x7f, 0xa2, 0xcd, 0xcb, 0x54, 0xcc, 0xd2, 0xd9, 0xc3, 0x15, 0xc3,
+	0x3a, 0xda, 0x3b, 0xe8, 0xd8, 0x4d, 0xba, 0x57, 0xe0, 0xcd, 0x9c, 0x3d, 0x5e, 0x3d, 0xaf, 0x25,
+	0x39, 0xdc, 0xfd, 0x77, 0x0b, 0x8f, 0x56, 0x13, 0x2b, 0x14, 0xdb, 0xb9, 0x09, 0xca, 0x9a, 0xb0,
+	0xdb, 0xdf, 0xce, 0x4f, 0xb7, 0xc9, 0xe1, 0x8b, 0x5f, 0x33, 0x97, 0x9c, 0xcd, 0x5c, 0xf2, 0x67,
+	0xe6, 0x92, 0x9f, 0x73, 0xb7, 0x71, 0x36, 0x77, 0x1b, 0xbf, 0xe7, 0x6e, 0xe3, 0x13, 0xab, 0xd4,
+	0x30, 0x3e, 0xf2, 0xc7, 0x32, 0x98, 0x2e, 0x3f, 0xd0, 0x51, 0xbb, 0x7c, 0x8d, 0xcf, 0xff, 0x06,
+	0x00, 0x00, 0xff, 0xff, 0x02, 0x12, 0x2a, 0x01, 0x07, 0x04, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -307,6 +421,9 @@ type MsgClient interface {
 	Init(ctx context.Context, in *MsgInit, opts ...grpc.CallOption) (*MsgInitResponse, error)
 	// Execute executes a message to the target account.
 	Execute(ctx context.Context, in *MsgExecute, opts ...grpc.CallOption) (*MsgExecuteResponse, error)
+	// ExecuteBundle pertains account abstraction, it is used by the bundler
+	// to execute multiple UserOperations in a single transaction message.
+	ExecuteBundle(ctx context.Context, in *MsgExecuteBundle, opts ...grpc.CallOption) (*MsgExecuteBundleResponse, error)
 }
 
 type msgClient struct {
@@ -335,12 +452,24 @@ func (c *msgClient) Execute(ctx context.Context, in *MsgExecute, opts ...grpc.Ca
 	return out, nil
 }
 
+func (c *msgClient) ExecuteBundle(ctx context.Context, in *MsgExecuteBundle, opts ...grpc.CallOption) (*MsgExecuteBundleResponse, error) {
+	out := new(MsgExecuteBundleResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.accounts.v1.Msg/ExecuteBundle", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 type MsgServer interface {
 	// Init creates a new account in the chain.
 	Init(context.Context, *MsgInit) (*MsgInitResponse, error)
 	// Execute executes a message to the target account.
 	Execute(context.Context, *MsgExecute) (*MsgExecuteResponse, error)
+	// ExecuteBundle pertains account abstraction, it is used by the bundler
+	// to execute multiple UserOperations in a single transaction message.
+	ExecuteBundle(context.Context, *MsgExecuteBundle) (*MsgExecuteBundleResponse, error)
 }
 
 // UnimplementedMsgServer can be embedded to have forward compatible implementations.
@@ -352,6 +481,9 @@ func (*UnimplementedMsgServer) Init(ctx context.Context, req *MsgInit) (*MsgInit
 }
 func (*UnimplementedMsgServer) Execute(ctx context.Context, req *MsgExecute) (*MsgExecuteResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Execute not implemented")
+}
+func (*UnimplementedMsgServer) ExecuteBundle(ctx context.Context, req *MsgExecuteBundle) (*MsgExecuteBundleResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ExecuteBundle not implemented")
 }
 
 func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
@@ -394,6 +526,24 @@ func _Msg_Execute_Handler(srv interface{}, ctx context.Context, dec func(interfa
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_ExecuteBundle_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgExecuteBundle)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).ExecuteBundle(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.accounts.v1.Msg/ExecuteBundle",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).ExecuteBundle(ctx, req.(*MsgExecuteBundle))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Msg_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "cosmos.accounts.v1.Msg",
 	HandlerType: (*MsgServer)(nil),
@@ -405,6 +555,10 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Execute",
 			Handler:    _Msg_Execute_Handler,
+		},
+		{
+			MethodName: "ExecuteBundle",
+			Handler:    _Msg_ExecuteBundle_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -566,6 +720,87 @@ func (m *MsgExecuteResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
+func (m *MsgExecuteBundle) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgExecuteBundle) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgExecuteBundle) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Operations) > 0 {
+		for iNdEx := len(m.Operations) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Operations[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintTx(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x12
+		}
+	}
+	if len(m.Bundler) > 0 {
+		i -= len(m.Bundler)
+		copy(dAtA[i:], m.Bundler)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Bundler)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgExecuteBundleResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgExecuteBundleResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgExecuteBundleResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Responses) > 0 {
+		for iNdEx := len(m.Responses) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Responses[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintTx(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintTx(dAtA []byte, offset int, v uint64) int {
 	offset -= sovTx(v)
 	base := offset
@@ -645,6 +880,40 @@ func (m *MsgExecuteResponse) Size() (n int) {
 	l = len(m.Response)
 	if l > 0 {
 		n += 1 + l + sovTx(uint64(l))
+	}
+	return n
+}
+
+func (m *MsgExecuteBundle) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Bundler)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	if len(m.Operations) > 0 {
+		for _, e := range m.Operations {
+			l = e.Size()
+			n += 1 + l + sovTx(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *MsgExecuteBundleResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.Responses) > 0 {
+		for _, e := range m.Responses {
+			l = e.Size()
+			n += 1 + l + sovTx(uint64(l))
+		}
 	}
 	return n
 }
@@ -1128,6 +1397,206 @@ func (m *MsgExecuteResponse) Unmarshal(dAtA []byte) error {
 			m.Response = append(m.Response[:0], dAtA[iNdEx:postIndex]...)
 			if m.Response == nil {
 				m.Response = []byte{}
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgExecuteBundle) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgExecuteBundle: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgExecuteBundle: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Bundler", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Bundler = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Operations", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Operations = append(m.Operations, &UserOperation{})
+			if err := m.Operations[len(m.Operations)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgExecuteBundleResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgExecuteBundleResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgExecuteBundleResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Responses", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Responses = append(m.Responses, &UserOperationResponse{})
+			if err := m.Responses[len(m.Responses)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
 			}
 			iNdEx = postIndex
 		default:

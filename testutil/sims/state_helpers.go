@@ -13,6 +13,9 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 
 	"cosmossdk.io/math"
+	authtypes "cosmossdk.io/x/auth/types"
+	banktypes "cosmossdk.io/x/bank/types"
+	stakingtypes "cosmossdk.io/x/staking/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
@@ -20,11 +23,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	simcli "github.com/cosmos/cosmos-sdk/x/simulation/client/cli"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // Simulation parameter constants
@@ -68,13 +68,9 @@ func AppStateFnWithExtendedCbs(
 		accs []simtypes.Account,
 		config simtypes.Config,
 	) (appState json.RawMessage, simAccs []simtypes.Account, chainID string, genesisTimestamp time.Time) {
-		if simcli.FlagGenesisTimeValue == 0 {
-			genesisTimestamp = simtypes.RandTimestamp(r)
-		} else {
-			genesisTimestamp = time.Unix(simcli.FlagGenesisTimeValue, 0)
-		}
-
+		genesisTimestamp = time.Unix(config.GenesisTime, 0)
 		chainID = config.ChainID
+
 		switch {
 		case config.ParamsFile != "" && config.GenesisFile != "":
 			panic("cannot provide both a genesis file and a params file")

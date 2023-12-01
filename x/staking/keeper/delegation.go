@@ -10,10 +10,10 @@ import (
 	"cosmossdk.io/collections"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
+	"cosmossdk.io/x/staking/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // GetAllDelegations returns all delegations used during genesis dump.
@@ -1077,7 +1077,7 @@ func (k Keeper) BeginRedelegation(
 		return time.Time{}, types.ErrTinyRedelegationAmount
 	}
 
-	sharesCreated, err := k.Delegate(ctx, delAddr, returnAmount, srcValidator.GetStatus(), dstValidator, false)
+	sharesCreated, err := k.Delegate(ctx, delAddr, returnAmount, types.BondStatus(srcValidator.GetStatus()), dstValidator, false)
 	if err != nil {
 		return time.Time{}, err
 	}

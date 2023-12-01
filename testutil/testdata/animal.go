@@ -1,7 +1,5 @@
 package testdata
 
-// nolint
-
 import (
 	"fmt"
 

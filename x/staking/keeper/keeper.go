@@ -9,14 +9,15 @@ import (
 
 	"cosmossdk.io/collections"
 	collcodec "cosmossdk.io/collections/codec"
+	"cosmossdk.io/collections/indexes"
 	addresscodec "cosmossdk.io/core/address"
 	storetypes "cosmossdk.io/core/store"
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
+	"cosmossdk.io/x/staking/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // Implements ValidatorSet interface
@@ -39,6 +40,27 @@ func HistoricalInfoCodec(cdc codec.BinaryCodec) collcodec.ValueCodec[types.Histo
 			ValidatorsHash: historicalinfo.Header.NextValidatorsHash,
 		}, nil
 	})
+}
+
+type rotationHistoryIndexes struct {
+	Block *indexes.Multi[uint64, []byte, types.ConsPubKeyRotationHistory]
+}
+
+func (a rotationHistoryIndexes) IndexesList() []collections.Index[[]byte, types.ConsPubKeyRotationHistory] {
+	return []collections.Index[[]byte, types.ConsPubKeyRotationHistory]{
+		a.Block,
+	}
+}
+
+func NewRotationHistoryIndexes(sb *collections.SchemaBuilder) rotationHistoryIndexes {
+	return rotationHistoryIndexes{
+		Block: indexes.NewMulti(
+			sb, types.BlockConsPubKeyRotationHistoryKey, "cons_pubkey_history_by_block", collections.Uint64Key, collections.BytesKey,
+			func(_ []byte, v types.ConsPubKeyRotationHistory) (uint64, error) {
+				return v.Height, nil
+			},
+		),
+	}
 }
 
 // Keeper of the x/staking store
@@ -93,6 +115,15 @@ type Keeper struct {
 	LastValidatorPower collections.Map[[]byte, gogotypes.Int64Value]
 	// Params key: ParamsKeyPrefix | value: Params
 	Params collections.Item[types.Params]
+	// ValidatorConsensusKeyRotationRecordIndexKey: this key is used to restrict the validator next rotation within waiting (unbonding) period
+	ValidatorConsensusKeyRotationRecordIndexKey collections.KeySet[collections.Pair[[]byte, time.Time]]
+	// ValidatorConsensusKeyRotationRecordQueue: this key is used to set the unbonding period time on each rotation
+	ValidatorConsensusKeyRotationRecordQueue collections.Map[time.Time, types.ValAddrsOfRotatedConsKeys]
+	// RotatedConsKeyMapIndex: prefix for rotated cons address to new cons address
+	RotatedConsKeyMapIndex collections.Map[[]byte, []byte]
+	// ValidatorConsPubKeyRotationHistory: consPubkey rotation history by validator
+	// A index is being added with key `BlockConsPubKeyRotationHistory`: consPubkey rotation history by height
+	RotationHistory *collections.IndexedMap[[]byte, types.ConsPubKeyRotationHistory, rotationHistoryIndexes]
 }
 
 // NewKeeper creates a new staking Keeper instance
@@ -226,6 +257,40 @@ func NewKeeper(
 		),
 		// key is: 113 (it's a direct prefix)
 		Params: collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
+
+		// key format is: 103 | valAddr | time
+		ValidatorConsensusKeyRotationRecordIndexKey: collections.NewKeySet(
+			sb, types.ValidatorConsensusKeyRotationRecordIndexKey,
+			"cons_pub_rotation_index",
+			collections.PairKeyCodec(collections.BytesKey, sdk.TimeKey),
+		),
+
+		// key format is: 104 | time
+		ValidatorConsensusKeyRotationRecordQueue: collections.NewMap(
+			sb, types.ValidatorConsensusKeyRotationRecordQueueKey,
+			"cons_pub_rotation_queue",
+			sdk.TimeKey,
+			codec.CollValue[types.ValAddrsOfRotatedConsKeys](cdc),
+		),
+
+		// key format is: 105 | valAddr
+		RotatedConsKeyMapIndex: collections.NewMap(
+			sb, types.RotatedConsKeyMapIndex,
+			"cons_pubkey_map",
+			collections.BytesKey,
+			collections.BytesValue,
+		),
+
+		// key format is : 101 | rotation history
+		// index is : 102 | rotation history
+		RotationHistory: collections.NewIndexedMap(
+			sb,
+			types.ValidatorConsPubKeyRotationHistoryKey,
+			"cons_pub_rotation_history",
+			collections.BytesKey,
+			codec.CollValue[types.ConsPubKeyRotationHistory](cdc),
+			NewRotationHistoryIndexes(sb),
+		),
 	}
 
 	schema, err := sb.Build()

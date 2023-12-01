@@ -18,6 +18,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 )
 
 func InitCmd(config *config.Config, configDir string) *cobra.Command {
@@ -66,20 +67,35 @@ func RemoteCommand(config *config.Config, configDir string) ([]*cobra.Command, e
 			return nil, err
 		}
 
+		kr, err := getKeyring(chain)
+		if err != nil {
+			return nil, err
+		}
+
+		autoCLIKeyring, err := keyring.NewAutoCLIKeyring(kr)
+		if err != nil {
+			return nil, err
+		}
+
 		clientCtx := client.Context{}.
 			WithAddressCodec(addressCodec).
 			WithValidatorAddressCodec(validatorAddressCodec).
-			WithConsensusAddressCodec(consensusAddressCodec)
+			WithConsensusAddressCodec(consensusAddressCodec).
+			WithKeyring(kr)
 
 		builder := &autocli.Builder{
 			Builder: flag.Builder{
-				ClientCtx:    &clientCtx,
-				TypeResolver: &dynamicTypeResolver{chainInfo},
-				FileResolver: chainInfo.ProtoFiles,
+				TypeResolver:          &dynamicTypeResolver{chainInfo},
+				FileResolver:          chainInfo.ProtoFiles,
+				AddressCodec:          addressCodec,
+				ValidatorAddressCodec: validatorAddressCodec,
+				ConsensusAddressCodec: consensusAddressCodec,
+				Keyring:               autoCLIKeyring,
 			},
 			GetClientConn: func(command *cobra.Command) (grpc.ClientConnInterface, error) {
 				return chainInfo.OpenClient()
 			},
+			ClientCtx:         clientCtx,
 			AddQueryConnFlags: func(command *cobra.Command) {},
 		}
 
@@ -114,7 +130,17 @@ func RemoteCommand(config *config.Config, configDir string) ([]*cobra.Command, e
 		chainCmd.AddCommand(KeyringCmd(chainInfo.Chain))
 
 		if err := appOpts.EnhanceRootCommandWithBuilder(chainCmd, builder); err != nil {
-			return nil, err
+			// when enriching the command with autocli fails, we add a command that
+			// will print the error and allow the user to reconfigure the chain instead
+			chainCmd.RunE = func(cmd *cobra.Command, args []string) error {
+				cmd.Printf("Error while loading AutoCLI data for %s: %+v\n", chain, err)
+				cmd.Printf("Attempt to reconfigure the chain using the %s flag\n", flags.FlagConfig)
+				if cmd.Flags().Changed(flags.FlagConfig) {
+					return reconfigure(cmd, config, configDir, chain)
+				}
+
+				return nil
+			}
 		}
 
 		commands = append(commands, chainCmd)

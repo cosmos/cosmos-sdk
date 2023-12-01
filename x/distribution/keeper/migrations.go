@@ -1,12 +1,10 @@
 package keeper
 
 import (
-	pooltypes "cosmossdk.io/x/protocolpool/types"
+	v4 "cosmossdk.io/x/distribution/migrations/v4"
+	"cosmossdk.io/x/distribution/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/distribution/migrations/funds"
-	v4 "github.com/cosmos/cosmos-sdk/x/distribution/migrations/v4"
-	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
 // Migrator is a struct for handling in-place store migrations.
@@ -32,22 +30,30 @@ func (m Migrator) Migrate2to3(ctx sdk.Context) error {
 	return nil
 }
 
+// Migrate3to4 migrates the x/distribution module state to use collections
+// Additionally it migrates distribution fee pool to use protocol pool module account
 func (m Migrator) Migrate3to4(ctx sdk.Context) error {
-	return v4.MigrateStore(ctx, m.keeper.storeService, m.keeper.cdc)
+	if err := v4.MigrateStore(ctx, m.keeper.storeService, m.keeper.cdc); err != nil {
+		return err
+	}
+
+	return m.migrateFunds(ctx)
 }
 
-func (m Migrator) MigrateFundsToPool(ctx sdk.Context) error {
+func (m Migrator) migrateFunds(ctx sdk.Context) error {
 	macc := m.keeper.GetDistributionAccount(ctx)
-	poolMacc := m.keeper.authKeeper.GetModuleAccount(ctx, pooltypes.ModuleName)
+	poolMacc := m.keeper.authKeeper.GetModuleAccount(ctx, types.ProtocolPoolModuleName)
 
 	feePool, err := m.keeper.FeePool.Get(ctx)
 	if err != nil {
 		return err
 	}
-	err = funds.MigrateFunds(ctx, m.keeper.bankKeeper, feePool, macc, poolMacc)
+
+	feePool, err = v4.MigrateFunds(ctx, m.keeper.bankKeeper, feePool, macc, poolMacc)
 	if err != nil {
 		return err
 	}
-	// return FeePool as empty (since FeePool funds are migrated to pool module account)
-	return m.keeper.FeePool.Set(ctx, types.FeePool{})
+
+	// the feePool has now an empty community pool and the remainder is stored in the DecimalPool
+	return m.keeper.FeePool.Set(ctx, feePool)
 }

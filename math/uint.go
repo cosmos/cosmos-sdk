@@ -15,7 +15,18 @@ type Uint struct {
 
 // BigInt converts Uint to big.Int
 func (u Uint) BigInt() *big.Int {
+	if u.IsNil() {
+		return nil
+	}
 	return new(big.Int).Set(u.i)
+}
+
+// BigInt converts Uint to big.Int, mutative the input
+func (u Uint) BigIntMut() *big.Int {
+	if u.IsNil() {
+		return nil
+	}
+	return u.i
 }
 
 // IsNil returns true if Uint is uninitialized

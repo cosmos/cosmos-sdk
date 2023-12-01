@@ -12,7 +12,6 @@ import (
 	bankmodulev1 "cosmossdk.io/api/cosmos/bank/module/v1"
 	circuitmodulev1 "cosmossdk.io/api/cosmos/circuit/module/v1"
 	consensusmodulev1 "cosmossdk.io/api/cosmos/consensus/module/v1"
-	crisismodulev1 "cosmossdk.io/api/cosmos/crisis/module/v1"
 	distrmodulev1 "cosmossdk.io/api/cosmos/distribution/module/v1"
 	evidencemodulev1 "cosmossdk.io/api/cosmos/evidence/module/v1"
 	feegrantmodulev1 "cosmossdk.io/api/cosmos/feegrant/module/v1"
@@ -29,8 +28,18 @@ import (
 	vestingmodulev1 "cosmossdk.io/api/cosmos/vesting/module/v1"
 	"cosmossdk.io/core/appconfig"
 	"cosmossdk.io/depinject"
+	_ "cosmossdk.io/x/auth/tx/config" // import for side-effects
+	authtypes "cosmossdk.io/x/auth/types"
+	_ "cosmossdk.io/x/auth/vesting" // import for side-effects
+	vestingtypes "cosmossdk.io/x/auth/vesting/types"
+	"cosmossdk.io/x/authz"
+	_ "cosmossdk.io/x/authz/module" // import for side-effects
+	_ "cosmossdk.io/x/bank"         // import for side-effects
+	banktypes "cosmossdk.io/x/bank/types"
 	_ "cosmossdk.io/x/circuit" // import for side-effects
 	circuittypes "cosmossdk.io/x/circuit/types"
+	_ "cosmossdk.io/x/distribution" // import for side-effects
+	distrtypes "cosmossdk.io/x/distribution/types"
 	_ "cosmossdk.io/x/evidence" // import for side-effects
 	evidencetypes "cosmossdk.io/x/evidence/types"
 	"cosmossdk.io/x/feegrant"
@@ -40,37 +49,25 @@ import (
 	govtypes "cosmossdk.io/x/gov/types"
 	"cosmossdk.io/x/group"
 	_ "cosmossdk.io/x/group/module" // import for side-effects
+	_ "cosmossdk.io/x/mint"         // import for side-effects
+	minttypes "cosmossdk.io/x/mint/types"
 	"cosmossdk.io/x/nft"
 	_ "cosmossdk.io/x/nft/module"   // import for side-effects
 	_ "cosmossdk.io/x/protocolpool" // import for side-effects
 	pooltypes "cosmossdk.io/x/protocolpool/types"
+	_ "cosmossdk.io/x/slashing" // import for side-effects
+	slashingtypes "cosmossdk.io/x/slashing/types"
+	_ "cosmossdk.io/x/staking" // import for side-effects
+	stakingtypes "cosmossdk.io/x/staking/types"
 	_ "cosmossdk.io/x/upgrade" // import for side-effects
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config" // import for side-effects
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	_ "github.com/cosmos/cosmos-sdk/x/auth/vesting" // import for side-effects
-	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
-	"github.com/cosmos/cosmos-sdk/x/authz"
-	_ "github.com/cosmos/cosmos-sdk/x/authz/module" // import for side-effects
-	_ "github.com/cosmos/cosmos-sdk/x/bank"         // import for side-effects
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	_ "github.com/cosmos/cosmos-sdk/x/consensus" // import for side-effects
 	consensustypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
-	_ "github.com/cosmos/cosmos-sdk/x/crisis" // import for side-effects
-	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
-	_ "github.com/cosmos/cosmos-sdk/x/distribution" // import for side-effects
-	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
-	_ "github.com/cosmos/cosmos-sdk/x/mint" // import for side-effects
-	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
-	_ "github.com/cosmos/cosmos-sdk/x/slashing" // import for side-effects
-	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
-	_ "github.com/cosmos/cosmos-sdk/x/staking" // import for side-effects
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 var (
@@ -123,11 +120,11 @@ var (
 						authz.ModuleName,
 					},
 					EndBlockers: []string{
-						crisistypes.ModuleName,
 						govtypes.ModuleName,
 						stakingtypes.ModuleName,
 						feegrant.ModuleName,
 						group.ModuleName,
+						pooltypes.ModuleName,
 					},
 					OverrideStoreKeys: []*runtimev1alpha1.StoreKeyConfig{
 						{
@@ -146,7 +143,6 @@ var (
 						slashingtypes.ModuleName,
 						govtypes.ModuleName,
 						minttypes.ModuleName,
-						crisistypes.ModuleName,
 						genutiltypes.ModuleName,
 						evidencetypes.ModuleName,
 						authz.ModuleName,
@@ -243,10 +239,6 @@ var (
 			{
 				Name:   govtypes.ModuleName,
 				Config: appconfig.WrapAny(&govmodulev1.Module{}),
-			},
-			{
-				Name:   crisistypes.ModuleName,
-				Config: appconfig.WrapAny(&crisismodulev1.Module{}),
 			},
 			{
 				Name:   consensustypes.ModuleName,

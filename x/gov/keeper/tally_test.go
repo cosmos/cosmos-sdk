@@ -42,7 +42,7 @@ func TestTally(t *testing.T) {
 			s.mocks.stakingKeeper.EXPECT().
 				IterateDelegations(s.ctx, voter, gomock.Any()).
 				DoAndReturn(
-					func(ctx context.Context, voter sdk.AccAddress, fn func(index int64, d stakingtypes.DelegationI) bool) error {
+					func(ctx context.Context, voter sdk.AccAddress, fn func(index int64, d sdk.DelegationI) bool) error {
 						for i, d := range delegations {
 							fn(int64(i), d)
 						}
@@ -419,7 +419,7 @@ func TestTally(t *testing.T) {
 			mocks.stakingKeeper.EXPECT().
 				IterateBondedValidatorsByPower(ctx, gomock.Any()).
 				DoAndReturn(
-					func(ctx context.Context, fn func(index int64, validator stakingtypes.ValidatorI) bool) error {
+					func(ctx context.Context, fn func(index int64, validator sdk.ValidatorI) bool) error {
 						for i := int64(0); i < int64(numVals); i++ {
 							fn(i, stakingtypes.Validator{
 								OperatorAddress: valAddrs[i].String(),

@@ -226,18 +226,18 @@ func (mr *MockStakingKeeperMockRecorder) GetAllValidators(ctx interface{}) *gomo
 }
 
 // GetNewToOldConsKeyMap mocks base method.
-func (m *MockStakingKeeper) GetNewToOldConsKeyMap(ctx context.Context, pk types0.ConsAddress) (types0.ConsAddress, error) {
+func (m *MockStakingKeeper) GetNewToOldConsKeyMap(arg0 context.Context, arg1 types0.ConsAddress) (types0.ConsAddress, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetNewToOldConsKeyMap", ctx, pk)
+	ret := m.ctrl.Call(m, "GetNewToOldConsKeyMap", arg0, arg1)
 	ret0, _ := ret[0].(types0.ConsAddress)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetNewToOldConsKeyMap indicates an expected call of GetNewToOldConsKeyMap.
-func (mr *MockStakingKeeperMockRecorder) GetNewToOldConsKeyMap(ctx, pk interface{}) *gomock.Call {
+func (mr *MockStakingKeeperMockRecorder) GetNewToOldConsKeyMap(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetNewToOldConsKeyMap", reflect.TypeOf((*MockStakingKeeper)(nil).GetNewToOldConsKeyMap), ctx, pk)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetNewToOldConsKeyMap", reflect.TypeOf((*MockStakingKeeper)(nil).GetNewToOldConsKeyMap), arg0, arg1)
 }
 
 // IsValidatorJailed mocks base method.

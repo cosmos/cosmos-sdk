@@ -174,6 +174,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/slashing) [#18115](https://github.com/cosmos/cosmos-sdk/pull/18115) `NewValidatorSigningInfo` takes strings instead of `sdk.AccAddress`
 * (types) [#18268](https://github.com/cosmos/cosmos-sdk/pull/18268) Remove global setting of basedenom. Use the staking module parameter instead
 * (x/auth) [#18351](https://github.com/cosmos/cosmos-sdk/pull/18351) Auth module was moved to its own go.mod `cosmossdk.io/x/auth`
+* (types) [#18607](https://github.com/cosmos/cosmos-sdk/pull/18607) Removed global address verifier function, separated bech32 verifications from custom verifications.
+    * Bech32 is the default address verification algorithm unless changed.
 
 ### CLI Breaking Changes
 

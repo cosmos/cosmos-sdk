@@ -3,38 +3,28 @@ package iavl
 import (
 	"errors"
 	"fmt"
-	"io"
-	"math"
 
 	dbm "github.com/cosmos/cosmos-db"
-	protoio "github.com/cosmos/gogoproto/io"
 	"github.com/cosmos/iavl"
 	ics23 "github.com/cosmos/ics23/go"
 
 	log "cosmossdk.io/log"
-	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/commitment"
-	snapshottypes "cosmossdk.io/store/v2/snapshots/types"
+	snapshotstypes "cosmossdk.io/store/v2/snapshots/types"
 )
 
 var _ commitment.Tree = (*IavlTree)(nil)
 
-var _ snapshottypes.CommitSnapshotter = (*IavlTree)(nil)
-
 // IavlTree is a wrapper around iavl.MutableTree.
 type IavlTree struct {
 	tree *iavl.MutableTree
-
-	// storeKey is the identifier of the store.
-	storeKey string
 }
 
 // NewIavlTree creates a new IavlTree instance.
-func NewIavlTree(db dbm.DB, logger log.Logger, storeKey string, cfg *Config) *IavlTree {
+func NewIavlTree(db dbm.DB, logger log.Logger, cfg *Config) *IavlTree {
 	tree := iavl.NewMutableTree(db, cfg.CacheSize, cfg.SkipFastStorageUpgrade, logger)
 	return &IavlTree{
-		tree:     tree,
-		storeKey: storeKey,
+		tree: tree,
 	}
 }
 
@@ -89,143 +79,84 @@ func (t *IavlTree) Prune(version uint64) error {
 	return t.tree.DeleteVersionsTo(int64(version))
 }
 
-// Snapshot implements snapshottypes.CommitSnapshotter.
-func (t *IavlTree) Snapshot(version uint64, protoWriter protoio.Writer) error {
-	if version == 0 {
-		return fmt.Errorf("the snapshot version must be greater than 0")
-	}
-
-	latestVersion := t.GetLatestVersion()
-	if version > latestVersion {
-		return fmt.Errorf("the snapshot version %d is greater than the latest version %d", version, latestVersion)
-	}
-
+// Export exports the tree exporter at the given version.
+func (t *IavlTree) Export(version uint64) (commitment.Exporter, error) {
 	tree, err := t.tree.GetImmutable(int64(version))
 	if err != nil {
-		return fmt.Errorf("failed to get immutable tree for version %d: %w", version, err)
+		return nil, err
 	}
-
 	exporter, err := tree.Export()
-	if err != nil {
-		return fmt.Errorf("failed to export tree for version %d: %w", version, err)
-	}
-
-	defer exporter.Close()
-
-	err = protoWriter.WriteMsg(&snapshottypes.SnapshotItem{
-		Item: &snapshottypes.SnapshotItem_Store{
-			Store: &snapshottypes.SnapshotStoreItem{
-				Name: t.storeKey,
-			},
-		},
-	})
-	if err != nil {
-		return fmt.Errorf("failed to write store name: %w", err)
-	}
-
-	for {
-		node, err := exporter.Next()
-		if errors.Is(err, iavl.ErrorExportDone) {
-			break
-		} else if err != nil {
-			return fmt.Errorf("failed to get the next export node: %w", err)
-		}
-
-		if err = protoWriter.WriteMsg(&snapshottypes.SnapshotItem{
-			Item: &snapshottypes.SnapshotItem_IAVL{
-				IAVL: &snapshottypes.SnapshotIAVLItem{
-					Key:     node.Key,
-					Value:   node.Value,
-					Height:  int32(node.Height),
-					Version: node.Version,
-				},
-			},
-		}); err != nil {
-			return fmt.Errorf("failed to write iavl node: %w", err)
-		}
-	}
-
-	return nil
+	return &Exporter{
+		exporter: exporter,
+	}, err
 }
 
-// Restore implements snapshottypes.CommitSnapshotter.
-func (t *IavlTree) Restore(version uint64, format uint32, protoReader protoio.Reader, chStorage chan<- *store.KVPair) (snapshottypes.SnapshotItem, error) {
-	var (
-		importer     *iavl.Importer
-		snapshotItem snapshottypes.SnapshotItem
-	)
-
-loop:
-	for {
-		snapshotItem = snapshottypes.SnapshotItem{}
-		err := protoReader.ReadMsg(&snapshotItem)
-		if errors.Is(err, io.EOF) {
-			break
-		} else if err != nil {
-			return snapshottypes.SnapshotItem{}, fmt.Errorf("invalid protobuf message: %w", err)
-		}
-
-		switch item := snapshotItem.Item.(type) {
-		case *snapshottypes.SnapshotItem_Store:
-			t.storeKey = item.Store.Name
-			importer, err = t.tree.Import(int64(version))
-			if err != nil {
-				return snapshottypes.SnapshotItem{}, fmt.Errorf("failed to import tree for version %d: %w", version, err)
-			}
-			defer importer.Close()
-
-		case *snapshottypes.SnapshotItem_IAVL:
-			if importer == nil {
-				return snapshottypes.SnapshotItem{}, fmt.Errorf("received IAVL node item before store item")
-			}
-			if item.IAVL.Height > int32(math.MaxInt8) {
-				return snapshottypes.SnapshotItem{}, fmt.Errorf("node height %v cannot exceed %v",
-					item.IAVL.Height, math.MaxInt8)
-			}
-			node := &iavl.ExportNode{
-				Key:     item.IAVL.Key,
-				Value:   item.IAVL.Value,
-				Height:  int8(item.IAVL.Height),
-				Version: item.IAVL.Version,
-			}
-			// Protobuf does not differentiate between []byte{} and nil, but fortunately IAVL does
-			// not allow nil keys nor nil values for leaf nodes, so we can always set them to empty.
-			if node.Key == nil {
-				node.Key = []byte{}
-			}
-			if node.Height == 0 {
-				if node.Value == nil {
-					node.Value = []byte{}
-				}
-				// If the node is a leaf node, it will be written to the storage.
-				chStorage <- &store.KVPair{
-					StoreKey: t.storeKey,
-					Key:      node.Key,
-					Value:    node.Value,
-				}
-			}
-			err := importer.Add(node)
-			if err != nil {
-				return snapshottypes.SnapshotItem{}, fmt.Errorf("failed to add node to importer: %w", err)
-			}
-		default:
-			break loop
-		}
-	}
-
-	if importer != nil {
-		err := importer.Commit()
-		if err != nil {
-			return snapshottypes.SnapshotItem{}, fmt.Errorf("failed to commit importer: %w", err)
-		}
-	}
-
-	_, err := t.tree.LoadVersion(int64(version))
-
-	return snapshotItem, err
+// Import imports the tree importer at the given version.
+func (t *IavlTree) Import(version uint64) (commitment.Importer, error) {
+	importer, err := t.tree.Import(int64(version))
+	return &Importer{
+		importer: importer,
+	}, err
 }
 
 // Close closes the iavl tree.
 func (t *IavlTree) Close() error {
+	return nil
+}
+
+// Exporter is a wrapper around iavl.Exporter.
+type Exporter struct {
+	exporter *iavl.Exporter
+}
+
+// Next returns the next item in the exporter.
+func (e *Exporter) Next() (*snapshotstypes.SnapshotIAVLItem, error) {
+	item, err := e.exporter.Next()
+	if err != nil {
+		if errors.Is(err, iavl.ErrorExportDone) {
+			return nil, commitment.ErrorExportDone
+		}
+		return nil, err
+	}
+
+	return &snapshotstypes.SnapshotIAVLItem{
+		Key:     item.Key,
+		Value:   item.Value,
+		Version: item.Version,
+		Height:  int32(item.Height),
+	}, nil
+}
+
+// Close closes the exporter.
+func (e *Exporter) Close() error {
+	e.exporter.Close()
+
+	return nil
+}
+
+// Importer is a wrapper around iavl.Importer.
+type Importer struct {
+	importer *iavl.Importer
+}
+
+// Add adds the given item to the importer.
+func (i *Importer) Add(item *snapshotstypes.SnapshotIAVLItem) error {
+	return i.importer.Add(&iavl.ExportNode{
+		Key:     item.Key,
+		Value:   item.Value,
+		Version: item.Version,
+		Height:  int8(item.Height),
+	})
+}
+
+// Commit commits the importer.
+func (i *Importer) Commit() error {
+	return i.importer.Commit()
+}
+
+// Close closes the importer.
+func (i *Importer) Close() error {
+	i.importer.Close()
+
 	return nil
 }

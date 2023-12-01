@@ -3,11 +3,15 @@ package commitment
 import (
 	"errors"
 	"fmt"
+	"io"
+	"math"
 
+	protoio "github.com/cosmos/gogoproto/io"
 	ics23 "github.com/cosmos/ics23/go"
 
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/v2"
+	snapshottypes "cosmossdk.io/store/v2/snapshots/types"
 )
 
 var _ store.Committer = (*CommitStore)(nil)
@@ -125,6 +129,140 @@ func (c *CommitStore) Prune(version uint64) (ferr error) {
 	}
 
 	return ferr
+}
+
+// Snapshot implements snapshottypes.CommitSnapshotter.
+func (c *CommitStore) Snapshot(version uint64, protoWriter protoio.Writer) error {
+	if version == 0 {
+		return fmt.Errorf("the snapshot version must be greater than 0")
+	}
+
+	latestVersion, err := c.GetLatestVersion()
+	if err != nil {
+		return err
+	}
+	if version > latestVersion {
+		return fmt.Errorf("the snapshot version %d is greater than the latest version %d", version, latestVersion)
+	}
+
+	for storeKey, tree := range c.multiTrees {
+		exporter, err := tree.Export(version)
+		if err != nil {
+			return fmt.Errorf("failed to export tree for version %d: %w", version, err)
+		}
+
+		defer exporter.Close()
+
+		err = protoWriter.WriteMsg(&snapshottypes.SnapshotItem{
+			Item: &snapshottypes.SnapshotItem_Store{
+				Store: &snapshottypes.SnapshotStoreItem{
+					Name: storeKey,
+				},
+			},
+		})
+		if err != nil {
+			return fmt.Errorf("failed to write store name: %w", err)
+		}
+
+		for {
+			item, err := exporter.Next()
+			if errors.Is(err, ErrorExportDone) {
+				break
+			} else if err != nil {
+				return fmt.Errorf("failed to get the next export node: %w", err)
+			}
+
+			if err = protoWriter.WriteMsg(&snapshottypes.SnapshotItem{
+				Item: &snapshottypes.SnapshotItem_IAVL{
+					IAVL: item,
+				},
+			}); err != nil {
+				return fmt.Errorf("failed to write iavl node: %w", err)
+			}
+		}
+	}
+
+	return nil
+}
+
+// Restore implements snapshottypes.CommitSnapshotter.
+func (c *CommitStore) Restore(version uint64, format uint32, protoReader protoio.Reader, chStorage chan<- *store.KVPair) (snapshottypes.SnapshotItem, error) {
+	var (
+		importer     Importer
+		snapshotItem snapshottypes.SnapshotItem
+		storeKey     string
+	)
+
+loop:
+	for {
+		snapshotItem = snapshottypes.SnapshotItem{}
+		err := protoReader.ReadMsg(&snapshotItem)
+		if errors.Is(err, io.EOF) {
+			break
+		} else if err != nil {
+			return snapshottypes.SnapshotItem{}, fmt.Errorf("invalid protobuf message: %w", err)
+		}
+
+		switch item := snapshotItem.Item.(type) {
+		case *snapshottypes.SnapshotItem_Store:
+			if importer != nil {
+				if err := importer.Commit(); err != nil {
+					return snapshottypes.SnapshotItem{}, fmt.Errorf("failed to commit importer: %w", err)
+				}
+				importer.Close()
+			}
+			storeKey = item.Store.Name
+			tree := c.multiTrees[storeKey]
+			if tree == nil {
+				return snapshottypes.SnapshotItem{}, fmt.Errorf("store %s not found", storeKey)
+			}
+			importer, err = tree.Import(version)
+			if err != nil {
+				return snapshottypes.SnapshotItem{}, fmt.Errorf("failed to import tree for version %d: %w", version, err)
+			}
+			defer importer.Close()
+
+		case *snapshottypes.SnapshotItem_IAVL:
+			if importer == nil {
+				return snapshottypes.SnapshotItem{}, fmt.Errorf("received IAVL node item before store item")
+			}
+			node := item.IAVL
+			if node.Height > int32(math.MaxInt8) {
+				return snapshottypes.SnapshotItem{}, fmt.Errorf("node height %v cannot exceed %v",
+					item.IAVL.Height, math.MaxInt8)
+			}
+			// Protobuf does not differentiate between []byte{} and nil, but fortunately IAVL does
+			// not allow nil keys nor nil values for leaf nodes, so we can always set them to empty.
+			if node.Key == nil {
+				node.Key = []byte{}
+			}
+			if node.Height == 0 {
+				if node.Value == nil {
+					node.Value = []byte{}
+				}
+				// If the node is a leaf node, it will be written to the storage.
+				chStorage <- &store.KVPair{
+					Key:      node.Key,
+					Value:    node.Value,
+					StoreKey: storeKey,
+				}
+			}
+			err := importer.Add(node)
+			if err != nil {
+				return snapshottypes.SnapshotItem{}, fmt.Errorf("failed to add node to importer: %w", err)
+			}
+		default:
+			break loop
+		}
+	}
+
+	if importer != nil {
+		if err := importer.Commit(); err != nil {
+			return snapshottypes.SnapshotItem{}, fmt.Errorf("failed to commit importer: %w", err)
+		}
+	}
+
+	return snapshotItem, c.LoadVersion(version)
 }
 
 func (c *CommitStore) Close() (ferr error) {

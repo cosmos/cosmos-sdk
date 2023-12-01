@@ -32,7 +32,7 @@ func (s *RootStoreTestSuite) SetupTest() {
 	s.Require().NoError(err)
 
 	tree := iavl.NewIavlTree(dbm.NewMemDB(), noopLog, iavl.DefaultConfig())
-	sc, err := commitment.NewCommitStore(map[string]commitment.Tree{"default": tree}, noopLog)
+	sc, err := commitment.NewCommitStore(map[string]commitment.Tree{defaultStoreKey: tree}, noopLog)
 	s.Require().NoError(err)
 
 	rs, err := New(noopLog, 1, ss, sc, nil)

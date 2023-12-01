@@ -57,7 +57,6 @@ func (s *PruningTestSuite) TestPruning() {
 	s.manager.Start()
 
 	latestVersion := uint64(100)
-	kvCount := 10
 
 	// write batches
 	for i := uint64(0); i < latestVersion; i++ {

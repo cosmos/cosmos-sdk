@@ -92,12 +92,44 @@ func (k Keeper) updateToNewPubkey(ctx context.Context, val types.Validator, oldP
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidType, "Expecting cryptotypes.PubKey, got %T", newPk)
 	}
 
-	// Sets a map to newly rotated consensus key with old consensus key
-	if err := k.RotatedConsKeyMapIndex.Set(ctx, oldPk.Address(), newPk.Address()); err != nil {
+	// sets a map: oldConsKey -> newConsKey
+	if err := k.OldToNewConsKeyMap.Set(ctx, oldPk.Address(), newPk.Address()); err != nil {
+		return err
+	}
+
+	// sets a map: newConsKey -> oldConsKey
+	if err := k.setNewToOldConsKeyMap(ctx, sdk.ConsAddress(oldPk.Address()), sdk.ConsAddress(newPk.Address())); err != nil {
 		return err
 	}
 
 	return k.Hooks().AfterConsensusPubKeyUpdate(ctx, oldPk, newPk, fee)
+}
+
+// setNewToOldConsKeyMap adds an entry in the state with the current consKey to the initial consKey of the validator.
+func (k Keeper) setNewToOldConsKeyMap(ctx context.Context, oldPk, newPk sdk.ConsAddress) error {
+	pk, err := k.NewToOldConsKeyMap.Get(ctx, oldPk)
+	if err != nil && !errors.Is(err, collections.ErrNotFound) {
+		return err
+	}
+
+	if pk != nil {
+		oldPk = pk
+	}
+
+	if err := k.NewToOldConsKeyMap.Set(ctx, newPk, oldPk); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (k Keeper) GetNewToOldConsKeyMap(ctx context.Context, newPk sdk.ConsAddress) (sdk.ConsAddress, error) {
+	pk, err := k.NewToOldConsKeyMap.Get(ctx, newPk)
+	if err != nil && !errors.Is(err, collections.ErrNotFound) {
+		return nil, err
+	}
+
+	return pk, nil
 }
 
 // exceedsMaxRotations returns true if the key rotations exceed the limit, currently we are limiting one rotation for unbonding period.

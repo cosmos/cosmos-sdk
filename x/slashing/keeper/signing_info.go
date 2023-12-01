@@ -83,6 +83,17 @@ func (k Keeper) SetMissedBlockBitmapChunk(ctx context.Context, addr sdk.ConsAddr
 // IndexOffset modulo SignedBlocksWindow. This index is used to fetch the chunk
 // in the bitmap and the relative bit in that chunk.
 func (k Keeper) GetMissedBlockBitmapValue(ctx context.Context, addr sdk.ConsAddress, index int64) (bool, error) {
+	// check the key rotated, if rotated use the returned consKey to get the missed blocks
+	// because missed blocks are still pointing to the old key
+	oldPk, err := k.sk.GetNewToOldConsKeyMap(ctx, addr)
+	if err != nil {
+		return false, err
+	}
+
+	if oldPk != nil {
+		addr = oldPk
+	}
+
 	// get the chunk or "word" in the logical bitmap
 	chunkIndex := index / types.MissedBlockBitmapChunkSize
 
@@ -112,6 +123,17 @@ func (k Keeper) GetMissedBlockBitmapValue(ctx context.Context, addr sdk.ConsAddr
 // index is used to fetch the chunk in the bitmap and the relative bit in that
 // chunk.
 func (k Keeper) SetMissedBlockBitmapValue(ctx context.Context, addr sdk.ConsAddress, index int64, missed bool) error {
+	// check the key rotated, if rotated use the returned consKey to set the missed blocks
+	// because missed blocks are still pointing to the old key
+	oldPk, err := k.sk.GetNewToOldConsKeyMap(ctx, addr)
+	if err != nil {
+		return err
+	}
+
+	if oldPk != nil {
+		addr = oldPk
+	}
+
 	// get the chunk or "word" in the logical bitmap
 	chunkIndex := index / types.MissedBlockBitmapChunkSize
 
@@ -145,8 +167,19 @@ func (k Keeper) SetMissedBlockBitmapValue(ctx context.Context, addr sdk.ConsAddr
 
 // DeleteMissedBlockBitmap removes a validator's missed block bitmap from state.
 func (k Keeper) DeleteMissedBlockBitmap(ctx context.Context, addr sdk.ConsAddress) error {
+	// check the key rotated, if rotated use the returned consKey to delete the missed blocks
+	// because missed blocks are still pointing to the old key
+	oldPk, err := k.sk.GetNewToOldConsKeyMap(ctx, addr)
+	if err != nil {
+		return err
+	}
+
+	if oldPk != nil {
+		addr = oldPk
+	}
+
 	rng := collections.NewPrefixedPairRange[[]byte, uint64](addr.Bytes())
-	err := k.ValidatorMissedBlockBitmap.Walk(ctx, rng, func(key collections.Pair[[]byte, uint64], value []byte) (bool, error) {
+	err = k.ValidatorMissedBlockBitmap.Walk(ctx, rng, func(key collections.Pair[[]byte, uint64], value []byte) (bool, error) {
 		err := k.ValidatorMissedBlockBitmap.Remove(ctx, key)
 		if err != nil {
 			return true, err
@@ -234,20 +267,20 @@ func (k Keeper) PerformConsensusPubKeyUpdate(ctx context.Context, oldPubKey, new
 	}
 
 	// Migrate ValidatorMissedBlockBitArray from oldPubKey to newPubKey
-	missedBlocks, err := k.GetValidatorMissedBlocks(ctx, sdk.ConsAddress(oldPubKey.Address()))
-	if err != nil {
-		return err
-	}
+	// missedBlocks, err := k.GetValidatorMissedBlocks(ctx, sdk.ConsAddress(oldPubKey.Address()))
+	// if err != nil {
+	// 	return err
+	// }
 
-	if err := k.DeleteMissedBlockBitmap(ctx, sdk.ConsAddress(oldPubKey.Address())); err != nil {
-		return err
-	}
+	// if err := k.DeleteMissedBlockBitmap(ctx, sdk.ConsAddress(oldPubKey.Address())); err != nil {
+	// return err
+	// }
 
-	for _, missed := range missedBlocks {
-		if err := k.SetMissedBlockBitmapValue(ctx, sdk.ConsAddress(newPubKey.Address()), missed.Index, missed.Missed); err != nil {
-			return err
-		}
-	}
+	// for _, missed := range missedBlocks {
+	// 	if err := k.SetMissedBlockBitmapValue(ctx, sdk.ConsAddress(newPubKey.Address()), missed.Index, missed.Missed); err != nil {
+	// 		return err
+	// 	}
+	// }
 
 	return nil
 }

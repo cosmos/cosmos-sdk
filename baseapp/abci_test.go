@@ -1231,12 +1231,11 @@ func TestABCI_MaxBlockGasLimits(t *testing.T) {
 		tx := tc.tx
 
 		// reset block gas
-		_, err := suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: suite.baseApp.LastBlockHeight() + 1})
+		_, err := suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: int64(suite.baseApp.LastBlockHeight()) + 1})
 		require.NoError(t, err)
 
 		// execute the transaction multiple times
 		for j := 0; j < tc.numDelivers; j++ {
-
 			_, result, err := suite.baseApp.SimDeliver(suite.txConfig.TxEncoder(), tx)
 
 			ctx := getFinalizeBlockStateCtx(suite.baseApp)
@@ -1317,7 +1316,7 @@ func TestABCI_GasConsumptionBadTx(t *testing.T) {
 	require.NoError(t, err)
 
 	_, err = suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{
-		Height: suite.baseApp.LastBlockHeight() + 1,
+		Height: int64(suite.baseApp.LastBlockHeight()) + 1,
 		Txs:    [][]byte{txBytes, txBytes2},
 	})
 	require.NoError(t, err)
@@ -1503,7 +1502,22 @@ func TestPrepareCheckStateCalledWithCheckState(t *testing.T) {
 	logger := log.NewTestLogger(t)
 	db := dbm.NewMemDB()
 	name := t.Name()
-	app := baseapp.NewBaseApp(name, logger, db, nil)
+
+	ss, err := sqlite.New(t.TempDir())
+	require.NoError(t, err)
+
+	sc, err := commitment.NewCommitStore(
+		map[string]commitment.Tree{
+			"main": iavl.NewIavlTree(db, logger, iavl.DefaultConfig()),
+		},
+		logger,
+	)
+	require.NoError(t, err)
+
+	rs, err := root.New(logger, ss, sc, pruning.DefaultOptions(), pruning.DefaultOptions(), nil)
+	require.NoError(t, err)
+
+	app := baseapp.NewBaseApp(name, logger, db, rs, nil)
 
 	wasPrepareCheckStateCalled := false
 	app.SetPrepareCheckStater(func(ctx sdk.Context) {
@@ -1511,8 +1525,9 @@ func TestPrepareCheckStateCalledWithCheckState(t *testing.T) {
 		wasPrepareCheckStateCalled = true
 	})
 
-	_, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1})
+	_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1})
 	require.NoError(t, err)
+
 	_, err = app.Commit()
 	require.NoError(t, err)
 
@@ -1526,7 +1541,22 @@ func TestPrecommiterCalledWithDeliverState(t *testing.T) {
 	logger := log.NewTestLogger(t)
 	db := dbm.NewMemDB()
 	name := t.Name()
-	app := baseapp.NewBaseApp(name, logger, db, nil)
+
+	ss, err := sqlite.New(t.TempDir())
+	require.NoError(t, err)
+
+	sc, err := commitment.NewCommitStore(
+		map[string]commitment.Tree{
+			"main": iavl.NewIavlTree(db, logger, iavl.DefaultConfig()),
+		},
+		logger,
+	)
+	require.NoError(t, err)
+
+	rs, err := root.New(logger, ss, sc, pruning.DefaultOptions(), pruning.DefaultOptions(), nil)
+	require.NoError(t, err)
+
+	app := baseapp.NewBaseApp(name, logger, db, rs, nil)
 
 	wasPrecommiterCalled := false
 	app.SetPrecommiter(func(ctx sdk.Context) {
@@ -1535,8 +1565,9 @@ func TestPrecommiterCalledWithDeliverState(t *testing.T) {
 		wasPrecommiterCalled = true
 	})
 
-	_, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1})
+	_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1})
 	require.NoError(t, err)
+
 	_, err = app.Commit()
 	require.NoError(t, err)
 
@@ -1601,7 +1632,7 @@ func TestABCI_Proposal_HappyPath(t *testing.T) {
 
 	// the same txs as in PrepareProposal
 	res, err := suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{
-		Height: suite.baseApp.LastBlockHeight() + 1,
+		Height: int64(suite.baseApp.LastBlockHeight()) + 1,
 		Txs:    reqProposalTxBytes[:],
 	})
 	require.NoError(t, err)
@@ -2174,8 +2205,23 @@ func TestBaseApp_PreBlocker(t *testing.T) {
 	name := t.Name()
 	logger := log.NewTestLogger(t)
 
-	app := baseapp.NewBaseApp(name, logger, db, nil)
-	_, err := app.InitChain(&abci.RequestInitChain{})
+	ss, err := sqlite.New(t.TempDir())
+	require.NoError(t, err)
+
+	sc, err := commitment.NewCommitStore(
+		map[string]commitment.Tree{
+			"main": iavl.NewIavlTree(db, logger, iavl.DefaultConfig()),
+		},
+		logger,
+	)
+	require.NoError(t, err)
+
+	rs, err := root.New(logger, ss, sc, pruning.DefaultOptions(), pruning.DefaultOptions(), nil)
+	require.NoError(t, err)
+
+	app := baseapp.NewBaseApp(name, logger, db, rs, nil)
+
+	_, err = app.InitChain(&abci.RequestInitChain{})
 	require.NoError(t, err)
 
 	wasHookCalled := false
@@ -2192,7 +2238,7 @@ func TestBaseApp_PreBlocker(t *testing.T) {
 	require.Equal(t, true, wasHookCalled)
 
 	// Now try erroring
-	app = baseapp.NewBaseApp(name, logger, db, nil)
+	app = baseapp.NewBaseApp(name, logger, db, rs, nil)
 	_, err = app.InitChain(&abci.RequestInitChain{})
 	require.NoError(t, err)
 

@@ -11,6 +11,7 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
+	distrtypes "cosmossdk.io/x/distribution/types"
 	"cosmossdk.io/x/protocolpool/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -126,11 +127,14 @@ func (k Keeper) withdrawContinuousFund(ctx context.Context, recipient sdk.AccAdd
 	totalRecipientBal := recipientAmount + fundsAllocated
 	// check if the recipient account balance exceeds maxDistributedCapital after distribution
 	if totalRecipientBal < cf.MaxDistributedCapital {
-		// Distribute funds to the recipient
+		// Distribute funds to the recipient from pool module account
 		err := k.DistributeFromFeePool(ctx, sdk.NewCoins(sdk.NewCoin(denom, math.NewIntFromUint64(fundsAllocated))), recipient)
 		if err != nil {
 			return sdk.Coin{}, err
 		}
+
+		// decrement fundsAllocated from toDistribute
+		k.toDistribute -= fundsAllocated
 	}
 
 	return amount, nil
@@ -149,19 +153,27 @@ func (k Keeper) iterateAndUpdateFundsDistribution(ctx context.Context) error {
 		return fmt.Errorf("total funds percentage is greater than one")
 	}
 
-	// Calculate the total pool amount
 	poolMAcc := k.authKeeper.GetModuleAccount(ctx, types.ModuleName)
-	totalPoolAmount := k.bankKeeper.GetAllBalances(ctx, poolMAcc.GetAddress())
-	poolDecAmount := sdk.NewDecCoinsFromCoins(totalPoolAmount...)
+
+	distrMAcc := k.authKeeper.GetModuleAccount(ctx, distrtypes.ModuleName)
+	distrBal := k.bankKeeper.GetAllBalances(ctx, distrMAcc.GetAddress())
+	distrDecAmount := sdk.NewDecCoinsFromCoins(distrBal...)
 
 	err = k.RecipientFundPercentage.Walk(ctx, nil, func(key sdk.AccAddress, value uint64) (stop bool, err error) {
 		// Calculate the funds to be distributed based on the percentage
-		distributionAmount := poolDecAmount.MulDec(math.LegacyNewDec(int64(value)))
+		distributionAmount := distrDecAmount.MulDec(math.LegacyNewDecWithPrec(int64(value), 2))
 		denom := distributionAmount.GetDenomByIndex(0)
 		distrAmount := distributionAmount.AmountOf(denom)
 		distrCoins := distrAmount.TruncateInt().Uint64()
+
+		// Send distribution funds to pool module account [i.e., poolMAcc = MAcc + toDistribute]
+		err = k.bankKeeper.SendCoinsFromModuleToModule(ctx, distrMAcc.GetName(), poolMAcc.GetName(), distrBal)
+		if err != nil {
+			return false, err
+		}
 		// Add all the coins to be distributed to toDistribute
 		k.toDistribute += distrCoins
+
 		// Set funds to be claimed
 		toClaim, err := k.RecipientFundDistribution.Get(ctx, key)
 		if err != nil {
@@ -186,7 +198,6 @@ func (k Keeper) getDistributedFunds(ctx context.Context, recipient sdk.AccAddres
 		return 0, err
 	}
 
-	k.toDistribute -= amount
 	// set claimable to zero
 	err = k.RecipientFundDistribution.Set(ctx, recipient, 0)
 	if err != nil {

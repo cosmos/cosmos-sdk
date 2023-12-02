@@ -6,6 +6,15 @@ import (
 	"google.golang.org/grpc"
 )
 
+// #include <stdint.h>
+//
+// typedef uintptr_t store_open_t(uintptr_t, uintptr_t);
+//
+// typedef struct ModuleServices {
+// 	store_open_t* store_open;
+// } ModuleServices;
+import "C"
+
 type module struct {
 	kvStoreService store.KVStoreService
 }

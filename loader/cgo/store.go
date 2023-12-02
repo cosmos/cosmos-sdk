@@ -1,9 +1,24 @@
 package cgo
 
+import "runtime/cgo"
+
 // #include <stdint.h>
+//
+// typedef uint32_t store_has_t(uintptr_t, const uint8_t*, size_t);
+// typedef uint32_t store_get_t(uintptr_t, const uint8_t*, size_t, uint8_t*, size_t*);
+// typedef uint32_t store_set_t(uintptr_t, const uint8_t*, size_t, const uint8_t*, size_t);
+// typedef uint32_t store_delete_t(uintptr_t, const uint8_t*, size_t);
+// typedef uint32_t store_close_t(uintptr_t);
+//
+// typedef struct KVStoreService {
+// 	store_has_t* has;
+// 	store_get_t* get;
+// 	store_set_t* set;
+// 	store_delete_t* del;
+// 	store_close_t* close;
+// } KVStoreService;
 import "C"
 import (
-	"runtime/cgo"
 	"unsafe"
 
 	"cosmossdk.io/core/store"

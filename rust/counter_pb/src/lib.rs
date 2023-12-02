@@ -9,7 +9,6 @@ pub mod example {
         }
     }
 }
-include!("../proto/out.rs");
 
 struct Counter {
     kv_store_service: KVStoreService,
@@ -34,4 +33,14 @@ impl example::counter::v1::msg_server::Msg for Counter {
             }))
         }
     }
+}
+
+static PROTO_FILE_DESCRIPTOR_SET: &'static [u8] = &[0u8, 0u8, 0u8, 0u8];
+
+#[no_mangle]
+extern fn __proto_file_descriptor_set(len: *mut usize) -> *const u8 {
+    unsafe {
+        *len = PROTO_FILE_DESCRIPTOR_SET.len();
+    }
+    PROTO_FILE_DESCRIPTOR_SET.as_ptr()
 }

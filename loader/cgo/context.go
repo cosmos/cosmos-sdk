@@ -1,4 +1,4 @@
-package ffi
+package cgo
 
 import (
 	"context"

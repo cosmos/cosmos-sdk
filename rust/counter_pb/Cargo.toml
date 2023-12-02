@@ -5,6 +5,9 @@ edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[lib]
+crate-type = ["cdylib"]
+
 [dependencies]
 cosmossdk_core = { version = "0.1.0", path = "../cosmossdk_core", features = ["tonic"] }
 prost = "0.12.3"

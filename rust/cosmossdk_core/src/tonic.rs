@@ -9,7 +9,7 @@ pub fn context<T>(req: &Request<T>) -> Context {
         .expect("context metadata key not found")
         .to_str()
         .expect("context metadata value is not a string")
-        .parse::<u32>()
+        .parse::<usize>()
         .expect("context metadata value is not an int");
     Context { id: ctx_id }
 }

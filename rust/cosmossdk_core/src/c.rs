@@ -13,23 +13,29 @@ type ModuleInitFn = unsafe extern "C" fn(init_data: *const ModuleInitData) -> i3
 struct ModuleInitData {
     config: *const u8,
     config_len: u32,
-    register_unary_method: unsafe extern "C" fn(name: *const u8, handler: UnaryMethodHandler),
+    register_unary_method: unsafe extern "C" fn(service: *const u8, name: *const u8, handler: MethodIn1Out1),
+    callbacks: *const CallbackAPI,
 }
 
-type UnaryMethodHandler = unsafe extern "C" fn(ctx: u32, req: *const u8, res: *mut u8) -> i32;
+pub(crate) type InvokeIn1Out1 = unsafe extern "C" fn(id: usize, ctx: usize, arg1: *const u8, arg1_len: usize, res: **mut u8, res_len: *mut usize) -> i64;
 
 #[repr(C)]
-struct StoreAPI {
-    open: OpenFn,
-    has: HasFn,
-    get: GetFn,
-    set: SetFn,
-    delete: DeleteFn,
+struct CallbackAPI {
+    invoke_unary: InvokeUnary,
+    method0: Method0,
+    method_in1: MethodIn1,
+    method_in2: MethodIn2,
+    method_in1_out1: MethodIn1Out1,
+    method_in2_out2: MethodIn2Out2,
 }
 
-type OpenFn = unsafe extern "C" fn(module: usize, context: usize) -> usize;
-type HasFn = unsafe extern "C" fn(store: usize, key: *const u8, len: u32) -> u32;
-type GetFn = unsafe extern "C" fn(store: usize, key: *const u8, len: u32, value: *mut u8, vlen: *mut u32) -> u32;
-type SetFn = unsafe extern "C" fn(store: usize, key: *const u8, len: u32, value: *const u8, vlen: u32) -> u32;
-type DeleteFn = unsafe extern "C" fn(store: usize, key: *const u8, len: u32) -> u32;
-
+// next, close
+pub(crate) type Method0 = unsafe extern "C" fn(ctx: usize) -> i64;
+// has, delete
+pub(crate) type MethodIn1 = unsafe extern "C" fn(ctx: usize, arg1: *const u8, arg1_len: usize) -> i64;
+// set
+pub(crate) type MethodIn2 = unsafe extern "C" fn(ctx: usize, arg1: *const u8, arg1_len: usize, arg2: *const u8, arg2_len: usize) -> i64;
+// get, unary method
+pub(crate) type MethodIn1Out1 = unsafe extern "C" fn(ctx: usize, arg1: *const u8, arg1_len: usize, res: **mut u8, res_len: *mut usize) -> i64;
+// iterate, iterate_reverse
+pub(crate) type MethodIn2Out2 = unsafe extern "C" fn(ctx: usize, arg1: *const u8, arg1_len: usize, arg2: *const u8, arg2_len: usize, res: **mut u8, res_len: *mut usize, res2: **mut u8, res2_len: **mut u8) -> i64;

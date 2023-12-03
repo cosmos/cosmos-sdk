@@ -13,4 +13,6 @@ use zeropb::{ClientConn, ZeroCopy};
 #[cfg(feature = "tonic")]
 pub mod tonic;
 mod c;
+mod module;
+mod services;
 

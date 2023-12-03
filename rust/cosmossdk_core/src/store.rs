@@ -1,18 +1,18 @@
 use crate::context::{Context};
 
 pub struct KVStoreService {
-    module_id: usize,
+    store_id: usize,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
 impl KVStoreService {
     pub fn open(&self, ctx: &Context) -> KVStore {
-        let store_id = unsafe { cosmossdk_store_open(self.module_id, ctx.id) };
+        let store_id = unsafe { cosmossdk_store_open(self.store_id, ctx.id) };
         KVStore { store_id }
     }
 
     pub fn open_mut(&self, ctx: &mut Context) -> KVStore {
-        let store_id = unsafe { cosmossdk_store_open(self.module_id, ctx.id) };
+        let store_id = unsafe { cosmossdk_store_open(self.store_id, ctx.id) };
         KVStore { store_id }
     }
 }

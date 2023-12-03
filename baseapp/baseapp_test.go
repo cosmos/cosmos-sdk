@@ -754,17 +754,27 @@ func TestGetEmptyConsensusParams(t *testing.T) {
 
 func TestLoadVersionPruning(t *testing.T) {
 	logger := log.NewNopLogger()
-	pruningOptions := pruningtypes.NewCustomPruningOptions(10, 15)
-	pruningOpt := baseapp.SetPruning(pruningOptions)
+	pruningOpt := pruning.Options{KeepRecent: 10, Interval: 15}
 	db := dbm.NewMemDB()
 	name := t.Name()
-	app := baseapp.NewBaseApp(name, logger, db, nil, pruningOpt)
 
-	// make a cap key and mount the store
-	capKey := storetypes.NewKVStoreKey("key1")
-	app.MountStores(capKey)
+	ss, err := sqlite.New(t.TempDir())
+	require.NoError(t, err)
 
-	err := app.LoadLatestVersion() // needed to make stores non-nil
+	sc, err := commitment.NewCommitStore(
+		map[string]commitment.Tree{
+			"key1": iavl.NewIavlTree(db, logger, iavl.DefaultConfig()),
+		},
+		logger,
+	)
+	require.NoError(t, err)
+
+	rs, err := root.New(logger, ss, sc, pruningOpt, pruningOpt, nil)
+	require.NoError(t, err)
+
+	app := baseapp.NewBaseApp(name, logger, db, rs, nil)
+
+	err = app.LoadLatestVersion() // needed to make stores non-nil
 	require.Nil(t, err)
 
 	emptyCommitID := storetypes.CommitID{}
@@ -772,7 +782,7 @@ func TestLoadVersionPruning(t *testing.T) {
 	// fresh store has zero/empty last commit
 	lastHeight := app.LastBlockHeight()
 	lastID := app.LastCommitID()
-	require.Equal(t, int64(0), lastHeight)
+	require.Equal(t, uint64(0), lastHeight)
 	require.Equal(t, emptyCommitID, lastID)
 
 	var lastCommitID storetypes.CommitID
@@ -782,24 +792,15 @@ func TestLoadVersionPruning(t *testing.T) {
 	for i := int64(1); i <= 7; i++ {
 		res, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: i})
 		require.NoError(t, err)
+
 		_, err = app.Commit()
 		require.NoError(t, err)
+
 		lastCommitID = storetypes.CommitID{Version: i, Hash: res.AppHash}
 	}
 
-	for _, v := range []int64{1, 2, 4} {
-		_, err = app.CommitMultiStore().CacheMultiStoreWithVersion(v)
-		require.NoError(t, err)
-	}
-
-	for _, v := range []int64{3, 5, 6, 7} {
-		_, err = app.CommitMultiStore().CacheMultiStoreWithVersion(v)
-		require.NoError(t, err)
-	}
-
 	// reload with LoadLatestVersion, check it loads last version
-	app = baseapp.NewBaseApp(name, logger, db, nil, pruningOpt)
-	app.MountStores(capKey)
+	app = baseapp.NewBaseApp(name, logger, db, rs, nil)
 
 	err = app.LoadLatestVersion()
 	require.Nil(t, err)

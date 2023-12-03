@@ -214,13 +214,27 @@ func NewBaseAppSuiteWithSnapshots(t *testing.T, cfg SnapshotsConfig, opts ...fun
 
 func TestLoadVersion(t *testing.T) {
 	logger := log.NewTestLogger(t)
-	pruningOpt := baseapp.SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
 	db := dbm.NewMemDB()
 	name := t.Name()
-	app := baseapp.NewBaseApp(name, logger, db, nil, pruningOpt)
+
+	ss, err := sqlite.New(t.TempDir())
+	require.NoError(t, err)
+
+	sc, err := commitment.NewCommitStore(
+		map[string]commitment.Tree{
+			"main": iavl.NewIavlTree(db, logger, iavl.DefaultConfig()),
+		},
+		logger,
+	)
+	require.NoError(t, err)
+
+	rs, err := root.New(logger, ss, sc, pruning.DefaultOptions(), pruning.DefaultOptions(), nil)
+	require.NoError(t, err)
+
+	app := baseapp.NewBaseApp(name, logger, db, rs, nil)
 
 	// make a cap key and mount the store
-	err := app.LoadLatestVersion() // needed to make stores non-nil
+	err = app.LoadLatestVersion() // needed to make stores non-nil
 	require.Nil(t, err)
 
 	emptyCommitID := storetypes.CommitID{}
@@ -235,6 +249,7 @@ func TestLoadVersion(t *testing.T) {
 	res, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1})
 	require.NoError(t, err)
 	commitID1 := storetypes.CommitID{Version: 1, Hash: res.AppHash}
+
 	_, err = app.Commit()
 	require.NoError(t, err)
 
@@ -246,8 +261,7 @@ func TestLoadVersion(t *testing.T) {
 	require.NoError(t, err)
 
 	// reload with LoadLatestVersion
-	app = baseapp.NewBaseApp(name, logger, db, nil, pruningOpt)
-	app.MountStores()
+	app = baseapp.NewBaseApp(name, logger, db, rs, nil)
 
 	err = app.LoadLatestVersion()
 	require.Nil(t, err)
@@ -256,7 +270,7 @@ func TestLoadVersion(t *testing.T) {
 
 	// Reload with LoadVersion, see if you can commit the same block and get
 	// the same result.
-	app = baseapp.NewBaseApp(name, logger, db, nil, pruningOpt)
+	app = baseapp.NewBaseApp(name, logger, db, rs, nil)
 	err = app.LoadVersion(1)
 	require.Nil(t, err)
 
@@ -271,29 +285,49 @@ func TestLoadVersion(t *testing.T) {
 }
 
 func TestSetLoader(t *testing.T) {
+	logger := log.NewNopLogger()
+
 	useDefaultLoader := func(app *baseapp.BaseApp) {
 		app.SetStoreLoader(baseapp.DefaultStoreLoader)
 	}
 
 	initStore := func(t *testing.T, db dbm.DB, storeKey string, k, v []byte) {
 		t.Helper()
-		rs := rootmulti.NewStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
-		rs.SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
 
-		key := storetypes.NewKVStoreKey(storeKey)
-		rs.MountStoreWithDB(key, storetypes.StoreTypeIAVL, nil)
+		ss, err := sqlite.New(t.TempDir())
+		require.NoError(t, err)
 
-		err := rs.LoadLatestVersion()
-		require.Nil(t, err)
-		require.Equal(t, int64(0), rs.LastCommitID().Version)
+		sc, err := commitment.NewCommitStore(
+			map[string]commitment.Tree{
+				storeKey: iavl.NewIavlTree(db, logger, iavl.DefaultConfig()),
+			},
+			logger,
+		)
+		require.NoError(t, err)
+
+		rs, err := root.New(logger, ss, sc, pruning.DefaultOptions(), pruning.DefaultOptions(), nil)
+		require.NoError(t, err)
+
+		err = rs.LoadLatestVersion()
+		require.NoError(t, err)
+
+		lastCommitID, err := rs.LastCommitID()
+		require.NoError(t, err)
+
+		require.Equal(t, uint64(0), lastCommitID.Version)
 
 		// write some data in substore
-		kv, _ := rs.GetStore(key).(storetypes.KVStore)
-		require.NotNil(t, kv)
-		kv.Set(k, v)
+		kvStore := rs.GetKVStore(storeKey)
+		require.NotNil(t, kvStore)
+		kvStore.Set(k, v)
 
-		commitID := rs.Commit()
-		require.Equal(t, int64(1), commitID.Version)
+		_, err = rs.Commit()
+		require.NoError(t, err)
+
+		lastCommitID, err = rs.LastCommitID()
+		require.NoError(t, err)
+
+		require.Equal(t, uint64(1), lastCommitID.Version)
 	}
 
 	checkStore := func(t *testing.T, db dbm.DB, ver int64, storeKey string, k, v []byte) {
@@ -340,19 +374,34 @@ func TestSetLoader(t *testing.T) {
 			initStore(t, db, tc.origStoreKey, k, v)
 
 			// load the app with the existing db
-			opts := []func(*baseapp.BaseApp){baseapp.SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))}
-			if tc.setLoader != nil {
-				opts = append(opts, tc.setLoader)
+			opts := []func(*baseapp.BaseApp){
+				tc.setLoader,
 			}
-			app := baseapp.NewBaseApp(t.Name(), log.NewTestLogger(t), db, nil, opts...)
-			app.MountStores(storetypes.NewKVStoreKey(tc.loadStoreKey))
-			err := app.LoadLatestVersion()
-			require.Nil(t, err)
+
+			ss, err := sqlite.New(t.TempDir())
+			require.NoError(t, err)
+
+			sc, err := commitment.NewCommitStore(
+				map[string]commitment.Tree{
+					tc.loadStoreKey: iavl.NewIavlTree(db, logger, iavl.DefaultConfig()),
+				},
+				logger,
+			)
+			require.NoError(t, err)
+
+			rs, err := root.New(logger, ss, sc, pruning.DefaultOptions(), pruning.DefaultOptions(), nil)
+			require.NoError(t, err)
+
+			app := baseapp.NewBaseApp(name, logger, db, rs, nil, opts...)
+
+			err = app.LoadLatestVersion()
+			require.NoError(t, err)
 
 			// "execute" one block
 			res, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 2})
 			require.NoError(t, err)
 			require.NotNil(t, res.AppHash)
+
 			_, err = app.Commit()
 			require.NoError(t, err)
 

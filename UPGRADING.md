@@ -22,7 +22,7 @@ These commands and flags are still supported for backward compatibility.
 
 For backward compatibility, the `**/tendermint/**` gRPC services are still supported.
 
-Additionally, the SDK is starting its abstraction from CometBFT Go types thorought the codebase:
+Additionally, the SDK is starting its abstraction from CometBFT Go types through the codebase:
 
 * The usage of the CometBFT logger has been replaced by the Cosmos SDK logger interface (`cosmossdk.io/log.Logger`).
 * The usage of `github.com/cometbft/cometbft/libs/bytes.HexByte` has been replaced by `[]byte`.

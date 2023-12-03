@@ -364,12 +364,28 @@ func TestSetLoader(t *testing.T) {
 }
 
 func TestVersionSetterGetter(t *testing.T) {
-	pruningOpt := baseapp.SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningDefault))
 	db := dbm.NewMemDB()
 	name := t.Name()
-	app := baseapp.NewBaseApp(name, log.NewTestLogger(t), db, nil, pruningOpt)
+	logger := log.NewNopLogger()
+
+	ss, err := sqlite.New(t.TempDir())
+	require.NoError(t, err)
+
+	sc, err := commitment.NewCommitStore(
+		map[string]commitment.Tree{
+			"main": iavl.NewIavlTree(db, logger, iavl.DefaultConfig()),
+		},
+		logger,
+	)
+	require.NoError(t, err)
+
+	rs, err := root.New(logger, ss, sc, pruning.DefaultOptions(), pruning.DefaultOptions(), nil)
+	require.NoError(t, err)
+
+	app := baseapp.NewBaseApp(name, logger, db, rs, nil)
 
 	require.Equal(t, "", app.Version())
+
 	res, err := app.Query(context.TODO(), &abci.RequestQuery{Path: "app/version"})
 	require.NoError(t, err)
 	require.True(t, res.IsOK())
@@ -387,26 +403,37 @@ func TestVersionSetterGetter(t *testing.T) {
 
 func TestLoadVersionInvalid(t *testing.T) {
 	logger := log.NewNopLogger()
-	pruningOpt := baseapp.SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
 	db := dbm.NewMemDB()
 	name := t.Name()
-	app := baseapp.NewBaseApp(name, logger, db, nil, pruningOpt)
 
-	err := app.LoadLatestVersion()
+	ss, err := sqlite.New(t.TempDir())
+	require.NoError(t, err)
+
+	sc, err := commitment.NewCommitStore(
+		map[string]commitment.Tree{
+			"main": iavl.NewIavlTree(db, logger, iavl.DefaultConfig()),
+		},
+		logger,
+	)
+	require.NoError(t, err)
+
+	rs, err := root.New(logger, ss, sc, pruning.DefaultOptions(), pruning.DefaultOptions(), nil)
+	require.NoError(t, err)
+
+	app := baseapp.NewBaseApp(name, logger, db, rs, nil)
+
+	err = app.LoadLatestVersion()
 	require.Nil(t, err)
-
-	// require error when loading an invalid version
-	err = app.LoadVersion(-1)
-	require.Error(t, err)
 
 	res, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1})
 	require.NoError(t, err)
+
 	commitID1 := storetypes.CommitID{Version: 1, Hash: res.AppHash}
 	_, err = app.Commit()
 	require.NoError(t, err)
 
 	// create a new app with the stores mounted under the same cap key
-	app = baseapp.NewBaseApp(name, logger, db, nil, pruningOpt)
+	app = baseapp.NewBaseApp(name, logger, db, rs, nil)
 
 	// require we can load the latest version
 	err = app.LoadVersion(1)
@@ -426,7 +453,7 @@ func TestOptionFunction(t *testing.T) {
 	}
 
 	db := dbm.NewMemDB()
-	bap := baseapp.NewBaseApp("starting name", log.NewTestLogger(t), db, nil, testChangeNameHelper("new name"))
+	bap := baseapp.NewBaseApp("starting name", log.NewTestLogger(t), db, nil, nil, testChangeNameHelper("new name"))
 	require.Equal(t, bap.Name(), "new name", "BaseApp should have had name changed via option function")
 }
 
@@ -443,7 +470,7 @@ func TestBaseAppOptionSeal(t *testing.T) {
 		suite.baseApp.SetDB(nil)
 	})
 	require.Panics(t, func() {
-		suite.baseApp.SetCMS(nil)
+		suite.baseApp.SetRootStore(nil)
 	})
 	require.Panics(t, func() {
 		suite.baseApp.SetInitChainer(nil)
@@ -621,10 +648,27 @@ func TestABCI_CreateQueryContext(t *testing.T) {
 
 	db := dbm.NewMemDB()
 	name := t.Name()
-	app := baseapp.NewBaseApp(name, log.NewTestLogger(t), db, nil)
+	logger := log.NewTestLogger(t)
 
-	_, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1})
+	ss, err := sqlite.New(t.TempDir())
 	require.NoError(t, err)
+
+	sc, err := commitment.NewCommitStore(
+		map[string]commitment.Tree{
+			"main": iavl.NewIavlTree(db, logger, iavl.DefaultConfig()),
+		},
+		logger,
+	)
+	require.NoError(t, err)
+
+	rs, err := root.New(logger, ss, sc, pruning.DefaultOptions(), pruning.DefaultOptions(), nil)
+	require.NoError(t, err)
+
+	app := baseapp.NewBaseApp(name, logger, db, rs, nil)
+
+	_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1})
+	require.NoError(t, err)
+
 	_, err = app.Commit()
 	require.NoError(t, err)
 
@@ -634,14 +678,12 @@ func TestABCI_CreateQueryContext(t *testing.T) {
 	require.NoError(t, err)
 	testCases := []struct {
 		name   string
-		height int64
+		height uint64
 		prove  bool
 		expErr bool
 	}{
 		{"valid height", 2, true, false},
 		{"future height", 10, true, true},
-		{"negative height, prove=true", -1, true, true},
-		{"negative height, prove=false", -1, false, true},
 	}
 
 	for _, tc := range testCases {

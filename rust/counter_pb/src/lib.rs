@@ -1,15 +1,10 @@
 use std::ptr::null;
 use tonic::{Request, Response, Status};
+use cosmossdk_core::c::ModuleDescriptor;
 // use cosmossdk_core::KVStoreService;
 use cosmossdk_core::tonic::{context};
 
-pub mod example {
-    pub mod counter {
-        pub mod v1 {
-            include!(concat!(env!("OUT_DIR"), "/example.counter.v1.rs"));
-        }
-    }
-}
+include!(concat!(env!("OUT_DIR"), "/_includes.rs"));
 
 // struct Counter {
 //     kv_store_service: KVStoreService,
@@ -36,18 +31,26 @@ pub mod example {
 //     }
 // }
 
-static PROTO_FILE_DESCRIPTOR_SET: &'static [u8] = &[0u8, 0u8, 0u8, 0u8];
+static PROTO_FILE_DESCRIPTORS: &'static [u8] = include_bytes!("file_descriptor_set.bin");
+
+static MODULE_DESCRIPTORS: &'static [ModuleDescriptor] = &[
+    ModuleDescriptor {
+        name: "example.counter.v1".as_ptr(),
+        name_len: "example.counter.v1".len(),
+        // init_fn: fn
+    },
+];
 
 static INIT_DATA: cosmossdk_core::c::InitData = cosmossdk_core::c::InitData {
-    proto_file_descriptors: PROTO_FILE_DESCRIPTOR_SET.as_ptr(),
-    proto_file_descriptors_len: PROTO_FILE_DESCRIPTOR_SET.len(),
-    num_modules: 0,
-    module_names: null(),
-    module_init_fns: null(),
+    proto_file_descriptors: PROTO_FILE_DESCRIPTORS.as_ptr(),
+    proto_file_descriptors_len: PROTO_FILE_DESCRIPTORS.len(),
+    module_descriptors: MODULE_DESCRIPTORS.as_ptr(),
+    num_modules: MODULE_DESCRIPTORS.len(),
+
 };
 
 #[no_mangle]
-extern fn __init(len: *mut usize) -> *const cosmossdk_core::c::InitData {
+extern fn __init() -> *const cosmossdk_core::c::InitData {
     &INIT_DATA
 }
 

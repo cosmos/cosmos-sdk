@@ -45,8 +45,4 @@ impl Resolver {
 }
 
 
-type EncodingType = u32;
-const ENCODING_CUSTOM: EncodingType = 0;
-const ENCODING_ZEROPB: EncodingType = 1;
-const ENCODING_PROTO_BINARY: EncodingType = 2;
 

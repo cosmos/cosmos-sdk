@@ -1,5 +1,15 @@
 package cgo
 
+import "C"
+import (
+	"fmt"
+	"unsafe"
+
+	"google.golang.org/protobuf/reflect/protodesc"
+	"google.golang.org/protobuf/reflect/protoregistry"
+	"google.golang.org/protobuf/types/descriptorpb"
+)
+
 // #cgo LDFLAGS: -ldl
 // #include <dlfcn.h>
 // #include <stdint.h>
@@ -11,7 +21,9 @@ package cgo
 // }
 import "C"
 import (
-	"fmt"
+	"errors"
+
+	"google.golang.org/protobuf/proto"
 )
 
 func LoadLibrary(path string) {
@@ -33,41 +45,54 @@ func loadLibrary(path string) error {
 	}
 
 	initData := C.init(init)
-	fmt.Printf("initData: %v\n", initData)
 
-	//protoFileDescriptorSet := C.dlsym(lib, C.CString("__proto_file_descriptor_set"))
-	//if protoFileDescriptorSet == nil {
-	//	return fmt.Errorf("failed to load proto_file_descriptor_set from %s", path)
+	// load proto file descriptors
+	fdsBz := C.GoBytes(unsafe.Pointer(initData.proto_file_descriptors), C.int(initData.proto_file_descriptors_len))
+	err := loadFileDescriptors(fdsBz, protoregistry.GlobalFiles)
+	if err != nil {
+		return err
+	}
+
+	// register modules
+	modDescriptors := unsafe.Slice(initData.module_descriptors, int(initData.num_modules))
+	for _, mod := range modDescriptors {
+		name := string(C.GoBytes(unsafe.Pointer(mod.name), C.int(mod.name_len)))
+		fmt.Printf("loading module %s\n", name)
+	}
+	//for i := 0; i < int(numModules); i++ {
+	//	mod := initData.module_descriptors[i]
+	//	fmt.Printf("loading module %+v\n", mod)
+	//	//fmt.Printf("loading module %s\n", C.GoString(name))
 	//}
-	//var outLen C.size_t
-	//protoFileDescriptorSetBytes := C.proto_file_descriptor_set(protoFileDescriptorSet, &outLen)
-	//fmt.Printf("protoFileDescriptorSetBytes: %v\n", C.GoBytes(unsafe.Pointer(protoFileDescriptorSetBytes), C.int(outLen)))
-	//
-	//entry := C.dlsym(lib, C.CString("__entry"))
-	//if entry == nil {
-	//	return fmt.Errorf("failed to load entry from %s", path)
-	//}
 
-	//loadModules := C.dlsym(lib, C.CString("__load_modules"))
-	//mods := C.load_modules(loadModules)
-	//for i := 0; i < int(mods.count); i++ {
-	//	initializer := mods.initializers[i]
-	//	name := C.GoString(initializer.name)
-	//	fmt.Printf("Loading module %s\n", name)
-	//	//appmodule.Register(nil,
-	//	//	appmodule.Provide(func(kvStoreService store.KVStoreService) appmodule.AppModule {
-	//	//		return module{
-	//	//			kvStoreService: kvStoreService,
-	//	//		}
-	//	//	}))
-	//}
-	// for each module
+	return nil
+}
 
-	// load library
-	// load FileDescriptorSet
-	// load module names & initializers
+func loadFileDescriptors(fdsBz []byte, registry *protoregistry.Files) error {
+	fds := &descriptorpb.FileDescriptorSet{}
+	err := proto.Unmarshal(fdsBz, fds)
+	if err != nil {
+		return err
+	}
 
-	// load module
-	// call initializer with: config, store, client
+	for _, fd := range fds.File {
+		existing, err := registry.FindFileByPath(fd.GetName())
+		if err != nil && !errors.Is(err, protoregistry.NotFound) {
+			return err
+		}
+		if existing != nil {
+			// TODO: compare existing and fd
+			continue
+		}
+		file, err := protodesc.NewFile(fd, registry)
+		if err != nil {
+			return err
+		}
+
+		err = registry.RegisterFile(file)
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }

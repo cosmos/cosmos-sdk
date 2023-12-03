@@ -2,10 +2,19 @@
 pub struct InitData {
     pub proto_file_descriptors: *const u8,
     pub proto_file_descriptors_len: usize,
+    pub module_descriptors: *const ModuleDescriptor,
     pub num_modules: usize,
-    pub module_names: *const *const u8,
-    pub module_init_fns: *const ModuleInitFn,
 }
+
+#[repr(C)]
+pub struct ModuleDescriptor {
+    pub name: *const u8,
+    pub name_len: usize,
+    // pub init_fn: ModuleInitFn,
+}
+
+unsafe impl Sync for ModuleDescriptor {}
+unsafe impl Send for ModuleDescriptor {}
 
 unsafe impl Sync for InitData {}
 unsafe impl Send for InitData {}
@@ -14,20 +23,27 @@ unsafe impl Send for InitData {}
 pub struct ModuleInitData {
     pub config: *const u8,
     pub config_len: u32,
-    pub register_unary_method: extern "C" fn(service: *const u8, service_len: usize, method: *const u8, method_len: usize, handler: UnaryMethodHandler) -> u32,
+    pub register_unary_method: extern "C" fn(service: *const u8, service_len: usize, method: *const u8, method_len: usize, encoding: EncodingType, handler: UnaryMethodHandler) -> u32,
 }
 
 unsafe impl Sync for ModuleInitData {}
 unsafe impl Send for ModuleInitData {}
 
-pub type ModuleInitFn = extern "C" fn(init_data: *const ModuleInitData) -> i32;
+pub type ModuleInitFn = extern "C" fn(init_data: *const ModuleInitData) -> *const ();
 
 pub type UnaryMethodHandler = unsafe extern "C" fn(ctx: u32, req: *const u8, req_len: usize, res: *mut u8, res_len: *mut usize) -> u32;
+
+pub type InitFn = extern "C" fn() -> *const InitData;
+
+type EncodingType = u32;
+const ENCODING_CUSTOM: EncodingType = 0;
+const ENCODING_ZEROPB: EncodingType = 1;
+const ENCODING_PROTO_BINARY: EncodingType = 2;
 
 #[cfg(feature = "example")]
 #[no_mangle]
 pub extern fn __init() -> *const InitData {
-    todo!()
+    null()
 }
 
 // #[repr(C)]

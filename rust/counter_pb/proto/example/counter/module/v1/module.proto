@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+package example.counter.module.v1;
+
+import "cosmos/app/v1alpha1/module.proto";
+
+message Module {
+  option (cosmos.app.v1alpha1.module) = {};
+}

@@ -1,5 +1,6 @@
 #![no_std]
 
+/// cbindgen:ignore
 #[link(wasm_import_module = "CosmosSDK")]
 extern "C" {
     fn resolve_service_method(name: *const u8) -> u32;
@@ -13,10 +14,16 @@ extern "C" {
     fn store_iter_release(iter: *mut u8);
 }
 
+/// cbindgen:ignore
+#[link(wasm_import_module = "CosmosSDK")]
 type ModuleInitFn = unsafe extern "C" fn(init_data: *const ModuleInitData) -> i32;
 
+/// cbindgen:ignore
+#[link(wasm_import_module = "CosmosSDK")]
 type UnaryMethodHandler = unsafe extern "C" fn(ctx: u32, req: *const u8, res: *mut u8) -> i32;
 
+/// cbindgen:ignore
+#[link(wasm_import_module = "CosmosSDK")]
 #[repr(C)]
 struct ModuleInitData {
     config: *const u8,
@@ -24,6 +31,8 @@ struct ModuleInitData {
     register_unary_method: unsafe extern "C" fn(name: *const u8, handler: UnaryMethodHandler),
 }
 
+/// cbindgen:ignore
+#[link(wasm_import_module = "CosmosSDK")]
 #[repr(C)]
 struct IterBuf {
     key: *mut u8,

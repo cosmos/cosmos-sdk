@@ -14,3 +14,6 @@ zeropb = { path = "../zeropb" }
 [features]
 default = []
 tonic = ["dep:tonic"]
+
+[build-dependencies]
+cbindgen = "0.26.0"

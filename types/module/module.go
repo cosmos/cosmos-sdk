@@ -813,9 +813,17 @@ func (m *Manager) EndBlock(ctx sdk.Context) (sdk.EndBlock, error) {
 
 	for _, moduleName := range m.OrderEndBlockers {
 		if module, ok := m.Modules[moduleName].(appmodule.HasEndBlocker); ok {
+			if m.beforeModuleEndBlock != nil {
+				m.beforeModuleEndBlock(moduleName)
+			}
+
 			err := module.EndBlock(ctx)
 			if err != nil {
 				return sdk.EndBlock{}, err
+			}
+
+			if m.afterModuleEndBlock != nil {
+				m.afterModuleEndBlock(moduleName)
 			}
 		} else if module, ok := m.Modules[moduleName].(HasABCIEndBlock); ok {
 			if m.beforeModuleEndBlock != nil {

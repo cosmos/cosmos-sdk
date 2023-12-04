@@ -4,9 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"slices"
 
 	"cosmossdk.io/errors"
 	"cosmossdk.io/math"
+	"cosmossdk.io/x/gov/types"
 	govtypes "cosmossdk.io/x/gov/types"
 	v1 "cosmossdk.io/x/gov/types/v1"
 	"cosmossdk.io/x/gov/types/v1beta1"
@@ -85,9 +87,19 @@ func (k msgServer) SubmitProposal(goCtx context.Context, msg *v1.MsgSubmitPropos
 	}
 
 	proposalType := msg.ProposalType
-	if msg.Expedited { // checking for backward compatibility
-		proposalType = v1.ProposalType_PROPOSAL_TYPE_EXPEDITED
+	switch proposalType {
+	case v1.ProposalType_PROPOSAL_TYPE_OPTIMISTIC:
+		if len(params.OptimisticAuthorizedAddreses) > 0 {
+			if slices.Contains(params.OptimisticAuthorizedAddreses, msg.GetProposer()) {
+				return nil, errors.Wrap(types.ErrInvalidProposer, "proposer is not authorized to submit optimistic proposal")
+			}
+		}
+	case v1.ProposalType_PROPOSAL_TYPE_EXPEDITED:
+		if msg.Expedited { // checking for backward compatibility
+			proposalType = v1.ProposalType_PROPOSAL_TYPE_EXPEDITED
+		}
 	}
+
 	proposal, err := k.Keeper.SubmitProposal(ctx, proposalMsgs, msg.Metadata, msg.Title, msg.Summary, proposer, proposalType)
 	if err != nil {
 		return nil, err
@@ -186,22 +198,8 @@ func (k msgServer) Vote(ctx context.Context, msg *v1.MsgVote) (*v1.MsgVoteRespon
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid voter address: %s", err)
 	}
 
-	// get proposal
-	proposal, err := k.Keeper.Proposals.Get(ctx, msg.ProposalId)
-	if err != nil {
-		return nil, err
-	}
-
-	switch proposal.ProposalType {
-	case v1.ProposalType_PROPOSAL_TYPE_OPTIMISTIC:
-		if msg.Option != v1.OptionNo {
-			return nil, errors.Wrap(govtypes.ErrInvalidVote, "optimistic proposals can only be rejected")
-		}
-	default:
-		if !v1.ValidVoteOption(msg.Option) {
-			return nil, errors.Wrap(govtypes.ErrInvalidVote, msg.Option.String())
-		}
-
+	if !v1.ValidVoteOption(msg.Option) {
+		return nil, errors.Wrap(govtypes.ErrInvalidVote, msg.Option.String())
 	}
 
 	if err = k.Keeper.AddVote(ctx, msg.ProposalId, accAddr, v1.NewNonSplitVoteOption(msg.Option), msg.Metadata); err != nil {

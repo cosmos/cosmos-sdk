@@ -1,0 +1,52 @@
+# Introduction
+
+## What is ABCI++?
+
+ABCI++, Application Blockchain Interface is the interface between CometBFT and the application. Within the release of ABCI 2.0 for the 0.38 CometBFT release there were additional methods introduced.
+
+The 5 methods introduced during ABCI 2.0 are:
+
+- `PrepareProposal`
+- `ProcessProposal`
+- `ExtendVote`
+- `VerifyVoteExtension`
+- `FinalizeBlock`
+
+
+## The Flow
+
+## PrepareProposal
+
+Based on their voting power, CometBFT chooses a block proposer and calls `PrepareProposal` on the block proposer's application (Cosmos SDK). The selected block proposer is responsible for collecting outstanding transactions from the mempool, adhering to the application's specifications. The application can enforce custom transaction ordering and incorporate additional transactions, potentially generated from vote extensions in the previous block.
+
+To perform this manipulation on the application side, a custom handler is implemented. If no custom handler exists, all transactions are validated. Please see [this](https://github.com/fatal-fruit/abci-workshop) tutorial for more information on custom handlers.
+
+Please note that vote extensions will only be available on the following height in which vote extensions are enabled. To see more details on vote extensions please see [here](https://docs.cosmos.network/main/build/abci++/01-vote-extensions).
+
+After creating the proposal, the proposer returns it to CometBFT.
+
+PrepareProposal CAN be non-deterministic.
+
+
+## ExtendVote and VerifyVoteExtensions
+
+These methods allow applications to extend the voting process by requiring validators to perform additional actions beyond simply validating blocks.
+
+If vote extensions are enabled, `ExtendVote` will be called on every validator and each one will return its vote extension which is in practice a bunch of bytes. As mentioned above this data (vote extension) can only be retrieved in the next block height during `PrepareProposal`. Additionally, this data can be arbitrary, but in the provided tutorials, it serves as an oracle or proof of transactions in the mempool. Essentially, vote extensions are processed and injected as transactions. Examples of use-cases for vote extensions include prices for a price oracle or encryption shares for an encrypted transaction mempool. `ExtendVote` CAN be non-deterministic.
+
+`VerifyVoteExtensions` is performed on every validator multiple times, so they can verify other validators' vote extensions. This check is submitted to validate the integrity and validity of the vote extensions preventing malicious or invalid vote extensions.
+
+Additionally, applications must keep the vote extension data concise as it can degrade the performance of their chain.
+
+`VerifyVoteExtensions` MUST be deterministic.
+
+
+## ProcessProposal
+
+This method allows validators to perform application-specific checks on the block proposal and is called on all validators. This is an important step in the consensus process, as it ensures that the block is valid and meets the requirements of the application. For example, validators could check that the block contains all the required transactions or that the block does not create any invalid state transitions.
+
+The implementation of `ProcessProposal` MUST be deterministic.
+
+## FinalizeBlock
+
+`FinalizeBlock` is then called and is responsible for updating the state of the blockchain and making the block available to users

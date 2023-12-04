@@ -11,10 +11,23 @@ import (
 )
 
 // TODO: Break into several smaller functions for clarity
+// TODO: Break for each proposal type (optimisic, standard, expedited and multiple choice)
 
-// Tally iterates over the votes and updates the tally of a proposal based on the voting power of the
-// voters
+// Tally iterates over the votes and updates the tally of a proposal based on the voting power of the voters
 func (keeper Keeper) Tally(ctx context.Context, proposal v1.Proposal) (passes, burnDeposits bool, tallyResults v1.TallyResult, err error) {
+	switch proposal.ProposalType {
+	case v1.ProposalType_PROPOSAL_TYPE_OPTIMISTIC:
+		return keeper.tallyOptimistic(ctx, proposal)
+	case v1.ProposalType_PROPOSAL_TYPE_EXPEDITED:
+		return keeper.tallyStandard(ctx, proposal) // TODO(@julienrbrt): investigate if we need a specific simpler tally for expedited
+	case v1.ProposalType_PROPOSAL_TYPE_MULTIPLE_CHOICE:
+		return keeper.tallyMultipleChoice(ctx, proposal) // TODO(@julienrbrt): implement in follow up
+	default:
+		return keeper.tallyStandard(ctx, proposal)
+	}
+}
+
+func (keeper Keeper) tallyStandard(ctx context.Context, proposal v1.Proposal) (passes, burnDeposits bool, tallyResults v1.TallyResult, err error) {
 	results := make(map[v1.VoteOption]math.LegacyDec)
 	results[v1.OptionYes] = math.LegacyZeroDec()
 	results[v1.OptionAbstain] = math.LegacyZeroDec()
@@ -170,4 +183,12 @@ func (keeper Keeper) Tally(ctx context.Context, proposal v1.Proposal) (passes, b
 
 	// If more than 1/2 of non-abstaining voters vote No, proposal fails
 	return false, false, tallyResults, nil
+}
+
+func (keeper Keeper) tallyOptimistic(ctx context.Context, proposal v1.Proposal) (passes, burnDeposits bool, tallyResults v1.TallyResult, err error) {
+	return false, false, v1.TallyResult{}, nil
+}
+
+func (keeper Keeper) tallyMultipleChoice(ctx context.Context, proposal v1.Proposal) (passes, burnDeposits bool, tallyResults v1.TallyResult, err error) {
+	return false, false, v1.TallyResult{}, nil
 }

@@ -3,6 +3,7 @@ package v1
 import (
 	"errors"
 
+	"cosmossdk.io/core/address"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 )
 
@@ -28,12 +29,12 @@ func (data GenesisState) Empty() bool {
 }
 
 // ValidateGenesis checks if parameters are within valid ranges
-func ValidateGenesis(data *GenesisState) error {
+func ValidateGenesis(ac address.Codec, data *GenesisState) error {
 	if data.StartingProposalId == 0 {
 		return errors.New("starting proposal id must be greater than 0")
 	}
 
-	return data.Params.ValidateBasic()
+	return data.Params.ValidateBasic(ac)
 }
 
 var _ types.UnpackInterfacesMessage = GenesisState{}

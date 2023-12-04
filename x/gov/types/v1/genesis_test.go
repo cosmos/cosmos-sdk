@@ -8,6 +8,7 @@ import (
 	sdkmath "cosmossdk.io/math"
 	v1 "cosmossdk.io/x/gov/types/v1"
 
+	"github.com/cosmos/cosmos-sdk/codec/address"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -20,6 +21,7 @@ func TestEmptyGenesis(t *testing.T) {
 }
 
 func TestValidateGenesis(t *testing.T) {
+	codec := address.NewBech32Codec("cosmos")
 	params := v1.DefaultParams()
 
 	testCases := []struct {
@@ -98,7 +100,7 @@ func TestValidateGenesis(t *testing.T) {
 	for _, tc := range testCases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-			err := v1.ValidateGenesis(tc.genesisState())
+			err := v1.ValidateGenesis(codec, tc.genesisState())
 			if tc.expErr {
 				require.Error(t, err)
 			} else {

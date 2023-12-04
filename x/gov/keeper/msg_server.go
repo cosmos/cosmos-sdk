@@ -186,12 +186,25 @@ func (k msgServer) Vote(ctx context.Context, msg *v1.MsgVote) (*v1.MsgVoteRespon
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid voter address: %s", err)
 	}
 
-	if !v1.ValidVoteOption(msg.Option) {
-		return nil, errors.Wrap(govtypes.ErrInvalidVote, msg.Option.String())
+	// get proposal
+	proposal, err := k.Keeper.Proposals.Get(ctx, msg.ProposalId)
+	if err != nil {
+		return nil, err
 	}
 
-	err = k.Keeper.AddVote(ctx, msg.ProposalId, accAddr, v1.NewNonSplitVoteOption(msg.Option), msg.Metadata)
-	if err != nil {
+	switch proposal.ProposalType {
+	case v1.ProposalType_PROPOSAL_TYPE_OPTIMISTIC:
+		if msg.Option != v1.OptionNo {
+			return nil, errors.Wrap(govtypes.ErrInvalidVote, "optimistic proposals can only be rejected")
+		}
+	default:
+		if !v1.ValidVoteOption(msg.Option) {
+			return nil, errors.Wrap(govtypes.ErrInvalidVote, msg.Option.String())
+		}
+
+	}
+
+	if err = k.Keeper.AddVote(ctx, msg.ProposalId, accAddr, v1.NewNonSplitVoteOption(msg.Option), msg.Metadata); err != nil {
 		return nil, err
 	}
 
@@ -277,7 +290,7 @@ func (k msgServer) UpdateParams(ctx context.Context, msg *v1.MsgUpdateParams) (*
 		return nil, errors.Wrapf(govtypes.ErrInvalidSigner, "invalid authority; expected %s, got %s", k.authority, msg.Authority)
 	}
 
-	if err := msg.Params.ValidateBasic(); err != nil {
+	if err := msg.Params.ValidateBasic(k.authKeeper.AddressCodec()); err != nil {
 		return nil, err
 	}
 

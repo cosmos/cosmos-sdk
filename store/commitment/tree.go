@@ -6,7 +6,7 @@ import (
 
 	ics23 "github.com/cosmos/ics23/go"
 
-	snapshottypes "cosmossdk.io/store/v2/snapshots/types"
+	snapshotstypes "cosmossdk.io/store/v2/snapshots/types"
 )
 
 // ErrorExportDone is returned by Exporter.Next() when all items have been exported.
@@ -30,14 +30,14 @@ type Tree interface {
 
 // Exporter is the interface that wraps the basic Export methods.
 type Exporter interface {
-	Next() (*snapshottypes.SnapshotIAVLItem, error)
+	Next() (*snapshotstypes.SnapshotIAVLItem, error)
 
 	io.Closer
 }
 
 // Importer is the interface that wraps the basic Import methods.
 type Importer interface {
-	Add(*snapshottypes.SnapshotIAVLItem) error
+	Add(*snapshotstypes.SnapshotIAVLItem) error
 	Commit() error
 
 	io.Closer

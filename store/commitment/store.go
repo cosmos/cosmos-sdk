@@ -11,10 +11,11 @@ import (
 
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/v2"
-	snapshottypes "cosmossdk.io/store/v2/snapshots/types"
+	snapshotstypes "cosmossdk.io/store/v2/snapshots/types"
 )
 
 var _ store.Committer = (*CommitStore)(nil)
+var _ snapshotstypes.CommitSnapshotter = (*CommitStore)(nil)
 
 // CommitStore is a wrapper around multiple Tree objects mapped by a unique store
 // key. Each store key reflects dedicated and unique usage within a module. A caller
@@ -131,7 +132,7 @@ func (c *CommitStore) Prune(version uint64) (ferr error) {
 	return ferr
 }
 
-// Snapshot implements snapshottypes.CommitSnapshotter.
+// Snapshot implements snapshotstypes.CommitSnapshotter.
 func (c *CommitStore) Snapshot(version uint64, protoWriter protoio.Writer) error {
 	if version == 0 {
 		return fmt.Errorf("the snapshot version must be greater than 0")
@@ -153,9 +154,9 @@ func (c *CommitStore) Snapshot(version uint64, protoWriter protoio.Writer) error
 
 		defer exporter.Close()
 
-		err = protoWriter.WriteMsg(&snapshottypes.SnapshotItem{
-			Item: &snapshottypes.SnapshotItem_Store{
-				Store: &snapshottypes.SnapshotStoreItem{
+		err = protoWriter.WriteMsg(&snapshotstypes.SnapshotItem{
+			Item: &snapshotstypes.SnapshotItem_Store{
+				Store: &snapshotstypes.SnapshotStoreItem{
 					Name: storeKey,
 				},
 			},
@@ -172,8 +173,8 @@ func (c *CommitStore) Snapshot(version uint64, protoWriter protoio.Writer) error
 				return fmt.Errorf("failed to get the next export node: %w", err)
 			}
 
-			if err = protoWriter.WriteMsg(&snapshottypes.SnapshotItem{
-				Item: &snapshottypes.SnapshotItem_IAVL{
+			if err = protoWriter.WriteMsg(&snapshotstypes.SnapshotItem{
+				Item: &snapshotstypes.SnapshotItem_IAVL{
 					IAVL: item,
 				},
 			}); err != nil {
@@ -185,50 +186,50 @@ func (c *CommitStore) Snapshot(version uint64, protoWriter protoio.Writer) error
 	return nil
 }
 
-// Restore implements snapshottypes.CommitSnapshotter.
-func (c *CommitStore) Restore(version uint64, format uint32, protoReader protoio.Reader, chStorage chan<- *store.KVPair) (snapshottypes.SnapshotItem, error) {
+// Restore implements snapshotstypes.CommitSnapshotter.
+func (c *CommitStore) Restore(version uint64, format uint32, protoReader protoio.Reader, chStorage chan<- *store.KVPair) (snapshotstypes.SnapshotItem, error) {
 	var (
 		importer     Importer
-		snapshotItem snapshottypes.SnapshotItem
+		snapshotItem snapshotstypes.SnapshotItem
 		storeKey     string
 	)
 
 loop:
 	for {
-		snapshotItem = snapshottypes.SnapshotItem{}
+		snapshotItem = snapshotstypes.SnapshotItem{}
 		err := protoReader.ReadMsg(&snapshotItem)
 		if errors.Is(err, io.EOF) {
 			break
 		} else if err != nil {
-			return snapshottypes.SnapshotItem{}, fmt.Errorf("invalid protobuf message: %w", err)
+			return snapshotstypes.SnapshotItem{}, fmt.Errorf("invalid protobuf message: %w", err)
 		}
 
 		switch item := snapshotItem.Item.(type) {
-		case *snapshottypes.SnapshotItem_Store:
+		case *snapshotstypes.SnapshotItem_Store:
 			if importer != nil {
 				if err := importer.Commit(); err != nil {
-					return snapshottypes.SnapshotItem{}, fmt.Errorf("failed to commit importer: %w", err)
+					return snapshotstypes.SnapshotItem{}, fmt.Errorf("failed to commit importer: %w", err)
 				}
 				importer.Close()
 			}
 			storeKey = item.Store.Name
 			tree := c.multiTrees[storeKey]
 			if tree == nil {
-				return snapshottypes.SnapshotItem{}, fmt.Errorf("store %s not found", storeKey)
+				return snapshotstypes.SnapshotItem{}, fmt.Errorf("store %s not found", storeKey)
 			}
 			importer, err = tree.Import(version)
 			if err != nil {
-				return snapshottypes.SnapshotItem{}, fmt.Errorf("failed to import tree for version %d: %w", version, err)
+				return snapshotstypes.SnapshotItem{}, fmt.Errorf("failed to import tree for version %d: %w", version, err)
 			}
 			defer importer.Close()
 
-		case *snapshottypes.SnapshotItem_IAVL:
+		case *snapshotstypes.SnapshotItem_IAVL:
 			if importer == nil {
-				return snapshottypes.SnapshotItem{}, fmt.Errorf("received IAVL node item before store item")
+				return snapshotstypes.SnapshotItem{}, fmt.Errorf("received IAVL node item before store item")
 			}
 			node := item.IAVL
 			if node.Height > int32(math.MaxInt8) {
-				return snapshottypes.SnapshotItem{}, fmt.Errorf("node height %v cannot exceed %v",
+				return snapshotstypes.SnapshotItem{}, fmt.Errorf("node height %v cannot exceed %v",
 					item.IAVL.Height, math.MaxInt8)
 			}
 			// Protobuf does not differentiate between []byte{} and nil, but fortunately IAVL does
@@ -249,7 +250,7 @@ loop:
 			}
 			err := importer.Add(node)
 			if err != nil {
-				return snapshottypes.SnapshotItem{}, fmt.Errorf("failed to add node to importer: %w", err)
+				return snapshotstypes.SnapshotItem{}, fmt.Errorf("failed to add node to importer: %w", err)
 			}
 		default:
 			break loop
@@ -258,7 +259,7 @@ loop:
 
 	if importer != nil {
 		if err := importer.Commit(); err != nil {
-			return snapshottypes.SnapshotItem{}, fmt.Errorf("failed to commit importer: %w", err)
+			return snapshotstypes.SnapshotItem{}, fmt.Errorf("failed to commit importer: %w", err)
 		}
 	}
 

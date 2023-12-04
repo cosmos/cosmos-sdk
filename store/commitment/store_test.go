@@ -29,9 +29,9 @@ func TestSnapshotter(t *testing.T) {
 	// latestHash := tree.WorkingHash()
 
 	// // create a snapshot
-	// dummyExtensionItem := snapshottypes.SnapshotItem{
-	// 	Item: &snapshottypes.SnapshotItem_Extension{
-	// 		Extension: &snapshottypes.SnapshotExtensionMeta{
+	// dummyExtensionItem := snapshotstypes.SnapshotItem{
+	// 	Item: &snapshotstypes.SnapshotItem_Extension{
+	// 		Extension: &snapshotstypes.SnapshotExtensionMeta{
 	// 			Name:   "test",
 	// 			Format: 1,
 	// 		},
@@ -53,7 +53,7 @@ func TestSnapshotter(t *testing.T) {
 	// streamReader, err := snapshots.NewStreamReader(chunks)
 	// chStorage := make(chan *store.KVPair, 100)
 	// require.NoError(t, err)
-	// nextItem, err := target.Restore(latestVersion, snapshottypes.CurrentFormat, streamReader, chStorage)
+	// nextItem, err := target.Restore(latestVersion, snapshotstypes.CurrentFormat, streamReader, chStorage)
 	// require.NoError(t, err)
 	// require.Equal(t, *dummyExtensionItem.GetExtension(), *nextItem.GetExtension())
 

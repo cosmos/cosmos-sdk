@@ -166,7 +166,7 @@ func (m *Manager) GetSnapshotBlockRetentionHeights() int64 {
 // Create creates a snapshot and returns its metadata.
 func (m *Manager) Create(height uint64) (*types.Snapshot, error) {
 	if m == nil {
-		return nil, errorsmod.Wrap(store.ErrLogic, "Snatshot Manager is nil")
+		return nil, errorsmod.Wrap(store.ErrLogic, "Snapshot Manager is nil")
 	}
 
 	err := m.begin(opSnapshot)
@@ -372,11 +372,11 @@ func (m *Manager) doRestoreSnapshot(snapshot types.Snapshot, chChunks <-chan io.
 
 	storageErrs := make(chan error, 1)
 	go func() {
+		defer close(storageErrs)
 		err := m.storageSnapshotter.Restore(snapshot.Height, chStorage)
 		if err != nil {
 			storageErrs <- err
 		}
-		close(storageErrs)
 	}()
 
 	nextItem, err = m.commitSnapshotter.Restore(snapshot.Height, snapshot.Format, streamReader, chStorage)

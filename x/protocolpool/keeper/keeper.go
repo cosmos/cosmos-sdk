@@ -41,6 +41,11 @@ type Keeper struct {
 // Global variables
 var toDistribute uint64
 
+func init() {
+	// Use the global variable to avoid lint issue
+	_ = toDistribute
+}
+
 func NewKeeper(cdc codec.BinaryCodec, storeService storetypes.KVStoreService,
 	ak types.AccountKeeper, bk types.BankKeeper, authority string,
 ) Keeper {
@@ -151,7 +156,7 @@ func (k Keeper) iterateAndUpdateFundsDistribution(ctx context.Context) (string, 
 		return "", err
 	}
 	if totalPercentageToBeDistributed > 100 {
-		return "", fmt.Errorf("total funds percentage is greater than one")
+		return "", fmt.Errorf("total funds percentage cannot exceed 100")
 	}
 
 	poolMAcc := k.authKeeper.GetModuleAccount(ctx, types.ModuleName)

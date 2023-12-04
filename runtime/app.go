@@ -88,16 +88,16 @@ func (a *App) RegisterModules(modules ...module.AppModule) error {
 	return nil
 }
 
-// RegisterStores registers the provided store keys.
-// This method should only be used for registering extra stores
-// wiich is necessary for modules that not registered using the app config.
-// To be used in combination of RegisterModules.
-func (a *App) RegisterStores(keys ...storetypes.StoreKey) error {
-	a.storeKeys = append(a.storeKeys, keys...)
-	a.MountStores(keys...)
+// // RegisterStores registers the provided store keys.
+// // This method should only be used for registering extra stores
+// // wiich is necessary for modules that not registered using the app config.
+// // To be used in combination of RegisterModules.
+// func (a *App) RegisterStores(keys ...storetypes.StoreKey) error {
+// 	a.storeKeys = append(a.storeKeys, keys...)
+// 	a.MountStores(keys...)
 
-	return nil
-}
+// 	return nil
+// }
 
 // Load finishes all initialization operations and loads the app.
 func (a *App) Load(loadLatest bool) error {
@@ -238,7 +238,7 @@ func (a *App) Configurator() module.Configurator {
 }
 
 // LoadHeight loads a particular height
-func (a *App) LoadHeight(height int64) error {
+func (a *App) LoadHeight(height uint64) error {
 	return a.LoadVersion(height)
 }
 

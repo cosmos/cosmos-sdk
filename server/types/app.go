@@ -12,7 +12,7 @@ import (
 
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/snapshots"
-	storetypes "cosmossdk.io/store/types"
+	"cosmossdk.io/store/v2"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/server/api"
@@ -53,8 +53,8 @@ type (
 		// RegisterNodeService registers the node gRPC Query service.
 		RegisterNodeService(client.Context, config.Config)
 
-		// CommitMultiStore return the multistore instance
-		CommitMultiStore() storetypes.CommitMultiStore
+		// RootStore return the RootStore type
+		RootStore() store.RootStore
 
 		// Return the snapshot manager
 		SnapshotManager() *snapshots.Manager

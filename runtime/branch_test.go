@@ -16,7 +16,7 @@ import (
 
 func TestBranchService(t *testing.T) {
 	bs := BranchService{}
-	sk := storetypes.NewKVStoreKey("test")
+	sk := "test"
 	tsk := storetypes.NewTransientStoreKey("transient-test")
 	// helper to create a state change
 	doStateChange := func(ctx context.Context) {

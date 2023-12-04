@@ -96,7 +96,6 @@ func NewBaseAppSuite(t *testing.T, opts ...func(*baseapp.BaseApp)) *BaseAppSuite
 	app.SetTxDecoder(txConfig.TxDecoder())
 	app.SetTxEncoder(txConfig.TxEncoder())
 
-	// mount stores and seal
 	require.Nil(t, app.LoadLatestVersion())
 
 	return &BaseAppSuite{
@@ -138,7 +137,8 @@ func NewBaseAppSuiteWithSnapshots(t *testing.T, cfg SnapshotsConfig, opts ...fun
 		append(
 			opts,
 			baseapp.SetSnapshot(snapshotStore, snapshottypes.NewSnapshotOptions(cfg.snapshotInterval, cfg.snapshotKeepRecent)),
-			baseapp.SetPruning(cfg.pruningOpts),
+			// TODO(bez): Handle custom pruning options.
+			// baseapp.SetPruning(cfg.pruningOpts),
 		)...,
 	)
 
@@ -153,9 +153,9 @@ func NewBaseAppSuiteWithSnapshots(t *testing.T, cfg SnapshotsConfig, opts ...fun
 	keyCounter := 0
 
 	for height := int64(1); height <= int64(cfg.blocks); height++ {
-
 		_, _, addr := testdata.KeyTestPubAddr()
 		txs := [][]byte{}
+
 		for txNum := 0; txNum < cfg.blockTxs; txNum++ {
 			msgs := []sdk.Msg{}
 			for msgNum := 0; msgNum < 100; msgNum++ {
@@ -170,8 +170,10 @@ func NewBaseAppSuiteWithSnapshots(t *testing.T, cfg SnapshotsConfig, opts ...fun
 			}
 
 			builder := suite.txConfig.NewTxBuilder()
+
 			err := builder.SetMsgs(msgs...)
 			require.NoError(t, err)
+
 			setTxSignature(t, builder, 0)
 
 			txBytes, err := suite.txConfig.TxEncoder()(builder.GetTx())

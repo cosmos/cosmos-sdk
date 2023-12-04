@@ -6,13 +6,14 @@ import (
 
 	dbm "github.com/cosmos/cosmos-db"
 
-	"cosmossdk.io/core/store"
+	corestore "cosmossdk.io/core/store"
 	storetypes "cosmossdk.io/store/types"
+	"cosmossdk.io/store/v2"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func NewKVStoreService(storeKey *storetypes.KVStoreKey) store.KVStoreService {
+func NewKVStoreService(storeKey *storetypes.KVStoreKey) corestore.KVStoreService {
 	return &kvStoreService{key: storeKey}
 }
 
@@ -20,25 +21,25 @@ type kvStoreService struct {
 	key *storetypes.KVStoreKey
 }
 
-func (k kvStoreService) OpenKVStore(ctx context.Context) store.KVStore {
-	return newKVStore(sdk.UnwrapSDKContext(ctx).KVStore(k.key))
+func (k kvStoreService) OpenKVStore(ctx context.Context) corestore.KVStore {
+	return newKVStore(sdk.UnwrapSDKContext(ctx).KVStore(k.key.String()))
 }
 
-type memStoreService struct {
-	key *storetypes.MemoryStoreKey
-}
+// type memStoreService struct {
+// 	key *storetypes.MemoryStoreKey
+// }
 
-func (m memStoreService) OpenMemoryStore(ctx context.Context) store.KVStore {
-	return newKVStore(sdk.UnwrapSDKContext(ctx).KVStore(m.key))
-}
+// func (m memStoreService) OpenMemoryStore(ctx context.Context) corestore.KVStore {
+// 	return newKVStore(sdk.UnwrapSDKContext(ctx).KVStore(m.key.String()))
+// }
 
-type transientStoreService struct {
-	key *storetypes.TransientStoreKey
-}
+// type transientStoreService struct {
+// 	key *storetypes.TransientStoreKey
+// }
 
-func (t transientStoreService) OpenTransientStore(ctx context.Context) store.KVStore {
-	return newKVStore(sdk.UnwrapSDKContext(ctx).KVStore(t.key))
-}
+// func (t transientStoreService) OpenTransientStore(ctx context.Context) corestore.KVStore {
+// 	return newKVStore(sdk.UnwrapSDKContext(ctx).KVStore(t.key))
+// }
 
 // CoreKVStore is a wrapper of Core/Store kvstore interface
 // Remove after https://github.com/cosmos/cosmos-sdk/issues/14714 is closed
@@ -48,7 +49,7 @@ type coreKVStore struct {
 
 // NewKVStore returns a wrapper of Core/Store kvstore interface
 // Remove once store migrates to core/store kvstore interface
-func newKVStore(store storetypes.KVStore) store.KVStore {
+func newKVStore(store storetypes.KVStore) corestore.KVStore {
 	return coreKVStore{kvStore: store}
 }
 
@@ -80,7 +81,7 @@ func (store coreKVStore) Delete(key []byte) error {
 // To iterate over entire domain, use store.Iterator(nil, nil)
 // CONTRACT: No writes may happen within a domain while an iterator exists over it.
 // Exceptionally allowed for cachekv.Store, safe to write in the modules.
-func (store coreKVStore) Iterator(start, end []byte) (store.Iterator, error) {
+func (store coreKVStore) Iterator(start, end []byte) (corestore.Iterator, error) {
 	return store.kvStore.Iterator(start, end), nil
 }
 
@@ -89,15 +90,15 @@ func (store coreKVStore) Iterator(start, end []byte) (store.Iterator, error) {
 // Iterator must be closed by caller.
 // CONTRACT: No writes may happen within a domain while an iterator exists over it.
 // Exceptionally allowed for cachekv.Store, safe to write in the modules.
-func (store coreKVStore) ReverseIterator(start, end []byte) (store.Iterator, error) {
+func (store coreKVStore) ReverseIterator(start, end []byte) (corestore.Iterator, error) {
 	return store.kvStore.ReverseIterator(start, end), nil
 }
 
 // Adapter
-var _ storetypes.KVStore = kvStoreAdapter{}
+var _ store.KVStore = kvStoreAdapter{}
 
 type kvStoreAdapter struct {
-	store store.KVStore
+	store corestore.KVStore
 }
 
 func (kvStoreAdapter) CacheWrap() storetypes.CacheWrap {
@@ -158,6 +159,6 @@ func (s kvStoreAdapter) ReverseIterator(start, end []byte) dbm.Iterator {
 	return it
 }
 
-func KVStoreAdapter(store store.KVStore) storetypes.KVStore {
+func KVStoreAdapter(store corestore.KVStore) store.KVStore {
 	return &kvStoreAdapter{store}
 }

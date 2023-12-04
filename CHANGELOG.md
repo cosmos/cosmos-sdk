@@ -52,6 +52,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/auth/vesting) [#17810](https://github.com/cosmos/cosmos-sdk/pull/17810) Add the ability to specify a start time for continuous vesting accounts.
 * (runtime) [#18475](https://github.com/cosmos/cosmos-sdk/pull/18475) Adds an implementation for core.branch.Service.
 * (server) [#18478](https://github.com/cosmos/cosmos-sdk/pull/18478) CMD flag to disable colored logs.
+* (baseapp) [#18499](https://github.com/cosmos/cosmos-sdk/pull/18499) Add `MsgRouter` response type from message name function.
 
 ### Improvements
 

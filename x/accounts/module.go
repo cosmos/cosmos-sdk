@@ -14,6 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
 )
@@ -22,6 +23,9 @@ const (
 	ModuleName = "accounts"
 	StoreKey   = "_" + ModuleName // unfortunately accounts collides with auth store key
 )
+
+// ModuleAccountAddress defines the x/accounts module address.
+var ModuleAccountAddress = address.Module(ModuleName)
 
 const (
 	ConsensusVersion = 1

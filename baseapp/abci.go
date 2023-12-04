@@ -693,14 +693,14 @@ func (app *BaseApp) BeginBlock(req *abci.RequestFinalizeBlock) (res sdk.BeginBlo
 		return res, err
 	}
 
-	if app.cms.TracingEnabled() {
-		app.cms.SetTracingContext(storetypes.TraceContext(
-			map[string]interface{}{"blockHeight": req.Height},
-		))
+	if err := app.validateFinalizeBlockHeight(req); err != nil {
+		return res, err
 	}
 
-	if err := app.validateFinalizeBlockHeight(req); err != nil {
-		panic(err)
+	if app.cms.TracingEnabled() {
+		app.cms.SetTracingContext(storetypes.TraceContext(
+			map[string]any{"blockHeight": req.Height},
+		))
 	}
 
 	header := cmtproto.Header{
@@ -773,6 +773,8 @@ func (app *BaseApp) EndBlock(req *abci.RequestFinalizeBlock) (res sdk.EndBlock, 
 	if err != nil {
 		return res, err
 	}
+
+	app.GetConsensusParams(app.finalizeBlockState.ctx)
 
 	return res, err
 }

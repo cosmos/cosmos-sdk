@@ -93,14 +93,16 @@ confix set ~/.simapp/config/client.toml chain-id "foo-1" # sets the value chain-
 
 ### Migrate
 
-Migrate a configuration file to a new version, e.g.:
+Migrate a configuration file to a new version, config type defaults to `app.toml`, if you want to change it to `client.toml`, please indicate it by adding the optional parameter, e.g.:
 
 ```shell
-simd config migrate v0.47 # migrates defaultHome/config/app.toml to the latest v0.47 config
+simd config migrate v0.50 # migrates defaultHome/config/app.toml to the latest v0.50 config
+simd config migrate v0.50 --client # migrates defaultHome/config/client.toml to the latest v0.50 config
 ```
 
 ```shell
-confix migrate v0.47 ~/.simapp/config/app.toml # migrate ~/.simapp/config/app.toml to the latest v0.47 config
+confix migrate v0.50 ~/.simapp/config/app.toml # migrate ~/.simapp/config/app.toml to the latest v0.50 config
+confix migrate v0.50 ~/.simapp/config/client.toml --client # migrate ~/.simapp/config/client.toml to the latest v0.50 config
 ```
 
 ### Diff
@@ -109,10 +111,12 @@ Get the diff between a given configuration file and the default configuration fi
 
 ```shell
 simd config diff v0.47 # gets the diff between defaultHome/config/app.toml and the latest v0.47 config
+simd config diff v0.47 --client # gets the diff between defaultHome/config/client.toml and the latest v0.47 config
 ```
 
 ```shell
 confix diff v0.47 ~/.simapp/config/app.toml # gets the diff between ~/.simapp/config/app.toml and the latest v0.47 config
+confix diff v0.47 ~/.simapp/config/client.toml --client # gets the diff between ~/.simapp/config/client.toml and the latest v0.47 config
 ```
 
 ### View

@@ -36,7 +36,7 @@ type BankKeeper interface {
 // PoolKeeper defines the expected interface needed to fund & distribute pool balances.
 type PoolKeeper interface {
 	FundCommunityPool(ctx context.Context, amount sdk.Coins, sender sdk.AccAddress) error
-	DistributeFromFeePool(ctx context.Context, amount sdk.Coins, receiveAddr sdk.AccAddress) error
+	DistributeFromCommunityPool(ctx context.Context, amount sdk.Coins, receiveAddr sdk.AccAddress) error
 	GetCommunityPool(ctx context.Context) (sdk.Coins, error)
 }
 
@@ -48,17 +48,17 @@ type StakingKeeper interface {
 
 	// iterate through validators by operator address, execute func for each validator
 	IterateValidators(context.Context,
-		func(index int64, validator stakingtypes.ValidatorI) (stop bool)) error
+		func(index int64, validator sdk.ValidatorI) (stop bool)) error
 
-	Validator(context.Context, sdk.ValAddress) (stakingtypes.ValidatorI, error)            // get a particular validator by operator address
-	ValidatorByConsAddr(context.Context, sdk.ConsAddress) (stakingtypes.ValidatorI, error) // get a particular validator by consensus address
+	Validator(context.Context, sdk.ValAddress) (sdk.ValidatorI, error)            // get a particular validator by operator address
+	ValidatorByConsAddr(context.Context, sdk.ConsAddress) (sdk.ValidatorI, error) // get a particular validator by consensus address
 
 	// Delegation allows for getting a particular delegation for a given validator
 	// and delegator outside the scope of the staking module.
-	Delegation(context.Context, sdk.AccAddress, sdk.ValAddress) (stakingtypes.DelegationI, error)
+	Delegation(context.Context, sdk.AccAddress, sdk.ValAddress) (sdk.DelegationI, error)
 
 	IterateDelegations(ctx context.Context, delegator sdk.AccAddress,
-		fn func(index int64, delegation stakingtypes.DelegationI) (stop bool)) error
+		fn func(index int64, delegation sdk.DelegationI) (stop bool)) error
 
 	GetAllSDKDelegations(ctx context.Context) ([]stakingtypes.Delegation, error)
 	GetAllValidators(ctx context.Context) ([]stakingtypes.Validator, error)

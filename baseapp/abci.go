@@ -730,7 +730,7 @@ func (app *BaseApp) BeginBlock(req *abci.RequestFinalizeBlock) (res sdk.BeginBlo
 			Hash:    req.Hash,
 			AppHash: app.LastCommitID().Hash,
 		}).
-		WithConsensusParams(app.GetConsensusParams(app.finalizeBlockState.ctx)).
+		// WithConsensusParams(app.GetConsensusParams(app.finalizeBlockState.ctx)).
 		WithVoteInfos(req.DecidedLastCommit.Votes).
 		WithExecMode(sdk.ExecModeFinalize).
 		WithCometInfo(cometInfo{
@@ -773,8 +773,6 @@ func (app *BaseApp) EndBlock(req *abci.RequestFinalizeBlock) (res sdk.EndBlock, 
 	if err != nil {
 		return res, err
 	}
-
-	app.GetConsensusParams(app.finalizeBlockState.ctx)
 
 	return res, err
 }

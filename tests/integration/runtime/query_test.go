@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/cosmos/gogoproto/proto"
-	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
 	"google.golang.org/protobuf/types/descriptorpb"

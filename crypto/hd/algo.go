@@ -2,6 +2,7 @@ package hd
 
 import (
 	"github.com/cosmos/go-bip39"
+	"gitlab.com/yawning/secp256k1-voi/secec"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/crypto/types"
@@ -65,6 +66,11 @@ func (s secp256k1Algo) Generate() GenerateFn {
 		bzArr := make([]byte, secp256k1.PrivKeySize)
 		copy(bzArr, bz)
 
-		return &secp256k1.PrivKey{Key: bzArr}
+		privKeyObj, err := secec.NewPrivateKey(bz)
+		if err != nil {
+			panic(err)
+		}
+
+		return &secp256k1.PrivKey{Key: privKeyObj.Bytes()}
 	}
 }

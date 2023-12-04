@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/store"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
@@ -23,6 +24,9 @@ var _ Keeper = (*BaseKeeper)(nil)
 // between accounts.
 type Keeper interface {
 	SendKeeper
+
+	// only exposed for sake of custom alliance bank keeper
+	GetAccountAddressCodec() address.Codec
 	WithMintCoinsRestriction(types.MintingRestrictionFn) BaseKeeper
 
 	InitGenesis(context.Context, *types.GenesisState)
@@ -114,6 +118,10 @@ func NewBaseKeeper(
 func (k BaseKeeper) WithMintCoinsRestriction(check types.MintingRestrictionFn) BaseKeeper {
 	k.mintCoinsRestrictionFn = check.Then(k.mintCoinsRestrictionFn)
 	return k
+}
+
+func (k BaseKeeper) GetAccountAddressCodec() address.Codec {
+	return k.ak.AddressCodec()
 }
 
 // DelegateCoins performs delegation by deducting amt coins from an account with

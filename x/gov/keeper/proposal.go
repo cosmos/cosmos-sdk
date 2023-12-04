@@ -18,12 +18,6 @@ import (
 
 // SubmitProposal creates a new proposal given an array of messages
 func (keeper Keeper) SubmitProposal(ctx context.Context, messages []sdk.Msg, metadata, title, summary string, proposer sdk.AccAddress, proposalType v1.ProposalType) (v1.Proposal, error) {
-	// This method checks that all message metadata, summary and title
-	// has te expected length defined in the module configuration.
-	if err := keeper.validateProposalLengths(metadata, title, summary); err != nil {
-		return v1.Proposal{}, err
-	}
-
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	// Will hold a string slice of all Msg type URLs.
 	msgs := []string{}

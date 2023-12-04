@@ -8,7 +8,6 @@ import (
 
 	"cosmossdk.io/errors"
 	"cosmossdk.io/math"
-	"cosmossdk.io/x/gov/types"
 	govtypes "cosmossdk.io/x/gov/types"
 	v1 "cosmossdk.io/x/gov/types/v1"
 	"cosmossdk.io/x/gov/types/v1beta1"
@@ -31,13 +30,6 @@ var _ v1.MsgServer = msgServer{}
 
 // SubmitProposal implements the MsgServer.SubmitProposal method.
 func (k msgServer) SubmitProposal(goCtx context.Context, msg *v1.MsgSubmitProposal) (*v1.MsgSubmitProposalResponse, error) {
-	if msg.Title == "" {
-		return nil, errors.Wrap(sdkerrors.ErrInvalidRequest, "proposal title cannot be empty")
-	}
-	if msg.Summary == "" {
-		return nil, errors.Wrap(sdkerrors.ErrInvalidRequest, "proposal summary cannot be empty")
-	}
-
 	proposer, err := k.authKeeper.AddressCodec().StringToBytes(msg.GetProposer())
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid proposer address: %s", err)
@@ -65,6 +57,12 @@ func (k msgServer) SubmitProposal(goCtx context.Context, msg *v1.MsgSubmitPropos
 		// nothing can be done here, and this is still a valid case, so we ignore the error
 	}
 
+	// This method checks that all message metadata, summary and title
+	// has te expected length defined in the module configuration.
+	if err := k.validateProposalLengths(msg.Metadata, msg.Title, msg.Summary); err != nil {
+		return nil, err
+	}
+
 	proposalMsgs, err := msg.GetMsgs()
 	if err != nil {
 		return nil, err
@@ -86,12 +84,13 @@ func (k msgServer) SubmitProposal(goCtx context.Context, msg *v1.MsgSubmitPropos
 		return nil, err
 	}
 
+	// additional checks per proposal types
 	proposalType := msg.ProposalType
 	switch proposalType {
 	case v1.ProposalType_PROPOSAL_TYPE_OPTIMISTIC:
 		if len(params.OptimisticAuthorizedAddreses) > 0 {
 			if slices.Contains(params.OptimisticAuthorizedAddreses, msg.GetProposer()) {
-				return nil, errors.Wrap(types.ErrInvalidProposer, "proposer is not authorized to submit optimistic proposal")
+				return nil, errors.Wrap(govtypes.ErrInvalidProposer, "proposer is not authorized to submit optimistic proposal")
 			}
 		}
 	case v1.ProposalType_PROPOSAL_TYPE_EXPEDITED:
@@ -100,7 +99,7 @@ func (k msgServer) SubmitProposal(goCtx context.Context, msg *v1.MsgSubmitPropos
 		}
 	}
 
-	proposal, err := k.Keeper.SubmitProposal(ctx, proposalMsgs, msg.Metadata, msg.Title, msg.Summary, proposer, proposalType)
+	proposal, err := k.Keeper.SubmitProposal(ctx, proposalMsgs, msg.Metadata, msg.Title, msg.Summary, proposer, msg.ProposalType)
 	if err != nil {
 		return nil, err
 	}

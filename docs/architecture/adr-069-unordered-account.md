@@ -20,7 +20,7 @@ As of today, the nonce value (account sequence number) prevents replay-attack an
 
 We propose to add a boolean field `unordered` to transaction body to mark "un-ordered" transactions.
 
-Un-ordered transactions will bypass the nonce rules and follow the rules described below instead, in contrary, the default transactions are not impacted by this proposal, they'll follow the nonce rules the same as before.
+Un-ordered transactions will bypass the nonce rules and follow the rules described below instead, in contrary, the default ordered transactions are not impacted by this proposal, they'll follow the nonce rules the same as before.
 
 When an un-ordered transaction are included into block, the transaction hash is recorded in a dictionary, new transactions are checked against this dictionary for duplicates, and to prevent the dictionary grow indefinitly, the transaction must specify `timeout_height` for expiration, so it's safe to removed it from the dictionary after it's expired.
 
@@ -33,6 +33,60 @@ message TxBody {
   ...
 
   boolean unordered = 4; 
+}
+```
+
+### `DedupTxHashManager`
+
+```golang
+// can reduce frequency we check the expiration.
+const ExpireCheckInterval = 1
+
+// DedupTxHashManager contains the tx hash dictionary for duplicates checking,
+// and expire them when block number progresses.
+type DedupTxHashManager struct {
+  // tx hash -> expire block number
+  // for duplicates checking and expiration
+  hashes map[TxHash]uint64
+}
+
+func (dtm *DedupTxHashManager) Contains(hash TxHash) (ok bool) {
+  dtm.mutex.RLock()
+  defer dtm.mutex.RUnlock()
+
+  _, ok = dtm.hashes[hash]
+  return
+}
+
+func (dtm *DedupTxHashManager) Size() int {
+  dtm.mutex.RLock()
+  defer dtm.mutex.RUnlock()
+
+  return len(dtm).hashes
+}
+
+func (dtm *DedupTxHashManager) Add(hash TxHash, expire uint64) (ok bool) {
+  dtm.mutex.Lock()
+  defer dtm.mutex.Unlock()
+
+  dtm.hashes[hash] = expire
+  return
+}
+
+// EndBlock remove expired tx hashes, need to wire in abci cycles.
+func (dtm *DedupTxHashManager) EndBlock(ctx sdk.Context) {
+  if ctx.BlockNumber() % ExpireCheckInterval != 0 {
+    return
+  }
+
+  dtm.mutex.Lock()
+  defer dtm.mutex.Unlock()
+
+  for k, expire := range dtm.hashes {
+    if ctx.BlockNumber() > expire {
+      delete(dtm.hashes, k)
+    }
+  }
 }
 ```
 
@@ -64,7 +118,7 @@ const (
 )
 
 type DedupTxDecorator struct {
-  hashes map[TxHash]struct{}
+  m *DedupTxHashManager
 }
 
 func (dtd *DedupTxDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
@@ -83,14 +137,14 @@ func (dtd *DedupTxDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate boo
 
   if !ctx.IsCheckTx() {
     // a new tx included in the block, add the hash to the dictionary
-    if len(dtd.hashes) >= MaxNumberOfTxHash {
+    if dtd.m.Size() >= MaxNumberOfTxHash {
       return nil, errorsmod.Wrap(sdkerrors.ErrLogic, "dedup map is full")
     }
-    dtd.hashes[tx.Hash()] = struct{}
+    dtd.m.Add(tx.Hash(), tx.TimeoutHeight())
   } else {
     // check for duplicates
-    if _, ok := dtd.hashes[tx.Hash()]; ok {
-      return nil, errorsmod.Wrap(sdkerrors.ErrLogic, "tx is dupliated")
+    if dtd.m.Contains(tx.Hash()) {
+      return nil, errorsmod.Wrap(sdkerrors.ErrLogic, "tx is duplicated")
     }
   }
 
@@ -98,9 +152,13 @@ func (dtd *DedupTxDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate boo
 }
 ```
 
+### EndBlocker
+
+Wire up the `EndBlock` method of `DedupTxHashManager` into the application's abci life cycle.
+
 ### Start Up
 
-On start up, the node needs to re-fill the tx hash dictionary by scanning `MaxUnOrderedTTL` number of historical blocks for un-ordered transactions.
+On start up, the node needs to re-fill the tx hash dictionary of `DedupTxHashManager` by scanning `MaxUnOrderedTTL` number of historical blocks for un-ordered transactions.
 
 An alternative design is to store the tx hash dictionary in kv store, then no need to warm up on start up.
 

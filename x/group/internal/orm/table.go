@@ -9,6 +9,7 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/store/prefix"
 	"cosmossdk.io/store/types"
+	"cosmossdk.io/store/v2"
 	"cosmossdk.io/x/group/errors"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -171,7 +172,7 @@ func (a table) Delete(store types.KVStore, rowID RowID) error {
 
 // Has checks if a key exists. Returns false when the key is empty or nil
 // because we don't allow creation of values without a key.
-func (a table) Has(store types.KVStore, key RowID) bool {
+func (a table) Has(store store.KVStore, key RowID) bool {
 	if len(key) == 0 {
 		return false
 	}

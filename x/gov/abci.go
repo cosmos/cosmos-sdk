@@ -65,8 +65,8 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) error {
 		}
 
 		// called when proposal become inactive
-		cacheCtx, writeCache := ctx.CacheContext()
-		err = keeper.Hooks().AfterProposalFailedMinDeposit(cacheCtx, proposal.Id)
+		branchedCtx, writeCache := ctx.BranchContext()
+		err = keeper.Hooks().AfterProposalFailedMinDeposit(branchedCtx, proposal.Id)
 		if err == nil { // purposely ignoring the error here not to halt the chain if the hook fails
 			writeCache()
 		} else {
@@ -158,7 +158,7 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) error {
 			// Messages may mutate state thus we use a cached context. If one of
 			// the handlers fails, no state mutation is written and the error
 			// message is logged.
-			cacheCtx, writeCache := ctx.CacheContext()
+			branchedCtx, writeCache := ctx.BranchContext()
 			messages, err := proposal.GetMsgs()
 			if err != nil {
 				proposal.Status = v1.StatusFailed
@@ -173,7 +173,7 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) error {
 			for idx, msg = range messages {
 				handler := keeper.Router().Handler(msg)
 				var res *sdk.Result
-				res, err = safeExecuteHandler(cacheCtx, msg, handler)
+				res, err = safeExecuteHandler(branchedCtx, msg, handler)
 				if err != nil {
 					break
 				}
@@ -234,8 +234,8 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) error {
 		}
 
 		// when proposal become active
-		cacheCtx, writeCache := ctx.CacheContext()
-		err = keeper.Hooks().AfterProposalVotingPeriodEnded(cacheCtx, proposal.Id)
+		branchedCtx, writeCache := ctx.BranchContext()
+		err = keeper.Hooks().AfterProposalVotingPeriodEnded(branchedCtx, proposal.Id)
 		if err == nil { // purposely ignoring the error here not to halt the chain if the hook fails
 			writeCache()
 		} else {

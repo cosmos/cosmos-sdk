@@ -62,7 +62,7 @@ func TestingUpdateValidator(keeper *Keeper, ctx sdk.Context, validator types.Val
 	}
 
 	if !apply {
-		ctx, _ = ctx.CacheContext()
+		ctx, _ = ctx.BranchContext()
 	}
 	_, err = keeper.ApplyAndReturnValidatorSetUpdates(ctx)
 	if err != nil {

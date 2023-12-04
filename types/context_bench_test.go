@@ -14,7 +14,7 @@ const (
 )
 
 func BenchmarkContext_KVStore(b *testing.B) {
-	key := types.NewKVStoreKey(b.Name() + tcc)
+	key := b.Name() + tcc
 
 	ctx := testutil.DefaultContext(key, types.NewTransientStoreKey(transient+b.Name()))
 
@@ -35,13 +35,13 @@ func BenchmarkContext_TransientStore(b *testing.B) {
 	}
 }
 
-func BenchmarkContext_CacheContext(b *testing.B) {
+func BenchmarkContext_BranchContext(b *testing.B) {
 	key := types.NewKVStoreKey(b.Name() + tcc)
 
 	ctx := testutil.DefaultContext(key, types.NewTransientStoreKey(transient+b.Name()))
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		_, _ = ctx.CacheContext()
+		_, _ = ctx.BranchContext()
 	}
 }

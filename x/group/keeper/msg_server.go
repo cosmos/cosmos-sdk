@@ -850,7 +850,7 @@ func (k Keeper) Exec(goCtx context.Context, msg *group.MsgExec) (*group.MsgExecR
 	var logs string
 	if proposal.Status == group.PROPOSAL_STATUS_ACCEPTED && proposal.ExecutorResult != group.PROPOSAL_EXECUTOR_RESULT_SUCCESS {
 		// Caching context so that we don't update the store in case of failure.
-		cacheCtx, flush := ctx.CacheContext()
+		branchedCtx, flush := ctx.BranchContext()
 
 		addr, err := k.accKeeper.AddressCodec().StringToBytes(policyInfo.Address)
 		if err != nil {
@@ -858,7 +858,7 @@ func (k Keeper) Exec(goCtx context.Context, msg *group.MsgExec) (*group.MsgExecR
 		}
 
 		decisionPolicy := policyInfo.DecisionPolicy.GetCachedValue().(group.DecisionPolicy)
-		if results, err := k.doExecuteMsgs(cacheCtx, k.router, proposal, addr, decisionPolicy); err != nil {
+		if results, err := k.doExecuteMsgs(branchedCtx, k.router, proposal, addr, decisionPolicy); err != nil {
 			proposal.ExecutorResult = group.PROPOSAL_EXECUTOR_RESULT_FAILURE
 			logs = fmt.Sprintf("proposal execution failed on proposal %d, because of error %s", proposal.Id, err.Error())
 			k.Logger(ctx).Info("proposal execution failed", "cause", err, "proposalID", proposal.Id)

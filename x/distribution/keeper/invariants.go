@@ -70,7 +70,7 @@ func NonNegativeOutstandingInvariant(k Keeper) sdk.Invariant {
 func CanWithdrawInvariant(k Keeper) sdk.Invariant {
 	return func(ctx sdk.Context) (string, bool) {
 		// cache, we don't want to write changes
-		ctx, _ = ctx.CacheContext()
+		ctx, _ = ctx.BranchContext()
 
 		var remaining sdk.DecCoins
 

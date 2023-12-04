@@ -27,7 +27,7 @@ func TestContextTestSuite(t *testing.T) {
 }
 
 func (s *contextTestSuite) TestCacheContext() {
-	key := storetypes.NewKVStoreKey(s.T().Name() + "_TestCacheContext")
+	key := s.T().Name() + "_TestCacheContext"
 	k1 := []byte("hello")
 	v1 := []byte("world")
 	k2 := []byte("key")
@@ -39,14 +39,14 @@ func (s *contextTestSuite) TestCacheContext() {
 	s.Require().Equal(v1, store.Get(k1))
 	s.Require().Nil(store.Get(k2))
 
-	cctx, write := ctx.CacheContext()
-	cstore := cctx.KVStore(key)
+	branchedctx, write := ctx.BranchContext()
+	cstore := branchedctx.KVStore(key)
 	s.Require().Equal(v1, cstore.Get(k1))
 	s.Require().Nil(cstore.Get(k2))
 
 	// emit some events
-	cctx.EventManager().EmitEvent(types.NewEvent("foo", types.NewAttribute("key", "value")))
-	cctx.EventManager().EmitEvent(types.NewEvent("bar", types.NewAttribute("key", "value")))
+	branchedctx.EventManager().EmitEvent(types.NewEvent("foo", types.NewAttribute("key", "value")))
+	branchedctx.EventManager().EmitEvent(types.NewEvent("bar", types.NewAttribute("key", "value")))
 
 	cstore.Set(k2, v2)
 	s.Require().Equal(v2, cstore.Get(k2))

@@ -18,7 +18,7 @@ type BranchService struct{}
 
 func (b BranchService) Execute(ctx context.Context, f func(ctx context.Context) error) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	branchedCtx, commit := sdkCtx.CacheContext()
+	branchedCtx, commit := sdkCtx.BranchContext()
 	err := f(branchedCtx)
 	if err != nil {
 		return err
@@ -29,7 +29,7 @@ func (b BranchService) Execute(ctx context.Context, f func(ctx context.Context) 
 
 func (b BranchService) ExecuteWithGasLimit(ctx context.Context, gasLimit uint64, f func(ctx context.Context) error) (gasUsed uint64, err error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	branchedCtx, commit := sdkCtx.CacheContext()
+	branchedCtx, commit := sdkCtx.BranchContext()
 	// create a new gas meter
 	limitedGasMeter := storetypes.NewGasMeter(gasLimit)
 	// apply gas meter with limit to branched context

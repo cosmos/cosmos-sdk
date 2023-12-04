@@ -533,8 +533,8 @@ func (s *TestSuite) TestUpdateGroupMembers() {
 	for msg, spec := range specs {
 		spec := spec
 		s.Run(msg, func() {
-			sdkCtx, _ := s.sdkCtx.CacheContext()
-			_, err := s.groupKeeper.UpdateGroupMembers(sdkCtx, spec.req)
+			branchedCtx, _ := s.sdkCtx.BranchContext()
+			_, err := s.groupKeeper.UpdateGroupMembers(branchedCtx, spec.req)
 			if spec.expErr {
 				s.Require().Error(err)
 				s.Require().Contains(err.Error(), spec.expErrMsg)
@@ -543,12 +543,12 @@ func (s *TestSuite) TestUpdateGroupMembers() {
 			s.Require().NoError(err)
 
 			// then
-			res, err := s.groupKeeper.GroupInfo(sdkCtx, &group.QueryGroupInfoRequest{GroupId: groupID})
+			res, err := s.groupKeeper.GroupInfo(branchedCtx, &group.QueryGroupInfoRequest{GroupId: groupID})
 			s.Require().NoError(err)
 			s.Assert().Equal(spec.expGroup, res.Info)
 
 			// and members persisted
-			membersRes, err := s.groupKeeper.GroupMembers(sdkCtx, &group.QueryGroupMembersRequest{GroupId: groupID})
+			membersRes, err := s.groupKeeper.GroupMembers(branchedCtx, &group.QueryGroupMembersRequest{GroupId: groupID})
 			s.Require().NoError(err)
 			loadedMembers := membersRes.Members
 			s.Require().Equal(len(spec.expMembers), len(loadedMembers))
@@ -568,7 +568,7 @@ func (s *TestSuite) TestUpdateGroupMembers() {
 				s.Assert().Equal(spec.expMembers[i].GroupId, loadedMembers[i].GroupId)
 			}
 
-			events := sdkCtx.EventManager().ABCIEvents()
+			events := branchedCtx.EventManager().ABCIEvents()
 			s.Require().Len(events, 1) // EventUpdateGroup
 		})
 	}
@@ -750,7 +750,7 @@ func (s *TestSuite) TestUpdateGroupMetadata() {
 	for msg, spec := range specs {
 		spec := spec
 		s.Run(msg, func() {
-			sdkCtx, _ := s.sdkCtx.CacheContext()
+			sdkCtx, _ := s.sdkCtx.BranchContext()
 			_, err := s.groupKeeper.UpdateGroupMetadata(sdkCtx, spec.req)
 			if spec.expErr {
 				s.Require().Error(err)
@@ -2429,7 +2429,8 @@ func (s *TestSuite) TestVote() {
 			if !spec.srcCtx.IsZero() {
 				sdkCtx = spec.srcCtx
 			}
-			sdkCtx, _ = sdkCtx.CacheContext()
+
+			sdkCtx, _ = sdkCtx.BranchContext()
 			if spec.doBefore != nil {
 				spec.doBefore(sdkCtx)
 			}
@@ -2779,14 +2780,14 @@ func (s *TestSuite) TestExecProposal() {
 	for msg, spec := range specs {
 		spec := spec
 		s.Run(msg, func() {
-			sdkCtx, _ := s.sdkCtx.CacheContext()
-			proposalID := spec.setupProposal(sdkCtx)
+			branchedCtx, _ := s.sdkCtx.BranchContext()
+			proposalID := spec.setupProposal(branchedCtx)
 
 			if !spec.srcBlockTime.IsZero() {
-				sdkCtx = sdkCtx.WithHeaderInfo(header.Info{Time: spec.srcBlockTime})
+				branchedCtx = branchedCtx.WithHeaderInfo(header.Info{Time: spec.srcBlockTime})
 			}
 
-			_, err := s.groupKeeper.Exec(sdkCtx, &group.MsgExec{Executor: addr1.String(), ProposalId: proposalID})
+			_, err := s.groupKeeper.Exec(branchedCtx, &group.MsgExec{Executor: addr1.String(), ProposalId: proposalID})
 			if spec.expErr {
 				s.Require().Error(err)
 				s.Require().Contains(err.Error(), spec.expErrMsg)
@@ -2797,7 +2798,7 @@ func (s *TestSuite) TestExecProposal() {
 			if !(spec.expExecutorResult == group.PROPOSAL_EXECUTOR_RESULT_SUCCESS) {
 
 				// and proposal is updated
-				res, err := s.groupKeeper.Proposal(sdkCtx, &group.QueryProposalRequest{ProposalId: proposalID})
+				res, err := s.groupKeeper.Proposal(branchedCtx, &group.QueryProposalRequest{ProposalId: proposalID})
 				s.Require().NoError(err)
 				proposal := res.Proposal
 
@@ -2811,15 +2812,15 @@ func (s *TestSuite) TestExecProposal() {
 			}
 
 			if spec.expBalance {
-				s.bankKeeper.EXPECT().GetAllBalances(sdkCtx, s.groupPolicyAddr).Return(sdk.Coins{spec.expFromBalances})
-				s.bankKeeper.EXPECT().GetAllBalances(sdkCtx, addr2).Return(sdk.Coins{spec.expToBalances})
+				s.bankKeeper.EXPECT().GetAllBalances(branchedCtx, s.groupPolicyAddr).Return(sdk.Coins{spec.expFromBalances})
+				s.bankKeeper.EXPECT().GetAllBalances(branchedCtx, addr2).Return(sdk.Coins{spec.expToBalances})
 
-				fromBalances := s.bankKeeper.GetAllBalances(sdkCtx, s.groupPolicyAddr)
+				fromBalances := s.bankKeeper.GetAllBalances(branchedCtx, s.groupPolicyAddr)
 				s.Require().Contains(fromBalances, spec.expFromBalances)
-				toBalances := s.bankKeeper.GetAllBalances(sdkCtx, addr2)
+				toBalances := s.bankKeeper.GetAllBalances(branchedCtx, addr2)
 				s.Require().Contains(toBalances, spec.expToBalances)
 			}
-			spec.postRun(sdkCtx)
+			spec.postRun(branchedCtx)
 		})
 
 	}
@@ -2980,16 +2981,16 @@ func (s *TestSuite) TestExecPrunedProposalsAndVotes() {
 	for msg, spec := range specs {
 		spec := spec
 		s.Run(msg, func() {
-			sdkCtx, _ := s.sdkCtx.CacheContext()
-			proposalID := spec.setupProposal(sdkCtx)
+			branchedCtx, _ := s.sdkCtx.BranchContext()
+			proposalID := spec.setupProposal(branchedCtx)
 
 			if !spec.srcBlockTime.IsZero() {
-				sdkCtx = sdkCtx.WithHeaderInfo(header.Info{Time: spec.srcBlockTime})
+				branchedCtx = branchedCtx.WithHeaderInfo(header.Info{Time: spec.srcBlockTime})
 			}
 
 			// Wait for min execution period end
-			sdkCtx = sdkCtx.WithHeaderInfo(header.Info{Time: sdkCtx.HeaderInfo().Time.Add(minExecutionPeriod)})
-			_, err := s.groupKeeper.Exec(sdkCtx, &group.MsgExec{Executor: addr1.String(), ProposalId: proposalID})
+			branchedCtx = branchedCtx.WithHeaderInfo(header.Info{Time: branchedCtx.HeaderInfo().Time.Add(minExecutionPeriod)})
+			_, err := s.groupKeeper.Exec(branchedCtx, &group.MsgExec{Executor: addr1.String(), ProposalId: proposalID})
 			if spec.expErr {
 				s.Require().Error(err)
 				s.Require().Contains(err.Error(), spec.expErrMsg)
@@ -2999,19 +3000,19 @@ func (s *TestSuite) TestExecPrunedProposalsAndVotes() {
 
 			if spec.expExecutorResult == group.PROPOSAL_EXECUTOR_RESULT_SUCCESS {
 				// Make sure proposal is deleted from state
-				_, err := s.groupKeeper.Proposal(sdkCtx, &group.QueryProposalRequest{ProposalId: proposalID})
+				_, err := s.groupKeeper.Proposal(branchedCtx, &group.QueryProposalRequest{ProposalId: proposalID})
 				s.Require().Contains(err.Error(), spec.expErrMsg)
-				res, err := s.groupKeeper.VotesByProposal(sdkCtx, &group.QueryVotesByProposalRequest{ProposalId: proposalID})
+				res, err := s.groupKeeper.VotesByProposal(branchedCtx, &group.QueryVotesByProposalRequest{ProposalId: proposalID})
 				s.Require().NoError(err)
 				s.Require().Empty(res.GetVotes())
-				events := sdkCtx.EventManager().ABCIEvents()
+				events := branchedCtx.EventManager().ABCIEvents()
 				s.Require().True(eventTypeFound(events, EventProposalPruned))
 
 			} else {
 				// Check that proposal and votes exists
-				res, err := s.groupKeeper.Proposal(sdkCtx, &group.QueryProposalRequest{ProposalId: proposalID})
+				res, err := s.groupKeeper.Proposal(branchedCtx, &group.QueryProposalRequest{ProposalId: proposalID})
 				s.Require().NoError(err)
-				_, err = s.groupKeeper.VotesByProposal(sdkCtx, &group.QueryVotesByProposalRequest{ProposalId: res.Proposal.Id})
+				_, err = s.groupKeeper.VotesByProposal(branchedCtx, &group.QueryVotesByProposalRequest{ProposalId: res.Proposal.Id})
 				s.Require().NoError(err)
 				s.Require().Equal("", spec.expErrMsg)
 
@@ -3384,7 +3385,7 @@ func (s *TestSuite) TestExecProposalsWhenMemberLeavesOrIsUpdated() {
 	for msg, spec := range specs {
 		spec := spec
 		s.Run(msg, func() {
-			sdkCtx, _ := s.sdkCtx.CacheContext()
+			branchedCtx, _ := s.sdkCtx.BranchContext()
 
 			s.setNextAccount()
 			groupRes, err := s.groupKeeper.CreateGroup(s.ctx, &group.MsgCreateGroup{
@@ -3409,11 +3410,11 @@ func (s *TestSuite) TestExecProposalsWhenMemberLeavesOrIsUpdated() {
 			s.Require().NoError(err)
 
 			// Setup and submit proposal
-			proposalID := spec.setupProposal(sdkCtx, policyRes.Address)
+			proposalID := spec.setupProposal(branchedCtx, policyRes.Address)
 
 			// vote on the proposals
 			for i, vote := range spec.votes {
-				_, err := s.groupKeeper.Vote(sdkCtx, &group.MsgVote{
+				_, err := s.groupKeeper.Vote(branchedCtx, &group.MsgVote{
 					ProposalId: proposalID,
 					Voter:      spec.members[i].Address,
 					Option:     vote,
@@ -3421,12 +3422,12 @@ func (s *TestSuite) TestExecProposalsWhenMemberLeavesOrIsUpdated() {
 				s.Require().NoError(err)
 			}
 
-			err = spec.malleate(sdkCtx, s.groupKeeper, policyRes.Address, groupID)
+			err = spec.malleate(branchedCtx, s.groupKeeper, policyRes.Address, groupID)
 			s.Require().NoError(err)
 
 			// travel in time
-			sdkCtx = sdkCtx.WithHeaderInfo(header.Info{Time: s.blockTime.Add(minExecutionPeriod + 1)})
-			_, err = s.groupKeeper.Exec(sdkCtx, &group.MsgExec{Executor: s.addrs[1].String(), ProposalId: proposalID})
+			branchedCtx = branchedCtx.WithHeaderInfo(header.Info{Time: s.blockTime.Add(minExecutionPeriod + 1)})
+			_, err = s.groupKeeper.Exec(branchedCtx, &group.MsgExec{Executor: s.addrs[1].String(), ProposalId: proposalID})
 			if spec.expErrMsg != "" {
 				s.Require().Contains(err.Error(), spec.expErrMsg)
 				return

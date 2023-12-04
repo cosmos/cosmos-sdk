@@ -510,7 +510,7 @@ func TestDowngradeVerification(t *testing.T) {
 	}
 
 	for name, tc := range testCases {
-		ctx, _ := ctx.CacheContext()
+		branchedCtx, _ := ctx.BranchContext()
 
 		authority, err := addresscodec.NewBech32Codec("cosmos").BytesToString(authtypes.NewModuleAddress(govtypes.ModuleName))
 		require.NoError(t, err)
@@ -520,19 +520,19 @@ func TestDowngradeVerification(t *testing.T) {
 		m := upgrade.NewAppModule(k, addresscodec.NewBech32Codec("cosmos"))
 
 		// assertions
-		lastAppliedPlan, _, err := k.GetLastCompletedUpgrade(ctx)
+		lastAppliedPlan, _, err := k.GetLastCompletedUpgrade(branchedCtx)
 		require.NoError(t, err)
 		require.Equal(t, planName, lastAppliedPlan)
 		require.False(t, k.HasHandler(planName))
 		require.False(t, k.DowngradeVerified())
-		_, err = k.GetUpgradePlan(ctx)
+		_, err = k.GetUpgradePlan(branchedCtx)
 		require.ErrorIs(t, err, types.ErrNoUpgradePlanFound)
 
 		if tc.preRun != nil {
-			tc.preRun(k, ctx, name)
+			tc.preRun(k, branchedCtx, name)
 		}
 
-		_, err = m.PreBlock(ctx)
+		_, err = m.PreBlock(branchedCtx)
 		if tc.expectError {
 			require.Error(t, err, name)
 		} else {

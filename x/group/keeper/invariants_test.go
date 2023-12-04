@@ -49,7 +49,7 @@ func (s *invariantTestSuite) SetupSuite() {
 }
 
 func (s *invariantTestSuite) TestGroupTotalWeightInvariant() {
-	sdkCtx, _ := s.ctx.CacheContext()
+	sdkCtx, _ := s.ctx.BranchContext()
 	curCtx, cdc, key := sdkCtx, s.cdc, s.key
 
 	// Group Table
@@ -128,19 +128,19 @@ func (s *invariantTestSuite) TestGroupTotalWeightInvariant() {
 	}
 
 	for _, spec := range specs {
-		cacheCurCtx, _ := curCtx.CacheContext()
+		branchedCtx, _ := curCtx.BranchContext()
 		groupsInfo := spec.groupsInfo
 		groupMembers := spec.groupMembers
 
-		_, err := groupTable.Create(cacheCurCtx.KVStore(key), groupsInfo)
+		_, err := groupTable.Create(branchedCtx.KVStore(key), groupsInfo)
 		s.Require().NoError(err)
 
 		for i := 0; i < len(groupMembers); i++ {
-			err := groupMemberTable.Create(cacheCurCtx.KVStore(key), groupMembers[i])
+			err := groupMemberTable.Create(branchedCtx.KVStore(key.String()), groupMembers[i])
 			s.Require().NoError(err)
 		}
 
-		_, broken := keeper.GroupTotalWeightInvariantHelper(cacheCurCtx, key, *groupTable, groupMemberByGroupIndex)
+		_, broken := keeper.GroupTotalWeightInvariantHelper(branchedCtx, key, *groupTable, groupMemberByGroupIndex)
 		s.Require().Equal(spec.expBroken, broken)
 
 	}

@@ -86,8 +86,8 @@ func TestEnsureMempoolFees(t *testing.T) {
 	require.NotNil(t, err, "Decorator should have errored on too low fee for local gasPrice")
 
 	// antehandler should not error since we do not check minGasPrice in simulation mode
-	cacheCtx, _ := s.ctx.CacheContext()
-	_, err = antehandler(cacheCtx, tx, true)
+	branchedCtx, _ := s.ctx.BranchContext()
+	_, err = antehandler(branchedCtx, tx, true)
 	require.Nil(t, err, "Decorator should not have errored in simulation mode")
 
 	// Set IsCheckTx to false

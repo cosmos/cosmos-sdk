@@ -105,7 +105,7 @@ func (k *Keeper) AssertInvariants(ctx context.Context) {
 	for i, ir := range invarRoutes {
 		logger.Info("asserting crisis invariants", "inv", fmt.Sprint(i+1, "/", n), "name", ir.FullRoute())
 
-		invCtx, _ := sdkCtx.CacheContext()
+		invCtx, _ := sdkCtx.BranchContext()
 		if res, stop := ir.Invar(invCtx); stop {
 			// TODO: Include app name as part of context to allow for this to be
 			// variable.

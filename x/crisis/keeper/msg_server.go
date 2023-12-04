@@ -35,7 +35,7 @@ func (k *Keeper) VerifyInvariant(goCtx context.Context, msg *types.MsgVerifyInva
 	}
 
 	// use a cached context to avoid gas costs during invariants
-	cacheCtx, _ := ctx.CacheContext()
+	branchedCtx, _ := ctx.BranchContext()
 
 	found := false
 	msgFullRoute := msg.FullInvariantRoute()
@@ -44,7 +44,7 @@ func (k *Keeper) VerifyInvariant(goCtx context.Context, msg *types.MsgVerifyInva
 	var stop bool
 	for _, invarRoute := range k.Routes() {
 		if invarRoute.FullRoute() == msgFullRoute {
-			res, stop = invarRoute.Invar(cacheCtx)
+			res, stop = invarRoute.Invar(branchedCtx)
 			found = true
 
 			break

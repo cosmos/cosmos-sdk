@@ -71,13 +71,13 @@ func (s *TestSuite) TestTally() {
 	for msg, spec := range specs {
 		spec := spec
 		s.Run(msg, func() {
-			sdkCtx, _ := s.sdkCtx.CacheContext()
-			pID := spec.setupProposal(sdkCtx)
+			branchedCtx, _ := s.sdkCtx.BranchContext()
+			pID := spec.setupProposal(branchedCtx)
 			req := &group.QueryTallyResultRequest{
 				ProposalId: pID,
 			}
 
-			res, err := s.groupKeeper.TallyResult(sdkCtx, req)
+			res, err := s.groupKeeper.TallyResult(branchedCtx, req)
 			if spec.expErr {
 				s.Require().Error(err)
 			} else {

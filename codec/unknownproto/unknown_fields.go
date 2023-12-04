@@ -343,7 +343,11 @@ func unnestDesc(mdescs []*descriptorpb.DescriptorProto, indices []int) *descript
 
 // Invoking descriptorpb.ForMessage(proto.Message.(Descriptor).Descriptor()) is incredibly slow
 // for every single message, thus the need for a hand-rolled custom version that's performant and cacheable.
-func extractFileDescMessageDesc(desc descriptorIface) (*descriptorpb.FileDescriptorProto, *descriptorpb.DescriptorProto, error) {
+func extractFileDescMessageDesc(msg proto.Message) (*descriptorpb.FileDescriptorProto, *descriptorpb.DescriptorProto, error) {
+	desc, ok := msg.(descriptorIface)
+	if !ok {
+		return nil, nil, fmt.Errorf("%T does not have a Descriptor() method", msg)
+	}
 	gzippedPb, indices := desc.Descriptor()
 
 	protoFileToDescMu.RLock()
@@ -402,11 +406,7 @@ func getDescriptorInfo(msg proto.Message) (map[int32]*descriptorpb.FieldDescript
 	}
 
 	// Now compute and cache the index.
-	desc, ok := msg.(descriptorIface)
-	if !ok {
-		return nil, nil, fmt.Errorf("%T does not have a Descriptor() method", msg)
-	}
-	_, md, err := extractFileDescMessageDesc(desc)
+	_, md, err := extractFileDescMessageDesc(msg)
 	if err != nil {
 		return nil, nil, err
 	}

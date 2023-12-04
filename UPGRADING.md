@@ -150,7 +150,7 @@ These commands and flags are still supported for backward compatibility.
 
 For backward compatibility, the `**/tendermint/**` gRPC services are still supported.
 
-Additionally, the SDK is starting its abstraction from CometBFT Go types thorought the codebase:
+Additionally, the SDK is starting its abstraction from CometBFT Go types through the codebase:
 
 * The usage of the CometBFT logger has been replaced by the Cosmos SDK logger interface (`cosmossdk.io/log.Logger`).
 * The usage of `github.com/cometbft/cometbft/libs/bytes.HexByte` has been replaced by `[]byte`.
@@ -780,7 +780,7 @@ the correct code.
 
 #### `**all**`
 
-`EventTypeMessage` events, with `sdk.AttributeKeyModule` and `sdk.AttributeKeySender` are now emitted directly at message excecution (in `baseapp`).
+`EventTypeMessage` events, with `sdk.AttributeKeyModule` and `sdk.AttributeKeySender` are now emitted directly at message execution (in `baseapp`).
 This means that the following boilerplate should be removed from all your custom modules:
 
 ```go
@@ -909,7 +909,7 @@ When using an `app.go` without App Wiring, the following changes are required:
 + bApp.SetParamStore(&app.ConsensusParamsKeeper)
 ```
 
-When using App Wiring, the paramater store is automatically set for you.
+When using App Wiring, the parameter store is automatically set for you.
 
 #### `x/nft`
 
@@ -1000,7 +1000,7 @@ mistakes.
 
 #### `x/params`
 
-* The `x/params` module has been depreacted in favour of each module housing and providing way to modify their parameters. Each module that has parameters that are changable during runtime have an authority, the authority can be a module or user account. The Cosmos SDK team recommends migrating modules away from using the param module. An example of how this could look like can be found [here](https://github.com/cosmos/cosmos-sdk/pull/12363).
+* The `x/params` module has been deprecated in favour of each module housing and providing way to modify their parameters. Each module that has parameters that are changeable during runtime have an authority, the authority can be a module or user account. The Cosmos SDK team recommends migrating modules away from using the param module. An example of how this could look like can be found [here](https://github.com/cosmos/cosmos-sdk/pull/12363).
 * The Param module will be maintained until April 18, 2023. At this point the module will reach end of life and be removed from the Cosmos SDK.
 
 #### `x/gov`
@@ -1037,4 +1037,4 @@ message MsgSetWithdrawAddress {
 }
 ```
 
-When clients interract with a node they are required to set a codec in in the grpc.Dial. More information can be found in this [doc](https://docs.cosmos.network/v0.46/run-node/interact-node.html#programmatically-via-go).
+When clients interact with a node they are required to set a codec in in the grpc.Dial. More information can be found in this [doc](https://docs.cosmos.network/v0.46/run-node/interact-node.html#programmatically-via-go).

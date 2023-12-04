@@ -84,8 +84,8 @@ func TestQueryAppConfig(t *testing.T) {
 	// has all expected modules
 	for _, modName := range []string{"auth", "bank", "tx", "consensus", "runtime", "staking"} {
 		modConfig := moduleConfigs[modName]
-		require.NotNil(t, modConfig, "Missing moddName: "+modName)
-		require.NotNil(t, modConfig.Config)
+		assert.Assert(t, modConfig != nil)
+		assert.Assert(t, modConfig.Config != nil)
 	}
 }
 

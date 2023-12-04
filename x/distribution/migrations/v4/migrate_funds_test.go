@@ -1,4 +1,4 @@
-package funds_test
+package v4_test
 
 import (
 	"testing"
@@ -16,7 +16,7 @@ import (
 	banktypes "cosmossdk.io/x/bank/types"
 	"cosmossdk.io/x/distribution"
 	"cosmossdk.io/x/distribution/keeper"
-	"cosmossdk.io/x/distribution/migrations/funds"
+	v4 "cosmossdk.io/x/distribution/migrations/v4"
 	distrtestutil "cosmossdk.io/x/distribution/testutil"
 	disttypes "cosmossdk.io/x/distribution/types"
 	pooltypes "cosmossdk.io/x/protocolpool/types"
@@ -100,8 +100,8 @@ func TestFundsMigration(t *testing.T) {
 	// Set pool module account
 	poolAcc := authtypes.NewEmptyModuleAccount(pooltypes.ModuleName)
 
-	// migrate feepool funds from distribution module account to pool module accout
-	err = funds.MigrateFunds(ctx, bankKeeper, feepool, distrAcc, poolAcc)
+	// migrate feepool funds from distribution module account to pool module account
+	_, err = v4.MigrateFunds(ctx, bankKeeper, feepool, distrAcc, poolAcc)
 	require.NoError(t, err)
 
 	// set distrbution feepool as empty (since migration)

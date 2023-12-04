@@ -15,7 +15,6 @@ import (
 	"cosmossdk.io/x/slashing/testutil"
 	stakingkeeper "cosmossdk.io/x/staking/keeper"
 	stakingtestutil "cosmossdk.io/x/staking/testutil"
-	stakingtypes "cosmossdk.io/x/staking/types"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -120,5 +119,5 @@ func TestBeginBlocker(t *testing.T) {
 	// validator should be jailed
 	validator, err := stakingKeeper.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(pk))
 	require.NoError(t, err)
-	require.Equal(t, stakingtypes.Unbonding, validator.GetStatus())
+	require.Equal(t, sdk.Unbonding, validator.GetStatus())
 }

@@ -152,3 +152,12 @@ type QueryBuilder struct {
 func (r *QueryBuilder) makeHandler() (func(ctx context.Context, queryRequest any) (queryResponse any, err error), error) {
 	return r.er.makeHandler()
 }
+
+// IsRoutingError returns true if the error is a routing error,
+// which typically occurs when a message cannot be matched to a handler.
+func IsRoutingError(err error) bool {
+	if err == nil {
+		return false
+	}
+	return errors.Is(err, errInvalidMessage)
+}

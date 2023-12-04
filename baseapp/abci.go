@@ -750,6 +750,10 @@ func (app *BaseApp) BeginBlock(req *abci.RequestFinalizeBlock) (res sdk.BeginBlo
 			WithHeaderHash(req.Hash)
 	}
 
+	if err := app.preBlock(req); err != nil {
+		return res, err
+	}
+
 	res, err = app.beginBlock(req)
 	if err != nil {
 		return res, err

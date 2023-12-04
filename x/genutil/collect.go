@@ -1,6 +1,7 @@
 package genutil
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -9,6 +10,7 @@ import (
 	"runtime"
 	"sort"
 	"strings"
+	"sync"
 
 	cfg "github.com/cometbft/cometbft/config"
 
@@ -93,12 +95,17 @@ func CollectTxs(cdc codec.JSONCodec, txJSONDecoder sdk.TxDecoder, moniker, genTx
 		},
 	)
 
-	// addresses and IPs (and port) validator server info
-	var addressesIPs []string
+	var wg sync.WaitGroup
+	type result struct {
+		tx     sdk.Tx
+		peerIP string
+		err    error
+	}
 
-	// TODO (https://github.com/cosmos/cosmos-sdk/issues/17815):
-	// Examine CPU and RAM profiles to see if we can parsing
-	// and ValidateAndGetGenTx concurrent.
+	resultsCh := make(chan *result, runtime.NumCPU())
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	for _, fo := range fos {
 		if fo.IsDir() {
 			continue
@@ -107,77 +114,122 @@ func CollectTxs(cdc codec.JSONCodec, txJSONDecoder sdk.TxDecoder, moniker, genTx
 			continue
 		}
 
-		// get the genTx
-		jsonRawTx, err := os.ReadFile(filepath.Join(genTxsDir, fo.Name()))
+		wg.Add(1)
+		go func(path string) {
+			defer wg.Done()
+
+			genTx, peerIP, err := parseTxsAndPeers(ctx, txJSONDecoder, moniker, path, valAddrCodec, validator, balancesMap)
+			if err != nil {
+				// Any error should cancel the context ASAP to prevent
+				// any further processing.
+				cancel()
+			}
+			resultsCh <- &result{tx: genTx, peerIP: peerIP, err: err}
+		}(filepath.Join(genTxsDir, fo.Name()))
+	}
+
+	go func() {
+		wg.Wait()
+		close(resultsCh)
+	}()
+
+	// addresses and IPs (and port) validator server info
+	var addressesIPs []string
+
+	for res := range resultsCh {
+		genTx, peerIP, err := res.tx, res.peerIP, res.err
 		if err != nil {
+			cancel()
 			return appGenTxs, persistentPeers, err
 		}
 
-		genTx, err := types.ValidateAndGetGenTx(jsonRawTx, txJSONDecoder, validator)
-		if err != nil {
-			return appGenTxs, persistentPeers, err
-		}
-
+		addressesIPs = append(addressesIPs, peerIP)
 		appGenTxs = append(appGenTxs, genTx)
-
-		// the memo flag is used to store
-		// the ip and node-id, for example this may be:
-		// "528fd3df22b31f4969b05652bfe8f0fe921321d5@192.168.2.37:26656"
-
-		memoTx, ok := genTx.(sdk.TxWithMemo)
-		if !ok {
-			return appGenTxs, persistentPeers, fmt.Errorf("expected TxWithMemo, got %T", genTx)
-		}
-		nodeAddrIP := memoTx.GetMemo()
-
-		// genesis transactions must be single-message
-		msgs := genTx.GetMsgs()
-
-		// TODO abstract out staking message validation back to staking
-		msg := msgs[0].(*stakingtypes.MsgCreateValidator)
-
-		// validate validator addresses and funds against the accounts in the state
-		valAddr, err := valAddrCodec.StringToBytes(msg.ValidatorAddress)
-		if err != nil {
-			return appGenTxs, persistentPeers, err
-		}
-
-		valAccAddr := sdk.AccAddress(valAddr).String()
-
-		delBal, delOk := balancesMap[valAccAddr]
-		if !delOk {
-			_, file, no, ok := runtime.Caller(1)
-			if ok {
-				fmt.Printf("CollectTxs-1, called from %s#%d\n", file, no)
-			}
-
-			return appGenTxs, persistentPeers, fmt.Errorf("account %s balance not in genesis state: %+v", valAccAddr, balancesMap)
-		}
-
-		_, valOk := balancesMap[valAccAddr]
-		if !valOk {
-			_, file, no, ok := runtime.Caller(1)
-			if ok {
-				fmt.Printf("CollectTxs-2, called from %s#%d - %s\n", file, no, sdk.AccAddress(msg.ValidatorAddress).String())
-			}
-			return appGenTxs, persistentPeers, fmt.Errorf("account %s balance not in genesis state: %+v", valAddr, balancesMap)
-		}
-
-		if delBal.GetCoins().AmountOf(msg.Value.Denom).LT(msg.Value.Amount) {
-			return appGenTxs, persistentPeers, fmt.Errorf(
-				"insufficient fund for delegation %v: %v < %v",
-				delBal.GetAddress(), delBal.GetCoins().AmountOf(msg.Value.Denom), msg.Value.Amount,
-			)
-		}
-
-		// exclude itself from persistent peers
-		if msg.Description.Moniker != moniker {
-			addressesIPs = append(addressesIPs, nodeAddrIP)
-		}
 	}
 
 	sort.Strings(addressesIPs)
 	persistentPeers = strings.Join(addressesIPs, ",")
 
 	return appGenTxs, persistentPeers, nil
+}
+
+func parseTxsAndPeers(
+	ctx context.Context, txJSONDecoder sdk.TxDecoder,
+	moniker, jsonTxPath string,
+	valAddrCodec sdkruntime.ValidatorAddressCodec,
+	validator types.MessageValidator,
+	balancesMap map[string]bankexported.GenesisBalance,
+) (genTx sdk.Tx, peerAddr string, err error) {
+	if err := ctx.Err(); err != nil {
+		return nil, "", err
+	}
+
+	// get the genTx
+	jsonRawTx, err := os.ReadFile(jsonTxPath)
+	if err != nil {
+		return nil, "", err
+	}
+
+	genTx, err = types.ValidateAndGetGenTx(jsonRawTx, txJSONDecoder, validator)
+	if err != nil {
+		return nil, "", err
+	}
+
+	// the memo flag is used to store
+	// the ip and node-id, for example this may be:
+	// "528fd3df22b31f4969b05652bfe8f0fe921321d5@192.168.2.37:26656"
+
+	memoTx, ok := genTx.(sdk.TxWithMemo)
+	if !ok {
+		err = fmt.Errorf("expected TxWithMemo, got %T", genTx)
+		return nil, "", err
+	}
+	nodeAddrIP := memoTx.GetMemo()
+
+	// genesis transactions must be single-message
+	msgs := genTx.GetMsgs()
+
+	// TODO abstract out staking message validation back to staking
+	msg := msgs[0].(*stakingtypes.MsgCreateValidator)
+
+	// validate validator addresses and funds against the accounts in the state
+	valAddr, err := valAddrCodec.StringToBytes(msg.ValidatorAddress)
+	if err != nil {
+		return genTx, "", err
+	}
+
+	valAccAddr := sdk.AccAddress(valAddr).String()
+
+	delBal, delOk := balancesMap[valAccAddr]
+	if !delOk {
+		_, file, no, ok := runtime.Caller(1)
+		if ok {
+			fmt.Printf("CollectTxs-1, called from %s#%d\n", file, no)
+		}
+
+		return genTx, "", fmt.Errorf("account %s balance not in genesis state: %+v", valAccAddr, balancesMap)
+	}
+
+	_, valOk := balancesMap[valAccAddr]
+	if !valOk {
+		_, file, no, ok := runtime.Caller(1)
+		if ok {
+			fmt.Printf("CollectTxs-2, called from %s#%d - %s\n", file, no, sdk.AccAddress(msg.ValidatorAddress).String())
+		}
+		return genTx, "", fmt.Errorf("account %s balance not in genesis state: %+v", valAddr, balancesMap)
+	}
+
+	if delBal.GetCoins().AmountOf(msg.Value.Denom).LT(msg.Value.Amount) {
+		return genTx, "", fmt.Errorf(
+			"insufficient fund for delegation %v: %v < %v",
+			delBal.GetAddress(), delBal.GetCoins().AmountOf(msg.Value.Denom), msg.Value.Amount,
+		)
+	}
+
+	// exclude itself from persistent peers
+	if msg.Description.Moniker != moniker {
+		peerAddr = nodeAddrIP
+	}
+
+	return genTx, peerAddr, nil
 }

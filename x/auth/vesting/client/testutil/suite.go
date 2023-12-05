@@ -7,6 +7,9 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/crypto/hd"
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -374,6 +377,67 @@ func (s *IntegrationTestSuite) TestNewMsgCreateClawbackVestingAccountCmd() {
 			clientCtx := val.ClientCtx
 
 			bw, err := clitestutil.ExecTestCLICmd(clientCtx, cli.NewMsgCreateClawbackVestingAccountCmd(), tc.args)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(bw.Bytes(), tc.respType), bw.String())
+
+				txResp := tc.respType.(*sdk.TxResponse)
+				s.Require().Equal(tc.expectedCode, txResp.Code)
+			}
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestNewMsgReturnGrantsCmd() {
+	val := s.network.Validators[0]
+
+	consPrivKey := ed25519.GenPrivKey()
+	consPubKeyBz, err := s.cfg.Codec.MarshalInterfaceJSON(consPrivKey.PubKey())
+	s.Require().NoError(err)
+	s.Require().NotNil(consPubKeyBz)
+
+	info, _, err := val.ClientCtx.Keyring.NewMnemonic("NewClawback", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
+	s.Require().NoError(err)
+
+	addr := sdk.AccAddress(info.GetPubKey().Address())
+
+	_, err = clitestutil.ExecTestCLICmd(val.ClientCtx, cli.NewMsgCreateClawbackVestingAccountCmd(), []string{
+		addr.String(),
+		fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address),
+		fmt.Sprintf("--%s=%s", cli.FlagLockup, "testdata/periods1.json"),
+		fmt.Sprintf("--%s=%s", cli.FlagVesting, "testdata/periods1.json"),
+		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+	})
+	s.Require().NoError(err)
+
+	for _, tc := range []struct {
+		name         string
+		args         []string
+		expectErr    bool
+		expectedCode uint32
+		respType     proto.Message
+	}{
+		{
+			name: "basic",
+			args: []string{
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, addr),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			expectErr:    false,
+			expectedCode: 0,
+			respType:     &sdk.TxResponse{},
+		},
+	} {
+		s.Run(tc.name, func() {
+			clientCtx := val.ClientCtx
+
+			bw, err := clitestutil.ExecTestCLICmd(clientCtx, cli.NewMsgReturnGrantsCmd(), tc.args)
 			if tc.expectErr {
 				s.Require().Error(err)
 			} else {

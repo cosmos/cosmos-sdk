@@ -1661,6 +1661,94 @@ func TestAddGrantClawbackVestingAcc(t *testing.T) {
 	require.NoError(t, err)
 }
 
+func TestReturnGrants(t *testing.T) {
+	c := sdk.NewCoins
+	fee := func(x int64) sdk.Coin { return sdk.NewInt64Coin(feeDenom, x) }
+	stake := func(x int64) sdk.Coin { return sdk.NewInt64Coin(stakeDenom, x) }
+	now := tmtime.Now()
+
+	// set up simapp and validators
+	app := simapp.Setup(false)
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{}).WithBlockTime((now))
+	valAddr, val := createValidator(t, ctx, app, 100)
+	require.Equal(t, "stake", app.StakingKeeper.BondDenom(ctx))
+
+	lockupPeriods := types.Periods{
+		{Length: int64(12 * 3600), Amount: c(fee(1000), stake(100))}, // noon
+	}
+	vestingPeriods := types.Periods{
+		{Length: int64(8 * 3600), Amount: c(fee(200))},            // 8am
+		{Length: int64(1 * 3600), Amount: c(fee(200), stake(50))}, // 9am
+		{Length: int64(6 * 3600), Amount: c(fee(200), stake(50))}, // 3pm
+		{Length: int64(2 * 3600), Amount: c(fee(200))},            // 5pm
+		{Length: int64(1 * 3600), Amount: c(fee(200))},            // 6pm
+	}
+
+	bacc, origCoins := initBaseAccount()
+	_, _, funder := testdata.KeyTestPubAddr()
+	va := types.NewClawbackVestingAccount(bacc, funder, origCoins, now.Unix(), lockupPeriods, vestingPeriods)
+	// simulate 17stake lost to slashing
+	va.DelegatedVesting = c(stake(17))
+	addr := va.GetAddress()
+	app.AccountKeeper.SetAccount(ctx, va)
+
+	// fund the vesting account with an extra 200fee but 17stake lost to slashing
+	err := simapp.FundAccount(app.BankKeeper, ctx, addr, c(fee(1200), stake(83)))
+	require.NoError(t, err)
+	require.Equal(t, int64(1200), app.BankKeeper.GetBalance(ctx, addr, feeDenom).Amount.Int64())
+	require.Equal(t, int64(83), app.BankKeeper.GetBalance(ctx, addr, stakeDenom).Amount.Int64())
+	ctx = ctx.WithBlockTime(now.Add(11 * time.Hour))
+
+	// delegate 65
+	shares, err := app.StakingKeeper.Delegate(ctx, addr, sdk.NewInt(65), stakingtypes.Unbonded, val, true)
+	require.NoError(t, err)
+	require.Equal(t, sdk.NewInt(65), shares.TruncateInt())
+	require.Equal(t, int64(18), app.BankKeeper.GetBalance(ctx, addr, stakeDenom).Amount.Int64())
+
+	// undelegate 5
+	_, err = app.StakingKeeper.Undelegate(ctx, addr, valAddr, sdk.NewDec(5))
+	require.NoError(t, err)
+
+	// Return the grant (1000fee, 100stake) with (1200fee, 83stake) available
+	va2 := app.AccountKeeper.GetAccount(ctx, addr).(*types.ClawbackVestingAccount)
+	returnGrantAction := types.NewReturnGrantAction(app.AccountKeeper, app.BankKeeper, app.StakingKeeper)
+	err = va2.ReturnGrants(ctx, returnGrantAction)
+	require.NoError(t, err)
+
+	// check vesting account
+	// want 200fee all vested
+	dest := funder
+	feeAmt := app.BankKeeper.GetBalance(ctx, addr, feeDenom).Amount
+	require.Equal(t, int64(200), feeAmt.Int64())
+	stakeAmt := app.BankKeeper.GetBalance(ctx, addr, stakeDenom).Amount
+	require.Equal(t, int64(0), stakeAmt.Int64())
+	spendable := app.BankKeeper.SpendableCoins(ctx, addr)
+	require.Equal(t, int64(200), spendable.AmountOf(feeDenom).Int64())
+	_, found := app.StakingKeeper.GetDelegation(ctx, addr, valAddr)
+	require.False(t, found)
+	_, found = app.StakingKeeper.GetUnbondingDelegation(ctx, addr, valAddr)
+	require.False(t, found)
+
+	// check destination account
+	// want 1000fee, 83stake (18 unbonded, 5 unbonding, 60 bonded)
+
+	feeAmt = app.BankKeeper.GetBalance(ctx, dest, feeDenom).Amount
+	require.Equal(t, int64(1000), feeAmt.Int64())
+	stakeAmt = app.BankKeeper.GetBalance(ctx, dest, stakeDenom).Amount
+	require.Equal(t, int64(18), stakeAmt.Int64())
+	del, found := app.StakingKeeper.GetDelegation(ctx, dest, valAddr)
+	require.True(t, found)
+	shares = del.GetShares()
+	val, found = app.StakingKeeper.GetValidator(ctx, valAddr)
+	require.True(t, found)
+	stakeAmt = val.TokensFromSharesTruncated(shares).RoundInt()
+	require.Equal(t, sdk.NewInt(60), stakeAmt)
+	ubd, found := app.StakingKeeper.GetUnbondingDelegation(ctx, dest, valAddr)
+	require.True(t, found)
+	require.Equal(t, 1, len(ubd.Entries))
+	require.Equal(t, sdk.NewInt(5), ubd.Entries[0].Balance)
+}
+
 func TestGenesisAccountValidate(t *testing.T) {
 	pubkey := secp256k1.GenPrivKey().PubKey()
 	addr := sdk.AccAddress(pubkey.Address())

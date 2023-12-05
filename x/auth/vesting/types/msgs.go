@@ -17,6 +17,9 @@ const (
 
 	// TypeMsgClawback defines the type value for a MsgClawback.
 	TypeMsgClawback = "msg_clawback"
+
+	// TypeMsgReturnGrants defines the type value for a MsgReturnGrants.
+	TypeMsgReturnGrants = "msg_return_grants"
 )
 
 var (
@@ -307,5 +310,47 @@ func (msg MsgClawback) ValidateBasic() error {
 		}
 	}
 
+	return nil
+}
+
+// NewMsgReturnGrants returns a reference to a new MsgReturnGrants.
+//
+//nolint:interfacer
+func NewMsgReturnGrants(addr sdk.AccAddress) *MsgReturnGrants {
+	return &MsgReturnGrants{
+		Address: addr.String(),
+	}
+}
+
+// Route returns the message route for a MsgReturnGrants.
+func (msg MsgReturnGrants) Route() string { return RouterKey }
+
+// Type returns the message type for a MsgReturnGrants.
+func (msg MsgReturnGrants) Type() string { return TypeMsgClawback }
+
+// GetSigners returns the expected signers for a MsgReturnGrants.
+func (msg MsgReturnGrants) GetSigners() []sdk.AccAddress {
+	addr, err := sdk.AccAddressFromBech32(msg.Address)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{addr}
+}
+
+// GetSignBytes returns the bytes all expected signers must sign over for a
+// MsgReturnGrants.
+func (msg MsgReturnGrants) GetSignBytes() []byte {
+	return sdk.MustSortJSON(amino.MustMarshalJSON(&msg))
+}
+
+// ValidateBasic Implements Msg.
+func (msg MsgReturnGrants) ValidateBasic() error {
+	addr, err := sdk.AccAddressFromBech32(msg.GetAddress())
+	if err != nil {
+		return err
+	}
+	if err := sdk.VerifyAddressFormat(addr); err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid account address: %s", err)
+	}
 	return nil
 }

@@ -610,6 +610,8 @@
     - [MsgCreatePeriodicVestingAccountResponse](#cosmos.vesting.v1beta1.MsgCreatePeriodicVestingAccountResponse)
     - [MsgCreateVestingAccount](#cosmos.vesting.v1beta1.MsgCreateVestingAccount)
     - [MsgCreateVestingAccountResponse](#cosmos.vesting.v1beta1.MsgCreateVestingAccountResponse)
+    - [MsgReturnGrants](#cosmos.vesting.v1beta1.MsgReturnGrants)
+    - [MsgReturnGrantsResponse](#cosmos.vesting.v1beta1.MsgReturnGrantsResponse)
   
     - [Msg](#cosmos.vesting.v1beta1.Msg)
   
@@ -8786,6 +8788,32 @@ MsgCreateVestingAccountResponse defines the MsgCreateVestingAccount response typ
 
 
 
+
+<a name="cosmos.vesting.v1beta1.MsgReturnGrants"></a>
+
+### MsgReturnGrants
+MsgReturnGrants defines a message for a grantee to return the unvested portion of a
+vesting grant to the funder. Currently only applies to ClawbackVesting accounts.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `address` | [string](#string) |  | address is the address of the grantee account returning the grant. |
+
+
+
+
+
+
+<a name="cosmos.vesting.v1beta1.MsgReturnGrantsResponse"></a>
+
+### MsgReturnGrantsResponse
+MsgReturnGrantsResponse defines the ReturnGrants response type.
+
+
+
+
+
  <!-- end messages -->
 
  <!-- end enums -->
@@ -8804,6 +8832,7 @@ Msg defines the bank Msg service.
 | `CreatePeriodicVestingAccount` | [MsgCreatePeriodicVestingAccount](#cosmos.vesting.v1beta1.MsgCreatePeriodicVestingAccount) | [MsgCreatePeriodicVestingAccountResponse](#cosmos.vesting.v1beta1.MsgCreatePeriodicVestingAccountResponse) | CreatePeriodicVestingAccount defines a method that enables creating a periodic vesting account. | |
 | `CreateClawbackVestingAccount` | [MsgCreateClawbackVestingAccount](#cosmos.vesting.v1beta1.MsgCreateClawbackVestingAccount) | [MsgCreateClawbackVestingAccountResponse](#cosmos.vesting.v1beta1.MsgCreateClawbackVestingAccountResponse) | CreateClawbackVestingAccount defines a method that enables creating a vesting account that is subject to clawback. | |
 | `Clawback` | [MsgClawback](#cosmos.vesting.v1beta1.MsgClawback) | [MsgClawbackResponse](#cosmos.vesting.v1beta1.MsgClawbackResponse) | Clawback removes the unvested tokens from a ClawbackVestingAccount. | |
+| `ReturnGrants` | [MsgReturnGrants](#cosmos.vesting.v1beta1.MsgReturnGrants) | [MsgReturnGrantsResponse](#cosmos.vesting.v1beta1.MsgReturnGrantsResponse) | ReturnGrants returns vesting grants to the funder. | |
 
  <!-- end services -->
 

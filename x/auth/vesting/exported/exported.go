@@ -39,11 +39,23 @@ type VestingAccount interface {
 	GetDelegatedVesting() sdk.Coins
 }
 
+// Additional vesting account behaviors are abstracted by interfaces to avoid
+// cyclic package dependencies. Specifically, the account-wrapping mechanism
+// to support liens in Agoric/agoric-sdk.
+
 // AddGrantAction encapsulates the data needed to add a grant to an account.
 type AddGrantAction interface {
 	// AddToAccount adds the grant to the specified account.
 	// The rawAccount should bypass any account wrappers.
 	AddToAccount(ctx sdk.Context, rawAccount VestingAccount) error
+}
+
+// ReturnGrantAction encapsulates the data needed to return grants from an account.
+type ReturnGrantAction interface {
+	// TakeGrants removes the original vesting amount from the account
+	// and clears the original vesting amount and schedule.
+	// The rawAccount should bypass any account wrappers.
+	TakeGrants(ctx sdk.Context, rawAccount VestingAccount) error
 }
 
 // ClabackAction encapsulates the data needed to perform clawback.
@@ -85,4 +97,7 @@ type ClawbackVestingAccountI interface {
 
 	// PostReward preforms post-reward processing described by action.
 	PostReward(ctx sdk.Context, reward sdk.Coins, action RewardAction) error
+
+	// ReturnGrants returns all grants to the funder.
+	ReturnGrants(ctx sdk.Context, action ReturnGrantAction) error
 }

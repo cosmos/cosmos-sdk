@@ -40,6 +40,7 @@ func GetTxCmd() *cobra.Command {
 		NewMsgCreatePeriodicVestingAccountCmd(),
 		NewMsgCreateClawbackVestingAccountCmd(),
 		NewMsgClawbackCmd(),
+		NewMsgReturnGrantsCmd(),
 	)
 
 	return txCmd
@@ -281,9 +282,9 @@ func NewMsgClawbackCmd() *cobra.Command {
 		Use:   "clawback [address]",
 		Short: "Transfer unvested amount out of a ClawbackVestingAccount.",
 		Long: `Must be requested by the original funder address (--from).
-		May provide a destination address (--dest), otherwise the coins return to the funder.
-		Delegated or undelegating staking tokens will be transferred in the delegated (undelegating) state.
-		The recipient is vulnerable to slashing, and must act to unbond the tokens if desired.`,
+May provide a destination address (--dest), otherwise the coins return to the funder.
+Delegated or undelegating staking tokens will be transferred in the delegated (undelegating) state.
+The recipient is vulnerable to slashing, and must act to unbond the tokens if desired.`,
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
@@ -315,6 +316,36 @@ func NewMsgClawbackCmd() *cobra.Command {
 	}
 
 	cmd.Flags().String(FlagDest, "", "address of destination (defaults to funder)")
+	flags.AddTxFlagsToCmd(cmd)
+	return cmd
+}
+
+// NewMsgReturnGrantsCmd returns a CLI command handler for creating a
+// MsgReturnGrantsCmd transaction.
+func NewMsgReturnGrantsCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "return-grants",
+		Short: "Transfer grants out of a vesting account.",
+		Long: `Must be authorized by the vesting account itself.
+All granted assets, including delegated and undelegating, vested and unvested,
+are transferred to the original funder of the account. Might not be complete if
+some vested assets have been transferred out of the account.
+Currently only supported for ClawbackVestingAccount.`,
+		Args: cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			msg := types.NewMsgReturnGrants(clientCtx.GetFromAddress())
+			if err := msg.ValidateBasic(); err != nil {
+				return err
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
 	flags.AddTxFlagsToCmd(cmd)
 	return cmd
 }

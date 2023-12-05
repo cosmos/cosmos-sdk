@@ -331,8 +331,8 @@ github.com/cockroachdb/tokenbucket v0.0.0-20230807174530-cc333fc44b06/go.mod h1:
 github.com/codahale/hdrhistogram v0.0.0-20161010025455-3a0bb77429bd/go.mod h1:sE/e/2PUdi/liOCUjSTXgM1o87ZssimdTWN964YiIeI=
 github.com/cometbft/cometbft v0.38.2 h1:io0JCh5EPxINKN5ZMI5hCdpW3QVZRy+o8qWe3mlJa/8=
 github.com/cometbft/cometbft v0.38.2/go.mod h1:PIi48BpzwlHqtV3mzwPyQgOyOnU94BNBimLS2ebBHOg=
-github.com/cometbft/cometbft-db v0.9.0 h1:J+7haCZCddpM8DBESe6R7/ScnqigdQKph8V2yucApx8=
-github.com/cometbft/cometbft-db v0.9.0/go.mod h1:iliyWaoV0mRwBJoizElCwwRA9Tf7jZJOURcRZF9m60U=
+github.com/cometbft/cometbft-db v0.9.1 h1:MIhVX5ja5bXNHF8EYrThkG9F7r9kSfv8BX4LWaxWJ4M=
+github.com/cometbft/cometbft-db v0.9.1/go.mod h1:iliyWaoV0mRwBJoizElCwwRA9Tf7jZJOURcRZF9m60U=
 github.com/containerd/continuity v0.3.0 h1:nisirsYROK15TAMVukJOUyGJjz4BNQJBVsNvAXZJ/eg=
 github.com/containerd/continuity v0.3.0/go.mod h1:wJEAIwKOm/pBZuBd0JmeTvnLquTB1Ag8espWhkykbPM=
 github.com/coreos/etcd v3.3.10+incompatible/go.mod h1:uF7uidLiAD3TWHmW31ZFd/JWoc32PjwdhPthX9715RE=

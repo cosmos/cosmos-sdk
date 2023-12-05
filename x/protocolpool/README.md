@@ -170,7 +170,7 @@ The message will fail under the following conditions:
 - The recipient address is empty or restricted.
 - The maxDistributedCapital is zero.
 - The percentage is zero/negative/greater than one.
-- expiry time is less than the current block time.
+- The Expiry time is less than the current block time.
 
 :::warning
 If two continuous fund proposals to the same address are created, the previous ContinuousFund would be updated with the new ContinuousFund.

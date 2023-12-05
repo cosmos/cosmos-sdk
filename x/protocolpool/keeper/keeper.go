@@ -32,18 +32,12 @@ type Keeper struct {
 	Schema         collections.Schema
 	BudgetProposal collections.Map[sdk.AccAddress, types.Budget]
 	ContinuousFund collections.Map[sdk.AccAddress, types.ContinuousFund]
-	// RecipientFundPercentage key: RecipientAddr | value: Percentage in uint64
-	RecipientFundPercentage collections.Map[sdk.AccAddress, uint64]
+	// RecipientFundPercentage key: RecipientAddr | value: Percentage in math.Int
+	RecipientFundPercentage collections.Map[sdk.AccAddress, math.Int]
 	// RecipientFundDistribution key: RecipientAddr | value: Claimable amount
-	RecipientFundDistribution collections.Map[sdk.AccAddress, uint64]
-}
-
-// Global variables
-var toDistribute uint64
-
-func init() {
-	// Use the global variable to avoid lint issue
-	_ = toDistribute
+	RecipientFundDistribution collections.Map[sdk.AccAddress, math.Int]
+	// ToDistribute is to keep track of funds distributed
+	ToDistribute collections.Item[math.Int]
 }
 
 func NewKeeper(cdc codec.BinaryCodec, storeService storetypes.KVStoreService,
@@ -63,8 +57,9 @@ func NewKeeper(cdc codec.BinaryCodec, storeService storetypes.KVStoreService,
 		authority:                 authority,
 		BudgetProposal:            collections.NewMap(sb, types.BudgetKey, "budget", sdk.AccAddressKey, codec.CollValue[types.Budget](cdc)),
 		ContinuousFund:            collections.NewMap(sb, types.ContinuousFundKey, "continuous_fund", sdk.AccAddressKey, codec.CollValue[types.ContinuousFund](cdc)),
-		RecipientFundPercentage:   collections.NewMap(sb, types.RecipientFundPercentageKey, "recipient_fund_percentage", sdk.AccAddressKey, collections.Uint64Value),
-		RecipientFundDistribution: collections.NewMap(sb, types.RecipientFundDistributionKey, "recipient_fund_distribution", sdk.AccAddressKey, collections.Uint64Value),
+		RecipientFundPercentage:   collections.NewMap(sb, types.RecipientFundPercentageKey, "recipient_fund_percentage", sdk.AccAddressKey, sdk.IntValue),
+		RecipientFundDistribution: collections.NewMap(sb, types.RecipientFundDistributionKey, "recipient_fund_distribution", sdk.AccAddressKey, sdk.IntValue),
+		ToDistribute:              collections.NewItem(sb, types.ToDistributeKey, "to_distribute", sdk.IntValue),
 	}
 
 	schema, err := sb.Build()
@@ -113,7 +108,7 @@ func (k Keeper) withdrawContinuousFund(ctx context.Context, recipient sdk.AccAdd
 		return sdk.Coin{}, fmt.Errorf("error while iterating all the continuous funds: %w", err)
 	}
 	// get allocated continuous fund
-	fundsAllocated, err := k.getDistributedFunds(ctx, recipient)
+	fundsAllocated, err := k.getAndResetDistributedFunds(ctx, recipient)
 	if err != nil {
 		return sdk.Coin{}, fmt.Errorf("error while getting distributed funds: %w", err)
 	}
@@ -127,35 +122,42 @@ func (k Keeper) withdrawContinuousFund(ctx context.Context, recipient sdk.AccAdd
 	}
 
 	recipientBal := k.bankKeeper.GetAllBalances(ctx, recipient)
-	recipientAmount := recipientBal.AmountOf(denom).Uint64()
-	totalRecipientBal := recipientAmount + fundsAllocated
+	recipientAmount := recipientBal.AmountOf(denom)
+	totalRecipientBal := recipientAmount.Add(fundsAllocated)
 	// check if the recipient account balance exceeds maxDistributedCapital after distribution
 	var withdrawnAmount sdk.Coin
-	if totalRecipientBal < cf.MaxDistributedCapital {
-		withdrawnAmount = sdk.NewCoin(denom, math.NewIntFromUint64(fundsAllocated))
+	if totalRecipientBal.LT(cf.MaxDistributedCapital) {
+		withdrawnAmount = sdk.NewCoin(denom, fundsAllocated)
 		// Distribute funds to the recipient from pool module account
 		err := k.DistributeFromCommunityPool(ctx, sdk.NewCoins(withdrawnAmount), recipient)
 		if err != nil {
 			return sdk.Coin{}, err
 		}
 
-		// decrement fundsAllocated from toDistribute
-		toDistribute -= fundsAllocated
+		// decrement fundsAllocated from ToDistribute
+		toDistribute, err := k.ToDistribute.Get(ctx)
+		if err != nil {
+			return sdk.Coin{}, err
+		}
+		err = k.ToDistribute.Set(ctx, toDistribute.Sub(fundsAllocated))
+		if err != nil {
+			return sdk.Coin{}, err
+		}
 	}
 
 	return withdrawnAmount, nil
 }
 
 func (k Keeper) iterateAndUpdateFundsDistribution(ctx context.Context) (string, error) {
-	var totalPercentageToBeDistributed uint64
-	err := k.RecipientFundPercentage.Walk(ctx, nil, func(key sdk.AccAddress, value uint64) (stop bool, err error) {
-		totalPercentageToBeDistributed += value
+	totalPercentageToBeDistributed := math.ZeroInt()
+	err := k.RecipientFundPercentage.Walk(ctx, nil, func(key sdk.AccAddress, value math.Int) (stop bool, err error) {
+		totalPercentageToBeDistributed = totalPercentageToBeDistributed.Add(value)
 		return false, nil
 	})
 	if err != nil {
 		return "", err
 	}
-	if totalPercentageToBeDistributed > 100 {
+	if totalPercentageToBeDistributed.GT(math.NewInt(100)) {
 		return "", fmt.Errorf("total funds percentage cannot exceed 100")
 	}
 
@@ -166,27 +168,34 @@ func (k Keeper) iterateAndUpdateFundsDistribution(ctx context.Context) (string, 
 	distrDecAmount := sdk.NewDecCoinsFromCoins(distrBal...)
 
 	var denom string
-	err = k.RecipientFundPercentage.Walk(ctx, nil, func(key sdk.AccAddress, value uint64) (stop bool, err error) {
+	err = k.RecipientFundPercentage.Walk(ctx, nil, func(key sdk.AccAddress, value math.Int) (stop bool, err error) {
 		// Calculate the funds to be distributed based on the percentage
-		distributionAmount := distrDecAmount.MulDec(math.LegacyNewDecWithPrec(int64(value), 2))
+		distributionAmount := distrDecAmount.MulDec(math.LegacyNewDecFromIntWithPrec(value, 2))
 		denom = distributionAmount.GetDenomByIndex(0)
 		distrAmount := distributionAmount.AmountOf(denom)
-		distrCoins := distrAmount.TruncateInt().Uint64()
+		distrCoins := distrAmount.TruncateInt()
 
 		// Send distribution funds to pool module account [i.e., poolMAcc = MAcc + toDistribute]
-		err = k.bankKeeper.SendCoinsFromModuleToModule(ctx, distrMAcc.GetName(), poolMAcc.GetName(), distrBal)
+		err = k.bankKeeper.SendCoinsFromModuleToModule(ctx, distrMAcc.GetName(), poolMAcc.GetName(), sdk.NewCoins(sdk.NewCoin(denom, distrCoins)))
 		if err != nil {
 			return false, err
 		}
 		// Add all the coins to be distributed to toDistribute
-		toDistribute += distrCoins
+		toDistribute, err := k.ToDistribute.Get(ctx)
+		if err != nil {
+			return false, err
+		}
+		err = k.ToDistribute.Set(ctx, toDistribute.Add(distrCoins))
+		if err != nil {
+			return false, err
+		}
 
 		// Set funds to be claimed
 		toClaim, err := k.RecipientFundDistribution.Get(ctx, key)
 		if err != nil {
 			return false, err
 		}
-		amount := toClaim + distrCoins
+		amount := toClaim.Add(distrCoins)
 		err = k.RecipientFundDistribution.Set(ctx, key, amount)
 		if err != nil {
 			return false, err
@@ -196,19 +205,19 @@ func (k Keeper) iterateAndUpdateFundsDistribution(ctx context.Context) (string, 
 	return denom, err
 }
 
-func (k Keeper) getDistributedFunds(ctx context.Context, recipient sdk.AccAddress) (amount uint64, err error) {
+func (k Keeper) getAndResetDistributedFunds(ctx context.Context, recipient sdk.AccAddress) (amount math.Int, err error) {
 	amount, err = k.RecipientFundDistribution.Get(ctx, recipient)
 	if err != nil {
 		if errors.Is(err, collections.ErrNotFound) {
-			return 0, fmt.Errorf("no recipient fund found for recipient: %s", recipient.String())
+			return math.ZeroInt(), fmt.Errorf("no recipient fund found for recipient: %s", recipient.String())
 		}
-		return 0, err
+		return math.ZeroInt(), err
 	}
 
 	// set claimable to zero
-	err = k.RecipientFundDistribution.Set(ctx, recipient, 0)
+	err = k.RecipientFundDistribution.Set(ctx, recipient, math.ZeroInt())
 	if err != nil {
-		return 0, err
+		return math.ZeroInt(), err
 	}
 	return amount, nil
 }
@@ -363,7 +372,7 @@ func (k Keeper) validateContinuousFund(ctx context.Context, msg types.MsgCreateC
 	}
 
 	// Validate maxDistributedCapital
-	if msg.MaxDistributedCapital == 0 {
+	if msg.MaxDistributedCapital.IsZero() {
 		return fmt.Errorf("invalid MaxDistributedCapital: amount cannot be zero")
 	}
 

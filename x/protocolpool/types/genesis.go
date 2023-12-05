@@ -69,7 +69,7 @@ func validateContinuousFund(cf ContinuousFund) error {
 	}
 
 	// Validate maxDistributedCapital
-	if cf.MaxDistributedCapital == 0 {
+	if cf.MaxDistributedCapital.IsZero() {
 		return fmt.Errorf("invalid MaxDistributedCapital: amount cannot be zero")
 	}
 

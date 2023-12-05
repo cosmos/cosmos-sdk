@@ -7,6 +7,7 @@ import (
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/errors"
+	"cosmossdk.io/math"
 	"cosmossdk.io/x/protocolpool/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -137,11 +138,15 @@ func (k MsgServer) CreateContinuousFund(ctx context.Context, msg *types.MsgCreat
 
 	// Set recipient fund percentage & distribution
 	percentage := cf.Percentage.MulInt64(100)
-	err = k.RecipientFundPercentage.Set(ctx, recipient, percentage.TruncateInt().Uint64())
+	err = k.RecipientFundPercentage.Set(ctx, recipient, percentage.TruncateInt())
 	if err != nil {
 		return nil, err
 	}
-	err = k.RecipientFundDistribution.Set(ctx, recipient, 0)
+	err = k.RecipientFundDistribution.Set(ctx, recipient, math.ZeroInt())
+	if err != nil {
+		return nil, err
+	}
+	err = k.ToDistribute.Set(ctx, math.ZeroInt())
 	if err != nil {
 		return nil, err
 	}

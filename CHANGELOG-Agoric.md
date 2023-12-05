@@ -35,7 +35,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 # Changelog (Agoric fork)
 
-## Unreleased
+## `v0.45.16-alpha.agoric.3` - 2023-12-04
 
 * (vesting) [#342](https://github.com/agoric-labs/cosmos-sdk/pull/342) recipient can return clawback vesting grant to funder
 

@@ -1,11 +1,15 @@
 package unknownproto
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/testutil/testdata/testpb"
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/reflect/protoregistry"
+	"google.golang.org/protobuf/types/known/anypb"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -669,4 +673,40 @@ func mustMarshal(msg proto.Message) []byte {
 		panic(err)
 	}
 	return blob
+}
+
+// mockRegistry is an unfriendly registry which does not resolve any types.
+// It is used to mock the case in which the interface registry does not know
+// about a type contained in an Any.
+type mockRegistry struct {
+	protoregistry.MessageTypeResolver
+}
+
+func (mockRegistry) Resolve(typeUrl string) (proto.Message, error) {
+	return nil, fmt.Errorf("always failing")
+}
+
+// TestUnknownFieldsAny tests that if the registry is provided with an auxiliary protov2 resolver
+// for unknown types within any's then it will use them to resolve the type.
+func TestUnknownFieldsAny(t *testing.T) {
+	registry := mockRegistry{protoregistry.GlobalTypes}
+
+	anyMsg, err := anypb.New(&testpb.Bird{
+		Species: "cool-bird",
+		Color:   100,
+	})
+	require.NoError(t, err)
+
+	msgSent := &testdata.TestVersion3{
+		G: &types.Any{
+			TypeUrl: anyMsg.TypeUrl,
+			Value:   anyMsg.Value,
+		},
+	}
+
+	msgBytes := mustMarshal(msgSent)
+	msgWant := new(testdata.TestVersion3)
+
+	err = RejectUnknownFieldsStrict(msgBytes, msgWant, registry)
+	require.NoError(t, err)
 }

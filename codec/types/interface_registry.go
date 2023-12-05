@@ -8,6 +8,7 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 	"google.golang.org/protobuf/reflect/protodesc"
 	"google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/reflect/protoregistry"
 
 	"cosmossdk.io/x/tx/signing"
 )
@@ -32,6 +33,7 @@ type AnyUnpacker interface {
 type InterfaceRegistry interface {
 	AnyUnpacker
 	jsonpb.AnyResolver
+	protoregistry.MessageTypeResolver
 
 	// RegisterInterface associates protoName as the public name for the
 	// interface passed in as iface. This is to be used primarily to create
@@ -102,11 +104,12 @@ type UnpackInterfacesMessage interface {
 
 type interfaceRegistry struct {
 	signing.ProtoFileResolver
-	interfaceNames map[string]reflect.Type
-	interfaceImpls map[reflect.Type]interfaceMap
-	implInterfaces map[reflect.Type]reflect.Type
-	typeURLMap     map[string]reflect.Type
-	signingCtx     *signing.Context
+	interfaceNames      map[string]reflect.Type
+	interfaceImpls      map[reflect.Type]interfaceMap
+	implInterfaces      map[reflect.Type]reflect.Type
+	typeURLMap          map[string]reflect.Type
+	signingCtx          *signing.Context
+	messageTypeResolver protoregistry.MessageTypeResolver
 }
 
 type interfaceMap = map[string]reflect.Type
@@ -133,6 +136,10 @@ type InterfaceRegistryOptions struct {
 
 	// SigningOptions are the signing options to use for the registry.
 	SigningOptions signing.Options
+
+	// MessageTypeResolver is the protoregistry.MessageTypeResolver to use for the registry.
+	// If not set then the FindMessageByName and FindMessageByURL methods will return protoregistry.ErrNotFound.
+	MessageTypeResolver protoregistry.MessageTypeResolver
 }
 
 // NewInterfaceRegistryWithOptions returns a new InterfaceRegistry with the given options.
@@ -147,13 +154,19 @@ func NewInterfaceRegistryWithOptions(options InterfaceRegistryOptions) (Interfac
 		return nil, err
 	}
 
+	typeResolver := options.MessageTypeResolver
+	if typeResolver == nil {
+		typeResolver = protoregistry.GlobalTypes
+	}
+
 	return &interfaceRegistry{
-		interfaceNames:    map[string]reflect.Type{},
-		interfaceImpls:    map[reflect.Type]interfaceMap{},
-		implInterfaces:    map[reflect.Type]reflect.Type{},
-		typeURLMap:        map[string]reflect.Type{},
-		ProtoFileResolver: options.ProtoFiles,
-		signingCtx:        signingCtx,
+		interfaceNames:      map[string]reflect.Type{},
+		interfaceImpls:      map[reflect.Type]interfaceMap{},
+		implInterfaces:      map[reflect.Type]reflect.Type{},
+		typeURLMap:          map[string]reflect.Type{},
+		ProtoFileResolver:   options.ProtoFiles,
+		signingCtx:          signingCtx,
+		messageTypeResolver: typeResolver,
 	}, nil
 }
 
@@ -346,6 +359,22 @@ func (registry *interfaceRegistry) Resolve(typeURL string) (proto.Message, error
 	}
 
 	return msg, nil
+}
+
+// FindMessageByName returns the message type with the given fully-qualified name.
+func (registry *interfaceRegistry) FindMessageByName(message protoreflect.FullName) (protoreflect.MessageType, error) {
+	if registry.messageTypeResolver == nil {
+		return nil, protoregistry.NotFound
+	}
+	return registry.messageTypeResolver.FindMessageByName(message)
+}
+
+// FindMessageByURL returns the message type with the given URL.
+func (registry *interfaceRegistry) FindMessageByURL(url string) (protoreflect.MessageType, error) {
+	if registry.messageTypeResolver == nil {
+		return nil, protoregistry.NotFound
+	}
+	return registry.messageTypeResolver.FindMessageByURL(url)
 }
 
 func (registry *interfaceRegistry) SigningContext() *signing.Context {

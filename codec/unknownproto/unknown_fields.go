@@ -14,6 +14,8 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 	"google.golang.org/protobuf/encoding/protowire"
 	protov2 "google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/reflect/protodesc"
+	"google.golang.org/protobuf/reflect/protoregistry"
 	"google.golang.org/protobuf/types/descriptorpb"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
@@ -141,8 +143,19 @@ func RejectUnknownFields(bz []byte, msg proto.Message, allowUnknownNonCriticals 
 			if err != nil {
 				// here we've checked the interface registry, which is the most common case.
 				// now let's try to also check the merged registry.
-
-				return hasUnknownNonCriticals, err
+				protov2TypeResolver, ok := resolver.(protoregistry.MessageTypeResolver)
+				if !ok {
+					return hasUnknownNonCriticals, err
+				}
+				protov2MessageType, err := protov2TypeResolver.FindMessageByURL(protoMessageName)
+				if err != nil {
+					return hasUnknownNonCriticals, err
+				}
+				msgv2 := protov2MessageType.New().Interface()
+				msg, ok = msgv2.(proto.Message)
+				if !ok {
+					return hasUnknownNonCriticals, fmt.Errorf("failed to cast %T to proto.Message", msgv2)
+				}
 			}
 		} else {
 			msg, err = protoMessageForTypeName(protoMessageName[1:])
@@ -344,6 +357,14 @@ func unnestDesc(mdescs []*descriptorpb.DescriptorProto, indices []int) *descript
 // Invoking descriptorpb.ForMessage(proto.Message.(Descriptor).Descriptor()) is incredibly slow
 // for every single message, thus the need for a hand-rolled custom version that's performant and cacheable.
 func extractFileDescMessageDesc(msg proto.Message) (*descriptorpb.FileDescriptorProto, *descriptorpb.DescriptorProto, error) {
+	if msgv2, ok := msg.(protov2.Message); ok {
+		// This is a protov2 message.
+		// We can use the protov2 API to extract the descriptor.
+		mdesc := msgv2.ProtoReflect().Descriptor()
+		fdesc := mdesc.ParentFile()
+		return protodesc.ToFileDescriptorProto(fdesc), protodesc.ToDescriptorProto(mdesc), nil
+	}
+
 	desc, ok := msg.(descriptorIface)
 	if !ok {
 		return nil, nil, fmt.Errorf("%T does not have a Descriptor() method", msg)

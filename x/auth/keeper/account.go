@@ -58,7 +58,7 @@ func (ak AccountKeeper) HasExactAccount(ctx context.Context, addr sdk.AccAddress
 func (ak AccountKeeper) IsModuleAccount(ctx context.Context, addr sdk.AccAddress) bool {
 	acc := ak.GetAccount(ctx, addr)
 	if acc != nil {
-		_, isModuleAccount := acc.(types.ModuleAccountI)
+		_, isModuleAccount := acc.(sdk.ModuleAccountI)
 		return isModuleAccount
 	}
 	return false
@@ -67,7 +67,7 @@ func (ak AccountKeeper) IsModuleAccount(ctx context.Context, addr sdk.AccAddress
 // GetAccount implements AccountKeeperI.
 func (ak AccountKeeper) GetAccount(ctx context.Context, addr sdk.AccAddress) sdk.AccountI {
 	acc, err := ak.Accounts.Get(ctx, addr)
-	if err != nil && !errors.Is(err, collections.ErrNotFound) {
+	if err != nil {
 		cosmosAddr := ak.GetCorrespondingCosmosAddressIfExists(ctx, addr)
 		if cosmosAddr == nil {
 			return nil
@@ -132,7 +132,6 @@ func (ak AccountKeeper) GetCorrespondingCosmosAddressIfExists(ctx context.Contex
 	}
 	mapping := ak.Store(ctx, types.EthAddressToCosmosAddressKey)
 	return mapping.Get(ethAddr)
-
 }
 
 func (ak AccountKeeper) SetCorrespondingAddresses(ctx context.Context, cosmosAddr sdk.AccAddress, ethAddr sdk.AccAddress) {

@@ -90,10 +90,10 @@ func (dtm *DedupTxHashManager) Add(hash TxHash, expire uint64) (ok bool) {
   return
 }
 
-// EndBlock send the latest block number to the background purge loop
-func (dtm *DedupTxHashManager) EndBlock(ctx sdk.Context) {
-  n := ctx.BlockNumber()
-  dtm.blockCh <- &n
+// OnNewBlock send the latest block number to the background purge loop,
+// it should be called in abci commit event.
+func (dtm *DedupTxHashManager) OnNewBlock(blockNumber uint64) {
+  dtm.blockCh <- &blockNumber
 }
 
 // purgeLoop removes expired tx hashes at background
@@ -215,13 +215,13 @@ func (dtd *DedupTxDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate boo
 }
 ```
 
-### EndBlocker
+### `OnNewBlock`
 
-Wire up the `EndBlock` method of `DedupTxHashManager` into the application's abci life cycle.
+Wire the `OnNewBlock` method of `DedupTxHashManager` into the baseapp's abci commit event.
 
 ### Start Up
 
-On start up, the node needs to re-fill the tx hash dictionary of `DedupTxHashManager` by scanning `MaxUnOrderedTTL` number of historical blocks for un-ordered transactions.
+On start up, the node needs to re-fill the tx hash dictionary of `DedupTxHashManager` by scanning `MaxUnOrderedTTL` number of historical blocks for existing un-expired un-ordered transactions.
 
 An alternative design is to store the tx hash dictionary in kv store, then no need to warm up on start up.
 

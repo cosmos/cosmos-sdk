@@ -11,9 +11,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 )
 
-// CreateSDKLogger creates a the default SDK logger.
+// NewLogger creates a the default SDK logger.
 // It reads the log level and format from the server context.
-func CreateSDKLogger(v *viper.Viper, out io.Writer) (log.Logger, error) {
+func NewLogger(v *viper.Viper, out io.Writer) (log.Logger, error) {
 	var opts []log.Option
 	if v.GetString(flags.FlagLogFormat) == flags.OutputFormatJSON {
 		opts = append(opts, log.OutputJSONOption())

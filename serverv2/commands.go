@@ -4,55 +4,57 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
+	"os/signal"
+	"path/filepath"
+	"syscall"
 
+	"cosmossdk.io/log"
 	"github.com/spf13/cobra"
-	"golang.org/x/sync/errgroup"
 )
 
-func Commands(modules ...Module) ([]*cobra.Command, error) {
+func Commands(homePath string, modules ...Module) ([]*cobra.Command, error) {
 	if len(modules) == 0 {
 		// TODO figure if we should define default modules
 		// and if so it should be done here to avoid uncessary dependencies
 		return nil, errors.New("no modules provided")
 	}
-	server := NewServer(modules...)
-	v, err := server.Configs()
+
+	server := NewServer(log.NewLogger(os.Stdout), modules...)
+	v, err := server.Config(filepath.Join(homePath, "config"))
 	if err != nil {
 		return nil, fmt.Errorf("failed to build server config: %w", err)
 	}
 
 	startCmd := &cobra.Command{
 		Use:   "start",
-		Short: "Run the full node",
+		Short: "Run the application",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if err := v.BindPFlags(cmd.Flags()); err != nil {
 				return err
 			}
 
-			logger, err := CreateSDKLogger(v, cmd.OutOrStdout())
-			if err != nil {
-				return err
+			srvConfig := Config{StartBlock: true}
+			ctx := cmd.Context()
+			ctx = context.WithValue(ctx, ServerContextKey, srvConfig)
+			ctx, cancelFn := context.WithCancel(ctx)
+			go func() {
+				sigCh := make(chan os.Signal, 1)
+				signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
+				sig := <-sigCh
+				cancelFn()
+				cmd.Printf("caught %s signal\n", sig.String())
+
+				if err := server.Stop(ctx); err != nil {
+					cmd.PrintErrln("failed to stop servers:", err)
+				}
+			}()
+
+			if err := server.Start(ctx); err != nil {
+				return fmt.Errorf("failed to start servers: %w", err)
 			}
 
-			ctx, cleanupFn := context.WithCancel(cmd.Context())
-			g, ctx := errgroup.WithContext(ctx)
-
-			ListenForQuitSignals(g, cleanupFn, logger)
-
-			g.Go(func() error {
-				logger.Info("starting servers...")
-				if err := server.Start(ctx); err != nil {
-					return fmt.Errorf("failed to start servers: %w", err)
-				}
-
-				// Wait for the calling process to be canceled or close the provided context.
-				<-ctx.Done()
-
-				logger.Info("shutting down servers...")
-				return server.Stop(ctx)
-			})
-
-			return g.Wait()
+			return nil
 		},
 	}
 

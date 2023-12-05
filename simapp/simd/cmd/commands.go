@@ -64,9 +64,14 @@ func initRootCmd(
 	)
 
 	// experimental commands
+	home, _ := rootCmd.Flags().GetString(flags.FlagHome)
+	if home == "" {
+		home = simapp.DefaultNodeHome
+	}
 	serverv2Cmds, err := serverv2.Commands(
-		mockmoduleserver.NewMockServer("foo"),
-		mockmoduleserver.NewMockServer("bar"),
+		home,
+		mockmoduleserver.NewServer("foo"),
+		mockmoduleserver.NewServer("bar"),
 	)
 	if err != nil {
 		panic(err)

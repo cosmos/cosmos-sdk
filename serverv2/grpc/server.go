@@ -1,6 +1,7 @@
 package grpc
 
 import (
+	"context"
 	"fmt"
 	"net"
 
@@ -11,6 +12,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/serverv2"
 	"github.com/cosmos/cosmos-sdk/serverv2/grpc/gogoreflection"
 	reflection "github.com/cosmos/cosmos-sdk/serverv2/grpc/reflection/v2alpha1"
@@ -31,10 +33,9 @@ type GRPCService interface {
 	RegisterGRPCServer(gogogrpc.Server)
 }
 
-// NewGRPCServer returns a correctly configured and initialized gRPC server.
-// Note, the caller is responsible for starting the server. See StartGRPCServer.
-// TODO: look into removing the clientCtx dependency.
-func NewGRPCServer(clientCtx client.Context, logger log.Logger, app GRPCService, cfg Config) (Server, error) {
+// NewServer returns a correctly configured and initialized gRPC server.
+// Note, the caller is responsible for starting the server.
+func NewServer(logger log.Logger, interfaceRegistry codectypes.InterfaceRegistry, txConfig client.TxConfig, app GRPCService, cfg Config, chainID string) (Server, error) {
 	maxSendMsgSize := cfg.MaxSendMsgSize
 	if maxSendMsgSize == 0 {
 		maxSendMsgSize = DefaultGRPCMaxSendMsgSize
@@ -46,7 +47,7 @@ func NewGRPCServer(clientCtx client.Context, logger log.Logger, app GRPCService,
 	}
 
 	grpcSrv := grpc.NewServer(
-		grpc.ForceServerCodec(codec.NewProtoCodec(clientCtx.InterfaceRegistry).GRPCCodec()),
+		grpc.ForceServerCodec(codec.NewProtoCodec(interfaceRegistry).GRPCCodec()),
 		grpc.MaxSendMsgSize(maxSendMsgSize),
 		grpc.MaxRecvMsgSize(maxRecvMsgSize),
 	)
@@ -58,7 +59,7 @@ func NewGRPCServer(clientCtx client.Context, logger log.Logger, app GRPCService,
 	// time.
 	err := reflection.Register(grpcSrv, reflection.Config{
 		SigningModes: func() map[string]int32 {
-			supportedModes := clientCtx.TxConfig.SignModeHandler().SupportedModes()
+			supportedModes := txConfig.SignModeHandler().SupportedModes()
 			modes := make(map[string]int32, len(supportedModes))
 			for _, m := range supportedModes {
 				modes[m.String()] = (int32)(m)
@@ -66,9 +67,9 @@ func NewGRPCServer(clientCtx client.Context, logger log.Logger, app GRPCService,
 
 			return modes
 		}(),
-		ChainID:                    clientCtx.ChainID,
+		ChainID:                    chainID,
 		Bech32AccountAddressPrefix: sdk.GetConfig().GetBech32AccountAddrPrefix(),
-		InterfaceRegistry:          clientCtx.InterfaceRegistry,
+		InterfaceRegistry:          interfaceRegistry,
 	})
 	if err != nil {
 		return Server{}, fmt.Errorf("failed to register reflection service: %w", err)
@@ -85,7 +86,11 @@ func NewGRPCServer(clientCtx client.Context, logger log.Logger, app GRPCService,
 	}, nil
 }
 
-func (g Server) Start() error {
+func (g Server) Name() string {
+	return "grpc-server"
+}
+
+func (g Server) Start(context.Context) error {
 	listener, err := net.Listen("tcp", g.config.Address)
 	if err != nil {
 		return fmt.Errorf("failed to listen on address %s: %w", g.config.Address, err)
@@ -109,7 +114,7 @@ func (g Server) Start() error {
 	return err
 }
 
-func (g Server) Stop() error {
+func (g Server) Stop(context.Context) error {
 	g.logger.Info("stopping gRPC server...", "address", g.config.Address)
 	g.grpcSrv.GracefulStop()
 

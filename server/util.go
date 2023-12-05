@@ -106,7 +106,7 @@ func InterceptConfigsPreRunHandler(cmd *cobra.Command, customAppConfigTemplate s
 	}
 
 	// overwrite default server logger
-	logger, err := serverv2.CreateSDKLogger(serverCtx.Viper, cmd.OutOrStdout())
+	logger, err := serverv2.NewLogger(serverCtx.Viper, cmd.OutOrStdout())
 	if err != nil {
 		return err
 	}

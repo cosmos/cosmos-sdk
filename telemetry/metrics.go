@@ -26,32 +26,32 @@ const (
 // Config defines the configuration options for application telemetry.
 type Config struct {
 	// Prefixed with keys to separate services
-	ServiceName string `mapstructure:"service-name"`
+	ServiceName string `mapstructure:"service-name" toml:"service-name" comment:"Prefixed with keys to separate services."`
 
 	// Enabled enables the application telemetry functionality. When enabled,
 	// an in-memory sink is also enabled by default. Operators may also enabled
 	// other sinks such as Prometheus.
-	Enabled bool `mapstructure:"enabled"`
+	Enabled bool `mapstructure:"enabled" toml:"enabled" comment:"Enabled enables the application telemetry functionality. When enabled, an in-memory sink is also enabled by default. Operators may also enabled other sinks such as Prometheus."`
 
 	// Enable prefixing gauge values with hostname
-	EnableHostname bool `mapstructure:"enable-hostname"`
+	EnableHostname bool `mapstructure:"enable-hostname" toml:"enable-hostname" comment:"Enable prefixing gauge values with hostname."`
 
 	// Enable adding hostname to labels
-	EnableHostnameLabel bool `mapstructure:"enable-hostname-label"`
+	EnableHostnameLabel bool `mapstructure:"enable-hostname-label" toml:"enable-hostname-label" comment:"Enable adding hostname to labels."`
 
 	// Enable adding service to labels
-	EnableServiceLabel bool `mapstructure:"enable-service-label"`
+	EnableServiceLabel bool `mapstructure:"enable-service-label" toml:"enable-service-label" comment:"Enable adding service to labels."`
 
 	// PrometheusRetentionTime, when positive, enables a Prometheus metrics sink.
 	// It defines the retention duration in seconds.
-	PrometheusRetentionTime int64 `mapstructure:"prometheus-retention-time"`
+	PrometheusRetentionTime int64 `mapstructure:"prometheus-retention-time" toml:"prometheus-retention-time" comment:"PrometheusRetentionTime, when positive, enables a Prometheus metrics sink. It defines the retention duration in seconds."`
 
 	// GlobalLabels defines a global set of name/value label tuples applied to all
 	// metrics emitted using the wrapper functions defined in telemetry package.
 	//
 	// Example:
 	// [["chain_id", "cosmoshub-1"]]
-	GlobalLabels [][]string `mapstructure:"global-labels"`
+	GlobalLabels [][]string `mapstructure:"global-labels" toml:"global-labels" comment:"GlobalLabels defines a global set of name/value label tuples applied to all metrics emitted using the wrapper functions defined in telemetry package.\n Example:\n  [[\"chain_id\", \"cosmoshub-1\"]]"`
 }
 
 // Metrics defines a wrapper around application telemetry functionality. It allows

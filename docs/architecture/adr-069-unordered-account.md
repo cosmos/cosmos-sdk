@@ -10,7 +10,7 @@ Proposed
 
 ## Abstract
 
-We propose a way to do replay-attack protection without enforcing the order of transactions, it don't use nonce at all. In this way we can support un-ordered transaction inclusion.
+We propose a way to do replay-attack protection without enforcing the order of transactions, without requiring the use of nonces. In this way, we can support un-ordered transaction inclusion.
 
 ## Context
 

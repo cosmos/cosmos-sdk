@@ -22,7 +22,7 @@ We propose to add a boolean field `unordered` to transaction body to mark "un-or
 
 Un-ordered transactions will bypass the nonce rules and follow the rules described below instead, in contrary, the default ordered transactions are not impacted by this proposal, they'll follow the nonce rules the same as before.
 
-When an un-ordered transaction are included into block, the transaction hash is recorded in a dictionary, new transactions are checked against this dictionary for duplicates, and to prevent the dictionary grow indefinitly, the transaction must specify `timeout_height` for expiration, so it's safe to removed it from the dictionary after it's expired.
+When an un-ordered transaction is included into a block, the transaction hash is recorded in a dictionary. New transactions are checked against this dictionary for duplicates, and to prevent the dictionary grow indefinitely, the transaction must specify `timeout_height` for expiration, so it's safe to removed it from the dictionary after it's expired.
 
 The dictionary can be simply implemented as an in-memory golang map, a preliminary analysis shows that the memory consumption won't be too big, for example `32M = 32 * 1024 * 1024` can support 1024 blocks where each block contains 1024 unordered transactions. For safty, we should limit the range of `timeout_height` to prevent very long expiration, and limit the size of the dictionary.
 

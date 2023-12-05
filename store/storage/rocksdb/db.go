@@ -92,12 +92,7 @@ func (db *Database) Close() error {
 }
 
 func (db *Database) NewBatch(version uint64) (store.Batch, error) {
-	batch, err := NewBatch(db, version)
-	if err != nil {
-		return nil, err
-	}
-
-	return batch, nil
+	return NewBatch(db, version), nil
 }
 
 func (db *Database) getSlice(storeKey string, version uint64, key []byte) (*grocksdb.Slice, error) {

@@ -121,9 +121,10 @@ func (a *App) Load(loadLatest bool) error {
 		a.SetEndBlocker(a.EndBlocker)
 	}
 
-	if len(a.config.OrderMigrations) != 0 {
-		a.ModuleManager.SetOrderMigrations(a.config.OrderMigrations...)
-	}
+	// TODO LSM refactor fix this
+	// if len(a.config.OrderMigrations) != 0 {
+	// 	a.ModuleManager.SetOrderMigrations(a.config.OrderMigrations...)
+	// }
 
 	if loadLatest {
 		if err := a.LoadLatestVersion(); err != nil {

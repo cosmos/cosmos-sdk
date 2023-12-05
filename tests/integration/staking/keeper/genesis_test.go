@@ -218,3 +218,47 @@ func TestInitGenesisLargeValidatorSet(t *testing.T) {
 	vals = vals[:100]
 	require.Equal(t, abcivals, vals)
 }
+
+// TODO: refactor LSM TEST
+func TestInitExportLiquidStakingGenesis(t *testing.T) {
+	// app, ctx, addrs := bootstrapGenesisTest(t, 2)
+	// address1, address2 := addrs[0], addrs[1]
+
+	// // Mock out a genesis state
+	// inGenesisState := types.GenesisState{
+	// 	Params: types.DefaultParams(),
+	// 	TokenizeShareRecords: []types.TokenizeShareRecord{
+	// 		{Id: 1, Owner: address1.String(), ModuleAccount: "module1", Validator: "val1"},
+	// 		{Id: 2, Owner: address2.String(), ModuleAccount: "module2", Validator: "val2"},
+	// 	},
+	// 	LastTokenizeShareRecordId: 2,
+	// 	TotalLiquidStakedTokens:   sdk.NewInt(1_000_000),
+	// 	TokenizeShareLocks: []types.TokenizeShareLock{
+	// 		{
+	// 			Address: address1.String(),
+	// 			Status:  types.TOKENIZE_SHARE_LOCK_STATUS_LOCKED.String(),
+	// 		},
+	// 		{
+	// 			Address:        address2.String(),
+	// 			Status:         types.TOKENIZE_SHARE_LOCK_STATUS_LOCK_EXPIRING.String(),
+	// 			CompletionTime: time.Date(2023, 1, 1, 1, 0, 0, 0, time.UTC),
+	// 		},
+	// 	},
+	// }
+
+	// // Call init and then export genesis - confirming the same state is returned
+	// staking.InitGenesis(ctx, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, &inGenesisState)
+	// outGenesisState := *staking.ExportGenesis(ctx, app.StakingKeeper)
+
+	// require.ElementsMatch(t, inGenesisState.TokenizeShareRecords, outGenesisState.TokenizeShareRecords,
+	// 	"tokenize share records")
+
+	// require.Equal(t, inGenesisState.LastTokenizeShareRecordId, outGenesisState.LastTokenizeShareRecordId,
+	// 	"last tokenize share record ID")
+
+	// require.Equal(t, inGenesisState.TotalLiquidStakedTokens.Int64(), outGenesisState.TotalLiquidStakedTokens.Int64(),
+	// 	"total liquid staked")
+
+	// require.ElementsMatch(t, inGenesisState.TokenizeShareLocks, outGenesisState.TokenizeShareLocks,
+	// 	"tokenize share locks")
+}

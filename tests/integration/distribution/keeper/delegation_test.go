@@ -14,6 +14,9 @@ import (
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	"github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	"github.com/cosmos/cosmos-sdk/x/distribution/testutil"
+	"github.com/cosmos/cosmos-sdk/x/distribution/types"
+	mintkeeper "github.com/cosmos/cosmos-sdk/x/mint/keeper"
+	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtestutil "github.com/cosmos/cosmos-sdk/x/staking/testutil"
@@ -817,4 +820,137 @@ func Test100PercentCommissionReward(t *testing.T) {
 		}
 	}
 	require.True(t, hasValue)
+}
+
+func TestWithdrawTokenizeShareRecordReward(t *testing.T) {
+	var (
+		accountKeeper authkeeper.AccountKeeper
+		bankKeeper    bankkeeper.Keeper
+		distrKeeper   keeper.Keeper
+		stakingKeeper *stakingkeeper.Keeper
+		mintKeeper    mintkeeper.Keeper
+	)
+
+	app, err := simtestutil.Setup(testutil.AppConfig,
+		&accountKeeper,
+		&bankKeeper,
+		&distrKeeper,
+		&stakingKeeper,
+		&mintKeeper,
+	)
+	require.NoError(t, err)
+
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+
+	addr := simtestutil.AddTestAddrs(bankKeeper, stakingKeeper, ctx, 2, sdk.NewInt(100000000))
+	valAddrs := simtestutil.ConvertAddrsToValAddrs(addr)
+	tstaking := stakingtestutil.NewHelper(t, ctx, stakingKeeper)
+
+	// create validator with 50% commission
+	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
+	valPower := int64(100)
+	tstaking.CreateValidatorWithValPower(valAddrs[0], valConsPk1, valPower, true)
+
+	// end block to bond validator
+	staking.EndBlocker(ctx, stakingKeeper)
+
+	// next block
+	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+
+	// fetch validator and delegation
+	val := stakingKeeper.Validator(ctx, valAddrs[0])
+	del := stakingKeeper.Delegation(ctx, sdk.AccAddress(valAddrs[0]), valAddrs[0])
+
+	// end period
+	endingPeriod := distrKeeper.IncrementValidatorPeriod(ctx, val)
+
+	// calculate delegation rewards
+	rewards := distrKeeper.CalculateDelegationRewards(ctx, val, del, endingPeriod)
+
+	// rewards should be zero
+	require.True(t, rewards.IsZero())
+
+	// start out block height
+	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 3)
+
+	// retrieve validator
+	val = stakingKeeper.Validator(ctx, valAddrs[0])
+
+	// increase block height
+	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 3)
+
+	// allocate some rewards
+	initial := stakingKeeper.TokensFromConsensusPower(ctx, 10)
+	tokens := sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: sdk.NewDecFromInt(initial)}}
+	distrKeeper.AllocateTokensToValidator(ctx, val, tokens)
+
+	// end period
+	distrKeeper.IncrementValidatorPeriod(ctx, val)
+
+	coins := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, initial)}
+	err = mintKeeper.MintCoins(ctx, coins)
+	require.NoError(t, err)
+	err = bankKeeper.SendCoinsFromModuleToModule(ctx, minttypes.ModuleName, types.ModuleName, coins)
+	require.NoError(t, err)
+
+	// tokenize share amount
+	delTokens := sdk.NewInt(1000000)
+	msgServer := stakingkeeper.NewMsgServerImpl(stakingKeeper)
+	resp, err := msgServer.TokenizeShares(sdk.WrapSDKContext(ctx), &stakingtypes.MsgTokenizeShares{
+		DelegatorAddress:    sdk.AccAddress(valAddrs[0]).String(),
+		ValidatorAddress:    valAddrs[0].String(),
+		TokenizedShareOwner: sdk.AccAddress(valAddrs[1]).String(),
+		Amount:              sdk.NewCoin(sdk.DefaultBondDenom, delTokens),
+	})
+	require.NoError(t, err)
+
+	// try withdrawing rewards before no reward is allocated
+	coins, err = distrKeeper.WithdrawAllTokenizeShareRecordReward(ctx, sdk.AccAddress(valAddrs[1]))
+	require.Nil(t, err)
+	require.Equal(t, coins, sdk.Coins{})
+
+	// assert tokenize share response
+	require.NoError(t, err)
+	require.Equal(t, resp.Amount.Amount, delTokens)
+
+	// end block to bond validator
+	staking.EndBlocker(ctx, stakingKeeper)
+	// next block
+	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+	// allocate some rewards
+	distrKeeper.AllocateTokensToValidator(ctx, val, tokens)
+	// end period
+	distrKeeper.IncrementValidatorPeriod(ctx, val)
+
+	beforeBalance := bankKeeper.GetBalance(ctx, sdk.AccAddress(valAddrs[1]), sdk.DefaultBondDenom)
+
+	// withdraw rewards
+	coins, err = distrKeeper.WithdrawAllTokenizeShareRecordReward(ctx, sdk.AccAddress(valAddrs[1]))
+	require.Nil(t, err)
+
+	// check return value
+	require.Equal(t, coins.String(), "50000stake")
+	// check balance changes
+	midBalance := bankKeeper.GetBalance(ctx, sdk.AccAddress(valAddrs[1]), sdk.DefaultBondDenom)
+	require.Equal(t, beforeBalance.Amount.Add(coins.AmountOf(sdk.DefaultBondDenom)), midBalance.Amount)
+
+	// allocate more rewards manually on module account and try full redeem
+	record, err := stakingKeeper.GetTokenizeShareRecord(ctx, 1)
+	require.NoError(t, err)
+
+	err = mintKeeper.MintCoins(ctx, coins)
+	require.NoError(t, err)
+	err = bankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, record.GetModuleAddress(), coins)
+	require.NoError(t, err)
+
+	shareTokenBalance := bankKeeper.GetBalance(ctx, sdk.AccAddress(valAddrs[0]), record.GetShareTokenDenom())
+
+	_, err = msgServer.RedeemTokensForShares(sdk.WrapSDKContext(ctx), &stakingtypes.MsgRedeemTokensForShares{
+		DelegatorAddress: sdk.AccAddress(valAddrs[0]).String(),
+		Amount:           shareTokenBalance,
+	})
+	require.NoError(t, err)
+
+	finalBalance := bankKeeper.GetBalance(ctx, sdk.AccAddress(valAddrs[1]), sdk.DefaultBondDenom)
+	require.Equal(t, midBalance.Amount.Add(coins.AmountOf(sdk.DefaultBondDenom)), finalBalance.Amount)
 }

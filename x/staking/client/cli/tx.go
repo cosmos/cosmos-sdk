@@ -44,7 +44,14 @@ func NewTxCmd() *cobra.Command {
 		NewDelegateCmd(),
 		NewRedelegateCmd(),
 		NewUnbondCmd(),
+		NewUnbondValidatorCmd(),
 		NewCancelUnbondingDelegation(),
+		NewTokenizeSharesCmd(),
+		NewRedeemTokensCmd(),
+		NewTransferTokenizeShareRecordCmd(),
+		NewDisableTokenizeShares(),
+		NewEnableTokenizeShares(),
+		NewValidatorBondCmd(),
 	)
 
 	return stakingTxCmd
@@ -262,6 +269,37 @@ $ %s tx staking unbond %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj 100stake --from
 			}
 
 			msg := types.NewMsgUndelegate(delAddr, valAddr, amount)
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+func NewUnbondValidatorCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "unbond-validator",
+		Short: "Unbond a validator",
+		Args:  cobra.ExactArgs(0),
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Unbond a validator.
+
+Example:
+$ %s tx staking unbond-validator --from mykey
+`,
+				version.AppName,
+			),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			msg := types.NewMsgUnbondValidator(sdk.ValAddress(clientCtx.GetFromAddress()))
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
@@ -574,4 +612,252 @@ func BuildCreateValidatorMsg(clientCtx client.Context, config TxCreateValidatorC
 	}
 
 	return txBldr, msg, nil
+}
+
+// NewTokenizeSharesCmd defines a command for tokenizing shares from a validator.
+func NewTokenizeSharesCmd() *cobra.Command {
+	bech32PrefixValAddr := sdk.GetConfig().GetBech32ValidatorAddrPrefix()
+	bech32PrefixAccAddr := sdk.GetConfig().GetBech32AccountAddrPrefix()
+
+	cmd := &cobra.Command{
+		Use:   "tokenize-share [validator-addr] [amount] [rewardOwner]",
+		Short: "Tokenize delegation to share tokens",
+		Args:  cobra.ExactArgs(3),
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Tokenize delegation to share tokens.
+
+Example:
+$ %s tx staking tokenize-share %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj 100stake %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj --from mykey
+`,
+				version.AppName, bech32PrefixValAddr, bech32PrefixAccAddr,
+			),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+			delAddr := clientCtx.GetFromAddress()
+			valAddr, err := sdk.ValAddressFromBech32(args[0])
+			if err != nil {
+				return err
+			}
+
+			amount, err := sdk.ParseCoinNormalized(args[1])
+			if err != nil {
+				return err
+			}
+
+			rewardOwner, err := sdk.AccAddressFromBech32(args[2])
+			if err != nil {
+				return err
+			}
+
+			msg := &types.MsgTokenizeShares{
+				DelegatorAddress:    delAddr.String(),
+				ValidatorAddress:    valAddr.String(),
+				Amount:              amount,
+				TokenizedShareOwner: rewardOwner.String(),
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// NewRedeemTokensCmd defines a command for redeeming tokens from a validator for shares.
+func NewRedeemTokensCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "redeem-tokens [amount]",
+		Short: "Redeem specified amount of share tokens to delegation",
+		Args:  cobra.ExactArgs(1),
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Redeem specified amount of share tokens to delegation.
+
+Example:
+$ %s tx staking redeem-tokens 100sharetoken --from mykey
+`,
+				version.AppName,
+			),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+			delAddr := clientCtx.GetFromAddress()
+
+			amount, err := sdk.ParseCoinNormalized(args[0])
+			if err != nil {
+				return err
+			}
+
+			msg := &types.MsgRedeemTokensForShares{
+				DelegatorAddress: delAddr.String(),
+				Amount:           amount,
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// NewTransferTokenizeShareRecordCmd defines a command to transfer ownership of TokenizeShareRecord
+func NewTransferTokenizeShareRecordCmd() *cobra.Command {
+	bech32PrefixAccAddr := sdk.GetConfig().GetBech32AccountAddrPrefix()
+
+	cmd := &cobra.Command{
+		Use:   "transfer-tokenize-share-record [record-id] [new-owner]",
+		Short: "Transfer ownership of TokenizeShareRecord",
+		Args:  cobra.ExactArgs(2),
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Transfer ownership of TokenizeShareRecord.
+
+Example:
+$ %s tx staking transfer-tokenize-share-record 1 %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj --from mykey
+`,
+				version.AppName, bech32PrefixAccAddr,
+			),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			recordID, err := strconv.Atoi(args[0])
+			if err != nil {
+				return err
+			}
+
+			ownerAddr, err := sdk.AccAddressFromBech32(args[1])
+			if err != nil {
+				return err
+			}
+
+			msg := &types.MsgTransferTokenizeShareRecord{
+				Sender:                clientCtx.GetFromAddress().String(),
+				TokenizeShareRecordId: uint64(recordID),
+				NewOwner:              ownerAddr.String(),
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// NewDisableTokenizeShares defines a command to disable tokenization for an address
+func NewDisableTokenizeShares() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "disable-tokenize-shares",
+		Short: "Disable tokenization of shares",
+		Args:  cobra.ExactArgs(0),
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Disables the tokenization of shares for an address. The account
+must explicitly re-enable if they wish to tokenize again, at which point they must wait 
+the chain's unbonding period. 
+
+Example:
+$ %s tx staking disable-tokenize-shares --from mykey
+`, version.AppName),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			msg := &types.MsgDisableTokenizeShares{
+				DelegatorAddress: clientCtx.GetFromAddress().String(),
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// NewEnableTokenizeShares defines a command to re-enable tokenization for an address
+func NewEnableTokenizeShares() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "enable-tokenize-shares",
+		Short: "Enable tokenization of shares",
+		Args:  cobra.ExactArgs(0),
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Enables the tokenization of shares for an address after 
+it had been disable. This transaction queues the enablement of tokenization, but
+the address must wait 1 unbonding period from the time of this transaction before
+tokenization is permitted.
+
+Example:
+$ %s tx staking enable-tokenize-shares --from mykey
+`, version.AppName),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			msg := &types.MsgEnableTokenizeShares{
+				DelegatorAddress: clientCtx.GetFromAddress().String(),
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// NewValidatorBondCmd defines a command to mark a delegation as a validator self bond
+func NewValidatorBondCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "validator-bond [validator]",
+		Short: "Mark a delegation as a validator self-bond",
+		Args:  cobra.ExactArgs(1),
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Mark a delegation as a validator self-bond.
+
+Example:
+$ %s tx staking validator-bond cosmosvaloper13h5xdxhsdaugwdrkusf8lkgu406h8t62jkqv3h --from mykey
+`,
+				version.AppName,
+			),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			msg := &types.MsgValidatorBond{
+				DelegatorAddress: clientCtx.GetFromAddress().String(),
+				ValidatorAddress: args[0],
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
 }

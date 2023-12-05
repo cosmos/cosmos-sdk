@@ -6,25 +6,42 @@
 
 ## Status
 
-Proposed
+ACCEPTED
 
 ## Abstract
 
-We propose a way to do replay-attack protection without enforcing the order of transactions, without requiring the use of nonces. In this way, we can support un-ordered transaction inclusion.
+We propose a way to do replay-attack protection without enforcing the order of
+transactions, without requiring the use of nonces. In this way, we can support
+un-ordered transaction inclusion.
 
 ## Context
 
-As of today, the nonce value (account sequence number) prevents replay-attack and ensures the transactions from the same sender are included into blocks and executed in sequential order. However it makes it tricky to send many transactions from the same sender concurrently in a reliable way. IBC relayer and crypto exchanges are typical examples of such use cases.
+As of today, the nonce value (account sequence number) prevents replay-attack and
+ensures the transactions from the same sender are included into blocks and executed
+in sequential order. However it makes it tricky to send many transactions from the
+same sender concurrently in a reliable way. IBC relayer and crypto exchanges are
+typical examples of such use cases.
 
 ## Decision
 
-We propose to add a boolean field `unordered` to transaction body to mark "un-ordered" transactions.
+We propose to add a boolean field `unordered` to transaction body to mark "un-ordered"
+transactions.
 
-Un-ordered transactions will bypass the nonce rules and follow the rules described below instead, in contrary, the default ordered transactions are not impacted by this proposal, they'll follow the nonce rules the same as before.
+Un-ordered transactions will bypass the nonce rules and follow the rules described
+below instead, in contrary, the default ordered transactions are not impacted by
+this proposal, they'll follow the nonce rules the same as before.
 
-When an un-ordered transaction is included into a block, the transaction hash is recorded in a dictionary. New transactions are checked against this dictionary for duplicates, and to prevent the dictionary grow indefinitely, the transaction must specify `timeout_height` for expiration, so it's safe to removed it from the dictionary after it's expired.
+When an un-ordered transaction is included into a block, the transaction hash is
+recorded in a dictionary. New transactions are checked against this dictionary for
+duplicates, and to prevent the dictionary grow indefinitely, the transaction must
+specify `timeout_height` for expiration, so it's safe to removed it from the
+dictionary after it's expired.
 
-The dictionary can be simply implemented as an in-memory golang map, a preliminary analysis shows that the memory consumption won't be too big, for example `32M = 32 * 1024 * 1024` can support 1024 blocks where each block contains 1024 unordered transactions. For safty, we should limit the range of `timeout_height` to prevent very long expiration, and limit the size of the dictionary.
+The dictionary can be simply implemented as an in-memory golang map, a preliminary
+analysis shows that the memory consumption won't be too big, for example `32M = 32 * 1024 * 1024`
+can support 1024 blocks where each block contains 1024 unordered transactions. For
+safety, we should limit the range of `timeout_height` to prevent very long expiration,
+and limit the size of the dictionary.
 
 ### Transaction Format
 
@@ -217,13 +234,16 @@ func (dtd *DedupTxDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate boo
 
 ### `OnNewBlock`
 
-Wire the `OnNewBlock` method of `DedupTxHashManager` into the baseapp's abci commit event.
+Wire the `OnNewBlock` method of `DedupTxHashManager` into the BaseApp's ABCI Commit event.
 
 ### Start Up
 
-On start up, the node needs to re-fill the tx hash dictionary of `DedupTxHashManager` by scanning `MaxUnOrderedTTL` number of historical blocks for existing un-expired un-ordered transactions.
+On start up, the node needs to re-fill the tx hash dictionary of `DedupTxHashManager`
+by scanning `MaxUnOrderedTTL` number of historical blocks for existing un-expired
+un-ordered transactions.
 
-An alternative design is to store the tx hash dictionary in kv store, then no need to warm up on start up.
+An alternative design is to store the tx hash dictionary in kv store, then no need
+to warm up on start up.
 
 ## Consequences
 
@@ -233,7 +253,7 @@ An alternative design is to store the tx hash dictionary in kv store, then no ne
 
 ### Negative
 
-- Start up overhead to scan historical blocks.
+* Start up overhead to scan historical blocks.
 
 ## References
 

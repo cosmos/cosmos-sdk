@@ -128,7 +128,11 @@ message MsgCreateContinuousFund {
   ];
   // MaxDistributedCapital is the threshold amount for distributing funds.
   // Once MaxDistributedCapital is reached, further fund distribution is halted.
-  uint64 max_distributed_capital = 4;
+  string max_distributed_capital = 4 [
+    (cosmos_proto.scalar)  = "cosmos.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable)   = false
+  ];
   // Optional, if expiry is set, removes the state object when expired.
   google.protobuf.Timestamp expiry = 5 [(gogoproto.stdtime) = true];
 }

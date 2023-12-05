@@ -32,22 +32,39 @@ The dictionary can be simply implemented as an in-memory golang map, a prelimina
 message TxBody {
   ...
 
-  boolean unordered = 4; 
+  bool unordered = 4; 
 }
 ```
 
 ### `DedupTxHashManager`
 
 ```golang
-// can reduce frequency we check the expiration.
-const ExpireCheckInterval = 1
+const PurgeLoopSleepMS = 500
 
 // DedupTxHashManager contains the tx hash dictionary for duplicates checking,
 // and expire them when block number progresses.
 type DedupTxHashManager struct {
+  mutex sync.RWMutex
   // tx hash -> expire block number
   // for duplicates checking and expiration
   hashes map[TxHash]uint64
+  // channel to receive latest block numbers
+  blockCh chan uint64
+}
+
+func NewDedupTxHashManager() *DedupTxHashManager {
+  m := &DedupTxHashManager{
+    hashes: make(map[TxHash]uint64),
+    blockCh: make(ch *uint64, 16),
+  }
+  go m.purgeLoop()
+  return m
+}
+
+func (dtm *DedupTxHashManager) Close() error {
+  close(dtm.blockCh)
+  dtm.blockCh = nil
+  return nil
 }
 
 func (dtm *DedupTxHashManager) Contains(hash TxHash) (ok bool) {
@@ -62,7 +79,7 @@ func (dtm *DedupTxHashManager) Size() int {
   dtm.mutex.RLock()
   defer dtm.mutex.RUnlock()
 
-  return len(dtm).hashes
+  return len(dtm.hashes)
 }
 
 func (dtm *DedupTxHashManager) Add(hash TxHash, expire uint64) (ok bool) {
@@ -73,20 +90,72 @@ func (dtm *DedupTxHashManager) Add(hash TxHash, expire uint64) (ok bool) {
   return
 }
 
-// EndBlock remove expired tx hashes, need to wire in abci cycles.
+// EndBlock send the latest block number to the background purge loop
 func (dtm *DedupTxHashManager) EndBlock(ctx sdk.Context) {
-  if ctx.BlockNumber() % ExpireCheckInterval != 0 {
-    return
-  }
+  n := ctx.BlockNumber()
+  dtm.blockCh <- &n
+}
 
+// purgeLoop removes expired tx hashes at background
+func (dtm *DedupTxHashManager) purgeLoop() error {
+  for {
+    blocks := channelBatchRecv(dtm.blockCh)
+    if len(blocks) == 0 {
+      // channel closed
+      break
+    }
+    
+    latest := *blocks[len(blocks)-1]
+    hashes := dtm.expired(latest)
+    if len(hashes) > 0 {
+      dtm.purge(hashes)
+    }
+    
+    // avoid burning cpu in catching up phase
+    time.Sleep(PurgeLoopSleepMS * time.Millisecond)
+  }
+}
+
+// expired find out expired tx hashes based on latest block number
+func (dtm *DedupTxHashManager) expired(block uint64) []TxHash {
+  dtm.mutex.RLock()
+  defer dtm.mutex.RUnlock()
+
+  var result []TxHash
+  for h, expire := range dtm.hashes {
+    if block > expire {
+      result = append(result, h)
+    }
+  }
+  return result
+}
+
+func (dtm *DedupTxHashManager) purge(hashes []TxHash) {
   dtm.mutex.Lock()
   defer dtm.mutex.Unlock()
 
-  for k, expire := range dtm.hashes {
-    if ctx.BlockNumber() > expire {
-      delete(dtm.hashes, k)
-    }
+  for _, hash := range hashes {
+    delete(dtm.hashes, hash)
   }
+}
+
+// channelBatchRecv try to exhaust the channel buffer when it's not empty,
+// and block when it's empty.
+func channelBatchRecv[T any](ch <-chan *T) []*T {
+	item := <-ch  // block if channel is empty
+	if item == nil {
+		// channel is closed
+		return nil
+	}
+
+	remaining := len(ch)
+	result := make([]*T, 0, remaining+1)
+	result = append(result, item)
+	for i := 0; i < remaining; i++ {
+		result = append(result, <-ch)
+	}
+
+	return result
 }
 ```
 
@@ -99,7 +168,7 @@ func (isd IncrementSequenceDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, sim
   if tx.UnOrdered() {
     return next(ctx, tx, simulate)
   }
-  
+
   // the previous logic
 }
 ```
@@ -110,9 +179,6 @@ A decorator for the new logic.
 type TxHash [32]byte
 
 const (
-  // MaxNumberOfTxHash * 32 = 128M max memory usage
-  MaxNumberOfTxHash = 1024 * 1024 * 4
-
   // MaxUnOrderedTTL defines the maximum ttl an un-order tx can set
   MaxUnOrderedTTL = 1024
 )
@@ -135,17 +201,14 @@ func (dtd *DedupTxDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate boo
     return nil, errorsmod.Wrapf(sdkerrors.ErrLogic, "unordered tx ttl exceeds %d", MaxUnOrderedTTL)
   }
 
+  // check for duplicates
+  if dtd.m.Contains(tx.Hash()) {
+    return nil, errorsmod.Wrap(sdkerrors.ErrLogic, "tx is duplicated")
+  }
+
   if !ctx.IsCheckTx() {
     // a new tx included in the block, add the hash to the dictionary
-    if dtd.m.Size() >= MaxNumberOfTxHash {
-      return nil, errorsmod.Wrap(sdkerrors.ErrLogic, "dedup map is full")
-    }
     dtd.m.Add(tx.Hash(), tx.TimeoutHeight())
-  } else {
-    // check for duplicates
-    if dtd.m.Contains(tx.Hash()) {
-      return nil, errorsmod.Wrap(sdkerrors.ErrLogic, "tx is duplicated")
-    }
   }
 
   return next(ctx, tx, simulate)

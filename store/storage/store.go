@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"cosmossdk.io/store/v2"
-	snapshotstypes "cosmossdk.io/store/v2/snapshots/types"
+	"cosmossdk.io/store/v2/snapshots"
 )
 
 const (
@@ -12,8 +12,10 @@ const (
 	defaultBatchBufferSize = 100000
 )
 
-var _ store.VersionedDatabase = (*StorageStore)(nil)
-var _ snapshotstypes.StorageSnapshotter = (*StorageStore)(nil)
+var (
+	_ store.VersionedDatabase      = (*StorageStore)(nil)
+	_ snapshots.StorageSnapshotter = (*StorageStore)(nil)
+)
 
 // StorageStore is a wrapper around the store.VersionedDatabase interface.
 type StorageStore struct {

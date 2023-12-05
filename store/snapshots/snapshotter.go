@@ -1,9 +1,10 @@
-package types
+package snapshots
 
 import (
 	protoio "github.com/cosmos/gogoproto/io"
 
 	"cosmossdk.io/store/v2"
+	"cosmossdk.io/store/v2/snapshots/types"
 )
 
 // CommitSnapshotter defines an API for creating and restoring snapshots of the
@@ -13,7 +14,7 @@ type CommitSnapshotter interface {
 	Snapshot(version uint64, protoWriter protoio.Writer) error
 
 	// Restore restores the commitment state from the snapshot reader.
-	Restore(version uint64, format uint32, protoReader protoio.Reader, chStorage chan<- *store.KVPair) (SnapshotItem, error)
+	Restore(version uint64, format uint32, protoReader protoio.Reader, chStorage chan<- *store.KVPair) (types.SnapshotItem, error)
 }
 
 // StorageSnapshotter defines an API for restoring snapshots of the storage state.

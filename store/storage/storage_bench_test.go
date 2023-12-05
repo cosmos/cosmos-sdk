@@ -1,7 +1,7 @@
 //go:build rocksdb
 // +build rocksdb
 
-package storage
+package storage_test
 
 import (
 	"bytes"
@@ -13,21 +13,29 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/store/v2"
+	"cosmossdk.io/store/v2/storage"
 	"cosmossdk.io/store/v2/storage/pebbledb"
 	"cosmossdk.io/store/v2/storage/rocksdb"
 	"cosmossdk.io/store/v2/storage/sqlite"
 )
 
+const (
+	storeKey1 = "store1"
+)
+
 var (
 	backends = map[string]func(dataDir string) (store.VersionedDatabase, error){
 		"rocksdb_versiondb_opts": func(dataDir string) (store.VersionedDatabase, error) {
-			return rocksdb.New(dataDir)
+			db, err := rocksdb.New(dataDir)
+			return storage.NewStorageStore(db), err
 		},
 		"pebbledb_default_opts": func(dataDir string) (store.VersionedDatabase, error) {
-			return pebbledb.New(dataDir)
+			db, err := pebbledb.New(dataDir)
+			return storage.NewStorageStore(db), err
 		},
 		"btree_sqlite": func(dataDir string) (store.VersionedDatabase, error) {
-			return sqlite.New(dataDir)
+			db, err := sqlite.New(dataDir)
+			return storage.NewStorageStore(db), err
 		},
 	}
 	rng = rand.New(rand.NewSource(567320))

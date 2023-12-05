@@ -12,6 +12,7 @@ import (
 	"golang.org/x/exp/slices"
 
 	"cosmossdk.io/store/v2"
+	"cosmossdk.io/store/v2/storage"
 	"cosmossdk.io/store/v2/storage/util"
 )
 
@@ -23,7 +24,7 @@ const (
 )
 
 var (
-	_ store.VersionedDatabase = (*Database)(nil)
+	_ storage.Database = (*Database)(nil)
 
 	defaultWriteOpts = grocksdb.NewDefaultWriteOptions()
 	defaultReadOpts  = grocksdb.NewDefaultReadOptions()
@@ -90,6 +91,15 @@ func (db *Database) Close() error {
 	return nil
 }
 
+func (db *Database) NewBatch(version uint64) (store.Batch, error) {
+	batch, err := NewBatch(db, version)
+	if err != nil {
+		return nil, err
+	}
+
+	return batch, nil
+}
+
 func (db *Database) getSlice(storeKey string, version uint64, key []byte) (*grocksdb.Slice, error) {
 	if version < db.tsLow {
 		return nil, store.ErrVersionPruned{EarliestVersion: db.tsLow}
@@ -139,26 +149,6 @@ func (db *Database) Get(storeKey string, version uint64, key []byte) ([]byte, er
 	}
 
 	return copyAndFreeSlice(slice), nil
-}
-
-func (db *Database) ApplyChangeset(version uint64, cs *store.Changeset) error {
-	b := NewBatch(db, version)
-
-	for storeKey, pairs := range cs.Pairs {
-		for _, kvPair := range pairs {
-			if kvPair.Value == nil {
-				if err := b.Delete(storeKey, kvPair.Key); err != nil {
-					return err
-				}
-			} else {
-				if err := b.Set(storeKey, kvPair.Key, kvPair.Value); err != nil {
-					return err
-				}
-			}
-		}
-	}
-
-	return b.Write()
 }
 
 // Prune attempts to prune all versions up to and including the provided version.

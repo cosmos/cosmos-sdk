@@ -21,7 +21,8 @@ const (
 func TestStorageTestSuite(t *testing.T) {
 	s := &storage.StorageTestSuite{
 		NewDB: func(dir string) (store.VersionedDatabase, error) {
-			return New(dir)
+			db, err := New(dir)
+			return storage.NewStorageStore(db), err
 		},
 		EmptyBatchSize: 12,
 	}

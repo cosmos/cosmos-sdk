@@ -31,14 +31,14 @@ import (
 //  2. io.ReadCloser streams automatically propagate IO errors, and can pass arbitrary
 //     errors via io.Pipe.CloseWithError().
 type Manager struct {
-	extensions map[string]types.ExtensionSnapshotter
+	extensions map[string]ExtensionSnapshotter
 	// store is the snapshot store where all completed snapshots are persisted.
 	store *Store
 	opts  types.SnapshotOptions
 	// commitSnapshotter is the snapshotter for the commitment state.
-	commitSnapshotter types.CommitSnapshotter
+	commitSnapshotter CommitSnapshotter
 	// storageSnapshotter is the snapshotter for the storage state.
-	storageSnapshotter types.StorageSnapshotter
+	storageSnapshotter StorageSnapshotter
 
 	logger log.Logger
 
@@ -75,9 +75,9 @@ const (
 var ErrOptsZeroSnapshotInterval = errors.New("snaphot-interval must not be 0")
 
 // NewManager creates a new manager.
-func NewManager(store *Store, opts types.SnapshotOptions, commitSnapshotter types.CommitSnapshotter, storageSnapshotter types.StorageSnapshotter, extensions map[string]types.ExtensionSnapshotter, logger log.Logger) *Manager {
+func NewManager(store *Store, opts types.SnapshotOptions, commitSnapshotter CommitSnapshotter, storageSnapshotter StorageSnapshotter, extensions map[string]ExtensionSnapshotter, logger log.Logger) *Manager {
 	if extensions == nil {
-		extensions = map[string]types.ExtensionSnapshotter{}
+		extensions = map[string]ExtensionSnapshotter{}
 	}
 	return &Manager{
 		store:              store,
@@ -90,9 +90,9 @@ func NewManager(store *Store, opts types.SnapshotOptions, commitSnapshotter type
 }
 
 // RegisterExtensions register extension snapshotters to manager
-func (m *Manager) RegisterExtensions(extensions ...types.ExtensionSnapshotter) error {
+func (m *Manager) RegisterExtensions(extensions ...ExtensionSnapshotter) error {
 	if m.extensions == nil {
-		m.extensions = make(map[string]types.ExtensionSnapshotter, len(extensions))
+		m.extensions = make(map[string]ExtensionSnapshotter, len(extensions))
 	}
 	for _, extension := range extensions {
 		name := extension.SnapshotName()
@@ -517,7 +517,7 @@ func (m *Manager) sortedExtensionNames() []string {
 }
 
 // IsFormatSupported returns if the snapshotter supports restoration from given format.
-func IsFormatSupported(snapshotter types.ExtensionSnapshotter, format uint32) bool {
+func IsFormatSupported(snapshotter ExtensionSnapshotter, format uint32) bool {
 	for _, i := range snapshotter.SupportedFormats() {
 		if i == format {
 			return true

@@ -11,11 +11,14 @@ import (
 
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/v2"
+	"cosmossdk.io/store/v2/snapshots"
 	snapshotstypes "cosmossdk.io/store/v2/snapshots/types"
 )
 
-var _ store.Committer = (*CommitStore)(nil)
-var _ snapshotstypes.CommitSnapshotter = (*CommitStore)(nil)
+var (
+	_ store.Committer             = (*CommitStore)(nil)
+	_ snapshots.CommitSnapshotter = (*CommitStore)(nil)
+)
 
 // CommitStore is a wrapper around multiple Tree objects mapped by a unique store
 // key. Each store key reflects dedicated and unique usage within a module. A caller
@@ -147,39 +150,45 @@ func (c *CommitStore) Snapshot(version uint64, protoWriter protoio.Writer) error
 	}
 
 	for storeKey, tree := range c.multiTrees {
-		exporter, err := tree.Export(version)
-		if err != nil {
-			return fmt.Errorf("failed to export tree for version %d: %w", version, err)
-		}
+		// TODO: check the parallelism of this loop
+		if err := func() error {
+			exporter, err := tree.Export(version)
+			if err != nil {
+				return fmt.Errorf("failed to export tree for version %d: %w", version, err)
+			}
+			defer exporter.Close()
 
-		defer exporter.Close()
-
-		err = protoWriter.WriteMsg(&snapshotstypes.SnapshotItem{
-			Item: &snapshotstypes.SnapshotItem_Store{
-				Store: &snapshotstypes.SnapshotStoreItem{
-					Name: storeKey,
+			err = protoWriter.WriteMsg(&snapshotstypes.SnapshotItem{
+				Item: &snapshotstypes.SnapshotItem_Store{
+					Store: &snapshotstypes.SnapshotStoreItem{
+						Name: storeKey,
+					},
 				},
-			},
-		})
-		if err != nil {
-			return fmt.Errorf("failed to write store name: %w", err)
-		}
-
-		for {
-			item, err := exporter.Next()
-			if errors.Is(err, ErrorExportDone) {
-				break
-			} else if err != nil {
-				return fmt.Errorf("failed to get the next export node: %w", err)
+			})
+			if err != nil {
+				return fmt.Errorf("failed to write store name: %w", err)
 			}
 
-			if err = protoWriter.WriteMsg(&snapshotstypes.SnapshotItem{
-				Item: &snapshotstypes.SnapshotItem_IAVL{
-					IAVL: item,
-				},
-			}); err != nil {
-				return fmt.Errorf("failed to write iavl node: %w", err)
+			for {
+				item, err := exporter.Next()
+				if errors.Is(err, ErrorExportDone) {
+					break
+				} else if err != nil {
+					return fmt.Errorf("failed to get the next export node: %w", err)
+				}
+
+				if err = protoWriter.WriteMsg(&snapshotstypes.SnapshotItem{
+					Item: &snapshotstypes.SnapshotItem_IAVL{
+						IAVL: item,
+					},
+				}); err != nil {
+					return fmt.Errorf("failed to write iavl node: %w", err)
+				}
 			}
+
+			return nil
+		}(); err != nil {
+			return err
 		}
 	}
 

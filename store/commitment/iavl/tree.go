@@ -1,7 +1,6 @@
 package iavl
 
 import (
-	"errors"
 	"fmt"
 
 	dbm "github.com/cosmos/cosmos-db"
@@ -10,7 +9,6 @@ import (
 
 	log "cosmossdk.io/log"
 	"cosmossdk.io/store/v2/commitment"
-	snapshotstypes "cosmossdk.io/store/v2/snapshots/types"
 )
 
 var _ commitment.Tree = (*IavlTree)(nil)
@@ -86,77 +84,28 @@ func (t *IavlTree) Export(version uint64) (commitment.Exporter, error) {
 		return nil, err
 	}
 	exporter, err := tree.Export()
+	if err != nil {
+		return nil, err
+	}
+
 	return &Exporter{
 		exporter: exporter,
-	}, err
+	}, nil
 }
 
 // Import imports the tree importer at the given version.
 func (t *IavlTree) Import(version uint64) (commitment.Importer, error) {
 	importer, err := t.tree.Import(int64(version))
+	if err != nil {
+		return nil, err
+	}
+
 	return &Importer{
 		importer: importer,
-	}, err
+	}, nil
 }
 
 // Close closes the iavl tree.
 func (t *IavlTree) Close() error {
-	return nil
-}
-
-// Exporter is a wrapper around iavl.Exporter.
-type Exporter struct {
-	exporter *iavl.Exporter
-}
-
-// Next returns the next item in the exporter.
-func (e *Exporter) Next() (*snapshotstypes.SnapshotIAVLItem, error) {
-	item, err := e.exporter.Next()
-	if err != nil {
-		if errors.Is(err, iavl.ErrorExportDone) {
-			return nil, commitment.ErrorExportDone
-		}
-		return nil, err
-	}
-
-	return &snapshotstypes.SnapshotIAVLItem{
-		Key:     item.Key,
-		Value:   item.Value,
-		Version: item.Version,
-		Height:  int32(item.Height),
-	}, nil
-}
-
-// Close closes the exporter.
-func (e *Exporter) Close() error {
-	e.exporter.Close()
-
-	return nil
-}
-
-// Importer is a wrapper around iavl.Importer.
-type Importer struct {
-	importer *iavl.Importer
-}
-
-// Add adds the given item to the importer.
-func (i *Importer) Add(item *snapshotstypes.SnapshotIAVLItem) error {
-	return i.importer.Add(&iavl.ExportNode{
-		Key:     item.Key,
-		Value:   item.Value,
-		Version: item.Version,
-		Height:  int8(item.Height),
-	})
-}
-
-// Commit commits the importer.
-func (i *Importer) Commit() error {
-	return i.importer.Commit()
-}
-
-// Close closes the importer.
-func (i *Importer) Close() error {
-	i.importer.Close()
-
 	return nil
 }

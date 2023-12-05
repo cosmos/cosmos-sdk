@@ -63,7 +63,7 @@ func readChunks(chunks <-chan io.ReadCloser) [][]byte {
 }
 
 // snapshotItems serialize a array of bytes as SnapshotItem_ExtensionPayload, and return the chunks.
-func snapshotItems(items [][]byte, ext snapshotstypes.ExtensionSnapshotter) [][]byte {
+func snapshotItems(items [][]byte, ext snapshots.ExtensionSnapshotter) [][]byte {
 	// copy the same parameters from the code
 	snapshotChunkSize := uint64(10e6)
 	snapshotBufferSize := int(snapshotChunkSize)
@@ -165,7 +165,7 @@ func (m *mockStorageSnapshotter) Restore(version uint64, chStorage <-chan *store
 
 type mockErrorCommitSnapshotter struct{}
 
-var _ snapshotstypes.CommitSnapshotter = (*mockErrorCommitSnapshotter)(nil)
+var _ snapshots.CommitSnapshotter = (*mockErrorCommitSnapshotter)(nil)
 
 func (m *mockErrorCommitSnapshotter) Snapshot(height uint64, protoWriter protoio.Writer) error {
 	return errors.New("mock snapshot error")
@@ -267,7 +267,7 @@ func (s *extSnapshotter) SupportedFormats() []uint32 {
 	return []uint32{1}
 }
 
-func (s *extSnapshotter) SnapshotExtension(height uint64, payloadWriter snapshotstypes.ExtensionPayloadWriter) error {
+func (s *extSnapshotter) SnapshotExtension(height uint64, payloadWriter snapshots.ExtensionPayloadWriter) error {
 	for _, i := range s.state {
 		if err := payloadWriter(snapshotstypes.Uint64ToBigEndian(i)); err != nil {
 			return err
@@ -276,7 +276,7 @@ func (s *extSnapshotter) SnapshotExtension(height uint64, payloadWriter snapshot
 	return nil
 }
 
-func (s *extSnapshotter) RestoreExtension(height uint64, format uint32, payloadReader snapshotstypes.ExtensionPayloadReader) error {
+func (s *extSnapshotter) RestoreExtension(height uint64, format uint32, payloadReader snapshots.ExtensionPayloadReader) error {
 	for {
 		payload, err := payloadReader()
 		if err == io.EOF {

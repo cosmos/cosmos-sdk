@@ -3,6 +3,7 @@ module cosmossdk.io/store/v2
 go 1.21
 
 require (
+	cosmossdk.io/core v0.12.0
 	cosmossdk.io/errors v1.0.0
 	cosmossdk.io/log v1.2.1
 	cosmossdk.io/math v1.2.0
@@ -14,7 +15,7 @@ require (
 	github.com/cosmos/iavl v1.0.0
 	github.com/cosmos/ics23/go v0.10.0
 	github.com/hashicorp/go-metrics v0.5.3
-	github.com/linxGnu/grocksdb v1.8.5
+	github.com/linxGnu/grocksdb v1.8.6
 	github.com/mattn/go-sqlite3 v1.14.18
 	github.com/stretchr/testify v1.8.4
 	github.com/tidwall/btree v1.7.0
@@ -58,7 +59,7 @@ require (
 	github.com/rs/zerolog v1.31.0 // indirect
 	github.com/sasha-s/go-deadlock v0.3.1 // indirect
 	github.com/spf13/cast v1.5.1 // indirect
-	github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7 // indirect
+	github.com/syndtr/goleveldb v1.0.1-0.20220721030215-126854af5e6d // indirect
 	golang.org/x/crypto v0.16.0 // indirect
 	golang.org/x/net v0.17.0 // indirect
 	golang.org/x/sync v0.4.0 // indirect

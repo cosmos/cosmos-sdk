@@ -60,6 +60,7 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		&MsgCreateVestingAccount{},
 		&MsgCreatePeriodicVestingAccount{},
 		&MsgCreateClawbackVestingAccount{},
+		&MsgReturnGrants{},
 	)
 
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)

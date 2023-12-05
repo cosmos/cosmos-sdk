@@ -340,3 +340,35 @@ func (s msgServer) Clawback(goCtx context.Context, msg *types.MsgClawback) (*typ
 
 	return &types.MsgClawbackResponse{}, nil
 }
+
+// ReturnGrants removes the unvested amount from a vesting account,
+// returning it to the funder. Currently only supported for ClawbackVestingAccount.
+func (s msgServer) ReturnGrants(goCtx context.Context, msg *types.MsgReturnGrants) (*types.MsgReturnGrantsResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	ak := s.AccountKeeper
+	bk := s.BankKeeper
+	sk := s.StakingKeeper
+
+	addr, err := sdk.AccAddressFromBech32(msg.GetAddress())
+	if err != nil {
+		return nil, err
+	}
+
+	acc := ak.GetAccount(ctx, addr)
+	if acc == nil {
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrNotFound, "account %s does not exist", msg.Address)
+	}
+	va, ok := acc.(exported.ClawbackVestingAccountI)
+	if !ok {
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "account does not support return-grants: %s", msg.Address)
+	}
+
+	returnGrantsAction := types.NewReturnGrantAction(ak, bk, sk)
+	err = va.ReturnGrants(ctx, returnGrantsAction)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.MsgReturnGrantsResponse{}, nil
+}

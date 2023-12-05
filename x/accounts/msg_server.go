@@ -3,8 +3,12 @@ package accounts
 import (
 	"context"
 
+	"cosmossdk.io/x/accounts/internal/implementation"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/anypb"
 
 	"cosmossdk.io/core/event"
 	v1 "cosmossdk.io/x/accounts/v1"
@@ -26,25 +30,14 @@ func (m msgServer) Init(ctx context.Context, request *v1.MsgInit) (*v1.MsgInitRe
 		return nil, err
 	}
 
-	impl, err := m.k.getImplementation(request.AccountType)
-	if err != nil {
-		return nil, err
-	}
-
 	// decode message bytes into the concrete boxed message type
-	msg, err := impl.InitHandlerSchema.RequestSchema.TxDecode(request.Message)
+	msg, err := unwrapAny(request.Message)
 	if err != nil {
 		return nil, err
 	}
 
 	// run account creation logic
 	resp, accAddr, err := m.k.Init(ctx, request.AccountType, creator, msg)
-	if err != nil {
-		return nil, err
-	}
-
-	// encode the response
-	respBytes, err := impl.InitHandlerSchema.ResponseSchema.TxEncode(resp)
 	if err != nil {
 		return nil, err
 	}
@@ -67,9 +60,14 @@ func (m msgServer) Init(ctx context.Context, request *v1.MsgInit) (*v1.MsgInitRe
 	if err != nil {
 		return nil, err
 	}
+
+	anyResp, err := wrapAny(resp.(proto.Message))
+	if err != nil {
+		return nil, err
+	}
 	return &v1.MsgInitResponse{
 		AccountAddress: accAddrString,
-		Response:       respBytes,
+		Response:       anyResp,
 	}, nil
 }
 
@@ -85,20 +83,8 @@ func (m msgServer) Execute(ctx context.Context, execute *v1.MsgExecute) (*v1.Msg
 		return nil, err
 	}
 
-	// get account type
-	accType, err := m.k.AccountsByType.Get(ctx, targetAddr)
-	if err != nil {
-		return nil, err
-	}
-
-	// get the implementation
-	impl, err := m.k.getImplementation(accType)
-	if err != nil {
-		return nil, err
-	}
-
 	// decode message bytes into the concrete boxed message type
-	req, err := impl.DecodeExecuteRequest(execute.Message)
+	req, err := unwrapAny(execute.Message)
 	if err != nil {
 		return nil, err
 	}
@@ -110,16 +96,33 @@ func (m msgServer) Execute(ctx context.Context, execute *v1.MsgExecute) (*v1.Msg
 	}
 
 	// encode the response
-	respBytes, err := impl.EncodeExecuteResponse(resp)
+	respAny, err := wrapAny(resp.(proto.Message))
 	if err != nil {
 		return nil, err
 	}
-
 	return &v1.MsgExecuteResponse{
-		Response: respBytes,
+		Response: respAny,
 	}, nil
 }
 
 func (m msgServer) ExecuteBundle(ctx context.Context, req *v1.MsgExecuteBundle) (*v1.MsgExecuteBundleResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "not implemented")
+}
+
+func unwrapAny(msg *codectypes.Any) (proto.Message, error) {
+	return anypb.UnmarshalNew(&anypb.Any{
+		TypeUrl: msg.TypeUrl,
+		Value:   msg.Value,
+	}, proto.UnmarshalOptions{})
+}
+
+func wrapAny(msg proto.Message) (*codectypes.Any, error) {
+	anyMsg, err := implementation.PackAny(msg)
+	if err != nil {
+		return nil, err
+	}
+	return &codectypes.Any{
+		TypeUrl: anyMsg.TypeUrl,
+		Value:   anyMsg.Value,
+	}, nil
 }

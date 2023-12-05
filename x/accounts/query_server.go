@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	v1 "cosmossdk.io/x/accounts/v1"
+	"google.golang.org/protobuf/proto"
 )
 
 var _ v1.QueryServer = queryServer{}
@@ -24,20 +25,8 @@ func (q queryServer) AccountQuery(ctx context.Context, request *v1.AccountQueryR
 		return nil, err
 	}
 
-	// get acc type
-	accType, err := q.k.AccountsByType.Get(ctx, targetAddr)
-	if err != nil {
-		return nil, err
-	}
-
-	// get impl
-	impl, err := q.k.getImplementation(accType)
-	if err != nil {
-		return nil, err
-	}
-
 	// decode req into boxed concrete type
-	queryReq, err := impl.DecodeQueryRequest(request.Request)
+	queryReq, err := unwrapAny(request.Request)
 	if err != nil {
 		return nil, err
 	}
@@ -48,13 +37,13 @@ func (q queryServer) AccountQuery(ctx context.Context, request *v1.AccountQueryR
 	}
 
 	// encode response
-	respBytes, err := impl.EncodeQueryResponse(resp)
+	respAny, err := wrapAny(resp.(proto.Message))
 	if err != nil {
 		return nil, err
 	}
 
 	return &v1.AccountQueryResponse{
-		Response: respBytes,
+		Response: respAny,
 	}, nil
 }
 

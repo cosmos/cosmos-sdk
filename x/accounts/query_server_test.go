@@ -6,7 +6,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 
@@ -24,7 +23,7 @@ func TestQueryServer(t *testing.T) {
 	qs := NewQueryServer(k)
 
 	// create
-	initMsg, err := proto.Marshal(&emptypb.Empty{})
+	initMsg, err := wrapAny(&emptypb.Empty{})
 	require.NoError(t, err)
 
 	initResp, err := ms.Init(ctx, &v1.MsgInit{
@@ -36,23 +35,16 @@ func TestQueryServer(t *testing.T) {
 
 	// query
 	req := &wrapperspb.UInt64Value{Value: 10}
-	anypbReq, err := anypb.New(req)
-	require.NoError(t, err)
-
-	anypbReqBytes, err := proto.Marshal(anypbReq)
+	anypbReq, err := wrapAny(req)
 	require.NoError(t, err)
 
 	queryResp, err := qs.AccountQuery(ctx, &v1.AccountQueryRequest{
 		Target:  initResp.AccountAddress,
-		Request: anypbReqBytes,
+		Request: anypbReq,
 	})
 	require.NoError(t, err)
 
-	respAnyPB := &anypb.Any{}
-	err = proto.Unmarshal(queryResp.Response, respAnyPB)
-	require.NoError(t, err)
-
-	resp, err := respAnyPB.UnmarshalNew()
+	resp, err := unwrapAny(queryResp.Response)
 	require.NoError(t, err)
 
 	require.Equal(t, "10", resp.(*wrapperspb.StringValue).Value)

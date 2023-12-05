@@ -24,7 +24,7 @@ func RegisterInitHandler[
 ) {
 	reqName := ProtoReq(new(Req)).ProtoReflect().Descriptor().FullName()
 
-	router.handler = func(ctx context.Context, initRequest any) (initResponse any, err error) {
+	router.handler = func(ctx context.Context, initRequest proto.Message) (initResponse proto.Message, err error) {
 		concrete, ok := initRequest.(ProtoReq)
 		if !ok {
 			return nil, fmt.Errorf("%w: wanted %s, got %T", errInvalidMessage, reqName, initRequest)
@@ -50,7 +50,7 @@ func RegisterExecuteHandler[
 		return
 	}
 
-	router.handlers[string(reqName)] = func(ctx context.Context, executeRequest any) (executeResponse any, err error) {
+	router.handlers[string(reqName)] = func(ctx context.Context, executeRequest proto.Message) (executeResponse proto.Message, err error) {
 		concrete, ok := executeRequest.(ProtoReq)
 		if !ok {
 			return nil, fmt.Errorf("%w: wanted %s, got %T", errInvalidMessage, reqName, executeRequest)

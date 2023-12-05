@@ -6,6 +6,7 @@ import (
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/address"
+	"google.golang.org/protobuf/proto"
 )
 
 // Dependencies are passed to the constructor of a smart account.
@@ -96,10 +97,6 @@ func NewImplementation(account Account) (Implementation, error) {
 		InitHandlerSchema:     ir.schema,
 		QueryHandlersSchema:   qr.er.handlersSchema,
 		ExecuteHandlersSchema: er.handlersSchema,
-		DecodeExecuteRequest:  er.makeRequestDecoder(),
-		EncodeExecuteResponse: er.makeResponseEncoder(),
-		DecodeQueryRequest:    qr.er.makeRequestDecoder(),
-		EncodeQueryResponse:   qr.er.makeResponseEncoder(),
 	}, nil
 }
 
@@ -107,11 +104,11 @@ func NewImplementation(account Account) (Implementation, error) {
 // and non-generic implementation usable by the x/accounts module.
 type Implementation struct {
 	// Init defines the initialisation handler for the smart account.
-	Init func(ctx context.Context, msg any) (resp any, err error)
+	Init func(ctx context.Context, msg proto.Message) (resp proto.Message, err error)
 	// Execute defines the execution handler for the smart account.
-	Execute func(ctx context.Context, msg any) (resp any, err error)
+	Execute func(ctx context.Context, msg proto.Message) (resp proto.Message, err error)
 	// Query defines the query handler for the smart account.
-	Query func(ctx context.Context, msg any) (resp any, err error)
+	Query func(ctx context.Context, msg proto.Message) (resp proto.Message, err error)
 	// CollectionsSchema represents the state schema.
 	CollectionsSchema collections.Schema
 	// InitHandlerSchema represents the init handler schema.
@@ -120,18 +117,6 @@ type Implementation struct {
 	QueryHandlersSchema map[string]HandlerSchema
 	// ExecuteHandlersSchema is the schema of the execute handlers.
 	ExecuteHandlersSchema map[string]HandlerSchema
-
-	// TODO: remove these fields and use the schemas instead
-
-	// DecodeExecuteRequest decodes an execute request coming from the message server.
-	DecodeExecuteRequest func([]byte) (any, error)
-	// EncodeExecuteResponse encodes an execute response to be sent back from the message server.
-	EncodeExecuteResponse func(any) ([]byte, error)
-
-	// DecodeQueryRequest decodes a query request coming from the message server.
-	DecodeQueryRequest func([]byte) (any, error)
-	// EncodeQueryResponse encodes a query response to be sent back from the message server.
-	EncodeQueryResponse func(any) ([]byte, error)
 }
 
 // MessageSchema defines the schema of a message.

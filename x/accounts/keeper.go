@@ -133,8 +133,8 @@ func (k Keeper) Init(
 	ctx context.Context,
 	accountType string,
 	creator []byte,
-	initRequest any,
-) (any, []byte, error) {
+	initRequest proto.Message,
+) (proto.Message, []byte, error) {
 	impl, err := k.getImplementation(accountType)
 	if err != nil {
 		return nil, nil, err
@@ -175,8 +175,8 @@ func (k Keeper) Execute(
 	ctx context.Context,
 	accountAddr []byte,
 	sender []byte,
-	execRequest any,
-) (any, error) {
+	execRequest proto.Message,
+) (proto.Message, error) {
 	// get account type
 	accountType, err := k.AccountsByType.Get(ctx, accountAddr)
 	if err != nil {
@@ -201,8 +201,8 @@ func (k Keeper) Execute(
 func (k Keeper) Query(
 	ctx context.Context,
 	accountAddr []byte,
-	queryRequest any,
-) (any, error) {
+	queryRequest proto.Message,
+) (proto.Message, error) {
 	// get account type
 	accountType, err := k.AccountsByType.Get(ctx, accountAddr)
 	if err != nil {

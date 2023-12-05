@@ -3,14 +3,13 @@ package cli
 import (
 	"fmt"
 
+	v1 "cosmossdk.io/x/accounts/v1"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/spf13/cobra"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
-	"google.golang.org/protobuf/types/known/anypb"
-
-	v1 "cosmossdk.io/x/accounts/v1"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -140,12 +139,7 @@ func GetQueryAccountCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			jsonResp, err := handlerResponseJSONBytes(schema.QueryHandlers, args[1], res.Response)
-			if err != nil {
-				return err
-			}
-
-			return clientCtx.PrintString(jsonResp)
+			return clientCtx.PrintProto(res)
 		},
 	}
 	flags.AddQueryFlagsToCmd(cmd)
@@ -165,7 +159,7 @@ func getSchemaForAccount(clientCtx client.Context, addr string) (*v1.SchemaRespo
 	})
 }
 
-func handlerMsgBytes(handlersSchema []*v1.SchemaResponse_Handler, msgTypeURL, msgString string) ([]byte, error) {
+func handlerMsgBytes(handlersSchema []*v1.SchemaResponse_Handler, msgTypeURL, msgString string) (*codectypes.Any, error) {
 	var msgSchema *v1.SchemaResponse_Handler
 	for _, handler := range handlersSchema {
 		if handler.Request == msgTypeURL {
@@ -176,36 +170,10 @@ func handlerMsgBytes(handlersSchema []*v1.SchemaResponse_Handler, msgTypeURL, ms
 	if msgSchema == nil {
 		return nil, fmt.Errorf("handler for message type %s not found", msgTypeURL)
 	}
-	msgBytes, err := encodeJSONToProto(msgSchema.Request, msgString)
-	if err != nil {
-		return nil, err
-	}
-	return proto.MarshalOptions{Deterministic: true}.Marshal(&anypb.Any{
-		TypeUrl: "/" + msgTypeURL,
-		Value:   msgBytes,
-	})
+	return encodeJSONToProto(msgSchema.Request, msgString)
 }
 
-func handlerResponseJSONBytes(handlerSchema []*v1.SchemaResponse_Handler, msgTypeURL string, protoBytes []byte) (string, error) {
-	var msgSchema *v1.SchemaResponse_Handler
-	for _, handler := range handlerSchema {
-		if handler.Request == msgTypeURL {
-			msgSchema = handler
-			break
-		}
-	}
-	if msgSchema == nil {
-		return "", fmt.Errorf("handler for message type %s not found", msgTypeURL)
-	}
-	anyMsg := new(anypb.Any)
-	err := proto.Unmarshal(protoBytes, anyMsg)
-	if err != nil {
-		return "", err
-	}
-	return decodeProtoToJSON(msgSchema.Response, anyMsg.Value)
-}
-
-func encodeJSONToProto(name, jsonMsg string) ([]byte, error) {
+func encodeJSONToProto(name, jsonMsg string) (*codectypes.Any, error) {
 	jsonBytes := []byte(jsonMsg)
 	impl, err := protoregistry.GlobalTypes.FindMessageByName(protoreflect.FullName(name))
 	if err != nil {
@@ -216,7 +184,14 @@ func encodeJSONToProto(name, jsonMsg string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	return proto.Marshal(msg)
+	msgBytes, err := proto.MarshalOptions{Deterministic: true}.Marshal(msg)
+	if err != nil {
+		return nil, err
+	}
+	return &codectypes.Any{
+		TypeUrl: "/" + name,
+		Value:   msgBytes,
+	}, nil
 }
 
 func decodeProtoToJSON(name string, protoBytes []byte) (string, error) {

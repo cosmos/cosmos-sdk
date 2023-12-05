@@ -18,12 +18,9 @@ message UserOperation {
   // authentication_data defines the authentication data associated with the authentication method.
   // It is the account implementer duty to assess that the UserOperation is properly signed.
   bytes authentication_data = 3;
-  // sequence defines the sequence number of the account, the authentication method might require this
-  // to ensure non-replayability.
-  uint64 sequence = 4;
   // authentication_gas_limit expresses the gas limit to be used for the authentication part of the
   // UserOperation.
-  uint64 authentication_gas_limit = 5;
+  uint64 authentication_gas_limit = 4;
   // bundler_payment_messages expresses a list of messages that the account
   // executes to pay the bundler for submitting the UserOperation.
   // It can be empty if the bundler does not need any form of payment,
@@ -33,21 +30,22 @@ message UserOperation {
   // - NFT payment
   // - IBC Token payment.
   // - Payment through delegations.
-  repeated google.protobuf.Any bundler_payment_messages = 6;
+  repeated google.protobuf.Any bundler_payment_messages = 5;
   // bundler_payment_gas_limit defines the gas limit to be used for the bundler payment.
   // This ensures that, since the bundler executes a list of UserOperations and there needs to
   // be minimal trust between bundler and UserOperation sender, the sender cannot consume
   // the whole bundle gas.
-  uint64 bundler_payment_gas_limit = 7;
+  uint64 bundler_payment_gas_limit = 6;
   // execution_messages expresses a list of messages that the account wants to execute.
   // This concretely is the intent of the transaction expressed as a UserOperation.
-  repeated google.protobuf.Any execution_messages = 8;
+  repeated google.protobuf.Any execution_messages = 7;
   // execution_gas_limit defines the gas limit to be used for the execution of the UserOperation's
   // execution messages.
-  uint64 execution_gas_limit = 9;
+  uint64 execution_gas_limit = 8;
 }
 
 // UserOperationResponse defines the response of a UserOperation.
+// If the operation fails the error field will be populated.
 message UserOperationResponse {
   // authentication_gas_used defines the gas used for the authentication part of the UserOperation.
   uint64 authentication_gas_used = 1;
@@ -60,4 +58,10 @@ message UserOperationResponse {
   uint64 execution_gas_used = 4;
   // execution_responses defines the responses of the execution messages.
   repeated google.protobuf.Any execution_responses = 5;
+  // error defines the error that occurred during the execution of the UserOperation.
+  // If the error is not empty, the UserOperation failed.
+  // Other fields might be populated even if the error is not empty, for example
+  // if the operation fails after the authentication step, the authentication_gas_used
+  // field will be populated.
+  string error = 6;
 }

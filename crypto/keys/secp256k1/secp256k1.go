@@ -10,6 +10,7 @@ import (
 
 	"github.com/cometbft/cometbft/crypto"
 	secp256k1dcrd "github.com/decred/dcrd/dcrec/secp256k1/v4"
+	"gitlab.com/yawning/secp256k1-voi/secec"
 	"golang.org/x/crypto/ripemd160" //nolint: staticcheck // keep around for backwards compatibility
 
 	errorsmod "cosmossdk.io/errors"
@@ -39,10 +40,12 @@ func (privKey *PrivKey) Bytes() []byte {
 // PubKey performs the point-scalar multiplication from the privKey on the
 // generator point to get the pubkey.
 func (privKey *PrivKey) PubKey() cryptotypes.PubKey {
-	pubkeyObject := secp256k1dcrd.PrivKeyFromBytes(privKey.Key).PubKey()
+	privateKeyObject, err := secec.NewPrivateKey(privKey.Key)
+	if err != nil {
+		panic(err)
+	}
 
-	pk := pubkeyObject.SerializeCompressed()
-	return &PubKey{Key: pk}
+	return &PubKey{Key: privateKeyObject.PublicKey().CompressedBytes()}
 }
 
 // Equals - you probably don't need to use this.
@@ -85,11 +88,21 @@ func (privKey *PrivKey) UnmarshalAminoJSON(bz []byte) error {
 // GenPrivKey generates a new ECDSA private key on curve secp256k1 private key.
 // It uses OS randomness to generate the private key.
 func GenPrivKey() *PrivKey {
-	return &PrivKey{Key: genPrivKey(crypto.CReader())}
+	return &PrivKey{Key: genPrivKey()}
 }
 
-// genPrivKey generates a new secp256k1 private key using the provided reader.
-func genPrivKey(rand io.Reader) []byte {
+// genPrivKey generates a new secp256k1 private key.
+func genPrivKey() []byte {
+	privateKeyObject, err := secec.GenerateKey()
+	if err != nil {
+		panic(err)
+	}
+
+	return privateKeyObject.Bytes()
+}
+
+// genPrivKeyLegacy generates a new secp256k1 private key using the provided reader.
+func genPrivKeyLegacy(rand io.Reader) []byte {
 	var privKeyBytes [PrivKeySize]byte
 	d := new(big.Int)
 	for {

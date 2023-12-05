@@ -3,6 +3,7 @@ package tx
 import (
 	"errors"
 	"fmt"
+	"math/big"
 	"os"
 	"strings"
 
@@ -311,7 +312,9 @@ func (f Factory) BuildUnsignedTx(msgs ...sdk.Msg) (client.TxBuilder, error) {
 			return nil, errors.New("cannot provide both fees and gas prices")
 		}
 
-		glDec := math.LegacyNewDec(int64(f.gas))
+		// f.gas is a uint64 and we should convert to LegacyDec
+		// without the risk of under/overflow via uint64->int64.
+		glDec := math.LegacyNewDecFromBigInt(new(big.Int).SetUint64(f.gas))
 
 		// Derive the fees based on the provided gas prices, where
 		// fee = ceil(gasPrice * gasLimit).

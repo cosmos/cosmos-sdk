@@ -81,7 +81,7 @@ The Cosmos SDK also provides a couple of other sign modes for particular use cas
 
 #### `SIGN_MODE_DIRECT_AUX`
 
-`SIGN_MODE_DIRECT_AUX` is a sign mode released in the Cosmos SDK v0.46 which targets transactions with multiple signers. Whereas `SIGN_MODE_DIRECT` expects each signer to sign over both `TxBody` and `AuthInfo` (which includes all other signers' signer infos, i.e. their account sequence, public key and mode info), `SIGN_MODE_DIRECT_AUX` allows N-1 signers to only sign over `TxBody` and _their own_ signer info. Morever, each auxiliary signer (i.e. a signer using `SIGN_MODE_DIRECT_AUX`) doesn't
+`SIGN_MODE_DIRECT_AUX` is a sign mode released in the Cosmos SDK v0.46 which targets transactions with multiple signers. Whereas `SIGN_MODE_DIRECT` expects each signer to sign over both `TxBody` and `AuthInfo` (which includes all other signers' signer infos, i.e. their account sequence, public key and mode info), `SIGN_MODE_DIRECT_AUX` allows N-1 signers to only sign over `TxBody` and _their own_ signer info. Moreover, each auxiliary signer (i.e. a signer using `SIGN_MODE_DIRECT_AUX`) doesn't
 need to sign over the fees:
 
 ```protobuf reference
@@ -140,7 +140,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/client/tx_config.go#L4
 ```
 
 * `Msg`s, the array of [messages](#messages) included in the transaction.
-* `GasLimit`, option chosen by the users for how to calculate how much gas they will need to pay.
+* `GasLimit`, option chosen by the users for how to calculate the gas they will need to pay.
 * `Memo`, a note or comment to send with the transaction.
 * `FeeAmount`, the maximum amount the user is willing to pay in fees.
 * `TimeoutHeight`, block height until which the transaction is valid.

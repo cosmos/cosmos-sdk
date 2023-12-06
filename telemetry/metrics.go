@@ -113,10 +113,15 @@ func New(cfg Config) (_ *Metrics, rerr error) {
 		memSink := metrics.NewInmemSink(10*time.Second, time.Minute)
 		sink = memSink
 		inMemSig := metrics.DefaultInmemSignal(memSink)
-		defer func() {
-			if rerr != nil {
-				inMemSig.Stop()
-			}
+		case "mem":
+		  memSink := metrics.NewInmemSink(10*time.Second, time.Minute)
+		  sink = memSink
+		  inMemSig := metrics.DefaultInmemSignal(memSink)
+		  defer func() {
+		    if rerr != nil {
+		      inMemSig.Stop()
+		    }
+		  }()
 		}()
 	case "statsd":
 		var err error

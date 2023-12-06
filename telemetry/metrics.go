@@ -94,8 +94,8 @@ func New(cfg Config) (_ *Metrics, rerr error) {
 		return nil, nil
 	}
 
-	if numGlobalLables := len(cfg.GlobalLabels); numGlobalLables > 0 {
-		parsedGlobalLabels := make([]metrics.Label, numGlobalLables)
+	if numGlobalLabels := len(cfg.GlobalLabels); numGlobalLabels > 0 {
+		parsedGlobalLabels := make([]metrics.Label, numGlobalLabels)
 		for i, gl := range cfg.GlobalLabels {
 			parsedGlobalLabels[i] = NewLabel(gl[0], gl[1])
 		}

@@ -23,11 +23,15 @@ const (
 	FormatDefault    = ""
 	FormatPrometheus = "prometheus"
 	FormatText       = "text"
+
+	MetricSinkInMem      = "mem"
+	MetricSinkStatsd     = "statsd"
+	MetricSinkDogsStatsd = "dogstatsd"
 )
 
 // DisplayableSink is an interface that defines a method for displaying metrics.
 type DisplayableSink interface {
-	DisplayMetrics(resp http.ResponseWriter, req *http.Request) (interface{}, error)
+	DisplayMetrics(resp http.ResponseWriter, req *http.Request) (any, error)
 }
 
 // Config defines the configuration options for application telemetry.
@@ -60,15 +64,15 @@ type Config struct {
 	// [["chain_id", "cosmoshub-1"]]
 	GlobalLabels [][]string `mapstructure:"global-labels"`
 
-	// MetricsBackend defines the type of metrics backend to use.
-	MetricsBackend string `mapstructure:"type" default:"mem"`
+	// MetricsSink defines the type of metrics backend to use.
+	MetricsSink string `mapstructure:"type" default:"mem"`
 
 	// StatsdAddr defines the address of a statsd server to send metrics to.
-	// Only utilized if MetricsBackend is set to "statsd" or "dogstatsd".
+	// Only utilized if MetricsSink is set to "statsd" or "dogstatsd".
 	StatsdAddr string `mapstructure:"statsd-addr"`
 
 	// DatadogHostname defines the hostname to use when emitting metrics to
-	// Datadog. Only utilized if MetricsBackend is set to "dogstatsd".
+	// Datadog. Only utilized if MetricsSink is set to "dogstatsd".
 	DatadogHostname string `mapstructure:"datadog-hostname"`
 }
 
@@ -99,17 +103,17 @@ func New(cfg Config) (_ *Metrics, rerr error) {
 		for i, gl := range cfg.GlobalLabels {
 			parsedGlobalLabels[i] = NewLabel(gl[0], gl[1])
 		}
-
 		globalLabels = parsedGlobalLabels
 	}
 
 	metricsConf := metrics.DefaultConfig(cfg.ServiceName)
 	metricsConf.EnableHostname = cfg.EnableHostname
 	metricsConf.EnableHostnameLabel = cfg.EnableHostnameLabel
-	var sink metrics.MetricSink
 
-	switch cfg.MetricsBackend {
-	case "mem":
+	var sink metrics.MetricSink
+	var err error
+	switch cfg.MetricsSink {
+	case MetricSinkInMem:
 		memSink := metrics.NewInmemSink(10*time.Second, time.Minute)
 		sink = memSink
 		inMemSig := metrics.DefaultInmemSignal(memSink)
@@ -118,18 +122,14 @@ func New(cfg Config) (_ *Metrics, rerr error) {
 				inMemSig.Stop()
 			}
 		}()
-	case "statsd":
-		var err error
+	case MetricSinkStatsd:
 		sink, err = metrics.NewStatsdSink(cfg.StatsdAddr)
-		if err != nil {
-			return nil, err
-		}
-	case "dogstatsd":
-		var err error
+	case MetricSinkDogsStatsd:
 		sink, err = datadog.NewDogStatsdSink(cfg.StatsdAddr, cfg.DatadogHostname)
-		if err != nil {
-			return nil, err
-		}
+	}
+
+	if err != nil {
+		return nil, err
 	}
 
 	m := &Metrics{sink: sink}
@@ -175,6 +175,8 @@ func (m *Metrics) Gather(format string) (GatherResponse, error) {
 	}
 }
 
+// gatherPrometheus collects Prometheus metrics and returns a GatherResponse.
+// If Prometheus metrics are not enabled, it returns an error.
 func (m *Metrics) gatherPrometheus() (GatherResponse, error) {
 	if !m.prometheusEnabled {
 		return GatherResponse{}, fmt.Errorf("prometheus metrics are not enabled")
@@ -189,6 +191,7 @@ func (m *Metrics) gatherPrometheus() (GatherResponse, error) {
 	defer buf.Reset()
 
 	e := expfmt.NewEncoder(buf, expfmt.FmtText)
+
 	for _, mf := range metricsFamilies {
 		if err := e.Encode(mf); err != nil {
 			return GatherResponse{}, fmt.Errorf("failed to encode prometheus metrics: %w", err)
@@ -198,6 +201,7 @@ func (m *Metrics) gatherPrometheus() (GatherResponse, error) {
 	return GatherResponse{ContentType: string(expfmt.FmtText), Metrics: buf.Bytes()}, nil
 }
 
+// gatherGeneric collects generic metrics and returns a GatherResponse.
 func (m *Metrics) gatherGeneric() (GatherResponse, error) {
 	gm, ok := m.sink.(DisplayableSink)
 	if !ok {

@@ -121,15 +121,15 @@ global-labels = [{{ range $k, $v := .Telemetry.GlobalLabels }}
   ["{{index $v 0 }}", "{{ index $v 1}}"],{{ end }}
 ]
 
-# MetricsBackend defines the type of metrics backend to use.
-metrics-backend = "{{ .Telemetry.MetricsBackend }}"
+# MetricsSink defines the type of metrics sink to use.
+metrics-sink = "{{ .Telemetry.MetricsSink }}"
 
 # StatsdAddr defines the address of a statsd server to send metrics to.
-# Only utilized if MetricsBackend is set to "statsd" or "dogstatsd".
+# Only utilized if MetricsSink is set to "statsd" or "dogstatsd".
 statsd-addr = "{{ .Telemetry.StatsdAddr }}"
 
 # DatadogHostname defines the hostname to use when emitting metrics to
-# Datadog. Only utilized if MetricsBackend is set to "dogstatsd".
+# Datadog. Only utilized if MetricsSink is set to "dogstatsd".
 datadog-hostname = "{{ .Telemetry.DatadogHostname }}"
 
 ###############################################################################

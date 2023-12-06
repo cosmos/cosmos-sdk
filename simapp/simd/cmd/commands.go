@@ -53,17 +53,7 @@ func initRootCmd(
 	)
 
 	// server.AddCommands(rootCmd, newApp, func(startCmd *cobra.Command) {})
-
-	// add keybase, auxiliary RPC, query, genesis, and tx child commands
-	rootCmd.AddCommand(
-		server.StatusCommand(),
-		genesisCommand(txConfig, basicManager, appExport),
-		queryCommand(),
-		txCommand(),
-		keys.Commands(),
-	)
-
-	// experimental commands
+	// server v2 commands
 	home, _ := rootCmd.Flags().GetString(flags.FlagHome)
 	if home == "" {
 		home = simapp.DefaultNodeHome
@@ -76,8 +66,16 @@ func initRootCmd(
 	if err != nil {
 		panic(err)
 	}
+
+	rootCmd.AddCommand(serverv2Cmds.Command...)
+
+	// add keybase, auxiliary RPC, query, genesis, and tx child commands
 	rootCmd.AddCommand(
-		serverv2Cmds...,
+		server.StatusCommand(),
+		genesisCommand(txConfig, basicManager, appExport),
+		queryCommand(serverv2Cmds.Query...),
+		txCommand(serverv2Cmds.Tx...),
+		keys.Commands(),
 	)
 }
 
@@ -91,7 +89,7 @@ func genesisCommand(txConfig client.TxConfig, basicManager module.BasicManager, 
 	return cmd
 }
 
-func queryCommand() *cobra.Command {
+func queryCommand(extraCmds ...*cobra.Command) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:                        "query",
 		Aliases:                    []string{"q"},
@@ -110,10 +108,12 @@ func queryCommand() *cobra.Command {
 		server.QueryBlockResultsCmd(),
 	)
 
+	cmd.AddCommand(extraCmds...)
+
 	return cmd
 }
 
-func txCommand() *cobra.Command {
+func txCommand(extraCmds ...*cobra.Command) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:                        "tx",
 		Short:                      "Transactions subcommands",
@@ -133,6 +133,8 @@ func txCommand() *cobra.Command {
 		authcmd.GetDecodeCommand(),
 		authcmd.GetSimulateCmd(),
 	)
+
+	cmd.AddCommand(extraCmds...)
 
 	return cmd
 }

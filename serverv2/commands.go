@@ -13,17 +13,17 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func Commands(homePath string, modules ...Module) ([]*cobra.Command, error) {
+func Commands(homePath string, modules ...Module) (CLIConfig, error) {
 	if len(modules) == 0 {
 		// TODO figure if we should define default modules
 		// and if so it should be done here to avoid uncessary dependencies
-		return nil, errors.New("no modules provided")
+		return CLIConfig{}, errors.New("no modules provided")
 	}
 
 	server := NewServer(log.NewLogger(os.Stdout), modules...)
 	v, err := server.Config(filepath.Join(homePath, "config"))
 	if err != nil {
-		return nil, fmt.Errorf("failed to build server config: %w", err)
+		return CLIConfig{}, fmt.Errorf("failed to build server config: %w", err)
 	}
 
 	startCmd := &cobra.Command{
@@ -58,5 +58,8 @@ func Commands(homePath string, modules ...Module) ([]*cobra.Command, error) {
 		},
 	}
 
-	return append(server.CLICommands(), startCmd), nil
+	cmds := server.CLICommands()
+	cmds.Command = append(cmds.Command, startCmd)
+
+	return cmds, nil
 }

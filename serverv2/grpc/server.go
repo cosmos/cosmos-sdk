@@ -6,6 +6,7 @@ import (
 	"net"
 
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
+	"github.com/spf13/viper"
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/log"
@@ -119,4 +120,16 @@ func (g Server) Stop(context.Context) error {
 	g.grpcSrv.GracefulStop()
 
 	return nil
+}
+
+func (g Server) Config() (any, *viper.Viper) {
+	v := viper.New()
+
+	// TODO
+	v.Set("enable", true)
+	v.Set("address", g.config.Address)
+	v.Set("max_send_msg_size", g.config.MaxSendMsgSize)
+	v.Set("max_recv_msg_size", g.config.MaxRecvMsgSize)
+
+	return g.config, v
 }

@@ -8,7 +8,6 @@ import (
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/pelletier/go-toml/v2"
-	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"golang.org/x/sync/errgroup"
 
@@ -25,7 +24,7 @@ type Module interface {
 
 // HasCLICommands is a server module that has CLI commands.
 type HasCLICommands interface {
-	CLICommands() []*cobra.Command
+	CLICommands() CLIConfig
 }
 
 // HasConfig is a server module that has a config.
@@ -114,11 +113,14 @@ func (s *Server) Reload(ctx context.Context, moduleName string) error {
 }
 
 // CLICommands returns all CLI commands of all modules.
-func (s *Server) CLICommands() []*cobra.Command {
-	var commands []*cobra.Command
+func (s *Server) CLICommands() CLIConfig {
+	commands := CLIConfig{}
+
 	for _, mod := range s.modules {
 		if climod, ok := mod.(HasCLICommands); ok {
-			commands = append(commands, climod.CLICommands()...)
+			commands.Command = append(commands.Command, climod.CLICommands().Command...)
+			commands.Query = append(commands.Query, climod.CLICommands().Query...)
+			commands.Tx = append(commands.Tx, climod.CLICommands().Tx...)
 		}
 	}
 

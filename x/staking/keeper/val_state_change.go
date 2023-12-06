@@ -280,7 +280,7 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx context.Context) (updates 
 
 func (k Keeper) bondedToUnbonding(ctx context.Context, validator types.Validator) (types.Validator, error) {
 	if !validator.IsBonded() {
-		return types.Validator{}, fmt.Errorf("bad state transition bondedToUnbonding, validator: %v\n", validator)
+		return types.Validator{}, fmt.Errorf("bad state transition bondedToUnbonding, validator: %v", validator)
 	}
 
 	return k.BeginUnbondingValidator(ctx, validator)
@@ -288,7 +288,7 @@ func (k Keeper) bondedToUnbonding(ctx context.Context, validator types.Validator
 
 func (k Keeper) unbondingToBonded(ctx context.Context, validator types.Validator) (types.Validator, error) {
 	if !validator.IsUnbonding() {
-		return types.Validator{}, fmt.Errorf("bad state transition unbondingToBonded, validator: %v\n", validator)
+		return types.Validator{}, fmt.Errorf("bad state transition unbondingToBonded, validator: %v", validator)
 	}
 
 	return k.bondValidator(ctx, validator)
@@ -296,7 +296,7 @@ func (k Keeper) unbondingToBonded(ctx context.Context, validator types.Validator
 
 func (k Keeper) unbondedToBonded(ctx context.Context, validator types.Validator) (types.Validator, error) {
 	if !validator.IsUnbonded() {
-		return types.Validator{}, fmt.Errorf("bad state transition unbondedToBonded, validator: %v\n", validator)
+		return types.Validator{}, fmt.Errorf("bad state transition unbondedToBonded, validator: %v", validator)
 	}
 
 	return k.bondValidator(ctx, validator)
@@ -394,7 +394,7 @@ func (k Keeper) BeginUnbondingValidator(ctx context.Context, validator types.Val
 
 	// sanity check
 	if validator.Status != types.Bonded {
-		return validator, fmt.Errorf("should not already be unbonded or unbonding, validator: %v\n", validator)
+		return validator, fmt.Errorf("should not already be unbonded or unbonding, validator: %v", validator)
 	}
 
 	id, err := k.IncrementUnbondingID(ctx)

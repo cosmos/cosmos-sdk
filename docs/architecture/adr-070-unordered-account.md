@@ -2,7 +2,7 @@
 
 ## Changelog
 
-* Dec 4, 2023: Initial Draft
+* Dec 4, 2023: Initial Draft (@yihuang, @alexanderbez)
 
 ## Status
 

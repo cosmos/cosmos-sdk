@@ -1,15 +1,9 @@
 package store
 
 import (
-	"fmt"
-
-	"github.com/cometbft/cometbft/crypto/merkle"
-	cmtcrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 	ics23 "github.com/cosmos/ics23/go"
 
 	errorsmod "cosmossdk.io/errors"
-	sdkmaps "cosmossdk.io/store/v2/internal/maps"
-	sdkproofs "cosmossdk.io/store/v2/internal/proofs"
 )
 
 // Proof operation types
@@ -18,8 +12,6 @@ const (
 	ProofOpSimpleMerkleCommitment = "ics23:simple"
 	ProofOpSMTCommitment          = "ics23:smt"
 )
-
-var _ merkle.ProofOperator = CommitmentOp{}
 
 // CommitmentOp implements merkle.ProofOperator by wrapping an ics23 CommitmentProof.
 // It also contains a Key field to determine which key the proof is proving.
@@ -60,38 +52,6 @@ func NewSMTCommitmentOp(key []byte, proof *ics23.CommitmentProof) CommitmentOp {
 		Key:   key,
 		Proof: proof,
 	}
-}
-
-// CommitmentOpDecoder takes a ProofOp and attempts to decode it into a CommitmentOp
-// ProofOperator. The proofOp.Data is just a marshaled CommitmentProof. The Key
-// of the CommitmentOp is extracted from the unmarshalled proof.
-func CommitmentOpDecoder(pop cmtcrypto.ProofOp) (merkle.ProofOperator, error) {
-	var spec *ics23.ProofSpec
-	switch pop.Type {
-	case ProofOpIAVLCommitment:
-		spec = ics23.IavlSpec
-
-	case ProofOpSimpleMerkleCommitment:
-		spec = ics23.TendermintSpec
-
-	case ProofOpSMTCommitment:
-		spec = ics23.SmtSpec
-
-	default:
-		return nil, errorsmod.Wrapf(ErrInvalidProof, "unexpected ProofOp.Type; got %s, want supported ics23 subtypes 'ProofOpSimpleMerkleCommitment', 'ProofOpIAVLCommitment', or 'ProofOpSMTCommitment'", pop.Type)
-	}
-
-	proof := &ics23.CommitmentProof{}
-	if err := proof.Unmarshal(pop.Data); err != nil {
-		return nil, err
-	}
-
-	return CommitmentOp{
-		Type:  pop.Type,
-		Key:   pop.Key,
-		Spec:  spec,
-		Proof: proof,
-	}, nil
 }
 
 func (op CommitmentOp) GetKey() []byte {
@@ -135,44 +95,4 @@ func (op CommitmentOp) Run(args [][]byte) ([][]byte, error) {
 	}
 
 	return [][]byte{root}, nil
-}
-
-// ProofOp implements ProofOperator interface and converts a CommitmentOp into a
-// ProofOp format that can later be decoded by CommitmentOpDecoder back into a
-// CommitmentOp for proof verification.
-func (op CommitmentOp) ProofOp() cmtcrypto.ProofOp {
-	bz, err := op.Proof.Marshal()
-	if err != nil {
-		panic(fmt.Errorf("failed to marshal CommitmentProof: %w", err))
-	}
-
-	return cmtcrypto.ProofOp{
-		Type: op.Type,
-		Key:  op.Key,
-		Data: bz,
-	}
-}
-
-// ProofOpFromMap generates a single proof from a map and converts it to a ProofOp.
-func ProofOpFromMap(cmap map[string][]byte, storeName string) (cmtcrypto.ProofOp, error) {
-	_, proofs, _ := sdkmaps.ProofsFromMap(cmap)
-
-	proof := proofs[storeName]
-	if proof == nil {
-		return cmtcrypto.ProofOp{}, fmt.Errorf("ProofOp for %s but not registered store name", storeName)
-	}
-
-	// convert merkle.SimpleProof to CommitmentProof
-	existProof, err := sdkproofs.ConvertExistenceProof(proof, []byte(storeName), cmap[storeName])
-	if err != nil {
-		return cmtcrypto.ProofOp{}, fmt.Errorf("could not convert simple proof to existence proof: %w", err)
-	}
-
-	commitmentProof := &ics23.CommitmentProof{
-		Proof: &ics23.CommitmentProof_Exist{
-			Exist: existProof,
-		},
-	}
-
-	return NewSimpleMerkleCommitmentOp([]byte(storeName), commitmentProof).ProofOp(), nil
 }

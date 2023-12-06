@@ -251,7 +251,7 @@ func TestTickPassedVotingPeriod(t *testing.T) {
 			suite := createTestSuite(t)
 			app := suite.App
 			ctx := app.BaseApp.NewContext(false)
-			depositMultiplier := getDepositMultiplier(tc.proposalType == v1.ProposalType_PROPOSAL_TYPE_EXPEDITED)
+			depositMultiplier := getDepositMultiplier(tc.proposalType)
 			addrs := simtestutil.AddTestAddrs(suite.BankKeeper, suite.StakingKeeper, ctx, 10, valTokens.Mul(math.NewInt(depositMultiplier)))
 
 			SortAddresses(addrs)
@@ -337,7 +337,7 @@ func TestProposalPassedEndblocker(t *testing.T) {
 			suite := createTestSuite(t)
 			app := suite.App
 			ctx := app.BaseApp.NewContext(false)
-			depositMultiplier := getDepositMultiplier(tc.proposalType == v1.ProposalType_PROPOSAL_TYPE_EXPEDITED)
+			depositMultiplier := getDepositMultiplier(tc.proposalType)
 			addrs := simtestutil.AddTestAddrs(suite.BankKeeper, suite.StakingKeeper, ctx, 10, valTokens.Mul(math.NewInt(depositMultiplier)))
 
 			SortAddresses(addrs)
@@ -467,7 +467,7 @@ func TestExpeditedProposal_PassAndConversionToRegular(t *testing.T) {
 			suite := createTestSuite(t)
 			app := suite.App
 			ctx := app.BaseApp.NewContext(false)
-			depositMultiplier := getDepositMultiplier(true)
+			depositMultiplier := getDepositMultiplier(v1.ProposalType_PROPOSAL_TYPE_EXPEDITED)
 			addrs := simtestutil.AddTestAddrs(suite.BankKeeper, suite.StakingKeeper, ctx, 3, valTokens.Mul(math.NewInt(depositMultiplier)))
 			params, err := suite.GovKeeper.Params.Get(ctx)
 			require.NoError(t, err)
@@ -640,12 +640,13 @@ func createValidators(t *testing.T, stakingMsgSvr stakingtypes.MsgServer, ctx sd
 // With expedited proposal's minimum deposit set higher than the default deposit, we must
 // initialize and deposit an amount depositMultiplier times larger
 // than the regular min deposit amount.
-func getDepositMultiplier(expedited bool) int64 {
-	if expedited {
+func getDepositMultiplier(proposalType v1.ProposalType) int64 {
+	switch proposalType {
+	case v1.ProposalType_PROPOSAL_TYPE_EXPEDITED:
 		return v1.DefaultMinExpeditedDepositTokensRatio
+	default:
+		return 1
 	}
-
-	return 1
 }
 
 func checkActiveProposalsQueue(t *testing.T, ctx sdk.Context, k *keeper.Keeper) {

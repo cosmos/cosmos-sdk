@@ -34,6 +34,24 @@ func TestLegacyGRPCQueryTally(t *testing.T) {
 		expErrMsg string
 	}{
 		{
+			"create a proposal and get tally",
+			func() {
+				var err error
+				proposal, err = f.govKeeper.SubmitProposal(ctx, TestProposal, "", "test", "description", addrs[0], v1.ProposalType_PROPOSAL_TYPE_STANDARD)
+				assert.NilError(t, err)
+				assert.Assert(t, proposal.String() != "")
+
+				req = &v1beta1.QueryTallyResultRequest{ProposalId: proposal.Id}
+
+				tallyResult := v1beta1.EmptyTallyResult()
+				expRes = &v1beta1.QueryTallyResultResponse{
+					Tally: tallyResult,
+				}
+			},
+			true,
+			"",
+		},
+		{
 			"request tally after few votes",
 			func() {
 				proposal.Status = v1.StatusVotingPeriod

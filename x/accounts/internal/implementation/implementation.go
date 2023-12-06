@@ -6,7 +6,6 @@ import (
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/address"
-	"google.golang.org/protobuf/proto"
 )
 
 // Dependencies are passed to the constructor of a smart account.
@@ -104,11 +103,11 @@ func NewImplementation(account Account) (Implementation, error) {
 // and non-generic implementation usable by the x/accounts module.
 type Implementation struct {
 	// Init defines the initialisation handler for the smart account.
-	Init func(ctx context.Context, msg proto.Message) (resp proto.Message, err error)
+	Init func(ctx context.Context, msg ProtoMsg) (resp ProtoMsg, err error)
 	// Execute defines the execution handler for the smart account.
-	Execute func(ctx context.Context, msg proto.Message) (resp proto.Message, err error)
+	Execute func(ctx context.Context, msg ProtoMsg) (resp ProtoMsg, err error)
 	// Query defines the query handler for the smart account.
-	Query func(ctx context.Context, msg proto.Message) (resp proto.Message, err error)
+	Query func(ctx context.Context, msg ProtoMsg) (resp ProtoMsg, err error)
 	// CollectionsSchema represents the state schema.
 	CollectionsSchema collections.Schema
 	// InitHandlerSchema represents the init handler schema.
@@ -124,18 +123,6 @@ type Implementation struct {
 type MessageSchema struct {
 	// Name identifies the message name, this must be queriable from some reflection service.
 	Name string
-	// TxDecode decodes into the message from transaction bytes.
-	// CONSENSUS SAFE: can be used in state machine logic.
-	TxDecode func([]byte) (any, error)
-	// TxEncode encodes the message into transaction bytes.
-	// CONSENSUS SAFE: can be used in state machine logic.
-	TxEncode func(any) ([]byte, error)
-	// HumanDecode decodes into the message from human-readable bytes.
-	// CONSENSUS UNSAFE: can be used only from clients, not state machine logic.
-	HumanDecode func([]byte) (any, error)
-	// HumanEncode encodes the message into human-readable bytes.
-	// CONSENSUS UNSAFE: can be used only from clients, not state machine logic.
-	HumanEncode func(any) ([]byte, error)
 }
 
 // HandlerSchema defines the schema of a handler.

@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/runtime/protoiface"
 
 	"cosmossdk.io/collections/colltest"
@@ -45,19 +44,19 @@ func newKeeper(t *testing.T, accounts ...implementation.AccountCreatorFunc) (Kee
 
 var _ QueryRouter = (*mockQuery)(nil)
 
-type mockQuery func(ctx context.Context, req, resp proto.Message) error
+type mockQuery func(ctx context.Context, req, resp implementation.ProtoMsg) error
 
-func (m mockQuery) HybridHandlerByRequestName(_ string) []func(ctx context.Context, req, resp protoiface.MessageV1) error {
+func (m mockQuery) HybridHandlerByRequestName(_ string) []func(ctx context.Context, req, resp implementation.ProtoMsg) error {
 	return []func(ctx context.Context, req, resp protoiface.MessageV1) error{func(ctx context.Context, req, resp protoiface.MessageV1) error {
-		return m(ctx, req.(proto.Message), resp.(proto.Message))
+		return m(ctx, req.(implementation.ProtoMsg), resp.(implementation.ProtoMsg))
 	}}
 }
 
 var _ SignerProvider = (*mockSigner)(nil)
 
-type mockSigner func(msg proto.Message) ([]byte, error)
+type mockSigner func(msg implementation.ProtoMsg) ([]byte, error)
 
-func (m mockSigner) GetSigners(msg proto.Message) ([][]byte, error) {
+func (m mockSigner) GetSigners(msg implementation.ProtoMsg) ([][]byte, error) {
 	s, err := m(msg)
 	if err != nil {
 		return nil, err
@@ -67,11 +66,11 @@ func (m mockSigner) GetSigners(msg proto.Message) ([][]byte, error) {
 
 var _ MsgRouter = (*mockExec)(nil)
 
-type mockExec func(ctx context.Context, msg, msgResp proto.Message) error
+type mockExec func(ctx context.Context, msg, msgResp implementation.ProtoMsg) error
 
 func (m mockExec) HybridHandlerByMsgName(_ string) func(ctx context.Context, req, resp protoiface.MessageV1) error {
 	return func(ctx context.Context, req, resp protoiface.MessageV1) error {
-		return m(ctx, req.(proto.Message), resp.(proto.Message))
+		return m(ctx, req.(implementation.ProtoMsg), resp.(implementation.ProtoMsg))
 	}
 }
 

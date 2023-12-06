@@ -3,15 +3,11 @@ package accounts
 import (
 	"context"
 
+	"cosmossdk.io/core/event"
 	"cosmossdk.io/x/accounts/internal/implementation"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	v1 "cosmossdk.io/x/accounts/v1"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/types/known/anypb"
-
-	"cosmossdk.io/core/event"
-	v1 "cosmossdk.io/x/accounts/v1"
 )
 
 var _ v1.MsgServer = msgServer{}
@@ -31,7 +27,7 @@ func (m msgServer) Init(ctx context.Context, request *v1.MsgInit) (*v1.MsgInitRe
 	}
 
 	// decode message bytes into the concrete boxed message type
-	msg, err := unwrapAny(request.Message)
+	msg, err := implementation.UnpackAnyRaw(request.Message)
 	if err != nil {
 		return nil, err
 	}
@@ -61,7 +57,7 @@ func (m msgServer) Init(ctx context.Context, request *v1.MsgInit) (*v1.MsgInitRe
 		return nil, err
 	}
 
-	anyResp, err := wrapAny(resp.(proto.Message))
+	anyResp, err := implementation.PackAny(resp)
 	if err != nil {
 		return nil, err
 	}
@@ -84,7 +80,7 @@ func (m msgServer) Execute(ctx context.Context, execute *v1.MsgExecute) (*v1.Msg
 	}
 
 	// decode message bytes into the concrete boxed message type
-	req, err := unwrapAny(execute.Message)
+	req, err := implementation.UnpackAnyRaw(execute.Message)
 	if err != nil {
 		return nil, err
 	}
@@ -96,7 +92,7 @@ func (m msgServer) Execute(ctx context.Context, execute *v1.MsgExecute) (*v1.Msg
 	}
 
 	// encode the response
-	respAny, err := wrapAny(resp.(proto.Message))
+	respAny, err := implementation.PackAny(resp.(implementation.ProtoMsg))
 	if err != nil {
 		return nil, err
 	}
@@ -107,22 +103,4 @@ func (m msgServer) Execute(ctx context.Context, execute *v1.MsgExecute) (*v1.Msg
 
 func (m msgServer) ExecuteBundle(ctx context.Context, req *v1.MsgExecuteBundle) (*v1.MsgExecuteBundleResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "not implemented")
-}
-
-func unwrapAny(msg *codectypes.Any) (proto.Message, error) {
-	return anypb.UnmarshalNew(&anypb.Any{
-		TypeUrl: msg.TypeUrl,
-		Value:   msg.Value,
-	}, proto.UnmarshalOptions{})
-}
-
-func wrapAny(msg proto.Message) (*codectypes.Any, error) {
-	anyMsg, err := implementation.PackAny(msg)
-	if err != nil {
-		return nil, err
-	}
-	return &codectypes.Any{
-		TypeUrl: anyMsg.TypeUrl,
-		Value:   anyMsg.Value,
-	}, nil
 }

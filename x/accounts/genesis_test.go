@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 
@@ -15,7 +14,7 @@ import (
 
 func TestGenesis(t *testing.T) {
 	k, ctx := newKeeper(t, implementation.AddAccount("test", NewTestAccount))
-	k.queryRouter = mockQuery(func(ctx context.Context, req, resp proto.Message) error { return nil })
+	k.queryRouter = mockQuery(func(ctx context.Context, req, resp implementation.ProtoMsg) error { return nil })
 	// we init two accounts of the same type
 
 	// we set counter to 10

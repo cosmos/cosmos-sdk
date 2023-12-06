@@ -3,8 +3,6 @@ package implementation
 import (
 	"context"
 
-	"google.golang.org/protobuf/proto"
-
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/x/accounts/internal/prefixstore"
@@ -13,9 +11,9 @@ import (
 var AccountStatePrefix = collections.NewPrefix(255)
 
 type (
-	ModuleExecUntypedFunc = func(ctx context.Context, sender []byte, msg proto.Message) (proto.Message, error)
-	ModuleExecFunc        = func(ctx context.Context, sender []byte, msg, msgResp proto.Message) error
-	ModuleQueryFunc       = func(ctx context.Context, queryReq, queryResp proto.Message) error
+	ModuleExecUntypedFunc = func(ctx context.Context, sender []byte, msg ProtoMsg) (ProtoMsg, error)
+	ModuleExecFunc        = func(ctx context.Context, sender []byte, msg, msgResp ProtoMsg) error
+	ModuleQueryFunc       = func(ctx context.Context, queryReq, queryResp ProtoMsg) error
 )
 
 type contextKey struct{}
@@ -58,7 +56,7 @@ func MakeAccountContext(
 }
 
 // ExecModuleUntyped can be used to execute a message towards a module, when the response type is unknown.
-func ExecModuleUntyped(ctx context.Context, msg proto.Message) (proto.Message, error) {
+func ExecModuleUntyped(ctx context.Context, msg ProtoMsg) (ProtoMsg, error) {
 	// get sender
 	v := ctx.Value(contextKey{}).(contextValue)
 
@@ -71,7 +69,7 @@ func ExecModuleUntyped(ctx context.Context, msg proto.Message) (proto.Message, e
 }
 
 // ExecModule can be used to execute a message towards a module.
-func ExecModule[Resp any, RespProto ProtoMsg[Resp], Req any, ReqProto ProtoMsg[Req]](ctx context.Context, msg ReqProto) (RespProto, error) {
+func ExecModule[Resp any, RespProto ProtoMsgG[Resp], Req any, ReqProto ProtoMsgG[Req]](ctx context.Context, msg ReqProto) (RespProto, error) {
 	// get sender
 	v := ctx.Value(contextKey{}).(contextValue)
 
@@ -86,7 +84,7 @@ func ExecModule[Resp any, RespProto ProtoMsg[Resp], Req any, ReqProto ProtoMsg[R
 }
 
 // QueryModule can be used by an account to execute a module query.
-func QueryModule[Resp any, RespProto ProtoMsg[Resp], Req any, ReqProto ProtoMsg[Req]](ctx context.Context, req ReqProto) (RespProto, error) {
+func QueryModule[Resp any, RespProto ProtoMsgG[Resp], Req any, ReqProto ProtoMsgG[Req]](ctx context.Context, req ReqProto) (RespProto, error) {
 	// we do not need to check the sender in a query because it is not a state transition.
 	// we also unwrap the original context.
 	v := ctx.Value(contextKey{}).(contextValue)

@@ -4,8 +4,8 @@ import (
 	"context"
 	"testing"
 
+	"cosmossdk.io/x/accounts/internal/implementation"
 	"github.com/stretchr/testify/require"
-	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 
@@ -17,7 +17,7 @@ import (
 
 func TestKeeper_Init(t *testing.T) {
 	m, ctx := newKeeper(t, accountstd.AddAccount("test", NewTestAccount))
-	m.queryRouter = mockQuery(func(ctx context.Context, req, resp proto.Message) error {
+	m.queryRouter = mockQuery(func(ctx context.Context, req, resp implementation.ProtoMsg) error {
 		_, ok := req.(*bankv1beta1.QueryBalanceRequest)
 		require.True(t, ok)
 		_, ok = resp.(*bankv1beta1.QueryBalanceResponse)
@@ -52,7 +52,7 @@ func TestKeeper_Init(t *testing.T) {
 
 func TestKeeper_Execute(t *testing.T) {
 	m, ctx := newKeeper(t, accountstd.AddAccount("test", NewTestAccount))
-	m.queryRouter = mockQuery(func(ctx context.Context, req, resp proto.Message) error { return nil })
+	m.queryRouter = mockQuery(func(ctx context.Context, req, resp implementation.ProtoMsg) error { return nil })
 
 	// create account
 	sender := []byte("sender")
@@ -71,7 +71,7 @@ func TestKeeper_Execute(t *testing.T) {
 	})
 
 	t.Run("exec module", func(t *testing.T) {
-		m.msgRouter = mockExec(func(ctx context.Context, msg, msgResp proto.Message) error {
+		m.msgRouter = mockExec(func(ctx context.Context, msg, msgResp implementation.ProtoMsg) error {
 			concrete, ok := msg.(*bankv1beta1.MsgSend)
 			require.True(t, ok)
 			require.Equal(t, concrete.ToAddress, "recipient")
@@ -80,20 +80,20 @@ func TestKeeper_Execute(t *testing.T) {
 			return nil
 		})
 
-		m.signerProvider = mockSigner(func(msg proto.Message) ([]byte, error) {
+		m.signerProvider = mockSigner(func(msg implementation.ProtoMsg) ([]byte, error) {
 			require.Equal(t, msg.(*bankv1beta1.MsgSend).FromAddress, string(accAddr))
 			return accAddr, nil
 		})
 
 		resp, err := m.Execute(ctx, accAddr, sender, &wrapperspb.Int64Value{Value: 1000})
 		require.NoError(t, err)
-		require.True(t, proto.Equal(&emptypb.Empty{}, resp.(proto.Message)))
+		require.True(t, implementation.Equal(&emptypb.Empty{}, resp.(implementation.ProtoMsg)))
 	})
 }
 
 func TestKeeper_Query(t *testing.T) {
 	m, ctx := newKeeper(t, accountstd.AddAccount("test", NewTestAccount))
-	m.queryRouter = mockQuery(func(ctx context.Context, req, resp proto.Message) error {
+	m.queryRouter = mockQuery(func(ctx context.Context, req, resp implementation.ProtoMsg) error {
 		return nil
 	})
 
@@ -116,7 +116,7 @@ func TestKeeper_Query(t *testing.T) {
 	t.Run("query module", func(t *testing.T) {
 		// we inject the module query function, which accepts only a specific type of message
 		// we force the response
-		m.queryRouter = mockQuery(func(ctx context.Context, req, resp proto.Message) error {
+		m.queryRouter = mockQuery(func(ctx context.Context, req, resp implementation.ProtoMsg) error {
 			concrete, ok := req.(*bankv1beta1.QueryBalanceRequest)
 			require.True(t, ok)
 			require.Equal(t, string(accAddr), concrete.Address)
@@ -125,12 +125,12 @@ func TestKeeper_Query(t *testing.T) {
 				Denom:  "atom",
 				Amount: "1000",
 			}}
-			proto.Merge(resp, copyResp)
+			implementation.Merge(resp, copyResp)
 			return nil
 		})
 
 		resp, err := m.Query(ctx, accAddr, wrapperspb.String("atom"))
 		require.NoError(t, err)
-		require.True(t, proto.Equal(wrapperspb.Int64(1000), resp.(proto.Message)))
+		require.True(t, implementation.Equal(wrapperspb.Int64(1000), resp.(implementation.ProtoMsg)))
 	})
 }

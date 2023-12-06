@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	"cosmossdk.io/x/accounts/internal/implementation"
 	v1 "cosmossdk.io/x/accounts/v1"
-	"google.golang.org/protobuf/proto"
 )
 
 var _ v1.QueryServer = queryServer{}
@@ -26,7 +26,7 @@ func (q queryServer) AccountQuery(ctx context.Context, request *v1.AccountQueryR
 	}
 
 	// decode req into boxed concrete type
-	queryReq, err := unwrapAny(request.Request)
+	queryReq, err := implementation.UnpackAnyRaw(request.Request)
 	if err != nil {
 		return nil, err
 	}
@@ -37,7 +37,7 @@ func (q queryServer) AccountQuery(ctx context.Context, request *v1.AccountQueryR
 	}
 
 	// encode response
-	respAny, err := wrapAny(resp.(proto.Message))
+	respAny, err := implementation.PackAny(resp)
 	if err != nil {
 		return nil, err
 	}

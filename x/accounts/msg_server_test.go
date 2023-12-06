@@ -16,7 +16,7 @@ import (
 
 func TestMsgServer(t *testing.T) {
 	k, ctx := newKeeper(t, accountstd.AddAccount("test", NewTestAccount))
-	k.queryRouter = mockQuery(func(ctx context.Context, req, resp proto.Message) error {
+	k.queryRouter = mockQuery(func(ctx context.Context, req, resp implementation.ProtoMsg) error {
 		_, ok := req.(*bankv1beta1.QueryBalanceRequest)
 		require.True(t, ok)
 		proto.Merge(resp, &bankv1beta1.QueryBalanceResponse{})

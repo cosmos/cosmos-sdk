@@ -8,12 +8,6 @@ import (
 	"errors"
 	"fmt"
 
-	"google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/reflect/protoreflect"
-	"google.golang.org/protobuf/reflect/protoregistry"
-	"google.golang.org/protobuf/runtime/protoiface"
-	"google.golang.org/protobuf/types/known/anypb"
-
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/branch"
@@ -21,8 +15,6 @@ import (
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/x/accounts/accountstd"
 	"cosmossdk.io/x/accounts/internal/implementation"
-
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 )
 
 var (
@@ -44,19 +36,19 @@ var (
 // It returns the handler given the message name, if multiple handlers are returned, then
 // it is up to the caller to choose which one to call.
 type QueryRouter interface {
-	HybridHandlerByRequestName(name string) []func(ctx context.Context, req, resp protoiface.MessageV1) error
+	HybridHandlerByRequestName(name string) []func(ctx context.Context, req, resp implementation.ProtoMsg) error
 }
 
 // MsgRouter represents a router which can be used to route messages to the correct module.
 type MsgRouter interface {
-	HybridHandlerByMsgName(msgName string) func(ctx context.Context, req, resp protoiface.MessageV1) error
+	HybridHandlerByMsgName(msgName string) func(ctx context.Context, req, resp implementation.ProtoMsg) error
 	ResponseNameByRequestName(name string) string
 }
 
 // SignerProvider defines an interface used to get the expected sender from a message.
 type SignerProvider interface {
 	// GetSigners returns the signers of the message.
-	GetSigners(msg proto.Message) ([][]byte, error)
+	GetSigners(msg implementation.ProtoMsg) ([][]byte, error)
 }
 
 // BranchExecutor defines an interface used to execute ops in a branch.
@@ -133,8 +125,8 @@ func (k Keeper) Init(
 	ctx context.Context,
 	accountType string,
 	creator []byte,
-	initRequest proto.Message,
-) (proto.Message, []byte, error) {
+	initRequest implementation.ProtoMsg,
+) (implementation.ProtoMsg, []byte, error) {
 	impl, err := k.getImplementation(accountType)
 	if err != nil {
 		return nil, nil, err
@@ -175,8 +167,8 @@ func (k Keeper) Execute(
 	ctx context.Context,
 	accountAddr []byte,
 	sender []byte,
-	execRequest proto.Message,
-) (proto.Message, error) {
+	execRequest implementation.ProtoMsg,
+) (implementation.ProtoMsg, error) {
 	// get account type
 	accountType, err := k.AccountsByType.Get(ctx, accountAddr)
 	if err != nil {
@@ -201,8 +193,8 @@ func (k Keeper) Execute(
 func (k Keeper) Query(
 	ctx context.Context,
 	accountAddr []byte,
-	queryRequest proto.Message,
-) (proto.Message, error) {
+	queryRequest implementation.ProtoMsg,
+) (implementation.ProtoMsg, error) {
 	// get account type
 	accountType, err := k.AccountsByType.Get(ctx, accountAddr)
 	if err != nil {
@@ -259,22 +251,22 @@ func (k Keeper) makeAccountContext(ctx context.Context, accountAddr, sender []by
 		k.storeService,
 		accountAddr,
 		nil,
-		func(ctx context.Context, sender []byte, msg, msgResp proto.Message) error {
+		func(ctx context.Context, sender []byte, msg, msgResp implementation.ProtoMsg) error {
 			return fmt.Errorf("cannot execute in query context")
 		},
-		func(ctx context.Context, sender []byte, msg proto.Message) (proto.Message, error) {
+		func(ctx context.Context, sender []byte, msg implementation.ProtoMsg) (implementation.ProtoMsg, error) {
 			return nil, fmt.Errorf("cannot execute in query context")
 		},
 		k.queryModule,
 	)
 }
 
-// sendAnyMessages it a helper function that executes untyped anypb.Any messages
+// sendAnyMessages it a helper function that executes untyped codectypes.Any messages
 // The messages must all belong to a module.
-func (k Keeper) sendAnyMessages(ctx context.Context, sender []byte, anyMessages []*anypb.Any) ([]*anypb.Any, error) {
-	anyResponses := make([]*anypb.Any, len(anyMessages))
+func (k Keeper) sendAnyMessages(ctx context.Context, sender []byte, anyMessages []*implementation.Any) ([]*implementation.Any, error) {
+	anyResponses := make([]*implementation.Any, len(anyMessages))
 	for i := range anyMessages {
-		msg, err := anyMessages[i].UnmarshalNew()
+		msg, err := implementation.UnpackAnyRaw(anyMessages[i])
 		if err != nil {
 			return nil, err
 		}
@@ -293,19 +285,18 @@ func (k Keeper) sendAnyMessages(ctx context.Context, sender []byte, anyMessages 
 
 // sendModuleMessageUntyped can be used to send a message towards a module.
 // It should be used when the response type is not known by the caller.
-func (k Keeper) sendModuleMessageUntyped(ctx context.Context, sender []byte, msg proto.Message) (proto.Message, error) {
+func (k Keeper) sendModuleMessageUntyped(ctx context.Context, sender []byte, msg implementation.ProtoMsg) (implementation.ProtoMsg, error) {
 	// we need to fetch the response type from the request message type.
 	// this is because the response type is not known.
-	respName := k.msgRouter.ResponseNameByRequestName(string(msg.ProtoReflect().Descriptor().FullName()))
+	respName := k.msgRouter.ResponseNameByRequestName(implementation.MessageName(msg))
 	if respName == "" {
 		return nil, fmt.Errorf("could not find response type for message %T", msg)
 	}
 	// get response type
-	respType, err := protoregistry.GlobalTypes.FindMessageByName(protoreflect.FullName(respName))
+	resp, err := implementation.FindMessageByName(respName)
 	if err != nil {
 		return nil, err
 	}
-	resp := respType.New().Interface()
 	// send the message
 	return resp, k.sendModuleMessage(ctx, sender, msg, resp)
 }
@@ -313,7 +304,7 @@ func (k Keeper) sendModuleMessageUntyped(ctx context.Context, sender []byte, msg
 // sendModuleMessage can be used to send a message towards a module. It expects the
 // response type to be known by the caller. It will also assert the sender has the right
 // is not trying to impersonate another account.
-func (k Keeper) sendModuleMessage(ctx context.Context, sender []byte, msg, msgResp proto.Message) error {
+func (k Keeper) sendModuleMessage(ctx context.Context, sender []byte, msg, msgResp implementation.ProtoMsg) error {
 	// do sender assertions.
 	wantSenders, err := k.signerProvider.GetSigners(msg)
 	if err != nil {
@@ -325,21 +316,19 @@ func (k Keeper) sendModuleMessage(ctx context.Context, sender []byte, msg, msgRe
 	if !bytes.Equal(sender, wantSenders[0]) {
 		return fmt.Errorf("%w: sender does not match expected sender", ErrUnauthorized)
 	}
-	msgV1, msgRespV1 := msg.(protoiface.MessageV1), msgResp.(protoiface.MessageV1)
-	messageName := getMessageName(msgV1)
+	messageName := implementation.MessageName(msg)
 	handler := k.msgRouter.HybridHandlerByMsgName(messageName)
 	if handler == nil {
 		return fmt.Errorf("unknown message: %s", messageName)
 	}
-	return handler(ctx, msgV1, msgRespV1)
+	return handler(ctx, msg, msgResp)
 }
 
 // queryModule is the entrypoint for an account to query a module.
 // It will try to find the query handler for the given query and execute it.
 // If multiple query handlers are found, it will return an error.
-func (k Keeper) queryModule(ctx context.Context, queryReq, queryResp proto.Message) error {
-	queryReqV1, queryRespV1 := queryReq.(protoiface.MessageV1), queryResp.(protoiface.MessageV1)
-	queryName := getMessageName(queryReqV1)
+func (k Keeper) queryModule(ctx context.Context, queryReq, queryResp implementation.ProtoMsg) error {
+	queryName := implementation.MessageName(queryReq)
 	handlers := k.queryRouter.HybridHandlerByRequestName(queryName)
 	if len(handlers) == 0 {
 		return fmt.Errorf("unknown query: %s", queryName)
@@ -347,9 +336,5 @@ func (k Keeper) queryModule(ctx context.Context, queryReq, queryResp proto.Messa
 	if len(handlers) > 1 {
 		return fmt.Errorf("multiple handlers for query: %s", queryName)
 	}
-	return handlers[0](ctx, queryReqV1, queryRespV1)
-}
-
-func getMessageName(msg protoiface.MessageV1) string {
-	return codectypes.MsgTypeURL(msg)[1:]
+	return handlers[0](ctx, queryReq, queryResp)
 }

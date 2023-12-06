@@ -110,8 +110,10 @@ func New(cfg Config) (_ *Metrics, rerr error) {
 	metricsConf.EnableHostname = cfg.EnableHostname
 	metricsConf.EnableHostnameLabel = cfg.EnableHostnameLabel
 
-	var sink metrics.MetricSink
-	var err error
+	var (
+		sink metrics.MetricSink
+		err error
+	)
 	switch cfg.MetricsSink {
 	case MetricSinkInMem:
 		memSink := metrics.NewInmemSink(10*time.Second, time.Minute)

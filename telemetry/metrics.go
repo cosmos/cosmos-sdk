@@ -25,6 +25,11 @@ const (
 	FormatText       = "text"
 )
 
+// DisplayableSink is an interface that defines a method for displaying metrics.
+type DisplayableSink interface {
+	DisplayMetrics(resp http.ResponseWriter, req *http.Request) (interface{}, error)
+}
+
 // Config defines the configuration options for application telemetry.
 type Config struct {
 	// Prefixed with keys to separate services
@@ -73,7 +78,7 @@ type Config struct {
 // by the operator. In addition to the sinks, when a process gets a SIGUSR1, a
 // dump of formatted recent metrics will be sent to STDERR.
 type Metrics struct {
-	memSink           metrics.MetricSink
+	sink              metrics.MetricSink
 	prometheusEnabled bool
 }
 
@@ -127,7 +132,7 @@ func New(cfg Config) (_ *Metrics, rerr error) {
 		}
 	}
 
-	m := &Metrics{memSink: sink}
+	m := &Metrics{sink: sink}
 	fanout := metrics.FanoutSink{sink}
 
 	if cfg.PrometheusRetentionTime > 0 {
@@ -149,10 +154,6 @@ func New(cfg Config) (_ *Metrics, rerr error) {
 	}
 
 	return m, nil
-}
-
-type DisplayableMetrics interface {
-	DisplayMetrics(resp http.ResponseWriter, req *http.Request) (interface{}, error)
 }
 
 // Gather collects all registered metrics and returns a GatherResponse where the
@@ -198,7 +199,7 @@ func (m *Metrics) gatherPrometheus() (GatherResponse, error) {
 }
 
 func (m *Metrics) gatherGeneric() (GatherResponse, error) {
-	gm, ok := m.memSink.(DisplayableMetrics)
+	gm, ok := m.sink.(DisplayableSink)
 	if !ok {
 		return GatherResponse{}, fmt.Errorf("non in-memory metrics sink does not support generic format")
 	}

@@ -24,6 +24,7 @@ func generateKeyPair() (pubkey, privkey []byte) {
 	if err != nil {
 		panic(err)
 	}
+
 	pubkey = elliptic.Marshal(S256(), key.X, key.Y) //nolint:staticcheck // crypto will be refactored soon.
 	privkey = make([]byte, 32)
 	blob := key.D.Bytes()

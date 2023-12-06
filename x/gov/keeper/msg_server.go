@@ -76,14 +76,6 @@ func (k msgServer) SubmitProposal(goCtx context.Context, msg *v1.MsgSubmitPropos
 		return nil, fmt.Errorf("failed to get governance parameters: %w", err)
 	}
 
-	if err := k.validateInitialDeposit(ctx, params, initialDeposit, msg.Expedited); err != nil {
-		return nil, err
-	}
-
-	if err := k.validateDepositDenom(ctx, params, initialDeposit); err != nil {
-		return nil, err
-	}
-
 	// additional checks per proposal types
 	proposalType := msg.ProposalType
 	switch proposalType {
@@ -97,6 +89,14 @@ func (k msgServer) SubmitProposal(goCtx context.Context, msg *v1.MsgSubmitPropos
 		if msg.Expedited { // checking for backward compatibility
 			proposalType = v1.ProposalType_PROPOSAL_TYPE_EXPEDITED
 		}
+	}
+
+	if err := k.validateInitialDeposit(ctx, params, initialDeposit, proposalType); err != nil {
+		return nil, err
+	}
+
+	if err := k.validateDepositDenom(ctx, params, initialDeposit); err != nil {
+		return nil, err
 	}
 
 	proposal, err := k.Keeper.SubmitProposal(ctx, proposalMsgs, msg.Metadata, msg.Title, msg.Summary, proposer, msg.ProposalType)

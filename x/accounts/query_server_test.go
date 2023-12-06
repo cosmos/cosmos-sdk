@@ -6,7 +6,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/runtime/protoiface"
 	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/wrapperspb"
@@ -17,9 +16,9 @@ import (
 
 func TestQueryServer(t *testing.T) {
 	k, ctx := newKeeper(t, accountstd.AddAccount("test", NewTestAccount))
-	k.queryModuleFunc = func(ctx context.Context, req, resp protoiface.MessageV1) error {
+	k.queryRouter = mockQuery(func(ctx context.Context, req, resp proto.Message) error {
 		return nil
-	}
+	})
 
 	ms := NewMsgServer(k)
 	qs := NewQueryServer(k)

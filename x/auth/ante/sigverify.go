@@ -393,15 +393,19 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 	return next(ctx, tx, simulate)
 }
 
-// IncrementSequenceDecorator handles incrementing sequences of all signers.
+// IncrementSequenceDecorator handles incrementing sequences of all signers, which
+// should happen after signature verification, i.e. after SigVerificationDecorator.
+//
 // Use the IncrementSequenceDecorator decorator to prevent replay attacks. Note,
 // there is need to execute IncrementSequenceDecorator on RecheckTx since
 // BaseApp.Commit() will set the check state based on the latest header.
 //
 // NOTE: Since CheckTx and DeliverTx state are managed separately, subsequent and
-// sequential txs orginating from the same account cannot be handled correctly in
+// sequential txs originating from the same account cannot be handled correctly in
 // a reliable way unless sequence numbers are managed and tracked manually by a
-// client. It is recommended to instead use multiple messages in a tx.
+// client. In such cases, where unordered or parallel transactions are desired,
+// it is recommended to to set unordered=true with a reasonable timeout_height
+// value.
 type IncrementSequenceDecorator struct {
 	ak AccountKeeper
 }
@@ -413,6 +417,14 @@ func NewIncrementSequenceDecorator(ak AccountKeeper) IncrementSequenceDecorator 
 }
 
 func (isd IncrementSequenceDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
+	// Bypass incrementing sequence for transactions with unordered set to true.
+	// The actual parameters of the un-ordered tx will be checked in a separate
+	// decorator.
+	unorderedTx, ok := tx.(sdk.TxWithUnordered)
+	if ok && unorderedTx.GetUnordered() {
+		return next(ctx, tx, simulate)
+	}
+
 	sigTx, ok := tx.(authsigning.SigVerifiableTx)
 	if !ok {
 		return ctx, errorsmod.Wrap(sdkerrors.ErrTxDecode, "invalid transaction type")
@@ -427,7 +439,7 @@ func (isd IncrementSequenceDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, sim
 	for _, signer := range signers {
 		acc := isd.ak.GetAccount(ctx, signer)
 		if err := acc.SetSequence(acc.GetSequence() + 1); err != nil {
-			panic(err)
+			panic(fmt.Errorf("failed to set account sequence: %w", err))
 		}
 
 		pubKey := acc.GetPubKey()
@@ -474,8 +486,7 @@ func (vscd ValidateSigCountDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, sim
 	for _, pk := range pubKeys {
 		sigCount += CountSubKeys(pk)
 		if uint64(sigCount) > params.TxSigLimit {
-			return ctx, errorsmod.Wrapf(sdkerrors.ErrTooManySignatures,
-				"signatures: %d, limit: %d", sigCount, params.TxSigLimit)
+			return ctx, errorsmod.Wrapf(sdkerrors.ErrTooManySignatures, "signatures: %d, limit: %d", sigCount, params.TxSigLimit)
 		}
 	}
 
@@ -485,10 +496,9 @@ func (vscd ValidateSigCountDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, sim
 // DefaultSigVerificationGasConsumer is the default implementation of SignatureVerificationGasConsumer. It consumes gas
 // for signature verification based upon the public key type. The cost is fetched from the given params and is matched
 // by the concrete type.
-func DefaultSigVerificationGasConsumer(
-	meter storetypes.GasMeter, sig signing.SignatureV2, params types.Params,
-) error {
+func DefaultSigVerificationGasConsumer(meter storetypes.GasMeter, sig signing.SignatureV2, params types.Params) error {
 	pubkey := sig.PubKey
+
 	switch pubkey := pubkey.(type) {
 	case *ed25519.PubKey:
 		meter.ConsumeGas(params.SigVerifyCostED25519, "ante verify: ed25519")
@@ -507,10 +517,12 @@ func DefaultSigVerificationGasConsumer(
 		if !ok {
 			return fmt.Errorf("expected %T, got, %T", &signing.MultiSignatureData{}, sig.Data)
 		}
+
 		err := ConsumeMultisignatureVerificationGas(meter, multisignature, pubkey, params, sig.Sequence)
 		if err != nil {
 			return err
 		}
+
 		return nil
 
 	default:
@@ -535,10 +547,12 @@ func ConsumeMultisignatureVerificationGas(
 			Data:     sig.Signatures[sigIndex],
 			Sequence: accSeq,
 		}
+
 		err := DefaultSigVerificationGasConsumer(meter, sigV2, params)
 		if err != nil {
 			return err
 		}
+
 		sigIndex++
 	}
 
@@ -562,6 +576,7 @@ func CountSubKeys(pub cryptotypes.PubKey) int {
 	if pub == nil {
 		return 0
 	}
+
 	v, ok := pub.(*kmultisig.LegacyAminoPubKey)
 	if !ok {
 		return 1
@@ -587,6 +602,7 @@ func signatureDataToBz(data signing.SignatureData) ([][]byte, error) {
 	switch data := data.(type) {
 	case *signing.SingleSignatureData:
 		return [][]byte{data.Signature}, nil
+
 	case *signing.MultiSignatureData:
 		sigs := [][]byte{}
 		var err error
@@ -596,19 +612,22 @@ func signatureDataToBz(data signing.SignatureData) ([][]byte, error) {
 			if err != nil {
 				return nil, err
 			}
+
 			sigs = append(sigs, nestedSigs...)
 		}
 
 		multiSignature := cryptotypes.MultiSignature{
 			Signatures: sigs,
 		}
+
 		aggregatedSig, err := multiSignature.Marshal()
 		if err != nil {
 			return nil, err
 		}
-		sigs = append(sigs, aggregatedSig)
 
+		sigs = append(sigs, aggregatedSig)
 		return sigs, nil
+
 	default:
 		return nil, sdkerrors.ErrInvalidType.Wrapf("unexpected signature data type %T", data)
 	}

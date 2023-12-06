@@ -439,7 +439,7 @@ func (isd IncrementSequenceDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, sim
 	for _, signer := range signers {
 		acc := isd.ak.GetAccount(ctx, signer)
 		if err := acc.SetSequence(acc.GetSequence() + 1); err != nil {
-			panic(fmt.Errorf("failed to set account sequence: %w", err))
+			panic(err)
 		}
 
 		pubKey := acc.GetPubKey()

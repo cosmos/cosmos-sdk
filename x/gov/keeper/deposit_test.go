@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/collections"
@@ -53,7 +54,10 @@ func TestDeposits(t *testing.T) {
 			TestAddrs := simtestutil.AddTestAddrsIncremental(bankKeeper, stakingKeeper, ctx, 2, sdkmath.NewInt(10000000*depositMultiplier))
 			authKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
 
-			tp := TestProposal
+			var tp []proto.Message
+			if TestProposal != nil {
+				tp = TestProposal
+			}
 			proposal, err := govKeeper.SubmitProposal(ctx, tp, "", "title", "summary", TestAddrs[0], tc.expedited)
 			require.NoError(t, err)
 			proposalID := proposal.Id
@@ -225,7 +229,10 @@ func TestDepositAmount(t *testing.T) {
 			err := govKeeper.Params.Set(ctx, params)
 			require.NoError(t, err)
 
-			tp := TestProposal
+			var tp []proto.Message
+			if TestProposal != nil {
+				tp = TestProposal
+			}
 			proposal, err := govKeeper.SubmitProposal(ctx, tp, "", "title", "summary", testAddrs[0], false)
 			require.NoError(t, err)
 			proposalID := proposal.Id
@@ -415,7 +422,10 @@ func TestChargeDeposit(t *testing.T) {
 				err := govKeeper.Params.Set(ctx, params)
 				require.NoError(t, err)
 
-				tp := TestProposal
+				var tp []proto.Message
+				if TestProposal != nil {
+					tp = TestProposal
+				}
 				proposal, err := govKeeper.SubmitProposal(ctx, tp, "", "title", "summary", TestAddrs[0], false)
 				require.NoError(t, err)
 				proposalID := proposal.Id

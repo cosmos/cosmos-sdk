@@ -31,10 +31,10 @@ import (
 )
 
 var (
-	_, _, addr   = testdata.KeyTestPubAddr()
-	govAcct      = authtypes.NewModuleAddress(types.ModuleName)
-	poolAcct     = authtypes.NewModuleAddress(pooltypes.ModuleName)
-	TestProposal = getTestProposal()
+	_, _, addr      = testdata.KeyTestPubAddr()
+	govAcct         = authtypes.NewModuleAddress(types.ModuleName)
+	poolAcct        = authtypes.NewModuleAddress(pooltypes.ModuleName)
+	TestProposal, _ = getTestProposal()
 )
 
 // mintModuleName duplicates the mint module's name to avoid a cyclic dependency with x/mint.
@@ -43,16 +43,16 @@ var (
 const mintModuleName = "mint"
 
 // getTestProposal creates and returns a test proposal message.
-func getTestProposal() []sdk.Msg {
+func getTestProposal() ([]sdk.Msg, error) {
 	legacyProposalMsg, err := v1.NewLegacyContent(v1beta1.NewTextProposal("Title", "description"), authtypes.NewModuleAddress(types.ModuleName).String())
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	return []sdk.Msg{
 		banktypes.NewMsgSend(govAcct, addr, sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(1000)))),
 		legacyProposalMsg,
-	}
+	}, nil
 }
 
 type mocks struct {

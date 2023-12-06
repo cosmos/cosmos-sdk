@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/collections"
@@ -29,7 +30,10 @@ func (suite *KeeperTestSuite) TestGetSetProposal() {
 	}
 
 	for _, tc := range testCases {
-		tp := TestProposal
+		var tp []proto.Message
+		if TestProposal != nil {
+			tp = TestProposal
+		}
 		proposal, err := suite.govKeeper.SubmitProposal(suite.ctx, tp, "", "test", "summary", suite.addrs[0], tc.expedited)
 		suite.Require().NoError(err)
 		proposalID := proposal.Id
@@ -57,7 +61,10 @@ func (suite *KeeperTestSuite) TestDeleteProposal() {
 		// delete non-existing proposal
 		suite.Require().ErrorIs(suite.govKeeper.DeleteProposal(suite.ctx, 10), collections.ErrNotFound)
 
-		tp := TestProposal
+		var tp []proto.Message
+		if TestProposal != nil {
+			tp = TestProposal
+		}
 		proposal, err := suite.govKeeper.SubmitProposal(suite.ctx, tp, "", "test", "summary", suite.addrs[0], tc.expedited)
 		suite.Require().NoError(err)
 		proposalID := proposal.Id
@@ -81,7 +88,10 @@ func (suite *KeeperTestSuite) TestActivateVotingPeriod() {
 	}
 
 	for _, tc := range testCases {
-		tp := TestProposal
+		var tp []proto.Message
+		if TestProposal != nil {
+			tp = TestProposal
+		}
 		proposal, err := suite.govKeeper.SubmitProposal(suite.ctx, tp, "", "test", "summary", suite.addrs[0], tc.expedited)
 		suite.Require().NoError(err)
 
@@ -112,7 +122,10 @@ func (suite *KeeperTestSuite) TestDeleteProposalInVotingPeriod() {
 
 	for _, tc := range testCases {
 		suite.reset()
-		tp := TestProposal
+		var tp []proto.Message
+		if TestProposal != nil {
+			tp = TestProposal
+		}
 		proposal, err := suite.govKeeper.SubmitProposal(suite.ctx, tp, "", "test", "summary", suite.addrs[0], tc.expedited)
 		suite.Require().NoError(err)
 		suite.Require().Nil(proposal.VotingStartTime)

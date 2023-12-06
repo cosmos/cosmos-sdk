@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"testing"
 
+	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
@@ -88,7 +89,10 @@ func TestIncrementProposalNumber(t *testing.T) {
 	addrBz, err := ac.StringToBytes(address1)
 	require.NoError(t, err)
 
-	tp := TestProposal
+	var tp []proto.Message
+	if TestProposal != nil {
+		tp = TestProposal
+	}
 	_, err = govKeeper.SubmitProposal(ctx, tp, "", "test", "summary", addrBz, false)
 	require.NoError(t, err)
 	_, err = govKeeper.SubmitProposal(ctx, tp, "", "test", "summary", addrBz, false)
@@ -115,7 +119,10 @@ func TestProposalQueues(t *testing.T) {
 	authKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
 
 	// create test proposals
-	tp := TestProposal
+	var tp []proto.Message
+	if TestProposal != nil {
+		tp = TestProposal
+	}
 	proposal, err := govKeeper.SubmitProposal(ctx, tp, "", "test", "summary", addrBz, false)
 	require.NoError(t, err)
 

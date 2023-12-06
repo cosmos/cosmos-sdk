@@ -4,6 +4,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/cosmos/gogoproto/proto"
+
 	sdkmath "cosmossdk.io/math"
 	banktypes "cosmossdk.io/x/bank/types"
 	v1 "cosmossdk.io/x/gov/types/v1"
@@ -1781,7 +1783,12 @@ func (suite *KeeperTestSuite) TestSubmitProposal_InitialDeposit() {
 			err := govKeeper.Params.Set(ctx, params)
 			suite.Require().NoError(err)
 
-			msg, err := v1.NewMsgSubmitProposal(TestProposal, tc.initialDeposit, address.String(), "test", "Proposal", "description of proposal", false)
+			var tp []proto.Message
+			if TestProposal != nil {
+				tp = TestProposal
+			}
+
+			msg, err := v1.NewMsgSubmitProposal(tp, tc.initialDeposit, address.String(), "test", "Proposal", "description of proposal", false)
 			suite.Require().NoError(err)
 
 			// System under test

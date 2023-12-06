@@ -774,10 +774,13 @@ func (app *BaseApp) EndBlock(req *abci.RequestFinalizeBlock) (res sdk.EndBlock, 
 		return res, err
 	}
 
+	return res, err
+}
+
+// expose method to manually write finalizeBlockState to store for testing
+func (app *BaseApp) WriteFinalizeBlockState() {
 	// write to preserve finalizeBlockState in store
 	app.finalizeBlockState.ms.Write()
-
-	return res, err
 }
 
 // internalFinalizeBlock executes the block, called by the Optimistic

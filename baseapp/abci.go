@@ -774,6 +774,9 @@ func (app *BaseApp) EndBlock(req *abci.RequestFinalizeBlock) (res sdk.EndBlock, 
 		return res, err
 	}
 
+	// write to preserve finalizeBlockState in store
+	app.finalizeBlockState.ms.Write()
+
 	return res, err
 }
 

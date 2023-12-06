@@ -13,7 +13,7 @@ import (
 	"cosmossdk.io/store/v2/snapshots/types"
 )
 
-var opts = types.NewSnapshotOptions(1500, 2)
+var opts = snapshots.NewSnapshotOptions(1500, 2)
 
 func TestManager_List(t *testing.T) {
 	store := setupStore(t)

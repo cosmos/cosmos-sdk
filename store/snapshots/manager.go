@@ -34,7 +34,7 @@ type Manager struct {
 	extensions map[string]ExtensionSnapshotter
 	// store is the snapshot store where all completed snapshots are persisted.
 	store *Store
-	opts  types.SnapshotOptions
+	opts  SnapshotOptions
 	// commitSnapshotter is the snapshotter for the commitment state.
 	commitSnapshotter CommitSnapshotter
 	// storageSnapshotter is the snapshotter for the storage state.
@@ -75,7 +75,7 @@ const (
 var ErrOptsZeroSnapshotInterval = errors.New("snaphot-interval must not be 0")
 
 // NewManager creates a new manager.
-func NewManager(store *Store, opts types.SnapshotOptions, commitSnapshotter CommitSnapshotter, storageSnapshotter StorageSnapshotter, extensions map[string]ExtensionSnapshotter, logger log.Logger) *Manager {
+func NewManager(store *Store, opts SnapshotOptions, commitSnapshotter CommitSnapshotter, storageSnapshotter StorageSnapshotter, extensions map[string]ExtensionSnapshotter, logger log.Logger) *Manager {
 	if extensions == nil {
 		extensions = map[string]ExtensionSnapshotter{}
 	}
@@ -85,7 +85,7 @@ func NewManager(store *Store, opts types.SnapshotOptions, commitSnapshotter Comm
 		commitSnapshotter:  commitSnapshotter,
 		storageSnapshotter: storageSnapshotter,
 		extensions:         extensions,
-		logger:             logger,
+		logger:             logger.With("module", "snapshot_manager"),
 	}
 }
 

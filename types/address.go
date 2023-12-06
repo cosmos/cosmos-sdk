@@ -13,13 +13,9 @@ import (
 	"github.com/hashicorp/golang-lru/simplelru"
 	"sigs.k8s.io/yaml"
 
-	errorsmod "cosmossdk.io/errors"
-
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/internal/conv"
-	"github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 const (
@@ -164,19 +160,7 @@ func VerifyAddressFormat(bz []byte, verifier func([]byte) error) error {
 	if verifier != nil {
 		return verifier(bz)
 	}
-	return VerifyAddressBech32(bz)
-}
-
-func VerifyAddressBech32(bz []byte) error {
-	if len(bz) == 0 {
-		return errorsmod.Wrap(sdkerrors.ErrUnknownAddress, "addresses cannot be empty")
-	}
-
-	if len(bz) > address.MaxAddrLen {
-		return errorsmod.Wrapf(sdkerrors.ErrUnknownAddress, "address max length is %d, got %d", address.MaxAddrLen, len(bz))
-	}
-
-	return nil
+	return bech32.VerifyAddressBech32(bz)
 }
 
 // MustAccAddressFromBech32 calls AccAddressFromBech32 and panics on error.
@@ -202,7 +186,7 @@ func AccAddressFromBech32(address string) (addr AccAddress, err error) {
 		return nil, err
 	}
 
-	err = VerifyAddressBech32(bz)
+	err = bech32.VerifyAddressBech32(bz)
 	if err != nil {
 		return nil, err
 	}
@@ -354,7 +338,7 @@ func ValAddressFromBech32(address string) (addr ValAddress, err error) {
 		return nil, err
 	}
 
-	err = VerifyAddressBech32(bz)
+	err = bech32.VerifyAddressBech32(bz)
 	if err != nil {
 		return nil, err
 	}
@@ -509,7 +493,7 @@ func ConsAddressFromBech32(address string) (addr ConsAddress, err error) {
 		return nil, err
 	}
 
-	err = VerifyAddressBech32(bz)
+	err = bech32.VerifyAddressBech32(bz)
 	if err != nil {
 		return nil, err
 	}

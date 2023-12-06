@@ -8471,14 +8471,22 @@ type TxBody struct {
 	// but should be called `note` instead (see
 	// https://github.com/cosmos/cosmos-sdk/issues/9122).
 	Memo string `protobuf:"bytes,2,opt,name=memo,proto3" json:"memo,omitempty"`
-	// timeout is the block height after which this transaction will not
-	// be processed by the chain
+	// timeout_height is the block height after which this transaction will not
+	// be processed by the chain.
+	//
+	// Note, if unordered=true this value MUST be set
+	// and will act as a short-lived TTL in which the transaction is deemed valid
+	// and kept in memory to prevent duplicates.
 	TimeoutHeight uint64 `protobuf:"varint,3,opt,name=timeout_height,json=timeoutHeight,proto3" json:"timeout_height,omitempty"`
 	// unordered, when set to true, indicates that the transaction signer(s)
 	// intend for the transaction to be evaluated and executed in an un-ordered
 	// fashion. Specifically, the account's nonce will NOT be checked or
 	// incremented, which allows for fire-and-forget as well as concurrent
 	// transaction execution.
+	//
+	// Note, when set to true, the existing 'timeout_height' value must be set and
+	// will be used to correspond to a height in which the transaction is deemed
+	// valid.
 	Unordered bool `protobuf:"varint,4,opt,name=unordered,proto3" json:"unordered,omitempty"`
 	// extension_options are arbitrary options that can be added by chains
 	// when the default options are not sufficient. If any of these are present

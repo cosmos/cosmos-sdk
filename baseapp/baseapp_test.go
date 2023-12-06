@@ -594,6 +594,53 @@ func TestBaseAppAnteHandler(t *testing.T) {
 	require.NoError(t, err)
 }
 
+func TestBaseAppPostHandler(t *testing.T) {
+	postHandlerRun := false
+	anteOpt := func(bapp *baseapp.BaseApp) {
+		bapp.SetPostHandler(func(ctx sdk.Context, tx sdk.Tx, simulate, success bool) (newCtx sdk.Context, err error) {
+			postHandlerRun = true
+			return ctx, nil
+		})
+	}
+
+	suite := NewBaseAppSuite(t, anteOpt)
+
+	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), CounterServerImpl{t, capKey1, []byte("foo")})
+
+	_, err := suite.baseApp.InitChain(&abci.RequestInitChain{
+		ConsensusParams: &cmtproto.ConsensusParams{},
+	})
+	require.NoError(t, err)
+
+	// execute a tx that will fail ante handler execution
+	//
+	// NOTE: State should not be mutated here. This will be implicitly checked by
+	// the next txs ante handler execution (anteHandlerTxTest).
+	tx := newTxCounter(t, suite.txConfig, 0, 0)
+	txBytes, err := suite.txConfig.TxEncoder()(tx)
+	require.NoError(t, err)
+
+	res, err := suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1, Txs: [][]byte{txBytes}})
+	require.NoError(t, err)
+	require.Empty(t, res.Events)
+	require.True(t, res.TxResults[0].IsOK(), fmt.Sprintf("%v", res))
+
+	// PostHandler runs on successful message execution
+	require.True(t, postHandlerRun)
+
+	// It should also run on failed message execution
+	postHandlerRun = false
+	tx = setFailOnHandler(t, suite.txConfig, tx, true)
+	txBytes, err = suite.txConfig.TxEncoder()(tx)
+	require.NoError(t, err)
+	res, err = suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1, Txs: [][]byte{txBytes}})
+	require.NoError(t, err)
+	require.Empty(t, res.Events)
+	require.False(t, res.TxResults[0].IsOK(), fmt.Sprintf("%v", res))
+
+	require.True(t, postHandlerRun)
+}
+
 // Test and ensure that invalid block heights always cause errors.
 // See issues:
 // - https://github.com/cosmos/cosmos-sdk/issues/11220

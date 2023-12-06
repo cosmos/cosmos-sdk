@@ -108,6 +108,17 @@ prometheus-retention-time = 0
 # [["chain_id", "cosmoshub-1"]]
 global-labels = []
 
+# MetricsSink defines the type of metrics sink to use.
+metrics-sink = "mem"
+
+# StatsdAddr defines the address of a statsd server to send metrics to.
+# Only utilized if MetricsSink is set to "statsd" or "dogstatsd".
+statsd-addr = ""
+
+# DatadogHostname defines the hostname to use when emitting metrics to
+# Datadog. Only utilized if MetricsSink is set to "dogstatsd".
+datadog-hostname = ""
+
 ###############################################################################
 ###                           API Configuration                             ###
 ###############################################################################

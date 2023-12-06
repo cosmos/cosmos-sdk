@@ -6,7 +6,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/runtime/protoiface"
 	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/wrapperspb"
@@ -18,12 +17,12 @@ import (
 
 func TestMsgServer(t *testing.T) {
 	k, ctx := newKeeper(t, accountstd.AddAccount("test", NewTestAccount))
-	k.queryModuleFunc = func(ctx context.Context, req, resp protoiface.MessageV1) error {
+	k.queryRouter = mockQuery(func(ctx context.Context, req, resp proto.Message) error {
 		_, ok := req.(*bankv1beta1.QueryBalanceRequest)
 		require.True(t, ok)
-		proto.Merge(resp.(proto.Message), &bankv1beta1.QueryBalanceResponse{})
+		proto.Merge(resp, &bankv1beta1.QueryBalanceResponse{})
 		return nil
-	}
+	})
 
 	s := NewMsgServer(k)
 

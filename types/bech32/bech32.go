@@ -1,12 +1,14 @@
 package bech32
 
 import (
-	errorsmod "cosmossdk.io/errors"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/types/address"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/cosmos/btcutil/bech32"
+
+	errorsmod "cosmossdk.io/errors"
+
+	"github.com/cosmos/cosmos-sdk/types/address"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // ConvertAndEncode converts from a base256 encoded byte string to base32 encoded byte string and then to bech32.

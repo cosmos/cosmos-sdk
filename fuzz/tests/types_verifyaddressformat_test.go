@@ -3,8 +3,9 @@
 package tests
 
 import (
-	"github.com/cosmos/cosmos-sdk/types/bech32"
 	"testing"
+
+	"github.com/cosmos/cosmos-sdk/types/bech32"
 )
 
 func FuzzTypesVerifyAddressBech32(f *testing.F) {

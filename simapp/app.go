@@ -22,6 +22,7 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/accounts"
 	"cosmossdk.io/x/accounts/accountstd"
+	"cosmossdk.io/x/accounts/testing/account_abstraction"
 	"cosmossdk.io/x/accounts/testing/counter"
 	"cosmossdk.io/x/auth"
 	"cosmossdk.io/x/auth/ante"
@@ -284,11 +285,14 @@ func NewSimApp(
 	accountsKeeper, err := accounts.NewKeeper(
 		runtime.NewKVStoreService(keys[accounts.StoreKey]),
 		runtime.EventService{},
+		runtime.BranchService{},
 		app.AuthKeeper.AddressCodec(),
 		appCodec.InterfaceRegistry().SigningContext(),
 		app.MsgServiceRouter(),
 		app.GRPCQueryRouter(),
 		accountstd.AddAccount("counter", counter.NewAccount),
+		accountstd.AddAccount("aa_minimal", account_abstraction.NewMinimalAbstractedAccount),
+		accountstd.AddAccount("aa_full", account_abstraction.NewFullAbstractedAccount),
 	)
 	if err != nil {
 		panic(err)

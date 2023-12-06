@@ -121,5 +121,5 @@ func (m msgServer) Execute(ctx context.Context, execute *v1.MsgExecute) (*v1.Msg
 }
 
 func (m msgServer) ExecuteBundle(ctx context.Context, req *v1.MsgExecuteBundle) (*v1.MsgExecuteBundleResponse, error) {
-	return nil, status.New(codes.Unimplemented, "not implemented").Err()
+	return nil, status.Error(codes.Unimplemented, "not implemented")
 }

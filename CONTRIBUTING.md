@@ -8,7 +8,7 @@
     * [Pull Request Templates](#pull-request-templates)
     * [Requesting Reviews](#requesting-reviews)
     * [Updating Documentation](#updating-documentation)
-    * [RFC & ADR](#RFC & ADR)
+    * [RFC & ADR](#rfc--adr)
 * [Dependencies](#dependencies)
     * [`go.work`](#gowork)
     * [`go.mod`](#gomod)

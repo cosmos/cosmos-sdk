@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/runtime/protoiface"
 )
 
@@ -72,6 +73,9 @@ func RegisterQueryHandler[
 
 func NewProtoMessageSchema[T any, PT ProtoMsgG[T]]() *MessageSchema {
 	msg := PT(new(T))
+	if _, ok := (interface{}(msg)).(proto.Message); ok {
+		panic("protov2 messages are not supported")
+	}
 	return &MessageSchema{
 		Name: MessageName(msg),
 	}

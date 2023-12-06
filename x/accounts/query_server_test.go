@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	"cosmossdk.io/x/accounts/internal/implementation"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/wrapperspb"
@@ -22,7 +23,7 @@ func TestQueryServer(t *testing.T) {
 	qs := NewQueryServer(k)
 
 	// create
-	initMsg, err := wrapAny(&emptypb.Empty{})
+	initMsg, err := implementation.PackAny(&emptypb.Empty{})
 	require.NoError(t, err)
 
 	initResp, err := ms.Init(ctx, &v1.MsgInit{
@@ -34,7 +35,7 @@ func TestQueryServer(t *testing.T) {
 
 	// query
 	req := &wrapperspb.UInt64Value{Value: 10}
-	anypbReq, err := wrapAny(req)
+	anypbReq, err := implementation.PackAny(req)
 	require.NoError(t, err)
 
 	queryResp, err := qs.AccountQuery(ctx, &v1.AccountQueryRequest{
@@ -43,7 +44,7 @@ func TestQueryServer(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	resp, err := unwrapAny(queryResp.Response)
+	resp, err := implementation.UnpackAnyRaw(queryResp.Response)
 	require.NoError(t, err)
 
 	require.Equal(t, "10", resp.(*wrapperspb.StringValue).Value)

@@ -4,8 +4,8 @@ import (
 	"context"
 	"testing"
 
+	"cosmossdk.io/x/accounts/internal/implementation"
 	"github.com/stretchr/testify/require"
-	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 
@@ -19,14 +19,14 @@ func TestMsgServer(t *testing.T) {
 	k.queryRouter = mockQuery(func(ctx context.Context, req, resp implementation.ProtoMsg) error {
 		_, ok := req.(*bankv1beta1.QueryBalanceRequest)
 		require.True(t, ok)
-		proto.Merge(resp, &bankv1beta1.QueryBalanceResponse{})
+		implementation.Merge(resp, &bankv1beta1.QueryBalanceResponse{})
 		return nil
 	})
 
 	s := NewMsgServer(k)
 
 	// create
-	initMsg, err := wrapAny(&emptypb.Empty{})
+	initMsg, err := implementation.PackAny(&emptypb.Empty{})
 	require.NoError(t, err)
 
 	initResp, err := s.Init(ctx, &v1.MsgInit{
@@ -41,7 +41,7 @@ func TestMsgServer(t *testing.T) {
 	executeMsg := &wrapperspb.StringValue{
 		Value: "10",
 	}
-	executeMsgAny, err := wrapAny(executeMsg)
+	executeMsgAny, err := implementation.PackAny(executeMsg)
 	require.NoError(t, err)
 
 	execResp, err := s.Execute(ctx, &v1.MsgExecute{

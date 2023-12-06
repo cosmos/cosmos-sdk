@@ -623,7 +623,7 @@ func TestBaseAppPostHandler(t *testing.T) {
 
 	// It should also run on failed message execution
 	postHandlerRun = false
-	tx = setFailOnHandler(t, suite.txConfig, tx, true)
+	tx = setFailOnHandler(suite.txConfig, tx, true)
 	txBytes, err = suite.txConfig.TxEncoder()(tx)
 	require.NoError(t, err)
 	res, err = suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1, Txs: [][]byte{txBytes}})

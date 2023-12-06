@@ -49,10 +49,12 @@ func TestProposalSetExpedited(t *testing.T) {
 	proposal, err := v1.NewProposal([]sdk.Msg{}, 1, time.Now(), time.Now(), "", "title", "summary", sdk.AccAddress("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r"), v1.ProposalType_PROPOSAL_TYPE_STANDARD)
 	require.NoError(t, err)
 	require.Equal(t, startExpedited, proposal.Expedited)
+	require.Equal(t, proposal.ProposalType, v1.ProposalType_PROPOSAL_TYPE_STANDARD)
 
 	proposal, err = v1.NewProposal([]sdk.Msg{}, 1, time.Now(), time.Now(), "", "title", "summary", sdk.AccAddress("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r"), v1.ProposalType_PROPOSAL_TYPE_EXPEDITED)
 	require.NoError(t, err)
 	require.Equal(t, !startExpedited, proposal.Expedited)
+	require.Equal(t, proposal.ProposalType, v1.ProposalType_PROPOSAL_TYPE_EXPEDITED)
 }
 
 func TestProposalGetMinDepositFromParams(t *testing.T) {

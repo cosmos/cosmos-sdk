@@ -54,7 +54,7 @@ func TestMsgSubmitProposal_GetSignBytes(t *testing.T) {
 			"gov/MsgVote",
 			"Proposal for a governance vote msg",
 			v1.ProposalType_PROPOSAL_TYPE_STANDARD,
-			`{"type":"cosmos-sdk/v1/MsgSubmitProposal","value":{"initial_deposit":[],"messages":[{"type":"cosmos-sdk/v1/MsgVote","value":{"option":1,"proposal_id":"1","voter":"cosmos1w3jhxap3gempvr"}}],"summary":"Proposal for a governance vote msg","title":"gov/MsgVote"}}`,
+			`{"type":"cosmos-sdk/v1/MsgSubmitProposal","value":{"initial_deposit":[],"messages":[{"type":"cosmos-sdk/v1/MsgVote","value":{"option":1,"proposal_id":"1","voter":"cosmos1w3jhxap3gempvr"}}],"proposal_type":1,"summary":"Proposal for a governance vote msg","title":"gov/MsgVote"}}`,
 		},
 		{
 			"MsgSend",
@@ -62,7 +62,7 @@ func TestMsgSubmitProposal_GetSignBytes(t *testing.T) {
 			"bank/MsgSend",
 			"Proposal for a bank msg send",
 			v1.ProposalType_PROPOSAL_TYPE_STANDARD,
-			fmt.Sprintf(`{"type":"cosmos-sdk/v1/MsgSubmitProposal","value":{"initial_deposit":[],"messages":[{"type":"cosmos-sdk/MsgSend","value":{"amount":[],"from_address":"%s","to_address":"%s"}}],"summary":"Proposal for a bank msg send","title":"bank/MsgSend"}}`, addrs[0], addrs[0]),
+			fmt.Sprintf(`{"type":"cosmos-sdk/v1/MsgSubmitProposal","value":{"initial_deposit":[],"messages":[{"type":"cosmos-sdk/MsgSend","value":{"amount":[],"from_address":"%s","to_address":"%s"}}],"proposal_type":1,"summary":"Proposal for a bank msg send","title":"bank/MsgSend"}}`, addrs[0], addrs[0]),
 		},
 	}
 

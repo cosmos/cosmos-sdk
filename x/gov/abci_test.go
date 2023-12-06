@@ -311,7 +311,7 @@ func TestTickPassedVotingPeriod(t *testing.T) {
 			proposal, err = suite.GovKeeper.Proposals.Get(ctx, res.ProposalId)
 			require.Nil(t, err)
 			require.Equal(t, v1.StatusVotingPeriod, proposal.Status)
-			require.False(t, proposal.Expedited)
+			require.False(t, proposal.ProposalType == v1.ProposalType_PROPOSAL_TYPE_EXPEDITED)
 			require.Equal(t, proposal.VotingStartTime.Add(*params.VotingPeriod), *proposal.VotingEndTime)
 		})
 	}
@@ -559,7 +559,7 @@ func TestExpeditedProposal_PassAndConversionToRegular(t *testing.T) {
 			proposal, err = suite.GovKeeper.Proposals.Get(ctx, res.ProposalId)
 			require.Nil(t, err)
 			require.Equal(t, v1.StatusVotingPeriod, proposal.Status)
-			require.False(t, proposal.Expedited)
+			require.False(t, proposal.ProposalType == v1.ProposalType_PROPOSAL_TYPE_EXPEDITED)
 			require.Equal(t, proposal.VotingStartTime.Add(*params.VotingPeriod), *proposal.VotingEndTime)
 
 			// We also want to make sure that the deposit is not refunded yet and is still present in the module account

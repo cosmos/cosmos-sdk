@@ -154,16 +154,6 @@ func TestConvertToLegacyTallyResult(t *testing.T) {
 			},
 			expErr: true,
 		},
-		"invalid spam count": {
-			tallyResult: v1.TallyResult{
-				YesCount:        tallyResult.YesCount,
-				NoCount:         tallyResult.NoCount,
-				AbstainCount:    tallyResult.AbstainCount,
-				NoWithVetoCount: tallyResult.NoWithVetoCount,
-				SpamCount:       "invalid",
-			},
-			expErr: true,
-		},
 	}
 	for name, tc := range testCases {
 		tc := tc

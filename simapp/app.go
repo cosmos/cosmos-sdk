@@ -287,7 +287,7 @@ func NewSimApp(
 		runtime.EventService{},
 		runtime.BranchService{},
 		app.AuthKeeper.AddressCodec(),
-		appCodec.InterfaceRegistry().SigningContext(),
+		appCodec,
 		app.MsgServiceRouter(),
 		app.GRPCQueryRouter(),
 		accountstd.AddAccount("counter", counter.NewAccount),

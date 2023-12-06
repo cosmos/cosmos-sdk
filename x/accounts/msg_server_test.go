@@ -6,6 +6,7 @@ import (
 
 	"cosmossdk.io/x/accounts/internal/implementation"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 
@@ -19,7 +20,7 @@ func TestMsgServer(t *testing.T) {
 	k.queryRouter = mockQuery(func(ctx context.Context, req, resp implementation.ProtoMsg) error {
 		_, ok := req.(*bankv1beta1.QueryBalanceRequest)
 		require.True(t, ok)
-		implementation.Merge(resp, &bankv1beta1.QueryBalanceResponse{})
+		proto.Merge(resp.(proto.Message), &bankv1beta1.QueryBalanceResponse{})
 		return nil
 	})
 

@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"cosmossdk.io/x/accounts/internal/implementation"
+	"github.com/cosmos/gogoproto/types"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/wrapperspb"
@@ -47,5 +48,5 @@ func TestQueryServer(t *testing.T) {
 	resp, err := implementation.UnpackAnyRaw(queryResp.Response)
 	require.NoError(t, err)
 
-	require.Equal(t, "10", resp.(*wrapperspb.StringValue).Value)
+	require.Equal(t, "10", resp.(*types.StringValue).Value)
 }

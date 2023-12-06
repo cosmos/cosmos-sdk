@@ -15,6 +15,8 @@ import (
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/x/accounts/accountstd"
 	"cosmossdk.io/x/accounts/internal/implementation"
+	gogoproto "github.com/cosmos/gogoproto/proto"
+	"google.golang.org/protobuf/proto"
 )
 
 var (
@@ -47,8 +49,8 @@ type MsgRouter interface {
 
 // SignerProvider defines an interface used to get the expected sender from a message.
 type SignerProvider interface {
-	// GetSigners returns the signers of the message.
-	GetSigners(msg implementation.ProtoMsg) ([][]byte, error)
+	// GetMsgV1Signers returns the signers of the message.
+	GetMsgV1Signers(msg gogoproto.Message) ([][]byte, proto.Message, error)
 }
 
 // BranchExecutor defines an interface used to execute ops in a branch.
@@ -306,7 +308,7 @@ func (k Keeper) sendModuleMessageUntyped(ctx context.Context, sender []byte, msg
 // is not trying to impersonate another account.
 func (k Keeper) sendModuleMessage(ctx context.Context, sender []byte, msg, msgResp implementation.ProtoMsg) error {
 	// do sender assertions.
-	wantSenders, err := k.signerProvider.GetSigners(msg)
+	wantSenders, _, err := k.signerProvider.GetMsgV1Signers(msg)
 	if err != nil {
 		return fmt.Errorf("cannot get signers: %w", err)
 	}

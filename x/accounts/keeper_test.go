@@ -5,9 +5,9 @@ import (
 	"testing"
 
 	"cosmossdk.io/x/accounts/internal/implementation"
+	"github.com/cosmos/gogoproto/types"
 	"github.com/stretchr/testify/require"
-	"google.golang.org/protobuf/types/known/emptypb"
-	"google.golang.org/protobuf/types/known/wrapperspb"
+	"google.golang.org/protobuf/proto"
 
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
@@ -28,9 +28,9 @@ func TestKeeper_Init(t *testing.T) {
 	t.Run("ok", func(t *testing.T) {
 		sender := []byte("sender")
 
-		resp, addr, err := m.Init(ctx, "test", sender, &emptypb.Empty{})
+		resp, addr, err := m.Init(ctx, "test", sender, &types.Empty{})
 		require.NoError(t, err)
-		require.Equal(t, &emptypb.Empty{}, resp)
+		require.Equal(t, &types.Empty{}, resp)
 		require.NotNil(t, addr)
 
 		// ensure acc number was increased.
@@ -45,7 +45,7 @@ func TestKeeper_Init(t *testing.T) {
 	})
 
 	t.Run("unknown account type", func(t *testing.T) {
-		_, _, err := m.Init(ctx, "unknown", []byte("sender"), &emptypb.Empty{})
+		_, _, err := m.Init(ctx, "unknown", []byte("sender"), &types.Empty{})
 		require.ErrorIs(t, err, errAccountTypeNotFound)
 	})
 }
@@ -56,17 +56,17 @@ func TestKeeper_Execute(t *testing.T) {
 
 	// create account
 	sender := []byte("sender")
-	_, accAddr, err := m.Init(ctx, "test", sender, &emptypb.Empty{})
+	_, accAddr, err := m.Init(ctx, "test", sender, &types.Empty{})
 	require.NoError(t, err)
 
 	t.Run("ok", func(t *testing.T) {
-		resp, err := m.Execute(ctx, accAddr, sender, &emptypb.Empty{})
+		resp, err := m.Execute(ctx, accAddr, sender, &types.Empty{})
 		require.NoError(t, err)
-		require.Equal(t, &emptypb.Empty{}, resp)
+		require.Equal(t, &types.Empty{}, resp)
 	})
 
 	t.Run("unknown account", func(t *testing.T) {
-		_, err := m.Execute(ctx, []byte("unknown"), sender, &emptypb.Empty{})
+		_, err := m.Execute(ctx, []byte("unknown"), sender, &types.Empty{})
 		require.ErrorIs(t, err, collections.ErrNotFound)
 	})
 
@@ -85,9 +85,9 @@ func TestKeeper_Execute(t *testing.T) {
 			return accAddr, nil
 		})
 
-		resp, err := m.Execute(ctx, accAddr, sender, &wrapperspb.Int64Value{Value: 1000})
+		resp, err := m.Execute(ctx, accAddr, sender, &types.Int64Value{Value: 1000})
 		require.NoError(t, err)
-		require.True(t, implementation.Equal(&emptypb.Empty{}, resp.(implementation.ProtoMsg)))
+		require.True(t, implementation.Equal(&types.Empty{}, resp.(implementation.ProtoMsg)))
 	})
 }
 
@@ -99,17 +99,17 @@ func TestKeeper_Query(t *testing.T) {
 
 	// create account
 	sender := []byte("sender")
-	_, accAddr, err := m.Init(ctx, "test", sender, &emptypb.Empty{})
+	_, accAddr, err := m.Init(ctx, "test", sender, &types.Empty{})
 	require.NoError(t, err)
 
 	t.Run("ok", func(t *testing.T) {
-		resp, err := m.Query(ctx, accAddr, &emptypb.Empty{})
+		resp, err := m.Query(ctx, accAddr, &types.Empty{})
 		require.NoError(t, err)
-		require.Equal(t, &emptypb.Empty{}, resp)
+		require.Equal(t, &types.Empty{}, resp)
 	})
 
 	t.Run("unknown account", func(t *testing.T) {
-		_, err := m.Query(ctx, []byte("unknown"), &emptypb.Empty{})
+		_, err := m.Query(ctx, []byte("unknown"), &types.Empty{})
 		require.ErrorIs(t, err, collections.ErrNotFound)
 	})
 
@@ -125,12 +125,12 @@ func TestKeeper_Query(t *testing.T) {
 				Denom:  "atom",
 				Amount: "1000",
 			}}
-			implementation.Merge(resp, copyResp)
+			proto.Merge(resp.(proto.Message), copyResp)
 			return nil
 		})
 
-		resp, err := m.Query(ctx, accAddr, wrapperspb.String("atom"))
+		resp, err := m.Query(ctx, accAddr, &types.StringValue{Value: "atom"})
 		require.NoError(t, err)
-		require.True(t, implementation.Equal(wrapperspb.Int64(1000), resp.(implementation.ProtoMsg)))
+		require.True(t, implementation.Equal(&types.Int64Value{Value: 1000}, resp.(implementation.ProtoMsg)))
 	})
 }

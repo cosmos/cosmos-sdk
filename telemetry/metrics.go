@@ -4,9 +4,11 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"time"
 
 	"github.com/hashicorp/go-metrics"
+	"github.com/hashicorp/go-metrics/datadog"
 	metricsprom "github.com/hashicorp/go-metrics/prometheus"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/common/expfmt"
@@ -52,6 +54,17 @@ type Config struct {
 	// Example:
 	// [["chain_id", "cosmoshub-1"]]
 	GlobalLabels [][]string `mapstructure:"global-labels"`
+
+	// MetricsBackend defines the type of metrics backend to use.
+	MetricsBackend string `mapstructure:"type" default:"mem"`
+
+	// StatsdAddr defines the address of a statsd server to send metrics to.
+	// Only utilized if MetricsBackend is set to "statsd" or "dogstatsd".
+	StatsdAddr string `mapstructure:"statsd-addr"`
+
+	// DatadogHostname defines the hostname to use when emitting metrics to
+	// Datadog. Only utilized if MetricsBackend is set to "dogstatsd".
+	DatadogHostname string `mapstructure:"datadog-hostname"`
 }
 
 // Metrics defines a wrapper around application telemetry functionality. It allows
@@ -60,7 +73,7 @@ type Config struct {
 // by the operator. In addition to the sinks, when a process gets a SIGUSR1, a
 // dump of formatted recent metrics will be sent to STDERR.
 type Metrics struct {
-	memSink           *metrics.InmemSink
+	memSink           metrics.MetricSink
 	prometheusEnabled bool
 }
 
@@ -88,17 +101,34 @@ func New(cfg Config) (_ *Metrics, rerr error) {
 	metricsConf := metrics.DefaultConfig(cfg.ServiceName)
 	metricsConf.EnableHostname = cfg.EnableHostname
 	metricsConf.EnableHostnameLabel = cfg.EnableHostnameLabel
+	var sink metrics.MetricSink
 
-	memSink := metrics.NewInmemSink(10*time.Second, time.Minute)
-	inMemSig := metrics.DefaultInmemSignal(memSink)
-	defer func() {
-		if rerr != nil {
-			inMemSig.Stop()
+	switch cfg.MetricsBackend {
+	case "mem":
+		memSink := metrics.NewInmemSink(10*time.Second, time.Minute)
+		sink = memSink
+		inMemSig := metrics.DefaultInmemSignal(memSink)
+		defer func() {
+			if rerr != nil {
+				inMemSig.Stop()
+			}
+		}()
+	case "statsd":
+		var err error
+		sink, err = metrics.NewStatsdSink(cfg.StatsdAddr)
+		if err != nil {
+			return nil, err
 		}
-	}()
+	case "dogstatsd":
+		var err error
+		sink, err = datadog.NewDogStatsdSink(cfg.StatsdAddr, cfg.DatadogHostname)
+		if err != nil {
+			return nil, err
+		}
+	}
 
-	m := &Metrics{memSink: memSink}
-	fanout := metrics.FanoutSink{memSink}
+	m := &Metrics{memSink: sink}
+	fanout := metrics.FanoutSink{sink}
 
 	if cfg.PrometheusRetentionTime > 0 {
 		m.prometheusEnabled = true
@@ -119,6 +149,10 @@ func New(cfg Config) (_ *Metrics, rerr error) {
 	}
 
 	return m, nil
+}
+
+type DisplayableMetrics interface {
+	DisplayMetrics(resp http.ResponseWriter, req *http.Request) (interface{}, error)
 }
 
 // Gather collects all registered metrics and returns a GatherResponse where the
@@ -164,7 +198,12 @@ func (m *Metrics) gatherPrometheus() (GatherResponse, error) {
 }
 
 func (m *Metrics) gatherGeneric() (GatherResponse, error) {
-	summary, err := m.memSink.DisplayMetrics(nil, nil)
+	gm, ok := m.memSink.(DisplayableMetrics)
+	if !ok {
+		return GatherResponse{}, fmt.Errorf("non in-memory metrics sink does not support generic format")
+	}
+
+	summary, err := gm.DisplayMetrics(nil, nil)
 	if err != nil {
 		return GatherResponse{}, fmt.Errorf("failed to gather in-memory metrics: %w", err)
 	}

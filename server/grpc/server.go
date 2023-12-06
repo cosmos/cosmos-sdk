@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net"
+	"strings"
 
 	"google.golang.org/grpc"
 
@@ -74,7 +75,17 @@ func NewGRPCServer(clientCtx client.Context, app types.Application, cfg config.G
 // Otherwise, an error is returned. The caller is expected to provide a Context
 // that is properly canceled or closed to indicate the server should be stopped.
 func StartGRPCServer(ctx context.Context, logger log.Logger, cfg config.GRPCConfig, grpcSrv *grpc.Server) error {
-	listener, err := net.Listen("tcp", cfg.Address)
+	var proto, addr string
+	parts := strings.SplitN(cfg.Address, "://", 2)
+	// Default to using 'tcp' to maintain backwards compatibility with configurations that don't specify
+	// the network to use.
+	if len(parts) != 2 {
+		proto = "tcp"
+		addr = cfg.Address
+	} else {
+		proto, addr = parts[0], parts[1]
+	}
+	listener, err := net.Listen(proto, addr)
 	if err != nil {
 		return fmt.Errorf("failed to listen on address %s: %w", cfg.Address, err)
 	}

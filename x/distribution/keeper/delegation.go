@@ -130,6 +130,7 @@ func (k Keeper) CalculateDelegationRewards(ctx context.Context, val sdk.Validato
 				if endingPeriod > startingPeriod {
 					delRewards, err := k.calculateDelegationRewardsBetween(ctx, val, startingPeriod, endingPeriod, stake)
 					if err != nil {
+						k.Logger(ctx).Error(err.Error())
 						return true
 					}
 					rewards = rewards.Add(delRewards...)

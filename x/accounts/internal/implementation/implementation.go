@@ -110,6 +110,8 @@ type Implementation struct {
 type MessageSchema struct {
 	// Name identifies the message name, this must be queriable from some reflection service.
 	Name string
+	// New is used to create a new message instance for the schema.
+	New func() ProtoMsg
 }
 
 // HandlerSchema defines the schema of a handler.

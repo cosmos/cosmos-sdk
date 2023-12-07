@@ -290,6 +290,7 @@ func NewSimApp(
 		appCodec,
 		app.MsgServiceRouter(),
 		app.GRPCQueryRouter(),
+		appCodec.InterfaceRegistry(),
 		accountstd.AddAccount("counter", counter.NewAccount),
 		accountstd.AddAccount("aa_minimal", account_abstraction.NewMinimalAbstractedAccount),
 		accountstd.AddAccount("aa_full", account_abstraction.NewFullAbstractedAccount),

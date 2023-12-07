@@ -57,7 +57,7 @@ func RegisterExecuteHandler[
 		return handler(ctx, concrete)
 	}
 
-	router.handlersSchema[string(reqName)] = HandlerSchema{
+	router.handlersSchema[reqName] = HandlerSchema{
 		RequestSchema:  *NewProtoMessageSchema[Req, ProtoReq](),
 		ResponseSchema: *NewProtoMessageSchema[Resp, ProtoResp](),
 	}
@@ -78,5 +78,8 @@ func NewProtoMessageSchema[T any, PT ProtoMsgG[T]]() *MessageSchema {
 	}
 	return &MessageSchema{
 		Name: MessageName(msg),
+		New: func() ProtoMsg {
+			return PT(new(T))
+		},
 	}
 }

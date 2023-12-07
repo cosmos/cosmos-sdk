@@ -56,6 +56,11 @@ type SignerProvider interface {
 // BranchExecutor defines an interface used to execute ops in a branch.
 type BranchExecutor = branch.Service
 
+type InterfaceRegistry interface {
+	RegisterInterface(name string, iface any, impls ...gogoproto.Message)
+	RegisterImplementations(iface any, impls ...gogoproto.Message)
+}
+
 func NewKeeper(
 	ss store.KVStoreService,
 	es event.Service,
@@ -64,6 +69,7 @@ func NewKeeper(
 	signerProvider SignerProvider,
 	execRouter MsgRouter,
 	queryRouter QueryRouter,
+	ir InterfaceRegistry,
 	accounts ...accountstd.AccountCreatorFunc,
 ) (Keeper, error) {
 	sb := collections.NewSchemaBuilder(ss)
@@ -91,6 +97,7 @@ func NewKeeper(
 	if err != nil {
 		return Keeper{}, err
 	}
+	registerToInterfaceRegistry(ir, keeper.accounts)
 	return keeper, nil
 }
 
@@ -339,4 +346,31 @@ func (k Keeper) queryModule(ctx context.Context, queryReq, queryResp implementat
 		return fmt.Errorf("multiple handlers for query: %s", queryName)
 	}
 	return handlers[0](ctx, queryReq, queryResp)
+}
+
+const msgInterfaceName = "cosmos.accounts.Msg.v1"
+
+// creates a new interface type which is a alias of the proto message interface to avoid conflicts with sdk.Msg
+type msgInterface implementation.ProtoMsg
+
+var msgInterfaceType = (*msgInterface)(nil)
+
+// registerToInterfaceRegistry registers all the interfaces of the accounts to the
+// global interface registry. This is required for the SDK to correctly decode
+// the google.Protobuf.Any used in x/accounts.
+func registerToInterfaceRegistry(ir InterfaceRegistry, accMap map[string]implementation.Implementation) {
+	ir.RegisterInterface(msgInterfaceName, msgInterfaceType)
+
+	for _, acc := range accMap {
+		// register init
+		ir.RegisterImplementations(msgInterfaceType, acc.InitHandlerSchema.RequestSchema.New(), acc.InitHandlerSchema.ResponseSchema.New())
+		// register exec
+		for _, exec := range acc.ExecuteHandlersSchema {
+			ir.RegisterImplementations(msgInterfaceType, exec.RequestSchema.New(), exec.ResponseSchema.New())
+		}
+		// register query
+		for _, query := range acc.QueryHandlersSchema {
+			ir.RegisterImplementations(msgInterfaceType, query.RequestSchema.New(), query.ResponseSchema.New())
+		}
+	}
 }

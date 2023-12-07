@@ -77,6 +77,34 @@ func (t *IavlTree) Prune(version uint64) error {
 	return t.tree.DeleteVersionsTo(int64(version))
 }
 
+// Export exports the tree exporter at the given version.
+func (t *IavlTree) Export(version uint64) (commitment.Exporter, error) {
+	tree, err := t.tree.GetImmutable(int64(version))
+	if err != nil {
+		return nil, err
+	}
+	exporter, err := tree.Export()
+	if err != nil {
+		return nil, err
+	}
+
+	return &Exporter{
+		exporter: exporter,
+	}, nil
+}
+
+// Import imports the tree importer at the given version.
+func (t *IavlTree) Import(version uint64) (commitment.Importer, error) {
+	importer, err := t.tree.Import(int64(version))
+	if err != nil {
+		return nil, err
+	}
+
+	return &Importer{
+		importer: importer,
+	}, nil
+}
+
 // Close closes the iavl tree.
 func (t *IavlTree) Close() error {
 	return nil

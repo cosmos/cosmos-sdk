@@ -112,7 +112,7 @@ func New(cfg Config) (_ *Metrics, rerr error) {
 
 	var (
 		sink metrics.MetricSink
-		err error
+		err  error
 	)
 	switch cfg.MetricsSink {
 	case MetricSinkInMem:

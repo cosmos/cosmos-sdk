@@ -11,7 +11,10 @@ import (
 )
 
 func TestGenesis(t *testing.T) {
-	k, ctx := newKeeper(t, implementation.AddAccount("test", NewTestAccount))
+	k, ctx := newKeeper(t, func(deps implementation.Dependencies) (string, implementation.Account, error) {
+		acc, err := NewTestAccount(deps)
+		return "test", acc, err
+	})
 	k.queryRouter = mockQuery(func(ctx context.Context, req, resp implementation.ProtoMsg) error { return nil })
 	// we init two accounts of the same type
 

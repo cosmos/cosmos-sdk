@@ -27,7 +27,7 @@ func TestMakeAccountContext(t *testing.T) {
 	ta, err := NewTestAccount(sb)
 	require.NoError(t, err)
 
-	impl, err := NewImplementation(ta)
+	impl, err := newImplementation(sb, ta)
 	require.NoError(t, err)
 
 	_, err = impl.Execute(accountCtx, &types.UInt64Value{Value: 1000})

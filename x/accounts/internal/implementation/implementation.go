@@ -15,24 +15,7 @@ type Dependencies struct {
 }
 
 // AccountCreatorFunc is a function that creates an account.
-type AccountCreatorFunc = func(deps Dependencies) (string, Implementation, error)
-
-// AddAccount is a helper function to add a smart account to the list of smart accounts.
-// It returns a function that given an Account implementer, returns the name of the account
-// and the Implementation instance.
-func AddAccount[A Account](name string, constructor func(deps Dependencies) (A, error)) func(deps Dependencies) (string, Implementation, error) {
-	return func(deps Dependencies) (string, Implementation, error) {
-		acc, err := constructor(deps)
-		if err != nil {
-			return "", Implementation{}, err
-		}
-		impl, err := NewImplementation(acc)
-		if err != nil {
-			return "", Implementation{}, err
-		}
-		return name, impl, nil
-	}
-}
+type AccountCreatorFunc = func(deps Dependencies) (string, Account, error)
 
 // MakeAccountsMap creates a map of account names to account implementations
 // from a list of account creator functions.
@@ -44,27 +27,25 @@ func MakeAccountsMap(addressCodec address.Codec, accounts []AccountCreatorFunc) 
 			SchemaBuilder: stateSchemaBuilder,
 			AddressCodec:  addressCodec,
 		}
-		name, impl, err := makeAccount(deps)
+		name, accountInterface, err := makeAccount(deps)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create account %s: %w", name, err)
 		}
 		if _, ok := accountsMap[name]; ok {
 			return nil, fmt.Errorf("account %s is already registered", name)
 		}
-		// build schema
-		schema, err := stateSchemaBuilder.Build()
+		impl, err := newImplementation(stateSchemaBuilder, accountInterface)
 		if err != nil {
-			return nil, fmt.Errorf("failed to build schema for account %s: %w", name, err)
+			return nil, fmt.Errorf("failed to create implementation for account %s: %w", name, err)
 		}
-		impl.CollectionsSchema = schema
 		accountsMap[name] = impl
 	}
 
 	return accountsMap, nil
 }
 
-// NewImplementation creates a new Implementation instance given an Account implementer.
-func NewImplementation(account Account) (Implementation, error) {
+// newImplementation creates a new Implementation instance given an Account implementer.
+func newImplementation(schemaBuilder *collections.SchemaBuilder, account Account) (Implementation, error) {
 	// make init handler
 	ir := NewInitBuilder()
 	account.RegisterInitHandler(ir)
@@ -88,11 +69,17 @@ func NewImplementation(account Account) (Implementation, error) {
 	if err != nil {
 		return Implementation{}, err
 	}
+
+	// build schema
+	schema, err := schemaBuilder.Build()
+	if err != nil {
+		return Implementation{}, err
+	}
 	return Implementation{
 		Init:                  initHandler,
 		Execute:               executeHandler,
 		Query:                 queryHandler,
-		CollectionsSchema:     collections.Schema{},
+		CollectionsSchema:     schema,
 		InitHandlerSchema:     ir.schema,
 		QueryHandlersSchema:   qr.er.handlersSchema,
 		ExecuteHandlersSchema: er.handlersSchema,

@@ -56,7 +56,10 @@ func RegisterInitHandler[
 
 // AddAccount is a helper function to add a smart account to the list of smart accounts.
 func AddAccount[A Interface](name string, constructor func(deps Dependencies) (A, error)) AccountCreatorFunc {
-	return implementation.AddAccount(name, constructor)
+	return func(deps implementation.Dependencies) (string, implementation.Account, error) {
+		acc, err := constructor(deps)
+		return name, acc, err
+	}
 }
 
 // Whoami returns the address of the account being invoked.

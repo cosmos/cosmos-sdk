@@ -4,12 +4,13 @@ import (
 	"context"
 	"testing"
 
+	"cosmossdk.io/collections"
 	"github.com/cosmos/gogoproto/types"
 	"github.com/stretchr/testify/require"
 )
 
 func TestImplementation(t *testing.T) {
-	impl, err := NewImplementation(TestAccount{})
+	impl, err := newImplementation(collections.NewSchemaBuilderFromAccessor(OpenKVStore), TestAccount{})
 	require.NoError(t, err)
 
 	ctx := context.Background()

@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"crypto/rand"
 	"encoding/hex"
-	"fmt"
 	mathrand "math/rand"
 	"strings"
 	"testing"
@@ -379,14 +378,6 @@ func (s *addressTestSuite) TestAddressInterface() {
 			s.T().Fail()
 		}
 	}
-}
-
-func customVerifier(bz []byte) error {
-	n := len(bz)
-	if n == 20 {
-		return nil
-	}
-	return fmt.Errorf("incorrect address length %d", n)
 }
 
 func (s *addressTestSuite) TestBech32ifyAddressBytes() {

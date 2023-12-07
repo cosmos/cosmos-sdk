@@ -12,6 +12,7 @@ import (
 	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/commitment"
 	"cosmossdk.io/store/v2/commitment/iavl"
+	"cosmossdk.io/store/v2/pruning"
 	"cosmossdk.io/store/v2/storage/sqlite"
 )
 
@@ -35,7 +36,7 @@ func (s *RootStoreTestSuite) SetupTest() {
 	sc, err := commitment.NewCommitStore(map[string]commitment.Tree{"default": tree}, noopLog)
 	s.Require().NoError(err)
 
-	rs, err := New(noopLog, 1, ss, sc, nil)
+	rs, err := New(noopLog, ss, sc, pruning.DefaultOptions(), pruning.DefaultOptions(), nil)
 	s.Require().NoError(err)
 
 	rs.SetTracer(io.Discard)
@@ -51,12 +52,8 @@ func (s *RootStoreTestSuite) TearDownTest() {
 	s.Require().NoError(err)
 }
 
-func (s *RootStoreTestSuite) TestMountSCStore() {
-	s.Require().Error(s.rootStore.MountSCStore("", nil))
-}
-
 func (s *RootStoreTestSuite) TestGetSCStore() {
-	s.Require().Equal(s.rootStore.GetSCStore(""), s.rootStore.(*Store).stateCommitment)
+	s.Require().Equal(s.rootStore.GetSCStore(), s.rootStore.(*Store).stateCommitment)
 }
 
 func (s *RootStoreTestSuite) TestGetKVStore() {
@@ -90,9 +87,9 @@ func (s *RootStoreTestSuite) TestQuery() {
 	// ensure the proof is non-nil for the corresponding version
 	result, err := s.rootStore.Query(defaultStoreKey, 1, []byte("foo"), true)
 	s.Require().NoError(err)
-	s.Require().NotNil(result.Proof)
-	s.Require().Equal([]byte("foo"), result.Proof.GetExist().Key)
-	s.Require().Equal([]byte("bar"), result.Proof.GetExist().Value)
+	s.Require().NotNil(result.Proof.Proof)
+	s.Require().Equal([]byte("foo"), result.Proof.Proof.GetExist().Key)
+	s.Require().Equal([]byte("bar"), result.Proof.Proof.GetExist().Value)
 }
 
 func (s *RootStoreTestSuite) TestBranch() {

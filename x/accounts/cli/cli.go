@@ -1,20 +1,18 @@
 package cli
 
 import (
+	"bytes"
 	"fmt"
-
-	"github.com/spf13/cobra"
-	"google.golang.org/protobuf/encoding/protojson"
-	"google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/reflect/protoreflect"
-	"google.golang.org/protobuf/reflect/protoregistry"
+	"reflect"
 
 	v1 "cosmossdk.io/x/accounts/v1"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/gogoproto/jsonpb"
+	gogoproto "github.com/cosmos/gogoproto/proto"
+	"github.com/spf13/cobra"
 )
 
 func TxCmd(name string) *cobra.Command {
@@ -175,22 +173,14 @@ func handlerMsgBytes(handlersSchema []*v1.SchemaResponse_Handler, msgTypeURL, ms
 }
 
 func encodeJSONToProto(name, jsonMsg string) (*codectypes.Any, error) {
-	jsonBytes := []byte(jsonMsg)
-	impl, err := protoregistry.GlobalTypes.FindMessageByName(protoreflect.FullName(name))
-	if err != nil {
-		return nil, err
+	impl := gogoproto.MessageType(name)
+	if impl == nil {
+		return nil, fmt.Errorf("message type %s not found", name)
 	}
-	msg := impl.New().Interface()
-	err = protojson.Unmarshal(jsonBytes, msg)
+	msg := reflect.New(impl.Elem()).Interface().(gogoproto.Message)
+	err := jsonpb.Unmarshal(bytes.NewBufferString(jsonMsg), msg)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("provided message is not valid %s: %w", jsonMsg, err)
 	}
-	msgBytes, err := proto.MarshalOptions{Deterministic: true}.Marshal(msg)
-	if err != nil {
-		return nil, err
-	}
-	return &codectypes.Any{
-		TypeUrl: "/" + name,
-		Value:   msgBytes,
-	}, nil
+	return codectypes.NewAnyWithValue(msg)
 }

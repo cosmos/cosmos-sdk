@@ -5,14 +5,16 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/cosmos/gogoproto/jsonpb"
+	gogoproto "github.com/cosmos/gogoproto/proto"
+	"github.com/spf13/cobra"
+
 	v1 "cosmossdk.io/x/accounts/v1"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/gogoproto/jsonpb"
-	gogoproto "github.com/cosmos/gogoproto/proto"
-	"github.com/spf13/cobra"
 )
 
 func TxCmd(name string) *cobra.Command {

@@ -1,4 +1,4 @@
-package types
+package snapshots
 
 // SnapshotOptions defines the snapshot strategy used when determining which
 // heights are snapshotted for state sync.

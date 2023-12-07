@@ -19,7 +19,8 @@ const (
 func TestStorageTestSuite(t *testing.T) {
 	s := &storage.StorageTestSuite{
 		NewDB: func(dir string) (store.VersionedDatabase, error) {
-			return New(dir)
+			db, err := New(dir)
+			return storage.NewStorageStore(db), err
 		},
 		EmptyBatchSize: 0,
 	}
@@ -31,15 +32,16 @@ func TestDatabase_ReverseIterator(t *testing.T) {
 	require.NoError(t, err)
 	defer db.Close()
 
-	cs := store.NewChangeset(map[string]store.KVPairs{storeKey1: {}})
+	batch, err := db.NewBatch(1)
+	require.NoError(t, err)
 	for i := 0; i < 100; i++ {
 		key := fmt.Sprintf("key%03d", i) // key000, key001, ..., key099
 		val := fmt.Sprintf("val%03d", i) // val000, val001, ..., val099
 
-		cs.AddKVPair(storeKey1, store.KVPair{Key: []byte(key), Value: []byte(val)})
+		require.NoError(t, batch.Set(storeKey1, []byte(key), []byte(val)))
 	}
 
-	require.NoError(t, db.ApplyChangeset(1, cs))
+	require.NoError(t, batch.Write())
 
 	// reverse iterator without an end key
 	iter, err := db.ReverseIterator(storeKey1, 1, []byte("key000"), nil)
@@ -106,15 +108,16 @@ func TestParallelWrites(t *testing.T) {
 		go func(i int) {
 			<-triggerStartCh
 			defer wg.Done()
-			cs := store.NewChangeset(map[string]store.KVPairs{storeKey1: {}})
+			batch, err := db.NewBatch(uint64(i + 1))
+			require.NoError(t, err)
 			for j := 0; j < kvCount; j++ {
 				key := fmt.Sprintf("key-%d-%03d", i, j)
 				val := fmt.Sprintf("val-%d-%03d", i, j)
 
-				cs.AddKVPair(storeKey1, store.KVPair{Key: []byte(key), Value: []byte(val)})
+				require.NoError(t, batch.Set(storeKey1, []byte(key), []byte(val)))
 			}
 
-			require.NoError(t, db.ApplyChangeset(uint64(i+1), cs))
+			require.NoError(t, batch.Write())
 		}(i)
 
 	}
@@ -155,15 +158,16 @@ func TestParallelWriteAndPruning(t *testing.T) {
 		<-triggerStartCh
 		defer wg.Done()
 		for i := 0; i < latestVersion; i++ {
-			cs := store.NewChangeset(map[string]store.KVPairs{storeKey1: {}})
+			batch, err := db.NewBatch(uint64(i + 1))
+			require.NoError(t, err)
 			for j := 0; j < kvCount; j++ {
 				key := fmt.Sprintf("key-%d-%03d", i, j)
 				val := fmt.Sprintf("val-%d-%03d", i, j)
 
-				cs.AddKVPair(storeKey1, store.KVPair{Key: []byte(key), Value: []byte(val)})
+				require.NoError(t, batch.Set(storeKey1, []byte(key), []byte(val)))
 			}
 
-			require.NoError(t, db.ApplyChangeset(uint64(i+1), cs))
+			require.NoError(t, batch.Write())
 		}
 	}()
 	// start a goroutine that prunes the database

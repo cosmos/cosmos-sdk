@@ -108,13 +108,6 @@ prometheus-retention-time = 0
 # [["chain_id", "cosmoshub-1"]]
 global-labels = []
 
-# GlobalLabels defines a global set of name/value label tuples applied to all
-# metrics emitted using the wrapper functions defined in telemetry package.
-#
-# Example:
-# [["chain_id", "cosmoshub-1"]]
-global-labels = []
-
 # MetricsSink defines the type of metrics sink to use.
 metrics-sink = "mem"
 

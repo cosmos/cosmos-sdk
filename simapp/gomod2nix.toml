@@ -50,9 +50,15 @@ schema = 3
     version = "v1.2.0"
     hash = "sha256-emQlH+RQpESoFCzpHS38fEhs1SLjotxNPlRK4B5Aybs="
     replaced = "github.com/cosmos/keyring"
+  [mod."github.com/DataDog/datadog-go"]
+    version = "v4.8.3+incompatible"
+    hash = "sha256-9KvlVQdgyJ1ulDa6wkLb0ACdjc+R0U91hdb7nxodrA0="
   [mod."github.com/DataDog/zstd"]
     version = "v1.5.5"
     hash = "sha256-tSw0aq0pPyroZtQYYb9lWOtPVNaQOt8skYQ4TMXGvAQ="
+  [mod."github.com/Microsoft/go-winio"]
+    version = "v0.6.0"
+    hash = "sha256-TQ0AvXZfuT3PDnb4p/h5zmyT8m9VPcwxlXMJuVD6ltE="
   [mod."github.com/aws/aws-sdk-go"]
     version = "v1.45.25"
     hash = "sha256-ZzeU4WSHm5shDqGnK2mXC2p18NyAO+hKZHP7l1KR69k="
@@ -474,6 +480,9 @@ schema = 3
   [mod."golang.org/x/exp"]
     version = "v0.0.0-20231127185646-65229373498e"
     hash = "sha256-GmQxMsgz6rZ/O7d4uFif6A/BpDfCqM7WpciDggDSv8I="
+  [mod."golang.org/x/mod"]
+    version = "v0.14.0"
+    hash = "sha256-sx3hWp5l99DBfIrn821ohfoBwvaITSHMWbzPvX0btLM="
   [mod."golang.org/x/net"]
     version = "v0.19.0"
     hash = "sha256-3M5rKEvJx4cO/q+06cGjR5sxF5JpnUWY0+fQttrWdT4="
@@ -492,6 +501,9 @@ schema = 3
   [mod."golang.org/x/text"]
     version = "v0.14.0"
     hash = "sha256-yh3B0tom1RfzQBf1RNmfdNWF1PtiqxV41jW1GVS6JAg="
+  [mod."golang.org/x/tools"]
+    version = "v0.16.0"
+    hash = "sha256-uVAW8zkeyMvPaWjXjyvq+DCfuA348YtwCrXzNROs7EQ="
   [mod."golang.org/x/xerrors"]
     version = "v0.0.0-20231012003039-104605ab7028"
     hash = "sha256-IsFTm5WZQ6W1ZDF8WOP+6xiOAc7pIq8r9Afvkjp3PRQ="

@@ -4,13 +4,13 @@ import (
 	"context"
 	"testing"
 
-	"cosmossdk.io/x/accounts/internal/implementation"
 	"github.com/cosmos/gogoproto/types"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 
 	"cosmossdk.io/x/accounts/accountstd"
+	"cosmossdk.io/x/accounts/internal/implementation"
 	v1 "cosmossdk.io/x/accounts/v1"
 )
 

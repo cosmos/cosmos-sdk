@@ -4,7 +4,6 @@ import (
 	"context"
 	"testing"
 
-	"cosmossdk.io/x/accounts/internal/implementation"
 	"github.com/cosmos/gogoproto/types"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/proto"
@@ -13,6 +12,7 @@ import (
 	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
 	"cosmossdk.io/collections"
 	"cosmossdk.io/x/accounts/accountstd"
+	"cosmossdk.io/x/accounts/internal/implementation"
 )
 
 func TestKeeper_Init(t *testing.T) {
@@ -87,7 +87,7 @@ func TestKeeper_Execute(t *testing.T) {
 
 		resp, err := m.Execute(ctx, accAddr, sender, &types.Int64Value{Value: 1000})
 		require.NoError(t, err)
-		require.True(t, implementation.Equal(&types.Empty{}, resp.(implementation.ProtoMsg)))
+		require.True(t, implementation.Equal(&types.Empty{}, resp))
 	})
 }
 
@@ -131,6 +131,6 @@ func TestKeeper_Query(t *testing.T) {
 
 		resp, err := m.Query(ctx, accAddr, &types.StringValue{Value: "atom"})
 		require.NoError(t, err)
-		require.True(t, implementation.Equal(&types.Int64Value{Value: 1000}, resp.(implementation.ProtoMsg)))
+		require.True(t, implementation.Equal(&types.Int64Value{Value: 1000}, resp))
 	})
 }

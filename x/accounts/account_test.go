@@ -4,12 +4,13 @@ import (
 	"context"
 	"strconv"
 
+	"github.com/cosmos/gogoproto/types"
+
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
 	"cosmossdk.io/collections"
 	"cosmossdk.io/x/accounts/accountstd"
 	"cosmossdk.io/x/accounts/internal/implementation"
-	"github.com/cosmos/gogoproto/types"
 )
 
 var _ implementation.Account = (*TestAccount)(nil)

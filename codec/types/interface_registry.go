@@ -4,11 +4,12 @@ import (
 	"fmt"
 	"reflect"
 
-	"cosmossdk.io/x/tx/signing"
 	"github.com/cosmos/gogoproto/jsonpb"
 	"github.com/cosmos/gogoproto/proto"
 	"google.golang.org/protobuf/reflect/protodesc"
 	"google.golang.org/protobuf/reflect/protoreflect"
+
+	"cosmossdk.io/x/tx/signing"
 )
 
 var protoMessageType = reflect.TypeOf((*proto.Message)(nil)).Elem()

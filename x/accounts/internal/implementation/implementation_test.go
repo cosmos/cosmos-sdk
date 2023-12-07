@@ -4,9 +4,10 @@ import (
 	"context"
 	"testing"
 
-	"cosmossdk.io/collections"
 	"github.com/cosmos/gogoproto/types"
 	"github.com/stretchr/testify/require"
+
+	"cosmossdk.io/collections"
 )
 
 func TestImplementation(t *testing.T) {

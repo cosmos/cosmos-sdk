@@ -4,10 +4,11 @@ import (
 	"context"
 	"testing"
 
-	"cosmossdk.io/collections/colltest"
-	"cosmossdk.io/x/accounts/internal/implementation"
 	"github.com/cosmos/gogoproto/types"
 	"github.com/stretchr/testify/require"
+
+	"cosmossdk.io/collections/colltest"
+	"cosmossdk.io/x/accounts/internal/implementation"
 )
 
 func TestGenesis(t *testing.T) {

@@ -58,7 +58,7 @@ type mockQuery func(ctx context.Context, req, resp implementation.ProtoMsg) erro
 
 func (m mockQuery) HybridHandlerByRequestName(_ string) []func(ctx context.Context, req, resp implementation.ProtoMsg) error {
 	return []func(ctx context.Context, req, resp protoiface.MessageV1) error{func(ctx context.Context, req, resp protoiface.MessageV1) error {
-		return m(ctx, req.(implementation.ProtoMsg), resp.(implementation.ProtoMsg))
+		return m(ctx, req, resp)
 	}}
 }
 
@@ -80,7 +80,7 @@ type mockExec func(ctx context.Context, msg, msgResp implementation.ProtoMsg) er
 
 func (m mockExec) HybridHandlerByMsgName(_ string) func(ctx context.Context, req, resp protoiface.MessageV1) error {
 	return func(ctx context.Context, req, resp protoiface.MessageV1) error {
-		return m(ctx, req.(implementation.ProtoMsg), resp.(implementation.ProtoMsg))
+		return m(ctx, req, resp)
 	}
 }
 

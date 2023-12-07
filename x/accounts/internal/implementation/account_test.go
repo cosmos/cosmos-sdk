@@ -3,8 +3,9 @@ package implementation
 import (
 	"context"
 
-	"cosmossdk.io/collections"
 	"github.com/cosmos/gogoproto/types"
+
+	"cosmossdk.io/collections"
 )
 
 var _ Account = (*TestAccount)(nil)

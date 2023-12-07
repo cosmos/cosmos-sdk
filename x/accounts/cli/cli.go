@@ -3,17 +3,18 @@ package cli
 import (
 	"fmt"
 
-	v1 "cosmossdk.io/x/accounts/v1"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/spf13/cobra"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
 
+	v1 "cosmossdk.io/x/accounts/v1"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 )
 
 func TxCmd(name string) *cobra.Command {
@@ -192,23 +193,4 @@ func encodeJSONToProto(name, jsonMsg string) (*codectypes.Any, error) {
 		TypeUrl: "/" + name,
 		Value:   msgBytes,
 	}, nil
-}
-
-func decodeProtoToJSON(name string, protoBytes []byte) (string, error) {
-	impl, err := protoregistry.GlobalTypes.FindMessageByName(protoreflect.FullName(name))
-	if err != nil {
-		return "", err
-	}
-	msg := impl.New().Interface()
-	err = proto.UnmarshalOptions{}.Unmarshal(protoBytes, msg)
-	if err != nil {
-		return "", fmt.Errorf(
-			"%w: unable to unmarshal protobytes in message '%s', message name: %s",
-			err, protoBytes, name)
-	}
-	jsonBytes, err := protojson.Marshal(msg)
-	if err != nil {
-		return "", err
-	}
-	return string(jsonBytes), nil
 }

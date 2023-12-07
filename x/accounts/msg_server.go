@@ -3,11 +3,12 @@ package accounts
 import (
 	"context"
 
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+
 	"cosmossdk.io/core/event"
 	"cosmossdk.io/x/accounts/internal/implementation"
 	v1 "cosmossdk.io/x/accounts/v1"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 var _ v1.MsgServer = msgServer{}
@@ -92,7 +93,7 @@ func (m msgServer) Execute(ctx context.Context, execute *v1.MsgExecute) (*v1.Msg
 	}
 
 	// encode the response
-	respAny, err := implementation.PackAny(resp.(implementation.ProtoMsg))
+	respAny, err := implementation.PackAny(resp)
 	if err != nil {
 		return nil, err
 	}

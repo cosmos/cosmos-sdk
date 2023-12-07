@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	account_abstractionv1 "cosmossdk.io/api/cosmos/accounts/interfaces/account_abstraction/v1"
 	"cosmossdk.io/x/accounts/accountstd"
+	account_abstractionv1 "cosmossdk.io/x/accounts/interfaces/account_abstraction/v1"
 )
 
 // FullAbstractedAccount is an account abstraction that implements

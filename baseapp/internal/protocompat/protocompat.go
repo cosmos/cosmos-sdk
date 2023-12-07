@@ -6,6 +6,7 @@ import (
 	"reflect"
 
 	gogoproto "github.com/cosmos/gogoproto/proto"
+	"github.com/golang/protobuf/proto"
 	"google.golang.org/grpc"
 	proto2 "google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -165,7 +166,8 @@ func makeGogoHybridHandler(prefMethod protoreflect.MethodDescriptor, cdc codec.B
 			// we can just call the handler after making a copy of the message, for safety reasons.
 			resp, err := method.Handler(handler, ctx, func(msg any) error {
 				// ref: https://github.com/cosmos/cosmos-sdk/issues/18003
-				gogoproto.Merge(msg.(gogoproto.Message), m)
+				asGogoProto := msg.(gogoproto.Message)
+				proto.Merge(asGogoProto, m)
 				return nil
 			}, nil)
 			if err != nil {

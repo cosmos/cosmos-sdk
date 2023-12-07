@@ -36,10 +36,6 @@ func (bc Bech32Codec) StringToBytes(text string) ([]byte, error) {
 		return nil, errorsmod.Wrapf(sdkerrors.ErrLogic, "hrp does not match bech32 prefix: expected '%s' got '%s'", bc.Bech32Prefix, hrp)
 	}
 
-	if err := bech32.VerifyAddressBech32(bz); err != nil {
-		return nil, err
-	}
-
 	return bz, nil
 }
 

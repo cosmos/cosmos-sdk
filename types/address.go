@@ -153,16 +153,6 @@ func AccAddressFromHexUnsafe(address string) (addr AccAddress, err error) {
 	return AccAddress(bz), err
 }
 
-// VerifyAddressFormat verifies that the provided bytes form a valid address
-// according to the default address rules or a custom address verifier set by
-// verifier
-func VerifyAddressFormat(bz []byte, verifier func([]byte) error) error {
-	if verifier != nil {
-		return verifier(bz)
-	}
-	return bech32.VerifyAddressBech32(bz)
-}
-
 // MustAccAddressFromBech32 calls AccAddressFromBech32 and panics on error.
 func MustAccAddressFromBech32(address string) AccAddress {
 	addr, err := AccAddressFromBech32(address)
@@ -182,11 +172,6 @@ func AccAddressFromBech32(address string) (addr AccAddress, err error) {
 	bech32PrefixAccAddr := GetConfig().GetBech32AccountAddrPrefix()
 
 	bz, err := GetFromBech32(address, bech32PrefixAccAddr)
-	if err != nil {
-		return nil, err
-	}
-
-	err = bech32.VerifyAddressBech32(bz)
 	if err != nil {
 		return nil, err
 	}
@@ -338,11 +323,6 @@ func ValAddressFromBech32(address string) (addr ValAddress, err error) {
 		return nil, err
 	}
 
-	err = bech32.VerifyAddressBech32(bz)
-	if err != nil {
-		return nil, err
-	}
-
 	return ValAddress(bz), nil
 }
 
@@ -489,11 +469,6 @@ func ConsAddressFromBech32(address string) (addr ConsAddress, err error) {
 	bech32PrefixConsAddr := GetConfig().GetBech32ConsensusAddrPrefix()
 
 	bz, err := GetFromBech32(address, bech32PrefixConsAddr)
-	if err != nil {
-		return nil, err
-	}
-
-	err = bech32.VerifyAddressBech32(bz)
 	if err != nil {
 		return nil, err
 	}

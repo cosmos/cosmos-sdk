@@ -4,11 +4,6 @@ import (
 	"fmt"
 
 	"github.com/cosmos/btcutil/bech32"
-
-	errorsmod "cosmossdk.io/errors"
-
-	"github.com/cosmos/cosmos-sdk/types/address"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // ConvertAndEncode converts from a base256 encoded byte string to base32 encoded byte string and then to bech32.
@@ -34,17 +29,4 @@ func DecodeAndConvert(bech string) (string, []byte, error) {
 	}
 
 	return hrp, converted, nil
-}
-
-// VerifyAddressBech32 Verifies if a given address matches bech32 rules
-func VerifyAddressBech32(bz []byte) error {
-	if len(bz) == 0 {
-		return errorsmod.Wrap(sdkerrors.ErrUnknownAddress, "addresses cannot be empty")
-	}
-
-	if len(bz) > address.MaxAddrLen {
-		return errorsmod.Wrapf(sdkerrors.ErrUnknownAddress, "address max length is %d, got %d", address.MaxAddrLen, len(bz))
-	}
-
-	return nil
 }

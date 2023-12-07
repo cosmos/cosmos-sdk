@@ -74,7 +74,7 @@ func (t TestAccount) RegisterExecuteHandlers(builder *implementation.ExecuteBuil
 
 	// genesis testing
 	implementation.RegisterExecuteHandler(builder, func(ctx context.Context, req *types.UInt64Value) (*types.Empty, error) {
-		return new(types.Empty), t.Counter.Set(ctx, req.Value)
+		return &types.Empty{}, t.Counter.Set(ctx, req.Value)
 	})
 }
 

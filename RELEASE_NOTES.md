@@ -4,6 +4,15 @@
 
 ## 🚀 Highlights
 
+A month ago, Cosmos SDK Eden was released. Missed the announcement? Read it [here](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.50.1).
+For second patch release of the v0.50.x line, a few features and improvements were added to the SDK.
+
+Notably, we added and fixed the following:
+
+* Allow to import base64 encoded pubkeys in the keyring using `<appd> keys add <name> --pubkey-base64 <base64-pubkey>` 
+* A bug when migrating from v0.45/v0.46 directly to v0.50 due to missing `ConsensusParams` 
+* An issue when simulating gas for transactions when using a multisig
+
 ## 📝 Changelog
 
 Check out the [changelog](https://github.com/cosmos/cosmos-sdk/blob/v0.50.2/CHANGELOG.md) for an exhaustive list of changes, or [compare changes](https://github.com/cosmos/cosmos-sdk/compare/release/v0.50.1...v0.50.2) from the last release.

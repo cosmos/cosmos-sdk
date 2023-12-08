@@ -123,6 +123,7 @@ func (k Keeper) CalculateDelegationRewards(ctx context.Context, val sdk.Validato
 	// Slashes this block happened after reward allocation, but we have to account
 	// for them for the stake sanity check below.
 	endingHeight := uint64(sdkCtx.BlockHeight())
+	var iterErr error
 	if endingHeight > startingHeight {
 		err = k.IterateValidatorSlashEventsBetween(ctx, valAddr, startingHeight, endingHeight,
 			func(height uint64, event types.ValidatorSlashEvent) (stop bool) {
@@ -130,7 +131,7 @@ func (k Keeper) CalculateDelegationRewards(ctx context.Context, val sdk.Validato
 				if endingPeriod > startingPeriod {
 					delRewards, err := k.calculateDelegationRewardsBetween(ctx, val, startingPeriod, endingPeriod, stake)
 					if err != nil {
-						k.Logger(ctx).Error(err.Error())
+						iterErr = err
 						return true
 					}
 					rewards = rewards.Add(delRewards...)
@@ -143,6 +144,9 @@ func (k Keeper) CalculateDelegationRewards(ctx context.Context, val sdk.Validato
 				return false
 			},
 		)
+		if iterErr != nil {
+			return sdk.DecCoins{}, iterErr
+		}
 		if err != nil {
 			return sdk.DecCoins{}, err
 		}

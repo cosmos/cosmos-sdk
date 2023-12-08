@@ -10,6 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	cryptokeyring "github.com/cosmos/cosmos-sdk/crypto/keyring"
+	"github.com/muesli/termenv"
 )
 
 func printKeyringRecord(w io.Writer, ko KeyOutput, output string) error {
@@ -69,5 +70,19 @@ func printTextRecords(w io.Writer, kos []KeyOutput) error {
 		return err
 	}
 
+	return nil
+}
+
+// displayDiscreetly Print a secret string to an alternate screen, so the string isn't printed to the terminal.
+func displayDiscreetly(clientCtx client.Context, w io.Writer, promptMsg, secretMsg string) (err error) {
+	output := termenv.NewOutput(w)
+	output.AltScreen()
+	defer output.ExitAltScreen()
+	if _, err = fmt.Fprintf(output, "%s\n\n%s\n\nPress 'Enter' key to continue.", promptMsg, secretMsg); err != nil {
+		return err
+	}
+	if _, err = fmt.Scanln(); err != nil {
+		return err
+	}
 	return nil
 }

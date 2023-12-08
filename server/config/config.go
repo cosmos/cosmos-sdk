@@ -234,6 +234,7 @@ func DefaultConfig() *Config {
 		Telemetry: telemetry.Config{
 			Enabled:      false,
 			GlobalLabels: [][]string{},
+			MetricsSink:  telemetry.MetricSinkInMem,
 		},
 		API: APIConfig{
 			Enable:             false,

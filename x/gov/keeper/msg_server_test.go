@@ -19,7 +19,7 @@ const (
 	o1  = "-0.1"
 )
 
-var longAddressError = "size cannot exceed: 255"
+var longAddressError = "address max length is 255"
 
 func (suite *KeeperTestSuite) TestMsgSubmitProposal() {
 	suite.reset()

@@ -4,9 +4,11 @@ import (
 	"errors"
 	"strings"
 
+
 	"cosmossdk.io/core/address"
 	errorsmod "cosmossdk.io/errors"
 
+	address2 "github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -36,6 +38,10 @@ func (bc Bech32Codec) StringToBytes(text string) ([]byte, error) {
 		return nil, errorsmod.Wrapf(sdkerrors.ErrLogic, "hrp does not match bech32 prefix: expected '%s' got '%s'", bc.Bech32Prefix, hrp)
 	}
 
+	if err = verifyAddress(bz); err != nil {
+		return nil, err
+	}
+
 	return bz, nil
 }
 
@@ -51,4 +57,15 @@ func (bc Bech32Codec) BytesToString(bz []byte) (string, error) {
 	}
 
 	return text, nil
+}
+
+func verifyAddress(bz []byte) error {
+	if len(bz) == 0 {
+		return errorsmod.Wrap(sdkerrors.ErrUnknownAddress, "addresses cannot be empty")
+	}
+
+	if len(bz) > address2.MaxAddrLen {
+		return errorsmod.Wrapf(sdkerrors.ErrUnknownAddress, "address max length is %d, got %d", address2.MaxAddrLen, len(bz))
+	}
+	return nil
 }

@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	"cosmossdk.io/math"
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -11,8 +12,9 @@ import (
 
 	"cosmossdk.io/simapp"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
+	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -65,7 +67,7 @@ func TestInitGenesis(t *testing.T) {
 	// mint coins in the bonded pool representing the validators coins
 	i2 := len(validators) - 1 // -1 to exclude genesis validator
 	require.NoError(t,
-		testutil.FundModuleAccount(
+		banktestutil.FundModuleAccount(
 			app.BankKeeper,
 			ctx,
 			types.BondedPoolName,
@@ -199,7 +201,7 @@ func TestInitGenesisLargeValidatorSet(t *testing.T) {
 
 	// mint coins in the bonded pool representing the validators coins
 	require.NoError(t,
-		testutil.FundModuleAccount(
+		banktestutil.FundModuleAccount(
 			app.BankKeeper,
 			ctx,
 			types.BondedPoolName,
@@ -219,46 +221,51 @@ func TestInitGenesisLargeValidatorSet(t *testing.T) {
 	require.Equal(t, abcivals, vals)
 }
 
-// TODO: refactor LSM TEST
 func TestInitExportLiquidStakingGenesis(t *testing.T) {
-	// app, ctx, addrs := bootstrapGenesisTest(t, 2)
-	// address1, address2 := addrs[0], addrs[1]
+	app := simapp.Setup(t, false)
+	ctx := app.NewContext(false, tmproto.Header{})
 
-	// // Mock out a genesis state
-	// inGenesisState := types.GenesisState{
-	// 	Params: types.DefaultParams(),
-	// 	TokenizeShareRecords: []types.TokenizeShareRecord{
-	// 		{Id: 1, Owner: address1.String(), ModuleAccount: "module1", Validator: "val1"},
-	// 		{Id: 2, Owner: address2.String(), ModuleAccount: "module2", Validator: "val2"},
-	// 	},
-	// 	LastTokenizeShareRecordId: 2,
-	// 	TotalLiquidStakedTokens:   sdk.NewInt(1_000_000),
-	// 	TokenizeShareLocks: []types.TokenizeShareLock{
-	// 		{
-	// 			Address: address1.String(),
-	// 			Status:  types.TOKENIZE_SHARE_LOCK_STATUS_LOCKED.String(),
-	// 		},
-	// 		{
-	// 			Address:        address2.String(),
-	// 			Status:         types.TOKENIZE_SHARE_LOCK_STATUS_LOCK_EXPIRING.String(),
-	// 			CompletionTime: time.Date(2023, 1, 1, 1, 0, 0, 0, time.UTC),
-	// 		},
-	// 	},
-	// }
+	addresses := simtestutil.AddTestAddrs(app.BankKeeper, app.StakingKeeper, ctx, 2, sdk.OneInt())
+	addrAcc1, addrAcc2 := addresses[0], addresses[1]
 
-	// // Call init and then export genesis - confirming the same state is returned
-	// staking.InitGenesis(ctx, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, &inGenesisState)
-	// outGenesisState := *staking.ExportGenesis(ctx, app.StakingKeeper)
+	// Mock out a genesis state
+	inGenesisState := types.GenesisState{
+		Params: types.DefaultParams(),
+		TokenizeShareRecords: []types.TokenizeShareRecord{
+			{Id: 1, Owner: addrAcc1.String(), ModuleAccount: "module1", Validator: "val1"},
+			{Id: 2, Owner: addrAcc2.String(), ModuleAccount: "module2", Validator: "val2"},
+		},
+		LastTokenizeShareRecordId: 2,
+		TotalLiquidStakedTokens:   sdk.NewInt(1_000_000),
+		TokenizeShareLocks: []types.TokenizeShareLock{
+			{
+				Address: addrAcc1.String(),
+				Status:  types.TOKENIZE_SHARE_LOCK_STATUS_LOCKED.String(),
+			},
+			{
+				Address:        addrAcc2.String(),
+				Status:         types.TOKENIZE_SHARE_LOCK_STATUS_LOCK_EXPIRING.String(),
+				CompletionTime: time.Date(2023, 1, 1, 1, 0, 0, 0, time.UTC),
+			},
+		},
+		// Ensure that the bonded pool balance matches the bonded coins by passing existing validators
+		// Note: the above wasn't required in v0.45.16-ics-lsm
+		Validators: app.StakingKeeper.GetAllValidators(ctx),
+	}
 
-	// require.ElementsMatch(t, inGenesisState.TokenizeShareRecords, outGenesisState.TokenizeShareRecords,
-	// 	"tokenize share records")
+	// Call init and then export genesis - confirming the same state is returned
+	app.StakingKeeper.InitGenesis(ctx, &inGenesisState)
+	outGenesisState := app.StakingKeeper.ExportGenesis(ctx)
 
-	// require.Equal(t, inGenesisState.LastTokenizeShareRecordId, outGenesisState.LastTokenizeShareRecordId,
-	// 	"last tokenize share record ID")
+	require.ElementsMatch(t, inGenesisState.TokenizeShareRecords, outGenesisState.TokenizeShareRecords,
+		"tokenize share records")
 
-	// require.Equal(t, inGenesisState.TotalLiquidStakedTokens.Int64(), outGenesisState.TotalLiquidStakedTokens.Int64(),
-	// 	"total liquid staked")
+	require.Equal(t, inGenesisState.LastTokenizeShareRecordId, outGenesisState.LastTokenizeShareRecordId,
+		"last tokenize share record ID")
 
-	// require.ElementsMatch(t, inGenesisState.TokenizeShareLocks, outGenesisState.TokenizeShareLocks,
-	// 	"tokenize share locks")
+	require.Equal(t, inGenesisState.TotalLiquidStakedTokens.Int64(), outGenesisState.TotalLiquidStakedTokens.Int64(),
+		"total liquid staked")
+
+	require.ElementsMatch(t, inGenesisState.TokenizeShareLocks, outGenesisState.TokenizeShareLocks,
+		"tokenize share locks")
 }

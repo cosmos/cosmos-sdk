@@ -260,7 +260,7 @@ func (s *Store) Save(
 	snapshotHasher := sha256.New()
 	chunkHasher := sha256.New()
 	for chunkBody := range chunks {
-		defer chunkBody.Close() //nolint:staticcheck
+		defer chunkBody.Close() 
 		dir := s.pathSnapshot(height, format)
 		err = os.MkdirAll(dir, 0o755)
 		if err != nil {

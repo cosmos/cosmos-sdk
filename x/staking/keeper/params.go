@@ -47,7 +47,6 @@ func (k Keeper) PowerReduction(ctx sdk.Context) math.Int {
 // Validator bond factor for all validators
 func (k Keeper) ValidatorBondFactor(ctx sdk.Context) (res sdk.Dec) {
 	return k.GetParams(ctx).ValidatorBondFactor
-
 }
 
 // Global liquid staking cap across all liquid staking providers

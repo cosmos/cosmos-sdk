@@ -11,7 +11,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
-	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -42,17 +41,17 @@ func getHistEntries(r *rand.Rand) uint32 {
 
 // getGlobalLiquidStakingCap returns randomized GlobalLiquidStakingCap between 0-1.
 func getGlobalLiquidStakingCap(r *rand.Rand) sdk.Dec {
-	return simtypes.RandomDecAmount(r, sdk.OneDec())
+	return simulation.RandomDecAmount(r, sdk.OneDec())
 }
 
 // getValidatorLiquidStakingCap returns randomized ValidatorLiquidStakingCap between 0-1.
 func getValidatorLiquidStakingCap(r *rand.Rand) sdk.Dec {
-	return simtypes.RandomDecAmount(r, sdk.OneDec())
+	return simulation.RandomDecAmount(r, sdk.OneDec())
 }
 
 // getValidatorBondFactor returns randomized ValidatorBondCap between -1 and 300.
 func getValidatorBondFactor(r *rand.Rand) sdk.Dec {
-	return sdk.NewDec(int64(simtypes.RandIntBetween(r, -1, 300)))
+	return sdk.NewDec(int64(simulation.RandIntBetween(r, -1, 300)))
 }
 
 // RandomizedGenState generates a random GenesisState for staking

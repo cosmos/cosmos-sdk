@@ -7,6 +7,7 @@ import (
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/math"
 	"cosmossdk.io/simapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -89,8 +90,8 @@ func createValidators(t *testing.T, ctx sdk.Context, app *simapp.SimApp, powers 
 	return addrs, valAddrs, vals
 }
 
-func delegateCoinsFromAccount(ctx sdk.Context, app *simapp.SimApp, addr sdk.AccAddress, amount sdk.Int, val types.Validator) error {
-	_, err := app.StakingKeeper.Delegate(ctx, addr, amount, types.Unbonded, val, true)
+func delegateCoinsFromAccount(ctx sdk.Context, sk keeper.Keeper, addr sdk.AccAddress, amount math.Int, val types.ValidatorI) error {
+	_, err := sk.Delegate(ctx, addr, amount, types.Unbonded, val.(types.Validator), true)
 
 	return err
 }

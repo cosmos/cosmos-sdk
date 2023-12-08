@@ -746,16 +746,6 @@ func (k Keeper) Unbond(
 		return amount, err
 	}
 
-	isValidatorOperator := delegatorAddress.Equals(validator.GetOperator())
-
-	// If the delegation is the operator of the validator and undelegating will decrease the validator's
-	// self-delegation below their minimum, we jail the validator.
-	if isValidatorOperator && !validator.Jailed &&
-		validator.TokensFromShares(delegation.Shares).TruncateInt().LT(validator.MinSelfDelegation) {
-		k.jailValidator(ctx, validator)
-		validator = k.mustGetValidator(ctx, validator.GetOperator())
-	}
-
 	if delegation.Shares.IsZero() {
 		err = k.RemoveDelegation(ctx, delegation)
 	} else {

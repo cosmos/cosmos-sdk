@@ -58,6 +58,7 @@ func NewValidator(operator sdk.ValAddress, pubKey cryptotypes.PubKey, descriptio
 		UnbondingHeight:         int64(0),
 		UnbondingTime:           time.Unix(0, 0).UTC(),
 		Commission:              NewCommission(math.LegacyZeroDec(), math.LegacyZeroDec(), math.LegacyZeroDec()),
+		MinSelfDelegation:       sdk.ZeroInt(),
 		UnbondingOnHoldRefCount: 0,
 		ValidatorBondShares:     sdk.ZeroDec(),
 		LiquidShares:            sdk.ZeroDec(),

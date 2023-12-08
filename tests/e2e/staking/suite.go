@@ -914,16 +914,19 @@ func (s *E2ETestSuite) TestGetCmdQueryParams() {
 			"with text output",
 			[]string{fmt.Sprintf("--%s=text", flags.FlagOutput)},
 			`bond_denom: stake
+global_liquid_staking_cap: "1.000000000000000000"
 historical_entries: 10000
 max_entries: 7
 max_validators: 100
 min_commission_rate: "0.000000000000000000"
-unbonding_time: 1814400s`,
+unbonding_time: 1814400s
+validator_bond_factor: "-1.000000000000000000"
+validator_liquid_staking_cap: "1.000000000000000000"`,
 		},
 		{
 			"with json output",
 			[]string{fmt.Sprintf("--%s=json", flags.FlagOutput)},
-			`{"unbonding_time":"1814400s","max_validators":100,"max_entries":7,"historical_entries":10000,"bond_denom":"stake","min_commission_rate":"0.000000000000000000"}`,
+			`{"unbonding_time":"1814400s","max_validators":100,"max_entries":7,"historical_entries":10000,"bond_denom":"stake","min_commission_rate":"0.000000000000000000","validator_bond_factor":"-1.000000000000000000","global_liquid_staking_cap":"1.000000000000000000","validator_liquid_staking_cap":"1.000000000000000000"}`,
 		},
 	}
 	for _, tc := range testCases {
@@ -1224,7 +1227,7 @@ func (s *E2ETestSuite) TestNewRedelegateCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, 31, &sdk.TxResponse{},
+			false, 3, &sdk.TxResponse{},
 		},
 		{
 			"valid transaction of delegate",

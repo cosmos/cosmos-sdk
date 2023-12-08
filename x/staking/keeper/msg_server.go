@@ -6,7 +6,6 @@ import (
 	"strconv"
 	"time"
 
-	"cosmossdk.io/math"
 	"github.com/armon/go-metrics"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -643,13 +642,13 @@ func (k msgServer) UnbondValidator(goCtx context.Context, msg *types.MsgUnbondVa
 	if err != nil {
 		return nil, err
 	}
+
 	// validator must already be registered
 	validator, found := k.GetValidator(ctx, valAddr)
 	if !found {
 		return nil, types.ErrNoValidatorFound
 	}
 
-	// jail the validator.
 	k.jailValidator(ctx, validator)
 	return &types.MsgUnbondValidatorResponse{}, nil
 }
@@ -855,7 +854,7 @@ func (k msgServer) RedeemTokensForShares(goCtx context.Context, msg *types.MsgRe
 	// Similar to undelegations, if the account is attempting to tokenize the full delegation,
 	// but there's a precision error due to the decimal to int conversion, round up to the
 	// full decimal amount before modifying the delegation
-	shares := math.LegacyNewDec(shareToken.Amount.Int64())
+	shares := sdk.NewDecFromInt(shareToken.Amount)
 	if shareToken.Amount.Equal(delegation.Shares.TruncateInt()) {
 		shares = delegation.Shares
 	}

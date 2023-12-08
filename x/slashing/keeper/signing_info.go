@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/bits-and-blooms/bitset"
@@ -26,7 +27,7 @@ func (k Keeper) HasValidatorSigningInfo(ctx context.Context, consAddr sdk.ConsAd
 func (k Keeper) JailUntil(ctx context.Context, consAddr sdk.ConsAddress, jailTime time.Time) error {
 	signInfo, err := k.ValidatorSigningInfo.Get(ctx, consAddr)
 	if err != nil {
-		return errorsmod.Wrap(err, "cannot jail validator that does not have any signing information")
+		return errorsmod.Wrap(err, fmt.Sprintf("cannot jail validator with consensus address %s that does not have any signing information", consAddr.String()))
 	}
 
 	signInfo.JailedUntil = jailTime
@@ -37,7 +38,7 @@ func (k Keeper) JailUntil(ctx context.Context, consAddr sdk.ConsAddress, jailTim
 func (k Keeper) Tombstone(ctx context.Context, consAddr sdk.ConsAddress) error {
 	signInfo, err := k.ValidatorSigningInfo.Get(ctx, consAddr)
 	if err != nil {
-		return types.ErrNoSigningInfoFound.Wrap("cannot tombstone validator that does not have any signing information")
+		return types.ErrNoSigningInfoFound.Wrap(fmt.Sprintf("cannot tombstone validator with consensus address %s that does not have any signing information", consAddr.String()))
 	}
 
 	if signInfo.Tombstoned {

@@ -59,7 +59,7 @@ func (k Keeper) IterateBondedValidatorsByPower(ctx context.Context, fn func(inde
 		address := iterator.Value()
 		validator, err := k.GetValidator(ctx, address)
 		if err != nil {
-			return fmt.Errorf("validator record not found for address: %X", address)
+			return fmt.Errorf("validator record not found for address: %s", sdk.ValAddress(address).String())
 		}
 		if validator.IsBonded() {
 			stop := fn(i, validator) // XXX is this safe will the validator unexposed fields be able to get written to?

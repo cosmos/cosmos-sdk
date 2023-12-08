@@ -216,9 +216,11 @@ func (k Keeper) GetDelegatorUnbonding(ctx context.Context, delegator sdk.AccAddr
 func (k Keeper) GetDelegatorBonded(ctx context.Context, delegator sdk.AccAddress) (math.Int, error) {
 	bonded := math.LegacyZeroDec()
 
+	var iterErr error
 	err := k.IterateDelegatorDelegations(ctx, delegator, func(delegation types.Delegation) bool {
 		validatorAddr, err := k.validatorAddressCodec.StringToBytes(delegation.ValidatorAddress)
 		if err != nil {
+			iterErr = err
 			return true
 		}
 		validator, err := k.GetValidator(ctx, validatorAddr)
@@ -229,6 +231,9 @@ func (k Keeper) GetDelegatorBonded(ctx context.Context, delegator sdk.AccAddress
 		}
 		return false
 	})
+	if iterErr != nil {
+		return bonded.RoundInt(), iterErr
+	}
 	return bonded.RoundInt(), err
 }
 
@@ -728,7 +733,7 @@ func (k Keeper) Delegate(
 		case validator.IsUnbonding(), validator.IsUnbonded():
 			sendName = types.NotBondedPoolName
 		default:
-			return math.LegacyZeroDec(), fmt.Errorf("invalid validator status")
+			return math.LegacyZeroDec(), fmt.Errorf("invalid validator status: %v", validator.Status)
 		}
 
 		bondDenom, err := k.BondDenom(ctx)
@@ -760,7 +765,7 @@ func (k Keeper) Delegate(
 				return math.LegacyDec{}, err
 			}
 		default:
-			return math.LegacyZeroDec(), fmt.Errorf("unknown token source bond status")
+			return math.LegacyZeroDec(), fmt.Errorf("unknown token source bond status: %v", tokenSrc)
 		}
 	}
 
@@ -832,7 +837,7 @@ func (k Keeper) Unbond(
 		validator.TokensFromShares(delegation.Shares).TruncateInt().LT(validator.MinSelfDelegation) {
 		err = k.jailValidator(ctx, validator)
 		if err != nil {
-			return amount, err
+			return amount, fmt.Errorf("failed to get updated validator after jailing: %v", err)
 		}
 		validator, err = k.GetValidator(ctx, valbz)
 		if err != nil {
@@ -909,7 +914,7 @@ func (k Keeper) getBeginInfo(
 		return validator.UnbondingTime, validator.UnbondingHeight, false, nil
 
 	default:
-		return completionTime, height, false, fmt.Errorf("unknown validator status: %s", validator.Status)
+		return completionTime, height, false, fmt.Errorf("unknown validator status: %v", validator.Status)
 	}
 }
 

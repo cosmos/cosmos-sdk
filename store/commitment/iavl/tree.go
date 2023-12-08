@@ -29,10 +29,13 @@ func NewIavlTree(db dbm.DB, logger log.Logger, cfg *Config) *IavlTree {
 // Remove removes the given key from the tree.
 func (t *IavlTree) Remove(key []byte) error {
 	_, res, err := t.tree.Remove(key)
+	if err != nil {
+		return err
+	}
 	if !res {
 		return fmt.Errorf("key %x not found", key)
 	}
-	return err
+	return nil
 }
 
 // Set sets the given key-value pair in the tree.

@@ -7,7 +7,6 @@ import (
 	"cosmossdk.io/core/address"
 	errorsmod "cosmossdk.io/errors"
 
-	address2 "github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -16,7 +15,10 @@ type Bech32Codec struct {
 	Bech32Prefix string
 }
 
-var _ address.Codec = &Bech32Codec{}
+var (
+	_             address.Codec = &Bech32Codec{}
+	maxAddressLen               = 255
+)
 
 func NewBech32Codec(prefix string) address.Codec {
 	return Bech32Codec{prefix}
@@ -63,8 +65,8 @@ func verifyAddress(bz []byte) error {
 		return errorsmod.Wrap(sdkerrors.ErrUnknownAddress, "addresses cannot be empty")
 	}
 
-	if len(bz) > address2.MaxAddrLen {
-		return errorsmod.Wrapf(sdkerrors.ErrUnknownAddress, "address max length is %d, got %d", address2.MaxAddrLen, len(bz))
+	if len(bz) > maxAddressLen {
+		return errorsmod.Wrapf(sdkerrors.ErrUnknownAddress, "address max length is %d, got %d", maxAddressLen, len(bz))
 	}
 	return nil
 }

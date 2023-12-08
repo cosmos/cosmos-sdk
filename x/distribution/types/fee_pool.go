@@ -6,18 +6,22 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// zero fee pool
+// InitialFeePool initializes a zero fee pool
 func InitialFeePool() FeePool {
 	return FeePool{
+		DecimalPool:   sdk.DecCoins{},
 		CommunityPool: sdk.DecCoins{},
 	}
 }
 
 // ValidateGenesis validates the fee pool for a genesis state
 func (f FeePool) ValidateGenesis() error {
-	if f.CommunityPool.IsAnyNegative() {
-		return fmt.Errorf("negative CommunityPool in distribution fee pool, is %v",
-			f.CommunityPool)
+	if f.DecimalPool.IsAnyNegative() {
+		return fmt.Errorf("negative DecimalPool in distribution fee pool, is %v", f.DecimalPool)
+	}
+
+	if f.CommunityPool.IsAnyNegative() { // TODO(@julienrbrt) in v0.53, panic if the community pool is set
+		return fmt.Errorf("negative CommunityPool in distribution fee pool, is %v", f.CommunityPool)
 	}
 
 	return nil

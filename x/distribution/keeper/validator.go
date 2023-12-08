@@ -9,13 +9,12 @@ import (
 	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/distribution/types"
-	stakingtypes "cosmossdk.io/x/staking/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // initialize rewards for a new validator
-func (k Keeper) initializeValidator(ctx context.Context, val stakingtypes.ValidatorI) error {
+func (k Keeper) initializeValidator(ctx context.Context, val sdk.ValidatorI) error {
 	valBz, err := k.stakingKeeper.ValidatorAddressCodec().StringToBytes(val.GetOperator())
 	if err != nil {
 		return err
@@ -44,7 +43,7 @@ func (k Keeper) initializeValidator(ctx context.Context, val stakingtypes.Valida
 }
 
 // increment validator period, returning the period just ended
-func (k Keeper) IncrementValidatorPeriod(ctx context.Context, val stakingtypes.ValidatorI) (uint64, error) {
+func (k Keeper) IncrementValidatorPeriod(ctx context.Context, val sdk.ValidatorI) (uint64, error) {
 	valBz, err := k.stakingKeeper.ValidatorAddressCodec().StringToBytes(val.GetOperator())
 	if err != nil {
 		return 0, err
@@ -61,7 +60,7 @@ func (k Keeper) IncrementValidatorPeriod(ctx context.Context, val stakingtypes.V
 	if val.GetTokens().IsZero() {
 
 		// can't calculate ratio for zero-token validators
-		// ergo we instead add to the community pool
+		// ergo we instead add to the decimal pool
 		feePool, err := k.FeePool.Get(ctx)
 		if err != nil {
 			return 0, err
@@ -72,7 +71,7 @@ func (k Keeper) IncrementValidatorPeriod(ctx context.Context, val stakingtypes.V
 			return 0, err
 		}
 
-		feePool.CommunityPool = feePool.CommunityPool.Add(rewards.Rewards...)
+		feePool.DecimalPool = feePool.DecimalPool.Add(rewards.Rewards...)
 		outstanding.Rewards = outstanding.GetRewards().Sub(rewards.Rewards)
 		err = k.FeePool.Set(ctx, feePool)
 		if err != nil {

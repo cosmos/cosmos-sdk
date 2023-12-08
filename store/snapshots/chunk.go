@@ -6,7 +6,7 @@ import (
 
 	"cosmossdk.io/errors"
 	"cosmossdk.io/store/v2"
-	snapshottypes "cosmossdk.io/store/v2/snapshots/types"
+	snapshotstypes "cosmossdk.io/store/v2/snapshots/types"
 )
 
 // ChunkWriter reads an input stream, splits it into fixed-size chunks, and writes them to a
@@ -169,15 +169,15 @@ func DrainChunks(chunks <-chan io.ReadCloser) {
 
 // ValidRestoreHeight will check height is valid for snapshot restore or not
 func ValidRestoreHeight(format uint32, height uint64) error {
-	if format != snapshottypes.CurrentFormat {
-		return errors.Wrapf(snapshottypes.ErrUnknownFormat, "format %v", format)
+	if format != snapshotstypes.CurrentFormat {
+		return errors.Wrapf(snapshotstypes.ErrUnknownFormat, "format %v", format)
 	}
 
 	if height == 0 {
 		return errors.Wrap(store.ErrLogic, "cannot restore snapshot at height 0")
 	}
 	if height > uint64(math.MaxInt64) {
-		return errors.Wrapf(snapshottypes.ErrInvalidMetadata,
+		return errors.Wrapf(snapshotstypes.ErrInvalidMetadata,
 			"snapshot height %v cannot exceed %v", height, int64(math.MaxInt64))
 	}
 

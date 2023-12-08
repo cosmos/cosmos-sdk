@@ -9,7 +9,7 @@ import (
 // SDK for store operations such as Get and Set calls. In addition, callers have
 // the ability to explicitly charge gas for costly operations such as signature
 // verification.
-type Gas uint64
+type Gas = uint64
 
 // Gas consumption descriptors.
 const (

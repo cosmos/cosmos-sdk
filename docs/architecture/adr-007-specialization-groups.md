@@ -10,7 +10,7 @@ This idea was first conceived of in order to fulfill the use case of the
 creation of a decentralized Computer Emergency Response Team (dCERT), whose
 members would be elected by a governing community and would fulfill the role of
 coordinating the community under emergency situations. This thinking
-can be further abstracted into the conception of "blockchain specialization
+can be further abstracted into the concept of "blockchain specialization
 groups".
 
 The creation of these groups are the beginning of specialization capabilities
@@ -44,7 +44,7 @@ A specialization group can be broadly broken down into the following functions
     * Individual compensation for all constituents of a group from the
      greater community
 
-Membership admittance to a specialization group could take place over a wide
+Membership admission to a specialization group could take place over a wide
 variety of mechanisms. The most obvious example is through a general vote among
 the entire community, however in certain systems a community may want to allow
 the members already in a specialization group to internally elect new members,

@@ -84,7 +84,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (simulation) [#17911](https://github.com/cosmos/cosmos-sdk/pull/17911) Fix all problems with executing command `make test-sim-custom-genesis-fast` for simulation test.
 * (simulation) [#18196](https://github.com/cosmos/cosmos-sdk/pull/18196) Fix the problem of `validator set is empty after InitGenesis` in simulation test.
 * (baseapp) [#18551](https://github.com/cosmos/cosmos-sdk/pull/18551) Fix SelectTxForProposal the calculation method of tx bytes size is inconsistent with CometBFT
-* (baseapp) [#18653](https://github.com/cosmos/cosmos-sdk/pull/18653) Fix protocompat hybrid handler merging on gogoproto handlers for messages with custom types.
+* (baseapp) [#18654](https://github.com/cosmos/cosmos-sdk/pull/18654) Fixes an issue in which gogoproto.Merge does not work with gogoproto messages with custom types.
 
 ### API Breaking Changes
 
@@ -186,6 +186,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### State Machine Breaking
 
+* (baseapp) [#18627](https://github.com/cosmos/cosmos-sdk/pull/18627) Post handlers are run on non successful transaction executions too.
 * (x/upgrade) [#16244](https://github.com/cosmos/cosmos-sdk/pull/16244) Upgrade module no longer stores the app version but gets and sets the app version stored in the `ParamStore` of baseapp.
 * (x/staking) [#17655](https://github.com/cosmos/cosmos-sdk/pull/17655) `HistoricalInfo` was replaced with `HistoricalRecord`, it removes the validator set and comet header and only keep what is needed for IBC. 
 

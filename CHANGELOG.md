@@ -59,6 +59,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (client/tx) [#18472](https://github.com/cosmos/cosmos-sdk/pull/18472) Utilizes the correct Pubkey when simulating a transaction.
 * (baseapp) [#18486](https://github.com/cosmos/cosmos-sdk/pull/18486) Fixed FinalizeBlock calls not being passed to ABCIListeners.
 * (baseapp) [#18627](https://github.com/cosmos/cosmos-sdk/pull/18627) Post handlers are run on non successful transaction executions too.
+* (baseapp) [#18654](https://github.com/cosmos/cosmos-sdk/pull/18654) Fixes an issue in which `gogoproto.Merge` does not work with gogoproto messages with custom types.
 
 ## [v0.50.1](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.50.1) - 2023-11-07
 

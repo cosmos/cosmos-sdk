@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"cosmossdk.io/x/accounts/internal/implementation"
 	v1 "cosmossdk.io/x/accounts/v1"
 )
 
@@ -24,20 +25,8 @@ func (q queryServer) AccountQuery(ctx context.Context, request *v1.AccountQueryR
 		return nil, err
 	}
 
-	// get acc type
-	accType, err := q.k.AccountsByType.Get(ctx, targetAddr)
-	if err != nil {
-		return nil, err
-	}
-
-	// get impl
-	impl, err := q.k.getImplementation(accType)
-	if err != nil {
-		return nil, err
-	}
-
 	// decode req into boxed concrete type
-	queryReq, err := impl.DecodeQueryRequest(request.Request)
+	queryReq, err := implementation.UnpackAnyRaw(request.Request)
 	if err != nil {
 		return nil, err
 	}
@@ -48,13 +37,13 @@ func (q queryServer) AccountQuery(ctx context.Context, request *v1.AccountQueryR
 	}
 
 	// encode response
-	respBytes, err := impl.EncodeQueryResponse(resp)
+	respAny, err := implementation.PackAny(resp)
 	if err != nil {
 		return nil, err
 	}
 
 	return &v1.AccountQueryResponse{
-		Response: respBytes,
+		Response: respAny,
 	}, nil
 }
 

@@ -6,22 +6,19 @@ import (
 	"context"
 	"testing"
 
-	rotationv1 "cosmossdk.io/api/cosmos/accounts/testing/rotation/v1"
-	accountsv1 "cosmossdk.io/api/cosmos/accounts/v1"
-	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
-	v1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
-	nftv1beta1 "cosmossdk.io/api/cosmos/nft/v1beta1"
-	stakingv1beta1 "cosmossdk.io/api/cosmos/staking/v1beta1"
 	"cosmossdk.io/simapp"
 	"cosmossdk.io/x/accounts"
+	rotationv1 "cosmossdk.io/x/accounts/testing/rotation/v1"
+	accountsv1 "cosmossdk.io/x/accounts/v1"
 	"cosmossdk.io/x/bank/testutil"
+	banktypes "cosmossdk.io/x/bank/types"
 	"cosmossdk.io/x/nft"
-	"github.com/cosmos/cosmos-proto/anyutil"
+	stakingtypes "cosmossdk.io/x/staking/types"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	gogoproto "github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/require"
-	"google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/types/known/anypb"
 )
 
 var (
@@ -70,13 +67,13 @@ func TestAccountAbstraction(t *testing.T) {
 			AuthenticationMethod:   "secp256k1",
 			AuthenticationData:     []byte("signature"),
 			AuthenticationGasLimit: 10000,
-			BundlerPaymentMessages: intoAny(t, &bankv1beta1.MsgSend{
+			BundlerPaymentMessages: intoAny(t, &banktypes.MsgSend{
 				FromAddress: aaAddrStr,
 				ToAddress:   bundlerAddrStr,
 				Amount:      coins(t, "1stake"), // the sender is the AA, so it has the coins and wants to pay the bundler for the gas
 			}),
 			BundlerPaymentGasLimit: 50000,
-			ExecutionMessages: intoAny(t, &bankv1beta1.MsgSend{
+			ExecutionMessages: intoAny(t, &banktypes.MsgSend{
 				FromAddress: aaAddrStr,
 				ToAddress:   aliceAddrStr,
 				Amount:      coins(t, "2000stake"), // as the real action the sender wants to send coins to alice
@@ -103,13 +100,13 @@ func TestAccountAbstraction(t *testing.T) {
 			AuthenticationMethod:   "secp256k1",
 			AuthenticationData:     []byte("signature"),
 			AuthenticationGasLimit: 10000,
-			BundlerPaymentMessages: intoAny(t, &bankv1beta1.MsgSend{
+			BundlerPaymentMessages: intoAny(t, &banktypes.MsgSend{
 				FromAddress: bundlerAddrStr, // abstracted account tries to send money from bundler to itself.
 				ToAddress:   aaAddrStr,
 				Amount:      coins(t, "1stake"),
 			}),
 			BundlerPaymentGasLimit: 50000,
-			ExecutionMessages: intoAny(t, &bankv1beta1.MsgSend{
+			ExecutionMessages: intoAny(t, &banktypes.MsgSend{
 				FromAddress: aaAddrStr,
 				ToAddress:   aliceAddrStr,
 				Amount:      coins(t, "2000stake"), // as the real action the sender wants to send coins to alice
@@ -130,13 +127,13 @@ func TestAccountAbstraction(t *testing.T) {
 			AuthenticationMethod:   "secp256k1",
 			AuthenticationData:     []byte("signature"),
 			AuthenticationGasLimit: 10000,
-			BundlerPaymentMessages: intoAny(t, &bankv1beta1.MsgSend{
+			BundlerPaymentMessages: intoAny(t, &banktypes.MsgSend{
 				FromAddress: aaAddrStr,
 				ToAddress:   bundlerAddrStr,
 				Amount:      coins(t, "1stake"),
 			}),
 			BundlerPaymentGasLimit: 50000,
-			ExecutionMessages: intoAny(t, &bankv1beta1.MsgSend{
+			ExecutionMessages: intoAny(t, &banktypes.MsgSend{
 				FromAddress: aliceAddrStr, // abstracted account attempts to send money from alice to itself
 				ToAddress:   aaAddrStr,
 				Amount:      coins(t, "2000stake"),
@@ -159,13 +156,13 @@ func TestAccountAbstraction(t *testing.T) {
 			AuthenticationMethod:   "invalid",
 			AuthenticationData:     []byte("signature"),
 			AuthenticationGasLimit: 10000,
-			BundlerPaymentMessages: intoAny(t, &bankv1beta1.MsgSend{
+			BundlerPaymentMessages: intoAny(t, &banktypes.MsgSend{
 				FromAddress: aaAddrStr,
 				ToAddress:   bundlerAddrStr,
 				Amount:      coins(t, "1stake"),
 			}),
 			BundlerPaymentGasLimit: 50000,
-			ExecutionMessages: intoAny(t, &bankv1beta1.MsgSend{
+			ExecutionMessages: intoAny(t, &banktypes.MsgSend{
 				FromAddress: aliceAddrStr, // abstracted account attempts to send money from alice to itself
 				ToAddress:   aaAddrStr,
 				Amount:      coins(t, "2000stake"),
@@ -189,13 +186,13 @@ func TestAccountAbstraction(t *testing.T) {
 			AuthenticationMethod:   "secp256k1",
 			AuthenticationData:     []byte("signature"),
 			AuthenticationGasLimit: 10000,
-			BundlerPaymentMessages: intoAny(t, &bankv1beta1.MsgSend{
+			BundlerPaymentMessages: intoAny(t, &banktypes.MsgSend{
 				FromAddress: aaAddrStr,
 				ToAddress:   bundlerAddrStr,
 				Amount:      coins(t, "1atom"), // abstracted account does not have enough money to pay the bundler, since it does not hold atom
 			}),
 			BundlerPaymentGasLimit: 50000,
-			ExecutionMessages: intoAny(t, &bankv1beta1.MsgSend{
+			ExecutionMessages: intoAny(t, &banktypes.MsgSend{
 				FromAddress: aliceAddrStr, // abstracted account attempts to send money from alice to itself
 				ToAddress:   aaAddrStr,
 				Amount:      coins(t, "2000stake"),
@@ -218,13 +215,13 @@ func TestAccountAbstraction(t *testing.T) {
 			AuthenticationMethod:   "secp256k1",
 			AuthenticationData:     []byte("signature"),
 			AuthenticationGasLimit: 10000,
-			BundlerPaymentMessages: intoAny(t, &bankv1beta1.MsgSend{
+			BundlerPaymentMessages: intoAny(t, &banktypes.MsgSend{
 				FromAddress: aaAddrStr,
 				ToAddress:   bundlerAddrStr,
 				Amount:      coins(t, "1stake"),
 			}),
 			BundlerPaymentGasLimit: 50000,
-			ExecutionMessages: intoAny(t, &bankv1beta1.MsgSend{
+			ExecutionMessages: intoAny(t, &banktypes.MsgSend{
 				FromAddress: aaAddrStr,
 				ToAddress:   aliceAddrStr,
 				Amount:      coins(t, "2000atom"), // abstracted account does not have enough money to pay alice, since it does not hold atom
@@ -247,13 +244,13 @@ func TestAccountAbstraction(t *testing.T) {
 			AuthenticationMethod:   "secp256k1",
 			AuthenticationData:     []byte("signature"),
 			AuthenticationGasLimit: 10000,
-			BundlerPaymentMessages: intoAny(t, &bankv1beta1.MsgSend{
+			BundlerPaymentMessages: intoAny(t, &banktypes.MsgSend{
 				FromAddress: aaFullAddrStr,
 				ToAddress:   bundlerAddrStr,
 				Amount:      coins(t, "1stake"), // we expect this to fail since the account is implement in such a way not to allow bank sends.
 			}),
 			BundlerPaymentGasLimit: 50000,
-			ExecutionMessages: intoAny(t, &bankv1beta1.MsgSend{
+			ExecutionMessages: intoAny(t, &banktypes.MsgSend{
 				FromAddress: aaFullAddrStr,
 				ToAddress:   aliceAddrStr,
 				Amount:      coins(t, "2000stake"),
@@ -273,7 +270,7 @@ func TestAccountAbstraction(t *testing.T) {
 			AuthenticationGasLimit: 10000,
 			BundlerPaymentMessages: nil,
 			BundlerPaymentGasLimit: 50000,
-			ExecutionMessages: intoAny(t, &stakingv1beta1.MsgDelegate{
+			ExecutionMessages: intoAny(t, &stakingtypes.MsgDelegate{
 				DelegatorAddress: aaFullAddrStr,
 				ValidatorAddress: "some-validator",
 				Amount:           coins(t, "2000stake")[0],
@@ -300,14 +297,14 @@ func TestAccountAbstraction(t *testing.T) {
 			AuthenticationMethod:   "secp256k1",
 			AuthenticationData:     []byte("signature"),
 			AuthenticationGasLimit: 10000,
-			BundlerPaymentMessages: intoAny(t, &nftv1beta1.MsgSend{
+			BundlerPaymentMessages: intoAny(t, &nft.MsgSend{
 				ClassId:  "omega-rare",
 				Id:       "the-most-rare",
 				Sender:   aaFullAddrStr,
 				Receiver: bundlerAddrStr,
 			}),
 			BundlerPaymentGasLimit: 50000,
-			ExecutionMessages: intoAny(t, &bankv1beta1.MsgSend{
+			ExecutionMessages: intoAny(t, &banktypes.MsgSend{
 				FromAddress: aaFullAddrStr,
 				ToAddress:   aliceAddrStr,
 				Amount:      coins(t, "2000stake"),
@@ -318,28 +315,21 @@ func TestAccountAbstraction(t *testing.T) {
 	})
 }
 
-func intoAny(t *testing.T, msgs ...proto.Message) (anys []*anypb.Any) {
+func intoAny(t *testing.T, msgs ...gogoproto.Message) (anys []*codectypes.Any) {
 	t.Helper()
 	for _, msg := range msgs {
-		any, err := anyutil.New(msg)
+		any, err := codectypes.NewAnyWithValue(msg)
 		require.NoError(t, err)
 		anys = append(anys, any)
 	}
 	return
 }
 
-func coins(t *testing.T, s string) []*v1beta1.Coin {
+func coins(t *testing.T, s string) sdk.Coins {
 	t.Helper()
 	coins, err := sdk.ParseCoinsNormalized(s)
 	require.NoError(t, err)
-	coinsv2 := make([]*v1beta1.Coin, len(coins))
-	for i, coin := range coins {
-		coinsv2[i] = &v1beta1.Coin{
-			Denom:  coin.Denom,
-			Amount: coin.Amount.String(),
-		}
-	}
-	return coinsv2
+	return coins
 }
 
 func balanceIs(t *testing.T, ctx context.Context, app *simapp.SimApp, addr sdk.AccAddress, s string) {

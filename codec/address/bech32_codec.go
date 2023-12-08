@@ -4,7 +4,6 @@ import (
 	"errors"
 	"strings"
 
-
 	"cosmossdk.io/core/address"
 	errorsmod "cosmossdk.io/errors"
 

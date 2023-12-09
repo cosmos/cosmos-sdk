@@ -1,4 +1,4 @@
-name: misspell
+name: Fix typos nightly
 
 on:
   schedule:
@@ -11,7 +11,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - uses: sobolevn/misspell-fixer-action@master
+      - uses: sobolevn/misspell-fixer-action@8842a5615f83fed75e8a87015e9300a54d049961
       - uses: peter-evans/create-pull-request@v5
         with:
           token: ${{ secrets.PRBOT_PAT }}

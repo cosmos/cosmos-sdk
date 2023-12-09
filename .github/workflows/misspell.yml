@@ -11,7 +11,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - uses: sobolevn/misspell-fixer-action@8842a5615f83fed75e8a87015e9300a54d049961
+      - uses: sobolevn/misspell-fixer-action@e5368f1b21585248afad4d32df9bc100451dbbff
       - uses: peter-evans/create-pull-request@v5
         with:
           token: ${{ secrets.PRBOT_PAT }}

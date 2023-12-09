@@ -451,10 +451,16 @@ func (coins DecCoins) Empty() bool {
 	return len(coins) == 0
 }
 
-// AmountOf returns the amount of a denom from deccoins
+// AmountOf returns the amount of a denom from deccoins. It panics if the denom
+// is invalid.
 func (coins DecCoins) AmountOf(denom string) math.LegacyDec {
 	mustValidateDenom(denom)
+	return coins.AmountOfNoValidation(denom)
+}
 
+// AmountOfNoValidation returns the amount of a denom from deccoins without checking
+// the correctness of the denom.
+func (coins DecCoins) AmountOfNoValidation(denom string) math.LegacyDec {
 	switch len(coins) {
 	case 0:
 		return math.LegacyZeroDec()
@@ -472,11 +478,11 @@ func (coins DecCoins) AmountOf(denom string) math.LegacyDec {
 
 		switch {
 		case denom < coin.Denom:
-			return coins[:midIdx].AmountOf(denom)
+			return coins[:midIdx].AmountOfNoValidation(denom)
 		case denom == coin.Denom:
 			return coin.Amount
 		default:
-			return coins[midIdx+1:].AmountOf(denom)
+			return coins[midIdx+1:].AmountOfNoValidation(denom)
 		}
 	}
 }

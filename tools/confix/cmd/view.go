@@ -12,7 +12,7 @@ import (
 )
 
 func ViewCommand() *cobra.Command {
-	flagOutputFomat := "output-format"
+	flagOutputFormat := "output-format"
 
 	cmd := &cobra.Command{
 		Use:   "view [config]",
@@ -31,7 +31,7 @@ func ViewCommand() *cobra.Command {
 				return err
 			}
 
-			if format, _ := cmd.Flags().GetString(flagOutputFomat); format == "toml" {
+			if format, _ := cmd.Flags().GetString(flagOutputFormat); format == "toml" {
 				cmd.Println(string(file))
 				return nil
 			}
@@ -48,7 +48,7 @@ func ViewCommand() *cobra.Command {
 	}
 
 	// output flag
-	cmd.Flags().String(flagOutputFomat, "toml", "Output format (json|toml)")
+	cmd.Flags().String(flagOutputFormat, "toml", "Output format (json|toml)")
 
 	return cmd
 }

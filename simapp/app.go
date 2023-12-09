@@ -22,6 +22,7 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/accounts"
 	"cosmossdk.io/x/accounts/accountstd"
+	"cosmossdk.io/x/accounts/testing/account_abstraction"
 	"cosmossdk.io/x/accounts/testing/counter"
 	"cosmossdk.io/x/auth"
 	"cosmossdk.io/x/auth/ante"
@@ -283,11 +284,15 @@ func NewSimApp(
 	accountsKeeper, err := accounts.NewKeeper(
 		runtime.NewKVStoreService(keys[accounts.StoreKey]),
 		runtime.EventService{},
+		runtime.BranchService{},
 		app.AuthKeeper.AddressCodec(),
-		appCodec.InterfaceRegistry().SigningContext(),
+		appCodec,
 		app.MsgServiceRouter(),
 		app.GRPCQueryRouter(),
+		appCodec.InterfaceRegistry(),
 		accountstd.AddAccount("counter", counter.NewAccount),
+		accountstd.AddAccount("aa_minimal", account_abstraction.NewMinimalAbstractedAccount),
+		accountstd.AddAccount("aa_full", account_abstraction.NewFullAbstractedAccount),
 	)
 	if err != nil {
 		panic(err)
@@ -347,8 +352,11 @@ func NewSimApp(
 
 	groupConfig := group.DefaultConfig()
 	/*
-		Example of setting group params:
-		groupConfig.MaxMetadataLen = 1000
+		Example of group params:
+		config.MaxExecutionPeriod = "1209600s" 	// example execution period in seconds
+		config.MaxMetadataLen = 1000 			// example metadata length in bytes
+		config.MaxProposalTitleLen = 255 		// example max title length in characters
+		config.MaxProposalSummaryLen = 10200 	// example max summary length in characters
 	*/
 	app.GroupKeeper = groupkeeper.NewKeeper(keys[group.StoreKey], appCodec, app.MsgServiceRouter(), app.AuthKeeper, groupConfig)
 

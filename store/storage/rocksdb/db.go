@@ -12,6 +12,7 @@ import (
 	"golang.org/x/exp/slices"
 
 	"cosmossdk.io/store/v2"
+	"cosmossdk.io/store/v2/storage"
 	"cosmossdk.io/store/v2/storage/util"
 )
 
@@ -23,7 +24,7 @@ const (
 )
 
 var (
-	_ store.VersionedDatabase = (*Database)(nil)
+	_ storage.Database = (*Database)(nil)
 
 	defaultWriteOpts = grocksdb.NewDefaultWriteOptions()
 	defaultReadOpts  = grocksdb.NewDefaultReadOptions()
@@ -33,9 +34,8 @@ type Database struct {
 	storage  *grocksdb.DB
 	cfHandle *grocksdb.ColumnFamilyHandle
 
-	// tsLow reflects the full_history_ts_low CF value. Since pruning is done in
-	// a lazy manner, we use this value to prevent reads for versions that will
-	// be purged in the next compaction.
+	// tsLow reflects the full_history_ts_low CF value, which is earliest version
+	// supported
 	tsLow uint64
 }
 
@@ -74,6 +74,7 @@ func NewWithDB(storage *grocksdb.DB, cfHandle *grocksdb.ColumnFamilyHandle) (*Da
 	if len(tsLowBz) > 0 {
 		tsLow = binary.LittleEndian.Uint64(tsLowBz)
 	}
+
 	return &Database{
 		storage:  storage,
 		cfHandle: cfHandle,
@@ -90,7 +91,15 @@ func (db *Database) Close() error {
 	return nil
 }
 
+func (db *Database) NewBatch(version uint64) (store.Batch, error) {
+	return NewBatch(db, version), nil
+}
+
 func (db *Database) getSlice(storeKey string, version uint64, key []byte) (*grocksdb.Slice, error) {
+	if version < db.tsLow {
+		return nil, store.ErrVersionPruned{EarliestVersion: db.tsLow}
+	}
+
 	return db.storage.GetCF(
 		newTSReadOptions(version),
 		db.cfHandle,
@@ -120,10 +129,6 @@ func (db *Database) GetLatestVersion() (uint64, error) {
 }
 
 func (db *Database) Has(storeKey string, version uint64, key []byte) (bool, error) {
-	if version < db.tsLow {
-		return false, nil
-	}
-
 	slice, err := db.getSlice(storeKey, version, key)
 	if err != nil {
 		return false, err
@@ -133,34 +138,12 @@ func (db *Database) Has(storeKey string, version uint64, key []byte) (bool, erro
 }
 
 func (db *Database) Get(storeKey string, version uint64, key []byte) ([]byte, error) {
-	if version < db.tsLow {
-		return nil, nil
-	}
-
 	slice, err := db.getSlice(storeKey, version, key)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get RocksDB slice: %w", err)
 	}
 
 	return copyAndFreeSlice(slice), nil
-}
-
-func (db *Database) ApplyChangeset(version uint64, cs *store.Changeset) error {
-	b := NewBatch(db, version)
-
-	for _, kvPair := range cs.Pairs {
-		if kvPair.Value == nil {
-			if err := b.Delete(kvPair.StoreKey, kvPair.Key); err != nil {
-				return err
-			}
-		} else {
-			if err := b.Set(kvPair.StoreKey, kvPair.Key, kvPair.Value); err != nil {
-				return err
-			}
-		}
-	}
-
-	return b.Write()
 }
 
 // Prune attempts to prune all versions up to and including the provided version.

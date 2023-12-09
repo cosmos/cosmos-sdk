@@ -40,11 +40,17 @@ func NewManager(
 
 // SetStorageOptions sets the state storage options.
 func (m *Manager) SetStorageOptions(opts Options) {
+	m.mtx.Lock()
+	defer m.mtx.Unlock()
+
 	m.storageOpts = opts
 }
 
 // SetCommitmentOptions sets the state commitment options.
 func (m *Manager) SetCommitmentOptions(opts Options) {
+	m.mtx.Lock()
+	defer m.mtx.Unlock()
+
 	m.commitmentOpts = opts
 }
 
@@ -113,7 +119,9 @@ func (m *Manager) Prune(height uint64) {
 						m.chStorage <- struct{}{}
 					}()
 				}
+
 			default:
+				m.logger.Debug("storage pruning is still running; skipping", "version", pruneHeight)
 			}
 		}
 	}
@@ -133,7 +141,9 @@ func (m *Manager) Prune(height uint64) {
 						m.chCommitment <- struct{}{}
 					}()
 				}
+
 			default:
+				m.logger.Debug("commitment pruning is still running; skipping", "version", pruneHeight)
 			}
 		}
 	}

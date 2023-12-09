@@ -29,6 +29,12 @@ service Msg {
 
   // ClaimBudget defines a method to claim the distributed budget.
   rpc ClaimBudget(MsgClaimBudget) returns (MsgClaimBudgetResponse);
+
+  // CreateContinuousFund defines a method to add funds continuously.
+  rpc CreateContinuousFund(MsgCreateContinuousFund) returns (MsgCreateContinuousFundResponse);
+
+  // CancelContinuousFund defines a method for cancelling continuous fund.
+  rpc CancelContinuousFund(MsgCancelContinuousFund) returns (MsgCancelContinuousFundResponse);
 }
 
 // MsgFundCommunityPool allows an account to directly
@@ -52,7 +58,7 @@ message MsgFundCommunityPoolResponse {}
 message MsgCommunityPoolSpend {
   option (cosmos.msg.v1.signer) = "authority";
 
-  // authority is the address that controls the module (defaults to x/gov unless overwritten).
+  // Authority is the address that controls the module (defaults to x/gov unless overwritten).
   string   authority                       = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   string   recipient                       = 2;
   repeated cosmos.base.v1beta1.Coin amount = 3
@@ -67,16 +73,16 @@ message MsgCommunityPoolSpendResponse {}
 message MsgSubmitBudgetProposal {
   option (cosmos.msg.v1.signer) = "authority";
 
-  // authority is the address that controls the module (defaults to x/gov unless overwritten).
+  // Authority is the address that controls the module (defaults to x/gov unless overwritten).
   string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  // recipient_address is the address of the recipient who can claim the budget.
+  // RecipientAddress is the address of the recipient who can claim the budget.
   string recipient_address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  // total_budget is the total amount allocated for the budget.
+  // TotalBudget is the total amount allocated for the budget.
   cosmos.base.v1beta1.Coin total_budget = 3;
-  // start_time is the time when the budget becomes claimable.
-  // If start_time is less than the current block time, proposal will not be accepted.
+  // StartTime is the time when the budget becomes claimable.
+  // If StartTime is less than the current block time, proposal will not be accepted.
   google.protobuf.Timestamp start_time = 4 [(gogoproto.stdtime) = true];
-  // tranches is the number of times the total budget amount is to be distributed.
+  // Tranches is the number of times the total budget amount is to be distributed.
   uint64 tranches = 5;
   // Period is the time interval(number of seconds) at which funds distribution should be performed.
   // For example, if a period is set to 3600, it represents an action that
@@ -100,4 +106,57 @@ message MsgClaimBudgetResponse {
   cosmos.base.v1beta1.Coin amount = 1
       [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
   ;
+}
+
+// MsgCreateContinuousFund defines a message for adding continuous funds.
+message MsgCreateContinuousFund {
+  option (cosmos.msg.v1.signer) = "authority";
+
+  // Title is the title of the funds.
+  string title = 1;
+  // Description of the funds.
+  string description = 2;
+  // Authority is the address that controls the module (defaults to x/gov unless overwritten).
+  string authority = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // Recipient address of the account receiving funds.
+  string recipient = 4 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // Metadata is any arbitrary metadata attached.
+  string metadata = 5;
+  // Percentage is the percentage of funds to be allocated from Community pool share on block by block,
+  // till the `cap` is reached or expired.
+  string percentage = 6 [
+    (cosmos_proto.scalar)  = "cosmos.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
+    (gogoproto.nullable)   = false
+  ];
+  // Cap is the capital amount, which when its met funds are no longer distributed.
+  repeated cosmos.base.v1beta1.Coin cap = 7
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  // Optional, if expiry is set, removes the state object when expired.
+  google.protobuf.Timestamp expiry = 8 [(gogoproto.stdtime) = true];
+}
+
+// MsgCreateContinuousFundResponse defines the response to executing a
+// MsgCreateContinuousFund message.
+message MsgCreateContinuousFundResponse {}
+
+// MsgCancelContinuousFund defines a message to cancel continuous funds for a specific recipient.
+message MsgCancelContinuousFund {
+  option (cosmos.msg.v1.signer) = "authority";
+
+  // Authority is the account address of authority.
+  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // RecipientAddress is the account address of recipient whose funds are to be cancelled.
+  string recipient_address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// MsgCancelContinuousFundResponse defines the response to executing a
+// MsgCancelContinuousFund message.
+message MsgCancelContinuousFundResponse {
+  // CanceledTime is the canceled time.
+  google.protobuf.Timestamp canceled_time = 1 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+  // CanceledHeight defines the canceled block height.
+  uint64 canceled_height = 2;
+  // RecipientAddress is the account address of recipient whose funds are cancelled.
+  string recipient_address = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }

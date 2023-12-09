@@ -12,12 +12,16 @@ import (
 func TestStorageTestSuite(t *testing.T) {
 	s := &storage.StorageTestSuite{
 		NewDB: func(dir string) (store.VersionedDatabase, error) {
-			return New(dir)
+			db, err := New(dir)
+			if err == nil && db != nil {
+				// We set sync=false just to speed up CI tests. Operators should take
+				// careful consideration when setting this value in production environments.
+				db.SetSync(false)
+			}
+
+			return storage.NewStorageStore(db), err
 		},
 		EmptyBatchSize: 12,
-		SkipTests: []string{
-			"TestStorageTestSuite/TestDatabase_Prune",
-		},
 	}
 
 	suite.Run(t, s)

@@ -16,7 +16,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: DeterminateSystems/nix-installer-action@main
       - uses: DeterminateSystems/magic-nix-cache-action@main
-      - uses: actions/setup-go@v4
+      - uses: actions/setup-go@v5
         with:
           go-version: "1.21"
           check-latest: true
@@ -24,38 +24,27 @@ jobs:
         id: git_diff
         with:
           PATTERNS: |
-            **/*.go
-            go.mod
-            go.sum
-            **/go.mod
-            **/go.sum
-      #   with:
-      #     PATTERNS: |
-      #       Makefile
-      #       **/Makefile
-      #       .golangci.yml
+            Makefile
+            **/Makefile
+            .golangci.yml
       - name: run linting (long)
-        # if: env.GIT_DIFF
-        # id: lint_long
+        if: env.GIT_DIFF
+        id: lint_long
         run: |
           nix develop -c make lint
         env:
           NIX: 1
-      # - uses: technote-space/get-diff-action@v6.1.2
-      #   if: steps.lint_long.outcome == 'skipped'
-      #   id: git_diff_all
-      #   with:
-      #     PATTERNS: |
-      #       **/*.go
-      #       go.mod
-      #       go.sum
-      #       **/go.mod
-      #       **/go.sum
-      # - name: run linting (short)
-      #   if: steps.lint_long.outcome == 'skipped' && env.GIT_DIFF
-      #   run: |
-      #     nix develop -c make lint
-      #   env:
-      #     GIT_DIFF: ${{ env.GIT_DIFF }}
-      #     LINT_DIFF: 1
-      #     NIX: 1
+      - uses: technote-space/get-diff-action@v6.1.2
+        if: steps.lint_long.outcome == 'skipped'
+        with:
+          PATTERNS: |
+            **/*.go
+            *.go
+      - name: run linting (short)
+        if: steps.lint_long.outcome == 'skipped' && env.GIT_DIFF
+        run: |
+          nix develop -c make lint
+        env:
+          GIT_DIFF: ${{ env.GIT_DIFF }}
+          LINT_DIFF: 1
+          NIX: 1

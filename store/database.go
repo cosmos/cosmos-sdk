@@ -68,11 +68,12 @@ type VersionedDatabase interface {
 // Committer defines an API for committing state.
 type Committer interface {
 	WriteBatch(cs *Changeset) error
-	WorkingHash() []byte
-	GetLatestVersion() uint64
+	WorkingStoreInfos(version uint64) []StoreInfo
+	GetLatestVersion() (uint64, error)
 	LoadVersion(targetVersion uint64) error
-	Commit() ([]byte, error)
-	GetProof(version uint64, key []byte) (*ics23.CommitmentProof, error)
+	Commit() ([]StoreInfo, error)
+	SetInitialVersion(version uint64) error
+	GetProof(storeKey string, version uint64, key []byte) (*ics23.CommitmentProof, error)
 
 	// Prune attempts to prune all versions up to and including the provided
 	// version argument. The operation should be idempotent. An error should be

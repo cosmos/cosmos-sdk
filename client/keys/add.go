@@ -20,6 +20,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -79,7 +80,7 @@ Example:
 	f.Bool(flagNoBackup, false, "Don't print out seed phrase (if others are watching the terminal)")
 	f.Bool(flags.FlagDryRun, false, "Perform action, but don't add key to local keystore")
 	f.String(flagHDPath, "", "Manual HD Path derivation (overrides BIP44 config)")
-	f.Uint32(flagCoinType, sdk.GetConfig().GetCoinType(), "coin type number for HD derivation")
+	f.Uint32(flagCoinType, sdk.CoinType, "coin type number for HD derivation")
 	f.Uint32(flagAccount, 0, "Account number for HD derivation (less than equal 2147483647)")
 	f.Uint32(flagIndex, 0, "Address index number for HD derivation (less than equal 2147483647)")
 	f.String(flags.FlagKeyType, string(hd.Secp256k1Type), "Key signing algorithm to generate keys for")
@@ -217,8 +218,9 @@ func runAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *buf
 		}
 
 		var pk cryptotypes.PubKey
-		// create an empty pubkey in order to get the algo TypeUrl.
-		tempAny, err := codectypes.NewAnyWithValue(algo.Generate()([]byte{}).PubKey())
+
+		// create an empty seckp256k1 pubkey since it is the key returned by algo Generate function.
+		enotySecpPubKey, err := codectypes.NewAnyWithValue(&secp256k1.PubKey{})
 		if err != nil {
 			return err
 		}
@@ -226,7 +228,7 @@ func runAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *buf
 		jsonPub, err := json.Marshal(struct {
 			Type string `json:"@type,omitempty"`
 			Key  string `json:"key,omitempty"`
-		}{tempAny.TypeUrl, string(b64)})
+		}{enotySecpPubKey.TypeUrl, string(b64)})
 		if err != nil {
 			return fmt.Errorf("failed to JSON marshal typeURL and base64 key: %w", err)
 		}

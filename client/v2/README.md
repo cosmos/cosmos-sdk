@@ -37,7 +37,7 @@ It is possible to customize the generation of transactions and queries by defini
 Here are the steps to use AutoCLI:
 
 1. Ensure your app's modules implements the `appmodule.AppModule` interface.
-2. (optional) Configure how behave `autocli` command generation, by implementing the `func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions` method on the module.
+2. (optional) Configure how to behave as `autocli` command generation, by implementing the `func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions` method on the module.
 3. Use the `autocli.AppOptions` struct to specify the modules you defined. If you are using `depinject` / app v2, it can automatically create an instance of `autocli.AppOptions` based on your app's configuration.
 4. Use the `EnhanceRootCommand()` method provided by `autocli` to add the CLI commands for the specified modules to your root command.
 
@@ -121,7 +121,7 @@ This field is automatically filled when using the `--from` flag or defining the 
 AutoCLI currently supports only one signer per transaction.
 :::
 
-## Module Wiring & Customization
+## Module wiring & Customization
 
 The `AutoCLIOptions()` method on your module allows to specify custom commands, sub-commands or flags for each service, as it was a `cobra.Command` instance, within the `RpcCommandOptions` struct. Defining such options will customize the behavior of the `autocli` command generation, which by default generates a command for each method in your gRPC service.
 
@@ -136,6 +136,11 @@ The `AutoCLIOptions()` method on your module allows to specify custom commands, 
   },
 }
 ```
+
+:::tip
+AutoCLI can create a gov proposal of any tx by simply setting the `GovProposal` field to `true` in the `autocli.RpcCommandOptions` struct.
+Users can however use the `--no-proposal` flag to disable the proposal creation (which is useful if the authority isn't the gov module on a chain).
+:::
 
 ### Specifying Subcommands
 
@@ -201,12 +206,12 @@ It is possible to use `AutoCLI` for non module commands. The trick is still to i
 For example, here is how the SDK does it for `cometbft` gRPC commands:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/julien/autocli-comet/client/grpc/cmtservice/autocli.go#L52-L71
+https://github.com/cosmos/cosmos-sdk/blob/main/client/grpc/cmtservice/autocli.go#L52-L71
 ```
 
 ## Summary
 
-`autocli` let you generate CLI to your Cosmos SDK-based applications without any cobra boilerplate. It allows you to easily generate CLI commands and flags from your protobuf messages, and provides many options for customising the behavior of your CLI application.
+`autocli` lets you generate CLI to your Cosmos SDK-based applications without any cobra boilerplate. It allows you to easily generate CLI commands and flags from your protobuf messages, and provides many options for customising the behavior of your CLI application.
 
 To further enhance your CLI experience with Cosmos SDK-based blockchains, you can use `hubl`. `hubl` is a tool that allows you to query any Cosmos SDK-based blockchain using the new AutoCLI feature of the Cosmos SDK. With `hubl`, you can easily configure a new chain and query modules with just a few simple commands.
 

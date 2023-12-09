@@ -8,6 +8,7 @@ import (
 
 	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/kv/branch"
+	"cosmossdk.io/store/v2/storage"
 	"cosmossdk.io/store/v2/storage/sqlite"
 )
 
@@ -25,23 +26,24 @@ func TestStorageTestSuite(t *testing.T) {
 }
 
 func (s *StoreTestSuite) SetupTest() {
-	storage, err := sqlite.New(s.T().TempDir())
+	sqliteDB, err := sqlite.New(s.T().TempDir())
+	ss := storage.NewStorageStore(sqliteDB)
 	s.Require().NoError(err)
 
-	cs := new(store.Changeset)
+	cs := store.NewChangeset(map[string]store.KVPairs{storeKey: {}})
 	for i := 0; i < 100; i++ {
 		key := fmt.Sprintf("key%03d", i) // key000, key001, ..., key099
 		val := fmt.Sprintf("val%03d", i) // val000, val001, ..., val099
 
-		cs.AddKVPair(store.KVPair{StoreKey: storeKey, Key: []byte(key), Value: []byte(val)})
+		cs.AddKVPair(storeKey, store.KVPair{Key: []byte(key), Value: []byte(val)})
 	}
 
-	s.Require().NoError(storage.ApplyChangeset(1, cs))
+	s.Require().NoError(ss.ApplyChangeset(1, cs))
 
-	kvStore, err := branch.New(storeKey, storage)
+	kvStore, err := branch.New(storeKey, ss)
 	s.Require().NoError(err)
 
-	s.storage = storage
+	s.storage = ss
 	s.kvStore = kvStore
 }
 
@@ -128,7 +130,7 @@ func (s *StoreTestSuite) TestBranch() {
 	s.Require().Equal([]byte("updated_val001"), s.kvStore.Get([]byte("key001")))
 
 	s.Require().Equal(1, b.GetChangeset().Size())
-	s.Require().Equal([]byte("key001"), b.GetChangeset().Pairs[0].Key)
+	s.Require().Equal([]byte("key001"), b.GetChangeset().Pairs[storeKey][0].Key)
 
 	// write the branched store and ensure all writes are flushed to the parent
 	b.Write()

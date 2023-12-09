@@ -6,15 +6,18 @@ package store
 type KVPair struct {
 	Key      []byte
 	Value    []byte
-	StoreKey string // optional
+	StoreKey string // Optional for snapshot restore
 }
 
-// Changeset defines a set of KVPair entries.
+type KVPairs []KVPair
+
+// Changeset defines a set of KVPair entries by maintaining a map
+// from store key to a slice of KVPair objects.
 type Changeset struct {
-	Pairs []KVPair
+	Pairs map[string]KVPairs
 }
 
-func NewChangeset(pairs ...KVPair) *Changeset {
+func NewChangeset(pairs map[string]KVPairs) *Changeset {
 	return &Changeset{
 		Pairs: pairs,
 	}
@@ -22,18 +25,23 @@ func NewChangeset(pairs ...KVPair) *Changeset {
 
 // Size returns the number of key-value pairs in the batch.
 func (cs *Changeset) Size() int {
-	return len(cs.Pairs)
+	cnt := 0
+	for _, pairs := range cs.Pairs {
+		cnt += len(pairs)
+	}
+
+	return cnt
 }
 
 // Add adds a key-value pair to the ChangeSet.
-func (cs *Changeset) Add(key, value []byte) {
-	cs.Pairs = append(cs.Pairs, KVPair{
+func (cs *Changeset) Add(storeKey string, key, value []byte) {
+	cs.Pairs[storeKey] = append(cs.Pairs[storeKey], KVPair{
 		Key:   key,
 		Value: value,
 	})
 }
 
 // AddKVPair adds a KVPair to the ChangeSet.
-func (cs *Changeset) AddKVPair(pair KVPair) {
-	cs.Pairs = append(cs.Pairs, pair)
+func (cs *Changeset) AddKVPair(storeKey string, pair KVPair) {
+	cs.Pairs[storeKey] = append(cs.Pairs[storeKey], pair)
 }

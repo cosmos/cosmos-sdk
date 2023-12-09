@@ -14,7 +14,7 @@ require (
 	cosmossdk.io/store v1.0.1
 	cosmossdk.io/x/evidence v0.0.0-20230613133644-0a778132a60f
 	cosmossdk.io/x/feegrant v0.0.0-20230613133644-0a778132a60f
-	cosmossdk.io/x/nft v0.0.0-20230613133644-0a778132a60f // indirect
+	cosmossdk.io/x/nft v0.0.0-20230613133644-0a778132a60f
 	cosmossdk.io/x/protocolpool v0.0.0-20230925135524-a1bc045b3190
 	cosmossdk.io/x/tx v0.12.0
 	cosmossdk.io/x/upgrade v0.0.0-20230613133644-0a778132a60f
@@ -34,6 +34,7 @@ require (
 )
 
 require (
+	cosmossdk.io/x/accounts v0.0.0-20231013072015-ec9bcc41ef9c
 	cosmossdk.io/x/auth v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/authz v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/bank v0.0.0-00010101000000-000000000000
@@ -54,7 +55,6 @@ require (
 	cloud.google.com/go/iam v1.1.5 // indirect
 	cloud.google.com/go/storage v1.33.0 // indirect
 	cosmossdk.io/client/v2 v2.0.0-20230630094428-02b760776860 // indirect
-	cosmossdk.io/x/accounts v0.0.0-20231013072015-ec9bcc41ef9c // indirect
 	cosmossdk.io/x/circuit v0.0.0-20230613133644-0a778132a60f // indirect
 	filippo.io/edwards25519 v1.0.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect

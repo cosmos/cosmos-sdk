@@ -85,76 +85,107 @@ However, we'll note a few important layers of protection and mitigation:
   so worst case you just end up filling up block space with a duplicate transaction.
 
 ```golang
+type TxHash [32]byte
+
 const PurgeLoopSleepMS = 500
 
 // UnorderedTxManager contains the tx hash dictionary for duplicates checking,
 // and expire them when block production progresses.
 type UnorderedTxManager struct {
-  mutex sync.RWMutex
-  // tx hash -> expire block number
-  // for duplicates checking and expiration
-  hashes map[TxHash]uint64
-  // channel to receive latest block numbers
+  // blockCh defines a channel to receive newly committed block heights
   blockCh chan uint64
+
+  mu sync.RWMutex
+  // hashes defines a map from tx hash -> TTL value, which is used for duplicate
+  // checking and replay protection.
+  hashes map[TxHash]uint64
 }
 
-func NewDedupTxHashManager() *DedupTxHashManager {
-  m := &DedupTxHashManager{
+func NewUnorderedTxManager() *UnorderedTxManager {
+  m := &UnorderedTxManager{
     hashes: make(map[TxHash]uint64),
     blockCh: make(ch *uint64, 16),
   }
-  go m.purgeLoop()
-  return m
+ 
+ return m
 }
 
-func (dtm *DedupTxHashManager) Close() error {
-  close(dtm.blockCh)
-  dtm.blockCh = nil
+func (m *UnorderedTxManager) Start() {
+  go m.purgeLoop()
+}
+
+func (m *UnorderedTxManager) Close() error {
+  close(m.blockCh)
+  m.blockCh = nil
   return nil
 }
 
-func (dtm *DedupTxHashManager) Contains(hash TxHash) (ok bool) {
-  dtm.mutex.RLock()
-  defer dtm.mutex.RUnlock()
+func (m *UnorderedTxManager) Contains(hash TxHash)  bool{
+  m.mu.RLock()
+  defer m.mu.RUnlock()
 
-  _, ok = dtm.hashes[hash]
-  return
+  _, ok := m.hashes[hash]
+  return ok
 }
 
-func (dtm *DedupTxHashManager) Size() int {
-  dtm.mutex.RLock()
-  defer dtm.mutex.RUnlock()
+func (m *UnorderedTxManager) Size() int {
+  m.mu.RLock()
+  defer m.mu.RUnlock()
 
-  return len(dtm.hashes)
+  return len(m.hashes)
 }
 
-func (dtm *DedupTxHashManager) Add(hash TxHash, expire uint64) (ok bool) {
-  dtm.mutex.Lock()
-  defer dtm.mutex.Unlock()
+func (m *UnorderedTxManager) Add(hash TxHash, expire uint64) {
+  m.mu.Lock()
+  defer m.mu.Unlock()
 
-  dtm.hashes[hash] = expire
-  return
+  m.hashes[hash] = expire
 }
 
-// OnNewBlock send the latest block number to the background purge loop,
-// it should be called in abci commit event.
-func (dtm *DedupTxHashManager) OnNewBlock(blockNumber uint64) {
-  dtm.blockCh <- &blockNumber
+// OnNewBlock send the latest block number to the background purge loop, which
+// should be called in ABCI Commit event.
+func (m *UnorderedTxManager) OnNewBlock(blockHeight uint64) {
+  m.blockCh <- blockHeight
 }
 
-// purgeLoop removes expired tx hashes at background
-func (dtm *DedupTxHashManager) purgeLoop() error {
+// expiredTxs returns expired tx hashes based on the provided block height.
+func (m *UnorderedTxManager) expiredTxs(blockHeight uint64) []TxHash {
+  m.mu.RLock()
+  defer m.mu.RUnlock()
+
+  var result []TxHash
+  for txHash, expire := range m.hashes {
+    if blockHeight > expire {
+      result = append(result, txHash)
+    }
+  }
+
+  return result
+}
+
+func (m *UnorderedTxManager) purge(txHashes []TxHash) {
+  m.mu.Lock()
+  defer m.mu.Unlock()
+
+  for _, txHash := range txHashes {
+    delete(dtm.hashes, txHash)
+  }
+}
+
+
+// purgeLoop removes expired tx hashes in the background
+func (m *UnorderedTxManager) purgeLoop() error {
   for {
-    blocks := channelBatchRecv(dtm.blockCh)
+    blocks := channelBatchRecv(m.blockCh)
     if len(blocks) == 0 {
       // channel closed
       break
     }
     
     latest := *blocks[len(blocks)-1]
-    hashes := dtm.expired(latest)
+    hashes := m.expired(latest)
     if len(hashes) > 0 {
-      dtm.purge(hashes)
+      m.purge(hashes)
     }
     
     // avoid burning cpu in catching up phase
@@ -162,28 +193,6 @@ func (dtm *DedupTxHashManager) purgeLoop() error {
   }
 }
 
-// expired find out expired tx hashes based on latest block number
-func (dtm *DedupTxHashManager) expired(block uint64) []TxHash {
-  dtm.mutex.RLock()
-  defer dtm.mutex.RUnlock()
-
-  var result []TxHash
-  for h, expire := range dtm.hashes {
-    if block > expire {
-      result = append(result, h)
-    }
-  }
-  return result
-}
-
-func (dtm *DedupTxHashManager) purge(hashes []TxHash) {
-  dtm.mutex.Lock()
-  defer dtm.mutex.Unlock()
-
-  for _, hash := range hashes {
-    delete(dtm.hashes, hash)
-  }
-}
 
 // channelBatchRecv try to exhaust the channel buffer when it's not empty,
 // and block when it's empty.
@@ -236,7 +245,7 @@ type DedupTxDecorator struct {
   maxUnOrderedTTL uint64
 }
 
-func (dtd *DedupTxDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
+func (d *DedupTxDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
   // only apply to un-ordered transactions
   if !tx.UnOrdered() {
     return next(ctx, tx, simulate)
@@ -246,18 +255,18 @@ func (dtd *DedupTxDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate boo
     return nil, errorsmod.Wrap(sdkerrors.ErrLogic, "unordered tx must set timeout-height")
   }
 
-  if tx.TimeoutHeight() > ctx.BlockHeight() + MaxUnOrderedTTL {
-    return nil, errorsmod.Wrapf(sdkerrors.ErrLogic, "unordered tx ttl exceeds %d", MaxUnOrderedTTL)
+  if tx.TimeoutHeight() > ctx.BlockHeight() + d.maxUnOrderedTTL {
+    return nil, errorsmod.Wrapf(sdkerrors.ErrLogic, "unordered tx ttl exceeds %d", d.maxUnOrderedTTL)
   }
 
   // check for duplicates
-  if dtd.m.Contains(tx.Hash()) {
+  if d.m.Contains(tx.Hash()) {
     return nil, errorsmod.Wrap(sdkerrors.ErrLogic, "tx is duplicated")
   }
 
   if !ctx.IsCheckTx() {
     // a new tx included in the block, add the hash to the unordered tx manager
-    dtd.m.Add(tx.Hash(), tx.TimeoutHeight())
+    d.m.Add(tx.Hash(), tx.TimeoutHeight())
   }
 
   return next(ctx, tx, simulate)
@@ -266,7 +275,7 @@ func (dtd *DedupTxDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate boo
 
 ### `OnNewBlock`
 
-Wire the `OnNewBlock` method of `DedupTxHashManager` into the BaseApp's ABCI Commit event.
+Wire the `OnNewBlock` method of `UnorderedTxManager` into the BaseApp's ABCI `Commit` event.
 
 ### Start Up
 

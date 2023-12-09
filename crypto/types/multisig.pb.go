@@ -544,7 +544,7 @@ func skipMultisig(dAtA []byte) (n int, err error) {
 }
 
 var (
-	ErrInvalidLengthMultisig        = fmt.Errorf("proto: negative length found during unmarshaling")
+	ErrInvalidLengthMultisig        = fmt.Errorf("proto: negative length found during unmarshalling")
 	ErrIntOverflowMultisig          = fmt.Errorf("proto: integer overflow")
 	ErrUnexpectedEndOfGroupMultisig = fmt.Errorf("proto: unexpected end of group")
 )

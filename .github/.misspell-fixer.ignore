@@ -1,4 +1,4 @@
-^*.pulsar.go
-^*.pb.go
-^*.pb.gw.go
-^*.cosmos_orm.go
+\*.pulsar.go
+\*.pb.go
+\*.pb.gw.go
+\*.cosmos_orm.go

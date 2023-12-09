@@ -53,14 +53,43 @@ message TxBody {
 }
 ```
 
-### `DedupTxHashManager`
+### Replay Protection
+
+In order to provide replay protection, a user should ensure that the transaction's
+TTL value is relatively short-lived but long enough to provide enough time to be
+included in a block, e.g. ~H+50. 
+
+We facilitate this by storing the transaction's hash in a durable map, `UnorderedTxManager`,
+to prevent duplicates, i.e. replay attacks. Upon transaction ingress during `CheckTx`,
+we check if the transaction's hash exists in this map or if the TTL value is stale,
+i.e. before the current block. If so, we reject it. Upon inclusion in a block
+during `DeliverTx`, the transaction's hash is set in the map along with it's TTL
+value.
+
+This map is evaluated at the end of each block, e.g. ABCI `Commit`, and all stale
+transactions, i.e. transactions's TTL value who's now beyond the committed block,
+are purged from the map.
+
+An important point to note is that in theory, it may be possible to submit an unordered
+transaction twice, or multiple times, before the transaction is included in a block.
+However, we'll note a few important layers of protection and mitigation:
+
+* Assuming CometBFT is used as the underlying consensus engine and a non-noop mempool
+  is used, CometBFT will reject the duplicate for you.
+* For applications that leverage ABCI++, `ProcessProposal` should evaluate and reject
+  malicious proposals with duplicate transactions.
+* For applications that leverage their own application mempool, their mempool should
+  reject the duplicate for you.
+* Finally, worst case if the duplicate transaction is somehow selected for a block
+  proposal, 2nd and all further attempts to evaluate it, will fail during `DeliverTx`,
+  so worst case you just end up filling up block space with a duplicate transaction.
 
 ```golang
 const PurgeLoopSleepMS = 500
 
-// DedupTxHashManager contains the tx hash dictionary for duplicates checking,
-// and expire them when block number progresses.
-type DedupTxHashManager struct {
+// UnorderedTxManager contains the tx hash dictionary for duplicates checking,
+// and expire them when block production progresses.
+type UnorderedTxManager struct {
   mutex sync.RWMutex
   // tx hash -> expire block number
   // for duplicates checking and expiration
@@ -176,9 +205,11 @@ func channelBatchRecv[T any](ch <-chan *T) []*T {
 }
 ```
 
-### Ante Handlers
+### AnteHandler Decorator
 
-Bypass the nonce decorator for un-ordered transactions.
+In order to facilitate bypassing nonce verification, we have to modify the existing
+`IncrementSequenceDecorator` AnteHandler decorator to skip the nonce verification
+when the transaction is marked as un-ordered.
 
 ```golang
 func (isd IncrementSequenceDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
@@ -186,22 +217,23 @@ func (isd IncrementSequenceDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, sim
     return next(ctx, tx, simulate)
   }
 
-  // the previous logic
+  // ...
 }
 ```
 
-A decorator for the new logic.
+In addition, we need to introduce a new decorator to perform the un-ordered transaction
+verification and map lookup.
 
 ```golang
-type TxHash [32]byte
-
 const (
-  // MaxUnOrderedTTL defines the maximum ttl an un-order tx can set
-  MaxUnOrderedTTL = 1024
+	// DefaultMaxUnOrderedTTL defines the default maximum TTL an un-ordered transaction
+	// can set.
+	DefaultMaxUnOrderedTTL = 1024
 )
 
 type DedupTxDecorator struct {
-  m *DedupTxHashManager
+  m *UnorderedTxManager
+  maxUnOrderedTTL uint64
 }
 
 func (dtd *DedupTxDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
@@ -224,7 +256,7 @@ func (dtd *DedupTxDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate boo
   }
 
   if !ctx.IsCheckTx() {
-    // a new tx included in the block, add the hash to the dictionary
+    // a new tx included in the block, add the hash to the unordered tx manager
     dtd.m.Add(tx.Hash(), tx.TimeoutHeight())
   }
 

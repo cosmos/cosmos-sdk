@@ -115,7 +115,11 @@ func New(cfg Config) (_ *Metrics, rerr error) {
 		err  error
 	)
 	switch cfg.MetricsSink {
-	case MetricSinkInMem:
+	case MetricSinkStatsd:
+		sink, err = metrics.NewStatsdSink(cfg.StatsdAddr)
+	case MetricSinkDogsStatsd:
+		sink, err = datadog.NewDogStatsdSink(cfg.StatsdAddr, cfg.DatadogHostname)
+	default:
 		memSink := metrics.NewInmemSink(10*time.Second, time.Minute)
 		sink = memSink
 		inMemSig := metrics.DefaultInmemSignal(memSink)
@@ -124,12 +128,6 @@ func New(cfg Config) (_ *Metrics, rerr error) {
 				inMemSig.Stop()
 			}
 		}()
-	case MetricSinkStatsd:
-		sink, err = metrics.NewStatsdSink(cfg.StatsdAddr)
-	case MetricSinkDogsStatsd:
-		sink, err = datadog.NewDogStatsdSink(cfg.StatsdAddr, cfg.DatadogHostname)
-	default:
-		sink = &metrics.BlackholeSink{}
 	}
 
 	if err != nil {

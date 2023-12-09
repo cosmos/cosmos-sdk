@@ -207,7 +207,7 @@ For backward compatibility with the existing `authtypes.NewModuleAddress`, we ad
 ```go
 func Module(moduleName string, derivationKeys ...[]byte) []byte{
 	if len(derivationKeys) == 0 {
-		return authtypes.NewModuleAddress(modulenName)  // legacy case
+		return authtypes.NewModuleAddress(moduleName)  // legacy case
 	}
 	submoduleAddress := Hash("module", []byte(moduleName) + 0 + key)
 	return fold((a, k) => Derive(a, k), subsubKeys, submoduleAddress)

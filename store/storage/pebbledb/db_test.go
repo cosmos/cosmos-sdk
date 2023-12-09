@@ -19,7 +19,7 @@ func TestStorageTestSuite(t *testing.T) {
 				db.SetSync(false)
 			}
 
-			return db, err
+			return storage.NewStorageStore(db), err
 		},
 		EmptyBatchSize: 12,
 	}

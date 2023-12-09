@@ -25,7 +25,7 @@ func NewBech32Codec(prefix string) address.Codec {
 // StringToBytes encodes text to bytes
 func (bc bech32Codec) StringToBytes(text string) ([]byte, error) {
 	if len(strings.TrimSpace(text)) == 0 {
-		return []byte{}, errors.New("empty address string is not allowed")
+		return []byte{}, errors.New("5 empty address string is not allowed")
 	}
 
 	hrp, bz, err := bech32.DecodeAndConvert(text)

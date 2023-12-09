@@ -193,7 +193,7 @@ func MustAccAddressFromBech32(address string) AccAddress {
 // AccAddressFromBech32 creates an AccAddress from a Bech32 string.
 func AccAddressFromBech32(address string) (addr AccAddress, err error) {
 	if len(strings.TrimSpace(address)) == 0 {
-		return AccAddress{}, errors.New("empty address string is not allowed")
+		return AccAddress{}, errors.New("2 empty address string is not allowed")
 	}
 
 	bech32PrefixAccAddr := GetConfig().GetBech32AccountAddrPrefix()
@@ -345,7 +345,7 @@ func ValAddressFromHex(address string) (addr ValAddress, err error) {
 // ValAddressFromBech32 creates a ValAddress from a Bech32 string.
 func ValAddressFromBech32(address string) (addr ValAddress, err error) {
 	if len(strings.TrimSpace(address)) == 0 {
-		return ValAddress{}, errors.New("empty address string is not allowed")
+		return ValAddress{}, errors.New("3 empty address string is not allowed")
 	}
 
 	bech32PrefixValAddr := GetConfig().GetBech32ValidatorAddrPrefix()
@@ -500,7 +500,7 @@ func ConsAddressFromHex(address string) (addr ConsAddress, err error) {
 // ConsAddressFromBech32 creates a ConsAddress from a Bech32 string.
 func ConsAddressFromBech32(address string) (addr ConsAddress, err error) {
 	if len(strings.TrimSpace(address)) == 0 {
-		return ConsAddress{}, errors.New("empty address string is not allowed")
+		return ConsAddress{}, errors.New("4 empty address string is not allowed")
 	}
 
 	bech32PrefixConsAddr := GetConfig().GetBech32ConsensusAddrPrefix()

@@ -3,7 +3,6 @@ name: Fix typos nightly
 on:
   schedule:
     - cron: "0 8 * * *"
-  push:
 
 jobs:
   build:
@@ -17,3 +16,9 @@ jobs:
           token: ${{ secrets.PRBOT_PAT }}
           commit-message: "chore: fixes by misspell-fixer"
           title: "chore: typos fix by misspell-fixer"
+          branch: "bot/fix-typos"
+          delete-branch: true
+          body: |
+            This PR fixes typos in the codebase.
+            Please, review it and merge if everything is fine.
+            If there is proto changes, please, run `make proto-gen` and commit changes.

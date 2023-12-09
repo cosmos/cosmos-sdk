@@ -12,10 +12,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: sobolevn/misspell-fixer-action@master
+      - uses: peter-evans/create-pull-request@v5
         with:
-          options: "-rsvn ."
-      - uses: peter-evans/create-pull-request@v2.4.4
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.PRBOT_PAT }}
           commit-message: "chore: fixes by misspell-fixer"
           title: "chore: typos fix by misspell-fixer"

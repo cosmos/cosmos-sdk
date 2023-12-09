@@ -333,20 +333,20 @@ func runAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *buf
 	}
 	noBackup, _ := cmd.Flags().GetBool(flagNoBackup)
 	showMnemonic := !noBackup
-	showMnemonicDiscreetly, _ := cmd.Flags().GetBool(flagIndiscreet)
+	showMnemonicIndiscreetly, _ := cmd.Flags().GetBool(flagIndiscreet)
 
 	// Recover key from seed passphrase
 	if recoverFlag {
 		// Hide mnemonic from output
 		showMnemonic = false
-		showMnemonicDiscreetly = false
+		showMnemonicIndiscreetly = false
 		mnemonic = ""
 	}
 
-	return printCreate(ctx, cmd, k, showMnemonic, showMnemonicDiscreetly, mnemonic, outputFormat)
+	return printCreate(ctx, cmd, k, showMnemonic, showMnemonicIndiscreetly, mnemonic, outputFormat)
 }
 
-func printCreate(ctx client.Context, cmd *cobra.Command, k *keyring.Record, showMnemonic bool, showMnemonicDiscreetly bool, mnemonic, outputFormat string) error {
+func printCreate(ctx client.Context, cmd *cobra.Command, k *keyring.Record, showMnemonic bool, showMnemonicIndiscreetly bool, mnemonic, outputFormat string) error {
 	switch outputFormat {
 	case flags.OutputFormatText:
 		cmd.PrintErrln()
@@ -361,12 +361,12 @@ func printCreate(ctx client.Context, cmd *cobra.Command, k *keyring.Record, show
 
 		// print mnemonic unless requested not to.
 		if showMnemonic {
-			if showMnemonicDiscreetly {
-				if err = displayDiscreetly(ctx, cmd.ErrOrStderr(), "**Important** write this mnemonic phrase in a safe place.\nIt is the only way to recover your account if you ever forget your password.", mnemonic); err != nil {
+			if showMnemonicIndiscreetly {
+				if _, err = fmt.Fprintf(cmd.ErrOrStderr(), "\n**Important** write this mnemonic phrase in a safe place.\nIt is the only way to recover your account if you ever forget your password.\n\n%s\n", mnemonic); err != nil {
 					return fmt.Errorf("failed to print mnemonic: %w", err)
 				}
 			} else {
-				if _, err = fmt.Fprintf(cmd.ErrOrStderr(), "\n**Important** write this mnemonic phrase in a safe place.\nIt is the only way to recover your account if you ever forget your password.\n\n%s\n", mnemonic); err != nil {
+				if err = displayDiscreetly(ctx, cmd.ErrOrStderr(), "**Important** write this mnemonic phrase in a safe place.\nIt is the only way to recover your account if you ever forget your password.", mnemonic); err != nil {
 					return fmt.Errorf("failed to print mnemonic: %w", err)
 				}
 			}

@@ -116,11 +116,7 @@ func (s *Store) SetMetrics(m metrics.Metrics) {
 func (s *Store) SetInitialVersion(v uint64) error {
 	s.initialVersion = v
 
-	// TODO(bez): Call SetInitialVersion on s.stateCommitment.
-	//
-	// Ref: https://github.com/cosmos/cosmos-sdk/issues/18597
-
-	return nil
+	return s.stateCommitment.SetInitialVersion(v)
 }
 
 // GetSCStore returns the store's state commitment (SC) backend.

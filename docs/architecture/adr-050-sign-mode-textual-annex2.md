@@ -25,7 +25,7 @@ Unicode text within the transaction.
 
 `SIGN_MODE_TEXTUAL` renders to an abstract representation, leaving it
 up to device-specific software how to present this representation given the
-capabilities, limitations, and conventions of the deivce.
+capabilities, limitations, and conventions of the device.
 
 We offer the following normative guidance:
 
@@ -77,7 +77,7 @@ in many languages:
 * All other ASCII control characters, plus non-ASCII Unicode code points,
 are shown as either:
 
-    * `\u` followed by 4 uppercase hex chacters for code points
+    * `\u` followed by 4 uppercase hex characters for code points
     in the basic multilingual plane (BMP).
 
     * `\U` followed by 8 uppercase hex characters for other code points.
@@ -116,7 +116,7 @@ Indent  Text
 0       ">tricky key4<: note the leading space in the presentation"
 0       "introducing an aggregate"
 1       "key5: false"
-1       "key6: a very long line of text, please coöperate and break into multiple lines."
+1       "key6: a very long line of text, please cooperate and break into multiple lines."
 1       "Can we do further nesting?"
 2       "You bet we can!"
 ```

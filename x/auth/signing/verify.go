@@ -60,7 +60,7 @@ func internalSignModeToAPI(mode signing.SignMode) (signingv1beta1.SignMode, erro
 
 // VerifysignatureCache is a cache of verified signatures
 // If the cached item is not found, it will be verified and added to the cache
-func verifySig(signBytes, sig []byte, pubKey cryptotypes.PubKey, cs *cryptotypes.Cache) bool {
+func verifySig(signBytes, sig []byte, pubKey cryptotypes.PubKey, cs *cryptotypes.SignatureCache) bool {
 	if cs != nil {
 		bz := cryptotypes.NewSigKey(signBytes, sig).String()
 		cachePub, ok := cs.Get(bz)
@@ -92,7 +92,7 @@ func VerifySignature(
 	signatureData signing.SignatureData,
 	handler *txsigning.HandlerMap,
 	txData txsigning.TxData,
-	cache *cryptotypes.Cache,
+	cache *cryptotypes.SignatureCache,
 ) error {
 	switch data := signatureData.(type) {
 	case *signing.SingleSignatureData:

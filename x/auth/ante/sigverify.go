@@ -231,7 +231,7 @@ func (sgcd SigGasConsumeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simula
 type SigVerificationDecorator struct {
 	ak                AccountKeeper
 	signModeHandler   *txsigning.HandlerMap
-	cacheVerification *cryptotypes.Cache
+	cacheVerification *cryptotypes.SignatureCache
 }
 
 func NewSigVerificationDecorator(ak AccountKeeper, signModeHandler *txsigning.HandlerMap, cacheVerification bool) SigVerificationDecorator {
@@ -240,7 +240,13 @@ func NewSigVerificationDecorator(ak AccountKeeper, signModeHandler *txsigning.Ha
 		signModeHandler: signModeHandler,
 	}
 	if cacheVerification {
-		svd.cacheVerification = cryptotypes.NewSignatureCache()
+		sv, err := cryptotypes.NewSignatureCache()
+		if err != nil {
+			panic(err)
+		}
+
+		svd.cacheVerification = sv
+
 	}
 
 	return svd

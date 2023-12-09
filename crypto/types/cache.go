@@ -9,26 +9,26 @@ const (
 	AddressStringLen = 2 + 20*2
 )
 
-// Cache is a cache of verified signatures
-type Cache struct {
+// SignatureCache is a cache of verified signatures
+type SignatureCache struct {
 	data *lru.Cache[string, []byte]
 }
 
 // NewSignatureCache initializes the signature cache.
 // signature verification is one of the most expensive parts in verification
 // by caching it we avoid needing to verify the same signature multiple times
-func NewSignatureCache() *Cache {
+func NewSignatureCache() (*SignatureCache, error) {
 	// 500 * (32 + 42) = 37.5KB
 	cache, err := lru.New[string, []byte](500)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
-	return &Cache{data: cache}
+	return &SignatureCache{data: cache}, nil
 }
 
 // Get returns the cached signature if it exists
-func (c *Cache) Get(key string) ([]byte, bool) {
+func (c *SignatureCache) Get(key string) ([]byte, bool) {
 	if !c.validate(key) {
 		return nil, false
 	}
@@ -37,17 +37,16 @@ func (c *Cache) Get(key string) ([]byte, bool) {
 }
 
 // Add adds a signature to the cache
-func (c *Cache) Add(key string, value []byte) {
+func (c *SignatureCache) Add(key string, value []byte) {
 	// validate
 	if !c.validate(key) {
 		return
 	}
-	// add cache
 	c.data.Add(key, value)
 }
 
 // Remove removes a signature from the cache
-func (c *Cache) Remove(key string) {
+func (c *SignatureCache) Remove(key string) {
 	// validate
 	if !c.validate(key) {
 		return
@@ -56,7 +55,7 @@ func (c *Cache) Remove(key string) {
 }
 
 // validate validates the key and cache
-func (c *Cache) validate(key string) bool {
+func (c *SignatureCache) validate(key string) bool {
 	// validate key
 	if len(key) == 0 {
 		return false

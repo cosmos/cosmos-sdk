@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/cosmos/cosmos-proto/anyutil"
+	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 
@@ -205,7 +206,8 @@ func BenchmarkVerifySignature(b *testing.B) {
 	b.ReportAllocs()
 	ctx := context.Background()
 	b.ResetTimer()
-	cache := cryptotypes.NewSignatureCache()
+	cache, err := cryptotypes.NewSignatureCache()
+	require.NoError(b, err)
 
 	for i := 0; i < b.N; i++ {
 		for _, tt := range cases {

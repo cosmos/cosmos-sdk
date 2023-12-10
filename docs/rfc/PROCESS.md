@@ -14,11 +14,11 @@ The main difference the Cosmos SDK is defining as a differentiation between RFC 
 
 ## RFC life cycle
 
-RFC creation is an **iterative** process. An RFC is meant as a distributed colloboration session, it may have many comments and is usually the bi-product of no working group or synchornous communication 
+RFC creation is an **iterative** process. An RFC is meant as a distributed collaboration session, it may have many comments and is usually the by-product of no working group or synchronous communication 
 
 1. Proposals could start with a new GitHub Issue,  be a result of existing Issues or a discussion.
 
-2. An RFC doesn't have to arrive to `main` with an _accepted_ status in a single PR. If the motivation is clear and the solution is sound, we SHOULD be able to merge it and keep a _proposed_ status. It's preferable to have an iterative approach rather than long, not merged Pull Requests.
+2. An RFC doesn't have to arrive to `main` with an _accepted_ status in a single PR. If the motivation is clear and the solution is sound, we SHOULD be able to merge it and keep a _proposed_ status. It's preferable to have an iterative approach rather than long, unmerged Pull Requests.
 
 3. If a _proposed_ RFC is merged, then it should clearly document outstanding issues either in the RFC document notes or in a GitHub Issue.
 
@@ -28,7 +28,7 @@ RFC creation is an **iterative** process. An RFC is meant as a distributed collo
 
 6. If there is consensus and enough feedback then the RFC can be accepted. 
 
-> Note: An RFC is written when there is no working group or team session on the problem. RFC's are meant as a distributed white boarding session. If there is a working group on the proposal there is no need to have an RFC as there is synchornous whiteboarding going on. 
+> Note: An RFC is written when there is no working group or team session on the problem. RFC's are meant as a distributed white boarding session. If there is a working group on the proposal there is no need to have an RFC as there is synchronous whiteboarding going on. 
 
 ### RFC status
 

@@ -116,6 +116,16 @@ func (c *CommitStore) Commit() ([]store.StoreInfo, error) {
 	return storeInfos, nil
 }
 
+func (c *CommitStore) SetInitialVersion(version uint64) error {
+	for _, tree := range c.multiTrees {
+		if err := tree.SetInitialVersion(version); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 func (c *CommitStore) GetProof(storeKey string, version uint64, key []byte) (*ics23.CommitmentProof, error) {
 	tree, ok := c.multiTrees[storeKey]
 	if !ok {

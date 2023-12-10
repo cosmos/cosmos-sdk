@@ -10,7 +10,7 @@ import (
 	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
 
-	"cosmossdk.io/client/v2/autocli/prompt"
+	"cosmossdk.io/client/v2/autocli/prompt" // TODO to delete this dependency
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/x/gov/types"
 

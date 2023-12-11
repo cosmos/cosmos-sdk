@@ -96,15 +96,16 @@ type UnorderedTxManager struct {
   blockCh chan uint64
 
   mu sync.RWMutex
-  // hashes defines a map from tx hash -> TTL value, which is used for duplicate
-  // checking and replay protection.
-  hashes map[TxHash]uint64
+	// txHashes defines a map from tx hash -> TTL value, which is used for duplicate
+	// checking and replay protection, as well as purging the map when the TTL is
+	// expired.
+	txHashes map[TxHash]uint64
 }
 
 func NewUnorderedTxManager() *UnorderedTxManager {
   m := &UnorderedTxManager{
-    hashes: make(map[TxHash]uint64),
-    blockCh: make(ch *uint64, 16),
+		blockCh:  make(chan uint64, 16),
+		txHashes: make(map[TxHash]uint64),
   }
  
  return m
@@ -124,7 +125,7 @@ func (m *UnorderedTxManager) Contains(hash TxHash)  bool{
   m.mu.RLock()
   defer m.mu.RUnlock()
 
-  _, ok := m.hashes[hash]
+  _, ok := m.txHashes[hash]
   return ok
 }
 
@@ -132,14 +133,14 @@ func (m *UnorderedTxManager) Size() int {
   m.mu.RLock()
   defer m.mu.RUnlock()
 
-  return len(m.hashes)
+  return len(m.txHashes)
 }
 
 func (m *UnorderedTxManager) Add(hash TxHash, expire uint64) {
   m.mu.Lock()
   defer m.mu.Unlock()
 
-  m.hashes[hash] = expire
+  m.txHashes[hash] = expire
 }
 
 // OnNewBlock send the latest block number to the background purge loop, which
@@ -154,7 +155,7 @@ func (m *UnorderedTxManager) expiredTxs(blockHeight uint64) []TxHash {
   defer m.mu.RUnlock()
 
   var result []TxHash
-  for txHash, expire := range m.hashes {
+  for txHash, expire := range m.txHashes {
     if blockHeight > expire {
       result = append(result, txHash)
     }
@@ -168,7 +169,7 @@ func (m *UnorderedTxManager) purge(txHashes []TxHash) {
   defer m.mu.Unlock()
 
   for _, txHash := range txHashes {
-    delete(dtm.hashes, txHash)
+    delete(m.txHashes, txHash)
   }
 }
 
@@ -279,7 +280,7 @@ Wire the `OnNewBlock` method of `UnorderedTxManager` into the BaseApp's ABCI `Co
 
 ### Start Up
 
-On start up, the node needs to re-fill the tx hash dictionary of `DedupTxHashManager`
+On start up, the node needs to re-fill the tx hash dictionary of `UnorderedTxManager`
 by scanning `MaxUnOrderedTTL` number of historical blocks for existing un-expired
 un-ordered transactions.
 

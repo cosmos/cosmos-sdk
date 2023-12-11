@@ -6,7 +6,6 @@ import (
 	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 	v1 "cosmossdk.io/x/gov/types/v1"
-	stakingtypes "cosmossdk.io/x/staking/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -21,12 +20,13 @@ func (keeper Keeper) Tally(ctx context.Context, proposal v1.Proposal) (passes, b
 	results[v1.OptionAbstain] = math.LegacyZeroDec()
 	results[v1.OptionNo] = math.LegacyZeroDec()
 	results[v1.OptionNoWithVeto] = math.LegacyZeroDec()
+	results[v1.OptionSpam] = math.LegacyZeroDec()
 
 	totalVotingPower := math.LegacyZeroDec()
 	currValidators := make(map[string]v1.ValidatorGovInfo)
 
 	// fetch all the bonded validators, insert them into currValidators
-	err = keeper.sk.IterateBondedValidatorsByPower(ctx, func(index int64, validator stakingtypes.ValidatorI) (stop bool) {
+	err = keeper.sk.IterateBondedValidatorsByPower(ctx, func(index int64, validator sdk.ValidatorI) (stop bool) {
 		valBz, err := keeper.sk.ValidatorAddressCodec().StringToBytes(validator.GetOperator())
 		if err != nil {
 			return false
@@ -63,7 +63,7 @@ func (keeper Keeper) Tally(ctx context.Context, proposal v1.Proposal) (passes, b
 		}
 
 		// iterate over all delegations from voter, deduct from any delegated-to validators
-		err = keeper.sk.IterateDelegations(ctx, voter, func(index int64, delegation stakingtypes.DelegationI) (stop bool) {
+		err = keeper.sk.IterateDelegations(ctx, voter, func(index int64, delegation sdk.DelegationI) (stop bool) {
 			valAddrStr := delegation.GetValidatorAddr()
 
 			if val, ok := currValidators[valAddrStr]; ok {
@@ -135,6 +135,11 @@ func (keeper Keeper) Tally(ctx context.Context, proposal v1.Proposal) (passes, b
 	quorum, _ := math.LegacyNewDecFromStr(params.Quorum)
 	if percentVoting.LT(quorum) {
 		return false, params.BurnVoteQuorum, tallyResults, nil
+	}
+
+	// If there are more spam votes than the sum of all other options, proposal fails
+	if results[v1.OptionSpam].GTE(results[v1.OptionOne].Add(results[v1.OptionTwo].Add(results[v1.OptionThree].Add(results[v1.OptionFour])))) {
+		return false, true, tallyResults, nil
 	}
 
 	// If no one votes (everyone abstains), proposal fails

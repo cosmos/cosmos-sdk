@@ -76,7 +76,12 @@ func (k msgServer) SubmitProposal(goCtx context.Context, msg *v1.MsgSubmitPropos
 		return nil, fmt.Errorf("failed to get governance parameters: %w", err)
 	}
 
-	if err := k.validateInitialDeposit(ctx, params, initialDeposit, msg.Expedited); err != nil {
+	proposalType := msg.ProposalType
+	if msg.Expedited { // checking for backward compatibility
+		proposalType = v1.ProposalType_PROPOSAL_TYPE_EXPEDITED
+	}
+
+	if err := k.validateInitialDeposit(ctx, params, initialDeposit, proposalType); err != nil {
 		return nil, err
 	}
 
@@ -84,7 +89,7 @@ func (k msgServer) SubmitProposal(goCtx context.Context, msg *v1.MsgSubmitPropos
 		return nil, err
 	}
 
-	proposal, err := k.Keeper.SubmitProposal(ctx, proposalMsgs, msg.Metadata, msg.Title, msg.Summary, proposer, msg.Expedited)
+	proposal, err := k.Keeper.SubmitProposal(ctx, proposalMsgs, msg.Metadata, msg.Title, msg.Summary, proposer, proposalType)
 	if err != nil {
 		return nil, err
 	}
@@ -321,7 +326,7 @@ func (k legacyMsgServer) SubmitProposal(goCtx context.Context, msg *v1beta1.MsgS
 		"",
 		msg.GetContent().GetTitle(),
 		msg.GetContent().GetDescription(),
-		false, // legacy proposals cannot be expedited
+		v1.ProposalType_PROPOSAL_TYPE_STANDARD, // legacy proposals can only be standard
 	)
 	if err != nil {
 		return nil, err

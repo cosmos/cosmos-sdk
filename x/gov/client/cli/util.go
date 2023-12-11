@@ -4,12 +4,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
 	govutils "cosmossdk.io/x/gov/client/utils"
 	govv1 "cosmossdk.io/x/gov/types/v1"
+	"cosmossdk.io/x/gov/types/v1beta1"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -48,7 +50,10 @@ func parseSubmitLegacyProposal(fs *pflag.FlagSet) (*legacyProposal, error) {
 		proposalType, _ := fs.GetString(FlagProposalType)
 		proposal.Title, _ = fs.GetString(FlagTitle)
 		proposal.Description, _ = fs.GetString(FlagDescription)
-		proposal.Type = govutils.NormalizeProposalType(proposalType)
+
+		if strings.EqualFold(proposalType, "text") {
+			proposal.Type = v1beta1.ProposalTypeText
+		}
 		proposal.Deposit, _ = fs.GetString(FlagDeposit)
 		if err := proposal.validate(); err != nil {
 			return nil, err
@@ -83,12 +88,14 @@ func parseSubmitLegacyProposal(fs *pflag.FlagSet) (*legacyProposal, error) {
 // proposal defines the new Msg-based proposal.
 type proposal struct {
 	// Msgs defines an array of sdk.Msgs proto-JSON-encoded as Anys.
-	Messages  []json.RawMessage `json:"messages,omitempty"`
-	Metadata  string            `json:"metadata"`
-	Deposit   string            `json:"deposit"`
-	Title     string            `json:"title"`
-	Summary   string            `json:"summary"`
-	Expedited bool              `json:"expedited"`
+	Messages        []json.RawMessage `json:"messages,omitempty"`
+	Metadata        string            `json:"metadata"`
+	Deposit         string            `json:"deposit"`
+	Title           string            `json:"title"`
+	Summary         string            `json:"summary"`
+	ProposalTypeStr string            `json:"proposal_type,omitempty"`
+
+	proposalType govv1.ProposalType `json:"-"`
 }
 
 // parseSubmitProposal reads and parses the proposal.
@@ -104,6 +111,12 @@ func parseSubmitProposal(cdc codec.Codec, path string) (proposal, []sdk.Msg, sdk
 	if err != nil {
 		return proposal, nil, nil, err
 	}
+
+	proposalType := govv1.ProposalType_PROPOSAL_TYPE_STANDARD
+	if proposal.ProposalTypeStr != "" {
+		proposalType = govutils.NormalizeProposalType(proposal.ProposalTypeStr)
+	}
+	proposal.proposalType = proposalType
 
 	msgs := make([]sdk.Msg, len(proposal.Messages))
 	for i, anyJSON := range proposal.Messages {
@@ -168,9 +181,13 @@ func ReadGovPropCmdFlags(proposer string, flagSet *pflag.FlagSet) (*govv1.MsgSub
 		return nil, fmt.Errorf("could not read summary: %w", err)
 	}
 
-	rv.Expedited, err = flagSet.GetBool(FlagExpedited)
+	expedited, err := flagSet.GetBool(FlagExpedited)
 	if err != nil {
 		return nil, fmt.Errorf("could not read expedited: %w", err)
+	}
+	if expedited {
+		rv.Expedited = true
+		rv.ProposalType = govv1.ProposalType_PROPOSAL_TYPE_EXPEDITED
 	}
 
 	rv.Proposer = proposer

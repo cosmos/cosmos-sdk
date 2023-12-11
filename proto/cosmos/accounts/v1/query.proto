@@ -4,6 +4,8 @@ package cosmos.accounts.v1;
 
 option go_package = "cosmossdk.io/x/accounts/v1";
 
+import "google/protobuf/any.proto";
+
 // Query defines the Query service for the x/accounts module.
 service Query {
   // AccountQuery runs an account query.
@@ -19,13 +21,13 @@ message AccountQueryRequest {
   // target defines the account to be queried.
   string target = 1;
   // request defines the query message being sent to the account.
-  bytes request = 2;
+  google.protobuf.Any request = 2;
 }
 
 // AccountQueryResponse is the response type for the Query/AccountQuery RPC method.
 message AccountQueryResponse {
   // response defines the query response of the account.
-  bytes response = 1;
+  google.protobuf.Any response = 1;
 }
 
 // SchemaResponse is the response type for the Query/Schema RPC method.

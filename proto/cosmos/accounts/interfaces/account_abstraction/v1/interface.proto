@@ -5,16 +5,18 @@ package cosmos.accounts.interfaces.account_abstraction.v1;
 import "google/protobuf/any.proto";
 import "cosmos/accounts/v1/account_abstraction.proto";
 
+option go_package = "cosmossdk.io/x/accounts/interfaces/account_abstraction/v1";
+
 // MsgAuthenticate is a message that an x/account account abstraction implementer
 // must handle to authenticate a state transition.
 message MsgAuthenticate {
+  // bundler defines the address of the bundler that sent the operation.
+  // NOTE: in case the operation was sent directly by the user, this field will reflect
+  // the user address.
+  string bundler = 1;
   // user_operation is the operation that the user is trying to perform.
   // it also contains authentication information.
-  cosmos.accounts.v1.UserOperation user_operation = 1;
-  // chain_id defines the network identifier.
-  string chain_id = 2;
-  // account_number is the account number of the user_operation.
-  uint64 account_number = 3;
+  cosmos.accounts.v1.UserOperation user_operation = 2;
 }
 
 // MsgAuthenticateResponse is the response to MsgAuthenticate.
@@ -27,9 +29,13 @@ message MsgAuthenticateResponse {}
 // the bundler payment messages.
 // The account must ensure the caller of this message is the x/accounts module itself.
 message MsgPayBundler {
+  // bundler is the address of the bundler.
+  // NOTE: in case the operation was sent directly by the user, this field will
+  // reflect the user address.
+  string bundler = 1;
   // bundler_payment_messages are the messages that the operation sender will execute.
   // The account can modify the messages as it sees fit.
-  repeated google.protobuf.Any bundler_payment_messages = 1;
+  repeated google.protobuf.Any bundler_payment_messages = 2;
 }
 
 // MsgPayBundlerResponse is the response to MsgPayBundler.
@@ -44,9 +50,13 @@ message MsgPayBundlerResponse {
 // block certain messages, or modify them.
 // The account must ensure the caller of this message is the x/accounts module itself.
 message MsgExecute {
+  // bundler is the address of the bundler.
+  // NOTE: in case the operation was sent directly by the user, this field will
+  // reflect the user address.
+  string bundler = 1;
   // execution_messages are the messages that the operation sender will execute.
   // The account can modify the messages as it sees fit.
-  repeated google.protobuf.Any execution_messages = 1;
+  repeated google.protobuf.Any execution_messages = 2;
 }
 
 // MsgExecuteResponse is the response to MsgExecute.

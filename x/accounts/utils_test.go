@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	gogoproto "github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/runtime/protoiface"
@@ -35,43 +36,51 @@ func (e eventService) EmitNonConsensus(ctx context.Context, event protoiface.Mes
 
 func (e eventService) EventManager(ctx context.Context) event.Manager { return e }
 
+var _ InterfaceRegistry = (*interfaceRegistry)(nil)
+
+type interfaceRegistry struct{}
+
+func (i interfaceRegistry) RegisterInterface(string, any, ...gogoproto.Message) {}
+
+func (i interfaceRegistry) RegisterImplementations(any, ...gogoproto.Message) {}
+
 func newKeeper(t *testing.T, accounts ...implementation.AccountCreatorFunc) (Keeper, context.Context) {
 	t.Helper()
 	ss, ctx := colltest.MockStore()
-	m, err := NewKeeper(ss, eventService{}, nil, addressCodec{}, nil, nil, nil, accounts...)
+	m, err := NewKeeper(ss, eventService{}, nil, addressCodec{}, nil, nil, nil, interfaceRegistry{}, accounts...)
 	require.NoError(t, err)
 	return m, ctx
 }
 
 var _ QueryRouter = (*mockQuery)(nil)
 
-type mockQuery func(ctx context.Context, req, resp proto.Message) error
+type mockQuery func(ctx context.Context, req, resp implementation.ProtoMsg) error
 
-func (m mockQuery) HybridHandlerByRequestName(_ string) []func(ctx context.Context, req, resp protoiface.MessageV1) error {
+func (m mockQuery) HybridHandlerByRequestName(_ string) []func(ctx context.Context, req, resp implementation.ProtoMsg) error {
 	return []func(ctx context.Context, req, resp protoiface.MessageV1) error{func(ctx context.Context, req, resp protoiface.MessageV1) error {
-		return m(ctx, req.(proto.Message), resp.(proto.Message))
+		return m(ctx, req, resp)
 	}}
 }
 
 var _ SignerProvider = (*mockSigner)(nil)
 
-type mockSigner func(msg proto.Message) ([]byte, error)
+type mockSigner func(msg implementation.ProtoMsg) ([]byte, error)
 
-func (m mockSigner) GetSigners(msg proto.Message) ([][]byte, error) {
+func (m mockSigner) GetMsgV1Signers(msg gogoproto.Message) ([][]byte, proto.Message, error) {
 	s, err := m(msg)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	return [][]byte{s}, nil
+	return [][]byte{s}, nil, nil
 }
 
 var _ MsgRouter = (*mockExec)(nil)
 
-type mockExec func(ctx context.Context, msg, msgResp proto.Message) error
+type mockExec func(ctx context.Context, msg, msgResp implementation.ProtoMsg) error
 
 func (m mockExec) HybridHandlerByMsgName(_ string) func(ctx context.Context, req, resp protoiface.MessageV1) error {
 	return func(ctx context.Context, req, resp protoiface.MessageV1) error {
-		return m(ctx, req.(proto.Message), resp.(proto.Message))
+		return m(ctx, req, resp)
 	}
 }
 

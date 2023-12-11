@@ -5,9 +5,9 @@ import (
 	"context"
 	"fmt"
 
-	counterv1 "cosmossdk.io/api/cosmos/accounts/testing/counter/v1"
 	"cosmossdk.io/collections"
 	"cosmossdk.io/x/accounts/accountstd"
+	counterv1 "cosmossdk.io/x/accounts/testing/counter/v1"
 )
 
 var (

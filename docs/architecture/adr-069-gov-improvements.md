@@ -19,7 +19,7 @@ Those two types are, namely: multiple choice proposals and optimistic proposals.
 ## Context
 
 `x/gov` is the center of Cosmos governance, and has already been improved from its first version `v1beta1`, with a second version [`v1`][5].
-This second iteration on gov unlocked many possibilities by letting governance proposals contain any number of proposals.
+This second iteration of gov unlocked many possibilities by letting governance proposals contain any number of proposals.
 The last addition of gov has been expedited proposals (proposals that have a shorter voting period and a higher quorum, approval threshold).
 
 The community requested ([1], [4]) two additional proposals for improving governance choices. Those proposals would be useful when having protocol decisions made on specific choices or simplifying regular proposals that do not require high community involvement.
@@ -66,7 +66,7 @@ Voter can only vote NO on the proposal. If the NO threshold is reached, the opti
 Two governance parameters will be in added [`v1.Params`][5] to support optimistic proposals:
 
 ```protobuf
-// optimistic_authorized_addreses is an optional governance parameter that limits the authorized accounts than can submit optimisitc proposals
+// optimistic_authorized_addreses is an optional governance parameter that limits the authorized accounts that can submit optimistic proposals
 repeated string optimistic_authorized_addreses = 17 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
 // Optimistic rejected threshold defines at which percentage of NO votes, the optimistic proposal should fail and be converted to a standard proposal.
@@ -77,8 +77,8 @@ string optimistic_rejected_threshold = 18 [(cosmos_proto.scalar) = "cosmos.Dec"]
 
 A multiple choice proposal is a proposal where the voting options can be defined by the proposer.
 
-The number of voting option will be limited to a maximum of 4.
-A new vote option `SPAM` will be added and distinguished of those voting options. `SPAM` will be used to mark a proposal as spam and is explained further below.
+The number of voting options will be limited to a maximum of 4.
+A new vote option `SPAM` will be added and distinguished from those voting options. `SPAM` will be used to mark a proposal as spam and is explained further below.
 
 Multiple choice proposals, contrary to any other proposal type, cannot have messages to execute. They are only text proposals.
 

@@ -99,7 +99,7 @@ func (k msgServer) SubmitProposal(goCtx context.Context, msg *v1.MsgSubmitPropos
 		return nil, err
 	}
 
-	proposal, err := k.Keeper.SubmitProposal(ctx, proposalMsgs, msg.Metadata, msg.Title, msg.Summary, proposer, msg.ProposalType)
+	proposal, err := k.Keeper.SubmitProposal(ctx, proposalMsgs, msg.Metadata, msg.Title, msg.Summary, proposer, proposalType)
 	if err != nil {
 		return nil, err
 	}

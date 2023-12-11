@@ -344,7 +344,11 @@ func TestValidateInitialDeposit(t *testing.T) {
 			err := govKeeper.Params.Set(ctx, params)
 			require.NoError(t, err)
 
-			err = govKeeper.ValidateInitialDeposit(ctx, tc.initialDeposit, tc.expedited)
+			if tc.expedited {
+				err = govKeeper.ValidateInitialDeposit(ctx, tc.initialDeposit, v1.ProposalType_PROPOSAL_TYPE_EXPEDITED)
+			} else {
+				err = govKeeper.ValidateInitialDeposit(ctx, tc.initialDeposit, v1.ProposalType_PROPOSAL_TYPE_STANDARD)
+			}
 
 			if tc.expectError {
 				require.Error(t, err)

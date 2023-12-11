@@ -17,6 +17,7 @@ import (
 	stakingkeeper "cosmossdk.io/x/staking/keeper"
 	stakingtypes "cosmossdk.io/x/staking/types"
 
+	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -251,7 +252,7 @@ func TestTickPassedVotingPeriod(t *testing.T) {
 			suite := createTestSuite(t)
 			app := suite.App
 			ctx := app.BaseApp.NewContext(false)
-			depositMultiplier := getDepositMultiplier(tc.proposalType == v1.ProposalType_PROPOSAL_TYPE_EXPEDITED)
+			depositMultiplier := getDepositMultiplier(tc.proposalType)
 			addrs := simtestutil.AddTestAddrs(suite.BankKeeper, suite.StakingKeeper, ctx, 10, valTokens.Mul(math.NewInt(depositMultiplier)))
 
 			SortAddresses(addrs)
@@ -337,7 +338,7 @@ func TestProposalPassedEndblocker(t *testing.T) {
 			suite := createTestSuite(t)
 			app := suite.App
 			ctx := app.BaseApp.NewContext(false)
-			depositMultiplier := getDepositMultiplier(tc.proposalType == v1.ProposalType_PROPOSAL_TYPE_EXPEDITED)
+			depositMultiplier := getDepositMultiplier(tc.proposalType)
 			addrs := simtestutil.AddTestAddrs(suite.BankKeeper, suite.StakingKeeper, ctx, 10, valTokens.Mul(math.NewInt(depositMultiplier)))
 
 			SortAddresses(addrs)
@@ -401,10 +402,16 @@ func TestEndBlockerProposalHandlerFailed(t *testing.T) {
 	valAddr := sdk.ValAddress(addrs[0])
 	proposer := addrs[0]
 
-	createValidators(t, stakingMsgSvr, ctx, []sdk.ValAddress{valAddr}, []int64{10})
-	_, err := suite.StakingKeeper.EndBlocker(ctx)
+	ac := addresscodec.NewBech32Codec("cosmos")
+	addrStr, err := ac.BytesToString(authtypes.NewModuleAddress(types.ModuleName))
 	require.NoError(t, err)
-	msg := banktypes.NewMsgSend(authtypes.NewModuleAddress(types.ModuleName), addrs[0], sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100000))))
+	toAddrStr, err := ac.BytesToString(addrs[0])
+	require.NoError(t, err)
+
+	createValidators(t, stakingMsgSvr, ctx, []sdk.ValAddress{valAddr}, []int64{10})
+	_, err = suite.StakingKeeper.EndBlocker(ctx)
+	require.NoError(t, err)
+	msg := banktypes.NewMsgSend(addrStr, toAddrStr, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100000))))
 	proposal, err := suite.GovKeeper.SubmitProposal(ctx, []sdk.Msg{msg}, "", "title", "summary", proposer, v1.ProposalType_PROPOSAL_TYPE_STANDARD)
 	require.NoError(t, err)
 
@@ -467,7 +474,7 @@ func TestExpeditedProposal_PassAndConversionToRegular(t *testing.T) {
 			suite := createTestSuite(t)
 			app := suite.App
 			ctx := app.BaseApp.NewContext(false)
-			depositMultiplier := getDepositMultiplier(true)
+			depositMultiplier := getDepositMultiplier(v1.ProposalType_PROPOSAL_TYPE_EXPEDITED)
 			addrs := simtestutil.AddTestAddrs(suite.BankKeeper, suite.StakingKeeper, ctx, 3, valTokens.Mul(math.NewInt(depositMultiplier)))
 			params, err := suite.GovKeeper.Params.Get(ctx)
 			require.NoError(t, err)
@@ -640,12 +647,13 @@ func createValidators(t *testing.T, stakingMsgSvr stakingtypes.MsgServer, ctx sd
 // With expedited proposal's minimum deposit set higher than the default deposit, we must
 // initialize and deposit an amount depositMultiplier times larger
 // than the regular min deposit amount.
-func getDepositMultiplier(expedited bool) int64 {
-	if expedited {
+func getDepositMultiplier(proposalType v1.ProposalType) int64 {
+	switch proposalType {
+	case v1.ProposalType_PROPOSAL_TYPE_EXPEDITED:
 		return v1.DefaultMinExpeditedDepositTokensRatio
+	default:
+		return 1
 	}
-
-	return 1
 }
 
 func checkActiveProposalsQueue(t *testing.T, ctx sdk.Context, k *keeper.Keeper) {

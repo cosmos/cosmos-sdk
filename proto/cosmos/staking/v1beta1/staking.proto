@@ -420,7 +420,7 @@ message ConsPubKeyRotationHistory {
   google.protobuf.Any old_cons_pubkey = 2 [(cosmos_proto.accepts_interface) = "cosmos.crypto.PubKey"];
   // new_cons_pubkey is the new consensus public key of the validator, as a Protobuf Any.
   google.protobuf.Any new_cons_pubkey = 3 [(cosmos_proto.accepts_interface) = "cosmos.crypto.PubKey"];
-  // height defines the block height at which the rotation event occured.
+  // height defines the block height at which the rotation event occurred.
   uint64 height = 4;
   // fee holds the amount of fee deduced for the rotation.
   cosmos.base.v1beta1.Coin fee = 5 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];

@@ -21,6 +21,10 @@ var (
 		sdk.AccAddress("test1"),
 		sdk.AccAddress("test2"),
 	}
+	addrStrs = []string{
+		"cosmos1w3jhxap3gempvr",
+		"cosmos1w3jhxapjx2whzu",
+	}
 )
 
 func init() {
@@ -58,17 +62,17 @@ func TestMsgSubmitProposal_GetSignBytes(t *testing.T) {
 		},
 		{
 			"MsgSend",
-			[]sdk.Msg{banktypes.NewMsgSend(addrs[0], addrs[0], sdk.NewCoins())},
+			[]sdk.Msg{banktypes.NewMsgSend(addrStrs[0], addrStrs[0], sdk.NewCoins())},
 			"bank/MsgSend",
 			"Proposal for a bank msg send",
 			v1.ProposalType_PROPOSAL_TYPE_STANDARD,
-			fmt.Sprintf(`{"type":"cosmos-sdk/v1/MsgSubmitProposal","value":{"initial_deposit":[],"messages":[{"type":"cosmos-sdk/MsgSend","value":{"amount":[],"from_address":"%s","to_address":"%s"}}],"proposal_type":1,"summary":"Proposal for a bank msg send","title":"bank/MsgSend"}}`, addrs[0], addrs[0]),
+			fmt.Sprintf(`{"type":"cosmos-sdk/v1/MsgSubmitProposal","value":{"initial_deposit":[],"messages":[{"type":"cosmos-sdk/MsgSend","value":{"amount":[],"from_address":"%s","to_address":"%s"}}],"proposal_type":1,"summary":"Proposal for a bank msg send","title":"bank/MsgSend"}}`, addrStrs[0], addrStrs[0]),
 		},
 	}
 
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
-			msg, err := v1.NewMsgSubmitProposal(tc.proposal, sdk.NewCoins(), sdk.AccAddress{}.String(), "", tc.title, tc.summary, tc.proposalType)
+			msg, err := v1.NewMsgSubmitProposal(tc.proposal, sdk.NewCoins(), "", "", tc.title, tc.summary, tc.proposalType)
 			require.NoError(t, err)
 			bz, err := pc.MarshalAminoJSON(msg)
 			require.NoError(t, err)

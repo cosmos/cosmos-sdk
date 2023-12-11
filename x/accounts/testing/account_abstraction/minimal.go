@@ -4,11 +4,11 @@ import (
 	"context"
 	"fmt"
 
-	account_abstractionv1 "cosmossdk.io/api/cosmos/accounts/interfaces/account_abstraction/v1"
-	rotationv1 "cosmossdk.io/api/cosmos/accounts/testing/rotation/v1"
 	"cosmossdk.io/api/cosmos/crypto/secp256k1"
 	"cosmossdk.io/collections"
 	"cosmossdk.io/x/accounts/accountstd"
+	account_abstractionv1 "cosmossdk.io/x/accounts/interfaces/account_abstraction/v1"
+	rotationv1 "cosmossdk.io/x/accounts/testing/rotation/v1"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 )

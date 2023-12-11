@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package cosmos.accounts.testing.counter.v1;
 
+option go_package = "cosmossdk.io/x/accounts/testing/counter/v1";
+
 // MsgInit defines a message which initializes the counter with a given amount.
 message MsgInit {
   // initial_value is the initial amount to set the counter to.

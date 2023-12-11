@@ -254,6 +254,7 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) error {
 			"proposal", proposal.Id,
 			"proposal_type", proposal.ProposalType,
 			"status", proposal.Status.String(),
+			"proposal_type", proposal.ProposalType,
 			"title", proposal.Title,
 			"results", logMsg,
 		)

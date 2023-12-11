@@ -874,7 +874,7 @@ func (s *E2ETestSuite) TestCLIMultisignSortSignatures() {
 	var balRes banktypes.QueryAllBalancesResponse
 	err = clientCtx.Codec.UnmarshalJSON(resp, &balRes)
 	s.Require().NoError(err)
-	intialCoins := balRes.Balances
+	initialCoins := balRes.Balances
 
 	// Send coins from validator to multisig.
 	sendTokens := sdk.NewInt64Coin(s.cfg.BondDenom, 10)
@@ -891,7 +891,7 @@ func (s *E2ETestSuite) TestCLIMultisignSortSignatures() {
 	s.Require().NoError(err)
 	err = clientCtx.Codec.UnmarshalJSON(resp, &balRes)
 	s.Require().NoError(err)
-	diff, _ := balRes.Balances.SafeSub(intialCoins...)
+	diff, _ := balRes.Balances.SafeSub(initialCoins...)
 	s.Require().Equal(sendTokens.Amount, diff.AmountOf(s.cfg.BondDenom))
 
 	tokens := sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 5))

@@ -1329,7 +1329,7 @@ type ConsPubKeyRotationHistory struct {
 	OldConsPubkey *types1.Any `protobuf:"bytes,2,opt,name=old_cons_pubkey,json=oldConsPubkey,proto3" json:"old_cons_pubkey,omitempty"`
 	// new_cons_pubkey is the new consensus public key of the validator, as a Protobuf Any.
 	NewConsPubkey *types1.Any `protobuf:"bytes,3,opt,name=new_cons_pubkey,json=newConsPubkey,proto3" json:"new_cons_pubkey,omitempty"`
-	// height defines the block height at which the rotation event occured.
+	// height defines the block height at which the rotation event occurred.
 	Height uint64 `protobuf:"varint,4,opt,name=height,proto3" json:"height,omitempty"`
 	// fee holds the amount of fee deduced for the rotation.
 	Fee types2.Coin `protobuf:"bytes,5,opt,name=fee,proto3" json:"fee"`

@@ -237,6 +237,11 @@ func simulateMsgSubmitProposal(
 			return simtypes.NoOpMsg(types.ModuleName, TypeMsgSubmitProposal, "unable to generate deposit"), nil, err
 		}
 
+		proposalType := v1.ProposalType_PROPOSAL_TYPE_STANDARD
+		if expedited {
+			proposalType = v1.ProposalType_PROPOSAL_TYPE_EXPEDITED
+		}
+
 		msg, err := v1.NewMsgSubmitProposal(
 			proposalMsgs,
 			deposit,
@@ -244,7 +249,7 @@ func simulateMsgSubmitProposal(
 			simtypes.RandStringOfLength(r, 100),
 			simtypes.RandStringOfLength(r, 100),
 			simtypes.RandStringOfLength(r, 100),
-			expedited,
+			proposalType,
 		)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), "unable to generate a submit proposal msg"), nil, err

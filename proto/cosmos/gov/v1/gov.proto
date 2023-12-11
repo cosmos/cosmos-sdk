@@ -12,18 +12,45 @@ import "amino/amino.proto";
 
 option go_package = "cosmossdk.io/x/gov/types/v1";
 
+// ProposalType enumerates the valid proposal types.
+// All proposal types are v1.Proposal which have different voting periods or tallying logic.
+enum ProposalType {
+  // PROPOSAL_TYPE_UNSPECIFIED defines no proposal type, which fallback to PROPOSAL_TYPE_STANDARD.
+  PROPOSAL_TYPE_UNSPECIFIED = 0;
+  // PROPOSAL_TYPE_STANDARD defines the type for a standard proposal.
+  PROPOSAL_TYPE_STANDARD = 1;
+  // PROPOSAL_TYPE_MULTIPLE_CHOICE defines the type for a multiple choice proposal.
+  PROPOSAL_TYPE_MULTIPLE_CHOICE = 2;
+  // PROPOSAL_TYPE_OPTIMISTIC defines the type for an optimistic proposal.
+  PROPOSAL_TYPE_OPTIMISTIC = 3;
+  // PROPOSAL_TYPE_EXPEDITED defines the type for an expedited proposal.
+  PROPOSAL_TYPE_EXPEDITED = 4;
+}
+
 // VoteOption enumerates the valid vote options for a given governance proposal.
 enum VoteOption {
+  option allow_alias = true;
+
   // VOTE_OPTION_UNSPECIFIED defines a no-op vote option.
   VOTE_OPTION_UNSPECIFIED = 0;
-  // VOTE_OPTION_YES defines a yes vote option.
+  // VOTE_OPTION_ONE defines the first proposal vote option.
+  VOTE_OPTION_ONE = 1;
+  // VOTE_OPTION_YES defines the yes proposal vote option.
   VOTE_OPTION_YES = 1;
-  // VOTE_OPTION_ABSTAIN defines an abstain vote option.
+  // VOTE_OPTION_TWO defines the second proposal vote option.
+  VOTE_OPTION_TWO = 2;
+  // VOTE_OPTION_ABSTAIN defines the abstain proposal vote option.
   VOTE_OPTION_ABSTAIN = 2;
-  // VOTE_OPTION_NO defines a no vote option.
+  // VOTE_OPTION_THREE defines the third proposal vote option.
+  VOTE_OPTION_THREE = 3;
+  // VOTE_OPTION_NO defines the no proposal vote option.
   VOTE_OPTION_NO = 3;
-  // VOTE_OPTION_NO_WITH_VETO defines a no with veto vote option.
+  // VOTE_OPTION_FOUR defines the fourth proposal vote option.
+  VOTE_OPTION_FOUR = 4;
+  // VOTE_OPTION_NO_WITH_VETO defines the no with veto proposal vote option.
   VOTE_OPTION_NO_WITH_VETO = 4;
+  // VOTE_OPTION_SPAM defines the spam proposal vote option.
+  VOTE_OPTION_SPAM = 5;
 }
 
 // WeightedVoteOption defines a unit of vote for vote split.
@@ -102,12 +129,18 @@ message Proposal {
   // expedited defines if the proposal is expedited
   //
   // Since: cosmos-sdk 0.50
-  bool expedited = 14;
+  // Deprecated: Use ProposalType instead.
+  bool expedited = 14 [deprecated = true];
 
   // failed_reason defines the reason why the proposal failed
   //
   // Since: cosmos-sdk 0.50
   string failed_reason = 15;
+
+  // proposal_type defines the type of the proposal
+  //
+  // Since: cosmos-sdk 0.51
+  ProposalType proposal_type = 16;
 }
 
 // ProposalStatus enumerates the valid statuses of a proposal.
@@ -134,13 +167,15 @@ enum ProposalStatus {
 // TallyResult defines a standard tally for a governance proposal.
 message TallyResult {
   // yes_count is the number of yes votes on a proposal.
-  string yes_count = 1 [(cosmos_proto.scalar) = "cosmos.Int"];
+  string yes_count = 1 [(cosmos_proto.scalar) = "cosmos.Int"]; // option 1
   // abstain_count is the number of abstain votes on a proposal.
-  string abstain_count = 2 [(cosmos_proto.scalar) = "cosmos.Int"];
+  string abstain_count = 2 [(cosmos_proto.scalar) = "cosmos.Int"]; // option 2
   // no_count is the number of no votes on a proposal.
-  string no_count = 3 [(cosmos_proto.scalar) = "cosmos.Int"];
+  string no_count = 3 [(cosmos_proto.scalar) = "cosmos.Int"]; // option 3
   // no_with_veto_count is the number of no with veto votes on a proposal.
-  string no_with_veto_count = 4 [(cosmos_proto.scalar) = "cosmos.Int"];
+  string no_with_veto_count = 4 [(cosmos_proto.scalar) = "cosmos.Int"]; // option 4
+  // spam_count is the number of spam votes on a proposal.
+  string spam_count = 5 [(cosmos_proto.scalar) = "cosmos.Int"];
 }
 
 // Vote defines a vote on a governance proposal.

@@ -102,7 +102,7 @@ func (suite *TestSuite) TestGrant() {
 		{
 			name: "invalid grant, past time",
 			malleate: func() *authz.MsgGrant {
-				pastTime := curBlockTime.Add(-time.Hour)
+				pastime := curBlockTime.Add(-time.Hour)
 				grant, err := authz.NewGrant(curBlockTime, banktypes.NewSendAuthorization(coins, nil), &oneHour) // we only need the authorization
 				suite.Require().NoError(err)
 				return &authz.MsgGrant{
@@ -110,7 +110,7 @@ func (suite *TestSuite) TestGrant() {
 					Grantee: grantee.String(),
 					Grant: authz.Grant{
 						Authorization: grant.Authorization,
-						Expiration:    &pastTime,
+						Expiration:    &pastime,
 					},
 				}
 			},

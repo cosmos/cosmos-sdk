@@ -72,7 +72,7 @@ or needs to be present only for signature integrity (see below).
 We require that the rendering of the transaction be invertible:
 there must be a parsing function such that for every transaction,
 when rendered to the textual representation,
-parsing that representation yeilds a proto message equivalent
+parsing that representation yields a proto message equivalent
 to the original under proto equality.
 
 Note that this inverse function does not need to perform correct
@@ -145,7 +145,7 @@ type SignDocTextual struct {
 ```
 
 We do not plan to use protobuf serialization to form the sequence of bytes
-that will be tranmitted and signed, in order to keep the decoder simple.
+that will be transmitted and signed, in order to keep the decoder simple.
 We will use [CBOR](https://cbor.io) ([RFC 8949](https://www.rfc-editor.org/rfc/rfc8949.html)) instead.
 The encoding is defined by the following CDDL ([RFC 8610](https://www.rfc-editor.org/rfc/rfc8610)):
 

@@ -205,7 +205,7 @@ func simulateMsgSubmitProposal(
 	// column 3: 75% vote
 	// column 4: 40% vote
 	// column 5: 15% vote
-	// column 6: noone votes
+	// column 6: no one votes
 	// All columns sum to 100 for simplicity, values chosen by @valardragon semi-arbitrarily,
 	// feel free to change.
 	numVotesTransitionMatrix, _ := simulation.CreateTransitionMatrix([][]int{
@@ -635,7 +635,7 @@ func randomProposalID(r *rand.Rand, k *keeper.Keeper, ctx sdk.Context, status v1
 		proposalID = uint64(simtypes.RandIntBetween(r, int(initialProposalID), int(proposalID)))
 
 	default:
-		// This is called on the first call to this funcion
+		// This is called on the first call to this function
 		// in order to update the global variable
 		initialProposalID = proposalID
 	}

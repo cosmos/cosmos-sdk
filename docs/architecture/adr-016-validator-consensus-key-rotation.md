@@ -51,7 +51,7 @@ Also, it should be noted that this ADR includes only the simplest form of consen
 
 ### Workflow
 
-1. The validator generates a new consensus keypair.
+1. The validator generates a new consensus key pair.
 2. The validator generates and signs a `MsgRotateConsPubKey` tx with their operator key and new ConsPubKey
 
     ```go

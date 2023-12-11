@@ -11,7 +11,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// Deprecated: LegacyInfo is the publicly exposed information about a keypair
+// Deprecated: LegacyInfo is the publicly exposed information about a key pair
 type LegacyInfo interface {
 	// Human-readable type for key listing
 	GetType() KeyType

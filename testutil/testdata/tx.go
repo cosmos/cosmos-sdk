@@ -36,7 +36,7 @@ func PaginationGenerator(t *rapid.T, maxLimit uint64) *rapid.Generator[*query.Pa
 	})
 }
 
-// KeyTestPubAddr generates a new secp256k1 keypair.
+// KeyTestPubAddr generates a new secp256k1 key pair.
 func KeyTestPubAddr() (cryptotypes.PrivKey, cryptotypes.PubKey, sdk.AccAddress) {
 	key := secp256k1.GenPrivKey()
 	pub := key.PubKey()
@@ -44,7 +44,7 @@ func KeyTestPubAddr() (cryptotypes.PrivKey, cryptotypes.PubKey, sdk.AccAddress) 
 	return key, pub, addr
 }
 
-// KeyTestPubAddrSecp256R1 generates a new secp256r1 keypair.
+// KeyTestPubAddrSecp256R1 generates a new secp256r1 key pair.
 func KeyTestPubAddrSecp256R1(t *testing.T) (cryptotypes.PrivKey, cryptotypes.PubKey, sdk.AccAddress) {
 	t.Helper()
 	key, err := secp256r1.GenPrivKey()
@@ -54,7 +54,7 @@ func KeyTestPubAddrSecp256R1(t *testing.T) (cryptotypes.PrivKey, cryptotypes.Pub
 	return key, pub, addr
 }
 
-// KeyTestPubAddrED25519 generates a new ed25519 keypair.
+// KeyTestPubAddrED25519 generates a new ed25519 key pair.
 func KeyTestPubAddrED25519() (cryptotypes.PrivKey, cryptotypes.PubKey, sdk.AccAddress) {
 	key := ed25519.GenPrivKey()
 	pub := key.PubKey()

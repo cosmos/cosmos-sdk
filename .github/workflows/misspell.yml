@@ -19,7 +19,7 @@ jobs:
         with:
           token: ${{ secrets.PRBOT_PAT }}
           commit-message: "chore: spelling errors fixes"
-          title: "chore: typos fixed by cosmos-sdk bot"
+          title: "chore: fix spelling errors"
           branch: "bot/fix-typos"
           delete-branch: true
           body: |

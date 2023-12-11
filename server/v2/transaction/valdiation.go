@@ -3,7 +3,7 @@ package transaction
 import (
 	"context"
 
-	tx "cosmossdk.io/core/transaction"
+	tx "github.com/cosmos/cosmos-sdk/serverv2/core/transaction"
 )
 
 var _ tx.Validator[tx.Tx] = TxValidator[tx.Tx]{}

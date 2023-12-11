@@ -74,13 +74,13 @@ func (am AppManager[T]) DeliverBlock(ctx context.Context, req appmanager.Request
 		// }
 
 		// validate the transaction
-		ctx, txerr := am.txValidator.Validate(ctx, []T{tx}, false)
+		ctx, txerr := am.txValidator.Validate(ctx, []T{tx})
 		if txerr != nil {
 			return appmanager.ResponseDeliverBlock{}, txerr[tx.Hash()] // TODO: dont return to execute other txs
 		}
 
 		// exec the transaction
-		txr, err := ExecTx(ctx, am.logger, tx, false)
+		txr, err := ExecTx(ctx, am.logger, tx)
 		if err != nil {
 			return appmanager.ResponseDeliverBlock{}, err
 		}
@@ -101,7 +101,7 @@ func (am AppManager[T]) DeliverBlock(ctx context.Context, req appmanager.Request
 }
 
 // Query implements the Query method for application based queries
-func (am AppManager[T]) Query(ctx context.Context, qr *QueryRequest) (*QueryResponse, error) {
+func (am AppManager[T]) Query(ctx context.Context, qr *appmanager.QueryRequest) (*appmanager.QueryResponse, error) {
 	telemetry.IncrCounter(1, "query", "count")
 	telemetry.IncrCounter(1, "query", qr.Path)
 	defer telemetry.MeasureSince(time.Now(), qr.Path)

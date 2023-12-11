@@ -92,7 +92,7 @@ func (k Keeper) Revoke(goCtx context.Context, msg *authz.MsgRevoke) (*authz.MsgR
 func (k Keeper) Exec(goCtx context.Context, msg *authz.MsgExec) (*authz.MsgExecResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	if msg.Grantee == "" {
-		return nil, errors.New("6 empty address string is not allowed")
+		return nil, errors.New("empty address string is not allowed")
 	}
 
 	grantee, err := k.authKeeper.AddressCodec().StringToBytes(msg.Grantee)

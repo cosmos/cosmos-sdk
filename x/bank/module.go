@@ -226,7 +226,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		}
 	} else {
 		for _, permission := range in.AccountKeeper.GetModulePermissions() {
-			addrStr, err := in.AccountKeeper.AddressCodec().BytesToString(authtypes.NewModuleAddress(string(permission.GetAddress())))
+			addrStr, err := in.AccountKeeper.AddressCodec().BytesToString(permission.GetAddress())
 			if err != nil {
 				panic(err)
 			}

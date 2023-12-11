@@ -59,7 +59,7 @@ Modules are encouraged to utilize Protobuf encoding for their respective types. 
 
 In addition to [following official Protocol Buffer guidelines](https://developers.google.com/protocol-buffers/docs/proto3#simple), we recommend using these annotations in .proto files when dealing with interfaces:
 
-* use `cosmos_proto.accepts_interface` to annote `Any` fields that accept interfaces
+* use `cosmos_proto.accepts_interface` to annotate `Any` fields that accept interfaces
     * pass the same fully qualified name as `protoName` to `InterfaceRegistry.RegisterInterface`
     * example: `(cosmos_proto.accepts_interface) = "cosmos.gov.v1beta1.Content"` (and not just `Content`)
 * annotate interface implementations with `cosmos_proto.implements_interface`

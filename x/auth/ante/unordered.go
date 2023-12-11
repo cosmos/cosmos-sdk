@@ -113,10 +113,7 @@ func (m *UnorderedTxManager) purge(txHashes []TxHash) {
 // purgeLoop removes expired tx hashes in the background
 func (m *UnorderedTxManager) purgeLoop() {
 	for {
-		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-		defer cancel()
-
-		latestHeight, ok := m.batchReceive(ctx)
+		latestHeight, ok := m.batchReceive()
 		if !ok {
 			// channel closed
 			m.doneCh <- struct{}{}
@@ -130,9 +127,11 @@ func (m *UnorderedTxManager) purgeLoop() {
 	}
 }
 
-func (m *UnorderedTxManager) batchReceive(ctx context.Context) (uint64, bool) {
-	var latestHeight uint64
+func (m *UnorderedTxManager) batchReceive() (uint64, bool) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
 
+	var latestHeight uint64
 	for {
 		select {
 		case <-ctx.Done():

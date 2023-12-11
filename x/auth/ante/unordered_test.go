@@ -10,6 +10,8 @@ import (
 
 func TestUnorderedTxManager_Close(t *testing.T) {
 	txm := ante.NewUnorderedTxManager()
+	txm.Start()
+
 	require.NoError(t, txm.Close())
 	require.Panics(t, func() { txm.Close() })
 }
@@ -17,6 +19,8 @@ func TestUnorderedTxManager_Close(t *testing.T) {
 func TestUnorderedTxManager_SimpleSize(t *testing.T) {
 	txm := ante.NewUnorderedTxManager()
 	defer txm.Close()
+
+	txm.Start()
 
 	txm.Add([32]byte{0xFF}, 100)
 	txm.Add([32]byte{0xAA}, 100)
@@ -28,6 +32,8 @@ func TestUnorderedTxManager_SimpleSize(t *testing.T) {
 func TestUnorderedTxManager_SimpleContains(t *testing.T) {
 	txm := ante.NewUnorderedTxManager()
 	defer txm.Close()
+
+	txm.Start()
 
 	for i := 0; i < 10; i++ {
 		txHash := [32]byte{byte(i)}

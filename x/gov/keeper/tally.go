@@ -36,30 +36,14 @@ func (keeper Keeper) tallyStandard(ctx context.Context, proposal v1.Proposal) (p
 	results[v1.OptionSpam] = math.LegacyZeroDec()
 
 	totalVotingPower := math.LegacyZeroDec()
-	currValidators := make(map[string]v1.ValidatorGovInfo)
-
-	// fetch all the bonded validators, insert them into currValidators
-	err = keeper.sk.IterateBondedValidatorsByPower(ctx, func(index int64, validator sdk.ValidatorI) (stop bool) {
-		valBz, err := keeper.sk.ValidatorAddressCodec().StringToBytes(validator.GetOperator())
-		if err != nil {
-			return false
-		}
-		currValidators[validator.GetOperator()] = v1.NewValidatorGovInfo(
-			valBz,
-			validator.GetBondedTokens(),
-			validator.GetDelegatorShares(),
-			math.LegacyZeroDec(),
-			v1.WeightedVoteOptions{},
-		)
-
-		return false
-	})
+	currValidators, err := keeper.getCurrentValidators(ctx)
 	if err != nil {
 		return false, false, tallyResults, err
 	}
 
+	// iterate over all votes, tally up the voting power of each validator
 	rng := collections.NewPrefixedPairRange[uint64, sdk.AccAddress](proposal.Id)
-	err = keeper.Votes.Walk(ctx, rng, func(key collections.Pair[uint64, sdk.AccAddress], vote v1.Vote) (bool, error) {
+	if err := keeper.Votes.Walk(ctx, rng, func(key collections.Pair[uint64, sdk.AccAddress], vote v1.Vote) (bool, error) {
 		// if validator, just record it in the map
 		voter, err := keeper.authKeeper.AddressCodec().StringToBytes(vote.Voter)
 		if err != nil {
@@ -70,6 +54,7 @@ func (keeper Keeper) tallyStandard(ctx context.Context, proposal v1.Proposal) (p
 		if err != nil {
 			return false, err
 		}
+
 		if val, ok := currValidators[valAddrStr]; ok {
 			val.Vote = vote.Options
 			currValidators[valAddrStr] = val
@@ -93,6 +78,7 @@ func (keeper Keeper) tallyStandard(ctx context.Context, proposal v1.Proposal) (p
 					subPower := votingPower.Mul(weight)
 					results[option.Option] = results[option.Option].Add(subPower)
 				}
+
 				totalVotingPower = totalVotingPower.Add(votingPower)
 			}
 
@@ -103,9 +89,7 @@ func (keeper Keeper) tallyStandard(ctx context.Context, proposal v1.Proposal) (p
 		}
 
 		return false, keeper.Votes.Remove(ctx, collections.Join(vote.ProposalId, sdk.AccAddress(voter)))
-	})
-
-	if err != nil {
+	}); err != nil {
 		return false, false, tallyResults, err
 	}
 
@@ -186,9 +170,45 @@ func (keeper Keeper) tallyStandard(ctx context.Context, proposal v1.Proposal) (p
 }
 
 func (keeper Keeper) tallyOptimistic(ctx context.Context, proposal v1.Proposal) (passes, burnDeposits bool, tallyResults v1.TallyResult, err error) {
+	results := make(map[v1.VoteOption]math.LegacyDec)
+	results[v1.OptionNo] = math.LegacyZeroDec()
+
+	currValidators, err := keeper.getCurrentValidators(ctx)
+	if err != nil {
+		return false, false, tallyResults, err
+	}
+
+	for _, val := range currValidators {
+		_ = val
+	}
+
 	return false, false, v1.TallyResult{}, nil
 }
 
 func (keeper Keeper) tallyMultipleChoice(ctx context.Context, proposal v1.Proposal) (passes, burnDeposits bool, tallyResults v1.TallyResult, err error) {
 	return false, false, v1.TallyResult{}, nil
+}
+
+// getCurrentValidators fetches all the bonded validators, insert them into currValidators
+func (keeper Keeper) getCurrentValidators(ctx context.Context) (map[string]v1.ValidatorGovInfo, error) {
+	currValidators := make(map[string]v1.ValidatorGovInfo)
+	if err := keeper.sk.IterateBondedValidatorsByPower(ctx, func(index int64, validator sdk.ValidatorI) (stop bool) {
+		valBz, err := keeper.sk.ValidatorAddressCodec().StringToBytes(validator.GetOperator())
+		if err != nil {
+			return false
+		}
+		currValidators[validator.GetOperator()] = v1.NewValidatorGovInfo(
+			valBz,
+			validator.GetBondedTokens(),
+			validator.GetDelegatorShares(),
+			math.LegacyZeroDec(),
+			v1.WeightedVoteOptions{},
+		)
+
+		return false
+	}); err != nil {
+		return nil, err
+	}
+
+	return currValidators, nil
 }

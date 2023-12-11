@@ -12,7 +12,13 @@ import (
 
 func ExecTx[T transaction.Tx](ctx context.Context, logger log.Logger, tx T, simulate bool) (appmanager.TxResult, error) {
 	// gInfo sdk.GasInfo, result *sdk.Result, anteEvents []event.Event,
-	return appmanager.TxResult{}, nil
+	// preExecution Hook
+
+	// execute the transaction
+
+	// postExecution Hook
+
+	panic("implement me")
 }
 
 // BeginBlocker is a function type alias for the begin blocker used in the

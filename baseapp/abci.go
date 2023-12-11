@@ -359,7 +359,7 @@ func (app *BaseApp) CheckTx(req *abci.RequestCheckTx) (*abci.ResponseCheckTx, er
 		return nil, fmt.Errorf("unknown RequestCheckTx type: %s", req.Type)
 	}
 
-	gInfo, result, anteEvents, err := app.runTx(mode, req.Tx)
+	gInfo, result, anteEvents, _, err := app.runTx(mode, req.Tx)
 	if err != nil {
 		return sdkerrors.ResponseCheckTxWithEvents(err, gInfo.GasWanted, gInfo.GasUsed, anteEvents, app.trace), nil
 	}

@@ -596,9 +596,17 @@ func TestBaseAppAnteHandler(t *testing.T) {
 
 func TestBaseAppPostHandler(t *testing.T) {
 	postHandlerRun := false
+	var postHandlerKey []byte = nil
+	postHandlerEvent := sdk.NewEvent("post-handler-event", sdk.NewAttribute("key", "value"))
+	postFails := false
 	anteOpt := func(bapp *baseapp.BaseApp) {
 		bapp.SetPostHandler(func(ctx sdk.Context, tx sdk.Tx, simulate, success bool) (newCtx sdk.Context, err error) {
 			postHandlerRun = true
+			ctx.KVStore(capKey1).Set(postHandlerKey, []byte{}) // we ensure post handler state
+			ctx.EventManager().EmitEvent(postHandlerEvent)
+			if postFails {
+				return ctx, fmt.Errorf("post handler failed")
+			}
 			return ctx, nil
 		})
 	}
@@ -612,10 +620,12 @@ func TestBaseAppPostHandler(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	// execute a tx that will fail ante handler execution
+	// execute a tx that will not fail.
 	//
 	// NOTE: State should not be mutated here. This will be implicitly checked by
 	// the next txs ante handler execution (anteHandlerTxTest).
+	postHandlerRun = false
+	postHandlerKey = []byte("post-key-success")
 	tx := newTxCounter(t, suite.txConfig, 0, 0)
 	txBytes, err := suite.txConfig.TxEncoder()(tx)
 	require.NoError(t, err)
@@ -626,10 +636,14 @@ func TestBaseAppPostHandler(t *testing.T) {
 	require.True(t, res.TxResults[0].IsOK(), fmt.Sprintf("%v", res))
 
 	// PostHandler runs on successful message execution
+	// and state is modified and persisted, so do events.
 	require.True(t, postHandlerRun)
+	require.Equal(t, []byte{}, suite.baseApp.CommitMultiStore().GetKVStore(capKey1).Get(postHandlerKey))
+	require.Equal(t, postHandlerEvent.Type, res.TxResults[0].Events[len(res.TxResults[0].Events)-1].Type)
 
 	// It should also run on failed message execution
 	postHandlerRun = false
+	postHandlerKey = []byte("post-key-fail")
 	tx = setFailOnHandler(t, suite.txConfig, tx, true)
 	txBytes, err = suite.txConfig.TxEncoder()(tx)
 	require.NoError(t, err)
@@ -638,7 +652,53 @@ func TestBaseAppPostHandler(t *testing.T) {
 	require.Empty(t, res.Events)
 	require.False(t, res.TxResults[0].IsOK(), fmt.Sprintf("%v", res))
 
+	// post handler has run on failed tx.
 	require.True(t, postHandlerRun)
+	require.Equal(t, []byte{}, suite.baseApp.CommitMultiStore().GetKVStore(capKey1).Get(postHandlerKey))
+	require.Equal(t, postHandlerEvent.Type, res.TxResults[0].Events[len(res.TxResults[0].Events)-1].Type)
+}
+
+func TestBaseAppPostHandlerFailure(t *testing.T) {
+	postHandlerRun := false
+	var postHandlerKey []byte = nil
+	postHandlerEvent := sdk.NewEvent("post-handler-event", sdk.NewAttribute("key", "value"))
+	postFails := false
+	anteOpt := func(bapp *baseapp.BaseApp) {
+		bapp.SetPostHandler(func(ctx sdk.Context, tx sdk.Tx, simulate, success bool) (newCtx sdk.Context, err error) {
+			postHandlerRun = true
+			ctx.KVStore(capKey1).Set(postHandlerKey, []byte{}) // we ensure post handler state
+			ctx.EventManager().EmitEvent(postHandlerEvent)
+			if postFails {
+				return ctx, fmt.Errorf("post handler failed")
+			}
+			return ctx, nil
+		})
+	}
+
+	suite := NewBaseAppSuite(t, anteOpt)
+
+	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), CounterServerImpl{t, capKey1, []byte("foo")})
+
+	_, err := suite.baseApp.InitChain(&abci.RequestInitChain{
+		ConsensusParams: &cmtproto.ConsensusParams{},
+	})
+	require.NoError(t, err)
+	// we simulate the post handler failing.
+	// test post handler failure on successful tx.
+	postHandlerRun = false
+	postHandlerKey = []byte("post-key-success-tx-failed-post")
+	postFails = true
+	tx := newTxCounter(t, suite.txConfig, 1, 0)
+	txBytes, err := suite.txConfig.TxEncoder()(tx)
+	require.NoError(t, err)
+	res, err := suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1, Txs: [][]byte{txBytes}})
+	require.NoError(t, err)
+	// we expect the exec to be rolled back.
+	// only ante events should be there.
+	require.Contains(t, res.TxResults[0].Log, "post handler failed")
+	require.True(t, postHandlerRun)
+	require.Equal(t, []byte(nil), suite.baseApp.CommitMultiStore().GetKVStore(capKey1).Get(postHandlerKey))
+	require.Empty(t, res.TxResults[0].Events)
 }
 
 // Test and ensure that invalid block heights always cause errors.

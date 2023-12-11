@@ -751,14 +751,14 @@ func (app *BaseApp) deliverTx(tx []byte) *abci.ExecTxResult {
 		telemetry.SetGauge(float32(gInfo.GasWanted), "tx", "gas", "wanted")
 	}()
 
-	gInfo, result, anteEvents, err := app.runTx(execModeFinalize, tx)
+	gInfo, result, anteEvents, postEvents, err := app.runTx(execModeFinalize, tx)
 	if err != nil {
 		resultStr = "failed"
 		resp = sdkerrors.ResponseExecTxResultWithEvents(
 			err,
 			gInfo.GasWanted,
 			gInfo.GasUsed,
-			sdk.MarkEventsToIndex(anteEvents, app.indexEvents),
+			sdk.MarkEventsToIndex(append(anteEvents, postEvents...), app.indexEvents),
 			app.trace,
 		)
 		return resp
@@ -808,7 +808,7 @@ func (app *BaseApp) endBlock(ctx context.Context) (sdk.EndBlock, error) {
 // Note, gas execution info is always returned. A reference to a Result is
 // returned if the tx does not run out of gas and if all the messages are valid
 // and execute successfully. An error is returned otherwise.
-func (app *BaseApp) runTx(mode execMode, txBytes []byte) (gInfo sdk.GasInfo, result *sdk.Result, anteEvents []abci.Event, err error) {
+func (app *BaseApp) runTx(mode execMode, txBytes []byte) (gInfo sdk.GasInfo, result *sdk.Result, anteEvents, postEvents []abci.Event, err error) {
 	// NOTE: GasWanted should be returned by the AnteHandler. GasUsed is
 	// determined by the GasMeter. We need access to the context to get the gas
 	// meter, so we initialize upfront.
@@ -819,7 +819,7 @@ func (app *BaseApp) runTx(mode execMode, txBytes []byte) (gInfo sdk.GasInfo, res
 
 	// only run the tx if there is block gas remaining
 	if mode == execModeFinalize && ctx.BlockGasMeter().IsOutOfGas() {
-		return gInfo, nil, nil, errorsmod.Wrap(sdkerrors.ErrOutOfGas, "no block gas left to run tx")
+		return gInfo, nil, nil, nil, errorsmod.Wrap(sdkerrors.ErrOutOfGas, "no block gas left to run tx")
 	}
 
 	defer func() {
@@ -858,18 +858,18 @@ func (app *BaseApp) runTx(mode execMode, txBytes []byte) (gInfo sdk.GasInfo, res
 
 	tx, err := app.txDecoder(txBytes)
 	if err != nil {
-		return sdk.GasInfo{}, nil, nil, err
+		return sdk.GasInfo{}, nil, nil, nil, err
 	}
 
 	msgs := tx.GetMsgs()
 	if err := validateBasicTxMsgs(msgs); err != nil {
-		return sdk.GasInfo{}, nil, nil, err
+		return sdk.GasInfo{}, nil, nil, nil, err
 	}
 
 	for _, msg := range msgs {
 		handler := app.msgServiceRouter.Handler(msg)
 		if handler == nil {
-			return sdk.GasInfo{}, nil, nil, errorsmod.Wrapf(sdkerrors.ErrUnknownRequest, "no message handler found for %T", msg)
+			return sdk.GasInfo{}, nil, nil, nil, errorsmod.Wrapf(sdkerrors.ErrUnknownRequest, "no message handler found for %T", msg)
 		}
 	}
 
@@ -906,7 +906,7 @@ func (app *BaseApp) runTx(mode execMode, txBytes []byte) (gInfo sdk.GasInfo, res
 		gasWanted = ctx.GasMeter().Limit()
 
 		if err != nil {
-			return gInfo, nil, nil, err
+			return gInfo, nil, nil, nil, err
 		}
 
 		msCache.Write()
@@ -916,12 +916,12 @@ func (app *BaseApp) runTx(mode execMode, txBytes []byte) (gInfo sdk.GasInfo, res
 	if mode == execModeCheck {
 		err = app.mempool.Insert(ctx, tx)
 		if err != nil {
-			return gInfo, nil, anteEvents, err
+			return gInfo, nil, anteEvents, nil, err
 		}
 	} else if mode == execModeFinalize {
 		err = app.mempool.Remove(tx)
 		if err != nil && !errors.Is(err, mempool.ErrTxNotFound) {
-			return gInfo, nil, anteEvents,
+			return gInfo, nil, anteEvents, nil,
 				fmt.Errorf("failed to remove tx from mempool: %w", err)
 		}
 	}
@@ -938,39 +938,67 @@ func (app *BaseApp) runTx(mode execMode, txBytes []byte) (gInfo sdk.GasInfo, res
 	if err == nil {
 		result, err = app.runMsgs(runMsgCtx, msgs, msgsV2, mode)
 	}
-
-	// Run optional postHandlers (should run regardless of the execution result).
-	//
-	// Note: If the postHandler fails, we also revert the runMsgs state.
-	if app.postHandler != nil {
-		// The runMsgCtx context currently contains events emitted by the ante handler.
-		// We clear this to correctly order events without duplicates.
-		// Note that the state is still preserved.
-		postCtx := runMsgCtx.WithEventManager(sdk.NewEventManager())
-
-		newCtx, err := app.postHandler(postCtx, tx, mode == execModeSimulate, err == nil)
-		if err != nil {
-			return gInfo, nil, anteEvents, err
-		}
-
-		result.Events = append(result.Events, newCtx.EventManager().ABCIEvents()...)
-	}
-
 	if err == nil {
+		// we run the post handler using the runMsgCtx, if the postHandler
+		// fails then we will not commit the runMsgCtx.
+		runMsgCtx = runMsgCtx.WithEventManager(sdk.NewEventManager()) // reset the event manager, so we can append  events to results.
+		postErr := app.runPostHandler(runMsgCtx, mode, true)
+		if postErr != nil {
+			return gInfo, nil, anteEvents, nil, postErr
+		}
+		// append post handler events to result
+		postHandlerEvents := runMsgCtx.EventManager().Events()
+		result.Events = append(result.Events, postHandlerEvents.ToABCIEvents()...)
+		// add events to result
 		if mode == execModeFinalize {
 			// When block gas exceeds, it'll panic and won't commit the cached store.
 			consumeBlockGas()
 
 			msCache.Write()
 		}
-
 		if len(anteEvents) > 0 && (mode == execModeFinalize || mode == execModeSimulate) {
 			// append the events in the order of occurrence
 			result.Events = append(anteEvents, result.Events...)
 		}
+	} else {
+		// if the tx has failed, we run the post handler, we branch off
+		// the original context and cache multi-store to ensure that
+		// state from the failed tx is not used.
+		// we do not branch off runMsgCtx because it contains invalid state
+		// from the failed tx.
+		postCtx, postMsCache := app.cacheTxContext(ctx, txBytes)
+		postCtx = postCtx.WithEventManager(sdk.NewEventManager()) // reset the event manager, so we can append post events to results.
+		postErr := app.runPostHandler(postCtx, mode, false)
+		if postErr != nil {
+			return gInfo, nil, anteEvents, nil, postErr
+		}
+		// we can write this no matter what, because if we're in checkTx
+		// then runPostHandler will have immediately returned,
+		// this would yield to writing nothing.
+		postMsCache.Write()
+		// save post handler events
+		postEvents = postCtx.EventManager().Events().ToABCIEvents()
 	}
 
-	return gInfo, result, anteEvents, err
+	return gInfo, result, anteEvents, postEvents, err
+}
+
+// runPostHandler will run the post handler if it is present.
+func (app *BaseApp) runPostHandler(ctx sdk.Context, execMode execMode, success bool) error {
+	// if no post handler is defined, we return.
+	if app.postHandler == nil {
+		return nil
+	}
+	// we check exec mode, if it's not finalize or simulate we do not run post handlers.
+	// it's pointless, if we're in check tx and the post wants a successful tx, then it does not
+	// make sense to run the post handler, since we do not know if the tx will be successful during
+	// check tx.
+	if execMode != execModeSimulate && execMode != execModeFinalize {
+		return nil
+	}
+	// we can safely write to this context.
+	_, err := app.postHandler(ctx, nil, execMode == execModeSimulate, success)
+	return err
 }
 
 // runMsgs iterates through a list of messages and executes them with the provided
@@ -1084,7 +1112,7 @@ func (app *BaseApp) PrepareProposalVerifyTx(tx sdk.Tx) ([]byte, error) {
 		return nil, err
 	}
 
-	_, _, _, err = app.runTx(execModePrepareProposal, bz)
+	_, _, _, _, err = app.runTx(execModePrepareProposal, bz)
 	if err != nil {
 		return nil, err
 	}
@@ -1103,7 +1131,7 @@ func (app *BaseApp) ProcessProposalVerifyTx(txBz []byte) (sdk.Tx, error) {
 		return nil, err
 	}
 
-	_, _, _, err = app.runTx(execModeProcessProposal, txBz)
+	_, _, _, _, err = app.runTx(execModeProcessProposal, txBz)
 	if err != nil {
 		return nil, err
 	}

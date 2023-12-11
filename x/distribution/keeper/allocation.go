@@ -149,7 +149,7 @@ func (k Keeper) AllocateTokensToValidator(ctx context.Context, val sdk.Validator
 }
 
 // sendDecimalPoolToCommunityPool sends the decimal pool to the community pool
-// Any remainer stays in the decimal pool
+// Any remainder stays in the decimal pool
 func (k Keeper) sendDecimalPoolToCommunityPool(ctx context.Context) error {
 	feePool, err := k.FeePool.Get(ctx)
 	if err != nil {

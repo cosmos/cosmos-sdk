@@ -629,7 +629,7 @@ func (ca ConsAddress) String() string {
 }
 
 // Bech32ifyAddressBytes returns a bech32 representation of address bytes.
-// Returns an empty sting if the byte slice is 0-length. Returns an error if the bech32 conversion
+// Returns an empty string if the byte slice is 0-length. Returns an error if the bech32 conversion
 // fails or the prefix is empty.
 func Bech32ifyAddressBytes(prefix string, bs []byte) (string, error) {
 	if len(bs) == 0 {
@@ -642,7 +642,7 @@ func Bech32ifyAddressBytes(prefix string, bs []byte) (string, error) {
 }
 
 // MustBech32ifyAddressBytes returns a bech32 representation of address bytes.
-// Returns an empty sting if the byte slice is 0-length. It panics if the bech32 conversion
+// Returns an empty string if the byte slice is 0-length. It panics if the bech32 conversion
 // fails or the prefix is empty.
 func MustBech32ifyAddressBytes(prefix string, bs []byte) string {
 	s, err := Bech32ifyAddressBytes(prefix, bs)

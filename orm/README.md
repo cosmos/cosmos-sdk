@@ -269,9 +269,9 @@ type BalanceTable interface {
     Update(ctx context.Context, balance *Balance) error
     Save(ctx context.Context, balance *Balance) error
     Delete(ctx context.Context, balance *Balance) error
-    Has(ctx context.Context, acocunt []byte, denom string) (found bool, err error)
+    Has(ctx context.Context, account []byte, denom string) (found bool, err error)
     // Get returns nil and an error which responds true to ormerrors.IsNotFound() if the record was not found.
-    Get(ctx context.Context, acocunt []byte, denom string) (*Balance, error)
+    Get(ctx context.Context, account []byte, denom string) (*Balance, error)
     List(ctx context.Context, prefixKey BalanceIndexKey, opts ...ormlist.Option) (BalanceIterator, error)
     ListRange(ctx context.Context, from, to BalanceIndexKey, opts ...ormlist.Option) (BalanceIterator, error)
     DeleteBy(ctx context.Context, prefixKey BalanceIndexKey) error

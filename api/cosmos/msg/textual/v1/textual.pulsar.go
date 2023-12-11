@@ -38,7 +38,7 @@ var (
 	// algorithm used to generate the custom textual representation of the
 	// protobuf message where this annotation is applied. We recommend to use a
 	// short, versioned name as this identifier, e.g. "replace_with_username_v1".
-	// We also recommand providing a human-readable description as protobuf
+	// We also recommend providing a human-readable description as protobuf
 	// comments on this annotation, for example a short specification or a link
 	// to the relevant documentation.
 	//

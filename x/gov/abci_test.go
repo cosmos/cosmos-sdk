@@ -405,13 +405,13 @@ func TestEndBlockerProposalHandlerFailed(t *testing.T) {
 	ac := addresscodec.NewBech32Codec("cosmos")
 	addrStr, err := ac.BytesToString(authtypes.NewModuleAddress(types.ModuleName))
 	require.NoError(t, err)
-	addrStr1, err := ac.BytesToString(addrs[0])
+	toAddrStr, err := ac.BytesToString(addrs[0])
 	require.NoError(t, err)
 
 	createValidators(t, stakingMsgSvr, ctx, []sdk.ValAddress{valAddr}, []int64{10})
 	_, err = suite.StakingKeeper.EndBlocker(ctx)
 	require.NoError(t, err)
-	msg := banktypes.NewMsgSend(addrStr, addrStr1, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100000))))
+	msg := banktypes.NewMsgSend(addrStr, toAddrStr, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100000))))
 	proposal, err := suite.GovKeeper.SubmitProposal(ctx, []sdk.Msg{msg}, "", "title", "summary", proposer, v1.ProposalType_PROPOSAL_TYPE_STANDARD)
 	require.NoError(t, err)
 

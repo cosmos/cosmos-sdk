@@ -58,29 +58,29 @@ func internalSignModeToAPI(mode signing.SignMode) (signingv1beta1.SignMode, erro
 	}
 }
 
-// VerifysignatureCache is a cache of verified signatures
+// verifySig verifies a signature against the given sign bytes and public key.
+// if a cache is set it will cache signatures for the given sign bytes.
 // If the cached item is not found, it will be verified and added to the cache
 func verifySig(signBytes, sig []byte, pubKey cryptotypes.PubKey, cs *cryptotypes.SignatureCache) bool {
-	if cs != nil {
-		bz := cryptotypes.NewSigKey(signBytes, sig).String()
-		cachePub, ok := cs.Get(bz)
-		// if the pubkey is in the cache, we know the signature is valid
-		// we remove the signature from the cache in the first lookup, as we assume this is when delivertx is being called
-		if ok {
-			cs.Remove(bz)
-			return bytes.Equal(pubKey.Bytes(), cachePub)
-		}
-		if !pubKey.VerifySignature(signBytes, sig) {
-			return false
-		}
-		cs.Add(bz, pubKey.Bytes())
-	} else if cs == nil {
-		if !pubKey.VerifySignature(signBytes, sig) {
-			return false
-		}
+	if cs == nil {
+		return pubKey.VerifySignature(signBytes, sig)
 	}
 
-	return true
+	bz := cryptotypes.NewSigKey(signBytes, sig).String()
+	cachePub, ok := cs.Get(bz)
+	// if the pubkey is in the cache, we know the signature is valid
+	// we remove the signature from the cache in the first lookup, as we assume this is when delivertx is being called
+	if ok {
+		cs.Remove(bz)
+		return bytes.Equal(pubKey.Bytes(), cachePub)
+	}
+
+	if pubKey.VerifySignature(signBytes, sig) {
+		cs.Add(bz, pubKey.Bytes())
+		return true
+	}
+
+	return false
 }
 
 // VerifySignature verifies a transaction signature contained in SignatureData abstracting over different signing
@@ -105,7 +105,7 @@ func VerifySignature(
 			return err
 		}
 		if !verifySig(signBytes, data.Signature, pubKey, cache) {
-			return fmt.Errorf("unable to verify single signer signature")
+			return fmt.Errorf("unable to verify single signer signature for public key: %s", pubKey.Address())
 		}
 		return nil
 

@@ -12,8 +12,9 @@ import (
 	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/commitment"
 	"cosmossdk.io/store/v2/commitment/iavl"
-	"cosmossdk.io/store/v2/storage"
 	"cosmossdk.io/store/v2/pruning"
+	"cosmossdk.io/store/v2/pruning"
+	"cosmossdk.io/store/v2/storage"
 	"cosmossdk.io/store/v2/storage/sqlite"
 )
 

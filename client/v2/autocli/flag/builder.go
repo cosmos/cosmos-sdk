@@ -27,6 +27,8 @@ const (
 	AddressStringScalarType          = "cosmos.AddressString"
 	ValidatorAddressStringScalarType = "cosmos.ValidatorAddressString"
 	ConsensusAddressStringScalarType = "cosmos.ConsensusAddressString"
+
+	CoinScalarType = "cosmos.base.v1beta1.Coin"
 )
 
 // Builder manages options for building pflag flags for protobuf messages.
@@ -62,7 +64,7 @@ func (b *Builder) init() {
 		b.messageFlagTypes = map[protoreflect.FullName]Type{}
 		b.messageFlagTypes["google.protobuf.Timestamp"] = timestampType{}
 		b.messageFlagTypes["google.protobuf.Duration"] = durationType{}
-		b.messageFlagTypes["cosmos.base.v1beta1.Coin"] = coinType{}
+		b.messageFlagTypes[CoinScalarType] = coinType{}
 	}
 
 	if b.scalarFlagTypes == nil {

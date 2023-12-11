@@ -51,5 +51,5 @@ func (c *coinValue) Set(stringValue string) error {
 }
 
 func (c *coinValue) Type() string {
-	return "cosmos.base.v1beta1.Coin"
+	return CoinScalarType
 }

@@ -7,12 +7,15 @@ import (
 	"sort"
 	"strings"
 
+	gogoproto "github.com/cosmos/gogoproto/proto"
 	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
+	"google.golang.org/protobuf/reflect/protoregistry"
 
 	"cosmossdk.io/client/v2/autocli/prompt" // TODO to delete this dependency
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/x/gov/types"
+	"cosmossdk.io/x/tx/signing/aminojson"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -57,11 +60,11 @@ var suggestedProposalTypes = []proposalType{
 type proposalType struct {
 	Name    string
 	MsgType string
-	Msg     sdk.Msg
+	Msg     gogoproto.Message
 }
 
 // Prompt the proposal type values and return the proposal and its metadata
-func (p *proposalType) Prompt(addressCodec address.Codec, cdc codec.Codec, skipMetadata bool) (*proposal, types.ProposalMetadata, error) {
+func (p *proposalType) Prompt(addressCodec address.Codec, validatorAddressCodec address.Codec, consensusAddressCodec address.Codec, cdc codec.Codec, skipMetadata bool) (*proposal, types.ProposalMetadata, error) {
 	metadata, err := PromptMetadata(addressCodec, skipMetadata)
 	if err != nil {
 		return nil, metadata, fmt.Errorf("failed to set proposal metadata: %w", err)
@@ -76,7 +79,7 @@ func (p *proposalType) Prompt(addressCodec address.Codec, cdc codec.Codec, skipM
 	// set deposit
 	depositPrompt := promptui.Prompt{
 		Label:    "Enter proposal deposit",
-		Validate: client.ValidatePromptCoins,
+		Validate: prompt.ValidatePromptCoins,
 	}
 	proposal.Deposit, err = depositPrompt.Run()
 	if err != nil {
@@ -88,16 +91,22 @@ func (p *proposalType) Prompt(addressCodec address.Codec, cdc codec.Codec, skipM
 	}
 
 	// set messages field
-	result, err := prompt.Prompt(addressCodec, p.Msg, "msg")
+	msg, err := prompt.Prompt(addressCodec, validatorAddressCodec, consensusAddressCodec, "msg", p.Msg)
 	if err != nil {
 		return nil, metadata, fmt.Errorf("failed to set proposal message: %w", err)
 	}
 
-	message, err := cdc.MarshalInterfaceJSON(result)
-	if err != nil {
-		return nil, metadata, fmt.Errorf("failed to marshal proposal message: %w", err)
+	// setup encoder
+	encoderOptions := aminojson.EncoderOptions{
+		Indent:          "  ",
+		DoNotSortFields: true,
+		TypeResolver:    protoregistry.GlobalTypes,
+		FileResolver:    cdc.InterfaceRegistry(),
 	}
-	proposal.Messages = append(proposal.Messages, message)
+	enc := aminojson.NewEncoder(encoderOptions)
+	bz, err := enc.Marshal(msg.Interface())
+
+	proposal.Messages = append(proposal.Messages, bz)
 
 	return proposal, metadata, nil
 }
@@ -114,7 +123,7 @@ func getProposalSuggestions() []string {
 // PromptMetadata prompts for proposal metadata or only title and summary if skip is true
 func PromptMetadata(addressCodec address.Codec, skip bool) (types.ProposalMetadata, error) {
 	if !skip {
-		metadata, err := prompt.Prompt(addressCodec, types.ProposalMetadata{}, "proposal")
+		metadata, err := prompt.PromptStruct("proposal", types.ProposalMetadata{})
 		if err != nil {
 			return metadata, fmt.Errorf("failed to set proposal metadata: %w", err)
 		}
@@ -125,7 +134,7 @@ func PromptMetadata(addressCodec address.Codec, skip bool) (types.ProposalMetada
 	// prompt for title and summary
 	titlePrompt := promptui.Prompt{
 		Label:    "Enter proposal title",
-		Validate: client.ValidatePromptNotEmpty,
+		Validate: prompt.ValidatePromptNotEmpty,
 	}
 
 	title, err := titlePrompt.Run()
@@ -135,7 +144,7 @@ func PromptMetadata(addressCodec address.Codec, skip bool) (types.ProposalMetada
 
 	summaryPrompt := promptui.Prompt{
 		Label:    "Enter proposal summary",
-		Validate: client.ValidatePromptNotEmpty,
+		Validate: prompt.ValidatePromptNotEmpty,
 	}
 
 	summary, err := summaryPrompt.Run()
@@ -209,7 +218,7 @@ func NewCmdDraftProposal() *cobra.Command {
 
 			skipMetadataPrompt, _ := cmd.Flags().GetBool(flagSkipMetadata)
 
-			result, metadata, err := proposal.Prompt(clientCtx.AddressCodec, clientCtx.Codec, skipMetadataPrompt)
+			result, metadata, err := proposal.Prompt(clientCtx.AddressCodec, clientCtx.ValidatorAddressCodec, clientCtx.ConsensusAddressCodec, clientCtx.Codec, skipMetadataPrompt)
 			if err != nil {
 				return err
 			}

@@ -346,7 +346,7 @@ func runAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *buf
 	return printCreate(ctx, cmd, k, showMnemonic, showMnemonicIndiscreetly, mnemonic, outputFormat)
 }
 
-func printCreate(ctx client.Context, cmd *cobra.Command, k *keyring.Record, showMnemonic bool, showMnemonicIndiscreetly bool, mnemonic, outputFormat string) error {
+func printCreate(ctx client.Context, cmd *cobra.Command, k *keyring.Record, showMnemonic, showMnemonicIndiscreetly bool, mnemonic, outputFormat string) error {
 	switch outputFormat {
 	case flags.OutputFormatText:
 		cmd.PrintErrln()

@@ -24,7 +24,7 @@ specifications for modules. The following list is nonbinding and all sections ar
 
 * `# {Module Name}` - overview of the module
 * `## Concepts` - describe specialized concepts and definitions used throughout the spec
-* `## State` - specify and describe structures expected to marshalled into the store, and their keys
+* `## State` - specify and describe structures expected to be marshalled into the store, and their keys
 * `## State Transitions` - standard state transition operations triggered by hooks, messages, etc.
 * `## Messages` - specify message structure(s) and expected state machine behaviour(s)
 * `## Begin Block` - specify any begin-block operations

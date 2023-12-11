@@ -42,6 +42,14 @@ func TestAuthzAuthorizations(t *testing.T) {
 	_, err = stakingtypes.NewStakeAuthorization([]sdk.ValAddress{val1, val2}, []sdk.ValAddress{val1}, stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_DELEGATE, &coin100)
 	require.Error(t, err)
 
+	// error duplicate allow list
+	_, err = stakingtypes.NewStakeAuthorization([]sdk.ValAddress{val1, val1}, []sdk.ValAddress{}, stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_DELEGATE, &coin100)
+	require.ErrorContains(t, err, "duplicate allowed validator address")
+
+	// error duplicate denied list
+	_, err = stakingtypes.NewStakeAuthorization([]sdk.ValAddress{}, []sdk.ValAddress{val1, val1}, stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_DELEGATE, &coin100)
+	require.ErrorContains(t, err, "duplicate denied validator address")
+
 	// verify MethodName
 	undelAuth, _ := stakingtypes.NewStakeAuthorization([]sdk.ValAddress{val1, val2}, []sdk.ValAddress{}, stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_UNDELEGATE, &coin100)
 	require.Equal(t, undelAuth.MsgTypeURL(), sdk.MsgTypeURL(&stakingtypes.MsgUndelegate{}))

@@ -29,10 +29,13 @@ func NewIavlTree(db dbm.DB, logger log.Logger, cfg *Config) *IavlTree {
 // Remove removes the given key from the tree.
 func (t *IavlTree) Remove(key []byte) error {
 	_, res, err := t.tree.Remove(key)
+	if err != nil {
+		return err
+	}
 	if !res {
 		return fmt.Errorf("key %x not found", key)
 	}
-	return err
+	return nil
 }
 
 // Set sets the given key-value pair in the tree.
@@ -70,6 +73,12 @@ func (t *IavlTree) GetProof(version uint64, key []byte) (*ics23.CommitmentProof,
 // GetLatestVersion returns the latest version of the database.
 func (t *IavlTree) GetLatestVersion() uint64 {
 	return uint64(t.tree.Version())
+}
+
+// SetInitialVersion sets the initial version of the database.
+func (t *IavlTree) SetInitialVersion(version uint64) error {
+	t.tree.SetInitialVersion(version)
+	return nil
 }
 
 // Prune prunes all versions up to and including the provided version.

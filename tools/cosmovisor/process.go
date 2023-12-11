@@ -180,8 +180,8 @@ func (l Launcher) doBackup() error {
 
 		// a destination directory, Format YYYY-MM-DD
 		st := time.Now()
-		strstr := fmt.Sprintf("%d-%d-%d", st.Year(), st.Month(), st.Day())
-		dst := filepath.Join(l.cfg.DataBackupPath, fmt.Sprintf("data"+"-backup-%s", strstr))
+		strStr := fmt.Sprintf("%d-%d-%d", st.Year(), st.Month(), st.Day())
+		dst := filepath.Join(l.cfg.DataBackupPath, fmt.Sprintf("data"+"-backup-%s", strStr))
 
 		l.logger.Info("starting to take backup of data directory", "backup start time", st)
 

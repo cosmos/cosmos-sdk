@@ -2,6 +2,7 @@ package implementation
 
 import (
 	"context"
+	"encoding/binary"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/store"
@@ -38,14 +39,15 @@ type contextValue struct {
 func MakeAccountContext(
 	ctx context.Context,
 	storeSvc store.KVStoreService,
-	accountAddr,
+	accNumber uint64,
+	accountAddr []byte,
 	sender []byte,
 	moduleExec ModuleExecFunc,
 	moduleExecUntyped ModuleExecUntypedFunc,
 	moduleQuery ModuleQueryFunc,
 ) context.Context {
 	return context.WithValue(ctx, contextKey{}, contextValue{
-		store:             prefixstore.New(storeSvc.OpenKVStore(ctx), append(AccountStatePrefix, accountAddr...)),
+		store:             makeAccountStore(ctx, storeSvc, accNumber),
 		sender:            sender,
 		whoami:            accountAddr,
 		originalContext:   ctx,
@@ -53,6 +55,15 @@ func MakeAccountContext(
 		moduleExec:        moduleExec,
 		moduleQuery:       moduleQuery,
 	})
+}
+
+// makeAccountStore creates the prefixed store for the account.
+// It uses the number of the account, this gives constant size
+// bytes prefixes for the account state.
+func makeAccountStore(ctx context.Context, storeSvc store.KVStoreService, accNum uint64) store.KVStore {
+	prefix := make([]byte, 8)
+	binary.BigEndian.PutUint64(prefix, accNum)
+	return prefixstore.New(storeSvc.OpenKVStore(ctx), append(AccountStatePrefix, prefix...))
 }
 
 // ExecModuleUntyped can be used to execute a message towards a module, when the response type is unknown.

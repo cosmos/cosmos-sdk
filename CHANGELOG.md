@@ -56,7 +56,11 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
-* (x/*all*) [#18636](https://github.com/cosmos/cosmos-sdk/pull/18636) Removed the usage of `panic` in keeper methods across all x/* modules and replaced with proper error returns.
+* (x/bank) [#18636](https://github.com/cosmos/cosmos-sdk/pull/18636) `SendCoinsFromModuleToAccount`, `SendCoinsFromModuleToModule`, `SendCoinsFromAccountToModule`, `DelegateCoinsFromAccountToModule`, `UndelegateCoinsFromModuleToAccount`, `MintCoins` and `BurnCoins` methods now returns an error instead of panicking if any module accounts does not exist or unauthorized.
+* (x/distribution) [#18636](https://github.com/cosmos/cosmos-sdk/pull/18636) `CalculateDelegationRewards` and `DelegationTotalRewards` methods no longer panics on any sanity checks and instead returns appropriate erros.
+* (x/slashing) [#18636](https://github.com/cosmos/cosmos-sdk/pull/18636) `JailUntil` and `Tombstone` methods no longer panics if the signing info does not exist for the validator but instead returns error.
+* (x/staking) [#18636](https://github.com/cosmos/cosmos-sdk/pull/18636) `IterateBondedValidatorsByPower`, `GetDelegatorBonded`, `Delegate`, `Unbond`, `Slash`, `Jail`, `SlashRedelegation`, `ApplyAndReturnValidatorSetUpdates` methods no longer panics on any kind of errors but instead returns appropriate errors. 
+    * Usage of `Must...` kind of functions are avoided in keeper methods.
 * (client/keys) [#18663](https://github.com/cosmos/cosmos-sdk/pull/18663) Improve `<appd> keys add` by displaying mnemonic discreetly on an alternate screen and adding `--indiscreet` option to disable it.
 * (telemetry) [#18646] (https://github.com/cosmos/cosmos-sdk/pull/18646) Enable statsd and dogstatsd telemetry sinks
 * (types) [#18440](https://github.com/cosmos/cosmos-sdk/pull/18440) Add `AmountOfNoValidation` to `sdk.DecCoins`.

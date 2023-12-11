@@ -10,7 +10,7 @@ pub struct InitData {
 pub struct ModuleDescriptor {
     pub name: *const u8,
     pub name_len: usize,
-    // pub init_fn: ModuleInitFn,
+    pub init_fn: ModuleInitFn,
 }
 
 unsafe impl Sync for ModuleDescriptor {}

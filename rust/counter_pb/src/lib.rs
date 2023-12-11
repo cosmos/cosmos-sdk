@@ -1,6 +1,6 @@
 use std::ptr::null;
 use tonic::{Request, Response, Status};
-use cosmossdk_core::c::ModuleDescriptor;
+use cosmossdk_core::c::{ModuleDescriptor, ModuleInitData};
 // use cosmossdk_core::KVStoreService;
 use cosmossdk_core::tonic::{context};
 
@@ -38,6 +38,7 @@ static MODULE_DESCRIPTORS: &'static [ModuleDescriptor] = &[
         name: "example.counter.v1".as_ptr(),
         name_len: "example.counter.v1".len(),
         // init_fn: fn
+        init_fn: |init_data| { null() },
     },
 ];
 

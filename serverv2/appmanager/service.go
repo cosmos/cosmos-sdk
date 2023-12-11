@@ -2,6 +2,8 @@ package appmanager
 
 import (
 	"context"
+	"errors"
+	"time"
 
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
@@ -11,6 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/serverv2/core/appmanager"
 	"github.com/cosmos/cosmos-sdk/serverv2/core/event"
 	"github.com/cosmos/cosmos-sdk/serverv2/core/transaction"
+	"github.com/cosmos/cosmos-sdk/telemetry"
 )
 
 type Store interface {
@@ -31,7 +34,7 @@ type AppManager[T transaction.Tx] struct {
 	// basicManager      module.BasicManager
 	// baseAppOptions    []BaseAppOption
 	msgServiceRouter *MsgServiceRouter
-	queryRouter      *GRPCQueryRouter
+	queryRouter      *QueryRouter
 	// appConfig         *appv1alpha1.Config
 	logger log.Logger
 }
@@ -76,9 +79,6 @@ func (am AppManager[T]) DeliverBlock(ctx context.Context, req appmanager.Request
 			return appmanager.ResponseDeliverBlock{}, txerr[tx.Hash()] // TODO: dont return to execute other txs
 		}
 
-		// pretransaction hook
-		// TODO: move to execTx
-
 		// exec the transaction
 		txr, err := ExecTx(ctx, am.logger, tx, false)
 		if err != nil {
@@ -86,8 +86,6 @@ func (am AppManager[T]) DeliverBlock(ctx context.Context, req appmanager.Request
 		}
 		txResult[i] = txr
 
-		// posttransaction hook
-		// TODO: move to ExecTx
 	}
 
 	endEvents, err := EndBlock()
@@ -102,34 +100,44 @@ func (am AppManager[T]) DeliverBlock(ctx context.Context, req appmanager.Request
 	}, nil
 }
 
+// Query implements the Query method for application based queries
+func (am AppManager[T]) Query(ctx context.Context, qr *QueryRequest) (*QueryResponse, error) {
+	telemetry.IncrCounter(1, "query", "count")
+	telemetry.IncrCounter(1, "query", qr.Path)
+	defer telemetry.MeasureSince(time.Now(), qr.Path)
+
+	// handle gRPC routes first rather than calling splitPath because '/' characters
+	// are used as part of gRPC paths
+	if grpcHandler := am.queryRouter.Route(qr.Path); grpcHandler != nil {
+		return grpcHandler(ctx, qr)
+	}
+
+	return nil, errors.New("unknown query path")
+}
+
+// func handleQueryGRPC(handler GRPCQueryHandler) {
+// 	ctx, err := app.CreateQueryContext(req.Height, req.Prove)
+// 	if err != nil {
+// 		return sdkerrors.QueryResult(err, app.trace)
+// 	}
+
+// 	resp, err := handler(ctx, req)
+// 	if err != nil {
+// 		resp = sdkerrors.QueryResult(gRPCErrorToSDKError(err), app.trace)
+// 		resp.Height = req.Height
+// 		return resp
+// 	}
+
+// 	return resp
+// }
+
 /*
 Things app manager needs to do:
 
-Transaction:
-- txdecoder
-	- the transaction is already decoded in consensus there should not be a need to decode it again here
-	- we should register the interface registstry to the txCodec
-- txvalidator
-	- needs to register the antehandlers
-
-Execution: (DeliverBlock)
-- execution of a transaction
-	- Preblock call
-	- BeginBlock call
-		- PremessageHook
-	- DeliverTx call
-		- PostmessageHook
-	- EndBlock call
-- ability to register hooks
-- ability to register messages and queries
 
 Genesis:
 - read genesis
 - execute genesis txs
-
-States:
-- ExecuteTx
-- SimulateTx
 
 Queries:
 - Query Router points to modules

@@ -12,7 +12,7 @@ jobs:
       - uses: actions/checkout@v4
       - run: |
           apt install codespell -y
-          codespell -w --skip="*.pulsar.go,*.pb.go*.pb.gw.go,*.cosmos_orm.go"
+          codespell -w --skip="*.pulsar.go,*.pb.go*.pb.gw.go,*.cosmos_orm.go,*.json"
       - uses: peter-evans/create-pull-request@v5
         with:
           token: ${{ secrets.PRBOT_PAT }}

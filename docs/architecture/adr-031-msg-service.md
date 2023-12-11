@@ -40,7 +40,7 @@ in `x/gov`,  `MsgSubmitProposal` returns the proposal ID as a big-endian `uint64
 This isn’t really documented anywhere and clients would need to know the internals
 of the Cosmos SDK to parse that value and return it to users.
 
-Also, there may be cases where we want to use these return values programatically.
+Also, there may be cases where we want to use these return values programmatically.
 For instance, https://github.com/cosmos/cosmos-sdk/issues/7093 proposes a method for
 doing inter-module Ocaps using the `Msg` router. A well-defined return type would
 improve the developer UX for this approach.
@@ -82,7 +82,7 @@ the intent of the [protobuf spec](https://developers.google.com/protocol-buffers
 With this approach, we would get an auto-generated `MsgServer` interface:
 
 In addition to clearly specifying return types, this has the benefit of generating client and server code. On the server
-side, this is almost like an automatically generated keeper method and could maybe be used intead of keepers eventually
+side, this is almost like an automatically generated keeper method and could maybe be used instead of keepers eventually
 (see [\#7093](https://github.com/cosmos/cosmos-sdk/issues/7093)):
 
 ```go
@@ -118,7 +118,7 @@ We propose to add a `msg_service_router` in BaseApp. This router is a key/value 
 
 When a transaction is processed by BaseApp (in CheckTx or in DeliverTx), its `TxBody.messages` are decoded as `Msg`s. Each `Msg`'s `type_url` is matched against an entry in the `msg_service_router`, and the respective `Msg` service method handler is called.
 
-For backward compatibility, the old handlers are not removed yet. If BaseApp receives a legacy `Msg` with no correspoding entry in the `msg_service_router`, it will be routed via its legacy `Route()` method into the legacy handler.
+For backward compatibility, the old handlers are not removed yet. If BaseApp receives a legacy `Msg` with no corresponding entry in the `msg_service_router`, it will be routed via its legacy `Route()` method into the legacy handler.
 
 ### Module Configuration
 

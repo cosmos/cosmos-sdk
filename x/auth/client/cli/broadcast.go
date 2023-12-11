@@ -35,22 +35,27 @@ filename, the command reads from standard input.`),
 				return errors.New("cannot broadcast tx during offline mode")
 			}
 
-			stdTx, err := authclient.ReadTxFromFile(clientCtx, args[0])
+			txs, err := authclient.ReadTxsFromFile(clientCtx, args[0])
 			if err != nil {
 				return err
 			}
 
-			txBytes, err := clientCtx.TxConfig.TxEncoder()(stdTx)
-			if err != nil {
-				return err
-			}
+			for _, tx := range txs {
+				txBytes, err1 := clientCtx.TxConfig.TxEncoder()(tx)
+				if err1 != nil {
+					err = errors.Join(err, err1)
+				}
 
-			res, err := clientCtx.BroadcastTx(txBytes)
-			if err != nil {
-				return err
+				res, err2 := clientCtx.BroadcastTx(txBytes)
+				if err2 != nil {
+					err = errors.Join(err, err2)
+				}
+				err3 := clientCtx.PrintProto(res)
+				if err != nil {
+					err = errors.Join(err, err3)
+				}
 			}
-
-			return clientCtx.PrintProto(res)
+			return err
 		},
 	}
 

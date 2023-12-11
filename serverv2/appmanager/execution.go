@@ -3,10 +3,11 @@ package appmanager
 import (
 	"context"
 
-	"cosmossdk.io/core/appmanager"
-	"cosmossdk.io/core/event"
-	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
+
+	"github.com/cosmos/cosmos-sdk/serverv2/core/appmanager"
+	"github.com/cosmos/cosmos-sdk/serverv2/core/event"
+	"github.com/cosmos/cosmos-sdk/serverv2/core/transaction"
 )
 
 func ExecTx[T transaction.Tx](ctx context.Context, logger log.Logger, tx T, simulate bool) (appmanager.TxResult, error) {

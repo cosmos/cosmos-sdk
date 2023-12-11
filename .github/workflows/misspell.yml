@@ -3,6 +3,7 @@ name: Fix typos nightly
 on:
   schedule:
     - cron: "0 8 * * *"
+  push:
 
 jobs:
   build:

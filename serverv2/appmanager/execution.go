@@ -10,8 +10,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/serverv2/core/transaction"
 )
 
-func ExecTx[T transaction.Tx](ctx context.Context, logger log.Logger, tx T, simulate bool) (appmanager.TxResult, error) {
+func ExecTx[T transaction.Tx](ctx context.Context, logger log.Logger, tx T) (appmanager.TxResult, error) {
 	// gInfo sdk.GasInfo, result *sdk.Result, anteEvents []event.Event,
+
+	// check execution mode
+
 	// preExecution Hook
 
 	// execute the transaction

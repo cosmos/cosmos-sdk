@@ -13,6 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/serverv2/appmanager/internal/protocompat"
+	"github.com/cosmos/cosmos-sdk/serverv2/core/appmanager"
 )
 
 // QueryRouter routes Query requests to GRPC handlers
@@ -46,20 +47,9 @@ func NewGRPCQueryRouter() *QueryRouter {
 	}
 }
 
-type QueryRequest struct {
-	Height int64
-	Path   string
-	Data   []byte
-}
-
-type QueryResponse struct {
-	Height int64
-	Value  []byte
-}
-
 // QueryHandler defines a function type which handles ABCI Query requests
 // using gRPC
-type QueryHandler = func(ctx context.Context, req *QueryRequest) (*QueryResponse, error)
+type QueryHandler = func(ctx context.Context, req *appmanager.QueryRequest) (*appmanager.QueryResponse, error)
 
 // Route returns the QueryHandler for a given query route path or nil
 // if not found
@@ -112,7 +102,7 @@ func (qrt *QueryRouter) registerQueryHandler(sd *grpc.ServiceDesc, method grpc.M
 		)
 	}
 
-	qrt.routes[fqName] = func(ctx context.Context, req *QueryRequest) (*QueryResponse, error) {
+	qrt.routes[fqName] = func(ctx context.Context, req *appmanager.QueryRequest) (*appmanager.QueryResponse, error) {
 		// call the method handler from the service description with the handler object,
 		// a wrapped sdk.Context with proto-unmarshaled data from the ABCI request data
 		res, err := methodHandler(handler, ctx, func(i interface{}) error {
@@ -130,7 +120,7 @@ func (qrt *QueryRouter) registerQueryHandler(sd *grpc.ServiceDesc, method grpc.M
 		}
 
 		// return the result bytes as the response value
-		return &QueryResponse{
+		return &appmanager.QueryResponse{
 			Height: req.Height,
 			Value:  resBytes,
 		}, nil

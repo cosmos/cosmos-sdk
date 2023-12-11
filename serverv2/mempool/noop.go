@@ -34,7 +34,7 @@ func (npm NoOpMempool[T]) Insert(ctx context.Context, tx T) error {
 	return err
 }
 
-func (NoOpMempool[T]) GetTxs(ctx context.Context, size uint32) (any, error) {
+func (NoOpMempool[T]) GetTxs(ctx context.Context, size uint32, txSizeFn TxSizeFn) (any, error) {
 	return nil, nil
 }
 

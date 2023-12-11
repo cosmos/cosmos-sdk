@@ -11,7 +11,6 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
-	distrtypes "cosmossdk.io/x/distribution/types"
 	"cosmossdk.io/x/protocolpool/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -162,41 +161,42 @@ func (k Keeper) iterateAndUpdateFundsDistribution(ctx context.Context) (string, 
 	}
 
 	poolMAcc := k.authKeeper.GetModuleAccount(ctx, types.ModuleName)
+	poolBal := k.bankKeeper.GetAllBalances(ctx, poolMAcc.GetAddress())
+	toDistributeDec := sdk.NewDecCoinsFromCoins(poolBal...)
 
-	distrMAcc := k.authKeeper.GetModuleAccount(ctx, distrtypes.ModuleName)
-	distrBal := k.bankKeeper.GetAllBalances(ctx, distrMAcc.GetAddress())
-	distrDecAmount := sdk.NewDecCoinsFromCoins(distrBal...)
+	err = k.ToDistribute.Set(ctx, poolBal.AmountOf(poolBal.GetDenomByIndex(0)))
+	if err != nil {
+		return "", err
+	}
 
 	var denom string
+	// Calculate the funds to be distributed based on the total percentage to be distributed
+	totalAmountToBeDistributed := toDistributeDec.MulDec(math.LegacyNewDecFromIntWithPrec(totalPercentageToBeDistributed, 2))
+	denom = totalAmountToBeDistributed.GetDenomByIndex(0)
+	totalDistrAmount := totalAmountToBeDistributed.AmountOf(denom)
+
 	err = k.RecipientFundPercentage.Walk(ctx, nil, func(key sdk.AccAddress, value math.Int) (stop bool, err error) {
 		// Calculate the funds to be distributed based on the percentage
-		distributionAmount := distrDecAmount.MulDec(math.LegacyNewDecFromIntWithPrec(value, 2))
-		denom = distributionAmount.GetDenomByIndex(0)
-		distrAmount := distributionAmount.AmountOf(denom)
-		distrCoins := distrAmount.TruncateInt()
-
-		// Send distribution funds to pool module account [i.e., poolMAcc = MAcc + toDistribute]
-		err = k.bankKeeper.SendCoinsFromModuleToModule(ctx, distrMAcc.GetName(), poolMAcc.GetName(), sdk.NewCoins(sdk.NewCoin(denom, distrCoins)))
-		if err != nil {
-			return false, err
-		}
-		// Add all the coins to be distributed to toDistribute
-		toDistribute, err := k.ToDistribute.Get(ctx)
-		if err != nil {
-			return false, err
-		}
-		err = k.ToDistribute.Set(ctx, toDistribute.Add(distrCoins))
-		if err != nil {
-			return false, err
-		}
+		recipientAmount := totalDistrAmount.Mul(math.LegacyNewDecFromIntWithPrec(value, 2)).Quo(totalPercentageToBeDistributed.ToLegacyDec())
+		recipientCoins := recipientAmount.TruncateInt()
 
 		// Set funds to be claimed
 		toClaim, err := k.RecipientFundDistribution.Get(ctx, key)
 		if err != nil {
 			return false, err
 		}
-		amount := toClaim.Add(distrCoins)
+		amount := toClaim.Add(recipientCoins)
 		err = k.RecipientFundDistribution.Set(ctx, key, amount)
+		if err != nil {
+			return false, err
+		}
+
+		// Subtract the coins to be distributed from toDistribute
+		toDistribute, err := k.ToDistribute.Get(ctx)
+		if err != nil {
+			return false, err
+		}
+		err = k.ToDistribute.Set(ctx, toDistribute.Sub(recipientCoins))
 		if err != nil {
 			return false, err
 		}

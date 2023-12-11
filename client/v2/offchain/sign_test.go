@@ -1,7 +1,6 @@
-package offChain
+package offchain
 
 import (
-	"github.com/cosmos/cosmos-sdk/codec/testutil"
 	"testing"
 
 	"github.com/cosmos/gogoproto/proto"
@@ -14,6 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/address"
+	"github.com/cosmos/cosmos-sdk/codec/testutil"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"

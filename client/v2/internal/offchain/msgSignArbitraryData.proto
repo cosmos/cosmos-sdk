@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package offChain;
+package offchain;
 
 import "cosmos_proto/cosmos.proto";
 import "cosmos/msg/v1/msg.proto";
@@ -8,7 +8,7 @@ import "amino/amino.proto";
 
 // MsgSignArbitraryData defines an arbitrary, general-purpose, off-chain message
 message MsgSignArbitraryData {
-  option (amino.name) = "offChain/MsgSignArbitraryData";
+  option (amino.name) = "offchain/MsgSignArbitraryData";
   option (cosmos.msg.v1.signer) = "signerAddress";
   // AppDomain is the application requesting off-chain message signing
   string appDomain = 1;

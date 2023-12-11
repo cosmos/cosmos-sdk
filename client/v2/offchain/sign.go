@@ -1,11 +1,12 @@
-package offChain
+package offchain
 
 import (
 	"context"
+
 	"google.golang.org/protobuf/encoding/protojson"
 
 	apitx "cosmossdk.io/api/cosmos/tx/v1beta1"
-	"cosmossdk.io/client/v2/internal/offChain"
+	"cosmossdk.io/client/v2/internal/offchain"
 	authsigning "cosmossdk.io/x/auth/signing"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -71,7 +72,7 @@ func sign(ctx client.Context, fromName, digest string, signMode signing.SignMode
 		return nil, err
 	}
 
-	msg := &offChain.MsgSignArbitraryData{
+	msg := &offchain.MsgSignArbitraryData{
 		AppDomain:     version.AppName,
 		SignerAddress: types.AccAddress(pubKey.Address()).String(),
 		Data:          digest,

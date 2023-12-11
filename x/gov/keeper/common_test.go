@@ -34,6 +34,8 @@ var (
 	_, _, addr   = testdata.KeyTestPubAddr()
 	govAcct      = authtypes.NewModuleAddress(types.ModuleName)
 	poolAcct     = authtypes.NewModuleAddress(pooltypes.ModuleName)
+	govAcctStr   = "cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn"
+	addrStr      = addr.String()
 	TestProposal = getTestProposal()
 )
 
@@ -50,7 +52,7 @@ func getTestProposal() []sdk.Msg {
 	}
 
 	return []sdk.Msg{
-		banktypes.NewMsgSend(govAcct, addr, sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(1000)))),
+		banktypes.NewMsgSend(govAcctStr, addrStr, sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(1000)))),
 		legacyProposalMsg,
 	}
 }

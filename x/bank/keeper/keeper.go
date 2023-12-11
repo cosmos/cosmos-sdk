@@ -152,12 +152,16 @@ func (k BaseKeeper) DelegateCoins(ctx context.Context, delegatorAddr, moduleAccA
 		return errorsmod.Wrap(err, "failed to track delegation")
 	}
 	// emit coin spent event
+	delAddrStr, err := k.ak.AddressCodec().BytesToString(delegatorAddr)
+	if err != nil {
+		return err
+	}
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	sdkCtx.EventManager().EmitEvent(
-		types.NewCoinSpentEvent(delegatorAddr, amt),
+		types.NewCoinSpentEvent(delAddrStr, amt),
 	)
 
-	err := k.addCoins(ctx, moduleAccAddr, amt)
+	err = k.addCoins(ctx, moduleAccAddr, amt)
 	if err != nil {
 		return err
 	}
@@ -370,9 +374,13 @@ func (k BaseKeeper) MintCoins(ctx context.Context, moduleName string, amounts sd
 
 	k.logger.Debug("minted coins from module account", "amount", amounts.String(), "from", moduleName)
 
+	addrStr, err := k.ak.AddressCodec().BytesToString(acc.GetAddress())
+	if err != nil {
+		return err
+	}
 	// emit mint event
 	sdkCtx.EventManager().EmitEvent(
-		types.NewCoinMintEvent(acc.GetAddress(), amounts),
+		types.NewCoinMintEvent(addrStr, amounts),
 	)
 
 	return nil
@@ -405,10 +413,14 @@ func (k BaseKeeper) BurnCoins(ctx context.Context, address []byte, amounts sdk.C
 
 	k.logger.Debug("burned tokens from account", "amount", amounts.String(), "from", address)
 
+	addrStr, err := k.ak.AddressCodec().BytesToString(acc.GetAddress())
+	if err != nil {
+		return err
+	}
 	// emit burn event
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	sdkCtx.EventManager().EmitEvent(
-		types.NewCoinBurnEvent(acc.GetAddress(), amounts),
+		types.NewCoinBurnEvent(addrStr, amounts),
 	)
 
 	return nil

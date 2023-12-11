@@ -54,7 +54,7 @@ func TestAddGenesisAccountCmd(t *testing.T) {
 		},
 		{
 			name:        "with keyring",
-			addr:        "ser",
+			addr:        "set",
 			denom:       "1000atom",
 			withKeyring: true,
 			expectErr:   false,

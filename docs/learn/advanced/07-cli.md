@@ -71,7 +71,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/simapp/simd/cmd/root_v
 
 :::tip
 Use the `EnhanceRootCommand()` from the AutoCLI options to automatically add auto-generated commands from the modules to the root command.
-Additionnally it adds all manually defined modules commands (`tx` and `query`) as well.
+Additionally it adds all manually defined modules commands (`tx` and `query`) as well.
 Read more about [AutoCLI](https://docs.cosmos.network/main/core/autocli) in its dedicated section.
 :::
 

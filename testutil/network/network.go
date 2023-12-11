@@ -16,6 +16,7 @@ import (
 	"testing"
 	"time"
 
+	cmtcfg "github.com/cometbft/cometbft/config"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/spf13/cobra"
 
@@ -131,6 +132,8 @@ type Config struct {
 	AddressCodec          address.Codec                 // address codec
 	ValidatorAddressCodec runtime.ValidatorAddressCodec // validator address codec
 	ConsensusAddressCodec runtime.ConsensusAddressCodec // consensus address codec
+
+	FuzzConnConfig *cmtcfg.FuzzConnConfig
 }
 
 // DefaultConfig returns a sane default configuration suitable for nearly all
@@ -340,6 +343,10 @@ func New(l Logger, baseDir string, cfg Config) (NetworkI, error) {
 		ctx := server.NewDefaultContext()
 		cmtCfg := ctx.Config
 		cmtCfg.Consensus.TimeoutCommit = cfg.TimeoutCommit
+		if fc := cfg.FuzzConnConfig; fc != nil {
+			cmtCfg.P2P.TestFuzz = true
+			cmtCfg.P2P.TestFuzzConfig = fc
+		}
 
 		// Only allow the first validator to expose an RPC, API and gRPC
 		// server/client due to CometBFT in-process constraints.

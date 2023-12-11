@@ -93,8 +93,7 @@ func (ab AppModuleBasic) GetTxCmd() *cobra.Command {
 type AppModule struct {
 	AppModuleBasic
 
-	accountKeeper     keeper.AccountKeeper
-	randGenAccountsFn types.RandomGenesisAccountsFn
+	accountKeeper keeper.AccountKeeper
 }
 
 // IsOnePerModuleType implements the depinject.OnePerModuleType interface.
@@ -104,11 +103,10 @@ func (am AppModule) IsOnePerModuleType() {}
 func (am AppModule) IsAppModule() {}
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(cdc codec.Codec, accountKeeper keeper.AccountKeeper, randGenAccountsFn types.RandomGenesisAccountsFn) AppModule {
+func NewAppModule(cdc codec.Codec, accountKeeper keeper.AccountKeeper) AppModule {
 	return AppModule{
-		AppModuleBasic:    AppModuleBasic{ac: accountKeeper.AddressCodec()},
-		accountKeeper:     accountKeeper,
-		randGenAccountsFn: randGenAccountsFn,
+		AppModuleBasic: AppModuleBasic{ac: accountKeeper.AddressCodec()},
+		accountKeeper:  accountKeeper,
 	}
 }
 
@@ -157,12 +155,12 @@ func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
 
 // GenerateGenesisState creates a randomized GenState of the auth module
 func (am AppModule) GenerateGenesisState(simState *module.SimulationState) {
-	simulation.RandomizedGenState(simState, am.randGenAccountsFn)
+	simulation.RandomizedGenState(simState.Rand, simState.GenState, simState.Cdc, simState.BondDenom, simState.Accounts, simState.InitialStake, int(simState.NumBonded), simState.GenTimestamp)
 }
 
 // ProposalMsgs returns msgs used for governance proposals for simulations.
 func (AppModule) ProposalMsgs(simState module.SimulationState) []simtypes.WeightedProposalMsg {
-	return simulation.ProposalMsgs()
+	return nil
 }
 
 // RegisterStoreDecoder registers a decoder for auth module's types
@@ -192,9 +190,8 @@ type ModuleInputs struct {
 	StoreService store.KVStoreService
 	Cdc          codec.Codec
 
-	AddressCodec            address.Codec
-	RandomGenesisAccountsFn types.RandomGenesisAccountsFn `optional:"true"`
-	AccountI                func() sdk.AccountI           `optional:"true"`
+	AddressCodec address.Codec
+	AccountI     func() sdk.AccountI `optional:"true"`
 }
 
 type ModuleOutputs struct {
@@ -216,10 +213,6 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		authority = types.NewModuleAddressOrBech32Address(in.Config.Authority)
 	}
 
-	if in.RandomGenesisAccountsFn == nil {
-		in.RandomGenesisAccountsFn = simulation.RandomGenesisAccounts
-	}
-
 	if in.AccountI == nil {
 		in.AccountI = types.ProtoBaseAccount
 	}
@@ -230,7 +223,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 	}
 
 	k := keeper.NewAccountKeeper(in.Cdc, in.StoreService, in.AccountI, maccPerms, in.AddressCodec, in.Config.Bech32Prefix, auth)
-	m := NewAppModule(in.Cdc, k, in.RandomGenesisAccountsFn)
+	m := NewAppModule(in.Cdc, k)
 
 	return ModuleOutputs{AccountKeeper: k, Module: m}
 }

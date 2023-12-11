@@ -164,7 +164,7 @@ func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
 
 // GenerateGenesisState creates a randomized GenState of the bank module.
 func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
-	simulation.RandomizedGenState(simState)
+	simulation.RandomizedGenState(simState.Rand, simState.GenState, simState.Cdc, simState.BondDenom, simState.Accounts)
 }
 
 // ProposalMsgs returns msgs used for governance proposals for simulations.
@@ -179,9 +179,7 @@ func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
 
 // WeightedOperations returns the all the gov module operations with their respective weights.
 func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
-	return simulation.WeightedOperations(
-		simState.AppParams, simState.Cdc, simState.TxConfig, am.accountKeeper, am.keeper,
-	)
+	return nil
 }
 
 // App Wiring Setup

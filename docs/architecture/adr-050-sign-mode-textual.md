@@ -11,7 +11,7 @@
 * Nov 23, 2022: Specify CBOR encoding.
 * Dec 01, 2022: Link to examples in separate JSON file.
 * Dec 06, 2022: Re-ordering of envelope screens.
-* Dec 14, 2022: Mention exceptions for invertability.
+* Dec 14, 2022: Mention exceptions for invertibility.
 * Jan 23, 2023: Switch Screen.Text to Title+Content.
 * Mar 07, 2023: Change SignDoc from array to struct containing array.
 * Mar 20, 2023: Introduce a spec version initialized to 0.
@@ -72,7 +72,7 @@ or needs to be present only for signature integrity (see below).
 We require that the rendering of the transaction be invertible:
 there must be a parsing function such that for every transaction,
 when rendered to the textual representation,
-parsing that representation yeilds a proto message equivalent
+parsing that representation yields a proto message equivalent
 to the original under proto equality.
 
 Note that this inverse function does not need to perform correct
@@ -145,7 +145,7 @@ type SignDocTextual struct {
 ```
 
 We do not plan to use protobuf serialization to form the sequence of bytes
-that will be tranmitted and signed, in order to keep the decoder simple.
+that will be transmitted and signed, in order to keep the decoder simple.
 We will use [CBOR](https://cbor.io) ([RFC 8949](https://www.rfc-editor.org/rfc/rfc8949.html)) instead.
 The encoding is defined by the following CDDL ([RFC 8610](https://www.rfc-editor.org/rfc/rfc8610)):
 
@@ -205,7 +205,7 @@ Memo: <string>                                              // Skipped if no mem
 Fee: <coins>                                                // See value renderers for coins rendering.
 *Fee payer: <string>                                        // Skipped if no fee_payer set.
 *Fee granter: <string>                                      // Skipped if no fee_granter set.
-Tip: <coins>                                                // Skippted if no tip.
+Tip: <coins>                                                // Skipped if no tip.
 Tipper: <string>
 *Gas Limit: <uint64>
 *Timeout Height: <uint64>                                   // Skipped if no timeout_height set.

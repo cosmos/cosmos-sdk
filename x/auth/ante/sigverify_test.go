@@ -421,7 +421,7 @@ func TestAnteHandlerChecks(t *testing.T) {
 		accNums   []uint64
 		accSeqs   []uint64
 		shouldErr bool
-		suported  bool
+		supported  bool
 	}
 
 	// Secp256r1 keys that are not on curve will fail before even doing any operation i.e when trying to get the pubkey
@@ -450,7 +450,7 @@ func TestAnteHandlerChecks(t *testing.T) {
 			_, err = anteHandler(byteCtx, tx, true)
 			if tc.shouldErr {
 				require.NotNil(t, err, "TestCase %d: %s did not error as expected", i, tc.name)
-				if tc.suported {
+				if tc.supported {
 					require.ErrorContains(t, err, "not on curve")
 				} else {
 					require.ErrorContains(t, err, "unsupported key type")

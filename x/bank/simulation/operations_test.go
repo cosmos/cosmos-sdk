@@ -149,13 +149,13 @@ func (suite *SimTestSuite) TestSimulateMsgMultiSend() {
 
 func (suite *SimTestSuite) TestSimulateModuleAccountMsgSend() {
 	const (
-		accCount       = 1
+		account       = 1
 		moduleAccCount = 1
 	)
 
 	s := rand.NewSource(1)
 	r := rand.New(s)
-	accounts := suite.getTestingAccounts(r, accCount)
+	accounts := suite.getTestingAccounts(r, account)
 
 	// execute operation
 	op := simulation.SimulateMsgSendToModuleAccount(suite.txConfig, suite.accountKeeper, suite.bankKeeper, moduleAccCount)
@@ -177,13 +177,13 @@ func (suite *SimTestSuite) TestSimulateModuleAccountMsgSend() {
 
 func (suite *SimTestSuite) TestSimulateMsgMultiSendToModuleAccount() {
 	const (
-		accCount  = 2
+		account  = 2
 		mAccCount = 2
 	)
 
 	s := rand.NewSource(1)
 	r := rand.New(s)
-	accounts := suite.getTestingAccounts(r, accCount)
+	accounts := suite.getTestingAccounts(r, account)
 
 	// execute operation
 	op := simulation.SimulateMsgMultiSendToModuleAccount(suite.txConfig, suite.accountKeeper, suite.bankKeeper, mAccCount)

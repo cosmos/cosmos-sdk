@@ -16,7 +16,7 @@ With the separation of CometBFT and Cosmos-SDK, there is a lack of control of wh
 
 The acceptance of this RFC would move validation within `ValidateBasic` to the message server in modules, update tutorials and docs to remove mention of using `ValidateBasic` in favour of handling all validation for a message where it is executed.
 
-We can and will still support the `Validatebasic` function for users and provide an extension interface of the function once `sdk.Msg` is depreacted. 
+We can and will still support the `Validatebasic` function for users and provide an extension interface of the function once `sdk.Msg` is deprecated. 
 
 > Note: This is how messages are handled in VMs like Ethereum and CosmWasm. 
 

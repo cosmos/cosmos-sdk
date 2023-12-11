@@ -4,7 +4,6 @@ import (
 	"context"
 	"testing"
 
-	"github.com/cosmos/gogoproto/proto"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -394,13 +393,9 @@ func TestTally(t *testing.T) {
 						}
 						return nil
 					})
-			var tp []proto.Message
-			if TestProposal != nil {
-				tp = TestProposal
-			}
 
 			// Submit and activate a proposal
-			proposal, err := govKeeper.SubmitProposal(ctx, tp, "", "title", "summary", delAddrs[0], tt.expedited)
+			proposal, err := govKeeper.SubmitProposal(ctx, TestProposal, "", "title", "summary", delAddrs[0], tt.expedited)
 			require.NoError(t, err)
 			err = govKeeper.ActivateVotingPeriod(ctx, proposal)
 			require.NoError(t, err)

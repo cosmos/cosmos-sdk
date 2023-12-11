@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/cosmos/gogoproto/proto"
-
 	"cosmossdk.io/math"
 	v3 "cosmossdk.io/x/gov/migrations/v3"
 	v1 "cosmossdk.io/x/gov/types/v1"
@@ -445,10 +443,6 @@ func (suite *KeeperTestSuite) TestLegacyGRPCQueryProposals() {
 
 func (suite *KeeperTestSuite) TestGRPCQueryVote() {
 	ctx, queryClient, addrs := suite.ctx, suite.queryClient, suite.addrs
-	var tp []proto.Message
-	if TestProposal != nil {
-		tp = TestProposal
-	}
 
 	var (
 		req      *v1.QueryVoteRequest
@@ -502,7 +496,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryVote() {
 			"no votes present",
 			func() {
 				var err error
-				proposal, err = suite.govKeeper.SubmitProposal(ctx, tp, "", "title", "summary", addrs[0], false)
+				proposal, err = suite.govKeeper.SubmitProposal(ctx, TestProposal, "", "title", "summary", addrs[0], false)
 				suite.Require().NoError(err)
 
 				req = &v1.QueryVoteRequest{
@@ -564,10 +558,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryVote() {
 
 func (suite *KeeperTestSuite) TestLegacyGRPCQueryVote() {
 	ctx, queryClient, addrs := suite.ctx, suite.legacyQueryClient, suite.addrs
-	var tp []proto.Message
-	if TestProposal != nil {
-		tp = TestProposal
-	}
+
 	var (
 		req      *v1beta1.QueryVoteRequest
 		expRes   *v1beta1.QueryVoteResponse
@@ -620,7 +611,7 @@ func (suite *KeeperTestSuite) TestLegacyGRPCQueryVote() {
 			"no votes present",
 			func() {
 				var err error
-				proposal, err = suite.govKeeper.SubmitProposal(ctx, tp, "", "title", "summary", addrs[0], false)
+				proposal, err = suite.govKeeper.SubmitProposal(ctx, TestProposal, "", "title", "summary", addrs[0], false)
 				suite.Require().NoError(err)
 
 				req = &v1beta1.QueryVoteRequest{
@@ -683,10 +674,6 @@ func (suite *KeeperTestSuite) TestLegacyGRPCQueryVote() {
 func (suite *KeeperTestSuite) TestGRPCQueryVotes() {
 	suite.reset()
 	ctx, queryClient := suite.ctx, suite.queryClient
-	var tp []proto.Message
-	if TestProposal != nil {
-		tp = TestProposal
-	}
 
 	addrs := simtestutil.AddTestAddrsIncremental(suite.bankKeeper, suite.stakingKeeper, ctx, 2, math.NewInt(30000000))
 
@@ -731,7 +718,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryVotes() {
 			"create a proposal and get votes",
 			func() {
 				var err error
-				proposal, err = suite.govKeeper.SubmitProposal(ctx, tp, "", "title", "summary", addrs[0], false)
+				proposal, err = suite.govKeeper.SubmitProposal(ctx, TestProposal, "", "title", "summary", addrs[0], false)
 				suite.Require().NoError(err)
 
 				req = &v1.QueryVotesRequest{
@@ -791,10 +778,6 @@ func (suite *KeeperTestSuite) TestGRPCQueryVotes() {
 func (suite *KeeperTestSuite) TestLegacyGRPCQueryVotes() {
 	suite.reset()
 	ctx, queryClient := suite.ctx, suite.legacyQueryClient
-	var tp []proto.Message
-	if TestProposal != nil {
-		tp = TestProposal
-	}
 
 	addrs := simtestutil.AddTestAddrsIncremental(suite.bankKeeper, suite.stakingKeeper, ctx, 2, math.NewInt(30000000))
 
@@ -839,7 +822,7 @@ func (suite *KeeperTestSuite) TestLegacyGRPCQueryVotes() {
 			"create a proposal and get votes",
 			func() {
 				var err error
-				proposal, err = suite.govKeeper.SubmitProposal(ctx, tp, "", "title", "summary", addrs[0], false)
+				proposal, err = suite.govKeeper.SubmitProposal(ctx, TestProposal, "", "title", "summary", addrs[0], false)
 				suite.Require().NoError(err)
 
 				req = &v1beta1.QueryVotesRequest{
@@ -1074,10 +1057,6 @@ func (suite *KeeperTestSuite) TestLegacyGRPCQueryParams() {
 func (suite *KeeperTestSuite) TestGRPCQueryDeposit() {
 	suite.reset()
 	ctx, queryClient, addrs := suite.ctx, suite.queryClient, suite.addrs
-	var tp []proto.Message
-	if TestProposal != nil {
-		tp = TestProposal
-	}
 
 	var (
 		req      *v1.QueryDepositRequest
@@ -1131,7 +1110,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryDeposit() {
 			"no deposits proposal",
 			func() {
 				var err error
-				proposal, err = suite.govKeeper.SubmitProposal(ctx, tp, "", "title", "summary", addrs[0], false)
+				proposal, err = suite.govKeeper.SubmitProposal(ctx, TestProposal, "", "title", "summary", addrs[0], false)
 				suite.Require().NoError(err)
 				suite.Require().NotNil(proposal)
 
@@ -1180,10 +1159,6 @@ func (suite *KeeperTestSuite) TestGRPCQueryDeposit() {
 
 func (suite *KeeperTestSuite) TestLegacyGRPCQueryDeposit() {
 	ctx, queryClient, addrs := suite.ctx, suite.legacyQueryClient, suite.addrs
-	var tp []proto.Message
-	if TestProposal != nil {
-		tp = TestProposal
-	}
 
 	var (
 		req      *v1beta1.QueryDepositRequest
@@ -1237,7 +1212,7 @@ func (suite *KeeperTestSuite) TestLegacyGRPCQueryDeposit() {
 			"no deposits proposal",
 			func() {
 				var err error
-				proposal, err = suite.govKeeper.SubmitProposal(ctx, tp, "", "title", "summary", addrs[0], false)
+				proposal, err = suite.govKeeper.SubmitProposal(ctx, TestProposal, "", "title", "summary", addrs[0], false)
 				suite.Require().NoError(err)
 				suite.Require().NotNil(proposal)
 
@@ -1287,10 +1262,6 @@ func (suite *KeeperTestSuite) TestLegacyGRPCQueryDeposit() {
 
 func (suite *KeeperTestSuite) TestGRPCQueryDeposits() {
 	ctx, queryClient, addrs := suite.ctx, suite.queryClient, suite.addrs
-	var tp []proto.Message
-	if TestProposal != nil {
-		tp = TestProposal
-	}
 
 	var (
 		req      *v1.QueryDepositsRequest
@@ -1332,7 +1303,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryDeposits() {
 			"create a proposal and get deposits",
 			func() {
 				var err error
-				proposal, err = suite.govKeeper.SubmitProposal(ctx, tp, "", "title", "summary", addrs[0], true)
+				proposal, err = suite.govKeeper.SubmitProposal(ctx, TestProposal, "", "title", "summary", addrs[0], true)
 				suite.Require().NoError(err)
 
 				req = &v1.QueryDepositsRequest{
@@ -1388,10 +1359,6 @@ func (suite *KeeperTestSuite) TestGRPCQueryDeposits() {
 func (suite *KeeperTestSuite) TestLegacyGRPCQueryDeposits() {
 	suite.reset()
 	ctx, queryClient, addrs := suite.ctx, suite.legacyQueryClient, suite.addrs
-	var tp []proto.Message
-	if TestProposal != nil {
-		tp = TestProposal
-	}
 
 	var (
 		req      *v1beta1.QueryDepositsRequest
@@ -1433,7 +1400,7 @@ func (suite *KeeperTestSuite) TestLegacyGRPCQueryDeposits() {
 			"create a proposal and get deposits",
 			func() {
 				var err error
-				proposal, err = suite.govKeeper.SubmitProposal(ctx, tp, "", "title", "summary", addrs[0], false)
+				proposal, err = suite.govKeeper.SubmitProposal(ctx, TestProposal, "", "title", "summary", addrs[0], false)
 				suite.Require().NoError(err)
 
 				req = &v1beta1.QueryDepositsRequest{

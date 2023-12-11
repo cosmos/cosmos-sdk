@@ -3,7 +3,6 @@ package keeper_test
 import (
 	"testing"
 
-	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/collections"
@@ -21,10 +20,7 @@ func TestVotes(t *testing.T) {
 	addrs := simtestutil.AddTestAddrsIncremental(bankKeeper, stakingKeeper, ctx, 2, sdkmath.NewInt(10000000))
 	authKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
 
-	var tp []proto.Message
-	if TestProposal != nil {
-		tp = TestProposal
-	}
+	tp := TestProposal
 	proposal, err := govKeeper.SubmitProposal(ctx, tp, "", "title", "description", sdk.AccAddress("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r"), false)
 	require.NoError(t, err)
 	proposalID := proposal.Id

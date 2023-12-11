@@ -5,7 +5,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/x/gov"
@@ -75,10 +74,7 @@ func TestHooks(t *testing.T) {
 	require.False(t, govHooksReceiver.AfterProposalFailedMinDepositValid)
 	require.False(t, govHooksReceiver.AfterProposalVotingPeriodEndedValid)
 
-	var tp []proto.Message
-	if TestProposal != nil {
-		tp = TestProposal
-	}
+	tp := TestProposal
 	_, err := govKeeper.SubmitProposal(ctx, tp, "", "test", "summary", sdk.AccAddress("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r"), false)
 	require.NoError(t, err)
 	require.True(t, govHooksReceiver.AfterProposalSubmissionValid)

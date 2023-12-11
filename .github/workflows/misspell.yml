@@ -10,12 +10,14 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - uses: sobolevn/misspell-fixer-action@e5368f1b21585248afad4d32df9bc100451dbbff
+      - run: |
+          pip install codespell
+          codespell -w --skip="*.pulsar.go,*.pb.go*.pb.gw.go,*.cosmos_orm.go"
       - uses: peter-evans/create-pull-request@v5
         with:
           token: ${{ secrets.PRBOT_PAT }}
-          commit-message: "chore: fixes by misspell-fixer"
-          title: "chore: typos fix by misspell-fixer"
+          commit-message: "chore: fixes by cosmos-sdk bot"
+          title: "chore: typos fix by cosmos-sdk bot"
           branch: "bot/fix-typos"
           delete-branch: true
           body: |

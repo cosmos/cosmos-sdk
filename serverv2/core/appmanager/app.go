@@ -15,6 +15,19 @@ type App[T transaction.Tx] interface {
 
 	InitChain(context.Context, RequestInitChain) (ResponseInitChain, error)
 	DeliverBlock(context.Context, RequestDeliverBlock[T]) (ResponseDeliverBlock, error)
+
+	Query(context.Context, *QueryRequest) (*QueryResponse, error)
+}
+
+type QueryRequest struct {
+	Height int64
+	Path   string
+	Data   []byte
+}
+
+type QueryResponse struct {
+	Height int64
+	Value  []byte
 }
 
 type RequestDeliverBlock[T transaction.Tx] struct {

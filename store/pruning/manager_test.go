@@ -11,6 +11,7 @@ import (
 	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/commitment"
 	"cosmossdk.io/store/v2/commitment/iavl"
+	"cosmossdk.io/store/v2/storage"
 	"cosmossdk.io/store/v2/storage/sqlite"
 )
 
@@ -34,8 +35,9 @@ func (s *PruningTestSuite) SetupTest() {
 		logger = log.NewTestLogger(s.T())
 	}
 
-	ss, err := sqlite.New(s.T().TempDir())
+	sqliteDB, err := sqlite.New(s.T().TempDir())
 	s.Require().NoError(err)
+	ss := storage.NewStorageStore(sqliteDB)
 
 	tree := iavl.NewIavlTree(dbm.NewMemDB(), log.NewNopLogger(), iavl.DefaultConfig())
 	sc, err := commitment.NewCommitStore(map[string]commitment.Tree{"default": tree}, logger)
@@ -58,7 +60,7 @@ func (s *PruningTestSuite) TestPruning() {
 
 	latestVersion := uint64(100)
 
-	// write 10 batches
+	// write batches
 	for i := uint64(0); i < latestVersion; i++ {
 		version := i + 1
 

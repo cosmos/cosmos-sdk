@@ -50,12 +50,21 @@ schema = 3
     version = "v1.2.0"
     hash = "sha256-emQlH+RQpESoFCzpHS38fEhs1SLjotxNPlRK4B5Aybs="
     replaced = "github.com/cosmos/keyring"
+  [mod."github.com/DataDog/datadog-go"]
+    version = "v4.8.3+incompatible"
+    hash = "sha256-9KvlVQdgyJ1ulDa6wkLb0ACdjc+R0U91hdb7nxodrA0="
   [mod."github.com/DataDog/zstd"]
     version = "v1.5.5"
     hash = "sha256-tSw0aq0pPyroZtQYYb9lWOtPVNaQOt8skYQ4TMXGvAQ="
+  [mod."github.com/Microsoft/go-winio"]
+    version = "v0.6.0"
+    hash = "sha256-TQ0AvXZfuT3PDnb4p/h5zmyT8m9VPcwxlXMJuVD6ltE="
   [mod."github.com/aws/aws-sdk-go"]
     version = "v1.45.25"
     hash = "sha256-ZzeU4WSHm5shDqGnK2mXC2p18NyAO+hKZHP7l1KR69k="
+  [mod."github.com/aymanbagabas/go-osc52/v2"]
+    version = "v2.0.1"
+    hash = "sha256-6Bp0jBZ6npvsYcKZGHHIUSVSTAMEyieweAX2YAKDjjg="
   [mod."github.com/beorn7/perks"]
     version = "v1.0.1"
     hash = "sha256-h75GUqfwJKngCJQVE5Ao5wnO3cfKD9lSIteoLp/3xJ4="
@@ -326,6 +335,9 @@ schema = 3
   [mod."github.com/linxGnu/grocksdb"]
     version = "v1.8.6"
     hash = "sha256-QOiVB6QU3AKNuuw1dbslszl+CwCF52f0hfb3YXDvLq8="
+  [mod."github.com/lucasb-eyer/go-colorful"]
+    version = "v1.2.0"
+    hash = "sha256-Gg9dDJFCTaHrKHRR1SrJgZ8fWieJkybljybkI9x0gyE="
   [mod."github.com/magiconair/properties"]
     version = "v1.8.7"
     hash = "sha256-XQ2bnc2s7/IH3WxEO4GishZurMyKwEclZy1DXg+2xXc="
@@ -338,6 +350,9 @@ schema = 3
   [mod."github.com/mattn/go-isatty"]
     version = "v0.0.20"
     hash = "sha256-qhw9hWtU5wnyFyuMbKx+7RB8ckQaFQ8D+8GKPkN3HHQ="
+  [mod."github.com/mattn/go-runewidth"]
+    version = "v0.0.14"
+    hash = "sha256-O3QdxqAcJgQ+HL1v8oBA4iKBwJ2AlDN+F464027hWMU="
   [mod."github.com/matttproud/golang_protobuf_extensions/v2"]
     version = "v2.0.0"
     hash = "sha256-gcAN8jKL0ve8pcgDkxr2Lc8CUBG39ri9QAp0zrzchEs="
@@ -359,6 +374,9 @@ schema = 3
   [mod."github.com/mtibben/percent"]
     version = "v0.2.1"
     hash = "sha256-Zj1lpCP6mKQ0UUTMs2By4LC414ou+iJzKkK+eBHfEcc="
+  [mod."github.com/muesli/termenv"]
+    version = "v0.15.2"
+    hash = "sha256-Eum/SpyytcNIchANPkG4bYGBgcezLgej7j/+6IhqoMU="
   [mod."github.com/oasisprotocol/curve25519-voi"]
     version = "v0.0.0-20230904125328-1f23a7beb09a"
     hash = "sha256-N5MMNn4rytO3ObXVXoY34Sf7AGPkw2dTPkXjigjozls="
@@ -392,6 +410,9 @@ schema = 3
   [mod."github.com/rcrowley/go-metrics"]
     version = "v0.0.0-20201227073835-cf1acfcdf475"
     hash = "sha256-10ytHQ1SpMKYTiKuOPdEMuOVa8HVvv9ryYSIF9BHEBI="
+  [mod."github.com/rivo/uniseg"]
+    version = "v0.2.0"
+    hash = "sha256-GLj0jiGrT03Ept4V6FXCN1yeZ/b6PpS3MEXK6rYQ8Eg="
   [mod."github.com/rogpeppe/go-internal"]
     version = "v1.11.0"
     hash = "sha256-BucSndJVnqX9e6p5PfA6Z8N2bGfIeRfxAxYLUDXTbIo="
@@ -453,6 +474,12 @@ schema = 3
   [mod."github.com/zondax/ledger-go"]
     version = "v0.14.3"
     hash = "sha256-tldEok5ebZ4R4B7H8dSlYS5oVuLvh89n9wUaVlDjYwg="
+  [mod."gitlab.com/yawning/secp256k1-voi"]
+    version = "v0.0.0-20230925100816-f2616030848b"
+    hash = "sha256-X8INg01LTg13iOuwPI3uOhPN7r01sPZtmtwJ2sudjCA="
+  [mod."gitlab.com/yawning/tuplehash"]
+    version = "v0.0.0-20230713102510-df83abbf9a02"
+    hash = "sha256-pehQduoaJRLchebhgvMYacVvbuNIBA++XkiqCuqdato="
   [mod."go.etcd.io/bbolt"]
     version = "v1.3.7"
     hash = "sha256-poZk8tPLDWwW95oCOkTJcQtEvOJTD9UXAZ2TqGJutwk="
@@ -468,6 +495,9 @@ schema = 3
   [mod."golang.org/x/exp"]
     version = "v0.0.0-20231127185646-65229373498e"
     hash = "sha256-GmQxMsgz6rZ/O7d4uFif6A/BpDfCqM7WpciDggDSv8I="
+  [mod."golang.org/x/mod"]
+    version = "v0.14.0"
+    hash = "sha256-sx3hWp5l99DBfIrn821ohfoBwvaITSHMWbzPvX0btLM="
   [mod."golang.org/x/net"]
     version = "v0.19.0"
     hash = "sha256-3M5rKEvJx4cO/q+06cGjR5sxF5JpnUWY0+fQttrWdT4="
@@ -486,6 +516,9 @@ schema = 3
   [mod."golang.org/x/text"]
     version = "v0.14.0"
     hash = "sha256-yh3B0tom1RfzQBf1RNmfdNWF1PtiqxV41jW1GVS6JAg="
+  [mod."golang.org/x/tools"]
+    version = "v0.16.0"
+    hash = "sha256-uVAW8zkeyMvPaWjXjyvq+DCfuA348YtwCrXzNROs7EQ="
   [mod."golang.org/x/xerrors"]
     version = "v0.0.0-20231012003039-104605ab7028"
     hash = "sha256-IsFTm5WZQ6W1ZDF8WOP+6xiOAc7pIq8r9Afvkjp3PRQ="

@@ -5,11 +5,29 @@ import (
 
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/log"
+	"cosmossdk.io/store/v2/commitment"
 )
 
-func generateTree(treeType string) *IavlTree {
+func TestCommitterSuite(t *testing.T) {
+	s := &commitment.CommitStoreTestSuite{
+		NewStore: func(db dbm.DB, storeKeys []string, logger log.Logger) (*commitment.CommitStore, error) {
+			multiTrees := make(map[string]commitment.Tree)
+			cfg := DefaultConfig()
+			for _, storeKey := range storeKeys {
+				prefixDB := dbm.NewPrefixDB(db, []byte(storeKey))
+				multiTrees[storeKey] = NewIavlTree(prefixDB, logger, cfg)
+			}
+			return commitment.NewCommitStore(multiTrees, logger)
+		},
+	}
+
+	suite.Run(t, s)
+}
+
+func generateTree() *IavlTree {
 	cfg := DefaultConfig()
 	db := dbm.NewMemDB()
 	return NewIavlTree(db, log.NewNopLogger(), cfg)
@@ -17,7 +35,7 @@ func generateTree(treeType string) *IavlTree {
 
 func TestIavlTree(t *testing.T) {
 	// generate a new tree
-	tree := generateTree("iavl")
+	tree := generateTree()
 	require.NotNil(t, tree)
 
 	initVersion := tree.GetLatestVersion()

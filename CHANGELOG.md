@@ -56,6 +56,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
+* (client/keys) [#18663](https://github.com/cosmos/cosmos-sdk/pull/18663) Improve `<appd> keys add` by displaying mnemonic discreetly on an alternate screen and adding `--indiscreet` option to disable it.
+* (telemetry) [#18646] (https://github.com/cosmos/cosmos-sdk/pull/18646) Enable statsd and dogstatsd telemetry sinks
 * (types) [#18440](https://github.com/cosmos/cosmos-sdk/pull/18440) Add `AmountOfNoValidation` to `sdk.DecCoins`.
 * (x/gov) [#18025](https://github.com/cosmos/cosmos-sdk/pull/18025) Improve `<appd> q gov proposer` by querying directly a proposal instead of tx events. It is an alias of `q gov proposal` as the proposer is a field of the proposal.
 * (client) [#17503](https://github.com/cosmos/cosmos-sdk/pull/17503) Add `client.Context{}.WithAddressCodec`, `WithValidatorAddressCodec`, `WithConsensusAddressCodec` to provide address codecs to the client context. See the [UPGRADING.md](./UPGRADING.md) for more details.
@@ -65,6 +67,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (types) [#17670](https://github.com/cosmos/cosmos-sdk/pull/17670) Use `ctx.CometInfo` in place of `ctx.VoteInfos`
 * [#17733](https://github.com/cosmos/cosmos-sdk/pull/17733) Ensure `buf export` exports all proto dependencies
 * (version) [#18063](https://github.com/cosmos/cosmos-sdk/pull/18063) Include additional information in the Info struct. This change enhances the Info struct by adding support for additional information through the ExtraInfo field
+* (crypto/keys) [#18026](https://github.com/cosmos/cosmos-sdk/pull/18026) Made public key generation constant time on `secp256k1`
 * (crypto | x/auth) [#14372](https://github.com/cosmos/cosmos-sdk/pull/18194) Key checks on signatures antehandle.
 * (codec/unknownproto)[#18541](https://github.com/cosmos/cosmos-sdk/pull/18541) Remove the use of "protoc-gen-gogo/descriptor" in favour of using the official protobuf descriptorpb types inside unknownproto.
 * (staking) [#18506](https://github.com/cosmos/cosmos-sdk/pull/18506) Detect the length of the ed25519 pubkey in CreateValidator to prevent panic.
@@ -83,6 +86,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (simulation) [#17911](https://github.com/cosmos/cosmos-sdk/pull/17911) Fix all problems with executing command `make test-sim-custom-genesis-fast` for simulation test.
 * (simulation) [#18196](https://github.com/cosmos/cosmos-sdk/pull/18196) Fix the problem of `validator set is empty after InitGenesis` in simulation test.
 * (baseapp) [#18551](https://github.com/cosmos/cosmos-sdk/pull/18551) Fix SelectTxForProposal the calculation method of tx bytes size is inconsistent with CometBFT
+* (baseapp) [#18654](https://github.com/cosmos/cosmos-sdk/pull/18654) Fixes an issue in which gogoproto.Merge does not work with gogoproto messages with custom types.
 
 ### API Breaking Changes
 
@@ -184,6 +188,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### State Machine Breaking
 
+* (baseapp) [#18627](https://github.com/cosmos/cosmos-sdk/pull/18627) Post handlers are run on non successful transaction executions too.
 * (x/upgrade) [#16244](https://github.com/cosmos/cosmos-sdk/pull/16244) Upgrade module no longer stores the app version but gets and sets the app version stored in the `ParamStore` of baseapp.
 * (x/staking) [#17655](https://github.com/cosmos/cosmos-sdk/pull/17655) `HistoricalInfo` was replaced with `HistoricalRecord`, it removes the validator set and comet header and only keep what is needed for IBC. 
 

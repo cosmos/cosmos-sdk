@@ -72,6 +72,7 @@ type Committer interface {
 	GetLatestVersion() (uint64, error)
 	LoadVersion(targetVersion uint64) error
 	Commit() ([]StoreInfo, error)
+	SetInitialVersion(version uint64) error
 	GetProof(storeKey string, version uint64, key []byte) (*ics23.CommitmentProof, error)
 
 	// Prune attempts to prune all versions up to and including the provided

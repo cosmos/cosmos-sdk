@@ -938,24 +938,25 @@ func (app *BaseApp) runTx(mode execMode, txBytes []byte) (gInfo sdk.GasInfo, res
 	if err == nil {
 		result, err = app.runMsgs(runMsgCtx, msgs, msgsV2, mode)
 	}
-	if err == nil {
-		// Run optional postHandlers.
-		//
-		// Note: If the postHandler fails, we also revert the runMsgs state.
-		if app.postHandler != nil {
-			// The runMsgCtx context currently contains events emitted by the ante handler.
-			// We clear this to correctly order events without duplicates.
-			// Note that the state is still preserved.
-			postCtx := runMsgCtx.WithEventManager(sdk.NewEventManager())
 
-			newCtx, err := app.postHandler(postCtx, tx, mode == execModeSimulate, err == nil)
-			if err != nil {
-				return gInfo, nil, anteEvents, err
-			}
+	// Run optional postHandlers (should run regardless of the execution result).
+	//
+	// Note: If the postHandler fails, we also revert the runMsgs state.
+	if app.postHandler != nil {
+		// The runMsgCtx context currently contains events emitted by the ante handler.
+		// We clear this to correctly order events without duplicates.
+		// Note that the state is still preserved.
+		postCtx := runMsgCtx.WithEventManager(sdk.NewEventManager())
 
-			result.Events = append(result.Events, newCtx.EventManager().ABCIEvents()...)
+		newCtx, err := app.postHandler(postCtx, tx, mode == execModeSimulate, err == nil)
+		if err != nil {
+			return gInfo, nil, anteEvents, err
 		}
 
+		result.Events = append(result.Events, newCtx.EventManager().ABCIEvents()...)
+	}
+
+	if err == nil {
 		if mode == execModeFinalize {
 			// When block gas exceeds, it'll panic and won't commit the cached store.
 			consumeBlockGas()

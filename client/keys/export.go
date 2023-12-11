@@ -70,7 +70,6 @@ and export your keys in ASCII-armored encrypted format.`,
 }
 
 func exportUnsafeUnarmored(ctx client.Context, cmd *cobra.Command, uid string, buf *bufio.Reader) error {
-	// confirm deletion, unless -y is passed
 	if yes, err := input.GetConfirmation("WARNING: The private key will be exported as an unarmored hexadecimal string. USE AT YOUR OWN RISK. Continue?", buf, cmd.ErrOrStderr()); err != nil {
 		return err
 	} else if !yes {

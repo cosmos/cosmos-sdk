@@ -45,9 +45,6 @@ func NewConfig() *Config {
 			"consensus_pub":  Bech32PrefixConsPub,
 		},
 		fullFundraiserPath: FullFundraiserPath,
-
-		purpose:  Purpose,
-		coinType: CoinType,
 	}
 }
 

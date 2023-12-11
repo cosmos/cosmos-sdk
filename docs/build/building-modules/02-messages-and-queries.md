@@ -41,7 +41,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/proto/cosmos/bank/v1be
 
 `sdk.Msg` is a alias of `proto.Message`. 
 
-To attach a `ValidateBasic()` method to a message then you must add methods to the type adhereing to the `HasValidateBasic`.
+To attach a `ValidateBasic()` method to a message then you must add methods to the type adhering to the `HasValidateBasic`.
 
 ```go reference
 https://github.com/cosmos/cosmos-sdk/blob/9c1e8b247cd47b5d3decda6e86fbc3bc996ee5d7/types/tx_msg.go#L84-L88

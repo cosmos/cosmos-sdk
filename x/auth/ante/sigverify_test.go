@@ -421,7 +421,7 @@ func TestAnteHandlerChecks(t *testing.T) {
 		accNums   []uint64
 		accSeqs   []uint64
 		shouldErr bool
-		supported  bool
+		supported bool
 	}
 
 	// Secp256r1 keys that are not on curve will fail before even doing any operation i.e when trying to get the pubkey

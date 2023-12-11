@@ -50,9 +50,11 @@ filename, the command reads from standard input.`),
 				if err2 != nil {
 					err = errors.Join(err, err2)
 				}
-				err3 := clientCtx.PrintProto(res)
-				if err != nil {
-					err = errors.Join(err, err3)
+				if res != nil {
+					err3 := clientCtx.PrintProto(res)
+					if err3 != nil {
+						err = errors.Join(err, err3)
+					}
 				}
 			}
 			return err

@@ -543,7 +543,7 @@ V' = 0
     V' = 25
     ```
 
-3. During vesting period 2, 5 coins are transfered and 5 coins are delegated
+3. During vesting period 2, 5 coins are transferred and 5 coins are delegated
 
     ```text
     DV = 5

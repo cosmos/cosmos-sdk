@@ -64,7 +64,7 @@ var (
 	coins     = sdk.Coins{sdk.NewInt64Coin("foocoin", 10)}
 	halfCoins = sdk.Coins{sdk.NewInt64Coin("foocoin", 5)}
 
-	sendMsg1 = types.NewMsgSend(addr1, addr2, coins)
+	sendMsg1 = types.NewMsgSend(addr1.String(), addr2.String(), coins)
 
 	multiSendMsg1 = &types.MsgMultiSend{
 		Inputs:  []types.Input{types.NewInput(addr1, coins)},
@@ -167,7 +167,11 @@ func TestSendNotEnoughBalance(t *testing.T) {
 	origAccNum := res1.GetAccountNumber()
 	origSeq := res1.GetSequence()
 
-	sendMsg := types.NewMsgSend(addr1, addr2, sdk.Coins{sdk.NewInt64Coin("foocoin", 100)})
+	addr1Str, err := s.AccountKeeper.AddressCodec().BytesToString(addr1)
+	require.NoError(t, err)
+	addr2Str, err := s.AccountKeeper.AddressCodec().BytesToString(addr2)
+	require.NoError(t, err)
+	sendMsg := types.NewMsgSend(addr1Str, addr2Str, sdk.Coins{sdk.NewInt64Coin("foocoin", 100)})
 	header := header.Info{Height: baseApp.LastBlockHeight() + 1}
 	txConfig := moduletestutil.MakeTestTxConfig()
 	_, _, err = simtestutil.SignCheckDeliver(t, txConfig, baseApp, header, []sdk.Msg{sendMsg}, "", []uint64{origAccNum}, []uint64{origSeq}, false, false, priv1)
@@ -386,7 +390,7 @@ func TestMsgSetSendEnabled(t *testing.T) {
 		"set default send enabled to true",
 		"Change send enabled",
 		"Modify send enabled and set to true",
-		false,
+		govv1.ProposalType_PROPOSAL_TYPE_STANDARD,
 	)
 	require.NoError(t, err, "making goodGovProp")
 

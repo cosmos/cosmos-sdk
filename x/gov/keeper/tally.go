@@ -20,6 +20,7 @@ func (keeper Keeper) Tally(ctx context.Context, proposal v1.Proposal) (passes, b
 	results[v1.OptionAbstain] = math.LegacyZeroDec()
 	results[v1.OptionNo] = math.LegacyZeroDec()
 	results[v1.OptionNoWithVeto] = math.LegacyZeroDec()
+	results[v1.OptionSpam] = math.LegacyZeroDec()
 
 	totalVotingPower := math.LegacyZeroDec()
 	currValidators := make(map[string]v1.ValidatorGovInfo)
@@ -134,6 +135,11 @@ func (keeper Keeper) Tally(ctx context.Context, proposal v1.Proposal) (passes, b
 	quorum, _ := math.LegacyNewDecFromStr(params.Quorum)
 	if percentVoting.LT(quorum) {
 		return false, params.BurnVoteQuorum, tallyResults, nil
+	}
+
+	// If there are more spam votes than the sum of all other options, proposal fails
+	if results[v1.OptionSpam].GTE(results[v1.OptionOne].Add(results[v1.OptionTwo].Add(results[v1.OptionThree].Add(results[v1.OptionFour])))) {
+		return false, true, tallyResults, nil
 	}
 
 	// If no one votes (everyone abstains), proposal fails

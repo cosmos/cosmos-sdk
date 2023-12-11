@@ -153,7 +153,7 @@ message QueryParamsResponse {
   // Deprecated: Prefer to use `params` instead.
   // tally_params defines the parameters related to tally.
   TallyParams tally_params = 3 [deprecated = true];
-  // params defines all the paramaters of x/gov module.
+  // params defines all the parameters of x/gov module.
   //
   // Since: cosmos-sdk 0.47
   Params params = 4;

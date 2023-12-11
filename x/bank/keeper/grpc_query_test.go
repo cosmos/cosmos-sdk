@@ -234,7 +234,10 @@ func (suite *KeeperTestSuite) TestSpendableBalanceByDenom() {
 	_, err := queryClient.SpendableBalanceByDenom(ctx, &types.QuerySpendableBalanceByDenomRequest{})
 	suite.Require().Error(err)
 
-	req := types.NewQuerySpendableBalanceByDenomRequest(addr, fooDenom)
+	addrStr, err := suite.authKeeper.AddressCodec().BytesToString(addr)
+	suite.Require().NoError(err)
+
+	req := types.NewQuerySpendableBalanceByDenomRequest(addrStr, fooDenom)
 	acc := authtypes.NewBaseAccountWithAddress(addr)
 
 	suite.mockSpendableCoins(ctx, acc)

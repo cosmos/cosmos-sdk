@@ -1,4 +1,0 @@
-\*.pulsar.go
-\*.pb.go
-\*.pb.gw.go
-\*.cosmos_orm.go

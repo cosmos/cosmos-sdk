@@ -84,13 +84,12 @@ func exportUnsafeUnarmored(ctx client.Context, cmd *cobra.Command, uid string, b
 	indiscreet, _ := cmd.Flags().GetBool(flagIndiscreet)
 	if indiscreet {
 		cmd.Println(hexPrivKey)
-	} else {
-		if err = printDiscreetly(ctx, cmd.ErrOrStderr(), "**Important** Do not share this private key.", hexPrivKey); err != nil {
-			return fmt.Errorf("failed to print private key: %w", err)
-		}
-		cmd.Println("Export private key successfully")
+		return nil
 	}
-
+	if err = printDiscreetly(ctx, cmd.ErrOrStderr(), "**Important** Do not share this private key.", hexPrivKey); err != nil {
+		return fmt.Errorf("failed to print private key: %w", err)
+	}
+	cmd.Println("Export private key successfully")
 	return nil
 }
 

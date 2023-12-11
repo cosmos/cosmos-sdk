@@ -27,7 +27,7 @@ func TestMigrateCmd(t *testing.T) {
 	_, err = clitestutil.ExecTestCLICmd(clientCtx, cmd.MigrateCommand(), []string{"v0.46", filepath.Join(clientCtx.HomeDir, "config", "unsupported.toml")})
 	assert.ErrorContains(t, err, "failed to migrate config")
 
-	// try to migrate from unspported.toml - it should work and give us a big diff
+	// try to migrate from unsupported.toml - it should work and give us a big diff
 	out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd.MigrateCommand(), []string{"v0.46", filepath.Join(clientCtx.HomeDir, "config", "unsupported.toml"), "--skip-validate", "--verbose"})
 	assert.NilError(t, err)
 	assert.Assert(t, strings.Contains(out.String(), "add app-db-backend key"))

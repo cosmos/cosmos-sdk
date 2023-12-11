@@ -144,7 +144,7 @@ message Validator {
   // strictly positive if this validator's unbonding has been stopped by external modules
   int64 unbonding_on_hold_ref_count = 12;
 
-  // list of unbonding ids, each uniquely identifing an unbonding of this validator
+  // list of unbonding ids, each uniquely identifying an unbonding of this validator
   repeated uint64 unbonding_ids = 13;
 }
 
@@ -420,7 +420,7 @@ message ConsPubKeyRotationHistory {
   google.protobuf.Any old_cons_pubkey = 2 [(cosmos_proto.accepts_interface) = "cosmos.crypto.PubKey"];
   // new_cons_pubkey is the new consensus public key of the validator, as a Protobuf Any.
   google.protobuf.Any new_cons_pubkey = 3 [(cosmos_proto.accepts_interface) = "cosmos.crypto.PubKey"];
-  // height defines the block height at which the rotation event occured.
+  // height defines the block height at which the rotation event occurred.
   uint64 height = 4;
   // fee holds the amount of fee deduced for the rotation.
   cosmos.base.v1beta1.Coin fee = 5 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];

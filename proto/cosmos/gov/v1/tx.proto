@@ -81,7 +81,16 @@ message MsgSubmitProposal {
   // expedited defines if the proposal is expedited or not
   //
   // Since: cosmos-sdk 0.50
-  bool expedited = 7;
+  // Deprecated: Use the PROPOSAL_TYPE_EXPEDITED proposal type instead.
+  // When this field is set and no proposal_type is set, the proposal_type
+  // will be set to PROPOSAL_TYPE_EXPEDITED for backwards compatibility.
+  bool expedited = 7 [deprecated = true];
+
+  // proposal_type defines the type of proposal
+  // When not set defaults to PROPOSAL_TYPE_STANDARD
+  //
+  // Since: cosmos-sdk 0.51
+  ProposalType proposal_type = 8;
 }
 
 // MsgSubmitProposalResponse defines the Msg/SubmitProposal response type.

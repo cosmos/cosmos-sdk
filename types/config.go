@@ -18,10 +18,6 @@ type Config struct {
 	addressVerifier     func([]byte) error
 	mtx                 sync.RWMutex
 
-	// SLIP-44 related
-	purpose  uint32
-	coinType uint32
-
 	sealed   bool
 	sealedch chan struct{}
 }

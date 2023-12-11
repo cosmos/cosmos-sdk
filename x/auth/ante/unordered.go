@@ -2,6 +2,7 @@ package ante
 
 import (
 	"context"
+	"crypto/sha256"
 	"sync"
 	"time"
 
@@ -25,6 +26,8 @@ type TxHash [32]byte
 type UnorderedTxManager struct {
 	// blockCh defines a channel to receive newly committed block heights
 	blockCh chan uint64
+	// doneCh allows us to ensure the purgeLoop has gracefully terminated prior to closing
+	doneCh chan struct{}
 
 	mu sync.RWMutex
 	// txHashes defines a map from tx hash -> TTL value, which is used for duplicate
@@ -36,6 +39,7 @@ type UnorderedTxManager struct {
 func NewUnorderedTxManager() *UnorderedTxManager {
 	m := &UnorderedTxManager{
 		blockCh:  make(chan uint64, 16),
+		doneCh:   make(chan struct{}),
 		txHashes: make(map[TxHash]uint64),
 	}
 
@@ -48,6 +52,7 @@ func (m *UnorderedTxManager) Start() {
 
 func (m *UnorderedTxManager) Close() error {
 	close(m.blockCh)
+	<-m.doneCh
 	m.blockCh = nil
 
 	return nil
@@ -114,7 +119,8 @@ func (m *UnorderedTxManager) purgeLoop() {
 		latestHeight, ok := m.batchReceive(ctx)
 		if !ok {
 			// channel closed
-			break
+			m.doneCh <- struct{}{}
+			return
 		}
 
 		hashes := m.expiredTxs(latestHeight)
@@ -155,6 +161,9 @@ var _ sdk.AnteDecorator = (*UnorderedTxDecorator)(nil)
 // The transaction sender must ensure that unordered=true and a timeout_height
 // is appropriately set. The AnteHandler will check that the transaction is not
 // a duplicate and will evict it from memory when the timeout is reached.
+//
+// The UnorderedTxDecorator should be placed as early as possible in the AnteHandler
+// chain to ensure that during DeliverTx, the transaction is added to the UnorderedTxManager.
 type UnorderedTxDecorator struct {
 	// maxUnOrderedTTL defines the maximum TTL a transaction can define.
 	maxUnOrderedTTL uint64
@@ -183,15 +192,17 @@ func (d *UnorderedTxDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 		return ctx, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "unordered tx ttl exceeds %d", d.maxUnOrderedTTL)
 	}
 
-	// // check for duplicates
-	// if d.m.Contains(tx.Hash()) {
-	// 	return nil, errorsmod.Wrap(sdkerrors.ErrLogic, "tx is duplicated")
-	// }
+	txHash := sha256.Sum256(ctx.TxBytes())
 
-	// if !ctx.IsCheckTx() {
-	// 	// a new tx included in the block, add the hash to the unordered tx manager
-	// 	d.m.Add(tx.Hash(), tx.TimeoutHeight())
-	// }
+	// check for duplicates
+	if d.txManager.Contains(txHash) {
+		return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "tx %X is duplicated")
+	}
+
+	if ctx.ExecMode() == sdk.ExecModeFinalize {
+		// a new tx included in the block, add the hash to the unordered tx manager
+		d.txManager.Add(txHash, unorderedTx.GetTimeoutHeight())
+	}
 
 	return next(ctx, tx, simulate)
 }

@@ -11,7 +11,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: |
-          pip install codespell
+          apt install codespell -y
           codespell -w --skip="*.pulsar.go,*.pb.go*.pb.gw.go,*.cosmos_orm.go"
       - uses: peter-evans/create-pull-request@v5
         with:

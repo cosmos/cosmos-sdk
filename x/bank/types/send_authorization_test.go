@@ -30,14 +30,10 @@ func TestSendAuthorization(t *testing.T) {
 	allowList[0] = toAddr
 	authorization := types.NewSendAuthorization(coins1000, nil)
 
-	fmt.Println(fromAddrStr, toAddrStr, unknownAddrStr)
-
 	t.Log("verify authorization returns valid method name")
 	require.Equal(t, authorization.MsgTypeURL(), "/cosmos.bank.v1beta1.MsgSend")
 	require.NoError(t, authorization.ValidateBasic())
 	send := types.NewMsgSend(fromAddrStr, toAddrStr, coins1000)
-
-	require.NoError(t, authorization.ValidateBasic())
 
 	t.Log("verify updated authorization returns nil")
 	resp, err := authorization.Accept(ctx, send)

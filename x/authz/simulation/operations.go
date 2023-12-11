@@ -285,7 +285,7 @@ func SimulateMsgExec(
 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, err.Error()), nil, nil
 		}
 
-		graStr, err := ak.AddressCodec().BytesToString(granteeAddr)
+		graStr, err := ak.AddressCodec().BytesToString(granterAddr)
 		if err != nil {
 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, err.Error()), nil, err
 		}

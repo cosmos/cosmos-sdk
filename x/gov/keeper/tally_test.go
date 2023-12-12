@@ -430,6 +430,7 @@ func TestTally(t *testing.T) {
 						}
 						return nil
 					})
+
 			// Submit and activate a proposal
 			proposal, err := govKeeper.SubmitProposal(ctx, TestProposal, "", "title", "summary", delAddrs[0], tt.proposalType)
 			require.NoError(t, err)

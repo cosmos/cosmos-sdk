@@ -264,27 +264,32 @@ func (k Querier) DelegationTotalRewards(ctx context.Context, req *types.QueryDel
 		return nil, err
 	}
 
+	var iterErr error
 	err = k.stakingKeeper.IterateDelegations(
 		ctx, delAdr,
 		func(_ int64, del sdk.DelegationI) (stop bool) {
 			valAddr, err := k.stakingKeeper.ValidatorAddressCodec().StringToBytes(del.GetValidatorAddr())
 			if err != nil {
-				panic(err)
+				iterErr = err
+				return true
 			}
 
 			val, err := k.stakingKeeper.Validator(ctx, valAddr)
 			if err != nil {
-				panic(err)
+				iterErr = err
+				return true
 			}
 
 			endingPeriod, err := k.IncrementValidatorPeriod(ctx, val)
 			if err != nil {
-				panic(err)
+				iterErr = err
+				return true
 			}
 
 			delReward, err := k.CalculateDelegationRewards(ctx, val, del, endingPeriod)
 			if err != nil {
-				panic(err)
+				iterErr = err
+				return true
 			}
 
 			delRewards = append(delRewards, types.NewDelegationDelegatorReward(del.GetValidatorAddr(), delReward))
@@ -292,6 +297,9 @@ func (k Querier) DelegationTotalRewards(ctx context.Context, req *types.QueryDel
 			return false
 		},
 	)
+	if iterErr != nil {
+		return nil, iterErr
+	}
 	if err != nil {
 		return nil, err
 	}

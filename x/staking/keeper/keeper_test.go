@@ -356,7 +356,7 @@ func (s *KeeperTestSuite) TestUnbondingDelegationsMigrationToColls() {
 					},
 				},
 			}
-			bz := stakingtypes.MustMarshalUBD(s.cdc, ubd)
+			bz := s.cdc.MustMarshal(&ubd)
 			s.ctx.KVStore(s.key).Set(getUBDKey(delAddrs[i], valAddrs[i]), bz)
 			s.ctx.KVStore(s.key).Set(getUBDByValIndexKey(delAddrs[i], valAddrs[i]), []byte{})
 		},
@@ -444,7 +444,7 @@ func (s *KeeperTestSuite) TestValidatorsMigrationToColls() {
 				Commission:        stakingtypes.NewCommission(math.LegacyZeroDec(), math.LegacyZeroDec(), math.LegacyZeroDec()),
 				MinSelfDelegation: math.ZeroInt(),
 			}
-			valBz := stakingtypes.MustMarshalValidator(s.cdc, &val)
+			valBz := s.cdc.MustMarshal(&val)
 			// legacy Set method
 			s.ctx.KVStore(s.key).Set(getValidatorKey(valAddrs[i]), valBz)
 		},

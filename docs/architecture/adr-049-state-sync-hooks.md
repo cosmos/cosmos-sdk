@@ -31,7 +31,7 @@ acting as a delimiter between extensions. As the chunk hashes should be able to 
 a delimiter to mark the end of the snapshot stream.
 
 Besides, we provide `Snapshotter` and `ExtensionSnapshotter` interface for modules to implement snapshotters, which will handle both taking 
-snapshot and the restoration. Each module could have mutiple snapshotters, and for modules with additional state, they should
+snapshot and the restoration. Each module could have multiple snapshotters, and for modules with additional state, they should
 implement `ExtensionSnapshotter` as extension snapshotters. When setting up the application, the snapshot `Manager` should call 
 `RegisterExtensions([]ExtensionSnapshotter…)` to register all the extension snapshotters.
 

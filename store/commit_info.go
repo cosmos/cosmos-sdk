@@ -8,14 +8,6 @@ import (
 )
 
 type (
-	// CommitHeader defines the interface for a block header that can be provided
-	// to a MultiStore upon Commit. This should be optional and used to facilitate
-	// time-based queries only.
-	CommitHeader interface {
-		GetTime() time.Time
-		GetHeight() uint64
-	}
-
 	// CommitInfo defines commit information used by the multi-store when committing
 	// a version/height.
 	CommitInfo struct {
@@ -79,4 +71,8 @@ func (m *CommitInfo) GetVersion() uint64 {
 
 func (cid CommitID) String() string {
 	return fmt.Sprintf("CommitID{%v:%X}", cid.Hash, cid.Version)
+}
+
+func (cid CommitID) IsZero() bool {
+	return cid.Version == 0 && len(cid.Hash) == 0
 }

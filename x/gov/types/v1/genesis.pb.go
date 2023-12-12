@@ -33,15 +33,15 @@ type GenesisState struct {
 	// proposals defines all the proposals present at genesis.
 	Proposals []*Proposal `protobuf:"bytes,4,rep,name=proposals,proto3" json:"proposals,omitempty"`
 	// Deprecated: Prefer to use `params` instead.
-	// deposit_params defines all the paramaters of related to deposit.
+	// deposit_params defines all the parameters of related to deposit.
 	DepositParams *DepositParams `protobuf:"bytes,5,opt,name=deposit_params,json=depositParams,proto3" json:"deposit_params,omitempty"` // Deprecated: Do not use.
 	// Deprecated: Prefer to use `params` instead.
-	// voting_params defines all the paramaters of related to voting.
+	// voting_params defines all the parameters of related to voting.
 	VotingParams *VotingParams `protobuf:"bytes,6,opt,name=voting_params,json=votingParams,proto3" json:"voting_params,omitempty"` // Deprecated: Do not use.
 	// Deprecated: Prefer to use `params` instead.
-	// tally_params defines all the paramaters of related to tally.
+	// tally_params defines all the parameters of related to tally.
 	TallyParams *TallyParams `protobuf:"bytes,7,opt,name=tally_params,json=tallyParams,proto3" json:"tally_params,omitempty"` // Deprecated: Do not use.
-	// params defines all the paramaters of x/gov module.
+	// params defines all the parameters of x/gov module.
 	//
 	// Since: cosmos-sdk 0.47
 	Params *Params `protobuf:"bytes,8,opt,name=params,proto3" json:"params,omitempty"`

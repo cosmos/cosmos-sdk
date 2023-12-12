@@ -31,6 +31,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+## [v0.1.1](https://github.com/cosmos/cosmos-sdk/releases/tag/tools/confix/v0.1.1) - 2023-12-11
+
 * [#18496](https://github.com/cosmos/cosmos-sdk/pull/18496) Remove invalid non SDK config from app.toml migration templates.
  
 

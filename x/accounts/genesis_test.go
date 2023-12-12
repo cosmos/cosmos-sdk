@@ -4,33 +4,31 @@ import (
 	"context"
 	"testing"
 
+	"github.com/cosmos/gogoproto/types"
 	"github.com/stretchr/testify/require"
-	"google.golang.org/protobuf/runtime/protoiface"
-	"google.golang.org/protobuf/types/known/emptypb"
-	"google.golang.org/protobuf/types/known/wrapperspb"
 
 	"cosmossdk.io/collections/colltest"
 	"cosmossdk.io/x/accounts/internal/implementation"
 )
 
 func TestGenesis(t *testing.T) {
-	k, ctx := newKeeper(t, implementation.AddAccount("test", NewTestAccount))
-	k.queryModuleFunc = func(ctx context.Context, req, resp protoiface.MessageV1) error {
-		return nil
-	}
-
+	k, ctx := newKeeper(t, func(deps implementation.Dependencies) (string, implementation.Account, error) {
+		acc, err := NewTestAccount(deps)
+		return "test", acc, err
+	})
+	k.queryRouter = mockQuery(func(ctx context.Context, req, resp implementation.ProtoMsg) error { return nil })
 	// we init two accounts of the same type
 
 	// we set counter to 10
-	_, addr1, err := k.Init(ctx, "test", []byte("sender"), &emptypb.Empty{})
+	_, addr1, err := k.Init(ctx, "test", []byte("sender"), &types.Empty{})
 	require.NoError(t, err)
-	_, err = k.Execute(ctx, addr1, []byte("sender"), &wrapperspb.UInt64Value{Value: 10})
+	_, err = k.Execute(ctx, addr1, []byte("sender"), &types.UInt64Value{Value: 10})
 	require.NoError(t, err)
 
 	// we set counter to 20
-	_, addr2, err := k.Init(ctx, "test", []byte("sender"), &emptypb.Empty{})
+	_, addr2, err := k.Init(ctx, "test", []byte("sender"), &types.Empty{})
 	require.NoError(t, err)
-	_, err = k.Execute(ctx, addr2, []byte("sender"), &wrapperspb.UInt64Value{Value: 20})
+	_, err = k.Execute(ctx, addr2, []byte("sender"), &types.UInt64Value{Value: 20})
 	require.NoError(t, err)
 
 	// export state
@@ -44,11 +42,11 @@ func TestGenesis(t *testing.T) {
 
 	// if genesis import went fine, we should be able to query the accounts
 	// and get the expected values.
-	resp, err := k.Query(ctx, addr1, &wrapperspb.DoubleValue{})
+	resp, err := k.Query(ctx, addr1, &types.DoubleValue{})
 	require.NoError(t, err)
-	require.Equal(t, &wrapperspb.UInt64Value{Value: 10}, resp)
+	require.Equal(t, &types.UInt64Value{Value: 10}, resp)
 
-	resp, err = k.Query(ctx, addr2, &wrapperspb.DoubleValue{})
+	resp, err = k.Query(ctx, addr2, &types.DoubleValue{})
 	require.NoError(t, err)
-	require.Equal(t, &wrapperspb.UInt64Value{Value: 20}, resp)
+	require.Equal(t, &types.UInt64Value{Value: 20}, resp)
 }

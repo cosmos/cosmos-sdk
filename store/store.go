@@ -3,7 +3,8 @@ package store
 import (
 	"io"
 
-	ics23 "github.com/cosmos/ics23/go"
+	coreheader "cosmossdk.io/core/header"
+	"cosmossdk.io/store/v2/metrics"
 )
 
 // StoreType defines a type of KVStore.
@@ -19,14 +20,8 @@ const (
 // RootStore defines an abstraction layer containing a State Storage (SS) engine
 // and one or more State Commitment (SC) engines.
 type RootStore interface {
-	// GetSCStore should return the SC backend for the given store key. A RootStore
-	// implementation may choose to ignore the store key in cases where only a single
-	// SC backend is used.
-	GetSCStore(storeKey string) Committer
-	// MountSCStore should mount the given SC backend for the given store key. For
-	// implementations that utilize a single SC backend, this method may be optional
-	// or a no-op.
-	MountSCStore(storeKey string, sc Committer) error
+	// GetSCStore should return the SC backend.
+	GetSCStore() Committer
 	// GetKVStore returns the KVStore for the given store key. If an implementation
 	// chooses to have a single SS backend, the store key may be ignored.
 	GetKVStore(storeKey string) KVStore
@@ -61,10 +56,13 @@ type RootStore interface {
 	// GetLatestVersion returns the latest version, i.e. height, committed.
 	GetLatestVersion() (uint64, error)
 
+	// SetInitialVersion sets the initial version on the RootStore.
+	SetInitialVersion(v uint64) error
+
 	// SetCommitHeader sets the commit header for the next commit. This call and
 	// implementation is optional. However, it must be supported in cases where
 	// queries based on block time need to be supported.
-	SetCommitHeader(h CommitHeader)
+	SetCommitHeader(h *coreheader.Info)
 
 	// WorkingHash returns the current WIP commitment hash. Depending on the underlying
 	// implementation, this may need to take the current changeset and write it to
@@ -79,6 +77,12 @@ type RootStore interface {
 	// It must return a hash of the merkle-ized committed state. This hash should
 	// be the same as the hash returned by WorkingHash() prior to calling Commit().
 	Commit() ([]byte, error)
+
+	// LastCommitID returns a CommitID pertaining to the last commitment.
+	LastCommitID() (CommitID, error)
+
+	// SetMetrics sets the telemetry handler on the RootStore.
+	SetMetrics(m metrics.Metrics)
 
 	io.Closer
 }
@@ -173,5 +177,5 @@ type QueryResult struct {
 	Key     []byte
 	Value   []byte
 	Version uint64
-	Proof   *ics23.CommitmentProof
+	Proof   CommitmentOp
 }

@@ -450,3 +450,14 @@ func TestMarshalAmino_BackwardsCompatibility(t *testing.T) {
 		})
 	}
 }
+
+func TestLegacyKeyGenerationAgainstConstantTime(t *testing.T) {
+	privKey := secp256k1.GenPrivKey()
+
+	pubKey := privKey.PubKey()
+
+	nonConstantTimePk := secp.PrivKeyFromBytes(privKey.Key).PubKey().SerializeCompressed() // Legacy functionality from pubkey
+	legacyPubKey := &secp256k1.PubKey{Key: nonConstantTimePk}
+
+	require.Equal(t, legacyPubKey, pubKey)
+}

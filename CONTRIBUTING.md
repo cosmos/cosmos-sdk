@@ -8,7 +8,7 @@
     * [Pull Request Templates](#pull-request-templates)
     * [Requesting Reviews](#requesting-reviews)
     * [Updating Documentation](#updating-documentation)
-    * [RFC & ADR](#RFC & ADR)
+    * [RFC & ADR](#rfc--adr)
 * [Dependencies](#dependencies)
     * [`go.work`](#gowork)
     * [`go.mod`](#gomod)
@@ -47,10 +47,14 @@ contributors, the general procedure for contributing has been established:
       to begin work.
 5. To submit your work as a contribution to the repository follow standard GitHub best practices. See [pull request guideline](#pull-requests) below.
 
-**Note:** For very small or blatantly obvious problems such as typos, you are
+**Note:** For very small or blatantly obvious problems, you are
 not required to an open issue to submit a PR, but be aware that for more complex
 problems/features, if a PR is opened before an adequate design discussion has
 taken place in a GitHub issue, that PR runs a high likelihood of being rejected.
+
+**Note 2:** At this time, we will not be accepting contributions that only fix spelling
+or grammar errors in documentation, code or elsewhere. The repository has a nightly job that
+spell checks all files and will automatically open PRs for any spelling errors.
 
 ## Teams Dev Calls
 

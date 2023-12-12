@@ -282,7 +282,7 @@ type HasGenesis interface {
 
 #### Pre Blockers
 
-Modules that have functionality that runs before BeginBlock and should implement the has `HasPreBlocker` interfaces:
+Modules that have functionality that runs before BeginBlock and should implement the `HasPreBlocker` interfaces:
 
 ```go
 type HasPreBlocker interface {
@@ -294,7 +294,7 @@ type HasPreBlocker interface {
 #### Begin and End Blockers
 
 Modules that have functionality that runs before transactions (begin blockers) or after transactions
-(end blockers) should implement the has `HasBeginBlocker` and/or `HasEndBlocker` interfaces:
+(end blockers) should implement the `HasBeginBlocker` and/or `HasEndBlocker` interfaces:
 
 ```go
 type HasBeginBlocker interface {
@@ -452,7 +452,7 @@ func ProvideApp(config *foomodulev2.Module, evtSvc event.EventService, db orm.Mo
 The `core` module will define a static integer var, `cosmossdk.io/core.RuntimeCompatibilityVersion`, which is
 a minor version indicator of the core module that is accessible at runtime. Correct runtime module implementations
 should check this compatibility version and return an error if the current `RuntimeCompatibilityVersion` is higher
-than the version of the core API that this runtime version can support. When new features are adding to the `core`
+than the version of the core API that this runtime version can support. When new features are added to the `core`
 module API that runtime modules are required to support, this version should be incremented.
 
 ### Runtime Modules

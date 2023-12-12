@@ -725,7 +725,7 @@ func (d LegacyDec) TruncateDec() LegacyDec {
 	return LegacyNewDecFromBigInt(chopPrecisionAndTruncateNonMutative(d.i))
 }
 
-// Ceil returns the smallest interger value (as a decimal) that is greater than
+// Ceil returns the smallest integer value (as a decimal) that is greater than
 // or equal to the given decimal.
 func (d LegacyDec) Ceil() LegacyDec {
 	tmp := new(big.Int).Set(d.i)

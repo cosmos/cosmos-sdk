@@ -172,6 +172,7 @@ type UnorderedTxDecorator struct {
 func NewUnorderedTxDecorator(maxTTL uint64, m *UnorderedTxManager) *UnorderedTxDecorator {
 	return &UnorderedTxDecorator{
 		maxUnOrderedTTL: maxTTL,
+		txManager:       m,
 	}
 }
 

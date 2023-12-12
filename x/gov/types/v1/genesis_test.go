@@ -93,6 +93,83 @@ func TestValidateGenesis(t *testing.T) {
 			},
 			expErr: true,
 		},
+		{
+			name: "duplicate proposals",
+			genesisState: func() *v1.GenesisState {
+				state := v1.NewGenesisState(v1.DefaultStartingProposalID, params)
+				state.Proposals = append(state.Proposals, &v1.Proposal{Id: 1})
+				state.Proposals = append(state.Proposals, &v1.Proposal{Id: 1})
+
+				return state
+			},
+			expErr: true,
+		},
+		{
+			name: "duplicate votes",
+			genesisState: func() *v1.GenesisState {
+				state := v1.NewGenesisState(v1.DefaultStartingProposalID, params)
+				state.Proposals = append(state.Proposals, &v1.Proposal{Id: 1})
+				state.Votes = append(state.Votes,
+					&v1.Vote{
+						ProposalId: 1,
+						Voter:      "voter",
+					},
+					&v1.Vote{
+						ProposalId: 1,
+						Voter:      "voter",
+					})
+
+				return state
+			},
+			expErr: true,
+		},
+		{
+			name: "duplicate deposits",
+			genesisState: func() *v1.GenesisState {
+				state := v1.NewGenesisState(v1.DefaultStartingProposalID, params)
+				state.Proposals = append(state.Proposals, &v1.Proposal{Id: 1})
+				state.Deposits = append(state.Deposits,
+					&v1.Deposit{
+						ProposalId: 1,
+						Depositor:  "depositor",
+					},
+					&v1.Deposit{
+						ProposalId: 1,
+						Depositor:  "depositor",
+					})
+
+				return state
+			},
+			expErr: true,
+		},
+		{
+			name: "non-existent proposal id in votes",
+			genesisState: func() *v1.GenesisState {
+				state := v1.NewGenesisState(v1.DefaultStartingProposalID, params)
+				state.Votes = append(state.Votes,
+					&v1.Vote{
+						ProposalId: 1,
+						Voter:      "voter",
+					})
+
+				return state
+			},
+			expErr: true,
+		},
+		{
+			name: "non-existent proposal id in deposits",
+			genesisState: func() *v1.GenesisState {
+				state := v1.NewGenesisState(v1.DefaultStartingProposalID, params)
+				state.Deposits = append(state.Deposits,
+					&v1.Deposit{
+						ProposalId: 1,
+						Depositor:  "depositor",
+					})
+
+				return state
+			},
+			expErr: true,
+		},
 	}
 
 	for _, tc := range testCases {

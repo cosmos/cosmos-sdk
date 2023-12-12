@@ -134,7 +134,7 @@ func Test_runShowCmd(t *testing.T) {
 	})
 	require.EqualError(t, cmd.ExecuteContext(ctx), "threshold must be a positive integer")
 
-	// Now try multisig key duplicate
+	// Now try multisig key duplicate(we just show warning message instead of return error)
 	cmd.SetArgs([]string{
 		fakeKeyName1, fakeKeyName1,
 		fmt.Sprintf("--%s=%s", flags.FlagKeyringDir, kbHome),
@@ -142,7 +142,7 @@ func Test_runShowCmd(t *testing.T) {
 		fmt.Sprintf("--%s=2", flagMultiSigThreshold),
 		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
 	})
-	require.EqualError(t, cmd.ExecuteContext(ctx), "duplicate keys: "+fakeKeyName1)
+	require.NoError(t, cmd.ExecuteContext(ctx))
 
 	cmd.SetArgs([]string{
 		fakeKeyName1, fakeKeyName2,

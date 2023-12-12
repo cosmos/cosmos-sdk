@@ -74,7 +74,7 @@ func runShowCmd(cmd *cobra.Command, args []string) (err error) {
 		keyFilter := make(map[string]struct{})
 		for i, keyRef := range args {
 			if _, ok := keyFilter[keyRef]; ok {
-				return fmt.Errorf("duplicate keys: %s", keyRef)
+				cmd.Printf("WARNING: duplicate keys found: %s.\n", keyRef)
 			} else {
 				keyFilter[keyRef] = struct{}{}
 			}

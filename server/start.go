@@ -341,20 +341,11 @@ func startInProcess(svrCtx *Context, svrCfg serverconfig.Config, clientCtx clien
 		svrCfg.GRPC.Enable = true
 	} else {
 		svrCtx.Logger.Info("starting node with ABCI CometBFT in-process")
-		tmNode, cleanupFn, err := startCmtNode(ctx, cmtCfg, app, svrCtx)
-		if err != nil {
-			return err
-		}
-		defer cleanupFn()
 
 		// Add the tx service to the gRPC router. We only need to register this
 		// service if API or gRPC is enabled, and avoid doing so in the general
 		// case, because it spawns a new local CometBFT RPC client.
 		if svrCfg.API.Enable || svrCfg.GRPC.Enable {
-			// Re-assign for making the client available below do not use := to avoid
-			// shadowing the clientCtx variable.
-			clientCtx = clientCtx.WithClient(local.New(tmNode))
-
 			app.RegisterTxService(clientCtx)
 			app.RegisterTendermintService(clientCtx)
 			app.RegisterNodeService(clientCtx, svrCfg)

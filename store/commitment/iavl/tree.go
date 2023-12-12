@@ -55,9 +55,9 @@ func (t *IavlTree) LoadVersion(version uint64) error {
 }
 
 // Commit commits the current state to the database.
-func (t *IavlTree) Commit() ([]byte, error) {
-	hash, _, err := t.tree.SaveVersion()
-	return hash, err
+func (t *IavlTree) Commit() ([]byte, uint64, error) {
+	hash, v, err := t.tree.SaveVersion()
+	return hash, uint64(v), err
 }
 
 // GetProof returns a proof for the given key and version.

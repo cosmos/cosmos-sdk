@@ -6,6 +6,7 @@ import (
 	"io"
 	"math"
 
+	dbm "github.com/cosmos/cosmos-db"
 	protoio "github.com/cosmos/gogoproto/io"
 	ics23 "github.com/cosmos/ics23/go"
 
@@ -14,6 +15,8 @@ import (
 	"cosmossdk.io/store/v2/snapshots"
 	snapshotstypes "cosmossdk.io/store/v2/snapshots/types"
 )
+
+const commitInfoKeyFmt = "c/%d" // c/<version>
 
 var (
 	_ store.Committer             = (*CommitStore)(nil)
@@ -26,15 +29,16 @@ var (
 // RootStore use a CommitStore as an abstraction to handle multiple store keys
 // and trees.
 type CommitStore struct {
-	logger log.Logger
-
+	logger     log.Logger
+	db         dbm.DB
 	multiTrees map[string]Tree
 }
 
 // NewCommitStore creates a new CommitStore instance.
-func NewCommitStore(multiTrees map[string]Tree, logger log.Logger) (*CommitStore, error) {
+func NewCommitStore(db dbm.DB, multiTrees map[string]Tree, logger log.Logger) (*CommitStore, error) {
 	return &CommitStore{
 		logger:     logger,
+		db:         db,
 		multiTrees: multiTrees,
 	}, nil
 }
@@ -59,7 +63,7 @@ func (c *CommitStore) WriteBatch(cs *store.Changeset) error {
 	return nil
 }
 
-func (c *CommitStore) WorkingStoreInfos(version uint64) []store.StoreInfo {
+func (c *CommitStore) WorkingCommitInfo(version uint64) *store.CommitInfo {
 	storeInfos := make([]store.StoreInfo, 0, len(c.multiTrees))
 	for storeKey, tree := range c.multiTrees {
 		storeInfos = append(storeInfos, store.StoreInfo{
@@ -71,7 +75,10 @@ func (c *CommitStore) WorkingStoreInfos(version uint64) []store.StoreInfo {
 		})
 	}
 
-	return storeInfos
+	return &store.CommitInfo{
+		Version:    version,
+		StoreInfos: storeInfos,
+	}
 }
 
 func (c *CommitStore) GetLatestVersion() (uint64, error) {
@@ -97,23 +104,58 @@ func (c *CommitStore) LoadVersion(targetVersion uint64) error {
 	return nil
 }
 
-func (c *CommitStore) Commit() ([]store.StoreInfo, error) {
+func (c *CommitStore) GetCommitInfo(version uint64) (*store.CommitInfo, error) {
+	key := []byte(fmt.Sprintf(commitInfoKeyFmt, version))
+	value, err := c.db.Get(key)
+	if err != nil {
+		return nil, err
+	}
+
+	cInfo := &store.CommitInfo{}
+	if err := cInfo.Unmarshal(value); err != nil {
+		return nil, err
+	}
+
+	return cInfo, nil
+}
+
+func (c *CommitStore) flushCommitInfo(version uint64, cInfo *store.CommitInfo) error {
+	key := []byte(fmt.Sprintf(commitInfoKeyFmt, version))
+	value, err := cInfo.Marshal()
+	if err != nil {
+		return err
+	}
+
+	return c.db.Set(key, value)
+}
+
+func (c *CommitStore) Commit(version uint64) (*store.CommitInfo, error) {
 	storeInfos := make([]store.StoreInfo, 0, len(c.multiTrees))
+
 	for storeKey, tree := range c.multiTrees {
-		hash, err := tree.Commit()
+		hash, version, err := tree.Commit()
 		if err != nil {
 			return nil, err
 		}
 		storeInfos = append(storeInfos, store.StoreInfo{
 			Name: storeKey,
 			CommitID: store.CommitID{
-				Version: tree.GetLatestVersion(),
+				Version: version,
 				Hash:    hash,
 			},
 		})
 	}
 
-	return storeInfos, nil
+	cInfo := &store.CommitInfo{
+		Version:    storeInfos[0].CommitID.Version,
+		StoreInfos: storeInfos,
+	}
+
+	if err := c.flushCommitInfo(version, cInfo); err != nil {
+		return nil, err
+	}
+
+	return cInfo, nil
 }
 
 func (c *CommitStore) GetProof(storeKey string, version uint64, key []byte) (*ics23.CommitmentProof, error) {

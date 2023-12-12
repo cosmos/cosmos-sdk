@@ -1,6 +1,7 @@
 package store
 
 import (
+	"bytes"
 	"fmt"
 	"time"
 
@@ -53,6 +54,87 @@ func (ci CommitInfo) toMap() map[string][]byte {
 	}
 
 	return m
+}
+
+func (ci *CommitInfo) encodedSize() int {
+	size := EncodeUvarintSize(ci.Version)
+	size += EncodeVarintSize(ci.Timestamp.UnixNano())
+	size += EncodeUvarintSize(uint64(len(ci.StoreInfos)))
+	for _, storeInfo := range ci.StoreInfos {
+		size += EncodeBytesSize([]byte(storeInfo.Name))
+		size += EncodeBytesSize(storeInfo.CommitID.Hash)
+	}
+	return size
+}
+
+func (ci *CommitInfo) Marshal() ([]byte, error) {
+	var buf bytes.Buffer
+	buf.Grow(ci.encodedSize())
+
+	if err := EncodeUvarint(&buf, ci.Version); err != nil {
+		return nil, err
+	}
+	if err := EncodeVarint(&buf, ci.Timestamp.UnixNano()); err != nil {
+		return nil, err
+	}
+	if err := EncodeUvarint(&buf, uint64(len(ci.StoreInfos))); err != nil {
+		return nil, err
+	}
+	for _, si := range ci.StoreInfos {
+		if err := EncodeBytes(&buf, []byte(si.Name)); err != nil {
+			return nil, err
+		}
+		if err := EncodeBytes(&buf, si.CommitID.Hash); err != nil {
+			return nil, err
+		}
+	}
+
+	return buf.Bytes(), nil
+}
+
+func (ci *CommitInfo) Unmarshal(buf []byte) error {
+	// Version
+	version, n, err := DecodeUvarint(buf)
+	if err != nil {
+		return err
+	}
+	buf = buf[n:]
+	ci.Version = version
+	// Timestamp
+	timestamp, n, err := DecodeVarint(buf)
+	if err != nil {
+		return err
+	}
+	buf = buf[n:]
+	ci.Timestamp = time.Unix(timestamp/int64(time.Second), timestamp%int64(time.Second))
+	// StoreInfos
+	storeInfosLen, n, err := DecodeVarint(buf)
+	if err != nil {
+		return err
+	}
+	buf = buf[n:]
+	ci.StoreInfos = make([]StoreInfo, storeInfosLen)
+	for i := 0; i < int(storeInfosLen); i++ {
+		// Name
+		name, n, err := DecodeBytes(buf)
+		if err != nil {
+			return err
+		}
+		buf = buf[n:]
+		ci.StoreInfos[i].Name = string(name)
+		// CommitID
+		hash, n, err := DecodeBytes(buf)
+		if err != nil {
+			return err
+		}
+		buf = buf[n:]
+		ci.StoreInfos[i].CommitID = CommitID{
+			Hash:    hash,
+			Version: ci.Version,
+		}
+	}
+
+	return nil
 }
 
 func (ci CommitInfo) CommitID() CommitID {

@@ -58,7 +58,7 @@ require (
 	golang.org/x/exp v0.0.0-20231127185646-65229373498e
 	golang.org/x/sync v0.5.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20231106174013-bbf56f31fb17
-	google.golang.org/grpc v1.59.0
+	google.golang.org/grpc v1.60.0
 	google.golang.org/protobuf v1.31.0
 	gotest.tools/v3 v3.5.1
 	pgregory.net/rapid v1.1.0

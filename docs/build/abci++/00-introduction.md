@@ -1,16 +1,16 @@
 # Introduction
 
-## What is ABCI++?
+## What is ABCI?
 
-ABCI++, Application Blockchain Interface is the interface between CometBFT and the application. Within the release of ABCI 2.0 for the 0.38 CometBFT release there were additional methods introduced.
+ABCI++, Application Blockchain Interface is the interface between CometBFT and the application, more information about ABCI can be found [here](https://docs.cometbft.com/v0.38/spec/abci/). Within the release of ABCI 2.0 for the 0.38 CometBFT release there were additional methods introduced.
 
 The 5 methods introduced during ABCI 2.0 are:
 
-- `PrepareProposal`
-- `ProcessProposal`
-- `ExtendVote`
-- `VerifyVoteExtension`
-- `FinalizeBlock`
+* `PrepareProposal`
+* `ProcessProposal`
+* `ExtendVote`
+* `VerifyVoteExtension`
+* `FinalizeBlock`
 
 
 ## The Flow

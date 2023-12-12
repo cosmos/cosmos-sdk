@@ -198,12 +198,19 @@ func TestAnteHandlerGasMeter(t *testing.T) {
 		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
 			gasMeter := ctx.BlockGasMeter()
 			require.NotNil(t, gasMeter)
-			require.Equal(t, 0, gasMeter.GasConsumed())
+			require.Equal(t, storetypes.Gas(0), gasMeter.GasConsumed())
 			return ctx, nil
 		})
 	}
+	// set the beginBlocker to use some gas
+	beginBlockerOpt := func(bapp *baseapp.BaseApp) {
+		bapp.SetBeginBlocker(func(ctx sdk.Context) (sdk.BeginBlock, error) {
+			ctx.BlockGasMeter().ConsumeGas(1, "beginBlocker gas consumption")
+			return sdk.BeginBlock{}, nil
+		})
+	}
 
-	suite := NewBaseAppSuite(t, anteOpt)
+	suite := NewBaseAppSuite(t, anteOpt, beginBlockerOpt)
 	_, err := suite.baseApp.InitChain(&abci.RequestInitChain{
 		ConsensusParams: &cmtproto.ConsensusParams{},
 	})

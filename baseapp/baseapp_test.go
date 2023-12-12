@@ -192,6 +192,34 @@ func NewBaseAppSuiteWithSnapshots(t *testing.T, cfg SnapshotsConfig, opts ...fun
 	return suite
 }
 
+func TestAnteHandlerGasMeter(t *testing.T) {
+	// run BeginBlock and assert that the gas meter passed into the first Txn is zeroed out
+	anteOpt := func(bapp *baseapp.BaseApp) {
+		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
+			gasMeter := ctx.BlockGasMeter()
+			require.NotNil(t, gasMeter)
+			require.Equal(t, 0, gasMeter.GasConsumed())
+			return ctx, nil
+		})
+	}
+
+	suite := NewBaseAppSuite(t, anteOpt)
+	_, err := suite.baseApp.InitChain(&abci.RequestInitChain{
+		ConsensusParams: &cmtproto.ConsensusParams{},
+	})
+	require.NoError(t, err)
+
+	deliverKey := []byte("deliver-key")
+	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), CounterServerImpl{t, capKey1, deliverKey})
+
+	tx := newTxCounter(t, suite.txConfig, 0, 0)
+	txBytes, err := suite.txConfig.TxEncoder()(tx)
+	require.NoError(t, err)
+	_, err = suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1, Txs: [][]byte{txBytes}})
+	require.NoError(t, err)
+
+}
+
 func TestLoadVersion(t *testing.T) {
 	logger := log.NewTestLogger(t)
 	pruningOpt := baseapp.SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))

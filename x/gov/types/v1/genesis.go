@@ -41,7 +41,7 @@ func ValidateGenesis(data *GenesisState) error {
 
 	var errGroup errgroup.Group
 
-	// verify proposal IDs
+	// weed out duplicate proposals
 	proposalIds := make(map[uint64]struct{})
 	for _, p := range data.Proposals {
 		if _, ok := proposalIds[p.Id]; ok {
@@ -51,7 +51,7 @@ func ValidateGenesis(data *GenesisState) error {
 		proposalIds[p.Id] = struct{}{}
 	}
 
-	// verify deposits
+	// weed out duplicate deposits
 	errGroup.Go(func() error {
 		type depositKey struct {
 			ProposalId uint64
@@ -74,7 +74,7 @@ func ValidateGenesis(data *GenesisState) error {
 		return nil
 	})
 
-	// verify votes
+	// weed out duplicate votes
 	errGroup.Go(func() error {
 		type voteKey struct {
 			ProposalId uint64

@@ -5,8 +5,9 @@ import (
 	"testing"
 	"time"
 
-	"cosmossdk.io/x/auth/ante"
 	"github.com/stretchr/testify/require"
+
+	"cosmossdk.io/x/auth/ante"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"

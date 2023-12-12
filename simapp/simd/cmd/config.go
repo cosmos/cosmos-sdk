@@ -61,7 +61,7 @@ func initClientConfig() (string, interface{}) {
 	// And we set the default config to the custom app template.
 	customClientConfigTemplate := clientconfig.DefaultClientConfigTemplate + strings.TrimSpace(`
 # This is default the gas adjustment factor used in tx commands.
-# It can be overwriten by the --gas-adjustment flag in each tx command.
+# It can be overwritten by the --gas-adjustment flag in each tx command.
 gas-adjustment = {{ .GasConfig.GasAdjustment }}
 `)
 

@@ -130,8 +130,8 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) error {
 		// If an expedited proposal fails, we do not want to update
 		// the deposit at this point since the proposal is converted to regular.
 		// As a result, the deposits are either deleted or refunded in all cases
-		// EXCEPT when an expedited proposal fails.
-		if passes || !(proposal.ProposalType == v1.ProposalType_PROPOSAL_TYPE_EXPEDITED) {
+		// EXCEPT when an expedited or optimistic proposal fails.
+		if passes || !(proposal.ProposalType == v1.ProposalType_PROPOSAL_TYPE_EXPEDITED || proposal.ProposalType == v1.ProposalType_PROPOSAL_TYPE_OPTIMISTIC) {
 			if burnDeposits {
 				err = keeper.DeleteAndBurnDeposits(ctx, proposal.Id)
 			} else {

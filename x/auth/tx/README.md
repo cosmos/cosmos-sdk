@@ -111,7 +111,7 @@ simd query blocks --query 'message.sender=cosmos...' --page 1 --limit 30
 
 #### Transactions
 
-The `x/auth/tx` module provides a convinient CLI command for decoding and encoding transactions.
+The `x/auth/tx` module provides a convenient CLI command for decoding and encoding transactions.
 
 #### `encode`
 

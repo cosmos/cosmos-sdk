@@ -82,7 +82,7 @@ func TestCustomTemplateAndConfig(t *testing.T) {
 
 	customClientConfigTemplate := config.DefaultClientConfigTemplate + `
 # This is the gas adjustment factor used by the tx commands.
-# Sets the default and can be overwriten by the --gas-adjustment flag in tx commands.
+# Sets the default and can be overwritten by the --gas-adjustment flag in tx commands.
 gas-adjustment = {{ .GasConfig.GasAdjustment }}
 # Memo to include in all transactions.
 note = "{{ .Note }}"

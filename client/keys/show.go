@@ -71,10 +71,16 @@ func runShowCmd(cmd *cobra.Command, args []string) (err error) {
 		}
 	} else {
 		pks := make([]cryptotypes.PubKey, len(args))
-		for i, keyref := range args {
-			k, err := fetchKey(clientCtx.Keyring, keyref, clientCtx.AddressCodec)
+		keyFilter := make(map[string]struct{})
+		for i, keyRef := range args {
+			if _, ok := keyFilter[keyRef]; ok {
+				return fmt.Errorf("duplicate keys: %s", keyRef)
+			} else {
+				keyFilter[keyRef] = struct{}{}
+			}
+			k, err := fetchKey(clientCtx.Keyring, keyRef, clientCtx.AddressCodec)
 			if err != nil {
-				return fmt.Errorf("%s is not a valid name or address: %w", keyref, err)
+				return fmt.Errorf("%s is not a valid name or address: %w", keyRef, err)
 			}
 			key, err := k.GetPubKey()
 			if err != nil {

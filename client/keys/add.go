@@ -164,8 +164,14 @@ func runAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *buf
 				return err
 			}
 
-			for i, keyname := range multisigKeys {
-				k, err := kb.Key(keyname)
+			keyFilter := make(map[string]struct{})
+			for i, keyName := range multisigKeys {
+				if _, ok := keyFilter[keyName]; ok {
+					return fmt.Errorf("duplicate multisig keys: %s", keyName)
+				} else {
+					keyFilter[keyName] = struct{}{}
+				}
+				k, err := kb.Key(keyName)
 				if err != nil {
 					return err
 				}

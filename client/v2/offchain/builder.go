@@ -5,23 +5,17 @@ import (
 	"fmt"
 
 	"github.com/cosmos/cosmos-proto/anyutil"
+	"github.com/cosmos/gogoproto/proto"
 	protov2 "google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 
 	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
-	apitxsigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	apitx "cosmossdk.io/api/cosmos/tx/v1beta1"
-	"cosmossdk.io/math"
-	authsigning "cosmossdk.io/x/auth/signing"
-	authtx "cosmossdk.io/x/auth/tx"
 	txsigning "cosmossdk.io/x/tx/signing"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/types"
-	typestx "github.com/cosmos/cosmos-sdk/types/tx"
-	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
 
 type builder struct {
@@ -46,81 +40,6 @@ func newBuilder(cdc codec.Codec) *builder {
 			Signatures: nil,
 		},
 	}
-}
-
-func (b *builder) GetMsgs() []types.Msg {
-	msgs := make([]types.Msg, len(b.tx.Body.Messages))
-	for i, v := range b.tx.Body.Messages {
-		msgs[i] = types.Msg(v)
-	}
-	return msgs
-}
-
-func (b *builder) GetMsgsV2() ([]protov2.Message, error) {
-	_, msgs, err := b.getSigners()
-	return msgs, err
-}
-
-func (b *builder) GetMemo() string {
-	return b.tx.Body.Memo
-}
-
-func (b *builder) GetGas() uint64 {
-	return b.tx.AuthInfo.Fee.GasLimit
-}
-
-func (b *builder) GetFee() types.Coins {
-	coins := make(types.Coins, len(b.tx.AuthInfo.Fee.Amount))
-	for i, v := range b.tx.AuthInfo.Fee.Amount {
-		res, ok := math.NewIntFromString(v.Amount)
-		if !ok {
-			panic("could not convert amount")
-		}
-		coins[i] = types.Coin{
-			Denom:  v.Denom,
-			Amount: res,
-		}
-	}
-	return coins
-}
-
-func (b *builder) FeePayer() []byte {
-	feePayer := b.tx.AuthInfo.Fee.Payer
-	if feePayer != "" {
-		feePayerAddr, err := b.cdc.InterfaceRegistry().SigningContext().AddressCodec().StringToBytes(feePayer)
-		if err != nil {
-			panic(err)
-		}
-		return feePayerAddr
-	}
-	// use first signer as default if no payer specified
-	signers, err := b.GetSigners()
-	if err != nil {
-		panic(err)
-	}
-
-	return signers[0]
-}
-
-func (b *builder) FeeGranter() []byte {
-	feeGranter := b.tx.AuthInfo.Fee.Granter
-	if feeGranter != "" {
-		feeGranterAddr, err := b.cdc.InterfaceRegistry().SigningContext().AddressCodec().StringToBytes(feeGranter)
-		if err != nil {
-			panic(err)
-		}
-
-		return feeGranterAddr
-	}
-	return nil
-}
-
-func (b *builder) GetTimeoutHeight() uint64 {
-	return b.tx.Body.TimeoutHeight
-}
-
-func (b *builder) ValidateBasic() error {
-	return nil
 }
 
 func (b *builder) GetProtoTx() *apitx.Tx {
@@ -211,10 +130,6 @@ func (b *builder) GetSigningTxData() txsigning.TxData {
 	return txData
 }
 
-func (b *builder) GetTx() authsigning.Tx {
-	return b
-}
-
 func (b *builder) GetPubKeys() ([]cryptotypes.PubKey, error) { // If signer already has pubkey in context, this list will have nil in its place
 	signerInfos := b.tx.AuthInfo.SignerInfos
 	pks := make([]cryptotypes.PubKey, len(signerInfos))
@@ -240,7 +155,7 @@ func (b *builder) GetPubKeys() ([]cryptotypes.PubKey, error) { // If signer alre
 	return pks, nil
 }
 
-func (b *builder) GetSignaturesV2() ([]signing.SignatureV2, error) {
+func (b *builder) GetSignaturesV2() ([]SignatureV2, error) {
 	signerInfos := b.tx.AuthInfo.SignerInfos
 	sigs := b.tx.Signatures
 	pubKeys, err := b.GetPubKeys()
@@ -248,12 +163,12 @@ func (b *builder) GetSignaturesV2() ([]signing.SignatureV2, error) {
 		return nil, err
 	}
 	n := len(signerInfos)
-	res := make([]signing.SignatureV2, n)
+	res := make([]SignatureV2, n)
 
 	for i, si := range signerInfos {
 		// handle nil signatures (in case of simulation)
 		if si.ModeInfo == nil {
-			res[i] = signing.SignatureV2{
+			res[i] = SignatureV2{
 				PubKey: pubKeys[i],
 			}
 		} else {
@@ -264,7 +179,7 @@ func (b *builder) GetSignaturesV2() ([]signing.SignatureV2, error) {
 			}
 			// sequence number is functionally a transaction nonce and referred to as such in the SDK
 			nonce := si.GetSequence()
-			res[i] = signing.SignatureV2{
+			res[i] = SignatureV2{
 				PubKey:   pubKeys[i],
 				Data:     sigData,
 				Sequence: nonce,
@@ -323,7 +238,7 @@ func (b *builder) getSigners() ([][]byte, []protov2.Message, error) {
 	return signers, msgsv2, nil
 }
 
-func (b *builder) setMsgs(msgs ...types.Msg) error {
+func (b *builder) setMsgs(msgs ...proto.Message) error {
 	anys := make([]*anypb.Any, len(msgs))
 	for i, msg := range msgs {
 		protoMsg, ok := msg.(protov2.Message)
@@ -336,7 +251,7 @@ func (b *builder) setMsgs(msgs ...types.Msg) error {
 			return err
 		}
 		anys[i] = &anypb.Any{
-			TypeUrl: types.MsgTypeURL(msg),
+			TypeUrl: codectypes.MsgTypeURL(msg),
 			Value:   bz,
 		}
 	}
@@ -344,18 +259,15 @@ func (b *builder) setMsgs(msgs ...types.Msg) error {
 	return nil
 }
 
-func (b *builder) SetSignatures(signatures ...signing.SignatureV2) error {
+func (b *builder) SetSignatures(signatures ...SignatureV2) error {
 	n := len(signatures)
 	signerInfos := make([]*apitx.SignerInfo, n)
 	rawSigs := make([][]byte, n)
 
 	for i, sig := range signatures {
-		var mi *typestx.ModeInfo
-		mi, rawSigs[i] = authtx.SignatureDataToModeInfoAndSig(sig.Data)
-		modeinfo, err := castModeInfo(mi)
-		if err != nil {
-			return err
-		}
+		var mi *apitx.ModeInfo
+		mi, rawSigs[i] = b.signatureDataToModeInfoAndSig(sig.Data)
+
 		pubKey, err := codectypes.NewAnyWithValue(sig.PubKey)
 		if err != nil {
 			return err
@@ -365,7 +277,7 @@ func (b *builder) SetSignatures(signatures ...signing.SignatureV2) error {
 				TypeUrl: pubKey.TypeUrl,
 				Value:   pubKey.Value,
 			},
-			ModeInfo: modeinfo,
+			ModeInfo: mi,
 			Sequence: sig.Sequence,
 		}
 	}
@@ -376,27 +288,57 @@ func (b *builder) SetSignatures(signatures ...signing.SignatureV2) error {
 	return nil
 }
 
-// TODO: cast multisig
-func castModeInfo(modeinfo *typestx.ModeInfo) (*apitx.ModeInfo, error) {
-	mi, ok := modeinfo.GetSum().(*typestx.ModeInfo_Single_)
-	if !ok {
-		return nil, errors.New("")
+// SignatureDataToModeInfoAndSig converts a SignatureData to a ModeInfo and raw bytes signature
+func (b *builder) signatureDataToModeInfoAndSig(data SignatureData) (*apitx.ModeInfo, []byte) {
+	if data == nil {
+		return nil, nil
 	}
-	return &apitx.ModeInfo{
-		Sum: &apitx.ModeInfo_Single_{
-			Single: &apitx.ModeInfo_Single{
-				Mode: apitxsigning.SignMode(mi.Single.Mode),
+
+	switch data := data.(type) {
+	case *SingleSignatureData:
+		return &apitx.ModeInfo{
+			Sum: &apitx.ModeInfo_Single_{
+				Single: &apitx.ModeInfo_Single{Mode: data.SignMode},
 			},
-		},
-	}, nil
+		}, data.Signature
+
+	// TODO: multisig
+	// case *signing.MultiSignatureData:
+	//	n := len(data.Signatures)
+	//	modeInfos := make([]*apitx.ModeInfo, n)
+	//	sigs := make([][]byte, n)
+	//
+	//	for i, d := range data.Signatures {
+	//		modeInfos[i], sigs[i] = SignatureDataToModeInfoAndSig(d)
+	//	}
+	//
+	//	multisig := cryptotypes.MultiSignature{
+	//		Signatures: sigs,
+	//	}
+	//	sig, err := multisig.Marshal()
+	//	if err != nil {
+	//		panic(err)
+	//	}
+	//
+	//	return &apitx.ModeInfo{
+	//		Sum: &apitx.ModeInfo_Multi_{
+	//			Multi: &apitx.ModeInfo_Multi{
+	//				Bitarray:  data.BitArray,
+	//				ModeInfos: modeInfos,
+	//			},
+	//		},
+	//	}, sig
+	default:
+		panic(fmt.Sprintf("unexpected signature data type %T", data))
+	}
 }
 
 // modeInfoAndSigToSignatureData converts a ModeInfo and raw bytes signature to a SignatureData
-func modeInfoAndSigToSignatureData(modeInfo *apitx.ModeInfo, sig []byte) (signing.SignatureData, error) {
+func modeInfoAndSigToSignatureData(modeInfo *apitx.ModeInfo, sig []byte) (SignatureData, error) {
 	switch modeInfoType := modeInfo.Sum.(type) {
 	case *apitx.ModeInfo_Single_:
-		return &signing.SingleSignatureData{
-			SignMode:  signing.SignMode(modeInfoType.Single.Mode),
+		return &SingleSignatureData{
+			SignMode:  modeInfoType.Single.Mode,
 			Signature: sig,
 		}, nil
 

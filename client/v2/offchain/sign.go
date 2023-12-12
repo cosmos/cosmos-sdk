@@ -4,14 +4,17 @@ import (
 	"context"
 
 	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/types/known/anypb"
 
+	apisigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	apitx "cosmossdk.io/api/cosmos/tx/v1beta1"
 	"cosmossdk.io/client/v2/internal/offchain"
 	authsigning "cosmossdk.io/x/auth/signing"
+	txsigning "cosmossdk.io/x/tx/signing"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/types"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/version"
 )
@@ -31,17 +34,17 @@ func noEncoding(digest []byte) (string, error) {
 	return string(digest), nil
 }
 
-func getSignMode(signModeStr string) signing.SignMode {
-	signMode := signing.SignMode_SIGN_MODE_UNSPECIFIED
+func getSignMode(signModeStr string) apisigning.SignMode {
+	signMode := apisigning.SignMode_SIGN_MODE_UNSPECIFIED
 	switch signModeStr {
 	case flags.SignModeDirect:
-		signMode = signing.SignMode_SIGN_MODE_DIRECT
+		signMode = apisigning.SignMode_SIGN_MODE_DIRECT
 	case flags.SignModeLegacyAminoJSON:
-		signMode = signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON
+		signMode = apisigning.SignMode_SIGN_MODE_LEGACY_AMINO_JSON
 	case flags.SignModeDirectAux:
-		signMode = signing.SignMode_SIGN_MODE_DIRECT_AUX
+		signMode = apisigning.SignMode_SIGN_MODE_DIRECT_AUX
 	case flags.SignModeTextual:
-		signMode = signing.SignMode_SIGN_MODE_TEXTUAL
+		signMode = apisigning.SignMode_SIGN_MODE_TEXTUAL
 	}
 	return signMode
 }
@@ -60,7 +63,7 @@ func Sign(ctx client.Context, rawBytes []byte, fromName, signMode string) (strin
 	return marshalOffChainTx(tx, true, "  ")
 }
 
-func sign(ctx client.Context, fromName, digest string, signMode signing.SignMode) (*apitx.Tx, error) {
+func sign(ctx client.Context, fromName, digest string, signMode apisigning.SignMode) (*apitx.Tx, error) {
 	keybase := ctx.Keyring
 	r, err := keybase.Key(fromName)
 	if err != nil {
@@ -72,9 +75,14 @@ func sign(ctx client.Context, fromName, digest string, signMode signing.SignMode
 		return nil, err
 	}
 
+	addr, err := ctx.AddressCodec.BytesToString(pubKey.Address())
+	if err != nil {
+		return nil, err
+	}
+
 	msg := &offchain.MsgSignArbitraryData{
 		AppDomain:     version.AppName,
-		SignerAddress: types.AccAddress(pubKey.Address()).String(),
+		SignerAddress: addr,
 		Data:          digest,
 	}
 
@@ -85,45 +93,47 @@ func sign(ctx client.Context, fromName, digest string, signMode signing.SignMode
 	}
 
 	signerData := authsigning.SignerData{
-		Address:       types.AccAddress(pubKey.Address()).String(),
+		Address:       addr,
 		ChainID:       ExpectedChainID,
 		AccountNumber: ExpectedAccountNumber,
 		Sequence:      ExpectedSequence,
 		PubKey:        pubKey,
 	}
-	sigData := signing.SingleSignatureData{
+
+	sigData := SingleSignatureData{
 		SignMode:  signMode,
 		Signature: nil,
 	}
-	sig := signing.SignatureV2{
+
+	sig := SignatureV2{
 		PubKey:   pubKey,
 		Data:     &sigData,
 		Sequence: ExpectedSequence,
 	}
 
-	sigs := []signing.SignatureV2{sig}
+	sigs := []SignatureV2{sig}
 	err = txBuilder.SetSignatures(sigs...)
 	if err != nil {
 		return nil, err
 	}
 
-	bytesToSign, err := authsigning.GetSignBytesAdapter(
+	bytesToSign, err := getSignBytes(
 		context.Background(), ctx.TxConfig.SignModeHandler(),
-		signMode, signerData, txBuilder.GetTx())
+		signMode, signerData, txBuilder)
 	if err != nil {
 		return nil, err
 	}
 
-	signedBytes, _, err := keybase.Sign(fromName, bytesToSign, signMode)
+	signedBytes, _, err := keybase.Sign(fromName, bytesToSign, signing.SignMode(signMode))
 	if err != nil {
 		return nil, err
 	}
 
-	sigData = signing.SingleSignatureData{
+	sigData = SingleSignatureData{
 		SignMode:  signMode,
 		Signature: signedBytes,
 	}
-	sig = signing.SignatureV2{
+	sig = SignatureV2{
 		PubKey:   pubKey,
 		Data:     &sigData,
 		Sequence: ExpectedSequence,
@@ -134,6 +144,33 @@ func sign(ctx client.Context, fromName, digest string, signMode signing.SignMode
 	}
 
 	return txBuilder.GetProtoTx(), nil
+}
+
+func getSignBytes(ctx context.Context,
+	handlerMap *txsigning.HandlerMap,
+	mode apisigning.SignMode,
+	signerData authsigning.SignerData,
+	tx authsigning.V2AdaptableTx,
+) ([]byte, error) {
+	txData := tx.GetSigningTxData()
+
+	anyPk, err := codectypes.NewAnyWithValue(signerData.PubKey)
+	if err != nil {
+		return nil, err
+	}
+
+	txSignerData := txsigning.SignerData{
+		ChainID:       signerData.ChainID,
+		AccountNumber: signerData.AccountNumber,
+		Sequence:      signerData.Sequence,
+		Address:       signerData.Address,
+		PubKey: &anypb.Any{
+			TypeUrl: anyPk.TypeUrl,
+			Value:   anyPk.Value,
+		},
+	}
+
+	return handlerMap.GetSignBytes(ctx, mode, txSignerData, txData)
 }
 
 func marshalOffChainTx(tx *apitx.Tx, emitUnpopulated bool, indent string) (string, error) {

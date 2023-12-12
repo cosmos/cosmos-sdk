@@ -25,8 +25,8 @@ func OffChain() *cobra.Command {
 	)
 
 	cmd.PersistentFlags().String(flags.FlagOutput, "text", "Output format (text|json)")
+	cmd.PersistentFlags().String(flags.FlagSignMode, "direct", "Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature")
 	flags.AddKeyringFlags(cmd.PersistentFlags())
-
 	return cmd
 }
 
@@ -38,20 +38,20 @@ func SignFile() *cobra.Command {
 		Long:  "Sign a file using a key.",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
-			if err != nil {
-				return err
-			}
+			clientCtx := client.GetClientContextFromCmd(cmd)
 
 			bz, err := os.ReadFile(args[1])
 			if err != nil {
 				return err
 			}
 
-			signedTx, err := Sign(clientCtx, bz, args[0], clientCtx.SignModeStr)
+			signmode, _ := cmd.Flags().GetString(flags.FlagSignMode)
+
+			signedTx, err := Sign(clientCtx, bz, args[0], signmode)
 			if err != nil {
 				return err
 			}
+
 			cmd.Println(signedTx)
 			return nil
 		},

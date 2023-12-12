@@ -6,6 +6,7 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/require"
 
+	apitxsigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	"cosmossdk.io/x/auth/tx"
 	txmodule "cosmossdk.io/x/auth/tx/config"
 	"cosmossdk.io/x/tx/signing"
@@ -66,7 +67,7 @@ func Test_sign(t *testing.T) {
 		ctx      client.Context
 		fromName string
 		digest   string
-		signMode signingtypes.SignMode
+		signMode apitxsigning.SignMode
 	}
 	tests := []struct {
 		name string
@@ -76,36 +77,39 @@ func Test_sign(t *testing.T) {
 			name: "signMode direct",
 			args: args{
 				ctx: client.Context{
-					Keyring:  k,
-					TxConfig: MakeTestTxConfig(),
+					Keyring:      k,
+					TxConfig:     MakeTestTxConfig(),
+					AddressCodec: address.NewBech32Codec("cosmos"),
 				},
 				fromName: "test",
 				digest:   "Hello world!",
-				signMode: signingtypes.SignMode_SIGN_MODE_DIRECT,
+				signMode: apitxsigning.SignMode_SIGN_MODE_DIRECT,
 			},
 		},
 		{
 			name: "signMode textual",
 			args: args{
 				ctx: client.Context{
-					Keyring:  k,
-					TxConfig: MakeTestTxConfig(),
+					Keyring:      k,
+					TxConfig:     MakeTestTxConfig(),
+					AddressCodec: address.NewBech32Codec("cosmos"),
 				},
 				fromName: "test",
 				digest:   "Hello world!",
-				signMode: signingtypes.SignMode_SIGN_MODE_TEXTUAL,
+				signMode: apitxsigning.SignMode_SIGN_MODE_TEXTUAL,
 			},
 		},
 		{
 			name: "signMode LegacyAmino",
 			args: args{
 				ctx: client.Context{
-					Keyring:  k,
-					TxConfig: MakeTestTxConfig(),
+					Keyring:      k,
+					TxConfig:     MakeTestTxConfig(),
+					AddressCodec: address.NewBech32Codec("cosmos"),
 				},
 				fromName: "test",
 				digest:   "Hello world!",
-				signMode: signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
+				signMode: apitxsigning.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
 			},
 		},
 	}

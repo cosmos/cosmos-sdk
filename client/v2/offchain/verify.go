@@ -15,7 +15,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/types"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 )
 
 func Verify(ctx client.Context, digest []byte) error {
@@ -54,17 +54,18 @@ func verify(ctx client.Context, tx *apitx.Tx) error {
 	}
 
 	for i, sig := range sigs {
-		var (
-			pubKey  = sig.PubKey
-			sigAddr = types.AccAddress(pubKey.Address())
-		)
-
-		if !bytes.Equal(sigAddr, signers[i]) {
+		pubKey := sig.PubKey
+		if !bytes.Equal(pubKey.Address(), signers[i]) {
 			return errors.New("signature does not match its respective signer")
 		}
 
+		addr, err := ctx.AddressCodec.BytesToString(pubKey.Address())
+		if err != nil {
+			return err
+		}
+
 		signingData := authsigning.SignerData{
-			Address:       sigAddr.String(),
+			Address:       addr,
 			ChainID:       ExpectedChainID,
 			AccountNumber: ExpectedAccountNumber,
 			Sequence:      ExpectedSequence,
@@ -87,10 +88,52 @@ func verify(ctx client.Context, tx *apitx.Tx) error {
 		}
 
 		txData := sigTx.GetSigningTxData()
-		err = authsigning.VerifySignature(context.Background(), pubKey, txSignerData, sig.Data, signModeHandler, txData)
+		err = verifySignature(context.Background(), pubKey, txSignerData, sig.Data, signModeHandler, txData)
 		if err != nil {
 			return err
 		}
 	}
 	return nil
+}
+
+// verifySignature verifies a transaction signature contained in SignatureData abstracting over different signing
+// modes. It differs from VerifySignature in that it uses the new txsigning.TxData interface in x/tx.
+func verifySignature(
+	ctx context.Context,
+	pubKey cryptotypes.PubKey,
+	signerData txsigning.SignerData,
+	signatureData SignatureData,
+	handler *txsigning.HandlerMap,
+	txData txsigning.TxData,
+) error {
+	switch data := signatureData.(type) {
+	case *SingleSignatureData:
+		signBytes, err := handler.GetSignBytes(ctx, data.SignMode, signerData, txData)
+		if err != nil {
+			return err
+		}
+		if !pubKey.VerifySignature(signBytes, data.Signature) {
+			return fmt.Errorf("unable to verify single signer signature")
+		}
+		return nil
+
+	//case *signing.MultiSignatureData:
+	//	multiPK, ok := pubKey.(multisig.PubKey)
+	//	if !ok {
+	//		return fmt.Errorf("expected %T, got %T", (multisig.PubKey)(nil), pubKey)
+	//	}
+	//	err := multiPK.VerifyMultisignature(func(mode signing.SignMode) ([]byte, error) {
+	//		signMode, err := internalSignModeToAPI(mode)
+	//		if err != nil {
+	//			return nil, err
+	//		}
+	//		return handler.GetSignBytes(ctx, signMode, signerData, txData)
+	//	}, data)
+	//	if err != nil {
+	//		return err
+	//	}
+	//	return nil
+	default:
+		return fmt.Errorf("unexpected SignatureData %T", signatureData)
+	}
 }

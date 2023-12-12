@@ -17,7 +17,6 @@ import (
 	pvm "github.com/cometbft/cometbft/privval"
 	"github.com/cometbft/cometbft/proxy"
 	rpchttp "github.com/cometbft/cometbft/rpc/client/http"
-	"github.com/cometbft/cometbft/rpc/client/local"
 	cmttypes "github.com/cometbft/cometbft/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/hashicorp/go-metrics"
@@ -41,6 +40,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/mempool"
 	"github.com/cosmos/cosmos-sdk/version"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
+	rollconf "github.com/rollkit/rollkit/config"
+	rollnode "github.com/rollkit/rollkit/node"
+	rollrpc "github.com/rollkit/rollkit/rpc"
+	rolltypes "github.com/rollkit/rollkit/types"
 )
 
 const (
@@ -226,6 +229,7 @@ is performed. Note, when enabled, gRPC will also be automatically enabled.
 
 	// add support for all CometBFT-specific command line options
 	cmtcmd.AddNodeFlags(cmd)
+	rollconf.AddFlags(cmd)
 
 	if opts.AddFlags != nil {
 		opts.AddFlags(cmd)
@@ -378,9 +382,103 @@ func startInProcess(svrCtx *Context, svrCfg serverconfig.Config, clientCtx clien
 	return g.Wait()
 }
 
-// TODO: Move nodeKey into being created within the function.
-func startCmtNode(
+func startDynamicServer(ctx context.Context, cfg *cmtcfg.Config, app types.Application, svrCtx *Context, serverType string) (interface{}, func(), error) {
+	var server interface{}
+	var cleanupFn func()
+
+	if serverType == "rollkit" {
+		// Create and start the rollkit server
+		rollkitServer, cleanupFn, err := createRollkitServer(ctx, cfg, app, svrCtx)
+		if err != nil {
+			return nil, cleanupFn, err
+		}
+		server = rollkitServer
+	} else {
+		cometServer, cleanupFn, err := createCometServer(ctx, cfg, app, svrCtx)
+		if err != nil {
+			return nil, cleanupFn, err
+		}
+		server = cometServer
+	}
+
+	return server, cleanupFn, nil
+}
+
+func createRollkitServer(
 	ctx context.Context,
+	cfg *cmtcfg.Config,
+	app types.Application,
+	svrCtx *Context,
+) (*rollrpc.Server, func(), error) {
+	nodeKey, err := p2p.LoadOrGenNodeKey(cfg.NodeKeyFile())
+	if err != nil {
+		return nil, nil, err
+	}
+
+	svrCtx.Logger.Info("starting node with Rollkit in-process")
+
+	pval := pvm.LoadOrGenFilePV(cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile())
+
+	p2pKey, err := rolltypes.GetNodeKey(nodeKey)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	signingKey, err := rolltypes.GetNodeKey(&p2p.NodeKey{PrivKey: pval.Key.PrivKey})
+	if err != nil {
+		return nil, nil, err
+	}
+
+	nodeConfig := rollconf.NodeConfig{}
+	err = nodeConfig.GetViperConfig(svrCtx.Viper)
+	if err != nil {
+		return nil, nil, err
+	}
+	rollconf.GetNodeConfig(&nodeConfig, cfg)
+	err = rollconf.TranslateAddresses(&nodeConfig)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	genDoc, err := getGenDocProvider(cfg)()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	cmtApp := NewCometABCIWrapper(app)
+	tmNode, err := rollnode.NewNode(
+		ctx,
+		nodeConfig,
+		p2pKey,
+		signingKey,
+		proxy.NewLocalClientCreator(cmtApp),
+		genDoc,
+		servercmtlog.CometLoggerWrapper{Logger: svrCtx.Logger},
+	)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	server := *rollrpc.NewServer(tmNode, cfg.RPC, servercmtlog.CometLoggerWrapper{Logger: svrCtx.Logger})
+	err = server.Start()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	if err := tmNode.Start(); err != nil {
+		return nil, nil, err
+	}
+
+	cleanupFn := func() {
+		if tmNode != nil && tmNode.IsRunning() {
+			_ = tmNode.Stop()
+		}
+	}
+
+	return &server, cleanupFn, nil
+}
+
+func createCometServer(ctx context.Context,
 	cfg *cmtcfg.Config,
 	app types.Application,
 	svrCtx *Context,

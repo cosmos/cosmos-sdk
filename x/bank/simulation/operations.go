@@ -107,7 +107,7 @@ func SimulateMsgSendToModuleAccount(
 	txGen client.TxConfig,
 	ak types.AccountKeeper,
 	bk keeper.Keeper,
-	moduleAccCount int,
+	moduleAccount int,
 ) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
@@ -115,7 +115,7 @@ func SimulateMsgSendToModuleAccount(
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		msgType := sdk.MsgTypeURL(&types.MsgSend{})
 		from := accs[0]
-		to := getModuleAccounts(ak, ctx, moduleAccCount)[0]
+		to := getModuleAccounts(ak, ctx, moduleAccount)[0]
 
 		spendable := bk.SpendableCoins(ctx, from.Address)
 		coins := simtypes.RandSubsetCoins(r, spendable)
@@ -290,7 +290,7 @@ func SimulateMsgMultiSendToModuleAccount(
 	txGen client.TxConfig,
 	ak types.AccountKeeper,
 	bk keeper.Keeper,
-	moduleAccCount int,
+	moduleAccount int,
 ) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
@@ -298,7 +298,7 @@ func SimulateMsgMultiSendToModuleAccount(
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		msgType := sdk.MsgTypeURL(&types.MsgMultiSend{})
 		inputs := make([]types.Input, 2)
-		outputs := make([]types.Output, moduleAccCount)
+		outputs := make([]types.Output, moduleAccount)
 		// collect signer privKeys
 		privs := make([]cryptotypes.PrivKey, len(inputs))
 		var totalSentCoins sdk.Coins
@@ -313,7 +313,7 @@ func SimulateMsgMultiSendToModuleAccount(
 		if err := bk.IsSendEnabledCoins(ctx, totalSentCoins...); err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, msgType, err.Error()), nil, nil
 		}
-		moduleAccounts := getModuleAccounts(ak, ctx, moduleAccCount)
+		moduleAccounts := getModuleAccounts(ak, ctx, moduleAccount)
 		for i := range outputs {
 			var outCoins sdk.Coins
 			// split total sent coins into random subsets for output
@@ -437,10 +437,10 @@ func randomSendFields(
 	return from, to, sendCoins, false
 }
 
-func getModuleAccounts(ak types.AccountKeeper, ctx sdk.Context, moduleAccCount int) []simtypes.Account {
-	moduleAccounts := make([]simtypes.Account, moduleAccCount)
+func getModuleAccounts(ak types.AccountKeeper, ctx sdk.Context, moduleAccount int) []simtypes.Account {
+	moduleAccounts := make([]simtypes.Account, moduleAccount)
 
-	for i := 0; i < moduleAccCount; i++ {
+	for i := 0; i < moduleAccount; i++ {
 		acc := ak.GetModuleAccount(ctx, distributionModuleName)
 		mAcc := simtypes.Account{
 			Address: acc.GetAddress(),

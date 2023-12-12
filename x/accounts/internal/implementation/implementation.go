@@ -108,7 +108,7 @@ type Implementation struct {
 // MessageSchema defines the schema of a message.
 // A message can also define a state schema.
 type MessageSchema struct {
-	// Name identifies the message name, this must be queriable from some reflection service.
+	// Name identifies the message name, this must be queryable from some reflection service.
 	Name string
 	// New is used to create a new message instance for the schema.
 	New func() ProtoMsg

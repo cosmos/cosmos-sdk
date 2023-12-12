@@ -19,9 +19,9 @@ The 5 methods introduced during ABCI 2.0 are:
 
 Based on their voting power, CometBFT chooses a block proposer and calls `PrepareProposal` on the block proposer's application (Cosmos SDK). The selected block proposer is responsible for collecting outstanding transactions from the mempool, adhering to the application's specifications. The application can enforce custom transaction ordering and incorporate additional transactions, potentially generated from vote extensions in the previous block.
 
-To perform this manipulation on the application side, a custom handler is implemented. If no custom handler exists, all transactions are validated. Please see [this](https://github.com/fatal-fruit/abci-workshop) tutorial for more information on custom handlers.
+To perform this manipulation on the application side, a custom handler must be implemented. By default, the Cosmos SDK provides `PrepareProposalHandler`, used in conjunction with an application specific mempool. A custom handler can be written by application developer, if a noop handler provided, all transactions are considered valid. Please see [this](https://github.com/fatal-fruit/abci-workshop) tutorial for more information on custom handlers.
 
-Please note that vote extensions will only be available on the following height in which vote extensions are enabled. To see more details on vote extensions please see [here](https://docs.cosmos.network/main/build/abci++/01-vote-extensions).
+Please note that vote extensions will only be available on the following height in which vote extensions are enabled. More information about vote extensions can be found [here](https://docs.cosmos.network/main/build/abci/03-vote-extensions.md).
 
 After creating the proposal, the proposer returns it to CometBFT.
 

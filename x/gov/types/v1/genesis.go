@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 
+	"golang.org/x/sync/errgroup"
+
 	"github.com/cosmos/cosmos-sdk/codec/types"
 )
 
@@ -37,6 +39,8 @@ func ValidateGenesis(data *GenesisState) error {
 		return errors.New("starting proposal id must be greater than 0")
 	}
 
+	var errGroup errgroup.Group
+
 	// verify proposal IDs
 	proposalIds := make(map[uint64]struct{})
 	for _, p := range data.Proposals {
@@ -48,44 +52,57 @@ func ValidateGenesis(data *GenesisState) error {
 	}
 
 	// verify deposits
-	type depositKey struct {
-		ProposalId uint64
-		Depositor  string
-	}
-	depositIds := make(map[depositKey]struct{})
-	for _, d := range data.Deposits {
-		if _, ok := proposalIds[d.ProposalId]; !ok {
-			return fmt.Errorf("deposit %v has non-existent proposal id: %d", d, d.ProposalId)
+	errGroup.Go(func() error {
+		type depositKey struct {
+			ProposalId uint64
+			Depositor  string
+		}
+		depositIds := make(map[depositKey]struct{})
+		for _, d := range data.Deposits {
+			if _, ok := proposalIds[d.ProposalId]; !ok {
+				return fmt.Errorf("deposit %v has non-existent proposal id: %d", d, d.ProposalId)
+			}
+
+			dk := depositKey{d.ProposalId, d.Depositor}
+			if _, ok := depositIds[dk]; ok {
+				return fmt.Errorf("duplicate deposit: %v", d)
+			}
+
+			depositIds[dk] = struct{}{}
 		}
 
-		dk := depositKey{d.ProposalId, d.Depositor}
-		if _, ok := depositIds[dk]; ok {
-			return fmt.Errorf("duplicate deposit: %v", d)
-		}
-
-		depositIds[dk] = struct{}{}
-	}
+		return nil
+	})
 
 	// verify votes
-	type voteKey struct {
-		ProposalId uint64
-		Voter      string
-	}
-	voteIds := make(map[voteKey]struct{})
-	for _, v := range data.Votes {
-		if _, ok := proposalIds[v.ProposalId]; !ok {
-			return fmt.Errorf("vote %v has non-existent proposal id: %d", v, v.ProposalId)
+	errGroup.Go(func() error {
+		type voteKey struct {
+			ProposalId uint64
+			Voter      string
+		}
+		voteIds := make(map[voteKey]struct{})
+		for _, v := range data.Votes {
+			if _, ok := proposalIds[v.ProposalId]; !ok {
+				return fmt.Errorf("vote %v has non-existent proposal id: %d", v, v.ProposalId)
+			}
+
+			vk := voteKey{v.ProposalId, v.Voter}
+			if _, ok := voteIds[vk]; ok {
+				return fmt.Errorf("duplicate vote: %v", v)
+			}
+
+			voteIds[vk] = struct{}{}
 		}
 
-		vk := voteKey{v.ProposalId, v.Voter}
-		if _, ok := voteIds[vk]; ok {
-			return fmt.Errorf("duplicate vote: %v", v)
-		}
+		return nil
+	})
 
-		voteIds[vk] = struct{}{}
-	}
+	// verify params
+	errGroup.Go(func() error {
+		return data.Params.ValidateBasic()
+	})
 
-	return data.Params.ValidateBasic()
+	return errGroup.Wait()
 }
 
 var _ types.UnpackInterfacesMessage = GenesisState{}

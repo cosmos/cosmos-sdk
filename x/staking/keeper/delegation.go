@@ -216,10 +216,12 @@ func (k Keeper) GetDelegatorUnbonding(ctx context.Context, delegator sdk.AccAddr
 func (k Keeper) GetDelegatorBonded(ctx context.Context, delegator sdk.AccAddress) (math.Int, error) {
 	bonded := math.LegacyZeroDec()
 
+	var iterErr error
 	err := k.IterateDelegatorDelegations(ctx, delegator, func(delegation types.Delegation) bool {
 		validatorAddr, err := k.validatorAddressCodec.StringToBytes(delegation.ValidatorAddress)
 		if err != nil {
-			panic(err) // shouldn't happen
+			iterErr = err
+			return true
 		}
 		validator, err := k.GetValidator(ctx, validatorAddr)
 		if err == nil {
@@ -229,6 +231,9 @@ func (k Keeper) GetDelegatorBonded(ctx context.Context, delegator sdk.AccAddress
 		}
 		return false
 	})
+	if iterErr != nil {
+		return bonded.RoundInt(), iterErr
+	}
 	return bonded.RoundInt(), err
 }
 
@@ -717,7 +722,7 @@ func (k Keeper) Delegate(
 	// all non bonded
 	if subtractAccount {
 		if tokenSrc == types.Bonded {
-			panic("delegation token source cannot be bonded")
+			return math.LegacyZeroDec(), fmt.Errorf("delegation token source cannot be bonded; expected Unbonded or Unbonding, got Bonded")
 		}
 
 		var sendName string
@@ -728,7 +733,7 @@ func (k Keeper) Delegate(
 		case validator.IsUnbonding(), validator.IsUnbonded():
 			sendName = types.NotBondedPoolName
 		default:
-			panic("invalid validator status")
+			return math.LegacyZeroDec(), fmt.Errorf("invalid validator status: %v", validator.Status)
 		}
 
 		bondDenom, err := k.BondDenom(ctx)
@@ -760,7 +765,7 @@ func (k Keeper) Delegate(
 				return math.LegacyDec{}, err
 			}
 		default:
-			panic("unknown token source bond status")
+			return math.LegacyZeroDec(), fmt.Errorf("unknown token source bond status: %v", tokenSrc)
 		}
 	}
 
@@ -832,9 +837,12 @@ func (k Keeper) Unbond(
 		validator.TokensFromShares(delegation.Shares).TruncateInt().LT(validator.MinSelfDelegation) {
 		err = k.jailValidator(ctx, validator)
 		if err != nil {
-			return amount, err
+			return amount, fmt.Errorf("failed to jail validator: %v", err)
 		}
-		validator = k.mustGetValidator(ctx, valbz)
+		validator, err = k.GetValidator(ctx, valbz)
+		if err != nil {
+			return amount, fmt.Errorf("validator record not found for address: %X", valbz)
+		}
 	}
 
 	if delegation.Shares.IsZero() {
@@ -906,7 +914,7 @@ func (k Keeper) getBeginInfo(
 		return validator.UnbondingTime, validator.UnbondingHeight, false, nil
 
 	default:
-		panic(fmt.Sprintf("unknown validator status: %s", validator.Status))
+		return completionTime, height, false, fmt.Errorf("unknown validator status: %v", validator.Status)
 	}
 }
 

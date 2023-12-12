@@ -116,7 +116,7 @@ func (k Keeper) BlockValidatorUpdates(ctx context.Context) ([]abci.ValidatorUpda
 		)
 	}
 
-	err = k.UpdateAllMaturedConsKeyRotatedKeys(sdkCtx, sdkCtx.HeaderInfo().Time)
+	err = k.PurgeAllMaturedConsKeyRotatedKeys(sdkCtx, sdkCtx.HeaderInfo().Time)
 	if err != nil {
 		return nil, err
 	}

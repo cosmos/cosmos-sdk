@@ -52,7 +52,7 @@ func (k Keeper) setConsPubKeyRotationHistory(
 	return k.setConsKeyQueue(ctx, queueTime, valAddr)
 }
 
-// This method gets called from the `ApplyAndReturnValidatorSetUpdates`(from endblocker) method.
+// This method gets called from the `ApplyAndReturnValidatorSetUpdates` method during EndBlock.
 //
 // This method makes the relative state changes to update the keys,
 // also maintains a map with old to new conskey rotation which is needed to retrieve the old conskey.
@@ -123,7 +123,7 @@ func (k Keeper) setNewToOldConsKeyMap(ctx context.Context, oldPk, newPk sdk.Cons
 	return nil
 }
 
-func (k Keeper) GetNewToOldConsKeyMap(ctx context.Context, newPk sdk.ConsAddress) (sdk.ConsAddress, error) {
+func (k Keeper) ValidatorIdentifier(ctx context.Context, newPk sdk.ConsAddress) (sdk.ConsAddress, error) {
 	pk, err := k.NewToOldConsKeyMap.Get(ctx, newPk)
 	if err != nil && !errors.Is(err, collections.ErrNotFound) {
 		return nil, err
@@ -176,8 +176,8 @@ func bytesSliceExists(sliceList [][]byte, targetBytes []byte) bool {
 	return false
 }
 
-// UpdateAllMaturedConsKeyRotatedKeys udpates all the matured key rotations.
-func (k Keeper) UpdateAllMaturedConsKeyRotatedKeys(ctx sdk.Context, maturedTime time.Time) error {
+// PurgeAllMaturedConsKeyRotatedKeys udpates all the matured key rotations.
+func (k Keeper) PurgeAllMaturedConsKeyRotatedKeys(ctx sdk.Context, maturedTime time.Time) error {
 	maturedRotatedValAddrs, err := k.GetAllMaturedRotatedKeys(ctx, maturedTime)
 	if err != nil {
 		return err

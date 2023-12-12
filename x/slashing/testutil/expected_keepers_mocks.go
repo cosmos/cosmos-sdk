@@ -225,21 +225,6 @@ func (mr *MockStakingKeeperMockRecorder) GetAllValidators(ctx interface{}) *gomo
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllValidators", reflect.TypeOf((*MockStakingKeeper)(nil).GetAllValidators), ctx)
 }
 
-// GetNewToOldConsKeyMap mocks base method.
-func (m *MockStakingKeeper) GetNewToOldConsKeyMap(arg0 context.Context, arg1 types0.ConsAddress) (types0.ConsAddress, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetNewToOldConsKeyMap", arg0, arg1)
-	ret0, _ := ret[0].(types0.ConsAddress)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetNewToOldConsKeyMap indicates an expected call of GetNewToOldConsKeyMap.
-func (mr *MockStakingKeeperMockRecorder) GetNewToOldConsKeyMap(arg0, arg1 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetNewToOldConsKeyMap", reflect.TypeOf((*MockStakingKeeper)(nil).GetNewToOldConsKeyMap), arg0, arg1)
-}
-
 // IsValidatorJailed mocks base method.
 func (m *MockStakingKeeper) IsValidatorJailed(ctx context.Context, addr types0.ConsAddress) (bool, error) {
 	m.ctrl.T.Helper()
@@ -384,6 +369,21 @@ func (m *MockStakingKeeper) ValidatorByConsAddr(arg0 context.Context, arg1 types
 func (mr *MockStakingKeeperMockRecorder) ValidatorByConsAddr(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ValidatorByConsAddr", reflect.TypeOf((*MockStakingKeeper)(nil).ValidatorByConsAddr), arg0, arg1)
+}
+
+// ValidatorIdentifier mocks base method.
+func (m *MockStakingKeeper) ValidatorIdentifier(arg0 context.Context, arg1 types0.ConsAddress) (types0.ConsAddress, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ValidatorIdentifier", arg0, arg1)
+	ret0, _ := ret[0].(types0.ConsAddress)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ValidatorIdentifier indicates an expected call of ValidatorIdentifier.
+func (mr *MockStakingKeeperMockRecorder) ValidatorIdentifier(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ValidatorIdentifier", reflect.TypeOf((*MockStakingKeeper)(nil).ValidatorIdentifier), arg0, arg1)
 }
 
 // MockStakingHooks is a mock of StakingHooks interface.

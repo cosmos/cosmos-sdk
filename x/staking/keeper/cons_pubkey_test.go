@@ -181,7 +181,7 @@ func (s *KeeperTestSuite) TestConsKeyRotn() {
 				s.Require().NoError(err)
 
 				// this shouldn't mature the recent rotation since unbonding period isn't reached
-				s.Require().NoError(stakingKeeper.UpdateAllMaturedConsKeyRotatedKeys(ctx, ctx.BlockTime()))
+				s.Require().NoError(stakingKeeper.PurgeAllMaturedConsKeyRotatedKeys(ctx, ctx.BlockTime()))
 
 				// 2nd rotation should fail since limit exceeding
 				req, err = types.NewMsgRotateConsPubKey(validators[3].GetOperator(), PKs[493])
@@ -192,7 +192,7 @@ func (s *KeeperTestSuite) TestConsKeyRotn() {
 				// This should remove the keys from queue
 				// after setting the blocktime to reach the unbonding period
 				newCtx := ctx.WithHeaderInfo(header.Info{Time: ctx.BlockTime().Add(params.UnbondingTime)})
-				s.Require().NoError(stakingKeeper.UpdateAllMaturedConsKeyRotatedKeys(newCtx, newCtx.BlockTime()))
+				s.Require().NoError(stakingKeeper.PurgeAllMaturedConsKeyRotatedKeys(newCtx, newCtx.BlockTime()))
 				return newCtx
 			},
 			isErr:     false,
@@ -229,7 +229,7 @@ func (s *KeeperTestSuite) TestConsKeyRotn() {
 				s.Require().NoError(err)
 
 				// this shouldn't mature the recent rotation since unbonding period isn't reached
-				s.Require().NoError(stakingKeeper.UpdateAllMaturedConsKeyRotatedKeys(ctx, ctx.BlockTime()))
+				s.Require().NoError(stakingKeeper.PurgeAllMaturedConsKeyRotatedKeys(ctx, ctx.BlockTime()))
 
 				// 2nd rotation should fail since limit exceeding
 				req, err = types.NewMsgRotateConsPubKey(valStr4, PKs[489])
@@ -241,7 +241,7 @@ func (s *KeeperTestSuite) TestConsKeyRotn() {
 				// after setting the blocktime to reach the unbonding period,
 				// but other validator which rotated with addition of 2 days shouldn't be removed, so it should stop the rotation of valStr5.
 				newCtx1 := ctx.WithHeaderInfo(header.Info{Time: ctx.BlockTime().Add(params.UnbondingTime).Add(time.Hour)})
-				s.Require().NoError(stakingKeeper.UpdateAllMaturedConsKeyRotatedKeys(newCtx1, newCtx1.BlockTime()))
+				s.Require().NoError(stakingKeeper.PurgeAllMaturedConsKeyRotatedKeys(newCtx1, newCtx1.BlockTime()))
 				return newCtx1
 			},
 			isErr:     true,

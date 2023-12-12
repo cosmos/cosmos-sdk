@@ -85,8 +85,8 @@ func (k Keeper) SetMissedBlockBitmapChunk(ctx context.Context, addr sdk.ConsAddr
 func (k Keeper) GetMissedBlockBitmapValue(ctx context.Context, addr sdk.ConsAddress, index int64) (bool, error) {
 	// check the key rotated, if rotated use the returned consKey to get the missed blocks
 	// because missed blocks are still pointing to the old key
-	oldPk, err := k.sk.GetNewToOldConsKeyMap(ctx, addr)
-	if err != nil {
+	oldPk, err := k.sk.ValidatorIdentifier(ctx, addr)
+	if err != nil && !errors.Is(err, collections.ErrNotFound) {
 		return false, err
 	}
 
@@ -125,8 +125,8 @@ func (k Keeper) GetMissedBlockBitmapValue(ctx context.Context, addr sdk.ConsAddr
 func (k Keeper) SetMissedBlockBitmapValue(ctx context.Context, addr sdk.ConsAddress, index int64, missed bool) error {
 	// check the key rotated, if rotated use the returned consKey to set the missed blocks
 	// because missed blocks are still pointing to the old key
-	oldPk, err := k.sk.GetNewToOldConsKeyMap(ctx, addr)
-	if err != nil {
+	oldPk, err := k.sk.ValidatorIdentifier(ctx, addr)
+	if err != nil && !errors.Is(err, collections.ErrNotFound) {
 		return err
 	}
 
@@ -169,8 +169,8 @@ func (k Keeper) SetMissedBlockBitmapValue(ctx context.Context, addr sdk.ConsAddr
 func (k Keeper) DeleteMissedBlockBitmap(ctx context.Context, addr sdk.ConsAddress) error {
 	// check the key rotated, if rotated use the returned consKey to delete the missed blocks
 	// because missed blocks are still pointing to the old key
-	oldPk, err := k.sk.GetNewToOldConsKeyMap(ctx, addr)
-	if err != nil {
+	oldPk, err := k.sk.ValidatorIdentifier(ctx, addr)
+	if err != nil && !errors.Is(err, collections.ErrNotFound) {
 		return err
 	}
 
@@ -265,22 +265,6 @@ func (k Keeper) PerformConsensusPubKeyUpdate(ctx context.Context, oldPubKey, new
 	if err := k.ValidatorSigningInfo.Remove(ctx, sdk.ConsAddress(oldPubKey.Address())); err != nil {
 		return err
 	}
-
-	// Migrate ValidatorMissedBlockBitArray from oldPubKey to newPubKey
-	// missedBlocks, err := k.GetValidatorMissedBlocks(ctx, sdk.ConsAddress(oldPubKey.Address()))
-	// if err != nil {
-	// 	return err
-	// }
-
-	// if err := k.DeleteMissedBlockBitmap(ctx, sdk.ConsAddress(oldPubKey.Address())); err != nil {
-	// return err
-	// }
-
-	// for _, missed := range missedBlocks {
-	// 	if err := k.SetMissedBlockBitmapValue(ctx, sdk.ConsAddress(newPubKey.Address()), missed.Index, missed.Missed); err != nil {
-	// 		return err
-	// 	}
-	// }
 
 	return nil
 }

@@ -16,11 +16,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/telemetry"
 )
 
-type Store interface {
-	Branch() (any, error)
-	WorkingHash() ([]byte, error)
-}
-
 type AppManager[T transaction.Tx] struct {
 	// ModuleManager     *module.Manager
 	// configurator      module.Configurator

@@ -82,6 +82,10 @@ func (m *Manager) OnInit() error {
 	panic("not implemented")
 }
 
+func (m *Manager) OnClose() error {
+	panic("not implemented")
+}
+
 // OnNewBlock sends the latest block number to the background purge loop, which
 // should be called in ABCI Commit event.
 func (m *Manager) OnNewBlock(blockHeight uint64) {

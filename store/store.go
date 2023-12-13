@@ -3,6 +3,8 @@ package store
 import (
 	"io"
 
+	cmtcrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
+
 	coreheader "cosmossdk.io/core/header"
 	"cosmossdk.io/store/v2/metrics"
 )
@@ -174,8 +176,8 @@ type BranchedKVStore interface {
 
 // QueryResult defines the response type to performing a query on a RootStore.
 type QueryResult struct {
-	Key     []byte
-	Value   []byte
-	Version uint64
-	Proof   CommitmentOp
+	Key      []byte
+	Value    []byte
+	Version  uint64
+	ProofOps cmtcrypto.ProofOps
 }

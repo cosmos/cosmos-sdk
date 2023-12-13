@@ -1,9 +1,14 @@
 package store
 
 import (
+	"fmt"
+
+	cmtcrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 	ics23 "github.com/cosmos/ics23/go"
 
 	errorsmod "cosmossdk.io/errors"
+	internalmaps "cosmossdk.io/store/v2/internal/maps"
+	internalproofs "cosmossdk.io/store/v2/internal/proofs"
 )
 
 // Proof operation types
@@ -95,4 +100,46 @@ func (op CommitmentOp) Run(args [][]byte) ([][]byte, error) {
 	}
 
 	return [][]byte{root}, nil
+}
+
+// ProofOp implements ProofOperator interface and converts a CommitmentOp
+// into a merkle.ProofOp format that can later be decoded by CommitmentOpDecoder
+// back into a CommitmentOp for proof verification
+func (op CommitmentOp) ProofOp() cmtcrypto.ProofOp {
+	bz, err := op.Proof.Marshal()
+	if err != nil {
+		panic(err.Error())
+	}
+	return cmtcrypto.ProofOp{
+		Type: op.Type,
+		Key:  op.Key,
+		Data: bz,
+	}
+}
+
+// ProofOpFromMap generates a single proof from a map and converts it to a ProofOp.
+func ProofOpFromMap(cmap map[string][]byte, storeName string) (ret cmtcrypto.ProofOp, err error) {
+	_, proofs, _ := internalmaps.ProofsFromMap(cmap)
+
+	proof := proofs[storeName]
+	if proof == nil {
+		err = fmt.Errorf("ProofOp for %s but not registered store name", storeName)
+		return
+	}
+
+	// convert merkle.SimpleProof to CommitmentProof
+	existProof, err := internalproofs.ConvertExistenceProof(proof, []byte(storeName), cmap[storeName])
+	if err != nil {
+		err = fmt.Errorf("could not convert simple proof to existence proof: %w", err)
+		return
+	}
+
+	commitmentProof := &ics23.CommitmentProof{
+		Proof: &ics23.CommitmentProof_Exist{
+			Exist: existProof,
+		},
+	}
+
+	ret = NewSimpleMerkleCommitmentOp([]byte(storeName), commitmentProof).ProofOp()
+	return
 }

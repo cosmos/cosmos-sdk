@@ -17,6 +17,7 @@ type Tree interface {
 	Set(key, value []byte) error
 	Remove(key []byte) error
 	GetLatestVersion() uint64
+	Hash() []byte
 	WorkingHash() []byte
 	LoadVersion(version uint64) error
 	Commit() ([]byte, uint64, error)

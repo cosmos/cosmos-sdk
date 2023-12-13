@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"time"
 
+	cmtcrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
+
 	"cosmossdk.io/store/v2/internal/maps"
 )
 
@@ -108,7 +110,7 @@ func (ci *CommitInfo) Unmarshal(buf []byte) error {
 	buf = buf[n:]
 	ci.Timestamp = time.Unix(timestamp/int64(time.Second), timestamp%int64(time.Second))
 	// StoreInfos
-	storeInfosLen, n, err := DecodeVarint(buf)
+	storeInfosLen, n, err := DecodeUvarint(buf)
 	if err != nil {
 		return err
 	}
@@ -135,6 +137,14 @@ func (ci *CommitInfo) Unmarshal(buf []byte) error {
 	}
 
 	return nil
+}
+
+func (ci CommitInfo) ProofOp(storeName string) cmtcrypto.ProofOp {
+	ret, err := ProofOpFromMap(ci.toMap(), storeName)
+	if err != nil {
+		panic(err)
+	}
+	return ret
 }
 
 func (ci CommitInfo) CommitID() CommitID {

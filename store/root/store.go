@@ -189,12 +189,10 @@ func (s *Store) Query(storeKey string, version uint64, key []byte, prove bool) (
 	}
 
 	if prove {
-		proof, err := s.stateCommitment.GetProof(storeKey, version, key)
+		result.ProofOps, err = s.stateCommitment.GetProof(storeKey, version, key)
 		if err != nil {
 			return store.QueryResult{}, err
 		}
-
-		result.Proof = store.NewIAVLCommitmentOp(key, proof)
 	}
 
 	return result, nil
@@ -406,10 +404,7 @@ func (s *Store) writeSC() error {
 		version = previousHeight + 1
 	}
 
-	s.lastCommitInfo = &store.CommitInfo{
-		Version:    version,
-		StoreInfos: s.stateCommitment.WorkingStoreInfos(version),
-	}
+	s.lastCommitInfo = s.stateCommitment.WorkingCommitInfo(version)
 
 	return nil
 }
@@ -419,15 +414,12 @@ func (s *Store) writeSC() error {
 // solely commits that batch. An error is returned if commit fails or if the
 // resulting commit hash is not equivalent to the working hash.
 func (s *Store) commitSC() error {
-	commitStoreInfos, err := s.stateCommitment.Commit()
+	cInfo, err := s.stateCommitment.Commit(s.lastCommitInfo.Version)
 	if err != nil {
 		return fmt.Errorf("failed to commit SC store: %w", err)
 	}
 
-	commitHash := store.CommitInfo{
-		Version:    s.lastCommitInfo.Version,
-		StoreInfos: commitStoreInfos,
-	}.Hash()
+	commitHash := cInfo.Hash()
 
 	workingHash, err := s.WorkingHash()
 	if err != nil {

@@ -1,14 +1,15 @@
 package commitment
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"io"
 	"math"
 
+	cmtcrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 	dbm "github.com/cosmos/cosmos-db"
 	protoio "github.com/cosmos/gogoproto/io"
-	ics23 "github.com/cosmos/ics23/go"
 
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/v2"
@@ -16,7 +17,10 @@ import (
 	snapshotstypes "cosmossdk.io/store/v2/snapshots/types"
 )
 
-const commitInfoKeyFmt = "c/%d" // c/<version>
+const (
+	commitInfoKeyFmt = "c/%d" // c/<version>
+	latestVersionKey = "c/latest"
+)
 
 var (
 	_ store.Committer             = (*CommitStore)(nil)
@@ -35,7 +39,7 @@ type CommitStore struct {
 }
 
 // NewCommitStore creates a new CommitStore instance.
-func NewCommitStore(db dbm.DB, multiTrees map[string]Tree, logger log.Logger) (*CommitStore, error) {
+func NewCommitStore(multiTrees map[string]Tree, db dbm.DB, logger log.Logger) (*CommitStore, error) {
 	return &CommitStore{
 		logger:     logger,
 		db:         db,
@@ -82,26 +86,53 @@ func (c *CommitStore) WorkingCommitInfo(version uint64) *store.CommitInfo {
 }
 
 func (c *CommitStore) GetLatestVersion() (uint64, error) {
-	latestVersion := uint64(0)
-	for storeKey, tree := range c.multiTrees {
-		version := tree.GetLatestVersion()
-		if latestVersion != 0 && version != latestVersion {
-			return 0, fmt.Errorf("store %s has version %d, not equal to latest version %d", storeKey, version, latestVersion)
-		}
-		latestVersion = version
+	value, err := c.db.Get([]byte(latestVersionKey))
+	if err != nil {
+		return 0, err
+	}
+	if value == nil {
+		return 0, nil
 	}
 
-	return latestVersion, nil
+	version, _, err := store.DecodeUvarint(value)
+	if err != nil {
+		return 0, err
+	}
+
+	return version, nil
 }
 
 func (c *CommitStore) LoadVersion(targetVersion uint64) error {
+	// Rollback the metadata to the target version.
+	latestVersion, err := c.GetLatestVersion()
+	if err != nil {
+		return err
+	}
+	if targetVersion < latestVersion {
+		batch := c.db.NewBatch()
+		for version := latestVersion; version > targetVersion; version-- {
+			cInfoKey := []byte(fmt.Sprintf(commitInfoKeyFmt, version))
+			if err := batch.Delete(cInfoKey); err != nil {
+				return err
+			}
+		}
+		if err := batch.WriteSync(); err != nil {
+			return err
+		}
+	}
+
 	for _, tree := range c.multiTrees {
 		if err := tree.LoadVersion(targetVersion); err != nil {
 			return err
 		}
 	}
 
-	return nil
+	var cInfo *store.CommitInfo
+	if targetVersion > latestVersion {
+		cInfo = c.WorkingCommitInfo(targetVersion)
+	}
+
+	return c.flushCommitInfo(targetVersion, cInfo)
 }
 
 func (c *CommitStore) GetCommitInfo(version uint64) (*store.CommitInfo, error) {
@@ -109,6 +140,9 @@ func (c *CommitStore) GetCommitInfo(version uint64) (*store.CommitInfo, error) {
 	value, err := c.db.Get(key)
 	if err != nil {
 		return nil, err
+	}
+	if value == nil {
+		return nil, nil
 	}
 
 	cInfo := &store.CommitInfo{}
@@ -120,34 +154,59 @@ func (c *CommitStore) GetCommitInfo(version uint64) (*store.CommitInfo, error) {
 }
 
 func (c *CommitStore) flushCommitInfo(version uint64, cInfo *store.CommitInfo) error {
-	key := []byte(fmt.Sprintf(commitInfoKeyFmt, version))
-	value, err := cInfo.Marshal()
-	if err != nil {
+	batch := c.db.NewBatch()
+	if cInfo != nil {
+		cInfoKey := []byte(fmt.Sprintf(commitInfoKeyFmt, version))
+		value, err := cInfo.Marshal()
+		if err != nil {
+			return err
+		}
+		if err := batch.Set(cInfoKey, value); err != nil {
+			return err
+		}
+	}
+
+	var buf bytes.Buffer
+	buf.Grow(store.EncodeUvarintSize(version))
+	if err := store.EncodeUvarint(&buf, version); err != nil {
+		return err
+	}
+	if err := batch.Set([]byte(latestVersionKey), buf.Bytes()); err != nil {
 		return err
 	}
 
-	return c.db.Set(key, value)
+	return batch.WriteSync()
 }
 
 func (c *CommitStore) Commit(version uint64) (*store.CommitInfo, error) {
 	storeInfos := make([]store.StoreInfo, 0, len(c.multiTrees))
 
 	for storeKey, tree := range c.multiTrees {
-		hash, version, err := tree.Commit()
-		if err != nil {
-			return nil, err
-		}
-		storeInfos = append(storeInfos, store.StoreInfo{
-			Name: storeKey,
-			CommitID: store.CommitID{
+		// If a commit event execution is interrupted, a new iavl store's version
+		// will be larger than the RMS's metadata, when the block is replayed, we
+		// should avoid committing that iavl store again.
+		var commitID store.CommitID
+		if tree.GetLatestVersion() >= version {
+			commitID.Version = version
+			commitID.Hash = tree.Hash()
+		} else {
+			hash, version, err := tree.Commit()
+			if err != nil {
+				return nil, err
+			}
+			commitID = store.CommitID{
 				Version: version,
 				Hash:    hash,
-			},
+			}
+		}
+		storeInfos = append(storeInfos, store.StoreInfo{
+			Name:     storeKey,
+			CommitID: commitID,
 		})
 	}
 
 	cInfo := &store.CommitInfo{
-		Version:    storeInfos[0].CommitID.Version,
+		Version:    version,
 		StoreInfos: storeInfos,
 	}
 
@@ -158,13 +217,26 @@ func (c *CommitStore) Commit(version uint64) (*store.CommitInfo, error) {
 	return cInfo, nil
 }
 
-func (c *CommitStore) GetProof(storeKey string, version uint64, key []byte) (*ics23.CommitmentProof, error) {
+func (c *CommitStore) GetProof(storeKey string, version uint64, key []byte) (cmtcrypto.ProofOps, error) {
 	tree, ok := c.multiTrees[storeKey]
 	if !ok {
-		return nil, fmt.Errorf("store %s not found", storeKey)
+		return cmtcrypto.ProofOps{}, fmt.Errorf("store %s not found", storeKey)
 	}
 
-	return tree.GetProof(version, key)
+	proof, err := tree.GetProof(version, key)
+	if err != nil {
+		return cmtcrypto.ProofOps{}, err
+	}
+	cInfo, err := c.GetCommitInfo(version)
+	if err != nil {
+		return cmtcrypto.ProofOps{}, err
+	}
+	if cInfo == nil {
+		return cmtcrypto.ProofOps{}, fmt.Errorf("commit info not found for version %d", version)
+	}
+	commitOp := store.NewIAVLCommitmentOp(key, proof).ProofOp()
+
+	return cmtcrypto.ProofOps{Ops: []cmtcrypto.ProofOp{commitOp, cInfo.ProofOp(storeKey)}}, nil
 }
 
 func (c *CommitStore) Prune(version uint64) (ferr error) {

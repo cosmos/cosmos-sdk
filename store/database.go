@@ -3,7 +3,7 @@ package store
 import (
 	"io"
 
-	ics23 "github.com/cosmos/ics23/go"
+	cmtcrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 )
 
 // Reader wraps the Has and Get method of a backing data store.
@@ -72,7 +72,7 @@ type Committer interface {
 	GetLatestVersion() (uint64, error)
 	LoadVersion(targetVersion uint64) error
 	Commit(version uint64) (*CommitInfo, error)
-	GetProof(storeKey string, version uint64, key []byte) (*ics23.CommitmentProof, error)
+	GetProof(storeKey string, version uint64, key []byte) (cmtcrypto.ProofOps, error)
 
 	// Prune attempts to prune all versions up to and including the provided
 	// version argument. The operation should be idempotent. An error should be

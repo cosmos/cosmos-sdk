@@ -127,7 +127,7 @@ func Test_runAddCmdBasic(t *testing.T) {
 	require.Error(t, cmd.ExecuteContext(ctx))
 }
 
-func Test_runAddCmdMultisig(t *testing.T) {
+func Test_runAddCmdMultisigDupKeys(t *testing.T) {
 	cmd := AddKeyCommand()
 	cmd.Flags().AddFlagSet(Commands().PersistentFlags())
 

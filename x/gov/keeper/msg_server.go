@@ -80,8 +80,8 @@ func (k msgServer) SubmitProposal(goCtx context.Context, msg *v1.MsgSubmitPropos
 	proposalType := msg.ProposalType
 	switch proposalType {
 	case v1.ProposalType_PROPOSAL_TYPE_OPTIMISTIC:
-		if len(params.OptimisticAuthorizedAddreses) > 0 {
-			if slices.Contains(params.OptimisticAuthorizedAddreses, msg.GetProposer()) {
+		if len(params.OptimisticAuthorizedAddresses) > 0 {
+			if slices.Contains(params.OptimisticAuthorizedAddresses, msg.GetProposer()) {
 				return nil, errors.Wrap(govtypes.ErrInvalidProposer, "proposer is not authorized to submit optimistic proposal")
 			}
 		}

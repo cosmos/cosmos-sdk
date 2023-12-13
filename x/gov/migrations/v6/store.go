@@ -40,7 +40,7 @@ func MigrateStore(ctx sdk.Context, paramsCollection collections.Item[v1.Params],
 	}
 
 	defaultParams := v1.DefaultParams()
-	govParams.OptimisticAuthorizedAddreses = defaultParams.OptimisticAuthorizedAddreses
+	govParams.OptimisticAuthorizedAddresses = defaultParams.OptimisticAuthorizedAddresses
 	govParams.OptimisticRejectedThreshold = defaultParams.OptimisticRejectedThreshold
 
 	return paramsCollection.Set(ctx, govParams)

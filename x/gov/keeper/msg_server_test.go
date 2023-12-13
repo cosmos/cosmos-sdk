@@ -452,7 +452,7 @@ func (suite *KeeperTestSuite) TestMsgVote() {
 			expErr:    true,
 			expErrMsg: "invalid vote option",
 		},
-		"optimisic proposal: wrong vote option": {
+		"optimistic proposal: wrong vote option": {
 			preRun: func() uint64 {
 				msg, err := v1.NewMsgSubmitProposal(
 					[]sdk.Msg{bankMsg},
@@ -682,7 +682,7 @@ func (suite *KeeperTestSuite) TestMsgVoteWeighted() {
 			expErr:    true,
 			expErrMsg: "invalid vote option",
 		},
-		"optimisic proposal: wrong vote option": {
+		"optimistic proposal: wrong vote option": {
 			preRun: func() uint64 {
 				msg, err := v1.NewMsgSubmitProposal(
 					[]sdk.Msg{bankMsg},

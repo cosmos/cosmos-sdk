@@ -201,7 +201,7 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) error {
 			}
 		case proposal.ProposalType == v1.ProposalType_PROPOSAL_TYPE_EXPEDITED ||
 			proposal.ProposalType == v1.ProposalType_PROPOSAL_TYPE_OPTIMISTIC:
-			// When expedited/optimisic proposal fails, it is converted
+			// When expedited/optimistic proposal fails, it is converted
 			// to a regular proposal. As a result, the voting period is extended, and,
 			// once the regular voting period expires again, the tally is repeated
 			// according to the regular proposal rules.

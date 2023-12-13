@@ -64,27 +64,27 @@ func NewVotingParams(votingPeriod *time.Duration) VotingParams {
 func NewParams(
 	minDeposit, expeditedminDeposit sdk.Coins, maxDepositPeriod, votingPeriod, expeditedVotingPeriod time.Duration,
 	quorum, threshold, expeditedThreshold, vetoThreshold, minInitialDepositRatio, proposalCancelRatio, proposalCancelDest string,
-	burnProposalDeposit, burnVoteQuorum, burnVoteVeto bool, minDepositRatio, optimisicRejectedThreshold string, optimisticAuthorizedAddreses []string,
+	burnProposalDeposit, burnVoteQuorum, burnVoteVeto bool, minDepositRatio, optimisticRejectedThreshold string, optimisticAuthorizedAddresses []string,
 ) Params {
 	return Params{
-		MinDeposit:                   minDeposit,
-		ExpeditedMinDeposit:          expeditedminDeposit,
-		MaxDepositPeriod:             &maxDepositPeriod,
-		VotingPeriod:                 &votingPeriod,
-		ExpeditedVotingPeriod:        &expeditedVotingPeriod,
-		Quorum:                       quorum,
-		Threshold:                    threshold,
-		ExpeditedThreshold:           expeditedThreshold,
-		VetoThreshold:                vetoThreshold,
-		MinInitialDepositRatio:       minInitialDepositRatio,
-		ProposalCancelRatio:          proposalCancelRatio,
-		ProposalCancelDest:           proposalCancelDest,
-		BurnProposalDepositPrevote:   burnProposalDeposit,
-		BurnVoteQuorum:               burnVoteQuorum,
-		BurnVoteVeto:                 burnVoteVeto,
-		MinDepositRatio:              minDepositRatio,
-		OptimisticRejectedThreshold:  optimisicRejectedThreshold,
-		OptimisticAuthorizedAddreses: optimisticAuthorizedAddreses,
+		MinDeposit:                    minDeposit,
+		ExpeditedMinDeposit:           expeditedminDeposit,
+		MaxDepositPeriod:              &maxDepositPeriod,
+		VotingPeriod:                  &votingPeriod,
+		ExpeditedVotingPeriod:         &expeditedVotingPeriod,
+		Quorum:                        quorum,
+		Threshold:                     threshold,
+		ExpeditedThreshold:            expeditedThreshold,
+		VetoThreshold:                 vetoThreshold,
+		MinInitialDepositRatio:        minInitialDepositRatio,
+		ProposalCancelRatio:           proposalCancelRatio,
+		ProposalCancelDest:            proposalCancelDest,
+		BurnProposalDepositPrevote:    burnProposalDeposit,
+		BurnVoteQuorum:                burnVoteQuorum,
+		BurnVoteVeto:                  burnVoteVeto,
+		MinDepositRatio:               minDepositRatio,
+		OptimisticRejectedThreshold:   optimisticRejectedThreshold,
+		OptimisticAuthorizedAddresses: optimisticAuthorizedAddresses,
 	}
 }
 
@@ -210,7 +210,7 @@ func (p Params) ValidateBasic(addressCodec address.Codec) error {
 		return fmt.Errorf("expedited voting period %s must be strictly less that the regular voting period %s", p.ExpeditedVotingPeriod, p.VotingPeriod)
 	}
 
-	for _, addr := range p.OptimisticAuthorizedAddreses {
+	for _, addr := range p.OptimisticAuthorizedAddresses {
 		if _, err := addressCodec.StringToBytes(addr); err != nil {
 			return fmt.Errorf("invalid optimistic authorized address: %s", addr)
 		}

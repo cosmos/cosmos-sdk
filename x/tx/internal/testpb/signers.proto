@@ -70,6 +70,21 @@ message DeeplyNestedSigner {
   }
 }
 
+message DeeplyNestedRepeatedSigner {
+  option (cosmos.msg.v1.signer) = "inner_one";
+  repeated InnerOne inner_one                   = 1;
+
+  message InnerOne {
+    option (cosmos.msg.v1.signer) = "inner_two";
+    repeated InnerTwo inner_two                   = 1;
+
+    message InnerTwo {
+      option (cosmos.msg.v1.signer) = "signer";
+      repeated string signer                 = 1;
+    }
+  }
+}
+
 message BadSigner {
   option (cosmos.msg.v1.signer) = "signer";
   bytes signer                  = 1;

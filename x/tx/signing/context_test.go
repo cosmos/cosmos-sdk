@@ -99,7 +99,7 @@ func TestGetSigners(t *testing.T) {
 			want: [][]byte{[]byte("foo")},
 		},
 		{
-			name: "nested repeated",
+			name: "nested repeated #1",
 			msg: &testpb.NestedRepeatedSigner{Inner: &testpb.NestedRepeatedSigner_Inner{
 				Signer: []string{
 					hex.EncodeToString([]byte("foo")),
@@ -107,6 +107,38 @@ func TestGetSigners(t *testing.T) {
 				},
 			}},
 			want: [][]byte{[]byte("foo"), []byte("bar")},
+		},
+		{
+			name: "nested repeated #2",
+			msg: &testpb.DeeplyNestedRepeatedSigner{
+				InnerOne: []*testpb.DeeplyNestedRepeatedSigner_InnerOne{
+					{
+						InnerTwo: []*testpb.DeeplyNestedRepeatedSigner_InnerOne_InnerTwo{
+							{
+								Signer: []string{hex.EncodeToString([]byte("foo")), hex.EncodeToString([]byte("bar"))},
+							},
+						},
+					},
+					{
+						InnerTwo: []*testpb.DeeplyNestedRepeatedSigner_InnerOne_InnerTwo{
+							{
+								Signer: []string{hex.EncodeToString([]byte("baz"))},
+							},
+						},
+					},
+					{
+						InnerTwo: []*testpb.DeeplyNestedRepeatedSigner_InnerOne_InnerTwo{
+							{
+								Signer: []string{hex.EncodeToString([]byte("qux")), hex.EncodeToString([]byte("fuz"))},
+							},
+							{
+								Signer: []string{hex.EncodeToString([]byte("bing")), hex.EncodeToString([]byte("bap"))},
+							},
+						},
+					},
+				},
+			},
+			want: [][]byte{[]byte("foo"), []byte("bar"), []byte("baz"), []byte("qux"), []byte("fuz"), []byte("bing"), []byte("bap")},
 		},
 		{
 			name: "repeated nested repeated",

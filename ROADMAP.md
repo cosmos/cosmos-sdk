@@ -116,7 +116,7 @@ Issue: https://github.com/cosmos/iavl/issues/548
         * Users should be able to pick between delayed execution and optimistic
         * RFC/ADR is merged
         * Implementation started. 
-    * Progess:
+    * Progress:
         * On pause till ABCI 2.0 is merged
 
 ### Client UX
@@ -159,14 +159,14 @@ Issue: https://github.com/cosmos/iavl/issues/548
         * KvStoreService is being added to all modules
 * [ ] [Remove global bech32](https://github.com/cosmos/cosmos-sdk/issues/13140) 
     * Objective:
-        * Depreacte global bech32 setting
+        * Deprecate global bech32 setting
     * Progress:
         * All modules except bank use the `address.Codec`
 * [ ] Make sdk.Msg only be `proto.message`
     * Objectives: 
         * Reduce sdk.Msg to only be proto.message
         * Reduce boilerplate in `msgs.go`
-    * Progess: 
+    * Progress: 
         * [x] [Make ValidateBasic Optional](https://github.com/cosmos/cosmos-sdk/issues/15648)
         * [ ] [Make GetSigners be optional](https://github.com/cosmos/cosmos-sdk/issues/15677)
         * [ ] Remove GetsignBytes for legacy amino encoding

@@ -31,4 +31,18 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Features
 
+* [#18532](https://github.com/cosmos/cosmos-sdk/pull/18532) Add SPAM vote proposals.
+* [#18532](https://github.com/cosmos/cosmos-sdk/pull/18532) Add proposal types to proposals.
+
+### Improvements
+
+* [#18532](https://github.com/cosmos/cosmos-sdk/pull/18532) Repurpose `govcliutils.NormalizeProposalType` to work for gov v1 proposal types.
+
 ### API Breaking Changes
+
+* [#18532](https://github.com/cosmos/cosmos-sdk/pull/18532) All functions that were taking an expedited bool parameter now take a `ProposalType` parameter instead.
+* [#17496](https://github.com/cosmos/cosmos-sdk/pull/17496) in `x/gov/types/v1beta1/vote.go` `NewVote` was removed, constructing the struct is required for this type.
+
+### Deprecated
+
+* [#18532](https://github.com/cosmos/cosmos-sdk/pull/18532) The field `v1.Proposal.Expedited` is deprecated and will be removed in the next release.

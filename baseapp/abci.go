@@ -889,7 +889,7 @@ func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (*abci.Respons
 	return res, err
 }
 
-// checkHalt checkes if height or time exceeds halt-height or halt-time respectively.
+// checkHalt checks if height or time exceeds halt-height or halt-time respectively.
 func (app *BaseApp) checkHalt(height int64, time time.Time) error {
 	var halt bool
 	switch {

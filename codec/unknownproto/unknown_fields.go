@@ -44,12 +44,7 @@ func RejectUnknownFields(bz []byte, msg proto.Message, allowUnknownNonCriticals 
 		return hasUnknownNonCriticals, nil
 	}
 
-	desc, ok := msg.(descriptorIface)
-	if !ok {
-		return hasUnknownNonCriticals, fmt.Errorf("%T does not have a Descriptor() method", msg)
-	}
-
-	fieldDescProtoFromTagNum, _, err := getDescriptorInfo(desc, msg)
+	fieldDescProtoFromTagNum, _, err := getDescriptorInfo(msg)
 	if err != nil {
 		return hasUnknownNonCriticals, err
 	}
@@ -345,7 +340,11 @@ func unnestDesc(mdescs []*descriptorpb.DescriptorProto, indices []int) *descript
 
 // Invoking descriptorpb.ForMessage(proto.Message.(Descriptor).Descriptor()) is incredibly slow
 // for every single message, thus the need for a hand-rolled custom version that's performant and cacheable.
-func extractFileDescMessageDesc(desc descriptorIface) (*descriptorpb.FileDescriptorProto, *descriptorpb.DescriptorProto, error) {
+func extractFileDescMessageDesc(msg proto.Message) (*descriptorpb.FileDescriptorProto, *descriptorpb.DescriptorProto, error) {
+	desc, ok := msg.(descriptorIface)
+	if !ok {
+		return nil, nil, fmt.Errorf("%T does not have a Descriptor() method", msg)
+	}
 	gzippedPb, indices := desc.Descriptor()
 
 	protoFileToDescMu.RLock()
@@ -391,7 +390,8 @@ var (
 )
 
 // getDescriptorInfo retrieves the mapping of field numbers to their respective field descriptors.
-func getDescriptorInfo(desc descriptorIface, msg proto.Message) (map[int32]*descriptorpb.FieldDescriptorProto, *descriptorpb.DescriptorProto, error) {
+func getDescriptorInfo(msg proto.Message) (map[int32]*descriptorpb.FieldDescriptorProto, *descriptorpb.DescriptorProto, error) {
+	// we immediately check if the desc is present in the desc
 	key := reflect.ValueOf(msg).Type()
 
 	descprotoCacheMu.RLock()
@@ -403,7 +403,7 @@ func getDescriptorInfo(desc descriptorIface, msg proto.Message) (map[int32]*desc
 	}
 
 	// Now compute and cache the index.
-	_, md, err := extractFileDescMessageDesc(desc)
+	_, md, err := extractFileDescMessageDesc(msg)
 	if err != nil {
 		return nil, nil, err
 	}

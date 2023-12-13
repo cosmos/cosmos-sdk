@@ -19,6 +19,7 @@ func TestMetrics_Disabled(t *testing.T) {
 
 func TestMetrics_InMem(t *testing.T) {
 	m, err := New(Config{
+		MetricsSink:    MetricSinkInMem,
 		Enabled:        true,
 		EnableHostname: false,
 		ServiceName:    "test",
@@ -42,6 +43,7 @@ func TestMetrics_InMem(t *testing.T) {
 
 func TestMetrics_Prom(t *testing.T) {
 	m, err := New(Config{
+		MetricsSink:             MetricSinkInMem,
 		Enabled:                 true,
 		EnableHostname:          false,
 		ServiceName:             "test",

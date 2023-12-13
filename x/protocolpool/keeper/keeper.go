@@ -147,7 +147,7 @@ func (k Keeper) withdrawContinuousFund(ctx context.Context, recipient sdk.AccAdd
 }
 
 func (k Keeper) SetToDistribute(ctx context.Context, amount sdk.Coins) error {
-	err := k.ToDistribute.Set(ctx, amount.AmountOf(amount.GetDenomByIndex(0)))
+	err := k.ToDistribute.Set(ctx, amount.AmountOf(sdk.DefaultBondDenom))
 	if err != nil {
 		return fmt.Errorf("error while setting ToDistribute: %v", err)
 	}

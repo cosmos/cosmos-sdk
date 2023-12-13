@@ -7,6 +7,7 @@ import (
 	"golang.org/x/sync/errgroup"
 
 	"cosmossdk.io/core/address"
+
 	"github.com/cosmos/cosmos-sdk/codec/types"
 )
 

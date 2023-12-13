@@ -7,7 +7,6 @@ import (
 	"cosmossdk.io/collections"
 	"cosmossdk.io/errors"
 	"cosmossdk.io/x/gov/types"
-	govtypes "cosmossdk.io/x/gov/types"
 	v1 "cosmossdk.io/x/gov/types/v1"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -39,7 +38,7 @@ func (keeper Keeper) AddVote(ctx context.Context, proposalID uint64, voterAddr s
 		switch proposal.ProposalType {
 		case v1.ProposalType_PROPOSAL_TYPE_OPTIMISTIC:
 			if option.Option != v1.OptionNo {
-				return errors.Wrap(govtypes.ErrInvalidVote, "optimistic proposals can only be rejected")
+				return errors.Wrap(types.ErrInvalidVote, "optimistic proposals can only be rejected")
 			}
 		default:
 			if !v1.ValidWeightedVoteOption(*option) {

@@ -73,6 +73,7 @@ type Committer interface {
 	LoadVersion(targetVersion uint64) error
 	Commit(version uint64) (*CommitInfo, error)
 	GetProof(storeKey string, version uint64, key []byte) (cmtcrypto.ProofOps, error)
+	SetInitialVersion(version uint64) error
 
 	// Prune attempts to prune all versions up to and including the provided
 	// version argument. The operation should be idempotent. An error should be

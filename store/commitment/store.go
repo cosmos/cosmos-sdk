@@ -217,6 +217,16 @@ func (c *CommitStore) Commit(version uint64) (*store.CommitInfo, error) {
 	return cInfo, nil
 }
 
+func (c *CommitStore) SetInitialVersion(version uint64) error {
+	for _, tree := range c.multiTrees {
+		if err := tree.SetInitialVersion(version); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 func (c *CommitStore) GetProof(storeKey string, version uint64, key []byte) (cmtcrypto.ProofOps, error) {
 	tree, ok := c.multiTrees[storeKey]
 	if !ok {

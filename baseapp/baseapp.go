@@ -153,7 +153,7 @@ type BaseApp struct {
 	// ResponseCommit.RetainHeight value during ABCI Commit. A value of 0 indicates
 	// that no blocks should be pruned.
 	//
-	// Note: CometBFT block pruning is dependant on this parameter in conjunction
+	// Note: CometBFT block pruning is dependent on this parameter in conjunction
 	// with the unbonding (safety threshold) period, state pruning and state sync
 	// snapshot parameters to determine the correct minimum value of
 	// ResponseCommit.RetainHeight.
@@ -424,15 +424,15 @@ func (app *BaseApp) Init() error {
 		panic("cannot call initFromMainStore: baseapp already sealed")
 	}
 
+	if app.cms == nil {
+		return errors.New("commit multi-store must not be nil")
+	}
+
 	emptyHeader := cmtproto.Header{ChainID: app.chainID}
 
 	// needed for the export command which inits from store but never calls initchain
 	app.setState(execModeCheck, emptyHeader)
 	app.Seal()
-
-	if app.cms == nil {
-		return errors.New("commit multi-store must not be nil")
-	}
 
 	return app.cms.GetPruning().Validate()
 }

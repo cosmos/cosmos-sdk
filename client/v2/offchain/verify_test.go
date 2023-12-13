@@ -3,7 +3,6 @@ package offchain
 import (
 	"testing"
 
-
 	"github.com/stretchr/testify/require"
 
 	apitxsigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"

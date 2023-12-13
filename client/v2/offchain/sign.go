@@ -2,6 +2,7 @@ package offchain
 
 import (
 	"context"
+	cryptokeyring "github.com/cosmos/cosmos-sdk/crypto/keyring"
 
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -15,7 +16,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/version"
 )
 
@@ -64,13 +64,12 @@ func Sign(ctx client.Context, rawBytes []byte, fromName, signMode string) (strin
 }
 
 func sign(ctx client.Context, fromName, digest string, signMode apisigning.SignMode) (*apitx.Tx, error) {
-	keybase := ctx.Keyring
-	r, err := keybase.Key(fromName)
+	keybase, err := cryptokeyring.NewAutoCLIKeyring(ctx.Keyring)
 	if err != nil {
 		return nil, err
 	}
 
-	pubKey, err := r.GetPubKey()
+	pubKey, err := keybase.GetPubKey(fromName)
 	if err != nil {
 		return nil, err
 	}
@@ -81,9 +80,9 @@ func sign(ctx client.Context, fromName, digest string, signMode apisigning.SignM
 	}
 
 	msg := &offchain.MsgSignArbitraryData{
-		AppDomain:     version.AppName,
-		SignerAddress: addr,
-		Data:          digest,
+		AppDomain: version.AppName,
+		Signer:    addr,
+		Data:      digest,
 	}
 
 	txBuilder := newBuilder(ctx.Codec)
@@ -124,7 +123,7 @@ func sign(ctx client.Context, fromName, digest string, signMode apisigning.SignM
 		return nil, err
 	}
 
-	signedBytes, _, err := keybase.Sign(fromName, bytesToSign, signing.SignMode(signMode))
+	signedBytes, err := keybase.Sign(fromName, bytesToSign, signMode)
 	if err != nil {
 		return nil, err
 	}

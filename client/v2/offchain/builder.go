@@ -1,5 +1,7 @@
 package offchain
 
+// TODO: remove custom off-chain builder once v2 tx builder is developed.
+
 import (
 	"errors"
 	"fmt"

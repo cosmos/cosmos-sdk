@@ -20,14 +20,17 @@ import (
 
 func Verify(ctx client.Context, digest []byte) error {
 	tx := &apitx.Tx{}
+
 	err := protojson.Unmarshal(digest, tx)
 	if err != nil {
 		return err
 	}
+
 	err = verify(ctx, tx)
 	if err != nil {
 		return err
 	}
+
 	fmt.Printf("Verification OK")
 	return nil
 }
@@ -37,8 +40,9 @@ func verify(ctx client.Context, tx *apitx.Tx) error {
 		cdc: ctx.Codec,
 		tx:  tx,
 	}
-	txConfig := ctx.TxConfig // TODO?
-	signModeHandler := txConfig.SignModeHandler()
+
+	signModeHandler := ctx.TxConfig.SignModeHandler()
+
 	signers, err := sigTx.GetSigners()
 	if err != nil {
 		return err

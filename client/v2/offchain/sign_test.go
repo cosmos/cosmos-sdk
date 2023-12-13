@@ -20,7 +20,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
-	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
 
 func getCodec() codec.Codec {
@@ -31,15 +30,8 @@ func getCodec() codec.Codec {
 }
 
 func MakeTestTxConfig() client.TxConfig {
-	enabledSignModes := []signingtypes.SignMode{
-		signingtypes.SignMode_SIGN_MODE_DIRECT,
-		signingtypes.SignMode_SIGN_MODE_DIRECT_AUX,
-		signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
-		signingtypes.SignMode_SIGN_MODE_TEXTUAL,
-	}
 	initClientCtx := client.Context{}
 	txConfigOpts := tx.ConfigOptions{
-		EnabledSignModes:           enabledSignModes,
 		TextualCoinMetadataQueryFn: txmodule.NewGRPCCoinMetadataQueryFn(initClientCtx),
 	}
 	ir, err := codectypes.NewInterfaceRegistryWithOptions(codectypes.InterfaceRegistryOptions{

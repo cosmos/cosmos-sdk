@@ -102,6 +102,13 @@ func (k Keeper) GetCommunityPool(ctx context.Context) (sdk.Coins, error) {
 }
 
 func (k Keeper) withdrawContinuousFund(ctx context.Context, recipient sdk.AccAddress) (sdk.Coin, error) {
+	cf, err := k.ContinuousFund.Get(ctx, recipient)
+	if err != nil {
+		if errors.Is(err, collections.ErrNotFound) {
+			return sdk.Coin{}, fmt.Errorf("no continuous fund found for recipient: %s", recipient.String())
+		}
+		return sdk.Coin{}, err
+	}
 	denom, err := k.iterateAndUpdateFundsDistribution(ctx)
 	if err != nil {
 		return sdk.Coin{}, fmt.Errorf("error while iterating all the continuous funds: %w", err)
@@ -110,14 +117,6 @@ func (k Keeper) withdrawContinuousFund(ctx context.Context, recipient sdk.AccAdd
 	fundsAllocated, err := k.getAndResetDistributedFunds(ctx, recipient)
 	if err != nil {
 		return sdk.Coin{}, fmt.Errorf("error while getting distributed funds: %w", err)
-	}
-
-	cf, err := k.ContinuousFund.Get(ctx, recipient)
-	if err != nil {
-		if errors.Is(err, collections.ErrNotFound) {
-			return sdk.Coin{}, fmt.Errorf("no continuous fund found for recipient: %s", recipient.String())
-		}
-		return sdk.Coin{}, err
 	}
 
 	recipientBal := k.bankKeeper.GetAllBalances(ctx, recipient)
@@ -187,7 +186,9 @@ func (k Keeper) iterateAndUpdateFundsDistribution(ctx context.Context) (string, 
 
 	err = k.RecipientFundPercentage.Walk(ctx, nil, func(key sdk.AccAddress, value math.Int) (stop bool, err error) {
 		// Calculate the funds to be distributed based on the percentage
-		recipientAmount := totalDistrAmount.Mul(math.LegacyNewDecFromIntWithPrec(value, 2)).Quo(totalPercentageToBeDistributed.ToLegacyDec())
+		decValue := math.LegacyNewDecFromIntWithPrec(value, 2)
+		percentage := math.LegacyNewDecFromIntWithPrec(totalPercentageToBeDistributed, 2)
+		recipientAmount := totalDistrAmount.Mul(decValue).Quo(percentage)
 		recipientCoins := recipientAmount.TruncateInt()
 
 		// Set funds to be claimed

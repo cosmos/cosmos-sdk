@@ -355,7 +355,7 @@ func (suite *KeeperTestSuite) TestWithdrawContinuousFund() {
 		"recipient with no continuous fund": {
 			recipientAddress: recipient,
 			expErr:           true,
-			expErrMsg:        "error while getting distributed funds: no recipient fund found for recipient",
+			expErrMsg:        "no continuous fund found for recipient",
 		},
 		"funds percentage > 100": {
 			preRun: func() {
@@ -407,7 +407,7 @@ func (suite *KeeperTestSuite) TestWithdrawContinuousFund() {
 			expErr:           true,
 			expErrMsg:        "error while iterating all the continuous funds: total funds percentage cannot exceed 100",
 		},
-		"valid case": {
+		"invalid case with ToDistribute amount zero": {
 			preRun: func() {
 				percentage, err := math.LegacyNewDecFromStr("0.2")
 				suite.Require().NoError(err)
@@ -429,6 +429,35 @@ func (suite *KeeperTestSuite) TestWithdrawContinuousFund() {
 				err = suite.poolKeeper.RecipientFundDistribution.Set(suite.ctx, recipient, math.ZeroInt())
 				suite.Require().NoError(err)
 				err = suite.poolKeeper.ToDistribute.Set(suite.ctx, math.ZeroInt())
+				suite.Require().NoError(err)
+			},
+			recipientAddress: recipient,
+			expErr:           true,
+			expErrMsg:        "no distribution amount found to update funds distribution",
+		},
+		"valid case": {
+			preRun: func() {
+				percentage, err := math.LegacyNewDecFromStr("0.2")
+				suite.Require().NoError(err)
+				oneMonthInSeconds := int64(30 * 24 * 60 * 60) // Approximate number of seconds in 1 month
+				expiry := suite.ctx.BlockTime().Add(time.Duration(oneMonthInSeconds) * time.Second)
+				cf := types.ContinuousFund{
+					Recipient:             recipient.String(),
+					Percentage:            percentage,
+					MaxDistributedCapital: math.NewInt(1000000),
+					Expiry:                &expiry,
+				}
+				// Set continuous fund
+				err = suite.poolKeeper.ContinuousFund.Set(suite.ctx, recipient, cf)
+				suite.Require().NoError(err)
+				// Set recipient fund percentage and recipient fund distribution
+				intPercentage := percentage.MulInt64(100)
+				err = suite.poolKeeper.RecipientFundPercentage.Set(suite.ctx, recipient, intPercentage.TruncateInt())
+				suite.Require().NoError(err)
+				err = suite.poolKeeper.RecipientFundDistribution.Set(suite.ctx, recipient, math.ZeroInt())
+				suite.Require().NoError(err)
+				toDistribute := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100000)))
+				err = suite.poolKeeper.SetToDistribute(suite.ctx, toDistribute)
 				suite.Require().NoError(err)
 			},
 			recipientAddress: recipient,

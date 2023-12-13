@@ -369,3 +369,7 @@ func (suite *TestSuite) TestExec() {
 		})
 	}
 }
+
+func (suite *TestSuite) TestPruneExpiredGrants() {
+
+}

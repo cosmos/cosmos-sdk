@@ -4,9 +4,9 @@
 is preparing to propose a block, it requests the application to evaluate a
 `RequestPrepareProposal`, which contains a series of transactions from CometBFT's
 mempool. At this point, the application has complete control over the proposal.
-It can modify, delete, and inject transactions from it's own app-side mempool into
+It can modify, delete, and inject transactions from its own app-side mempool into
 the proposal or even ignore all the transactions altogether. What the application
-does with the transactions provided to it by `RequestPrepareProposal` have no
+does with the transactions provided to it by `RequestPrepareProposal` has no
 effect on CometBFT's mempool.
 
 Note, that the application defines the semantics of the `PrepareProposal` and it
@@ -14,8 +14,10 @@ MAY be non-deterministic and is only executed by the current block proposer.
 
 Now, reading mempool twice in the previous sentence is confusing, lets break it down.
 CometBFT has a mempool that handles gossiping transactions to other nodes
-in the network. How these transactions are ordered is determined by CometBFT's
-mempool, typically FIFO. However, since the application is able to fully inspect
+in the network. The order of these transactions is determined by CometBFT's mempool,
+using FIFO as the sole ordering mechanism. It's worth noting that the priority mempool
+in Comet was removed or deprecated.
+However, since the application is able to fully inspect
 all transactions, it can provide greater control over transaction ordering.
 Allowing the application to handle ordering enables the application to define how
 it would like the block constructed.

@@ -224,7 +224,6 @@ func TestAnteHandlerGasMeter(t *testing.T) {
 	require.NoError(t, err)
 	_, err = suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1, Txs: [][]byte{txBytes}})
 	require.NoError(t, err)
-
 }
 
 func TestLoadVersion(t *testing.T) {

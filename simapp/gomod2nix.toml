@@ -384,8 +384,8 @@ schema = 3
     version = "v1.1.0"
     hash = "sha256-U4IS0keJa4BSBSeEBqtIV1Zg6N4b0zFiKfzN9ua4pWQ="
   [mod."github.com/pelletier/go-toml/v2"]
-    version = "v2.1.0"
-    hash = "sha256-0u6oV8YMM26y2bw1oe3gLmEJc/whpNaFtEe4yOkN24c="
+    version = "v2.1.1"
+    hash = "sha256-BQtflYQ8Dt7FL/yFI9OnxwvsRk0oEO37ZXuGXFveVpo="
   [mod."github.com/petermattis/goid"]
     version = "v0.0.0-20231126143041-f558c26febf5"
     hash = "sha256-59jZe0vsHp1vgj+o4D6IPgoyw9C2+jVxmh7uwfxUSzU="

@@ -70,11 +70,27 @@ func runShowCmd(cmd *cobra.Command, args []string) (err error) {
 		}
 	} else {
 		pks := make([]cryptotypes.PubKey, len(args))
+<<<<<<< HEAD
 		for i, keyref := range args {
 			k, err := fetchKey(clientCtx.Keyring, keyref)
 			if err != nil {
 				return fmt.Errorf("%s is not a valid name or address: %w", keyref, err)
+=======
+		seenKeys := make(map[string]struct{})
+		for i, keyRef := range args {
+			if _, ok := seenKeys[keyRef]; ok {
+				// we just show warning message instead of return error in case someone relies on this behavior.
+				cmd.PrintErrf("WARNING: duplicate keys found: %s.\n\n", keyRef)
+			} else {
+				seenKeys[keyRef] = struct{}{}
+>>>>>>> f876b1428 (feat(client/keys): check multisig key duplicate (#18703))
 			}
+
+			k, err := fetchKey(clientCtx.Keyring, keyRef, clientCtx.AddressCodec)
+			if err != nil {
+				return fmt.Errorf("%s is not a valid name or address: %w", keyRef, err)
+			}
+
 			key, err := k.GetPubKey()
 			if err != nil {
 				return err

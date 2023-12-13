@@ -88,6 +88,17 @@ func TestGetSigners(t *testing.T) {
 			want: [][]byte{[]byte("foo"), []byte("bar")},
 		},
 		{
+			name: "deeply nested",
+			msg: &testpb.DeeplyNestedSigner{
+				InnerOne: &testpb.DeeplyNestedSigner_InnerOne{
+					InnerTwo: &testpb.DeeplyNestedSigner_InnerOne_InnerTwo{
+						Signer: hex.EncodeToString([]byte("foo")),
+					},
+				},
+			},
+			want: [][]byte{[]byte("foo")},
+		},
+		{
 			name: "nested repeated",
 			msg: &testpb.NestedRepeatedSigner{Inner: &testpb.NestedRepeatedSigner_Inner{
 				Signer: []string{

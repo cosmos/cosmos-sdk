@@ -1130,7 +1130,7 @@ type EventGrant struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// Msg type URL for which an autorization is granted
+	// Msg type URL for which an authorization is granted
 	MsgTypeUrl string `protobuf:"bytes,2,opt,name=msg_type_url,json=msgTypeUrl,proto3" json:"msg_type_url,omitempty"`
 	// Granter account address
 	Granter string `protobuf:"bytes,3,opt,name=granter,proto3" json:"granter,omitempty"`
@@ -1185,7 +1185,7 @@ type EventRevoke struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// Msg type URL for which an autorization is revoked
+	// Msg type URL for which an authorization is revoked
 	MsgTypeUrl string `protobuf:"bytes,2,opt,name=msg_type_url,json=msgTypeUrl,proto3" json:"msg_type_url,omitempty"`
 	// Granter account address
 	Granter string `protobuf:"bytes,3,opt,name=granter,proto3" json:"granter,omitempty"`

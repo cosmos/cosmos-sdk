@@ -31,13 +31,16 @@ import (
 //  2. io.ReadCloser streams automatically propagate IO errors, and can pass arbitrary
 //     errors via io.Pipe.CloseWithError().
 type Manager struct {
-	extensions map[string]types.ExtensionSnapshotter
+	extensions map[string]ExtensionSnapshotter
 	// store is the snapshot store where all completed snapshots are persisted.
 	store *Store
-	opts  types.SnapshotOptions
-	// multistore is the store from which snapshots are taken.
-	multistore types.Snapshotter
-	logger     log.Logger
+	opts  SnapshotOptions
+	// commitSnapshotter is the snapshotter for the commitment state.
+	commitSnapshotter CommitSnapshotter
+	// storageSnapshotter is the snapshotter for the storage state.
+	storageSnapshotter StorageSnapshotter
+
+	logger log.Logger
 
 	mtx               sync.Mutex
 	operation         operation
@@ -62,8 +65,9 @@ const (
 	opPrune    operation = "prune"
 	opRestore  operation = "restore"
 
-	chunkBufferSize   = 4
-	chunkIDBufferSize = 1024
+	chunkBufferSize                 = 4
+	chunkIDBufferSize               = 1024
+	defaultStorageChannelBufferSize = 1024
 
 	snapshotMaxItemSize = int(64e6) // SDK has no key/value size limit, so we set an arbitrary limit
 )
@@ -71,23 +75,24 @@ const (
 var ErrOptsZeroSnapshotInterval = errors.New("snaphot-interval must not be 0")
 
 // NewManager creates a new manager.
-func NewManager(store *Store, opts types.SnapshotOptions, multistore types.Snapshotter, extensions map[string]types.ExtensionSnapshotter, logger log.Logger) *Manager {
+func NewManager(store *Store, opts SnapshotOptions, commitSnapshotter CommitSnapshotter, storageSnapshotter StorageSnapshotter, extensions map[string]ExtensionSnapshotter, logger log.Logger) *Manager {
 	if extensions == nil {
-		extensions = map[string]types.ExtensionSnapshotter{}
+		extensions = map[string]ExtensionSnapshotter{}
 	}
 	return &Manager{
-		store:      store,
-		opts:       opts,
-		multistore: multistore,
-		extensions: extensions,
-		logger:     logger,
+		store:              store,
+		opts:               opts,
+		commitSnapshotter:  commitSnapshotter,
+		storageSnapshotter: storageSnapshotter,
+		extensions:         extensions,
+		logger:             logger.With("module", "snapshot_manager"),
 	}
 }
 
 // RegisterExtensions register extension snapshotters to manager
-func (m *Manager) RegisterExtensions(extensions ...types.ExtensionSnapshotter) error {
+func (m *Manager) RegisterExtensions(extensions ...ExtensionSnapshotter) error {
 	if m.extensions == nil {
-		m.extensions = make(map[string]types.ExtensionSnapshotter, len(extensions))
+		m.extensions = make(map[string]ExtensionSnapshotter, len(extensions))
 	}
 	for _, extension := range extensions {
 		name := extension.SnapshotName()
@@ -161,10 +166,8 @@ func (m *Manager) GetSnapshotBlockRetentionHeights() int64 {
 // Create creates a snapshot and returns its metadata.
 func (m *Manager) Create(height uint64) (*types.Snapshot, error) {
 	if m == nil {
-		return nil, errorsmod.Wrap(store.ErrLogic, "no snapshot store configured")
+		return nil, errorsmod.Wrap(store.ErrLogic, "Snapshot Manager is nil")
 	}
-
-	defer m.multistore.PruneSnapshotHeight(int64(height))
 
 	err := m.begin(opSnapshot)
 	if err != nil {
@@ -201,7 +204,7 @@ func (m *Manager) createSnapshot(height uint64, ch chan<- io.ReadCloser) {
 		}
 	}()
 
-	if err := m.multistore.Snapshot(height, streamWriter); err != nil {
+	if err := m.commitSnapshotter.Snapshot(height, streamWriter); err != nil {
 		streamWriter.CloseWithError(err)
 		return
 	}
@@ -363,7 +366,20 @@ func (m *Manager) doRestoreSnapshot(snapshot types.Snapshot, chChunks <-chan io.
 		return payload.Payload, nil
 	}
 
-	nextItem, err = m.multistore.Restore(snapshot.Height, snapshot.Format, streamReader)
+	// chStorage is the channel to pass the KV pairs to the storage snapshotter.
+	chStorage := make(chan *store.KVPair, defaultStorageChannelBufferSize)
+	defer close(chStorage)
+
+	storageErrs := make(chan error, 1)
+	go func() {
+		defer close(storageErrs)
+		err := m.storageSnapshotter.Restore(snapshot.Height, chStorage)
+		if err != nil {
+			storageErrs <- err
+		}
+	}()
+
+	nextItem, err = m.commitSnapshotter.Restore(snapshot.Height, snapshot.Format, streamReader, chStorage)
 	if err != nil {
 		return errorsmod.Wrap(err, "multistore restore")
 	}
@@ -393,6 +409,12 @@ func (m *Manager) doRestoreSnapshot(snapshot types.Snapshot, chChunks <-chan io.
 			return errorsmod.Wrapf(err, "extension %s don't exhausted payload stream", metadata.Name)
 		}
 	}
+
+	// wait for storage snapshotter to complete
+	if err := <-storageErrs; err != nil {
+		return errorsmod.Wrap(err, "storage snapshotter")
+	}
+
 	return nil
 }
 
@@ -495,7 +517,7 @@ func (m *Manager) sortedExtensionNames() []string {
 }
 
 // IsFormatSupported returns if the snapshotter supports restoration from given format.
-func IsFormatSupported(snapshotter types.ExtensionSnapshotter, format uint32) bool {
+func IsFormatSupported(snapshotter ExtensionSnapshotter, format uint32) bool {
 	for _, i := range snapshotter.SupportedFormats() {
 		if i == format {
 			return true

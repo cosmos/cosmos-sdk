@@ -137,7 +137,7 @@ func (s *Simulator) SimulateBlock() {
 }
 ```
 
-Note, some application do not define or need their own app-side mempool, so we
+Note, some applications do not define or need their own app-side mempool, so we
 propose that `SelectTxs` mimic CometBFT and just return FIFO-ordered transactions
 from an ad-hoc simulator mempool. In the case where an application does define
 its own mempool, it will simply ignore what is provided in `RequestPrepareProposal`.
@@ -162,7 +162,7 @@ set of validity predicates, i.e. invariant checkers, that will be executed befor
 and after each block. This will allow for the application to assert that certain
 state invariants are held before and after each block. Note, as a consequence of
 this, we propose to remove the existing notion of invariants from module production
-execution paths and deprecate their usage all together.
+execution paths and deprecate their usage altogether.
 
 ```go
 type Manager struct {

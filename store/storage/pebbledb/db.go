@@ -11,6 +11,7 @@ import (
 	"github.com/cockroachdb/pebble"
 
 	"cosmossdk.io/store/v2"
+	"cosmossdk.io/store/v2/storage"
 )
 
 const (
@@ -25,7 +26,7 @@ const (
 	tombstoneVal     = "TOMBSTONE"
 )
 
-var _ store.VersionedDatabase = (*Database)(nil)
+var _ storage.Database = (*Database)(nil)
 
 type Database struct {
 	storage *pebble.DB
@@ -90,6 +91,15 @@ func (db *Database) Close() error {
 	err := db.storage.Close()
 	db.storage = nil
 	return err
+}
+
+func (db *Database) NewBatch(version uint64) (store.Batch, error) {
+	b, err := NewBatch(db.storage, version, db.sync)
+	if err != nil {
+		return nil, err
+	}
+
+	return b, nil
 }
 
 func (db *Database) SetLatestVersion(version uint64) error {
@@ -173,29 +183,6 @@ func (db *Database) Get(storeKey string, targetVersion uint64, key []byte) ([]by
 
 	// the value is considered deleted
 	return nil, nil
-}
-
-func (db *Database) ApplyChangeset(version uint64, cs *store.Changeset) error {
-	b, err := NewBatch(db.storage, version, db.sync)
-	if err != nil {
-		return err
-	}
-
-	for storeKey, pairs := range cs.Pairs {
-		for _, kvPair := range pairs {
-			if kvPair.Value == nil {
-				if err := b.Delete(storeKey, kvPair.Key); err != nil {
-					return err
-				}
-			} else {
-				if err := b.Set(storeKey, kvPair.Key, kvPair.Value); err != nil {
-					return err
-				}
-			}
-		}
-	}
-
-	return b.Write()
 }
 
 // Prune removes all versions of all keys that are <= the given version.

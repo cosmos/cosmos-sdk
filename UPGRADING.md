@@ -346,7 +346,7 @@ User manually wiring their chain need to add the logger argument when creating t
 
 #### Module Basics
 
-Previously, the `ModuleBasics` was a global variable that was used to register all modules's `AppModuleBasic` implementation.
+Previously, the `ModuleBasics` was a global variable that was used to register all modules' `AppModuleBasic` implementation.
 The global variable has been removed and the basic module manager can be now created from the module manager.
 
 This is automatically done for `depinject` / app v2 users, however for supplying different app module implementation, pass them via `depinject.Supply` in the main `AppConfig` (`app_config.go`):
@@ -365,7 +365,7 @@ depinject.Supply(
 		)
 ```
 
-Users manually wiring their chain need to use the new `module.NewBasicManagerFromManager` function, after the module manager creation, and pass a `map[string]module.AppModuleBasic` as argument for optionally overridding some module's `AppModuleBasic`.
+Users manually wiring their chain need to use the new `module.NewBasicManagerFromManager` function, after the module manager creation, and pass a `map[string]module.AppModuleBasic` as argument for optionally overriding some module's `AppModuleBasic`.
 
 #### AutoCLI
 
@@ -493,7 +493,7 @@ To learn more see the [docs](https://docs.cosmos.network/main/learn/advanced/tra
 
 * Messages no longer need to implement the `LegacyMsg` interface and implementations of `GetSignBytes` can be deleted. Because of this change, global legacy Amino codec definitions and their registration in `init()` can safely be removed as well.
 
-* The `AppModuleBasic` interface has been simplifed. Defining `GetTxCmd() *cobra.Command` and `GetQueryCmd() *cobra.Command` is no longer required. The module manager detects when module commands are defined. If AutoCLI is enabled, `EnhanceRootCommand()` will add the auto-generated commands to the root command, unless a custom module command is defined and register that one instead.
+* The `AppModuleBasic` interface has been simplified. Defining `GetTxCmd() *cobra.Command` and `GetQueryCmd() *cobra.Command` is no longer required. The module manager detects when module commands are defined. If AutoCLI is enabled, `EnhanceRootCommand()` will add the auto-generated commands to the root command, unless a custom module command is defined and register that one instead.
 
 * The following modules' `Keeper` methods now take in a `context.Context` instead of `sdk.Context`. Any module that has an interfaces for them (like "expected keepers") will need to update and re-generate mocks if needed:
 
@@ -800,7 +800,7 @@ In case a module does not follow the standard message path, (e.g. IBC), it is ad
 #### `x/params`
 
 The `params` module was deprecated since v0.46. The Cosmos SDK has migrated away from `x/params` for its own modules.
-Cosmos SDK modules now store their parameters directly in its repective modules.
+Cosmos SDK modules now store their parameters directly in its respective modules.
 The `params` module will be removed in `v0.50`, as mentioned [in v0.46 release](https://github.com/cosmos/cosmos-sdk/blob/v0.46.1/UPGRADING.md#xparams). It is strongly encouraged to migrate away from `x/params` before `v0.50`.
 
 When performing a chain migration, the params table must be initizalied manually. This was done in the modules keepers in previous versions.

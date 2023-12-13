@@ -12,10 +12,8 @@ import (
 )
 
 func TestMsgSendGetSignBytes(t *testing.T) {
-	addr1 := sdk.AccAddress([]byte("input"))
-	addr2 := sdk.AccAddress([]byte("output"))
 	coins := sdk.NewCoins(sdk.NewInt64Coin("atom", 10))
-	msg := NewMsgSend(addr1, addr2, coins)
+	msg := NewMsgSend("cosmos1d9h8qat57ljhcm", "cosmos1da6hgur4wsmpnjyg", coins)
 	res, err := codec.NewProtoCodec(types.NewInterfaceRegistry()).MarshalAminoJSON(msg)
 	require.NoError(t, err)
 

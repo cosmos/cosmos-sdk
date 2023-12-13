@@ -6,9 +6,6 @@ import (
 	"context"
 	"fmt"
 
-	"google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/types/known/anypb"
-
 	"cosmossdk.io/x/accounts/internal/implementation"
 
 	"github.com/cosmos/cosmos-sdk/types/address"
@@ -35,7 +32,7 @@ type AccountCreatorFunc = implementation.AccountCreatorFunc
 type Dependencies = implementation.Dependencies
 
 func RegisterExecuteHandler[
-	Req any, ProtoReq implementation.ProtoMsg[Req], Resp any, ProtoResp implementation.ProtoMsg[Resp],
+	Req any, ProtoReq implementation.ProtoMsgG[Req], Resp any, ProtoResp implementation.ProtoMsgG[Resp],
 ](router *ExecuteBuilder, handler func(ctx context.Context, req ProtoReq) (ProtoResp, error),
 ) {
 	implementation.RegisterExecuteHandler(router, handler)
@@ -43,7 +40,7 @@ func RegisterExecuteHandler[
 
 // RegisterQueryHandler registers a query handler for a smart account that uses protobuf.
 func RegisterQueryHandler[
-	Req any, ProtoReq implementation.ProtoMsg[Req], Resp any, ProtoResp implementation.ProtoMsg[Resp],
+	Req any, ProtoReq implementation.ProtoMsgG[Req], Resp any, ProtoResp implementation.ProtoMsgG[Resp],
 ](router *QueryBuilder, handler func(ctx context.Context, req ProtoReq) (ProtoResp, error),
 ) {
 	implementation.RegisterQueryHandler(router, handler)
@@ -51,7 +48,7 @@ func RegisterQueryHandler[
 
 // RegisterInitHandler registers an initialisation handler for a smart account that uses protobuf.
 func RegisterInitHandler[
-	Req any, ProtoReq implementation.ProtoMsg[Req], Resp any, ProtoResp implementation.ProtoMsg[Resp],
+	Req any, ProtoReq implementation.ProtoMsgG[Req], Resp any, ProtoResp implementation.ProtoMsgG[Resp],
 ](router *InitBuilder, handler func(ctx context.Context, req ProtoReq) (ProtoResp, error),
 ) {
 	implementation.RegisterInitHandler(router, handler)
@@ -59,7 +56,10 @@ func RegisterInitHandler[
 
 // AddAccount is a helper function to add a smart account to the list of smart accounts.
 func AddAccount[A Interface](name string, constructor func(deps Dependencies) (A, error)) AccountCreatorFunc {
-	return implementation.AddAccount(name, constructor)
+	return func(deps implementation.Dependencies) (string, implementation.Account, error) {
+		acc, err := constructor(deps)
+		return name, acc, err
+	}
 }
 
 // Whoami returns the address of the account being invoked.
@@ -78,34 +78,34 @@ func SenderIsAccountsModule(ctx context.Context) bool {
 }
 
 // ExecModule can be used to execute a message towards a module.
-func ExecModule[Resp any, RespProto implementation.ProtoMsg[Resp], Req any, ReqProto implementation.ProtoMsg[Req]](ctx context.Context, msg ReqProto) (RespProto, error) {
+func ExecModule[Resp any, RespProto implementation.ProtoMsgG[Resp], Req any, ReqProto implementation.ProtoMsgG[Req]](ctx context.Context, msg ReqProto) (RespProto, error) {
 	return implementation.ExecModule[Resp, RespProto, Req, ReqProto](ctx, msg)
 }
 
-func ExecModuleUntyped(ctx context.Context, msg proto.Message) (proto.Message, error) {
+func ExecModuleUntyped(ctx context.Context, msg implementation.ProtoMsg) (implementation.ProtoMsg, error) {
 	return implementation.ExecModuleUntyped(ctx, msg)
 }
 
 // QueryModule can be used by an account to execute a module query.
-func QueryModule[Resp any, RespProto implementation.ProtoMsg[Resp], Req any, ReqProto implementation.ProtoMsg[Req]](ctx context.Context, req ReqProto) (RespProto, error) {
+func QueryModule[Resp any, RespProto implementation.ProtoMsgG[Resp], Req any, ReqProto implementation.ProtoMsgG[Req]](ctx context.Context, req ReqProto) (RespProto, error) {
 	return implementation.QueryModule[Resp, RespProto, Req, ReqProto](ctx, req)
 }
 
 // UnpackAny unpacks a protobuf Any message generically.
-func UnpackAny[Msg any, ProtoMsg implementation.ProtoMsg[Msg]](any *anypb.Any) (*Msg, error) {
+func UnpackAny[Msg any, ProtoMsg implementation.ProtoMsgG[Msg]](any *implementation.Any) (*Msg, error) {
 	return implementation.UnpackAny[Msg, ProtoMsg](any)
 }
 
 // PackAny packs a protobuf Any message generically.
-func PackAny(msg proto.Message) (*anypb.Any, error) {
+func PackAny(msg implementation.ProtoMsg) (*implementation.Any, error) {
 	return implementation.PackAny(msg)
 }
 
 // ExecModuleAnys can be used to execute a list of messages towards a module
 // when those messages are packed in Any messages. The function returns a list
 // of responses packed in Any messages.
-func ExecModuleAnys(ctx context.Context, msgs []*anypb.Any) ([]*anypb.Any, error) {
-	responses := make([]*anypb.Any, len(msgs))
+func ExecModuleAnys(ctx context.Context, msgs []*implementation.Any) ([]*implementation.Any, error) {
+	responses := make([]*implementation.Any, len(msgs))
 	for i, msg := range msgs {
 		concreteMessage, err := implementation.UnpackAnyRaw(msg)
 		if err != nil {

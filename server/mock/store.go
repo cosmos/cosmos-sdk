@@ -217,7 +217,7 @@ func (kv kvStore) Prefix(prefix []byte) storetypes.KVStore {
 }
 
 func (kv kvStore) Gas(meter storetypes.GasMeter, config storetypes.GasConfig) storetypes.KVStore {
-	panic("not implmeneted")
+	panic("not implemented")
 }
 
 func (kv kvStore) Iterator(start, end []byte) storetypes.Iterator {

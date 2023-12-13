@@ -8,6 +8,7 @@ import (
 
 	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/kv/branch"
+	"cosmossdk.io/store/v2/storage"
 	"cosmossdk.io/store/v2/storage/sqlite"
 )
 
@@ -25,7 +26,8 @@ func TestStorageTestSuite(t *testing.T) {
 }
 
 func (s *StoreTestSuite) SetupTest() {
-	storage, err := sqlite.New(s.T().TempDir())
+	sqliteDB, err := sqlite.New(s.T().TempDir())
+	ss := storage.NewStorageStore(sqliteDB)
 	s.Require().NoError(err)
 
 	cs := store.NewChangeset(map[string]store.KVPairs{storeKey: {}})
@@ -36,12 +38,12 @@ func (s *StoreTestSuite) SetupTest() {
 		cs.AddKVPair(storeKey, store.KVPair{Key: []byte(key), Value: []byte(val)})
 	}
 
-	s.Require().NoError(storage.ApplyChangeset(1, cs))
+	s.Require().NoError(ss.ApplyChangeset(1, cs))
 
-	kvStore, err := branch.New(storeKey, storage)
+	kvStore, err := branch.New(storeKey, ss)
 	s.Require().NoError(err)
 
-	s.storage = storage
+	s.storage = ss
 	s.kvStore = kvStore
 }
 

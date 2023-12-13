@@ -427,7 +427,7 @@ func (s *addressTestSuite) TestCustomAddressVerifier() {
 		return fmt.Errorf("incorrect address length %d", n)
 	})
 
-	// Verifiy that the custom logic rejects this 10 byte address
+	// Verify that the custom logic rejects this 10 byte address
 	err = types.VerifyAddressFormat(addr)
 	s.Require().NotNil(err)
 	_, err = types.AccAddressFromBech32(accBech)

@@ -48,7 +48,7 @@ func verify(ctx client.Context, tx *apitx.Tx) error {
 		return err
 	}
 
-	sigs, err := sigTx.GetSignaturesV2()
+	sigs, err := sigTx.GetSignatures()
 	if err != nil {
 		return err
 	}
@@ -80,6 +80,7 @@ func verify(ctx client.Context, tx *apitx.Tx) error {
 		if err != nil {
 			return err
 		}
+
 		txSignerData := txsigning.SignerData{
 			ChainID:       signingData.ChainID,
 			AccountNumber: signingData.AccountNumber,

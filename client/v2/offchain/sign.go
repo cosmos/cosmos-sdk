@@ -2,7 +2,6 @@ package offchain
 
 import (
 	"context"
-	cryptokeyring "github.com/cosmos/cosmos-sdk/crypto/keyring"
 
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -16,6 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/version"
 )
 
@@ -64,7 +64,7 @@ func Sign(ctx client.Context, rawBytes []byte, fromName, signMode string) (strin
 }
 
 func sign(ctx client.Context, fromName, digest string, signMode apisigning.SignMode) (*apitx.Tx, error) {
-	keybase, err := cryptokeyring.NewAutoCLIKeyring(ctx.Keyring)
+	keybase, err := keyring.NewAutoCLIKeyring(ctx.Keyring)
 	if err != nil {
 		return nil, err
 	}
@@ -104,13 +104,13 @@ func sign(ctx client.Context, fromName, digest string, signMode apisigning.SignM
 		Signature: nil,
 	}
 
-	sig := SignatureV2{
+	sig := OffchainSignature{
 		PubKey:   pubKey,
 		Data:     &sigData,
 		Sequence: ExpectedSequence,
 	}
 
-	sigs := []SignatureV2{sig}
+	sigs := []OffchainSignature{sig}
 	err = txBuilder.SetSignatures(sigs...)
 	if err != nil {
 		return nil, err
@@ -132,7 +132,7 @@ func sign(ctx client.Context, fromName, digest string, signMode apisigning.SignM
 		SignMode:  signMode,
 		Signature: signedBytes,
 	}
-	sig = SignatureV2{
+	sig = OffchainSignature{
 		PubKey:   pubKey,
 		Data:     &sigData,
 		Sequence: ExpectedSequence,

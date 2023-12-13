@@ -11,8 +11,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 )
+
+const mnemonic = "have embark stumble card pistol fun gauge obtain forget oil awesome lottery unfold corn sure original exist siren pudding spread uphold dwarf goddess card"
 
 func Test_verify(t *testing.T) {
 	k := keyring.NewInMemory(getCodec())
@@ -50,7 +51,7 @@ func Test_verify(t *testing.T) {
 		},
 		{
 			name:     "signMode legacyAmino",
-			fromName: "textualKey",
+			fromName: "legacyKey",
 			digest:   "hello world",
 			signMode: apitxsigning.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
 			ctx: client.Context{
@@ -63,7 +64,7 @@ func Test_verify(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, err := k.NewAccount(tt.fromName, testdata.TestMnemonic, tt.name, "m/44'/118'/0'/0/0", hd.Secp256k1)
+			_, err := k.NewAccount(tt.fromName, mnemonic, tt.name, "m/44'/118'/0'/0/0", hd.Secp256k1)
 			require.NoError(t, err)
 
 			tx, err := sign(tt.ctx, tt.fromName, tt.digest, tt.signMode)

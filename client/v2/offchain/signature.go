@@ -20,7 +20,7 @@ type SingleSignatureData struct {
 	Signature []byte
 }
 
-type SignatureV2 struct {
+type OffchainSignature struct {
 	// PubKey is the public key to use for verifying the signature
 	PubKey cryptotypes.PubKey
 

@@ -19,7 +19,7 @@ import (
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-	"github.com/cosmos/cosmos-sdk/testutil/testdata"
+	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing" // TODO: needed as textual is not enabled by default
 )
 
 func getCodec() codec.Codec {
@@ -30,8 +30,15 @@ func getCodec() codec.Codec {
 }
 
 func MakeTestTxConfig() client.TxConfig {
+	enabledSignModes := []signingtypes.SignMode{
+		signingtypes.SignMode_SIGN_MODE_DIRECT,
+		signingtypes.SignMode_SIGN_MODE_DIRECT_AUX,
+		signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
+		signingtypes.SignMode_SIGN_MODE_TEXTUAL,
+	}
 	initClientCtx := client.Context{}
 	txConfigOpts := tx.ConfigOptions{
+		EnabledSignModes:           enabledSignModes,
 		TextualCoinMetadataQueryFn: txmodule.NewGRPCCoinMetadataQueryFn(initClientCtx),
 	}
 	ir, err := codectypes.NewInterfaceRegistryWithOptions(codectypes.InterfaceRegistryOptions{
@@ -73,7 +80,7 @@ func Test_sign(t *testing.T) {
 					TxConfig:     MakeTestTxConfig(),
 					AddressCodec: address.NewBech32Codec("cosmos"),
 				},
-				fromName: "test",
+				fromName: "direct",
 				digest:   "Hello world!",
 				signMode: apitxsigning.SignMode_SIGN_MODE_DIRECT,
 			},
@@ -86,7 +93,7 @@ func Test_sign(t *testing.T) {
 					TxConfig:     MakeTestTxConfig(),
 					AddressCodec: address.NewBech32Codec("cosmos"),
 				},
-				fromName: "test",
+				fromName: "textual",
 				digest:   "Hello world!",
 				signMode: apitxsigning.SignMode_SIGN_MODE_TEXTUAL,
 			},
@@ -99,7 +106,7 @@ func Test_sign(t *testing.T) {
 					TxConfig:     MakeTestTxConfig(),
 					AddressCodec: address.NewBech32Codec("cosmos"),
 				},
-				fromName: "test",
+				fromName: "legacy",
 				digest:   "Hello world!",
 				signMode: apitxsigning.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
 			},
@@ -107,7 +114,7 @@ func Test_sign(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, err := k.NewAccount(tt.args.fromName, testdata.TestMnemonic, tt.name, "m/44'/118'/0'/0/0", hd.Secp256k1)
+			_, err := k.NewAccount(tt.args.fromName, mnemonic, tt.name, "m/44'/118'/0'/0/0", hd.Secp256k1)
 			require.NoError(t, err)
 
 			got, err := sign(tt.args.ctx, tt.args.fromName, tt.args.digest, tt.args.signMode)

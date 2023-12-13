@@ -157,7 +157,7 @@ func (b *builder) GetPubKeys() ([]cryptotypes.PubKey, error) { // If signer alre
 	return pks, nil
 }
 
-func (b *builder) GetSignaturesV2() ([]SignatureV2, error) {
+func (b *builder) GetSignatures() ([]OffchainSignature, error) {
 	signerInfos := b.tx.AuthInfo.SignerInfos
 	sigs := b.tx.Signatures
 	pubKeys, err := b.GetPubKeys()
@@ -165,12 +165,12 @@ func (b *builder) GetSignaturesV2() ([]SignatureV2, error) {
 		return nil, err
 	}
 	n := len(signerInfos)
-	res := make([]SignatureV2, n)
+	res := make([]OffchainSignature, n)
 
 	for i, si := range signerInfos {
 		// handle nil signatures (in case of simulation)
 		if si.ModeInfo == nil {
-			res[i] = SignatureV2{
+			res[i] = OffchainSignature{
 				PubKey: pubKeys[i],
 			}
 		} else {
@@ -181,7 +181,7 @@ func (b *builder) GetSignaturesV2() ([]SignatureV2, error) {
 			}
 			// sequence number is functionally a transaction nonce and referred to as such in the SDK
 			nonce := si.GetSequence()
-			res[i] = SignatureV2{
+			res[i] = OffchainSignature{
 				PubKey:   pubKeys[i],
 				Data:     sigData,
 				Sequence: nonce,
@@ -261,7 +261,7 @@ func (b *builder) setMsgs(msgs ...proto.Message) error {
 	return nil
 }
 
-func (b *builder) SetSignatures(signatures ...SignatureV2) error {
+func (b *builder) SetSignatures(signatures ...OffchainSignature) error {
 	n := len(signatures)
 	signerInfos := make([]*apitx.SignerInfo, n)
 	rawSigs := make([][]byte, n)

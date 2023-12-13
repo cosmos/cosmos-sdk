@@ -19,20 +19,12 @@ import (
 )
 
 func Verify(ctx client.Context, digest []byte) error {
-	tx := &apitx.Tx{}
-
-	err := protojson.Unmarshal(digest, tx)
+	tx, err := unmarshall(digest)
 	if err != nil {
 		return err
 	}
 
-	err = verify(ctx, tx)
-	if err != nil {
-		return err
-	}
-
-	fmt.Printf("Verification OK")
-	return nil
+	return verify(ctx, tx)
 }
 
 func verify(ctx client.Context, tx *apitx.Tx) error {
@@ -101,6 +93,13 @@ func verify(ctx client.Context, tx *apitx.Tx) error {
 	return nil
 }
 
+// unmarshall a digest to a Tx using protobuf protojson
+func unmarshall(digest []byte) (*apitx.Tx, error) {
+	tx := &apitx.Tx{}
+	err := protojson.Unmarshal(digest, tx)
+	return tx, err
+}
+
 // verifySignature verifies a transaction signature contained in SignatureData abstracting over different signing
 // modes. It differs from VerifySignature in that it uses the new txsigning.TxData interface in x/tx.
 func verifySignature(
@@ -121,23 +120,6 @@ func verifySignature(
 			return fmt.Errorf("unable to verify single signer signature")
 		}
 		return nil
-
-	//case *signing.MultiSignatureData:
-	//	multiPK, ok := pubKey.(multisig.PubKey)
-	//	if !ok {
-	//		return fmt.Errorf("expected %T, got %T", (multisig.PubKey)(nil), pubKey)
-	//	}
-	//	err := multiPK.VerifyMultisignature(func(mode signing.SignMode) ([]byte, error) {
-	//		signMode, err := internalSignModeToAPI(mode)
-	//		if err != nil {
-	//			return nil, err
-	//		}
-	//		return handler.GetSignBytes(ctx, signMode, signerData, txData)
-	//	}, data)
-	//	if err != nil {
-	//		return err
-	//	}
-	//	return nil
 	default:
 		return fmt.Errorf("unexpected SignatureData %T", signatureData)
 	}

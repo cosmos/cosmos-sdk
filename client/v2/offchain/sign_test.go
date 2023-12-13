@@ -3,6 +3,7 @@ package offchain
 import (
 	"testing"
 
+
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/require"
 
@@ -12,6 +13,7 @@ import (
 	"cosmossdk.io/x/tx/signing"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/codec/testutil"
@@ -58,6 +60,46 @@ func MakeTestTxConfig() client.TxConfig {
 		panic(err)
 	}
 	return txConfig
+}
+
+func Test_getSignMode(t *testing.T) {
+	tests := []struct {
+		name        string
+		signModeStr string
+		want        apitxsigning.SignMode
+	}{
+		{
+			name:        "direct",
+			signModeStr: flags.SignModeDirect,
+			want:        apitxsigning.SignMode_SIGN_MODE_DIRECT,
+		},
+		{
+			name:        "legacy Amino JSON",
+			signModeStr: flags.SignModeLegacyAminoJSON,
+			want:        apitxsigning.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
+		},
+		{
+			name:        "direct Aux",
+			signModeStr: flags.SignModeDirectAux,
+			want:        apitxsigning.SignMode_SIGN_MODE_DIRECT_AUX,
+		},
+		{
+			name:        "textual",
+			signModeStr: flags.SignModeTextual,
+			want:        apitxsigning.SignMode_SIGN_MODE_TEXTUAL,
+		},
+		{
+			name:        "unspecified",
+			signModeStr: "",
+			want:        apitxsigning.SignMode_SIGN_MODE_UNSPECIFIED,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := getSignMode(tt.signModeStr)
+			require.Equal(t, got, tt.want)
+		})
+	}
 }
 
 func Test_sign(t *testing.T) {

@@ -28,12 +28,6 @@ const (
 	ExpectedSequence = 0
 )
 
-type encodingFunc = func([]byte) (string, error)
-
-func noEncoding(digest []byte) (string, error) {
-	return string(digest), nil
-}
-
 func getSignMode(signModeStr string) apisigning.SignMode {
 	signMode := apisigning.SignMode_SIGN_MODE_UNSPECIFIED
 	switch signModeStr {
@@ -49,8 +43,8 @@ func getSignMode(signModeStr string) apisigning.SignMode {
 	return signMode
 }
 
-func Sign(ctx client.Context, rawBytes []byte, fromName, signMode string) (string, error) {
-	digest, err := noEncoding(rawBytes)
+func Sign(ctx client.Context, rawBytes []byte, fromName, signMode, indent, encoding string, emitUnpopulated bool) (string, error) {
+	digest, err := getEncoder(encoding)(rawBytes)
 	if err != nil {
 		return "", err
 	}
@@ -60,7 +54,7 @@ func Sign(ctx client.Context, rawBytes []byte, fromName, signMode string) (strin
 		return "", err
 	}
 
-	return marshalOffChainTx(tx, true, "  ")
+	return marshalOffChainTx(tx, emitUnpopulated, indent)
 }
 
 func sign(ctx client.Context, fromName, digest string, signMode apisigning.SignMode) (*apitx.Tx, error) {
@@ -99,14 +93,14 @@ func sign(ctx client.Context, fromName, digest string, signMode apisigning.SignM
 		PubKey:        pubKey,
 	}
 
-	sigData := SingleSignatureData{
+	sigData := &SingleSignatureData{
 		SignMode:  signMode,
 		Signature: nil,
 	}
 
 	sig := OffchainSignature{
 		PubKey:   pubKey,
-		Data:     &sigData,
+		Data:     sigData,
 		Sequence: ExpectedSequence,
 	}
 
@@ -128,15 +122,8 @@ func sign(ctx client.Context, fromName, digest string, signMode apisigning.SignM
 		return nil, err
 	}
 
-	sigData = SingleSignatureData{
-		SignMode:  signMode,
-		Signature: signedBytes,
-	}
-	sig = OffchainSignature{
-		PubKey:   pubKey,
-		Data:     &sigData,
-		Sequence: ExpectedSequence,
-	}
+	sigData.Signature = signedBytes
+
 	err = txBuilder.SetSignatures(sig)
 	if err != nil {
 		return nil, err

@@ -223,20 +223,6 @@ func (b *builder) getSigners() ([][]byte, []protov2.Message, error) {
 		}
 	}
 
-	// ensure any specified fee payer is included in the required signers (at the end)
-	feePayer := b.tx.AuthInfo.Fee.Payer
-	var feePayerAddr []byte
-	if feePayer != "" {
-		var err error
-		if err != nil {
-			return nil, nil, err
-		}
-	}
-	if feePayerAddr != nil && !seen[string(feePayerAddr)] {
-		signers = append(signers, feePayerAddr)
-		seen[string(feePayerAddr)] = true
-	}
-
 	return signers, msgsv2, nil
 }
 
@@ -303,33 +289,6 @@ func (b *builder) signatureDataToModeInfoAndSig(data SignatureData) (*apitx.Mode
 				Single: &apitx.ModeInfo_Single{Mode: data.SignMode},
 			},
 		}, data.Signature
-
-	// TODO: multisig
-	// case *signing.MultiSignatureData:
-	//	n := len(data.Signatures)
-	//	modeInfos := make([]*apitx.ModeInfo, n)
-	//	sigs := make([][]byte, n)
-	//
-	//	for i, d := range data.Signatures {
-	//		modeInfos[i], sigs[i] = SignatureDataToModeInfoAndSig(d)
-	//	}
-	//
-	//	multisig := cryptotypes.MultiSignature{
-	//		Signatures: sigs,
-	//	}
-	//	sig, err := multisig.Marshal()
-	//	if err != nil {
-	//		panic(err)
-	//	}
-	//
-	//	return &apitx.ModeInfo{
-	//		Sum: &apitx.ModeInfo_Multi_{
-	//			Multi: &apitx.ModeInfo_Multi{
-	//				Bitarray:  data.BitArray,
-	//				ModeInfos: modeInfos,
-	//			},
-	//		},
-	//	}, sig
 	default:
 		panic(fmt.Sprintf("unexpected signature data type %T", data))
 	}

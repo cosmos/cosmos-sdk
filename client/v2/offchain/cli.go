@@ -11,6 +11,12 @@ import (
 
 // TODO: auto-cli
 
+const (
+	flagNotEmitUnpopulated = "notEmitUnpopulated"
+	flagIndent             = "indent"
+	flagEncoding           = "encoding"
+)
+
 // OffChain off-chain utilities
 func OffChain() *cobra.Command {
 	cmd := &cobra.Command{
@@ -24,7 +30,6 @@ func OffChain() *cobra.Command {
 		VerifyFile(),
 	)
 
-	cmd.PersistentFlags().String(flags.FlagOutput, "text", "Output format (text|json)")
 	cmd.PersistentFlags().String(flags.FlagSignMode, "direct", "Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature")
 	flags.AddKeyringFlags(cmd.PersistentFlags())
 	return cmd
@@ -32,7 +37,7 @@ func OffChain() *cobra.Command {
 
 // SignFile sign a file with a key
 func SignFile() *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "sign <keyName> <fileName>",
 		Short: "Sign a file",
 		Long:  "Sign a file using a key.",
@@ -46,8 +51,11 @@ func SignFile() *cobra.Command {
 			}
 
 			signmode, _ := cmd.Flags().GetString(flags.FlagSignMode)
+			notEmitUnpopulated, _ := cmd.Flags().GetBool(flagNotEmitUnpopulated)
+			indent, _ := cmd.Flags().GetString(flagIndent)
+			encoding, _ := cmd.Flags().GetString(flagEncoding)
 
-			signedTx, err := Sign(clientCtx, bz, args[0], signmode)
+			signedTx, err := Sign(clientCtx, bz, args[0], signmode, indent, encoding, !notEmitUnpopulated)
 			if err != nil {
 				return err
 			}
@@ -56,6 +64,11 @@ func SignFile() *cobra.Command {
 			return nil
 		},
 	}
+
+	cmd.PersistentFlags().Bool(flagNotEmitUnpopulated, false, "Don't show unpopulated fields in the tx")
+	cmd.PersistentFlags().String(flagIndent, "  ", "Choose an indent for the tx. Default '  ' (two spaces)")
+	cmd.PersistentFlags().String(flagEncoding, "no-encoding", "Choose an encoding method for the file content to be added as the tx data (no-encoding|base64). Default no-encoding")
+	return cmd
 }
 
 // VerifyFile sign a file with a key
@@ -76,7 +89,11 @@ func VerifyFile() *cobra.Command {
 				return err
 			}
 
-			return Verify(clientCtx, bz)
+			err = Verify(clientCtx, bz)
+			if err == nil {
+				cmd.Println("Verification OK!")
+			}
+			return err
 		},
 	}
 }

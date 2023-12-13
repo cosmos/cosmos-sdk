@@ -6,8 +6,6 @@ Circuit Breaker is a module that is meant to avoid a chain needing to halt/shut 
 
 Circuit Breaker works with the idea that an address or set of addresses have the right to block messages from being executed and/or included in the mempool. Any address with a permission is able to reset the circuit breaker for the message. 
 
-<<<<<<< HEAD
-=======
 The transactions are checked and can be rejected at two points:
 
 * In `CircuitBreakerDecorator` [ante handler](https://docs.cosmos.network/main/learn/advanced/baseapp#antehandler):
@@ -27,7 +25,6 @@ The `CircuitBreakerDecorator` works for most use cases, but [does not check the 
 This tradeoff is to avoid introducing more dependencies in the `x/circuit` module. Chains can re-define the `CircuitBreakerDecorator` to check for inner messages if they wish to do so.
 :::
 
->>>>>>> 49825ea40 (docs: add ante precision (#18709))
 ## State
 
 ### Accounts

@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/spf13/cobra"
 
 	modulev1 "cosmossdk.io/api/cosmos/auth/module/v1"
 	"cosmossdk.io/core/address"
@@ -83,9 +84,9 @@ func (AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) 
 }
 
 // GetTxCmd returns the root tx command for the auth module.
-/* func (ab AppModuleBasic) GetTxCmd() *cobra.Command {
-	return cli.GetTxCmd()
-} */
+func (ab AppModuleBasic) GetTxCmd() *cobra.Command {
+	return nil
+}
 
 // AppModule implements an application module for the auth module.
 type AppModule struct {

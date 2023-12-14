@@ -33,7 +33,7 @@ type Manager struct {
 	// dataDir defines the directory to store unexpired unordered transactions
 	//
 	// XXX: Note, ideally we avoid the need to store unexpired unordered transactions
-	// directly to file. However, store v1 does not allow such a primitive. However,
+	// directly to file. However, store v1 does not allow such a primitive. But,
 	// once store v2 is fully integrated, we can remove manual file handling and
 	// store the unexpired unordered transactions directly to SS.
 	//

@@ -25,12 +25,11 @@ func (keeper Keeper) SubmitProposal(ctx context.Context, messages []sdk.Msg, met
 	}
 
 	// additional checks per proposal types
-	switch proposalType {
-	case v1.ProposalType_PROPOSAL_TYPE_OPTIMISTIC:
+	if proposalType == v1.ProposalType_PROPOSAL_TYPE_OPTIMISTIC {
 		proposerStr, _ := keeper.authKeeper.AddressCodec().BytesToString(proposer)
 
 		if len(params.OptimisticAuthorizedAddresses) > 0 {
-			if slices.Contains(params.OptimisticAuthorizedAddresses, proposerStr) {
+			if !slices.Contains(params.OptimisticAuthorizedAddresses, proposerStr) {
 				return v1.Proposal{}, errorsmod.Wrap(types.ErrInvalidProposer, "proposer is not authorized to submit optimistic proposal")
 			}
 		}

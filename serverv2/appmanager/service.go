@@ -14,7 +14,7 @@ type AppManager[T transaction.Tx] struct {
 	// basicManager      module.BasicManager
 	// baseAppOptions    []BaseAppOption
 	msgServiceRouter *MsgServiceRouter
-	queryRouter      *QueryRouter
+	handleQuery      *QueryRouter
 	// appConfig         *appv1alpha1.Config
 	logger log.Logger
 }
@@ -88,7 +88,7 @@ func (am AppManager[T]) Query(ctx context.Context, qr *appmanager.QueryRequest) 
 
 	// handle gRPC routes first rather than calling splitPath because '/' characters
 	// are used as part of gRPC paths
-	if grpcHandler := am.queryRouter.Route(qr.Path); grpcHandler != nil {
+	if grpcHandler := am.handleQuery.Route(qr.Path); grpcHandler != nil {
 		return grpcHandler(ctx, qr)
 	}
 

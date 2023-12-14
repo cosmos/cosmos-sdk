@@ -49,20 +49,18 @@ type TxResult struct {
 
 // STFAppManager is a struct that manages the state transition component of the app.
 type STFAppManager struct {
-	msgRouter   MsgRouter
-	queryRouter QueryRouter
+	handleMsg   func(ctx context.Context, msg Type) (msgResp Type, err error)
+	handleQuery func(ctx context.Context, req Type) (resp Type, err error)
 
 	doBeginBlock func(ctx context.Context) error
 	doEndBlock   func(ctx context.Context) error
 
 	doTxValidation func(ctx context.Context, tx Tx) error
 
-	txDecoder TxDecoder
+	decodeTx func(txBytes []byte) (Tx, error)
 
 	store  Store
 	branch func(store ReadonlyStore) BranchStore
-
-	blockGasLimit uint64
 }
 
 // DeliverBlock is our state transition function.
@@ -121,21 +119,20 @@ func (s STFAppManager) beginBlock(ctx context.Context, store BranchStore) (begin
 }
 
 func (s STFAppManager) deliverTx(ctx context.Context, blockStore BranchStore, txBytes []byte) TxResult {
-	// decode TX
-	tx, err := s.txDecoder.Decode(txBytes)
+	tx, err := s.decodeTx(txBytes)
 	if err != nil {
 		return TxResult{
 			Error: err,
 		}
 	}
-	// validate tx
+
 	validateGas, validationEvents, err := s.validateTx(ctx, blockStore, tx.GetGasLimit(), tx)
 	if err != nil {
 		return TxResult{
 			Error: err,
 		}
 	}
-	// exec tx
+
 	execResp, execGas, execEvents, err := s.execTx(ctx, blockStore, tx.GetGasLimit()-validateGas, tx)
 	if err != nil {
 		return TxResult{
@@ -144,6 +141,7 @@ func (s STFAppManager) deliverTx(ctx context.Context, blockStore BranchStore, tx
 			Error:   err,
 		}
 	}
+
 	return TxResult{
 		Events:  append(validationEvents, execEvents...),
 		GasUsed: execGas + validateGas,
@@ -174,7 +172,7 @@ func (s STFAppManager) validateTx(ctx context.Context, store BranchStore, gasLim
 
 func (s STFAppManager) execTx(ctx context.Context, store BranchStore, gasLimit uint64, tx Tx) (msgResp Type, gasUsed uint64, execEvents []Event, err error) {
 	execCtx := s.makeContext(ctx, store, gasLimit)
-	msgResp, err = s.msgRouter.Handle(ctx, tx.GetMessage())
+	msgResp, err = s.handleMsg(ctx, tx.GetMessage())
 	if err != nil {
 		return nil, 0, nil, err
 	}

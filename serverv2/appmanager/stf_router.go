@@ -3,70 +3,76 @@ package appmanager
 import (
 	"context"
 	"errors"
+	"fmt"
 )
 
 var (
 	ErrNoHandler = errors.New("no handler")
 )
 
-// MsgHandler is a function that handles the message execution.
+// MsgHandler is a function that handles the message execution. TODO: move to appmanager.Module.go
 type MsgHandler = func(ctx context.Context, msg Type) (msgResp Type, err error)
 
-// PreMsgHandler is a function that executes before the message execution.
+// PreMsgHandler is a function that executes before the message execution.TODO: move to appmanager.Module.go
 type PreMsgHandler = func(ctx context.Context, msg Type) (err error)
 
-// PostMsgHandler is a function that executes after the message execution.
+// PostMsgHandler is a function that executes after the message execution.TODO: move to appmanager.Module.go
 type PostMsgHandler = func(ctx context.Context, msg Type, msgResp Type) (err error)
 
-type MsgRouter struct {
-	handlers map[string]MsgHandler
-}
+type QueryHandler = MsgHandler
 
-func (r MsgRouter) Handle(ctx context.Context, msg Type) (msgResp Type, err error) {
-	msgType := TypeName(msg)
-	handler, ok := r.handlers[msgType]
-	if !ok {
-		return nil, ErrNoHandler
+func newMsgRouterBuilder() *msgRouterBuilder {
+	return &msgRouterBuilder{
+		handlers:     make(map[string]MsgHandler),
+		preHandlers:  make(map[string][]PreMsgHandler),
+		postHandlers: make(map[string][]PostMsgHandler),
 	}
-	return handler(ctx, msg)
 }
 
-type MsgRouterBuilder struct {
+type msgRouterBuilder struct {
 	handlers     map[string]MsgHandler
 	preHandlers  map[string][]PreMsgHandler
 	postHandlers map[string][]PostMsgHandler
 }
 
-func (b *MsgRouterBuilder) RegisterHandler(msgType string, handler MsgHandler) {
+func (b *msgRouterBuilder) RegisterHandler(msgType string, handler MsgHandler) error {
 	// panic on override
 	if _, ok := b.handlers[msgType]; ok {
-		panic("handler already registered: " + msgType)
+		return fmt.Errorf("handler already registered: %s", msgType)
 	}
 	b.handlers[msgType] = handler
+	return nil
 }
 
-func (b *MsgRouterBuilder) RegisterPreHandler(msgType string, handler PreMsgHandler) {
+func (b *msgRouterBuilder) RegisterPreHandler(msgType string, handler PreMsgHandler) {
 	b.preHandlers[msgType] = append(b.preHandlers[msgType], handler)
 }
 
-func (b *MsgRouterBuilder) RegisterPostHandler(msgType string, handler PostMsgHandler) {
+func (b *msgRouterBuilder) RegisterPostHandler(msgType string, handler PostMsgHandler) {
 	b.postHandlers[msgType] = append(b.postHandlers[msgType], handler)
 }
 
-func (b *MsgRouterBuilder) Build() (*MsgRouter, error) {
-	msgRouter := &MsgRouter{
-		handlers: make(map[string]MsgHandler),
-	}
+func (b *msgRouterBuilder) Build() (MsgHandler, error) {
+	handlers := make(map[string]MsgHandler)
 	for msgType, handler := range b.handlers {
 		// find pre handler
 		preHandlers := b.preHandlers[msgType]
 		// find post handler
 		postHandlers := b.postHandlers[msgType]
 		// build the handler
-		msgRouter.handlers[msgType] = buildHandler(handler, preHandlers, postHandlers)
+		handlers[msgType] = buildHandler(handler, preHandlers, postHandlers)
 	}
 	// TODO: add checks for when a pre handler/post handler is registered but there is no matching handler.
-	return msgRouter, nil
+
+	// return handler as function
+	return func(ctx context.Context, msg Type) (Type, error) {
+		typeName := TypeName(msg)
+		handler, exists := handlers[typeName]
+		if !exists {
+			return nil, fmt.Errorf("%w: %s", ErrNoHandler, typeName)
+		}
+		return handler(ctx, msg)
+	}, nil
 }
 
 func buildHandler(handler MsgHandler, preHandlers []PreMsgHandler, postHandlers []PostMsgHandler) MsgHandler {

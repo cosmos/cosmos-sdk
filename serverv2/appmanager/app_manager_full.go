@@ -56,7 +56,7 @@ type AppManager struct {
 
 func (a AppManager) CheckTx(ctx context.Context, txBytes []byte) error {
 	// decode tx
-	tx, err := a.stf.txDecoder.Decode(txBytes)
+	tx, err := a.stf.decodeTx.Decode(txBytes)
 	if err != nil {
 		return err
 	}
@@ -83,7 +83,7 @@ func (a AppManager) DeliverBlock(ctx context.Context, block Block) (*BlockRespon
 func (a AppManager) Query(ctx context.Context, request Type) (response Type, err error) {
 	queryState := a.getLatestState(ctx)
 	queryCtx := a.stf.makeContext(ctx, queryState, a.queryGasLimit)
-	return a.stf.queryRouter.Handle(queryCtx, request)
+	return a.stf.handleQuery(queryCtx, request)
 }
 
 // getLatestState provides a readonly view of the state of the last committed block.

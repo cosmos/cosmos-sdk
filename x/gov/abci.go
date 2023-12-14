@@ -127,11 +127,11 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) error {
 			return false, err
 		}
 
-		// If an expedited proposal fails, we do not want to update
+		// If an expedited/optimistic proposal fails and isn't spammy, we do not want to update
 		// the deposit at this point since the proposal is converted to regular.
 		// As a result, the deposits are either deleted or refunded in all cases
-		// EXCEPT when an expedited or optimistic proposal fails.
-		if passes || !(proposal.ProposalType == v1.ProposalType_PROPOSAL_TYPE_EXPEDITED || proposal.ProposalType == v1.ProposalType_PROPOSAL_TYPE_OPTIMISTIC) {
+		// EXCEPT when an expedited or optimistic proposal fails and isn't spammy.
+		if passes || (burnDeposits || !(proposal.ProposalType == v1.ProposalType_PROPOSAL_TYPE_EXPEDITED || proposal.ProposalType == v1.ProposalType_PROPOSAL_TYPE_OPTIMISTIC)) {
 			if burnDeposits {
 				err = keeper.DeleteAndBurnDeposits(ctx, proposal.Id)
 			} else {
@@ -199,9 +199,9 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) error {
 				tagValue = types.AttributeValueProposalFailed
 				logMsg = fmt.Sprintf("passed, but msg %d (%s) failed on execution: %s", idx, sdk.MsgTypeURL(msg), err)
 			}
-		case proposal.ProposalType == v1.ProposalType_PROPOSAL_TYPE_EXPEDITED ||
-			proposal.ProposalType == v1.ProposalType_PROPOSAL_TYPE_OPTIMISTIC:
-			// When expedited/optimistic proposal fails, it is converted
+		case !burnDeposits && (proposal.ProposalType == v1.ProposalType_PROPOSAL_TYPE_EXPEDITED ||
+			proposal.ProposalType == v1.ProposalType_PROPOSAL_TYPE_OPTIMISTIC):
+			// When a non spammy expedited/optimistic proposal fails, it is converted
 			// to a regular proposal. As a result, the voting period is extended, and,
 			// once the regular voting period expires again, the tally is repeated
 			// according to the regular proposal rules.

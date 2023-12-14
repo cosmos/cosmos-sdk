@@ -313,7 +313,7 @@ func runAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *buf
 
 	// override bip39 passphrase
 	if interactive {
-		bip39Passphrase, err = input.GetString(
+		bip39Passphrase, err = input.GetPassword(
 			"Enter your bip39 passphrase. This is combined with the mnemonic to derive the seed. "+
 				"Most users should just hit enter to use the default, \"\"", inBuf)
 		if err != nil {
@@ -322,7 +322,7 @@ func runAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *buf
 
 		// if they use one, make them re-enter it
 		if len(bip39Passphrase) != 0 {
-			p2, err := input.GetString("Repeat the passphrase:", inBuf)
+			p2, err := input.GetPassword("Repeat the passphrase:", inBuf)
 			if err != nil {
 				return err
 			}

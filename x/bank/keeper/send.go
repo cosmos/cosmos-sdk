@@ -163,7 +163,7 @@ func (k BaseSendKeeper) InputOutputCoins(ctx context.Context, inputs []types.Inp
 		return err
 	}
 
-	if err := k.BeforeMultiSend(ctx, inputs, outputs); err != nil {
+	if err := k.BeforeMultiSend(ctx, inputs[0], outputs); err != nil {
 		return err
 	}
 
@@ -228,7 +228,7 @@ func (k BaseSendKeeper) InputOutputCoins(ctx context.Context, inputs []types.Inp
 		}
 	}
 
-	if err := k.AfterMultiSend(ctx, inputs, outputs); err != nil {
+	if err := k.AfterMultiSend(ctx, inputs[0], outputs); err != nil {
 		return err
 	}
 

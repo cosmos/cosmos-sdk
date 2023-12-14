@@ -16,8 +16,8 @@ func NewMsgSend(fromAddr, toAddr sdk.AccAddress, amount sdk.Coins) *MsgSend {
 }
 
 // NewMsgMultiSend - construct arbitrary multi-in, multi-out send msg.
-func NewMsgMultiSend(in []Input, out []Output) *MsgMultiSend {
-	return &MsgMultiSend{Inputs: in, Outputs: out}
+func NewMsgMultiSend(in Input, out []Output) *MsgMultiSend {
+	return &MsgMultiSend{Inputs: []Input{in}, Outputs: out}
 }
 
 // NewMsgSetSendEnabled Construct a message to set one or more SendEnabled entries.

@@ -109,7 +109,16 @@ func (k Keeper) withdrawContinuousFund(ctx context.Context, recipient sdk.AccAdd
 		}
 		return sdk.Coin{}, err
 	}
-	denom, err := k.iterateAndUpdateFundsDistribution(ctx)
+
+	toDistributeAmount, err := k.ToDistribute.Get(ctx)
+	if err != nil {
+		return sdk.Coin{}, err
+	}
+	if toDistributeAmount.Equal(math.ZeroInt()) {
+		return sdk.Coin{}, nil
+	}
+
+	denom, err := k.iterateAndUpdateFundsDistribution(ctx, toDistributeAmount)
 	if err != nil {
 		return sdk.Coin{}, fmt.Errorf("error while iterating all the continuous funds: %w", err)
 	}
@@ -154,7 +163,7 @@ func (k Keeper) SetToDistribute(ctx context.Context, amount sdk.Coins) error {
 	return nil
 }
 
-func (k Keeper) iterateAndUpdateFundsDistribution(ctx context.Context) (string, error) {
+func (k Keeper) iterateAndUpdateFundsDistribution(ctx context.Context, toDistributeAmount math.Int) (string, error) {
 	totalPercentageToBeDistributed := math.ZeroInt()
 	err := k.RecipientFundPercentage.Walk(ctx, nil, func(key sdk.AccAddress, value math.Int) (stop bool, err error) {
 		totalPercentageToBeDistributed = totalPercentageToBeDistributed.Add(value)
@@ -171,13 +180,6 @@ func (k Keeper) iterateAndUpdateFundsDistribution(ctx context.Context) (string, 
 	poolBal := k.bankKeeper.GetAllBalances(ctx, poolMAcc.GetAddress())
 	denom := poolBal.GetDenomByIndex(0)
 
-	toDistributeAmount, err := k.ToDistribute.Get(ctx)
-	if err != nil {
-		return "", err
-	}
-	if toDistributeAmount.Equal(math.ZeroInt()) {
-		return "", fmt.Errorf("no distribution amount found to update funds distribution")
-	}
 	toDistributeDec := sdk.NewDecCoins(sdk.NewDecCoin(denom, toDistributeAmount))
 
 	// Calculate the funds to be distributed based on the total percentage to be distributed

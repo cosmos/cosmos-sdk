@@ -2,10 +2,8 @@ package keeper
 
 import (
 	"context"
-	errorspkg "errors"
 	"fmt"
 
-	"cosmossdk.io/collections"
 	"cosmossdk.io/errors"
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/protocolpool/types"
@@ -164,6 +162,9 @@ func (k MsgServer) WithdrawContinuousFund(ctx context.Context, msg *types.MsgWit
 	if err != nil {
 		return nil, err
 	}
+	if amount.IsNil() {
+		k.Logger(ctx).Info(fmt.Sprintf("no distribution amount found for recipient %s", msg.RecipientAddress))
+	}
 
 	return &types.MsgWithdrawContinuousFundResponse{Amount: amount}, nil
 }
@@ -183,11 +184,11 @@ func (k MsgServer) CancelContinuousFund(ctx context.Context, msg *types.MsgCance
 	canceledHeight := sdkCtx.BlockHeight()
 	canceledTime := sdkCtx.BlockTime()
 
-	_, err = k.ContinuousFund.Get(ctx, recipient)
+	found, err := k.ContinuousFund.Has(ctx, recipient)
+	if !found {
+		return nil, fmt.Errorf("no recipient found to cancel continuous fund: %s", msg.RecipientAddress)
+	}
 	if err != nil {
-		if errorspkg.Is(err, collections.ErrNotFound) {
-			return nil, fmt.Errorf("no recipient found to cancel continuous fund: %s", msg.RecipientAddress)
-		}
 		return nil, err
 	}
 

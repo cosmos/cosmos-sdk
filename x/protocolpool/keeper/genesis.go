@@ -11,10 +11,6 @@ import (
 
 func (k Keeper) InitGenesis(ctx context.Context, data *types.GenesisState) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	// Perform data validation
-	if err := types.ValidateGenesis(data); err != nil {
-		return err
-	}
 	currentTime := sdkCtx.BlockTime()
 	for _, cf := range data.ContinuousFund {
 		// ignore expired ContinuousFunds

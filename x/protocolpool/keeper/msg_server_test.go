@@ -379,8 +379,6 @@ func (suite *KeeperTestSuite) TestWithdrawContinuousFund() {
 				suite.Require().NoError(err)
 				err = suite.poolKeeper.RecipientFundDistribution.Set(suite.ctx, recipient, math.ZeroInt())
 				suite.Require().NoError(err)
-				err = suite.poolKeeper.ToDistribute.Set(suite.ctx, math.ZeroInt())
-				suite.Require().NoError(err)
 
 				// Set fund 2
 				percentage, err = math.LegacyNewDecFromStr("0.9")
@@ -400,14 +398,17 @@ func (suite *KeeperTestSuite) TestWithdrawContinuousFund() {
 				suite.Require().NoError(err)
 				err = suite.poolKeeper.RecipientFundDistribution.Set(suite.ctx, recipient2, math.ZeroInt())
 				suite.Require().NoError(err)
-				err = suite.poolKeeper.ToDistribute.Set(suite.ctx, math.ZeroInt())
+
+				// Set ToDistribute
+				toDistribute := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100000)))
+				err = suite.poolKeeper.SetToDistribute(suite.ctx, toDistribute)
 				suite.Require().NoError(err)
 			},
 			recipientAddress: recipient,
 			expErr:           true,
 			expErrMsg:        "error while iterating all the continuous funds: total funds percentage cannot exceed 100",
 		},
-		"invalid case with ToDistribute amount zero": {
+		"valid case with ToDistribute amount zero": {
 			preRun: func() {
 				percentage, err := math.LegacyNewDecFromStr("0.2")
 				suite.Require().NoError(err)
@@ -432,8 +433,8 @@ func (suite *KeeperTestSuite) TestWithdrawContinuousFund() {
 				suite.Require().NoError(err)
 			},
 			recipientAddress: recipient,
-			expErr:           true,
-			expErrMsg:        "no distribution amount found to update funds distribution",
+			expErr:           false,
+			withdrawnAmount:  sdk.Coin{},
 		},
 		"valid case": {
 			preRun: func() {

@@ -115,10 +115,11 @@ func TestReadTxsFromFile(t *testing.T) {
 	for i, decodedTx := range decodedBatchTxs {
 		txBldr, err := txConfig.WrapTxBuilder(decodedTx)
 		require.NoError(t, err)
-		t.Log(txBuilders[i].GetTx())
-		t.Log(txBldr.GetTx())
-		require.Equal(t, txBuilders[i].GetTx().GetMemo(), txBldr.GetTx().GetMemo())
-		require.Equal(t, txBuilders[i].GetTx().GetFee(), txBldr.GetTx().GetFee())
+
+		wantTx := txBuilders[i].GetTx()
+		gotTx := txBldr.GetTx()
+		require.Equal(t, wantTx.GetMemo(), gotTx.GetMemo())
+		require.Equal(t, wantTx.GetFee(), gotTx.GetFee())
 	}
 
 	// single tx case
@@ -127,8 +128,11 @@ func TestReadTxsFromFile(t *testing.T) {
 	require.Equal(t, len(decodedSingleTx), 1)
 	txBldr, err := txConfig.WrapTxBuilder(decodedSingleTx[0])
 	require.NoError(t, err)
-	require.Equal(t, txBuilders[0].GetTx().GetMemo(), txBldr.GetTx().GetMemo())
-	require.Equal(t, txBuilders[0].GetTx().GetFee(), txBldr.GetTx().GetFee())
+
+	wantTx := txBuilders[0].GetTx()
+	gotTx := txBldr.GetTx()
+	require.Equal(t, wantTx.GetMemo(), gotTx.GetMemo())
+	require.Equal(t, wantTx.GetFee(), gotTx.GetFee())
 }
 
 func TestBatchScanner_Scan(t *testing.T) {

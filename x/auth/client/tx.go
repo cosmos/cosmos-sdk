@@ -135,11 +135,12 @@ func ReadTxsFromFile(ctx client.Context, filename string) (tx []sdk.Tx, err erro
 	// So we split the output bytes to slice of tx bytes,
 	// last elemet always be empty bytes.
 	txsBytes := bytes.Split(fileBuff, []byte("\n"))
+	txDecoder := ctx.TxConfig.TxJSONDecoder()
 	for _, txBytes := range txsBytes {
 		if len(txBytes) == 0 {
 			continue
 		}
-		tx, err := ctx.TxConfig.TxJSONDecoder()(txBytes)
+		tx, err := txDecoder(txBytes)
 		if err != nil {
 			return nil, err
 		}

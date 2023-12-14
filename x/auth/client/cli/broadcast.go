@@ -40,15 +40,18 @@ filename, the command reads from standard input.`),
 				return err
 			}
 
+			txEncoder := clientCtx.TxConfig.TxEncoder()
 			for _, tx := range txs {
-				txBytes, err1 := clientCtx.TxConfig.TxEncoder()(tx)
+				txBytes, err1 := txEncoder(tx)
 				if err1 != nil {
 					err = errors.Join(err, err1)
+					continue
 				}
 
 				res, err2 := clientCtx.BroadcastTx(txBytes)
 				if err2 != nil {
 					err = errors.Join(err, err2)
+					continue
 				}
 				if res != nil {
 					err3 := clientCtx.PrintProto(res)

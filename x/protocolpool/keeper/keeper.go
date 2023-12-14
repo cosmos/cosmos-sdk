@@ -123,7 +123,7 @@ func (k Keeper) withdrawContinuousFund(ctx context.Context, recipient sdk.AccAdd
 		return sdk.Coin{}, fmt.Errorf("error while iterating all the continuous funds: %w", err)
 	}
 	// get allocated continuous fund
-	fundsAllocated, err := k.getAndResetDistributedFunds(ctx, recipient)
+	fundsAllocated, err := k.getDistributedFunds(ctx, recipient)
 	if err != nil {
 		return sdk.Coin{}, fmt.Errorf("error while getting distributed funds: %w", err)
 	}
@@ -147,6 +147,22 @@ func (k Keeper) withdrawContinuousFund(ctx context.Context, recipient sdk.AccAdd
 			return sdk.Coin{}, err
 		}
 		err = k.ToDistribute.Set(ctx, toDistribute.Sub(fundsAllocated))
+		if err != nil {
+			return sdk.Coin{}, err
+		}
+
+		// set claimable to zero
+		err = k.RecipientFundDistribution.Set(ctx, recipient, math.ZeroInt())
+		if err != nil {
+			return sdk.Coin{}, err
+		}
+	} else {
+		curBal, err := k.RecipientFundDistribution.Get(ctx, recipient)
+		if err != nil {
+			return sdk.Coin{}, err
+		}
+		// add allocated fund amount to claimable balance
+		err = k.RecipientFundDistribution.Set(ctx, recipient, curBal.Add(fundsAllocated))
 		if err != nil {
 			return sdk.Coin{}, err
 		}
@@ -218,7 +234,7 @@ func (k Keeper) iterateAndUpdateFundsDistribution(ctx context.Context, toDistrib
 	return denom, err
 }
 
-func (k Keeper) getAndResetDistributedFunds(ctx context.Context, recipient sdk.AccAddress) (amount math.Int, err error) {
+func (k Keeper) getDistributedFunds(ctx context.Context, recipient sdk.AccAddress) (amount math.Int, err error) {
 	amount, err = k.RecipientFundDistribution.Get(ctx, recipient)
 	if err != nil {
 		if errors.Is(err, collections.ErrNotFound) {
@@ -227,11 +243,6 @@ func (k Keeper) getAndResetDistributedFunds(ctx context.Context, recipient sdk.A
 		return math.ZeroInt(), err
 	}
 
-	// set claimable to zero
-	err = k.RecipientFundDistribution.Set(ctx, recipient, math.ZeroInt())
-	if err != nil {
-		return math.ZeroInt(), err
-	}
 	return amount, nil
 }
 

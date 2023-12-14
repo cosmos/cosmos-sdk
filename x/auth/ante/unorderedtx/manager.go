@@ -1,7 +1,14 @@
 package unorderedtx
 
 import (
+	"bufio"
 	"context"
+	"encoding/binary"
+	"errors"
+	"fmt"
+	"io"
+	"os"
+	"path/filepath"
 	"sync"
 	"time"
 )
@@ -23,6 +30,16 @@ type Manager struct {
 	// doneCh allows us to ensure the purgeLoop has gracefully terminated prior to closing
 	doneCh chan struct{}
 
+	// dataDir defines the directory to store unexpired unordered transactions
+	//
+	// XXX: Note, ideally we avoid the need to store unexpired unordered transactions
+	// directly to file. However, store v1 does not allow such a primitive. However,
+	// once store v2 is fully integrated, we can remove manual file handling and
+	// store the unexpired unordered transactions directly to SS.
+	//
+	// Ref: https://github.com/cosmos/cosmos-sdk/issues/18467
+	dataDir string
+
 	mu sync.RWMutex
 	// txHashes defines a map from tx hash -> TTL value, which is used for duplicate
 	// checking and replay protection, as well as purging the map when the TTL is
@@ -30,8 +47,14 @@ type Manager struct {
 	txHashes map[TxHash]uint64
 }
 
-func NewManager() *Manager {
+func NewManager(dataDir string) *Manager {
+	path := filepath.Join(dataDir, "unordered_txs")
+	if _, err := os.Stat(path); errors.Is(err, os.ErrNotExist) {
+		_ = os.Mkdir(path, os.ModePerm)
+	}
+
 	m := &Manager{
+		dataDir:  dataDir,
 		blockCh:  make(chan uint64, 16),
 		doneCh:   make(chan struct{}),
 		txHashes: make(map[TxHash]uint64),
@@ -44,12 +67,17 @@ func (m *Manager) Start() {
 	go m.purgeLoop()
 }
 
+// Close must be called when a node gracefully shuts down. Typically, this should
+// be called in an application's Close() function, which is called by the server.
+//
+// It will free all necessary resources as well as writing all unexpired unordered
+// transactions along with their TTL values to file.
 func (m *Manager) Close() error {
 	close(m.blockCh)
 	<-m.doneCh
 	m.blockCh = nil
 
-	return nil
+	return m.flushToFile()
 }
 
 func (m *Manager) Contains(hash TxHash) bool {
@@ -74,22 +102,91 @@ func (m *Manager) Add(txHash TxHash, ttl uint64) {
 	m.txHashes[txHash] = ttl
 }
 
-func (m *Manager) Export() any {
-	panic("not implemented")
-}
+// // Export returns the current set of unexpired unordered transactions along with
+// // their TTL values.
+// func (m *Manager) Export() map[TxHash]uint64 {
+// 	m.mu.RLock()
+// 	defer m.mu.RUnlock()
 
+// 	result := make(map[TxHash]uint64, len(m.txHashes))
+// 	maps.Copy(m.txHashes, result)
+
+// 	return result
+// }
+
+// OnInit must be called when a node starts up. Typically, this should be called
+// in an application's constructor, which is called by the server.
 func (m *Manager) OnInit() error {
-	panic("not implemented")
-}
+	f, err := os.Open(filepath.Join(m.dataDir, "unordered_txs", "unordered_txs"))
+	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			// File does not exist, which we can assume that there are no unexpired
+			// unordered transactions.
+			return nil
+		}
 
-func (m *Manager) OnClose() error {
-	panic("not implemented")
+		return fmt.Errorf("failed to open unconfirmed txs file: %w", err)
+	}
+	defer f.Close()
+
+	var (
+		r   = bufio.NewReader(f)
+		buf = make([]byte, 32+8)
+	)
+	for {
+		n, err := r.Read(buf)
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			} else {
+				return fmt.Errorf("failed to read unconfirmed txs file: %w", err)
+			}
+		}
+		if n != 32+8 {
+			return fmt.Errorf("read unexpected number of bytes from unconfirmed txs file: %d", n)
+		}
+
+		var txHash TxHash
+		copy(txHash[:], buf[:32])
+
+		m.Add(txHash, binary.BigEndian.Uint64(buf[32:]))
+	}
+
+	return nil
 }
 
 // OnNewBlock sends the latest block number to the background purge loop, which
 // should be called in ABCI Commit event.
 func (m *Manager) OnNewBlock(blockHeight uint64) {
 	m.blockCh <- blockHeight
+}
+
+func (m *Manager) flushToFile() error {
+	f, err := os.Create(filepath.Join(m.dataDir, "unordered_txs", "unordered_txs"))
+	if err != nil {
+		return fmt.Errorf("failed to create unconfirmed txs file: %w", err)
+	}
+	defer f.Close()
+
+	w := bufio.NewWriter(f)
+	for txHash, ttl := range m.txHashes {
+		buf := make([]byte, 32+8)
+		copy(buf[:32], txHash[:])
+
+		ttlBz := make([]byte, 8)
+		binary.BigEndian.PutUint64(ttlBz, ttl)
+		copy(buf[32:], ttlBz)
+
+		if _, err = w.Write(buf); err != nil {
+			return fmt.Errorf("failed to write buffer to unconfirmed txs file: %w", err)
+		}
+	}
+
+	if err = w.Flush(); err != nil {
+		return fmt.Errorf("failed to flush buffer to unconfirmed txs file: %w", err)
+	}
+
+	return nil
 }
 
 // expiredTxs returns expired tx hashes based on the provided block height.

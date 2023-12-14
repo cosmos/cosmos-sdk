@@ -17,6 +17,9 @@ const (
 	// DefaultMaxUnOrderedTTL defines the default maximum TTL an un-ordered transaction
 	// can set.
 	DefaultMaxUnOrderedTTL = 1024
+
+	dirName  = "unordered_txs"
+	fileName = "data"
 )
 
 // TxHash defines a transaction hash type alias, which is a fixed array of 32 bytes.
@@ -48,7 +51,7 @@ type Manager struct {
 }
 
 func NewManager(dataDir string) *Manager {
-	path := filepath.Join(dataDir, "unordered_txs")
+	path := filepath.Join(dataDir, dirName)
 	if _, err := os.Stat(path); errors.Is(err, os.ErrNotExist) {
 		_ = os.Mkdir(path, os.ModePerm)
 	}
@@ -117,7 +120,7 @@ func (m *Manager) Add(txHash TxHash, ttl uint64) {
 // OnInit must be called when a node starts up. Typically, this should be called
 // in an application's constructor, which is called by the server.
 func (m *Manager) OnInit() error {
-	f, err := os.Open(filepath.Join(m.dataDir, "unordered_txs", "unordered_txs"))
+	f, err := os.Open(filepath.Join(m.dataDir, dirName, fileName))
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
 			// File does not exist, which we can assume that there are no unexpired
@@ -162,7 +165,7 @@ func (m *Manager) OnNewBlock(blockHeight uint64) {
 }
 
 func (m *Manager) flushToFile() error {
-	f, err := os.Create(filepath.Join(m.dataDir, "unordered_txs", "unordered_txs"))
+	f, err := os.Create(filepath.Join(m.dataDir, dirName, fileName))
 	if err != nil {
 		return fmt.Errorf("failed to create unconfirmed txs file: %w", err)
 	}

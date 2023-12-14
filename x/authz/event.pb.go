@@ -24,6 +24,8 @@ var _ = math.Inf
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // EventGrant is emitted on Msg/Grant
+//
+// Since: cosmos-sdk 0.43
 type EventGrant struct {
 	// Msg type URL for which an authorization is granted
 	MsgTypeUrl string `protobuf:"bytes,2,opt,name=msg_type_url,json=msgTypeUrl,proto3" json:"msg_type_url,omitempty"`
@@ -88,6 +90,8 @@ func (m *EventGrant) GetGrantee() string {
 }
 
 // EventRevoke is emitted on Msg/Revoke
+//
+// Since: cosmos-sdk 0.43
 type EventRevoke struct {
 	// Msg type URL for which an authorization is revoked
 	MsgTypeUrl string `protobuf:"bytes,2,opt,name=msg_type_url,json=msgTypeUrl,proto3" json:"msg_type_url,omitempty"`
@@ -152,6 +156,8 @@ func (m *EventRevoke) GetGrantee() string {
 }
 
 // EventPruneExpiredGrants is emitted on Msg/PruneExpiredGrants
+//
+// Since: x/authz 1.0.0
 type EventPruneExpiredGrants struct {
 	// Address of the pruner
 	Pruner string `protobuf:"bytes,2,opt,name=pruner,proto3" json:"pruner,omitempty"`

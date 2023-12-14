@@ -3,6 +3,7 @@ package collections
 import (
 	"context"
 	"errors"
+	"fmt"
 	io "io"
 	"math"
 
@@ -138,6 +139,10 @@ type collectionImpl[K, V any] struct {
 	m Map[K, V]
 }
 
+type lookupMapImpl[K, V any] struct {
+	lm LookupMap[K, V]
+}
+
 func (c collectionImpl[K, V]) ValueCodec() codec.UntypedValueCodec {
 	return codec.NewUntypedValueCodec(c.m.vc)
 }
@@ -157,3 +162,26 @@ func (c collectionImpl[K, V]) exportGenesis(ctx context.Context, w io.Writer) er
 }
 
 func (c collectionImpl[K, V]) defaultGenesis(w io.Writer) error { return c.m.defaultGenesis(w) }
+
+func (l lookupMapImpl[K, V]) ValueCodec() codec.UntypedValueCodec {
+	return codec.NewUntypedValueCodec(l.lm.vc)
+}
+
+func (l lookupMapImpl[K, V]) GetName() string { return l.lm.name }
+
+func (l lookupMapImpl[K, V]) GetPrefix() []byte { return NewPrefix(l.lm.prefix) }
+
+func (l lookupMapImpl[K, V]) validateGenesis(r io.Reader) error { return l.lm.validateGenesis(r) }
+
+func (l lookupMapImpl[K, V]) importGenesis(ctx context.Context, r io.Reader) error {
+	return l.lm.importGenesis(ctx, r)
+}
+
+func (l lookupMapImpl[K, V]) exportGenesis(ctx context.Context, w io.Writer) error {
+	// Implement as needed
+	return fmt.Errorf("exportGenesis not implemented for LookupMap")
+}
+
+func (l lookupMapImpl[K, V]) defaultGenesis(w io.Writer) error {
+	return l.lm.defaultGenesis(w)
+}

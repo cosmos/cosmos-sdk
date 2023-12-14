@@ -279,7 +279,7 @@ Since this is more of a social feature than a technical feature, we'll now get i
   * In the event of an economic emergency, what should validators do?
     * Terra crash of May, 2022, saw validators choose to run a new binary with code that had not been approved by governance, because the governance token had been inflated to nothing.
 * What is the purpose of the chain, specifically?
-  * best example of this is the Cosmos hub, where different founding groups, have different interpertations of the purpose of the network.
+  * best example of this is the Cosmos hub, where different founding groups, have different interpretations of the purpose of the network.
 
 This genesis entry, "constitution" hasn't been designed for existing chains, who should likely just ratify a constitution using their governance system.  Instead, this is for new chains.  It will allow for validators to have a much clearer idea of purpose and the expecations placed on them while operating their nodes.  Likewise, for community members, the constitution will give them some idea of what to expect from both the "chain team" and the validators, respectively.
 

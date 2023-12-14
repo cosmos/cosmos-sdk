@@ -276,7 +276,7 @@ func (b *builder) SetSignatures(signatures ...OffchainSignature) error {
 	return nil
 }
 
-// SignatureDataToModeInfoAndSig converts a SignatureData to a ModeInfo and raw bytes signature
+// signatureDataToModeInfoAndSig converts a SignatureData to a ModeInfo and raw bytes signature
 func (b *builder) signatureDataToModeInfoAndSig(data SignatureData) (*apitx.ModeInfo, []byte) {
 	if data == nil {
 		return nil, nil

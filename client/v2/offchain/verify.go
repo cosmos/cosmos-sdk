@@ -93,15 +93,14 @@ func verify(ctx client.Context, tx *apitx.Tx) error {
 	return nil
 }
 
-// unmarshall a digest to a Tx using protobuf protojson
+// unmarshall unmarshalls a digest to a Tx using protobuf protojson
 func unmarshall(digest []byte) (*apitx.Tx, error) {
 	tx := &apitx.Tx{}
 	err := protojson.Unmarshal(digest, tx)
 	return tx, err
 }
 
-// verifySignature verifies a transaction signature contained in SignatureData abstracting over different signing
-// modes. It differs from VerifySignature in that it uses the new txsigning.TxData interface in x/tx.
+// verifySignature verifies a transaction signature contained in SignatureData abstracting over different signing modes.
 func verifySignature(
 	ctx context.Context,
 	pubKey cryptotypes.PubKey,

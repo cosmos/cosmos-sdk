@@ -9,8 +9,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 )
 
-// TODO: auto-cli
-
 const (
 	flagNotEmitUnpopulated = "notEmitUnpopulated"
 	flagIndent             = "indent"
@@ -21,8 +19,8 @@ const (
 func OffChain() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "offchain",
-		Short: "offchain msg utilities",
-		Long:  ``,
+		Short: "Off-chain utilities.",
+		Long:  `Utilities for off-chain data.`,
 	}
 
 	cmd.AddCommand(
@@ -30,17 +28,16 @@ func OffChain() *cobra.Command {
 		VerifyFile(),
 	)
 
-	cmd.PersistentFlags().String(flags.FlagSignMode, "direct", "Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature")
 	flags.AddKeyringFlags(cmd.PersistentFlags())
 	return cmd
 }
 
-// SignFile sign a file with a key
+// SignFile signs a file with a key
 func SignFile() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "sign <keyName> <fileName>",
-		Short: "Sign a file",
-		Long:  "Sign a file using a key.",
+		Use:   "sign-file <keyName> <fileName>",
+		Short: "Sign a file.",
+		Long:  "Sign a file using a given key.",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
@@ -65,18 +62,19 @@ func SignFile() *cobra.Command {
 		},
 	}
 
+	cmd.PersistentFlags().String(flagIndent, "  ", "Choose an indent for the tx")
 	cmd.PersistentFlags().Bool(flagNotEmitUnpopulated, false, "Don't show unpopulated fields in the tx")
-	cmd.PersistentFlags().String(flagIndent, "  ", "Choose an indent for the tx. Default '  ' (two spaces)")
-	cmd.PersistentFlags().String(flagEncoding, "no-encoding", "Choose an encoding method for the file content to be added as the tx data (no-encoding|base64). Default no-encoding")
+	cmd.PersistentFlags().String(flags.FlagSignMode, "direct", "Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature")
+	cmd.PersistentFlags().String(flagEncoding, "no-encoding", "Choose an encoding method for the file content to be added as the tx data (no-encoding|base64)")
 	return cmd
 }
 
-// VerifyFile sign a file with a key
+// VerifyFile verifies given file with given key
 func VerifyFile() *cobra.Command {
 	return &cobra.Command{
-		Use:   "verify <keyName> <fileName>",
-		Short: "",
-		Long:  "",
+		Use:   "verify-file <keyName> <fileName>",
+		Short: "Verify a file.",
+		Long:  "Verify a previously signed file with the given key.",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)

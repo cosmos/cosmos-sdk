@@ -3,7 +3,6 @@ package offchain
 import (
 	"testing"
 
-
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/require"
 
@@ -111,8 +110,9 @@ func Test_sign(t *testing.T) {
 		signMode apitxsigning.SignMode
 	}
 	tests := []struct {
-		name string
-		args args
+		name    string
+		args    args
+		wantErr bool
 	}{
 		{
 			name: "signMode direct",
@@ -126,6 +126,7 @@ func Test_sign(t *testing.T) {
 				digest:   "Hello world!",
 				signMode: apitxsigning.SignMode_SIGN_MODE_DIRECT,
 			},
+			wantErr: false,
 		},
 		{
 			name: "signMode textual",
@@ -139,9 +140,10 @@ func Test_sign(t *testing.T) {
 				digest:   "Hello world!",
 				signMode: apitxsigning.SignMode_SIGN_MODE_TEXTUAL,
 			},
+			wantErr: false,
 		},
 		{
-			name: "signMode LegacyAmino",
+			name: "signMode legacyAmino",
 			args: args{
 				ctx: client.Context{
 					Keyring:      k,
@@ -152,6 +154,21 @@ func Test_sign(t *testing.T) {
 				digest:   "Hello world!",
 				signMode: apitxsigning.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
 			},
+			wantErr: false,
+		},
+		{
+			name: "signMode direct aux",
+			args: args{
+				ctx: client.Context{
+					Keyring:      k,
+					TxConfig:     MakeTestTxConfig(),
+					AddressCodec: address.NewBech32Codec("cosmos"),
+				},
+				fromName: "direct-aux",
+				digest:   "Hello world!",
+				signMode: apitxsigning.SignMode_SIGN_MODE_DIRECT_AUX,
+			},
+			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
@@ -160,8 +177,12 @@ func Test_sign(t *testing.T) {
 			require.NoError(t, err)
 
 			got, err := sign(tt.args.ctx, tt.args.fromName, tt.args.digest, tt.args.signMode)
-			require.NoError(t, err)
-			require.NotNil(t, got)
+			if !tt.wantErr {
+				require.NoError(t, err)
+				require.NotNil(t, got)
+			} else {
+				require.Error(t, err)
+			}
 		})
 	}
 }

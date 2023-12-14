@@ -890,7 +890,7 @@ type Params struct {
 	// Since: x/gov v1.0.0
 	OptimisticAuthorizedAddresses []string `protobuf:"bytes,17,rep,name=optimistic_authorized_addresses,json=optimisticAuthorizedAddresses,proto3" json:"optimistic_authorized_addresses,omitempty"`
 	// optimistic rejected threshold defines at which percentage of NO votes, the optimistic proposal should fail and be
-	// converted to a standard proposal.
+	// converted to a standard proposal. The threshold is expressed as a percentage of the total bonded tokens.
 	//
 	// Since: x/gov v1.0.0
 	OptimisticRejectedThreshold string `protobuf:"bytes,18,opt,name=optimistic_rejected_threshold,json=optimisticRejectedThreshold,proto3" json:"optimistic_rejected_threshold,omitempty"`

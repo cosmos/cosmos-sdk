@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"slices"
 
 	"cosmossdk.io/errors"
 	"cosmossdk.io/math"
@@ -69,37 +68,23 @@ func (k msgServer) SubmitProposal(goCtx context.Context, msg *v1.MsgSubmitPropos
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	initialDeposit := msg.GetInitialDeposit()
-
 	params, err := k.Params.Get(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get governance parameters: %w", err)
 	}
 
-	// additional checks per proposal types
-	proposalType := msg.ProposalType
-	switch proposalType {
-	case v1.ProposalType_PROPOSAL_TYPE_OPTIMISTIC:
-		if len(params.OptimisticAuthorizedAddresses) > 0 {
-			if slices.Contains(params.OptimisticAuthorizedAddresses, msg.GetProposer()) {
-				return nil, errors.Wrap(govtypes.ErrInvalidProposer, "proposer is not authorized to submit optimistic proposal")
-			}
-		}
-	case v1.ProposalType_PROPOSAL_TYPE_EXPEDITED:
-		if msg.Expedited { // checking for backward compatibility
-			proposalType = v1.ProposalType_PROPOSAL_TYPE_EXPEDITED
-		}
+	if msg.Expedited { // checking for backward compatibility
+		msg.ProposalType = v1.ProposalType_PROPOSAL_TYPE_EXPEDITED
 	}
-
-	if err := k.validateInitialDeposit(ctx, params, initialDeposit, proposalType); err != nil {
+	if err := k.validateInitialDeposit(ctx, params, msg.GetInitialDeposit(), msg.ProposalType); err != nil {
 		return nil, err
 	}
 
-	if err := k.validateDepositDenom(ctx, params, initialDeposit); err != nil {
+	if err := k.validateDepositDenom(ctx, params, msg.GetInitialDeposit()); err != nil {
 		return nil, err
 	}
 
-	proposal, err := k.Keeper.SubmitProposal(ctx, proposalMsgs, msg.Metadata, msg.Title, msg.Summary, proposer, proposalType)
+	proposal, err := k.Keeper.SubmitProposal(ctx, proposalMsgs, msg.Metadata, msg.Title, msg.Summary, proposer, msg.ProposalType)
 	if err != nil {
 		return nil, err
 	}

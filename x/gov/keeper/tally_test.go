@@ -778,8 +778,6 @@ func TestTally_Expedited(t *testing.T) {
 }
 
 func TestTally_Optimistic(t *testing.T) {
-	t.Skip() // TODO
-
 	tests := []struct {
 		name          string
 		setup         func(tallyFixture)
@@ -804,262 +802,24 @@ func TestTally_Optimistic(t *testing.T) {
 			},
 		},
 		{
-			name: "no votes: prop fails/burn deposit",
+			name: "no votes: prop passes",
 			setup: func(s tallyFixture) {
 				setTotalBonded(s, 10000000)
-			},
-			expectedPass: false,
-			expectedBurn: true, // burn because quorum not reached
-			expectedTally: v1.TallyResult{
-				YesCount:        "0",
-				AbstainCount:    "0",
-				NoCount:         "0",
-				NoWithVetoCount: "0",
-				SpamCount:       "0",
-			},
-		},
-		{
-			name: "one validator votes: prop fails/burn deposit",
-			setup: func(s tallyFixture) {
-				setTotalBonded(s, 10000000)
-				validatorVote(s, s.valAddrs[0], v1.VoteOption_VOTE_OPTION_THREE)
-			},
-			expectedPass: false,
-			expectedBurn: true, // burn because quorum not reached
-			expectedTally: v1.TallyResult{
-				YesCount:        "0",
-				AbstainCount:    "0",
-				NoCount:         "1000000",
-				NoWithVetoCount: "0",
-				SpamCount:       "0",
-			},
-		},
-		{
-			name: "one account votes without delegation: prop fails/burn deposit",
-			setup: func(s tallyFixture) {
-				setTotalBonded(s, 10000000)
-				delegatorVote(s, s.delAddrs[0], nil, v1.VoteOption_VOTE_OPTION_ONE)
-			},
-			expectedPass: false,
-			expectedBurn: true, // burn because quorum not reached
-			expectedTally: v1.TallyResult{
-				YesCount:        "0",
-				AbstainCount:    "0",
-				NoCount:         "0",
-				NoWithVetoCount: "0",
-				SpamCount:       "0",
-			},
-		},
-		{
-			name: "one delegator votes: prop fails/burn deposit",
-			setup: func(s tallyFixture) {
-				setTotalBonded(s, 10000000)
-				delegations := []stakingtypes.Delegation{{
-					DelegatorAddress: s.delAddrs[0].String(),
-					ValidatorAddress: s.valAddrs[0].String(),
-					Shares:           sdkmath.LegacyNewDec(42),
-				}}
-				delegatorVote(s, s.delAddrs[0], delegations, v1.VoteOption_VOTE_OPTION_ONE)
-			},
-			expectedPass: false,
-			expectedBurn: true, // burn because quorum not reached
-			expectedTally: v1.TallyResult{
-				YesCount:        "42",
-				AbstainCount:    "0",
-				NoCount:         "0",
-				NoWithVetoCount: "0",
-				SpamCount:       "0",
-			},
-		},
-		{
-			name: "one delegator votes yes, validator votes also yes: prop fails/burn deposit",
-			setup: func(s tallyFixture) {
-				setTotalBonded(s, 10000000)
-				delegations := []stakingtypes.Delegation{{
-					DelegatorAddress: s.delAddrs[0].String(),
-					ValidatorAddress: s.valAddrs[0].String(),
-					Shares:           sdkmath.LegacyNewDec(42),
-				}}
-				delegatorVote(s, s.delAddrs[0], delegations, v1.VoteOption_VOTE_OPTION_ONE)
-				validatorVote(s, s.valAddrs[0], v1.VoteOption_VOTE_OPTION_ONE)
-			},
-			expectedPass: false,
-			expectedBurn: true, // burn because quorum not reached
-			expectedTally: v1.TallyResult{
-				YesCount:        "1000000",
-				AbstainCount:    "0",
-				NoCount:         "0",
-				NoWithVetoCount: "0",
-				SpamCount:       "0",
-			},
-		},
-		{
-			name: "one delegator votes yes, validator votes no: prop fails/burn deposit",
-			setup: func(s tallyFixture) {
-				setTotalBonded(s, 10000000)
-				delegations := []stakingtypes.Delegation{{
-					DelegatorAddress: s.delAddrs[0].String(),
-					ValidatorAddress: s.valAddrs[0].String(),
-					Shares:           sdkmath.LegacyNewDec(42),
-				}}
-				delegatorVote(s, s.delAddrs[0], delegations, v1.VoteOption_VOTE_OPTION_ONE)
-				validatorVote(s, s.valAddrs[0], v1.VoteOption_VOTE_OPTION_THREE)
-			},
-			expectedPass: false,
-			expectedBurn: true, // burn because quorum not reached
-			expectedTally: v1.TallyResult{
-				YesCount:        "42",
-				AbstainCount:    "0",
-				NoCount:         "999958",
-				NoWithVetoCount: "0",
-				SpamCount:       "0",
-			},
-		},
-		{
-			// one delegator delegates 42 shares to 2 different validators (21 each)
-			// delegator votes yes
-			// first validator votes yes
-			// second validator votes no
-			// third validator (no delegation) votes abstain
-			name: "delegator with mixed delegations: prop fails/burn deposit",
-			setup: func(s tallyFixture) {
-				setTotalBonded(s, 10000000)
-				delegations := []stakingtypes.Delegation{
-					{
-						DelegatorAddress: s.delAddrs[0].String(),
-						ValidatorAddress: s.valAddrs[0].String(),
-						Shares:           sdkmath.LegacyNewDec(21),
-					},
-					{
-						DelegatorAddress: s.delAddrs[0].String(),
-						ValidatorAddress: s.valAddrs[1].String(),
-						Shares:           sdkmath.LegacyNewDec(21),
-					},
-				}
-				delegatorVote(s, s.delAddrs[0], delegations, v1.VoteOption_VOTE_OPTION_ONE)
-				validatorVote(s, s.valAddrs[0], v1.VoteOption_VOTE_OPTION_THREE)
-				validatorVote(s, s.valAddrs[1], v1.VoteOption_VOTE_OPTION_ONE)
-				validatorVote(s, s.valAddrs[2], v1.VoteOption_VOTE_OPTION_TWO)
-			},
-			expectedPass: false,
-			expectedBurn: true, // burn because quorum not reached
-			expectedTally: v1.TallyResult{
-				YesCount:        "1000021",
-				AbstainCount:    "1000000",
-				NoCount:         "999979",
-				NoWithVetoCount: "0",
-				SpamCount:       "0",
-			},
-		},
-		{
-			name: "quorum reached with only abstain: prop fails",
-			setup: func(s tallyFixture) {
-				setTotalBonded(s, 10000000)
-				validatorVote(s, s.valAddrs[0], v1.VoteOption_VOTE_OPTION_TWO)
-				validatorVote(s, s.valAddrs[1], v1.VoteOption_VOTE_OPTION_TWO)
-				validatorVote(s, s.valAddrs[2], v1.VoteOption_VOTE_OPTION_TWO)
-				validatorVote(s, s.valAddrs[3], v1.VoteOption_VOTE_OPTION_TWO)
-			},
-			expectedPass: false,
-			expectedBurn: false,
-			expectedTally: v1.TallyResult{
-				YesCount:        "0",
-				AbstainCount:    "4000000",
-				NoCount:         "0",
-				NoWithVetoCount: "0",
-				SpamCount:       "0",
-			},
-		},
-		{
-			name: "quorum reached with veto>1/3: prop fails/burn deposit",
-			setup: func(s tallyFixture) {
-				setTotalBonded(s, 10000000)
-				validatorVote(s, s.valAddrs[0], v1.VoteOption_VOTE_OPTION_ONE)
-				validatorVote(s, s.valAddrs[1], v1.VoteOption_VOTE_OPTION_ONE)
-				validatorVote(s, s.valAddrs[2], v1.VoteOption_VOTE_OPTION_ONE)
-				validatorVote(s, s.valAddrs[3], v1.VoteOption_VOTE_OPTION_ONE)
-				validatorVote(s, s.valAddrs[4], v1.VoteOption_VOTE_OPTION_FOUR)
-				validatorVote(s, s.valAddrs[5], v1.VoteOption_VOTE_OPTION_FOUR)
-				validatorVote(s, s.valAddrs[6], v1.VoteOption_VOTE_OPTION_FOUR)
-			},
-			expectedPass: false,
-			expectedBurn: true,
-			expectedTally: v1.TallyResult{
-				YesCount:        "4000000",
-				AbstainCount:    "0",
-				NoCount:         "0",
-				NoWithVetoCount: "3000000",
-				SpamCount:       "0",
-			},
-		},
-		{
-			name: "quorum reached with yes<=.5: prop fails",
-			setup: func(s tallyFixture) {
-				setTotalBonded(s, 10000000)
-				validatorVote(s, s.valAddrs[0], v1.VoteOption_VOTE_OPTION_ONE)
-				validatorVote(s, s.valAddrs[1], v1.VoteOption_VOTE_OPTION_ONE)
-				validatorVote(s, s.valAddrs[2], v1.VoteOption_VOTE_OPTION_THREE)
-				validatorVote(s, s.valAddrs[3], v1.VoteOption_VOTE_OPTION_THREE)
-			},
-			expectedPass: false,
-			expectedBurn: false,
-			expectedTally: v1.TallyResult{
-				YesCount:        "2000000",
-				AbstainCount:    "0",
-				NoCount:         "2000000",
-				NoWithVetoCount: "0",
-				SpamCount:       "0",
-			},
-		},
-		{
-			name: "quorum reached with yes>.5: prop succeeds",
-			setup: func(s tallyFixture) {
-				setTotalBonded(s, 10000000)
-				validatorVote(s, s.valAddrs[0], v1.VoteOption_VOTE_OPTION_ONE)
-				validatorVote(s, s.valAddrs[1], v1.VoteOption_VOTE_OPTION_ONE)
-				validatorVote(s, s.valAddrs[2], v1.VoteOption_VOTE_OPTION_ONE)
-				validatorVote(s, s.valAddrs[3], v1.VoteOption_VOTE_OPTION_ONE)
-				validatorVote(s, s.valAddrs[4], v1.VoteOption_VOTE_OPTION_THREE)
-				validatorVote(s, s.valAddrs[5], v1.VoteOption_VOTE_OPTION_THREE)
-				validatorVote(s, s.valAddrs[6], v1.VoteOption_VOTE_OPTION_FOUR)
 			},
 			expectedPass: true,
 			expectedBurn: false,
 			expectedTally: v1.TallyResult{
-				YesCount:        "4000000",
+				YesCount:        "0",
 				AbstainCount:    "0",
-				NoCount:         "2000000",
-				NoWithVetoCount: "1000000",
-				SpamCount:       "0",
-			},
-		},
-		{
-			name: "quorum reached thanks to abstain, yes>.5: prop succeeds",
-			setup: func(s tallyFixture) {
-				setTotalBonded(s, 10000000)
-				validatorVote(s, s.valAddrs[0], v1.VoteOption_VOTE_OPTION_ONE)
-				validatorVote(s, s.valAddrs[1], v1.VoteOption_VOTE_OPTION_ONE)
-				validatorVote(s, s.valAddrs[2], v1.VoteOption_VOTE_OPTION_THREE)
-				validatorVote(s, s.valAddrs[3], v1.VoteOption_VOTE_OPTION_TWO)
-				validatorVote(s, s.valAddrs[4], v1.VoteOption_VOTE_OPTION_TWO)
-				validatorVote(s, s.valAddrs[5], v1.VoteOption_VOTE_OPTION_TWO)
-			},
-			expectedPass: true,
-			expectedBurn: false,
-			expectedTally: v1.TallyResult{
-				YesCount:        "2000000",
-				AbstainCount:    "3000000",
-				NoCount:         "1000000",
+				NoCount:         "0",
 				NoWithVetoCount: "0",
 				SpamCount:       "0",
 			},
 		},
 		{
-			name: "quorum reached with spam > all other votes: prop fails/burn deposit",
+			name: "spam votes: prop fails/burn deposit",
 			setup: func(s tallyFixture) {
 				setTotalBonded(s, 10000000)
-				validatorVote(s, s.valAddrs[0], v1.VoteOption_VOTE_OPTION_ONE)
-				// spam votes
 				validatorVote(s, s.valAddrs[1], v1.VoteOption_VOTE_OPTION_SPAM)
 				validatorVote(s, s.valAddrs[2], v1.VoteOption_VOTE_OPTION_SPAM)
 				validatorVote(s, s.valAddrs[3], v1.VoteOption_VOTE_OPTION_SPAM)
@@ -1070,11 +830,51 @@ func TestTally_Optimistic(t *testing.T) {
 			expectedPass: false,
 			expectedBurn: true,
 			expectedTally: v1.TallyResult{
-				YesCount:        "1000000",
+				YesCount:        "0",
 				AbstainCount:    "0",
 				NoCount:         "0",
 				NoWithVetoCount: "0",
 				SpamCount:       "6000000",
+			},
+		},
+		{
+			name: "one delegator votes: threshold no not reached, prop passes",
+			setup: func(s tallyFixture) {
+				setTotalBonded(s, 10000000)
+				delegations := []stakingtypes.Delegation{{
+					DelegatorAddress: s.delAddrs[0].String(),
+					ValidatorAddress: s.valAddrs[0].String(),
+					Shares:           sdkmath.LegacyNewDec(42),
+				}}
+				delegatorVote(s, s.delAddrs[0], delegations, v1.VoteOption_VOTE_OPTION_THREE)
+			},
+			expectedPass: true,
+			expectedBurn: false,
+			expectedTally: v1.TallyResult{
+				YesCount:        "0",
+				AbstainCount:    "0",
+				NoCount:         "42",
+				NoWithVetoCount: "0",
+				SpamCount:       "0",
+			},
+		},
+		{
+			name: "no vote threshold reached: prop fails",
+			setup: func(s tallyFixture) {
+				setTotalBonded(s, 10000000)
+				validatorVote(s, s.valAddrs[0], v1.VoteOption_VOTE_OPTION_THREE)
+				validatorVote(s, s.valAddrs[1], v1.VoteOption_VOTE_OPTION_THREE)
+				validatorVote(s, s.valAddrs[2], v1.VoteOption_VOTE_OPTION_THREE)
+				validatorVote(s, s.valAddrs[3], v1.VoteOption_VOTE_OPTION_THREE)
+			},
+			expectedPass: false,
+			expectedBurn: false,
+			expectedTally: v1.TallyResult{
+				YesCount:        "0",
+				AbstainCount:    "0",
+				NoCount:         "4000000",
+				NoWithVetoCount: "0",
+				SpamCount:       "0",
 			},
 		},
 	}

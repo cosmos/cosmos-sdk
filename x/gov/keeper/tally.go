@@ -17,7 +17,7 @@ func (keeper Keeper) Tally(ctx context.Context, proposal v1.Proposal) (passes, b
 		return false, false, v1.TallyResult{}, err
 	}
 
-	totalVotingPower, results, err := keeper.calculateVoteResultsAndVotingPower(ctx, proposal.Id, validators)
+	totalVoterPower, results, err := keeper.calculateVoteResultsAndVotingPower(ctx, proposal.Id, validators)
 	if err != nil {
 		return false, false, v1.TallyResult{}, err
 	}
@@ -28,7 +28,6 @@ func (keeper Keeper) Tally(ctx context.Context, proposal v1.Proposal) (passes, b
 	}
 	tallyResults = v1.NewTallyResultFromMap(results)
 
-	// TODO: Upgrade the spec to cover all of these cases & remove pseudocode.
 	// If there is no staked coins, the proposal fails
 	totalBonded, err := keeper.sk.TotalBondedTokens(ctx)
 	if err != nil {
@@ -39,48 +38,50 @@ func (keeper Keeper) Tally(ctx context.Context, proposal v1.Proposal) (passes, b
 		return false, false, tallyResults, nil
 	}
 
-	// If there is not enough quorum of votes, the proposal fails
-	percentVoting := totalVotingPower.Quo(math.LegacyNewDecFromInt(totalBonded))
-	quorum, _ := math.LegacyNewDecFromStr(params.Quorum)
-	if percentVoting.LT(quorum) {
-		return false, params.BurnVoteQuorum, tallyResults, nil
-	}
-
 	// If there are more spam votes than the sum of all other options, proposal fails
-	if results[v1.OptionSpam].GTE(results[v1.OptionOne].Add(results[v1.OptionTwo].Add(results[v1.OptionThree].Add(results[v1.OptionFour])))) {
+	// A proposal with no votes should not be considered spam
+	if !totalVoterPower.Equal(math.LegacyZeroDec()) &&
+		results[v1.OptionSpam].GTE(results[v1.OptionOne].Add(results[v1.OptionTwo].Add(results[v1.OptionThree].Add(results[v1.OptionFour])))) {
 		return false, true, tallyResults, nil
 	}
 
 	switch proposal.ProposalType {
 	case v1.ProposalType_PROPOSAL_TYPE_OPTIMISTIC:
-		return keeper.tallyOptimistic(totalVotingPower, results, params)
+		return keeper.tallyOptimistic(totalVoterPower, totalBonded, results, params)
 	case v1.ProposalType_PROPOSAL_TYPE_EXPEDITED:
-		return keeper.tallyExpedited(totalVotingPower, results, params)
+		return keeper.tallyExpedited(totalVoterPower, totalBonded, results, params)
 	case v1.ProposalType_PROPOSAL_TYPE_MULTIPLE_CHOICE:
-		return keeper.tallyMultipleChoice(totalVotingPower, results, params) // TODO(@julienrbrt): implement in follow up
+		return keeper.tallyMultipleChoice(totalVoterPower, totalBonded, results, params) // TODO(@julienrbrt): implement in follow up
 	default:
-		return keeper.tallyStandard(totalVotingPower, results, params)
+		return keeper.tallyStandard(totalVoterPower, totalBonded, results, params)
 	}
 }
 
-func (keeper Keeper) tallyStandard(totalVotingPower math.LegacyDec, results map[v1.VoteOption]math.LegacyDec, params v1.Params) (passes, burnDeposits bool, tallyResults v1.TallyResult, err error) {
+func (keeper Keeper) tallyStandard(totalVoterPower math.LegacyDec, totalBonded math.Int, results map[v1.VoteOption]math.LegacyDec, params v1.Params) (passes, burnDeposits bool, tallyResults v1.TallyResult, err error) {
 	tallyResults = v1.NewTallyResultFromMap(results)
 
+	// If there is not enough quorum of votes, the proposal fails
+	percentVoting := totalVoterPower.Quo(math.LegacyNewDecFromInt(totalBonded))
+	quorum, _ := math.LegacyNewDecFromStr(params.Quorum)
+	if percentVoting.LT(quorum) {
+		return false, params.BurnVoteQuorum, tallyResults, nil
+	}
+
 	// If no one votes (everyone abstains), proposal fails
-	if totalVotingPower.Sub(results[v1.OptionAbstain]).Equal(math.LegacyZeroDec()) {
+	if totalVoterPower.Sub(results[v1.OptionAbstain]).Equal(math.LegacyZeroDec()) {
 		return false, false, tallyResults, nil
 	}
 
 	// If more than 1/3 of voters veto, proposal fails
 	vetoThreshold, _ := math.LegacyNewDecFromStr(params.VetoThreshold)
-	if results[v1.OptionNoWithVeto].Quo(totalVotingPower).GT(vetoThreshold) {
+	if results[v1.OptionNoWithVeto].Quo(totalVoterPower).GT(vetoThreshold) {
 		return false, params.BurnVoteVeto, tallyResults, nil
 	}
 
 	// If more than 1/2 of non-abstaining voters vote Yes, proposal passes
 	threshold, _ := math.LegacyNewDecFromStr(params.GetThreshold())
 
-	if results[v1.OptionYes].Quo(totalVotingPower.Sub(results[v1.OptionAbstain])).GT(threshold) {
+	if results[v1.OptionYes].Quo(totalVoterPower.Sub(results[v1.OptionAbstain])).GT(threshold) {
 		return true, false, tallyResults, nil
 	}
 
@@ -88,24 +89,31 @@ func (keeper Keeper) tallyStandard(totalVotingPower math.LegacyDec, results map[
 	return false, false, tallyResults, nil
 }
 
-func (keeper Keeper) tallyExpedited(totalVotingPower math.LegacyDec, results map[v1.VoteOption]math.LegacyDec, params v1.Params) (passes, burnDeposits bool, tallyResults v1.TallyResult, err error) {
+func (keeper Keeper) tallyExpedited(totalVoterPower math.LegacyDec, totalBonded math.Int, results map[v1.VoteOption]math.LegacyDec, params v1.Params) (passes, burnDeposits bool, tallyResults v1.TallyResult, err error) {
 	tallyResults = v1.NewTallyResultFromMap(results)
 
+	// If there is not enough quorum of votes, the proposal fails
+	percentVoting := totalVoterPower.Quo(math.LegacyNewDecFromInt(totalBonded))
+	quorum, _ := math.LegacyNewDecFromStr(params.Quorum)
+	if percentVoting.LT(quorum) {
+		return false, params.BurnVoteQuorum, tallyResults, nil
+	}
+
 	// If no one votes (everyone abstains), proposal fails
-	if totalVotingPower.Sub(results[v1.OptionAbstain]).Equal(math.LegacyZeroDec()) {
+	if totalVoterPower.Sub(results[v1.OptionAbstain]).Equal(math.LegacyZeroDec()) {
 		return false, false, tallyResults, nil
 	}
 
 	// If more than 1/3 of voters veto, proposal fails
 	vetoThreshold, _ := math.LegacyNewDecFromStr(params.VetoThreshold)
-	if results[v1.OptionNoWithVeto].Quo(totalVotingPower).GT(vetoThreshold) {
+	if results[v1.OptionNoWithVeto].Quo(totalVoterPower).GT(vetoThreshold) {
 		return false, params.BurnVoteVeto, tallyResults, nil
 	}
 
 	// If more than 2/3 of non-abstaining voters vote Yes, proposal passes
 	threshold, _ := math.LegacyNewDecFromStr(params.GetExpeditedThreshold())
 
-	if results[v1.OptionYes].Quo(totalVotingPower.Sub(results[v1.OptionAbstain])).GT(threshold) {
+	if results[v1.OptionYes].Quo(totalVoterPower.Sub(results[v1.OptionAbstain])).GT(threshold) {
 		return true, false, tallyResults, nil
 	}
 
@@ -113,20 +121,32 @@ func (keeper Keeper) tallyExpedited(totalVotingPower math.LegacyDec, results map
 	return false, false, tallyResults, nil
 }
 
-func (keeper Keeper) tallyOptimistic(totalVotingPower math.LegacyDec, results map[v1.VoteOption]math.LegacyDec, params v1.Params) (passes, burnDeposits bool, tallyResults v1.TallyResult, err error) {
+func (keeper Keeper) tallyOptimistic(totalVoterPower math.LegacyDec, totalBonded math.Int, results map[v1.VoteOption]math.LegacyDec, params v1.Params) (passes, burnDeposits bool, tallyResults v1.TallyResult, err error) {
 	tallyResults = v1.NewTallyResultFromMap(results)
 	optimisticNoThreshold, _ := math.LegacyNewDecFromStr(params.OptimisticRejectedThreshold)
 
+	// If proposal has no votes, proposal passes
+	if totalVoterPower.Equal(math.LegacyZeroDec()) {
+		return true, false, tallyResults, nil
+	}
+
 	// If the threshold of no is reached, proposal fails
-	if results[v1.OptionNo].Quo(totalVotingPower).GT(optimisticNoThreshold) {
+	if results[v1.OptionNo].Quo(totalBonded.ToLegacyDec()).GT(optimisticNoThreshold) {
 		return false, false, tallyResults, nil
 	}
 
 	return true, false, tallyResults, nil
 }
 
-func (keeper Keeper) tallyMultipleChoice(totalVotingPower math.LegacyDec, results map[v1.VoteOption]math.LegacyDec, params v1.Params) (passes, burnDeposits bool, tallyResults v1.TallyResult, err error) {
+func (keeper Keeper) tallyMultipleChoice(totalVoterPower math.LegacyDec, totalBonded math.Int, results map[v1.VoteOption]math.LegacyDec, params v1.Params) (passes, burnDeposits bool, tallyResults v1.TallyResult, err error) {
 	tallyResults = v1.NewTallyResultFromMap(results)
+
+	// If there is not enough quorum of votes, the proposal fails
+	percentVoting := totalVoterPower.Quo(math.LegacyNewDecFromInt(totalBonded))
+	quorum, _ := math.LegacyNewDecFromStr(params.Quorum)
+	if percentVoting.LT(quorum) {
+		return false, params.BurnVoteQuorum, tallyResults, nil
+	}
 
 	return true, false, tallyResults, nil
 }

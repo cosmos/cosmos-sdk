@@ -133,7 +133,7 @@ func ReadTxsFromFile(ctx client.Context, filename string) (tx []sdk.Tx, err erro
 
 	// In SignBatchCmd, the output prints each tx line by line separated by "\n".
 	// So we split the output bytes to slice of tx bytes,
-	// last elemet always be empty bytes.
+	// last element always be empty bytes.
 	txsBytes := bytes.Split(fileBuff, []byte("\n"))
 	txDecoder := ctx.TxConfig.TxJSONDecoder()
 	for _, txBytes := range txsBytes {

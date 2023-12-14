@@ -104,7 +104,7 @@ func TestFundsMigration(t *testing.T) {
 	_, err = v4.MigrateFunds(ctx, bankKeeper, feepool, distrAcc, poolAcc)
 	require.NoError(t, err)
 
-	// set distrbution feepool as empty (since migration)
+	// set distribution feepool as empty (since migration)
 	err = distrKeeper.FeePool.Set(ctx, disttypes.FeePool{})
 	require.NoError(t, err)
 

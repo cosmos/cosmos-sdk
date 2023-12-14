@@ -1,9 +1,15 @@
 package v1
 
 import (
+	"fmt"
+
+	errorsmod "cosmossdk.io/errors"
+
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	sdktx "github.com/cosmos/cosmos-sdk/types/tx"
+	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
@@ -52,6 +58,54 @@ func (m *MsgSubmitProposal) SetMsgs(msgs []sdk.Msg) error {
 	}
 
 	m.Messages = anys
+	return nil
+}
+
+// TODO(CORE-843): Revert this if we decide to move to only validate during `DeliverTx`.
+// ValidateBasic implements the sdk.Msg interface.
+func (m *MsgSubmitProposal) ValidateBasic() error {
+	if m.Title == "" {
+		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "proposal title cannot be empty")
+	}
+	if m.Summary == "" {
+		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "proposal summary cannot be empty")
+	}
+
+	if _, err := sdk.AccAddressFromBech32(m.Proposer); err != nil {
+		return sdkerrors.ErrInvalidAddress.Wrapf("invalid proposer address: %s", err)
+	}
+
+	deposit := sdk.NewCoins(m.InitialDeposit...)
+	if !deposit.IsValid() {
+		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, deposit.String())
+	}
+
+	if deposit.IsAnyNegative() {
+		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, deposit.String())
+	}
+
+	// Check that either metadata or Msgs length is non nil.
+	if len(m.Messages) == 0 && len(m.Metadata) == 0 {
+		return errorsmod.Wrap(types.ErrNoProposalMsgs, "either metadata or Msgs length must be non-nil")
+	}
+
+	msgs, err := m.GetMsgs()
+	if err != nil {
+		return err
+	}
+
+	for idx, msg := range msgs {
+		m, ok := msg.(sdk.HasValidateBasic)
+		if !ok {
+			continue
+		}
+
+		if err := m.ValidateBasic(); err != nil {
+			return errorsmod.Wrap(types.ErrInvalidProposalMsg,
+				fmt.Sprintf("msg: %d, err: %s", idx, err.Error()))
+		}
+	}
+
 	return nil
 }
 

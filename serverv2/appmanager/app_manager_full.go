@@ -56,7 +56,7 @@ type AppManager struct {
 
 func (a AppManager) CheckTx(ctx context.Context, txBytes []byte) error {
 	// decode tx
-	tx, err := a.stf.decodeTx.Decode(txBytes)
+	tx, err := a.stf.decodeTx(txBytes)
 	if err != nil {
 		return err
 	}

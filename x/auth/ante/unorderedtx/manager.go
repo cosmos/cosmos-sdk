@@ -164,6 +164,8 @@ func (m *Manager) OnNewBlock(blockHeight uint64) {
 	m.blockCh <- blockHeight
 }
 
+// flushToFile writes all unexpired unordered transactions along with their TTL
+// to file, overwriting the existing file if it exists.
 func (m *Manager) flushToFile() error {
 	f, err := os.Create(filepath.Join(m.dataDir, dirName, fileName))
 	if err != nil {

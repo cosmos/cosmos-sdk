@@ -14,6 +14,8 @@ import (
 	"cosmossdk.io/core/address"
 )
 
+const maxRecursionDepth = 32
+
 type TypeResolver interface {
 	protoregistry.MessageTypeResolver
 	protoregistry.ExtensionTypeResolver
@@ -208,8 +210,11 @@ func (c *Context) makeGetSignersFunc(descriptor protoreflect.MessageDescriptor) 
 				}
 			}
 		case protoreflect.MessageKind:
-			var fieldGetter func(protoreflect.Message) ([][]byte, error)
-			fieldGetter = func(msg protoreflect.Message) ([][]byte, error) {
+			var fieldGetter func(protoreflect.Message, int) ([][]byte, error)
+			fieldGetter = func(msg protoreflect.Message, depth int) ([][]byte, error) {
+				if depth > maxRecursionDepth {
+					return nil, fmt.Errorf("maximum recursion depth exceeded")
+				}
 				desc := msg.Descriptor()
 				signerFields, err := getSignersFieldNames(desc)
 				if err != nil {
@@ -226,7 +231,7 @@ func (c *Context) makeGetSignersFunc(descriptor protoreflect.MessageDescriptor) 
 						childMsgs := msg.Get(childField).List()
 						var arr [][]byte
 						for i := 0; i < childMsgs.Len(); i++ {
-							res, err := fieldGetter(childMsgs.Get(i).Message())
+							res, err := fieldGetter(childMsgs.Get(i).Message(), depth+1)
 							if err != nil {
 								return nil, err
 							}
@@ -234,7 +239,7 @@ func (c *Context) makeGetSignersFunc(descriptor protoreflect.MessageDescriptor) 
 						}
 						return arr, nil
 					} else {
-						return fieldGetter(msg.Get(childField).Message())
+						return fieldGetter(msg.Get(childField).Message(), depth+1)
 					}
 				case childField.IsMap() || childField.HasOptionalKeyword():
 					return nil, fmt.Errorf("cosmos.msg.v1.signer field %s in message %s must not be a map or optional", signerFieldName, desc.FullName())
@@ -270,14 +275,14 @@ func (c *Context) makeGetSignersFunc(descriptor protoreflect.MessageDescriptor) 
 					signers := msg.ProtoReflect().Get(field).List()
 					n := signers.Len()
 					for i := 0; i < n; i++ {
-						res, err := fieldGetter(signers.Get(i).Message())
+						res, err := fieldGetter(signers.Get(i).Message(), 0)
 						if err != nil {
 							return nil, err
 						}
 						arr = append(arr, res...)
 					}
 				} else {
-					res, err := fieldGetter(msg.ProtoReflect().Get(field).Message())
+					res, err := fieldGetter(msg.ProtoReflect().Get(field).Message(), 0)
 					if err != nil {
 						return nil, err
 					}

@@ -31,6 +31,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+### Improvements
+* [#18740](https://github.com/cosmos/cosmos-sdk/pull/18740) Support nested messages when fetching signers up to a maximum depth of 32.
+
 ## v0.12.0
 
 ### Improvements

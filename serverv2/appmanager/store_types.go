@@ -1,6 +1,7 @@
 package appmanager
 
 type Store interface {
+	NewBlockWithVersion(version uint64) ReadonlyStore
 	ReadonlyWithVersion(version uint64) ReadonlyStore
 	CommitChanges(changes []ChangeSet) (Hash, error)
 }

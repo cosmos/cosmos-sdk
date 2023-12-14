@@ -1,28 +1,13 @@
 package appmanager
 
-import (
-	"context"
-	"errors"
-	"time"
-
-	"cosmossdk.io/log"
-	storetypes "cosmossdk.io/store/types"
-
-	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/serverv2/core/appmanager"
-	"github.com/cosmos/cosmos-sdk/serverv2/core/event"
-	"github.com/cosmos/cosmos-sdk/serverv2/core/transaction"
-	"github.com/cosmos/cosmos-sdk/telemetry"
-)
-
+/*
 type AppManager[T transaction.Tx] struct {
 	// ModuleManager     *module.Manager
 	// configurator      module.Configurator
 	// config            *runtimev1alpha1.Module
 	storeKeys         []storetypes.StoreKey
 	txCodec           transaction.Codec[T]
-	txValidator       transaction.Validator[T]
+	doTxValidation       transaction.Validator[T]
 	interfaceRegistry codectypes.InterfaceRegistry
 	cdc               codec.Codec
 	// amino             *codec.LegacyAmino
@@ -69,7 +54,7 @@ func (am AppManager[T]) DeliverBlock(ctx context.Context, req appmanager.Request
 		// }
 
 		// validate the transaction
-		ctx, txerr := am.txValidator.Validate(ctx, []T{tx})
+		ctx, txerr := am.doTxValidation.Validate(ctx, []T{tx})
 		if txerr != nil {
 			return appmanager.ResponseDeliverBlock{}, txerr[tx.Hash()] // TODO: dont return to execute other txs
 		}

@@ -23,22 +23,20 @@ type Tx interface {
 	GetGasLimit() uint64
 }
 
-type TxValidator interface {
-	ValidateTx(ctx context.Context, tx Tx) error
-}
-
 type Block struct {
-	Height uint64
-	Time   time.Time
-	Hash   []byte
-	Txs    [][]byte
+	Height            uint64
+	Time              time.Time
+	Hash              []byte
+	Txs               [][]byte
+	ConsensusMessages []Type // <= proto.Message
 }
 
 type BlockResponse struct {
-	AppHash          Hash
-	BeginBlockEvents []Event
-	TxResults        []TxResult
-	EndBlockEvents   []Event
+	AppHash                    Hash
+	BeginBlockEvents           []Event
+	TxResults                  []TxResult
+	EndBlockEvents             []Event
+	ConsensusMessagesResponses []Type
 }
 
 type TxResult struct {
@@ -57,7 +55,7 @@ type STFAppManager struct {
 	doBeginBlock func(ctx context.Context) error
 	doEndBlock   func(ctx context.Context) error
 
-	txValidator TxValidator
+	doTxValidation func(ctx context.Context, tx Tx) error
 
 	txDecoder TxDecoder
 
@@ -158,7 +156,7 @@ func (s STFAppManager) deliverTx(ctx context.Context, blockStore BranchStore, tx
 // If the validation is successful, state is committed
 func (s STFAppManager) validateTx(ctx context.Context, store BranchStore, gasLimit uint64, tx Tx) (gasUsed uint64, events []Event, err error) {
 	validateCtx := s.makeContext(ctx, store, gasLimit)
-	err = s.txValidator.ValidateTx(ctx, tx)
+	err = s.doTxValidation(ctx, tx)
 	if err != nil {
 		return 0, nil, nil
 	}

@@ -122,10 +122,14 @@ func (k Keeper) withdrawContinuousFund(ctx context.Context, recipient sdk.AccAdd
 	if err != nil {
 		return sdk.Coin{}, fmt.Errorf("error while iterating all the continuous funds: %w", err)
 	}
+
 	// get allocated continuous fund
-	fundsAllocated, err := k.getDistributedFunds(ctx, recipient)
+	fundsAllocated, err := k.RecipientFundDistribution.Get(ctx, recipient)
 	if err != nil {
-		return sdk.Coin{}, fmt.Errorf("error while getting distributed funds: %w", err)
+		if errors.Is(err, collections.ErrNotFound) {
+			return sdk.Coin{}, fmt.Errorf("no recipient fund found for recipient: %s", recipient.String())
+		}
+		return sdk.Coin{}, err
 	}
 
 	recipientBal := k.bankKeeper.GetAllBalances(ctx, recipient)
@@ -232,18 +236,6 @@ func (k Keeper) iterateAndUpdateFundsDistribution(ctx context.Context, toDistrib
 		return false, nil
 	})
 	return denom, err
-}
-
-func (k Keeper) getDistributedFunds(ctx context.Context, recipient sdk.AccAddress) (amount math.Int, err error) {
-	amount, err = k.RecipientFundDistribution.Get(ctx, recipient)
-	if err != nil {
-		if errors.Is(err, collections.ErrNotFound) {
-			return math.ZeroInt(), fmt.Errorf("no recipient fund found for recipient: %s", recipient.String())
-		}
-		return math.ZeroInt(), err
-	}
-
-	return amount, nil
 }
 
 func (k Keeper) claimFunds(ctx context.Context, recipient sdk.AccAddress) (amount sdk.Coin, err error) {

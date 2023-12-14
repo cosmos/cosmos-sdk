@@ -18,8 +18,9 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 )
 
+// Verify verifies a digest after unmarshalling it.
 func Verify(ctx client.Context, digest []byte) error {
-	tx, err := unmarshall(digest)
+	tx, err := unmarshal(digest)
 	if err != nil {
 		return err
 	}
@@ -27,6 +28,7 @@ func Verify(ctx client.Context, digest []byte) error {
 	return verify(ctx, tx)
 }
 
+// verify verifies given Tx.
 func verify(ctx client.Context, tx *apitx.Tx) error {
 	sigTx := builder{
 		cdc: ctx.Codec,
@@ -93,8 +95,8 @@ func verify(ctx client.Context, tx *apitx.Tx) error {
 	return nil
 }
 
-// unmarshall unmarshalls a digest to a Tx using protobuf protojson
-func unmarshall(digest []byte) (*apitx.Tx, error) {
+// unmarshal unmarshalls a digest to a Tx using protobuf protojson.
+func unmarshal(digest []byte) (*apitx.Tx, error) {
 	tx := &apitx.Tx{}
 	err := protojson.Unmarshal(digest, tx)
 	return tx, err

@@ -15,7 +15,7 @@ const (
 	flagEncoding           = "encoding"
 )
 
-// OffChain off-chain utilities
+// OffChain off-chain utilities.
 func OffChain() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "offchain",
@@ -32,7 +32,7 @@ func OffChain() *cobra.Command {
 	return cmd
 }
 
-// SignFile signs a file with a key
+// SignFile signs a file with a key.
 func SignFile() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "sign-file <keyName> <fileName>",
@@ -69,7 +69,7 @@ func SignFile() *cobra.Command {
 	return cmd
 }
 
-// VerifyFile verifies given file with given key
+// VerifyFile verifies given file with given key.
 func VerifyFile() *cobra.Command {
 	return &cobra.Command{
 		Use:   "verify-file <keyName> <fileName>",

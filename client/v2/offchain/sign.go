@@ -28,6 +28,7 @@ const (
 	ExpectedSequence = 0
 )
 
+// getSignMode returns the expected SignMode.
 func getSignMode(signModeStr string) apisigning.SignMode {
 	signMode := apisigning.SignMode_SIGN_MODE_UNSPECIFIED
 	switch signModeStr {
@@ -43,6 +44,7 @@ func getSignMode(signModeStr string) apisigning.SignMode {
 	return signMode
 }
 
+// Sign signs given bytes using the specified encoder and SignMode.
 func Sign(ctx client.Context, rawBytes []byte, fromName, signMode, indent, encoding string, emitUnpopulated bool) (string, error) {
 	digest, err := getEncoder(encoding)(rawBytes)
 	if err != nil {
@@ -57,6 +59,7 @@ func Sign(ctx client.Context, rawBytes []byte, fromName, signMode, indent, encod
 	return marshalOffChainTx(tx, emitUnpopulated, indent)
 }
 
+// sign signs a digest with provided key and SignMode.
 func sign(ctx client.Context, fromName, digest string, signMode apisigning.SignMode) (*apitx.Tx, error) {
 	keybase, err := keyring.NewAutoCLIKeyring(ctx.Keyring)
 	if err != nil {
@@ -132,6 +135,7 @@ func sign(ctx client.Context, fromName, digest string, signMode apisigning.SignM
 	return txBuilder.GetProtoTx(), nil
 }
 
+// getSignBytes gets the bytes to be signed for the given Tx and SignMode.
 func getSignBytes(ctx context.Context,
 	handlerMap *txsigning.HandlerMap,
 	mode apisigning.SignMode,
@@ -159,6 +163,7 @@ func getSignBytes(ctx context.Context,
 	return handlerMap.GetSignBytes(ctx, mode, txSignerData, txData)
 }
 
+// marshalOffChainTx marshals a Tx using protobuf protojson.
 func marshalOffChainTx(tx *apitx.Tx, emitUnpopulated bool, indent string) (string, error) {
 	bytesTx, err := protojson.MarshalOptions{
 		EmitUnpopulated: emitUnpopulated,

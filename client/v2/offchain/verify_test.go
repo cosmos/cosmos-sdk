@@ -6,6 +6,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	_ "cosmossdk.io/api/cosmos/crypto/secp256k1"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
@@ -63,7 +64,6 @@ func Test_Verify(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-
 			err = Verify(tt.ctx, tt.digest)
 			if tt.wantErr {
 				require.Error(t, err)
@@ -74,7 +74,7 @@ func Test_Verify(t *testing.T) {
 	}
 }
 
-func Test_unmarshall(t *testing.T) {
+func Test_unmarshal(t *testing.T) {
 	tests := []struct {
 		name   string
 		digest []byte
@@ -86,7 +86,7 @@ func Test_unmarshall(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := unmarshall(tt.digest)
+			got, err := unmarshal(tt.digest)
 			require.NoError(t, err)
 			require.NotNil(t, got)
 		})

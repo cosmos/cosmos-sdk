@@ -115,6 +115,40 @@ func ReadTxFromFile(ctx client.Context, filename string) (tx sdk.Tx, err error) 
 	return ctx.TxConfig.TxJSONDecoder()(bytes)
 }
 
+// Read and decode a multi transactions (must be in Txs format) from the given filename.
+// Can pass "-" to read from stdin.
+func ReadTxsFromFile(ctx client.Context, filename string) (tx []sdk.Tx, err error) {
+	var fileBuff []byte
+	var txs []sdk.Tx
+
+	if filename == "-" {
+		fileBuff, err = io.ReadAll(os.Stdin)
+	} else {
+		fileBuff, err = os.ReadFile(filename)
+	}
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to read batch txs from file %s: %w", filename, err)
+	}
+
+	// In SignBatchCmd, the output prints each tx line by line separated by "\n".
+	// So we split the output bytes to slice of tx bytes,
+	// last elemet always be empty bytes.
+	txsBytes := bytes.Split(fileBuff, []byte("\n"))
+	txDecoder := ctx.TxConfig.TxJSONDecoder()
+	for _, txBytes := range txsBytes {
+		if len(txBytes) == 0 {
+			continue
+		}
+		tx, err := txDecoder(txBytes)
+		if err != nil {
+			return nil, err
+		}
+		txs = append(txs, tx)
+	}
+	return txs, nil
+}
+
 // ReadTxsFromInput reads multiples txs from the given filename(s). Can pass "-" to read from stdin.
 // Unlike ReadTxFromFile, this function does not decode the txs.
 func ReadTxsFromInput(txCfg client.TxConfig, filenames ...string) (scanner *BatchScanner, err error) {

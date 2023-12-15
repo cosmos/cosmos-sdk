@@ -4,7 +4,7 @@ mod wasm;
 mod r#extern;
 
 mod store;
-// pub use store::{KVStore, KVStoreService};
+pub use store::{KVStore, KVStoreService};
 mod context;
 
 use zeropb;

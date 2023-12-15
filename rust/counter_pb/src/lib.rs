@@ -1,35 +1,39 @@
 use std::ptr::null;
 use tonic::{Request, Response, Status};
 use cosmossdk_core::c::{ModuleDescriptor, ModuleInitData};
-// use cosmossdk_core::KVStoreService;
+use cosmossdk_core::KVStoreService;
 use cosmossdk_core::tonic::{context};
 
 include!(concat!(env!("OUT_DIR"), "/_includes.rs"));
 
-// struct Counter {
-//     kv_store_service: KVStoreService,
-// }
-//
-// #[tonic::async_trait]
-// impl example::counter::v1::msg_server::Msg for Counter {
-//     async fn increment_counter(&self, request: Request<example::counter::v1::IncrementCounterRequest>) -> Result<Response<example::counter::v1::IncrementCounterResponse>, Status> {
-//         let mut store = self.kv_store_service.open(&mut context(&request));
-//         if let Some(val) = store.get(&[0]) {
-//             let mut val_be = u64::from_be_bytes(val[..8].try_into().unwrap());
-//             val_be += 1;
-//             store.set(&[0], val_be.to_be_bytes().as_ref());
-//             Ok(Response::new(example::counter::v1::IncrementCounterResponse {
-//                 current: val_be,
-//             }))
-//         } else {
-//             let val_be = 1u64;
-//             store.set(&[0], val_be.to_be_bytes().as_ref());
-//             Ok(Response::new(example::counter::v1::IncrementCounterResponse {
-//                 current: 1,
-//             }))
-//         }
-//     }
-// }
+struct Counter {
+    kv_store_service: KVStoreService,
+}
+
+#[tonic::async_trait]
+impl example::counter::v1::msg_server::Msg for Counter {
+    async fn increment_counter(&self, request: Request<example::counter::v1::IncrementCounterRequest>) -> Result<Response<example::counter::v1::IncrementCounterResponse>, Status> {
+        let mut store = self.kv_store_service.open(&mut context(&request));
+        if let Some(val) = store.get(&[0]) {
+            let mut val_be = u64::from_be_bytes(val[..8].try_into().unwrap());
+            val_be += 1;
+            store.set(&[0], val_be.to_be_bytes().as_ref());
+            Ok(Response::new(example::counter::v1::IncrementCounterResponse {
+                current: val_be,
+            }))
+        } else {
+            let val_be = 1u64;
+            store.set(&[0], val_be.to_be_bytes().as_ref());
+            Ok(Response::new(example::counter::v1::IncrementCounterResponse {
+                current: 1,
+            }))
+        }
+    }
+}
+
+static MSG_SERVICE: example::counter::v1::msg_server::MsgServer<Counter> = example::counter::v1::msg_server::MsgServer::new(Counter {
+    kv_store_service: todo!()
+});
 
 static PROTO_FILE_DESCRIPTORS: &'static [u8] = include_bytes!("file_descriptor_set.bin");
 

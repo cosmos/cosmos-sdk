@@ -98,7 +98,7 @@ func SignTxWithSignerAddress(txFactory tx.Factory, clientCtx client.Context, add
 	return tx.Sign(clientCtx.CmdContext, txFactory, name, txBuilder, overwrite)
 }
 
-// Read and decode a StdTx from the given filename. Can pass "-" to read from stdin.
+// ReadTxFromFile read and decode a StdTx from the given filename. Can pass "-" to read from stdin.
 func ReadTxFromFile(ctx client.Context, filename string) (tx sdk.Tx, err error) {
 	var bytes []byte
 
@@ -115,11 +115,10 @@ func ReadTxFromFile(ctx client.Context, filename string) (tx sdk.Tx, err error) 
 	return ctx.TxConfig.TxJSONDecoder()(bytes)
 }
 
-// Read and decode a multi transactions (must be in Txs format) from the given filename.
+// ReadTxsFromFile read and decode a multi transactions (must be in Txs format) from the given filename.
 // Can pass "-" to read from stdin.
-func ReadTxsFromFile(ctx client.Context, filename string) (tx []sdk.Tx, err error) {
+func ReadTxsFromFile(ctx client.Context, filename string) (txs []sdk.Tx, err error) {
 	var fileBuff []byte
-	var txs []sdk.Tx
 
 	if filename == "-" {
 		fileBuff, err = io.ReadAll(os.Stdin)

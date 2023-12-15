@@ -57,6 +57,7 @@ func (keeper Keeper) Tally(ctx context.Context, proposal v1.Proposal) (passes, b
 	}
 }
 
+// tallyStandard tallies the votes of a standard proposal
 func (keeper Keeper) tallyStandard(totalVoterPower math.LegacyDec, totalBonded math.Int, results map[v1.VoteOption]math.LegacyDec, params v1.Params) (passes, burnDeposits bool, tallyResults v1.TallyResult, err error) {
 	tallyResults = v1.NewTallyResultFromMap(results)
 
@@ -89,6 +90,7 @@ func (keeper Keeper) tallyStandard(totalVoterPower math.LegacyDec, totalBonded m
 	return false, false, tallyResults, nil
 }
 
+// tallyExpedited tallies the votes of an expedited proposal
 func (keeper Keeper) tallyExpedited(totalVoterPower math.LegacyDec, totalBonded math.Int, results map[v1.VoteOption]math.LegacyDec, params v1.Params) (passes, burnDeposits bool, tallyResults v1.TallyResult, err error) {
 	tallyResults = v1.NewTallyResultFromMap(results)
 
@@ -121,6 +123,7 @@ func (keeper Keeper) tallyExpedited(totalVoterPower math.LegacyDec, totalBonded 
 	return false, false, tallyResults, nil
 }
 
+// tallyOptimistic tallies the votes of an optimistic proposal
 func (keeper Keeper) tallyOptimistic(totalVoterPower math.LegacyDec, totalBonded math.Int, results map[v1.VoteOption]math.LegacyDec, params v1.Params) (passes, burnDeposits bool, tallyResults v1.TallyResult, err error) {
 	tallyResults = v1.NewTallyResultFromMap(results)
 	optimisticNoThreshold, _ := math.LegacyNewDecFromStr(params.OptimisticRejectedThreshold)
@@ -138,6 +141,7 @@ func (keeper Keeper) tallyOptimistic(totalVoterPower math.LegacyDec, totalBonded
 	return true, false, tallyResults, nil
 }
 
+// tallyMultipleChoice tallies the votes of a multiple choice proposal
 func (keeper Keeper) tallyMultipleChoice(totalVoterPower math.LegacyDec, totalBonded math.Int, results map[v1.VoteOption]math.LegacyDec, params v1.Params) (passes, burnDeposits bool, tallyResults v1.TallyResult, err error) {
 	tallyResults = v1.NewTallyResultFromMap(results)
 

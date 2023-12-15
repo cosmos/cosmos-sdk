@@ -700,7 +700,7 @@ func (suite *KeeperTestSuite) TestMsgVoteWeighted() {
 				suite.Require().NotNil(res.ProposalId)
 				return res.ProposalId
 			},
-			option:    v1.NewNonSplitVoteOption(v1.VoteOption_VOTE_OPTION_ONE),
+			option:    v1.NewNonSplitVoteOption(v1.VoteOption_VOTE_OPTION_ONE), // vote yes
 			voter:     proposer,
 			metadata:  "",
 			expErr:    true,

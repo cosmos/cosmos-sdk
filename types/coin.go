@@ -274,7 +274,7 @@ func (coins Coins) Validate() error {
 	}
 }
 
-func (coins Coins) isSorted() bool {
+func (coins Coins) IsSorted() bool {
 	for i := 1; i < len(coins); i++ {
 		if coins[i-1].Denom > coins[i].Denom {
 			return false
@@ -323,10 +323,10 @@ func (coins Coins) Add(coinsB ...Coin) Coins {
 func (coins Coins) safeAdd(coinsB Coins) (coalesced Coins) {
 	// probably the best way will be to make Coins and interface and hide the structure
 	// definition (type alias)
-	if !coins.isSorted() {
+	if !coins.IsSorted() {
 		panic("Coins (self) must be sorted")
 	}
-	if !coinsB.isSorted() {
+	if !coinsB.IsSorted() {
 		panic("Wrong argument: coins must be sorted")
 	}
 
@@ -473,7 +473,7 @@ func (coins Coins) SafeQuoInt(x math.Int) (Coins, bool) {
 //	a.Add(b...).Equal(a.Min(b).Add(a.Max(b)...))
 //
 // E.g.
-// {1A, 3B, 2C}.Max({4A, 2B, 2C} == {4A, 3B, 2C})
+// {1A, 3B, 2C}.Max({4A, 2B, 2C}) == {4A, 3B, 2C}
 // {2A, 3B}.Max({1B, 4C}) == {2A, 3B, 4C}
 // {1A, 2B}.Max({}) == {1A, 2B}
 func (coins Coins) Max(coinsB Coins) Coins {
@@ -519,7 +519,7 @@ func (coins Coins) Max(coinsB Coins) Coins {
 //	a.Add(b...).Equal(a.Min(b).Add(a.Max(b)...))
 //
 // E.g.
-// {1A, 3B, 2C}.Min({4A, 2B, 2C} == {1A, 2B, 2C})
+// {1A, 3B, 2C}.Min({4A, 2B, 2C}) == {1A, 2B, 2C}
 // {2A, 3B}.Min({1B, 4C}) == {1B}
 // {1A, 2B}.Min({3C}) == empty
 //
@@ -683,6 +683,7 @@ func (coins Coins) Empty() bool {
 }
 
 // AmountOf returns the amount of a denom from coins
+// CONTRACT: coins must be valid (sorted).
 func (coins Coins) AmountOf(denom string) math.Int {
 	mustValidateDenom(denom)
 	return coins.AmountOfNoDenomValidation(denom)
@@ -690,6 +691,7 @@ func (coins Coins) AmountOf(denom string) math.Int {
 
 // AmountOfNoDenomValidation returns the amount of a denom from coins
 // without validating the denomination.
+// CONTRACT: coins must be valid (sorted).
 func (coins Coins) AmountOfNoDenomValidation(denom string) math.Int {
 	if ok, c := coins.Find(denom); ok {
 		return c.Amount

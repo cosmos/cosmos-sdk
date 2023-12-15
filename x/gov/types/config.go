@@ -1,6 +1,6 @@
 package types
 
-// Config is a config struct used for intialising the gov module to avoid using globals.
+// Config is a config struct used for initializing the gov module to avoid using globals.
 type Config struct {
 	// MaxTitleLen defines the amount of characters that can be used for proposal title
 	MaxTitleLen uint64

@@ -384,8 +384,8 @@ schema = 3
     version = "v1.1.0"
     hash = "sha256-U4IS0keJa4BSBSeEBqtIV1Zg6N4b0zFiKfzN9ua4pWQ="
   [mod."github.com/pelletier/go-toml/v2"]
-    version = "v2.1.0"
-    hash = "sha256-0u6oV8YMM26y2bw1oe3gLmEJc/whpNaFtEe4yOkN24c="
+    version = "v2.1.1"
+    hash = "sha256-BQtflYQ8Dt7FL/yFI9OnxwvsRk0oEO37ZXuGXFveVpo="
   [mod."github.com/petermattis/goid"]
     version = "v0.0.0-20231126143041-f558c26febf5"
     hash = "sha256-59jZe0vsHp1vgj+o4D6IPgoyw9C2+jVxmh7uwfxUSzU="
@@ -535,11 +535,11 @@ schema = 3
     version = "v0.0.0-20231106174013-bbf56f31fb17"
     hash = "sha256-HEYq4ualnRizyySTBztWWhHEgMNScqOHUhFvTSDmjnA="
   [mod."google.golang.org/genproto/googleapis/rpc"]
-    version = "v0.0.0-20231127180814-3a041ad873d4"
+    version = "v0.0.0-20231211222908-989df2bf70f3"
     hash = "sha256-kpTwMHwou3hEhCA/zCerdEP5gV9SHNA7bAMqcIHZesM="
   [mod."google.golang.org/grpc"]
-    version = "v1.59.0"
-    hash = "sha256-IcwmXyeroUg742wqU4Zikwxm7y0i7x4axOPdWOGPkzE="
+    version = "v1.60.0"
+    hash = "sha256-L8NmvIG8gYSWlfjnEL+Cm83kF8dNnHWh4t7gNWHO4jY="
   [mod."google.golang.org/protobuf"]
     version = "v1.31.0"
     hash = "sha256-UdIk+xRaMfdhVICvKRk1THe3R1VU+lWD8hqoW/y8jT0="

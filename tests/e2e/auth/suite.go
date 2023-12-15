@@ -11,6 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/math"
 	authcli "cosmossdk.io/x/auth/client/cli"
@@ -22,6 +23,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
@@ -40,6 +42,7 @@ type E2ETestSuite struct {
 	suite.Suite
 
 	cfg     network.Config
+	ac      address.Codec
 	network network.NetworkI
 }
 
@@ -75,6 +78,8 @@ func (s *E2ETestSuite) SetupSuite() {
 	_, err = kb.SaveMultisig("multi", multi)
 	s.Require().NoError(err)
 	s.Require().NoError(s.network.WaitForNextBlock())
+
+	s.ac = addresscodec.NewBech32Codec("cosmos")
 }
 
 func (s *E2ETestSuite) TearDownSuite() {
@@ -874,7 +879,7 @@ func (s *E2ETestSuite) TestCLIMultisignSortSignatures() {
 	var balRes banktypes.QueryAllBalancesResponse
 	err = clientCtx.Codec.UnmarshalJSON(resp, &balRes)
 	s.Require().NoError(err)
-	intialCoins := balRes.Balances
+	initialCoins := balRes.Balances
 
 	// Send coins from validator to multisig.
 	sendTokens := sdk.NewInt64Coin(s.cfg.BondDenom, 10)
@@ -891,7 +896,7 @@ func (s *E2ETestSuite) TestCLIMultisignSortSignatures() {
 	s.Require().NoError(err)
 	err = clientCtx.Codec.UnmarshalJSON(resp, &balRes)
 	s.Require().NoError(err)
-	diff, _ := balRes.Balances.SafeSub(intialCoins...)
+	diff, _ := balRes.Balances.SafeSub(initialCoins...)
 	s.Require().Equal(sendTokens.Amount, diff.AmountOf(s.cfg.BondDenom))
 
 	tokens := sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 5))
@@ -1302,11 +1307,7 @@ func TestGetBroadcastCommandWithoutOfflineFlag(t *testing.T) {
 	// Create new file with tx
 	builder := txCfg.NewTxBuilder()
 	builder.SetGasLimit(200000)
-	from, err := sdk.AccAddressFromBech32("cosmos1cxlt8kznps92fwu3j6npahx4mjfutydyene2qw")
-	require.NoError(t, err)
-	to, err := sdk.AccAddressFromBech32("cosmos1cxlt8kznps92fwu3j6npahx4mjfutydyene2qw")
-	require.NoError(t, err)
-	err = builder.SetMsgs(banktypes.NewMsgSend(from, to, sdk.Coins{sdk.NewInt64Coin("stake", 10000)}))
+	err = builder.SetMsgs(banktypes.NewMsgSend("cosmos1cxlt8kznps92fwu3j6npahx4mjfutydyene2qw", "cosmos1cxlt8kznps92fwu3j6npahx4mjfutydyene2qw", sdk.Coins{sdk.NewInt64Coin("stake", 10000)}))
 	require.NoError(t, err)
 	txContents, err := txCfg.TxJSONEncoder()(builder.GetTx())
 	require.NoError(t, err)
@@ -1330,7 +1331,7 @@ func (s *E2ETestSuite) TestTxWithoutPublicKey() {
 
 	// Create a txBuilder with an unsigned tx.
 	txBuilder := txCfg.NewTxBuilder()
-	msg := banktypes.NewMsgSend(val1.GetAddress(), val1.GetAddress(), sdk.NewCoins(
+	msg := banktypes.NewMsgSend(val1.GetAddress().String(), val1.GetAddress().String(), sdk.NewCoins(
 		sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10)),
 	))
 	err := txBuilder.SetMsgs(msg)
@@ -1397,9 +1398,15 @@ func (s *E2ETestSuite) TestSignWithMultiSignersAminoJSON() {
 	// because DIRECT doesn't support multi signers via the CLI.
 	// Since we use amino, we don't need to pre-populate signer_infos.
 	txBuilder := val0.GetClientCtx().TxConfig.NewTxBuilder()
-	err := txBuilder.SetMsgs(
-		banktypes.NewMsgSend(val0.GetAddress(), addr1, sdk.NewCoins(val0Coin)),
-		banktypes.NewMsgSend(val1.GetAddress(), addr1, sdk.NewCoins(val1Coin)),
+	val0Str, err := s.ac.BytesToString(val0.GetAddress())
+	s.Require().NoError(err)
+	val1Str, err := s.ac.BytesToString(val1.GetAddress())
+	s.Require().NoError(err)
+	addrStr, err := s.ac.BytesToString(addr1)
+	s.Require().NoError(err)
+	err = txBuilder.SetMsgs(
+		banktypes.NewMsgSend(val0Str, addrStr, sdk.NewCoins(val0Coin)),
+		banktypes.NewMsgSend(val1Str, addrStr, sdk.NewCoins(val1Coin)),
 	)
 	require.NoError(err)
 	txBuilder.SetFeeAmount(sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))))

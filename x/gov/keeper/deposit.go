@@ -281,7 +281,7 @@ func (keeper Keeper) RefundAndDeleteDeposits(ctx context.Context, proposalID uin
 // validateInitialDeposit validates if initial deposit is greater than or equal to the minimum
 // required at the time of proposal submission. This threshold amount is determined by
 // the deposit parameters. Returns nil on success, error otherwise.
-func (keeper Keeper) validateInitialDeposit(ctx context.Context, params v1.Params, initialDeposit sdk.Coins, expedited bool) error {
+func (keeper Keeper) validateInitialDeposit(ctx context.Context, params v1.Params, initialDeposit sdk.Coins, proposalType v1.ProposalType) error {
 	if !initialDeposit.IsValid() || initialDeposit.IsAnyNegative() {
 		return errors.Wrap(sdkerrors.ErrInvalidCoins, initialDeposit.String())
 	}
@@ -295,9 +295,10 @@ func (keeper Keeper) validateInitialDeposit(ctx context.Context, params v1.Param
 	}
 
 	var minDepositCoins sdk.Coins
-	if expedited {
+	switch proposalType {
+	case v1.ProposalType_PROPOSAL_TYPE_EXPEDITED:
 		minDepositCoins = params.ExpeditedMinDeposit
-	} else {
+	default:
 		minDepositCoins = params.MinDeposit
 	}
 

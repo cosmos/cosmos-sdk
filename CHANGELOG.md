@@ -53,6 +53,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
+* (client/keys) [#18743](https://github.com/cosmos/cosmos-sdk/pull/18743) Improve `<appd> keys add -i` by hiding inputting of bip39 passphrase.
 * (client/keys) [#18703](https://github.com/cosmos/cosmos-sdk/pull/18703) Improve `<appd> keys add` and `<appd> keys show` by checking whether there are duplicate keys in the multisig case.
 * (x/gov) [#18707](https://github.com/cosmos/cosmos-sdk/pull/18707) Improve genesis validation. 
 * (x/bank) [#18636](https://github.com/cosmos/cosmos-sdk/pull/18636) `SendCoinsFromModuleToAccount`, `SendCoinsFromModuleToModule`, `SendCoinsFromAccountToModule`, `DelegateCoinsFromAccountToModule`, `UndelegateCoinsFromModuleToAccount`, `MintCoins` and `BurnCoins` methods now returns an error instead of panicking if any module accounts does not exist or unauthorized.

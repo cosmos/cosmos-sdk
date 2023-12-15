@@ -88,7 +88,11 @@ func verify(ctx client.Context, tx *apitx.Tx) error {
 			},
 		}
 
-		txData := sigTx.GetSigningTxData()
+		txData, err := sigTx.GetSigningTxData()
+		if err != nil {
+			return err
+		}
+
 		err = verifySignature(context.Background(), pubKey, txSignerData, sig.Data, signModeHandler, txData)
 		if err != nil {
 			return err
@@ -106,6 +110,8 @@ func unmarshal(digest []byte, fileFormat string) (*apitx.Tx, error) {
 		err = protojson.Unmarshal(digest, tx)
 	case v2flags.OutputFormatText:
 		err = prototext.Unmarshal(digest, tx)
+	default:
+		return nil, fmt.Errorf("unsupported file format: %s", fileFormat)
 	}
 	return tx, err
 }

@@ -30,7 +30,7 @@ func getCodec() codec.Codec {
 	return codec.NewProtoCodec(registry)
 }
 
-func MakeTestTxConfig() client.TxConfig {
+func MakeTestTxConfig(t *testing.T) client.TxConfig {
 	enabledSignModes := []signingtypes.SignMode{
 		signingtypes.SignMode_SIGN_MODE_DIRECT,
 		signingtypes.SignMode_SIGN_MODE_DIRECT_AUX,
@@ -49,15 +49,13 @@ func MakeTestTxConfig() client.TxConfig {
 			ValidatorAddressCodec: address.NewBech32Codec("cosmosvaloper"),
 		},
 	})
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(t, err)
+
 	cryptocodec.RegisterInterfaces(ir)
 	cdc := codec.NewProtoCodec(ir)
 	txConfig, err := tx.NewTxConfigWithOptions(cdc, txConfigOpts)
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(t, err)
+
 	return txConfig
 }
 
@@ -106,7 +104,7 @@ func Test_sign(t *testing.T) {
 
 	ctx := client.Context{
 		Keyring:      k,
-		TxConfig:     MakeTestTxConfig(),
+		TxConfig:     MakeTestTxConfig(t),
 		AddressCodec: address.NewBech32Codec("cosmos"),
 	}
 

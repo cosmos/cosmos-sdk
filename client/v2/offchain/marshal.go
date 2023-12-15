@@ -1,7 +1,7 @@
 package offchain
 
 import (
-	"errors"
+	"fmt"
 
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/encoding/prototext"
@@ -30,7 +30,7 @@ func getMarshaller(marshallerId, indent string, emitUnpopulated bool) (marshalle
 			EmitUnknown: emitUnpopulated,
 		}, nil
 	}
-	return nil, errors.New("marshaller not identified")
+	return nil, fmt.Errorf("marshaller with id '%s' not identified", marshallerId)
 }
 
 // marshalOffChainTx marshals a Tx using given marshaller.

@@ -45,7 +45,12 @@ func getSignMode(signModeStr string) apisigning.SignMode {
 
 // Sign signs given bytes using the specified encoder and SignMode.
 func Sign(ctx client.Context, rawBytes []byte, fromName, signMode, indent, encoding, output string, emitUnpopulated bool) (string, error) {
-	digest, err := getEncoder(encoding)(rawBytes)
+	encoder, err := getEncoder(encoding)
+	if err != nil {
+		return "", err
+	}
+
+	digest, err := encoder(rawBytes)
 	if err != nil {
 		return "", err
 	}
@@ -144,9 +149,12 @@ func getSignBytes(ctx context.Context,
 	handlerMap *txsigning.HandlerMap,
 	mode apisigning.SignMode,
 	signerData authsigning.SignerData,
-	tx authsigning.V2AdaptableTx,
+	tx *builder,
 ) ([]byte, error) {
-	txData := tx.GetSigningTxData()
+	txData, err := tx.GetSigningTxData()
+	if err != nil {
+		return nil, err
+	}
 
 	anyPk, err := codectypes.NewAnyWithValue(signerData.PubKey)
 	if err != nil {

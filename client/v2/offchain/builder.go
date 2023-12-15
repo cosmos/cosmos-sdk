@@ -48,7 +48,7 @@ func (b *builder) GetProtoTx() *apitx.Tx {
 	return b.tx
 }
 
-func (b *builder) GetSigningTxData() txsigning.TxData {
+func (b *builder) GetSigningTxData() (txsigning.TxData, error) {
 	body := b.tx.Body
 	authInfo := b.tx.AuthInfo
 
@@ -117,7 +117,7 @@ func (b *builder) GetSigningTxData() txsigning.TxData {
 	}
 	authInfoBz, err := protov2.Marshal(b.tx.AuthInfo)
 	if err != nil {
-		panic(err)
+		return txsigning.TxData{}, err
 	}
 	bodyBz, err := protov2.Marshal(b.tx.Body)
 	if err != nil {
@@ -129,7 +129,7 @@ func (b *builder) GetSigningTxData() txsigning.TxData {
 		Body:          txBody,
 		BodyBytes:     bodyBz,
 	}
-	return txData
+	return txData, nil
 }
 
 func (b *builder) GetPubKeys() ([]cryptotypes.PubKey, error) { // If signer already has pubkey in context, this list will have nil in its place
@@ -231,7 +231,7 @@ func (b *builder) setMsgs(msgs ...proto.Message) error {
 	for i, msg := range msgs {
 		protoMsg, ok := msg.(protov2.Message)
 		if !ok {
-			return errors.New("")
+			return errors.New("message is not a proto.Message")
 		}
 		protov2MarshalOpts := protov2.MarshalOptions{Deterministic: true}
 		bz, err := protov2MarshalOpts.Marshal(protoMsg)
@@ -251,15 +251,19 @@ func (b *builder) SetSignatures(signatures ...OffchainSignature) error {
 	n := len(signatures)
 	signerInfos := make([]*apitx.SignerInfo, n)
 	rawSigs := make([][]byte, n)
-
+	var err error
 	for i, sig := range signatures {
 		var mi *apitx.ModeInfo
-		mi, rawSigs[i] = b.signatureDataToModeInfoAndSig(sig.Data)
+		mi, rawSigs[i], err = b.signatureDataToModeInfoAndSig(sig.Data)
+		if err != nil {
+			return err
+		}
 
 		pubKey, err := codectypes.NewAnyWithValue(sig.PubKey)
 		if err != nil {
 			return err
 		}
+
 		signerInfos[i] = &apitx.SignerInfo{
 			PublicKey: &anypb.Any{
 				TypeUrl: pubKey.TypeUrl,
@@ -277,9 +281,9 @@ func (b *builder) SetSignatures(signatures ...OffchainSignature) error {
 }
 
 // signatureDataToModeInfoAndSig converts a SignatureData to a ModeInfo and raw bytes signature
-func (b *builder) signatureDataToModeInfoAndSig(data SignatureData) (*apitx.ModeInfo, []byte) {
+func (b *builder) signatureDataToModeInfoAndSig(data SignatureData) (*apitx.ModeInfo, []byte, error) {
 	if data == nil {
-		return nil, nil
+		return nil, nil, errors.New("empty SignatureData")
 	}
 
 	switch data := data.(type) {
@@ -288,9 +292,9 @@ func (b *builder) signatureDataToModeInfoAndSig(data SignatureData) (*apitx.Mode
 			Sum: &apitx.ModeInfo_Single_{
 				Single: &apitx.ModeInfo_Single{Mode: data.SignMode},
 			},
-		}, data.Signature
+		}, data.Signature, nil
 	default:
-		panic(fmt.Sprintf("unexpected signature data type %T", data))
+		return nil, nil, fmt.Errorf("unexpected signature data type %T", data)
 	}
 }
 

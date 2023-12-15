@@ -55,7 +55,8 @@ func Test_getEncoder(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := getEncoder(tt.encoder)
+			got, err := getEncoder(tt.encoder)
+			require.NoError(t, err)
 			require.Equal(t, reflect.ValueOf(got).Pointer(), reflect.ValueOf(tt.want).Pointer())
 		})
 	}

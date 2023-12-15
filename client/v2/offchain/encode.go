@@ -1,6 +1,9 @@
 package offchain
 
-import "encoding/base64"
+import (
+	"encoding/base64"
+	"fmt"
+)
 
 const (
 	noEncoder  = "no-encoding"
@@ -20,12 +23,13 @@ func base64Encoding(digest []byte) (string, error) {
 }
 
 // getEncoder returns a encodingFunc bases on the encoder id provided
-func getEncoder(encoder string) encodingFunc {
+func getEncoder(encoder string) (encodingFunc, error) {
 	switch encoder {
 	case noEncoder:
-		return noEncoding
+		return noEncoding, nil
 	case b64Encoder:
-		return base64Encoding
+		return base64Encoding, nil
+	default:
+		return nil, fmt.Errorf("unknown encoder: %s", encoder)
 	}
-	return noEncoding
 }

@@ -308,6 +308,6 @@ func modeInfoAndSigToSignatureData(modeInfo *apitx.ModeInfo, sig []byte) (Signat
 		}, nil
 
 	default:
-		panic(fmt.Errorf("unexpected ModeInfo data type %T", modeInfo))
+		return nil, fmt.Errorf("unexpected ModeInfo data type %T", modeInfo)
 	}
 }

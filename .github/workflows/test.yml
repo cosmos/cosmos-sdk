@@ -69,7 +69,7 @@ jobs:
             **/go.sum
             **/Makefile
             Makefile
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: "${{ github.sha }}-${{ matrix.part }}"
       - name: test & coverage report creation
@@ -158,27 +158,27 @@ jobs:
             go.sum
             **/go.mod
             **/go.sum
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         if: env.GIT_DIFF
         with:
           name: "${{ github.sha }}-00-coverage"
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         if: env.GIT_DIFF
         with:
           name: "${{ github.sha }}-01-coverage"
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         if: env.GIT_DIFF
         with:
           name: "${{ github.sha }}-02-coverage"
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         if: env.GIT_DIFF
         with:
           name: "${{ github.sha }}-03-coverage"
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         if: env.GIT_DIFF
         with:
           name: "${{ github.sha }}-integration-coverage"
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         if: env.GIT_DIFF
         with:
           name: "${{ github.sha }}-e2e-coverage"

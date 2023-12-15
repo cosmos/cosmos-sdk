@@ -3,8 +3,10 @@ package offchain
 import (
 	"bytes"
 	"context"
+	v2flags "cosmossdk.io/client/v2/internal/flags"
 	"errors"
 	"fmt"
+	"google.golang.org/protobuf/encoding/prototext"
 
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -19,8 +21,8 @@ import (
 )
 
 // Verify verifies a digest after unmarshalling it.
-func Verify(ctx client.Context, digest []byte) error {
-	tx, err := unmarshal(digest)
+func Verify(ctx client.Context, digest []byte, fileFormat string) error {
+	tx, err := unmarshal(digest, fileFormat)
 	if err != nil {
 		return err
 	}
@@ -96,9 +98,15 @@ func verify(ctx client.Context, tx *apitx.Tx) error {
 }
 
 // unmarshal unmarshalls a digest to a Tx using protobuf protojson.
-func unmarshal(digest []byte) (*apitx.Tx, error) {
+func unmarshal(digest []byte, fileFormat string) (*apitx.Tx, error) {
+	var err error
 	tx := &apitx.Tx{}
-	err := protojson.Unmarshal(digest, tx)
+	switch fileFormat {
+	case v2flags.OutputFormatJSON:
+		err = protojson.Unmarshal(digest, tx)
+	case v2flags.OutputFormatText:
+		err = prototext.Unmarshal(digest, tx)
+	}
 	return tx, err
 }
 

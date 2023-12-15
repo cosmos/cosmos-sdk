@@ -5,6 +5,8 @@ import (
 
 	"github.com/spf13/cobra"
 
+	v2flags "cosmossdk.io/client/v2/internal/flags"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 )
@@ -13,6 +15,7 @@ const (
 	flagNotEmitUnpopulated = "notEmitUnpopulated"
 	flagIndent             = "indent"
 	flagEncoding           = "encoding"
+	flagFileFormat         = "file-format"
 )
 
 // OffChain off-chain utilities.
@@ -51,8 +54,9 @@ func SignFile() *cobra.Command {
 			notEmitUnpopulated, _ := cmd.Flags().GetBool(flagNotEmitUnpopulated)
 			indent, _ := cmd.Flags().GetString(flagIndent)
 			encoding, _ := cmd.Flags().GetString(flagEncoding)
+			outputFormat, _ := cmd.Flags().GetString(v2flags.FlagOutput)
 
-			signedTx, err := Sign(clientCtx, bz, args[0], signmode, indent, encoding, !notEmitUnpopulated)
+			signedTx, err := Sign(clientCtx, bz, args[0], signmode, indent, encoding, outputFormat, !notEmitUnpopulated)
 			if err != nil {
 				return err
 			}
@@ -63,6 +67,7 @@ func SignFile() *cobra.Command {
 	}
 
 	cmd.PersistentFlags().String(flagIndent, "  ", "Choose an indent for the tx")
+	cmd.PersistentFlags().String(v2flags.FlagOutput, "json", "Choose output format (json|text")
 	cmd.PersistentFlags().Bool(flagNotEmitUnpopulated, false, "Don't show unpopulated fields in the tx")
 	cmd.PersistentFlags().String(flags.FlagSignMode, "direct", "Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature")
 	cmd.PersistentFlags().String(flagEncoding, "no-encoding", "Choose an encoding method for the file content to be added as the tx data (no-encoding|base64)")
@@ -71,7 +76,7 @@ func SignFile() *cobra.Command {
 
 // VerifyFile verifies given file with given key.
 func VerifyFile() *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "verify-file <keyName> <fileName>",
 		Short: "Verify a file.",
 		Long:  "Verify a previously signed file with the given key.",
@@ -87,11 +92,16 @@ func VerifyFile() *cobra.Command {
 				return err
 			}
 
-			err = Verify(clientCtx, bz)
+			fileFormat, _ := cmd.Flags().GetString(flagFileFormat)
+
+			err = Verify(clientCtx, bz, fileFormat)
 			if err == nil {
 				cmd.Println("Verification OK!")
 			}
 			return err
 		},
 	}
+
+	cmd.PersistentFlags().String(flagFileFormat, "json", "Choose whats the file format to be verified (json|text)")
+	return cmd
 }

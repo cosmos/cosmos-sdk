@@ -103,6 +103,13 @@ func Test_getSignMode(t *testing.T) {
 
 func Test_sign(t *testing.T) {
 	k := keyring.NewInMemory(getCodec())
+
+	ctx := client.Context{
+		Keyring:      k,
+		TxConfig:     MakeTestTxConfig(),
+		AddressCodec: address.NewBech32Codec("cosmos"),
+	}
+
 	type args struct {
 		ctx      client.Context
 		fromName string
@@ -117,11 +124,7 @@ func Test_sign(t *testing.T) {
 		{
 			name: "signMode direct",
 			args: args{
-				ctx: client.Context{
-					Keyring:      k,
-					TxConfig:     MakeTestTxConfig(),
-					AddressCodec: address.NewBech32Codec("cosmos"),
-				},
+				ctx:      ctx,
 				fromName: "direct",
 				digest:   "Hello world!",
 				signMode: apitxsigning.SignMode_SIGN_MODE_DIRECT,
@@ -131,11 +134,7 @@ func Test_sign(t *testing.T) {
 		{
 			name: "signMode textual",
 			args: args{
-				ctx: client.Context{
-					Keyring:      k,
-					TxConfig:     MakeTestTxConfig(),
-					AddressCodec: address.NewBech32Codec("cosmos"),
-				},
+				ctx:      ctx,
 				fromName: "textual",
 				digest:   "Hello world!",
 				signMode: apitxsigning.SignMode_SIGN_MODE_TEXTUAL,
@@ -145,11 +144,7 @@ func Test_sign(t *testing.T) {
 		{
 			name: "signMode legacyAmino",
 			args: args{
-				ctx: client.Context{
-					Keyring:      k,
-					TxConfig:     MakeTestTxConfig(),
-					AddressCodec: address.NewBech32Codec("cosmos"),
-				},
+				ctx:      ctx,
 				fromName: "legacy",
 				digest:   "Hello world!",
 				signMode: apitxsigning.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
@@ -159,11 +154,7 @@ func Test_sign(t *testing.T) {
 		{
 			name: "signMode direct aux",
 			args: args{
-				ctx: client.Context{
-					Keyring:      k,
-					TxConfig:     MakeTestTxConfig(),
-					AddressCodec: address.NewBech32Codec("cosmos"),
-				},
+				ctx:      ctx,
 				fromName: "direct-aux",
 				digest:   "Hello world!",
 				signMode: apitxsigning.SignMode_SIGN_MODE_DIRECT_AUX,

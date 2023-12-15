@@ -2,8 +2,6 @@ package offchain
 
 import (
 	"context"
-
-	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/types/known/anypb"
 
 	apisigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
@@ -45,7 +43,7 @@ func getSignMode(signModeStr string) apisigning.SignMode {
 }
 
 // Sign signs given bytes using the specified encoder and SignMode.
-func Sign(ctx client.Context, rawBytes []byte, fromName, signMode, indent, encoding string, emitUnpopulated bool) (string, error) {
+func Sign(ctx client.Context, rawBytes []byte, fromName, signMode, indent, encoding, output string, emitUnpopulated bool) (string, error) {
 	digest, err := getEncoder(encoding)(rawBytes)
 	if err != nil {
 		return "", err
@@ -56,7 +54,12 @@ func Sign(ctx client.Context, rawBytes []byte, fromName, signMode, indent, encod
 		return "", err
 	}
 
-	return marshalOffChainTx(tx, emitUnpopulated, indent)
+	txMarshaller, err := getMarshaller(output, indent, emitUnpopulated)
+	if err != nil {
+		return "", err
+	}
+
+	return marshalOffChainTx(tx, txMarshaller)
 }
 
 // sign signs a digest with provided key and SignMode.
@@ -161,16 +164,4 @@ func getSignBytes(ctx context.Context,
 	}
 
 	return handlerMap.GetSignBytes(ctx, mode, txSignerData, txData)
-}
-
-// marshalOffChainTx marshals a Tx using protobuf protojson.
-func marshalOffChainTx(tx *apitx.Tx, emitUnpopulated bool, indent string) (string, error) {
-	bytesTx, err := protojson.MarshalOptions{
-		EmitUnpopulated: emitUnpopulated,
-		Indent:          indent,
-	}.Marshal(tx)
-	if err != nil {
-		return "", err
-	}
-	return string(bytesTx), nil
 }

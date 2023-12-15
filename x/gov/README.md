@@ -187,7 +187,7 @@ For a weighted vote to be valid, the `options` field must not contain duplicate 
 Quorum is defined as the minimum percentage of voting power that needs to be
 cast on a proposal for the result to be valid.
 
-### Proposas Types
+### Proposal Types
 
 Proposal types have been introduced in ADR-069.
 

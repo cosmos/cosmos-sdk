@@ -153,7 +153,7 @@ func (suite *KeeperTestSuite) TestMsgSubmitProposal() {
 					[]sdk.Msg{bankMsg},
 					initialDeposit,
 					proposer.String(),
-					strings.Repeat("1", 256),
+					strings.Repeat("1", 257),
 					"Proposal",
 					"description of proposal",
 					v1.ProposalType_PROPOSAL_TYPE_STANDARD,

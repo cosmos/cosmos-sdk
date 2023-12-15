@@ -118,6 +118,10 @@ func Test_runAddCmdBasic(t *testing.T) {
 
 	const password = "password1!"
 
+	// set password default interactive key generation successfully
+	mockIn.Reset("\n\n")
+	require.NoError(t, cmd.ExecuteContext(ctx))
+
 	// set password and complete interactive key generation successfully
 	mockIn.Reset("\n" + password + "\n" + password + "\n")
 	require.NoError(t, cmd.ExecuteContext(ctx))

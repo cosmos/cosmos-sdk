@@ -104,7 +104,7 @@ func (a AppManager) Query(ctx context.Context, request Type) (response Type, err
 	if err != nil {
 		return nil, err
 	}
-	queryCtx := a.stf.makeContext(ctx, queryState, a.queryGasLimit)
+	queryCtx := a.stf.makeContext(ctx, nil, queryState, a.queryGasLimit)
 	return a.stf.handleQuery(queryCtx, request)
 }
 

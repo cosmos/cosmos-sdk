@@ -50,7 +50,7 @@ func verify(ctx client.Context, tx *apitx.Tx) error {
 	}
 
 	if len(sigs) != len(signers) {
-		return errors.New("")
+		return errors.New("mismatch between the number of signatures and signers")
 	}
 
 	for i, sig := range sigs {

@@ -14,8 +14,6 @@ import (
 	"cosmossdk.io/core/address"
 )
 
-const maxRecursionDepth = 32
-
 type TypeResolver interface {
 	protoregistry.MessageTypeResolver
 	protoregistry.ExtensionTypeResolver
@@ -32,6 +30,7 @@ type Context struct {
 	validatorAddressCodec address.Codec
 	getSignersFuncs       map[protoreflect.FullName]GetSignersFunc
 	customGetSignerFuncs  map[protoreflect.FullName]GetSignersFunc
+	maxRecursionDepth     int
 }
 
 // Options are options for creating Context which will be used for signing operations.
@@ -50,6 +49,8 @@ type Options struct {
 	ValidatorAddressCodec address.Codec
 
 	CustomGetSigners map[protoreflect.FullName]GetSignersFunc
+
+	MaxRecursionDepth int
 }
 
 // DefineCustomGetSigners defines a custom GetSigners function for a given
@@ -92,6 +93,10 @@ func NewContext(options Options) (*Context, error) {
 		return nil, errors.New("validator address codec is required")
 	}
 
+	if options.MaxRecursionDepth <= 0 {
+		options.MaxRecursionDepth = 32
+	}
+
 	customGetSignerFuncs := map[protoreflect.FullName]GetSignersFunc{}
 	for k := range options.CustomGetSigners {
 		customGetSignerFuncs[k] = options.CustomGetSigners[k]
@@ -104,6 +109,7 @@ func NewContext(options Options) (*Context, error) {
 		validatorAddressCodec: options.ValidatorAddressCodec,
 		getSignersFuncs:       map[protoreflect.FullName]GetSignersFunc{},
 		customGetSignerFuncs:  customGetSignerFuncs,
+		maxRecursionDepth:     options.MaxRecursionDepth,
 	}
 
 	return c, nil
@@ -212,7 +218,7 @@ func (c *Context) makeGetSignersFunc(descriptor protoreflect.MessageDescriptor) 
 		case protoreflect.MessageKind:
 			var fieldGetter func(protoreflect.Message, int) ([][]byte, error)
 			fieldGetter = func(msg protoreflect.Message, depth int) ([][]byte, error) {
-				if depth > maxRecursionDepth {
+				if depth > c.maxRecursionDepth {
 					return nil, fmt.Errorf("maximum recursion depth exceeded")
 				}
 				desc := msg.Descriptor()

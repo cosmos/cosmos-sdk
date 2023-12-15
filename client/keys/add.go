@@ -322,12 +322,7 @@ func runAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *buf
 
 		// if they use one, make them re-enter it
 		if len(bip39Passphrase) != 0 {
-			if len(bip39Passphrase) < input.MinPassLength {
-				// Return the given passphrase to the upstream client so it can handle a
-				// non-STDIN failure gracefully.
-				return fmt.Errorf("passphrase must be at least %d characters", input.MinPassLength)
-			}
-			p2, err := input.GetPassword("Repeat the passphrase:\n", inBuf)
+			p2, err := input.GetSecretString("Repeat the passphrase:\n", inBuf)
 			if err != nil {
 				return err
 			}

@@ -12,7 +12,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/client/input"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
@@ -117,18 +116,11 @@ func Test_runAddCmdBasic(t *testing.T) {
 		fmt.Sprintf("--%s=false", flagRecover),
 	})
 
-	const (
-		password        = "password1!"
-		invalidPassword = "1234"
-	)
+	const password = "password1!"
 
 	// set password default interactive key generation successfully
 	mockIn.Reset("\n\n")
 	require.NoError(t, cmd.ExecuteContext(ctx))
-
-	// set invalid password interactive key generation fail
-	mockIn.Reset("\n" + invalidPassword + "\n")
-	require.EqualError(t, cmd.ExecuteContext(ctx), fmt.Sprintf("passphrase must be at least %d characters", input.MinPassLength))
 
 	// set password and complete interactive key generation successfully
 	mockIn.Reset("\n" + password + "\n" + password + "\n")

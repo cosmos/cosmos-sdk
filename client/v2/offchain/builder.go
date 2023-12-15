@@ -121,7 +121,7 @@ func (b *builder) GetSigningTxData() (txsigning.TxData, error) {
 	}
 	bodyBz, err := protov2.Marshal(b.tx.Body)
 	if err != nil {
-		panic(err)
+		return txsigning.TxData{}, err
 	}
 	txData := txsigning.TxData{
 		AuthInfo:      txAuthInfo,

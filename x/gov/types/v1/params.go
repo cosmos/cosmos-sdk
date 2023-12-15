@@ -33,7 +33,7 @@ var (
 	DefaultBurnVoteVeto                 = true  // set to true to replicate behavior of when this change was made (0.47)
 	DefaultMinDepositRatio              = sdkmath.LegacyMustNewDecFromStr("0.01")
 	DefaultOptimisticRejectedThreshold  = sdkmath.LegacyMustNewDecFromStr("0.1")
-	DefaultOptimisticAuthorizedAddreses = []string{}
+	DefaultOptimisticAuthorizedAddreses = []string(nil)
 )
 
 // Deprecated: NewDepositParams creates a new DepositParams object

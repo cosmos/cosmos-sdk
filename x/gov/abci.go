@@ -127,19 +127,17 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) error {
 			return false, err
 		}
 
-		// If an expedited/optimistic proposal fails and isn't spammy, we do not want to update
-		// the deposit at this point since the proposal is converted to regular.
-		// As a result, the deposits are either deleted or refunded in all cases
-		// EXCEPT when an expedited or optimistic proposal fails and isn't spammy.
-		if passes || (burnDeposits || !(proposal.ProposalType == v1.ProposalType_PROPOSAL_TYPE_EXPEDITED || proposal.ProposalType == v1.ProposalType_PROPOSAL_TYPE_OPTIMISTIC)) {
-			if burnDeposits {
-				err = keeper.DeleteAndBurnDeposits(ctx, proposal.Id)
-			} else {
-				err = keeper.RefundAndDeleteDeposits(ctx, proposal.Id)
-			}
-			if err != nil {
-				return false, err
-			}
+		// Deposits are always burned if tally said so, regardless of the proposal type.
+		// If a proposal passes, deposits are always refunded, regardless of the proposal type.
+		// If a proposal fails, and isn't spammy, deposits are refunded, unless the proposal is expedited or optimistic.
+		// An expedited or optimistic proposal that fails and isn't spammy is converted to a regular proposal.
+		if burnDeposits {
+			err = keeper.DeleteAndBurnDeposits(ctx, proposal.Id)
+		} else if passes || !(proposal.ProposalType == v1.ProposalType_PROPOSAL_TYPE_EXPEDITED || proposal.ProposalType == v1.ProposalType_PROPOSAL_TYPE_OPTIMISTIC) {
+			err = keeper.RefundAndDeleteDeposits(ctx, proposal.Id)
+		}
+		if err != nil {
+			return false, err
 		}
 
 		if err = keeper.ActiveProposalsQueue.Remove(ctx, collections.Join(*proposal.VotingEndTime, proposal.Id)); err != nil {

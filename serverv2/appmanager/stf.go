@@ -32,7 +32,6 @@ type Block struct {
 }
 
 type BlockResponse struct {
-	AppHash                    Hash
 	BeginBlockEvents           []Event
 	TxResults                  []TxResult
 	EndBlockEvents             []Event
@@ -59,53 +58,42 @@ type STFAppManager struct {
 
 	decodeTx func(txBytes []byte) (Tx, error)
 
-	store  Store
-	branch func(store ReadonlyStore) BranchStore
+	branch func(store ReadonlyStore) BranchStore // branch is a function that given a readonly store it returns a writable version of it.
 }
 
 // DeliverBlock is our state transition function.
-func (s STFAppManager) DeliverBlock(ctx context.Context, block Block) (blockResult *BlockResponse, err error) {
+// It takes a read only view of the state to apply the block to,
+// executes the block and returns the block results and the new state.
+func (s STFAppManager) DeliverBlock(ctx context.Context, block Block, state ReadonlyStore) (blockResult *BlockResponse, newState BranchStore, err error) {
 	blockResult = new(BlockResponse)
-	// create a new readonly view of the store in the new block.
-	readonlyBlockStore := s.store.ReadonlyWithVersion(block.Height)
 	// creates a new branch store, from the readonly view of the state
 	// that can be written to.
-	blockStore := s.branch(readonlyBlockStore)
+	newState = s.branch(state)
 	// begin block
-	beginBlockEvents, err := s.beginBlock(ctx, blockStore)
+	beginBlockEvents, err := s.beginBlock(ctx, newState)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	// execute txs
 	txResults := make([]TxResult, len(block.Txs))
 	for i, txBytes := range block.Txs {
-		txResults[i] = s.deliverTx(ctx, blockStore, txBytes)
+		txResults[i] = s.deliverTx(ctx, newState, txBytes)
 	}
 	// end block
-	endBlockEvents, err := s.endBlock(ctx, blockStore, block)
+	endBlockEvents, err := s.endBlock(ctx, newState, block)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	// commit to storage
-	changeSet, err := blockStore.ChangeSets()
-	if err != nil {
-		return nil, err
-	}
-	commitmentHash, err := s.store.CommitChanges(changeSet)
-	if err != nil {
-		return nil, err
-	}
 	return &BlockResponse{
-		AppHash:          commitmentHash,
 		BeginBlockEvents: beginBlockEvents,
 		TxResults:        txResults,
 		EndBlockEvents:   endBlockEvents,
-	}, nil
+	}, newState, nil
 }
 
-func (s STFAppManager) beginBlock(ctx context.Context, store BranchStore) (beginBlockEvents []Event, err error) {
-	execCtx := s.makeContext(ctx, store, 0) // TODO: gas limit
+func (s STFAppManager) beginBlock(ctx context.Context, state BranchStore) (beginBlockEvents []Event, err error) {
+	execCtx := s.makeContext(ctx, state, 0) // TODO: gas limit
 	err = s.doBeginBlock(execCtx)
 	if err != nil {
 		return nil, err
@@ -115,10 +103,10 @@ func (s STFAppManager) beginBlock(ctx context.Context, store BranchStore) (begin
 	if err != nil {
 		return nil, err
 	}
-	return execCtx.events, store.ApplyChangeSets(changes)
+	return execCtx.events, state.ApplyChangeSets(changes)
 }
 
-func (s STFAppManager) deliverTx(ctx context.Context, blockStore BranchStore, txBytes []byte) TxResult {
+func (s STFAppManager) deliverTx(ctx context.Context, state BranchStore, txBytes []byte) TxResult {
 	tx, err := s.decodeTx(txBytes)
 	if err != nil {
 		return TxResult{
@@ -126,14 +114,14 @@ func (s STFAppManager) deliverTx(ctx context.Context, blockStore BranchStore, tx
 		}
 	}
 
-	validateGas, validationEvents, err := s.validateTx(ctx, blockStore, tx.GetGasLimit(), tx)
+	validateGas, validationEvents, err := s.validateTx(ctx, state, tx.GetGasLimit(), tx)
 	if err != nil {
 		return TxResult{
 			Error: err,
 		}
 	}
 
-	execResp, execGas, execEvents, err := s.execTx(ctx, blockStore, tx.GetGasLimit()-validateGas, tx)
+	execResp, execGas, execEvents, err := s.execTx(ctx, state, tx.GetGasLimit()-validateGas, tx)
 	if err != nil {
 		return TxResult{
 			Events:  validationEvents,

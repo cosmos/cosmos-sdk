@@ -69,7 +69,6 @@ func (s *STFBuilder) Build(opts *STFBuilderOptions) (*STFAppManager, error) {
 		decodeTx: func(txBytes []byte) (Tx, error) {
 			return s.txCodec.Decode(txBytes)
 		},
-		store:  nil, // TODO
 		branch: nil, // TODO
 	}, nil
 }

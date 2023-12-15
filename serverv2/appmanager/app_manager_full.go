@@ -45,7 +45,9 @@ type AppManager struct {
 	queryGasLimit   uint64
 	// configs - end
 
-	lastBlock *atomic.Uint64
+	db Store
+
+	lastBlockHeight *atomic.Uint64
 
 	initGenesis func(ctx context.Context, genesisBytes []byte) error
 
@@ -61,7 +63,10 @@ func (a AppManager) CheckTx(ctx context.Context, txBytes []byte) error {
 		return err
 	}
 	// apply validation using last block state
-	checkTxState := a.getLatestState(ctx)
+	checkTxState, err := a.getLatestState(ctx)
+	if err != nil {
+		return err
+	}
 	_, _, err = a.stf.validateTx(ctx, checkTxState, min(a.checkTxGasLimit, tx.GetGasLimit()), tx)
 	if err != nil {
 		return err
@@ -70,25 +75,45 @@ func (a AppManager) CheckTx(ctx context.Context, txBytes []byte) error {
 	return nil
 }
 
-func (a AppManager) DeliverBlock(ctx context.Context, block Block) (*BlockResponse, error) {
-	blockResponse, err := a.stf.DeliverBlock(ctx, block)
+func (a AppManager) DeliverBlock(ctx context.Context, block Block) (*BlockResponse, Hash, error) {
+	currentState, err := a.db.NewBlockWithVersion(block.Height)
 	if err != nil {
-		return nil, err
+		return nil, nil, fmt.Errorf("unable to create new state for height %d: %w", block.Height, err)
+	}
+
+	blockResponse, newState, err := a.stf.DeliverBlock(ctx, block, currentState)
+	if err != nil {
+		return nil, nil, fmt.Errorf("block delivery failed: %w", err)
+	}
+	// apply new state to store
+	newStateChanges, err := newState.ChangeSets()
+	if err != nil {
+		return nil, nil, fmt.Errorf("change set: %w", err)
+	}
+	stateRoot, err := a.db.CommitChanges(newStateChanges)
+	if err != nil {
+		return nil, nil, fmt.Errorf("commit failed: %w", err)
 	}
 	// update last stored block
-	a.lastBlock.Store(block.Height)
-	return blockResponse, nil
+	a.lastBlockHeight.Store(block.Height)
+	return blockResponse, stateRoot, nil
 }
 
 func (a AppManager) Query(ctx context.Context, request Type) (response Type, err error) {
-	queryState := a.getLatestState(ctx)
+	queryState, err := a.getLatestState(ctx)
+	if err != nil {
+		return nil, err
+	}
 	queryCtx := a.stf.makeContext(ctx, queryState, a.queryGasLimit)
 	return a.stf.handleQuery(queryCtx, request)
 }
 
 // getLatestState provides a readonly view of the state of the last committed block.
-func (a AppManager) getLatestState(_ context.Context) BranchStore {
-	lastBlock := a.lastBlock.Load()
-	lastBlockStore := a.stf.store.ReadonlyWithVersion(lastBlock)
-	return a.stf.branch(lastBlockStore)
+func (a AppManager) getLatestState(_ context.Context) (BranchStore, error) {
+	lastBlock := a.lastBlockHeight.Load()
+	lastBlockStore, err := a.db.ReadonlyWithVersion(lastBlock)
+	if err != nil {
+		return nil, err
+	}
+	return a.stf.branch(lastBlockStore), nil
 }

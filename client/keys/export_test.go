@@ -49,7 +49,27 @@ func Test_runExportCmd(t *testing.T) {
 			expectedOutput: "",
 		},
 		{
+<<<<<<< HEAD
 			name:           "--unsafe --unarmored-hex succeed",
+=======
+			name:                  "--unsafe --unarmored-hex --yes success",
+			keyringBackend:        keyring.BackendTest,
+			extraArgs:             []string{"--unsafe", "--unarmored-hex", "--yes"},
+			userInput:             "",
+			mustFail:              false,
+			expectedOutputContain: "2485e33678db4175dc0ecef2d6e1fc493d4a0d7f7ce83324b6ed70afe77f3485\n",
+		},
+		{
+			name:                  "--unsafe --unarmored-hex success",
+			keyringBackend:        keyring.BackendTest,
+			extraArgs:             []string{"--unsafe", "--unarmored-hex"},
+			userInput:             "y\n",
+			mustFail:              false,
+			expectedOutputContain: "2485e33678db4175dc0ecef2d6e1fc493d4a0d7f7ce83324b6ed70afe77f3485\n",
+		},
+		{
+			name:           "--unsafe --unarmored-hex --indiscreet success",
+>>>>>>> 0268ff937 (feat(client/keys): add --yes option to `keys export` and `keys mnemonic` (#18745))
 			keyringBackend: keyring.BackendTest,
 			extraArgs:      []string{"--unsafe", "--unarmored-hex"},
 			userInput:      "y\n",

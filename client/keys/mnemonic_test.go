@@ -49,4 +49,11 @@ func Test_RunMnemonicCmdUser(t *testing.T) {
 	fakeEntropy = strings.Repeat(":)", 40) + "\nn\n" // entropy + accept count
 	mockIn.Reset(fakeEntropy)
 	require.NoError(t, cmd.Execute())
+
+	// test for skip confirmation
+	cmd.SetArgs([]string{fmt.Sprintf("--%s", flagUserEntropy), fmt.Sprintf("--%s", flagIndiscreet), fmt.Sprintf("--%s", flagYes)})
+	fakeEntropy = strings.Repeat(":)", 40) + "\n" // entropy + accept count
+	mockIn.Reset(fakeEntropy)
+	require.NoError(t, cmd.Execute())
+	require.Equal(t, "volcano hungry midnight divorce post ship bicycle fitness hospital critic protect ring trim alien there safe fine subway style impulse identify right improve print\n", mockOut.String())
 }

@@ -3,12 +3,13 @@ package offchain
 import (
 	"bytes"
 	"context"
-	v2flags "cosmossdk.io/client/v2/internal/flags"
 	"errors"
 	"fmt"
-	"google.golang.org/protobuf/encoding/prototext"
+
+	v2flags "cosmossdk.io/client/v2/internal/flags"
 
 	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/encoding/prototext"
 	"google.golang.org/protobuf/types/known/anypb"
 
 	apitx "cosmossdk.io/api/cosmos/tx/v1beta1"

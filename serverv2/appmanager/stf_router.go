@@ -6,9 +6,7 @@ import (
 	"fmt"
 )
 
-var (
-	ErrNoHandler = errors.New("no handler")
-)
+var ErrNoHandler = errors.New("no handler")
 
 // MsgHandler is a function that handles the message execution. TODO: move to appmanager.Module.go
 type MsgHandler = func(ctx context.Context, msg Type) (msgResp Type, err error)
@@ -17,7 +15,7 @@ type MsgHandler = func(ctx context.Context, msg Type) (msgResp Type, err error)
 type PreMsgHandler = func(ctx context.Context, msg Type) (err error)
 
 // PostMsgHandler is a function that executes after the message execution.TODO: move to appmanager.Module.go
-type PostMsgHandler = func(ctx context.Context, msg Type, msgResp Type) (err error)
+type PostMsgHandler = func(ctx context.Context, msg, msgResp Type) (err error)
 
 type QueryHandler = MsgHandler
 

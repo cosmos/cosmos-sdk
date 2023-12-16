@@ -13,7 +13,7 @@ type ChangeSet struct {
 
 type BranchStore interface {
 	ReadonlyStore
-	Set(key []byte, value []byte) error
+	Set(key, value []byte) error
 	Delete(key []byte) error
 	ApplyChangeSets(changes []ChangeSet) error
 	ChangeSets() ([]ChangeSet, error)

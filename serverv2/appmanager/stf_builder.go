@@ -6,28 +6,30 @@ import (
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/serverv2/core/appmanager"
+	"github.com/cosmos/cosmos-sdk/serverv2/core/transaction"
 )
 
-func NewSTFBuilder() *STFBuilder {
-	return &STFBuilder{
+func NewSTFBuilder[T transaction.Tx]() *STFBuilder[T] {
+	return &STFBuilder[T]{
 		err:                nil,
 		msgRouterBuilder:   newMsgRouterBuilder(),
 		queryRouterBuilder: newMsgRouterBuilder(),
-		txValidators:       make(map[string]func(ctx context.Context, tx Tx) error),
+		txValidators:       make(map[string]func(ctx context.Context, tx T) error),
 		beginBlockers:      make(map[string]func(ctx context.Context) error),
 		endBlockers:        make(map[string]func(ctx context.Context) error),
 	}
 }
 
-type STFBuilder struct {
+type STFBuilder[T transaction.Tx] struct {
 	err error
 
 	msgRouterBuilder   *msgRouterBuilder
 	queryRouterBuilder *msgRouterBuilder
-	txValidators       map[string]func(ctx context.Context, tx Tx) error
+	txValidators       map[string]func(ctx context.Context, tx T) error
 	beginBlockers      map[string]func(ctx context.Context) error
 	endBlockers        map[string]func(ctx context.Context) error
-	txCodec            TxDecoder
+	valSetUpdate       func(ctx context.Context) (appmanager.ValidatorUpdate, error)
+	txCodec            transaction.Codec[T]
 }
 
 type STFBuilderOptions struct {
@@ -39,7 +41,7 @@ type STFBuilderOptions struct {
 	OrderTxValidators []string
 }
 
-func (s *STFBuilder) Build(opts *STFBuilderOptions) (*STFAppManager, error) {
+func (s *STFBuilder[T]) Build(opts *STFBuilderOptions) (*STFAppManager[T], error) {
 	msgHandler, err := s.msgRouterBuilder.Build()
 	if err != nil {
 		return nil, fmt.Errorf("unable to build msg handler: %w", err)
@@ -60,20 +62,20 @@ func (s *STFBuilder) Build(opts *STFBuilderOptions) (*STFAppManager, error) {
 	if err != nil {
 		return nil, fmt.Errorf("unable to build tx validator: %w", err)
 	}
-	return &STFAppManager{
+	return &STFAppManager[T]{
 		handleMsg:      msgHandler,
 		handleQuery:    queryHandler,
 		doBeginBlock:   beginBlocker,
 		doEndBlock:     endBlocker,
 		doTxValidation: txValidator,
-		decodeTx: func(txBytes []byte) (Tx, error) {
+		decodeTx: func(txBytes []byte) (T, error) {
 			return s.txCodec.Decode(txBytes)
 		},
 		branch: nil, // TODO
 	}, nil
 }
 
-func (s *STFBuilder) AddModule(m appmanager.Module) {
+func (s *STFBuilder[T]) AddModule(m appmanager.Module[T]) {
 	// TODO: the best is add modules but not build them here but build them later when we call STFBuilder.Build.
 	// build msg handler
 	moduleMsgRouter := _newModuleMsgRouter(m.Name(), s.msgRouterBuilder)
@@ -90,7 +92,7 @@ func (s *STFBuilder) AddModule(m appmanager.Module) {
 	s.txValidators[m.Name()] = m.TxValidator()
 }
 
-func (s *STFBuilder) makeEndBlocker(order []string) (func(ctx context.Context) error, error) {
+func (s *STFBuilder[T]) makeEndBlocker(order []string) (func(ctx context.Context) error, error) {
 	// TODO do ordering...
 	// TODO do checks if all are present etc
 	return func(ctx context.Context) error {
@@ -104,7 +106,7 @@ func (s *STFBuilder) makeEndBlocker(order []string) (func(ctx context.Context) e
 	}, nil
 }
 
-func (s *STFBuilder) makeBeginBlocker(order []string) (func(ctx context.Context) error, error) {
+func (s *STFBuilder[T]) makeBeginBlocker(order []string) (func(ctx context.Context) error, error) {
 	// TODO do ordering...
 	// TODO do checks if all are present etc
 	return func(ctx context.Context) error {
@@ -118,10 +120,10 @@ func (s *STFBuilder) makeBeginBlocker(order []string) (func(ctx context.Context)
 	}, nil
 }
 
-func (s *STFBuilder) makeTxValidator(order []string) (func(ctx context.Context, tx Tx) error, error) {
+func (s *STFBuilder[T]) makeTxValidator(order []string) (func(ctx context.Context, tx T) error, error) {
 	// TODO do ordering...
 	// TODO do checks if all are present etc
-	return func(ctx context.Context, tx Tx) error {
+	return func(ctx context.Context, tx T) error {
 		for module, f := range s.txValidators {
 			err := f(ctx, tx)
 			if err != nil {
@@ -133,9 +135,11 @@ func (s *STFBuilder) makeTxValidator(order []string) (func(ctx context.Context, 
 }
 
 // we create some intermediary type that associates a registration error with the module.
-var _ appmanager.MsgRouterBuilder = (*_moduleMsgRouter)(nil)
-var _ appmanager.PostMsgRouterBuilder = (*_moduleMsgRouter)(nil)
-var _ appmanager.PreMsgRouterBuilder = (*_moduleMsgRouter)(nil)
+var (
+	_ appmanager.MsgRouterBuilder     = (*_moduleMsgRouter)(nil)
+	_ appmanager.PostMsgRouterBuilder = (*_moduleMsgRouter)(nil)
+	_ appmanager.PreMsgRouterBuilder  = (*_moduleMsgRouter)(nil)
+)
 
 func _newModuleMsgRouter(moduleName string, router *msgRouterBuilder) *_moduleMsgRouter {
 	return &_moduleMsgRouter{
@@ -155,7 +159,7 @@ func (r *_moduleMsgRouter) RegisterPreHandler(msg appmanager.Type, preHandler fu
 	r.msgRouterBuilder.RegisterPreHandler(TypeName(msg), preHandler)
 }
 
-func (r *_moduleMsgRouter) RegisterPostHandler(msg appmanager.Type, postHandler func(ctx context.Context, msg appmanager.Type, msgResp appmanager.Type) error) {
+func (r *_moduleMsgRouter) RegisterPostHandler(msg appmanager.Type, postHandler func(ctx context.Context, msg, msgResp appmanager.Type) error) {
 	r.msgRouterBuilder.RegisterPostHandler(TypeName(msg), postHandler)
 }
 

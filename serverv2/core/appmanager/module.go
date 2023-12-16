@@ -3,14 +3,12 @@ package appmanager
 import (
 	"context"
 
-	"github.com/cosmos/cosmos-sdk/serverv2/appmanager"
-	"google.golang.org/protobuf/proto"
+	"github.com/cosmos/cosmos-sdk/serverv2/core/transaction"
 )
 
-type Type = proto.Message
 type Identity = []byte
 
-type Tx = appmanager.Tx
+type Tx = transaction.Tx
 
 type MsgRouterBuilder interface {
 	RegisterHandler(msg Type, handlerFunc func(ctx context.Context, msg Type) (resp Type, err error))
@@ -23,20 +21,27 @@ type PreMsgRouterBuilder interface {
 }
 
 type PostMsgRouterBuilder interface {
-	RegisterPostHandler(msg Type, postHandler func(ctx context.Context, msg Type, msgResp Type) error)
+	RegisterPostHandler(msg Type, postHandler func(ctx context.Context, msg, msgResp Type) error)
 }
 
-type STFModule interface {
+type STFModule[T transaction.Tx] interface {
 	Name() string
 	RegisterMsgHandlers(router MsgRouterBuilder)
 	RegisterQueryHandler(router QueryRouterBuilder)
 	BeginBlocker() func(ctx context.Context) error
 	EndBlocker() func(ctx context.Context) error
-	TxValidator() func(ctx context.Context, tx Tx) error
+	UpdateValidators() func(ctx context.Context) ([]ValidatorUpdate, error)
+	TxValidator() func(ctx context.Context, tx T) error // why does the module handle registration
 	RegisterPreMsgHandler(router PreMsgRouterBuilder)
 	RegisterPostMsgHandler(router PostMsgRouterBuilder)
 }
 
-type Module interface {
-	STFModule
+type Module[T transaction.Tx] interface {
+	STFModule[T]
+}
+
+// Update defines what is expected to be returned
+type ValidatorUpdate struct {
+	PubKey []byte
+	Power  int64 // updated power of the validtor
 }

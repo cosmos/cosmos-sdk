@@ -2,64 +2,25 @@ package appmanager
 
 import (
 	"context"
-	"time"
+
+	"github.com/cosmos/cosmos-sdk/serverv2/core/appmanager"
+	"github.com/cosmos/cosmos-sdk/serverv2/core/event"
+	"github.com/cosmos/cosmos-sdk/serverv2/core/transaction"
 )
 
 var runtimeIdentity Identity = []byte("app-manager")
 
-type executionContext struct {
-	context.Context
-	store    BranchStore
-	gasUsed  uint64
-	gasLimit uint64
-	events   []Event
-	sender   Identity
-}
-
-type TxDecoder interface {
-	Decode([]byte) (Tx, error)
-}
-
-type Tx interface {
-	GetMessage() Type
-	GetSender() Identity
-	GetGasLimit() uint64
-}
-
-type Block struct {
-	Height            uint64
-	Time              time.Time
-	Hash              []byte
-	Txs               [][]byte
-	ConsensusMessages []Type // <= proto.Message
-}
-
-type BlockResponse struct {
-	BeginBlockEvents           []Event
-	TxResults                  []TxResult
-	EndBlockEvents             []Event
-	ConsensusMessagesResponses []Type
-}
-
-type TxResult struct {
-	Events  []Event
-	GasUsed uint64
-
-	Resp  Type
-	Error error
-}
-
 // STFAppManager is a struct that manages the state transition component of the app.
-type STFAppManager struct {
+type STFAppManager[T transaction.Tx] struct {
 	handleMsg   func(ctx context.Context, msg Type) (msgResp Type, err error)
 	handleQuery func(ctx context.Context, req Type) (resp Type, err error)
 
 	doBeginBlock func(ctx context.Context) error
 	doEndBlock   func(ctx context.Context) error
 
-	doTxValidation func(ctx context.Context, tx Tx) error
+	doTxValidation func(ctx context.Context, tx T) error
 
-	decodeTx func(txBytes []byte) (Tx, error)
+	decodeTx func(txBytes []byte) (T, error)
 
 	branch func(store ReadonlyStore) BranchStore // branch is a function that given a readonly store it returns a writable version of it.
 }
@@ -67,8 +28,8 @@ type STFAppManager struct {
 // DeliverBlock is our state transition function.
 // It takes a read only view of the state to apply the block to,
 // executes the block and returns the block results and the new state.
-func (s STFAppManager) DeliverBlock(ctx context.Context, block Block, state ReadonlyStore) (blockResult *BlockResponse, newState BranchStore, err error) {
-	blockResult = new(BlockResponse)
+func (s STFAppManager[T]) DeliverBlock(ctx context.Context, block appmanager.BlockRequest, state ReadonlyStore) (blockResult *appmanager.BlockResponse, newState BranchStore, err error) {
+	blockResult = new(appmanager.BlockResponse)
 	// creates a new branch store, from the readonly view of the state
 	// that can be written to.
 	newState = s.branch(state)
@@ -78,7 +39,7 @@ func (s STFAppManager) DeliverBlock(ctx context.Context, block Block, state Read
 		return nil, nil, err
 	}
 	// execute txs
-	txResults := make([]TxResult, len(block.Txs))
+	txResults := make([]appmanager.TxResult, len(block.Txs))
 	for i, txBytes := range block.Txs {
 		txResults[i] = s.deliverTx(ctx, newState, txBytes)
 	}
@@ -88,14 +49,14 @@ func (s STFAppManager) DeliverBlock(ctx context.Context, block Block, state Read
 		return nil, nil, err
 	}
 
-	return &BlockResponse{
+	return &appmanager.BlockResponse{
 		BeginBlockEvents: beginBlockEvents,
 		TxResults:        txResults,
 		EndBlockEvents:   endBlockEvents,
 	}, newState, nil
 }
 
-func (s STFAppManager) beginBlock(ctx context.Context, state BranchStore) (beginBlockEvents []Event, err error) {
+func (s STFAppManager[T]) beginBlock(ctx context.Context, state BranchStore) (beginBlockEvents []event.Event, err error) {
 	execCtx := s.makeContext(ctx, runtimeIdentity, state, 0) // TODO: gas limit
 	err = s.doBeginBlock(execCtx)
 	if err != nil {
@@ -109,31 +70,31 @@ func (s STFAppManager) beginBlock(ctx context.Context, state BranchStore) (begin
 	return execCtx.events, state.ApplyChangeSets(changes)
 }
 
-func (s STFAppManager) deliverTx(ctx context.Context, state BranchStore, txBytes []byte) TxResult {
+func (s STFAppManager[T]) deliverTx(ctx context.Context, state BranchStore, txBytes []byte) appmanager.TxResult {
 	tx, err := s.decodeTx(txBytes)
 	if err != nil {
-		return TxResult{
+		return appmanager.TxResult{
 			Error: err,
 		}
 	}
 
 	validateGas, validationEvents, err := s.validateTx(ctx, state, tx.GetGasLimit(), tx)
 	if err != nil {
-		return TxResult{
+		return appmanager.TxResult{
 			Error: err,
 		}
 	}
 
 	execResp, execGas, execEvents, err := s.execTx(ctx, state, tx.GetGasLimit()-validateGas, tx)
 	if err != nil {
-		return TxResult{
+		return appmanager.TxResult{
 			Events:  validationEvents,
 			GasUsed: validateGas + execGas,
 			Error:   err,
 		}
 	}
 
-	return TxResult{
+	return appmanager.TxResult{
 		Events:  append(validationEvents, execEvents...),
 		GasUsed: execGas + validateGas,
 		Resp:    execResp,
@@ -143,7 +104,7 @@ func (s STFAppManager) deliverTx(ctx context.Context, state BranchStore, txBytes
 
 // validateTx validates a transaction given the provided BranchStore and gas limit.
 // If the validation is successful, state is committed
-func (s STFAppManager) validateTx(ctx context.Context, store BranchStore, gasLimit uint64, tx Tx) (gasUsed uint64, events []Event, err error) {
+func (s STFAppManager[T]) validateTx(ctx context.Context, store BranchStore, gasLimit uint64, tx T) (gasUsed uint64, events []event.Event, err error) {
 	validateCtx := s.makeContext(ctx, tx.GetSender(), store, gasLimit)
 	err = s.doTxValidation(ctx, tx)
 	if err != nil {
@@ -161,11 +122,15 @@ func (s STFAppManager) validateTx(ctx context.Context, store BranchStore, gasLim
 	return validateCtx.gasUsed, validateCtx.events, nil
 }
 
-func (s STFAppManager) execTx(ctx context.Context, store BranchStore, gasLimit uint64, tx Tx) (msgResp Type, gasUsed uint64, execEvents []Event, err error) {
+func (s STFAppManager[T]) execTx(ctx context.Context, store BranchStore, gasLimit uint64, tx T) (msgResp Type, gasUsed uint64, execEvents []event.Event, err error) {
 	execCtx := s.makeContext(ctx, tx.GetSender(), store, gasLimit)
-	msgResp, err = s.handleMsg(ctx, tx.GetMessage())
-	if err != nil {
-		return nil, 0, nil, err
+	// atomic execution of the all messages in a transaction, TODO: we should allow messages to fail in a specific mode
+	for _, msg := range tx.GetMessages() {
+		msgResp, err = s.handleMsg(ctx, msg)
+		if err != nil {
+			return nil, 0, nil, err
+		}
+
 	}
 	// get state changes and save them to the parent store
 	changeSets, err := execCtx.store.ChangeSets()
@@ -179,7 +144,7 @@ func (s STFAppManager) execTx(ctx context.Context, store BranchStore, gasLimit u
 	return msgResp, 0, execCtx.events, nil
 }
 
-func (s STFAppManager) endBlock(ctx context.Context, store BranchStore, block Block) (endBlockEvents []Event, err error) {
+func (s STFAppManager[T]) endBlock(ctx context.Context, store BranchStore, block appmanager.BlockRequest) (endBlockEvents []event.Event, err error) {
 	execCtx := s.makeContext(ctx, runtimeIdentity, store, 0) // TODO: gas limit
 	err = s.doBeginBlock(execCtx)
 	if err != nil {
@@ -193,7 +158,16 @@ func (s STFAppManager) endBlock(ctx context.Context, store BranchStore, block Bl
 	return execCtx.events, store.ApplyChangeSets(changes)
 }
 
-func (s STFAppManager) makeContext(
+type executionContext struct {
+	context.Context
+	store    BranchStore
+	gasUsed  uint64
+	gasLimit uint64
+	events   []event.Event
+	sender   Identity
+}
+
+func (s STFAppManager[T]) makeContext(
 	ctx context.Context,
 	sender Identity,
 	store BranchStore,
@@ -204,7 +178,7 @@ func (s STFAppManager) makeContext(
 		store:    store,
 		gasUsed:  0,
 		gasLimit: gasLimit,
-		events:   make([]Event, 0),
+		events:   make([]event.Event, 0),
 		sender:   sender,
 	}
 }

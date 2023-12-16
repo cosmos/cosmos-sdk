@@ -4,20 +4,20 @@ import (
 	"context"
 	"fmt"
 	"sync/atomic"
+
+	"github.com/cosmos/cosmos-sdk/serverv2/core/appmanager"
+	"github.com/cosmos/cosmos-sdk/serverv2/core/transaction"
 )
 
-type Mempool interface {
-}
-
-type AppManagerBuilder struct {
+type AppManagerBuilder[T transaction.Tx] struct {
 	InitGenesis map[string]func(ctx context.Context, moduleGenesisBytes []byte) error
 }
 
-func (a *AppManagerBuilder) RegisterInitGenesis(moduleName string, genesisFunc func(ctx context.Context, moduleGenesisBytes []byte) error) {
+func (a *AppManagerBuilder[T]) RegisterInitGenesis(moduleName string, genesisFunc func(ctx context.Context, moduleGenesisBytes []byte) error) {
 	a.InitGenesis[moduleName] = genesisFunc
 }
 
-func (a *AppManagerBuilder) RegisterHandler(moduleName, handlerName string, handler MsgHandler) {
+func (a *AppManagerBuilder[T]) RegisterHandler(moduleName, handlerName string, handler MsgHandler) {
 	panic("...")
 }
 
@@ -25,7 +25,7 @@ type MsgSetKVPairs struct {
 	Pairs []ChangeSet
 }
 
-func (a *AppManagerBuilder) Build() *AppManager {
+func (a *AppManagerBuilder[T]) Build() *AppManager[T] {
 	genesis := func(ctx context.Context, genesisBytes []byte) error {
 		genesisMap := map[string][]byte{} // module=> genesis bytes
 		for module, genesisFunc := range a.InitGenesis {
@@ -36,10 +36,10 @@ func (a *AppManagerBuilder) Build() *AppManager {
 		}
 		return nil
 	}
-	return &AppManager{initGenesis: genesis}
+	return &AppManager[T]{initGenesis: genesis}
 }
 
-type AppManager struct {
+type AppManager[T transaction.Tx] struct {
 	// configs
 	checkTxGasLimit uint64
 	queryGasLimit   uint64
@@ -51,31 +51,10 @@ type AppManager struct {
 
 	initGenesis func(ctx context.Context, genesisBytes []byte) error
 
-	stf *STFAppManager
-
-	mempool Mempool
+	stf *STFAppManager[T]
 }
 
-func (a AppManager) CheckTx(ctx context.Context, txBytes []byte) error {
-	// decode tx
-	tx, err := a.stf.decodeTx(txBytes)
-	if err != nil {
-		return err
-	}
-	// apply validation using last block state
-	checkTxState, err := a.getLatestState(ctx)
-	if err != nil {
-		return err
-	}
-	_, _, err = a.stf.validateTx(ctx, checkTxState, min(a.checkTxGasLimit, tx.GetGasLimit()), tx)
-	if err != nil {
-		return err
-	}
-	// TODO: cache, insert in mempool?
-	return nil
-}
-
-func (a AppManager) DeliverBlock(ctx context.Context, block Block) (*BlockResponse, Hash, error) {
+func (a AppManager[T]) DeliverBlock(ctx context.Context, block appmanager.BlockRequest) (*appmanager.BlockResponse, Hash, error) {
 	currentState, err := a.db.NewBlockWithVersion(block.Height)
 	if err != nil {
 		return nil, nil, fmt.Errorf("unable to create new state for height %d: %w", block.Height, err)
@@ -99,7 +78,7 @@ func (a AppManager) DeliverBlock(ctx context.Context, block Block) (*BlockRespon
 	return blockResponse, stateRoot, nil
 }
 
-func (a AppManager) Query(ctx context.Context, request Type) (response Type, err error) {
+func (a AppManager[T]) Query(ctx context.Context, request Type) (response Type, err error) {
 	queryState, err := a.getLatestState(ctx)
 	if err != nil {
 		return nil, err
@@ -109,7 +88,7 @@ func (a AppManager) Query(ctx context.Context, request Type) (response Type, err
 }
 
 // getLatestState provides a readonly view of the state of the last committed block.
-func (a AppManager) getLatestState(_ context.Context) (BranchStore, error) {
+func (a AppManager[T]) getLatestState(_ context.Context) (BranchStore, error) {
 	lastBlock := a.lastBlockHeight.Load()
 	lastBlockStore, err := a.db.ReadonlyWithVersion(lastBlock)
 	if err != nil {

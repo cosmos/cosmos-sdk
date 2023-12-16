@@ -163,15 +163,15 @@ func (m *Manager) exportSnapshot(height uint64, snapshotWriter func([]byte) erro
 			continue
 		}
 
-		chunk := unconfirmedTxToBytes(txHash, ttl)
+		chunk := unorderedTxToBytes(txHash, ttl)
 
 		if _, err := w.Write(chunk); err != nil {
-			return fmt.Errorf("failed to write unconfirmed tx to buffer: %w", err)
+			return fmt.Errorf("failed to write unordered tx to buffer: %w", err)
 		}
 	}
 
 	if err := w.Flush(); err != nil {
-		return fmt.Errorf("failed to flush unconfirmed txs buffer: %w", err)
+		return fmt.Errorf("failed to flush unordered txs buffer: %w", err)
 	}
 
 	return snapshotWriter(buf.Bytes())
@@ -182,21 +182,21 @@ func (m *Manager) exportSnapshot(height uint64, snapshotWriter func([]byte) erro
 func (m *Manager) flushToFile() error {
 	f, err := os.Create(filepath.Join(m.dataDir, dirName, fileName))
 	if err != nil {
-		return fmt.Errorf("failed to create unconfirmed txs file: %w", err)
+		return fmt.Errorf("failed to create unordered txs file: %w", err)
 	}
 	defer f.Close()
 
 	w := bufio.NewWriter(f)
 	for txHash, ttl := range m.txHashes {
-		chunk := unconfirmedTxToBytes(txHash, ttl)
+		chunk := unorderedTxToBytes(txHash, ttl)
 
 		if _, err = w.Write(chunk); err != nil {
-			return fmt.Errorf("failed to write unconfirmed tx to buffer: %w", err)
+			return fmt.Errorf("failed to write unordered tx to buffer: %w", err)
 		}
 	}
 
 	if err = w.Flush(); err != nil {
-		return fmt.Errorf("failed to flush unconfirmed txs buffer: %w", err)
+		return fmt.Errorf("failed to flush unordered txs buffer: %w", err)
 	}
 
 	return nil
@@ -265,7 +265,7 @@ func (m *Manager) batchReceive() (uint64, bool) {
 	}
 }
 
-func unconfirmedTxToBytes(txHash TxHash, ttl uint64) []byte {
+func unorderedTxToBytes(txHash TxHash, ttl uint64) []byte {
 	chunk := make([]byte, 32+8)
 	copy(chunk[:32], txHash[:])
 

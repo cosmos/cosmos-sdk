@@ -1,6 +1,10 @@
 package unorderedtx
 
 import (
+	"encoding/binary"
+	"errors"
+	"io"
+
 	snapshot "cosmossdk.io/store/snapshots/types"
 )
 
@@ -36,13 +40,37 @@ func (s *Snapshotter) SupportedFormats() []uint32 {
 }
 
 func (s *Snapshotter) SnapshotExtension(height uint64, payloadWriter snapshot.ExtensionPayloadWriter) error {
+	// export all unordered transactions as a single blob
 	return s.m.exportSnapshot(height, payloadWriter)
 }
 
-func (s *Snapshotter) RestoreExtension(_ uint64, format uint32, payloadReader snapshot.ExtensionPayloadReader) error {
+func (s *Snapshotter) RestoreExtension(height uint64, format uint32, payloadReader snapshot.ExtensionPayloadReader) error {
 	if format == SnapshotFormat {
-		return s.restore(payloadReader)
+		return s.restore(height, payloadReader)
 	}
 
 	return snapshot.ErrUnknownFormat
+}
+
+func (s *Snapshotter) restore(height uint64, payloadReader snapshot.ExtensionPayloadReader) error {
+	// the payload should be the entire set of unordered transactions
+	payload, err := payloadReader()
+	if err != nil {
+		if !errors.Is(err, io.EOF) {
+			return err
+		}
+	}
+
+	var i int
+	for i < len(payload) {
+		var txHash TxHash
+		copy(txHash[:], payload[i:i+32])
+
+		ttl := binary.BigEndian.Uint64(payload[i+32 : i+40])
+		s.m.Add(txHash, ttl)
+
+		i += 40
+	}
+
+	return nil
 }

@@ -6,30 +6,43 @@ import (
 
 var _ snapshot.ExtensionSnapshotter = &Snapshotter{}
 
-// SnapshotFormat defines the snapshot format of exported unordered transactions.
-// No protobuf envelope, no metadata.
-const SnapshotFormat = 1
+const (
+	// SnapshotFormat defines the snapshot format of exported unordered transactions.
+	// No protobuf envelope, no metadata.
+	SnapshotFormat = 1
+
+	// SnapshotName defines the snapshot name of exported unordered transactions.
+	SnapshotName = "unordered_txs"
+)
 
 type Snapshotter struct {
 	m *Manager
 }
 
+func NewSnapshotter(m *Manager) *Snapshotter {
+	return &Snapshotter{m: m}
+}
+
 func (s *Snapshotter) SnapshotName() string {
-	panic("not implemented!")
+	return SnapshotName
 }
 
 func (s *Snapshotter) SnapshotFormat() uint32 {
-	panic("not implemented!")
+	return SnapshotFormat
 }
 
 func (s *Snapshotter) SupportedFormats() []uint32 {
-	panic("not implemented!")
+	return []uint32{SnapshotFormat}
 }
 
 func (s *Snapshotter) SnapshotExtension(height uint64, payloadWriter snapshot.ExtensionPayloadWriter) error {
-	panic("not implemented!")
+	return s.m.exportSnapshot(height, payloadWriter)
 }
 
-func (s *Snapshotter) RestoreExtension(height uint64, format uint32, payloadReader snapshot.ExtensionPayloadReader) error {
-	panic("not implemented!")
+func (s *Snapshotter) RestoreExtension(_ uint64, format uint32, payloadReader snapshot.ExtensionPayloadReader) error {
+	if format == SnapshotFormat {
+		return s.restore(payloadReader)
+	}
+
+	return snapshot.ErrUnknownFormat
 }

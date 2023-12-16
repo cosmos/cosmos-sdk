@@ -2,6 +2,7 @@ package unorderedtx
 
 import (
 	"bufio"
+	"bytes"
 	"context"
 	"encoding/binary"
 	"errors"
@@ -105,18 +106,6 @@ func (m *Manager) Add(txHash TxHash, ttl uint64) {
 	m.txHashes[txHash] = ttl
 }
 
-// // Export returns the current set of unexpired unordered transactions along with
-// // their TTL values.
-// func (m *Manager) Export() map[TxHash]uint64 {
-// 	m.mu.RLock()
-// 	defer m.mu.RUnlock()
-
-// 	result := make(map[TxHash]uint64, len(m.txHashes))
-// 	maps.Copy(m.txHashes, result)
-
-// 	return result
-// }
-
 // OnInit must be called when a node starts up. Typically, this should be called
 // in an application's constructor, which is called by the server.
 func (m *Manager) OnInit() error {
@@ -162,6 +151,34 @@ func (m *Manager) OnInit() error {
 // should be called in ABCI Commit event.
 func (m *Manager) OnNewBlock(blockHeight uint64) {
 	m.blockCh <- blockHeight
+}
+
+func (m *Manager) exportSnapshot(height uint64, snapshotWriter func([]byte) error) error {
+	var buf bytes.Buffer
+	w := bufio.NewWriter(&buf)
+
+	for txHash, ttl := range m.txHashes {
+		if height > ttl {
+			continue
+		}
+
+		chunk := make([]byte, 32+8)
+		copy(chunk[:32], txHash[:])
+
+		ttlBz := make([]byte, 8)
+		binary.BigEndian.PutUint64(ttlBz, ttl)
+		copy(chunk[32:], ttlBz)
+
+		if _, err := w.Write(chunk); err != nil {
+			return fmt.Errorf("failed to write unconfirmed tx to buffer: %w", err)
+		}
+	}
+
+	if err := w.Flush(); err != nil {
+		return fmt.Errorf("failed to flush unconfirmed txs buffer: %w", err)
+	}
+
+	return snapshotWriter(buf.Bytes())
 }
 
 // flushToFile writes all unexpired unordered transactions along with their TTL

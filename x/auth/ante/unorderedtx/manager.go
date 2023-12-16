@@ -159,15 +159,11 @@ func (m *Manager) exportSnapshot(height uint64, snapshotWriter func([]byte) erro
 
 	for txHash, ttl := range m.txHashes {
 		if height > ttl {
+			// skip expired txs that have yet to be purged
 			continue
 		}
 
-		chunk := make([]byte, 32+8)
-		copy(chunk[:32], txHash[:])
-
-		ttlBz := make([]byte, 8)
-		binary.BigEndian.PutUint64(ttlBz, ttl)
-		copy(chunk[32:], ttlBz)
+		chunk := unconfirmedTxToBytes(txHash, ttl)
 
 		if _, err := w.Write(chunk); err != nil {
 			return fmt.Errorf("failed to write unconfirmed tx to buffer: %w", err)
@@ -192,20 +188,15 @@ func (m *Manager) flushToFile() error {
 
 	w := bufio.NewWriter(f)
 	for txHash, ttl := range m.txHashes {
-		buf := make([]byte, 32+8)
-		copy(buf[:32], txHash[:])
+		chunk := unconfirmedTxToBytes(txHash, ttl)
 
-		ttlBz := make([]byte, 8)
-		binary.BigEndian.PutUint64(ttlBz, ttl)
-		copy(buf[32:], ttlBz)
-
-		if _, err = w.Write(buf); err != nil {
-			return fmt.Errorf("failed to write buffer to unconfirmed txs file: %w", err)
+		if _, err = w.Write(chunk); err != nil {
+			return fmt.Errorf("failed to write unconfirmed tx to buffer: %w", err)
 		}
 	}
 
 	if err = w.Flush(); err != nil {
-		return fmt.Errorf("failed to flush buffer to unconfirmed txs file: %w", err)
+		return fmt.Errorf("failed to flush unconfirmed txs buffer: %w", err)
 	}
 
 	return nil
@@ -272,4 +263,15 @@ func (m *Manager) batchReceive() (uint64, bool) {
 			}
 		}
 	}
+}
+
+func unconfirmedTxToBytes(txHash TxHash, ttl uint64) []byte {
+	chunk := make([]byte, 32+8)
+	copy(chunk[:32], txHash[:])
+
+	ttlBz := make([]byte, 8)
+	binary.BigEndian.PutUint64(ttlBz, ttl)
+	copy(chunk[32:], ttlBz)
+
+	return chunk
 }

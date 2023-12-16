@@ -567,3 +567,13 @@ func (s *addressTestSuite) TestGetFromBech32() {
 	s.Require().Error(err)
 	s.Require().Equal("invalid Bech32 prefix; expected x, got cosmos", err.Error())
 }
+
+func (s *addressTestSuite) TestMustAccAddressFromBech32() {
+	address := "cosmosvaloper1780p20ce3quhzqxdq0xfeqtnzrjgdraz0kwwjp"
+	valAddress1, err := types.ValAddressFromBech32(address)
+	s.Require().Nil(err)
+
+	valAddress2 := types.MustValAddressFromBech32(address)
+
+	s.Require().Equal(valAddress1, valAddress2)
+}

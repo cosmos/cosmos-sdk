@@ -50,6 +50,14 @@ func Test_runExportCmd(t *testing.T) {
 			expectedOutput: "",
 		},
 		{
+			name:                  "--unsafe --unarmored-hex --yes success",
+			keyringBackend:        keyring.BackendTest,
+			extraArgs:             []string{"--unsafe", "--unarmored-hex", "--yes"},
+			userInput:             "",
+			mustFail:              false,
+			expectedOutputContain: "2485e33678db4175dc0ecef2d6e1fc493d4a0d7f7ce83324b6ed70afe77f3485\n",
+		},
+		{
 			name:                  "--unsafe --unarmored-hex success",
 			keyringBackend:        keyring.BackendTest,
 			extraArgs:             []string{"--unsafe", "--unarmored-hex"},

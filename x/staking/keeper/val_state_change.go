@@ -273,7 +273,7 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx context.Context) (updates 
 		if !ok {
 			return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidType, "Expecting cryptotypes.PubKey, got %T", oldPk)
 		}
-		oldTmPk, err := cryptocodec.ToCmtProtoPublicKey(oldPk)
+		oldCmtPk, err := cryptocodec.ToCmtProtoPublicKey(oldPk)
 		if err != nil {
 			return nil, err
 		}
@@ -282,19 +282,19 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx context.Context) (updates 
 		if !ok {
 			return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidType, "Expecting cryptotypes.PubKey, got %T", oldPk)
 		}
-		newTmPk, err := cryptocodec.ToCmtProtoPublicKey(newPk)
+		newCmtPk, err := cryptocodec.ToCmtProtoPublicKey(newPk)
 		if err != nil {
 			return nil, err
 		}
 
 		if !(validator.Jailed || validator.Status != types.Bonded) {
 			updates = append(updates, abci.ValidatorUpdate{
-				PubKey: oldTmPk,
+				PubKey: oldCmtPk,
 				Power:  0,
 			})
 
 			updates = append(updates, abci.ValidatorUpdate{
-				PubKey: newTmPk,
+				PubKey: newCmtPk,
 				Power:  validator.ConsensusPower(powerReduction),
 			})
 

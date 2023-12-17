@@ -86,7 +86,7 @@ func (k Keeper) GetMissedBlockBitmapValue(ctx context.Context, addr sdk.ConsAddr
 	// check the key rotated, if rotated use the returned consKey to get the missed blocks
 	// because missed blocks are still pointing to the old key
 	oldPk, err := k.sk.ValidatorIdentifier(ctx, addr)
-	if err != nil && !errors.Is(err, collections.ErrNotFound) {
+	if err != nil {
 		return false, err
 	}
 
@@ -126,7 +126,7 @@ func (k Keeper) SetMissedBlockBitmapValue(ctx context.Context, addr sdk.ConsAddr
 	// check the key rotated, if rotated use the returned consKey to set the missed blocks
 	// because missed blocks are still pointing to the old key
 	oldPk, err := k.sk.ValidatorIdentifier(ctx, addr)
-	if err != nil && !errors.Is(err, collections.ErrNotFound) {
+	if err != nil {
 		return err
 	}
 
@@ -170,7 +170,7 @@ func (k Keeper) DeleteMissedBlockBitmap(ctx context.Context, addr sdk.ConsAddres
 	// check the key rotated, if rotated use the returned consKey to delete the missed blocks
 	// because missed blocks are still pointing to the old key
 	oldPk, err := k.sk.ValidatorIdentifier(ctx, addr)
-	if err != nil && !errors.Is(err, collections.ErrNotFound) {
+	if err != nil {
 		return err
 	}
 
@@ -179,18 +179,13 @@ func (k Keeper) DeleteMissedBlockBitmap(ctx context.Context, addr sdk.ConsAddres
 	}
 
 	rng := collections.NewPrefixedPairRange[[]byte, uint64](addr.Bytes())
-	err = k.ValidatorMissedBlockBitmap.Walk(ctx, rng, func(key collections.Pair[[]byte, uint64], value []byte) (bool, error) {
+	return k.ValidatorMissedBlockBitmap.Walk(ctx, rng, func(key collections.Pair[[]byte, uint64], value []byte) (bool, error) {
 		err := k.ValidatorMissedBlockBitmap.Remove(ctx, key)
 		if err != nil {
 			return true, err
 		}
 		return false, nil
 	})
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
 
 // IterateMissedBlockBitmap iterates over a validator's signed blocks window
@@ -202,7 +197,7 @@ func (k Keeper) DeleteMissedBlockBitmap(ctx context.Context, addr sdk.ConsAddres
 func (k Keeper) IterateMissedBlockBitmap(ctx context.Context, addr sdk.ConsAddress, cb func(index int64, missed bool) (stop bool)) error {
 	var index int64
 	rng := collections.NewPrefixedPairRange[[]byte, uint64](addr.Bytes())
-	err := k.ValidatorMissedBlockBitmap.Walk(ctx, rng, func(key collections.Pair[[]byte, uint64], value []byte) (bool, error) {
+	return k.ValidatorMissedBlockBitmap.Walk(ctx, rng, func(key collections.Pair[[]byte, uint64], value []byte) (bool, error) {
 		bs := bitset.New(uint(types.MissedBlockBitmapChunkSize))
 
 		if err := bs.UnmarshalBinary(value); err != nil {
@@ -219,10 +214,6 @@ func (k Keeper) IterateMissedBlockBitmap(ctx context.Context, addr sdk.ConsAddre
 		}
 		return false, nil
 	})
-	if err != nil {
-		return err
-	}
-	return nil
 }
 
 // GetValidatorMissedBlocks returns array of missed blocks for given validator.
@@ -244,9 +235,9 @@ func (k Keeper) GetValidatorMissedBlocks(ctx context.Context, addr sdk.ConsAddre
 	return missedBlocks, err
 }
 
-// PerformConsensusPubKeyUpdate updates cons address to its pub key relation
+// performConsensusPubKeyUpdate updates cons address to its pub key relation
 // Updates signing info, missed blocks (removes old one, and sets new one)
-func (k Keeper) PerformConsensusPubKeyUpdate(ctx context.Context, oldPubKey, newPubKey cryptotypes.PubKey) error {
+func (k Keeper) performConsensusPubKeyUpdate(ctx context.Context, oldPubKey, newPubKey cryptotypes.PubKey) error {
 	// Connect new consensus address with PubKey
 	if err := k.AddrPubkeyRelation.Set(ctx, newPubKey.Address(), newPubKey); err != nil {
 		return err
@@ -262,9 +253,5 @@ func (k Keeper) PerformConsensusPubKeyUpdate(ctx context.Context, oldPubKey, new
 		return err
 	}
 
-	if err := k.ValidatorSigningInfo.Remove(ctx, sdk.ConsAddress(oldPubKey.Address())); err != nil {
-		return err
-	}
-
-	return nil
+	return k.ValidatorSigningInfo.Remove(ctx, sdk.ConsAddress(oldPubKey.Address()))
 }

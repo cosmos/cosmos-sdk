@@ -44,7 +44,7 @@ func (k Keeper) setConsPubKeyRotationHistory(
 		return err
 	}
 
-	queueTime := sdkCtx.BlockTime().Add(ubdTime)
+	queueTime := sdkCtx.HeaderInfo().Time.Add(ubdTime)
 	if err := k.ValidatorConsensusKeyRotationRecordIndexKey.Set(ctx, collections.Join(valAddr.Bytes(), queueTime)); err != nil {
 		return err
 	}
@@ -116,11 +116,7 @@ func (k Keeper) setNewToOldConsKeyMap(ctx context.Context, oldPk, newPk sdk.Cons
 		oldPk = pk
 	}
 
-	if err := k.NewToOldConsKeyMap.Set(ctx, newPk, oldPk); err != nil {
-		return err
-	}
-
-	return nil
+	return k.NewToOldConsKeyMap.Set(ctx, newPk, oldPk)
 }
 
 func (k Keeper) ValidatorIdentifier(ctx context.Context, newPk sdk.ConsAddress) (sdk.ConsAddress, error) {
@@ -155,10 +151,12 @@ func (k Keeper) exceedsMaxRotations(ctx context.Context, valAddr sdk.ValAddress)
 // this is to keep track of rotations made within the unbonding period
 func (k Keeper) setConsKeyQueue(ctx context.Context, ts time.Time, valAddr sdk.ValAddress) error {
 	queueRec, err := k.ValidatorConsensusKeyRotationRecordQueue.Get(ctx, ts)
+	// we should return if the key found here.
 	if err != nil && !errors.Is(err, collections.ErrNotFound) {
 		return err
 	}
 
+	// push the address if it is not present in the array.
 	if !bytesSliceExists(queueRec.Addresses, valAddr.Bytes()) {
 		// Address does not exist, so you can append it to the list
 		queueRec.Addresses = append(queueRec.Addresses, valAddr.Bytes())
@@ -167,6 +165,7 @@ func (k Keeper) setConsKeyQueue(ctx context.Context, ts time.Time, valAddr sdk.V
 	return k.ValidatorConsensusKeyRotationRecordQueue.Set(ctx, ts, queueRec)
 }
 
+// bytesSliceExists tries to find the duplicate entry the array.
 func bytesSliceExists(sliceList [][]byte, targetBytes []byte) bool {
 	for _, bytesSlice := range sliceList {
 		if bytes.Equal(bytesSlice, targetBytes) {
@@ -176,9 +175,9 @@ func bytesSliceExists(sliceList [][]byte, targetBytes []byte) bool {
 	return false
 }
 
-// PurgeAllMaturedConsKeyRotatedKeys udpates all the matured key rotations.
+// PurgeAllMaturedConsKeyRotatedKeys deletes all the matured key rotations.
 func (k Keeper) PurgeAllMaturedConsKeyRotatedKeys(ctx sdk.Context, maturedTime time.Time) error {
-	maturedRotatedValAddrs, err := k.GetAllMaturedRotatedKeys(ctx, maturedTime)
+	maturedRotatedValAddrs, err := k.getAndRemoveAllMaturedRotatedKeys(ctx, maturedTime)
 	if err != nil {
 		return err
 	}
@@ -193,7 +192,8 @@ func (k Keeper) PurgeAllMaturedConsKeyRotatedKeys(ctx sdk.Context, maturedTime t
 	return nil
 }
 
-// deleteConsKeyIndexKey deletes the key which is formed with the given valAddr, time.
+// deleteConsKeyIndexKey deletes the keys which forms a with given validator address and time lesser than the given time.
+// eventually there should be only one occurance since we allow only one rotation for bonding period.
 func (k Keeper) deleteConsKeyIndexKey(ctx sdk.Context, valAddr sdk.ValAddress, ts time.Time) error {
 	rng := new(collections.Range[collections.Pair[[]byte, time.Time]]).
 		StartInclusive(collections.Join(valAddr.Bytes(), time.Time{})).
@@ -204,8 +204,8 @@ func (k Keeper) deleteConsKeyIndexKey(ctx sdk.Context, valAddr sdk.ValAddress, t
 	})
 }
 
-// GetAllMaturedRotatedKeys returns all matured valaddresses .
-func (k Keeper) GetAllMaturedRotatedKeys(ctx sdk.Context, matureTime time.Time) ([][]byte, error) {
+// getAndRemoveAllMaturedRotatedKeys returns all matured valaddresses.
+func (k Keeper) getAndRemoveAllMaturedRotatedKeys(ctx sdk.Context, matureTime time.Time) ([][]byte, error) {
 	valAddrs := [][]byte{}
 
 	// get an iterator for all timeslices from time 0 until the current HeaderInfo time
@@ -221,7 +221,7 @@ func (k Keeper) GetAllMaturedRotatedKeys(ctx sdk.Context, matureTime time.Time) 
 	return valAddrs, nil
 }
 
-// GetBlockConsPubKeyRotationHistory iterates over the rotation history for the current height.
+// GetBlockConsPubKeyRotationHistory returns the rotation history for the current height.
 func (k Keeper) GetBlockConsPubKeyRotationHistory(ctx context.Context) ([]types.ConsPubKeyRotationHistory, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
@@ -240,10 +240,8 @@ func (k Keeper) GetValidatorConsPubKeyRotationHistory(ctx sdk.Context, operatorA
 
 	rng := collections.NewPrefixedPairRange[[]byte, uint64](operatorAddress.Bytes())
 
-	index := 0
 	err := k.RotationHistory.Walk(ctx, rng, func(key collections.Pair[[]byte, uint64], history types.ConsPubKeyRotationHistory) (stop bool, err error) {
 		historyObjects = append(historyObjects, history)
-		index++
 		return false, nil
 	})
 

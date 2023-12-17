@@ -569,7 +569,10 @@ func (s *addressTestSuite) TestGetFromBech32() {
 }
 
 func (s *addressTestSuite) TestMustAccAddressFromBech32() {
-	address := "cosmosvaloper1780p20ce3quhzqxdq0xfeqtnzrjgdraz0kwwjp"
+	bech32PrefixValAddr := types.GetConfig().GetBech32ValidatorAddrPrefix()
+	addr20byte := []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19}
+	address := types.MustBech32ifyAddressBytes(bech32PrefixValAddr, addr20byte)
+
 	valAddress1, err := types.ValAddressFromBech32(address)
 	s.Require().Nil(err)
 

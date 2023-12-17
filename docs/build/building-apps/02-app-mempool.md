@@ -11,94 +11,18 @@ This sections describes how the app-side mempool can be used and replaced.
 Since `v0.47` the application has its own mempool to allow much more granular
 block building than previous versions. This change was enabled by
 [ABCI 1.0](https://github.com/cometbft/cometbft/blob/v0.37.0/spec/abci).
-Notably it introduces the `PrepareProposal` and `ProcessProposal` steps of ABCI++.
+Notably it introduces the `PrepareProposal` and `ProcessProposal` steps of ABCI++. For more information please see [here](../abci/00-introduction.md)
 
 :::note Pre-requisite Readings
 
 * [BaseApp](../../learn/advanced/00-baseapp.md)
+* [Abci](../abci/00-introduction.md)
 
 :::
 
-## Prepare Proposal
-
-`PrepareProposal` handles construction of the block, meaning that when a proposer
-is preparing to propose a block, it requests the application to evaluate a
-`RequestPrepareProposal`, which contains a series of transactions from CometBFT's
-mempool. At this point, the application has complete control over the proposal.
-It can modify, delete, and inject transactions from it's own app-side mempool into
-the proposal or even ignore all the transactions altogether. What the application
-does with the transactions provided to it by `RequestPrepareProposal` have no
-effect on CometBFT's mempool.
-
-Note, that the application defines the semantics of the `PrepareProposal` and it
-MAY be non-deterministic and is only executed by the current block proposer.
-
-Now, reading mempool twice in the previous sentence is confusing, lets break it down.
-CometBFT has a mempool that handles gossiping transactions to other nodes
-in the network. How these transactions are ordered is determined by CometBFT's
-mempool, typically FIFO. However, since the application is able to fully inspect
-all transactions, it can provide greater control over transaction ordering.
-Allowing the application to handle ordering enables the application to define how
-it would like the block constructed. 
-
-The Cosmos SDK defines the `DefaultProposalHandler` type, which provides applications with
-`PrepareProposal` and `ProcessProposal` handlers. If you decide to implement your
-own `PrepareProposal` handler, you must be sure to ensure that the transactions
-selected DO NOT exceed the maximum block gas (if set) and the maximum bytes provided
-by `req.MaxBytes`.
-
-```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/baseapp/abci_utils.go
-```
-
-This default implementation can be overridden by the application developer in
-favor of a custom implementation in [`app.go`](./01-app-go-v2.md):
-
-```go
-prepareOpt := func(app *baseapp.BaseApp) {
-	abciPropHandler := baseapp.NewDefaultProposalHandler(mempool, app)
-	app.SetPrepareProposal(abciPropHandler.PrepareProposalHandler())
-}
-
-baseAppOptions = append(baseAppOptions, prepareOpt)
-```
-
-## Process Proposal
-
-`ProcessProposal` handles the validation of a proposal from `PrepareProposal`,
-which also includes a block header. Meaning, that after a block has been proposed
-the other validators have the right to vote on a block. The validator in the
-default implementation of `PrepareProposal` runs basic validity checks on each
-transaction.
-
-Note, `ProcessProposal` MAY NOT be non-deterministic, i.e. it must be deterministic.
-This means if `ProcessProposal` panics or fails and we reject, all honest validator
-processes will prevote nil and the CometBFT round will proceed again until a valid
-proposal is proposed.
-
-Here is the implementation of the default implementation:
-
-```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/baseapp/abci_utils.go#L153-L159
-```
-
-Like `PrepareProposal` this implementation is the default and can be modified by
-the application developer in [`app.go`](./01-app-go-v2.md). If you decide to implement
-your own `ProcessProposal` handler, you must be sure to ensure that the transactions
-provided in the proposal DO NOT exceed the maximum block gas (if set).
-
-```go
-processOpt := func(app *baseapp.BaseApp) {
-	abciPropHandler := baseapp.NewDefaultProposalHandler(mempool, app)
-	app.SetProcessProposal(abciPropHandler.ProcessProposalHandler())
-}
-
-baseAppOptions = append(baseAppOptions, processOpt)
-```
-
 ## Mempool
 
-Now that we have walked through the `PrepareProposal` & `ProcessProposal`, we can move on to walking through the mempool. 
++ Before we delve into `PrepareProposal` and `ProcessProposal`, let's first walk through the mempool concepts.
 
 There are countless designs that an application developer can write for a mempool, the SDK opted to provide only simple mempool implementations.
 Namely, the SDK provides the following mempools:

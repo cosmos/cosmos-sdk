@@ -76,6 +76,21 @@ func (k Keeper) SetMissedBlockBitmapChunk(ctx context.Context, addr sdk.ConsAddr
 	return k.ValidatorMissedBlockBitmap.Set(ctx, collections.Join(addr.Bytes(), uint64(chunkIndex)), chunk)
 }
 
+// getPreviousConsKey checks if the key rotated, returns the old consKey to get the missed blocks
+// because missed blocks are still pointing to the old key
+func (k Keeper) getPreviousConsKey(ctx context.Context, addr sdk.ConsAddress) (sdk.ConsAddress, error) {
+	oldPk, err := k.sk.ValidatorIdentifier(ctx, addr)
+	if err != nil {
+		return nil, err
+	}
+
+	if oldPk != nil {
+		addr = oldPk
+	}
+
+	return addr, err
+}
+
 // GetMissedBlockBitmapValue returns true if a validator missed signing a block
 // at the given index and false otherwise. The index provided is assumed to be
 // the index in the range [0, SignedBlocksWindow), which represents the bitmap
@@ -85,13 +100,9 @@ func (k Keeper) SetMissedBlockBitmapChunk(ctx context.Context, addr sdk.ConsAddr
 func (k Keeper) GetMissedBlockBitmapValue(ctx context.Context, addr sdk.ConsAddress, index int64) (bool, error) {
 	// check the key rotated, if rotated use the returned consKey to get the missed blocks
 	// because missed blocks are still pointing to the old key
-	oldPk, err := k.sk.ValidatorIdentifier(ctx, addr)
+	addr, err := k.getPreviousConsKey(ctx, addr)
 	if err != nil {
 		return false, err
-	}
-
-	if oldPk != nil {
-		addr = oldPk
 	}
 
 	// get the chunk or "word" in the logical bitmap
@@ -123,15 +134,11 @@ func (k Keeper) GetMissedBlockBitmapValue(ctx context.Context, addr sdk.ConsAddr
 // index is used to fetch the chunk in the bitmap and the relative bit in that
 // chunk.
 func (k Keeper) SetMissedBlockBitmapValue(ctx context.Context, addr sdk.ConsAddress, index int64, missed bool) error {
-	// check the key rotated, if rotated use the returned consKey to set the missed blocks
+	// check the key rotated, if rotated use the returned consKey to get the missed blocks
 	// because missed blocks are still pointing to the old key
-	oldPk, err := k.sk.ValidatorIdentifier(ctx, addr)
+	addr, err := k.getPreviousConsKey(ctx, addr)
 	if err != nil {
 		return err
-	}
-
-	if oldPk != nil {
-		addr = oldPk
 	}
 
 	// get the chunk or "word" in the logical bitmap
@@ -169,13 +176,9 @@ func (k Keeper) SetMissedBlockBitmapValue(ctx context.Context, addr sdk.ConsAddr
 func (k Keeper) DeleteMissedBlockBitmap(ctx context.Context, addr sdk.ConsAddress) error {
 	// check the key rotated, if rotated use the returned consKey to delete the missed blocks
 	// because missed blocks are still pointing to the old key
-	oldPk, err := k.sk.ValidatorIdentifier(ctx, addr)
+	addr, err := k.getPreviousConsKey(ctx, addr)
 	if err != nil {
 		return err
-	}
-
-	if oldPk != nil {
-		addr = oldPk
 	}
 
 	rng := collections.NewPrefixedPairRange[[]byte, uint64](addr.Bytes())

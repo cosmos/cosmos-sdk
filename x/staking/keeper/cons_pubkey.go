@@ -52,7 +52,7 @@ func (k Keeper) setConsPubKeyRotationHistory(
 	return k.setConsKeyQueue(ctx, queueTime, valAddr)
 }
 
-// This method gets called from the `ApplyAndReturnValidatorSetUpdates` method during EndBlock.
+// updateToNewPubkey gets called from the `ApplyAndReturnValidatorSetUpdates` method during EndBlock.
 //
 // This method makes the relative state changes to update the keys,
 // also maintains a map with old to new conskey rotation which is needed to retrieve the old conskey.
@@ -119,6 +119,8 @@ func (k Keeper) setNewToOldConsKeyMap(ctx context.Context, oldPk, newPk sdk.Cons
 	return k.NewToOldConsKeyMap.Set(ctx, newPk, oldPk)
 }
 
+// ValidatorIdentifier maps the new cons key to previous cons key (which is the address before the rotation).
+// (that is: newConsKey -> oldConsKey)
 func (k Keeper) ValidatorIdentifier(ctx context.Context, newPk sdk.ConsAddress) (sdk.ConsAddress, error) {
 	pk, err := k.NewToOldConsKeyMap.Get(ctx, newPk)
 	if err != nil && !errors.Is(err, collections.ErrNotFound) {

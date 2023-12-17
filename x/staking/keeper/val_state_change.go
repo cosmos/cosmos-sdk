@@ -287,6 +287,9 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx context.Context) (updates 
 			return nil, err
 		}
 
+		// validator cannot rotate it's keys if not bonded or jailed.
+		// - a validator can be unbonding state but jailed status false
+		// - a validator can be jailed and status can be unbonding
 		if !(validator.Jailed || validator.Status != types.Bonded) {
 			updates = append(updates, abci.ValidatorUpdate{
 				PubKey: oldCmtPk,

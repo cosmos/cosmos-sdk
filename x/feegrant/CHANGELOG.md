@@ -35,6 +35,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * [#18047](https://github.com/cosmos/cosmos-sdk/pull/18047) Added a limit of 200 grants pruned per EndBlock and the method PruneAllowances that prunes 75 expired grants on every run.
 
+### Improvements
+
+* (feegrant) [#18767](https://github.com/cosmos/cosmos-sdk/pull/18767) Ensure we only execute revokeAllowance if there is no error is the grant is to be removed.
+
 ### API Breaking Changes
 
 * [#15606](https://github.com/cosmos/cosmos-sdk/pull/15606) `NewKeeper` now takes a `KVStoreService` instead of a `StoreKey` and methods in the `Keeper` now take a `context.Context` instead of a `sdk.Context`.

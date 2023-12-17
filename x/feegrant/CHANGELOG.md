@@ -37,7 +37,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
-* (feegrant) [#18767](https://github.com/cosmos/cosmos-sdk/pull/18767) Ensure we only execute revokeAllowance if there is no error is the grant is to be removed.
+* [#18767](https://github.com/cosmos/cosmos-sdk/pull/18767) Ensure we only execute revokeAllowance if there is no error is the grant is to be removed.
 
 ### API Breaking Changes
 

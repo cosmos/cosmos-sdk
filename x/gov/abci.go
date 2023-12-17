@@ -84,7 +84,7 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) error {
 		logger.Info(
 			"proposal did not meet minimum deposit; deleted",
 			"proposal", proposal.Id,
-			"expedited", proposal.Expedited,
+			"proposal_type", proposal.ProposalType,
 			"title", proposal.Title,
 			"min_deposit", sdk.NewCoins(proposal.GetMinDepositFromParams(params)...).String(),
 			"total_deposit", sdk.NewCoins(proposal.TotalDeposit...).String(),
@@ -131,7 +131,7 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) error {
 		// the deposit at this point since the proposal is converted to regular.
 		// As a result, the deposits are either deleted or refunded in all cases
 		// EXCEPT when an expedited proposal fails.
-		if passes || !proposal.Expedited {
+		if passes || !(proposal.ProposalType == v1.ProposalType_PROPOSAL_TYPE_EXPEDITED) {
 			if burnDeposits {
 				err = keeper.DeleteAndBurnDeposits(ctx, proposal.Id)
 			} else {
@@ -199,12 +199,13 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) error {
 				tagValue = types.AttributeValueProposalFailed
 				logMsg = fmt.Sprintf("passed, but msg %d (%s) failed on execution: %s", idx, sdk.MsgTypeURL(msg), err)
 			}
-		case proposal.Expedited:
+		case proposal.ProposalType == v1.ProposalType_PROPOSAL_TYPE_EXPEDITED:
 			// When expedited proposal fails, it is converted
 			// to a regular proposal. As a result, the voting period is extended, and,
 			// once the regular voting period expires again, the tally is repeated
 			// according to the regular proposal rules.
-			proposal.Expedited = false
+			proposal.ProposalType = v1.ProposalType_PROPOSAL_TYPE_STANDARD
+			proposal.Expedited = false // can be removed as never read but kept for state coherence
 			params, err := keeper.Params.Get(ctx)
 			if err != nil {
 				return false, err
@@ -246,7 +247,7 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) error {
 			"proposal tallied",
 			"proposal", proposal.Id,
 			"status", proposal.Status.String(),
-			"expedited", proposal.Expedited,
+			"proposal_type", proposal.ProposalType,
 			"title", proposal.Title,
 			"results", logMsg,
 		)
@@ -317,7 +318,7 @@ func failUnsupportedProposal(
 	logger.Info(
 		"proposal failed to decode; deleted",
 		"proposal", proposal.Id,
-		"expedited", proposal.Expedited,
+		"proposal_type", proposal.ProposalType,
 		"title", proposal.Title,
 		"results", errMsg,
 	)

@@ -32,7 +32,6 @@ const (
 	//	config.SetBech32PrefixForValidator(yourBech32PrefixValAddr, yourBech32PrefixValPub)
 	//	config.SetBech32PrefixForConsensusNode(yourBech32PrefixConsAddr, yourBech32PrefixConsPub)
 	//	config.SetPurpose(yourPurpose)
-	//	config.SetCoinType(yourCoinType)
 	//	config.Seal()
 
 	// Bech32MainPrefix defines the main SDK Bech32 prefix of an account's address
@@ -363,6 +362,16 @@ func ValAddressFromBech32(address string) (addr ValAddress, err error) {
 	return ValAddress(bz), nil
 }
 
+// MustValAddressFromBech32 calls ValAddressFromBech32 and panics on error.
+func MustValAddressFromBech32(address string) ValAddress {
+	addr, err := ValAddressFromBech32(address)
+	if err != nil {
+		panic(err)
+	}
+
+	return addr
+}
+
 // Returns boolean for whether two ValAddresses are Equal
 func (va ValAddress) Equals(va2 Address) bool {
 	if va.Empty() && va2.Empty() {
@@ -630,7 +639,7 @@ func (ca ConsAddress) String() string {
 }
 
 // Bech32ifyAddressBytes returns a bech32 representation of address bytes.
-// Returns an empty sting if the byte slice is 0-length. Returns an error if the bech32 conversion
+// Returns an empty string if the byte slice is 0-length. Returns an error if the bech32 conversion
 // fails or the prefix is empty.
 func Bech32ifyAddressBytes(prefix string, bs []byte) (string, error) {
 	if len(bs) == 0 {
@@ -643,7 +652,7 @@ func Bech32ifyAddressBytes(prefix string, bs []byte) (string, error) {
 }
 
 // MustBech32ifyAddressBytes returns a bech32 representation of address bytes.
-// Returns an empty sting if the byte slice is 0-length. It panics if the bech32 conversion
+// Returns an empty string if the byte slice is 0-length. It panics if the bech32 conversion
 // fails or the prefix is empty.
 func MustBech32ifyAddressBytes(prefix string, bs []byte) string {
 	s, err := Bech32ifyAddressBytes(prefix, bs)
@@ -708,4 +717,9 @@ func cacheBech32Addr(prefix string, addr []byte, cache *simplelru.LRU, cacheKey 
 		cache.Add(cacheKey, bech32Addr)
 	}
 	return bech32Addr
+}
+
+// GetFullBIP44Path returns the BIP44Prefix.
+func GetFullBIP44Path() string {
+	return fmt.Sprintf("m/%d'/%d'/0'/0/0", Purpose, CoinType)
 }

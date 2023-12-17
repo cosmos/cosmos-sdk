@@ -12,7 +12,13 @@ import (
 	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/commitment"
 	"cosmossdk.io/store/v2/commitment/iavl"
+<<<<<<< HEAD
 	"cosmossdk.io/store/v2/pruning"
+||||||| 0c633a59f3
+=======
+	"cosmossdk.io/store/v2/pruning"
+	"cosmossdk.io/store/v2/storage"
+>>>>>>> main
 	"cosmossdk.io/store/v2/storage/sqlite"
 )
 
@@ -29,11 +35,12 @@ func TestStorageTestSuite(t *testing.T) {
 func (s *RootStoreTestSuite) SetupTest() {
 	noopLog := log.NewNopLogger()
 
-	ss, err := sqlite.New(s.T().TempDir())
+	sqliteDB, err := sqlite.New(s.T().TempDir())
 	s.Require().NoError(err)
+	ss := storage.NewStorageStore(sqliteDB)
 
 	tree := iavl.NewIavlTree(dbm.NewMemDB(), noopLog, iavl.DefaultConfig())
-	sc, err := commitment.NewCommitStore(map[string]commitment.Tree{"default": tree}, noopLog)
+	sc, err := commitment.NewCommitStore(map[string]commitment.Tree{defaultStoreKey: tree}, noopLog)
 	s.Require().NoError(err)
 
 	rs, err := New(noopLog, ss, sc, pruning.DefaultOptions(), pruning.DefaultOptions(), nil)

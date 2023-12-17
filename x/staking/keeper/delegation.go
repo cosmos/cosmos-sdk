@@ -212,14 +212,16 @@ func (k Keeper) GetDelegatorUnbonding(ctx context.Context, delegator sdk.AccAddr
 	return unbonding, err
 }
 
-// GetDelegatorBonded returs the total amount a delegator has bonded.
+// GetDelegatorBonded returns the total amount a delegator has bonded.
 func (k Keeper) GetDelegatorBonded(ctx context.Context, delegator sdk.AccAddress) (math.Int, error) {
 	bonded := math.LegacyZeroDec()
 
+	var iterErr error
 	err := k.IterateDelegatorDelegations(ctx, delegator, func(delegation types.Delegation) bool {
 		validatorAddr, err := k.validatorAddressCodec.StringToBytes(delegation.ValidatorAddress)
 		if err != nil {
-			panic(err) // shouldn't happen
+			iterErr = err
+			return true
 		}
 		validator, err := k.GetValidator(ctx, validatorAddr)
 		if err == nil {
@@ -229,6 +231,9 @@ func (k Keeper) GetDelegatorBonded(ctx context.Context, delegator sdk.AccAddress
 		}
 		return false
 	})
+	if iterErr != nil {
+		return bonded.RoundInt(), iterErr
+	}
 	return bonded.RoundInt(), err
 }
 
@@ -459,16 +464,16 @@ func (k Keeper) GetRedelegationsFromSrcValidator(ctx context.Context, valAddr sd
 // HasReceivingRedelegation checks if validator is receiving a redelegation.
 func (k Keeper) HasReceivingRedelegation(ctx context.Context, delAddr sdk.AccAddress, valDstAddr sdk.ValAddress) (bool, error) {
 	rng := collections.NewSuperPrefixedTripleRange[[]byte, []byte, []byte](valDstAddr, delAddr)
-	hasAtleastOneEntry := false
+	hasReceivingRedelegation := false
 	err := k.RedelegationsByValDst.Walk(ctx, rng, func(key collections.Triple[[]byte, []byte, []byte], value []byte) (stop bool, err error) {
-		hasAtleastOneEntry = true
+		hasReceivingRedelegation = true
 		return true, nil // returning true here to stop the iterations after 1st finding
 	})
 	if err != nil {
 		return false, err
 	}
 
-	return hasAtleastOneEntry, nil
+	return hasReceivingRedelegation, nil
 }
 
 // HasMaxRedelegationEntries checks if the redelegation entries reached maximum limit.
@@ -717,7 +722,7 @@ func (k Keeper) Delegate(
 	// all non bonded
 	if subtractAccount {
 		if tokenSrc == types.Bonded {
-			panic("delegation token source cannot be bonded")
+			return math.LegacyZeroDec(), fmt.Errorf("delegation token source cannot be bonded; expected Unbonded or Unbonding, got Bonded")
 		}
 
 		var sendName string
@@ -728,7 +733,7 @@ func (k Keeper) Delegate(
 		case validator.IsUnbonding(), validator.IsUnbonded():
 			sendName = types.NotBondedPoolName
 		default:
-			panic("invalid validator status")
+			return math.LegacyZeroDec(), fmt.Errorf("invalid validator status: %v", validator.Status)
 		}
 
 		bondDenom, err := k.BondDenom(ctx)
@@ -760,7 +765,7 @@ func (k Keeper) Delegate(
 				return math.LegacyDec{}, err
 			}
 		default:
-			panic("unknown token source bond status")
+			return math.LegacyZeroDec(), fmt.Errorf("unknown token source bond status: %v", tokenSrc)
 		}
 	}
 
@@ -832,9 +837,12 @@ func (k Keeper) Unbond(
 		validator.TokensFromShares(delegation.Shares).TruncateInt().LT(validator.MinSelfDelegation) {
 		err = k.jailValidator(ctx, validator)
 		if err != nil {
-			return amount, err
+			return amount, fmt.Errorf("failed to jail validator: %v", err)
 		}
-		validator = k.mustGetValidator(ctx, valbz)
+		validator, err = k.GetValidator(ctx, valbz)
+		if err != nil {
+			return amount, fmt.Errorf("validator record not found for address: %X", valbz)
+		}
 	}
 
 	if delegation.Shares.IsZero() {
@@ -906,7 +914,7 @@ func (k Keeper) getBeginInfo(
 		return validator.UnbondingTime, validator.UnbondingHeight, false, nil
 
 	default:
-		panic(fmt.Sprintf("unknown validator status: %s", validator.Status))
+		return completionTime, height, false, fmt.Errorf("unknown validator status: %v", validator.Status)
 	}
 }
 
@@ -1077,7 +1085,7 @@ func (k Keeper) BeginRedelegation(
 		return time.Time{}, types.ErrTinyRedelegationAmount
 	}
 
-	sharesCreated, err := k.Delegate(ctx, delAddr, returnAmount, srcValidator.GetStatus(), dstValidator, false)
+	sharesCreated, err := k.Delegate(ctx, delAddr, returnAmount, types.BondStatus(srcValidator.GetStatus()), dstValidator, false)
 	if err != nil {
 		return time.Time{}, err
 	}

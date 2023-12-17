@@ -113,6 +113,7 @@ func (s *Store) SetMetrics(m metrics.Metrics) {
 	s.telemetry = m
 }
 
+<<<<<<< HEAD
 func (s *Store) SetInitialVersion(v uint64) error {
 	s.initialVersion = v
 
@@ -121,6 +122,16 @@ func (s *Store) SetInitialVersion(v uint64) error {
 	// Ref: https://github.com/cosmos/cosmos-sdk/issues/18597
 
 	return nil
+||||||| 0c633a59f3
+// MountSCStore performs a no-op as a SC backend must be provided at initialization.
+func (s *Store) MountSCStore(_ string, _ store.Committer) error {
+	return errors.New("cannot mount SC store; SC must be provided on initialization")
+=======
+func (s *Store) SetInitialVersion(v uint64) error {
+	s.initialVersion = v
+
+	return s.stateCommitment.SetInitialVersion(v)
+>>>>>>> main
 }
 
 // GetSCStore returns the store's state commitment (SC) backend.

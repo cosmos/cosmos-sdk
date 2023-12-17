@@ -2,12 +2,11 @@ package implementation
 
 import (
 	"context"
+	"encoding/binary"
 	"testing"
 
+	"github.com/cosmos/gogoproto/types"
 	"github.com/stretchr/testify/require"
-	"google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/runtime/protoiface"
-	"google.golang.org/protobuf/types/known/wrapperspb"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/collections/colltest"
@@ -19,7 +18,7 @@ func TestMakeAccountContext(t *testing.T) {
 	sender := []byte("sender")
 	sb := collections.NewSchemaBuilderFromAccessor(OpenKVStore)
 
-	accountCtx := MakeAccountContext(originalContext, storeService, accountAddr, sender, nil, nil, nil)
+	accountCtx := MakeAccountContext(originalContext, storeService, 1, accountAddr, sender, nil, nil, nil)
 
 	// ensure whoami
 	require.Equal(t, accountAddr, Whoami(accountCtx))
@@ -29,52 +28,52 @@ func TestMakeAccountContext(t *testing.T) {
 	ta, err := NewTestAccount(sb)
 	require.NoError(t, err)
 
-	impl, err := NewImplementation(ta)
+	impl, err := newImplementation(sb, ta)
 	require.NoError(t, err)
 
-	_, err = impl.Execute(accountCtx, &wrapperspb.UInt64Value{Value: 1000})
+	_, err = impl.Execute(accountCtx, &types.UInt64Value{Value: 1000})
 	require.NoError(t, err)
 
 	// we want to ensure that the account wrote in the correct prefix.
 	// this store is the global x/accounts module store.
 	store := storeService.OpenKVStore(originalContext)
 
-	// now we want the value to be store in the following accounts prefix (AccountsStatePrefix + accountAddr + itemPrefix)
-	value, err := store.Get(append(AccountStatePrefix, append(accountAddr, itemPrefix...)...))
+	// now we want the value to be store in the following accounts prefix (AccountsStatePrefix + big_endian(acc_number=1) + itemPrefix)
+	value, err := store.Get(append(AccountStatePrefix, append(binary.BigEndian.AppendUint64(nil, 1), itemPrefix...)...))
 	require.NoError(t, err)
 	require.Equal(t, []byte{0, 0, 0, 0, 0, 0, 3, 232}, value)
 
-	// ensure getSenderAccount blocks impersonation
-	accountCtx = MakeAccountContext(originalContext, storeService, []byte("impersonator"), []byte("account-invoker"), func(_ proto.Message) ([]byte, error) {
-		return []byte("legit-exec-module"), nil
-	}, nil, nil)
-
-	_, err = ExecModule[wrapperspb.StringValue](accountCtx, &wrapperspb.UInt64Value{Value: 1000})
-	require.ErrorIs(t, err, errUnauthorized)
-
 	// ensure calling ExecModule works
-	accountCtx = MakeAccountContext(originalContext, storeService, []byte("legit-exec-module"), []byte("invoker"), func(_ proto.Message) ([]byte, error) {
-		return []byte("legit-exec-module"), nil
-	}, func(ctx context.Context, msg, msgResp protoiface.MessageV1) error {
+	accountCtx = MakeAccountContext(originalContext, storeService, 1, []byte("legit-exec-module"), []byte("invoker"), func(ctx context.Context, sender []byte, msg, msgResp ProtoMsg) error {
 		// ensure we unwrapped the context when invoking a module call
 		require.Equal(t, originalContext, ctx)
-		proto.Merge(msgResp.(proto.Message), &wrapperspb.StringValue{Value: "module exec was called"})
+		Merge(msgResp, &types.StringValue{Value: "module exec was called"})
 		return nil
+	}, nil, nil)
+
+	resp, err := ExecModule[types.StringValue](accountCtx, &types.UInt64Value{Value: 1000})
+	require.NoError(t, err)
+	require.True(t, Equal(&types.StringValue{Value: "module exec was called"}, resp))
+
+	// ensure calling ExecModuleUntyped works
+	accountCtx = MakeAccountContext(originalContext, storeService, 1, []byte("legit-exec-module-untyped"), []byte("invoker"), nil, func(ctx context.Context, sender []byte, msg ProtoMsg) (ProtoMsg, error) {
+		require.Equal(t, originalContext, ctx)
+		return &types.StringValue{Value: "module exec untyped was called"}, nil
 	}, nil)
 
-	resp, err := ExecModule[wrapperspb.StringValue](accountCtx, &wrapperspb.UInt64Value{Value: 1000})
+	respUntyped, err := ExecModuleUntyped(accountCtx, &types.UInt64Value{Value: 1000})
 	require.NoError(t, err)
-	require.True(t, proto.Equal(wrapperspb.String("module exec was called"), resp))
+	require.True(t, Equal(&types.StringValue{Value: "module exec untyped was called"}, respUntyped))
 
 	// ensure calling QueryModule works, also by setting everything else communication related to nil
 	// we can guarantee that exec paths do not impact query paths.
-	accountCtx = MakeAccountContext(originalContext, storeService, nil, nil, nil, nil, func(ctx context.Context, req, resp protoiface.MessageV1) error {
+	accountCtx = MakeAccountContext(originalContext, storeService, 1, nil, nil, nil, nil, func(ctx context.Context, req, resp ProtoMsg) error {
 		require.Equal(t, originalContext, ctx)
-		proto.Merge(resp.(proto.Message), wrapperspb.String("module query was called"))
+		Merge(resp, &types.StringValue{Value: "module query was called"})
 		return nil
 	})
 
-	resp, err = QueryModule[wrapperspb.StringValue](accountCtx, &wrapperspb.UInt64Value{Value: 1000})
+	resp, err = QueryModule[types.StringValue](accountCtx, &types.UInt64Value{Value: 1000})
 	require.NoError(t, err)
-	require.True(t, proto.Equal(wrapperspb.String("module query was called"), resp))
+	require.True(t, Equal(&types.StringValue{Value: "module query was called"}, resp))
 }

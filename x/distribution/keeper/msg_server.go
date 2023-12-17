@@ -158,7 +158,7 @@ func (k msgServer) CommunityPoolSpend(ctx context.Context, msg *types.MsgCommuni
 		return nil, fmt.Errorf("invalid recipient address: %w", err)
 	}
 
-	if err := k.poolKeeper.DistributeFromFeePool(ctx, msg.Amount, recipient); err != nil {
+	if err := k.poolKeeper.DistributeFromCommunityPool(ctx, msg.Amount, recipient); err != nil {
 		return nil, err
 	}
 

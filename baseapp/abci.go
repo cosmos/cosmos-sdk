@@ -2,7 +2,6 @@ package baseapp
 
 import (
 	"context"
-	"crypto/sha256"
 	"fmt"
 	"sort"
 	"strings"
@@ -127,33 +126,29 @@ func (app *BaseApp) InitChain(req *abci.RequestInitChain) (*abci.ResponseInitCha
 		}
 	}
 
-	// In the case of a new chain, AppHash will be the hash of an empty string.
-	// During an upgrade, it'll be the hash of the last committed block.
-	var appHash []byte
-	if !app.LastCommitID().IsZero() {
-		appHash = app.LastCommitID().Hash
-	} else {
-		// $ echo -n '' | sha256sum
-		// e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
-		emptyHash := sha256.Sum256([]byte{})
-		appHash = emptyHash[:]
-	}
-
 	// NOTE: We don't commit, but FinalizeBlock for block InitialHeight starts from
 	// this FinalizeBlockState.
 	return &abci.ResponseInitChain{
 		ConsensusParams: res.ConsensusParams,
 		Validators:      res.Validators,
-		AppHash:         appHash,
+		AppHash:         app.LastCommitID().Hash,
 	}, nil
 }
 
+<<<<<<< HEAD
 func (app *BaseApp) Info(req *abci.RequestInfo) (*abci.ResponseInfo, error) {
 	lastCommitID, err := app.rs.LastCommitID()
 	if err != nil {
 		return nil, err
 	}
 
+||||||| 0c633a59f3
+func (app *BaseApp) Info(req *abci.RequestInfo) (*abci.ResponseInfo, error) {
+	lastCommitID := app.cms.LastCommitID()
+=======
+func (app *BaseApp) Info(_ *abci.RequestInfo) (*abci.ResponseInfo, error) {
+	lastCommitID := app.cms.LastCommitID()
+>>>>>>> main
 	appVersion := InitialAppVersion
 	if lastCommitID.Version > 0 {
 		ctx, err := app.CreateQueryContext(lastCommitID.Version, false)
@@ -658,6 +653,8 @@ func (app *BaseApp) ExtendVote(_ context.Context, req *abci.RequestExtendVote) (
 // logic in verifying a vote extension from another validator during the pre-commit
 // phase. The response MUST be deterministic. An error is returned if vote
 // extensions are not enabled or if verifyVoteExt fails or panics.
+// We highly recommend a size validation due to performance degredation,
+// see more here https://docs.cometbft.com/v0.38/qa/cometbft-qa-38#vote-extensions-testbed
 func (app *BaseApp) VerifyVoteExtension(req *abci.RequestVerifyVoteExtension) (resp *abci.ResponseVerifyVoteExtension, err error) {
 	if app.verifyVoteExt == nil {
 		return nil, errors.New("application VerifyVoteExtension handler not set")
@@ -797,6 +794,10 @@ func (app *BaseApp) internalFinalizeBlock(ctx context.Context, req *abci.Request
 
 	events = append(events, beginBlock.Events...)
 
+	// Reset the gas meter so that the AnteHandlers aren't required to
+	gasMeter = app.getBlockGasMeter(app.finalizeBlockState.ctx)
+	app.finalizeBlockState.ctx = app.finalizeBlockState.ctx.WithBlockGasMeter(gasMeter)
+
 	// Iterate over all raw transactions in the proposal and attempt to execute
 	// them, gathering the execution results.
 	//
@@ -906,7 +907,7 @@ func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (*abci.Respons
 	return res, err
 }
 
-// checkHalt checkes if height or time exceeds halt-height or halt-time respectively.
+// checkHalt checks if height or time exceeds halt-height or halt-time respectively.
 func (app *BaseApp) checkHalt(height int64, time time.Time) error {
 	var halt bool
 	switch {

@@ -9,8 +9,8 @@ Start integrating with [Cosmos SDK Eden (v0.50)](https://github.com/cosmos/cosmo
 
 For this 7th patch release of the `v0.47.x` line, some of the notable changes include:
 
-* 
-* 
+* A bug fix in the `app.toml` parsing for the `minimum-gas-prices` parameter.
+* A bug fix to properly simulate a transaction when using a multisig. 
 
 Check out the [changelog](https://github.com/cosmos/cosmos-sdk/blob/v0.47.5/CHANGELOG.md) for an exhaustive list of changes or [compare changes](https://github.com/cosmos/cosmos-sdk/compare/v0.47.6...v0.47.7) from last release.
 

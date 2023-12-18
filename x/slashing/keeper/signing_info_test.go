@@ -7,6 +7,7 @@ import (
 	slashingtypes "cosmossdk.io/x/slashing/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/golang/mock/gomock"
 )
 
 func (s *KeeperTestSuite) TestValidatorSigningInfo() {
@@ -64,6 +65,8 @@ func (s *KeeperTestSuite) TestValidatorMissedBlockBitmap_SmallWindow() {
 		params := testutil.TestParams()
 		params.SignedBlocksWindow = window
 		require.NoError(keeper.Params.Set(ctx, params))
+
+		s.stakingKeeper.EXPECT().ValidatorIdentifier(gomock.Any(), consAddr).Return(consAddr, nil).AnyTimes()
 
 		// validator misses all blocks in the window
 		var valIdxOffset int64

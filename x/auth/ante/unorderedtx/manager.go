@@ -10,8 +10,11 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"sort"
 	"sync"
 	"time"
+
+	"golang.org/x/exp/maps"
 )
 
 const (
@@ -158,7 +161,11 @@ func (m *Manager) exportSnapshot(height uint64, snapshotWriter func([]byte) erro
 	var buf bytes.Buffer
 	w := bufio.NewWriter(&buf)
 
-	for txHash, ttl := range m.txHashes {
+	keys := maps.Keys(m.txHashes)
+	sort.Slice(keys, func(i, j int) bool { return bytes.Compare(keys[i][:], keys[j][:]) < 0 })
+
+	for _, txHash := range keys {
+		ttl := m.txHashes[txHash]
 		if height > ttl {
 			// skip expired txs that have yet to be purged
 			continue

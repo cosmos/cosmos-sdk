@@ -3,8 +3,9 @@ package unorderedtx_test
 import (
 	"testing"
 
-	"cosmossdk.io/x/auth/ante/unorderedtx"
 	"github.com/stretchr/testify/require"
+
+	"cosmossdk.io/x/auth/ante/unorderedtx"
 )
 
 func TestSnapshotter(t *testing.T) {

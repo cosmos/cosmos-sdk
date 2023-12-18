@@ -262,6 +262,7 @@ func NewSimApp(
 	// 	return app.App.InitChainer(ctx, req)
 	// })
 
+	// create, start, and load the unordered tx manager
 	utxDataDir := filepath.Join(cast.ToString(appOpts.Get(flags.FlagHome)), "data")
 	app.UnorderedTxManager = unorderedtx.NewManager(utxDataDir)
 	app.UnorderedTxManager.Start()

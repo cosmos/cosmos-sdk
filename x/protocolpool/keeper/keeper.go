@@ -141,16 +141,6 @@ func (k Keeper) withdrawContinuousFund(ctx context.Context, recipient sdk.AccAdd
 		if err != nil {
 			return sdk.Coin{}, err
 		}
-
-		// decrement fundsAllocated from ToDistribute
-		toDistribute, err := k.ToDistribute.Get(ctx)
-		if err != nil {
-			return sdk.Coin{}, err
-		}
-		err = k.ToDistribute.Set(ctx, toDistribute.Sub(fundsAllocated))
-		if err != nil {
-			return sdk.Coin{}, err
-		}
 	}
 
 	return withdrawnAmount, nil
@@ -177,10 +167,7 @@ func (k Keeper) iterateAndUpdateFundsDistribution(ctx context.Context, toDistrib
 		return "", fmt.Errorf("total funds percentage cannot exceed 100")
 	}
 
-	poolMAcc := k.authKeeper.GetModuleAccount(ctx, types.ModuleName)
-	poolBal := k.bankKeeper.GetAllBalances(ctx, poolMAcc.GetAddress())
-	denom := poolBal.GetDenomByIndex(0)
-
+	denom := sdk.DefaultBondDenom
 	toDistributeDec := sdk.NewDecCoins(sdk.NewDecCoin(denom, toDistributeAmount))
 
 	// Calculate the funds to be distributed based on the total percentage to be distributed

@@ -124,12 +124,9 @@ func (k Keeper) withdrawContinuousFund(ctx context.Context, recipient sdk.AccAdd
 	}
 
 	// get allocated continuous fund
-	fundsAllocated, err := k.RecipientFundDistribution.Get(ctx, recipient)
+	fundsAllocated, err := k.getAndResetDistributedFunds(ctx, recipient)
 	if err != nil {
-		if errors.Is(err, collections.ErrNotFound) {
-			return sdk.Coin{}, fmt.Errorf("no recipient fund found for recipient: %s", recipient.String())
-		}
-		return sdk.Coin{}, err
+		return sdk.Coin{}, fmt.Errorf("error while getting distributed funds: %w", err)
 	}
 
 	recipientBal := k.bankKeeper.GetAllBalances(ctx, recipient)
@@ -151,22 +148,6 @@ func (k Keeper) withdrawContinuousFund(ctx context.Context, recipient sdk.AccAdd
 			return sdk.Coin{}, err
 		}
 		err = k.ToDistribute.Set(ctx, toDistribute.Sub(fundsAllocated))
-		if err != nil {
-			return sdk.Coin{}, err
-		}
-
-		// set claimable to zero
-		err = k.RecipientFundDistribution.Set(ctx, recipient, math.ZeroInt())
-		if err != nil {
-			return sdk.Coin{}, err
-		}
-	} else {
-		curBal, err := k.RecipientFundDistribution.Get(ctx, recipient)
-		if err != nil {
-			return sdk.Coin{}, err
-		}
-		// add allocated fund amount to claimable balance
-		err = k.RecipientFundDistribution.Set(ctx, recipient, curBal.Add(fundsAllocated))
 		if err != nil {
 			return sdk.Coin{}, err
 		}
@@ -236,6 +217,23 @@ func (k Keeper) iterateAndUpdateFundsDistribution(ctx context.Context, toDistrib
 		return false, nil
 	})
 	return denom, err
+}
+
+func (k Keeper) getAndResetDistributedFunds(ctx context.Context, recipient sdk.AccAddress) (amount math.Int, err error) {
+	amount, err = k.RecipientFundDistribution.Get(ctx, recipient)
+	if err != nil {
+		if errors.Is(err, collections.ErrNotFound) {
+			return math.ZeroInt(), fmt.Errorf("no recipient fund found for recipient: %s", recipient.String())
+		}
+		return math.ZeroInt(), err
+	}
+
+	// set claimable to zero
+	err = k.RecipientFundDistribution.Set(ctx, recipient, math.ZeroInt())
+	if err != nil {
+		return math.ZeroInt(), err
+	}
+	return amount, nil
 }
 
 func (k Keeper) claimFunds(ctx context.Context, recipient sdk.AccAddress) (amount sdk.Coin, err error) {

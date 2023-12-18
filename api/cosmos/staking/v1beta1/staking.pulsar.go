@@ -4,9 +4,9 @@ package stakingv1beta1
 import (
 	_ "cosmossdk.io/api/amino"
 	v1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
+	abci "cosmossdk.io/api/tendermint/abci"
+	types "cosmossdk.io/api/tendermint/types"
 	fmt "fmt"
-	types1 "github.com/cometbft/cometbft/abci/types"
-	types "github.com/cometbft/cometbft/proto/tendermint/types"
 	_ "github.com/cosmos/cosmos-proto"
 	runtime "github.com/cosmos/cosmos-proto/runtime"
 	_ "github.com/cosmos/gogoproto/gogoproto"
@@ -12834,7 +12834,7 @@ func (x *fastReflection_Pool) ProtoMethods() *protoiface.Methods {
 var _ protoreflect.List = (*_ValidatorUpdates_1_list)(nil)
 
 type _ValidatorUpdates_1_list struct {
-	list *[]*types1.ValidatorUpdate
+	list *[]*abci.ValidatorUpdate
 }
 
 func (x *_ValidatorUpdates_1_list) Len() int {
@@ -12850,18 +12850,18 @@ func (x *_ValidatorUpdates_1_list) Get(i int) protoreflect.Value {
 
 func (x *_ValidatorUpdates_1_list) Set(i int, value protoreflect.Value) {
 	valueUnwrapped := value.Message()
-	concreteValue := valueUnwrapped.Interface().(*types1.ValidatorUpdate)
+	concreteValue := valueUnwrapped.Interface().(*abci.ValidatorUpdate)
 	(*x.list)[i] = concreteValue
 }
 
 func (x *_ValidatorUpdates_1_list) Append(value protoreflect.Value) {
 	valueUnwrapped := value.Message()
-	concreteValue := valueUnwrapped.Interface().(*types1.ValidatorUpdate)
+	concreteValue := valueUnwrapped.Interface().(*abci.ValidatorUpdate)
 	*x.list = append(*x.list, concreteValue)
 }
 
 func (x *_ValidatorUpdates_1_list) AppendMutable() protoreflect.Value {
-	v := new(types1.ValidatorUpdate)
+	v := new(abci.ValidatorUpdate)
 	*x.list = append(*x.list, v)
 	return protoreflect.ValueOfMessage(v.ProtoReflect())
 }
@@ -12874,7 +12874,7 @@ func (x *_ValidatorUpdates_1_list) Truncate(n int) {
 }
 
 func (x *_ValidatorUpdates_1_list) NewElement() protoreflect.Value {
-	v := new(types1.ValidatorUpdate)
+	v := new(abci.ValidatorUpdate)
 	return protoreflect.ValueOfMessage(v.ProtoReflect())
 }
 
@@ -13067,7 +13067,7 @@ func (x *fastReflection_ValidatorUpdates) Mutable(fd protoreflect.FieldDescripto
 	switch fd.FullName() {
 	case "cosmos.staking.v1beta1.ValidatorUpdates.updates":
 		if x.Updates == nil {
-			x.Updates = []*types1.ValidatorUpdate{}
+			x.Updates = []*abci.ValidatorUpdate{}
 		}
 		value := &_ValidatorUpdates_1_list{list: &x.Updates}
 		return protoreflect.ValueOfList(value)
@@ -13085,7 +13085,7 @@ func (x *fastReflection_ValidatorUpdates) Mutable(fd protoreflect.FieldDescripto
 func (x *fastReflection_ValidatorUpdates) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
 	case "cosmos.staking.v1beta1.ValidatorUpdates.updates":
-		list := []*types1.ValidatorUpdate{}
+		list := []*abci.ValidatorUpdate{}
 		return protoreflect.ValueOfList(&_ValidatorUpdates_1_list{list: &list})
 	default:
 		if fd.IsExtension() {
@@ -13285,7 +13285,7 @@ func (x *fastReflection_ValidatorUpdates) ProtoMethods() *protoiface.Methods {
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.Updates = append(x.Updates, &types1.ValidatorUpdate{})
+				x.Updates = append(x.Updates, &abci.ValidatorUpdate{})
 				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Updates[len(x.Updates)-1]); err != nil {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
 				}
@@ -15900,7 +15900,7 @@ type ValidatorUpdates struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Updates []*types1.ValidatorUpdate `protobuf:"bytes,1,rep,name=updates,proto3" json:"updates,omitempty"`
+	Updates []*abci.ValidatorUpdate `protobuf:"bytes,1,rep,name=updates,proto3" json:"updates,omitempty"`
 }
 
 func (x *ValidatorUpdates) Reset() {
@@ -15923,7 +15923,7 @@ func (*ValidatorUpdates) Descriptor() ([]byte, []int) {
 	return file_cosmos_staking_v1beta1_staking_proto_rawDescGZIP(), []int{21}
 }
 
-func (x *ValidatorUpdates) GetUpdates() []*types1.ValidatorUpdate {
+func (x *ValidatorUpdates) GetUpdates() []*abci.ValidatorUpdate {
 	if x != nil {
 		return x.Updates
 	}
@@ -16523,7 +16523,7 @@ var file_cosmos_staking_v1beta1_staking_proto_goTypes = []interface{}{
 	(*anypb.Any)(nil),                 // 28: google.protobuf.Any
 	(*durationpb.Duration)(nil),       // 29: google.protobuf.Duration
 	(*v1beta1.Coin)(nil),              // 30: cosmos.base.v1beta1.Coin
-	(*types1.ValidatorUpdate)(nil),    // 31: tendermint.abci.ValidatorUpdate
+	(*abci.ValidatorUpdate)(nil),      // 31: tendermint.abci.ValidatorUpdate
 }
 var file_cosmos_staking_v1beta1_staking_proto_depIdxs = []int32{
 	26, // 0: cosmos.staking.v1beta1.HistoricalInfo.header:type_name -> tendermint.types.Header

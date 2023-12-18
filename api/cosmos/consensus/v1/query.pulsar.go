@@ -2,8 +2,8 @@
 package consensusv1
 
 import (
+	types "cosmossdk.io/api/tendermint/types"
 	fmt "fmt"
-	types "github.com/cometbft/cometbft/proto/tendermint/types"
 	runtime "github.com/cosmos/cosmos-proto/runtime"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"

@@ -76,6 +76,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (crypto/keys) [#18026](https://github.com/cosmos/cosmos-sdk/pull/18026) Made public key generation constant time on `secp256k1`
 * (crypto | x/auth) [#14372](https://github.com/cosmos/cosmos-sdk/pull/18194) Key checks on signatures antehandle.
 * (staking) [#18506](https://github.com/cosmos/cosmos-sdk/pull/18506) Detect the length of the ed25519 pubkey in CreateValidator to prevent panic.
+* (tx) [#]() Remove misleading gas wanted from tx simulation failure log.
 
 ### Bug Fixes
 

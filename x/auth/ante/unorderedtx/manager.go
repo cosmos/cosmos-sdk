@@ -73,6 +73,7 @@ func (m *Manager) Start() {
 
 // Close must be called when a node gracefully shuts down. Typically, this should
 // be called in an application's Close() function, which is called by the server.
+// Note, Start() must be called in order for Close() to not hang.
 //
 // It will free all necessary resources as well as writing all unexpired unordered
 // transactions along with their TTL values to file.

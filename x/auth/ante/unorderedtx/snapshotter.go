@@ -67,7 +67,11 @@ func (s *Snapshotter) restore(height uint64, payloadReader snapshot.ExtensionPay
 		copy(txHash[:], payload[i:i+32])
 
 		ttl := binary.BigEndian.Uint64(payload[i+32 : i+40])
-		s.m.Add(txHash, ttl)
+
+		if height < ttl {
+			// only add unordered transactions that are still valid, i.e. unexpired
+			s.m.Add(txHash, ttl)
+		}
 
 		i += 40
 	}

@@ -45,11 +45,13 @@ func (d *UnorderedTxDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 		return next(ctx, tx, simulate)
 	}
 
-	if unorderedTx.GetTimeoutHeight() == 0 {
+	// TTL is defined as a specific block height at which this tx is no longer valid
+	ttl := unorderedTx.GetTimeoutHeight()
+
+	if ttl == 0 {
 		return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "unordered transaction must have timeout_height set")
 	}
-
-	if unorderedTx.GetTimeoutHeight() > uint64(ctx.BlockHeight())+d.maxUnOrderedTTL {
+	if ttl > uint64(ctx.BlockHeight())+d.maxUnOrderedTTL {
 		return ctx, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "unordered tx ttl exceeds %d", d.maxUnOrderedTTL)
 	}
 
@@ -62,7 +64,7 @@ func (d *UnorderedTxDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 
 	if ctx.ExecMode() == sdk.ExecModeFinalize {
 		// a new tx included in the block, add the hash to the unordered tx manager
-		d.txManager.Add(txHash, unorderedTx.GetTimeoutHeight())
+		d.txManager.Add(txHash, ttl)
 	}
 
 	return next(ctx, tx, simulate)

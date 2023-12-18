@@ -246,7 +246,7 @@ func checkMultipleSigners(tx authsigning.Tx) error {
 // Sign signs a given tx with a named key. The bytes signed over are canconical.
 // The resulting signature will be added to the transaction builder overwriting the previous
 // ones if overwrite=true (otherwise, the signature will be appended).
-// Signing a transaction with mutltiple signers in the DIRECT mode is not supprted and will
+// Signing a transaction with mutltiple signers in the DIRECT mode is not supported and will
 // return an error.
 // An error is returned upon failure.
 func Sign(ctx context.Context, txf Factory, name string, txBuilder client.TxBuilder, overwriteSig bool) error {

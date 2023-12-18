@@ -171,6 +171,65 @@ func (s *CLITestSuite) TestCLISignBatch() {
 	s.Require().EqualError(err, "required flag(s) \"sequence\" not set")
 }
 
+func (s *CLITestSuite) TestCLISignBatchTotalFees() {
+	txCfg := s.clientCtx.TxConfig
+	s.clientCtx.HomeDir = strings.Replace(s.clientCtx.HomeDir, "simd", "simcli", 1)
+
+	testCases := []struct {
+		name            string
+		args            []string
+		numTransactions int
+		denom           string
+	}{
+		{
+			"Offline batch-sign one transaction",
+			[]string{"--offline", "--account-number", "1", "--sequence", "1", "--append"},
+			1,
+			"stake",
+		},
+		{
+			"Offline batch-sign two transactions",
+			[]string{"--offline", "--account-number", "1", "--sequence", "1", "--append"},
+			2,
+			"stake",
+		},
+	}
+
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			// Create multiple transactions and write them to separate files
+			sendTokens := sdk.NewCoin(tc.denom, sdk.TokensFromConsensusPower(10, sdk.DefaultPowerReduction))
+			expectedBatchedTotalFee := int64(0)
+			txFiles := make([]string, tc.numTransactions)
+			for i := 0; i < tc.numTransactions; i++ {
+				tx, err := s.createBankMsg(s.clientCtx, s.val,
+					sdk.NewCoins(sendTokens), clitestutil.TestTxConfig{GenOnly: true})
+				s.Require().NoError(err)
+				txFile := testutil.WriteToNewTempFile(s.T(), tx.String()+"\n")
+				defer txFile.Close()
+				txFiles[i] = txFile.Name()
+
+				unsignedTx, err := txCfg.TxJSONDecoder()(tx.Bytes())
+				s.Require().NoError(err)
+				txBuilder, err := txCfg.WrapTxBuilder(unsignedTx)
+				s.Require().NoError(err)
+				expectedBatchedTotalFee += txBuilder.GetTx().GetFee().AmountOf(tc.denom).Int64()
+			}
+
+			// Test batch sign
+			batchSignArgs := append([]string{fmt.Sprintf("--from=%s", s.val.String())}, append(txFiles, tc.args...)...)
+			signedTx, err := clitestutil.ExecTestCLICmd(s.clientCtx, authcli.GetSignBatchCommand(), batchSignArgs)
+			s.Require().NoError(err)
+			signedFinalTx, err := txCfg.TxJSONDecoder()(signedTx.Bytes())
+			s.Require().NoError(err)
+			txBuilder, err := txCfg.WrapTxBuilder(signedFinalTx)
+			s.Require().NoError(err)
+			finalTotalFee := txBuilder.GetTx().GetFee()
+			s.Require().Equal(expectedBatchedTotalFee, finalTotalFee.AmountOf(tc.denom).Int64())
+		})
+	}
+}
+
 func (s *CLITestSuite) TestCLIQueryTxCmdByHash() {
 	sendTokens := sdk.NewInt64Coin("stake", 10)
 
@@ -781,11 +840,8 @@ func (s *CLITestSuite) TestGetBroadcastCommandWithoutOfflineFlag() {
 	// Create new file with tx
 	builder := txCfg.NewTxBuilder()
 	builder.SetGasLimit(200000)
-	from, err := s.ac.StringToBytes("cosmos1cxlt8kznps92fwu3j6npahx4mjfutydyene2qw")
-	s.Require().NoError(err)
-	to, err := s.ac.StringToBytes("cosmos1cxlt8kznps92fwu3j6npahx4mjfutydyene2qw")
-	s.Require().NoError(err)
-	err = builder.SetMsgs(banktypes.NewMsgSend(from, to, sdk.Coins{sdk.NewInt64Coin("stake", 10000)}))
+
+	err := builder.SetMsgs(banktypes.NewMsgSend("cosmos1cxlt8kznps92fwu3j6npahx4mjfutydyene2qw", "cosmos1cxlt8kznps92fwu3j6npahx4mjfutydyene2qw", sdk.Coins{sdk.NewInt64Coin("stake", 10000)}))
 	s.Require().NoError(err)
 	txContents, err := txCfg.TxJSONEncoder()(builder.GetTx())
 	s.Require().NoError(err)
@@ -805,12 +861,15 @@ func (s *CLITestSuite) TestGetBroadcastCommandWithoutOfflineFlag() {
 func (s *CLITestSuite) TestTxWithoutPublicKey() {
 	txCfg := s.clientCtx.TxConfig
 
+	valStr, err := s.ac.BytesToString(s.val)
+	s.Require().NoError(err)
+
 	// Create a txBuilder with an unsigned tx.
 	txBuilder := txCfg.NewTxBuilder()
-	msg := banktypes.NewMsgSend(s.val, s.val, sdk.NewCoins(
+	msg := banktypes.NewMsgSend(valStr, valStr, sdk.NewCoins(
 		sdk.NewCoin("Stake", math.NewInt(10)),
 	))
-	err := txBuilder.SetMsgs(msg)
+	err = txBuilder.SetMsgs(msg)
 	s.Require().NoError(err)
 	txBuilder.SetFeeAmount(sdk.NewCoins(sdk.NewCoin("Stake", math.NewInt(150))))
 	txBuilder.SetGasLimit(testdata.NewTestGasLimit())
@@ -858,14 +917,21 @@ func (s *CLITestSuite) TestSignWithMultiSignersAminoJSON() {
 	val1Coin := sdk.NewCoin("test2token", math.NewInt(10))
 	_, _, addr1 := testdata.KeyTestPubAddr()
 
+	valStr, err := s.ac.BytesToString(val0)
+	s.Require().NoError(err)
+	val1Str, err := s.ac.BytesToString(val1)
+	s.Require().NoError(err)
+
+	addrStr, err := s.ac.BytesToString(addr1)
+	s.Require().NoError(err)
 	// Creating a tx with 2 msgs from 2 signers: val0 and val1.
 	// The validators need to sign with SIGN_MODE_LEGACY_AMINO_JSON,
 	// because DIRECT doesn't support multi signers via the CLI.
 	// Since we use amino, we don't need to pre-populate signer_infos.
 	txBuilder := s.clientCtx.TxConfig.NewTxBuilder()
-	err := txBuilder.SetMsgs(
-		banktypes.NewMsgSend(val0, addr1, sdk.NewCoins(val0Coin)),
-		banktypes.NewMsgSend(val1, addr1, sdk.NewCoins(val1Coin)),
+	err = txBuilder.SetMsgs(
+		banktypes.NewMsgSend(valStr, addrStr, sdk.NewCoins(val0Coin)),
+		banktypes.NewMsgSend(val1Str, addrStr, sdk.NewCoins(val1Coin)),
 	)
 	s.Require().NoError(err)
 	txBuilder.SetFeeAmount(sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(10))))

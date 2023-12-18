@@ -2,7 +2,6 @@ package types
 
 import (
 	"context"
-	"fmt"
 	"sync"
 
 	"github.com/cosmos/cosmos-sdk/version"
@@ -16,13 +15,8 @@ const DefaultKeyringServiceName = "cosmos"
 type Config struct {
 	fullFundraiserPath  string
 	bech32AddressPrefix map[string]string
-	txEncoder           TxEncoder
 	addressVerifier     func([]byte) error
 	mtx                 sync.RWMutex
-
-	// SLIP-44 related
-	purpose  uint32
-	coinType uint32
 
 	sealed   bool
 	sealedch chan struct{}
@@ -47,10 +41,6 @@ func NewConfig() *Config {
 			"consensus_pub":  Bech32PrefixConsPub,
 		},
 		fullFundraiserPath: FullFundraiserPath,
-
-		purpose:   Purpose,
-		coinType:  CoinType,
-		txEncoder: nil,
 	}
 }
 
@@ -107,12 +97,6 @@ func (config *Config) SetBech32PrefixForConsensusNode(addressPrefix, pubKeyPrefi
 	config.bech32AddressPrefix["consensus_pub"] = pubKeyPrefix
 }
 
-// SetTxEncoder builds the Config with TxEncoder used to marshal StdTx to bytes
-func (config *Config) SetTxEncoder(encoder TxEncoder) {
-	config.assertNotSealed()
-	config.txEncoder = encoder
-}
-
 // SetAddressVerifier builds the Config with the provided function for verifying that addresses
 // have the correct format
 func (config *Config) SetAddressVerifier(addressVerifier func([]byte) error) {
@@ -126,18 +110,6 @@ func (config *Config) SetAddressVerifier(addressVerifier func([]byte) error) {
 func (config *Config) SetFullFundraiserPath(fullFundraiserPath string) {
 	config.assertNotSealed()
 	config.fullFundraiserPath = fullFundraiserPath
-}
-
-// Set the BIP-0044 Purpose code on the config
-func (config *Config) SetPurpose(purpose uint32) {
-	config.assertNotSealed()
-	config.purpose = purpose
-}
-
-// Set the BIP-0044 CoinType code on the config
-func (config *Config) SetCoinType(coinType uint32) {
-	config.assertNotSealed()
-	config.coinType = coinType
 }
 
 // Seal seals the config such that the config state could not be modified further
@@ -187,24 +159,9 @@ func (config *Config) GetBech32ConsensusPubPrefix() string {
 	return config.bech32AddressPrefix["consensus_pub"]
 }
 
-// GetTxEncoder return function to encode transactions
-func (config *Config) GetTxEncoder() TxEncoder {
-	return config.txEncoder
-}
-
 // GetAddressVerifier returns the function to verify that addresses have the correct format
 func (config *Config) GetAddressVerifier() func([]byte) error {
 	return config.addressVerifier
-}
-
-// GetPurpose returns the BIP-0044 Purpose code on the config.
-func (config *Config) GetPurpose() uint32 {
-	return config.purpose
-}
-
-// GetCoinType returns the BIP-0044 CoinType code on the config.
-func (config *Config) GetCoinType() uint32 {
-	return config.coinType
 }
 
 // GetFullFundraiserPath returns the BIP44Prefix.
@@ -212,11 +169,6 @@ func (config *Config) GetCoinType() uint32 {
 // Deprecated: This method is supported for backward compatibility only and will be removed in a future release. Use GetFullBIP44Path instead.
 func (config *Config) GetFullFundraiserPath() string {
 	return config.fullFundraiserPath
-}
-
-// GetFullBIP44Path returns the BIP44Prefix.
-func (config *Config) GetFullBIP44Path() string {
-	return fmt.Sprintf("m/%d'/%d'/0'/0/0", config.purpose, config.coinType)
 }
 
 func KeyringServiceName() string {

@@ -57,7 +57,7 @@ func (k Keeper) Slash(ctx context.Context, consAddr sdk.ConsAddress, infractionH
 		// Log the slash attempt for future reference (maybe we should tag it too)
 		conStr, err := k.consensusAddressCodec.BytesToString(consAddr)
 		if err != nil {
-			panic(err)
+			return math.NewInt(0), err
 		}
 
 		logger.Error(
@@ -182,16 +182,16 @@ func (k Keeper) Slash(ctx context.Context, consAddr sdk.ConsAddress, infractionH
 	}
 
 	switch validator.GetStatus() {
-	case types.Bonded:
+	case sdk.Bonded:
 		if err := k.burnBondedTokens(ctx, tokensToBurn); err != nil {
 			return math.NewInt(0), err
 		}
-	case types.Unbonding, types.Unbonded:
+	case sdk.Unbonding, sdk.Unbonded:
 		if err := k.burnNotBondedTokens(ctx, tokensToBurn); err != nil {
 			return math.NewInt(0), err
 		}
 	default:
-		panic("invalid validator status")
+		return math.NewInt(0), fmt.Errorf("invalid validator status")
 	}
 
 	logger.Info(
@@ -210,7 +210,10 @@ func (k Keeper) SlashWithInfractionReason(ctx context.Context, consAddr sdk.Cons
 
 // jail a validator
 func (k Keeper) Jail(ctx context.Context, consAddr sdk.ConsAddress) error {
-	validator := k.mustGetValidatorByConsAddr(ctx, consAddr)
+	validator, err := k.GetValidatorByConsAddr(ctx, consAddr)
+	if err != nil {
+		return fmt.Errorf("validator with consensus-Address %s not found", consAddr)
+	}
 	if err := k.jailValidator(ctx, validator); err != nil {
 		return err
 	}
@@ -222,7 +225,10 @@ func (k Keeper) Jail(ctx context.Context, consAddr sdk.ConsAddress) error {
 
 // unjail a validator
 func (k Keeper) Unjail(ctx context.Context, consAddr sdk.ConsAddress) error {
-	validator := k.mustGetValidatorByConsAddr(ctx, consAddr)
+	validator, err := k.GetValidatorByConsAddr(ctx, consAddr)
+	if err != nil {
+		return fmt.Errorf("validator with consensus-Address %s not found", consAddr)
+	}
 	if err := k.unjailValidator(ctx, validator); err != nil {
 		return err
 	}
@@ -356,14 +362,14 @@ func (k Keeper) SlashRedelegation(ctx context.Context, srcValidator types.Valida
 		}
 
 		// tokens of a redelegation currently live in the destination validator
-		// therefor we must burn tokens from the destination-validator's bonding status
+		// therefore we must burn tokens from the destination-validator's bonding status
 		switch {
 		case dstValidator.IsBonded():
 			bondedBurnedAmount = bondedBurnedAmount.Add(tokensToBurn)
 		case dstValidator.IsUnbonded() || dstValidator.IsUnbonding():
 			notBondedBurnedAmount = notBondedBurnedAmount.Add(tokensToBurn)
 		default:
-			panic("unknown validator status")
+			return math.ZeroInt(), fmt.Errorf("unknown validator status")
 		}
 	}
 

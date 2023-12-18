@@ -1,29 +1,26 @@
-package types
+package snapshots
 
 import (
 	protoio "github.com/cosmos/gogoproto/io"
+
+	"cosmossdk.io/store/v2"
+	"cosmossdk.io/store/v2/snapshots/types"
 )
 
-// Snapshotter is something that can create and restore snapshots, consisting of streamed binary
-// chunks - all of which must be read from the channel and closed. If an unsupported format is
-// given, it must return ErrUnknownFormat (possibly wrapped with fmt.Errorf).
-type Snapshotter interface {
-	// Snapshot writes snapshot items into the protobuf writer.
-	Snapshot(height uint64, protoWriter protoio.Writer) error
+// CommitSnapshotter defines an API for creating and restoring snapshots of the
+// commitment state.
+type CommitSnapshotter interface {
+	// Snapshot writes a snapshot of the commitment state at the given version.
+	Snapshot(version uint64, protoWriter protoio.Writer) error
 
-	// PruneSnapshotHeight prunes the given height according to the prune strategy.
-	// If PruneNothing, this is a no-op.
-	// If other strategy, this height is persisted until it is
-	// less than <current height> - KeepRecent and <current height> % Interval == 0
-	PruneSnapshotHeight(height int64)
+	// Restore restores the commitment state from the snapshot reader.
+	Restore(version uint64, format uint32, protoReader protoio.Reader, chStorage chan<- *store.KVPair) (types.SnapshotItem, error)
+}
 
-	// SetSnapshotInterval sets the interval at which the snapshots are taken.
-	// It is used by the store that implements the Snapshotter interface
-	// to determine which heights to retain until after the snapshot is complete.
-	SetSnapshotInterval(snapshotInterval uint64)
-
-	// Restore restores a state snapshot, taking the reader of protobuf message stream as input.
-	Restore(height uint64, format uint32, protoReader protoio.Reader) (SnapshotItem, error)
+// StorageSnapshotter defines an API for restoring snapshots of the storage state.
+type StorageSnapshotter interface {
+	// Restore restores the storage state from the given channel.
+	Restore(version uint64, chStorage <-chan *store.KVPair) error
 }
 
 // ExtensionPayloadReader read extension payloads,

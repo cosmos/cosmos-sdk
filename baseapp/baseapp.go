@@ -153,7 +153,7 @@ type BaseApp struct {
 	// ResponseCommit.RetainHeight value during ABCI Commit. A value of 0 indicates
 	// that no blocks should be pruned.
 	//
-	// Note: CometBFT block pruning is dependant on this parameter in conjunction
+	// Note: CometBFT block pruning is dependent on this parameter in conjunction
 	// with the unbonding (safety threshold) period, state pruning and state sync
 	// snapshot parameters to determine the correct minimum value of
 	// ResponseCommit.RetainHeight.
@@ -424,15 +424,15 @@ func (app *BaseApp) Init() error {
 		panic("cannot call initFromMainStore: baseapp already sealed")
 	}
 
+	if app.cms == nil {
+		return errors.New("commit multi-store must not be nil")
+	}
+
 	emptyHeader := cmtproto.Header{ChainID: app.chainID}
 
 	// needed for the export command which inits from store but never calls initchain
 	app.setState(execModeCheck, emptyHeader)
 	app.Seal()
-
-	if app.cms == nil {
-		return errors.New("commit multi-store must not be nil")
-	}
 
 	return app.cms.GetPruning().Validate()
 }
@@ -522,7 +522,11 @@ func (app *BaseApp) GetConsensusParams(ctx sdk.Context) cmtproto.ConsensusParams
 
 	cp, err := app.paramStore.Get(ctx)
 	if err != nil {
-		panic(fmt.Errorf("consensus key is nil: %w", err))
+		// This could happen while migrating from v0.45/v0.46 to v0.50, we should
+		// allow it to happen so during preblock the upgrade plan can be executed
+		// and the consensus params set for the first time in the new format.
+		app.logger.Error("failed to get consensus params", "err", err)
+		return cmtproto.ConsensusParams{}
 	}
 
 	return cp
@@ -597,20 +601,22 @@ func (app *BaseApp) validateFinalizeBlockHeight(req *abci.RequestFinalizeBlock) 
 	return nil
 }
 
-// validateBasicTxMsgs executes basic validator calls for messages.
-func validateBasicTxMsgs(msgs []sdk.Msg) error {
+// validateBasicTxMsgs executes basic validator calls for messages firstly by invoking
+// .ValidateBasic if possible, then checking if the message has a known handler.
+func validateBasicTxMsgs(router *MsgServiceRouter, msgs []sdk.Msg) error {
 	if len(msgs) == 0 {
 		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "must contain at least one message")
 	}
 
 	for _, msg := range msgs {
-		m, ok := msg.(sdk.HasValidateBasic)
-		if !ok {
-			continue
+		if m, ok := msg.(sdk.HasValidateBasic); ok {
+			if err := m.ValidateBasic(); err != nil {
+				return err
+			}
 		}
 
-		if err := m.ValidateBasic(); err != nil {
-			return err
+		if router != nil && router.Handler(msg) == nil {
+			return errorsmod.Wrapf(sdkerrors.ErrUnknownRequest, "no message handler found for %T", msg)
 		}
 	}
 
@@ -858,15 +864,8 @@ func (app *BaseApp) runTx(mode execMode, txBytes []byte) (gInfo sdk.GasInfo, res
 	}
 
 	msgs := tx.GetMsgs()
-	if err := validateBasicTxMsgs(msgs); err != nil {
+	if err := validateBasicTxMsgs(app.msgServiceRouter, msgs); err != nil {
 		return sdk.GasInfo{}, nil, nil, err
-	}
-
-	for _, msg := range msgs {
-		handler := app.msgServiceRouter.Handler(msg)
-		if handler == nil {
-			return sdk.GasInfo{}, nil, nil, errorsmod.Wrapf(sdkerrors.ErrUnknownRequest, "no message handler found for %T", msg)
-		}
 	}
 
 	if app.anteHandler != nil {
@@ -934,24 +933,25 @@ func (app *BaseApp) runTx(mode execMode, txBytes []byte) (gInfo sdk.GasInfo, res
 	if err == nil {
 		result, err = app.runMsgs(runMsgCtx, msgs, msgsV2, mode)
 	}
-	if err == nil {
-		// Run optional postHandlers.
-		//
-		// Note: If the postHandler fails, we also revert the runMsgs state.
-		if app.postHandler != nil {
-			// The runMsgCtx context currently contains events emitted by the ante handler.
-			// We clear this to correctly order events without duplicates.
-			// Note that the state is still preserved.
-			postCtx := runMsgCtx.WithEventManager(sdk.NewEventManager())
 
-			newCtx, err := app.postHandler(postCtx, tx, mode == execModeSimulate, err == nil)
-			if err != nil {
-				return gInfo, nil, anteEvents, err
-			}
+	// Run optional postHandlers (should run regardless of the execution result).
+	//
+	// Note: If the postHandler fails, we also revert the runMsgs state.
+	if app.postHandler != nil {
+		// The runMsgCtx context currently contains events emitted by the ante handler.
+		// We clear this to correctly order events without duplicates.
+		// Note that the state is still preserved.
+		postCtx := runMsgCtx.WithEventManager(sdk.NewEventManager())
 
-			result.Events = append(result.Events, newCtx.EventManager().ABCIEvents()...)
+		newCtx, err := app.postHandler(postCtx, tx, mode == execModeSimulate, err == nil)
+		if err != nil {
+			return gInfo, nil, anteEvents, err
 		}
 
+		result.Events = append(result.Events, newCtx.EventManager().ABCIEvents()...)
+	}
+
+	if err == nil {
 		if mode == execModeFinalize {
 			// When block gas exceeds, it'll panic and won't commit the cached store.
 			consumeBlockGas()

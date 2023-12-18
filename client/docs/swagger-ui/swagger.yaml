@@ -14171,7 +14171,7 @@ paths:
                       vetoed. Default value: 1/3.
               params:
                 description: |-
-                  params defines all the paramaters of x/gov module.
+                  params defines all the parameters of x/gov module.
 
                   Since: cosmos-sdk 0.47
                 type: object
@@ -19195,7 +19195,7 @@ paths:
                         type: string
                         format: uint64
                       title: >-
-                        list of unbonding ids, each uniquely identifing an
+                        list of unbonding ids, each uniquely identifying an
                         unbonding of this validator
                   description: >-
                     Validator defines a validator, together with the total
@@ -19819,7 +19819,7 @@ paths:
                       type: string
                       format: uint64
                     title: >-
-                      list of unbonding ids, each uniquely identifing an
+                      list of unbonding ids, each uniquely identifying an
                       unbonding of this validator
                 description: >-
                   Validator defines a validator, together with the total amount
@@ -20458,7 +20458,7 @@ paths:
                             type: string
                             format: uint64
                           title: >-
-                            list of unbonding ids, each uniquely identifing an
+                            list of unbonding ids, each uniquely identifying an
                             unbonding of this validator
                       description: >-
                         Validator defines a validator, together with the total
@@ -21517,7 +21517,7 @@ paths:
                         type: string
                         format: uint64
                       title: >-
-                        list of unbonding ids, each uniquely identifing an
+                        list of unbonding ids, each uniquely identifying an
                         unbonding of this validator
                   description: >-
                     Validator defines a validator, together with the total
@@ -22139,7 +22139,7 @@ paths:
                       type: string
                       format: uint64
                     title: >-
-                      list of unbonding ids, each uniquely identifing an
+                      list of unbonding ids, each uniquely identifying an
                       unbonding of this validator
                 description: >-
                   Validator defines a validator, together with the total amount
@@ -51844,7 +51844,7 @@ definitions:
               vetoed. Default value: 1/3.
       params:
         description: |-
-          params defines all the paramaters of x/gov module.
+          params defines all the parameters of x/gov module.
 
           Since: cosmos-sdk 0.47
         type: object
@@ -53712,7 +53712,7 @@ definitions:
                 type: string
                 format: uint64
               title: >-
-                list of unbonding ids, each uniquely identifing an unbonding of
+                list of unbonding ids, each uniquely identifying an unbonding of
                 this validator
           description: >-
             Validator defines a validator, together with the total amount of the
@@ -54309,7 +54309,7 @@ definitions:
               type: string
               format: uint64
             title: >-
-              list of unbonding ids, each uniquely identifing an unbonding of
+              list of unbonding ids, each uniquely identifying an unbonding of
               this validator
         description: >-
           Validator defines a validator, together with the total amount of the
@@ -54631,7 +54631,7 @@ definitions:
                 type: string
                 format: uint64
               title: >-
-                list of unbonding ids, each uniquely identifing an unbonding of
+                list of unbonding ids, each uniquely identifying an unbonding of
                 this validator
           description: >-
             Validator defines a validator, together with the total amount of the
@@ -55060,7 +55060,7 @@ definitions:
                     type: string
                     format: uint64
                   title: >-
-                    list of unbonding ids, each uniquely identifing an unbonding
+                    list of unbonding ids, each uniquely identifying an unbonding
                     of this validator
               description: >-
                 Validator defines a validator, together with the total amount of
@@ -55747,7 +55747,7 @@ definitions:
               type: string
               format: uint64
             title: >-
-              list of unbonding ids, each uniquely identifing an unbonding of
+              list of unbonding ids, each uniquely identifying an unbonding of
               this validator
         description: >-
           Validator defines a validator, together with the total amount of the
@@ -56145,7 +56145,7 @@ definitions:
                 type: string
                 format: uint64
               title: >-
-                list of unbonding ids, each uniquely identifing an unbonding of
+                list of unbonding ids, each uniquely identifying an unbonding of
                 this validator
           description: >-
             Validator defines a validator, together with the total amount of the
@@ -56813,7 +56813,7 @@ definitions:
           type: string
           format: uint64
         title: >-
-          list of unbonding ids, each uniquely identifing an unbonding of this
+          list of unbonding ids, each uniquely identifying an unbonding of this
           validator
     description: >-
       Validator defines a validator, together with the total amount of the

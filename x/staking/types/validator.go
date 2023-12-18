@@ -38,7 +38,7 @@ var (
 	BondStatusBonded      = BondStatus_name[int32(Bonded)]
 )
 
-var _ ValidatorI = Validator{}
+var _ sdk.ValidatorI = Validator{}
 
 // NewValidator constructs a new Validator
 func NewValidator(operator string, pubKey cryptotypes.PubKey, description Description) (Validator, error) {
@@ -78,7 +78,7 @@ func (v Validators) String() (out string) {
 }
 
 // ToSDKValidators -  convenience function convert []Validator to []sdk.ValidatorI
-func (v Validators) ToSDKValidators() (validators []ValidatorI) {
+func (v Validators) ToSDKValidators() (validators []sdk.ValidatorI) {
 	for _, val := range v.Validators {
 		validators = append(validators, val)
 	}
@@ -173,17 +173,17 @@ func UnmarshalValidator(cdc codec.BinaryCodec, value []byte) (v Validator, err e
 
 // IsBonded checks if the validator status equals Bonded
 func (v Validator) IsBonded() bool {
-	return v.GetStatus() == Bonded
+	return v.GetStatus() == sdk.Bonded
 }
 
 // IsUnbonded checks if the validator status equals Unbonded
 func (v Validator) IsUnbonded() bool {
-	return v.GetStatus() == Unbonded
+	return v.GetStatus() == sdk.Unbonded
 }
 
 // IsUnbonding checks if the validator status equals Unbonding
 func (v Validator) IsUnbonding() bool {
-	return v.GetStatus() == Unbonding
+	return v.GetStatus() == sdk.Unbonding
 }
 
 // constant used in flags to indicate that description field should not be updated
@@ -456,9 +456,9 @@ func (v *Validator) Equal(v2 *Validator) bool {
 		v.UnbondingTime.Equal(v2.UnbondingTime)
 }
 
-func (v Validator) IsJailed() bool        { return v.Jailed }
-func (v Validator) GetMoniker() string    { return v.Description.Moniker }
-func (v Validator) GetStatus() BondStatus { return v.Status }
+func (v Validator) IsJailed() bool            { return v.Jailed }
+func (v Validator) GetMoniker() string        { return v.Description.Moniker }
+func (v Validator) GetStatus() sdk.BondStatus { return sdk.BondStatus(v.Status) }
 func (v Validator) GetOperator() string {
 	return v.OperatorAddress
 }

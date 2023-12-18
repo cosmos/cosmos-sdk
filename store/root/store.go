@@ -5,13 +5,16 @@ import (
 	"fmt"
 	"io"
 	"slices"
+	"time"
 
 	"github.com/cockroachdb/errors"
 
+	coreheader "cosmossdk.io/core/header"
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/kv/branch"
 	"cosmossdk.io/store/v2/kv/trace"
+	"cosmossdk.io/store/v2/metrics"
 	"cosmossdk.io/store/v2/pruning"
 )
 
@@ -41,7 +44,7 @@ type Store struct {
 	rootKVStore store.BranchedKVStore
 
 	// commitHeader reflects the header used when committing state (note, this isn't required and only used for query purposes)
-	commitHeader store.CommitHeader
+	commitHeader *coreheader.Info
 
 	// lastCommitInfo reflects the last version/hash that has been committed
 	lastCommitInfo *store.CommitInfo
@@ -57,13 +60,17 @@ type Store struct {
 
 	// pruningManager manages pruning of the SS and SC backends
 	pruningManager *pruning.Manager
+
+	// telemetry reflects a telemetry agent responsible for emitting metrics (if any)
+	telemetry metrics.StoreMetrics
 }
 
 func New(
 	logger log.Logger,
-	initVersion uint64,
 	ss store.VersionedDatabase,
 	sc store.Committer,
+	ssOpts, scOpts pruning.Options,
+	m metrics.StoreMetrics,
 ) (store.RootStore, error) {
 	rootKVStore, err := branch.New(defaultStoreKey, ss)
 	if err != nil {
@@ -71,14 +78,18 @@ func New(
 	}
 
 	pruningManager := pruning.NewManager(logger, ss, sc)
+	pruningManager.SetStorageOptions(ssOpts)
+	pruningManager.SetCommitmentOptions(scOpts)
+	pruningManager.Start()
 
 	return &Store{
 		logger:          logger.With("module", "root_store"),
-		initialVersion:  initVersion,
+		initialVersion:  1,
 		stateStore:      ss,
 		stateCommitment: sc,
 		rootKVStore:     rootKVStore,
 		pruningManager:  pruningManager,
+		telemetry:       m,
 	}, nil
 }
 
@@ -98,23 +109,18 @@ func (s *Store) Close() (err error) {
 	return err
 }
 
-// SetPruningOptions sets the pruning options on the SS and SC backends.
-// NOTE: It will also start the pruning manager.
-func (s *Store) SetPruningOptions(ssOpts, scOpts pruning.Options) {
-	s.pruningManager.SetStorageOptions(ssOpts)
-	s.pruningManager.SetCommitmentOptions(scOpts)
-
-	s.pruningManager.Start()
+func (s *Store) SetMetrics(m metrics.Metrics) {
+	s.telemetry = m
 }
 
-// MountSCStore performs a no-op as a SC backend must be provided at initialization.
-func (s *Store) MountSCStore(_ string, _ store.Committer) error {
-	return errors.New("cannot mount SC store; SC must be provided on initialization")
+func (s *Store) SetInitialVersion(v uint64) error {
+	s.initialVersion = v
+
+	return s.stateCommitment.SetInitialVersion(v)
 }
 
-// GetSCStore returns the store's state commitment (SC) backend. Note, the store
-// key is ignored as there exists only a single SC tree.
-func (s *Store) GetSCStore(_ string) store.Committer {
+// GetSCStore returns the store's state commitment (SC) backend.
+func (s *Store) GetSCStore() store.Committer {
 	return s.stateCommitment
 }
 
@@ -162,6 +168,11 @@ func (s *Store) GetLatestVersion() (uint64, error) {
 }
 
 func (s *Store) Query(storeKey string, version uint64, key []byte, prove bool) (store.QueryResult, error) {
+	if s.telemetry != nil {
+		now := time.Now()
+		s.telemetry.MeasureSince(now, "root_store", "query")
+	}
+
 	val, err := s.stateStore.Get(storeKey, version, key)
 	if err != nil {
 		return store.QueryResult{}, err
@@ -179,7 +190,7 @@ func (s *Store) Query(storeKey string, version uint64, key []byte, prove bool) (
 			return store.QueryResult{}, err
 		}
 
-		result.Proof = proof
+		result.Proof = store.NewIAVLCommitmentOp(key, proof)
 	}
 
 	return result, nil
@@ -206,6 +217,11 @@ func (s *Store) GetBranchedKVStore(_ string) store.BranchedKVStore {
 }
 
 func (s *Store) LoadLatestVersion() error {
+	if s.telemetry != nil {
+		now := time.Now()
+		s.telemetry.MeasureSince(now, "root_store", "load_latest_version")
+	}
+
 	lv, err := s.GetLatestVersion()
 	if err != nil {
 		return err
@@ -215,6 +231,11 @@ func (s *Store) LoadLatestVersion() error {
 }
 
 func (s *Store) LoadVersion(version uint64) error {
+	if s.telemetry != nil {
+		now := time.Now()
+		s.telemetry.MeasureSince(now, "root_store", "load_version")
+	}
+
 	return s.loadVersion(version)
 }
 
@@ -252,7 +273,7 @@ func (s *Store) TracingEnabled() bool {
 	return s.traceWriter != nil
 }
 
-func (s *Store) SetCommitHeader(h store.CommitHeader) {
+func (s *Store) SetCommitHeader(h *coreheader.Info) {
 	s.commitHeader = h
 }
 
@@ -282,6 +303,11 @@ func (s *Store) Branch() store.BranchedRootStore {
 // by constructing a CommitInfo object, which in turn creates and writes a batch
 // of the current changeset to the SC tree.
 func (s *Store) WorkingHash() ([]byte, error) {
+	if s.telemetry != nil {
+		now := time.Now()
+		s.telemetry.MeasureSince(now, "root_store", "working_hash")
+	}
+
 	if s.workingHash == nil {
 		if err := s.writeSC(); err != nil {
 			return nil, err
@@ -306,14 +332,19 @@ func (s *Store) Write() {
 //
 // Note, Commit() commits SC and SC synchronously.
 func (s *Store) Commit() ([]byte, error) {
+	if s.telemetry != nil {
+		now := time.Now()
+		s.telemetry.MeasureSince(now, "root_store", "commit")
+	}
+
 	if s.workingHash == nil {
 		return nil, fmt.Errorf("working hash is nil; must call WorkingHash() before Commit()")
 	}
 
 	version := s.lastCommitInfo.Version
 
-	if s.commitHeader != nil && s.commitHeader.GetHeight() != version {
-		s.logger.Debug("commit header and version mismatch", "header_height", s.commitHeader.GetHeight(), "version", version)
+	if s.commitHeader != nil && uint64(s.commitHeader.Height) != version {
+		s.logger.Debug("commit header and version mismatch", "header_height", s.commitHeader.Height, "version", version)
 	}
 
 	changeset := s.rootKVStore.GetChangeset()
@@ -329,7 +360,7 @@ func (s *Store) Commit() ([]byte, error) {
 	}
 
 	if s.commitHeader != nil {
-		s.lastCommitInfo.Timestamp = s.commitHeader.GetTime()
+		s.lastCommitInfo.Timestamp = s.commitHeader.Time
 	}
 
 	if err := s.rootKVStore.Reset(version); err != nil {

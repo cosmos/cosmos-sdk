@@ -119,22 +119,14 @@ message MsgCreateContinuousFund {
   string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   // Recipient address of the account receiving funds.
   string recipient = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  // Percentage is the percentage of funds to be allocated from Community pool,
-  // till the `MaxDistributedCapital` is reached or expired.
+  // Percentage is the percentage of funds to be allocated from Community pool.
   string percentage = 3 [
     (cosmos_proto.scalar)  = "cosmos.Dec",
     (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable)   = false
   ];
-  // MaxDistributedCapital is the threshold amount for distributing funds.
-  // Once MaxDistributedCapital is reached, further fund distribution is halted.
-  string max_distributed_capital = 4 [
-    (cosmos_proto.scalar)  = "cosmos.Int",
-    (gogoproto.customtype) = "cosmossdk.io/math.Int",
-    (gogoproto.nullable)   = false
-  ];
   // Optional, if expiry is set, removes the state object when expired.
-  google.protobuf.Timestamp expiry = 5 [(gogoproto.stdtime) = true];
+  google.protobuf.Timestamp expiry = 4 [(gogoproto.stdtime) = true];
 }
 
 // MsgCreateContinuousFundResponse defines the response to executing a

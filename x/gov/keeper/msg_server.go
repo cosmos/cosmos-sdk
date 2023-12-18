@@ -77,6 +77,60 @@ func (k msgServer) SubmitProposal(goCtx context.Context, msg *v1.MsgSubmitPropos
 	}, nil
 }
 
+// SubmitProposalWithValidation implements the MsgServer.SubmitProposalWithValidation method.
+func (k msgServer) SubmitProposalWithValidation(goCtx context.Context, msg *v1.MsgSubmitProposalCheck) (*v1.MsgSubmitProposalCheckResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	initialDeposit := msg.GetInitialDeposit()
+
+	if err := k.validateInitialDeposit(ctx, initialDeposit); err != nil {
+		return nil, err
+	}
+
+	proposalMsgs, err := msg.GetMsgs()
+	if err != nil {
+		return nil, err
+	}
+
+	proposer, err := sdk.AccAddressFromBech32(msg.GetProposer())
+	if err != nil {
+		return nil, err
+	}
+
+	proposal, err := k.Keeper.SubmitProposalWithValidation(ctx, proposalMsgs, msg.Metadata, msg.Title, msg.Summary, proposer)
+	if err != nil {
+		return nil, err
+	}
+
+	bytes, err := proposal.Marshal()
+	if err != nil {
+		return nil, err
+	}
+
+	// ref: https://github.com/cosmos/cosmos-sdk/issues/9683
+	ctx.GasMeter().ConsumeGas(
+		3*ctx.KVGasConfig().WriteCostPerByte*uint64(len(bytes)),
+		"submit proposal",
+	)
+
+	votingStarted, err := k.Keeper.AddDeposit(ctx, proposal.Id, proposer, msg.GetInitialDeposit())
+	if err != nil {
+		return nil, err
+	}
+
+	if votingStarted {
+		ctx.EventManager().EmitEvent(
+			sdk.NewEvent(govtypes.EventTypeSubmitProposal,
+				sdk.NewAttribute(govtypes.AttributeKeyVotingPeriodStart, fmt.Sprintf("%d", proposal.Id)),
+			),
+		)
+	}
+
+	return &v1.MsgSubmitProposalCheckResponse{
+		ProposalId: proposal.Id,
+	}, nil
+}
+
 // ExecLegacyContent implements the MsgServer.ExecLegacyContent method.
 func (k msgServer) ExecLegacyContent(goCtx context.Context, msg *v1.MsgExecLegacyContent) (*v1.MsgExecLegacyContentResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)

@@ -15,8 +15,8 @@ import (
 )
 
 var (
-	_, _, _, _, _, _ sdk.Msg                            = &MsgSubmitProposal{}, &MsgDeposit{}, &MsgVote{}, &MsgVoteWeighted{}, &MsgExecLegacyContent{}, &MsgUpdateParams{}
-	_, _             codectypes.UnpackInterfacesMessage = &MsgSubmitProposal{}, &MsgExecLegacyContent{}
+	_, _, _, _, _, _, _ sdk.Msg                            = &MsgSubmitProposal{}, &MsgDeposit{}, &MsgVote{}, &MsgVoteWeighted{}, &MsgExecLegacyContent{}, &MsgUpdateParams{}, &MsgSubmitProposalCheck{}
+	_, _                codectypes.UnpackInterfacesMessage = &MsgSubmitProposal{}, &MsgExecLegacyContent{}
 )
 
 // NewMsgSubmitProposal creates a new MsgSubmitProposal.
@@ -120,6 +120,110 @@ func (m MsgSubmitProposal) GetSigners() []sdk.AccAddress {
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 func (m MsgSubmitProposal) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+	return sdktx.UnpackInterfaces(unpacker, m.Messages)
+}
+
+// NewMsgSubmitProposal creates a new MsgSubmitProposal.
+//
+//nolint:interfacer
+func NewMsgSubmitProposalCheck(messages []sdk.Msg, initialDeposit sdk.Coins, proposer, metadata, title, summary string) (*MsgSubmitProposalCheck, error) {
+	m := &MsgSubmitProposalCheck{
+		InitialDeposit: initialDeposit,
+		Proposer:       proposer,
+		Metadata:       metadata,
+		Title:          title,
+		Summary:        summary,
+	}
+
+	anys, err := sdktx.SetMsgs(messages)
+	if err != nil {
+		return nil, err
+	}
+
+	m.Messages = anys
+
+	return m, nil
+}
+
+// GetMsgs unpacks m.Messages Any's into sdk.Msg's
+func (m *MsgSubmitProposalCheck) GetMsgs() ([]sdk.Msg, error) {
+	return sdktx.GetMsgs(m.Messages, "sdk.MsgProposal")
+}
+
+// SetMsgs packs sdk.Msg's into m.Messages Any's
+// NOTE: this will overwrite any existing messages
+func (m *MsgSubmitProposalCheck) SetMsgs(msgs []sdk.Msg) error {
+	anys, err := sdktx.SetMsgs(msgs)
+	if err != nil {
+		return err
+	}
+
+	m.Messages = anys
+	return nil
+}
+
+// Route implements the sdk.Msg interface.
+func (m MsgSubmitProposalCheck) Route() string { return types.RouterKey }
+
+// Type implements the sdk.Msg interface.
+func (m MsgSubmitProposalCheck) Type() string { return sdk.MsgTypeURL(&m) }
+
+// ValidateBasic implements the sdk.Msg interface.
+func (m MsgSubmitProposalCheck) ValidateBasic() error {
+	if m.Title == "" {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "proposal title cannot be empty")
+	}
+	if m.Summary == "" {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "proposal summary cannot be empty")
+	}
+
+	if _, err := sdk.AccAddressFromBech32(m.Proposer); err != nil {
+		return sdkerrors.ErrInvalidAddress.Wrapf("invalid proposer address: %s", err)
+	}
+
+	deposit := sdk.NewCoins(m.InitialDeposit...)
+	if !deposit.IsValid() {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, deposit.String())
+	}
+
+	if deposit.IsAnyNegative() {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, deposit.String())
+	}
+
+	// Check that either metadata or Msgs length is non nil.
+	if len(m.Messages) == 0 && len(m.Metadata) == 0 {
+		return sdkerrors.Wrap(types.ErrNoProposalMsgs, "either metadata or Msgs length must be non-nil")
+	}
+
+	msgs, err := m.GetMsgs()
+	if err != nil {
+		return err
+	}
+
+	for idx, msg := range msgs {
+		if err := msg.ValidateBasic(); err != nil {
+			return sdkerrors.Wrap(types.ErrInvalidProposalMsg,
+				fmt.Sprintf("msg: %d, err: %s", idx, err.Error()))
+		}
+	}
+
+	return nil
+}
+
+// GetSignBytes returns the message bytes to sign over.
+func (m MsgSubmitProposalCheck) GetSignBytes() []byte {
+	bz := codec.ModuleCdc.MustMarshalJSON(&m)
+	return sdk.MustSortJSON(bz)
+}
+
+// GetSigners returns the expected signers for a MsgSubmitProposalCheck.
+func (m MsgSubmitProposalCheck) GetSigners() []sdk.AccAddress {
+	proposer, _ := sdk.AccAddressFromBech32(m.Proposer)
+	return []sdk.AccAddress{proposer}
+}
+
+// UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
+func (m MsgSubmitProposalCheck) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	return sdktx.UnpackInterfaces(unpacker, m.Messages)
 }
 

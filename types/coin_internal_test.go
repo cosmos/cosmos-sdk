@@ -34,6 +34,6 @@ func (s *coinInternalSuite) TestIsSorted() {
 	}
 	assert := s.Assert()
 	for i, tc := range cases {
-		assert.Equal(tc.expected, tc.coins.isSorted(), "testcase %d failed", i)
+		assert.Equal(tc.expected, tc.coins.IsSorted(), "testcase %d failed", i)
 	}
 }

@@ -13,12 +13,7 @@ home=$PWD
 
 echo "Generating proto code"
 proto_dirs=$(find ./ -name 'buf.yaml' -print0 | xargs -0 -n1 dirname | sort | uniq)
-# proto_dirs=$(find ./cosmos ./amino -path -prune -o -name '*.proto' -print0 | xargs -0 -n1 dirname | sort | uniq | grep -v '^./cosmos/store/')
 for dir in $proto_dirs; do
-  if [ "$dir" == '*store*' ]; then
-    continue
-  fi
-
   echo "Generating proto code for $dir"
 
   cd $dir
@@ -35,33 +30,34 @@ for dir in $proto_dirs; do
   # check if buf.gen.gogo.yaml exists in the proto directory
   if [ -f "buf.gen.gogo.yaml" ]; then
       for file in $(find . -maxdepth 5 -name '*.proto'); do
-      # this regex checks if a proto file has its go_package set to cosmossdk.io/api/...
-      # gogo proto files SHOULD ONLY be generated if this is false
-      # we don't want gogo proto to run for proto files which are natively built for google.golang.org/protobuf
-      if grep -q "option go_package" "$file" && grep -H -o -c 'option go_package.*cosmossdk.io/api' "$file" | grep -q ':0$'; then
-        if [ $file == *"store"* ]; then # skip store proto files
+        if [ $file == "./cosmos/store/"* ]; then # skip store proto files
           continue
         fi
 
-        buf generate --template buf.gen.gogo.yaml $file
-      fi
+        # this regex checks if a proto file has its go_package set to cosmossdk.io/api/...
+        # gogo proto files SHOULD ONLY be generated if this is false
+        # we don't want gogo proto to run for proto files which are natively built for google.golang.org/protobuf
+        if grep -q "option go_package" "$file" && grep -H -o -c 'option go_package.*cosmossdk.io/api' "$file" | grep -q ':0$'; then
+          buf generate --template buf.gen.gogo.yaml $file
+        fi
     done
 
-    if [ -d "../cosmossdk.io" -a "$dir" != "./proto" ]; then
+    # move generated files to the right places
+    if [ -d "../cosmossdk.io" ]; then
       cp -r ../cosmossdk.io/* $home
       rm -rf ../cosmossdk.io ../github.com
     fi
 
-    if [ -d "../github.com" -a "$dir" != "./proto" ]; then
+    if [ -d "../github.com" ]; then
       cp -r ../github.com/cosmos/cosmos-sdk/* $home
-      rm -rf ../cosmos ../github.com
+      rm -rf ../github.com
     fi
   fi
 
   cd $home
 done
 
-# move proto files to the right places
+# move generated files to the right places
 cp -r github.com/cosmos/cosmos-sdk/* ./
 cp -r cosmossdk.io/** ./
 rm -rf github.com cosmossdk.io

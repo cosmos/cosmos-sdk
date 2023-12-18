@@ -225,6 +225,7 @@ var xxx_messageInfo_Output proto.InternalMessageInfo
 //
 // Deprecated: Do not use.
 type Supply struct {
+	// total is the total supply of coins across the network.
 	Total github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,1,rep,name=total,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"total"`
 }
 

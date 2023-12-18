@@ -2,6 +2,7 @@
 package accountsv1
 
 import (
+	v1 "cosmossdk.io/api/cosmos/accounts/v1"
 	_ "cosmossdk.io/api/cosmos/msg/v1"
 	fmt "fmt"
 	runtime "github.com/cosmos/cosmos-proto/runtime"
@@ -2077,7 +2078,7 @@ func (x *fastReflection_MsgExecuteResponse) ProtoMethods() *protoiface.Methods {
 var _ protoreflect.List = (*_MsgExecuteBundle_2_list)(nil)
 
 type _MsgExecuteBundle_2_list struct {
-	list *[]*UserOperation
+	list *[]*v1.UserOperation
 }
 
 func (x *_MsgExecuteBundle_2_list) Len() int {
@@ -2093,18 +2094,18 @@ func (x *_MsgExecuteBundle_2_list) Get(i int) protoreflect.Value {
 
 func (x *_MsgExecuteBundle_2_list) Set(i int, value protoreflect.Value) {
 	valueUnwrapped := value.Message()
-	concreteValue := valueUnwrapped.Interface().(*UserOperation)
+	concreteValue := valueUnwrapped.Interface().(*v1.UserOperation)
 	(*x.list)[i] = concreteValue
 }
 
 func (x *_MsgExecuteBundle_2_list) Append(value protoreflect.Value) {
 	valueUnwrapped := value.Message()
-	concreteValue := valueUnwrapped.Interface().(*UserOperation)
+	concreteValue := valueUnwrapped.Interface().(*v1.UserOperation)
 	*x.list = append(*x.list, concreteValue)
 }
 
 func (x *_MsgExecuteBundle_2_list) AppendMutable() protoreflect.Value {
-	v := new(UserOperation)
+	v := new(v1.UserOperation)
 	*x.list = append(*x.list, v)
 	return protoreflect.ValueOfMessage(v.ProtoReflect())
 }
@@ -2117,7 +2118,7 @@ func (x *_MsgExecuteBundle_2_list) Truncate(n int) {
 }
 
 func (x *_MsgExecuteBundle_2_list) NewElement() protoreflect.Value {
-	v := new(UserOperation)
+	v := new(v1.UserOperation)
 	return protoreflect.ValueOfMessage(v.ProtoReflect())
 }
 
@@ -2327,7 +2328,7 @@ func (x *fastReflection_MsgExecuteBundle) Mutable(fd protoreflect.FieldDescripto
 	switch fd.FullName() {
 	case "cosmos.accounts.v1.MsgExecuteBundle.operations":
 		if x.Operations == nil {
-			x.Operations = []*UserOperation{}
+			x.Operations = []*v1.UserOperation{}
 		}
 		value := &_MsgExecuteBundle_2_list{list: &x.Operations}
 		return protoreflect.ValueOfList(value)
@@ -2349,7 +2350,7 @@ func (x *fastReflection_MsgExecuteBundle) NewField(fd protoreflect.FieldDescript
 	case "cosmos.accounts.v1.MsgExecuteBundle.bundler":
 		return protoreflect.ValueOfString("")
 	case "cosmos.accounts.v1.MsgExecuteBundle.operations":
-		list := []*UserOperation{}
+		list := []*v1.UserOperation{}
 		return protoreflect.ValueOfList(&_MsgExecuteBundle_2_list{list: &list})
 	default:
 		if fd.IsExtension() {
@@ -2592,7 +2593,7 @@ func (x *fastReflection_MsgExecuteBundle) ProtoMethods() *protoiface.Methods {
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.Operations = append(x.Operations, &UserOperation{})
+				x.Operations = append(x.Operations, &v1.UserOperation{})
 				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Operations[len(x.Operations)-1]); err != nil {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
 				}
@@ -2635,7 +2636,7 @@ func (x *fastReflection_MsgExecuteBundle) ProtoMethods() *protoiface.Methods {
 var _ protoreflect.List = (*_MsgExecuteBundleResponse_1_list)(nil)
 
 type _MsgExecuteBundleResponse_1_list struct {
-	list *[]*UserOperationResponse
+	list *[]*v1.UserOperationResponse
 }
 
 func (x *_MsgExecuteBundleResponse_1_list) Len() int {
@@ -2651,18 +2652,18 @@ func (x *_MsgExecuteBundleResponse_1_list) Get(i int) protoreflect.Value {
 
 func (x *_MsgExecuteBundleResponse_1_list) Set(i int, value protoreflect.Value) {
 	valueUnwrapped := value.Message()
-	concreteValue := valueUnwrapped.Interface().(*UserOperationResponse)
+	concreteValue := valueUnwrapped.Interface().(*v1.UserOperationResponse)
 	(*x.list)[i] = concreteValue
 }
 
 func (x *_MsgExecuteBundleResponse_1_list) Append(value protoreflect.Value) {
 	valueUnwrapped := value.Message()
-	concreteValue := valueUnwrapped.Interface().(*UserOperationResponse)
+	concreteValue := valueUnwrapped.Interface().(*v1.UserOperationResponse)
 	*x.list = append(*x.list, concreteValue)
 }
 
 func (x *_MsgExecuteBundleResponse_1_list) AppendMutable() protoreflect.Value {
-	v := new(UserOperationResponse)
+	v := new(v1.UserOperationResponse)
 	*x.list = append(*x.list, v)
 	return protoreflect.ValueOfMessage(v.ProtoReflect())
 }
@@ -2675,7 +2676,7 @@ func (x *_MsgExecuteBundleResponse_1_list) Truncate(n int) {
 }
 
 func (x *_MsgExecuteBundleResponse_1_list) NewElement() protoreflect.Value {
-	v := new(UserOperationResponse)
+	v := new(v1.UserOperationResponse)
 	return protoreflect.ValueOfMessage(v.ProtoReflect())
 }
 
@@ -2868,7 +2869,7 @@ func (x *fastReflection_MsgExecuteBundleResponse) Mutable(fd protoreflect.FieldD
 	switch fd.FullName() {
 	case "cosmos.accounts.v1.MsgExecuteBundleResponse.responses":
 		if x.Responses == nil {
-			x.Responses = []*UserOperationResponse{}
+			x.Responses = []*v1.UserOperationResponse{}
 		}
 		value := &_MsgExecuteBundleResponse_1_list{list: &x.Responses}
 		return protoreflect.ValueOfList(value)
@@ -2886,7 +2887,7 @@ func (x *fastReflection_MsgExecuteBundleResponse) Mutable(fd protoreflect.FieldD
 func (x *fastReflection_MsgExecuteBundleResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
 	case "cosmos.accounts.v1.MsgExecuteBundleResponse.responses":
-		list := []*UserOperationResponse{}
+		list := []*v1.UserOperationResponse{}
 		return protoreflect.ValueOfList(&_MsgExecuteBundleResponse_1_list{list: &list})
 	default:
 		if fd.IsExtension() {
@@ -3086,7 +3087,7 @@ func (x *fastReflection_MsgExecuteBundleResponse) ProtoMethods() *protoiface.Met
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.Responses = append(x.Responses, &UserOperationResponse{})
+				x.Responses = append(x.Responses, &v1.UserOperationResponse{})
 				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Responses[len(x.Responses)-1]); err != nil {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
 				}
@@ -3342,7 +3343,7 @@ type MsgExecuteBundle struct {
 	// to execute one or multiple UserOperations on behalf of others.
 	Bundler string `protobuf:"bytes,1,opt,name=bundler,proto3" json:"bundler,omitempty"`
 	// operations is the list of operations to be executed.
-	Operations []*UserOperation `protobuf:"bytes,2,rep,name=operations,proto3" json:"operations,omitempty"`
+	Operations []*v1.UserOperation `protobuf:"bytes,2,rep,name=operations,proto3" json:"operations,omitempty"`
 }
 
 func (x *MsgExecuteBundle) Reset() {
@@ -3372,7 +3373,7 @@ func (x *MsgExecuteBundle) GetBundler() string {
 	return ""
 }
 
-func (x *MsgExecuteBundle) GetOperations() []*UserOperation {
+func (x *MsgExecuteBundle) GetOperations() []*v1.UserOperation {
 	if x != nil {
 		return x.Operations
 	}
@@ -3386,7 +3387,7 @@ type MsgExecuteBundleResponse struct {
 	unknownFields protoimpl.UnknownFields
 
 	// responses is the list of responses returned by the account implementations.
-	Responses []*UserOperationResponse `protobuf:"bytes,1,rep,name=responses,proto3" json:"responses,omitempty"`
+	Responses []*v1.UserOperationResponse `protobuf:"bytes,1,rep,name=responses,proto3" json:"responses,omitempty"`
 }
 
 func (x *MsgExecuteBundleResponse) Reset() {
@@ -3409,7 +3410,7 @@ func (*MsgExecuteBundleResponse) Descriptor() ([]byte, []int) {
 	return file_cosmos_accounts_v1_tx_proto_rawDescGZIP(), []int{5}
 }
 
-func (x *MsgExecuteBundleResponse) GetResponses() []*UserOperationResponse {
+func (x *MsgExecuteBundleResponse) GetResponses() []*v1.UserOperationResponse {
 	if x != nil {
 		return x.Responses
 	}
@@ -3486,20 +3487,20 @@ var file_cosmos_accounts_v1_tx_proto_rawDesc = []byte{
 	0x74, 0x65, 0x42, 0x75, 0x6e, 0x64, 0x6c, 0x65, 0x1a, 0x2c, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
 	0x73, 0x2e, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73,
 	0x67, 0x45, 0x78, 0x65, 0x63, 0x75, 0x74, 0x65, 0x42, 0x75, 0x6e, 0x64, 0x6c, 0x65, 0x52, 0x65,
-	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x1a, 0x05, 0x80, 0xe7, 0xb0, 0x2a, 0x01, 0x42, 0xbb, 0x01,
+	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x1a, 0x05, 0x80, 0xe7, 0xb0, 0x2a, 0x01, 0x42, 0xc2, 0x01,
 	0x0a, 0x16, 0x63, 0x6f, 0x6d, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x61, 0x63, 0x63,
 	0x6f, 0x75, 0x6e, 0x74, 0x73, 0x2e, 0x76, 0x31, 0x42, 0x07, 0x54, 0x78, 0x50, 0x72, 0x6f, 0x74,
-	0x6f, 0x50, 0x01, 0x5a, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69,
-	0x6f, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x61, 0x63, 0x63,
-	0x6f, 0x75, 0x6e, 0x74, 0x73, 0x2f, 0x76, 0x31, 0x3b, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74,
-	0x73, 0x76, 0x31, 0xa2, 0x02, 0x03, 0x43, 0x41, 0x58, 0xaa, 0x02, 0x12, 0x43, 0x6f, 0x73, 0x6d,
-	0x6f, 0x73, 0x2e, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x2e, 0x56, 0x31, 0xca, 0x02,
-	0x12, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73,
-	0x5c, 0x56, 0x31, 0xe2, 0x02, 0x1e, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x41, 0x63, 0x63,
-	0x6f, 0x75, 0x6e, 0x74, 0x73, 0x5c, 0x56, 0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61,
-	0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x14, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x3a, 0x3a, 0x41,
-	0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x3a, 0x3a, 0x56, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f,
-	0x74, 0x6f, 0x33,
+	0x6f, 0x50, 0x01, 0x5a, 0x35, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69,
+	0x6f, 0x2f, 0x78, 0x2f, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x2f, 0x63, 0x6f, 0x73,
+	0x6d, 0x6f, 0x73, 0x2f, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x2f, 0x76, 0x31, 0x3b,
+	0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x76, 0x31, 0xa2, 0x02, 0x03, 0x43, 0x41, 0x58,
+	0xaa, 0x02, 0x12, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e,
+	0x74, 0x73, 0x2e, 0x56, 0x31, 0xca, 0x02, 0x12, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x41,
+	0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x5c, 0x56, 0x31, 0xe2, 0x02, 0x1e, 0x43, 0x6f, 0x73,
+	0x6d, 0x6f, 0x73, 0x5c, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x5c, 0x56, 0x31, 0x5c,
+	0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x14, 0x43, 0x6f,
+	0x73, 0x6d, 0x6f, 0x73, 0x3a, 0x3a, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x3a, 0x3a,
+	0x56, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -3523,8 +3524,8 @@ var file_cosmos_accounts_v1_tx_proto_goTypes = []interface{}{
 	(*MsgExecuteBundle)(nil),         // 4: cosmos.accounts.v1.MsgExecuteBundle
 	(*MsgExecuteBundleResponse)(nil), // 5: cosmos.accounts.v1.MsgExecuteBundleResponse
 	(*anypb.Any)(nil),                // 6: google.protobuf.Any
-	(*UserOperation)(nil),            // 7: cosmos.accounts.v1.UserOperation
-	(*UserOperationResponse)(nil),    // 8: cosmos.accounts.v1.UserOperationResponse
+	(*v1.UserOperation)(nil),         // 7: cosmos.accounts.v1.UserOperation
+	(*v1.UserOperationResponse)(nil), // 8: cosmos.accounts.v1.UserOperationResponse
 }
 var file_cosmos_accounts_v1_tx_proto_depIdxs = []int32{
 	6, // 0: cosmos.accounts.v1.MsgInit.message:type_name -> google.protobuf.Any
@@ -3551,7 +3552,6 @@ func file_cosmos_accounts_v1_tx_proto_init() {
 	if File_cosmos_accounts_v1_tx_proto != nil {
 		return
 	}
-	file_cosmos_accounts_v1_account_abstraction_proto_init()
 	if !protoimpl.UnsafeEnabled {
 		file_cosmos_accounts_v1_tx_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*MsgInit); i {

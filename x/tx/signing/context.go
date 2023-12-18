@@ -48,8 +48,10 @@ type Options struct {
 	// ValidatorAddressCodec is the codec for converting validator addresses between strings and bytes.
 	ValidatorAddressCodec address.Codec
 
+	// CustomGetSigners is a map of message types to custom GetSignersFuncs.
 	CustomGetSigners map[protoreflect.FullName]GetSignersFunc
 
+	// MaxRecursionDepth is the maximum depth of nested messages that will be traversed
 	MaxRecursionDepth int
 }
 
@@ -273,7 +275,8 @@ func (c *Context) makeGetSignersFunc(descriptor protoreflect.MessageDescriptor) 
 						return [][]byte{addrBz}, nil
 					}
 				}
-				return nil, fmt.Errorf("unexpected field type %s for field %s in message %s", childField.Kind(), signerFieldName, desc.FullName())
+				return nil, fmt.Errorf("unexpected field type %s for field %s in message %s, only string and message type are supported",
+					childField.Kind(), signerFieldName, desc.FullName())
 			}
 
 			fieldGetters[i] = func(msg proto.Message, arr [][]byte) ([][]byte, error) {

@@ -48,7 +48,6 @@ var deeplyNestedRepeatedSigner = &testpb.DeeplyNestedRepeatedSigner{
 				},
 			},
 		},
-		{},
 	},
 }
 

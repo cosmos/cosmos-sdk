@@ -11,7 +11,8 @@ managed:
 plugins:
   - name: go-pulsar
     out: ..
-    opt: paths=source_relative,Mcosmos/app/v1alpha1/module.proto=cosmossdk.io/api/cosmos/app/v1alpha1,Mcosmos/base/v1beta1/coin.proto=cosmossdk.io/api/cosmos/base/v1beta1,Mcosmos/base/query/v1beta1/pagination.proto=cosmossdk.io/api/cosmos/base/query/v1beta1
+    opt: paths=source_relative,Mcosmos/app/v1alpha1/module.proto=cosmossdk.io/api/cosmos/app/v1alpha1,Mcosmos/base/v1beta1/coin.proto=cosmossdk.io/api/cosmos/base/v1beta1,Mcosmos/base/query/v1beta1/pagination.proto=cosmossdk.io/api/cosmos/base/query/v1beta1,Mamino/amino.proto=cosmossdk.io/api/amino,Mcosmos/msg/v1/msg.proto=cosmossdk.io/api/cosmos/msg/v1,Mcosmos/tx/v1beta1/service.proto=cosmossdk.io/api/cosmos/tx/v1beta1,Mcosmos/accounts/v1/account_abstraction.proto=cosmossdk.io/api/cosmos/accounts/v1
+
   - name: go-grpc
     out: ..
     opt: paths=source_relative,Mcosmos/app/v1alpha1/module.proto=cosmossdk.io/api/cosmos/app/v1alpha1

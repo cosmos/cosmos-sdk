@@ -391,7 +391,6 @@ protoImage=$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace $(pro
 proto-all: proto-format proto-lint proto-gen
 
 proto-gen:
-	@echo "Generating Protobuf files"
 	@$(protoImage) sh ./scripts/protocgen.sh
 
 proto-swagger-gen:

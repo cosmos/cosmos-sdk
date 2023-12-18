@@ -102,12 +102,15 @@ func (k Keeper) GetCommunityPool(ctx context.Context) (sdk.Coins, error) {
 }
 
 func (k Keeper) withdrawContinuousFund(ctx context.Context, recipient sdk.AccAddress) (sdk.Coin, error) {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	cf, err := k.ContinuousFund.Get(ctx, recipient)
 	if err != nil {
 		if errors.Is(err, collections.ErrNotFound) {
 			return sdk.Coin{}, fmt.Errorf("no continuous fund found for recipient: %s", recipient.String())
 		}
-		return sdk.Coin{}, err
+	}
+	if cf.Expiry.Before(sdkCtx.HeaderInfo().Time) {
+		return sdk.Coin{}, fmt.Errorf("cannot withdraw continuous funds\ncontinuous fund expired for recipient: %s", recipient.String())
 	}
 
 	toDistributeAmount, err := k.ToDistribute.Get(ctx)
@@ -129,18 +132,11 @@ func (k Keeper) withdrawContinuousFund(ctx context.Context, recipient sdk.AccAdd
 		return sdk.Coin{}, fmt.Errorf("error while getting distributed funds: %w", err)
 	}
 
-	recipientBal := k.bankKeeper.GetAllBalances(ctx, recipient)
-	recipientAmount := recipientBal.AmountOf(denom)
-	totalRecipientBal := recipientAmount.Add(fundsAllocated)
-	// check if the recipient account balance exceeds maxDistributedCapital after distribution
-	var withdrawnAmount sdk.Coin
-	if totalRecipientBal.LT(cf.MaxDistributedCapital) {
-		withdrawnAmount = sdk.NewCoin(denom, fundsAllocated)
-		// Distribute funds to the recipient from pool module account
-		err := k.DistributeFromCommunityPool(ctx, sdk.NewCoins(withdrawnAmount), recipient)
-		if err != nil {
-			return sdk.Coin{}, err
-		}
+	withdrawnAmount := sdk.NewCoin(denom, fundsAllocated)
+	// Distribute funds to the recipient from pool module account
+	err = k.DistributeFromCommunityPool(ctx, sdk.NewCoins(withdrawnAmount), recipient)
+	if err != nil {
+		return sdk.Coin{}, err
 	}
 
 	return withdrawnAmount, nil
@@ -370,11 +366,6 @@ func (k Keeper) validateContinuousFund(ctx context.Context, msg types.MsgCreateC
 	}
 	if msg.Percentage.GTE(math.LegacyOneDec()) {
 		return fmt.Errorf("percentage cannot be greater than or equal to one")
-	}
-
-	// Validate maxDistributedCapital
-	if msg.MaxDistributedCapital.IsZero() {
-		return fmt.Errorf("invalid MaxDistributedCapital: amount cannot be zero")
 	}
 
 	// Validate expiry

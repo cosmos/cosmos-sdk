@@ -68,11 +68,6 @@ func validateContinuousFund(cf ContinuousFund) error {
 		return fmt.Errorf("recipient cannot be empty")
 	}
 
-	// Validate maxDistributedCapital
-	if cf.MaxDistributedCapital.IsZero() {
-		return fmt.Errorf("invalid MaxDistributedCapital: amount cannot be zero")
-	}
-
 	// Validate percentage
 	if cf.Percentage.IsZero() || cf.Percentage.IsNil() {
 		return fmt.Errorf("percentage cannot be zero or empty")

@@ -57,7 +57,7 @@ ClaimBudget is a message used to claim funds from a previously submitted budget 
 
 ### CreateContinuousFund
 
-CreateContinuousFund is a message used to initiate a continuous fund for a specific recipient. The proposed percentage of funds will be distributed at every end block until maxDistributedCapital is reached or expiry time is reached or until continuous fund is canceled.
+CreateContinuousFund is a message used to initiate a continuous fund for a specific recipient. The proposed percentage of funds will be distributed only on withdraw request for the recipient. The fund distribution continues until expiry time is reached or continuous fund request is canceled.
 
 ```protobuf
   // CreateContinuousFund defines a method to add funds continuously.
@@ -159,7 +159,7 @@ https://github.com/cosmos/cosmos-sdk/blob/97724493d792517ba2be8969078b5f92ad04d7
 
 ### MsgCreateContinuousFund
 
-This message is used to create a continuous fund for a specific recipient. The proposed percentage of funds will be distributed at every end block until maxDistributedCapital is reached or expiry time is reached or until continuous fund is canceled.
+This message is used to create a continuous fund for a specific recipient. The proposed percentage of funds will be distributed only on withdraw request for the recipient. This fund distribution continues until expiry time is reached or continuous fund request is canceled.
 
 ```protobuf reference
 https://github.com/cosmos/cosmos-sdk/blob/44985ec56557e2d5b763c8676fabbed971f157ba/proto/cosmos/protocolpool/v1/tx.proto#L111-L130
@@ -168,7 +168,6 @@ https://github.com/cosmos/cosmos-sdk/blob/44985ec56557e2d5b763c8676fabbed971f157
 The message will fail under the following conditions:
 
 - The recipient address is empty or restricted.
-- The maxDistributedCapital is zero.
 - The percentage is zero/negative/greater than one.
 - The Expiry time is less than the current block time.
 

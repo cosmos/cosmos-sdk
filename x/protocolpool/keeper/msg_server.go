@@ -122,10 +122,9 @@ func (k MsgServer) CreateContinuousFund(ctx context.Context, msg *types.MsgCreat
 
 	// Create continuous fund proposal
 	cf := types.ContinuousFund{
-		Recipient:             msg.Recipient,
-		Percentage:            msg.Percentage,
-		MaxDistributedCapital: msg.MaxDistributedCapital,
-		Expiry:                msg.Expiry,
+		Recipient:  msg.Recipient,
+		Percentage: msg.Percentage,
+		Expiry:     msg.Expiry,
 	}
 
 	// Set continuous fund to the state

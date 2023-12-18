@@ -62,13 +62,12 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				},
 				{
 					RpcMethod: "CreateContinuousFund",
-					Use:       "create-continuous-fund [recipient] [percentage] [maxDistributedCapital] <expiry>",
+					Use:       "create-continuous-fund [recipient] [percentage] <expiry>",
 					Short:     "Create continuous fund for a recipient with optional expiry",
-					Example:   fmt.Sprintf(`$ %s tx protocolpool create-continuous-fund cosmos1... 0.2 1000000 2023-11-31T12:34:56.789Z --from mykey`, version.AppName),
+					Example:   fmt.Sprintf(`$ %s tx protocolpool create-continuous-fund cosmos1... 0.2 2023-11-31T12:34:56.789Z --from mykey`, version.AppName),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
 						{ProtoField: "recipient"},
 						{ProtoField: "percentage"},
-						{ProtoField: "max_distributed_capital"},
 						{ProtoField: "expiry", Optional: true},
 					},
 					GovProposal: true,

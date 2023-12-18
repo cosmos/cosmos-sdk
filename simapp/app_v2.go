@@ -262,8 +262,8 @@ func NewSimApp(
 	// 	return app.App.InitChainer(ctx, req)
 	// })
 
-	dataDir := filepath.Join(cast.ToString(appOpts.Get(flags.FlagHome)), "data")
-	app.UnorderedTxManager = unorderedtx.NewManager(dataDir)
+	utxDataDir := filepath.Join(cast.ToString(appOpts.Get(flags.FlagHome)), "data")
+	app.UnorderedTxManager = unorderedtx.NewManager(utxDataDir)
 	app.UnorderedTxManager.Start()
 
 	if err := app.UnorderedTxManager.OnInit(); err != nil {

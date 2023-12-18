@@ -1,5 +1,10 @@
 {
+<<<<<<< HEAD:docs/docs/core/_category_.json
     "label": "Core Concepts",
     "position": 2,
+=======
+    "label": "Advanced",
+    "position": 3,
+>>>>>>> 1a496057a (docs: add index page for learn section (#18777)):docs/learn/advanced/_category_.json
     "link": null
 }

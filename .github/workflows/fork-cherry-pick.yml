@@ -35,5 +35,6 @@ jobs:
         shell: bash
         env:
           GH_TOKEN: ${{ secrets.PRBOT_PAT }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
         run: |
-          gh pr create --repo cosmos/cosmos-sdk --base main --head "${{ github.event.repository.owner.login }}:pr-patch-${{ github.sha }}" --title "${{ github.event.pull_request.title }}" --body "Automated PR for commit: ${{ github.sha }} from ${{ github.repository }}"
+          gh pr create --repo cosmos/cosmos-sdk --base main --head "${{ github.event.repository.owner.login }}:pr-patch-${{ github.sha }}" --title "$PR_TITLE" --body "Automated PR for commit: ${{ github.sha }} from ${{ github.repository }}"

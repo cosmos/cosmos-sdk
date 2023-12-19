@@ -31,6 +31,7 @@ func getCodec() codec.Codec {
 }
 
 func MakeTestTxConfig(t *testing.T) client.TxConfig {
+	t.Helper()
 	enabledSignModes := []signingtypes.SignMode{
 		signingtypes.SignMode_SIGN_MODE_DIRECT,
 		signingtypes.SignMode_SIGN_MODE_DIRECT_AUX,

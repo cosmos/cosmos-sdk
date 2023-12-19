@@ -1,12 +1,12 @@
-package appmanager
+package stf
 
 import (
 	"context"
 	"errors"
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/serverv2/core/appmanager"
-	"github.com/cosmos/cosmos-sdk/serverv2/core/transaction"
+	"cosmossdk.io/server/v2/core/appmanager"
+	"cosmossdk.io/server/v2/core/transaction"
 )
 
 func NewSTFBuilder[T transaction.Tx]() *STFBuilder[T] {
@@ -63,15 +63,15 @@ func (s *STFBuilder[T]) Build(opts *STFBuilderOptions) (*STFAppManager[T], error
 		return nil, fmt.Errorf("unable to build tx validator: %w", err)
 	}
 	return &STFAppManager[T]{
-		handleMsg:      msgHandler,
-		handleQuery:    queryHandler,
+		HandleMsg:      msgHandler,
+		HandleQuery:    queryHandler,
 		doBeginBlock:   beginBlocker,
 		doEndBlock:     endBlocker,
 		doTxValidation: txValidator,
 		decodeTx: func(txBytes []byte) (T, error) {
 			return s.txCodec.Decode(txBytes)
 		},
-		branch: nil, // TODO
+		Branch: nil, // TODO
 	}, nil
 }
 

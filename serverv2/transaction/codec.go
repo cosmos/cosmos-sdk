@@ -4,7 +4,7 @@ import (
 	txdecoder "cosmossdk.io/x/tx/decode"
 	"cosmossdk.io/x/tx/signing"
 
-	"github.com/cosmos/cosmos-sdk/serverv2/core/transaction"
+	"cosmossdk.io/server/v2/core/transaction"
 )
 
 var _ transaction.Codec[transaction.Tx] = Codec[txdecoder.DecodedTx]{}

@@ -285,7 +285,16 @@ func SimulateMsgExec(
 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, err.Error()), nil, nil
 		}
 
-		msg := []sdk.Msg{banktype.NewMsgSend(granterAddr, granteeAddr, coins)}
+		graStr, err := ak.AddressCodec().BytesToString(granterAddr)
+		if err != nil {
+			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, err.Error()), nil, err
+		}
+		greStr, err := ak.AddressCodec().BytesToString(granteeAddr)
+		if err != nil {
+			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, err.Error()), nil, err
+		}
+
+		msg := []sdk.Msg{banktype.NewMsgSend(graStr, greStr, coins)}
 
 		_, err = sendAuth.Accept(ctx, msg[0])
 		if err != nil {

@@ -29,12 +29,13 @@ func NewValidatorGovInfo(address sdk.ValAddress, bondedTokens math.Int, delegato
 }
 
 // NewTallyResult creates a new TallyResult instance
-func NewTallyResult(yes, abstain, no, noWithVeto math.Int) TallyResult {
+func NewTallyResult(option1, option2, option3, option4, spam math.Int) TallyResult {
 	return TallyResult{
-		YesCount:        yes.String(),
-		AbstainCount:    abstain.String(),
-		NoCount:         no.String(),
-		NoWithVetoCount: noWithVeto.String(),
+		YesCount:        option1.String(),
+		AbstainCount:    option2.String(),
+		NoCount:         option3.String(),
+		NoWithVetoCount: option4.String(),
+		SpamCount:       spam.String(),
 	}
 }
 
@@ -45,12 +46,13 @@ func NewTallyResultFromMap(results map[VoteOption]math.LegacyDec) TallyResult {
 		results[OptionAbstain].TruncateInt(),
 		results[OptionNo].TruncateInt(),
 		results[OptionNoWithVeto].TruncateInt(),
+		results[OptionSpam].TruncateInt(),
 	)
 }
 
 // EmptyTallyResult returns an empty TallyResult.
 func EmptyTallyResult() TallyResult {
-	return NewTallyResult(math.ZeroInt(), math.ZeroInt(), math.ZeroInt(), math.ZeroInt())
+	return NewTallyResult(math.ZeroInt(), math.ZeroInt(), math.ZeroInt(), math.ZeroInt(), math.ZeroInt())
 }
 
 // Equals returns if two tally results are equal.
@@ -58,5 +60,6 @@ func (tr TallyResult) Equals(comp TallyResult) bool {
 	return tr.YesCount == comp.YesCount &&
 		tr.AbstainCount == comp.AbstainCount &&
 		tr.NoCount == comp.NoCount &&
-		tr.NoWithVetoCount == comp.NoWithVetoCount
+		tr.NoWithVetoCount == comp.NoWithVetoCount &&
+		tr.SpamCount == comp.SpamCount
 }

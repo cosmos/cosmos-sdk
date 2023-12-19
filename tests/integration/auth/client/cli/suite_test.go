@@ -840,11 +840,8 @@ func (s *CLITestSuite) TestGetBroadcastCommandWithoutOfflineFlag() {
 	// Create new file with tx
 	builder := txCfg.NewTxBuilder()
 	builder.SetGasLimit(200000)
-	from, err := s.ac.StringToBytes("cosmos1cxlt8kznps92fwu3j6npahx4mjfutydyene2qw")
-	s.Require().NoError(err)
-	to, err := s.ac.StringToBytes("cosmos1cxlt8kznps92fwu3j6npahx4mjfutydyene2qw")
-	s.Require().NoError(err)
-	err = builder.SetMsgs(banktypes.NewMsgSend(from, to, sdk.Coins{sdk.NewInt64Coin("stake", 10000)}))
+
+	err := builder.SetMsgs(banktypes.NewMsgSend("cosmos1cxlt8kznps92fwu3j6npahx4mjfutydyene2qw", "cosmos1cxlt8kznps92fwu3j6npahx4mjfutydyene2qw", sdk.Coins{sdk.NewInt64Coin("stake", 10000)}))
 	s.Require().NoError(err)
 	txContents, err := txCfg.TxJSONEncoder()(builder.GetTx())
 	s.Require().NoError(err)
@@ -864,12 +861,15 @@ func (s *CLITestSuite) TestGetBroadcastCommandWithoutOfflineFlag() {
 func (s *CLITestSuite) TestTxWithoutPublicKey() {
 	txCfg := s.clientCtx.TxConfig
 
+	valStr, err := s.ac.BytesToString(s.val)
+	s.Require().NoError(err)
+
 	// Create a txBuilder with an unsigned tx.
 	txBuilder := txCfg.NewTxBuilder()
-	msg := banktypes.NewMsgSend(s.val, s.val, sdk.NewCoins(
+	msg := banktypes.NewMsgSend(valStr, valStr, sdk.NewCoins(
 		sdk.NewCoin("Stake", math.NewInt(10)),
 	))
-	err := txBuilder.SetMsgs(msg)
+	err = txBuilder.SetMsgs(msg)
 	s.Require().NoError(err)
 	txBuilder.SetFeeAmount(sdk.NewCoins(sdk.NewCoin("Stake", math.NewInt(150))))
 	txBuilder.SetGasLimit(testdata.NewTestGasLimit())
@@ -917,14 +917,21 @@ func (s *CLITestSuite) TestSignWithMultiSignersAminoJSON() {
 	val1Coin := sdk.NewCoin("test2token", math.NewInt(10))
 	_, _, addr1 := testdata.KeyTestPubAddr()
 
+	valStr, err := s.ac.BytesToString(val0)
+	s.Require().NoError(err)
+	val1Str, err := s.ac.BytesToString(val1)
+	s.Require().NoError(err)
+
+	addrStr, err := s.ac.BytesToString(addr1)
+	s.Require().NoError(err)
 	// Creating a tx with 2 msgs from 2 signers: val0 and val1.
 	// The validators need to sign with SIGN_MODE_LEGACY_AMINO_JSON,
 	// because DIRECT doesn't support multi signers via the CLI.
 	// Since we use amino, we don't need to pre-populate signer_infos.
 	txBuilder := s.clientCtx.TxConfig.NewTxBuilder()
-	err := txBuilder.SetMsgs(
-		banktypes.NewMsgSend(val0, addr1, sdk.NewCoins(val0Coin)),
-		banktypes.NewMsgSend(val1, addr1, sdk.NewCoins(val1Coin)),
+	err = txBuilder.SetMsgs(
+		banktypes.NewMsgSend(valStr, addrStr, sdk.NewCoins(val0Coin)),
+		banktypes.NewMsgSend(val1Str, addrStr, sdk.NewCoins(val1Coin)),
 	)
 	s.Require().NoError(err)
 	txBuilder.SetFeeAmount(sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(10))))

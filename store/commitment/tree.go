@@ -20,6 +20,7 @@ type Tree interface {
 	WorkingHash() []byte
 	LoadVersion(version uint64) error
 	Commit() ([]byte, error)
+	SetInitialVersion(version uint64) error
 	GetProof(version uint64, key []byte) (*ics23.CommitmentProof, error)
 	Prune(version uint64) error
 	Export(version uint64) (Exporter, error)

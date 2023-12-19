@@ -58,7 +58,7 @@ func TestConstantTimePubKeyGeneration(t *testing.T) {
 func TestNonConstantTimePubKeyGeneration(t *testing.T) {
 	for i := 0; i < 500; i++ {
 		privKey := GenPrivKey()
-		nonConstantTimePk := secp256k1_dcrd.PrivKeyFromBytes(privKey.Key).PubKey().SerializeCompressed() // Legacy functionability from pubkey
+		nonConstantTimePk := secp256k1_dcrd.PrivKeyFromBytes(privKey.Key).PubKey().SerializeCompressed() // Legacy functionality from pubkey
 		pk := &PubKey{Key: nonConstantTimePk}
 		require.NotNil(t, pk)
 	}

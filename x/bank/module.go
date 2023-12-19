@@ -218,11 +218,19 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 	blockedAddresses := make(map[string]bool)
 	if len(in.Config.BlockedModuleAccountsOverride) > 0 {
 		for _, moduleName := range in.Config.BlockedModuleAccountsOverride {
-			blockedAddresses[authtypes.NewModuleAddress(moduleName).String()] = true
+			addrStr, err := in.AccountKeeper.AddressCodec().BytesToString(authtypes.NewModuleAddress(moduleName))
+			if err != nil {
+				panic(err)
+			}
+			blockedAddresses[addrStr] = true
 		}
 	} else {
 		for _, permission := range in.AccountKeeper.GetModulePermissions() {
-			blockedAddresses[permission.GetAddress().String()] = true
+			addrStr, err := in.AccountKeeper.AddressCodec().BytesToString(permission.GetAddress())
+			if err != nil {
+				panic(err)
+			}
+			blockedAddresses[addrStr] = true
 		}
 	}
 
@@ -232,12 +240,17 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		authority = authtypes.NewModuleAddressOrBech32Address(in.Config.Authority)
 	}
 
+	authStr, err := in.AccountKeeper.AddressCodec().BytesToString(authority)
+	if err != nil {
+		panic(err)
+	}
+
 	bankKeeper := keeper.NewBaseKeeper(
 		in.Cdc,
 		in.StoreService,
 		in.AccountKeeper,
 		blockedAddresses,
-		authority.String(),
+		authStr,
 		in.Logger,
 	)
 	m := NewAppModule(in.Cdc, bankKeeper, in.AccountKeeper)

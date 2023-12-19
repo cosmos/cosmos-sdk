@@ -1,4 +1,6 @@
-package appmanager
+package store
+
+type Hash = []byte
 
 type Store interface {
 	NewBlockWithVersion(version uint64) (ReadonlyStore, error)

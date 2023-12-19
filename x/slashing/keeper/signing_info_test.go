@@ -3,11 +3,12 @@ package keeper_test
 import (
 	"time"
 
+	"github.com/golang/mock/gomock"
+
 	"cosmossdk.io/x/slashing/testutil"
 	slashingtypes "cosmossdk.io/x/slashing/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/golang/mock/gomock"
 )
 
 func (s *KeeperTestSuite) TestValidatorSigningInfo() {

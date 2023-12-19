@@ -1,9 +1,21 @@
 package transaction
 
-import "context"
+import (
+	"context"
+
+	"google.golang.org/protobuf/proto"
+)
+
+type (
+	Type     = proto.Message
+	Identity = []byte
+)
 
 type Tx interface {
 	Hash() [32]byte // TODO evaluate if 32 bytes is the right size & benchmark overhead of hashing instead of using identifier
+	GetMessages() []Type
+	GetSenders() []Identity // TODO reduce this to a single identity if accepted
+	GetGasLimit() uint64
 }
 
 // Handler is a recursive function that takes a transaction and returns a new context to be used by the next handler

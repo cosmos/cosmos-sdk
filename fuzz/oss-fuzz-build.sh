@@ -39,5 +39,3 @@ build_go_fuzzer FuzzTypesParseTimeBytes fuzz_types_parsetimebytes
 build_go_fuzzer FuzzTypesDecSetString fuzz_types_dec_setstring
 
 build_go_fuzzer FuzzUnknownProto fuzz_unknownproto
-
-build_go_fuzzer FuzzXBankTypesAddressFromBalancesStore fuzz_x_bank_types_addressfrombalancesstore

@@ -32,7 +32,7 @@ func newTestTxConfig() (client.TxConfig, codec.Codec) {
 	return authtx.NewTxConfig(codec.NewProtoCodec(encodingConfig.InterfaceRegistry), authtx.DefaultSignModes), encodingConfig.Codec
 }
 
-// mockContext is a mock client.Context to return abitrary simulation response, used to
+// mockContext is a mock client.Context to return arbitrary simulation response, used to
 // unit test CalculateGas.
 type mockContext struct {
 	gasUsed uint64

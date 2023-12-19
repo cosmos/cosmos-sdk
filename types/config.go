@@ -15,7 +15,6 @@ const DefaultKeyringServiceName = "cosmos"
 type Config struct {
 	fullFundraiserPath  string
 	bech32AddressPrefix map[string]string
-	txEncoder           TxEncoder
 	mtx                 sync.RWMutex
 
 	sealed   bool
@@ -41,8 +40,6 @@ func NewConfig() *Config {
 			"consensus_pub":  Bech32PrefixConsPub,
 		},
 		fullFundraiserPath: FullFundraiserPath,
-
-		txEncoder: nil,
 	}
 }
 
@@ -99,12 +96,6 @@ func (config *Config) SetBech32PrefixForConsensusNode(addressPrefix, pubKeyPrefi
 	config.bech32AddressPrefix["consensus_pub"] = pubKeyPrefix
 }
 
-// SetTxEncoder builds the Config with TxEncoder used to marshal StdTx to bytes
-func (config *Config) SetTxEncoder(encoder TxEncoder) {
-	config.assertNotSealed()
-	config.txEncoder = encoder
-}
-
 // Set the FullFundraiserPath (BIP44Prefix) on the config.
 //
 // Deprecated: This method is supported for backward compatibility only and will be removed in a future release. Use SetPurpose and SetCoinType instead.
@@ -158,11 +149,6 @@ func (config *Config) GetBech32ValidatorPubPrefix() string {
 // GetBech32ConsensusPubPrefix returns the Bech32 prefix for consensus node public key
 func (config *Config) GetBech32ConsensusPubPrefix() string {
 	return config.bech32AddressPrefix["consensus_pub"]
-}
-
-// GetTxEncoder return function to encode transactions
-func (config *Config) GetTxEncoder() TxEncoder {
-	return config.txEncoder
 }
 
 func KeyringServiceName() string {

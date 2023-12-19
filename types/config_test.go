@@ -1,7 +1,6 @@
 package types_test
 
 import (
-	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
@@ -15,19 +14,6 @@ type configTestSuite struct {
 
 func TestConfigTestSuite(t *testing.T) {
 	suite.Run(t, new(configTestSuite))
-}
-
-func (s *configTestSuite) TestConfig_SetTxEncoder() {
-	mockErr := errors.New("test")
-	config := sdk.NewConfig()
-	s.Require().Nil(config.GetTxEncoder())
-	encFunc := sdk.TxEncoder(func(tx sdk.Tx) ([]byte, error) { return nil, nil })
-	config.SetTxEncoder(encFunc)
-	_, err := config.GetTxEncoder()(sdk.Tx(nil))
-	s.Require().Error(mockErr, err)
-
-	config.Seal()
-	s.Require().Panics(func() { config.SetTxEncoder(encFunc) })
 }
 
 func (s *configTestSuite) TestConfig_SetFullFundraiserPath() {

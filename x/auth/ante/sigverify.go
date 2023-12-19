@@ -146,83 +146,6 @@ func (spkd SetPubKeyDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 	return next(ctx, tx, simulate)
 }
 
-// Consume parameter-defined amount of gas for each signature according to the passed-in SignatureVerificationGasConsumer function
-// before calling the next AnteHandler
-// CONTRACT: Pubkeys are set in context for all signers before this decorator runs
-// CONTRACT: Tx must implement SigVerifiableTx interface
-type SigGasConsumeDecorator struct {
-	ak             AccountKeeper
-	sigGasConsumer SignatureVerificationGasConsumer
-}
-
-func NewSigGasConsumeDecorator(ak AccountKeeper, sigGasConsumer SignatureVerificationGasConsumer) SigGasConsumeDecorator {
-	if sigGasConsumer == nil {
-		sigGasConsumer = DefaultSigVerificationGasConsumer
-	}
-
-	return SigGasConsumeDecorator{
-		ak:             ak,
-		sigGasConsumer: sigGasConsumer,
-	}
-}
-
-func (sgcd SigGasConsumeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
-	sigTx, ok := tx.(authsigning.SigVerifiableTx)
-	if !ok {
-		return ctx, errorsmod.Wrap(sdkerrors.ErrTxDecode, "invalid transaction type")
-	}
-
-	params := sgcd.ak.GetParams(ctx)
-	sigs, err := sigTx.GetSignaturesV2()
-	if err != nil {
-		return ctx, err
-	}
-
-	// stdSigs contains the sequence number, account number, and signatures.
-	// When simulating, this would just be a 0-length slice.
-	signers, err := sigTx.GetSigners()
-	if err != nil {
-		return ctx, err
-	}
-
-	for i, sig := range sigs {
-		signerAcc, err := GetSignerAcc(ctx, sgcd.ak, signers[i])
-		if err != nil {
-			return ctx, err
-		}
-
-		pubKey := signerAcc.GetPubKey()
-		if !simulate && pubKey == nil {
-			return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidPubKey, "pubkey on account is not set")
-		}
-		if err := verifyIsOnCurve(pubKey); err != nil {
-			return ctx, err
-		}
-
-		// In simulate mode the transaction comes with no signatures, thus if the
-		// account's pubkey is nil, both signature verification and gasKVStore.Set()
-		// shall consume the largest amount, i.e. it takes more gas to verify
-		// secp256k1 keys than ed25519 ones.
-		if simulate && pubKey == nil {
-			pubKey = simSecp256k1Pubkey
-		}
-
-		// make a SignatureV2 with PubKey filled in from above
-		sig = signing.SignatureV2{
-			PubKey:   pubKey,
-			Data:     sig.Data,
-			Sequence: sig.Sequence,
-		}
-
-		err = sgcd.sigGasConsumer(ctx.GasMeter(), sig, params)
-		if err != nil {
-			return ctx, err
-		}
-	}
-
-	return next(ctx, tx, simulate)
-}
-
 // SigVerificationDecorator verifies all signatures for a tx and return an error if any are invalid. Note,
 // the SigVerificationDecorator will not check signatures on ReCheck.
 //
@@ -231,12 +154,14 @@ func (sgcd SigGasConsumeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simula
 type SigVerificationDecorator struct {
 	ak              AccountKeeper
 	signModeHandler *txsigning.HandlerMap
+	sigGasConsumer  SignatureVerificationGasConsumer
 }
 
-func NewSigVerificationDecorator(ak AccountKeeper, signModeHandler *txsigning.HandlerMap) SigVerificationDecorator {
+func NewSigVerificationDecorator(ak AccountKeeper, signModeHandler *txsigning.HandlerMap, sigGasConsumer SignatureVerificationGasConsumer) SigVerificationDecorator {
 	return SigVerificationDecorator{
 		ak:              ak,
 		signModeHandler: signModeHandler,
+		sigGasConsumer:  sigGasConsumer,
 	}
 }
 
@@ -341,12 +266,42 @@ func (svd SigVerificationDecorator) authenticate(ctx sdk.Context, tx sdk.Tx, sim
 		return err
 	}
 
+	err = svd.consumeSignatureGas(ctx, simulate, acc.GetPubKey(), sig)
+	if err != nil {
+		return err
+	}
+
 	err = svd.verifySig(ctx, simulate, tx, acc, sig)
 	if err != nil {
 		return err
 	}
 
 	err = svd.increaseSequence(ctx, acc)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// consumeSignatureGas will consume gas according to the pub-key being verified.
+func (svd SigVerificationDecorator) consumeSignatureGas(
+	ctx sdk.Context,
+	simulate bool,
+	pubKey cryptotypes.PubKey,
+	signature signing.SignatureV2,
+) error {
+	if simulate && pubKey == nil {
+		pubKey = simSecp256k1Pubkey
+	}
+
+	// make a SignatureV2 with PubKey filled in from above
+	signature = signing.SignatureV2{
+		PubKey:   pubKey,
+		Data:     signature.Data,
+		Sequence: signature.Sequence,
+	}
+
+	err := svd.sigGasConsumer(ctx.GasMeter(), signature, svd.ak.GetParams(ctx))
 	if err != nil {
 		return err
 	}

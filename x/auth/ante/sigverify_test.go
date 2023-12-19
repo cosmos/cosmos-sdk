@@ -178,7 +178,8 @@ func TestSigVerification(t *testing.T) {
 		txConfigOpts,
 	)
 	require.NoError(t, err)
-	svd := ante.NewSigVerificationDecorator(suite.accountKeeper, anteTxConfig.SignModeHandler())
+	noOpGasConsume := func(_ storetypes.GasMeter, _ signing.SignatureV2, _ types.Params) error { return nil }
+	svd := ante.NewSigVerificationDecorator(suite.accountKeeper, anteTxConfig.SignModeHandler(), noOpGasConsume)
 	antehandler := sdk.ChainAnteDecorators(spkd, svd)
 	defaultSignMode, err := authsign.APISignModeToInternal(anteTxConfig.SignModeHandler().DefaultMode())
 	require.NoError(t, err)
@@ -313,9 +314,8 @@ func runSigDecorators(t *testing.T, params types.Params, _ bool, privs ...crypto
 	require.NoError(t, err)
 
 	spkd := ante.NewSetPubKeyDecorator(suite.accountKeeper)
-	svgc := ante.NewSigGasConsumeDecorator(suite.accountKeeper, ante.DefaultSigVerificationGasConsumer)
-	svd := ante.NewSigVerificationDecorator(suite.accountKeeper, suite.clientCtx.TxConfig.SignModeHandler())
-	antehandler := sdk.ChainAnteDecorators(spkd, svgc, svd)
+	svd := ante.NewSigVerificationDecorator(suite.accountKeeper, suite.clientCtx.TxConfig.SignModeHandler(), ante.DefaultSigVerificationGasConsumer)
+	antehandler := sdk.ChainAnteDecorators(spkd, svd)
 
 	txBytes, err := suite.clientCtx.TxConfig.TxEncoder()(tx)
 	require.NoError(t, err)
@@ -371,10 +371,9 @@ func TestAnteHandlerChecks(t *testing.T) {
 	}
 
 	setPubKeyDecorator := ante.NewSetPubKeyDecorator(suite.accountKeeper)
-	sigGasConsumeDecorator := ante.NewSigGasConsumeDecorator(suite.accountKeeper, ante.DefaultSigVerificationGasConsumer)
-	sigVerificationDecorator := ante.NewSigVerificationDecorator(suite.accountKeeper, anteTxConfig.SignModeHandler())
+	sigVerificationDecorator := ante.NewSigVerificationDecorator(suite.accountKeeper, anteTxConfig.SignModeHandler(), ante.DefaultSigVerificationGasConsumer)
 
-	anteHandler := sdk.ChainAnteDecorators(setPubKeyDecorator, sigGasConsumeDecorator, sigVerificationDecorator)
+	anteHandler := sdk.ChainAnteDecorators(setPubKeyDecorator, sigVerificationDecorator)
 
 	type testCase struct {
 		name      string

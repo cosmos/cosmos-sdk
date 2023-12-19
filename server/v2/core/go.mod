@@ -1,6 +1,6 @@
 module cosmossdk.io/server/v2/core
 
-go 1.21.1
+go 1.21
 
 require google.golang.org/protobuf v1.31.0
 

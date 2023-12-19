@@ -51,6 +51,9 @@ func (d *UnorderedTxDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 	if ttl == 0 {
 		return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "unordered transaction must have timeout_height set")
 	}
+	if ttl < uint64(ctx.BlockHeight()) {
+		return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "unordered transaction has a timeout_height that has already passed")
+	}
 	if ttl > uint64(ctx.BlockHeight())+d.maxUnOrderedTTL {
 		return ctx, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "unordered tx ttl exceeds %d", d.maxUnOrderedTTL)
 	}

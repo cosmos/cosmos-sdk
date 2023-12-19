@@ -1972,14 +1972,14 @@ func TestRenameKey(t *testing.T) {
 			},
 		},
 		{
-			name: "cant rename a key that doesnt exist",
+			name: "can't rename a key that doesnt exist",
 			run: func(kr Keyring) {
 				err := kr.Rename("bogus", "bogus2")
 				require.Error(t, err)
 			},
 		},
 		{
-			name: "cant rename a key to an already existing key name",
+			name: "can't rename a key to an already existing key name",
 			run: func(kr Keyring) {
 				key1, key2 := "existingKey", "existingKey2" // create 2 keys
 				newKeyRecord(t, kr, key1)
@@ -1990,7 +1990,7 @@ func TestRenameKey(t *testing.T) {
 			},
 		},
 		{
-			name: "cant rename key to itself",
+			name: "can't rename key to itself",
 			run: func(kr Keyring) {
 				keyName := "keyName"
 				newKeyRecord(t, kr, keyName)

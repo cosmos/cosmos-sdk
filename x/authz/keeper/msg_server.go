@@ -118,6 +118,18 @@ func (k Keeper) Exec(ctx context.Context, msg *authz.MsgExec) (*authz.MsgExecRes
 	return &authz.MsgExecResponse{Results: results}, nil
 }
 
+func (k Keeper) PruneExpiredGrants(ctx context.Context, msg *authz.MsgPruneExpiredGrants) (*authz.MsgPruneExpiredGrantsResponse, error) {
+	// 75 is an arbitrary value, we can change it later if needed
+	if err := k.DequeueAndDeleteExpiredGrants(ctx, 75); err != nil {
+		return nil, err
+	}
+
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	_ = sdkCtx.EventManager().EmitTypedEvent(&authz.EventPruneExpiredGrants{Pruner: msg.Pruner})
+
+	return &authz.MsgPruneExpiredGrantsResponse{}, nil
+}
+
 func validateMsgs(msgs []sdk.Msg) error {
 	for i, msg := range msgs {
 		m, ok := msg.(sdk.HasValidateBasic)

@@ -1,7 +1,3 @@
----
-sidebar_position: 1
----
-
 # Vote Extensions
 
 :::note Synopsis
@@ -33,6 +29,9 @@ to consider the size of the vote extensions as they could increase latency in bl
 production. See [here](https://github.com/cometbft/cometbft/blob/v0.38.0-rc1/docs/qa/CometBFT-QA-38.md#vote-extensions-testbed)
 for more details.
 
+Click [here](https://docs.cosmos.network/main/user/tutorials/vote-extensions) if you would like a walkthrough of how to implement vote extensions.
+
+
 ## Verify Vote Extension
 
 Similar to extending a vote, an application can also verify vote extensions from
@@ -50,6 +49,9 @@ extension handler, it should also define a verification handler. Note, not all
 validators will share the same view of what vote extensions they verify depending
 on how votes are propagated. See [here](https://github.com/cometbft/cometbft/blob/v0.38.0-rc1/spec/abci/abci++_methods.md#verifyvoteextension)
 for more details.
+
+Additionally, please keep in mind that performance can be degraded if vote extensions are too big (https://docs.cometbft.com/v0.38/qa/cometbft-qa-38#vote-extensions-testbed), so we highly recommend a size validation in `VerifyVoteExtensions`.
+
 
 ## Vote Extension Propagation
 

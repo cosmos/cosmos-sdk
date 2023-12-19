@@ -309,7 +309,7 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 
 	// stdSigs contains the sequence number, account number, and signatures.
 	// When simulating, this would just be a 0-length slice.
-	sigs, err := sigTx.GetSignaturesV2()
+	signatures, err := sigTx.GetSignaturesV2()
 	if err != nil {
 		return ctx, err
 	}
@@ -320,77 +320,85 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 	}
 
 	// check that signer length and signature length are the same
-	if len(sigs) != len(signers) {
-		return ctx, errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "invalid number of signer;  expected: %d, got %d", len(signers), len(sigs))
+	if len(signatures) != len(signers) {
+		return ctx, errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "invalid number of signer;  expected: %d, got %d", len(signers), len(signatures))
 	}
 
-	for i, sig := range sigs {
-		acc, err := GetSignerAcc(ctx, svd.ak, signers[i])
+	for i := range signers {
+		err = svd.authenticate(ctx, tx, simulate, signers[i], signatures[i])
 		if err != nil {
 			return ctx, err
-		}
-
-		// retrieve pubkey
-		pubKey := acc.GetPubKey()
-		if !simulate && pubKey == nil {
-			return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidPubKey, "pubkey on account is not set")
-		}
-
-		if err := verifyIsOnCurve(pubKey); err != nil {
-			return ctx, err
-		}
-
-		if sig.Sequence != acc.GetSequence() {
-			return ctx, errorsmod.Wrapf(
-				sdkerrors.ErrWrongSequence,
-				"account sequence mismatch, expected %d, got %d", acc.GetSequence(), sig.Sequence,
-			)
-		}
-
-		// retrieve signer data
-		genesis := ctx.BlockHeight() == 0
-		chainID := ctx.ChainID()
-		var accNum uint64
-		if !genesis {
-			accNum = acc.GetAccountNumber()
-		}
-
-		// no need to verify signatures on recheck tx
-		if !simulate && !ctx.IsReCheckTx() && ctx.IsSigverifyTx() {
-			anyPk, _ := codectypes.NewAnyWithValue(pubKey)
-
-			signerData := txsigning.SignerData{
-				Address:       acc.GetAddress().String(),
-				ChainID:       chainID,
-				AccountNumber: accNum,
-				Sequence:      acc.GetSequence(),
-				PubKey: &anypb.Any{
-					TypeUrl: anyPk.TypeUrl,
-					Value:   anyPk.Value,
-				},
-			}
-			adaptableTx, ok := tx.(authsigning.V2AdaptableTx)
-			if !ok {
-				return ctx, fmt.Errorf("expected tx to implement V2AdaptableTx, got %T", tx)
-			}
-			txData := adaptableTx.GetSigningTxData()
-			err = authsigning.VerifySignature(ctx, pubKey, signerData, sig.Data, svd.signModeHandler, txData)
-			if err != nil {
-				var errMsg string
-				if OnlyLegacyAminoSigners(sig.Data) {
-					// If all signers are using SIGN_MODE_LEGACY_AMINO, we rely on VerifySignature to check account sequence number,
-					// and therefore communicate sequence number as a potential cause of error.
-					errMsg = fmt.Sprintf("signature verification failed; please verify account number (%d), sequence (%d) and chain-id (%s)", accNum, acc.GetSequence(), chainID)
-				} else {
-					errMsg = fmt.Sprintf("signature verification failed; please verify account number (%d) and chain-id (%s): (%s)", accNum, chainID, err.Error())
-				}
-				return ctx, errorsmod.Wrap(sdkerrors.ErrUnauthorized, errMsg)
-
-			}
 		}
 	}
 
 	return next(ctx, tx, simulate)
+}
+
+// authenticate the authentication of the TX for a specific tx signer.
+func (svd SigVerificationDecorator) authenticate(ctx sdk.Context, tx sdk.Tx, simulate bool, signer []byte, sig signing.SignatureV2) error {
+	acc, err := GetSignerAcc(ctx, svd.ak, signer)
+	if err != nil {
+		return err
+	}
+
+	// retrieve pubkey
+	pubKey := acc.GetPubKey()
+	if !simulate && pubKey == nil {
+		return errorsmod.Wrap(sdkerrors.ErrInvalidPubKey, "pubkey on account is not set")
+	}
+
+	if err := verifyIsOnCurve(pubKey); err != nil {
+		return err
+	}
+
+	if sig.Sequence != acc.GetSequence() {
+		return errorsmod.Wrapf(
+			sdkerrors.ErrWrongSequence,
+			"account sequence mismatch, expected %d, got %d", acc.GetSequence(), sig.Sequence,
+		)
+	}
+
+	// retrieve signer data
+	genesis := ctx.BlockHeight() == 0
+	chainID := ctx.ChainID()
+	var accNum uint64
+	if !genesis {
+		accNum = acc.GetAccountNumber()
+	}
+
+	// no need to verify signatures on recheck tx
+	if !simulate && !ctx.IsReCheckTx() && ctx.IsSigverifyTx() {
+		anyPk, _ := codectypes.NewAnyWithValue(pubKey)
+
+		signerData := txsigning.SignerData{
+			Address:       acc.GetAddress().String(),
+			ChainID:       chainID,
+			AccountNumber: accNum,
+			Sequence:      acc.GetSequence(),
+			PubKey: &anypb.Any{
+				TypeUrl: anyPk.TypeUrl,
+				Value:   anyPk.Value,
+			},
+		}
+		adaptableTx, ok := tx.(authsigning.V2AdaptableTx)
+		if !ok {
+			return fmt.Errorf("expected tx to implement V2AdaptableTx, got %T", tx)
+		}
+		txData := adaptableTx.GetSigningTxData()
+		err = authsigning.VerifySignature(ctx, pubKey, signerData, sig.Data, svd.signModeHandler, txData)
+		if err != nil {
+			var errMsg string
+			if OnlyLegacyAminoSigners(sig.Data) {
+				// If all signers are using SIGN_MODE_LEGACY_AMINO, we rely on VerifySignature to check account sequence number,
+				// and therefore communicate sequence number as a potential cause of error.
+				errMsg = fmt.Sprintf("signature verification failed; please verify account number (%d), sequence (%d) and chain-id (%s)", accNum, acc.GetSequence(), chainID)
+			} else {
+				errMsg = fmt.Sprintf("signature verification failed; please verify account number (%d) and chain-id (%s): (%s)", accNum, chainID, err.Error())
+			}
+			return errorsmod.Wrap(sdkerrors.ErrUnauthorized, errMsg)
+		}
+	}
+	return nil
 }
 
 // IncrementSequenceDecorator handles incrementing sequences of all signers.
@@ -399,7 +407,7 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 // BaseApp.Commit() will set the check state based on the latest header.
 //
 // NOTE: Since CheckTx and DeliverTx state are managed separately, subsequent and
-// sequential txs orginating from the same account cannot be handled correctly in
+// sequential txs originating from the same account cannot be handled correctly in
 // a reliable way unless sequence numbers are managed and tracked manually by a
 // client. It is recommended to instead use multiple messages in a tx.
 type IncrementSequenceDecorator struct {

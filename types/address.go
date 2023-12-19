@@ -362,6 +362,16 @@ func ValAddressFromBech32(address string) (addr ValAddress, err error) {
 	return ValAddress(bz), nil
 }
 
+// MustValAddressFromBech32 calls ValAddressFromBech32 and panics on error.
+func MustValAddressFromBech32(address string) ValAddress {
+	addr, err := ValAddressFromBech32(address)
+	if err != nil {
+		panic(err)
+	}
+
+	return addr
+}
+
 // Returns boolean for whether two ValAddresses are Equal
 func (va ValAddress) Equals(va2 Address) bool {
 	if va.Empty() && va2.Empty() {
@@ -629,7 +639,7 @@ func (ca ConsAddress) String() string {
 }
 
 // Bech32ifyAddressBytes returns a bech32 representation of address bytes.
-// Returns an empty sting if the byte slice is 0-length. Returns an error if the bech32 conversion
+// Returns an empty string if the byte slice is 0-length. Returns an error if the bech32 conversion
 // fails or the prefix is empty.
 func Bech32ifyAddressBytes(prefix string, bs []byte) (string, error) {
 	if len(bs) == 0 {
@@ -642,7 +652,7 @@ func Bech32ifyAddressBytes(prefix string, bs []byte) (string, error) {
 }
 
 // MustBech32ifyAddressBytes returns a bech32 representation of address bytes.
-// Returns an empty sting if the byte slice is 0-length. It panics if the bech32 conversion
+// Returns an empty string if the byte slice is 0-length. It panics if the bech32 conversion
 // fails or the prefix is empty.
 func MustBech32ifyAddressBytes(prefix string, bs []byte) string {
 	s, err := Bech32ifyAddressBytes(prefix, bs)

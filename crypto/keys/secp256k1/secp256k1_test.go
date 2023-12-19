@@ -456,7 +456,7 @@ func TestLegacyKeyGenerationAgainstConstantTime(t *testing.T) {
 
 	pubKey := privKey.PubKey()
 
-	nonConstantTimePk := secp.PrivKeyFromBytes(privKey.Key).PubKey().SerializeCompressed() // Legacy functionability from pubkey
+	nonConstantTimePk := secp.PrivKeyFromBytes(privKey.Key).PubKey().SerializeCompressed() // Legacy functionality from pubkey
 	legacyPubKey := &secp256k1.PubKey{Key: nonConstantTimePk}
 
 	require.Equal(t, legacyPubKey, pubKey)

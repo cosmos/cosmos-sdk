@@ -2,156 +2,98 @@ package appmanager
 
 import (
 	"context"
-	"errors"
-	"time"
+	"fmt"
+	"sync/atomic"
 
-	"cosmossdk.io/log"
-	storetypes "cosmossdk.io/store/types"
-
-	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/serverv2/core/appmanager"
-	"github.com/cosmos/cosmos-sdk/serverv2/core/event"
 	"github.com/cosmos/cosmos-sdk/serverv2/core/transaction"
-	"github.com/cosmos/cosmos-sdk/telemetry"
 )
 
-type Store interface {
-	Branch() (any, error)
-	WorkingHash() ([]byte, error)
+type AppManagerBuilder[T transaction.Tx] struct {
+	InitGenesis map[string]func(ctx context.Context, moduleGenesisBytes []byte) error
 }
 
+func (a *AppManagerBuilder[T]) RegisterInitGenesis(moduleName string, genesisFunc func(ctx context.Context, moduleGenesisBytes []byte) error) {
+	a.InitGenesis[moduleName] = genesisFunc
+}
+
+func (a *AppManagerBuilder[T]) RegisterHandler(moduleName, handlerName string, handler MsgHandler) {
+	panic("...")
+}
+
+type MsgSetKVPairs struct {
+	Pairs []ChangeSet
+}
+
+func (a *AppManagerBuilder[T]) Build() *AppManager[T] {
+	genesis := func(ctx context.Context, genesisBytes []byte) error {
+		genesisMap := map[string][]byte{} // module=> genesis bytes
+		for module, genesisFunc := range a.InitGenesis {
+			err := genesisFunc(ctx, genesisMap[module])
+			if err != nil {
+				return fmt.Errorf("failed to init genesis on module: %s", module)
+			}
+		}
+		return nil
+	}
+	return &AppManager[T]{initGenesis: genesis}
+}
+
+// AppManager is a coordinator for all things related to an application
 type AppManager[T transaction.Tx] struct {
-	// ModuleManager     *module.Manager
-	// configurator      module.Configurator
-	// config            *runtimev1alpha1.Module
-	storeKeys         []storetypes.StoreKey
-	txCodec           transaction.Codec[T]
-	txValidator       transaction.Validator[T]
-	interfaceRegistry codectypes.InterfaceRegistry
-	cdc               codec.Codec
-	// amino             *codec.LegacyAmino
-	// basicManager      module.BasicManager
-	// baseAppOptions    []BaseAppOption
-	msgServiceRouter *MsgServiceRouter
-	queryRouter      *QueryRouter
-	// appConfig         *appv1alpha1.Config
-	logger log.Logger
+	// configs
+	checkTxGasLimit uint64
+	queryGasLimit   uint64
+	// configs - end
+
+	db Store
+
+	lastBlockHeight *atomic.Uint64
+
+	initGenesis func(ctx context.Context, genesisBytes []byte) error
+
+	stf *STFAppManager[T]
 }
 
-func NewAppManager[T transaction.Tx](txv transaction.Validator[T], txc transaction.Codec[T], logger log.Logger) appmanager.App[T] {
-	return AppManager[T]{}
-}
-
-func (am AppManager[T]) ChainID() string {
-	panic("implement me")
-}
-
-func (am AppManager[T]) AppVersion() (uint64, error) {
-	panic("implement me")
-}
-
-func (am AppManager[T]) InitChain(context.Context, appmanager.RequestInitChain) (appmanager.ResponseInitChain, error) {
-	panic("implement me")
-}
-
-func (am AppManager[T]) DeliverBlock(ctx context.Context, req appmanager.RequestDeliverBlock[T]) (appmanager.ResponseDeliverBlock, error) {
-	txResult := make([]appmanager.TxResult, len(req.Txs))
-	events := make([]event.Event, 0)
-
-	beginEvents, err := BeginBlock()
+func (a AppManager[T]) DeliverBlock(ctx context.Context, block appmanager.BlockRequest) (*appmanager.BlockResponse, Hash, error) {
+	currentState, err := a.db.NewBlockWithVersion(block.Height)
 	if err != nil {
-		return appmanager.ResponseDeliverBlock{}, err
+		return nil, nil, fmt.Errorf("unable to create new state for height %d: %w", block.Height, err)
 	}
 
-	events = append(events, beginEvents...)
-
-	for i, tx := range req.Txs {
-		// // decode the transaction
-		// tx, err := am.txCodec.Decode(bz)
-		// if err != nil {
-		// 	return appmanager.ResponseDeliverBlock{}, err
-		// }
-
-		// validate the transaction
-		ctx, txerr := am.txValidator.Validate(ctx, []T{tx})
-		if txerr != nil {
-			return appmanager.ResponseDeliverBlock{}, txerr[tx.Hash()] // TODO: dont return to execute other txs
-		}
-
-		// exec the transaction
-		txr, err := ExecTx(ctx, am.logger, tx)
-		if err != nil {
-			return appmanager.ResponseDeliverBlock{}, err
-		}
-		txResult[i] = txr
-
-	}
-
-	endEvents, err := EndBlock()
+	blockResponse, newState, err := a.stf.DeliverBlock(ctx, block, currentState)
 	if err != nil {
-		return appmanager.ResponseDeliverBlock{}, err
+		return nil, nil, fmt.Errorf("block delivery failed: %w", err)
 	}
-	events = append(events, endEvents...)
-
-	return appmanager.ResponseDeliverBlock{
-		TxResults: txResult,
-		Events:    events,
-	}, nil
+	// apply new state to store
+	newStateChanges, err := newState.ChangeSets()
+	if err != nil {
+		return nil, nil, fmt.Errorf("change set: %w", err)
+	}
+	stateRoot, err := a.db.CommitChanges(newStateChanges)
+	if err != nil {
+		return nil, nil, fmt.Errorf("commit failed: %w", err)
+	}
+	// update last stored block
+	a.lastBlockHeight.Store(block.Height)
+	return blockResponse, stateRoot, nil
 }
 
-// Query implements the Query method for application based queries
-func (am AppManager[T]) Query(ctx context.Context, qr *appmanager.QueryRequest) (*appmanager.QueryResponse, error) {
-	telemetry.IncrCounter(1, "query", "count")
-	telemetry.IncrCounter(1, "query", qr.Path)
-	defer telemetry.MeasureSince(time.Now(), qr.Path)
-
-	// handle gRPC routes first rather than calling splitPath because '/' characters
-	// are used as part of gRPC paths
-	if grpcHandler := am.queryRouter.Route(qr.Path); grpcHandler != nil {
-		return grpcHandler(ctx, qr)
+func (a AppManager[T]) Query(ctx context.Context, request Type) (response Type, err error) {
+	queryState, err := a.getLatestState(ctx)
+	if err != nil {
+		return nil, err
 	}
-
-	return nil, errors.New("unknown query path")
+	queryCtx := a.stf.makeContext(ctx, nil, queryState, a.queryGasLimit)
+	return a.stf.handleQuery(queryCtx, request)
 }
 
-// func handleQueryGRPC(handler GRPCQueryHandler) {
-// 	ctx, err := app.CreateQueryContext(req.Height, req.Prove)
-// 	if err != nil {
-// 		return sdkerrors.QueryResult(err, app.trace)
-// 	}
-
-// 	resp, err := handler(ctx, req)
-// 	if err != nil {
-// 		resp = sdkerrors.QueryResult(gRPCErrorToSDKError(err), app.trace)
-// 		resp.Height = req.Height
-// 		return resp
-// 	}
-
-// 	return resp
-// }
-
-/*
-Things app manager needs to do:
-
-
-Genesis:
-- read genesis
-- execute genesis txs
-
-Queries:
-- Query Router points to modules
-
-Messages:
-- Message Router points to modules
-
-Config:
-- QueryGasLimit
-- HaltTime
-- HaltBlock
-
-Recovery:
-- Panic Recovery for the app manager
-
-
-*/
+// getLatestState provides a readonly view of the state of the last committed block.
+func (a AppManager[T]) getLatestState(_ context.Context) (BranchStore, error) {
+	lastBlock := a.lastBlockHeight.Load()
+	lastBlockStore, err := a.db.ReadonlyWithVersion(lastBlock)
+	if err != nil {
+		return nil, err
+	}
+	return a.stf.branch(lastBlockStore), nil
+}

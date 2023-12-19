@@ -44,6 +44,18 @@ transactions in your application:
 	return sdk.ChainAnteDecorators(anteDecorators...), nil
 	```
 
+* If the App has a SnapshotManager defined, you must also register the extension
+  for the TxManager.
+
+	```go
+	if manager := app.SnapshotManager(); manager != nil {
+		err := manager.RegisterExtensions(unorderedtx.NewSnapshotter(app.UnorderedTxManager))
+		if err != nil {
+			panic(fmt.Errorf("failed to register snapshot extension: %s", err))
+		}
+	}
+	```
+
 * Create or update the App's `Close()` method to close the unordered tx manager.
   Note, this is critical as it ensures the manager's state is written to file
   such that when the node restarts, it can recover the state to provide replay

@@ -129,3 +129,15 @@ func (dtx *DecodedTx) Hash() [32]byte {
 
 	return sha256.Sum256(bz)
 }
+
+func (dtx *DecodedTx) GetGasLimit() uint64 {
+	return dtx.Tx.AuthInfo.Fee.GasLimit
+}
+
+func (dtx *DecodedTx) GetMessages() []proto.Message {
+	return dtx.Messages
+}
+
+func (dtx *DecodedTx) GetSenders() [][]byte {
+	return dtx.Signers
+}

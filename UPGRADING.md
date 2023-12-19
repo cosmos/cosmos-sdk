@@ -80,7 +80,6 @@ used as a TTL for the transaction and is used to provide replay protection. See
 [ADR-070](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-070-unordered-account.md)
 for more details.
 
-
 ### Params
 
 * Params Migrations were removed. It is required to migrate to 0.50 prior to upgrading to .51.

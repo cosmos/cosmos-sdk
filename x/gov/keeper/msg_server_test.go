@@ -19,7 +19,7 @@ const (
 	o1  = "-0.1"
 )
 
-var longAddressError = "address max length is 255"
+var longAddressError = "bytes key non terminal size cannot exceed: 255"
 
 func (suite *KeeperTestSuite) TestMsgSubmitProposal() {
 	suite.reset()

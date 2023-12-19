@@ -15,10 +15,7 @@ type Bech32Codec struct {
 	Bech32Prefix string
 }
 
-var (
-	_             address.Codec = &Bech32Codec{}
-	maxAddressLen               = 255
-)
+var _ address.Codec = &Bech32Codec{}
 
 func NewBech32Codec(prefix string) address.Codec {
 	return Bech32Codec{prefix}
@@ -39,10 +36,6 @@ func (bc Bech32Codec) StringToBytes(text string) ([]byte, error) {
 		return nil, errorsmod.Wrapf(sdkerrors.ErrLogic, "hrp does not match bech32 prefix: expected '%s' got '%s'", bc.Bech32Prefix, hrp)
 	}
 
-	if err = verifyAddress(bz); err != nil {
-		return nil, err
-	}
-
 	return bz, nil
 }
 
@@ -58,15 +51,4 @@ func (bc Bech32Codec) BytesToString(bz []byte) (string, error) {
 	}
 
 	return text, nil
-}
-
-func verifyAddress(bz []byte) error {
-	if len(bz) == 0 {
-		return errorsmod.Wrap(sdkerrors.ErrUnknownAddress, "addresses cannot be empty")
-	}
-
-	if len(bz) > maxAddressLen {
-		return errorsmod.Wrapf(sdkerrors.ErrUnknownAddress, "address max length is %d, got %d", maxAddressLen, len(bz))
-	}
-	return nil
 }

@@ -85,8 +85,9 @@ const (
 	FlagOutput = tmcli.OutputFlag
 
 	// Tendermint logging flags
-	FlagLogLevel  = "log_level"
-	FlagLogFormat = "log_format"
+	FlagLogLevel   = "log_level"
+	FlagLogFormat  = "log_format"
+	FlagLogNoColor = "log_no_color"
 )
 
 // LineBreak can be included in a command list to provide a blank line

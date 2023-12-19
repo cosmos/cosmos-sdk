@@ -366,37 +366,42 @@ func (svd SigVerificationDecorator) authenticate(ctx sdk.Context, tx sdk.Tx, sim
 		accNum = acc.GetAccountNumber()
 	}
 
-	// no need to verify signatures on recheck tx
-	if !simulate && !ctx.IsReCheckTx() && ctx.IsSigverifyTx() {
-		anyPk, _ := codectypes.NewAnyWithValue(pubKey)
+	// we're in simulation mode, or in ReCheckTx, or context is not
+	// on sig verify tx, then we do not need to verify the signatures
+	// in the tx.
+	if simulate || ctx.IsReCheckTx() || !ctx.IsSigverifyTx() {
+		return nil
+	}
 
-		signerData := txsigning.SignerData{
-			Address:       acc.GetAddress().String(),
-			ChainID:       chainID,
-			AccountNumber: accNum,
-			Sequence:      acc.GetSequence(),
-			PubKey: &anypb.Any{
-				TypeUrl: anyPk.TypeUrl,
-				Value:   anyPk.Value,
-			},
+	// we need to verify the signature.
+	anyPk, _ := codectypes.NewAnyWithValue(pubKey)
+
+	signerData := txsigning.SignerData{
+		Address:       acc.GetAddress().String(),
+		ChainID:       chainID,
+		AccountNumber: accNum,
+		Sequence:      acc.GetSequence(),
+		PubKey: &anypb.Any{
+			TypeUrl: anyPk.TypeUrl,
+			Value:   anyPk.Value,
+		},
+	}
+	adaptableTx, ok := tx.(authsigning.V2AdaptableTx)
+	if !ok {
+		return fmt.Errorf("expected tx to implement V2AdaptableTx, got %T", tx)
+	}
+	txData := adaptableTx.GetSigningTxData()
+	err = authsigning.VerifySignature(ctx, pubKey, signerData, sig.Data, svd.signModeHandler, txData)
+	if err != nil {
+		var errMsg string
+		if OnlyLegacyAminoSigners(sig.Data) {
+			// If all signers are using SIGN_MODE_LEGACY_AMINO, we rely on VerifySignature to check account sequence number,
+			// and therefore communicate sequence number as a potential cause of error.
+			errMsg = fmt.Sprintf("signature verification failed; please verify account number (%d), sequence (%d) and chain-id (%s)", accNum, acc.GetSequence(), chainID)
+		} else {
+			errMsg = fmt.Sprintf("signature verification failed; please verify account number (%d) and chain-id (%s): (%s)", accNum, chainID, err.Error())
 		}
-		adaptableTx, ok := tx.(authsigning.V2AdaptableTx)
-		if !ok {
-			return fmt.Errorf("expected tx to implement V2AdaptableTx, got %T", tx)
-		}
-		txData := adaptableTx.GetSigningTxData()
-		err = authsigning.VerifySignature(ctx, pubKey, signerData, sig.Data, svd.signModeHandler, txData)
-		if err != nil {
-			var errMsg string
-			if OnlyLegacyAminoSigners(sig.Data) {
-				// If all signers are using SIGN_MODE_LEGACY_AMINO, we rely on VerifySignature to check account sequence number,
-				// and therefore communicate sequence number as a potential cause of error.
-				errMsg = fmt.Sprintf("signature verification failed; please verify account number (%d), sequence (%d) and chain-id (%s)", accNum, acc.GetSequence(), chainID)
-			} else {
-				errMsg = fmt.Sprintf("signature verification failed; please verify account number (%d) and chain-id (%s): (%s)", accNum, chainID, err.Error())
-			}
-			return errorsmod.Wrap(sdkerrors.ErrUnauthorized, errMsg)
-		}
+		return errorsmod.Wrap(sdkerrors.ErrUnauthorized, errMsg)
 	}
 	return nil
 }

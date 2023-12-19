@@ -6,8 +6,8 @@ import (
 
 	"google.golang.org/protobuf/proto"
 
-	"cosmossdk.io/server/v2/core/event"
-	"cosmossdk.io/server/v2/core/transaction"
+	"github.com/cosmos/cosmos-sdk/serverv2/core/event"
+	"github.com/cosmos/cosmos-sdk/serverv2/core/transaction"
 )
 
 type Type = proto.Message

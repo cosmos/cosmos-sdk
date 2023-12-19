@@ -195,7 +195,7 @@ func (k Keeper) PurgeAllMaturedConsKeyRotatedKeys(ctx sdk.Context, maturedTime t
 }
 
 // deleteConsKeyIndexKey deletes the keys which forms a with given validator address and time lesser than the given time.
-// eventually there should be only one occurance since we allow only one rotation for bonding period.
+// eventually there should be only one occurrence since we allow only one rotation for bonding period.
 func (k Keeper) deleteConsKeyIndexKey(ctx sdk.Context, valAddr sdk.ValAddress, ts time.Time) error {
 	rng := new(collections.Range[collections.Pair[[]byte, time.Time]]).
 		StartInclusive(collections.Join(valAddr.Bytes(), time.Time{})).
@@ -246,7 +246,6 @@ func (k Keeper) GetValidatorConsPubKeyRotationHistory(ctx sdk.Context, operatorA
 		historyObjects = append(historyObjects, history)
 		return false, nil
 	})
-
 	if err != nil {
 		return nil, err
 	}

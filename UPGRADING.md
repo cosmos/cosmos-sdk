@@ -46,8 +46,8 @@ transactions in your application:
 
 * Create or update the App's `Close()` method to close the unordered tx manager.
   Note, this is critical as it ensures the manager's state is written to file
-	such that when the node restarts, it can recover the state to provide replay
-	protection.
+  such that when the node restarts, it can recover the state to provide replay
+  protection.
 
 	```go
 	func (app *App) Close() error {

@@ -117,28 +117,36 @@ func (k Keeper) withdrawContinuousFund(ctx context.Context, recipient sdk.AccAdd
 	if err != nil {
 		return sdk.Coin{}, err
 	}
-	if toDistributeAmount.Equal(math.ZeroInt()) {
-		return sdk.Coin{}, nil
+
+	if !toDistributeAmount.Equal(math.ZeroInt()) {
+		err = k.iterateAndUpdateFundsDistribution(ctx, toDistributeAmount)
+		if err != nil {
+			return sdk.Coin{}, fmt.Errorf("error while iterating all the continuous funds: %w", err)
+		}
 	}
 
-	denom, err := k.iterateAndUpdateFundsDistribution(ctx, toDistributeAmount)
+	// withdraw continuous fund
+	withdrawnAmount, err := k.withdrawRecipientFunds(ctx, recipient)
 	if err != nil {
-		return sdk.Coin{}, fmt.Errorf("error while iterating all the continuous funds: %w", err)
+		return sdk.Coin{}, fmt.Errorf("error while withdrawing recipient funds for recipient: %s", recipient.String())
 	}
 
+	return withdrawnAmount, nil
+}
+
+func (k Keeper) withdrawRecipientFunds(ctx context.Context, recipient sdk.AccAddress) (sdk.Coin, error) {
 	// get allocated continuous fund
 	fundsAllocated, err := k.getAndResetDistributedFunds(ctx, recipient)
 	if err != nil {
 		return sdk.Coin{}, fmt.Errorf("error while getting distributed funds: %w", err)
 	}
 
-	withdrawnAmount := sdk.NewCoin(denom, fundsAllocated)
+	withdrawnAmount := sdk.NewCoin(sdk.DefaultBondDenom, fundsAllocated)
 	// Distribute funds to the recipient from pool module account
 	err = k.DistributeFromCommunityPool(ctx, sdk.NewCoins(withdrawnAmount), recipient)
 	if err != nil {
 		return sdk.Coin{}, err
 	}
-
 	return withdrawnAmount, nil
 }
 
@@ -150,17 +158,17 @@ func (k Keeper) SetToDistribute(ctx context.Context, amount sdk.Coins) error {
 	return nil
 }
 
-func (k Keeper) iterateAndUpdateFundsDistribution(ctx context.Context, toDistributeAmount math.Int) (string, error) {
+func (k Keeper) iterateAndUpdateFundsDistribution(ctx context.Context, toDistributeAmount math.Int) error {
 	totalPercentageToBeDistributed := math.ZeroInt()
 	err := k.RecipientFundPercentage.Walk(ctx, nil, func(key sdk.AccAddress, value math.Int) (stop bool, err error) {
 		totalPercentageToBeDistributed = totalPercentageToBeDistributed.Add(value)
 		return false, nil
 	})
 	if err != nil {
-		return "", err
+		return err
 	}
 	if totalPercentageToBeDistributed.GT(math.NewInt(100)) {
-		return "", fmt.Errorf("total funds percentage cannot exceed 100")
+		return fmt.Errorf("total funds percentage cannot exceed 100")
 	}
 
 	denom := sdk.DefaultBondDenom
@@ -188,18 +196,14 @@ func (k Keeper) iterateAndUpdateFundsDistribution(ctx context.Context, toDistrib
 			return false, err
 		}
 
-		// Subtract the coins to be distributed from toDistribute
-		toDistribute, err := k.ToDistribute.Get(ctx)
-		if err != nil {
-			return false, err
-		}
-		err = k.ToDistribute.Set(ctx, toDistribute.Sub(recipientCoins))
-		if err != nil {
-			return false, err
-		}
 		return false, nil
 	})
-	return denom, err
+	if err != nil {
+		return err
+	}
+
+	// Set the coins to be distributed from toDistribute to 0
+	return k.ToDistribute.Set(ctx, math.ZeroInt())
 }
 
 func (k Keeper) getAndResetDistributedFunds(ctx context.Context, recipient sdk.AccAddress) (amount math.Int, err error) {

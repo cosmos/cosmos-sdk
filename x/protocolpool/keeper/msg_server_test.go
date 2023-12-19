@@ -449,7 +449,7 @@ func (suite *KeeperTestSuite) TestWithdrawContinuousFund() {
 			},
 			recipientAddress: recipient,
 			expErr:           false,
-			withdrawnAmount:  sdk.Coin{},
+			withdrawnAmount:  sdk.NewCoin(sdk.DefaultBondDenom, math.ZeroInt()),
 		},
 		"valid case": {
 			preRun: func() {

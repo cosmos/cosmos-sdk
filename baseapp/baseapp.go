@@ -900,7 +900,7 @@ func (app *BaseApp) runTx(mode execMode, txBytes []byte) (gInfo sdk.GasInfo, res
 		anteEvents = events.ToABCIEvents()
 	}
 
-	if mode == execModeCheck {
+	if mode == execModeCheck || mode == execModeReCheck {
 		err = app.mempool.Insert(ctx, tx)
 		if err != nil {
 			return gInfo, nil, anteEvents, err

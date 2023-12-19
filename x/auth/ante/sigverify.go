@@ -341,6 +341,23 @@ func (svd SigVerificationDecorator) authenticate(ctx sdk.Context, tx sdk.Tx, sim
 		return err
 	}
 
+	err = svd.verifySig(ctx, simulate, tx, acc, sig)
+	if err != nil {
+		return err
+	}
+
+	err = svd.increaseSequence(ctx, acc)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// verifySig will verify the signature of the provided signer account.
+// it will assess:
+// - the pub key is on the curve.
+// - verify sig
+func (svd SigVerificationDecorator) verifySig(ctx sdk.Context, simulate bool, tx sdk.Tx, acc sdk.AccountI, sig signing.SignatureV2) error {
 	// retrieve pubkey
 	pubKey := acc.GetPubKey()
 	if !simulate && pubKey == nil {
@@ -358,6 +375,13 @@ func (svd SigVerificationDecorator) authenticate(ctx sdk.Context, tx sdk.Tx, sim
 		)
 	}
 
+	// we're in simulation mode, or in ReCheckTx, or context is not
+	// on sig verify tx, then we do not need to verify the signatures
+	// in the tx.
+	if simulate || ctx.IsReCheckTx() || !ctx.IsSigverifyTx() {
+		return nil
+	}
+
 	// retrieve signer data
 	genesis := ctx.BlockHeight() == 0
 	chainID := ctx.ChainID()
@@ -366,14 +390,6 @@ func (svd SigVerificationDecorator) authenticate(ctx sdk.Context, tx sdk.Tx, sim
 		accNum = acc.GetAccountNumber()
 	}
 
-	// we're in simulation mode, or in ReCheckTx, or context is not
-	// on sig verify tx, then we do not need to verify the signatures
-	// in the tx.
-	if simulate || ctx.IsReCheckTx() || !ctx.IsSigverifyTx() {
-		return nil
-	}
-
-	// we need to verify the signature.
 	anyPk, _ := codectypes.NewAnyWithValue(pubKey)
 
 	signerData := txsigning.SignerData{
@@ -391,7 +407,7 @@ func (svd SigVerificationDecorator) authenticate(ctx sdk.Context, tx sdk.Tx, sim
 		return fmt.Errorf("expected tx to implement V2AdaptableTx, got %T", tx)
 	}
 	txData := adaptableTx.GetSigningTxData()
-	err = authsigning.VerifySignature(ctx, pubKey, signerData, sig.Data, svd.signModeHandler, txData)
+	err := authsigning.VerifySignature(ctx, pubKey, signerData, sig.Data, svd.signModeHandler, txData)
 	if err != nil {
 		var errMsg string
 		if OnlyLegacyAminoSigners(sig.Data) {
@@ -403,58 +419,18 @@ func (svd SigVerificationDecorator) authenticate(ctx sdk.Context, tx sdk.Tx, sim
 		}
 		return errorsmod.Wrap(sdkerrors.ErrUnauthorized, errMsg)
 	}
+
 	return nil
 }
 
-// IncrementSequenceDecorator handles incrementing sequences of all signers.
-// Use the IncrementSequenceDecorator decorator to prevent replay attacks. Note,
-// there is need to execute IncrementSequenceDecorator on RecheckTx since
-// BaseApp.Commit() will set the check state based on the latest header.
-//
-// NOTE: Since CheckTx and DeliverTx state are managed separately, subsequent and
-// sequential txs originating from the same account cannot be handled correctly in
-// a reliable way unless sequence numbers are managed and tracked manually by a
-// client. It is recommended to instead use multiple messages in a tx.
-type IncrementSequenceDecorator struct {
-	ak AccountKeeper
-}
-
-func NewIncrementSequenceDecorator(ak AccountKeeper) IncrementSequenceDecorator {
-	return IncrementSequenceDecorator{
-		ak: ak,
-	}
-}
-
-func (isd IncrementSequenceDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
-	sigTx, ok := tx.(authsigning.SigVerifiableTx)
-	if !ok {
-		return ctx, errorsmod.Wrap(sdkerrors.ErrTxDecode, "invalid transaction type")
+// increaseSequence will increase the sequence number of the account.
+func (svd SigVerificationDecorator) increaseSequence(ctx sdk.Context, acc sdk.AccountI) error {
+	if err := acc.SetSequence(acc.GetSequence() + 1); err != nil {
+		return err
 	}
 
-	// increment sequence of all signers
-	signers, err := sigTx.GetSigners()
-	if err != nil {
-		return sdk.Context{}, err
-	}
-
-	for _, signer := range signers {
-		acc := isd.ak.GetAccount(ctx, signer)
-		if err := acc.SetSequence(acc.GetSequence() + 1); err != nil {
-			panic(err)
-		}
-
-		pubKey := acc.GetPubKey()
-		if !simulate && pubKey == nil {
-			return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidPubKey, "pubkey on account is not set")
-		}
-		if err := verifyIsOnCurve(pubKey); err != nil {
-			return ctx, err
-		}
-
-		isd.ak.SetAccount(ctx, acc)
-	}
-
-	return next(ctx, tx, simulate)
+	svd.ak.SetAccount(ctx, acc)
+	return nil
 }
 
 // ValidateSigCountDecorator takes in Params and returns errors if there are too many signatures in the tx for the given params

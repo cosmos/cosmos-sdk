@@ -209,14 +209,15 @@ func TestSigVerification(t *testing.T) {
 	for i, tc := range testCases {
 		for _, signMode := range enabledSignModes {
 			t.Run(fmt.Sprintf("%s with %s", tc.name, signMode), func(t *testing.T) {
-				suite.ctx = suite.ctx.WithIsReCheckTx(tc.recheck).WithIsSigverifyTx(tc.sigverify)
+				ctx, _ := suite.ctx.CacheContext()
+				ctx = ctx.WithIsReCheckTx(tc.recheck).WithIsSigverifyTx(tc.sigverify)
 				suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder() // Create new txBuilder for each test
 
 				require.NoError(t, suite.txBuilder.SetMsgs(msgs...))
 				suite.txBuilder.SetFeeAmount(feeAmount)
 				suite.txBuilder.SetGasLimit(gasLimit)
 
-				tx, err := suite.CreateTestTx(suite.ctx, tc.privs, tc.accNums, tc.accSeqs, suite.ctx.ChainID(), signMode)
+				tx, err := suite.CreateTestTx(ctx, tc.privs, tc.accNums, tc.accSeqs, ctx.ChainID(), signMode)
 				require.NoError(t, err)
 				if tc.invalidSigs {
 					txSigs, _ := tx.GetSignaturesV2()
@@ -237,12 +238,21 @@ func TestSigVerification(t *testing.T) {
 
 				txBytes, err := suite.clientCtx.TxConfig.TxEncoder()(tx)
 				require.NoError(t, err)
-				byteCtx := suite.ctx.WithTxBytes(txBytes)
+				byteCtx := ctx.WithTxBytes(txBytes)
 				_, err = antehandler(byteCtx, tx, false)
 				if tc.shouldErr {
 					require.NotNil(t, err, "TestCase %d: %s did not error as expected", i, tc.name)
 				} else {
 					require.Nil(t, err, "TestCase %d: %s errored unexpectedly. Err: %v", i, tc.name, err)
+					// check account sequence
+					signers, err := tx.GetSigners()
+					require.NoError(t, err)
+					for i, signer := range signers {
+						wantSeq := tc.accSeqs[i] + 1
+						acc, err := suite.accountKeeper.Accounts.Get(ctx, signer)
+						require.NoError(t, err)
+						require.Equal(t, int(wantSeq), int(acc.GetSequence()))
+					}
 				}
 			})
 		}
@@ -319,53 +329,6 @@ func runSigDecorators(t *testing.T, params types.Params, _ bool, privs ...crypto
 	return after - before, err
 }
 
-func TestIncrementSequenceDecorator(t *testing.T) {
-	suite := SetupTestSuite(t, true)
-	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
-
-	priv, _, addr := testdata.KeyTestPubAddr()
-	acc := suite.accountKeeper.NewAccountWithAddress(suite.ctx, addr)
-	require.NoError(t, acc.SetAccountNumber(uint64(50)))
-	suite.accountKeeper.SetAccount(suite.ctx, acc)
-
-	msgs := []sdk.Msg{testdata.NewTestMsg(addr)}
-	require.NoError(t, suite.txBuilder.SetMsgs(msgs...))
-	privs := []cryptotypes.PrivKey{priv}
-	accNums := []uint64{suite.accountKeeper.GetAccount(suite.ctx, addr).GetAccountNumber()}
-	accSeqs := []uint64{suite.accountKeeper.GetAccount(suite.ctx, addr).GetSequence()}
-	feeAmount := testdata.NewTestFeeAmount()
-	gasLimit := testdata.NewTestGasLimit()
-	suite.txBuilder.SetFeeAmount(feeAmount)
-	suite.txBuilder.SetGasLimit(gasLimit)
-
-	tx, err := suite.CreateTestTx(suite.ctx, privs, accNums, accSeqs, suite.ctx.ChainID(), signing.SignMode_SIGN_MODE_DIRECT)
-	require.NoError(t, err)
-
-	pubKeyDecorator := ante.NewSetPubKeyDecorator(suite.accountKeeper)
-	IncrementSequenceDecorator := ante.NewIncrementSequenceDecorator(suite.accountKeeper)
-	antehandler := sdk.ChainAnteDecorators(pubKeyDecorator, IncrementSequenceDecorator)
-
-	testCases := []struct {
-		ctx         sdk.Context
-		simulate    bool
-		expectedSeq uint64
-	}{
-		{suite.ctx.WithIsReCheckTx(true), false, 1},
-		{suite.ctx.WithIsCheckTx(true).WithIsReCheckTx(false), false, 2},
-		{suite.ctx.WithIsReCheckTx(true), false, 3},
-		{suite.ctx.WithIsReCheckTx(true), false, 4},
-		{suite.ctx.WithIsReCheckTx(true), true, 5},
-	}
-
-	for i, tc := range testCases {
-		t.Run(fmt.Sprintf("%d test", i), func(t *testing.T) {
-			_, err = antehandler(tc.ctx, tx, tc.simulate)
-			require.NoError(t, err, "unexpected error; tc #%d, %v", i, tc)
-			require.Equal(t, tc.expectedSeq, suite.accountKeeper.GetAccount(suite.ctx, addr).GetSequence())
-		})
-	}
-}
-
 func TestAnteHandlerChecks(t *testing.T) {
 	suite := SetupTestSuite(t, true)
 	suite.txBankKeeper.EXPECT().DenomMetadataV2(gomock.Any(), gomock.Any()).Return(&bankv1beta1.QueryDenomMetadataResponse{}, nil).AnyTimes()
@@ -410,9 +373,8 @@ func TestAnteHandlerChecks(t *testing.T) {
 	setPubKeyDecorator := ante.NewSetPubKeyDecorator(suite.accountKeeper)
 	sigGasConsumeDecorator := ante.NewSigGasConsumeDecorator(suite.accountKeeper, ante.DefaultSigVerificationGasConsumer)
 	sigVerificationDecorator := ante.NewSigVerificationDecorator(suite.accountKeeper, anteTxConfig.SignModeHandler())
-	IncrementSequenceDecorator := ante.NewIncrementSequenceDecorator(suite.accountKeeper)
 
-	anteHandler := sdk.ChainAnteDecorators(setPubKeyDecorator, sigGasConsumeDecorator, sigVerificationDecorator, IncrementSequenceDecorator)
+	anteHandler := sdk.ChainAnteDecorators(setPubKeyDecorator, sigGasConsumeDecorator, sigVerificationDecorator)
 
 	type testCase struct {
 		name      string

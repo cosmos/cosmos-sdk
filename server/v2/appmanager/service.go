@@ -5,8 +5,11 @@ import (
 	"fmt"
 	"sync/atomic"
 
-	"github.com/cosmos/cosmos-sdk/serverv2/core/appmanager"
-	"github.com/cosmos/cosmos-sdk/serverv2/core/transaction"
+	"cosmossdk.io/server/v2/stf"
+
+	"cosmossdk.io/server/v2/core/appmanager"
+	"cosmossdk.io/server/v2/core/store"
+	"cosmossdk.io/server/v2/core/transaction"
 )
 
 type AppManagerBuilder[T transaction.Tx] struct {
@@ -17,12 +20,12 @@ func (a *AppManagerBuilder[T]) RegisterInitGenesis(moduleName string, genesisFun
 	a.InitGenesis[moduleName] = genesisFunc
 }
 
-func (a *AppManagerBuilder[T]) RegisterHandler(moduleName, handlerName string, handler MsgHandler) {
+func (a *AppManagerBuilder[T]) RegisterHandler(moduleName, handlerName string, handler stf.MsgHandler) {
 	panic("...")
 }
 
 type MsgSetKVPairs struct {
-	Pairs []ChangeSet
+	Pairs []store.ChangeSet
 }
 
 func (a *AppManagerBuilder[T]) Build() *AppManager[T] {
@@ -46,13 +49,13 @@ type AppManager[T transaction.Tx] struct {
 	queryGasLimit   uint64
 	// configs - end
 
-	db Store
+	db store.Store
 
 	lastBlockHeight *atomic.Uint64
 
 	initGenesis func(ctx context.Context, genesisBytes []byte) error
 
-	stf *STFAppManager[T]
+	stf *stf.STFAppManager[T]
 }
 
 func (a AppManager[T]) DeliverBlock(ctx context.Context, block appmanager.BlockRequest) (*appmanager.BlockResponse, Hash, error) {
@@ -84,16 +87,16 @@ func (a AppManager[T]) Query(ctx context.Context, request Type) (response Type, 
 	if err != nil {
 		return nil, err
 	}
-	queryCtx := a.stf.makeContext(ctx, nil, queryState, a.queryGasLimit)
-	return a.stf.handleQuery(queryCtx, request)
+	queryCtx := a.stf.MakeContext(ctx, nil, queryState, a.queryGasLimit)
+	return a.stf.HandleQuery(queryCtx, request)
 }
 
 // getLatestState provides a readonly view of the state of the last committed block.
-func (a AppManager[T]) getLatestState(_ context.Context) (BranchStore, error) {
+func (a AppManager[T]) getLatestState(_ context.Context) (store.BranchStore, error) {
 	lastBlock := a.lastBlockHeight.Load()
 	lastBlockStore, err := a.db.ReadonlyWithVersion(lastBlock)
 	if err != nil {
 		return nil, err
 	}
-	return a.stf.branch(lastBlockStore), nil
+	return a.stf.Branch(lastBlockStore), nil
 }

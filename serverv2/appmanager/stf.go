@@ -57,7 +57,7 @@ func (s STFAppManager[T]) DeliverBlock(ctx context.Context, block appmanager.Blo
 }
 
 func (s STFAppManager[T]) beginBlock(ctx context.Context, state BranchStore) (beginBlockEvents []event.Event, err error) {
-	execCtx := s.makeContext(ctx, runtimeIdentity, state, 0) // TODO: gas limit
+	execCtx := s.makeContext(ctx, []Identity{runtimeIdentity}, state, 0) // TODO: gas limit
 	err = s.doBeginBlock(execCtx)
 	if err != nil {
 		return nil, err
@@ -105,7 +105,7 @@ func (s STFAppManager[T]) deliverTx(ctx context.Context, state BranchStore, txBy
 // validateTx validates a transaction given the provided BranchStore and gas limit.
 // If the validation is successful, state is committed
 func (s STFAppManager[T]) validateTx(ctx context.Context, store BranchStore, gasLimit uint64, tx T) (gasUsed uint64, events []event.Event, err error) {
-	validateCtx := s.makeContext(ctx, tx.GetSender(), store, gasLimit)
+	validateCtx := s.makeContext(ctx, tx.GetSenders(), store, gasLimit)
 	err = s.doTxValidation(ctx, tx)
 	if err != nil {
 		return 0, nil, nil
@@ -123,7 +123,7 @@ func (s STFAppManager[T]) validateTx(ctx context.Context, store BranchStore, gas
 }
 
 func (s STFAppManager[T]) execTx(ctx context.Context, store BranchStore, gasLimit uint64, tx T) (msgResp Type, gasUsed uint64, execEvents []event.Event, err error) {
-	execCtx := s.makeContext(ctx, tx.GetSender(), store, gasLimit)
+	execCtx := s.makeContext(ctx, tx.GetSenders(), store, gasLimit)
 	// atomic execution of the all messages in a transaction, TODO: we should allow messages to fail in a specific mode
 	for _, msg := range tx.GetMessages() {
 		msgResp, err = s.handleMsg(ctx, msg)
@@ -145,7 +145,7 @@ func (s STFAppManager[T]) execTx(ctx context.Context, store BranchStore, gasLimi
 }
 
 func (s STFAppManager[T]) endBlock(ctx context.Context, store BranchStore, block appmanager.BlockRequest) (endBlockEvents []event.Event, err error) {
-	execCtx := s.makeContext(ctx, runtimeIdentity, store, 0) // TODO: gas limit
+	execCtx := s.makeContext(ctx, []Identity{runtimeIdentity}, store, 0) // TODO: gas limit
 	err = s.doBeginBlock(execCtx)
 	if err != nil {
 		return nil, err
@@ -164,12 +164,12 @@ type executionContext struct {
 	gasUsed  uint64
 	gasLimit uint64
 	events   []event.Event
-	sender   Identity
+	sender   []Identity
 }
 
 func (s STFAppManager[T]) makeContext(
 	ctx context.Context,
-	sender Identity,
+	sender []Identity,
 	store BranchStore,
 	gasLimit uint64,
 ) *executionContext {

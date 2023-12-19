@@ -14,7 +14,7 @@ type (
 type Tx interface {
 	Hash() [32]byte // TODO evaluate if 32 bytes is the right size & benchmark overhead of hashing instead of using identifier
 	GetMessages() []Type
-	GetSender() Identity
+	GetSenders() []Identity // TODO reduce this to a single identity if accepted
 	GetGasLimit() uint64
 }
 

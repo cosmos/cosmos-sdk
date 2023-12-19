@@ -39,6 +39,7 @@ func (a *AppManagerBuilder[T]) Build() *AppManager[T] {
 	return &AppManager[T]{initGenesis: genesis}
 }
 
+// AppManager is a coordinator for all things related to an application
 type AppManager[T transaction.Tx] struct {
 	// configs
 	checkTxGasLimit uint64

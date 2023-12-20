@@ -16,7 +16,7 @@ type (
 	Identity = []byte
 )
 
-var runtimeIdentity Identity = []byte("runtime")
+var runtimeIdentity Identity = []byte("runtime") // TODO: most likely should be moved to core somewhere.
 
 // STF is a struct that manages the state transition component of the app.
 type STF[T transaction.Tx] struct {

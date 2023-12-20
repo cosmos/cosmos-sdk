@@ -53,13 +53,14 @@ func (s *KeeperTestSuite) TestConsPubKeyRotationHistory() {
 	s.Require().NoError(err)
 
 	height := uint64(ctx.BlockHeight())
-	stakingKeeper.RotationHistory.Set(ctx, collections.Join(valAddr.Bytes(), height), types.ConsPubKeyRotationHistory{
+	err = stakingKeeper.RotationHistory.Set(ctx, collections.Join(valAddr.Bytes(), height), types.ConsPubKeyRotationHistory{
 		OperatorAddress: valAddr,
 		OldConsPubkey:   validator.ConsensusPubkey,
 		NewConsPubkey:   newConsPub,
 		Height:          height,
 		Fee:             params.KeyRotationFee,
 	})
+	s.Require().NoError(err)
 
 	historyObjects, err = stakingKeeper.GetValidatorConsPubKeyRotationHistory(ctx, valAddr)
 	s.Require().NoError(err)
@@ -103,8 +104,12 @@ func (s *KeeperTestSuite) setValidators(n int) {
 		_ = stakingkeeper.TestingUpdateValidator(stakingKeeper, ctx, val, true)
 		val0AccAddr := sdk.AccAddress(addrVals[i].Bytes())
 		selfDelegation := types.NewDelegation(val0AccAddr.String(), addrVals[i].String(), issuedShares)
-		stakingKeeper.SetDelegation(ctx, selfDelegation)
-		stakingKeeper.SetValidatorByConsAddr(ctx, val)
+		err := stakingKeeper.SetDelegation(ctx, selfDelegation)
+		s.Require().NoError(err)
+
+		err = stakingKeeper.SetValidatorByConsAddr(ctx, val)
+		s.Require().NoError(err)
+
 	}
 
 	validators, err := stakingKeeper.GetAllValidators(ctx)

@@ -148,6 +148,7 @@ func (spkd SetPubKeyDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 
 // SigVerificationDecorator verifies all signatures for a tx and return an error if any are invalid. Note,
 // the SigVerificationDecorator will not check signatures on ReCheck.
+// It will also increase the sequence number, and consume gas for signature verification.
 //
 // CONTRACT: Pubkeys are set in context for all signers before this decorator runs
 // CONTRACT: Tx must implement SigVerifiableTx interface

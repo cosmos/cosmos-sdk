@@ -31,4 +31,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### API Breaking Changes
 
+* [#18827](https://github.com/cosmos/cosmos-sdk/pull/18827) Remove coin spent event, coin mint event, coin burn event and coin subtraction events. These are replaced by state streaming
+
 ### Bug Fixes

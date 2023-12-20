@@ -65,7 +65,6 @@ type ResponseInitChain struct {
 type TxResult struct {
 	Events  []event.Event
 	GasUsed uint64
-
-	Resp  Type
-	Error error
+	Resp    Type
+	Error   error
 }

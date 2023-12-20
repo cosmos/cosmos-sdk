@@ -16,10 +16,10 @@ type (
 	Identity = []byte
 )
 
-var runtimeIdentity Identity = []byte("app-manager")
+var runtimeIdentity Identity = []byte("runtime")
 
-// STFAppManager is a struct that manages the state transition component of the app.
-type STFAppManager[T transaction.Tx] struct {
+// STF is a struct that manages the state transition component of the app.
+type STF[T transaction.Tx] struct {
 	handleMsg   func(ctx context.Context, msg Type) (msgResp Type, err error)
 	handleQuery func(ctx context.Context, req Type) (resp Type, err error)
 
@@ -30,16 +30,16 @@ type STFAppManager[T transaction.Tx] struct {
 
 	decodeTx func(txBytes []byte) (T, error)
 
-	Branch func(store store.ReadonlyState) store.WritableState // branch is a function that given a readonly store it returns a writable version of it.
+	branch func(store store.ReadonlyState) store.WritableState // branch is a function that given a readonly store it returns a writable version of it.
 }
 
 // DeliverBlock is our state transition function.
 // It takes a read only view of the state to apply the block to,
 // executes the block and returns the block results and the new state.
-func (s STFAppManager[T]) DeliverBlock(ctx context.Context, block appmanager.BlockRequest, state store.ReadonlyState) (blockResult *appmanager.BlockResponse, newState store.WritableState, err error) {
+func (s STF[T]) DeliverBlock(ctx context.Context, block appmanager.BlockRequest, state store.ReadonlyState) (blockResult *appmanager.BlockResponse, newState store.WritableState, err error) {
 	// creates a new branch store, from the readonly view of the state
 	// that can be written to.
-	newState = s.Branch(state)
+	newState = s.branch(state)
 	// begin block
 	beginBlockEvents, err := s.beginBlock(ctx, newState)
 	if err != nil {
@@ -48,7 +48,7 @@ func (s STFAppManager[T]) DeliverBlock(ctx context.Context, block appmanager.Blo
 	// execute txs
 	txResults := make([]appmanager.TxResult, len(block.Txs))
 	for i, txBytes := range block.Txs {
-		txResults[i] = s.DeliverTx(ctx, newState, txBytes)
+		txResults[i] = s.deliverTx(ctx, newState, txBytes)
 	}
 	// end block
 	endBlockEvents, err := s.endBlock(ctx, newState, block)
@@ -63,22 +63,8 @@ func (s STFAppManager[T]) DeliverBlock(ctx context.Context, block appmanager.Blo
 	}, newState, nil
 }
 
-func (s STFAppManager[T]) beginBlock(ctx context.Context, state store.WritableState) (beginBlockEvents []event.Event, err error) {
-	execCtx := s.MakeContext(ctx, []Identity{runtimeIdentity}, state, 0) // TODO: gas limit
-	err = s.doBeginBlock(execCtx)
-	if err != nil {
-		return nil, err
-	}
-	// apply state changes
-	changes, err := execCtx.store.ChangeSets()
-	if err != nil {
-		return nil, err
-	}
-	return execCtx.events, state.ApplyChangeSets(changes)
-}
-
 // DeliverTx executes a TX and returns the result.
-func (s STFAppManager[T]) DeliverTx(ctx context.Context, state store.WritableState, txBytes []byte) appmanager.TxResult {
+func (s STF[T]) deliverTx(ctx context.Context, state store.WritableState, txBytes []byte) appmanager.TxResult {
 	tx, err := s.decodeTx(txBytes)
 	if err != nil {
 		return appmanager.TxResult{
@@ -112,58 +98,45 @@ func (s STFAppManager[T]) DeliverTx(ctx context.Context, state store.WritableSta
 
 // validateTx validates a transaction given the provided WritableState and gas limit.
 // If the validation is successful, state is committed
-func (s STFAppManager[T]) validateTx(ctx context.Context, store store.WritableState, gasLimit uint64, tx T) (gasUsed uint64, events []event.Event, err error) {
-	validateCtx := s.MakeContext(ctx, tx.GetSenders(), store, gasLimit)
-	err = s.doTxValidation(ctx, tx)
-	if err != nil {
-		return 0, nil, nil
-	}
-	// all went fine we can commit to state.
-	changeSets, err := validateCtx.store.ChangeSets()
+func (s STF[T]) validateTx(ctx context.Context, state store.WritableState, gasLimit uint64, tx T) (gasUsed uint64, events []event.Event, err error) {
+	validateState := s.branch(state)
+	validateCtx := s.makeContext(ctx, tx.GetSenders(), validateState, gasLimit)
+	err = s.doTxValidation(validateCtx, tx)
 	if err != nil {
 		return 0, nil, err
 	}
-	err = store.ApplyChangeSets(changeSets)
-	if err != nil {
-		return 0, nil, err
-	}
-	return validateCtx.gasUsed, validateCtx.events, nil
+	return validateCtx.gasUsed, validateCtx.events, applyStateChanges(state, validateState)
 }
 
-func (s STFAppManager[T]) execTx(ctx context.Context, store store.WritableState, gasLimit uint64, tx T) (msgResp Type, gasUsed uint64, execEvents []event.Event, err error) {
-	execCtx := s.MakeContext(ctx, tx.GetSenders(), store, gasLimit)
+func (s STF[T]) execTx(ctx context.Context, state store.WritableState, gasLimit uint64, tx T) (msgResp Type, gasUsed uint64, execEvents []event.Event, err error) {
+	execState := s.branch(state)
+	execCtx := s.makeContext(ctx, tx.GetSenders(), execState, gasLimit)
 	// atomic execution of the all messages in a transaction, TODO: we should allow messages to fail in a specific mode
 	for _, msg := range tx.GetMessages() {
-		msgResp, err = s.handleMsg(ctx, msg)
+		msgResp, err = s.handleMsg(execCtx, msg)
 		if err != nil {
 			return nil, 0, nil, err
 		}
-
 	}
-	// get state changes and save them to the parent store
-	changeSets, err := execCtx.store.ChangeSets()
-	if err != nil {
-		return nil, 0, nil, err
-	}
-	err = store.ApplyChangeSets(changeSets)
-	if err != nil {
-		return nil, 0, nil, err
-	}
-	return msgResp, 0, execCtx.events, nil
+	return msgResp, 0, execCtx.events, applyStateChanges(state, execState)
 }
 
-func (s STFAppManager[T]) endBlock(ctx context.Context, store store.WritableState, block appmanager.BlockRequest) (endBlockEvents []event.Event, err error) {
-	execCtx := s.MakeContext(ctx, []Identity{runtimeIdentity}, store, 0) // TODO: gas limit
-	err = s.doBeginBlock(execCtx)
+func (s STF[T]) beginBlock(ctx context.Context, state store.WritableState) (beginBlockEvents []event.Event, err error) {
+	bbCtx := s.makeContext(ctx, []Identity{runtimeIdentity}, state, 0) // TODO: gas limit
+	err = s.doBeginBlock(bbCtx)
 	if err != nil {
 		return nil, err
 	}
-	// apply state changes
-	changes, err := execCtx.store.ChangeSets()
+	return bbCtx.events, nil
+}
+
+func (s STF[T]) endBlock(ctx context.Context, store store.WritableState, block appmanager.BlockRequest) (endBlockEvents []event.Event, err error) {
+	ebCtx := s.makeContext(ctx, []Identity{runtimeIdentity}, store, 0) // TODO: gas limit
+	err = s.doEndBlock(ebCtx)
 	if err != nil {
 		return nil, err
 	}
-	return execCtx.events, store.ApplyChangeSets(changes)
+	return ebCtx.events, nil
 }
 
 type executionContext struct {
@@ -175,7 +148,7 @@ type executionContext struct {
 	sender   []Identity
 }
 
-func (s STFAppManager[T]) MakeContext(
+func (s STF[T]) makeContext(
 	ctx context.Context,
 	sender []Identity,
 	store store.WritableState,
@@ -189,4 +162,13 @@ func (s STFAppManager[T]) MakeContext(
 		events:   make([]event.Event, 0),
 		sender:   sender,
 	}
+}
+
+// applyStateChanges writes the changes in state from src to dst.
+func applyStateChanges(dst store.WritableState, src store.WritableState) error {
+	changes, err := src.ChangeSets()
+	if err != nil {
+		return err
+	}
+	return dst.ApplyChangeSets(changes)
 }

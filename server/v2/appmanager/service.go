@@ -56,7 +56,7 @@ type AppManager[T transaction.Tx] struct {
 
 	initGenesis func(ctx context.Context, genesisBytes []byte) error
 
-	stf *stf.STFAppManager[T]
+	stf *stf.STF[T]
 }
 
 func (a AppManager[T]) DeliverBlock(ctx context.Context, block appmanager.BlockRequest) (*appmanager.BlockResponse, Hash, error) {
@@ -88,7 +88,7 @@ func (a AppManager[T]) Simulate(ctx context.Context, tx []byte) (appmanager.TxRe
 	if err != nil {
 		return appmanager.TxResult{}, err
 	}
-	result := a.stf.DeliverTx(ctx, state, tx)
+	result := a.stf.deliverTx(ctx, state, tx)
 	return result, nil
 }
 
@@ -97,16 +97,15 @@ func (a AppManager[T]) Query(ctx context.Context, request Type) (response Type, 
 	if err != nil {
 		return nil, err
 	}
-	queryCtx := a.stf.MakeContext(ctx, nil, queryState, a.queryGasLimit)
-	return a.stf.Query(queryCtx, request)
+	return a.stf.Query(ctx, queryState, a.queryGasLimit, request)
 }
 
 // getLatestState provides a readonly view of the state of the last committed block.
-func (a AppManager[T]) getLatestState(_ context.Context) (store.WritableState, error) {
+func (a AppManager[T]) getLatestState(_ context.Context) (store.ReadonlyState, error) {
 	lastBlock := a.lastBlockHeight.Load()
-	lastBlockStore, err := a.db.ReadonlyStateAt(lastBlock)
+	lastBlockState, err := a.db.ReadonlyStateAt(lastBlock)
 	if err != nil {
 		return nil, err
 	}
-	return a.stf.Branch(lastBlockStore), nil
+	return lastBlockState, nil
 }

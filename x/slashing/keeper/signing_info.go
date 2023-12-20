@@ -76,21 +76,6 @@ func (k Keeper) SetMissedBlockBitmapChunk(ctx context.Context, addr sdk.ConsAddr
 	return k.ValidatorMissedBlockBitmap.Set(ctx, collections.Join(addr.Bytes(), uint64(chunkIndex)), chunk)
 }
 
-// getPreviousConsKey checks if the key rotated, returns the old consKey to get the missed blocks
-// because missed blocks are still pointing to the old key
-func (k Keeper) getPreviousConsKey(ctx context.Context, addr sdk.ConsAddress) (sdk.ConsAddress, error) {
-	oldPk, err := k.sk.ValidatorIdentifier(ctx, addr)
-	if err != nil {
-		return nil, err
-	}
-
-	if oldPk != nil {
-		return oldPk, nil
-	}
-
-	return addr, nil
-}
-
 // GetMissedBlockBitmapValue returns true if a validator missed signing a block
 // at the given index and false otherwise. The index provided is assumed to be
 // the index in the range [0, SignedBlocksWindow), which represents the bitmap

@@ -8,14 +8,15 @@ import (
 	"os"
 	"path/filepath"
 
+	cmtabciclient "github.com/cometbft/cometbft/abci/client"
 	cmtcfg "github.com/cometbft/cometbft/config"
 	"github.com/cometbft/cometbft/node"
 	"github.com/cometbft/cometbft/p2p"
 	pvm "github.com/cometbft/cometbft/privval"
 	"github.com/cometbft/cometbft/proxy"
-	"github.com/cometbft/cometbft/rpc/client/local"
+	rpclientlocal "github.com/cometbft/cometbft/rpc/client/local"
 	cmttypes "github.com/cometbft/cometbft/types"
-	cmttime "github.com/cometbft/cometbft/types/time"
+	abciclient "github.com/informalsystems/CometMock/cometmock/abci_client"
 	"golang.org/x/sync/errgroup"
 
 	"cosmossdk.io/log"
@@ -76,14 +77,14 @@ func startInProcess(cfg Config, val *Validator) error {
 	}
 	val.tmNode = tmNode
 
-	if val.rPCAddress != "" {
-		val.rPCClient = local.New(tmNode)
+	if val.rpcAddress != "" {
+		val.rpcClient = rpclientlocal.New(tmNode)
 	}
 
 	// We'll need a RPC client if the validator exposes a gRPC or REST endpoint.
-	if val.aPIAddress != "" || val.AppConfig.GRPC.Enable {
+	if val.rpcAddress != "" || val.AppConfig.GRPC.Enable {
 		val.clientCtx = val.clientCtx.
-			WithClient(val.rPCClient)
+			WithClient(val.rpcClient)
 
 		app.RegisterTxService(val.clientCtx)
 		app.RegisterTendermintService(val.clientCtx)
@@ -111,7 +112,82 @@ func startInProcess(cfg Config, val *Validator) error {
 		val.grpc = grpcSrv
 	}
 
-	if val.aPIAddress != "" {
+	if val.apiAddress != "" {
+		apiSrv := api.New(val.clientCtx, logger.With(log.ModuleKey, "api-server"), val.grpc)
+		app.RegisterAPIRoutes(apiSrv, val.AppConfig.API)
+
+		val.errGroup.Go(func() error {
+			return apiSrv.Start(ctx, *val.AppConfig)
+		})
+
+		val.api = apiSrv
+	}
+
+	return nil
+}
+
+func startInProcessMock(cfg Config, val *Validator, clientMap map[string]abciclient.AbciCounterpartyClient) error {
+	logger := val.ctx.Logger
+	cmtCfg := val.ctx.Config
+	cmtCfg.Instrumentation.Prometheus = false
+
+	if err := val.AppConfig.ValidateBasic(); err != nil {
+		return err
+	}
+
+	app := cfg.AppConstructor(val)
+	val.app = app
+
+	privVal := pvm.LoadOrGenFilePV(cmtCfg.PrivValidatorKeyFile(), cmtCfg.PrivValidatorStateFile())
+	pubkey, err := privVal.GetPubKey()
+	if err != nil {
+		return err
+	}
+	valAddr := pubkey.Address().String()
+
+	cmtLogger := servercmtlog.CometLoggerWrapper{Logger: logger.With("module", val.moniker)}
+	client := cmtabciclient.NewGRPCClient(val.p2pAddress, true)
+	client.SetLogger(cmtLogger)
+
+	counterpartyClient := abciclient.NewAbciCounterpartyClient(client, val.p2pAddress, valAddr, privVal)
+	clientMap[valAddr] = *counterpartyClient
+
+	if val.rpcAddress != "" {
+		val.rpcClient = counterpartyClient.Client
+	}
+
+	// We'll need a RPC client if the validator exposes a gRPC or REST endpoint.
+	if val.rpcAddress != "" || val.AppConfig.GRPC.Enable {
+		val.clientCtx = val.clientCtx.
+			WithClient(val.rpcClient)
+
+		app.RegisterTxService(val.clientCtx)
+		app.RegisterTendermintService(val.clientCtx)
+		app.RegisterNodeService(val.clientCtx, *val.AppConfig)
+	}
+
+	ctx := context.Background()
+	ctx, val.cancelFn = context.WithCancel(ctx)
+	val.errGroup, ctx = errgroup.WithContext(ctx)
+
+	grpcCfg := val.AppConfig.GRPC
+
+	if grpcCfg.Enable {
+		grpcSrv, err := servergrpc.NewGRPCServer(val.clientCtx, app, grpcCfg)
+		if err != nil {
+			return err
+		}
+
+		// Start the gRPC server in a goroutine. Note, the provided ctx will ensure
+		// that the server is gracefully shut down.
+		val.errGroup.Go(func() error {
+			return servergrpc.StartGRPCServer(ctx, logger.With(log.ModuleKey, "grpc-server"), grpcCfg, grpcSrv)
+		})
+
+		val.grpc = grpcSrv
+	}
+
+	if val.apiAddress != "" {
 		apiSrv := api.New(val.clientCtx, logger.With(log.ModuleKey, "api-server"), val.grpc)
 		app.RegisterAPIRoutes(apiSrv, val.AppConfig.API)
 
@@ -126,11 +202,6 @@ func startInProcess(cfg Config, val *Validator) error {
 }
 
 func collectGenFiles(cfg Config, vals []*Validator, outputDir string) error {
-	genTime := cfg.GenesisTime
-	if genTime.IsZero() {
-		genTime = cmttime.Now()
-	}
-
 	for i := 0; i < cfg.NumValidators; i++ {
 		cmtCfg := vals[i].ctx.Config
 
@@ -155,7 +226,7 @@ func collectGenFiles(cfg Config, vals []*Validator, outputDir string) error {
 		}
 
 		// overwrite each validator's genesis file to have a canonical genesis time
-		if err := genutil.ExportGenesisFileWithTime(genFile, cfg.ChainID, nil, appState, genTime); err != nil {
+		if err := genutil.ExportGenesisFileWithTime(genFile, cfg.ChainID, nil, appState, cfg.GenesisTime); err != nil {
 			return err
 		}
 	}

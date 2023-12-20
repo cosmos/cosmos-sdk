@@ -4,7 +4,7 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/cometbft/cometbft/node"
+	cmtnode "github.com/cometbft/cometbft/node"
 	cmtclient "github.com/cometbft/cometbft/rpc/client"
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
@@ -29,15 +29,15 @@ type Validator struct {
 	nodeID     string
 	pubKey     cryptotypes.PubKey
 	moniker    string
-	aPIAddress string
-	rPCAddress string
-	p2PAddress string
+	apiAddress string
+	rpcAddress string
+	p2pAddress string
 	address    sdk.AccAddress
 	valAddress sdk.ValAddress
-	rPCClient  cmtclient.Client
+	rpcClient  cmtclient.Client
 
 	app      servertypes.Application
-	tmNode   *node.Node
+	tmNode   *cmtnode.Node
 	api      *api.Server
 	grpc     *grpc.Server
 	grpcWeb  *http.Server
@@ -68,11 +68,11 @@ func (v *Validator) GetValAddress() sdk.ValAddress {
 }
 
 func (v *Validator) GetAPIAddress() string {
-	return v.aPIAddress
+	return v.apiAddress
 }
 
 func (v *Validator) GetRPCAddress() string {
-	return v.rPCAddress
+	return v.rpcAddress
 }
 
 func (v *Validator) GetPubKey() cryptotypes.PubKey {

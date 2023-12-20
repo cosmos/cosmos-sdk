@@ -16,7 +16,11 @@ import (
 	"testing"
 	"time"
 
+	cmtstate "github.com/cometbft/cometbft/state"
+	cmttypes "github.com/cometbft/cometbft/types"
 	dbm "github.com/cosmos/cosmos-db"
+	abciclient "github.com/informalsystems/CometMock/cometmock/abci_client"
+	"github.com/informalsystems/CometMock/cometmock/storage"
 	"github.com/spf13/cobra"
 
 	"cosmossdk.io/core/address"
@@ -47,6 +51,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/server"
 	srvconfig "github.com/cosmos/cosmos-sdk/server/config"
+	servercmtlog "github.com/cosmos/cosmos-sdk/server/log"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
@@ -55,6 +60,7 @@ import (
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	_ "github.com/cosmos/cosmos-sdk/x/consensus" // import consensus as a blank
 	"github.com/cosmos/cosmos-sdk/x/genutil"
+	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
 // package-wide network lock to only allow one test network at a time
@@ -126,6 +132,7 @@ type Config struct {
 	APIAddress       string                     // REST API listen address (including port)
 	GRPCAddress      string                     // GRPC server listen address (including port)
 	PrintMnemonic    bool                       // print the mnemonic of first validator as log output for testing
+	UseCometMock     bool                       // mock CometBFT by using CometMock
 
 	// Address codecs
 	AddressCodec          address.Codec                 // address codec
@@ -159,6 +166,7 @@ func DefaultConfig(factory TestFixtureFactory) Config {
 		SigningAlgo:           string(hd.Secp256k1Type),
 		KeyringOptions:        []keyring.Option{},
 		PrintMnemonic:         false,
+		UseCometMock:          false,
 		AddressCodec:          addresscodec.NewBech32Codec("cosmos"),
 		ValidatorAddressCodec: addresscodec.NewBech32Codec("cosmosvaloper"),
 		ConsensusAddressCodec: addresscodec.NewBech32Codec("cosmosvalcons"),
@@ -213,6 +221,7 @@ func DefaultConfigWithAppConfig(appConfig depinject.Config) (Config, error) {
 	cfg.TxConfig = txConfig
 	cfg.LegacyAmino = legacyAmino
 	cfg.InterfaceRegistry = interfaceRegistry
+	cfg.GenesisTime = time.Now().UTC()
 	cfg.GenesisState = appBuilder.DefaultGenesis()
 	cfg.AppConstructor = func(val ValidatorI) servertypes.Application {
 		// we build a unique app instance for every validator here
@@ -570,9 +579,9 @@ func New(l Logger, baseDir string, cfg Config) (NetworkI, error) {
 			nodeID:     nodeID,
 			pubKey:     pubKey,
 			moniker:    nodeDirName,
-			rPCAddress: cmtCfg.RPC.ListenAddress,
-			p2PAddress: cmtCfg.P2P.ListenAddress,
-			aPIAddress: apiAddr,
+			rpcAddress: cmtCfg.RPC.ListenAddress,
+			p2pAddress: cmtCfg.P2P.ListenAddress,
+			apiAddress: apiAddr,
 			address:    addr,
 			valAddress: sdk.ValAddress(addr),
 		}
@@ -588,11 +597,48 @@ func New(l Logger, baseDir string, cfg Config) (NetworkI, error) {
 	}
 
 	l.Log("starting test network...")
-	for idx, v := range network.Validators {
-		if err := startInProcess(cfg, v); err != nil {
+	if !cfg.UseCometMock {
+		for idx, v := range network.Validators {
+			if err := startInProcess(cfg, v); err != nil {
+				return nil, err
+			}
+			l.Log("started validator", idx)
+		}
+	} else {
+		clientMap := make(map[string]abciclient.AbciCounterpartyClient)
+		for idx, v := range network.Validators {
+			if err := startInProcessMock(cfg, v, clientMap); err != nil {
+				return nil, err
+			}
+			l.Log("started validator", idx)
+		}
+
+		appGenesis, err := genutiltypes.AppGenesisFromFile(network.Validators[0].ctx.Config.GenesisFile())
+		if err != nil {
 			return nil, err
 		}
-		l.Log("started validator", idx)
+
+		genesisDoc, err := appGenesis.ToGenesisDoc()
+		if err != nil {
+			return nil, err
+		}
+
+		curState, err := cmtstate.MakeGenesisState(genesisDoc)
+		if err != nil {
+			return nil, err
+		}
+
+		abciclient.GlobalClient = abciclient.NewAbciClient(
+			clientMap,
+			servercmtlog.CometLoggerWrapper{Logger: log.NewLogger(os.Stdout)}, // TODO check this
+			curState,
+			&cmttypes.Block{},
+			&cmttypes.ExtendedCommit{},
+			&storage.MapStorage{},
+			abciclient.NewSystemClockTimeHandler(cfg.GenesisTime),
+			true,
+		)
+		abciclient.GlobalClient.AutoIncludeTx = true
 	}
 
 	height, err := network.LatestHeight()

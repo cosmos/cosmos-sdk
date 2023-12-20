@@ -19,12 +19,12 @@ func (ts TestStore) Has(key []byte) (bool, error) {
 	return ts.Db.Has(key)
 }
 
-func (ts TestStore) Set(k []byte, v []byte) error {
+func (ts TestStore) Set(k, v []byte) error {
 	return ts.Db.Set(k, v)
 }
 
 // // SetSync sets the value for the given key, and flushes it to storage before returning.
-func (ts TestStore) SetSync(k []byte, v []byte) error {
+func (ts TestStore) SetSync(k, v []byte) error {
 	return ts.Db.SetSync(k, v)
 }
 
@@ -83,7 +83,7 @@ type IteratorWrapper struct {
 
 // Domain returns the start (inclusive) and end (exclusive) limits of the iterator.
 // CONTRACT: start, end readonly []byte
-func (iw IteratorWrapper) Domain() (start []byte, end []byte) {
+func (iw IteratorWrapper) Domain() (start, end []byte) {
 	return iw.itr.Domain()
 }
 

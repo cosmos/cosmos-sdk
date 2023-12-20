@@ -239,18 +239,19 @@ func getBalance(store kv.Store, address, denom string) (*testpb.Balance, error) 
 }
 
 func BenchmarkManualInsertMemory(b *testing.B) {
-	benchManual(b, func() (dbm.DB, error) {
-		return dbm.NewMemDB(), nil
+	benchManual(b, func() (store.KVStore, error) {
+		return testkv.TestStore{Db: dbm.NewMemDB()}, nil
 	})
 }
 
 func BenchmarkManualInsertLevelDB(b *testing.B) {
-	benchManual(b, func() (dbm.DB, error) {
-		return dbm.NewGoLevelDB("test", b.TempDir(), nil)
+	benchManual(b, func() (store.KVStore, error) {
+		db, err := dbm.NewGoLevelDB("test", b.TempDir(), nil)
+		return testkv.TestStore{Db: db}, err
 	})
 }
 
-func benchManual(b *testing.B, newStore func() (dbm.DB, error)) {
+func benchManual(b *testing.B, newStore func() (store.KVStore, error)) {
 	b.Helper()
 	b.Run("insert", func(b *testing.B) {
 		b.StopTimer()

@@ -24,14 +24,26 @@ func (keeper Keeper) AddVote(ctx context.Context, proposalID uint64, voterAddr s
 		return errors.Wrapf(types.ErrInactiveProposal, "%d", proposalID)
 	}
 
-	err = keeper.assertMetadataLength(metadata)
+	if err := keeper.assertMetadataLength(metadata); err != nil {
+		return err
+	}
+
+	// get proposal
+	proposal, err := keeper.Proposals.Get(ctx, proposalID)
 	if err != nil {
 		return err
 	}
 
 	for _, option := range options {
-		if !v1.ValidWeightedVoteOption(*option) {
-			return errors.Wrap(types.ErrInvalidVote, option.String())
+		switch proposal.ProposalType {
+		case v1.ProposalType_PROPOSAL_TYPE_OPTIMISTIC:
+			if option.Option != v1.OptionNo && option.Option != v1.OptionSpam {
+				return errors.Wrap(types.ErrInvalidVote, "optimistic proposals can only be rejected")
+			}
+		default:
+			if !v1.ValidWeightedVoteOption(*option) {
+				return errors.Wrap(types.ErrInvalidVote, option.String())
+			}
 		}
 	}
 

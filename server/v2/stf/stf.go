@@ -140,9 +140,25 @@ func (s STF[T]) endBlock(ctx context.Context, store store.WritableState, block a
 }
 
 // Simulate simulates the execution of a tx on the provided state.
-func (s STF[T]) Simulate(ctx context.Context, state store.ReadonlyState, tx []byte) appmanager.TxResult {
+func (s STF[T]) Simulate(ctx context.Context, state store.ReadonlyState, gasLimit uint64, tx []byte) appmanager.TxResult {
 	simulationState := s.branch(state)
 	return s.deliverTx(ctx, simulationState, tx)
+}
+
+// ValidateTx will run only the validation steps required for a transaction.
+// Validations are run over the provided state, with the provided gas limit.
+func (s STF[T]) ValidateTx(ctx context.Context, state store.ReadonlyState, gasLimit uint64, txBytes []byte) appmanager.TxResult {
+	tx, err := s.decodeTx(txBytes)
+	if err != nil {
+		return appmanager.TxResult{Error: err}
+	}
+	validationState := s.branch(state)
+	gasUsed, events, err := s.validateTx(ctx, validationState, gasLimit, tx)
+	return appmanager.TxResult{
+		Events:  events,
+		GasUsed: gasUsed,
+		Error:   err,
+	}
 }
 
 // Query executes the query on the provided state with the provided gas limits.

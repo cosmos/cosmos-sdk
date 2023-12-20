@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	stderrors "errors"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -52,6 +53,57 @@ func (q queryServer) Proposal(ctx context.Context, req *v1.QueryProposalRequest)
 	}
 
 	return &v1.QueryProposalResponse{Proposal: &proposal}, nil
+}
+
+// ProposalVoteOptions returns the proposal votes options
+// It returns the stringified vote options if the proposal is a multiple choice proposal
+// Otherwise it returns the generic vote options
+func (q queryServer) ProposalVoteOptions(ctx context.Context, req *v1.QueryProposalVoteOptionsRequest) (*v1.QueryProposalVoteOptionsResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+
+	if req.ProposalId == 0 {
+		return nil, status.Error(codes.InvalidArgument, "proposal id can not be 0")
+	}
+
+	ok, err := q.k.Proposals.Has(ctx, req.ProposalId)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	if !ok {
+		return nil, status.Errorf(codes.NotFound, "proposal %d doesn't exist", req.ProposalId)
+	}
+
+	optionSpam := "SPAM"
+
+	voteOptions, err := q.k.ProposalVoteOptions.Get(ctx, req.ProposalId)
+	if err != nil {
+		if stderrors.Is(err, collections.ErrNotFound) { // fallback to generic vote options
+			return &v1.QueryProposalVoteOptionsResponse{
+				VoteOptions: &v1.ProposalVoteOptions{
+					OptionOne:   v1.OptionYes.String(),
+					OptionTwo:   v1.OptionAbstain.String(),
+					OptionThree: v1.OptionNo.String(),
+					OptionFour:  v1.OptionNoWithVeto.String(),
+					OptionSpam:  optionSpam,
+				},
+			}, nil
+		}
+
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &v1.QueryProposalVoteOptionsResponse{
+		VoteOptions: &v1.ProposalVoteOptions{
+			OptionOne:   voteOptions.OptionOne,
+			OptionTwo:   voteOptions.OptionTwo,
+			OptionThree: voteOptions.OptionThree,
+			OptionFour:  voteOptions.OptionFour,
+			OptionSpam:  optionSpam,
+		},
+	}, nil
 }
 
 // Proposals implements the Query/Proposals gRPC method

@@ -298,6 +298,10 @@ func (suite *KeeperTestSuite) TestMsgSubmitProposal() {
 	}
 }
 
+func (suite *KeeperTestSuite) TestSubmitMultipleChoiceProposal() {
+
+}
+
 func (suite *KeeperTestSuite) TestMsgCancelProposal() {
 	govAcct := suite.govKeeper.GetGovernanceAccount(suite.ctx).GetAddress()
 	addrs := suite.addrs

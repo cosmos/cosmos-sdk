@@ -1201,7 +1201,12 @@ func (k Keeper) ValidateUnbondAmount(
 	// due to rounding, however we don't want to truncate the shares or take the
 	// minimum because we want to allow for the full withdraw of shares from a
 	// delegation.
-	if shares.GT(delShares) {
+	tolerance, err := validator.SharesFromTokens(math.OneInt())
+	if err != nil {
+		return shares, err
+	}
+
+	if delShares.Sub(shares).LT(tolerance) {
 		shares = delShares
 	}
 

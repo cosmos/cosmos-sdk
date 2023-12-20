@@ -156,10 +156,6 @@ func (k BaseKeeper) DelegateCoins(ctx context.Context, delegatorAddr, moduleAccA
 	if err != nil {
 		return err
 	}
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	sdkCtx.EventManager().EmitEvent(
-		types.NewCoinSpentEvent(delAddrStr, amt),
-	)
 
 	err = k.addCoins(ctx, moduleAccAddr, amt)
 	if err != nil {
@@ -378,10 +374,6 @@ func (k BaseKeeper) MintCoins(ctx context.Context, moduleName string, amounts sd
 	if err != nil {
 		return err
 	}
-	// emit mint event
-	sdkCtx.EventManager().EmitEvent(
-		types.NewCoinMintEvent(addrStr, amounts),
-	)
 
 	return nil
 }
@@ -417,11 +409,6 @@ func (k BaseKeeper) BurnCoins(ctx context.Context, address []byte, amounts sdk.C
 	if err != nil {
 		return err
 	}
-	// emit burn event
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	sdkCtx.EventManager().EmitEvent(
-		types.NewCoinBurnEvent(addrStr, amounts),
-	)
 
 	return nil
 }

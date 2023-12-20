@@ -45,8 +45,9 @@ func (a *AppManagerBuilder[T]) Build() *AppManager[T] {
 // AppManager is a coordinator for all things related to an application
 type AppManager[T transaction.Tx] struct {
 	// configs
-	checkTxGasLimit uint64
-	queryGasLimit   uint64
+	checkTxGasLimit    uint64
+	queryGasLimit      uint64
+	simulationGasLimit uint64
 	// configs - end
 
 	db store.Store
@@ -87,7 +88,7 @@ func (a AppManager[T]) Simulate(ctx context.Context, tx []byte) (appmanager.TxRe
 	if err != nil {
 		return appmanager.TxResult{}, err
 	}
-	result := a.stf.Simulate(ctx, state, tx)
+	result := a.stf.Simulate(ctx, state, a.simulationGasLimit, tx)
 	return result, nil
 }
 

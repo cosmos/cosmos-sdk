@@ -65,7 +65,7 @@ func ExportCmd(appExporter servertypes.AppExporter) *cobra.Command {
 			}
 
 			traceWriterFile, _ := cmd.Flags().GetString(flagTraceStore)
-			traceWriter, cleanup, err := server.SetupTraceWriter(serverCtx.Logger, traceWriterFile)
+			traceWriter, cleanup, err := server.SetupTraceWriter(serverCtx.Logger, traceWriterFile) //resleak:notresource
 			if err != nil {
 				return err
 			}

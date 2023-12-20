@@ -98,9 +98,9 @@ func (k Keeper) getPreviousConsKey(ctx context.Context, addr sdk.ConsAddress) (s
 // IndexOffset modulo SignedBlocksWindow. This index is used to fetch the chunk
 // in the bitmap and the relative bit in that chunk.
 func (k Keeper) GetMissedBlockBitmapValue(ctx context.Context, addr sdk.ConsAddress, index int64) (bool, error) {
-	// check the key rotated, if rotated use the returned consKey to get the missed blocks
+	// check if the key rotated, if rotated use the returned consKey to get the missed blocks
 	// because missed blocks are still pointing to the old key
-	addr, err := k.getPreviousConsKey(ctx, addr)
+	addr, err := k.sk.ValidatorIdentifier(ctx, addr)
 	if err != nil {
 		return false, err
 	}
@@ -134,9 +134,9 @@ func (k Keeper) GetMissedBlockBitmapValue(ctx context.Context, addr sdk.ConsAddr
 // index is used to fetch the chunk in the bitmap and the relative bit in that
 // chunk.
 func (k Keeper) SetMissedBlockBitmapValue(ctx context.Context, addr sdk.ConsAddress, index int64, missed bool) error {
-	// check the key rotated, if rotated use the returned consKey to get the missed blocks
+	// check if the key rotated, if rotated use the returned consKey to get the missed blocks
 	// because missed blocks are still pointing to the old key
-	addr, err := k.getPreviousConsKey(ctx, addr)
+	addr, err := k.sk.ValidatorIdentifier(ctx, addr)
 	if err != nil {
 		return err
 	}
@@ -174,9 +174,9 @@ func (k Keeper) SetMissedBlockBitmapValue(ctx context.Context, addr sdk.ConsAddr
 
 // DeleteMissedBlockBitmap removes a validator's missed block bitmap from state.
 func (k Keeper) DeleteMissedBlockBitmap(ctx context.Context, addr sdk.ConsAddress) error {
-	// check the key rotated, if rotated use the returned consKey to delete the missed blocks
+	// check if the key rotated, if rotated use the returned consKey to delete the missed blocks
 	// because missed blocks are still pointing to the old key
-	addr, err := k.getPreviousConsKey(ctx, addr)
+	addr, err := k.sk.ValidatorIdentifier(ctx, addr)
 	if err != nil {
 		return err
 	}

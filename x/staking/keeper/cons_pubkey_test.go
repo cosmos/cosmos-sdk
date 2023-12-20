@@ -89,6 +89,30 @@ func (s *KeeperTestSuite) TestConsPubKeyRotationHistory() {
 	s.Require().Len(historyObjects, 1)
 }
 
+func (s *KeeperTestSuite) TestValidatorIdentifier() {
+	stakingKeeper, ctx := s.stakingKeeper, s.ctx
+	consAddr1 := sdk.ConsAddress(([]byte("addr1_______________")))
+	consAddr2 := sdk.ConsAddress(([]byte("addr2_______________")))
+	consAddr3 := sdk.ConsAddress(([]byte("addr3_______________")))
+	s.Require().NoError(stakingKeeper.NewToOldConsKeyMap.Set(ctx, consAddr2, consAddr1))
+	s.Require().NoError(stakingKeeper.NewToOldConsKeyMap.Set(ctx, consAddr3, consAddr1))
+
+	// ValidatorIdentifier returns the same key if there is no key map found
+	addr, err := stakingKeeper.ValidatorIdentifier(ctx, consAddr1)
+	s.Require().NoError(err)
+	s.Require().Equal(consAddr1, addr)
+
+	// ValidatorIdentifier should return the consAddr1 here
+	addr, err = stakingKeeper.ValidatorIdentifier(ctx, consAddr2)
+	s.Require().NoError(err)
+	s.Require().Equal(consAddr1, addr)
+
+	// ValidatorIdentifier should return the consAddr1 here as well cause it's the original key
+	addr, err = stakingKeeper.ValidatorIdentifier(ctx, consAddr3)
+	s.Require().NoError(err)
+	s.Require().Equal(consAddr1, addr)
+}
+
 func (s *KeeperTestSuite) setValidators(n int) {
 	stakingKeeper, ctx := s.stakingKeeper, s.ctx
 

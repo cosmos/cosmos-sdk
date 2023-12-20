@@ -121,13 +121,18 @@ func (k Keeper) setNewToOldConsKeyMap(ctx context.Context, oldPk, newPk sdk.Cons
 
 // ValidatorIdentifier maps the new cons key to previous cons key (which is the address before the rotation).
 // (that is: newConsKey -> oldConsKey)
+// if there is no map found it will return the same consPubkey
 func (k Keeper) ValidatorIdentifier(ctx context.Context, newPk sdk.ConsAddress) (sdk.ConsAddress, error) {
-	pk, err := k.NewToOldConsKeyMap.Get(ctx, newPk)
+	oldPk, err := k.NewToOldConsKeyMap.Get(ctx, newPk)
 	if err != nil && !errors.Is(err, collections.ErrNotFound) {
 		return nil, err
 	}
 
-	return pk, nil
+	if oldPk != nil {
+		return oldPk, nil
+	}
+
+	return newPk, nil
 }
 
 // exceedsMaxRotations returns true if the key rotations exceed the limit, currently we are limiting one rotation for unbonding period.

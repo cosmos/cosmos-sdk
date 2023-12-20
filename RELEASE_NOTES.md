@@ -1,4 +1,4 @@
-# Cosmos SDK v0.47.9 Release Notes
+# Cosmos SDK v0.47.10 Release Notes
 
 💬 [**Release Discussion**](https://github.com/orgs/cosmos/discussions/6)
 

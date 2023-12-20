@@ -7,70 +7,72 @@ import (
 )
 
 type TestStore struct {
-	db dbm.DB
+	Db dbm.DB
 }
 
 func (ts TestStore) Get(bz []byte) ([]byte, error) {
-	return ts.db.Get(bz)
+	return ts.Db.Get(bz)
 }
 
 // // Has checks if a key exists.
 func (ts TestStore) Has(key []byte) (bool, error) {
-	return ts.db.Has(key)
+	return ts.Db.Has(key)
 }
 
 func (ts TestStore) Set(k []byte, v []byte) error {
-	return ts.db.Set(k, v)
+	return ts.Db.Set(k, v)
 }
 
 // // SetSync sets the value for the given key, and flushes it to storage before returning.
 func (ts TestStore) SetSync(k []byte, v []byte) error {
-	return ts.db.SetSync(k, v)
+	return ts.Db.SetSync(k, v)
 }
 
 // // Delete deletes the key, or does nothing if the key does not exist.
 // // CONTRACT: key readonly []byte
 func (ts TestStore) Delete(bz []byte) error {
-	return ts.db.Delete(bz)
+	return ts.Db.Delete(bz)
 }
 
 // // DeleteSync deletes the key, and flushes the delete to storage before returning.
 func (ts TestStore) DeleteSync(bz []byte) error {
-	return ts.db.DeleteSync(bz)
+	return ts.Db.DeleteSync(bz)
 }
 
 func (ts TestStore) Iterator(start, end []byte) (store.Iterator, error) {
-	return IteratorWrapper{itr: ts.db.Iterator}, nil
+	itr, err := ts.Db.Iterator(start, end)
+	return IteratorWrapper{itr: itr}, err
 }
 
 func (ts TestStore) ReverseIterator(start, end []byte) (store.Iterator, error) {
-	return nil, nil
+	itr, err := ts.Db.ReverseIterator(start, end)
+	return itr, err
 }
 
 // Close closes the database connection.
 func (ts TestStore) Close() error {
-	return ts.db.Close()
+	return ts.Db.Close()
 }
 
 // NewBatch creates a batch for atomic updates. The caller must call Batch.Close.
 func (ts TestStore) NewBatch() dbm.Batch {
-	return ts.db.NewBatch()
+	return ts.Db.NewBatch()
 }
 
 // NewBatchWithSize create a new batch for atomic updates, but with pre-allocated size.
 // This will does the same thing as NewBatch if the batch implementation doesn't support pre-allocation.
 func (ts TestStore) NewBatchWithSize(i int) dbm.Batch {
-	return ts.db.NewBatchWithSize(i)
+	return ts.Db.NewBatchWithSize(i)
 }
 
 // Print is used for debugging.
 func (ts TestStore) Print() error {
-	return ts.db.Print()
+	return ts.Db.Print()
 }
 
 // Stats returns a map of property values for all keys and the size of the cache.
 func (ts TestStore) Stats() map[string]string {
-	return ts.db.Stats()
+	return ts.Db.Stats()
 }
 
 var _ store.Iterator = IteratorWrapper{}

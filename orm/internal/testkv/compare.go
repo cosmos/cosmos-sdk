@@ -7,7 +7,6 @@ import (
 
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/orm/model/ormtable"
-	"cosmossdk.io/store/v2"
 )
 
 func AssertBackendsEqual(t assert.TestingT, b1, b2 ormtable.Backend) {

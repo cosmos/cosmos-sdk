@@ -146,28 +146,6 @@ func (db *Database) Get(storeKey string, version uint64, key []byte) ([]byte, er
 	return copyAndFreeSlice(slice), nil
 }
 
-// LazyPrune attempts to prune versions up to and including the given version.
-// This is done internally by updating the full_history_ts_low RocksDB value on
-// the column families, s.t. all versions less than full_history_ts_low will be
-// dropped.
-//
-// Note, this does NOT incur an immediate full compaction, i.e. this performs a
-// lazy prune. Future compactions will honor the increased full_history_ts_low
-// and trim history when possible.
-func (db *Database) LazyPrune(version uint64) error {
-	tsLow := version + 1 // we increment by 1 to include the provided version
-
-	var ts [TimestampSize]byte
-	binary.LittleEndian.PutUint64(ts[:], tsLow)
-
-	if err := db.storage.IncreaseFullHistoryTsLow(db.cfHandle, ts[:]); err != nil {
-		return fmt.Errorf("failed to update column family full_history_ts_low: %w", err)
-	}
-
-	db.tsLow = tsLow
-	return nil
-}
-
 // Prune prunes all versions up to and including the provided version argument.
 // Internally, this performs a manual compaction, the data with older timestamp
 // will be GCed by compaction.

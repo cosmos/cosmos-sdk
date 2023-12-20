@@ -151,13 +151,8 @@ func (k BaseKeeper) DelegateCoins(ctx context.Context, delegatorAddr, moduleAccA
 	if err := k.trackDelegation(ctx, delegatorAddr, balances, amt); err != nil {
 		return errorsmod.Wrap(err, "failed to track delegation")
 	}
-	// emit coin spent event
-	delAddrStr, err := k.ak.AddressCodec().BytesToString(delegatorAddr)
-	if err != nil {
-		return err
-	}
 
-	err = k.addCoins(ctx, moduleAccAddr, amt)
+	err := k.addCoins(ctx, moduleAccAddr, amt)
 	if err != nil {
 		return err
 	}
@@ -341,8 +336,6 @@ func (k BaseKeeper) UndelegateCoinsFromModuleToAccount(
 // MintCoins creates new coins from thin air and adds it to the module account.
 // An error is returned if the module account does not exist or is unauthorized.
 func (k BaseKeeper) MintCoins(ctx context.Context, moduleName string, amounts sdk.Coins) error {
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-
 	err := k.mintCoinsRestrictionFn(ctx, amounts)
 	if err != nil {
 		k.logger.Error(fmt.Sprintf("Module %q attempted to mint coins %s it doesn't have permission for, error %v", moduleName, amounts, err))
@@ -369,11 +362,6 @@ func (k BaseKeeper) MintCoins(ctx context.Context, moduleName string, amounts sd
 	}
 
 	k.logger.Debug("minted coins from module account", "amount", amounts.String(), "from", moduleName)
-
-	addrStr, err := k.ak.AddressCodec().BytesToString(acc.GetAddress())
-	if err != nil {
-		return err
-	}
 
 	return nil
 }
@@ -404,11 +392,6 @@ func (k BaseKeeper) BurnCoins(ctx context.Context, address []byte, amounts sdk.C
 	}
 
 	k.logger.Debug("burned tokens from account", "amount", amounts.String(), "from", address)
-
-	addrStr, err := k.ak.AddressCodec().BytesToString(acc.GetAddress())
-	if err != nil {
-		return err
-	}
 
 	return nil
 }

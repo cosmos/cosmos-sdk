@@ -28,7 +28,8 @@ func (s *KeeperTestSuite) TestConsPubKeyRotationHistory() {
 	val0AccAddr := sdk.AccAddress(addrVals[0].Bytes())
 	selfDelegation := types.NewDelegation(val0AccAddr.String(), addrVals[0].String(), issuedShares)
 
-	stakingKeeper.SetDelegation(ctx, selfDelegation)
+	err := stakingKeeper.SetDelegation(ctx, selfDelegation)
+	s.Require().NoError(err)
 
 	validators, err := stakingKeeper.GetAllValidators(ctx)
 	s.Require().NoError(err)

@@ -85,10 +85,10 @@ func (k Keeper) getPreviousConsKey(ctx context.Context, addr sdk.ConsAddress) (s
 	}
 
 	if oldPk != nil {
-		addr = oldPk
+		return oldPk, nil
 	}
 
-	return addr, err
+	return addr, nil
 }
 
 // GetMissedBlockBitmapValue returns true if a validator missed signing a block

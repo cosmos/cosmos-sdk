@@ -101,5 +101,13 @@ func (s *KeeperTestSuite) TestValidatorMissedBlockBitmap_SmallWindow() {
 		missedBlocks, err = keeper.GetValidatorMissedBlocks(ctx, consAddr)
 		require.NoError(err)
 		require.Len(missedBlocks, int(params.SignedBlocksWindow)-1)
+
+		// if the validator rotated it's key there will be different consKeys and a mapping will be added in the state.
+		consAddr1 := sdk.ConsAddress(sdk.AccAddress([]byte("addr1_______________")))
+		s.stakingKeeper.EXPECT().ValidatorIdentifier(gomock.Any(), consAddr1).Return(consAddr, nil).AnyTimes()
+
+		missedBlocks, err = keeper.GetValidatorMissedBlocks(ctx, consAddr1)
+		require.NoError(err)
+		require.Len(missedBlocks, int(params.SignedBlocksWindow)-1)
 	}
 }

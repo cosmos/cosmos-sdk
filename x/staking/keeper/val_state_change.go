@@ -287,7 +287,7 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx context.Context) (updates 
 			return nil, err
 		}
 
-		// validator cannot rotate it's keys if not bonded or jailed.
+		// a validator cannot rotate keys if it's not bonded or if it's jailed
 		// - a validator can be unbonding state but jailed status false
 		// - a validator can be jailed and status can be unbonding
 		if !(validator.Jailed || validator.Status != types.Bonded) {
@@ -306,9 +306,6 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx context.Context) (updates 
 			}
 		}
 	}
-
-	// TODO: at previousVotes Iteration logic of AllocateTokens, previousVote using OldConsPubKey
-	// match up with ConsPubKeyRotationHistory, and replace validator for token allocation
 
 	// Update the pools based on the recent updates in the validator set:
 	// - The tokens from the non-bonded candidates that enter the new validator set need to be transferred

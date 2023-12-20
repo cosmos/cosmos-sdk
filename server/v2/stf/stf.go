@@ -139,6 +139,19 @@ func (s STF[T]) endBlock(ctx context.Context, store store.WritableState, block a
 	return ebCtx.events, nil
 }
 
+// Simulate simulates the execution of a tx on the provided state.
+func (s STF[T]) Simulate(ctx context.Context, state store.ReadonlyState, tx []byte) appmanager.TxResult {
+	simulationState := s.branch(state)
+	return s.deliverTx(ctx, simulationState, tx)
+}
+
+// Query executes the query on the provided state with the provided gas limits.
+func (s STF[T]) Query(ctx context.Context, state store.ReadonlyState, gasLimit uint64, req Type) (Type, error) {
+	queryState := s.branch(state)
+	queryCtx := s.makeContext(ctx, nil, queryState, gasLimit)
+	return s.handleQuery(queryCtx, req)
+}
+
 type executionContext struct {
 	context.Context
 	store    store.WritableState

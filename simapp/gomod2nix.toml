@@ -529,17 +529,17 @@ schema = 3
     version = "v1.6.8"
     hash = "sha256-decMa0MiWfW/Bzr8QPPzzpeya0YWGHhZAt4Cr/bD1wQ="
   [mod."google.golang.org/genproto"]
-    version = "v0.0.0-20231120223509-83a465c0220f"
-    hash = "sha256-M3/MfV+++gH4BVG+enkN46MBXJ0lU4uw5ZcQMadtq80="
-  [mod."google.golang.org/genproto/googleapis/api"]
-    version = "v0.0.0-20231106174013-bbf56f31fb17"
-    hash = "sha256-HEYq4ualnRizyySTBztWWhHEgMNScqOHUhFvTSDmjnA="
-  [mod."google.golang.org/genproto/googleapis/rpc"]
     version = "v0.0.0-20231211222908-989df2bf70f3"
-    hash = "sha256-kpTwMHwou3hEhCA/zCerdEP5gV9SHNA7bAMqcIHZesM="
+    hash = "sha256-7DvusxTmchjQbVzN4ph4p5EYvfQQwDg+lo9nk8qDwXY="
+  [mod."google.golang.org/genproto/googleapis/api"]
+    version = "v0.0.0-20231120223509-83a465c0220f"
+    hash = "sha256-hWz9HrHPPPmWxOZ+VdpayDHCN79UMxrnQ66wTDE1lvY="
+  [mod."google.golang.org/genproto/googleapis/rpc"]
+    version = "v0.0.0-20231212172506-995d672761c0"
+    hash = "sha256-48aeFcLvuthyG7x9JmpeySrBkOqRhu+FgECjt1167IY="
   [mod."google.golang.org/grpc"]
-    version = "v1.60.0"
-    hash = "sha256-L8NmvIG8gYSWlfjnEL+Cm83kF8dNnHWh4t7gNWHO4jY="
+    version = "v1.60.1"
+    hash = "sha256-JJ3X6DTUZWYtM8i8izWTH9nDvCydzea31iZt6ULDvsw="
   [mod."google.golang.org/protobuf"]
     version = "v1.31.0"
     hash = "sha256-UdIk+xRaMfdhVICvKRk1THe3R1VU+lWD8hqoW/y8jT0="

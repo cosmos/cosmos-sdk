@@ -45,8 +45,9 @@ func (a *AppManagerBuilder[T]) Build() *AppManager[T] {
 // AppManager is a coordinator for all things related to an application
 type AppManager[T transaction.Tx] struct {
 	// configs
-	checkTxGasLimit uint64
-	queryGasLimit   uint64
+	checkTxGasLimit  uint64
+	queryGasLimit    uint64
+	simulateGasLimit uint64
 	// configs - end
 
 	db store.Store
@@ -59,7 +60,7 @@ type AppManager[T transaction.Tx] struct {
 }
 
 func (a AppManager[T]) DeliverBlock(ctx context.Context, block appmanager.BlockRequest) (*appmanager.BlockResponse, Hash, error) {
-	currentState, err := a.db.NewBlockWithVersion(block.Height)
+	currentState, err := a.db.NewStateAt(block.Height)
 	if err != nil {
 		return nil, nil, fmt.Errorf("unable to create new state for height %d: %w", block.Height, err)
 	}
@@ -73,7 +74,7 @@ func (a AppManager[T]) DeliverBlock(ctx context.Context, block appmanager.BlockR
 	if err != nil {
 		return nil, nil, fmt.Errorf("change set: %w", err)
 	}
-	stateRoot, err := a.db.CommitChanges(newStateChanges)
+	stateRoot, err := a.db.CommitState(newStateChanges)
 	if err != nil {
 		return nil, nil, fmt.Errorf("commit failed: %w", err)
 	}
@@ -82,19 +83,28 @@ func (a AppManager[T]) DeliverBlock(ctx context.Context, block appmanager.BlockR
 	return blockResponse, stateRoot, nil
 }
 
+func (a AppManager[T]) Simulate(ctx context.Context, tx []byte) (appmanager.TxResult, error) {
+	state, err := a.getLatestState(ctx)
+	if err != nil {
+		return appmanager.TxResult{}, err
+	}
+	result := a.stf.DeliverTx(ctx, state, tx)
+	return result, nil
+}
+
 func (a AppManager[T]) Query(ctx context.Context, request Type) (response Type, err error) {
 	queryState, err := a.getLatestState(ctx)
 	if err != nil {
 		return nil, err
 	}
 	queryCtx := a.stf.MakeContext(ctx, nil, queryState, a.queryGasLimit)
-	return a.stf.HandleQuery(queryCtx, request)
+	return a.stf.Query(queryCtx, request)
 }
 
 // getLatestState provides a readonly view of the state of the last committed block.
-func (a AppManager[T]) getLatestState(_ context.Context) (store.BranchStore, error) {
+func (a AppManager[T]) getLatestState(_ context.Context) (store.WritableState, error) {
 	lastBlock := a.lastBlockHeight.Load()
-	lastBlockStore, err := a.db.ReadonlyWithVersion(lastBlock)
+	lastBlockStore, err := a.db.ReadonlyStateAt(lastBlock)
 	if err != nil {
 		return nil, err
 	}

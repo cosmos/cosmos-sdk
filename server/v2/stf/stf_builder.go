@@ -63,8 +63,8 @@ func (s *STFBuilder[T]) Build(opts *STFBuilderOptions) (*STFAppManager[T], error
 		return nil, fmt.Errorf("unable to build tx validator: %w", err)
 	}
 	return &STFAppManager[T]{
-		HandleMsg:      msgHandler,
-		HandleQuery:    queryHandler,
+		handleMsg:      msgHandler,
+		handleQuery:    queryHandler,
 		doBeginBlock:   beginBlocker,
 		doEndBlock:     endBlocker,
 		doTxValidation: txValidator,

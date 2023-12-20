@@ -14,6 +14,11 @@ Note, always read the **SimApp** section for more information on application wir
 In this section we describe the changes made in Cosmos SDK' SimApp.
 **These changes are directly applicable to your application wiring.**
 
+#### AnteHandlers
+
+The GasConsumptionDecorator and IncreaseSequenceDecorator have been merged with the SigVerificationDecorator, so you'll
+need to remove them both from your app.go code, they will yield to unresolvable symbols when compiling.
+
 #### Client (`root.go`)
 
 The `client` package has been refactored to make use of the address codecs (address, validator address, consensus address, etc.).
@@ -192,7 +197,7 @@ is `BeginBlock` -> `DeliverTx` (for all txs) -> `EndBlock`.
 ABCI++ 2.0 also brings `ExtendVote` and `VerifyVoteExtension` ABCI methods. These
 methods allow applications to extend and verify pre-commit votes. The Cosmos SDK
 allows an application to define handlers for these methods via `ExtendVoteHandler`
-and `VerifyVoteExtensionHandler` respectively. Please see [here](https://docs.cosmos.network/v0.50/building-apps/vote-extensions)
+and `VerifyVoteExtensionHandler` respectively. Please see [here](https://docs.cosmos.network/v0.50/build/abci/03-vote-extensions)
 for more info.
 
 #### Set PreBlocker

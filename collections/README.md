@@ -604,7 +604,7 @@ we specified in the range.
 
 Then we use again th `Values` method of the `Iterator` to collect all the results.
 
-`collections.Range` also offers a `Prefix` API which is not appliable to all keys types,
+`collections.Range` also offers a `Prefix` API which is not applicable to all keys types,
 for example uint64 cannot be prefix because it is of constant size, but a `string` key
 can be prefixed.
 
@@ -796,7 +796,7 @@ in `Pair` keys iterations.
 ```
 
 As we can see here we're passing the type parameters of the `collections.Pair` because golang type inference
-with respect to generics is not as permissive as other languages, so we need to explitly say what are the types of the pair key.
+with respect to generics is not as permissive as other languages, so we need to explicitly say what are the types of the pair key.
 
 #### GetAllAddressesBalancesBetween
 

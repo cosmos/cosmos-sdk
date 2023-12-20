@@ -44,7 +44,7 @@ func (s *TestSuite) TestChainTokenTransfer() {
 		s.Require().NoError(err)
 
 		// build tx into the txBuilder
-		msg := banktypes.NewMsgSend(addr1, addr2, sdk.NewCoins(sdk.NewCoin(denom, math.NewInt(1230000))))
+		msg := banktypes.NewMsgSend(addr1.String(), addr2.String(), sdk.NewCoins(sdk.NewCoin(denom, math.NewInt(1230000))))
 		s.Require().NoError(err)
 		err = txBuilder.SetMsgs(msg)
 		s.Require().NoError(err)

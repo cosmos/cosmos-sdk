@@ -295,10 +295,12 @@ func (suite *KeeperTestSuite) TestUseGrantedFee() {
 	suite.Error(err)
 	suite.Contains(err.Error(), "fee allowance expired")
 
-	// verify: feegrant is revoked
+	// verify: feegrant is not revoked
+	// Because using the past feegrant will return err, data will be rolled back in actual scenarios.
+	// Only when the feegrant allowance used up in a certain transaction feegrant will revoked success due to err is nil
+	// abci's EndBlocker will remove the expired feegrant.
 	_, err = suite.feegrantKeeper.GetAllowance(ctx, suite.addrs[0], suite.addrs[2])
-	suite.Error(err)
-	suite.Contains(err.Error(), "not found")
+	suite.Require().NoError(err)
 }
 
 func (suite *KeeperTestSuite) TestIterateGrants() {

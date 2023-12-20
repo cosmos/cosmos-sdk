@@ -2,6 +2,7 @@ package keeper
 
 import (
 	v5 "cosmossdk.io/x/gov/migrations/v5"
+	v6 "cosmossdk.io/x/gov/migrations/v6"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -36,4 +37,9 @@ func (m Migrator) Migrate3to4(ctx sdk.Context) error {
 // Migrate4to5 migrates from version 4 to 5.
 func (m Migrator) Migrate4to5(ctx sdk.Context) error {
 	return v5.MigrateStore(ctx, m.keeper.storeService, m.keeper.cdc, m.keeper.Constitution)
+}
+
+// Migrate4to5 migrates from version 5 to 6.
+func (m Migrator) Migrate5to6(ctx sdk.Context) error {
+	return v6.MigrateStore(ctx, m.keeper.Params, m.keeper.Proposals)
 }

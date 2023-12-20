@@ -131,7 +131,7 @@ func (fw *fileWatcher) CheckUpdate(currentUpgrade upgradetypes.Plan) bool {
 		fw.currentInfo = info
 		fw.lastModTime = stat.ModTime()
 
-		// Heuristic: Deamon has restarted, so we don't know if we successfully
+		// Heuristic: Daemon has restarted, so we don't know if we successfully
 		// downloaded the upgrade or not. So we try to compare the running upgrade
 		// name (read from the cosmovisor file) with the upgrade info.
 		if !strings.EqualFold(currentUpgrade.Name, fw.currentInfo.Name) {

@@ -3,7 +3,7 @@ package transaction
 import (
 	"context"
 
-	tx "cosmossdk.io/core/transaction"
+	tx "github.com/cosmos/cosmos-sdk/serverv2/core/transaction"
 )
 
 var _ tx.Validator[tx.Tx] = TxValidator[tx.Tx]{}
@@ -26,7 +26,7 @@ func (v *TxValidator[T]) RegisterHandler(h tx.Handler) {
 
 // Validate validates the transaction
 // it returns the context to be used further for execution
-func (v TxValidator[T]) Validate(ctx context.Context, txs []T, simulate bool) (context.Context, map[[32]byte]error) {
+func (v TxValidator[T]) Validate(ctx context.Context, txs []T) (context.Context, map[[32]byte]error) {
 	var (
 		errMap = make(map[[32]byte]error, len(txs)) // used to return a map of which txs failed
 		newctx = ctx                                // retrun the context to be used further for execution
@@ -35,7 +35,7 @@ func (v TxValidator[T]) Validate(ctx context.Context, txs []T, simulate bool) (c
 	for _, tx := range txs {
 		// create a copy of the context for each transaction
 		cctx := newctx
-		ctx, err := v.handler(cctx, tx, simulate)
+		ctx, err := v.handler(cctx, tx)
 		if err != nil {
 			errMap[tx.Hash()] = err
 		} else {

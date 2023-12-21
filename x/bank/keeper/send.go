@@ -287,7 +287,7 @@ func (k BaseSendKeeper) SendManyCoins(ctx sdk.Context, fromAddr sdk.AccAddress, 
 	for i, toAddr := range toAddrs {
 		amt := amts[i]
 
-		err := k.addCoins(ctx, toAddr, amt)
+		err := k.addCoinsImproved(ctx, toAddr, amt)
 		if err != nil {
 			return err
 		}
@@ -304,12 +304,11 @@ func (k BaseSendKeeper) SendManyCoins(ctx sdk.Context, fromAddr sdk.AccAddress, 
 			sdk.NewAttribute(types.AttributeKeySender, fromAddrString),
 			sdk.NewAttribute(sdk.AttributeKeyAmount, amt.String()),
 		))
-		ctx.EventManager().EmitEvent(sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(types.AttributeKeySender, fromAddr.String()),
-		))
-
 	}
+	ctx.EventManager().EmitEvent(sdk.NewEvent(
+		sdk.EventTypeMessage,
+		sdk.NewAttribute(types.AttributeKeySender, fromAddr.String()),
+	))
 
 	return nil
 }
@@ -352,6 +351,28 @@ func (k BaseSendKeeper) subUnlockedCoins(ctx sdk.Context, addr sdk.AccAddress, a
 	ctx.EventManager().EmitEvent(
 		types.NewCoinSpentEvent(addr, amt),
 	)
+
+	return nil
+}
+
+// Better add coins implementation for code that is not gas metered. Reduces I/O overhead.
+// Used in osmosis epoch.
+// Also removes event that should not exist.
+func (k BaseSendKeeper) addCoinsImproved(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) error {
+	if !amt.IsValid() {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, amt.String())
+	}
+
+	for _, coin := range amt {
+		balance := k.GetBalance(ctx, addr, coin.Denom)
+		newBalance := balance.Add(coin)
+
+		// err := k.setBalance(ctx, addr, balance, newBalance)
+		err := k.setBalance(ctx, addr, newBalance)
+		if err != nil {
+			return err
+		}
+	}
 
 	return nil
 }
@@ -407,6 +428,50 @@ func (k BaseSendKeeper) initBalances(ctx sdk.Context, addr sdk.AccAddress, balan
 				denomPrefixStores[balance.Denom] = denomPrefixStore
 			}
 
+			// Store a reverse index from denomination to account address with a
+			// sentinel value.
+			denomAddrKey := address.MustLengthPrefix(addr)
+			if !denomPrefixStore.Has(denomAddrKey) {
+				denomPrefixStore.Set(denomAddrKey, []byte{0})
+			}
+		}
+	}
+
+	return nil
+}
+
+// 2 blocks after osmosis first epoch
+var osmosisFirstEpochHeight = int64(12834361)
+
+// Better add coins implementation for code that is not gas metered. Reduces I/O overhead.
+// Used in osmosis epoch.
+// Also removes event that should not exist.
+// SDK should always use this for teh denom reverse map, but we can't edit right now as that would be a state break.
+// Furthermore, this reverse map code should just get deleted.
+func (k BaseSendKeeper) setBalanceImproved(ctx sdk.Context, addr sdk.AccAddress, oldBalance sdk.Coin, newBalance sdk.Coin) error {
+	if !newBalance.IsValid() {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, oldBalance.String())
+	}
+
+	accountStore := k.getAccountStore(ctx, addr)
+	denomPrefixStore := k.getDenomAddressPrefixStore(ctx, oldBalance.Denom)
+	// x/bank invariants prohibit persistence of zero balances
+	if newBalance.IsZero() {
+		accountStore.Delete([]byte(newBalance.Denom))
+		denomPrefixStore.Delete(address.MustLengthPrefix(addr))
+	} else {
+		amount, err := newBalance.Amount.Marshal()
+		if err != nil {
+			return err
+		}
+
+		accountStore.Set([]byte(newBalance.Denom), amount)
+
+		mustSetDenom := oldBalance.IsZero()
+		if ctx.BlockHeight() <= osmosisFirstEpochHeight || newBalance.Denom != "uosmo" {
+			mustSetDenom = true
+		}
+		if mustSetDenom {
 			// Store a reverse index from denomination to account address with a
 			// sentinel value.
 			denomAddrKey := address.MustLengthPrefix(addr)

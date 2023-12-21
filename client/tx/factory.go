@@ -191,6 +191,7 @@ func (f Factory) WithKeybase(keybase keyring.Keyring) Factory {
 }
 
 // WithFromName returns a copy of the Factory with updated fromName
+// fromName will be use for building a simulation tx.
 func (f Factory) WithFromName(fromName string) Factory {
 	f.fromName = fromName
 	return f

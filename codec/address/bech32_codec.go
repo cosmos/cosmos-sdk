@@ -2,12 +2,13 @@ package address
 
 import (
 	"errors"
-	sdkAddress "github.com/cosmos/cosmos-sdk/types/address"
 	"strings"
+
 
 	"cosmossdk.io/core/address"
 	errorsmod "cosmossdk.io/errors"
 
+	sdkAddress "github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )

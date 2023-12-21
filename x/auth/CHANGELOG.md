@@ -37,7 +37,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * [#18422](https://github.com/cosmos/cosmos-sdk/issues/18422) `NewSigVerificationDecorator` takes a new parameter that allows applications to decide if they want to cache signatures verification or not.
 
-### Bug Fixes
+### Consensus Breaking Changes
 
 * [#18817](https://github.com/cosmos/cosmos-sdk/pull/18817) SigVerification, GasConsumption, IncreaseSequence ante decorators have all been joined into one SigVerification decorator. Gas consumption during TX validation flow has reduced.
 

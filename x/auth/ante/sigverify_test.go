@@ -178,8 +178,8 @@ func TestSigVerification(t *testing.T) {
 		txConfigOpts,
 	)
 	require.NoError(t, err)
-	noOpGasConsume := func(_ storetypes.GasMeter, _ signing.SignatureV2, _ types.Params, _ bool) error { return nil }
-	svd := ante.NewSigVerificationDecorator(suite.accountKeeper, anteTxConfig.SignModeHandler(), noOpGasConsume)
+	noOpGasConsume := func(_ storetypes.GasMeter, _ signing.SignatureV2, _ types.Params) error { return nil }
+	svd := ante.NewSigVerificationDecorator(suite.accountKeeper, anteTxConfig.SignModeHandler(), noOpGasConsume, true)
 	antehandler := sdk.ChainAnteDecorators(spkd, svd)
 	defaultSignMode, err := authsign.APISignModeToInternal(anteTxConfig.SignModeHandler().DefaultMode())
 	require.NoError(t, err)

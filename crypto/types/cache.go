@@ -4,11 +4,6 @@ import (
 	lru "github.com/hashicorp/golang-lru/v2"
 )
 
-const (
-	TxHashLen        = 32
-	AddressStringLen = 2 + 20*2
-)
-
 // SignatureCache is a cache of verified signatures
 type SignatureCache struct {
 	data *lru.Cache[string, []byte]

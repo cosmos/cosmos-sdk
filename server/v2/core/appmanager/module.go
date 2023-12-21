@@ -3,7 +3,7 @@ package appmanager
 import (
 	"context"
 
-	"github.com/cosmos/cosmos-sdk/serverv2/core/transaction"
+	"cosmossdk.io/server/v2/core/transaction"
 )
 
 type Identity = []byte

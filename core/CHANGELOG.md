@@ -44,6 +44,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### API Breaking
 
 * [#18857](https://github.com/cosmos/cosmos-sdk/pull/18857) Moved `FormatCoins` to `x/tx`.
+* [#18861](httpes://github.com/cosmos/cosmos-sdk/pull/18861) Moved `coin.ParseCoin` to `client/v2/internal`.
 
 ## [v0.12.0](https://github.com/cosmos/cosmos-sdk/releases/tag/core%2Fv0.11.0)
 

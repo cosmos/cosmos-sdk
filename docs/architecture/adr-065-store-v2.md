@@ -87,13 +87,17 @@ less intrusive. Specifically, we propose to:
 * Ensure the `RootStore` interface remains as lightweight as possible.
 * Allow application developers to easily swap out SS and SC backends.
 
-Furthermore, we will keep the IAVL is the backing [commitment](https://cryptography.fandom.com/wiki/Commitment_scheme)
-store for the time being. While we might not fully settle on the use of IAVL in
+Furthermore, we will keep IAVL as the default [SC](https://cryptography.fandom.com/wiki/Commitment_scheme)
+backend for the time being. While we might not fully settle on the use of IAVL in
 the long term, we do not have strong empirical evidence to suggest a better
 alternative. Given that the SDK provides interfaces for stores, it should be sufficient
 to change the backing commitment store in the future should evidence arise to
 warrant a better alternative. However there is promising work being done to IAVL
 that should result in significant performance improvement <sup>[1,2]</sup>.
+
+Note, we will provide applications with the ability to use IAVL v1 and IAVL v2 as
+either SC backend, with the latter showing extremely promising performance improvements
+over IAVL v0 and v1, at the cost of a state migration.
 
 ### Separating SS and SC
 
@@ -108,47 +112,48 @@ will be namespaced.
 
 #### State Commitment (SC)
 
-Given that the existing solution today acts as both SS and SC, we can simply
-repurpose it to act solely as the SC layer without any significant changes to
-access patterns or behavior. In other words, the entire collection of existing
-IAVL-backed module `KVStore`s will act as the SC layer.
+A foremost design goal is that SC backends should be easily swappable, i.e. not
+necessarily IAVL.  To this end, the scope of SC has been reduced, it must only:
 
-However, in order for the SC layer to remain lightweight and not duplicate a
-majority of the data held in the SS layer, we encourage node operators to keep
-tight pruning strategies.
+* Provide a stateful root app hash for height h resulting from applying a batch
+  of key-value set/deletes to height h-1.
+* Fulfill (though not necessarily provide) historical proofs for all heights < h.
+* Provide an API for snapshot create/restore to fulfill state sync requests.
+
+Notably, SC is not required to provide key iteration or value retrieval for either
+queries or state machine execution, this now being the responsibility of state storage.  
+
+An SC implementation may choose not to provide historical proofs past height h - n (n can be 0)
+due to the time and space constraints, but since store v2 defines an API for historical
+proofs there should be at least one configuration of a given SC backend which
+supports this.
+
+Pruning (managing state bloat) is not considered a feature of store v2 or SC in
+the abstract, although it is probably required for an SC implementation to operate
+at scale.
 
 #### State Storage (SS)
 
-In the RMS, we will expose a *single* `KVStore` backed by the same physical
-database that backs the SC layer. This `KVStore` will be explicitly namespaced
-to avoid collisions and will act as the primary storage for (key, value) pairs.
+The goal of SS is to provide a modular storage backend, i.e. multiple implementations,
+to facilitate storing versioned raw key/value pairs in a fast embedded database.
+The responsibility and functions of SS include the following:
 
-While we most likely will continue the use of `cosmos-db`, or some local interface,
-to allow for flexibility and iteration over preferred physical storage backends
-as research and benchmarking continues. However, we propose to hardcode the use
-of RocksDB as the primary physical storage backend.
+* Provided fast and efficient queries for versioned raw key/value pairs
+* Provide versioned CRUD operations
+* Provide versioned batching functionality
+* Provide versioned iteration (forward and reverse) functionality
+* Provide pruning functionality
 
-Since the SS layer will be implemented as a `KVStore`, it will support the
-following functionality:
+All of the functionality provided by an SS backend should work under a versioned
+scheme, i.e. a user should be able to get, store, and iterate over keys for the latest
+and historical versions efficiently and a store key, which is used for name-spacing
+purposes.
 
-* Range queries
-* CRUD operations
-* Historical queries and versioning
-* Pruning
+We propose to have three defaulting SS backends for applications to choose from:
 
-The RMS will keep track of all buffered writes using a dedicated and internal
-`MemoryListener` for each `StoreKey`. For each block height, upon `Commit`, the
-SS layer will write all buffered (key, value) pairs under a [RocksDB user-defined timestamp](https://github.com/facebook/rocksdb/wiki/User-defined-Timestamp-%28Experimental%29) column
-family using the block height as the timestamp, which is an unsigned integer.
-This will allow a client to fetch (key, value) pairs at historical and current
-heights along with making iteration and range queries relatively performant as
-the timestamp is the key suffix.
-
-Note, we choose not to use a more general approach of allowing any embedded key/value
-database, such as LevelDB or PebbleDB, using height key-prefixed keys to
-effectively version state because most of these databases use variable length
-keys which would effectively make actions likes iteration and range queries less
-performant.
+* RocksDB
+* PebbleDB
+* SQLite
 
 Since operators might want pruning strategies to differ in SS compared to SC,
 e.g. having a very tight pruning strategy in SC while having a looser pruning

@@ -29,13 +29,6 @@ var _ v1.MsgServer = msgServer{}
 
 // SubmitProposal implements the MsgServer.SubmitProposal method.
 func (k msgServer) SubmitProposal(goCtx context.Context, msg *v1.MsgSubmitProposal) (*v1.MsgSubmitProposalResponse, error) {
-	if msg.Title == "" {
-		return nil, errors.Wrap(sdkerrors.ErrInvalidRequest, "proposal title cannot be empty")
-	}
-	if msg.Summary == "" {
-		return nil, errors.Wrap(sdkerrors.ErrInvalidRequest, "proposal summary cannot be empty")
-	}
-
 	proposer, err := k.authKeeper.AddressCodec().StringToBytes(msg.GetProposer())
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid proposer address: %s", err)
@@ -63,28 +56,35 @@ func (k msgServer) SubmitProposal(goCtx context.Context, msg *v1.MsgSubmitPropos
 		// nothing can be done here, and this is still a valid case, so we ignore the error
 	}
 
+	// This method checks that all message metadata, summary and title
+	// has te expected length defined in the module configuration.
+	if err := k.validateProposalLengths(msg.Metadata, msg.Title, msg.Summary); err != nil {
+		return nil, err
+	}
+
 	proposalMsgs, err := msg.GetMsgs()
 	if err != nil {
 		return nil, err
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	initialDeposit := msg.GetInitialDeposit()
-
 	params, err := k.Params.Get(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get governance parameters: %w", err)
 	}
 
-	if err := k.validateInitialDeposit(ctx, params, initialDeposit, msg.Expedited); err != nil {
+	if msg.Expedited { // checking for backward compatibility
+		msg.ProposalType = v1.ProposalType_PROPOSAL_TYPE_EXPEDITED
+	}
+	if err := k.validateInitialDeposit(ctx, params, msg.GetInitialDeposit(), msg.ProposalType); err != nil {
 		return nil, err
 	}
 
-	if err := k.validateDepositDenom(ctx, params, initialDeposit); err != nil {
+	if err := k.validateDepositDenom(ctx, params, msg.GetInitialDeposit()); err != nil {
 		return nil, err
 	}
 
-	proposal, err := k.Keeper.SubmitProposal(ctx, proposalMsgs, msg.Metadata, msg.Title, msg.Summary, proposer, msg.Expedited)
+	proposal, err := k.Keeper.SubmitProposal(ctx, proposalMsgs, msg.Metadata, msg.Title, msg.Summary, proposer, msg.ProposalType)
 	if err != nil {
 		return nil, err
 	}
@@ -186,8 +186,7 @@ func (k msgServer) Vote(ctx context.Context, msg *v1.MsgVote) (*v1.MsgVoteRespon
 		return nil, errors.Wrap(govtypes.ErrInvalidVote, msg.Option.String())
 	}
 
-	err = k.Keeper.AddVote(ctx, msg.ProposalId, accAddr, v1.NewNonSplitVoteOption(msg.Option), msg.Metadata)
-	if err != nil {
+	if err = k.Keeper.AddVote(ctx, msg.ProposalId, accAddr, v1.NewNonSplitVoteOption(msg.Option), msg.Metadata); err != nil {
 		return nil, err
 	}
 
@@ -273,7 +272,7 @@ func (k msgServer) UpdateParams(ctx context.Context, msg *v1.MsgUpdateParams) (*
 		return nil, errors.Wrapf(govtypes.ErrInvalidSigner, "invalid authority; expected %s, got %s", k.authority, msg.Authority)
 	}
 
-	if err := msg.Params.ValidateBasic(); err != nil {
+	if err := msg.Params.ValidateBasic(k.authKeeper.AddressCodec()); err != nil {
 		return nil, err
 	}
 
@@ -321,7 +320,7 @@ func (k legacyMsgServer) SubmitProposal(goCtx context.Context, msg *v1beta1.MsgS
 		"",
 		msg.GetContent().GetTitle(),
 		msg.GetContent().GetDescription(),
-		false, // legacy proposals cannot be expedited
+		v1.ProposalType_PROPOSAL_TYPE_STANDARD, // legacy proposals can only be standard
 	)
 	if err != nil {
 		return nil, err

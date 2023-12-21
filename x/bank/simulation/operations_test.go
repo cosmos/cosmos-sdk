@@ -148,17 +148,14 @@ func (suite *SimTestSuite) TestSimulateMsgMultiSend() {
 }
 
 func (suite *SimTestSuite) TestSimulateModuleAccountMsgSend() {
-	const (
-		accCount       = 1
-		moduleAccCount = 1
-	)
+	const moduleAccount = 1
 
 	s := rand.NewSource(1)
 	r := rand.New(s)
-	accounts := suite.getTestingAccounts(r, accCount)
+	accounts := suite.getTestingAccounts(r, 1)
 
 	// execute operation
-	op := simulation.SimulateMsgSendToModuleAccount(suite.txConfig, suite.accountKeeper, suite.bankKeeper, moduleAccCount)
+	op := simulation.SimulateMsgSendToModuleAccount(suite.txConfig, suite.accountKeeper, suite.bankKeeper, moduleAccount)
 
 	s = rand.NewSource(1)
 	r = rand.New(s)
@@ -176,17 +173,14 @@ func (suite *SimTestSuite) TestSimulateModuleAccountMsgSend() {
 }
 
 func (suite *SimTestSuite) TestSimulateMsgMultiSendToModuleAccount() {
-	const (
-		accCount  = 2
-		mAccCount = 2
-	)
+	const mAccount = 2
 
 	s := rand.NewSource(1)
 	r := rand.New(s)
-	accounts := suite.getTestingAccounts(r, accCount)
+	accounts := suite.getTestingAccounts(r, 2)
 
 	// execute operation
-	op := simulation.SimulateMsgMultiSendToModuleAccount(suite.txConfig, suite.accountKeeper, suite.bankKeeper, mAccCount)
+	op := simulation.SimulateMsgMultiSendToModuleAccount(suite.txConfig, suite.accountKeeper, suite.bankKeeper, mAccount)
 
 	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
 	suite.Require().Error(err)

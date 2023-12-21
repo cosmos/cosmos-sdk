@@ -27,7 +27,11 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Features
 
+* [#18281](https://github.com/cosmos/cosmos-sdk/pull/18281) Support broadcasting multiple transactions.
+
 ### Improvements
+
+* [#18780](https://github.com/cosmos/cosmos-sdk/pull/18780) Move sig verification out of the for loop, into the authenticate method.
 
 ### API Breaking Changes
 
@@ -35,4 +39,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Bug Fixes
 
-* (client/cli) [#18564](https://github.com/cosmos/cosmos-sdk/pull/18564) Fix total fees calculation when batch signing
+* [#18817](https://github.com/cosmos/cosmos-sdk/pull/18817) SigVerification, GasConsumption, IncreaseSequence ante decorators have all been joined into one SigVerification decorator. Gas consumption during TX validation flow has reduced.
+
+### Bug Fixes

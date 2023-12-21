@@ -86,7 +86,7 @@ func NewKeeper(
 		AccountNumber:   collections.NewSequence(sb, AccountNumberKey, "account_number"),
 		AccountsByType:  collections.NewMap(sb, AccountTypeKeyPrefix, "accounts_by_type", collections.BytesKey, collections.StringValue),
 		AccountByNumber: collections.NewMap(sb, AccountByNumber, "account_by_number", collections.BytesKey, collections.Uint64Value),
-		AccountsState:   collections.NewMap(sb, implementation.AccountStatePrefix, "accounts_state", collections.BytesKey, collections.BytesValue),
+		AccountsState:   collections.NewMap(sb, implementation.AccountStatePrefix, "accounts_state", collections.PairKeyCodec(collections.Uint64Key, collections.BytesKey), collections.BytesValue),
 	}
 
 	schema, err := sb.Build()
@@ -125,9 +125,9 @@ type Keeper struct {
 
 	// AccountsState keeps track of the state of each account.
 	// NOTE: this is only used for genesis import and export.
-	// Contracts set and get their own state but this helps providing a nice mapping
-	// between: (account address, account state key) => account state value.
-	AccountsState collections.Map[[]byte, []byte]
+	// Account set and get their own state but this helps providing a nice mapping
+	// between: (account number, account state key) => account state value.
+	AccountsState collections.Map[collections.Pair[uint64, []byte], []byte]
 }
 
 // Init creates a new account of the given type.
@@ -155,7 +155,7 @@ func (k Keeper) Init(
 	}
 
 	// make the context and init the account
-	ctx = k.makeAccountContext(ctx, accountAddr, creator, false)
+	ctx = k.makeAccountContext(ctx, num, accountAddr, creator, false)
 	resp, err := impl.Init(ctx, initRequest)
 	if err != nil {
 		return nil, nil, err
@@ -194,8 +194,14 @@ func (k Keeper) Execute(
 		return nil, err
 	}
 
+	// get account number
+	accountNum, err := k.AccountByNumber.Get(ctx, accountAddr)
+	if err != nil {
+		return nil, err
+	}
+
 	// make the context and execute the account state transition.
-	ctx = k.makeAccountContext(ctx, accountAddr, sender, false)
+	ctx = k.makeAccountContext(ctx, accountNum, accountAddr, sender, false)
 	return impl.Execute(ctx, execRequest)
 }
 
@@ -220,8 +226,13 @@ func (k Keeper) Query(
 		return nil, err
 	}
 
+	accountNum, err := k.AccountByNumber.Get(ctx, accountAddr)
+	if err != nil {
+		return nil, err
+	}
+
 	// make the context and execute the account query
-	ctx = k.makeAccountContext(ctx, accountAddr, nil, true)
+	ctx = k.makeAccountContext(ctx, accountNum, accountAddr, nil, true)
 	return impl.Query(ctx, queryRequest)
 }
 
@@ -240,12 +251,13 @@ func (k Keeper) makeAddress(accNum uint64) ([]byte, error) {
 }
 
 // makeAccountContext makes a new context for the given account.
-func (k Keeper) makeAccountContext(ctx context.Context, accountAddr, sender []byte, isQuery bool) context.Context {
+func (k Keeper) makeAccountContext(ctx context.Context, accountNumber uint64, accountAddr, sender []byte, isQuery bool) context.Context {
 	// if it's not a query we create a context that allows to do anything.
 	if !isQuery {
 		return implementation.MakeAccountContext(
 			ctx,
 			k.storeService,
+			accountNumber,
 			accountAddr,
 			sender,
 			k.sendModuleMessage,
@@ -259,6 +271,7 @@ func (k Keeper) makeAccountContext(ctx context.Context, accountAddr, sender []by
 	return implementation.MakeAccountContext(
 		ctx,
 		k.storeService,
+		accountNumber,
 		accountAddr,
 		nil,
 		func(ctx context.Context, sender []byte, msg, msgResp implementation.ProtoMsg) error {
@@ -349,9 +362,9 @@ func (k Keeper) queryModule(ctx context.Context, queryReq, queryResp implementat
 	return handlers[0](ctx, queryReq, queryResp)
 }
 
-const msgInterfaceName = "cosmos.accounts.Msg.v1"
+const msgInterfaceName = "cosmos.accounts.v1.MsgInterface"
 
-// creates a new interface type which is a alias of the proto message interface to avoid conflicts with sdk.Msg
+// creates a new interface type which is an alias of the proto message interface to avoid conflicts with sdk.Msg
 type msgInterface implementation.ProtoMsg
 
 var msgInterfaceType = (*msgInterface)(nil)

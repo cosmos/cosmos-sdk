@@ -102,7 +102,7 @@ TODO: Consider removing this section in favor of just using the current section 
 
 The solution here is to instead store each period created by a slash in the validators state.
 Then when withdrawing, you must iterate over all slashes between when you started and ended.
-Suppose you delegated at period $0$, a y\% slash occured at period $2$, and your withdrawal creates period $4$.
+Suppose you delegated at period $0$, a y\% slash occurred at period $2$, and your withdrawal creates period $4$.
 Then you receive funds from periods $0$ to $2$ as normal.
 The equations for funds you receive for periods $2$ to $4$ now uses $(1 - y)x$ for your stake instead of just $x$ stake.
 When there are multiple slashes, you just account for the accumulated slash factor.
@@ -110,7 +110,7 @@ When there are multiple slashes, you just account for the accumulated slash fact
 In practice this will not really be an efficiency hit, as the number of slashes is expected to be 0 or 1 for most validators.
 Validators that get slashed more will naturally lose their delegators.
 A malicious validator that gets itself slashed many times would increase the gas to withdraw linearly, but the economic loss of funds due to the slashes is expected to far out-weigh the extra overhead the honest withdrawer must pay for due to the gas.
-(TODO: frame that above sentence in terms of griefing factors, as thats more correct)
+(TODO: frame that above sentence in terms of griefing factors, as that's more correct)
 
 \subsection{Inflation}
 Inflation is the idea that we want every staked coin to create more staking tokens as time progresses.

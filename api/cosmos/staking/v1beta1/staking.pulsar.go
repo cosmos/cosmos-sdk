@@ -14953,7 +14953,7 @@ type Validator struct {
 	MinSelfDelegation string `protobuf:"bytes,11,opt,name=min_self_delegation,json=minSelfDelegation,proto3" json:"min_self_delegation,omitempty"`
 	// strictly positive if this validator's unbonding has been stopped by external modules
 	UnbondingOnHoldRefCount int64 `protobuf:"varint,12,opt,name=unbonding_on_hold_ref_count,json=unbondingOnHoldRefCount,proto3" json:"unbonding_on_hold_ref_count,omitempty"`
-	// list of unbonding ids, each uniquely identifing an unbonding of this validator
+	// list of unbonding ids, each uniquely identifying an unbonding of this validator
 	UnbondingIds []uint64 `protobuf:"varint,13,rep,packed,name=unbonding_ids,json=unbondingIds,proto3" json:"unbonding_ids,omitempty"`
 }
 
@@ -15942,7 +15942,7 @@ type ConsPubKeyRotationHistory struct {
 	OldConsPubkey *anypb.Any `protobuf:"bytes,2,opt,name=old_cons_pubkey,json=oldConsPubkey,proto3" json:"old_cons_pubkey,omitempty"`
 	// new_cons_pubkey is the new consensus public key of the validator, as a Protobuf Any.
 	NewConsPubkey *anypb.Any `protobuf:"bytes,3,opt,name=new_cons_pubkey,json=newConsPubkey,proto3" json:"new_cons_pubkey,omitempty"`
-	// height defines the block height at which the rotation event occured.
+	// height defines the block height at which the rotation event occurred.
 	Height uint64 `protobuf:"varint,4,opt,name=height,proto3" json:"height,omitempty"`
 	// fee holds the amount of fee deduced for the rotation.
 	Fee *v1beta1.Coin `protobuf:"bytes,5,opt,name=fee,proto3" json:"fee,omitempty"`

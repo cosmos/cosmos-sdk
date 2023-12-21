@@ -73,7 +73,7 @@ func (suite *KeeperTestSuite) reset() {
 	suite.msgSrvr = keeper.NewMsgServerImpl(suite.govKeeper)
 
 	suite.legacyMsgSrvr = keeper.NewLegacyMsgServerImpl(govAcct.String(), suite.msgSrvr)
-	suite.addrs = simtestutil.AddTestAddrsIncremental(bankKeeper, stakingKeeper, ctx, 3, sdkmath.NewInt(30000000))
+	suite.addrs = simtestutil.AddTestAddrsIncremental(bankKeeper, stakingKeeper, ctx, 3, sdkmath.NewInt(300000000))
 
 	suite.acctKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
 }
@@ -89,17 +89,17 @@ func TestIncrementProposalNumber(t *testing.T) {
 	require.NoError(t, err)
 
 	tp := TestProposal
-	_, err = govKeeper.SubmitProposal(ctx, tp, "", "test", "summary", addrBz, false)
+	_, err = govKeeper.SubmitProposal(ctx, tp, "", "test", "summary", addrBz, v1.ProposalType_PROPOSAL_TYPE_STANDARD)
 	require.NoError(t, err)
-	_, err = govKeeper.SubmitProposal(ctx, tp, "", "test", "summary", addrBz, false)
+	_, err = govKeeper.SubmitProposal(ctx, tp, "", "test", "summary", addrBz, v1.ProposalType_PROPOSAL_TYPE_STANDARD)
 	require.NoError(t, err)
-	_, err = govKeeper.SubmitProposal(ctx, tp, "", "test", "summary", addrBz, true)
+	_, err = govKeeper.SubmitProposal(ctx, tp, "", "test", "summary", addrBz, v1.ProposalType_PROPOSAL_TYPE_EXPEDITED)
 	require.NoError(t, err)
-	_, err = govKeeper.SubmitProposal(ctx, tp, "", "test", "summary", addrBz, true)
+	_, err = govKeeper.SubmitProposal(ctx, tp, "", "test", "summary", addrBz, v1.ProposalType_PROPOSAL_TYPE_EXPEDITED)
 	require.NoError(t, err)
-	_, err = govKeeper.SubmitProposal(ctx, tp, "", "test", "summary", addrBz, false)
+	_, err = govKeeper.SubmitProposal(ctx, tp, "", "test", "summary", addrBz, v1.ProposalType_PROPOSAL_TYPE_STANDARD)
 	require.NoError(t, err)
-	proposal6, err := govKeeper.SubmitProposal(ctx, tp, "", "test", "summary", addrBz, false)
+	proposal6, err := govKeeper.SubmitProposal(ctx, tp, "", "test", "summary", addrBz, v1.ProposalType_PROPOSAL_TYPE_STANDARD)
 	require.NoError(t, err)
 
 	require.Equal(t, uint64(6), proposal6.Id)
@@ -116,7 +116,7 @@ func TestProposalQueues(t *testing.T) {
 
 	// create test proposals
 	tp := TestProposal
-	proposal, err := govKeeper.SubmitProposal(ctx, tp, "", "test", "summary", addrBz, false)
+	proposal, err := govKeeper.SubmitProposal(ctx, tp, "", "test", "summary", addrBz, v1.ProposalType_PROPOSAL_TYPE_STANDARD)
 	require.NoError(t, err)
 
 	has, err := govKeeper.InactiveProposalsQueue.Has(ctx, collections.Join(*proposal.DepositEndTime, proposal.Id))

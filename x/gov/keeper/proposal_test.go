@@ -226,7 +226,7 @@ func (suite *KeeperTestSuite) TestCancelProposal() {
 		{
 			name: "without proposer",
 			malleate: func() (uint64, string) {
-				return 1, ""
+				return proposalID, ""
 			},
 			expectedErrMsg: "invalid proposer",
 		},

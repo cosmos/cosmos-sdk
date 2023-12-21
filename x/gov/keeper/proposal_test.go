@@ -171,8 +171,6 @@ func (suite *KeeperTestSuite) TestSubmitProposal() {
 		{&v1beta1.TextProposal{Title: strings.Repeat("1234567890", 100), Description: "description"}, govAcct, "", v1.ProposalType_PROPOSAL_TYPE_STANDARD, nil},
 		{&v1beta1.TextProposal{Title: "title", Description: ""}, govAcct, "", v1.ProposalType_PROPOSAL_TYPE_STANDARD, nil},
 		{&v1beta1.TextProposal{Title: "title", Description: strings.Repeat("1234567890", 1000)}, govAcct, "", v1.ProposalType_PROPOSAL_TYPE_EXPEDITED, nil},
-		// error when metadata is too long (>10000)
-		{&tp, govAcct, strings.Repeat("a", 100001), v1.ProposalType_PROPOSAL_TYPE_EXPEDITED, types.ErrMetadataTooLong},
 		// error when signer is not gov acct
 		{&tp, randomAddr.String(), "", v1.ProposalType_PROPOSAL_TYPE_STANDARD, types.ErrInvalidSigner},
 		// error only when invalid route

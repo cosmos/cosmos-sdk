@@ -3,10 +3,11 @@
 ## Changelog
 
 * Feb 14, 2023: Initial Draft (@alexanderbez)
+* Dec 21, 2023: Updates after implementation (@alexanderbez)
 
 ## Status
 
-DRAFT
+ACCEPTED
 
 ## Abstract
 
@@ -81,10 +82,10 @@ less intrusive. Specifically, we propose to:
 * Separate the concerns of state commitment (**SC**), needed for consensus, and
   state storage (**SS**), needed for state machine and clients.
 * Reduce layers of abstractions necessary between the RMS and underlying stores.
-* Provide atomic module store commitments by providing a batch database object
-  to core IAVL APIs.
-* Reduce complexities in the `CacheKVStore` implementation while also improving
-  performance<sup>[3]</sup>.
+* Remove unnecessary store types and implementations such as `CacheKVStore`.
+* Simplify the branching logic.
+* Ensure the `RootStore` interface remains as lightweight as possible.
+* Allow application developers to easily swap out SS and SC backends.
 
 Furthermore, we will keep the IAVL is the backing [commitment](https://cryptography.fandom.com/wiki/Commitment_scheme)
 store for the time being. While we might not fully settle on the use of IAVL in

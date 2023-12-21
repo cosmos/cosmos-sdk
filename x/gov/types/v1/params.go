@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"cosmossdk.io/core/address"
 	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -18,19 +19,21 @@ const (
 
 // Default governance params
 var (
-	DefaultMinDepositTokens          = sdkmath.NewInt(10000000)
-	DefaultMinExpeditedDepositTokens = DefaultMinDepositTokens.Mul(sdkmath.NewInt(DefaultMinExpeditedDepositTokensRatio))
-	DefaultQuorum                    = sdkmath.LegacyNewDecWithPrec(334, 3)
-	DefaultThreshold                 = sdkmath.LegacyNewDecWithPrec(5, 1)
-	DefaultExpeditedThreshold        = sdkmath.LegacyNewDecWithPrec(667, 3)
-	DefaultVetoThreshold             = sdkmath.LegacyNewDecWithPrec(334, 3)
-	DefaultMinInitialDepositRatio    = sdkmath.LegacyZeroDec()
-	DefaultProposalCancelRatio       = sdkmath.LegacyMustNewDecFromStr("0.5")
-	DefaultProposalCancelDestAddress = ""
-	DefaultBurnProposalPrevote       = false // set to false to replicate behavior of when this change was made (0.47)
-	DefaultBurnVoteQuorom            = false // set to false to  replicate behavior of when this change was made (0.47)
-	DefaultBurnVoteVeto              = true  // set to true to replicate behavior of when this change was made (0.47)
-	DefaultMinDepositRatio           = sdkmath.LegacyMustNewDecFromStr("0.01")
+	DefaultMinDepositTokens             = sdkmath.NewInt(10000000)
+	DefaultMinExpeditedDepositTokens    = DefaultMinDepositTokens.Mul(sdkmath.NewInt(DefaultMinExpeditedDepositTokensRatio))
+	DefaultQuorum                       = sdkmath.LegacyNewDecWithPrec(334, 3)
+	DefaultThreshold                    = sdkmath.LegacyNewDecWithPrec(5, 1)
+	DefaultExpeditedThreshold           = sdkmath.LegacyNewDecWithPrec(667, 3)
+	DefaultVetoThreshold                = sdkmath.LegacyNewDecWithPrec(334, 3)
+	DefaultMinInitialDepositRatio       = sdkmath.LegacyZeroDec()
+	DefaultProposalCancelRatio          = sdkmath.LegacyMustNewDecFromStr("0.5")
+	DefaultProposalCancelDestAddress    = ""
+	DefaultBurnProposalPrevote          = false // set to false to replicate behavior of when this change was made (0.47)
+	DefaultBurnVoteQuorom               = false // set to false to  replicate behavior of when this change was made (0.47)
+	DefaultBurnVoteVeto                 = true  // set to true to replicate behavior of when this change was made (0.47)
+	DefaultMinDepositRatio              = sdkmath.LegacyMustNewDecFromStr("0.01")
+	DefaultOptimisticRejectedThreshold  = sdkmath.LegacyMustNewDecFromStr("0.1")
+	DefaultOptimisticAuthorizedAddreses = []string(nil)
 )
 
 // Deprecated: NewDepositParams creates a new DepositParams object
@@ -61,25 +64,27 @@ func NewVotingParams(votingPeriod *time.Duration) VotingParams {
 func NewParams(
 	minDeposit, expeditedminDeposit sdk.Coins, maxDepositPeriod, votingPeriod, expeditedVotingPeriod time.Duration,
 	quorum, threshold, expeditedThreshold, vetoThreshold, minInitialDepositRatio, proposalCancelRatio, proposalCancelDest string,
-	burnProposalDeposit, burnVoteQuorum, burnVoteVeto bool, minDepositRatio string,
+	burnProposalDeposit, burnVoteQuorum, burnVoteVeto bool, minDepositRatio, optimisticRejectedThreshold string, optimisticAuthorizedAddresses []string,
 ) Params {
 	return Params{
-		MinDeposit:                 minDeposit,
-		ExpeditedMinDeposit:        expeditedminDeposit,
-		MaxDepositPeriod:           &maxDepositPeriod,
-		VotingPeriod:               &votingPeriod,
-		ExpeditedVotingPeriod:      &expeditedVotingPeriod,
-		Quorum:                     quorum,
-		Threshold:                  threshold,
-		ExpeditedThreshold:         expeditedThreshold,
-		VetoThreshold:              vetoThreshold,
-		MinInitialDepositRatio:     minInitialDepositRatio,
-		ProposalCancelRatio:        proposalCancelRatio,
-		ProposalCancelDest:         proposalCancelDest,
-		BurnProposalDepositPrevote: burnProposalDeposit,
-		BurnVoteQuorum:             burnVoteQuorum,
-		BurnVoteVeto:               burnVoteVeto,
-		MinDepositRatio:            minDepositRatio,
+		MinDeposit:                    minDeposit,
+		ExpeditedMinDeposit:           expeditedminDeposit,
+		MaxDepositPeriod:              &maxDepositPeriod,
+		VotingPeriod:                  &votingPeriod,
+		ExpeditedVotingPeriod:         &expeditedVotingPeriod,
+		Quorum:                        quorum,
+		Threshold:                     threshold,
+		ExpeditedThreshold:            expeditedThreshold,
+		VetoThreshold:                 vetoThreshold,
+		MinInitialDepositRatio:        minInitialDepositRatio,
+		ProposalCancelRatio:           proposalCancelRatio,
+		ProposalCancelDest:            proposalCancelDest,
+		BurnProposalDepositPrevote:    burnProposalDeposit,
+		BurnVoteQuorum:                burnVoteQuorum,
+		BurnVoteVeto:                  burnVoteVeto,
+		MinDepositRatio:               minDepositRatio,
+		OptimisticRejectedThreshold:   optimisticRejectedThreshold,
+		OptimisticAuthorizedAddresses: optimisticAuthorizedAddresses,
 	}
 }
 
@@ -102,11 +107,13 @@ func DefaultParams() Params {
 		DefaultBurnVoteQuorom,
 		DefaultBurnVoteVeto,
 		DefaultMinDepositRatio.String(),
+		DefaultOptimisticRejectedThreshold.String(),
+		DefaultOptimisticAuthorizedAddreses,
 	)
 }
 
 // ValidateBasic performs basic validation on governance parameters.
-func (p Params) ValidateBasic() error {
+func (p Params) ValidateBasic(addressCodec address.Codec) error {
 	minDeposit := sdk.Coins(p.MinDeposit)
 	if minDeposit.Empty() || !minDeposit.IsValid() {
 		return fmt.Errorf("invalid minimum deposit: %s", minDeposit)
@@ -173,6 +180,19 @@ func (p Params) ValidateBasic() error {
 		return fmt.Errorf("veto threshold too large: %s", vetoThreshold)
 	}
 
+	optimisticRejectedThreshold, err := sdkmath.LegacyNewDecFromStr(p.OptimisticRejectedThreshold)
+	if err != nil {
+		return fmt.Errorf("invalid optimistic rejected threshold string: %w", err)
+	}
+
+	if !optimisticRejectedThreshold.IsPositive() {
+		return fmt.Errorf("optimistic rejected threshold must be positive: %s", optimisticRejectedThreshold)
+	}
+
+	if optimisticRejectedThreshold.GT(sdkmath.LegacyOneDec()) {
+		return fmt.Errorf("optimistic rejected threshold too large: %s", optimisticRejectedThreshold)
+	}
+
 	if p.VotingPeriod == nil {
 		return fmt.Errorf("voting period must not be nil: %d", p.VotingPeriod)
 	}
@@ -188,6 +208,12 @@ func (p Params) ValidateBasic() error {
 	}
 	if p.ExpeditedVotingPeriod.Seconds() >= p.VotingPeriod.Seconds() {
 		return fmt.Errorf("expedited voting period %s must be strictly less that the regular voting period %s", p.ExpeditedVotingPeriod, p.VotingPeriod)
+	}
+
+	for _, addr := range p.OptimisticAuthorizedAddresses {
+		if _, err := addressCodec.StringToBytes(addr); err != nil {
+			return fmt.Errorf("invalid optimistic authorized address: %s", addr)
+		}
 	}
 
 	minInitialDepositRatio, err := sdkmath.LegacyNewDecFromStr(p.MinInitialDepositRatio)

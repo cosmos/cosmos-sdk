@@ -6,8 +6,8 @@ import (
 
 	"google.golang.org/protobuf/proto"
 
-	"github.com/cosmos/cosmos-sdk/serverv2/core/event"
-	"github.com/cosmos/cosmos-sdk/serverv2/core/transaction"
+	"cosmossdk.io/server/v2/core/event"
+	"cosmossdk.io/server/v2/core/transaction"
 )
 
 type Type = proto.Message
@@ -68,4 +68,9 @@ type TxResult struct {
 
 	Resp  Type
 	Error error
+}
+
+type ValidatorUpdate struct {
+	PubKey []byte
+	Power  int64
 }

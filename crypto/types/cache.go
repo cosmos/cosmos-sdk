@@ -51,12 +51,7 @@ func (c *SignatureCache) Remove(key string) {
 
 // validate validates the key and cache
 func (c *SignatureCache) validate(key string) bool {
-	// validate key
-	if len(key) == 0 {
-		return false
-	}
-
-	return c.data != nil
+	return len(key) != 0
 }
 
 // sigkey is the key used to store the signature in the cache

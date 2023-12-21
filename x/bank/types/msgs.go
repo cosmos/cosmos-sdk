@@ -11,8 +11,8 @@ var (
 )
 
 // NewMsgSend - construct a msg to send coins from one account to another.
-func NewMsgSend(fromAddr, toAddr sdk.AccAddress, amount sdk.Coins) *MsgSend {
-	return &MsgSend{FromAddress: fromAddr.String(), ToAddress: toAddr.String(), Amount: amount}
+func NewMsgSend(fromAddr, toAddr string, amount sdk.Coins) *MsgSend {
+	return &MsgSend{FromAddress: fromAddr, ToAddress: toAddr, Amount: amount}
 }
 
 // NewMsgMultiSend - construct arbitrary multi-in, multi-out send msg.

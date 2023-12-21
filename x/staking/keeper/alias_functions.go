@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 
 	"cosmossdk.io/collections"
 	storetypes "cosmossdk.io/store/types"
@@ -56,8 +57,10 @@ func (k Keeper) IterateBondedValidatorsByPower(ctx context.Context, fn func(inde
 	i := int64(0)
 	for ; iterator.Valid() && i < int64(maxValidators); iterator.Next() {
 		address := iterator.Value()
-		validator := k.mustGetValidator(ctx, address)
-
+		validator, err := k.GetValidator(ctx, address)
+		if err != nil {
+			return fmt.Errorf("validator record not found for address: %s", sdk.ValAddress(address).String())
+		}
 		if validator.IsBonded() {
 			stop := fn(i, validator) // XXX is this safe will the validator unexposed fields be able to get written to?
 			if stop {

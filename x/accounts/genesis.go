@@ -19,8 +19,12 @@ func (k Keeper) ExportState(ctx context.Context) (*v1.GenesisState, error) {
 
 	genState.AccountNumber = accountNumber
 
-	err = k.AccountsByType.Walk(ctx, nil, func(key []byte, value string) (stop bool, err error) {
-		accState, err := k.exportAccount(ctx, key, value)
+	err = k.AccountsByType.Walk(ctx, nil, func(accAddr []byte, accType string) (stop bool, err error) {
+		accNum, err := k.AccountByNumber.Get(ctx, accAddr)
+		if err != nil {
+			return true, err
+		}
+		accState, err := k.exportAccount(ctx, accAddr, accType, accNum)
 		if err != nil {
 			return true, err
 		}
@@ -34,20 +38,21 @@ func (k Keeper) ExportState(ctx context.Context) (*v1.GenesisState, error) {
 	return genState, nil
 }
 
-func (k Keeper) exportAccount(ctx context.Context, addr []byte, accType string) (*v1.GenesisAccount, error) {
+func (k Keeper) exportAccount(ctx context.Context, addr []byte, accType string, accNum uint64) (*v1.GenesisAccount, error) {
 	addrString, err := k.addressCodec.BytesToString(addr)
 	if err != nil {
 		return nil, err
 	}
 	account := &v1.GenesisAccount{
-		Address:     addrString,
-		AccountType: accType,
+		Address:       addrString,
+		AccountType:   accType,
+		AccountNumber: accNum,
+		State:         nil,
 	}
-	rng := new(collections.Range[[]byte]).
-		Prefix(addr)
-	err = k.AccountsState.Walk(ctx, rng, func(key, value []byte) (stop bool, err error) {
+	rng := collections.NewPrefixedPairRange[uint64, []byte](accNum)
+	err = k.AccountsState.Walk(ctx, rng, func(key collections.Pair[uint64, []byte], value []byte) (stop bool, err error) {
 		account.State = append(account.State, &v1.KVPair{
-			Key:   key,
+			Key:   key.K2(),
 			Value: value,
 		})
 		return false, nil
@@ -84,8 +89,12 @@ func (k Keeper) importAccount(ctx context.Context, acc *v1.GenesisAccount) error
 	if err != nil {
 		return err
 	}
+	err = k.AccountByNumber.Set(ctx, addrBytes, acc.AccountNumber)
+	if err != nil {
+		return err
+	}
 	for _, kv := range acc.State {
-		err = k.AccountsState.Set(ctx, kv.Key, kv.Value)
+		err = k.AccountsState.Set(ctx, collections.Join(acc.AccountNumber, kv.Key), kv.Value)
 		if err != nil {
 			return err
 		}

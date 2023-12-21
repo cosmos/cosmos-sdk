@@ -15,31 +15,31 @@ func TestNormalizeWeightedVoteOptions(t *testing.T) {
 	}{
 		"simple Yes": {
 			options:    "Yes",
-			normalized: "VOTE_OPTION_YES=1",
+			normalized: "VOTE_OPTION_ONE=1",
 		},
 		"simple yes": {
 			options:    "yes",
-			normalized: "VOTE_OPTION_YES=1",
+			normalized: "VOTE_OPTION_ONE=1",
 		},
 		"formal yes": {
 			options:    "yes=1",
-			normalized: "VOTE_OPTION_YES=1",
+			normalized: "VOTE_OPTION_ONE=1",
 		},
 		"half yes half no": {
 			options:    "yes=0.5,no=0.5",
-			normalized: "VOTE_OPTION_YES=0.5,VOTE_OPTION_NO=0.5",
+			normalized: "VOTE_OPTION_ONE=0.5,VOTE_OPTION_THREE=0.5",
 		},
 		"3 options": {
 			options:    "Yes=0.5,No=0.4,NoWithVeto=0.1",
-			normalized: "VOTE_OPTION_YES=0.5,VOTE_OPTION_NO=0.4,VOTE_OPTION_NO_WITH_VETO=0.1",
+			normalized: "VOTE_OPTION_ONE=0.5,VOTE_OPTION_THREE=0.4,VOTE_OPTION_FOUR=0.1",
 		},
 		"zero weight option": {
 			options:    "Yes=0.5,No=0.5,NoWithVeto=0",
-			normalized: "VOTE_OPTION_YES=0.5,VOTE_OPTION_NO=0.5,VOTE_OPTION_NO_WITH_VETO=0",
+			normalized: "VOTE_OPTION_ONE=0.5,VOTE_OPTION_THREE=0.5,VOTE_OPTION_FOUR=0",
 		},
 		"minus weight option": {
 			options:    "Yes=0.5,No=0.6,NoWithVeto=-0.1",
-			normalized: "VOTE_OPTION_YES=0.5,VOTE_OPTION_NO=0.6,VOTE_OPTION_NO_WITH_VETO=-0.1",
+			normalized: "VOTE_OPTION_ONE=0.5,VOTE_OPTION_THREE=0.6,VOTE_OPTION_FOUR=-0.1",
 		},
 		"empty options": {
 			options:    "",

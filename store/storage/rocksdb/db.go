@@ -12,6 +12,7 @@ import (
 	"golang.org/x/exp/slices"
 
 	"cosmossdk.io/store/v2"
+	"cosmossdk.io/store/v2/storage"
 	"cosmossdk.io/store/v2/storage/util"
 )
 
@@ -23,7 +24,7 @@ const (
 )
 
 var (
-	_ store.VersionedDatabase = (*Database)(nil)
+	_ storage.Database = (*Database)(nil)
 
 	defaultWriteOpts = grocksdb.NewDefaultWriteOptions()
 	defaultReadOpts  = grocksdb.NewDefaultReadOptions()
@@ -90,6 +91,10 @@ func (db *Database) Close() error {
 	return nil
 }
 
+func (db *Database) NewBatch(version uint64) (store.Batch, error) {
+	return NewBatch(db, version), nil
+}
+
 func (db *Database) getSlice(storeKey string, version uint64, key []byte) (*grocksdb.Slice, error) {
 	if version < db.tsLow {
 		return nil, store.ErrVersionPruned{EarliestVersion: db.tsLow}
@@ -141,43 +146,17 @@ func (db *Database) Get(storeKey string, version uint64, key []byte) ([]byte, er
 	return copyAndFreeSlice(slice), nil
 }
 
-func (db *Database) ApplyChangeset(version uint64, cs *store.Changeset) error {
-	b := NewBatch(db, version)
-
-	for storeKey, pairs := range cs.Pairs {
-		for _, kvPair := range pairs {
-			if kvPair.Value == nil {
-				if err := b.Delete(storeKey, kvPair.Key); err != nil {
-					return err
-				}
-			} else {
-				if err := b.Set(storeKey, kvPair.Key, kvPair.Value); err != nil {
-					return err
-				}
-			}
-		}
-	}
-
-	return b.Write()
-}
-
-// Prune attempts to prune all versions up to and including the provided version.
-// This is done internally by updating the full_history_ts_low RocksDB value on
-// the column families, s.t. all versions less than full_history_ts_low will be
-// dropped.
-//
-// Note, this does NOT incur an immediate full compaction, i.e. this performs a
-// lazy prune. Future compactions will honor the increased full_history_ts_low
-// and trim history when possible.
+// Prune prunes all versions up to and including the provided version argument.
+// Internally, this performs a manual compaction, the data with older timestamp
+// will be GCed by compaction.
 func (db *Database) Prune(version uint64) error {
 	tsLow := version + 1 // we increment by 1 to include the provided version
 
 	var ts [TimestampSize]byte
 	binary.LittleEndian.PutUint64(ts[:], tsLow)
-
-	if err := db.storage.IncreaseFullHistoryTsLow(db.cfHandle, ts[:]); err != nil {
-		return fmt.Errorf("failed to update column family full_history_ts_low: %w", err)
-	}
+	compactOpts := grocksdb.NewCompactRangeOptions()
+	compactOpts.SetFullHistoryTsLow(ts[:])
+	db.storage.CompactRangeCFOpt(db.cfHandle, grocksdb.Range{}, compactOpts)
 
 	db.tsLow = tsLow
 	return nil

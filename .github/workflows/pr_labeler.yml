@@ -8,11 +8,11 @@ permissions:
 jobs:
   labeler:
     permissions:
-      contents: read  # for actions/labeler to determine modified files
-      pull-requests: write  # for actions/labeler to add labels to PRs
+      contents: read # for actions/labeler to determine modified files
+      pull-requests: write # for actions/labeler to add labels to PRs
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/labeler@main
+      - uses: actions/labeler@v4 # v5 is broken, ref https://github.com/actions/labeler/issues/712. Do not bump.
         with:
           configuration-path: .github/pr_labeler.yml
           repo-token: "${{ secrets.GITHUB_TOKEN }}"

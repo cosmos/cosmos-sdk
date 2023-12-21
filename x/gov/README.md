@@ -2,6 +2,8 @@
 sidebar_position: 1
 ---
 
+<!--- TODO(@julienrbrt), describe spam votes and vote options changes -->
+
 # `x/gov`
 
 ## Abstract
@@ -33,33 +35,32 @@ can be adapted to any Proof-Of-Stake blockchain by replacing *ATOM* with the nat
 staking token of the chain.
 
 * [Concepts](#concepts)
-    * [Proposal submission](#proposal-submission)
-    * [Deposit](#deposit)
-    * [Vote](#vote)
-    * [Software Upgrade](#software-upgrade)
+  * [Proposal submission](#proposal-submission)
+  * [Deposit](#deposit)
+  * [Vote](#vote)
 * [State](#state)
-    * [Proposals](#proposals)
-    * [Parameters and base types](#parameters-and-base-types)
-    * [Deposit](#deposit-1)
-    * [ValidatorGovInfo](#validatorgovinfo)
-    * [Stores](#stores)
-    * [Proposal Processing Queue](#proposal-processing-queue)
-    * [Legacy Proposal](#legacy-proposal)
+  * [Proposals](#proposals)
+  * [Parameters and base types](#parameters-and-base-types)
+  * [Deposit](#deposit-1)
+  * [ValidatorGovInfo](#validatorgovinfo)
+  * [Stores](#stores)
+  * [Proposal Processing Queue](#proposal-processing-queue)
+  * [Legacy Proposal](#legacy-proposal)
 * [Messages](#messages)
-    * [Proposal Submission](#proposal-submission-1)
-    * [Deposit](#deposit-2)
-    * [Vote](#vote-1)
+  * [Proposal Submission](#proposal-submission-1)
+  * [Deposit](#deposit-2)
+  * [Vote](#vote-1)
 * [Events](#events)
-    * [EndBlocker](#endblocker)
-    * [Handlers](#handlers)
+  * [EndBlocker](#endblocker)
+  * [Handlers](#handlers)
 * [Parameters](#parameters)
 * [Client](#client)
-    * [CLI](#cli)
-    * [gRPC](#grpc)
-    * [REST](#rest)
+  * [CLI](#cli)
+  * [gRPC](#grpc)
+  * [REST](#rest)
 * [Metadata](#metadata)
-    * [Proposal](#proposal-3)
-    * [Vote](#vote-5)
+  * [Proposal](#proposal-3)
+  * [Vote](#vote-5)
 * [Future Improvements](#future-improvements)
 
 ## Concepts
@@ -185,9 +186,28 @@ For a weighted vote to be valid, the `options` field must not contain duplicate 
 Quorum is defined as the minimum percentage of voting power that needs to be
 cast on a proposal for the result to be valid.
 
-### Expedited Proposals
+### Proposal Types
+
+Proposal types have been introduced in ADR-069.
+
+#### Standard proposal
+
+A standard proposal is a proposal that can contain any messages. The proposal follows the standard governance flow and governance parameters.
+
+#### Expedited Proposal
 
 A proposal can be expedited, making the proposal use shorter voting duration and a higher tally threshold by its default. If an expedited proposal fails to meet the threshold within the scope of shorter voting duration, the expedited proposal is then converted to a regular proposal and restarts voting under regular voting conditions.
+
+#### Optimistic Proposal
+
+An optimistic proposal is a proposal that passes unless a threshold a NO votes is reached.
+Voter can only vote NO on the proposal. If the NO threshold is reached, the optimistic proposal is converted to a standard proposal.
+
+#### Multiple Choice Proposals
+
+A multiple choice proposal is a proposal where the voting options can be defined by the proposer.
+The number of voting options is limited to a maximum of 4.
+Multiple choice proposals, contrary to any other proposal type, cannot have messages to execute. They are only text proposals.
 
 #### Threshold
 
@@ -231,19 +251,19 @@ Later, we may add permissioned keys that could only sign txs from certain module
 
 #### Burnable Params
 
-There are three parameters that define if the deposit of a proposal should be burned or returned to the depositors. 
+There are three parameters that define if the deposit of a proposal should be burned or returned to the depositors.
 
-* `BurnVoteVeto` burns the proposal deposit if the proposal gets vetoed. 
+* `BurnVoteVeto` burns the proposal deposit if the proposal gets vetoed.
 * `BurnVoteQuorum` burns the proposal deposit if the proposal deposit if the vote does not reach quorum.
-* `BurnProposalDepositPrevote` burns the proposal deposit if it does not enter the voting phase. 
+* `BurnProposalDepositPrevote` burns the proposal deposit if it does not enter the voting phase.
 
-> Note: These parameters are modifiable via governance. 
+> Note: These parameters are modifiable via governance.
 
 ## State
 
 ### Constitution
 
-`Constitution` is found in the genesis state.  It is a string field intended to be used to descibe the purpose of a particular blockchain, and its expected norms.  A few examples of how the constitution field can be used:
+`Constitution` is found in the genesis state.  It is a string field intended to be used to describe the purpose of a particular blockchain, and its expected norms.  A few examples of how the constitution field can be used:
 
 * define the purpose of the chain, laying a foundation for its future development
 * set expectations for delegators
@@ -253,14 +273,14 @@ There are three parameters that define if the deposit of a proposal should be bu
 Since this is more of a social feature than a technical feature, we'll now get into some items that may have been useful to have in a genesis constitution:
 
 * What limitations on governance exist, if any?
-    * is it okay for the community to slash the wallet of a whale that they no longer feel that they want around? (viz: Juno Proposal 4 and 16)
-    * can governance "socially slash" a validator who is using unapproved MEV? (viz: commonwealth.im/osmosis)
-    * In the event of an economic emergency, what should validators do?
-        * Terra crash of May, 2022, saw validators choose to run a new binary with code that had not been approved by governance, because the governance token had been inflated to nothing.
+  * is it okay for the community to slash the wallet of a whale that they no longer feel that they want around? (viz: Juno Proposal 4 and 16)
+  * can governance "socially slash" a validator who is using unapproved MEV? (viz: commonwealth.im/osmosis)
+  * In the event of an economic emergency, what should validators do?
+    * Terra crash of May, 2022, saw validators choose to run a new binary with code that had not been approved by governance, because the governance token had been inflated to nothing.
 * What is the purpose of the chain, specifically?
-    * best example of this is the Cosmos hub, where different founding groups, have different interpertations of the purpose of the network.
+  * best example of this is the Cosmos hub, where different founding groups, have different interpretations of the purpose of the network.
 
-This genesis entry, "constitution" hasn't been designed for existing chains, who should likely just ratify a constitution using their governance system.  Instead, this is for new chains.  It will allow for validators to have a much clearer idea of purpose and the expecations placed on them while operating thier nodes.  Likewise, for community members, the constitution will give them some idea of what to expect from both the "chain team" and the validators, respectively.
+This genesis entry, "constitution" hasn't been designed for existing chains, who should likely just ratify a constitution using their governance system.  Instead, this is for new chains.  It will allow for validators to have a much clearer idea of purpose and the expecations placed on them while operating their nodes.  Likewise, for community members, the constitution will give them some idea of what to expect from both the "chain team" and the validators, respectively.
 
 This constitution is designed to be immutable, and placed only in genesis, though that could change over time by a pull request to the cosmos-sdk that allows for the constitution to be changed by governance.  Communities whishing to make amendments to their original constitution should use the governance mechanism and a "signaling proposal" to do exactly that.
 
@@ -358,13 +378,7 @@ const (
     VoteNo          = 0x2
     VoteNoWithVeto  = 0x3
     VoteAbstain     = 0x4
-)
-
-type ProposalType  string
-
-const (
-    ProposalTypePlainText       = "Text"
-    ProposalTypeSoftwareUpgrade = "SoftwareUpgrade"
+    VoteSpam        = 0x5
 )
 
 type ProposalStatus byte
@@ -431,67 +445,6 @@ For pseudocode purposes, here are the two function we will use to read or write 
   voted. If the proposal is accepted, deposits are refunded. Finally, the proposal
   content `Handler` is executed.
 
-And the pseudocode for the `ProposalProcessingQueue`:
-
-```go
-  in EndBlock do
-
-    for finishedProposalID in GetAllFinishedProposalIDs(block.Time)
-      proposal = load(Governance, <proposalID|'proposal'>) // proposal is a const key
-
-      validators = Keeper.getAllValidators()
-      tmpValMap := map(sdk.AccAddress)ValidatorGovInfo
-
-      // Initiate mapping at 0. This is the amount of shares of the validator's vote that will be overridden by their delegator's votes
-      for each validator in validators
-        tmpValMap(validator.OperatorAddr).Minus = 0
-
-      // Tally
-      voterIterator = rangeQuery(Governance, <proposalID|'addresses'>) //return all the addresses that voted on the proposal
-      for each (voterAddress, vote) in voterIterator
-        delegations = stakingKeeper.getDelegations(voterAddress) // get all delegations for current voter
-
-        for each delegation in delegations
-          // make sure delegation.Shares does NOT include shares being unbonded
-          tmpValMap(delegation.ValidatorAddr).Minus += delegation.Shares
-          proposal.updateTally(vote, delegation.Shares)
-
-        _, isVal = stakingKeeper.getValidator(voterAddress)
-        if (isVal)
-          tmpValMap(voterAddress).Vote = vote
-
-      tallyingParam = load(GlobalParams, 'TallyingParam')
-
-      // Update tally if validator voted
-      for each validator in validators
-        if tmpValMap(validator).HasVoted
-          proposal.updateTally(tmpValMap(validator).Vote, (validator.TotalShares - tmpValMap(validator).Minus))
-
-
-
-      // Check if proposal is accepted or rejected
-      totalNonAbstain := proposal.YesVotes + proposal.NoVotes + proposal.NoWithVetoVotes
-      if (proposal.Votes.YesVotes/totalNonAbstain > tallyingParam.Threshold AND proposal.Votes.NoWithVetoVotes/totalNonAbstain  < tallyingParam.Veto)
-        //  proposal was accepted at the end of the voting period
-        //  refund deposits (non-voters already punished)
-        for each (amount, depositor) in proposal.Deposits
-          depositor.AtomBalance += amount
-
-        stateWriter, err := proposal.Handler()
-        if err != nil
-            // proposal passed but failed during state execution
-            proposal.CurrentStatus = ProposalStatusFailed
-         else
-            // proposal pass and state is persisted
-            proposal.CurrentStatus = ProposalStatusAccepted
-            stateWriter.save()
-      else
-        // proposal was rejected
-        proposal.CurrentStatus = ProposalStatusRejected
-
-      store(Governance, <proposalID|'proposal'>, proposal)
-```
-
 ### Legacy Proposal
 
 :::warning
@@ -527,7 +480,7 @@ The `initialDeposit` must be strictly positive and conform to the accepted denom
 * Initialise `Proposal`'s attributes
 * Decrease balance of sender by `InitialDeposit`
 * If `MinDeposit` is reached:
-    * Push `proposalID` in `ProposalProcessingQueue`
+  * Push `proposalID` in `ProposalProcessingQueue`
 * Transfer `InitialDeposit` from the `Proposer` to the governance `ModuleAccount`
 
 ### Deposit
@@ -551,7 +504,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/gov/v1/tx.pro
 * Add `deposit` of sender in `proposal.Deposits`
 * Increase `proposal.TotalDeposit` by sender's `deposit`
 * If `MinDeposit` is reached:
-    * Push `proposalID` in `ProposalProcessingQueueEnd`
+  * Push `proposalID` in `ProposalProcessingQueueEnd`
 * Transfer `Deposit` from the `proposer` to the governance `ModuleAccount`
 
 ### Vote
@@ -579,7 +532,7 @@ The governance module emits the following events:
 ### EndBlocker
 
 | Type              | Attribute Key   | Attribute Value  |
-|-------------------|-----------------|------------------|
+| ----------------- | --------------- | ---------------- |
 | inactive_proposal | proposal_id     | {proposalID}     |
 | inactive_proposal | proposal_result | {proposalResult} |
 | active_proposal   | proposal_id     | {proposalID}     |
@@ -590,7 +543,7 @@ The governance module emits the following events:
 #### MsgSubmitProposal
 
 | Type                | Attribute Key       | Attribute Value |
-|---------------------|---------------------|-----------------|
+| ------------------- | ------------------- | --------------- |
 | submit_proposal     | proposal_id         | {proposalID}    |
 | submit_proposal [0] | voting_period_start | {proposalID}    |
 | proposal_deposit    | amount              | {depositAmount} |
@@ -604,7 +557,7 @@ The governance module emits the following events:
 #### MsgVote
 
 | Type          | Attribute Key | Attribute Value |
-|---------------|---------------|-----------------|
+| ------------- | ------------- | --------------- |
 | proposal_vote | option        | {voteOption}    |
 | proposal_vote | proposal_id   | {proposalID}    |
 | message       | module        | governance      |
@@ -614,7 +567,7 @@ The governance module emits the following events:
 #### MsgVoteWeighted
 
 | Type          | Attribute Key | Attribute Value       |
-|---------------|---------------|-----------------------|
+| ------------- | ------------- | --------------------- |
 | proposal_vote | option        | {weightedVoteOptions} |
 | proposal_vote | proposal_id   | {proposalID}          |
 | message       | module        | governance            |
@@ -624,7 +577,7 @@ The governance module emits the following events:
 #### MsgDeposit
 
 | Type                 | Attribute Key       | Attribute Value |
-|----------------------|---------------------|-----------------|
+| -------------------- | ------------------- | --------------- |
 | proposal_deposit     | amount              | {depositAmount} |
 | proposal_deposit     | proposal_id         | {proposalID}    |
 | proposal_deposit [0] | voting_period_start | {proposalID}    |
@@ -638,22 +591,23 @@ The governance module emits the following events:
 
 The governance module contains the following parameters:
 
-| Key                           | Type             | Example                                 |
-|-------------------------------|------------------|-----------------------------------------|
-| min_deposit                   | array (coins)    | [{"denom":"uatom","amount":"10000000"}] |
-| max_deposit_period            | string (time ns) | "172800000000000" (17280s)              |
-| voting_period                 | string (time ns) | "172800000000000" (17280s)              |
-| quorum                        | string (dec)     | "0.334000000000000000"                  |
-| threshold                     | string (dec)     | "0.500000000000000000"                  |
-| veto                          | string (dec)     | "0.334000000000000000"                  |
-| expedited_threshold           | string (time ns) | "0.667000000000000000"                  |
-| expedited_voting_period       | string (time ns) | "86400000000000" (8600s)                |
-| expedited_min_deposit         | array (coins)    | [{"denom":"uatom","amount":"50000000"}] |
-| burn_proposal_deposit_prevote | bool             | false                                    |
-| burn_vote_quorum              | bool             | false                                   |
-| burn_vote_veto                | bool             | true                                    |
-| min_initial_deposit_ratio                | string             | "0.1"                                    |
-
+| Key                             | Type                   | Example                                 |
+| ------------------------------- | ---------------------- | --------------------------------------- |
+| min_deposit                     | array (coins)          | [{"denom":"uatom","amount":"10000000"}] |
+| max_deposit_period              | string (time ns)       | "172800000000000" (17280s)              |
+| voting_period                   | string (time ns)       | "172800000000000" (17280s)              |
+| quorum                          | string (dec)           | "0.334000000000000000"                  |
+| threshold                       | string (dec)           | "0.500000000000000000"                  |
+| veto                            | string (dec)           | "0.334000000000000000"                  |
+| expedited_threshold             | string (time ns)       | "0.667000000000000000"                  |
+| expedited_voting_period         | string (time ns)       | "86400000000000" (8600s)                |
+| expedited_min_deposit           | array (coins)          | [{"denom":"uatom","amount":"50000000"}] |
+| burn_proposal_deposit_prevote   | bool                   | false                                   |
+| burn_vote_quorum                | bool                   | false                                   |
+| burn_vote_veto                  | bool                   | true                                    |
+| min_initial_deposit_ratio       | string                 | "0.1"                                   |
+| optimistic_rejected_threshold   | string (dec)           | "0.1"                                   |
+| optimistic_authorized_addresses | bytes array (addreses) | [][]                                    |
 
 **NOTE**: The governance module contains parameters that are objects unlike other
 modules. If only a subset of parameters are desired to be changed, only they need
@@ -2487,7 +2441,7 @@ Example Output:
 
 ## Metadata
 
-The gov module has two locations for metadata where users can provide further context about the on-chain actions they are taking. By default all metadata fields have a 255 character length field where metadata can be stored in json format, either on-chain or off-chain depending on the amount of data required. Here we provide a recommendation for the json structure and where the data should be stored. There are two important factors in making these recommendations. First, that the gov and group modules are consistent with one another, note the number of proposals made by all groups may be quite large. Second, that client applications such as block explorers and governance interfaces have confidence in the consistency of metadata structure accross chains.
+The gov module has two locations for metadata where users can provide further context about the on-chain actions they are taking. By default all metadata fields have a 255 character length field where metadata can be stored in json format, either on-chain or off-chain depending on the amount of data required. Here we provide a recommendation for the json structure and where the data should be stored. There are two important factors in making these recommendations. First, that the gov and group modules are consistent with one another, note the number of proposals made by all groups may be quite large. Second, that client applications such as block explorers and governance interfaces have confidence in the consistency of metadata structure across chains.
 
 ### Proposal
 

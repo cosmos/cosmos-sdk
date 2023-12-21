@@ -4,7 +4,28 @@
 
 Circuit Breaker is a module that is meant to avoid a chain needing to halt/shut down in the presence of a vulnerability, instead the module will allow specific messages or all messages to be disabled. When operating a chain, if it is app specific then a halt of the chain is less detrimental, but if there are applications built on top of the chain then halting is expensive due to the disturbance to applications. 
 
+## How it works
+
 Circuit Breaker works with the idea that an address or set of addresses have the right to block messages from being executed and/or included in the mempool. Any address with a permission is able to reset the circuit breaker for the message. 
+
+The transactions are checked and can be rejected at two points:
+
+* In `CircuitBreakerDecorator` [ante handler](https://docs.cosmos.network/main/learn/advanced/baseapp#antehandler):
+
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/x/circuit/v0.1.0/x/circuit/ante/circuit.go#L27-L41
+``` 
+
+* With a [message router check](https://docs.cosmos.network/main/learn/advanced/baseapp#msg-service-router):
+
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.50.1/baseapp/msg_service_router.go#L104-L115
+``` 
+
+:::note
+The `CircuitBreakerDecorator` works for most use cases, but [does not check the inner messages of a transaction](https://docs.cosmos.network/main/learn/beginner/tx-lifecycle#antehandler). This some transactions (such as `x/authz` transactions or some `x/gov` transactions) may pass the ante handler. **This does not affect the circuit breaker** as the message router check will still fail the transaction.
+This tradeoff is to avoid introducing more dependencies in the `x/circuit` module. Chains can re-define the `CircuitBreakerDecorator` to check for inner messages if they wish to do so.
+:::
 
 ## State
 
@@ -37,7 +58,6 @@ type Access struct {
 	msgs []string // if full permission, msgs can be empty
 }
 ```
-
 
 ### Disable List
 
@@ -108,7 +128,7 @@ This message is expected to fail if:
 
 * if the type url is not disabled
 
-## Events - list and describe event tags 
+## Events
 
 The circuit module emits the following events:
 
@@ -143,9 +163,41 @@ The circuit module emits the following events:
 | message  | action        | reset_circuit_breaker |
 
 
-## Keys - list of key prefixes used by the circuit module
+## Keys
 
 * `AccountPermissionPrefix` - `0x01`
 * `DisableListPrefix` -  `0x02`
 
-## Client - list and describe CLI commands and gRPC and REST endpoints
+## Client
+
+### CLI
+
+`x/circuit` module client provides the following CLI commands:
+
+```shell
+$ <appd> tx circuit
+Transactions commands for the circuit module
+
+Usage:
+  simd tx circuit [flags]
+  simd tx circuit [command]
+
+Available Commands:
+  authorize   Authorize an account to trip the circuit breaker.
+  disable     Disable a message from being executed
+  reset       Enable a message to be executed
+```
+
+```shell
+$ <appd> query circuit
+Querying commands for the circuit module
+
+Usage:
+  simd query circuit [flags]
+  simd query circuit [command]
+
+Available Commands:
+  account       Query a specific account's permissions
+  accounts      Query all account permissions
+  disabled-list Query a list of all disabled message types
+```

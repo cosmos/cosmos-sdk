@@ -22,6 +22,7 @@ granting arbitrary privileges from one account (the granter) to another account 
     * [MsgGrant](#msggrant)
     * [MsgRevoke](#msgrevoke)
     * [MsgExec](#msgexec)
+    * [MsgPruneExpiredGrants](#msgpruneexpiredgrants)
 * [Events](#events)
 * [Client](#client)
     * [CLI](#cli)
@@ -82,7 +83,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/x/bank/types/send_authoriz
 
 #### StakeAuthorization
 
-`StakeAuthorization` implements the `Authorization` interface for messages in the [staking module](https://docs.cosmos.network/v0.44/modules/staking/). It takes an `AuthorizationType` to specify whether you want to authorise delegating, undelegating or redelegating (i.e. these have to be authorised seperately). It also takes a required `MaxTokens` that keeps track of a limit to the amount of tokens that can be delegated/undelegated/redelegated. If left empty, the amount is unlimited. Additionally, this Msg takes an `AllowList` or a `DenyList`, which allows you to select which validators you allow or deny grantees to stake with.
+`StakeAuthorization` implements the `Authorization` interface for messages in the [staking module](https://docs.cosmos.network/v0.44/modules/staking/). It takes an `AuthorizationType` to specify whether you want to authorise delegating, undelegating or redelegating (i.e. these have to be authorised separately). It also takes a required `MaxTokens` that keeps track of a limit to the amount of tokens that can be delegated/undelegated/redelegated. If left empty, the amount is unlimited. Additionally, this Msg takes an `AllowList` or a `DenyList`, which allows you to select which validators you allow or deny grantees to stake with.
 
 ```protobuf reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/staking/v1beta1/authz.proto#L11-L35
@@ -96,7 +97,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/x/staking/types/authz.go#L
 
 In order to prevent DoS attacks, granting `StakeAuthorization`s with `x/authz` incurs gas. `StakeAuthorization` allows you to authorize another account to delegate, undelegate, or redelegate to validators. The authorizer can define a list of validators they allow or deny delegations to. The Cosmos SDK iterates over these lists and charge 10 gas for each validator in both of the lists.
 
-Since the state maintaining a list for granter, grantee pair with same expiration, we are iterating over the list to remove the grant (incase of any revoke of paritcular `msgType`) from the list and we are charging 20 gas per iteration.
+Since the state maintaining a list for granter, grantee pair with same expiration, we are iterating over the list to remove the grant (in case of any revoke of paritcular `msgType`) from the list and we are charging 20 gas per iteration.
 
 ## State
 
@@ -180,6 +181,10 @@ The message handling should fail if:
 * provided `Authorization` is not implemented.
 * grantee doesn't have permission to run the transaction.
 * if granted authorization is expired.
+
+### MsgPruneExpiredGrants
+
+Message that clean up 75 expired grants. A user has no benefit sending this transaction, it is only used by the chain to clean up expired grants.
 
 ## Events
 

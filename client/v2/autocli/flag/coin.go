@@ -22,8 +22,7 @@ func (c coinType) NewValue(context.Context, *Builder) Value {
 }
 
 func (c coinType) DefaultValue() string {
-	stringCoin, _ := coins.FormatCoins([]*basev1beta1.Coin{}, nil)
-	return stringCoin
+	return "zero"
 }
 
 func (c *coinValue) Get(protoreflect.Value) (protoreflect.Value, error) {

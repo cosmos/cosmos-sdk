@@ -40,9 +40,9 @@ func (k Keeper) handleEquivocationEvidence(ctx context.Context, evidence *types.
 	}
 
 	if len(validator.GetOperator()) != 0 {
-		// get the consAddr again, this is because validator might've rotated it's key.
-		// the consAddr submitted by the evidence can be an address which is before the rotation
-		// (because there is unbonding period window to submit the evidences)
+		// Get the consAddr from the validator read from the store and not from the evidence,
+		// because if the validator has rotated its key, the key in evidence could be outdated.
+		// (ValidatorByConsAddr can get a validator even if the key has been rotated)
 		valConsAddr, err := validator.GetConsAddr()
 		if err != nil {
 			return err

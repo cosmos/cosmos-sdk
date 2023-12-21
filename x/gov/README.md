@@ -607,7 +607,7 @@ The governance module contains the following parameters:
 | burn_vote_veto                  | bool                   | true                                    |
 | min_initial_deposit_ratio       | string                 | "0.1"                                   |
 | optimistic_rejected_threshold   | string (dec)           | "0.1"                                   |
-| optimistic_authorized_addresses | bytes array (addreses) | [][]                                    |
+| optimistic_authorized_addresses | bytes array (addresses) | [][]                                    |
 
 **NOTE**: The governance module contains parameters that are objects unlike other
 modules. If only a subset of parameters are desired to be changed, only they need

@@ -26,8 +26,8 @@ import (
 	txconfigv1 "cosmossdk.io/api/cosmos/tx/config/v1"
 	upgrademodulev1 "cosmossdk.io/api/cosmos/upgrade/module/v1"
 	vestingmodulev1 "cosmossdk.io/api/cosmos/vesting/module/v1"
-	"cosmossdk.io/core/appconfig"
 	"cosmossdk.io/depinject"
+	"cosmossdk.io/depinject/appconfig"
 	_ "cosmossdk.io/x/auth/tx/config" // import for side-effects
 	authtypes "cosmossdk.io/x/auth/types"
 	_ "cosmossdk.io/x/auth/vesting" // import for side-effects

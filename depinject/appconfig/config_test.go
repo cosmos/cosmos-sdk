@@ -10,11 +10,11 @@ import (
 
 	"gotest.tools/v3/assert"
 
-	"cosmossdk.io/core/appconfig"
-	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/internal"
-	"cosmossdk.io/core/internal/testpb"
 	"cosmossdk.io/depinject"
+	"cosmossdk.io/depinject/appconfig"
+	"cosmossdk.io/depinject/appmodule"
+	internal "cosmossdk.io/depinject/internal/appconfig"
+	"cosmossdk.io/depinject/internal/appconfig/testpb"
 )
 
 func expectContainerErrorContains(t *testing.T, option depinject.Config, contains string) {

@@ -33,7 +33,6 @@ var (
 	_ module.HasGenesis          = AppModule{}
 
 	_ appmodule.AppModule       = AppModule{}
-	_ appmodule.HasServices     = AppModule{}
 	_ appmodule.HasBeginBlocker = AppModule{}
 )
 

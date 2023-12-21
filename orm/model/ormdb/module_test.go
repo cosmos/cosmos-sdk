@@ -16,11 +16,11 @@ import (
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
 	ormmodulev1alpha1 "cosmossdk.io/api/cosmos/orm/module/v1alpha1"
 	ormv1alpha1 "cosmossdk.io/api/cosmos/orm/v1alpha1"
-	"cosmossdk.io/core/appconfig"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/genesis"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
+	"cosmossdk.io/depinject/appconfig"
 	_ "cosmossdk.io/orm" // required for ORM module registration
 	"cosmossdk.io/orm/internal/testkv"
 	"cosmossdk.io/orm/internal/testpb"

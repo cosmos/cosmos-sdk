@@ -13,7 +13,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/core/address"
-	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	"cosmossdk.io/x/accounts"
@@ -109,7 +108,7 @@ func TestRunMigrations(t *testing.T) {
 			mod.RegisterServices(configurator)
 		}
 
-		if mod, ok := mod.(appmodule.HasServices); ok {
+		if mod, ok := mod.(module.HasGRPCServices); ok {
 			err := mod.RegisterServices(configurator)
 			require.NoError(t, err)
 		}

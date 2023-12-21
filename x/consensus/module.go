@@ -29,8 +29,7 @@ const ConsensusVersion = 1
 var (
 	_ module.AppModuleBasic = AppModule{}
 
-	_ appmodule.AppModule   = AppModule{}
-	_ appmodule.HasServices = AppModule{}
+	_ appmodule.AppModule = AppModule{}
 )
 
 // AppModuleBasic defines the basic application module used by the consensus module.

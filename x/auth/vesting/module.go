@@ -25,8 +25,7 @@ var (
 	_ module.AppModuleBasic = AppModule{}
 	_ module.HasGenesis     = AppModule{}
 
-	_ appmodule.AppModule   = AppModule{}
-	_ appmodule.HasServices = AppModule{}
+	_ appmodule.AppModule = AppModule{}
 )
 
 // AppModuleBasic defines the basic application module used by the sub-vesting

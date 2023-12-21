@@ -12,7 +12,6 @@ import (
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	cosmosmsg "cosmossdk.io/api/cosmos/msg/v1"
-	"cosmossdk.io/core/appmodule"
 
 	"github.com/cosmos/cosmos-sdk/types/module"
 )
@@ -54,7 +53,7 @@ func ExtractAutoCLIOptions(appModules map[string]interface{}) map[string]*autocl
 			mod.RegisterServices(cfg)
 		}
 
-		if mod, ok := mod.(appmodule.HasServices); ok {
+		if mod, ok := mod.(module.HasGRPCServices); ok {
 			err := mod.RegisterServices(cfg)
 			if err != nil {
 				panic(err)

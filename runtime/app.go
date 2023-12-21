@@ -9,7 +9,6 @@ import (
 
 	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
-	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 	authtx "cosmossdk.io/x/auth/tx"
@@ -76,9 +75,9 @@ func (a *App) RegisterModules(modules ...module.AppModule) error {
 		appModule.RegisterInterfaces(a.interfaceRegistry)
 		appModule.RegisterLegacyAminoCodec(a.amino)
 
-		if module, ok := appModule.(module.HasServices); ok {
-			module.RegisterServices(a.configurator)
-		} else if module, ok := appModule.(appmodule.HasServices); ok {
+		if mod, ok := appModule.(module.HasServices); ok {
+			mod.RegisterServices(a.configurator)
+		} else if module, ok := appModule.(module.HasGRPCServices); ok {
 			if err := module.RegisterServices(a.configurator); err != nil {
 				return err
 			}

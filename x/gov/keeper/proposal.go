@@ -160,7 +160,7 @@ func (keeper Keeper) CancelProposal(ctx context.Context, proposalID uint64, prop
 		currentTime := sdkCtx.HeaderInfo().Time
 
 		maxCancelPeriodRate := sdkmath.LegacyMustNewDecFromStr(params.ProposalCancelMaxCancelPeriod)
-		maxCancelPeriod := time.Duration(float64(proposal.VotingEndTime.Sub(*proposal.VotingStartTime)) * maxCancelPeriodRate.MustFloat64())
+		maxCancelPeriod := time.Duration(float64(proposal.VotingEndTime.Sub(*proposal.VotingStartTime)) * maxCancelPeriodRate.MustFloat64()).Round(time.Second)
 
 		if proposal.VotingEndTime.Before(currentTime) {
 			return types.ErrVotingPeriodEnded.Wrapf("voting period is already ended for this proposal %d", proposalID)

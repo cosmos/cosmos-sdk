@@ -72,11 +72,11 @@ message DeeplyNestedSigner {
 
 message DeeplyNestedRepeatedSigner {
   option (cosmos.msg.v1.signer) = "inner";
-  repeated Inner inner                   = 1;
+  repeated Inner inner          = 1;
 
   message Inner {
     option (cosmos.msg.v1.signer) = "inner";
-    repeated Inner inner = 1;
+    repeated Inner inner          = 1;
 
     message Inner {
       option (cosmos.msg.v1.signer) = "inner";
@@ -89,7 +89,6 @@ message DeeplyNestedRepeatedSigner {
     }
   }
 }
-
 
 message BadSigner {
   option (cosmos.msg.v1.signer) = "signer";

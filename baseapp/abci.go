@@ -82,13 +82,13 @@ func (app *BaseApp) InitChain(req *abci.RequestInitChain) (*abci.ResponseInitCha
 		// handler, the block height is zero by default. However, after Commit is called
 		// the height needs to reflect the true block height.
 		initHeader.Height = req.InitialHeight
-		app.checkState.UpdateContext(app.checkState.Context().WithBlockHeader(initHeader).
+		app.checkState.SetContext(app.checkState.Context().WithBlockHeader(initHeader).
 			WithHeaderInfo(coreheader.Info{
 				ChainID: req.ChainId,
 				Height:  req.InitialHeight,
 				Time:    req.Time,
 			}))
-		app.finalizeBlockState.UpdateContext(app.finalizeBlockState.Context().WithBlockHeader(initHeader).
+		app.finalizeBlockState.SetContext(app.finalizeBlockState.Context().WithBlockHeader(initHeader).
 			WithHeaderInfo(coreheader.Info{
 				ChainID: req.ChainId,
 				Height:  req.InitialHeight,
@@ -101,7 +101,7 @@ func (app *BaseApp) InitChain(req *abci.RequestInitChain) (*abci.ResponseInitCha
 	}
 
 	// add block gas meter for any genesis transactions (allow infinite gas)
-	app.finalizeBlockState.UpdateContext(app.finalizeBlockState.Context().WithBlockGasMeter(storetypes.NewInfiniteGasMeter()))
+	app.finalizeBlockState.SetContext(app.finalizeBlockState.Context().WithBlockGasMeter(storetypes.NewInfiniteGasMeter()))
 
 	res, err := app.initChainer(app.finalizeBlockState.Context(), req)
 	if err != nil {
@@ -410,7 +410,7 @@ func (app *BaseApp) PrepareProposal(req *abci.RequestPrepareProposal) (resp *abc
 		return nil, errors.New("PrepareProposal called with invalid height")
 	}
 
-	app.prepareProposalState.UpdateContext(app.getContextForProposal(app.prepareProposalState.Context(), req.Height).
+	app.prepareProposalState.SetContext(app.getContextForProposal(app.prepareProposalState.Context(), req.Height).
 		WithVoteInfos(toVoteInfo(req.LocalLastCommit.Votes)). // this is a set of votes that are not finalized yet, wait for commit
 		WithBlockHeight(req.Height).
 		WithProposer(req.ProposerAddress).
@@ -427,7 +427,7 @@ func (app *BaseApp) PrepareProposal(req *abci.RequestPrepareProposal) (resp *abc
 			Time:    req.Time,
 		}))
 
-	app.prepareProposalState.UpdateContext(app.prepareProposalState.Context().
+	app.prepareProposalState.SetContext(app.prepareProposalState.Context().
 		WithConsensusParams(app.GetConsensusParams(app.prepareProposalState.Context())).
 		WithBlockGasMeter(app.getBlockGasMeter(app.prepareProposalState.Context())))
 
@@ -502,7 +502,7 @@ func (app *BaseApp) ProcessProposal(req *abci.RequestProcessProposal) (resp *abc
 		app.setState(execModeFinalize, header)
 	}
 
-	app.processProposalState.UpdateContext(app.getContextForProposal(app.processProposalState.Context(), req.Height).
+	app.processProposalState.SetContext(app.getContextForProposal(app.processProposalState.Context(), req.Height).
 		WithVoteInfos(req.ProposedLastCommit.Votes). // this is a set of votes that are not finalized yet, wait for commit
 		WithBlockHeight(req.Height).
 		WithHeaderHash(req.Hash).
@@ -521,7 +521,7 @@ func (app *BaseApp) ProcessProposal(req *abci.RequestProcessProposal) (resp *abc
 			Time:    req.Time,
 		}))
 
-	app.processProposalState.UpdateContext(app.processProposalState.Context().
+	app.processProposalState.SetContext(app.processProposalState.Context().
 		WithConsensusParams(app.GetConsensusParams(app.processProposalState.Context())).
 		WithBlockGasMeter(app.getBlockGasMeter(app.processProposalState.Context())))
 
@@ -732,7 +732,7 @@ func (app *BaseApp) internalFinalizeBlock(ctx context.Context, req *abci.Request
 	}
 
 	// Context is now updated with Header information.
-	app.finalizeBlockState.UpdateContext(app.finalizeBlockState.Context().
+	app.finalizeBlockState.SetContext(app.finalizeBlockState.Context().
 		WithBlockHeader(header).
 		WithHeaderHash(req.Hash).
 		WithHeaderInfo(coreheader.Info{
@@ -754,10 +754,10 @@ func (app *BaseApp) internalFinalizeBlock(ctx context.Context, req *abci.Request
 
 	// GasMeter must be set after we get a context with updated consensus params.
 	gasMeter := app.getBlockGasMeter(app.finalizeBlockState.Context())
-	app.finalizeBlockState.UpdateContext(app.finalizeBlockState.Context().WithBlockGasMeter(gasMeter))
+	app.finalizeBlockState.SetContext(app.finalizeBlockState.Context().WithBlockGasMeter(gasMeter))
 
 	if app.checkState != nil {
-		app.checkState.UpdateContext(app.checkState.Context().
+		app.checkState.SetContext(app.checkState.Context().
 			WithBlockGasMeter(gasMeter).
 			WithHeaderHash(req.Hash))
 	}
@@ -784,7 +784,7 @@ func (app *BaseApp) internalFinalizeBlock(ctx context.Context, req *abci.Request
 
 	// Reset the gas meter so that the AnteHandlers aren't required to
 	gasMeter = app.getBlockGasMeter(app.finalizeBlockState.Context())
-	app.finalizeBlockState.UpdateContext(app.finalizeBlockState.Context().WithBlockGasMeter(gasMeter))
+	app.finalizeBlockState.SetContext(app.finalizeBlockState.Context().WithBlockGasMeter(gasMeter))
 
 	// Iterate over all raw transactions in the proposal and attempt to execute
 	// them, gathering the execution results.

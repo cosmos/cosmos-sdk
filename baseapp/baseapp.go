@@ -487,7 +487,7 @@ func (app *BaseApp) setState(mode execMode, header cmtproto.Header) {
 
 	switch mode {
 	case execModeCheck:
-		baseState.UpdateContext(baseState.Context().WithIsCheckTx(true).WithMinGasPrices(app.minGasPrices))
+		baseState.SetContext(baseState.Context().WithIsCheckTx(true).WithMinGasPrices(app.minGasPrices))
 		app.checkState = baseState
 
 	case execModePrepareProposal:
@@ -708,7 +708,7 @@ func (app *BaseApp) preBlock(req *abci.RequestFinalizeBlock) error {
 			// GasMeter must be set after we get a context with updated consensus params.
 			gasMeter := app.getBlockGasMeter(ctx)
 			ctx = ctx.WithBlockGasMeter(gasMeter)
-			app.finalizeBlockState.UpdateContext(ctx)
+			app.finalizeBlockState.SetContext(ctx)
 		}
 	}
 	return nil

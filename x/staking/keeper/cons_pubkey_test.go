@@ -1,9 +1,13 @@
 package keeper_test
 
 import (
+	"time"
+
 	"github.com/golang/mock/gomock"
 
 	"cosmossdk.io/collections"
+	"cosmossdk.io/core/header"
+	authtypes "cosmossdk.io/x/auth/types"
 	stakingkeeper "cosmossdk.io/x/staking/keeper"
 	"cosmossdk.io/x/staking/testutil"
 	"cosmossdk.io/x/staking/types"
@@ -89,29 +93,87 @@ func (s *KeeperTestSuite) TestConsPubKeyRotationHistory() {
 	s.Require().Len(historyObjects, 1)
 }
 
-func (s *KeeperTestSuite) TestValidatorIdentifier() {
-	stakingKeeper, ctx := s.stakingKeeper, s.ctx
-	consAddr1 := sdk.ConsAddress(([]byte("addr1_______________")))
-	consAddr2 := sdk.ConsAddress(([]byte("addr2_______________")))
-	consAddr3 := sdk.ConsAddress(([]byte("addr3_______________")))
-	s.Require().NoError(stakingKeeper.NewToOldConsKeyMap.Set(ctx, consAddr2, consAddr1))
-	s.Require().NoError(stakingKeeper.NewToOldConsKeyMap.Set(ctx, consAddr3, consAddr1))
+func (s *KeeperTestSuite) TestValidatorIdentifier1() {
+	stakingKeeper, ctx, accountKeeper, bankKeeper := s.stakingKeeper, s.ctx, s.accountKeeper, s.bankKeeper
 
-	// ValidatorIdentifier returns the same key if there is no key map found
-	addr, err := stakingKeeper.ValidatorIdentifier(ctx, consAddr1)
+	msgServer := stakingkeeper.NewMsgServerImpl(stakingKeeper)
+	s.setValidators(6)
+	validators, err := stakingKeeper.GetAllValidators(ctx)
 	s.Require().NoError(err)
-	s.Require().Equal(consAddr1, addr)
+	s.Require().Len(validators, 6)
 
-	// ValidatorIdentifier should return the consAddr1 here
-	addr, err = stakingKeeper.ValidatorIdentifier(ctx, consAddr2)
+	initialConsAddr, err := validators[3].GetConsAddr()
 	s.Require().NoError(err)
-	s.Require().Equal(consAddr1, addr)
 
-	// ValidatorIdentifier should return the consAddr1 here as well cause it's the original key
-	addr, err = stakingKeeper.ValidatorIdentifier(ctx, consAddr3)
+	oldPk, err := stakingKeeper.ValidatorIdentifier(ctx, initialConsAddr)
 	s.Require().NoError(err)
-	s.Require().Equal(consAddr1, addr)
+	s.Require().Nil(oldPk)
+
+	bondedPool := authtypes.NewEmptyModuleAccount(types.BondedPoolName)
+	accountKeeper.EXPECT().GetModuleAccount(gomock.Any(), types.BondedPoolName).Return(bondedPool).AnyTimes()
+	bankKeeper.EXPECT().GetBalance(gomock.Any(), bondedPool.GetAddress(), sdk.DefaultBondDenom).Return(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000000)).AnyTimes()
+
+	val, err := stakingKeeper.ValidatorAddressCodec().StringToBytes(validators[3].GetOperator())
+	s.Require().NoError(err)
+	bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), sdk.AccAddress(val), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+
+	req, err := types.NewMsgRotateConsPubKey(validators[3].GetOperator(), PKs[495])
+	s.Require().NoError(err)
+	_, err = msgServer.RotateConsPubKey(ctx, req)
+	s.Require().NoError(err)
+	_, err = stakingKeeper.BlockValidatorUpdates(ctx)
+	s.Require().NoError(err)
+	params, err := stakingKeeper.Params.Get(ctx)
+	s.Require().NoError(err)
+
+	oldPk1, err := stakingKeeper.ValidatorIdentifier(ctx, sdk.ConsAddress(PKs[495].Address()))
+	s.Require().NoError(err)
+	s.Require().Equal(oldPk1.Bytes(), initialConsAddr)
+
+	ctx = ctx.WithHeaderInfo(header.Info{Time: ctx.BlockTime().Add(params.UnbondingTime).Add(time.Hour)})
+	_, err = stakingKeeper.BlockValidatorUpdates(ctx)
+	s.Require().NoError(err)
+
+	req, err = types.NewMsgRotateConsPubKey(validators[3].GetOperator(), PKs[494])
+	s.Require().NoError(err)
+	_, err = msgServer.RotateConsPubKey(ctx, req)
+	s.Require().NoError(err)
+	_, err = stakingKeeper.BlockValidatorUpdates(ctx)
+	s.Require().NoError(err)
+
+	ctx = ctx.WithHeaderInfo(header.Info{Time: ctx.BlockTime().Add(params.UnbondingTime)})
+
+	oldPk2, err := stakingKeeper.ValidatorIdentifier(ctx, sdk.ConsAddress(PKs[494].Address()))
+	s.Require().NoError(err)
+	stakingKeeper.BlockValidatorUpdates(ctx)
+
+	s.Require().Equal(oldPk2.Bytes(), initialConsAddr)
 }
+
+// func (s *KeeperTestSuite) TestValidatorIdentifier() {
+
+// 	stakingKeeper, ctx := s.stakingKeeper, s.ctx
+// 	consAddr1 := sdk.ConsAddress(([]byte("addr1_______________")))
+// 	consAddr2 := sdk.ConsAddress(([]byte("addr2_______________")))
+// 	consAddr3 := sdk.ConsAddress(([]byte("addr3_______________")))
+// 	s.Require().NoError(stakingKeeper.NewToOldConsKeyMap.Set(ctx, consAddr2, consAddr1))
+// 	s.Require().NoError(stakingKeeper.NewToOldConsKeyMap.Set(ctx, consAddr3, consAddr1))
+
+// 	// ValidatorIdentifier returns the same key if there is no key map found
+// 	addr, err := stakingKeeper.ValidatorIdentifier(ctx, consAddr1)
+// 	s.Require().NoError(err)
+// 	s.Require().Equal(consAddr1, addr)
+
+// 	// ValidatorIdentifier should return the consAddr1 here
+// 	addr, err = stakingKeeper.ValidatorIdentifier(ctx, consAddr2)
+// 	s.Require().NoError(err)
+// 	s.Require().Equal(consAddr1, addr)
+
+// 	// ValidatorIdentifier should return the consAddr1 here as well cause it's the original key
+// 	addr, err = stakingKeeper.ValidatorIdentifier(ctx, consAddr3)
+// 	s.Require().NoError(err)
+// 	s.Require().Equal(consAddr1, addr)
+// }
 
 func (s *KeeperTestSuite) setValidators(n int) {
 	stakingKeeper, ctx := s.stakingKeeper, s.ctx

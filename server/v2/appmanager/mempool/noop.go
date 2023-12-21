@@ -38,8 +38,8 @@ func (npm NoOpMempool[T]) Insert(ctx context.Context, tx T) error {
 	return err
 }
 
-func (NoOpMempool[T]) GetTxs(ctx context.Context, size uint32, txSizeFn mempool.TxSizeFn) (any, error) {
+func (NoOpMempool[T]) GetTxs(context.Context, uint32, mempool.TxSizeFn) ([]T, error) {
 	return nil, nil
 }
 
-func (NoOpMempool[T]) Remove(any) error { return nil }
+func (NoOpMempool[T]) Remove(T) error { return nil }

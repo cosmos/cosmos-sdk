@@ -12,8 +12,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/serverv2/grpc/gogoreflection"
-	reflection "github.com/cosmos/cosmos-sdk/serverv2/grpc/reflection/v2alpha1"
+	"github.com/cosmos/cosmos-sdk/server/v2/grpc/gogoreflection"
+	reflection "github.com/cosmos/cosmos-sdk/server/v2/grpc/reflection/v2alpha1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	_ "github.com/cosmos/cosmos-sdk/types/tx/amino" // Import amino.proto file for reflection
 )

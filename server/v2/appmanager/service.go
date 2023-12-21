@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"sync/atomic"
 
-	"github.com/cosmos/cosmos-sdk/serverv2/core/appmanager"
-	"github.com/cosmos/cosmos-sdk/serverv2/core/transaction"
+	"github.com/cosmos/cosmos-sdk/server/v2/core/appmanager"
+	"github.com/cosmos/cosmos-sdk/server/v2/core/transaction"
 )
 
 type AppManagerBuilder[T transaction.Tx] struct {

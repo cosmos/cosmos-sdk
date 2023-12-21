@@ -11,7 +11,7 @@ import (
 
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
-	"cosmossdk.io/core/coins"
+
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/tx/signing/textual"
 )
@@ -126,7 +126,7 @@ func TestFormatCoin(t *testing.T) {
 	for _, tc := range testcases {
 		t.Run(tc.Text, func(t *testing.T) {
 			if tc.Proto != nil {
-				out, err := coins.FormatCoins([]*basev1beta1.Coin{tc.Proto}, []*bankv1beta1.Metadata{tc.Metadata})
+				out, err := textual.FormatCoins([]*basev1beta1.Coin{tc.Proto}, []*bankv1beta1.Metadata{tc.Metadata})
 
 				if tc.Error {
 					require.Error(t, err)
@@ -155,7 +155,7 @@ func TestFormatCoins(t *testing.T) {
 					metadata[i] = tc.Metadata[coin.Denom]
 				}
 
-				out, err := coins.FormatCoins(tc.Proto, metadata)
+				out, err := textual.FormatCoins(tc.Proto, metadata)
 
 				if tc.Error {
 					require.Error(t, err)

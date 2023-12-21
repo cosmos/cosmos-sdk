@@ -56,13 +56,20 @@ If you want to follow the updates or learn more about the latest design then joi
 The Cosmos ecosystem is vast.
 [Awesome Cosmos](https://github.com/cosmos/awesome-cosmos) is a community-curated list of notable frameworks, modules and tools.
 
-### Cosmos Hub Mainnet
-
-The Cosmos Hub application, `gaia`, has its own [cosmos/gaia repository](https://github.com/cosmos/gaia). Go there to join the Cosmos Hub mainnet and more.
-
 ### Inter-Blockchain Communication (IBC)
 
 The IBC module for the Cosmos SDK has its own [cosmos/ibc-go repository](https://github.com/cosmos/ibc-go). Go there to build and integrate with the IBC module.
+
+### Version Matrix
+
+The version matrix below shows which versions of the Cosmos SDK, modules and libraries are compatible with each other.
+
+| Cosmos SDK | cosmossdk.io/core | cosmossdk.io/api | cosmossdk.io/math | cosmossdk.io/errors | cosmossdk.io/depinject | cosmossdk.io/log |
+|------------|-------------------|------------------|-------------------|---------------------|------------------------|------------------|
+| 0.50.x     | 0.11.x            | 0.7.x            | 1.x.x             | 1.x.x               | 1.x.x                  | 1.x.x            |
+| 0.47.x     | 0.5.x             | 0.3.x            | 1.x.x             | 1.x.x               | 1.x.x                  | 1.x.x            |
+| 0.46.x     | ❌                 | ❌                | 1.x.x             | 1.x.x               | ❌                      | ❌                |
+
 
 ## Disambiguation
 

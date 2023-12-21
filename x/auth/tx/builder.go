@@ -255,7 +255,6 @@ func (w *wrapper) GetSignaturesV2() ([]signing.SignatureV2, error) {
 				Data:     sigData,
 				Sequence: nonce,
 			}
-
 		}
 	}
 

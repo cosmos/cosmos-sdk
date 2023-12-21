@@ -80,12 +80,11 @@ Core Dependencies are the core libraries that a application may depend on.
 
 Module Dependencies are the modules that a application may depend on and which version of the Cosmos SDK they are compatible with.
 
-> Note: The version table only goes back to 0.47.x, this is due to the reason that modules were not spun out into their own go.mods until 0.47.x. Secondly only a subset were spunout in 0.47.x, these will be marked by a ❌ in the table.
+> Note: The version table only goes back to 0.50.x, this is due to the reason that modules were not spun out into their own go.mods until 0.50.x. 
 
 | Cosmos SDK |   |
 |------------|---|
 | 0.50.x     |   |
-| 0.47.x     |   |
 
 
 

@@ -487,7 +487,7 @@ func (app *BaseApp) setState(mode execMode, header cmtproto.Header) {
 
 	switch mode {
 	case execModeCheck:
-		baseState.UpdateContext(baseState.Context() .WithIsCheckTx(true).WithMinGasPrices(app.minGasPrices))
+		baseState.UpdateContext(baseState.Context().WithIsCheckTx(true).WithMinGasPrices(app.minGasPrices))
 		app.checkState = baseState
 
 	case execModePrepareProposal:

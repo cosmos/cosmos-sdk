@@ -1,17 +1,18 @@
 package baseapp
 
 import (
+	"sync"
+
 	storetypes "cosmossdk.io/store/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"sync"
 )
 
 type state struct {
 	mtx sync.RWMutex
 	ctx sdk.Context
 	// no need for synchronization on the MultiStore as implementations are thread-safe
-	ms  storetypes.CacheMultiStore
+	ms storetypes.CacheMultiStore
 }
 
 // CacheMultiStore calls and returns a CacheMultiStore on the state's underling

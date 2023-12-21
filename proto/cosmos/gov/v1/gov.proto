@@ -303,4 +303,16 @@ message Params {
   //
   // Since: cosmos-sdk 0.50
   string min_deposit_ratio = 16 [(cosmos_proto.scalar) = "cosmos.Dec"];
+
+  // optimistic_authorized_addresses is an optional governance parameter that limits the authorized accounts than can
+  // submit optimistic proposals
+  //
+  // Since: x/gov v1.0.0
+  repeated string optimistic_authorized_addresses = 17 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // optimistic rejected threshold defines at which percentage of NO votes, the optimistic proposal should fail and be
+  // converted to a standard proposal. The threshold is expressed as a percentage of the total bonded tokens.
+  //
+  // Since: x/gov v1.0.0
+  string optimistic_rejected_threshold = 18 [(cosmos_proto.scalar) = "cosmos.Dec"];
 }

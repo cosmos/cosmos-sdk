@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -208,6 +209,10 @@ func (k Keeper) validateProposalLengths(metadata, title, summary string) error {
 // assertTitleLength returns an error if given title length
 // is greater than a pre-defined MaxTitleLen.
 func (k Keeper) assertTitleLength(title string) error {
+	if len(title) == 0 {
+		return errors.New("proposal title cannot be empty")
+	}
+
 	if uint64(len(title)) > k.config.MaxTitleLen {
 		return types.ErrTitleTooLong.Wrapf("got title with length %d", len(title))
 	}
@@ -226,6 +231,10 @@ func (k Keeper) assertMetadataLength(metadata string) error {
 // assertSummaryLength returns an error if given summary length
 // is greater than a pre-defined MaxSummaryLen.
 func (k Keeper) assertSummaryLength(summary string) error {
+	if len(summary) == 0 {
+		return errors.New("proposal summary cannot be empty")
+	}
+
 	if uint64(len(summary)) > k.config.MaxSummaryLen {
 		return types.ErrSummaryTooLong.Wrapf("got summary with length %d", len(summary))
 	}

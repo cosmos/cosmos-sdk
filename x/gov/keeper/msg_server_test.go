@@ -153,7 +153,7 @@ func (suite *KeeperTestSuite) TestMsgSubmitProposal() {
 					[]sdk.Msg{bankMsg},
 					initialDeposit,
 					proposer.String(),
-					strings.Repeat("1", 256),
+					strings.Repeat("1", 257),
 					"Proposal",
 					"description of proposal",
 					v1.ProposalType_PROPOSAL_TYPE_STANDARD,
@@ -452,6 +452,30 @@ func (suite *KeeperTestSuite) TestMsgVote() {
 			expErr:    true,
 			expErrMsg: "invalid vote option",
 		},
+		"optimistic proposal: wrong vote option": {
+			preRun: func() uint64 {
+				msg, err := v1.NewMsgSubmitProposal(
+					[]sdk.Msg{bankMsg},
+					minDeposit,
+					proposer.String(),
+					"",
+					"Proposal",
+					"description of proposal",
+					v1.ProposalType_PROPOSAL_TYPE_OPTIMISTIC,
+				)
+				suite.Require().NoError(err)
+
+				res, err := suite.msgSrvr.SubmitProposal(suite.ctx, msg)
+				suite.Require().NoError(err)
+				suite.Require().NotNil(res.ProposalId)
+				return res.ProposalId
+			},
+			option:    v1.VoteOption_VOTE_OPTION_ONE,
+			voter:     proposer,
+			metadata:  "",
+			expErr:    true,
+			expErrMsg: "optimistic proposals can only be rejected: invalid vote option",
+		},
 		"vote on inactive proposal": {
 			preRun: func() uint64 {
 				msg, err := v1.NewMsgSubmitProposal(
@@ -657,6 +681,30 @@ func (suite *KeeperTestSuite) TestMsgVoteWeighted() {
 			metadata:  "",
 			expErr:    true,
 			expErrMsg: "invalid vote option",
+		},
+		"optimistic proposal: wrong vote option": {
+			preRun: func() uint64 {
+				msg, err := v1.NewMsgSubmitProposal(
+					[]sdk.Msg{bankMsg},
+					minDeposit,
+					proposer.String(),
+					"",
+					"Proposal",
+					"description of proposal",
+					v1.ProposalType_PROPOSAL_TYPE_OPTIMISTIC,
+				)
+				suite.Require().NoError(err)
+
+				res, err := suite.msgSrvr.SubmitProposal(suite.ctx, msg)
+				suite.Require().NoError(err)
+				suite.Require().NotNil(res.ProposalId)
+				return res.ProposalId
+			},
+			option:    v1.NewNonSplitVoteOption(v1.VoteOption_VOTE_OPTION_ONE), // vote yes
+			voter:     proposer,
+			metadata:  "",
+			expErr:    true,
+			expErrMsg: "optimistic proposals can only be rejected: invalid vote option",
 		},
 		"weight sum < 1": {
 			preRun: func() uint64 {

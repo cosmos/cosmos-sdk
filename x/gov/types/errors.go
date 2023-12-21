@@ -26,4 +26,5 @@ var (
 	ErrSummaryTooLong          = errors.Register(ModuleName, 22, "summary too long")
 	ErrInvalidDepositDenom     = errors.Register(ModuleName, 23, "invalid deposit denom")
 	ErrTitleTooLong            = errors.Register(ModuleName, 24, "title too long")
+	ErrTooLateToCancel         = errors.Register(ModuleName, 25, "too late to cancel proposal")
 )

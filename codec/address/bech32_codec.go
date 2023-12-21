@@ -2,12 +2,12 @@ package address
 
 import (
 	"errors"
+	sdkAddress "github.com/cosmos/cosmos-sdk/types/address"
 	"strings"
 
 	"cosmossdk.io/core/address"
 	errorsmod "cosmossdk.io/errors"
 
-	sdkAddress "github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -33,8 +33,8 @@ func (bc Bech32Codec) StringToBytes(text string) ([]byte, error) {
 		return nil, err
 	}
 
-	if err = verifyAddress(bz); err != nil {
-		return nil, err
+	if len(bz) > sdkAddress.MaxAddrLen {
+		return nil, errorsmod.Wrapf(sdkerrors.ErrUnknownAddress, "address max length is %d, got %d", sdkAddress.MaxAddrLen, len(bz))
 	}
 
 	if hrp != bc.Bech32Prefix {
@@ -55,20 +55,9 @@ func (bc Bech32Codec) BytesToString(bz []byte) (string, error) {
 		return "", err
 	}
 
-	if err = verifyAddress(bz); err != nil {
-		return "", err
+	if len(bz) > sdkAddress.MaxAddrLen {
+		return "", errorsmod.Wrapf(sdkerrors.ErrUnknownAddress, "address max length is %d, got %d", sdkAddress.MaxAddrLen, len(bz))
 	}
 
 	return text, nil
-}
-
-func verifyAddress(bz []byte) error {
-	if len(bz) == 0 {
-		return errorsmod.Wrap(sdkerrors.ErrUnknownAddress, "addresses cannot be empty")
-	}
-
-	if len(bz) > sdkAddress.MaxAddrLen {
-		return errorsmod.Wrapf(sdkerrors.ErrUnknownAddress, "address max length is %d, got %d", sdkAddress.MaxAddrLen, len(bz))
-	}
-	return nil
 }

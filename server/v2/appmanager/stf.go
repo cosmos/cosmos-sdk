@@ -3,9 +3,9 @@ package appmanager
 import (
 	"context"
 
-	"github.com/cosmos/cosmos-sdk/serverv2/core/appmanager"
-	"github.com/cosmos/cosmos-sdk/serverv2/core/event"
-	"github.com/cosmos/cosmos-sdk/serverv2/core/transaction"
+	"github.com/cosmos/cosmos-sdk/server/v2/core/appmanager"
+	"github.com/cosmos/cosmos-sdk/server/v2/core/event"
+	"github.com/cosmos/cosmos-sdk/server/v2/core/transaction"
 )
 
 var runtimeIdentity Identity = []byte("app-manager")

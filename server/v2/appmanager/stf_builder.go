@@ -5,8 +5,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/serverv2/core/appmanager"
-	"github.com/cosmos/cosmos-sdk/serverv2/core/transaction"
+	"github.com/cosmos/cosmos-sdk/server/v2/core/appmanager"
+	"github.com/cosmos/cosmos-sdk/server/v2/core/transaction"
 )
 
 func NewSTFBuilder[T transaction.Tx]() *STFBuilder[T] {

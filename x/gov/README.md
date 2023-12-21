@@ -38,7 +38,6 @@ staking token of the chain.
   * [Proposal submission](#proposal-submission)
   * [Deposit](#deposit)
   * [Vote](#vote)
-  * [Software Upgrade](#software-upgrade)
 * [State](#state)
   * [Proposals](#proposals)
   * [Parameters and base types](#parameters-and-base-types)
@@ -187,9 +186,28 @@ For a weighted vote to be valid, the `options` field must not contain duplicate 
 Quorum is defined as the minimum percentage of voting power that needs to be
 cast on a proposal for the result to be valid.
 
-### Expedited Proposals
+### Proposal Types
+
+Proposal types have been introduced in ADR-069.
+
+#### Standard proposal
+
+A standard proposal is a proposal that can contain any messages. The proposal follows the standard governance flow and governance parameters.
+
+#### Expedited Proposal
 
 A proposal can be expedited, making the proposal use shorter voting duration and a higher tally threshold by its default. If an expedited proposal fails to meet the threshold within the scope of shorter voting duration, the expedited proposal is then converted to a regular proposal and restarts voting under regular voting conditions.
+
+#### Optimistic Proposal
+
+An optimistic proposal is a proposal that passes unless a threshold a NO votes is reached.
+Voter can only vote NO on the proposal. If the NO threshold is reached, the optimistic proposal is converted to a standard proposal.
+
+#### Multiple Choice Proposals
+
+A multiple choice proposal is a proposal where the voting options can be defined by the proposer.
+The number of voting options is limited to a maximum of 4.
+Multiple choice proposals, contrary to any other proposal type, cannot have messages to execute. They are only text proposals.
 
 #### Threshold
 
@@ -427,67 +445,6 @@ For pseudocode purposes, here are the two function we will use to read or write 
   voted. If the proposal is accepted, deposits are refunded. Finally, the proposal
   content `Handler` is executed.
 
-And the pseudocode for the `ProposalProcessingQueue`:
-
-```go
-  in EndBlock do
-
-    for finishedProposalID in GetAllFinishedProposalIDs(block.Time)
-      proposal = load(Governance, <proposalID|'proposal'>) // proposal is a const key
-
-      validators = Keeper.getAllValidators()
-      tmpValMap := map(sdk.AccAddress)ValidatorGovInfo
-
-      // Initiate mapping at 0. This is the amount of shares of the validator's vote that will be overridden by their delegator's votes
-      for each validator in validators
-        tmpValMap(validator.OperatorAddr).Minus = 0
-
-      // Tally
-      voterIterator = rangeQuery(Governance, <proposalID|'addresses'>) //return all the addresses that voted on the proposal
-      for each (voterAddress, vote) in voterIterator
-        delegations = stakingKeeper.getDelegations(voterAddress) // get all delegations for current voter
-
-        for each delegation in delegations
-          // make sure delegation.Shares does NOT include shares being unbonded
-          tmpValMap(delegation.ValidatorAddr).Minus += delegation.Shares
-          proposal.updateTally(vote, delegation.Shares)
-
-        _, isVal = stakingKeeper.getValidator(voterAddress)
-        if (isVal)
-          tmpValMap(voterAddress).Vote = vote
-
-      tallyingParam = load(GlobalParams, 'TallyingParam')
-
-      // Update tally if validator voted
-      for each validator in validators
-        if tmpValMap(validator).HasVoted
-          proposal.updateTally(tmpValMap(validator).Vote, (validator.TotalShares - tmpValMap(validator).Minus))
-
-
-
-      // Check if proposal is accepted or rejected
-      totalNonAbstain := proposal.YesVotes + proposal.NoVotes + proposal.NoWithVetoVotes
-      if (proposal.Votes.YesVotes/totalNonAbstain > tallyingParam.Threshold AND proposal.Votes.NoWithVetoVotes/totalNonAbstain  < tallyingParam.Veto)
-        //  proposal was accepted at the end of the voting period
-        //  refund deposits (non-voters already punished)
-        for each (amount, depositor) in proposal.Deposits
-          depositor.AtomBalance += amount
-
-        stateWriter, err := proposal.Handler()
-        if err != nil
-            // proposal passed but failed during state execution
-            proposal.CurrentStatus = ProposalStatusFailed
-         else
-            // proposal pass and state is persisted
-            proposal.CurrentStatus = ProposalStatusAccepted
-            stateWriter.save()
-      else
-        // proposal was rejected
-        proposal.CurrentStatus = ProposalStatusRejected
-
-      store(Governance, <proposalID|'proposal'>, proposal)
-```
-
 ### Legacy Proposal
 
 :::warning
@@ -575,7 +532,7 @@ The governance module emits the following events:
 ### EndBlocker
 
 | Type              | Attribute Key   | Attribute Value  |
-|-------------------|-----------------|------------------|
+| ----------------- | --------------- | ---------------- |
 | inactive_proposal | proposal_id     | {proposalID}     |
 | inactive_proposal | proposal_result | {proposalResult} |
 | active_proposal   | proposal_id     | {proposalID}     |
@@ -586,7 +543,7 @@ The governance module emits the following events:
 #### MsgSubmitProposal
 
 | Type                | Attribute Key       | Attribute Value |
-|---------------------|---------------------|-----------------|
+| ------------------- | ------------------- | --------------- |
 | submit_proposal     | proposal_id         | {proposalID}    |
 | submit_proposal [0] | voting_period_start | {proposalID}    |
 | proposal_deposit    | amount              | {depositAmount} |
@@ -600,7 +557,7 @@ The governance module emits the following events:
 #### MsgVote
 
 | Type          | Attribute Key | Attribute Value |
-|---------------|---------------|-----------------|
+| ------------- | ------------- | --------------- |
 | proposal_vote | option        | {voteOption}    |
 | proposal_vote | proposal_id   | {proposalID}    |
 | message       | module        | governance      |
@@ -610,7 +567,7 @@ The governance module emits the following events:
 #### MsgVoteWeighted
 
 | Type          | Attribute Key | Attribute Value       |
-|---------------|---------------|-----------------------|
+| ------------- | ------------- | --------------------- |
 | proposal_vote | option        | {weightedVoteOptions} |
 | proposal_vote | proposal_id   | {proposalID}          |
 | message       | module        | governance            |
@@ -620,7 +577,7 @@ The governance module emits the following events:
 #### MsgDeposit
 
 | Type                 | Attribute Key       | Attribute Value |
-|----------------------|---------------------|-----------------|
+| -------------------- | ------------------- | --------------- |
 | proposal_deposit     | amount              | {depositAmount} |
 | proposal_deposit     | proposal_id         | {proposalID}    |
 | proposal_deposit [0] | voting_period_start | {proposalID}    |
@@ -634,21 +591,23 @@ The governance module emits the following events:
 
 The governance module contains the following parameters:
 
-| Key                           | Type             | Example                                 |
-|-------------------------------|------------------|-----------------------------------------|
-| min_deposit                   | array (coins)    | [{"denom":"uatom","amount":"10000000"}] |
-| max_deposit_period            | string (time ns) | "172800000000000" (17280s)              |
-| voting_period                 | string (time ns) | "172800000000000" (17280s)              |
-| quorum                        | string (dec)     | "0.334000000000000000"                  |
-| threshold                     | string (dec)     | "0.500000000000000000"                  |
-| veto                          | string (dec)     | "0.334000000000000000"                  |
-| expedited_threshold           | string (time ns) | "0.667000000000000000"                  |
-| expedited_voting_period       | string (time ns) | "86400000000000" (8600s)                |
-| expedited_min_deposit         | array (coins)    | [{"denom":"uatom","amount":"50000000"}] |
-| burn_proposal_deposit_prevote | bool             | false                                    |
-| burn_vote_quorum              | bool             | false                                   |
-| burn_vote_veto                | bool             | true                                    |
-| min_initial_deposit_ratio                | string             | "0.1"                                    |
+| Key                             | Type                   | Example                                 |
+| ------------------------------- | ---------------------- | --------------------------------------- |
+| min_deposit                     | array (coins)          | [{"denom":"uatom","amount":"10000000"}] |
+| max_deposit_period              | string (time ns)       | "172800000000000" (17280s)              |
+| voting_period                   | string (time ns)       | "172800000000000" (17280s)              |
+| quorum                          | string (dec)           | "0.334000000000000000"                  |
+| threshold                       | string (dec)           | "0.500000000000000000"                  |
+| veto                            | string (dec)           | "0.334000000000000000"                  |
+| expedited_threshold             | string (time ns)       | "0.667000000000000000"                  |
+| expedited_voting_period         | string (time ns)       | "86400000000000" (8600s)                |
+| expedited_min_deposit           | array (coins)          | [{"denom":"uatom","amount":"50000000"}] |
+| burn_proposal_deposit_prevote   | bool                   | false                                   |
+| burn_vote_quorum                | bool                   | false                                   |
+| burn_vote_veto                  | bool                   | true                                    |
+| min_initial_deposit_ratio       | string                 | "0.1"                                   |
+| optimistic_rejected_threshold   | string (dec)           | "0.1"                                   |
+| optimistic_authorized_addresses | bytes array (addresses) | [][]                                    |
 
 **NOTE**: The governance module contains parameters that are objects unlike other
 modules. If only a subset of parameters are desired to be changed, only they need

@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"slices"
 	"strings"
 	"time"
 
@@ -18,18 +19,26 @@ import (
 
 // SubmitProposal creates a new proposal given an array of messages
 func (keeper Keeper) SubmitProposal(ctx context.Context, messages []sdk.Msg, metadata, title, summary string, proposer sdk.AccAddress, proposalType v1.ProposalType) (v1.Proposal, error) {
-	// This method checks that all message metadata, summary and title
-	// has te expected length defined in the module configuration.
-	if err := keeper.validateProposalLengths(metadata, title, summary); err != nil {
+	params, err := keeper.Params.Get(ctx)
+	if err != nil {
 		return v1.Proposal{}, err
 	}
 
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	// Will hold a string slice of all Msg type URLs.
-	msgs := []string{}
+	// additional checks per proposal types
+	if proposalType == v1.ProposalType_PROPOSAL_TYPE_OPTIMISTIC {
+		proposerStr, _ := keeper.authKeeper.AddressCodec().BytesToString(proposer)
 
-	// Loop through all messages and confirm that each has a handler and the gov module account
-	// as the only signer
+		if len(params.OptimisticAuthorizedAddresses) > 0 {
+			if !slices.Contains(params.OptimisticAuthorizedAddresses, proposerStr) {
+				return v1.Proposal{}, errorsmod.Wrap(types.ErrInvalidProposer, "proposer is not authorized to submit optimistic proposal")
+			}
+		}
+	}
+
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	msgs := []string{} // will hold a string slice of all Msg type URLs.
+
+	// Loop through all messages and confirm that each has a handler and the gov module account as the only signer
 	for _, msg := range messages {
 		msgs = append(msgs, sdk.MsgTypeURL(msg))
 
@@ -81,15 +90,8 @@ func (keeper Keeper) SubmitProposal(ctx context.Context, messages []sdk.Msg, met
 		return v1.Proposal{}, err
 	}
 
-	params, err := keeper.Params.Get(ctx)
-	if err != nil {
-		return v1.Proposal{}, err
-	}
-
 	submitTime := sdkCtx.HeaderInfo().Time
-	depositPeriod := params.MaxDepositPeriod
-
-	proposal, err := v1.NewProposal(messages, proposalID, submitTime, submitTime.Add(*depositPeriod), metadata, title, summary, proposer, proposalType)
+	proposal, err := v1.NewProposal(messages, proposalID, submitTime, submitTime.Add(*params.MaxDepositPeriod), metadata, title, summary, proposer, proposalType)
 	if err != nil {
 		return v1.Proposal{}, err
 	}

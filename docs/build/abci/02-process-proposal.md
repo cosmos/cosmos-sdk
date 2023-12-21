@@ -1,4 +1,4 @@
-## Process Proposal
+# Process Proposal
 
 `ProcessProposal` handles the validation of a proposal from `PrepareProposal`,
 which also includes a block header. Meaning, that after a block has been proposed

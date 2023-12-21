@@ -22,9 +22,8 @@ func TestLegacyGRPCQueryTally(t *testing.T) {
 	addrs, _ := createValidators(t, f, []int64{5, 5, 5})
 
 	var (
-		req      *v1beta1.QueryTallyResultRequest
-		expRes   *v1beta1.QueryTallyResultResponse
-		proposal v1.Proposal
+		req    *v1beta1.QueryTallyResultRequest
+		expRes *v1beta1.QueryTallyResultResponse
 	)
 
 	testCases := []struct {
@@ -34,28 +33,12 @@ func TestLegacyGRPCQueryTally(t *testing.T) {
 		expErrMsg string
 	}{
 		{
-			"create a proposal and get tally",
-			func() {
-				var err error
-				proposal, err = f.govKeeper.SubmitProposal(ctx, TestProposal, "", "test", "description", addrs[0], v1.ProposalType_PROPOSAL_TYPE_STANDARD)
-				assert.NilError(t, err)
-				assert.Assert(t, proposal.String() != "")
-
-				req = &v1beta1.QueryTallyResultRequest{ProposalId: proposal.Id}
-
-				tallyResult := v1beta1.EmptyTallyResult()
-				expRes = &v1beta1.QueryTallyResultResponse{
-					Tally: tallyResult,
-				}
-			},
-			true,
-			"",
-		},
-		{
 			"request tally after few votes",
 			func() {
+				proposal, err := f.govKeeper.SubmitProposal(ctx, TestProposal, "", "test", "description", addrs[0], v1.ProposalType_PROPOSAL_TYPE_STANDARD)
+				assert.NilError(t, err)
 				proposal.Status = v1.StatusVotingPeriod
-				err := f.govKeeper.SetProposal(ctx, proposal)
+				err = f.govKeeper.SetProposal(ctx, proposal)
 				assert.NilError(t, err)
 				assert.NilError(t, f.govKeeper.AddVote(ctx, proposal.Id, addrs[0], v1.NewNonSplitVoteOption(v1.OptionYes), ""))
 				assert.NilError(t, f.govKeeper.AddVote(ctx, proposal.Id, addrs[1], v1.NewNonSplitVoteOption(v1.OptionYes), ""))

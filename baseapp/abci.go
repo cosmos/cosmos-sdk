@@ -728,13 +728,8 @@ func (app *BaseApp) internalFinalizeBlock(ctx context.Context, req *abci.Request
 			Misbehavior:     req.Misbehavior,
 			ValidatorsHash:  req.NextValidatorsHash,
 			ProposerAddress: req.ProposerAddress,
-<<<<<<< HEAD
-			LastCommit:      req.DecidedLastCommit,
-		})
-=======
 			LastCommit:      sdk.ToSDKCommitInfo(req.DecidedLastCommit),
 		}))
->>>>>>> c5191041a (fix(baseapp): introduce mutex to state (#18846))
 
 	// GasMeter must be set after we get a context with updated consensus params.
 	gasMeter := app.getBlockGasMeter(app.finalizeBlockState.Context())
@@ -1220,11 +1215,7 @@ func (app *BaseApp) CreateQueryContext(height int64, prove bool) (sdk.Context, e
 	ctx := sdk.NewContext(cacheMS, app.checkState.ctx.BlockHeader(), true, app.logger).
 		WithMinGasPrices(app.minGasPrices).
 		WithBlockHeight(height).
-<<<<<<< HEAD
-		WithGasMeter(storetypes.NewGasMeter(app.queryGasLimit))
-=======
 		WithGasMeter(storetypes.NewGasMeter(app.queryGasLimit)).WithBlockHeader(app.checkState.Context().BlockHeader())
->>>>>>> c5191041a (fix(baseapp): introduce mutex to state (#18846))
 
 	if height != lastBlockHeight {
 		rms, ok := app.cms.(*rootmulti.Store)

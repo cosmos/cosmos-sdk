@@ -263,10 +263,6 @@ func (i Int) Mul(i2 Int) (res Int) {
 		panic("Int overflow")
 	}
 	res = Int{mul(i.i, i2.i)}
-	// Check overflow if sign of both are same
-	if res.i.BitLen() > MaxBitLen {
-		panic("Int overflow")
-	}
 	return
 }
 

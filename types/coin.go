@@ -310,6 +310,8 @@ func (coins Coins) Add(coinsB ...Coin) Coins {
 	return coins.safeAdd(coinsB)
 }
 
+var zeroInt = NewInt(0)
+
 // safeAdd will perform addition of two coins sets. If both coin sets are
 // empty, then an empty set is returned. If only a single set is empty, the
 // other set is returned. Otherwise, the coins are compared in order of their
@@ -335,7 +337,7 @@ func (coins Coins) safeAdd(coinsB Coins) (coalesced Coins) {
 	}
 
 	for denom, cL := range uniqCoins { //#nosec
-		comboCoin := Coin{Denom: denom, Amount: NewInt(0)}
+		comboCoin := Coin{Denom: denom, Amount: zeroInt}
 		for _, c := range cL {
 			comboCoin = comboCoin.Add(c)
 		}
@@ -827,7 +829,9 @@ var _ sort.Interface = Coins{}
 
 // Sort is a helper function to sort the set of coins in-place
 func (coins Coins) Sort() Coins {
-	sort.Sort(coins)
+	if len(coins) > 1 {
+		sort.Sort(coins)
+	}
 	return coins
 }
 

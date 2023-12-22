@@ -51,7 +51,7 @@ func TestRandomizedGenState(t *testing.T) {
 		tallyExpeditedThreshold = "0.537000000000000000"
 		tallyVetoThreshold      = "0.276000000000000000"
 		minInitialDepositDec    = "0.880000000000000000"
-		proposalMaxCancelPeriod = "0.110000000000000000"
+		proposalCancelMaxPeriod = "0.110000000000000000"
 	)
 
 	assert.Equal(t, "272stake", govGenesis.Params.MinDeposit[0].String())
@@ -63,7 +63,7 @@ func TestRandomizedGenState(t *testing.T) {
 	assert.Equal(t, tallyThreshold, govGenesis.Params.Threshold)
 	assert.Equal(t, tallyExpeditedThreshold, govGenesis.Params.ExpeditedThreshold)
 	assert.Equal(t, tallyVetoThreshold, govGenesis.Params.VetoThreshold)
-	assert.Equal(t, proposalMaxCancelPeriod, govGenesis.Params.ProposalCancelMaxCancelPeriod)
+	assert.Equal(t, proposalCancelMaxPeriod, govGenesis.Params.ProposalCancelMaxPeriod)
 	assert.Equal(t, uint64(0x28), govGenesis.StartingProposalId)
 	assert.DeepEqual(t, []*v1.Deposit{}, govGenesis.Deposits)
 	assert.DeepEqual(t, []*v1.Vote{}, govGenesis.Votes)

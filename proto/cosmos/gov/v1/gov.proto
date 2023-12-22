@@ -310,11 +310,11 @@ message Params {
   // Since: cosmos-sdk 0.50
   string min_deposit_ratio = 16 [(cosmos_proto.scalar) = "cosmos.Dec"];
 
-  // proposal_cancel_max_cancel_period defines how far in the voting period a proposer can cancel a proposal.
+  // proposal_cancel_max_period defines how far in the voting period a proposer can cancel a proposal.
   // If the proposal is cancelled before the max cancel period, the deposit will be returned/burn to the
   // depositors, according to the proposal_cancel_ratio and proposal_cancel_dest parameters.
   // After the max cancel period, the proposal cannot be cancelled anymore.
-  string proposal_cancel_max_cancel_period = 17 [(cosmos_proto.scalar) = "cosmos.Dec"];
+  string proposal_cancel_max_period = 17 [(cosmos_proto.scalar) = "cosmos.Dec"];
 
   // optimistic_authorized_addresses is an optional governance parameter that limits the authorized accounts than can
   // submit optimistic proposals

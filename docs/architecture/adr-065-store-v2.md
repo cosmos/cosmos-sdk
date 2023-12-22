@@ -103,12 +103,8 @@ over IAVL v0 and v1, at the cost of a state migration.
 
 By separating SS and SC, it will allow for us to optimize against primary use cases
 and access patterns to state. Specifically, The SS layer will be responsible for
-direct access to data in the form of (key, value) pairs, whereas the SC layer (IAVL)
+direct access to data in the form of (key, value) pairs, whereas the SC layer (e.g. IAVL)
 will be responsible for committing to data and providing Merkle proofs.
-
-Note, the underlying physical storage database will be the same between both the
-SS and SC layers. So to avoid collisions between (key, value) pairs, both layers
-will be namespaced.
 
 #### State Commitment (SC)
 
@@ -118,10 +114,7 @@ necessarily IAVL.  To this end, the scope of SC has been reduced, it must only:
 * Provide a stateful root app hash for height h resulting from applying a batch
   of key-value set/deletes to height h-1.
 * Fulfill (though not necessarily provide) historical proofs for all heights < h.
-* Provide an API for snapshot create/restore to fulfill state sync requests.
-
-Notably, SC is not required to provide key iteration or value retrieval for either
-queries or state machine execution, this now being the responsibility of state storage.  
+* Provide an API for snapshot create/restore to fulfill state sync requests. 
 
 An SC implementation may choose not to provide historical proofs past height h - n (n can be 0)
 due to the time and space constraints, but since store v2 defines an API for historical
@@ -151,9 +144,9 @@ purposes.
 
 We propose to have three defaulting SS backends for applications to choose from:
 
-* RocksDB
+* RocksDB (cgo-based)
 * PebbleDB
-* SQLite
+* SQLite (cgo-based)
 
 Since operators might want pruning strategies to differ in SS compared to SC,
 e.g. having a very tight pruning strategy in SC while having a looser pruning
@@ -171,58 +164,60 @@ otherwise, a snapshot could be triggered on a height that is not available in SC
 The state sync process should be largely unaffected by the separation of the SC
 and SS layers. However, if a node syncs via state sync, the SS layer of the node
 will not have the state synced height available, since the IAVL import process is
-not setup in way to easily allow direct key/value insertion. A modification of
-the IAVL import process would be necessary to facilitate having the state sync
-height available.
+not setup in way to easily allow direct key/value insertion.
 
-Note, this is not problematic for the state machine itself because when a query
-is made, the RMS will automatically direct the query correctly (see [Queries](#queries)).
+We propose a simple `SnapshotManager` that consumes and produces snapshots, that
+syncs to both the SC and SC backends.
 
-#### Queries
+#### RootStore
 
-To consolidate the query routing between both the SC and SS layers, we propose to
-have a notion of a "query router" that is constructed in the RMS. This query router
-will be supplied to each `KVStore` implementation. The query router will route
-queries to either the SC layer or the SS layer based on a few parameters. If
-`prove: true`, then the query must be routed to the SC layer. Otherwise, if the
-query height is available in the SS layer, the query will be served from the SS
-layer. Otherwise, we fall back on the SC layer.
+We will define a `RootStore` interface and default implementation that will be
+the primary interface for the application to interact with. The `RootStore` will
+be responsible for housing SS and SC backends. Specifically, a `RootStore` will
+provide the following functionality:
 
-If no height is provided, the SS layer will assume the latest height. The SS
-layer will store a reverse index to lookup `LatestVersion -> timestamp(version)`
-which is set on `Commit`.
+* Manage commitment of state (both SS and SC)
+* Provide modules access to state
+* Query delegation (i.e. get a value for a <key, height> tuple)
+* Providing commitment proofs
+
+#### Store Keys
+
+Naturally, if a single SC tree is used in all RootStore implementations, then the
+notion of a store key becomes entirely useless. However, we cannot dictate or
+predicate how all applications will implement their RooStore (if they choose to).
+
+Since an app can choose to have multiple SC trees, we need to keep the notion of
+store keys. Unlike store v1, we represent store keys as simple strings as opposed
+to concrete types to provide OCAP functionality. The store key strings act to
+solely provide key prefixing/namespacing functionality for modules.
 
 #### Proofs
 
 Since the SS layer is naturally a storage layer only, without any commitments
 to (key, value) pairs, it cannot provide Merkle proofs to clients during queries.
 
-Since the pruning strategy against the SC layer is configured by the operator,
-we can therefore have the RMS route the query SC layer if the version exists and
-`prove: true`. Otherwise, the query will fall back to the SS layer without a proof.
+So providing inclusion and exclusion proofs, via a `CommitmentOp` type, will be
+the responsibility of the SC backend. Retrieving proofs will be done through the
+a `RootStore`, which will internally route the request to the SC backend.
 
-We could explore the idea of using state snapshots to rebuild an in-memory IAVL
-tree in real time against a version closest to the one provided in the query.
-However, it is not clear what the performance implications will be of this approach.
+#### Commitment
 
-### Atomic Commitment
+Before ABCI++, specifically before `FinalizeBlock` was introduced, the flow of state
+commitment in BaseApp was defined by writes being written to the `RootMultiStore`
+and then a single Commit call on the `RootMultiStore` during the ABCI Commit method.
 
-We propose to modify the existing IAVL APIs to accept a batch DB object instead
-of relying on an internal batch object in `nodeDB`. Since each underlying IAVL
-`KVStore` shares the same DB in the SC layer, this will allow commits to be
-atomic.
+With the advent of ABCI++, the commitment flow has now changed to `WorkingHash` being
+called during `FinalizeBlock` and then Commit being called on ABCI Commit. Note,
+`WorkingHash` does not actually commit state to disk, but rather computes an
+uncommitted work-in-progress hash, which is returned in `FinalizeBlock`. Then,
+during the ABCI Commit phase, the state is finally flushed to disk.
 
-Specifically, we propose to:
-
-* Remove the `dbm.Batch` field from `nodeDB`
-* Update the `SaveVersion` method of the `MutableTree` IAVL type to accept a batch object
-* Update the `Commit` method of the `CommitKVStore` interface to accept a batch object
-* Create a batch object in the RMS during `Commit` and pass this object to each
-  `KVStore`
-* Write the database batch after all stores have committed successfully
-
-Note, this will require IAVL to be updated to not rely or assume on any batch
-being present during `SaveVersion`.
+In store v2, we must respect this flow. Thus, a caller is expected to call `WorkingHash`
+during `FinalizeBlock`, which takes the latest changeset in the `RootStore`,
+writes that to the SC tree in a single batch and returns a hash. Finally, during
+the ABCI Commit phase, we call `Commit` on the `RootStore` which commits the SC
+tree and flushes the changeset to the SS backend.
 
 ## Consequences
 
@@ -281,16 +276,9 @@ commitment proofs for historical state. While solutions can be devised such as
 rebuilding trees on the fly based on state snapshots, it is not clear what the
 performance implications are for such solutions.
 
-### Physical DB Backends
-
-This ADR proposes usage of RocksDB to utilize user-defined timestamps as a
-versioning mechanism. However, other physical DB backends are available that may
-offer alternative ways to implement versioning while also providing performance
-improvements over RocksDB. E.g. PebbleDB supports MVCC timestamps as well, but
-we'll need to explore how PebbleDB handles compaction and state growth over time.
-
 ## References
 
 * [1] https://github.com/cosmos/iavl/pull/676
 * [2] https://github.com/cosmos/iavl/pull/664
 * [3] https://github.com/cosmos/cosmos-sdk/issues/14990
+* [4] https://docs.google.com/document/d/e/2PACX-1vSCFfXZm2vsRsACOPoxGqysMaUg7jY833LwR3YyjA1S3FNHfXRiJor-qLjzx833TavLXLPSIcFZJhyh/pub

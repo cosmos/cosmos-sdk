@@ -82,9 +82,27 @@ Module Dependencies are the modules that a application may depend on and which v
 
 > Note: The version table only goes back to 0.50.x, this is due to the reason that modules were not spun out into their own go.mods until 0.50.x. 
 
-| Cosmos SDK |  cosmossdk.io/x/auth| cosmossdk.io/x/account | cosmossdk.io/x/bank | cosmossdk.io/x/circuit| cosmossdk.io/x/consensus | cosmossdk.io/x/distribution | cosmossdk.io/x/evidence | cosmossdk.io/x/feegrant | cosmossdk.io/x/gov| cosmossdk.io/x/group | cosmossdk.io/x/mint | cosmossdk.io/x/nft | cosmossdk.io/x/protocolpool | cosmossdk.io/x/slashing | cosmossdk.io/x/staking | cosmossdk.io/x/tx | cosmossdk.io/x/upgrade
-|------------|---|
-| 0.50.x     |   |
+
+| Cosmos SDK                  | 0.50.x    | 0.y.z |
+|-----------------------------|-----------|-------|
+| cosmossdk.io/x/auth         | 0.1.z     |       |
+| cosmossdk.io/x/accounts     | 0.1.z     |       |
+| cosmossdk.io/x/bank         | 0.1.z     |       |
+| cosmossdk.io/x/circuit      | 0.1.z     |       |
+| cosmossdk.io/x/consensus    | 0.1.z     |       |
+| cosmossdk.io/x/distribution | 0.1.z     |       |
+| cosmossdk.io/x/evidence     | 0.1.z     |       |
+| cosmossdk.io/x/feegrant     | 0.1.z     |       |
+| cosmossdk.io/x/gov          | 0.1.z     |       |
+| cosmossdk.io/x/group        | 0.1.z     |       |
+| cosmossdk.io/x/mint         | 0.1.z     |       |
+| cosmossdk.io/x/nft          | 0.1.z     |       |
+| cosmossdk.io/x/protcolpool  | 0.1.z     |       |
+| cosmossdk.io/x/slashing     | 0.1.z     |       |
+| cosmossdk.io/x/staking      | 0.1.z     |       |
+| cosmossdk.io/x/tx           | =< 0.13.z |       |
+| cosmossdk.io/x/upgrade      | 0.1.z     |       |
+
 
 
 

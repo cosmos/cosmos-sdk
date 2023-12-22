@@ -154,6 +154,18 @@ func (s *CLITestSuite) TestNewCmdSubmitProposal() {
 			},
 			false, &sdk.TxResponse{},
 		},
+		{
+			"valid proposal with validity check flag set to false",
+			[]string{
+				validPropFile.Name(),
+				fmt.Sprintf("--%s=%s", cli.FlagValidate, "false"),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(10))).String()),
+			},
+			false, &sdk.TxResponse{},
+		},
 	}
 
 	for _, tc := range testCases {

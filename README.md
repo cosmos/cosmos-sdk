@@ -82,7 +82,7 @@ Module Dependencies are the modules that a application may depend on and which v
 
 > Note: The version table only goes back to 0.50.x, this is due to the reason that modules were not spun out into their own go.mods until 0.50.x. 
 
-| Cosmos SDK |   |
+| Cosmos SDK |  cosmossdk.io/x/auth| cosmossdk.io/x/account | cosmossdk.io/x/bank | cosmossdk.io/x/circuit| cosmossdk.io/x/consensus | cosmossdk.io/x/distribution | cosmossdk.io/x/evidence | cosmossdk.io/x/feegrant | cosmossdk.io/x/gov| cosmossdk.io/x/group | cosmossdk.io/x/mint | cosmossdk.io/x/nft | cosmossdk.io/x/protocolpool | cosmossdk.io/x/slashing | cosmossdk.io/x/staking | cosmossdk.io/x/tx | cosmossdk.io/x/upgrade
 |------------|---|
 | 0.50.x     |   |
 

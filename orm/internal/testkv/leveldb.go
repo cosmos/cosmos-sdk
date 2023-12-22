@@ -14,6 +14,6 @@ func NewGoLevelDBBackend(tb testing.TB) ormtable.Backend {
 	db, err := dbm.NewGoLevelDB("test", tb.TempDir(), nil)
 	assert.NilError(tb, err)
 	return ormtable.NewBackend(ormtable.BackendOptions{
-		CommitmentStore: db,
+		CommitmentStore: TestStore{Db: db},
 	})
 }

@@ -127,19 +127,17 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) error {
 			return false, err
 		}
 
-		// If an expedited proposal fails, we do not want to update
-		// the deposit at this point since the proposal is converted to regular.
-		// As a result, the deposits are either deleted or refunded in all cases
-		// EXCEPT when an expedited proposal fails.
-		if passes || !(proposal.ProposalType == v1.ProposalType_PROPOSAL_TYPE_EXPEDITED) {
-			if burnDeposits {
-				err = keeper.DeleteAndBurnDeposits(ctx, proposal.Id)
-			} else {
-				err = keeper.RefundAndDeleteDeposits(ctx, proposal.Id)
-			}
-			if err != nil {
-				return false, err
-			}
+		// Deposits are always burned if tally said so, regardless of the proposal type.
+		// If a proposal passes, deposits are always refunded, regardless of the proposal type.
+		// If a proposal fails, and isn't spammy, deposits are refunded, unless the proposal is expedited or optimistic.
+		// An expedited or optimistic proposal that fails and isn't spammy is converted to a regular proposal.
+		if burnDeposits {
+			err = keeper.DeleteAndBurnDeposits(ctx, proposal.Id)
+		} else if passes || !(proposal.ProposalType == v1.ProposalType_PROPOSAL_TYPE_EXPEDITED || proposal.ProposalType == v1.ProposalType_PROPOSAL_TYPE_OPTIMISTIC) {
+			err = keeper.RefundAndDeleteDeposits(ctx, proposal.Id)
+		}
+		if err != nil {
+			return false, err
 		}
 
 		if err = keeper.ActiveProposalsQueue.Remove(ctx, collections.Join(*proposal.VotingEndTime, proposal.Id)); err != nil {
@@ -199,8 +197,9 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) error {
 				tagValue = types.AttributeValueProposalFailed
 				logMsg = fmt.Sprintf("passed, but msg %d (%s) failed on execution: %s", idx, sdk.MsgTypeURL(msg), err)
 			}
-		case proposal.ProposalType == v1.ProposalType_PROPOSAL_TYPE_EXPEDITED:
-			// When expedited proposal fails, it is converted
+		case !burnDeposits && (proposal.ProposalType == v1.ProposalType_PROPOSAL_TYPE_EXPEDITED ||
+			proposal.ProposalType == v1.ProposalType_PROPOSAL_TYPE_OPTIMISTIC):
+			// When a non spammy expedited/optimistic proposal fails, it is converted
 			// to a regular proposal. As a result, the voting period is extended, and,
 			// once the regular voting period expires again, the tally is repeated
 			// according to the regular proposal rules.
@@ -218,8 +217,13 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) error {
 				return false, err
 			}
 
-			tagValue = types.AttributeValueExpeditedProposalRejected
-			logMsg = "expedited proposal converted to regular"
+			if proposal.ProposalType == v1.ProposalType_PROPOSAL_TYPE_EXPEDITED {
+				tagValue = types.AttributeValueExpeditedProposalRejected
+				logMsg = "expedited proposal converted to regular"
+			} else {
+				tagValue = types.AttributeValueOptimisticProposalRejected
+				logMsg = "optimistic proposal converted to regular"
+			}
 		default:
 			proposal.Status = v1.StatusRejected
 			proposal.FailedReason = "proposal did not get enough votes to pass"
@@ -246,8 +250,8 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) error {
 		logger.Info(
 			"proposal tallied",
 			"proposal", proposal.Id,
-			"status", proposal.Status.String(),
 			"proposal_type", proposal.ProposalType,
+			"status", proposal.Status.String(),
 			"title", proposal.Title,
 			"results", logMsg,
 		)

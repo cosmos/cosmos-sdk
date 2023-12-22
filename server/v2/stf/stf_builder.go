@@ -41,7 +41,7 @@ type STFBuilderOptions struct {
 	OrderTxValidators []string
 }
 
-func (s *STFBuilder[T]) Build(opts *STFBuilderOptions) (*STFAppManager[T], error) {
+func (s *STFBuilder[T]) Build(opts *STFBuilderOptions) (*STF[T], error) {
 	msgHandler, err := s.msgRouterBuilder.Build()
 	if err != nil {
 		return nil, fmt.Errorf("unable to build msg handler: %w", err)
@@ -62,16 +62,16 @@ func (s *STFBuilder[T]) Build(opts *STFBuilderOptions) (*STFAppManager[T], error
 	if err != nil {
 		return nil, fmt.Errorf("unable to build tx validator: %w", err)
 	}
-	return &STFAppManager[T]{
-		HandleMsg:      msgHandler,
-		HandleQuery:    queryHandler,
+	return &STF[T]{
+		handleMsg:      msgHandler,
+		handleQuery:    queryHandler,
 		doBeginBlock:   beginBlocker,
 		doEndBlock:     endBlocker,
 		doTxValidation: txValidator,
 		decodeTx: func(txBytes []byte) (T, error) {
 			return s.txCodec.Decode(txBytes)
 		},
-		Branch: nil, // TODO
+		branch: nil, // TODO
 	}, nil
 }
 

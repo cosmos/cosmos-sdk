@@ -728,7 +728,7 @@ func (app *BaseApp) internalFinalizeBlock(ctx context.Context, req *abci.Request
 			Misbehavior:     req.Misbehavior,
 			ValidatorsHash:  req.NextValidatorsHash,
 			ProposerAddress: req.ProposerAddress,
-			LastCommit:      sdk.ToSDKCommitInfo(req.DecidedLastCommit),
+			LastCommit:      req.DecidedLastCommit,
 		}))
 
 	// GasMeter must be set after we get a context with updated consensus params.

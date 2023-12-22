@@ -116,7 +116,7 @@ func (iw IteratorWrapper) Error() error {
 	return iw.itr.Error()
 }
 
-// Close closes the iterator, relasing any allocated resources.
+// Close closes the iterator, releasing any allocated resources.
 func (iw IteratorWrapper) Close() error {
 	return iw.itr.Close()
 }

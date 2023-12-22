@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/core/coins"
+	"cosmossdk.io/client/v2/internal/coins"
 )
 
 func TestDecodeCoin(t *testing.T) {

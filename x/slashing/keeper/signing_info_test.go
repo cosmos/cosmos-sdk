@@ -3,6 +3,8 @@ package keeper_test
 import (
 	"time"
 
+	"github.com/golang/mock/gomock"
+
 	"cosmossdk.io/x/slashing/testutil"
 	slashingtypes "cosmossdk.io/x/slashing/types"
 
@@ -65,6 +67,8 @@ func (s *KeeperTestSuite) TestValidatorMissedBlockBitmap_SmallWindow() {
 		params.SignedBlocksWindow = window
 		require.NoError(keeper.Params.Set(ctx, params))
 
+		s.stakingKeeper.EXPECT().ValidatorIdentifier(gomock.Any(), consAddr).Return(consAddr, nil).AnyTimes()
+
 		// validator misses all blocks in the window
 		var valIdxOffset int64
 		for valIdxOffset < params.SignedBlocksWindow {
@@ -95,6 +99,14 @@ func (s *KeeperTestSuite) TestValidatorMissedBlockBitmap_SmallWindow() {
 
 		// validator should have missed all blocks except the last one
 		missedBlocks, err = keeper.GetValidatorMissedBlocks(ctx, consAddr)
+		require.NoError(err)
+		require.Len(missedBlocks, int(params.SignedBlocksWindow)-1)
+
+		// if the validator rotated it's key there will be different consKeys and a mapping will be added in the state.
+		consAddr1 := sdk.ConsAddress(sdk.AccAddress([]byte("addr1_______________")))
+		s.stakingKeeper.EXPECT().ValidatorIdentifier(gomock.Any(), consAddr1).Return(consAddr, nil).AnyTimes()
+
+		missedBlocks, err = keeper.GetValidatorMissedBlocks(ctx, consAddr1)
 		require.NoError(err)
 		require.Len(missedBlocks, int(params.SignedBlocksWindow)-1)
 	}

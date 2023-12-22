@@ -241,15 +241,15 @@ func (p Params) ValidateBasic(addressCodec address.Codec) error {
 		return fmt.Errorf("burn rate of cancel proposal is too large: %s", proposalCancelRate)
 	}
 
-	prosalMaxCencelPeriod, err := sdkmath.LegacyNewDecFromStr(p.ProposalCancelMaxCancelPeriod)
+	proposalMaxCancelPeriod, err := sdkmath.LegacyNewDecFromStr(p.ProposalCancelMaxCancelPeriod)
 	if err != nil {
 		return fmt.Errorf("invalid max cancel period of cancel proposal: %w", err)
 	}
-	if prosalMaxCencelPeriod.IsNegative() {
-		return fmt.Errorf("max cancel period of cancel proposal must be positive: %s", prosalMaxCencelPeriod)
+	if proposalMaxCancelPeriod.IsNegative() {
+		return fmt.Errorf("max cancel period of cancel proposal must be positive: %s", proposalMaxCancelPeriod)
 	}
-	if prosalMaxCencelPeriod.GT(sdkmath.LegacyOneDec()) {
-		return fmt.Errorf("max cancel period of cancel proposal is too large: %s", prosalMaxCencelPeriod)
+	if proposalMaxCancelPeriod.GT(sdkmath.LegacyOneDec()) {
+		return fmt.Errorf("max cancel period of cancel proposal is too large: %s", proposalMaxCancelPeriod)
 	}
 
 	if len(p.ProposalCancelDest) != 0 {

@@ -166,6 +166,8 @@ require (
 	pgregory.net/rapid v1.1.0 // indirect
 )
 
+require github.com/grpc-ecosystem/grpc-gateway/v2 v2.18.1 // indirect
+
 replace github.com/cosmos/cosmos-sdk => ./../../
 
 replace (

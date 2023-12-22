@@ -260,6 +260,9 @@ schema = 3
   [mod."github.com/grpc-ecosystem/grpc-gateway"]
     version = "v1.16.0"
     hash = "sha256-wLymGic7wZ6fSiBYDAaGqnQ9Ste1fUWeqXeolZXCHvI="
+  [mod."github.com/grpc-ecosystem/grpc-gateway/v2"]
+    version = "v2.18.1"
+    hash = "sha256-mXkj2d4OM0zZm1ekH9qUUh09DvLQDN5vt7azmifx9Mw="
   [mod."github.com/gsterjov/go-libsecret"]
     version = "v0.0.0-20161001094733-a6f4afe4910c"
     hash = "sha256-Z5upjItPU9onq5t7VzhdQFp13lMJrSiE3gNRapuK6ic="

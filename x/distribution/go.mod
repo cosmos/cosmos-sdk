@@ -23,6 +23,7 @@ require (
 	github.com/golang/mock v1.6.0
 	github.com/golang/protobuf v1.5.3
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
+	github.com/grpc-ecosystem/grpc-gateway/v2 v2.18.1
 	github.com/hashicorp/go-metrics v0.5.3
 	github.com/pkg/errors v0.9.1
 	github.com/spf13/cobra v1.8.0

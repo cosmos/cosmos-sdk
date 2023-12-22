@@ -65,12 +65,6 @@ type ResponseInitChain struct {
 type TxResult struct {
 	Events  []event.Event
 	GasUsed uint64
-
-	Resp  Type
-	Error error
-}
-
-type ValidatorUpdate struct {
-	PubKey []byte
-	Power  int64
+	Resp    Type
+	Error   error
 }

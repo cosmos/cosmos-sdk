@@ -35,7 +35,7 @@ import (
 	"sort"
 
 	abci "github.com/cometbft/cometbft/abci/types"
-	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/spf13/cobra"
 	"golang.org/x/exp/maps"
 

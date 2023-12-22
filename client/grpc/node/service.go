@@ -4,7 +4,7 @@ import (
 	context "context"
 
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
-	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/server/config"

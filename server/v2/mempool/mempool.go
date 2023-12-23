@@ -2,22 +2,27 @@ package mempool
 
 import (
 	"context"
+
+	"cosmossdk.io/server/v2/core/transaction"
 )
 
+// Tx defines a mempool tx containing both encoded and decoded version of it.
+// This is useful to avoid further encoding and decoding of txs.
+type Tx[T transaction.Tx] struct {
+	// Decoded is the decoded Tx.
+	Decoded T
+	// Encoded is the encoded Tx.
+	Encoded []byte
+}
+
 // Mempool defines the required methods of an application's mempool.
-type Mempool[T any] interface {
-	// Insert attempts to insert a Tx into the app-side mempool returning
-	// an error upon failure. Insert will validate the transaction using the txValidator
-	Insert(ctx context.Context, txs T) error
-
-	// GetTxs returns a list of transactions to add in a block
-	// size specifies the size of the block left for transactions
-	GetTxs(ctx context.Context, size uint32) (ts any, err error)
-
-	// CountTx returns the number of transactions currently in the mempool.
-	CountTx() uint32
-
-	// Remove attempts to remove a transaction from the mempool, returning an error
-	// upon failure.
-	Remove(txs T) error
+type Mempool[T transaction.Tx] interface {
+	// Push pushes the TXs to the mempool.
+	Push(ctx context.Context, txs []Tx[T]) error
+	// Pull fetches the provided number of txs from the mempool.
+	// It is a design detail of the mempool to decide what is the
+	// prioritization over the mempool.
+	Pull(ctx context.Context, num int) ([]Tx[T], error)
+	// Count returns the number of Txs in the mempool.
+	Count(ctx context.Context) (int, error)
 }

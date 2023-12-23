@@ -8,8 +8,6 @@ import (
 
 type Identity = []byte
 
-type Tx = transaction.Tx
-
 type MsgRouterBuilder interface {
 	RegisterHandler(msg Type, handlerFunc func(ctx context.Context, msg Type) (resp Type, err error))
 }

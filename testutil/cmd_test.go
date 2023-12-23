@@ -41,7 +41,7 @@ func TestSetArgsWithOriginalMethod(t *testing.T) {
 	})
 	require.NoError(t, cmd.Execute())
 
-	// although we called cmd.SetArgs and expected that only b was set, but a has already set by last call `cmd.SetArgs`
+	// This call to cmd.SetArgs is expected to set only the 'b' flag. However, due to the bug, the 'a' flag remains set from the previous call to cmd.SetArgs, leading to an error.
 	cmd.SetArgs([]string{
 		"testcmd",
 		"--b=true",
@@ -49,14 +49,14 @@ func TestSetArgsWithOriginalMethod(t *testing.T) {
 	require.True(t, cmd.Flags().Changed("a"))
 	require.Error(t, cmd.Execute())
 
-	// although we called cmd.SetArgs and expected that only c was set, but a,b has already set by last two call `cmd.SetArgs`
+	// This call to cmd.SetArgs is expected to set only the 'c' flag. However, the 'a' and 'b' flags remain set from the previous calls, causing an unexpected error.
 	cmd.SetArgs([]string{
 		"testcmd",
 		"--c=true",
 	})
 	require.Error(t, cmd.Execute())
 
-	// we should explicitly set all args that has changed before, so that it works as we expected
+	// To work around the bug, we must explicitly reset the 'a' and 'b' flags to false, even though we only want to set the 'c' flag to true.
 	cmd.SetArgs([]string{
 		"testcmd",
 		"--a=false",

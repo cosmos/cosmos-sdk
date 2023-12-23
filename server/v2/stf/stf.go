@@ -2,6 +2,7 @@ package stf
 
 import (
 	"context"
+	"time"
 
 	"google.golang.org/protobuf/proto"
 
@@ -18,6 +19,15 @@ type (
 
 var runtimeIdentity Identity = []byte("runtime") // TODO: most likely should be moved to core somewhere.
 
+// BlockRequest aliases appmanager.BlockRequest but makes the Tx type concrete.
+type BlockRequest[T transaction.Tx] struct {
+	Height            uint64
+	Time              time.Time
+	Hash              []byte
+	Txs               []T
+	ConsensusMessages []Type //
+}
+
 // STF is a struct that manages the state transition component of the app.
 type STF[T transaction.Tx] struct {
 	handleMsg   func(ctx context.Context, msg Type) (msgResp Type, err error)
@@ -28,15 +38,13 @@ type STF[T transaction.Tx] struct {
 
 	doTxValidation func(ctx context.Context, tx T) error
 
-	decodeTx func(txBytes []byte) (T, error)
-
 	branch func(store store.ReadonlyState) store.WritableState // branch is a function that given a readonly store it returns a writable version of it.
 }
 
 // DeliverBlock is our state transition function.
 // It takes a read only view of the state to apply the block to,
 // executes the block and returns the block results and the new state.
-func (s STF[T]) DeliverBlock(ctx context.Context, block appmanager.BlockRequest, state store.ReadonlyState) (blockResult *appmanager.BlockResponse, newState store.WritableState, err error) {
+func (s STF[T]) DeliverBlock(ctx context.Context, block BlockRequest[T], state store.ReadonlyState) (blockResult *appmanager.BlockResponse, newState store.WritableState, err error) {
 	// creates a new branch store, from the readonly view of the state
 	// that can be written to.
 	newState = s.branch(state)
@@ -51,7 +59,7 @@ func (s STF[T]) DeliverBlock(ctx context.Context, block appmanager.BlockRequest,
 		txResults[i] = s.deliverTx(ctx, newState, txBytes)
 	}
 	// end block
-	endBlockEvents, err := s.endBlock(ctx, newState, block)
+	endBlockEvents, err := s.endBlock(ctx, newState)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -64,14 +72,7 @@ func (s STF[T]) DeliverBlock(ctx context.Context, block appmanager.BlockRequest,
 }
 
 // DeliverTx executes a TX and returns the result.
-func (s STF[T]) deliverTx(ctx context.Context, state store.WritableState, txBytes []byte) appmanager.TxResult {
-	tx, err := s.decodeTx(txBytes)
-	if err != nil {
-		return appmanager.TxResult{
-			Error: err,
-		}
-	}
-
+func (s STF[T]) deliverTx(ctx context.Context, state store.WritableState, tx T) appmanager.TxResult {
 	validateGas, validationEvents, err := s.validateTx(ctx, state, tx.GetGasLimit(), tx)
 	if err != nil {
 		return appmanager.TxResult{
@@ -130,7 +131,7 @@ func (s STF[T]) beginBlock(ctx context.Context, state store.WritableState) (begi
 	return bbCtx.events, nil
 }
 
-func (s STF[T]) endBlock(ctx context.Context, store store.WritableState, block appmanager.BlockRequest) (endBlockEvents []event.Event, err error) {
+func (s STF[T]) endBlock(ctx context.Context, store store.WritableState) (endBlockEvents []event.Event, err error) {
 	ebCtx := s.makeContext(ctx, []Identity{runtimeIdentity}, store, 0) // TODO: gas limit
 	err = s.doEndBlock(ebCtx)
 	if err != nil {
@@ -140,18 +141,14 @@ func (s STF[T]) endBlock(ctx context.Context, store store.WritableState, block a
 }
 
 // Simulate simulates the execution of a tx on the provided state.
-func (s STF[T]) Simulate(ctx context.Context, state store.ReadonlyState, gasLimit uint64, tx []byte) appmanager.TxResult {
+func (s STF[T]) Simulate(ctx context.Context, state store.ReadonlyState, tx T) appmanager.TxResult {
 	simulationState := s.branch(state)
 	return s.deliverTx(ctx, simulationState, tx)
 }
 
 // ValidateTx will run only the validation steps required for a transaction.
 // Validations are run over the provided state, with the provided gas limit.
-func (s STF[T]) ValidateTx(ctx context.Context, state store.ReadonlyState, gasLimit uint64, txBytes []byte) appmanager.TxResult {
-	tx, err := s.decodeTx(txBytes)
-	if err != nil {
-		return appmanager.TxResult{Error: err}
-	}
+func (s STF[T]) ValidateTx(ctx context.Context, state store.ReadonlyState, gasLimit uint64, tx T) appmanager.TxResult {
 	validationState := s.branch(state)
 	gasUsed, events, err := s.validateTx(ctx, validationState, gasLimit, tx)
 	return appmanager.TxResult{

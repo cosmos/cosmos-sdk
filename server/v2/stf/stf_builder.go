@@ -68,10 +68,7 @@ func (s *STFBuilder[T]) Build(opts *STFBuilderOptions) (*STF[T], error) {
 		doBeginBlock:   beginBlocker,
 		doEndBlock:     endBlocker,
 		doTxValidation: txValidator,
-		decodeTx: func(txBytes []byte) (T, error) {
-			return s.txCodec.Decode(txBytes)
-		},
-		branch: nil, // TODO
+		branch:         nil, // TODO
 	}, nil
 }
 

@@ -11,17 +11,17 @@ var _ Mempool[transaction.Tx] = (*Default[transaction.Tx])(nil)
 
 type Default[T transaction.Tx] struct {
 	mu   *sync.Mutex
-	list []Tx[T]
+	list []CacheTx[T]
 }
 
-func (d Default[T]) Push(_ context.Context, txs []Tx[T]) error {
+func (d Default[T]) Push(_ context.Context, txs ...CacheTx[T]) error {
 	d.mu.Lock()
 	d.list = append(d.list, txs...)
 	d.mu.Unlock()
 	return nil
 }
 
-func (d Default[T]) Pull(_ context.Context, num int) ([]Tx[T], error) {
+func (d Default[T]) Pull(_ context.Context, num int) ([]CacheTx[T], error) {
 	d.mu.Lock()
 	num = min(num, len(d.list))
 	pulledTx := d.list[:num]

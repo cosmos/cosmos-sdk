@@ -1,7 +1,6 @@
 package appmanager
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"sync/atomic"
@@ -14,7 +13,7 @@ import (
 )
 
 type Tx struct {
-	Tx         []byte // transaction bytes
+	Tx         []byte // transaction bytes, we store this to avoid encoding the tx again to include it in a block
 	Identifier string // transaction Identifier
 }
 
@@ -71,10 +70,6 @@ type AppManager[T transaction.Tx] struct {
 	initGenesis func(ctx context.Context, genesisBytes []byte) error
 
 	stf *stf.STF[T]
-
-	cachedState         []store.ChangeSet
-	cachedTx            []Tx
-	cachedBlockResponse *appmanager.BlockResponse
 }
 
 // BuildBlock builds a block when requested by consensus. It will take in a list of transactions and return a list of transactions
@@ -86,17 +81,9 @@ func (a AppManager[T]) BuildBlock(ctx context.Context, txs []Tx, totalSize uint3
 	}
 
 	// run txs through handler
-	bsr, changeSets, err := a.PrepareBlock(ctx, txs)
+	_, _, err := a.PrepareBlock(ctx, txs)
 	if err != nil {
 		return nil, err
-	}
-
-	// cache the changes and txs to avoid execution later on
-	if changeSets != nil && bsr != nil {
-		a.cachedState = changeSets
-		a.cachedBlockResponse = bsr
-		a.cachedTx = txs
-		return txs, nil
 	}
 
 	return txs, nil
@@ -106,30 +93,6 @@ func (a AppManager[T]) DeliverBlock(ctx context.Context, block appmanager.BlockR
 	currentState, err := a.db.NewStateAt(block.Height)
 	if err != nil {
 		return nil, nil, fmt.Errorf("unable to create new state for height %d: %w", block.Height, err)
-	}
-
-	// if we cached values, avoid rexecuting
-	if a.cachedState != nil && a.cachedTx != nil {
-		diff := false
-		for _, txs := range a.cachedTx {
-			// compare txs to make sure they are whats in the cache, if not do normal execution
-			for _, tx := range block.Txs {
-				if !bytes.Equal(txs.Tx, tx) {
-					// if txs dont match break and continue with normal execution
-					// this means that a tx was added to the block which we did not optimistically execute
-					diff = true
-					break
-				}
-			}
-		}
-
-		if !diff {
-			stateRoot, err := a.db.CommitState(a.cachedState)
-			if err != nil {
-				return nil, nil, fmt.Errorf("commit failed: %w", err)
-			}
-			return a.cachedBlockResponse, stateRoot, nil
-		}
 	}
 
 	blockResponse, newState, err := a.stf.DeliverBlock(ctx, block, currentState)

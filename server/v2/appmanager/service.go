@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"sync/atomic"
 
+	"cosmossdk.io/server/v2/mempool"
 	"cosmossdk.io/server/v2/stf"
 
 	"cosmossdk.io/server/v2/core/appmanager"
@@ -12,16 +13,7 @@ import (
 	"cosmossdk.io/server/v2/core/transaction"
 )
 
-type Tx struct {
-	Tx         []byte // transaction bytes, we store this to avoid encoding the tx again to include it in a block
-	Identifier string // transaction Identifier
-}
-
-type TxPool interface {
-	GetTxs(context.Context, uint32) ([]Tx, error)
-}
-
-type PrepareHandler func(ctx context.Context, txs []Tx) ([]Tx, []store.ChangeSet, error)
+type PrepareHandler[T transaction.Tx] func(context.Context, []T, store.ReadonlyState) ([]T, []store.ChangeSet, error)
 
 type AppManagerBuilder[T transaction.Tx] struct {
 	InitGenesis map[string]func(ctx context.Context, moduleGenesisBytes []byte) error
@@ -63,7 +55,7 @@ type AppManager[T transaction.Tx] struct {
 
 	db store.Store
 
-	txpool TxPool
+	mempool mempool.Mempool[T]
 
 	lastBlockHeight *atomic.Uint64
 
@@ -73,15 +65,20 @@ type AppManager[T transaction.Tx] struct {
 }
 
 // BuildBlock builds a block when requested by consensus. It will take in a list of transactions and return a list of transactions
-func (a AppManager[T]) BuildBlock(ctx context.Context, txs []Tx, totalSize uint32) ([]Tx, error) {
+func (a AppManager[T]) BuildBlock(ctx context.Context, block appmanager.BlockRequest, totalSize uint32) ([]T, error) {
 
-	txs, err := a.txpool.GetTxs(ctx, totalSize)
+	txs, err := a.mempool.GetTxs(ctx, totalSize)
 	if err != nil {
 		return nil, err
 	}
 
+	currentState, err := a.db.NewStateAt(block.Height)
+	if err != nil {
+		return nil, fmt.Errorf("unable to create new state for height %d: %w", block.Height, err)
+	}
+
 	// run txs through handler
-	_, _, err := a.PrepareBlock(ctx, txs)
+	_, _, err := a.PrepareBlock(ctx, txs, currentState)
 	if err != nil {
 		return nil, err
 	}

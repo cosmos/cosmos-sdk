@@ -7,8 +7,13 @@ import (
 	"google.golang.org/protobuf/proto"
 
 	"cosmossdk.io/server/v2/core/event"
+	"cosmossdk.io/server/v2/core/store"
 	"cosmossdk.io/server/v2/core/transaction"
 )
+
+// PrepareHandler is a function that takes a list of transactions and returns a list of transactions and a list of changesets
+// In the block building phase the transactions from the mempool can be verified, executed right away or lazily.
+type PrepareHandler[T transaction.Tx] func(context.Context, []T, store.ReadonlyState) ([]T, []store.ChangeSet, error)
 
 type Type = proto.Message
 

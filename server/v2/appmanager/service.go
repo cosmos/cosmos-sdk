@@ -13,10 +13,13 @@ import (
 	"cosmossdk.io/server/v2/core/transaction"
 )
 
-type PrepareHandler[T transaction.Tx] func(context.Context, []T, store.ReadonlyState) ([]T, []store.ChangeSet, error)
-
 type AppManagerBuilder[T transaction.Tx] struct {
-	InitGenesis map[string]func(ctx context.Context, moduleGenesisBytes []byte) error
+	InitGenesis    map[string]func(ctx context.Context, moduleGenesisBytes []byte) error
+	PrepareHandler appmanager.PrepareHandler[T]
+}
+
+func (a *AppManagerBuilder[T]) Register(moduleName string, prepareFunc appmanager.PrepareHandler[T]) {
+	a.PrepareHandler = prepareFunc
 }
 
 func (a *AppManagerBuilder[T]) RegisterInitGenesis(moduleName string, genesisFunc func(ctx context.Context, moduleGenesisBytes []byte) error) {
@@ -61,6 +64,8 @@ type AppManager[T transaction.Tx] struct {
 
 	initGenesis func(ctx context.Context, genesisBytes []byte) error
 
+	prepareHandler appmanager.PrepareHandler[T]
+
 	stf *stf.STF[T]
 }
 
@@ -78,7 +83,8 @@ func (a AppManager[T]) BuildBlock(ctx context.Context, block appmanager.BlockReq
 	}
 
 	// run txs through handler
-	_, _, err := a.PrepareBlock(ctx, txs, currentState)
+	// TODO handle if optimistic or immediate execution
+	_, _, err = a.prepareHandler(ctx, txs, currentState)
 	if err != nil {
 		return nil, err
 	}

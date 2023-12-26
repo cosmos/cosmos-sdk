@@ -203,7 +203,7 @@ a `RootStore`, which will internally route the request to the SC backend.
 
 #### Commitment
 
-Before ABCI++, specifically before `FinalizeBlock` was introduced, the flow of state
+Before ABCI 2.0, specifically before `FinalizeBlock` was introduced, the flow of state
 commitment in BaseApp was defined by writes being written to the `RootMultiStore`
 and then a single Commit call on the `RootMultiStore` during the ABCI Commit method.
 

@@ -53,6 +53,10 @@ type StakingKeeper interface {
 
 	// IsValidatorJailed returns if the validator is jailed.
 	IsValidatorJailed(ctx context.Context, addr sdk.ConsAddress) (bool, error)
+
+	// ValidatorIdentifier maps the new cons key to previous cons key (which is the address before the rotation).
+	// (that is: newConsKey -> oldConsKey)
+	ValidatorIdentifier(context.Context, sdk.ConsAddress) (sdk.ConsAddress, error)
 }
 
 // StakingHooks event hooks for staking validator object (noalias)

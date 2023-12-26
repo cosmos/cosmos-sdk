@@ -136,14 +136,23 @@ func (k Keeper) withdrawContinuousFund(ctx context.Context, recipient sdk.AccAdd
 
 func (k Keeper) withdrawRecipientFunds(ctx context.Context, recipient sdk.AccAddress) (sdk.Coin, error) {
 	// get allocated continuous fund
-	fundsAllocated, err := k.getAndResetDistributedFunds(ctx, recipient)
+	fundsAllocated, err := k.RecipientFundDistribution.Get(ctx, recipient)
 	if err != nil {
-		return sdk.Coin{}, fmt.Errorf("error while getting distributed funds: %w", err)
+		if errors.Is(err, collections.ErrNotFound) {
+			return sdk.Coin{}, types.ErrNoRecipientFund
+		}
+		return sdk.Coin{}, err
 	}
 
-	withdrawnAmount := sdk.NewCoin(sdk.DefaultBondDenom, fundsAllocated)
 	// Distribute funds to the recipient from pool module account
+	withdrawnAmount := sdk.NewCoin(sdk.DefaultBondDenom, fundsAllocated)
 	err = k.DistributeFromCommunityPool(ctx, sdk.NewCoins(withdrawnAmount), recipient)
+	if err != nil {
+		return sdk.Coin{}, fmt.Errorf("error while distributing funds to the recipient: %s", recipient.String())
+	}
+
+	// reset fund distribution
+	err = k.RecipientFundDistribution.Set(ctx, recipient, math.ZeroInt())
 	if err != nil {
 		return sdk.Coin{}, err
 	}
@@ -204,23 +213,6 @@ func (k Keeper) iterateAndUpdateFundsDistribution(ctx context.Context, toDistrib
 
 	// Set the coins to be distributed from toDistribute to 0
 	return k.ToDistribute.Set(ctx, math.ZeroInt())
-}
-
-func (k Keeper) getAndResetDistributedFunds(ctx context.Context, recipient sdk.AccAddress) (amount math.Int, err error) {
-	amount, err = k.RecipientFundDistribution.Get(ctx, recipient)
-	if err != nil {
-		if errors.Is(err, collections.ErrNotFound) {
-			return math.ZeroInt(), fmt.Errorf("no recipient fund found for recipient: %s", recipient.String())
-		}
-		return math.ZeroInt(), err
-	}
-
-	// set claimable to zero
-	err = k.RecipientFundDistribution.Set(ctx, recipient, math.ZeroInt())
-	if err != nil {
-		return math.ZeroInt(), err
-	}
-	return amount, nil
 }
 
 func (k Keeper) claimFunds(ctx context.Context, recipient sdk.AccAddress) (amount sdk.Coin, err error) {

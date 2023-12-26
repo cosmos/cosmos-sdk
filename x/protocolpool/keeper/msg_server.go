@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	errorspkg "errors"
 	"fmt"
 
 	"cosmossdk.io/errors"
@@ -143,10 +144,6 @@ func (k MsgServer) CreateContinuousFund(ctx context.Context, msg *types.MsgCreat
 	if err != nil {
 		return nil, err
 	}
-	err = k.ToDistribute.Set(ctx, math.ZeroInt())
-	if err != nil {
-		return nil, err
-	}
 
 	return &types.MsgCreateContinuousFundResponse{}, nil
 }
@@ -189,6 +186,14 @@ func (k MsgServer) CancelContinuousFund(ctx context.Context, msg *types.MsgCance
 	}
 	if err != nil {
 		return nil, err
+	}
+
+	// withdraw funds if any are allocated
+	_, err = k.withdrawRecipientFunds(ctx, recipient)
+	if err != nil {
+		if !errorspkg.Is(err, types.ErrNoRecipientFund) {
+			return nil, fmt.Errorf("error while withdrawing already allocated funds for recipient %s: %v", msg.RecipientAddress, err)
+		}
 	}
 
 	if err := k.ContinuousFund.Remove(ctx, recipient); err != nil {

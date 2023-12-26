@@ -14,12 +14,7 @@ import (
 )
 
 type AppManagerBuilder[T transaction.Tx] struct {
-	InitGenesis    map[string]func(ctx context.Context, moduleGenesisBytes []byte) error
-	PrepareHandler appmanager.PrepareHandler[T]
-}
-
-func (a *AppManagerBuilder[T]) Register(moduleName string, prepareFunc appmanager.PrepareHandler[T]) {
-	a.PrepareHandler = prepareFunc
+	InitGenesis map[string]func(ctx context.Context, moduleGenesisBytes []byte) error
 }
 
 func (a *AppManagerBuilder[T]) RegisterInitGenesis(moduleName string, genesisFunc func(ctx context.Context, moduleGenesisBytes []byte) error) {
@@ -69,22 +64,9 @@ type AppManager[T transaction.Tx] struct {
 	stf *stf.STF[T]
 }
 
-// BuildBlock builds a block when requested by consensus. It will take in a list of transactions and return a list of transactions
-func (a AppManager[T]) BuildBlock(ctx context.Context, block appmanager.BlockRequest, totalSize uint32) ([]T, error) {
-
-	txs, err := a.mempool.GetTxs(ctx, totalSize)
-	if err != nil {
-		return nil, err
-	}
-
-	currentState, err := a.db.NewStateAt(block.Height)
-	if err != nil {
-		return nil, fmt.Errorf("unable to create new state for height %d: %w", block.Height, err)
-	}
-
-	// run txs through handler
-	// TODO handle if optimistic or immediate execution
-	_, _, err = a.prepareHandler(ctx, txs, currentState)
+// BuildBlock builds a block when requested by consensus. It will take in the total size txs to be included and return a list of transactions
+func (a AppManager[T]) BuildBlock(ctx context.Context, totalSize uint32) ([]T, error) {
+	txs, err := a.prepareHandler(ctx, totalSize, a.mempool)
 	if err != nil {
 		return nil, err
 	}

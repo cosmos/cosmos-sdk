@@ -207,7 +207,7 @@ Before ABCI++, specifically before `FinalizeBlock` was introduced, the flow of s
 commitment in BaseApp was defined by writes being written to the `RootMultiStore`
 and then a single Commit call on the `RootMultiStore` during the ABCI Commit method.
 
-With the advent of ABCI++, the commitment flow has now changed to `WorkingHash` being
+With the advent of ABCI 2.0, the commitment flow has now changed to `WorkingHash` being
 called during `FinalizeBlock` and then Commit being called on ABCI Commit. Note,
 `WorkingHash` does not actually commit state to disk, but rather computes an
 uncommitted work-in-progress hash, which is returned in `FinalizeBlock`. Then,

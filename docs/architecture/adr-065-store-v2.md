@@ -140,9 +140,15 @@ purposes.
 
 We propose to have three defaulting SS backends for applications to choose from:
 
-* RocksDB (cgo-based)
+* RocksDB
+    * CGO based
+    * Usage of User-Defined Timestamps as a built-in versioning mechanism
 * PebbleDB
-* SQLite (cgo-based)
+    * Native
+    * Manual implementation of MVCC keys for versioning
+* SQLite
+    * CGO based
+    * Single table for all state
 
 Since operators might want pruning strategies to differ in SS compared to SC,
 e.g. having a very tight pruning strategy in SC while having a looser pruning

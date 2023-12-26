@@ -462,7 +462,11 @@ We will:
 * Refactor existing code into new structure and interfaces.
 * Implement Unit Tests to ensure no backward compatibility issues.
 
-## Consequences
+## Consequences 
+
+### Impact on the SDK codebase
+
+This ADR primarily impacts the client-side components of the Cosmos SDK. The consensus layer of the Cosmos SDK, which Tendermint Core largely handles, will not be directly affected by these changes. The cryptographic tools, such as hashers and verifiers, will still be available as external packages. These can be imported and utilized directly in the consensus code without the need for a CryptoProvider instance. This approach ensures that the consensus layer remains decoupled from the specific implementations of cryptographic operations. It maintains the integrity and stability of the consensus process while allowing for enhancements and extensions in the cryptographic functionalities.
 
 ### Backwards Compatibility
 

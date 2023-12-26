@@ -224,7 +224,6 @@ func (s *ABCIUtilsTestSuite) TestValidateVoteExtensionsDuplicateVotes() {
 		Votes: []abci.ExtendedVoteInfo{
 			ve,
 			ve,
-			ve,
 		},
 	}
 	// expect fail (duplicate votes)

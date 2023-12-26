@@ -100,7 +100,7 @@ func ValidateVoteExtensions(
 		// Ensure that the validator has not already submitted a vote extension.
 		valConsAddr := sdk.ConsAddress(vote.Validator.Address)
 		if _, ok := cache[valConsAddr.String()]; ok {
-			continue
+			return fmt.Errorf("duplicate validator; validator %s has already submitted a vote extension", valConsAddr.String())
 		}
 		cache[valConsAddr.String()] = struct{}{}
 

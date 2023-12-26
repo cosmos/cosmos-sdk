@@ -121,6 +121,10 @@ func NewLogger(dst io.Writer, options ...Option) Logger {
 		logger = logger.Level(logCfg.Level)
 	}
 
+	for i := range logCfg.Hooks {
+		logger = logger.Hook(logCfg.Hooks[i])
+	}
+
 	return zeroLogWrapper{&logger}
 }
 

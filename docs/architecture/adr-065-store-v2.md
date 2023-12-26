@@ -52,7 +52,7 @@ design of storage in the Cosmos SDK:
     * Note, we can still allow modules to have their own IAVL `KVStore`, but the
       IAVL library will need to support the ability to pass a DB instance as an
       argument to various IAVL APIs.
-* Since IAVL is responsible for both state storage and commitment, running an 
+* Since IAVL is responsible for both state storage and commitment, running an
   archive node becomes increasingly expensive as disk space grows exponentially.
 * As the size of a network increases, various performance bottlenecks start to
   emerge in many areas such as query performance, network upgrades, state
@@ -114,16 +114,12 @@ necessarily IAVL.  To this end, the scope of SC has been reduced, it must only:
 * Provide a stateful root app hash for height h resulting from applying a batch
   of key-value set/deletes to height h-1.
 * Fulfill (though not necessarily provide) historical proofs for all heights < h.
-* Provide an API for snapshot create/restore to fulfill state sync requests. 
+* Provide an API for snapshot create/restore to fulfill state sync requests.
 
 An SC implementation may choose not to provide historical proofs past height h - n (n can be 0)
 due to the time and space constraints, but since store v2 defines an API for historical
 proofs there should be at least one configuration of a given SC backend which
 supports this.
-
-Pruning (managing state bloat) is not considered a feature of store v2 or SC in
-the abstract, although it is probably required for an SC implementation to operate
-at scale.
 
 #### State Storage (SS)
 

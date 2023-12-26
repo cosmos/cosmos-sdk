@@ -65,8 +65,13 @@ type AppManager[T transaction.Tx] struct {
 }
 
 // BuildBlock builds a block when requested by consensus. It will take in the total size txs to be included and return a list of transactions
-func (a AppManager[T]) BuildBlock(ctx context.Context, totalSize uint32) ([]T, error) {
-	txs, err := a.prepareHandler(ctx, totalSize, a.mempool)
+func (a AppManager[T]) BuildBlock(ctx context.Context, height uint64, totalSize uint32) ([]T, error) {
+	currentState, err := a.db.NewStateAt(height)
+	if err != nil {
+		return nil, fmt.Errorf("unable to create new state for height %d: %w", height, err)
+	}
+
+	txs, err := a.prepareHandler(ctx, totalSize, a.mempool, currentState)
 	if err != nil {
 		return nil, err
 	}

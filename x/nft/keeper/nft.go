@@ -97,7 +97,7 @@ func (k Keeper) Update(ctx context.Context, token nft.NFT) error {
 	return nil
 }
 
-// Update defines a method for updating an exist nft
+// updateWithNoCheck defines a method for updating an exist nft
 // Note: this method does not check whether the class already exists in nft.
 // The upper-layer application needs to check it when it needs to use it
 func (k Keeper) updateWithNoCheck(ctx context.Context, token nft.NFT) {
@@ -126,7 +126,7 @@ func (k Keeper) Transfer(ctx context.Context,
 	return nil
 }
 
-// Transfer defines a method for sending a nft from one account to another account.
+// transferWithNoCheck defines a method for sending a nft from one account to another account.
 // Note: this method does not check whether the class already exists in nft.
 // The upper-layer application needs to check it when it needs to use it
 func (k Keeper) transferWithNoCheck(ctx context.Context,

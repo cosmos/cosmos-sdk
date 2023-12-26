@@ -362,11 +362,11 @@ type testStoreService struct {
 }
 
 func (t testStoreService) OpenKVStore(context.Context) store.KVStore {
-	return t.db
+	return testkv.TestStore{Db: t.db}
 }
 
 func (t testStoreService) OpenMemoryStore(context.Context) store.KVStore {
-	return t.db
+	return testkv.TestStore{Db: t.db}
 }
 
 func TestGetBackendResolver(t *testing.T) {

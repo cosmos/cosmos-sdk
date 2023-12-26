@@ -249,6 +249,11 @@ be broken or modified.
 
 ### Neutral
 
+* Removal of OCAP-based store keys in favor of simple strings for state retrieval
+  and name-spacing. We consider this neutral as removal of OCAP functionality can
+  be seen as a negative, however, we're simply moving the OCAP functionality upstream
+  to the KVStore service. The SS and SC layers shouldn't have to concern themselves
+  with OCAP responsibilities.
 * Keeping IAVL as the primary commitment data structure, although drastic
   performance improvements are being made
 

@@ -34,15 +34,16 @@ func TestPeriodicFeeValidAllow(t *testing.T) {
 	tenMinutes := time.Duration(10) * time.Minute
 
 	cases := map[string]struct {
-		allow         feegrant.PeriodicAllowance
-		fee           sdk.Coins
-		blockTime     time.Time
-		valid         bool // all other checks are ignored if valid=false
-		accept        bool
-		remove        bool
-		remains       sdk.Coins
-		remainsPeriod sdk.Coins
-		periodReset   time.Time
+		allow            feegrant.PeriodicAllowance
+		fee              sdk.Coins
+		blockTime        time.Time
+		valid            bool // all other checks are ignored if valid=false
+		accept           bool
+		remove           bool
+		remains          sdk.Coins
+		remainsPeriod    sdk.Coins
+		periodReset      time.Time
+		clearPeriodReset bool
 	}{
 		"empty": {
 			allow: feegrant.PeriodicAllowance{},
@@ -185,6 +186,20 @@ func TestPeriodicFeeValidAllow(t *testing.T) {
 			accept:    false,
 			remove:    true,
 		},
+		"clear PeriodReset ": {
+			allow: feegrant.PeriodicAllowance{
+				Period:           tenMinutes,
+				PeriodSpendLimit: smallAtom,
+				PeriodReset:      now.Add(30 * time.Minute),
+			},
+			blockTime:        now,
+			valid:            true,
+			accept:           true,
+			remove:           false,
+			remainsPeriod:    emptyCoins,
+			periodReset:      now.Add(10 * time.Minute),
+			clearPeriodReset: true,
+		},
 	}
 
 	for name, stc := range cases {
@@ -196,6 +211,11 @@ func TestPeriodicFeeValidAllow(t *testing.T) {
 				return
 			}
 			require.NoError(t, err)
+
+			if tc.clearPeriodReset {
+				err = tc.allow.ClearPeriodReset(tc.blockTime)
+				require.NoError(t, err)
+			}
 
 			ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Time: tc.blockTime})
 			// now try to deduct

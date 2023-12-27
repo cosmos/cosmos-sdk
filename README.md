@@ -72,18 +72,18 @@ Core Dependencies are the core libraries that a application may depend on.
 
 | Cosmos SDK | cosmossdk.io/core | cosmossdk.io/api | cosmossdk.io/math | cosmossdk.io/errors | cosmossdk.io/depinject | cosmossdk.io/log | cosmossdk.io/store |
 |------------|-------------------|------------------|-------------------|---------------------|------------------------|------------------|--------------------|
-| 0.50.x     | 0.11.x            | 0.7.x            | 1.x.x             | 1.x.x               | 1.x.x                  | 1.x.x            | 1.x.x              |
-| 0.47.x     | 0.5.x             | 0.3.x            | 1.x.x             | 1.x.x               | 1.x.x                  | 1.x.x            | ❌                  |
-| 0.46.x     | ❌                 | ❌                | 1.x.x             | 1.x.x               | ❌                      | ❌                | ❌                  |
+| 0.50.z     | 0.11.z            | 0.7.z            | 1.y.z             | 1.y.z               | 1.y.z                  | 1.y.z            | 1.y.z              |
+| 0.47.z     | 0.5.z             | 0.3.z            | 1.y.z             | 1.y.z               | 1.y.z                  | 1.y.z            | ❌                  |
+| 0.46.z     | ❌                 | ❌                | 1.y.z             | 1.y.z               | ❌                      | ❌                | ❌                  |
 
 #### Module Dependencies
 
 Module Dependencies are the modules that a application may depend on and which version of the Cosmos SDK they are compatible with.
 
-> Note: The version table only goes back to 0.50.x, this is due to the reason that modules were not spun out into their own go.mods until 0.50.x. ❌ signals that the module was not spun out into its own go.mod file.
+> Note: The version table only goes back to 0.50.x, this is due to the reason that modules were not spun out into their own go.mods until 0.50.z. ❌ signals that the module was not spun out into its own go.mod file.
 
 
-| Cosmos SDK                  | 0.50.x    | 0.y.z |
+| Cosmos SDK                  | 0.50.z    | 0.y.z |
 |-----------------------------|-----------|-------|
 | cosmossdk.io/x/auth         | ❌         |       |
 | cosmossdk.io/x/accounts     | ❌         |       |

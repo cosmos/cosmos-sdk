@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"sync/atomic"
 
+	"cosmossdk.io/server/v2/mempool"
 	"cosmossdk.io/server/v2/stf"
 
 	"cosmossdk.io/server/v2/core/appmanager"
@@ -52,11 +53,30 @@ type AppManager[T transaction.Tx] struct {
 
 	db store.Store
 
+	mempool mempool.Mempool[T]
+
 	lastBlockHeight *atomic.Uint64
 
 	initGenesis func(ctx context.Context, genesisBytes []byte) error
 
+	prepareHandler appmanager.PrepareHandler[T]
+
 	stf *stf.STF[T]
+}
+
+// BuildBlock builds a block when requested by consensus. It will take in the total size txs to be included and return a list of transactions
+func (a AppManager[T]) BuildBlock(ctx context.Context, height uint64, totalSize uint32) ([]T, error) {
+	currentState, err := a.db.NewStateAt(height)
+	if err != nil {
+		return nil, fmt.Errorf("unable to create new state for height %d: %w", height, err)
+	}
+
+	txs, err := a.prepareHandler(ctx, totalSize, a.mempool, currentState)
+	if err != nil {
+		return nil, err
+	}
+
+	return txs, nil
 }
 
 func (a AppManager[T]) DeliverBlock(ctx context.Context, block appmanager.BlockRequest) (*appmanager.BlockResponse, Hash, error) {
@@ -69,11 +89,13 @@ func (a AppManager[T]) DeliverBlock(ctx context.Context, block appmanager.BlockR
 	if err != nil {
 		return nil, nil, fmt.Errorf("block delivery failed: %w", err)
 	}
+
 	// apply new state to store
 	newStateChanges, err := newState.ChangeSets()
 	if err != nil {
 		return nil, nil, fmt.Errorf("change set: %w", err)
 	}
+
 	stateRoot, err := a.db.CommitState(newStateChanges)
 	if err != nil {
 		return nil, nil, fmt.Errorf("commit failed: %w", err)

@@ -38,4 +38,7 @@ use (
 	./x/staking
 	./x/tx
 	./x/upgrade
+	./server/v2/core
+	./server/v2/stf
+	./server/v2
 )

@@ -615,12 +615,15 @@ func (suite *KeeperTestSuite) TestCreateContinuousFund() {
 }
 
 func (suite *KeeperTestSuite) TestCancelContinuousFund() {
+	recipient2 := sdk.AccAddress([]byte("recipientAddr2___________________"))
+
 	testCases := map[string]struct {
-		preRun        func()
-		recipientAddr sdk.AccAddress
-		expErr        bool
-		expErrMsg     string
-		postRun       func()
+		preRun         func()
+		recipientAddr  sdk.AccAddress
+		expErr         bool
+		expErrMsg      string
+		postRun        func()
+		withdrawnFunds sdk.Coin
 	}{
 		"empty recipient": {
 			preRun: func() {
@@ -643,6 +646,66 @@ func (suite *KeeperTestSuite) TestCancelContinuousFund() {
 			recipientAddr: recipientAddr,
 			expErr:        true,
 			expErrMsg:     "no recipient found to cancel continuous fund",
+		},
+		"all good with unclaimed funds for recipient": {
+			preRun: func() {
+				// Set fund 1
+				percentage, err := math.LegacyNewDecFromStr("0.2")
+				suite.Require().NoError(err)
+				oneMonthInSeconds := int64(30 * 24 * 60 * 60) // Approximate number of seconds in 1 month
+				expiry := suite.ctx.BlockTime().Add(time.Duration(oneMonthInSeconds) * time.Second)
+				cf := types.ContinuousFund{
+					Recipient:  recipientAddr.String(),
+					Percentage: percentage,
+					Expiry:     &expiry,
+				}
+				// Set continuous fund
+				err = suite.poolKeeper.ContinuousFund.Set(suite.ctx, recipientAddr, cf)
+				suite.Require().NoError(err)
+				// Set recipient fund percentage and recipient fund distribution
+				intPercentage := percentage.MulInt64(100)
+				err = suite.poolKeeper.RecipientFundPercentage.Set(suite.ctx, recipientAddr, intPercentage.TruncateInt())
+				suite.Require().NoError(err)
+				err = suite.poolKeeper.RecipientFundDistribution.Set(suite.ctx, recipientAddr, math.ZeroInt())
+				suite.Require().NoError(err)
+
+				// Set fund 2
+				percentage, err = math.LegacyNewDecFromStr("0.3")
+				suite.Require().NoError(err)
+				cf = types.ContinuousFund{
+					Recipient:  recipient2.String(),
+					Percentage: percentage,
+					Expiry:     &expiry,
+				}
+				// Set continuous fund
+				err = suite.poolKeeper.ContinuousFund.Set(suite.ctx, recipient2, cf)
+				suite.Require().NoError(err)
+				// Set recipient fund percentage and recipient fund distribution
+				intPercentage = percentage.MulInt64(100)
+				err = suite.poolKeeper.RecipientFundPercentage.Set(suite.ctx, recipient2, intPercentage.TruncateInt())
+				suite.Require().NoError(err)
+				err = suite.poolKeeper.RecipientFundDistribution.Set(suite.ctx, recipient2, math.ZeroInt())
+				suite.Require().NoError(err)
+
+				// Set ToDistribute
+				toDistribute := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100000)))
+				err = suite.poolKeeper.SetToDistribute(suite.ctx, toDistribute)
+				suite.Require().NoError(err)
+
+				// withdraw funds for fund request 2
+				suite.mockWithdrawContinuousFund()
+				msg := &types.MsgWithdrawContinuousFund{RecipientAddress: recipient2.String()}
+				_, err = suite.msgServer.WithdrawContinuousFund(suite.ctx, msg)
+				suite.Require().NoError(err)
+			},
+			recipientAddr: recipientAddr,
+			expErr:        false,
+			postRun: func() {
+				_, err := suite.poolKeeper.ContinuousFund.Get(suite.ctx, recipientAddr)
+				suite.Require().Error(err)
+				suite.Require().ErrorIs(err, collections.ErrNotFound)
+			},
+			withdrawnFunds: sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(20000)),
 		},
 		"all good": {
 			preRun: func() {
@@ -678,12 +741,13 @@ func (suite *KeeperTestSuite) TestCancelContinuousFund() {
 				Authority:        suite.poolKeeper.GetAuthority(),
 				RecipientAddress: tc.recipientAddr.String(),
 			}
-			_, err := suite.msgServer.CancelContinuousFund(suite.ctx, msg)
+			resp, err := suite.msgServer.CancelContinuousFund(suite.ctx, msg)
 			if tc.expErr {
 				suite.Require().Error(err)
 				suite.Require().Contains(err.Error(), tc.expErrMsg)
 			} else {
 				suite.Require().NoError(err)
+				suite.Require().Equal(resp.WithdrawnAllocatedFund, &tc.withdrawnFunds)
 			}
 			if tc.postRun != nil {
 				tc.postRun()

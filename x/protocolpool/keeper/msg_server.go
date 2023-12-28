@@ -189,7 +189,7 @@ func (k MsgServer) CancelContinuousFund(ctx context.Context, msg *types.MsgCance
 	}
 
 	// withdraw funds if any are allocated
-	_, err = k.withdrawRecipientFunds(ctx, recipient)
+	withdrawnFunds, err := k.withdrawRecipientFunds(ctx, recipient)
 	if err != nil {
 		if !errorspkg.Is(err, types.ErrNoRecipientFund) {
 			return nil, fmt.Errorf("error while withdrawing already allocated funds for recipient %s: %v", msg.RecipientAddress, err)
@@ -201,9 +201,10 @@ func (k MsgServer) CancelContinuousFund(ctx context.Context, msg *types.MsgCance
 	}
 
 	return &types.MsgCancelContinuousFundResponse{
-		CanceledTime:     canceledTime,
-		CanceledHeight:   uint64(canceledHeight),
-		RecipientAddress: msg.RecipientAddress,
+		CanceledTime:           canceledTime,
+		CanceledHeight:         uint64(canceledHeight),
+		RecipientAddress:       msg.RecipientAddress,
+		WithdrawnAllocatedFund: &withdrawnFunds,
 	}, nil
 }
 

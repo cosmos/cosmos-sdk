@@ -747,7 +747,7 @@ func (suite *KeeperTestSuite) TestCancelContinuousFund() {
 				suite.Require().Contains(err.Error(), tc.expErrMsg)
 			} else {
 				suite.Require().NoError(err)
-				suite.Require().Equal(resp.WithdrawnAllocatedFund, &tc.withdrawnFunds)
+				suite.Require().Equal(resp.WithdrawnAllocatedFund, tc.withdrawnFunds)
 			}
 			if tc.postRun != nil {
 				tc.postRun()

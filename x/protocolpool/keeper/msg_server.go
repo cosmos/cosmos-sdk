@@ -204,7 +204,7 @@ func (k MsgServer) CancelContinuousFund(ctx context.Context, msg *types.MsgCance
 		CanceledTime:           canceledTime,
 		CanceledHeight:         uint64(canceledHeight),
 		RecipientAddress:       msg.RecipientAddress,
-		WithdrawnAllocatedFund: &withdrawnFunds,
+		WithdrawnAllocatedFund: withdrawnFunds,
 	}, nil
 }
 

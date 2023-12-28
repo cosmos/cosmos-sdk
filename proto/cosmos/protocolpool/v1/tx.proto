@@ -170,5 +170,6 @@ message MsgCancelContinuousFundResponse {
   // before a cancellation request has been initiated.
   // It involves first withdrawing the funds and then canceling the request.
   cosmos.base.v1beta1.Coin withdrawn_allocated_fund = 4
-      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  ;
 }

@@ -2,6 +2,7 @@ package v2alpha1
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/cosmos/gogoproto/proto"
@@ -45,6 +46,10 @@ func (r reflectionServiceServer) GetCodecDescriptor(_ context.Context, _ *GetCod
 	return &GetCodecDescriptorResponse{Codec: r.desc.Codec}, nil
 }
 
+func (r reflectionServiceServer) GetConfigurationDescriptor(_ context.Context, _ *GetConfigurationDescriptorRequest) (*GetConfigurationDescriptorResponse, error) {
+	return nil, errors.New("this endpoint has been depreacted, please see auth/Bech32Prefix for the data you are seeking")
+}
+
 func (r reflectionServiceServer) GetQueryServicesDescriptor(_ context.Context, _ *GetQueryServicesDescriptorRequest) (*GetQueryServicesDescriptorResponse, error) {
 	return &GetQueryServicesDescriptorResponse{Queries: r.desc.QueryServices}, nil
 }
@@ -56,6 +61,7 @@ func (r reflectionServiceServer) GetTxDescriptor(_ context.Context, _ *GetTxDesc
 func newReflectionServiceServer(grpcSrv *grpc.Server, conf Config) (reflectionServiceServer, error) {
 	// set chain descriptor
 	chainDescriptor := &ChainDescriptor{Id: conf.ChainID}
+
 	// set codec descriptor
 	codecDescriptor, err := newCodecDescriptor(conf.InterfaceRegistry)
 	if err != nil {

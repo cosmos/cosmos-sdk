@@ -24,6 +24,7 @@ const (
 	ReflectionService_GetAuthnDescriptor_FullMethodName         = "/cosmos.base.reflection.v2alpha1.ReflectionService/GetAuthnDescriptor"
 	ReflectionService_GetChainDescriptor_FullMethodName         = "/cosmos.base.reflection.v2alpha1.ReflectionService/GetChainDescriptor"
 	ReflectionService_GetCodecDescriptor_FullMethodName         = "/cosmos.base.reflection.v2alpha1.ReflectionService/GetCodecDescriptor"
+	ReflectionService_GetConfigurationDescriptor_FullMethodName = "/cosmos.base.reflection.v2alpha1.ReflectionService/GetConfigurationDescriptor"
 	ReflectionService_GetQueryServicesDescriptor_FullMethodName = "/cosmos.base.reflection.v2alpha1.ReflectionService/GetQueryServicesDescriptor"
 	ReflectionService_GetTxDescriptor_FullMethodName            = "/cosmos.base.reflection.v2alpha1.ReflectionService/GetTxDescriptor"
 )
@@ -40,6 +41,8 @@ type ReflectionServiceClient interface {
 	GetChainDescriptor(ctx context.Context, in *GetChainDescriptorRequest, opts ...grpc.CallOption) (*GetChainDescriptorResponse, error)
 	// GetCodecDescriptor returns the descriptor of the codec of the application
 	GetCodecDescriptor(ctx context.Context, in *GetCodecDescriptorRequest, opts ...grpc.CallOption) (*GetCodecDescriptorResponse, error)
+	// GetConfigurationDescriptor returns the descriptor for the sdk.Config of the application
+	GetConfigurationDescriptor(ctx context.Context, in *GetConfigurationDescriptorRequest, opts ...grpc.CallOption) (*GetConfigurationDescriptorResponse, error)
 	// GetQueryServicesDescriptor returns the available gRPC queryable services of the application
 	GetQueryServicesDescriptor(ctx context.Context, in *GetQueryServicesDescriptorRequest, opts ...grpc.CallOption) (*GetQueryServicesDescriptorResponse, error)
 	// GetTxDescriptor returns information on the used transaction object and available msgs that can be used
@@ -81,6 +84,15 @@ func (c *reflectionServiceClient) GetCodecDescriptor(ctx context.Context, in *Ge
 	return out, nil
 }
 
+func (c *reflectionServiceClient) GetConfigurationDescriptor(ctx context.Context, in *GetConfigurationDescriptorRequest, opts ...grpc.CallOption) (*GetConfigurationDescriptorResponse, error) {
+	out := new(GetConfigurationDescriptorResponse)
+	err := c.cc.Invoke(ctx, ReflectionService_GetConfigurationDescriptor_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *reflectionServiceClient) GetQueryServicesDescriptor(ctx context.Context, in *GetQueryServicesDescriptorRequest, opts ...grpc.CallOption) (*GetQueryServicesDescriptorResponse, error) {
 	out := new(GetQueryServicesDescriptorResponse)
 	err := c.cc.Invoke(ctx, ReflectionService_GetQueryServicesDescriptor_FullMethodName, in, out, opts...)
@@ -111,6 +123,8 @@ type ReflectionServiceServer interface {
 	GetChainDescriptor(context.Context, *GetChainDescriptorRequest) (*GetChainDescriptorResponse, error)
 	// GetCodecDescriptor returns the descriptor of the codec of the application
 	GetCodecDescriptor(context.Context, *GetCodecDescriptorRequest) (*GetCodecDescriptorResponse, error)
+	// GetConfigurationDescriptor returns the descriptor for the sdk.Config of the application
+	GetConfigurationDescriptor(context.Context, *GetConfigurationDescriptorRequest) (*GetConfigurationDescriptorResponse, error)
 	// GetQueryServicesDescriptor returns the available gRPC queryable services of the application
 	GetQueryServicesDescriptor(context.Context, *GetQueryServicesDescriptorRequest) (*GetQueryServicesDescriptorResponse, error)
 	// GetTxDescriptor returns information on the used transaction object and available msgs that can be used
@@ -130,6 +144,9 @@ func (UnimplementedReflectionServiceServer) GetChainDescriptor(context.Context, 
 }
 func (UnimplementedReflectionServiceServer) GetCodecDescriptor(context.Context, *GetCodecDescriptorRequest) (*GetCodecDescriptorResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetCodecDescriptor not implemented")
+}
+func (UnimplementedReflectionServiceServer) GetConfigurationDescriptor(context.Context, *GetConfigurationDescriptorRequest) (*GetConfigurationDescriptorResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetConfigurationDescriptor not implemented")
 }
 func (UnimplementedReflectionServiceServer) GetQueryServicesDescriptor(context.Context, *GetQueryServicesDescriptorRequest) (*GetQueryServicesDescriptorResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetQueryServicesDescriptor not implemented")
@@ -204,6 +221,24 @@ func _ReflectionService_GetCodecDescriptor_Handler(srv interface{}, ctx context.
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ReflectionService_GetConfigurationDescriptor_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetConfigurationDescriptorRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ReflectionServiceServer).GetConfigurationDescriptor(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ReflectionService_GetConfigurationDescriptor_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ReflectionServiceServer).GetConfigurationDescriptor(ctx, req.(*GetConfigurationDescriptorRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _ReflectionService_GetQueryServicesDescriptor_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetQueryServicesDescriptorRequest)
 	if err := dec(in); err != nil {
@@ -258,6 +293,10 @@ var ReflectionService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetCodecDescriptor",
 			Handler:    _ReflectionService_GetCodecDescriptor_Handler,
+		},
+		{
+			MethodName: "GetConfigurationDescriptor",
+			Handler:    _ReflectionService_GetConfigurationDescriptor_Handler,
 		},
 		{
 			MethodName: "GetQueryServicesDescriptor",

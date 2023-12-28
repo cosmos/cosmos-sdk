@@ -6,7 +6,7 @@ package types
 // is required for the remainder of the AnteHandler execution, a new Context should
 // be created off of the provided Context and returned as <newCtx>.
 //
-// The simulate param is provided to indicate if the AnteHandler is being executed
+// The simulate argument is provided to indicate if the AnteHandler is being executed
 // in simulation mode, which attempts to estimate a gas cost for the tx. Any state
 // modifications made will be discarded if simulate is true.
 type AnteHandler func(ctx Context, tx Tx, simulate bool) (newCtx Context, err error)

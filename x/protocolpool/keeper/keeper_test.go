@@ -80,10 +80,8 @@ func (s *KeeperTestSuite) mockSendCoinsFromModuleToAccount(accAddr sdk.AccAddres
 
 func (s *KeeperTestSuite) mockWithdrawContinuousFund() {
 	s.authKeeper.EXPECT().GetModuleAccount(s.ctx, types.ModuleName).Return(poolAcc).AnyTimes()
-	s.authKeeper.EXPECT().GetModuleAccount(s.ctx, distrtypes.ModuleName).Return(distrAcc).AnyTimes()
 	distrBal := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100000)))
 	s.bankKeeper.EXPECT().GetAllBalances(s.ctx, gomock.Any()).Return(distrBal).AnyTimes()
-	s.bankKeeper.EXPECT().SendCoinsFromModuleToModule(s.ctx, gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
 	s.bankKeeper.EXPECT().SendCoinsFromModuleToAccount(s.ctx, gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
 }
 

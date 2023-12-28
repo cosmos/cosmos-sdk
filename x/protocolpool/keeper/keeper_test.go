@@ -11,7 +11,6 @@ import (
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 	authtypes "cosmossdk.io/x/auth/types"
-	distrtypes "cosmossdk.io/x/distribution/types"
 	poolkeeper "cosmossdk.io/x/protocolpool/keeper"
 	pooltestutil "cosmossdk.io/x/protocolpool/testutil"
 	"cosmossdk.io/x/protocolpool/types"
@@ -24,10 +23,7 @@ import (
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 )
 
-var (
-	poolAcc  = authtypes.NewEmptyModuleAccount(types.ModuleName)
-	distrAcc = authtypes.NewEmptyModuleAccount(distrtypes.ModuleName)
-)
+var poolAcc = authtypes.NewEmptyModuleAccount(types.ModuleName)
 
 type KeeperTestSuite struct {
 	suite.Suite

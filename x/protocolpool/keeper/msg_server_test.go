@@ -399,7 +399,7 @@ func (suite *KeeperTestSuite) TestWithdrawContinuousFund() {
 
 				// Set ToDistribute
 				toDistribute := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100000)))
-				err = suite.poolKeeper.SetToDistribute(suite.ctx, toDistribute)
+				err = suite.poolKeeper.SetToDistribute(suite.ctx, toDistribute, suite.poolKeeper.GetAuthority())
 				suite.Require().NoError(err)
 			},
 			recipientAddress: recipient,
@@ -472,7 +472,7 @@ func (suite *KeeperTestSuite) TestWithdrawContinuousFund() {
 				err = suite.poolKeeper.RecipientFundDistribution.Set(suite.ctx, recipient, math.ZeroInt())
 				suite.Require().NoError(err)
 				toDistribute := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100000)))
-				err = suite.poolKeeper.SetToDistribute(suite.ctx, toDistribute)
+				err = suite.poolKeeper.SetToDistribute(suite.ctx, toDistribute, suite.poolKeeper.GetAuthority())
 				suite.Require().NoError(err)
 			},
 			recipientAddress: recipient,
@@ -689,7 +689,7 @@ func (suite *KeeperTestSuite) TestCancelContinuousFund() {
 
 				// Set ToDistribute
 				toDistribute := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100000)))
-				err = suite.poolKeeper.SetToDistribute(suite.ctx, toDistribute)
+				err = suite.poolKeeper.SetToDistribute(suite.ctx, toDistribute, suite.poolKeeper.GetAuthority())
 				suite.Require().NoError(err)
 
 				// withdraw funds for fund request 2

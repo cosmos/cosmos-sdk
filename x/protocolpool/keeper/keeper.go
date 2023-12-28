@@ -159,12 +159,33 @@ func (k Keeper) withdrawRecipientFunds(ctx context.Context, recipient sdk.AccAdd
 	return withdrawnAmount, nil
 }
 
-func (k Keeper) SetToDistribute(ctx context.Context, amount sdk.Coins) error {
-	err := k.ToDistribute.Set(ctx, amount.AmountOf(sdk.DefaultBondDenom))
+func (k Keeper) SetToDistribute(ctx context.Context, amount sdk.Coins, addr string) error {
+	authAddr, err := k.authKeeper.AddressCodec().StringToBytes(addr)
+	if err != nil {
+		return err
+	}
+	hasPermission, err := k.HasPermission(ctx, authAddr)
+	if err != nil {
+		return err
+	}
+	if !hasPermission {
+		return sdkerrors.ErrUnauthorized
+	}
+
+	err = k.ToDistribute.Set(ctx, amount.AmountOf(sdk.DefaultBondDenom))
 	if err != nil {
 		return fmt.Errorf("error while setting ToDistribute: %v", err)
 	}
 	return nil
+}
+
+func (k Keeper) HasPermission(ctx context.Context, addr sdk.AccAddress) (bool, error) {
+	authority := k.GetAuthority()
+	authAcc, err := k.authKeeper.AddressCodec().StringToBytes(authority)
+	if err != nil {
+		return false, err
+	}
+	return addr.Equals(sdk.AccAddress(authAcc)), nil
 }
 
 func (k Keeper) iterateAndUpdateFundsDistribution(ctx context.Context, toDistributeAmount math.Int) error {

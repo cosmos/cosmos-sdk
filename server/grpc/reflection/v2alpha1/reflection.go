@@ -15,7 +15,6 @@ import (
 type Config struct {
 	SigningModes      map[string]int32
 	ChainID           string
-	SdkConfig         *sdk.Config
 	InterfaceRegistry codectypes.InterfaceRegistry
 }
 
@@ -46,10 +45,6 @@ func (r reflectionServiceServer) GetCodecDescriptor(_ context.Context, _ *GetCod
 	return &GetCodecDescriptorResponse{Codec: r.desc.Codec}, nil
 }
 
-func (r reflectionServiceServer) GetConfigurationDescriptor(_ context.Context, _ *GetConfigurationDescriptorRequest) (*GetConfigurationDescriptorResponse, error) {
-	return &GetConfigurationDescriptorResponse{Config: r.desc.Configuration}, nil
-}
-
 func (r reflectionServiceServer) GetQueryServicesDescriptor(_ context.Context, _ *GetQueryServicesDescriptorRequest) (*GetQueryServicesDescriptorResponse, error) {
 	return &GetQueryServicesDescriptorResponse{Queries: r.desc.QueryServices}, nil
 }
@@ -61,10 +56,6 @@ func (r reflectionServiceServer) GetTxDescriptor(_ context.Context, _ *GetTxDesc
 func newReflectionServiceServer(grpcSrv *grpc.Server, conf Config) (reflectionServiceServer, error) {
 	// set chain descriptor
 	chainDescriptor := &ChainDescriptor{Id: conf.ChainID}
-	// set configuration descriptor
-	configurationDescriptor := &ConfigurationDescriptor{
-		Bech32AccountAddressPrefix: conf.SdkConfig.GetBech32AccountAddrPrefix(),
-	}
 	// set codec descriptor
 	codecDescriptor, err := newCodecDescriptor(conf.InterfaceRegistry)
 	if err != nil {
@@ -82,7 +73,6 @@ func newReflectionServiceServer(grpcSrv *grpc.Server, conf Config) (reflectionSe
 		Authn:         authnDescriptor,
 		Chain:         chainDescriptor,
 		Codec:         codecDescriptor,
-		Configuration: configurationDescriptor,
 		QueryServices: queryServiceDescriptor,
 		Tx:            txDescriptor,
 	}

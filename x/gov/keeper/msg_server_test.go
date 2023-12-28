@@ -341,11 +341,11 @@ func (suite *KeeperTestSuite) TestMsgCancelProposal() {
 			},
 			depositor: proposer,
 			expErr:    true,
-			expErrMsg: "not found",
+			expErrMsg: "proposal 0 doesn't exist",
 		},
 		"valid proposal but invalid proposer": {
 			preRun: func() uint64 {
-				return proposalID
+				return res.ProposalId
 			},
 			depositor: addrs[1],
 			expErr:    true,

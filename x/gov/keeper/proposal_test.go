@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 
@@ -224,32 +225,32 @@ func (suite *KeeperTestSuite) TestCancelProposal() {
 	suite.Require().NoError(err)
 
 	testCases := []struct {
-		name        string
-		malleate    func() (proposalID uint64, proposer string)
-		proposalID  uint64
-		proposer    string
-		expectedErr bool
+		name           string
+		malleate       func() (proposalID uint64, proposer string)
+		proposalID     uint64
+		proposer       string
+		expectedErrMsg string
 	}{
 		{
 			name: "without proposer",
 			malleate: func() (uint64, string) {
-				return 1, ""
+				return proposalID, ""
 			},
-			expectedErr: true,
+			expectedErrMsg: "invalid proposer",
 		},
 		{
 			name: "invalid proposal id",
 			malleate: func() (uint64, string) {
-				return 1, suite.addrs[1].String()
+				return 10, suite.addrs[1].String()
 			},
-			expectedErr: true,
+			expectedErrMsg: "proposal 10 doesn't exist",
 		},
 		{
 			name: "valid proposalID but invalid proposer",
 			malleate: func() (uint64, string) {
 				return proposalID, suite.addrs[1].String()
 			},
-			expectedErr: true,
+			expectedErrMsg: "invalid proposer",
 		},
 		{
 			name: "valid proposalID but invalid proposal which has already passed",
@@ -263,14 +264,32 @@ func (suite *KeeperTestSuite) TestCancelProposal() {
 				suite.Require().NoError(err)
 				return proposal2ID, suite.addrs[1].String()
 			},
-			expectedErr: true,
+			expectedErrMsg: "proposal should be in the deposit or voting period",
+		},
+		{
+			name: "proposal canceled too late",
+			malleate: func() (uint64, string) {
+				suite.Require().NoError(suite.govKeeper.ActivateVotingPeriod(suite.ctx, proposal2))
+
+				proposal2, err = suite.govKeeper.Proposals.Get(suite.ctx, proposal2.Id)
+				suite.Require().Nil(err)
+
+				headerInfo := suite.ctx.HeaderInfo()
+				// try to cancel 1min before the end of the voting period
+				// this should fail, as we allow to cancel proposal (by default) up to 1/2 of the voting period
+				headerInfo.Time = proposal2.VotingEndTime.Add(-1 * time.Minute)
+				suite.ctx = suite.ctx.WithHeaderInfo(headerInfo)
+
+				suite.Require().NoError(err)
+				return proposal2ID, suite.addrs[1].String()
+			},
+			expectedErrMsg: "too late",
 		},
 		{
 			name: "valid proposer and proposal id",
 			malleate: func() (uint64, string) {
 				return proposalID, suite.addrs[0].String()
 			},
-			expectedErr: false,
 		},
 		{
 			name: "valid case with deletion of votes",
@@ -291,7 +310,6 @@ func (suite *KeeperTestSuite) TestCancelProposal() {
 
 				return proposalID, suite.addrs[0].String()
 			},
-			expectedErr: false,
 		},
 	}
 
@@ -299,8 +317,8 @@ func (suite *KeeperTestSuite) TestCancelProposal() {
 		suite.Run(tc.name, func() {
 			pID, proposer := tc.malleate()
 			err = suite.govKeeper.CancelProposal(suite.ctx, pID, proposer)
-			if tc.expectedErr {
-				suite.Require().Error(err)
+			if tc.expectedErrMsg != "" {
+				suite.Require().ErrorContains(err, tc.expectedErrMsg)
 			} else {
 				suite.Require().NoError(err)
 			}

@@ -16,6 +16,9 @@ import (
 // In the block building phase the transactions from the mempool can be verified, executed right away or lazily.
 type PrepareHandler[T transaction.Tx] func(context.Context, uint32, mempool.Mempool[T], store.ReadonlyState) ([]T, error)
 
+// ProcessHandler is a function that takes a list of transactions and returns a boolean and an error. If the verification of a transaction fails, the boolean is false and the error is non-nil.
+type ProcessHandler[T transaction.Tx] func(context.Context, []T, store.ReadonlyState) error
+
 type Type = proto.Message
 
 type App[T transaction.Tx] interface {

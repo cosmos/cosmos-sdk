@@ -80,18 +80,18 @@ func (a AppManager[T]) BuildBlock(ctx context.Context, height uint64, totalSize 
 	return txs, nil
 }
 
-func (a AppManager[T]) VerifyBlock(ctx context.Context, height uint64, txs []T) (bool, error) {
+func (a AppManager[T]) VerifyBlock(ctx context.Context, height uint64, txs []T) error {
 	currentState, err := a.db.NewStateAt(height)
 	if err != nil {
 		return false, fmt.Errorf("unable to create new state for height %d: %w", height, err)
 	}
 
-	verified, err := a.processHandler(ctx, txs, currentState)
+	err := a.processHandler(ctx, txs, currentState)
 	if err != nil {
-		return false, err
+		return err
 	}
 
-	return verified, nil
+	return nil
 }
 
 func (a AppManager[T]) DeliverBlock(ctx context.Context, block appmanager.BlockRequest) (*appmanager.BlockResponse, Hash, error) {

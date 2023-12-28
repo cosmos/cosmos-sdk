@@ -685,6 +685,18 @@ func (app *BaseApp) VerifyVoteExtension(req *abci.RequestVerifyVoteExtension) (r
 		}
 	}()
 
+	ctx = ctx.
+		WithConsensusParams(cp).
+		WithBlockGasMeter(storetypes.NewInfiniteGasMeter()).
+		WithBlockHeight(req.Height).
+		WithHeaderHash(req.Hash).
+		WithExecMode(sdk.ExecModeVerifyVoteExtension).
+		WithHeaderInfo(coreheader.Info{
+			ChainID: app.chainID,
+			Height:  req.Height,
+			Hash:    req.Hash,
+		})
+
 	resp, err = app.verifyVoteExt(ctx, req)
 	if err != nil {
 		app.logger.Error("failed to verify vote extension", "height", req.Height, "err", err)

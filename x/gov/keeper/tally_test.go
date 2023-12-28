@@ -941,5 +941,4 @@ func TestTally_Optimistic(t *testing.T) {
 }
 
 func TestTally_Multiple_Choice(t *testing.T) {
-
 }

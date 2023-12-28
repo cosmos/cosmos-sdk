@@ -1739,5 +1739,4 @@ func (suite *KeeperTestSuite) TestLegacyGRPCQueryTallyResult() {
 
 func (suite *KeeperTestSuite) TestProposalVoteOptions() {
 	suite.reset()
-
 }

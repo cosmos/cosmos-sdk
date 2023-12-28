@@ -62,7 +62,7 @@ type Keeper struct {
 	// Proposals key:proposalID | value: Proposal
 	Proposals collections.Map[uint64, v1.Proposal]
 	// ProposalVoteOptions key: proposalID | value:
-	// This is used to store mutliple choice vote options
+	// This is used to store multiple choice vote options
 	ProposalVoteOptions collections.Map[uint64, v1.ProposalVoteOptions]
 	// ActiveProposalsQueue key: votingEndTime+proposalID | value: proposalID
 	ActiveProposalsQueue collections.Map[collections.Pair[time.Time, uint64], uint64] // TODO(tip): this should be simplified and go into an index.

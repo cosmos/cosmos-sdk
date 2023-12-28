@@ -299,7 +299,6 @@ func (suite *KeeperTestSuite) TestMsgSubmitProposal() {
 }
 
 func (suite *KeeperTestSuite) TestSubmitMultipleChoiceProposal() {
-
 }
 
 func (suite *KeeperTestSuite) TestMsgCancelProposal() {

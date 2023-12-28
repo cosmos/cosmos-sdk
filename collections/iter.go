@@ -26,9 +26,9 @@ const (
 type rangeKeyKind uint8
 
 const (
-	rangeKeyExact rangeKeyKind = iota
-	rangeKeyNext
-	rangeKeyPrefixEnd
+	RangeKeyExactKind rangeKeyKind = iota
+	RangeKeyNextKind
+	RangeKeyPrefixEndKind
 )
 
 // RangeKey wraps a generic range key K, acts as an enum which defines different
@@ -38,6 +38,9 @@ type RangeKey[K any] struct {
 	key  K
 }
 
+func (r RangeKey[K]) Kind() rangeKeyKind { return r.kind }
+func (r RangeKey[K]) Key() K             { return r.key }
+
 // RangeKeyNext instantiates a RangeKey that when encoded to bytes
 // identifies the next key after the provided key K.
 // Example: given a string key "ABCD" the next key is bytes("ABCD\0")
@@ -45,20 +48,20 @@ type RangeKey[K any] struct {
 // in store iteration. Specifically: to make an Iterator start exclude key K
 // I would return a RangeKeyNext(key) in the Ranger start.
 func RangeKeyNext[K any](key K) *RangeKey[K] {
-	return &RangeKey[K]{key: key, kind: rangeKeyNext}
+	return &RangeKey[K]{key: key, kind: RangeKeyNextKind}
 }
 
 // RangeKeyPrefixEnd instantiates a RangeKey that when encoded to bytes
 // identifies the key that would end the prefix of the key K.
 // Example: if the string key "ABCD" is provided, it would be encoded as bytes("ABCE").
 func RangeKeyPrefixEnd[K any](key K) *RangeKey[K] {
-	return &RangeKey[K]{key: key, kind: rangeKeyPrefixEnd}
+	return &RangeKey[K]{key: key, kind: RangeKeyPrefixEndKind}
 }
 
 // RangeKeyExact instantiates a RangeKey that applies no modifications
 // to the key K. So its bytes representation will not be altered.
 func RangeKeyExact[K any](key K) *RangeKey[K] {
-	return &RangeKey[K]{key: key, kind: rangeKeyExact}
+	return &RangeKey[K]{key: key, kind: RangeKeyExactKind}
 }
 
 // Ranger defines a generic interface that provides a range of keys.
@@ -316,11 +319,11 @@ func encodeRangeBound[T any](prefix []byte, keyCodec codec.KeyCodec[T], bound *R
 		return nil, err
 	}
 	switch bound.kind {
-	case rangeKeyExact:
+	case RangeKeyExactKind:
 		return key, nil
-	case rangeKeyNext:
+	case RangeKeyNextKind:
 		return nextBytesKey(key), nil
-	case rangeKeyPrefixEnd:
+	case RangeKeyPrefixEndKind:
 		return nextBytesPrefixKey(key), nil
 	default:
 		panic("undefined bound kind")

@@ -12,7 +12,7 @@ var (
 	// ErrEmptyVec is returned when trying to pop an element from an empty Vec.
 	ErrEmptyVec = errors.New("vec is empty")
 	// ErrOutOfBounds is returned when trying to do an operation on an index that is out of bounds.
-	ErrOutOfBounds = errors.New("vec index is out of bounds")
+	ErrOutOfBounds = fmt.Errorf("vec index is out of bounds: %w", ErrNotFound)
 )
 
 const (
@@ -139,3 +139,5 @@ func (v Vec[T]) Iterate(ctx context.Context, rng Ranger[uint64]) (Iterator[uint6
 func (v Vec[T]) Walk(ctx context.Context, rng Ranger[uint64], walkFn func(index uint64, elem T) (stop bool, err error)) error {
 	return v.elements.Walk(ctx, rng, walkFn)
 }
+
+func (v Vec[T]) ValueCodec() codec.ValueCodec[T] { return v.elements.ValueCodec() }

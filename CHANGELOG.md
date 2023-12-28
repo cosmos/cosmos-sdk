@@ -93,6 +93,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (simulation) [#18196](https://github.com/cosmos/cosmos-sdk/pull/18196) Fix the problem of `validator set is empty after InitGenesis` in simulation test.
 * (baseapp) [#18551](https://github.com/cosmos/cosmos-sdk/pull/18551) Fix SelectTxForProposal the calculation method of tx bytes size is inconsistent with CometBFT
 * (baseapp) [#18895](https://github.com/cosmos/cosmos-sdk/pull/18895) Fix de-duplicating vote extensions during validation in ValidateVoteExtensions.
+* (x/staking) [#18841](https://github.com/cosmos/cosmos-sdk/pull/18841) Fix delegation state when it has dust share. Change the condition of unbond to remove delegation with less than minimum share
 
 ### API Breaking Changes
 
@@ -197,6 +198,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * (x/upgrade) [#16244](https://github.com/cosmos/cosmos-sdk/pull/16244) Upgrade module no longer stores the app version but gets and sets the app version stored in the `ParamStore` of baseapp.
 * (x/staking) [#17655](https://github.com/cosmos/cosmos-sdk/pull/17655) `HistoricalInfo` was replaced with `HistoricalRecord`, it removes the validator set and comet header and only keep what is needed for IBC. 
+* (x/staking) [#18841](https://github.com/cosmos/cosmos-sdk/pull/18841) Delegates with less than the minimum share removed.
 
 ## [v0.50.2](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.50.2) - 2023-12-11
 

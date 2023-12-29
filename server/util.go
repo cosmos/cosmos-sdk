@@ -523,7 +523,6 @@ func readChainIdFromHome(homeDir string) (string, error) {
 	// if the blockStore.LoadBaseMeta() is nil (no blocks are created/synced so far), fallback to genesis chain-id
 	if blockStore.LoadBaseMeta() == nil {
 		appGenesis, err := tmtypes.GenesisDocFromFile(filepath.Join(homeDir, "config", "genesis.json"))
-
 		if err != nil {
 			return "", err
 		}

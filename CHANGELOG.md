@@ -37,6 +37,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+### Bug Fixes
+
+* (server) [#18920](https://github.com/cosmos/cosmos-sdk/pull/18920) fixes consensus failure while restart node with wrong `chainId` in genesis
+
 ### Improvements
 
 * (client/tx) [#18852](https://github.com/cosmos/cosmos-sdk/pull/18852) Add `WithFromName` to tx factory.

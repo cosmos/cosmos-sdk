@@ -11,6 +11,7 @@ import (
 
 	"cosmossdk.io/collections"
 	errorsmod "cosmossdk.io/errors"
+	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/x/gov/types"
 	v1 "cosmossdk.io/x/gov/types/v1"
 
@@ -127,6 +128,14 @@ func (keeper Keeper) CancelProposal(ctx context.Context, proposalID uint64, prop
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	proposal, err := keeper.Proposals.Get(ctx, proposalID)
 	if err != nil {
+		if errors.Is(err, collections.ErrNotFound) {
+			return types.ErrInvalidProposal.Wrapf("proposal %d doesn't exist", proposalID)
+		}
+		return err
+	}
+
+	params, err := keeper.Params.Get(ctx)
+	if err != nil {
 		return err
 	}
 
@@ -146,18 +155,22 @@ func (keeper Keeper) CancelProposal(ctx context.Context, proposalID uint64, prop
 		return types.ErrInvalidProposal.Wrap("proposal should be in the deposit or voting period")
 	}
 
-	// Check proposal voting period is ended.
-	if proposal.VotingEndTime != nil && proposal.VotingEndTime.Before(sdkCtx.HeaderInfo().Time) {
-		return types.ErrVotingPeriodEnded.Wrapf("voting period is already ended for this proposal %d", proposalID)
+	// Check proposal is not too far in voting period to be canceled
+	if proposal.VotingEndTime != nil {
+		currentTime := sdkCtx.HeaderInfo().Time
+
+		maxCancelPeriodRate := sdkmath.LegacyMustNewDecFromStr(params.ProposalCancelMaxPeriod)
+		maxCancelPeriod := time.Duration(float64(proposal.VotingEndTime.Sub(*proposal.VotingStartTime)) * maxCancelPeriodRate.MustFloat64()).Round(time.Second)
+
+		if proposal.VotingEndTime.Before(currentTime) {
+			return types.ErrVotingPeriodEnded.Wrapf("voting period is already ended for this proposal %d", proposalID)
+		} else if proposal.VotingEndTime.Add(-maxCancelPeriod).Before(currentTime) {
+			return types.ErrTooLateToCancel.Wrapf("proposal %d is too late to cancel", proposalID)
+		}
 	}
 
 	// burn the (deposits * proposal_cancel_rate) amount or sent to cancellation destination address.
 	// and deposits * (1 - proposal_cancel_rate) will be sent to depositors.
-	params, err := keeper.Params.Get(ctx)
-	if err != nil {
-		return err
-	}
-
 	err = keeper.ChargeDeposit(ctx, proposal.Id, params.ProposalCancelDest, params.ProposalCancelRatio)
 	if err != nil {
 		return err

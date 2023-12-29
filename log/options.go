@@ -90,9 +90,9 @@ func TraceOption(val bool) Option {
 	}
 }
 
-// HooksOption sets hook for the Logger
+// HooksOption append hooks to the Logger hooks
 func HooksOption(hooks ...zerolog.Hook) Option {
 	return func(cfg *Config) {
-		cfg.Hooks = hooks
+		cfg.Hooks = append(cfg.Hooks, hooks...)
 	}
 }

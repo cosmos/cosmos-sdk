@@ -121,6 +121,11 @@ func NewLogger(dst io.Writer, options ...Option) Logger {
 		logger = logger.Level(logCfg.Level)
 	}
 
+	// TODO: when https://github.com/rs/zerolog/pull/629 is tagged, replace it to use logger.Hooks()
+	for i := range logCfg.Hooks {
+		logger = logger.Hook(logCfg.Hooks[i])
+	}
+
 	return zeroLogWrapper{&logger}
 }
 

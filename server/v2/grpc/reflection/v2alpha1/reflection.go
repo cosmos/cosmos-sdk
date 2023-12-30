@@ -7,9 +7,10 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 	"google.golang.org/grpc"
 
+	tx "cosmossdk.io/api/cosmos/tx/v1beta1"
 	"cosmossdk.io/server/v2/core/appmanager"
+
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/types/tx"
 )
 
 type Config struct {
@@ -45,6 +46,10 @@ func (r reflectionServiceServer) GetCodecDescriptor(_ context.Context, _ *GetCod
 	return &GetCodecDescriptorResponse{Codec: r.desc.Codec}, nil
 }
 
+func (r reflectionServiceServer) GetConfigurationDescriptor(_ context.Context, _ *GetConfigurationDescriptorRequest) (*GetConfigurationDescriptorResponse, error) {
+	return &GetConfigurationDescriptorResponse{Config: r.desc.Configuration}, nil
+}
+
 func (r reflectionServiceServer) GetQueryServicesDescriptor(_ context.Context, _ *GetQueryServicesDescriptorRequest) (*GetQueryServicesDescriptorResponse, error) {
 	return &GetQueryServicesDescriptorResponse{Queries: r.desc.QueryServices}, nil
 }
@@ -62,10 +67,8 @@ func newReflectionServiceServer(grpcSrv *grpc.Server, conf Config) (reflectionSe
 	if err != nil {
 		return reflectionServiceServer{}, fmt.Errorf("unable to create codec descriptor: %w", err)
 	}
-
 	// set query service descriptor
 	queryServiceDescriptor := newQueryServiceDescriptor(grpcSrv)
-
 	// set deliver descriptor
 	txDescriptor, err := newTxDescriptor(conf.InterfaceRegistry)
 	if err != nil {

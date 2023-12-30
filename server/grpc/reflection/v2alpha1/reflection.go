@@ -46,6 +46,10 @@ func (r reflectionServiceServer) GetCodecDescriptor(_ context.Context, _ *GetCod
 	return &GetCodecDescriptorResponse{Codec: r.desc.Codec}, nil
 }
 
+func (r reflectionServiceServer) GetConfigurationDescriptor(_ context.Context, _ *GetConfigurationDescriptorRequest) (*GetConfigurationDescriptorResponse, error) {
+	return &GetConfigurationDescriptorResponse{Config: r.desc.Configuration}, nil
+}
+
 func (r reflectionServiceServer) GetQueryServicesDescriptor(_ context.Context, _ *GetQueryServicesDescriptorRequest) (*GetQueryServicesDescriptorResponse, error) {
 	return &GetQueryServicesDescriptorResponse{Queries: r.desc.QueryServices}, nil
 }

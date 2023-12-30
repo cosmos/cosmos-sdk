@@ -30,19 +30,20 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) error {
 			// if the proposal has an encoding error, this means it cannot be processed by x/gov
 			// this could be due to some types missing their registration
 			// instead of returning an error (i.e, halting the chain), we fail the proposal
-			if !errors.Is(err, collections.ErrEncoding) {
-				return false, err
-			}
-			proposal.Id = key.K2()
-			if err := failUnsupportedProposal(logger, ctx, keeper, proposal, err.Error(), false); err != nil {
-				return false, err
+			if errors.Is(err, collections.ErrEncoding) {
+				proposal.Id = key.K2()
+				if err := failUnsupportedProposal(logger, ctx, keeper, proposal, err.Error(), false); err != nil {
+					return false, err
+				}
+
+				if err = keeper.DeleteProposal(ctx, proposal.Id); err != nil {
+					return false, err
+				}
+
+				return false, nil
 			}
 
-			if err = keeper.DeleteProposal(ctx, proposal.Id); err != nil {
-				return false, err
-			}
-
-			return false, nil
+			return false, err
 		}
 
 		if err = keeper.DeleteProposal(ctx, proposal.Id); err != nil {
@@ -103,19 +104,20 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) error {
 			// if the proposal has an encoding error, this means it cannot be processed by x/gov
 			// this could be due to some types missing their registration
 			// instead of returning an error (i.e, halting the chain), we fail the proposal
-			if !errors.Is(err, collections.ErrEncoding) {
-				return false, err
-			}
-			proposal.Id = key.K2()
-			if err := failUnsupportedProposal(logger, ctx, keeper, proposal, err.Error(), true); err != nil {
-				return false, err
+			if errors.Is(err, collections.ErrEncoding) {
+				proposal.Id = key.K2()
+				if err := failUnsupportedProposal(logger, ctx, keeper, proposal, err.Error(), true); err != nil {
+					return false, err
+				}
+
+				if err = keeper.ActiveProposalsQueue.Remove(ctx, collections.Join(*proposal.VotingEndTime, proposal.Id)); err != nil {
+					return false, err
+				}
+
+				return false, nil
 			}
 
-			if err = keeper.ActiveProposalsQueue.Remove(ctx, collections.Join(*proposal.VotingEndTime, proposal.Id)); err != nil {
-				return false, err
-			}
-
-			return false, nil
+			return false, err
 		}
 
 		var tagValue, logMsg string

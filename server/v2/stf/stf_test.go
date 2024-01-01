@@ -5,12 +5,13 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/types/known/wrapperspb"
+
 	"cosmossdk.io/server/v2/core/appmanager"
 	"cosmossdk.io/server/v2/core/store"
 	"cosmossdk.io/server/v2/core/transaction"
 	"cosmossdk.io/server/v2/stf/mock"
-	"github.com/stretchr/testify/require"
-	"google.golang.org/protobuf/types/known/wrapperspb"
 )
 
 func TestSTF(t *testing.T) {
@@ -94,16 +95,19 @@ func TestSTF(t *testing.T) {
 }
 
 func kvSet(t *testing.T, ctx context.Context, v string) {
+	t.Helper()
 	require.NoError(t, ctx.(*executionContext).store.Set([]byte(v), []byte(v)))
 }
 
 func stateHas(t *testing.T, state store.ReadonlyState, key string) {
+	t.Helper()
 	has, err := state.Has([]byte(key))
 	require.NoError(t, err)
 	require.Truef(t, has, "state did not have key: %s", key)
 }
 
 func stateNotHas(t *testing.T, state store.ReadonlyState, key string) {
+	t.Helper()
 	has, err := state.Has([]byte(key))
 	require.NoError(t, err)
 	require.Falsef(t, has, "state was not supposed to have key: %s", key)

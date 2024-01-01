@@ -194,10 +194,3 @@ func (g grpcProtoCodec) Unmarshal(data []byte, v any) error {
 func (g grpcProtoCodec) Name() string {
 	return "cosmos-sdk-grpc-codec"
 }
-
-func assertNotNil(i interface{}) error {
-	if i == nil {
-		return errors.New("can't marshal <nil> value")
-	}
-	return nil
-}

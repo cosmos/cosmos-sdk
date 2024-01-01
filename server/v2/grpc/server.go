@@ -3,7 +3,6 @@ package grpc
 import (
 	"errors"
 	"fmt"
-	"math"
 	"net"
 
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
@@ -14,24 +13,11 @@ import (
 
 	"cosmossdk.io/log"
 	"cosmossdk.io/server/v2/core/appmanager"
+	"cosmossdk.io/server/v2/core/client"
 	"cosmossdk.io/server/v2/grpc/gogoreflection"
 	reflection "cosmossdk.io/server/v2/grpc/reflection/v2alpha1"
-	txsigning "cosmossdk.io/x/tx/signing"
 
 	_ "github.com/cosmos/cosmos-sdk/types/tx/amino" // Import amino.proto file for reflection
-)
-
-const (
-	// DefaultGRPCAddress defines the default address to bind the gRPC server to.
-	DefaultGRPCAddress = "localhost:9090"
-
-	// DefaultGRPCMaxRecvMsgSize defines the default gRPC max message size in
-	// bytes the server can receive.
-	DefaultGRPCMaxRecvMsgSize = 1024 * 1024 * 10
-
-	// DefaultGRPCMaxSendMsgSize defines the default gRPC max message size in
-	// bytes the server can send.
-	DefaultGRPCMaxSendMsgSize = math.MaxInt32
 )
 
 type GRPCServer struct {
@@ -40,44 +26,16 @@ type GRPCServer struct {
 	config  Config
 }
 
-// GRPCConfig defines configuration for the gRPC server.
-type Config struct {
-	// Enable defines if the gRPC server should be enabled.
-	Enable bool `mapstructure:"enable"`
-
-	// Address defines the API server to listen on
-	Address string `mapstructure:"address"`
-
-	// MaxRecvMsgSize defines the max message size in bytes the server can receive.
-	// The default value is 10MB.
-	MaxRecvMsgSize int `mapstructure:"max-recv-msg-size"`
-
-	// MaxSendMsgSize defines the max message size in bytes the server can send.
-	// The default value is math.MaxInt32.
-	MaxSendMsgSize int `mapstructure:"max-send-msg-size"`
-}
-
 type GRPCService interface {
 	// RegisterGRPCServer registers gRPC services directly with the gRPC
 	// server.
 	RegisterGRPCServer(gogogrpc.Server)
 }
 
-type ClientContext interface {
-	// InterfaceRegistry returns the InterfaceRegistry.
-	InterfaceRegistry() appmanager.InterfaceRegistry
-	ChainID() string
-	TxConfig() TxConfig
-}
-
-type TxConfig interface {
-	SignModeHandler() *txsigning.HandlerMap
-}
-
 // NewGRPCServer returns a correctly configured and initialized gRPC server.
 // Note, the caller is responsible for starting the server. See StartGRPCServer.
 // TODO: look into removing the clientCtx dependency.
-func NewGRPCServer(clientCtx ClientContext, logger log.Logger, app GRPCService, cfg Config) (GRPCServer, error) {
+func NewGRPCServer(clientCtx client.ClientContext, logger log.Logger, app GRPCService, cfg Config) (GRPCServer, error) {
 	maxSendMsgSize := cfg.MaxSendMsgSize
 	if maxSendMsgSize == 0 {
 		maxSendMsgSize = DefaultGRPCMaxSendMsgSize
@@ -89,7 +47,7 @@ func NewGRPCServer(clientCtx ClientContext, logger log.Logger, app GRPCService, 
 	}
 
 	grpcSrv := grpc.NewServer(
-		grpc.ForceServerCodec(NewProtoCodec(clientCtx.InterfaceRegistry()).GRPCCodec()),
+		grpc.ForceServerCodec(newProtoCodec(clientCtx.InterfaceRegistry()).GRPCCodec()),
 		grpc.MaxSendMsgSize(maxSendMsgSize),
 		grpc.MaxRecvMsgSize(maxRecvMsgSize),
 	)
@@ -155,13 +113,13 @@ func (g GRPCServer) Stop() {
 	g.grpcSrv.GracefulStop()
 }
 
-type ProtoCodec struct {
+type protoCodec struct {
 	interfaceRegistry appmanager.InterfaceRegistry
 }
 
-// NewProtoCodec returns a reference to a new ProtoCodec
-func NewProtoCodec(interfaceRegistry appmanager.InterfaceRegistry) *ProtoCodec {
-	return &ProtoCodec{
+// newProtoCodec returns a reference to a new ProtoCodec
+func newProtoCodec(interfaceRegistry appmanager.InterfaceRegistry) *protoCodec {
+	return &protoCodec{
 		interfaceRegistry: interfaceRegistry,
 	}
 }
@@ -169,7 +127,7 @@ func NewProtoCodec(interfaceRegistry appmanager.InterfaceRegistry) *ProtoCodec {
 // Marshal implements BinaryMarshaler.Marshal method.
 // NOTE: this function must be used with a concrete type which
 // implements proto.Message. For interface please use the codec.MarshalInterface
-func (pc *ProtoCodec) Marshal(o gogoproto.Message) ([]byte, error) {
+func (pc *protoCodec) Marshal(o gogoproto.Message) ([]byte, error) {
 	// Size() check can catch the typed nil value.
 	if o == nil || gogoproto.Size(o) == 0 {
 		// return empty bytes instead of nil, because nil has special meaning in places like store.Set
@@ -182,7 +140,7 @@ func (pc *ProtoCodec) Marshal(o gogoproto.Message) ([]byte, error) {
 // Unmarshal implements BinaryMarshaler.Unmarshal method.
 // NOTE: this function must be used with a concrete type which
 // implements proto.Message. For interface please use the codec.UnmarshalInterface
-func (pc *ProtoCodec) Unmarshal(bz []byte, ptr gogoproto.Message) error {
+func (pc *protoCodec) Unmarshal(bz []byte, ptr gogoproto.Message) error {
 	err := gogoproto.Unmarshal(bz, ptr)
 	if err != nil {
 		return err
@@ -194,12 +152,12 @@ func (pc *ProtoCodec) Unmarshal(bz []byte, ptr gogoproto.Message) error {
 	return nil
 }
 
-func (pc *ProtoCodec) Name() string {
+func (pc *protoCodec) Name() string {
 	return "cosmos-sdk-grpc-codec"
 }
 
 // GRPCCodec returns the gRPC Codec for this specific ProtoCodec
-func (pc *ProtoCodec) GRPCCodec() encoding.Codec {
+func (pc *protoCodec) GRPCCodec() encoding.Codec {
 	return &grpcProtoCodec{cdc: pc}
 }
 

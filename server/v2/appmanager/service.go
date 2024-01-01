@@ -62,6 +62,8 @@ type AppManager[T transaction.Tx] struct {
 	processHandler appmanager.ProcessHandler[T]
 
 	stf *stf.STF[T]
+
+	changeSet store.WritableState
 }
 
 // BuildBlock builds a block when requested by consensus. It will take in the total size txs to be included and return a list of transactions
@@ -93,7 +95,9 @@ func (a AppManager[T]) VerifyBlock(ctx context.Context, height uint64, txs []T) 
 	return nil
 }
 
-func (a AppManager[T]) DeliverBlock(ctx context.Context, block appmanager.BlockRequest) (*appmanager.BlockResponse, Hash, error) {
+func (a *AppManager[T]) DeliverBlock(ctx context.Context, block appmanager.BlockRequest) (*appmanager.BlockResponse, Hash, error) {
+	a.changeSet = nil
+
 	currentState, err := a.db.NewStateAt(block.Height)
 	if err != nil {
 		return nil, nil, fmt.Errorf("unable to create new state for height %d: %w", block.Height, err)
@@ -103,20 +107,35 @@ func (a AppManager[T]) DeliverBlock(ctx context.Context, block appmanager.BlockR
 	if err != nil {
 		return nil, nil, fmt.Errorf("block delivery failed: %w", err)
 	}
+	// cache state changes
+	a.changeSet = newState
 
-	// apply new state to store
-	newStateChanges, err := newState.ChangeSets()
-	if err != nil {
-		return nil, nil, fmt.Errorf("change set: %w", err)
-	}
-
-	stateRoot, err := a.db.CommitState(newStateChanges)
+	stateRoot, err := newState.WorkingHash()
 	if err != nil {
 		return nil, nil, fmt.Errorf("commit failed: %w", err)
 	}
 	// update last stored block
 	a.lastBlockHeight.Store(block.Height)
-	return blockResponse, stateRoot, nil
+	return blockResponse, stateRoot[:], nil
+}
+
+func (a *AppManager[T]) CommitBlock(ctx context.Context, block appmanager.BlockRequest) (Hash, error) {
+	// apply new state to store
+	newStateChanges, err := a.changeSet.ChangeSets()
+	if err != nil {
+		return nil, fmt.Errorf("change set: %w", err)
+	}
+
+	stateRoot, err := a.db.CommitState(newStateChanges)
+	if err != nil {
+		return nil, fmt.Errorf("commit failed: %w", err)
+	}
+
+	a.changeSet = nil
+
+	// update last stored block
+	a.lastBlockHeight.Store(block.Height)
+	return stateRoot, nil
 }
 
 func (a AppManager[T]) Simulate(ctx context.Context, tx []byte) (appmanager.TxResult, error) {

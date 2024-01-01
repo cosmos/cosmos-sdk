@@ -17,7 +17,7 @@ import (
 	"cosmossdk.io/server/v2/grpc/gogoreflection"
 	reflection "cosmossdk.io/server/v2/grpc/reflection/v2alpha1"
 
-	_ "github.com/cosmos/cosmos-sdk/types/tx/amino" // Import amino.proto file for reflection
+	_ "cosmossdk.io/api/amino" // Import amino.proto file for reflection
 )
 
 type GRPCServer struct {

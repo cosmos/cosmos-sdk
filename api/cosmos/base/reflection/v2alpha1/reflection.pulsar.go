@@ -5066,426 +5066,6 @@ func (x *fastReflection_InterfaceAcceptingMessageDescriptor) ProtoMethods() *pro
 }
 
 var (
-	md_MsgDescriptor              protoreflect.MessageDescriptor
-	fd_MsgDescriptor_msg_type_url protoreflect.FieldDescriptor
-)
-
-func init() {
-	file_cosmos_base_reflection_v2alpha1_reflection_proto_init()
-	md_MsgDescriptor = File_cosmos_base_reflection_v2alpha1_reflection_proto.Messages().ByName("MsgDescriptor")
-	fd_MsgDescriptor_msg_type_url = md_MsgDescriptor.Fields().ByName("msg_type_url")
-}
-
-var _ protoreflect.Message = (*fastReflection_MsgDescriptor)(nil)
-
-type fastReflection_MsgDescriptor MsgDescriptor
-
-func (x *MsgDescriptor) ProtoReflect() protoreflect.Message {
-	return (*fastReflection_MsgDescriptor)(x)
-}
-
-func (x *MsgDescriptor) slowProtoReflect() protoreflect.Message {
-	mi := &file_cosmos_base_reflection_v2alpha1_reflection_proto_msgTypes[9]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-var _fastReflection_MsgDescriptor_messageType fastReflection_MsgDescriptor_messageType
-var _ protoreflect.MessageType = fastReflection_MsgDescriptor_messageType{}
-
-type fastReflection_MsgDescriptor_messageType struct{}
-
-func (x fastReflection_MsgDescriptor_messageType) Zero() protoreflect.Message {
-	return (*fastReflection_MsgDescriptor)(nil)
-}
-func (x fastReflection_MsgDescriptor_messageType) New() protoreflect.Message {
-	return new(fastReflection_MsgDescriptor)
-}
-func (x fastReflection_MsgDescriptor_messageType) Descriptor() protoreflect.MessageDescriptor {
-	return md_MsgDescriptor
-}
-
-// Descriptor returns message descriptor, which contains only the protobuf
-// type information for the message.
-func (x *fastReflection_MsgDescriptor) Descriptor() protoreflect.MessageDescriptor {
-	return md_MsgDescriptor
-}
-
-// Type returns the message type, which encapsulates both Go and protobuf
-// type information. If the Go type information is not needed,
-// it is recommended that the message descriptor be used instead.
-func (x *fastReflection_MsgDescriptor) Type() protoreflect.MessageType {
-	return _fastReflection_MsgDescriptor_messageType
-}
-
-// New returns a newly allocated and mutable empty message.
-func (x *fastReflection_MsgDescriptor) New() protoreflect.Message {
-	return new(fastReflection_MsgDescriptor)
-}
-
-// Interface unwraps the message reflection interface and
-// returns the underlying ProtoMessage interface.
-func (x *fastReflection_MsgDescriptor) Interface() protoreflect.ProtoMessage {
-	return (*MsgDescriptor)(x)
-}
-
-// Range iterates over every populated field in an undefined order,
-// calling f for each field descriptor and value encountered.
-// Range returns immediately if f returns false.
-// While iterating, mutating operations may only be performed
-// on the current field descriptor.
-func (x *fastReflection_MsgDescriptor) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-	if x.MsgTypeUrl != "" {
-		value := protoreflect.ValueOfString(x.MsgTypeUrl)
-		if !f(fd_MsgDescriptor_msg_type_url, value) {
-			return
-		}
-	}
-}
-
-// Has reports whether a field is populated.
-//
-// Some fields have the property of nullability where it is possible to
-// distinguish between the default value of a field and whether the field
-// was explicitly populated with the default value. Singular message fields,
-// member fields of a oneof, and proto2 scalar fields are nullable. Such
-// fields are populated only if explicitly set.
-//
-// In other cases (aside from the nullable cases above),
-// a proto3 scalar field is populated if it contains a non-zero value, and
-// a repeated field is populated if it is non-empty.
-func (x *fastReflection_MsgDescriptor) Has(fd protoreflect.FieldDescriptor) bool {
-	switch fd.FullName() {
-	case "cosmos.base.reflection.v2alpha1.MsgDescriptor.msg_type_url":
-		return x.MsgTypeUrl != ""
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.base.reflection.v2alpha1.MsgDescriptor"))
-		}
-		panic(fmt.Errorf("message cosmos.base.reflection.v2alpha1.MsgDescriptor does not contain field %s", fd.FullName()))
-	}
-}
-
-// Clear clears the field such that a subsequent Has call reports false.
-//
-// Clearing an extension field clears both the extension type and value
-// associated with the given field number.
-//
-// Clear is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgDescriptor) Clear(fd protoreflect.FieldDescriptor) {
-	switch fd.FullName() {
-	case "cosmos.base.reflection.v2alpha1.MsgDescriptor.msg_type_url":
-		x.MsgTypeUrl = ""
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.base.reflection.v2alpha1.MsgDescriptor"))
-		}
-		panic(fmt.Errorf("message cosmos.base.reflection.v2alpha1.MsgDescriptor does not contain field %s", fd.FullName()))
-	}
-}
-
-// Get retrieves the value for a field.
-//
-// For unpopulated scalars, it returns the default value, where
-// the default value of a bytes scalar is guaranteed to be a copy.
-// For unpopulated composite types, it returns an empty, read-only view
-// of the value; to obtain a mutable reference, use Mutable.
-func (x *fastReflection_MsgDescriptor) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
-	switch descriptor.FullName() {
-	case "cosmos.base.reflection.v2alpha1.MsgDescriptor.msg_type_url":
-		value := x.MsgTypeUrl
-		return protoreflect.ValueOfString(value)
-	default:
-		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.base.reflection.v2alpha1.MsgDescriptor"))
-		}
-		panic(fmt.Errorf("message cosmos.base.reflection.v2alpha1.MsgDescriptor does not contain field %s", descriptor.FullName()))
-	}
-}
-
-// Set stores the value for a field.
-//
-// For a field belonging to a oneof, it implicitly clears any other field
-// that may be currently set within the same oneof.
-// For extension fields, it implicitly stores the provided ExtensionType.
-// When setting a composite type, it is unspecified whether the stored value
-// aliases the source's memory in any way. If the composite value is an
-// empty, read-only value, then it panics.
-//
-// Set is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgDescriptor) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
-	switch fd.FullName() {
-	case "cosmos.base.reflection.v2alpha1.MsgDescriptor.msg_type_url":
-		x.MsgTypeUrl = value.Interface().(string)
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.base.reflection.v2alpha1.MsgDescriptor"))
-		}
-		panic(fmt.Errorf("message cosmos.base.reflection.v2alpha1.MsgDescriptor does not contain field %s", fd.FullName()))
-	}
-}
-
-// Mutable returns a mutable reference to a composite type.
-//
-// If the field is unpopulated, it may allocate a composite value.
-// For a field belonging to a oneof, it implicitly clears any other field
-// that may be currently set within the same oneof.
-// For extension fields, it implicitly stores the provided ExtensionType
-// if not already stored.
-// It panics if the field does not contain a composite type.
-//
-// Mutable is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgDescriptor) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
-	switch fd.FullName() {
-	case "cosmos.base.reflection.v2alpha1.MsgDescriptor.msg_type_url":
-		panic(fmt.Errorf("field msg_type_url of message cosmos.base.reflection.v2alpha1.MsgDescriptor is not mutable"))
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.base.reflection.v2alpha1.MsgDescriptor"))
-		}
-		panic(fmt.Errorf("message cosmos.base.reflection.v2alpha1.MsgDescriptor does not contain field %s", fd.FullName()))
-	}
-}
-
-// NewField returns a new value that is assignable to the field
-// for the given descriptor. For scalars, this returns the default value.
-// For lists, maps, and messages, this returns a new, empty, mutable value.
-func (x *fastReflection_MsgDescriptor) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
-	switch fd.FullName() {
-	case "cosmos.base.reflection.v2alpha1.MsgDescriptor.msg_type_url":
-		return protoreflect.ValueOfString("")
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.base.reflection.v2alpha1.MsgDescriptor"))
-		}
-		panic(fmt.Errorf("message cosmos.base.reflection.v2alpha1.MsgDescriptor does not contain field %s", fd.FullName()))
-	}
-}
-
-// WhichOneof reports which field within the oneof is populated,
-// returning nil if none are populated.
-// It panics if the oneof descriptor does not belong to this message.
-func (x *fastReflection_MsgDescriptor) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
-	switch d.FullName() {
-	default:
-		panic(fmt.Errorf("%s is not a oneof field in cosmos.base.reflection.v2alpha1.MsgDescriptor", d.FullName()))
-	}
-	panic("unreachable")
-}
-
-// GetUnknown retrieves the entire list of unknown fields.
-// The caller may only mutate the contents of the RawFields
-// if the mutated bytes are stored back into the message with SetUnknown.
-func (x *fastReflection_MsgDescriptor) GetUnknown() protoreflect.RawFields {
-	return x.unknownFields
-}
-
-// SetUnknown stores an entire list of unknown fields.
-// The raw fields must be syntactically valid according to the wire format.
-// An implementation may panic if this is not the case.
-// Once stored, the caller must not mutate the content of the RawFields.
-// An empty RawFields may be passed to clear the fields.
-//
-// SetUnknown is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgDescriptor) SetUnknown(fields protoreflect.RawFields) {
-	x.unknownFields = fields
-}
-
-// IsValid reports whether the message is valid.
-//
-// An invalid message is an empty, read-only value.
-//
-// An invalid message often corresponds to a nil pointer of the concrete
-// message type, but the details are implementation dependent.
-// Validity is not part of the protobuf data model, and may not
-// be preserved in marshaling or other operations.
-func (x *fastReflection_MsgDescriptor) IsValid() bool {
-	return x != nil
-}
-
-// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
-// This method may return nil.
-//
-// The returned methods type is identical to
-// "google.golang.org/protobuf/runtime/protoiface".Methods.
-// Consult the protoiface package documentation for details.
-func (x *fastReflection_MsgDescriptor) ProtoMethods() *protoiface.Methods {
-	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
-		x := input.Message.Interface().(*MsgDescriptor)
-		if x == nil {
-			return protoiface.SizeOutput{
-				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-				Size:              0,
-			}
-		}
-		options := runtime.SizeInputToOptions(input)
-		_ = options
-		var n int
-		var l int
-		_ = l
-		l = len(x.MsgTypeUrl)
-		if l > 0 {
-			n += 1 + l + runtime.Sov(uint64(l))
-		}
-		if x.unknownFields != nil {
-			n += len(x.unknownFields)
-		}
-		return protoiface.SizeOutput{
-			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-			Size:              n,
-		}
-	}
-
-	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
-		x := input.Message.Interface().(*MsgDescriptor)
-		if x == nil {
-			return protoiface.MarshalOutput{
-				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-				Buf:               input.Buf,
-			}, nil
-		}
-		options := runtime.MarshalInputToOptions(input)
-		_ = options
-		size := options.Size(x)
-		dAtA := make([]byte, size)
-		i := len(dAtA)
-		_ = i
-		var l int
-		_ = l
-		if x.unknownFields != nil {
-			i -= len(x.unknownFields)
-			copy(dAtA[i:], x.unknownFields)
-		}
-		if len(x.MsgTypeUrl) > 0 {
-			i -= len(x.MsgTypeUrl)
-			copy(dAtA[i:], x.MsgTypeUrl)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.MsgTypeUrl)))
-			i--
-			dAtA[i] = 0xa
-		}
-		if input.Buf != nil {
-			input.Buf = append(input.Buf, dAtA...)
-		} else {
-			input.Buf = dAtA
-		}
-		return protoiface.MarshalOutput{
-			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-			Buf:               input.Buf,
-		}, nil
-	}
-	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
-		x := input.Message.Interface().(*MsgDescriptor)
-		if x == nil {
-			return protoiface.UnmarshalOutput{
-				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-				Flags:             input.Flags,
-			}, nil
-		}
-		options := runtime.UnmarshalInputToOptions(input)
-		_ = options
-		dAtA := input.Buf
-		l := len(dAtA)
-		iNdEx := 0
-		for iNdEx < l {
-			preIndex := iNdEx
-			var wire uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-				}
-				if iNdEx >= l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				wire |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			fieldNum := int32(wire >> 3)
-			wireType := int(wire & 0x7)
-			if wireType == 4 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgDescriptor: wiretype end group for non-group")
-			}
-			if fieldNum <= 0 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgDescriptor: illegal tag %d (wire type %d)", fieldNum, wire)
-			}
-			switch fieldNum {
-			case 1:
-				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field MsgTypeUrl", wireType)
-				}
-				var stringLen uint64
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					stringLen |= uint64(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				intStringLen := int(stringLen)
-				if intStringLen < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				postIndex := iNdEx + intStringLen
-				if postIndex < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if postIndex > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				x.MsgTypeUrl = string(dAtA[iNdEx:postIndex])
-				iNdEx = postIndex
-			default:
-				iNdEx = preIndex
-				skippy, err := runtime.Skip(dAtA[iNdEx:])
-				if err != nil {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
-				}
-				if (skippy < 0) || (iNdEx+skippy) < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if (iNdEx + skippy) > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				if !options.DiscardUnknown {
-					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
-				}
-				iNdEx += skippy
-			}
-		}
-
-		if iNdEx > l {
-			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-		}
-		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
-	}
-	return &protoiface.Methods{
-		NoUnkeyedLiterals: struct{}{},
-		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
-		Size:              size,
-		Marshal:           marshal,
-		Unmarshal:         unmarshal,
-		Merge:             nil,
-		CheckInitialized:  nil,
-	}
-}
-
-var (
 	md_ConfigurationDescriptor                               protoreflect.MessageDescriptor
 	fd_ConfigurationDescriptor_bech32_account_address_prefix protoreflect.FieldDescriptor
 )
@@ -5505,7 +5085,7 @@ func (x *ConfigurationDescriptor) ProtoReflect() protoreflect.Message {
 }
 
 func (x *ConfigurationDescriptor) slowProtoReflect() protoreflect.Message {
-	mi := &file_cosmos_base_reflection_v2alpha1_reflection_proto_msgTypes[10]
+	mi := &file_cosmos_base_reflection_v2alpha1_reflection_proto_msgTypes[9]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5869,6 +5449,426 @@ func (x *fastReflection_ConfigurationDescriptor) ProtoMethods() *protoiface.Meth
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
 				x.Bech32AccountAddressPrefix = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var (
+	md_MsgDescriptor              protoreflect.MessageDescriptor
+	fd_MsgDescriptor_msg_type_url protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_cosmos_base_reflection_v2alpha1_reflection_proto_init()
+	md_MsgDescriptor = File_cosmos_base_reflection_v2alpha1_reflection_proto.Messages().ByName("MsgDescriptor")
+	fd_MsgDescriptor_msg_type_url = md_MsgDescriptor.Fields().ByName("msg_type_url")
+}
+
+var _ protoreflect.Message = (*fastReflection_MsgDescriptor)(nil)
+
+type fastReflection_MsgDescriptor MsgDescriptor
+
+func (x *MsgDescriptor) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_MsgDescriptor)(x)
+}
+
+func (x *MsgDescriptor) slowProtoReflect() protoreflect.Message {
+	mi := &file_cosmos_base_reflection_v2alpha1_reflection_proto_msgTypes[10]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_MsgDescriptor_messageType fastReflection_MsgDescriptor_messageType
+var _ protoreflect.MessageType = fastReflection_MsgDescriptor_messageType{}
+
+type fastReflection_MsgDescriptor_messageType struct{}
+
+func (x fastReflection_MsgDescriptor_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_MsgDescriptor)(nil)
+}
+func (x fastReflection_MsgDescriptor_messageType) New() protoreflect.Message {
+	return new(fastReflection_MsgDescriptor)
+}
+func (x fastReflection_MsgDescriptor_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgDescriptor
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_MsgDescriptor) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgDescriptor
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_MsgDescriptor) Type() protoreflect.MessageType {
+	return _fastReflection_MsgDescriptor_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_MsgDescriptor) New() protoreflect.Message {
+	return new(fastReflection_MsgDescriptor)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_MsgDescriptor) Interface() protoreflect.ProtoMessage {
+	return (*MsgDescriptor)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_MsgDescriptor) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.MsgTypeUrl != "" {
+		value := protoreflect.ValueOfString(x.MsgTypeUrl)
+		if !f(fd_MsgDescriptor_msg_type_url, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_MsgDescriptor) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "cosmos.base.reflection.v2alpha1.MsgDescriptor.msg_type_url":
+		return x.MsgTypeUrl != ""
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.base.reflection.v2alpha1.MsgDescriptor"))
+		}
+		panic(fmt.Errorf("message cosmos.base.reflection.v2alpha1.MsgDescriptor does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgDescriptor) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "cosmos.base.reflection.v2alpha1.MsgDescriptor.msg_type_url":
+		x.MsgTypeUrl = ""
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.base.reflection.v2alpha1.MsgDescriptor"))
+		}
+		panic(fmt.Errorf("message cosmos.base.reflection.v2alpha1.MsgDescriptor does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_MsgDescriptor) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "cosmos.base.reflection.v2alpha1.MsgDescriptor.msg_type_url":
+		value := x.MsgTypeUrl
+		return protoreflect.ValueOfString(value)
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.base.reflection.v2alpha1.MsgDescriptor"))
+		}
+		panic(fmt.Errorf("message cosmos.base.reflection.v2alpha1.MsgDescriptor does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgDescriptor) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "cosmos.base.reflection.v2alpha1.MsgDescriptor.msg_type_url":
+		x.MsgTypeUrl = value.Interface().(string)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.base.reflection.v2alpha1.MsgDescriptor"))
+		}
+		panic(fmt.Errorf("message cosmos.base.reflection.v2alpha1.MsgDescriptor does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgDescriptor) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "cosmos.base.reflection.v2alpha1.MsgDescriptor.msg_type_url":
+		panic(fmt.Errorf("field msg_type_url of message cosmos.base.reflection.v2alpha1.MsgDescriptor is not mutable"))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.base.reflection.v2alpha1.MsgDescriptor"))
+		}
+		panic(fmt.Errorf("message cosmos.base.reflection.v2alpha1.MsgDescriptor does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_MsgDescriptor) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "cosmos.base.reflection.v2alpha1.MsgDescriptor.msg_type_url":
+		return protoreflect.ValueOfString("")
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.base.reflection.v2alpha1.MsgDescriptor"))
+		}
+		panic(fmt.Errorf("message cosmos.base.reflection.v2alpha1.MsgDescriptor does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_MsgDescriptor) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.base.reflection.v2alpha1.MsgDescriptor", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_MsgDescriptor) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgDescriptor) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_MsgDescriptor) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_MsgDescriptor) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*MsgDescriptor)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		l = len(x.MsgTypeUrl)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*MsgDescriptor)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if len(x.MsgTypeUrl) > 0 {
+			i -= len(x.MsgTypeUrl)
+			copy(dAtA[i:], x.MsgTypeUrl)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.MsgTypeUrl)))
+			i--
+			dAtA[i] = 0xa
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*MsgDescriptor)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgDescriptor: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgDescriptor: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field MsgTypeUrl", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.MsgTypeUrl = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
 			default:
 				iNdEx = preIndex
@@ -12712,43 +12712,6 @@ func (x *InterfaceAcceptingMessageDescriptor) GetFieldDescriptorNames() []string
 	return nil
 }
 
-// MsgDescriptor describes a cosmos-sdk message that can be delivered with a transaction
-type MsgDescriptor struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	// msg_type_url contains the TypeURL of a sdk.Msg.
-	MsgTypeUrl string `protobuf:"bytes,1,opt,name=msg_type_url,json=msgTypeUrl,proto3" json:"msg_type_url,omitempty"`
-}
-
-func (x *MsgDescriptor) Reset() {
-	*x = MsgDescriptor{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_cosmos_base_reflection_v2alpha1_reflection_proto_msgTypes[9]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *MsgDescriptor) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*MsgDescriptor) ProtoMessage() {}
-
-// Deprecated: Use MsgDescriptor.ProtoReflect.Descriptor instead.
-func (*MsgDescriptor) Descriptor() ([]byte, []int) {
-	return file_cosmos_base_reflection_v2alpha1_reflection_proto_rawDescGZIP(), []int{9}
-}
-
-func (x *MsgDescriptor) GetMsgTypeUrl() string {
-	if x != nil {
-		return x.MsgTypeUrl
-	}
-	return ""
-}
-
 // ConfigurationDescriptor contains metadata information on the sdk.Config
 type ConfigurationDescriptor struct {
 	state         protoimpl.MessageState
@@ -12762,7 +12725,7 @@ type ConfigurationDescriptor struct {
 func (x *ConfigurationDescriptor) Reset() {
 	*x = ConfigurationDescriptor{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_cosmos_base_reflection_v2alpha1_reflection_proto_msgTypes[10]
+		mi := &file_cosmos_base_reflection_v2alpha1_reflection_proto_msgTypes[9]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -12776,12 +12739,49 @@ func (*ConfigurationDescriptor) ProtoMessage() {}
 
 // Deprecated: Use ConfigurationDescriptor.ProtoReflect.Descriptor instead.
 func (*ConfigurationDescriptor) Descriptor() ([]byte, []int) {
-	return file_cosmos_base_reflection_v2alpha1_reflection_proto_rawDescGZIP(), []int{10}
+	return file_cosmos_base_reflection_v2alpha1_reflection_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *ConfigurationDescriptor) GetBech32AccountAddressPrefix() string {
 	if x != nil {
 		return x.Bech32AccountAddressPrefix
+	}
+	return ""
+}
+
+// MsgDescriptor describes a cosmos-sdk message that can be delivered with a transaction
+type MsgDescriptor struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// msg_type_url contains the TypeURL of a sdk.Msg.
+	MsgTypeUrl string `protobuf:"bytes,1,opt,name=msg_type_url,json=msgTypeUrl,proto3" json:"msg_type_url,omitempty"`
+}
+
+func (x *MsgDescriptor) Reset() {
+	*x = MsgDescriptor{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_cosmos_base_reflection_v2alpha1_reflection_proto_msgTypes[10]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *MsgDescriptor) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MsgDescriptor) ProtoMessage() {}
+
+// Deprecated: Use MsgDescriptor.ProtoReflect.Descriptor instead.
+func (*MsgDescriptor) Descriptor() ([]byte, []int) {
+	return file_cosmos_base_reflection_v2alpha1_reflection_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *MsgDescriptor) GetMsgTypeUrl() string {
+	if x != nil {
+		return x.MsgTypeUrl
 	}
 	return ""
 }
@@ -13416,16 +13416,16 @@ var file_cosmos_base_reflection_v2alpha1_reflection_proto_rawDesc = []byte{
 	0x6c, 0x6c, 0x6e, 0x61, 0x6d, 0x65, 0x12, 0x34, 0x0a, 0x16, 0x66, 0x69, 0x65, 0x6c, 0x64, 0x5f,
 	0x64, 0x65, 0x73, 0x63, 0x72, 0x69, 0x70, 0x74, 0x6f, 0x72, 0x5f, 0x6e, 0x61, 0x6d, 0x65, 0x73,
 	0x18, 0x02, 0x20, 0x03, 0x28, 0x09, 0x52, 0x14, 0x66, 0x69, 0x65, 0x6c, 0x64, 0x44, 0x65, 0x73,
-	0x63, 0x72, 0x69, 0x70, 0x74, 0x6f, 0x72, 0x4e, 0x61, 0x6d, 0x65, 0x73, 0x22, 0x31, 0x0a, 0x0d,
-	0x4d, 0x73, 0x67, 0x44, 0x65, 0x73, 0x63, 0x72, 0x69, 0x70, 0x74, 0x6f, 0x72, 0x12, 0x20, 0x0a,
-	0x0c, 0x6d, 0x73, 0x67, 0x5f, 0x74, 0x79, 0x70, 0x65, 0x5f, 0x75, 0x72, 0x6c, 0x18, 0x01, 0x20,
-	0x01, 0x28, 0x09, 0x52, 0x0a, 0x6d, 0x73, 0x67, 0x54, 0x79, 0x70, 0x65, 0x55, 0x72, 0x6c, 0x22,
-	0x5c, 0x0a, 0x17, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x75, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e,
-	0x44, 0x65, 0x73, 0x63, 0x72, 0x69, 0x70, 0x74, 0x6f, 0x72, 0x12, 0x41, 0x0a, 0x1d, 0x62, 0x65,
-	0x63, 0x68, 0x33, 0x32, 0x5f, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x5f, 0x61, 0x64, 0x64,
-	0x72, 0x65, 0x73, 0x73, 0x5f, 0x70, 0x72, 0x65, 0x66, 0x69, 0x78, 0x18, 0x01, 0x20, 0x01, 0x28,
-	0x09, 0x52, 0x1a, 0x62, 0x65, 0x63, 0x68, 0x33, 0x32, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74,
-	0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x50, 0x72, 0x65, 0x66, 0x69, 0x78, 0x22, 0x1b, 0x0a,
+	0x63, 0x72, 0x69, 0x70, 0x74, 0x6f, 0x72, 0x4e, 0x61, 0x6d, 0x65, 0x73, 0x22, 0x5c, 0x0a, 0x17,
+	0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x75, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x44, 0x65, 0x73,
+	0x63, 0x72, 0x69, 0x70, 0x74, 0x6f, 0x72, 0x12, 0x41, 0x0a, 0x1d, 0x62, 0x65, 0x63, 0x68, 0x33,
+	0x32, 0x5f, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73,
+	0x73, 0x5f, 0x70, 0x72, 0x65, 0x66, 0x69, 0x78, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x1a,
+	0x62, 0x65, 0x63, 0x68, 0x33, 0x32, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x41, 0x64, 0x64,
+	0x72, 0x65, 0x73, 0x73, 0x50, 0x72, 0x65, 0x66, 0x69, 0x78, 0x22, 0x31, 0x0a, 0x0d, 0x4d, 0x73,
+	0x67, 0x44, 0x65, 0x73, 0x63, 0x72, 0x69, 0x70, 0x74, 0x6f, 0x72, 0x12, 0x20, 0x0a, 0x0c, 0x6d,
+	0x73, 0x67, 0x5f, 0x74, 0x79, 0x70, 0x65, 0x5f, 0x75, 0x72, 0x6c, 0x18, 0x01, 0x20, 0x01, 0x28,
+	0x09, 0x52, 0x0a, 0x6d, 0x73, 0x67, 0x54, 0x79, 0x70, 0x65, 0x55, 0x72, 0x6c, 0x22, 0x1b, 0x0a,
 	0x19, 0x47, 0x65, 0x74, 0x41, 0x75, 0x74, 0x68, 0x6e, 0x44, 0x65, 0x73, 0x63, 0x72, 0x69, 0x70,
 	0x74, 0x6f, 0x72, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x22, 0x64, 0x0a, 0x1a, 0x47, 0x65,
 	0x74, 0x41, 0x75, 0x74, 0x68, 0x6e, 0x44, 0x65, 0x73, 0x63, 0x72, 0x69, 0x70, 0x74, 0x6f, 0x72,
@@ -13627,8 +13627,8 @@ var file_cosmos_base_reflection_v2alpha1_reflection_proto_goTypes = []interface{
 	(*InterfaceDescriptor)(nil),                 // 6: cosmos.base.reflection.v2alpha1.InterfaceDescriptor
 	(*InterfaceImplementerDescriptor)(nil),      // 7: cosmos.base.reflection.v2alpha1.InterfaceImplementerDescriptor
 	(*InterfaceAcceptingMessageDescriptor)(nil), // 8: cosmos.base.reflection.v2alpha1.InterfaceAcceptingMessageDescriptor
-	(*MsgDescriptor)(nil),                       // 9: cosmos.base.reflection.v2alpha1.MsgDescriptor
-	(*ConfigurationDescriptor)(nil),             // 10: cosmos.base.reflection.v2alpha1.ConfigurationDescriptor
+	(*ConfigurationDescriptor)(nil),             // 9: cosmos.base.reflection.v2alpha1.ConfigurationDescriptor
+	(*MsgDescriptor)(nil),                       // 10: cosmos.base.reflection.v2alpha1.MsgDescriptor
 	(*GetAuthnDescriptorRequest)(nil),           // 11: cosmos.base.reflection.v2alpha1.GetAuthnDescriptorRequest
 	(*GetAuthnDescriptorResponse)(nil),          // 12: cosmos.base.reflection.v2alpha1.GetAuthnDescriptorResponse
 	(*GetChainDescriptorRequest)(nil),           // 13: cosmos.base.reflection.v2alpha1.GetChainDescriptorRequest
@@ -13649,10 +13649,10 @@ var file_cosmos_base_reflection_v2alpha1_reflection_proto_depIdxs = []int32{
 	2,  // 0: cosmos.base.reflection.v2alpha1.AppDescriptor.authn:type_name -> cosmos.base.reflection.v2alpha1.AuthnDescriptor
 	4,  // 1: cosmos.base.reflection.v2alpha1.AppDescriptor.chain:type_name -> cosmos.base.reflection.v2alpha1.ChainDescriptor
 	5,  // 2: cosmos.base.reflection.v2alpha1.AppDescriptor.codec:type_name -> cosmos.base.reflection.v2alpha1.CodecDescriptor
-	10, // 3: cosmos.base.reflection.v2alpha1.AppDescriptor.configuration:type_name -> cosmos.base.reflection.v2alpha1.ConfigurationDescriptor
+	9,  // 3: cosmos.base.reflection.v2alpha1.AppDescriptor.configuration:type_name -> cosmos.base.reflection.v2alpha1.ConfigurationDescriptor
 	23, // 4: cosmos.base.reflection.v2alpha1.AppDescriptor.query_services:type_name -> cosmos.base.reflection.v2alpha1.QueryServicesDescriptor
 	1,  // 5: cosmos.base.reflection.v2alpha1.AppDescriptor.tx:type_name -> cosmos.base.reflection.v2alpha1.TxDescriptor
-	9,  // 6: cosmos.base.reflection.v2alpha1.TxDescriptor.msgs:type_name -> cosmos.base.reflection.v2alpha1.MsgDescriptor
+	10, // 6: cosmos.base.reflection.v2alpha1.TxDescriptor.msgs:type_name -> cosmos.base.reflection.v2alpha1.MsgDescriptor
 	3,  // 7: cosmos.base.reflection.v2alpha1.AuthnDescriptor.sign_modes:type_name -> cosmos.base.reflection.v2alpha1.SigningModeDescriptor
 	6,  // 8: cosmos.base.reflection.v2alpha1.CodecDescriptor.interfaces:type_name -> cosmos.base.reflection.v2alpha1.InterfaceDescriptor
 	8,  // 9: cosmos.base.reflection.v2alpha1.InterfaceDescriptor.interface_accepting_messages:type_name -> cosmos.base.reflection.v2alpha1.InterfaceAcceptingMessageDescriptor
@@ -13660,7 +13660,7 @@ var file_cosmos_base_reflection_v2alpha1_reflection_proto_depIdxs = []int32{
 	2,  // 11: cosmos.base.reflection.v2alpha1.GetAuthnDescriptorResponse.authn:type_name -> cosmos.base.reflection.v2alpha1.AuthnDescriptor
 	4,  // 12: cosmos.base.reflection.v2alpha1.GetChainDescriptorResponse.chain:type_name -> cosmos.base.reflection.v2alpha1.ChainDescriptor
 	5,  // 13: cosmos.base.reflection.v2alpha1.GetCodecDescriptorResponse.codec:type_name -> cosmos.base.reflection.v2alpha1.CodecDescriptor
-	10, // 14: cosmos.base.reflection.v2alpha1.GetConfigurationDescriptorResponse.config:type_name -> cosmos.base.reflection.v2alpha1.ConfigurationDescriptor
+	9,  // 14: cosmos.base.reflection.v2alpha1.GetConfigurationDescriptorResponse.config:type_name -> cosmos.base.reflection.v2alpha1.ConfigurationDescriptor
 	23, // 15: cosmos.base.reflection.v2alpha1.GetQueryServicesDescriptorResponse.queries:type_name -> cosmos.base.reflection.v2alpha1.QueryServicesDescriptor
 	1,  // 16: cosmos.base.reflection.v2alpha1.GetTxDescriptorResponse.tx:type_name -> cosmos.base.reflection.v2alpha1.TxDescriptor
 	24, // 17: cosmos.base.reflection.v2alpha1.QueryServicesDescriptor.query_services:type_name -> cosmos.base.reflection.v2alpha1.QueryServiceDescriptor
@@ -13799,7 +13799,7 @@ func file_cosmos_base_reflection_v2alpha1_reflection_proto_init() {
 			}
 		}
 		file_cosmos_base_reflection_v2alpha1_reflection_proto_msgTypes[9].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgDescriptor); i {
+			switch v := v.(*ConfigurationDescriptor); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -13811,7 +13811,7 @@ func file_cosmos_base_reflection_v2alpha1_reflection_proto_init() {
 			}
 		}
 		file_cosmos_base_reflection_v2alpha1_reflection_proto_msgTypes[10].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ConfigurationDescriptor); i {
+			switch v := v.(*MsgDescriptor); i {
 			case 0:
 				return &v.state
 			case 1:

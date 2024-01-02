@@ -696,6 +696,7 @@ func (k msgServer) TokenizeShares(goCtx context.Context, msg *types.MsgTokenizeS
 			// the tokenize share amount and execute further tokenize share process
 			// tokenize share is reducing unlocked tokens delegation from the vesting account and further process
 			// is not causing issues
+			acc.TrackUndelegation(msg.Amount)
 			delFree := acc.GetDelegatedFree().AmountOf(msg.Amount.Denom)
 			if delFree.LT(msg.Amount.Amount) {
 				return nil, types.ErrExceedingFreeVestingDelegations

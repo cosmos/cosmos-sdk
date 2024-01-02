@@ -67,7 +67,7 @@ func (s STF[T]) DeliverBlock(ctx context.Context, block appmanager.BlockRequest,
 	}, newState, nil
 }
 
-// DeliverTx executes a TX and returns the result.
+// deliverTx executes a TX and returns the result.
 func (s STF[T]) deliverTx(ctx context.Context, state store.WritableState, txBytes []byte) appmanager.TxResult {
 	tx, err := s.decodeTx(txBytes)
 	if err != nil {
@@ -105,47 +105,62 @@ func (s STF[T]) validateTx(ctx context.Context, state store.WritableState, gasLi
 }
 
 // execTx executes the tx messages on the provided state. If the tx fails then the state is discarded.
-func (s STF[T]) execTx(ctx context.Context, state store.WritableState, gasLimit uint64, tx T) (msgResp Type, gasUsed uint64, execEvents []event.Event, err error) {
+func (s STF[T]) execTx(ctx context.Context, state store.WritableState, gasLimit uint64, tx T) (msgsResp []Type, gasUsed uint64, execEvents []event.Event, _err error) {
 	execState := s.branch(state)
 	execCtx := s.makeContext(ctx, tx.GetSenders(), execState, gasLimit)
 	// atomic execution of the all messages in a transaction, TODO: we should allow messages to fail in a specific mode
-	var txErr error
-	for i, msg := range tx.GetMessages() {
-		msgResp, txErr = s.handleMsg(execCtx, msg)
-		if txErr != nil {
-			txErr = fmt.Errorf("tx execution failed at message with index %d: %w", i, txErr)
-			break // stop execution when one message fails.
-		}
-	}
-	// if tx failed then we run the post tx handler with the initial state, and we only return
-	// post tx handler events.
+	msgsResp, txErr := s.runTxMsgs(ctx, execState, gasLimit, tx)
 	if txErr != nil {
-		postTxEvents, postTxErr := s.runPostTxHandler(ctx, state, tx, false)
+		// in case of error during message execution, we do not apply the exec state.
+		// instead we run the post exec handler in a new branch from the initial state.
+		postTxState := s.branch(state)
+		postTxCtx := s.makeContext(ctx, []Identity{runtimeIdentity}, postTxState, math.MaxUint64) // NO gas limit.
+		postTxErr := s.postTxExec(postTxCtx, tx, false)
 		if postTxErr != nil {
+			// if the post tx handler fails, then we do not apply any state change to the initial state.
+			// we just return the exec gas used and a joined error from TX error and post TX error.
 			return nil, execCtx.gasUsed, nil, errors.Join(txErr, postTxErr)
 		}
-		return nil, execCtx.gasUsed, postTxEvents, txErr
+		// in case post tx is successful, then we commit the post tx state to the initial state,
+		// and we return post tx events alongside exec gas used and the error of the tx.
+		applyErr := applyStateChanges(state, postTxState)
+		if applyErr != nil {
+			return nil, 0, nil, applyErr
+		}
+		return nil, execCtx.gasUsed, postTxCtx.events, txErr
 	}
-	// if the tx did not fail, we run the post handler using a branch of a branch of the provided
-	// initial state. Rationale for running in a branch of a branch is that in case the post tx fails
-	// then the whole exec state needs to be rolled back.
-	postTxEvents, postTxErr := s.runPostTxHandler(ctx, execState, tx, true)
+	// tx execution went fine, now we use the same state to run the post tx exec handler,
+	// in case the execution of the post tx fails, then no state change is applied and the
+	// whole execution step is rolled back.
+	postTxCtx := s.makeContext(ctx, []Identity{runtimeIdentity}, execState, math.MaxUint64) // NO gas limit.
+	postTxErr := s.postTxExec(postTxCtx, tx, true)
 	if postTxErr != nil {
-		return msgResp, execCtx.gasUsed, nil, fmt.Errorf("post tx exec failure: %w", postTxErr)
+		// if post tx fails, then we do not apply any state change, we return the post tx error,
+		// alongside the gas used.
+		return nil, execCtx.gasUsed, nil, postTxErr
 	}
-	return msgResp, execCtx.gasUsed, append(execCtx.events, postTxEvents...), applyStateChanges(state, execState)
+	// both the execution and post tx execution step were successful, so we apply the state changes
+	// to the provided state, and we return responses, and events from exec tx and post tx exec.
+	applyErr := applyStateChanges(state, execState)
+	if applyErr != nil {
+		return nil, 0, nil, applyErr
+	}
+	return msgsResp, execCtx.gasUsed, append(execCtx.events, postTxCtx.events...), nil
 }
 
-// runPostTxHandler will do post tx execution handling. It will apply state changes on the provided
-// state, in case of post tx handler success then changes are applied to the state.
-func (s STF[T]) runPostTxHandler(ctx context.Context, state store.WritableState, tx T, success bool) ([]event.Event, error) {
-	postExecState := s.branch(state)
-	postExecCtx := s.makeContext(ctx, []Identity{runtimeIdentity}, postExecState, math.MaxUint64) // NO gas limit.
-	err := s.postTxExec(postExecCtx, tx, success)
-	if err != nil {
-		return nil, err
+// runTxMsgs will execute the messages contained in the TX with the provided state.
+func (s STF[T]) runTxMsgs(ctx context.Context, state store.WritableState, gasLimit uint64, tx T) ([]Type, error) {
+	execCtx := s.makeContext(ctx, tx.GetSenders(), state, gasLimit)
+	msgs := tx.GetMessages()
+	msgResps := make([]Type, len(msgs))
+	for i, msg := range tx.GetMessages() {
+		resp, err := s.handleMsg(execCtx, msg)
+		if err != nil {
+			return nil, fmt.Errorf("message execution at index %d failed: %w", i, err)
+		}
+		msgResps[i] = resp
 	}
-	return postExecCtx.events, applyStateChanges(state, postExecState)
+	return msgResps, nil
 }
 
 func (s STF[T]) beginBlock(ctx context.Context, state store.WritableState) (beginBlockEvents []event.Event, err error) {

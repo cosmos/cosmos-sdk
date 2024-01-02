@@ -62,8 +62,6 @@ type AppManager[T transaction.Tx] struct {
 	processHandler appmanager.ProcessHandler[T]
 
 	stf *stf.STF[T]
-
-	changeSet store.WritableState
 }
 
 // BuildBlock builds a block when requested by consensus. It will take in the total size txs to be included and return a list of transactions
@@ -95,46 +93,40 @@ func (a AppManager[T]) VerifyBlock(ctx context.Context, height uint64, txs []T) 
 	return nil
 }
 
-func (a *AppManager[T]) DeliverBlock(ctx context.Context, block appmanager.BlockRequest) (*appmanager.BlockResponse, Hash, error) {
-	a.changeSet = nil
-
+func (a AppManager[T]) DeliverBlock(ctx context.Context, block appmanager.BlockRequest) (*appmanager.BlockResponse, Hash, []store.ChangeSet, error) {
 	currentState, err := a.db.NewStateAt(block.Height)
 	if err != nil {
-		return nil, nil, fmt.Errorf("unable to create new state for height %d: %w", block.Height, err)
+		return nil, nil, nil, fmt.Errorf("unable to create new state for height %d: %w", block.Height, err)
 	}
 
 	blockResponse, newState, err := a.stf.DeliverBlock(ctx, block, currentState)
 	if err != nil {
-		return nil, nil, fmt.Errorf("block delivery failed: %w", err)
+		return nil, nil, nil, fmt.Errorf("block delivery failed: %w", err)
 	}
-	// cache state changes
-	a.changeSet = newState
+
+	changesets, err := newState.ChangeSets()
+	if err != nil {
+		return nil, nil, nil, err
+	}
 
 	stateRoot, err := newState.WorkingHash()
 	if err != nil {
-		return nil, nil, fmt.Errorf("commit failed: %w", err)
+		return nil, nil, nil, fmt.Errorf("commit failed: %w", err)
 	}
 	// update last stored block
 	a.lastBlockHeight.Store(block.Height)
-	return blockResponse, stateRoot[:], nil
+	return blockResponse, stateRoot[:], changesets, nil
 }
 
-func (a *AppManager[T]) CommitBlock(ctx context.Context, block appmanager.BlockRequest) (Hash, error) {
-	// apply new state to store
-	newStateChanges, err := a.changeSet.ChangeSets()
-	if err != nil {
-		return nil, fmt.Errorf("change set: %w", err)
-	}
-
-	stateRoot, err := a.db.CommitState(newStateChanges)
+// CommitBlock commits the block to the database, it must be called after DeliverBlock or when Finalization criteria is met
+func (a AppManager[T]) CommitBlock(ctx context.Context, height uint64, sc []store.ChangeSet) (Hash, error) {
+	stateRoot, err := a.db.CommitState(sc)
 	if err != nil {
 		return nil, fmt.Errorf("commit failed: %w", err)
 	}
 
-	a.changeSet = nil
-
 	// update last stored block
-	a.lastBlockHeight.Store(block.Height)
+	a.lastBlockHeight.Store(height)
 	return stateRoot, nil
 }
 

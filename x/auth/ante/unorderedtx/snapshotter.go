@@ -56,9 +56,11 @@ func (s *Snapshotter) restore(height uint64, payloadReader snapshot.ExtensionPay
 	// the payload should be the entire set of unordered transactions
 	payload, err := payloadReader()
 	if err != nil {
-		if !errors.Is(err, io.EOF) {
-			return err
+		if errors.Is(err, io.EOF) {
+			return io.ErrUnexpectedEOF
 		}
+
+		return err
 	}
 
 	var i int

@@ -130,7 +130,7 @@ func (m *Manager) OnInit() error {
 		buf = make([]byte, 32+8)
 	)
 	for {
-		n, err := r.Read(buf)
+		n, err := io.ReadFull(r, buf)
 		if err != nil {
 			if errors.Is(err, io.EOF) {
 				break

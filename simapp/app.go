@@ -532,14 +532,14 @@ func NewSimApp(
 	}
 
 	// register custom snapshot extensions (if any)
-	// if manager := app.SnapshotManager(); manager != nil {
-	// 	err := manager.RegisterExtensions(
-	// 		unorderedtx.NewSnapshotter(app.UnorderedTxManager),
-	// 	)
-	// 	if err != nil {
-	// 		panic(fmt.Errorf("failed to register snapshot extension: %s", err))
-	// 	}
-	// }
+	if manager := app.SnapshotManager(); manager != nil {
+		err := manager.RegisterExtensions(
+			unorderedtx.NewSnapshotter(app.UnorderedTxManager),
+		)
+		if err != nil {
+			panic(fmt.Errorf("failed to register snapshot extension: %s", err))
+		}
+	}
 
 	app.sm.RegisterStoreDecoders()
 

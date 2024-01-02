@@ -30,6 +30,8 @@ require (
 	google.golang.org/protobuf v1.31.0
 )
 
+require github.com/cosmos/gogogateway/v2 v2.0.0 // indirect
+
 require (
 	cosmossdk.io/collections v0.4.0 // indirect
 	cosmossdk.io/x/auth v0.0.0-00010101000000-000000000000
@@ -56,7 +58,6 @@ require (
 	github.com/cosmos/btcutil v1.0.5 // indirect
 	github.com/cosmos/cosmos-db v1.0.0 // indirect
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
-	github.com/cosmos/gogogateway v1.2.0 // indirect
 	github.com/cosmos/iavl v1.0.0 // indirect
 	github.com/cosmos/ics23/go v0.10.0 // indirect
 	github.com/cosmos/ledger-cosmos-go v0.13.3 // indirect

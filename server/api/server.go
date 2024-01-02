@@ -10,7 +10,7 @@ import (
 	"time"
 
 	tmrpcserver "github.com/cometbft/cometbft/rpc/jsonrpc/server"
-	gateway "github.com/cosmos/gogogateway"
+	gateway "github.com/cosmos/gogogateway/v2"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
@@ -79,7 +79,7 @@ func New(clientCtx client.Context, logger log.Logger, grpcSrv *grpc.Server) *Ser
 
 			// This is necessary to get error details properly
 			// marshaled in unary requests.
-			runtime.WithProtoErrorHandler(runtime.DefaultHTTPProtoErrorHandler),
+			runtime.WithErrorHandler(runtime.DefaultHTTPErrorHandler),
 
 			// Custom header matcher for mapping request headers to
 			// GRPC metadata

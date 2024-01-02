@@ -283,7 +283,7 @@ Wire the `OnNewBlock` method of `UnorderedTxManager` into the BaseApp's ABCI `Co
 On start up, the node needs to ensure the TxManager's state contains all un-expired
 transactions that have been committed to the chain. This is critical since if the
 state is not properly initialized, the node will not reject duplicate transactions
-and thus will not provide replay protection.
+and thus will not provide replay protection, and will likely get an app hash mismatch error.
 
 We propose to write all un-expired unordered transactions from the TxManager's to
 file on disk. On start up, the node will read this file and re-populate the TxManager's

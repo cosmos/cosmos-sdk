@@ -163,8 +163,10 @@ func (k BaseSendKeeper) InputOutputCoins(ctx context.Context, inputs []types.Inp
 		return err
 	}
 
-	if err := k.BeforeMultiSend(ctx, inputs[0], outputs); err != nil {
-		return err
+	if len(inputs) > 0 {
+		if err := k.BeforeMultiSend(ctx, inputs[0], outputs); err != nil {
+			return err
+		}
 	}
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
@@ -228,8 +230,10 @@ func (k BaseSendKeeper) InputOutputCoins(ctx context.Context, inputs []types.Inp
 		}
 	}
 
-	if err := k.AfterMultiSend(ctx, inputs[0], outputs); err != nil {
-		return err
+	if len(inputs) > 0 {
+		if err := k.AfterMultiSend(ctx, inputs[0], outputs); err != nil {
+			return err
+		}
 	}
 
 	return nil

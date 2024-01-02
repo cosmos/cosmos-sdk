@@ -8,6 +8,12 @@ import (
 	snapshot "cosmossdk.io/store/snapshots/types"
 )
 
+const (
+	txHashSize = 32
+	ttlSize    = 8
+	chunkSize  = txHashSize + ttlSize
+)
+
 var _ snapshot.ExtensionSnapshotter = &Snapshotter{}
 
 const (
@@ -63,19 +69,23 @@ func (s *Snapshotter) restore(height uint64, payloadReader snapshot.ExtensionPay
 		return err
 	}
 
+	if len(payload)%chunkSize != 0 {
+		return errors.New("invalid unordered txs payload length")
+	}
+
 	var i int
 	for i < len(payload) {
 		var txHash TxHash
-		copy(txHash[:], payload[i:i+32])
+		copy(txHash[:], payload[i:i+txHashSize])
 
-		ttl := binary.BigEndian.Uint64(payload[i+32 : i+40])
+		ttl := binary.BigEndian.Uint64(payload[i+txHashSize : i+chunkSize])
 
 		if height < ttl {
 			// only add unordered transactions that are still valid, i.e. unexpired
 			s.m.Add(txHash, ttl)
 		}
 
-		i += 40
+		i += chunkSize
 	}
 
 	return nil

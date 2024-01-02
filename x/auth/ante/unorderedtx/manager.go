@@ -127,7 +127,7 @@ func (m *Manager) OnInit() error {
 
 	var (
 		r   = bufio.NewReader(f)
-		buf = make([]byte, 32+8)
+		buf = make([]byte, chunkSize)
 	)
 	for {
 		n, err := io.ReadFull(r, buf)
@@ -143,9 +143,9 @@ func (m *Manager) OnInit() error {
 		}
 
 		var txHash TxHash
-		copy(txHash[:], buf[:32])
+		copy(txHash[:], buf[:txHashSize])
 
-		m.Add(txHash, binary.BigEndian.Uint64(buf[32:]))
+		m.Add(txHash, binary.BigEndian.Uint64(buf[txHashSize:]))
 	}
 
 	return nil
@@ -274,12 +274,12 @@ func (m *Manager) batchReceive() (uint64, bool) {
 }
 
 func unorderedTxToBytes(txHash TxHash, ttl uint64) []byte {
-	chunk := make([]byte, 32+8)
-	copy(chunk[:32], txHash[:])
+	chunk := make([]byte, chunkSize)
+	copy(chunk[:txHashSize], txHash[:])
 
-	ttlBz := make([]byte, 8)
+	ttlBz := make([]byte, ttlSize)
 	binary.BigEndian.PutUint64(ttlBz, ttl)
-	copy(chunk[32:], ttlBz)
+	copy(chunk[txHashSize:], ttlBz)
 
 	return chunk
 }

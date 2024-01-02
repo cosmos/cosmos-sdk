@@ -52,18 +52,10 @@ func (s STF[T]) DeliverBlock(ctx context.Context, block appmanager.BlockRequest,
 		txResults[i] = s.deliverTx(ctx, newState, txBytes)
 	}
 	// end block
-	endBlockEvents, err := s.endBlock(ctx, newState, block)
+	endBlockEvents, valset, err := s.endBlock(ctx, newState, block)
 	if err != nil {
 		return nil, nil, err
 	}
-
-	events, valset, err := s.validatorUpdates(ctx, newState, block)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	// append endblock events to the end of the block events
-	endBlockEvents = append(endBlockEvents, events...)
 
 	return &appmanager.BlockResponse{
 		BeginBlockEvents: beginBlockEvents,
@@ -140,15 +132,24 @@ func (s STF[T]) beginBlock(ctx context.Context, state store.WritableState) (begi
 	return bbCtx.events, nil
 }
 
-func (s STF[T]) endBlock(ctx context.Context, state store.WritableState, block appmanager.BlockRequest) (endBlockEvents []event.Event, err error) {
+func (s STF[T]) endBlock(ctx context.Context, state store.WritableState, block appmanager.BlockRequest) ([]event.Event, []appmanager.ValidatorUpdate, error) {
 	ebCtx := s.makeContext(ctx, []Identity{runtimeIdentity}, state, 0) // TODO: gas limit
-	err = s.doEndBlock(ebCtx)
+	err := s.doEndBlock(ebCtx)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	return ebCtx.events, nil
+
+	events, valsetUpdates, err := s.validatorUpdates(ctx, state, block)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	ebCtx.events = append(ebCtx.events, events...)
+
+	return ebCtx.events, valsetUpdates, nil
 }
 
+// validatorUpdates returns the validator updates for the current block. It is called by endBlock after the endblock execution has concluded
 func (s STF[T]) validatorUpdates(ctx context.Context, state store.WritableState, block appmanager.BlockRequest) ([]event.Event, []appmanager.ValidatorUpdate, error) {
 	ebCtx := s.makeContext(ctx, []Identity{runtimeIdentity}, state, 0) // TODO: gas limit
 	valSetUpdates, err := s.doValidatorUpdate(ebCtx)

@@ -267,10 +267,7 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) error {
 
 		return false, nil
 	})
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
 
 // executes handle(msg) and recovers from panic.

@@ -39,6 +39,6 @@ type AccountKeeper interface {
 type SendHooks interface {
 	BeforeSend(ctx context.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) error
 	AfterSend(ctx context.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) error
-	BeforeMultiSend(ctx context.Context, inputs Input, outputs []Output) error
-	AfterMultiSend(ctx context.Context, inputs Input, outputs []Output) error
+	BeforeMultiSend(ctx context.Context, inputs []Input, outputs []Output) error
+	AfterMultiSend(ctx context.Context, inputs []Input, outputs []Output) error
 }

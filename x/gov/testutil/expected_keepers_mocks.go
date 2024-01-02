@@ -144,9 +144,9 @@ func (m *MockBankKeeper) EXPECT() *MockBankKeeperMockRecorder {
 	return m.recorder
 }
 
-func (m *MockBankKeeper) AfterMultiSend(ctx context.Context, input types0.Input, outputs []types0.Output) error
+func (m *MockBankKeeper) AfterMultiSend(ctx context.Context, input []types0.Input, outputs []types0.Output) error
 func (m *MockBankKeeper) AfterSend(ctx context.Context, fromAddr types.AccAddress, toAddr types.AccAddress, amt types.Coins) error
-func (m *MockBankKeeper) BeforeMultiSend(ctx context.Context, input types0.Input, outputs []types0.Output) error
+func (m *MockBankKeeper) BeforeMultiSend(ctx context.Context, input []types0.Input, outputs []types0.Output) error
 func (m *MockBankKeeper) BeforeSend(ctx context.Context, fromAddr types.AccAddress, toAddr types.AccAddress, amt types.Coins) error
 func (m *MockBankKeeper) SetHooks(sh types0.SendHooks) *keeper.BaseSendKeeper
 

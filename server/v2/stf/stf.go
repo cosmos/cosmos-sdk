@@ -2,6 +2,9 @@ package stf
 
 import (
 	"context"
+	"errors"
+	"fmt"
+	"math"
 
 	"google.golang.org/protobuf/proto"
 
@@ -27,6 +30,7 @@ type STF[T transaction.Tx] struct {
 	doEndBlock   func(ctx context.Context) error
 
 	doTxValidation func(ctx context.Context, tx T) error
+	postTxExec     func(ctx context.Context, tx T, success bool) error
 
 	decodeTx func(txBytes []byte) (T, error)
 
@@ -80,19 +84,11 @@ func (s STF[T]) deliverTx(ctx context.Context, state store.WritableState, txByte
 	}
 
 	execResp, execGas, execEvents, err := s.execTx(ctx, state, tx.GetGasLimit()-validateGas, tx)
-	if err != nil {
-		return appmanager.TxResult{
-			Events:  validationEvents,
-			GasUsed: validateGas + execGas,
-			Error:   err,
-		}
-	}
-
 	return appmanager.TxResult{
 		Events:  append(validationEvents, execEvents...),
 		GasUsed: execGas + validateGas,
 		Resp:    execResp,
-		Error:   nil,
+		Error:   err,
 	}
 }
 
@@ -108,17 +104,48 @@ func (s STF[T]) validateTx(ctx context.Context, state store.WritableState, gasLi
 	return validateCtx.gasUsed, validateCtx.events, applyStateChanges(state, validateState)
 }
 
+// execTx executes the tx messages on the provided state. If the tx fails then the state is discarded.
 func (s STF[T]) execTx(ctx context.Context, state store.WritableState, gasLimit uint64, tx T) (msgResp Type, gasUsed uint64, execEvents []event.Event, err error) {
 	execState := s.branch(state)
 	execCtx := s.makeContext(ctx, tx.GetSenders(), execState, gasLimit)
 	// atomic execution of the all messages in a transaction, TODO: we should allow messages to fail in a specific mode
-	for _, msg := range tx.GetMessages() {
-		msgResp, err = s.handleMsg(execCtx, msg)
+	var txErr error
+	for i, msg := range tx.GetMessages() {
+		msgResp, txErr = s.handleMsg(execCtx, msg)
 		if err != nil {
-			return nil, 0, nil, err
+			err = fmt.Errorf("tx execution failed at message with index %d: %w", i, err)
+			break // stop execution when one message fails.
 		}
 	}
-	return msgResp, 0, execCtx.events, applyStateChanges(state, execState)
+	// if tx failed then we run the post tx handler with the initial state, and we only return
+	// post tx handler events.
+	if txErr != nil {
+		postTxEvents, postTxErr := s.runPostTxHandler(ctx, state, tx, false)
+		if postTxErr != nil {
+			return nil, execCtx.gasUsed, nil, errors.Join(txErr, postTxErr)
+		}
+		return nil, execCtx.gasUsed, postTxEvents, txErr
+	}
+	// if the tx did not fail, we run the post handler using a branch of a branch of the provided
+	// initial state. Rationale for running in a branch of a branch is that in case the post tx fails
+	// then the whole exec state needs to be rolled back.
+	postTxEvents, postTxErr := s.runPostTxHandler(ctx, execState, tx, true)
+	if postTxErr != nil {
+		return msgResp, execCtx.gasUsed, nil, fmt.Errorf("post tx exec failure: %w", postTxErr)
+	}
+	return msgResp, execCtx.gasUsed, append(execCtx.events, postTxEvents...), applyStateChanges(state, execState)
+}
+
+// runPostTxHandler will do post tx execution handling. It will apply state changes on the provided
+// state, in case of post tx handler success then changes are applied to the state.
+func (s STF[T]) runPostTxHandler(ctx context.Context, state store.WritableState, tx T, success bool) ([]event.Event, error) {
+	postExecState := s.branch(state)
+	postExecCtx := s.makeContext(ctx, []Identity{runtimeIdentity}, postExecState, math.MaxUint64) // NO gas limit.
+	err := s.postTxExec(postExecCtx, tx, success)
+	if err != nil {
+		return nil, err
+	}
+	return postExecCtx.events, applyStateChanges(state, postExecState)
 }
 
 func (s STF[T]) beginBlock(ctx context.Context, state store.WritableState) (beginBlockEvents []event.Event, err error) {

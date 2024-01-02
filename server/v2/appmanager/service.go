@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"sync/atomic"
 
-	"cosmossdk.io/server/v2/mempool"
+	"cosmossdk.io/server/v2/core/mempool"
 	"cosmossdk.io/server/v2/stf"
 
 	"cosmossdk.io/server/v2/core/appmanager"

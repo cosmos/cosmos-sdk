@@ -17,6 +17,8 @@ func NewSTFBuilder[T transaction.Tx]() *STFBuilder[T] {
 		txValidators:       make(map[string]func(ctx context.Context, tx T) error),
 		beginBlockers:      make(map[string]func(ctx context.Context) error),
 		endBlockers:        make(map[string]func(ctx context.Context) error),
+		postExecHandler:    make(map[string]func(ctx context.Context, tx T, success bool) error),
+		txCodec:            nil,
 	}
 }
 
@@ -29,6 +31,7 @@ type STFBuilder[T transaction.Tx] struct {
 	beginBlockers      map[string]func(ctx context.Context) error
 	endBlockers        map[string]func(ctx context.Context) error
 	valSetUpdate       func(ctx context.Context) (appmanager.ValidatorUpdate, error)
+	postExecHandler    map[string]func(ctx context.Context, tx T, success bool) error
 	txCodec            transaction.Codec[T]
 }
 

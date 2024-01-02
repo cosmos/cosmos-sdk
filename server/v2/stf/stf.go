@@ -112,8 +112,8 @@ func (s STF[T]) execTx(ctx context.Context, state store.WritableState, gasLimit 
 	var txErr error
 	for i, msg := range tx.GetMessages() {
 		msgResp, txErr = s.handleMsg(execCtx, msg)
-		if err != nil {
-			err = fmt.Errorf("tx execution failed at message with index %d: %w", i, err)
+		if txErr != nil {
+			txErr = fmt.Errorf("tx execution failed at message with index %d: %w", i, txErr)
 			break // stop execution when one message fails.
 		}
 	}

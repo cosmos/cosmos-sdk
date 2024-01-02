@@ -520,19 +520,18 @@ func readChainIdFromHome(homeDir string) (string, error) {
 		}
 	}()
 
-	// if the blockStore.LoadBaseMeta() is nil (no blocks are created/synced so far), fallback to genesis chain-id
-	if blockStore.LoadBaseMeta() == nil {
-		appGenesis, err := tmtypes.GenesisDocFromFile(filepath.Join(homeDir, "config", "genesis.json"))
-		if err != nil {
-			return "", err
-		}
-
-		return appGenesis.ChainID, nil
+	// if the blockStore.LoadBaseMeta() is nil (no blocks are created/synced so far), fallback to genesis chain-id.
+	baseMeta := blockStore.LoadBaseMeta()
+	if baseMeta != nil {
+		return baseMeta.Header.ChainID, nil
 	}
 
-	chainID := blockStore.LoadBaseMeta().Header.ChainID
+	appGenesis, err := tmtypes.GenesisDocFromFile(filepath.Join(homeDir, "config", "genesis.json"))
+	if err != nil {
+		return "", err
+	}
 
-	return chainID, nil
+	return appGenesis.ChainID, nil
 }
 
 func GetSnapshotStore(appOpts types.AppOptions) (*snapshots.Store, error) {

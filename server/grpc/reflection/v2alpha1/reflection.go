@@ -47,7 +47,7 @@ func (r reflectionServiceServer) GetCodecDescriptor(_ context.Context, _ *GetCod
 }
 
 func (r reflectionServiceServer) GetConfigurationDescriptor(_ context.Context, _ *GetConfigurationDescriptorRequest) (*GetConfigurationDescriptorResponse, error) {
-	return nil, errors.New("this endpoint has been depreacted, please see auth/Bech32Prefix for the data you are seeking")
+	return nil, errors.New("this endpoint has been deprecated, please see auth/Bech32Prefix for the data you are seeking")
 }
 
 func (r reflectionServiceServer) GetQueryServicesDescriptor(_ context.Context, _ *GetQueryServicesDescriptorRequest) (*GetQueryServicesDescriptorResponse, error) {

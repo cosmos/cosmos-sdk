@@ -29,10 +29,8 @@ func (keeper Keeper) SubmitProposal(ctx context.Context, messages []sdk.Msg, met
 	if proposalType == v1.ProposalType_PROPOSAL_TYPE_OPTIMISTIC {
 		proposerStr, _ := keeper.authKeeper.AddressCodec().BytesToString(proposer)
 
-		if len(params.OptimisticAuthorizedAddresses) > 0 {
-			if !slices.Contains(params.OptimisticAuthorizedAddresses, proposerStr) {
-				return v1.Proposal{}, errorsmod.Wrap(types.ErrInvalidProposer, "proposer is not authorized to submit optimistic proposal")
-			}
+		if len(params.OptimisticAuthorizedAddresses) > 0 && !slices.Contains(params.OptimisticAuthorizedAddresses, proposerStr) {
+			return v1.Proposal{}, errorsmod.Wrap(types.ErrInvalidProposer, "proposer is not authorized to submit optimistic proposal")
 		}
 	}
 
@@ -74,14 +72,16 @@ func (keeper Keeper) SubmitProposal(ctx context.Context, messages []sdk.Msg, met
 		// For other Msgs, we do not verify the proposal messages any further.
 		// They may fail upon execution.
 		// ref: https://github.com/cosmos/cosmos-sdk/pull/10868#discussion_r784872842
-		if msg, ok := msg.(*v1.MsgExecLegacyContent); ok {
-			cacheCtx, _ := sdkCtx.CacheContext()
-			if _, err := handler(cacheCtx, msg); err != nil {
-				if errors.Is(types.ErrNoProposalHandlerExists, err) {
-					return v1.Proposal{}, err
-				}
-				return v1.Proposal{}, errorsmod.Wrap(types.ErrInvalidProposalContent, err.Error())
+		msg, ok := msg.(*v1.MsgExecLegacyContent)
+		if !ok {
+			continue
+		}
+		cacheCtx, _ := sdkCtx.CacheContext()
+		if _, err := handler(cacheCtx, msg); err != nil {
+			if errors.Is(types.ErrNoProposalHandlerExists, err) {
+				return v1.Proposal{}, err
 			}
+			return v1.Proposal{}, errorsmod.Wrap(types.ErrInvalidProposalContent, err.Error())
 		}
 
 	}

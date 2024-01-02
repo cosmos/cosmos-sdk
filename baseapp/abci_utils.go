@@ -72,6 +72,7 @@ func ValidateVoteExtensions(
 		sumVP int64
 	)
 
+	cache := make(map[string]struct{})
 	for _, vote := range extCommit.Votes {
 		totalVP += vote.Validator.Power
 
@@ -96,7 +97,13 @@ func ValidateVoteExtensions(
 			return fmt.Errorf("vote extensions enabled; received empty vote extension signature at height %d", currentHeight)
 		}
 
+		// Ensure that the validator has not already submitted a vote extension.
 		valConsAddr := sdk.ConsAddress(vote.Validator.Address)
+		if _, ok := cache[valConsAddr.String()]; ok {
+			return fmt.Errorf("duplicate validator; validator %s has already submitted a vote extension", valConsAddr.String())
+		}
+		cache[valConsAddr.String()] = struct{}{}
+
 		pubKeyProto, err := valStore.GetPubKeyByConsAddr(ctx, valConsAddr)
 		if err != nil {
 			return fmt.Errorf("failed to get validator %X public key: %w", valConsAddr, err)

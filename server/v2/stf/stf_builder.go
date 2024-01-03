@@ -89,8 +89,10 @@ func (s *STFBuilder[T]) AddModule(m appmanager.Module[T]) {
 	// TODO: check if is not nil, etc.
 	s.beginBlockers[m.Name()] = m.BeginBlocker()
 	s.endBlockers[m.Name()] = m.EndBlocker()
-	if m.UpdateValidators() != nil {
+	if s.valSetUpdate == nil && m.UpdateValidators() != nil {
 		s.valSetUpdate = m.UpdateValidators()
+	} else if s.valSetUpdate != nil && m.UpdateValidators() != nil {
+		s.err = errors.Join(s.err, fmt.Errorf("multiple modules are trying to update validators"))
 	}
 	s.txValidators[m.Name()] = m.TxValidator()
 }

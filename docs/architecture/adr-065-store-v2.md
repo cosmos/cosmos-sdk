@@ -168,8 +168,9 @@ and SS layers. However, if a node syncs via state sync, the SS layer of the node
 will not have the state synced height available, since the IAVL import process is
 not setup in way to easily allow direct key/value insertion.
 
-We propose a simple `SnapshotManager` that consumes and produces snapshots, that
-syncs to both the SC and SC backends.
+We propose a simple `SnapshotManager` that consumes and produces snapshots. SC 
+backends will be responsible for providing a snapshot of the state at a given 
+height and both SS and SC consume snapshots to restore state.
 
 #### RootStore
 

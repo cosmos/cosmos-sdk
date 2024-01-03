@@ -8,7 +8,9 @@ import (
 )
 
 const (
-	// TODO: it is a random number, need to be tuned
+	// TODO: Ensure a value is appropriately chosen.
+	//
+	// Ref: https://github.com/cosmos/cosmos-sdk/issues/18937
 	defaultBatchBufferSize = 100000
 )
 
@@ -17,7 +19,13 @@ var (
 	_ snapshots.StorageSnapshotter = (*StorageStore)(nil)
 )
 
-// StorageStore is a wrapper around the store.VersionedDatabase interface.
+// StorageStore is a wrapper around the store.VersionedDatabase (SS) interface.
+//
+// We provide a wrapper that will allow us to abstract various methods that must
+// be implemented on each possible SS backend type, e.g. State Sync restoring.
+// Instead of implementing these methods on each SS backend, we can implement
+// them here and embed the SS backend directly. This means that applications
+// should use this type instead of an SS backend directly.
 type StorageStore struct {
 	db Database
 }
@@ -100,7 +108,7 @@ func (ss *StorageStore) Restore(version uint64, chStorage <-chan *store.KVPair) 
 
 	b, err := ss.db.NewBatch(version)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to create a new batch: %w", err)
 	}
 
 	for kvPair := range chStorage {
@@ -115,6 +123,7 @@ func (ss *StorageStore) Restore(version uint64, chStorage <-chan *store.KVPair) 
 		}
 	}
 
+	// flush the remaining writes
 	if b.Size() > 0 {
 		if err := b.Write(); err != nil {
 			return err

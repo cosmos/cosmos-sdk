@@ -373,15 +373,19 @@ func (m *Manager) doRestoreSnapshot(snapshot types.Snapshot, chChunks <-chan io.
 	storageErrs := make(chan error, 1)
 	go func() {
 		defer close(storageErrs)
-		err := m.storageSnapshotter.Restore(snapshot.Height, chStorage)
-		if err != nil {
+
+		// Note, the chStorage channel is passed to the SS backend, which will read
+		// value from it.
+		if err := m.storageSnapshotter.Restore(snapshot.Height, chStorage); err != nil {
 			storageErrs <- err
 		}
 	}()
 
+	// Note, the chStorage channel is passed to the SC backend, which will write
+	// values to it.
 	nextItem, err = m.commitSnapshotter.Restore(snapshot.Height, snapshot.Format, streamReader, chStorage)
 	if err != nil {
-		return errorsmod.Wrap(err, "multistore restore")
+		return fmt.Errorf("failed to restore commitment state: %w", err)
 	}
 
 	for {

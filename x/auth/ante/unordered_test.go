@@ -16,8 +16,10 @@ import (
 )
 
 func TestUnorderedTxDecorator_OrderedTx(t *testing.T) {
-	txm := unorderedtx.NewManager()
-	defer txm.Close()
+	txm := unorderedtx.NewManager(t.TempDir())
+	defer func() {
+		require.NoError(t, txm.Close())
+	}()
 
 	txm.Start()
 
@@ -31,8 +33,10 @@ func TestUnorderedTxDecorator_OrderedTx(t *testing.T) {
 }
 
 func TestUnorderedTxDecorator_UnorderedTx_NoTTL(t *testing.T) {
-	txm := unorderedtx.NewManager()
-	defer txm.Close()
+	txm := unorderedtx.NewManager(t.TempDir())
+	defer func() {
+		require.NoError(t, txm.Close())
+	}()
 
 	txm.Start()
 
@@ -46,8 +50,10 @@ func TestUnorderedTxDecorator_UnorderedTx_NoTTL(t *testing.T) {
 }
 
 func TestUnorderedTxDecorator_UnorderedTx_InvalidTTL(t *testing.T) {
-	txm := unorderedtx.NewManager()
-	defer txm.Close()
+	txm := unorderedtx.NewManager(t.TempDir())
+	defer func() {
+		require.NoError(t, txm.Close())
+	}()
 
 	txm.Start()
 
@@ -61,8 +67,10 @@ func TestUnorderedTxDecorator_UnorderedTx_InvalidTTL(t *testing.T) {
 }
 
 func TestUnorderedTxDecorator_UnorderedTx_AlreadyExists(t *testing.T) {
-	txm := unorderedtx.NewManager()
-	defer txm.Close()
+	txm := unorderedtx.NewManager(t.TempDir())
+	defer func() {
+		require.NoError(t, txm.Close())
+	}()
 
 	txm.Start()
 
@@ -79,8 +87,10 @@ func TestUnorderedTxDecorator_UnorderedTx_AlreadyExists(t *testing.T) {
 }
 
 func TestUnorderedTxDecorator_UnorderedTx_ValidCheckTx(t *testing.T) {
-	txm := unorderedtx.NewManager()
-	defer txm.Close()
+	txm := unorderedtx.NewManager(t.TempDir())
+	defer func() {
+		require.NoError(t, txm.Close())
+	}()
 
 	txm.Start()
 
@@ -94,8 +104,10 @@ func TestUnorderedTxDecorator_UnorderedTx_ValidCheckTx(t *testing.T) {
 }
 
 func TestUnorderedTxDecorator_UnorderedTx_ValidDeliverTx(t *testing.T) {
-	txm := unorderedtx.NewManager()
-	defer txm.Close()
+	txm := unorderedtx.NewManager(t.TempDir())
+	defer func() {
+		require.NoError(t, txm.Close())
+	}()
 
 	txm.Start()
 

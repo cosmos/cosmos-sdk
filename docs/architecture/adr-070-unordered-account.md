@@ -278,14 +278,22 @@ func (d *DedupTxDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool,
 
 Wire the `OnNewBlock` method of `UnorderedTxManager` into the BaseApp's ABCI `Commit` event.
 
-### Start Up
+### State Management
 
-On start up, the node needs to re-fill the tx hash dictionary of `UnorderedTxManager`
-by scanning `MaxUnOrderedTTL` number of historical blocks for existing un-expired
-un-ordered transactions.
+On start up, the node needs to ensure the TxManager's state contains all un-expired
+transactions that have been committed to the chain. This is critical since if the
+state is not properly initialized, the node will not reject duplicate transactions
+and thus will not provide replay protection, and will likely get an app hash mismatch error.
 
-An alternative design is to store the tx hash dictionary in kv store, then no need
-to warm up on start up.
+We propose to write all un-expired unordered transactions from the TxManager's to
+file on disk. On start up, the node will read this file and re-populate the TxManager's
+map. The write to file will happen when the node gracefully shuts down on `Close()`.
+
+Note, this is not a perfect solution, in the context of store v1. With store v2,
+we can omit explicit file handling altogether and simply write the all the transactions
+to non-consensus state, i.e State Storage (SS).
+
+Alternatively, we can write all the transactions to consensus state.
 
 ## Consequences
 

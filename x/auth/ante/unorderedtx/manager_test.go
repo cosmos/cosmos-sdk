@@ -10,7 +10,7 @@ import (
 )
 
 func TestUnorderedTxManager_Close(t *testing.T) {
-	txm := unorderedtx.NewManager()
+	txm := unorderedtx.NewManager(t.TempDir())
 	txm.Start()
 
 	require.NoError(t, txm.Close())
@@ -18,8 +18,10 @@ func TestUnorderedTxManager_Close(t *testing.T) {
 }
 
 func TestUnorderedTxManager_SimpleSize(t *testing.T) {
-	txm := unorderedtx.NewManager()
-	defer txm.Close()
+	txm := unorderedtx.NewManager(t.TempDir())
+	defer func() {
+		require.NoError(t, txm.Close())
+	}()
 
 	txm.Start()
 
@@ -31,8 +33,10 @@ func TestUnorderedTxManager_SimpleSize(t *testing.T) {
 }
 
 func TestUnorderedTxManager_SimpleContains(t *testing.T) {
-	txm := unorderedtx.NewManager()
-	defer txm.Close()
+	txm := unorderedtx.NewManager(t.TempDir())
+	defer func() {
+		require.NoError(t, txm.Close())
+	}()
 
 	txm.Start()
 
@@ -48,9 +52,51 @@ func TestUnorderedTxManager_SimpleContains(t *testing.T) {
 	}
 }
 
+func TestUnorderedTxManager_InitEmpty(t *testing.T) {
+	txm := unorderedtx.NewManager(t.TempDir())
+	defer func() {
+		require.NoError(t, txm.Close())
+	}()
+
+	txm.Start()
+
+	require.NoError(t, txm.OnInit())
+}
+
+func TestUnorderedTxManager_CloseInit(t *testing.T) {
+	dataDir := t.TempDir()
+	txm := unorderedtx.NewManager(dataDir)
+	txm.Start()
+
+	// add a handful of unordered txs
+	for i := 0; i < 100; i++ {
+		txm.Add([32]byte{byte(i)}, 100)
+	}
+
+	// close the manager, which should flush all unexpired txs to file
+	require.NoError(t, txm.Close())
+
+	// create a new manager, start it
+	txm2 := unorderedtx.NewManager(dataDir)
+	defer func() {
+		require.NoError(t, txm2.Close())
+	}()
+
+	// start and execute OnInit, which should load the unexpired txs from file
+	txm2.Start()
+	require.NoError(t, txm2.OnInit())
+	require.Equal(t, 100, txm2.Size())
+
+	for i := 0; i < 100; i++ {
+		require.True(t, txm2.Contains([32]byte{byte(i)}))
+	}
+}
+
 func TestUnorderedTxManager_Flow(t *testing.T) {
-	txm := unorderedtx.NewManager()
-	defer txm.Close()
+	txm := unorderedtx.NewManager(t.TempDir())
+	defer func() {
+		require.NoError(t, txm.Close())
+	}()
 
 	txm.Start()
 

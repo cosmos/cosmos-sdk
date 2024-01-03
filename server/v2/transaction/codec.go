@@ -1,10 +1,9 @@
 package transaction
 
 import (
+	"cosmossdk.io/server/v2/core/transaction"
 	txdecoder "cosmossdk.io/x/tx/decode"
 	"cosmossdk.io/x/tx/signing"
-
-	"cosmossdk.io/server/v2/core/transaction"
 )
 
 var _ transaction.Codec[transaction.Tx] = Codec[txdecoder.DecodedTx]{}

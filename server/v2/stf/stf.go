@@ -26,10 +26,10 @@ type STF[T transaction.Tx] struct {
 	handleMsg   func(ctx context.Context, msg Type) (msgResp Type, err error)
 	handleQuery func(ctx context.Context, req Type) (resp Type, err error)
 
-	doPreBlock        func(ctx context.Context, block appmanager.BlockRequest) error
-	doBeginBlock      func(ctx context.Context) error                                 // TODO: do we need blockrequest here?
-	doEndBlock        func(ctx context.Context) error                                 // TODO: do we need blockrequest here?
-	doValidatorUpdate func(ctx context.Context) ([]appmanager.ValidatorUpdate, error) // TODO: do we need blockrequest here?
+	doUpgradeBlock    func(ctx context.Context) (bool, error)
+	doBeginBlock      func(ctx context.Context) error
+	doEndBlock        func(ctx context.Context) error
+	doValidatorUpdate func(ctx context.Context) ([]appmanager.ValidatorUpdate, error)
 
 	doTxValidation func(ctx context.Context, tx T) error
 	postTxExec     func(ctx context.Context, tx T, success bool) error
@@ -47,8 +47,8 @@ func (s STF[T]) DeliverBlock(ctx context.Context, block appmanager.BlockRequest,
 	// that can be written to.
 	newState = s.branch(state)
 
-	// preBlock
-	preBlockEvents, err := s.preBlock(ctx, newState, block)
+	// upgrade block is called separate from begin block in order to refresh state updates
+	upgradeBlockEvents, err := s.upgradeBlock(ctx, newState)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -78,11 +78,11 @@ func (s STF[T]) DeliverBlock(ctx context.Context, block appmanager.BlockRequest,
 	endBlockEvents = append(endBlockEvents, events...)
 
 	return &appmanager.BlockResponse{
-		PreBlockEvents:   preBlockEvents,
-		BeginBlockEvents: beginBlockEvents,
-		TxResults:        txResults,
-		EndBlockEvents:   endBlockEvents,
-		ValidatorUpdates: valset,
+		UpgradeBlockEvents: upgradeBlockEvents,
+		BeginBlockEvents:   beginBlockEvents,
+		TxResults:          txResults,
+		EndBlockEvents:     endBlockEvents,
+		ValidatorUpdates:   valset,
 	}, newState, nil
 }
 
@@ -182,12 +182,16 @@ func (s STF[T]) runTxMsgs(ctx context.Context, state store.WritableState, gasLim
 	return msgResps, nil
 }
 
-func (s STF[T]) preBlock(ctx context.Context, state store.WritableState, block appmanager.BlockRequest) ([]event.Event, error) {
+func (s STF[T]) upgradeBlock(ctx context.Context, state store.WritableState) ([]event.Event, error) {
 	pbCtx := s.makeContext(ctx, []Identity{runtimeIdentity}, state, 0) // TODO: gas limit
-	err := s.doPreBlock(pbCtx, block)
+	refresh, err := s.doUpgradeBlock(pbCtx)
 	if err != nil {
 		return nil, err
 	}
+	if refresh {
+		// TODO: update context with updated params
+	}
+
 	return pbCtx.events, nil
 }
 

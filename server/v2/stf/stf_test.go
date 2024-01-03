@@ -26,7 +26,7 @@ func TestSTF(t *testing.T) {
 			kvSet(t, ctx, "exec")
 			return nil, nil
 		},
-		doPreBlock: func(ctx context.Context, block appmanager.BlockRequest) error { return nil },
+		doUpgradeBlock: func(ctx context.Context) (bool, error) { return false, nil },
 		doBeginBlock: func(ctx context.Context) error {
 			kvSet(t, ctx, "begin-block")
 			return nil
@@ -158,7 +158,7 @@ func cloneSTF[T transaction.Tx](stf *STF[T]) *STF[T] {
 	return &STF[T]{
 		handleMsg:         stf.handleMsg,
 		handleQuery:       stf.handleQuery,
-		doPreBlock:        stf.doPreBlock,
+		doUpgradeBlock:    stf.doUpgradeBlock,
 		doBeginBlock:      stf.doBeginBlock,
 		doEndBlock:        stf.doEndBlock,
 		doValidatorUpdate: stf.doValidatorUpdate,

@@ -38,6 +38,10 @@ type STFModule[T transaction.Tx] interface {
 	RegisterPostMsgHandler(router PostMsgRouterBuilder)
 }
 
+type UpgradeModule interface {
+	UpgradeBlocker() func(ctx context.Context) error
+}
+
 type Module[T transaction.Tx] interface {
 	STFModule[T]
 }

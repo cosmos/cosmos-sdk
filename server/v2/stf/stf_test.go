@@ -47,7 +47,8 @@ func TestSTF(t *testing.T) {
 			tx.Decode(txBytes)
 			return *tx, nil
 		},
-		branch: branch,
+		branch:            branch,
+		doValidatorUpdate: func(ctx context.Context) ([]appmanager.ValidatorUpdate, error) { return nil, nil },
 	}
 
 	t.Run("begin and end block", func(t *testing.T) {
@@ -154,13 +155,14 @@ func stateNotHas(t *testing.T, state store.ReadonlyState, key string) {
 
 func cloneSTF[T transaction.Tx](stf *STF[T]) *STF[T] {
 	return &STF[T]{
-		handleMsg:      stf.handleMsg,
-		handleQuery:    stf.handleQuery,
-		doBeginBlock:   stf.doBeginBlock,
-		doEndBlock:     stf.doEndBlock,
-		doTxValidation: stf.doTxValidation,
-		postTxExec:     stf.postTxExec,
-		decodeTx:       stf.decodeTx,
-		branch:         stf.branch,
+		handleMsg:         stf.handleMsg,
+		handleQuery:       stf.handleQuery,
+		doBeginBlock:      stf.doBeginBlock,
+		doEndBlock:        stf.doEndBlock,
+		doValidatorUpdate: stf.doValidatorUpdate,
+		doTxValidation:    stf.doTxValidation,
+		postTxExec:        stf.postTxExec,
+		decodeTx:          stf.decodeTx,
+		branch:            stf.branch,
 	}
 }

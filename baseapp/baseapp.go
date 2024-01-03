@@ -46,13 +46,14 @@ type (
 )
 
 const (
-	execModeCheck           execMode = iota // Check a transaction
-	execModeReCheck                         // Recheck a (pending) transaction after a commit
-	execModeSimulate                        // Simulate a transaction
-	execModePrepareProposal                 // Prepare a block proposal
-	execModeProcessProposal                 // Process a block proposal
-	execModeVoteExtension                   // Extend or verify a pre-commit vote
-	execModeFinalize                        // Finalize a block proposal
+	execModeCheck               execMode = iota // Check a transaction
+	execModeReCheck                             // Recheck a (pending) transaction after a commit
+	execModeSimulate                            // Simulate a transaction
+	execModePrepareProposal                     // Prepare a block proposal
+	execModeProcessProposal                     // Process a block proposal
+	execModeVoteExtension                       // Extend or verify a pre-commit vote
+	execModeVerifyVoteExtension                 // Verify a vote extension
+	execModeFinalize                            // Finalize a block proposal
 )
 
 var _ servertypes.ABCI = (*BaseApp)(nil)

@@ -118,6 +118,11 @@ func (s STF[T]) validateTx(ctx context.Context, state store.WritableState, gasLi
 func (s STF[T]) execTx(ctx context.Context, state store.WritableState, gasLimit uint64, tx T) ([]Type, uint64, []event.Event, error) {
 	execState := s.branch(state)
 	execCtx := s.makeContext(ctx, tx.GetSenders(), execState, gasLimit)
+
+	// recover in the case of a panic
+	defer func() {
+		recover()
+	}()
 	// atomic execution of the all messages in a transaction, TODO: we should allow messages to fail in a specific mode
 	msgsResp, txErr := s.runTxMsgs(ctx, execState, gasLimit, tx)
 	if txErr != nil {

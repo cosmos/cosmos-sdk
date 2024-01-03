@@ -163,7 +163,7 @@ func (s STF[T]) runTxMsgs(ctx context.Context, state store.WritableState, gasLim
 	execCtx := s.makeContext(ctx, tx.GetSenders(), state, gasLimit)
 	msgs := tx.GetMessages()
 	msgResps := make([]Type, len(msgs))
-	for i, msg := range tx.GetMessages() {
+	for i, msg := range msgs {
 		resp, err := s.handleMsg(execCtx, msg)
 		if err != nil {
 			return nil, fmt.Errorf("message execution at index %d failed: %w", i, err)

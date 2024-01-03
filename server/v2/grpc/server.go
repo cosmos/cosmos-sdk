@@ -12,9 +12,9 @@ import (
 	"cosmossdk.io/server/v2/grpc/gogoreflection"
 	reflection "cosmossdk.io/server/v2/grpc/reflection/v2alpha1"
 
-	"github.com/cosmos/cosmos-sdk/client"
+	txsigning "cosmossdk.io/x/tx/signing"
 	"github.com/cosmos/cosmos-sdk/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	_ "github.com/cosmos/cosmos-sdk/types/tx/amino" // Import amino.proto file for reflection
 )
 
@@ -60,10 +60,21 @@ type GRPCService interface {
 	RegisterGRPCServer(gogogrpc.Server)
 }
 
+type ClientContext interface {
+	// InterfaceRegistry returns the InterfaceRegistry.
+	InterfaceRegistry() codectypes.InterfaceRegistry
+	ChainID() string
+	TxConfig() TxConfig
+}
+
+type TxConfig interface {
+	SignModeHandler() *txsigning.HandlerMap
+}
+
 // NewGRPCServer returns a correctly configured and initialized gRPC server.
 // Note, the caller is responsible for starting the server. See StartGRPCServer.
 // TODO: look into removing the clientCtx dependency.
-func NewGRPCServer(clientCtx client.Context, logger log.Logger, app GRPCService, cfg Config) (GRPCServer, error) {
+func NewGRPCServer(clientCtx ClientContext, logger log.Logger, app GRPCService, cfg Config) (GRPCServer, error) {
 	maxSendMsgSize := cfg.MaxSendMsgSize
 	if maxSendMsgSize == 0 {
 		maxSendMsgSize = DefaultGRPCMaxSendMsgSize
@@ -75,7 +86,7 @@ func NewGRPCServer(clientCtx client.Context, logger log.Logger, app GRPCService,
 	}
 
 	grpcSrv := grpc.NewServer(
-		grpc.ForceServerCodec(codec.NewProtoCodec(clientCtx.InterfaceRegistry).GRPCCodec()),
+		grpc.ForceServerCodec(codec.NewProtoCodec(clientCtx.InterfaceRegistry()).GRPCCodec()),
 		grpc.MaxSendMsgSize(maxSendMsgSize),
 		grpc.MaxRecvMsgSize(maxRecvMsgSize),
 	)
@@ -87,7 +98,7 @@ func NewGRPCServer(clientCtx client.Context, logger log.Logger, app GRPCService,
 	// time.
 	err := reflection.Register(grpcSrv, reflection.Config{
 		SigningModes: func() map[string]int32 {
-			supportedModes := clientCtx.TxConfig.SignModeHandler().SupportedModes()
+			supportedModes := clientCtx.TxConfig().SignModeHandler().SupportedModes()
 			modes := make(map[string]int32, len(supportedModes))
 			for _, m := range supportedModes {
 				modes[m.String()] = (int32)(m)
@@ -95,9 +106,8 @@ func NewGRPCServer(clientCtx client.Context, logger log.Logger, app GRPCService,
 
 			return modes
 		}(),
-		ChainID:                    clientCtx.ChainID,
-		Bech32AccountAddressPrefix: sdk.GetConfig().GetBech32AccountAddrPrefix(),
-		InterfaceRegistry:          clientCtx.InterfaceRegistry,
+		ChainID:           clientCtx.ChainID(),
+		InterfaceRegistry: clientCtx.InterfaceRegistry(),
 	})
 	if err != nil {
 		return GRPCServer{}, fmt.Errorf("failed to register reflection service: %w", err)

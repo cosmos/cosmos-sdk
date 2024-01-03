@@ -15,12 +15,12 @@ message AppDescriptor {
   ChainDescriptor chain = 2;
   // codec provides metadata information regarding codec related types
   CodecDescriptor codec = 3;
-  // configuration provides metadata information regarding the sdk.Config type
-  ConfigurationDescriptor configuration = 4;
   // query_services provides metadata information regarding the available queryable endpoints
   QueryServicesDescriptor query_services = 5;
   // tx provides metadata information regarding how to send transactions to the given application
   TxDescriptor tx = 6;
+
+  reserved 4;
 }
 
 // TxDescriptor describes the accepted transaction type
@@ -99,12 +99,6 @@ message InterfaceAcceptingMessageDescriptor {
   repeated string field_descriptor_names = 2;
 }
 
-// ConfigurationDescriptor contains metadata information on the sdk.Config
-message ConfigurationDescriptor {
-  // bech32_account_address_prefix is the account address prefix
-  string bech32_account_address_prefix = 1;
-}
-
 // MsgDescriptor describes a cosmos-sdk message that can be delivered with a transaction
 message MsgDescriptor {
   // msg_type_url contains the TypeURL of a sdk.Msg.
@@ -126,10 +120,6 @@ service ReflectionService {
   // GetCodecDescriptor returns the descriptor of the codec of the application
   rpc GetCodecDescriptor(GetCodecDescriptorRequest) returns (GetCodecDescriptorResponse) {
     option (google.api.http).get = "/cosmos/base/reflection/v1beta1/app_descriptor/codec";
-  }
-  // GetConfigurationDescriptor returns the descriptor for the sdk.Config of the application
-  rpc GetConfigurationDescriptor(GetConfigurationDescriptorRequest) returns (GetConfigurationDescriptorResponse) {
-    option (google.api.http).get = "/cosmos/base/reflection/v1beta1/app_descriptor/configuration";
   }
   // GetQueryServicesDescriptor returns the available gRPC queryable services of the application
   rpc GetQueryServicesDescriptor(GetQueryServicesDescriptorRequest) returns (GetQueryServicesDescriptorResponse) {
@@ -163,14 +153,6 @@ message GetCodecDescriptorRequest {}
 message GetCodecDescriptorResponse {
   // codec describes the application codec such as registered interfaces and implementations
   CodecDescriptor codec = 1;
-}
-
-// GetConfigurationDescriptorRequest is the request used for the GetConfigurationDescriptor RPC
-message GetConfigurationDescriptorRequest {}
-// GetConfigurationDescriptorResponse is the response returned by the GetConfigurationDescriptor RPC
-message GetConfigurationDescriptorResponse {
-  // config describes the application's sdk.Config
-  ConfigurationDescriptor config = 1;
 }
 
 // GetQueryServicesDescriptorRequest is the request used for the GetQueryServicesDescriptor RPC

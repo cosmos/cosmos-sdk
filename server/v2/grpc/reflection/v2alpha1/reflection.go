@@ -7,16 +7,15 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 	"google.golang.org/grpc"
 
+	"cosmossdk.io/server/v2/core/appmanager"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 )
 
 type Config struct {
-	SigningModes               map[string]int32
-	ChainID                    string
-	Bech32AccountAddressPrefix string
-	InterfaceRegistry          codectypes.InterfaceRegistry
+	SigningModes      map[string]int32
+	ChainID           string
+	InterfaceRegistry codectypes.InterfaceRegistry
 }
 
 // Register registers the cosmos sdk reflection service
@@ -46,10 +45,6 @@ func (r reflectionServiceServer) GetCodecDescriptor(_ context.Context, _ *GetCod
 	return &GetCodecDescriptorResponse{Codec: r.desc.Codec}, nil
 }
 
-func (r reflectionServiceServer) GetConfigurationDescriptor(_ context.Context, _ *GetConfigurationDescriptorRequest) (*GetConfigurationDescriptorResponse, error) {
-	return &GetConfigurationDescriptorResponse{Config: r.desc.Configuration}, nil
-}
-
 func (r reflectionServiceServer) GetQueryServicesDescriptor(_ context.Context, _ *GetQueryServicesDescriptorRequest) (*GetQueryServicesDescriptorResponse, error) {
 	return &GetQueryServicesDescriptorResponse{Queries: r.desc.QueryServices}, nil
 }
@@ -61,17 +56,16 @@ func (r reflectionServiceServer) GetTxDescriptor(_ context.Context, _ *GetTxDesc
 func newReflectionServiceServer(grpcSrv *grpc.Server, conf Config) (reflectionServiceServer, error) {
 	// set chain descriptor
 	chainDescriptor := &ChainDescriptor{Id: conf.ChainID}
-	// set configuration descriptor
-	configurationDescriptor := &ConfigurationDescriptor{
-		Bech32AccountAddressPrefix: conf.Bech32AccountAddressPrefix,
-	}
+
 	// set codec descriptor
 	codecDescriptor, err := newCodecDescriptor(conf.InterfaceRegistry)
 	if err != nil {
 		return reflectionServiceServer{}, fmt.Errorf("unable to create codec descriptor: %w", err)
 	}
+
 	// set query service descriptor
 	queryServiceDescriptor := newQueryServiceDescriptor(grpcSrv)
+
 	// set deliver descriptor
 	txDescriptor, err := newTxDescriptor(conf.InterfaceRegistry)
 	if err != nil {
@@ -82,7 +76,6 @@ func newReflectionServiceServer(grpcSrv *grpc.Server, conf Config) (reflectionSe
 		Authn:         authnDescriptor,
 		Chain:         chainDescriptor,
 		Codec:         codecDescriptor,
-		Configuration: configurationDescriptor,
 		QueryServices: queryServiceDescriptor,
 		Tx:            txDescriptor,
 	}
@@ -169,7 +162,7 @@ func newTxDescriptor(ir codectypes.InterfaceRegistry) (*TxDescriptor, error) {
 		return nil, fmt.Errorf("unable to get *tx.Tx protobuf name")
 	}
 	// get msgs
-	sdkMsgImplementers := ir.ListImplementations(sdk.MsgInterfaceProtoName)
+	sdkMsgImplementers := ir.ListImplementations(appmanager.MsgInterfaceProtoName)
 
 	msgsDesc := make([]*MsgDescriptor, 0, len(sdkMsgImplementers))
 

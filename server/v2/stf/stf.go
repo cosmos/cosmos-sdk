@@ -23,9 +23,10 @@ type STF[T transaction.Tx] struct {
 	handleMsg   func(ctx context.Context, msg Type) (msgResp Type, err error)
 	handleQuery func(ctx context.Context, req Type) (resp Type, err error)
 
-	doBeginBlock      func(ctx context.Context) error
-	doEndBlock        func(ctx context.Context) error
-	doValidatorUpdate func(ctx context.Context) ([]appmanager.ValidatorUpdate, error)
+	doPreblock        func(ctx context.Context, block appmanager.BlockRequest) error
+	doBeginBlock      func(ctx context.Context) error                                 // TODO: do we need blockrequest here?
+	doEndBlock        func(ctx context.Context) error                                 // TODO: do we need blockrequest here?
+	doValidatorUpdate func(ctx context.Context) ([]appmanager.ValidatorUpdate, error) // TODO: do we need blockrequest here?
 
 	doTxValidation func(ctx context.Context, tx T) error
 
@@ -41,6 +42,13 @@ func (s STF[T]) DeliverBlock(ctx context.Context, block appmanager.BlockRequest,
 	// creates a new branch store, from the readonly view of the state
 	// that can be written to.
 	newState = s.branch(state)
+
+	// preblock
+	preBlockEvents, err := s.preblock(ctx, newState, block)
+	if err != nil {
+		return nil, nil, err
+	}
+
 	// begin block
 	beginBlockEvents, err := s.beginBlock(ctx, newState)
 	if err != nil {
@@ -66,6 +74,7 @@ func (s STF[T]) DeliverBlock(ctx context.Context, block appmanager.BlockRequest,
 	endBlockEvents = append(endBlockEvents, events...)
 
 	return &appmanager.BlockResponse{
+		PreBlockEvents:   preBlockEvents,
 		BeginBlockEvents: beginBlockEvents,
 		TxResults:        txResults,
 		EndBlockEvents:   endBlockEvents,
@@ -129,6 +138,15 @@ func (s STF[T]) execTx(ctx context.Context, state store.WritableState, gasLimit 
 		}
 	}
 	return msgResp, 0, execCtx.events, applyStateChanges(state, execState)
+}
+
+func (s STF[T]) preblock(ctx context.Context, state store.WritableState, block appmanager.BlockRequest) ([]event.Event, error) {
+	pbCtx := s.makeContext(ctx, []Identity{runtimeIdentity}, state, 0) // TODO: gas limit
+	err := s.doPreblock(pbCtx, block)
+	if err != nil {
+		return nil, err
+	}
+	return pbCtx.events, nil
 }
 
 func (s STF[T]) beginBlock(ctx context.Context, state store.WritableState) (beginBlockEvents []event.Event, err error) {

@@ -240,7 +240,7 @@ message MsgUpdateParamsResponse {};
 // experiencing a slash
 message MsgUnbondValidator {
   option (cosmos.msg.v1.signer) = "validator_address";
-  option (amino.name)           = "cosmos-sdk/x/staking/MsgUnbondValidator";
+  option (amino.name)           = "cosmos-sdk/MsgUnbondValidator";
 
   string validator_address = 1 [(gogoproto.moretags) = "yaml:\"address\""];
 }

@@ -26,6 +26,7 @@ type STFBuilder[T transaction.Tx] struct {
 	msgRouterBuilder   *msgRouterBuilder
 	queryRouterBuilder *msgRouterBuilder
 	txValidators       map[string]func(ctx context.Context, tx T) error
+	preblocker         map[string]func(ctx context.Context) error
 	beginBlockers      map[string]func(ctx context.Context) error
 	endBlockers        map[string]func(ctx context.Context) error
 	valSetUpdate       func(ctx context.Context) ([]appmanager.ValidatorUpdate, error)
@@ -87,6 +88,7 @@ func (s *STFBuilder[T]) AddModule(m appmanager.Module[T]) {
 	m.RegisterQueryHandler(moduleQueryRouter)
 	// add begin blockers and endblockers
 	// TODO: check if is not nil, etc.
+	s.preblocker[m.Name()] = m.PreBlocker()
 	s.beginBlockers[m.Name()] = m.BeginBlocker()
 	s.endBlockers[m.Name()] = m.EndBlocker()
 	if s.valSetUpdate == nil && m.UpdateValidators() != nil {

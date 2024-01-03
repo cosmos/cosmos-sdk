@@ -25,6 +25,8 @@ import (
 	tmcmd "github.com/cometbft/cometbft/cmd/cometbft/commands"
 	tmcfg "github.com/cometbft/cometbft/config"
 	tmlog "github.com/cometbft/cometbft/libs/log"
+	"github.com/cometbft/cometbft/node"
+	tmstore "github.com/cometbft/cometbft/store"
 	tmtypes "github.com/cometbft/cometbft/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -459,13 +461,13 @@ func DefaultBaseappOptions(appOpts types.AppOptions) []func(*baseapp.BaseApp) {
 	homeDir := cast.ToString(appOpts.Get(flags.FlagHome))
 	chainID := cast.ToString(appOpts.Get(flags.FlagChainID))
 	if chainID == "" {
-		// fallback to genesis chain-id
-		appGenesis, err := tmtypes.GenesisDocFromFile(filepath.Join(homeDir, "config", "genesis.json"))
+		// read the chainID from home directory (either from comet or genesis).
+		chainId, err := readChainIdFromHome(homeDir)
 		if err != nil {
 			panic(err)
 		}
 
-		chainID = appGenesis.ChainID
+		chainID = chainId
 	}
 
 	snapshotStore, err := GetSnapshotStore(appOpts)
@@ -498,6 +500,38 @@ func DefaultBaseappOptions(appOpts types.AppOptions) []func(*baseapp.BaseApp) {
 		baseapp.SetIAVLLazyLoading(cast.ToBool(appOpts.Get(FlagIAVLLazyLoading))),
 		baseapp.SetChainID(chainID),
 	}
+}
+
+// readChainIdFromHome reads chain id from home directory.
+func readChainIdFromHome(homeDir string) (string, error) {
+	cfg := tmcfg.DefaultConfig()
+	cfg.SetRoot(homeDir)
+
+	// if the node's current height is not zero then try to read the chainID from comet db.
+	db, err := node.DefaultDBProvider(&node.DBContext{ID: "blockstore", Config: cfg})
+	if err != nil {
+		return "", err
+	}
+
+	blockStore := tmstore.NewBlockStore(db)
+	defer func() {
+		if err := blockStore.Close(); err != nil {
+			panic(err)
+		}
+	}()
+
+	// if the blockStore.LoadBaseMeta() is nil (no blocks are created/synced so far), fallback to genesis chain-id.
+	baseMeta := blockStore.LoadBaseMeta()
+	if baseMeta != nil {
+		return baseMeta.Header.ChainID, nil
+	}
+
+	appGenesis, err := tmtypes.GenesisDocFromFile(filepath.Join(homeDir, "config", "genesis.json"))
+	if err != nil {
+		return "", err
+	}
+
+	return appGenesis.ChainID, nil
 }
 
 func GetSnapshotStore(appOpts types.AppOptions) (*snapshots.Store, error) {

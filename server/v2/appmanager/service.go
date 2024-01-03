@@ -5,12 +5,11 @@ import (
 	"fmt"
 	"sync/atomic"
 
-	"cosmossdk.io/server/v2/core/mempool"
-	"cosmossdk.io/server/v2/stf"
-
 	"cosmossdk.io/server/v2/core/appmanager"
 	"cosmossdk.io/server/v2/core/store"
 	"cosmossdk.io/server/v2/core/transaction"
+	"cosmossdk.io/server/v2/mempool"
+	"cosmossdk.io/server/v2/stf"
 )
 
 type AppManagerBuilder[T transaction.Tx] struct {
@@ -83,10 +82,10 @@ func (a AppManager[T]) BuildBlock(ctx context.Context, height uint64, totalSize 
 func (a AppManager[T]) VerifyBlock(ctx context.Context, height uint64, txs []T) error {
 	currentState, err := a.db.NewStateAt(height)
 	if err != nil {
-		return false, fmt.Errorf("unable to create new state for height %d: %w", height, err)
+		return fmt.Errorf("unable to create new state for height %d: %w", height, err)
 	}
 
-	err := a.processHandler(ctx, txs, currentState)
+	err = a.processHandler(ctx, txs, currentState)
 	if err != nil {
 		return err
 	}
@@ -94,7 +93,7 @@ func (a AppManager[T]) VerifyBlock(ctx context.Context, height uint64, txs []T) 
 	return nil
 }
 
-func (a AppManager[T]) DeliverBlock(ctx context.Context, block appmanager.BlockRequest) (*appmanager.BlockResponse, Hash, error) {
+func (a AppManager[T]) DeliverBlock(ctx context.Context, block appmanager.BlockRequest) (*appmanager.BlockResponse, []store.ChangeSet, error) {
 	currentState, err := a.db.NewStateAt(block.Height)
 	if err != nil {
 		return nil, nil, fmt.Errorf("unable to create new state for height %d: %w", block.Height, err)
@@ -105,19 +104,26 @@ func (a AppManager[T]) DeliverBlock(ctx context.Context, block appmanager.BlockR
 		return nil, nil, fmt.Errorf("block delivery failed: %w", err)
 	}
 
-	// apply new state to store
 	newStateChanges, err := newState.ChangeSets()
 	if err != nil {
 		return nil, nil, fmt.Errorf("change set: %w", err)
 	}
 
-	stateRoot, err := a.db.CommitState(newStateChanges)
-	if err != nil {
-		return nil, nil, fmt.Errorf("commit failed: %w", err)
-	}
 	// update last stored block
 	a.lastBlockHeight.Store(block.Height)
-	return blockResponse, stateRoot, nil
+	return blockResponse, newStateChanges, nil
+}
+
+// CommitBlock commits the block to the database, it must be called after DeliverBlock or when Finalization criteria is met
+func (a AppManager[T]) CommitBlock(ctx context.Context, height uint64, sc []store.ChangeSet) (Hash, error) {
+	stateRoot, err := a.db.CommitState(sc)
+	if err != nil {
+		return nil, fmt.Errorf("commit failed: %w", err)
+	}
+
+	// update last stored block
+	a.lastBlockHeight.Store(height)
+	return stateRoot, nil
 }
 
 func (a AppManager[T]) Simulate(ctx context.Context, tx []byte) (appmanager.TxResult, error) {

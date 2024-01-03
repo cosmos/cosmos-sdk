@@ -239,6 +239,9 @@ message MsgUpdateParamsResponse {};
 // This allows a validator to stop their services and jail themselves without
 // experiencing a slash
 message MsgUnbondValidator {
+  option (cosmos.msg.v1.signer) = "validator_address";
+  option (amino.name)           = "cosmos-sdk/x/staking/MsgUnbondValidator";
+
   string validator_address = 1 [(gogoproto.moretags) = "yaml:\"address\""];
 }
 // MsgUnbondValidatorResponse defines the Msg/UnbondValidator response type.
@@ -246,6 +249,9 @@ message MsgUnbondValidatorResponse {}
 
 // MsgTokenizeShares tokenizes a delegation
 message MsgTokenizeShares {
+  option (cosmos.msg.v1.signer) = "delegator_address";
+  option (amino.name)           = "cosmos-sdk/MsgTokenizeShares";
+  
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
@@ -262,6 +268,9 @@ message MsgTokenizeSharesResponse {
 
 // MsgRedeemTokensForShares redeems a tokenized share back into a native delegation
 message MsgRedeemTokensForShares {
+  option (cosmos.msg.v1.signer) = "delegator_address";
+  option (amino.name)           = "cosmos-sdk/MsgRedeemTokensForShares";
+
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
@@ -276,6 +285,9 @@ message MsgRedeemTokensForSharesResponse {
 
 // MsgTransferTokenizeShareRecord transfer a tokenize share record
 message MsgTransferTokenizeShareRecord {
+  option (cosmos.msg.v1.signer) = "sender";
+  option (amino.name)           = "cosmos-sdk/MsgTransferTokenizeShareRecord";
+
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
@@ -289,6 +301,9 @@ message MsgTransferTokenizeShareRecordResponse {}
 
 // MsgDisableTokenizeShares prevents the tokenization of shares for a given address
 message MsgDisableTokenizeShares {
+  option (cosmos.msg.v1.signer) = "delegator_address";
+  option (amino.name)           = "cosmos-sdk/MsgDisableTokenizeShares";
+
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
@@ -300,6 +315,9 @@ message MsgDisableTokenizeSharesResponse {}
 
 // MsgEnableTokenizeShares re-enables tokenization of shares for a given address
 message MsgEnableTokenizeShares {
+  option (cosmos.msg.v1.signer) = "delegator_address";
+  option (amino.name)           = "cosmos-sdk/MsgEnableTokenizeShares";
+
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
@@ -314,6 +332,9 @@ message MsgEnableTokenizeSharesResponse {
 // MsgValidatorBond defines a SDK message for performing validator self-bond of delegated coins
 // from a delegator to a validator.
 message MsgValidatorBond {
+  option (cosmos.msg.v1.signer) = "delegator_address";
+  option (amino.name)           = "cosmos-sdk/MsgValidatorBond";
+  
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 

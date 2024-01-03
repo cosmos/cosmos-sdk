@@ -93,29 +93,25 @@ func (a AppManager[T]) VerifyBlock(ctx context.Context, height uint64, txs []T) 
 	return nil
 }
 
-func (a AppManager[T]) DeliverBlock(ctx context.Context, block appmanager.BlockRequest) (*appmanager.BlockResponse, Hash, []store.ChangeSet, error) {
+func (a AppManager[T]) DeliverBlock(ctx context.Context, block appmanager.BlockRequest) (*appmanager.BlockResponse, []store.ChangeSet, error) {
 	currentState, err := a.db.NewStateAt(block.Height)
 	if err != nil {
-		return nil, nil, nil, fmt.Errorf("unable to create new state for height %d: %w", block.Height, err)
+		return nil, nil, fmt.Errorf("unable to create new state for height %d: %w", block.Height, err)
 	}
 
 	blockResponse, newState, err := a.stf.DeliverBlock(ctx, block, currentState)
 	if err != nil {
-		return nil, nil, nil, fmt.Errorf("block delivery failed: %w", err)
+		return nil, nil, fmt.Errorf("block delivery failed: %w", err)
 	}
 
 	changesets, err := newState.ChangeSets()
 	if err != nil {
-		return nil, nil, nil, err
+		return nil, nil, err
 	}
 
-	stateRoot, err := newState.WorkingHash()
-	if err != nil {
-		return nil, nil, nil, fmt.Errorf("commit failed: %w", err)
-	}
 	// update last stored block
 	a.lastBlockHeight.Store(block.Height)
-	return blockResponse, stateRoot[:], changesets, nil
+	return blockResponse, changesets, nil
 }
 
 // CommitBlock commits the block to the database, it must be called after DeliverBlock or when Finalization criteria is met

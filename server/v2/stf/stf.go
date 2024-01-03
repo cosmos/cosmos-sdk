@@ -167,15 +167,6 @@ func (s STF[T]) validatorUpdates(ctx context.Context, state store.WritableState,
 	return ebCtx.events, valSetUpdates, nil
 }
 
-func (s STF[T]) validatorUpdates(ctx context.Context, state store.WritableState, block appmanager.BlockRequest) ([]event.Event, []appmanager.ValidatorUpdate, error) {
-	ebCtx := s.makeContext(ctx, []Identity{runtimeIdentity}, state, 0) // TODO: gas limit
-	valSetUpdates, err := s.doValidatorUpdate(ebCtx)
-	if err != nil {
-		return nil, nil, err
-	}
-	return ebCtx.events, valSetUpdates, nil
-}
-
 // Simulate simulates the execution of a tx on the provided state.
 func (s STF[T]) Simulate(ctx context.Context, state store.ReadonlyState, gasLimit uint64, tx []byte) appmanager.TxResult {
 	simulationState := s.branch(state)

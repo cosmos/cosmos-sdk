@@ -40,7 +40,6 @@ type WritableState interface {
 	Delete(key []byte) error
 	ApplyChangeSets(changes []ChangeSet) error
 	ChangeSets() ([]ChangeSet, error)
-	WorkingHash() ([32]byte, error)
 }
 
 // ReadonlyState defines a sub-set of the methods exposed by store.KVStore.

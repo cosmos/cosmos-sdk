@@ -26,7 +26,7 @@ type STF[T transaction.Tx] struct {
 	handleMsg   func(ctx context.Context, msg Type) (msgResp Type, err error)
 	handleQuery func(ctx context.Context, req Type) (resp Type, err error)
 
-	doPreblock        func(ctx context.Context, block appmanager.BlockRequest) error
+	doPreBlock        func(ctx context.Context, block appmanager.BlockRequest) error
 	doBeginBlock      func(ctx context.Context) error                                 // TODO: do we need blockrequest here?
 	doEndBlock        func(ctx context.Context) error                                 // TODO: do we need blockrequest here?
 	doValidatorUpdate func(ctx context.Context) ([]appmanager.ValidatorUpdate, error) // TODO: do we need blockrequest here?
@@ -47,8 +47,8 @@ func (s STF[T]) DeliverBlock(ctx context.Context, block appmanager.BlockRequest,
 	// that can be written to.
 	newState = s.branch(state)
 
-	// preblock
-	preBlockEvents, err := s.preblock(ctx, newState, block)
+	// preBlock
+	preBlockEvents, err := s.preBlock(ctx, newState, block)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -182,9 +182,9 @@ func (s STF[T]) runTxMsgs(ctx context.Context, state store.WritableState, gasLim
 	return msgResps, nil
 }
 
-func (s STF[T]) preblock(ctx context.Context, state store.WritableState, block appmanager.BlockRequest) ([]event.Event, error) {
+func (s STF[T]) preBlock(ctx context.Context, state store.WritableState, block appmanager.BlockRequest) ([]event.Event, error) {
 	pbCtx := s.makeContext(ctx, []Identity{runtimeIdentity}, state, 0) // TODO: gas limit
-	err := s.doPreblock(pbCtx, block)
+	err := s.doPreBlock(pbCtx, block)
 	if err != nil {
 		return nil, err
 	}

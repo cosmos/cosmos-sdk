@@ -720,9 +720,3 @@ func (s *CLITestSuite) TestNewWithdrawAllTokenizeShareRecordRewardCmd() {
 		})
 	}
 }
-
-// This test requires multiple validators, if I add this test to `IntegrationTestSuite` by increasing
-// `NumValidators` the existing tests are leading to non-determnism so created new suite for this test.
-func (s *CLITestSuite) TestNewWithdrawAllRewardsGenerateOnly() {
-	// TODO add LSM test
-}

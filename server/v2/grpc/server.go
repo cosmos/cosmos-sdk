@@ -1,20 +1,23 @@
 package grpc
 
 import (
+	"errors"
 	"fmt"
 	"math"
 	"net"
 
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
+	gogoproto "github.com/cosmos/gogoproto/proto"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/encoding"
+	"google.golang.org/protobuf/proto"
 
 	"cosmossdk.io/log"
+	"cosmossdk.io/server/v2/core/appmanager"
 	"cosmossdk.io/server/v2/grpc/gogoreflection"
 	reflection "cosmossdk.io/server/v2/grpc/reflection/v2alpha1"
-
 	txsigning "cosmossdk.io/x/tx/signing"
-	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+
 	_ "github.com/cosmos/cosmos-sdk/types/tx/amino" // Import amino.proto file for reflection
 )
 
@@ -62,7 +65,7 @@ type GRPCService interface {
 
 type ClientContext interface {
 	// InterfaceRegistry returns the InterfaceRegistry.
-	InterfaceRegistry() codectypes.InterfaceRegistry
+	InterfaceRegistry() appmanager.InterfaceRegistry
 	ChainID() string
 	TxConfig() TxConfig
 }
@@ -86,7 +89,7 @@ func NewGRPCServer(clientCtx ClientContext, logger log.Logger, app GRPCService, 
 	}
 
 	grpcSrv := grpc.NewServer(
-		grpc.ForceServerCodec(codec.NewProtoCodec(clientCtx.InterfaceRegistry()).GRPCCodec()),
+		grpc.ForceServerCodec(NewProtoCodec(clientCtx.InterfaceRegistry()).GRPCCodec()),
 		grpc.MaxSendMsgSize(maxSendMsgSize),
 		grpc.MaxRecvMsgSize(maxRecvMsgSize),
 	)
@@ -150,4 +153,93 @@ func (g GRPCServer) Start() error {
 func (g GRPCServer) Stop() {
 	g.logger.Info("stopping gRPC server...", "address", g.config.Address)
 	g.grpcSrv.GracefulStop()
+}
+
+type ProtoCodec struct {
+	interfaceRegistry appmanager.InterfaceRegistry
+}
+
+// NewProtoCodec returns a reference to a new ProtoCodec
+func NewProtoCodec(interfaceRegistry appmanager.InterfaceRegistry) *ProtoCodec {
+	return &ProtoCodec{
+		interfaceRegistry: interfaceRegistry,
+	}
+}
+
+// Marshal implements BinaryMarshaler.Marshal method.
+// NOTE: this function must be used with a concrete type which
+// implements proto.Message. For interface please use the codec.MarshalInterface
+func (pc *ProtoCodec) Marshal(o gogoproto.Message) ([]byte, error) {
+	// Size() check can catch the typed nil value.
+	if o == nil || gogoproto.Size(o) == 0 {
+		// return empty bytes instead of nil, because nil has special meaning in places like store.Set
+		return []byte{}, nil
+	}
+
+	return gogoproto.Marshal(o)
+}
+
+// Unmarshal implements BinaryMarshaler.Unmarshal method.
+// NOTE: this function must be used with a concrete type which
+// implements proto.Message. For interface please use the codec.UnmarshalInterface
+func (pc *ProtoCodec) Unmarshal(bz []byte, ptr gogoproto.Message) error {
+	err := gogoproto.Unmarshal(bz, ptr)
+	if err != nil {
+		return err
+	}
+	// err = codectypes.UnpackInterfaces(ptr, pc.interfaceRegistry) // TODO: identify if needed for grpc
+	// if err != nil {
+	// 	return err
+	// }
+	return nil
+}
+
+func (pc *ProtoCodec) Name() string {
+	return "cosmos-sdk-grpc-codec"
+}
+
+// GRPCCodec returns the gRPC Codec for this specific ProtoCodec
+func (pc *ProtoCodec) GRPCCodec() encoding.Codec {
+	return &grpcProtoCodec{cdc: pc}
+}
+
+// grpcProtoCodec is the implementation of the gRPC proto codec.
+type grpcProtoCodec struct {
+	cdc appmanager.ProtoCodec
+}
+
+var errUnknownProtoType = errors.New("codec: unknown proto type") // sentinel error
+
+func (g grpcProtoCodec) Marshal(v any) ([]byte, error) {
+	switch m := v.(type) {
+	case proto.Message:
+		protov2MarshalOpts := proto.MarshalOptions{Deterministic: true}
+		return protov2MarshalOpts.Marshal(m)
+	case gogoproto.Message:
+		return g.cdc.Marshal(m)
+	default:
+		return nil, fmt.Errorf("%w: cannot marshal type %T", errUnknownProtoType, v)
+	}
+}
+
+func (g grpcProtoCodec) Unmarshal(data []byte, v any) error {
+	switch m := v.(type) {
+	case proto.Message:
+		return proto.Unmarshal(data, m)
+	case gogoproto.Message:
+		return g.cdc.Unmarshal(data, m)
+	default:
+		return fmt.Errorf("%w: cannot unmarshal type %T", errUnknownProtoType, v)
+	}
+}
+
+func (g grpcProtoCodec) Name() string {
+	return "cosmos-sdk-grpc-codec"
+}
+
+func assertNotNil(i interface{}) error {
+	if i == nil {
+		return errors.New("can't marshal <nil> value")
+	}
+	return nil
 }

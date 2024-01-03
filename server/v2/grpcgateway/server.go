@@ -5,13 +5,12 @@ import (
 	"strings"
 
 	gateway "github.com/cosmos/gogogateway"
+	"github.com/cosmos/gogoproto/jsonpb"
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/log"
-
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 )
 
 const (
@@ -32,19 +31,15 @@ type Config struct {
 	Enable bool `mapstructure:"enable"`
 }
 
-type InterfaceRegistry interface {
-	GetInterfaceRegistry() codectypes.InterfaceRegistry
-}
-
 // New creates a new gRPC-gateway server.
-func New(logger log.Logger, grpcSrv *grpc.Server, cfg Config, ir InterfaceRegistry) *Server {
+func New(logger log.Logger, grpcSrv *grpc.Server, cfg Config, ir jsonpb.AnyResolver) *Server {
 	// The default JSON marshaller used by the gRPC-Gateway is unable to marshal non-nullable non-scalar fields.
 	// Using the gogo/gateway package with the gRPC-Gateway WithMarshaler option fixes the scalar field marshaling issue.
 	marshalerOption := &gateway.JSONPb{
 		EmitDefaults: true,
 		Indent:       "",
 		OrigName:     true,
-		AnyResolver:  ir.GetInterfaceRegistry(),
+		AnyResolver:  ir,
 	}
 	return &Server{
 		logger: logger,

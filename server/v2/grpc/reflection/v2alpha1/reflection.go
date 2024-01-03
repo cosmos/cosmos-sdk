@@ -9,14 +9,12 @@ import (
 
 	tx "cosmossdk.io/api/cosmos/tx/v1beta1"
 	"cosmossdk.io/server/v2/core/appmanager"
-
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 )
 
 type Config struct {
 	SigningModes      map[string]int32
 	ChainID           string
-	InterfaceRegistry codectypes.InterfaceRegistry
+	InterfaceRegistry appmanager.InterfaceRegistry
 }
 
 // Register registers the cosmos sdk reflection service
@@ -99,7 +97,7 @@ func newReflectionServiceServer(grpcSrv *grpc.Server, conf Config) (reflectionSe
 }
 
 // newCodecDescriptor describes the codec given the codectypes.InterfaceRegistry
-func newCodecDescriptor(ir codectypes.InterfaceRegistry) (*CodecDescriptor, error) {
+func newCodecDescriptor(ir appmanager.InterfaceRegistry) (*CodecDescriptor, error) {
 	registeredInterfaces := ir.ListAllInterfaces()
 	interfaceDescriptors := make([]*InterfaceDescriptor, len(registeredInterfaces))
 
@@ -158,7 +156,7 @@ func newQueryServiceDescriptor(srv *grpc.Server) *QueryServicesDescriptor {
 	return &QueryServicesDescriptor{QueryServices: queryServices}
 }
 
-func newTxDescriptor(ir codectypes.InterfaceRegistry) (*TxDescriptor, error) {
+func newTxDescriptor(ir appmanager.InterfaceRegistry) (*TxDescriptor, error) {
 	// get base tx type name
 	txPbName := proto.MessageName(&tx.Tx{})
 	if txPbName == "" {

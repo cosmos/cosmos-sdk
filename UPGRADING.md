@@ -89,6 +89,11 @@ for more details.
 In this section we describe the changes made in Cosmos SDK' SimApp.
 **These changes are directly applicable to your application wiring.**
 
+#### AnteHandlers
+
+The GasConsumptionDecorator and IncreaseSequenceDecorator have been merged with the SigVerificationDecorator, so you'll
+need to remove them both from your app.go code, they will yield to unresolvable symbols when compiling.
+
 #### Client (`root.go`)
 
 The `client` package has been refactored to make use of the address codecs (address, validator address, consensus address, etc.).

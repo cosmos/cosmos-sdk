@@ -142,3 +142,35 @@ func NewMsgCancelUnbondingDelegation(delAddr, valAddr string, creationHeight int
 		CreationHeight:   creationHeight,
 	}
 }
+
+// NewMsgRotateConsPubKey creates a new MsgRotateConsPubKey instance.
+func NewMsgRotateConsPubKey(valAddr string, pubKey cryptotypes.PubKey) (*MsgRotateConsPubKey, error) {
+	var pkAny *codectypes.Any
+	if pubKey != nil {
+		var err error
+		if pkAny, err = codectypes.NewAnyWithValue(pubKey); err != nil {
+			return nil, err
+		}
+	}
+	return &MsgRotateConsPubKey{
+		ValidatorAddress: valAddr,
+		NewPubkey:        pkAny,
+	}, nil
+}
+
+// UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
+func (msg MsgRotateConsPubKey) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+	var pubKey cryptotypes.PubKey
+	return unpacker.UnpackAny(msg.NewPubkey, &pubKey)
+}
+
+// UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
+func (hi ConsPubKeyRotationHistory) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+	var oldPubKey cryptotypes.PubKey
+	err := unpacker.UnpackAny(hi.OldConsPubkey, &oldPubKey)
+	if err != nil {
+		return err
+	}
+	var newPubKey cryptotypes.PubKey
+	return unpacker.UnpackAny(hi.NewConsPubkey, &newPubKey)
+}

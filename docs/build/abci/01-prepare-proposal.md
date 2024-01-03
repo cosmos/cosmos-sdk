@@ -1,4 +1,4 @@
-## Prepare Proposal
+# Prepare Proposal
 
 `PrepareProposal` handles construction of the block, meaning that when a proposer
 is preparing to propose a block, it requests the application to evaluate a

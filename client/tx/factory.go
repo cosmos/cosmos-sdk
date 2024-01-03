@@ -136,6 +136,7 @@ func (f Factory) GasPrices() sdk.DecCoins                   { return f.gasPrices
 func (f Factory) AccountRetriever() client.AccountRetriever { return f.accountRetriever }
 func (f Factory) TimeoutHeight() uint64                     { return f.timeoutHeight }
 func (f Factory) Unordered() bool                           { return f.unordered }
+func (f Factory) FromName() string                          { return f.fromName }
 
 // SimulateAndExecute returns the option to simulate and then execute the transaction
 // using the gas from the simulation results
@@ -190,6 +191,13 @@ func (f Factory) WithGasPrices(gasPrices string) Factory {
 // WithKeybase returns a copy of the Factory with updated Keybase.
 func (f Factory) WithKeybase(keybase keyring.Keyring) Factory {
 	f.keybase = keybase
+	return f
+}
+
+// WithFromName returns a copy of the Factory with updated fromName
+// fromName will be use for building a simulation tx.
+func (f Factory) WithFromName(fromName string) Factory {
+	f.fromName = fromName
 	return f
 }
 

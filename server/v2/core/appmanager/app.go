@@ -4,12 +4,12 @@ import (
 	"context"
 	"time"
 
+	"cosmossdk.io/server/v2/core/mempool"
 	"google.golang.org/protobuf/proto"
 
 	"cosmossdk.io/server/v2/core/event"
 	"cosmossdk.io/server/v2/core/store"
 	"cosmossdk.io/server/v2/core/transaction"
-	"cosmossdk.io/server/v2/mempool"
 )
 
 // PrepareHandler is a function that takes a list of transactions and returns a list of transactions and a list of changesets
@@ -75,6 +75,6 @@ type ResponseInitChain struct {
 type TxResult struct {
 	Events  []event.Event
 	GasUsed uint64
-	Resp    Type
+	Resp    []Type
 	Error   error
 }

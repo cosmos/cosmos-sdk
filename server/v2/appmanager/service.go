@@ -6,9 +6,9 @@ import (
 	"sync/atomic"
 
 	"cosmossdk.io/server/v2/core/appmanager"
+	"cosmossdk.io/server/v2/core/mempool"
 	"cosmossdk.io/server/v2/core/store"
 	"cosmossdk.io/server/v2/core/transaction"
-	"cosmossdk.io/server/v2/mempool"
 	"cosmossdk.io/server/v2/stf"
 )
 

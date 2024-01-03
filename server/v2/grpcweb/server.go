@@ -3,10 +3,11 @@ package grpcweb
 import (
 	"net/http"
 
-	"cosmossdk.io/log"
 	"github.com/gorilla/mux"
 	"github.com/improbable-eng/grpc-web/go/grpcweb"
 	"google.golang.org/grpc"
+
+	"cosmossdk.io/log"
 )
 
 type Server struct {

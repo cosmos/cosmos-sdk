@@ -26,6 +26,6 @@ type Handler func(ctx context.Context, tx Tx) (newCtx context.Context, err error
 type Validator[T Tx] interface {
 	// Validate validates the transactions
 	// it returns the context used and a map of which txs failed.
-	// It does not take into account what information is needed to be returned to the consensus engine, this must be extracted from teh context
+	// It does not take into account what information is needed to be returned to the consensus engine, this must be extracted from the context
 	Validate(ctx context.Context, txs []T) (context.Context, map[[32]byte]error)
 }

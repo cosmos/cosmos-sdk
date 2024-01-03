@@ -5,12 +5,11 @@ import (
 	"fmt"
 	"sync/atomic"
 
-	"cosmossdk.io/server/v2/mempool"
-	"cosmossdk.io/server/v2/stf"
-
 	"cosmossdk.io/server/v2/core/appmanager"
 	"cosmossdk.io/server/v2/core/store"
 	"cosmossdk.io/server/v2/core/transaction"
+	"cosmossdk.io/server/v2/mempool"
+	"cosmossdk.io/server/v2/stf"
 )
 
 type AppManagerBuilder[T transaction.Tx] struct {
@@ -83,10 +82,10 @@ func (a AppManager[T]) BuildBlock(ctx context.Context, height uint64, totalSize 
 func (a AppManager[T]) VerifyBlock(ctx context.Context, height uint64, txs []T) error {
 	currentState, err := a.db.NewStateAt(height)
 	if err != nil {
-		return false, fmt.Errorf("unable to create new state for height %d: %w", height, err)
+		return fmt.Errorf("unable to create new state for height %d: %w", height, err)
 	}
 
-	err := a.processHandler(ctx, txs, currentState)
+	err = a.processHandler(ctx, txs, currentState)
 	if err != nil {
 		return err
 	}

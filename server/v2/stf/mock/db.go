@@ -1,8 +1,6 @@
 package mock
 
 import (
-	"crypto/sha256"
-
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/server/v2/core/store"
 )
@@ -77,10 +75,6 @@ func (b branchdb) Set(key, value []byte) error {
 func (b branchdb) Delete(key []byte) error {
 	b.changes[string(key)] = nil
 	return nil
-}
-
-func (b branchdb) WorkingHash() ([32]byte, error) {
-	return sha256.Sum256([]byte("workinghash")), nil
 }
 
 func (b branchdb) ApplyChangeSets(changes []store.ChangeSet) error {

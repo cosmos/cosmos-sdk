@@ -3,8 +3,6 @@ package store
 import (
 	"fmt"
 	"time"
-
-	"cosmossdk.io/store/v2/internal/maps"
 )
 
 type (
@@ -14,6 +12,7 @@ type (
 		Version    uint64
 		StoreInfos []StoreInfo
 		Timestamp  time.Time
+		CommitHash []byte
 	}
 
 	// StoreInfo defines store-specific commit information. It contains a reference
@@ -37,16 +36,21 @@ func (si StoreInfo) GetHash() []byte {
 
 // Hash returns the root hash of all committed stores represented by CommitInfo,
 // sorted by store name/key.
-func (ci CommitInfo) Hash() []byte {
+func (ci *CommitInfo) Hash() []byte {
 	if len(ci.StoreInfos) == 0 {
 		return nil
 	}
 
-	rootHash, _, _ := maps.ProofsFromMap(ci.toMap())
-	return rootHash
+	if len(ci.CommitHash) != 0 {
+		return ci.CommitHash
+	}
+
+	// rootHash, _, _ := maps.ProofsFromMap(ci.toMap())
+	// return rootHash
+	return []byte{}
 }
 
-func (ci CommitInfo) toMap() map[string][]byte {
+func (ci *CommitInfo) toMap() map[string][]byte {
 	m := make(map[string][]byte, len(ci.StoreInfos))
 	for _, storeInfo := range ci.StoreInfos {
 		m[storeInfo.Name] = storeInfo.GetHash()
@@ -55,7 +59,7 @@ func (ci CommitInfo) toMap() map[string][]byte {
 	return m
 }
 
-func (ci CommitInfo) CommitID() CommitID {
+func (ci *CommitInfo) CommitID() CommitID {
 	return CommitID{
 		Version: ci.Version,
 		Hash:    ci.Hash(),

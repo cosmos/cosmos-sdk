@@ -6,7 +6,6 @@ require (
 	cosmossdk.io/core v0.12.0
 	cosmossdk.io/errors v1.0.0
 	cosmossdk.io/log v1.2.1
-	cosmossdk.io/math v1.2.0
 	github.com/cockroachdb/errors v1.11.1
 	github.com/cockroachdb/pebble v0.0.0-20231102162011-844f0582c2eb
 	github.com/cometbft/cometbft v0.38.2

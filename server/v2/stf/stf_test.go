@@ -38,12 +38,17 @@ func TestSTF(t *testing.T) {
 			kvSet(t, ctx, "validate")
 			return nil
 		},
+		postTxExec: func(ctx context.Context, tx mock.Tx, success bool) error {
+			kvSet(t, ctx, "post-tx-exec")
+			return nil
+		},
 		decodeTx: func(txBytes []byte) (mock.Tx, error) {
 			tx := new(mock.Tx)
 			tx.Decode(txBytes)
 			return *tx, nil
 		},
-		branch: branch,
+		branch:            branch,
+		doValidatorUpdate: func(ctx context.Context) ([]appmanager.ValidatorUpdate, error) { return nil, nil },
 	}
 
 	t.Run("begin and end block", func(t *testing.T) {
@@ -60,6 +65,7 @@ func TestSTF(t *testing.T) {
 		require.NoError(t, err)
 		stateHas(t, newState, "validate")
 		stateHas(t, newState, "exec")
+		stateHas(t, newState, "post-tx-exec")
 	})
 
 	t.Run("fail exec tx", func(t *testing.T) {
@@ -76,6 +82,40 @@ func TestSTF(t *testing.T) {
 		stateHas(t, newState, "end-block")
 		stateHas(t, newState, "validate")
 		stateNotHas(t, newState, "exec")
+		stateHas(t, newState, "post-tx-exec")
+	})
+
+	t.Run("tx is success but post tx failed", func(t *testing.T) {
+		stf := cloneSTF(stf)
+		stf.postTxExec = func(ctx context.Context, tx mock.Tx, success bool) error {
+			return fmt.Errorf("post tx failure")
+		}
+		blockResult, newState, err := stf.DeliverBlock(context.Background(), appmanager.BlockRequest{
+			Txs: [][]byte{mockTx.Encode()},
+		}, state)
+		require.NoError(t, err)
+		require.ErrorContains(t, blockResult.TxResults[0].Error, "post tx failure")
+		stateHas(t, newState, "begin-block")
+		stateHas(t, newState, "end-block")
+		stateHas(t, newState, "validate")
+		stateNotHas(t, newState, "exec")
+		stateNotHas(t, newState, "post-tx-exec")
+	})
+
+	t.Run("tx failed and post tx failed", func(t *testing.T) {
+		stf := cloneSTF(stf)
+		stf.handleMsg = func(ctx context.Context, msg Type) (msgResp Type, err error) { return nil, fmt.Errorf("exec failure") }
+		stf.postTxExec = func(ctx context.Context, tx mock.Tx, success bool) error { return fmt.Errorf("post tx failure") }
+		blockResult, newState, err := stf.DeliverBlock(context.Background(), appmanager.BlockRequest{
+			Txs: [][]byte{mockTx.Encode()},
+		}, state)
+		require.NoError(t, err)
+		require.ErrorContains(t, blockResult.TxResults[0].Error, "exec failure\npost tx failure")
+		stateHas(t, newState, "begin-block")
+		stateHas(t, newState, "end-block")
+		stateHas(t, newState, "validate")
+		stateNotHas(t, newState, "exec")
+		stateNotHas(t, newState, "post-tx-exec")
 	})
 
 	t.Run("fail validate tx", func(t *testing.T) {
@@ -115,12 +155,14 @@ func stateNotHas(t *testing.T, state store.ReadonlyState, key string) {
 
 func cloneSTF[T transaction.Tx](stf *STF[T]) *STF[T] {
 	return &STF[T]{
-		handleMsg:      stf.handleMsg,
-		handleQuery:    stf.handleQuery,
-		doBeginBlock:   stf.doBeginBlock,
-		doEndBlock:     stf.doEndBlock,
-		doTxValidation: stf.doTxValidation,
-		decodeTx:       stf.decodeTx,
-		branch:         stf.branch,
+		handleMsg:         stf.handleMsg,
+		handleQuery:       stf.handleQuery,
+		doBeginBlock:      stf.doBeginBlock,
+		doEndBlock:        stf.doEndBlock,
+		doValidatorUpdate: stf.doValidatorUpdate,
+		doTxValidation:    stf.doTxValidation,
+		postTxExec:        stf.postTxExec,
+		decodeTx:          stf.decodeTx,
+		branch:            stf.branch,
 	}
 }

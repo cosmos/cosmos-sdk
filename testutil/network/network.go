@@ -558,7 +558,7 @@ func New(l Logger, baseDir string, cfg Config) (NetworkI, error) {
 			WithAddressCodec(cfg.AddressCodec).
 			WithValidatorAddressCodec(cfg.ValidatorAddressCodec).
 			WithConsensusAddressCodec(cfg.ValidatorAddressCodec).
-			WithNodeURI(tmCfg.RPC.ListenAddress)
+			WithNodeURI(cmtCfg.RPC.ListenAddress)
 
 		// Provide ChainID here since we can't modify it in the Comet config.
 		ctx.Viper.Set(flags.FlagChainID, cfg.ChainID)

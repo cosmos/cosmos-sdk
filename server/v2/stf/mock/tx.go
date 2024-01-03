@@ -4,9 +4,10 @@ import (
 	"crypto/sha256"
 	"encoding/json"
 
-	"cosmossdk.io/server/v2/core/transaction"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
+
+	"cosmossdk.io/server/v2/core/transaction"
 )
 
 var _ transaction.Tx = Tx{}

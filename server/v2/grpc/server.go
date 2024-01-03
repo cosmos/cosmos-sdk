@@ -9,9 +9,9 @@ import (
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/log"
-
 	"cosmossdk.io/server/v2/grpc/gogoreflection"
 	reflection "cosmossdk.io/server/v2/grpc/reflection/v2alpha1"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"

@@ -28,7 +28,7 @@ type STFBuilder[T transaction.Tx] struct {
 	txValidators       map[string]func(ctx context.Context, tx T) error
 	beginBlockers      map[string]func(ctx context.Context) error
 	endBlockers        map[string]func(ctx context.Context) error
-	valSetUpdate       func(ctx context.Context) (appmanager.ValidatorUpdate, error)
+	valSetUpdate       func(ctx context.Context) ([]appmanager.ValidatorUpdate, error)
 	txCodec            transaction.Codec[T]
 }
 
@@ -89,6 +89,11 @@ func (s *STFBuilder[T]) AddModule(m appmanager.Module[T]) {
 	// TODO: check if is not nil, etc.
 	s.beginBlockers[m.Name()] = m.BeginBlocker()
 	s.endBlockers[m.Name()] = m.EndBlocker()
+	if s.valSetUpdate == nil && m.UpdateValidators() != nil {
+		s.valSetUpdate = m.UpdateValidators()
+	} else if s.valSetUpdate != nil && m.UpdateValidators() != nil {
+		s.err = errors.Join(s.err, fmt.Errorf("multiple modules are trying to update validators"))
+	}
 	s.txValidators[m.Name()] = m.TxValidator()
 }
 

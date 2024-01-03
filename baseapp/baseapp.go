@@ -929,6 +929,7 @@ func (app *BaseApp) runTx(mode execMode, txBytes []byte) (gInfo sdk.GasInfo, res
 	// Run optional postHandlers (should run regardless of the execution result).
 	//
 	// Note: If the postHandler fails, we also revert the runMsgs state.
+	var postHandlerEvents []abci.Event
 	if app.postHandler != nil {
 		// The runMsgCtx context currently contains events emitted by the ante handler.
 		// We clear this to correctly order events without duplicates.
@@ -940,7 +941,10 @@ func (app *BaseApp) runTx(mode execMode, txBytes []byte) (gInfo sdk.GasInfo, res
 			return gInfo, nil, anteEvents, err
 		}
 
-		result.Events = append(result.Events, newCtx.EventManager().ABCIEvents()...)
+		postHandlerEvents = newCtx.EventManager().ABCIEvents()
+		if result != nil {
+			result.Events = append(result.Events, newCtx.EventManager().ABCIEvents()...)
+		}
 	}
 
 	if err == nil {
@@ -953,7 +957,7 @@ func (app *BaseApp) runTx(mode execMode, txBytes []byte) (gInfo sdk.GasInfo, res
 
 		if len(anteEvents) > 0 && (mode == execModeFinalize || mode == execModeSimulate) {
 			// append the events in the order of occurrence
-			result.Events = append(anteEvents, result.Events...)
+			result.Events = append(append(anteEvents, result.Events...), postHandlerEvents...)
 		}
 	}
 

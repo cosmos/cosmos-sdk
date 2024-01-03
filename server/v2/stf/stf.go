@@ -115,7 +115,7 @@ func (s STF[T]) validateTx(ctx context.Context, state store.WritableState, gasLi
 }
 
 // execTx executes the tx messages on the provided state. If the tx fails then the state is discarded.
-func (s STF[T]) execTx(ctx context.Context, state store.WritableState, gasLimit uint64, tx T) (msgsResp []Type, gasUsed uint64, execEvents []event.Event, _err error) {
+func (s STF[T]) execTx(ctx context.Context, state store.WritableState, gasLimit uint64, tx T) ([]Type, uint64, []event.Event, error) {
 	execState := s.branch(state)
 	execCtx := s.makeContext(ctx, tx.GetSenders(), execState, gasLimit)
 	// atomic execution of the all messages in a transaction, TODO: we should allow messages to fail in a specific mode

@@ -104,14 +104,14 @@ func (a AppManager[T]) DeliverBlock(ctx context.Context, block appmanager.BlockR
 		return nil, nil, fmt.Errorf("block delivery failed: %w", err)
 	}
 
-	changesets, err := newState.ChangeSets()
+	newStateChanges, err := newState.ChangeSets()
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, fmt.Errorf("change set: %w", err)
 	}
 
 	// update last stored block
 	a.lastBlockHeight.Store(block.Height)
-	return blockResponse, changesets, nil
+	return blockResponse, newStateChanges, nil
 }
 
 // CommitBlock commits the block to the database, it must be called after DeliverBlock or when Finalization criteria is met

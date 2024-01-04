@@ -152,3 +152,15 @@ func (a AppManager[T]) getLatestState(_ context.Context) (store.ReadonlyState, e
 	}
 	return lastBlockState, nil
 }
+
+func (a AppManager[T]) Validate(ctx context.Context, txBytes []byte) (appmanager.TxResult, error) {
+	state, err := a.getLatestState(ctx)
+	if err != nil {
+		return appmanager.TxResult{}, err
+	}
+	return a.stf.ValidateTx(ctx, state, a.checkTxGasLimit, txBytes), nil
+}
+
+func (a AppManager[T]) LastBlockHeight() uint64 {
+	return a.lastBlockHeight.Load()
+}

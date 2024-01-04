@@ -27,6 +27,7 @@ func Test_runRenameCmd(t *testing.T) {
 	yesF, _ := cmd.Flags().GetBool(flagYes)
 	require.False(t, yesF)
 
+	invalidName := ""
 	fakeKeyName1 := "runRenameCmd_Key1"
 	fakeKeyName2 := "runRenameCmd_Key2"
 
@@ -45,6 +46,9 @@ func Test_runRenameCmd(t *testing.T) {
 		WithCodec(cdc)
 
 	ctx := context.WithValue(context.Background(), client.ClientContextKey, &clientCtx)
+
+	cmd.SetArgs([]string{fakeKeyName1, invalidName, fmt.Sprintf("--%s=%s", flags.FlagKeyringDir, kbHome)})
+	require.ErrorContains(t, cmd.ExecuteContext(ctx), "new name is empty after trimming the white space")
 
 	// rename a key 'blah' which doesnt exist
 	cmd.SetArgs([]string{"blah", "blaah", fmt.Sprintf("--%s=%s", flags.FlagKeyringDir, kbHome)})

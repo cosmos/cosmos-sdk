@@ -90,7 +90,6 @@ func (s *STFBuilder[T]) AddModule(m appmanager.Module[T]) {
 	moduleQueryRouter := _newModuleMsgRouter(m.Name(), s.queryRouterBuilder)
 	m.RegisterQueryHandler(moduleQueryRouter)
 	// add begin blockers and endblockers
-	// TODO: check if is not nil, etc.
 	if i, ok := m.(appmanager.UpgradeModule); ok {
 		if m.Name() == "upgrade" {
 			s.upgradeBlocker = i.UpgradeBlocker()

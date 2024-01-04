@@ -130,7 +130,7 @@ func Test_runListCmdWithGivenShowField(t *testing.T) {
 			if tt.wantErr {
 				assert.Error(t, err, tt.wantErrStr)
 			} else {
-				assert.NilError(t, cmd.ExecuteContext(ctx))
+				assert.NilError(t, err)
 				assert.Assert(t, strings.Contains(mockOut.String(), tt.expectContain))
 			}
 		})

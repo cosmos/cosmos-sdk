@@ -2,6 +2,7 @@ package store
 
 import (
 	"fmt"
+	"sort"
 	"time"
 )
 
@@ -45,18 +46,32 @@ func (ci *CommitInfo) Hash() []byte {
 		return ci.CommitHash
 	}
 
-	// rootHash, _, _ := maps.ProofsFromMap(ci.toMap())
-	// return rootHash
-	return []byte{}
+	rootHash, _, _ := ci.GetStoreProof("")
+	return rootHash
 }
 
-func (ci *CommitInfo) toMap() map[string][]byte {
-	m := make(map[string][]byte, len(ci.StoreInfos))
-	for _, storeInfo := range ci.StoreInfos {
-		m[storeInfo.Name] = storeInfo.GetHash()
+func (ci *CommitInfo) GetStoreProof(storeKey string) ([]byte, *CommitmentOp, error) {
+	sort.Slice(ci.StoreInfos, func(i, j int) bool {
+		return ci.StoreInfos[i].Name < ci.StoreInfos[j].Name
+	})
+
+	index := 0
+	leaves := make([][]byte, len(ci.StoreInfos))
+	for i, si := range ci.StoreInfos {
+		var err error
+		leaves[i], err = LeafHash([]byte(si.Name), si.GetHash())
+		if err != nil {
+			return nil, nil, err
+		}
+		if si.Name == storeKey {
+			index = i
+		}
 	}
 
-	return m
+	rootHash, inners := ProofFromByteSlices(leaves, index)
+	commitmentOp := ConvertCommitmentOp(inners, []byte(storeKey), ci.StoreInfos[index].GetHash())
+
+	return rootHash, &commitmentOp, nil
 }
 
 func (ci *CommitInfo) CommitID() CommitID {

@@ -52,9 +52,9 @@ func TestProofFromBytesSlices(t *testing.T) {
 			rootHash, inners := ProofFromByteSlices(buf, j)
 			require.Equal(t, tc.want, fmt.Sprintf("%x", rootHash), "test case %d", i)
 			commitmentOp := ConvertCommitmentOp(inners, []byte(tc.keys[j]), []byte(tc.values[j]))
-			expRoot, err := commitmentOp.Proof.Calculate()
+			expRoots, err := commitmentOp.Run([][]byte{[]byte(tc.values[j])})
 			require.NoError(t, err)
-			require.Equal(t, tc.want, fmt.Sprintf("%x", expRoot), "test case %d", i)
+			require.Equal(t, tc.want, fmt.Sprintf("%x", expRoots[0]), "test case %d", i)
 		}
 
 	}

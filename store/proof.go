@@ -33,7 +33,7 @@ var (
 			MinPrefixLength: 1,
 			MaxPrefixLength: 1,
 			ChildSize:       32,
-			Hash:            ics23.HashOp_SHA512_256,
+			Hash:            ics23.HashOp_SHA256,
 		},
 	}
 )

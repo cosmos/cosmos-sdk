@@ -91,10 +91,12 @@ func (s *STFBuilder[T]) AddModule(m appmanager.Module[T]) {
 	m.RegisterQueryHandler(moduleQueryRouter)
 	// add begin blockers and endblockers
 	// TODO: check if is not nil, etc.
-	if s.upgradeBlocker == nil && m.PreBlocker() != nil {
-		s.upgradeBlocker = m.PreBlocker()
-	} else if s.upgradeBlocker != nil && m.PreBlocker() != nil {
-		s.err = errors.Join(s.err, fmt.Errorf("multiple modules are trying to update validators"))
+	if i, ok := m.(appmanager.UpgradeModule); ok {
+		if m.Name() == "upgrade" {
+			s.upgradeBlocker = i.UpgradeBlocker()
+		} else {
+			s.err = errors.Join(s.err, fmt.Errorf("upgrade module must be named 'upgrade'"))
+		}
 	}
 	s.beginBlockers[m.Name()] = m.BeginBlocker()
 	s.endBlockers[m.Name()] = m.EndBlocker()

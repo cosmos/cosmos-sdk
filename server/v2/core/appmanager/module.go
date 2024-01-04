@@ -29,7 +29,6 @@ type STFModule[T transaction.Tx] interface {
 	Name() string
 	RegisterMsgHandlers(router MsgRouterBuilder)
 	RegisterQueryHandler(router QueryRouterBuilder)
-	PreBlocker() func(ctx context.Context) error
 	BeginBlocker() func(ctx context.Context) error
 	EndBlocker() func(ctx context.Context) error
 	UpdateValidators() func(ctx context.Context) ([]ValidatorUpdate, error)

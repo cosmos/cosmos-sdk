@@ -135,7 +135,7 @@ func (itr *iterator) Next() bool {
 
 	// First move the iterator to the next prefix, which may not correspond to the
 	// desired version for that key, e.g. if the key was written at a later version,
-	// so we seek back to the latest desired version, s.t. the version is <= itr.version.
+	// so we seek back to the latest desired version, s.t. the version <= itr.version.
 	if next {
 		nextKey, _, ok := SplitMVCCKey(itr.source.Key())
 		if !ok {
@@ -150,7 +150,7 @@ func (itr *iterator) Next() bool {
 			return itr.valid
 		}
 
-		// Move the iterator to the closest version to the desired version, so we
+		// Move the iterator to the closest version of the desired version, so we
 		// append the current iterator key to the prefix and seek to that key.
 		itr.valid = itr.source.SeekLT(MVCCEncode(nextKey, itr.version+1))
 
@@ -162,6 +162,8 @@ func (itr *iterator) Next() bool {
 			return itr.valid
 		}
 
+		// There exists cases where the SeekLT() call moved us back to the same key
+		// we started at, so we must move to next key, i.e. two keys forward.
 		if bytes.Equal(tmpKey, currKey) {
 			if itr.source.SeekGE(MVCCEncode(nextKey, 0)) {
 				if itr.source.NextPrefix() {

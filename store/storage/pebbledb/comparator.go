@@ -137,6 +137,9 @@ func (f mvccKeyFormatter) Format(s fmt.State, verb rune) {
 
 // SplitMVCCKey accepts an MVCC key and returns the "user" key, the MVCC version,
 // and a boolean indicating if the provided key is an MVCC key.
+//
+// Note, internally, we must make a copy of the provided mvccKey argument, which
+// typically comes from the Key() method as it's not safe.
 func SplitMVCCKey(mvccKey []byte) (key, version []byte, ok bool) {
 	if len(mvccKey) == 0 {
 		return nil, nil, false

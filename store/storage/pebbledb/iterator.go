@@ -116,15 +116,15 @@ func (itr *iterator) Value() []byte {
 }
 
 func (itr *iterator) Next() bool {
+	currKey, _, ok := SplitMVCCKey(itr.source.Key())
+	if !ok {
+		// XXX: This should not happen as that would indicate we have a malformed
+		// MVCC key.
+		panic(fmt.Sprintf("invalid PebbleDB MVCC key: %s", itr.source.Key()))
+	}
+
 	var next bool
 	if itr.reverse {
-		currKey, _, ok := SplitMVCCKey(itr.source.Key())
-		if !ok {
-			// XXX: This should not happen as that would indicate we have a malformed
-			// MVCC key.
-			panic(fmt.Sprintf("invalid PebbleDB MVCC key: %s", itr.source.Key()))
-		}
-
 		// Since PebbleDB has no PrevPrefix API, we must manually seek to the next
 		// key that is lexicographically less than the current key.
 		next = itr.source.SeekLT(MVCCEncode(currKey, 0))
@@ -153,6 +153,25 @@ func (itr *iterator) Next() bool {
 		// Move the iterator to the closest version to the desired version, so we
 		// append the current iterator key to the prefix and seek to that key.
 		itr.valid = itr.source.SeekLT(MVCCEncode(nextKey, itr.version+1))
+
+		tmpKey, _, ok := SplitMVCCKey(itr.source.Key())
+		if !ok {
+			// XXX: This should not happen as that would indicate we have a malformed
+			// MVCC key.
+			itr.valid = false
+			return itr.valid
+		}
+
+		if bytes.Equal(tmpKey, currKey) {
+			if itr.source.SeekGE(MVCCEncode(nextKey, 0)) {
+				if itr.source.NextPrefix() {
+					return itr.Next()
+				}
+			}
+
+			itr.valid = false
+			return itr.valid
+		}
 
 		// The cursor might now be pointing at a key/value pair that is tombstoned.
 		// If so, we must move the cursor.

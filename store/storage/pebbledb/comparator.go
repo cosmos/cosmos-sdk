@@ -142,15 +142,18 @@ func SplitMVCCKey(mvccKey []byte) (key, version []byte, ok bool) {
 		return nil, nil, false
 	}
 
-	n := len(mvccKey) - 1
-	tsLen := int(mvccKey[n])
+	mvccKeyCopy := make([]byte, len(mvccKey))
+	copy(mvccKeyCopy, mvccKey)
+
+	n := len(mvccKeyCopy) - 1
+	tsLen := int(mvccKeyCopy[n])
 	if n < tsLen {
 		return nil, nil, false
 	}
 
-	key = mvccKey[:n-tsLen]
+	key = mvccKeyCopy[:n-tsLen]
 	if tsLen > 0 {
-		version = mvccKey[n-tsLen+1 : len(mvccKey)-1]
+		version = mvccKeyCopy[n-tsLen+1 : len(mvccKeyCopy)-1]
 	}
 
 	return key, version, true

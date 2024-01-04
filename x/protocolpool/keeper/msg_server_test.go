@@ -451,6 +451,31 @@ func (suite *KeeperTestSuite) TestWithdrawContinuousFund() {
 			expErr:           false,
 			withdrawnAmount:  sdk.NewCoin(sdk.DefaultBondDenom, math.ZeroInt()),
 		},
+		"valid case with empty expiry": {
+			preRun: func() {
+				percentage, err := math.LegacyNewDecFromStr("0.2")
+				suite.Require().NoError(err)
+				cf := types.ContinuousFund{
+					Recipient:  recipient.String(),
+					Percentage: percentage,
+				}
+				// Set continuous fund
+				err = suite.poolKeeper.ContinuousFund.Set(suite.ctx, recipient, cf)
+				suite.Require().NoError(err)
+				// Set recipient fund percentage and recipient fund distribution
+				intPercentage := percentage.MulInt64(100)
+				err = suite.poolKeeper.RecipientFundPercentage.Set(suite.ctx, recipient, intPercentage.TruncateInt())
+				suite.Require().NoError(err)
+				err = suite.poolKeeper.RecipientFundDistribution.Set(suite.ctx, recipient, math.ZeroInt())
+				suite.Require().NoError(err)
+				toDistribute := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100000)))
+				err = suite.poolKeeper.SetToDistribute(suite.ctx, toDistribute, suite.poolKeeper.GetAuthority())
+				suite.Require().NoError(err)
+			},
+			recipientAddress: recipient,
+			expErr:           false,
+			withdrawnAmount:  sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(20000)),
+		},
 		"valid case": {
 			preRun: func() {
 				percentage, err := math.LegacyNewDecFromStr("0.2")

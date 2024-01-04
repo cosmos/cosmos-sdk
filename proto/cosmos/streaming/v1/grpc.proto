@@ -2,51 +2,41 @@ syntax = "proto3";
 
 package cosmos.streaming.v1;
 
-import "gogoproto/gogo.proto";
-import "google/protobuf/timestamp.proto";
-
 option go_package = "cosmossdk.io/server/v2/streaming";
 
 // ListenDeliverBlockRequest is the request type for the ListenDeliverBlock RPC method
 message ListenDeliverBlockRequest {
-  repeated Transaction      txs                  = 1;
-  int64                     height               = 2;
-  repeated Event            events               = 3;
-  bytes                     hash                 = 4;
-  google.protobuf.Timestamp time                 = 5 [(gogoproto.stdtime) = true];
-  bytes                     next_validators_hash = 6;
-  bytes                     proposer_address     = 7;
+  int64                block_height = 1;
+  repeated Transaction txs          = 2;
+  repeated Event       events       = 3;
 }
 
 // ListenDeliverBlockResponse is the response type for the ListenDeliverBlock RPC method
 message ListenDeliverBlockResponse {}
 
-// ListenCommitRequest is the request type for the ListenCommit RPC method
+// ListenStateChangesRequest is the request type for the ListenStateChanges RPC method
 message ListenStateChangesRequest {
-  // explicitly pass in block height as ResponseCommit does not contain this
-  // info
   int64                block_height = 1;
   repeated StoreKVPair change_set   = 2;
   bytes                app_hash     = 3;
 }
 
-// ListenStateChangesResponse is the response type for the ListenCommit RPC method
+// ListenStateChangesResponse is the response type for the ListenStateChanges RPC method
 message ListenStateChangesResponse {}
 
-// ListenerService is the service for the ABCIListener interface
+// ListenerService is the service for the Listener interface
 service ListenerService {
-  // ListenDeliverBlock is the corresponding endpoint for ABCIListener.ListenDeliverBlock
+  // ListenDeliverBlock is the corresponding endpoint for Listener.ListenDeliverBlock
   rpc ListenDeliverBlock(ListenDeliverBlockRequest) returns (ListenDeliverBlockResponse);
-  // ListenCommit is the corresponding endpoint for ABCIListener.ListenCommit
+  // ListenStateChanges is the corresponding endpoint for Listener.ListenStateChanges
   rpc ListenStateChanges(ListenStateChangesRequest) returns (ListenStateChangesResponse);
 }
 
 // StoreKVPair is a single key-value pair, associated with a store.
 message StoreKVPair {
   string store_key = 1; // the store key for the KVStore this pair originates from
-  bool delete      = 2; // true indicates a delete operation, false indicates a set operation
-  bytes key        = 3;
-  bytes value      = 4;
+  bytes  key       = 3;
+  bytes  value     = 4;
 }
 
 // Event is a single event, associated with a transaction.

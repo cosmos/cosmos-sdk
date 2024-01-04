@@ -27,9 +27,9 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type ListenerServiceClient interface {
-	// ListenDeliverBlock is the corresponding endpoint for ABCIListener.ListenDeliverBlock
+	// ListenDeliverBlock is the corresponding endpoint for Listener.ListenDeliverBlock
 	ListenDeliverBlock(ctx context.Context, in *ListenDeliverBlockRequest, opts ...grpc.CallOption) (*ListenDeliverBlockResponse, error)
-	// ListenCommit is the corresponding endpoint for ABCIListener.ListenCommit
+	// ListenStateChanges is the corresponding endpoint for Listener.ListenStateChanges
 	ListenStateChanges(ctx context.Context, in *ListenStateChangesRequest, opts ...grpc.CallOption) (*ListenStateChangesResponse, error)
 }
 
@@ -63,9 +63,9 @@ func (c *listenerServiceClient) ListenStateChanges(ctx context.Context, in *List
 // All implementations must embed UnimplementedListenerServiceServer
 // for forward compatibility
 type ListenerServiceServer interface {
-	// ListenDeliverBlock is the corresponding endpoint for ABCIListener.ListenDeliverBlock
+	// ListenDeliverBlock is the corresponding endpoint for Listener.ListenDeliverBlock
 	ListenDeliverBlock(context.Context, *ListenDeliverBlockRequest) (*ListenDeliverBlockResponse, error)
-	// ListenCommit is the corresponding endpoint for ABCIListener.ListenCommit
+	// ListenStateChanges is the corresponding endpoint for Listener.ListenStateChanges
 	ListenStateChanges(context.Context, *ListenStateChangesRequest) (*ListenStateChangesResponse, error)
 	mustEmbedUnimplementedListenerServiceServer()
 }

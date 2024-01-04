@@ -62,7 +62,7 @@ func (s *PluginTestSuite) SetupTest() {
 	// test abci message types
 
 	s.deliverBlockrequest = ListenDeliverBlockRequest{
-		Height: s.loggerCtx.BlockHeight(),
+		BlockHeight: s.loggerCtx.BlockHeight(),
 		Txs: []*Transaction{{TxBytes: []byte{1, 2, 3, 4, 5, 6, 7, 8, 9}, Result: &ExecTxResult{
 			Events:    []*Event{},
 			Code:      1,
@@ -73,7 +73,6 @@ func (s *PluginTestSuite) SetupTest() {
 			Info:      "mockInfo",
 			Log:       "mockLog",
 		}}},
-		Hash:   []byte{1, 2, 3, 4, 5, 6, 7, 8, 9},
 		Events: []*Event{},
 	}
 	s.stateChangeRequest = ListenStateChangesRequest{}
@@ -82,7 +81,6 @@ func (s *PluginTestSuite) SetupTest() {
 	for range [2000]int{} {
 		s.changeSet = append(s.changeSet, &StoreKVPair{
 			StoreKey: "mockStore",
-			Delete:   false,
 			Key:      []byte{1, 2, 3},
 			Value:    []byte{3, 2, 1},
 		})

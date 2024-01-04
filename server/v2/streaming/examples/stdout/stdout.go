@@ -16,7 +16,7 @@ type StdoutPlugin struct {
 }
 
 func (a *StdoutPlugin) ListenDeliverBlock(ctx context.Context, req streaming.ListenDeliverBlockRequest) error {
-	a.BlockHeight = req.Height
+	a.BlockHeight = req.BlockHeight
 	// process tx messages (i.e: sent to external system)
 	fmt.Printf("listen-finalize-block: block-height=%d req=%v res=%v", a.BlockHeight, req)
 	return nil

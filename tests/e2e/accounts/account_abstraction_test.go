@@ -89,7 +89,6 @@ func TestAccountAbstraction(t *testing.T) {
 		// assert there were state changes
 		balanceIs(t, ctx, app, bundlerAddr.Bytes(), "1stake")  // pay bundler state change
 		balanceIs(t, ctx, app, aliceAddr.Bytes(), "2000stake") // execute messages state change.
-
 	})
 	t.Run("pay bundle impersonation", func(t *testing.T) {
 		// we simulate the execution of an abstracted account

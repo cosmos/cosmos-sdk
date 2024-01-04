@@ -1,13 +1,16 @@
 package keeper_test
 
 import (
+	"fmt"
 	"testing"
 
 	"cosmossdk.io/math"
+	"cosmossdk.io/simapp"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	accountkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
@@ -35,6 +38,24 @@ func fundPoolBalance(t *testing.T, sk keeper.Keeper, bk bankkeeper.Keeper, ctx s
 
 	err = bk.SendCoinsFromModuleToModule(ctx, minttypes.ModuleName, types.BondedPoolName, sdk.NewCoins(bondedPoolCoin))
 	require.NoError(t, err, "no error expected when sending tokens to bonded pool")
+}
+
+// Helper function to create a module account address from a tokenized share
+// Used to mock the delegation owner of a tokenized share
+func createTokenizeShareModuleAccount(recordID uint64) sdk.AccAddress {
+	record := types.TokenizeShareRecord{
+		Id:            recordID,
+		ModuleAccount: fmt.Sprintf("%s%d", types.TokenizeShareModuleAccountPrefix, recordID),
+	}
+	return record.GetModuleAddress()
+}
+
+// Helper function to create a base account from an account name
+// Used to differentiate against liquid staking provider module account
+func createBaseAccount(ak accountkeeper.AccountKeeper, ctx sdk.Context, accountName string) sdk.AccAddress {
+	baseAccountAddress := sdk.AccAddress(accountName)
+	ak.SetAccount(ctx, authtypes.NewBaseAccountWithAddress(baseAccountAddress))
+	return baseAccountAddress
 }
 
 // Tests CheckExceedsGlobalLiquidStakingCap
@@ -271,4 +292,196 @@ func TestSafelyIncreaseTotalLiquidStakedTokens(t *testing.T) {
 	err = stakingKeeper.SafelyIncreaseTotalLiquidStakedTokens(ctx, increaseAmount, true)
 	require.NoError(t, err)
 	require.Equal(t, intitialTotalLiquidStaked.Add(increaseAmount), stakingKeeper.GetTotalLiquidStakedTokens(ctx))
+}
+
+// Test RefreshTotalLiquidStaked
+func TestRefreshTotalLiquidStaked(t *testing.T) {
+	_, app, ctx := createTestInput(t)
+
+	var (
+		accountKeeper = app.AccountKeeper
+		stakingKeeper = app.StakingKeeper
+	)
+
+	// Set an arbitrary total liquid staked tokens amount that will get overwritten by the refresh
+	stakingKeeper.SetTotalLiquidStakedTokens(ctx, sdk.NewInt(999))
+
+	// Add validator's with various exchange rates
+	validators := []types.Validator{
+		{
+			// Exchange rate of 1
+			OperatorAddress: "valA",
+			Tokens:          sdk.NewInt(100),
+			DelegatorShares: sdk.NewDec(100),
+			LiquidShares:    sdk.NewDec(100), // should be overwritten
+		},
+		{
+			// Exchange rate of 0.9
+			OperatorAddress: "valB",
+			Tokens:          sdk.NewInt(90),
+			DelegatorShares: sdk.NewDec(100),
+			LiquidShares:    sdk.NewDec(200), // should be overwritten
+		},
+		{
+			// Exchange rate of 0.75
+			OperatorAddress: "valC",
+			Tokens:          sdk.NewInt(75),
+			DelegatorShares: sdk.NewDec(100),
+			LiquidShares:    sdk.NewDec(300), // should be overwritten
+		},
+	}
+
+	// Add various delegations across the above validator's
+	// Total Liquid Staked: 1,849 + 922 = 2,771
+	// Liquid Shares:
+	//   ValA: 400 + 325 = 725
+	//   ValB: 860 + 580 = 1,440
+	//   ValC: 900 + 100 = 1,000
+	expectedTotalLiquidStaked := int64(2771)
+	expectedValidatorLiquidShares := map[string]sdk.Dec{
+		"valA": sdk.NewDec(725),
+		"valB": sdk.NewDec(1440),
+		"valC": sdk.NewDec(1000),
+	}
+
+	delegations := []struct {
+		delegation  types.Delegation
+		isLSTP      bool
+		isTokenized bool
+	}{
+		// Delegator A - Not a liquid staking provider
+		// Number of tokens/shares is irrelevant for this test
+		{
+			isLSTP: false,
+			delegation: types.Delegation{
+				DelegatorAddress: "delA",
+				ValidatorAddress: "valA",
+				Shares:           sdk.NewDec(100),
+			},
+		},
+		{
+			isLSTP: false,
+			delegation: types.Delegation{
+				DelegatorAddress: "delA",
+				ValidatorAddress: "valB",
+				Shares:           sdk.NewDec(860),
+			},
+		},
+		{
+			isLSTP: false,
+			delegation: types.Delegation{
+				DelegatorAddress: "delA",
+				ValidatorAddress: "valC",
+				Shares:           sdk.NewDec(750),
+			},
+		},
+		// Delegator B - Liquid staking provider, tokens included in total
+		// Total liquid staked: 400 + 774 + 675 = 1,849
+		{
+			// Shares: 400 shares, Exchange Rate: 1.0, Tokens: 400
+			isLSTP: true,
+			delegation: types.Delegation{
+				DelegatorAddress: "delB-LSTP",
+				ValidatorAddress: "valA",
+				Shares:           sdk.NewDec(400),
+			},
+		},
+		{
+			// Shares: 860 shares, Exchange Rate: 0.9, Tokens: 774
+			isLSTP: true,
+			delegation: types.Delegation{
+				DelegatorAddress: "delB-LSTP",
+				ValidatorAddress: "valB",
+				Shares:           sdk.NewDec(860),
+			},
+		},
+		{
+			// Shares: 900 shares, Exchange Rate: 0.75, Tokens: 675
+			isLSTP: true,
+			delegation: types.Delegation{
+				DelegatorAddress: "delB-LSTP",
+				ValidatorAddress: "valC",
+				Shares:           sdk.NewDec(900),
+			},
+		},
+		// Delegator C - Tokenized shares, tokens included in total
+		// Total liquid staked: 325 + 522 + 75 = 922
+		{
+			// Shares: 325 shares, Exchange Rate: 1.0, Tokens: 325
+			isTokenized: true,
+			delegation: types.Delegation{
+				DelegatorAddress: "delC-LSTP",
+				ValidatorAddress: "valA",
+				Shares:           sdk.NewDec(325),
+			},
+		},
+		{
+			// Shares: 580 shares, Exchange Rate: 0.9, Tokens: 522
+			isTokenized: true,
+			delegation: types.Delegation{
+				DelegatorAddress: "delC-LSTP",
+				ValidatorAddress: "valB",
+				Shares:           sdk.NewDec(580),
+			},
+		},
+		{
+			// Shares: 100 shares, Exchange Rate: 0.75, Tokens: 75
+			isTokenized: true,
+			delegation: types.Delegation{
+				DelegatorAddress: "delC-LSTP",
+				ValidatorAddress: "valC",
+				Shares:           sdk.NewDec(100),
+			},
+		},
+	}
+
+	// Create validators based on the above (must use an actual validator address)
+	addresses := simapp.AddTestAddrsIncremental(app, ctx, 5, app.StakingKeeper.TokensFromConsensusPower(ctx, 300))
+	validatorAddresses := map[string]sdk.ValAddress{
+		"valA": sdk.ValAddress(addresses[0]),
+		"valB": sdk.ValAddress(addresses[1]),
+		"valC": sdk.ValAddress(addresses[2]),
+	}
+	for _, validator := range validators {
+		validator.OperatorAddress = validatorAddresses[validator.OperatorAddress].String()
+		app.StakingKeeper.SetValidator(ctx, validator)
+	}
+
+	// Create the delegations based on the above (must use actual delegator addresses)
+	for _, delegationCase := range delegations {
+		var delegatorAddress sdk.AccAddress
+		switch {
+		case delegationCase.isLSTP:
+			delegatorAddress = createICAAccount(ctx, accountKeeper)
+		case delegationCase.isTokenized:
+			delegatorAddress = createTokenizeShareModuleAccount(1)
+		default:
+			delegatorAddress = createBaseAccount(accountKeeper, ctx, delegationCase.delegation.DelegatorAddress)
+		}
+
+		delegation := delegationCase.delegation
+		delegation.DelegatorAddress = delegatorAddress.String()
+		delegation.ValidatorAddress = validatorAddresses[delegation.ValidatorAddress].String()
+		app.StakingKeeper.SetDelegation(ctx, delegation)
+	}
+
+	// Refresh the total liquid staked and validator liquid shares
+	err := app.StakingKeeper.RefreshTotalLiquidStaked(ctx)
+	require.NoError(t, err, "no error expected when refreshing total liquid staked")
+
+	// Check the total liquid staked and liquid shares by validator
+	actualTotalLiquidStaked := app.StakingKeeper.GetTotalLiquidStakedTokens(ctx)
+	require.Equal(t, expectedTotalLiquidStaked, actualTotalLiquidStaked.Int64(), "total liquid staked tokens")
+
+	for _, moniker := range []string{"valA", "valB", "valC"} {
+		address := validatorAddresses[moniker]
+		expectedLiquidShares := expectedValidatorLiquidShares[moniker]
+
+		actualValidator, found := app.StakingKeeper.GetValidator(ctx, address)
+		require.True(t, found, "validator %s should have been found after refresh", moniker)
+
+		actualLiquidShares := actualValidator.LiquidShares
+		require.Equal(t, expectedLiquidShares.TruncateInt64(), actualLiquidShares.TruncateInt64(),
+			"liquid staked shares for validator %s", moniker)
+	}
 }

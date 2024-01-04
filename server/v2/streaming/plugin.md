@@ -1,6 +1,8 @@
-# ABCI and State Streaming Plugin (gRPC)
+# State Streaming Plugin (gRPC)
 
-The `BaseApp` package contains the interface for a [ABCIListener](https://github.com/cosmos/cosmos-sdk/blob/main/baseapp/streaming.go)
+<!-- TODO fix docs before final release -->
+
+The `Server/v2` package contains the interface for a [Listener](https://github.com/cosmos/cosmos-sdk/blob/main/baseapp/streaming.go)
 service used to write state changes out from individual KVStores to external systems,
 as described in [ADR-038](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-038-state-listening.md).
 
@@ -12,7 +14,7 @@ In this section we describe the implementation of the `ABCIListener` interface a
 
 ### Service Protocol
 
-The companion service protocol for the `ABCIListener` interface is described below.
+The companion service protocol for the `Listener` interface is described below.
 See [proto/cosmos/store/streaming/abci/grpc.proto](https://github.com/cosmos/cosmos-sdk/blob/main/proto/cosmos/store/streaming/abci/grpc.proto) for full details.
 
 ```protobuf reference
@@ -43,15 +45,15 @@ of the `ABCIListener` plugin written in Go.
 
 #### The Interface
 
-The `BaseApp` `ABCIListener` interface will be what will define the plugins capabilities.
+The `Server/v2` `Listener` interface will be what will define the plugins capabilities.
 
-Boilerplate RPC implementation example of the `ABCIListener` interface. ([store/streaming/abci/grpc.go](https://github.com/cosmos/cosmos-sdk/blob/main/store/streaming/abci/grpc.go))
+Boilerplate RPC implementation example of the `Listener` interface. ([store/streaming/abci/grpc.go](https://github.com/cosmos/cosmos-sdk/blob/main/store/streaming/abci/grpc.go))
 
 ```go reference
 https://github.com/cosmos/cosmos-sdk/blob/f851e188b3b9d46e7c63fa514ad137e6d558fdd9/store/streaming/abci/grpc.go#L13-L79
 ```
 
-Our `ABCIlistener` service plugin. ([store/streaming/plugins/abci/v1/interface.go](interface.go))
+Our `listener` service plugin. ([store/streaming/plugins/abci/v1/interface.go](interface.go))
 
 ```go reference
 https://github.com/cosmos/cosmos-sdk/blob/f851e188b3b9d46e7c63fa514ad137e6d558fdd9/store/streaming/abci/interface.go#L13-L45
@@ -60,7 +62,7 @@ https://github.com/cosmos/cosmos-sdk/blob/f851e188b3b9d46e7c63fa514ad137e6d558fd
 #### Plugin Implementation
 
 Plugin implementations can be in a completely separate package but will need access
-to the `ABCIListener` interface. One thing to note here is that plugin implementations
+to the `Listener` interface. One thing to note here is that plugin implementations
 defined in the `ListenerGRPCPlugin.Impl` property are **only** required when building
 plugins in Go. They are pre-compiled into Go modules. The `GRPCServer.Impl` calls methods
 on this out-of-process plugin.

@@ -37,18 +37,23 @@ func (k Keeper) GetValidator(ctx context.Context, addr sdk.ValAddress) (validato
 // GetValidatorByConsAddr gets a single validator by consensus address
 func (k Keeper) GetValidatorByConsAddr(ctx context.Context, consAddr sdk.ConsAddress) (validator types.Validator, err error) {
 	opAddr, err := k.ValidatorByConsensusAddress.Get(ctx, consAddr)
-	if err != nil && !errors.Is(err, collections.ErrNotFound) {
-		// if the validator not found try to find it in the map of `OldToNewConsKeyMap`` because validator may've rotated it's key.
+	if err != nil {
+		// if the validator not found try to find it in the map of `OldToNewConsKeyMap` because validator may've rotated it's key.
 		if !errors.Is(err, collections.ErrNotFound) {
 			return types.Validator{}, err
 		}
 
-		newConsAddr, err := k.OldToNewConsKeyMap.Get(ctx, consAddr)
+		newConsAddr, err := k.OldToNewConsKeyMap.Get(ctx, consAddr.Bytes())
 		if err != nil {
 			return types.Validator{}, err
 		}
 
-		opAddr = newConsAddr
+		operatorAddr, err := k.ValidatorByConsensusAddress.Get(ctx, newConsAddr)
+		if err != nil {
+			return types.Validator{}, err
+		}
+
+		opAddr = operatorAddr
 	}
 
 	if opAddr == nil {

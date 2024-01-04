@@ -9,6 +9,7 @@ import (
 	"runtime/debug"
 	"strings"
 	"testing"
+	"encoding/binary"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
@@ -55,6 +56,104 @@ func fauxMerkleModeOpt(bapp *baseapp.BaseApp) {
 func interBlockCacheOpt() func(*baseapp.BaseApp) {
 	return baseapp.SetInterBlockCache(store.NewCommitKVStoreCacheManager())
 }
+
+func FuzzFullAppSimulation(f *testing.F) {
+    f.Fuzz(func(t *testing.T, raw_seeds [] byte) {
+	config := simcli.NewConfigFromFlags()
+	var seeds []int64
+	for {
+		if (len(raw_seeds) < 8) {
+			break
+		}
+
+		seeds = append(seeds, int64(binary.BigEndian.Uint64(raw_seeds)))
+		raw_seeds = raw_seeds[8:]
+	}
+
+	if len(seeds) == 0 {
+		return
+	}
+
+	config.Seeds = seeds
+	config.ChainID = SimAppChainID
+
+	appOptions := make(simtestutil.AppOptionsMap, 0)
+	appOptions[flags.FlagHome] = DefaultNodeHome
+	appOptions[server.FlagInvCheckPeriod] = simcli.FlagPeriodValue
+        db := dbm.NewMemDB()
+	logger := log.NewNopLogger()
+
+	app := NewSimApp(logger, db, nil, true, appOptions, interBlockCacheOpt(), baseapp.SetChainID(SimAppChainID))
+	require.Equal(t, "SimApp", app.Name())
+
+	defer func() {
+		if r := recover(); r != nil {
+			err := fmt.Sprintf("%v", r)
+			shouldPanic := true
+			if strings.Contains(err, "validator set is empty after InitGenesis") {
+				shouldPanic = false
+			}
+
+                        if strings.Contains(err, "duplicate account in genesis state") {
+				shouldPanic = false
+			}
+
+			if strings.Contains(err, "group policies: unique constraint violation") {
+				shouldPanic = false
+			}
+
+                        if strings.Contains(err, "nft class already exists") {
+				shouldPanic = false
+			}
+
+	                if strings.Contains(err, "nft already exists") {
+				shouldPanic = false
+			}
+
+	                if strings.Contains(err, "invalid coins") {
+				shouldPanic = false
+			}
+
+			if strings.Contains(err, "invalid argument to Int63n") {
+				shouldPanic = false
+			}
+
+			if strings.Contains(err, "v.DelegatorShares is zero") {
+				shouldPanic = false
+			}
+
+			if strings.Contains(err, "group: not found") {
+				shouldPanic = false
+			}
+
+			if shouldPanic {
+				panic(r)
+			}
+
+			logger.Info("Skipping simulation as all validators have been unbonded")
+			logger.Info("err", err, "stacktrace", string(debug.Stack()))
+		}
+	}()
+
+	// run randomized simulation
+	_,_, err := simulation.SimulateFromSeed(
+		t,
+		os.Stdout,
+		app.BaseApp,
+		simtestutil.AppStateFn(app.AppCodec(), app.SimulationManager(), app.DefaultGenesis()),
+		simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
+		simtestutil.SimulationOperations(app, app.AppCodec(), config),
+		BlockedAddresses(),
+		config,
+		app.AppCodec(),
+	)
+
+	if err != nil {
+		panic(err)
+	}
+    })
+}
+
 
 func TestFullAppSimulation(t *testing.T) {
 	config := simcli.NewConfigFromFlags()

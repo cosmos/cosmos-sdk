@@ -310,6 +310,9 @@ func (v Validator) TokensFromShares(shares math.LegacyDec) math.LegacyDec {
 
 // calculate the token worth of provided shares, truncated
 func (v Validator) TokensFromSharesTruncated(shares math.LegacyDec) math.LegacyDec {
+	if (v.DelegatorShares.IsZero()) {
+		panic("v.DelegatorShares is zero");
+	}
 	return (shares.MulInt(v.Tokens)).QuoTruncate(v.DelegatorShares)
 }
 

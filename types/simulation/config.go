@@ -11,6 +11,7 @@ type Config struct {
 	ExportStatsPath    string // custom file path to save the exported simulation statistics JSON
 
 	Seed               int64  // simulation random seed
+        Seeds              [] int64 // Added
 	InitialBlockHeight int    // initial block to start the simulation
 	GenesisTime        int64  // genesis time to start the simulation
 	NumBlocks          int    // number of new blocks to simulate from the initial block height

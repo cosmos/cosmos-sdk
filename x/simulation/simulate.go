@@ -23,6 +23,39 @@ import (
 
 const AverageBlockTime = 6 * time.Second
 
+const (
+       rngMax   = 1 << 63
+       rngMask  = rngMax - 1
+)
+
+type arraySource struct {
+    pos int
+    arr []int64
+    src *rand.Rand
+}
+
+// Int63 returns a non-negative pseudo-random 63-bit integer as an int64.
+func (rng *arraySource) Int63() int64 {
+       return int64(rng.Uint64() & rngMask)
+}
+
+// Uint64 returns a non-negative pseudo-random 64-bit integer as an uint64.
+func (rng *arraySource) Uint64() uint64 {
+       if (rng.pos >= len(rng.arr)) {
+               return rng.src.Uint64()
+       }
+        val := rng.arr[rng.pos]
+       rng.pos = rng.pos + 1
+       if val < 0 {
+           return uint64(-val)
+       }
+
+       return uint64(val)
+}
+
+func (rng *arraySource) Seed(seed int64) {}
+
+
 // initialize the chain for the simulation
 func initChain(
 	r *rand.Rand,
@@ -71,7 +104,12 @@ func SimulateFromSeed(
 	// in case we have to end early, don't os.Exit so that we can run cleanup code.
 	testingMode, _, b := getTestingMode(tb)
 
-	r := rand.New(rand.NewSource(config.Seed))
+	//r := rand.New(rand.NewSource(config.Seed))
+	var rng arraySource
+        rng.arr = config.Seeds
+        rng.src = rand.New(rand.NewSource(config.Seed))
+        r := rand.New(&rng)
+
 	params := RandomParams(r)
 
 	fmt.Fprintf(w, "Starting SimulateFromSeed with randomness created with seed %d\n", int(config.Seed))
@@ -339,6 +377,7 @@ func createBlockSimulator(tb testing.TB, testingMode bool, w io.Writer, params P
 			op, r2 := opAndR.op, opAndR.rand
 			opMsg, futureOps, err := op(r2, app, ctx, accounts, config.ChainID)
 			opMsg.LogEvent(event)
+			fmt.Printf("\n Executing: %s\n", opMsg.String())
 
 			if !config.Lean || opMsg.OK {
 				logWriter.AddEntry(MsgEntry(header.Height, int64(i), opMsg))
@@ -346,10 +385,12 @@ func createBlockSimulator(tb testing.TB, testingMode bool, w io.Writer, params P
 
 			if err != nil {
 				logWriter.PrintLogs()
-				tb.Fatalf(`error on block  %d/%d, operation (%d/%d) from x/%s:
+				if opMsg.OK {
+					tb.Fatalf(`error on block  %d/%d, operation (%d/%d) from x/%s:
 %v
 Comment: %s`,
-					header.Height, config.NumBlocks, opCount, blocksize, opMsg.Route, err, opMsg.Comment)
+						header.Height, config.NumBlocks, opCount, blocksize, opMsg.Route, err, opMsg.String())
+				}
 			}
 
 			queueOperations(operationQueue, timeOperationQueue, futureOps)

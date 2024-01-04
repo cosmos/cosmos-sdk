@@ -34,16 +34,16 @@ func TestPeriodicFeeValidAllow(t *testing.T) {
 	tenMinutes := time.Duration(10) * time.Minute
 
 	cases := map[string]struct {
-		allow            feegrant.PeriodicAllowance
-		fee              sdk.Coins
-		blockTime        time.Time
-		valid            bool // all other checks are ignored if valid=false
-		accept           bool
-		remove           bool
-		remains          sdk.Coins
-		remainsPeriod    sdk.Coins
-		periodReset      time.Time
-		clearPeriodReset bool
+		allow             feegrant.PeriodicAllowance
+		fee               sdk.Coins
+		blockTime         time.Time
+		valid             bool // all other checks are ignored if valid=false
+		accept            bool
+		remove            bool
+		remains           sdk.Coins
+		remainsPeriod     sdk.Coins
+		periodReset       time.Time
+		updatePeriodReset bool
 	}{
 		"empty": {
 			allow: feegrant.PeriodicAllowance{},
@@ -192,13 +192,13 @@ func TestPeriodicFeeValidAllow(t *testing.T) {
 				PeriodSpendLimit: smallAtom,
 				PeriodReset:      now.Add(30 * time.Minute),
 			},
-			blockTime:        now,
-			valid:            true,
-			accept:           true,
-			remove:           false,
-			remainsPeriod:    emptyCoins,
-			periodReset:      now.Add(10 * time.Minute),
-			clearPeriodReset: true,
+			blockTime:         now,
+			valid:             true,
+			accept:            true,
+			remove:            false,
+			remainsPeriod:     emptyCoins,
+			periodReset:       now.Add(10 * time.Minute),
+			updatePeriodReset: true,
 		},
 	}
 
@@ -212,7 +212,7 @@ func TestPeriodicFeeValidAllow(t *testing.T) {
 			}
 			require.NoError(t, err)
 
-			if tc.clearPeriodReset {
+			if tc.updatePeriodReset {
 				err = tc.allow.UpdatePeriodReset(tc.blockTime)
 				require.NoError(t, err)
 			}

@@ -145,8 +145,7 @@ func SplitMVCCKey(mvccKey []byte) (key, version []byte, ok bool) {
 		return nil, nil, false
 	}
 
-	mvccKeyCopy := make([]byte, len(mvccKey))
-	copy(mvccKeyCopy, mvccKey)
+	mvccKeyCopy := bytes.Clone(mvccKey)
 
 	n := len(mvccKeyCopy) - 1
 	tsLen := int(mvccKeyCopy[n])

@@ -29,6 +29,6 @@ type FeeAllowanceI interface {
 	// ExpiresAt returns the expiry time of the allowance.
 	ExpiresAt() (*time.Time, error)
 
-	// ClearPeriodReset clear "PeriodReset" value by valid time
-	ClearPeriodReset(validTime time.Time) error
+	// UpdatePeriodReset update "PeriodReset" value by valid time
+	UpdatePeriodReset(validTime time.Time) error
 }

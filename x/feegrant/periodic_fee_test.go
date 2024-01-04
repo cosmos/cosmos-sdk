@@ -213,7 +213,7 @@ func TestPeriodicFeeValidAllow(t *testing.T) {
 			require.NoError(t, err)
 
 			if tc.clearPeriodReset {
-				err = tc.allow.ClearPeriodReset(tc.blockTime)
+				err = tc.allow.UpdatePeriodReset(tc.blockTime)
 				require.NoError(t, err)
 			}
 

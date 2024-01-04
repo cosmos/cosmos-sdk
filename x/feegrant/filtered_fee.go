@@ -137,11 +137,11 @@ func (a *AllowedMsgAllowance) ExpiresAt() (*time.Time, error) {
 	return allowance.ExpiresAt()
 }
 
-// ClearPeriodReset clear "PeriodReset" of the AllowedMsgAllowance.
-func (a *AllowedMsgAllowance) ClearPeriodReset(validTime time.Time) error {
+// UpdatePeriodReset update "PeriodReset" of the AllowedMsgAllowance.
+func (a *AllowedMsgAllowance) UpdatePeriodReset(validTime time.Time) error {
 	allowance, err := a.GetAllowance()
 	if err != nil {
 		return err
 	}
-	return allowance.ClearPeriodReset(validTime)
+	return allowance.UpdatePeriodReset(validTime)
 }

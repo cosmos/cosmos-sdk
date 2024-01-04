@@ -186,7 +186,7 @@ func TestPeriodicFeeValidAllow(t *testing.T) {
 			accept:    false,
 			remove:    true,
 		},
-		"clear PeriodReset ": {
+		"test update PeriodReset ": {
 			allow: feegrant.PeriodicAllowance{
 				Period:           tenMinutes,
 				PeriodSpendLimit: smallAtom,

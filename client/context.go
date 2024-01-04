@@ -43,7 +43,7 @@ type Context struct {
 	OutputFormat          string
 	Height                int64
 	HomeDir               string
-	// Name or an address of a keyring account used to set FromName and FromAddress fields.
+	// From is a name or an address of a keyring account used to set FromName and FromAddress fields.
 	// Should be set by the "from" flag.
 	From string
 	// Name of a keyring account used to sign transactions.

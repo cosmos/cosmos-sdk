@@ -180,10 +180,10 @@ func LeafHash(key, value []byte) ([]byte, error) {
 
 // InnerHash computes the hash of an inner node.
 func InnerHash(left, right []byte) []byte {
-	data := innerPrefix
-	data = append(data, left...)
-	data = append(data, right...)
+	data := make([]byte, len(innerPrefix)+len(left)+len(right))
+	n := copy(data, innerPrefix)
+	n += copy(data[n:], left)
+	copy(data[n:], right)
 	h := sha256.Sum256(data)
-
 	return h[:]
 }

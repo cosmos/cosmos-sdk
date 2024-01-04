@@ -5,6 +5,81 @@ Note, always read the **SimApp** section for more information on application wir
 
 ## [Unreleased]
 
+### Unordered Transactions
+
+The Cosmos SDK now supports unordered transactions. This means that transactions
+can be executed in any order and doesn't require the client to deal with or manage
+nonces. This also means the order of execution is not guaranteed. To enable unordered
+transactions in your application:
+
+* Update the `App` constructor to create, load, and save the unordered transaction
+  manager.
+
+	```go
+	func NewApp(...) *App {
+		// ...
+
+		// create, start, and load the unordered tx manager
+		utxDataDir := filepath.Join(cast.ToString(appOpts.Get(flags.FlagHome)), "data")
+		app.UnorderedTxManager = unorderedtx.NewManager(utxDataDir)
+		app.UnorderedTxManager.Start()
+
+		if err := app.UnorderedTxManager.OnInit(); err != nil {
+			panic(fmt.Errorf("failed to initialize unordered tx manager: %w", err))
+		}
+	}
+	```
+
+* Add the decorator to the existing AnteHandler chain, which should be as early
+  as possible.
+
+	```go
+	anteDecorators := []sdk.AnteDecorator{
+		ante.NewSetUpContextDecorator(),
+		// ...
+		ante.NewUnorderedTxDecorator(unorderedtx.DefaultMaxUnOrderedTTL, app.UnorderedTxManager),
+		// ...
+	}
+
+	return sdk.ChainAnteDecorators(anteDecorators...), nil
+	```
+
+* If the App has a SnapshotManager defined, you must also register the extension
+  for the TxManager.
+
+	```go
+	if manager := app.SnapshotManager(); manager != nil {
+		err := manager.RegisterExtensions(unorderedtx.NewSnapshotter(app.UnorderedTxManager))
+		if err != nil {
+			panic(fmt.Errorf("failed to register snapshot extension: %s", err))
+		}
+	}
+	```
+
+* Create or update the App's `Close()` method to close the unordered tx manager.
+  Note, this is critical as it ensures the manager's state is written to file
+  such that when the node restarts, it can recover the state to provide replay
+  protection.
+
+	```go
+	func (app *App) Close() error {
+		// ...
+
+		// close the unordered tx manager
+		if e := app.UnorderedTxManager.Close(); e != nil {
+			err = errors.Join(err, e)
+		}
+
+		return err
+	}
+	```
+
+To submit an unordered transaction, the client must set the `unordered` flag to
+`true` and ensure a reasonable `timeout_height` is set. The `timeout_height` is
+used as a TTL for the transaction and is used to provide replay protection. See
+[ADR-070](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-070-unordered-account.md)
+for more details.
+
 ### Params
 
 * Params Migrations were removed. It is required to migrate to 0.50 prior to upgrading to .51.

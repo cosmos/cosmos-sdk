@@ -126,6 +126,8 @@ func (c *CommitStore) LoadVersion(targetVersion uint64) error {
 		}
 	}
 
+	// If the target version is greater than the latest version, it is the snapshot
+	// restore case, we should create a new commit info for the target version.
 	var cInfo *store.CommitInfo
 	if targetVersion > latestVersion {
 		cInfo = c.WorkingCommitInfo(targetVersion)
@@ -253,6 +255,21 @@ func (c *CommitStore) GetProof(storeKey string, version uint64, key []byte) ([]s
 }
 
 func (c *CommitStore) Prune(version uint64) (ferr error) {
+	// prune the metadata
+	batch := c.db.NewBatch()
+	for v := version; v > 0; v-- {
+		cInfoKey := []byte(fmt.Sprintf(commitInfoKeyFmt, v))
+		if exist, _ := c.db.Has(cInfoKey); !exist {
+			break
+		}
+		if err := batch.Delete(cInfoKey); err != nil {
+			return err
+		}
+	}
+	if err := batch.WriteSync(); err != nil {
+		return err
+	}
+
 	for _, tree := range c.multiTrees {
 		if err := tree.Prune(version); err != nil {
 			ferr = errors.Join(ferr, err)

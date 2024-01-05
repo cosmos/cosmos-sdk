@@ -13,12 +13,23 @@ import (
 
 	"cosmossdk.io/log"
 	"cosmossdk.io/server/v2/core/appmanager"
-	"cosmossdk.io/server/v2/core/client"
 	"cosmossdk.io/server/v2/grpc/gogoreflection"
 	reflection "cosmossdk.io/server/v2/grpc/reflection/v2alpha1"
+	txsigning "cosmossdk.io/x/tx/signing"
 
 	_ "cosmossdk.io/api/amino" // Import amino.proto file for reflection
 )
+
+type ClientContext interface {
+	// InterfaceRegistry returns the InterfaceRegistry.
+	InterfaceRegistry() appmanager.InterfaceRegistry
+	ChainID() string
+	TxConfig() TxConfig
+}
+
+type TxConfig interface {
+	SignModeHandler() *txsigning.HandlerMap
+}
 
 type GRPCServer struct {
 	grpcSrv *grpc.Server
@@ -35,7 +46,7 @@ type GRPCService interface {
 // NewGRPCServer returns a correctly configured and initialized gRPC server.
 // Note, the caller is responsible for starting the server. See StartGRPCServer.
 // TODO: look into removing the clientCtx dependency.
-func NewGRPCServer(clientCtx client.ClientContext, logger log.Logger, app GRPCService, cfg Config) (GRPCServer, error) {
+func NewGRPCServer(clientCtx ClientContext, logger log.Logger, app GRPCService, cfg Config) (GRPCServer, error) {
 	maxSendMsgSize := cfg.MaxSendMsgSize
 	if maxSendMsgSize == 0 {
 		maxSendMsgSize = DefaultGRPCMaxSendMsgSize

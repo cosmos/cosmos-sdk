@@ -7,10 +7,10 @@ import (
 
 	"github.com/cockroachdb/pebble"
 
-	"cosmossdk.io/store/v2"
+	corestore "cosmossdk.io/core/store"
 )
 
-var _ store.Iterator = (*iterator)(nil)
+var _ corestore.Iterator = (*iterator)(nil)
 
 // iterator implements the store.Iterator interface. It wraps a PebbleDB iterator
 // with added MVCC key handling logic. The iterator will iterate over the key space

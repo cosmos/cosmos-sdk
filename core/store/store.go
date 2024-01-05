@@ -30,29 +30,13 @@ type KVStore interface {
 	ReverseIterator(start, end []byte) (Iterator, error)
 }
 
-// Iterator represents an iterator over a domain of keys. Callers must call Close when done.
-// No writes can happen to a domain while there exists an iterator over it, some backends may take
-// out database locks to ensure this will not happen.
+// Iterator represents an iterator over a domain of keys. Callers must call
+// Close when done. No writes can happen to a domain while there exists an
+// iterator over it. Some backends may take out database locks to ensure this
+// will not happen.
 //
-// Callers must make sure the iterator is valid before calling any methods on it, otherwise
-// these methods will panic. This is in part caused by most backend databases using this convention.
-//
-// As with DB, keys and values should be considered read-only, and must be copied before they are
-// modified.
-//
-// Typical usage:
-//
-// var itr Iterator = ...
-// defer itr.Close()
-//
-//	for ; itr.Valid(); itr.Next() {
-//	  k, v := itr.Key(); itr.Value()
-//	  ...
-//	}
-//
-//	if err := itr.Error(); err != nil {
-//	  ...
-//	}
+// Callers must make sure the iterator is valid before calling any methods on it,
+// otherwise these methods will panic.
 type Iterator interface {
 	// Domain returns the start (inclusive) and end (exclusive) limits of the iterator.
 	Domain() (start, end []byte)
@@ -66,10 +50,13 @@ type Iterator interface {
 	Next()
 
 	// Key returns the key at the current position. Panics if the iterator is invalid.
-	Key() (key []byte)
+	// Note, the key returned should be a copy and thus safe for modification.
+	Key() []byte
 
-	// Value returns the value at the current position. Panics if the iterator is invalid.
-	Value() (value []byte)
+	// Value returns the value at the current position. Panics if the iterator is
+	// invalid.
+	// Note, the value returned should be a copy and thus safe for modification.
+	Value() []byte
 
 	// Error returns the last error encountered by the iterator, if any.
 	Error() error

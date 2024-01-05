@@ -7,7 +7,6 @@ import (
 	"io"
 	"math"
 
-	cmtcrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 	dbm "github.com/cosmos/cosmos-db"
 	protoio "github.com/cosmos/gogoproto/io"
 
@@ -227,26 +226,30 @@ func (c *CommitStore) SetInitialVersion(version uint64) error {
 	return nil
 }
 
-func (c *CommitStore) GetProof(storeKey string, version uint64, key []byte) (cmtcrypto.ProofOps, error) {
+func (c *CommitStore) GetProof(storeKey string, version uint64, key []byte) ([]store.CommitmentOp, error) {
 	tree, ok := c.multiTrees[storeKey]
 	if !ok {
-		return cmtcrypto.ProofOps{}, fmt.Errorf("store %s not found", storeKey)
+		return nil, fmt.Errorf("store %s not found", storeKey)
 	}
 
 	proof, err := tree.GetProof(version, key)
 	if err != nil {
-		return cmtcrypto.ProofOps{}, err
+		return nil, err
 	}
 	cInfo, err := c.GetCommitInfo(version)
 	if err != nil {
-		return cmtcrypto.ProofOps{}, err
+		return nil, err
 	}
 	if cInfo == nil {
-		return cmtcrypto.ProofOps{}, fmt.Errorf("commit info not found for version %d", version)
+		return nil, fmt.Errorf("commit info not found for version %d", version)
 	}
-	commitOp := store.NewIAVLCommitmentOp(key, proof).ProofOp()
+	commitOp := store.NewIAVLCommitmentOp(key, proof)
+	_, storeCommitmentOp, err := cInfo.GetStoreProof(storeKey)
+	if err != nil {
+		return nil, err
+	}
 
-	return cmtcrypto.ProofOps{Ops: []cmtcrypto.ProofOp{commitOp, cInfo.ProofOp(storeKey)}}, nil
+	return []store.CommitmentOp{commitOp, *storeCommitmentOp}, nil
 }
 
 func (c *CommitStore) Prune(version uint64) (ferr error) {

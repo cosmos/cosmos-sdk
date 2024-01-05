@@ -96,10 +96,10 @@ func (s *PruningTestSuite) TestPruning() {
 	// check the commitment for the version 96
 	proofOps, err := s.sc.GetProof(defaultStoreKey, latestVersion-4, []byte("key"))
 	s.Require().NoError(err)
-	s.Require().NotNil(proofOps.Ops)
+	s.Require().Len(proofOps, 2)
 
 	// check the commitment for the version 95
 	proofOps, err = s.sc.GetProof(defaultStoreKey, latestVersion-5, []byte("key"))
 	s.Require().Error(err)
-	s.Require().Nil(proofOps.Ops)
+	s.Require().Nil(proofOps)
 }

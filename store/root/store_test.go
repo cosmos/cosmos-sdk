@@ -89,9 +89,44 @@ func (s *RootStoreTestSuite) TestQuery() {
 	// ensure the proof is non-nil for the corresponding version
 	result, err := s.rootStore.Query(defaultStoreKey, 1, []byte("foo"), true)
 	s.Require().NoError(err)
-	s.Require().NotNil(result.ProofOps.Ops)
-	s.Require().Equal([]byte("foo"), result.ProofOps.Ops[0].Key)
+	s.Require().NotNil(result.ProofOps)
+	s.Require().Equal([]byte("foo"), result.ProofOps[0].Key)
 }
+
+// func (s *RootStoreTestSuite) TestQueryProof() {
+// 	// store1
+// 	bs1 := s.rootStore.GetBranchedKVStore("store1")
+// 	bs1.Set([]byte("key1"), []byte("value1"))
+// 	bs1.Set([]byte("key2"), []byte("value2"))
+
+// 	// store2
+// 	bs2 := s.rootStore.GetBranchedKVStore("store2")
+// 	bs2.Set([]byte("key3"), []byte("value3"))
+
+// 	// store3
+// 	bs3 := s.rootStore.GetBranchedKVStore("store3")
+// 	bs3.Set([]byte("key4"), []byte("value4"))
+
+// 	// commit
+// 	_, err := s.rootStore.WorkingHash()
+// 	s.Require().NoError(err)
+// 	_, err = s.rootStore.Commit()
+// 	s.Require().NoError(err)
+
+// 	// query proof for store1
+// 	result, err := s.rootStore.Query("store1", 1, []byte("key1"), true)
+// 	s.Require().NoError(err)
+// 	s.Require().NotNil(result.ProofOps)
+// 	cInfo, err := s.rootStore.GetSCStore().GetCommitInfo(1)
+// 	s.Require().NoError(err)
+// 	storeHash := cInfo.GetStoreCommitID("store1").Hash
+// 	treeRoots, err := result.ProofOps[0].Run([][]byte{[]byte("value1")})
+// 	s.Require().NoError(err)
+// 	s.Require().Equal(treeRoots[0], storeHash)
+// 	expRoots, err := result.ProofOps[1].Run([][]byte{storeHash})
+// 	s.Require().NoError(err)
+// 	s.Require().Equal(expRoots[0], cInfo.Hash())
+// }
 
 func (s *RootStoreTestSuite) TestBranch() {
 	// write and commit a changeset

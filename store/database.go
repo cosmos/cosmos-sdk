@@ -2,8 +2,6 @@ package store
 
 import (
 	"io"
-
-	cmtcrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 )
 
 // Reader wraps the Has and Get method of a backing data store.
@@ -72,8 +70,9 @@ type Committer interface {
 	GetLatestVersion() (uint64, error)
 	LoadVersion(targetVersion uint64) error
 	Commit(version uint64) (*CommitInfo, error)
-	GetProof(storeKey string, version uint64, key []byte) (cmtcrypto.ProofOps, error)
+	GetProof(storeKey string, version uint64, key []byte) ([]CommitmentOp, error)
 	SetInitialVersion(version uint64) error
+	GetCommitInfo(version uint64) (*CommitInfo, error)
 
 	// Prune attempts to prune all versions up to and including the provided
 	// version argument. The operation should be idempotent. An error should be

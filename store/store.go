@@ -3,8 +3,6 @@ package store
 import (
 	"io"
 
-	cmtcrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
-
 	coreheader "cosmossdk.io/core/header"
 	"cosmossdk.io/store/v2/metrics"
 )
@@ -179,5 +177,5 @@ type QueryResult struct {
 	Key      []byte
 	Value    []byte
 	Version  uint64
-	ProofOps cmtcrypto.ProofOps
+	ProofOps []CommitmentOp
 }

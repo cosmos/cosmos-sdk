@@ -5,10 +5,6 @@ import (
 	"fmt"
 	"sort"
 	"time"
-
-	cmtcrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
-
-	"cosmossdk.io/store/v2/internal/maps"
 )
 
 type (
@@ -55,6 +51,18 @@ func (ci *CommitInfo) Hash() []byte {
 	return rootHash
 }
 
+// GetStoreCommitID returns the CommitID for the given store key.
+func (ci *CommitInfo) GetStoreCommitID(storeKey string) CommitID {
+	for _, si := range ci.StoreInfos {
+		if si.Name == storeKey {
+			return si.CommitID
+		}
+	}
+	return CommitID{}
+}
+
+// GetStoreProof returns the simple merkle proof for the given store key. It will
+// return the merkle root hash of all committed stores.
 func (ci *CommitInfo) GetStoreProof(storeKey string) ([]byte, *CommitmentOp, error) {
 	sort.Slice(ci.StoreInfos, func(i, j int) bool {
 		return ci.StoreInfos[i].Name < ci.StoreInfos[j].Name
@@ -160,15 +168,6 @@ func (ci *CommitInfo) Unmarshal(buf []byte) error {
 	return nil
 }
 
-func (ci CommitInfo) ProofOp(storeName string) cmtcrypto.ProofOp {
-	ret, err := ProofOpFromMap(ci.toMap(), storeName)
-	if err != nil {
-		panic(err)
-	}
-	return ret
-}
-
-func (ci CommitInfo) CommitID() CommitID {
 func (ci *CommitInfo) CommitID() CommitID {
 	return CommitID{
 		Version: ci.Version,

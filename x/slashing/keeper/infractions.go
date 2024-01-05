@@ -87,7 +87,7 @@ func (k Keeper) HandleValidatorSignatureWithParams(ctx context.Context, params t
 		// bitmap value at this index has not changed, no need to update counter
 	}
 
-	minSignedPerWindow := params.MinSignedPerWindow()
+	minSignedPerWindow := params.MinSignedPerWindowInt()
 
 	consStr, err := k.sk.ConsensusAddressCodec().BytesToString(consAddr)
 	if err != nil {

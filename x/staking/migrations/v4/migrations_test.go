@@ -65,7 +65,7 @@ func TestMigrate(t *testing.T) {
 				bz := store.Get(v4.ParamsKey)
 				require.NoError(t, cdc.Unmarshal(bz, &res))
 				require.Equal(t, legacySubspace.ps, res)
-
+				require.Equal(t, types.DefaultMinCommissionRate, legacySubspace.ps.MinCommissionRate)
 			} else {
 				require.Equal(t, true, true)
 			}

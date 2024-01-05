@@ -222,7 +222,7 @@ func (k msgServer) Delegate(goCtx context.Context, msg *types.MsgDelegate) (*typ
 		if err := k.SafelyIncreaseTotalLiquidStakedTokens(ctx, tokens, false); err != nil {
 			return nil, err
 		}
-		validator, err = k.SafelyIncreaseValidatorLiquidShares(ctx, valAddr, shares)
+		validator, err = k.SafelyIncreaseValidatorLiquidShares(ctx, valAddr, shares, false)
 		if err != nil {
 			return nil, err
 		}
@@ -328,7 +328,7 @@ func (k msgServer) BeginRedelegate(goCtx context.Context, msg *types.MsgBeginRed
 		if err != nil {
 			return nil, err
 		}
-		if _, err := k.SafelyIncreaseValidatorLiquidShares(ctx, valDstAddr, dstShares); err != nil {
+		if _, err := k.SafelyIncreaseValidatorLiquidShares(ctx, valDstAddr, dstShares, false); err != nil {
 			return nil, err
 		}
 		if _, err := k.DecreaseValidatorLiquidShares(ctx, valSrcAddr, srcShares); err != nil {
@@ -540,7 +540,7 @@ func (k msgServer) CancelUnbondingDelegation(goCtx context.Context, msg *types.M
 		if err := k.SafelyIncreaseTotalLiquidStakedTokens(ctx, tokens, false); err != nil {
 			return nil, err
 		}
-		validator, err = k.SafelyIncreaseValidatorLiquidShares(ctx, valAddr, shares)
+		validator, err = k.SafelyIncreaseValidatorLiquidShares(ctx, valAddr, shares, false)
 		if err != nil {
 			return nil, err
 		}
@@ -724,7 +724,7 @@ func (k msgServer) TokenizeShares(goCtx context.Context, msg *types.MsgTokenizeS
 		if err := k.SafelyIncreaseTotalLiquidStakedTokens(ctx, msg.Amount.Amount, true); err != nil {
 			return nil, err
 		}
-		validator, err = k.SafelyIncreaseValidatorLiquidShares(ctx, valAddr, shares)
+		validator, err = k.SafelyIncreaseValidatorLiquidShares(ctx, valAddr, shares, true)
 		if err != nil {
 			return nil, err
 		}

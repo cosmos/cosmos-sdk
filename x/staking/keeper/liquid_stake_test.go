@@ -218,72 +218,131 @@ func (s *KeeperTestSuite) TestCheckExceedsValidatorLiquidStakingCap() {
 		validatorLiquidShares sdk.Dec
 		validatorTotalShares  sdk.Dec
 		newLiquidShares       sdk.Dec
+		tokenizingShares      bool
 		expectedExceeds       bool
 	}{
 		{
 			// Cap: 10% - Delegation Below Threshold
 			// Liquid Shares: 5, Total Shares: 95, New Liquid Shares: 1
 			// => Liquid Shares: 5+1=6, Total Shares: 95+1=96 => 6/96 = 6% < 10% cap
-			name:                  "10 percent cap _ delegation below cap",
+			name:                  "10 percent cap _ native delegation _ below cap",
 			validatorLiquidCap:    sdk.MustNewDecFromStr("0.1"),
 			validatorLiquidShares: sdk.NewDec(5),
 			validatorTotalShares:  sdk.NewDec(95),
 			newLiquidShares:       sdk.NewDec(1),
+			tokenizingShares:      false,
 			expectedExceeds:       false,
 		},
 		{
 			// Cap: 10% - Delegation At Threshold
 			// Liquid Shares: 5, Total Shares: 95, New Liquid Shares: 5
 			// => Liquid Shares: 5+5=10, Total Shares: 95+5=100 => 10/100 = 10% == 10% cap
-			name:                  "10 percent cap _ delegation equals cap",
+			name:                  "10 percent cap _ native delegation _ equals cap",
 			validatorLiquidCap:    sdk.MustNewDecFromStr("0.1"),
 			validatorLiquidShares: sdk.NewDec(5),
 			validatorTotalShares:  sdk.NewDec(95),
 			newLiquidShares:       sdk.NewDec(4),
+			tokenizingShares:      false,
 			expectedExceeds:       false,
 		},
 		{
 			// Cap: 10% - Delegation Exceeds Threshold
 			// Liquid Shares: 5, Total Shares: 95, New Liquid Shares: 6
 			// => Liquid Shares: 5+6=11, Total Shares: 95+6=101 => 11/101 = 11% > 10% cap
-			name:                  "10 percent cap _ delegation exceeds cap",
+			name:                  "10 percent cap _ native delegation _ exceeds cap",
 			validatorLiquidCap:    sdk.MustNewDecFromStr("0.1"),
 			validatorLiquidShares: sdk.NewDec(5),
 			validatorTotalShares:  sdk.NewDec(95),
 			newLiquidShares:       sdk.NewDec(6),
+			tokenizingShares:      false,
 			expectedExceeds:       true,
 		},
 		{
 			// Cap: 20% - Delegation Below Threshold
 			// Liquid Shares: 20, Total Shares: 220, New Liquid Shares: 29
 			// => Liquid Shares: 20+29=49, Total Shares: 220+29=249 => 49/249 = 19% < 20% cap
-			name:                  "20 percent cap _ delegation below cap",
+			name:                  "20 percent cap _ native delegation _ below cap",
 			validatorLiquidCap:    sdk.MustNewDecFromStr("0.2"),
 			validatorLiquidShares: sdk.NewDec(20),
 			validatorTotalShares:  sdk.NewDec(220),
 			newLiquidShares:       sdk.NewDec(29),
+			tokenizingShares:      false,
 			expectedExceeds:       false,
 		},
 		{
 			// Cap: 20% - Delegation At Threshold
 			// Liquid Shares: 20, Total Shares: 220, New Liquid Shares: 30
 			// => Liquid Shares: 20+30=50, Total Shares: 220+30=250 => 50/250 = 20% == 20% cap
-			name:                  "20 percent cap _ delegation equals cap",
+			name:                  "20 percent cap _ native delegation _ equals cap",
 			validatorLiquidCap:    sdk.MustNewDecFromStr("0.2"),
 			validatorLiquidShares: sdk.NewDec(20),
 			validatorTotalShares:  sdk.NewDec(220),
 			newLiquidShares:       sdk.NewDec(30),
+			tokenizingShares:      false,
 			expectedExceeds:       false,
 		},
 		{
 			// Cap: 20% - Delegation Exceeds Threshold
 			// Liquid Shares: 20, Total Shares: 220, New Liquid Shares: 31
 			// => Liquid Shares: 20+31=51, Total Shares: 220+31=251 => 51/251 = 21% > 20% cap
-			name:                  "20 percent cap _ delegation exceeds cap",
+			name:                  "20 percent cap _ native delegation _ exceeds cap",
 			validatorLiquidCap:    sdk.MustNewDecFromStr("0.2"),
 			validatorLiquidShares: sdk.NewDec(20),
 			validatorTotalShares:  sdk.NewDec(220),
 			newLiquidShares:       sdk.NewDec(31),
+			tokenizingShares:      false,
+			expectedExceeds:       true,
+		},
+		{
+			// Cap: 50% - Native Delegation - Delegation At Threshold
+			// Liquid shares: 0, Total Shares: 100, New Liquid Shares: 50
+			// Total Liquid Shares: 0+50=50, Total Shares: 100+50=150
+			// => 50/150 = 33% < 50% cap
+			name:                  "50 percent cap _ native delegation _ delegation equals cap",
+			validatorLiquidCap:    sdk.MustNewDecFromStr("0.5"),
+			validatorLiquidShares: sdk.NewDec(0),
+			validatorTotalShares:  sdk.NewDec(100),
+			newLiquidShares:       sdk.NewDec(50),
+			tokenizingShares:      false,
+			expectedExceeds:       false,
+		},
+		{
+			// Cap: 50% - Tokenized Delegation - Delegation At Threshold
+			// Liquid shares: 0, Total Shares: 100, New Liquid Shares: 50
+			// Total Liquid Shares => 0+50=50, Total Shares: 100,  New Liquid Shares: 50
+			// => 50 / 100 = 50% == 50% cap
+			name:                  "50 percent cap _ tokenized delegation _ delegation equals cap",
+			validatorLiquidCap:    sdk.MustNewDecFromStr("0.5"),
+			validatorLiquidShares: sdk.NewDec(0),
+			validatorTotalShares:  sdk.NewDec(100),
+			newLiquidShares:       sdk.NewDec(50),
+			tokenizingShares:      true,
+			expectedExceeds:       false,
+		},
+		{
+			// Cap: 50% - Native Delegation - Delegation At Threshold
+			// Liquid shares: 0, Total Shares: 100, New Liquid Shares: 51
+			// Total Liquid Shares: 0+51=51, Total Shares: 100+51=151
+			// => 51/150 = 33% < 50% cap
+			name:                  "50 percent cap _ native delegation _ delegation equals cap",
+			validatorLiquidCap:    sdk.MustNewDecFromStr("0.5"),
+			validatorLiquidShares: sdk.NewDec(0),
+			validatorTotalShares:  sdk.NewDec(100),
+			newLiquidShares:       sdk.NewDec(51),
+			tokenizingShares:      false,
+			expectedExceeds:       false,
+		},
+		{
+			// Cap: 50% - Tokenized Delegation - Delegation At Threshold
+			// Liquid shares: 0, Total Shares: 100, New Liquid Shares: 50
+			// Total Liquid Shares => 0+51=51, Total Shares: 100,  New Liquid Shares: 51
+			// => 51 / 100 = 51% > 50% cap
+			name:                  "50 percent cap _ tokenized delegation _ delegation equals cap",
+			validatorLiquidCap:    sdk.MustNewDecFromStr("0.5"),
+			validatorLiquidShares: sdk.NewDec(0),
+			validatorTotalShares:  sdk.NewDec(100),
+			newLiquidShares:       sdk.NewDec(51),
+			tokenizingShares:      true,
 			expectedExceeds:       true,
 		},
 		{
@@ -293,6 +352,7 @@ func (s *KeeperTestSuite) TestCheckExceedsValidatorLiquidStakingCap() {
 			validatorLiquidShares: sdk.NewDec(0),
 			validatorTotalShares:  sdk.NewDec(1_000_000),
 			newLiquidShares:       sdk.NewDec(1),
+			tokenizingShares:      false,
 			expectedExceeds:       true,
 		},
 		{
@@ -302,6 +362,7 @@ func (s *KeeperTestSuite) TestCheckExceedsValidatorLiquidStakingCap() {
 			validatorLiquidShares: sdk.NewDec(1),
 			validatorTotalShares:  sdk.NewDec(1_000_000),
 			newLiquidShares:       sdk.NewDec(1),
+			tokenizingShares:      false,
 			expectedExceeds:       false,
 		},
 	}
@@ -320,7 +381,7 @@ func (s *KeeperTestSuite) TestCheckExceedsValidatorLiquidStakingCap() {
 			}
 
 			// Check whether the cap is exceeded
-			actualExceeds := keeper.CheckExceedsValidatorLiquidStakingCap(ctx, validator, tc.newLiquidShares)
+			actualExceeds := keeper.CheckExceedsValidatorLiquidStakingCap(ctx, validator, tc.newLiquidShares, tc.tokenizingShares)
 			require.Equal(tc.expectedExceeds, actualExceeds, tc.name)
 		})
 	}
@@ -386,7 +447,7 @@ func (s *KeeperTestSuite) TestSafelyIncreaseValidatorLiquidShares() {
 
 	// Attempt to increase the validator liquid shares, it should throw an
 	// error that the validator bond cap was exceeded
-	_, err := keeper.SafelyIncreaseValidatorLiquidShares(ctx, valAddress, firstIncreaseAmount)
+	_, err := keeper.SafelyIncreaseValidatorLiquidShares(ctx, valAddress, firstIncreaseAmount, false)
 	require.ErrorIs(err, types.ErrInsufficientValidatorBondShares)
 	checkValidatorLiquidShares(initialLiquidShares, "shares after low bond factor")
 
@@ -396,12 +457,12 @@ func (s *KeeperTestSuite) TestSafelyIncreaseValidatorLiquidShares() {
 
 	// Try the increase again and check that it succeeded
 	expectedLiquidSharesAfterFirstStake := initialLiquidShares.Add(firstIncreaseAmount)
-	_, err = keeper.SafelyIncreaseValidatorLiquidShares(ctx, valAddress, firstIncreaseAmount)
+	_, err = keeper.SafelyIncreaseValidatorLiquidShares(ctx, valAddress, firstIncreaseAmount, false)
 	require.NoError(err)
 	checkValidatorLiquidShares(expectedLiquidSharesAfterFirstStake, "shares with cap loose bond cap")
 
 	// Attempt another increase, it should fail from the liquid staking cap
-	_, err = keeper.SafelyIncreaseValidatorLiquidShares(ctx, valAddress, secondIncreaseAmount)
+	_, err = keeper.SafelyIncreaseValidatorLiquidShares(ctx, valAddress, secondIncreaseAmount, false)
 	require.ErrorIs(err, types.ErrValidatorLiquidStakingCapExceeded)
 	checkValidatorLiquidShares(expectedLiquidSharesAfterFirstStake, "shares after liquid staking cap hit")
 
@@ -411,7 +472,7 @@ func (s *KeeperTestSuite) TestSafelyIncreaseValidatorLiquidShares() {
 
 	// Finally confirm that the increase succeeded this time
 	expectedLiquidSharesAfterSecondStake := expectedLiquidSharesAfterFirstStake.Add(secondIncreaseAmount)
-	_, err = keeper.SafelyIncreaseValidatorLiquidShares(ctx, valAddress, secondIncreaseAmount)
+	_, err = keeper.SafelyIncreaseValidatorLiquidShares(ctx, valAddress, secondIncreaseAmount, false)
 	require.NoError(err, "no error expected after increasing liquid staking cap")
 	checkValidatorLiquidShares(expectedLiquidSharesAfterSecondStake, "shares after loose liquid stake cap")
 }

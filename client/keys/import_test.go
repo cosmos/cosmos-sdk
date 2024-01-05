@@ -183,7 +183,7 @@ func Test_runImportCmdWithEmptyName(t *testing.T) {
 	cmd.Flags().AddFlagSet(Commands().PersistentFlags())
 	mockIn := testutil.ApplyMockIODiscardOutErr(cmd)
 	// Now add a temporary keybase
-	kbHome := filepath.Join(t.TempDir())
+	kbHome := t.TempDir()
 	cdc := moduletestutil.MakeTestEncodingConfig().Codec
 	kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, kbHome, mockIn, cdc)
 	require.NoError(t, err)

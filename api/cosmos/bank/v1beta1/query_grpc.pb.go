@@ -30,6 +30,7 @@ const (
 	Query_DenomMetadataByQueryString_FullMethodName = "/cosmos.bank.v1beta1.Query/DenomMetadataByQueryString"
 	Query_DenomsMetadata_FullMethodName             = "/cosmos.bank.v1beta1.Query/DenomsMetadata"
 	Query_DenomOwners_FullMethodName                = "/cosmos.bank.v1beta1.Query/DenomOwners"
+	Query_DenomOwnersByQuery_FullMethodName         = "/cosmos.bank.v1beta1.Query/DenomOwnersByQuery"
 	Query_SendEnabled_FullMethodName                = "/cosmos.bank.v1beta1.Query/SendEnabled"
 )
 
@@ -87,6 +88,9 @@ type QueryClient interface {
 	//
 	// Since: cosmos-sdk 0.46
 	DenomOwners(ctx context.Context, in *QueryDenomOwnersRequest, opts ...grpc.CallOption) (*QueryDenomOwnersResponse, error)
+	// DenomOwners queries for all account addresses that own a particular token
+	// denomination.
+	DenomOwnersByQuery(ctx context.Context, in *QueryDenomOwnersByQueryRequest, opts ...grpc.CallOption) (*QueryDenomOwnersByQueryResponse, error)
 	// SendEnabled queries for SendEnabled entries.
 	//
 	// This query only returns denominations that have specific SendEnabled settings.
@@ -204,6 +208,15 @@ func (c *queryClient) DenomOwners(ctx context.Context, in *QueryDenomOwnersReque
 	return out, nil
 }
 
+func (c *queryClient) DenomOwnersByQuery(ctx context.Context, in *QueryDenomOwnersByQueryRequest, opts ...grpc.CallOption) (*QueryDenomOwnersByQueryResponse, error) {
+	out := new(QueryDenomOwnersByQueryResponse)
+	err := c.cc.Invoke(ctx, Query_DenomOwnersByQuery_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *queryClient) SendEnabled(ctx context.Context, in *QuerySendEnabledRequest, opts ...grpc.CallOption) (*QuerySendEnabledResponse, error) {
 	out := new(QuerySendEnabledResponse)
 	err := c.cc.Invoke(ctx, Query_SendEnabled_FullMethodName, in, out, opts...)
@@ -267,6 +280,9 @@ type QueryServer interface {
 	//
 	// Since: cosmos-sdk 0.46
 	DenomOwners(context.Context, *QueryDenomOwnersRequest) (*QueryDenomOwnersResponse, error)
+	// DenomOwners queries for all account addresses that own a particular token
+	// denomination.
+	DenomOwnersByQuery(context.Context, *QueryDenomOwnersByQueryRequest) (*QueryDenomOwnersByQueryResponse, error)
 	// SendEnabled queries for SendEnabled entries.
 	//
 	// This query only returns denominations that have specific SendEnabled settings.
@@ -314,6 +330,9 @@ func (UnimplementedQueryServer) DenomsMetadata(context.Context, *QueryDenomsMeta
 }
 func (UnimplementedQueryServer) DenomOwners(context.Context, *QueryDenomOwnersRequest) (*QueryDenomOwnersResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DenomOwners not implemented")
+}
+func (UnimplementedQueryServer) DenomOwnersByQuery(context.Context, *QueryDenomOwnersByQueryRequest) (*QueryDenomOwnersByQueryResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DenomOwnersByQuery not implemented")
 }
 func (UnimplementedQueryServer) SendEnabled(context.Context, *QuerySendEnabledRequest) (*QuerySendEnabledResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SendEnabled not implemented")
@@ -529,6 +548,24 @@ func _Query_DenomOwners_Handler(srv interface{}, ctx context.Context, dec func(i
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_DenomOwnersByQuery_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryDenomOwnersByQueryRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).DenomOwnersByQuery(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Query_DenomOwnersByQuery_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).DenomOwnersByQuery(ctx, req.(*QueryDenomOwnersByQueryRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Query_SendEnabled_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(QuerySendEnabledRequest)
 	if err := dec(in); err != nil {
@@ -597,6 +634,10 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DenomOwners",
 			Handler:    _Query_DenomOwners_Handler,
+		},
+		{
+			MethodName: "DenomOwnersByQuery",
+			Handler:    _Query_DenomOwnersByQuery_Handler,
 		},
 		{
 			MethodName: "SendEnabled",

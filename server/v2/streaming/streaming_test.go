@@ -1,0 +1,169 @@
+package streaming
+
+import (
+	"context"
+	"fmt"
+	"os"
+	"runtime"
+	"testing"
+	"time"
+
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	"github.com/cosmos/gogoproto/proto"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
+
+	"cosmossdk.io/log"
+	streamingabci "cosmossdk.io/server/v2/streaming/abci"
+)
+
+type PluginTestSuite struct {
+	suite.Suite
+
+	loggerCtx MockContext
+
+	workDir string
+
+	deliverBlockrequest streamingabci.ListenDeliverBlockRequest
+	stateChangeRequest  streamingabci.ListenStateChangesRequest
+
+	changeSet []*streamingabci.StoreKVPair
+}
+
+func (s *PluginTestSuite) SetupTest() {
+	if runtime.GOOS != "linux" {
+		s.T().Skip("only run on linux")
+	}
+
+	path, err := os.Getwd()
+	if err != nil {
+		s.T().Fail()
+	}
+	s.workDir = path
+
+	pluginVersion := "abci"
+	// to write data to files, replace stdout/stdout => file/file
+	pluginPath := fmt.Sprintf("%s/abci/examples/stdout/stdout", s.workDir)
+	if err := os.Setenv(GetPluginEnvKey(pluginVersion), pluginPath); err != nil {
+		s.T().Fail()
+	}
+
+	raw, err := NewStreamingPlugin(pluginVersion, "trace")
+	require.NoError(s.T(), err, "load", "streaming", "unexpected error")
+
+	abciListener, ok := raw.(streamingabci.Listener)
+	require.True(s.T(), ok, "should pass type check")
+
+	header := tmproto.Header{Height: 1, Time: time.Now()}
+	logger := log.NewNopLogger()
+	streamingService := StreamingManager{
+		Listeners:     []streamingabci.Listener{abciListener},
+		StopNodeOnErr: true,
+	}
+	s.loggerCtx = NewMockContext(header, logger, streamingService)
+
+	// test abci message types
+
+	s.deliverBlockrequest = streamingabci.ListenDeliverBlockRequest{
+		Height: s.loggerCtx.BlockHeight(),
+		Txs: []*streamingabci.Transaction{{TxBytes: []byte{1, 2, 3, 4, 5, 6, 7, 8, 9}, Result: &streamingabci.ExecTxResult{
+			Events:    []*streamingabci.Event{},
+			Code:      1,
+			Codespace: "mockCodeSpace",
+			Data:      []byte{5, 6, 7, 8},
+			GasUsed:   2,
+			GasWanted: 3,
+			Info:      "mockInfo",
+			Log:       "mockLog",
+		}}},
+		Hash:   []byte{1, 2, 3, 4, 5, 6, 7, 8, 9},
+		Events: []*streamingabci.Event{},
+	}
+	s.stateChangeRequest = streamingabci.ListenStateChangesRequest{}
+
+	// test store kv pair types
+	for range [2000]int{} {
+		s.changeSet = append(s.changeSet, &streamingabci.StoreKVPair{
+			StoreKey: "mockStore",
+			Delete:   false,
+			Key:      []byte{1, 2, 3},
+			Value:    []byte{3, 2, 1},
+		})
+	}
+}
+
+func TestPluginTestSuite(t *testing.T) {
+	suite.Run(t, new(PluginTestSuite))
+}
+
+func (s *PluginTestSuite) TestABCIGRPCPlugin() {
+	s.T().Run("Should successfully load streaming", func(t *testing.T) {
+		abciListeners := s.loggerCtx.StreamingManager().Listeners
+		for _, abciListener := range abciListeners {
+			for i := range [50]int{} {
+
+				err := abciListener.ListenDeliverBlock(s.loggerCtx, s.deliverBlockrequest)
+				assert.NoError(t, err, "ListenEndBlock")
+
+				err = abciListener.ListenStateChanges(s.loggerCtx, s.changeSet)
+				assert.NoError(t, err, "ListenCommit")
+
+				s.updateHeight(int64(i + 1))
+			}
+		}
+	})
+}
+
+func (s *PluginTestSuite) updateHeight(n int64) {
+	header := s.loggerCtx.BlockHeader()
+	header.Height = n
+	s.loggerCtx = NewMockContext(header, s.loggerCtx.Logger(), s.loggerCtx.StreamingManager())
+}
+
+var (
+	_ context.Context = MockContext{}
+	_ Context         = MockContext{}
+)
+
+type MockContext struct {
+	baseCtx          context.Context
+	header           tmproto.Header
+	logger           log.Logger
+	streamingManager StreamingManager
+}
+
+func (m MockContext) BlockHeight() int64                 { return m.header.Height }
+func (m MockContext) Logger() log.Logger                 { return m.logger }
+func (m MockContext) StreamingManager() StreamingManager { return m.streamingManager }
+
+func (m MockContext) BlockHeader() tmproto.Header {
+	msg := proto.Clone(&m.header).(*tmproto.Header)
+	return *msg
+}
+
+func NewMockContext(header tmproto.Header, logger log.Logger, sm StreamingManager) MockContext {
+	header.Time = header.Time.UTC()
+	return MockContext{
+		baseCtx:          context.Background(),
+		header:           header,
+		logger:           logger,
+		streamingManager: sm,
+	}
+}
+
+func (m MockContext) Deadline() (deadline time.Time, ok bool) {
+	return m.baseCtx.Deadline()
+}
+
+func (m MockContext) Done() <-chan struct{} {
+	return m.baseCtx.Done()
+}
+
+func (m MockContext) Err() error {
+	return m.baseCtx.Err()
+}
+
+func (m MockContext) Value(key any) any {
+	return m.baseCtx.Value(key)
+}

@@ -21,6 +21,7 @@ type GasMeter interface {
 	Limit() Gas
 	// ConsumeGas adds the given amount of gas to the gas consumed and should error
 	// if it overflows the gas limit (if any).
+	// contract: total consumption must be checked in order to exit early from execution
 	ConsumeGas(amount Gas, descriptor string) error
 	// RefundGas will deduct the given amount from the gas consumed so far. If the
 	// amount is greater than the gas consumed, the function should error.

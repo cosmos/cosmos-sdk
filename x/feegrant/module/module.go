@@ -12,6 +12,7 @@ import (
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
+	am "cosmossdk.io/depinject/appmodule"
 	"cosmossdk.io/errors"
 	"cosmossdk.io/x/feegrant"
 	"cosmossdk.io/x/feegrant/client/cli"
@@ -163,8 +164,8 @@ func (am AppModule) EndBlock(ctx context.Context) error {
 }
 
 func init() {
-	appmodule.Register(&modulev1.Module{},
-		appmodule.Provide(ProvideModule),
+	am.Register(&modulev1.Module{},
+		am.Provide(ProvideModule),
 	)
 }
 

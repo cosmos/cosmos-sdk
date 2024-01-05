@@ -38,10 +38,8 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	"golang.org/x/exp/maps"
-	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/appmodule"
-	am "cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/genesis"
 	errorsmod "cosmossdk.io/errors"
 	storetypes "cosmossdk.io/store/types"
@@ -216,26 +214,6 @@ type HasInvariants interface {
 type HasServices interface {
 	// RegisterServices allows a module to register services.
 	RegisterServices(Configurator)
-}
-
-// HasServices is the extension interface that modules should implement to register
-// implementations of services defined in .proto files.
-type HasGRPCServices interface {
-	am.AppModule
-
-	// RegisterServices registers the module's services with the app's service
-	// registrar.
-	//
-	// Two types of services are currently supported:
-	// - read-only gRPC query services, which are the default.
-	// - transaction message services, which must have the protobuf service
-	//   option "cosmos.msg.v1.service" (defined in "cosmos/msg/v1/service.proto")
-	//   set to true.
-	//
-	// The service registrar will figure out which type of service you are
-	// implementing based on the presence (or absence) of protobuf options. You
-	// do not need to specify this in golang code.
-	RegisterServices(grpc.ServiceRegistrar) error
 }
 
 // HasConsensusVersion is the interface for declaring a module consensus version.

@@ -230,6 +230,7 @@ require (
 replace (
 	cosmossdk.io/api => ../api
 	cosmossdk.io/client/v2 => ../client/v2
+	cosmossdk.io/depinject => ../depinject
 	cosmossdk.io/tools/confix => ../tools/confix
 	cosmossdk.io/x/accounts => ../x/accounts
 	cosmossdk.io/x/auth => ../x/auth

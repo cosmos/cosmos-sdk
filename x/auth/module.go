@@ -12,6 +12,7 @@ import (
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
+	am "cosmossdk.io/depinject/appmodule"
 	"cosmossdk.io/x/auth/keeper"
 	"cosmossdk.io/x/auth/simulation"
 	"cosmossdk.io/x/auth/types"
@@ -173,8 +174,8 @@ func (AppModule) WeightedOperations(_ module.SimulationState) []simtypes.Weighte
 //
 
 func init() {
-	appmodule.Register(&modulev1.Module{},
-		appmodule.Provide(ProvideModule),
+	am.Register(&modulev1.Module{},
+		am.Provide(ProvideModule),
 	)
 }
 

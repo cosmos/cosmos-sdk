@@ -11,6 +11,7 @@ import (
 	"cosmossdk.io/core/event"
 	storetypes "cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
+	am "cosmossdk.io/depinject/appmodule"
 	authtypes "cosmossdk.io/x/auth/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -89,9 +90,9 @@ func NewAppModule(cdc codec.Codec, keeper keeper.Keeper) AppModule {
 func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
 
 func init() {
-	appmodule.Register(
+	am.Register(
 		&modulev1.Module{},
-		appmodule.Provide(ProvideModule),
+		am.Provide(ProvideModule),
 	)
 }
 

@@ -20,7 +20,7 @@ func (k Keeper) MinSignedPerWindow(ctx context.Context) (int64, error) {
 		return 0, err
 	}
 
-	return p.MinSignedPerWindow(), nil
+	return params.MinSignedPerWindow(), nil
 }
 
 // DowntimeJailDuration - Downtime unbond duration

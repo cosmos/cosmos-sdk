@@ -3,7 +3,6 @@ package telemetry
 import (
 	"time"
 
-	"cosmossdk.io/server/v2/telemetry"
 	"github.com/hashicorp/go-metrics"
 )
 
@@ -15,6 +14,10 @@ const (
 	MetricKeyPrecommiter        = "precommiter"
 	MetricLabelNameModule       = "module"
 )
+
+// GlobalLabels defines the set of global labels that will be applied to all
+// metrics emitted using the telemetry package function wrappers.
+var GlobalLabels = []metrics.Label{} // nolint: ignore
 
 // NewLabel creates a new instance of Label with name and value
 func NewLabel(name, value string) metrics.Label {
@@ -28,7 +31,7 @@ func ModuleMeasureSince(module string, start time.Time, keys ...string) {
 	metrics.MeasureSinceWithLabels(
 		keys,
 		start.UTC(),
-		append([]metrics.Label{NewLabel(MetricLabelNameModule, module)}, telemetry.GlobalLabels...),
+		append([]metrics.Label{NewLabel(MetricLabelNameModule, module)}, GlobalLabels...),
 	)
 }
 
@@ -39,36 +42,36 @@ func ModuleSetGauge(module string, val float32, keys ...string) {
 	metrics.SetGaugeWithLabels(
 		keys,
 		val,
-		append([]metrics.Label{NewLabel(MetricLabelNameModule, module)}, telemetry.GlobalLabels...),
+		append([]metrics.Label{NewLabel(MetricLabelNameModule, module)}, GlobalLabels...),
 	)
 }
 
 // IncrCounter provides a wrapper functionality for emitting a counter metric with
 // global labels (if any).
 func IncrCounter(val float32, keys ...string) {
-	metrics.IncrCounterWithLabels(keys, val, telemetry.GlobalLabels)
+	metrics.IncrCounterWithLabels(keys, val, GlobalLabels)
 }
 
 // IncrCounterWithLabels provides a wrapper functionality for emitting a counter
 // metric with global labels (if any) along with the provided labels.
 func IncrCounterWithLabels(keys []string, val float32, labels []metrics.Label) {
-	metrics.IncrCounterWithLabels(keys, val, append(labels, telemetry.GlobalLabels...))
+	metrics.IncrCounterWithLabels(keys, val, append(labels, GlobalLabels...))
 }
 
 // SetGauge provides a wrapper functionality for emitting a gauge metric with
 // global labels (if any).
 func SetGauge(val float32, keys ...string) {
-	metrics.SetGaugeWithLabels(keys, val, telemetry.GlobalLabels)
+	metrics.SetGaugeWithLabels(keys, val, GlobalLabels)
 }
 
 // SetGaugeWithLabels provides a wrapper functionality for emitting a gauge
 // metric with global labels (if any) along with the provided labels.
 func SetGaugeWithLabels(keys []string, val float32, labels []metrics.Label) {
-	metrics.SetGaugeWithLabels(keys, val, append(labels, telemetry.GlobalLabels...))
+	metrics.SetGaugeWithLabels(keys, val, append(labels, GlobalLabels...))
 }
 
 // MeasureSince provides a wrapper functionality for emitting a a time measure
 // metric with global labels (if any).
 func MeasureSince(start time.Time, keys ...string) {
-	metrics.MeasureSinceWithLabels(keys, start.UTC(), telemetry.GlobalLabels)
+	metrics.MeasureSinceWithLabels(keys, start.UTC(), GlobalLabels)
 }

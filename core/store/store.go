@@ -55,7 +55,6 @@ type KVStore interface {
 //	}
 type Iterator interface {
 	// Domain returns the start (inclusive) and end (exclusive) limits of the iterator.
-	// CONTRACT: start, end readonly []byte
 	Domain() (start, end []byte)
 
 	// Valid returns whether the current iterator is valid. Once invalid, the Iterator remains
@@ -67,11 +66,9 @@ type Iterator interface {
 	Next()
 
 	// Key returns the key at the current position. Panics if the iterator is invalid.
-	// CONTRACT: key readonly []byte
 	Key() (key []byte)
 
 	// Value returns the value at the current position. Panics if the iterator is invalid.
-	// CONTRACT: value readonly []byte
 	Value() (value []byte)
 
 	// Error returns the last error encountered by the iterator, if any.
@@ -79,4 +76,16 @@ type Iterator interface {
 
 	// Close closes the iterator, releasing any allocated resources.
 	Close() error
+}
+
+// IteratorCreator defines an interface for creating forward and reverse iterators.
+type IteratorCreator interface {
+	// Iterator creates a new iterator for the given store name and domain, where
+	// domain is defined by [start, end). Note, both start and end are optional.
+	Iterator(storeKey string, start, end []byte) (Iterator, error)
+
+	// ReverseIterator creates a new reverse iterator for the given store name
+	// and domain, where domain is defined by [start, end). Note, both start and
+	// end are optional.
+	ReverseIterator(storeKey string, start, end []byte) (Iterator, error)
 }

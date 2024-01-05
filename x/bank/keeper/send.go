@@ -368,7 +368,6 @@ func (k BaseSendKeeper) addCoinsImproved(ctx sdk.Context, addr sdk.AccAddress, a
 		balance := k.GetBalance(ctx, addr, coin.Denom)
 		newBalance := balance.Add(coin)
 
-		// err := k.setBalance(ctx, addr, balance, newBalance)
 		err := k.setBalance(ctx, addr, newBalance)
 		if err != nil {
 			return err
@@ -444,47 +443,6 @@ func (k BaseSendKeeper) initBalances(ctx sdk.Context, addr sdk.AccAddress, balan
 // 2 blocks after osmosis first epoch
 var osmosisFirstEpochHeight = int64(12834361)
 
-// Better add coins implementation for code that is not gas metered. Reduces I/O overhead.
-// Used in osmosis epoch.
-// Also removes event that should not exist.
-// SDK should always use this for teh denom reverse map, but we can't edit right now as that would be a state break.
-// Furthermore, this reverse map code should just get deleted.
-func (k BaseSendKeeper) setBalanceImproved(ctx sdk.Context, addr sdk.AccAddress, oldBalance sdk.Coin, newBalance sdk.Coin) error {
-	if !newBalance.IsValid() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, oldBalance.String())
-	}
-
-	accountStore := k.getAccountStore(ctx, addr)
-	denomPrefixStore := k.getDenomAddressPrefixStore(ctx, oldBalance.Denom)
-	// x/bank invariants prohibit persistence of zero balances
-	if newBalance.IsZero() {
-		accountStore.Delete([]byte(newBalance.Denom))
-		denomPrefixStore.Delete(address.MustLengthPrefix(addr))
-	} else {
-		amount, err := newBalance.Amount.Marshal()
-		if err != nil {
-			return err
-		}
-
-		accountStore.Set([]byte(newBalance.Denom), amount)
-
-		mustSetDenom := oldBalance.IsZero()
-		if ctx.BlockHeight() <= osmosisFirstEpochHeight || newBalance.Denom != "uosmo" {
-			mustSetDenom = true
-		}
-		if mustSetDenom {
-			// Store a reverse index from denomination to account address with a
-			// sentinel value.
-			denomAddrKey := address.MustLengthPrefix(addr)
-			if !denomPrefixStore.Has(denomAddrKey) {
-				denomPrefixStore.Set(denomAddrKey, []byte{0})
-			}
-		}
-	}
-
-	return nil
-}
-
 // setBalance sets the coin balance for an account by address.
 func (k BaseSendKeeper) setBalance(ctx sdk.Context, addr sdk.AccAddress, balance sdk.Coin) error {
 	if !balance.IsValid() {
@@ -505,13 +463,7 @@ func (k BaseSendKeeper) setBalance(ctx sdk.Context, addr sdk.AccAddress, balance
 		}
 
 		accountStore.Set([]byte(balance.Denom), amount)
-
-		// Store a reverse index from denomination to account address with a
-		// sentinel value.
-		denomAddrKey := address.MustLengthPrefix(addr)
-		if !denomPrefixStore.Has(denomAddrKey) {
-			denomPrefixStore.Set(denomAddrKey, []byte{0})
-		}
+		// We deleted denomPrefixStore setting.
 	}
 
 	return nil

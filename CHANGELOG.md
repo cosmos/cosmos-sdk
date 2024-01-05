@@ -83,6 +83,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (tx) [#18772](https://github.com/cosmos/cosmos-sdk/pull/18772) Remove misleading gas wanted from tx simulation failure log.
 * (tx) [#18852](https://github.com/cosmos/cosmos-sdk/pull/18852) Add `WithFromName` to tx factory.
 * (testutil) [#18930](https://github.com/cosmos/cosmos-sdk/pull/18930) Add NodeURI for clientCtx.
+* [#18956](https://github.com/cosmos/cosmos-sdk/pull/18956) Add `DenomOwnersByQuery` query added for `DenomOwners`. It will take denom value as a query string to `DenomOwners` req.
 
 ### Bug Fixes
 

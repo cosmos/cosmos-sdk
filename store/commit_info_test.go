@@ -51,7 +51,7 @@ func TestGetStoreProof(t *testing.T) {
 			_, proof, err := ci.GetStoreProof(si.Name)
 			require.NoError(t, err, "test case %d", i)
 			// verify the proof
-			expRoots, err := proof.Run([][]byte{[]byte(si.CommitID.Hash)})
+			expRoots, err := proof.Run([][]byte{si.CommitID.Hash})
 			require.NoError(t, err, "test case %d", i)
 			require.Equal(t, commitHash, expRoots[0], "test case %d", i)
 		}

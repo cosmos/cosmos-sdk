@@ -1,12 +1,10 @@
-package abci
+package streaming
 
 import (
 	"context"
 	"os"
 
 	"github.com/hashicorp/go-plugin"
-
-	storetypes "cosmossdk.io/store/types"
 )
 
 var _ Listener = (*GRPCClient)(nil)
@@ -22,7 +20,7 @@ type GRPCClient struct {
 // When the node is configured to stop on listening errors,
 // it will terminate immediately and exit with a non-zero code.
 func (m *GRPCClient) ListenDeliverBlock(goCtx context.Context, req ListenDeliverBlockRequest) error {
-	ctx := goCtx.(storetypes.Context)
+	ctx := goCtx.(Context)
 	sm := ctx.StreamingManager()
 	_, err := m.client.ListenDeliverBlock(goCtx, &req)
 	if err != nil && sm.StopNodeOnErr {
@@ -38,7 +36,7 @@ func (m *GRPCClient) ListenDeliverBlock(goCtx context.Context, req ListenDeliver
 // When the node is configured to stop on listening errors,
 // it will terminate immediately and exit with a non-zero code.
 func (m *GRPCClient) ListenStateChanges(goCtx context.Context, changeSet []*StoreKVPair) error {
-	ctx := goCtx.(storetypes.Context)
+	ctx := goCtx.(Context)
 	sm := ctx.StreamingManager()
 	request := &ListenStateChangesRequest{BlockHeight: ctx.BlockHeight(), ChangeSet: changeSet}
 	_, err := m.client.ListenStateChanges(goCtx, request)

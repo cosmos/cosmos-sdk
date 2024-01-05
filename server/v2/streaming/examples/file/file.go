@@ -6,11 +6,8 @@ import (
 	"os"
 	"path/filepath"
 
-	abci "github.com/cometbft/cometbft/abci/types"
+	"cosmossdk.io/server/v2/streaming"
 	"github.com/hashicorp/go-plugin"
-
-	streamingabci "cosmossdk.io/store/streaming/abci"
-	store "cosmossdk.io/store/types"
 )
 
 // FilePlugin is the implementation of the baseapp.ABCIListener interface
@@ -43,7 +40,7 @@ func (a *FilePlugin) writeToFile(file string, data []byte) error {
 	return nil
 }
 
-func (a *FilePlugin) ListenFinalizeBlock(ctx context.Context, req abci.RequestFinalizeBlock, res abci.ResponseFinalizeBlock) error {
+func (a *FilePlugin) ListenDeliverBlock(ctx context.Context, req streaming.ListenDeliverBlockRequest) error {
 	d1 := []byte(fmt.Sprintf("%d:::%v\n", a.BlockHeight, req))
 	d2 := []byte(fmt.Sprintf("%d:::%v\n", a.BlockHeight, req))
 	if err := a.writeToFile("finalize-block-req", d1); err != nil {
@@ -55,9 +52,9 @@ func (a *FilePlugin) ListenFinalizeBlock(ctx context.Context, req abci.RequestFi
 	return nil
 }
 
-func (a *FilePlugin) ListenCommit(ctx context.Context, res abci.ResponseCommit, changeSet []*store.StoreKVPair) error {
-	fmt.Printf("listen-commit: block_height=%d data=%v", res.RetainHeight, changeSet)
-	d1 := []byte(fmt.Sprintf("%d:::%v\n", a.BlockHeight, res))
+func (a *FilePlugin) ListenStateChanges(ctx context.Context, changeSet []*streaming.StoreKVPair) error {
+	fmt.Printf("listen-commit: block_height=%d data=%v", a.BlockHeight, changeSet)
+	d1 := []byte(fmt.Sprintf("%d:::%v\n", a.BlockHeight))
 	d2 := []byte(fmt.Sprintf("%d:::%v\n", a.BlockHeight, changeSet))
 	if err := a.writeToFile("commit-res", d1); err != nil {
 		return err
@@ -70,9 +67,9 @@ func (a *FilePlugin) ListenCommit(ctx context.Context, res abci.ResponseCommit, 
 
 func main() {
 	plugin.Serve(&plugin.ServeConfig{
-		HandshakeConfig: streamingabci.Handshake,
+		HandshakeConfig: streaming.Handshake,
 		Plugins: map[string]plugin.Plugin{
-			"abci": &streamingabci.ListenerGRPCPlugin{Impl: &FilePlugin{}},
+			"abci": &streaming.ListenerGRPCPlugin{Impl: &FilePlugin{}},
 		},
 
 		// A non-nil value here enables gRPC serving for this streaming...

@@ -8,14 +8,11 @@ import (
 	"testing"
 	"time"
 
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/log"
-	streamingabci "cosmossdk.io/server/v2/streaming/abci"
 )
 
 type PluginTestSuite struct {
@@ -25,10 +22,10 @@ type PluginTestSuite struct {
 
 	workDir string
 
-	deliverBlockrequest streamingabci.ListenDeliverBlockRequest
-	stateChangeRequest  streamingabci.ListenStateChangesRequest
+	deliverBlockrequest ListenDeliverBlockRequest
+	stateChangeRequest  ListenStateChangesRequest
 
-	changeSet []*streamingabci.StoreKVPair
+	changeSet []*StoreKVPair
 }
 
 func (s *PluginTestSuite) SetupTest() {
@@ -52,23 +49,22 @@ func (s *PluginTestSuite) SetupTest() {
 	raw, err := NewStreamingPlugin(pluginVersion, "trace")
 	require.NoError(s.T(), err, "load", "streaming", "unexpected error")
 
-	abciListener, ok := raw.(streamingabci.Listener)
+	abciListener, ok := raw.(Listener)
 	require.True(s.T(), ok, "should pass type check")
 
-	header := tmproto.Header{Height: 1, Time: time.Now()}
 	logger := log.NewNopLogger()
 	streamingService := StreamingManager{
-		Listeners:     []streamingabci.Listener{abciListener},
+		Listeners:     []Listener{abciListener},
 		StopNodeOnErr: true,
 	}
-	s.loggerCtx = NewMockContext(header, logger, streamingService)
+	s.loggerCtx = NewMockContext(1, logger, streamingService)
 
 	// test abci message types
 
-	s.deliverBlockrequest = streamingabci.ListenDeliverBlockRequest{
+	s.deliverBlockrequest = ListenDeliverBlockRequest{
 		Height: s.loggerCtx.BlockHeight(),
-		Txs: []*streamingabci.Transaction{{TxBytes: []byte{1, 2, 3, 4, 5, 6, 7, 8, 9}, Result: &streamingabci.ExecTxResult{
-			Events:    []*streamingabci.Event{},
+		Txs: []*Transaction{{TxBytes: []byte{1, 2, 3, 4, 5, 6, 7, 8, 9}, Result: &ExecTxResult{
+			Events:    []*Event{},
 			Code:      1,
 			Codespace: "mockCodeSpace",
 			Data:      []byte{5, 6, 7, 8},
@@ -78,13 +74,13 @@ func (s *PluginTestSuite) SetupTest() {
 			Log:       "mockLog",
 		}}},
 		Hash:   []byte{1, 2, 3, 4, 5, 6, 7, 8, 9},
-		Events: []*streamingabci.Event{},
+		Events: []*Event{},
 	}
-	s.stateChangeRequest = streamingabci.ListenStateChangesRequest{}
+	s.stateChangeRequest = ListenStateChangesRequest{}
 
 	// test store kv pair types
 	for range [2000]int{} {
-		s.changeSet = append(s.changeSet, &streamingabci.StoreKVPair{
+		s.changeSet = append(s.changeSet, &StoreKVPair{
 			StoreKey: "mockStore",
 			Delete:   false,
 			Key:      []byte{1, 2, 3},
@@ -116,9 +112,7 @@ func (s *PluginTestSuite) TestABCIGRPCPlugin() {
 }
 
 func (s *PluginTestSuite) updateHeight(n int64) {
-	header := s.loggerCtx.BlockHeader()
-	header.Height = n
-	s.loggerCtx = NewMockContext(header, s.loggerCtx.Logger(), s.loggerCtx.StreamingManager())
+	s.loggerCtx = NewMockContext(n, s.loggerCtx.Logger(), s.loggerCtx.StreamingManager())
 }
 
 var (
@@ -128,25 +122,19 @@ var (
 
 type MockContext struct {
 	baseCtx          context.Context
-	header           tmproto.Header
+	height           int64
 	logger           log.Logger
 	streamingManager StreamingManager
 }
 
-func (m MockContext) BlockHeight() int64                 { return m.header.Height }
+func (m MockContext) BlockHeight() int64                 { return m.height }
 func (m MockContext) Logger() log.Logger                 { return m.logger }
 func (m MockContext) StreamingManager() StreamingManager { return m.streamingManager }
 
-func (m MockContext) BlockHeader() tmproto.Header {
-	msg := proto.Clone(&m.header).(*tmproto.Header)
-	return *msg
-}
-
-func NewMockContext(header tmproto.Header, logger log.Logger, sm StreamingManager) MockContext {
-	header.Time = header.Time.UTC()
+func NewMockContext(height int64, logger log.Logger, sm StreamingManager) MockContext {
 	return MockContext{
 		baseCtx:          context.Background(),
-		header:           header,
+		height:           height,
 		logger:           logger,
 		streamingManager: sm,
 	}

@@ -1,5 +1,5 @@
 // Package abci contains shared data between the host and plugins.
-package abci
+package streaming
 
 import (
 	"context"

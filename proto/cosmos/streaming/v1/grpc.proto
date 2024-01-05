@@ -5,7 +5,7 @@ package cosmos.streaming.v1;
 import "gogoproto/gogo.proto";
 import "google/protobuf/timestamp.proto";
 
-option go_package = "cosmossdk.io/server/v2/streaming/abci";
+option go_package = "cosmossdk.io/server/v2/streaming";
 
 // ListenDeliverBlockRequest is the request type for the ListenDeliverBlock RPC method
 message ListenDeliverBlockRequest {

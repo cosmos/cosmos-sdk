@@ -1,7 +1,14 @@
 package types
 
-// AnteHandler authenticates transactions, before their internal messages are handled.
-// If newCtx.IsZero(), ctx is used instead.
+// AnteHandler authenticates transactions, before their internal messages are
+// executed. The provided ctx is expected to contain all relevant information
+// needed to process the transaction, e.g. fee payment information. If new data
+// is required for the remainder of the AnteHandler execution, a new Context should
+// be created off of the provided Context and returned as <newCtx>.
+//
+// The simulate argument is provided to indicate if the AnteHandler is being executed
+// in simulation mode, which attempts to estimate a gas cost for the tx. Any state
+// modifications made will be discarded if simulate is true.
 type AnteHandler func(ctx Context, tx Tx, simulate bool) (newCtx Context, err error)
 
 // PostHandler like AnteHandler but it executes after RunMsgs. Runs on success

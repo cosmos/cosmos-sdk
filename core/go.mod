@@ -5,7 +5,10 @@ go 1.20
 require (
 	cosmossdk.io/depinject v0.0.0-00010101000000-000000000000
 	github.com/stretchr/testify v1.8.4
-	google.golang.org/protobuf v1.31.0
+	google.golang.org/grpc v1.60.1
+	google.golang.org/protobuf v1.32.0
+	gotest.tools/v3 v3.5.1
+	sigs.k8s.io/yaml v1.4.0
 )
 
 require (

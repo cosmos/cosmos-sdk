@@ -9,6 +9,7 @@ import (
 	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/x/slashing/types"
 
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -97,5 +98,18 @@ func (h Hooks) BeforeValidatorSlashed(_ context.Context, _ sdk.ValAddress, _ sdk
 }
 
 func (h Hooks) AfterUnbondingInitiated(_ context.Context, _ uint64) error {
+	return nil
+}
+
+// AfterConsensusPubKeyUpdate triggers the functions to rotate the signing-infos also sets address pubkey relation.
+func (h Hooks) AfterConsensusPubKeyUpdate(ctx context.Context, oldPubKey, newPubKey cryptotypes.PubKey, _ sdk.Coin) error {
+	if err := h.k.performConsensusPubKeyUpdate(ctx, oldPubKey, newPubKey); err != nil {
+		return err
+	}
+
+	if err := h.k.AddrPubkeyRelation.Remove(ctx, oldPubKey.Address()); err != nil {
+		return err
+	}
+
 	return nil
 }

@@ -23036,7 +23036,7 @@ func (x *fastReflection_TestUpdatedTxBody) ProtoMethods() *protoiface.Methods {
 		if x.SomeNewField != 0 {
 			i = runtime.EncodeVarint(dAtA, i, uint64(x.SomeNewField))
 			i--
-			dAtA[i] = 0x20
+			dAtA[i] = 0x28
 		}
 		if x.TimeoutHeight != 0 {
 			i = runtime.EncodeVarint(dAtA, i, uint64(x.TimeoutHeight))
@@ -23200,7 +23200,7 @@ func (x *fastReflection_TestUpdatedTxBody) ProtoMethods() *protoiface.Methods {
 						break
 					}
 				}
-			case 4:
+			case 5:
 				if wireType != 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field SomeNewField", wireType)
 				}
@@ -26508,7 +26508,7 @@ type TestUpdatedTxBody struct {
 	Messages                     []*anypb.Any `protobuf:"bytes,1,rep,name=messages,proto3" json:"messages,omitempty"`
 	Memo                         string       `protobuf:"bytes,2,opt,name=memo,proto3" json:"memo,omitempty"`
 	TimeoutHeight                int64        `protobuf:"varint,3,opt,name=timeout_height,json=timeoutHeight,proto3" json:"timeout_height,omitempty"`
-	SomeNewField                 uint64       `protobuf:"varint,4,opt,name=some_new_field,json=someNewField,proto3" json:"some_new_field,omitempty"`
+	SomeNewField                 uint64       `protobuf:"varint,5,opt,name=some_new_field,json=someNewField,proto3" json:"some_new_field,omitempty"`
 	SomeNewFieldNonCriticalField string       `protobuf:"bytes,1050,opt,name=some_new_field_non_critical_field,json=someNewFieldNonCriticalField,proto3" json:"some_new_field_non_critical_field,omitempty"`
 	ExtensionOptions             []*anypb.Any `protobuf:"bytes,1023,rep,name=extension_options,json=extensionOptions,proto3" json:"extension_options,omitempty"`
 	NonCriticalExtensionOptions  []*anypb.Any `protobuf:"bytes,2047,rep,name=non_critical_extension_options,json=nonCriticalExtensionOptions,proto3" json:"non_critical_extension_options,omitempty"`
@@ -27410,7 +27410,7 @@ var file_testpb_unknonwnproto_proto_rawDesc = []byte{
 	0x6d, 0x65, 0x6f, 0x75, 0x74, 0x5f, 0x68, 0x65, 0x69, 0x67, 0x68, 0x74, 0x18, 0x03, 0x20, 0x01,
 	0x28, 0x03, 0x52, 0x0d, 0x74, 0x69, 0x6d, 0x65, 0x6f, 0x75, 0x74, 0x48, 0x65, 0x69, 0x67, 0x68,
 	0x74, 0x12, 0x24, 0x0a, 0x0e, 0x73, 0x6f, 0x6d, 0x65, 0x5f, 0x6e, 0x65, 0x77, 0x5f, 0x66, 0x69,
-	0x65, 0x6c, 0x64, 0x18, 0x04, 0x20, 0x01, 0x28, 0x04, 0x52, 0x0c, 0x73, 0x6f, 0x6d, 0x65, 0x4e,
+	0x65, 0x6c, 0x64, 0x18, 0x05, 0x20, 0x01, 0x28, 0x04, 0x52, 0x0c, 0x73, 0x6f, 0x6d, 0x65, 0x4e,
 	0x65, 0x77, 0x46, 0x69, 0x65, 0x6c, 0x64, 0x12, 0x48, 0x0a, 0x21, 0x73, 0x6f, 0x6d, 0x65, 0x5f,
 	0x6e, 0x65, 0x77, 0x5f, 0x66, 0x69, 0x65, 0x6c, 0x64, 0x5f, 0x6e, 0x6f, 0x6e, 0x5f, 0x63, 0x72,
 	0x69, 0x74, 0x69, 0x63, 0x61, 0x6c, 0x5f, 0x66, 0x69, 0x65, 0x6c, 0x64, 0x18, 0x9a, 0x08, 0x20,

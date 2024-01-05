@@ -420,10 +420,10 @@ func (s *Store) commitSC() error {
 		return fmt.Errorf("failed to commit SC store: %w", err)
 	}
 
-	commitHash := store.CommitInfo{
+	commitHash := (&store.CommitInfo{
 		Version:    s.lastCommitInfo.Version,
 		StoreInfos: commitStoreInfos,
-	}.Hash()
+	}).Hash()
 
 	workingHash, err := s.WorkingHash()
 	if err != nil {

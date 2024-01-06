@@ -11,6 +11,7 @@ require (
 	cosmossdk.io/core v0.11.0
 	cosmossdk.io/server/v2/core v0.0.0-00010101000000-000000000000
 	github.com/stretchr/testify v1.8.4
+	github.com/tidwall/btree v1.7.0
 	google.golang.org/protobuf v1.31.0
 )
 

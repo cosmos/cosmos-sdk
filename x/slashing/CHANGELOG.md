@@ -29,7 +29,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
-* (slashing) [#18959](https://github.com/cosmos/cosmos-sdk/pull/18959) Avoid deserialization of parameters with every validator lookup
+* [#18959](https://github.com/cosmos/cosmos-sdk/pull/18959) Avoid deserialization of parameters with every validator lookup
 
 ### API Breaking Changes
 

@@ -125,7 +125,7 @@ func runAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *buf
 
 	name := args[0]
 	if strings.TrimSpace(name) == "" {
-		return errors.New("name is empty after trimming the white space")
+		return errors.New("the provided name is invalid or empty after trimming whitespace")
 	}
 	interactive, _ := cmd.Flags().GetBool(flagInteractive)
 	kb := ctx.Keyring

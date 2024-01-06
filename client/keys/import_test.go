@@ -199,7 +199,7 @@ func Test_runImportCmdWithEmptyName(t *testing.T) {
 		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
 	})
 
-	require.ErrorContains(t, cmd.ExecuteContext(ctx), "name is empty after trimming the white space")
+	require.ErrorContains(t, cmd.ExecuteContext(ctx), "the provided name is invalid or empty after trimming whitespace")
 
 	cmd = ImportKeyHexCommand()
 	cmd.Flags().AddFlagSet(Commands().PersistentFlags())
@@ -209,5 +209,5 @@ func Test_runImportCmdWithEmptyName(t *testing.T) {
 		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
 	})
 
-	require.ErrorContains(t, cmd.ExecuteContext(ctx), "name is empty after trimming the white space")
+	require.ErrorContains(t, cmd.ExecuteContext(ctx), "the provided name is invalid or empty after trimming whitespace")
 }

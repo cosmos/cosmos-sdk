@@ -56,7 +56,7 @@ func Test_runAddCmdBasic(t *testing.T) {
 		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
 	})
 	mockIn.Reset("y\n")
-	require.ErrorContains(t, cmd.ExecuteContext(ctx), "name is empty after trimming the white space")
+	require.ErrorContains(t, cmd.ExecuteContext(ctx), "the provided name is invalid or empty after trimming whitespace")
 
 	cmd.SetArgs([]string{
 		"keyname1",

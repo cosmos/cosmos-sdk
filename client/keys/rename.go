@@ -34,7 +34,7 @@ private keys stored in a ledger device cannot be renamed with the CLI.
 
 			oldName, newName := args[0], args[1]
 			if strings.TrimSpace(newName) == "" {
-				return errors.New("new name is empty after trimming the white space")
+				return errors.New("the new name cannot be empty or consist solely of whitespace")
 			}
 
 			k, err := clientCtx.Keyring.Key(oldName)

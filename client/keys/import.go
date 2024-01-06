@@ -30,7 +30,7 @@ func ImportKeyCommand() *cobra.Command {
 			}
 			name := args[0]
 			if strings.TrimSpace(name) == "" {
-				return errors.New("name is empty after trimming the white space")
+				return errors.New("the provided name is invalid or empty after trimming whitespace")
 			}
 			buf := bufio.NewReader(clientCtx.Input)
 
@@ -62,7 +62,7 @@ func ImportKeyHexCommand() *cobra.Command {
 			}
 			name := args[0]
 			if strings.TrimSpace(name) == "" {
-				return errors.New("name is empty after trimming the white space")
+				return errors.New("the provided name is invalid or empty after trimming whitespace")
 			}
 			keyType, _ := cmd.Flags().GetString(flags.FlagKeyType)
 			return clientCtx.Keyring.ImportPrivKeyHex(args[0], args[1], keyType)

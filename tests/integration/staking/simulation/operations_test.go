@@ -367,6 +367,31 @@ func (s *SimTestSuite) TestSimulateMsgBeginRedelegate() {
 	require.Len(futureOperations, 0)
 }
 
+func (s *SimTestSuite) TestSimulateRotateConsPubKey() {
+	require := s.Require()
+	blockTime := time.Now().UTC()
+	ctx := s.ctx.WithHeaderInfo(header.Info{Time: blockTime})
+
+	_ = s.getTestingValidator2(ctx)
+
+	// begin a new block
+	s.app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: s.app.LastBlockHeight() + 1, Hash: s.app.LastCommitID().Hash, Time: blockTime})
+
+	// execute operation
+	op := simulation.SimulateMsgRotateConsPubKey(s.txConfig, s.accountKeeper, s.bankKeeper, s.stakingKeeper)
+	operationMsg, futureOperations, err := op(s.r, s.app.BaseApp, ctx, s.accounts, "")
+	require.NoError(err)
+
+	var msg types.MsgRotateConsPubKey
+	err = proto.Unmarshal(operationMsg.Msg, &msg)
+	require.NoError(err)
+
+	require.True(operationMsg.OK)
+	require.Equal(sdk.MsgTypeURL(&types.MsgRotateConsPubKey{}), sdk.MsgTypeURL(&msg))
+	require.Equal("cosmosvaloper1p8wcgrjr4pjju90xg6u9cgq55dxwq8j7epjs3u", msg.ValidatorAddress)
+	require.Len(futureOperations, 0)
+}
+
 func (s *SimTestSuite) getTestingValidator0(ctx sdk.Context) types.Validator {
 	commission0 := types.NewCommission(math.LegacyZeroDec(), math.LegacyOneDec(), math.LegacyOneDec())
 	return s.getTestingValidator(ctx, commission0, 1)
@@ -391,6 +416,14 @@ func (s *SimTestSuite) getTestingValidator(ctx sdk.Context, commission types.Com
 	s.Require().NoError(s.stakingKeeper.SetValidator(ctx, validator))
 
 	return validator
+}
+
+func (s *SimTestSuite) getTestingValidator2(ctx sdk.Context) types.Validator {
+	val := s.getTestingValidator0(ctx)
+	val.Status = types.Bonded
+	s.stakingKeeper.SetValidator(ctx, val)
+	s.stakingKeeper.SetValidatorByConsAddr(ctx, val)
+	return val
 }
 
 func (s *SimTestSuite) setupValidatorRewards(ctx sdk.Context, valAddress sdk.ValAddress) {

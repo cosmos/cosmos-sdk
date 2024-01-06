@@ -79,6 +79,21 @@ func (s STF[T]) DeliverBlock(ctx context.Context, block appmanager.BlockRequest,
 
 // deliverTx executes a TX and returns the result.
 func (s STF[T]) deliverTx(ctx context.Context, state store.WritableState, txBytes []byte) appmanager.TxResult {
+
+	// recover in the case of a panic
+	// TODO: after discussion with users see if we need middleware
+	var recoveryError error
+	defer func() {
+		if r := recover(); r != nil {
+			recoveryError = fmt.Errorf("panic during transaction execution: %s", r)
+		}
+	}()
+	if recoveryError != nil {
+		return appmanager.TxResult{
+			Error: recoveryError,
+		}
+	}
+
 	tx, err := s.decodeTx(txBytes)
 	if err != nil {
 		return appmanager.TxResult{
@@ -118,6 +133,7 @@ func (s STF[T]) validateTx(ctx context.Context, state store.WritableState, gasLi
 func (s STF[T]) execTx(ctx context.Context, state store.WritableState, gasLimit uint64, tx T) ([]Type, uint64, []event.Event, error) {
 	execState := s.branch(state)
 	execCtx := s.makeContext(ctx, tx.GetSenders(), execState, gasLimit)
+
 	// atomic execution of the all messages in a transaction, TODO: we should allow messages to fail in a specific mode
 	msgsResp, txErr := s.runTxMsgs(ctx, execState, gasLimit, tx)
 	if txErr != nil {

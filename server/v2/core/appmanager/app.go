@@ -4,10 +4,10 @@ import (
 	"context"
 	"time"
 
-	"cosmossdk.io/server/v2/core/mempool"
 	"google.golang.org/protobuf/proto"
 
 	"cosmossdk.io/server/v2/core/event"
+	"cosmossdk.io/server/v2/core/mempool"
 	"cosmossdk.io/server/v2/core/store"
 	"cosmossdk.io/server/v2/core/transaction"
 )

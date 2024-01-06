@@ -3,7 +3,6 @@ package appmanager
 import (
 	"context"
 	"fmt"
-	"sync/atomic"
 
 	"cosmossdk.io/server/v2/core/appmanager"
 	"cosmossdk.io/server/v2/core/mempool"
@@ -54,8 +53,6 @@ type AppManager[T transaction.Tx] struct {
 
 	mempool mempool.Mempool[T]
 
-	lastBlockHeight *atomic.Uint64
-
 	initGenesis func(ctx context.Context, genesisBytes []byte) error
 
 	prepareHandler appmanager.PrepareHandler[T]
@@ -66,9 +63,13 @@ type AppManager[T transaction.Tx] struct {
 
 // BuildBlock builds a block when requested by consensus. It will take in the total size txs to be included and return a list of transactions
 func (a AppManager[T]) BuildBlock(ctx context.Context, height uint64, totalSize uint32) ([]T, error) {
-	currentState, err := a.db.NewStateAt(height)
+	latestVersion, currentState, err := a.db.StateLatest()
 	if err != nil {
 		return nil, fmt.Errorf("unable to create new state for height %d: %w", height, err)
+	}
+
+	if latestVersion+1 != height {
+		return nil, fmt.Errorf("unexpected next height version, wanted %d got %d", latestVersion+1, height)
 	}
 
 	txs, err := a.prepareHandler(ctx, totalSize, a.mempool, currentState)
@@ -80,7 +81,7 @@ func (a AppManager[T]) BuildBlock(ctx context.Context, height uint64, totalSize 
 }
 
 func (a AppManager[T]) VerifyBlock(ctx context.Context, height uint64, txs []T) error {
-	currentState, err := a.db.NewStateAt(height)
+	currentState, err := a.db.LatestState(height)
 	if err != nil {
 		return fmt.Errorf("unable to create new state for height %d: %w", height, err)
 	}
@@ -94,7 +95,7 @@ func (a AppManager[T]) VerifyBlock(ctx context.Context, height uint64, txs []T) 
 }
 
 func (a AppManager[T]) DeliverBlock(ctx context.Context, block appmanager.BlockRequest) (*appmanager.BlockResponse, []store.ChangeSet, error) {
-	currentState, err := a.db.NewStateAt(block.Height)
+	currentState, err := a.db.LatestState(block.Height)
 	if err != nil {
 		return nil, nil, fmt.Errorf("unable to create new state for height %d: %w", block.Height, err)
 	}
@@ -109,8 +110,6 @@ func (a AppManager[T]) DeliverBlock(ctx context.Context, block appmanager.BlockR
 		return nil, nil, fmt.Errorf("change set: %w", err)
 	}
 
-	// update last stored block
-	a.lastBlockHeight.Store(block.Height)
 	return blockResponse, newStateChanges, nil
 }
 
@@ -120,9 +119,6 @@ func (a AppManager[T]) CommitBlock(ctx context.Context, height uint64, sc []stor
 	if err != nil {
 		return nil, fmt.Errorf("commit failed: %w", err)
 	}
-
-	// update last stored block
-	a.lastBlockHeight.Store(height)
 	return stateRoot, nil
 }
 
@@ -141,14 +137,4 @@ func (a AppManager[T]) Query(ctx context.Context, request Type) (response Type, 
 		return nil, err
 	}
 	return a.stf.Query(ctx, queryState, a.queryGasLimit, request)
-}
-
-// getLatestState provides a readonly view of the state of the last committed block.
-func (a AppManager[T]) getLatestState(_ context.Context) (store.ReadonlyState, error) {
-	lastBlock := a.lastBlockHeight.Load()
-	lastBlockState, err := a.db.ReadonlyStateAt(lastBlock)
-	if err != nil {
-		return nil, err
-	}
-	return lastBlockState, nil
 }

@@ -130,7 +130,16 @@ func (a AppManager[T]) Simulate(ctx context.Context, tx []byte) (appmanager.TxRe
 	return result, nil
 }
 
-func (a AppManager[T]) Query(ctx context.Context, request Type) (response Type, err error) {
+func (a AppManager[T]) Query(ctx context.Context, version uint64, request Type) (response Type, err error) {
+	// if version is provided attempt to do a heighted query.
+	if version != 0 {
+		queryState, err := a.db.StateAt(version)
+		if err != nil {
+			return nil, err
+		}
+		return a.stf.Query(ctx, queryState, a.queryGasLimit, request)
+	}
+	// otherwise rely on latest available state.
 	_, queryState, err := a.db.StateLatest()
 	if err != nil {
 		return nil, err

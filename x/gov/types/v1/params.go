@@ -210,7 +210,7 @@ func (p Params) ValidateBasic(addressCodec address.Codec) error {
 		return fmt.Errorf("expedited voting period must be positive: %s", p.ExpeditedVotingPeriod)
 	}
 	if p.ExpeditedVotingPeriod.Seconds() >= p.VotingPeriod.Seconds() {
-		return fmt.Errorf("expedited voting period %s must be strictly less that the regular voting period %s", p.ExpeditedVotingPeriod, p.VotingPeriod)
+		return fmt.Errorf("expedited voting period %s must be strictly less than the regular voting period %s", p.ExpeditedVotingPeriod, p.VotingPeriod)
 	}
 
 	for _, addr := range p.OptimisticAuthorizedAddresses {

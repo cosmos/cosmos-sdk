@@ -69,14 +69,6 @@ func (s STF[T]) DeliverBlock(ctx context.Context, block appmanager.BlockRequest,
 		return nil, nil, err
 	}
 
-	events, valset, err := s.validatorUpdates(ctx, newState, block)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	// append endblock events to the end of the block events
-	endBlockEvents = append(endBlockEvents, events...)
-
 	return &appmanager.BlockResponse{
 		UpgradeBlockEvents: upgradeBlockEvents,
 		BeginBlockEvents:   beginBlockEvents,
@@ -88,7 +80,6 @@ func (s STF[T]) DeliverBlock(ctx context.Context, block appmanager.BlockRequest,
 
 // deliverTx executes a TX and returns the result.
 func (s STF[T]) deliverTx(ctx context.Context, state store.WritableState, txBytes []byte) appmanager.TxResult {
-
 	// recover in the case of a panic
 	// TODO: after discussion with users see if we need middleware
 	var recoveryError error

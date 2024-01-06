@@ -45,11 +45,17 @@ func (k Keeper) GetValidatorByConsAddr(ctx context.Context, consAddr sdk.ConsAdd
 
 		newConsAddr, err := k.OldToNewConsKeyMap.Get(ctx, consAddr.Bytes())
 		if err != nil {
+			if errors.Is(err, collections.ErrNotFound) {
+				return types.Validator{}, types.ErrNoValidatorFound
+			}
 			return types.Validator{}, err
 		}
 
 		operatorAddr, err := k.ValidatorByConsensusAddress.Get(ctx, newConsAddr)
 		if err != nil {
+			if errors.Is(err, collections.ErrNotFound) {
+				return types.Validator{}, types.ErrNoValidatorFound
+			}
 			return types.Validator{}, err
 		}
 

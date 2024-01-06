@@ -69,7 +69,9 @@ func (a AppManager[T]) BuildBlock(ctx context.Context, height uint64, totalSize 
 	}
 
 	if latestVersion+1 != height {
-		return nil, fmt.Errorf("unexpected next height version, wanted %d got %d", latestVersion+1, height)
+		if err != nil {
+			return nil, fmt.Errorf("invalid BuildBlock height wanted %d, got %d", latestVersion+1, height)
+		}
 	}
 
 	txs, err := a.prepareHandler(ctx, totalSize, a.mempool, currentState)
@@ -81,9 +83,13 @@ func (a AppManager[T]) BuildBlock(ctx context.Context, height uint64, totalSize 
 }
 
 func (a AppManager[T]) VerifyBlock(ctx context.Context, height uint64, txs []T) error {
-	currentState, err := a.db.LatestState(height)
+	latestVersion, currentState, err := a.db.StateLatest()
 	if err != nil {
 		return fmt.Errorf("unable to create new state for height %d: %w", height, err)
+	}
+
+	if latestVersion+1 != height {
+		return fmt.Errorf("invalid VerifyBlock height wanted %d, got %d", latestVersion+1, height)
 	}
 
 	err = a.processHandler(ctx, txs, currentState)
@@ -95,9 +101,13 @@ func (a AppManager[T]) VerifyBlock(ctx context.Context, height uint64, txs []T) 
 }
 
 func (a AppManager[T]) DeliverBlock(ctx context.Context, block appmanager.BlockRequest) (*appmanager.BlockResponse, []store.ChangeSet, error) {
-	currentState, err := a.db.LatestState(block.Height)
+	latestVersion, currentState, err := a.db.StateLatest()
 	if err != nil {
 		return nil, nil, fmt.Errorf("unable to create new state for height %d: %w", block.Height, err)
+	}
+
+	if latestVersion+1 != block.Height {
+		return nil, nil, fmt.Errorf("invalid DeliverBlock height wanted %d, got %d", latestVersion+1, block.Height)
 	}
 
 	blockResponse, newState, err := a.stf.DeliverBlock(ctx, block, currentState)
@@ -115,7 +125,7 @@ func (a AppManager[T]) DeliverBlock(ctx context.Context, block appmanager.BlockR
 
 // CommitBlock commits the block to the database, it must be called after DeliverBlock or when Finalization criteria is met
 func (a AppManager[T]) CommitBlock(ctx context.Context, height uint64, sc []store.ChangeSet) (Hash, error) {
-	stateRoot, err := a.db.CommitState(sc)
+	stateRoot, err := a.db.StateCommit(sc)
 	if err != nil {
 		return nil, fmt.Errorf("commit failed: %w", err)
 	}
@@ -123,7 +133,7 @@ func (a AppManager[T]) CommitBlock(ctx context.Context, height uint64, sc []stor
 }
 
 func (a AppManager[T]) Simulate(ctx context.Context, tx []byte) (appmanager.TxResult, error) {
-	state, err := a.getLatestState(ctx)
+	_, state, err := a.db.StateLatest()
 	if err != nil {
 		return appmanager.TxResult{}, err
 	}
@@ -132,7 +142,7 @@ func (a AppManager[T]) Simulate(ctx context.Context, tx []byte) (appmanager.TxRe
 }
 
 func (a AppManager[T]) Query(ctx context.Context, request Type) (response Type, err error) {
-	queryState, err := a.getLatestState(ctx)
+	_, queryState, err := a.db.StateLatest()
 	if err != nil {
 		return nil, err
 	}

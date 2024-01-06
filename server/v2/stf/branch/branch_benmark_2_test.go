@@ -150,7 +150,7 @@ func BenchmarkBlankParentAppendKeySize32(b *testing.B) {
 	benchmarkBlankParentAppend(b, 32)
 }
 
-// BenchmarkSetKeySize32-14    	 1888374	       832.9 ns/op	     138 B/op	       0 allocs/op
+// BenchmarkSetKeySize32-14    	 1888374	       740.9 ns/op	     138 B/op	       0 allocs/op
 func BenchmarkSetKeySize32(b *testing.B) {
 	benchmarkRandomSet(b, 32)
 }

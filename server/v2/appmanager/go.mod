@@ -6,7 +6,6 @@ replace (
 	cosmossdk.io/server/v2/core => ../core
 	cosmossdk.io/server/v2/stf => ../stf
 	cosmossdk.io/store/v2 => ../../../store
-
 )
 
 require (
@@ -21,6 +20,7 @@ require (
 	cosmossdk.io/errors v1.0.0 // indirect
 	github.com/DataDog/zstd v1.5.5 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
+	github.com/celestiaorg/smt v0.3.0 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/cockroachdb/errors v1.11.1 // indirect
 	github.com/cockroachdb/logtags v0.0.0-20230118201751-21c54148d20b // indirect

@@ -20,7 +20,7 @@ func (k Keeper) HandleValidatorSignature(ctx context.Context, addr cryptotypes.A
 	if err != nil {
 		return err
 	}
-	return k.HandleValidatorSignatureWithParams(ctx, addr, power, signed, params.SignedBlocksWindow, params.MinSignedPerWindow, params.DowntimeJailDuration, params.SlashFractionDoubleSign, params.SlashFractionDowntime)
+	return k.HandleValidatorSignatureWithParams(ctx, params, addr, power, signed)
 }
 
 func (k Keeper) HandleValidatorSignatureWithParams(ctx context.Context, params types.Params, addr cryptotypes.Address, power int64, signed comet.BlockIDFlag) error {

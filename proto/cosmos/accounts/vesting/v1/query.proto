@@ -1,0 +1,47 @@
+syntax = "proto3";
+package cosmos.accounts.vesting.v1;
+
+import "gogoproto/gogo.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "cosmos_proto/cosmos.proto";
+import "cosmos/vesting/v1beta1/vesting.proto";
+import "cosmos/msg/v1/msg.proto";
+import "amino/amino.proto";
+
+option go_package = "cosmossdk.io/x/accounts/vesting/types/v1";
+
+// QueryOriginalVestingRequest is used to query the account original vesting.
+message QueryOriginalVestingRequest {}
+
+// QueryOriginalVestingResponse returns the account original vesting.
+message QueryOriginalVestingResponse {
+  // original_vesting defines the value of the account original vesting.
+  repeated cosmos.base.v1beta1.Coin original_vesting = 1;
+}
+
+// QueryDelegatedFreeRequest is used to query the account delegated free amount.
+message QueryDelegatedFreeRequest {}
+
+// QueryDelegatedFreeResponse returns the account delegated free amount.
+message QueryDelegatedFreeResponse {
+  // delegated_free defines the value of the account delegated free.
+  repeated cosmos.base.v1beta1.Coin delegated_free = 1;
+}
+
+// QueryDelegatedVestingRequest is used to query the account delegated vesting amount.
+message QueryDelegatedVestingRequest {}
+
+// QueryDelegatedVestingResponse returns the account delegated vesting amount.
+message QueryDelegatedVestingResponse {
+  // delegated_vesting defines the the account delegated vesting.
+  repeated cosmos.base.v1beta1.Coin delegated_vesting = 1;
+}
+
+// QueryCounterRequest is used to query the account vesting end time.
+message QueryEndTimeRequest {}
+
+// QueryEndTimeResponse returns the account vesting end time.
+message QueryEndTimeResponse {
+  // end_time defines the value of the account vesting end time.
+  int64 end_time = 1;
+}

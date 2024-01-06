@@ -17,12 +17,21 @@ require (
 )
 
 require (
+	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000 // indirect
+	github.com/golang/mock v1.6.0 // indirect
+	github.com/google/orderedcode v0.0.1 // indirect
+	github.com/lib/pq v1.10.7 // indirect
+	github.com/minio/highwayhash v1.0.2 // indirect
+)
+
+require (
 	cosmossdk.io/depinject v1.0.0-alpha.4 // indirect
 	cosmossdk.io/errors v1.0.0 // indirect
 	cosmossdk.io/log v1.2.1 // indirect
 	cosmossdk.io/math v1.2.0 // indirect
 	cosmossdk.io/store v1.0.1 // indirect
 	cosmossdk.io/x/auth v0.0.0-00010101000000-000000000000 // indirect
+	cosmossdk.io/x/bank v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/tx v0.13.0 // indirect
 	filippo.io/edwards25519 v1.0.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
@@ -30,6 +39,7 @@ require (
 	github.com/DataDog/datadog-go v4.8.3+incompatible // indirect
 	github.com/DataDog/zstd v1.5.5 // indirect
 	github.com/Microsoft/go-winio v0.6.0 // indirect
+	github.com/armon/go-metrics v0.4.1
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bgentry/speakeasy v0.1.1-0.20220910012023-760eaf8b6816 // indirect
 	github.com/btcsuite/btcd/btcec/v2 v2.3.2 // indirect

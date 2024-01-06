@@ -177,26 +177,42 @@ func (bva *BaseVestingAccount) TrackUndelegation(amount sdk.Coins) {
 
 // --------------- Query -----------------
 
-// GetOriginalVesting returns a vesting account's original vesting amount
-func (bva BaseVestingAccount) GetOriginalVesting() sdk.Coins {
-	return bva.OriginalVesting
+// QueryOriginalVesting returns a vesting account's original vesting amount
+func (bva BaseVestingAccount) QueryOriginalVesting(ctx context.Context, _ *vestingtypes.QueryOriginalVestingRequest) (
+	*vestingtypes.QueryOriginalVestingResponse, error,
+) {
+	return &vestingtypes.QueryOriginalVestingResponse{
+		OriginalVesting: bva.OriginalVesting,
+	}, nil
 }
 
-// GetDelegatedFree returns a vesting account's delegation amount that is not
+// QueryDelegatedFree returns a vesting account's delegation amount that is not
 // vesting.
-func (bva BaseVestingAccount) GetDelegatedFree() sdk.Coins {
-	return bva.DelegatedFree
+func (bva BaseVestingAccount) QueryDelegatedFree(ctx context.Context, _ *vestingtypes.QueryDelegatedFreeRequest) (
+	*vestingtypes.QueryDelegatedFreeResponse, error,
+) {
+	return &vestingtypes.QueryDelegatedFreeResponse{
+		DelegatedFree: bva.DelegatedFree,
+	}, nil
 }
 
-// GetDelegatedVesting returns a vesting account's delegation amount that is
+// QueryDelegatedVesting returns a vesting account's delegation amount that is
 // still vesting.
-func (bva BaseVestingAccount) GetDelegatedVesting() sdk.Coins {
-	return bva.DelegatedVesting
+func (bva BaseVestingAccount) QueryDelegatedVesting(ctx context.Context, _ *vestingtypes.QueryDelegatedVestingRequest) (
+	*vestingtypes.QueryDelegatedVestingResponse, error,
+) {
+	return &vestingtypes.QueryDelegatedVestingResponse{
+		DelegatedVesting: bva.DelegatedVesting,
+	}, nil
 }
 
-// GetEndTime returns a vesting account's end time
-func (bva BaseVestingAccount) GetEndTime() int64 {
-	return bva.EndTime
+// QueryEndTime returns a vesting account's end time
+func (bva BaseVestingAccount) QueryEndTime(ctx context.Context, _ *vestingtypes.QueryEndTimeRequest) (
+	*vestingtypes.QueryEndTimeResponse, error,
+) {
+	return &vestingtypes.QueryEndTimeResponse{
+		EndTime: bva.EndTime,
+	}, nil
 }
 
 // Validate checks for errors on the account fields
@@ -216,11 +232,17 @@ func (bva BaseVestingAccount) Validate() error {
 	return nil
 }
 
+// Implement smart account interface
 func (bva BaseVestingAccount) RegisterInitHandler(builder *accountstd.InitBuilder) {
+	accountstd.RegisterInitHandler(builder, bva.Init)
 }
 
 func (bva BaseVestingAccount) RegisterExecuteHandlers(builder *accountstd.ExecuteBuilder) {
 }
 
 func (bva BaseVestingAccount) RegisterQueryHandlers(builder *accountstd.QueryBuilder) {
+	accountstd.RegisterQueryHandler(builder, bva.QueryOriginalVesting)
+	accountstd.RegisterQueryHandler(builder, bva.QueryDelegatedFree)
+	accountstd.RegisterQueryHandler(builder, bva.QueryDelegatedVesting)
+	accountstd.RegisterQueryHandler(builder, bva.QueryEndTime)
 }

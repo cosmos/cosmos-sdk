@@ -1,12 +1,12 @@
 syntax = "proto3";
 package cosmos.accounts.vesting.v1;
 
-import "gogoproto/gogo.proto";
-import "cosmos/base/v1beta1/coin.proto";
-import "cosmos_proto/cosmos.proto";
-import "cosmos/vesting/v1beta1/vesting.proto";
-import "cosmos/msg/v1/msg.proto";
 import "amino/amino.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "cosmos/msg/v1/msg.proto";
+import "cosmos/vesting/v1beta1/vesting.proto";
+import "cosmos_proto/cosmos.proto";
+import "gogoproto/gogo.proto";
 
 option go_package = "cosmossdk.io/x/accounts/vesting/types/v1";
 
@@ -16,7 +16,12 @@ message QueryOriginalVestingRequest {}
 // QueryOriginalVestingResponse returns the account original vesting.
 message QueryOriginalVestingResponse {
   // original_vesting defines the value of the account original vesting.
-  repeated cosmos.base.v1beta1.Coin original_vesting = 1;
+  repeated cosmos.base.v1beta1.Coin original_vesting = 1 [
+    (gogoproto.nullable)     = false,
+    (amino.dont_omitempty)   = true,
+    (amino.encoding)         = "legacy_coins",
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
 }
 
 // QueryDelegatedFreeRequest is used to query the account delegated free amount.
@@ -25,7 +30,12 @@ message QueryDelegatedFreeRequest {}
 // QueryDelegatedFreeResponse returns the account delegated free amount.
 message QueryDelegatedFreeResponse {
   // delegated_free defines the value of the account delegated free.
-  repeated cosmos.base.v1beta1.Coin delegated_free = 1;
+  repeated cosmos.base.v1beta1.Coin delegated_free = 1 [
+    (gogoproto.nullable)     = false,
+    (amino.dont_omitempty)   = true,
+    (amino.encoding)         = "legacy_coins",
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
 }
 
 // QueryDelegatedVestingRequest is used to query the account delegated vesting amount.
@@ -34,7 +44,12 @@ message QueryDelegatedVestingRequest {}
 // QueryDelegatedVestingResponse returns the account delegated vesting amount.
 message QueryDelegatedVestingResponse {
   // delegated_vesting defines the the account delegated vesting.
-  repeated cosmos.base.v1beta1.Coin delegated_vesting = 1;
+  repeated cosmos.base.v1beta1.Coin delegated_vesting = 1 [
+    (gogoproto.nullable)     = false,
+    (amino.dont_omitempty)   = true,
+    (amino.encoding)         = "legacy_coins",
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
 }
 
 // QueryCounterRequest is used to query the account vesting end time.

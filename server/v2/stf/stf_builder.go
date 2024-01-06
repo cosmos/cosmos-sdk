@@ -28,6 +28,7 @@ type STFBuilder[T transaction.Tx] struct {
 	msgRouterBuilder   *msgRouterBuilder
 	queryRouterBuilder *msgRouterBuilder
 	txValidators       map[string]func(ctx context.Context, tx T) error
+	upgradeBlocker     func(ctx context.Context) error
 	beginBlockers      map[string]func(ctx context.Context) error
 	endBlockers        map[string]func(ctx context.Context) error
 	valSetUpdate       func(ctx context.Context) ([]appmanager.ValidatorUpdate, error)
@@ -89,7 +90,13 @@ func (s *STFBuilder[T]) AddModule(m appmanager.Module[T]) {
 	moduleQueryRouter := _newModuleMsgRouter(m.Name(), s.queryRouterBuilder)
 	m.RegisterQueryHandler(moduleQueryRouter)
 	// add begin blockers and endblockers
-	// TODO: check if is not nil, etc.
+	if i, ok := m.(appmanager.UpgradeModule); ok {
+		if m.Name() == "upgrade" {
+			s.upgradeBlocker = i.UpgradeBlocker()
+		} else {
+			s.err = errors.Join(s.err, fmt.Errorf("upgrade module must be named 'upgrade'"))
+		}
+	}
 	s.beginBlockers[m.Name()] = m.BeginBlocker()
 	s.endBlockers[m.Name()] = m.EndBlocker()
 	if s.valSetUpdate == nil && m.UpdateValidators() != nil {

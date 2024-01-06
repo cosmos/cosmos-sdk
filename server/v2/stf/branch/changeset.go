@@ -52,14 +52,14 @@ func (bt changeSet) iterator(start, end []byte) (store.Iterator, error) {
 	if (start != nil && len(start) == 0) || (end != nil && len(end) == 0) {
 		return nil, errKeyEmpty
 	}
-	return newMemIterator(start, end, bt, true), nil
+	return newMemIterator(start, end, bt.tree, true), nil
 }
 
 func (bt changeSet) reverseIterator(start, end []byte) (store.Iterator, error) {
 	if (start != nil && len(start) == 0) || (end != nil && len(end) == 0) {
 		return nil, errKeyEmpty
 	}
-	return newMemIterator(start, end, bt, false), nil
+	return newMemIterator(start, end, bt.tree, false), nil
 }
 
 // item is a btree item with byte slices as keys and values
@@ -90,8 +90,8 @@ type memIterator struct {
 	valid     bool
 }
 
-func newMemIterator(start, end []byte, items changeSet, ascending bool) *memIterator {
-	iter := items.tree.Iter()
+func newMemIterator(start, end []byte, tree *btree.BTreeG[item], ascending bool) *memIterator {
+	iter := tree.Iter()
 	var valid bool
 	if ascending {
 		if start != nil {

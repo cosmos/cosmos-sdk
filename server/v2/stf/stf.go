@@ -26,6 +26,7 @@ type STF[T transaction.Tx] struct {
 	handleMsg   func(ctx context.Context, msg Type) (msgResp Type, err error)
 	handleQuery func(ctx context.Context, req Type) (resp Type, err error)
 
+	doUpgradeBlock    func(ctx context.Context) (bool, error)
 	doBeginBlock      func(ctx context.Context) error
 	doEndBlock        func(ctx context.Context) error
 	doValidatorUpdate func(ctx context.Context) ([]appmanager.ValidatorUpdate, error)
@@ -45,6 +46,13 @@ func (s STF[T]) DeliverBlock(ctx context.Context, block appmanager.BlockRequest,
 	// creates a new branch store, from the readonly view of the state
 	// that can be written to.
 	newState = s.branch(state)
+
+	// upgrade block is called separate from begin block in order to refresh state updates
+	upgradeBlockEvents, err := s.upgradeBlock(ctx, newState)
+	if err != nil {
+		return nil, nil, err
+	}
+
 	// begin block
 	beginBlockEvents, err := s.beginBlock(ctx, newState)
 	if err != nil {
@@ -61,24 +69,31 @@ func (s STF[T]) DeliverBlock(ctx context.Context, block appmanager.BlockRequest,
 		return nil, nil, err
 	}
 
-	events, valset, err := s.validatorUpdates(ctx, newState, block)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	// append endblock events to the end of the block events
-	endBlockEvents = append(endBlockEvents, events...)
-
 	return &appmanager.BlockResponse{
-		BeginBlockEvents: beginBlockEvents,
-		TxResults:        txResults,
-		EndBlockEvents:   endBlockEvents,
-		ValidatorUpdates: valset,
+		UpgradeBlockEvents: upgradeBlockEvents,
+		BeginBlockEvents:   beginBlockEvents,
+		TxResults:          txResults,
+		EndBlockEvents:     endBlockEvents,
+		ValidatorUpdates:   valset,
 	}, newState, nil
 }
 
 // deliverTx executes a TX and returns the result.
 func (s STF[T]) deliverTx(ctx context.Context, state store.WritableState, txBytes []byte) appmanager.TxResult {
+	// recover in the case of a panic
+	// TODO: after discussion with users see if we need middleware
+	var recoveryError error
+	defer func() {
+		if r := recover(); r != nil {
+			recoveryError = fmt.Errorf("panic during transaction execution: %s", r)
+		}
+	}()
+	if recoveryError != nil {
+		return appmanager.TxResult{
+			Error: recoveryError,
+		}
+	}
+
 	tx, err := s.decodeTx(txBytes)
 	if err != nil {
 		return appmanager.TxResult{
@@ -118,6 +133,7 @@ func (s STF[T]) validateTx(ctx context.Context, state store.WritableState, gasLi
 func (s STF[T]) execTx(ctx context.Context, state store.WritableState, gasLimit uint64, tx T) ([]Type, uint64, []event.Event, error) {
 	execState := s.branch(state)
 	execCtx := s.makeContext(ctx, tx.GetSenders(), execState, gasLimit)
+
 	// atomic execution of the all messages in a transaction, TODO: we should allow messages to fail in a specific mode
 	msgsResp, txErr := s.runTxMsgs(ctx, execState, gasLimit, tx)
 	if txErr != nil {
@@ -171,6 +187,19 @@ func (s STF[T]) runTxMsgs(ctx context.Context, state store.WritableState, gasLim
 		msgResps[i] = resp
 	}
 	return msgResps, nil
+}
+
+func (s STF[T]) upgradeBlock(ctx context.Context, state store.WritableState) ([]event.Event, error) {
+	pbCtx := s.makeContext(ctx, []Identity{runtimeIdentity}, state, 0) // TODO: gas limit
+	refresh, err := s.doUpgradeBlock(pbCtx)
+	if err != nil {
+		return nil, err
+	}
+	if refresh {
+		// TODO: update context with updated params
+	}
+
+	return pbCtx.events, nil
 }
 
 func (s STF[T]) beginBlock(ctx context.Context, state store.WritableState) (beginBlockEvents []event.Event, err error) {

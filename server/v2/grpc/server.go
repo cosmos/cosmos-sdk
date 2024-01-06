@@ -11,13 +11,12 @@ import (
 	"google.golang.org/grpc/encoding"
 	"google.golang.org/protobuf/proto"
 
+	_ "cosmossdk.io/api/amino" // Import amino.proto file for reflection
 	"cosmossdk.io/log"
 	"cosmossdk.io/server/v2/core/appmanager"
 	"cosmossdk.io/server/v2/grpc/gogoreflection"
 	reflection "cosmossdk.io/server/v2/grpc/reflection/v2alpha1"
 	txsigning "cosmossdk.io/x/tx/signing"
-
-	_ "cosmossdk.io/api/amino" // Import amino.proto file for reflection
 )
 
 type ClientContext interface {

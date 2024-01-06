@@ -4,10 +4,10 @@ import (
 	"context"
 	"time"
 
-	"cosmossdk.io/server/v2/core/mempool"
 	"google.golang.org/protobuf/proto"
 
 	"cosmossdk.io/server/v2/core/event"
+	"cosmossdk.io/server/v2/core/mempool"
 	"cosmossdk.io/server/v2/core/store"
 	"cosmossdk.io/server/v2/core/transaction"
 )
@@ -51,11 +51,12 @@ type BlockRequest struct {
 }
 
 type BlockResponse struct {
-	Apphash          []byte
-	ValidatorUpdates []ValidatorUpdate
-	BeginBlockEvents []event.Event
-	TxResults        []TxResult
-	EndBlockEvents   []event.Event
+	Apphash            []byte
+	ValidatorUpdates   []ValidatorUpdate
+	UpgradeBlockEvents []event.Event
+	BeginBlockEvents   []event.Event
+	TxResults          []TxResult
+	EndBlockEvents     []event.Event
 }
 
 type RequestInitChain struct {

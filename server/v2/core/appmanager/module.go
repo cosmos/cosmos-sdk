@@ -25,6 +25,7 @@ type PostMsgRouterBuilder interface {
 }
 
 type STFModule[T transaction.Tx] interface {
+	// TODO: should we separate the interface to avoid boilerplate in modules when things are not needed?
 	Name() string
 	RegisterMsgHandlers(router MsgRouterBuilder)
 	RegisterQueryHandler(router QueryRouterBuilder)
@@ -34,6 +35,10 @@ type STFModule[T transaction.Tx] interface {
 	TxValidator() func(ctx context.Context, tx T) error // why does the module handle registration
 	RegisterPreMsgHandler(router PreMsgRouterBuilder)
 	RegisterPostMsgHandler(router PostMsgRouterBuilder)
+}
+
+type UpgradeModule interface {
+	UpgradeBlocker() func(ctx context.Context) error
 }
 
 type Module[T transaction.Tx] interface {

@@ -347,7 +347,7 @@ Update app to the latest version (e.g. v0.50.0).
 
 :::note
 
-Migration plans are defined using the `x/upgrade` module and described in [In-Place Store Migrations](https://github.com/cosmos/cosmos-sdk/blob/main/docs/docs/core/15-upgrade.md). Migrations can perform any deterministic state change.
+Migration plans are defined using the `x/upgrade` module and described in [In-Place Store Migrations](https://github.com/cosmos/cosmos-sdk/blob/main/docs/learn/advanced/15-upgrade.md). Migrations can perform any deterministic state change.
 
 The migration plan to upgrade the simapp from v0.47 to v0.50 is defined in `simapp/upgrade.go`.
 

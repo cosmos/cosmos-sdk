@@ -55,8 +55,8 @@ require (
 	github.com/tendermint/go-amino v0.16.0
 	gitlab.com/yawning/secp256k1-voi v0.0.0-20230925100816-f2616030848b
 	golang.org/x/crypto v0.17.0
-	golang.org/x/exp v0.0.0-20231214170342-aacd6d4b4611
-	golang.org/x/sync v0.5.0
+	golang.org/x/exp v0.0.0-20231226003508-02704c960a9b
+	golang.org/x/sync v0.6.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20231120223509-83a465c0220f
 	google.golang.org/grpc v1.60.1
 	google.golang.org/protobuf v1.32.0
@@ -79,9 +79,8 @@ require (
 	github.com/cespare/xxhash v1.1.0 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/cockroachdb/logtags v0.0.0-20230118201751-21c54148d20b // indirect
-	github.com/cockroachdb/pebble v0.0.0-20231129003907-ce7560a81fb6 // indirect
+	github.com/cockroachdb/pebble v1.0.0 // indirect
 	github.com/cockroachdb/redact v1.1.5 // indirect
-	github.com/cockroachdb/tokenbucket v0.0.0-20230807174530-cc333fc44b06 // indirect
 	github.com/cometbft/cometbft-db v0.8.0 // indirect
 	github.com/cosmos/iavl v1.0.0 // indirect
 	github.com/cosmos/ics23/go v0.10.0 // indirect
@@ -118,7 +117,7 @@ require (
 	github.com/iancoleman/strcase v0.3.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/jmhodges/levigo v1.0.0 // indirect
-	github.com/klauspost/compress v1.17.3 // indirect
+	github.com/klauspost/compress v1.17.4 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/kr/text v0.2.0 // indirect
 	github.com/lib/pq v1.10.7 // indirect
@@ -143,7 +142,7 @@ require (
 	github.com/prometheus/procfs v0.12.0 // indirect
 	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475 // indirect
 	github.com/rivo/uniseg v0.2.0 // indirect
-	github.com/rogpeppe/go-internal v1.11.0 // indirect
+	github.com/rogpeppe/go-internal v1.12.0 // indirect
 	github.com/rs/cors v1.8.3 // indirect
 	github.com/sagikazarmark/locafero v0.4.0 // indirect
 	github.com/sagikazarmark/slog-shim v0.1.0 // indirect

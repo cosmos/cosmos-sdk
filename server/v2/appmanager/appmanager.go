@@ -8,37 +8,24 @@ import (
 	"cosmossdk.io/server/v2/core/mempool"
 	"cosmossdk.io/server/v2/core/store"
 	"cosmossdk.io/server/v2/core/transaction"
-	"cosmossdk.io/server/v2/stf"
 )
 
-type AppManagerBuilder[T transaction.Tx] struct {
-	InitGenesis map[string]func(ctx context.Context, moduleGenesisBytes []byte) error
-}
-
-func (a *AppManagerBuilder[T]) RegisterInitGenesis(moduleName string, genesisFunc func(ctx context.Context, moduleGenesisBytes []byte) error) {
-	a.InitGenesis[moduleName] = genesisFunc
-}
-
-func (a *AppManagerBuilder[T]) RegisterHandler(moduleName, handlerName string, handler stf.MsgHandler) {
-	panic("...")
-}
-
-type MsgSetKVPairs struct {
-	Pairs []store.ChangeSet
-}
-
-func (a *AppManagerBuilder[T]) Build() *AppManager[T] {
-	genesis := func(ctx context.Context, genesisBytes []byte) error {
-		genesisMap := map[string][]byte{} // module=> genesis bytes
-		for module, genesisFunc := range a.InitGenesis {
-			err := genesisFunc(ctx, genesisMap[module])
-			if err != nil {
-				return fmt.Errorf("failed to init genesis on module: %s", module)
-			}
-		}
-		return nil
-	}
-	return &AppManager[T]{initGenesis: genesis}
+// STF defines the state transition handler used by AppManager to execute
+// state transitions over some state. STF never writes to state, instead
+// returns the state changes caused by the state transitions.
+type STF[T transaction.Tx] interface {
+	// DeliverBlock is used to process an entire block, given a state to apply the state transition to.
+	// Returns the state changes of the transition.
+	DeliverBlock(
+		ctx context.Context,
+		block appmanager.BlockRequest,
+		state store.ReadonlyState,
+	) (*appmanager.BlockResponse, store.WritableState, error)
+	// Simulate simulates the execution of a transaction over the provided state, with the provided gas limit.
+	// TODO: Might be useful to return the state changes caused by the TX.
+	Simulate(ctx context.Context, state store.ReadonlyState, gasLimit uint64, tx []byte) appmanager.TxResult
+	// Query runs the provided query over the provided readonly state.
+	Query(ctx context.Context, state store.ReadonlyState, gasLimit uint64, queryRequest Type) (queryResponse Type, err error)
 }
 
 // AppManager is a coordinator for all things related to an application
@@ -58,7 +45,7 @@ type AppManager[T transaction.Tx] struct {
 	prepareHandler appmanager.PrepareHandler[T]
 	processHandler appmanager.ProcessHandler[T]
 
-	stf *stf.STF[T]
+	stf STF[T] // consider if instead of having an interface (which is boxed), we could have another type Parameter defining STF.
 }
 
 // BuildBlock builds a block when requested by consensus. It will take in the total size txs to be included and return a list of transactions

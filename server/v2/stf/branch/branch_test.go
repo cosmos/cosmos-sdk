@@ -30,8 +30,16 @@ func TestBranch(t *testing.T) {
 
 	iter := func(s interface {
 		Iterator(start, end []byte) (corestore.Iterator, error)
-	}, start, end []byte, wantPairs [][2]string) {
-		iter, err := s.Iterator(nil, nil)
+	}, start, end string, wantPairs [][2]string) {
+		startKey := []byte(start)
+		endKey := []byte(end)
+		if start == "" {
+			startKey = nil
+		}
+		if end == "" {
+			endKey = nil
+		}
+		iter, err := s.Iterator(startKey, endKey)
 		require.NoError(t, err)
 		defer iter.Close()
 		numPairs := len(wantPairs)
@@ -73,12 +81,21 @@ func TestBranch(t *testing.T) {
 	// test iter
 	iter(
 		branch,
-		nil, nil,
+		"", "",
 		[][2]string{
 			{"1", "z"},
 			{"2", "b"},
 			{"4", "d"},
 			{"5", "e"},
+		},
+	)
+
+	// test iter in range
+	iter(
+		branch,
+		"2", "4",
+		[][2]string{
+			{"2", "b"},
 		},
 	)
 

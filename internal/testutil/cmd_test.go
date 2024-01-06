@@ -95,7 +95,7 @@ func TestSetArgsWithWrappedMethod(t *testing.T) {
 
 	cmd := getCMD()
 
-	var checkFlagsValue = func(cmd *cobra.Command, notDefaultFlags map[string]string) bool {
+	checkFlagsValue := func(cmd *cobra.Command, notDefaultFlags map[string]string) bool {
 		require.NoError(t, cmd.Execute())
 		for _, k := range []string{"a", "b", "c", "d", "e", "f", "g"} {
 			curVal := cmd.Flag(k).Value

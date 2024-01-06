@@ -18,11 +18,6 @@ import (
 	"cosmossdk.io/store/v2/pruning"
 )
 
-// defaultStoreKey defines the default store key used for the single SC backend.
-// Note, however, this store key is essentially irrelevant as it's not exposed
-// to the user and it only needed to fulfill usage of StoreInfo during Commit.
-const defaultStoreKey = "default"
-
 var _ store.RootStore = (*Store)(nil)
 
 // Store defines the SDK's default RootStore implementation. It contains a single

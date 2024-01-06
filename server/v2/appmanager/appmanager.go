@@ -3,6 +3,7 @@ package appmanager
 import (
 	"context"
 	"fmt"
+	"io"
 
 	"cosmossdk.io/server/v2/core/appmanager"
 	"cosmossdk.io/server/v2/core/mempool"
@@ -31,7 +32,7 @@ type STF[T transaction.Tx] interface {
 // AppManager is a coordinator for all things related to an application
 type AppManager[T transaction.Tx] struct {
 	// configs
-	checkTxGasLimit    uint64
+	ValidateTxGasLimit uint64
 	queryGasLimit      uint64
 	simulationGasLimit uint64
 	// configs - end
@@ -40,7 +41,8 @@ type AppManager[T transaction.Tx] struct {
 
 	mempool mempool.Mempool[T]
 
-	initGenesis func(ctx context.Context, genesisBytes []byte) error
+	exportState func(ctx context.Context, dst map[string]io.Writer) error
+	importState func(ctx context.Context, src map[string]io.Reader) error
 
 	prepareHandler appmanager.PrepareHandler[T]
 	processHandler appmanager.ProcessHandler[T]

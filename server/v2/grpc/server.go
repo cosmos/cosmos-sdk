@@ -16,18 +16,12 @@ import (
 	"cosmossdk.io/server/v2/core/appmanager"
 	"cosmossdk.io/server/v2/grpc/gogoreflection"
 	reflection "cosmossdk.io/server/v2/grpc/reflection/v2alpha1"
-	txsigning "cosmossdk.io/x/tx/signing"
 )
 
 type ClientContext interface {
 	// InterfaceRegistry returns the InterfaceRegistry.
 	InterfaceRegistry() appmanager.InterfaceRegistry
 	ChainID() string
-	TxConfig() TxConfig
-}
-
-type TxConfig interface {
-	SignModeHandler() *txsigning.HandlerMap
 }
 
 type GRPCServer struct {
@@ -44,7 +38,6 @@ type GRPCService interface {
 
 // NewGRPCServer returns a correctly configured and initialized gRPC server.
 // Note, the caller is responsible for starting the server. See StartGRPCServer.
-// TODO: look into removing the clientCtx dependency.
 func NewGRPCServer(clientCtx ClientContext, logger log.Logger, app GRPCService, cfg Config) (GRPCServer, error) {
 	maxSendMsgSize := cfg.MaxSendMsgSize
 	if maxSendMsgSize == 0 {
@@ -68,15 +61,6 @@ func NewGRPCServer(clientCtx ClientContext, logger log.Logger, app GRPCService, 
 	// Cosmos SDK application without relying on application packages at compile
 	// time.
 	err := reflection.Register(grpcSrv, reflection.Config{
-		SigningModes: func() map[string]int32 {
-			supportedModes := clientCtx.TxConfig().SignModeHandler().SupportedModes()
-			modes := make(map[string]int32, len(supportedModes))
-			for _, m := range supportedModes {
-				modes[m.String()] = (int32)(m)
-			}
-
-			return modes
-		}(),
 		ChainID:           clientCtx.ChainID(),
 		InterfaceRegistry: clientCtx.InterfaceRegistry(),
 	})

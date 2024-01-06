@@ -12,7 +12,6 @@ import (
 )
 
 type Config struct {
-	SigningModes      map[string]int32
 	ChainID           string
 	InterfaceRegistry appmanager.InterfaceRegistry
 }
@@ -72,9 +71,8 @@ func newReflectionServiceServer(grpcSrv *grpc.Server, conf Config) (reflectionSe
 	if err != nil {
 		return reflectionServiceServer{}, fmt.Errorf("unable to create deliver descriptor: %w", err)
 	}
-	authnDescriptor := newAuthnDescriptor(conf.SigningModes)
+
 	desc := &AppDescriptor{
-		Authn:         authnDescriptor,
 		Chain:         chainDescriptor,
 		Codec:         codecDescriptor,
 		QueryServices: queryServiceDescriptor,

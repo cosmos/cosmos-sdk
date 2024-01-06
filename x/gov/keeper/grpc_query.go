@@ -18,6 +18,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/query"
 )
 
+const optionSpam = "SPAM"
+
 var _ v1.QueryServer = queryServer{}
 
 type queryServer struct{ k *Keeper }
@@ -45,14 +47,13 @@ func (q queryServer) Proposal(ctx context.Context, req *v1.QueryProposalRequest)
 	}
 
 	proposal, err := q.k.Proposals.Get(ctx, req.ProposalId)
-	if err != nil {
-		if errors.IsOf(err, collections.ErrNotFound) {
-			return nil, status.Errorf(codes.NotFound, "proposal %d doesn't exist", req.ProposalId)
-		}
-		return nil, status.Error(codes.Internal, err.Error())
+	if err == nil {
+		return &v1.QueryProposalResponse{Proposal: &proposal}, nil
 	}
-
-	return &v1.QueryProposalResponse{Proposal: &proposal}, nil
+	if errors.IsOf(err, collections.ErrNotFound) {
+		return nil, status.Errorf(codes.NotFound, "proposal %d doesn't exist", req.ProposalId)
+	}
+	return nil, status.Error(codes.Internal, err.Error())
 }
 
 // ProposalVoteOptions returns the proposal votes options
@@ -75,8 +76,6 @@ func (q queryServer) ProposalVoteOptions(ctx context.Context, req *v1.QueryPropo
 	if !ok {
 		return nil, status.Errorf(codes.NotFound, "proposal %d doesn't exist", req.ProposalId)
 	}
-
-	optionSpam := "SPAM"
 
 	voteOptions, err := q.k.ProposalVoteOptions.Get(ctx, req.ProposalId)
 	if err != nil {
@@ -175,15 +174,14 @@ func (q queryServer) Vote(ctx context.Context, req *v1.QueryVoteRequest) (*v1.Qu
 		return nil, err
 	}
 	vote, err := q.k.Votes.Get(ctx, collections.Join(req.ProposalId, sdk.AccAddress(voter)))
-	if err != nil {
-		if errors.IsOf(err, collections.ErrNotFound) {
-			return nil, status.Errorf(codes.InvalidArgument,
-				"voter: %v not found for proposal: %v", req.Voter, req.ProposalId)
-		}
-		return nil, status.Error(codes.Internal, err.Error())
+	if err == nil {
+		return &v1.QueryVoteResponse{Vote: &vote}, nil
 	}
-
-	return &v1.QueryVoteResponse{Vote: &vote}, nil
+	if errors.IsOf(err, collections.ErrNotFound) {
+		return nil, status.Errorf(codes.InvalidArgument,
+			"voter: %v not found for proposal: %v", req.Voter, req.ProposalId)
+	}
+	return nil, status.Error(codes.Internal, err.Error())
 }
 
 // Votes returns single proposal's votes

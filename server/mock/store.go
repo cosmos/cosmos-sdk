@@ -160,6 +160,10 @@ func (ms multiStore) LatestVersion() int64 {
 	panic("not implemented")
 }
 
+func (ms multiStore) GetCommitInfo(key int64) (*storetypes.CommitInfo, error) {
+	panic("not implemented")
+}
+
 var _ sdk.KVStore = kvStore{}
 
 type kvStore struct {

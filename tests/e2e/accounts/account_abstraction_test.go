@@ -59,6 +59,21 @@ func TestAccountAbstraction(t *testing.T) {
 	aliceAddrStr, err := app.AuthKeeper.AddressCodec().BytesToString(aliceAddr)
 	require.NoError(t, err)
 
+	t.Run("fail - tx compat in bundle is not allowed", func(t *testing.T) {
+		resp := ak.ExecuteUserOperation(ctx, bundlerAddrStr, &accountsv1.UserOperation{
+			Sender:               aaAddrStr,
+			AuthenticationMethod: "secp256k1",
+			AuthenticationData:   mockSignature,
+			ExecutionMessages: intoAny(t, &banktypes.MsgSend{
+				FromAddress: aaAddrStr,
+				ToAddress:   bundlerAddrStr,
+				Amount:      coins(t, "1stake"), // the sender is the AA, so it has the coins and wants to pay the bundler for the gas
+			}),
+			TxCompat: &accountsv1.TxCompat{},
+		})
+		require.Contains(t, resp.Error, accounts.ErrDisallowedTxCompatInBundle.Error())
+	})
+
 	t.Run("ok - pay bundler and exec not implemented", func(t *testing.T) {
 		// we simulate executing an user operation in an abstracted account
 		// which only implements the authentication.

@@ -58,9 +58,7 @@ func (a AppManager[T]) BuildBlock(ctx context.Context, height uint64, totalSize 
 	}
 
 	if latestVersion+1 != height {
-		if err != nil {
-			return nil, fmt.Errorf("invalid BuildBlock height wanted %d, got %d", latestVersion+1, height)
-		}
+		return nil, fmt.Errorf("invalid BuildBlock height wanted %d, got %d", latestVersion+1, height)
 	}
 
 	txs, err := a.prepareHandler(ctx, totalSize, a.mempool, currentState)

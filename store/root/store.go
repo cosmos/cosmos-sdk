@@ -34,9 +34,10 @@ type Store struct {
 	// stateCommitment reflects the state commitment (SC) backend
 	stateCommitment store.Committer
 
-	// rootKVStore reflects the root BranchedKVStore that is used to accumulate writes
+	// kvStores reflects a mapping of store keys, typically dedicated to modules,
+	// to a dedicated BranchedKVStore. Each store is used to accumulate writes
 	// and branch off of.
-	rootKVStore store.BranchedKVStore
+	kvStores map[string]store.BranchedKVStore
 
 	// commitHeader reflects the header used when committing state (note, this isn't required and only used for query purposes)
 	commitHeader *coreheader.Info
@@ -64,12 +65,18 @@ func New(
 	logger log.Logger,
 	ss store.VersionedDatabase,
 	sc store.Committer,
+	storeKeys []string,
 	ssOpts, scOpts pruning.Options,
 	m metrics.StoreMetrics,
 ) (store.RootStore, error) {
-	rootKVStore, err := branch.New(defaultStoreKey, ss)
-	if err != nil {
-		return nil, err
+	kvStores := make(map[string]store.BranchedKVStore, len(storeKeys))
+	for _, storeKey := range storeKeys {
+		bkv, err := branch.New(storeKey, ss)
+		if err != nil {
+			return nil, err
+		}
+
+		kvStores[storeKey] = bkv
 	}
 
 	pruningManager := pruning.NewManager(logger, ss, sc)
@@ -82,7 +89,7 @@ func New(
 		initialVersion:  1,
 		stateStore:      ss,
 		stateCommitment: sc,
-		rootKVStore:     rootKVStore,
+		kvStores:        kvStores,
 		pruningManager:  pruningManager,
 		telemetry:       m,
 	}, nil

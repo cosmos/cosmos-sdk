@@ -198,16 +198,21 @@ func (s *Store) Query(storeKey string, version uint64, key []byte, prove bool) (
 	return result, nil
 }
 
-// GetKVStore returns the store's root KVStore. Any writes to this store without
-// branching will be committed to SC and SS upon Commit(). Branching will create
+// GetKVStore returns a KVStore for the given store key. Any writes to this store
+// without branching will be committed to SC and SS upon Commit(). Branching will create
 // a branched KVStore that allow writes to be discarded and propagated to the
 // root KVStore using Write().
-func (s *Store) GetKVStore(_ string) store.KVStore {
-	if s.TracingEnabled() {
-		return trace.New(s.rootKVStore, s.traceWriter, s.traceContext)
+func (s *Store) GetKVStore(storeKey string) store.KVStore {
+	bkv, ok := s.kvStores[storeKey]
+	if !ok {
+		panic(fmt.Sprintf("unknown store key: %s", storeKey))
 	}
 
-	return s.rootKVStore
+	if s.TracingEnabled() {
+		return trace.New(bkv, s.traceWriter, s.traceContext)
+	}
+
+	return bkv
 }
 
 func (s *Store) GetBranchedKVStore(_ string) store.BranchedKVStore {

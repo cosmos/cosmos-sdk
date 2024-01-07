@@ -1,7 +1,11 @@
 ---
 name: Module Readiness Checklist
-about: Pre-flight checklist that modules must pass in order to be included in a release of the Cosmos SDK
-labels: 'module-readiness-checklist'
+about: Pre-flight checklist that modules must pass in order to be included in a release
+  of the Cosmos SDK
+title: ''
+labels: ''
+assignees: ''
+
 ---
 
 ## x/{MODULE_NAME} Module Readiness Checklist

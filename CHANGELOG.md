@@ -192,7 +192,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (types) [#18372](https://github.com/cosmos/cosmos-sdk/pull/18372) Removed global configuration for coin type and purpose. Setters and getters should be removed and access directly to defined types.
 * (types) [#18695](https://github.com/cosmos/cosmos-sdk/pull/18695) Removed global configuration for txEncoder.
 * (server) [#18909](https://github.com/cosmos/cosmos-sdk/pull/18909) Remove configuration endpoint on grpc reflection endpoint in favour of auth module bech32prefix endpoint already exposed.
-* (slashing) [#18959](https://github.com/cosmos/cosmos-sdk/pull/18959) Slight speedup to Slashing Beginblock logic
 
 ### CLI Breaking Changes
 

@@ -34,7 +34,7 @@ require (
 )
 
 require (
-	cosmossdk.io/x/accounts v0.0.0-20231013072015-ec9bcc41ef9c
+	cosmossdk.io/x/accounts v0.0.0-20240104091155-b729e981f130
 	cosmossdk.io/x/auth v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/authz v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/bank v0.0.0-00010101000000-000000000000

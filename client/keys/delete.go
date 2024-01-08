@@ -2,12 +2,14 @@ package keys
 
 import (
 	"bufio"
+	"fmt"
 
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/input"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
+	"github.com/cosmos/cosmos-sdk/version"
 )
 
 const (
@@ -20,12 +22,15 @@ func DeleteKeyCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delete <name>...",
 		Short: "Delete the given keys",
-		Long: `Delete keys from the Keybase backend.
+		Long: fmt.Sprintf(`Delete keys from the Keybase backend.
 
 Note that removing offline or ledger keys will remove
 only the public key references stored locally, i.e.
 private keys stored in a ledger device cannot be deleted with the CLI.
-`,
+
+Tips: 
+1. removing all keys by running: %s keys list -n |xargs %s keys delete -y
+`, version.AppName, version.AppName),
 		Args: cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			buf := bufio.NewReader(cmd.InOrStdin())

@@ -80,8 +80,8 @@ func (dfd DeductFeeDecorator) checkDeductFee(ctx sdk.Context, sdkTx sdk.Tx, fee 
 		return fmt.Errorf("fee collector module account (%s) has not been set", types.FeeCollectorName)
 	}
 
-	feePayer := feeTx.FeePayer()
-	feeGranter := feeTx.FeeGranter()
+	feePayer := sdk.AccAddress(feeTx.FeePayer())
+	feeGranter := sdk.AccAddress(feeTx.FeeGranter())
 	deductFeesFrom := feePayer
 
 	// if feegranter set deduct fee from feegranter account.

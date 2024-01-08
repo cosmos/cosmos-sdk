@@ -30,10 +30,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [#18532](https://github.com/cosmos/cosmos-sdk/pull/18532) Add SPAM vote to proposals.
 * [#18532](https://github.com/cosmos/cosmos-sdk/pull/18532) Add proposal types to proposals.
 * [#18620](https://github.com/cosmos/cosmos-sdk/pull/18620) Add optimistic proposals.
+* [#18762](https://github.com/cosmos/cosmos-sdk/pull/18762) Add multiple choice proposals.
 
 ### Improvements
 
-* [#18445](https://github.com/cosmos/cosmos-sdk/pull/18445) Extend gov config 
+* [#18856](https://github.com/cosmos/cosmos-sdk/pull/18856) Add `ProposalCancelMaxPeriod` for modifying how long a proposal can be cancelled after it has been submitted.
+* [#18445](https://github.com/cosmos/cosmos-sdk/pull/18445) Extend gov config.
 * [#18532](https://github.com/cosmos/cosmos-sdk/pull/18532) Repurpose `govcliutils.NormalizeProposalType` to work for gov v1 proposal types.
 
 ### API Breaking Changes

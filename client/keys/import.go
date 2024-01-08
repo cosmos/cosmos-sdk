@@ -64,7 +64,10 @@ func ImportKeyHexCommand() *cobra.Command {
 			if strings.TrimSpace(name) == "" {
 				return errors.New("the provided name is invalid or empty after trimming whitespace")
 			}
+<<<<<<< HEAD
 
+=======
+>>>>>>> c30700134 (refactor(client): check name validation for `keys add|import|rename` (#18950))
 			keyType, _ := cmd.Flags().GetString(flags.FlagKeyType)
 			var hexKey string
 			if len(args) == 2 {

@@ -1,23 +1,67 @@
 package cometbft
 
 import (
+	"fmt"
+
 	"cosmossdk.io/core/comet"
 	coreappmgr "cosmossdk.io/server/v2/core/appmanager"
 	"cosmossdk.io/server/v2/core/event"
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	gogoproto "github.com/cosmos/gogoproto/proto"
 	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/types/dynamicpb"
 )
 
-// TODO
+func parseQueryRequest(req *abci.RequestQuery) (proto.Message, error) {
+	desc, err := gogoproto.HybridResolver.FindDescriptorByName(protoreflect.FullName(req.Path))
+	if err != nil {
+		return nil, err
+	}
 
-func parseQueryRequest(_ *abci.RequestQuery) (proto.Message, error) {
-	return nil, nil
+	methodDesc, ok := desc.(protoreflect.MethodDescriptor)
+	if !ok {
+		return nil, fmt.Errorf("invalid method descriptor %s", desc.FullName())
+	}
+
+	queryReqType := dynamicpb.NewMessage(methodDesc.Input())
+	err = proto.Unmarshal(req.Data, queryReqType)
+
+	return queryReqType, err
 }
 
-func parseQueryResponse(_ proto.Message) (*abci.ResponseQuery, error) {
-	return &abci.ResponseQuery{}, nil
+// parseQueryResponse needs the request to get the path
+func parseQueryResponse(req *abci.RequestQuery, res proto.Message) (*abci.ResponseQuery, error) {
+	desc, err := gogoproto.HybridResolver.FindDescriptorByName(protoreflect.FullName(req.Path))
+	if err != nil {
+		return nil, err
+	}
+
+	methodDesc, ok := desc.(protoreflect.MethodDescriptor)
+	if !ok {
+		return nil, fmt.Errorf("invalid method descriptor %s", desc.FullName())
+	}
+
+	queryRespType := dynamicpb.NewMessage(methodDesc.Output())
+	proto.Merge(queryRespType, res)
+	bz, err := proto.Marshal(res)
+	if err != nil {
+		return nil, err
+	}
+
+	return &abci.ResponseQuery{ // TODO: fill all the fields
+		Code:      0,
+		Log:       "",
+		Info:      "",
+		Index:     0,
+		Key:       []byte{},
+		Value:     bz,
+		ProofOps:  &cmtprotocrypto.ProofOps{},
+		Height:    0,
+		Codespace: "",
+	}, nil
 }
 
 func parseFinalizeBlockResponse(in *coreappmgr.BlockResponse, err error) (*abci.ResponseFinalizeBlock, error) {

@@ -105,7 +105,7 @@ func (c *Consensus[T]) Query(ctx context.Context, req *abci.RequestQuery) (*abci
 		return nil, err
 	}
 
-	return parseQueryResponse(res)
+	return parseQueryResponse(req, res)
 }
 
 // InitChain implements types.Application.

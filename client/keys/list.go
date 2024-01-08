@@ -19,7 +19,7 @@ along with their associated name and address.`,
 		RunE: runListCmd,
 	}
 
-	cmd.Flags().BoolP(flagListNames, "n", false, "List names only")
+	cmd.Flags().BoolP(flagListNames, "n", false, "List names only. Deprecated, please use `keys list --output json | jq .[].name`")
 	return cmd
 }
 

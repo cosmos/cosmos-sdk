@@ -33,7 +33,7 @@ require (
 	google.golang.org/protobuf v1.32.0
 )
 
-require cosmossdk.io/x/accounts v0.0.0-20231013072015-ec9bcc41ef9c
+require cosmossdk.io/x/accounts v0.0.0-20240104091155-b729e981f130
 
 require (
 	cosmossdk.io/x/auth v0.0.0-00010101000000-000000000000

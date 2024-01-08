@@ -5,6 +5,7 @@ package cosmos.accounts.v1;
 option go_package = "cosmossdk.io/x/accounts/v1";
 
 import "google/protobuf/any.proto";
+import "cosmos/accounts/v1/account_abstraction.proto";
 
 // Query defines the Query service for the x/accounts module.
 service Query {
@@ -14,6 +15,8 @@ service Query {
   rpc Schema(SchemaRequest) returns (SchemaResponse) {};
   // AccountType returns the account type for an address.
   rpc AccountType(AccountTypeRequest) returns (AccountTypeResponse) {};
+  // SimulateUserOperation simulates a user operation.
+  rpc SimulateUserOperation(SimulateUserOperationRequest) returns (SimulateUserOperationResponse) {};
 }
 
 // AccountQueryRequest is the request type for the Query/AccountQuery RPC
@@ -65,4 +68,21 @@ message AccountTypeRequest {
 message AccountTypeResponse {
   // account_type defines the account type for the address.
   string account_type = 1;
+}
+
+// SimulateUserOperationRequest is the query request used to simulate a
+// UserOperation.
+message SimulateUserOperationRequest {
+  // bundler can be filled to simulate the address of the bundler.
+  string bundler = 1;
+  // user_operation defines the user operation that we want to simulate.
+  // Gas limit fields are ignored.
+  UserOperation user_operation = 2;
+}
+
+// SimulateUserOperationResponse is the query response returned by the simulation.
+// It will populate the gas limits fields.
+message SimulateUserOperationResponse {
+  // UserOperationResponse is the response of the simulation.
+  UserOperationResponse user_operation_response = 1;
 }

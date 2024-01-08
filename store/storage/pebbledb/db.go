@@ -10,6 +10,7 @@ import (
 
 	"github.com/cockroachdb/pebble"
 
+	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/storage"
 )
@@ -262,7 +263,7 @@ func (db *Database) Prune(version uint64) error {
 	return db.setPruneHeight(version)
 }
 
-func (db *Database) Iterator(storeKey string, version uint64, start, end []byte) (store.Iterator, error) {
+func (db *Database) Iterator(storeKey string, version uint64, start, end []byte) (corestore.Iterator, error) {
 	if (start != nil && len(start) == 0) || (end != nil && len(end) == 0) {
 		return nil, store.ErrKeyEmpty
 	}
@@ -283,7 +284,7 @@ func (db *Database) Iterator(storeKey string, version uint64, start, end []byte)
 	return newPebbleDBIterator(itr, storePrefix(storeKey), start, end, version, db.earliestVersion, false), nil
 }
 
-func (db *Database) ReverseIterator(storeKey string, version uint64, start, end []byte) (store.Iterator, error) {
+func (db *Database) ReverseIterator(storeKey string, version uint64, start, end []byte) (corestore.Iterator, error) {
 	if (start != nil && len(start) == 0) || (end != nil && len(end) == 0) {
 		return nil, store.ErrKeyEmpty
 	}

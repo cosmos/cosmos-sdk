@@ -8,6 +8,7 @@ import (
 
 	"golang.org/x/exp/maps"
 
+	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/kv/trace"
 )
@@ -214,11 +215,11 @@ func (s *Store) Write() {
 // Note, writes that happen on the KVStore over an iterator will not affect the
 // iterator. This is because when an iterator is created, it takes a current
 // snapshot of the changeset.
-func (s *Store) Iterator(start, end []byte) store.Iterator {
+func (s *Store) Iterator(start, end []byte) corestore.Iterator {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	var parentItr store.Iterator
+	var parentItr corestore.Iterator
 	if s.parent != nil {
 		parentItr = s.parent.Iterator(start, end)
 	} else {
@@ -240,11 +241,11 @@ func (s *Store) Iterator(start, end []byte) store.Iterator {
 // Note, writes that happen on the KVStore over an iterator will not affect the
 // iterator. This is because when an iterator is created, it takes a current
 // snapshot of the changeset.
-func (s *Store) ReverseIterator(start, end []byte) store.Iterator {
+func (s *Store) ReverseIterator(start, end []byte) corestore.Iterator {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	var parentItr store.Iterator
+	var parentItr corestore.Iterator
 	if s.parent != nil {
 		parentItr = s.parent.ReverseIterator(start, end)
 	} else {
@@ -258,7 +259,7 @@ func (s *Store) ReverseIterator(start, end []byte) store.Iterator {
 	return s.newIterator(parentItr, start, end, true)
 }
 
-func (s *Store) newIterator(parentItr store.Iterator, start, end []byte, reverse bool) *iterator {
+func (s *Store) newIterator(parentItr corestore.Iterator, start, end []byte, reverse bool) *iterator {
 	startStr := string(start)
 	endStr := string(end)
 
@@ -307,7 +308,7 @@ func (s *Store) newIterator(parentItr store.Iterator, start, end []byte, reverse
 	}
 
 	// call Next() to move the iterator to the first key/value entry
-	_ = itr.Next()
+	itr.Next()
 
 	return itr
 }

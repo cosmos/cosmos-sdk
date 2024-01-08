@@ -8,10 +8,10 @@ import (
 
 	"golang.org/x/exp/slices"
 
-	"cosmossdk.io/store/v2"
+	corestore "cosmossdk.io/core/store"
 )
 
-var _ store.Iterator = (*iterator)(nil)
+var _ corestore.Iterator = (*iterator)(nil)
 
 type iterator struct {
 	statement  *sql.Stmt
@@ -100,14 +100,16 @@ func newIterator(db *Database, storeKey string, targetVersion uint64, start, end
 	return itr, nil
 }
 
-func (itr *iterator) Close() {
+func (itr *iterator) Close() (err error) {
 	if itr.statement != nil {
-		_ = itr.statement.Close()
+		err = itr.statement.Close()
 	}
 
 	itr.valid = false
 	itr.statement = nil
 	itr.rows = nil
+
+	return err
 }
 
 // Domain returns the domain of the iterator. The caller must not modify the
@@ -143,14 +145,14 @@ func (itr *iterator) Valid() bool {
 	return true
 }
 
-func (itr *iterator) Next() bool {
+func (itr *iterator) Next() {
 	if itr.rows.Next() {
 		itr.parseRow()
-		return itr.Valid()
+		return
 	}
 
 	itr.valid = false
-	return itr.valid
+	return
 }
 
 func (itr *iterator) Error() error {

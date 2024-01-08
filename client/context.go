@@ -29,7 +29,6 @@ type PreprocessTxFn func(chainID string, key keyring.KeyType, tx TxBuilder) erro
 // Context implements a typical context created in SDK modules for transaction
 // handling and queries.
 type Context struct {
-	FromAddress           sdk.AccAddress
 	Client                CometRPC
 	GRPCClient            *grpc.ClientConn
 	ChainID               string
@@ -44,23 +43,28 @@ type Context struct {
 	OutputFormat          string
 	Height                int64
 	HomeDir               string
-	From                  string
-	BroadcastMode         string
-	FromName              string
-	SignModeStr           string
-	UseLedger             bool
-	Simulate              bool
-	GenerateOnly          bool
-	Offline               bool
-	SkipConfirm           bool
-	TxConfig              TxConfig
-	AccountRetriever      AccountRetriever
-	NodeURI               string
-	FeePayer              sdk.AccAddress
-	FeeGranter            sdk.AccAddress
-	Viper                 *viper.Viper
-	LedgerHasProtobuf     bool
-	PreprocessTxHook      PreprocessTxFn
+	// From is a name or an address of a keyring account used to set FromName and FromAddress fields.
+	// Should be set by the "from" flag.
+	From string
+	// Name of a keyring account used to sign transactions.
+	FromName string
+	// Address of a keyring account used to sign transactions.
+	FromAddress       sdk.AccAddress
+	BroadcastMode     string
+	SignModeStr       string
+	UseLedger         bool
+	Simulate          bool
+	GenerateOnly      bool
+	Offline           bool
+	SkipConfirm       bool
+	TxConfig          TxConfig
+	AccountRetriever  AccountRetriever
+	NodeURI           string
+	FeePayer          sdk.AccAddress
+	FeeGranter        sdk.AccAddress
+	Viper             *viper.Viper
+	LedgerHasProtobuf bool
+	PreprocessTxHook  PreprocessTxFn
 
 	// IsAux is true when the signer is an auxiliary signer (e.g. the tipper).
 	IsAux bool

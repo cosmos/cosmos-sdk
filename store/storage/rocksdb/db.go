@@ -11,6 +11,7 @@ import (
 	"github.com/linxGnu/grocksdb"
 	"golang.org/x/exp/slices"
 
+	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/storage"
 	"cosmossdk.io/store/v2/storage/util"
@@ -162,7 +163,7 @@ func (db *Database) Prune(version uint64) error {
 	return nil
 }
 
-func (db *Database) Iterator(storeKey string, version uint64, start, end []byte) (store.Iterator, error) {
+func (db *Database) Iterator(storeKey string, version uint64, start, end []byte) (corestore.Iterator, error) {
 	if (start != nil && len(start) == 0) || (end != nil && len(end) == 0) {
 		return nil, store.ErrKeyEmpty
 	}
@@ -178,7 +179,7 @@ func (db *Database) Iterator(storeKey string, version uint64, start, end []byte)
 	return newRocksDBIterator(itr, prefix, start, end, false), nil
 }
 
-func (db *Database) ReverseIterator(storeKey string, version uint64, start, end []byte) (store.Iterator, error) {
+func (db *Database) ReverseIterator(storeKey string, version uint64, start, end []byte) (corestore.Iterator, error) {
 	if (start != nil && len(start) == 0) || (end != nil && len(end) == 0) {
 		return nil, store.ErrKeyEmpty
 	}

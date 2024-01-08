@@ -87,7 +87,7 @@ Submitting a new multiple choice proposal will use a different message than the 
 
 ```protobuf
 message MsgSubmitMultipleChoiceProposal {
-  repeated cosmos.base.v1beta1.Coin initial_deposit = 1
+  repeated cosmos.base.v1beta1.Coin initial_deposit = 1;
   string proposer = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   string metadata = 3;
   string title = 4;

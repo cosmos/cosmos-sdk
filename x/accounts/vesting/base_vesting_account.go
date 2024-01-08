@@ -15,9 +15,7 @@ import (
 
 // Base Vesting Account
 
-// NewBaseVestingAccount creates a new BaseVestingAccount object. It is the
-// callers responsibility to ensure the base account has sufficient funds with
-// regards to the original vesting amount.
+// NewBaseVestingAccount creates a new BaseVestingAccount object.
 func NewBaseVestingAccount(d accountstd.Dependencies) (*BaseVestingAccount, error) {
 	baseVestingAccount := &BaseVestingAccount{
 		OriginalVesting:  sdk.NewCoins(),
@@ -182,4 +180,11 @@ func (bva BaseVestingAccount) Validate() error {
 	}
 
 	return nil
+}
+
+func (bva BaseVestingAccount) RegisterQueryHandlers(builder *accountstd.QueryBuilder) {
+	accountstd.RegisterQueryHandler(builder, bva.QueryOriginalVesting)
+	accountstd.RegisterQueryHandler(builder, bva.QueryDelegatedFree)
+	accountstd.RegisterQueryHandler(builder, bva.QueryDelegatedVesting)
+	accountstd.RegisterQueryHandler(builder, bva.QueryEndTime)
 }

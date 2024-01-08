@@ -21,11 +21,9 @@ var (
 	_ accountstd.Interface = (*ContinuousVestingAccount)(nil)
 )
 
-// Base Vesting Account
+// Continuos Vesting Account
 
-// NewContinuousVestingAccount creates a new ContinuousVestingAccount object. It is the
-// callers responsibility to ensure the base account has sufficient funds with
-// regards to the original vesting amount.
+// NewContinuousVestingAccount creates a new ContinuousVestingAccount object.
 func NewContinuousVestingAccount(d accountstd.Dependencies) (*ContinuousVestingAccount, error) {
 	baseVestingAccount := BaseVestingAccount{
 		OriginalVesting:  sdk.NewCoins(),
@@ -210,11 +208,8 @@ func (cva ContinuousVestingAccount) RegisterExecuteHandlers(builder *accountstd.
 }
 
 func (cva ContinuousVestingAccount) RegisterQueryHandlers(builder *accountstd.QueryBuilder) {
-	accountstd.RegisterQueryHandler(builder, cva.QueryOriginalVesting)
-	accountstd.RegisterQueryHandler(builder, cva.QueryDelegatedFree)
-	accountstd.RegisterQueryHandler(builder, cva.QueryDelegatedVesting)
 	accountstd.RegisterQueryHandler(builder, cva.QueryStartTime)
-	accountstd.RegisterQueryHandler(builder, cva.QueryEndTime)
 	accountstd.RegisterQueryHandler(builder, cva.QueryVestedCoins)
 	accountstd.RegisterQueryHandler(builder, cva.QueryVestingCoins)
+	cva.BaseVestingAccount.RegisterQueryHandlers(builder)
 }

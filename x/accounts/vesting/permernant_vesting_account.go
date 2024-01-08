@@ -19,11 +19,9 @@ var (
 	_ accountstd.Interface = (*PermanentLockedAccount)(nil)
 )
 
-// Base Vesting Account
+// Permernant Vesting Account
 
-// NewPermanentLockedAccount creates a new PermanentLockedAccount object. It is the
-// callers responsibility to ensure the base account has sufficient funds with
-// regards to the original vesting amount.
+// NewPermanentLockedAccount creates a new PermanentLockedAccount object.
 func NewPermanentLockedAccount(d accountstd.Dependencies) (*PermanentLockedAccount, error) {
 	baseVestingAccount := BaseVestingAccount{
 		OriginalVesting:  sdk.NewCoins(),
@@ -151,10 +149,7 @@ func (plva PermanentLockedAccount) RegisterExecuteHandlers(builder *accountstd.E
 }
 
 func (plva PermanentLockedAccount) RegisterQueryHandlers(builder *accountstd.QueryBuilder) {
-	accountstd.RegisterQueryHandler(builder, plva.QueryOriginalVesting)
-	accountstd.RegisterQueryHandler(builder, plva.QueryDelegatedFree)
-	accountstd.RegisterQueryHandler(builder, plva.QueryDelegatedVesting)
-	accountstd.RegisterQueryHandler(builder, plva.QueryEndTime)
 	accountstd.RegisterQueryHandler(builder, plva.QueryVestedCoins)
 	accountstd.RegisterQueryHandler(builder, plva.QueryVestingCoins)
+	plva.BaseVestingAccount.RegisterQueryHandlers(builder)
 }

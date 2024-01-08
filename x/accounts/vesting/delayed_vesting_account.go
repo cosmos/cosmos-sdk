@@ -18,11 +18,9 @@ var (
 	_ accountstd.Interface = (*DelayedVestingAccount)(nil)
 )
 
-// Base Vesting Account
+// Delayed Vesting Account
 
-// NewDelayedVestingAccount creates a new DelayedVestingAccount object. It is the
-// callers responsibility to ensure the base account has sufficient funds with
-// regards to the original vesting amount.
+// NewDelayedVestingAccount creates a new DelayedVestingAccount object.
 func NewDelayedVestingAccount(d accountstd.Dependencies) (*DelayedVestingAccount, error) {
 	baseVestingAccount := BaseVestingAccount{
 		OriginalVesting:  sdk.NewCoins(),
@@ -153,10 +151,7 @@ func (dva DelayedVestingAccount) RegisterExecuteHandlers(builder *accountstd.Exe
 }
 
 func (dva DelayedVestingAccount) RegisterQueryHandlers(builder *accountstd.QueryBuilder) {
-	accountstd.RegisterQueryHandler(builder, dva.QueryOriginalVesting)
-	accountstd.RegisterQueryHandler(builder, dva.QueryDelegatedFree)
-	accountstd.RegisterQueryHandler(builder, dva.QueryDelegatedVesting)
-	accountstd.RegisterQueryHandler(builder, dva.QueryEndTime)
 	accountstd.RegisterQueryHandler(builder, dva.QueryVestedCoins)
 	accountstd.RegisterQueryHandler(builder, dva.QueryVestingCoins)
+	dva.BaseVestingAccount.RegisterQueryHandlers(builder)
 }

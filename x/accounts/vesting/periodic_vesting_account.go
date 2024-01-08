@@ -20,11 +20,9 @@ var (
 	_ accountstd.Interface = (*PeriodicVestingAccount)(nil)
 )
 
-// Base Vesting Account
+// Periodic Vesting Account
 
-// NewPeriodicVestingAccount creates a new PeriodicVestingAccount object. It is the
-// callers responsibility to ensure the base account has sufficient funds with
-// regards to the original vesting amount.
+// NewPeriodicVestingAccount creates a new PeriodicVestingAccount object.
 func NewPeriodicVestingAccount(d accountstd.Dependencies) (*PeriodicVestingAccount, error) {
 	baseVestingAccount := BaseVestingAccount{
 		OriginalVesting:  sdk.NewCoins(),
@@ -214,11 +212,8 @@ func (pva PeriodicVestingAccount) RegisterExecuteHandlers(builder *accountstd.Ex
 }
 
 func (pva PeriodicVestingAccount) RegisterQueryHandlers(builder *accountstd.QueryBuilder) {
-	accountstd.RegisterQueryHandler(builder, pva.QueryOriginalVesting)
-	accountstd.RegisterQueryHandler(builder, pva.QueryDelegatedFree)
-	accountstd.RegisterQueryHandler(builder, pva.QueryDelegatedVesting)
 	accountstd.RegisterQueryHandler(builder, pva.QueryStartTime)
-	accountstd.RegisterQueryHandler(builder, pva.QueryEndTime)
 	accountstd.RegisterQueryHandler(builder, pva.QueryVestedCoins)
 	accountstd.RegisterQueryHandler(builder, pva.QueryVestingCoins)
+	pva.BaseVestingAccount.RegisterQueryHandlers(builder)
 }

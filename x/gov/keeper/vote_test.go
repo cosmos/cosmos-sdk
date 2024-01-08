@@ -115,11 +115,12 @@ func TestVotes_MultipleChoiceProposal(t *testing.T) {
 
 	proposal, err := govKeeper.SubmitProposal(ctx, nil, "", "title", "description", sdk.AccAddress("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r"), v1.ProposalType_PROPOSAL_TYPE_MULTIPLE_CHOICE)
 	require.NoError(t, err)
-	govKeeper.ProposalVoteOptions.Set(ctx, proposal.Id, v1.ProposalVoteOptions{
+	err = govKeeper.ProposalVoteOptions.Set(ctx, proposal.Id, v1.ProposalVoteOptions{
 		OptionOne:   "Vote for @tac0turle",
 		OptionTwo:   "Vote for @facudomedica",
 		OptionThree: "Vote for @alexanderbez",
 	})
+	require.NoError(t, err)
 
 	proposal.Status = v1.StatusVotingPeriod
 	require.NoError(t, govKeeper.SetProposal(ctx, proposal))

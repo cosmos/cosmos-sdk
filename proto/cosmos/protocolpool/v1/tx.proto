@@ -143,20 +143,6 @@ message MsgCancelContinuousFund {
   string recipient_address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 
-// MsgWithdrawContinuousFund defines a message for withdrawing the continuous fund allocated to it.
-message MsgWithdrawContinuousFund {
-  option (cosmos.msg.v1.signer) = "recipient_address";
-  string recipient_address      = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-}
-
-// MsgWithdrawContinuousFundResponse defines the response to executing a
-// MsgWithdrawContinuousFund message.
-message MsgWithdrawContinuousFundResponse {
-  cosmos.base.v1beta1.Coin amount = 1
-      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
-  ;
-}
-
 // MsgCancelContinuousFundResponse defines the response to executing a
 // MsgCancelContinuousFund message.
 message MsgCancelContinuousFundResponse {
@@ -173,3 +159,18 @@ message MsgCancelContinuousFundResponse {
       [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
   ;
 }
+
+// MsgWithdrawContinuousFund defines a message for withdrawing the continuous fund allocated to it.
+message MsgWithdrawContinuousFund {
+  option (cosmos.msg.v1.signer) = "recipient_address";
+  string recipient_address      = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// MsgWithdrawContinuousFundResponse defines the response to executing a
+// MsgWithdrawContinuousFund message.
+message MsgWithdrawContinuousFundResponse {
+  cosmos.base.v1beta1.Coin amount = 1
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  ;
+}
+

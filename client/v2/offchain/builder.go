@@ -22,7 +22,6 @@ import (
 
 type builder struct {
 	cdc codec.Codec
-
 	tx *apitx.Tx
 }
 

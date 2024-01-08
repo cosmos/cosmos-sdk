@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	stderrors "errors"
 	"fmt"
 
 	"cosmossdk.io/collections"
@@ -43,6 +44,10 @@ func (k Keeper) AddVote(ctx context.Context, proposalID uint64, voterAddr sdk.Ac
 		case v1.ProposalType_PROPOSAL_TYPE_MULTIPLE_CHOICE:
 			proposalOptionsStr, err := k.ProposalVoteOptions.Get(ctx, proposalID)
 			if err != nil {
+				if stderrors.Is(err, collections.ErrNotFound) {
+					return errors.Wrap(types.ErrInvalidProposal, "invalid multiple choice proposal, no options set")
+				}
+
 				return err
 			}
 

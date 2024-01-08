@@ -33,7 +33,7 @@ func (k Keeper) SubmitProposal(ctx context.Context, messages []sdk.Msg, metadata
 			return v1.Proposal{}, errorsmod.Wrap(types.ErrInvalidProposer, "proposer is not authorized to submit optimistic proposal")
 		}
 	case v1.ProposalType_PROPOSAL_TYPE_MULTIPLE_CHOICE:
-		if len(messages) > 0 { // cannot happen, except when a the proposal is created via keeper call instead of message server.
+		if len(messages) > 0 { // cannot happen, except when the proposal is created via keeper call instead of message server.
 			return v1.Proposal{}, errorsmod.Wrap(types.ErrInvalidProposalMsg, "multiple choice proposal should not contain any messages")
 		}
 	}

@@ -18,9 +18,17 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/query"
 )
 
-const optionSpam = "SPAM"
+var (
+	_ v1.QueryServer = queryServer{}
 
-var _ v1.QueryServer = queryServer{}
+	defaultVoteOptions = &v1.ProposalVoteOptions{
+		OptionOne:   "yes",
+		OptionTwo:   "abstain",
+		OptionThree: "no",
+		OptionFour:  "no_with_veto",
+		OptionSpam:  "spam",
+	}
+)
 
 type queryServer struct{ k *Keeper }
 
@@ -81,13 +89,7 @@ func (q queryServer) ProposalVoteOptions(ctx context.Context, req *v1.QueryPropo
 	if err != nil {
 		if stderrors.Is(err, collections.ErrNotFound) { // fallback to generic vote options
 			return &v1.QueryProposalVoteOptionsResponse{
-				VoteOptions: &v1.ProposalVoteOptions{
-					OptionOne:   v1.OptionYes.String(),
-					OptionTwo:   v1.OptionAbstain.String(),
-					OptionThree: v1.OptionNo.String(),
-					OptionFour:  v1.OptionNoWithVeto.String(),
-					OptionSpam:  optionSpam,
-				},
+				VoteOptions: defaultVoteOptions,
 			}, nil
 		}
 
@@ -100,7 +102,7 @@ func (q queryServer) ProposalVoteOptions(ctx context.Context, req *v1.QueryPropo
 			OptionTwo:   voteOptions.OptionTwo,
 			OptionThree: voteOptions.OptionThree,
 			OptionFour:  voteOptions.OptionFour,
-			OptionSpam:  optionSpam,
+			OptionSpam:  defaultVoteOptions.OptionSpam,
 		},
 	}, nil
 }

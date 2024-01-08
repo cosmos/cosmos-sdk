@@ -12,7 +12,6 @@ import (
 
 	apitx "cosmossdk.io/api/cosmos/tx/v1beta1"
 	v2flags "cosmossdk.io/client/v2/internal/flags"
-	authsigning "cosmossdk.io/x/auth/signing"
 	txsigning "cosmossdk.io/x/tx/signing"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -64,24 +63,16 @@ func verify(ctx client.Context, tx *apitx.Tx) error {
 			return err
 		}
 
-		signingData := authsigning.SignerData{
-			Address:       addr,
-			ChainID:       ExpectedChainID,
-			AccountNumber: ExpectedAccountNumber,
-			Sequence:      ExpectedSequence,
-			PubKey:        pubKey,
-		}
-
 		anyPk, err := codectypes.NewAnyWithValue(pubKey)
 		if err != nil {
 			return err
 		}
 
 		txSignerData := txsigning.SignerData{
-			ChainID:       signingData.ChainID,
-			AccountNumber: signingData.AccountNumber,
-			Sequence:      signingData.Sequence,
-			Address:       signingData.Address,
+			ChainID:       ExpectedChainID,
+			AccountNumber: ExpectedAccountNumber,
+			Sequence:      ExpectedSequence,
+			Address:       addr,
 			PubKey: &anypb.Any{
 				TypeUrl: anyPk.TypeUrl,
 				Value:   anyPk.Value,

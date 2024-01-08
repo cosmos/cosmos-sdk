@@ -68,13 +68,15 @@ func (suite *KeeperTestSuite) TestGRPCQueryProposal() {
 		},
 	}
 
-	for _, testCase := range testCases {
-		suite.Run(fmt.Sprintf("Case %s", testCase.msg), func() {
-			testCase.malleate()
+	for _, tc := range testCases {
+		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
+			if tc.malleate != nil {
+				tc.malleate()
+			}
 
 			proposalRes, err := queryClient.Proposal(gocontext.Background(), req)
 
-			if testCase.expPass {
+			if tc.expPass {
 				suite.Require().NoError(err)
 				suite.Require().NotEmpty(proposalRes.Proposal.String())
 				suite.Require().Equal(proposalRes.Proposal.String(), expProposal.String())
@@ -166,13 +168,15 @@ func (suite *KeeperTestSuite) TestLegacyGRPCQueryProposal() {
 		},
 	}
 
-	for _, testCase := range testCases {
-		suite.Run(fmt.Sprintf("Case %s", testCase.msg), func() {
-			testCase.malleate()
+	for _, tc := range testCases {
+		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
+			if tc.malleate != nil {
+				tc.malleate()
+			}
 
 			proposalRes, err := queryClient.Proposal(gocontext.Background(), req)
 
-			if testCase.expPass {
+			if tc.expPass {
 				suite.Require().NoError(err)
 				suite.Require().NotEmpty(proposalRes.Proposal.String())
 				suite.Require().Equal(proposalRes.Proposal.String(), expProposal.String())
@@ -373,13 +377,15 @@ func (suite *KeeperTestSuite) TestGRPCQueryProposals() {
 		},
 	}
 
-	for _, testCase := range testCases {
-		suite.Run(fmt.Sprintf("Case %s", testCase.msg), func() {
-			testCase.malleate()
+	for _, tc := range testCases {
+		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
+			if tc.malleate != nil {
+				tc.malleate()
+			}
 
 			proposals, err := queryClient.Proposals(gocontext.Background(), req)
 
-			if testCase.expPass {
+			if tc.expPass {
 				suite.Require().NoError(err)
 
 				suite.Require().Len(proposals.GetProposals(), len(expRes.GetProposals()))
@@ -423,13 +429,15 @@ func (suite *KeeperTestSuite) TestLegacyGRPCQueryProposals() {
 		},
 	}
 
-	for _, testCase := range testCases {
-		suite.Run(fmt.Sprintf("Case %s", testCase.msg), func() {
-			testCase.malleate()
+	for _, tc := range testCases {
+		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
+			if tc.malleate != nil {
+				tc.malleate()
+			}
 
 			proposalRes, err := queryClient.Proposals(gocontext.Background(), req)
 
-			if testCase.expPass {
+			if tc.expPass {
 				suite.Require().NoError(err)
 				suite.Require().NotNil(proposalRes.Proposals)
 				suite.Require().Equal(len(proposalRes.Proposals), 1)
@@ -539,13 +547,15 @@ func (suite *KeeperTestSuite) TestGRPCQueryVote() {
 		},
 	}
 
-	for _, testCase := range testCases {
-		suite.Run(fmt.Sprintf("Case %s", testCase.msg), func() {
-			testCase.malleate()
+	for _, tc := range testCases {
+		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
+			if tc.malleate != nil {
+				tc.malleate()
+			}
 
 			vote, err := queryClient.Vote(gocontext.Background(), req)
 
-			if testCase.expPass {
+			if tc.expPass {
 				suite.Require().NoError(err)
 				suite.Require().Equal(expRes, vote)
 			} else {
@@ -654,13 +664,15 @@ func (suite *KeeperTestSuite) TestLegacyGRPCQueryVote() {
 		},
 	}
 
-	for _, testCase := range testCases {
-		suite.Run(fmt.Sprintf("Case %s", testCase.msg), func() {
-			testCase.malleate()
+	for _, tc := range testCases {
+		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
+			if tc.malleate != nil {
+				tc.malleate()
+			}
 
 			vote, err := queryClient.Vote(gocontext.Background(), req)
 
-			if testCase.expPass {
+			if tc.expPass {
 				suite.Require().NoError(err)
 				suite.Require().Equal(expRes, vote)
 			} else {
@@ -758,13 +770,15 @@ func (suite *KeeperTestSuite) TestGRPCQueryVotes() {
 		},
 	}
 
-	for _, testCase := range testCases {
-		suite.Run(fmt.Sprintf("Case %s", testCase.msg), func() {
-			testCase.malleate()
+	for _, tc := range testCases {
+		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
+			if tc.malleate != nil {
+				tc.malleate()
+			}
 
 			votes, err := queryClient.Votes(gocontext.Background(), req)
 
-			if testCase.expPass {
+			if tc.expPass {
 				suite.Require().NoError(err)
 				suite.Require().Equal(expRes.GetVotes(), votes.GetVotes())
 			} else {
@@ -863,13 +877,15 @@ func (suite *KeeperTestSuite) TestLegacyGRPCQueryVotes() {
 		},
 	}
 
-	for _, testCase := range testCases {
-		suite.Run(fmt.Sprintf("Case %s", testCase.msg), func() {
-			testCase.malleate()
+	for _, tc := range testCases {
+		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
+			if tc.malleate != nil {
+				tc.malleate()
+			}
 
 			votes, err := queryClient.Votes(gocontext.Background(), req)
 
-			if testCase.expPass {
+			if tc.expPass {
 				suite.Require().NoError(err)
 				suite.Require().Equal(expRes.GetVotes(), votes.GetVotes())
 			} else {
@@ -945,13 +961,15 @@ func (suite *KeeperTestSuite) TestGRPCQueryParams() {
 		},
 	}
 
-	for _, testCase := range testCases {
-		suite.Run(fmt.Sprintf("Case %s", testCase.msg), func() {
-			testCase.malleate()
+	for _, tc := range testCases {
+		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
+			if tc.malleate != nil {
+				tc.malleate()
+			}
 
 			params, err := queryClient.Params(gocontext.Background(), req)
 
-			if testCase.expPass {
+			if tc.expPass {
 				suite.Require().NoError(err)
 				suite.Require().Equal(expRes.GetDepositParams(), params.GetDepositParams()) //nolint:staticcheck // SA1019: params.MinDeposit is deprecated: Use MinInitialDeposit instead.
 				suite.Require().Equal(expRes.GetVotingParams(), params.GetVotingParams())   //nolint:staticcheck // SA1019: params.VotingPeriod is deprecated: Use VotingPeriod instead.
@@ -1035,13 +1053,15 @@ func (suite *KeeperTestSuite) TestLegacyGRPCQueryParams() {
 		},
 	}
 
-	for _, testCase := range testCases {
-		suite.Run(fmt.Sprintf("Case %s", testCase.msg), func() {
-			testCase.malleate()
+	for _, tc := range testCases {
+		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
+			if tc.malleate != nil {
+				tc.malleate()
+			}
 
 			params, err := queryClient.Params(gocontext.Background(), req)
 
-			if testCase.expPass {
+			if tc.expPass {
 				suite.Require().NoError(err)
 				suite.Require().Equal(expRes.GetDepositParams(), params.GetDepositParams())
 				suite.Require().Equal(expRes.GetVotingParams(), params.GetVotingParams())
@@ -1140,13 +1160,15 @@ func (suite *KeeperTestSuite) TestGRPCQueryDeposit() {
 		},
 	}
 
-	for _, testCase := range testCases {
-		suite.Run(fmt.Sprintf("Case %s", testCase.msg), func() {
-			testCase.malleate()
+	for _, tc := range testCases {
+		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
+			if tc.malleate != nil {
+				tc.malleate()
+			}
 
 			deposit, err := queryClient.Deposit(gocontext.Background(), req)
 
-			if testCase.expPass {
+			if tc.expPass {
 				suite.Require().NoError(err)
 				suite.Require().Equal(deposit.GetDeposit(), expRes.GetDeposit())
 			} else {
@@ -1243,13 +1265,15 @@ func (suite *KeeperTestSuite) TestLegacyGRPCQueryDeposit() {
 		},
 	}
 
-	for _, testCase := range testCases {
-		suite.Run(fmt.Sprintf("Case %s", testCase.msg), func() {
-			testCase.malleate()
+	for _, tc := range testCases {
+		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
+			if tc.malleate != nil {
+				tc.malleate()
+			}
 
 			deposit, err := queryClient.Deposit(gocontext.Background(), req)
 
-			if testCase.expPass {
+			if tc.expPass {
 				suite.Require().NoError(err)
 				suite.Require().Equal(deposit.GetDeposit(), expRes.GetDeposit())
 			} else {
@@ -1339,13 +1363,15 @@ func (suite *KeeperTestSuite) TestGRPCQueryDeposits() {
 		},
 	}
 
-	for _, testCase := range testCases {
-		suite.Run(fmt.Sprintf("Case %s", testCase.msg), func() {
-			testCase.malleate()
+	for _, tc := range testCases {
+		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
+			if tc.malleate != nil {
+				tc.malleate()
+			}
 
 			deposits, err := queryClient.Deposits(gocontext.Background(), req)
 
-			if testCase.expPass {
+			if tc.expPass {
 				suite.Require().NoError(err)
 				suite.Require().Equal(expRes.GetDeposits(), deposits.GetDeposits())
 			} else {
@@ -1438,13 +1464,15 @@ func (suite *KeeperTestSuite) TestLegacyGRPCQueryDeposits() {
 		},
 	}
 
-	for _, testCase := range testCases {
-		suite.Run(fmt.Sprintf("Case %s", testCase.msg), func() {
-			testCase.malleate()
+	for _, tc := range testCases {
+		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
+			if tc.malleate != nil {
+				tc.malleate()
+			}
 
 			deposits, err := queryClient.Deposits(gocontext.Background(), req)
 
-			if testCase.expPass {
+			if tc.expPass {
 				suite.Require().NoError(err)
 				suite.Require().Equal(expRes.GetDeposits(), deposits.GetDeposits())
 			} else {
@@ -1580,13 +1608,15 @@ func (suite *KeeperTestSuite) TestGRPCQueryTallyResult() {
 		},
 	}
 
-	for _, testCase := range testCases {
-		suite.Run(fmt.Sprintf("Case %s", testCase.msg), func() {
-			testCase.malleate()
+	for _, tc := range testCases {
+		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
+			if tc.malleate != nil {
+				tc.malleate()
+			}
 
 			tallyRes, err := queryClient.TallyResult(gocontext.Background(), req)
 
-			if testCase.expPass {
+			if tc.expPass {
 				suite.Require().NoError(err)
 				suite.Require().NotEmpty(tallyRes.Tally.String())
 				suite.Require().Equal(expTally.String(), tallyRes.Tally.String())
@@ -1719,19 +1749,151 @@ func (suite *KeeperTestSuite) TestLegacyGRPCQueryTallyResult() {
 		},
 	}
 
-	for _, testCase := range testCases {
-		suite.Run(fmt.Sprintf("Case %s", testCase.msg), func() {
-			testCase.malleate()
+	for _, tc := range testCases {
+		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
+			if tc.malleate != nil {
+				tc.malleate()
+			}
 
 			tallyRes, err := queryClient.TallyResult(gocontext.Background(), req)
 
-			if testCase.expPass {
+			if tc.expPass {
 				suite.Require().NoError(err)
 				suite.Require().NotEmpty(tallyRes.Tally.String())
 				suite.Require().Equal(expTally.String(), tallyRes.Tally.String())
 			} else {
 				suite.Require().Error(err)
 				suite.Require().Nil(tallyRes)
+			}
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestProposalVoteOptions() {
+	suite.reset()
+
+	testCases := []struct {
+		name     string
+		malleate func()
+		req      *v1.QueryProposalVoteOptionsRequest
+		expResp  *v1.QueryProposalVoteOptionsResponse
+		errStr   string
+	}{
+		{
+			name:   "invalid proposal id",
+			req:    &v1.QueryProposalVoteOptionsRequest{},
+			errStr: "proposal id can not be 0",
+		},
+		{
+			name:   "proposal not found",
+			req:    &v1.QueryProposalVoteOptionsRequest{ProposalId: 1},
+			errStr: "proposal 1 doesn't exist",
+		},
+		{
+			name: "non multiple choice proposal",
+			malleate: func() {
+				propTime := time.Now()
+				proposal := v1.Proposal{
+					Id:              1,
+					Status:          v1.StatusVotingPeriod,
+					SubmitTime:      &propTime,
+					VotingStartTime: &propTime,
+					VotingEndTime:   &propTime,
+					Metadata:        "proposal metadata",
+					ProposalType:    v1.ProposalType_PROPOSAL_TYPE_STANDARD,
+				}
+				err := suite.govKeeper.SetProposal(suite.ctx, proposal)
+				suite.Require().NoError(err)
+			},
+			req: &v1.QueryProposalVoteOptionsRequest{ProposalId: 1},
+			expResp: &v1.QueryProposalVoteOptionsResponse{
+				VoteOptions: &v1.ProposalVoteOptions{
+					OptionOne:   "yes",
+					OptionTwo:   "abstain",
+					OptionThree: "no",
+					OptionFour:  "no_with_veto",
+					OptionSpam:  "spam",
+				},
+			},
+		},
+		{
+			name: "invalid multiple choice proposal",
+			req:  &v1.QueryProposalVoteOptionsRequest{ProposalId: 2},
+			malleate: func() {
+				propTime := time.Now()
+				proposal := v1.Proposal{
+					Id:              2,
+					Status:          v1.StatusVotingPeriod,
+					SubmitTime:      &propTime,
+					VotingStartTime: &propTime,
+					VotingEndTime:   &propTime,
+					Metadata:        "proposal metadata",
+					ProposalType:    v1.ProposalType_PROPOSAL_TYPE_MULTIPLE_CHOICE,
+				}
+				err := suite.govKeeper.SetProposal(suite.ctx, proposal)
+				suite.Require().NoError(err)
+
+				// multiple choice proposal, but no vote options set
+				// because the query does not check the proposal type,
+				// it falls back to the default vote options
+			},
+			expResp: &v1.QueryProposalVoteOptionsResponse{
+				VoteOptions: &v1.ProposalVoteOptions{
+					OptionOne:   "yes",
+					OptionTwo:   "abstain",
+					OptionThree: "no",
+					OptionFour:  "no_with_veto",
+					OptionSpam:  "spam",
+				},
+			},
+		},
+		{
+			name: "multiple choice proposal",
+			req:  &v1.QueryProposalVoteOptionsRequest{ProposalId: 3},
+			malleate: func() {
+				propTime := time.Now()
+				proposal := v1.Proposal{
+					Id:              3,
+					Status:          v1.StatusVotingPeriod,
+					SubmitTime:      &propTime,
+					VotingStartTime: &propTime,
+					VotingEndTime:   &propTime,
+					Metadata:        "proposal metadata",
+					ProposalType:    v1.ProposalType_PROPOSAL_TYPE_MULTIPLE_CHOICE,
+				}
+				err := suite.govKeeper.SetProposal(suite.ctx, proposal)
+				suite.Require().NoError(err)
+				err = suite.govKeeper.ProposalVoteOptions.Set(suite.ctx, proposal.Id, v1.ProposalVoteOptions{
+					OptionOne:   "Vote for @tac0turle",
+					OptionTwo:   "Vote for @facudomedica",
+					OptionThree: "Vote for @alexanderbez",
+				})
+				suite.Require().NoError(err)
+			},
+			expResp: &v1.QueryProposalVoteOptionsResponse{
+				VoteOptions: &v1.ProposalVoteOptions{
+					OptionOne:   "Vote for @tac0turle",
+					OptionTwo:   "Vote for @facudomedica",
+					OptionThree: "Vote for @alexanderbez",
+					OptionSpam:  "spam",
+				},
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		suite.Run(tc.name, func() {
+			if tc.malleate != nil {
+				tc.malleate()
+			}
+
+			resp, err := suite.queryClient.ProposalVoteOptions(suite.ctx, tc.req)
+			if tc.errStr != "" {
+				suite.Require().Error(err)
+				suite.Require().Contains(err.Error(), tc.errStr)
+			} else {
+				suite.Require().NoError(err)
+				suite.Require().Equal(tc.expResp, resp)
 			}
 		})
 	}

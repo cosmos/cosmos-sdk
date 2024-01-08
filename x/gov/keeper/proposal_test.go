@@ -167,6 +167,7 @@ func (suite *KeeperTestSuite) TestSubmitProposal() {
 	}{
 		{&tp, govAcct, "", v1.ProposalType_PROPOSAL_TYPE_STANDARD, nil},
 		{&tp, govAcct, "", v1.ProposalType_PROPOSAL_TYPE_EXPEDITED, nil},
+		{nil, govAcct, "", v1.ProposalType_PROPOSAL_TYPE_MULTIPLE_CHOICE, nil},
 		// Keeper does not check the validity of title and description, no error
 		{&v1beta1.TextProposal{Title: "", Description: "description"}, govAcct, "", v1.ProposalType_PROPOSAL_TYPE_STANDARD, nil},
 		{&v1beta1.TextProposal{Title: strings.Repeat("1234567890", 100), Description: "description"}, govAcct, "", v1.ProposalType_PROPOSAL_TYPE_STANDARD, nil},
@@ -176,12 +177,19 @@ func (suite *KeeperTestSuite) TestSubmitProposal() {
 		{&tp, randomAddr.String(), "", v1.ProposalType_PROPOSAL_TYPE_STANDARD, types.ErrInvalidSigner},
 		// error only when invalid route
 		{&invalidProposalRoute{}, govAcct, "", v1.ProposalType_PROPOSAL_TYPE_STANDARD, types.ErrNoProposalHandlerExists},
+		// error invalid multiple choice proposal
+		{&tp, govAcct, "", v1.ProposalType_PROPOSAL_TYPE_MULTIPLE_CHOICE, types.ErrInvalidProposalMsg},
 	}
 
 	for i, tc := range testCases {
-		prop, err := v1.NewLegacyContent(tc.content, tc.authority)
-		suite.Require().NoError(err)
-		_, err = suite.govKeeper.SubmitProposal(suite.ctx, []sdk.Msg{prop}, tc.metadata, "title", "", suite.addrs[0], tc.proposalType)
+		msg := []sdk.Msg{}
+		if tc.content != nil {
+			prop, err := v1.NewLegacyContent(tc.content, tc.authority)
+			suite.Require().NoError(err)
+			msg = append(msg, prop)
+		}
+
+		_, err := suite.govKeeper.SubmitProposal(suite.ctx, msg, tc.metadata, "title", "", suite.addrs[0], tc.proposalType)
 		suite.Require().True(errors.Is(tc.expectedErr, err), "tc #%d; got: %v, expected: %v", i, err, tc.expectedErr)
 	}
 }

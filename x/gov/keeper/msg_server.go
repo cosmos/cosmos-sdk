@@ -118,6 +118,45 @@ func (k msgServer) SubmitProposal(goCtx context.Context, msg *v1.MsgSubmitPropos
 	}, nil
 }
 
+// SubmitMultipleChoiceProposal implements the MsgServer.SubmitMultipleChoiceProposal method.
+func (k msgServer) SubmitMultipleChoiceProposal(ctx context.Context, msg *v1.MsgSubmitMultipleChoiceProposal) (*v1.MsgSubmitMultipleChoiceProposalResponse, error) {
+	resp, err := k.SubmitProposal(ctx, &v1.MsgSubmitProposal{
+		InitialDeposit: msg.InitialDeposit,
+		Proposer:       msg.Proposer,
+		Title:          msg.Title,
+		Summary:        msg.Summary,
+		Metadata:       msg.Metadata,
+		ProposalType:   v1.ProposalType_PROPOSAL_TYPE_MULTIPLE_CHOICE,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	if msg.VoteOptions == nil {
+		return nil, sdkerrors.ErrInvalidRequest.Wrap("vote options cannot be nil")
+	}
+
+	// check that if a vote option is provided, the previous one is also provided
+	if (msg.VoteOptions.OptionTwo != "" && msg.VoteOptions.OptionOne == "") ||
+		(msg.VoteOptions.OptionThree != "" && msg.VoteOptions.OptionTwo == "") ||
+		(msg.VoteOptions.OptionFour != "" && msg.VoteOptions.OptionThree == "") {
+		return nil, sdkerrors.ErrInvalidRequest.Wrap("if a vote option is provided, the previous one must also be provided")
+	}
+
+	// check that at least two vote options are provided
+	if msg.VoteOptions.OptionOne == "" && msg.VoteOptions.OptionTwo == "" {
+		return nil, sdkerrors.ErrInvalidRequest.Wrap("vote options cannot be empty, two or more options must be provided")
+	}
+
+	if err := k.ProposalVoteOptions.Set(ctx, resp.ProposalId, *msg.VoteOptions); err != nil {
+		return nil, err
+	}
+
+	return &v1.MsgSubmitMultipleChoiceProposalResponse{
+		ProposalId: resp.ProposalId,
+	}, nil
+}
+
 // CancelProposal implements the MsgServer.CancelProposal method.
 func (k msgServer) CancelProposal(goCtx context.Context, msg *v1.MsgCancelProposal) (*v1.MsgCancelProposalResponse, error) {
 	_, err := k.authKeeper.AddressCodec().StringToBytes(msg.Proposer)

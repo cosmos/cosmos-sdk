@@ -8,13 +8,13 @@ import (
 	apisigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	apitx "cosmossdk.io/api/cosmos/tx/v1beta1"
 	"cosmossdk.io/client/v2/internal/offchain"
-	authsigning "cosmossdk.io/x/auth/signing"
 	txsigning "cosmossdk.io/x/tx/signing"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/version"
 )
 
@@ -26,6 +26,14 @@ const (
 	// ExpectedSequence defines the sequence number an off-chain message must have
 	ExpectedSequence = 0
 )
+
+type signerData struct {
+	Address       string
+	ChainID       string
+	AccountNumber uint64
+	Sequence      uint64
+	PubKey        cryptotypes.PubKey
+}
 
 // getSignMode returns the expected SignMode.
 func getSignMode(signModeStr string) apisigning.SignMode {
@@ -97,7 +105,7 @@ func sign(ctx client.Context, fromName, digest string, signMode apisigning.SignM
 		return nil, err
 	}
 
-	signerData := authsigning.SignerData{
+	signerData := signerData{
 		Address:       addr,
 		ChainID:       ExpectedChainID,
 		AccountNumber: ExpectedAccountNumber,
@@ -148,7 +156,7 @@ func sign(ctx client.Context, fromName, digest string, signMode apisigning.SignM
 func getSignBytes(ctx context.Context,
 	handlerMap *txsigning.HandlerMap,
 	mode apisigning.SignMode,
-	signerData authsigning.SignerData,
+	signerData signerData,
 	tx *builder,
 ) ([]byte, error) {
 	txData, err := tx.GetSigningTxData()

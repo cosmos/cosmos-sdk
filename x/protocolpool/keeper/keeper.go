@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -110,7 +111,7 @@ func (k Keeper) withdrawContinuousFund(ctx context.Context, recipient sdk.AccAdd
 		}
 	}
 	if cf.Expiry != nil && cf.Expiry.Before(sdkCtx.HeaderInfo().Time) {
-		return sdk.Coin{}, fmt.Errorf("cannot withdraw continuous funds\ncontinuous fund expired for recipient: %s", recipient.String())
+		return sdk.Coin{}, fmt.Errorf("cannot withdraw continuous funds: continuous fund expired for recipient: %s", recipient.String())
 	}
 
 	toDistributeAmount, err := k.ToDistribute.Get(ctx)
@@ -159,6 +160,8 @@ func (k Keeper) withdrawRecipientFunds(ctx context.Context, recipient sdk.AccAdd
 	return withdrawnAmount, nil
 }
 
+// SetToDistribute sets the amount to be distributed among recipients.
+// This could be only set by the authority address.
 func (k Keeper) SetToDistribute(ctx context.Context, amount sdk.Coins, addr string) error {
 	authAddr, err := k.authKeeper.AddressCodec().StringToBytes(addr)
 	if err != nil {
@@ -179,13 +182,14 @@ func (k Keeper) SetToDistribute(ctx context.Context, amount sdk.Coins, addr stri
 	return nil
 }
 
-func (k Keeper) hasPermission(ctx context.Context, addr sdk.AccAddress) (bool, error) {
+func (k Keeper) hasPermission(ctx context.Context, addr []byte) (bool, error) {
 	authority := k.GetAuthority()
 	authAcc, err := k.authKeeper.AddressCodec().StringToBytes(authority)
 	if err != nil {
 		return false, err
 	}
-	return addr.Equals(sdk.AccAddress(authAcc)), nil
+
+	return bytes.Equal(authAcc, addr), nil
 }
 
 func (k Keeper) iterateAndUpdateFundsDistribution(ctx context.Context, toDistributeAmount math.Int) error {

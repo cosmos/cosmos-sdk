@@ -73,6 +73,13 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					GovProposal: true,
 				},
 				{
+					RpcMethod:      "WithdrawContinuousFund",
+					Use:            "withdraw-continuous-fund [recipient]",
+					Short:          "Withdraw continuous fund allocated to the recipient",
+					Example:        fmt.Sprintf(`$ %s tx protocolpool withdraw-continuous-fund cosmos1... --from mykey`, version.AppName),
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "recipient_address"}},
+				},
+				{
 					RpcMethod: "CancelContinuousFund",
 					Use:       "cancel-continuous-fund [recipient_address]",
 					Short:     "Cancel continuous fund for a specific recipient",
@@ -80,6 +87,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
 						{ProtoField: "recipient_address"},
 					},
+					GovProposal: true,
 				},
 			},
 		},

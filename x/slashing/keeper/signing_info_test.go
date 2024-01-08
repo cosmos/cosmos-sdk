@@ -135,9 +135,10 @@ func (s *KeeperTestSuite) TestPerformConsensusPubKeyUpdate() {
 	err := slashingKeeper.ValidatorSigningInfo.Set(ctx, oldConsAddr, newInfo)
 	require.NoError(err)
 
-	//
 	s.stakingKeeper.EXPECT().ValidatorIdentifier(gomock.Any(), oldConsAddr).Return(oldConsAddr, nil)
-	slashingKeeper.SetMissedBlockBitmapValue(ctx, oldConsAddr, 10, true)
+	err = slashingKeeper.SetMissedBlockBitmapValue(ctx, oldConsAddr, 10, true)
+	require.NoError(err)
+
 	err = slashingKeeper.Hooks().AfterConsensusPubKeyUpdate(ctx, pks[0], pks[1], sdk.Coin{})
 	require.NoError(err)
 

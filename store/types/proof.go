@@ -95,6 +95,10 @@ func (op CommitmentOp) GetKey() []byte {
 	return op.Key
 }
 
+func (op CommitmentOp) GetProof() *ics23.CommitmentProof {
+	return op.Proof
+}
+
 // Run takes in a list of arguments and attempts to run the proof op against these arguments
 // Returns the root wrapped in [][]byte if the proof op succeeds with given args. If not,
 // it will return an error.

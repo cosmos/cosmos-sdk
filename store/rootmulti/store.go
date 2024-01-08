@@ -8,6 +8,7 @@ import (
 	"strings"
 	"sync"
 
+	sdkmaps "github.com/cosmos/cosmos-sdk/store/internal/maps"
 	iavltree "github.com/cosmos/iavl"
 	protoio "github.com/gogo/protobuf/io"
 	gogotypes "github.com/gogo/protobuf/types"
@@ -28,6 +29,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/transient"
 	"github.com/cosmos/cosmos-sdk/store/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	tmcrypto "github.com/tendermint/tendermint/proto/tendermint/crypto"
 )
 
 const (
@@ -134,7 +136,11 @@ func (rs *Store) MountStoreWithDB(key types.StoreKey, typ types.StoreType, db db
 	if _, ok := rs.keysByName[key.Name()]; ok {
 		panic(fmt.Sprintf("store duplicate store key name %v", key))
 	}
-	rs.storesParams[key] = newStoreParams(key, db, typ, 0)
+	rs.storesParams[key] = storeParams{
+		key: key,
+		typ: typ,
+		db:  db,
+	}
 	rs.keysByName[key.Name()] = key
 }
 
@@ -159,6 +165,14 @@ func (rs *Store) GetCommitKVStore(key types.StoreKey) types.CommitKVStore {
 	return rs.stores[key]
 }
 
+func (s *Store) GetStoreKeys() []types.StoreKey {
+	storeKeys := make([]types.StoreKey, 0, len(s.keysByName))
+	for _, sk := range s.keysByName {
+		storeKeys = append(storeKeys, sk)
+	}
+	return storeKeys
+}
+
 // StoreKeysByName returns mapping storeNames -> StoreKeys
 func (rs *Store) StoreKeysByName() map[string]types.StoreKey {
 	return rs.keysByName
@@ -179,6 +193,16 @@ func (rs *Store) LoadVersionAndUpgrade(ver int64, upgrades *types.StoreUpgrades)
 func (rs *Store) LoadLatestVersion() error {
 	ver := GetLatestVersion(rs.db)
 	return rs.loadVersion(ver, nil)
+}
+
+func (rs *Store) LoadLastVersion() error {
+	if rs.lastCommitInfo.GetVersion() == 0 {
+		// This case means that no commit has been made in the store, so
+		// there is no last version.
+		return fmt.Errorf("no previous commit found")
+	}
+	lastVersion := rs.lastCommitInfo.GetVersion()
+	return rs.loadVersion(lastVersion, nil)
 }
 
 // LoadVersion implements CommitMultiStore.
@@ -227,10 +251,8 @@ func (rs *Store) loadVersion(ver int64, upgrades *types.StoreUpgrades) error {
 		commitID := rs.getCommitID(infos, key.Name())
 
 		// If it has been added, set the initial version
-		if upgrades.IsAdded(key.Name()) || upgrades.RenamedFrom(key.Name()) != "" {
+		if upgrades.IsAdded(key.Name()) {
 			storeParams.initialVersion = uint64(ver) + 1
-		} else if commitID.Version != ver && storeParams.typ == types.StoreTypeIAVL {
-			return fmt.Errorf("version of store %s mismatch root store's version; expected %d got %d", key.Name(), ver, commitID.Version)
 		}
 
 		store, err := rs.loadCommitStoreFromParams(key, commitID, storeParams)
@@ -250,7 +272,8 @@ func (rs *Store) loadVersion(ver int64, upgrades *types.StoreUpgrades) error {
 			// handle renames specially
 			// make an unregistered key to satisfy loadCommitStore params
 			oldKey := types.NewKVStoreKey(oldName)
-			oldParams := newStoreParams(oldKey, storeParams.db, storeParams.typ, 0)
+			oldParams := storeParams
+			oldParams.key = oldKey
 
 			// load from the old name
 			oldStore, err := rs.loadCommitStoreFromParams(oldKey, rs.getCommitID(infos, oldName), oldParams)
@@ -335,11 +358,40 @@ func (rs *Store) SetInterBlockCache(c types.MultiStorePersistentCache) {
 	rs.interBlockCache = c
 }
 
+func (rs *Store) SetDeepIAVLTree(skey string, iavlTree iavl.Tree) {
+	key := rs.keysByName[skey]
+	storeParams := rs.storesParams[key]
+	storeParams.deepIAVLTree = iavlTree
+	rs.storesParams[key] = storeParams
+}
+
 // SetTracer sets the tracer for the MultiStore that the underlying
 // stores will utilize to trace operations. A MultiStore is returned.
 func (rs *Store) SetTracer(w io.Writer) types.MultiStore {
 	rs.traceWriter = w
 	return rs
+}
+
+// SetTracer sets the tracer for the MultiStore that the underlying
+// stores will utilize to trace operations.
+func (rs *Store) SetTracingEnabledAll(tracingEnabled bool) {
+	for skey := range rs.keysByName {
+		iavlStore, err := rs.GetIAVLStore(skey)
+		if err == nil {
+			iavlStore.SetTracingEnabled(tracingEnabled)
+		}
+	}
+}
+
+func (rs *Store) GetWitnessDataMap() map[string][]iavltree.WitnessData {
+	storeKeyToWitnessData := make(map[string][]iavltree.WitnessData)
+	for skey := range rs.keysByName {
+		iavlStore, err := rs.GetIAVLStore(skey)
+		if err == nil {
+			storeKeyToWitnessData[skey] = iavlStore.GetWitnessData()
+		}
+	}
+	return storeKeyToWitnessData
 }
 
 // SetTracingContext updates the tracing context for the MultiStore by merging
@@ -481,8 +533,6 @@ func (rs *Store) CacheMultiStore() types.CacheMultiStore {
 // iterating at past heights.
 func (rs *Store) CacheMultiStoreWithVersion(version int64) (types.CacheMultiStore, error) {
 	cachedStores := make(map[types.StoreKey]types.CacheWrapper)
-	var commitInfo *types.CommitInfo
-	storeInfos := map[string]bool{}
 	for key, store := range rs.stores {
 		var cacheStore types.KVStore
 		switch store.GetStoreType() {
@@ -495,30 +545,9 @@ func (rs *Store) CacheMultiStoreWithVersion(version int64) (types.CacheMultiStor
 			// version does not exist or is pruned, an error should be returned.
 			var err error
 			cacheStore, err = store.(*iavl.Store).GetImmutable(version)
-			// if we got error from loading a module store
-			// we fetch commit info of this version
-			// we use commit info to check if the store existed at this version or not
 			if err != nil {
-				if commitInfo == nil {
-					var errCommitInfo error
-					commitInfo, errCommitInfo = getCommitInfo(rs.db, version)
-
-					if errCommitInfo != nil {
-						return nil, errCommitInfo
-					}
-
-					for _, storeInfo := range commitInfo.StoreInfos {
-						storeInfos[storeInfo.Name] = true
-					}
-				}
-
-				// If the store existed at this version, it means there's actually an error
-				// getting the root store at this version.
-				if storeInfos[key.Name()] {
-					return nil, err
-				}
+				return nil, err
 			}
-
 		default:
 			cacheStore = store
 		}
@@ -564,7 +593,11 @@ func (rs *Store) GetKVStore(key types.StoreKey) types.KVStore {
 	store := types.KVStore(s)
 
 	if rs.TracingEnabled() {
-		store = tracekv.NewStore(store, rs.traceWriter, rs.getTracingContext())
+		if rs.storesParams[key].traceWriter != nil {
+			store = tracekv.NewStore(store, rs.storesParams[key].traceWriter, rs.getTracingContext())
+		} else {
+			store = tracekv.NewStore(store, rs.traceWriter, rs.getTracingContext())
+		}
 	}
 	if rs.ListeningEnabled(key) {
 		store = listenkv.NewStore(store, key, rs.listeners[key])
@@ -915,10 +948,12 @@ func (rs *Store) loadCommitStoreFromParams(key types.StoreKey, id types.CommitID
 	case types.StoreTypeIAVL:
 		var store types.CommitKVStore
 		var err error
-
-		if params.initialVersion == 0 {
-			store, err = iavl.LoadStore(db, rs.logger, key, id, rs.lazyLoading, rs.iavlCacheSize, rs.iavlDisableFastNode)
-		} else {
+		switch {
+		case params.deepIAVLTree != nil:
+			store, err = iavl.LoadStoreWithDeepIAVLTree(params.deepIAVLTree)
+		case params.initialVersion == 0:
+			store, err = iavl.LoadStore(db, rs.logger, key, id, rs.lazyLoading, rs.iavlCacheSize, true)
+		default:
 			store, err = iavl.LoadStoreWithInitialVersion(db, rs.logger, key, id, rs.lazyLoading, params.initialVersion, rs.iavlCacheSize, rs.iavlDisableFastNode)
 		}
 
@@ -986,12 +1021,7 @@ func (rs *Store) RollbackToVersion(target int64) error {
 			// If the store is wrapped with an inter-block cache, we must first unwrap
 			// it to get the underlying IAVL store.
 			store = rs.GetCommitKVStore(key)
-			var err error
-			if rs.lazyLoading {
-				_, err = store.(*iavl.Store).LazyLoadVersionForOverwriting(target)
-			} else {
-				_, err = store.(*iavl.Store).LoadVersionForOverwriting(target)
-			}
+			_, err := store.(*iavl.Store).LoadVersionForOverwriting(target)
 			if err != nil {
 				return err
 			}
@@ -1022,20 +1052,46 @@ func (rs *Store) flushMetadata(db dbm.DB, version int64, cInfo *types.CommitInfo
 	rs.logger.Debug("flushing metadata finished", "height", version)
 }
 
+func (rs *Store) GetAppHash() ([]byte, error) {
+	m, err := rs.getWorkingMap()
+	if err != nil {
+		return nil, err
+	}
+	return sdkmaps.HashFromMap(m), nil
+}
+
+// Returns a map from store name to substore hash for all substores in the multistore
+// Note: Only IAVL substores are included in the app hash for use in Fraud Proof detection
+func (rs *Store) getWorkingMap() (map[string][]byte, error) {
+	stores := rs.stores
+	m := make(map[string][]byte, len(stores))
+	for key := range stores {
+		name := key.Name()
+		store := rs.GetStoreByName(name)
+		storeType := store.GetStoreType()
+		if storeType == types.StoreTypeIAVL {
+			iavlStore, err := rs.GetIAVLStore(name)
+			if err != nil {
+				return nil, err
+			}
+			m[name], err = iavlStore.Root()
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
+	return m, nil
+}
+
 type storeParams struct {
 	key            types.StoreKey
 	db             dbm.DB
 	typ            types.StoreType
 	initialVersion uint64
-}
 
-func newStoreParams(key types.StoreKey, db dbm.DB, typ types.StoreType, initialVersion uint64) storeParams {
-	return storeParams{
-		key:            key,
-		db:             db,
-		typ:            typ,
-		initialVersion: initialVersion,
-	}
+	deepIAVLTree iavl.Tree
+
+	traceWriter io.Writer
 }
 
 func GetLatestVersion(db dbm.DB) int64 {
@@ -1128,4 +1184,24 @@ func flushLatestVersion(batch dbm.Batch, version int64) {
 	}
 
 	batch.Set([]byte(latestVersionKey), bz)
+}
+
+func (rs *Store) GetIAVLStore(key string) (*iavl.Store, error) {
+	store := rs.GetStoreByName(key)
+	if store.GetStoreType() != types.StoreTypeIAVL {
+		return nil, fmt.Errorf("non-IAVL store not supported")
+	}
+	return store.(*iavl.Store), nil
+}
+
+func (rs *Store) GetStoreProof(storeKeyName string) (*tmcrypto.ProofOp, error) {
+	m, err := rs.getWorkingMap()
+	if err != nil {
+		return nil, err
+	}
+	proofOp, err := types.ProofOpFromMap(m, storeKeyName)
+	if err != nil {
+		return nil, err
+	}
+	return &proofOp, nil
 }

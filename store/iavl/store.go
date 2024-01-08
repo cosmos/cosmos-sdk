@@ -40,6 +40,13 @@ type Store struct {
 	logger log.Logger
 }
 
+// LoadStoreWithDeepIAVLTree returns an IAVL Store as a CommitKVStore with given deep tree.
+func LoadStoreWithDeepIAVLTree(tree Tree) (types.CommitKVStore, error) {
+	return &Store{
+		tree: tree,
+	}, nil
+}
+
 // LoadStore returns an IAVL Store as a CommitKVStore. Internally, it will load the
 // store's version (id) from the provided DB. An error is returned if the version
 // fails to load, or if called with a positive version on an empty tree.
@@ -111,7 +118,7 @@ func UnsafeNewStore(tree *iavl.MutableTree) *Store {
 // Any mutable operations executed will result in a panic.
 func (st *Store) GetImmutable(version int64) (*Store, error) {
 	if !st.VersionExists(version) {
-		return nil, fmt.Errorf("version mismatch on immutable IAVL tree; version does not exist. Version has either been pruned, or is for a future block height")
+		return &Store{tree: &immutableTree{&iavl.ImmutableTree{}}}, nil
 	}
 
 	iTree, err := st.tree.GetImmutable(version)
@@ -239,11 +246,6 @@ func (st *Store) LoadVersionForOverwriting(targetVersion int64) (int64, error) {
 	return st.tree.LoadVersionForOverwriting(targetVersion)
 }
 
-// LazyLoadVersionForOverwriting is the lazy version of LoadVersionForOverwriting.
-func (st *Store) LazyLoadVersionForOverwriting(targetVersion int64) (int64, error) {
-	return st.tree.LazyLoadVersionForOverwriting(targetVersion)
-}
-
 // Implements types.KVStore.
 func (st *Store) Iterator(start, end []byte) types.Iterator {
 	iterator, err := st.tree.Iterator(start, end, true)
@@ -288,6 +290,17 @@ func (st *Store) Import(version int64) (*iavl.Importer, error) {
 		return nil, errors.New("iavl import failed: unable to find mutable tree")
 	}
 	return tree.Import(version)
+}
+
+func (st *Store) Root() ([]byte, error) {
+	iavlTree, ok := st.tree.(*iavl.MutableTree)
+	if !ok {
+		iavlTree := st.tree.(*iavl.DeepSubTree)
+		rootHash, err := iavlTree.GetInitialRootHash()
+		return rootHash, err
+	}
+	hash, err := iavlTree.WorkingHash()
+	return hash, err
 }
 
 // Handle gatest the latest height, if height is 0
@@ -413,6 +426,18 @@ func getProofFromTree(tree *iavl.MutableTree, key []byte, exists bool) *tmcrypto
 
 	op := types.NewIavlCommitmentOp(key, commitmentProof)
 	return &tmcrypto.ProofOps{Ops: []tmcrypto.ProofOp{op.ProofOp()}}
+}
+
+// Takes a MutableTree, and a key and returns a DST Non-Existence Proof for the key
+func (st *Store) GetWitnessData() []iavl.WitnessData {
+	// value wasn't found
+	iavlTree := st.tree.((*iavl.MutableTree))
+	return iavlTree.GetWitnessData()
+}
+
+func (st *Store) SetTracingEnabled(tracingEnabled bool) {
+	iavlTree := st.tree.((*iavl.MutableTree))
+	iavlTree.SetTracingEnabled(tracingEnabled)
 }
 
 //----------------------------------------

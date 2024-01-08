@@ -6,9 +6,12 @@ import (
 	"github.com/stretchr/testify/require"
 
 	_ "cosmossdk.io/api/cosmos/crypto/secp256k1"
+	apitxsigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec/address"
+	"github.com/cosmos/cosmos-sdk/crypto/hd"
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 )
 
 const mnemonic = "have embark stumble card pistol fun gauge obtain forget oil awesome lottery unfold corn sure original exist siren pudding spread uphold dwarf goddess card"
@@ -90,6 +93,25 @@ func Test_Verify(t *testing.T) {
 	}
 }
 
+func Test_SignVerify(t *testing.T) {
+	k := keyring.NewInMemory(getCodec())
+	_, err := k.NewAccount("signVerify", mnemonic, "", "m/44'/118'/0'/0/0", hd.Secp256k1)
+	require.NoError(t, err)
+
+	ctx := client.Context{
+		TxConfig:     MakeTestTxConfig(t),
+		Codec:        getCodec(),
+		AddressCodec: address.NewBech32Codec("cosmos"),
+		Keyring:      k,
+	}
+
+	tx, err := sign(ctx, "signVerify", "digest", apitxsigning.SignMode_SIGN_MODE_DIRECT)
+	require.NoError(t, err)
+
+	err = verify(ctx, tx)
+	require.NoError(t, err)
+}
+
 func Test_unmarshal(t *testing.T) {
 	tests := []struct {
 		name       string
@@ -98,12 +120,12 @@ func Test_unmarshal(t *testing.T) {
 	}{
 		{
 			name:       "json test",
-			digest:     []byte(`{"body":{"messages":[{"@type":"/offchain.MsgSignArbitraryData","appDomain":"simd","signer":"cosmos1rt2xyymh5pvycl8dc00et4mxgr4cpzcdlk8ped","data":"{\n\t\"name\": \"John\",\n\t\"surname\": \"Connor\",\n\t\"age\": 15\n}\n"}],"memo":"","timeoutHeight":"0","extensionOptions":[],"nonCriticalExtensionOptions":[]},"authInfo":{"signerInfos":[{"publicKey":{"@type":"/cosmos.crypto.secp256k1.PubKey","key":"A06XPD6ML7BHSWHsc2u5EtkCXzsCNmhgPaDdNCp5nPF2"},"modeInfo":{"single":{"mode":"SIGN_MODE_DIRECT"}},"sequence":"0"}],"fee":{"amount":[],"gasLimit":"0","payer":"","granter":""},"tip":null},"signatures":["hx8Qo6xZ/Ie0d1TFtiVxSK1rUsRKDEiv1IdcgbkSGYgePYZl6aHJxpSxQDXdIeoZiPeIdrsTkkgjmH4wv2BBdw=="]}`),
+			digest:     []byte(`{"body":{"messages":[{"@type":"/offchain.MsgSignArbitraryData","appDomain":"simd","signer":"cosmos1jcc2frcc4mww897ey4ejphj4x7jaza5w74dmaq","data":"{\n\t\"name\": \"John\",\n\t\"surname\": \"Connor\",\n\t\"age\": 15\n}\n"}],"memo":"","timeoutHeight":"0","extensionOptions":[],"nonCriticalExtensionOptions":[]},"authInfo":{"signerInfos":[{"publicKey":{"@type":"/cosmos.crypto.secp256k1.PubKey","key":"Ayw88k8vMspZcgo6qkL8INRzP2HVQJZWu6amPsq+Fg4U"},"modeInfo":{"single":{"mode":"SIGN_MODE_DIRECT"}},"sequence":"0"}],"fee":{"amount":[],"gasLimit":"0","payer":"","granter":""},"tip":null},"signatures":["RUf2CTYcyeFIijviTAtRN9oqlY7BcaWsQtGvmTVQff0sinh6C1IeL4M2UxakDa1PSVveZyy8gdTsQs3zG43/Kw=="]}`),
 			fileFormat: "json",
 		},
 		{
 			name:       "text test",
-			digest:     []byte("body:{messages:{[/offchain.MsgSignArbitraryData]:{appDomain:\"simd\" signer:\"cosmos15r8vphexk8tnu6gvq0a5dhfs3j06ht9kux78rp\" data:\"{\\n\\t\\\"name\\\": \\\"John\\\",\\n\\t\\\"surname\\\": \\\"Connor\\\",\\n\\t\\\"age\\\": 15\\n}\\n\"}}} auth_info:{signer_infos:{public_key:{[/cosmos.crypto.secp256k1.PubKey]:{key:\"\\x03\\xa85\\xb37ړO\\xd6x\\xb5\\x9f\\xb1\\x83\\x92`\\x1b\\xf7Q\\xd0<v\\xdf\\xc4}\\x82\\xcb\\x1eG\\xf5c\\x9c\\xad\"}} mode_info:{single:{mode:SIGN_MODE_DIRECT}}} fee:{}} signatures:\"\\x05\\xacz\\xfa1\\xba\\xa4d\\xc8\\xfa\\xdcT\\xa8B7\\xa4\\xc7餣jf\\xee\\x1e\\xecp\\x07\\xfe\\xb61\\\"Fd\\x19z\\x89(8&\\xf0J\\xe2\\xdd\\\"C\\xe8\\x7ffH5\\r\\xd8E\\xb5TH\\x80v\\x9dNew:\\x03\""),
+			digest:     []byte("body:{messages:{[/offchain.MsgSignArbitraryData]:{app_domain:\"simd\" signer:\"cosmos1jcc2frcc4mww897ey4ejphj4x7jaza5w74dmaq\" data:\"{\\n\\t\\\"name\\\": \\\"John\\\",\\n\\t\\\"surname\\\": \\\"Connor\\\",\\n\\t\\\"age\\\": 15\\n}\\n\"}}} auth_info:{signer_infos:{public_key:{[/cosmos.crypto.secp256k1.PubKey]:{key:\"\\x03,<\\xf2O/2\\xcaYr\\n:\\xaaB\\xfc \\xd4s?a\\xd5@\\x96V\\xbb\\xa6\\xa6>ʾ\\x16\\x0e\\x14\"}} mode_info:{single:{mode:SIGN_MODE_DIRECT}}} fee:{}} signatures:\"EG\\xf6\\t6\\x1c\\xc9\\xe1H\\x8a;\\xe2L\\x0bQ7\\xda*\\x95\\x8e\\xc1q\\xa5\\xacBѯ\\x995P}\\xfd,\\x8axz\\x0bR\\x1e/\\x836S\\x16\\xa4\\r\\xadOI[\\xdeg,\\xbc\\x81\\xd4\\xecB\\xcd\\xf3\\x1b\\x8d\\xff+\""),
 			fileFormat: "text",
 		},
 	}

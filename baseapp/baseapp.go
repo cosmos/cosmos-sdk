@@ -15,6 +15,7 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/snapshots"
 	"github.com/cosmos/cosmos-sdk/store"
+	"github.com/cosmos/cosmos-sdk/store/rootmulti"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -111,6 +112,8 @@ type BaseApp struct { // nolint: maligned
 	// abciListeners for hooking into the ABCI message processing of the BaseApp
 	// and exposing the requests and responses to external consumers
 	abciListeners []ABCIListener
+
+	routerOpts map[string]func(*BaseApp)
 }
 
 type appStore struct {
@@ -365,7 +368,11 @@ func (app *BaseApp) Init() error {
 		return errors.New("commit multi-store must not be nil")
 	}
 
-	return app.cms.GetPruning().Validate()
+	rms, ok := app.cms.(*rootmulti.Store)
+	if !ok {
+		return fmt.Errorf("invalid commit multi-store; expected %T, got: %T", &rootmulti.Store{}, app.cms)
+	}
+	return rms.GetPruning().Validate()
 }
 
 func (app *BaseApp) setMinGasPrices(gasPrices sdk.DecCoins) {

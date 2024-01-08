@@ -19,6 +19,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
+	"github.com/cosmos/cosmos-sdk/store/rootmulti"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -129,6 +130,20 @@ func (app *BaseApp) Info(req abci.RequestInfo) abci.ResponseInfo {
 		LastBlockHeight:  lastCommitID.Version,
 		LastBlockAppHash: lastCommitID.Hash,
 	}
+}
+
+//FIXME: generate new ABCI proto
+
+// GetAppHash implements the ABCI application interface. It returns an App Hash
+// whiich acts as a unique ID of the current state of the BaseApp.
+func (app *BaseApp) GetAppHash() (apphash []byte) {
+	cms := app.cms.(*rootmulti.Store)
+
+	appHash, err := cms.GetAppHash()
+	if err != nil {
+		panic(err)
+	}
+	return appHash
 }
 
 // BeginBlock implements the ABCI application interface.

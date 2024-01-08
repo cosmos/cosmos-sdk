@@ -31,6 +31,7 @@ var (
 	_ module.AppModuleSimulation = AppModule{}
 	_ module.HasServices         = AppModule{}
 	_ module.HasGenesis          = AppModule{}
+	_ depinject.OnePerModuleType = AppModule{}
 
 	_ appmodule.AppModule     = AppModule{}
 	_ appmodule.HasEndBlocker = AppModule{}

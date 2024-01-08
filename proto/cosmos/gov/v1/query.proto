@@ -55,6 +55,11 @@ service Query {
   rpc TallyResult(QueryTallyResultRequest) returns (QueryTallyResultResponse) {
     option (google.api.http).get = "/cosmos/gov/v1/proposals/{proposal_id}/tally";
   }
+
+  // ProposalVoteOptions queries the valid voting options for a proposal.
+  rpc ProposalVoteOptions(QueryProposalVoteOptionsRequest) returns (QueryProposalVoteOptionsResponse) {
+    option (google.api.http).get = "/cosmos/gov/v1/proposals/{proposal_id}/vote_options";
+  }
 }
 
 // QueryConstitutionRequest is the request type for the Query/Constitution RPC method
@@ -202,4 +207,16 @@ message QueryTallyResultRequest {
 message QueryTallyResultResponse {
   // tally defines the requested tally.
   TallyResult tally = 1;
+}
+
+// QueryProposalVoteOptionsRequest is the request type for the Query/ProposalVoteOptions RPC method.
+message QueryProposalVoteOptionsRequest {
+  // proposal_id defines the unique id of the proposal.
+  uint64 proposal_id = 1;
+}
+
+// QueryProposalVoteOptionsResponse is the response type for the Query/ProposalVoteOptions RPC method.
+message QueryProposalVoteOptionsResponse {
+  // vote_options defines the valid voting options for a proposal.
+  ProposalVoteOptions vote_options = 1;
 }

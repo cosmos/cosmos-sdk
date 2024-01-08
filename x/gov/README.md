@@ -461,11 +461,20 @@ More information on how to submit proposals in the [client section](#client).
 
 ### Proposal Submission
 
-Proposals can be submitted by any account via a `MsgSubmitProposal` transaction.
+Proposals can be submitted by any account via a `MsgSubmitProposal` or a `MsgSubmitMultipleChoiceProposal` transaction.
 
 ```protobuf reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/gov/v1/tx.proto#L42-L69
 ```
+
+:::note
+A multiple choice proposal is a proposal where the voting options can be defined by the proposer.
+It cannot have messages to execute. It is only a text proposal.
+:::
+
+:::warning
+Submitting a multiple choice proposal using `MsgSubmitProposal` is invalid, as vote options cannot be defined.
+:::
 
 All `sdk.Msgs` passed into the `messages` field of a `MsgSubmitProposal` message
 must be registered in the app's `MsgServiceRouter`. Each of these messages must
@@ -540,7 +549,7 @@ The governance module emits the following events:
 
 ### Handlers
 
-#### MsgSubmitProposal
+#### MsgSubmitProposal, MsgSubmitMultipleChoiceProposal
 
 | Type                | Attribute Key       | Attribute Value |
 | ------------------- | ------------------- | --------------- |

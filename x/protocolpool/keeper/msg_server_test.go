@@ -400,6 +400,7 @@ func (suite *KeeperTestSuite) TestWithdrawContinuousFund() {
 
 				// Set ToDistribute
 				toDistribute := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100000)))
+				suite.stakingKeeper.EXPECT().BondDenom(suite.ctx).Return("stake", nil).AnyTimes()
 				err = suite.poolKeeper.SetToDistribute(suite.ctx, toDistribute, suite.poolKeeper.GetAuthority())
 				suite.Require().NoError(err)
 			},
@@ -423,7 +424,7 @@ func (suite *KeeperTestSuite) TestWithdrawContinuousFund() {
 			},
 			recipientAddress: []sdk.AccAddress{recipient},
 			expErr:           true,
-			expErrMsg:        "cannot withdraw continuous funds\ncontinuous fund expired for recipient",
+			expErrMsg:        "cannot withdraw continuous funds: continuous fund expired for recipient",
 		},
 		"valid case with ToDistribute amount zero": {
 			preRun: func() {

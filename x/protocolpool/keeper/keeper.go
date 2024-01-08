@@ -20,9 +20,10 @@ import (
 )
 
 type Keeper struct {
-	storeService storetypes.KVStoreService
-	authKeeper   types.AccountKeeper
-	bankKeeper   types.BankKeeper
+	storeService  storetypes.KVStoreService
+	authKeeper    types.AccountKeeper
+	bankKeeper    types.BankKeeper
+	stakingKeeper types.StakingKeeper
 
 	cdc codec.BinaryCodec
 
@@ -41,7 +42,7 @@ type Keeper struct {
 }
 
 func NewKeeper(cdc codec.BinaryCodec, storeService storetypes.KVStoreService,
-	ak types.AccountKeeper, bk types.BankKeeper, authority string,
+	ak types.AccountKeeper, bk types.BankKeeper, sk types.StakingKeeper, authority string,
 ) Keeper {
 	// ensure pool module account is set
 	if addr := ak.GetModuleAddress(types.ModuleName); addr == nil {
@@ -53,6 +54,7 @@ func NewKeeper(cdc codec.BinaryCodec, storeService storetypes.KVStoreService,
 		storeService:              storeService,
 		authKeeper:                ak,
 		bankKeeper:                bk,
+		stakingKeeper:             sk,
 		cdc:                       cdc,
 		authority:                 authority,
 		BudgetProposal:            collections.NewMap(sb, types.BudgetKey, "budget", sdk.AccAddressKey, codec.CollValue[types.Budget](cdc)),
@@ -145,8 +147,13 @@ func (k Keeper) withdrawRecipientFunds(ctx context.Context, recipient sdk.AccAdd
 		return sdk.Coin{}, err
 	}
 
+	denom, err := k.stakingKeeper.BondDenom(ctx)
+	if err != nil {
+		return sdk.Coin{}, err
+	}
+
 	// Distribute funds to the recipient from pool module account
-	withdrawnAmount := sdk.NewCoin(sdk.DefaultBondDenom, fundsAllocated)
+	withdrawnAmount := sdk.NewCoin(denom, fundsAllocated)
 	err = k.DistributeFromCommunityPool(ctx, sdk.NewCoins(withdrawnAmount), recipient)
 	if err != nil {
 		return sdk.Coin{}, fmt.Errorf("error while distributing funds to the recipient %s: %v", recipient.String(), err)
@@ -175,7 +182,12 @@ func (k Keeper) SetToDistribute(ctx context.Context, amount sdk.Coins, addr stri
 		return sdkerrors.ErrUnauthorized
 	}
 
-	err = k.ToDistribute.Set(ctx, amount.AmountOf(sdk.DefaultBondDenom))
+	denom, err := k.stakingKeeper.BondDenom(ctx)
+	if err != nil {
+		return err
+	}
+
+	err = k.ToDistribute.Set(ctx, amount.AmountOf(denom))
 	if err != nil {
 		return fmt.Errorf("error while setting ToDistribute: %v", err)
 	}
@@ -211,7 +223,10 @@ func (k Keeper) iterateAndUpdateFundsDistribution(ctx context.Context, toDistrib
 		return fmt.Errorf("total funds percentage cannot exceed 100")
 	}
 
-	denom := sdk.DefaultBondDenom
+	denom, err := k.stakingKeeper.BondDenom(ctx)
+	if err != nil {
+		return err
+	}
 	toDistributeDec := sdk.NewDecCoins(sdk.NewDecCoin(denom, toDistributeAmount))
 
 	// Calculate the funds to be distributed based on the total percentage to be distributed

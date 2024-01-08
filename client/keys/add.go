@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"sort"
+	"strings"
 
 	"github.com/cosmos/go-bip39"
 	"github.com/spf13/cobra"
@@ -123,6 +124,9 @@ func runAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *buf
 	var err error
 
 	name := args[0]
+	if strings.TrimSpace(name) == "" {
+		return errors.New("the provided name is invalid or empty after trimming whitespace")
+	}
 	interactive, _ := cmd.Flags().GetBool(flagInteractive)
 	kb := ctx.Keyring
 	outputFormat := ctx.OutputFormat

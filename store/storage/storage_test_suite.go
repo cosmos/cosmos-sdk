@@ -410,6 +410,16 @@ func (s *StorageTestSuite) TestDatabaseIterator_SkipVersion() {
 	s.Require().NoError(db.ApplyChangeset(58827506, cs))
 
 	cs = store.NewChangeset(map[string]store.KVPairs{storeKey1: {
+		{Key: []byte("keyE"), Value: []byte("value000")},
+	}})
+	s.Require().NoError(db.ApplyChangeset(58827506, cs))
+
+	cs = store.NewChangeset(map[string]store.KVPairs{storeKey1: {
+		{Key: []byte("keyF"), Value: []byte("value000")},
+	}})
+	s.Require().NoError(db.ApplyChangeset(58827506, cs))
+
+	cs = store.NewChangeset(map[string]store.KVPairs{storeKey1: {
 		{Key: []byte("keyC"), Value: []byte("value004")},
 	}})
 	s.Require().NoError(db.ApplyChangeset(58833605, cs))
@@ -423,8 +433,12 @@ func (s *StorageTestSuite) TestDatabaseIterator_SkipVersion() {
 	s.Require().NoError(err)
 	defer itr.Close()
 
+	count := make(map[string]struct{})
 	for ; itr.Valid(); itr.Next() {
+		count[string(itr.Key())] = struct{}{}
 	}
+
+	s.Require().Equal(3, len(count))
 }
 
 func (s *StorageTestSuite) TestDatabase_IteratorNoDomain() {

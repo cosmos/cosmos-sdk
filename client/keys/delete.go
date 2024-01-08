@@ -29,7 +29,7 @@ only the public key references stored locally, i.e.
 private keys stored in a ledger device cannot be deleted with the CLI.
 
 Tips: 
-1. removing all keys by running: %s keys list -n |xargs %s keys delete -y
+1. Removing all keys by running: %s keys list -n |xargs %s keys delete
 `, version.AppName, version.AppName),
 		Args: cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {

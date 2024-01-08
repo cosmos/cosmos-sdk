@@ -2,6 +2,7 @@ package types_test
 
 import (
 	"encoding/hex"
+	"encoding/json"
 	"strings"
 	"testing"
 	"time"
@@ -12,7 +13,6 @@ import (
 	cmt "github.com/cometbft/cometbft/types"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -39,14 +39,13 @@ func (s *resultTestSuite) TestParseABCILog() {
 }
 
 func (s *resultTestSuite) TestABCIMessageLog() {
-	cdc := codec.NewLegacyAmino()
 	events := sdk.Events{
 		sdk.NewEvent("transfer", sdk.NewAttribute("sender", "foo")),
 		sdk.NewEvent("transfer", sdk.NewAttribute("sender", "bar")),
 	}
 	msgLog := sdk.NewABCIMessageLog(0, "", events)
 	msgLogs := sdk.ABCIMessageLogs{msgLog}
-	bz, err := cdc.MarshalJSON(msgLogs)
+	bz, err := json.Marshal(msgLogs)
 
 	s.Require().NoError(err)
 	s.Require().Equal(string(bz), msgLogs.String())

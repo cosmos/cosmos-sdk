@@ -40,7 +40,8 @@ type Consensus[T transaction.Tx] struct {
 	app    appmanager.AppManager[T]
 	logger log.Logger
 
-	name string
+	name    string
+	version string // TODO: check if these are needed
 
 	current atomic.Pointer[CurrentBlock]
 
@@ -76,9 +77,9 @@ func (c *Consensus[T]) Info(context.Context, *abci.RequestInfo) (*abci.ResponseI
 	// TODO: big TODO here
 
 	return &abci.ResponseInfo{
-		Data: c.name,
-		// Version:          versionStr,
-		// AppVersion:       appVersion,
+		Data:    c.name,
+		Version: c.version,
+		// AppVersion:       appVersion, // TODO: get consensus params here
 		LastBlockHeight:  int64(c.app.LastBlockHeight()), // last committed block height
 		LastBlockAppHash: []byte{},                       // TODO: missing apphash of the last committed block
 	}, nil
@@ -100,7 +101,7 @@ func (c *Consensus[T]) Query(ctx context.Context, req *abci.RequestQuery) (*abci
 		return nil, err
 	}
 
-	res, err := c.app.Query(ctx, appreq)
+	res, err := c.app.Query(ctx, appreq, uint64(req.Height))
 	if err != nil {
 		return nil, err
 	}

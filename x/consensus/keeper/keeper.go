@@ -56,3 +56,17 @@ func (k *Keeper) Set(ctx sdk.Context, cp *tmproto.ConsensusParams) {
 	store := ctx.KVStore(k.storeKey)
 	store.Set(types.ParamStoreKeyConsensusParams, k.cdc.MustMarshal(cp))
 }
+
+func (k *Keeper) GetParamsNoUnmarshal(ctx sdk.Context) []byte {
+	store := ctx.KVStore(k.storeKey)
+	return store.Get(types.ParamStoreKeyConsensusParams)
+}
+
+func (k *Keeper) UnmarshalParamBytes(ctx sdk.Context, bz []byte) (*tmproto.ConsensusParams, error) {
+	cp := &tmproto.ConsensusParams{}
+	if err := k.cdc.Unmarshal(bz, cp); err != nil {
+		return nil, err
+	}
+
+	return cp, nil
+}

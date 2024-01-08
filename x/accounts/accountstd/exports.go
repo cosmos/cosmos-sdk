@@ -62,6 +62,11 @@ func AddAccount[A Interface](name string, constructor func(deps Dependencies) (A
 	}
 }
 
+// OriginalContext returns the address of the account being invoked.
+func OriginalContext(ctx context.Context) context.Context {
+	return implementation.OriginalContext(ctx)
+}
+
 // Whoami returns the address of the account being invoked.
 func Whoami(ctx context.Context) []byte {
 	return implementation.Whoami(ctx)

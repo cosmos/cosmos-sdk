@@ -9,16 +9,8 @@ import (
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/accounts/accountstd"
 	vestingtypes "cosmossdk.io/x/accounts/vesting/types/v1"
-	banktypes "cosmossdk.io/x/bank/types"
 
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-)
-
-// Compile-time type assertions
-var (
-	_ accountstd.Interface = (*BaseVestingAccount)(nil)
 )
 
 // Base Vesting Account
@@ -35,7 +27,7 @@ func NewBaseVestingAccount(d accountstd.Dependencies) (*BaseVestingAccount, erro
 		EndTime:          0,
 	}
 
-	return baseVestingAccount, baseVestingAccount.Validate()
+	return baseVestingAccount, nil
 }
 
 type BaseVestingAccount struct {
@@ -47,45 +39,7 @@ type BaseVestingAccount struct {
 	EndTime int64
 }
 
-// --------------- Init -----------------
-
-func (bva BaseVestingAccount) Init(ctx context.Context, msg *vestingtypes.MsgInitVestingAccount) (*vestingtypes.MsgInitVestingAccountResponse, error) {
-	to := accountstd.Whoami(ctx)
-	if to == nil {
-		return nil, sdkerrors.ErrInvalidAddress.Wrapf("Cannot find account address from context")
-	}
-
-	toAddress, err := bva.AddressCodec.BytesToString(to)
-	if err != nil {
-		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid 'to' address: %s", err)
-	}
-
-	if err := validateAmount(msg.Amount); err != nil {
-		return nil, err
-	}
-
-	if msg.EndTime <= 0 {
-		return nil, sdkerrors.ErrInvalidRequest.Wrap("invalid end time")
-	}
-
-	bva.OriginalVesting = msg.Amount.Sort()
-	bva.DelegatedFree = sdk.NewCoins()
-	bva.DelegatedVesting = sdk.NewCoins()
-	bva.EndTime = msg.EndTime
-
-	// Send token to new vesting account
-	sendMsg := banktypes.NewMsgSend(msg.FromAddress, toAddress, msg.Amount)
-	anyMsg, err := codectypes.NewAnyWithValue(sendMsg)
-	if err != nil {
-		return nil, err
-	}
-
-	if _, err = accountstd.ExecModuleAnys(ctx, []*codectypes.Any{anyMsg}); err != nil {
-		return nil, err
-	}
-
-	return &vestingtypes.MsgInitVestingAccountResponse{}, nil
-}
+// --------------- execute -----------------
 
 // LockedCoinsFromVesting returns all the coins that are not spendable (i.e. locked)
 // for a vesting account given the current vesting coins. If no coins are locked,
@@ -99,8 +53,6 @@ func (bva BaseVestingAccount) LockedCoinsFromVesting(vestingCoins sdk.Coins) sdk
 	}
 	return lockedCoins
 }
-
-// --------------- execute -----------------
 
 // TrackDelegation tracks a delegation amount for any given vesting account type
 // given the amount of coins currently vesting and the current account balance
@@ -230,19 +182,4 @@ func (bva BaseVestingAccount) Validate() error {
 	}
 
 	return nil
-}
-
-// Implement smart account interface
-func (bva BaseVestingAccount) RegisterInitHandler(builder *accountstd.InitBuilder) {
-	accountstd.RegisterInitHandler(builder, bva.Init)
-}
-
-func (bva BaseVestingAccount) RegisterExecuteHandlers(builder *accountstd.ExecuteBuilder) {
-}
-
-func (bva BaseVestingAccount) RegisterQueryHandlers(builder *accountstd.QueryBuilder) {
-	accountstd.RegisterQueryHandler(builder, bva.QueryOriginalVesting)
-	accountstd.RegisterQueryHandler(builder, bva.QueryDelegatedFree)
-	accountstd.RegisterQueryHandler(builder, bva.QueryDelegatedVesting)
-	accountstd.RegisterQueryHandler(builder, bva.QueryEndTime)
 }

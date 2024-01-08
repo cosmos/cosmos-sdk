@@ -278,6 +278,89 @@ func (m *QueryDelegatedVestingResponse) GetDelegatedVesting() github_com_cosmos_
 	return nil
 }
 
+// QueryStartTimeRequest is used to query the account vesting end time.
+type QueryStartTimeRequest struct {
+}
+
+func (m *QueryStartTimeRequest) Reset()         { *m = QueryStartTimeRequest{} }
+func (m *QueryStartTimeRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryStartTimeRequest) ProtoMessage()    {}
+func (*QueryStartTimeRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_5f809c257a71960c, []int{6}
+}
+func (m *QueryStartTimeRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryStartTimeRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryStartTimeRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryStartTimeRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryStartTimeRequest.Merge(m, src)
+}
+func (m *QueryStartTimeRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryStartTimeRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryStartTimeRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryStartTimeRequest proto.InternalMessageInfo
+
+// QueryStartTimeResponse returns the account vesting start time.
+type QueryStartTimeResponse struct {
+	// end_time defines the value of the account vesting start time.
+	StartTime int64 `protobuf:"varint,1,opt,name=start_time,json=startTime,proto3" json:"start_time,omitempty"`
+}
+
+func (m *QueryStartTimeResponse) Reset()         { *m = QueryStartTimeResponse{} }
+func (m *QueryStartTimeResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryStartTimeResponse) ProtoMessage()    {}
+func (*QueryStartTimeResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_5f809c257a71960c, []int{7}
+}
+func (m *QueryStartTimeResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryStartTimeResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryStartTimeResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryStartTimeResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryStartTimeResponse.Merge(m, src)
+}
+func (m *QueryStartTimeResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryStartTimeResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryStartTimeResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryStartTimeResponse proto.InternalMessageInfo
+
+func (m *QueryStartTimeResponse) GetStartTime() int64 {
+	if m != nil {
+		return m.StartTime
+	}
+	return 0
+}
+
 // QueryCounterRequest is used to query the account vesting end time.
 type QueryEndTimeRequest struct {
 }
@@ -286,7 +369,7 @@ func (m *QueryEndTimeRequest) Reset()         { *m = QueryEndTimeRequest{} }
 func (m *QueryEndTimeRequest) String() string { return proto.CompactTextString(m) }
 func (*QueryEndTimeRequest) ProtoMessage()    {}
 func (*QueryEndTimeRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_5f809c257a71960c, []int{6}
+	return fileDescriptor_5f809c257a71960c, []int{8}
 }
 func (m *QueryEndTimeRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -325,7 +408,7 @@ func (m *QueryEndTimeResponse) Reset()         { *m = QueryEndTimeResponse{} }
 func (m *QueryEndTimeResponse) String() string { return proto.CompactTextString(m) }
 func (*QueryEndTimeResponse) ProtoMessage()    {}
 func (*QueryEndTimeResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_5f809c257a71960c, []int{7}
+	return fileDescriptor_5f809c257a71960c, []int{9}
 }
 func (m *QueryEndTimeResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -361,6 +444,172 @@ func (m *QueryEndTimeResponse) GetEndTime() int64 {
 	return 0
 }
 
+// QueryVestingCoinsRequest is used to query the account vesting coins.
+type QueryVestingCoinsRequest struct {
+}
+
+func (m *QueryVestingCoinsRequest) Reset()         { *m = QueryVestingCoinsRequest{} }
+func (m *QueryVestingCoinsRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryVestingCoinsRequest) ProtoMessage()    {}
+func (*QueryVestingCoinsRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_5f809c257a71960c, []int{10}
+}
+func (m *QueryVestingCoinsRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryVestingCoinsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryVestingCoinsRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryVestingCoinsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryVestingCoinsRequest.Merge(m, src)
+}
+func (m *QueryVestingCoinsRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryVestingCoinsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryVestingCoinsRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryVestingCoinsRequest proto.InternalMessageInfo
+
+// QueryVestingCoinsResponse returns the account vesting coins.
+type QueryVestingCoinsResponse struct {
+	// original_vesting defines the value of the account original vesting.
+	VestingCoins github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,1,rep,name=vesting_coins,json=vestingCoins,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"vesting_coins"`
+}
+
+func (m *QueryVestingCoinsResponse) Reset()         { *m = QueryVestingCoinsResponse{} }
+func (m *QueryVestingCoinsResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryVestingCoinsResponse) ProtoMessage()    {}
+func (*QueryVestingCoinsResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_5f809c257a71960c, []int{11}
+}
+func (m *QueryVestingCoinsResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryVestingCoinsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryVestingCoinsResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryVestingCoinsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryVestingCoinsResponse.Merge(m, src)
+}
+func (m *QueryVestingCoinsResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryVestingCoinsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryVestingCoinsResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryVestingCoinsResponse proto.InternalMessageInfo
+
+func (m *QueryVestingCoinsResponse) GetVestingCoins() github_com_cosmos_cosmos_sdk_types.Coins {
+	if m != nil {
+		return m.VestingCoins
+	}
+	return nil
+}
+
+// QueryVestedCoinsRequest is used to query the account vested coins.
+type QueryVestedCoinsRequest struct {
+}
+
+func (m *QueryVestedCoinsRequest) Reset()         { *m = QueryVestedCoinsRequest{} }
+func (m *QueryVestedCoinsRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryVestedCoinsRequest) ProtoMessage()    {}
+func (*QueryVestedCoinsRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_5f809c257a71960c, []int{12}
+}
+func (m *QueryVestedCoinsRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryVestedCoinsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryVestedCoinsRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryVestedCoinsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryVestedCoinsRequest.Merge(m, src)
+}
+func (m *QueryVestedCoinsRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryVestedCoinsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryVestedCoinsRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryVestedCoinsRequest proto.InternalMessageInfo
+
+// QueryVestedCoinsResponse returns the account vested coins.
+type QueryVestedCoinsResponse struct {
+	// original_vesting defines the value of the account original vesting.
+	VestedVesting github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,1,rep,name=vested_vesting,json=vestedVesting,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"vested_vesting"`
+}
+
+func (m *QueryVestedCoinsResponse) Reset()         { *m = QueryVestedCoinsResponse{} }
+func (m *QueryVestedCoinsResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryVestedCoinsResponse) ProtoMessage()    {}
+func (*QueryVestedCoinsResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_5f809c257a71960c, []int{13}
+}
+func (m *QueryVestedCoinsResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryVestedCoinsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryVestedCoinsResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryVestedCoinsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryVestedCoinsResponse.Merge(m, src)
+}
+func (m *QueryVestedCoinsResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryVestedCoinsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryVestedCoinsResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryVestedCoinsResponse proto.InternalMessageInfo
+
+func (m *QueryVestedCoinsResponse) GetVestedVesting() github_com_cosmos_cosmos_sdk_types.Coins {
+	if m != nil {
+		return m.VestedVesting
+	}
+	return nil
+}
+
 func init() {
 	proto.RegisterType((*QueryOriginalVestingRequest)(nil), "cosmos.accounts.vesting.v1.QueryOriginalVestingRequest")
 	proto.RegisterType((*QueryOriginalVestingResponse)(nil), "cosmos.accounts.vesting.v1.QueryOriginalVestingResponse")
@@ -368,8 +617,14 @@ func init() {
 	proto.RegisterType((*QueryDelegatedFreeResponse)(nil), "cosmos.accounts.vesting.v1.QueryDelegatedFreeResponse")
 	proto.RegisterType((*QueryDelegatedVestingRequest)(nil), "cosmos.accounts.vesting.v1.QueryDelegatedVestingRequest")
 	proto.RegisterType((*QueryDelegatedVestingResponse)(nil), "cosmos.accounts.vesting.v1.QueryDelegatedVestingResponse")
+	proto.RegisterType((*QueryStartTimeRequest)(nil), "cosmos.accounts.vesting.v1.QueryStartTimeRequest")
+	proto.RegisterType((*QueryStartTimeResponse)(nil), "cosmos.accounts.vesting.v1.QueryStartTimeResponse")
 	proto.RegisterType((*QueryEndTimeRequest)(nil), "cosmos.accounts.vesting.v1.QueryEndTimeRequest")
 	proto.RegisterType((*QueryEndTimeResponse)(nil), "cosmos.accounts.vesting.v1.QueryEndTimeResponse")
+	proto.RegisterType((*QueryVestingCoinsRequest)(nil), "cosmos.accounts.vesting.v1.QueryVestingCoinsRequest")
+	proto.RegisterType((*QueryVestingCoinsResponse)(nil), "cosmos.accounts.vesting.v1.QueryVestingCoinsResponse")
+	proto.RegisterType((*QueryVestedCoinsRequest)(nil), "cosmos.accounts.vesting.v1.QueryVestedCoinsRequest")
+	proto.RegisterType((*QueryVestedCoinsResponse)(nil), "cosmos.accounts.vesting.v1.QueryVestedCoinsResponse")
 }
 
 func init() {
@@ -377,36 +632,41 @@ func init() {
 }
 
 var fileDescriptor_5f809c257a71960c = []byte{
-	// 453 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xbc, 0x93, 0x4f, 0x6e, 0xd4, 0x30,
-	0x14, 0xc6, 0xc7, 0xaa, 0x04, 0xc8, 0xfc, 0x6b, 0x4b, 0x11, 0xcc, 0x94, 0xba, 0x28, 0x42, 0x28,
-	0xaa, 0x84, 0xad, 0xc0, 0x0d, 0x06, 0xe8, 0x16, 0x31, 0x42, 0x2c, 0xd8, 0x44, 0x99, 0xf8, 0x11,
-	0xac, 0x36, 0xf6, 0x34, 0x76, 0x22, 0xe6, 0x06, 0x2c, 0x10, 0x62, 0xcd, 0x05, 0x40, 0x48, 0x48,
-	0x73, 0x8c, 0x2e, 0xbb, 0x64, 0x05, 0x68, 0x66, 0xd1, 0x6b, 0xa0, 0xd8, 0x2f, 0x2d, 0x2d, 0xed,
-	0xb6, 0x9b, 0x99, 0xe4, 0x7d, 0x9f, 0xfd, 0x7e, 0x9f, 0x5f, 0x4c, 0x1f, 0xe6, 0xc6, 0x96, 0xc6,
-	0x8a, 0x2c, 0xcf, 0x4d, 0xad, 0x9d, 0x15, 0x0d, 0x58, 0xa7, 0x74, 0x21, 0x9a, 0x44, 0xec, 0xd5,
-	0x50, 0x4d, 0xf9, 0xa4, 0x32, 0xce, 0xac, 0x0e, 0x82, 0x8f, 0x77, 0x3e, 0x8e, 0x3e, 0xde, 0x24,
-	0x83, 0x95, 0xac, 0x54, 0xda, 0x08, 0xff, 0x1b, 0xec, 0x03, 0x86, 0xdb, 0x8e, 0x33, 0x0b, 0xa2,
-	0x49, 0xc6, 0xe0, 0xb2, 0x44, 0xe4, 0x46, 0x69, 0xd4, 0xef, 0xa0, 0x5e, 0x5a, 0xdf, 0xa9, 0xb4,
-	0x05, 0x0a, 0x0f, 0x50, 0x38, 0xc6, 0x08, 0x6b, 0xbb, 0x76, 0xc1, 0xd5, 0x0f, 0xae, 0xd4, 0xbf,
-	0x09, 0x44, 0x0b, 0xd2, 0x5a, 0x61, 0x0a, 0x13, 0xea, 0xed, 0x53, 0xa8, 0x46, 0x1b, 0x74, 0xfd,
-	0x65, 0x9b, 0xe6, 0x45, 0xa5, 0x0a, 0xa5, 0xb3, 0xdd, 0xd7, 0x61, 0xbb, 0x11, 0xec, 0xd5, 0x60,
-	0x5d, 0xf4, 0x83, 0xd0, 0x7b, 0x67, 0xeb, 0x76, 0x62, 0xb4, 0x85, 0xd5, 0x8f, 0x84, 0x2e, 0x1b,
-	0xd4, 0x52, 0x64, 0xb9, 0x4b, 0xee, 0x2f, 0xc5, 0x57, 0x1f, 0xf7, 0x39, 0xf6, 0x6f, 0xb3, 0x72,
-	0xe4, 0xe5, 0x4f, 0x8d, 0xd2, 0xc3, 0xed, 0xfd, 0x5f, 0x9b, 0xbd, 0xef, 0xbf, 0x37, 0xe3, 0x42,
-	0xb9, 0x77, 0xf5, 0x98, 0xe7, 0xa6, 0x44, 0x58, 0xfc, 0x7b, 0x64, 0xe5, 0x8e, 0x70, 0xd3, 0x09,
-	0x58, 0xbf, 0xc0, 0x7e, 0x39, 0x9c, 0x6d, 0x5d, 0xdb, 0x85, 0x22, 0xcb, 0xa7, 0x69, 0x7b, 0x5a,
-	0xf6, 0xdb, 0xe1, 0x6c, 0x8b, 0x8c, 0x6e, 0x9a, 0x93, 0x58, 0xd1, 0x3a, 0xed, 0x7b, 0xdc, 0x67,
-	0xd0, 0x9a, 0x1d, 0xc8, 0xed, 0x0a, 0xa0, 0x0b, 0xf3, 0x95, 0xd0, 0xc1, 0x59, 0x2a, 0x46, 0xf9,
-	0x40, 0xe8, 0x0d, 0xd9, 0x29, 0xe9, 0xdb, 0x0a, 0xe0, 0xe2, 0x82, 0x5c, 0x97, 0xff, 0x22, 0x45,
-	0x0c, 0x4f, 0xfd, 0x08, 0xf4, 0xd4, 0x58, 0x66, 0x84, 0x6e, 0x9c, 0x63, 0xc0, 0x30, 0x9f, 0x08,
-	0x5d, 0x39, 0x0e, 0x73, 0xe1, 0x83, 0x59, 0x96, 0xa7, 0xc0, 0xa2, 0xdb, 0xf4, 0x96, 0x27, 0x7e,
-	0xae, 0xe5, 0x2b, 0x55, 0x1e, 0xcd, 0x24, 0xa1, 0x6b, 0x27, 0xcb, 0xc8, 0xdf, 0xa7, 0x57, 0x40,
-	0xcb, 0xd4, 0xa9, 0xb2, 0x9d, 0x02, 0x89, 0x97, 0x46, 0x97, 0x21, 0x58, 0x86, 0xc3, 0xfd, 0x39,
-	0x23, 0x07, 0x73, 0x46, 0xfe, 0xcc, 0x19, 0xf9, 0xbc, 0x60, 0xbd, 0x83, 0x05, 0xeb, 0xfd, 0x5c,
-	0xb0, 0xde, 0x9b, 0x38, 0x30, 0x5a, 0xb9, 0xc3, 0x95, 0x11, 0xef, 0xff, 0xbf, 0xbb, 0x1e, 0xbc,
-	0xbd, 0x3a, 0x97, 0xfc, 0xd7, 0xff, 0xe4, 0x6f, 0x00, 0x00, 0x00, 0xff, 0xff, 0xff, 0xb1, 0xf6,
-	0xa3, 0xe6, 0x03, 0x00, 0x00,
+	// 540 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xbc, 0x54, 0x4d, 0x6f, 0xd3, 0x40,
+	0x10, 0xcd, 0xaa, 0x12, 0x1f, 0x43, 0x03, 0x6d, 0x69, 0x49, 0xed, 0x12, 0x17, 0x59, 0x08, 0x45,
+	0x95, 0xf0, 0xca, 0x70, 0xe0, 0x1e, 0xa0, 0x57, 0x44, 0x40, 0x1c, 0xb8, 0x58, 0x8e, 0xbd, 0x98,
+	0x55, 0x6b, 0x6f, 0xea, 0xdd, 0x58, 0xe4, 0x0f, 0x20, 0x0e, 0x08, 0x71, 0xe6, 0x0c, 0x02, 0x21,
+	0x21, 0xe5, 0x67, 0xf4, 0xd8, 0x23, 0x27, 0x40, 0xc9, 0xa1, 0x7f, 0x03, 0x79, 0x77, 0x9c, 0x3a,
+	0xa1, 0x5c, 0x73, 0xc9, 0xc7, 0xbc, 0xb7, 0x6f, 0xde, 0x9b, 0x59, 0x2d, 0xdc, 0x89, 0x84, 0x4c,
+	0x85, 0xa4, 0x61, 0x14, 0x89, 0x61, 0xa6, 0x24, 0x2d, 0x98, 0x54, 0x3c, 0x4b, 0x68, 0xe1, 0xd3,
+	0xa3, 0x21, 0xcb, 0x47, 0xde, 0x20, 0x17, 0x4a, 0x6c, 0xd8, 0x86, 0xe7, 0x55, 0x3c, 0x0f, 0x79,
+	0x5e, 0xe1, 0xdb, 0xeb, 0x61, 0xca, 0x33, 0x41, 0xf5, 0xa7, 0xa1, 0xdb, 0x0e, 0xca, 0xf6, 0x43,
+	0xc9, 0x68, 0xe1, 0xf7, 0x99, 0x0a, 0x7d, 0x1a, 0x09, 0x9e, 0x21, 0xde, 0x42, 0x3c, 0x95, 0xba,
+	0x53, 0x2a, 0x13, 0x04, 0x6e, 0x23, 0x70, 0x66, 0xc3, 0x9c, 0xad, 0xda, 0x19, 0x96, 0x65, 0x58,
+	0x81, 0xfe, 0x47, 0xd1, 0x9a, 0x81, 0x36, 0x13, 0x91, 0x08, 0x53, 0x2f, 0x7f, 0x99, 0xaa, 0xdb,
+	0x86, 0x9d, 0xa7, 0x65, 0x9a, 0x27, 0x39, 0x4f, 0x78, 0x16, 0x1e, 0xbe, 0x30, 0x72, 0x3d, 0x76,
+	0x34, 0x64, 0x52, 0xb9, 0x3f, 0x08, 0xdc, 0x3c, 0x1f, 0x97, 0x03, 0x91, 0x49, 0xb6, 0xf1, 0x9e,
+	0xc0, 0x9a, 0x40, 0x2c, 0x40, 0x2f, 0xdb, 0xe4, 0xd6, 0x4a, 0xe7, 0xca, 0x3d, 0xcb, 0xc3, 0xfe,
+	0x65, 0x56, 0x0f, 0xfd, 0x7a, 0x0f, 0x05, 0xcf, 0xba, 0xfb, 0xc7, 0xbf, 0x76, 0x1b, 0xdf, 0x7f,
+	0xef, 0x76, 0x12, 0xae, 0x5e, 0x0f, 0xfb, 0x5e, 0x24, 0x52, 0x34, 0x8b, 0x5f, 0x77, 0x65, 0x7c,
+	0x40, 0xd5, 0x68, 0xc0, 0xa4, 0x3e, 0x20, 0x3f, 0x9d, 0x8e, 0xf7, 0x56, 0x0f, 0x59, 0x12, 0x46,
+	0xa3, 0xa0, 0x9c, 0x96, 0xfc, 0x76, 0x3a, 0xde, 0x23, 0xbd, 0x6b, 0x62, 0xde, 0x96, 0xbb, 0x03,
+	0x96, 0xb6, 0xfb, 0x88, 0x95, 0x64, 0xc5, 0xe2, 0xfd, 0x9c, 0xb1, 0x2a, 0xcc, 0x57, 0x02, 0xf6,
+	0x79, 0x28, 0x46, 0x79, 0x47, 0xe0, 0x6a, 0x5c, 0x21, 0xc1, 0xab, 0x9c, 0xb1, 0xe5, 0x05, 0x69,
+	0xc6, 0x75, 0x4b, 0xae, 0x83, 0x53, 0x9f, 0x19, 0x5d, 0x58, 0xcb, 0x98, 0x40, 0xfb, 0x3f, 0x04,
+	0x0c, 0xf3, 0x81, 0xc0, 0xfa, 0x59, 0x98, 0xa5, 0x2f, 0x66, 0x2d, 0x5e, 0x30, 0xe6, 0xb6, 0x60,
+	0x4b, 0x3b, 0x7e, 0xa6, 0xc2, 0x5c, 0x3d, 0xe7, 0xe9, 0x6c, 0x2b, 0x0f, 0xe0, 0xc6, 0x22, 0x80,
+	0x19, 0xda, 0x00, 0xb2, 0x2c, 0x06, 0x8a, 0xa7, 0xe5, 0x2e, 0x48, 0x67, 0xa5, 0x77, 0x59, 0x56,
+	0x34, 0x77, 0x0b, 0xae, 0xeb, 0x83, 0x8f, 0xb3, 0xb8, 0xae, 0xe7, 0xc3, 0xe6, 0x7c, 0x19, 0xd5,
+	0x2c, 0xb8, 0xc4, 0xb2, 0xb8, 0xae, 0x75, 0x91, 0x19, 0x8a, 0x6b, 0xc3, 0xb6, 0x3e, 0x82, 0x5e,
+	0x75, 0xb0, 0x4a, 0xee, 0x33, 0xc1, 0x2b, 0x35, 0x0f, 0xa2, 0xe8, 0x5b, 0x02, 0x4d, 0x1c, 0xae,
+	0x89, 0xbf, 0xbc, 0x11, 0xaf, 0x16, 0x35, 0x43, 0xae, 0x05, 0xad, 0x99, 0x4b, 0x16, 0xcf, 0x25,
+	0xf8, 0x42, 0x6a, 0xf1, 0x66, 0x58, 0xed, 0xd2, 0x17, 0xba, 0xbe, 0xfc, 0x4b, 0xd2, 0x34, 0x8d,
+	0x71, 0xb0, 0xdd, 0xee, 0xf1, 0xc4, 0x21, 0x27, 0x13, 0x87, 0xfc, 0x99, 0x38, 0xe4, 0xe3, 0xd4,
+	0x69, 0x9c, 0x4c, 0x9d, 0xc6, 0xcf, 0xa9, 0xd3, 0x78, 0xd9, 0x31, 0xb2, 0x32, 0x3e, 0xf0, 0xb8,
+	0xa0, 0x6f, 0xfe, 0x7d, 0x93, 0x75, 0xaf, 0xf2, 0x49, 0xbc, 0xa0, 0x5f, 0xb5, 0xfb, 0x7f, 0x03,
+	0x00, 0x00, 0xff, 0xff, 0x38, 0x37, 0x9c, 0x62, 0xbe, 0x05, 0x00, 0x00,
 }
 
 func (m *QueryOriginalVestingRequest) Marshal() (dAtA []byte, err error) {
@@ -589,6 +849,57 @@ func (m *QueryDelegatedVestingResponse) MarshalToSizedBuffer(dAtA []byte) (int, 
 	return len(dAtA) - i, nil
 }
 
+func (m *QueryStartTimeRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryStartTimeRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryStartTimeRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryStartTimeResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryStartTimeResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryStartTimeResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.StartTime != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.StartTime))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
 func (m *QueryEndTimeRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -636,6 +947,126 @@ func (m *QueryEndTimeResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i = encodeVarintQuery(dAtA, i, uint64(m.EndTime))
 		i--
 		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryVestingCoinsRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryVestingCoinsRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryVestingCoinsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryVestingCoinsResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryVestingCoinsResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryVestingCoinsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.VestingCoins) > 0 {
+		for iNdEx := len(m.VestingCoins) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.VestingCoins[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintQuery(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryVestedCoinsRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryVestedCoinsRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryVestedCoinsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryVestedCoinsResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryVestedCoinsResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryVestedCoinsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.VestedVesting) > 0 {
+		for iNdEx := len(m.VestedVesting) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.VestedVesting[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintQuery(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
 	}
 	return len(dAtA) - i, nil
 }
@@ -723,6 +1154,27 @@ func (m *QueryDelegatedVestingResponse) Size() (n int) {
 	return n
 }
 
+func (m *QueryStartTimeRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *QueryStartTimeResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.StartTime != 0 {
+		n += 1 + sovQuery(uint64(m.StartTime))
+	}
+	return n
+}
+
 func (m *QueryEndTimeRequest) Size() (n int) {
 	if m == nil {
 		return 0
@@ -740,6 +1192,54 @@ func (m *QueryEndTimeResponse) Size() (n int) {
 	_ = l
 	if m.EndTime != 0 {
 		n += 1 + sovQuery(uint64(m.EndTime))
+	}
+	return n
+}
+
+func (m *QueryVestingCoinsRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *QueryVestingCoinsResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.VestingCoins) > 0 {
+		for _, e := range m.VestingCoins {
+			l = e.Size()
+			n += 1 + l + sovQuery(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *QueryVestedCoinsRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *QueryVestedCoinsResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.VestedVesting) > 0 {
+		for _, e := range m.VestedVesting {
+			l = e.Size()
+			n += 1 + l + sovQuery(uint64(l))
+		}
 	}
 	return n
 }
@@ -1152,6 +1652,125 @@ func (m *QueryDelegatedVestingResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+func (m *QueryStartTimeRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryStartTimeRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryStartTimeRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryStartTimeResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryStartTimeResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryStartTimeResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field StartTime", wireType)
+			}
+			m.StartTime = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.StartTime |= int64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
 func (m *QueryEndTimeRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -1250,6 +1869,274 @@ func (m *QueryEndTimeResponse) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryVestingCoinsRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryVestingCoinsRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryVestingCoinsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryVestingCoinsResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryVestingCoinsResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryVestingCoinsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field VestingCoins", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.VestingCoins = append(m.VestingCoins, types.Coin{})
+			if err := m.VestingCoins[len(m.VestingCoins)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryVestedCoinsRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryVestedCoinsRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryVestedCoinsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryVestedCoinsResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryVestedCoinsResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryVestedCoinsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field VestedVesting", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.VestedVesting = append(m.VestedVesting, types.Coin{})
+			if err := m.VestedVesting[len(m.VestedVesting)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipQuery(dAtA[iNdEx:])

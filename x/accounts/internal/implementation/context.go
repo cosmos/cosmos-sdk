@@ -121,3 +121,8 @@ func Sender(ctx context.Context) []byte {
 func Whoami(ctx context.Context) []byte {
 	return ctx.Value(contextKey{}).(contextValue).whoami
 }
+
+// OriginalContext returns the original context for the account given the context.
+func OriginalContext(ctx context.Context) context.Context {
+	return ctx.Value(contextKey{}).(contextValue).originalContext
+}

@@ -30,6 +30,11 @@ message MsgInitVestingAccount {
 
   // end of vesting as unix time (in seconds).
   int64 end_time = 3;
+  bool  delayed  = 4;
+  // start of vesting as unix time (in seconds).
+  //
+  // Since 0.51.x
+  int64 start_time = 5;
 }
 
 // MsgInitVestingAccountResponse defines the Msg/InitVestingAccount response type.

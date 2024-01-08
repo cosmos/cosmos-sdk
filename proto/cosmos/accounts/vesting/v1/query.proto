@@ -52,6 +52,15 @@ message QueryDelegatedVestingResponse {
   ];
 }
 
+// QueryStartTimeRequest is used to query the account vesting end time.
+message QueryStartTimeRequest {}
+
+// QueryStartTimeResponse returns the account vesting start time.
+message QueryStartTimeResponse {
+  // end_time defines the value of the account vesting start time.
+  int64 start_time = 1;
+}
+
 // QueryCounterRequest is used to query the account vesting end time.
 message QueryEndTimeRequest {}
 
@@ -59,4 +68,32 @@ message QueryEndTimeRequest {}
 message QueryEndTimeResponse {
   // end_time defines the value of the account vesting end time.
   int64 end_time = 1;
+}
+
+// QueryVestingCoinsRequest is used to query the account vesting coins.
+message QueryVestingCoinsRequest {}
+
+// QueryVestingCoinsResponse returns the account vesting coins.
+message QueryVestingCoinsResponse {
+  // original_vesting defines the value of the account original vesting.
+  repeated cosmos.base.v1beta1.Coin vesting_coins = 1 [
+    (gogoproto.nullable)     = false,
+    (amino.dont_omitempty)   = true,
+    (amino.encoding)         = "legacy_coins",
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
+}
+
+// QueryVestedCoinsRequest is used to query the account vested coins.
+message QueryVestedCoinsRequest {}
+
+// QueryVestedCoinsResponse returns the account vested coins.
+message QueryVestedCoinsResponse {
+  // original_vesting defines the value of the account original vesting.
+  repeated cosmos.base.v1beta1.Coin vested_vesting = 1 [
+    (gogoproto.nullable)     = false,
+    (amino.dont_omitempty)   = true,
+    (amino.encoding)         = "legacy_coins",
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
 }

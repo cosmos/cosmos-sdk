@@ -215,12 +215,17 @@ func (s *Store) GetKVStore(storeKey string) store.KVStore {
 	return bkv
 }
 
-func (s *Store) GetBranchedKVStore(_ string) store.BranchedKVStore {
-	if s.TracingEnabled() {
-		return trace.New(s.rootKVStore, s.traceWriter, s.traceContext)
+func (s *Store) GetBranchedKVStore(storeKey string) store.BranchedKVStore {
+	bkv, ok := s.kvStores[storeKey]
+	if !ok {
+		panic(fmt.Sprintf("unknown store key: %s", storeKey))
 	}
 
-	return s.rootKVStore
+	if s.TracingEnabled() {
+		return trace.New(bkv, s.traceWriter, s.traceContext)
+	}
+
+	return bkv
 }
 
 func (s *Store) LoadLatestVersion() error {
@@ -249,10 +254,12 @@ func (s *Store) LoadVersion(version uint64) error {
 func (s *Store) loadVersion(v uint64) error {
 	s.logger.Debug("loading version", "version", v)
 
-	// Reset the root KVStore s.t. the latest version is v. Any writes will
-	// overwrite existing versions.
-	if err := s.rootKVStore.Reset(v); err != nil {
-		return err
+	// Reset each KVStore s.t. the latest version is v. Any writes will overwrite
+	// existing versions.
+	for storeKey, kvStore := range s.kvStores {
+		if err := kvStore.Reset(v); err != nil {
+			return fmt.Errorf("failed to reset %s KVStore: %w", storeKey, err)
+		}
 	}
 
 	if err := s.stateCommitment.LoadVersion(v); err != nil {
@@ -327,7 +334,9 @@ func (s *Store) WorkingHash() ([]byte, error) {
 }
 
 func (s *Store) Write() {
-	s.rootKVStore.Write()
+	for _, kvStore := range s.kvStores {
+		kvStore.Write()
+	}
 }
 
 // Commit commits all state changes to the underlying SS and SC backends. Note,
@@ -354,7 +363,10 @@ func (s *Store) Commit() ([]byte, error) {
 		s.logger.Debug("commit header and version mismatch", "header_height", s.commitHeader.Height, "version", version)
 	}
 
-	changeset := s.rootKVStore.GetChangeset()
+	changeset := store.NewChangeset()
+	for _, kvStore := range s.kvStores {
+		changeset.Merge(kvStore.GetChangeset())
+	}
 
 	// commit SS
 	if err := s.stateStore.ApplyChangeset(version, changeset); err != nil {
@@ -370,8 +382,10 @@ func (s *Store) Commit() ([]byte, error) {
 		s.lastCommitInfo.Timestamp = s.commitHeader.Time
 	}
 
-	if err := s.rootKVStore.Reset(version); err != nil {
-		return nil, fmt.Errorf("failed to reset root KVStore: %w", err)
+	for storeKey, kvStore := range s.kvStores {
+		if err := kvStore.Reset(version); err != nil {
+			return nil, fmt.Errorf("failed to reset %s KVStore: %w", storeKey, err)
+		}
 	}
 
 	s.workingHash = nil
@@ -387,9 +401,12 @@ func (s *Store) Commit() ([]byte, error) {
 // of the SC tree. Finally, we construct a *CommitInfo and return the hash.
 // Note, this should only be called once per block!
 func (s *Store) writeSC() error {
-	changeSet := s.rootKVStore.GetChangeset()
+	changeset := store.NewChangeset()
+	for _, kvStore := range s.kvStores {
+		changeset.Merge(kvStore.GetChangeset())
+	}
 
-	if err := s.stateCommitment.WriteBatch(changeSet); err != nil {
+	if err := s.stateCommitment.WriteBatch(changeset); err != nil {
 		return fmt.Errorf("failed to write batch to SC store: %w", err)
 	}
 

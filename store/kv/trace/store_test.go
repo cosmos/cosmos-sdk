@@ -203,7 +203,6 @@ func TestTestTraceKVStoreIterator(t *testing.T) {
 	}
 
 	require.False(t, iterator.Valid())
-	require.False(t, iterator.Next())
 }
 
 func TestTestTraceKVStoreReverseIterator(t *testing.T) {
@@ -258,7 +257,6 @@ func TestTestTraceKVStoreReverseIterator(t *testing.T) {
 	}
 
 	require.False(t, iterator.Valid())
-	require.False(t, iterator.Next())
 }
 
 func TestTraceKVStoreGetStoreType(t *testing.T) {

@@ -126,32 +126,3 @@ func (m LookupMap[K, V]) ValueCodec() codec.ValueCodec[V] { return m.vc }
 // func (m LookupMap[K, V]) ProveNonExistence(ctx context.Context, key K) error {
 // 	// Implementation...
 // }
-
-// TreeMap represents a map that provides ordered iteration.
-type TreeMap[K, V any] struct {
-	LookupMap[K, V] // Embedding LookupMap for shared methods
-}
-
-// NewTreeMap creates a new TreeMap.
-func NewTreeMap[K, V any](
-	schemaBuilder *SchemaBuilder,
-	prefix Prefix,
-	name string,
-	keyCodec codec.KeyCodec[K],
-	valueCodec codec.ValueCodec[V],
-) TreeMap[K, V] {
-	lookupMap := NewLookupMap(schemaBuilder, prefix, name, keyCodec, valueCodec)
-	return TreeMap[K, V]{lookupMap}
-}
-
-// // Other methods of LookupMap...
-
-// // ProveExistence proves the existence of a key in the collection.
-// func (m TreeMap[K, V]) ProveExistence(ctx context.Context, key K) error {
-// 	// Implementation...
-// }
-
-// // ProveNonExistence proves the non-existence of a key in the collection.
-// func (m TreeMap[K, V]) ProveNonExistence(ctx context.Context, key K) error {
-// 	// Implementation...
-// }

@@ -216,16 +216,10 @@ func (s *Store) GetKVStore(storeKey string) store.KVStore {
 }
 
 func (s *Store) GetBranchedKVStore(storeKey string) store.BranchedKVStore {
-	bkv, ok := s.kvStores[storeKey]
-	if !ok {
-		panic(fmt.Sprintf("unknown store key: %s", storeKey))
-	}
-
-	if s.TracingEnabled() {
-		return trace.New(bkv, s.traceWriter, s.traceContext)
-	}
-
-	return bkv
+	// Branching will soon be removed.
+	//
+	// Ref: https://github.com/cosmos/cosmos-sdk/issues/18981
+	panic("TODO: WILL BE REMOVED!")
 }
 
 func (s *Store) LoadLatestVersion() error {
@@ -291,22 +285,11 @@ func (s *Store) SetCommitHeader(h *coreheader.Info) {
 	s.commitHeader = h
 }
 
-// Branch a copy of the Store with a branched underlying root KVStore. Any call
-// to GetKVStore and GetBranchedKVStore returns the branched KVStore.
 func (s *Store) Branch() store.BranchedRootStore {
-	branch := s.rootKVStore.Branch()
-
-	return &Store{
-		logger:          s.logger,
-		initialVersion:  s.initialVersion,
-		stateStore:      s.stateStore,
-		stateCommitment: s.stateCommitment,
-		rootKVStore:     branch,
-		commitHeader:    s.commitHeader,
-		lastCommitInfo:  s.lastCommitInfo,
-		traceWriter:     s.traceWriter,
-		traceContext:    s.traceContext,
-	}
+	// Branching will soon be removed.
+	//
+	// Ref: https://github.com/cosmos/cosmos-sdk/issues/18981
+	panic("TODO: WILL BE REMOVED!")
 }
 
 // WorkingHash returns the working hash of the root store. Note, WorkingHash()

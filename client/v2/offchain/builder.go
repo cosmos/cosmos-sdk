@@ -22,7 +22,7 @@ import (
 
 type builder struct {
 	cdc codec.Codec
-	tx *apitx.Tx
+	tx  *apitx.Tx
 }
 
 func newBuilder(cdc codec.Codec) *builder {
@@ -43,10 +43,12 @@ func newBuilder(cdc codec.Codec) *builder {
 	}
 }
 
-func (b *builder) GetProtoTx() *apitx.Tx {
+// GetTx returns the tx.
+func (b *builder) GetTx() *apitx.Tx {
 	return b.tx
 }
 
+// GetSigningTxData returns the necessary data to generate sign bytes.
 func (b *builder) GetSigningTxData() (txsigning.TxData, error) {
 	body := b.tx.Body
 	authInfo := b.tx.AuthInfo
@@ -131,6 +133,7 @@ func (b *builder) GetSigningTxData() (txsigning.TxData, error) {
 	return txData, nil
 }
 
+// GetPubKeys returns the pubKeys of the tx.
 func (b *builder) GetPubKeys() ([]cryptotypes.PubKey, error) { // If signer already has pubkey in context, this list will have nil in its place
 	signerInfos := b.tx.AuthInfo.SignerInfos
 	pks := make([]cryptotypes.PubKey, len(signerInfos))
@@ -156,6 +159,7 @@ func (b *builder) GetPubKeys() ([]cryptotypes.PubKey, error) { // If signer alre
 	return pks, nil
 }
 
+// GetSignatures returns the signatures of the tx.
 func (b *builder) GetSignatures() ([]OffchainSignature, error) {
 	signerInfos := b.tx.AuthInfo.SignerInfos
 	sigs := b.tx.Signatures
@@ -185,13 +189,13 @@ func (b *builder) GetSignatures() ([]OffchainSignature, error) {
 				Data:     sigData,
 				Sequence: nonce,
 			}
-
 		}
 	}
 
 	return res, nil
 }
 
+// GetSigners returns the signers of the tx.
 func (b *builder) GetSigners() ([][]byte, error) {
 	signers, _, err := b.getSigners()
 	return signers, err
@@ -246,6 +250,7 @@ func (b *builder) setMsgs(msgs ...proto.Message) error {
 	return nil
 }
 
+// SetSignatures set the signatures of the tx.
 func (b *builder) SetSignatures(signatures ...OffchainSignature) error {
 	n := len(signatures)
 	signerInfos := make([]*apitx.SignerInfo, n)
@@ -279,7 +284,7 @@ func (b *builder) SetSignatures(signatures ...OffchainSignature) error {
 	return nil
 }
 
-// signatureDataToModeInfoAndSig converts a SignatureData to a ModeInfo and raw bytes signature
+// signatureDataToModeInfoAndSig converts a SignatureData to a ModeInfo and raw bytes signature.
 func (b *builder) signatureDataToModeInfoAndSig(data SignatureData) (*apitx.ModeInfo, []byte, error) {
 	if data == nil {
 		return nil, nil, errors.New("empty SignatureData")
@@ -297,7 +302,7 @@ func (b *builder) signatureDataToModeInfoAndSig(data SignatureData) (*apitx.Mode
 	}
 }
 
-// modeInfoAndSigToSignatureData converts a ModeInfo and raw bytes signature to a SignatureData
+// modeInfoAndSigToSignatureData converts a ModeInfo and raw bytes signature to a SignatureData.
 func modeInfoAndSigToSignatureData(modeInfo *apitx.ModeInfo, sig []byte) (SignatureData, error) {
 	switch modeInfoType := modeInfo.Sum.(type) {
 	case *apitx.ModeInfo_Single_:

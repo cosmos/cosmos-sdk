@@ -12,17 +12,17 @@ const (
 
 type encodingFunc = func([]byte) (string, error)
 
-// noEncoding returns a byte slice as a string
+// noEncoding returns a byte slice as a string.
 func noEncoding(digest []byte) (string, error) {
 	return string(digest), nil
 }
 
-// base64Encoding returns a byte slice as a b64 encoded string
+// base64Encoding returns a byte slice as a b64 encoded string.
 func base64Encoding(digest []byte) (string, error) {
 	return base64.StdEncoding.EncodeToString(digest), nil
 }
 
-// getEncoder returns a encodingFunc bases on the encoder id provided
+// getEncoder returns a encodingFunc bases on the encoder id provided.
 func getEncoder(encoder string) (encodingFunc, error) {
 	switch encoder {
 	case noEncoder:

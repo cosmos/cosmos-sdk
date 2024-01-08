@@ -141,7 +141,7 @@ func sign(ctx client.Context, fromName, digest string, signMode apisigning.SignM
 		return nil, err
 	}
 
-	return txBuilder.GetProtoTx(), nil
+	return txBuilder.GetTx(), nil
 }
 
 // getSignBytes gets the bytes to be signed for the given Tx and SignMode.

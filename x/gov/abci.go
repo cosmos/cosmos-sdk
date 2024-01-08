@@ -146,7 +146,7 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) error {
 				sdk.NewEvent(
 					types.EventTypeProposalDeposit,
 					sdk.NewAttribute(types.AttributeKeyProposalID, fmt.Sprintf("%d", proposal.Id)),
-					sdk.NewAttribute("deposit", "failed to refund or burn deposits"),
+					sdk.NewAttribute(types.AttributeKeyProposalDepositError, "failed to refund or burn deposits"),
 					sdk.NewAttribute("error", err.Error()),
 				),
 			)

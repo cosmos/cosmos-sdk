@@ -36,6 +36,7 @@ type Factory struct {
 	gasAdjustment      float64
 	chainID            string
 	fromName           string
+	unordered          bool
 	offline            bool
 	generateOnly       bool
 	memo               string
@@ -86,6 +87,7 @@ func NewFactoryCLI(clientCtx client.Context, flagSet *pflag.FlagSet) (Factory, e
 	gasAdj := clientCtx.Viper.GetFloat64(flags.FlagGasAdjustment)
 	memo := clientCtx.Viper.GetString(flags.FlagNote)
 	timeoutHeight := clientCtx.Viper.GetUint64(flags.FlagTimeoutHeight)
+	unordered := clientCtx.Viper.GetBool(flags.FlagUnordered)
 
 	gasStr := clientCtx.Viper.GetString(flags.FlagGas)
 	gasSetting, _ := flags.ParseGasSetting(gasStr)
@@ -103,6 +105,7 @@ func NewFactoryCLI(clientCtx client.Context, flagSet *pflag.FlagSet) (Factory, e
 		accountNumber:      accNum,
 		sequence:           accSeq,
 		timeoutHeight:      timeoutHeight,
+		unordered:          unordered,
 		gasAdjustment:      gasAdj,
 		memo:               memo,
 		signMode:           signMode,
@@ -132,6 +135,7 @@ func (f Factory) Fees() sdk.Coins                           { return f.fees }
 func (f Factory) GasPrices() sdk.DecCoins                   { return f.gasPrices }
 func (f Factory) AccountRetriever() client.AccountRetriever { return f.accountRetriever }
 func (f Factory) TimeoutHeight() uint64                     { return f.timeoutHeight }
+func (f Factory) Unordered() bool                           { return f.unordered }
 func (f Factory) FromName() string                          { return f.fromName }
 
 // SimulateAndExecute returns the option to simulate and then execute the transaction
@@ -242,6 +246,12 @@ func (f Factory) WithSignMode(mode signing.SignMode) Factory {
 // WithTimeoutHeight returns a copy of the Factory with an updated timeout height.
 func (f Factory) WithTimeoutHeight(height uint64) Factory {
 	f.timeoutHeight = height
+	return f
+}
+
+// WithUnordered returns a copy of the Factory with an updated unordered field.
+func (f Factory) WithUnordered(v bool) Factory {
+	f.unordered = v
 	return f
 }
 

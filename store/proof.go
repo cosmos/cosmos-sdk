@@ -1,6 +1,8 @@
 package store
 
 import (
+	"crypto/sha256"
+
 	ics23 "github.com/cosmos/ics23/go"
 
 	errorsmod "cosmossdk.io/errors"
@@ -11,6 +13,29 @@ const (
 	ProofOpIAVLCommitment         = "ics23:iavl"
 	ProofOpSimpleMerkleCommitment = "ics23:simple"
 	ProofOpSMTCommitment          = "ics23:smt"
+)
+
+var (
+	leafPrefix  = []byte{0}
+	innerPrefix = []byte{1}
+
+	// SimpleMerkleSpec is the ics23 proof spec for simple merkle proofs.
+	SimpleMerkleSpec = &ics23.ProofSpec{
+		LeafSpec: &ics23.LeafOp{
+			Prefix:       leafPrefix,
+			PrehashKey:   ics23.HashOp_NO_HASH,
+			PrehashValue: ics23.HashOp_NO_HASH,
+			Hash:         ics23.HashOp_SHA256,
+			Length:       ics23.LengthOp_VAR_PROTO,
+		},
+		InnerSpec: &ics23.InnerSpec{
+			ChildOrder:      []int32{0, 1},
+			MinPrefixLength: 1,
+			MaxPrefixLength: 1,
+			ChildSize:       32,
+			Hash:            ics23.HashOp_SHA256,
+		},
+	}
 )
 
 // CommitmentOp implements merkle.ProofOperator by wrapping an ics23 CommitmentProof.
@@ -39,7 +64,7 @@ func NewIAVLCommitmentOp(key []byte, proof *ics23.CommitmentProof) CommitmentOp 
 func NewSimpleMerkleCommitmentOp(key []byte, proof *ics23.CommitmentProof) CommitmentOp {
 	return CommitmentOp{
 		Type:  ProofOpSimpleMerkleCommitment,
-		Spec:  ics23.TendermintSpec,
+		Spec:  SimpleMerkleSpec,
 		Key:   key,
 		Proof: proof,
 	}
@@ -95,4 +120,70 @@ func (op CommitmentOp) Run(args [][]byte) ([][]byte, error) {
 	}
 
 	return [][]byte{root}, nil
+}
+
+// ProofFromByteSlices computes the proof from the given leaves.
+func ProofFromByteSlices(leaves [][]byte, index int) (rootHash []byte, inners []*ics23.InnerOp) {
+	if len(leaves) == 0 {
+		return emptyHash(), nil
+	}
+
+	n := len(leaves)
+	for n > 1 {
+		if index < n-1 || index&1 == 1 {
+			inner := &ics23.InnerOp{Hash: ics23.HashOp_SHA256}
+			if index&1 == 0 {
+				inner.Prefix = innerPrefix
+				inner.Suffix = leaves[index^1]
+			} else {
+				inner.Prefix = append(innerPrefix, leaves[index^1]...)
+			}
+			inners = append(inners, inner)
+		}
+		for i := 0; i < n/2; i++ {
+			leaves[i] = InnerHash(leaves[2*i], leaves[2*i+1])
+		}
+		if n&1 == 1 {
+			leaves[n/2] = leaves[n-1]
+		}
+		n = (n + 1) / 2
+		index /= 2
+	}
+
+	rootHash = leaves[0]
+	return
+}
+
+// ConvertCommitmentOp converts the given merkle proof into an CommitmentOp.
+func ConvertCommitmentOp(inners []*ics23.InnerOp, key, value []byte) CommitmentOp {
+	return NewSimpleMerkleCommitmentOp(key, &ics23.CommitmentProof{
+		Proof: &ics23.CommitmentProof_Exist{
+			Exist: &ics23.ExistenceProof{
+				Key:   key,
+				Value: value,
+				Leaf:  SimpleMerkleSpec.LeafSpec,
+				Path:  inners,
+			},
+		},
+	})
+}
+
+func emptyHash() []byte {
+	h := sha256.Sum256([]byte{})
+	return h[:]
+}
+
+// LeafHash computes the hash of a leaf node.
+func LeafHash(key, value []byte) ([]byte, error) {
+	return SimpleMerkleSpec.LeafSpec.Apply(key, value)
+}
+
+// InnerHash computes the hash of an inner node.
+func InnerHash(left, right []byte) []byte {
+	data := make([]byte, len(innerPrefix)+len(left)+len(right))
+	n := copy(data, innerPrefix)
+	n += copy(data[n:], left)
+	copy(data[n:], right)
+	h := sha256.Sum256(data)
+	return h[:]
 }

@@ -71,3 +71,27 @@ func (q queryServer) AccountType(ctx context.Context, request *v1.AccountTypeReq
 		AccountType: accType,
 	}, nil
 }
+
+const (
+	SimulateAuthenticateGasLimit   = 1_000_000
+	SimulateBundlerPaymentGasLimit = SimulateAuthenticateGasLimit
+	ExecuteGasLimit                = SimulateAuthenticateGasLimit
+)
+
+func (q queryServer) SimulateUserOperation(ctx context.Context, request *v1.SimulateUserOperationRequest) (*v1.SimulateUserOperationResponse, error) {
+	_, err := q.k.addressCodec.StringToBytes(request.Bundler)
+	if err != nil {
+		return nil, err
+	}
+
+	if request.UserOperation == nil {
+		return nil, fmt.Errorf("nil user operation")
+	}
+
+	request.UserOperation.AuthenticationGasLimit = SimulateAuthenticateGasLimit
+	request.UserOperation.BundlerPaymentGasLimit = SimulateBundlerPaymentGasLimit
+	request.UserOperation.ExecutionGasLimit = ExecuteGasLimit
+
+	resp := q.k.ExecuteUserOperation(ctx, request.Bundler, request.UserOperation)
+	return &v1.SimulateUserOperationResponse{UserOperationResponse: resp}, nil
+}

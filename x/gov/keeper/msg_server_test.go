@@ -298,6 +298,83 @@ func (suite *KeeperTestSuite) TestMsgSubmitProposal() {
 	}
 }
 
+// TestSubmitMultipleChoiceProposal tests only multiple choice proposal specific logic.
+// Internally the message uses MsgSubmitProposal, which is tested above.
+func (suite *KeeperTestSuite) TestSubmitMultipleChoiceProposal() {
+	suite.reset()
+	addrs := suite.addrs
+	proposer := addrs[0]
+	initialDeposit := sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(100000)))
+
+	cases := map[string]struct {
+		preRun    func() (*v1.MsgSubmitMultipleChoiceProposal, error)
+		expErr    bool
+		expErrMsg string
+	}{
+		"empty options": {
+			preRun: func() (*v1.MsgSubmitMultipleChoiceProposal, error) {
+				return v1.NewMultipleChoiceMsgSubmitProposal(
+					initialDeposit,
+					proposer.String(),
+					"mandatory metadata",
+					"Proposal",
+					"description of proposal",
+					&v1.ProposalVoteOptions{},
+				)
+			},
+			expErr:    true,
+			expErrMsg: "vote options cannot be empty, two or more options must be provided",
+		},
+		"invalid options": {
+			preRun: func() (*v1.MsgSubmitMultipleChoiceProposal, error) {
+				return v1.NewMultipleChoiceMsgSubmitProposal(
+					initialDeposit,
+					proposer.String(),
+					"mandatory metadata",
+					"Proposal",
+					"description of proposal",
+					&v1.ProposalVoteOptions{
+						OptionOne:  "Vote for me",
+						OptionFour: "Vote for them",
+					},
+				)
+			},
+			expErr:    true,
+			expErrMsg: "if a vote option is provided, the previous one must also be provided",
+		},
+		"valid proposal": {
+			preRun: func() (*v1.MsgSubmitMultipleChoiceProposal, error) {
+				return v1.NewMultipleChoiceMsgSubmitProposal(
+					initialDeposit,
+					proposer.String(),
+					"mandatory metadata",
+					"Proposal",
+					"description of proposal",
+					&v1.ProposalVoteOptions{
+						OptionOne: "Vote for me",
+						OptionTwo: "Vote for them",
+					},
+				)
+			},
+		},
+	}
+
+	for name, tc := range cases {
+		suite.Run(name, func() {
+			msg, err := tc.preRun()
+			suite.Require().NoError(err)
+			res, err := suite.msgSrvr.SubmitMultipleChoiceProposal(suite.ctx, msg)
+			if tc.expErr {
+				suite.Require().Error(err)
+				suite.Require().Contains(err.Error(), tc.expErrMsg)
+			} else {
+				suite.Require().NoError(err)
+				suite.Require().NotNil(res.ProposalId)
+			}
+		})
+	}
+}
+
 func (suite *KeeperTestSuite) TestMsgCancelProposal() {
 	govAcct := suite.govKeeper.GetGovernanceAccount(suite.ctx).GetAddress()
 	addrs := suite.addrs

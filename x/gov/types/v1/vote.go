@@ -18,10 +18,10 @@ const (
 	OptionFour  = VoteOption_VOTE_OPTION_FOUR
 	OptionSpam  = VoteOption_VOTE_OPTION_SPAM
 
-	OptionYes        = OptionOne
-	OptionNo         = OptionThree
-	OptionNoWithVeto = OptionFour
-	OptionAbstain    = OptionTwo
+	OptionYes        = VoteOption_VOTE_OPTION_YES
+	OptionNo         = VoteOption_VOTE_OPTION_NO
+	OptionNoWithVeto = VoteOption_VOTE_OPTION_NO_WITH_VETO
+	OptionAbstain    = VoteOption_VOTE_OPTION_ABSTAIN
 )
 
 // NewVote creates a new Vote instance

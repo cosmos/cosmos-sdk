@@ -617,7 +617,7 @@ func (k msgServer) RotateConsPubKey(ctx context.Context, msg *types.MsgRotateCon
 	}
 
 	// check cons key is already present in the key rotation history.
-	rotatedTo, err := k.RotatedConsKeyMapIndex.Get(ctx, pk.Address())
+	rotatedTo, err := k.NewToOldConsKeyMap.Get(ctx, pk.Address())
 	if err != nil && !errors.Is(err, collections.ErrNotFound) {
 		return nil, err
 	}
@@ -630,8 +630,8 @@ func (k msgServer) RotateConsPubKey(ctx context.Context, msg *types.MsgRotateCon
 	newConsAddr := sdk.ConsAddress(pk.Address())
 
 	// checks if NewPubKey is not duplicated on ValidatorsByConsAddr
-	validator1, _ := k.Keeper.ValidatorByConsAddr(ctx, newConsAddr)
-	if validator1 != nil {
+	_, err = k.Keeper.ValidatorByConsAddr(ctx, newConsAddr)
+	if err == nil {
 		return nil, types.ErrConsensusPubKeyAlreadyUsedForValidator
 	}
 
@@ -642,6 +642,10 @@ func (k msgServer) RotateConsPubKey(ctx context.Context, msg *types.MsgRotateCon
 
 	validator2, err := k.Keeper.GetValidator(ctx, valAddr)
 	if err != nil {
+		return nil, err
+	}
+
+	if validator2.GetOperator() == "" {
 		return nil, types.ErrNoValidatorFound
 	}
 
@@ -651,7 +655,7 @@ func (k msgServer) RotateConsPubKey(ctx context.Context, msg *types.MsgRotateCon
 
 	// Check if the validator is exceeding parameter MaxConsPubKeyRotations within the
 	// unbonding period by iterating ConsPubKeyRotationHistory.
-	err = k.exceedsMaxRotations(ctx, valAddr)
+	err = k.ExceedsMaxRotations(ctx, valAddr)
 	if err != nil {
 		return nil, err
 	}
@@ -663,7 +667,7 @@ func (k msgServer) RotateConsPubKey(ctx context.Context, msg *types.MsgRotateCon
 		return nil, err
 	}
 
-	err = k.Keeper.bankKeeper.SendCoinsFromAccountToModule(ctx, sdk.AccAddress(valAddr), types.DistributionModuleName, sdk.NewCoins(params.KeyRotationFee))
+	err = k.Keeper.bankKeeper.SendCoinsFromAccountToModule(ctx, sdk.AccAddress(valAddr), types.PoolModuleName, sdk.NewCoins(params.KeyRotationFee))
 	if err != nil {
 		return nil, err
 	}

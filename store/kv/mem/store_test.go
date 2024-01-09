@@ -92,7 +92,6 @@ func (s *StoreTestSuite) TestIterator() {
 		s.Require().NoError(itr.Error())
 
 		// seek past domain, which should make the iterator invalid and produce an error
-		s.Require().False(itr.Next())
 		s.Require().False(itr.Valid())
 	})
 
@@ -113,7 +112,6 @@ func (s *StoreTestSuite) TestIterator() {
 		s.Require().NoError(itr.Error())
 
 		// seek past domain, which should make the iterator invalid and produce an error
-		s.Require().False(itr.Next())
 		s.Require().False(itr.Valid())
 	})
 
@@ -134,7 +132,7 @@ func (s *StoreTestSuite) TestIterator() {
 		s.Require().NoError(itr.Error())
 
 		// seek past domain, which should make the iterator invalid and produce an error
-		s.Require().False(itr.Next())
+
 		s.Require().False(itr.Valid())
 	})
 
@@ -155,7 +153,6 @@ func (s *StoreTestSuite) TestIterator() {
 		s.Require().NoError(itr.Error())
 
 		// seek past domain, which should make the iterator invalid and produce an error
-		s.Require().False(itr.Next())
 		s.Require().False(itr.Valid())
 	})
 }
@@ -185,7 +182,6 @@ func (s *StoreTestSuite) TestReverseIterator() {
 		s.Require().NoError(itr.Error())
 
 		// seek past domain, which should make the iterator invalid and produce an error
-		s.Require().False(itr.Next())
 		s.Require().False(itr.Valid())
 	})
 
@@ -208,7 +204,6 @@ func (s *StoreTestSuite) TestReverseIterator() {
 
 		// seek past domain, which should make the iterator invalid and produce an error
 		s.Require().False(itr.Valid())
-		s.Require().False(itr.Next())
 	})
 
 	// reverse iterator with with a start and end domain
@@ -229,7 +224,6 @@ func (s *StoreTestSuite) TestReverseIterator() {
 		s.Require().NoError(itr.Error())
 
 		// seek past domain, which should make the iterator invalid and produce an error
-		s.Require().False(itr.Next())
 		s.Require().False(itr.Valid())
 	})
 
@@ -251,7 +245,6 @@ func (s *StoreTestSuite) TestReverseIterator() {
 		s.Require().NoError(itr.Error())
 
 		// seek past domain, which should make the iterator invalid and produce an error
-		s.Require().False(itr.Next())
 		s.Require().False(itr.Valid())
 	})
 }

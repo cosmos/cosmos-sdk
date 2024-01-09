@@ -153,7 +153,7 @@ func (suite *KeeperTestSuite) TestMsgSubmitProposal() {
 					[]sdk.Msg{bankMsg},
 					initialDeposit,
 					proposer.String(),
-					strings.Repeat("1", 256),
+					strings.Repeat("1", 257),
 					"Proposal",
 					"description of proposal",
 					v1.ProposalType_PROPOSAL_TYPE_STANDARD,
@@ -298,6 +298,83 @@ func (suite *KeeperTestSuite) TestMsgSubmitProposal() {
 	}
 }
 
+// TestSubmitMultipleChoiceProposal tests only multiple choice proposal specific logic.
+// Internally the message uses MsgSubmitProposal, which is tested above.
+func (suite *KeeperTestSuite) TestSubmitMultipleChoiceProposal() {
+	suite.reset()
+	addrs := suite.addrs
+	proposer := addrs[0]
+	initialDeposit := sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(100000)))
+
+	cases := map[string]struct {
+		preRun    func() (*v1.MsgSubmitMultipleChoiceProposal, error)
+		expErr    bool
+		expErrMsg string
+	}{
+		"empty options": {
+			preRun: func() (*v1.MsgSubmitMultipleChoiceProposal, error) {
+				return v1.NewMultipleChoiceMsgSubmitProposal(
+					initialDeposit,
+					proposer.String(),
+					"mandatory metadata",
+					"Proposal",
+					"description of proposal",
+					&v1.ProposalVoteOptions{},
+				)
+			},
+			expErr:    true,
+			expErrMsg: "vote options cannot be empty, two or more options must be provided",
+		},
+		"invalid options": {
+			preRun: func() (*v1.MsgSubmitMultipleChoiceProposal, error) {
+				return v1.NewMultipleChoiceMsgSubmitProposal(
+					initialDeposit,
+					proposer.String(),
+					"mandatory metadata",
+					"Proposal",
+					"description of proposal",
+					&v1.ProposalVoteOptions{
+						OptionOne:  "Vote for me",
+						OptionFour: "Vote for them",
+					},
+				)
+			},
+			expErr:    true,
+			expErrMsg: "if a vote option is provided, the previous one must also be provided",
+		},
+		"valid proposal": {
+			preRun: func() (*v1.MsgSubmitMultipleChoiceProposal, error) {
+				return v1.NewMultipleChoiceMsgSubmitProposal(
+					initialDeposit,
+					proposer.String(),
+					"mandatory metadata",
+					"Proposal",
+					"description of proposal",
+					&v1.ProposalVoteOptions{
+						OptionOne: "Vote for me",
+						OptionTwo: "Vote for them",
+					},
+				)
+			},
+		},
+	}
+
+	for name, tc := range cases {
+		suite.Run(name, func() {
+			msg, err := tc.preRun()
+			suite.Require().NoError(err)
+			res, err := suite.msgSrvr.SubmitMultipleChoiceProposal(suite.ctx, msg)
+			if tc.expErr {
+				suite.Require().Error(err)
+				suite.Require().Contains(err.Error(), tc.expErrMsg)
+			} else {
+				suite.Require().NoError(err)
+				suite.Require().NotNil(res.ProposalId)
+			}
+		})
+	}
+}
+
 func (suite *KeeperTestSuite) TestMsgCancelProposal() {
 	govAcct := suite.govKeeper.GetGovernanceAccount(suite.ctx).GetAddress()
 	addrs := suite.addrs
@@ -337,11 +414,11 @@ func (suite *KeeperTestSuite) TestMsgCancelProposal() {
 			},
 			depositor: proposer,
 			expErr:    true,
-			expErrMsg: "not found",
+			expErrMsg: "proposal 0 doesn't exist",
 		},
 		"valid proposal but invalid proposer": {
 			preRun: func() uint64 {
-				return proposalID
+				return res.ProposalId
 			},
 			depositor: addrs[1],
 			expErr:    true,
@@ -451,6 +528,30 @@ func (suite *KeeperTestSuite) TestMsgVote() {
 			metadata:  "",
 			expErr:    true,
 			expErrMsg: "invalid vote option",
+		},
+		"optimistic proposal: wrong vote option": {
+			preRun: func() uint64 {
+				msg, err := v1.NewMsgSubmitProposal(
+					[]sdk.Msg{bankMsg},
+					minDeposit,
+					proposer.String(),
+					"",
+					"Proposal",
+					"description of proposal",
+					v1.ProposalType_PROPOSAL_TYPE_OPTIMISTIC,
+				)
+				suite.Require().NoError(err)
+
+				res, err := suite.msgSrvr.SubmitProposal(suite.ctx, msg)
+				suite.Require().NoError(err)
+				suite.Require().NotNil(res.ProposalId)
+				return res.ProposalId
+			},
+			option:    v1.VoteOption_VOTE_OPTION_ONE,
+			voter:     proposer,
+			metadata:  "",
+			expErr:    true,
+			expErrMsg: "optimistic proposals can only be rejected: invalid vote option",
 		},
 		"vote on inactive proposal": {
 			preRun: func() uint64 {
@@ -657,6 +758,30 @@ func (suite *KeeperTestSuite) TestMsgVoteWeighted() {
 			metadata:  "",
 			expErr:    true,
 			expErrMsg: "invalid vote option",
+		},
+		"optimistic proposal: wrong vote option": {
+			preRun: func() uint64 {
+				msg, err := v1.NewMsgSubmitProposal(
+					[]sdk.Msg{bankMsg},
+					minDeposit,
+					proposer.String(),
+					"",
+					"Proposal",
+					"description of proposal",
+					v1.ProposalType_PROPOSAL_TYPE_OPTIMISTIC,
+				)
+				suite.Require().NoError(err)
+
+				res, err := suite.msgSrvr.SubmitProposal(suite.ctx, msg)
+				suite.Require().NoError(err)
+				suite.Require().NotNil(res.ProposalId)
+				return res.ProposalId
+			},
+			option:    v1.NewNonSplitVoteOption(v1.VoteOption_VOTE_OPTION_ONE), // vote yes
+			voter:     proposer,
+			metadata:  "",
+			expErr:    true,
+			expErrMsg: "optimistic proposals can only be rejected: invalid vote option",
 		},
 		"weight sum < 1": {
 			preRun: func() uint64 {

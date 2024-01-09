@@ -62,7 +62,6 @@ func TestDatabase_ReverseIterator(t *testing.T) {
 	require.NoError(t, iter.Error())
 
 	// seek past domain, which should make the iterator invalid and produce an error
-	require.False(t, iter.Next())
 	require.False(t, iter.Valid())
 
 	// reverse iterator with with a start and end domain
@@ -83,7 +82,6 @@ func TestDatabase_ReverseIterator(t *testing.T) {
 	require.NoError(t, iter2.Error())
 
 	// seek past domain, which should make the iterator invalid and produce an error
-	require.False(t, iter2.Next())
 	require.False(t, iter2.Valid())
 
 	// start must be <= end

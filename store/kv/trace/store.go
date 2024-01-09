@@ -8,6 +8,7 @@ import (
 
 	"github.com/cockroachdb/errors"
 
+	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/store/v2"
 )
 
@@ -98,11 +99,11 @@ func (s *Store) BranchWithTrace(_ io.Writer, _ store.TraceContext) store.Branche
 	panic(fmt.Sprintf("cannot call BranchWithTrace() on %T", s))
 }
 
-func (s *Store) Iterator(start, end []byte) store.Iterator {
+func (s *Store) Iterator(start, end []byte) corestore.Iterator {
 	return newIterator(s.writer, s.parent.Iterator(start, end), s.context)
 }
 
-func (s *Store) ReverseIterator(start, end []byte) store.Iterator {
+func (s *Store) ReverseIterator(start, end []byte) corestore.Iterator {
 	return newIterator(s.writer, s.parent.ReverseIterator(start, end), s.context)
 }
 

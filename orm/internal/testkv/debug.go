@@ -6,6 +6,7 @@ import (
 
 	"google.golang.org/protobuf/proto"
 
+	"cosmossdk.io/core/store"
 	"cosmossdk.io/orm/encoding/ormkv"
 	"cosmossdk.io/orm/internal/stablejson"
 	"cosmossdk.io/orm/model/ormtable"
@@ -77,7 +78,7 @@ func (t debugStore) Has(key []byte) (bool, error) {
 	return has, nil
 }
 
-func (t debugStore) Iterator(start, end []byte) (kv.Iterator, error) {
+func (t debugStore) Iterator(start, end []byte) (store.Iterator, error) {
 	if t.debugger != nil {
 		t.debugger.Log(fmt.Sprintf("ITERATOR %x -> %x", start, end))
 	}
@@ -92,7 +93,7 @@ func (t debugStore) Iterator(start, end []byte) (kv.Iterator, error) {
 	}, nil
 }
 
-func (t debugStore) ReverseIterator(start, end []byte) (kv.Iterator, error) {
+func (t debugStore) ReverseIterator(start, end []byte) (store.Iterator, error) {
 	if t.debugger != nil {
 		t.debugger.Log(fmt.Sprintf("ITERATOR %x <- %x", start, end))
 	}
@@ -140,7 +141,7 @@ func (t debugStore) Delete(key []byte) error {
 var _ kv.Store = &debugStore{}
 
 type debugIterator struct {
-	iterator  kv.Iterator
+	iterator  store.Iterator
 	storeName string
 	debugger  Debugger
 }
@@ -185,7 +186,7 @@ func (d debugIterator) Close() error {
 	return d.iterator.Close()
 }
 
-var _ kv.Iterator = &debugIterator{}
+var _ store.Iterator = &debugIterator{}
 
 // EntryCodecDebugger is a Debugger instance that uses an EntryCodec and Print
 // function for debugging.

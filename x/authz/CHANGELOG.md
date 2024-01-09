@@ -27,8 +27,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Features
 
+* [#18737](https://github.com/cosmos/cosmos-sdk/pull/18737) Added a limit of 200 grants pruned per `BeginBlock` and the `PruneExpiredGrants` message that prunes 75 expired grants on every run.
+
 ### Improvements
 
 ### API Breaking Changes
+
+* [#18737](https://github.com/cosmos/cosmos-sdk/pull/18737) Update the keeper method `DequeueAndDeleteExpiredGrants` to take a limit argument for the number of grants to prune.
 
 ### Bug Fixes

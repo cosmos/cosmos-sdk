@@ -4,6 +4,7 @@ import (
 	"io"
 
 	coreheader "cosmossdk.io/core/header"
+	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/store/v2/metrics"
 )
 
@@ -148,11 +149,11 @@ type KVStore interface {
 	//
 	// CONTRACT: No writes may happen within a domain while an iterator exists over
 	// it, with the exception of a branched/cached KVStore.
-	Iterator(start, end []byte) Iterator
+	Iterator(start, end []byte) corestore.Iterator
 
 	// ReverseIterator creates a new reverse Iterator over the domain [start, end).
 	// It has the some properties and contracts as Iterator.
-	ReverseIterator(start, end []byte) Iterator
+	ReverseIterator(start, end []byte) corestore.Iterator
 }
 
 // BranchedKVStore defines an interface for a branched a KVStore. It extends KVStore

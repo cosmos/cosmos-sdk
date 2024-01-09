@@ -59,13 +59,28 @@ func TestAccountAbstraction(t *testing.T) {
 	aliceAddrStr, err := app.AuthKeeper.AddressCodec().BytesToString(aliceAddr)
 	require.NoError(t, err)
 
+	t.Run("fail - tx compat in bundle is not allowed", func(t *testing.T) {
+		resp := ak.ExecuteUserOperation(ctx, bundlerAddrStr, &accountsv1.UserOperation{
+			Sender:               aaAddrStr,
+			AuthenticationMethod: "secp256k1",
+			AuthenticationData:   mockSignature,
+			ExecutionMessages: intoAny(t, &banktypes.MsgSend{
+				FromAddress: aaAddrStr,
+				ToAddress:   bundlerAddrStr,
+				Amount:      coins(t, "1stake"), // the sender is the AA, so it has the coins and wants to pay the bundler for the gas
+			}),
+			TxCompat: &accountsv1.TxCompat{},
+		})
+		require.Contains(t, resp.Error, accounts.ErrDisallowedTxCompatInBundle.Error())
+	})
+
 	t.Run("ok - pay bundler and exec not implemented", func(t *testing.T) {
 		// we simulate executing an user operation in an abstracted account
 		// which only implements the authentication.
 		resp := ak.ExecuteUserOperation(ctx, bundlerAddrStr, &accountsv1.UserOperation{
 			Sender:                 aaAddrStr,
 			AuthenticationMethod:   "secp256k1",
-			AuthenticationData:     []byte("signature"),
+			AuthenticationData:     mockSignature,
 			AuthenticationGasLimit: 10000,
 			BundlerPaymentMessages: intoAny(t, &banktypes.MsgSend{
 				FromAddress: aaAddrStr,
@@ -78,7 +93,7 @@ func TestAccountAbstraction(t *testing.T) {
 				ToAddress:   aliceAddrStr,
 				Amount:      coins(t, "2000stake"), // as the real action the sender wants to send coins to alice
 			}),
-			ExecutionGasLimit: 36000,
+			ExecutionGasLimit: 38000,
 		})
 		require.Empty(t, resp.Error) // no error
 		require.Len(t, resp.BundlerPaymentResponses, 1)
@@ -89,7 +104,6 @@ func TestAccountAbstraction(t *testing.T) {
 		// assert there were state changes
 		balanceIs(t, ctx, app, bundlerAddr.Bytes(), "1stake")  // pay bundler state change
 		balanceIs(t, ctx, app, aliceAddr.Bytes(), "2000stake") // execute messages state change.
-
 	})
 	t.Run("pay bundle impersonation", func(t *testing.T) {
 		// we simulate the execution of an abstracted account
@@ -98,7 +112,7 @@ func TestAccountAbstraction(t *testing.T) {
 		resp := ak.ExecuteUserOperation(ctx, bundlerAddrStr, &accountsv1.UserOperation{
 			Sender:                 aaAddrStr,
 			AuthenticationMethod:   "secp256k1",
-			AuthenticationData:     []byte("signature"),
+			AuthenticationData:     mockSignature,
 			AuthenticationGasLimit: 10000,
 			BundlerPaymentMessages: intoAny(t, &banktypes.MsgSend{
 				FromAddress: bundlerAddrStr, // abstracted account tries to send money from bundler to itself.
@@ -125,7 +139,7 @@ func TestAccountAbstraction(t *testing.T) {
 		resp := ak.ExecuteUserOperation(ctx, bundlerAddrStr, &accountsv1.UserOperation{
 			Sender:                 aaAddrStr,
 			AuthenticationMethod:   "secp256k1",
-			AuthenticationData:     []byte("signature"),
+			AuthenticationData:     mockSignature,
 			AuthenticationGasLimit: 10000,
 			BundlerPaymentMessages: intoAny(t, &banktypes.MsgSend{
 				FromAddress: aaAddrStr,
@@ -154,7 +168,7 @@ func TestAccountAbstraction(t *testing.T) {
 		resp := ak.ExecuteUserOperation(ctx, bundlerAddrStr, &accountsv1.UserOperation{
 			Sender:                 aaAddrStr,
 			AuthenticationMethod:   "invalid",
-			AuthenticationData:     []byte("signature"),
+			AuthenticationData:     mockSignature,
 			AuthenticationGasLimit: 10000,
 			BundlerPaymentMessages: intoAny(t, &banktypes.MsgSend{
 				FromAddress: aaAddrStr,
@@ -184,7 +198,7 @@ func TestAccountAbstraction(t *testing.T) {
 		resp := ak.ExecuteUserOperation(ctx, bundlerAddrStr, &accountsv1.UserOperation{
 			Sender:                 aaAddrStr,
 			AuthenticationMethod:   "secp256k1",
-			AuthenticationData:     []byte("signature"),
+			AuthenticationData:     mockSignature,
 			AuthenticationGasLimit: 10000,
 			BundlerPaymentMessages: intoAny(t, &banktypes.MsgSend{
 				FromAddress: aaAddrStr,
@@ -213,7 +227,7 @@ func TestAccountAbstraction(t *testing.T) {
 		resp := ak.ExecuteUserOperation(ctx, bundlerAddrStr, &accountsv1.UserOperation{
 			Sender:                 aaAddrStr,
 			AuthenticationMethod:   "secp256k1",
-			AuthenticationData:     []byte("signature"),
+			AuthenticationData:     mockSignature,
 			AuthenticationGasLimit: 10000,
 			BundlerPaymentMessages: intoAny(t, &banktypes.MsgSend{
 				FromAddress: aaAddrStr,
@@ -242,7 +256,7 @@ func TestAccountAbstraction(t *testing.T) {
 		resp := ak.ExecuteUserOperation(ctx, bundlerAddrStr, &accountsv1.UserOperation{
 			Sender:                 aaFullAddrStr,
 			AuthenticationMethod:   "secp256k1",
-			AuthenticationData:     []byte("signature"),
+			AuthenticationData:     mockSignature,
 			AuthenticationGasLimit: 10000,
 			BundlerPaymentMessages: intoAny(t, &banktypes.MsgSend{
 				FromAddress: aaFullAddrStr,
@@ -266,7 +280,7 @@ func TestAccountAbstraction(t *testing.T) {
 		resp := ak.ExecuteUserOperation(ctx, bundlerAddrStr, &accountsv1.UserOperation{
 			Sender:                 aaFullAddrStr,
 			AuthenticationMethod:   "secp256k1",
-			AuthenticationData:     []byte("signature"),
+			AuthenticationData:     mockSignature,
 			AuthenticationGasLimit: 10000,
 			BundlerPaymentMessages: nil,
 			BundlerPaymentGasLimit: 50000,
@@ -295,7 +309,7 @@ func TestAccountAbstraction(t *testing.T) {
 		resp := ak.ExecuteUserOperation(ctx, bundlerAddrStr, &accountsv1.UserOperation{
 			Sender:                 aaFullAddrStr,
 			AuthenticationMethod:   "secp256k1",
-			AuthenticationData:     []byte("signature"),
+			AuthenticationData:     mockSignature,
 			AuthenticationGasLimit: 10000,
 			BundlerPaymentMessages: intoAny(t, &nft.MsgSend{
 				ClassId:  "omega-rare",
@@ -309,7 +323,7 @@ func TestAccountAbstraction(t *testing.T) {
 				ToAddress:   aliceAddrStr,
 				Amount:      coins(t, "2000stake"),
 			}),
-			ExecutionGasLimit: 36000,
+			ExecutionGasLimit: 38000,
 		})
 		require.Empty(t, resp.Error) // no error
 	})
@@ -336,4 +350,12 @@ func balanceIs(t *testing.T, ctx context.Context, app *simapp.SimApp, addr sdk.A
 	t.Helper()
 	balance := app.BankKeeper.GetAllBalances(ctx, addr)
 	require.Equal(t, s, balance.String())
+}
+
+var mockSignature = &codectypes.Any{TypeUrl: "signature", Value: []byte("signature")}
+
+func setupApp(t *testing.T) *simapp.SimApp {
+	t.Helper()
+	app := simapp.Setup(t, false)
+	return app
 }

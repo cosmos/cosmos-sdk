@@ -556,7 +556,7 @@ func New(l Logger, baseDir string, cfg Config) (NetworkI, error) {
 			WithTxConfig(cfg.TxConfig).
 			WithAccountRetriever(cfg.AccountRetriever).
 			WithAddressCodec(cfg.AddressCodec).
-			WithValidatorAddressCodec(cfg.ValidatorAddressCodec).
+			WithValidatorAddressCodec(cfg.ConsensusAddressCodec).
 			WithConsensusAddressCodec(cfg.ValidatorAddressCodec).
 			WithNodeURI(cmtCfg.RPC.ListenAddress)
 

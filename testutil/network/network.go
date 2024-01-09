@@ -556,8 +556,8 @@ func New(l Logger, baseDir string, cfg Config) (NetworkI, error) {
 			WithTxConfig(cfg.TxConfig).
 			WithAccountRetriever(cfg.AccountRetriever).
 			WithAddressCodec(cfg.AddressCodec).
-			WithValidatorAddressCodec(cfg.ConsensusAddressCodec).
-			WithConsensusAddressCodec(cfg.ValidatorAddressCodec).
+			WithValidatorAddressCodec(cfg.ValidatorAddressCodec).
+			WithConsensusAddressCodec(cfg.ConsensusAddressCodec).
 			WithNodeURI(cmtCfg.RPC.ListenAddress)
 
 		// Provide ChainID here since we can't modify it in the Comet config.

@@ -118,6 +118,7 @@ func UnsafeNewStore(tree *iavl.MutableTree) *Store {
 // Any mutable operations executed will result in a panic.
 func (st *Store) GetImmutable(version int64) (*Store, error) {
 	if !st.VersionExists(version) {
+		//TODO: was returning error before. need to test if this is ok
 		return &Store{tree: &immutableTree{&iavl.ImmutableTree{}}}, nil
 	}
 

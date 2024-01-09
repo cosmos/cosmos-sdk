@@ -195,6 +195,7 @@ func (rs *Store) LoadLatestVersion() error {
 	return rs.loadVersion(ver, nil)
 }
 
+// new code
 func (rs *Store) LoadLastVersion() error {
 	if rs.lastCommitInfo.GetVersion() == 0 {
 		// This case means that no commit has been made in the store, so
@@ -250,6 +251,7 @@ func (rs *Store) loadVersion(ver int64, upgrades *types.StoreUpgrades) error {
 		storeParams := rs.storesParams[key]
 		commitID := rs.getCommitID(infos, key.Name())
 
+		//TODO: removed some commit related code
 		// If it has been added, set the initial version
 		if upgrades.IsAdded(key.Name()) {
 			storeParams.initialVersion = uint64(ver) + 1
@@ -531,6 +533,8 @@ func (rs *Store) CacheMultiStore() types.CacheMultiStore {
 // attempts to load stores at a given version (height). An error is returned if
 // any store cannot be loaded. This should only be used for querying and
 // iterating at past heights.
+
+// TODO: removed commit related code. to test
 func (rs *Store) CacheMultiStoreWithVersion(version int64) (types.CacheMultiStore, error) {
 	cachedStores := make(map[types.StoreKey]types.CacheWrapper)
 	for key, store := range rs.stores {

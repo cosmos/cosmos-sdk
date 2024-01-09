@@ -59,7 +59,7 @@ require (
 	cosmossdk.io/depinject v1.0.0-alpha.4 // indirect
 	cosmossdk.io/errors v1.0.0 // indirect
 	cosmossdk.io/store v1.0.1 // indirect
-	cosmossdk.io/x/accounts v0.0.0-20231013072015-ec9bcc41ef9c // indirect
+	cosmossdk.io/x/accounts v0.0.0-20240104091155-b729e981f130 // indirect
 	cosmossdk.io/x/authz v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/x/circuit v0.0.0-20230613133644-0a778132a60f // indirect
 	cosmossdk.io/x/distribution v0.0.0-20230925135524-a1bc045b3190 // indirect

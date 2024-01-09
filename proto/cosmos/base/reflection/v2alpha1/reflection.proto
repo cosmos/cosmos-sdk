@@ -36,6 +36,7 @@ message TxDescriptor {
 // AuthnDescriptor provides information on how to sign transactions without relying
 // on the online RPCs GetTxMetadata and CombineUnsignedTxAndSignatures
 message AuthnDescriptor {
+  option deprecated = true;
   // sign_modes defines the supported signature algorithm
   repeated SigningModeDescriptor sign_modes = 1;
 }
@@ -101,6 +102,7 @@ message InterfaceAcceptingMessageDescriptor {
 
 // ConfigurationDescriptor contains metadata information on the sdk.Config
 message ConfigurationDescriptor {
+  option deprecated = true;
   // bech32_account_address_prefix is the account address prefix
   string bech32_account_address_prefix = 1;
 }
@@ -117,6 +119,7 @@ service ReflectionService {
   // NOTE: this RPC is still experimental and might be subject to breaking changes or removal in
   // future releases of the cosmos-sdk.
   rpc GetAuthnDescriptor(GetAuthnDescriptorRequest) returns (GetAuthnDescriptorResponse) {
+    option deprecated            = true;
     option (google.api.http).get = "/cosmos/base/reflection/v1beta1/app_descriptor/authn";
   }
   // GetChainDescriptor returns the description of the chain
@@ -129,6 +132,7 @@ service ReflectionService {
   }
   // GetConfigurationDescriptor returns the descriptor for the sdk.Config of the application
   rpc GetConfigurationDescriptor(GetConfigurationDescriptorRequest) returns (GetConfigurationDescriptorResponse) {
+    option deprecated            = true;
     option (google.api.http).get = "/cosmos/base/reflection/v1beta1/app_descriptor/configuration";
   }
   // GetQueryServicesDescriptor returns the available gRPC queryable services of the application
@@ -142,9 +146,12 @@ service ReflectionService {
 }
 
 // GetAuthnDescriptorRequest is the request used for the GetAuthnDescriptor RPC
-message GetAuthnDescriptorRequest {}
+message GetAuthnDescriptorRequest {
+  option deprecated = true;
+}
 // GetAuthnDescriptorResponse is the response returned by the GetAuthnDescriptor RPC
 message GetAuthnDescriptorResponse {
+  option deprecated = true;
   // authn describes how to authenticate to the application when sending transactions
   AuthnDescriptor authn = 1;
 }
@@ -166,9 +173,12 @@ message GetCodecDescriptorResponse {
 }
 
 // GetConfigurationDescriptorRequest is the request used for the GetConfigurationDescriptor RPC
-message GetConfigurationDescriptorRequest {}
+message GetConfigurationDescriptorRequest {
+  option deprecated = true;
+}
 // GetConfigurationDescriptorResponse is the response returned by the GetConfigurationDescriptor RPC
 message GetConfigurationDescriptorResponse {
+  option deprecated = true;
   // config describes the application's sdk.Config
   ConfigurationDescriptor config = 1;
 }

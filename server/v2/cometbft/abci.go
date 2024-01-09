@@ -201,14 +201,15 @@ func (c *Consensus[T]) PrepareProposal(ctx context.Context, req *abci.RequestPre
 		return nil, err
 	}
 
-	fmt.Println("txs", txs)
-	// TODO: convert []tx into [][]byte
-	return &abci.ResponsePrepareProposal{}, nil
+	return &abci.ResponsePrepareProposal{
+		Txs: c.app.EncodeTxs(txs),
+	}, nil
 }
 
 // ProcessProposal implements types.Application.
 func (c *Consensus[T]) ProcessProposal(ctx context.Context, req *abci.RequestProcessProposal) (*abci.ResponseProcessProposal, error) {
-	err := c.app.VerifyBlock(ctx, uint64(req.Height), nil) // TODO: convert [][]byte into []tx
+	decodedTxs := c.app.DecodeTxs(req.Txs)
+	err := c.app.VerifyBlock(ctx, uint64(req.Height), decodedTxs)
 	if err != nil {
 		c.logger.Error("failed to process proposal", "height", req.Height, "time", req.Time, "hash", fmt.Sprintf("%X", req.Hash), "err", err)
 		return &abci.ResponseProcessProposal{

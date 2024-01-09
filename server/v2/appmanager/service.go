@@ -169,3 +169,13 @@ func (a AppManager[T]) Validate(ctx context.Context, txBytes []byte) (appmanager
 func (a AppManager[T]) LastBlockHeight() uint64 {
 	return a.lastBlockHeight.Load()
 }
+
+// TODO: implement
+func (a AppManager[T]) DecodeTxs(_ [][]byte) []T {
+	return []T{}
+}
+
+// TODO: implement
+func (a AppManager[T]) EncodeTxs(_ []T) [][]byte {
+	return [][]byte{}
+}

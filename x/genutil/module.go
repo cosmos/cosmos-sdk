@@ -12,6 +12,7 @@ import (
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/genesis"
 	"cosmossdk.io/depinject"
+	am "cosmossdk.io/depinject/appmodule"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -120,8 +121,8 @@ func (am AppModule) ExportGenesis(_ context.Context, cdc codec.JSONCodec) json.R
 func (AppModule) ConsensusVersion() uint64 { return 1 }
 
 func init() {
-	appmodule.Register(&modulev1.Module{},
-		appmodule.Provide(ProvideModule),
+	am.Register(&modulev1.Module{},
+		am.Provide(ProvideModule),
 	)
 }
 

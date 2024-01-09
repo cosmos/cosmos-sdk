@@ -17,6 +17,9 @@ var (
 	ErrBundlerPayment = errors.New("bundler payment failed")
 	// ErrExecution is returned when the execution fails.
 	ErrExecution = errors.New("execution failed")
+	// ErrDisallowedTxCompatInBundle is returned when the tx compat
+	// is populated in a bundle.
+	ErrDisallowedTxCompatInBundle = errors.New("tx compat field populated in bundle")
 )
 
 // ExecuteUserOperation handles the execution of an abstracted account UserOperation.
@@ -25,6 +28,13 @@ func (k Keeper) ExecuteUserOperation(
 	bundler string,
 	op *v1.UserOperation,
 ) *v1.UserOperationResponse {
+	// TxCompat field must not be allowed in a UserOperation sent from a bundle.
+	// Only the runtime can populate this field when an abstracted account sends
+	// a tx (not from a bundle) and this is converted into a UserOperation.
+	if op.TxCompat != nil {
+		return &v1.UserOperationResponse{Error: ErrDisallowedTxCompatInBundle.Error()}
+	}
+
 	resp := &v1.UserOperationResponse{}
 
 	// authenticate

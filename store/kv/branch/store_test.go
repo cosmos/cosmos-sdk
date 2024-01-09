@@ -30,7 +30,7 @@ func (s *StoreTestSuite) SetupTest() {
 	ss := storage.NewStorageStore(sqliteDB)
 	s.Require().NoError(err)
 
-	cs := store.NewChangeset(map[string]store.KVPairs{storeKey: {}})
+	cs := store.NewChangesetWithPairs(map[string]store.KVPairs{storeKey: {}})
 	for i := 0; i < 100; i++ {
 		key := fmt.Sprintf("key%03d", i) // key000, key001, ..., key099
 		val := fmt.Sprintf("val%03d", i) // val000, val001, ..., val099
@@ -157,7 +157,6 @@ func (s *StoreTestSuite) TestIterator_NoWrites() {
 		s.Require().NoError(itr.Error())
 
 		// seek past domain, which should make the iterator invalid and produce an error
-		s.Require().False(itr.Next())
 		s.Require().False(itr.Valid())
 	})
 
@@ -178,7 +177,6 @@ func (s *StoreTestSuite) TestIterator_NoWrites() {
 		s.Require().NoError(itr.Error())
 
 		// seek past domain, which should make the iterator invalid and produce an error
-		s.Require().False(itr.Next())
 		s.Require().False(itr.Valid())
 	})
 
@@ -199,7 +197,6 @@ func (s *StoreTestSuite) TestIterator_NoWrites() {
 		s.Require().NoError(itr.Error())
 
 		// seek past domain, which should make the iterator invalid and produce an error
-		s.Require().False(itr.Next())
 		s.Require().False(itr.Valid())
 	})
 
@@ -220,7 +217,6 @@ func (s *StoreTestSuite) TestIterator_NoWrites() {
 		s.Require().NoError(itr.Error())
 
 		// seek past domain, which should make the iterator invalid and produce an error
-		s.Require().False(itr.Next())
 		s.Require().False(itr.Valid())
 	})
 }
@@ -264,7 +260,6 @@ func (s *StoreTestSuite) TestIterator_DirtyWrites() {
 		s.Require().NoError(itr.Error())
 
 		// seek past domain, which should make the iterator invalid and produce an error
-		s.Require().False(itr.Next())
 		s.Require().False(itr.Valid())
 	})
 
@@ -290,7 +285,6 @@ func (s *StoreTestSuite) TestIterator_DirtyWrites() {
 		s.Require().NoError(itr.Error())
 
 		// seek past domain, which should make the iterator invalid and produce an error
-		s.Require().False(itr.Next())
 		s.Require().False(itr.Valid())
 	})
 
@@ -316,7 +310,6 @@ func (s *StoreTestSuite) TestIterator_DirtyWrites() {
 		s.Require().NoError(itr.Error())
 
 		// seek past domain, which should make the iterator invalid and produce an error
-		s.Require().False(itr.Next())
 		s.Require().False(itr.Valid())
 	})
 
@@ -342,7 +335,6 @@ func (s *StoreTestSuite) TestIterator_DirtyWrites() {
 		s.Require().NoError(itr.Error())
 
 		// seek past domain, which should make the iterator invalid and produce an error
-		s.Require().False(itr.Next())
 		s.Require().False(itr.Valid())
 	})
 }
@@ -366,7 +358,6 @@ func (s *StoreTestSuite) TestReverseIterator_NoWrites() {
 		s.Require().NoError(itr.Error())
 
 		// seek past domain, which should make the iterator invalid and produce an error
-		s.Require().False(itr.Next())
 		s.Require().False(itr.Valid())
 	})
 
@@ -388,7 +379,6 @@ func (s *StoreTestSuite) TestReverseIterator_NoWrites() {
 		s.Require().NoError(itr.Error())
 
 		// seek past domain, which should make the iterator invalid and produce an error
-		s.Require().False(itr.Next())
 		s.Require().False(itr.Valid())
 	})
 
@@ -410,7 +400,6 @@ func (s *StoreTestSuite) TestReverseIterator_NoWrites() {
 		s.Require().NoError(itr.Error())
 
 		// seek past domain, which should make the iterator invalid and produce an error
-		s.Require().False(itr.Next())
 		s.Require().False(itr.Valid())
 	})
 
@@ -432,7 +421,6 @@ func (s *StoreTestSuite) TestReverseIterator_NoWrites() {
 		s.Require().NoError(itr.Error())
 
 		// seek past domain, which should make the iterator invalid and produce an error
-		s.Require().False(itr.Next())
 		s.Require().False(itr.Valid())
 	})
 }
@@ -477,7 +465,6 @@ func (s *StoreTestSuite) TestReverseIterator_DirtyWrites() {
 		s.Require().NoError(itr.Error())
 
 		// seek past domain, which should make the iterator invalid and produce an error
-		s.Require().False(itr.Next())
 		s.Require().False(itr.Valid())
 	})
 
@@ -504,7 +491,6 @@ func (s *StoreTestSuite) TestReverseIterator_DirtyWrites() {
 		s.Require().NoError(itr.Error())
 
 		// seek past domain, which should make the iterator invalid and produce an error
-		s.Require().False(itr.Next())
 		s.Require().False(itr.Valid())
 	})
 
@@ -531,7 +517,6 @@ func (s *StoreTestSuite) TestReverseIterator_DirtyWrites() {
 		s.Require().NoError(itr.Error())
 
 		// seek past domain, which should make the iterator invalid and produce an error
-		s.Require().False(itr.Next())
 		s.Require().False(itr.Valid())
 	})
 
@@ -558,7 +543,6 @@ func (s *StoreTestSuite) TestReverseIterator_DirtyWrites() {
 		s.Require().NoError(itr.Error())
 
 		// seek past domain, which should make the iterator invalid and produce an error
-		s.Require().False(itr.Next())
 		s.Require().False(itr.Valid())
 	})
 }

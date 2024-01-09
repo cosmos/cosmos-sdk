@@ -16,6 +16,14 @@ import (
 
 // HandleValidatorSignature handles a validator signature, must be called once per validator per block.
 func (k Keeper) HandleValidatorSignature(ctx context.Context, addr cryptotypes.Address, power int64, signed comet.BlockIDFlag) error {
+	params, err := k.Params.Get(ctx)
+	if err != nil {
+		return err
+	}
+	return k.HandleValidatorSignatureWithParams(ctx, params, addr, power, signed)
+}
+
+func (k Keeper) HandleValidatorSignatureWithParams(ctx context.Context, params types.Params, addr cryptotypes.Address, power int64, signed comet.BlockIDFlag) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	logger := k.Logger(ctx)
 	height := sdkCtx.BlockHeight()
@@ -39,10 +47,7 @@ func (k Keeper) HandleValidatorSignature(ctx context.Context, addr cryptotypes.A
 		return err
 	}
 
-	signedBlocksWindow, err := k.SignedBlocksWindow(ctx)
-	if err != nil {
-		return err
-	}
+	signedBlocksWindow := params.SignedBlocksWindow
 
 	// Compute the relative index, so we count the blocks the validator *should*
 	// have signed. We will use the 0-value default signing info if not present,
@@ -82,10 +87,7 @@ func (k Keeper) HandleValidatorSignature(ctx context.Context, addr cryptotypes.A
 		// bitmap value at this index has not changed, no need to update counter
 	}
 
-	minSignedPerWindow, err := k.MinSignedPerWindow(ctx)
-	if err != nil {
-		return err
-	}
+	minSignedPerWindow := params.MinSignedPerWindowInt()
 
 	consStr, err := k.sk.ConsensusAddressCodec().BytesToString(consAddr)
 	if err != nil {

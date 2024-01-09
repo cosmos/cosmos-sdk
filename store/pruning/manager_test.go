@@ -64,7 +64,7 @@ func (s *PruningTestSuite) TestPruning() {
 	for i := uint64(0); i < latestVersion; i++ {
 		version := i + 1
 
-		cs := store.NewChangeset(map[string]store.KVPairs{defaultStoreKey: {}})
+		cs := store.NewChangesetWithPairs(map[string]store.KVPairs{defaultStoreKey: {}})
 		cs.AddKVPair(defaultStoreKey, store.KVPair{
 			Key:   []byte("key"),
 			Value: []byte(fmt.Sprintf("value%d", version)),

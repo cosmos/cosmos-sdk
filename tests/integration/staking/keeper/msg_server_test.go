@@ -6,12 +6,15 @@ import (
 
 	"gotest.tools/v3/assert"
 
+	"cosmossdk.io/core/header"
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/bank/testutil"
+	pooltypes "cosmossdk.io/x/protocolpool/types"
 	"cosmossdk.io/x/staking/keeper"
 	"cosmossdk.io/x/staking/types"
 
 	"github.com/cosmos/cosmos-sdk/codec/address"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -171,6 +174,220 @@ func TestCancelUnbondingDelegation(t *testing.T) {
 				balanceForNotBondedPool := f.bankKeeper.GetBalance(ctx, notBondedPool.GetAddress(), bondDenom)
 				assert.DeepEqual(t, balanceForNotBondedPool, moduleBalance.Sub(tc.req.Amount))
 				moduleBalance = moduleBalance.Sub(tc.req.Amount)
+			}
+		})
+	}
+}
+
+func TestRotateConsPubKey(t *testing.T) {
+	t.Parallel()
+	f := initFixture(t)
+
+	ctx := f.sdkCtx
+	stakingKeeper := f.stakingKeeper
+	bankKeeper := f.bankKeeper
+	accountKeeper := f.accountKeeper
+
+	msgServer := keeper.NewMsgServerImpl(stakingKeeper)
+	bondDenom, err := stakingKeeper.BondDenom(ctx)
+	assert.NilError(t, err)
+
+	params, err := stakingKeeper.Params.Get(ctx)
+	assert.NilError(t, err)
+
+	params.KeyRotationFee = sdk.NewInt64Coin(bondDenom, 10)
+	err = stakingKeeper.Params.Set(ctx, params)
+	assert.NilError(t, err)
+
+	addrs := simtestutil.AddTestAddrsIncremental(bankKeeper, stakingKeeper, ctx, 5, stakingKeeper.TokensFromConsensusPower(ctx, 100))
+	valAddrs := simtestutil.ConvertAddrsToValAddrs(addrs)
+
+	// create 5 validators
+	for i := 0; i < 5; i++ {
+		comm := types.NewCommissionRates(math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0))
+
+		msg, err := types.NewMsgCreateValidator(valAddrs[i].String(), PKs[i], sdk.NewCoin(sdk.DefaultBondDenom, stakingKeeper.TokensFromConsensusPower(ctx, 30)),
+			types.Description{Moniker: "NewVal"}, comm, math.OneInt())
+		assert.NilError(t, err)
+		_, err = msgServer.CreateValidator(ctx, msg)
+		assert.NilError(t, err)
+	}
+
+	// call endblocker to update the validator state
+	_, err = stakingKeeper.EndBlocker(ctx.WithBlockHeight(ctx.BlockHeader().Height + 1))
+	assert.NilError(t, err)
+
+	params, err = stakingKeeper.Params.Get(ctx)
+	assert.NilError(t, err)
+
+	validators, err := stakingKeeper.GetAllValidators(ctx)
+	assert.NilError(t, err)
+	assert.Equal(t, len(validators) >= 5, true)
+
+	testCases := []struct {
+		name           string
+		malleate       func() sdk.Context
+		pass           bool
+		validator      string
+		newPubKey      cryptotypes.PubKey
+		expErrMsg      string
+		expHistoryObjs int
+		fees           sdk.Coin
+	}{
+		{
+			name: "successful consensus pubkey rotation",
+			malleate: func() sdk.Context {
+				return ctx
+			},
+			validator:      validators[0].GetOperator(),
+			newPubKey:      PKs[499],
+			pass:           true,
+			expHistoryObjs: 1,
+			fees:           params.KeyRotationFee,
+		},
+		{
+			name: "non existing validator check",
+			malleate: func() sdk.Context {
+				return ctx
+			},
+			validator: sdk.ValAddress("non_existing_val").String(),
+			newPubKey: PKs[498],
+			pass:      false,
+			expErrMsg: "validator does not exist",
+		},
+		{
+			name: "pubkey already associated with another validator",
+			malleate: func() sdk.Context {
+				return ctx
+			},
+			validator: validators[0].GetOperator(),
+			newPubKey: validators[1].ConsensusPubkey.GetCachedValue().(cryptotypes.PubKey),
+			pass:      false,
+			expErrMsg: "consensus pubkey is already used for a validator",
+		},
+		{
+			name: "consensus pubkey rotation limit check",
+			malleate: func() sdk.Context {
+				params, err := stakingKeeper.Params.Get(ctx)
+				assert.NilError(t, err)
+
+				params.KeyRotationFee = sdk.NewInt64Coin(bondDenom, 10)
+				err = stakingKeeper.Params.Set(ctx, params)
+				assert.NilError(t, err)
+
+				msg, err := types.NewMsgRotateConsPubKey(
+					validators[1].GetOperator(),
+					PKs[498],
+				)
+				assert.NilError(t, err)
+				_, err = msgServer.RotateConsPubKey(ctx, msg)
+				assert.NilError(t, err)
+
+				return ctx
+			},
+			validator: validators[1].GetOperator(),
+			newPubKey: PKs[497],
+			pass:      false,
+			expErrMsg: "exceeding maximum consensus pubkey rotations within unbonding period",
+		},
+		{
+			name: "limit reached, but should rotate after the unbonding period",
+			malleate: func() sdk.Context {
+				params, err := stakingKeeper.Params.Get(ctx)
+				assert.NilError(t, err)
+
+				params.KeyRotationFee = sdk.NewInt64Coin(bondDenom, 10)
+				err = stakingKeeper.Params.Set(ctx, params)
+				assert.NilError(t, err)
+
+				msg, err := types.NewMsgRotateConsPubKey(
+					validators[3].GetOperator(),
+					PKs[495],
+				)
+
+				assert.NilError(t, err)
+				_, err = msgServer.RotateConsPubKey(ctx, msg)
+				assert.NilError(t, err)
+				ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+
+				// this shouldn't remove the existing keys from waiting queue since unbonding time isn't reached
+				_, err = stakingKeeper.EndBlocker(ctx)
+				assert.NilError(t, err)
+				// stakingKeeper.UpdateAllMaturedConsKeyRotatedKeys(ctx, ctx.BlockHeader().Time)
+
+				msg, err = types.NewMsgRotateConsPubKey(
+					validators[3].GetOperator(),
+					PKs[494],
+				)
+
+				assert.NilError(t, err)
+				_, err = msgServer.RotateConsPubKey(ctx, msg)
+				assert.Error(t, err, "exceeding maximum consensus pubkey rotations within unbonding period")
+
+				ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+
+				newCtx := ctx.WithHeaderInfo(header.Info{Time: ctx.HeaderInfo().Time.Add(params.UnbondingTime)})
+				newCtx = newCtx.WithBlockHeight(newCtx.BlockHeight() + 1)
+				// this should remove keys from waiting queue since unbonding time is reached
+				_, err = stakingKeeper.EndBlocker(newCtx)
+				assert.NilError(t, err)
+				// stakingKeeper.UpdateAllMaturedConsKeyRotatedKeys(newCtx, newCtx.BlockHeader().Time)
+
+				return newCtx
+			},
+			validator:      validators[3].GetOperator(),
+			newPubKey:      PKs[494],
+			pass:           true,
+			expErrMsg:      "",
+			expHistoryObjs: 2,
+			fees:           params.KeyRotationFee,
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			newCtx := testCase.malleate()
+			oldDistrBalance := bankKeeper.GetBalance(newCtx, accountKeeper.GetModuleAddress(pooltypes.ModuleName), bondDenom)
+			msg, err := types.NewMsgRotateConsPubKey(
+				testCase.validator,
+				testCase.newPubKey,
+			)
+			assert.NilError(t, err)
+
+			_, err = msgServer.RotateConsPubKey(newCtx, msg)
+
+			if testCase.pass {
+				assert.NilError(t, err)
+
+				_, err = stakingKeeper.EndBlocker(newCtx)
+				assert.NilError(t, err)
+
+				// rotation fee payment from sender to distrtypes
+				newDistrBalance := bankKeeper.GetBalance(newCtx, accountKeeper.GetModuleAddress(pooltypes.ModuleName), bondDenom)
+				assert.DeepEqual(t, newDistrBalance, oldDistrBalance.Add(testCase.fees))
+
+				valBytes, err := stakingKeeper.ValidatorAddressCodec().StringToBytes(testCase.validator)
+				assert.NilError(t, err)
+
+				// validator consensus pubkey update check
+				validator, err := stakingKeeper.GetValidator(newCtx, valBytes)
+				assert.NilError(t, err)
+
+				consAddr, err := validator.GetConsAddr()
+				assert.NilError(t, err)
+				assert.DeepEqual(t, consAddr, testCase.newPubKey.Address().Bytes())
+
+				// consensus rotation history set check
+				historyObjects, err := stakingKeeper.GetValidatorConsPubKeyRotationHistory(newCtx, valBytes)
+				assert.NilError(t, err)
+				assert.Equal(t, len(historyObjects), testCase.expHistoryObjs)
+
+				historyObjects, err = stakingKeeper.GetBlockConsPubKeyRotationHistory(newCtx)
+				assert.NilError(t, err)
+				assert.Equal(t, len(historyObjects), 1)
+
+			} else {
+				assert.ErrorContains(t, err, testCase.expErrMsg)
 			}
 		})
 	}

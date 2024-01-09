@@ -117,7 +117,7 @@ All methods, structs and their fields must be public for `depinject`.
     https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/x/group/module/module.go#L194-L235
     ```
 
-6. All modules must implement `depinject.OnePerModuleType` interface. This is used in order to tell the dependency injection framework that the module can only be instaniated once. 
+6. All modules must implement `depinject.OnePerModuleType` interface. This is used in order to tell the dependency injection framework that the module can only be instantiated once. 
 
     ```go reference
     https://github.com/cosmos/cosmos-sdk/blob/f4bdec3433373cc4950f4680743e969495763fbb/x/group/module/module.go#L64-L65

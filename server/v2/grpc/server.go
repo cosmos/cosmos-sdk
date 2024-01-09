@@ -20,7 +20,6 @@ import (
 type ClientContext interface {
 	// InterfaceRegistry returns the InterfaceRegistry.
 	InterfaceRegistry() appmanager.InterfaceRegistry
-	ChainID() string
 }
 
 type GRPCServer struct {

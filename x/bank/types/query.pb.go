@@ -1550,9 +1550,9 @@ type QueryClient interface {
 	SupplyOf(ctx context.Context, in *QuerySupplyOfRequest, opts ...grpc.CallOption) (*QuerySupplyOfResponse, error)
 	// Params queries the parameters of x/bank module.
 	Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error)
-	// DenomsMetadata queries the client metadata of a given coin denomination.
+	// DenomMetadata queries the client metadata of a given coin denomination.
 	DenomMetadata(ctx context.Context, in *QueryDenomMetadataRequest, opts ...grpc.CallOption) (*QueryDenomMetadataResponse, error)
-	// DenomsMetadata queries the client metadata of a given coin denomination.
+	// DenomMetadataByQueryString queries the client metadata of a given coin denomination.
 	DenomMetadataByQueryString(ctx context.Context, in *QueryDenomMetadataByQueryStringRequest, opts ...grpc.CallOption) (*QueryDenomMetadataByQueryStringResponse, error)
 	// DenomsMetadata queries the client metadata for all registered coin
 	// denominations.
@@ -1565,7 +1565,7 @@ type QueryClient interface {
 	//
 	// Since: cosmos-sdk 0.46
 	DenomOwners(ctx context.Context, in *QueryDenomOwnersRequest, opts ...grpc.CallOption) (*QueryDenomOwnersResponse, error)
-	// DenomOwners queries for all account addresses that own a particular token
+	// DenomOwnersByQuery queries for all account addresses that own a particular token
 	// denomination.
 	DenomOwnersByQuery(ctx context.Context, in *QueryDenomOwnersByQueryRequest, opts ...grpc.CallOption) (*QueryDenomOwnersByQueryResponse, error)
 	// SendEnabled queries for SendEnabled entries.
@@ -1740,9 +1740,9 @@ type QueryServer interface {
 	SupplyOf(context.Context, *QuerySupplyOfRequest) (*QuerySupplyOfResponse, error)
 	// Params queries the parameters of x/bank module.
 	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
-	// DenomsMetadata queries the client metadata of a given coin denomination.
+	// DenomMetadata queries the client metadata of a given coin denomination.
 	DenomMetadata(context.Context, *QueryDenomMetadataRequest) (*QueryDenomMetadataResponse, error)
-	// DenomsMetadata queries the client metadata of a given coin denomination.
+	// DenomMetadataByQueryString queries the client metadata of a given coin denomination.
 	DenomMetadataByQueryString(context.Context, *QueryDenomMetadataByQueryStringRequest) (*QueryDenomMetadataByQueryStringResponse, error)
 	// DenomsMetadata queries the client metadata for all registered coin
 	// denominations.
@@ -1755,7 +1755,7 @@ type QueryServer interface {
 	//
 	// Since: cosmos-sdk 0.46
 	DenomOwners(context.Context, *QueryDenomOwnersRequest) (*QueryDenomOwnersResponse, error)
-	// DenomOwners queries for all account addresses that own a particular token
+	// DenomOwnersByQuery queries for all account addresses that own a particular token
 	// denomination.
 	DenomOwnersByQuery(context.Context, *QueryDenomOwnersByQueryRequest) (*QueryDenomOwnersByQueryResponse, error)
 	// SendEnabled queries for SendEnabled entries.

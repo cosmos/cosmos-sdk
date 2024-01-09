@@ -3,62 +3,16 @@ package offchain
 import (
 	"testing"
 
-	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/require"
 
 	apitxsigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
-	"cosmossdk.io/x/auth/tx"
-	txmodule "cosmossdk.io/x/auth/tx/config"
-	"cosmossdk.io/x/tx/signing"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/address"
-	"github.com/cosmos/cosmos-sdk/codec/testutil"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing" // TODO: needed as textual is not enabled by default
 )
-
-func getCodec() codec.Codec {
-	registry := testutil.CodecOptions{}.NewInterfaceRegistry()
-	cryptocodec.RegisterInterfaces(registry)
-
-	return codec.NewProtoCodec(registry)
-}
-
-func MakeTestTxConfig(t *testing.T) client.TxConfig {
-	t.Helper()
-	enabledSignModes := []signingtypes.SignMode{
-		signingtypes.SignMode_SIGN_MODE_DIRECT,
-		signingtypes.SignMode_SIGN_MODE_DIRECT_AUX,
-		signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
-		signingtypes.SignMode_SIGN_MODE_TEXTUAL,
-	}
-	initClientCtx := client.Context{}
-	txConfigOpts := tx.ConfigOptions{
-		EnabledSignModes:           enabledSignModes,
-		TextualCoinMetadataQueryFn: txmodule.NewGRPCCoinMetadataQueryFn(initClientCtx),
-	}
-	ir, err := codectypes.NewInterfaceRegistryWithOptions(codectypes.InterfaceRegistryOptions{
-		ProtoFiles: proto.HybridResolver,
-		SigningOptions: signing.Options{
-			AddressCodec:          address.NewBech32Codec("cosmos"),
-			ValidatorAddressCodec: address.NewBech32Codec("cosmosvaloper"),
-		},
-	})
-	require.NoError(t, err)
-
-	cryptocodec.RegisterInterfaces(ir)
-	cdc := codec.NewProtoCodec(ir)
-	txConfig, err := tx.NewTxConfigWithOptions(cdc, txConfigOpts)
-	require.NoError(t, err)
-
-	return txConfig
-}
 
 func Test_getSignMode(t *testing.T) {
 	tests := []struct {
@@ -105,7 +59,7 @@ func Test_sign(t *testing.T) {
 
 	ctx := client.Context{
 		Keyring:      k,
-		TxConfig:     MakeTestTxConfig(t),
+		TxConfig:     newTestConfig(t),
 		AddressCodec: address.NewBech32Codec("cosmos"),
 	}
 

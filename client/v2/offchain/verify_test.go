@@ -14,11 +14,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 )
 
-const mnemonic = "have embark stumble card pistol fun gauge obtain forget oil awesome lottery unfold corn sure original exist siren pudding spread uphold dwarf goddess card"
-
 func Test_Verify(t *testing.T) {
 	ctx := client.Context{
-		TxConfig:     MakeTestTxConfig(t),
+		TxConfig:     newTestConfig(t),
 		Codec:        getCodec(),
 		AddressCodec: address.NewBech32Codec("cosmos"),
 	}
@@ -99,7 +97,7 @@ func Test_SignVerify(t *testing.T) {
 	require.NoError(t, err)
 
 	ctx := client.Context{
-		TxConfig:     MakeTestTxConfig(t),
+		TxConfig:     newTestConfig(t),
 		Codec:        getCodec(),
 		AddressCodec: address.NewBech32Codec("cosmos"),
 		Keyring:      k,

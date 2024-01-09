@@ -15,6 +15,8 @@ service Query {
   rpc Schema(SchemaRequest) returns (SchemaResponse) {};
   // AccountType returns the account type for an address.
   rpc AccountType(AccountTypeRequest) returns (AccountTypeResponse) {};
+  // AccountNumber returns the account number given the account address.
+  rpc AccountNumber(AccountNumberRequest) returns (AccountNumberResponse) {};
   // SimulateUserOperation simulates a user operation.
   rpc SimulateUserOperation(SimulateUserOperationRequest) returns (SimulateUserOperationResponse) {};
 }
@@ -68,6 +70,19 @@ message AccountTypeRequest {
 message AccountTypeResponse {
   // account_type defines the account type for the address.
   string account_type = 1;
+}
+
+// AccountNumberRequest returns the account number given the address.
+message AccountNumberRequest {
+  // address is the address of the account we want to know the number of.
+  string address = 1;
+}
+
+// AccountNumberResponse is the response returned when querying the
+// account number by address.
+message AccountNumberResponse {
+  // number is the account number of the provided address.
+  uint64 number = 1;
 }
 
 // SimulateUserOperationRequest is the query request used to simulate a

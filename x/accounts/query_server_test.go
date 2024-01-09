@@ -48,7 +48,6 @@ func TestQueryServer(t *testing.T) {
 
 		resp, err := implementation.UnpackAnyRaw(queryResp.Response)
 		require.NoError(t, err)
-
 		require.Equal(t, "10", resp.(*types.StringValue).Value)
 	})
 

@@ -41,6 +41,9 @@ type (
 		//   (sequence number) when evicting transactions.
 		// - if MaxTx < 0, `Insert` is a no-op.
 		MaxTx int
+
+		// SignerExtractor is an implementation which retrieves signer data from a sdk.Tx
+		SignerExtractor SignerExtractionAdapter
 	}
 
 	// PriorityNonceMempool is a mempool implementation that stores txs
@@ -117,7 +120,8 @@ func NewDefaultTxPriority() TxPriority[int64] {
 
 func DefaultPriorityNonceMempoolConfig() PriorityNonceMempoolConfig[int64] {
 	return PriorityNonceMempoolConfig[int64]{
-		TxPriority: NewDefaultTxPriority(),
+		TxPriority:      NewDefaultTxPriority(),
+		SignerExtractor: NewDefaultSignerExtractionAdapter(),
 	}
 }
 
@@ -205,7 +209,7 @@ func (mp *PriorityNonceMempool[C]) Insert(ctx context.Context, tx sdk.Tx) error 
 		return nil
 	}
 
-	sigs, err := tx.(signing.SigVerifiableTx).GetSignaturesV2()
+	sigs, err := mp.cfg.SignerExtractor.GetSigners(tx)
 	if err != nil {
 		return err
 	}
@@ -214,7 +218,7 @@ func (mp *PriorityNonceMempool[C]) Insert(ctx context.Context, tx sdk.Tx) error 
 	}
 
 	sig := sigs[0]
-	sender := sdk.AccAddress(sig.PubKey.Address()).String()
+	sender := sig.Signer.String()
 	priority := mp.cfg.TxPriority.GetTxPriority(ctx, tx)
 	nonce := sig.Sequence
 	key := txMeta[C]{nonce: nonce, priority: priority, sender: sender}

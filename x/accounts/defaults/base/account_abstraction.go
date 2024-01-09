@@ -69,10 +69,15 @@ func (a Account) getSignerData(ctx context.Context) (secp256k1.PubKey, signing.S
 		return secp256k1.PubKey{}, signing.SignerData{}, err
 	}
 
+	accNum, err := accountstd.QueryModule[*accountsv1.AccountNumberResponse](ctx, &accountsv1.AccountNumberRequest{Address: addrStr})
+	if err != nil {
+		return secp256k1.PubKey{}, signing.SignerData{}, err
+	}
+
 	return pk, signing.SignerData{
 		Address:       addrStr,
 		ChainID:       "",
-		AccountNumber: 0,
+		AccountNumber: accNum.Number,
 		Sequence:      seq,
 		PubKey: &anypb.Any{
 			TypeUrl: pkAny.TypeUrl,

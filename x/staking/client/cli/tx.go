@@ -45,6 +45,7 @@ func NewTxCmd() *cobra.Command {
 	stakingTxCmd.AddCommand(
 		NewCreateValidatorCmd(),
 		NewEditValidatorCmd(),
+		NewRotateConsensusKeyCmd(),
 	)
 
 	return stakingTxCmd
@@ -170,6 +171,52 @@ func NewEditValidatorCmd() *cobra.Command {
 	cmd.Flags().AddFlagSet(flagSetCommissionUpdate())
 	cmd.Flags().AddFlagSet(FlagSetMinSelfDelegation())
 	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// // NewRotateConsensusKeyCmd returns a CLI command handler for creating a MsgRotateConsPubKey transaction.
+// TODO: remove this once AutoCLI can flatten nested structs.
+func NewRotateConsensusKeyCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "rotate-cons-pubkey",
+		Short: "rotate validator consensus pub key",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			pkStr, err := cmd.Flags().GetString(FlagPubKey)
+			if err != nil {
+				return err
+			}
+
+			var pk cryptotypes.PubKey
+			if err := clientCtx.Codec.UnmarshalInterfaceJSON([]byte(pkStr), &pk); err != nil {
+				return err
+			}
+
+			valAddr, err := clientCtx.ValidatorAddressCodec.BytesToString(clientCtx.GetFromAddress())
+			if err != nil {
+				return err
+			}
+
+			msg, err := types.NewMsgRotateConsPubKey(valAddr, pk)
+			if err != nil {
+				return err
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	cmd.Flags().AddFlagSet(FlagSetPublicKey())
+
+	flags.AddTxFlagsToCmd(cmd)
+
+	_ = cmd.MarkFlagRequired(flags.FlagFrom)
+	_ = cmd.MarkFlagRequired(FlagPubKey)
 
 	return cmd
 }

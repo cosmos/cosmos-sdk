@@ -437,3 +437,76 @@ func (s *CLITestSuite) TestNewEditValidatorCmd() {
 		})
 	}
 }
+
+func (s *CLITestSuite) TestNewRotateConsensusKeyCmd() {
+	cmd := cli.NewRotateConsensusKeyCmd()
+
+	validPubkey := `{"@type":"/cosmos.crypto.ed25519.PubKey","key":"oWg2ISpLF405Jcm2vXV+2v4fnjodh6aafuIdeoW+rUw="}`
+	invalidPubkey := `{"@type":"/ed25519.PubKey","key":"wrong"}`
+
+	testCases := []struct {
+		name      string
+		args      []string
+		expErrMsg string
+	}{
+		{
+			"invalid tx no pubkey passed",
+			[]string{
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.addrs[0]),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.NewInt(10))).String()),
+			},
+			`"pubkey" not set`,
+		},
+		{
+			"wrong pubkey set",
+			[]string{
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.addrs[0]),
+				fmt.Sprintf("--%s=%s", cli.FlagPubKey, invalidPubkey),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.NewInt(10))).String()),
+			},
+			"unable to resolve type URL",
+		},
+		{
+			"wrong from address",
+			[]string{
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, "wrongFrom"),
+				fmt.Sprintf("--%s=%s", cli.FlagPubKey, validPubkey),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.NewInt(10))).String()),
+			},
+			"key not found",
+		},
+		{
+			"valid tx",
+			[]string{
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.addrs[0]),
+				fmt.Sprintf("--%s=%s", cli.FlagPubKey, validPubkey),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.NewInt(10))).String()),
+			},
+			"",
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			out, err := clitestutil.ExecTestCLICmd(s.clientCtx, cmd, tc.args)
+			if tc.expErrMsg != "" {
+				s.Require().Error(err)
+				s.Require().Contains(err.Error(), tc.expErrMsg)
+			} else {
+				s.Require().NoError(err, out.String())
+				resp := &sdk.TxResponse{}
+				s.Require().NoError(s.clientCtx.Codec.UnmarshalJSON(out.Bytes(), resp))
+			}
+		})
+	}
+}

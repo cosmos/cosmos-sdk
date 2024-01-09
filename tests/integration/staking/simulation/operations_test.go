@@ -376,7 +376,8 @@ func (s *SimTestSuite) TestSimulateRotateConsPubKey() {
 	_ = s.getTestingValidator2(ctx)
 
 	// begin a new block
-	s.app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: s.app.LastBlockHeight() + 1, Hash: s.app.LastCommitID().Hash, Time: blockTime})
+	_, err := s.app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: s.app.LastBlockHeight() + 1, Hash: s.app.LastCommitID().Hash, Time: blockTime})
+	require.NoError(err)
 
 	// execute operation
 	op := simulation.SimulateMsgRotateConsPubKey(s.txConfig, s.accountKeeper, s.bankKeeper, s.stakingKeeper)
@@ -422,8 +423,8 @@ func (s *SimTestSuite) getTestingValidator(ctx sdk.Context, commission types.Com
 func (s *SimTestSuite) getTestingValidator2(ctx sdk.Context) types.Validator {
 	val := s.getTestingValidator0(ctx)
 	val.Status = types.Bonded
-	s.stakingKeeper.SetValidator(ctx, val)
-	s.stakingKeeper.SetValidatorByConsAddr(ctx, val)
+	s.Require().NoError(s.stakingKeeper.SetValidator(ctx, val))
+	s.Require().NoError(s.stakingKeeper.SetValidatorByConsAddr(ctx, val))
 	return val
 }
 

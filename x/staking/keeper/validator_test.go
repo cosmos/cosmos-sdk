@@ -461,9 +461,9 @@ func (s *KeeperTestSuite) TestValidatorConsPubKeyUpdate() {
 		tokens := keeper.TokensFromConsensusPower(ctx, power)
 
 		validators[i], _ = validators[i].AddTokensFromDel(tokens)
-		keeper.SetValidator(ctx, validators[i])
-		keeper.SetValidatorByPowerIndex(ctx, validators[i])
-		keeper.SetValidatorByConsAddr(ctx, validators[i])
+		require.NoError(keeper.SetValidator(ctx, validators[i]))
+		require.NoError(keeper.SetValidatorByPowerIndex(ctx, validators[i]))
+		require.NoError(keeper.SetValidatorByConsAddr(ctx, validators[i]))
 
 		s.bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), stakingtypes.NotBondedPoolName, stakingtypes.BondedPoolName, gomock.Any())
 		updates := s.applyValidatorSetUpdates(ctx, keeper, 1)

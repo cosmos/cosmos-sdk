@@ -7,8 +7,8 @@ import (
 
 	"cosmossdk.io/x/slashing/testutil"
 	slashingtypes "cosmossdk.io/x/slashing/types"
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 

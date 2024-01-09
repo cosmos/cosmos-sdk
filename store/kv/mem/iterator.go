@@ -98,8 +98,6 @@ func (itr *iterator) Next() {
 	if itr.valid {
 		itr.valid = itr.keyInRange(itr.Key())
 	}
-
-	return
 }
 
 func (itr *iterator) Close() error {

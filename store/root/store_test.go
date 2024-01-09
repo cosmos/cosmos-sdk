@@ -18,7 +18,9 @@ import (
 )
 
 const (
-	testStoreKey = "test"
+	testStoreKey  = "test"
+	testStoreKey2 = "test2"
+	testStoreKey3 = "test3"
 )
 
 type RootStoreTestSuite struct {
@@ -39,10 +41,12 @@ func (s *RootStoreTestSuite) SetupTest() {
 	ss := storage.NewStorageStore(sqliteDB)
 
 	tree := iavl.NewIavlTree(dbm.NewMemDB(), noopLog, iavl.DefaultConfig())
-	sc, err := commitment.NewCommitStore(map[string]commitment.Tree{testStoreKey: tree}, dbm.NewMemDB(), noopLog)
+	tree2 := iavl.NewIavlTree(dbm.NewMemDB(), noopLog, iavl.DefaultConfig())
+	tree3 := iavl.NewIavlTree(dbm.NewMemDB(), noopLog, iavl.DefaultConfig())
+	sc, err := commitment.NewCommitStore(map[string]commitment.Tree{testStoreKey: tree, testStoreKey2: tree2, testStoreKey3: tree3}, dbm.NewMemDB(), noopLog)
 	s.Require().NoError(err)
 
-	rs, err := New(noopLog, ss, sc, []string{testStoreKey}, pruning.DefaultOptions(), pruning.DefaultOptions(), nil)
+	rs, err := New(noopLog, ss, sc, []string{testStoreKey, testStoreKey2, testStoreKey3}, pruning.DefaultOptions(), pruning.DefaultOptions(), nil)
 	s.Require().NoError(err)
 
 	rs.SetTracer(io.Discard)
@@ -91,40 +95,40 @@ func (s *RootStoreTestSuite) TestQuery() {
 	s.Require().Equal([]byte("foo"), result.ProofOps[0].Key)
 }
 
-// func (s *RootStoreTestSuite) TestQueryProof() {
-// 	// store1
-// 	bs1 := s.rootStore.GetBranchedKVStore("store1")
-// 	bs1.Set([]byte("key1"), []byte("value1"))
-// 	bs1.Set([]byte("key2"), []byte("value2"))
+func (s *RootStoreTestSuite) TestQueryProof() {
+	// testStoreKey
+	bs1 := s.rootStore.GetKVStore(testStoreKey)
+	bs1.Set([]byte("key1"), []byte("value1"))
+	bs1.Set([]byte("key2"), []byte("value2"))
 
-// 	// store2
-// 	bs2 := s.rootStore.GetBranchedKVStore("store2")
-// 	bs2.Set([]byte("key3"), []byte("value3"))
+	// testStoreKey2
+	bs2 := s.rootStore.GetKVStore(testStoreKey2)
+	bs2.Set([]byte("key3"), []byte("value3"))
 
-// 	// store3
-// 	bs3 := s.rootStore.GetBranchedKVStore("store3")
-// 	bs3.Set([]byte("key4"), []byte("value4"))
+	// testStoreKey3
+	bs3 := s.rootStore.GetKVStore(testStoreKey3)
+	bs3.Set([]byte("key4"), []byte("value4"))
 
-// 	// commit
-// 	_, err := s.rootStore.WorkingHash()
-// 	s.Require().NoError(err)
-// 	_, err = s.rootStore.Commit()
-// 	s.Require().NoError(err)
+	// commit
+	_, err := s.rootStore.WorkingHash()
+	s.Require().NoError(err)
+	_, err = s.rootStore.Commit()
+	s.Require().NoError(err)
 
-// 	// query proof for store1
-// 	result, err := s.rootStore.Query("store1", 1, []byte("key1"), true)
-// 	s.Require().NoError(err)
-// 	s.Require().NotNil(result.ProofOps)
-// 	cInfo, err := s.rootStore.GetSCStore().GetCommitInfo(1)
-// 	s.Require().NoError(err)
-// 	storeHash := cInfo.GetStoreCommitID("store1").Hash
-// 	treeRoots, err := result.ProofOps[0].Run([][]byte{[]byte("value1")})
-// 	s.Require().NoError(err)
-// 	s.Require().Equal(treeRoots[0], storeHash)
-// 	expRoots, err := result.ProofOps[1].Run([][]byte{storeHash})
-// 	s.Require().NoError(err)
-// 	s.Require().Equal(expRoots[0], cInfo.Hash())
-// }
+	// query proof for testStoreKey
+	result, err := s.rootStore.Query(testStoreKey, 1, []byte("key1"), true)
+	s.Require().NoError(err)
+	s.Require().NotNil(result.ProofOps)
+	cInfo, err := s.rootStore.GetSCStore().GetCommitInfo(1)
+	s.Require().NoError(err)
+	storeHash := cInfo.GetStoreCommitID(testStoreKey).Hash
+	treeRoots, err := result.ProofOps[0].Run([][]byte{[]byte("value1")})
+	s.Require().NoError(err)
+	s.Require().Equal(treeRoots[0], storeHash)
+	expRoots, err := result.ProofOps[1].Run([][]byte{storeHash})
+	s.Require().NoError(err)
+	s.Require().Equal(expRoots[0], cInfo.Hash())
+}
 
 func (s *RootStoreTestSuite) TestLoadVersion() {
 	// write and commit a few changesets

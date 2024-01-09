@@ -12,6 +12,7 @@ import (
 
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/v2"
+	"cosmossdk.io/store/v2/internal/encoding"
 	"cosmossdk.io/store/v2/snapshots"
 	snapshotstypes "cosmossdk.io/store/v2/snapshots/types"
 )
@@ -93,7 +94,7 @@ func (c *CommitStore) GetLatestVersion() (uint64, error) {
 		return 0, nil
 	}
 
-	version, _, err := store.DecodeUvarint(value)
+	version, _, err := encoding.DecodeUvarint(value)
 	if err != nil {
 		return 0, err
 	}
@@ -168,8 +169,8 @@ func (c *CommitStore) flushCommitInfo(version uint64, cInfo *store.CommitInfo) e
 	}
 
 	var buf bytes.Buffer
-	buf.Grow(store.EncodeUvarintSize(version))
-	if err := store.EncodeUvarint(&buf, version); err != nil {
+	buf.Grow(encoding.EncodeUvarintSize(version))
+	if err := encoding.EncodeUvarint(&buf, version); err != nil {
 		return err
 	}
 	if err := batch.Set([]byte(latestVersionKey), buf.Bytes()); err != nil {

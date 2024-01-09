@@ -43,7 +43,7 @@ func (s *CommitStoreTestSuite) TestSnapshotter() {
 				kvPairs[storeKey] = append(kvPairs[storeKey], store.KVPair{Key: key, Value: value})
 			}
 		}
-		s.Require().NoError(commitStore.WriteBatch(store.NewChangeset(kvPairs)))
+		s.Require().NoError(commitStore.WriteBatch(store.NewChangesetWithPairs(kvPairs)))
 
 		_, err = commitStore.Commit()
 		s.Require().NoError(err)

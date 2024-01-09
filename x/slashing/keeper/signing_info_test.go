@@ -8,6 +8,7 @@ import (
 	"cosmossdk.io/x/slashing/testutil"
 	slashingtypes "cosmossdk.io/x/slashing/types"
 
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -110,4 +111,50 @@ func (s *KeeperTestSuite) TestValidatorMissedBlockBitmap_SmallWindow() {
 		require.NoError(err)
 		require.Len(missedBlocks, int(params.SignedBlocksWindow)-1)
 	}
+}
+
+func (s *KeeperTestSuite) TestPerformConsensusPubKeyUpdate() {
+	ctx, slashingKeeper := s.ctx, s.slashingKeeper
+
+	require := s.Require()
+
+	pks := simtestutil.CreateTestPubKeys(500)
+
+	oldConsAddr := sdk.ConsAddress(pks[0].Address())
+	newConsAddr := sdk.ConsAddress(pks[1].Address())
+
+	newInfo := slashingtypes.NewValidatorSigningInfo(
+		oldConsAddr.String(),
+		int64(4),
+		int64(3),
+		time.Unix(2, 0).UTC(),
+		false,
+		int64(10),
+	)
+
+	err := slashingKeeper.ValidatorSigningInfo.Set(ctx, oldConsAddr, newInfo)
+	require.NoError(err)
+
+	s.stakingKeeper.EXPECT().ValidatorIdentifier(gomock.Any(), oldConsAddr).Return(oldConsAddr, nil)
+	err = slashingKeeper.SetMissedBlockBitmapValue(ctx, oldConsAddr, 10, true)
+	require.NoError(err)
+
+	err = slashingKeeper.Hooks().AfterConsensusPubKeyUpdate(ctx, pks[0], pks[1], sdk.Coin{})
+	require.NoError(err)
+
+	// check pubkey relation is set properly
+	savedPubKey, err := slashingKeeper.GetPubkey(ctx, newConsAddr.Bytes())
+	require.NoError(err)
+	require.Equal(savedPubKey, pks[1])
+
+	// check validator SigningInfo is set properly to new consensus pubkey
+	signingInfo, err := slashingKeeper.ValidatorSigningInfo.Get(ctx, newConsAddr)
+	require.NoError(err)
+	require.Equal(signingInfo, newInfo)
+
+	// missed blocks maps to old cons key only since there is a identifier added to get the missed blocks using the new cons key.
+	missedBlocks, err := slashingKeeper.GetValidatorMissedBlocks(ctx, oldConsAddr)
+	require.NoError(err)
+
+	require.Len(missedBlocks, 1)
 }

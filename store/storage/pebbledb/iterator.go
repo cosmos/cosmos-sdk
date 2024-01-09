@@ -7,20 +7,17 @@ import (
 
 	"github.com/cockroachdb/pebble"
 
-	"cosmossdk.io/store/v2"
+	corestore "cosmossdk.io/core/store"
 )
 
-var _ store.Iterator = (*iterator)(nil)
+var _ corestore.Iterator = (*iterator)(nil)
 
 // iterator implements the store.Iterator interface. It wraps a PebbleDB iterator
 // with added MVCC key handling logic. The iterator will iterate over the key space
 // in the provided domain for a given version. If a key has been written at the
 // provided version, that key/value pair will be iterated over. Otherwise, the
 // latest version for that key/value pair will be iterated over s.t. it's less
-// than the provided version. Note:
-//
-// - The start key must not be empty.
-// - Currently, reverse iteration is NOT supported.
+// than the provided version.
 type iterator struct {
 	source             *pebble.Iterator
 	prefix, start, end []byte
@@ -76,7 +73,7 @@ func newPebbleDBIterator(src *pebble.Iterator, prefix, mvccStart, mvccEnd []byte
 	// The cursor might now be pointing at a key/value pair that is tombstoned.
 	// If so, we must move the cursor.
 	if itr.valid && itr.cursorTombstoned() {
-		itr.valid = itr.Next()
+		itr.Next()
 	}
 
 	return itr
@@ -115,7 +112,7 @@ func (itr *iterator) Value() []byte {
 	return slices.Clone(val)
 }
 
-func (itr *iterator) Next() bool {
+func (itr *iterator) Next() {
 	var next bool
 	if itr.reverse {
 		currKey, _, ok := SplitMVCCKey(itr.source.Key())
@@ -142,12 +139,12 @@ func (itr *iterator) Next() bool {
 			// XXX: This should not happen as that would indicate we have a malformed
 			// MVCC key.
 			itr.valid = false
-			return itr.valid
+			return
 		}
 		if !bytes.HasPrefix(nextKey, itr.prefix) {
 			// the next key must have itr.prefix as the prefix
 			itr.valid = false
-			return itr.valid
+			return
 		}
 
 		// Move the iterator to the closest version to the desired version, so we
@@ -157,14 +154,14 @@ func (itr *iterator) Next() bool {
 		// The cursor might now be pointing at a key/value pair that is tombstoned.
 		// If so, we must move the cursor.
 		if itr.valid && itr.cursorTombstoned() {
-			itr.valid = itr.Next()
+			itr.Next()
 		}
 
-		return itr.valid
+		return
 	}
 
 	itr.valid = false
-	return itr.valid
+	return
 }
 
 func (itr *iterator) Valid() bool {
@@ -195,10 +192,12 @@ func (itr *iterator) Error() error {
 	return itr.source.Error()
 }
 
-func (itr *iterator) Close() {
-	_ = itr.source.Close()
+func (itr *iterator) Close() error {
+	err := itr.source.Close()
 	itr.source = nil
 	itr.valid = false
+
+	return err
 }
 
 func (itr *iterator) assertIsValid() {

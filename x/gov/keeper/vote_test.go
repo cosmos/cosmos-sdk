@@ -14,6 +14,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+var invalidOption v1.VoteOption = 0x10
+
 func TestVotes(t *testing.T) {
 	govKeeper, mocks, _, ctx := setupGovKeeper(t)
 	authKeeper, bankKeeper, stakingKeeper := mocks.acctKeeper, mocks.bankKeeper, mocks.stakingKeeper
@@ -25,8 +27,6 @@ func TestVotes(t *testing.T) {
 	require.NoError(t, err)
 	proposalID := proposal.Id
 	metadata := "metadata"
-
-	var invalidOption v1.VoteOption = 0x10
 
 	require.Error(t, govKeeper.AddVote(ctx, proposalID, addrs[0], v1.NewNonSplitVoteOption(v1.OptionYes), metadata), "proposal not on voting period")
 	require.Error(t, govKeeper.AddVote(ctx, 10, addrs[0], v1.NewNonSplitVoteOption(v1.OptionYes), ""), "invalid proposal ID")
@@ -105,4 +105,34 @@ func TestVotes(t *testing.T) {
 	// non existent vote
 	_, err = govKeeper.Votes.Get(ctx, collections.Join(proposalID+100, addrs[1]))
 	require.ErrorIs(t, err, collections.ErrNotFound)
+}
+
+func TestVotes_MultipleChoiceProposal(t *testing.T) {
+	govKeeper, mocks, _, ctx := setupGovKeeper(t)
+	authKeeper, bankKeeper, stakingKeeper := mocks.acctKeeper, mocks.bankKeeper, mocks.stakingKeeper
+	addrs := simtestutil.AddTestAddrsIncremental(bankKeeper, stakingKeeper, ctx, 2, sdkmath.NewInt(10000000))
+	authKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
+
+	proposal, err := govKeeper.SubmitProposal(ctx, nil, "", "title", "description", sdk.AccAddress("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r"), v1.ProposalType_PROPOSAL_TYPE_MULTIPLE_CHOICE)
+	require.NoError(t, err)
+	err = govKeeper.ProposalVoteOptions.Set(ctx, proposal.Id, v1.ProposalVoteOptions{
+		OptionOne:   "Vote for @tac0turle",
+		OptionTwo:   "Vote for @facudomedica",
+		OptionThree: "Vote for @alexanderbez",
+	})
+	require.NoError(t, err)
+
+	proposal.Status = v1.StatusVotingPeriod
+	require.NoError(t, govKeeper.SetProposal(ctx, proposal))
+
+	proposalID := proposal.Id
+
+	// invalid options
+	require.Error(t, govKeeper.AddVote(ctx, proposalID, addrs[0], v1.NewNonSplitVoteOption(invalidOption), ""), "invalid option")
+	require.Error(t, govKeeper.AddVote(ctx, proposalID, addrs[0], v1.NewNonSplitVoteOption(v1.OptionFour), ""), "invalid option") // option four is not defined.
+
+	// valid options
+	require.NoError(t, govKeeper.AddVote(ctx, proposalID, addrs[0], v1.NewNonSplitVoteOption(v1.OptionOne), ""))
+	require.NoError(t, govKeeper.AddVote(ctx, proposalID, addrs[1], v1.NewNonSplitVoteOption(v1.OptionTwo), ""))
+	require.NoError(t, govKeeper.AddVote(ctx, proposalID, addrs[0], v1.NewNonSplitVoteOption(v1.OptionThree), ""))
 }

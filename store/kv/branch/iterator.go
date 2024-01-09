@@ -3,10 +3,11 @@ package branch
 import (
 	"slices"
 
+	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/store/v2"
 )
 
-var _ store.Iterator = (*iterator)(nil)
+var _ corestore.Iterator = (*iterator)(nil)
 
 // iterator walks over both the KVStore's changeset, i.e. dirty writes, and the
 // parent iterator, which can either be another KVStore or the SS backend, at the
@@ -16,7 +17,7 @@ var _ store.Iterator = (*iterator)(nil)
 // iterator. This is because when an iterator is created, it takes a current
 // snapshot of the changeset.
 type iterator struct {
-	parentItr store.Iterator
+	parentItr corestore.Iterator
 	start     []byte
 	end       []byte
 	key       []byte
@@ -41,21 +42,21 @@ func (itr *iterator) Value() []byte {
 	return slices.Clone(itr.value)
 }
 
-func (itr *iterator) Close() {
+func (itr *iterator) Close() error {
 	itr.key = nil
 	itr.value = nil
 	itr.keys = nil
 	itr.values = nil
-	itr.parentItr.Close()
+	return itr.parentItr.Close()
 }
 
-func (itr *iterator) Next() bool {
+func (itr *iterator) Next() {
 	for {
 		switch {
 		case itr.exhausted && len(itr.keys) == 0: // exhausted both
 			itr.key = nil
 			itr.value = nil
-			return false
+			return
 
 		case itr.exhausted: // exhausted parent iterator but not store (dirty writes) iterator
 			nextKey := itr.keys[0]
@@ -72,15 +73,17 @@ func (itr *iterator) Next() bool {
 			if nextValue.Value != nil {
 				itr.key = []byte(nextKey)
 				itr.value = nextValue.Value
-				return true
+				return
 			}
 
 		case len(itr.keys) == 0: // exhausted store (dirty writes) iterator but not parent iterator
 			itr.key = itr.parentItr.Key()
 			itr.value = itr.parentItr.Value()
-			itr.exhausted = !itr.parentItr.Next()
 
-			return true
+			itr.parentItr.Next()
+			itr.exhausted = !itr.parentItr.Valid()
+
+			return
 
 		default: // parent iterator is not exhausted and we have store (dirty writes) remaining
 			dirtyKey := itr.keys[0]
@@ -102,14 +105,17 @@ func (itr *iterator) Next() bool {
 				if dirtyVal.Value != nil {
 					itr.key = []byte(dirtyKey)
 					itr.value = dirtyVal.Value
-					return true
+					return
 				}
 
 			case (!itr.reverse && parentKeyStr < dirtyKey) || (itr.reverse && parentKeyStr > dirtyKey): // parent's key should come before dirty key
 				itr.key = parentKey
 				itr.value = itr.parentItr.Value()
-				itr.exhausted = !itr.parentItr.Next()
-				return true
+
+				itr.parentItr.Next()
+				itr.exhausted = !itr.parentItr.Valid()
+
+				return
 
 			default:
 				// pop off key
@@ -120,12 +126,13 @@ func (itr *iterator) Next() bool {
 				itr.values[0].Value = nil
 				itr.values = itr.values[1:]
 
-				itr.exhausted = !itr.parentItr.Next()
+				itr.parentItr.Next()
+				itr.exhausted = !itr.parentItr.Valid()
 
 				if dirtyVal.Value != nil {
 					itr.key = []byte(dirtyKey)
 					itr.value = dirtyVal.Value
-					return true
+					return
 				}
 			}
 		}

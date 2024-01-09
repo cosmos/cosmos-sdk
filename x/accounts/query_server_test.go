@@ -23,7 +23,7 @@ func TestQueryServer(t *testing.T) {
 	ms := NewMsgServer(k)
 	qs := NewQueryServer(k)
 
-	// create
+	// create account
 	initMsg, err := implementation.PackAny(&emptypb.Empty{})
 	require.NoError(t, err)
 
@@ -34,19 +34,32 @@ func TestQueryServer(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	// query
-	req := &wrapperspb.UInt64Value{Value: 10}
-	anypbReq, err := implementation.PackAny(req)
-	require.NoError(t, err)
+	t.Run("account query", func(t *testing.T) {
+		// query
+		req := &wrapperspb.UInt64Value{Value: 10}
+		anypbReq, err := implementation.PackAny(req)
+		require.NoError(t, err)
 
-	queryResp, err := qs.AccountQuery(ctx, &v1.AccountQueryRequest{
-		Target:  initResp.AccountAddress,
-		Request: anypbReq,
+		queryResp, err := qs.AccountQuery(ctx, &v1.AccountQueryRequest{
+			Target:  initResp.AccountAddress,
+			Request: anypbReq,
+		})
+		require.NoError(t, err)
+
+		resp, err := implementation.UnpackAnyRaw(queryResp.Response)
+		require.NoError(t, err)
+		require.Equal(t, "10", resp.(*types.StringValue).Value)
 	})
-	require.NoError(t, err)
 
-	resp, err := implementation.UnpackAnyRaw(queryResp.Response)
-	require.NoError(t, err)
+	t.Run("account number", func(t *testing.T) {
+		numResp, err := qs.AccountNumber(ctx, &v1.AccountNumberRequest{Address: initResp.AccountAddress})
+		require.NoError(t, err)
+		require.Equal(t, 0, int(numResp.Number))
+	})
 
-	require.Equal(t, "10", resp.(*types.StringValue).Value)
+	t.Run("account type", func(t *testing.T) {
+		typ, err := qs.AccountType(ctx, &v1.AccountTypeRequest{Address: initResp.AccountAddress})
+		require.NoError(t, err)
+		require.Equal(t, "test", typ.AccountType)
+	})
 }

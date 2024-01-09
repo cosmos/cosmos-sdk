@@ -15,7 +15,6 @@ import (
 	"cosmossdk.io/log"
 	"cosmossdk.io/server/v2/core/appmanager"
 	"cosmossdk.io/server/v2/grpc/gogoreflection"
-	reflection "cosmossdk.io/server/v2/grpc/reflection/v2alpha1"
 )
 
 type ClientContext interface {
@@ -56,17 +55,6 @@ func NewGRPCServer(clientCtx ClientContext, logger log.Logger, app GRPCService, 
 	)
 
 	app.RegisterGRPCServer(grpcSrv)
-
-	// Reflection allows consumers to build dynamic clients that can write to any
-	// Cosmos SDK application without relying on application packages at compile
-	// time.
-	err := reflection.Register(grpcSrv, reflection.Config{
-		ChainID:           clientCtx.ChainID(),
-		InterfaceRegistry: clientCtx.InterfaceRegistry(),
-	})
-	if err != nil {
-		return GRPCServer{}, fmt.Errorf("failed to register reflection service: %w", err)
-	}
 
 	// Reflection allows external clients to see what services and methods
 	// the gRPC server exposes.

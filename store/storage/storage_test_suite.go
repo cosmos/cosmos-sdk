@@ -402,27 +402,27 @@ func (s *StorageTestSuite) TestDatabaseIterator_SkipVersion() {
 
 	defer db.Close()
 
-	cs := store.NewChangeset(map[string]store.KVPairs{storeKey1: {
+	cs := store.NewChangesetWithPairs(map[string]store.KVPairs{storeKey1: {
 		{Key: []byte("keyC"), Value: []byte("value003")},
 	}})
 	s.Require().NoError(db.ApplyChangeset(58827506, cs))
 
-	cs = store.NewChangeset(map[string]store.KVPairs{storeKey1: {
+	cs = store.NewChangesetWithPairs(map[string]store.KVPairs{storeKey1: {
 		{Key: []byte("keyE"), Value: []byte("value000")},
 	}})
 	s.Require().NoError(db.ApplyChangeset(58827506, cs))
 
-	cs = store.NewChangeset(map[string]store.KVPairs{storeKey1: {
+	cs = store.NewChangesetWithPairs(map[string]store.KVPairs{storeKey1: {
 		{Key: []byte("keyF"), Value: []byte("value000")},
 	}})
 	s.Require().NoError(db.ApplyChangeset(58827506, cs))
 
-	cs = store.NewChangeset(map[string]store.KVPairs{storeKey1: {
+	cs = store.NewChangesetWithPairs(map[string]store.KVPairs{storeKey1: {
 		{Key: []byte("keyC"), Value: []byte("value004")},
 	}})
 	s.Require().NoError(db.ApplyChangeset(58833605, cs))
 
-	cs = store.NewChangeset(map[string]store.KVPairs{storeKey1: {
+	cs = store.NewChangesetWithPairs(map[string]store.KVPairs{storeKey1: {
 		{Key: []byte("keyD"), Value: []byte("value006")},
 	}})
 	s.Require().NoError(db.ApplyChangeset(58833606, cs))

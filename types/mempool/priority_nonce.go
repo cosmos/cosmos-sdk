@@ -162,6 +162,9 @@ func skiplistComparable[C comparable](txPriority TxPriority[C]) skiplist.Compara
 // NewPriorityMempool returns the SDK's default mempool implementation which
 // returns txs in a partial order by 2 dimensions; priority, and sender-nonce.
 func NewPriorityMempool[C comparable](cfg PriorityNonceMempoolConfig[C]) *PriorityNonceMempool[C] {
+	if cfg.SignerExtractor == nil {
+		cfg.SignerExtractor = NewDefaultSignerExtractionAdapter()
+	}
 	mp := &PriorityNonceMempool[C]{
 		priorityIndex:  skiplist.New(skiplistComparable(cfg.TxPriority)),
 		priorityCounts: make(map[C]int),

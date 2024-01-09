@@ -580,15 +580,8 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 			WithCodec(cfg.Codec).
 			WithLegacyAmino(cfg.LegacyAmino).
 			WithTxConfig(cfg.TxConfig).
-<<<<<<< HEAD
-			WithAccountRetriever(cfg.AccountRetriever)
-=======
 			WithAccountRetriever(cfg.AccountRetriever).
-			WithAddressCodec(cfg.AddressCodec).
-			WithValidatorAddressCodec(cfg.ValidatorAddressCodec).
-			WithConsensusAddressCodec(cfg.ValidatorAddressCodec).
 			WithNodeURI(cmtCfg.RPC.ListenAddress)
->>>>>>> 24a8123c2 (test: add NodeURI for clientCtx (#18930))
 
 		// Provide ChainID here since we can't modify it in the Comet config.
 		ctx.Viper.Set(flags.FlagChainID, cfg.ChainID)

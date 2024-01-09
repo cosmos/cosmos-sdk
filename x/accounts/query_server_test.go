@@ -62,5 +62,4 @@ func TestQueryServer(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, "test", typ.AccountType)
 	})
-
 }

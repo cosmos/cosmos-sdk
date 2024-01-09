@@ -5,6 +5,7 @@ import (
 
 	"github.com/tidwall/btree"
 
+	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/store/v2"
 )
 
@@ -92,10 +93,10 @@ func (s *Store) Reset(_ uint64) error {
 	return nil
 }
 
-func (s *Store) Iterator(start, end []byte) store.Iterator {
+func (s *Store) Iterator(start, end []byte) corestore.Iterator {
 	return newIterator(s.tree, start, end, false)
 }
 
-func (s *Store) ReverseIterator(start, end []byte) store.Iterator {
+func (s *Store) ReverseIterator(start, end []byte) corestore.Iterator {
 	return newIterator(s.tree, start, end, true)
 }

@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	stderrors "errors"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -17,7 +18,17 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/query"
 )
 
-var _ v1.QueryServer = queryServer{}
+var (
+	_ v1.QueryServer = queryServer{}
+
+	defaultVoteOptions = &v1.ProposalVoteOptions{
+		OptionOne:   "yes",
+		OptionTwo:   "abstain",
+		OptionThree: "no",
+		OptionFour:  "no_with_veto",
+		OptionSpam:  "spam",
+	}
+)
 
 type queryServer struct{ k *Keeper }
 
@@ -51,6 +62,49 @@ func (q queryServer) Proposal(ctx context.Context, req *v1.QueryProposalRequest)
 		return nil, status.Errorf(codes.NotFound, "proposal %d doesn't exist", req.ProposalId)
 	}
 	return nil, status.Error(codes.Internal, err.Error())
+}
+
+// ProposalVoteOptions returns the proposal votes options
+// It returns the stringified vote options if the proposal is a multiple choice proposal
+// Otherwise it returns the generic vote options
+func (q queryServer) ProposalVoteOptions(ctx context.Context, req *v1.QueryProposalVoteOptionsRequest) (*v1.QueryProposalVoteOptionsResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+
+	if req.ProposalId == 0 {
+		return nil, status.Error(codes.InvalidArgument, "proposal id can not be 0")
+	}
+
+	ok, err := q.k.Proposals.Has(ctx, req.ProposalId)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	if !ok {
+		return nil, status.Errorf(codes.NotFound, "proposal %d doesn't exist", req.ProposalId)
+	}
+
+	voteOptions, err := q.k.ProposalVoteOptions.Get(ctx, req.ProposalId)
+	if err != nil {
+		if stderrors.Is(err, collections.ErrNotFound) { // fallback to generic vote options
+			return &v1.QueryProposalVoteOptionsResponse{
+				VoteOptions: defaultVoteOptions,
+			}, nil
+		}
+
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &v1.QueryProposalVoteOptionsResponse{
+		VoteOptions: &v1.ProposalVoteOptions{
+			OptionOne:   voteOptions.OptionOne,
+			OptionTwo:   voteOptions.OptionTwo,
+			OptionThree: voteOptions.OptionThree,
+			OptionFour:  voteOptions.OptionFour,
+			OptionSpam:  defaultVoteOptions.OptionSpam,
+		},
+	}, nil
 }
 
 // Proposals implements the Query/Proposals gRPC method

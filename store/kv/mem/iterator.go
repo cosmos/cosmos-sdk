@@ -6,10 +6,11 @@ import (
 	"github.com/tidwall/btree"
 	"golang.org/x/exp/slices"
 
+	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/store/v2"
 )
 
-var _ store.Iterator = (*iterator)(nil)
+var _ corestore.Iterator = (*iterator)(nil)
 
 type iterator struct {
 	treeItr btree.IterG[store.KVPair]
@@ -19,7 +20,7 @@ type iterator struct {
 	valid   bool
 }
 
-func newIterator(tree *btree.BTreeG[store.KVPair], start, end []byte, reverse bool) store.Iterator {
+func newIterator(tree *btree.BTreeG[store.KVPair], start, end []byte, reverse bool) corestore.Iterator {
 	if (start != nil && len(start) == 0) || (end != nil && len(end) == 0) {
 		panic(store.ErrKeyEmpty)
 	}
@@ -83,9 +84,9 @@ func (itr *iterator) Value() []byte {
 	return slices.Clone(itr.treeItr.Item().Value)
 }
 
-func (itr *iterator) Next() bool {
+func (itr *iterator) Next() {
 	if !itr.valid {
-		return false
+		return
 	}
 
 	if !itr.reverse {
@@ -98,11 +99,12 @@ func (itr *iterator) Next() bool {
 		itr.valid = itr.keyInRange(itr.Key())
 	}
 
-	return itr.valid
+	return
 }
 
-func (itr *iterator) Close() {
+func (itr *iterator) Close() error {
 	itr.treeItr.Release()
+	return nil
 }
 
 func (itr *iterator) Error() error {

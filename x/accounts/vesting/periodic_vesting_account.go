@@ -108,12 +108,6 @@ func (pva PeriodicVestingAccount) Init(ctx context.Context, msg *vestingtypes.Ms
 
 // --------------- execute -----------------
 
-// LockedCoins returns the set of coins that are not spendable (i.e. locked),
-// defined as the vesting coins that are not delegated.
-func (pva PeriodicVestingAccount) LockedCoins(blockTime time.Time) sdk.Coins {
-	return pva.BaseVestingAccount.LockedCoinsFromVesting(pva.GetVestingCoins(blockTime))
-}
-
 func (pva *PeriodicVestingAccount) ExecuteMessages(ctx context.Context, msg *vestingtypes.MsgExecuteMessages) (
 	*vestingtypes.MsgExecuteMessagesResponse, error,
 ) {
@@ -121,6 +115,12 @@ func (pva *PeriodicVestingAccount) ExecuteMessages(ctx context.Context, msg *ves
 }
 
 // ----------------- Query --------------------
+
+// LockedCoins returns the set of coins that are not spendable (i.e. locked),
+// defined as the vesting coins that are not delegated.
+func (pva PeriodicVestingAccount) LockedCoins(blockTime time.Time) sdk.Coins {
+	return pva.BaseVestingAccount.LockedCoinsFromVesting(pva.GetVestingCoins(blockTime))
+}
 
 // GetVestedCoins returns the total number of vested coins. If no coins are vested,
 // nil is returned.

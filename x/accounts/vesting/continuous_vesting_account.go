@@ -110,11 +110,6 @@ func (cva ContinuousVestingAccount) Init(ctx context.Context, msg *vestingtypes.
 }
 
 // --------------- execute -----------------
-// LockedCoins returns the set of coins that are not spendable (i.e. locked),
-// defined as the vesting coins that are not delegated.
-func (cva ContinuousVestingAccount) LockedCoins(blockTime time.Time) sdk.Coins {
-	return cva.BaseVestingAccount.LockedCoinsFromVesting(cva.GetVestingCoins(blockTime))
-}
 
 func (cva *ContinuousVestingAccount) ExecuteMessages(ctx context.Context, msg *vestingtypes.MsgExecuteMessages) (
 	*vestingtypes.MsgExecuteMessagesResponse, error,
@@ -123,6 +118,12 @@ func (cva *ContinuousVestingAccount) ExecuteMessages(ctx context.Context, msg *v
 }
 
 // --------------- Query -----------------
+
+// LockedCoins returns the set of coins that are not spendable (i.e. locked),
+// defined as the vesting coins that are not delegated.
+func (cva ContinuousVestingAccount) LockedCoins(blockTime time.Time) sdk.Coins {
+	return cva.BaseVestingAccount.LockedCoinsFromVesting(cva.GetVestingCoins(blockTime))
+}
 
 // GetVestedCoins returns the total number of vested coins. If no coins are vested,
 // nil is returned.

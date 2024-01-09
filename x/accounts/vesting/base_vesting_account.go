@@ -66,19 +66,6 @@ func (bva BaseVestingAccount) NewInitialStateTransitionRecords() StateTransition
 
 // --------------- execute -----------------
 
-// LockedCoinsFromVesting returns all the coins that are not spendable (i.e. locked)
-// for a vesting account given the current vesting coins. If no coins are locked,
-// an empty slice of Coins is returned.
-//
-// CONTRACT: Delegated vesting coins and vestingCoins must be sorted.
-func (bva BaseVestingAccount) LockedCoinsFromVesting(vestingCoins sdk.Coins) sdk.Coins {
-	lockedCoins := vestingCoins.Sub(vestingCoins.Min(bva.DelegatedVesting)...)
-	if lockedCoins == nil {
-		return sdk.Coins{}
-	}
-	return lockedCoins
-}
-
 // TrackDelegation tracks a delegation amount for any given vesting account type
 // given the amount of coins currently vesting and the current account balance
 // of the delegation denominations.
@@ -164,6 +151,9 @@ func (bva *BaseVestingAccount) TrackUndelegation(
 	return newDelegatedFree, newDelegatedVesting
 }
 
+// ExecuteMessages handle the execution of codectypes Any messages
+// and update the vesting account DelegatedFree and DelegatedVesting
+// when delegate or undelegate is trigger.
 func (bva *BaseVestingAccount) ExecuteMessages(
 	ctx context.Context, msg *vestingtypes.MsgExecuteMessages, getVestingFunc getVestingFunc,
 ) (
@@ -248,6 +238,19 @@ func (bva *BaseVestingAccount) ExecuteMessages(
 }
 
 // --------------- Query -----------------
+
+// LockedCoinsFromVesting returns all the coins that are not spendable (i.e. locked)
+// for a vesting account given the current vesting coins. If no coins are locked,
+// an empty slice of Coins is returned.
+//
+// CONTRACT: Delegated vesting coins and vestingCoins must be sorted.
+func (bva BaseVestingAccount) LockedCoinsFromVesting(vestingCoins sdk.Coins) sdk.Coins {
+	lockedCoins := vestingCoins.Sub(vestingCoins.Min(bva.DelegatedVesting)...)
+	if lockedCoins == nil {
+		return sdk.Coins{}
+	}
+	return lockedCoins
+}
 
 // QueryOriginalVesting returns a vesting account's original vesting amount
 func (bva BaseVestingAccount) QueryOriginalVesting(ctx context.Context, _ *vestingtypes.QueryOriginalVestingRequest) (

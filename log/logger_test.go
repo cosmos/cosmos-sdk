@@ -6,9 +6,10 @@ import (
 	"strings"
 	"testing"
 
-	"cosmossdk.io/log"
 	"github.com/rs/zerolog"
 	"gotest.tools/v3/assert"
+
+	"cosmossdk.io/log"
 )
 
 func TestLoggerOptionStackTrace(t *testing.T) {

@@ -388,6 +388,110 @@ func (m *AccountTypeResponse) GetAccountType() string {
 	return ""
 }
 
+// SimulateUserOperationRequest is the query request used to simulate a
+// UserOperation.
+type SimulateUserOperationRequest struct {
+	// bundler can be filled to simulate the address of the bundler.
+	Bundler string `protobuf:"bytes,1,opt,name=bundler,proto3" json:"bundler,omitempty"`
+	// user_operation defines the user operation that we want to simulate.
+	// Gas limit fields are ignored.
+	UserOperation *UserOperation `protobuf:"bytes,2,opt,name=user_operation,json=userOperation,proto3" json:"user_operation,omitempty"`
+}
+
+func (m *SimulateUserOperationRequest) Reset()         { *m = SimulateUserOperationRequest{} }
+func (m *SimulateUserOperationRequest) String() string { return proto.CompactTextString(m) }
+func (*SimulateUserOperationRequest) ProtoMessage()    {}
+func (*SimulateUserOperationRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_16ad14c22e3080d2, []int{6}
+}
+func (m *SimulateUserOperationRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *SimulateUserOperationRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_SimulateUserOperationRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *SimulateUserOperationRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_SimulateUserOperationRequest.Merge(m, src)
+}
+func (m *SimulateUserOperationRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *SimulateUserOperationRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_SimulateUserOperationRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_SimulateUserOperationRequest proto.InternalMessageInfo
+
+func (m *SimulateUserOperationRequest) GetBundler() string {
+	if m != nil {
+		return m.Bundler
+	}
+	return ""
+}
+
+func (m *SimulateUserOperationRequest) GetUserOperation() *UserOperation {
+	if m != nil {
+		return m.UserOperation
+	}
+	return nil
+}
+
+// SimulateUserOperationResponse is the query response returned by the simulation.
+// It will populate the gas limits fields.
+type SimulateUserOperationResponse struct {
+	// UserOperationResponse is the response of the simulation.
+	UserOperationResponse *UserOperationResponse `protobuf:"bytes,1,opt,name=user_operation_response,json=userOperationResponse,proto3" json:"user_operation_response,omitempty"`
+}
+
+func (m *SimulateUserOperationResponse) Reset()         { *m = SimulateUserOperationResponse{} }
+func (m *SimulateUserOperationResponse) String() string { return proto.CompactTextString(m) }
+func (*SimulateUserOperationResponse) ProtoMessage()    {}
+func (*SimulateUserOperationResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_16ad14c22e3080d2, []int{7}
+}
+func (m *SimulateUserOperationResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *SimulateUserOperationResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_SimulateUserOperationResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *SimulateUserOperationResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_SimulateUserOperationResponse.Merge(m, src)
+}
+func (m *SimulateUserOperationResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *SimulateUserOperationResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_SimulateUserOperationResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_SimulateUserOperationResponse proto.InternalMessageInfo
+
+func (m *SimulateUserOperationResponse) GetUserOperationResponse() *UserOperationResponse {
+	if m != nil {
+		return m.UserOperationResponse
+	}
+	return nil
+}
+
 func init() {
 	proto.RegisterType((*AccountQueryRequest)(nil), "cosmos.accounts.v1.AccountQueryRequest")
 	proto.RegisterType((*AccountQueryResponse)(nil), "cosmos.accounts.v1.AccountQueryResponse")
@@ -396,41 +500,50 @@ func init() {
 	proto.RegisterType((*SchemaResponse_Handler)(nil), "cosmos.accounts.v1.SchemaResponse.Handler")
 	proto.RegisterType((*AccountTypeRequest)(nil), "cosmos.accounts.v1.AccountTypeRequest")
 	proto.RegisterType((*AccountTypeResponse)(nil), "cosmos.accounts.v1.AccountTypeResponse")
+	proto.RegisterType((*SimulateUserOperationRequest)(nil), "cosmos.accounts.v1.SimulateUserOperationRequest")
+	proto.RegisterType((*SimulateUserOperationResponse)(nil), "cosmos.accounts.v1.SimulateUserOperationResponse")
 }
 
 func init() { proto.RegisterFile("cosmos/accounts/v1/query.proto", fileDescriptor_16ad14c22e3080d2) }
 
 var fileDescriptor_16ad14c22e3080d2 = []byte{
-	// 453 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x94, 0xbf, 0x8e, 0xd3, 0x40,
-	0x10, 0xc6, 0x6d, 0x9f, 0x48, 0x60, 0x7c, 0x77, 0xa0, 0xe5, 0x84, 0x8c, 0x0b, 0x2b, 0xe7, 0x82,
-	0x8b, 0x28, 0xd6, 0x5c, 0xa0, 0xa0, 0x43, 0xa1, 0x3a, 0x89, 0x2a, 0x06, 0x1a, 0x24, 0x14, 0x7c,
-	0xf6, 0x92, 0x8b, 0xb8, 0x78, 0x1d, 0xef, 0x3a, 0x8a, 0xdf, 0x82, 0x57, 0xe0, 0x6d, 0x52, 0xa6,
-	0xa4, 0x44, 0xc9, 0x8b, 0xa0, 0xec, 0x9f, 0xd8, 0x11, 0x21, 0x56, 0x3a, 0xcf, 0xce, 0xb7, 0xbf,
-	0xd9, 0x99, 0x6f, 0x12, 0xf0, 0x62, 0xca, 0x26, 0x94, 0x05, 0x51, 0x1c, 0xd3, 0x22, 0xe5, 0x2c,
-	0x98, 0x5d, 0x07, 0xd3, 0x82, 0xe4, 0x25, 0xce, 0x72, 0xca, 0x29, 0x42, 0x32, 0x8f, 0x75, 0x1e,
-	0xcf, 0xae, 0xdd, 0xe7, 0x23, 0x4a, 0x47, 0xf7, 0x24, 0x10, 0x8a, 0xdb, 0xe2, 0x7b, 0x10, 0xa5,
-	0x4a, 0xee, 0x7f, 0x85, 0xa7, 0x7d, 0xa9, 0x1c, 0x6c, 0x20, 0x21, 0x99, 0x16, 0x84, 0x71, 0xf4,
-	0x0c, 0x5a, 0x3c, 0xca, 0x47, 0x84, 0x3b, 0x66, 0xc7, 0xec, 0x3e, 0x0a, 0x55, 0x84, 0x30, 0xb4,
-	0x73, 0x29, 0x71, 0xac, 0x8e, 0xd9, 0xb5, 0x7b, 0x17, 0x58, 0xb2, 0xb1, 0x66, 0xe3, 0x7e, 0x5a,
-	0x86, 0x5a, 0xe4, 0xdf, 0xc0, 0xc5, 0x2e, 0x9e, 0x65, 0x34, 0x65, 0x04, 0xbd, 0x82, 0x87, 0xb9,
-	0xfa, 0x16, 0x15, 0xfe, 0x07, 0xda, 0xaa, 0xfc, 0x1e, 0x9c, 0x7d, 0x8c, 0xef, 0xc8, 0x24, 0xd2,
-	0x4f, 0xbc, 0x84, 0x53, 0xd5, 0xe3, 0x90, 0x97, 0x19, 0x51, 0x0f, 0xb5, 0xd5, 0xd9, 0xa7, 0x32,
-	0x23, 0xfe, 0xc2, 0x82, 0x73, 0x7d, 0x49, 0x15, 0xfe, 0x00, 0xf6, 0x38, 0x1d, 0xf3, 0x21, 0x13,
-	0xc7, 0xaa, 0xf6, 0x4b, 0xfc, 0xef, 0xd0, 0xf0, 0xee, 0x45, 0x7c, 0x13, 0xa5, 0xc9, 0x3d, 0xc9,
-	0x43, 0xd8, 0x5c, 0x97, 0x39, 0xf4, 0x19, 0x9e, 0x90, 0x39, 0x89, 0x0b, 0x4e, 0x86, 0x77, 0x32,
-	0xcd, 0x1c, 0xab, 0x73, 0x72, 0x24, 0xf1, 0xb1, 0x62, 0xa8, 0x98, 0xa1, 0x01, 0x9c, 0x0b, 0x47,
-	0x2b, 0xe8, 0xc9, 0xd1, 0xd0, 0x33, 0x41, 0xd0, 0x48, 0xf7, 0x1d, 0xb4, 0xd5, 0x37, 0x72, 0x2a,
-	0x0b, 0xe5, 0xc8, 0x74, 0x88, 0xdc, 0x9a, 0x29, 0x96, 0x48, 0x55, 0xe3, 0xc7, 0x80, 0xfa, 0xd5,
-	0x64, 0xb5, 0x07, 0x0e, 0xb4, 0xa3, 0x24, 0xc9, 0x09, 0x63, 0x9a, 0xa5, 0x42, 0xff, 0xed, 0x76,
-	0xaf, 0xa4, 0x5e, 0x8d, 0xbf, 0xd9, 0xb4, 0xde, 0x2f, 0x0b, 0x1e, 0x88, 0x65, 0x41, 0x31, 0x9c,
-	0xd6, 0x97, 0x07, 0x5d, 0xed, 0xeb, 0x7f, 0xcf, 0xf6, 0xba, 0xdd, 0x66, 0xa1, 0x6a, 0xcb, 0x40,
-	0x03, 0x68, 0x29, 0x37, 0x2f, 0x0f, 0x8d, 0x57, 0x82, 0xfd, 0x66, 0x07, 0x7c, 0x03, 0x7d, 0x03,
-	0xbb, 0xd6, 0x3b, 0x7a, 0x71, 0xe0, 0x35, 0xb5, 0x61, 0xba, 0x57, 0x8d, 0x3a, 0x5d, 0xe1, 0xfd,
-	0x9b, 0xc5, 0xca, 0x33, 0x97, 0x2b, 0xcf, 0xfc, 0xb3, 0xf2, 0xcc, 0x9f, 0x6b, 0xcf, 0x58, 0xae,
-	0x3d, 0xe3, 0xf7, 0xda, 0x33, 0xbe, 0xb8, 0x92, 0xc1, 0x92, 0x1f, 0x78, 0x4c, 0x83, 0x79, 0xfd,
-	0x6f, 0xe2, 0xb6, 0x25, 0x7e, 0x5a, 0xaf, 0xff, 0x06, 0x00, 0x00, 0xff, 0xff, 0x95, 0x18, 0x10,
-	0x13, 0x43, 0x04, 0x00, 0x00,
+	// 563 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x54, 0xcd, 0x8e, 0x12, 0x41,
+	0x10, 0x66, 0xd8, 0x08, 0x5a, 0x2c, 0x68, 0xda, 0x5d, 0xc5, 0x89, 0x4e, 0x60, 0x0e, 0x2e, 0x1a,
+	0xd3, 0xb3, 0xa0, 0x07, 0x6f, 0x06, 0x4f, 0x24, 0x1e, 0x0c, 0xac, 0x7b, 0x31, 0x31, 0xd8, 0x0c,
+	0x2d, 0x4b, 0x84, 0x69, 0xb6, 0x7f, 0x36, 0xcb, 0xc5, 0x83, 0x4f, 0xe0, 0x2b, 0xf8, 0x36, 0x7b,
+	0xdc, 0xa3, 0x47, 0x03, 0x2f, 0x62, 0x98, 0xee, 0x86, 0x41, 0x67, 0x41, 0x6e, 0x53, 0x5d, 0x5f,
+	0x7d, 0x5f, 0x75, 0xd5, 0xd7, 0x03, 0x5e, 0xc8, 0xc4, 0x98, 0x89, 0x80, 0x84, 0x21, 0x53, 0x91,
+	0x14, 0xc1, 0x45, 0x3d, 0x38, 0x57, 0x94, 0x4f, 0xf1, 0x84, 0x33, 0xc9, 0x10, 0xd2, 0x79, 0x6c,
+	0xf3, 0xf8, 0xa2, 0xee, 0x3e, 0x1a, 0x30, 0x36, 0x18, 0xd1, 0x20, 0x46, 0xf4, 0xd4, 0x97, 0x80,
+	0x44, 0x06, 0xee, 0xbe, 0x48, 0xa1, 0x33, 0xdf, 0x5d, 0xd2, 0x13, 0x92, 0x93, 0x50, 0x0e, 0x59,
+	0xa4, 0xd1, 0xfe, 0x27, 0xb8, 0xdf, 0xd4, 0xc9, 0xf6, 0x42, 0xb2, 0x43, 0xcf, 0x15, 0x15, 0x12,
+	0x3d, 0x80, 0x9c, 0x24, 0x7c, 0x40, 0x65, 0xd9, 0xa9, 0x38, 0xb5, 0x3b, 0x1d, 0x13, 0x21, 0x0c,
+	0x79, 0xae, 0x21, 0xe5, 0x6c, 0xc5, 0xa9, 0x15, 0x1a, 0x07, 0x58, 0x77, 0x82, 0x6d, 0x27, 0xb8,
+	0x19, 0x4d, 0x3b, 0x16, 0xe4, 0xb7, 0xe0, 0x60, 0x9d, 0x5e, 0x4c, 0x58, 0x24, 0x28, 0x3a, 0x86,
+	0xdb, 0xdc, 0x7c, 0xc7, 0x0a, 0x37, 0x11, 0x2d, 0x51, 0x7e, 0x03, 0x8a, 0x27, 0xe1, 0x19, 0x1d,
+	0x13, 0xdb, 0x62, 0x15, 0xf6, 0xed, 0xb5, 0xe4, 0x74, 0x42, 0x4d, 0xa3, 0x05, 0x73, 0xf6, 0x61,
+	0x3a, 0xa1, 0xfe, 0x55, 0x16, 0x4a, 0xb6, 0xc8, 0x08, 0xbf, 0x83, 0xc2, 0x30, 0x1a, 0xca, 0xae,
+	0x88, 0x8f, 0x8d, 0xf6, 0x73, 0xfc, 0xef, 0x88, 0xf1, 0x7a, 0x21, 0x6e, 0x91, 0xa8, 0x3f, 0xa2,
+	0xbc, 0x03, 0x8b, 0x72, 0x9d, 0x43, 0xa7, 0x70, 0x8f, 0x5e, 0xd2, 0x50, 0x49, 0xda, 0x3d, 0xd3,
+	0x69, 0x51, 0xce, 0x56, 0xf6, 0x76, 0x64, 0xbc, 0x6b, 0x38, 0x4c, 0x2c, 0x50, 0x1b, 0x4a, 0xf1,
+	0xfe, 0x57, 0xa4, 0x7b, 0x3b, 0x93, 0x16, 0x63, 0x06, 0x4b, 0xe9, 0xbe, 0x81, 0xbc, 0xf9, 0x46,
+	0xe5, 0xd5, 0x0a, 0xf5, 0xc8, 0x6c, 0x88, 0xdc, 0xc4, 0x52, 0xb2, 0x71, 0x6a, 0x35, 0x7e, 0x0c,
+	0xa8, 0xb9, 0x9a, 0xac, 0xdd, 0x41, 0x19, 0xf2, 0xa4, 0xdf, 0xe7, 0x54, 0x08, 0xcb, 0x65, 0x42,
+	0xff, 0xf5, 0xd2, 0x57, 0x1a, 0x6f, 0xc6, 0xff, 0x1f, 0x4b, 0xfb, 0xee, 0xc0, 0xe3, 0x93, 0xe1,
+	0x58, 0x8d, 0x88, 0xa4, 0xa7, 0x82, 0xf2, 0xf7, 0x13, 0xca, 0xc9, 0xc2, 0xb1, 0x09, 0xd1, 0x9e,
+	0x8a, 0xef, 0x62, 0x45, 0x4d, 0x88, 0x5a, 0x50, 0x52, 0x82, 0xf2, 0x2e, 0xb3, 0x25, 0xc6, 0xa4,
+	0xd5, 0xb4, 0xc1, 0xad, 0x73, 0x17, 0x55, 0x32, 0x5c, 0x34, 0xf1, 0xe4, 0x86, 0x26, 0xcc, 0x4d,
+	0x08, 0x3c, 0x5c, 0xd7, 0xea, 0xfe, 0x65, 0xe8, 0x67, 0xdb, 0x45, 0x4d, 0x41, 0xe7, 0x50, 0xa5,
+	0x1d, 0x37, 0x7e, 0xee, 0xc1, 0xad, 0xf8, 0xd9, 0xa0, 0x10, 0xf6, 0x93, 0xcf, 0x08, 0x1d, 0xa5,
+	0x71, 0xa7, 0xbc, 0x63, 0xb7, 0xb6, 0x1d, 0x68, 0x16, 0x9c, 0x41, 0x6d, 0xc8, 0x19, 0x5f, 0x57,
+	0x37, 0x19, 0x4d, 0x13, 0xfb, 0xdb, 0xbd, 0xe8, 0x67, 0xd0, 0x67, 0x28, 0x24, 0x5c, 0x80, 0x9e,
+	0x6e, 0xe8, 0x26, 0x61, 0x2b, 0xf7, 0x68, 0x2b, 0x6e, 0xa9, 0xf0, 0x0d, 0x0e, 0x53, 0xf7, 0x84,
+	0x8e, 0x53, 0x1b, 0xdc, 0xe0, 0x2b, 0xb7, 0xbe, 0x43, 0x85, 0xd5, 0x7f, 0xfb, 0xea, 0x6a, 0xe6,
+	0x39, 0xd7, 0x33, 0xcf, 0xf9, 0x3d, 0xf3, 0x9c, 0x1f, 0x73, 0x2f, 0x73, 0x3d, 0xf7, 0x32, 0xbf,
+	0xe6, 0x5e, 0xe6, 0xa3, 0xab, 0xd9, 0x44, 0xff, 0x2b, 0x1e, 0xb2, 0xe0, 0x32, 0xf9, 0x3f, 0xee,
+	0xe5, 0xe2, 0x9f, 0xdc, 0xcb, 0x3f, 0x01, 0x00, 0x00, 0xff, 0xff, 0x77, 0xb6, 0x2c, 0xc3, 0xfb,
+	0x05, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -451,6 +564,8 @@ type QueryClient interface {
 	Schema(ctx context.Context, in *SchemaRequest, opts ...grpc.CallOption) (*SchemaResponse, error)
 	// AccountType returns the account type for an address.
 	AccountType(ctx context.Context, in *AccountTypeRequest, opts ...grpc.CallOption) (*AccountTypeResponse, error)
+	// SimulateUserOperation simulates a user operation.
+	SimulateUserOperation(ctx context.Context, in *SimulateUserOperationRequest, opts ...grpc.CallOption) (*SimulateUserOperationResponse, error)
 }
 
 type queryClient struct {
@@ -488,6 +603,15 @@ func (c *queryClient) AccountType(ctx context.Context, in *AccountTypeRequest, o
 	return out, nil
 }
 
+func (c *queryClient) SimulateUserOperation(ctx context.Context, in *SimulateUserOperationRequest, opts ...grpc.CallOption) (*SimulateUserOperationResponse, error) {
+	out := new(SimulateUserOperationResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.accounts.v1.Query/SimulateUserOperation", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 type QueryServer interface {
 	// AccountQuery runs an account query.
@@ -496,6 +620,8 @@ type QueryServer interface {
 	Schema(context.Context, *SchemaRequest) (*SchemaResponse, error)
 	// AccountType returns the account type for an address.
 	AccountType(context.Context, *AccountTypeRequest) (*AccountTypeResponse, error)
+	// SimulateUserOperation simulates a user operation.
+	SimulateUserOperation(context.Context, *SimulateUserOperationRequest) (*SimulateUserOperationResponse, error)
 }
 
 // UnimplementedQueryServer can be embedded to have forward compatible implementations.
@@ -510,6 +636,9 @@ func (*UnimplementedQueryServer) Schema(ctx context.Context, req *SchemaRequest)
 }
 func (*UnimplementedQueryServer) AccountType(ctx context.Context, req *AccountTypeRequest) (*AccountTypeResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AccountType not implemented")
+}
+func (*UnimplementedQueryServer) SimulateUserOperation(ctx context.Context, req *SimulateUserOperationRequest) (*SimulateUserOperationResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SimulateUserOperation not implemented")
 }
 
 func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
@@ -570,6 +699,24 @@ func _Query_AccountType_Handler(srv interface{}, ctx context.Context, dec func(i
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_SimulateUserOperation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SimulateUserOperationRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).SimulateUserOperation(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.accounts.v1.Query/SimulateUserOperation",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).SimulateUserOperation(ctx, req.(*SimulateUserOperationRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Query_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "cosmos.accounts.v1.Query",
 	HandlerType: (*QueryServer)(nil),
@@ -585,6 +732,10 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "AccountType",
 			Handler:    _Query_AccountType_Handler,
+		},
+		{
+			MethodName: "SimulateUserOperation",
+			Handler:    _Query_SimulateUserOperation_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -858,6 +1009,83 @@ func (m *AccountTypeResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
+func (m *SimulateUserOperationRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *SimulateUserOperationRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *SimulateUserOperationRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.UserOperation != nil {
+		{
+			size, err := m.UserOperation.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintQuery(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Bundler) > 0 {
+		i -= len(m.Bundler)
+		copy(dAtA[i:], m.Bundler)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.Bundler)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *SimulateUserOperationResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *SimulateUserOperationResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *SimulateUserOperationResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.UserOperationResponse != nil {
+		{
+			size, err := m.UserOperationResponse.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintQuery(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintQuery(dAtA []byte, offset int, v uint64) int {
 	offset -= sovQuery(v)
 	base := offset
@@ -975,6 +1203,36 @@ func (m *AccountTypeResponse) Size() (n int) {
 	_ = l
 	l = len(m.AccountType)
 	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *SimulateUserOperationRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Bundler)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	if m.UserOperation != nil {
+		l = m.UserOperation.Size()
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *SimulateUserOperationResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.UserOperationResponse != nil {
+		l = m.UserOperationResponse.Size()
 		n += 1 + l + sovQuery(uint64(l))
 	}
 	return n
@@ -1682,6 +1940,210 @@ func (m *AccountTypeResponse) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			m.AccountType = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *SimulateUserOperationRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: SimulateUserOperationRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: SimulateUserOperationRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Bundler", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Bundler = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field UserOperation", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.UserOperation == nil {
+				m.UserOperation = &UserOperation{}
+			}
+			if err := m.UserOperation.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *SimulateUserOperationResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: SimulateUserOperationResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: SimulateUserOperationResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field UserOperationResponse", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.UserOperationResponse == nil {
+				m.UserOperationResponse = &UserOperationResponse{}
+			}
+			if err := m.UserOperationResponse.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex

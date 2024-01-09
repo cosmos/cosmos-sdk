@@ -3,6 +3,7 @@ package storage
 import (
 	"io"
 
+	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/store/v2"
 )
 
@@ -16,8 +17,8 @@ type Database interface {
 	GetLatestVersion() (uint64, error)
 	SetLatestVersion(version uint64) error
 
-	Iterator(storeKey string, version uint64, start, end []byte) (store.Iterator, error)
-	ReverseIterator(storeKey string, version uint64, start, end []byte) (store.Iterator, error)
+	Iterator(storeKey string, version uint64, start, end []byte) (corestore.Iterator, error)
+	ReverseIterator(storeKey string, version uint64, start, end []byte) (corestore.Iterator, error)
 
 	Prune(version uint64) error
 

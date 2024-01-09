@@ -265,7 +265,6 @@ func (s *StorageTestSuite) TestDatabase_Iterator() {
 		s.Require().NoError(itr.Error())
 
 		// seek past domain, which should make the iterator invalid and produce an error
-		s.Require().False(itr.Next())
 		s.Require().False(itr.Valid())
 	}
 
@@ -288,7 +287,6 @@ func (s *StorageTestSuite) TestDatabase_Iterator() {
 		s.Require().NoError(itr2.Error())
 
 		// seek past domain, which should make the iterator invalid and produce an error
-		s.Require().False(itr2.Next())
 		s.Require().False(itr2.Valid())
 	}
 

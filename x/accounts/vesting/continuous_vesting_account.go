@@ -116,11 +116,10 @@ func (cva ContinuousVestingAccount) LockedCoins(blockTime time.Time) sdk.Coins {
 	return cva.BaseVestingAccount.LockedCoinsFromVesting(cva.GetVestingCoins(blockTime))
 }
 
-// TrackDelegation tracks a desired delegation amount by setting the appropriate
-// values for the amount of delegated vesting, delegated free, and reducing the
-// overall amount of base coins.
-func (cva *ContinuousVestingAccount) TrackDelegation(blockTime time.Time, balance, amount sdk.Coins) {
-	cva.BaseVestingAccount.TrackDelegation(balance, cva.GetVestingCoins(blockTime), amount)
+func (cva *ContinuousVestingAccount) ExecuteMessages(ctx context.Context, msg *vestingtypes.MsgExecuteMessages) (
+	*vestingtypes.MsgExecuteMessagesResponse, error,
+) {
+	return cva.BaseVestingAccount.ExecuteMessages(ctx, msg, cva.GetVestingCoins)
 }
 
 // --------------- Query -----------------
@@ -205,6 +204,7 @@ func (cva ContinuousVestingAccount) RegisterInitHandler(builder *accountstd.Init
 }
 
 func (cva ContinuousVestingAccount) RegisterExecuteHandlers(builder *accountstd.ExecuteBuilder) {
+	accountstd.RegisterExecuteHandler(builder, cva.ExecuteMessages)
 }
 
 func (cva ContinuousVestingAccount) RegisterQueryHandlers(builder *accountstd.QueryBuilder) {

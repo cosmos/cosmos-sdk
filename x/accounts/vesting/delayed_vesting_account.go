@@ -93,11 +93,10 @@ func (dva DelayedVestingAccount) LockedCoins(blockTime time.Time) sdk.Coins {
 	return dva.BaseVestingAccount.LockedCoinsFromVesting(dva.GetVestingCoins(blockTime))
 }
 
-// TrackDelegation tracks a desired delegation amount by setting the appropriate
-// values for the amount of delegated vesting, delegated free, and reducing the
-// overall amount of base coins.
-func (dva *DelayedVestingAccount) TrackDelegation(blockTime time.Time, balance, amount sdk.Coins) {
-	dva.BaseVestingAccount.TrackDelegation(balance, dva.GetVestingCoins(blockTime), amount)
+func (dva *DelayedVestingAccount) ExecuteMessages(ctx context.Context, msg *vestingtypes.MsgExecuteMessages) (
+	*vestingtypes.MsgExecuteMessagesResponse, error,
+) {
+	return dva.BaseVestingAccount.ExecuteMessages(ctx, msg, dva.GetVestingCoins)
 }
 
 // --------------- Query -----------------
@@ -148,6 +147,7 @@ func (dva DelayedVestingAccount) RegisterInitHandler(builder *accountstd.InitBui
 }
 
 func (dva DelayedVestingAccount) RegisterExecuteHandlers(builder *accountstd.ExecuteBuilder) {
+	accountstd.RegisterExecuteHandler(builder, dva.ExecuteMessages)
 }
 
 func (dva DelayedVestingAccount) RegisterQueryHandlers(builder *accountstd.QueryBuilder) {

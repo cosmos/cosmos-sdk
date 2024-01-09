@@ -114,20 +114,10 @@ func (pva PeriodicVestingAccount) LockedCoins(blockTime time.Time) sdk.Coins {
 	return pva.BaseVestingAccount.LockedCoinsFromVesting(pva.GetVestingCoins(blockTime))
 }
 
-// TrackDelegation tracks a desired delegation amount by setting the appropriate
-// values for the amount of delegated vesting, delegated free, and reducing the
-// overall amount of base coins.
-func (pva *PeriodicVestingAccount) TrackDelegation(blockTime time.Time, balance, amount sdk.Coins) {
-	pva.BaseVestingAccount.TrackDelegation(balance, pva.GetVestingCoins(blockTime), amount)
-}
-
-// Validate checks for errors on the account fields
-func (pva PeriodicVestingAccount) Validate() error {
-	if pva.StartTime >= pva.EndTime {
-		return errors.New("vesting start-time cannot be before end-time")
-	}
-
-	return pva.BaseVestingAccount.Validate()
+func (pva *PeriodicVestingAccount) ExecuteMessages(ctx context.Context, msg *vestingtypes.MsgExecuteMessages) (
+	*vestingtypes.MsgExecuteMessagesResponse, error,
+) {
+	return pva.BaseVestingAccount.ExecuteMessages(ctx, msg, pva.GetVestingCoins)
 }
 
 // ----------------- Query --------------------
@@ -203,12 +193,22 @@ func (pva PeriodicVestingAccount) QueryStartTime(ctx context.Context, msg *vesti
 	}, nil
 }
 
+// Validate checks for errors on the account fields
+func (pva PeriodicVestingAccount) Validate() error {
+	if pva.StartTime >= pva.EndTime {
+		return errors.New("vesting start-time cannot be before end-time")
+	}
+
+	return pva.BaseVestingAccount.Validate()
+}
+
 // Implement smart account interface
 func (pva PeriodicVestingAccount) RegisterInitHandler(builder *accountstd.InitBuilder) {
 	accountstd.RegisterInitHandler(builder, pva.Init)
 }
 
 func (pva PeriodicVestingAccount) RegisterExecuteHandlers(builder *accountstd.ExecuteBuilder) {
+	accountstd.RegisterExecuteHandler(builder, pva.ExecuteMessages)
 }
 
 func (pva PeriodicVestingAccount) RegisterQueryHandlers(builder *accountstd.QueryBuilder) {

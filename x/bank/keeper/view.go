@@ -190,6 +190,7 @@ func (k BaseViewKeeper) LockedCoins(ctx context.Context, addr sdk.AccAddress) sd
 			return vacc.LockedCoins(sdkCtx.HeaderInfo().Time)
 		}
 	}
+	// TODO: Add check for x/accounts vesting account
 
 	return sdk.NewCoins()
 }
@@ -251,6 +252,8 @@ func (k BaseViewKeeper) ValidateBalance(ctx context.Context, addr sdk.AccAddress
 			return fmt.Errorf("vesting amount %s cannot be greater than total amount %s", ogv, balances)
 		}
 	}
+
+	// TODO: Add check for x/accounts vesting account
 
 	return nil
 }

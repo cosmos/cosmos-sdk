@@ -4,16 +4,24 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/accounts/accountstd"
+	impl "cosmossdk.io/x/accounts/internal/implementation"
 	vestingtypes "cosmossdk.io/x/accounts/vesting/types/v1"
+	banktypes "cosmossdk.io/x/bank/types"
+	stakingtypes "cosmossdk.io/x/staking/types"
 
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // Base Vesting Account
+var _ accountstd.Interface = (*BaseVestingAccount)(nil)
+
+type getVestingFunc = func(time time.Time) sdk.Coins
 
 // NewBaseVestingAccount creates a new BaseVestingAccount object.
 func NewBaseVestingAccount(d accountstd.Dependencies) (*BaseVestingAccount, error) {
@@ -37,6 +45,25 @@ type BaseVestingAccount struct {
 	EndTime int64
 }
 
+type StateTransitionRecord struct {
+	DelegatedFree    sdk.Coins
+	DelegatedVesting sdk.Coins
+}
+
+type StateTransitionRecords struct {
+	Records []StateTransitionRecord
+}
+
+// NewStateTransitionRecords creates a new StateTransitionRecords object.
+func (bva BaseVestingAccount) NewInitialStateTransitionRecords() StateTransitionRecords {
+	return StateTransitionRecords{
+		Records: []StateTransitionRecord{{
+			DelegatedFree:    bva.DelegatedFree,
+			DelegatedVesting: bva.DelegatedVesting,
+		}},
+	}
+}
+
 // --------------- execute -----------------
 
 // LockedCoinsFromVesting returns all the coins that are not spendable (i.e. locked)
@@ -58,11 +85,13 @@ func (bva BaseVestingAccount) LockedCoinsFromVesting(vestingCoins sdk.Coins) sdk
 //
 // CONTRACT: The account's coins, delegation coins, vesting coins, and delegated
 // vesting coins must be sorted.
-func (bva *BaseVestingAccount) TrackDelegation(balance, vestingCoins, amount sdk.Coins) {
+func (bva *BaseVestingAccount) TrackDelegation(
+	balance, vestingCoins, amount, delegatedFree, delegatedVesting sdk.Coins,
+) (newDelegatedFree, newDelegatedVesting sdk.Coins) {
 	for _, coin := range amount {
 		baseAmt := balance.AmountOf(coin.Denom)
 		vestingAmt := vestingCoins.AmountOf(coin.Denom)
-		delVestingAmt := bva.DelegatedVesting.AmountOf(coin.Denom)
+		delVestingAmt := delegatedVesting.AmountOf(coin.Denom)
 
 		// Panic if the delegation amount is zero or if the base coins does not
 		// exceed the desired delegation amount.
@@ -76,16 +105,20 @@ func (bva *BaseVestingAccount) TrackDelegation(balance, vestingCoins, amount sdk
 		x := math.MinInt(math.MaxInt(vestingAmt.Sub(delVestingAmt), math.ZeroInt()), coin.Amount)
 		y := coin.Amount.Sub(x)
 
+		newDelegatedFree = delegatedFree
+		newDelegatedVesting = delegatedVesting
 		if !x.IsZero() {
 			xCoin := sdk.NewCoin(coin.Denom, x)
-			bva.DelegatedVesting = bva.DelegatedVesting.Add(xCoin)
+			newDelegatedVesting = delegatedVesting.Add(xCoin)
 		}
 
 		if !y.IsZero() {
 			yCoin := sdk.NewCoin(coin.Denom, y)
-			bva.DelegatedFree = bva.DelegatedFree.Add(yCoin)
+			newDelegatedFree = delegatedFree.Add(yCoin)
 		}
 	}
+
+	return newDelegatedFree, newDelegatedFree
 }
 
 // TrackUndelegation tracks an undelegation amount by setting the necessary
@@ -98,31 +131,120 @@ func (bva *BaseVestingAccount) TrackDelegation(balance, vestingCoins, amount sdk
 // the undelegated tokens are non-integral.
 //
 // CONTRACT: The account's coins and undelegation coins must be sorted.
-func (bva *BaseVestingAccount) TrackUndelegation(amount sdk.Coins) {
+func (bva *BaseVestingAccount) TrackUndelegation(
+	amount, delegatedFree, delegatedVesting sdk.Coins,
+) (newDelegatedFree, newDelegatedVesting sdk.Coins) {
 	for _, coin := range amount {
 		// panic if the undelegation amount is zero
 		if coin.Amount.IsZero() {
 			panic("undelegation attempt with zero coins")
 		}
-		delegatedFree := bva.DelegatedFree.AmountOf(coin.Denom)
-		delegatedVesting := bva.DelegatedVesting.AmountOf(coin.Denom)
+		delegatedFreeAmount := delegatedFree.AmountOf(coin.Denom)
+		delegatedVestingAmount := delegatedVesting.AmountOf(coin.Denom)
 
 		// compute x and y per the specification, where:
 		// X := min(DF, D)
 		// Y := min(DV, D - X)
-		x := math.MinInt(delegatedFree, coin.Amount)
-		y := math.MinInt(delegatedVesting, coin.Amount.Sub(x))
+		x := math.MinInt(delegatedFreeAmount, coin.Amount)
+		y := math.MinInt(delegatedVestingAmount, coin.Amount.Sub(x))
 
+		newDelegatedFree = delegatedFree
+		newDelegatedVesting = delegatedVesting
 		if !x.IsZero() {
 			xCoin := sdk.NewCoin(coin.Denom, x)
-			bva.DelegatedFree = bva.DelegatedFree.Sub(xCoin)
+			newDelegatedFree = delegatedFree.Sub(xCoin)
 		}
 
 		if !y.IsZero() {
 			yCoin := sdk.NewCoin(coin.Denom, y)
-			bva.DelegatedVesting = bva.DelegatedVesting.Sub(yCoin)
+			newDelegatedVesting = delegatedVesting.Sub(yCoin)
 		}
 	}
+
+	return newDelegatedFree, newDelegatedVesting
+}
+
+func (bva *BaseVestingAccount) ExecuteMessages(
+	ctx context.Context, msg *vestingtypes.MsgExecuteMessages, getVestingFunc getVestingFunc,
+) (
+	*vestingtypes.MsgExecuteMessagesResponse, error,
+) {
+	originalContext := accountstd.OriginalContext(ctx)
+	sdkctx := sdk.UnwrapSDKContext(originalContext)
+
+	// Keep track of all delegation related transitions
+	stateRecords := bva.NewInitialStateTransitionRecords()
+	for _, m := range msg.ExecutionMessages {
+		protoMsg, err := impl.UnpackAnyRaw(m)
+		if err != nil {
+			return nil, err
+		}
+
+		previousStateRecord := stateRecords.Records[len(stateRecords.Records)-1]
+
+		typeUrl := codectypes.MsgTypeURL(protoMsg)
+		switch typeUrl {
+		case "/cosmos.staking.v1beta1.MsgDelegate":
+			msgDelegate, ok := protoMsg.(*stakingtypes.MsgDelegate)
+			if !ok {
+				return nil, fmt.Errorf("Invalid proto msg for type: %s", typeUrl)
+			}
+
+			// Query account balance for the delegated denom
+			balanceQueryReq := banktypes.NewQueryBalanceRequest(sdk.AccAddress(msgDelegate.DelegatorAddress), msgDelegate.Amount.Denom)
+			resp, err := accountstd.QueryModule[banktypes.QueryBalanceResponse](ctx, balanceQueryReq)
+			if err != nil {
+				return nil, err
+			}
+
+			// Apply track delegation with previous state in the record
+			newDelegatedFree, newDelegatedVesting := bva.TrackDelegation(
+				sdk.Coins{*resp.Balance},
+				getVestingFunc(sdkctx.BlockHeader().Time),
+				sdk.Coins{msgDelegate.Amount},
+				previousStateRecord.DelegatedFree,
+				previousStateRecord.DelegatedVesting,
+			)
+			stateRecords.Records = append(stateRecords.Records, StateTransitionRecord{
+				DelegatedFree:    newDelegatedFree,
+				DelegatedVesting: newDelegatedVesting,
+			})
+		case "/cosmos.staking.v1beta1.MsgUndelegate":
+			msgUndelegate, ok := protoMsg.(*stakingtypes.MsgUndelegate)
+			if !ok {
+				return nil, fmt.Errorf("Invalid proto msg for type: %s", typeUrl)
+			}
+
+			// Apply track delegation with previous state in the record
+			newDelegatedFree, newDelegatedVesting := bva.TrackUndelegation(
+				sdk.Coins{msgUndelegate.Amount},
+				previousStateRecord.DelegatedFree,
+				previousStateRecord.DelegatedVesting,
+			)
+			stateRecords.Records = append(stateRecords.Records, StateTransitionRecord{
+				DelegatedFree:    newDelegatedFree,
+				DelegatedVesting: newDelegatedVesting,
+			})
+		default:
+			fmt.Println("Contiue with the execution")
+		}
+	}
+
+	// execute messages
+	responses, err := accountstd.ExecModuleAnys(ctx, msg.ExecutionMessages)
+	if err != nil {
+		return nil, err
+	}
+
+	// Apply the lastest delegation state to account
+	// when execute is successfull. If no delegate or
+	// undelegate action involve then apply the initial
+	// state which is the account current state.
+	newestStateRecord := stateRecords.Records[len(stateRecords.Records)-1]
+	bva.DelegatedFree = newestStateRecord.DelegatedFree
+	bva.DelegatedVesting = newestStateRecord.DelegatedVesting
+
+	return &vestingtypes.MsgExecuteMessagesResponse{ExecutionMessagesResponse: responses}, nil
 }
 
 // --------------- Query -----------------
@@ -180,6 +302,16 @@ func (bva BaseVestingAccount) Validate() error {
 	}
 
 	return nil
+}
+
+// Only for implementing account interface, base vesting account
+// served as a base for other types of vesting account only
+// and should not be initialize as a stand alone vesting account type.
+func (bva BaseVestingAccount) RegisterInitHandler(builder *accountstd.InitBuilder) {
+}
+
+func (bva BaseVestingAccount) RegisterExecuteHandlers(builder *accountstd.ExecuteBuilder) {
+
 }
 
 func (bva BaseVestingAccount) RegisterQueryHandlers(builder *accountstd.QueryBuilder) {

@@ -87,47 +87,29 @@ func (plva PermanentLockedAccount) LockedCoins(_ time.Time) sdk.Coins {
 	return plva.BaseVestingAccount.LockedCoinsFromVesting(plva.OriginalVesting)
 }
 
-// TrackDelegation tracks a desired delegation amount by setting the appropriate
-// values for the amount of delegated vesting, delegated free, and reducing the
-// overall amount of base coins.
-func (plva *PermanentLockedAccount) TrackDelegation(blockTime time.Time, balance, amount sdk.Coins) {
-	plva.BaseVestingAccount.TrackDelegation(balance, plva.OriginalVesting, amount)
+func (plva *PermanentLockedAccount) ExecuteMessages(ctx context.Context, msg *vestingtypes.MsgExecuteMessages) (
+	*vestingtypes.MsgExecuteMessagesResponse, error,
+) {
+	return plva.BaseVestingAccount.ExecuteMessages(ctx, msg, func(_ time.Time) sdk.Coins {
+		return plva.OriginalVesting
+	})
 }
 
 // --------------- Query -----------------
-// GetVestedCoins returns the total amount of vested coins for a permanent locked vesting
-// account. All coins are only vested once the schedule has elapsed.
-func (plva PermanentLockedAccount) GetVestedCoins(_ time.Time) sdk.Coins {
-	return nil
-}
-
-// GetVestingCoins returns the total number of vesting coins for a permanent locked
-// vesting account.
-func (plva PermanentLockedAccount) GetVestingCoins(_ time.Time) sdk.Coins {
-	return plva.OriginalVesting
-}
 
 func (plva PermanentLockedAccount) QueryVestedCoins(ctx context.Context, msg *vestingtypes.QueryVestedCoinsRequest) (
 	*vestingtypes.QueryVestedCoinsResponse, error,
 ) {
-	originalContext := accountstd.OriginalContext(ctx)
-	sdkctx := sdk.UnwrapSDKContext(originalContext)
-	vestedCoins := plva.GetVestedCoins(sdkctx.HeaderInfo().Time)
-
 	return &vestingtypes.QueryVestedCoinsResponse{
-		VestedVesting: vestedCoins,
+		VestedVesting: nil,
 	}, nil
 }
 
 func (plva PermanentLockedAccount) QueryVestingCoins(ctx context.Context, msg *vestingtypes.QueryVestingCoinsRequest) (
 	*vestingtypes.QueryVestingCoinsResponse, error,
 ) {
-	originalContext := accountstd.OriginalContext(ctx)
-	sdkctx := sdk.UnwrapSDKContext(originalContext)
-	vestingCoins := plva.GetVestingCoins(sdkctx.BlockHeader().Time)
-
 	return &vestingtypes.QueryVestingCoinsResponse{
-		VestingCoins: vestingCoins,
+		VestingCoins: plva.OriginalVesting,
 	}, nil
 }
 
@@ -146,6 +128,7 @@ func (plva PermanentLockedAccount) RegisterInitHandler(builder *accountstd.InitB
 }
 
 func (plva PermanentLockedAccount) RegisterExecuteHandlers(builder *accountstd.ExecuteBuilder) {
+	accountstd.RegisterExecuteHandler(builder, plva.ExecuteMessages)
 }
 
 func (plva PermanentLockedAccount) RegisterQueryHandlers(builder *accountstd.QueryBuilder) {

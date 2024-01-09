@@ -166,6 +166,7 @@ require (
 replace github.com/cosmos/cosmos-sdk => ../..
 
 replace (
+	cosmossdk.io/depinject => ../../depinject
 	cosmossdk.io/x/auth => ../auth
 	cosmossdk.io/x/bank => ../bank
 	cosmossdk.io/x/distribution => ../distribution

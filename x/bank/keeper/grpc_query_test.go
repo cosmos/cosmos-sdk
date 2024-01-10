@@ -812,11 +812,11 @@ func (suite *KeeperTestSuite) TestGRPCDenomOwnersByQuery() {
 	keeper := suite.bankKeeper
 
 	suite.mockMintCoins(mintAcc)
-	suite.Require().NoError(keeper.MintCoins(ctx, types.MintModuleName, initCoins))
+	suite.Require().NoError(keeper.MintCoins(ctx, minttypes.ModuleName, initCoins))
 	denom := "ibc/123123213123"
 	newCoins := sdk.NewCoins(sdk.NewCoin(denom, initTokens))
 	suite.mockMintCoins(mintAcc)
-	suite.Require().NoError(keeper.MintCoins(ctx, types.MintModuleName, newCoins))
+	suite.Require().NoError(keeper.MintCoins(ctx, minttypes.ModuleName, newCoins))
 
 	for i := 0; i < 10; i++ {
 		addr := sdk.AccAddress(fmt.Sprintf("account-%d", i))
@@ -826,7 +826,7 @@ func (suite *KeeperTestSuite) TestGRPCDenomOwnersByQuery() {
 			sdk.TokensFromConsensusPower(initialPower/10, sdk.DefaultPowerReduction),
 		))
 		suite.mockSendCoinsFromModuleToAccount(mintAcc, addr)
-		suite.Require().NoError(keeper.SendCoinsFromModuleToAccount(ctx, types.MintModuleName, addr, bal))
+		suite.Require().NoError(keeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, addr, bal))
 	}
 
 	testCases := map[string]struct {

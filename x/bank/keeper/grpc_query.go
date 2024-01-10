@@ -229,73 +229,16 @@ func (k BaseKeeper) DenomMetadataByQueryString(c context.Context, req *types.Que
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
 
-	res, err := k.DenomMetadata(ctx, &types.QueryDenomMetadataRequest{
+	res, err := k.DenomMetadata(c, &types.QueryDenomMetadataRequest{
 		Denom: req.Denom,
 	})
 	if err != nil {
 		return nil, err
 	}
 
-<<<<<<< HEAD
-	ctx := sdk.UnwrapSDKContext(c)
-
-	metadata, found := k.GetDenomMetaData(ctx, req.Denom)
-	if !found {
-		return nil, status.Errorf(codes.NotFound, "client metadata for denom %s", req.Denom)
-	}
-
-	return &types.QueryDenomMetadataByQueryStringResponse{
-		Metadata: metadata,
-	}, nil
-}
-
-=======
 	return &types.QueryDenomMetadataByQueryStringResponse{Metadata: res.Metadata}, nil
 }
 
-// DenomMetadataV2 is identical to DenomMetadata but receives protoreflect types instead of gogo types.  It exists to
-// resolve a cyclic dependency existent between x/auth and x/bank, so that x/auth may call this keeper without
-// depending on x/bank.
-func (k BaseKeeper) DenomMetadataV2(ctx context.Context, req *v1beta1.QueryDenomMetadataRequest) (*v1beta1.QueryDenomMetadataResponse, error) {
-	if req == nil {
-		return nil, status.Errorf(codes.InvalidArgument, "empty request")
-	}
-
-	if err := sdk.ValidateDenom(req.Denom); err != nil {
-		return nil, status.Error(codes.InvalidArgument, err.Error())
-	}
-
-	metadata, found := k.GetDenomMetaData(ctx, req.Denom)
-	if !found {
-		return nil, status.Errorf(codes.NotFound, "client metadata for denom %s", req.Denom)
-	}
-
-	denomUnits := make([]*v1beta1.DenomUnit, len(metadata.DenomUnits))
-	for i, unit := range metadata.DenomUnits {
-		denomUnits[i] = &v1beta1.DenomUnit{
-			Denom:    unit.Denom,
-			Exponent: unit.Exponent,
-			Aliases:  unit.Aliases,
-		}
-	}
-	metadataV2 := &v1beta1.Metadata{
-		Description: metadata.Description,
-		DenomUnits:  denomUnits,
-		Base:        metadata.Base,
-		Display:     metadata.Display,
-		Name:        metadata.Name,
-		Symbol:      metadata.Symbol,
-		Uri:         metadata.URI,
-		UriHash:     metadata.URIHash,
-	}
-
-	return &v1beta1.QueryDenomMetadataResponse{
-		Metadata: metadataV2,
-	}, nil
-}
-
-// DenomOwners returns all the account address that own a requested token denom.
->>>>>>> dee9eda5e (feat(x/bank): adding DenomOwnersByQuery for denom owners for token (#18956))
 func (k BaseKeeper) DenomOwners(
 	ctx context.Context,
 	req *types.QueryDenomOwnersRequest,

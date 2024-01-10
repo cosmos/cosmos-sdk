@@ -38,26 +38,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
-<<<<<<< HEAD
-=======
-### Features
-
-* (x/auth) Support the ability to broadcast unordered transactions per ADR-070. See UPGRADING.md for more details on integration.
-* (client) [#18557](https://github.com/cosmos/cosmos-sdk/pull/18557) Add `--qrcode` flag to `keys show` command to support displaying keys address QR code.
-* (x/staking) [#18142](https://github.com/cosmos/cosmos-sdk/pull/18142) Introduce `key_rotation_fee` param to calculate fees while rotating the keys
-* (client) [#18101](https://github.com/cosmos/cosmos-sdk/pull/18101) Add a `keyring-default-keyname` in `client.toml` for specifying a default key name, and skip the need to use the `--from` flag when signing transactions.
-* (tests) [#17868](https://github.com/cosmos/cosmos-sdk/pull/17868) Added helper method `SubmitTestTx` in testutil to broadcast test txns to test e2e tests.
-* (x/protocolpool) [#17657](https://github.com/cosmos/cosmos-sdk/pull/17657) Create a new `x/protocolpool` module that is responsible for handling community pool funds. This module is split out into a new module from x/distribution.
-* (client) [#17513](https://github.com/cosmos/cosmos-sdk/pull/17513) Allow overwriting `client.toml`. Use `client.CreateClientConfig` in place of `client.ReadFromClientConfig` and provide a custom template and a custom config.
-* (x/bank) [#17569](https://github.com/cosmos/cosmos-sdk/pull/17569) Introduce a new message type, `MsgBurn`, to burn coins.
-* (x/auth/vesting) [#17810](https://github.com/cosmos/cosmos-sdk/pull/17810) Add the ability to specify a start time for continuous vesting accounts.
-* (runtime) [#18475](https://github.com/cosmos/cosmos-sdk/pull/18475) Adds an implementation for core.branch.Service.
-* (baseapp) [#18499](https://github.com/cosmos/cosmos-sdk/pull/18499) Add `MsgRouter` response type from message name function.
-* (types) [#18768](https://github.com/cosmos/cosmos-sdk/pull/18768) Add MustValAddressFromBech32 function.
-  
->>>>>>> dee9eda5e (feat(x/bank): adding DenomOwnersByQuery for denom owners for token (#18956))
 ### Improvements
 
+* (x/bank) [#18956](https://github.com/cosmos/cosmos-sdk/pull/18956) Introduced a new `DenomOwnersByQuery` query method for `DenomOwners`, which accepts the denom value as a query string parameter, resolving issues with denoms containing slashes.
 * (x/gov) [#18707](https://github.com/cosmos/cosmos-sdk/pull/18707) Improve genesis validation.
 * (x/auth/tx) [#18772](https://github.com/cosmos/cosmos-sdk/pull/18772) Remove misleading gas wanted from tx simulation failure log.
 * (client/tx) [#18852](https://github.com/cosmos/cosmos-sdk/pull/18852) Add `WithFromName` to tx factory.

@@ -26,6 +26,7 @@ import (
 	govtypes "cosmossdk.io/x/gov/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/config"
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
@@ -130,6 +131,11 @@ func (b *Builder) BuildMsgMethodCommand(descriptor protoreflect.MethodDescriptor
 
 		clientCtx = clientCtx.WithCmdContext(cmd.Context())
 		clientCtx = clientCtx.WithOutput(cmd.OutOrStdout())
+
+		clientCtx, err = config.CreateClientConfig(clientCtx, "", nil)
+		if err != nil {
+			return err
+		}
 
 		// enable sign mode textual
 		// the config is always overwritten as we need to have set the flags to the client context

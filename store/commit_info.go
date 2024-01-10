@@ -63,8 +63,9 @@ func (ci *CommitInfo) GetStoreCommitID(storeKey string) CommitID {
 	return CommitID{}
 }
 
-// GetStoreProof returns the simple merkle proof for the given store key. It will
-// return the merkle root hash of all committed stores.
+// GetStoreProof takes in a storeKey and returns a proof of the store key in addition
+// to the root hash it should be proved against. If an empty string is provided, the first
+// store based on lexographical ordering will be proved.
 func (ci *CommitInfo) GetStoreProof(storeKey string) ([]byte, *CommitmentOp, error) {
 	sort.Slice(ci.StoreInfos, func(i, j int) bool {
 		return ci.StoreInfos[i].Name < ci.StoreInfos[j].Name

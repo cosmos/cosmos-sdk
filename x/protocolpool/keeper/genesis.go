@@ -28,11 +28,11 @@ func (k Keeper) InitGenesis(ctx context.Context, data *types.GenesisState) error
 	}
 	for _, budget := range data.Budget {
 		// Validate StartTime
-		if budget.StartTime.IsZero() || budget.StartTime == nil {
+		if budget.StartTime == nil || budget.StartTime.IsZero() {
 			budget.StartTime = &currentTime
 		}
 		// ignore budget with start time < currentTime
-		if budget.StartTime != nil && budget.StartTime.Before(currentTime) {
+		if budget.StartTime.Before(currentTime) {
 			continue
 		}
 

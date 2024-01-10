@@ -7,6 +7,9 @@ import (
 
 var _ store.ReadOnlyRootStore = (*ReadOnlyAdapter)(nil)
 
+// ReadOnlyAdapter defines an adapter around a RootStore that only exposes read-only
+// operations. This is useful for exposing a read-only view of the RootStore at
+// a specific version in history, which could also be the latest state.
 type ReadOnlyAdapter struct {
 	rootStore store.RootStore
 	version   uint64

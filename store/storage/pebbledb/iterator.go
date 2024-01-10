@@ -113,15 +113,15 @@ func (itr *iterator) Value() []byte {
 }
 
 func (itr *iterator) Next() {
+	currKey, _, ok := SplitMVCCKey(itr.source.Key())
+	if !ok {
+		// XXX: This should not happen as that would indicate we have a malformed
+		// MVCC key.
+		panic(fmt.Sprintf("invalid PebbleDB MVCC key: %s", itr.source.Key()))
+	}
+
 	var next bool
 	if itr.reverse {
-		currKey, _, ok := SplitMVCCKey(itr.source.Key())
-		if !ok {
-			// XXX: This should not happen as that would indicate we have a malformed
-			// MVCC key.
-			panic(fmt.Sprintf("invalid PebbleDB MVCC key: %s", itr.source.Key()))
-		}
-
 		// Since PebbleDB has no PrevPrefix API, we must manually seek to the next
 		// key that is lexicographically less than the current key.
 		next = itr.source.SeekLT(MVCCEncode(currKey, 0))
@@ -132,7 +132,7 @@ func (itr *iterator) Next() {
 
 	// First move the iterator to the next prefix, which may not correspond to the
 	// desired version for that key, e.g. if the key was written at a later version,
-	// so we seek back to the latest desired version, s.t. the version is <= itr.version.
+	// so we seek back to the latest desired version, s.t. the version <= itr.version.
 	if next {
 		nextKey, _, ok := SplitMVCCKey(itr.source.Key())
 		if !ok {
@@ -147,9 +147,28 @@ func (itr *iterator) Next() {
 			return
 		}
 
-		// Move the iterator to the closest version to the desired version, so we
+		// Move the iterator to the closest version of the desired version, so we
 		// append the current iterator key to the prefix and seek to that key.
 		itr.valid = itr.source.SeekLT(MVCCEncode(nextKey, itr.version+1))
+
+		tmpKey, _, ok := SplitMVCCKey(itr.source.Key())
+		if !ok {
+			// XXX: This should not happen as that would indicate we have a malformed
+			// MVCC key.
+			itr.valid = false
+			return
+		}
+
+		// There exists cases where the SeekLT() call moved us back to the same key
+		// we started at, so we must move to next key, i.e. two keys forward.
+		if bytes.Equal(tmpKey, currKey) {
+			if itr.source.NextPrefix() {
+				itr.Next()
+			} else {
+				itr.valid = false
+				return
+			}
+		}
 
 		// The cursor might now be pointing at a key/value pair that is tombstoned.
 		// If so, we must move the cursor.

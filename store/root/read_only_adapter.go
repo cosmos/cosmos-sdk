@@ -12,12 +12,29 @@ type ReadOnlyAdapter struct {
 	version   uint64
 }
 
+func NewReadOnlyAdapter(v uint64, rs store.RootStore) *ReadOnlyAdapter {
+	return &ReadOnlyAdapter{
+		rootStore: rs,
+		version:   v,
+	}
+}
+
 func (roa *ReadOnlyAdapter) Has(storeKey string, key []byte) (bool, error) {
-	panic("not implemented yet!")
+	val, err := roa.Get(storeKey, key)
+	if err != nil {
+		return false, err
+	}
+
+	return val != nil, nil
 }
 
 func (roa *ReadOnlyAdapter) Get(storeKey string, key []byte) ([]byte, error) {
-	panic("not implemented yet!")
+	result, err := roa.rootStore.Query(storeKey, roa.version, key, false)
+	if err != nil {
+		return nil, err
+	}
+
+	return result.Value, nil
 }
 
 func (roa *ReadOnlyAdapter) Iterator(storeKey string, start, end []byte) (corestore.Iterator, error) {

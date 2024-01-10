@@ -96,11 +96,18 @@ func (s *Store) SetInitialVersion(v uint64) error {
 }
 
 func (s *Store) StateLatest() (uint64, store.ReadOnlyRootStore, error) {
-	panic("not implemented yet!")
+	v, err := s.GetLatestVersion()
+	if err != nil {
+		return 0, nil, err
+	}
+
+	return v, NewReadOnlyAdapter(v, s), nil
 }
 
-func (s *Store) StateAt(version uint64) (store.ReadOnlyRootStore, error) {
-	panic("not implemented yet!")
+func (s *Store) StateAt(v uint64) (store.ReadOnlyRootStore, error) {
+	// TODO(bez):: Ensure version exists.
+
+	return NewReadOnlyAdapter(v, s), nil
 }
 
 // GetSCStore returns the store's state commitment (SC) backend.

@@ -147,8 +147,8 @@ func intoABCIAttributes(attributes []event.Attribute) []abci.EventAttribute {
 	abciAttributes := make([]abci.EventAttribute, len(attributes))
 	for i := range attributes {
 		abciAttributes[i] = abci.EventAttribute{
-			Key:   "",
-			Value: "",
+			Key:   attributes[i].Key,
+			Value: attributes[i].Value,
 			Index: false, // TODO: who holds this config?
 		}
 	}

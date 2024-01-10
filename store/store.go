@@ -23,8 +23,11 @@ type RootStore interface {
 	// an error must be returned.
 	StateAt(version uint64) (ReadOnlyRootStore, error)
 
-	// GetSCStore should return the SC backend.
-	GetSCStore() Committer
+	// GetStateStorage returns the SS backend.
+	GetStateStorage() VersionedDatabase
+
+	// GetStateCommitment returns the SC backend.
+	GetStateCommitment() Committer
 
 	// Query performs a query on the RootStore for a given store key, version (height),
 	// and key tuple. Queries should be routed to the underlying SS engine.

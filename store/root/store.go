@@ -110,8 +110,11 @@ func (s *Store) StateAt(v uint64) (store.ReadOnlyRootStore, error) {
 	return NewReadOnlyAdapter(v, s), nil
 }
 
-// GetSCStore returns the store's state commitment (SC) backend.
-func (s *Store) GetSCStore() store.Committer {
+func (s *Store) GetStateStorage() store.VersionedDatabase {
+	return s.stateStore
+}
+
+func (s *Store) GetStateCommitment() store.Committer {
 	return s.stateCommitment
 }
 

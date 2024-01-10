@@ -38,9 +38,9 @@ func (roa *ReadOnlyAdapter) Get(storeKey string, key []byte) ([]byte, error) {
 }
 
 func (roa *ReadOnlyAdapter) Iterator(storeKey string, start, end []byte) (corestore.Iterator, error) {
-	panic("not implemented yet!")
+	return roa.rootStore.GetStateStorage().Iterator(storeKey, roa.version, start, end)
 }
 
 func (roa *ReadOnlyAdapter) ReverseIterator(storeKey string, start, end []byte) (corestore.Iterator, error) {
-	panic("not implemented yet!")
+	return roa.rootStore.GetStateStorage().ReverseIterator(storeKey, roa.version, start, end)
 }

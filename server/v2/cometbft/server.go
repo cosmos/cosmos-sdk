@@ -12,13 +12,11 @@ import (
 	abciserver "github.com/cometbft/cometbft/abci/server"
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtcfg "github.com/cometbft/cometbft/config"
-	cometservice "github.com/cometbft/cometbft/libs/service"
 	"github.com/cometbft/cometbft/node"
 	"github.com/cometbft/cometbft/p2p"
 	pvm "github.com/cometbft/cometbft/privval"
 	"github.com/cometbft/cometbft/proxy"
-	cmttypes "github.com/cometbft/cometbft/types"
-	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
+	// genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
 type Config struct {
@@ -36,7 +34,6 @@ type CometBFTServer struct {
 	logger log.Logger
 
 	config    Config
-	service   cometservice.Service
 	cleanupFn func()
 }
 
@@ -67,7 +64,7 @@ func (s *CometBFTServer) Start(ctx context.Context) error {
 		return err
 	}
 
-	s.Node, err = node.NewNodeWithContext(
+	s.Node, err = node.NewNode(
 		ctx,
 		s.config.CmtConfig,
 		pvm.LoadOrGenFilePV(s.config.CmtConfig.PrivValidatorKeyFile(), s.config.CmtConfig.PrivValidatorStateFile()),
@@ -93,20 +90,22 @@ func (s *CometBFTServer) Start(ctx context.Context) error {
 
 func (s *CometBFTServer) Stop() error {
 	defer s.cleanupFn()
-	if s.service != nil {
-		return s.service.Stop()
+	if s.Node != nil {
+		return s.Node.Stop()
 	}
 	return nil
 }
 
 // returns a function which returns the genesis doc from the genesis file.
-func getGenDocProvider(cfg *cmtcfg.Config) func() (*cmttypes.GenesisDoc, error) {
-	return func() (*cmttypes.GenesisDoc, error) {
-		appGenesis, err := genutiltypes.AppGenesisFromFile(cfg.GenesisFile())
-		if err != nil {
-			return nil, err
-		}
+func getGenDocProvider(cfg *cmtcfg.Config) func() (node.ChecksummedGenesisDoc, error) {
+	return func() (node.ChecksummedGenesisDoc, error) {
+		//TODO: re-add this after fixing deps
+		// appGenesis, err := genutiltypes.AppGenesisFromFile(cfg.GenesisFile())
+		// if err != nil {
+		// 	return nil, err
+		// }
 
-		return appGenesis.ToGenesisDoc()
+		// return appGenesis.ToGenesisDoc()
+		return node.ChecksummedGenesisDoc{}, nil
 	}
 }

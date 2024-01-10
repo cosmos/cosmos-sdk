@@ -10,16 +10,28 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
 	"cosmossdk.io/server/v2/appmanager"
+	"cosmossdk.io/server/v2/cometbft/types"
 	coreappmgr "cosmossdk.io/server/v2/core/appmanager"
 	"cosmossdk.io/server/v2/core/store"
 	"cosmossdk.io/server/v2/core/transaction"
 	"cosmossdk.io/server/v2/stf/mock"
-	"cosmossdk.io/store/snapshots"
-	snapshottypes "cosmossdk.io/store/snapshots/types"
+
+	// "cosmossdk.io/store/snapshots"
+	// snapshottypes "cosmossdk.io/store/snapshots/types"
 	abci "github.com/cometbft/cometbft/abci/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
+)
+
+// Supported ABCI Query prefixes and paths
+const (
+	QueryPathApp    = "app"
+	QueryPathCustom = "custom"
+	QueryPathP2P    = "p2p"
+	QueryPathStore  = "store"
+
+	QueryPathBroadcastTx = "/cosmos.tx.v1beta1.Service/BroadcastTx"
 )
 
 var _ abci.Application = (*Consensus[mock.Tx])(nil)
@@ -30,7 +42,10 @@ func NewConsensus[T transaction.Tx](app appmanager.AppManager[T]) *Consensus[T] 
 	}
 }
 
-type CurrentBlock struct {
+// BlockData is used to keep some data about the last committed block. Currently
+// we only use the height, the rest is not needed right now and might get removed
+// in the future.
+type BlockData struct {
 	Height    int64
 	Hash      []byte
 	ChangeSet []store.ChangeSet
@@ -42,26 +57,33 @@ type Consensus[T transaction.Tx] struct {
 
 	name    string
 	version string // TODO: check if these are needed
+	trace   bool
 
-	current atomic.Pointer[CurrentBlock]
+	// this is only available after this node has committed a block (in FinalizeBlock),
+	// otherwise it will be empty and we will need to query the app for the last
+	// committed block.
+	lastCommittedBlock atomic.Pointer[BlockData]
 
-	snapshotManager *snapshots.Manager
+	// snapshotManager *snapshots.Manager // TODO: This imports some unexistent comet pkgs
+
+	addrPeerFilter types.PeerFilter // filter peers by address and port
+	idPeerFilter   types.PeerFilter // filter peers by node ID
 }
 
-// TODO
+// TODO: implement
 func (*Consensus[T]) GetBlockRetentionHeight(commitHeight int64) int64 {
 	return 0
 }
 
 // CheckTx implements types.Application.
-func (c *Consensus[T]) CheckTx(ctx context.Context, req *abci.RequestCheckTx) (*abci.ResponseCheckTx, error) {
+func (c *Consensus[T]) CheckTx(ctx context.Context, req *abci.CheckTxRequest) (*abci.CheckTxResponse, error) {
 	resp, err := c.app.Validate(ctx, req.Tx)
 	if err != nil {
 		return nil, err
 	}
-	cometResp := &abci.ResponseCheckTx{
+	cometResp := &abci.CheckTxResponse{
 		Code:      0,
-		GasWanted: 0, // TODO: maybe appmanager.TxResult should include this
+		GasWanted: int64(resp.GasUsed), // TODO: maybe appmanager.TxResult should include this
 		GasUsed:   int64(resp.GasUsed),
 		Events:    intoABCIEvents(resp.Events),
 	}
@@ -73,46 +95,78 @@ func (c *Consensus[T]) CheckTx(ctx context.Context, req *abci.RequestCheckTx) (*
 }
 
 // Info implements types.Application.
-func (c *Consensus[T]) Info(context.Context, *abci.RequestInfo) (*abci.ResponseInfo, error) {
-	// TODO: big TODO here
+func (c *Consensus[T]) Info(context.Context, *abci.InfoRequest) (*abci.InfoResponse, error) {
+	// TODO: I need to be able to get the app version from consensus params at the latest height
+	// Maybe we need to perform a Query with something like RequestConsensusParams?
 
-	return &abci.ResponseInfo{
+	return &abci.InfoResponse{
 		Data:    c.name,
 		Version: c.version,
 		// AppVersion:       appVersion, // TODO: get consensus params here
-		LastBlockHeight:  int64(c.app.LastBlockHeight()), // last committed block height
-		LastBlockAppHash: []byte{},                       // TODO: missing apphash of the last committed block
+		// these values must come from disk, as we might not have them in memory yet!
+		// we could get them from memory if they are there, otherwise get them from disk
+		LastBlockHeight:  int64(c.app.LastCommittedBlockHeight()),
+		LastBlockAppHash: c.app.LastCommittedBlockHash(),
 	}, nil
 }
 
-var QueryPathBroadcastTx = "/cosmos.tx.v1beta1.Service/BroadcastTx"
-
 // Query implements types.Application.
-func (c *Consensus[T]) Query(ctx context.Context, req *abci.RequestQuery) (*abci.ResponseQuery, error) {
+func (c *Consensus[T]) Query(ctx context.Context, req *abci.QueryRequest) (*abci.QueryResponse, error) {
 	// reject special cases
 	if req.Path == QueryPathBroadcastTx {
 		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "can't route a broadcast tx message")
 	}
 
-	// TODO: Here we have to use the path to look for a grpc method through the proto v2 registry
-	// (using FindDescriptorByName), then with the method descriptor we get the proper req and resp.
+	// store.ReadonlyState
+
+	// grpc appmanager, and then the rest I handle here.
+	// take in an SC for keys.
+
 	appreq, err := parseQueryRequest(req)
-	if err != nil {
-		return nil, err
+	if err == nil { // if no error is returned then we can handle the query with the appmanager
+		res, err := c.app.Query(ctx, appreq, uint64(req.Height))
+		if err != nil {
+			return nil, err
+		}
+
+		return parseQueryResponse(req, res)
 	}
 
-	res, err := c.app.Query(ctx, appreq, uint64(req.Height))
-	if err != nil {
-		return nil, err
+	// this error most probably means that we can't handle it with a proto message, so
+	// it must be an app/p2p/store query
+
+	path := splitABCIQueryPath(req.Path)
+	if len(path) == 0 {
+		// TODO: move QueryResult to this package
+		return QueryResult(errorsmod.Wrap(sdkerrors.ErrUnknownRequest, "no query path provided"), c.trace), nil
 	}
 
-	return parseQueryResponse(req, res)
+	var resp *abci.QueryResponse
+	switch path[0] {
+	case QueryPathApp:
+		// TODO: handle these queries
+		// "/app" prefix for special application queries
+		// resp = handleQueryApp(app, path, req)
+
+	case QueryPathStore:
+		// TODO: handle these queries
+		// resp = handleQueryStore(app, path, *req)
+
+	case QueryPathP2P:
+		resp = c.handleQueryP2P(path)
+
+	default:
+		resp = QueryResult(errorsmod.Wrap(sdkerrors.ErrUnknownRequest, "unknown query path"), c.trace)
+	}
+
+	return resp, err
+
 }
 
 // InitChain implements types.Application.
-func (c *Consensus[T]) InitChain(ctx context.Context, req *abci.RequestInitChain) (*abci.ResponseInitChain, error) {
+func (c *Consensus[T]) InitChain(ctx context.Context, req *abci.InitChainRequest) (*abci.InitChainResponse, error) {
 	// TODO: won't work now
-	return &abci.ResponseInitChain{
+	return &abci.InitChainResponse{
 		ConsensusParams: req.ConsensusParams,
 		Validators:      req.Validators,
 		AppHash:         []byte{},
@@ -176,7 +230,7 @@ func (c *Consensus[T]) InitChain(ctx context.Context, req *abci.RequestInitChain
 }
 
 // PrepareProposal implements types.Application.
-func (c *Consensus[T]) PrepareProposal(ctx context.Context, req *abci.RequestPrepareProposal) (resp *abci.ResponsePrepareProposal, err error) {
+func (c *Consensus[T]) PrepareProposal(ctx context.Context, req *abci.PrepareProposalRequest) (resp *abci.PrepareProposalResponse, err error) {
 	if req.Height < 1 {
 		return nil, errors.New("PrepareProposal called with invalid height")
 	}
@@ -191,7 +245,7 @@ func (c *Consensus[T]) PrepareProposal(ctx context.Context, req *abci.RequestPre
 				"panic", err,
 			)
 
-			resp = &abci.ResponsePrepareProposal{Txs: req.Txs}
+			resp = &abci.PrepareProposalResponse{Txs: req.Txs}
 		}
 	}()
 
@@ -201,24 +255,24 @@ func (c *Consensus[T]) PrepareProposal(ctx context.Context, req *abci.RequestPre
 		return nil, err
 	}
 
-	return &abci.ResponsePrepareProposal{
+	return &abci.PrepareProposalResponse{
 		Txs: c.app.EncodeTxs(txs),
 	}, nil
 }
 
 // ProcessProposal implements types.Application.
-func (c *Consensus[T]) ProcessProposal(ctx context.Context, req *abci.RequestProcessProposal) (*abci.ResponseProcessProposal, error) {
+func (c *Consensus[T]) ProcessProposal(ctx context.Context, req *abci.ProcessProposalRequest) (*abci.ProcessProposalResponse, error) {
 	decodedTxs := c.app.DecodeTxs(req.Txs)
 	err := c.app.VerifyBlock(ctx, uint64(req.Height), decodedTxs)
 	if err != nil {
 		c.logger.Error("failed to process proposal", "height", req.Height, "time", req.Time, "hash", fmt.Sprintf("%X", req.Hash), "err", err)
-		return &abci.ResponseProcessProposal{
-			Status: abci.ResponseProcessProposal_REJECT,
+		return &abci.ProcessProposalResponse{
+			Status: abci.PROCESS_PROPOSAL_STATUS_REJECT,
 		}, nil
 	}
 
-	return &abci.ResponseProcessProposal{
-		Status: abci.ResponseProcessProposal_ACCEPT,
+	return &abci.ProcessProposalResponse{
+		Status: abci.PROCESS_PROPOSAL_STATUS_ACCEPT,
 	}, nil
 }
 
@@ -234,7 +288,7 @@ func (*ConsensusInfo) ProtoReflect() protoreflect.Message {
 }
 
 // FinalizeBlock implements types.Application.
-func (c *Consensus[T]) FinalizeBlock(ctx context.Context, req *abci.RequestFinalizeBlock) (*abci.ResponseFinalizeBlock, error) {
+func (c *Consensus[T]) FinalizeBlock(ctx context.Context, req *abci.FinalizeBlockRequest) (*abci.FinalizeBlockResponse, error) {
 	// TODO: add validation over block height (validateFinalizeBlockHeight)
 
 	cometInfo := &ConsensusInfo{
@@ -246,6 +300,8 @@ func (c *Consensus[T]) FinalizeBlock(ctx context.Context, req *abci.RequestFinal
 		},
 	}
 
+	// if am, ok := appmanager.(*core.consesnus); ok { am.GetConsensusParams}
+
 	blockReq := coreappmgr.BlockRequest{
 		Height:            uint64(req.Height),
 		Time:              req.Time,
@@ -255,175 +311,175 @@ func (c *Consensus[T]) FinalizeBlock(ctx context.Context, req *abci.RequestFinal
 	}
 
 	resp, changeSet, err := c.app.DeliverBlock(ctx, blockReq)
-
-	// keep these values in memory so we can commit them later
-	c.current.Store(&CurrentBlock{
-		Height:    int64(req.Height),
-		Hash:      req.Hash,
-		ChangeSet: changeSet,
-	})
-
-	return parseFinalizeBlockResponse(resp, err)
-}
-
-// Commit implements types.Application.
-func (c *Consensus[T]) Commit(ctx context.Context, _ *abci.RequestCommit) (*abci.ResponseCommit, error) {
-	// get the block processed in FinalizeBlock
-	currentState := c.current.Load()
-
-	_, err := c.app.CommitBlock(ctx, uint64(currentState.Height), currentState.ChangeSet)
 	if err != nil {
 		return nil, err
 	}
 
-	c.current.Store(nil) // reset current block
+	appHash, err := c.app.CommitBlock(ctx, blockReq.Height, changeSet)
+	if err != nil {
+		return nil, err
+	}
+
+	c.lastCommittedBlock.Store(&BlockData{
+		Height:    int64(req.Height),
+		Hash:      appHash,
+		ChangeSet: changeSet,
+	})
+
+	return parseFinalizeBlockResponse(resp, appHash)
+}
+
+// Commit implements types.Application.
+func (c *Consensus[T]) Commit(ctx context.Context, _ *abci.CommitRequest) (*abci.CommitResponse, error) {
+	lastCommittedBlock := c.lastCommittedBlock.Load()
 
 	// TODO: add abci listener here and snapshotting
-	c.snapshotManager.SnapshotIfApplicable(currentState.Height)
+	// c.snapshotManager.SnapshotIfApplicable(lastCommittedBlock.Height)
 
-	return &abci.ResponseCommit{
-		RetainHeight: c.GetBlockRetentionHeight(currentState.Height),
+	return &abci.CommitResponse{
+		RetainHeight: c.GetBlockRetentionHeight(lastCommittedBlock.Height),
 	}, nil
 }
 
 // Vote extensions
 // VerifyVoteExtension implements types.Application.
-func (*Consensus[T]) VerifyVoteExtension(context.Context, *abci.RequestVerifyVoteExtension) (*abci.ResponseVerifyVoteExtension, error) {
+func (*Consensus[T]) VerifyVoteExtension(context.Context, *abci.VerifyVoteExtensionRequest) (*abci.VerifyVoteExtensionResponse, error) {
 	panic("unimplemented")
 }
 
 // ExtendVote implements types.Application.
-func (*Consensus[T]) ExtendVote(context.Context, *abci.RequestExtendVote) (*abci.ResponseExtendVote, error) {
+func (*Consensus[T]) ExtendVote(context.Context, *abci.ExtendVoteRequest) (*abci.ExtendVoteResponse, error) {
 	panic("unimplemented")
 }
 
 // snapshots (unchanged from baseapp's implementation)
 
 // ApplySnapshotChunk implements types.Application.
-func (c *Consensus[T]) ApplySnapshotChunk(_ context.Context, req *abci.RequestApplySnapshotChunk) (*abci.ResponseApplySnapshotChunk, error) {
-	if c.snapshotManager == nil {
-		c.logger.Error("snapshot manager not configured")
-		return &abci.ResponseApplySnapshotChunk{Result: abci.ResponseApplySnapshotChunk_ABORT}, nil
-	}
+func (c *Consensus[T]) ApplySnapshotChunk(_ context.Context, req *abci.ApplySnapshotChunkRequest) (*abci.ApplySnapshotChunkResponse, error) {
+	// if c.snapshotManager == nil {
+	// 	c.logger.Error("snapshot manager not configured")
+	// 	return &abci.ResponseApplySnapshotChunk{Result: abci.ResponseApplySnapshotChunk_ABORT}, nil
+	// }
 
-	_, err := c.snapshotManager.RestoreChunk(req.Chunk)
-	switch {
-	case err == nil:
-		return &abci.ResponseApplySnapshotChunk{Result: abci.ResponseApplySnapshotChunk_ACCEPT}, nil
+	// _, err := c.snapshotManager.RestoreChunk(req.Chunk)
+	// switch {
+	// case err == nil:
+	// 	return &abci.ResponseApplySnapshotChunk{Result: abci.ResponseApplySnapshotChunk_ACCEPT}, nil
 
-	case errors.Is(err, snapshottypes.ErrChunkHashMismatch):
-		c.logger.Error(
-			"chunk checksum mismatch; rejecting sender and requesting refetch",
-			"chunk", req.Index,
-			"sender", req.Sender,
-			"err", err,
-		)
-		return &abci.ResponseApplySnapshotChunk{
-			Result:        abci.ResponseApplySnapshotChunk_RETRY,
-			RefetchChunks: []uint32{req.Index},
-			RejectSenders: []string{req.Sender},
-		}, nil
+	// case errors.Is(err, snapshottypes.ErrChunkHashMismatch):
+	// 	c.logger.Error(
+	// 		"chunk checksum mismatch; rejecting sender and requesting refetch",
+	// 		"chunk", req.Index,
+	// 		"sender", req.Sender,
+	// 		"err", err,
+	// 	)
+	// 	return &abci.ResponseApplySnapshotChunk{
+	// 		Result:        abci.ResponseApplySnapshotChunk_RETRY,
+	// 		RefetchChunks: []uint32{req.Index},
+	// 		RejectSenders: []string{req.Sender},
+	// 	}, nil
 
-	default:
-		c.logger.Error("failed to restore snapshot", "err", err)
-		return &abci.ResponseApplySnapshotChunk{Result: abci.ResponseApplySnapshotChunk_ABORT}, nil
-	}
+	// default:
+	// c.logger.Error("failed to restore snapshot", "err", err)
+	return &abci.ApplySnapshotChunkResponse{Result: abci.APPLY_SNAPSHOT_CHUNK_RESULT_ABORT}, nil
+	// }
 }
 
 // ListSnapshots implements types.Application.
-func (c *Consensus[T]) ListSnapshots(_ context.Context, ctx *abci.RequestListSnapshots) (*abci.ResponseListSnapshots, error) {
-	resp := &abci.ResponseListSnapshots{Snapshots: []*abci.Snapshot{}}
-	if c.snapshotManager == nil {
-		return resp, nil
-	}
+func (c *Consensus[T]) ListSnapshots(_ context.Context, ctx *abci.ListSnapshotsRequest) (*abci.ListSnapshotsResponse, error) {
+	resp := &abci.ListSnapshotsResponse{Snapshots: []*abci.Snapshot{}}
+	// if c.snapshotManager == nil {
+	// 	return resp, nil
+	// }
 
-	snapshots, err := c.snapshotManager.List()
-	if err != nil {
-		c.logger.Error("failed to list snapshots", "err", err)
-		return nil, err
-	}
+	// snapshots, err := c.snapshotManager.List()
+	// if err != nil {
+	// 	c.logger.Error("failed to list snapshots", "err", err)
+	// 	return nil, err
+	// }
 
-	for _, snapshot := range snapshots {
-		abciSnapshot, err := snapshot.ToABCI()
-		if err != nil {
-			c.logger.Error("failed to convert ABCI snapshots", "err", err)
-			return nil, err
-		}
+	// for _, snapshot := range snapshots {
+	// 	abciSnapshot, err := snapshot.ToABCI()
+	// 	if err != nil {
+	// 		c.logger.Error("failed to convert ABCI snapshots", "err", err)
+	// 		return nil, err
+	// 	}
 
-		resp.Snapshots = append(resp.Snapshots, &abciSnapshot)
-	}
+	// 	resp.Snapshots = append(resp.Snapshots, &abciSnapshot)
+	// }
 
 	return resp, nil
 }
 
 // LoadSnapshotChunk implements types.Application.
-func (c *Consensus[T]) LoadSnapshotChunk(_ context.Context, req *abci.RequestLoadSnapshotChunk) (*abci.ResponseLoadSnapshotChunk, error) {
-	if c.snapshotManager == nil {
-		return &abci.ResponseLoadSnapshotChunk{}, nil
-	}
+func (c *Consensus[T]) LoadSnapshotChunk(_ context.Context, req *abci.LoadSnapshotChunkRequest) (*abci.LoadSnapshotChunkResponse, error) {
+	// if c.snapshotManager == nil {
+	// 	return &abci.ResponseLoadSnapshotChunk{}, nil
+	// }
 
-	chunk, err := c.snapshotManager.LoadChunk(req.Height, req.Format, req.Chunk)
-	if err != nil {
-		c.logger.Error(
-			"failed to load snapshot chunk",
-			"height", req.Height,
-			"format", req.Format,
-			"chunk", req.Chunk,
-			"err", err,
-		)
-		return nil, err
-	}
+	// chunk, err := c.snapshotManager.LoadChunk(req.Height, req.Format, req.Chunk)
+	// if err != nil {
+	// 	c.logger.Error(
+	// 		"failed to load snapshot chunk",
+	// 		"height", req.Height,
+	// 		"format", req.Format,
+	// 		"chunk", req.Chunk,
+	// 		"err", err,
+	// 	)
+	// 	return nil, err
+	// }
 
-	return &abci.ResponseLoadSnapshotChunk{Chunk: chunk}, nil
+	// return &abci.ResponseLoadSnapshotChunk{Chunk: chunk}, nil
+	return nil, nil
 }
 
 // OfferSnapshot implements types.Application.
-func (c *Consensus[T]) OfferSnapshot(_ context.Context, req *abci.RequestOfferSnapshot) (*abci.ResponseOfferSnapshot, error) {
-	if c.snapshotManager == nil {
-		c.logger.Error("snapshot manager not configured")
-		return &abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_ABORT}, nil
-	}
+func (c *Consensus[T]) OfferSnapshot(_ context.Context, req *abci.OfferSnapshotRequest) (*abci.OfferSnapshotResponse, error) {
+	// if c.snapshotManager == nil {
+	// 	c.logger.Error("snapshot manager not configured")
+	// 	return &abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_ABORT}, nil
+	// }
 
-	if req.Snapshot == nil {
-		c.logger.Error("received nil snapshot")
-		return &abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_REJECT}, nil
-	}
+	// if req.Snapshot == nil {
+	// 	c.logger.Error("received nil snapshot")
+	// 	return &abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_REJECT}, nil
+	// }
 
-	// TODO: SnapshotFromABCI should be moved to this package or out of the SDK
-	snapshot, err := snapshottypes.SnapshotFromABCI(req.Snapshot)
-	if err != nil {
-		c.logger.Error("failed to decode snapshot metadata", "err", err)
-		return &abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_REJECT}, nil
-	}
+	// // TODO: SnapshotFromABCI should be moved to this package or out of the SDK
+	// snapshot, err := snapshottypes.SnapshotFromABCI(req.Snapshot)
+	// if err != nil {
+	// 	c.logger.Error("failed to decode snapshot metadata", "err", err)
+	// 	return &abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_REJECT}, nil
+	// }
 
-	err = c.snapshotManager.Restore(snapshot)
-	switch {
-	case err == nil:
-		return &abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_ACCEPT}, nil
+	// err = c.snapshotManager.Restore(snapshot)
+	// switch {
+	// case err == nil:
+	// 	return &abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_ACCEPT}, nil
 
-	case errors.Is(err, snapshottypes.ErrUnknownFormat):
-		return &abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_REJECT_FORMAT}, nil
+	// case errors.Is(err, snapshottypes.ErrUnknownFormat):
+	// 	return &abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_REJECT_FORMAT}, nil
 
-	case errors.Is(err, snapshottypes.ErrInvalidMetadata):
-		c.logger.Error(
-			"rejecting invalid snapshot",
-			"height", req.Snapshot.Height,
-			"format", req.Snapshot.Format,
-			"err", err,
-		)
-		return &abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_REJECT}, nil
+	// case errors.Is(err, snapshottypes.ErrInvalidMetadata):
+	// 	c.logger.Error(
+	// 		"rejecting invalid snapshot",
+	// 		"height", req.Snapshot.Height,
+	// 		"format", req.Snapshot.Format,
+	// 		"err", err,
+	// 	)
+	// 	return &abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_REJECT}, nil
 
-	default:
-		c.logger.Error(
-			"failed to restore snapshot",
-			"height", req.Snapshot.Height,
-			"format", req.Snapshot.Format,
-			"err", err,
-		)
+	// default:
+	// 	c.logger.Error(
+	// 		"failed to restore snapshot",
+	// 		"height", req.Snapshot.Height,
+	// 		"format", req.Snapshot.Format,
+	// 		"err", err,
+	// 	)
 
-		// We currently don't support resetting the IAVL stores and retrying a
-		// different snapshot, so we ask CometBFT to abort all snapshot restoration.
-		return &abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_ABORT}, nil
-	}
-
+	// 	// We currently don't support resetting the IAVL stores and retrying a
+	// 	// different snapshot, so we ask CometBFT to abort all snapshot restoration.
+	// 	return &abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_ABORT}, nil
+	// }
+	return nil, nil
 }

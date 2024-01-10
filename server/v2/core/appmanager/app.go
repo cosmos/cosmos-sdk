@@ -51,7 +51,6 @@ type BlockRequest struct {
 }
 
 type BlockResponse struct {
-	Apphash          []byte
 	ValidatorUpdates []ValidatorUpdate
 	BeginBlockEvents []event.Event
 	TxResults        []TxResult

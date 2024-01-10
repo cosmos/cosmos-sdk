@@ -2,12 +2,14 @@ package cometbft
 
 import (
 	"fmt"
+	"strings"
 
 	"cosmossdk.io/core/comet"
+	errorsmod "cosmossdk.io/errors"
 	coreappmgr "cosmossdk.io/server/v2/core/appmanager"
 	"cosmossdk.io/server/v2/core/event"
 	abci "github.com/cometbft/cometbft/abci/types"
-	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
+	cmtcrypto "github.com/cometbft/cometbft/api/cometbft/crypto/v1"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	"google.golang.org/protobuf/proto"
@@ -15,7 +17,7 @@ import (
 	"google.golang.org/protobuf/types/dynamicpb"
 )
 
-func parseQueryRequest(req *abci.RequestQuery) (proto.Message, error) {
+func parseQueryRequest(req *abci.QueryRequest) (proto.Message, error) {
 	desc, err := gogoproto.HybridResolver.FindDescriptorByName(protoreflect.FullName(req.Path))
 	if err != nil {
 		return nil, err
@@ -33,7 +35,7 @@ func parseQueryRequest(req *abci.RequestQuery) (proto.Message, error) {
 }
 
 // parseQueryResponse needs the request to get the path
-func parseQueryResponse(req *abci.RequestQuery, res proto.Message) (*abci.ResponseQuery, error) {
+func parseQueryResponse(req *abci.QueryRequest, res proto.Message) (*abci.QueryResponse, error) {
 	desc, err := gogoproto.HybridResolver.FindDescriptorByName(protoreflect.FullName(req.Path))
 	if err != nil {
 		return nil, err
@@ -51,27 +53,43 @@ func parseQueryResponse(req *abci.RequestQuery, res proto.Message) (*abci.Respon
 		return nil, err
 	}
 
-	return &abci.ResponseQuery{ // TODO: fill all the fields
+	//TODO: how do I reply? I suppose we need to different replies depending of the query
+
+	return &abci.QueryResponse{ // TODO: fill all the fields
 		Code:      0,
 		Log:       "",
 		Info:      "",
 		Index:     0,
 		Key:       []byte{},
 		Value:     bz,
-		ProofOps:  &cmtprotocrypto.ProofOps{},
+		ProofOps:  &cmtcrypto.ProofOps{},
 		Height:    0,
 		Codespace: "",
 	}, nil
 }
 
-func parseFinalizeBlockResponse(in *coreappmgr.BlockResponse, err error) (*abci.ResponseFinalizeBlock, error) {
+// SplitABCIQueryPath splits a string path using the delimiter '/'.
+//
+// e.g. "this/is/funny" becomes []string{"this", "is", "funny"}
+func splitABCIQueryPath(requestPath string) (path []string) {
+	path = strings.Split(requestPath, "/")
+
+	// first element is empty string
+	if len(path) > 0 && path[0] == "" {
+		path = path[1:]
+	}
+
+	return path
+}
+
+func parseFinalizeBlockResponse(in *coreappmgr.BlockResponse, appHash []byte) (*abci.FinalizeBlockResponse, error) {
 	allEvents := append(in.BeginBlockEvents, in.EndBlockEvents...)
 
-	resp := &abci.ResponseFinalizeBlock{
+	resp := &abci.FinalizeBlockResponse{
 		Events:                intoABCIEvents(allEvents),
 		TxResults:             intoABCITxResults(in.TxResults),
 		ValidatorUpdates:      intoABCIValidatorUpdates(in.ValidatorUpdates),
-		AppHash:               in.Apphash,
+		AppHash:               appHash,
 		ConsensusParamUpdates: nil, // TODO: figure out consensus params here, maybe parse the tx responses or events?
 	}
 	return resp, nil
@@ -82,8 +100,8 @@ func intoABCIValidatorUpdates(updates []coreappmgr.ValidatorUpdate) []abci.Valid
 
 	for i := range updates {
 		valsetUpdates[i] = abci.ValidatorUpdate{
-			PubKey: cmtprotocrypto.PublicKey{
-				Sum: &cmtprotocrypto.PublicKey_Ed25519{ // TODO: check if this is ok
+			PubKey: cmtcrypto.PublicKey{
+				Sum: &cmtcrypto.PublicKey_Ed25519{ // TODO: check if this is ok
 					Ed25519: updates[i].PubKey,
 				},
 			},
@@ -190,4 +208,15 @@ func ToSDKExtendedCommitInfo(commit abci.ExtendedCommitInfo) comet.CommitInfo {
 	}
 
 	return ci
+}
+
+// QueryResult returns a ResponseQuery from an error. It will try to parse ABCI
+// info from the error.
+func QueryResult(err error, debug bool) *abci.QueryResponse {
+	space, code, log := errorsmod.ABCIInfo(err, debug)
+	return &abci.QueryResponse{
+		Codespace: space,
+		Code:      code,
+		Log:       log,
+	}
 }

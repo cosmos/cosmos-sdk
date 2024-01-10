@@ -7,6 +7,9 @@ import (
 )
 
 type VoteExtensionsHandler interface {
-	ExtendVote(context.Context, *abci.RequestExtendVote) (*abci.ResponseExtendVote, error)
-	VerifyVoteExtension(context.Context, *abci.RequestVerifyVoteExtension) (*abci.ResponseVerifyVoteExtension, error)
+	ExtendVote(context.Context, *abci.ExtendVoteRequest) (*abci.ExtendVoteResponse, error)
+	VerifyVoteExtension(context.Context, *abci.VerifyVoteExtensionRequest) (*abci.VerifyVoteExtensionResponse, error)
 }
+
+// PeerFilter responds to p2p filtering queries from Tendermint
+type PeerFilter func(info string) *abci.QueryResponse

@@ -166,8 +166,13 @@ func (a AppManager[T]) Validate(ctx context.Context, txBytes []byte) (appmanager
 	return a.stf.ValidateTx(ctx, state, a.checkTxGasLimit, txBytes), nil
 }
 
-func (a AppManager[T]) LastBlockHeight() uint64 {
+// TODO: LastBlockHeight and LastBlockHash must come from the disk
+func (a AppManager[T]) LastCommittedBlockHeight() uint64 {
 	return a.lastBlockHeight.Load()
+}
+
+func (a AppManager[T]) LastCommittedBlockHash() Hash {
+	return []byte{}
 }
 
 // TODO: implement
@@ -179,3 +184,7 @@ func (a AppManager[T]) DecodeTxs(_ [][]byte) []T {
 func (a AppManager[T]) EncodeTxs(_ []T) [][]byte {
 	return [][]byte{}
 }
+
+// Add QueryWithChangeset
+
+// Set ConsensusParams to context. Create a new context with SetConsensusParams that sets it to a specific context key

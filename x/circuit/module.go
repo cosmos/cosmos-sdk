@@ -13,6 +13,7 @@ import (
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
+	am "cosmossdk.io/depinject/appmodule"
 	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/circuit/keeper"
 	"cosmossdk.io/x/circuit/types"
@@ -126,9 +127,9 @@ func (am AppModule) ExportGenesis(ctx context.Context, cdc codec.JSONCodec) json
 }
 
 func init() {
-	appmodule.Register(
+	am.Register(
 		&modulev1.Module{},
-		appmodule.Provide(ProvideModule),
+		am.Provide(ProvideModule),
 	)
 }
 

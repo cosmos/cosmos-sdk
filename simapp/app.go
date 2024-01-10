@@ -333,7 +333,7 @@ func NewSimApp(
 	)
 	app.MintKeeper = mintkeeper.NewKeeper(appCodec, runtime.NewKVStoreService(keys[minttypes.StoreKey]), app.StakingKeeper, app.AuthKeeper, app.BankKeeper, authtypes.FeeCollectorName, authtypes.NewModuleAddress(govtypes.ModuleName).String())
 
-	app.PoolKeeper = poolkeeper.NewKeeper(appCodec, runtime.NewKVStoreService(keys[pooltypes.StoreKey]), app.AuthKeeper, app.BankKeeper, authtypes.NewModuleAddress(govtypes.ModuleName).String())
+	app.PoolKeeper = poolkeeper.NewKeeper(appCodec, runtime.NewKVStoreService(keys[pooltypes.StoreKey]), app.AuthKeeper, app.BankKeeper, app.StakingKeeper, authtypes.NewModuleAddress(govtypes.ModuleName).String())
 
 	app.DistrKeeper = distrkeeper.NewKeeper(appCodec, runtime.NewKVStoreService(keys[distrtypes.StoreKey]), app.AuthKeeper, app.BankKeeper, app.StakingKeeper, app.PoolKeeper, authtypes.FeeCollectorName, authtypes.NewModuleAddress(govtypes.ModuleName).String())
 

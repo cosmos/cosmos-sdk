@@ -8,6 +8,7 @@ import (
 	modulev1 "cosmossdk.io/api/cosmos/params/module/v1"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
+	am "cosmossdk.io/depinject/appmodule"
 	store "cosmossdk.io/store/types"
 	govv1beta1 "cosmossdk.io/x/gov/types/v1beta1"
 	"cosmossdk.io/x/params/keeper"
@@ -25,6 +26,7 @@ var (
 	_ module.AppModuleBasic      = AppModule{}
 	_ module.AppModuleSimulation = AppModule{}
 	_ module.HasServices         = AppModule{}
+	_ depinject.OnePerModuleType = AppModule{}
 
 	_ appmodule.AppModule = AppModule{}
 )
@@ -102,8 +104,8 @@ func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
 //
 
 func init() {
-	appmodule.Register(&modulev1.Module{},
-		appmodule.Provide(
+	am.Register(&modulev1.Module{},
+		am.Provide(
 			ProvideModule,
 			ProvideSubspace,
 		))

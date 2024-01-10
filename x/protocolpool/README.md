@@ -55,6 +55,25 @@ ClaimBudget is a message used to claim funds from a previously submitted budget 
 
 ```
 
+### CreateContinuousFund
+
+CreateContinuousFund is a message used to initiate a continuous fund for a specific recipient. The proposed percentage of funds will be distributed only on withdraw request for the recipient. The fund distribution continues until expiry time is reached or continuous fund request is canceled.
+NOTE:  This feature is designed to work with the SDK's default bond denom. 
+
+```protobuf
+  // CreateContinuousFund defines a method to add funds continuously.
+  rpc CreateContinuousFund(MsgCreateContinuousFund) returns (MsgCreateContinuousFundResponse);
+```
+
+### CancelContinuousFund
+
+CancelContinuousFund is a message used to cancel an existing continuous fund proposal for a specific recipient. Cancelling a continuous fund stops further distribution of funds, and the state object is removed from storage.
+
+```protobuf
+  // CancelContinuousFund defines a method for cancelling continuous fund.
+  rpc CancelContinuousFund(MsgCancelContinuousFund) returns (MsgCancelContinuousFundResponse);
+```
+
 ## Messages
 
 ### MsgFundCommunityPool
@@ -79,7 +98,7 @@ func (k Keeper) FundCommunityPool(ctx context.Context, amount sdk.Coins, sender 
 
 ### MsgCommunityPoolSpend
 
-This message distributes funds from the protocolpool module account to the recipient using `DistributeFromFeePool` keeper method.
+This message distributes funds from the protocolpool module account to the recipient using `DistributeFromCommunityPool` keeper method.
 
 ```protobuf reference
 https://github.com/cosmos/cosmos-sdk/blob/97724493d792517ba2be8969078b5f92ad04d79c/proto/cosmos/protocolpool/v1/tx.proto#L47-L58
@@ -91,7 +110,7 @@ The message will fail under the following conditions:
 * The `recipient` address is restricted
 
 ```go
-func (k Keeper) DistributeFromFeePool(ctx context.Context, amount sdk.Coins, receiveAddr sdk.AccAddress) error {
+func (k Keeper) DistributeFromCommunityPool(ctx context.Context, amount sdk.Coins, receiveAddr sdk.AccAddress) error {
 	return k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, receiveAddr, amount)
 }
 ```
@@ -139,6 +158,44 @@ The message will fail under the following conditions:
 https://github.com/cosmos/cosmos-sdk/blob/97724493d792517ba2be8969078b5f92ad04d79c/x/protocolpool/keeper/msg_server.go#L25-L37
 ```
 
+### MsgCreateContinuousFund
+
+This message is used to create a continuous fund for a specific recipient. The proposed percentage of funds will be distributed only on withdraw request for the recipient. This fund distribution continues until expiry time is reached or continuous fund request is canceled.
+
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/44985ec56557e2d5b763c8676fabbed971f157ba/proto/cosmos/protocolpool/v1/tx.proto#L111-L130
+```
+
+The message will fail under the following conditions:
+
+- The recipient address is empty or restricted.
+- The percentage is zero/negative/greater than one.
+- The Expiry time is less than the current block time.
+
+:::warning
+If two continuous fund proposals to the same address are created, the previous ContinuousFund would be updated with the new ContinuousFund.
+:::
+
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/44985ec56557e2d5b763c8676fabbed971f157ba/x/protocolpool/keeper/msg_server.go#L109-L140
+```
+
+### MsgCancelContinuousFund
+
+This message is used to cancel an existing continuous fund proposal for a specific recipient. Once canceled, the continuous fund will no longer distribute funds at each end block, and the state object will be removed. Users should be cautious when canceling continuous funds, as it may affect the planned distribution for the recipient.
+
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/44985ec56557e2d5b763c8676fabbed971f157ba/proto/cosmos/protocolpool/v1/tx.proto#L136-L144
+```
+
+The message will fail under the following conditions:
+
+- The recipient address is empty or restricted.
+- The ContinuousFund for the recipient does not exist.
+
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/44985ec56557e2d5b763c8676fabbed971f157ba/x/protocolpool/keeper/msg_server.go#L142-L174
+```
 
 ## Client
 

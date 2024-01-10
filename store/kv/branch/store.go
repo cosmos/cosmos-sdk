@@ -34,7 +34,8 @@ type Store struct {
 	// parent reflects a parent store if branched (it may be nil)
 	parent store.KVStore
 
-	// changeset reflects the uncommitted writes to the store
+	// changeset reflects the uncommitted writes to the store as it contains a mapping
+	// from key to a KVPair.
 	changeset map[string]store.KVPair
 }
 
@@ -77,12 +78,13 @@ func (s *Store) GetChangeset() *store.Changeset {
 	for i, key := range keys {
 		kvPair := s.changeset[key]
 		pairs[i] = store.KVPair{
-			Key:   []byte(key),
-			Value: slices.Clone(kvPair.Value),
+			Key:      []byte(key),
+			Value:    slices.Clone(kvPair.Value),
+			StoreKey: s.storeKey,
 		}
 	}
 
-	return store.NewChangeset(map[string]store.KVPairs{s.storeKey: pairs})
+	return store.NewChangesetWithPairs(map[string]store.KVPairs{s.storeKey: pairs})
 }
 
 func (s *Store) Reset(toVersion uint64) error {

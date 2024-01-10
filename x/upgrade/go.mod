@@ -196,6 +196,7 @@ replace github.com/cosmos/cosmos-sdk => ../../.
 // TODO Remove it: https://github.com/cosmos/cosmos-sdk/issues/10409
 
 replace (
+	cosmossdk.io/depinject => ../../depinject
 	cosmossdk.io/x/auth => ../auth
 	cosmossdk.io/x/bank => ../bank
 	cosmossdk.io/x/distribution => ../distribution

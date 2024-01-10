@@ -5,7 +5,7 @@ import (
 
 	"google.golang.org/protobuf/proto"
 
-	"cosmossdk.io/core/internal"
+	internal "cosmossdk.io/depinject/internal/appconfig"
 )
 
 // Register registers a module with the global module registry. The provided

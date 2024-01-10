@@ -17,6 +17,7 @@ import (
 	"cosmossdk.io/core/appmodule"
 	store "cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
+	am "cosmossdk.io/depinject/appmodule"
 	authtypes "cosmossdk.io/x/auth/types"
 	govclient "cosmossdk.io/x/gov/client"
 	"cosmossdk.io/x/gov/client/cli"
@@ -151,10 +152,10 @@ func (am AppModule) IsOnePerModuleType() {}
 func (am AppModule) IsAppModule() {}
 
 func init() {
-	appmodule.Register(
+	am.Register(
 		&modulev1.Module{},
-		appmodule.Invoke(InvokeAddRoutes, InvokeSetHooks),
-		appmodule.Provide(ProvideModule))
+		am.Invoke(InvokeAddRoutes, InvokeSetHooks),
+		am.Provide(ProvideModule))
 }
 
 type ModuleInputs struct {

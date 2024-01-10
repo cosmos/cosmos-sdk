@@ -14,6 +14,7 @@ replace (
 replace (
 	cosmossdk.io/api => ../../../api
 	cosmossdk.io/client/v2 => ../../../client/v2
+	cosmossdk.io/depinject => ../../../depinject
 	cosmossdk.io/simapp => ../../../simapp
 	cosmossdk.io/x/accounts => ../../../x/accounts
 	cosmossdk.io/x/auth => ../../../x/auth

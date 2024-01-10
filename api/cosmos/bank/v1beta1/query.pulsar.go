@@ -14203,6 +14203,8 @@ func (x *QueryDenomOwnersResponse) GetPagination() *v1beta11.PageResponse {
 // QueryDenomOwnersByQueryRequest defines the request type for the DenomOwnersByQuery RPC query,
 // which queries for a paginated set of all account holders of a particular
 // denomination.
+//
+// Since: cosmos-sdk 0.50.3
 type QueryDenomOwnersByQueryRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -14249,6 +14251,8 @@ func (x *QueryDenomOwnersByQueryRequest) GetPagination() *v1beta11.PageRequest {
 }
 
 // QueryDenomOwnersByQueryResponse defines the RPC response of a DenomOwnersByQuery RPC query.
+//
+// Since: cosmos-sdk 0.50.3
 type QueryDenomOwnersByQueryResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

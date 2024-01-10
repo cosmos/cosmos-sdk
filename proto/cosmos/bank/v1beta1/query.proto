@@ -110,6 +110,8 @@ service Query {
 
   // DenomOwnersByQuery queries for all account addresses that own a particular token
   // denomination.
+  //
+  // Since: cosmos-sdk 0.50.3
   rpc DenomOwnersByQuery(QueryDenomOwnersByQueryRequest) returns (QueryDenomOwnersByQueryResponse) {
     option (cosmos.query.v1.module_query_safe) = true;
     option (google.api.http).get               = "/cosmos/bank/v1beta1/denom_owners_by_query";
@@ -364,6 +366,8 @@ message QueryDenomOwnersResponse {
 // QueryDenomOwnersByQueryRequest defines the request type for the DenomOwnersByQuery RPC query,
 // which queries for a paginated set of all account holders of a particular
 // denomination.
+//
+// Since: cosmos-sdk 0.50.3
 message QueryDenomOwnersByQueryRequest {
   // denom defines the coin denomination to query all account holders for.
   string denom = 1;
@@ -373,6 +377,8 @@ message QueryDenomOwnersByQueryRequest {
 }
 
 // QueryDenomOwnersByQueryResponse defines the RPC response of a DenomOwnersByQuery RPC query.
+//
+// Since: cosmos-sdk 0.50.3
 message QueryDenomOwnersByQueryResponse {
   repeated DenomOwner denom_owners = 1;
 

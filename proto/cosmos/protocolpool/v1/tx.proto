@@ -173,4 +173,3 @@ message MsgWithdrawContinuousFundResponse {
       [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
   ;
 }
-

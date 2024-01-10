@@ -90,6 +90,8 @@ type QueryClient interface {
 	DenomOwners(ctx context.Context, in *QueryDenomOwnersRequest, opts ...grpc.CallOption) (*QueryDenomOwnersResponse, error)
 	// DenomOwnersByQuery queries for all account addresses that own a particular token
 	// denomination.
+	//
+	// Since: cosmos-sdk 0.50.3
 	DenomOwnersByQuery(ctx context.Context, in *QueryDenomOwnersByQueryRequest, opts ...grpc.CallOption) (*QueryDenomOwnersByQueryResponse, error)
 	// SendEnabled queries for SendEnabled entries.
 	//
@@ -282,6 +284,8 @@ type QueryServer interface {
 	DenomOwners(context.Context, *QueryDenomOwnersRequest) (*QueryDenomOwnersResponse, error)
 	// DenomOwnersByQuery queries for all account addresses that own a particular token
 	// denomination.
+	//
+	// Since: cosmos-sdk 0.50.3
 	DenomOwnersByQuery(context.Context, *QueryDenomOwnersByQueryRequest) (*QueryDenomOwnersByQueryResponse, error)
 	// SendEnabled queries for SendEnabled entries.
 	//

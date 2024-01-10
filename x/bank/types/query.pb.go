@@ -1160,6 +1160,8 @@ func (m *QueryDenomOwnersResponse) GetPagination() *query.PageResponse {
 // QueryDenomOwnersByQueryRequest defines the request type for the DenomOwnersByQuery RPC query,
 // which queries for a paginated set of all account holders of a particular
 // denomination.
+//
+// Since: cosmos-sdk 0.50.3
 type QueryDenomOwnersByQueryRequest struct {
 	// denom defines the coin denomination to query all account holders for.
 	Denom string `protobuf:"bytes,1,opt,name=denom,proto3" json:"denom,omitempty"`
@@ -1215,6 +1217,8 @@ func (m *QueryDenomOwnersByQueryRequest) GetPagination() *query.PageRequest {
 }
 
 // QueryDenomOwnersByQueryResponse defines the RPC response of a DenomOwnersByQuery RPC query.
+//
+// Since: cosmos-sdk 0.50.3
 type QueryDenomOwnersByQueryResponse struct {
 	DenomOwners []*DenomOwner `protobuf:"bytes,1,rep,name=denom_owners,json=denomOwners,proto3" json:"denom_owners,omitempty"`
 	// pagination defines the pagination in the response.
@@ -1567,6 +1571,8 @@ type QueryClient interface {
 	DenomOwners(ctx context.Context, in *QueryDenomOwnersRequest, opts ...grpc.CallOption) (*QueryDenomOwnersResponse, error)
 	// DenomOwnersByQuery queries for all account addresses that own a particular token
 	// denomination.
+	//
+	// Since: cosmos-sdk 0.50.3
 	DenomOwnersByQuery(ctx context.Context, in *QueryDenomOwnersByQueryRequest, opts ...grpc.CallOption) (*QueryDenomOwnersByQueryResponse, error)
 	// SendEnabled queries for SendEnabled entries.
 	//
@@ -1757,6 +1763,8 @@ type QueryServer interface {
 	DenomOwners(context.Context, *QueryDenomOwnersRequest) (*QueryDenomOwnersResponse, error)
 	// DenomOwnersByQuery queries for all account addresses that own a particular token
 	// denomination.
+	//
+	// Since: cosmos-sdk 0.50.3
 	DenomOwnersByQuery(context.Context, *QueryDenomOwnersByQueryRequest) (*QueryDenomOwnersByQueryResponse, error)
 	// SendEnabled queries for SendEnabled entries.
 	//

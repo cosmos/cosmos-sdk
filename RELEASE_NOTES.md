@@ -9,8 +9,8 @@ For this month patch release of the v0.50.x line, a few features and improvement
 
 Notably, we added and fixed the following:
 
-* 
-*
+* Introduced a new bank query, `DenomOwnersByQuery` resolving issues with denoms containing slashes
+* Improve the block gas meter resetting in baseapp
 
 ## 📝 Changelog
 

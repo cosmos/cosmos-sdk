@@ -157,10 +157,10 @@ func ProofFromByteSlices(leaves [][]byte, index int) (rootHash []byte, inners []
 
 	n := len(leaves)
 	for n > 1 {
-		// begin by constructing the proof for the inner node of the requested index
-		// a proof of the inner node is skipped only in the case where the requested index
+		// Begin by constructing the proof for the inner node of the requested index.
+		// A proof of the inner node is skipped only in the case where the requested index
 		// is the last element and it does not have a leaf pair (resulting in it being
-		// saved until the next iteration)
+		// saved until the next iteration).
 		if index < n-1 || index&1 == 1 {
 			inner := &ics23.InnerOp{Hash: ics23.HashOp_SHA256}
 			//Iif proof index is even then child is from left, suffix is populated

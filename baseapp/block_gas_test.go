@@ -14,9 +14,7 @@ import (
 	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
 	store "cosmossdk.io/store/types"
-	authkeeper "cosmossdk.io/x/auth/keeper"
 	xauthsigning "cosmossdk.io/x/auth/signing"
-	bankkeeper "cosmossdk.io/x/bank/keeper"
 	banktypes "cosmossdk.io/x/bank/types"
 
 	baseapptestutil "github.com/cosmos/cosmos-sdk/baseapp/testutil"
@@ -35,6 +33,16 @@ import (
 	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
+
+type BankKeeper interface {
+	MintCoins(ctx context.Context, moduleName string, amt sdk.Coins) error
+	SendCoinsFromModuleToAccount(ctx context.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
+	GetBalance(ctx context.Context, addr sdk.AccAddress, denom string) sdk.Coin
+}
+
+type AuthKeeper interface {
+	GetAccount(ctx context.Context, addr sdk.AccAddress) sdk.AccountI
+}
 
 var blockMaxGas = uint64(simtestutil.DefaultConsensusParams.Block.MaxGas)
 
@@ -71,8 +79,8 @@ func TestBaseApp_BlockGas(t *testing.T) {
 
 	for _, tc := range testcases {
 		var (
-			bankKeeper        bankkeeper.Keeper
-			accountKeeper     authkeeper.AccountKeeper
+			bankKeeper        BankKeeper
+			accountKeeper     AuthKeeper
 			appBuilder        *runtime.AppBuilder
 			txConfig          client.TxConfig
 			cdc               codec.Codec

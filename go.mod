@@ -175,9 +175,11 @@ replace (
 	github.com/jhump/protoreflect => github.com/jhump/protoreflect v1.9.0
 	// replace broken goleveldb.
 	github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
-	// use cometbft
-	github.com/tendermint/tendermint => github.com/cometbft/cometbft v0.34.29
+// use cometbft
+// github.com/tendermint/tendermint => github.com/cometbft/cometbft v0.34.29
 )
+
+replace github.com/tendermint/tendermint => /Users/mtsitrin/Applications/dymension/cometbft
 
 retract (
 	// revert fix https://github.com/cosmos/cosmos-sdk/pull/16331

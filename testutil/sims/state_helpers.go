@@ -31,6 +31,8 @@ import (
 const (
 	StakePerAccount           = "stake_per_account"
 	InitiallyBondedValidators = "initially_bonded_validators"
+	authModuleName            = "auth"
+	bankModuleName            = "bank"
 )
 
 // AppStateFn returns the initial application state using a genesis or the simulation parameters.
@@ -134,7 +136,7 @@ func AppStateFnWithExtendedCbs(
 		}
 		notBondedCoins := sdk.NewCoin(stakingState.Params.BondDenom, notBondedTokens)
 		// edit bank state to make it have the not bonded pool tokens
-		bankStateBz, ok := rawState[banktypes.ModuleName]
+		bankStateBz, ok := rawState[bankModuleName]
 		// TODO(fdymylja/jonathan): should we panic in this case
 		if !ok {
 			panic("bank genesis state is missing")
@@ -162,7 +164,7 @@ func AppStateFnWithExtendedCbs(
 		// change appState back
 		for name, state := range map[string]proto.Message{
 			stakingtypes.ModuleName: stakingState,
-			banktypes.ModuleName:    bankState,
+			bankModuleName:          bankState,
 		} {
 			if moduleStateCb != nil {
 				moduleStateCb(name, state)
@@ -269,8 +271,8 @@ func AppStateFromGenesisFileFn(r io.Reader, cdc codec.JSONCodec, genesisFile str
 	}
 
 	var authGenesis authtypes.GenesisState
-	if appState[authtypes.ModuleName] != nil {
-		cdc.MustUnmarshalJSON(appState[authtypes.ModuleName], &authGenesis)
+	if appState[authModuleName] != nil {
+		cdc.MustUnmarshalJSON(appState[authModuleName], &authGenesis)
 	}
 
 	newAccs := make([]simtypes.Account, len(authGenesis.Accounts))

@@ -20,6 +20,8 @@ import (
 
 	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
+	banktypes "cosmossdk.io/api/cosmos/bank/v1beta1"
+	base "cosmossdk.io/api/cosmos/base/v1beta1"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
@@ -31,7 +33,6 @@ import (
 	_ "cosmossdk.io/x/auth/tx/config"
 	authtypes "cosmossdk.io/x/auth/types"
 	_ "cosmossdk.io/x/bank"
-	banktypes "cosmossdk.io/x/bank/types"
 	_ "cosmossdk.io/x/staking"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -72,7 +73,7 @@ func GenesisStateWithSingleValidator(t *testing.T, codec codec.Codec, builder *r
 	balances := []banktypes.Balance{
 		{
 			Address: acc.GetAddress().String(),
-			Coins:   sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100000000000000))),
+			Coins:   []*base.Coin{{Denom: sdk.DefaultBondDenom, Amount: math.NewInt(100000000000000).String()}},
 		},
 	}
 

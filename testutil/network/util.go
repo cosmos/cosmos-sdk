@@ -30,6 +30,11 @@ import (
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
+const (
+	bankModuleName = "bank"
+	authModuleName = "auth"
+)
+
 func startInProcess(cfg Config, val *Validator) error {
 	logger := val.ctx.Logger
 	cmtCfg := val.ctx.Config
@@ -166,7 +171,7 @@ func collectGenFiles(cfg Config, vals []*Validator, outputDir string) error {
 func initGenFiles(cfg Config, genAccounts []authtypes.GenesisAccount, genBalances []banktypes.Balance, genFiles []string) error {
 	// set the accounts in the genesis state
 	var authGenState authtypes.GenesisState
-	cfg.Codec.MustUnmarshalJSON(cfg.GenesisState[authtypes.ModuleName], &authGenState)
+	cfg.Codec.MustUnmarshalJSON(cfg.GenesisState[authModuleName], &authGenState)
 
 	accounts, err := authtypes.PackAccounts(genAccounts)
 	if err != nil {
@@ -174,14 +179,14 @@ func initGenFiles(cfg Config, genAccounts []authtypes.GenesisAccount, genBalance
 	}
 
 	authGenState.Accounts = append(authGenState.Accounts, accounts...)
-	cfg.GenesisState[authtypes.ModuleName] = cfg.Codec.MustMarshalJSON(&authGenState)
+	cfg.GenesisState[authModuleName] = cfg.Codec.MustMarshalJSON(&authGenState)
 
 	// set the balances in the genesis state
 	var bankGenState banktypes.GenesisState
-	cfg.Codec.MustUnmarshalJSON(cfg.GenesisState[banktypes.ModuleName], &bankGenState)
+	cfg.Codec.MustUnmarshalJSON(cfg.GenesisState[bankModuleName], &bankGenState)
 
 	bankGenState.Balances = append(bankGenState.Balances, genBalances...)
-	cfg.GenesisState[banktypes.ModuleName] = cfg.Codec.MustMarshalJSON(&bankGenState)
+	cfg.GenesisState[bankModuleName] = cfg.Codec.MustMarshalJSON(&bankGenState)
 
 	appGenStateJSON, err := json.MarshalIndent(cfg.GenesisState, "", "  ")
 	if err != nil {

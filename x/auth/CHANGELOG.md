@@ -27,13 +27,22 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Features
 
+* [#18641](https://github.com/cosmos/cosmos-sdk/pull/18641) Support the ability to broadcast unordered transactions per ADR-070. See UPGRADING.md for more details on integration.
 * [#18281](https://github.com/cosmos/cosmos-sdk/pull/18281) Support broadcasting multiple transactions.
+* (vesting) [#17810](https://github.com/cosmos/cosmos-sdk/pull/17810) Add the ability to specify a start time for continuous vesting accounts.
+* (tx) [#18772](https://github.com/cosmos/cosmos-sdk/pull/18772) Remove misleading gas wanted from tx simulation failure log.
 
 ### Improvements
 
 * [#18780](https://github.com/cosmos/cosmos-sdk/pull/18780) Move sig verification out of the for loop, into the authenticate method.
 
+### CLI Breaking Changes
+
+* (vesting) [#18100](https://github.com/cosmos/cosmos-sdk/pull/18100) `appd tx vesting create-vesting-account` takes an amount of coin as last argument instead of second. Coins are space separated.
+
 ### API Breaking Changes
+
+* [#17985](https://github.com/cosmos/cosmos-sdk/pull/17985) Remove `StdTxConfig`
 
 ### Consensus Breaking Changes
 

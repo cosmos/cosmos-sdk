@@ -92,9 +92,16 @@ type UpgradeableRootStore interface {
 
 // ReadOnlyRootStore defines a read-only interface for a RootStore.
 type ReadOnlyRootStore interface {
+	// Has returns if a key exists in the read-only RootStore.
 	Has(storeKey string, key []byte) (bool, error)
+
+	// Get returns the value of a key, if it exists, in the read-only RootStore.
 	Get(storeKey string, key []byte) ([]byte, error)
+
+	// Iterator returns an iterator over a given store key and domain.
 	Iterator(storeKey string, start, end []byte) (corestore.Iterator, error)
+
+	// ReverseIterator returns a reverse iterator over a given store key and domain.
 	ReverseIterator(storeKey string, start, end []byte) (corestore.Iterator, error)
 }
 

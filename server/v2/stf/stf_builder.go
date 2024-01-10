@@ -6,7 +6,9 @@ import (
 	"fmt"
 
 	"cosmossdk.io/server/v2/core/appmanager"
+	"cosmossdk.io/server/v2/core/store"
 	"cosmossdk.io/server/v2/core/transaction"
+	"cosmossdk.io/server/v2/stf/branch"
 )
 
 func NewSTFBuilder[T transaction.Tx]() *STFBuilder[T] {
@@ -19,12 +21,14 @@ func NewSTFBuilder[T transaction.Tx]() *STFBuilder[T] {
 		endBlockers:        make(map[string]func(ctx context.Context) error),
 		postExecHandler:    make(map[string]func(ctx context.Context, tx T, success bool) error),
 		txCodec:            nil,
+		branch:             func(state store.ReadonlyState) store.WritableState { return branch.NewStore(state) },
 	}
 }
 
 type STFBuilder[T transaction.Tx] struct {
 	err error
 
+	branch             func(state store.ReadonlyState) store.WritableState
 	msgRouterBuilder   *msgRouterBuilder
 	queryRouterBuilder *msgRouterBuilder
 	txValidators       map[string]func(ctx context.Context, tx T) error

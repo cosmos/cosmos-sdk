@@ -118,7 +118,7 @@ func NewContext(options Options) (*Context, error) {
 }
 
 // GetSignersFunc returns the signers for a given message.
-type GetSignersFunc func(proto.Message) ([][]byte, error)
+type GetSignersFunc func(proto.Message) ([]byte, error)
 
 // CustomGetSigner is a custom GetSignersFunc that is defined for a specific message type.
 type CustomGetSigner struct {
@@ -179,7 +179,7 @@ func (c *Context) makeGetSignersFunc(descriptor protoreflect.MessageDescriptor) 
 		return nil, err
 	}
 
-	fieldGetters := make([]func(proto.Message, [][]byte) ([][]byte, error), len(signersFields))
+	fieldGetters := make([]func(proto.Message, [][]byte) ([]byte, error), len(signersFields))
 	for i, fieldName := range signersFields {
 		field := descriptor.Fields().ByName(protoreflect.Name(fieldName))
 		if field == nil {
@@ -194,7 +194,7 @@ func (c *Context) makeGetSignersFunc(descriptor protoreflect.MessageDescriptor) 
 		case protoreflect.StringKind:
 			addrCdc := c.getAddressCodec(field)
 			if field.IsList() {
-				fieldGetters[i] = func(msg proto.Message, arr [][]byte) ([][]byte, error) {
+				fieldGetters[i] = func(msg proto.Message, arr [][]byte) ([]byte, error) {
 					signers := msg.ProtoReflect().Get(field).List()
 					n := signers.Len()
 					for i := 0; i < n; i++ {
@@ -208,7 +208,7 @@ func (c *Context) makeGetSignersFunc(descriptor protoreflect.MessageDescriptor) 
 					return arr, nil
 				}
 			} else {
-				fieldGetters[i] = func(msg proto.Message, arr [][]byte) ([][]byte, error) {
+				fieldGetters[i] = func(msg proto.Message, arr [][]byte) ([]byte, error) {
 					addrStr := msg.ProtoReflect().Get(field).String()
 					addrBz, err := addrCdc.StringToBytes(addrStr)
 					if err != nil {
@@ -279,7 +279,7 @@ func (c *Context) makeGetSignersFunc(descriptor protoreflect.MessageDescriptor) 
 					childField.Kind(), signerFieldName, desc.FullName())
 			}
 
-			fieldGetters[i] = func(msg proto.Message, arr [][]byte) ([][]byte, error) {
+			fieldGetters[i] = func(msg proto.Message, arr [][]byte) ([]byte, error) {
 				if field.IsList() {
 					signers := msg.ProtoReflect().Get(field).List()
 					n := signers.Len()
@@ -304,8 +304,8 @@ func (c *Context) makeGetSignersFunc(descriptor protoreflect.MessageDescriptor) 
 		}
 	}
 
-	return func(message proto.Message) ([][]byte, error) {
-		var signers [][]byte
+	return func(message proto.Message) ([]byte, error) {
+		var signers []byte
 		for _, getter := range fieldGetters {
 			signers, err = getter(message, signers)
 			if err != nil {
@@ -347,7 +347,7 @@ func (c *Context) getGetSignersFn(messageDescriptor protoreflect.MessageDescript
 }
 
 // GetSigners returns the signers for a given message.
-func (c *Context) GetSigners(msg proto.Message) ([][]byte, error) {
+func (c *Context) GetSigners(msg proto.Message) ([]byte, error) {
 	f, err := c.getGetSignersFn(msg.ProtoReflect().Descriptor())
 	if err != nil {
 		return nil, err

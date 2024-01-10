@@ -51,7 +51,7 @@ type MsgRouter interface {
 // SignerProvider defines an interface used to get the expected sender from a message.
 type SignerProvider interface {
 	// GetMsgV1Signers returns the signers of the message.
-	GetMsgV1Signers(msg gogoproto.Message) ([][]byte, proto.Message, error)
+	GetMsgV1Signers(msg gogoproto.Message) ([]byte, proto.Message, error)
 }
 
 // BranchExecutor defines an interface used to execute ops in a branch.
@@ -336,7 +336,7 @@ func (k Keeper) sendModuleMessage(ctx context.Context, sender []byte, msg, msgRe
 	if len(wantSenders) != 1 {
 		return fmt.Errorf("expected only one signer, got %d", len(wantSenders))
 	}
-	if !bytes.Equal(sender, wantSenders[0]) {
+	if !bytes.Equal(sender, wantSenders) {
 		return fmt.Errorf("%w: sender does not match expected sender", ErrUnauthorized)
 	}
 	messageName := implementation.MessageName(msg)

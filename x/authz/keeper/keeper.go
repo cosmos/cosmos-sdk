@@ -103,11 +103,7 @@ func (k Keeper) DispatchActions(ctx context.Context, grantee sdk.AccAddress, msg
 			return nil, err
 		}
 
-		if len(signers) != 1 {
-			return nil, authz.ErrAuthorizationNumOfSigners
-		}
-
-		granter := signers[0]
+		granter := signers
 
 		// If granter != grantee then check authorization.Accept, otherwise we
 		// implicitly accept.

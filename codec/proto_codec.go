@@ -299,7 +299,7 @@ func (pc *ProtoCodec) InterfaceRegistry() types.InterfaceRegistry {
 	return pc.interfaceRegistry
 }
 
-func (pc ProtoCodec) GetMsgAnySigners(msg *types.Any) ([][]byte, proto.Message, error) {
+func (pc ProtoCodec) GetMsgAnySigners(msg *types.Any) ([]byte, proto.Message, error) {
 	msgv2, err := anyutil.Unpack(&anypb.Any{
 		TypeUrl: msg.TypeUrl,
 		Value:   msg.Value,
@@ -312,11 +312,11 @@ func (pc ProtoCodec) GetMsgAnySigners(msg *types.Any) ([][]byte, proto.Message, 
 	return signers, msgv2, err
 }
 
-func (pc *ProtoCodec) GetMsgV2Signers(msg proto.Message) ([][]byte, error) {
+func (pc *ProtoCodec) GetMsgV2Signers(msg proto.Message) ([]byte, error) {
 	return pc.interfaceRegistry.SigningContext().GetSigners(msg)
 }
 
-func (pc *ProtoCodec) GetMsgV1Signers(msg gogoproto.Message) ([][]byte, proto.Message, error) {
+func (pc *ProtoCodec) GetMsgV1Signers(msg gogoproto.Message) ([]byte, proto.Message, error) {
 	if msgV2, ok := msg.(proto.Message); ok {
 		signers, err := pc.interfaceRegistry.SigningContext().GetSigners(msgV2)
 		return signers, msgV2, err

@@ -107,7 +107,7 @@ func (d *Decoder) Decode(txBytes []byte) (*DecodedTx, error) {
 		if signerErr != nil {
 			return nil, errors.Wrap(ErrTxDecode, signerErr.Error())
 		}
-		signers = append(signers, ss...)
+		signers = append(signers, ss)
 	}
 
 	return &DecodedTx{

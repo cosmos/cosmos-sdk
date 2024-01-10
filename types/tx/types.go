@@ -110,11 +110,9 @@ func (t *Tx) GetSigners(cdc codec.Codec) ([][]byte, []protov2.Message, error) {
 
 		msgsv2 = append(msgsv2, msgv2)
 
-		for _, signer := range xs {
-			if !seen[string(signer)] {
-				signers = append(signers, signer)
-				seen[string(signer)] = true
-			}
+		if !seen[string(xs)] {
+			signers = append(signers, xs)
+			seen[string(xs)] = true
 		}
 	}
 

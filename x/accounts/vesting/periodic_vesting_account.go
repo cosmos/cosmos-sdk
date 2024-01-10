@@ -2,6 +2,7 @@ package vesting
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"cosmossdk.io/collections"
@@ -74,7 +75,7 @@ func (pva PeriodicVestingAccount) Init(ctx context.Context, msg *vestingtypes.Ms
 		totalCoins = totalCoins.Add(period.Amount...)
 		// Calculate end time
 		endTime += period.Length
-		pva.VestingPeriods.Set(ctx, string(i), period)
+		pva.VestingPeriods.Set(ctx, fmt.Sprint(i), period)
 	}
 
 	sortedAmt := totalCoins.Sort()

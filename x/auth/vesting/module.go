@@ -11,6 +11,7 @@ import (
 	modulev1 "cosmossdk.io/api/cosmos/vesting/module/v1"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
+	am "cosmossdk.io/depinject/appmodule"
 	"cosmossdk.io/x/auth/keeper"
 	"cosmossdk.io/x/auth/vesting/client/cli"
 	"cosmossdk.io/x/auth/vesting/types"
@@ -25,8 +26,7 @@ var (
 	_ module.AppModuleBasic = AppModule{}
 	_ module.HasGenesis     = AppModule{}
 
-	_ appmodule.AppModule   = AppModule{}
-	_ appmodule.HasServices = AppModule{}
+	_ appmodule.AppModule = AppModule{}
 )
 
 // AppModuleBasic defines the basic application module used by the sub-vesting
@@ -114,8 +114,8 @@ func (AppModule) ConsensusVersion() uint64 { return 1 }
 //
 
 func init() {
-	appmodule.Register(&modulev1.Module{},
-		appmodule.Provide(ProvideModule),
+	am.Register(&modulev1.Module{},
+		am.Provide(ProvideModule),
 	)
 }
 

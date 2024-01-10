@@ -11,6 +11,7 @@ import (
 	"cosmossdk.io/core/event"
 	storetypes "cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
+	am "cosmossdk.io/depinject/appmodule"
 	authtypes "cosmossdk.io/x/auth/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -29,8 +30,7 @@ const ConsensusVersion = 1
 var (
 	_ module.AppModuleBasic = AppModule{}
 
-	_ appmodule.AppModule   = AppModule{}
-	_ appmodule.HasServices = AppModule{}
+	_ appmodule.AppModule = AppModule{}
 )
 
 // AppModuleBasic defines the basic application module used by the consensus module.
@@ -90,9 +90,9 @@ func NewAppModule(cdc codec.Codec, keeper keeper.Keeper) AppModule {
 func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
 
 func init() {
-	appmodule.Register(
+	am.Register(
 		&modulev1.Module{},
-		appmodule.Provide(ProvideModule),
+		am.Provide(ProvideModule),
 	)
 }
 

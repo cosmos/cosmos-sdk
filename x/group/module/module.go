@@ -12,6 +12,7 @@ import (
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
+	am "cosmossdk.io/depinject/appmodule"
 	store "cosmossdk.io/store/types"
 	"cosmossdk.io/x/group"
 	"cosmossdk.io/x/group/client/cli"
@@ -36,6 +37,7 @@ var (
 	_ module.HasGenesis          = AppModule{}
 	_ module.HasServices         = AppModule{}
 	_ module.HasInvariants       = AppModule{}
+	_ depinject.OnePerModuleType = AppModule{}
 
 	_ appmodule.AppModule     = AppModule{}
 	_ appmodule.HasEndBlocker = AppModule{}
@@ -180,9 +182,9 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 //
 
 func init() {
-	appmodule.Register(
+	am.Register(
 		&modulev1.Module{},
-		appmodule.Provide(ProvideModule),
+		am.Provide(ProvideModule),
 	)
 }
 

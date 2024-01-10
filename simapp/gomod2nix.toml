@@ -22,9 +22,6 @@ schema = 3
   [mod."cosmossdk.io/core"]
     version = "v0.12.1-0.20231114100755-569e3ff6a0d7"
     hash = "sha256-I74lq2kZ9hOcvOU4uJZ8LhSoQ0RbgCvAvSXj1xI0iII="
-  [mod."cosmossdk.io/depinject"]
-    version = "v1.0.0-alpha.4"
-    hash = "sha256-xpLH0K6ivQznFrLw2hmhWIIyYgqjstV47OhTEj/c1oQ="
   [mod."cosmossdk.io/errors"]
     version = "v1.0.0"
     hash = "sha256-ZD1fhIefk3qkt9I4+ed9NBmBqTDvym9cXWmgFBh5qu0="
@@ -487,8 +484,8 @@ schema = 3
     version = "v1.11.0"
     hash = "sha256-Lb6rHHfR62Ozg2j2JZy3MKOMKdsfzd1IYTR57r3Mhp0="
   [mod."golang.org/x/crypto"]
-    version = "v0.17.0"
-    hash = "sha256-/vzBaeD/Ymyc7cpjBvSfJfuZ57zWa9LOaZM7b33eIx0="
+    version = "v0.18.0"
+    hash = "sha256-BuMVUxOIyfLo8MOhqYt+uQ8NDN6P2KdblKyfPxINzQ4="
   [mod."golang.org/x/exp"]
     version = "v0.0.0-20231226003508-02704c960a9b"
     hash = "sha256-K35MT3O16IlvqhDZBVBF4lJZIM7T/15PxOmeyGYv01A="
@@ -505,11 +502,11 @@ schema = 3
     version = "v0.6.0"
     hash = "sha256-LLims/wjDZtIqlYCVHREewcUOX4hwRwplEuZKPOJ/HI="
   [mod."golang.org/x/sys"]
-    version = "v0.15.0"
-    hash = "sha256-n7TlABF6179RzGq3gctPDKDPRtDfnwPdjNCMm8ps2KY="
+    version = "v0.16.0"
+    hash = "sha256-ZkGclbp2S7NQYhbuGji6XokCn2Qi1BJy8dwyAOTV8sY="
   [mod."golang.org/x/term"]
-    version = "v0.15.0"
-    hash = "sha256-rsvtsE7sKmBwtR+mhJ8iUq93ZT8fV2LU+Pd69sh2es8="
+    version = "v0.16.0"
+    hash = "sha256-9qlHcsCI1sa7ZI4Q+fJbOp3mG5Y+uV16e+pGmG+MQe0="
   [mod."golang.org/x/text"]
     version = "v0.14.0"
     hash = "sha256-yh3B0tom1RfzQBf1RNmfdNWF1PtiqxV41jW1GVS6JAg="

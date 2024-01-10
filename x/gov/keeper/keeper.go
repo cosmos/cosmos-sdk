@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -47,16 +48,22 @@ type Keeper struct {
 	// should be the x/gov module account.
 	authority string
 
-	Schema       collections.Schema
+	Schema collections.Schema
+	// Constitution value: constitution
 	Constitution collections.Item[string]
-	Params       collections.Item[v1.Params]
+	// Params stores the governance parameters
+	Params collections.Item[v1.Params]
 	// Deposits key: proposalID+depositorAddr | value: Deposit
 	Deposits collections.Map[collections.Pair[uint64, sdk.AccAddress], v1.Deposit]
 	// Votes key: proposalID+voterAddr | value: Vote
-	Votes      collections.Map[collections.Pair[uint64, sdk.AccAddress], v1.Vote]
+	Votes collections.Map[collections.Pair[uint64, sdk.AccAddress], v1.Vote]
+	// ProposalID is a counter for proposals. It tracks the next proposal ID to be issued.
 	ProposalID collections.Sequence
 	// Proposals key:proposalID | value: Proposal
 	Proposals collections.Map[uint64, v1.Proposal]
+	// ProposalVoteOptions key: proposalID | value:
+	// This is used to store multiple choice vote options
+	ProposalVoteOptions collections.Map[uint64, v1.ProposalVoteOptions]
 	// ActiveProposalsQueue key: votingEndTime+proposalID | value: proposalID
 	ActiveProposalsQueue collections.Map[collections.Pair[time.Time, uint64], uint64] // TODO(tip): this should be simplified and go into an index.
 	// InactiveProposalsQueue key: depositEndTime+proposalID | value: proposalID
@@ -122,6 +129,7 @@ func NewKeeper(
 		Votes:                  collections.NewMap(sb, types.VotesKeyPrefix, "votes", collections.PairKeyCodec(collections.Uint64Key, sdk.LengthPrefixedAddressKey(sdk.AccAddressKey)), codec.CollValue[v1.Vote](cdc)),          //nolint: staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility
 		ProposalID:             collections.NewSequence(sb, types.ProposalIDKey, "proposal_id"),
 		Proposals:              collections.NewMap(sb, types.ProposalsKeyPrefix, "proposals", collections.Uint64Key, codec.CollValue[v1.Proposal](cdc)),
+		ProposalVoteOptions:    collections.NewMap(sb, types.ProposalVoteOptionsKeyPrefix, "proposal_vote_options", collections.Uint64Key, codec.CollValue[v1.ProposalVoteOptions](cdc)),
 		ActiveProposalsQueue:   collections.NewMap(sb, types.ActiveProposalQueuePrefix, "active_proposals_queue", collections.PairKeyCodec(sdk.TimeKey, collections.Uint64Key), collections.Uint64Value),     // sdk.TimeKey is needed to retain state compatibility
 		InactiveProposalsQueue: collections.NewMap(sb, types.InactiveProposalQueuePrefix, "inactive_proposals_queue", collections.PairKeyCodec(sdk.TimeKey, collections.Uint64Key), collections.Uint64Value), // sdk.TimeKey is needed to retain state compatibility
 		VotingPeriodProposals:  collections.NewMap(sb, types.VotingPeriodProposalKeyPrefix, "voting_period_proposals", collections.Uint64Key, collections.BytesValue),
@@ -134,7 +142,7 @@ func NewKeeper(
 	return k
 }
 
-// Hooks gets the hooks for governance *Keeper {
+// Hooks gets the hooks for governance Keeper
 func (k *Keeper) Hooks() types.GovHooks {
 	if k.hooks == nil {
 		// return a no-op implementation if no hooks are set
@@ -208,6 +216,10 @@ func (k Keeper) validateProposalLengths(metadata, title, summary string) error {
 // assertTitleLength returns an error if given title length
 // is greater than a pre-defined MaxTitleLen.
 func (k Keeper) assertTitleLength(title string) error {
+	if len(title) == 0 {
+		return errors.New("proposal title cannot be empty")
+	}
+
 	if uint64(len(title)) > k.config.MaxTitleLen {
 		return types.ErrTitleTooLong.Wrapf("got title with length %d", len(title))
 	}
@@ -226,6 +238,10 @@ func (k Keeper) assertMetadataLength(metadata string) error {
 // assertSummaryLength returns an error if given summary length
 // is greater than a pre-defined MaxSummaryLen.
 func (k Keeper) assertSummaryLength(summary string) error {
+	if len(summary) == 0 {
+		return errors.New("proposal summary cannot be empty")
+	}
+
 	if uint64(len(summary)) > k.config.MaxSummaryLen {
 		return types.ErrSummaryTooLong.Wrapf("got summary with length %d", len(summary))
 	}

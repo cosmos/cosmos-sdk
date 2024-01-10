@@ -9,6 +9,7 @@ import (
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/math"
+	authtypes "cosmossdk.io/x/auth/types"
 	stakingkeeper "cosmossdk.io/x/staking/keeper"
 	"cosmossdk.io/x/staking/testutil"
 	stakingtypes "cosmossdk.io/x/staking/types"
@@ -441,4 +442,72 @@ func (s *KeeperTestSuite) TestUnbondingValidator() {
 	validator, err = keeper.GetValidator(ctx, valAddr)
 	require.NoError(err)
 	require.Equal(stakingtypes.Unbonded, validator.Status)
+}
+
+func (s *KeeperTestSuite) TestValidatorConsPubKeyUpdate() {
+	ctx, keeper, msgServer, bk, ak := s.ctx, s.stakingKeeper, s.msgServer, s.bankKeeper, s.accountKeeper
+	require := s.Require()
+
+	powers := []int64{10, 20}
+	var validators [2]stakingtypes.Validator
+
+	bonedPool := authtypes.NewEmptyModuleAccount(stakingtypes.BondedPoolName)
+	ak.EXPECT().GetModuleAccount(gomock.Any(), stakingtypes.BondedPoolName).Return(bonedPool).AnyTimes()
+	bk.EXPECT().GetBalance(gomock.Any(), bonedPool.GetAddress(), sdk.DefaultBondDenom).Return(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000000)).AnyTimes()
+
+	for i, power := range powers {
+		valAddr := sdk.ValAddress(PKs[i].Address().Bytes())
+		validators[i] = testutil.NewValidator(s.T(), valAddr, PKs[i])
+		tokens := keeper.TokensFromConsensusPower(ctx, power)
+
+		validators[i], _ = validators[i].AddTokensFromDel(tokens)
+		require.NoError(keeper.SetValidator(ctx, validators[i]))
+		require.NoError(keeper.SetValidatorByPowerIndex(ctx, validators[i]))
+		require.NoError(keeper.SetValidatorByConsAddr(ctx, validators[i]))
+
+		s.bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), stakingtypes.NotBondedPoolName, stakingtypes.BondedPoolName, gomock.Any())
+		updates := s.applyValidatorSetUpdates(ctx, keeper, 1)
+		validator, err := keeper.GetValidator(ctx, valAddr)
+		require.NoError(err)
+		require.Equal(validator.ABCIValidatorUpdate(keeper.PowerReduction(ctx)), updates[0])
+	}
+
+	params, err := keeper.Params.Get(ctx)
+	require.NoError(err)
+
+	params.KeyRotationFee = sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000)
+	err = keeper.Params.Set(ctx, params)
+	require.NoError(err)
+
+	valAddr1 := sdk.ValAddress(PKs[0].Address().Bytes())
+
+	valStr, err := keeper.ValidatorAddressCodec().BytesToString(valAddr1)
+	require.NoError(err)
+
+	msg, err := stakingtypes.NewMsgRotateConsPubKey(
+		valStr,
+		PKs[499], // taking the last element from PKs
+	)
+
+	require.NoError(err)
+
+	bk.EXPECT().SendCoinsFromAccountToModule(ctx, sdk.AccAddress(valAddr1), gomock.Any(), gomock.Any()).AnyTimes()
+	_, err = msgServer.RotateConsPubKey(ctx, msg)
+	require.NoError(err)
+
+	updates := s.applyValidatorSetUpdates(ctx, keeper, 2)
+
+	originalPubKey, err := validators[0].CmtConsPublicKey()
+	require.NoError(err)
+
+	validator, err := keeper.GetValidator(ctx, valAddr1)
+	require.NoError(err)
+
+	newPubKey, err := validator.CmtConsPublicKey()
+	require.NoError(err)
+
+	require.Equal(int64(0), updates[0].Power)
+	require.Equal(originalPubKey, updates[0].PubKey)
+	require.Equal(int64(10), updates[1].Power)
+	require.Equal(newPubKey, updates[1].PubKey)
 }

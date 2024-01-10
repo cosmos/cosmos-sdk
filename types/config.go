@@ -15,13 +15,8 @@ const DefaultKeyringServiceName = "cosmos"
 type Config struct {
 	fullFundraiserPath  string
 	bech32AddressPrefix map[string]string
-	txEncoder           TxEncoder
 	addressVerifier     func([]byte) error
 	mtx                 sync.RWMutex
-
-	// SLIP-44 related
-	purpose  uint32
-	coinType uint32
 
 	sealed   bool
 	sealedch chan struct{}
@@ -46,10 +41,6 @@ func NewConfig() *Config {
 			"consensus_pub":  Bech32PrefixConsPub,
 		},
 		fullFundraiserPath: FullFundraiserPath,
-
-		purpose:   Purpose,
-		coinType:  CoinType,
-		txEncoder: nil,
 	}
 }
 
@@ -104,12 +95,6 @@ func (config *Config) SetBech32PrefixForConsensusNode(addressPrefix, pubKeyPrefi
 	config.assertNotSealed()
 	config.bech32AddressPrefix["consensus_addr"] = addressPrefix
 	config.bech32AddressPrefix["consensus_pub"] = pubKeyPrefix
-}
-
-// SetTxEncoder builds the Config with TxEncoder used to marshal StdTx to bytes
-func (config *Config) SetTxEncoder(encoder TxEncoder) {
-	config.assertNotSealed()
-	config.txEncoder = encoder
 }
 
 // SetAddressVerifier builds the Config with the provided function for verifying that addresses
@@ -172,11 +157,6 @@ func (config *Config) GetBech32ValidatorPubPrefix() string {
 // GetBech32ConsensusPubPrefix returns the Bech32 prefix for consensus node public key
 func (config *Config) GetBech32ConsensusPubPrefix() string {
 	return config.bech32AddressPrefix["consensus_pub"]
-}
-
-// GetTxEncoder return function to encode transactions
-func (config *Config) GetTxEncoder() TxEncoder {
-	return config.txEncoder
 }
 
 // GetAddressVerifier returns the function to verify that addresses have the correct format

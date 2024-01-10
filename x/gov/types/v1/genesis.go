@@ -6,6 +6,8 @@ import (
 
 	"golang.org/x/sync/errgroup"
 
+	"cosmossdk.io/core/address"
+
 	"github.com/cosmos/cosmos-sdk/codec/types"
 )
 
@@ -34,7 +36,7 @@ func (data GenesisState) Empty() bool {
 // It checks if params are in valid ranges
 // It also makes sure that the provided proposal IDs are unique and
 // that there are no duplicate deposit or vote records and no vote or deposits for non-existent proposals
-func ValidateGenesis(data *GenesisState) error {
+func ValidateGenesis(ac address.Codec, data *GenesisState) error {
 	if data.StartingProposalId == 0 {
 		return errors.New("starting proposal id must be greater than 0")
 	}
@@ -99,7 +101,7 @@ func ValidateGenesis(data *GenesisState) error {
 
 	// verify params
 	errGroup.Go(func() error {
-		return data.Params.ValidateBasic()
+		return data.Params.ValidateBasic(ac)
 	})
 
 	return errGroup.Wait()

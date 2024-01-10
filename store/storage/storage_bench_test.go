@@ -65,7 +65,7 @@ func BenchmarkGet(b *testing.B) {
 			_ = db.Close()
 		}()
 
-		cs := store.NewChangeset(map[string]store.KVPairs{storeKey1: {}})
+		cs := store.NewChangesetWithPairs(map[string]store.KVPairs{storeKey1: {}})
 		for i := 0; i < numKeyVals; i++ {
 			cs.AddKVPair(storeKey1, store.KVPair{Key: keys[i], Value: vals[i]})
 		}
@@ -101,7 +101,7 @@ func BenchmarkApplyChangeset(b *testing.B) {
 			for i := 0; i < b.N; i++ {
 				b.StopTimer()
 
-				cs := store.NewChangeset(map[string]store.KVPairs{storeKey1: {}})
+				cs := store.NewChangesetWithPairs(map[string]store.KVPairs{storeKey1: {}})
 				for j := 0; j < 1000; j++ {
 					key := make([]byte, 128)
 					val := make([]byte, 128)
@@ -148,7 +148,7 @@ func BenchmarkIterate(b *testing.B) {
 
 		b.StopTimer()
 
-		cs := store.NewChangeset(map[string]store.KVPairs{storeKey1: {}})
+		cs := store.NewChangesetWithPairs(map[string]store.KVPairs{storeKey1: {}})
 		for i := 0; i < numKeyVals; i++ {
 			cs.AddKVPair(storeKey1, store.KVPair{Key: keys[i], Value: vals[i]})
 		}

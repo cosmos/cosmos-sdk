@@ -19,7 +19,6 @@ import (
 )
 
 const (
-	// StoreKey is the key used to access the store in the context.
 	authStoreKey           = "acc"
 	GlobalAccountNumberKey = 0x1
 )

@@ -36,8 +36,6 @@ import (
 
 var blockMaxGas = uint64(simtestutil.DefaultConsensusParams.Block.MaxGas)
 
-const bankModuleName = "bank"
-
 type BlockGasImpl struct {
 	panicTx      bool
 	gasToConsume uint64
@@ -108,7 +106,7 @@ func TestBaseApp_BlockGas(t *testing.T) {
 			baseapptestutil.RegisterKeyValueServer(bapp.MsgServiceRouter(), BlockGasImpl{
 				panicTx:      tc.panicTx,
 				gasToConsume: tc.gasToConsume,
-				key:          bapp.UnsafeFindStoreKey(bankModuleName),
+				key:          bapp.UnsafeFindStoreKey(testutil.BankModuleName),
 			})
 
 			genState := GenesisStateWithSingleValidator(t, cdc, appBuilder)
@@ -160,7 +158,7 @@ func TestBaseApp_BlockGas(t *testing.T) {
 
 			// check result
 			ctx = bapp.GetContextForFinalizeBlock(txBytes)
-			okValue := ctx.KVStore(bapp.UnsafeFindStoreKey(bankModuleName)).Get([]byte("ok"))
+			okValue := ctx.KVStore(bapp.UnsafeFindStoreKey(testutil.BankModuleName)).Get([]byte("ok"))
 
 			if tc.expErr {
 				if tc.panicTx {

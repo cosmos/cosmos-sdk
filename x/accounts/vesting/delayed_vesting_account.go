@@ -53,10 +53,10 @@ func (dva *DelayedVestingAccount) ExecuteMessages(ctx context.Context, msg *vest
 
 // GetVestedCoins returns the total number of vested coins. If no coins are vested,
 // nil is returned.
-func (dva DelayedVestingAccount) GetVestedCoins(ctx context.Context, blockTime time.Time) sdk.Coins {
+func (dva DelayedVestingAccount) GetVestedCoins(ctx context.Context, blockTime time.Time) (sdk.Coins, error) {
 	endTime, err := dva.EndTime.Get(ctx)
 	if err != nil {
-		return nil
+		return nil, err
 	}
 	var originalVesting sdk.Coins
 	dva.IterateEntries(ctx, dva.OriginalVesting, func(key string, value math.Int) (stop bool) {
@@ -64,21 +64,25 @@ func (dva DelayedVestingAccount) GetVestedCoins(ctx context.Context, blockTime t
 		return false
 	})
 	if math.NewInt(blockTime.Unix()).GTE(endTime) {
-		return originalVesting
+		return originalVesting, nil
 	}
 
-	return nil
+	return nil, nil
 }
 
 // GetVestingCoins returns the total number of vesting coins. If no coins are
 // vesting, nil is returned.
-func (dva DelayedVestingAccount) GetVestingCoins(ctx context.Context, blockTime time.Time) sdk.Coins {
+func (dva DelayedVestingAccount) GetVestingCoins(ctx context.Context, blockTime time.Time) (sdk.Coins, error) {
 	var originalVesting sdk.Coins
 	dva.IterateEntries(ctx, dva.OriginalVesting, func(key string, value math.Int) (stop bool) {
 		originalVesting = append(originalVesting, sdk.NewCoin(key, value))
 		return false
 	})
-	return originalVesting.Sub(dva.GetVestedCoins(ctx, blockTime)...)
+	vestedCoins, err := dva.GetVestedCoins(ctx, blockTime)
+	if err != nil {
+		return nil, err
+	}
+	return originalVesting.Sub(vestedCoins...), nil
 }
 
 func (dva DelayedVestingAccount) QueryVestedCoins(ctx context.Context, msg *vestingtypes.QueryVestedCoinsRequest) (
@@ -86,7 +90,10 @@ func (dva DelayedVestingAccount) QueryVestedCoins(ctx context.Context, msg *vest
 ) {
 	originalContext := accountstd.OriginalContext(ctx)
 	sdkctx := sdk.UnwrapSDKContext(originalContext)
-	vestedCoins := dva.GetVestedCoins(ctx, sdkctx.HeaderInfo().Time)
+	vestedCoins, err := dva.GetVestedCoins(ctx, sdkctx.HeaderInfo().Time)
+	if err != nil {
+		return nil, err
+	}
 
 	return &vestingtypes.QueryVestedCoinsResponse{
 		VestedVesting: vestedCoins,
@@ -98,7 +105,10 @@ func (dva DelayedVestingAccount) QueryVestingCoins(ctx context.Context, msg *ves
 ) {
 	originalContext := accountstd.OriginalContext(ctx)
 	sdkctx := sdk.UnwrapSDKContext(originalContext)
-	vestingCoins := dva.GetVestingCoins(ctx, sdkctx.BlockHeader().Time)
+	vestingCoins, err := dva.GetVestingCoins(ctx, sdkctx.BlockHeader().Time)
+	if err != nil {
+		return nil, err
+	}
 
 	return &vestingtypes.QueryVestingCoinsResponse{
 		VestingCoins: vestingCoins,

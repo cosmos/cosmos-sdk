@@ -33,7 +33,7 @@ var (
 // Base Vesting Account
 var _ accountstd.Interface = (*BaseVestingAccount)(nil)
 
-type getVestingFunc = func(ctx context.Context, time time.Time) sdk.Coins
+type getVestingFunc = func(ctx context.Context, time time.Time) (sdk.Coins, error)
 
 // NewBaseVestingAccount creates a new BaseVestingAccount object.
 func NewBaseVestingAccount(d accountstd.Dependencies) (*BaseVestingAccount, error) {
@@ -228,22 +228,30 @@ func (bva *BaseVestingAccount) ExecuteMessages(
 			if err != nil {
 				return nil, err
 			}
+			vestingCoins, err := getVestingFunc(ctx, sdkctx.BlockHeader().Time)
+			if err != nil {
+				return nil, err
+			}
 
-			// Apply track delegation with previous state in the record
-			bva.TrackDelegation(
+			err = bva.TrackDelegation(
 				ctx,
 				sdk.Coins{*resp.Balance},
-				getVestingFunc(ctx, sdkctx.BlockHeader().Time),
+				vestingCoins,
 				sdk.Coins{msgDelegate.Amount},
 			)
+			if err != nil {
+				return nil, err
+			}
 		case "/cosmos.staking.v1beta1.MsgUndelegate":
 			msgUndelegate, ok := concreteMessage.(*stakingtypes.MsgUndelegate)
 			if !ok {
 				return nil, fmt.Errorf("Invalid proto msg for type: %s", typeUrl)
 			}
 
-			// Apply track delegation with previous state in the record
-			bva.TrackUndelegation(ctx, sdk.Coins{msgUndelegate.Amount})
+			err := bva.TrackUndelegation(ctx, sdk.Coins{msgUndelegate.Amount})
+			if err != nil {
+				return nil, err
+			}
 		case "/cosmos.bank.v1beta1.MsgSend", "/cosmos.bank.v1beta1.MsgMultiSend":
 			var sender string
 			var amount sdk.Coins
@@ -263,8 +271,13 @@ func (bva *BaseVestingAccount) ExecuteMessages(
 				amount = msgMultiSend.Inputs[0].Coins
 			}
 
+			vestingCoins, err := getVestingFunc(ctx, sdkctx.BlockHeader().Time)
+			if err != nil {
+				return nil, err
+			}
+
 			// Get locked token
-			lockedCoins := bva.LockedCoinsFromVesting(ctx, getVestingFunc(ctx, sdkctx.BlockHeader().Time))
+			lockedCoins := bva.LockedCoinsFromVesting(ctx, vestingCoins)
 
 			// Check if any sent tokens is exceeds vesting account balances
 			for _, coin := range amount {

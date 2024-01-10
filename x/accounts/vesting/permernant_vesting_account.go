@@ -43,13 +43,13 @@ func (plva PermanentLockedAccount) Init(ctx context.Context, msg *vestingtypes.M
 func (plva *PermanentLockedAccount) ExecuteMessages(ctx context.Context, msg *vestingtypes.MsgExecuteMessages) (
 	*vestingtypes.MsgExecuteMessagesResponse, error,
 ) {
-	return plva.BaseVestingAccount.ExecuteMessages(ctx, msg, func(_ context.Context, _ time.Time) sdk.Coins {
+	return plva.BaseVestingAccount.ExecuteMessages(ctx, msg, func(_ context.Context, _ time.Time) (sdk.Coins, error) {
 		var originalVesting sdk.Coins
 		plva.IterateEntries(ctx, plva.OriginalVesting, func(key string, value math.Int) (stop bool) {
 			originalVesting = append(originalVesting, sdk.NewCoin(key, value))
 			return false
 		})
-		return originalVesting
+		return originalVesting, nil
 	})
 }
 

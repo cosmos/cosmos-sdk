@@ -1,96 +1,104 @@
 package root
 
-// import (
-// 	"fmt"
-// 	"io"
-// 	"testing"
+import (
+	"testing"
 
-// 	dbm "github.com/cosmos/cosmos-db"
-// 	"github.com/stretchr/testify/suite"
+	dbm "github.com/cosmos/cosmos-db"
+	"github.com/stretchr/testify/suite"
 
-// 	"cosmossdk.io/log"
-// 	"cosmossdk.io/store/v2"
-// 	"cosmossdk.io/store/v2/commitment"
-// 	"cosmossdk.io/store/v2/commitment/iavl"
-// 	"cosmossdk.io/store/v2/pruning"
-// 	"cosmossdk.io/store/v2/storage"
-// 	"cosmossdk.io/store/v2/storage/sqlite"
-// )
+	coreheader "cosmossdk.io/core/header"
+	"cosmossdk.io/log"
+	"cosmossdk.io/store/v2"
+	"cosmossdk.io/store/v2/commitment"
+	"cosmossdk.io/store/v2/commitment/iavl"
+	"cosmossdk.io/store/v2/pruning"
+	"cosmossdk.io/store/v2/storage"
+	"cosmossdk.io/store/v2/storage/sqlite"
+)
 
-// // const (
-// // 	testStoreKey = "test"
-// // )
+const (
+	testStoreKey = "test_store_key"
+)
 
-// // type RootStoreTestSuite struct {
-// // 	suite.Suite
+type RootStoreTestSuite struct {
+	suite.Suite
 
-// // 	rootStore store.RootStore
-// // }
+	rootStore store.RootStore
+}
 
-// // func TestStorageTestSuite(t *testing.T) {
-// // 	suite.Run(t, &RootStoreTestSuite{})
-// // }
+func TestStorageTestSuite(t *testing.T) {
+	suite.Run(t, &RootStoreTestSuite{})
+}
 
-// // func (s *RootStoreTestSuite) SetupTest() {
-// // 	noopLog := log.NewNopLogger()
+func (s *RootStoreTestSuite) SetupTest() {
+	noopLog := log.NewNopLogger()
 
-// // 	sqliteDB, err := sqlite.New(s.T().TempDir())
-// // 	s.Require().NoError(err)
-// // 	ss := storage.NewStorageStore(sqliteDB)
+	sqliteDB, err := sqlite.New(s.T().TempDir())
+	s.Require().NoError(err)
+	ss := storage.NewStorageStore(sqliteDB)
 
-// // 	tree := iavl.NewIavlTree(dbm.NewMemDB(), noopLog, iavl.DefaultConfig())
-// // 	sc, err := commitment.NewCommitStore(map[string]commitment.Tree{testStoreKey: tree}, noopLog)
-// // 	s.Require().NoError(err)
+	tree := iavl.NewIavlTree(dbm.NewMemDB(), noopLog, iavl.DefaultConfig())
+	sc, err := commitment.NewCommitStore(map[string]commitment.Tree{testStoreKey: tree}, noopLog)
+	s.Require().NoError(err)
 
-// // 	rs, err := New(noopLog, ss, sc, []string{testStoreKey}, pruning.DefaultOptions(), pruning.DefaultOptions(), nil)
-// // 	s.Require().NoError(err)
+	rs, err := New(noopLog, ss, sc, pruning.DefaultOptions(), pruning.DefaultOptions(), nil)
+	s.Require().NoError(err)
 
-// // 	rs.SetTracer(io.Discard)
-// // 	rs.SetTracingContext(store.TraceContext{
-// // 		"test": s.T().Name(),
-// // 	})
+	s.rootStore = rs
+}
 
-// // 	s.rootStore = rs
-// // }
+func (s *RootStoreTestSuite) TearDownTest() {
+	err := s.rootStore.Close()
+	s.Require().NoError(err)
+}
 
-// // func (s *RootStoreTestSuite) TearDownTest() {
-// // 	err := s.rootStore.Close()
-// // 	s.Require().NoError(err)
-// // }
+func (s *RootStoreTestSuite) TestGetStateCommitment() {
+	s.Require().Equal(s.rootStore.GetStateCommitment(), s.rootStore.(*Store).stateCommitment)
+}
 
-// // func (s *RootStoreTestSuite) TestGetSCStore() {
-// // 	s.Require().Equal(s.rootStore.GetSCStore(), s.rootStore.(*Store).stateCommitment)
-// // }
+func (s *RootStoreTestSuite) TestGetStateStorage() {
+	s.Require().Equal(s.rootStore.GetStateStorage(), s.rootStore.(*Store).stateStore)
+}
 
-// // func (s *RootStoreTestSuite) TestGetKVStore() {
-// // 	kvs := s.rootStore.GetKVStore(testStoreKey)
-// // 	s.Require().NotNil(kvs)
-// // }
+func (s *RootStoreTestSuite) TestSetInitialVersion() {
+	s.Require().NoError(s.rootStore.SetInitialVersion(100))
+}
 
-// // func (s *RootStoreTestSuite) TestQuery() {
-// // 	_, err := s.rootStore.Query("", 1, []byte("foo"), true)
-// // 	s.Require().Error(err)
+func (s *RootStoreTestSuite) TestSetCommitHeader() {
+	h := &coreheader.Info{
+		Height:  100,
+		Hash:    []byte("foo"),
+		ChainID: "test",
+	}
+	s.rootStore.SetCommitHeader(h)
 
-// // 	// write and commit a changeset
-// // 	bs := s.rootStore.GetKVStore(testStoreKey)
-// // 	bs.Set([]byte("foo"), []byte("bar"))
+	s.Require().Equal(h, s.rootStore.(*Store).commitHeader)
+}
 
-// // 	workingHash, err := s.rootStore.WorkingHash()
-// // 	s.Require().NoError(err)
-// // 	s.Require().NotNil(workingHash)
+func (s *RootStoreTestSuite) TestQuery() {
+	_, err := s.rootStore.Query("", 1, []byte("foo"), true)
+	s.Require().Error(err)
 
-// // 	commitHash, err := s.rootStore.Commit()
-// // 	s.Require().NoError(err)
-// // 	s.Require().NotNil(commitHash)
-// // 	s.Require().Equal(workingHash, commitHash)
+	// write and commit a changeset
+	cs := store.NewChangeset()
+	cs.Add(testStoreKey, []byte("foo"), []byte("bar"))
 
-// // 	// ensure the proof is non-nil for the corresponding version
-// // 	result, err := s.rootStore.Query(testStoreKey, 1, []byte("foo"), true)
-// // 	s.Require().NoError(err)
-// // 	s.Require().NotNil(result.Proof.Proof)
-// // 	s.Require().Equal([]byte("foo"), result.Proof.Proof.GetExist().Key)
-// // 	s.Require().Equal([]byte("bar"), result.Proof.Proof.GetExist().Value)
-// // }
+	workingHash, err := s.rootStore.WorkingHash(cs)
+	s.Require().NoError(err)
+	s.Require().NotNil(workingHash)
+
+	commitHash, err := s.rootStore.Commit(cs)
+	s.Require().NoError(err)
+	s.Require().NotNil(commitHash)
+	s.Require().Equal(workingHash, commitHash)
+
+	// ensure the proof is non-nil for the corresponding version
+	result, err := s.rootStore.Query(testStoreKey, 1, []byte("foo"), true)
+	s.Require().NoError(err)
+	s.Require().NotNil(result.Proof.Proof)
+	s.Require().Equal([]byte("foo"), result.Proof.Proof.GetExist().Key)
+	s.Require().Equal([]byte("bar"), result.Proof.Proof.GetExist().Value)
+}
 
 // // func (s *RootStoreTestSuite) TestLoadVersion() {
 // // 	// write and commit a few changesets

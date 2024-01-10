@@ -95,12 +95,6 @@ func (dva *DelayedVestingAccount) ExecuteMessages(ctx context.Context, msg *vest
 
 // --------------- Query -----------------
 
-// LockedCoins returns the set of coins that are not spendable (i.e. locked),
-// defined as the vesting coins that are not delegated.
-func (dva DelayedVestingAccount) LockedCoins(blockTime time.Time) sdk.Coins {
-	return dva.BaseVestingAccount.LockedCoinsFromVesting(dva.GetVestingCoins(blockTime))
-}
-
 // GetVestedCoins returns the total number of vested coins. If no coins are vested,
 // nil is returned.
 func (dva DelayedVestingAccount) GetVestedCoins(blockTime time.Time) sdk.Coins {

@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"cosmossdk.io/core/address"
+	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/accounts/accountstd"
 	impl "cosmossdk.io/x/accounts/internal/implementation"
@@ -16,6 +17,7 @@ import (
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // Base Vesting Account
@@ -165,17 +167,17 @@ func (bva *BaseVestingAccount) ExecuteMessages(
 	// Keep track of all delegation related transitions
 	stateRecords := bva.NewInitialStateTransitionRecords()
 	for _, m := range msg.ExecutionMessages {
-		protoMsg, err := impl.UnpackAnyRaw(m)
+		concreteMessage, err := impl.UnpackAnyRaw(m)
 		if err != nil {
 			return nil, err
 		}
 
 		previousStateRecord := stateRecords.Records[len(stateRecords.Records)-1]
 
-		typeUrl := codectypes.MsgTypeURL(protoMsg)
+		typeUrl := codectypes.MsgTypeURL(concreteMessage)
 		switch typeUrl {
 		case "/cosmos.staking.v1beta1.MsgDelegate":
-			msgDelegate, ok := protoMsg.(*stakingtypes.MsgDelegate)
+			msgDelegate, ok := concreteMessage.(*stakingtypes.MsgDelegate)
 			if !ok {
 				return nil, fmt.Errorf("Invalid proto msg for type: %s", typeUrl)
 			}
@@ -200,7 +202,7 @@ func (bva *BaseVestingAccount) ExecuteMessages(
 				DelegatedVesting: newDelegatedVesting,
 			})
 		case "/cosmos.staking.v1beta1.MsgUndelegate":
-			msgUndelegate, ok := protoMsg.(*stakingtypes.MsgUndelegate)
+			msgUndelegate, ok := concreteMessage.(*stakingtypes.MsgUndelegate)
 			if !ok {
 				return nil, fmt.Errorf("Invalid proto msg for type: %s", typeUrl)
 			}
@@ -215,6 +217,56 @@ func (bva *BaseVestingAccount) ExecuteMessages(
 				DelegatedFree:    newDelegatedFree,
 				DelegatedVesting: newDelegatedVesting,
 			})
+		case "/cosmos.bank.v1beta1.MsgSend", "/cosmos.bank.v1beta1.MsgMultiSend":
+			var sender string
+			var amount sdk.Coins
+			if typeUrl == "/cosmos.bank.v1beta1.MsgSend" {
+				msgSend, ok := concreteMessage.(*banktypes.MsgSend)
+				if !ok {
+					return nil, fmt.Errorf("Invalid proto msg for type: %s", typeUrl)
+				}
+				sender = msgSend.FromAddress
+				amount = msgSend.Amount
+			} else {
+				msgMultiSend, ok := concreteMessage.(*banktypes.MsgMultiSend)
+				if !ok {
+					return nil, fmt.Errorf("Invalid proto msg for type: %s", typeUrl)
+				}
+				sender = msgMultiSend.Inputs[0].Address
+				amount = msgMultiSend.Inputs[0].Coins
+			}
+
+			// Get locked token
+			lockedCoins := bva.LockedCoinsFromVesting(getVestingFunc(sdkctx.BlockHeader().Time), previousStateRecord.DelegatedVesting)
+
+			// Check if any sent tokens is exceeds vesting account balances
+			for _, coin := range amount {
+				// Query account balance for the sent denom
+				balanceQueryReq := banktypes.NewQueryBalanceRequest(sdk.AccAddress(sender), coin.Denom)
+				resp, err := accountstd.QueryModule[banktypes.QueryBalanceResponse](ctx, balanceQueryReq)
+				if err != nil {
+					return nil, err
+				}
+				balance := resp.Balance
+				locked := sdk.NewCoin(coin.Denom, lockedCoins.AmountOf(coin.Denom))
+
+				spendable, hasNeg := sdk.Coins{*balance}.SafeSub(locked)
+				if hasNeg {
+					return nil, errorsmod.Wrapf(sdkerrors.ErrInsufficientFunds,
+						"locked amount exceeds account balance funds: %s > %s", locked, balance)
+				}
+
+				if _, hasNeg := spendable.SafeSub(coin); hasNeg {
+					if len(spendable) == 0 {
+						spendable = sdk.Coins{sdk.NewCoin(coin.Denom, math.ZeroInt())}
+					}
+					return nil, errorsmod.Wrapf(
+						sdkerrors.ErrInsufficientFunds,
+						"spendable balance %s is smaller than %s",
+						spendable, coin,
+					)
+				}
+			}
 		default:
 			fmt.Println("Contiue with the execution")
 		}
@@ -244,8 +296,8 @@ func (bva *BaseVestingAccount) ExecuteMessages(
 // an empty slice of Coins is returned.
 //
 // CONTRACT: Delegated vesting coins and vestingCoins must be sorted.
-func (bva BaseVestingAccount) LockedCoinsFromVesting(vestingCoins sdk.Coins) sdk.Coins {
-	lockedCoins := vestingCoins.Sub(vestingCoins.Min(bva.DelegatedVesting)...)
+func (bva BaseVestingAccount) LockedCoinsFromVesting(vestingCoins, delegatedVesting sdk.Coins) sdk.Coins {
+	lockedCoins := vestingCoins.Sub(vestingCoins.Min(delegatedVesting)...)
 	if lockedCoins == nil {
 		return sdk.Coins{}
 	}
@@ -314,7 +366,6 @@ func (bva BaseVestingAccount) RegisterInitHandler(builder *accountstd.InitBuilde
 }
 
 func (bva BaseVestingAccount) RegisterExecuteHandlers(builder *accountstd.ExecuteBuilder) {
-
 }
 
 func (bva BaseVestingAccount) RegisterQueryHandlers(builder *accountstd.QueryBuilder) {

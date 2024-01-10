@@ -91,12 +91,6 @@ func (plva *PermanentLockedAccount) ExecuteMessages(ctx context.Context, msg *ve
 
 // --------------- Query -----------------
 
-// LockedCoins returns the set of coins that are not spendable (i.e. locked),
-// defined as the vesting coins that are not delegated.
-func (plva PermanentLockedAccount) LockedCoins(_ time.Time) sdk.Coins {
-	return plva.BaseVestingAccount.LockedCoinsFromVesting(plva.OriginalVesting)
-}
-
 func (plva PermanentLockedAccount) QueryVestedCoins(ctx context.Context, msg *vestingtypes.QueryVestedCoinsRequest) (
 	*vestingtypes.QueryVestedCoinsResponse, error,
 ) {

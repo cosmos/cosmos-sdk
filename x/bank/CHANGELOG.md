@@ -27,6 +27,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Features
 
+* [#18956](https://github.com/cosmos/cosmos-sdk/pull/18956) Introduced a new `DenomOwnersByQuery` query method
+  for `DenomOwners`, which accepts the denom value as a query string parameter, resolving issues with denoms containing
+  slashes.
+
 ### Improvements
 
 ### API Breaking Changes

@@ -109,6 +109,10 @@ func (s *Store) StateAt(v uint64) (store.ReadOnlyRootStore, error) {
 	// method once available.
 	//
 	// Ref: https://github.com/cosmos/cosmos-sdk/pull/18736
+	// if err := s.stateCommitment.GetCommitInfo(v); err != nil {
+	// 	return nil, fmt.Errorf("failed to get commit info for version %d: %w", v, err)
+	// }
+
 	return NewReadOnlyAdapter(v, s), nil
 }
 

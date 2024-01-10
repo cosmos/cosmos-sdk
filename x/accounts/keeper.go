@@ -8,7 +8,6 @@ import (
 	"errors"
 	"fmt"
 
-	"cosmossdk.io/core/header"
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	"google.golang.org/protobuf/proto"
 
@@ -16,6 +15,7 @@ import (
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/branch"
 	"cosmossdk.io/core/event"
+	"cosmossdk.io/core/header"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/x/accounts/accountstd"
 	"cosmossdk.io/x/accounts/internal/implementation"

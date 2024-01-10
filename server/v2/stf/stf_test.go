@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"testing"
 
+	"cosmossdk.io/server/v2/stf/branch"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 
@@ -15,7 +16,7 @@ import (
 )
 
 func TestSTF(t *testing.T) {
-	state, branch := mock.DB()
+	state := mock.DB()
 	mockTx := mock.Tx{
 		Sender: []byte("sender"),
 		Msg:    wrapperspb.Bool(true), // msg does not matter at all because our handler does nothing.
@@ -48,7 +49,7 @@ func TestSTF(t *testing.T) {
 			tx.Decode(txBytes)
 			return *tx, nil
 		},
-		branch:            branch,
+		branch:            func(store store.ReadonlyState) store.WritableState { return branch.NewStore(store) },
 		doValidatorUpdate: func(ctx context.Context) ([]appmanager.ValidatorUpdate, error) { return nil, nil },
 	}
 

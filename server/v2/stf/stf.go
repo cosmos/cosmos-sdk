@@ -298,5 +298,6 @@ func applyStateChanges(dst, src store.WritableState) error {
 	if err != nil {
 		return err
 	}
+
 	return dst.ApplyChangeSets(changes)
 }

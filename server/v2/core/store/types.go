@@ -1,25 +1,27 @@
 package store
 
-import "cosmossdk.io/core/store"
+import (
+	"cosmossdk.io/core/store"
+)
 
 type Hash = []byte
 
 var _ store.KVStore = (WritableState)(nil)
 
-// Store defines the underlying storage engine used in the state machine.
+// Store defines the underlying storage engine of an app.
 type Store interface {
-	// NewStateAt returns a ReadonlyState taken from the latest
-	// committed state.
-	// Version is provided as a parameter for the store to check if
-	// the state machine is in line with the latest version known
-	// by the storage itself.
-	NewStateAt(version uint64) (ReadonlyState, error)
-	// ReadonlyStateAt returns a ReadonlyState of the provided
-	// version. If the version does not exist an error must be returned.
-	ReadonlyStateAt(version uint64) (ReadonlyState, error)
-	// CommitState commits the provided changeset and returns
+	// StateLatest returns a readonly view over the latest
+	// committed state of the store. Alongside the version
+	// associated with it.
+	StateLatest() (uint64, ReadonlyState, error)
+
+	// StateAt returns a readonly view over the provided
+	// state. Must error when the version does not exist.
+	StateAt(version uint64) (ReadonlyState, error)
+
+	// StateCommit commits the provided changeset and returns
 	// the new state root of the state.
-	CommitState(changes []ChangeSet) (Hash, error)
+	StateCommit(changes []ChangeSet) (Hash, error)
 }
 
 // ChangeSet represents a change in a key and value of state.

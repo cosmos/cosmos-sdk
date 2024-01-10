@@ -5,6 +5,7 @@ go 1.21
 replace (
 	cosmossdk.io/server/v2/core => ./core
 	cosmossdk.io/server/v2/stf => ./stf
+	cosmossdk.io/store/v2 => ../../store
 )
 
 require (

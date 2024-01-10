@@ -805,3 +805,111 @@ func (suite *KeeperTestSuite) TestQuerySendEnabled() {
 		})
 	}
 }
+
+func (suite *KeeperTestSuite) TestGRPCDenomOwnersByQuery() {
+	ctx := suite.ctx
+
+	keeper := suite.bankKeeper
+
+	suite.mockMintCoins(mintAcc)
+	suite.Require().NoError(keeper.MintCoins(ctx, minttypes.ModuleName, initCoins))
+	denom := "ibc/123123213123"
+	newCoins := sdk.NewCoins(sdk.NewCoin(denom, initTokens))
+	suite.mockMintCoins(mintAcc)
+	suite.Require().NoError(keeper.MintCoins(ctx, minttypes.ModuleName, newCoins))
+
+	for i := 0; i < 10; i++ {
+		addr := sdk.AccAddress(fmt.Sprintf("account-%d", i))
+
+		bal := sdk.NewCoins(sdk.NewCoin(
+			sdk.DefaultBondDenom,
+			sdk.TokensFromConsensusPower(initialPower/10, sdk.DefaultPowerReduction),
+		))
+		suite.mockSendCoinsFromModuleToAccount(mintAcc, addr)
+		suite.Require().NoError(keeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, addr, bal))
+	}
+
+	testCases := map[string]struct {
+		req      *types.QueryDenomOwnersByQueryRequest
+		expPass  bool
+		numAddrs int
+		hasNext  bool
+		total    uint64
+	}{
+		"empty request": {
+			req:     &types.QueryDenomOwnersByQueryRequest{},
+			expPass: false,
+		},
+		"invalid denom": {
+			req: &types.QueryDenomOwnersByQueryRequest{
+				Denom: "foo",
+			},
+			expPass:  true,
+			numAddrs: 0,
+			hasNext:  false,
+			total:    0,
+		},
+		"valid request - page 1": {
+			req: &types.QueryDenomOwnersByQueryRequest{
+				Denom: sdk.DefaultBondDenom,
+				Pagination: &query.PageRequest{
+					Limit:      6,
+					CountTotal: true,
+				},
+			},
+			expPass:  true,
+			numAddrs: 6,
+			hasNext:  true,
+			total:    10,
+		},
+		"valid request - page 2": {
+			req: &types.QueryDenomOwnersByQueryRequest{
+				Denom: sdk.DefaultBondDenom,
+				Pagination: &query.PageRequest{
+					Offset:     6,
+					Limit:      10,
+					CountTotal: true,
+				},
+			},
+			expPass:  true,
+			numAddrs: 4,
+			hasNext:  false,
+			total:    10,
+		},
+		"valid request for query": {
+			req: &types.QueryDenomOwnersByQueryRequest{
+				Denom: denom,
+				Pagination: &query.PageRequest{
+					Limit:      6,
+					CountTotal: true,
+				},
+			},
+			expPass:  true,
+			numAddrs: 1,
+			hasNext:  false,
+			total:    1,
+		},
+	}
+
+	for name, tc := range testCases {
+		suite.Run(name, func() {
+			resp, err := suite.queryClient.DenomOwnersByQuery(gocontext.Background(), tc.req)
+			if tc.expPass {
+				suite.NoError(err)
+				suite.NotNil(resp)
+				suite.Len(resp.DenomOwners, tc.numAddrs)
+				suite.Equal(tc.total, resp.Pagination.Total)
+
+				if tc.hasNext {
+					suite.NotNil(resp.Pagination.NextKey)
+				} else {
+					suite.Nil(resp.Pagination.NextKey)
+				}
+			} else {
+				suite.Require().Error(err)
+			}
+		})
+	}
+
+	suite.Require().True(true)
+}

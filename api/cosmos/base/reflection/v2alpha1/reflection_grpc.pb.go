@@ -33,6 +33,7 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type ReflectionServiceClient interface {
+	// Deprecated: Do not use.
 	// GetAuthnDescriptor returns information on how to authenticate transactions in the application
 	// NOTE: this RPC is still experimental and might be subject to breaking changes or removal in
 	// future releases of the cosmos-sdk.
@@ -41,6 +42,7 @@ type ReflectionServiceClient interface {
 	GetChainDescriptor(ctx context.Context, in *GetChainDescriptorRequest, opts ...grpc.CallOption) (*GetChainDescriptorResponse, error)
 	// GetCodecDescriptor returns the descriptor of the codec of the application
 	GetCodecDescriptor(ctx context.Context, in *GetCodecDescriptorRequest, opts ...grpc.CallOption) (*GetCodecDescriptorResponse, error)
+	// Deprecated: Do not use.
 	// GetConfigurationDescriptor returns the descriptor for the sdk.Config of the application
 	GetConfigurationDescriptor(ctx context.Context, in *GetConfigurationDescriptorRequest, opts ...grpc.CallOption) (*GetConfigurationDescriptorResponse, error)
 	// GetQueryServicesDescriptor returns the available gRPC queryable services of the application
@@ -57,6 +59,7 @@ func NewReflectionServiceClient(cc grpc.ClientConnInterface) ReflectionServiceCl
 	return &reflectionServiceClient{cc}
 }
 
+// Deprecated: Do not use.
 func (c *reflectionServiceClient) GetAuthnDescriptor(ctx context.Context, in *GetAuthnDescriptorRequest, opts ...grpc.CallOption) (*GetAuthnDescriptorResponse, error) {
 	out := new(GetAuthnDescriptorResponse)
 	err := c.cc.Invoke(ctx, ReflectionService_GetAuthnDescriptor_FullMethodName, in, out, opts...)
@@ -84,6 +87,7 @@ func (c *reflectionServiceClient) GetCodecDescriptor(ctx context.Context, in *Ge
 	return out, nil
 }
 
+// Deprecated: Do not use.
 func (c *reflectionServiceClient) GetConfigurationDescriptor(ctx context.Context, in *GetConfigurationDescriptorRequest, opts ...grpc.CallOption) (*GetConfigurationDescriptorResponse, error) {
 	out := new(GetConfigurationDescriptorResponse)
 	err := c.cc.Invoke(ctx, ReflectionService_GetConfigurationDescriptor_FullMethodName, in, out, opts...)
@@ -115,6 +119,7 @@ func (c *reflectionServiceClient) GetTxDescriptor(ctx context.Context, in *GetTx
 // All implementations must embed UnimplementedReflectionServiceServer
 // for forward compatibility
 type ReflectionServiceServer interface {
+	// Deprecated: Do not use.
 	// GetAuthnDescriptor returns information on how to authenticate transactions in the application
 	// NOTE: this RPC is still experimental and might be subject to breaking changes or removal in
 	// future releases of the cosmos-sdk.
@@ -123,6 +128,7 @@ type ReflectionServiceServer interface {
 	GetChainDescriptor(context.Context, *GetChainDescriptorRequest) (*GetChainDescriptorResponse, error)
 	// GetCodecDescriptor returns the descriptor of the codec of the application
 	GetCodecDescriptor(context.Context, *GetCodecDescriptorRequest) (*GetCodecDescriptorResponse, error)
+	// Deprecated: Do not use.
 	// GetConfigurationDescriptor returns the descriptor for the sdk.Config of the application
 	GetConfigurationDescriptor(context.Context, *GetConfigurationDescriptorRequest) (*GetConfigurationDescriptorResponse, error)
 	// GetQueryServicesDescriptor returns the available gRPC queryable services of the application

@@ -24,7 +24,7 @@ var (
 		LeafSpec: &ics23.LeafOp{
 			Prefix:       leafPrefix,
 			PrehashKey:   ics23.HashOp_NO_HASH,
-			PrehashValue: ics23.HashOp_NO_HASH,
+			PrehashValue: ics23.HashOp_SHA256,
 			Hash:         ics23.HashOp_SHA256,
 			Length:       ics23.LengthOp_VAR_PROTO,
 		},
@@ -122,7 +122,34 @@ func (op CommitmentOp) Run(args [][]byte) ([][]byte, error) {
 	return [][]byte{root}, nil
 }
 
-// ProofFromByteSlices computes the proof from the given leaves.
+// ProofFromByteSlices computes the proof from the given leaves. An iteration will be
+// perfomed for each level of the tree, where each iteration hashes together the bottom most
+// nodes. If the length of the bottom most nodes is odd, then the last node will be saved
+// for the next iteration.
+//
+// Example:
+// Iteration 1:
+// n = 5
+// leaves = a, b, c, d, e.
+// index = 2 (prove c)
+//
+// Iteration 2:
+// n = 3
+// leaves = ab, cd, e
+// index = 1 (prove c, so index of cd)
+//
+// Iteration 3:
+// n = 2
+// leaves = abcd, e
+// index = 0 (prove c, so index of abcd)
+//
+// Final iteration:
+// n = 1
+// leaves = abcde
+// index = 0
+//
+// The bitwise & operator allows us to determine if the index or length is odd or even.
+// The bitwise ^ operator allows us to increment when the value is even and decrement when it is odd.
 func ProofFromByteSlices(leaves [][]byte, index int) (rootHash []byte, inners []*ics23.InnerOp) {
 	if len(leaves) == 0 {
 		return emptyHash(), nil
@@ -130,23 +157,35 @@ func ProofFromByteSlices(leaves [][]byte, index int) (rootHash []byte, inners []
 
 	n := len(leaves)
 	for n > 1 {
+		// Begin by constructing the proof for the inner node of the requested index.
+		// A proof of the inner node is skipped only in the case where the requested index
+		// is the last element and it does not have a leaf pair (resulting in it being
+		// saved until the next iteration).
 		if index < n-1 || index&1 == 1 {
 			inner := &ics23.InnerOp{Hash: ics23.HashOp_SHA256}
+			//Iif proof index is even then child is from left, suffix is populated
+			// otherwise, child is from right and the prefix is populated.
 			if index&1 == 0 {
+				// inner op(prefix=0x01 | child | suffix=leaves[index+1])
 				inner.Prefix = innerPrefix
-				inner.Suffix = leaves[index^1]
+				inner.Suffix = leaves[index^1] // XOR op is index+1 because index is even
 			} else {
-				inner.Prefix = append(innerPrefix, leaves[index^1]...)
+				// inner op(prefix=0x01 | leaves[index-1] | child | suffix=nil)
+				inner.Prefix = append(innerPrefix, leaves[index^1]...) // XOR op is index-1 because index is odd
 			}
 			inners = append(inners, inner)
 		}
+
+		// hash together all leaf pairs
 		for i := 0; i < n/2; i++ {
 			leaves[i] = InnerHash(leaves[2*i], leaves[2*i+1])
 		}
+
+		// save any leftover leaf for the next iteration
 		if n&1 == 1 {
 			leaves[n/2] = leaves[n-1]
 		}
-		n = (n + 1) / 2
+		n = (n + 1) / 2 // n + 1 accounts for any leaves which are added to the next iteration
 		index /= 2
 	}
 
@@ -178,7 +217,8 @@ func LeafHash(key, value []byte) ([]byte, error) {
 	return SimpleMerkleSpec.LeafSpec.Apply(key, value)
 }
 
-// InnerHash computes the hash of an inner node.
+// InnerHash computes the hash of an inner node as defined by ics23:
+// https://github.com/cosmos/ics23/blob/go/v0.10.0/proto/cosmos/ics23/v1/proofs.proto#L130
 func InnerHash(left, right []byte) []byte {
 	data := make([]byte, len(innerPrefix)+len(left)+len(right))
 	n := copy(data, innerPrefix)

@@ -222,14 +222,14 @@ func (s *Store) SetCommitHeader(h *coreheader.Info) {
 // If working hash is nil, then we need to compute and set it on the root store
 // by constructing a CommitInfo object, which in turn creates and writes a batch
 // of the current changeset to the SC tree.
-func (s *Store) WorkingHash() ([]byte, error) {
+func (s *Store) WorkingHash(cs *store.Changeset) ([]byte, error) {
 	if s.telemetry != nil {
 		now := time.Now()
 		s.telemetry.MeasureSince(now, "root_store", "working_hash")
 	}
 
 	if s.workingHash == nil {
-		if err := s.writeSC(); err != nil {
+		if err := s.writeSC(cs); err != nil {
 			return nil, err
 		}
 
@@ -240,14 +240,11 @@ func (s *Store) WorkingHash() ([]byte, error) {
 }
 
 // Commit commits all state changes to the underlying SS and SC backends. Note,
-// at the time of Commit(), we expect WorkingHash() to have already been called,
-// which internally sets the working hash, retrieved by writing a batch of the
-// changeset to the SC tree, and CommitInfo on the root store. The changeset is
-// retrieved from the rootKVStore and represents the entire set of writes to be
-// committed. The same changeset is used to flush writes to the SS backend.
-//
-// Note, Commit() commits SC and SC synchronously.
-func (s *Store) Commit() ([]byte, error) {
+// at the time of Commit(), we expect WorkingHash() to have already been called
+// with the same Changeset, which internally sets the working hash, retrieved by
+// writing a batch of the changeset to the SC tree, and CommitInfo on the root
+// store.
+func (s *Store) Commit(cs *store.Changeset) ([]byte, error) {
 	if s.telemetry != nil {
 		now := time.Now()
 		s.telemetry.MeasureSince(now, "root_store", "commit")
@@ -263,29 +260,18 @@ func (s *Store) Commit() ([]byte, error) {
 		s.logger.Debug("commit header and version mismatch", "header_height", s.commitHeader.Height, "version", version)
 	}
 
-	changeset := store.NewChangeset()
-	for _, kvStore := range s.kvStores {
-		changeset.Merge(kvStore.GetChangeset())
-	}
-
 	// commit SS
-	if err := s.stateStore.ApplyChangeset(version, changeset); err != nil {
+	if err := s.stateStore.ApplyChangeset(version, cs); err != nil {
 		return nil, fmt.Errorf("failed to commit SS: %w", err)
 	}
 
 	// commit SC
-	if err := s.commitSC(); err != nil {
+	if err := s.commitSC(cs); err != nil {
 		return nil, fmt.Errorf("failed to commit SC stores: %w", err)
 	}
 
 	if s.commitHeader != nil {
 		s.lastCommitInfo.Timestamp = s.commitHeader.Time
-	}
-
-	for storeKey, kvStore := range s.kvStores {
-		if err := kvStore.Reset(version); err != nil {
-			return nil, fmt.Errorf("failed to reset %s KVStore: %w", storeKey, err)
-		}
 	}
 
 	s.workingHash = nil
@@ -296,17 +282,12 @@ func (s *Store) Commit() ([]byte, error) {
 	return s.lastCommitInfo.Hash(), nil
 }
 
-// writeSC gets the current changeset from the rootKVStore and writes that as a
-// batch to the underlying SC tree, which allows us to retrieve the working hash
-// of the SC tree. Finally, we construct a *CommitInfo and return the hash.
-// Note, this should only be called once per block!
-func (s *Store) writeSC() error {
-	changeset := store.NewChangeset()
-	for _, kvStore := range s.kvStores {
-		changeset.Merge(kvStore.GetChangeset())
-	}
-
-	if err := s.stateCommitment.WriteBatch(changeset); err != nil {
+// writeSC accepts a Changeset and writes that as a batch to the underlying SC
+// tree, which allows us to retrieve the working hash of the SC tree. Finally,
+// we construct a *CommitInfo and set that as lastCommitInfo. Note, this should
+// only be called once per block!
+func (s *Store) writeSC(cs *store.Changeset) error {
+	if err := s.stateCommitment.WriteBatch(cs); err != nil {
 		return fmt.Errorf("failed to write batch to SC store: %w", err)
 	}
 
@@ -338,7 +319,7 @@ func (s *Store) writeSC() error {
 // should have already been written to the SC via WorkingHash(). This method
 // solely commits that batch. An error is returned if commit fails or if the
 // resulting commit hash is not equivalent to the working hash.
-func (s *Store) commitSC() error {
+func (s *Store) commitSC(cs *store.Changeset) error {
 	commitStoreInfos, err := s.stateCommitment.Commit()
 	if err != nil {
 		return fmt.Errorf("failed to commit SC store: %w", err)
@@ -349,7 +330,7 @@ func (s *Store) commitSC() error {
 		StoreInfos: commitStoreInfos,
 	}).Hash()
 
-	workingHash, err := s.WorkingHash()
+	workingHash, err := s.WorkingHash(cs)
 	if err != nil {
 		return fmt.Errorf("failed to get working hash: %w", err)
 	}

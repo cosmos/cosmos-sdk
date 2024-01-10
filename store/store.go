@@ -17,17 +17,6 @@ type RootStore interface {
 	// and key tuple. Queries should be routed to the underlying SS engine.
 	Query(storeKey string, version uint64, key []byte, prove bool) (QueryResult, error)
 
-	// SetTracingContext sets the tracing context, i.e tracing metadata, on the
-	// RootStore.
-	SetTracingContext(tc TraceContext)
-
-	// SetTracer sets the tracer on the RootStore, such that any calls to GetKVStore
-	// or GetBranchedKVStore, will have tracing enabled.
-	SetTracer(w io.Writer)
-
-	// TracingEnabled returns true if tracing is enabled on the RootStore.
-	TracingEnabled() bool
-
 	// LoadVersion loads the RootStore to the given version.
 	LoadVersion(version uint64) error
 
@@ -46,20 +35,21 @@ type RootStore interface {
 	// queries based on block time need to be supported.
 	SetCommitHeader(h *coreheader.Info)
 
-	// WorkingHash returns the current WIP commitment hash. Depending on the underlying
-	// implementation, this may need to take the current changeset and write it to
-	// the SC backend(s). In such cases, Commit() would return this hash and flush
-	// writes to disk. This means that WorkingHash mutates the RootStore and must
-	// be called prior to Commit().
-	WorkingHash() ([]byte, error)
+	// WorkingHash returns the current WIP commitment hash by applying the Changeset
+	// to the SC backend. Typically, WorkingHash() is called prior to Commit() and
+	// must be applied with the exact same Changeset. This is because WorkingHash()
+	// is responsible for writing the Changeset to the SC backend and returning the
+	// resulting root hash. Then, Commit() would return this hash and flush writes
+	// to disk.
+	WorkingHash(cs *Changeset) ([]byte, error)
 
-	// Commit should be responsible for taking the current changeset and flushing
+	// Commit should be responsible for taking the provided changeset and flushing
 	// it to disk. Note, depending on the implementation, the changeset, at this
 	// point, may already be written to the SC backends. Commit() should ensure
 	// the changeset is committed to all SC and SC backends and flushed to disk.
 	// It must return a hash of the merkle-ized committed state. This hash should
 	// be the same as the hash returned by WorkingHash() prior to calling Commit().
-	Commit() ([]byte, error)
+	Commit(cs *Changeset) ([]byte, error)
 
 	// LastCommitID returns a CommitID pertaining to the last commitment.
 	LastCommitID() (CommitID, error)

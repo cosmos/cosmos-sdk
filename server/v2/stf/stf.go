@@ -33,16 +33,13 @@ type STF[T transaction.Tx] struct {
 
 	doTxValidation func(ctx context.Context, tx T) error
 	postTxExec     func(ctx context.Context, tx T, success bool) error
-
-	decodeTx func(txBytes []byte) (T, error)
-
-	branch func(store store.ReadonlyState) store.WritableState // branch is a function that given a readonly store it returns a writable version of it.
+	branch         func(store store.ReadonlyState) store.WritableState // branch is a function that given a readonly store it returns a writable version of it.
 }
 
 // DeliverBlock is our state transition function.
 // It takes a read only view of the state to apply the block to,
 // executes the block and returns the block results and the new state.
-func (s STF[T]) DeliverBlock(ctx context.Context, block appmanager.BlockRequest, state store.ReadonlyState) (blockResult *appmanager.BlockResponse, newState store.WritableState, err error) {
+func (s STF[T]) DeliverBlock(ctx context.Context, block *appmanager.DecodedBlockRequest[T], state store.ReadonlyState) (blockResult *appmanager.BlockResponse, newState store.WritableState, err error) {
 	// creates a new branch store, from the readonly view of the state
 	// that can be written to.
 	newState = s.branch(state)
@@ -64,7 +61,7 @@ func (s STF[T]) DeliverBlock(ctx context.Context, block appmanager.BlockRequest,
 		txResults[i] = s.deliverTx(ctx, newState, txBytes)
 	}
 	// end block
-	endBlockEvents, valset, err := s.endBlock(ctx, newState, block)
+	endBlockEvents, valset, err := s.endBlock(ctx, newState)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -79,7 +76,7 @@ func (s STF[T]) DeliverBlock(ctx context.Context, block appmanager.BlockRequest,
 }
 
 // deliverTx executes a TX and returns the result.
-func (s STF[T]) deliverTx(ctx context.Context, state store.WritableState, txBytes []byte) appmanager.TxResult {
+func (s STF[T]) deliverTx(ctx context.Context, state store.WritableState, tx T) appmanager.TxResult {
 	// recover in the case of a panic
 	// TODO: after discussion with users see if we need middleware
 	var recoveryError error
@@ -91,13 +88,6 @@ func (s STF[T]) deliverTx(ctx context.Context, state store.WritableState, txByte
 	if recoveryError != nil {
 		return appmanager.TxResult{
 			Error: recoveryError,
-		}
-	}
-
-	tx, err := s.decodeTx(txBytes)
-	if err != nil {
-		return appmanager.TxResult{
-			Error: err,
 		}
 	}
 
@@ -211,14 +201,14 @@ func (s STF[T]) beginBlock(ctx context.Context, state store.WritableState) (begi
 	return bbCtx.events, nil
 }
 
-func (s STF[T]) endBlock(ctx context.Context, state store.WritableState, block appmanager.BlockRequest) ([]event.Event, []appmanager.ValidatorUpdate, error) {
+func (s STF[T]) endBlock(ctx context.Context, state store.WritableState) ([]event.Event, []appmanager.ValidatorUpdate, error) {
 	ebCtx := s.makeContext(ctx, []Identity{runtimeIdentity}, state, 0) // TODO: gas limit
 	err := s.doEndBlock(ebCtx)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	events, valsetUpdates, err := s.validatorUpdates(ctx, state, block)
+	events, valsetUpdates, err := s.validatorUpdates(ctx, state)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -229,7 +219,7 @@ func (s STF[T]) endBlock(ctx context.Context, state store.WritableState, block a
 }
 
 // validatorUpdates returns the validator updates for the current block. It is called by endBlock after the endblock execution has concluded
-func (s STF[T]) validatorUpdates(ctx context.Context, state store.WritableState, block appmanager.BlockRequest) ([]event.Event, []appmanager.ValidatorUpdate, error) {
+func (s STF[T]) validatorUpdates(ctx context.Context, state store.WritableState) ([]event.Event, []appmanager.ValidatorUpdate, error) {
 	ebCtx := s.makeContext(ctx, []Identity{runtimeIdentity}, state, 0) // TODO: gas limit
 	valSetUpdates, err := s.doValidatorUpdate(ebCtx)
 	if err != nil {
@@ -239,18 +229,14 @@ func (s STF[T]) validatorUpdates(ctx context.Context, state store.WritableState,
 }
 
 // Simulate simulates the execution of a tx on the provided state.
-func (s STF[T]) Simulate(ctx context.Context, state store.ReadonlyState, gasLimit uint64, tx []byte) appmanager.TxResult {
+func (s STF[T]) Simulate(ctx context.Context, state store.ReadonlyState, gasLimit uint64, tx T) appmanager.TxResult {
 	simulationState := s.branch(state)
 	return s.deliverTx(ctx, simulationState, tx)
 }
 
 // ValidateTx will run only the validation steps required for a transaction.
 // Validations are run over the provided state, with the provided gas limit.
-func (s STF[T]) ValidateTx(ctx context.Context, state store.ReadonlyState, gasLimit uint64, txBytes []byte) appmanager.TxResult {
-	tx, err := s.decodeTx(txBytes)
-	if err != nil {
-		return appmanager.TxResult{Error: err}
-	}
+func (s STF[T]) ValidateTx(ctx context.Context, state store.ReadonlyState, gasLimit uint64, tx T) appmanager.TxResult {
 	validationState := s.branch(state)
 	gasUsed, events, err := s.validateTx(ctx, validationState, gasLimit, tx)
 	return appmanager.TxResult{

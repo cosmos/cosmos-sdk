@@ -95,6 +95,14 @@ func (s *Store) SetInitialVersion(v uint64) error {
 	return s.stateCommitment.SetInitialVersion(v)
 }
 
+func (s *Store) StateLatest() (uint64, store.ReadOnlyRootStore, error) {
+	panic("not implemented yet!")
+}
+
+func (s *Store) StateAt(version uint64) (store.ReadOnlyRootStore, error) {
+	panic("not implemented yet!")
+}
+
 // GetSCStore returns the store's state commitment (SC) backend.
 func (s *Store) GetSCStore() store.Committer {
 	return s.stateCommitment

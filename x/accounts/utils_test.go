@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/proto"
@@ -47,7 +48,7 @@ func (i interfaceRegistry) RegisterImplementations(any, ...gogoproto.Message) {}
 func newKeeper(t *testing.T, accounts ...implementation.AccountCreatorFunc) (Keeper, context.Context) {
 	t.Helper()
 	ss, ctx := colltest.MockStore()
-	m, err := NewKeeper(ss, eventService{}, nil, addressCodec{}, nil, nil, nil, interfaceRegistry{}, accounts...)
+	m, err := NewKeeper(ss, eventService{}, nil, addressCodec{}, nil, nil, nil, interfaceRegistry{}, &codec.ProtoCodec{}, accounts...)
 	require.NoError(t, err)
 	return m, ctx
 }

@@ -2,16 +2,13 @@ package vesting
 
 import (
 	"context"
-	"errors"
 	"time"
 
+	"cosmossdk.io/math"
 	"cosmossdk.io/x/accounts/accountstd"
 	vestingtypes "cosmossdk.io/x/accounts/vesting/types/v1"
-	banktypes "cosmossdk.io/x/bank/types"
 
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // Compile-time type assertions
@@ -23,15 +20,9 @@ var (
 
 // NewPermanentLockedAccount creates a new PermanentLockedAccount object.
 func NewPermanentLockedAccount(d accountstd.Dependencies) (*PermanentLockedAccount, error) {
-	baseVestingAccount := BaseVestingAccount{
-		OriginalVesting:  sdk.NewCoins(),
-		DelegatedFree:    sdk.NewCoins(),
-		DelegatedVesting: sdk.NewCoins(),
-		AddressCodec:     d.AddressCodec,
-		EndTime:          0,
-	}
+	baseVestingAccount, err := NewBaseVestingAccount(d)
 
-	return &PermanentLockedAccount{&baseVestingAccount}, nil
+	return &PermanentLockedAccount{baseVestingAccount}, err
 }
 
 type PermanentLockedAccount struct {
@@ -40,43 +31,11 @@ type PermanentLockedAccount struct {
 
 // --------------- Init -----------------
 
-func (cva PermanentLockedAccount) Init(ctx context.Context, msg *vestingtypes.MsgInitVestingAccount) (*vestingtypes.MsgInitVestingAccountResponse, error) {
-	to := accountstd.Whoami(ctx)
-	if to == nil {
-		return nil, sdkerrors.ErrInvalidAddress.Wrapf("Cannot find account address from context")
-	}
+func (plva PermanentLockedAccount) Init(ctx context.Context, msg *vestingtypes.MsgInitVestingAccount) (*vestingtypes.MsgInitVestingAccountResponse, error) {
+	resp, err := plva.BaseVestingAccount.Init(ctx, msg)
+	plva.EndTime.Set(ctx, math.ZeroInt())
 
-	toAddress, err := cva.AddressCodec.BytesToString(to)
-	if err != nil {
-		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid 'to' address: %s", err)
-	}
-
-	if err := validateAmount(msg.Amount); err != nil {
-		return nil, err
-	}
-
-	cva.OriginalVesting = msg.Amount.Sort()
-	cva.DelegatedFree = sdk.NewCoins()
-	cva.DelegatedVesting = sdk.NewCoins()
-
-	// Send token to new vesting account
-	sendMsg := banktypes.NewMsgSend(msg.FromAddress, toAddress, msg.Amount)
-	anyMsg, err := codectypes.NewAnyWithValue(sendMsg)
-	if err != nil {
-		return nil, err
-	}
-
-	if _, err = accountstd.ExecModuleAnys(ctx, []*codectypes.Any{anyMsg}); err != nil {
-		return nil, err
-	}
-
-	// Validate the newly init account
-	err = cva.Validate()
-	if err != nil {
-		return nil, err
-	}
-
-	return &vestingtypes.MsgInitVestingAccountResponse{}, nil
+	return resp, err
 }
 
 // --------------- execute -----------------
@@ -84,8 +43,13 @@ func (cva PermanentLockedAccount) Init(ctx context.Context, msg *vestingtypes.Ms
 func (plva *PermanentLockedAccount) ExecuteMessages(ctx context.Context, msg *vestingtypes.MsgExecuteMessages) (
 	*vestingtypes.MsgExecuteMessagesResponse, error,
 ) {
-	return plva.BaseVestingAccount.ExecuteMessages(ctx, msg, func(_ time.Time) sdk.Coins {
-		return plva.OriginalVesting
+	return plva.BaseVestingAccount.ExecuteMessages(ctx, msg, func(_ context.Context, _ time.Time) sdk.Coins {
+		var originalVesting sdk.Coins
+		plva.IterateEntries(ctx, plva.OriginalVesting, func(key string, value math.Int) (stop bool) {
+			originalVesting = append(originalVesting, sdk.NewCoin(key, value))
+			return false
+		})
+		return originalVesting
 	})
 }
 
@@ -102,18 +66,14 @@ func (plva PermanentLockedAccount) QueryVestedCoins(ctx context.Context, msg *ve
 func (plva PermanentLockedAccount) QueryVestingCoins(ctx context.Context, msg *vestingtypes.QueryVestingCoinsRequest) (
 	*vestingtypes.QueryVestingCoinsResponse, error,
 ) {
+	var originalVesting sdk.Coins
+	plva.IterateEntries(ctx, plva.OriginalVesting, func(key string, value math.Int) (stop bool) {
+		originalVesting = append(originalVesting, sdk.NewCoin(key, value))
+		return false
+	})
 	return &vestingtypes.QueryVestingCoinsResponse{
-		VestingCoins: plva.OriginalVesting,
+		VestingCoins: originalVesting,
 	}, nil
-}
-
-// Validate checks for errors on the account fields
-func (plva PermanentLockedAccount) Validate() error {
-	if plva.EndTime > 0 {
-		return errors.New("permanently vested accounts cannot have an end-time")
-	}
-
-	return plva.BaseVestingAccount.Validate()
 }
 
 // Implement smart account interface

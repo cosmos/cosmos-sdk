@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	"google.golang.org/protobuf/proto"
 
@@ -71,6 +72,7 @@ func NewKeeper(
 	execRouter MsgRouter,
 	queryRouter QueryRouter,
 	ir InterfaceRegistry,
+	codec *codec.ProtoCodec,
 	accounts ...accountstd.AccountCreatorFunc,
 ) (Keeper, error) {
 	sb := collections.NewSchemaBuilder(ss)
@@ -83,6 +85,7 @@ func NewKeeper(
 		msgRouter:       execRouter,
 		queryRouter:     queryRouter,
 		Schema:          collections.Schema{},
+		codec:           codec,
 		AccountNumber:   collections.NewSequence(sb, AccountNumberKey, "account_number"),
 		AccountsByType:  collections.NewMap(sb, AccountTypeKeyPrefix, "accounts_by_type", collections.BytesKey, collections.StringValue),
 		AccountByNumber: collections.NewMap(sb, AccountByNumber, "account_by_number", collections.BytesKey, collections.Uint64Value),
@@ -94,7 +97,7 @@ func NewKeeper(
 		return Keeper{}, err
 	}
 	keeper.Schema = schema
-	keeper.accounts, err = implementation.MakeAccountsMap(keeper.addressCodec, accounts)
+	keeper.accounts, err = implementation.MakeAccountsMap(keeper.addressCodec, keeper.codec, accounts)
 	if err != nil {
 		return Keeper{}, err
 	}
@@ -111,6 +114,7 @@ type Keeper struct {
 	msgRouter      MsgRouter
 	signerProvider SignerProvider
 	queryRouter    QueryRouter
+	codec          *codec.ProtoCodec
 
 	accounts map[string]implementation.Implementation
 

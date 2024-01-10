@@ -8,7 +8,7 @@ import "cosmos/vesting/v1beta1/vesting.proto";
 import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 
-option go_package = "cosmossdk.io/x/accounts/vesting/types/v1";
+option go_package = "cosmossdk.io/x/accounts/vesting/types";
 
 // QueryOriginalVestingRequest is used to query the account original vesting.
 message QueryOriginalVestingRequest {}

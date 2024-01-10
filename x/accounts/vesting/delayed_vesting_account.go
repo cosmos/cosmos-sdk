@@ -4,11 +4,10 @@ import (
 	"context"
 	"time"
 
+	"cosmossdk.io/math"
 	"cosmossdk.io/x/accounts/accountstd"
 	vestingtypes "cosmossdk.io/x/accounts/vesting/types/v1"
-	banktypes "cosmossdk.io/x/bank/types"
 
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -22,17 +21,10 @@ var (
 
 // NewDelayedVestingAccount creates a new DelayedVestingAccount object.
 func NewDelayedVestingAccount(d accountstd.Dependencies) (*DelayedVestingAccount, error) {
-	baseVestingAccount := BaseVestingAccount{
-		OriginalVesting:  sdk.NewCoins(),
-		DelegatedFree:    sdk.NewCoins(),
-		DelegatedVesting: sdk.NewCoins(),
-		AddressCodec:     d.AddressCodec,
-		EndTime:          0,
-	}
-
+	baseVestingAccount, err := NewBaseVestingAccount(d)
 	return &DelayedVestingAccount{
-		&baseVestingAccount,
-	}, nil
+		baseVestingAccount,
+	}, err
 }
 
 type DelayedVestingAccount struct {
@@ -42,47 +34,11 @@ type DelayedVestingAccount struct {
 // --------------- Init -----------------
 
 func (dva DelayedVestingAccount) Init(ctx context.Context, msg *vestingtypes.MsgInitVestingAccount) (*vestingtypes.MsgInitVestingAccountResponse, error) {
-	to := accountstd.Whoami(ctx)
-	if to == nil {
-		return nil, sdkerrors.ErrInvalidAddress.Wrapf("Cannot find account address from context")
-	}
-
-	toAddress, err := dva.AddressCodec.BytesToString(to)
-	if err != nil {
-		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid 'to' address: %s", err)
-	}
-
-	if err := validateAmount(msg.Amount); err != nil {
-		return nil, err
-	}
-
 	if msg.EndTime <= 0 {
 		return nil, sdkerrors.ErrInvalidRequest.Wrap("invalid end time")
 	}
 
-	dva.OriginalVesting = msg.Amount.Sort()
-	dva.DelegatedFree = sdk.NewCoins()
-	dva.DelegatedVesting = sdk.NewCoins()
-	dva.EndTime = msg.EndTime
-
-	// Send token to new vesting account
-	sendMsg := banktypes.NewMsgSend(msg.FromAddress, toAddress, msg.Amount)
-	anyMsg, err := codectypes.NewAnyWithValue(sendMsg)
-	if err != nil {
-		return nil, err
-	}
-
-	if _, err = accountstd.ExecModuleAnys(ctx, []*codectypes.Any{anyMsg}); err != nil {
-		return nil, err
-	}
-
-	// Validate the newly init account
-	err = dva.BaseVestingAccount.Validate()
-	if err != nil {
-		return nil, err
-	}
-
-	return &vestingtypes.MsgInitVestingAccountResponse{}, nil
+	return dva.BaseVestingAccount.Init(ctx, msg)
 }
 
 // --------------- execute -----------------
@@ -97,9 +53,18 @@ func (dva *DelayedVestingAccount) ExecuteMessages(ctx context.Context, msg *vest
 
 // GetVestedCoins returns the total number of vested coins. If no coins are vested,
 // nil is returned.
-func (dva DelayedVestingAccount) GetVestedCoins(blockTime time.Time) sdk.Coins {
-	if blockTime.Unix() >= dva.EndTime {
-		return dva.OriginalVesting
+func (dva DelayedVestingAccount) GetVestedCoins(ctx context.Context, blockTime time.Time) sdk.Coins {
+	endTime, err := dva.EndTime.Get(ctx)
+	if err != nil {
+		return nil
+	}
+	var originalVesting sdk.Coins
+	dva.IterateEntries(ctx, dva.OriginalVesting, func(key string, value math.Int) (stop bool) {
+		originalVesting = append(originalVesting, sdk.NewCoin(key, value))
+		return false
+	})
+	if math.NewInt(blockTime.Unix()).GTE(endTime) {
+		return originalVesting
 	}
 
 	return nil
@@ -107,8 +72,13 @@ func (dva DelayedVestingAccount) GetVestedCoins(blockTime time.Time) sdk.Coins {
 
 // GetVestingCoins returns the total number of vesting coins. If no coins are
 // vesting, nil is returned.
-func (dva DelayedVestingAccount) GetVestingCoins(blockTime time.Time) sdk.Coins {
-	return dva.OriginalVesting.Sub(dva.GetVestedCoins(blockTime)...)
+func (dva DelayedVestingAccount) GetVestingCoins(ctx context.Context, blockTime time.Time) sdk.Coins {
+	var originalVesting sdk.Coins
+	dva.IterateEntries(ctx, dva.OriginalVesting, func(key string, value math.Int) (stop bool) {
+		originalVesting = append(originalVesting, sdk.NewCoin(key, value))
+		return false
+	})
+	return originalVesting.Sub(dva.GetVestedCoins(ctx, blockTime)...)
 }
 
 func (dva DelayedVestingAccount) QueryVestedCoins(ctx context.Context, msg *vestingtypes.QueryVestedCoinsRequest) (
@@ -116,7 +86,7 @@ func (dva DelayedVestingAccount) QueryVestedCoins(ctx context.Context, msg *vest
 ) {
 	originalContext := accountstd.OriginalContext(ctx)
 	sdkctx := sdk.UnwrapSDKContext(originalContext)
-	vestedCoins := dva.GetVestedCoins(sdkctx.HeaderInfo().Time)
+	vestedCoins := dva.GetVestedCoins(ctx, sdkctx.HeaderInfo().Time)
 
 	return &vestingtypes.QueryVestedCoinsResponse{
 		VestedVesting: vestedCoins,
@@ -128,7 +98,7 @@ func (dva DelayedVestingAccount) QueryVestingCoins(ctx context.Context, msg *ves
 ) {
 	originalContext := accountstd.OriginalContext(ctx)
 	sdkctx := sdk.UnwrapSDKContext(originalContext)
-	vestingCoins := dva.GetVestingCoins(sdkctx.BlockHeader().Time)
+	vestingCoins := dva.GetVestingCoins(ctx, sdkctx.BlockHeader().Time)
 
 	return &vestingtypes.QueryVestingCoinsResponse{
 		VestingCoins: vestingCoins,

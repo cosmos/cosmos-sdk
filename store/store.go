@@ -4,12 +4,25 @@ import (
 	"io"
 
 	coreheader "cosmossdk.io/core/header"
+	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/store/v2/metrics"
 )
 
 // RootStore defines an abstraction layer containing a State Storage (SS) engine
 // and one or more State Commitment (SC) engines.
 type RootStore interface {
+	// StateLatest returns a read-only version of the RootStore at the latest
+	// height, alongside the associated version.
+	StateLatest() (uint64, ReadOnlyRootStore, error)
+
+	// StateAt returns a readonly view over the provided
+	// state. Must error when the version does not exist.
+
+	// StateAt is analogous to StateLatest() except it returns a read-only version
+	// of the RootStore at the provided version. If such a version cannot be found,
+	// an error must be returned.
+	StateAt(version uint64) (ReadOnlyRootStore, error)
+
 	// GetSCStore should return the SC backend.
 	GetSCStore() Committer
 
@@ -72,6 +85,14 @@ type UpgradeableRootStore interface {
 	// Note, handling StoreUpgrades is optional depending on the underlying RootStore
 	// implementation.
 	LoadVersionAndUpgrade(version uint64, upgrades *StoreUpgrades) error
+}
+
+// ReadOnlyRootStore defines a read-only interface for a RootStore.
+type ReadOnlyRootStore interface {
+	Has(storeKey string, key []byte) (bool, error)
+	Get(storeKey string, key []byte) ([]byte, error)
+	Iterator(storeKey string, start, end []byte) (corestore.Iterator, error)
+	ReverseIterator(storeKey string, start, end []byte) (corestore.Iterator, error)
 }
 
 // QueryResult defines the response type to performing a query on a RootStore.

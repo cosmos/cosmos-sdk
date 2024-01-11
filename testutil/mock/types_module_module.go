@@ -371,6 +371,18 @@ func (mr *MockAppModuleMockRecorder) IsAppModule() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsAppModule", reflect.TypeOf((*MockAppModule)(nil).IsAppModule))
 }
 
+// IsOnePerModuleType mocks base method.
+func (m *MockAppModule) IsOnePerModuleType() {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "IsOnePerModuleType")
+}
+
+// IsOnePerModuleType indicates an expected call of IsOnePerModuleType.
+func (mr *MockAppModuleMockRecorder) IsOnePerModuleType() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsOnePerModuleType", reflect.TypeOf((*MockAppModule)(nil).IsOnePerModuleType))
+}
+
 // Name mocks base method.
 func (m *MockAppModule) Name() string {
 	m.ctrl.T.Helper()
@@ -576,6 +588,18 @@ func (m *MockHasABCIEndBlock) IsAppModule() {
 func (mr *MockHasABCIEndBlockMockRecorder) IsAppModule() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsAppModule", reflect.TypeOf((*MockHasABCIEndBlock)(nil).IsAppModule))
+}
+
+// IsOnePerModuleType mocks base method.
+func (m *MockHasABCIEndBlock) IsOnePerModuleType() {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "IsOnePerModuleType")
+}
+
+// IsOnePerModuleType indicates an expected call of IsOnePerModuleType.
+func (mr *MockHasABCIEndBlockMockRecorder) IsOnePerModuleType() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsOnePerModuleType", reflect.TypeOf((*MockHasABCIEndBlock)(nil).IsOnePerModuleType))
 }
 
 // Name mocks base method.

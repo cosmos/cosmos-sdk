@@ -2,10 +2,10 @@ package flag
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strconv"
 
-	"github.com/cockroachdb/errors"
 	cosmos_proto "github.com/cosmos/cosmos-proto"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"

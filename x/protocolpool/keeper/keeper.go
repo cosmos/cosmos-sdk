@@ -111,6 +111,7 @@ func (k Keeper) withdrawContinuousFund(ctx context.Context, recipient sdk.AccAdd
 		if errors.Is(err, collections.ErrNotFound) {
 			return sdk.Coin{}, fmt.Errorf("no continuous fund found for recipient: %s", recipient.String())
 		}
+		return sdk.Coin{}, fmt.Errorf("get continuous fund failed for recipient: %s", recipient.String())
 	}
 	if cf.Expiry != nil && cf.Expiry.Before(sdkCtx.HeaderInfo().Time) {
 		return sdk.Coin{}, fmt.Errorf("cannot withdraw continuous funds: continuous fund expired for recipient: %s", recipient.String())
@@ -412,10 +413,8 @@ func (k Keeper) validateContinuousFund(ctx context.Context, msg types.MsgCreateC
 
 	// Validate expiry
 	currentTime := sdk.UnwrapSDKContext(ctx).BlockTime()
-	if msg.Expiry != nil {
-		if msg.Expiry.Compare(currentTime) == -1 {
-			return fmt.Errorf("expiry time cannot be less than the current block time")
-		}
+	if msg.Expiry != nil && msg.Expiry.Compare(currentTime) == -1 {
+		return fmt.Errorf("expiry time cannot be less than the current block time")
 	}
 
 	return nil

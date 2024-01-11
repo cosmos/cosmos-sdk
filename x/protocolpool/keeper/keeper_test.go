@@ -25,7 +25,7 @@ import (
 
 var (
 	poolAcc   = authtypes.NewEmptyModuleAccount(types.ModuleName)
-	streamAcc = authtypes.NewEmptyModuleAccount(types.StreamModuleName)
+	streamAcc = authtypes.NewEmptyModuleAccount(types.StreamAccount)
 )
 
 type KeeperTestSuite struct {
@@ -69,7 +69,7 @@ func (s *KeeperTestSuite) SetupTest() {
 		bankKeeper,
 		stakingKeeper,
 		authtypes.NewModuleAddress(types.GovModuleName).String(),
-		authtypes.NewModuleAddress(types.StreamModuleName).String(),
+		authtypes.NewModuleAddress(types.StreamAccount).String(),
 	)
 	s.ctx = ctx
 	s.poolKeeper = poolKeeper
@@ -95,7 +95,7 @@ func (s *KeeperTestSuite) mockWithdrawContinuousFund() {
 
 func (s *KeeperTestSuite) mockStreamFunds() {
 	s.authKeeper.EXPECT().GetModuleAccount(s.ctx, types.ModuleName).Return(poolAcc).AnyTimes()
-	s.authKeeper.EXPECT().GetModuleAddress(types.StreamModuleName).Return(streamAcc.GetAddress()).AnyTimes()
+	s.authKeeper.EXPECT().GetModuleAddress(types.StreamAccount).Return(streamAcc.GetAddress()).AnyTimes()
 	distrBal := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100000)))
 	s.bankKeeper.EXPECT().GetAllBalances(s.ctx, poolAcc.GetAddress()).Return(distrBal).AnyTimes()
 	s.bankKeeper.EXPECT().SendCoinsFromModuleToModule(s.ctx, poolAcc.GetName(), streamAcc.GetName(), gomock.Any()).AnyTimes()

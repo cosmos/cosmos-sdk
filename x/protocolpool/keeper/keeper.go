@@ -98,7 +98,7 @@ func (k Keeper) DistributeFromCommunityPool(ctx context.Context, amount sdk.Coin
 // DistributeFromStreamFunds distributes funds from the protocolpool's stream module account to
 // a receiver address.
 func (k Keeper) DistributeFromStreamFunds(ctx context.Context, amount sdk.Coins, receiveAddr sdk.AccAddress) error {
-	return k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.StreamModuleName, receiveAddr, amount)
+	return k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.StreamAccount, receiveAddr, amount)
 }
 
 // GetCommunityPool gets the community pool balance.
@@ -230,7 +230,7 @@ func (k Keeper) sendFundsToStreamModule(ctx context.Context, denom string, perce
 	streamAmt := sdk.NewCoins(sdk.NewCoin(denom, amt.AmountOf(denom).TruncateInt()))
 
 	// Send streaming funds to the StreamModuleAccount
-	if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, types.StreamModuleName, streamAmt); err != nil {
+	if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, types.StreamAccount, streamAmt); err != nil {
 		return err
 	}
 

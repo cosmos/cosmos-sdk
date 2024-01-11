@@ -12,4 +12,4 @@ type VoteExtensionsHandler interface {
 }
 
 // PeerFilter responds to p2p filtering queries from Tendermint
-type PeerFilter func(info string) *abci.QueryResponse
+type PeerFilter func(info string) (*abci.QueryResponse, error)

@@ -53,6 +53,7 @@ type BlockData struct {
 
 type Consensus[T transaction.Tx] struct {
 	app    appmanager.AppManager[T]
+	store  store.Store // TODO: where should i get this from?
 	logger log.Logger
 
 	name    string
@@ -114,13 +115,8 @@ func (c *Consensus[T]) Info(context.Context, *abci.InfoRequest) (*abci.InfoRespo
 func (c *Consensus[T]) Query(ctx context.Context, req *abci.QueryRequest) (*abci.QueryResponse, error) {
 	// reject special cases
 	if req.Path == QueryPathBroadcastTx {
-		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "can't route a broadcast tx message")
+		return QueryResult(errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "can't route a broadcast tx message"), c.trace), nil
 	}
-
-	// store.ReadonlyState
-
-	// grpc appmanager, and then the rest I handle here.
-	// take in an SC for keys.
 
 	appreq, err := parseQueryRequest(req)
 	if err == nil { // if no error is returned then we can handle the query with the appmanager
@@ -134,33 +130,32 @@ func (c *Consensus[T]) Query(ctx context.Context, req *abci.QueryRequest) (*abci
 
 	// this error most probably means that we can't handle it with a proto message, so
 	// it must be an app/p2p/store query
-
 	path := splitABCIQueryPath(req.Path)
 	if len(path) == 0 {
-		// TODO: move QueryResult to this package
 		return QueryResult(errorsmod.Wrap(sdkerrors.ErrUnknownRequest, "no query path provided"), c.trace), nil
 	}
 
 	var resp *abci.QueryResponse
+
 	switch path[0] {
 	case QueryPathApp:
-		// TODO: handle these queries
-		// "/app" prefix for special application queries
-		// resp = handleQueryApp(app, path, req)
+		resp, err = c.handlerQueryApp(ctx, path, req)
 
 	case QueryPathStore:
-		// TODO: handle these queries
-		// resp = handleQueryStore(app, path, *req)
+		resp, err = c.handleQueryStore(path, c.store, req)
 
 	case QueryPathP2P:
-		resp = c.handleQueryP2P(path)
+		resp, err = c.handleQueryP2P(path)
 
 	default:
 		resp = QueryResult(errorsmod.Wrap(sdkerrors.ErrUnknownRequest, "unknown query path"), c.trace)
 	}
 
-	return resp, err
+	if err != nil {
+		return QueryResult(err, c.trace), nil
+	}
 
+	return resp, nil
 }
 
 // InitChain implements types.Application.

@@ -1,6 +1,7 @@
 package root
 
 import (
+	"fmt"
 	"testing"
 
 	dbm "github.com/cosmos/cosmos-db"
@@ -100,72 +101,80 @@ func (s *RootStoreTestSuite) TestQuery() {
 	s.Require().Equal([]byte("bar"), result.Proof.Proof.GetExist().Value)
 }
 
-// // func (s *RootStoreTestSuite) TestLoadVersion() {
-// // 	// write and commit a few changesets
-// // 	for v := 1; v <= 5; v++ {
-// // 		bs := s.rootStore.GetKVStore(testStoreKey)
-// // 		val := fmt.Sprintf("val%03d", v) // val001, val002, ..., val005
-// // 		bs.Set([]byte("key"), []byte(val))
+func (s *RootStoreTestSuite) TestLoadVersion() {
+	// write and commit a few changesets
+	for v := 1; v <= 5; v++ {
+		val := fmt.Sprintf("val%03d", v) // val001, val002, ..., val005
 
-// // 		workingHash, err := s.rootStore.WorkingHash()
-// // 		s.Require().NoError(err)
-// // 		s.Require().NotNil(workingHash)
+		cs := store.NewChangeset()
+		cs.Add(testStoreKey, []byte("key"), []byte(val))
 
-// // 		commitHash, err := s.rootStore.Commit()
-// // 		s.Require().NoError(err)
-// // 		s.Require().NotNil(commitHash)
-// // 		s.Require().Equal(workingHash, commitHash)
-// // 	}
+		workingHash, err := s.rootStore.WorkingHash(cs)
+		s.Require().NoError(err)
+		s.Require().NotNil(workingHash)
 
-// // 	// ensure the latest version is correct
-// // 	latest, err := s.rootStore.GetLatestVersion()
-// // 	s.Require().NoError(err)
-// // 	s.Require().Equal(uint64(5), latest)
+		commitHash, err := s.rootStore.Commit(cs)
+		s.Require().NoError(err)
+		s.Require().NotNil(commitHash)
+		s.Require().Equal(workingHash, commitHash)
+	}
 
-// // 	// attempt to load a non-existent version
-// // 	err = s.rootStore.LoadVersion(6)
-// // 	s.Require().Error(err)
+	// ensure the latest version is correct
+	latest, err := s.rootStore.GetLatestVersion()
+	s.Require().NoError(err)
+	s.Require().Equal(uint64(5), latest)
 
-// // 	// attempt to load a previously committed version
-// // 	err = s.rootStore.LoadVersion(3)
-// // 	s.Require().NoError(err)
+	// attempt to load a non-existent version
+	err = s.rootStore.LoadVersion(6)
+	s.Require().Error(err)
 
-// // 	// ensure the latest version is correct
-// // 	latest, err = s.rootStore.GetLatestVersion()
-// // 	s.Require().NoError(err)
-// // 	s.Require().Equal(uint64(3), latest)
+	// attempt to load a previously committed version
+	err = s.rootStore.LoadVersion(3)
+	s.Require().NoError(err)
 
-// // 	// query state and ensure values returned are based on the loaded version
-// // 	kvStore := s.rootStore.GetKVStore(testStoreKey)
-// // 	val := kvStore.Get([]byte("key"))
-// // 	s.Require().Equal([]byte("val003"), val)
+	// ensure the latest version is correct
+	latest, err = s.rootStore.GetLatestVersion()
+	s.Require().NoError(err)
+	s.Require().Equal(uint64(3), latest)
 
-// // 	// attempt to write and commit a few changesets
-// // 	for v := 4; v <= 5; v++ {
-// // 		bs := s.rootStore.GetKVStore(testStoreKey)
-// // 		val := fmt.Sprintf("overwritten_val%03d", v) // overwritten_val004, overwritten_val005
-// // 		bs.Set([]byte("key"), []byte(val))
+	// query state and ensure values returned are based on the loaded version
+	_, ro, err := s.rootStore.StateLatest()
+	s.Require().NoError(err)
 
-// // 		workingHash, err := s.rootStore.WorkingHash()
-// // 		s.Require().NoError(err)
-// // 		s.Require().NotNil(workingHash)
+	val, err := ro.Get(testStoreKey, []byte("key"))
+	s.Require().NoError(err)
+	s.Require().Equal([]byte("val003"), val)
 
-// // 		commitHash, err := s.rootStore.Commit()
-// // 		s.Require().NoError(err)
-// // 		s.Require().NotNil(commitHash)
-// // 		s.Require().Equal(workingHash, commitHash)
-// // 	}
+	// attempt to write and commit a few changesets
+	for v := 4; v <= 5; v++ {
+		val := fmt.Sprintf("overwritten_val%03d", v) // overwritten_val004, overwritten_val005
 
-// // 	// ensure the latest version is correct
-// // 	latest, err = s.rootStore.GetLatestVersion()
-// // 	s.Require().NoError(err)
-// // 	s.Require().Equal(uint64(5), latest)
+		cs := store.NewChangeset()
+		cs.Add(testStoreKey, []byte("key"), []byte(val))
 
-// // 	// query state and ensure values returned are based on the loaded version
-// // 	kvStore = s.rootStore.GetKVStore(testStoreKey)
-// // 	val = kvStore.Get([]byte("key"))
-// // 	s.Require().Equal([]byte("overwritten_val005"), val)
-// // }
+		workingHash, err := s.rootStore.WorkingHash(cs)
+		s.Require().NoError(err)
+		s.Require().NotNil(workingHash)
+
+		commitHash, err := s.rootStore.Commit(cs)
+		s.Require().NoError(err)
+		s.Require().NotNil(commitHash)
+		s.Require().Equal(workingHash, commitHash)
+	}
+
+	// ensure the latest version is correct
+	latest, err = s.rootStore.GetLatestVersion()
+	s.Require().NoError(err)
+	s.Require().Equal(uint64(5), latest)
+
+	// query state and ensure values returned are based on the loaded version
+	_, ro, err = s.rootStore.StateLatest()
+	s.Require().NoError(err)
+
+	val, err = ro.Get(testStoreKey, []byte("key"))
+	s.Require().NoError(err)
+	s.Require().Equal([]byte("overwritten_val005"), val)
+}
 
 // // func (s *RootStoreTestSuite) TestCommit() {
 // // 	lv, err := s.rootStore.GetLatestVersion()

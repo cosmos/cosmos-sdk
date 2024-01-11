@@ -76,10 +76,16 @@ func (bva *BaseVestingAccount) Init(ctx context.Context, msg *vestingtypes.MsgIn
 
 	sortedAmt := msg.Amount.Sort()
 	for _, coin := range sortedAmt {
-		bva.OriginalVesting.Set(ctx, coin.Denom, coin.Amount)
+		err = bva.OriginalVesting.Set(ctx, coin.Denom, coin.Amount)
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	bva.EndTime.Set(ctx, math.NewInt(msg.EndTime))
+	err = bva.EndTime.Set(ctx, math.NewInt(msg.EndTime))
+	if err != nil {
+		return nil, err
+	}
 
 	// Send token to new vesting account
 	sendMsg := banktypes.NewMsgSend(msg.FromAddress, toAddress, msg.Amount)
@@ -135,13 +141,19 @@ func (bva *BaseVestingAccount) TrackDelegation(
 		if !x.IsZero() {
 			xCoin := sdk.NewCoin(coin.Denom, x)
 			newDelVesting := delVestingCoin.Add(xCoin)
-			bva.DelegatedVesting.Set(ctx, newDelVesting.Denom, newDelVesting.Amount)
+			err = bva.DelegatedVesting.Set(ctx, newDelVesting.Denom, newDelVesting.Amount)
+			if err != nil {
+				return err
+			}
 		}
 
 		if !y.IsZero() {
 			yCoin := sdk.NewCoin(coin.Denom, y)
 			newDelFree := delFreeCoin.Add(yCoin)
-			bva.DelegatedFree.Set(ctx, newDelFree.Denom, newDelFree.Amount)
+			err = bva.DelegatedFree.Set(ctx, newDelFree.Denom, newDelFree.Amount)
+			if err != nil {
+				return err
+			}
 		}
 	}
 
@@ -184,13 +196,19 @@ func (bva *BaseVestingAccount) TrackUndelegation(ctx context.Context, amount sdk
 		if !x.IsZero() {
 			xCoin := sdk.NewCoin(coin.Denom, x)
 			newDelFree := delFreeCoin.Sub(xCoin)
-			bva.DelegatedVesting.Set(ctx, newDelFree.Denom, newDelFree.Amount)
+			err = bva.DelegatedVesting.Set(ctx, newDelFree.Denom, newDelFree.Amount)
+			if err != nil {
+				return err
+			}
 		}
 
 		if !y.IsZero() {
 			yCoin := sdk.NewCoin(coin.Denom, y)
 			newDelVesting := delVestingCoin.Sub(yCoin)
-			bva.DelegatedVesting.Set(ctx, newDelVesting.Denom, newDelVesting.Amount)
+			err = bva.DelegatedVesting.Set(ctx, newDelVesting.Denom, newDelVesting.Amount)
+			if err != nil {
+				return err
+			}
 		}
 	}
 

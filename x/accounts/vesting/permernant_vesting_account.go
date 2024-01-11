@@ -33,7 +33,10 @@ type PermanentLockedAccount struct {
 
 func (plva PermanentLockedAccount) Init(ctx context.Context, msg *vestingtypes.MsgInitVestingAccount) (*vestingtypes.MsgInitVestingAccountResponse, error) {
 	resp, err := plva.BaseVestingAccount.Init(ctx, msg)
-	plva.EndTime.Set(ctx, math.ZeroInt())
+	err = plva.EndTime.Set(ctx, math.ZeroInt())
+	if err != nil {
+		return nil, err
+	}
 
 	return resp, err
 }

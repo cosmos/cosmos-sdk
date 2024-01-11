@@ -75,7 +75,10 @@ func (pva PeriodicVestingAccount) Init(ctx context.Context, msg *vestingtypes.Ms
 		totalCoins = totalCoins.Add(period.Amount...)
 		// Calculate end time
 		endTime += period.Length
-		pva.VestingPeriods.Set(ctx, fmt.Sprint(i), period)
+		err = pva.VestingPeriods.Set(ctx, fmt.Sprint(i), period)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	sortedAmt := totalCoins.Sort()
@@ -83,8 +86,14 @@ func (pva PeriodicVestingAccount) Init(ctx context.Context, msg *vestingtypes.Ms
 		pva.OriginalVesting.Set(ctx, coin.Denom, coin.Amount)
 	}
 
-	pva.StartTime.Set(ctx, math.NewInt(msg.StartTime))
-	pva.EndTime.Set(ctx, math.NewInt(endTime))
+	err = pva.StartTime.Set(ctx, math.NewInt(msg.StartTime))
+	if err != nil {
+		return nil, err
+	}
+	err = pva.EndTime.Set(ctx, math.NewInt(endTime))
+	if err != nil {
+		return nil, err
+	}
 
 	// Send token to new vesting account
 	sendMsg := banktypes.NewMsgSend(msg.FromAddress, toAddress, totalCoins)
@@ -166,11 +175,14 @@ func (pva PeriodicVestingAccount) GetVestedCoins(ctx context.Context, blockTime 
 		vestedCoins = vestedCoins.Add(period.Amount...)
 
 		// update the start time of the next period
-		pva.StartTime.Set(ctx, currentPeriodStartTime.Add(math.NewInt(period.Length)))
+		err = pva.StartTime.Set(ctx, currentPeriodStartTime.Add(math.NewInt(period.Length)))
+		if err != nil {
+			return true
+		}
 		return false
 	})
 
-	return vestedCoins, nil
+	return vestedCoins, err
 }
 
 // GetVestingCoins returns the total number of vesting coins. If no coins are

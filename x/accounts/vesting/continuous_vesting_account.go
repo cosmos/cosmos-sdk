@@ -61,7 +61,10 @@ func (cva ContinuousVestingAccount) Init(ctx context.Context, msg *vestingtypes.
 		start = sdkctx.HeaderInfo().Time.Unix()
 	}
 
-	cva.StartTime.Set(ctx, math.NewInt(start))
+	err := cva.StartTime.Set(ctx, math.NewInt(start))
+	if err != nil {
+		return nil, err
+	}
 
 	return cva.BaseVestingAccount.Init(ctx, msg)
 }

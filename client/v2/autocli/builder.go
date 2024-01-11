@@ -5,14 +5,9 @@ import (
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/client/v2/autocli/flag"
-<<<<<<< HEAD
-	"cosmossdk.io/client/v2/autocli/keyring"
-=======
 	authtx "cosmossdk.io/x/auth/tx"
->>>>>>> 390750f7d (refactor(client/v2): use address codec instead of global (#19026))
 
 	"github.com/cosmos/cosmos-sdk/client"
-	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 )
 
 // Builder manages options for building CLI commands.

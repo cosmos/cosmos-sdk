@@ -96,7 +96,7 @@ func (cva ContinuousVestingAccount) GetVestedCoins(ctx context.Context, blockTim
 		return nil, err
 	}
 	var originalVesting sdk.Coins
-	cva.IterateEntries(ctx, cva.OriginalVesting, func(key string, value math.Int) (stop bool) {
+	cva.IterateCoinEntries(ctx, cva.OriginalVesting, func(key string, value math.Int) (stop bool) {
 		originalVesting = append(originalVesting, sdk.NewCoin(key, value))
 		return false
 	})
@@ -123,7 +123,7 @@ func (cva ContinuousVestingAccount) GetVestedCoins(ctx context.Context, blockTim
 // vesting, nil is returned.
 func (cva ContinuousVestingAccount) GetVestingCoins(ctx context.Context, blockTime time.Time) (sdk.Coins, error) {
 	var originalVesting sdk.Coins
-	cva.IterateEntries(ctx, cva.OriginalVesting, func(key string, value math.Int) (stop bool) {
+	cva.IterateCoinEntries(ctx, cva.OriginalVesting, func(key string, value math.Int) (stop bool) {
 		originalVesting = append(originalVesting, sdk.NewCoin(key, value))
 		return false
 	})

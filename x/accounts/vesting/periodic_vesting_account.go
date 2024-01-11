@@ -150,7 +150,7 @@ func (pva PeriodicVestingAccount) GetVestedCoins(ctx context.Context, blockTime 
 		return nil, err
 	}
 	var originalVesting sdk.Coins
-	pva.IterateEntries(ctx, pva.OriginalVesting, func(key string, value math.Int) (stop bool) {
+	pva.IterateCoinEntries(ctx, pva.OriginalVesting, func(key string, value math.Int) (stop bool) {
 		originalVesting = append(originalVesting, sdk.NewCoin(key, value))
 		return false
 	})
@@ -189,7 +189,7 @@ func (pva PeriodicVestingAccount) GetVestedCoins(ctx context.Context, blockTime 
 // vesting, nil is returned.
 func (pva PeriodicVestingAccount) GetVestingCoins(ctx context.Context, blockTime time.Time) (sdk.Coins, error) {
 	var originalVesting sdk.Coins
-	pva.IterateEntries(ctx, pva.OriginalVesting, func(key string, value math.Int) (stop bool) {
+	pva.IterateCoinEntries(ctx, pva.OriginalVesting, func(key string, value math.Int) (stop bool) {
 		originalVesting = append(originalVesting, sdk.NewCoin(key, value))
 		return false
 	})

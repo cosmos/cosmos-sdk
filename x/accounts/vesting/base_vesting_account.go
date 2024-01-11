@@ -342,7 +342,7 @@ func (bva *BaseVestingAccount) ExecuteMessages(
 // --------------- Query -----------------
 
 // IterateSendEnabledEntries iterates over all the SendEnabled entries.
-func (bva BaseVestingAccount) IterateEntries(
+func (bva BaseVestingAccount) IterateCoinEntries(
 	ctx context.Context,
 	entries collections.Map[string, math.Int],
 	cb func(denom string, value math.Int) bool,
@@ -362,7 +362,7 @@ func (bva BaseVestingAccount) IterateEntries(
 // CONTRACT: Delegated vesting coins and vestingCoins must be sorted.
 func (bva BaseVestingAccount) LockedCoinsFromVesting(ctx context.Context, vestingCoins sdk.Coins) sdk.Coins {
 	var delegatedVestingCoins sdk.Coins
-	bva.IterateEntries(ctx, bva.DelegatedVesting, func(key string, value math.Int) (stop bool) {
+	bva.IterateCoinEntries(ctx, bva.DelegatedVesting, func(key string, value math.Int) (stop bool) {
 		delegatedVestingCoins = append(delegatedVestingCoins, sdk.NewCoin(key, value))
 		return false
 	})
@@ -379,7 +379,7 @@ func (bva BaseVestingAccount) QueryOriginalVesting(ctx context.Context, _ *vesti
 	*vestingtypesv1.QueryOriginalVestingResponse, error,
 ) {
 	var originalVesting sdk.Coins
-	bva.IterateEntries(ctx, bva.OriginalVesting, func(key string, value math.Int) (stop bool) {
+	bva.IterateCoinEntries(ctx, bva.OriginalVesting, func(key string, value math.Int) (stop bool) {
 		originalVesting = append(originalVesting, sdk.NewCoin(key, value))
 		return false
 	})
@@ -394,7 +394,7 @@ func (bva BaseVestingAccount) QueryDelegatedFree(ctx context.Context, _ *vesting
 	*vestingtypesv1.QueryDelegatedFreeResponse, error,
 ) {
 	var delegatedFree sdk.Coins
-	bva.IterateEntries(ctx, bva.DelegatedFree, func(key string, value math.Int) (stop bool) {
+	bva.IterateCoinEntries(ctx, bva.DelegatedFree, func(key string, value math.Int) (stop bool) {
 		delegatedFree = append(delegatedFree, sdk.NewCoin(key, value))
 		return false
 	})
@@ -409,7 +409,7 @@ func (bva BaseVestingAccount) QueryDelegatedVesting(ctx context.Context, _ *vest
 	*vestingtypesv1.QueryDelegatedVestingResponse, error,
 ) {
 	var delegatedVesting sdk.Coins
-	bva.IterateEntries(ctx, bva.DelegatedVesting, func(key string, value math.Int) (stop bool) {
+	bva.IterateCoinEntries(ctx, bva.DelegatedVesting, func(key string, value math.Int) (stop bool) {
 		delegatedVesting = append(delegatedVesting, sdk.NewCoin(key, value))
 		return false
 	})

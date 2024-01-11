@@ -1,13 +1,10 @@
 package autocli
 
 import (
-	"errors"
-
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/client/v2/autocli/flag"
-	"cosmossdk.io/client/v2/autocli/keyring"
 	authtx "cosmossdk.io/x/auth/tx"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -35,32 +32,6 @@ type Builder struct {
 
 // ValidateAndComplete the builder fields.
 // It returns an error if any of the required fields are missing.
-// If the Logger is nil, it will be set to a nop logger.
-// If the keyring is nil, it will be set to a no keyring.
 func (b *Builder) ValidateAndComplete() error {
-	if b.Builder.AddressCodec == nil {
-		return errors.New("address codec is required in flag builder")
-	}
-
-	if b.Builder.ValidatorAddressCodec == nil {
-		return errors.New("validator address codec is required in flag builder")
-	}
-
-	if b.Builder.ConsensusAddressCodec == nil {
-		return errors.New("consensus address codec is required in flag builder")
-	}
-
-	if b.Builder.Keyring == nil {
-		b.Keyring = keyring.NoKeyring{}
-	}
-
-	if b.Builder.TypeResolver == nil {
-		return errors.New("type resolver is required in flag builder")
-	}
-
-	if b.Builder.FileResolver == nil {
-		return errors.New("file resolver is required in flag builder")
-	}
-
-	return nil
+	return b.Builder.ValidateAndComplete()
 }

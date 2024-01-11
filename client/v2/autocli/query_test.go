@@ -729,6 +729,5 @@ func TestDurationMarshal(t *testing.T) {
 
 	out, err := runCmd(fixture.conn, fixture.b, buildModuleQueryCommand, "echo", "1", "abc", "--duration", "1s")
 	assert.NilError(t, err)
-	fmt.Println(out.String())
 	assert.Assert(t, strings.Contains(out.String(), "duration: 1s"))
 }

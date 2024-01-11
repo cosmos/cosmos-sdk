@@ -42,7 +42,7 @@ type Keeper struct {
 }
 
 func NewKeeper(cdc codec.BinaryCodec, storeService storetypes.KVStoreService,
-	ak types.AccountKeeper, bk types.BankKeeper, sk types.StakingKeeper, authority string, streamMAcc string,
+	ak types.AccountKeeper, bk types.BankKeeper, sk types.StakingKeeper, authority, streamMAcc string,
 ) Keeper {
 	// ensure pool module account is set
 	if addr := ak.GetModuleAddress(types.ModuleName); addr == nil {

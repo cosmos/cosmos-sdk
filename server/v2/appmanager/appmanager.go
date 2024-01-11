@@ -130,7 +130,7 @@ func (a AppManager[T]) CommitBlock(ctx context.Context, height uint64, sc []stor
 }
 
 func (a AppManager[T]) Simulate(ctx context.Context, txBytes []byte) (appmanager.TxResult, error) {
-	tx, err := a.txCodec.DecodeTxBytes(txBytes)
+	tx, err := a.txCodec.Decode(txBytes)
 	if err != nil {
 		return appmanager.TxResult{}, err
 	}
@@ -163,7 +163,7 @@ func (a AppManager[T]) Query(ctx context.Context, version uint64, request Type) 
 func (a AppManager[T]) decodeBlock(block appmanager.BlockRequest) (*appmanager.DecodedBlockRequest[T], error) {
 	txs := make([]T, len(block.Txs))
 	for i, rawTx := range block.Txs {
-		decodedTx, err := a.txCodec.DecodeTxBytes(rawTx)
+		decodedTx, err := a.txCodec.Decode(rawTx)
 		if err != nil {
 			return nil, fmt.Errorf("invalid tx at index %d: %w", i, err)
 		}

@@ -18,8 +18,8 @@ type Builder[T transaction.Tx] struct {
 	VerifyBlockHandler  appmanager.ProcessHandler[T]
 }
 
-func (b Builder[T]) Build() (AppManager[T], error) {
-	return AppManager[T]{
+func (b Builder[T]) Build() (*AppManager[T], error) {
+	return &AppManager[T]{
 		ValidateTxGasLimit: b.ValidateTxGasLimit,
 		queryGasLimit:      b.QueryGasLimit,
 		simulationGasLimit: b.SimulationGasLimit,

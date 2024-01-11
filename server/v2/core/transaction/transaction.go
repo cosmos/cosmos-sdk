@@ -13,9 +13,9 @@ type (
 
 // Codec defines the TX codec, which converts a TX from bytes to its concrete representation.
 type Codec[T Tx] interface {
-	// DecodeTxBytes decodes the tx bytes into a DecodedTx, containing
+	// Decode decodes the tx bytes into a DecodedTx, containing
 	// both concrete and bytes representation of the tx.
-	DecodeTxBytes([]byte) (T, error)
+	Decode([]byte) (T, error)
 }
 
 type Tx interface {

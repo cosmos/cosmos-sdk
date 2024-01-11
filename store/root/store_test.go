@@ -176,46 +176,48 @@ func (s *RootStoreTestSuite) TestLoadVersion() {
 	s.Require().Equal([]byte("overwritten_val005"), val)
 }
 
-// // func (s *RootStoreTestSuite) TestCommit() {
-// // 	lv, err := s.rootStore.GetLatestVersion()
-// // 	s.Require().NoError(err)
-// // 	s.Require().Zero(lv)
+func (s *RootStoreTestSuite) TestCommit() {
+	lv, err := s.rootStore.GetLatestVersion()
+	s.Require().NoError(err)
+	s.Require().Zero(lv)
 
-// // 	// perform changes
-// // 	bs2 := s.rootStore.GetKVStore(testStoreKey)
-// // 	for i := 0; i < 100; i++ {
-// // 		key := fmt.Sprintf("key%03d", i) // key000, key001, ..., key099
-// // 		val := fmt.Sprintf("val%03d", i) // val000, val001, ..., val099
+	// perform changes
+	cs := store.NewChangeset()
+	for i := 0; i < 100; i++ {
+		key := fmt.Sprintf("key%03d", i) // key000, key001, ..., key099
+		val := fmt.Sprintf("val%03d", i) // val000, val001, ..., val099
 
-// // 		bs2.Set([]byte(key), []byte(val))
-// // 	}
+		cs.Add(testStoreKey, []byte(key), []byte(val))
+	}
 
-// // 	// committing w/o calling WorkingHash should error
-// // 	_, err = s.rootStore.Commit()
-// // 	s.Require().Error(err)
+	// committing w/o calling WorkingHash should error
+	_, err = s.rootStore.Commit(cs)
+	s.Require().Error(err)
 
-// // 	// execute WorkingHash and Commit
-// // 	wHash, err := s.rootStore.WorkingHash()
-// // 	s.Require().NoError(err)
+	// execute WorkingHash and Commit
+	wHash, err := s.rootStore.WorkingHash(cs)
+	s.Require().NoError(err)
 
-// // 	cHash, err := s.rootStore.Commit()
-// // 	s.Require().NoError(err)
-// // 	s.Require().Equal(wHash, cHash)
+	cHash, err := s.rootStore.Commit(cs)
+	s.Require().NoError(err)
+	s.Require().Equal(wHash, cHash)
 
-// // 	// ensure latest version is updated
-// // 	lv, err = s.rootStore.GetLatestVersion()
-// // 	s.Require().NoError(err)
-// // 	s.Require().Equal(uint64(1), lv)
+	// ensure latest version is updated
+	lv, err = s.rootStore.GetLatestVersion()
+	s.Require().NoError(err)
+	s.Require().Equal(uint64(1), lv)
 
-// // 	// ensure the root KVStore is cleared
-// // 	s.Require().Empty(s.rootStore.(*Store).kvStores[testStoreKey].GetChangeset().Size())
+	// perform reads on the updated root store
+	_, ro, err := s.rootStore.StateLatest()
+	s.Require().NoError(err)
 
-// // 	// perform reads on the updated root store
-// // 	bs := s.rootStore.GetKVStore(testStoreKey)
-// // 	for i := 0; i < 100; i++ {
-// // 		key := fmt.Sprintf("key%03d", i) // key000, key001, ..., key099
-// // 		val := fmt.Sprintf("val%03d", i) // val000, val001, ..., val099
+	for i := 0; i < 100; i++ {
+		key := fmt.Sprintf("key%03d", i) // key000, key001, ..., key099
+		val := fmt.Sprintf("val%03d", i) // val000, val001, ..., val099
 
-// // 		s.Require().Equal([]byte(val), bs.Get([]byte(key)))
-// // 	}
-// // }
+		result, err := ro.Get(testStoreKey, []byte(key))
+		s.Require().NoError(err)
+
+		s.Require().Equal([]byte(val), result)
+	}
+}

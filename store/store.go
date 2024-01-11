@@ -15,9 +15,6 @@ type RootStore interface {
 	// height, alongside the associated version.
 	StateLatest() (uint64, ReadOnlyRootStore, error)
 
-	// StateAt returns a readonly view over the provided
-	// state. Must error when the version does not exist.
-
 	// StateAt is analogous to StateLatest() except it returns a read-only version
 	// of the RootStore at the provided version. If such a version cannot be found,
 	// an error must be returned.

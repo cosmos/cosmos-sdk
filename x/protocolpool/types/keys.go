@@ -6,6 +6,9 @@ const (
 	// ModuleName is the module name constant used in many places
 	ModuleName = "protocolpool"
 
+	// StreamModuleName is the name constant used for stream module account
+	StreamModuleName = "stream_module"
+
 	// StoreKey is the store key string for protocolpool
 	StoreKey = ModuleName
 

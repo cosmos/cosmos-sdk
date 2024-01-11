@@ -42,7 +42,7 @@ type Keeper struct {
 }
 
 func NewKeeper(cdc codec.BinaryCodec, storeService storetypes.KVStoreService,
-	ak types.AccountKeeper, bk types.BankKeeper, sk types.StakingKeeper, authority string,
+	ak types.AccountKeeper, bk types.BankKeeper, sk types.StakingKeeper, authority string, streamMAcc string,
 ) Keeper {
 	// ensure pool module account is set
 	if addr := ak.GetModuleAddress(types.ModuleName); addr == nil {
@@ -95,7 +95,13 @@ func (k Keeper) DistributeFromCommunityPool(ctx context.Context, amount sdk.Coin
 	return k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, receiveAddr, amount)
 }
 
-// GetCommunityPool get the community pool balance.
+// DistributeFromStreamFunds distributes funds from the protocolpool's stream module account to
+// a receiver address.
+func (k Keeper) DistributeFromStreamFunds(ctx context.Context, amount sdk.Coins, receiveAddr sdk.AccAddress) error {
+	return k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.StreamModuleName, receiveAddr, amount)
+}
+
+// GetCommunityPool gets the community pool balance.
 func (k Keeper) GetCommunityPool(ctx context.Context) (sdk.Coins, error) {
 	moduleAccount := k.authKeeper.GetModuleAccount(ctx, types.ModuleName)
 	if moduleAccount == nil {
@@ -155,7 +161,7 @@ func (k Keeper) withdrawRecipientFunds(ctx context.Context, recipient sdk.AccAdd
 
 	// Distribute funds to the recipient from pool module account
 	withdrawnAmount := sdk.NewCoin(denom, fundsAllocated)
-	err = k.DistributeFromCommunityPool(ctx, sdk.NewCoins(withdrawnAmount), recipient)
+	err = k.DistributeFromStreamFunds(ctx, sdk.NewCoins(withdrawnAmount), recipient)
 	if err != nil {
 		return sdk.Coin{}, fmt.Errorf("error while distributing funds to the recipient %s: %v", recipient.String(), err)
 	}
@@ -188,10 +194,46 @@ func (k Keeper) SetToDistribute(ctx context.Context, amount sdk.Coins, addr stri
 		return err
 	}
 
+	totalStreamFundsPercentage := math.ZeroInt()
+	err = k.RecipientFundPercentage.Walk(ctx, nil, func(key sdk.AccAddress, value math.Int) (stop bool, err error) {
+		totalStreamFundsPercentage = totalStreamFundsPercentage.Add(value)
+		return false, nil
+	})
+	if totalStreamFundsPercentage.GT(math.NewInt(100)) {
+		return fmt.Errorf("total funds percentage cannot exceed 100")
+	}
+	if err != nil {
+		return err
+	}
+
+	// send streaming funds to the stream module account
+	if err := k.sendFundsToStreamModule(ctx, denom, totalStreamFundsPercentage); err != nil {
+		return err
+	}
+
 	err = k.ToDistribute.Set(ctx, amount.AmountOf(denom))
 	if err != nil {
 		return fmt.Errorf("error while setting ToDistribute: %v", err)
 	}
+	return nil
+}
+
+func (k Keeper) sendFundsToStreamModule(ctx context.Context, denom string, percentage math.Int) error {
+	totalPoolAmt, err := k.GetCommunityPool(ctx)
+	if err != nil {
+		return err
+	}
+
+	poolAmt := totalPoolAmt.AmountOf(denom)
+	poolAmtDec := sdk.NewDecCoins(sdk.NewDecCoin(denom, poolAmt))
+	amt := poolAmtDec.MulDec(math.LegacyNewDecFromIntWithPrec(percentage, 2))
+	streamAmt := sdk.NewCoins(sdk.NewCoin(denom, amt.AmountOf(denom).TruncateInt()))
+
+	// Send streaming funds to the StreamModuleAccount
+	if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, types.StreamModuleName, streamAmt); err != nil {
+		return err
+	}
+
 	return nil
 }
 

@@ -399,9 +399,7 @@ func (suite *KeeperTestSuite) TestWithdrawContinuousFund() {
 				suite.Require().NoError(err)
 
 				// Set ToDistribute
-				toDistribute := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100000)))
-				suite.stakingKeeper.EXPECT().BondDenom(suite.ctx).Return("stake", nil).AnyTimes()
-				err = suite.poolKeeper.SetToDistribute(suite.ctx, toDistribute, suite.poolKeeper.GetAuthority())
+				err = suite.poolKeeper.ToDistribute.Set(suite.ctx, math.NewInt(100000))
 				suite.Require().NoError(err)
 			},
 			recipientAddress: []sdk.AccAddress{recipient},
@@ -471,6 +469,7 @@ func (suite *KeeperTestSuite) TestWithdrawContinuousFund() {
 				err = suite.poolKeeper.RecipientFundDistribution.Set(suite.ctx, recipient, math.ZeroInt())
 				suite.Require().NoError(err)
 				toDistribute := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100000)))
+				suite.mockStreamFunds()
 				err = suite.poolKeeper.SetToDistribute(suite.ctx, toDistribute, suite.poolKeeper.GetAuthority())
 				suite.Require().NoError(err)
 			},
@@ -499,6 +498,7 @@ func (suite *KeeperTestSuite) TestWithdrawContinuousFund() {
 				err = suite.poolKeeper.RecipientFundDistribution.Set(suite.ctx, recipient, math.ZeroInt())
 				suite.Require().NoError(err)
 				toDistribute := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100000)))
+				suite.mockStreamFunds()
 				err = suite.poolKeeper.SetToDistribute(suite.ctx, toDistribute, suite.poolKeeper.GetAuthority())
 				suite.Require().NoError(err)
 			},
@@ -565,6 +565,7 @@ func (suite *KeeperTestSuite) TestWithdrawContinuousFund() {
 				suite.Require().NoError(err)
 
 				toDistribute := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100000)))
+				suite.mockStreamFunds()
 				err = suite.poolKeeper.SetToDistribute(suite.ctx, toDistribute, suite.poolKeeper.GetAuthority())
 				suite.Require().NoError(err)
 			},
@@ -792,6 +793,7 @@ func (suite *KeeperTestSuite) TestCancelContinuousFund() {
 
 				// Set ToDistribute
 				toDistribute := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100000)))
+				suite.mockStreamFunds()
 				err = suite.poolKeeper.SetToDistribute(suite.ctx, toDistribute, suite.poolKeeper.GetAuthority())
 				suite.Require().NoError(err)
 

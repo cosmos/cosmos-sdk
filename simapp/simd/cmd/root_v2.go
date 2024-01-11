@@ -115,7 +115,7 @@ func ProvideClientContext(
 		WithAddressCodec(addressCodec).
 		WithValidatorAddressCodec(validatorAddressCodec).
 		WithConsensusAddressCodec(consensusAddressCodec).
-		WithHomeDir(tempDir()).
+		WithHomeDir(simapp.DefaultNodeHome).
 		WithViper("") // uses by default the binary name as prefix
 
 	// Read the config to overwrite the default values with the values from the config file

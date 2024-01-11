@@ -221,3 +221,44 @@ func (s *RootStoreTestSuite) TestCommit() {
 		s.Require().Equal([]byte(val), result)
 	}
 }
+
+func (s *RootStoreTestSuite) TestStateAt() {
+	// write keys over multiple versions
+	for v := uint64(1); v <= 5; v++ {
+		// perform changes
+		cs := store.NewChangeset()
+		for i := 0; i < 100; i++ {
+			key := fmt.Sprintf("key%03d", i)         // key000, key001, ..., key099
+			val := fmt.Sprintf("val%03d_%03d", i, v) // val000_1, val001_1, ..., val099_1
+
+			cs.Add(testStoreKey, []byte(key), []byte(val))
+		}
+
+		// execute WorkingHash and Commit
+		wHash, err := s.rootStore.WorkingHash(cs)
+		s.Require().NoError(err)
+
+		cHash, err := s.rootStore.Commit(cs)
+		s.Require().NoError(err)
+		s.Require().Equal(wHash, cHash)
+	}
+
+	lv, err := s.rootStore.GetLatestVersion()
+	s.Require().NoError(err)
+	s.Require().Equal(uint64(5), lv)
+
+	// ensure we can read state correctly at each version
+	for v := uint64(1); v <= 5; v++ {
+		ro, err := s.rootStore.StateAt(v)
+		s.Require().NoError(err)
+
+		for i := 0; i < 100; i++ {
+			key := fmt.Sprintf("key%03d", i)         // key000, key001, ..., key099
+			val := fmt.Sprintf("val%03d_%03d", i, v) // val000_1, val001_1, ..., val099_1
+
+			result, err := ro.Get(testStoreKey, []byte(key))
+			s.Require().NoError(err)
+			s.Require().Equal([]byte(val), result)
+		}
+	}
+}

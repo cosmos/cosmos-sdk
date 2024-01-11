@@ -81,11 +81,12 @@ message MsgInitPeriodicVestingAccountResponse {}
 //-------------------------------------- EXECUTE --------------------------------------
 
 message MsgExecuteMessages {
+  // execution_messages are the messages that the operation sender will execute.
   repeated google.protobuf.Any execution_messages = 2;
 }
 
 // MsgExecuteResponse is the response to MsgExecute.
 message MsgExecuteMessagesResponse {
-  // execution_messages_response are the messages that the operation sender will execute.
+  // execution_messages_response are the responses that the messages execution return.
   repeated google.protobuf.Any execution_messages_response = 1;
 }

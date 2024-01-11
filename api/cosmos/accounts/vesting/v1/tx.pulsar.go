@@ -4218,6 +4218,7 @@ type MsgExecuteMessages struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
+	// execution_messages are the messages that the operation sender will execute.
 	ExecutionMessages []*anypb.Any `protobuf:"bytes,2,rep,name=execution_messages,json=executionMessages,proto3" json:"execution_messages,omitempty"`
 }
 
@@ -4254,7 +4255,7 @@ type MsgExecuteMessagesResponse struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// execution_messages_response are the messages that the operation sender will execute.
+	// execution_messages_response are the responses that the messages execution return.
 	ExecutionMessagesResponse []*anypb.Any `protobuf:"bytes,1,rep,name=execution_messages_response,json=executionMessagesResponse,proto3" json:"execution_messages_response,omitempty"`
 }
 

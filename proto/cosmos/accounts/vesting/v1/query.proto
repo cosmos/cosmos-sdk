@@ -4,7 +4,7 @@ package cosmos.accounts.vesting.v1;
 import "amino/amino.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/msg/v1/msg.proto";
-import "cosmos/vesting/v1beta1/vesting.proto";
+import "cosmos/accounts/vesting/v1/vesting.proto";
 import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 
@@ -96,4 +96,13 @@ message QueryVestedCoinsResponse {
     (amino.encoding)         = "legacy_coins",
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
+}
+
+// QueryVestingPeriodsRequest is used to query the periodic vesting account vesting periods.
+message QueryVestingPeriodsRequest {}
+
+// QueryVestingPeriodsResponse returns the periodic vesting account vesting periods.
+message QueryVestingPeriodsResponse {
+  // vesting_periods defines the value of the periodic vesting account vesting periods.
+  repeated Period vesting_periods = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 }

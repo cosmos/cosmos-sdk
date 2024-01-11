@@ -5,9 +5,9 @@ import (
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/client/v2/autocli/flag"
-	authtx "cosmossdk.io/x/auth/tx"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 )
 
 // Builder manages options for building CLI commands.

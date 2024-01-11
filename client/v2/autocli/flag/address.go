@@ -134,7 +134,7 @@ func (a *consensusAddressValue) Set(s string) error {
 
 	a.value, err = a.addressCodec.BytesToString(pk.Address())
 	if err != nil {
-		return fmt.Errorf("invalid account address or key name: %w", err)
+		return fmt.Errorf("invalid pubkey address: %w", err)
 	}
 
 	return nil

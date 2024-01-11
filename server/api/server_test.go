@@ -18,10 +18,10 @@ import (
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/grpc/codes"
 
-	banktypes "cosmossdk.io/api/cosmos/bank/v1beta1"
 	_ "cosmossdk.io/x/auth"
 	_ "cosmossdk.io/x/auth/tx/config"
 	_ "cosmossdk.io/x/bank"
+	banktypes "cosmossdk.io/x/bank/types"
 	_ "cosmossdk.io/x/staking"
 
 	"github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"

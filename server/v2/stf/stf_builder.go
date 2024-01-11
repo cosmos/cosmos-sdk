@@ -20,7 +20,6 @@ func NewSTFBuilder[T transaction.Tx]() *STFBuilder[T] {
 		beginBlockers:      make(map[string]func(ctx context.Context) error),
 		endBlockers:        make(map[string]func(ctx context.Context) error),
 		postExecHandler:    make(map[string]func(ctx context.Context, tx T, success bool) error),
-		txCodec:            nil,
 		branch:             func(state store.ReadonlyState) store.WritableState { return branch.NewStore(state) },
 	}
 }
@@ -37,7 +36,6 @@ type STFBuilder[T transaction.Tx] struct {
 	endBlockers        map[string]func(ctx context.Context) error
 	valSetUpdate       func(ctx context.Context) ([]appmanager.ValidatorUpdate, error)
 	postExecHandler    map[string]func(ctx context.Context, tx T, success bool) error
-	txCodec            transaction.Codec[T]
 }
 
 type STFBuilderOptions struct {
@@ -76,10 +74,7 @@ func (s *STFBuilder[T]) Build(opts *STFBuilderOptions) (*STF[T], error) {
 		doBeginBlock:   beginBlocker,
 		doEndBlock:     endBlocker,
 		doTxValidation: txValidator,
-		decodeTx: func(txBytes []byte) (T, error) {
-			return s.txCodec.Decode(txBytes)
-		},
-		branch: nil, // TODO
+		branch:         nil, // TODO
 	}, nil
 }
 

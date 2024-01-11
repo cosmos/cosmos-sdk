@@ -19,12 +19,12 @@ type STF[T transaction.Tx] interface {
 	// Returns the state changes of the transition.
 	DeliverBlock(
 		ctx context.Context,
-		block appmanager.BlockRequest,
+		block *appmanager.DecodedBlockRequest[T],
 		state store.ReadonlyState,
 	) (*appmanager.BlockResponse, store.WritableState, error)
 	// Simulate simulates the execution of a transaction over the provided state, with the provided gas limit.
 	// TODO: Might be useful to return the state changes caused by the TX.
-	Simulate(ctx context.Context, state store.ReadonlyState, gasLimit uint64, tx []byte) appmanager.TxResult
+	Simulate(ctx context.Context, state store.ReadonlyState, gasLimit uint64, tx T) appmanager.TxResult
 	// Query runs the provided query over the provided readonly state.
 	Query(ctx context.Context, state store.ReadonlyState, gasLimit uint64, queryRequest Type) (queryResponse Type, err error)
 }
@@ -46,6 +46,8 @@ type AppManager[T transaction.Tx] struct {
 
 	prepareHandler appmanager.PrepareHandler[T]
 	processHandler appmanager.ProcessHandler[T]
+
+	txCodec transaction.Codec[T]
 
 	stf STF[T] // consider if instead of having an interface (which is boxed), we could have another type Parameter defining STF.
 }
@@ -88,6 +90,14 @@ func (a AppManager[T]) VerifyBlock(ctx context.Context, height uint64, txs []T) 
 }
 
 func (a AppManager[T]) DeliverBlock(ctx context.Context, block appmanager.BlockRequest) (*appmanager.BlockResponse, []store.ChangeSet, error) {
+	// we return error here, considering the consensus is giving us TXs that we have
+	// provided it, consensus should never ask us to deliver TXs which are not valid
+	// at encoding level.
+	decodedBlock, err := a.decodeBlock(block)
+	if err != nil {
+		return nil, nil, err
+	}
+
 	latestVersion, currentState, err := a.db.StateLatest()
 	if err != nil {
 		return nil, nil, fmt.Errorf("unable to create new state for height %d: %w", block.Height, err)
@@ -97,7 +107,7 @@ func (a AppManager[T]) DeliverBlock(ctx context.Context, block appmanager.BlockR
 		return nil, nil, fmt.Errorf("invalid DeliverBlock height wanted %d, got %d", latestVersion+1, block.Height)
 	}
 
-	blockResponse, newState, err := a.stf.DeliverBlock(ctx, block, currentState)
+	blockResponse, newState, err := a.stf.DeliverBlock(ctx, decodedBlock, currentState)
 	if err != nil {
 		return nil, nil, fmt.Errorf("block delivery failed: %w", err)
 	}
@@ -119,7 +129,11 @@ func (a AppManager[T]) CommitBlock(ctx context.Context, height uint64, sc []stor
 	return stateRoot, nil
 }
 
-func (a AppManager[T]) Simulate(ctx context.Context, tx []byte) (appmanager.TxResult, error) {
+func (a AppManager[T]) Simulate(ctx context.Context, txBytes []byte) (appmanager.TxResult, error) {
+	tx, err := a.txCodec.Decode(txBytes)
+	if err != nil {
+		return appmanager.TxResult{}, err
+	}
 	_, state, err := a.db.StateLatest()
 	if err != nil {
 		return appmanager.TxResult{}, err
@@ -143,4 +157,23 @@ func (a AppManager[T]) Query(ctx context.Context, version uint64, request Type) 
 		return nil, err
 	}
 	return a.stf.Query(ctx, queryState, a.queryGasLimit, request)
+}
+
+// decodeBlock decodes a raw block request into a fully tx decoded block
+func (a AppManager[T]) decodeBlock(block appmanager.BlockRequest) (*appmanager.DecodedBlockRequest[T], error) {
+	txs := make([]T, len(block.Txs))
+	for i, rawTx := range block.Txs {
+		decodedTx, err := a.txCodec.Decode(rawTx)
+		if err != nil {
+			return nil, fmt.Errorf("invalid tx at index %d: %w", i, err)
+		}
+		txs[i] = decodedTx
+	}
+	return &appmanager.DecodedBlockRequest[T]{
+		Height:            block.Height,
+		Time:              block.Time,
+		Hash:              block.Hash,
+		Txs:               txs,
+		ConsensusMessages: block.ConsensusMessages,
+	}, nil
 }

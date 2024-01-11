@@ -12,8 +12,6 @@ import (
 
 var _ transaction.Tx = Tx{}
 
-var TxCodec transaction.Codec[Tx] = txCodec{}
-
 type Tx struct {
 	Sender   []byte
 	Msg      proto.Message

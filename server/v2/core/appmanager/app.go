@@ -21,16 +21,6 @@ type ProcessHandler[T transaction.Tx] func(context.Context, []T, store.ReadonlyS
 
 type Type = proto.Message
 
-type App[T transaction.Tx] interface {
-	ChainID() string
-	AppVersion() (uint64, error)
-
-	InitChain(context.Context, RequestInitChain) (ResponseInitChain, error)
-	DeliverBlock(context.Context, BlockRequest) (BlockResponse, error)
-
-	Query(context.Context, *QueryRequest) (*QueryResponse, error)
-}
-
 type QueryRequest struct {
 	Height int64
 	Path   string
@@ -48,6 +38,15 @@ type BlockRequest struct {
 	Hash              []byte
 	Txs               [][]byte
 	ConsensusMessages []Type //
+}
+
+// DecodedBlockRequest defines a block whose TXs are already decoded.
+type DecodedBlockRequest[T any] struct {
+	Height            uint64
+	Time              time.Time
+	Hash              []byte
+	Txs               []T
+	ConsensusMessages []Type
 }
 
 type BlockResponse struct {

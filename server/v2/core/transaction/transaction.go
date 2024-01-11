@@ -1,8 +1,6 @@
 package transaction
 
 import (
-	"context"
-
 	"google.golang.org/protobuf/proto"
 )
 
@@ -23,13 +21,4 @@ type Tx interface {
 	GetMessages() []Type
 	GetSenders() []Identity // TODO reduce this to a single identity if accepted
 	GetGasLimit() uint64
-}
-
-// Validator is a transaction validator that validates transactions based off an existing set of handlers
-// Validators can be designed to be asynchronous or synchronous
-type Validator[T Tx] interface {
-	// Validate validates the transactions
-	// it returns the context used and a map of which txs failed.
-	// It does not take into account what information is needed to be returned to the consensus engine, this must be extracted from the context
-	Validate(ctx context.Context, txs []T) (context.Context, map[[32]byte]error)
 }

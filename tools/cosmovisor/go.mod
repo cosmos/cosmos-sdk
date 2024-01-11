@@ -3,7 +3,7 @@ module cosmossdk.io/tools/cosmovisor
 go 1.21
 
 require (
-	cosmossdk.io/log v1.2.1
+	cosmossdk.io/log v1.3.0
 	cosmossdk.io/x/upgrade v0.1.1
 	github.com/otiai10/copy v1.14.0
 	github.com/spf13/cobra v1.8.0

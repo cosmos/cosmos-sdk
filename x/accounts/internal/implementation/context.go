@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 
 	"cosmossdk.io/collections"
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/x/accounts/internal/prefixstore"
 )
@@ -23,6 +24,7 @@ type contextValue struct {
 	store             store.KVStore         // store is the prefixed store for the account.
 	sender            []byte                // sender is the address of the entity invoking the account action.
 	whoami            []byte                // whoami is the address of the account being invoked.
+	addressCodec      address.Codec         // addressCodec is the address codec.
 	originalContext   context.Context       // originalContext that was used to build the account context.
 	moduleExec        ModuleExecFunc        // moduleExec is a function that executes a module message, when the resp type is known.
 	moduleExecUntyped ModuleExecUntypedFunc // moduleExecUntyped is a function that executes a module message, when the resp type is unknown.
@@ -42,6 +44,7 @@ func MakeAccountContext(
 	accNumber uint64,
 	accountAddr []byte,
 	sender []byte,
+	addressCodec address.Codec,
 	moduleExec ModuleExecFunc,
 	moduleExecUntyped ModuleExecUntypedFunc,
 	moduleQuery ModuleQueryFunc,
@@ -50,6 +53,7 @@ func MakeAccountContext(
 		store:             makeAccountStore(ctx, storeSvc, accNumber),
 		sender:            sender,
 		whoami:            accountAddr,
+		addressCodec:      addressCodec,
 		originalContext:   ctx,
 		moduleExecUntyped: moduleExecUntyped,
 		moduleExec:        moduleExec,
@@ -125,4 +129,9 @@ func Whoami(ctx context.Context) []byte {
 // OriginalContext returns the original context for the account given the context.
 func OriginalContext(ctx context.Context) context.Context {
 	return ctx.Value(contextKey{}).(contextValue).originalContext
+}
+
+// OriginalContext returns the original context for the account given the context.
+func AddressCodec(ctx context.Context) address.Codec {
+	return ctx.Value(contextKey{}).(contextValue).addressCodec
 }

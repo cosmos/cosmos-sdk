@@ -6,6 +6,7 @@ import (
 	"context"
 	"fmt"
 
+	coreaddr "cosmossdk.io/core/address"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/x/accounts/internal/implementation"
 
@@ -81,6 +82,11 @@ func Whoami(ctx context.Context) []byte {
 // Sender returns the sender of the execution request.
 func Sender(ctx context.Context) []byte {
 	return implementation.Sender(ctx)
+}
+
+// Whoami returns the address of the account being invoked.
+func AddressCodec(ctx context.Context) coreaddr.Codec {
+	return implementation.AddressCodec(ctx)
 }
 
 // SenderIsAccountsModule returns true if the sender of the execution request is the accounts module.

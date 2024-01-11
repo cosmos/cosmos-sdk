@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"cosmossdk.io/collections"
-	"cosmossdk.io/core/address"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/accounts/accountstd"
@@ -41,7 +40,6 @@ func NewBaseVestingAccount(d accountstd.Dependencies) (*BaseVestingAccount, erro
 		OriginalVesting:  collections.NewMap(d.SchemaBuilder, OriginalVestingPrefix, "original_vesting", collections.StringKey, sdk.IntValue),
 		DelegatedFree:    collections.NewMap(d.SchemaBuilder, DelegatedFreePrefix, "delegated_free", collections.StringKey, sdk.IntValue),
 		DelegatedVesting: collections.NewMap(d.SchemaBuilder, DelegatedVestingPrefix, "delegated_vesting", collections.StringKey, sdk.IntValue),
-		AddressCodec:     d.AddressCodec,
 		EndTime:          collections.NewItem(d.SchemaBuilder, EndTimePrefix, "end_time", sdk.IntValue),
 	}
 
@@ -52,7 +50,6 @@ type BaseVestingAccount struct {
 	OriginalVesting  collections.Map[string, math.Int]
 	DelegatedFree    collections.Map[string, math.Int]
 	DelegatedVesting collections.Map[string, math.Int]
-	AddressCodec     address.Codec
 	// Vesting end time, as unix timestamp (in seconds).
 	EndTime collections.Item[math.Int]
 }
@@ -65,7 +62,8 @@ func (bva *BaseVestingAccount) Init(ctx context.Context, msg *vestingtypes.MsgIn
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("Cannot find account address from context")
 	}
 
-	toAddress, err := bva.AddressCodec.BytesToString(to)
+	addrCodec := accountstd.AddressCodec(ctx)
+	toAddress, err := addrCodec.BytesToString(to)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid 'to' address: %s", err)
 	}

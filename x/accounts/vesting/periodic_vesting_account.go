@@ -52,7 +52,8 @@ func (pva PeriodicVestingAccount) Init(ctx context.Context, msg *vestingtypes.Ms
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("Cannot find account address from context")
 	}
 
-	toAddress, err := pva.AddressCodec.BytesToString(to)
+	addrCodec := accountstd.AddressCodec(ctx)
+	toAddress, err := addrCodec.BytesToString(to)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid 'to' address: %s", err)
 	}
@@ -231,6 +232,18 @@ func (pva PeriodicVestingAccount) QueryVestingCoins(ctx context.Context, msg *ve
 }
 
 func (pva PeriodicVestingAccount) QueryStartTime(ctx context.Context, msg *vestingtypes.QueryStartTimeRequest) (
+	*vestingtypes.QueryStartTimeResponse, error,
+) {
+	startTime, err := pva.StartTime.Get(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return &vestingtypes.QueryStartTimeResponse{
+		StartTime: startTime.Int64(),
+	}, nil
+}
+
+func (pva PeriodicVestingAccount) QueryPeriods(ctx context.Context, msg *vestingtypes.QueryStartTimeRequest) (
 	*vestingtypes.QueryStartTimeResponse, error,
 ) {
 	startTime, err := pva.StartTime.Get(ctx)

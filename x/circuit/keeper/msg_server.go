@@ -65,9 +65,9 @@ func (srv msgServer) AuthorizeCircuitBreaker(ctx context.Context, msg *types.Msg
 
 	err = srv.Keeper.eventService.EventManager(ctx).EmitKV(
 		"authorize_circuit_breaker",
-		event.Attribute{Key: "granter", Value: msg.Granter},
-		event.Attribute{Key: "grantee", Value: msg.Grantee},
-		event.Attribute{Key: "permission", Value: msg.Permissions.String()},
+		event.NewAttribute("granter", msg.Granter),
+		event.NewAttribute("grantee", msg.Grantee),
+		event.NewAttribute("permission", msg.Permissions.String()),
 	)
 	if err != nil {
 		return nil, err
@@ -123,8 +123,8 @@ func (srv msgServer) TripCircuitBreaker(ctx context.Context, msg *types.MsgTripC
 
 	err = srv.Keeper.eventService.EventManager(ctx).EmitKV(
 		"trip_circuit_breaker",
-		event.Attribute{Key: "authority", Value: msg.Authority},
-		event.Attribute{Key: "msg_url", Value: urls},
+		event.NewAttribute("authority", msg.Authority),
+		event.NewAttribute("msg_url", urls),
 	)
 	if err != nil {
 		return nil, err
@@ -182,8 +182,8 @@ func (srv msgServer) ResetCircuitBreaker(ctx context.Context, msg *types.MsgRese
 
 	err = srv.Keeper.eventService.EventManager(ctx).EmitKV(
 		"reset_circuit_breaker",
-		event.Attribute{Key: "authority", Value: msg.Authority},
-		event.Attribute{Key: "msg_url", Value: urls},
+		event.NewAttribute("authority", msg.Authority),
+		event.NewAttribute("msg_url", urls),
 	)
 	if err != nil {
 		return nil, err

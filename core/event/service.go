@@ -41,3 +41,7 @@ type Manager interface {
 type Attribute struct {
 	Key, Value string
 }
+
+func NewAttribute(key, value string) Attribute {
+	return Attribute{Key: key, Value: value}
+}

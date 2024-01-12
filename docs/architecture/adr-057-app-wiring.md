@@ -4,7 +4,7 @@
 
 * 2022-05-04: Initial Draft
 * 2022-08-19: Updates
-* 2024-01-11: Less protobuf-centric (TODO update)
+* 2024-01-12: Updates
 
 ## Status
 
@@ -75,25 +75,24 @@ than fully static resolution in terms of error reporting and much better in term
 
 ### Declarative App Config
 
-In order to compose modules into an app, a declarative app configuration will be used. This configuration is based off
-of protobuf and its basic structure is very simple:
+In order to compose modules into an app, a declarative app configuration will be used. This configuration is very simple:
 
-```protobuf
-package cosmos.app.v1;
-
-message Config {
-  repeated ModuleConfig modules = 1;
+```go
+type AppConfig struct {
+	// Modules are the module configurations for the app.
+	Modules []*ModuleConfig `json:"modules,omitempty"`
 }
 
-message ModuleConfig {
-  string name = 1;
-  google.protobuf.Any config = 2;
+// ModuleConfig is a module configuration for an app.
+type ModuleConfig struct {
+  // Name is the unique name of the module.
+  Name string `json:"name,omitempty"`
+  // Config is the configuration for the module.
+  Config *any.Any `json:"config,omitempty"`
 }
 ```
 
-(See also https://github.com/cosmos/cosmos-sdk/blob/6e18f582bf69e3926a1e22a6de3c35ea327aadce/proto/cosmos/app/v1alpha1/config.proto)
-
-The configuration for every module is itself a protobuf message and modules will be identified and loaded based
+The configuration for every module is a protobuf message and modules will be identified and loaded based
 on the protobuf type URL of their config object (ex. `cosmos.bank.module.v1.Module`). Modules are given a unique short `name`
 to share resources across different versions of the same module which might have a different protobuf package
 versions (ex. `cosmos.bank.module.v2.Module`). All module config objects should define the `cosmos.app.v1alpha1.module`
@@ -182,13 +181,13 @@ Ex:
 
 ```go
 func init() {
-	appmodule.Register("cosmos.bank.module.v1.Module",
-		appmodule.Types(
+	appconfig.Register("cosmos.bank.module.v1.Module",
+		appconfig.Types(
 			types.Types_tx_proto,
             types.Types_query_proto,
             types.Types_types_proto,
 	    ),
-	    appmodule.Provide(
+	    appconfig.Provide(
 			provideBankModule,
 	    )
 	)
@@ -251,8 +250,6 @@ defined here are described in [ADR 063: Core Module API](./adr-063-core-module-a
 
 ### Registration of Inter-Module Hooks
 
-### Registration of Inter-Module Hooks
-
 Some modules define a hooks interface (ex. `StakingHooks`) which allows one module to call back into another module
 when certain events happen.
 
@@ -261,9 +258,9 @@ which consumes these hooks can collect these hooks as a map of module name to ho
 
 ```go
 func init() {
-    appmodule.Register(
+    appconfig.RegisterModule(
         &foomodulev1.Module{},
-        appmodule.Invoke(InvokeSetFooHooks),
+        appconfig.Invoke(InvokeSetFooHooks),
 	    ...
     )
 }

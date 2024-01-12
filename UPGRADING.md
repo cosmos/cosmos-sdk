@@ -82,7 +82,7 @@ for more details.
 
 ### Params
 
-* Params Migrations were removed. It is required to migrate to 0.50 prior to upgrading to .51.
+* Params migrations were removed. It is required to migrate to 0.50 prior to upgrading to v0.51.
 
 ### SimApp
 
@@ -111,6 +111,10 @@ clientCtx = clientCtx.
 **When using `depinject` / `app v2`, the client codecs can be provided directly from application config.**
 
 Refer to SimApp `root_v2.go` and `root.go` for an example with an app v2 and a legacy app.
+
+#### Dependency Injection 
+
+<!-- explain app_config.go changes -->
 
 ### Modules
 

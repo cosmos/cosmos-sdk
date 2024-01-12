@@ -45,6 +45,8 @@ github.com/cockroachdb/tokenbucket v0.0.0-20230807174530-cc333fc44b06 h1:zuQyyAK
 github.com/cockroachdb/tokenbucket v0.0.0-20230807174530-cc333fc44b06/go.mod h1:7nc4anLGjupUW/PeY5qiNYsdNXj7zopG+eqsS7To5IQ=
 github.com/cometbft/cometbft v0.38.2 h1:io0JCh5EPxINKN5ZMI5hCdpW3QVZRy+o8qWe3mlJa/8=
 github.com/cometbft/cometbft v0.38.2/go.mod h1:PIi48BpzwlHqtV3mzwPyQgOyOnU94BNBimLS2ebBHOg=
+github.com/cometbft/cometbft/api v1.0.0-alpha.1 h1:/Ey3EyNgY7aO3fl8TvNOpipfRWQCIIC3iN1M5+jJIZI=
+github.com/cometbft/cometbft/api v1.0.0-alpha.1/go.mod h1:5vJTKMdvGufLjyQ0fqSfZ1Dbr7xENK170gUunyT7UL8=
 github.com/coreos/go-systemd/v22 v22.5.0/go.mod h1:Y58oyj3AT4RCenI/lSvhwexgC+NSVTIJ3seZv2GcEnc=
 github.com/cosmos/cosmos-db v1.0.0 h1:EVcQZ+qYag7W6uorBKFPvX6gRjw6Uq2hIh4hCWjuQ0E=
 github.com/cosmos/cosmos-db v1.0.0/go.mod h1:iBvi1TtqaedwLdcrZVYRSSCb6eSy61NLj4UNmdIgs0U=

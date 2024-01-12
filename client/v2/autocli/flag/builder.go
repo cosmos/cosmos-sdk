@@ -28,7 +28,7 @@ const (
 	AddressStringScalarType          = "cosmos.AddressString"
 	ValidatorAddressStringScalarType = "cosmos.ValidatorAddressString"
 	ConsensusAddressStringScalarType = "cosmos.ConsensusAddressString"
-	PubkeyScalarType                 = "cosmos.pubkey"
+	PubkeyScalarType                 = "cosmos.Pubkey"
 )
 
 // Builder manages options for building pflag flags for protobuf messages.

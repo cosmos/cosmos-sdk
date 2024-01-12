@@ -8,7 +8,9 @@ import (
 	"github.com/spf13/pflag"
 )
 
-// SetArgs sets arguments for the command. It is desired to replace the cmd.SetArgs in all test cases, as cmd.SetArgs doesn't reset the flag value as expected.
+// ResetArgs sets arguments for the command. It is desired to replace the cmd.SetArgs
+// in the case that calling multiple times in a unit test, as cmd.ResetArgs doesn't
+// reset the flag value as expected.
 //
 // **Warning**: this is only compatible with following flag types:
 //  1. the implementations of pflag.Value
@@ -16,7 +18,7 @@ import (
 //  3. the custom implementations of pflag.SliceValue that are split by comma ","
 //
 // see https://github.com/spf13/cobra/issues/2079#issuecomment-1867991505 for more detail info
-func SetArgs(cmd *cobra.Command, args []string) {
+func ResetArgs(cmd *cobra.Command, args []string) {
 	// if flags haven't been parsed yet, it's ok to use cmd.SetArgs
 	if !cmd.Flags().Parsed() {
 		cmd.SetArgs(args)

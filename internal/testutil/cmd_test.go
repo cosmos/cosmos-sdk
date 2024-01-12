@@ -110,48 +110,48 @@ func TestSetArgsWithWrappedMethod(t *testing.T) {
 		return true
 	}
 
-	testutil.SetArgs(cmd, []string{
+	testutil.ResetArgs(cmd, []string{
 		"testcmd",
 	})
 	checkFlagsValue(cmd, nil)
 
-	testutil.SetArgs(cmd, []string{
+	testutil.ResetArgs(cmd, []string{
 		"testcmd",
 		"--a=true",
 	})
 	checkFlagsValue(cmd, map[string]string{"a": "true"})
 
-	testutil.SetArgs(cmd, []string{
+	testutil.ResetArgs(cmd, []string{
 		"testcmd",
 		"--b=3,4",
 	})
 	checkFlagsValue(cmd, map[string]string{"b": "[3,4]"})
 
-	testutil.SetArgs(cmd, []string{
+	testutil.ResetArgs(cmd, []string{
 		"testcmd",
 		"--c=3,4",
 	})
 	checkFlagsValue(cmd, map[string]string{"c": "[3,4]"})
 
-	testutil.SetArgs(cmd, []string{
+	testutil.ResetArgs(cmd, []string{
 		"testcmd",
 		"--d=g;n,g;m",
 	})
 	checkFlagsValue(cmd, map[string]string{"d": "g;n,g;m"})
 
-	testutil.SetArgs(cmd, []string{
+	testutil.ResetArgs(cmd, []string{
 		"testcmd",
 		"--e=g;n,g;m",
 	})
 	checkFlagsValue(cmd, map[string]string{"e": "g;n,g;m"})
 
-	testutil.SetArgs(cmd, []string{
+	testutil.ResetArgs(cmd, []string{
 		"testcmd",
 		"--f=g,n;g,m",
 	})
 	checkFlagsValue(cmd, map[string]string{"f": "g,n;g,m"})
 
-	testutil.SetArgs(cmd, []string{
+	testutil.ResetArgs(cmd, []string{
 		"testcmd",
 		"--g=g,n;g,m",
 	})

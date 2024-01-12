@@ -11,8 +11,7 @@ import (
 
 var _ gas.Service = GasService{}
 
-type GasService struct {
-}
+type GasService struct{}
 
 func (g GasService) GetGasMeter(ctx context.Context) gas.Meter {
 	return CoreGasmeter{gm: sdk.UnwrapSDKContext(ctx).GasMeter()}
@@ -64,7 +63,6 @@ func (gm SDKGasMeter) RefundGas(amount storetypes.Gas, descriptor string) {
 
 func (gm SDKGasMeter) IsPastLimit() bool {
 	return gm.gm.Remaining() <= gm.gm.Limit()
-
 }
 
 func (gm SDKGasMeter) IsOutOfGas() bool {

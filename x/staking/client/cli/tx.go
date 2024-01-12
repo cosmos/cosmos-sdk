@@ -179,7 +179,7 @@ func NewEditValidatorCmd() *cobra.Command {
 // TODO: remove this once AutoCLI can flatten nested structs.
 func NewRotateConsensusKeyCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "rotate-cons-pubkey",
+		Use:   "rotate-cons-pub-key",
 		Short: "rotate validator consensus pub key",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)

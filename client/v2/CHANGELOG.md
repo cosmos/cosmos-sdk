@@ -41,6 +41,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Features
 
 * [#18461](https://github.com/cosmos/cosmos-sdk/pull/18461) Support governance proposals.
+* [#19039](https://github.com/cosmos/cosmos-sdk/pull/19039) add support for pubkey in autocli.
 
 ### API Breaking Changes
 

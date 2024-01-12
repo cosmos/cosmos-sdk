@@ -7,6 +7,7 @@ import (
 	"google.golang.org/protobuf/reflect/protodesc"
 	"google.golang.org/protobuf/reflect/protoregistry"
 
+	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
 	modulev1alpha1 "cosmossdk.io/api/cosmos/orm/module/v1alpha1"
 	ormv1alpha1 "cosmossdk.io/api/cosmos/orm/v1alpha1"
 	"cosmossdk.io/core/store"
@@ -26,7 +27,7 @@ func init() {
 type ModuleDBInputs struct {
 	depinject.In
 
-	AppConfig             *appconfig.AppConfig
+	AppConfig             *appv1alpha1.Config
 	KVStoreService        store.KVStoreService
 	MemoryStoreService    store.MemoryStoreService    `optional:"true"`
 	TransientStoreService store.TransientStoreService `optional:"true"`

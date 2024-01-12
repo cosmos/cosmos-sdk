@@ -75,20 +75,18 @@ than fully static resolution in terms of error reporting and much better in term
 
 ### Declarative App Config
 
-In order to compose modules into an app, a declarative app configuration will be used. This configuration is very simple:
+In order to compose modules into an app, a declarative app configuration will be used. This configuration is based off
+of protobuf and its basic structure is very simple:
 
-```go
-type AppConfig struct {
-	// Modules are the module configurations for the app.
-	Modules []*ModuleConfig `json:"modules,omitempty"`
+```protobuf
+package cosmos.app.v1;
+message Config {
+  repeated ModuleConfig modules = 1;
 }
 
-// ModuleConfig is a module configuration for an app.
-type ModuleConfig struct {
-  // Name is the unique name of the module.
-  Name string `json:"name,omitempty"`
-  // Config is the configuration for the module.
-  Config *any.Any `json:"config,omitempty"`
+message ModuleConfig {
+  string name = 1;
+  google.protobuf.Any config = 2;
 }
 ```
 

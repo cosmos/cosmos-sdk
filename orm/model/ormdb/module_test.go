@@ -398,8 +398,8 @@ func ProvideTestRuntime() store.KVStoreService {
 }
 
 func TestAppConfigModule(t *testing.T) {
-	appCfg := appconfig.Compose(&appconfig.AppConfig{
-		Modules: []*appconfig.ModuleConfig{
+	appCfg := appconfig.Compose(&appv1alpha1.Config{
+		Modules: []*appv1alpha1.ModuleConfig{
 			{Name: "bank", Config: appconfig.WrapAny(&testpb.Module{})},
 			{Name: "orm", Config: appconfig.WrapAny(&ormmodulev1alpha1.Module{})},
 		},

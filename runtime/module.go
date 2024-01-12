@@ -18,7 +18,6 @@ import (
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
-	am "cosmossdk.io/depinject/appmodule"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/tx/signing"
@@ -59,8 +58,8 @@ type BaseAppOption func(*baseapp.BaseApp)
 func (b BaseAppOption) IsManyPerContainerType() {}
 
 func init() {
-	am.Register(&runtimev1alpha1.Module{},
-		am.Provide(
+	appconfig.RegisterModule(&runtimev1alpha1.Module{},
+		appconfig.Provide(
 			ProvideApp,
 			ProvideInterfaceRegistry,
 			ProvideKVStoreKey,
@@ -75,7 +74,7 @@ func init() {
 			ProvideAppVersionModifier,
 			ProvideAddressCodec,
 		),
-		am.Invoke(SetupAppBuilder),
+		appconfig.Invoke(SetupAppBuilder),
 	)
 }
 

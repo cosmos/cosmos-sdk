@@ -4,12 +4,7 @@ import (
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"google.golang.org/grpc"
 
-	modulev1 "cosmossdk.io/api/cosmos/counter/module/v1"
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/event"
-	storetypes "cosmossdk.io/core/store"
-	"cosmossdk.io/depinject"
-	am "cosmossdk.io/depinject/appmodule"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -49,9 +44,6 @@ type AppModule struct {
 	keeper keeper.Keeper
 }
 
-// IsOnePerModuleType implements the depinject.OnePerModuleType interface.
-func (am AppModule) IsOnePerModuleType() {}
-
 // IsAppModule implements the appmodule.AppModule interface.
 func (am AppModule) IsAppModule() {}
 
@@ -72,35 +64,3 @@ func NewAppModule(keeper keeper.Keeper) AppModule {
 
 // ConsensusVersion implements AppModule/ConsensusVersion.
 func (AppModule) ConsensusVersion() uint64 { return 1 }
-
-func init() {
-	am.Register(
-		&modulev1.Module{},
-		am.Provide(ProvideModule),
-	)
-}
-
-type ModuleInputs struct {
-	depinject.In
-
-	Config       *modulev1.Module
-	StoreService storetypes.KVStoreService
-	EventManager event.Service
-}
-
-type ModuleOutputs struct {
-	depinject.Out
-
-	Keeper keeper.Keeper
-	Module appmodule.AppModule
-}
-
-func ProvideModule(in ModuleInputs) ModuleOutputs {
-	k := keeper.NewKeeper(in.StoreService, in.EventManager)
-	m := NewAppModule(k)
-
-	return ModuleOutputs{
-		Keeper: k,
-		Module: m,
-	}
-}

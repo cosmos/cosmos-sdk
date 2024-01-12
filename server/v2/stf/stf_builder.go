@@ -6,7 +6,9 @@ import (
 	"fmt"
 
 	"cosmossdk.io/server/v2/core/appmanager"
+	"cosmossdk.io/server/v2/core/store"
 	"cosmossdk.io/server/v2/core/transaction"
+	"cosmossdk.io/server/v2/stf/branch"
 )
 
 func NewSTFBuilder[T transaction.Tx]() *STFBuilder[T] {
@@ -18,21 +20,22 @@ func NewSTFBuilder[T transaction.Tx]() *STFBuilder[T] {
 		beginBlockers:      make(map[string]func(ctx context.Context) error),
 		endBlockers:        make(map[string]func(ctx context.Context) error),
 		postExecHandler:    make(map[string]func(ctx context.Context, tx T, success bool) error),
-		txCodec:            nil,
+		branch:             func(state store.ReadonlyState) store.WritableState { return branch.NewStore(state) },
 	}
 }
 
 type STFBuilder[T transaction.Tx] struct {
 	err error
 
+	branch             func(state store.ReadonlyState) store.WritableState
 	msgRouterBuilder   *msgRouterBuilder
 	queryRouterBuilder *msgRouterBuilder
 	txValidators       map[string]func(ctx context.Context, tx T) error
+	upgradeBlocker     func(ctx context.Context) error
 	beginBlockers      map[string]func(ctx context.Context) error
 	endBlockers        map[string]func(ctx context.Context) error
 	valSetUpdate       func(ctx context.Context) ([]appmanager.ValidatorUpdate, error)
 	postExecHandler    map[string]func(ctx context.Context, tx T, success bool) error
-	txCodec            transaction.Codec[T]
 }
 
 type STFBuilderOptions struct {
@@ -71,10 +74,7 @@ func (s *STFBuilder[T]) Build(opts *STFBuilderOptions) (*STF[T], error) {
 		doBeginBlock:   beginBlocker,
 		doEndBlock:     endBlocker,
 		doTxValidation: txValidator,
-		decodeTx: func(txBytes []byte) (T, error) {
-			return s.txCodec.Decode(txBytes)
-		},
-		branch: nil, // TODO
+		branch:         nil, // TODO
 	}, nil
 }
 
@@ -89,7 +89,13 @@ func (s *STFBuilder[T]) AddModule(m appmanager.Module[T]) {
 	moduleQueryRouter := _newModuleMsgRouter(m.Name(), s.queryRouterBuilder)
 	m.RegisterQueryHandler(moduleQueryRouter)
 	// add begin blockers and endblockers
-	// TODO: check if is not nil, etc.
+	if i, ok := m.(appmanager.UpgradeModule); ok {
+		if m.Name() == "upgrade" {
+			s.upgradeBlocker = i.UpgradeBlocker()
+		} else {
+			s.err = errors.Join(s.err, fmt.Errorf("upgrade module must be named 'upgrade'"))
+		}
+	}
 	s.beginBlockers[m.Name()] = m.BeginBlocker()
 	s.endBlockers[m.Name()] = m.EndBlocker()
 	if s.valSetUpdate == nil && m.UpdateValidators() != nil {

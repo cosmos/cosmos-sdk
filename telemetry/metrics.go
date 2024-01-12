@@ -14,10 +14,6 @@ import (
 	"github.com/prometheus/common/expfmt"
 )
 
-// globalLabels defines the set of global labels that will be applied to all
-// metrics emitted using the telemetry package function wrappers.
-var globalLabels = []metrics.Label{}
-
 // Metrics supported format types.
 const (
 	FormatDefault    = ""
@@ -103,7 +99,7 @@ func New(cfg Config) (_ *Metrics, rerr error) {
 		for i, gl := range cfg.GlobalLabels {
 			parsedGlobalLabels[i] = NewLabel(gl[0], gl[1])
 		}
-		globalLabels = parsedGlobalLabels
+		GlobalLabels = parsedGlobalLabels
 	}
 
 	metricsConf := metrics.DefaultConfig(cfg.ServiceName)

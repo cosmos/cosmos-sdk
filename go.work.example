@@ -1,6 +1,6 @@
 go 1.21
 
-toolchain go1.21.0
+toolchain go1.21
 
 use (
 	.
@@ -38,6 +38,7 @@ use (
 	./x/staking
 	./x/tx
 	./x/upgrade
+	./server/v2/appmanager
 	./server/v2/core
 	./server/v2/stf
 	./server/v2

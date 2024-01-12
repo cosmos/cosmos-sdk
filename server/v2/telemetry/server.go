@@ -7,12 +7,10 @@ import (
 	"strings"
 
 	"github.com/gorilla/mux"
-
-	"github.com/cosmos/cosmos-sdk/telemetry"
 )
 
-func RegisterMetrics(r mux.Router, cfg telemetry.Config) (*telemetry.Metrics, error) {
-	m, err := telemetry.New(cfg)
+func RegisterMetrics(r mux.Router, cfg Config) (*Metrics, error) {
+	m, err := New(cfg)
 	if err != nil {
 		return nil, err
 	}

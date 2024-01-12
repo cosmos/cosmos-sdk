@@ -53,10 +53,10 @@ type BlockData struct {
 
 type Consensus[T transaction.Tx] struct {
 	app    appmanager.AppManager[T]
-	store  store.Store // TODO: where should i get this from?
+	store  store.Store
 	logger log.Logger
 
-	name    string
+	name    string // TODO: check if these are needed
 	version string // TODO: check if these are needed
 	trace   bool
 
@@ -329,7 +329,7 @@ func (c *Consensus[T]) Commit(ctx context.Context, _ *abci.CommitRequest) (*abci
 	lastCommittedBlock := c.lastCommittedBlock.Load()
 
 	// TODO: add abci listener here and snapshotting
-	// c.snapshotManager.SnapshotIfApplicable(lastCommittedBlock.Height)
+	c.snapshotManager.SnapshotIfApplicable(lastCommittedBlock.Height)
 
 	return &abci.CommitResponse{
 		RetainHeight: c.GetBlockRetentionHeight(lastCommittedBlock.Height),

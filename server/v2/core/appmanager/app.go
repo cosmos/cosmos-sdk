@@ -4,10 +4,10 @@ import (
 	"context"
 	"time"
 
-	"cosmossdk.io/server/v2/core/mempool"
 	"google.golang.org/protobuf/proto"
 
 	"cosmossdk.io/server/v2/core/event"
+	"cosmossdk.io/server/v2/core/mempool"
 	"cosmossdk.io/server/v2/core/store"
 	"cosmossdk.io/server/v2/core/transaction"
 )
@@ -20,16 +20,6 @@ type PrepareHandler[T transaction.Tx] func(context.Context, uint32, mempool.Memp
 type ProcessHandler[T transaction.Tx] func(context.Context, []T, store.ReadonlyState) error
 
 type Type = proto.Message
-
-type App[T transaction.Tx] interface {
-	ChainID() string
-	AppVersion() (uint64, error)
-
-	InitChain(context.Context, RequestInitChain) (ResponseInitChain, error)
-	DeliverBlock(context.Context, BlockRequest) (BlockResponse, error)
-
-	Query(context.Context, *QueryRequest) (*QueryResponse, error)
-}
 
 type QueryRequest struct {
 	Height int64
@@ -50,11 +40,22 @@ type BlockRequest struct {
 	ConsensusMessages []Type //
 }
 
+// DecodedBlockRequest defines a block whose TXs are already decoded.
+type DecodedBlockRequest[T any] struct {
+	Height            uint64
+	Time              time.Time
+	Hash              []byte
+	Txs               []T
+	ConsensusMessages []Type
+}
+
 type BlockResponse struct {
-	ValidatorUpdates []ValidatorUpdate
-	BeginBlockEvents []event.Event
-	TxResults        []TxResult
-	EndBlockEvents   []event.Event
+	Apphash            []byte
+	ValidatorUpdates   []ValidatorUpdate
+	UpgradeBlockEvents []event.Event
+	BeginBlockEvents   []event.Event
+	TxResults          []TxResult
+	EndBlockEvents     []event.Event
 }
 
 type RequestInitChain struct {

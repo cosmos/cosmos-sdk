@@ -26,15 +26,10 @@ type Service interface {
 	WithBlockGasMeter(ctx context.Context, meter Meter) context.Context
 }
 
-// Meter represents a gas meter.
+// Meter represents a gas meter for modules consumption
 type Meter interface {
-	GasConsumed() Gas
-	GasConsumedToLimit() Gas
-	GasRemaining() Gas
+	Consume(amount Gas, descriptor string)
+	Refund(amount Gas, descriptor string)
+	Remaining() Gas
 	Limit() Gas
-	ConsumeGas(amount Gas, descriptor string)
-	RefundGas(amount Gas, descriptor string)
-	IsPastLimit() bool
-	IsOutOfGas() bool
-	String() string
 }

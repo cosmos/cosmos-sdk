@@ -24,13 +24,13 @@ func (a addressCodec) BytesToString(bz []byte) (string, error)   { return string
 
 type eventService struct{}
 
-func (e eventService) Emit(ctx context.Context, event protoiface.MessageV1) error { return nil }
+func (e eventService) Emit(event protoiface.MessageV1) error { return nil }
 
-func (e eventService) EmitKV(ctx context.Context, eventType string, attrs ...event.Attribute) error {
+func (e eventService) EmitKV(eventType string, attrs ...event.Attribute) error {
 	return nil
 }
 
-func (e eventService) EmitNonConsensus(ctx context.Context, event protoiface.MessageV1) error {
+func (e eventService) EmitNonConsensus(event protoiface.MessageV1) error {
 	return nil
 }
 

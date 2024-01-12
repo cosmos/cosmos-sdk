@@ -4,17 +4,18 @@ import (
 	"context"
 	"fmt"
 
+	"google.golang.org/protobuf/reflect/protoreflect"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
 type pubkeyType struct{}
 
 func (a pubkeyType) NewValue(_ context.Context, _ *Builder) Value {
-	return pubkeyValue{}
+	return &pubkeyValue{}
 }
 
 func (a pubkeyType) DefaultValue() string {
@@ -33,7 +34,7 @@ func (a pubkeyValue) String() string {
 	return a.value.String()
 }
 
-func (a pubkeyValue) Set(s string) error {
+func (a *pubkeyValue) Set(s string) error {
 	registry := types.NewInterfaceRegistry()
 	cryptocodec.RegisterInterfaces(registry)
 	cdc := codec.NewProtoCodec(registry)
@@ -48,6 +49,7 @@ func (a pubkeyValue) Set(s string) error {
 	if err != nil {
 		return fmt.Errorf("error converting to any type")
 	}
+
 	a.value = any
 
 	return nil

@@ -8,8 +8,8 @@ import (
 	"github.com/spf13/pflag"
 )
 
-// ResetArgs sets arguments for the command. It is desired to replace the cmd.SetArgs
-// in the case that calling multiple times in a unit test, as cmd.ResetArgs doesn't
+// ResetArgs resets arguments for the command. It is desired to be a helpful function for the cmd.SetArgs
+// in the case of calling multiple times in a unit test, as cmd.ResetArgs doesn't
 // reset the flag value as expected.
 //
 // **Warning**: this is only compatible with following flag types:
@@ -18,15 +18,14 @@ import (
 //  3. the custom implementations of pflag.SliceValue that are split by comma ","
 //
 // see https://github.com/spf13/cobra/issues/2079#issuecomment-1867991505 for more detail info
-func ResetArgs(cmd *cobra.Command, args []string) {
-	// if flags haven't been parsed yet, it's ok to use cmd.SetArgs
+func ResetArgs(cmd *cobra.Command) {
+	// if flags haven't been parsed yet, there is no need to reset the args
 	if !cmd.Flags().Parsed() {
-		cmd.SetArgs(args)
 		return
 	}
 	// if flags have been parsed yet, we should reset flags's value that don't been set
 	cmd.Flags().Visit(func(pf *pflag.Flag) {
-		// if the flag hasn't been changed, ignore it
+		// if the flag hasn't been changed, there is no need to reset the args
 		if !pf.Changed {
 			return
 		}
@@ -47,6 +46,4 @@ func ResetArgs(cmd *cobra.Command, args []string) {
 			panic(fmt.Errorf("reset argument<%s> with default value<%s> error %v", pf.Name, pf.DefValue, err))
 		}
 	})
-	// call cmd.SetArgs at last
-	cmd.SetArgs(args)
 }

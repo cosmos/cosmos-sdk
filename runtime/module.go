@@ -251,6 +251,26 @@ func ProvideAppVersionModifier(app *AppBuilder) baseapp.AppVersionModifier {
 	return app.app
 }
 
+func ProvideEnvironment(config *runtimev1alpha1.Module, key depinject.ModuleKey, app *AppBuilder) appmodule.Environment {
+	override := storeKeyOverride(config, key.Name())
+
+	var storeKeyName string
+	if override != nil {
+		storeKeyName = override.KvStoreKey
+	} else {
+		storeKeyName = key.Name()
+	}
+
+	storeKey := storetypes.NewKVStoreKey(storeKeyName)
+	registerStoreKey(app, storeKey)
+
+	kvKeys := map[string]*storetypes.KVStoreKey{
+		storeKeyName: storeKey,
+	}
+
+	return NewEnvironment(kvKeys, nil)
+}
+
 type (
 	// ValidatorAddressCodec is an alias for address.Codec for validator addresses.
 	ValidatorAddressCodec address.Codec

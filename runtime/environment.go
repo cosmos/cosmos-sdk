@@ -5,11 +5,11 @@ import (
 	storetypes "cosmossdk.io/store/types"
 )
 
-func NewEnvironment(kvKeys []storetypes.KVStoreKey, memKeys []storetypes.MemoryStoreKey) *appmodule.Environment {
-	env := &appmodule.Environment{}
+func NewEnvironment(kvKeys map[string]*storetypes.KVStoreKey, memKeys []storetypes.MemoryStoreKey) appmodule.Environment {
+	env := appmodule.Environment{}
 	for _, storeKey := range kvKeys {
 		storeKey := storeKey // TODO remove in go 1.22
-		env.KvStoreService[storeKey.Name()] = NewKVStoreService(&storeKey)
+		env.KvStoreService[storeKey.Name()] = NewKVStoreService(storeKey)
 	}
 	for _, memKey := range memKeys {
 		memKey := memKey // TODO remove in go 1.22

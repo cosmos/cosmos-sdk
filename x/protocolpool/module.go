@@ -2,6 +2,8 @@ package protocolpool
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 
@@ -30,6 +32,7 @@ var (
 
 	_ module.AppModule           = AppModule{}
 	_ module.AppModuleSimulation = AppModule{}
+	_ module.HasGenesis          = AppModule{}
 )
 
 // AppModuleBasic defines the basic application module used by the pool module.
@@ -53,6 +56,22 @@ func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *g
 // RegisterInterfaces registers interfaces and implementations of the bank module.
 func (AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	types.RegisterInterfaces(registry)
+}
+
+// DefaultGenesis returns default genesis state as raw bytes for the protocolpool
+// module.
+func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
+	return cdc.MustMarshalJSON(types.DefaultGenesisState())
+}
+
+// ValidateGenesis performs genesis state validation for the protocolpool module.
+func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncodingConfig, bz json.RawMessage) error {
+	var data types.GenesisState
+	if err := cdc.UnmarshalJSON(bz, &data); err != nil {
+		return fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err)
+	}
+
+	return types.ValidateGenesis(&data)
 }
 
 // AppModule implements an application module for the pool module
@@ -90,6 +109,25 @@ func NewAppModule(cdc codec.Codec, keeper keeper.Keeper,
 	}
 }
 
+// InitGenesis performs genesis initialization for the protocolpool module.
+func (am AppModule) InitGenesis(ctx context.Context, cdc codec.JSONCodec, data json.RawMessage) {
+	var genesisState types.GenesisState
+	cdc.MustUnmarshalJSON(data, &genesisState)
+	if err := am.keeper.InitGenesis(ctx, &genesisState); err != nil {
+		panic(err)
+	}
+}
+
+// ExportGenesis returns the exported genesis state as raw bytes for the protocolpool
+// module.
+func (am AppModule) ExportGenesis(ctx context.Context, cdc codec.JSONCodec) json.RawMessage {
+	gs, err := am.keeper.ExportGenesis(ctx)
+	if err != nil {
+		panic(err)
+	}
+	return cdc.MustMarshalJSON(gs)
+}
+
 // ConsensusVersion implements AppModule/ConsensusVersion.
 func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
 
@@ -113,6 +151,7 @@ type ModuleInputs struct {
 
 	AccountKeeper types.AccountKeeper
 	BankKeeper    types.BankKeeper
+	StakingKeeper types.StakingKeeper
 }
 
 type ModuleOutputs struct {
@@ -129,7 +168,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		authority = authtypes.NewModuleAddressOrBech32Address(in.Config.Authority)
 	}
 
-	k := keeper.NewKeeper(in.Codec, in.StoreService, in.AccountKeeper, in.BankKeeper, authority.String())
+	k := keeper.NewKeeper(in.Codec, in.StoreService, in.AccountKeeper, in.BankKeeper, in.StakingKeeper, authority.String())
 	m := NewAppModule(in.Codec, k, in.AccountKeeper, in.BankKeeper)
 
 	return ModuleOutputs{

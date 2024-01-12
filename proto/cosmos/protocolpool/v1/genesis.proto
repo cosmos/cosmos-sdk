@@ -1,0 +1,14 @@
+syntax = "proto3";
+package cosmos.protocolpool.v1;
+
+option go_package = "cosmossdk.io/x/protocolpool/types";
+
+import "cosmos/protocolpool/v1/types.proto";
+
+// GenesisState defines the protocolpool module's genesis state.
+message GenesisState {
+  // ContinuousFund defines the continuous funds at genesis.
+  repeated ContinuousFund continuous_fund = 1;
+  // Budget defines the budget proposals at genesis.
+  repeated Budget budget = 2;
+}

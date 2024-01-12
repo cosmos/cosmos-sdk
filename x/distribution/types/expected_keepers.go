@@ -38,6 +38,7 @@ type PoolKeeper interface {
 	FundCommunityPool(ctx context.Context, amount sdk.Coins, sender sdk.AccAddress) error
 	DistributeFromCommunityPool(ctx context.Context, amount sdk.Coins, receiveAddr sdk.AccAddress) error
 	GetCommunityPool(ctx context.Context) (sdk.Coins, error)
+	SetToDistribute(ctx context.Context, amount sdk.Coins, addr string) error
 }
 
 // StakingKeeper expected staking keeper (noalias)

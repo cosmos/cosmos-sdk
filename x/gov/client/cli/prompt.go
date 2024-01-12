@@ -50,6 +50,10 @@ var suggestedProposalTypes = []proposalType{
 		MsgType: "/cosmos.protocolpool.v1.MsgSubmitBudgetProposal",
 	},
 	{
+		Name:    "create-continuous-fund",
+		MsgType: "/cosmos.protocolpool.v1.MsgCreateContinuousFund",
+	},
+	{
 		Name:    proposalOther,
 		MsgType: "", // user will input the message type
 	},

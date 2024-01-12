@@ -14,6 +14,7 @@ import (
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
+	am "cosmossdk.io/depinject/appmodule"
 	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/upgrade/client/cli"
 	"cosmossdk.io/x/upgrade/keeper"
@@ -165,9 +166,9 @@ func (am AppModule) PreBlock(ctx context.Context) (appmodule.ResponsePreBlock, e
 //
 
 func init() {
-	appmodule.Register(&modulev1.Module{},
-		appmodule.Provide(ProvideModule),
-		appmodule.Invoke(PopulateVersionMap),
+	am.Register(&modulev1.Module{},
+		am.Provide(ProvideModule),
+		am.Invoke(PopulateVersionMap),
 	)
 }
 

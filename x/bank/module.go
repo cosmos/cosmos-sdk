@@ -13,6 +13,7 @@ import (
 	"cosmossdk.io/core/appmodule"
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
+	am "cosmossdk.io/depinject/appmodule"
 	"cosmossdk.io/log"
 	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/bank/client/cli"
@@ -38,6 +39,7 @@ var (
 	_ module.HasGenesis          = AppModule{}
 	_ module.HasServices         = AppModule{}
 	_ module.HasInvariants       = AppModule{}
+	_ depinject.OnePerModuleType = AppModule{}
 
 	_ appmodule.AppModule = AppModule{}
 )
@@ -187,8 +189,8 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 // App Wiring Setup
 
 func init() {
-	appmodule.Register(&modulev1.Module{},
-		appmodule.Provide(ProvideModule),
+	am.Register(&modulev1.Module{},
+		am.Provide(ProvideModule),
 	)
 }
 

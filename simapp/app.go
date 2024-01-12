@@ -26,6 +26,7 @@ import (
 	"cosmossdk.io/x/accounts/testing/counter"
 	"cosmossdk.io/x/auth"
 	"cosmossdk.io/x/auth/ante"
+	"cosmossdk.io/x/auth/ante/unorderedtx"
 	authcodec "cosmossdk.io/x/auth/codec"
 	authkeeper "cosmossdk.io/x/auth/keeper"
 	"cosmossdk.io/x/auth/posthandler"
@@ -169,6 +170,8 @@ type SimApp struct {
 	ModuleManager      *module.Manager
 	BasicModuleManager module.BasicManager
 
+	UnorderedTxManager *unorderedtx.Manager
+
 	// simulation manager
 	sm *module.SimulationManager
 
@@ -285,6 +288,7 @@ func NewSimApp(
 	accountsKeeper, err := accounts.NewKeeper(
 		runtime.NewKVStoreService(keys[accounts.StoreKey]),
 		runtime.EventService{},
+		runtime.HeaderService{},
 		runtime.BranchService{},
 		app.AuthKeeper.AddressCodec(),
 		appCodec,
@@ -330,7 +334,7 @@ func NewSimApp(
 	)
 	app.MintKeeper = mintkeeper.NewKeeper(appCodec, runtime.NewKVStoreService(keys[minttypes.StoreKey]), app.StakingKeeper, app.AuthKeeper, app.BankKeeper, authtypes.FeeCollectorName, authtypes.NewModuleAddress(govtypes.ModuleName).String())
 
-	app.PoolKeeper = poolkeeper.NewKeeper(appCodec, runtime.NewKVStoreService(keys[pooltypes.StoreKey]), app.AuthKeeper, app.BankKeeper, authtypes.NewModuleAddress(govtypes.ModuleName).String())
+	app.PoolKeeper = poolkeeper.NewKeeper(appCodec, runtime.NewKVStoreService(keys[pooltypes.StoreKey]), app.AuthKeeper, app.BankKeeper, app.StakingKeeper, authtypes.NewModuleAddress(govtypes.ModuleName).String())
 
 	app.DistrKeeper = distrkeeper.NewKeeper(appCodec, runtime.NewKVStoreService(keys[distrtypes.StoreKey]), app.AuthKeeper, app.BankKeeper, app.StakingKeeper, app.PoolKeeper, authtypes.FeeCollectorName, authtypes.NewModuleAddress(govtypes.ModuleName).String())
 
@@ -519,6 +523,25 @@ func NewSimApp(
 	}
 	app.sm = module.NewSimulationManagerFromAppModules(app.ModuleManager.Modules, overrideModules)
 
+	// create, start, and load the unordered tx manager
+	utxDataDir := filepath.Join(cast.ToString(appOpts.Get(flags.FlagHome)), "data")
+	app.UnorderedTxManager = unorderedtx.NewManager(utxDataDir)
+	app.UnorderedTxManager.Start()
+
+	if err := app.UnorderedTxManager.OnInit(); err != nil {
+		panic(fmt.Errorf("failed to initialize unordered tx manager: %w", err))
+	}
+
+	// register custom snapshot extensions (if any)
+	if manager := app.SnapshotManager(); manager != nil {
+		err := manager.RegisterExtensions(
+			unorderedtx.NewSnapshotter(app.UnorderedTxManager),
+		)
+		if err != nil {
+			panic(fmt.Errorf("failed to register snapshot extension: %s", err))
+		}
+	}
+
 	app.sm.RegisterStoreDecoders()
 
 	// initialize stores
@@ -579,6 +602,7 @@ func (app *SimApp) setAnteHandler(txConfig client.TxConfig) {
 				SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
 			},
 			&app.CircuitKeeper,
+			app.UnorderedTxManager,
 		},
 	)
 	if err != nil {
@@ -598,6 +622,12 @@ func (app *SimApp) setPostHandler() {
 	}
 
 	app.SetPostHandler(postHandler)
+}
+
+// Close implements the Application interface and closes all necessary application
+// resources.
+func (app *SimApp) Close() error {
+	return app.UnorderedTxManager.Close()
 }
 
 // Name returns the name of the App

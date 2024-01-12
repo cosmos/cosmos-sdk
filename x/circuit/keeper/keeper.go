@@ -6,6 +6,7 @@ import (
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/event"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/x/circuit/types"
 
@@ -16,6 +17,7 @@ import (
 type Keeper struct {
 	cdc          codec.BinaryCodec
 	storeService store.KVStoreService
+	eventService event.Service
 
 	authority []byte
 
@@ -42,6 +44,7 @@ func NewKeeper(env appmodule.Environment, cdc codec.BinaryCodec, authority strin
 	k := Keeper{
 		cdc:          cdc,
 		storeService: storeService,
+		eventService: env.EventService,
 		authority:    auth,
 		addressCodec: addressCodec,
 		Permissions: collections.NewMap(

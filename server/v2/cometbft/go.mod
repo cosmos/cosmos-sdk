@@ -5,6 +5,7 @@ go 1.21.1
 replace (
 	cosmossdk.io/core => ../../../core
 	cosmossdk.io/server/v2 => ../
+	cosmossdk.io/server/v2/appmanager => ../appmanager
 	cosmossdk.io/server/v2/core => ../core
 	cosmossdk.io/server/v2/stf => ../stf
 	cosmossdk.io/store/v2 => ../../../store
@@ -15,13 +16,12 @@ require (
 	cosmossdk.io/core v0.12.0
 	cosmossdk.io/errors v1.0.0
 	cosmossdk.io/log v1.2.1
-	cosmossdk.io/server/v2 v2.0.0-00010101000000-000000000000
+	cosmossdk.io/server/v2/appmanager v0.0.0-00010101000000-000000000000
 	cosmossdk.io/server/v2/core v0.0.0-00010101000000-000000000000
 	cosmossdk.io/server/v2/stf v0.0.0-00010101000000-000000000000
 	cosmossdk.io/store/v2 v2.0.0-00010101000000-000000000000
 	github.com/cometbft/cometbft v1.0.0-alpha.1
 	github.com/cometbft/cometbft/api v1.0.0-alpha.1
-	github.com/cosmos/cosmos-sdk v0.50.2
 	github.com/cosmos/gogoproto v1.4.11
 	google.golang.org/protobuf v1.32.0
 )

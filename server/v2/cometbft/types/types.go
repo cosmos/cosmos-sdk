@@ -3,7 +3,9 @@ package types
 import (
 	"context"
 
+	corecomet "cosmossdk.io/core/comet"
 	abci "github.com/cometbft/cometbft/abci/types"
+	"google.golang.org/protobuf/proto"
 )
 
 type VoteExtensionsHandler interface {
@@ -13,3 +15,8 @@ type VoteExtensionsHandler interface {
 
 // PeerFilter responds to p2p filtering queries from Tendermint
 type PeerFilter func(info string) (*abci.QueryResponse, error)
+
+type ConsensusInfo struct { // TODO: this is a mock, we need a proper proto.Message
+	proto.Message
+	corecomet.Info
+}

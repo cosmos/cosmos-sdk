@@ -6,15 +6,15 @@ import (
 	"strings"
 
 	errorsmod "cosmossdk.io/errors"
+	cometerrors "cosmossdk.io/server/v2/cometbft/types/errors"
 	"cosmossdk.io/server/v2/core/store"
 	abci "github.com/cometbft/cometbft/abci/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 func (c *Consensus[T]) handleQueryP2P(path []string) (*abci.QueryResponse, error) {
 	// "/p2p" prefix for p2p queries
 	if len(path) < 4 {
-		return nil, errorsmod.Wrap(sdkerrors.ErrUnknownRequest, "path should be p2p filter <addr|id> <parameter>")
+		return nil, errorsmod.Wrap(cometerrors.ErrUnknownRequest, "path should be p2p filter <addr|id> <parameter>")
 	}
 
 	cmd, typ, arg := path[1], path[2], path[3]
@@ -33,70 +33,70 @@ func (c *Consensus[T]) handleQueryP2P(path []string) (*abci.QueryResponse, error
 		}
 	}
 
-	return nil, errorsmod.Wrap(sdkerrors.ErrUnknownRequest, "expected second parameter to be 'filter'")
+	return nil, errorsmod.Wrap(cometerrors.ErrUnknownRequest, "expected second parameter to be 'filter'")
 }
 
 func (c *Consensus[T]) handlerQueryApp(ctx context.Context, path []string, req *abci.QueryRequest) (*abci.QueryResponse, error) {
 	if len(path) < 2 {
 		return nil, errorsmod.Wrap(
-			sdkerrors.ErrUnknownRequest,
+			cometerrors.ErrUnknownRequest,
 			"expected second parameter to be either 'simulate' or 'version', neither was present",
 		)
 	}
 
 	switch path[1] {
 	case "simulate":
-		// TODO: is this context fine?
+		// TODO: is this context ok?
 		txResult, err := c.app.Simulate(ctx, req.Data)
 		if err != nil {
 			return nil, errorsmod.Wrap(err, "failed to simulate tx")
 		}
 
-		// TODO: encode txResult, we use codec.ProtoMarshalJSON in baseapp
+		// TODO: encode txResult, we use codec.ProtoMarshalJSON in baseapp, is JSON fine?
 		bz, err := json.Marshal(txResult)
 		if err != nil {
 			return nil, errorsmod.Wrap(err, "failed to marshal txResult")
 		}
 
 		return &abci.QueryResponse{
-			Codespace: "sdk", // TODO: put this in a const
+			Codespace: cometerrors.RootCodespace,
 			Value:     bz,
 			Height:    req.Height,
 		}, nil
 
 	case "version":
 		return &abci.QueryResponse{
-			Codespace: "sdk", // TODO: put this in a const
+			Codespace: cometerrors.RootCodespace,
 			Value:     []byte(c.version),
 			Height:    req.Height,
 		}, nil
 	}
 
-	return nil, errorsmod.Wrapf(sdkerrors.ErrUnknownRequest, "unknown query: %s", path)
+	return nil, errorsmod.Wrapf(cometerrors.ErrUnknownRequest, "unknown query: %s", path)
 }
 
 func (c *Consensus[T]) handleQueryStore(path []string, store store.Store, req *abci.QueryRequest) (*abci.QueryResponse, error) {
 	req.Path = "/" + strings.Join(path[1:], "/")
 	if req.Height <= 1 && req.Prove {
 		return nil, errorsmod.Wrap(
-			sdkerrors.ErrInvalidRequest,
+			cometerrors.ErrInvalidRequest,
 			"cannot query with proof when height <= 1; please provide a valid height",
 		)
 	}
 
-	st, err := store.ReadonlyStateAt(uint64(req.Height))
+	st, err := store.StateAt(uint64(req.Height))
 	if err != nil {
 		return nil, err
 	}
 
-	// TODO: revisit this, i need to parse the path
+	// TODO: key format has changed or should we do the same as in baseapp?
 	bz, err := st.Get([]byte(req.Path))
 	if err != nil {
 		return nil, err
 	}
 	// TODO: also proving is not implemented
 	return &abci.QueryResponse{
-		Codespace: "sdk", // TODO: put this in a const
+		Codespace: cometerrors.RootCodespace,
 		Value:     bz,
 		Height:    req.Height,
 		Key:       []byte(req.Path),

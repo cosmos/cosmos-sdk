@@ -16,12 +16,13 @@ import (
 	"cosmossdk.io/server/v2/core/transaction"
 	"cosmossdk.io/server/v2/stf/mock"
 
+	// "cosmossdk.io/server/v2/streaming"
+
+	cometerrors "cosmossdk.io/server/v2/cometbft/types/errors"
 	"cosmossdk.io/store/v2/snapshots"
 	snapshottypes "cosmossdk.io/store/v2/snapshots/types"
 	abci "github.com/cometbft/cometbft/abci/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
 // Supported ABCI Query prefixes and paths
@@ -52,13 +53,18 @@ type BlockData struct {
 }
 
 type Consensus[T transaction.Tx] struct {
-	app    appmanager.AppManager[T]
-	store  store.Store
-	logger log.Logger
+	app     appmanager.AppManager[T]
+	store   store.Store
+	logger  log.Logger
+	txCodec transaction.Codec[T]
 
-	name    string // TODO: check if these are needed
-	version string // TODO: check if these are needed
-	trace   bool
+	// TODO: configs
+	name            string
+	version         string
+	initialHeight   uint64
+	trace           bool
+	minRetainBlocks uint64
+	indexEvents     map[string]struct{}
 
 	// this is only available after this node has committed a block (in FinalizeBlock),
 	// otherwise it will be empty and we will need to query the app for the last
@@ -71,22 +77,18 @@ type Consensus[T transaction.Tx] struct {
 	idPeerFilter   types.PeerFilter // filter peers by node ID
 }
 
-// TODO: implement
-func (*Consensus[T]) GetBlockRetentionHeight(commitHeight int64) int64 {
-	return 0
-}
-
 // CheckTx implements types.Application.
 func (c *Consensus[T]) CheckTx(ctx context.Context, req *abci.CheckTxRequest) (*abci.CheckTxResponse, error) {
-	resp, err := c.app.Validate(ctx, req.Tx)
+	resp, err := c.app.Simulate(ctx, req.Tx) // TODO: is it ok to use Simulate here?
 	if err != nil {
 		return nil, err
 	}
+
 	cometResp := &abci.CheckTxResponse{
 		Code:      0,
-		GasWanted: int64(resp.GasUsed), // TODO: maybe appmanager.TxResult should include this
+		GasWanted: int64(resp.GasWanted),
 		GasUsed:   int64(resp.GasUsed),
-		Events:    intoABCIEvents(resp.Events),
+		Events:    intoABCIEvents(resp.Events, c.indexEvents),
 	}
 	if resp.Error != nil {
 		cometResp.Code = 1
@@ -97,17 +99,22 @@ func (c *Consensus[T]) CheckTx(ctx context.Context, req *abci.CheckTxRequest) (*
 
 // Info implements types.Application.
 func (c *Consensus[T]) Info(context.Context, *abci.InfoRequest) (*abci.InfoResponse, error) {
-	// TODO: I need to be able to get the app version from consensus params at the latest height
-	// Maybe we need to perform a Query with something like RequestConsensusParams?
+	version, _, err := c.store.StateLatest()
+	if err != nil {
+		return nil, err
+	}
+
+	cp, err := c.GetConsensusParams()
+	if err != nil {
+		return nil, err
+	}
 
 	return &abci.InfoResponse{
-		Data:    c.name,
-		Version: c.version,
-		// AppVersion:       appVersion, // TODO: get consensus params here
-		// these values must come from disk, as we might not have them in memory yet!
-		// we could get them from memory if they are there, otherwise get them from disk
-		LastBlockHeight:  int64(c.app.LastCommittedBlockHeight()),
-		LastBlockAppHash: c.app.LastCommittedBlockHash(),
+		Data:            c.name,
+		Version:         c.version,
+		AppVersion:      cp.GetVersion().App,
+		LastBlockHeight: int64(version),
+		// LastBlockAppHash: c.app.LastCommittedBlockHash(), // TODO: implement this on store. It's required by CometBFT
 	}, nil
 }
 
@@ -115,24 +122,24 @@ func (c *Consensus[T]) Info(context.Context, *abci.InfoRequest) (*abci.InfoRespo
 func (c *Consensus[T]) Query(ctx context.Context, req *abci.QueryRequest) (*abci.QueryResponse, error) {
 	// reject special cases
 	if req.Path == QueryPathBroadcastTx {
-		return QueryResult(errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "can't route a broadcast tx message"), c.trace), nil
+		return QueryResult(errorsmod.Wrap(cometerrors.ErrInvalidRequest, "can't route a broadcast tx message"), c.trace), nil
 	}
 
 	appreq, err := parseQueryRequest(req)
 	if err == nil { // if no error is returned then we can handle the query with the appmanager
-		res, err := c.app.Query(ctx, appreq, uint64(req.Height))
+		res, err := c.app.Query(ctx, uint64(req.Height), appreq)
 		if err != nil {
 			return nil, err
 		}
 
-		return parseQueryResponse(req, res)
+		return queryResponse(req, res)
 	}
 
 	// this error most probably means that we can't handle it with a proto message, so
 	// it must be an app/p2p/store query
 	path := splitABCIQueryPath(req.Path)
 	if len(path) == 0 {
-		return QueryResult(errorsmod.Wrap(sdkerrors.ErrUnknownRequest, "no query path provided"), c.trace), nil
+		return QueryResult(errorsmod.Wrap(cometerrors.ErrUnknownRequest, "no query path provided"), c.trace), nil
 	}
 
 	var resp *abci.QueryResponse
@@ -148,7 +155,7 @@ func (c *Consensus[T]) Query(ctx context.Context, req *abci.QueryRequest) (*abci
 		resp, err = c.handleQueryP2P(path)
 
 	default:
-		resp = QueryResult(errorsmod.Wrap(sdkerrors.ErrUnknownRequest, "unknown query path"), c.trace)
+		resp = QueryResult(errorsmod.Wrap(cometerrors.ErrUnknownRequest, "unknown query path"), c.trace)
 	}
 
 	if err != nil {
@@ -230,34 +237,38 @@ func (c *Consensus[T]) PrepareProposal(ctx context.Context, req *abci.PreparePro
 		return nil, errors.New("PrepareProposal called with invalid height")
 	}
 
-	// TODO: maybe we don't need this here and we handle panics in AppManager
-	defer func() {
-		if err := recover(); err != nil {
-			c.logger.Error(
-				"panic recovered in PrepareProposal",
-				"height", req.Height,
-				"time", req.Time,
-				"panic", err,
-			)
-
-			resp = &abci.PrepareProposalResponse{Txs: req.Txs}
-		}
-	}()
-
-	maxTotalBlockSize := uint32(4096) // TODO: make this configurable
-	txs, err := c.app.BuildBlock(ctx, uint64(req.Height), maxTotalBlockSize)
+	cp, err := c.GetConsensusParams()
 	if err != nil {
 		return nil, err
 	}
 
+	txs, err := c.app.BuildBlock(ctx, uint64(req.Height), uint32(cp.Block.MaxBytes))
+	if err != nil {
+		return nil, err
+	}
+
+	encodedTxs := make([][]byte, len(txs))
+	for i, tx := range txs {
+		encodedTxs[i] = tx.Encode()
+	}
+
 	return &abci.PrepareProposalResponse{
-		Txs: c.app.EncodeTxs(txs),
+		Txs: encodedTxs,
 	}, nil
 }
 
 // ProcessProposal implements types.Application.
 func (c *Consensus[T]) ProcessProposal(ctx context.Context, req *abci.ProcessProposalRequest) (*abci.ProcessProposalResponse, error) {
-	decodedTxs := c.app.DecodeTxs(req.Txs)
+	decodedTxs := []T{}
+	for _, tx := range req.Txs {
+		decTx, err := c.txCodec.Decode(tx)
+		if err != nil {
+			// continue even if tx decoding fails
+			c.logger.Error("failed to decode tx", "err", err)
+		}
+		decodedTxs = append(decodedTxs, decTx)
+	}
+
 	err := c.app.VerifyBlock(ctx, uint64(req.Height), decodedTxs)
 	if err != nil {
 		c.logger.Error("failed to process proposal", "height", req.Height, "time", req.Time, "hash", fmt.Sprintf("%X", req.Hash), "err", err)
@@ -271,22 +282,18 @@ func (c *Consensus[T]) ProcessProposal(ctx context.Context, req *abci.ProcessPro
 	}, nil
 }
 
-// check that ConsenusInfo (mock) implements proto.Message
-var _ = proto.Message(&ConsensusInfo{})
-
-type ConsensusInfo struct { // TODO: this is a mock, we need a proper proto.Message
-	corecomet.Info
-}
-
-func (*ConsensusInfo) ProtoReflect() protoreflect.Message {
-	panic("unimplemented")
-}
-
 // FinalizeBlock implements types.Application.
 func (c *Consensus[T]) FinalizeBlock(ctx context.Context, req *abci.FinalizeBlockRequest) (*abci.FinalizeBlockResponse, error) {
-	// TODO: add validation over block height (validateFinalizeBlockHeight)
+	if err := c.validateFinalizeBlockHeight(req); err != nil {
+		return nil, err
+	}
 
-	cometInfo := &ConsensusInfo{
+	// TODO: add later
+	// if err := c.checkHalt(req.Height, req.Time); err != nil {
+	// 	return nil, err
+	// }
+
+	cometInfo := &types.ConsensusInfo{
 		Info: corecomet.Info{
 			Evidence:        ToSDKEvidence(req.Misbehavior),
 			ValidatorsHash:  req.NextValidatorsHash,
@@ -294,8 +301,6 @@ func (c *Consensus[T]) FinalizeBlock(ctx context.Context, req *abci.FinalizeBloc
 			LastCommit:      ToSDKCommitInfo(req.DecidedLastCommit),
 		},
 	}
-
-	// if am, ok := appmanager.(*core.consesnus); ok { am.GetConsensusParams}
 
 	blockReq := coreappmgr.BlockRequest{
 		Height:            uint64(req.Height),
@@ -321,18 +326,27 @@ func (c *Consensus[T]) FinalizeBlock(ctx context.Context, req *abci.FinalizeBloc
 		ChangeSet: changeSet,
 	})
 
-	return parseFinalizeBlockResponse(resp, appHash)
+	cp, err := c.GetConsensusParams()
+	if err != nil {
+		return nil, err
+	}
+
+	return finalizeBlockResponse(resp, cp, appHash, c.indexEvents)
 }
 
 // Commit implements types.Application.
 func (c *Consensus[T]) Commit(ctx context.Context, _ *abci.CommitRequest) (*abci.CommitResponse, error) {
 	lastCommittedBlock := c.lastCommittedBlock.Load()
 
-	// TODO: add abci listener here and snapshotting
 	c.snapshotManager.SnapshotIfApplicable(lastCommittedBlock.Height)
 
+	cp, err := c.GetConsensusParams()
+	if err != nil {
+		return nil, err
+	}
+
 	return &abci.CommitResponse{
-		RetainHeight: c.GetBlockRetentionHeight(lastCommittedBlock.Height),
+		RetainHeight: c.GetBlockRetentionHeight(cp, lastCommittedBlock.Height),
 	}, nil
 }
 
@@ -346,8 +360,6 @@ func (*Consensus[T]) VerifyVoteExtension(context.Context, *abci.VerifyVoteExtens
 func (*Consensus[T]) ExtendVote(context.Context, *abci.ExtendVoteRequest) (*abci.ExtendVoteResponse, error) {
 	panic("unimplemented")
 }
-
-// snapshots (unchanged from baseapp's implementation)
 
 // ApplySnapshotChunk implements types.Application.
 func (c *Consensus[T]) ApplySnapshotChunk(_ context.Context, req *abci.ApplySnapshotChunkRequest) (*abci.ApplySnapshotChunkResponse, error) {
@@ -438,7 +450,6 @@ func (c *Consensus[T]) OfferSnapshot(_ context.Context, req *abci.OfferSnapshotR
 		return &abci.OfferSnapshotResponse{Result: abci.OFFER_SNAPSHOT_RESULT_REJECT}, nil
 	}
 
-	// TODO: SnapshotFromABCI should be moved to this package or out of the SDK
 	snapshot, err := snapshottypes.SnapshotFromABCI(req.Snapshot)
 	if err != nil {
 		c.logger.Error("failed to decode snapshot metadata", "err", err)

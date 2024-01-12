@@ -34,15 +34,14 @@ func (a pubkeyValue) String() string {
 }
 
 func (a pubkeyValue) Set(s string) error {
-	// fallback to pubkey parsing
 	registry := types.NewInterfaceRegistry()
 	cryptocodec.RegisterInterfaces(registry)
 	cdc := codec.NewProtoCodec(registry)
 
 	var pk cryptotypes.PubKey
-	err2 := cdc.UnmarshalInterfaceJSON([]byte(s), &pk)
-	if err2 != nil {
-		return fmt.Errorf("input isn't a pubkey, or is an invalid account address: %w", err2)
+	err := cdc.UnmarshalInterfaceJSON([]byte(s), &pk)
+	if err != nil {
+		return fmt.Errorf("input isn't a pubkey: %w", err)
 	}
 
 	any, err := types.NewAnyWithValue(pk)
@@ -50,11 +49,6 @@ func (a pubkeyValue) Set(s string) error {
 		return fmt.Errorf("error converting to any type")
 	}
 	a.value = any
-
-	// a.value, err = a.addressCodec.BytesToString(pk.Address())
-	// if err != nil {
-	// 	return fmt.Errorf("invalid pubkey address: %w", err)
-	// }
 
 	return nil
 }

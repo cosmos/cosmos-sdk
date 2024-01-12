@@ -89,7 +89,10 @@ message MsgEditValidator {
   option (gogoproto.goproto_getters) = false;
 
   Description description       = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
-  string      validator_address = 2 [(cosmos_proto.scalar) = "cosmos.ValidatorAddressString"];
+  string      validator_address = 2 [
+    (cosmos_proto.scalar) = "cosmos.ValidatorAddressString",
+    (cosmos_proto.accepts_interface) = "cosmos.crypto.PubKey"
+  ];
 
   // We pass a reference to the new commission rate and min self delegation as
   // it's not mandatory to update. If not updated, the deserialized rate will be

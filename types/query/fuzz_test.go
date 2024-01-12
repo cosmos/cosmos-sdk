@@ -9,11 +9,15 @@ import (
 	"cosmossdk.io/math"
 	"cosmossdk.io/store/prefix"
 	"cosmossdk.io/x/bank/testutil"
-	"cosmossdk.io/x/bank/types"
 
+	sdktestutil "github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/cosmos/cosmos-sdk/types/query"
+)
+
+const (
+	balancesPrefix = 0x2
 )
 
 type fuzzTestSuite struct {
@@ -80,12 +84,11 @@ func FuzzPagination(f *testing.F) {
 		}
 
 		// Now try to paginate it.
-		req := types.NewQueryAllBalancesRequest(addr1, qr, false)
 		balResult := sdk.NewCoins()
-		authStore := suite.ctx.KVStore(suite.app.UnsafeFindStoreKey(types.StoreKey))
-		balancesStore := prefix.NewStore(authStore, types.BalancesPrefix)
+		authStore := suite.ctx.KVStore(suite.app.UnsafeFindStoreKey(sdktestutil.BankModuleName))
+		balancesStore := prefix.NewStore(authStore, []byte{balancesPrefix})
 		accountStore := prefix.NewStore(balancesStore, address.MustLengthPrefix(addr1))
-		_, _ = query.Paginate(accountStore, req.Pagination, func(key, value []byte) error {
+		_, _ = query.Paginate(accountStore, qr, func(key, value []byte) error {
 			var amount math.Int
 			err := amount.Unmarshal(value)
 			if err != nil {

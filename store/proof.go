@@ -123,7 +123,7 @@ func (op CommitmentOp) Run(args [][]byte) ([][]byte, error) {
 }
 
 // ProofFromByteSlices computes the proof from the given leaves. An iteration will be
-// perfomed for each level of the tree, where each iteration hashes together the bottom most
+// performed for each level of the tree, where each iteration hashes together the bottom most
 // nodes. If the length of the bottom most nodes is odd, then the last node will be saved
 // for the next iteration.
 //
@@ -163,7 +163,7 @@ func ProofFromByteSlices(leaves [][]byte, index int) (rootHash []byte, inners []
 		// saved until the next iteration).
 		if index < n-1 || index&1 == 1 {
 			inner := &ics23.InnerOp{Hash: ics23.HashOp_SHA256}
-			//Iif proof index is even then child is from left, suffix is populated
+			//If proof index is even then child is from left, suffix is populated
 			// otherwise, child is from right and the prefix is populated.
 			if index&1 == 0 {
 				// inner op(prefix=0x01 | child | suffix=leaves[index+1])

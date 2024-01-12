@@ -58,13 +58,15 @@ type Consensus[T transaction.Tx] struct {
 	logger  log.Logger
 	txCodec transaction.Codec[T]
 
-	// TODO: configs
+	// TODO: configs copied from baseapp, should we group this into a config struct?
 	name            string
 	version         string
 	initialHeight   uint64
 	trace           bool
 	minRetainBlocks uint64
 	indexEvents     map[string]struct{}
+	haltHeight      uint64
+	haltTime        uint64
 
 	// this is only available after this node has committed a block (in FinalizeBlock),
 	// otherwise it will be empty and we will need to query the app for the last
@@ -167,7 +169,7 @@ func (c *Consensus[T]) Query(ctx context.Context, req *abci.QueryRequest) (*abci
 
 // InitChain implements types.Application.
 func (c *Consensus[T]) InitChain(ctx context.Context, req *abci.InitChainRequest) (*abci.InitChainResponse, error) {
-	// TODO: won't work now
+	// TODO: won't work for now
 	return &abci.InitChainResponse{
 		ConsensusParams: req.ConsensusParams,
 		Validators:      req.Validators,
@@ -288,11 +290,11 @@ func (c *Consensus[T]) FinalizeBlock(ctx context.Context, req *abci.FinalizeBloc
 		return nil, err
 	}
 
-	// TODO: add later
-	// if err := c.checkHalt(req.Height, req.Time); err != nil {
-	// 	return nil, err
-	// }
+	if err := c.checkHalt(req.Height, req.Time); err != nil {
+		return nil, err
+	}
 
+	// for passing consensus info as a consensus message
 	cometInfo := &types.ConsensusInfo{
 		Info: corecomet.Info{
 			Evidence:        ToSDKEvidence(req.Misbehavior),

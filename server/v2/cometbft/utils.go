@@ -3,6 +3,7 @@ package cometbft
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"cosmossdk.io/core/comet"
 	errorsmod "cosmossdk.io/errors"
@@ -119,7 +120,7 @@ func intoABCIValidatorUpdates(updates []coreappmgr.ValidatorUpdate) []abci.Valid
 	for i := range updates {
 		valsetUpdates[i] = abci.ValidatorUpdate{
 			PubKey: cmtcrypto.PublicKey{
-				Sum: &cmtcrypto.PublicKey_Ed25519{ // TODO: check if this is ok
+				Sum: &cmtcrypto.PublicKey_Ed25519{ // TODO: check if this is ok, i didn't find a way to check the pubkey type
 					Ed25519: updates[i].PubKey,
 				},
 			},
@@ -276,7 +277,6 @@ func (c *Consensus[T]) GetConsensusParams() (*v1.ConsensusParams, error) {
 	return &v1.ConsensusParams{}, nil
 }
 
-// TODO: implement
 func (c *Consensus[T]) GetBlockRetentionHeight(cp *v1.ConsensusParams, commitHeight int64) int64 {
 	// pruning is disabled if minRetainBlocks is zero
 	if c.minRetainBlocks == 0 {
@@ -329,4 +329,22 @@ func (c *Consensus[T]) GetBlockRetentionHeight(cp *v1.ConsensusParams, commitHei
 	}
 
 	return retentionHeight
+}
+
+// checkHalt checks if height or time exceeds halt-height or halt-time respectively.
+func (c *Consensus[T]) checkHalt(height int64, time time.Time) error {
+	var halt bool
+	switch {
+	case c.haltHeight > 0 && uint64(height) > c.haltHeight:
+		halt = true
+
+	case c.haltTime > 0 && time.Unix() > int64(c.haltTime):
+		halt = true
+	}
+
+	if halt {
+		return fmt.Errorf("halt per configuration height %d time %d", c.haltHeight, c.haltTime)
+	}
+
+	return nil
 }

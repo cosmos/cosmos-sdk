@@ -6,7 +6,6 @@ import (
 	"google.golang.org/protobuf/types/known/durationpb"
 
 	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
-	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
 	authmodulev1 "cosmossdk.io/api/cosmos/auth/module/v1"
 	authzmodulev1 "cosmossdk.io/api/cosmos/authz/module/v1"
 	bankmodulev1 "cosmossdk.io/api/cosmos/bank/module/v1"
@@ -97,8 +96,8 @@ var (
 	}
 
 	// application configuration (used by depinject)
-	AppConfig = depinject.Configs(appconfig.Compose(&appv1alpha1.Config{
-		Modules: []*appv1alpha1.ModuleConfig{
+	AppConfig = depinject.Configs(appconfig.Compose(&appconfig.AppConfig{
+		Modules: []*appconfig.ModuleConfig{
 			{
 				Name: runtime.ModuleName,
 				Config: appconfig.WrapAny(&runtimev1alpha1.Module{

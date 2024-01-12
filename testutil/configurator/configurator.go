@@ -2,7 +2,6 @@ package configurator
 
 import (
 	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
-	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
 	authmodulev1 "cosmossdk.io/api/cosmos/auth/module/v1"
 	authzmodulev1 "cosmossdk.io/api/cosmos/authz/module/v1"
 	bankmodulev1 "cosmossdk.io/api/cosmos/bank/module/v1"
@@ -31,7 +30,7 @@ import (
 
 // Config should never need to be instantiated manually and is solely used for ModuleOption.
 type Config struct {
-	ModuleConfigs      map[string]*appv1alpha1.ModuleConfig
+	ModuleConfigs      map[string]*appconfig.ModuleConfig
 	PreBlockersOrder   []string
 	BeginBlockersOrder []string
 	EndBlockersOrder   []string
@@ -41,7 +40,7 @@ type Config struct {
 
 func defaultConfig() *Config {
 	return &Config{
-		ModuleConfigs: make(map[string]*appv1alpha1.ModuleConfig),
+		ModuleConfigs: make(map[string]*appconfig.ModuleConfig),
 		PreBlockersOrder: []string{
 			testutil.UpgradeModuleName,
 		},
@@ -139,7 +138,7 @@ func WithCustomInitGenesisOrder(initGenesisOrder ...string) ModuleOption {
 
 func BankModule() ModuleOption {
 	return func(config *Config) {
-		config.ModuleConfigs[testutil.BankModuleName] = &appv1alpha1.ModuleConfig{
+		config.ModuleConfigs[testutil.BankModuleName] = &appconfig.ModuleConfig{
 			Name:   testutil.BankModuleName,
 			Config: appconfig.WrapAny(&bankmodulev1.Module{}),
 		}
@@ -148,7 +147,7 @@ func BankModule() ModuleOption {
 
 func AuthModule() ModuleOption {
 	return func(config *Config) {
-		config.ModuleConfigs[testutil.AuthModuleName] = &appv1alpha1.ModuleConfig{
+		config.ModuleConfigs[testutil.AuthModuleName] = &appconfig.ModuleConfig{
 			Name: testutil.AuthModuleName,
 			Config: appconfig.WrapAny(&authmodulev1.Module{
 				Bech32Prefix: "cosmos",
@@ -169,7 +168,7 @@ func AuthModule() ModuleOption {
 
 func ParamsModule() ModuleOption {
 	return func(config *Config) {
-		config.ModuleConfigs[testutil.ParamsModuleName] = &appv1alpha1.ModuleConfig{
+		config.ModuleConfigs[testutil.ParamsModuleName] = &appconfig.ModuleConfig{
 			Name:   testutil.ParamsModuleName,
 			Config: appconfig.WrapAny(&paramsmodulev1.Module{}),
 		}
@@ -178,7 +177,7 @@ func ParamsModule() ModuleOption {
 
 func TxModule() ModuleOption {
 	return func(config *Config) {
-		config.ModuleConfigs[testutil.TxModuleName] = &appv1alpha1.ModuleConfig{
+		config.ModuleConfigs[testutil.TxModuleName] = &appconfig.ModuleConfig{
 			Name:   testutil.TxModuleName,
 			Config: appconfig.WrapAny(&txconfigv1.Config{}),
 		}
@@ -187,7 +186,7 @@ func TxModule() ModuleOption {
 
 func StakingModule() ModuleOption {
 	return func(config *Config) {
-		config.ModuleConfigs[testutil.StakingModuleName] = &appv1alpha1.ModuleConfig{
+		config.ModuleConfigs[testutil.StakingModuleName] = &appconfig.ModuleConfig{
 			Name:   testutil.StakingModuleName,
 			Config: appconfig.WrapAny(&stakingmodulev1.Module{}),
 		}
@@ -196,7 +195,7 @@ func StakingModule() ModuleOption {
 
 func SlashingModule() ModuleOption {
 	return func(config *Config) {
-		config.ModuleConfigs[testutil.SlashingModuleName] = &appv1alpha1.ModuleConfig{
+		config.ModuleConfigs[testutil.SlashingModuleName] = &appconfig.ModuleConfig{
 			Name:   testutil.SlashingModuleName,
 			Config: appconfig.WrapAny(&slashingmodulev1.Module{}),
 		}
@@ -205,7 +204,7 @@ func SlashingModule() ModuleOption {
 
 func GenutilModule() ModuleOption {
 	return func(config *Config) {
-		config.ModuleConfigs["genutil"] = &appv1alpha1.ModuleConfig{
+		config.ModuleConfigs["genutil"] = &appconfig.ModuleConfig{
 			Name:   "genutil",
 			Config: appconfig.WrapAny(&genutilmodulev1.Module{}),
 		}
@@ -214,7 +213,7 @@ func GenutilModule() ModuleOption {
 
 func DistributionModule() ModuleOption {
 	return func(config *Config) {
-		config.ModuleConfigs[testutil.DistributionModuleName] = &appv1alpha1.ModuleConfig{
+		config.ModuleConfigs[testutil.DistributionModuleName] = &appconfig.ModuleConfig{
 			Name:   testutil.DistributionModuleName,
 			Config: appconfig.WrapAny(&distrmodulev1.Module{}),
 		}
@@ -223,7 +222,7 @@ func DistributionModule() ModuleOption {
 
 func FeegrantModule() ModuleOption {
 	return func(config *Config) {
-		config.ModuleConfigs[testutil.FeegrantModuleName] = &appv1alpha1.ModuleConfig{
+		config.ModuleConfigs[testutil.FeegrantModuleName] = &appconfig.ModuleConfig{
 			Name:   testutil.FeegrantModuleName,
 			Config: appconfig.WrapAny(&feegrantmodulev1.Module{}),
 		}
@@ -232,7 +231,7 @@ func FeegrantModule() ModuleOption {
 
 func VestingModule() ModuleOption {
 	return func(config *Config) {
-		config.ModuleConfigs["vesting"] = &appv1alpha1.ModuleConfig{
+		config.ModuleConfigs["vesting"] = &appconfig.ModuleConfig{
 			Name:   "vesting",
 			Config: appconfig.WrapAny(&vestingmodulev1.Module{}),
 		}
@@ -241,7 +240,7 @@ func VestingModule() ModuleOption {
 
 func GovModule() ModuleOption {
 	return func(config *Config) {
-		config.ModuleConfigs[testutil.GovModuleName] = &appv1alpha1.ModuleConfig{
+		config.ModuleConfigs[testutil.GovModuleName] = &appconfig.ModuleConfig{
 			Name:   testutil.GovModuleName,
 			Config: appconfig.WrapAny(&govmodulev1.Module{}),
 		}
@@ -250,7 +249,7 @@ func GovModule() ModuleOption {
 
 func ConsensusModule() ModuleOption {
 	return func(config *Config) {
-		config.ModuleConfigs["consensus"] = &appv1alpha1.ModuleConfig{
+		config.ModuleConfigs["consensus"] = &appconfig.ModuleConfig{
 			Name:   "consensus",
 			Config: appconfig.WrapAny(&consensusmodulev1.Module{}),
 		}
@@ -259,10 +258,10 @@ func ConsensusModule() ModuleOption {
 
 func MintModule() ModuleOption {
 	return func(config *Config) {
-		config.ModuleConfigs[testutil.MintModuleName] = &appv1alpha1.ModuleConfig{
+		config.ModuleConfigs[testutil.MintModuleName] = &appconfig.ModuleConfig{
 			Name:   testutil.MintModuleName,
 			Config: appconfig.WrapAny(&mintmodulev1.Module{}),
-			GolangBindings: []*appv1alpha1.GolangBinding{
+			GolangBindings: []*appconfig.GolangBinding{
 				{
 					InterfaceType:  "cosmossdk.io/x/mint/types/types.StakingKeeper",
 					Implementation: "cosmossdk.io/x/staking/keeper/*keeper.Keeper",
@@ -274,7 +273,7 @@ func MintModule() ModuleOption {
 
 func EvidenceModule() ModuleOption {
 	return func(config *Config) {
-		config.ModuleConfigs[testutil.EvidenceModuleName] = &appv1alpha1.ModuleConfig{
+		config.ModuleConfigs[testutil.EvidenceModuleName] = &appconfig.ModuleConfig{
 			Name:   testutil.EvidenceModuleName,
 			Config: appconfig.WrapAny(&evidencemodulev1.Module{}),
 		}
@@ -283,7 +282,7 @@ func EvidenceModule() ModuleOption {
 
 func AuthzModule() ModuleOption {
 	return func(config *Config) {
-		config.ModuleConfigs[testutil.AuthzModuleName] = &appv1alpha1.ModuleConfig{
+		config.ModuleConfigs[testutil.AuthzModuleName] = &appconfig.ModuleConfig{
 			Name:   testutil.AuthzModuleName,
 			Config: appconfig.WrapAny(&authzmodulev1.Module{}),
 		}
@@ -292,7 +291,7 @@ func AuthzModule() ModuleOption {
 
 func GroupModule() ModuleOption {
 	return func(config *Config) {
-		config.ModuleConfigs[testutil.GroupModuleName] = &appv1alpha1.ModuleConfig{
+		config.ModuleConfigs[testutil.GroupModuleName] = &appconfig.ModuleConfig{
 			Name:   testutil.GroupModuleName,
 			Config: appconfig.WrapAny(&groupmodulev1.Module{}),
 		}
@@ -301,7 +300,7 @@ func GroupModule() ModuleOption {
 
 func NFTModule() ModuleOption {
 	return func(config *Config) {
-		config.ModuleConfigs[testutil.NFTModuleName] = &appv1alpha1.ModuleConfig{
+		config.ModuleConfigs[testutil.NFTModuleName] = &appconfig.ModuleConfig{
 			Name:   testutil.NFTModuleName,
 			Config: appconfig.WrapAny(&nftmodulev1.Module{}),
 		}
@@ -310,7 +309,7 @@ func NFTModule() ModuleOption {
 
 func CircuitModule() ModuleOption {
 	return func(config *Config) {
-		config.ModuleConfigs[testutil.CircuitModuleName] = &appv1alpha1.ModuleConfig{
+		config.ModuleConfigs[testutil.CircuitModuleName] = &appconfig.ModuleConfig{
 			Name:   testutil.CircuitModuleName,
 			Config: appconfig.WrapAny(&circuitmodulev1.Module{}),
 		}
@@ -319,7 +318,7 @@ func CircuitModule() ModuleOption {
 
 func ProtocolPoolModule() ModuleOption {
 	return func(config *Config) {
-		config.ModuleConfigs[testutil.ProtocolPoolModuleName] = &appv1alpha1.ModuleConfig{
+		config.ModuleConfigs[testutil.ProtocolPoolModuleName] = &appconfig.ModuleConfig{
 			Name:   testutil.ProtocolPoolModuleName,
 			Config: appconfig.WrapAny(&poolmodulev1.Module{}),
 		}
@@ -328,7 +327,7 @@ func ProtocolPoolModule() ModuleOption {
 
 func CounterModule() ModuleOption {
 	return func(config *Config) {
-		config.ModuleConfigs["counter"] = &appv1alpha1.ModuleConfig{
+		config.ModuleConfigs["counter"] = &appconfig.ModuleConfig{
 			Name:   "counter",
 			Config: appconfig.WrapAny(&countermodulev1.Module{}),
 		}
@@ -392,7 +391,7 @@ func NewAppConfig(opts ...ModuleOption) depinject.Config {
 		runtimeConfig.InitGenesis = initGenesis
 	}
 
-	modules := []*appv1alpha1.ModuleConfig{{
+	modules := []*appconfig.ModuleConfig{{
 		Name:   "runtime",
 		Config: appconfig.WrapAny(runtimeConfig),
 	}}
@@ -401,5 +400,5 @@ func NewAppConfig(opts ...ModuleOption) depinject.Config {
 		modules = append(modules, m)
 	}
 
-	return appconfig.Compose(&appv1alpha1.Config{Modules: modules})
+	return appconfig.Compose(&appconfig.AppConfig{Modules: modules})
 }

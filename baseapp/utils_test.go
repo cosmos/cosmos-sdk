@@ -19,7 +19,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
-	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
@@ -94,8 +93,8 @@ func makeMinimalConfig() depinject.Config {
 
 	return depinject.Configs(
 		depinject.Supply(mempoolOpt, addressCodec, validatorAddressCodec, consensusAddressCodec),
-		appconfig.Compose(&appv1alpha1.Config{
-			Modules: []*appv1alpha1.ModuleConfig{
+		appconfig.Compose(&appconfig.AppConfig{
+			Modules: []*appconfig.ModuleConfig{
 				{
 					Name: "runtime",
 					Config: appconfig.WrapAny(&runtimev1alpha1.Module{

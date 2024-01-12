@@ -1,11 +1,11 @@
 package appconfig
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 
 	"github.com/cosmos/cosmos-proto/anyutil"
-	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
@@ -17,10 +17,56 @@ import (
 	internal "cosmossdk.io/depinject/internal/appconfig"
 )
 
+// Config represents the configuration for a Cosmos SDK ABCI app.
+// It is intended that all state machine logic including the version of
+// baseapp and tx handlers (and possibly even Tendermint) that an app needs
+// can be described in a config object. For compatibility, the framework should
+// allow a mixture of declarative and imperative app wiring, however, apps
+// that strive for the maximum ease of maintainability should be able to describe
+// their state machine with a config object alone.
+type AppConfig struct {
+	// Modules are the module configurations for the app.
+	Modules []*ModuleConfig `json:"modules,omitempty"`
+	// golang_bindings specifies explicit interface to implementation type bindings which
+	// depinject uses to resolve interface inputs to provider functions.  The scope of this
+	// field's configuration is global (not module specific).
+	GolangBindings []*GolangBinding `json:"golang_bindings,omitempty"`
+}
+
+// ModuleConfig is a module configuration for an app.
+type ModuleConfig struct {
+	// Name is the unique name of the module within the app. It should be a name
+	// that persists between different versions of a module so that modules
+	// can be smoothly upgraded to new versions.
+	//
+	// For example, for the module cosmos.bank.module.v1.Module, we may chose
+	// to simply name the module "bank" in the app. When we upgrade to
+	// cosmos.bank.module.v2.Module, the app-specific name "bank" stays the same
+	// and the framework knows that the v2 module should receive all the same state
+	// that the v1 module had. Note: modules should provide info on which versions
+	// they can migrate from in the ModuleDescriptor.can_migration_from field.
+	Name string `json:"name,omitempty"`
+	// Config is the config object for the module. Module config messages should
+	// define a ModuleDescriptor using the cosmos.app.v1alpha1.is_module extension.
+	Config *anypb.Any `json:"config,omitempty"`
+	// golang_bindings specifies explicit interface to implementation type bindings which
+	// depinject uses to resolve interface inputs to provider functions.  The scope of this
+	// field's configuration is module specific.
+	GolangBindings []*GolangBinding `json:"golang_bindings,omitempty"`
+}
+
+// GolangBinding is an explicit interface type to implementing type binding for dependency injection.
+type GolangBinding struct {
+	// InterfaceType is the interface type which will be bound to a specific implementation type
+	InterfaceType string `json:"interface_type,omitempty"`
+	// Implementation is the implementing type which will be supplied when an input of type interface is requested
+	Implementation string `json:"implementation,omitempty"`
+}
+
 // LoadJSON loads an app config in JSON format.
 func LoadJSON(bz []byte) depinject.Config {
-	config := &appv1alpha1.Config{}
-	err := protojson.Unmarshal(bz, config)
+	config := &AppConfig{}
+	err := json.Unmarshal(bz, config)
 	if err != nil {
 		return depinject.Error(err)
 	}
@@ -48,9 +94,9 @@ func WrapAny(config protoreflect.ProtoMessage) *anypb.Any {
 	return cfg
 }
 
-// Compose composes a v1alpha1 app config into a container option by resolving
+// Compose composes an app config into a container option by resolving
 // the required modules and composing their options.
-func Compose(appConfig *appv1alpha1.Config) depinject.Config {
+func Compose(appConfig *AppConfig) depinject.Config {
 	opts := []depinject.Config{
 		depinject.Supply(appConfig),
 	}

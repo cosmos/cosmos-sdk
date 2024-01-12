@@ -177,7 +177,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					RpcMethod:      "RotateConsPubKey",
 					Use:            "rotate-cons-pubkey [validator-address] [new-pubkey]",
 					Short:          "rotate validator consensus pub key. Note: you have to replace the `~/.simapp/config/priv_validator_key.json` with new key and restart the node after rotating the key ",
-					Example:        fmt.Sprintf(`%s tx staking rotate-cons-pubkey cosmosvaloper... {"@type":"/cosmos.crypto.ed25519.PubKey","key":"oWg2ISpLF405Jcm2vXV+2v4fnjodh6aafuIdeoW+rUw="} --from myvalidator`, version.AppName),
+					Example:        fmt.Sprintf(`%s tx staking rotate-cons-pubkey myvalidator {"@type":"/cosmos.crypto.ed25519.PubKey","key":"oWg2ISpLF405Jcm2vXV+2v4fnjodh6aafuIdeoW+rUw="}`, version.AppName),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "validator_address"}, {ProtoField: "new_pubkey"}},
 				},
 				{

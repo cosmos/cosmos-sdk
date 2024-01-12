@@ -116,6 +116,10 @@ Refer to SimApp `root_v2.go` and `root.go` for an example with an app v2 and a l
 
 #### `**all**`
 
+##### Dependency Injection 
+
+Previously `cosmossdk.io/core` held functions `Invoke`, `Provide` and `Register` were moved to `cosmossdk.io/depinject/appmodule`. All modules using dependency injection must update their imports.
+
 ##### Genesis Interface
 
 All genesis interfaces have been migrated to take context.Context instead of sdk.Context.

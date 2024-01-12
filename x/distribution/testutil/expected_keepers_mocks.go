@@ -292,6 +292,20 @@ func (mr *MockPoolKeeperMockRecorder) GetCommunityPool(ctx interface{}) *gomock.
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCommunityPool", reflect.TypeOf((*MockPoolKeeper)(nil).GetCommunityPool), ctx)
 }
 
+// SetToDistribute mocks base method.
+func (m *MockPoolKeeper) SetToDistribute(ctx context.Context, amount types0.Coins, addr string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SetToDistribute", ctx, amount, addr)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SetToDistribute indicates an expected call of SetToDistribute.
+func (mr *MockPoolKeeperMockRecorder) SetToDistribute(ctx, amount, addr interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetToDistribute", reflect.TypeOf((*MockPoolKeeper)(nil).SetToDistribute), ctx, amount, addr)
+}
+
 // MockStakingKeeper is a mock of StakingKeeper interface.
 type MockStakingKeeper struct {
 	ctrl     *gomock.Controller

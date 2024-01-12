@@ -8,10 +8,10 @@ import (
 
 	"github.com/linxGnu/grocksdb"
 
-	"cosmossdk.io/store/v2"
+	corestore "cosmossdk.io/core/store"
 )
 
-var _ store.Iterator = (*iterator)(nil)
+var _ corestore.Iterator = (*iterator)(nil)
 
 type iterator struct {
 	source             *grocksdb.Iterator
@@ -124,9 +124,9 @@ func (itr *iterator) Value() []byte {
 	return copyAndFreeSlice(itr.source.Value())
 }
 
-func (itr iterator) Next() bool {
+func (itr iterator) Next() {
 	if itr.invalid {
-		return false
+		return
 	}
 
 	if itr.reverse {
@@ -135,17 +135,19 @@ func (itr iterator) Next() bool {
 		itr.source.Next()
 	}
 
-	return itr.Valid()
+	return
 }
 
 func (itr *iterator) Error() error {
 	return itr.source.Err()
 }
 
-func (itr *iterator) Close() {
+func (itr *iterator) Close() error {
 	itr.source.Close()
 	itr.source = nil
 	itr.invalid = true
+
+	return nil
 }
 
 func (itr *iterator) assertIsValid() {

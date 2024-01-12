@@ -2,14 +2,12 @@ package sims
 
 import (
 	"bytes"
-	"context"
 	"encoding/hex"
 	"fmt"
 	"strconv"
 
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
-	bankkeeper "cosmossdk.io/x/bank/keeper"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -21,15 +19,8 @@ const mintModuleName = "mint"
 
 type GenerateAccountStrategy func(int) []sdk.AccAddress
 
-// BondDenomProvider is a subset of the staking keeper's public interface that
-// provides the staking bond denom. It is used in arguments in this package's
-// functions so that a mock staking keeper can be passed instead of the real one.
-type BondDenomProvider interface {
-	BondDenom(ctx context.Context) (string, error)
-}
-
 // AddTestAddrsFromPubKeys adds the addresses into the SimApp providing only the public keys.
-func AddTestAddrsFromPubKeys(bankKeeper bankkeeper.Keeper, stakingKeeper BondDenomProvider, ctx sdk.Context, pubKeys []cryptotypes.PubKey, accAmt math.Int) {
+func AddTestAddrsFromPubKeys(bankKeeper BankKeeper, stakingKeeper StakingKeeper, ctx sdk.Context, pubKeys []cryptotypes.PubKey, accAmt math.Int) {
 	bondDenom, err := stakingKeeper.BondDenom(ctx)
 	if err != nil {
 		panic(err)
@@ -43,16 +34,16 @@ func AddTestAddrsFromPubKeys(bankKeeper bankkeeper.Keeper, stakingKeeper BondDen
 
 // AddTestAddrs constructs and returns accNum amount of accounts with an
 // initial balance of accAmt in random order
-func AddTestAddrs(bankKeeper bankkeeper.Keeper, stakingKeeper BondDenomProvider, ctx sdk.Context, accNum int, accAmt math.Int) []sdk.AccAddress {
+func AddTestAddrs(bankKeeper BankKeeper, stakingKeeper StakingKeeper, ctx sdk.Context, accNum int, accAmt math.Int) []sdk.AccAddress {
 	return addTestAddrs(bankKeeper, stakingKeeper, ctx, accNum, accAmt, CreateRandomAccounts)
 }
 
 // AddTestAddrsIncremental constructs and returns accNum amount of accounts with an initial balance of accAmt in random order
-func AddTestAddrsIncremental(bankKeeper bankkeeper.Keeper, stakingKeeper BondDenomProvider, ctx sdk.Context, accNum int, accAmt math.Int) []sdk.AccAddress {
+func AddTestAddrsIncremental(bankKeeper BankKeeper, stakingKeeper StakingKeeper, ctx sdk.Context, accNum int, accAmt math.Int) []sdk.AccAddress {
 	return addTestAddrs(bankKeeper, stakingKeeper, ctx, accNum, accAmt, CreateIncrementalAccounts)
 }
 
-func addTestAddrs(bankKeeper bankkeeper.Keeper, stakingKeeper BondDenomProvider, ctx sdk.Context, accNum int, accAmt math.Int, strategy GenerateAccountStrategy) []sdk.AccAddress {
+func addTestAddrs(bankKeeper BankKeeper, stakingKeeper StakingKeeper, ctx sdk.Context, accNum int, accAmt math.Int, strategy GenerateAccountStrategy) []sdk.AccAddress {
 	testAddrs := strategy(accNum)
 	bondDenom, err := stakingKeeper.BondDenom(ctx)
 	if err != nil {
@@ -67,7 +58,7 @@ func addTestAddrs(bankKeeper bankkeeper.Keeper, stakingKeeper BondDenomProvider,
 	return testAddrs
 }
 
-func initAccountWithCoins(bankKeeper bankkeeper.Keeper, ctx sdk.Context, addr sdk.AccAddress, coins sdk.Coins) {
+func initAccountWithCoins(bankKeeper BankKeeper, ctx sdk.Context, addr sdk.AccAddress, coins sdk.Coins) {
 	if err := bankKeeper.MintCoins(ctx, mintModuleName, coins); err != nil {
 		panic(err)
 	}

@@ -13,7 +13,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 type addressStringType struct{}
@@ -133,6 +132,10 @@ func (a *consensusAddressValue) Set(s string) error {
 		return fmt.Errorf("input isn't a pubkey %w or is an invalid account address: %w", err, err2)
 	}
 
-	a.value = sdk.ConsAddress(pk.Address()).String()
+	a.value, err = a.addressCodec.BytesToString(pk.Address())
+	if err != nil {
+		return fmt.Errorf("invalid pubkey address: %w", err)
+	}
+
 	return nil
 }

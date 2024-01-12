@@ -2,7 +2,6 @@ package rpc_test
 
 import (
 	"context"
-	"fmt"
 	"strconv"
 	"testing"
 
@@ -10,8 +9,6 @@ import (
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
-
-	banktypes "cosmossdk.io/x/bank/types"
 
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -97,7 +94,7 @@ func (s *IntegrationTestSuite) TestQueryABCIHeight() {
 			clientCtx = clientCtx.WithHeight(tc.ctxHeight)
 
 			req := abci.RequestQuery{
-				Path:   fmt.Sprintf("store/%s/key", banktypes.StoreKey),
+				Path:   "store/bank/key",
 				Height: tc.reqHeight,
 				Data:   address.MustLengthPrefix(val.GetAddress()),
 				Prove:  true,

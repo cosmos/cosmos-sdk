@@ -93,3 +93,21 @@ func TestMsgDepositIntoCommunityPool(t *testing.T) {
 		}
 	}
 }
+
+func TestMsgWithdrawTokenizeShareRecordReward(t *testing.T) {
+	tests := []struct {
+		ownerAddr  sdk.AccAddress
+		expectPass bool
+	}{
+		{sdk.AccAddress{}, false},
+		{delAddr1, true},
+	}
+	for i, tc := range tests {
+		msg := NewMsgWithdrawAllTokenizeShareRecordReward(tc.ownerAddr)
+		if tc.expectPass {
+			require.Nil(t, msg.ValidateBasic(), "test index: %v", i)
+		} else {
+			require.NotNil(t, msg.ValidateBasic(), "test index: %v", i)
+		}
+	}
+}

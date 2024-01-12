@@ -46,3 +46,19 @@ func MsgUnbondExec(clientCtx client.Context, from fmt.Stringer, valAddress,
 	args = append(args, extraArgs...)
 	return clitestutil.ExecTestCLICmd(clientCtx, stakingcli.NewUnbondCmd(), args)
 }
+
+// MsgTokenizeSharesExec creates a delegation message.
+func MsgTokenizeSharesExec(clientCtx client.Context, from fmt.Stringer, valAddress,
+	rewardOwner, amount fmt.Stringer, extraArgs ...string,
+) (testutil.BufferWriter, error) {
+	args := []string{
+		valAddress.String(),
+		amount.String(),
+		rewardOwner.String(),
+		fmt.Sprintf("--%s=%s", flags.FlagFrom, from.String()),
+	}
+
+	args = append(args, commonArgs...)
+	args = append(args, extraArgs...)
+	return clitestutil.ExecTestCLICmd(clientCtx, stakingcli.NewTokenizeSharesCmd(), args)
+}

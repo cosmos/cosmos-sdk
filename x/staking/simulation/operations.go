@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"math/rand"
 
-	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	vesting "github.com/cosmos/cosmos-sdk/x/auth/vesting/exported"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -20,19 +20,32 @@ import (
 //
 //nolint:gosec // these are not hardcoded credentials
 const (
-	DefaultWeightMsgCreateValidator           int = 100
-	DefaultWeightMsgEditValidator             int = 5
-	DefaultWeightMsgDelegate                  int = 100
-	DefaultWeightMsgUndelegate                int = 100
-	DefaultWeightMsgBeginRedelegate           int = 100
-	DefaultWeightMsgCancelUnbondingDelegation int = 100
+	DefaultWeightMsgCreateValidator             int = 100
+	DefaultWeightMsgEditValidator               int = 5
+	DefaultWeightMsgDelegate                    int = 100
+	DefaultWeightMsgUndelegate                  int = 100
+	DefaultWeightMsgBeginRedelegate             int = 100
+	DefaultWeightMsgCancelUnbondingDelegation   int = 100
+	DefaultWeightMsgValidatorBond               int = 100
+	DefaultWeightMsgTokenizeShares              int = 25
+	DefaultWeightMsgRedeemTokensforShares       int = 25
+	DefaultWeightMsgTransferTokenizeShareRecord int = 5
+	DefaultWeightMsgEnableTokenizeShares        int = 1
+	DefaultWeightMsgDisableTokenizeShares       int = 1
 
-	OpWeightMsgCreateValidator           = "op_weight_msg_create_validator"
-	OpWeightMsgEditValidator             = "op_weight_msg_edit_validator"
-	OpWeightMsgDelegate                  = "op_weight_msg_delegate"
-	OpWeightMsgUndelegate                = "op_weight_msg_undelegate"
-	OpWeightMsgBeginRedelegate           = "op_weight_msg_begin_redelegate"
-	OpWeightMsgCancelUnbondingDelegation = "op_weight_msg_cancel_unbonding_delegation"
+	OpWeightMsgCreateValidator             = "op_weight_msg_create_validator"
+	OpWeightMsgEditValidator               = "op_weight_msg_edit_validator"
+	OpWeightMsgDelegate                    = "op_weight_msg_delegate"
+	OpWeightMsgUndelegate                  = "op_weight_msg_undelegate"
+	OpWeightMsgBeginRedelegate             = "op_weight_msg_begin_redelegate"
+	OpWeightMsgCancelUnbondingDelegation   = "op_weight_msg_cancel_unbonding_delegation"
+	OpWeightMsgValidatorBond               = "op_weight_msg_validator_bond"                 //nolint:gosec
+	OpWeightMsgTokenizeShares              = "op_weight_msg_tokenize_shares"                //nolint:gosec
+	OpWeightMsgRedeemTokensforShares       = "op_weight_msg_redeem_tokens_for_shares"       //nolint:gosec
+	OpWeightMsgTransferTokenizeShareRecord = "op_weight_msg_transfer_tokenize_share_record" //nolint:gosec
+	OpWeightMsgDisableTokenizeShares       = "op_weight_msg_disable_tokenize_shares"        //nolint:gosec
+	OpWeightMsgEnableTokenizeShares        = "op_weight_msg_enable_tokenize_shares"         //nolint:gosec
+
 )
 
 // WeightedOperations returns all the operations from the module with their respective weights
@@ -41,12 +54,18 @@ func WeightedOperations(
 	bk types.BankKeeper, k *keeper.Keeper,
 ) simulation.WeightedOperations {
 	var (
-		weightMsgCreateValidator           int
-		weightMsgEditValidator             int
-		weightMsgDelegate                  int
-		weightMsgUndelegate                int
-		weightMsgBeginRedelegate           int
-		weightMsgCancelUnbondingDelegation int
+		weightMsgCreateValidator             int
+		weightMsgEditValidator               int
+		weightMsgDelegate                    int
+		weightMsgUndelegate                  int
+		weightMsgBeginRedelegate             int
+		weightMsgCancelUnbondingDelegation   int
+		weightMsgValidatorBond               int
+		weightMsgTokenizeShares              int
+		weightMsgRedeemTokensforShares       int
+		weightMsgTransferTokenizeShareRecord int
+		weightMsgDisableTokenizeShares       int
+		weightMsgEnableTokenizeShares        int
 	)
 
 	appParams.GetOrGenerate(cdc, OpWeightMsgCreateValidator, &weightMsgCreateValidator, nil,
@@ -85,6 +104,42 @@ func WeightedOperations(
 		},
 	)
 
+	appParams.GetOrGenerate(cdc, OpWeightMsgValidatorBond, &weightMsgValidatorBond, nil,
+		func(_ *rand.Rand) {
+			weightMsgValidatorBond = DefaultWeightMsgValidatorBond
+		},
+	)
+
+	appParams.GetOrGenerate(cdc, OpWeightMsgTokenizeShares, &weightMsgTokenizeShares, nil,
+		func(_ *rand.Rand) {
+			weightMsgTokenizeShares = DefaultWeightMsgTokenizeShares
+		},
+	)
+
+	appParams.GetOrGenerate(cdc, OpWeightMsgRedeemTokensforShares, &weightMsgRedeemTokensforShares, nil,
+		func(_ *rand.Rand) {
+			weightMsgRedeemTokensforShares = DefaultWeightMsgRedeemTokensforShares
+		},
+	)
+
+	appParams.GetOrGenerate(cdc, OpWeightMsgTransferTokenizeShareRecord, &weightMsgTransferTokenizeShareRecord, nil,
+		func(_ *rand.Rand) {
+			weightMsgTransferTokenizeShareRecord = DefaultWeightMsgTransferTokenizeShareRecord
+		},
+	)
+
+	appParams.GetOrGenerate(cdc, OpWeightMsgDisableTokenizeShares, &weightMsgDisableTokenizeShares, nil,
+		func(_ *rand.Rand) {
+			weightMsgDisableTokenizeShares = DefaultWeightMsgDisableTokenizeShares
+		},
+	)
+
+	appParams.GetOrGenerate(cdc, OpWeightMsgEnableTokenizeShares, &weightMsgEnableTokenizeShares, nil,
+		func(_ *rand.Rand) {
+			weightMsgEnableTokenizeShares = DefaultWeightMsgEnableTokenizeShares
+		},
+	)
+
 	return simulation.WeightedOperations{
 		simulation.NewWeightedOperation(
 			weightMsgCreateValidator,
@@ -109,6 +164,30 @@ func WeightedOperations(
 		simulation.NewWeightedOperation(
 			weightMsgCancelUnbondingDelegation,
 			SimulateMsgCancelUnbondingDelegate(ak, bk, k),
+		),
+		simulation.NewWeightedOperation(
+			weightMsgValidatorBond,
+			SimulateMsgValidatorBond(ak, bk, k),
+		),
+		simulation.NewWeightedOperation(
+			weightMsgTokenizeShares,
+			SimulateMsgTokenizeShares(ak, bk, k),
+		),
+		simulation.NewWeightedOperation(
+			weightMsgRedeemTokensforShares,
+			SimulateMsgRedeemTokensforShares(ak, bk, k),
+		),
+		simulation.NewWeightedOperation(
+			weightMsgTransferTokenizeShareRecord,
+			SimulateMsgTransferTokenizeShareRecord(ak, bk, k),
+		),
+		simulation.NewWeightedOperation(
+			weightMsgDisableTokenizeShares,
+			SimulateMsgDisableTokenizeShares(ak, bk, k),
+		),
+		simulation.NewWeightedOperation(
+			weightMsgEnableTokenizeShares,
+			SimulateMsgEnableTokenizeShares(ak, bk, k),
 		),
 	}
 }
@@ -169,7 +248,7 @@ func SimulateMsgCreateValidator(ak types.AccountKeeper, bk types.BankKeeper, k *
 			simtypes.RandomDecAmount(r, maxCommission),
 		)
 
-		msg, err := types.NewMsgCreateValidator(address, simAccount.ConsKey.PubKey(), selfDelegation, description, commission, math.OneInt())
+		msg, err := types.NewMsgCreateValidator(address, simAccount.ConsKey.PubKey(), selfDelegation, description, commission)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to create CreateValidator message"), nil, err
 		}
@@ -229,7 +308,7 @@ func SimulateMsgEditValidator(ak types.AccountKeeper, bk types.BankKeeper, k *ke
 			simtypes.RandStringOfLength(r, 10),
 		)
 
-		msg := types.NewMsgEditValidator(address, description, &newCommissionRate, nil)
+		msg := types.NewMsgEditValidator(address, description, &newCommissionRate)
 
 		txCtx := simulation.OperationInput{
 			R:               r,
@@ -320,13 +399,13 @@ func SimulateMsgUndelegate(ak types.AccountKeeper, bk types.BankKeeper, k *keepe
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-		val, ok := testutil.RandSliceElem(r, k.GetAllValidators(ctx))
+		validator, ok := testutil.RandSliceElem(r, k.GetAllValidators(ctx))
 		if !ok {
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgUndelegate, "validator is not ok"), nil, nil
 		}
 
-		valAddr := val.GetOperator()
-		delegations := k.GetValidatorDelegations(ctx, val.GetOperator())
+		valAddr := validator.GetOperator()
+		delegations := k.GetValidatorDelegations(ctx, validator.GetOperator())
 		if delegations == nil {
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgUndelegate, "keeper does have any delegation entries"), nil, nil
 		}
@@ -339,7 +418,7 @@ func SimulateMsgUndelegate(ak types.AccountKeeper, bk types.BankKeeper, k *keepe
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgUndelegate, "keeper does have a max unbonding delegation entries"), nil, nil
 		}
 
-		totalBond := val.TokensFromShares(delegation.GetShares()).TruncateInt()
+		totalBond := validator.TokensFromShares(delegation.GetShares()).TruncateInt()
 		if !totalBond.IsPositive() {
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgUndelegate, "total bond is negative"), nil, nil
 		}
@@ -351,6 +430,19 @@ func SimulateMsgUndelegate(ak types.AccountKeeper, bk types.BankKeeper, k *keepe
 
 		if unbondAmt.IsZero() {
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgUndelegate, "unbond amount is zero"), nil, nil
+		}
+
+		// if delegation is a validator bond, make sure the decrease wont cause the validator bond cap to be exceeded
+		if delegation.ValidatorBond {
+			shares, err := validator.SharesFromTokens(unbondAmt)
+			if err != nil {
+				return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgUndelegate, "unable to calculate shares from tokens"), nil, nil
+			}
+
+			maxValTotalShare := validator.ValidatorBondShares.Sub(shares).Mul(k.ValidatorBondFactor(ctx))
+			if validator.LiquidShares.GT(maxValTotalShare) {
+				return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgUndelegate, "unbonding validator bond exceeds cap"), nil, nil
+			}
 		}
 
 		msg := types.NewMsgUndelegate(
@@ -533,6 +625,14 @@ func SimulateMsgBeginRedelegate(ak types.AccountKeeper, bk types.BankKeeper, k *
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgBeginRedelegate, "shares truncate to zero"), nil, nil // skip
 		}
 
+		// if delegation is a validator bond, make sure the decrease wont cause the validator bond cap to be exceeded
+		if delegation.ValidatorBond {
+			maxValTotalShare := srcVal.ValidatorBondShares.Sub(shares).Mul(k.ValidatorBondFactor(ctx))
+			if srcVal.LiquidShares.GT(maxValTotalShare) {
+				return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgBeginRedelegate, "source validator bond exceeds cap"), nil, nil
+			}
+		}
+
 		// need to retrieve the simulation account associated with delegation to retrieve PrivKey
 		var simAccount simtypes.Account
 
@@ -571,6 +671,428 @@ func SimulateMsgBeginRedelegate(ak types.AccountKeeper, bk types.BankKeeper, k *
 			CoinsSpentInMsg: spendable,
 		}
 
+		return simulation.GenAndDeliverTxWithRandFees(txCtx)
+	}
+}
+
+func SimulateMsgValidatorBond(ak types.AccountKeeper, bk types.BankKeeper, k *keeper.Keeper) simtypes.Operation {
+	return func(
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
+	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+		// get random validator
+		validator, ok := testutil.RandSliceElem(r, k.GetAllValidators(ctx))
+		if !ok {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgValidatorBond, "unable to pick validator"), nil, nil
+		}
+
+		valAddr := validator.GetOperator()
+		delegations := k.GetValidatorDelegations(ctx, validator.GetOperator())
+		if delegations == nil {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgValidatorBond, "keeper does have any delegation entries"), nil, nil
+		}
+
+		// get random delegator from validator
+		delegation := delegations[r.Intn(len(delegations))]
+		delAddr := delegation.GetDelegatorAddr()
+
+		totalBond := validator.TokensFromShares(delegation.GetShares()).TruncateInt()
+		if !totalBond.IsPositive() {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgValidatorBond, "total bond is negative"), nil, nil
+		}
+
+		// submit validator bond
+		msg := &types.MsgValidatorBond{
+			DelegatorAddress: delAddr.String(),
+			ValidatorAddress: valAddr.String(),
+		}
+
+		// need to retrieve the simulation account associated with delegation to retrieve PrivKey
+		var simAccount simtypes.Account
+
+		for _, simAcc := range accs {
+			if simAcc.Address.Equals(delAddr) {
+				simAccount = simAcc
+				break
+			}
+		}
+		// if simaccount.PrivKey == nil, delegation address does not exist in accs. Return error
+		if simAccount.PrivKey == nil {
+			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "account private key is nil"), nil, nil
+		}
+
+		account := ak.GetAccount(ctx, delAddr)
+		spendable := bk.SpendableCoins(ctx, account.GetAddress())
+
+		txCtx := simulation.OperationInput{
+			R:               r,
+			App:             app,
+			TxGen:           moduletestutil.MakeTestEncodingConfig().TxConfig,
+			Cdc:             nil,
+			Msg:             msg,
+			MsgType:         msg.Type(),
+			Context:         ctx,
+			SimAccount:      simAccount,
+			AccountKeeper:   ak,
+			Bankkeeper:      bk,
+			ModuleName:      types.ModuleName,
+			CoinsSpentInMsg: spendable,
+		}
+		return simulation.GenAndDeliverTxWithRandFees(txCtx)
+	}
+}
+
+// SimulateMsgTokenizeShares generates a MsgTokenizeShares with random values
+func SimulateMsgTokenizeShares(ak types.AccountKeeper, bk types.BankKeeper, k *keeper.Keeper) simtypes.Operation {
+	return func(
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
+	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+		// get random source validator
+		validator, ok := testutil.RandSliceElem(r, k.GetAllValidators(ctx))
+		if !ok {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgTokenizeShares, "unable to pick validator"), nil, nil
+		}
+
+		srcAddr := validator.GetOperator()
+		delegations := k.GetValidatorDelegations(ctx, srcAddr)
+		if delegations == nil {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgTokenizeShares, "keeper does have any delegation entries"), nil, nil
+		}
+
+		// get random delegator from src validator
+		delegation := delegations[r.Intn(len(delegations))]
+		delAddr := delegation.GetDelegatorAddr()
+
+		// make sure delegation is not a validator bond
+		if delegation.ValidatorBond {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgTokenizeShares, "can't tokenize a validator bond"), nil, nil
+		}
+
+		// make sure tokenizations are not disabled
+		lockStatus, _ := k.GetTokenizeSharesLock(ctx, delAddr)
+		if lockStatus != types.TOKENIZE_SHARE_LOCK_STATUS_UNLOCKED {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgTokenizeShares, "tokenize shares disabled"), nil, nil
+		}
+
+		// get random destination validator
+		totalBond := validator.TokensFromShares(delegation.GetShares()).TruncateInt()
+		if !totalBond.IsPositive() {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgTokenizeShares, "total bond is negative"), nil, nil
+		}
+
+		tokenizeShareAmt, err := simtypes.RandPositiveInt(r, totalBond)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgTokenizeShares, "unable to generate positive amount"), nil, err
+		}
+
+		if tokenizeShareAmt.IsZero() {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgTokenizeShares, "amount is zero"), nil, nil
+		}
+
+		account := ak.GetAccount(ctx, delAddr)
+		if account, ok := account.(vesting.VestingAccount); ok {
+			if tokenizeShareAmt.GT(account.GetDelegatedFree().AmountOf(k.BondDenom(ctx))) {
+				return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgTokenizeShares, "account vests and amount exceeds free portion"), nil, nil
+			}
+		}
+
+		// check if the shares truncate to zero
+		shares, err := validator.SharesFromTokens(tokenizeShareAmt)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgTokenizeShares, "invalid shares"), nil, err
+		}
+
+		if validator.TokensFromShares(shares).TruncateInt().IsZero() {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgTokenizeShares, "shares truncate to zero"), nil, nil // skip
+		}
+
+		// check that tokenization would not exceed global cap
+		params := k.GetParams(ctx)
+		totalStaked := sdk.NewDecFromInt(k.TotalBondedTokens(ctx))
+		if totalStaked.IsZero() {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgTokenizeShares, "cannot happened - no validators bonded if stake is 0.0"), nil, nil // skip
+		}
+		totalLiquidStaked := sdk.NewDecFromInt(k.GetTotalLiquidStakedTokens(ctx).Add(tokenizeShareAmt))
+		liquidStakedPercent := totalLiquidStaked.Quo(totalStaked)
+		if liquidStakedPercent.GT(params.GlobalLiquidStakingCap) {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgTokenizeShares, "global liquid staking cap exceeded"), nil, nil
+		}
+
+		// check that tokenization would not exceed validator liquid staking cap
+		validatorTotalShares := validator.DelegatorShares.Add(shares)
+		validatorLiquidShares := validator.LiquidShares.Add(shares)
+		validatorLiquidSharesPercent := validatorLiquidShares.Quo(validatorTotalShares)
+		if validatorLiquidSharesPercent.GT(params.ValidatorLiquidStakingCap) {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgTokenizeShares, "validator liquid staking cap exceeded"), nil, nil
+		}
+
+		// check that tokenization would not exceed validator bond cap
+		maxValidatorLiquidShares := validator.ValidatorBondShares.Mul(params.ValidatorBondFactor)
+		if validator.LiquidShares.Add(shares).GT(maxValidatorLiquidShares) {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgTokenizeShares, "validator bond cap exceeded"), nil, nil
+		}
+
+		// need to retrieve the simulation account associated with delegation to retrieve PrivKey
+		var simAccount simtypes.Account
+
+		for _, simAcc := range accs {
+			if simAcc.Address.Equals(delAddr) {
+				simAccount = simAcc
+				break
+			}
+		}
+
+		// if simaccount.PrivKey == nil, delegation address does not exist in accs. Return error
+		if simAccount.PrivKey == nil {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgTokenizeShares, "account private key is nil"), nil, nil
+		}
+
+		msg := &types.MsgTokenizeShares{
+			DelegatorAddress:    delAddr.String(),
+			ValidatorAddress:    srcAddr.String(),
+			Amount:              sdk.NewCoin(k.BondDenom(ctx), tokenizeShareAmt),
+			TokenizedShareOwner: delAddr.String(),
+		}
+
+		spendable := bk.SpendableCoins(ctx, account.GetAddress())
+
+		txCtx := simulation.OperationInput{
+			R:               r,
+			App:             app,
+			TxGen:           moduletestutil.MakeTestEncodingConfig().TxConfig,
+			Cdc:             nil,
+			Msg:             msg,
+			MsgType:         msg.Type(),
+			Context:         ctx,
+			SimAccount:      simAccount,
+			AccountKeeper:   ak,
+			Bankkeeper:      bk,
+			ModuleName:      types.ModuleName,
+			CoinsSpentInMsg: spendable,
+		}
+
+		return simulation.GenAndDeliverTxWithRandFees(txCtx)
+	}
+}
+
+// SimulateMsgRedeemTokensforShares generates a MsgRedeemTokensforShares with random values
+func SimulateMsgRedeemTokensforShares(ak types.AccountKeeper, bk types.BankKeeper, k *keeper.Keeper) simtypes.Operation {
+	return func(
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
+	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+		redeemUser := simtypes.Account{}
+		redeemCoin := sdk.Coin{}
+		tokenizeShareRecord := types.TokenizeShareRecord{}
+
+		records := k.GetAllTokenizeShareRecords(ctx)
+		if len(records) > 0 {
+			record := records[r.Intn(len(records))]
+			for _, acc := range accs {
+				balance := bk.GetBalance(ctx, acc.Address, record.GetShareTokenDenom())
+				if balance.Amount.IsPositive() {
+					redeemUser = acc
+					redeemAmount, err := simtypes.RandPositiveInt(r, balance.Amount)
+					if err == nil {
+						redeemCoin = sdk.NewCoin(record.GetShareTokenDenom(), redeemAmount)
+						tokenizeShareRecord = record
+					}
+					break
+				}
+			}
+		}
+
+		// if redeemUser.PrivKey == nil, redeem user does not exist in accs
+		if redeemUser.PrivKey == nil {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgRedeemTokensForShares, "account private key is nil"), nil, nil
+		}
+
+		if redeemCoin.Amount.IsZero() {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgRedeemTokensForShares, "empty balance in tokens"), nil, nil
+		}
+
+		valAddress, err := sdk.ValAddressFromBech32(tokenizeShareRecord.Validator)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgRedeemTokensForShares, "invalid validator address"), nil, fmt.Errorf("invalid validator address")
+		}
+		validator, found := k.GetValidator(ctx, valAddress)
+		if !found {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgRedeemTokensForShares, "validator not found"), nil, fmt.Errorf("validator not found")
+		}
+		delegation, found := k.GetDelegation(ctx, tokenizeShareRecord.GetModuleAddress(), valAddress)
+		if !found {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgRedeemTokensForShares, "delegation not found"), nil, fmt.Errorf("delegation not found")
+		}
+
+		// prevent redemption that returns a 0 amount
+		shareDenomSupply := bk.GetSupply(ctx, tokenizeShareRecord.GetShareTokenDenom())
+		shares := delegation.Shares.Mul(sdk.NewDecFromInt(redeemCoin.Amount)).QuoInt(shareDenomSupply.Amount)
+
+		if validator.TokensFromShares(shares).TruncateInt().IsZero() {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgRedeemTokensForShares, "zero tokens returned"), nil, nil
+		}
+
+		account := ak.GetAccount(ctx, redeemUser.Address)
+		spendable := bk.SpendableCoins(ctx, account.GetAddress())
+
+		msg := &types.MsgRedeemTokensForShares{
+			DelegatorAddress: redeemUser.Address.String(),
+			Amount:           redeemCoin,
+		}
+
+		txCtx := simulation.OperationInput{
+			R:               r,
+			App:             app,
+			TxGen:           moduletestutil.MakeTestEncodingConfig().TxConfig,
+			Cdc:             nil,
+			Msg:             msg,
+			MsgType:         msg.Type(),
+			Context:         ctx,
+			SimAccount:      redeemUser,
+			AccountKeeper:   ak,
+			Bankkeeper:      bk,
+			ModuleName:      types.ModuleName,
+			CoinsSpentInMsg: spendable,
+		}
+
+		return simulation.GenAndDeliverTxWithRandFees(txCtx)
+	}
+}
+
+// SimulateMsgTransferTokenizeShareRecord generates a MsgTransferTokenizeShareRecord with random values
+func SimulateMsgTransferTokenizeShareRecord(ak types.AccountKeeper, bk types.BankKeeper, k *keeper.Keeper) simtypes.Operation {
+	return func(
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
+	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+		simAccount, _ := simtypes.RandomAcc(r, accs)
+		destAccount, _ := simtypes.RandomAcc(r, accs)
+		transferRecord := types.TokenizeShareRecord{}
+
+		records := k.GetAllTokenizeShareRecords(ctx)
+		if len(records) > 0 {
+			record := records[r.Intn(len(records))]
+			for _, acc := range accs {
+				if record.Owner == acc.Address.String() {
+					simAccount = acc
+					transferRecord = record
+					break
+				}
+			}
+		}
+
+		// if simAccount.PrivKey == nil, record owner does not exist in accs
+		if simAccount.PrivKey == nil {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgTransferTokenizeShareRecord, "account private key is nil"), nil, nil
+		}
+
+		if transferRecord.Id == 0 {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgTransferTokenizeShareRecord, "share record not found"), nil, nil
+		}
+
+		account := ak.GetAccount(ctx, simAccount.Address)
+		spendable := bk.SpendableCoins(ctx, account.GetAddress())
+
+		msg := &types.MsgTransferTokenizeShareRecord{
+			TokenizeShareRecordId: transferRecord.Id,
+			Sender:                simAccount.Address.String(),
+			NewOwner:              destAccount.Address.String(),
+		}
+
+		txCtx := simulation.OperationInput{
+			R:               r,
+			App:             app,
+			TxGen:           moduletestutil.MakeTestEncodingConfig().TxConfig,
+			Cdc:             nil,
+			Msg:             msg,
+			MsgType:         msg.Type(),
+			Context:         ctx,
+			SimAccount:      simAccount,
+			AccountKeeper:   ak,
+			Bankkeeper:      bk,
+			ModuleName:      types.ModuleName,
+			CoinsSpentInMsg: spendable,
+		}
+
+		return simulation.GenAndDeliverTxWithRandFees(txCtx)
+	}
+}
+
+func SimulateMsgDisableTokenizeShares(ak types.AccountKeeper, bk types.BankKeeper, k *keeper.Keeper) simtypes.Operation {
+	return func(
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
+	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+		simAccount, _ := simtypes.RandomAcc(r, accs)
+
+		if simAccount.PrivKey == nil {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgDisableTokenizeShares, "account private key is nil"), nil, nil
+		}
+
+		balance := bk.GetBalance(ctx, simAccount.Address, k.GetParams(ctx).BondDenom).Amount
+		if !balance.IsPositive() {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgDisableTokenizeShares, "balance is negative"), nil, nil
+		}
+
+		lockStatus, _ := k.GetTokenizeSharesLock(ctx, simAccount.Address)
+		if lockStatus == types.TOKENIZE_SHARE_LOCK_STATUS_LOCKED {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgDisableTokenizeShares, "account already locked"), nil, nil
+		}
+
+		msg := &types.MsgDisableTokenizeShares{
+			DelegatorAddress: simAccount.Address.String(),
+		}
+
+		txCtx := simulation.OperationInput{
+			R:             r,
+			App:           app,
+			TxGen:         moduletestutil.MakeTestEncodingConfig().TxConfig,
+			Cdc:           nil,
+			Msg:           msg,
+			MsgType:       msg.Type(),
+			Context:       ctx,
+			SimAccount:    simAccount,
+			AccountKeeper: ak,
+			Bankkeeper:    bk,
+			ModuleName:    types.ModuleName,
+		}
+		return simulation.GenAndDeliverTxWithRandFees(txCtx)
+	}
+}
+
+func SimulateMsgEnableTokenizeShares(ak types.AccountKeeper, bk types.BankKeeper, k *keeper.Keeper) simtypes.Operation {
+	return func(
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
+	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+		simAccount, _ := simtypes.RandomAcc(r, accs)
+
+		if simAccount.PrivKey == nil {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgEnableTokenizeShares, "account private key is nil"), nil, nil
+		}
+
+		balance := bk.GetBalance(ctx, simAccount.Address, k.GetParams(ctx).BondDenom).Amount
+		if !balance.IsPositive() {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgEnableTokenizeShares, "balance is negative"), nil, nil
+		}
+
+		lockStatus, _ := k.GetTokenizeSharesLock(ctx, simAccount.Address)
+		if lockStatus != types.TOKENIZE_SHARE_LOCK_STATUS_LOCKED {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgEnableTokenizeShares, "account is not locked"), nil, nil
+		}
+
+		msg := &types.MsgEnableTokenizeShares{
+			DelegatorAddress: simAccount.Address.String(),
+		}
+
+		txCtx := simulation.OperationInput{
+			R:             r,
+			App:           app,
+			TxGen:         moduletestutil.MakeTestEncodingConfig().TxConfig,
+			Cdc:           nil,
+			Msg:           msg,
+			MsgType:       msg.Type(),
+			Context:       ctx,
+			SimAccount:    simAccount,
+			AccountKeeper: ak,
+			Bankkeeper:    bk,
+			ModuleName:    types.ModuleName,
+		}
 		return simulation.GenAndDeliverTxWithRandFees(txCtx)
 	}
 }

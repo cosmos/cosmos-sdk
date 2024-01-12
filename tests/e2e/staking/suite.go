@@ -49,7 +49,10 @@ func (s *E2ETestSuite) SetupSuite() {
 	s.network, err = network.New(s.T(), s.T().TempDir(), s.cfg)
 	s.Require().NoError(err)
 
-	unbond, err := sdk.ParseCoinNormalized("10stake")
+	unbondCoin, err := sdk.ParseCoinNormalized("10stake")
+	s.Require().NoError(err)
+
+	tokenizeCoin, err := sdk.ParseCoinNormalized("1000stake")
 	s.Require().NoError(err)
 
 	val := s.network.Validators[0]
@@ -61,7 +64,7 @@ func (s *E2ETestSuite) SetupSuite() {
 		val.Address,
 		val.ValAddress,
 		val2.ValAddress,
-		unbond,
+		unbondCoin,
 		fmt.Sprintf("--%s=%d", flags.FlagGas, 300000),
 	)
 	s.Require().NoError(err)
@@ -70,14 +73,31 @@ func (s *E2ETestSuite) SetupSuite() {
 	s.Require().Equal(uint32(0), txRes.Code)
 	s.Require().NoError(s.network.WaitForNextBlock())
 
-	unbondingAmount := sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(5))
-
 	// unbonding the amount
-	out, err = MsgUnbondExec(val.ClientCtx, val.Address, val.ValAddress, unbondingAmount)
+	out, err = MsgUnbondExec(val.ClientCtx, val.Address, val.ValAddress, unbondCoin)
 	s.Require().NoError(err)
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txRes))
 	s.Require().Equal(uint32(0), txRes.Code)
 	s.Require().NoError(s.network.WaitForNextBlock())
+
+	// tokenize shares twice (once for the transfer and one for the redeem)
+	for i := 1; i <= 2; i++ {
+		out, err := MsgTokenizeSharesExec(
+			val.ClientCtx,
+			val.Address,
+			val.ValAddress,
+			val.Address,
+			tokenizeCoin,
+			fmt.Sprintf("--%s=%d", flags.FlagGas, 1000000),
+		)
+
+		s.Require().NoError(err)
+		s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txRes))
+		s.Require().Equal(uint32(0), txRes.Code)
+		s.Require().NoError(s.network.WaitForNextBlock())
+	}
+
+	unbondingAmount := sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(5))
 
 	// unbonding the amount
 	out, err = MsgUnbondExec(val.ClientCtx, val.Address, val.ValAddress, unbondingAmount)
@@ -137,7 +157,6 @@ func (s *E2ETestSuite) TestNewCreateValidatorCmd() {
 				fmt.Sprintf("--%s=0.5", cli.FlagCommissionRate),
 				fmt.Sprintf("--%s=1.0", cli.FlagCommissionMaxRate),
 				fmt.Sprintf("--%s=0.1", cli.FlagCommissionMaxChangeRate),
-				fmt.Sprintf("--%s=1", cli.FlagMinSelfDelegation),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
@@ -156,7 +175,6 @@ func (s *E2ETestSuite) TestNewCreateValidatorCmd() {
 				fmt.Sprintf("--%s=0.5", cli.FlagCommissionRate),
 				fmt.Sprintf("--%s=1.0", cli.FlagCommissionMaxRate),
 				fmt.Sprintf("--%s=0.1", cli.FlagCommissionMaxChangeRate),
-				fmt.Sprintf("--%s=1", cli.FlagMinSelfDelegation),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
@@ -176,7 +194,6 @@ func (s *E2ETestSuite) TestNewCreateValidatorCmd() {
 				fmt.Sprintf("--%s=0.5", cli.FlagCommissionRate),
 				fmt.Sprintf("--%s=1.0", cli.FlagCommissionMaxRate),
 				fmt.Sprintf("--%s=0.1", cli.FlagCommissionMaxChangeRate),
-				fmt.Sprintf("--%s=1", cli.FlagMinSelfDelegation),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
@@ -197,7 +214,6 @@ func (s *E2ETestSuite) TestNewCreateValidatorCmd() {
 				fmt.Sprintf("--%s=0.5", cli.FlagCommissionRate),
 				fmt.Sprintf("--%s=1.0", cli.FlagCommissionMaxRate),
 				fmt.Sprintf("--%s=0.1", cli.FlagCommissionMaxChangeRate),
-				fmt.Sprintf("--%s=1", cli.FlagMinSelfDelegation),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
@@ -424,7 +440,7 @@ func (s *E2ETestSuite) TestGetCmdQueryDelegations() {
 			&types.QueryDelegatorDelegationsResponse{},
 			&types.QueryDelegatorDelegationsResponse{
 				DelegationResponses: types.DelegationResponses{
-					types.NewDelegationResp(val.Address, val.ValAddress, sdk.NewDecFromInt(cli.DefaultTokens), sdk.NewCoin(sdk.DefaultBondDenom, cli.DefaultTokens)),
+					types.NewDelegationResp(val.Address, val.ValAddress, sdk.NewDecFromInt(cli.DefaultTokens), false, sdk.NewCoin(sdk.DefaultBondDenom, cli.DefaultTokens)),
 				},
 				Pagination: &query.PageResponse{},
 			},
@@ -480,7 +496,7 @@ func (s *E2ETestSuite) TestGetCmdQueryValidatorDelegations() {
 			&types.QueryValidatorDelegationsResponse{},
 			&types.QueryValidatorDelegationsResponse{
 				DelegationResponses: types.DelegationResponses{
-					types.NewDelegationResp(val.Address, val.ValAddress, sdk.NewDecFromInt(cli.DefaultTokens), sdk.NewCoin(sdk.DefaultBondDenom, cli.DefaultTokens)),
+					types.NewDelegationResp(val.Address, val.ValAddress, sdk.NewDecFromInt(cli.DefaultTokens), false, sdk.NewCoin(sdk.DefaultBondDenom, cli.DefaultTokens)),
 				},
 				Pagination: &query.PageResponse{},
 			},
@@ -898,16 +914,19 @@ func (s *E2ETestSuite) TestGetCmdQueryParams() {
 			"with text output",
 			[]string{fmt.Sprintf("--%s=text", flags.FlagOutput)},
 			`bond_denom: stake
+global_liquid_staking_cap: "1.000000000000000000"
 historical_entries: 10000
 max_entries: 7
 max_validators: 100
 min_commission_rate: "0.000000000000000000"
-unbonding_time: 1814400s`,
+unbonding_time: 1814400s
+validator_bond_factor: "-1.000000000000000000"
+validator_liquid_staking_cap: "1.000000000000000000"`,
 		},
 		{
 			"with json output",
 			[]string{fmt.Sprintf("--%s=json", flags.FlagOutput)},
-			`{"unbonding_time":"1814400s","max_validators":100,"max_entries":7,"historical_entries":10000,"bond_denom":"stake","min_commission_rate":"0.000000000000000000"}`,
+			`{"unbonding_time":"1814400s","max_validators":100,"max_entries":7,"historical_entries":10000,"bond_denom":"stake","min_commission_rate":"0.000000000000000000","validator_bond_factor":"-1.000000000000000000","global_liquid_staking_cap":"1.000000000000000000","validator_liquid_staking_cap":"1.000000000000000000"}`,
 		},
 	}
 	for _, tc := range testCases {
@@ -1208,7 +1227,7 @@ func (s *E2ETestSuite) TestNewRedelegateCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, 31, &sdk.TxResponse{},
+			false, 3, &sdk.TxResponse{},
 		},
 		{
 			"valid transaction of delegate",

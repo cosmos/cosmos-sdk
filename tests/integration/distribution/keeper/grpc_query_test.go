@@ -19,6 +19,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	"github.com/cosmos/cosmos-sdk/x/distribution/testutil"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
+	mintkeeper "github.com/cosmos/cosmos-sdk/x/mint/keeper"
+	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtestutil "github.com/cosmos/cosmos-sdk/x/staking/testutil"
@@ -35,6 +37,7 @@ type KeeperTestSuite struct {
 
 	interfaceRegistry codectypes.InterfaceRegistry
 	bankKeeper        bankkeeper.Keeper
+	mintKeeper        mintkeeper.Keeper
 	distrKeeper       keeper.Keeper
 	stakingKeeper     *stakingkeeper.Keeper
 	msgServer         types.MsgServer
@@ -44,6 +47,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	app, err := simtestutil.Setup(testutil.AppConfig,
 		&suite.interfaceRegistry,
 		&suite.bankKeeper,
+		&suite.mintKeeper,
 		&suite.distrKeeper,
 		&suite.stakingKeeper,
 	)
@@ -671,6 +675,84 @@ func (suite *KeeperTestSuite) TestGRPCCommunityPool() {
 			}
 		})
 	}
+}
+
+func (suite *KeeperTestSuite) TestGRPCTokenizeShareRecordReward() {
+	ctx, queryClient := suite.ctx, suite.queryClient
+
+	addr := simtestutil.AddTestAddrs(suite.bankKeeper, suite.stakingKeeper, ctx, 2, sdk.NewInt(100000000))
+	valAddrs := simtestutil.ConvertAddrsToValAddrs(addr)
+	tstaking := stakingtestutil.NewHelper(suite.T(), ctx, suite.stakingKeeper)
+
+	// create validator with 50% commission
+	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
+	valPower := int64(100)
+	tstaking.CreateValidatorWithValPower(valAddrs[0], valConsPk1, valPower, true)
+
+	// end block to bond validator
+	staking.EndBlocker(ctx, suite.stakingKeeper)
+
+	// next block
+	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+
+	// fetch validator and delegation
+	val := suite.stakingKeeper.Validator(ctx, valAddrs[0])
+	del := suite.stakingKeeper.Delegation(ctx, sdk.AccAddress(valAddrs[0]), valAddrs[0])
+
+	// end period
+	endingPeriod := suite.distrKeeper.IncrementValidatorPeriod(ctx, val)
+
+	// calculate delegation rewards
+	suite.distrKeeper.CalculateDelegationRewards(ctx, val, del, endingPeriod)
+
+	// start out block height
+	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 3)
+	val = suite.stakingKeeper.Validator(ctx, valAddrs[0])
+	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 3)
+
+	// allocate some rewards
+	initial := suite.stakingKeeper.TokensFromConsensusPower(ctx, 10)
+	tokens := sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: sdk.NewDecFromInt(initial)}}
+	suite.distrKeeper.AllocateTokensToValidator(ctx, val, tokens)
+
+	// end period
+	suite.distrKeeper.IncrementValidatorPeriod(ctx, val)
+
+	coins := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, initial)}
+	err := suite.mintKeeper.MintCoins(ctx, coins)
+	suite.Require().NoError(err)
+
+	err = suite.bankKeeper.SendCoinsFromModuleToModule(ctx, minttypes.ModuleName, types.ModuleName, coins)
+	suite.Require().NoError(err)
+	// tokenize share amount
+	delTokens := sdk.NewInt(1000000)
+	msgServer := stakingkeeper.NewMsgServerImpl(suite.stakingKeeper)
+	_, err = msgServer.TokenizeShares(sdk.WrapSDKContext(ctx), &stakingtypes.MsgTokenizeShares{
+		DelegatorAddress:    sdk.AccAddress(valAddrs[0]).String(),
+		ValidatorAddress:    valAddrs[0].String(),
+		TokenizedShareOwner: sdk.AccAddress(valAddrs[0]).String(),
+		Amount:              sdk.NewCoin(sdk.DefaultBondDenom, delTokens),
+	})
+	suite.Require().NoError(err)
+
+	staking.EndBlocker(ctx, suite.stakingKeeper)
+	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+	suite.distrKeeper.AllocateTokensToValidator(ctx, val, tokens)
+	suite.distrKeeper.IncrementValidatorPeriod(ctx, val)
+
+	rewards, err := queryClient.TokenizeShareRecordReward(gocontext.Background(), &types.QueryTokenizeShareRecordRewardRequest{
+		OwnerAddress: sdk.AccAddress(valAddrs[0]).String(),
+	})
+	suite.Require().NoError(err)
+	suite.Require().Equal(&types.QueryTokenizeShareRecordRewardResponse{
+		Rewards: []types.TokenizeShareRecordReward{
+			{
+				RecordId: 1,
+				Reward:   sdk.DecCoins{sdk.NewInt64DecCoin("stake", 50000)},
+			},
+		},
+		Total: sdk.DecCoins{sdk.NewInt64DecCoin("stake", 50000)},
+	}, rewards)
 }
 
 func TestDistributionTestSuite(t *testing.T) {

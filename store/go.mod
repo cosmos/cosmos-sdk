@@ -14,7 +14,7 @@ require (
 	github.com/cosmos/iavl v1.0.0
 	github.com/cosmos/ics23/go v0.10.0
 	github.com/hashicorp/go-metrics v0.5.3
-	github.com/linxGnu/grocksdb v1.8.10
+	github.com/linxGnu/grocksdb v1.8.11
 	github.com/mattn/go-sqlite3 v1.14.19
 	github.com/stretchr/testify v1.8.4
 	github.com/tidwall/btree v1.7.0

@@ -89,10 +89,7 @@ message MsgEditValidator {
   option (gogoproto.goproto_getters) = false;
 
   Description description       = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
-  string      validator_address = 2 [
-    (cosmos_proto.scalar) = "cosmos.ValidatorAddressString",
-    (cosmos_proto.accepts_interface) = "cosmos.crypto.PubKey"
-  ];
+  string      validator_address = 2 [(cosmos_proto.scalar) = "cosmos.ValidatorAddressString"];
 
   // We pass a reference to the new commission rate and min self delegation as
   // it's not mandatory to update. If not updated, the deserialized rate will be
@@ -224,7 +221,10 @@ message MsgRotateConsPubKey {
   option (gogoproto.equal)           = false;
 
   string              validator_address = 1 [(cosmos_proto.scalar) = "cosmos.ValidatorAddressString"];
-  google.protobuf.Any new_pubkey        = 2 [(cosmos_proto.scalar) = "cosmos.PubKey"];
+  google.protobuf.Any new_pubkey        = 2 [
+    (cosmos_proto.accepts_interface) = "cosmos.crypto.PubKey",
+    (cosmos_proto.scalar) = "cosmos.PubKey"
+  ];
 }
 
 // MsgRotateConsPubKeyResponse defines the response structure for executing a

@@ -13,7 +13,6 @@ import (
 	banktypes "cosmossdk.io/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -102,19 +101,15 @@ func (pva PeriodicVestingAccount) Init(ctx context.Context, msg *vestingtypes.Ms
 	if err != nil {
 		return nil, err
 	}
-	err = pva.RootAccount.Set(ctx, fromAddress)
+	err = pva.Owner.Set(ctx, sender)
 	if err != nil {
 		return nil, err
 	}
 
 	// Send token to new vesting account
 	sendMsg := banktypes.NewMsgSend(fromAddress, toAddress, totalCoins)
-	anyMsg, err := codectypes.NewAnyWithValue(sendMsg)
-	if err != nil {
-		return nil, err
-	}
 
-	if _, err = accountstd.ExecModuleAnys(ctx, []*codectypes.Any{anyMsg}); err != nil {
+	if _, err = accountstd.ExecModule[banktypes.MsgSendResponse](ctx, sendMsg); err != nil {
 		return nil, err
 	}
 

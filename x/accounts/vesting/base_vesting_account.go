@@ -1,6 +1,7 @@
 package vesting
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"time"
@@ -28,7 +29,7 @@ var (
 	EndTimePrefix          = collections.NewPrefix(3)
 	StartTimePrefix        = collections.NewPrefix(4)
 	VestingPeriodsPrefix   = collections.NewPrefix(5)
-	RootAccountPrefix      = collections.NewPrefix(6)
+	OwnerPrefix            = collections.NewPrefix(6)
 )
 
 // Base Vesting Account
@@ -39,7 +40,7 @@ type getVestingFunc = func(ctx context.Context, time time.Time) (sdk.Coins, erro
 // NewBaseVestingAccount creates a new BaseVestingAccount object.
 func NewBaseVestingAccount(d accountstd.Dependencies) (*BaseVestingAccount, error) {
 	baseVestingAccount := &BaseVestingAccount{
-		RootAccount:      collections.NewItem(d.SchemaBuilder, RootAccountPrefix, "root_account", collections.StringValue),
+		Owner:            collections.NewItem(d.SchemaBuilder, OwnerPrefix, "owner", collections.BytesValue),
 		OriginalVesting:  collections.NewMap(d.SchemaBuilder, OriginalVestingPrefix, "original_vesting", collections.StringKey, sdk.IntValue),
 		DelegatedFree:    collections.NewMap(d.SchemaBuilder, DelegatedFreePrefix, "delegated_free", collections.StringKey, sdk.IntValue),
 		DelegatedVesting: collections.NewMap(d.SchemaBuilder, DelegatedVestingPrefix, "delegated_vesting", collections.StringKey, sdk.IntValue),
@@ -51,7 +52,8 @@ func NewBaseVestingAccount(d accountstd.Dependencies) (*BaseVestingAccount, erro
 }
 
 type BaseVestingAccount struct {
-	RootAccount      collections.Item[string]
+	// Owner is the address of the account owner.
+	Owner            collections.Item[[]byte]
 	OriginalVesting  collections.Map[string, math.Int]
 	DelegatedFree    collections.Map[string, math.Int]
 	DelegatedVesting collections.Map[string, math.Int]
@@ -80,7 +82,7 @@ func (bva *BaseVestingAccount) Init(ctx context.Context, msg *vestingtypes.MsgIn
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid 'to' address: %s", err)
 	}
-	err = bva.RootAccount.Set(ctx, fromAddress)
+	err = bva.Owner.Set(ctx, sender)
 	if err != nil {
 		return nil, err
 	}
@@ -104,12 +106,7 @@ func (bva *BaseVestingAccount) Init(ctx context.Context, msg *vestingtypes.MsgIn
 
 	// Send token to new vesting account
 	sendMsg := banktypes.NewMsgSend(fromAddress, toAddress, msg.Amount)
-	anyMsg, err := codectypes.NewAnyWithValue(sendMsg)
-	if err != nil {
-		return nil, err
-	}
-
-	if _, err = accountstd.ExecModuleAnys(ctx, []*codectypes.Any{anyMsg}); err != nil {
+	if _, err = accountstd.ExecModule[banktypes.MsgSendResponse](ctx, sendMsg); err != nil {
 		return nil, err
 	}
 
@@ -363,16 +360,12 @@ func (bva *BaseVestingAccount) ExecuteMessages(
 // Check the sender of the execute message is the owner of the vesting account
 func (bva BaseVestingAccount) Authenticate(ctx context.Context) error {
 	sender := accountstd.Sender(ctx)
-	senderAddress, err := bva.addressCodec.BytesToString(sender)
+	owner, err := bva.Owner.Get(ctx)
 	if err != nil {
 		return sdkerrors.ErrInvalidAddress.Wrapf("invalid 'to' address: %s", err)
 	}
-	rootAccount, err := bva.RootAccount.Get(ctx)
-	if err != nil {
-		return sdkerrors.ErrInvalidAddress.Wrapf("invalid 'to' address: %s", err)
-	}
-	if senderAddress != rootAccount {
-		return fmt.Errorf("sender account is not the owner of this vesting account, expected owner address %s: ", rootAccount)
+	if !bytes.Equal(sender, owner) {
+		return fmt.Errorf("sender account is not the owner of this vesting account, expected owner address %s: ", owner)
 	}
 
 	return nil

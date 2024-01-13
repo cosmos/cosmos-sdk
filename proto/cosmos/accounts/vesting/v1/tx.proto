@@ -16,13 +16,11 @@ option go_package = "cosmossdk.io/x/accounts/vesting/types/v1";
 // MsgInitVestingAccount defines a message that enables creating a vesting
 // account.
 message MsgInitVestingAccount {
-  option (cosmos.msg.v1.signer) = "from_address";
-  option (amino.name)           = "cosmos-sdk/MsgInitVestingAccount";
+  option (amino.name) = "cosmos-sdk/MsgInitVestingAccount";
 
   option (gogoproto.equal) = true;
 
-  string   from_address                    = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  repeated cosmos.base.v1beta1.Coin amount = 2 [
+  repeated cosmos.base.v1beta1.Coin amount = 1 [
     (gogoproto.nullable)     = false,
     (amino.dont_omitempty)   = true,
     (amino.encoding)         = "legacy_coins",
@@ -30,48 +28,27 @@ message MsgInitVestingAccount {
   ];
 
   // end of vesting as unix time (in seconds).
-  int64 end_time = 3;
-  bool  delayed  = 4;
+  int64 end_time = 2;
+  bool  delayed  = 3;
   // start of vesting as unix time (in seconds).
   //
   // Since 0.51.x
-  int64 start_time = 5;
+  int64 start_time = 4;
 }
 
 // MsgInitVestingAccountResponse defines the Msg/InitVestingAccount response type.
 message MsgInitVestingAccountResponse {}
 
-// MsgInitPermanentLockedAccount defines a message that enables creating a permanent
-// locked account.
-message MsgInitPermanentLockedAccount {
-  option (cosmos.msg.v1.signer) = "from_address";
-  option (amino.name)           = "cosmos-sdk/MsgInitPermLockedAccount";
-  option (gogoproto.equal)      = true;
-
-  string   from_address                    = 1 [(gogoproto.moretags) = "yaml:\"from_address\""];
-  repeated cosmos.base.v1beta1.Coin amount = 2 [
-    (gogoproto.nullable)     = false,
-    (amino.dont_omitempty)   = true,
-    (amino.encoding)         = "legacy_coins",
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
-  ];
-}
-
-// MsgInitPermanentLockedAccountResponse defines the Msg/InitPermanentLockedAccount response type.
-message MsgInitPermanentLockedAccountResponse {}
-
 // MsgInitVestingAccount defines a message that enables creating a vesting
 // account.
 message MsgInitPeriodicVestingAccount {
-  option (cosmos.msg.v1.signer) = "from_address";
-  option (amino.name)           = "cosmos-sdk/MsgInitPeriodVestAccount";
+  option (amino.name) = "cosmos-sdk/MsgInitPeriodVestAccount";
 
   option (gogoproto.equal) = false;
 
-  string from_address = 1;
   // start of vesting as unix time (in seconds).
-  int64           start_time      = 2;
-  repeated Period vesting_periods = 3 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+  int64           start_time      = 1;
+  repeated Period vesting_periods = 2 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 }
 
 // MsgInitVestingAccountResponse defines the Msg/InitPeriodicVestingAccount
@@ -82,7 +59,7 @@ message MsgInitPeriodicVestingAccountResponse {}
 
 message MsgExecuteMessages {
   // execution_messages are the messages that the operation sender will execute.
-  repeated google.protobuf.Any execution_messages = 2;
+  repeated google.protobuf.Any execution_messages = 1;
 }
 
 // MsgExecuteResponse is the response to MsgExecute.

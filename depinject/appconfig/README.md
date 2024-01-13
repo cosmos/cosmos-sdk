@@ -37,11 +37,11 @@ message Module {
 
 Once we have a module config object, we need to register depinject providers and invokers for the module using the `cosmossdk.io/core/appmodule` package.
 
-At the most basic level, we must define an `init` function in the package listed as the `go_import` in the module descriptor. This `init` function must call `appmodule.Register` with an empty instance of the config object and some options for initializing the module, ex:
+At the most basic level, we must define an `init` function in the package listed as the `go_import` in the module descriptor. This `init` function must call `appconfig.RegisterModule` with an empty instance of the config object and some options for initializing the module, ex:
 
 ```go
 func init() {
-	appmodule.Register(&modulev1.Module{},
+ appconfig.RegisterModule(&modulev1.Module{},
     // options
   )
 }
@@ -53,14 +53,14 @@ A `depinject` "provider" is a function which takes dependencies from other modul
 other modules to use as dependencies. A `depinject` "invoker" is function which takes optional dependencies as inputs,
 returns no outputs, and is run at the end of initializing the dependency graph. Providers are much more common than
 invokers and should be the preferred method of wiring up modules when possible. Providers and invokers can be registered
-for modules by using `appmodule.Provide` and `appmodule.Invoke` to create options which get passed
-to `appmodule.Register` in the module `init` function, ex:
+for modules by using `appconfig.Provide` and `appconfig.Invoke` to create options which get passed
+to `appconfig.RegisterModule` in the module `init` function, ex:
 
 ```go
 func init() {
-  appmodule.Register(&modulev1.Module{},
-	  appmodule.Provide(provideSomething, provideSomethingElse),
-	  appmodule.Invoke(invokeSomething),
+  appconfig.RegisterModule(&modulev1.Module{},
+   appconfig.Provide(provideSomething, provideSomethingElse),
+   appconfig.Invoke(invokeSomething),
   )
 }
 ```
@@ -79,7 +79,7 @@ func init() {
 #### Regular Golang Types
 
 Regular golang types (besides the special cases described above) can be provided as both input and output parameters
-to providers and invokers. For `depinject` to match an output parameter of one provider to an input parameter of 
+to providers and invokers. For `depinject` to match an output parameter of one provider to an input parameter of
 another, there must be an exact match for the type unless the input parameter is an input type. For instance, if
 a provider defines a dependency on `Foo` and some module provides `*Foo`, these two types will not match and there
 will be an error.
@@ -133,7 +133,7 @@ bet.
 If `depinject.ModuleKey` is used as input parameter for a provider, the provider function will be treated as a
 "module-scoped provider" which means that the provider function will be called exactly once every time
 one of its outputs is needed by a module so that the provider can provide a unique instance of the dependency to
-each module. 
+each module.
 
 Module-scoped dependencies should be used to provide dependencies which are private and unique to each module. Examples
 of these are store keys and param subspaces.
@@ -177,7 +177,7 @@ when ordering *really* doesn't matter (which is rare).
 
 ### Resolving Circular Dependencies
 
-Circular dependencies are inevitable to crop up and there are ways to avoid them. While `depinject` cannot handle 
+Circular dependencies are inevitable to crop up and there are ways to avoid them. While `depinject` cannot handle
 circular dependency graphs of providers, many of the above tools are designed to enable satisfying circular dependencies
 between modules.
 
@@ -193,7 +193,7 @@ the staking module can define an invoker which depends on `map[string]StakingHoo
 satisfy this dependency graph which allows staking and slashing to depend on each other in this order:
 
 * provide staking keeper -> slashing keeper
-* provide slashing keeper wrapped as `StakingHooksWrapper` 
+* provide slashing keeper wrapped as `StakingHooksWrapper`
 * get `map[string]StakingHooksWrapper` and the staking keeper and wire them together
 
 ## 3. Testing and Debugging The Module
@@ -212,8 +212,8 @@ var appConfig []byte
 var AppConfig = appconfig.LoadYAML(appConfig)
 
 func TestModule(t *testing.T) {
-	var keeper Keeper
-	assert.NilError(t, depinject.Inject(AppConfig, &keeper))
+ var keeper Keeper
+ assert.NilError(t, depinject.Inject(AppConfig, &keeper))
 }
 ```
 

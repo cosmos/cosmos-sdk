@@ -14,7 +14,7 @@ message GenesisState {
   // Budget defines the budget proposals at genesis.
   repeated Budget budget = 2;
 
-  string to_distirbute = 3 [
+  string to_distribute = 3 [
     (cosmos_proto.scalar)  = "cosmos.Int",
     (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.nullable)   = false

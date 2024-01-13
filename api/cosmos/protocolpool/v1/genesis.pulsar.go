@@ -120,7 +120,7 @@ var (
 	md_GenesisState                 protoreflect.MessageDescriptor
 	fd_GenesisState_continuous_fund protoreflect.FieldDescriptor
 	fd_GenesisState_budget          protoreflect.FieldDescriptor
-	fd_GenesisState_to_distirbute   protoreflect.FieldDescriptor
+	fd_GenesisState_to_distribute   protoreflect.FieldDescriptor
 )
 
 func init() {
@@ -128,7 +128,7 @@ func init() {
 	md_GenesisState = File_cosmos_protocolpool_v1_genesis_proto.Messages().ByName("GenesisState")
 	fd_GenesisState_continuous_fund = md_GenesisState.Fields().ByName("continuous_fund")
 	fd_GenesisState_budget = md_GenesisState.Fields().ByName("budget")
-	fd_GenesisState_to_distirbute = md_GenesisState.Fields().ByName("to_distirbute")
+	fd_GenesisState_to_distribute = md_GenesisState.Fields().ByName("to_distribute")
 }
 
 var _ protoreflect.Message = (*fastReflection_GenesisState)(nil)
@@ -208,9 +208,9 @@ func (x *fastReflection_GenesisState) Range(f func(protoreflect.FieldDescriptor,
 			return
 		}
 	}
-	if x.ToDistirbute != "" {
-		value := protoreflect.ValueOfString(x.ToDistirbute)
-		if !f(fd_GenesisState_to_distirbute, value) {
+	if x.ToDistribute != "" {
+		value := protoreflect.ValueOfString(x.ToDistribute)
+		if !f(fd_GenesisState_to_distribute, value) {
 			return
 		}
 	}
@@ -233,8 +233,8 @@ func (x *fastReflection_GenesisState) Has(fd protoreflect.FieldDescriptor) bool 
 		return len(x.ContinuousFund) != 0
 	case "cosmos.protocolpool.v1.GenesisState.budget":
 		return len(x.Budget) != 0
-	case "cosmos.protocolpool.v1.GenesisState.to_distirbute":
-		return x.ToDistirbute != ""
+	case "cosmos.protocolpool.v1.GenesisState.to_distribute":
+		return x.ToDistribute != ""
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.GenesisState"))
@@ -255,8 +255,8 @@ func (x *fastReflection_GenesisState) Clear(fd protoreflect.FieldDescriptor) {
 		x.ContinuousFund = nil
 	case "cosmos.protocolpool.v1.GenesisState.budget":
 		x.Budget = nil
-	case "cosmos.protocolpool.v1.GenesisState.to_distirbute":
-		x.ToDistirbute = ""
+	case "cosmos.protocolpool.v1.GenesisState.to_distribute":
+		x.ToDistribute = ""
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.GenesisState"))
@@ -285,8 +285,8 @@ func (x *fastReflection_GenesisState) Get(descriptor protoreflect.FieldDescripto
 		}
 		listValue := &_GenesisState_2_list{list: &x.Budget}
 		return protoreflect.ValueOfList(listValue)
-	case "cosmos.protocolpool.v1.GenesisState.to_distirbute":
-		value := x.ToDistirbute
+	case "cosmos.protocolpool.v1.GenesisState.to_distribute":
+		value := x.ToDistribute
 		return protoreflect.ValueOfString(value)
 	default:
 		if descriptor.IsExtension() {
@@ -316,8 +316,8 @@ func (x *fastReflection_GenesisState) Set(fd protoreflect.FieldDescriptor, value
 		lv := value.List()
 		clv := lv.(*_GenesisState_2_list)
 		x.Budget = *clv.list
-	case "cosmos.protocolpool.v1.GenesisState.to_distirbute":
-		x.ToDistirbute = value.Interface().(string)
+	case "cosmos.protocolpool.v1.GenesisState.to_distribute":
+		x.ToDistribute = value.Interface().(string)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.GenesisState"))
@@ -350,8 +350,8 @@ func (x *fastReflection_GenesisState) Mutable(fd protoreflect.FieldDescriptor) p
 		}
 		value := &_GenesisState_2_list{list: &x.Budget}
 		return protoreflect.ValueOfList(value)
-	case "cosmos.protocolpool.v1.GenesisState.to_distirbute":
-		panic(fmt.Errorf("field to_distirbute of message cosmos.protocolpool.v1.GenesisState is not mutable"))
+	case "cosmos.protocolpool.v1.GenesisState.to_distribute":
+		panic(fmt.Errorf("field to_distribute of message cosmos.protocolpool.v1.GenesisState is not mutable"))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.GenesisState"))
@@ -371,7 +371,7 @@ func (x *fastReflection_GenesisState) NewField(fd protoreflect.FieldDescriptor) 
 	case "cosmos.protocolpool.v1.GenesisState.budget":
 		list := []*Budget{}
 		return protoreflect.ValueOfList(&_GenesisState_2_list{list: &list})
-	case "cosmos.protocolpool.v1.GenesisState.to_distirbute":
+	case "cosmos.protocolpool.v1.GenesisState.to_distribute":
 		return protoreflect.ValueOfString("")
 	default:
 		if fd.IsExtension() {
@@ -454,7 +454,7 @@ func (x *fastReflection_GenesisState) ProtoMethods() *protoiface.Methods {
 				n += 1 + l + runtime.Sov(uint64(l))
 			}
 		}
-		l = len(x.ToDistirbute)
+		l = len(x.ToDistribute)
 		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
@@ -487,10 +487,10 @@ func (x *fastReflection_GenesisState) ProtoMethods() *protoiface.Methods {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
 		}
-		if len(x.ToDistirbute) > 0 {
-			i -= len(x.ToDistirbute)
-			copy(dAtA[i:], x.ToDistirbute)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.ToDistirbute)))
+		if len(x.ToDistribute) > 0 {
+			i -= len(x.ToDistribute)
+			copy(dAtA[i:], x.ToDistribute)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.ToDistribute)))
 			i--
 			dAtA[i] = 0x1a
 		}
@@ -645,7 +645,7 @@ func (x *fastReflection_GenesisState) ProtoMethods() *protoiface.Methods {
 				iNdEx = postIndex
 			case 3:
 				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field ToDistirbute", wireType)
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field ToDistribute", wireType)
 				}
 				var stringLen uint64
 				for shift := uint(0); ; shift += 7 {
@@ -673,7 +673,7 @@ func (x *fastReflection_GenesisState) ProtoMethods() *protoiface.Methods {
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.ToDistirbute = string(dAtA[iNdEx:postIndex])
+				x.ToDistribute = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
 			default:
 				iNdEx = preIndex
@@ -733,7 +733,7 @@ type GenesisState struct {
 	ContinuousFund []*ContinuousFund `protobuf:"bytes,1,rep,name=continuous_fund,json=continuousFund,proto3" json:"continuous_fund,omitempty"`
 	// Budget defines the budget proposals at genesis.
 	Budget       []*Budget `protobuf:"bytes,2,rep,name=budget,proto3" json:"budget,omitempty"`
-	ToDistirbute string    `protobuf:"bytes,3,opt,name=to_distirbute,json=toDistirbute,proto3" json:"to_distirbute,omitempty"`
+	ToDistribute string    `protobuf:"bytes,3,opt,name=to_distribute,json=toDistribute,proto3" json:"to_distribute,omitempty"`
 }
 
 func (x *GenesisState) Reset() {
@@ -770,9 +770,9 @@ func (x *GenesisState) GetBudget() []*Budget {
 	return nil
 }
 
-func (x *GenesisState) GetToDistirbute() string {
+func (x *GenesisState) GetToDistribute() string {
 	if x != nil {
-		return x.ToDistirbute
+		return x.ToDistribute
 	}
 	return ""
 }
@@ -799,11 +799,11 @@ var file_cosmos_protocolpool_v1_genesis_proto_rawDesc = []byte{
 	0x02, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x1e, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x70,
 	0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x2e, 0x76, 0x31, 0x2e, 0x42,
 	0x75, 0x64, 0x67, 0x65, 0x74, 0x52, 0x06, 0x62, 0x75, 0x64, 0x67, 0x65, 0x74, 0x12, 0x50, 0x0a,
-	0x0d, 0x74, 0x6f, 0x5f, 0x64, 0x69, 0x73, 0x74, 0x69, 0x72, 0x62, 0x75, 0x74, 0x65, 0x18, 0x03,
+	0x0d, 0x74, 0x6f, 0x5f, 0x64, 0x69, 0x73, 0x74, 0x72, 0x69, 0x62, 0x75, 0x74, 0x65, 0x18, 0x03,
 	0x20, 0x01, 0x28, 0x09, 0x42, 0x2b, 0xc8, 0xde, 0x1f, 0x00, 0xda, 0xde, 0x1f, 0x15, 0x63, 0x6f,
 	0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x6d, 0x61, 0x74, 0x68, 0x2e,
 	0x49, 0x6e, 0x74, 0xd2, 0xb4, 0x2d, 0x0a, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x49, 0x6e,
-	0x74, 0x52, 0x0c, 0x74, 0x6f, 0x44, 0x69, 0x73, 0x74, 0x69, 0x72, 0x62, 0x75, 0x74, 0x65, 0x42,
+	0x74, 0x52, 0x0c, 0x74, 0x6f, 0x44, 0x69, 0x73, 0x74, 0x72, 0x69, 0x62, 0x75, 0x74, 0x65, 0x42,
 	0xdc, 0x01, 0x0a, 0x1a, 0x63, 0x6f, 0x6d, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x70,
 	0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x2e, 0x76, 0x31, 0x42, 0x0c,
 	0x47, 0x65, 0x6e, 0x65, 0x73, 0x69, 0x73, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x36,

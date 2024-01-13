@@ -2,7 +2,6 @@ package cometbft
 
 import (
 	"context"
-	"encoding/json"
 	"strings"
 
 	errorsmod "cosmossdk.io/errors"
@@ -46,14 +45,12 @@ func (c *Consensus[T]) handlerQueryApp(ctx context.Context, path []string, req *
 
 	switch path[1] {
 	case "simulate":
-		// TODO: is this context ok?
 		txResult, err := c.app.Simulate(ctx, req.Data)
 		if err != nil {
 			return nil, errorsmod.Wrap(err, "failed to simulate tx")
 		}
 
-		// TODO: encode txResult, we use codec.ProtoMarshalJSON in baseapp, is JSON fine?
-		bz, err := json.Marshal(txResult)
+		bz, err := intoABCISimulationResponse(txResult, c.indexEvents)
 		if err != nil {
 			return nil, errorsmod.Wrap(err, "failed to marshal txResult")
 		}

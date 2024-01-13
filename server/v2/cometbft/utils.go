@@ -5,17 +5,22 @@ import (
 	"strings"
 	"time"
 
+	v1beta1 "cosmossdk.io/api/cosmos/base/abci/v1beta1"
+	sdkabci "cosmossdk.io/api/tendermint/abci"
 	"cosmossdk.io/core/comet"
 	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/server/v2/core/appmanager"
 	coreappmgr "cosmossdk.io/server/v2/core/appmanager"
 	"cosmossdk.io/server/v2/core/event"
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtcrypto "github.com/cometbft/cometbft/api/cometbft/crypto/v1"
 	v1 "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	gogoproto "github.com/cosmos/gogoproto/proto"
+	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/types/dynamicpb"
+	"google.golang.org/protobuf/types/known/anypb"
 )
 
 func parseQueryRequest(req *abci.QueryRequest) (proto.Message, error) {
@@ -170,6 +175,50 @@ func intoABCIEvents(events []event.Event, indexSet map[string]struct{}) []abci.E
 		}
 	}
 	return abciEvents
+}
+
+func intoABCISimulationResponse(txRes appmanager.TxResult, indexSet map[string]struct{}) ([]byte, error) {
+	indexAll := len(indexSet) == 0
+	abciEvents := make([]*sdkabci.Event, len(txRes.Events))
+	for i, e := range txRes.Events {
+		abciEvents[i] = &sdkabci.Event{
+			Type_:      e.Type,
+			Attributes: make([]*sdkabci.EventAttribute, len(e.Attributes)),
+		}
+
+		for j, attr := range e.Attributes {
+			_, index := indexSet[fmt.Sprintf("%s.%s", e.Type, attr.Key)]
+			abciEvents[i].Attributes[j] = &sdkabci.EventAttribute{
+				Key:   attr.Key,
+				Value: attr.Value,
+				Index: index || indexAll,
+			}
+		}
+	}
+
+	msgResponses := make([]*anypb.Any, len(txRes.Resp))
+	for i, resp := range txRes.Resp {
+		any, err := anypb.New(resp)
+		if err != nil {
+			return nil, err
+		}
+		msgResponses[i] = any
+	}
+
+	res := &v1beta1.SimulationResponse{
+		GasInfo: &v1beta1.GasInfo{
+			GasWanted: txRes.GasWanted,
+			GasUsed:   txRes.GasUsed,
+		},
+		Result: &v1beta1.Result{
+			Data:         []byte{},
+			Log:          txRes.Error.Error(),
+			Events:       abciEvents,
+			MsgResponses: msgResponses,
+		},
+	}
+
+	return protojson.Marshal(res)
 }
 
 // ToSDKEvidence takes comet evidence and returns sdk evidence

@@ -9472,9 +9472,11 @@ paths:
                 type: string
               pruning_keep_recent:
                 type: string
-                title: pruning settings
               pruning_interval:
                 type: string
+              halt_height:
+                type: string
+                format: uint64
             description: >-
               ConfigResponse defines the response structure for the Config gRPC
               query.
@@ -47593,9 +47595,11 @@ definitions:
         type: string
       pruning_keep_recent:
         type: string
-        title: pruning settings
       pruning_interval:
         type: string
+      halt_height:
+        type: string
+        format: uint64
     description: ConfigResponse defines the response structure for the Config gRPC query.
   cosmos.base.node.v1beta1.StatusResponse:
     type: object

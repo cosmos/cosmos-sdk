@@ -40,6 +40,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [v0.50.3](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.50.3) - 2023-01-11
 
+### Features
+
+* (gRPC) [#19043](https://github.com/cosmos/cosmos-sdk/pull/19043) Add `halt_height` to the gRPC `/cosmos/base/node/v1beta1/config` request.
+
 ### Improvements
 
 * (x/bank) [#18956](https://github.com/cosmos/cosmos-sdk/pull/18956) Introduced a new `DenomOwnersByQuery` query method for `DenomOwners`, which accepts the denom value as a query string parameter, resolving issues with denoms containing slashes.

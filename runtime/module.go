@@ -252,23 +252,17 @@ func ProvideAppVersionModifier(app *AppBuilder) baseapp.AppVersionModifier {
 }
 
 func ProvideEnvironment(config *runtimev1alpha1.Module, key depinject.ModuleKey, app *AppBuilder) appmodule.Environment {
-	override := storeKeyOverride(config, key.Name())
+	env := appmodule.Environment{}
 
-	var storeKeyName string
-	if override != nil {
-		storeKeyName = override.KvStoreKey
-	} else {
-		storeKeyName = key.Name()
-	}
+	env.KvStoreService = ProvideKVStoreService(config, key, app)
 
-	storeKey := storetypes.NewKVStoreKey(storeKeyName)
-	registerStoreKey(app, storeKey)
+	env.EventService = EventService{}
+	env.HeaderService = HeaderService{}
+	env.BranchService = BranchService{}
+	env.GasService = GasService{}
 
-	kvKeys := map[string]*storetypes.KVStoreKey{
-		storeKeyName: storeKey,
-	}
+	return env
 
-	return NewEnvironment(kvKeys, nil)
 }
 
 type (

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"cosmossdk.io/collections"
+	"cosmossdk.io/core/address"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/accounts/accountstd"
@@ -27,6 +28,7 @@ var (
 	EndTimePrefix          = collections.NewPrefix(3)
 	StartTimePrefix        = collections.NewPrefix(4)
 	VestingPeriodsPrefix   = collections.NewPrefix(5)
+	RootAccountPrefix      = collections.NewPrefix(6)
 )
 
 // Base Vesting Account
@@ -37,9 +39,11 @@ type getVestingFunc = func(ctx context.Context, time time.Time) (sdk.Coins, erro
 // NewBaseVestingAccount creates a new BaseVestingAccount object.
 func NewBaseVestingAccount(d accountstd.Dependencies) (*BaseVestingAccount, error) {
 	baseVestingAccount := &BaseVestingAccount{
+		RootAccount:      collections.NewItem(d.SchemaBuilder, RootAccountPrefix, "root_account", collections.StringValue),
 		OriginalVesting:  collections.NewMap(d.SchemaBuilder, OriginalVestingPrefix, "original_vesting", collections.StringKey, sdk.IntValue),
 		DelegatedFree:    collections.NewMap(d.SchemaBuilder, DelegatedFreePrefix, "delegated_free", collections.StringKey, sdk.IntValue),
 		DelegatedVesting: collections.NewMap(d.SchemaBuilder, DelegatedVestingPrefix, "delegated_vesting", collections.StringKey, sdk.IntValue),
+		addressCodec:     d.AddressCodec,
 		EndTime:          collections.NewItem(d.SchemaBuilder, EndTimePrefix, "end_time", sdk.IntValue),
 	}
 
@@ -47,9 +51,11 @@ func NewBaseVestingAccount(d accountstd.Dependencies) (*BaseVestingAccount, erro
 }
 
 type BaseVestingAccount struct {
+	RootAccount      collections.Item[string]
 	OriginalVesting  collections.Map[string, math.Int]
 	DelegatedFree    collections.Map[string, math.Int]
 	DelegatedVesting collections.Map[string, math.Int]
+	addressCodec     address.Codec
 	// Vesting end time, as unix timestamp (in seconds).
 	EndTime collections.Item[math.Int]
 }
@@ -57,15 +63,26 @@ type BaseVestingAccount struct {
 func (bva *BaseVestingAccount) Init(ctx context.Context, msg *vestingtypes.MsgInitVestingAccount) (
 	*vestingtypes.MsgInitVestingAccountResponse, error,
 ) {
+	sender := accountstd.Sender(ctx)
+	if sender == nil {
+		return nil, sdkerrors.ErrInvalidAddress.Wrapf("Cannot find sender address from context")
+	}
 	to := accountstd.Whoami(ctx)
 	if to == nil {
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("Cannot find account address from context")
 	}
 
-	addrCodec := accountstd.AddressCodec(ctx)
-	toAddress, err := addrCodec.BytesToString(to)
+	toAddress, err := bva.addressCodec.BytesToString(to)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid 'to' address: %s", err)
+	}
+	fromAddress, err := bva.addressCodec.BytesToString(sender)
+	if err != nil {
+		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid 'to' address: %s", err)
+	}
+	err = bva.RootAccount.Set(ctx, fromAddress)
+	if err != nil {
+		return nil, err
 	}
 
 	if err := validateAmount(msg.Amount); err != nil {
@@ -86,7 +103,7 @@ func (bva *BaseVestingAccount) Init(ctx context.Context, msg *vestingtypes.MsgIn
 	}
 
 	// Send token to new vesting account
-	sendMsg := banktypes.NewMsgSend(msg.FromAddress, toAddress, msg.Amount)
+	sendMsg := banktypes.NewMsgSend(fromAddress, toAddress, msg.Amount)
 	anyMsg, err := codectypes.NewAnyWithValue(sendMsg)
 	if err != nil {
 		return nil, err
@@ -221,6 +238,12 @@ func (bva *BaseVestingAccount) ExecuteMessages(
 ) (
 	*vestingtypesv1.MsgExecuteMessagesResponse, error,
 ) {
+	// Make sure sender are the owner of the vesting account
+	err := bva.Authenticate(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	originalContext := accountstd.OriginalContext(ctx)
 	sdkctx := sdk.UnwrapSDKContext(originalContext)
 
@@ -335,6 +358,24 @@ func (bva *BaseVestingAccount) ExecuteMessages(
 	}
 
 	return &vestingtypesv1.MsgExecuteMessagesResponse{ExecutionMessagesResponse: responses}, nil
+}
+
+// Check the sender of the execute message is the owner of the vesting account
+func (bva BaseVestingAccount) Authenticate(ctx context.Context) error {
+	sender := accountstd.Sender(ctx)
+	senderAddress, err := bva.addressCodec.BytesToString(sender)
+	if err != nil {
+		return sdkerrors.ErrInvalidAddress.Wrapf("invalid 'to' address: %s", err)
+	}
+	rootAccount, err := bva.RootAccount.Get(ctx)
+	if err != nil {
+		return sdkerrors.ErrInvalidAddress.Wrapf("invalid 'to' address: %s", err)
+	}
+	if senderAddress != rootAccount {
+		return fmt.Errorf("sender account is not the owner of this vesting account, expected owner address %s: ", rootAccount)
+	}
+
+	return nil
 }
 
 // --------------- Query -----------------

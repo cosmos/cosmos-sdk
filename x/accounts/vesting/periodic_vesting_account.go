@@ -47,13 +47,20 @@ type PeriodicVestingAccount struct {
 // --------------- Init -----------------
 
 func (pva PeriodicVestingAccount) Init(ctx context.Context, msg *vestingtypes.MsgInitPeriodicVestingAccount) (*vestingtypes.MsgInitPeriodicVestingAccountResponse, error) {
+	sender := accountstd.Sender(ctx)
+	if sender == nil {
+		return nil, sdkerrors.ErrInvalidAddress.Wrapf("Cannot find sender address from context")
+	}
 	to := accountstd.Whoami(ctx)
 	if to == nil {
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("Cannot find account address from context")
 	}
 
-	addrCodec := accountstd.AddressCodec(ctx)
-	toAddress, err := addrCodec.BytesToString(to)
+	toAddress, err := pva.addressCodec.BytesToString(to)
+	if err != nil {
+		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid 'to' address: %s", err)
+	}
+	fromAddress, err := pva.addressCodec.BytesToString(sender)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid 'to' address: %s", err)
 	}
@@ -95,9 +102,13 @@ func (pva PeriodicVestingAccount) Init(ctx context.Context, msg *vestingtypes.Ms
 	if err != nil {
 		return nil, err
 	}
+	err = pva.RootAccount.Set(ctx, fromAddress)
+	if err != nil {
+		return nil, err
+	}
 
 	// Send token to new vesting account
-	sendMsg := banktypes.NewMsgSend(msg.FromAddress, toAddress, totalCoins)
+	sendMsg := banktypes.NewMsgSend(fromAddress, toAddress, totalCoins)
 	anyMsg, err := codectypes.NewAnyWithValue(sendMsg)
 	if err != nil {
 		return nil, err

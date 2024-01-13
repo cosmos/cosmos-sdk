@@ -40,6 +40,12 @@ Example of validator address string scalar:
 https://github.com/cosmos/cosmos-sdk/blob/e8f28bf5db18b8d6b7e0d94b542ce4cf48fed9d6/proto/cosmos/distribution/v1beta1/query.proto#L87
 ```
 
+Example of pubkey scalar: 
+
+```proto reference 
+https://github.com/cosmos/cosmos-sdk/blob/11068bfbcd44a7db8af63b6a8aa079b1718f6040/proto/cosmos/staking/v1beta1/tx.proto#L94
+```
+
 Example of Decimals scalar: 
 
 ```proto reference

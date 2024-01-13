@@ -10,6 +10,7 @@ import (
 	"cosmossdk.io/x/params/keeper"
 	"cosmossdk.io/x/params/types"
 	"cosmossdk.io/x/params/types/proposal"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 )
 

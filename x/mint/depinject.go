@@ -9,6 +9,7 @@ import (
 	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/mint/keeper"
 	"cosmossdk.io/x/mint/types"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 )
 

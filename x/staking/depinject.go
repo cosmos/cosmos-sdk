@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"sort"
 
+	"golang.org/x/exp/maps"
+
 	modulev1 "cosmossdk.io/api/cosmos/staking/module/v1"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/store"
@@ -13,11 +15,11 @@ import (
 	"cosmossdk.io/x/staking/keeper"
 	"cosmossdk.io/x/staking/simulation"
 	"cosmossdk.io/x/staking/types"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	"golang.org/x/exp/maps"
 )
 
 var _ depinject.OnePerModuleType = AppModule{}

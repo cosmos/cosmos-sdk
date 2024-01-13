@@ -248,5 +248,6 @@ var (
 				Name:   pooltypes.ModuleName,
 				Config: appconfig.WrapAny(&poolmodulev1.Module{}),
 			},
-		}})
+		},
+	})
 )

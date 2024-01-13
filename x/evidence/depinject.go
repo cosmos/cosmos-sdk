@@ -9,6 +9,7 @@ import (
 	"cosmossdk.io/depinject/appconfig"
 	"cosmossdk.io/x/evidence/keeper"
 	"cosmossdk.io/x/evidence/types"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 )
 

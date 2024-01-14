@@ -130,6 +130,7 @@ Every Module contains its own CHANGELOG.md. Please refer to the module you are i
 * (types) [#18372](https://github.com/cosmos/cosmos-sdk/pull/18372) Removed global configuration for coin type and purpose. Setters and getters should be removed and access directly to defined types.
 * (types) [#18695](https://github.com/cosmos/cosmos-sdk/pull/18695) Removed global configuration for txEncoder.
 * (server) [#18909](https://github.com/cosmos/cosmos-sdk/pull/18909) Remove configuration endpoint on grpc reflection endpoint in favour of auth module bech32prefix endpoint already exposed.
+* (baseapp) [#19049](https://github.com/cosmos/cosmos-sdk/pull/19049) `RegisterGRPCServer` now also takes a `logQueries` boolean.
 
 ### Client Breaking Changes
 

@@ -169,6 +169,11 @@ max-recv-msg-size = "10485760"
 # The default value is math.MaxInt32.
 max-send-msg-size = "2147483647"
 
+# LogQueries if enabled will print an info log containing the query request
+# that was submitted to this node on every submission.
+# This is useful strictly for debugging purposes and should be disabled otherwise.
+log-queries = false
+
 ###############################################################################
 ###                        gRPC Web Configuration                           ###
 ###############################################################################

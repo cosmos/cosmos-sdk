@@ -2,107 +2,183 @@ package baseapp
 
 import (
 	"bytes"
-	"errors"
-	"fmt"
 
-	ics23 "github.com/confio/ics23/go"
+	iavltree "github.com/cosmos/iavl"
+
 	"github.com/cosmos/cosmos-sdk/store/rootmulti"
-	"github.com/cosmos/cosmos-sdk/store/types"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/iavl"
 	abci "github.com/tendermint/tendermint/abci/types"
-	tmcrypto "github.com/tendermint/tendermint/proto/tendermint/crypto"
-	db "github.com/tendermint/tm-db"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	dbm "github.com/tendermint/tm-db"
 )
 
-var ErrMoreThanOneBlockTypeUsed = errors.New("fraudProof has more than one type of fradulent state transitions marked nil")
-
-// Represents a single-round fraudProof
-type FraudProof struct {
-	// The block height to load state of
-	blockHeight int64
-
-	// TODO: Add Proof that appHash is inside merklized ISRs in block header at block height
-
-	preStateAppHash      []byte
-	expectedValidAppHash []byte
-	// A map from module name to state witness
-	stateWitness map[string]StateWitness
-
-	// Fraudulent state transition has to be one of these
-	// Only one have of these three can be non-nil
-	fraudulentBeginBlock *abci.RequestBeginBlock
-	fraudulentDeliverTx  *abci.RequestDeliverTx
-	fraudulentEndBlock   *abci.RequestEndBlock
-
-	// TODO: Add Proof that fraudulent state transition is inside merkelizied transactions in block header
-}
-
-// State witness with a list of all witness data
-type StateWitness struct {
-	// store level proof
-	Proof    tmcrypto.ProofOp
-	RootHash []byte
-	// List of witness data
-	WitnessData []*WitnessData
-}
-
-// Witness data represents a trace operation along with inclusion proofs required for said operation
-type WitnessData struct {
-	Operation iavl.Operation
-	Key       []byte
-	Value     []byte
-	Proofs    []*tmcrypto.ProofOp
-}
-
-func convertToProofOps(existenceProofs []*ics23.ExistenceProof) []*tmcrypto.ProofOp {
-	if existenceProofs == nil {
-		return nil
-	}
-	proofOps := make([]*tmcrypto.ProofOp, 0)
-	for _, existenceProof := range existenceProofs {
-		proofOps = append(proofOps, getProofOp(existenceProof))
-	}
-	return proofOps
-}
-
-func getProofOp(exist *ics23.ExistenceProof) *tmcrypto.ProofOp {
-	commitmentProof := &ics23.CommitmentProof{
-		Proof: &ics23.CommitmentProof_Exist{
-			Exist: exist,
-		},
-	}
-	proofOp := types.NewIavlCommitmentOp(exist.Key, commitmentProof).ProofOp()
-	return &proofOp
-}
-
-func convertToExistenceProofs(proofs []*tmcrypto.ProofOp) ([]*ics23.ExistenceProof, error) {
-	existenceProofs := make([]*ics23.ExistenceProof, 0)
-	for _, proof := range proofs {
-		_, existenceProof, err := getExistenceProof(*proof)
-		if err != nil {
-			return nil, err
-		}
-		existenceProofs = append(existenceProofs, existenceProof)
-	}
-	return existenceProofs, nil
-}
-
-func getExistenceProof(proofOp tmcrypto.ProofOp) (types.CommitmentOp, *ics23.ExistenceProof, error) {
-	op, err := types.CommitmentOpDecoder(proofOp)
+// GenerateFraudProof implements the ABCI application interface. The BaseApp reverts to
+// previous state, runs the given fraudulent state transition, and gets the traced witness data representing
+// the operations that this state transition makes. It then uses this traced witness data and
+// the pre-fraudulent execution state of the BaseApp to generates a Fraud Proof
+// representing it. It returns this generated Fraud Proof.
+func (app *BaseApp) GenerateFraudProof(req abci.RequestGenerateFraudProof) (res abci.ResponseGenerateFraudProof) {
+	// Revert app to previous state
+	cms := app.cms.(*rootmulti.Store)
+	cms.SetInterBlockCache(nil)
+	err := cms.LoadLastVersion()
 	if err != nil {
-		return types.CommitmentOp{}, nil, err
+		// Happens when there is no last state to load form
+		panic(err)
 	}
-	commitmentOp := op.(types.CommitmentOp)
-	commitmentProof := commitmentOp.GetProof()
-	return commitmentOp, commitmentProof.GetExist(), nil
+	app.deliverState = nil
+	// Run the set of all nonFradulent and fraudulent state transitions
+	beginBlockRequest := req.BeginBlockRequest
+	isBeginBlockFraudulent := req.DeliverTxRequests == nil
+	isDeliverTxFraudulent := req.EndBlockRequest == nil
+
+	//FIRST PHASE: tracing all block
+
+	if isBeginBlockFraudulent {
+		cms.SetTracingEnabledAll(true)
+	}
+	app.BeginBlock(beginBlockRequest)
+
+	if !isBeginBlockFraudulent {
+		// BeginBlock is not the fraudulent state transition
+		app.executeNonFraudulentTransactions(req, isDeliverTxFraudulent)
+
+		cms.SetTracingEnabledAll(true)
+		// skip IncrementSequenceDecorator check in AnteHandler
+		app.anteHandler = nil
+
+		// Record the trace made by the fraudulent state transitions
+		if isDeliverTxFraudulent {
+			// The last DeliverTx is the fraudulent state transition
+			fraudulentDeliverTx := req.DeliverTxRequests[len(req.DeliverTxRequests)-1]
+			app.DeliverTx(*fraudulentDeliverTx)
+		} else {
+			// EndBlock is the fraudulent state transition
+			app.EndBlock(*req.EndBlockRequest)
+		}
+	}
+	validAppHash := app.GetAppHash(abci.RequestGetAppHash{}).AppHash
+
+	storeKeyToWitnessData := cms.GetWitnessDataMap()
+	// Revert app to previous state
+	cms.SetInterBlockCache(nil)
+	err = cms.LoadLastVersion()
+	if err != nil {
+		panic(err)
+	}
+	app.deliverState = nil
+	// Fast-forward to right before fraudulent state transition occurred
+	app.BeginBlock(beginBlockRequest) //TODO: Potentially move inside next if statement
+	if !isBeginBlockFraudulent {
+		app.executeNonFraudulentTransactions(req, isDeliverTxFraudulent)
+	}
+
+	// Export the app's current trace-filtered state into a Fraud Proof and return it
+	fraudProof, err := app.getFraudProof(storeKeyToWitnessData)
+	if err != nil {
+		panic(err)
+	}
+
+	fraudProof.ExpectedValidAppHash = validAppHash
+
+	switch {
+	case isBeginBlockFraudulent:
+		fraudProof.fraudulentBeginBlock = &beginBlockRequest
+	case isDeliverTxFraudulent:
+		fraudProof.fraudulentDeliverTx = req.DeliverTxRequests[len(req.DeliverTxRequests)-1]
+	default:
+		fraudProof.fraudulentEndBlock = req.EndBlockRequest
+	}
+	abciFraudProof, err := fraudProof.toABCI()
+	if err != nil {
+		panic(err)
+	}
+	res = abci.ResponseGenerateFraudProof{
+		FraudProof: abciFraudProof,
+	}
+	return res
 }
 
-func (fraudProof *FraudProof) getModules() []string {
-	keys := make([]string, 0, len(fraudProof.stateWitness))
-	for k := range fraudProof.stateWitness {
-		keys = append(keys, k)
+// VerifyFraudProof implements the ABCI application interface. It loads a fresh BaseApp using
+// the given Fraud Proof, runs the given fraudulent state transition within the Fraud Proof,
+// and gets the app hash representing state of the resulting BaseApp. It returns a boolean
+// representing whether this app hash is equivalent to the expected app hash given.
+func (app *BaseApp) VerifyFraudProof(req abci.RequestVerifyFraudProof) (res abci.ResponseVerifyFraudProof) {
+	abciFraudProof := req.FraudProof
+	fraudProof := FraudProof{}
+	err := fraudProof.FromABCI(*abciFraudProof)
+	if err != nil {
+		panic(err)
 	}
-	return keys
+
+	// Store and subtore level verification
+	success, err := fraudProof.ValidateBasic()
+	if err != nil {
+		panic(err)
+	}
+
+	if success {
+		// State execution verification
+		options := make([]func(*BaseApp), 0)
+		if app.routerOpts != nil {
+			for _, routerOpt := range app.routerOpts {
+				options = append(options, routerOpt)
+			}
+		}
+		cms := app.cms.(*rootmulti.Store)
+		storeKeys := cms.StoreKeysByName()
+		modules := fraudProof.GetModules()
+		iavlStoreKeys := make([]storetypes.StoreKey, 0, len(modules))
+		for _, module := range modules {
+			iavlStoreKeys = append(iavlStoreKeys, storeKeys[module])
+		}
+		// Setup a new app from fraud proof
+		appFromFraudProof, err := SetupBaseAppFromFraudProof(
+			app,
+			dbm.NewMemDB(),
+			fraudProof,
+			iavlStoreKeys,
+			options...,
+		)
+		if err != nil {
+			panic(err)
+		}
+		appFromFraudProof.InitChain(abci.RequestInitChain{
+			InitialHeight: fraudProof.BlockHeight,
+		})
+		appHash := appFromFraudProof.GetAppHash(abci.RequestGetAppHash{}).AppHash
+
+		if !bytes.Equal(fraudProof.PreStateAppHash, appHash) {
+			return abci.ResponseVerifyFraudProof{
+				Success: false,
+			}
+		}
+
+		// Execute fraudulent state transition
+		if fraudProof.fraudulentBeginBlock != nil {
+			appFromFraudProof.BeginBlock(*fraudProof.fraudulentBeginBlock)
+		} else {
+			// Need to add some dummy begin block here since its a new app
+			appFromFraudProof.beginBlocker = nil
+			appFromFraudProof.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: fraudProof.BlockHeight}})
+			if fraudProof.fraudulentDeliverTx != nil {
+				resp := appFromFraudProof.DeliverTx(*fraudProof.fraudulentDeliverTx)
+				if !resp.IsOK() {
+					panic(resp.Log)
+				}
+			} else {
+				appFromFraudProof.EndBlock(*fraudProof.fraudulentEndBlock)
+			}
+		}
+
+		appHash = appFromFraudProof.GetAppHash(abci.RequestGetAppHash{}).AppHash
+		success = bytes.Equal(appHash, req.ExpectedValidAppHash)
+	}
+	res = abci.ResponseVerifyFraudProof{
+		Success: success,
+	}
+	return res
 }
 
 func (app *BaseApp) executeNonFraudulentTransactions(req abci.RequestGenerateFraudProof, isDeliverTxFraudulent bool) {
@@ -120,14 +196,14 @@ func (app *BaseApp) executeNonFraudulentTransactions(req abci.RequestGenerateFra
 func (app *BaseApp) getFraudProof(storeKeyToWitnessData map[string][]iavl.WitnessData) (FraudProof, error) {
 	fraudProof := FraudProof{}
 	fraudProof.stateWitness = make(map[string]StateWitness)
-	fraudProof.blockHeight = app.LastBlockHeight()
+	fraudProof.BlockHeight = app.LastBlockHeight()
 	cms := app.cms.(*rootmulti.Store)
 
 	appHash, err := cms.GetAppHash()
 	if err != nil {
 		return FraudProof{}, err
 	}
-	fraudProof.preStateAppHash = appHash
+	fraudProof.PreStateAppHash = appHash
 	for storeKeyName := range storeKeyToWitnessData {
 		iavlStore, err := cms.GetIAVLStore(storeKeyName)
 		if err != nil {
@@ -171,179 +247,32 @@ func populateStateWitness(stateWitness *StateWitness, iavlWitnessData []iavl.Wit
 	}
 }
 
-// Returns a map from storeKey to IAVL Deep Subtrees which have witness data and
-// initial root hash initialized from fraud proof
-func (fraudProof *FraudProof) getDeepIAVLTrees() (map[string]*iavl.DeepSubTree, error) {
-	storeKeyToIAVLTree := make(map[string]*iavl.DeepSubTree)
-	for storeKey, stateWitness := range fraudProof.stateWitness {
-		dst := iavl.NewDeepSubTree(db.NewMemDB(), 100, false, fraudProof.blockHeight)
-		iavlWitnessData := make([]iavl.WitnessData, 0)
-		for _, witnessData := range stateWitness.WitnessData {
-			existenceProofs, err := convertToExistenceProofs(witnessData.Proofs)
-			if err != nil {
-				return nil, err
-			}
-			iavlWitnessData = append(
-				iavlWitnessData,
-				iavl.WitnessData{
-					Operation: witnessData.Operation,
-					Key:       witnessData.Key,
-					Value:     witnessData.Value,
-					Proofs:    existenceProofs,
-				},
-			)
-			dst.SetWitnessData(iavlWitnessData)
-		}
-		dst.SetInitialRootHash(stateWitness.RootHash)
-		storeKeyToIAVLTree[storeKey] = dst
+// set up a new baseapp from given params
+func setupBaseAppFromParams(app *BaseApp, db dbm.DB, storeKeyToIAVLTree map[string]*iavltree.DeepSubTree, blockHeight int64, storeKeys []storetypes.StoreKey, options ...func(*BaseApp)) (*BaseApp, error) {
+	// This initial height is used in `BeginBlock` in `validateHeight`
+	// options = append(options, SetInitialHeight(blockHeight))
+
+	appName := app.Name() + "FromFraudProof"
+	newApp := NewBaseApp(appName, app.logger, db, app.txDecoder, options...)
+
+	newApp.msgServiceRouter = app.msgServiceRouter
+	newApp.beginBlocker = app.beginBlocker
+	newApp.endBlocker = app.endBlocker
+	// stores are mounted
+	newApp.MountStores(storeKeys...)
+	cmsStore := newApp.cms.(*rootmulti.Store)
+	for storeKey, iavlTree := range storeKeyToIAVLTree {
+		cmsStore.SetDeepIAVLTree(storeKey, iavlTree)
 	}
-	return storeKeyToIAVLTree, nil
+	err := newApp.LoadLatestVersion()
+	return newApp, err
 }
 
-// Returns true only if only one of the three pointers is nil
-func (fraudProof *FraudProof) checkFraudulentStateTransition() bool {
-	if fraudProof.fraudulentBeginBlock != nil {
-		return fraudProof.fraudulentDeliverTx == nil && fraudProof.fraudulentEndBlock == nil
+// set up a new baseapp from a fraudproof
+func SetupBaseAppFromFraudProof(app *BaseApp, db dbm.DB, fraudProof FraudProof, storeKeys []storetypes.StoreKey, options ...func(*BaseApp)) (*BaseApp, error) {
+	storeKeyToIAVLTree, err := fraudProof.GetDeepIAVLTrees()
+	if err != nil {
+		return nil, err
 	}
-	if fraudProof.fraudulentDeliverTx != nil {
-		return fraudProof.fraudulentEndBlock == nil
-	}
-	return fraudProof.fraudulentEndBlock != nil
-}
-
-// Performs fraud proof verification on a store and substore level
-func (fraudProof *FraudProof) verifyFraudProof() (bool, error) {
-	if !fraudProof.checkFraudulentStateTransition() {
-		return false, ErrMoreThanOneBlockTypeUsed
-	}
-	for storeKey, stateWitness := range fraudProof.stateWitness {
-		// Fraudproof verification on a store level
-		proofOp := stateWitness.Proof
-		proof, err := types.CommitmentOpDecoder(proofOp)
-		if err != nil {
-			return false, err
-		}
-		if !bytes.Equal(proof.GetKey(), []byte(storeKey)) {
-			return false, fmt.Errorf("got storeKey: %s, expected: %s", string(proof.GetKey()), storeKey)
-		}
-		appHash, err := proof.Run([][]byte{stateWitness.RootHash})
-		if err != nil {
-			return false, err
-		}
-		if !bytes.Equal(appHash[0], fraudProof.preStateAppHash) {
-			return false, fmt.Errorf("got appHash: %s, expected: %s", string(fraudProof.preStateAppHash), string(fraudProof.preStateAppHash))
-		}
-
-		// Fraudproof verification on a substore level
-		// Note: We can only verify the first witness in this witnessData
-		// with current root hash. Other proofs are verified in the IAVL tree.
-		if len(stateWitness.WitnessData) > 0 {
-			witness := stateWitness.WitnessData[0]
-			for _, proofOp := range witness.Proofs {
-				op, existenceProof, err := getExistenceProof(*proofOp)
-				if err != nil {
-					return false, err
-				}
-				verified := ics23.VerifyMembership(op.Spec, stateWitness.RootHash, op.Proof, op.Key, existenceProof.Value)
-				if !verified {
-					return false, fmt.Errorf("existence proof verification failed, expected rootHash: %s, key: %s, value: %s for storeKey: %s", string(stateWitness.RootHash), string(op.Key), string(existenceProof.Value), storeKey)
-				}
-			}
-		}
-	}
-	return true, nil
-}
-
-func toABCI(operation iavl.Operation) (abci.Operation, error) {
-	switch operation {
-	case iavl.WriteOp:
-		return abci.Operation_write, nil
-	case iavl.ReadOp:
-		return abci.Operation_read, nil
-	case iavl.DeleteOp:
-		return abci.Operation_delete, nil
-	default:
-		return -1, fmt.Errorf("unsupported opearation: %s", operation)
-	}
-}
-
-func fromABCI(operation abci.Operation) (iavl.Operation, error) {
-	switch operation {
-	case abci.Operation_write:
-		return iavl.WriteOp, nil
-	case abci.Operation_read:
-		return iavl.ReadOp, nil
-	case abci.Operation_delete:
-		return iavl.DeleteOp, nil
-	default:
-		return iavl.Operation("unknown"), fmt.Errorf("unsupported opearation: %s", operation.String())
-	}
-}
-
-func (fraudProof *FraudProof) toABCI() (*abci.FraudProof, error) {
-	abciStateWitness := make(map[string]*abci.StateWitness)
-	for storeKey, stateWitness := range fraudProof.stateWitness {
-		abciWitnessData := make([]*abci.WitnessData, 0, len(stateWitness.WitnessData))
-		for _, witnessData := range stateWitness.WitnessData {
-			abciOperation, err := toABCI(witnessData.Operation)
-			if err != nil {
-				return nil, err
-			}
-			abciWitness := abci.WitnessData{
-				Operation: abciOperation,
-				Key:       witnessData.Key,
-				Value:     witnessData.Value,
-				Proofs:    witnessData.Proofs,
-			}
-			abciWitnessData = append(abciWitnessData, &abciWitness)
-		}
-		proof := stateWitness.Proof
-		abciStateWitness[storeKey] = &abci.StateWitness{
-			Proof:       &proof,
-			RootHash:    stateWitness.RootHash,
-			WitnessData: abciWitnessData,
-		}
-	}
-	return &abci.FraudProof{
-		BlockHeight:          fraudProof.blockHeight,
-		PreStateAppHash:      fraudProof.preStateAppHash,
-		ExpectedValidAppHash: fraudProof.expectedValidAppHash,
-		StateWitness:         abciStateWitness,
-		FraudulentBeginBlock: fraudProof.fraudulentBeginBlock,
-		FraudulentDeliverTx:  fraudProof.fraudulentDeliverTx,
-		FraudulentEndBlock:   fraudProof.fraudulentEndBlock,
-	}, nil
-}
-
-func (fraudProof *FraudProof) fromABCI(abciFraudProof abci.FraudProof) error {
-	stateWitness := make(map[string]StateWitness)
-	for storeKey, abciStateWitness := range abciFraudProof.StateWitness {
-		witnessData := make([]*WitnessData, 0, len(abciStateWitness.WitnessData))
-		for _, abciWitnessData := range abciStateWitness.WitnessData {
-			iavlOperation, err := fromABCI(abciWitnessData.Operation)
-			if err != nil {
-				return err
-			}
-			witness := WitnessData{
-				Operation: iavlOperation,
-				Key:       abciWitnessData.Key,
-				Value:     abciWitnessData.Value,
-				Proofs:    abciWitnessData.Proofs,
-			}
-			witnessData = append(witnessData, &witness)
-		}
-		stateWitness[storeKey] = StateWitness{
-			Proof:       *abciStateWitness.Proof,
-			RootHash:    abciStateWitness.RootHash,
-			WitnessData: witnessData,
-		}
-	}
-	fraudProof.blockHeight = abciFraudProof.BlockHeight
-	fraudProof.preStateAppHash = abciFraudProof.PreStateAppHash
-	fraudProof.expectedValidAppHash = abciFraudProof.ExpectedValidAppHash
-	fraudProof.stateWitness = stateWitness
-	fraudProof.fraudulentBeginBlock = abciFraudProof.FraudulentBeginBlock
-	fraudProof.fraudulentDeliverTx = abciFraudProof.FraudulentDeliverTx
-	fraudProof.fraudulentEndBlock = abciFraudProof.FraudulentEndBlock
-	return nil
+	return setupBaseAppFromParams(app, db, storeKeyToIAVLTree, fraudProof.BlockHeight, storeKeys, options...)
 }

@@ -2,8 +2,7 @@ package baseapp
 
 import (
 	"bytes"
-
-	iavltree "github.com/cosmos/iavl"
+	"encoding/hex"
 
 	"github.com/cosmos/cosmos-sdk/store/rootmulti"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
@@ -28,37 +27,29 @@ func (app *BaseApp) GenerateFraudProof(req abci.RequestGenerateFraudProof) (res 
 		panic(err)
 	}
 	app.deliverState = nil
-	// Run the set of all nonFradulent and fraudulent state transitions
-	beginBlockRequest := req.BeginBlockRequest
-	isBeginBlockFraudulent := req.DeliverTxRequests == nil
-	isDeliverTxFraudulent := req.EndBlockRequest == nil
+
+	prestateHash, err := cms.GetAppHash()
+	if err != nil {
+		panic(err)
+	}
+
+	app.logger.Info("AppHash", "prestateHash", hex.EncodeToString(prestateHash))
 
 	//FIRST PHASE: tracing all block
+	cms.SetTracingEnabledAll(true)
+	app.BeginBlock(req.BeginBlockRequest)
+	app.logger.Info("AppHash", "beginBlock", hex.EncodeToString(app.GetAppHashInternal()))
 
-	if isBeginBlockFraudulent {
-		cms.SetTracingEnabledAll(true)
+	for _, deliverTxRequest := range req.DeliverTxRequests {
+		app.DeliverTx(*deliverTxRequest)
 	}
-	app.BeginBlock(beginBlockRequest)
+	// skip IncrementSequenceDecorator check in AnteHandler
+	app.anteHandler = nil
+	app.logger.Info("AppHash", "delivertx", hex.EncodeToString(app.GetAppHashInternal()))
 
-	if !isBeginBlockFraudulent {
-		// BeginBlock is not the fraudulent state transition
-		app.executeNonFraudulentTransactions(req, isDeliverTxFraudulent)
-
-		cms.SetTracingEnabledAll(true)
-		// skip IncrementSequenceDecorator check in AnteHandler
-		app.anteHandler = nil
-
-		// Record the trace made by the fraudulent state transitions
-		if isDeliverTxFraudulent {
-			// The last DeliverTx is the fraudulent state transition
-			fraudulentDeliverTx := req.DeliverTxRequests[len(req.DeliverTxRequests)-1]
-			app.DeliverTx(*fraudulentDeliverTx)
-		} else {
-			// EndBlock is the fraudulent state transition
-			app.EndBlock(*req.EndBlockRequest)
-		}
-	}
+	app.EndBlock(*req.EndBlockRequest)
 	validAppHash := app.GetAppHash(abci.RequestGetAppHash{}).AppHash
+	app.logger.Info("AppHash", "endblock", hex.EncodeToString(validAppHash))
 
 	storeKeyToWitnessData := cms.GetWitnessDataMap()
 	// Revert app to previous state
@@ -67,12 +58,7 @@ func (app *BaseApp) GenerateFraudProof(req abci.RequestGenerateFraudProof) (res 
 	if err != nil {
 		panic(err)
 	}
-	app.deliverState = nil
-	// Fast-forward to right before fraudulent state transition occurred
-	app.BeginBlock(beginBlockRequest) //TODO: Potentially move inside next if statement
-	if !isBeginBlockFraudulent {
-		app.executeNonFraudulentTransactions(req, isDeliverTxFraudulent)
-	}
+	// app.deliverState = nil
 
 	// Export the app's current trace-filtered state into a Fraud Proof and return it
 	fraudProof, err := app.getFraudProof(storeKeyToWitnessData)
@@ -82,14 +68,10 @@ func (app *BaseApp) GenerateFraudProof(req abci.RequestGenerateFraudProof) (res 
 
 	fraudProof.ExpectedValidAppHash = validAppHash
 
-	switch {
-	case isBeginBlockFraudulent:
-		fraudProof.fraudulentBeginBlock = &beginBlockRequest
-	case isDeliverTxFraudulent:
-		fraudProof.fraudulentDeliverTx = req.DeliverTxRequests[len(req.DeliverTxRequests)-1]
-	default:
-		fraudProof.fraudulentEndBlock = req.EndBlockRequest
-	}
+	fraudProof.FraudulentBeginBlock = &req.BeginBlockRequest
+	fraudProof.FraudulentDeliverTx = req.DeliverTxRequests
+	fraudProof.FraudulentEndBlock = req.EndBlockRequest
+
 	abciFraudProof, err := fraudProof.toABCI()
 	if err != nil {
 		panic(err)
@@ -156,21 +138,20 @@ func (app *BaseApp) VerifyFraudProof(req abci.RequestVerifyFraudProof) (res abci
 		}
 
 		// Execute fraudulent state transition
-		if fraudProof.fraudulentBeginBlock != nil {
-			appFromFraudProof.BeginBlock(*fraudProof.fraudulentBeginBlock)
-		} else {
-			// Need to add some dummy begin block here since its a new app
-			appFromFraudProof.beginBlocker = nil
-			appFromFraudProof.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: fraudProof.BlockHeight}})
-			if fraudProof.fraudulentDeliverTx != nil {
-				resp := appFromFraudProof.DeliverTx(*fraudProof.fraudulentDeliverTx)
+		appFromFraudProof.BeginBlock(*fraudProof.FraudulentBeginBlock)
+		// Need to add some dummy begin block here since its a new app
+		appFromFraudProof.beginBlocker = nil
+		appFromFraudProof.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: fraudProof.BlockHeight}})
+		if fraudProof.FraudulentDeliverTx != nil {
+			for _, deliverTxRequest := range fraudProof.FraudulentDeliverTx {
+				appFromFraudProof.DeliverTx(*deliverTxRequest)
+				resp := appFromFraudProof.DeliverTx(*deliverTxRequest)
 				if !resp.IsOK() {
 					panic(resp.Log)
 				}
-			} else {
-				appFromFraudProof.EndBlock(*fraudProof.fraudulentEndBlock)
 			}
 		}
+		appFromFraudProof.EndBlock(*fraudProof.FraudulentEndBlock)
 
 		appHash = appFromFraudProof.GetAppHash(abci.RequestGetAppHash{}).AppHash
 		success = bytes.Equal(appHash, req.ExpectedValidAppHash)
@@ -196,7 +177,7 @@ func (app *BaseApp) executeNonFraudulentTransactions(req abci.RequestGenerateFra
 func (app *BaseApp) getFraudProof(storeKeyToWitnessData map[string][]iavl.WitnessData) (FraudProof, error) {
 	fraudProof := FraudProof{}
 	fraudProof.stateWitness = make(map[string]StateWitness)
-	fraudProof.BlockHeight = app.LastBlockHeight()
+	fraudProof.BlockHeight = app.LastBlockHeight() + 1 //FIXME: patch
 	cms := app.cms.(*rootmulti.Store)
 
 	appHash, err := cms.GetAppHash()
@@ -204,6 +185,8 @@ func (app *BaseApp) getFraudProof(storeKeyToWitnessData map[string][]iavl.Witnes
 		return FraudProof{}, err
 	}
 	fraudProof.PreStateAppHash = appHash
+	app.logger.Info("AppHash", "getFraudProof", hex.EncodeToString(appHash))
+
 	for storeKeyName := range storeKeyToWitnessData {
 		iavlStore, err := cms.GetIAVLStore(storeKeyName)
 		if err != nil {
@@ -248,7 +231,7 @@ func populateStateWitness(stateWitness *StateWitness, iavlWitnessData []iavl.Wit
 }
 
 // set up a new baseapp from given params
-func setupBaseAppFromParams(app *BaseApp, db dbm.DB, storeKeyToIAVLTree map[string]*iavltree.DeepSubTree, blockHeight int64, storeKeys []storetypes.StoreKey, options ...func(*BaseApp)) (*BaseApp, error) {
+func setupBaseAppFromParams(app *BaseApp, db dbm.DB, storeKeyToIAVLTree map[string]*iavl.DeepSubTree, blockHeight int64, storeKeys []storetypes.StoreKey, options ...func(*BaseApp)) (*BaseApp, error) {
 	// This initial height is used in `BeginBlock` in `validateHeight`
 	// options = append(options, SetInitialHeight(blockHeight))
 

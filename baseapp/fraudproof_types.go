@@ -29,9 +29,9 @@ type FraudProof struct {
 
 	// Fraudulent state transition has to be one of these
 	// Only one have of these three can be non-nil
-	fraudulentBeginBlock *abci.RequestBeginBlock
-	fraudulentDeliverTx  *abci.RequestDeliverTx
-	fraudulentEndBlock   *abci.RequestEndBlock
+	FraudulentBeginBlock *abci.RequestBeginBlock
+	FraudulentDeliverTx  []*abci.RequestDeliverTx
+	FraudulentEndBlock   *abci.RequestEndBlock
 
 	// TODO: Add Proof that fraudulent state transition is inside merkelizied transactions in block header
 }
@@ -135,13 +135,14 @@ func (fraudProof *FraudProof) GetDeepIAVLTrees() (map[string]*iavl.DeepSubTree, 
 
 // Returns true only if only one of the three pointers is nil
 func (fraudProof *FraudProof) checkFraudulentStateTransition() bool {
-	if fraudProof.fraudulentBeginBlock != nil {
-		return fraudProof.fraudulentDeliverTx == nil && fraudProof.fraudulentEndBlock == nil
-	}
-	if fraudProof.fraudulentDeliverTx != nil {
-		return fraudProof.fraudulentEndBlock == nil
-	}
-	return fraudProof.fraudulentEndBlock != nil
+	// if fraudProof.fraudulentBeginBlock != nil {
+	// 	return fraudProof.fraudulentDeliverTx == nil && fraudProof.fraudulentEndBlock == nil
+	// }
+	// if fraudProof.fraudulentDeliverTx != nil {
+	// 	return fraudProof.fraudulentEndBlock == nil
+	// }
+	// return fraudProof.fraudulentEndBlock != nil
+	return true
 }
 
 // Performs fraud proof verification on a store and substore level
@@ -243,9 +244,9 @@ func (fraudProof *FraudProof) toABCI() (*abci.FraudProof, error) {
 		PreStateAppHash:      fraudProof.PreStateAppHash,
 		ExpectedValidAppHash: fraudProof.ExpectedValidAppHash,
 		StateWitness:         abciStateWitness,
-		FraudulentBeginBlock: fraudProof.fraudulentBeginBlock,
-		FraudulentDeliverTx:  fraudProof.fraudulentDeliverTx,
-		FraudulentEndBlock:   fraudProof.fraudulentEndBlock,
+		BeginBlock:           fraudProof.FraudulentBeginBlock,
+		DeliverTx:            fraudProof.FraudulentDeliverTx,
+		EndBlock:             fraudProof.FraudulentEndBlock,
 	}, nil
 }
 
@@ -276,8 +277,8 @@ func (fraudProof *FraudProof) FromABCI(abciFraudProof abci.FraudProof) error {
 	fraudProof.PreStateAppHash = abciFraudProof.PreStateAppHash
 	fraudProof.ExpectedValidAppHash = abciFraudProof.ExpectedValidAppHash
 	fraudProof.stateWitness = stateWitness
-	fraudProof.fraudulentBeginBlock = abciFraudProof.FraudulentBeginBlock
-	fraudProof.fraudulentDeliverTx = abciFraudProof.FraudulentDeliverTx
-	fraudProof.fraudulentEndBlock = abciFraudProof.FraudulentEndBlock
+	fraudProof.FraudulentBeginBlock = abciFraudProof.BeginBlock
+	fraudProof.FraudulentDeliverTx = abciFraudProof.DeliverTx
+	fraudProof.FraudulentEndBlock = abciFraudProof.EndBlock
 	return nil
 }

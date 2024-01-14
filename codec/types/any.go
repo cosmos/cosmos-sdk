@@ -2,6 +2,7 @@ package types
 
 import (
 	fmt "fmt"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/cosmos/gogoproto/proto"
 	protov2 "google.golang.org/protobuf/proto"
@@ -58,7 +59,7 @@ type Any struct {
 // returns an error if that value couldn't be packed. This also caches
 // the packed value so that it can be retrieved from GetCachedValue without
 // unmarshaling
-func NewAnyWithValue(v proto.Message) (*Any, error) {
+func NewAnyWithValue[T sdk.ProtoMessage](v T) (*Any, error) {
 	if v == nil {
 		return nil, errorsmod.Wrap(sdkerrors.ErrPackAny, "Expecting non nil value to create a new Any")
 	}
@@ -67,12 +68,15 @@ func NewAnyWithValue(v proto.Message) (*Any, error) {
 		bz  []byte
 		err error
 	)
-	if msg, ok := v.(protov2.Message); ok {
+
+	switch msg := any(v).(type) {
+	case sdk.Msg:
+		bz, err = proto.Marshal(msg)
+	case sdk.MsgV2:
 		protov2MarshalOpts := protov2.MarshalOptions{Deterministic: true}
 		bz, err = protov2MarshalOpts.Marshal(msg)
-	} else {
-		bz, err = proto.Marshal(v)
 	}
+
 	if err != nil {
 		return nil, err
 	}

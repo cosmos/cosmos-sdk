@@ -32,7 +32,9 @@ type (
 	// transaction type to be able to set and return the transaction fee.
 	Fee interface {
 		GetGas() uint64
-		GetAmount() Coins
+		GetFee() Coins
+		FeePayer() []byte
+		FeeGranter() []byte
 	}
 
 	// Signature defines an interface for an application application-defined

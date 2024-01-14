@@ -14,6 +14,26 @@ var errNoKeyring = errors.New("no keyring configured")
 
 type NoKeyring struct{}
 
+func (k NoKeyring) Key(uid string) (*Record, error) {
+	return nil, errNoKeyring
+}
+
+func (k NoKeyring) KeyByAddress(address []byte) (*Record, error) {
+	return nil, errNoKeyring
+}
+
+func (k NoKeyring) GetRecordAddress(record *Record) ([]byte, error) {
+	return nil, errNoKeyring
+}
+
+func (k NoKeyring) GetRecordName(record *Record) string {
+	return ""
+}
+
+func (k NoKeyring) GetRecordType(record *Record) KeyType {
+	return 0
+}
+
 func (k NoKeyring) List() ([]string, error) {
 	return nil, errNoKeyring
 }

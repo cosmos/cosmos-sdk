@@ -7,12 +7,12 @@ managed:
       - buf.build/googleapis/googleapis
       - buf.build/cosmos/gogo-proto
       - buf.build/cosmos/cosmos-proto
-      - buf.build/cosmos/cosmos-sdk
+    override:
+      buf.build/cosmos/cosmos-sdk: cosmossdk.io/api
 plugins:
   - name: go-pulsar
     out: ..
-    opt: paths=source_relative,Mcosmos/app/v1alpha1/module.proto=cosmossdk.io/api/cosmos/app/v1alpha1,Mcosmos/base/v1beta1/coin.proto=cosmossdk.io/api/cosmos/base/v1beta1,Mcosmos/base/query/v1beta1/pagination.proto=cosmossdk.io/api/cosmos/base/query/v1beta1,Mamino/amino.proto=cosmossdk.io/api/amino,Mcosmos/msg/v1/msg.proto=cosmossdk.io/api/cosmos/msg/v1,Mcosmos/tx/v1beta1/service.proto=cosmossdk.io/api/cosmos/tx/v1beta1,Mcosmos/query/v1/query.proto=cosmossdk.io/api/cosmos/query/v1,Mtendermint/types/params.proto=cosmossdk.io/api/tendermint/types
-
+    opt: paths=source_relative
   - name: go-grpc
     out: ..
-    opt: paths=source_relative,Mcosmos/app/v1alpha1/module.proto=cosmossdk.io/api/cosmos/app/v1alpha1
+    opt: paths=source_relative

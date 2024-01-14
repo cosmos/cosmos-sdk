@@ -45,7 +45,7 @@ func (k Keeper) InitGenesis(ctx context.Context, data *types.GenesisState) error
 		}
 	}
 
-	if err := k.ToDistribute.Set(ctx, data.ToDistirbute); err != nil {
+	if err := k.ToDistribute.Set(ctx, data.ToDistribute); err != nil {
 		return fmt.Errorf("failed to set to distribute: %w", err)
 	}
 
@@ -86,7 +86,7 @@ func (k Keeper) ExportGenesis(ctx context.Context) (*types.GenesisState, error) 
 
 	genState := types.NewGenesisState(cf, budget)
 
-	genState.ToDistirbute, err = k.ToDistribute.Get(ctx)
+	genState.ToDistribute, err = k.ToDistribute.Get(ctx)
 	if err != nil {
 		return nil, err
 	}

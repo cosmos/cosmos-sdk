@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/spf13/cobra"
 	"gotest.tools/v3/assert"
 	"gotest.tools/v3/golden"
@@ -15,14 +16,16 @@ import (
 )
 
 var buildModuleMsgCommand = func(moduleName string, f *fixture) (*cobra.Command, error) {
-	cmd := topLevelCmd(moduleName, fmt.Sprintf("Transactions commands for the %s module", moduleName))
+	ctx := context.WithValue(context.Background(), client.ClientContextKey, &f.clientCtx)
+	cmd := topLevelCmd(ctx, moduleName, fmt.Sprintf("Transactions commands for the %s module", moduleName))
 	err := f.b.AddMsgServiceCommands(cmd, bankAutoCLI)
 	return cmd, err
 }
 
 func buildCustomModuleMsgCommand(cmdDescriptor *autocliv1.ServiceCommandDescriptor) func(moduleName string, f *fixture) (*cobra.Command, error) {
 	return func(moduleName string, f *fixture) (*cobra.Command, error) {
-		cmd := topLevelCmd(moduleName, fmt.Sprintf("Transactions commands for the %s module", moduleName))
+		ctx := context.WithValue(context.Background(), client.ClientContextKey, &f.clientCtx)
+		cmd := topLevelCmd(ctx, moduleName, fmt.Sprintf("Transactions commands for the %s module", moduleName))
 		err := f.b.AddMsgServiceCommands(cmd, cmdDescriptor)
 		return cmd, err
 	}
@@ -154,7 +157,7 @@ func TestNotFoundErrorsMsg(t *testing.T) {
 	b.AddTxConnFlags = nil
 
 	buildModuleMsgCommand := func(moduleName string, cmdDescriptor *autocliv1.ServiceCommandDescriptor) (*cobra.Command, error) {
-		cmd := topLevelCmd(moduleName, fmt.Sprintf("Transactions commands for the %s module", moduleName))
+		cmd := topLevelCmd(context.Background(), moduleName, fmt.Sprintf("Transactions commands for the %s module", moduleName))
 
 		err := b.AddMsgServiceCommands(cmd, cmdDescriptor)
 		return cmd, err

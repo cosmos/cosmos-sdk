@@ -20,9 +20,8 @@ import (
 // module, this is used instead of any automatically generated CLI commands. This allows apps to a fully dynamic client
 // with a more customized experience if a binary with custom commands is downloaded.
 func (b *Builder) BuildQueryCommand(ctx context.Context, appOptions AppOptions, customCmds map[string]*cobra.Command) (*cobra.Command, error) {
-	queryCmd := topLevelCmd("query", "Querying subcommands")
+	queryCmd := topLevelCmd(ctx, "query", "Querying subcommands")
 	queryCmd.Aliases = []string{"q"}
-	queryCmd.SetContext(ctx)
 
 	if err := b.enhanceCommandCommon(queryCmd, queryCmdType, appOptions, customCmds); err != nil {
 		return nil, err
@@ -38,7 +37,7 @@ func (b *Builder) AddQueryServiceCommands(cmd *cobra.Command, cmdDescriptor *aut
 	for cmdName, subCmdDesc := range cmdDescriptor.SubCommands {
 		subCmd := findSubCommand(cmd, cmdName)
 		if subCmd == nil {
-			subCmd = topLevelCmd(cmdName, fmt.Sprintf("Querying commands for the %s service", subCmdDesc.Service))
+			subCmd = topLevelCmd(cmd.Context(), cmdName, fmt.Sprintf("Querying commands for the %s service", subCmdDesc.Service))
 		}
 
 		if err := b.AddQueryServiceCommands(subCmd, subCmdDesc); err != nil {

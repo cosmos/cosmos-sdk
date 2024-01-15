@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/spf13/cobra"
 	"google.golang.org/protobuf/testing/protocmp"
 	"google.golang.org/protobuf/types/known/durationpb"
@@ -22,21 +23,24 @@ import (
 )
 
 var buildModuleQueryCommand = func(moduleName string, f *fixture) (*cobra.Command, error) {
-	cmd := topLevelCmd(moduleName, fmt.Sprintf("Querying commands for the %s module", moduleName))
+	ctx := context.WithValue(context.Background(), client.ClientContextKey, &f.clientCtx)
+	cmd := topLevelCmd(ctx, moduleName, fmt.Sprintf("Querying commands for the %s module", moduleName))
 
 	err := f.b.AddQueryServiceCommands(cmd, testCmdDesc)
 	return cmd, err
 }
 
 var buildModuleQueryCommandOptional = func(moduleName string, f *fixture) (*cobra.Command, error) {
-	cmd := topLevelCmd(moduleName, fmt.Sprintf("Querying commands for the %s module", moduleName))
+	ctx := context.WithValue(context.Background(), client.ClientContextKey, &f.clientCtx)
+	cmd := topLevelCmd(ctx, moduleName, fmt.Sprintf("Querying commands for the %s module", moduleName))
 
 	err := f.b.AddQueryServiceCommands(cmd, testCmdDescOptional)
 	return cmd, err
 }
 
 var buildModuleVargasOptional = func(moduleName string, f *fixture) (*cobra.Command, error) {
-	cmd := topLevelCmd(moduleName, fmt.Sprintf("Querying commands for the %s module", moduleName))
+	ctx := context.WithValue(context.Background(), client.ClientContextKey, &f.clientCtx)
+	cmd := topLevelCmd(ctx, moduleName, fmt.Sprintf("Querying commands for the %s module", moduleName))
 
 	err := f.b.AddQueryServiceCommands(cmd, testCmdDescInvalidOptAndVargas)
 	return cmd, err
@@ -680,7 +684,7 @@ func TestNotFoundErrorsQuery(t *testing.T) {
 	b.AddTxConnFlags = nil
 
 	buildModuleQueryCommand := func(moduleName string, cmdDescriptor *autocliv1.ServiceCommandDescriptor) (*cobra.Command, error) {
-		cmd := topLevelCmd("query", "Querying subcommands")
+		cmd := topLevelCmd(context.Background(), "query", "Querying subcommands")
 		err := b.AddMsgServiceCommands(cmd, cmdDescriptor)
 		return cmd, err
 	}

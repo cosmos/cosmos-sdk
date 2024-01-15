@@ -2,6 +2,8 @@ package baseapp
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"math"
 	"sort"
@@ -856,6 +858,9 @@ func (app *BaseApp) runTx(mode execMode, txBytes []byte) (gInfo sdk.GasInfo, res
 		}
 	}
 
+	h := sha256.New()
+	h.Write(txBytes)
+	txHash := hex.EncodeToString(h.Sum(nil))
 	if app.anteHandler != nil {
 		var (
 			anteCtx sdk.Context
@@ -871,7 +876,14 @@ func (app *BaseApp) runTx(mode execMode, txBytes []byte) (gInfo sdk.GasInfo, res
 		// performance benefits, but it'll be more difficult to get right.
 		anteCtx, msCache = app.cacheTxContext(ctx, txBytes)
 		anteCtx = anteCtx.WithEventManager(sdk.NewEventManager())
+
+		if mode == execModePrepareProposal || mode == execModeProcessProposal {
+			ctx.Logger().Info("running anteHandler on tx", "txHash", txHash)
+		}
 		newCtx, err := app.anteHandler(anteCtx, tx, mode == execModeSimulate)
+		if mode == execModePrepareProposal || mode == execModeProcessProposal {
+			ctx.Logger().Info("done anteHandler on tx", "txHash", txHash, "err", err)
+		}
 
 		if !newCtx.IsZero() {
 			// At this point, newCtx.MultiStore() is a store branch, or something else
@@ -931,7 +943,13 @@ func (app *BaseApp) runTx(mode execMode, txBytes []byte) (gInfo sdk.GasInfo, res
 			// Note that the state is still preserved.
 			postCtx := runMsgCtx.WithEventManager(sdk.NewEventManager())
 
+			if mode == execModePrepareProposal || mode == execModeProcessProposal {
+				ctx.Logger().Info("running postHandler on tx", "txHash", txHash)
+			}
 			newCtx, err := app.postHandler(postCtx, tx, mode == execModeSimulate, err == nil)
+			if mode == execModePrepareProposal || mode == execModeProcessProposal {
+				ctx.Logger().Info("done postHandler on tx", "txHash", txHash, "err", err)
+			}
 			if err != nil {
 				return gInfo, nil, anteEvents, err
 			}

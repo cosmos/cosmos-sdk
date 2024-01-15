@@ -7,6 +7,7 @@ import (
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/address"
+	"cosmossdk.io/core/header"
 	"cosmossdk.io/x/accounts/accountstd"
 	v1 "cosmossdk.io/x/accounts/defaults/base/v1"
 	txsigning "cosmossdk.io/x/tx/signing"
@@ -32,6 +33,8 @@ func NewAccount(deps accountstd.Dependencies) (Account, error) {
 type Account struct {
 	PubKey   collections.Item[secp256k1.PubKey]
 	Sequence collections.Sequence
+
+	hs header.Service
 
 	addrCodec        address.Codec
 	signModeHandlers *txsigning.HandlerMap

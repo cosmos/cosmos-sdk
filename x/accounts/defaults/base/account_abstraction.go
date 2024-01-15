@@ -13,6 +13,7 @@ import (
 	"cosmossdk.io/x/tx/signing"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
@@ -74,9 +75,11 @@ func (a Account) getSignerData(ctx context.Context) (secp256k1.PubKey, signing.S
 		return secp256k1.PubKey{}, signing.SignerData{}, err
 	}
 
+	chainID := a.hs.GetHeaderInfo(ctx).ChainID
+
 	return pk, signing.SignerData{
 		Address:       addrStr,
-		ChainID:       "",
+		ChainID:       chainID,
 		AccountNumber: accNum.Number,
 		Sequence:      seq,
 		PubKey: &anypb.Any{
@@ -101,18 +104,12 @@ func (a Account) getAuthenticationData(_ context.Context, authData *codectypes.A
 func (a Account) getTxData(ctx context.Context, op *accountsv1.UserOperation, authData *v1.AuthenticationData) (signing.TxData, error) {
 	// it's coming from a TX, so we can safely return signing.TxData
 	if op.TxCompat != nil {
-		return signing.TxData{
-			Body:                       op.TxCompat.Body,
-			AuthInfo:                   op.TxCompat.AuthInfo,
-			BodyBytes:                  op.TxCompat.BodyBytes,
-			AuthInfoBytes:              op.TxCompat.AuthInfoBytes,
-			BodyHasUnknownNonCriticals: false,
-		}, nil
+		return getTxDataFromTxCompat(op.TxCompat)
 	}
 	// if it's coming from an operation, then we need to compute this information ourselves.
 	txBody := &txv1beta1.TxBody{
 		Messages:         op.ExecutionMessages,
-		ExtensionOptions: nil, // TODO: UserOperation should be populated here
+		ExtensionOptions: nil, // TODO: UserOperation extra fields must be populated here
 	}
 	authInfo := &txv1beta1.AuthInfo{
 		SignerInfos: []*txv1beta1.SignerInfo{
@@ -121,6 +118,7 @@ func (a Account) getTxData(ctx context.Context, op *accountsv1.UserOperation, au
 				Sequence: 0,
 			},
 		},
+		// Fee and Tip are empty.
 	}
 	return signing.TxData{
 		Body:                       txBody,
@@ -128,5 +126,27 @@ func (a Account) getTxData(ctx context.Context, op *accountsv1.UserOperation, au
 		BodyBytes:                  nil,
 		AuthInfoBytes:              nil,
 		BodyHasUnknownNonCriticals: false,
+	}, nil
+}
+
+// getTxDataFromTxCompat computes the signing.TxData from TxCompat.
+func getTxDataFromTxCompat(compat *accountsv1.TxCompat) (signing.TxData, error) {
+	// maybe avoid the unmarshal again!!
+	body := new(txv1beta1.TxBody)
+	authInfo := new(txv1beta1.AuthInfo)
+	err := proto.Unmarshal(compat.BodyBytes, body)
+	if err != nil {
+		return signing.TxData{}, err
+	}
+	err = proto.Unmarshal(compat.AuthInfoBytes, authInfo)
+	if err != nil {
+		return signing.TxData{}, err
+	}
+	return signing.TxData{
+		Body:                       body,
+		AuthInfo:                   authInfo,
+		BodyBytes:                  compat.BodyBytes,
+		AuthInfoBytes:              compat.AuthInfoBytes,
+		BodyHasUnknownNonCriticals: false, // TODO: this is needed for amino..
 	}, nil
 }

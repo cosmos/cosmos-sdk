@@ -344,7 +344,16 @@ func (c *Consensus[T]) FinalizeBlock(ctx context.Context, req *abci.RequestFinal
 			c.logger.Error("ListenDeliverBlock listening hook failed", "height", req.Height, "err", err)
 		}
 
-		if err := streamingListener.ListenStateChanges(ctx, changeSet); err != nil {
+		strChangeSet := make([]*streaming.StoreKVPair, len(changeSet))
+		for i, cs := range changeSet {
+			strChangeSet[i] = &streaming.StoreKVPair{
+				Key:    cs.Key,
+				Value:  cs.Value,
+				Delete: cs.Remove,
+			}
+		}
+
+		if err := streamingListener.ListenStateChanges(ctx, strChangeSet); err != nil {
 			c.logger.Error("ListenStateChanges listening hook failed", "height", req.Height, "err", err)
 		}
 	}

@@ -77,12 +77,13 @@ func (s *PluginTestSuite) SetupTest() {
 	}
 	s.stateChangeRequest = ListenStateChangesRequest{}
 
+	key := []byte("mockStore")
+	key = append(key, 1, 2, 3)
 	// test store kv pair types
 	for range [2000]int{} {
 		s.changeSet = append(s.changeSet, &StoreKVPair{
-			StoreKey: "mockStore",
-			Key:      []byte{1, 2, 3},
-			Value:    []byte{3, 2, 1},
+			Key:   key,
+			Value: []byte{3, 2, 1},
 		})
 	}
 }

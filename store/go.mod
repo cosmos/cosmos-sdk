@@ -9,7 +9,6 @@ require (
 	github.com/cockroachdb/errors v1.11.1
 	github.com/cockroachdb/pebble v1.0.0
 	github.com/cometbft/cometbft v0.38.2
-	github.com/cometbft/cometbft/api v1.0.0-alpha.1
 	github.com/cosmos/cosmos-db v1.0.0
 	github.com/cosmos/gogoproto v1.4.11
 	github.com/cosmos/iavl v1.0.0
@@ -18,7 +17,6 @@ require (
 	github.com/linxGnu/grocksdb v1.8.10
 	github.com/mattn/go-sqlite3 v1.14.19
 	github.com/stretchr/testify v1.8.4
-	github.com/tidwall/btree v1.7.0
 	golang.org/x/exp v0.0.0-20231226003508-02704c960a9b
 )
 

@@ -7,7 +7,7 @@ replace cosmossdk.io/core => ../../../core
 require (
 	cosmossdk.io/core v0.11.0
 	github.com/cosmos/gogoproto v1.4.11
-	google.golang.org/protobuf v1.31.0
+	google.golang.org/protobuf v1.32.0
 )
 
 require (

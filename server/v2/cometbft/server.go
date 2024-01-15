@@ -20,28 +20,6 @@ package cometbft
 // 	// genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 // )
 
-// type Config struct {
-// 	Name            string // TODO: we might want to put some of these in the app manager
-// 	Version         string
-// 	InitialHeight   uint64
-// 	MinRetainBlocks uint64
-// 	IndexEvents     map[string]struct{}
-// 	HaltHeight      uint64
-// 	HaltTime        uint64
-
-// 	SnapshotManager *snapshots.Manager
-
-// 	AddrPeerFilter types.PeerFilter // filter peers by address and port
-// 	IdPeerFilter   types.PeerFilter // filter peers by node ID
-
-// 	Transport  string
-// 	Addr       string
-// 	Standalone bool
-// 	Trace      bool
-
-// 	CmtConfig *cmtcfg.Config
-// }
-
 // type CometBFTServer struct {
 // 	Node   *node.Node
 // 	app    abci.Application

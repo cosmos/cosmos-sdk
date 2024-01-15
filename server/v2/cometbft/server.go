@@ -20,6 +20,14 @@ import (
 )
 
 type Config struct {
+	Name            string // TODO: we might want to put some of these in the app manager
+	Version         string
+	InitialHeight   uint64
+	MinRetainBlocks uint64
+	IndexEvents     map[string]struct{}
+	HaltHeight      uint64
+	HaltTime        uint64
+
 	Transport  string
 	Addr       string
 	Standalone bool
@@ -41,7 +49,7 @@ func NewCometBFTServer[T transaction.Tx](logger log.Logger, app appmanager.AppMa
 	logger = logger.With("module", "cometbft-server")
 	return &CometBFTServer{
 		logger: logger,
-		app:    NewConsensus[T](app),
+		app:    NewConsensus[T](app, cfg),
 		config: cfg,
 	}
 }

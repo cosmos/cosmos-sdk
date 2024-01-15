@@ -37,9 +37,10 @@ const (
 
 var _ abci.Application = (*Consensus[mock.Tx])(nil)
 
-func NewConsensus[T transaction.Tx](app appmanager.AppManager[T]) *Consensus[T] {
+func NewConsensus[T transaction.Tx](app appmanager.AppManager[T], cfg Config) *Consensus[T] {
 	return &Consensus[T]{
 		app: app,
+		cfg: cfg,
 	}
 }
 
@@ -54,19 +55,10 @@ type BlockData struct {
 
 type Consensus[T transaction.Tx] struct {
 	app     appmanager.AppManager[T]
+	cfg     Config
 	store   store.Store
 	logger  log.Logger
 	txCodec transaction.Codec[T]
-
-	// TODO: configs copied from baseapp, should we group this into a config struct?
-	name            string
-	version         string
-	initialHeight   uint64
-	trace           bool
-	minRetainBlocks uint64
-	indexEvents     map[string]struct{}
-	haltHeight      uint64
-	haltTime        uint64
 
 	// this is only available after this node has committed a block (in FinalizeBlock),
 	// otherwise it will be empty and we will need to query the app for the last
@@ -90,7 +82,7 @@ func (c *Consensus[T]) CheckTx(ctx context.Context, req *abci.CheckTxRequest) (*
 		Code:      0,
 		GasWanted: int64(resp.GasWanted),
 		GasUsed:   int64(resp.GasUsed),
-		Events:    intoABCIEvents(resp.Events, c.indexEvents),
+		Events:    intoABCIEvents(resp.Events, c.cfg.IndexEvents),
 	}
 	if resp.Error != nil {
 		cometResp.Code = 1
@@ -112,8 +104,8 @@ func (c *Consensus[T]) Info(context.Context, *abci.InfoRequest) (*abci.InfoRespo
 	}
 
 	return &abci.InfoResponse{
-		Data:            c.name,
-		Version:         c.version,
+		Data:            c.cfg.Name,
+		Version:         c.cfg.Version,
 		AppVersion:      cp.GetVersion().App,
 		LastBlockHeight: int64(version),
 		// LastBlockAppHash: c.app.LastCommittedBlockHash(), // TODO: implement this on store. It's required by CometBFT
@@ -124,7 +116,7 @@ func (c *Consensus[T]) Info(context.Context, *abci.InfoRequest) (*abci.InfoRespo
 func (c *Consensus[T]) Query(ctx context.Context, req *abci.QueryRequest) (*abci.QueryResponse, error) {
 	// reject special cases
 	if req.Path == QueryPathBroadcastTx {
-		return QueryResult(errorsmod.Wrap(cometerrors.ErrInvalidRequest, "can't route a broadcast tx message"), c.trace), nil
+		return QueryResult(errorsmod.Wrap(cometerrors.ErrInvalidRequest, "can't route a broadcast tx message"), c.cfg.Trace), nil
 	}
 
 	appreq, err := parseQueryRequest(req)
@@ -141,7 +133,7 @@ func (c *Consensus[T]) Query(ctx context.Context, req *abci.QueryRequest) (*abci
 	// it must be an app/p2p/store query
 	path := splitABCIQueryPath(req.Path)
 	if len(path) == 0 {
-		return QueryResult(errorsmod.Wrap(cometerrors.ErrUnknownRequest, "no query path provided"), c.trace), nil
+		return QueryResult(errorsmod.Wrap(cometerrors.ErrUnknownRequest, "no query path provided"), c.cfg.Trace), nil
 	}
 
 	var resp *abci.QueryResponse
@@ -157,11 +149,11 @@ func (c *Consensus[T]) Query(ctx context.Context, req *abci.QueryRequest) (*abci
 		resp, err = c.handleQueryP2P(path)
 
 	default:
-		resp = QueryResult(errorsmod.Wrap(cometerrors.ErrUnknownRequest, "unknown query path"), c.trace)
+		resp = QueryResult(errorsmod.Wrap(cometerrors.ErrUnknownRequest, "unknown query path"), c.cfg.Trace)
 	}
 
 	if err != nil {
-		return QueryResult(err, c.trace), nil
+		return QueryResult(err, c.cfg.Trace), nil
 	}
 
 	return resp, nil
@@ -333,7 +325,7 @@ func (c *Consensus[T]) FinalizeBlock(ctx context.Context, req *abci.FinalizeBloc
 		return nil, err
 	}
 
-	return finalizeBlockResponse(resp, cp, appHash, c.indexEvents)
+	return finalizeBlockResponse(resp, cp, appHash, c.cfg.IndexEvents)
 }
 
 // Commit implements types.Application.

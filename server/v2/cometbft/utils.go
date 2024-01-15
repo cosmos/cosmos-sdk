@@ -299,10 +299,10 @@ func (c *Consensus[T]) validateFinalizeBlockHeight(req *abci.FinalizeBlockReques
 
 	// expectedHeight holds the expected height to validate
 	var expectedHeight uint64
-	if lastBlockHeight == 0 && c.initialHeight > 1 {
+	if lastBlockHeight == 0 && c.cfg.InitialHeight > 1 {
 		// In this case, we're validating the first block of the chain, i.e no
 		// previous commit. The height we're expecting is the initial height.
-		expectedHeight = c.initialHeight
+		expectedHeight = c.cfg.InitialHeight
 	} else {
 		// This case can mean two things:
 		//
@@ -328,7 +328,7 @@ func (c *Consensus[T]) GetConsensusParams() (*v1.ConsensusParams, error) {
 
 func (c *Consensus[T]) GetBlockRetentionHeight(cp *v1.ConsensusParams, commitHeight int64) int64 {
 	// pruning is disabled if minRetainBlocks is zero
-	if c.minRetainBlocks == 0 {
+	if c.cfg.MinRetainBlocks == 0 {
 		return 0
 	}
 
@@ -369,7 +369,7 @@ func (c *Consensus[T]) GetBlockRetentionHeight(cp *v1.ConsensusParams, commitHei
 		}
 	}
 
-	v := commitHeight - int64(c.minRetainBlocks)
+	v := commitHeight - int64(c.cfg.MinRetainBlocks)
 	retentionHeight = minNonZero(retentionHeight, v)
 
 	if retentionHeight <= 0 {
@@ -384,15 +384,15 @@ func (c *Consensus[T]) GetBlockRetentionHeight(cp *v1.ConsensusParams, commitHei
 func (c *Consensus[T]) checkHalt(height int64, time time.Time) error {
 	var halt bool
 	switch {
-	case c.haltHeight > 0 && uint64(height) > c.haltHeight:
+	case c.cfg.HaltHeight > 0 && uint64(height) > c.cfg.HaltHeight:
 		halt = true
 
-	case c.haltTime > 0 && time.Unix() > int64(c.haltTime):
+	case c.cfg.HaltTime > 0 && time.Unix() > int64(c.cfg.HaltTime):
 		halt = true
 	}
 
 	if halt {
-		return fmt.Errorf("halt per configuration height %d time %d", c.haltHeight, c.haltTime)
+		return fmt.Errorf("halt per configuration height %d time %d", c.cfg.HaltHeight, c.cfg.HaltTime)
 	}
 
 	return nil

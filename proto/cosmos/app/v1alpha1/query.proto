@@ -8,7 +8,9 @@ import "cosmos/app/v1alpha1/config.proto";
 service Query {
 
   // Config returns the current app config.
-  rpc Config(QueryConfigRequest) returns (QueryConfigResponse) {}
+  rpc Config(QueryConfigRequest) returns (QueryConfigResponse) {
+    option deprecated = true;
+  }
 }
 
 // QueryConfigRequest is the Query/Config request type.

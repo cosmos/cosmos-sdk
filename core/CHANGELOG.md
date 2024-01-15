@@ -36,8 +36,16 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+### Features
+
 * [#18379](https://github.com/cosmos/cosmos-sdk/pull/18379) Add branch service.
 * [#18457](https://github.com/cosmos/cosmos-sdk/pull/18457) Add branch.ExecuteWithGasLimit.
+
+### API Breaking
+
+* [#18857](https://github.com/cosmos/cosmos-sdk/pull/18857) Moved `FormatCoins` to `x/tx`.
+* [#18861](httpes://github.com/cosmos/cosmos-sdk/pull/18861) Moved `coin.ParseCoin` to `client/v2/internal`.
+* [#18866](https://github.com/cosmos/cosmos-sdk/pull/18866) All items related to depinject have been moved to `cosmossdk.io/depinject` (`Provide`, `Invoke`, `Register`)
 
 ## [v0.12.0](https://github.com/cosmos/cosmos-sdk/releases/tag/core%2Fv0.11.0)
 

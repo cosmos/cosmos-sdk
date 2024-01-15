@@ -4,6 +4,8 @@ import (
 	"io"
 
 	ics23 "github.com/cosmos/ics23/go"
+
+	corestore "cosmossdk.io/core/store"
 )
 
 // Reader wraps the Has and Get method of a backing data store.
@@ -38,7 +40,7 @@ type Writer interface {
 type Database interface {
 	Reader
 	Writer
-	IteratorCreator
+	corestore.IteratorCreator
 	io.Closer
 }
 
@@ -50,8 +52,8 @@ type VersionedDatabase interface {
 	GetLatestVersion() (uint64, error)
 	SetLatestVersion(version uint64) error
 
-	Iterator(storeKey string, version uint64, start, end []byte) (Iterator, error)
-	ReverseIterator(storeKey string, version uint64, start, end []byte) (Iterator, error)
+	Iterator(storeKey string, version uint64, start, end []byte) (corestore.Iterator, error)
+	ReverseIterator(storeKey string, version uint64, start, end []byte) (corestore.Iterator, error)
 
 	ApplyChangeset(version uint64, cs *Changeset) error
 

@@ -146,3 +146,13 @@ func validateSlashFractionDowntime(i interface{}) error {
 
 	return nil
 }
+
+// MinSignedPerWindowInt returns min signed per window as an integer (vs the decimal in the param)
+func (p *Params) MinSignedPerWindowInt() int64 {
+	signedBlocksWindow := p.SignedBlocksWindow
+	minSignedPerWindow := p.MinSignedPerWindow
+
+	// NOTE: RoundInt64 will never panic as minSignedPerWindow is
+	//       less than 1.
+	return minSignedPerWindow.MulInt64(signedBlocksWindow).RoundInt64()
+}

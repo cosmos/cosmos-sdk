@@ -21,12 +21,12 @@ build-tags:
 linters:
   disable-all: true
   enable:
-    - errcheck
     - dogsled
+    - errcheck
     - exportloopref
+    - gci
     - goconst
     - gocritic
-    - gci
     - gofumpt
     - gosec
     - gosimple
@@ -35,11 +35,11 @@ linters:
     - misspell
     - nakedret
     - nolintlint
-    - staticcheck
     - revive
+    - staticcheck
     - stylecheck
-    - typecheck
     - thelper
+    - typecheck
     - unconvert
     - unused
 

@@ -9,13 +9,15 @@ const (
 	EventTypeActiveProposal   = "active_proposal"
 	EventTypeCancelProposal   = "cancel_proposal"
 
-	AttributeKeyProposalResult               = "proposal_result"
-	AttributeKeyVoter                        = "voter"
-	AttributeKeyOption                       = "option"
-	AttributeKeyProposalID                   = "proposal_id"
-	AttributeKeyProposalMessages             = "proposal_messages" // Msg type_urls in the proposal
-	AttributeKeyVotingPeriodStart            = "voting_period_start"
-	AttributeKeyProposalLog                  = "proposal_log"                 // log of proposal execution
+	AttributeKeyProposalResult       = "proposal_result"
+	AttributeKeyVoter                = "voter"
+	AttributeKeyOption               = "option"
+	AttributeKeyProposalID           = "proposal_id"
+	AttributeKeyProposalMessages     = "proposal_messages" // Msg type_urls in the proposal
+	AttributeKeyVotingPeriodStart    = "voting_period_start"
+	AttributeKeyProposalLog          = "proposal_log"           // log of proposal execution
+	AttributeKeyProposalDepositError = "proposal_deposit_error" // error on proposal deposit refund/burn
+
 	AttributeValueProposalDropped            = "proposal_dropped"             // didn't meet min deposit
 	AttributeValueProposalPassed             = "proposal_passed"              // met vote quorum
 	AttributeValueProposalRejected           = "proposal_rejected"            // didn't meet vote quorum

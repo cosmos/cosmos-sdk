@@ -9,11 +9,7 @@ import (
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 
-	modulev1 "cosmossdk.io/api/cosmos/evidence/module/v1"
-	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
-	store "cosmossdk.io/core/store"
-	"cosmossdk.io/depinject"
 	eviclient "cosmossdk.io/x/evidence/client"
 	"cosmossdk.io/x/evidence/client/cli"
 	"cosmossdk.io/x/evidence/keeper"
@@ -33,7 +29,6 @@ var (
 	_ module.HasGenesis          = AppModule{}
 
 	_ appmodule.AppModule       = AppModule{}
-	_ appmodule.HasServices     = AppModule{}
 	_ appmodule.HasBeginBlocker = AppModule{}
 )
 
@@ -120,9 +115,6 @@ func NewAppModule(keeper keeper.Keeper) AppModule {
 	}
 }
 
-// IsOnePerModuleType implements the depinject.OnePerModuleType interface.
-func (am AppModule) IsOnePerModuleType() {}
-
 // IsAppModule implements the appmodule.AppModule interface.
 func (am AppModule) IsAppModule() {}
 
@@ -173,39 +165,4 @@ func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
 // WeightedOperations returns the all the gov module operations with their respective weights.
 func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
 	return nil
-}
-
-//
-// App Wiring Setup
-//
-
-func init() {
-	appmodule.Register(&modulev1.Module{},
-		appmodule.Provide(ProvideModule),
-	)
-}
-
-type ModuleInputs struct {
-	depinject.In
-
-	StoreService store.KVStoreService
-	Cdc          codec.Codec
-
-	StakingKeeper  types.StakingKeeper
-	SlashingKeeper types.SlashingKeeper
-	AddressCodec   address.Codec
-}
-
-type ModuleOutputs struct {
-	depinject.Out
-
-	EvidenceKeeper keeper.Keeper
-	Module         appmodule.AppModule
-}
-
-func ProvideModule(in ModuleInputs) ModuleOutputs {
-	k := keeper.NewKeeper(in.Cdc, in.StoreService, in.StakingKeeper, in.SlashingKeeper, in.AddressCodec)
-	m := NewAppModule(*k)
-
-	return ModuleOutputs{EvidenceKeeper: *k, Module: m}
 }

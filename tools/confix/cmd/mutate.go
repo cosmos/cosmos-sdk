@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"path/filepath"
 	"strings"
 
 	"github.com/creachadair/tomledit"
@@ -30,7 +31,7 @@ func SetCommand() *cobra.Command {
 
 			clientCtx := client.GetClientContextFromCmd(cmd)
 			if clientCtx.HomeDir != "" {
-				filename = fmt.Sprintf("%s/config/%s.toml", clientCtx.HomeDir, filename)
+				filename = filepath.Join(clientCtx.HomeDir, "config", filename+tomlSuffix)
 			}
 
 			plan := transform.Plan{
@@ -97,7 +98,7 @@ func GetCommand() *cobra.Command {
 
 			clientCtx := client.GetClientContextFromCmd(cmd)
 			if clientCtx.HomeDir != "" {
-				filename = fmt.Sprintf("%s/config/%s.toml", clientCtx.HomeDir, filename)
+				filename = filepath.Join(clientCtx.HomeDir, "config", filename+tomlSuffix)
 			}
 
 			doc, err := confix.LoadConfig(filename)

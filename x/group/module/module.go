@@ -8,17 +8,13 @@ import (
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 
-	modulev1 "cosmossdk.io/api/cosmos/group/module/v1"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/depinject"
-	store "cosmossdk.io/store/types"
 	"cosmossdk.io/x/group"
 	"cosmossdk.io/x/group/client/cli"
 	"cosmossdk.io/x/group/keeper"
 	"cosmossdk.io/x/group/simulation"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -59,9 +55,6 @@ func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, ak group.AccountKeeper,
 		registry:       registry,
 	}
 }
-
-// IsOnePerModuleType implements the depinject.OnePerModuleType interface.
-func (am AppModule) IsOnePerModuleType() {}
 
 // IsAppModule implements the appmodule.AppModule interface.
 func (am AppModule) IsAppModule() {}
@@ -173,50 +166,4 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 		simState.AppParams, simState.Cdc, simState.TxConfig,
 		am.accKeeper, am.bankKeeper, am.keeper, am.cdc,
 	)
-}
-
-//
-// App Wiring Setup
-//
-
-func init() {
-	appmodule.Register(
-		&modulev1.Module{},
-		appmodule.Provide(ProvideModule),
-	)
-}
-
-type GroupInputs struct {
-	depinject.In
-
-	Config           *modulev1.Module
-	Key              *store.KVStoreKey
-	Cdc              codec.Codec
-	AccountKeeper    group.AccountKeeper
-	BankKeeper       group.BankKeeper
-	Registry         cdctypes.InterfaceRegistry
-	MsgServiceRouter baseapp.MessageRouter
-}
-
-type GroupOutputs struct {
-	depinject.Out
-
-	GroupKeeper keeper.Keeper
-	Module      appmodule.AppModule
-}
-
-func ProvideModule(in GroupInputs) GroupOutputs {
-	k := keeper.NewKeeper(in.Key,
-		in.Cdc,
-		in.MsgServiceRouter,
-		in.AccountKeeper,
-		group.Config{
-			MaxExecutionPeriod:    in.Config.MaxExecutionPeriod.AsDuration(),
-			MaxMetadataLen:        in.Config.MaxMetadataLen,
-			MaxProposalTitleLen:   in.Config.MaxProposalTitleLen,
-			MaxProposalSummaryLen: in.Config.MaxProposalSummaryLen,
-		},
-	)
-	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.Registry)
-	return GroupOutputs{GroupKeeper: k, Module: m}
 }

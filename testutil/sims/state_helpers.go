@@ -20,6 +20,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -134,7 +135,7 @@ func AppStateFnWithExtendedCbs(
 		}
 		notBondedCoins := sdk.NewCoin(stakingState.Params.BondDenom, notBondedTokens)
 		// edit bank state to make it have the not bonded pool tokens
-		bankStateBz, ok := rawState[banktypes.ModuleName]
+		bankStateBz, ok := rawState[testutil.BankModuleName]
 		// TODO(fdymylja/jonathan): should we panic in this case
 		if !ok {
 			panic("bank genesis state is missing")
@@ -162,7 +163,7 @@ func AppStateFnWithExtendedCbs(
 		// change appState back
 		for name, state := range map[string]proto.Message{
 			stakingtypes.ModuleName: stakingState,
-			banktypes.ModuleName:    bankState,
+			testutil.BankModuleName: bankState,
 		} {
 			if moduleStateCb != nil {
 				moduleStateCb(name, state)
@@ -269,8 +270,8 @@ func AppStateFromGenesisFileFn(r io.Reader, cdc codec.JSONCodec, genesisFile str
 	}
 
 	var authGenesis authtypes.GenesisState
-	if appState[authtypes.ModuleName] != nil {
-		cdc.MustUnmarshalJSON(appState[authtypes.ModuleName], &authGenesis)
+	if appState[testutil.AuthModuleName] != nil {
+		cdc.MustUnmarshalJSON(appState[testutil.AuthModuleName], &authGenesis)
 	}
 
 	newAccs := make([]simtypes.Account, len(authGenesis.Accounts))

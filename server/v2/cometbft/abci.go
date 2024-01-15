@@ -67,7 +67,7 @@ type Consensus[T transaction.Tx] struct {
 }
 
 // CheckTx implements types.Application.
-func (c *Consensus[T]) CheckTx(ctx context.Context, req *abci.CheckTxRequest) (*abci.CheckTxResponse, error) {
+func (c *Consensus[T]) CheckTx(ctx context.Context, req *abci.RequestCheckTx) (*abci.ResponseCheckTx, error) {
 	// TODO: evaluate here if to return error, or CheckTxResponse.error.
 	decodedTx, err := c.txCodec.Decode(req.Tx)
 	if err != nil {
@@ -78,7 +78,7 @@ func (c *Consensus[T]) CheckTx(ctx context.Context, req *abci.CheckTxRequest) (*
 		return nil, err
 	}
 
-	cometResp := &abci.CheckTxResponse{
+	cometResp := &abci.ResponseCheckTx{
 		Code:      0,
 		GasWanted: int64(resp.GasWanted),
 		GasUsed:   int64(resp.GasUsed),
@@ -92,7 +92,7 @@ func (c *Consensus[T]) CheckTx(ctx context.Context, req *abci.CheckTxRequest) (*
 }
 
 // Info implements types.Application.
-func (c *Consensus[T]) Info(context.Context, *abci.InfoRequest) (*abci.InfoResponse, error) {
+func (c *Consensus[T]) Info(context.Context, *abci.RequestInfo) (*abci.ResponseInfo, error) {
 	version, _, err := c.store.StateLatest()
 	if err != nil {
 		return nil, err
@@ -103,7 +103,7 @@ func (c *Consensus[T]) Info(context.Context, *abci.InfoRequest) (*abci.InfoRespo
 		return nil, err
 	}
 
-	return &abci.InfoResponse{
+	return &abci.ResponseInfo{
 		Data:            c.cfg.Name,
 		Version:         c.cfg.Version,
 		AppVersion:      cp.GetVersion().App,
@@ -113,7 +113,7 @@ func (c *Consensus[T]) Info(context.Context, *abci.InfoRequest) (*abci.InfoRespo
 }
 
 // Query implements types.Application.
-func (c *Consensus[T]) Query(ctx context.Context, req *abci.QueryRequest) (*abci.QueryResponse, error) {
+func (c *Consensus[T]) Query(ctx context.Context, req *abci.RequestQuery) (*abci.ResponseQuery, error) {
 	appreq, err := parseQueryRequest(req)
 	if err == nil { // if no error is returned then we can handle the query with the appmanager
 		res, err := c.app.Query(ctx, uint64(req.Height), appreq)
@@ -131,7 +131,7 @@ func (c *Consensus[T]) Query(ctx context.Context, req *abci.QueryRequest) (*abci
 		return QueryResult(errorsmod.Wrap(cometerrors.ErrUnknownRequest, "no query path provided"), c.cfg.Trace), nil
 	}
 
-	var resp *abci.QueryResponse
+	var resp *abci.ResponseQuery
 
 	switch path[0] {
 	case QueryPathApp:
@@ -155,9 +155,9 @@ func (c *Consensus[T]) Query(ctx context.Context, req *abci.QueryRequest) (*abci
 }
 
 // InitChain implements types.Application.
-func (c *Consensus[T]) InitChain(ctx context.Context, req *abci.InitChainRequest) (*abci.InitChainResponse, error) {
+func (c *Consensus[T]) InitChain(ctx context.Context, req *abci.RequestInitChain) (*abci.ResponseInitChain, error) {
 	// TODO: won't work for now
-	return &abci.InitChainResponse{
+	return &abci.ResponseInitChain{
 		ConsensusParams: req.ConsensusParams,
 		Validators:      req.Validators,
 		AppHash:         []byte{},
@@ -221,7 +221,7 @@ func (c *Consensus[T]) InitChain(ctx context.Context, req *abci.InitChainRequest
 }
 
 // PrepareProposal implements types.Application.
-func (c *Consensus[T]) PrepareProposal(ctx context.Context, req *abci.PrepareProposalRequest) (resp *abci.PrepareProposalResponse, err error) {
+func (c *Consensus[T]) PrepareProposal(ctx context.Context, req *abci.RequestPrepareProposal) (resp *abci.ResponsePrepareProposal, err error) {
 	if req.Height < 1 {
 		return nil, errors.New("PrepareProposal called with invalid height")
 	}
@@ -246,13 +246,13 @@ func (c *Consensus[T]) PrepareProposal(ctx context.Context, req *abci.PreparePro
 		encodedTxs[i] = tx.Bytes()
 	}
 
-	return &abci.PrepareProposalResponse{
+	return &abci.ResponsePrepareProposal{
 		Txs: encodedTxs,
 	}, nil
 }
 
 // ProcessProposal implements types.Application.
-func (c *Consensus[T]) ProcessProposal(ctx context.Context, req *abci.ProcessProposalRequest) (*abci.ProcessProposalResponse, error) {
+func (c *Consensus[T]) ProcessProposal(ctx context.Context, req *abci.RequestProcessProposal) (*abci.ResponseProcessProposal, error) {
 	decodedTxs := make([]T, len(req.Txs))
 	for _, tx := range req.Txs {
 		decTx, err := c.txCodec.Decode(tx)
@@ -266,18 +266,18 @@ func (c *Consensus[T]) ProcessProposal(ctx context.Context, req *abci.ProcessPro
 	err := c.app.VerifyBlock(ctx, uint64(req.Height), decodedTxs)
 	if err != nil {
 		c.logger.Error("failed to process proposal", "height", req.Height, "time", req.Time, "hash", fmt.Sprintf("%X", req.Hash), "err", err)
-		return &abci.ProcessProposalResponse{
-			Status: abci.PROCESS_PROPOSAL_STATUS_REJECT,
+		return &abci.ResponseProcessProposal{
+			Status: abci.ResponseProcessProposal_REJECT,
 		}, nil
 	}
 
-	return &abci.ProcessProposalResponse{
-		Status: abci.PROCESS_PROPOSAL_STATUS_ACCEPT,
+	return &abci.ResponseProcessProposal{
+		Status: abci.ResponseProcessProposal_ACCEPT,
 	}, nil
 }
 
 // FinalizeBlock implements types.Application.
-func (c *Consensus[T]) FinalizeBlock(ctx context.Context, req *abci.FinalizeBlockRequest) (*abci.FinalizeBlockResponse, error) {
+func (c *Consensus[T]) FinalizeBlock(ctx context.Context, req *abci.RequestFinalizeBlock) (*abci.ResponseFinalizeBlock, error) {
 	if err := c.validateFinalizeBlockHeight(req); err != nil {
 		return nil, err
 	}
@@ -345,7 +345,7 @@ func (c *Consensus[T]) FinalizeBlock(ctx context.Context, req *abci.FinalizeBloc
 }
 
 // Commit implements types.Application.
-func (c *Consensus[T]) Commit(ctx context.Context, _ *abci.CommitRequest) (*abci.CommitResponse, error) {
+func (c *Consensus[T]) Commit(ctx context.Context, _ *abci.RequestCommit) (*abci.ResponseCommit, error) {
 	lastCommittedBlock := c.lastCommittedBlock.Load()
 
 	c.cfg.SnapshotManager.SnapshotIfApplicable(lastCommittedBlock.Height)
@@ -355,19 +355,19 @@ func (c *Consensus[T]) Commit(ctx context.Context, _ *abci.CommitRequest) (*abci
 		return nil, err
 	}
 
-	return &abci.CommitResponse{
+	return &abci.ResponseCommit{
 		RetainHeight: c.GetBlockRetentionHeight(cp, lastCommittedBlock.Height),
 	}, nil
 }
 
 // Vote extensions
 // VerifyVoteExtension implements types.Application.
-func (*Consensus[T]) VerifyVoteExtension(context.Context, *abci.VerifyVoteExtensionRequest) (*abci.VerifyVoteExtensionResponse, error) {
+func (*Consensus[T]) VerifyVoteExtension(context.Context, *abci.RequestVerifyVoteExtension) (*abci.ResponseVerifyVoteExtension, error) {
 	panic("unimplemented")
 }
 
 // ExtendVote implements types.Application.
-func (*Consensus[T]) ExtendVote(context.Context, *abci.ExtendVoteRequest) (*abci.ExtendVoteResponse, error) {
+func (*Consensus[T]) ExtendVote(context.Context, *abci.RequestExtendVote) (*abci.ResponseExtendVote, error) {
 	panic("unimplemented")
 }
 

@@ -8,7 +8,7 @@ import (
 
 // iterAdapter adapts a storev2.Iterator into a corestore.Iterator
 type iterAdapter struct {
-	iter storev2.Iterator
+	iter corestore.Iterator
 }
 
 func (i iterAdapter) Domain() (start []byte, end []byte) {
@@ -40,7 +40,7 @@ func (i iterAdapter) Close() error {
 	return nil
 }
 
-func newIterAdapter(iter storev2.Iterator) corestore.Iterator {
+func newIterAdapter(iter corestore.Iterator) corestore.Iterator {
 	return iterAdapter{iter: iter}
 }
 

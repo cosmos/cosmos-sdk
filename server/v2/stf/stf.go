@@ -39,7 +39,7 @@ type STF[T transaction.Tx] struct {
 // DeliverBlock is our state transition function.
 // It takes a read only view of the state to apply the block to,
 // executes the block and returns the block results and the new state.
-func (s STF[T]) DeliverBlock(ctx context.Context, block *appmanager.DecodedBlockRequest[T], state store.ReadonlyState) (blockResult *appmanager.BlockResponse, newState store.WritableState, err error) {
+func (s STF[T]) DeliverBlock(ctx context.Context, block *appmanager.BlockRequest[T], state store.ReadonlyState) (blockResult *appmanager.BlockResponse, newState store.WritableState, err error) {
 	// creates a new branch store, from the readonly view of the state
 	// that can be written to.
 	newState = s.branch(state)

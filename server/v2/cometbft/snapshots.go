@@ -9,16 +9,16 @@ import (
 )
 
 // ApplySnapshotChunk implements types.Application.
-func (c *Consensus[T]) ApplySnapshotChunk(_ context.Context, req *abci.ApplySnapshotChunkRequest) (*abci.ApplySnapshotChunkResponse, error) {
+func (c *Consensus[T]) ApplySnapshotChunk(_ context.Context, req *abci.RequestApplySnapshotChunk) (*abci.ResponseApplySnapshotChunk, error) {
 	if c.cfg.SnapshotManager == nil {
 		c.logger.Error("snapshot manager not configured")
-		return &abci.ApplySnapshotChunkResponse{Result: abci.APPLY_SNAPSHOT_CHUNK_RESULT_ABORT}, nil
+		return &abci.ResponseApplySnapshotChunk{Result: abci.ResponseApplySnapshotChunk_ABORT}, nil
 	}
 
 	_, err := c.cfg.SnapshotManager.RestoreChunk(req.Chunk)
 	switch {
 	case err == nil:
-		return &abci.ApplySnapshotChunkResponse{Result: abci.APPLY_SNAPSHOT_CHUNK_RESULT_ACCEPT}, nil
+		return &abci.ResponseApplySnapshotChunk{Result: abci.ResponseApplySnapshotChunk_ACCEPT}, nil
 
 	case errors.Is(err, snapshottypes.ErrChunkHashMismatch):
 		c.logger.Error(
@@ -27,20 +27,20 @@ func (c *Consensus[T]) ApplySnapshotChunk(_ context.Context, req *abci.ApplySnap
 			"sender", req.Sender,
 			"err", err,
 		)
-		return &abci.ApplySnapshotChunkResponse{
-			Result:        abci.APPLY_SNAPSHOT_CHUNK_RESULT_RETRY,
+		return &abci.ResponseApplySnapshotChunk{
+			Result:        abci.ResponseApplySnapshotChunk_RETRY,
 			RefetchChunks: []uint32{req.Index},
 			RejectSenders: []string{req.Sender},
 		}, nil
 
 	default:
 		c.logger.Error("failed to restore snapshot", "err", err)
-		return &abci.ApplySnapshotChunkResponse{Result: abci.APPLY_SNAPSHOT_CHUNK_RESULT_ABORT}, nil
+		return &abci.ResponseApplySnapshotChunk{Result: abci.ResponseApplySnapshotChunk_ABORT}, nil
 	}
 }
 
 // ListSnapshots implements types.Application.
-func (c *Consensus[T]) ListSnapshots(_ context.Context, ctx *abci.ListSnapshotsRequest) (resp *abci.ListSnapshotsResponse, err error) {
+func (c *Consensus[T]) ListSnapshots(_ context.Context, ctx *abci.RequestListSnapshots) (resp *abci.ResponseListSnapshots, err error) {
 	if c.cfg.SnapshotManager == nil {
 		return resp, nil
 	}
@@ -65,9 +65,9 @@ func (c *Consensus[T]) ListSnapshots(_ context.Context, ctx *abci.ListSnapshotsR
 }
 
 // LoadSnapshotChunk implements types.Application.
-func (c *Consensus[T]) LoadSnapshotChunk(_ context.Context, req *abci.LoadSnapshotChunkRequest) (*abci.LoadSnapshotChunkResponse, error) {
+func (c *Consensus[T]) LoadSnapshotChunk(_ context.Context, req *abci.RequestLoadSnapshotChunk) (*abci.ResponseLoadSnapshotChunk, error) {
 	if c.cfg.SnapshotManager == nil {
-		return &abci.LoadSnapshotChunkResponse{}, nil
+		return &abci.ResponseLoadSnapshotChunk{}, nil
 	}
 
 	chunk, err := c.cfg.SnapshotManager.LoadChunk(req.Height, req.Format, req.Chunk)
@@ -82,34 +82,34 @@ func (c *Consensus[T]) LoadSnapshotChunk(_ context.Context, req *abci.LoadSnapsh
 		return nil, err
 	}
 
-	return &abci.LoadSnapshotChunkResponse{Chunk: chunk}, nil
+	return &abci.ResponseLoadSnapshotChunk{Chunk: chunk}, nil
 }
 
 // OfferSnapshot implements types.Application.
-func (c *Consensus[T]) OfferSnapshot(_ context.Context, req *abci.OfferSnapshotRequest) (*abci.OfferSnapshotResponse, error) {
+func (c *Consensus[T]) OfferSnapshot(_ context.Context, req *abci.RequestOfferSnapshot) (*abci.ResponseOfferSnapshot, error) {
 	if c.cfg.SnapshotManager == nil {
 		c.logger.Error("snapshot manager not configured")
-		return &abci.OfferSnapshotResponse{Result: abci.OFFER_SNAPSHOT_RESULT_ABORT}, nil
+		return &abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_ABORT}, nil
 	}
 
 	if req.Snapshot == nil {
 		c.logger.Error("received nil snapshot")
-		return &abci.OfferSnapshotResponse{Result: abci.OFFER_SNAPSHOT_RESULT_REJECT}, nil
+		return &abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_REJECT}, nil
 	}
 
 	snapshot, err := snapshottypes.SnapshotFromABCI(req.Snapshot)
 	if err != nil {
 		c.logger.Error("failed to decode snapshot metadata", "err", err)
-		return &abci.OfferSnapshotResponse{Result: abci.OFFER_SNAPSHOT_RESULT_REJECT}, nil
+		return &abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_REJECT}, nil
 	}
 
 	err = c.cfg.SnapshotManager.Restore(snapshot)
 	switch {
 	case err == nil:
-		return &abci.OfferSnapshotResponse{Result: abci.OFFER_SNAPSHOT_RESULT_ACCEPT}, nil
+		return &abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_ACCEPT}, nil
 
 	case errors.Is(err, snapshottypes.ErrUnknownFormat):
-		return &abci.OfferSnapshotResponse{Result: abci.OFFER_SNAPSHOT_RESULT_REJECT_FORMAT}, nil
+		return &abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_REJECT_FORMAT}, nil
 
 	case errors.Is(err, snapshottypes.ErrInvalidMetadata):
 		c.logger.Error(
@@ -118,7 +118,7 @@ func (c *Consensus[T]) OfferSnapshot(_ context.Context, req *abci.OfferSnapshotR
 			"format", req.Snapshot.Format,
 			"err", err,
 		)
-		return &abci.OfferSnapshotResponse{Result: abci.OFFER_SNAPSHOT_RESULT_REJECT}, nil
+		return &abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_REJECT}, nil
 
 	default:
 		c.logger.Error(
@@ -130,6 +130,6 @@ func (c *Consensus[T]) OfferSnapshot(_ context.Context, req *abci.OfferSnapshotR
 
 		// We currently don't support resetting the IAVL stores and retrying a
 		// different snapshot, so we ask CometBFT to abort all snapshot restoration.
-		return &abci.OfferSnapshotResponse{Result: abci.OFFER_SNAPSHOT_RESULT_ABORT}, nil
+		return &abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_ABORT}, nil
 	}
 }

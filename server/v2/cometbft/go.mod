@@ -20,7 +20,7 @@ require (
 	cosmossdk.io/server/v2/appmanager v0.0.0-00010101000000-000000000000
 	cosmossdk.io/server/v2/core v0.0.0-00010101000000-000000000000
 	cosmossdk.io/store/v2 v2.0.0-00010101000000-000000000000
-	github.com/cometbft/cometbft v0.38.0
+	github.com/cometbft/cometbft v0.38.2
 	github.com/cometbft/cometbft/api v1.0.0-alpha.1
 	github.com/cosmos/gogoproto v1.4.11
 	google.golang.org/protobuf v1.32.0

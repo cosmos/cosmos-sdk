@@ -13,8 +13,7 @@ import (
 	coreappmgr "cosmossdk.io/server/v2/core/appmanager"
 	"cosmossdk.io/server/v2/core/event"
 	abci "github.com/cometbft/cometbft/abci/types"
-	cmtcrypto "github.com/cometbft/cometbft/api/cometbft/crypto/v1"
-	v1 "github.com/cometbft/cometbft/api/cometbft/types/v1"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
@@ -23,7 +22,7 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
-func parseQueryRequest(req *abci.QueryRequest) (proto.Message, error) {
+func parseQueryRequest(req *abci.RequestQuery) (proto.Message, error) {
 	desc, err := gogoproto.HybridResolver.FindDescriptorByName(protoreflect.FullName(req.Path))
 	if err != nil {
 		return nil, err
@@ -41,7 +40,7 @@ func parseQueryRequest(req *abci.QueryRequest) (proto.Message, error) {
 }
 
 // queryResponse needs the request to get the path
-func queryResponse(req *abci.QueryRequest, res proto.Message) (*abci.QueryResponse, error) {
+func queryResponse(req *abci.RequestQuery, res proto.Message) (*abci.ResponseQuery, error) {
 	desc, err := gogoproto.HybridResolver.FindDescriptorByName(protoreflect.FullName(req.Path))
 	if err != nil {
 		return nil, err
@@ -60,14 +59,14 @@ func queryResponse(req *abci.QueryRequest, res proto.Message) (*abci.QueryRespon
 	}
 
 	//TODO: how do I reply? I suppose we need to different replies depending of the query
-	return &abci.QueryResponse{
-		Code:      0,
-		Log:       "",
-		Info:      "",
-		Index:     0,
-		Key:       []byte{},
-		Value:     bz,
-		ProofOps:  &cmtcrypto.ProofOps{},
+	return &abci.ResponseQuery{
+		Code:  0,
+		Log:   "",
+		Info:  "",
+		Index: 0,
+		Key:   []byte{},
+		Value: bz,
+		// ProofOps:  &cmtcrypto.ProofOps{},
 		Height:    0,
 		Codespace: "",
 	}, nil
@@ -103,13 +102,13 @@ func splitABCIQueryPath(requestPath string) (path []string) {
 
 func finalizeBlockResponse(
 	in *coreappmgr.BlockResponse,
-	cp *v1.ConsensusParams,
+	cp *cmtproto.ConsensusParams,
 	appHash []byte,
 	indexSet map[string]struct{},
-) (*abci.FinalizeBlockResponse, error) {
+) (*abci.ResponseFinalizeBlock, error) {
 	allEvents := append(in.BeginBlockEvents, in.EndBlockEvents...)
 
-	resp := &abci.FinalizeBlockResponse{
+	resp := &abci.ResponseFinalizeBlock{
 		Events:                intoABCIEvents(allEvents, indexSet),
 		TxResults:             intoABCITxResults(in.TxResults, indexSet),
 		ValidatorUpdates:      intoABCIValidatorUpdates(in.ValidatorUpdates),
@@ -124,11 +123,11 @@ func intoABCIValidatorUpdates(updates []coreappmgr.ValidatorUpdate) []abci.Valid
 
 	for i := range updates {
 		valsetUpdates[i] = abci.ValidatorUpdate{
-			PubKey: cmtcrypto.PublicKey{
-				Sum: &cmtcrypto.PublicKey_Ed25519{ // TODO: check if this is ok, i didn't find a way to check the pubkey type
-					Ed25519: updates[i].PubKey,
-				},
-			},
+			// PubKey: cmtcrypto.PublicKey{
+			// 	Sum: &cmtcrypto.PublicKey_Ed25519{ // TODO: check if this is ok, i didn't find a way to check the pubkey type
+			// 		Ed25519: updates[i].PubKey,
+			// 	},
+			// }, // TODO uncomment
 			Power: updates[i].Power,
 		}
 	}
@@ -278,16 +277,16 @@ func ToSDKExtendedCommitInfo(commit abci.ExtendedCommitInfo) comet.CommitInfo {
 
 // QueryResult returns a ResponseQuery from an error. It will try to parse ABCI
 // info from the error.
-func QueryResult(err error, debug bool) *abci.QueryResponse {
+func QueryResult(err error, debug bool) *abci.ResponseQuery {
 	space, code, log := errorsmod.ABCIInfo(err, debug)
-	return &abci.QueryResponse{
+	return &abci.ResponseQuery{
 		Codespace: space,
 		Code:      code,
 		Log:       log,
 	}
 }
 
-func (c *Consensus[T]) validateFinalizeBlockHeight(req *abci.FinalizeBlockRequest) error {
+func (c *Consensus[T]) validateFinalizeBlockHeight(req *abci.RequestFinalizeBlock) error {
 	if req.Height < 1 {
 		return fmt.Errorf("invalid height: %d", req.Height)
 	}
@@ -321,12 +320,12 @@ func (c *Consensus[T]) validateFinalizeBlockHeight(req *abci.FinalizeBlockReques
 
 // TODO: implement this, only from committed state, there's no need to get it from
 // uncommitted store because we are committing before responding to FinalizeBlock.
-func (c *Consensus[T]) GetConsensusParams() (*v1.ConsensusParams, error) {
+func (c *Consensus[T]) GetConsensusParams() (*cmtproto.ConsensusParams, error) {
 	// I think we should be able to do a query here, or allow consensus to read from store?
-	return &v1.ConsensusParams{}, nil
+	return &cmtproto.ConsensusParams{}, nil
 }
 
-func (c *Consensus[T]) GetBlockRetentionHeight(cp *v1.ConsensusParams, commitHeight int64) int64 {
+func (c *Consensus[T]) GetBlockRetentionHeight(cp *cmtproto.ConsensusParams, commitHeight int64) int64 {
 	// pruning is disabled if minRetainBlocks is zero
 	if c.cfg.MinRetainBlocks == 0 {
 		return 0

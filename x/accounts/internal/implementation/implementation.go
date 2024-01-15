@@ -8,6 +8,7 @@ import (
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/gas"
 	"cosmossdk.io/core/header"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 )
 

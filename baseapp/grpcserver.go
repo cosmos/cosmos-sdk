@@ -69,7 +69,7 @@ func (app *BaseApp) RegisterGRPCServer(server gogogrpc.Server, logQueries bool) 
 		}
 
 		if logQueries {
-			app.logger.Info("gRPC query received of type: " + fmt.Sprintf("%#v", req))
+			app.logger.Debug("gRPC query received of type: " + fmt.Sprintf("%#v", req))
 		}
 
 		return handler(grpcCtx, req)

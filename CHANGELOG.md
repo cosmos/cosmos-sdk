@@ -38,10 +38,11 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
-## [v0.50.3](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.50.3) - 2023-01-11
+## [v0.50.3](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.50.3) - 2023-01-15
 
 ### Features
 
+* (types) [#18991](https://github.com/cosmos/cosmos-sdk/pull/18991) Add SignerExtractionAdapter to PriorityNonceMempool/Config and provide Default implementation matching existing behavior.
 * (gRPC) [#19043](https://github.com/cosmos/cosmos-sdk/pull/19043) Add `halt_height` to the gRPC `/cosmos/base/node/v1beta1/config` request.
 
 ### Improvements

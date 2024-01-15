@@ -12,7 +12,6 @@ require (
 	cosmossdk.io/api v0.7.2
 	cosmossdk.io/log v1.2.1
 	cosmossdk.io/server/v2/core v0.0.0-00010101000000-000000000000
-	cosmossdk.io/x/tx v0.13.0
 	github.com/cosmos/cosmos-proto v1.0.0-beta.3
 	github.com/cosmos/gogogateway v1.2.0
 	github.com/cosmos/gogoproto v1.4.11
@@ -32,7 +31,6 @@ require (
 
 require (
 	cosmossdk.io/core v0.11.0 // indirect
-	cosmossdk.io/errors v1.0.0 // indirect
 	github.com/DataDog/datadog-go v3.2.0+incompatible // indirect
 	github.com/DataDog/zstd v1.5.5 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
@@ -86,5 +84,6 @@ require (
 	google.golang.org/genproto/googleapis/api v0.0.0-20231212172506-995d672761c0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20231212172506-995d672761c0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
+	gotest.tools/v3 v3.5.1 // indirect
 	nhooyr.io/websocket v1.8.6 // indirect
 )

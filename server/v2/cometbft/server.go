@@ -55,7 +55,7 @@ func NewCometBFTServer[T transaction.Tx](logger log.Logger, app appmanager.AppMa
 	logger = logger.With("module", "cometbft-server")
 	return &CometBFTServer{
 		logger: logger,
-		app:    NewConsensus[T](app, cfg),
+		app:    NewConsensus[T](app, nil, nil, cfg),
 		config: cfg,
 	}
 }
@@ -113,7 +113,7 @@ func (s *CometBFTServer) Stop() error {
 // returns a function which returns the genesis doc from the genesis file.
 func getGenDocProvider(cfg *cmtcfg.Config) func() (node.ChecksummedGenesisDoc, error) {
 	return func() (node.ChecksummedGenesisDoc, error) {
-		//TODO: re-add this after fixing deps
+		// TODO: re-add this after fixing deps
 		// appGenesis, err := genutiltypes.AppGenesisFromFile(cfg.GenesisFile())
 		// if err != nil {
 		// 	return nil, err

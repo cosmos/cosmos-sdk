@@ -54,7 +54,7 @@ func (a *FilePlugin) ListenDeliverBlock(ctx context.Context, req streaming.Liste
 
 func (a *FilePlugin) ListenStateChanges(ctx context.Context, changeSet []*streaming.StoreKVPair) error {
 	fmt.Printf("listen-commit: block_height=%d data=%v", a.BlockHeight, changeSet)
-	d1 := []byte(fmt.Sprintf("%d:::%v\n", a.BlockHeight))
+	d1 := []byte(fmt.Sprintf("%d:::%v\n", a.BlockHeight, nil))
 	d2 := []byte(fmt.Sprintf("%d:::%v\n", a.BlockHeight, changeSet))
 	if err := a.writeToFile("commit-res", d1); err != nil {
 		return err

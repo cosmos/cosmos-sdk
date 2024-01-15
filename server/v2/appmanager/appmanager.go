@@ -119,6 +119,7 @@ func (a AppManager[T]) ValidateTx(ctx context.Context, tx T) (appmanager.TxResul
 	return a.stf.ValidateTx(ctx, latestState, a.ValidateTxGasLimit, tx), nil
 }
 
+// Simulate runs validation and execution flow of a Tx.
 func (a AppManager[T]) Simulate(ctx context.Context, tx T) (appmanager.TxResult, error) {
 	_, state, err := a.db.StateLatest()
 	if err != nil {
@@ -128,6 +129,7 @@ func (a AppManager[T]) Simulate(ctx context.Context, tx T) (appmanager.TxResult,
 	return result, nil
 }
 
+// Query queries the application at the provided version.
 func (a AppManager[T]) Query(ctx context.Context, version uint64, request Type) (response Type, err error) {
 	// if version is provided attempt to do a heighted query.
 	if version != 0 {

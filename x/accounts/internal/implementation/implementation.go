@@ -6,7 +6,9 @@ import (
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/address"
+	"cosmossdk.io/core/gas"
 	"cosmossdk.io/core/header"
+	"github.com/cosmos/cosmos-sdk/codec"
 )
 
 // Dependencies are passed to the constructor of a smart account.
@@ -14,6 +16,8 @@ type Dependencies struct {
 	SchemaBuilder *collections.SchemaBuilder
 	AddressCodec  address.Codec
 	HeaderService header.Service
+	GasService    gas.Service
+	StateCodec    codec.BinaryCodec
 }
 
 // AccountCreatorFunc is a function that creates an account.
@@ -22,8 +26,10 @@ type AccountCreatorFunc = func(deps Dependencies) (string, Account, error)
 // MakeAccountsMap creates a map of account names to account implementations
 // from a list of account creator functions.
 func MakeAccountsMap(
+	cdc codec.BinaryCodec,
 	addressCodec address.Codec,
 	hs header.Service,
+	gs gas.Service,
 	accounts []AccountCreatorFunc,
 ) (map[string]Implementation, error) {
 	accountsMap := make(map[string]Implementation, len(accounts))
@@ -33,6 +39,8 @@ func MakeAccountsMap(
 			SchemaBuilder: stateSchemaBuilder,
 			AddressCodec:  addressCodec,
 			HeaderService: headerService{hs},
+			GasService:    gasService{gs},
+			StateCodec:    cdc,
 		}
 		name, accountInterface, err := makeAccount(deps)
 		if err != nil {

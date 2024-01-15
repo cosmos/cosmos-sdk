@@ -286,10 +286,12 @@ func NewSimApp(
 	app.AuthKeeper = authkeeper.NewAccountKeeper(appCodec, runtime.NewKVStoreService(keys[authtypes.StoreKey]), authtypes.ProtoBaseAccount, maccPerms, authcodec.NewBech32Codec(sdk.Bech32MainPrefix), sdk.Bech32MainPrefix, authtypes.NewModuleAddress(govtypes.ModuleName).String())
 
 	accountsKeeper, err := accounts.NewKeeper(
+		appCodec,
 		runtime.NewKVStoreService(keys[accounts.StoreKey]),
 		runtime.EventService{},
 		runtime.HeaderService{},
 		runtime.BranchService{},
+		runtime.GasService{},
 		app.AuthKeeper.AddressCodec(),
 		appCodec,
 		app.MsgServiceRouter(),

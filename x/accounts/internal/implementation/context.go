@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 
 	"cosmossdk.io/collections"
+	"cosmossdk.io/core/gas"
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/x/accounts/internal/prefixstore"
@@ -123,9 +124,38 @@ func Whoami(ctx context.Context) []byte {
 	return ctx.Value(contextKey{}).(contextValue).whoami
 }
 
-type headerService struct{ header.Service }
+type headerService struct{ hs header.Service }
 
 func (h headerService) GetHeaderInfo(ctx context.Context) header.Info {
-	originalContext := ctx.Value(contextKey{}).(contextValue).originalContext
-	return h.Service.GetHeaderInfo(originalContext)
+	return h.hs.GetHeaderInfo(getOriginalContext(ctx))
+}
+
+var _ gas.Service = (*gasService)(nil)
+
+type gasService struct {
+	gs gas.Service
+}
+
+func (g gasService) GetGasMeter(ctx context.Context) gas.Meter {
+	return g.gs.GetGasMeter(getOriginalContext(ctx))
+}
+
+func (g gasService) GetBlockGasMeter(ctx context.Context) gas.Meter {
+	return g.gs.GetBlockGasMeter(getOriginalContext(ctx))
+}
+
+func (g gasService) WithGasMeter(ctx context.Context, meter gas.Meter) context.Context {
+	v := ctx.Value(contextKey{}).(contextValue)
+	v.originalContext = g.gs.WithGasMeter(v.originalContext, meter)
+	return context.WithValue(v.originalContext, contextKey{}, v)
+}
+
+func (g gasService) WithBlockGasMeter(ctx context.Context, meter gas.Meter) context.Context {
+	v := ctx.Value(contextKey{}).(contextValue)
+	v.originalContext = g.gs.WithBlockGasMeter(v.originalContext, meter)
+	return context.WithValue(v.originalContext, contextKey{}, v)
+}
+
+func getOriginalContext(ctx context.Context) context.Context {
+	return ctx.Value(contextKey{}).(contextValue).originalContext
 }

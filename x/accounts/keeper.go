@@ -8,6 +8,8 @@ import (
 	"errors"
 	"fmt"
 
+	"cosmossdk.io/core/gas"
+	"github.com/cosmos/cosmos-sdk/codec"
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	"google.golang.org/protobuf/proto"
 
@@ -61,10 +63,12 @@ type InterfaceRegistry interface {
 }
 
 func NewKeeper(
+	cdc codec.BinaryCodec,
 	ss store.KVStoreService,
 	es event.Service,
 	hs header.Service,
 	bs branch.Service,
+	gs gas.Service,
 	addressCodec address.Codec,
 	signerProvider SignerProvider,
 	execRouter MsgRouter,
@@ -92,7 +96,7 @@ func NewKeeper(
 		return Keeper{}, err
 	}
 	keeper.Schema = schema
-	keeper.accounts, err = implementation.MakeAccountsMap(keeper.addressCodec, hs, accounts)
+	keeper.accounts, err = implementation.MakeAccountsMap(cdc, keeper.addressCodec, hs, gs, accounts)
 	if err != nil {
 		return Keeper{}, err
 	}

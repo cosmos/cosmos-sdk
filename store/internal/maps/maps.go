@@ -132,7 +132,7 @@ func (sm *simpleMap) KVPairs() kv.Pairs {
 	return kvs
 }
 
-//----------------------------------------
+// ----------------------------------------
 
 // A local extension to KVPair that can be hashed.
 // Key and value are length prefixed and concatenated,
@@ -202,7 +202,7 @@ func ProofsFromMap(m map[string][]byte) ([]byte, map[string]*cmtprotocrypto.Proo
 	keys := make([]string, len(proofList))
 
 	for i, kvp := range kvs.Pairs {
-		proofs[string(kvp.Key)] = proofList[i].ToProto()
+		proofs[string(kvp.Key)] = (*cmtprotocrypto.Proof)(proofList[i].ToProto())
 		keys[i] = string(kvp.Key)
 	}
 

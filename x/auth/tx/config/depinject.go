@@ -12,7 +12,7 @@ import (
 	txconfigv1 "cosmossdk.io/api/cosmos/tx/config/v1"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/depinject"
-	"cosmossdk.io/depinject/appmodule"
+	"cosmossdk.io/depinject/appconfig"
 	"cosmossdk.io/x/auth/ante"
 	"cosmossdk.io/x/auth/posthandler"
 	"cosmossdk.io/x/auth/tx"
@@ -30,9 +30,9 @@ import (
 )
 
 func init() {
-	appmodule.Register(&txconfigv1.Config{},
-		appmodule.Provide(ProvideModule),
-		appmodule.Provide(ProvideProtoRegistry),
+	appconfig.RegisterModule(&txconfigv1.Config{},
+		appconfig.Provide(ProvideModule),
+		appconfig.Provide(ProvideProtoRegistry),
 	)
 }
 

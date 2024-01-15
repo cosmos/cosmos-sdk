@@ -1,4 +1,4 @@
-package authz
+package module
 
 import (
 	"context"

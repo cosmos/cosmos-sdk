@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"cosmossdk.io/x/tx/signing/direct"
 	abci "github.com/cometbft/cometbft/abci/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/gogoproto/proto"
@@ -22,6 +23,7 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/accounts"
 	"cosmossdk.io/x/accounts/accountstd"
+	accounts_defaults_base "cosmossdk.io/x/accounts/defaults/base"
 	"cosmossdk.io/x/accounts/testing/account_abstraction"
 	"cosmossdk.io/x/accounts/testing/counter"
 	"cosmossdk.io/x/auth"
@@ -285,7 +287,10 @@ func NewSimApp(
 
 	app.AuthKeeper = authkeeper.NewAccountKeeper(appCodec, runtime.NewKVStoreService(keys[authtypes.StoreKey]), authtypes.ProtoBaseAccount, maccPerms, authcodec.NewBech32Codec(sdk.Bech32MainPrefix), sdk.Bech32MainPrefix, authtypes.NewModuleAddress(govtypes.ModuleName).String())
 
+	handlersMap := signing.NewHandlerMap(direct.SignModeHandler{}) // TODO: add more sign modes
+
 	accountsKeeper, err := accounts.NewKeeper(
+		appCodec,
 		runtime.NewKVStoreService(keys[accounts.StoreKey]),
 		runtime.EventService{},
 		runtime.HeaderService{},
@@ -298,6 +303,7 @@ func NewSimApp(
 		accountstd.AddAccount("counter", counter.NewAccount),
 		accountstd.AddAccount("aa_minimal", account_abstraction.NewMinimalAbstractedAccount),
 		accountstd.AddAccount("aa_full", account_abstraction.NewFullAbstractedAccount),
+		accountstd.AddAccount("base", accounts_defaults_base.NewAccount(handlersMap)),
 	)
 	if err != nil {
 		panic(err)

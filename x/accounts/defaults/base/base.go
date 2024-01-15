@@ -20,13 +20,16 @@ var (
 	SequencePrefix = collections.NewPrefix(1)
 )
 
-func NewAccount(deps accountstd.Dependencies) (Account, error) {
-	return Account{
-		PubKey:   collections.NewItem(deps.SchemaBuilder, PubKeyPrefix, "pub_key", codec.CollValue[secp256k1.PubKey](nil)),
-		Sequence: collections.NewSequence(deps.SchemaBuilder, SequencePrefix, "sequence"),
-
-		addrCodec: deps.AddressCodec,
-	}, nil
+func NewAccount(signModeHandler *txsigning.HandlerMap) func(accountstd.Dependencies) (Account, error) {
+	return func(deps accountstd.Dependencies) (Account, error) {
+		return Account{
+			PubKey:           collections.NewItem(deps.SchemaBuilder, PubKeyPrefix, "pub_key", codec.CollValue[secp256k1.PubKey](deps.StateCodec)),
+			Sequence:         collections.NewSequence(deps.SchemaBuilder, SequencePrefix, "sequence"),
+			hs:               deps.HeaderService,
+			addrCodec:        deps.AddressCodec,
+			signModeHandlers: signModeHandler,
+		}, nil
+	}
 }
 
 // Account is the implementation of the modernized auth.BaseAccount.

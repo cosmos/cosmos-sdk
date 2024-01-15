@@ -107,26 +107,12 @@ func (a Account) getTxData(ctx context.Context, op *accountsv1.UserOperation, au
 		return getTxDataFromTxCompat(op.TxCompat)
 	}
 	// if it's coming from an operation, then we need to compute this information ourselves.
-	txBody := &txv1beta1.TxBody{
-		Messages:         op.ExecutionMessages,
-		ExtensionOptions: nil, // TODO: UserOperation extra fields must be populated here
-	}
-	authInfo := &txv1beta1.AuthInfo{
-		SignerInfos: []*txv1beta1.SignerInfo{
-			{
-				ModeInfo: &txv1beta1.ModeInfo{Sum: &txv1beta1.ModeInfo_Single_{Single: &txv1beta1.ModeInfo_Single{Mode: signingv1beta1.SignMode(authData.SignMode)}}},
-				Sequence: 0,
-			},
-		},
-		// Fee and Tip are empty.
-	}
-	return signing.TxData{
-		Body:                       txBody,
-		AuthInfo:                   authInfo,
-		BodyBytes:                  nil,
-		AuthInfoBytes:              nil,
-		BodyHasUnknownNonCriticals: false,
-	}, nil
+	return a.getTxDataFromOperation(ctx, op, authData)
+}
+
+// TODO: in a future PR.
+func (a Account) getTxDataFromOperation(ctx context.Context, op *accountsv1.UserOperation, authData *v1.AuthenticationData) (signing.TxData, error) {
+	panic("impl")
 }
 
 // getTxDataFromTxCompat computes the signing.TxData from TxCompat.

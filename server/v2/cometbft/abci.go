@@ -19,7 +19,6 @@ import (
 	// "cosmossdk.io/server/v2/streaming"
 
 	cometerrors "cosmossdk.io/server/v2/cometbft/types/errors"
-	"cosmossdk.io/store/v2/snapshots"
 	snapshottypes "cosmossdk.io/store/v2/snapshots/types"
 	abci "github.com/cometbft/cometbft/abci/types"
 	"google.golang.org/protobuf/proto"
@@ -64,11 +63,6 @@ type Consensus[T transaction.Tx] struct {
 	// otherwise it will be empty and we will need to query the app for the last
 	// committed block.
 	lastCommittedBlock atomic.Pointer[BlockData]
-
-	snapshotManager *snapshots.Manager
-
-	addrPeerFilter types.PeerFilter // filter peers by address and port
-	idPeerFilter   types.PeerFilter // filter peers by node ID
 }
 
 // CheckTx implements types.Application.
@@ -332,7 +326,7 @@ func (c *Consensus[T]) FinalizeBlock(ctx context.Context, req *abci.FinalizeBloc
 func (c *Consensus[T]) Commit(ctx context.Context, _ *abci.CommitRequest) (*abci.CommitResponse, error) {
 	lastCommittedBlock := c.lastCommittedBlock.Load()
 
-	c.snapshotManager.SnapshotIfApplicable(lastCommittedBlock.Height)
+	c.cfg.SnapshotManager.SnapshotIfApplicable(lastCommittedBlock.Height)
 
 	cp, err := c.GetConsensusParams()
 	if err != nil {
@@ -357,12 +351,12 @@ func (*Consensus[T]) ExtendVote(context.Context, *abci.ExtendVoteRequest) (*abci
 
 // ApplySnapshotChunk implements types.Application.
 func (c *Consensus[T]) ApplySnapshotChunk(_ context.Context, req *abci.ApplySnapshotChunkRequest) (*abci.ApplySnapshotChunkResponse, error) {
-	if c.snapshotManager == nil {
+	if c.cfg.SnapshotManager == nil {
 		c.logger.Error("snapshot manager not configured")
 		return &abci.ApplySnapshotChunkResponse{Result: abci.APPLY_SNAPSHOT_CHUNK_RESULT_ABORT}, nil
 	}
 
-	_, err := c.snapshotManager.RestoreChunk(req.Chunk)
+	_, err := c.cfg.SnapshotManager.RestoreChunk(req.Chunk)
 	switch {
 	case err == nil:
 		return &abci.ApplySnapshotChunkResponse{Result: abci.APPLY_SNAPSHOT_CHUNK_RESULT_ACCEPT}, nil
@@ -388,11 +382,11 @@ func (c *Consensus[T]) ApplySnapshotChunk(_ context.Context, req *abci.ApplySnap
 
 // ListSnapshots implements types.Application.
 func (c *Consensus[T]) ListSnapshots(_ context.Context, ctx *abci.ListSnapshotsRequest) (resp *abci.ListSnapshotsResponse, err error) {
-	if c.snapshotManager == nil {
+	if c.cfg.SnapshotManager == nil {
 		return resp, nil
 	}
 
-	snapshots, err := c.snapshotManager.List()
+	snapshots, err := c.cfg.SnapshotManager.List()
 	if err != nil {
 		c.logger.Error("failed to list snapshots", "err", err)
 		return nil, err
@@ -413,11 +407,11 @@ func (c *Consensus[T]) ListSnapshots(_ context.Context, ctx *abci.ListSnapshotsR
 
 // LoadSnapshotChunk implements types.Application.
 func (c *Consensus[T]) LoadSnapshotChunk(_ context.Context, req *abci.LoadSnapshotChunkRequest) (*abci.LoadSnapshotChunkResponse, error) {
-	if c.snapshotManager == nil {
+	if c.cfg.SnapshotManager == nil {
 		return &abci.LoadSnapshotChunkResponse{}, nil
 	}
 
-	chunk, err := c.snapshotManager.LoadChunk(req.Height, req.Format, req.Chunk)
+	chunk, err := c.cfg.SnapshotManager.LoadChunk(req.Height, req.Format, req.Chunk)
 	if err != nil {
 		c.logger.Error(
 			"failed to load snapshot chunk",
@@ -434,7 +428,7 @@ func (c *Consensus[T]) LoadSnapshotChunk(_ context.Context, req *abci.LoadSnapsh
 
 // OfferSnapshot implements types.Application.
 func (c *Consensus[T]) OfferSnapshot(_ context.Context, req *abci.OfferSnapshotRequest) (*abci.OfferSnapshotResponse, error) {
-	if c.snapshotManager == nil {
+	if c.cfg.SnapshotManager == nil {
 		c.logger.Error("snapshot manager not configured")
 		return &abci.OfferSnapshotResponse{Result: abci.OFFER_SNAPSHOT_RESULT_ABORT}, nil
 	}
@@ -450,7 +444,7 @@ func (c *Consensus[T]) OfferSnapshot(_ context.Context, req *abci.OfferSnapshotR
 		return &abci.OfferSnapshotResponse{Result: abci.OFFER_SNAPSHOT_RESULT_REJECT}, nil
 	}
 
-	err = c.snapshotManager.Restore(snapshot)
+	err = c.cfg.SnapshotManager.Restore(snapshot)
 	switch {
 	case err == nil:
 		return &abci.OfferSnapshotResponse{Result: abci.OFFER_SNAPSHOT_RESULT_ACCEPT}, nil

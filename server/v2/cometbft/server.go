@@ -9,6 +9,7 @@ import (
 	cometlog "cosmossdk.io/server/v2/cometbft/log"
 	"cosmossdk.io/server/v2/cometbft/types"
 	"cosmossdk.io/server/v2/core/transaction"
+	"cosmossdk.io/store/v2/snapshots"
 	abciserver "github.com/cometbft/cometbft/abci/server"
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtcfg "github.com/cometbft/cometbft/config"
@@ -27,6 +28,11 @@ type Config struct {
 	IndexEvents     map[string]struct{}
 	HaltHeight      uint64
 	HaltTime        uint64
+
+	SnapshotManager *snapshots.Manager
+
+	AddrPeerFilter types.PeerFilter // filter peers by address and port
+	IdPeerFilter   types.PeerFilter // filter peers by node ID
 
 	Transport  string
 	Addr       string

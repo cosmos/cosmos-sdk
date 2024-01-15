@@ -362,8 +362,8 @@ func (c *Consensus[T]) GetBlockRetentionHeight(cp *v1.ConsensusParams, commitHei
 		retentionHeight = commitHeight - cp.Evidence.MaxAgeNumBlocks
 	}
 
-	if c.snapshotManager != nil {
-		snapshotRetentionHeights := c.snapshotManager.GetSnapshotBlockRetentionHeights()
+	if c.cfg.SnapshotManager != nil {
+		snapshotRetentionHeights := c.cfg.SnapshotManager.GetSnapshotBlockRetentionHeights()
 		if snapshotRetentionHeights > 0 {
 			retentionHeight = minNonZero(retentionHeight, commitHeight-snapshotRetentionHeights)
 		}

@@ -21,13 +21,13 @@ func (c *Consensus[T]) handleQueryP2P(path []string) (*abci.QueryResponse, error
 	case "filter":
 		switch typ {
 		case "addr":
-			if c.addrPeerFilter != nil {
-				return c.addrPeerFilter(arg)
+			if c.cfg.AddrPeerFilter != nil {
+				return c.cfg.AddrPeerFilter(arg)
 			}
 
 		case "id":
-			if c.idPeerFilter != nil {
-				return c.idPeerFilter(arg)
+			if c.cfg.IdPeerFilter != nil {
+				return c.cfg.IdPeerFilter(arg)
 			}
 		}
 	}

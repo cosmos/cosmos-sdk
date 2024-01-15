@@ -76,9 +76,10 @@ func (b *Builder) init() {
 	}
 }
 
-// Validate the flag builder fields.
+// ValidateAndComplete the flag builder fields.
 // It returns an error if any of the required fields are missing.
-func (b *Builder) Validate() error {
+// If the keyring is nil, it will be set to a no keyring.
+func (b *Builder) ValidateAndComplete() error {
 	if b.AddressCodec == nil {
 		return errors.New("address codec is required in flag builder")
 	}
@@ -92,7 +93,7 @@ func (b *Builder) Validate() error {
 	}
 
 	if b.Keyring == nil {
-		return errors.New("keyring is required in flag builder")
+		b.Keyring = keyring.NoKeyring{}
 	}
 
 	if b.TypeResolver == nil {

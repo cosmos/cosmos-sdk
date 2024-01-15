@@ -62,7 +62,9 @@ func (a *addressValue) Set(s string) error {
 		return nil
 	}
 
-	// failed all validation, just accept the input
+	// failed all validation, just accept the input.
+	// TODO(@julienrbrt), for final client/v2 2.0.0 revert the logic and
+	// do a better keyring instantiation.
 	a.value = s
 
 	return nil
@@ -125,7 +127,9 @@ func (a *consensusAddressValue) Set(s string) error {
 	var pk cryptotypes.PubKey
 	err2 := cdc.UnmarshalInterfaceJSON([]byte(s), &pk)
 	if err2 != nil {
-		// failed all validation, just accept the input
+		// failed all validation, just accept the input.
+		// TODO(@julienrbrt), for final client/v2 2.0.0 revert the logic and
+		// do a better keyring instantiation.
 		a.value = s
 		return nil
 	}

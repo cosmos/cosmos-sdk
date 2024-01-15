@@ -33,5 +33,5 @@ type Builder struct {
 // ValidateAndComplete the builder fields.
 // It returns an error if any of the required fields are missing.
 func (b *Builder) ValidateAndComplete() error {
-	return b.Builder.Validate()
+	return b.Builder.ValidateAndComplete()
 }

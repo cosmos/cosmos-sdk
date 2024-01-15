@@ -26,10 +26,14 @@ const (
 // ReflectionServiceClient is the client API for ReflectionService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+//
+// Deprecated: Do not use.
 type ReflectionServiceClient interface {
+	// Deprecated: Do not use.
 	// ListAllInterfaces lists all the interfaces registered in the interface
 	// registry.
 	ListAllInterfaces(ctx context.Context, in *ListAllInterfacesRequest, opts ...grpc.CallOption) (*ListAllInterfacesResponse, error)
+	// Deprecated: Do not use.
 	// ListImplementations list all the concrete types that implement a given
 	// interface.
 	ListImplementations(ctx context.Context, in *ListImplementationsRequest, opts ...grpc.CallOption) (*ListImplementationsResponse, error)
@@ -39,10 +43,12 @@ type reflectionServiceClient struct {
 	cc grpc.ClientConnInterface
 }
 
+// Deprecated: Do not use.
 func NewReflectionServiceClient(cc grpc.ClientConnInterface) ReflectionServiceClient {
 	return &reflectionServiceClient{cc}
 }
 
+// Deprecated: Do not use.
 func (c *reflectionServiceClient) ListAllInterfaces(ctx context.Context, in *ListAllInterfacesRequest, opts ...grpc.CallOption) (*ListAllInterfacesResponse, error) {
 	out := new(ListAllInterfacesResponse)
 	err := c.cc.Invoke(ctx, ReflectionService_ListAllInterfaces_FullMethodName, in, out, opts...)
@@ -52,6 +58,7 @@ func (c *reflectionServiceClient) ListAllInterfaces(ctx context.Context, in *Lis
 	return out, nil
 }
 
+// Deprecated: Do not use.
 func (c *reflectionServiceClient) ListImplementations(ctx context.Context, in *ListImplementationsRequest, opts ...grpc.CallOption) (*ListImplementationsResponse, error) {
 	out := new(ListImplementationsResponse)
 	err := c.cc.Invoke(ctx, ReflectionService_ListImplementations_FullMethodName, in, out, opts...)
@@ -64,10 +71,14 @@ func (c *reflectionServiceClient) ListImplementations(ctx context.Context, in *L
 // ReflectionServiceServer is the server API for ReflectionService service.
 // All implementations must embed UnimplementedReflectionServiceServer
 // for forward compatibility
+//
+// Deprecated: Do not use.
 type ReflectionServiceServer interface {
+	// Deprecated: Do not use.
 	// ListAllInterfaces lists all the interfaces registered in the interface
 	// registry.
 	ListAllInterfaces(context.Context, *ListAllInterfacesRequest) (*ListAllInterfacesResponse, error)
+	// Deprecated: Do not use.
 	// ListImplementations list all the concrete types that implement a given
 	// interface.
 	ListImplementations(context.Context, *ListImplementationsRequest) (*ListImplementationsResponse, error)
@@ -93,6 +104,7 @@ type UnsafeReflectionServiceServer interface {
 	mustEmbedUnimplementedReflectionServiceServer()
 }
 
+// Deprecated: Do not use.
 func RegisterReflectionServiceServer(s grpc.ServiceRegistrar, srv ReflectionServiceServer) {
 	s.RegisterService(&ReflectionService_ServiceDesc, srv)
 }

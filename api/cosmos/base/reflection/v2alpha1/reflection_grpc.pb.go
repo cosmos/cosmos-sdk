@@ -32,21 +32,27 @@ const (
 // ReflectionServiceClient is the client API for ReflectionService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+//
+// Deprecated: Do not use.
 type ReflectionServiceClient interface {
 	// Deprecated: Do not use.
 	// GetAuthnDescriptor returns information on how to authenticate transactions in the application
 	// NOTE: this RPC is still experimental and might be subject to breaking changes or removal in
 	// future releases of the cosmos-sdk.
 	GetAuthnDescriptor(ctx context.Context, in *GetAuthnDescriptorRequest, opts ...grpc.CallOption) (*GetAuthnDescriptorResponse, error)
+	// Deprecated: Do not use.
 	// GetChainDescriptor returns the description of the chain
 	GetChainDescriptor(ctx context.Context, in *GetChainDescriptorRequest, opts ...grpc.CallOption) (*GetChainDescriptorResponse, error)
+	// Deprecated: Do not use.
 	// GetCodecDescriptor returns the descriptor of the codec of the application
 	GetCodecDescriptor(ctx context.Context, in *GetCodecDescriptorRequest, opts ...grpc.CallOption) (*GetCodecDescriptorResponse, error)
 	// Deprecated: Do not use.
 	// GetConfigurationDescriptor returns the descriptor for the sdk.Config of the application
 	GetConfigurationDescriptor(ctx context.Context, in *GetConfigurationDescriptorRequest, opts ...grpc.CallOption) (*GetConfigurationDescriptorResponse, error)
+	// Deprecated: Do not use.
 	// GetQueryServicesDescriptor returns the available gRPC queryable services of the application
 	GetQueryServicesDescriptor(ctx context.Context, in *GetQueryServicesDescriptorRequest, opts ...grpc.CallOption) (*GetQueryServicesDescriptorResponse, error)
+	// Deprecated: Do not use.
 	// GetTxDescriptor returns information on the used transaction object and available msgs that can be used
 	GetTxDescriptor(ctx context.Context, in *GetTxDescriptorRequest, opts ...grpc.CallOption) (*GetTxDescriptorResponse, error)
 }
@@ -55,6 +61,7 @@ type reflectionServiceClient struct {
 	cc grpc.ClientConnInterface
 }
 
+// Deprecated: Do not use.
 func NewReflectionServiceClient(cc grpc.ClientConnInterface) ReflectionServiceClient {
 	return &reflectionServiceClient{cc}
 }
@@ -69,6 +76,7 @@ func (c *reflectionServiceClient) GetAuthnDescriptor(ctx context.Context, in *Ge
 	return out, nil
 }
 
+// Deprecated: Do not use.
 func (c *reflectionServiceClient) GetChainDescriptor(ctx context.Context, in *GetChainDescriptorRequest, opts ...grpc.CallOption) (*GetChainDescriptorResponse, error) {
 	out := new(GetChainDescriptorResponse)
 	err := c.cc.Invoke(ctx, ReflectionService_GetChainDescriptor_FullMethodName, in, out, opts...)
@@ -78,6 +86,7 @@ func (c *reflectionServiceClient) GetChainDescriptor(ctx context.Context, in *Ge
 	return out, nil
 }
 
+// Deprecated: Do not use.
 func (c *reflectionServiceClient) GetCodecDescriptor(ctx context.Context, in *GetCodecDescriptorRequest, opts ...grpc.CallOption) (*GetCodecDescriptorResponse, error) {
 	out := new(GetCodecDescriptorResponse)
 	err := c.cc.Invoke(ctx, ReflectionService_GetCodecDescriptor_FullMethodName, in, out, opts...)
@@ -97,6 +106,7 @@ func (c *reflectionServiceClient) GetConfigurationDescriptor(ctx context.Context
 	return out, nil
 }
 
+// Deprecated: Do not use.
 func (c *reflectionServiceClient) GetQueryServicesDescriptor(ctx context.Context, in *GetQueryServicesDescriptorRequest, opts ...grpc.CallOption) (*GetQueryServicesDescriptorResponse, error) {
 	out := new(GetQueryServicesDescriptorResponse)
 	err := c.cc.Invoke(ctx, ReflectionService_GetQueryServicesDescriptor_FullMethodName, in, out, opts...)
@@ -106,6 +116,7 @@ func (c *reflectionServiceClient) GetQueryServicesDescriptor(ctx context.Context
 	return out, nil
 }
 
+// Deprecated: Do not use.
 func (c *reflectionServiceClient) GetTxDescriptor(ctx context.Context, in *GetTxDescriptorRequest, opts ...grpc.CallOption) (*GetTxDescriptorResponse, error) {
 	out := new(GetTxDescriptorResponse)
 	err := c.cc.Invoke(ctx, ReflectionService_GetTxDescriptor_FullMethodName, in, out, opts...)
@@ -118,21 +129,27 @@ func (c *reflectionServiceClient) GetTxDescriptor(ctx context.Context, in *GetTx
 // ReflectionServiceServer is the server API for ReflectionService service.
 // All implementations must embed UnimplementedReflectionServiceServer
 // for forward compatibility
+//
+// Deprecated: Do not use.
 type ReflectionServiceServer interface {
 	// Deprecated: Do not use.
 	// GetAuthnDescriptor returns information on how to authenticate transactions in the application
 	// NOTE: this RPC is still experimental and might be subject to breaking changes or removal in
 	// future releases of the cosmos-sdk.
 	GetAuthnDescriptor(context.Context, *GetAuthnDescriptorRequest) (*GetAuthnDescriptorResponse, error)
+	// Deprecated: Do not use.
 	// GetChainDescriptor returns the description of the chain
 	GetChainDescriptor(context.Context, *GetChainDescriptorRequest) (*GetChainDescriptorResponse, error)
+	// Deprecated: Do not use.
 	// GetCodecDescriptor returns the descriptor of the codec of the application
 	GetCodecDescriptor(context.Context, *GetCodecDescriptorRequest) (*GetCodecDescriptorResponse, error)
 	// Deprecated: Do not use.
 	// GetConfigurationDescriptor returns the descriptor for the sdk.Config of the application
 	GetConfigurationDescriptor(context.Context, *GetConfigurationDescriptorRequest) (*GetConfigurationDescriptorResponse, error)
+	// Deprecated: Do not use.
 	// GetQueryServicesDescriptor returns the available gRPC queryable services of the application
 	GetQueryServicesDescriptor(context.Context, *GetQueryServicesDescriptorRequest) (*GetQueryServicesDescriptorResponse, error)
+	// Deprecated: Do not use.
 	// GetTxDescriptor returns information on the used transaction object and available msgs that can be used
 	GetTxDescriptor(context.Context, *GetTxDescriptorRequest) (*GetTxDescriptorResponse, error)
 	mustEmbedUnimplementedReflectionServiceServer()
@@ -169,6 +186,7 @@ type UnsafeReflectionServiceServer interface {
 	mustEmbedUnimplementedReflectionServiceServer()
 }
 
+// Deprecated: Do not use.
 func RegisterReflectionServiceServer(s grpc.ServiceRegistrar, srv ReflectionServiceServer) {
 	s.RegisterService(&ReflectionService_ServiceDesc, srv)
 }

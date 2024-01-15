@@ -131,7 +131,7 @@ func (a AppManager[T]) Simulate(ctx context.Context, tx T) (appmanager.TxResult,
 
 // Query queries the application at the provided version.
 func (a AppManager[T]) Query(ctx context.Context, version uint64, request Type) (response Type, err error) {
-	// if version is provided attempt to do a heighted query.
+	// if version is provided attempt to do a heightened query.
 	if version != 0 {
 		queryState, err := a.db.StateAt(version)
 		if err != nil {

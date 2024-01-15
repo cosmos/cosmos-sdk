@@ -6,21 +6,21 @@ import (
 	"fmt"
 	"sync/atomic"
 
+	abci "github.com/cometbft/cometbft/abci/types"
+	"google.golang.org/protobuf/proto"
+
 	corecomet "cosmossdk.io/core/comet"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
 	"cosmossdk.io/server/v2/appmanager"
 	"cosmossdk.io/server/v2/cometbft/types"
+	cometerrors "cosmossdk.io/server/v2/cometbft/types/errors"
 	coreappmgr "cosmossdk.io/server/v2/core/appmanager"
 	"cosmossdk.io/server/v2/core/event"
 	"cosmossdk.io/server/v2/core/mempool"
 	"cosmossdk.io/server/v2/core/store"
 	"cosmossdk.io/server/v2/core/transaction"
 	"cosmossdk.io/server/v2/streaming"
-
-	cometerrors "cosmossdk.io/server/v2/cometbft/types/errors"
-	abci "github.com/cometbft/cometbft/abci/types"
-	"google.golang.org/protobuf/proto"
 )
 
 const (
@@ -35,7 +35,8 @@ func NewConsensus[T transaction.Tx](
 	app appmanager.AppManager[T],
 	mp mempool.Mempool[T],
 	store store.Store,
-	cfg Config) *Consensus[T] {
+	cfg Config,
+) *Consensus[T] {
 	return &Consensus[T]{
 		mempool: mp,
 		store:   store,

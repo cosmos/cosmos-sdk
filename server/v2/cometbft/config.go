@@ -1,9 +1,10 @@
 package cometbft
 
 import (
+	cmtcfg "github.com/cometbft/cometbft/config"
+
 	"cosmossdk.io/server/v2/cometbft/types"
 	"cosmossdk.io/store/v2/snapshots"
-	cmtcfg "github.com/cometbft/cometbft/config"
 )
 
 type Config struct {

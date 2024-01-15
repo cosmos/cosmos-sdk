@@ -390,3 +390,17 @@ func setFailOnHandler(cfg client.TxConfig, tx signing.Tx, fail bool) signing.Tx 
 	builder.SetMsgs(msgs...)
 	return builder.GetTx()
 }
+
+// wonkyMsg is to be used to run a MsgCounter2 message when the MsgCounter2 handler is not registered.
+func wonkyMsg(t *testing.T, cfg client.TxConfig, tx signing.Tx) signing.Tx {
+	t.Helper()
+	builder := cfg.NewTxBuilder()
+	builder.SetMemo(tx.GetMemo())
+
+	msgs := tx.GetMsgs()
+	msgs = append(msgs, &baseapptestutil.MsgCounter2{})
+
+	err := builder.SetMsgs(msgs...)
+	require.NoError(t, err)
+	return builder.GetTx()
+}

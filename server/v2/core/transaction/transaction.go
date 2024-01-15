@@ -21,4 +21,5 @@ type Tx interface {
 	GetMessages() []Type
 	GetSenders() []Identity // TODO reduce this to a single identity if accepted
 	GetGasLimit() uint64
+	Encode() []byte
 }

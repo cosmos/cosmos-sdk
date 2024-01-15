@@ -19,7 +19,7 @@ type Tx struct {
 }
 
 func (t Tx) Hash() [32]byte {
-	return sha256.Sum256(t.Encode())
+	return sha256.Sum256(t.Bytes())
 }
 
 func (t Tx) GetMessages() []transaction.Type {
@@ -40,7 +40,7 @@ type encodedTx struct {
 	GasLimit uint64     `json:"gas_limit"`
 }
 
-func (t Tx) Encode() []byte {
+func (t Tx) Bytes() []byte {
 	msg, err := anypb.New(t.Msg)
 	if err != nil {
 		panic(err)

@@ -12,34 +12,33 @@ import (
 	"cosmossdk.io/server/v2/appmanager"
 	"cosmossdk.io/server/v2/cometbft/types"
 	coreappmgr "cosmossdk.io/server/v2/core/appmanager"
+	"cosmossdk.io/server/v2/core/mempool"
 	"cosmossdk.io/server/v2/core/store"
 	"cosmossdk.io/server/v2/core/transaction"
-	"cosmossdk.io/server/v2/stf/mock"
-
-	// "cosmossdk.io/server/v2/streaming"
 
 	cometerrors "cosmossdk.io/server/v2/cometbft/types/errors"
-	snapshottypes "cosmossdk.io/store/v2/snapshots/types"
 	abci "github.com/cometbft/cometbft/abci/types"
 	"google.golang.org/protobuf/proto"
 )
 
-// Supported ABCI Query prefixes and paths
 const (
-	QueryPathApp    = "app"
-	QueryPathCustom = "custom"
-	QueryPathP2P    = "p2p"
-	QueryPathStore  = "store"
-
-	QueryPathBroadcastTx = "/cosmos.tx.v1beta1.Service/BroadcastTx"
+	QueryPathApp   = "app"
+	QueryPathP2P   = "p2p"
+	QueryPathStore = "store"
 )
 
-var _ abci.Application = (*Consensus[mock.Tx])(nil)
+var _ abci.Application = (*Consensus[transaction.Tx])(nil)
 
-func NewConsensus[T transaction.Tx](app appmanager.AppManager[T], cfg Config) *Consensus[T] {
+func NewConsensus[T transaction.Tx](
+	app appmanager.AppManager[T],
+	mp mempool.Mempool[T],
+	store store.Store,
+	cfg Config) *Consensus[T] {
 	return &Consensus[T]{
-		app: app,
-		cfg: cfg,
+		mempool: mp,
+		store:   store,
+		app:     app,
+		cfg:     cfg,
 	}
 }
 
@@ -59,6 +58,8 @@ type Consensus[T transaction.Tx] struct {
 	logger  log.Logger
 	txCodec transaction.Codec[T]
 
+	mempool mempool.Mempool[T]
+
 	// this is only available after this node has committed a block (in FinalizeBlock),
 	// otherwise it will be empty and we will need to query the app for the last
 	// committed block.
@@ -67,7 +68,12 @@ type Consensus[T transaction.Tx] struct {
 
 // CheckTx implements types.Application.
 func (c *Consensus[T]) CheckTx(ctx context.Context, req *abci.CheckTxRequest) (*abci.CheckTxResponse, error) {
-	resp, err := c.app.Simulate(ctx, req.Tx) // TODO: is it ok to use Simulate here?
+	// TODO: evaluate here if to return error, or CheckTxResponse.error.
+	decodedTx, err := c.txCodec.Decode(req.Tx)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := c.app.ValidateTx(ctx, decodedTx)
 	if err != nil {
 		return nil, err
 	}
@@ -108,11 +114,6 @@ func (c *Consensus[T]) Info(context.Context, *abci.InfoRequest) (*abci.InfoRespo
 
 // Query implements types.Application.
 func (c *Consensus[T]) Query(ctx context.Context, req *abci.QueryRequest) (*abci.QueryResponse, error) {
-	// reject special cases
-	if req.Path == QueryPathBroadcastTx {
-		return QueryResult(errorsmod.Wrap(cometerrors.ErrInvalidRequest, "can't route a broadcast tx message"), c.cfg.Trace), nil
-	}
-
 	appreq, err := parseQueryRequest(req)
 	if err == nil { // if no error is returned then we can handle the query with the appmanager
 		res, err := c.app.Query(ctx, uint64(req.Height), appreq)
@@ -230,14 +231,19 @@ func (c *Consensus[T]) PrepareProposal(ctx context.Context, req *abci.PreparePro
 		return nil, err
 	}
 
-	txs, err := c.app.BuildBlock(ctx, uint64(req.Height), uint32(cp.Block.MaxBytes))
+	txs, err := c.mempool.Get(ctx, int(cp.Block.MaxBytes))
+	if err != nil {
+		return nil, err
+	}
+
+	txs, err = c.app.BuildBlock(ctx, uint64(req.Height), txs)
 	if err != nil {
 		return nil, err
 	}
 
 	encodedTxs := make([][]byte, len(txs))
 	for i, tx := range txs {
-		encodedTxs[i] = tx.Encode()
+		encodedTxs[i] = tx.Bytes()
 	}
 
 	return &abci.PrepareProposalResponse{
@@ -247,7 +253,7 @@ func (c *Consensus[T]) PrepareProposal(ctx context.Context, req *abci.PreparePro
 
 // ProcessProposal implements types.Application.
 func (c *Consensus[T]) ProcessProposal(ctx context.Context, req *abci.ProcessProposalRequest) (*abci.ProcessProposalResponse, error) {
-	decodedTxs := []T{}
+	decodedTxs := make([]T, len(req.Txs))
 	for _, tx := range req.Txs {
 		decTx, err := c.txCodec.Decode(tx)
 		if err != nil {
@@ -290,11 +296,19 @@ func (c *Consensus[T]) FinalizeBlock(ctx context.Context, req *abci.FinalizeBloc
 		},
 	}
 
-	blockReq := coreappmgr.BlockRequest{
+	// TODO(tip): can we expect some txs to not decode? if so, what we do in this case? this does not seem to be the case,
+	// considering that prepare and process always decode txs, assuming they're the ones providing txs we should never
+	// have a tx that fails decoding.
+	decodedTxs, err := decodeTxs(req.Txs, c.txCodec)
+	if err != nil {
+		return nil, err
+	}
+
+	blockReq := &coreappmgr.BlockRequest[T]{
 		Height:            uint64(req.Height),
 		Time:              req.Time,
 		Hash:              req.Hash,
-		Txs:               req.Txs,
+		Txs:               decodedTxs,
 		ConsensusMessages: []proto.Message{cometInfo},
 	}
 
@@ -303,13 +317,21 @@ func (c *Consensus[T]) FinalizeBlock(ctx context.Context, req *abci.FinalizeBloc
 		return nil, err
 	}
 
-	appHash, err := c.app.CommitBlock(ctx, blockReq.Height, changeSet)
+	// after we get the changeset we can produce the commit hash,
+	// from the store.
+	appHash, err := c.store.StateCommit(changeSet)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unable to commit the changeset: %w", err)
+	}
+
+	// remove txs from the mempool
+	err = c.mempool.Remove(decodedTxs)
+	if err != nil {
+		return nil, fmt.Errorf("unable to remove txs: %w", err) // TODO: evaluate what erroring means here, and if we should even error.
 	}
 
 	c.lastCommittedBlock.Store(&BlockData{
-		Height:    int64(req.Height),
+		Height:    req.Height,
 		Hash:      appHash,
 		ChangeSet: changeSet,
 	})
@@ -349,128 +371,14 @@ func (*Consensus[T]) ExtendVote(context.Context, *abci.ExtendVoteRequest) (*abci
 	panic("unimplemented")
 }
 
-// ApplySnapshotChunk implements types.Application.
-func (c *Consensus[T]) ApplySnapshotChunk(_ context.Context, req *abci.ApplySnapshotChunkRequest) (*abci.ApplySnapshotChunkResponse, error) {
-	if c.cfg.SnapshotManager == nil {
-		c.logger.Error("snapshot manager not configured")
-		return &abci.ApplySnapshotChunkResponse{Result: abci.APPLY_SNAPSHOT_CHUNK_RESULT_ABORT}, nil
-	}
-
-	_, err := c.cfg.SnapshotManager.RestoreChunk(req.Chunk)
-	switch {
-	case err == nil:
-		return &abci.ApplySnapshotChunkResponse{Result: abci.APPLY_SNAPSHOT_CHUNK_RESULT_ACCEPT}, nil
-
-	case errors.Is(err, snapshottypes.ErrChunkHashMismatch):
-		c.logger.Error(
-			"chunk checksum mismatch; rejecting sender and requesting refetch",
-			"chunk", req.Index,
-			"sender", req.Sender,
-			"err", err,
-		)
-		return &abci.ApplySnapshotChunkResponse{
-			Result:        abci.APPLY_SNAPSHOT_CHUNK_RESULT_RETRY,
-			RefetchChunks: []uint32{req.Index},
-			RejectSenders: []string{req.Sender},
-		}, nil
-
-	default:
-		c.logger.Error("failed to restore snapshot", "err", err)
-		return &abci.ApplySnapshotChunkResponse{Result: abci.APPLY_SNAPSHOT_CHUNK_RESULT_ABORT}, nil
-	}
-}
-
-// ListSnapshots implements types.Application.
-func (c *Consensus[T]) ListSnapshots(_ context.Context, ctx *abci.ListSnapshotsRequest) (resp *abci.ListSnapshotsResponse, err error) {
-	if c.cfg.SnapshotManager == nil {
-		return resp, nil
-	}
-
-	snapshots, err := c.cfg.SnapshotManager.List()
-	if err != nil {
-		c.logger.Error("failed to list snapshots", "err", err)
-		return nil, err
-	}
-
-	for _, snapshot := range snapshots {
-		abciSnapshot, err := snapshot.ToABCI()
+func decodeTxs[T transaction.Tx](rawTxs [][]byte, codec transaction.Codec[T]) ([]T, error) {
+	txs := make([]T, len(rawTxs))
+	for i, rawTx := range rawTxs {
+		tx, err := codec.Decode(rawTx)
 		if err != nil {
-			c.logger.Error("failed to convert ABCI snapshots", "err", err)
-			return nil, err
+			return nil, fmt.Errorf("unable to decode tx: %d: %w", i, err)
 		}
-
-		resp.Snapshots = append(resp.Snapshots, &abciSnapshot)
+		txs[i] = tx
 	}
-
-	return resp, nil
-}
-
-// LoadSnapshotChunk implements types.Application.
-func (c *Consensus[T]) LoadSnapshotChunk(_ context.Context, req *abci.LoadSnapshotChunkRequest) (*abci.LoadSnapshotChunkResponse, error) {
-	if c.cfg.SnapshotManager == nil {
-		return &abci.LoadSnapshotChunkResponse{}, nil
-	}
-
-	chunk, err := c.cfg.SnapshotManager.LoadChunk(req.Height, req.Format, req.Chunk)
-	if err != nil {
-		c.logger.Error(
-			"failed to load snapshot chunk",
-			"height", req.Height,
-			"format", req.Format,
-			"chunk", req.Chunk,
-			"err", err,
-		)
-		return nil, err
-	}
-
-	return &abci.LoadSnapshotChunkResponse{Chunk: chunk}, nil
-}
-
-// OfferSnapshot implements types.Application.
-func (c *Consensus[T]) OfferSnapshot(_ context.Context, req *abci.OfferSnapshotRequest) (*abci.OfferSnapshotResponse, error) {
-	if c.cfg.SnapshotManager == nil {
-		c.logger.Error("snapshot manager not configured")
-		return &abci.OfferSnapshotResponse{Result: abci.OFFER_SNAPSHOT_RESULT_ABORT}, nil
-	}
-
-	if req.Snapshot == nil {
-		c.logger.Error("received nil snapshot")
-		return &abci.OfferSnapshotResponse{Result: abci.OFFER_SNAPSHOT_RESULT_REJECT}, nil
-	}
-
-	snapshot, err := snapshottypes.SnapshotFromABCI(req.Snapshot)
-	if err != nil {
-		c.logger.Error("failed to decode snapshot metadata", "err", err)
-		return &abci.OfferSnapshotResponse{Result: abci.OFFER_SNAPSHOT_RESULT_REJECT}, nil
-	}
-
-	err = c.cfg.SnapshotManager.Restore(snapshot)
-	switch {
-	case err == nil:
-		return &abci.OfferSnapshotResponse{Result: abci.OFFER_SNAPSHOT_RESULT_ACCEPT}, nil
-
-	case errors.Is(err, snapshottypes.ErrUnknownFormat):
-		return &abci.OfferSnapshotResponse{Result: abci.OFFER_SNAPSHOT_RESULT_REJECT_FORMAT}, nil
-
-	case errors.Is(err, snapshottypes.ErrInvalidMetadata):
-		c.logger.Error(
-			"rejecting invalid snapshot",
-			"height", req.Snapshot.Height,
-			"format", req.Snapshot.Format,
-			"err", err,
-		)
-		return &abci.OfferSnapshotResponse{Result: abci.OFFER_SNAPSHOT_RESULT_REJECT}, nil
-
-	default:
-		c.logger.Error(
-			"failed to restore snapshot",
-			"height", req.Snapshot.Height,
-			"format", req.Snapshot.Format,
-			"err", err,
-		)
-
-		// We currently don't support resetting the IAVL stores and retrying a
-		// different snapshot, so we ask CometBFT to abort all snapshot restoration.
-		return &abci.OfferSnapshotResponse{Result: abci.OFFER_SNAPSHOT_RESULT_ABORT}, nil
-	}
+	return txs, nil
 }

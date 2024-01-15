@@ -18,13 +18,13 @@ type StdoutPlugin struct {
 func (a *StdoutPlugin) ListenDeliverBlock(ctx context.Context, req streaming.ListenDeliverBlockRequest) error {
 	a.BlockHeight = req.BlockHeight
 	// process tx messages (i.e: sent to external system)
-	fmt.Printf("listen-finalize-block: block-height=%d req=%v res=%v", a.BlockHeight, req)
+	fmt.Printf("listen-finalize-block: block-height=%d req=%v res=%v", a.BlockHeight, req, nil)
 	return nil
 }
 
 func (a *StdoutPlugin) ListenStateChanges(ctx context.Context, changeSet []*streaming.StoreKVPair) error {
 	// process block commit messages (i.e: sent to external system)
-	fmt.Printf("listen-commit: block_height=%d res=%v data=%v", a.BlockHeight, changeSet)
+	fmt.Printf("listen-commit: block_height=%d res=%v data=%v", a.BlockHeight, changeSet, nil)
 	return nil
 }
 

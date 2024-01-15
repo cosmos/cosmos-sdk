@@ -12,11 +12,12 @@ type Mempool[T transaction.Tx] interface {
 	// an error upon failure. Insert will validate the transaction using the txValidator
 	Insert(ctx context.Context, txs T) error
 
-	// GetTxs returns a list of transactions to add in a block
-	// size specifies the size of the block left for transactions
-	GetTxs(ctx context.Context, size uint32) ([]T, error)
+	// Get returns a list of transactions to add in a block
+	// where num is the number of txs to get. NOTE: size
+	// represents the size of a TX in bytes.
+	Get(ctx context.Context, size int) ([]T, error)
 
 	// Remove attempts to remove a transaction from the mempool, returning an error
 	// upon failure.
-	Remove(txs T) error
+	Remove(txs []T) error
 }

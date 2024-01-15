@@ -8,7 +8,7 @@ import (
 	"cosmossdk.io/store/v2/commitment"
 	"cosmossdk.io/store/v2/commitment/iavl"
 	"cosmossdk.io/store/v2/storage"
-	"cosmossdk.io/store/v2/storage/rocksdb"
+	"cosmossdk.io/store/v2/storage/pebbledb"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
 )
@@ -22,8 +22,7 @@ func StateCommitment(_ *testing.T) storev2.Committer {
 }
 
 func StateStorage(t *testing.T) storev2.VersionedDatabase {
-	d := t.TempDir()
-	db, err := rocksdb.New(d)
+	db, err := pebbledb.New(t.TempDir())
 	require.NoError(t, err)
 	return storage.NewStorageStore(db)
 }

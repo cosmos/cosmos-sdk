@@ -236,6 +236,11 @@ func (c *Consensus[T]) PrepareProposal(ctx context.Context, req *abci.PreparePro
 		return nil, err
 	}
 
+	txs, err = c.app.BuildBlock(ctx, uint64(req.Height), txs)
+	if err != nil {
+		return nil, err
+	}
+
 	encodedTxs := make([][]byte, len(txs))
 	for i, tx := range txs {
 		encodedTxs[i] = tx.Bytes()
@@ -248,7 +253,7 @@ func (c *Consensus[T]) PrepareProposal(ctx context.Context, req *abci.PreparePro
 
 // ProcessProposal implements types.Application.
 func (c *Consensus[T]) ProcessProposal(ctx context.Context, req *abci.ProcessProposalRequest) (*abci.ProcessProposalResponse, error) {
-	var decodedTxs []T
+	decodedTxs := make([]T, len(req.Txs))
 	for _, tx := range req.Txs {
 		decTx, err := c.txCodec.Decode(tx)
 		if err != nil {

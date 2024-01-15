@@ -3,8 +3,9 @@ package store
 import (
 	"io"
 
-	corestore "cosmossdk.io/core/store"
 	ics23 "github.com/cosmos/ics23/go"
+
+	corestore "cosmossdk.io/core/store"
 )
 
 // Reader wraps the Has and Get method of a backing data store.

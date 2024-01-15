@@ -28,7 +28,7 @@ use (
 	./x/distribution
 	./x/evidence
 	./x/feegrant
- 	./x/gov
+	./x/gov
 	./x/group
 	./x/mint
 	./x/nft
@@ -40,6 +40,7 @@ use (
 	./x/upgrade
 	./server/v2/appmanager
 	./server/v2/core
+	./server/v2/cometbft
 	./server/v2/stf
 	./server/v2
 )

@@ -6,22 +6,23 @@ import (
 	"fmt"
 	"sync/atomic"
 
+	"google.golang.org/protobuf/proto"
+
 	corecomet "cosmossdk.io/core/comet"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
 	"cosmossdk.io/server/v2/appmanager"
-	"cosmossdk.io/server/v2/cometbft/types"
 	coreappmgr "cosmossdk.io/server/v2/core/appmanager"
 	"cosmossdk.io/server/v2/core/store"
 	"cosmossdk.io/server/v2/core/transaction"
 	"cosmossdk.io/server/v2/stf/mock"
+	abci "github.com/cometbft/cometbft/abci/types"
 
 	// "cosmossdk.io/server/v2/streaming"
 
+	"cosmossdk.io/server/v2/cometbft/types"
 	cometerrors "cosmossdk.io/server/v2/cometbft/types/errors"
 	snapshottypes "cosmossdk.io/store/v2/snapshots/types"
-	abci "github.com/cometbft/cometbft/abci/types"
-	"google.golang.org/protobuf/proto"
 )
 
 // Supported ABCI Query prefixes and paths
@@ -36,22 +37,6 @@ const (
 
 var _ abci.Application = (*Consensus[mock.Tx])(nil)
 
-func NewConsensus[T transaction.Tx](app appmanager.AppManager[T], cfg Config) *Consensus[T] {
-	return &Consensus[T]{
-		app: app,
-		cfg: cfg,
-	}
-}
-
-// BlockData is used to keep some data about the last committed block. Currently
-// we only use the height, the rest is not needed right now and might get removed
-// in the future.
-type BlockData struct {
-	Height    int64
-	Hash      []byte
-	ChangeSet []store.ChangeSet
-}
-
 type Consensus[T transaction.Tx] struct {
 	app     appmanager.AppManager[T]
 	cfg     Config
@@ -63,6 +48,23 @@ type Consensus[T transaction.Tx] struct {
 	// otherwise it will be empty and we will need to query the app for the last
 	// committed block.
 	lastCommittedBlock atomic.Pointer[BlockData]
+}
+
+func NewConsensus[T transaction.Tx](app appmanager.AppManager[T], str store.Store, cfg Config) *Consensus[T] {
+	return &Consensus[T]{
+		app:   app,
+		cfg:   cfg,
+		store: str,
+	}
+}
+
+// BlockData is used to keep some data about the last committed block. Currently
+// we only use the height, the rest is not needed right now and might get removed
+// in the future.
+type BlockData struct {
+	Height    int64
+	Hash      []byte
+	ChangeSet []store.ChangeSet
 }
 
 // CheckTx implements types.Application.

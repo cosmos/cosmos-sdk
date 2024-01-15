@@ -11,7 +11,7 @@ type iterAdapter struct {
 	iter corestore.Iterator
 }
 
-func (i iterAdapter) Domain() (start []byte, end []byte) {
+func (i iterAdapter) Domain() (start, end []byte) {
 	return i.iter.Domain()
 }
 

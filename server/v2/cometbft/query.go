@@ -4,10 +4,11 @@ import (
 	"context"
 	"strings"
 
+	abci "github.com/cometbft/cometbft/abci/types"
+
 	errorsmod "cosmossdk.io/errors"
 	cometerrors "cosmossdk.io/server/v2/cometbft/types/errors"
 	"cosmossdk.io/server/v2/core/store"
-	abci "github.com/cometbft/cometbft/abci/types"
 )
 
 func (c *Consensus[T]) handleQueryP2P(path []string) (*abci.ResponseQuery, error) {

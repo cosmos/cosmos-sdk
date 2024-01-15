@@ -3,13 +3,13 @@ package mempool
 import (
 	"context"
 
+	"cosmossdk.io/server/v2/core/mempool"
 	"cosmossdk.io/server/v2/core/transaction"
 )
 
-var _ Mempool[transaction.Tx] = NoOpMempool[transaction.Tx]{}
+var _ mempool.Mempool[transaction.Tx] = NoOpMempool[transaction.Tx]{}
 
-type NoOpMempool[T transaction.Tx] struct {
-}
+type NoOpMempool[T transaction.Tx] struct{}
 
 func NewNoopMempool[T transaction.Tx]() NoOpMempool[T] { return NoOpMempool[T]{} }
 

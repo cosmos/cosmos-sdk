@@ -7,5 +7,5 @@ import "cosmossdk.io/log"
 type Context interface {
 	BlockHeight() int64
 	Logger() log.Logger
-	StreamingManager() StreamingManager
+	StreamingManager() Manager
 }

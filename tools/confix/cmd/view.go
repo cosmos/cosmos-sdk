@@ -24,7 +24,7 @@ func ViewCommand() *cobra.Command {
 
 			clientCtx := client.GetClientContextFromCmd(cmd)
 			if clientCtx.HomeDir != "" {
-				filename = filepath.Join(clientCtx.HomeDir, "config", filename+".toml")
+				filename = filepath.Join(clientCtx.HomeDir, "config", filename+tomlSuffix)
 			}
 
 			file, err := os.ReadFile(filename)

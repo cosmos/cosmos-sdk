@@ -31,7 +31,7 @@ func SetCommand() *cobra.Command {
 
 			clientCtx := client.GetClientContextFromCmd(cmd)
 			if clientCtx.HomeDir != "" {
-				filename = filepath.Join(clientCtx.HomeDir, "config", filename+".toml")
+				filename = filepath.Join(clientCtx.HomeDir, "config", filename+tomlSuffix)
 			}
 
 			plan := transform.Plan{
@@ -98,7 +98,7 @@ func GetCommand() *cobra.Command {
 
 			clientCtx := client.GetClientContextFromCmd(cmd)
 			if clientCtx.HomeDir != "" {
-				filename = filepath.Join(clientCtx.HomeDir, "config", filename+".toml")
+				filename = filepath.Join(clientCtx.HomeDir, "config", filename+tomlSuffix)
 			}
 
 			doc, err := confix.LoadConfig(filename)

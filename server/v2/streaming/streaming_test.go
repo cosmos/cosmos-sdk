@@ -53,7 +53,7 @@ func (s *PluginTestSuite) SetupTest() {
 	require.True(s.T(), ok, "should pass type check")
 
 	logger := log.NewNopLogger()
-	streamingService := StreamingManager{
+	streamingService := Manager{
 		Listeners:     []Listener{abciListener},
 		StopNodeOnErr: true,
 	}
@@ -122,14 +122,14 @@ type MockContext struct {
 	baseCtx          context.Context
 	height           int64
 	logger           log.Logger
-	streamingManager StreamingManager
+	streamingManager Manager
 }
 
-func (m MockContext) BlockHeight() int64                 { return m.height }
-func (m MockContext) Logger() log.Logger                 { return m.logger }
-func (m MockContext) StreamingManager() StreamingManager { return m.streamingManager }
+func (m MockContext) BlockHeight() int64        { return m.height }
+func (m MockContext) Logger() log.Logger        { return m.logger }
+func (m MockContext) StreamingManager() Manager { return m.streamingManager }
 
-func NewMockContext(height int64, logger log.Logger, sm StreamingManager) MockContext {
+func NewMockContext(height int64, logger log.Logger, sm Manager) MockContext {
 	return MockContext{
 		baseCtx:          context.Background(),
 		height:           height,

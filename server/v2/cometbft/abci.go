@@ -12,9 +12,11 @@ import (
 	"cosmossdk.io/server/v2/appmanager"
 	"cosmossdk.io/server/v2/cometbft/types"
 	coreappmgr "cosmossdk.io/server/v2/core/appmanager"
+	"cosmossdk.io/server/v2/core/event"
 	"cosmossdk.io/server/v2/core/mempool"
 	"cosmossdk.io/server/v2/core/store"
 	"cosmossdk.io/server/v2/core/transaction"
+	"cosmossdk.io/server/v2/streaming"
 
 	cometerrors "cosmossdk.io/server/v2/cometbft/types/errors"
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -52,13 +54,13 @@ type BlockData struct {
 }
 
 type Consensus[T transaction.Tx] struct {
-	app     appmanager.AppManager[T]
-	cfg     Config
-	store   store.Store
-	logger  log.Logger
-	txCodec transaction.Codec[T]
-
-	mempool mempool.Mempool[T]
+	app       appmanager.AppManager[T]
+	cfg       Config
+	store     store.Store
+	logger    log.Logger
+	txCodec   transaction.Codec[T]
+	streaming streaming.Manager
+	mempool   mempool.Mempool[T]
 
 	// this is only available after this node has committed a block (in FinalizeBlock),
 	// otherwise it will be empty and we will need to query the app for the last
@@ -322,6 +324,29 @@ func (c *Consensus[T]) FinalizeBlock(ctx context.Context, req *abci.RequestFinal
 	appHash, err := c.store.StateCommit(changeSet)
 	if err != nil {
 		return nil, fmt.Errorf("unable to commit the changeset: %w", err)
+	}
+
+	events := []event.Event{}
+	events = append(events, resp.BeginBlockEvents...)
+	events = append(events, resp.UpgradeBlockEvents...)
+	for _, tx := range resp.TxResults {
+		events = append(events, tx.Events...)
+	}
+	events = append(events, resp.EndBlockEvents...)
+
+	// listen to state streaming changes in accordance with the block
+	for _, streamingListener := range c.streaming.Listeners {
+		if err := streamingListener.ListenDeliverBlock(ctx, streaming.ListenDeliverBlockRequest{
+			BlockHeight: req.Height,
+			// Txs:         req.Txs, TODO: see how to map txs
+			Events: streaming.IntoStreamingEvents(events),
+		}); err != nil {
+			c.logger.Error("ListenDeliverBlock listening hook failed", "height", req.Height, "err", err)
+		}
+
+		if err := streamingListener.ListenStateChanges(ctx, changeSet); err != nil {
+			c.logger.Error("ListenStateChanges listening hook failed", "height", req.Height, "err", err)
+		}
 	}
 
 	// remove txs from the mempool

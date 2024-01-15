@@ -1,7 +1,6 @@
 package autocli
 
 import (
-	"context"
 	"fmt"
 	"strings"
 
@@ -57,7 +56,6 @@ func (b *Builder) buildMethodCommandCommon(descriptor protoreflect.MethodDescrip
 		Version:      options.Version,
 	}
 
-	cmd.SetContext(context.Background())
 	binder, err := b.AddMessageFlags(cmd.Context(), cmd.Flags(), inputType, options)
 	if err != nil {
 		return nil, err

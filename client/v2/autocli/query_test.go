@@ -8,7 +8,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/spf13/cobra"
 	"google.golang.org/protobuf/testing/protocmp"
 	"google.golang.org/protobuf/types/known/durationpb"
@@ -20,6 +19,8 @@ import (
 	queryv1beta1 "cosmossdk.io/api/cosmos/base/query/v1beta1"
 	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
 	"cosmossdk.io/client/v2/internal/testpb"
+
+	"github.com/cosmos/cosmos-sdk/client"
 )
 
 var buildModuleQueryCommand = func(moduleName string, f *fixture) (*cobra.Command, error) {

@@ -61,8 +61,7 @@ func initFixture(t *testing.T) *fixture {
 	interfaceRegistry := encodingConfig.Codec.InterfaceRegistry()
 	banktypes.RegisterInterfaces(interfaceRegistry)
 
-	var initClientCtx client.Context
-	initClientCtx = initClientCtx.
+	clientCtx := client.Context{}.
 		WithAddressCodec(addresscodec.NewBech32Codec("cosmos")).
 		WithValidatorAddressCodec(addresscodec.NewBech32Codec("cosmosvaloper")).
 		WithConsensusAddressCodec(addresscodec.NewBech32Codec("cosmosvalcons")).
@@ -80,9 +79,9 @@ func initFixture(t *testing.T) *fixture {
 		Builder: flag.Builder{
 			TypeResolver:          protoregistry.GlobalTypes,
 			FileResolver:          protoregistry.GlobalFiles,
-			AddressCodec:          initClientCtx.AddressCodec,
-			ValidatorAddressCodec: initClientCtx.ValidatorAddressCodec,
-			ConsensusAddressCodec: initClientCtx.ConsensusAddressCodec,
+			AddressCodec:          clientCtx.AddressCodec,
+			ValidatorAddressCodec: clientCtx.ValidatorAddressCodec,
+			ConsensusAddressCodec: clientCtx.ConsensusAddressCodec,
 			Keyring:               akr,
 		},
 		GetClientConn: func(*cobra.Command) (grpc.ClientConnInterface, error) {
@@ -96,7 +95,7 @@ func initFixture(t *testing.T) *fixture {
 	return &fixture{
 		conn:      conn,
 		b:         b,
-		clientCtx: initClientCtx,
+		clientCtx: clientCtx,
 	}
 }
 

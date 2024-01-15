@@ -28,6 +28,7 @@ import (
 	"cosmossdk.io/x/gov"
 	group "cosmossdk.io/x/group/module"
 	"cosmossdk.io/x/mint"
+	"cosmossdk.io/x/protocolpool"
 	"cosmossdk.io/x/slashing"
 	"cosmossdk.io/x/staking"
 	"cosmossdk.io/x/upgrade"
@@ -211,6 +212,7 @@ func TestRunMigrations(t *testing.T) {
 					"feegrant":     feegrantmodule.AppModule{}.ConsensusVersion(),
 					"evidence":     evidence.AppModule{}.ConsensusVersion(),
 					"genutil":      genutil.AppModule{}.ConsensusVersion(),
+					"protocolpool": protocolpool.AppModule{}.ConsensusVersion(),
 				},
 			)
 			if tc.expRunErr {

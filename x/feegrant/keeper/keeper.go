@@ -106,6 +106,11 @@ func (k Keeper) GrantAllowance(ctx context.Context, granter, grantee sdk.AccAddr
 		return err
 	}
 
+	err = feeAllowance.UpdatePeriodReset(sdkCtx.HeaderInfo().Time)
+	if err != nil {
+		return err
+	}
+
 	grant, err := feegrant.NewGrant(granterStr, granteeStr, feeAllowance)
 	if err != nil {
 		return err

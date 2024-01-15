@@ -30,7 +30,7 @@ func (a *AllowedMsgAllowance) UnpackInterfaces(unpacker types.AnyUnpacker) error
 	return unpacker.UnpackAny(a.Allowance, &allowance)
 }
 
-// NewAllowedMsgFeeAllowance creates new filtered fee allowance.
+// NewAllowedMsgAllowance creates new filtered fee allowance.
 func NewAllowedMsgAllowance(allowance FeeAllowanceI, allowedMsgs []string) (*AllowedMsgAllowance, error) {
 	msg, ok := allowance.(proto.Message)
 	if !ok {
@@ -135,4 +135,13 @@ func (a *AllowedMsgAllowance) ExpiresAt() (*time.Time, error) {
 		return nil, err
 	}
 	return allowance.ExpiresAt()
+}
+
+// UpdatePeriodReset update "PeriodReset" of the AllowedMsgAllowance.
+func (a *AllowedMsgAllowance) UpdatePeriodReset(validTime time.Time) error {
+	allowance, err := a.GetAllowance()
+	if err != nil {
+		return err
+	}
+	return allowance.UpdatePeriodReset(validTime)
 }

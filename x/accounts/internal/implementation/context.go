@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 
 	"cosmossdk.io/collections"
+	"cosmossdk.io/core/header"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/x/accounts/internal/prefixstore"
 )
@@ -51,8 +52,8 @@ func MakeAccountContext(
 		sender:            sender,
 		whoami:            accountAddr,
 		originalContext:   ctx,
-		moduleExecUntyped: moduleExecUntyped,
 		moduleExec:        moduleExec,
+		moduleExecUntyped: moduleExecUntyped,
 		moduleQuery:       moduleQuery,
 	})
 }
@@ -107,8 +108,8 @@ func QueryModule[Resp any, RespProto ProtoMsgG[Resp], Req any, ReqProto ProtoMsg
 	return resp, nil
 }
 
-// OpenKVStore returns the prefixed store for the account given the context.
-func OpenKVStore(ctx context.Context) store.KVStore {
+// openKVStore returns the prefixed store for the account given the context.
+func openKVStore(ctx context.Context) store.KVStore {
 	return ctx.Value(contextKey{}).(contextValue).store
 }
 
@@ -120,4 +121,11 @@ func Sender(ctx context.Context) []byte {
 // Whoami returns the address of the account being invoked.
 func Whoami(ctx context.Context) []byte {
 	return ctx.Value(contextKey{}).(contextValue).whoami
+}
+
+type headerService struct{ header.Service }
+
+func (h headerService) GetHeaderInfo(ctx context.Context) header.Info {
+	originalContext := ctx.Value(contextKey{}).(contextValue).originalContext
+	return h.Service.GetHeaderInfo(originalContext)
 }

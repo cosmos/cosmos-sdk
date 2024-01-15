@@ -219,18 +219,14 @@ func (k BaseKeeper) DenomMetadataByQueryString(ctx context.Context, req *types.Q
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
 
-	if err := sdk.ValidateDenom(req.Denom); err != nil {
-		return nil, status.Error(codes.InvalidArgument, err.Error())
+	res, err := k.DenomMetadata(ctx, &types.QueryDenomMetadataRequest{
+		Denom: req.Denom,
+	})
+	if err != nil {
+		return nil, err
 	}
 
-	metadata, found := k.GetDenomMetaData(ctx, req.Denom)
-	if !found {
-		return nil, status.Errorf(codes.NotFound, "client metadata for denom %s", req.Denom)
-	}
-
-	return &types.QueryDenomMetadataByQueryStringResponse{
-		Metadata: metadata,
-	}, nil
+	return &types.QueryDenomMetadataByQueryStringResponse{Metadata: res.Metadata}, nil
 }
 
 // DenomMetadataV2 is identical to DenomMetadata but receives protoreflect types instead of gogo types.  It exists to
@@ -274,8 +270,9 @@ func (k BaseKeeper) DenomMetadataV2(ctx context.Context, req *v1beta1.QueryDenom
 	}, nil
 }
 
+// DenomOwners returns all the account address that own a requested token denom.
 func (k BaseKeeper) DenomOwners(
-	goCtx context.Context,
+	ctx context.Context,
 	req *types.QueryDenomOwnersRequest,
 ) (*types.QueryDenomOwnersResponse, error) {
 	if req == nil {
@@ -287,11 +284,11 @@ func (k BaseKeeper) DenomOwners(
 	}
 
 	denomOwners, pageRes, err := query.CollectionPaginate(
-		goCtx,
+		ctx,
 		k.Balances.Indexes.Denom,
 		req.Pagination,
 		func(key collections.Pair[string, sdk.AccAddress], value collections.NoValue) (*types.DenomOwner, error) {
-			amt, err := k.Balances.Get(goCtx, collections.Join(key.K2(), req.Denom))
+			amt, err := k.Balances.Get(ctx, collections.Join(key.K2(), req.Denom))
 			if err != nil {
 				return nil, err
 			}
@@ -333,4 +330,20 @@ func (k BaseKeeper) SendEnabled(ctx context.Context, req *types.QuerySendEnabled
 	}
 
 	return resp, nil
+}
+
+// DenomOwnersByQuery is identical to DenomOwner query, but receives denom values via query string.
+func (k BaseKeeper) DenomOwnersByQuery(ctx context.Context, req *types.QueryDenomOwnersByQueryRequest) (*types.QueryDenomOwnersByQueryResponse, error) {
+	if req == nil {
+		return nil, status.Errorf(codes.InvalidArgument, "empty request")
+	}
+	resp, err := k.DenomOwners(ctx, &types.QueryDenomOwnersRequest{
+		Denom:      req.Denom,
+		Pagination: req.Pagination,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.QueryDenomOwnersByQueryResponse{DenomOwners: resp.DenomOwners, Pagination: resp.Pagination}, nil
 }

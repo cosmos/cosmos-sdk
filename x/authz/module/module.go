@@ -1,4 +1,4 @@
-package authz
+package module
 
 import (
 	"context"
@@ -8,18 +8,13 @@ import (
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 
-	modulev1 "cosmossdk.io/api/cosmos/authz/module/v1"
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/store"
-	"cosmossdk.io/depinject"
-	am "cosmossdk.io/depinject/appmodule"
 	"cosmossdk.io/errors"
 	"cosmossdk.io/x/authz"
 	"cosmossdk.io/x/authz/client/cli"
 	"cosmossdk.io/x/authz/keeper"
 	"cosmossdk.io/x/authz/simulation"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -32,7 +27,6 @@ var (
 	_ module.AppModuleSimulation = AppModule{}
 	_ module.HasGenesis          = AppModule{}
 	_ module.HasServices         = AppModule{}
-	_ depinject.OnePerModuleType = AppModule{}
 
 	_ appmodule.AppModule       = AppModule{}
 	_ appmodule.HasBeginBlocker = AppModule{}
@@ -119,9 +113,6 @@ func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, ak authz.AccountKeeper,
 	}
 }
 
-// IsOnePerModuleType implements the depinject.OnePerModuleType interface.
-func (am AppModule) IsOnePerModuleType() {}
-
 // IsAppModule implements the appmodule.AppModule interface.
 func (am AppModule) IsAppModule() {}
 
@@ -147,39 +138,6 @@ func (AppModule) ConsensusVersion() uint64 { return 2 }
 func (am AppModule) BeginBlock(ctx context.Context) error {
 	return BeginBlocker(ctx, am.keeper)
 }
-
-func init() {
-	am.Register(
-		&modulev1.Module{},
-		am.Provide(ProvideModule),
-	)
-}
-
-type ModuleInputs struct {
-	depinject.In
-
-	Cdc              codec.Codec
-	AccountKeeper    authz.AccountKeeper
-	BankKeeper       authz.BankKeeper
-	Registry         cdctypes.InterfaceRegistry
-	MsgServiceRouter baseapp.MessageRouter
-	StoreService     store.KVStoreService
-}
-
-type ModuleOutputs struct {
-	depinject.Out
-
-	AuthzKeeper keeper.Keeper
-	Module      appmodule.AppModule
-}
-
-func ProvideModule(in ModuleInputs) ModuleOutputs {
-	k := keeper.NewKeeper(in.StoreService, in.Cdc, in.MsgServiceRouter, in.AccountKeeper)
-	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.Registry)
-	return ModuleOutputs{AuthzKeeper: k, Module: m}
-}
-
-// ____________________________________________________________________________
 
 // AppModuleSimulation functions
 

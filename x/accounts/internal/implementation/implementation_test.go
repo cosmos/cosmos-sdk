@@ -11,7 +11,7 @@ import (
 )
 
 func TestImplementation(t *testing.T) {
-	impl, err := newImplementation(collections.NewSchemaBuilderFromAccessor(OpenKVStore), TestAccount{})
+	impl, err := newImplementation(collections.NewSchemaBuilderFromAccessor(openKVStore), TestAccount{})
 	require.NoError(t, err)
 
 	ctx := context.Background()

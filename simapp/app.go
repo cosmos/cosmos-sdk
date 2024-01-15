@@ -288,6 +288,7 @@ func NewSimApp(
 	accountsKeeper, err := accounts.NewKeeper(
 		runtime.NewKVStoreService(keys[accounts.StoreKey]),
 		runtime.EventService{},
+		runtime.HeaderService{},
 		runtime.BranchService{},
 		app.AuthKeeper.AddressCodec(),
 		appCodec,

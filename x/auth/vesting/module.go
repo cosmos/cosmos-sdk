@@ -8,10 +8,7 @@ import (
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 
-	modulev1 "cosmossdk.io/api/cosmos/vesting/module/v1"
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/depinject"
-	am "cosmossdk.io/depinject/appmodule"
 	"cosmossdk.io/x/auth/keeper"
 	"cosmossdk.io/x/auth/vesting/client/cli"
 	"cosmossdk.io/x/auth/vesting/types"
@@ -86,9 +83,6 @@ func NewAppModule(ak keeper.AccountKeeper, bk types.BankKeeper) AppModule {
 	}
 }
 
-// IsOnePerModuleType implements the depinject.OnePerModuleType interface.
-func (am AppModule) IsOnePerModuleType() {}
-
 // IsAppModule implements the appmodule.AppModule interface.
 func (am AppModule) IsAppModule() {}
 
@@ -108,32 +102,3 @@ func (am AppModule) ExportGenesis(_ context.Context, cdc codec.JSONCodec) json.R
 
 // ConsensusVersion implements AppModule/ConsensusVersion.
 func (AppModule) ConsensusVersion() uint64 { return 1 }
-
-//
-// App Wiring Setup
-//
-
-func init() {
-	am.Register(&modulev1.Module{},
-		am.Provide(ProvideModule),
-	)
-}
-
-type ModuleInputs struct {
-	depinject.In
-
-	AccountKeeper keeper.AccountKeeper
-	BankKeeper    types.BankKeeper
-}
-
-type ModuleOutputs struct {
-	depinject.Out
-
-	Module appmodule.AppModule
-}
-
-func ProvideModule(in ModuleInputs) ModuleOutputs {
-	m := NewAppModule(in.AccountKeeper, in.BankKeeper)
-
-	return ModuleOutputs{Module: m}
-}

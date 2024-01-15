@@ -72,6 +72,7 @@ type ResponseInitChain struct {
 }
 
 type TxResult struct {
+	Code      uint32
 	Events    []event.Event
 	GasUsed   uint64
 	GasWanted uint64

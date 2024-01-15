@@ -134,12 +134,12 @@ service ReflectionService {
   }
   // GetChainDescriptor returns the description of the chain
   rpc GetChainDescriptor(GetChainDescriptorRequest) returns (GetChainDescriptorResponse) {
-    option deprecated = true;
+    option deprecated            = true;
     option (google.api.http).get = "/cosmos/base/reflection/v1beta1/app_descriptor/chain";
   };
   // GetCodecDescriptor returns the descriptor of the codec of the application
   rpc GetCodecDescriptor(GetCodecDescriptorRequest) returns (GetCodecDescriptorResponse) {
-    option deprecated = true;
+    option deprecated            = true;
     option (google.api.http).get = "/cosmos/base/reflection/v1beta1/app_descriptor/codec";
   }
   // GetConfigurationDescriptor returns the descriptor for the sdk.Config of the application
@@ -149,12 +149,12 @@ service ReflectionService {
   }
   // GetQueryServicesDescriptor returns the available gRPC queryable services of the application
   rpc GetQueryServicesDescriptor(GetQueryServicesDescriptorRequest) returns (GetQueryServicesDescriptorResponse) {
-    option deprecated = true;
+    option deprecated            = true;
     option (google.api.http).get = "/cosmos/base/reflection/v1beta1/app_descriptor/query_services";
   }
   // GetTxDescriptor returns information on the used transaction object and available msgs that can be used
   rpc GetTxDescriptor(GetTxDescriptorRequest) returns (GetTxDescriptorResponse) {
-    option deprecated = true;
+    option deprecated            = true;
     option (google.api.http).get = "/cosmos/base/reflection/v1beta1/app_descriptor/tx_descriptor";
   }
 }

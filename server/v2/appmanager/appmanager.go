@@ -120,15 +120,6 @@ func (a AppManager[T]) DeliverBlock(ctx context.Context, block appmanager.BlockR
 	return blockResponse, newStateChanges, nil
 }
 
-// CommitBlock commits the block to the database, it must be called after DeliverBlock or when Finalization criteria is met
-func (a AppManager[T]) CommitBlock(ctx context.Context, height uint64, sc []store.ChangeSet) (Hash, error) {
-	stateRoot, err := a.db.StateCommit(sc)
-	if err != nil {
-		return nil, fmt.Errorf("commit failed: %w", err)
-	}
-	return stateRoot, nil
-}
-
 func (a AppManager[T]) Simulate(ctx context.Context, txBytes []byte) (appmanager.TxResult, error) {
 	tx, err := a.txCodec.Decode(txBytes)
 	if err != nil {

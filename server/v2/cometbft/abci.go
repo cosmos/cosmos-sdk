@@ -13,12 +13,12 @@ import (
 	"cosmossdk.io/log"
 	"cosmossdk.io/server/v2/appmanager"
 	coreappmgr "cosmossdk.io/server/v2/core/appmanager"
+	"cosmossdk.io/server/v2/core/event"
 	"cosmossdk.io/server/v2/core/store"
 	"cosmossdk.io/server/v2/core/transaction"
 	"cosmossdk.io/server/v2/stf/mock"
+	"cosmossdk.io/server/v2/streaming"
 	abci "github.com/cometbft/cometbft/abci/types"
-
-	// "cosmossdk.io/server/v2/streaming"
 
 	"cosmossdk.io/server/v2/cometbft/types"
 	cometerrors "cosmossdk.io/server/v2/cometbft/types/errors"
@@ -38,11 +38,12 @@ const (
 var _ abci.Application = (*Consensus[mock.Tx])(nil)
 
 type Consensus[T transaction.Tx] struct {
-	app     appmanager.AppManager[T]
-	cfg     Config
-	store   store.Store
-	logger  log.Logger
-	txCodec transaction.Codec[T]
+	app       appmanager.AppManager[T]
+	cfg       Config
+	store     store.Store
+	streaming streaming.Manager
+	logger    log.Logger
+	txCodec   transaction.Codec[T]
 
 	// this is only available after this node has committed a block (in FinalizeBlock),
 	// otherwise it will be empty and we will need to query the app for the last
@@ -75,7 +76,7 @@ func (c *Consensus[T]) CheckTx(ctx context.Context, req *abci.CheckTxRequest) (*
 	}
 
 	cometResp := &abci.CheckTxResponse{
-		Code:      0,
+		Code:      resp.Code,
 		GasWanted: int64(resp.GasWanted),
 		GasUsed:   int64(resp.GasUsed),
 		Events:    intoABCIEvents(resp.Events, c.cfg.IndexEvents),
@@ -99,12 +100,17 @@ func (c *Consensus[T]) Info(context.Context, *abci.InfoRequest) (*abci.InfoRespo
 		return nil, err
 	}
 
+	lastStateRoot, err := c.store.LastCommitID() // TODO remove this TODO once rebase on main happens
+	if err != nil {
+		return nil, err
+	}
+
 	return &abci.InfoResponse{
-		Data:            c.cfg.Name,
-		Version:         c.cfg.Version,
-		AppVersion:      cp.GetVersion().App,
-		LastBlockHeight: int64(version),
-		// LastBlockAppHash: c.app.LastCommittedBlockHash(), // TODO: implement this on store. It's required by CometBFT
+		Data:             c.cfg.Name,
+		Version:          c.cfg.Version,
+		AppVersion:       cp.GetVersion().App,
+		LastBlockHeight:  int64(version),
+		LastBlockAppHash: lastStateRoot.Hash,
 	}, nil
 }
 
@@ -300,18 +306,44 @@ func (c *Consensus[T]) FinalizeBlock(ctx context.Context, req *abci.FinalizeBloc
 		ConsensusMessages: []proto.Message{cometInfo},
 	}
 
+	// Deliver the block to appmanager for execution
 	resp, changeSet, err := c.app.DeliverBlock(ctx, blockReq)
 	if err != nil {
 		return nil, err
 	}
 
-	appHash, err := c.app.CommitBlock(ctx, blockReq.Height, changeSet)
+	events := []event.Event{}
+
+	events = append(events, resp.BeginBlockEvents...)
+	events = append(events, resp.UpgradeBlockEvents...)
+	for _, tx := range resp.TxResults {
+		events = append(events, tx.Events...)
+	}
+	events = append(events, resp.EndBlockEvents...)
+
+	// Commit the state changes to store
+	appHash, err := c.store.StateCommit(changeSet)
 	if err != nil {
 		return nil, err
 	}
 
+	// listen to state streaming changes in accordance with the block
+	for _, streamingListener := range c.streaming.Listeners {
+		if err := streamingListener.ListenDeliverBlock(ctx, streaming.ListenDeliverBlockRequest{
+			BlockHeight: req.Height,
+			// Txs:         req.Txs, TODO: see how to map txs
+			Events: streaming.IntoStreamingEvents(events),
+		}); err != nil {
+			c.logger.Error("ListenDeliverBlock listening hook failed", "height", req.Height, "err", err)
+		}
+
+		if err := streamingListener.ListenStateChanges(ctx, changeSet); err != nil {
+			c.logger.Error("ListenStateChanges listening hook failed", "height", req.Height, "err", err)
+		}
+	}
+
 	c.lastCommittedBlock.Store(&BlockData{
-		Height:    int64(req.Height),
+		Height:    req.Height,
 		Hash:      appHash,
 		ChangeSet: changeSet,
 	})

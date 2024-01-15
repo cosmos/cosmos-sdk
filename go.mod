@@ -55,22 +55,10 @@ require (
 	github.com/stretchr/testify v1.8.4
 	github.com/tendermint/go-amino v0.16.0
 	gitlab.com/yawning/secp256k1-voi v0.0.0-20230925100816-f2616030848b
-<<<<<<< HEAD
-	golang.org/x/crypto v0.18.0
-	golang.org/x/exp v0.0.0-20231226003508-02704c960a9b
-	golang.org/x/sync v0.6.0
-	google.golang.org/genproto/googleapis/api v0.0.0-20231212172506-995d672761c0
-||||||| parent of c0536f1f67 (refactor(server/v2): remove sdk as a dependency from server/v2 (#18905))
-	golang.org/x/crypto v0.17.0
-	golang.org/x/exp v0.0.0-20231214170342-aacd6d4b4611
-	golang.org/x/sync v0.5.0
-	google.golang.org/genproto/googleapis/api v0.0.0-20231120223509-83a465c0220f
-=======
 	golang.org/x/crypto v0.17.0
 	golang.org/x/exp v0.0.0-20231214170342-aacd6d4b4611
 	golang.org/x/sync v0.5.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20231212172506-995d672761c0
->>>>>>> c0536f1f67 (refactor(server/v2): remove sdk as a dependency from server/v2 (#18905))
 	google.golang.org/grpc v1.60.1
 	google.golang.org/protobuf v1.32.0
 	gotest.tools/v3 v3.5.1
@@ -191,13 +179,7 @@ require (
 // )
 // TODO remove after all modules have their own go.mods
 replace (
-<<<<<<< HEAD
-	cosmossdk.io/api => ./api
-	cosmossdk.io/depinject => ./depinject
-||||||| parent of c0536f1f67 (refactor(server/v2): remove sdk as a dependency from server/v2 (#18905))
-=======
 	cosmossdk.io/server/v2 => ./server/v2
->>>>>>> c0536f1f67 (refactor(server/v2): remove sdk as a dependency from server/v2 (#18905))
 	cosmossdk.io/x/auth => ./x/auth
 	cosmossdk.io/x/bank => ./x/bank
 	cosmossdk.io/x/distribution => ./x/distribution

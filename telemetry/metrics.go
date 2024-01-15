@@ -12,8 +12,6 @@ import (
 	metricsprom "github.com/hashicorp/go-metrics/prometheus"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/common/expfmt"
-
-	"cosmossdk.io/server/v2/telemetry"
 )
 
 // Metrics supported format types.
@@ -101,7 +99,7 @@ func New(cfg Config) (_ *Metrics, rerr error) {
 		for i, gl := range cfg.GlobalLabels {
 			parsedGlobalLabels[i] = NewLabel(gl[0], gl[1])
 		}
-		telemetry.GlobalLabels = parsedGlobalLabels
+		GlobalLabels = parsedGlobalLabels
 	}
 
 	metricsConf := metrics.DefaultConfig(cfg.ServiceName)

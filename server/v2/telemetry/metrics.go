@@ -12,9 +12,16 @@ import (
 	metricsprom "github.com/hashicorp/go-metrics/prometheus"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/common/expfmt"
-
-	"cosmossdk.io/server/v2/telemetry"
 )
+
+// GlobalLabels defines the set of global labels that will be applied to all
+// metrics emitted using the telemetry package function wrappers.
+var GlobalLabels = []metrics.Label{} // nolint: ignore
+
+// NewLabel creates a new instance of Label with name and value
+func NewLabel(name, value string) metrics.Label {
+	return metrics.Label{Name: name, Value: value}
+}
 
 // Metrics supported format types.
 const (
@@ -30,48 +37,6 @@ const (
 // DisplayableSink is an interface that defines a method for displaying metrics.
 type DisplayableSink interface {
 	DisplayMetrics(resp http.ResponseWriter, req *http.Request) (any, error)
-}
-
-// Config defines the configuration options for application telemetry.
-type Config struct {
-	// Prefixed with keys to separate services
-	ServiceName string `mapstructure:"service-name"`
-
-	// Enabled enables the application telemetry functionality. When enabled,
-	// an in-memory sink is also enabled by default. Operators may also enabled
-	// other sinks such as Prometheus.
-	Enabled bool `mapstructure:"enabled"`
-
-	// Enable prefixing gauge values with hostname
-	EnableHostname bool `mapstructure:"enable-hostname"`
-
-	// Enable adding hostname to labels
-	EnableHostnameLabel bool `mapstructure:"enable-hostname-label"`
-
-	// Enable adding service to labels
-	EnableServiceLabel bool `mapstructure:"enable-service-label"`
-
-	// PrometheusRetentionTime, when positive, enables a Prometheus metrics sink.
-	// It defines the retention duration in seconds.
-	PrometheusRetentionTime int64 `mapstructure:"prometheus-retention-time"`
-
-	// GlobalLabels defines a global set of name/value label tuples applied to all
-	// metrics emitted using the wrapper functions defined in telemetry package.
-	//
-	// Example:
-	// [["chain_id", "cosmoshub-1"]]
-	GlobalLabels [][]string `mapstructure:"global-labels"`
-
-	// MetricsSink defines the type of metrics backend to use.
-	MetricsSink string `mapstructure:"metrics-sink" default:"mem"`
-
-	// StatsdAddr defines the address of a statsd server to send metrics to.
-	// Only utilized if MetricsSink is set to "statsd" or "dogstatsd".
-	StatsdAddr string `mapstructure:"statsd-addr"`
-
-	// DatadogHostname defines the hostname to use when emitting metrics to
-	// Datadog. Only utilized if MetricsSink is set to "dogstatsd".
-	DatadogHostname string `mapstructure:"datadog-hostname"`
 }
 
 // Metrics defines a wrapper around application telemetry functionality. It allows
@@ -101,7 +66,7 @@ func New(cfg Config) (_ *Metrics, rerr error) {
 		for i, gl := range cfg.GlobalLabels {
 			parsedGlobalLabels[i] = NewLabel(gl[0], gl[1])
 		}
-		telemetry.GlobalLabels = parsedGlobalLabels
+		GlobalLabels = parsedGlobalLabels
 	}
 
 	metricsConf := metrics.DefaultConfig(cfg.ServiceName)

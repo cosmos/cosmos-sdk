@@ -4,11 +4,12 @@ import (
 	"context"
 	"fmt"
 
+	gogoproto "github.com/cosmos/gogoproto/proto"
+
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/gas"
 	"cosmossdk.io/core/header"
-	gogoproto "github.com/cosmos/gogoproto/proto"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 )

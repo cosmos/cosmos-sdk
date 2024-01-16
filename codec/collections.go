@@ -55,7 +55,8 @@ type protoMessage[T any] interface {
 func CollValue[T any, PT protoMessage[T]](cdc interface {
 	Marshal(proto.Message) ([]byte, error)
 	Unmarshal([]byte, proto.Message) error
-}) collcodec.ValueCodec[T] {
+},
+) collcodec.ValueCodec[T] {
 	return &collValue[T, PT]{cdc.(Codec), proto.MessageName(PT(new(T)))}
 }
 

@@ -339,7 +339,7 @@ func (s *Store) writeSC(cs *store.Changeset) error {
 // solely commits that batch. An error is returned if commit fails or if the
 // resulting commit hash is not equivalent to the working hash.
 func (s *Store) commitSC(cs *store.Changeset) error {
-	commitStoreInfos, err := s.stateCommitment.Commit()
+	cInfo, err := s.stateCommitment.Commit(s.lastCommitInfo.Version)
 	if err != nil {
 		return fmt.Errorf("failed to commit SC store: %w", err)
 	}

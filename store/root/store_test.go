@@ -18,10 +18,9 @@ import (
 )
 
 const (
-	testStoreKey  = "test"
-	testStoreKey2 = "test2"
-	testStoreKey3 = "test3"
 	testStoreKey  = "test_store_key"
+	testStoreKey2 = "test_store_key2"
+	testStoreKey3 = "test_store_key3"
 )
 
 type RootStoreTestSuite struct {
@@ -47,7 +46,6 @@ func (s *RootStoreTestSuite) SetupTest() {
 	sc, err := commitment.NewCommitStore(map[string]commitment.Tree{testStoreKey: tree, testStoreKey2: tree2, testStoreKey3: tree3}, dbm.NewMemDB(), noopLog)
 	s.Require().NoError(err)
 
-	rs, err := New(noopLog, ss, sc, []string{testStoreKey, testStoreKey2, testStoreKey3}, pruning.DefaultOptions(), pruning.DefaultOptions(), nil)
 	rs, err := New(noopLog, ss, sc, pruning.DefaultOptions(), pruning.DefaultOptions(), nil)
 	s.Require().NoError(err)
 
@@ -107,30 +105,26 @@ func (s *RootStoreTestSuite) TestQuery() {
 }
 
 func (s *RootStoreTestSuite) TestQueryProof() {
+	cs := store.NewChangeset()
 	// testStoreKey
-	bs1 := s.rootStore.GetKVStore(testStoreKey)
-	bs1.Set([]byte("key1"), []byte("value1"))
-	bs1.Set([]byte("key2"), []byte("value2"))
-
+	cs.Add(testStoreKey, []byte("key1"), []byte("value1"))
+	cs.Add(testStoreKey, []byte("key2"), []byte("value2"))
 	// testStoreKey2
-	bs2 := s.rootStore.GetKVStore(testStoreKey2)
-	bs2.Set([]byte("key3"), []byte("value3"))
-
+	cs.Add(testStoreKey2, []byte("key3"), []byte("value3"))
 	// testStoreKey3
-	bs3 := s.rootStore.GetKVStore(testStoreKey3)
-	bs3.Set([]byte("key4"), []byte("value4"))
+	cs.Add(testStoreKey3, []byte("key4"), []byte("value4"))
 
 	// commit
-	_, err := s.rootStore.WorkingHash()
+	_, err := s.rootStore.WorkingHash(cs)
 	s.Require().NoError(err)
-	_, err = s.rootStore.Commit()
+	_, err = s.rootStore.Commit(cs)
 	s.Require().NoError(err)
 
 	// query proof for testStoreKey
 	result, err := s.rootStore.Query(testStoreKey, 1, []byte("key1"), true)
 	s.Require().NoError(err)
 	s.Require().NotNil(result.ProofOps)
-	cInfo, err := s.rootStore.GetSCStore().GetCommitInfo(1)
+	cInfo, err := s.rootStore.GetStateCommitment().GetCommitInfo(1)
 	s.Require().NoError(err)
 	storeHash := cInfo.GetStoreCommitID(testStoreKey).Hash
 	treeRoots, err := result.ProofOps[0].Run([][]byte{[]byte("value1")})

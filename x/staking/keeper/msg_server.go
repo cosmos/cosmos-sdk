@@ -855,11 +855,18 @@ func (k msgServer) RedeemTokensForShares(goCtx context.Context, msg *types.MsgRe
 	// Similar to undelegations, if the account is attempting to tokenize the full delegation,
 	// but there's a precision error due to the decimal to int conversion, round up to the
 	// full decimal amount before modifying the delegation
-	shares := sdk.NewDecFromInt(shareToken.Amount)
+	// sharesTokenSupply := sdk.NewDecFromInt(shareToken.Amount)
+	shareDenomSupply := k.bankKeeper.GetSupply(ctx, shareToken.Denom)
+	shares := delegation.Shares.Mul(sdk.NewDecFromInt(shareToken.Amount)).QuoInt(shareDenomSupply.Amount)
 	if shareToken.Amount.Equal(delegation.Shares.TruncateInt()) {
 		shares = delegation.Shares
 	}
 	tokens := validator.TokensFromShares(shares).TruncateInt()
+
+	// prevent redemption that returns a 0 amount
+	if tokens.IsZero() {
+		return nil, types.ErrTinyRedeemAmount
+	}
 
 	// If this redemption is NOT from a liquid staking provider, decrement the total liquid staked
 	// If the redemption was from a liquid staking provider, the shares are still considered
@@ -877,6 +884,10 @@ func (k msgServer) RedeemTokensForShares(goCtx context.Context, msg *types.MsgRe
 	returnAmount, err := k.Unbond(ctx, record.GetModuleAddress(), valAddr, shares)
 	if err != nil {
 		return nil, err
+	}
+
+	if !returnAmount.Equal(tokens) {
+		panic("tokens from shares is incorrect")
 	}
 
 	if validator.IsBonded() {

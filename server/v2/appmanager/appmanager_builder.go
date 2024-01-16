@@ -2,12 +2,13 @@ package appmanager
 
 import (
 	"cosmossdk.io/server/v2/core/appmanager"
+	"cosmossdk.io/server/v2/core/stf"
 	"cosmossdk.io/server/v2/core/store"
 	"cosmossdk.io/server/v2/core/transaction"
 )
 
 type Builder[T transaction.Tx] struct {
-	STF STF[T]
+	STF stf.STF[T]
 	DB  store.Store
 	ValidateTxGasLimit,
 	QueryGasLimit,

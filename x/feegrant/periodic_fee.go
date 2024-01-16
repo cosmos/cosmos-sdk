@@ -70,9 +70,9 @@ func (a *PeriodicAllowance) tryResetPeriod(blockTime time.Time) {
 
 	// If we are within the period, step from expiration (eg. if you always do one tx per day, it will always reset the same time)
 	// If we are more then one period out (eg. no activity in a week), reset is one period from this time
-	a.PeriodReset = a.PeriodReset.Add(a.Period)
+	_ = a.UpdatePeriodReset(a.PeriodReset)
 	if blockTime.After(a.PeriodReset) {
-		a.PeriodReset = blockTime.Add(a.Period)
+		_ = a.UpdatePeriodReset(blockTime)
 	}
 }
 
@@ -112,4 +112,10 @@ func (a PeriodicAllowance) ValidateBasic() error {
 // ExpiresAt returns the expiry time of the PeriodicAllowance.
 func (a PeriodicAllowance) ExpiresAt() (*time.Time, error) {
 	return a.Basic.ExpiresAt()
+}
+
+// UpdatePeriodReset update "PeriodReset" of the PeriodicAllowance.
+func (a *PeriodicAllowance) UpdatePeriodReset(validTime time.Time) error {
+	a.PeriodReset = validTime.Add(a.Period)
+	return nil
 }

@@ -53,12 +53,11 @@ func (cva ContinuousVestingAccount) Init(ctx context.Context, msg *vestingtypes.
 		return nil, sdkerrors.ErrInvalidRequest.Wrap("invalid start and end time (must be start < end)")
 	}
 
-	originalContext := accountstd.OriginalContext(ctx)
+	hs := cva.headerService.GetHeaderInfo(ctx)
 
 	start := msg.StartTime
 	if msg.StartTime == 0 {
-		sdkctx := sdk.UnwrapSDKContext(originalContext)
-		start = sdkctx.HeaderInfo().Time.Unix()
+		start = hs.Time.Unix()
 	}
 
 	err := cva.StartTime.Set(ctx, math.NewInt(start))
@@ -137,9 +136,8 @@ func (cva ContinuousVestingAccount) GetVestingCoins(ctx context.Context, blockTi
 func (cva ContinuousVestingAccount) QueryVestedCoins(ctx context.Context, msg *vestingtypes.QueryVestedCoinsRequest) (
 	*vestingtypes.QueryVestedCoinsResponse, error,
 ) {
-	originalContext := accountstd.OriginalContext(ctx)
-	sdkctx := sdk.UnwrapSDKContext(originalContext)
-	vestedCoins, err := cva.GetVestedCoins(ctx, sdkctx.HeaderInfo().Time)
+	hs := cva.headerService.GetHeaderInfo(ctx)
+	vestedCoins, err := cva.GetVestedCoins(ctx, hs.Time)
 	if err != nil {
 		return nil, err
 	}
@@ -151,9 +149,8 @@ func (cva ContinuousVestingAccount) QueryVestedCoins(ctx context.Context, msg *v
 func (cva ContinuousVestingAccount) QueryVestingCoins(ctx context.Context, msg *vestingtypes.QueryVestingCoinsRequest) (
 	*vestingtypes.QueryVestingCoinsResponse, error,
 ) {
-	originalContext := accountstd.OriginalContext(ctx)
-	sdkctx := sdk.UnwrapSDKContext(originalContext)
-	vestingCoins, err := cva.GetVestingCoins(ctx, sdkctx.BlockHeader().Time)
+	hs := cva.headerService.GetHeaderInfo(ctx)
+	vestingCoins, err := cva.GetVestingCoins(ctx, hs.Time)
 	if err != nil {
 		return nil, err
 	}

@@ -95,7 +95,7 @@ func NewKeeper(
 		return Keeper{}, err
 	}
 	keeper.Schema = schema
-	keeper.accounts, err = implementation.MakeAccountsMap(keeper.addressCodec, hs, keeper.codec, accounts)
+	keeper.accounts, err = implementation.MakeAccountsMap(keeper.addressCodec, codec, hs, accounts)
 	if err != nil {
 		return Keeper{}, err
 	}
@@ -112,7 +112,6 @@ type Keeper struct {
 	msgRouter      MsgRouter
 	signerProvider SignerProvider
 	queryRouter    QueryRouter
-	codec          *codec.ProtoCodec
 
 	accounts map[string]implementation.Implementation
 

@@ -209,9 +209,8 @@ func (pva PeriodicVestingAccount) GetVestingCoins(ctx context.Context, blockTime
 func (pva PeriodicVestingAccount) QueryVestedCoins(ctx context.Context, msg *vestingtypes.QueryVestedCoinsRequest) (
 	*vestingtypes.QueryVestedCoinsResponse, error,
 ) {
-	originalContext := accountstd.OriginalContext(ctx)
-	sdkctx := sdk.UnwrapSDKContext(originalContext)
-	vestedCoins, err := pva.GetVestedCoins(ctx, sdkctx.HeaderInfo().Time)
+	hs := pva.headerService.GetHeaderInfo(ctx)
+	vestedCoins, err := pva.GetVestedCoins(ctx, hs.Time)
 	if err != nil {
 		return nil, err
 	}
@@ -224,9 +223,8 @@ func (pva PeriodicVestingAccount) QueryVestedCoins(ctx context.Context, msg *ves
 func (pva PeriodicVestingAccount) QueryVestingCoins(ctx context.Context, msg *vestingtypes.QueryVestingCoinsRequest) (
 	*vestingtypes.QueryVestingCoinsResponse, error,
 ) {
-	originalContext := accountstd.OriginalContext(ctx)
-	sdkctx := sdk.UnwrapSDKContext(originalContext)
-	vestingCoins, err := pva.GetVestingCoins(ctx, sdkctx.BlockHeader().Time)
+	hs := pva.headerService.GetHeaderInfo(ctx)
+	vestingCoins, err := pva.GetVestingCoins(ctx, hs.Time)
 	if err != nil {
 		return nil, err
 	}

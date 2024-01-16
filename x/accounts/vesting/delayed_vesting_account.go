@@ -88,9 +88,8 @@ func (dva DelayedVestingAccount) GetVestingCoins(ctx context.Context, blockTime 
 func (dva DelayedVestingAccount) QueryVestedCoins(ctx context.Context, msg *vestingtypes.QueryVestedCoinsRequest) (
 	*vestingtypes.QueryVestedCoinsResponse, error,
 ) {
-	originalContext := accountstd.OriginalContext(ctx)
-	sdkctx := sdk.UnwrapSDKContext(originalContext)
-	vestedCoins, err := dva.GetVestedCoins(ctx, sdkctx.HeaderInfo().Time)
+	hs := dva.headerService.GetHeaderInfo(ctx)
+	vestedCoins, err := dva.GetVestedCoins(ctx, hs.Time)
 	if err != nil {
 		return nil, err
 	}
@@ -103,9 +102,8 @@ func (dva DelayedVestingAccount) QueryVestedCoins(ctx context.Context, msg *vest
 func (dva DelayedVestingAccount) QueryVestingCoins(ctx context.Context, msg *vestingtypes.QueryVestingCoinsRequest) (
 	*vestingtypes.QueryVestingCoinsResponse, error,
 ) {
-	originalContext := accountstd.OriginalContext(ctx)
-	sdkctx := sdk.UnwrapSDKContext(originalContext)
-	vestingCoins, err := dva.GetVestingCoins(ctx, sdkctx.BlockHeader().Time)
+	hs := dva.headerService.GetHeaderInfo(ctx)
+	vestingCoins, err := dva.GetVestingCoins(ctx, hs.Time)
 	if err != nil {
 		return nil, err
 	}

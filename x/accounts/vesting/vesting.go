@@ -8,6 +8,7 @@ import (
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/address"
+	"cosmossdk.io/core/header"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/accounts/accountstd"
@@ -45,6 +46,7 @@ func NewBaseVestingAccount(d accountstd.Dependencies) (*BaseVestingAccount, erro
 		DelegatedFree:    collections.NewMap(d.SchemaBuilder, DelegatedFreePrefix, "delegated_free", collections.StringKey, sdk.IntValue),
 		DelegatedVesting: collections.NewMap(d.SchemaBuilder, DelegatedVestingPrefix, "delegated_vesting", collections.StringKey, sdk.IntValue),
 		addressCodec:     d.AddressCodec,
+		headerService:    d.HeaderService,
 		EndTime:          collections.NewItem(d.SchemaBuilder, EndTimePrefix, "end_time", sdk.IntValue),
 	}
 
@@ -58,6 +60,7 @@ type BaseVestingAccount struct {
 	DelegatedFree    collections.Map[string, math.Int]
 	DelegatedVesting collections.Map[string, math.Int]
 	addressCodec     address.Codec
+	headerService    header.Service
 	// Vesting end time, as unix timestamp (in seconds).
 	EndTime collections.Item[math.Int]
 }
@@ -241,8 +244,7 @@ func (bva *BaseVestingAccount) ExecuteMessages(
 		return nil, err
 	}
 
-	originalContext := accountstd.OriginalContext(ctx)
-	sdkctx := sdk.UnwrapSDKContext(originalContext)
+	hs := bva.headerService.GetHeaderInfo(ctx)
 
 	for _, m := range msg.ExecutionMessages {
 		concreteMessage, err := impl.UnpackAnyRaw(m)
@@ -264,7 +266,7 @@ func (bva *BaseVestingAccount) ExecuteMessages(
 			if err != nil {
 				return nil, err
 			}
-			vestingCoins, err := getVestingFunc(ctx, sdkctx.BlockHeader().Time)
+			vestingCoins, err := getVestingFunc(ctx, hs.Time)
 			if err != nil {
 				return nil, err
 			}
@@ -307,7 +309,7 @@ func (bva *BaseVestingAccount) ExecuteMessages(
 				amount = msgMultiSend.Inputs[0].Coins
 			}
 
-			vestingCoins, err := getVestingFunc(ctx, sdkctx.BlockHeader().Time)
+			vestingCoins, err := getVestingFunc(ctx, hs.Time)
 			if err != nil {
 				return nil, err
 			}
@@ -343,8 +345,6 @@ func (bva *BaseVestingAccount) ExecuteMessages(
 					)
 				}
 			}
-		default:
-			sdkctx.Logger().Info("Non special case continue the execution")
 		}
 	}
 

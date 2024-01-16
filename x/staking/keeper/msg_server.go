@@ -855,7 +855,6 @@ func (k msgServer) RedeemTokensForShares(goCtx context.Context, msg *types.MsgRe
 	// Similar to undelegations, if the account is attempting to tokenize the full delegation,
 	// but there's a precision error due to the decimal to int conversion, round up to the
 	// full decimal amount before modifying the delegation
-	// sharesTokenSupply := sdk.NewDecFromInt(shareToken.Amount)
 	shareDenomSupply := k.bankKeeper.GetSupply(ctx, shareToken.Denom)
 	shares := delegation.Shares.Mul(sdk.NewDecFromInt(shareToken.Amount)).QuoInt(shareDenomSupply.Amount)
 	if shareToken.Amount.Equal(delegation.Shares.TruncateInt()) {

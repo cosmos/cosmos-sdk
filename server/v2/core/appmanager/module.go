@@ -46,7 +46,9 @@ type Module[T transaction.Tx] interface {
 }
 
 // Update defines what is expected to be returned
+// TODO: move to cosmossdk.io/core
 type ValidatorUpdate struct {
-	PubKey []byte
-	Power  int64 // updated power of the validtor
+	PubKey     []byte
+	PubKeyType string
+	Power      int64 // updated power of the validtor
 }

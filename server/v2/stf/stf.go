@@ -267,6 +267,7 @@ func (s STF[T]) makeContext(
 	sender []Identity,
 	store store.WritableState,
 	gasLimit uint64,
+	// TODO add exec mode
 ) *executionContext {
 	return &executionContext{
 		Context:  ctx,

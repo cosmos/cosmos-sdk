@@ -23,6 +23,7 @@ import (
 	"cosmossdk.io/server/v2/core/event"
 )
 
+// parseQueryRequest parses a RequestQuery into a proto.Message, if it is a proto query
 func parseQueryRequest(req *abci.RequestQuery) (proto.Message, error) {
 	desc, err := gogoproto.HybridResolver.FindDescriptorByName(protoreflect.FullName(req.Path))
 	if err != nil {

@@ -36,6 +36,7 @@ func (c *Consensus[T]) handleQueryP2P(path []string) (*abci.ResponseQuery, error
 	return nil, errorsmod.Wrap(cometerrors.ErrUnknownRequest, "expected second parameter to be 'filter'")
 }
 
+// TODO godoc
 func (c *Consensus[T]) handlerQueryApp(ctx context.Context, path []string, req *abci.RequestQuery) (*abci.ResponseQuery, error) {
 	if len(path) < 2 {
 		return nil, errorsmod.Wrap(

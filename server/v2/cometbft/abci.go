@@ -31,6 +31,21 @@ const (
 
 var _ abci.Application = (*Consensus[transaction.Tx])(nil)
 
+type Consensus[T transaction.Tx] struct {
+	app       appmanager.AppManager[T]
+	cfg       Config
+	store     store.Store
+	logger    log.Logger
+	txCodec   transaction.Codec[T]
+	streaming streaming.Manager
+	mempool   mempool.Mempool[T]
+
+	// this is only available after this node has committed a block (in FinalizeBlock),
+	// otherwise it will be empty and we will need to query the app for the last
+	// committed block.
+	lastCommittedBlock atomic.Pointer[BlockData]
+}
+
 func NewConsensus[T transaction.Tx](
 	app appmanager.AppManager[T],
 	mp mempool.Mempool[T],
@@ -54,21 +69,6 @@ type BlockData struct {
 	ChangeSet []store.ChangeSet
 }
 
-type Consensus[T transaction.Tx] struct {
-	app       appmanager.AppManager[T]
-	cfg       Config
-	store     store.Store
-	logger    log.Logger
-	txCodec   transaction.Codec[T]
-	streaming streaming.Manager
-	mempool   mempool.Mempool[T]
-
-	// this is only available after this node has committed a block (in FinalizeBlock),
-	// otherwise it will be empty and we will need to query the app for the last
-	// committed block.
-	lastCommittedBlock atomic.Pointer[BlockData]
-}
-
 // CheckTx implements types.Application.
 func (c *Consensus[T]) CheckTx(ctx context.Context, req *abci.RequestCheckTx) (*abci.ResponseCheckTx, error) {
 	// TODO: evaluate here if to return error, or CheckTxResponse.error.
@@ -81,10 +81,21 @@ func (c *Consensus[T]) CheckTx(ctx context.Context, req *abci.RequestCheckTx) (*
 		return nil, err
 	}
 
+	/* TODO insertion into the mempool, insertion should a cache tx,
+	type CacheTx struct {
+		// Tx is the transaction.
+		Tx transaction.Tx
+		// Encoded
+		EncodedTx []byte
+	}
+
+	either do this in x/tx or here, but we need to avoid re-encoding the tx due to maliability
+	*/
+
 	cometResp := &abci.ResponseCheckTx{
-		Code:      0,
-		GasWanted: int64(resp.GasWanted),
-		GasUsed:   int64(resp.GasUsed),
+		Code:      resp.Code,
+		GasWanted: int64(resp.GasWanted), // TODO overflow checking
+		GasUsed:   int64(resp.GasUsed),   // TODO overflow checking
 		Events:    intoABCIEvents(resp.Events, c.cfg.IndexEvents),
 	}
 	if resp.Error != nil {
@@ -106,19 +117,23 @@ func (c *Consensus[T]) Info(context.Context, *abci.RequestInfo) (*abci.ResponseI
 		return nil, err
 	}
 
+	// TODO use rootstore interface and that has LastCommitID
+
 	return &abci.ResponseInfo{
 		Data:            c.cfg.Name,
 		Version:         c.cfg.Version,
 		AppVersion:      cp.GetVersion().App,
 		LastBlockHeight: int64(version),
-		// LastBlockAppHash: c.app.LastCommittedBlockHash(), // TODO: implement this on store. It's required by CometBFT
+		// LastBlockAppHash: c.store.LastCommittedID().Hash(), // TODO: implement this on store. It's required by CometBFT
 	}, nil
 }
 
 // Query implements types.Application.
 func (c *Consensus[T]) Query(ctx context.Context, req *abci.RequestQuery) (*abci.ResponseQuery, error) {
 	appreq, err := parseQueryRequest(req)
-	if err == nil { // if no error is returned then we can handle the query with the appmanager
+	// if no error is returned then we can handle the query with the appmanager
+	// otherwise it is a KV store query
+	if err == nil {
 		res, err := c.app.Query(ctx, uint64(req.Height), appreq)
 		if err != nil {
 			return nil, err
@@ -229,21 +244,20 @@ func (c *Consensus[T]) PrepareProposal(ctx context.Context, req *abci.RequestPre
 		return nil, errors.New("PrepareProposal called with invalid height")
 	}
 
+	// TODO: consensus has access query router, grpc or appmanger, to query consensuns param info
 	cp, err := c.GetConsensusParams()
 	if err != nil {
 		return nil, err
 	}
 
-	txs, err := c.mempool.Get(ctx, int(cp.Block.MaxBytes))
+	// TODO check if we call this method when state is not committed
+
+	txs, err = c.app.BuildBlock(ctx, uint64(req.Height), int(cp.Block.MaxBytes))
 	if err != nil {
 		return nil, err
 	}
 
-	txs, err = c.app.BuildBlock(ctx, uint64(req.Height), txs)
-	if err != nil {
-		return nil, err
-	}
-
+	// TODO add bytes method in x/tx or cachetx
 	encodedTxs := make([][]byte, len(txs))
 	for i, tx := range txs {
 		encodedTxs[i] = tx.Bytes()
@@ -260,6 +274,7 @@ func (c *Consensus[T]) ProcessProposal(ctx context.Context, req *abci.RequestPro
 	for _, tx := range req.Txs {
 		decTx, err := c.txCodec.Decode(tx)
 		if err != nil {
+			// TODO: vote extension meta data as a custom type to avoid possibly accepting invalid txs
 			// continue even if tx decoding fails
 			c.logger.Error("failed to decode tx", "err", err)
 		}

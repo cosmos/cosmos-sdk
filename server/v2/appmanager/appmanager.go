@@ -13,6 +13,7 @@ import (
 // STF defines the state transition handler used by AppManager to execute
 // state transitions over some state. STF never writes to state, instead
 // returns the state changes caused by the state transitions.
+// TODO move to v2/core
 type STF[T transaction.Tx] interface {
 	// DeliverBlock is used to process an entire block, given a state to apply the state transition to.
 	// Returns the state changes of the transition.
@@ -32,6 +33,7 @@ type STF[T transaction.Tx] interface {
 
 // AppManager is a coordinator for all things related to an application
 type AppManager[T transaction.Tx] struct {
+	//  TODO: add configs to config.go with toml annotations (mapstructure)
 	// configs
 	ValidateTxGasLimit uint64
 	queryGasLimit      uint64
@@ -48,7 +50,11 @@ type AppManager[T transaction.Tx] struct {
 	stf            STF[T] // consider if instead of having an interface (which is boxed?), we could have another type Parameter defining STF.
 }
 
+// TODO add initgenesis and figure out how to use it
+// TODO make sure to provide defaults for handlers and configs
+
 // BuildBlock builds a block when requested by consensus. It will take in the total size txs to be included and return a list of transactions
+// TODO accept maxtxbytes instead of []T
 func (a AppManager[T]) BuildBlock(ctx context.Context, height uint64, txs []T) ([]T, error) {
 	latestVersion, currentState, err := a.db.StateLatest()
 	if err != nil {
@@ -59,7 +65,7 @@ func (a AppManager[T]) BuildBlock(ctx context.Context, height uint64, txs []T) (
 		return nil, fmt.Errorf("invalid BuildBlock height wanted %d, got %d", latestVersion+1, height)
 	}
 
-	txs, err = a.prepareHandler(ctx, txs, currentState)
+	txs, err = a.prepareHandler(ctx, currentState)
 	if err != nil {
 		return nil, err
 	}
@@ -131,7 +137,7 @@ func (a AppManager[T]) Simulate(ctx context.Context, tx T) (appmanager.TxResult,
 
 // Query queries the application at the provided version.
 func (a AppManager[T]) Query(ctx context.Context, version uint64, request Type) (response Type, err error) {
-	// if version is provided attempt to do a heightened query.
+	// if version is provided attempt to do a height query.
 	if version != 0 {
 		queryState, err := a.db.StateAt(version)
 		if err != nil {
@@ -139,6 +145,7 @@ func (a AppManager[T]) Query(ctx context.Context, version uint64, request Type) 
 		}
 		return a.stf.Query(ctx, queryState, a.queryGasLimit, request)
 	}
+
 	// otherwise rely on latest available state.
 	_, queryState, err := a.db.StateLatest()
 	if err != nil {
@@ -146,3 +153,10 @@ func (a AppManager[T]) Query(ctx context.Context, version uint64, request Type) 
 	}
 	return a.stf.Query(ctx, queryState, a.queryGasLimit, request)
 }
+
+/* TODO query with state changes
+func (a Appmanager[T]) QueryWitStateChanges(ctx context.Context, changeset []store.ChangeSet, request Type) (response Type, err error) {
+
+
+}
+*/

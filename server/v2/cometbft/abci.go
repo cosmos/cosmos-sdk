@@ -32,13 +32,13 @@ const (
 var _ abci.Application = (*Consensus[transaction.Tx])(nil)
 
 type Consensus[T transaction.Tx] struct {
-	app     appmanager.AppManager[T]
-	cfg     Config
-	store   store.Store
-	logger  log.Logger
-	txCodec transaction.Codec[T]
-
-	mempool mempool.Mempool[T]
+	app       appmanager.AppManager[T]
+	cfg       Config
+	store     store.Store
+	logger    log.Logger
+	txCodec   transaction.Codec[T]
+	streaming streaming.Manager
+	mempool   mempool.Mempool[T]
 
 	// this is only available after this node has committed a block (in FinalizeBlock),
 	// otherwise it will be empty and we will need to query the app for the last
@@ -67,21 +67,6 @@ type BlockData struct {
 	Height    int64
 	Hash      []byte
 	ChangeSet []store.ChangeSet
-}
-
-type Consensus[T transaction.Tx] struct {
-	app       appmanager.AppManager[T]
-	cfg       Config
-	store     store.Store
-	logger    log.Logger
-	txCodec   transaction.Codec[T]
-	streaming streaming.Manager
-	mempool   mempool.Mempool[T]
-
-	// this is only available after this node has committed a block (in FinalizeBlock),
-	// otherwise it will be empty and we will need to query the app for the last
-	// committed block.
-	lastCommittedBlock atomic.Pointer[BlockData]
 }
 
 // CheckTx implements types.Application.

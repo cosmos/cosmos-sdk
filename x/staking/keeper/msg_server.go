@@ -886,10 +886,6 @@ func (k msgServer) RedeemTokensForShares(goCtx context.Context, msg *types.MsgRe
 		return nil, err
 	}
 
-	if !returnAmount.Equal(tokens) {
-		panic("tokens from shares is incorrect")
-	}
-
 	if validator.IsBonded() {
 		k.bondedTokensToNotBonded(ctx, returnAmount)
 	}

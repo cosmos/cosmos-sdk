@@ -9,7 +9,7 @@ import (
 )
 
 // ResetArgs resets arguments for the command. It is desired to be a helpful function for the cmd.SetArgs
-// in the case of calling multiple times in a unit test, as cmd.ResetArgs doesn't
+// in the case of calling multiple times in a unit test, as cmd.SetArgs doesn't
 // reset the flag value as expected.
 //
 // **Warning**: this is only compatible with following flag types:

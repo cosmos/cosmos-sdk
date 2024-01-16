@@ -6,7 +6,6 @@ import (
 	"context"
 	"fmt"
 
-	"cosmossdk.io/core/store"
 	"cosmossdk.io/x/accounts/internal/implementation"
 
 	"github.com/cosmos/cosmos-sdk/types/address"
@@ -61,16 +60,6 @@ func AddAccount[A Interface](name string, constructor func(deps Dependencies) (A
 		acc, err := constructor(deps)
 		return name, acc, err
 	}
-}
-
-// OriginalContext returns the address of the account being invoked.
-func OriginalContext(ctx context.Context) context.Context {
-	return implementation.OriginalContext(ctx)
-}
-
-// OpenKVStore returns the store of the account being invoked.
-func OpenKVStore(ctx context.Context) store.KVStore {
-	return implementation.OpenKVStore(ctx)
 }
 
 // Whoami returns the address of the account being invoked.

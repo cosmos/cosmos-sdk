@@ -161,6 +161,28 @@ func (suite *KeeperTestSuite) TestGrantAllowance() {
 			"",
 		},
 		{
+			"valid: with period reset",
+			func() *feegrant.MsgGrantAllowance {
+				any, err := codectypes.NewAnyWithValue(&feegrant.PeriodicAllowance{
+					Basic: feegrant.BasicAllowance{
+						SpendLimit: suite.atom,
+						Expiration: &oneYear,
+					},
+					Period:           time.Hour,
+					PeriodSpendLimit: suite.atom,
+					PeriodReset:      oneYear,
+				})
+				suite.Require().NoError(err)
+				return &feegrant.MsgGrantAllowance{
+					Granter:   suite.encodedAddrs[1],
+					Grantee:   suite.encodedAddrs[2],
+					Allowance: any,
+				}
+			},
+			false,
+			"",
+		},
+		{
 			"error: fee allowance exists",
 			func() *feegrant.MsgGrantAllowance {
 				any, err := codectypes.NewAnyWithValue(&feegrant.PeriodicAllowance{

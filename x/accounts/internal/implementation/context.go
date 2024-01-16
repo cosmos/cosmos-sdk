@@ -25,7 +25,7 @@ type contextValue struct {
 	store             store.KVStore         // store is the prefixed store for the account.
 	sender            []byte                // sender is the address of the entity invoking the account action.
 	whoami            []byte                // whoami is the address of the account being invoked.
-	originalContext   context.Context       // originalContext that was used to build the account context.
+	parentContext     context.Context       // parentContext that was used to build the account context.
 	moduleExec        ModuleExecFunc        // moduleExec is a function that executes a module message, when the resp type is known.
 	moduleExecUntyped ModuleExecUntypedFunc // moduleExecUntyped is a function that executes a module message, when the resp type is unknown.
 	moduleQuery       ModuleQueryFunc       // moduleQuery is a function that queries a module.
@@ -52,7 +52,7 @@ func MakeAccountContext(
 		store:             makeAccountStore(ctx, storeSvc, accNumber),
 		sender:            sender,
 		whoami:            accountAddr,
-		originalContext:   ctx,
+		parentContext:     ctx,
 		moduleExec:        moduleExec,
 		moduleExecUntyped: moduleExecUntyped,
 		moduleQuery:       moduleQuery,
@@ -73,7 +73,7 @@ func ExecModuleUntyped(ctx context.Context, msg ProtoMsg) (ProtoMsg, error) {
 	// get sender
 	v := ctx.Value(contextKey{}).(contextValue)
 
-	resp, err := v.moduleExecUntyped(v.originalContext, v.whoami, msg)
+	resp, err := v.moduleExecUntyped(v.parentContext, v.whoami, msg)
 	if err != nil {
 		return nil, err
 	}
@@ -88,7 +88,7 @@ func ExecModule[Resp any, RespProto ProtoMsgG[Resp], Req any, ReqProto ProtoMsgG
 
 	// execute module, unwrapping the original context.
 	resp := RespProto(new(Resp))
-	err := v.moduleExec(v.originalContext, v.whoami, msg, resp)
+	err := v.moduleExec(v.parentContext, v.whoami, msg, resp)
 	if err != nil {
 		return nil, err
 	}
@@ -102,7 +102,7 @@ func QueryModule[Resp any, RespProto ProtoMsgG[Resp], Req any, ReqProto ProtoMsg
 	// we also unwrap the original context.
 	v := ctx.Value(contextKey{}).(contextValue)
 	resp := RespProto(new(Resp))
-	err := v.moduleQuery(v.originalContext, req, resp)
+	err := v.moduleQuery(v.parentContext, req, resp)
 	if err != nil {
 		return nil, err
 	}
@@ -127,7 +127,7 @@ func Whoami(ctx context.Context) []byte {
 type headerService struct{ hs header.Service }
 
 func (h headerService) GetHeaderInfo(ctx context.Context) header.Info {
-	return h.hs.GetHeaderInfo(getOriginalContext(ctx))
+	return h.hs.GetHeaderInfo(getParentContext(ctx))
 }
 
 var _ gas.Service = (*gasService)(nil)
@@ -137,25 +137,25 @@ type gasService struct {
 }
 
 func (g gasService) GetGasMeter(ctx context.Context) gas.Meter {
-	return g.gs.GetGasMeter(getOriginalContext(ctx))
+	return g.gs.GetGasMeter(getParentContext(ctx))
 }
 
 func (g gasService) GetBlockGasMeter(ctx context.Context) gas.Meter {
-	return g.gs.GetBlockGasMeter(getOriginalContext(ctx))
+	return g.gs.GetBlockGasMeter(getParentContext(ctx))
 }
 
 func (g gasService) WithGasMeter(ctx context.Context, meter gas.Meter) context.Context {
 	v := ctx.Value(contextKey{}).(contextValue)
-	v.originalContext = g.gs.WithGasMeter(v.originalContext, meter)
-	return context.WithValue(v.originalContext, contextKey{}, v)
+	v.parentContext = g.gs.WithGasMeter(v.parentContext, meter)
+	return context.WithValue(v.parentContext, contextKey{}, v)
 }
 
 func (g gasService) WithBlockGasMeter(ctx context.Context, meter gas.Meter) context.Context {
 	v := ctx.Value(contextKey{}).(contextValue)
-	v.originalContext = g.gs.WithBlockGasMeter(v.originalContext, meter)
-	return context.WithValue(v.originalContext, contextKey{}, v)
+	v.parentContext = g.gs.WithBlockGasMeter(v.parentContext, meter)
+	return context.WithValue(v.parentContext, contextKey{}, v)
 }
 
-func getOriginalContext(ctx context.Context) context.Context {
-	return ctx.Value(contextKey{}).(contextValue).originalContext
+func getParentContext(ctx context.Context) context.Context {
+	return ctx.Value(contextKey{}).(contextValue).parentContext
 }

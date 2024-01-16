@@ -62,3 +62,6 @@ func (a BasicAllowance) ValidateBasic() error {
 func (a BasicAllowance) ExpiresAt() (*time.Time, error) {
 	return a.Expiration, nil
 }
+
+// UpdatePeriodReset BasicAllowance does not update "PeriodReset"
+func (a BasicAllowance) UpdatePeriodReset(validTime time.Time) error { return nil }

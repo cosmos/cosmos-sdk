@@ -333,8 +333,8 @@ schema = 3
     version = "v0.1.0"
     hash = "sha256-wQqGTtRWsfR9n0O/SXHVgECebbnNmHddxJIbG63OJBQ="
   [mod."github.com/linxGnu/grocksdb"]
-    version = "v1.8.10"
-    hash = "sha256-HrhAhTVHPtsBCnWeFmoZI5qZdLIbWB5wofO+iS0xgLI="
+    version = "v1.8.11"
+    hash = "sha256-R2svcOUzENb2o9r8lxohUYn61FCQO7ZyWkV9wjtpoXY="
   [mod."github.com/lucasb-eyer/go-colorful"]
     version = "v1.2.0"
     hash = "sha256-Gg9dDJFCTaHrKHRR1SrJgZ8fWieJkybljybkI9x0gyE="

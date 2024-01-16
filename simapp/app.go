@@ -281,9 +281,9 @@ func NewSimApp(
 	app.ConsensusParamsKeeper = consensusparamkeeper.NewKeeper(appCodec, runtime.NewKVStoreService(keys[consensusparamtypes.StoreKey]), authtypes.NewModuleAddress(govtypes.ModuleName).String(), runtime.EventService{})
 	bApp.SetParamStore(app.ConsensusParamsKeeper.ParamsStore)
 
-	// add keepers
+	addressCodec := authcodec.NewBech32Codec(sdk.Bech32MainPrefix)
 
-	app.AuthKeeper = authkeeper.NewAccountKeeper(appCodec, runtime.NewKVStoreService(keys[authtypes.StoreKey]), authtypes.ProtoBaseAccount, maccPerms, authcodec.NewBech32Codec(sdk.Bech32MainPrefix), sdk.Bech32MainPrefix, authtypes.NewModuleAddress(govtypes.ModuleName).String())
+	// add keepers
 
 	accountsKeeper, err := accounts.NewKeeper(
 		appCodec,
@@ -292,7 +292,7 @@ func NewSimApp(
 		runtime.HeaderService{},
 		runtime.BranchService{},
 		runtime.GasService{},
-		app.AuthKeeper.AddressCodec(),
+		addressCodec,
 		appCodec,
 		app.MsgServiceRouter(),
 		app.GRPCQueryRouter(),
@@ -304,8 +304,9 @@ func NewSimApp(
 	if err != nil {
 		panic(err)
 	}
-
 	app.AccountsKeeper = accountsKeeper
+
+	app.AuthKeeper = authkeeper.NewAccountKeeper(appCodec, runtime.NewKVStoreService(keys[authtypes.StoreKey]), authtypes.ProtoBaseAccount, maccPerms, addressCodec, sdk.Bech32MainPrefix, authtypes.NewModuleAddress(govtypes.ModuleName).String())
 
 	app.BankKeeper = bankkeeper.NewBaseKeeper(
 		appCodec,

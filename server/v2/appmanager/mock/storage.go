@@ -3,14 +3,15 @@ package mock
 import (
 	"testing"
 
+	dbm "github.com/cosmos/cosmos-db"
+	"github.com/stretchr/testify/require"
+
 	"cosmossdk.io/log"
 	storev2 "cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/commitment"
 	"cosmossdk.io/store/v2/commitment/iavl"
 	"cosmossdk.io/store/v2/storage"
 	"cosmossdk.io/store/v2/storage/pebbledb"
-	dbm "github.com/cosmos/cosmos-db"
-	"github.com/stretchr/testify/require"
 )
 
 func StateCommitment(_ *testing.T) storev2.Committer {
@@ -34,6 +35,8 @@ func (l logger) Info(msg string, keyVals ...any) {}
 func (l logger) Error(msg string, keyVals ...any) {}
 
 func (l logger) Debug(msg string, keyVals ...any) {}
+
+func (l logger) Warn(msg string, keyVals ...any) {}
 
 func (l logger) With(keyVals ...any) log.Logger { return l }
 

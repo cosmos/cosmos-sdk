@@ -4,8 +4,9 @@ import (
 	"context"
 	"errors"
 
-	snapshottypes "cosmossdk.io/store/v2/snapshots/types"
 	abci "github.com/cometbft/cometbft/abci/types"
+
+	snapshottypes "cosmossdk.io/store/v2/snapshots/types"
 )
 
 // ApplySnapshotChunk implements types.Application.

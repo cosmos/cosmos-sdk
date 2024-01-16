@@ -3,9 +3,10 @@ package types
 import (
 	"context"
 
-	corecomet "cosmossdk.io/core/comet"
 	abci "github.com/cometbft/cometbft/abci/types"
 	"google.golang.org/protobuf/proto"
+
+	corecomet "cosmossdk.io/core/comet"
 )
 
 type VoteExtensionsHandler interface {

@@ -1,7 +1,7 @@
 package streaming
 
-// StreamingManager is the struct that maintains a list of ABCIListeners and configuration settings.
-type StreamingManager struct {
+// Manager is the struct that maintains a list of ABCIListeners and configuration settings.
+type Manager struct {
 	// Listeners for hooking into the message processing of the server
 	// and exposing the requests and responses to external consumers
 	Listeners []Listener

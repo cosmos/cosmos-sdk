@@ -34,9 +34,9 @@ service ListenerService {
 
 // StoreKVPair is a single key-value pair, associated with a store.
 message StoreKVPair {
-  string store_key = 1; // the store key for the KVStore this pair originates from
-  bytes  key       = 3;
-  bytes  value     = 4;
+  bytes key   = 1; // the store key for the KVStore this pair originates from
+  bytes value = 2;
+  bool delete = 3; // true indicates a delete operation, false indicates a set operation
 }
 
 // Event is a single event, associated with a transaction.

@@ -5,13 +5,6 @@ import (
 	"strings"
 	"time"
 
-	v1beta1 "cosmossdk.io/api/cosmos/base/abci/v1beta1"
-	sdkabci "cosmossdk.io/api/tendermint/abci"
-	"cosmossdk.io/core/comet"
-	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/server/v2/core/appmanager"
-	coreappmgr "cosmossdk.io/server/v2/core/appmanager"
-	"cosmossdk.io/server/v2/core/event"
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	gogoproto "github.com/cosmos/gogoproto/proto"
@@ -20,6 +13,14 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/types/dynamicpb"
 	"google.golang.org/protobuf/types/known/anypb"
+
+	v1beta1 "cosmossdk.io/api/cosmos/base/abci/v1beta1"
+	sdkabci "cosmossdk.io/api/tendermint/abci"
+	"cosmossdk.io/core/comet"
+	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/server/v2/core/appmanager"
+
+	"cosmossdk.io/server/v2/core/event"
 )
 
 // parseQueryRequest parses a RequestQuery into a proto.Message, if it is a proto query
@@ -59,7 +60,7 @@ func queryResponse(req *abci.RequestQuery, res proto.Message) (*abci.ResponseQue
 		return nil, err
 	}
 
-	//TODO: how do I reply? I suppose we need to different replies depending of the query
+	// TODO: how do I reply? I suppose we need to different replies depending of the query
 	return &abci.ResponseQuery{
 		Code:  0,
 		Log:   "",
@@ -102,7 +103,7 @@ func splitABCIQueryPath(requestPath string) (path []string) {
 }
 
 func finalizeBlockResponse(
-	in *coreappmgr.BlockResponse,
+	in *appmanager.BlockResponse,
 	cp *cmtproto.ConsensusParams,
 	appHash []byte,
 	indexSet map[string]struct{},
@@ -119,7 +120,7 @@ func finalizeBlockResponse(
 	return resp, nil
 }
 
-func intoABCIValidatorUpdates(updates []coreappmgr.ValidatorUpdate) []abci.ValidatorUpdate {
+func intoABCIValidatorUpdates(updates []appmanager.ValidatorUpdate) []abci.ValidatorUpdate {
 	valsetUpdates := make([]abci.ValidatorUpdate, len(updates))
 
 	for i := range updates {
@@ -136,7 +137,7 @@ func intoABCIValidatorUpdates(updates []coreappmgr.ValidatorUpdate) []abci.Valid
 	return valsetUpdates
 }
 
-func intoABCITxResults(results []coreappmgr.TxResult, indexSet map[string]struct{}) []*abci.ExecTxResult {
+func intoABCITxResults(results []appmanager.TxResult, indexSet map[string]struct{}) []*abci.ExecTxResult {
 	res := make([]*abci.ExecTxResult, len(results))
 	for i := range results {
 		if results[i].Error == nil {

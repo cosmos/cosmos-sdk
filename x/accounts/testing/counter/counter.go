@@ -28,7 +28,7 @@ func NewAccount(d accountstd.Dependencies) (Account, error) {
 	return Account{
 		Owner:          collections.NewItem(d.SchemaBuilder, OwnerPrefix, "owner", collections.BytesValue),
 		Counter:        collections.NewItem(d.SchemaBuilder, CounterPrefix, "counter", collections.Uint64Value),
-		TestStateCodec: collections.NewItem(d.SchemaBuilder, TestStateCodecPrefix, "test_state_codec", codec.CollValue[counterv1.MsgTestDependencies](d.StateCodec)),
+		TestStateCodec: collections.NewItem(d.SchemaBuilder, TestStateCodecPrefix, "test_state_codec", codec.CollValue[counterv1.MsgTestDependencies](d.LegacyStateCodec)),
 		hs:             d.HeaderService,
 		addressCodec:   d.AddressCodec,
 		gs:             d.GasService,

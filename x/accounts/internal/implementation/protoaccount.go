@@ -5,16 +5,7 @@ import (
 	"fmt"
 
 	"google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/runtime/protoiface"
 )
-
-type ProtoMsg = protoiface.MessageV1
-
-// ProtoMsgG is a generic interface for protobuf messages.
-type ProtoMsgG[T any] interface {
-	*T
-	protoiface.MessageV1
-}
 
 // RegisterInitHandler registers an initialisation handler for a smart account that uses protobuf.
 func RegisterInitHandler[

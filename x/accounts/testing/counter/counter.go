@@ -6,13 +6,19 @@ import (
 	"fmt"
 
 	"cosmossdk.io/collections"
+	"cosmossdk.io/core/address"
+	"cosmossdk.io/core/gas"
+	"cosmossdk.io/core/header"
 	"cosmossdk.io/x/accounts/accountstd"
 	counterv1 "cosmossdk.io/x/accounts/testing/counter/v1"
+
+	"github.com/cosmos/cosmos-sdk/codec"
 )
 
 var (
-	OwnerPrefix   = collections.NewPrefix(0)
-	CounterPrefix = collections.NewPrefix(1)
+	OwnerPrefix          = collections.NewPrefix(0)
+	CounterPrefix        = collections.NewPrefix(1)
+	TestStateCodecPrefix = collections.NewPrefix(2)
 )
 
 var _ accountstd.Interface = (*Account)(nil)
@@ -20,8 +26,12 @@ var _ accountstd.Interface = (*Account)(nil)
 // NewAccount creates a new account.
 func NewAccount(d accountstd.Dependencies) (Account, error) {
 	return Account{
-		Owner:   collections.NewItem(d.SchemaBuilder, OwnerPrefix, "owner", collections.BytesValue),
-		Counter: collections.NewItem(d.SchemaBuilder, CounterPrefix, "counter", collections.Uint64Value),
+		Owner:          collections.NewItem(d.SchemaBuilder, OwnerPrefix, "owner", collections.BytesValue),
+		Counter:        collections.NewItem(d.SchemaBuilder, CounterPrefix, "counter", collections.Uint64Value),
+		TestStateCodec: collections.NewItem(d.SchemaBuilder, TestStateCodecPrefix, "test_state_codec", codec.CollValue[counterv1.MsgTestDependencies](d.LegacyStateCodec)),
+		hs:             d.HeaderService,
+		addressCodec:   d.AddressCodec,
+		gs:             d.GasService,
 	}, nil
 }
 
@@ -32,6 +42,13 @@ type Account struct {
 	Owner collections.Item[[]byte]
 	// Counter is the counter value.
 	Counter collections.Item[uint64]
+	// TestStateCodec is used to test the binary codec provided by the runtime.
+	// It simply stores the MsgInit.
+	TestStateCodec collections.Item[counterv1.MsgTestDependencies]
+
+	hs           header.Service
+	addressCodec address.Codec
+	gs           gas.Service
 }
 
 func (a Account) Init(ctx context.Context, msg *counterv1.MsgInit) (*counterv1.MsgInitResponse, error) {
@@ -79,12 +96,43 @@ func (a Account) QueryCounter(ctx context.Context, _ *counterv1.QueryCounterRequ
 	}, nil
 }
 
+func (a Account) TestDependencies(ctx context.Context, _ *counterv1.MsgTestDependencies) (*counterv1.MsgTestDependenciesResponse, error) {
+	// test binary codec
+	err := a.TestStateCodec.Set(ctx, counterv1.MsgTestDependencies{})
+	if err != nil {
+		return nil, err
+	}
+
+	// test address codec
+	me := accountstd.Whoami(ctx)
+	meStr, err := a.addressCodec.BytesToString(me)
+	if err != nil {
+		return nil, err
+	}
+
+	// test header service
+	chainID := a.hs.GetHeaderInfo(ctx).ChainID
+
+	// test gas meter
+	gasBefore := a.gs.GetGasMeter(ctx).GasConsumedToLimit()
+	a.gs.GetGasMeter(ctx).ConsumeGas(10, "test")
+	gasAfter := a.gs.GetGasMeter(ctx).GasConsumedToLimit()
+
+	return &counterv1.MsgTestDependenciesResponse{
+		ChainId:   chainID,
+		Address:   meStr,
+		BeforeGas: gasBefore,
+		AfterGas:  gasAfter,
+	}, nil
+}
+
 func (a Account) RegisterInitHandler(builder *accountstd.InitBuilder) {
 	accountstd.RegisterInitHandler(builder, a.Init)
 }
 
 func (a Account) RegisterExecuteHandlers(builder *accountstd.ExecuteBuilder) {
 	accountstd.RegisterExecuteHandler(builder, a.IncreaseCounter)
+	accountstd.RegisterExecuteHandler(builder, a.TestDependencies)
 }
 
 func (a Account) RegisterQueryHandlers(builder *accountstd.QueryBuilder) {

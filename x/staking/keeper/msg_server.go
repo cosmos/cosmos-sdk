@@ -861,6 +861,11 @@ func (k msgServer) RedeemTokensForShares(goCtx context.Context, msg *types.MsgRe
 	}
 	tokens := validator.TokensFromShares(shares).TruncateInt()
 
+	// prevent redemption that returns a 0 amount
+	if tokens.IsZero() {
+		return nil, types.ErrTinyRedemptionAmount
+	}
+
 	// If this redemption is NOT from a liquid staking provider, decrement the total liquid staked
 	// If the redemption was from a liquid staking provider, the shares are still considered
 	// liquid, even in their non-tokenized form (since they are owned by a liquid staking provider)

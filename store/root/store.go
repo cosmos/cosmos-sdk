@@ -177,8 +177,8 @@ func (s *Store) Query(storeKey string, version uint64, key []byte, prove bool) (
 	if err != nil || val == nil {
 		// fallback to querying SC backend if not found in SS backend
 		//
-		// Note, this is only used during migration, i.e. while SS and IAVL v2 is being
-		// asynchronously synced.
+		// Note, this should only used during migration, i.e. while SS and IAVL v2
+		// are being asynchronously synced.
 		if val == nil {
 			bz, scErr := s.stateCommitment.Get(storeKey, version, key)
 			if scErr != nil {

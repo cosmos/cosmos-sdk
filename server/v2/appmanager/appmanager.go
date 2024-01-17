@@ -34,7 +34,7 @@ type AppManager[T transaction.Tx] struct {
 // TODO make sure to provide defaults for handlers and configs
 
 // BuildBlock builds a block when requested by consensus. It will take in the total size txs to be included and return a list of transactions
-func (a AppManager[T]) BuildBlock(ctx context.Context, height uint64, maxBlockBytes uint64) ([]T, error) {
+func (a AppManager[T]) BuildBlock(ctx context.Context, height, maxBlockBytes uint64) ([]T, error) {
 	latestVersion, currentState, err := a.db.StateLatest()
 	if err != nil {
 		return nil, fmt.Errorf("unable to create new state for height %d: %w", height, err)
@@ -44,7 +44,7 @@ func (a AppManager[T]) BuildBlock(ctx context.Context, height uint64, maxBlockBy
 		return nil, fmt.Errorf("invalid BuildBlock height wanted %d, got %d", latestVersion+1, height)
 	}
 
-	txs, err = a.prepareHandler(ctx, currentState)
+	txs, err := a.prepareHandler(ctx, currentState)
 	if err != nil {
 		return nil, err
 	}

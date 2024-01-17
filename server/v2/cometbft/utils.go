@@ -20,7 +20,6 @@ import (
 	"cosmossdk.io/core/comet"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/server/v2/core/appmanager"
-
 	"cosmossdk.io/server/v2/core/event"
 )
 

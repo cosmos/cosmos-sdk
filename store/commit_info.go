@@ -90,6 +90,7 @@ func (ci *CommitInfo) GetStoreProof(storeKey string) ([]byte, *CommitmentOp, err
 	return rootHash, &commitmentOp, nil
 }
 
+// encodedSize returns the encoded size of CommitInfo for preallocation in Marshal.
 func (ci *CommitInfo) encodedSize() int {
 	size := encoding.EncodeUvarintSize(ci.Version)
 	size += encoding.EncodeVarintSize(ci.Timestamp.UnixNano())
@@ -101,6 +102,14 @@ func (ci *CommitInfo) encodedSize() int {
 	return size
 }
 
+// Marshal returns the encoded byte representation of CommitInfo.
+// NOTE: CommitInfo is encoded as follows:
+// - version (uvarint)
+// - timestamp (varint)
+// - number of stores (uvarint)
+// - for each store:
+//   - store name (bytes)
+//   - store hash (bytes)
 func (ci *CommitInfo) Marshal() ([]byte, error) {
 	var buf bytes.Buffer
 	buf.Grow(ci.encodedSize())
@@ -126,6 +135,7 @@ func (ci *CommitInfo) Marshal() ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
+// Unmarshal unmarshals the encoded byte representation of CommitInfo.
 func (ci *CommitInfo) Unmarshal(buf []byte) error {
 	// Version
 	version, n, err := encoding.DecodeUvarint(buf)

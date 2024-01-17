@@ -70,5 +70,5 @@ var (
 	ErrTokenizeSharesAlreadyDisabledForAccount  = sdkerrors.Register(ModuleName, 116, "tokenize shares is already disabled for this account")
 	ErrValidatorLiquidSharesUnderflow           = sdkerrors.Register(ModuleName, 117, "validator liquid shares underflow")
 	ErrTotalLiquidStakedUnderflow               = sdkerrors.Register(ModuleName, 118, "total liquid staked underflow")
-	ErrTinyRedeemAmount                         = sdkerrors.Register(ModuleName, 119, "too few tokens to redeem (truncates to zero tokens)")
+	ErrTinyRedemptionAmount                     = sdkerrors.Register(ModuleName, 119, "too few tokens to redeem (truncates to zero tokens)")
 )

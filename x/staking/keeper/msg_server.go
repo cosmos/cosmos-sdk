@@ -1081,5 +1081,7 @@ func (k msgServer) ValidatorBond(goCtx context.Context, msg *types.MsgValidatorB
 		)
 	}
 
+	set := map[string]struct{}{}
+
 	return &types.MsgValidatorBondResponse{}, nil
 }

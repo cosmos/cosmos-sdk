@@ -2,11 +2,13 @@ package ante
 
 import (
 	"bytes"
+	"context"
 	"encoding/base64"
 	"encoding/hex"
 	"errors"
 	"fmt"
 
+	accountsv1 "cosmossdk.io/api/cosmos/accounts/v1"
 	secp256k1dcrd "github.com/decred/dcrd/dcrec/secp256k1/v4"
 	"google.golang.org/protobuf/types/known/anypb"
 
@@ -146,6 +148,11 @@ func (spkd SetPubKeyDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 	return next(ctx, tx, simulate)
 }
 
+type AccountAbstractionKeeper interface {
+	IsAbstractedAccount(ctx context.Context, addr []byte) (bool, error)
+	Authenticate(ctx context.Context, addr []byte, op *accountsv1.UserOperation) error
+}
+
 // SigVerificationDecorator verifies all signatures for a tx and returns an
 // error if any are invalid. Note, the SigVerificationDecorator will not check
 // signatures on ReCheckTx. It will also increase the sequence number, and consume
@@ -161,6 +168,7 @@ type SigVerificationDecorator struct {
 	ak              AccountKeeper
 	signModeHandler *txsigning.HandlerMap
 	sigGasConsumer  SignatureVerificationGasConsumer
+	aaKeeper        AccountAbstractionKeeper
 }
 
 func NewSigVerificationDecorator(ak AccountKeeper, signModeHandler *txsigning.HandlerMap, sigGasConsumer SignatureVerificationGasConsumer) SigVerificationDecorator {
@@ -267,6 +275,16 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 
 // authenticate the authentication of the TX for a specific tx signer.
 func (svd SigVerificationDecorator) authenticate(ctx sdk.Context, tx sdk.Tx, simulate bool, signer []byte, sig signing.SignatureV2) error {
+	if svd.aaKeeper != nil {
+		isAa, err := svd.aaKeeper.IsAbstractedAccount(ctx, signer)
+		if err != nil {
+			return err
+		}
+		if isAa {
+			return svd.authenticateAbstractedAccount(ctx, tx, simulate, signer, sig)
+		}
+	}
+
 	acc, err := GetSignerAcc(ctx, svd.ak, signer)
 	if err != nil {
 		return err
@@ -396,6 +414,11 @@ func (svd SigVerificationDecorator) increaseSequence(ctx sdk.Context, acc sdk.Ac
 
 	svd.ak.SetAccount(ctx, acc)
 	return nil
+}
+
+func (svd SigVerificationDecorator) authenticateAbstractedAccount(ctx sdk.Context, tx sdk.Tx, simulate bool, signer []byte, sig signing.SignatureV2) error {
+	// convert tx to UserOperation
+	panic("impl")
 }
 
 // ValidateSigCountDecorator takes in Params and returns errors if there are too many signatures in the tx for the given params

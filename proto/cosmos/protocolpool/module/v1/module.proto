@@ -12,4 +12,6 @@ message Module {
 
   // authority defines the custom module authority. If not set, defaults to the governance module.
   string authority = 1;
+
+  string stream_account = 2;
 }

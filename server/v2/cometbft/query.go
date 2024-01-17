@@ -9,6 +9,7 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	cometerrors "cosmossdk.io/server/v2/cometbft/types/errors"
 	"cosmossdk.io/server/v2/core/store"
+	"cosmossdk.io/store/types"
 )
 
 func (c *Consensus[T]) handleQueryP2P(path []string) (*abci.ResponseQuery, error) {
@@ -79,7 +80,7 @@ func (c *Consensus[T]) handlerQueryApp(ctx context.Context, path []string, req *
 	return nil, errorsmod.Wrapf(cometerrors.ErrUnknownRequest, "unknown query: %s", path)
 }
 
-func (c *Consensus[T]) handleQueryStore(path []string, store store.Store, req *abci.RequestQuery) (*abci.ResponseQuery, error) {
+func (c *Consensus[T]) handleQueryStore(path []string, st store.Store, req *abci.RequestQuery) (*abci.ResponseQuery, error) {
 	req.Path = "/" + strings.Join(path[1:], "/")
 	if req.Height <= 1 && req.Prove {
 		return nil, errorsmod.Wrap(
@@ -88,21 +89,42 @@ func (c *Consensus[T]) handleQueryStore(path []string, store store.Store, req *a
 		)
 	}
 
-	st, err := store.StateAt(uint64(req.Height))
+	// TOOD: remove subpaths if not needed anymore
+	storeName, _, err := parsePath(req.Path)
 	if err != nil {
 		return nil, err
 	}
 
-	// TODO: key format has changed or should we do the same as in baseapp?
-	bz, err := st.Get([]byte(req.Path))
+	qRes, err := c.store.Query(storeName, uint64(req.Height), req.Data, req.Prove)
 	if err != nil {
 		return nil, err
 	}
-	// TODO: also proving is not implemented
-	return &abci.ResponseQuery{
+
+	res := &abci.ResponseQuery{
 		Codespace: cometerrors.RootCodespace,
-		Value:     bz,
-		Height:    req.Height,
-		Key:       []byte(req.Path),
-	}, nil
+		Height:    int64(qRes.Version()),
+		Key:       qRes.Key(),
+		Value:     qRes.Value(),
+		ProofOps:  nil, // TODO: add proofOps
+	}
+
+	return res, nil
+}
+
+// parsePath expects a format like /<storeName>[/<subpath>]
+// Must start with /, subpath may be empty
+// Returns error if it doesn't start with /
+func parsePath(path string) (storeName, subpath string, err error) {
+	if !strings.HasPrefix(path, "/") {
+		return storeName, subpath, errorsmod.Wrapf(types.ErrUnknownRequest, "invalid path: %s", path)
+	}
+
+	paths := strings.SplitN(path[1:], "/", 2)
+	storeName = paths[0]
+
+	if len(paths) == 2 {
+		subpath = "/" + paths[1]
+	}
+
+	return storeName, subpath, nil
 }

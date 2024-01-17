@@ -50,15 +50,38 @@ func (s STF[T]) DeliverBlock(ctx context.Context, block *appmanager.BlockRequest
 		return nil, nil, err
 	}
 
+	// check if we need to return early
+	select {
+	case <-ctx.Done():
+		return nil, nil, ctx.Err()
+	default:
+		// continue
+	}
+
 	// begin block
 	beginBlockEvents, err := s.beginBlock(ctx, newState)
 	if err != nil {
 		return nil, nil, err
 	}
+
+	// check if we need to return early
+	select {
+	case <-ctx.Done():
+		return nil, nil, ctx.Err()
+	default:
+		// continue
+	}
+
 	// execute txs
 	txResults := make([]appmanager.TxResult, len(block.Txs))
 	for i, txBytes := range block.Txs {
-		txResults[i] = s.deliverTx(ctx, newState, txBytes)
+		// check if we need to return early or continue delivering txs
+		select {
+		case <-ctx.Done():
+			return nil, nil, ctx.Err()
+		default:
+			txResults[i] = s.deliverTx(ctx, newState, txBytes)
+		}
 	}
 	// end block
 	endBlockEvents, valset, err := s.endBlock(ctx, newState)

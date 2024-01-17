@@ -34,7 +34,7 @@ var _ abci.Application = (*Consensus[transaction.Tx])(nil)
 type Consensus[T transaction.Tx] struct {
 	app       appmanager.AppManager[T]
 	cfg       Config
-	store     store.Store
+	store     types.Store
 	logger    log.Logger
 	txCodec   transaction.Codec[T]
 	streaming streaming.Manager

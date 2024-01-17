@@ -264,14 +264,14 @@ func NewKeeper(
 		// key is: 113 (it's a direct prefix)
 		Params: collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
 
-		// key format is: 103 | valAddr | time
+		// key format is: 104 | valAddr | time
 		ValidatorConsensusKeyRotationRecordIndexKey: collections.NewKeySet(
 			sb, types.ValidatorConsensusKeyRotationRecordIndexKey,
 			"cons_pub_rotation_index",
 			collections.PairKeyCodec(collections.BytesKey, sdk.TimeKey),
 		),
 
-		// key format is: 104 | time
+		// key format is: 103 | time
 		ValidatorConsensusKeyRotationRecordQueue: collections.NewMap(
 			sb, types.ValidatorConsensusKeyRotationRecordQueueKey,
 			"cons_pub_rotation_queue",

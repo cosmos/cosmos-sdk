@@ -278,13 +278,13 @@ The `ConsPubkey` of a validator will be instantly rotated to the new `ConsPubkey
 
 `ConsPubkeyRotation` are indexed in the store as:
 
-ValidatorConsPubKeyRotationHistoryKey: `101 | valAddr | rotatedHeight -> ProtocalBuffer(ConsPubKeyRotationHistory)`555682
+ValidatorConsPubKeyRotationHistoryKey: `101 | valAddr | rotatedHeight -> ProtocolBuffer(ConsPubKeyRotationHistory)`555682
 
-BlockConsPubKeyRotationHistoryKey (index): `102 | rotatedHeight | valAddr | -> ProtocalBuffer(ConsPubKeyRotationHistory)`
+BlockConsPubKeyRotationHistoryKey (index): `102 | rotatedHeight | valAddr | -> ProtocolBuffer(ConsPubKeyRotationHistory)`
 
-ValidatorConsensusKeyRotationRecordQueueKey: `103 | format(time) -> ProtocalBuffer(ValAddrsOfRotatedConsKeys)`
+ValidatorConsensusKeyRotationRecordQueueKey: `103 | format(time) -> ProtocolBuffer(ValAddrsOfRotatedConsKeys)`
 
-ValidatorConsensusKeyRotationRecordIndexKey:`104 | valAddr | format(time) -> ProtocalBuffer([]Byte{})`
+ValidatorConsensusKeyRotationRecordIndexKey:`104 | valAddr | format(time) -> ProtocolBuffer([]Byte{})`
 
 OldToNewConsKeyMap:`105 | byte(oldConsKey) -> byte(newConsKey)`
 

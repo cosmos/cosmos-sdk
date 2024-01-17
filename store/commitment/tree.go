@@ -17,9 +17,12 @@ type Tree interface {
 	Set(key, value []byte) error
 	Remove(key []byte) error
 	GetLatestVersion() uint64
+	// Hash returns the hash of the latest saved version of the tree.
+	Hash() []byte
+	// WorkingHash returns the working hash of the tree.
 	WorkingHash() []byte
 	LoadVersion(version uint64) error
-	Commit() ([]byte, error)
+	Commit() ([]byte, uint64, error)
 	SetInitialVersion(version uint64) error
 	GetProof(version uint64, key []byte) (*ics23.CommitmentProof, error)
 	Prune(version uint64) error

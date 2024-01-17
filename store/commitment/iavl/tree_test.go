@@ -20,7 +20,7 @@ func TestCommitterSuite(t *testing.T) {
 				prefixDB := dbm.NewPrefixDB(db, []byte(storeKey))
 				multiTrees[storeKey] = NewIavlTree(prefixDB, logger, cfg)
 			}
-			return commitment.NewCommitStore(multiTrees, logger)
+			return commitment.NewCommitStore(multiTrees, db, logger)
 		},
 	}
 
@@ -51,8 +51,9 @@ func TestIavlTree(t *testing.T) {
 	require.Equal(t, uint64(0), tree.GetLatestVersion())
 
 	// commit the batch
-	commitHash, err := tree.Commit()
+	commitHash, version, err := tree.Commit()
 	require.NoError(t, err)
+	require.Equal(t, version, uint64(1))
 	require.Equal(t, workingHash, commitHash)
 	require.Equal(t, uint64(1), tree.GetLatestVersion())
 
@@ -63,8 +64,9 @@ func TestIavlTree(t *testing.T) {
 	require.NoError(t, tree.Remove([]byte("key1"))) // delete key1
 	version2Hash := tree.WorkingHash()
 	require.NotNil(t, version2Hash)
-	commitHash, err = tree.Commit()
+	commitHash, version, err = tree.Commit()
 	require.NoError(t, err)
+	require.Equal(t, version, uint64(2))
 	require.Equal(t, version2Hash, commitHash)
 
 	// get proof for key1
@@ -80,7 +82,7 @@ func TestIavlTree(t *testing.T) {
 	require.NoError(t, tree.Set([]byte("key7"), []byte("value7")))
 	require.NoError(t, tree.Set([]byte("key8"), []byte("value8")))
 	require.NoError(t, err)
-	_, err = tree.Commit()
+	_, _, err = tree.Commit()
 	require.NoError(t, err)
 
 	// prune version 1

@@ -13,10 +13,9 @@ import (
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/accounts/accountstd"
 	account_abstractionv1 "cosmossdk.io/x/accounts/interfaces/account_abstraction/v1"
-	vestingtypes "cosmossdk.io/x/accounts/vesting/types/v1"
-	vestingtypesv1 "cosmossdk.io/x/accounts/vesting/types/v1"
 	banktypes "cosmossdk.io/x/bank/types"
 	stakingtypes "cosmossdk.io/x/staking/types"
+	vestingtypes "cosmossdk.io/x/vesting/types/v1"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -401,58 +400,58 @@ func (bva BaseVestingAccount) LockedCoinsFromVesting(ctx context.Context, vestin
 }
 
 // QueryOriginalVesting returns a vesting account's original vesting amount
-func (bva BaseVestingAccount) QueryOriginalVesting(ctx context.Context, _ *vestingtypesv1.QueryOriginalVestingRequest) (
-	*vestingtypesv1.QueryOriginalVestingResponse, error,
+func (bva BaseVestingAccount) QueryOriginalVesting(ctx context.Context, _ *vestingtypes.QueryOriginalVestingRequest) (
+	*vestingtypes.QueryOriginalVestingResponse, error,
 ) {
 	var originalVesting sdk.Coins
 	bva.IterateCoinEntries(ctx, bva.OriginalVesting, func(key string, value math.Int) (stop bool) {
 		originalVesting = append(originalVesting, sdk.NewCoin(key, value))
 		return false
 	})
-	return &vestingtypesv1.QueryOriginalVestingResponse{
+	return &vestingtypes.QueryOriginalVestingResponse{
 		OriginalVesting: originalVesting,
 	}, nil
 }
 
 // QueryDelegatedFree returns a vesting account's delegation amount that is not
 // vesting.
-func (bva BaseVestingAccount) QueryDelegatedFree(ctx context.Context, _ *vestingtypesv1.QueryDelegatedFreeRequest) (
-	*vestingtypesv1.QueryDelegatedFreeResponse, error,
+func (bva BaseVestingAccount) QueryDelegatedFree(ctx context.Context, _ *vestingtypes.QueryDelegatedFreeRequest) (
+	*vestingtypes.QueryDelegatedFreeResponse, error,
 ) {
 	var delegatedFree sdk.Coins
 	bva.IterateCoinEntries(ctx, bva.DelegatedFree, func(key string, value math.Int) (stop bool) {
 		delegatedFree = append(delegatedFree, sdk.NewCoin(key, value))
 		return false
 	})
-	return &vestingtypesv1.QueryDelegatedFreeResponse{
+	return &vestingtypes.QueryDelegatedFreeResponse{
 		DelegatedFree: delegatedFree,
 	}, nil
 }
 
 // QueryDelegatedVesting returns a vesting account's delegation amount that is
 // still vesting.
-func (bva BaseVestingAccount) QueryDelegatedVesting(ctx context.Context, _ *vestingtypesv1.QueryDelegatedVestingRequest) (
-	*vestingtypesv1.QueryDelegatedVestingResponse, error,
+func (bva BaseVestingAccount) QueryDelegatedVesting(ctx context.Context, _ *vestingtypes.QueryDelegatedVestingRequest) (
+	*vestingtypes.QueryDelegatedVestingResponse, error,
 ) {
 	var delegatedVesting sdk.Coins
 	bva.IterateCoinEntries(ctx, bva.DelegatedVesting, func(key string, value math.Int) (stop bool) {
 		delegatedVesting = append(delegatedVesting, sdk.NewCoin(key, value))
 		return false
 	})
-	return &vestingtypesv1.QueryDelegatedVestingResponse{
+	return &vestingtypes.QueryDelegatedVestingResponse{
 		DelegatedVesting: delegatedVesting,
 	}, nil
 }
 
 // QueryEndTime returns a vesting account's end time
-func (bva BaseVestingAccount) QueryEndTime(ctx context.Context, _ *vestingtypesv1.QueryEndTimeRequest) (
-	*vestingtypesv1.QueryEndTimeResponse, error,
+func (bva BaseVestingAccount) QueryEndTime(ctx context.Context, _ *vestingtypes.QueryEndTimeRequest) (
+	*vestingtypes.QueryEndTimeResponse, error,
 ) {
 	endTime, err := bva.EndTime.Get(ctx)
 	if err != nil {
 		return nil, err
 	}
-	return &vestingtypesv1.QueryEndTimeResponse{
+	return &vestingtypes.QueryEndTimeResponse{
 		EndTime: endTime.Int64(),
 	}, nil
 }

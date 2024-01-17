@@ -10,8 +10,8 @@ import (
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/accounts/accountstd"
 	account_abstractionv1 "cosmossdk.io/x/accounts/interfaces/account_abstraction/v1"
-	vestingtypes "cosmossdk.io/x/accounts/vesting/types/v1"
 	banktypes "cosmossdk.io/x/bank/types"
+	vestingtypes "cosmossdk.io/x/vesting/types/v1"
 	"github.com/cosmos/cosmos-sdk/codec"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"

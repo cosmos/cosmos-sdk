@@ -6,9 +6,18 @@ import (
 	"strings"
 
 	"github.com/cosmos/gogoproto/proto"
+	"google.golang.org/protobuf/runtime/protoiface"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 )
+
+type ProtoMsg = protoiface.MessageV1
+
+// ProtoMsgG is a generic interface for protobuf messages.
+type ProtoMsgG[T any] interface {
+	*T
+	protoiface.MessageV1
+}
 
 type Any = codectypes.Any
 

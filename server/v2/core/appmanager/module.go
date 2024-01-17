@@ -6,8 +6,6 @@ import (
 	"cosmossdk.io/server/v2/core/transaction"
 )
 
-type Identity = []byte
-
 type Tx = transaction.Tx
 
 type MsgRouterBuilder interface {

@@ -4,8 +4,6 @@ import (
 	"context"
 	"time"
 
-	"google.golang.org/protobuf/proto"
-
 	"cosmossdk.io/server/v2/core/event"
 	"cosmossdk.io/server/v2/core/store"
 	"cosmossdk.io/server/v2/core/transaction"
@@ -18,8 +16,6 @@ type PrepareHandler[T transaction.Tx] func(context.Context, store.ReadonlyState)
 // ProcessHandler is a function that takes a list of transactions and returns a boolean and an error.
 // If the verification of a transaction fails, the boolean is false and the error is non-nil.
 type ProcessHandler[T transaction.Tx] func(context.Context, []T, store.ReadonlyState) error
-
-type Type = proto.Message
 
 type QueryRequest struct {
 	Height int64

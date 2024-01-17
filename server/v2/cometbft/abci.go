@@ -21,6 +21,7 @@ import (
 	"cosmossdk.io/server/v2/core/store"
 	"cosmossdk.io/server/v2/core/transaction"
 	"cosmossdk.io/server/v2/streaming"
+	"cosmossdk.io/store/v2/snapshots"
 )
 
 const (
@@ -32,13 +33,14 @@ const (
 var _ abci.Application = (*Consensus[transaction.Tx])(nil)
 
 type Consensus[T transaction.Tx] struct {
-	app       appmanager.AppManager[T]
-	cfg       Config
-	store     types.Store
-	logger    log.Logger
-	txCodec   transaction.Codec[T]
-	streaming streaming.Manager
-	mempool   mempool.Mempool[T]
+	app             appmanager.AppManager[T]
+	cfg             Config
+	store           store.Store
+	logger          log.Logger
+	txCodec         transaction.Codec[T]
+	streaming       streaming.Manager
+	snapshotManager *snapshots.Manager
+	mempool         mempool.Mempool[T]
 
 	// this is only available after this node has committed a block (in FinalizeBlock),
 	// otherwise it will be empty and we will need to query the app for the last
@@ -70,6 +72,7 @@ type BlockData struct {
 }
 
 // CheckTx implements types.Application.
+// It is called by cometbft to verify transaction validity
 func (c *Consensus[T]) CheckTx(ctx context.Context, req *abci.RequestCheckTx) (*abci.ResponseCheckTx, error) {
 	// TODO: evaluate here if to return error, or CheckTxResponse.error.
 	decodedTx, err := c.txCodec.Decode(req.Tx)
@@ -94,8 +97,8 @@ func (c *Consensus[T]) CheckTx(ctx context.Context, req *abci.RequestCheckTx) (*
 
 	cometResp := &abci.ResponseCheckTx{
 		Code:      resp.Code,
-		GasWanted: int64(resp.GasWanted), // TODO overflow checking
-		GasUsed:   int64(resp.GasUsed),   // TODO overflow checking
+		GasWanted: uint64ToInt64(resp.GasWanted),
+		GasUsed:   uint64ToInt64(resp.GasUsed),
 		Events:    intoABCIEvents(resp.Events, c.cfg.IndexEvents),
 	}
 	if resp.Error != nil {
@@ -129,6 +132,7 @@ func (c *Consensus[T]) Info(context.Context, *abci.RequestInfo) (*abci.ResponseI
 }
 
 // Query implements types.Application.
+// It is called by cometbft to query application state.
 func (c *Consensus[T]) Query(ctx context.Context, req *abci.RequestQuery) (*abci.ResponseQuery, error) {
 	appreq, err := parseQueryRequest(req)
 	// if no error is returned then we can handle the query with the appmanager
@@ -239,6 +243,7 @@ func (c *Consensus[T]) InitChain(ctx context.Context, req *abci.RequestInitChain
 }
 
 // PrepareProposal implements types.Application.
+// It is called by cometbft to prepare a proposal block.
 func (c *Consensus[T]) PrepareProposal(ctx context.Context, req *abci.RequestPrepareProposal) (resp *abci.ResponsePrepareProposal, err error) {
 	if req.Height < 1 {
 		return nil, errors.New("PrepareProposal called with invalid height")
@@ -252,7 +257,7 @@ func (c *Consensus[T]) PrepareProposal(ctx context.Context, req *abci.RequestPre
 
 	// TODO check if we call this method when state is not committed
 
-	txs, err = c.app.BuildBlock(ctx, uint64(req.Height), int(cp.Block.MaxBytes))
+	txs, err := c.app.BuildBlock(ctx, int64ToUint64(req.Height), int64ToUint64(cp.Block.MaxBytes))
 	if err != nil {
 		return nil, err
 	}
@@ -269,6 +274,7 @@ func (c *Consensus[T]) PrepareProposal(ctx context.Context, req *abci.RequestPre
 }
 
 // ProcessProposal implements types.Application.
+// It is called by cometbft to process/verify a proposal block.
 func (c *Consensus[T]) ProcessProposal(ctx context.Context, req *abci.RequestProcessProposal) (*abci.ResponseProcessProposal, error) {
 	decodedTxs := make([]T, len(req.Txs))
 	for _, tx := range req.Txs {
@@ -295,6 +301,7 @@ func (c *Consensus[T]) ProcessProposal(ctx context.Context, req *abci.RequestPro
 }
 
 // FinalizeBlock implements types.Application.
+// It is called by cometbft to finalize a block.
 func (c *Consensus[T]) FinalizeBlock(ctx context.Context, req *abci.RequestFinalizeBlock) (*abci.ResponseFinalizeBlock, error) {
 	if err := c.validateFinalizeBlockHeight(req); err != nil {
 		return nil, err
@@ -395,10 +402,11 @@ func (c *Consensus[T]) FinalizeBlock(ctx context.Context, req *abci.RequestFinal
 }
 
 // Commit implements types.Application.
+// It is called by cometbft to notify the application that a block was committed.
 func (c *Consensus[T]) Commit(ctx context.Context, _ *abci.RequestCommit) (*abci.ResponseCommit, error) {
 	lastCommittedBlock := c.lastCommittedBlock.Load()
 
-	c.cfg.SnapshotManager.SnapshotIfApplicable(lastCommittedBlock.Height)
+	c.snapshotManager.SnapshotIfApplicable(lastCommittedBlock.Height)
 
 	cp, err := c.GetConsensusParams()
 	if err != nil {

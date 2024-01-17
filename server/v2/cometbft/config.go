@@ -4,19 +4,19 @@ import (
 	cmtcfg "github.com/cometbft/cometbft/config"
 
 	"cosmossdk.io/server/v2/cometbft/types"
-	"cosmossdk.io/store/v2/snapshots"
 )
 
+// Config is the configuration for the CometBFT application
 type Config struct {
-	Name            string // TODO: we might want to put some of these in the app manager
+	// app.toml config options
+	Name            string
 	Version         string
 	InitialHeight   uint64
 	MinRetainBlocks uint64
 	IndexEvents     map[string]struct{}
 	HaltHeight      uint64
 	HaltTime        uint64
-
-	SnapshotManager *snapshots.Manager
+	// end of app.toml config options
 
 	AddrPeerFilter types.PeerFilter // filter peers by address and port
 	IdPeerFilter   types.PeerFilter // filter peers by node ID

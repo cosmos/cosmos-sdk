@@ -4,9 +4,11 @@ import (
 	"context"
 
 	abci "github.com/cometbft/cometbft/abci/types"
+	ics23 "github.com/cosmos/ics23/go"
 	"google.golang.org/protobuf/proto"
 
 	corecomet "cosmossdk.io/core/comet"
+	"cosmossdk.io/server/v2/core/store"
 )
 
 type VoteExtensionsHandler interface {
@@ -20,4 +22,17 @@ type PeerFilter func(info string) (*abci.ResponseQuery, error)
 type ConsensusInfo struct { // TODO: this is a mock, we need a proper proto.Message
 	proto.Message
 	corecomet.Info
+}
+
+type Store interface {
+	store.Store
+	Query(storeKey string, version uint64, key []byte, prove bool) (QueryResult, error)
+}
+
+type QueryResult interface {
+	Key() []byte
+	Value() []byte
+	Version() uint64
+	Proof() *ics23.CommitmentProof
+	ProofType() string
 }

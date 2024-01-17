@@ -54,7 +54,12 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		authority = authtypes.NewModuleAddressOrBech32Address(in.Config.Authority)
 	}
 
-	k := keeper.NewKeeper(in.Codec, in.StoreService, in.AccountKeeper, in.BankKeeper, in.StakingKeeper, authority.String())
+	streamMAcc := authtypes.NewModuleAddress(types.StreamAccount)
+	ba := authtypes.NewBaseAccountWithAddress(streamMAcc)
+	maccPerms := []string{}
+	macc := authtypes.NewModuleAccount(ba, types.StreamAccount, maccPerms...)
+
+	k := keeper.NewKeeper(in.Codec, in.StoreService, in.AccountKeeper, in.BankKeeper, in.StakingKeeper, authority.String(), macc.GetName())
 	m := NewAppModule(in.Codec, k, in.AccountKeeper, in.BankKeeper)
 
 	return ModuleOutputs{

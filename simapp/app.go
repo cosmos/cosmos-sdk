@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"cosmossdk.io/x/tx/signing/direct"
 	abci "github.com/cometbft/cometbft/abci/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/gogoproto/proto"
@@ -22,6 +23,7 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/accounts"
 	"cosmossdk.io/x/accounts/accountstd"
+	baseaccount "cosmossdk.io/x/accounts/defaults/base"
 	"cosmossdk.io/x/accounts/testing/account_abstraction"
 	"cosmossdk.io/x/accounts/testing/counter"
 	"cosmossdk.io/x/auth"
@@ -285,6 +287,8 @@ func NewSimApp(
 
 	// add keepers
 
+	handlersMap := signing.NewHandlerMap(direct.SignModeHandler{})
+
 	accountsKeeper, err := accounts.NewKeeper(
 		appCodec,
 		runtime.NewKVStoreService(keys[accounts.StoreKey]),
@@ -297,6 +301,9 @@ func NewSimApp(
 		app.MsgServiceRouter(),
 		app.GRPCQueryRouter(),
 		appCodec.InterfaceRegistry(),
+		// can integrate these accounts to your app!
+		accountstd.AddAccount("base", baseaccount.NewAccount(handlersMap)),
+		// these are testing accounts, do not integrate to your app!
 		accountstd.AddAccount("counter", counter.NewAccount),
 		accountstd.AddAccount("aa_minimal", account_abstraction.NewMinimalAbstractedAccount),
 		accountstd.AddAccount("aa_full", account_abstraction.NewFullAbstractedAccount),

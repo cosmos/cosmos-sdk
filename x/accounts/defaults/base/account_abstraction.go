@@ -18,7 +18,7 @@ import (
 )
 
 func (a Account) Authenticate(ctx context.Context, msg *account_abstractionv1.MsgAuthenticate) (*account_abstractionv1.MsgAuthenticateResponse, error) {
-	pubKey, signerData, err := a.getSignerData(ctx)
+	pubKey, signerData, err := a.computeSignerData(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("unable to compute signer data: %w", err)
 	}
@@ -49,7 +49,8 @@ func (a Account) Authenticate(ctx context.Context, msg *account_abstractionv1.Ms
 	return &account_abstractionv1.MsgAuthenticateResponse{}, nil
 }
 
-func (a Account) getSignerData(ctx context.Context) (secp256k1.PubKey, signing.SignerData, error) {
+// computeSignerData will compute the signer data required by the tx, and also return the pubkey.
+func (a Account) computeSignerData(ctx context.Context) (secp256k1.PubKey, signing.SignerData, error) {
 	pk, err := a.PubKey.Get(ctx)
 	if err != nil {
 		return secp256k1.PubKey{}, signing.SignerData{}, err
@@ -70,7 +71,7 @@ func (a Account) getSignerData(ctx context.Context) (secp256k1.PubKey, signing.S
 		return secp256k1.PubKey{}, signing.SignerData{}, err
 	}
 
-	accNum, err := accountstd.QueryModule[*accountsv1.AccountNumberResponse](ctx, &accountsv1.AccountNumberRequest{Address: addrStr})
+	accNum, err := accountstd.QueryModule[accountsv1.AccountNumberResponse](ctx, &accountsv1.AccountNumberRequest{Address: addrStr})
 	if err != nil {
 		return secp256k1.PubKey{}, signing.SignerData{}, err
 	}
@@ -110,14 +111,18 @@ func (a Account) getTxData(ctx context.Context, op *accountsv1.UserOperation, au
 	return a.getTxDataFromOperation(ctx, op, authData)
 }
 
-// TODO: in a future PR.
+// TODO: in a future PR. this is meant to be how we compute txData in case the operation is coming from a bundler.
 func (a Account) getTxDataFromOperation(ctx context.Context, op *accountsv1.UserOperation, authData *v1.AuthenticationData) (signing.TxData, error) {
 	panic("impl")
 }
 
 // getTxDataFromTxCompat computes the signing.TxData from TxCompat.
 func getTxDataFromTxCompat(compat *accountsv1.TxCompat) (signing.TxData, error) {
-	// maybe avoid the unmarshal again!!
+	// it's impossible to avoid to unmarshal again here due to the fact that
+	// we're going from gogoproto but signing.TxData expects protov2.
+	// we could use google.Protobuf.Any to hide the protov2 type, but
+	// it's too implicit and hard to reason about.
+	// TODO(tip): don't forget to reconsider this eventually.
 	body := new(txv1beta1.TxBody)
 	authInfo := new(txv1beta1.AuthInfo)
 	err := proto.Unmarshal(compat.BodyBytes, body)
@@ -133,6 +138,6 @@ func getTxDataFromTxCompat(compat *accountsv1.TxCompat) (signing.TxData, error) 
 		AuthInfo:                   authInfo,
 		BodyBytes:                  compat.BodyBytes,
 		AuthInfoBytes:              compat.AuthInfoBytes,
-		BodyHasUnknownNonCriticals: false, // TODO: this is needed for amino..
+		BodyHasUnknownNonCriticals: false, // TODO: this is needed for amino?
 	}, nil
 }

@@ -23,7 +23,7 @@ var (
 func NewAccount(signModeHandler *txsigning.HandlerMap) func(accountstd.Dependencies) (Account, error) {
 	return func(deps accountstd.Dependencies) (Account, error) {
 		return Account{
-			PubKey:           collections.NewItem(deps.SchemaBuilder, PubKeyPrefix, "pub_key", codec.CollValue[secp256k1.PubKey](deps.StateCodec)),
+			PubKey:           collections.NewItem(deps.SchemaBuilder, PubKeyPrefix, "pub_key", codec.CollValue[secp256k1.PubKey](deps.LegacyStateCodec)),
 			Sequence:         collections.NewSequence(deps.SchemaBuilder, SequencePrefix, "sequence"),
 			hs:               deps.HeaderService,
 			addrCodec:        deps.AddressCodec,
@@ -54,6 +54,11 @@ func (a Account) SwapPubKey(ctx context.Context, msg *v1.MsgSwapPubKey) (*v1.Msg
 	return &v1.MsgSwapPubKeyResponse{}, a.validateAndSetPubKey(ctx, msg.NewPubKey)
 }
 
+func (a Account) QuerySequence(ctx context.Context, _ *v1.QuerySequence) (*v1.QuerySequenceResponse, error) {
+	seq, err := a.Sequence.Peek(ctx)
+	return &v1.QuerySequenceResponse{Sequence: seq}, err
+}
+
 func (a Account) validateAndSetPubKey(ctx context.Context, key []byte) error {
 	// TODO: add secp256k1 pub key validation.
 	return a.PubKey.Set(ctx, secp256k1.PubKey{Key: key})
@@ -68,4 +73,6 @@ func (a Account) RegisterExecuteHandlers(r *accountstd.ExecuteBuilder) {
 	accountstd.RegisterExecuteHandler(r, a.Authenticate)
 }
 
-func (a Account) RegisterQueryHandlers(r *accountstd.QueryBuilder) {}
+func (a Account) RegisterQueryHandlers(r *accountstd.QueryBuilder) {
+	accountstd.RegisterQueryHandler(r, a.QuerySequence)
+}

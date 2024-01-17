@@ -50,6 +50,8 @@ func TestAccountAbstraction(t *testing.T) {
 	require.NoError(t, err)
 
 	// let's give aa some coins.
+	fundAccount(t, app, ctx, aaAddr, "100000000000stake")
+	fundAccount(t, app, ctx, aaFullAddr, "100000000000stake")
 	require.NoError(t, testutil.FundAccount(ctx, app.BankKeeper, aaAddr, sdk.NewCoins(sdk.NewInt64Coin("stake", 100000000000))))
 	require.NoError(t, testutil.FundAccount(ctx, app.BankKeeper, aaFullAddr, sdk.NewCoins(sdk.NewInt64Coin("stake", 100000000000))))
 
@@ -399,4 +401,9 @@ func setupApp(t *testing.T) *simapp.SimApp {
 	t.Helper()
 	app := simapp.Setup(t, false)
 	return app
+}
+
+func fundAccount(t *testing.T, app *simapp.SimApp, ctx sdk.Context, addr sdk.AccAddress, amt string) {
+	require.NoError(t, testutil.FundAccount(ctx, app.BankKeeper, addr, coins(t, amt)))
+
 }

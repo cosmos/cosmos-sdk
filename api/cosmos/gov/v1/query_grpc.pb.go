@@ -31,6 +31,7 @@ const (
 	Query_Deposits_FullMethodName            = "/cosmos.gov.v1.Query/Deposits"
 	Query_TallyResult_FullMethodName         = "/cosmos.gov.v1.Query/TallyResult"
 	Query_ProposalVoteOptions_FullMethodName = "/cosmos.gov.v1.Query/ProposalVoteOptions"
+	Query_ProposalParams_FullMethodName      = "/cosmos.gov.v1.Query/ProposalParams"
 )
 
 // QueryClient is the client API for Query service.
@@ -56,7 +57,11 @@ type QueryClient interface {
 	// TallyResult queries the tally of a proposal vote.
 	TallyResult(ctx context.Context, in *QueryTallyResultRequest, opts ...grpc.CallOption) (*QueryTallyResultResponse, error)
 	// ProposalVoteOptions queries the valid voting options for a proposal.
+	// Since: cosmos-sdk x/gov v1.0.0
 	ProposalVoteOptions(ctx context.Context, in *QueryProposalVoteOptionsRequest, opts ...grpc.CallOption) (*QueryProposalVoteOptionsResponse, error)
+	// ProposalParams queries the message specific proposal params based on a msg url.
+	// Since: cosmos-sdk x/gov v1.0.0
+	ProposalParams(ctx context.Context, in *QueryProposalParams, opts ...grpc.CallOption) (*QueryProposalParamsResponse, error)
 }
 
 type queryClient struct {
@@ -157,6 +162,15 @@ func (c *queryClient) ProposalVoteOptions(ctx context.Context, in *QueryProposal
 	return out, nil
 }
 
+func (c *queryClient) ProposalParams(ctx context.Context, in *QueryProposalParams, opts ...grpc.CallOption) (*QueryProposalParamsResponse, error) {
+	out := new(QueryProposalParamsResponse)
+	err := c.cc.Invoke(ctx, Query_ProposalParams_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 // All implementations must embed UnimplementedQueryServer
 // for forward compatibility
@@ -180,7 +194,11 @@ type QueryServer interface {
 	// TallyResult queries the tally of a proposal vote.
 	TallyResult(context.Context, *QueryTallyResultRequest) (*QueryTallyResultResponse, error)
 	// ProposalVoteOptions queries the valid voting options for a proposal.
+	// Since: cosmos-sdk x/gov v1.0.0
 	ProposalVoteOptions(context.Context, *QueryProposalVoteOptionsRequest) (*QueryProposalVoteOptionsResponse, error)
+	// ProposalParams queries the message specific proposal params based on a msg url.
+	// Since: cosmos-sdk x/gov v1.0.0
+	ProposalParams(context.Context, *QueryProposalParams) (*QueryProposalParamsResponse, error)
 	mustEmbedUnimplementedQueryServer()
 }
 
@@ -217,6 +235,9 @@ func (UnimplementedQueryServer) TallyResult(context.Context, *QueryTallyResultRe
 }
 func (UnimplementedQueryServer) ProposalVoteOptions(context.Context, *QueryProposalVoteOptionsRequest) (*QueryProposalVoteOptionsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ProposalVoteOptions not implemented")
+}
+func (UnimplementedQueryServer) ProposalParams(context.Context, *QueryProposalParams) (*QueryProposalParamsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ProposalParams not implemented")
 }
 func (UnimplementedQueryServer) mustEmbedUnimplementedQueryServer() {}
 
@@ -411,6 +432,24 @@ func _Query_ProposalVoteOptions_Handler(srv interface{}, ctx context.Context, de
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_ProposalParams_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryProposalParams)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).ProposalParams(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Query_ProposalParams_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).ProposalParams(ctx, req.(*QueryProposalParams))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Query_ServiceDesc is the grpc.ServiceDesc for Query service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -457,6 +496,10 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ProposalVoteOptions",
 			Handler:    _Query_ProposalVoteOptions_Handler,
+		},
+		{
+			MethodName: "ProposalParams",
+			Handler:    _Query_ProposalParams_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

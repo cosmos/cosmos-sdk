@@ -57,8 +57,15 @@ service Query {
   }
 
   // ProposalVoteOptions queries the valid voting options for a proposal.
+  // Since: cosmos-sdk x/gov v1.0.0
   rpc ProposalVoteOptions(QueryProposalVoteOptionsRequest) returns (QueryProposalVoteOptionsResponse) {
     option (google.api.http).get = "/cosmos/gov/v1/proposals/{proposal_id}/vote_options";
+  }
+
+  // ProposalParams queries the message specific proposal params based on a msg url.
+  // Since: cosmos-sdk x/gov v1.0.0
+  rpc ProposalParams(QueryProposalParams) returns (QueryProposalParamsResponse) {
+    option (google.api.http).get = "/cosmos/gov/v1/param/{msg_url}";
   }
 }
 
@@ -219,4 +226,14 @@ message QueryProposalVoteOptionsRequest {
 message QueryProposalVoteOptionsResponse {
   // vote_options defines the valid voting options for a proposal.
   ProposalVoteOptions vote_options = 1;
+}
+
+// QueryProposalParams is the request type for the Query/ProposalParams RPC method.
+message QueryProposalParams {
+  string msg_url = 1;
+}
+
+// QueryProposalParamsResponse is the response for the Query/ProposalParams RPC method.
+message QueryProposalParamsResponse {
+  ProposalMessageBasedParams params = 1;
 }

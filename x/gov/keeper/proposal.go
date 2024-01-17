@@ -20,6 +20,18 @@ import (
 
 // SubmitProposal creates a new proposal given an array of messages
 func (k Keeper) SubmitProposal(ctx context.Context, messages []sdk.Msg, metadata, title, summary string, proposer sdk.AccAddress, proposalType v1.ProposalType) (v1.Proposal, error) {
+	// check if any of the message has message based params
+	for _, msg := range messages {
+		hasMessagedBasedParams, err := k.ProposalMessageBasedParams.Has(ctx, sdk.MsgTypeURL(msg))
+		if err != nil {
+			return v1.Proposal{}, err
+		}
+
+		if hasMessagedBasedParams && len(messages) > 1 {
+			return v1.Proposal{}, errorsmod.Wrap(types.ErrInvalidProposalMsg)
+		}
+	}
+
 	params, err := k.Params.Get(ctx)
 	if err != nil {
 		return v1.Proposal{}, err
@@ -71,7 +83,7 @@ func (k Keeper) SubmitProposal(ctx context.Context, messages []sdk.Msg, metadata
 			return v1.Proposal{}, errorsmod.Wrap(types.ErrUnroutableProposalMsg, sdk.MsgTypeURL(msg))
 		}
 
-		// Only if it's a MsgExecLegacyContent do we try to execute the
+		// Only if it's a MsgExecLegacyContent we try to execute the
 		// proposal in a cached context.
 		// For other Msgs, we do not verify the proposal messages any further.
 		// They may fail upon execution.

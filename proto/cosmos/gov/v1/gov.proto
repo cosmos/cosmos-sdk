@@ -263,7 +263,7 @@ message Params {
   // Minimum deposit for a proposal to enter voting period.
   repeated cosmos.base.v1beta1.Coin min_deposit = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 
-  // Maximum period for Atom holders to deposit on a proposal. Initial value: 2
+  // Maximum period for stake holders to deposit on a proposal. Initial value: 2
   // months.
   google.protobuf.Duration max_deposit_period = 2 [(gogoproto.stdduration) = true];
 
@@ -350,4 +350,25 @@ message Params {
   //
   // Since: x/gov v1.0.0
   string optimistic_rejected_threshold = 19 [(cosmos_proto.scalar) = "cosmos.Dec"];
+}
+
+// ProposalMessageBasedParams defines the parameters of specific messages in a proposal.
+// It is used to define the parameters of a proposal that is based on a specific message.
+// Once a message has message based params, it only supports a standard proposal type.
+//
+// Since: x/gov v1.0.0
+message ProposalMessageBasedParams {
+  // Duration of the voting period.
+  google.protobuf.Duration voting_period = 1 [(gogoproto.stdduration) = true];
+
+  //  Minimum percentage of total stake needed to vote for a result to be
+  //  considered valid.
+  string quorum = 2 [(cosmos_proto.scalar) = "cosmos.Dec"];
+
+  //  Minimum proportion of Yes votes for proposal to pass.
+  string threshold = 3 [(cosmos_proto.scalar) = "cosmos.Dec"];
+
+  //  Minimum value of Veto votes to Total votes ratio for proposal to be
+  //  vetoed.
+  string veto_threshold = 4 [(cosmos_proto.scalar) = "cosmos.Dec"];
 }

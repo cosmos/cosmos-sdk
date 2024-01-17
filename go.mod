@@ -196,3 +196,5 @@ retract (
 	// do not use
 	v0.43.0
 )
+
+replace github.com/cometbft/cometbft => github.com/dydxprotocol/cometbft v0.38.6-0.20240220185844-e704122c8540

@@ -26,6 +26,21 @@ message MsgIncreaseCounterResponse {
   uint64 new_amount = 1;
 }
 
+// MsgTestDependencies is used to test the dependencies.
+message MsgTestDependencies {}
+
+// MsgTestDependenciesResponse is used to test the dependencies.
+message MsgTestDependenciesResponse {
+  // chain_id is used to test that the header service correctly works.
+  string chain_id = 1;
+  // address is used to test address codec.
+  string address = 2;
+  // before_gas is used to test the gas meter reporting.
+  uint64 before_gas = 3;
+  // after_gas is used to test gas meter increasing.
+  uint64 after_gas = 4;
+}
+
 // QueryCounterRequest is used to query the counter value.
 message QueryCounterRequest {}
 

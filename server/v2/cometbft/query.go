@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	abci "github.com/cometbft/cometbft/abci/types"
+	"github.com/cometbft/cometbft/proto/tendermint/crypto"
 
 	errorsmod "cosmossdk.io/errors"
 	cometerrors "cosmossdk.io/server/v2/cometbft/types/errors"
@@ -105,7 +106,23 @@ func (c *Consensus[T]) handleQueryStore(path []string, st store.Store, req *abci
 		Height:    int64(qRes.Version()),
 		Key:       qRes.Key(),
 		Value:     qRes.Value(),
-		ProofOps:  nil, // TODO: add proofOps
+	}
+
+	if req.Prove {
+		bz, err := qRes.Proof().Marshal()
+		if err != nil {
+			return nil, errorsmod.Wrap(err, "failed to marshal proof")
+		}
+
+		res.ProofOps = &crypto.ProofOps{
+			Ops: []crypto.ProofOp{
+				{
+					Type: "ics23", // TODO: use constants, store v2 has :iavl, :simple and :smt commitment ops
+					Key:  qRes.Key(),
+					Data: bz,
+				},
+			},
+		}
 	}
 
 	return res, nil

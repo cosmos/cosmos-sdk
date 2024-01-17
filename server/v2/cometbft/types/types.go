@@ -4,6 +4,7 @@ import (
 	"context"
 
 	abci "github.com/cometbft/cometbft/abci/types"
+	ics23 "github.com/cosmos/ics23/go"
 	"google.golang.org/protobuf/proto"
 
 	corecomet "cosmossdk.io/core/comet"
@@ -32,5 +33,5 @@ type QueryResult interface {
 	Key() []byte
 	Value() []byte
 	Version() uint64
-	Proof() interface{} // CommitmentOp // TODO: use correct type
+	Proof() *ics23.CommitmentProof
 }

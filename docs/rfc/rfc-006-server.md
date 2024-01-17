@@ -21,9 +21,84 @@ This proposal is centered around modularity and simplicity of the Cosmos SDK. Th
 
 The server is the workhorse of the state machine. It is where all the components are initialized, combined and started. The server is where the consensus engine lives, meaning that every server will be custom to a consensus engine or logic for the application. The default server will be using comet with its async client to enable better concurrency. 
 
+#### Services 
+
+All components should be treated as services and have `Start` `Stop` and `Refresh` methods. If a service needs to be started and stopped due to handling of different concurrent processes the Service interface is what would be needed. If a service does not have the need to be started and stopped, it will be treated as a component of another service. 
+
 #### Consensus
 
-Consensus is part of server and the component that controls the rest of the state machine. It receives a block and tells the STF (state transition function) what to execute, in which order and possibly in parallel. The consensus engine receives multiple componenets from the server, application manager, mempool and a smaller component, the transaction codec. 
+Consensus is part of server and the component that controls the rest of the state machine. It receives a block and tells the STF (state transition function) what to execute, in which order and possibly in parallel. The consensus engine receives multiple service and componenets from the server, application manager, mempool and a smaller component, the transaction codec. 
+
+#### Transaction Codec
+
+The transaction codec is a component in the server, it defines how a transaction will work in the Cosmos SDK. Users will have the option to use the default transaction codec or create their own. The default transaction codec will be the current Cosmos SDK one, Protobuf transactions.
+
+The codec only supports decoding in the state machine. Inside the state machine we should avoid encoding transactions at all costs due to malleability concerns. 
+
+```go
+// Codec defines the TX codec, which converts a TX from bytes to its concrete representation.
+type Codec[T Tx] interface {
+	// Decode decodes the tx bytes into a DecodedTx, containing
+	// both concrete and bytes representation of the tx.
+	Decode([]byte) (T, error)
+}
+```
+
+The transaction is defined as: 
+
+```go
+type (
+	Type     = proto.Message
+	Identity = []byte
+)
+
+type Tx interface {
+	// Hash returns the unique identifier for the Tx.
+	Hash() [32]byte
+	// GetMessages returns the list of state transitions of the Tx.
+	GetMessages() []Type
+	// GetSenders returns the tx state transition sender.
+	GetSenders() []Identity // TODO reduce this to a single identity if accepted
+	// GetGasLimit returns the gas limit of the tx. Must return math.MaxUint64 for infinite gas
+	// txs.
+	GetGasLimit() uint64
+	// Bytes returns the encoded version of this tx. Note: this is ideally cached
+	// from the first instance of the decoding of the tx.
+	Bytes() []byte
+}
+```
+
+#### Mempool
+
+Mempool is a pool of transactions held in memory. There are three methods on the mempool interface: `Get`, `Insert`, and `Remove`. Depending on the implementation of the mempool and consensus, we could see these three functions called at different times. 
+
+In the CometBFT case, `Insert` & `Remove` is called in consensus, but get is called in the prepare block phase, or what we will begin calling the block building phase.
+
+
+```go
+// Mempool defines the required methods of an application's mempool.
+type Mempool[T transaction.Tx] interface {
+	// Insert attempts to insert a Tx into the app-side mempool returning
+	// an error upon failure. Insert will validate the transaction using the txValidator
+	Insert(ctx context.Context, txs T) error
+
+	// Get returns a list of transactions to add in a block
+	// where num is the number of txs to get. NOTE: size
+	// represents the size of a TX in bytes.
+	Get(ctx context.Context, size int) ([]T, error)
+
+	// Remove attempts to remove a transaction from the mempool, returning an error
+	// upon failure.
+	Remove(txs []T) error
+}
+```
+
+#### Application Manager
+
+The application manager is the componenet of the state machine which interacts with the STF and consensus. It is responsible for registering all modules and its client interactions on the different layers. 
+
+
+#### State Transition Function
 
 
 

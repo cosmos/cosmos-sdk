@@ -108,8 +108,8 @@ func (k Keeper) tallyExpedited(totalVoterPower math.LegacyDec, totalBonded math.
 
 	// If there is not enough quorum of votes, the proposal fails
 	percentVoting := totalVoterPower.Quo(math.LegacyNewDecFromInt(totalBonded))
-	quorum, _ := math.LegacyNewDecFromStr(params.Quorum)
-	if percentVoting.LT(quorum) {
+	expeditedQuorum, _ := math.LegacyNewDecFromStr(params.ExpeditedQuorum)
+	if percentVoting.LT(expeditedQuorum) {
 		return false, params.BurnVoteQuorum, tallyResults, nil
 	}
 

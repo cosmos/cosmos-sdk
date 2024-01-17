@@ -386,15 +386,19 @@ func ExternalIP() (string, error) {
 //
 // Note, the blocking behavior of this depends on the block argument.
 // The caller must ensure the corresponding context derived from the cancelFn is used correctly.
-func ListenForQuitSignals(g *errgroup.Group, block bool, cancelFn context.CancelFunc, logger log.Logger) {
+func ListenForQuitSignals(parentCtx context.Context, g *errgroup.Group, block bool, cancelFn context.CancelFunc, logger log.Logger) {
 	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
 
 	f := func() {
-		sig := <-sigCh
+		select {
+		case sig := <-sigCh:
+			logger.Info("caught signal", "signal", sig.String())
+			cancelFn()
+		case <-parentCtx.Done():
+			logger.Info("parentCtx is done")
+		}
 		cancelFn()
-
-		logger.Info("caught signal", "signal", sig.String())
 	}
 
 	if block {

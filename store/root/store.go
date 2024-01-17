@@ -105,6 +105,8 @@ func (s *Store) StateLatest() (uint64, store.ReadOnlyRootStore, error) {
 }
 
 func (s *Store) StateAt(v uint64) (store.ReadOnlyRootStore, error) {
+	// TODO(bez): We may want to avoid relying on the SC metadata here. Instead,
+	// we should add a VersionExists() method to the VersionedDatabase interface.
 	if cInfo, err := s.stateCommitment.GetCommitInfo(v); err != nil || cInfo == nil {
 		return nil, fmt.Errorf("failed to get commit info for version %d: %w", v, err)
 	}
@@ -171,7 +173,12 @@ func (s *Store) Query(storeKey string, version uint64, key []byte, prove bool) (
 
 	val, err := s.stateStore.Get(storeKey, version, key)
 	if err != nil {
-		return store.QueryResult{}, err
+		return store.QueryResult{}, fmt.Errorf("failed to query SS store: %w", err)
+	}
+
+	// fallback to querying SC backend if not found in SS backend
+	if val == nil {
+		// s.stateCommitment.Get()
 	}
 
 	result := store.QueryResult{
@@ -183,7 +190,7 @@ func (s *Store) Query(storeKey string, version uint64, key []byte, prove bool) (
 	if prove {
 		result.ProofOps, err = s.stateCommitment.GetProof(storeKey, version, key)
 		if err != nil {
-			return store.QueryResult{}, err
+			return store.QueryResult{}, fmt.Errorf("failed to get SC store proof: %w", err)
 		}
 	}
 

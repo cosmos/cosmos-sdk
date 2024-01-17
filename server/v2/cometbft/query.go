@@ -10,7 +10,6 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	cometerrors "cosmossdk.io/server/v2/cometbft/types/errors"
 	"cosmossdk.io/server/v2/core/store"
-	"cosmossdk.io/store/types"
 )
 
 func (c *Consensus[T]) handleQueryP2P(path []string) (*abci.ResponseQuery, error) {
@@ -90,12 +89,8 @@ func (c *Consensus[T]) handleQueryStore(path []string, st store.Store, req *abci
 		)
 	}
 
-	// TOOD: remove subpaths if not needed anymore
-	storeName, _, err := parsePath(req.Path)
-	if err != nil {
-		return nil, err
-	}
-
+	// "/store/<storeName>" for store queries
+	storeName := path[1]
 	qRes, err := c.store.Query(storeName, uint64(req.Height), req.Data, req.Prove)
 	if err != nil {
 		return nil, err
@@ -126,22 +121,4 @@ func (c *Consensus[T]) handleQueryStore(path []string, st store.Store, req *abci
 	}
 
 	return res, nil
-}
-
-// parsePath expects a format like /<storeName>[/<subpath>]
-// Must start with /, subpath may be empty
-// Returns error if it doesn't start with /
-func parsePath(path string) (storeName, subpath string, err error) {
-	if !strings.HasPrefix(path, "/") {
-		return storeName, subpath, errorsmod.Wrapf(types.ErrUnknownRequest, "invalid path: %s", path)
-	}
-
-	paths := strings.SplitN(path[1:], "/", 2)
-	storeName = paths[0]
-
-	if len(paths) == 2 {
-		subpath = "/" + paths[1]
-	}
-
-	return storeName, subpath, nil
 }

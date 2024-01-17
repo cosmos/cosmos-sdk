@@ -1,4 +1,4 @@
-package authz_test
+package module_test
 
 import (
 	"testing"

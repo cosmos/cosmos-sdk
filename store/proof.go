@@ -163,7 +163,7 @@ func ProofFromByteSlices(leaves [][]byte, index int) (rootHash []byte, inners []
 		// saved until the next iteration).
 		if index < n-1 || index&1 == 1 {
 			inner := &ics23.InnerOp{Hash: ics23.HashOp_SHA256}
-
+			// If proof index is even then child is from left, suffix is populated
 			// otherwise, child is from right and the prefix is populated.
 			if index&1 == 0 {
 				// inner op(prefix=0x01 | child | suffix=leaves[index+1])

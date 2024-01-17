@@ -12,15 +12,15 @@ sidebar_position: 1
 
 `depinject` is particularly useful for developing blockchain applications:
 
-*   With multiple interdependent components, modules, or services. Helping manage their dependencies effectively.
-*   That require decoupling of these components, making it easier to test, modify, or replace individual parts without affecting the entire system.
-*   That are wanting to simplify the setup and initialisation of modules and their dependencies by reducing boilerplate code and automating dependency management.
+* With multiple interdependent components, modules, or services. Helping manage their dependencies effectively.
+* That require decoupling of these components, making it easier to test, modify, or replace individual parts without affecting the entire system.
+* That are wanting to simplify the setup and initialisation of modules and their dependencies by reducing boilerplate code and automating dependency management.
 
 By using `depinject`, developers can achieve:
 
-*   Cleaner and more organised code.
-*   Improved modularity and maintainability.
-*   A more maintainable and modular structure for their blockchain applications, ultimately enhancing development velocity and code quality.
+* Cleaner and more organised code.
+* Improved modularity and maintainability.
+* A more maintainable and modular structure for their blockchain applications, ultimately enhancing development velocity and code quality.
 
 * [Go Doc](https://pkg.go.dev/cosmossdk.io/depinject)
 
@@ -38,9 +38,9 @@ Example:
 package main
 
 import (
-	"fmt"
+ "fmt"
 
-	"cosmossdk.io/depinject"
+ "cosmossdk.io/depinject"
 )
 
 type AnotherInt int
@@ -49,21 +49,21 @@ func GetInt() int               { return 1 }
 func GetAnotherInt() AnotherInt { return 2 }
 
 func main() {
-	var (
-		x int
-		y AnotherInt
-	)
+ var (
+  x int
+  y AnotherInt
+ )
 
-	fmt.Printf("Before (%v, %v)\n", x, y)
-	depinject.Inject(
-		depinject.Provide(
-			GetInt,
-			GetAnotherInt,
-		),
-		&x,
-		&y,
-	)
-	fmt.Printf("After (%v, %v)\n", x, y)
+ fmt.Printf("Before (%v, %v)\n", x, y)
+ depinject.Inject(
+  depinject.Provide(
+   GetInt,
+   GetAnotherInt,
+  ),
+  &x,
+  &y,
+ )
+ fmt.Printf("After (%v, %v)\n", x, y)
 }
 ```
 
@@ -83,11 +83,11 @@ Consider the following example:
 package duck
 
 type Duck interface {
-	quack()
+ quack()
 }
 
 type AlsoDuck interface {
-	quack()
+ quack()
 }
 
 type Mallard struct{}
@@ -97,7 +97,7 @@ func (duck Mallard) quack()    {}
 func (duck Canvasback) quack() {}
 
 type Pond struct {
-	Duck AlsoDuck
+ Duck AlsoDuck
 }
 ```
 
@@ -105,15 +105,15 @@ And the following provider functions:
 
 ```go
 func GetMallard() duck.Mallard {
-	return Mallard{}
+ return Mallard{}
 }
 
 func GetPond(duck Duck) Pond {
-	return Pond{Duck: duck}
+ return Pond{Duck: duck}
 }
 
 func GetCanvasback() Canvasback {
-	return Canvasback{}
+ return Canvasback{}
 }
 ```
 
@@ -124,9 +124,9 @@ var pond Pond
 
 depinject.Inject(
   depinject.Provide(
- 		GetMallard,
- 		GetPond,
- 	),
+   GetMallard,
+   GetPond,
+  ),
    &pond)
 ```
 
@@ -138,12 +138,12 @@ However, if there are multiple implementations of the `Duck` interface, as in th
 var pond Pond
 
 depinject.Inject(
-	depinject.Provide(
-		GetMallard,
-		GetCanvasback,
-		GetPond,
-	),
-	&pond)
+ depinject.Provide(
+  GetMallard,
+  GetCanvasback,
+  GetPond,
+ ),
+ &pond)
 ```
 
 A specific binding preference for `Duck` is required.
@@ -154,21 +154,21 @@ In the above situation registering a binding for a given interface binding may l
 
 ```go
 depinject.Inject(
-	depinject.Configs(
-		depinject.BindInterface(
-			"duck/duck.Duck",
-			"duck/duck.Mallard",
-		),
-		depinject.Provide(
-			GetMallard,
-			GetCanvasback,
-			GetPond,
-		),
-	),
-	&pond)
+ depinject.Configs(
+  depinject.BindInterface(
+   "duck/duck.Duck",
+   "duck/duck.Mallard",
+  ),
+  depinject.Provide(
+   GetMallard,
+   GetCanvasback,
+   GetPond,
+  ),
+ ),
+ &pond)
 ```
 
-Now `depinject` has enough information to provide `Mallard` as an input to `APond`. 
+Now `depinject` has enough information to provide `Mallard` as an input to `APond`.
 
 ### Full example in real app
 

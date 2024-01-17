@@ -177,8 +177,16 @@ func (s *Store) Query(storeKey string, version uint64, key []byte, prove bool) (
 	}
 
 	// fallback to querying SC backend if not found in SS backend
+	//
+	// Note, this is only used during migration, i.e. while SS and IAVL v2 is being
+	// asynchronously synced.
 	if val == nil {
-		// s.stateCommitment.Get()
+		bz, err := s.stateCommitment.Get(storeKey, version, key)
+		if err != nil {
+			return store.QueryResult{}, fmt.Errorf("failed to query SC store: %w", err)
+		}
+
+		val = bz
 	}
 
 	result := store.QueryResult{

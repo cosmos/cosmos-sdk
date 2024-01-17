@@ -44,7 +44,12 @@ func (t *IavlTree) Set(key, value []byte) error {
 	return err
 }
 
-// WorkingHash returns the working hash of the database.
+// Hash returns the hash of the latest saved version of the tree.
+func (t *IavlTree) Hash() []byte {
+	return t.tree.Hash()
+}
+
+// WorkingHash returns the working hash of the tree.
 func (t *IavlTree) WorkingHash() []byte {
 	return t.tree.WorkingHash()
 }
@@ -54,10 +59,10 @@ func (t *IavlTree) LoadVersion(version uint64) error {
 	return t.tree.LoadVersionForOverwriting(int64(version))
 }
 
-// Commit commits the current state to the database.
-func (t *IavlTree) Commit() ([]byte, error) {
-	hash, _, err := t.tree.SaveVersion()
-	return hash, err
+// Commit commits the current state to the tree.
+func (t *IavlTree) Commit() ([]byte, uint64, error) {
+	hash, v, err := t.tree.SaveVersion()
+	return hash, uint64(v), err
 }
 
 // GetProof returns a proof for the given key and version.
@@ -70,7 +75,7 @@ func (t *IavlTree) GetProof(version uint64, key []byte) (*ics23.CommitmentProof,
 	return imutableTree.GetProof(key)
 }
 
-// GetLatestVersion returns the latest version of the database.
+// GetLatestVersion returns the latest version of the tree.
 func (t *IavlTree) GetLatestVersion() uint64 {
 	return uint64(t.tree.Version())
 }

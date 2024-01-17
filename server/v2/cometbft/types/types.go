@@ -34,4 +34,5 @@ type QueryResult interface {
 	Value() []byte
 	Version() uint64
 	Proof() *ics23.CommitmentProof
+	ProofType() string
 }

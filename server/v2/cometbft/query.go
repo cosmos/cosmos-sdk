@@ -117,7 +117,7 @@ func (c *Consensus[T]) handleQueryStore(path []string, st store.Store, req *abci
 		res.ProofOps = &crypto.ProofOps{
 			Ops: []crypto.ProofOp{
 				{
-					Type: "ics23", // TODO: use constants, store v2 has :iavl, :simple and :smt commitment ops
+					Type: qRes.ProofType(),
 					Key:  qRes.Key(),
 					Data: bz,
 				},

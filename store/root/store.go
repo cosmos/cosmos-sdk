@@ -105,13 +105,9 @@ func (s *Store) StateLatest() (uint64, store.ReadOnlyRootStore, error) {
 }
 
 func (s *Store) StateAt(v uint64) (store.ReadOnlyRootStore, error) {
-	// TODO(bez): Ensure the version <v> exists. We can utilize the GetCommitInfo()
-	// SC method once available.
-	//
-	// Ref: https://github.com/cosmos/cosmos-sdk/pull/18736
-	// if err := s.stateCommitment.GetCommitInfo(v); err != nil {
-	// 	return nil, fmt.Errorf("failed to get commit info for version %d: %w", v, err)
-	// }
+	if cInfo, err := s.stateCommitment.GetCommitInfo(v); err != nil || cInfo == nil {
+		return nil, fmt.Errorf("failed to get commit info for version %d: %w", v, err)
+	}
 
 	return NewReadOnlyAdapter(v, s), nil
 }

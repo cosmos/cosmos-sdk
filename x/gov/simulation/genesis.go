@@ -94,7 +94,7 @@ func GenThreshold(r *rand.Rand) sdkmath.LegacyDec {
 
 // GenExpeditedQuorum returns randomized ExpeditedQuorum
 func GenExpeditedQuorum(r *rand.Rand) sdkmath.LegacyDec {
-	return sdkmath.LegacyNewDecWithPrec(int64(simulation.RandIntBetween(r, 667, 500)), 3)
+	return sdkmath.LegacyNewDecWithPrec(int64(simulation.RandIntBetween(r, 334, 500)), 3)
 }
 
 // GenExpeditedThreshold randomized ExpeditedThreshold
@@ -152,7 +152,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 	simState.AppParams.GetOrGenerate(Threshold, &threshold, simState.Rand, func(r *rand.Rand) { threshold = GenThreshold(r) })
 
 	var expeditedQuorum sdkmath.LegacyDec
-	simState.AppParams.GetOrGenerate(ExpeditedQuorum, &quorum, simState.Rand, func(r *rand.Rand) { expeditedQuorum = GenExpeditedQuorum(r) })
+	simState.AppParams.GetOrGenerate(ExpeditedQuorum, &expeditedQuorum, simState.Rand, func(r *rand.Rand) { expeditedQuorum = GenExpeditedQuorum(r) })
 
 	var expitedVotingThreshold sdkmath.LegacyDec
 	simState.AppParams.GetOrGenerate(ExpeditedThreshold, &expitedVotingThreshold, simState.Rand, func(r *rand.Rand) { expitedVotingThreshold = GenExpeditedThreshold(r) })

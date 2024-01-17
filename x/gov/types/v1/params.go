@@ -166,10 +166,10 @@ func (p Params) ValidateBasic(addressCodec address.Codec) error {
 		return fmt.Errorf("invalid expedited quorum string: %w", err)
 	}
 	if expeditedQuorum.IsNegative() {
-		return fmt.Errorf("expedited quorom cannot be negative: %s", expeditedQuorum)
+		return fmt.Errorf("expedited quorum cannot be negative: %s", expeditedQuorum)
 	}
 	if expeditedQuorum.GT(sdkmath.LegacyOneDec()) {
-		return fmt.Errorf("expedited quorom too large: %s", p.ExpeditedQuorum)
+		return fmt.Errorf("expedited quorum too large: %s", p.ExpeditedQuorum)
 	}
 
 	expeditedThreshold, err := sdkmath.LegacyNewDecFromStr(p.ExpeditedThreshold)

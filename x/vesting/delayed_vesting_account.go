@@ -22,14 +22,14 @@ var (
 
 // NewDelayedVestingAccount creates a new DelayedVestingAccount object.
 func NewDelayedVestingAccount(d accountstd.Dependencies) (*DelayedVestingAccount, error) {
-	baseVestingAccount, err := NewBaseVestingAccount(d)
+	baseVestingAccount, err := NewBaseVesting(d)
 	return &DelayedVestingAccount{
 		baseVestingAccount,
 	}, err
 }
 
 type DelayedVestingAccount struct {
-	*BaseVestingAccount
+	*BaseVesting
 }
 
 // --------------- Init -----------------
@@ -39,7 +39,7 @@ func (dva DelayedVestingAccount) Init(ctx context.Context, msg *vestingtypes.Msg
 		return nil, sdkerrors.ErrInvalidRequest.Wrap("invalid end time")
 	}
 
-	return dva.BaseVestingAccount.Init(ctx, msg)
+	return dva.BaseVesting.Init(ctx, msg)
 }
 
 // --------------- execute -----------------
@@ -47,7 +47,7 @@ func (dva DelayedVestingAccount) Init(ctx context.Context, msg *vestingtypes.Msg
 func (dva *DelayedVestingAccount) ExecuteMessages(ctx context.Context, msg *account_abstractionv1.MsgExecute) (
 	*account_abstractionv1.MsgExecuteResponse, error,
 ) {
-	return dva.BaseVestingAccount.ExecuteMessages(ctx, msg, dva.GetVestingCoins)
+	return dva.BaseVesting.ExecuteMessages(ctx, msg, dva.GetVestingCoins)
 }
 
 // --------------- Query -----------------
@@ -121,11 +121,11 @@ func (dva DelayedVestingAccount) RegisterInitHandler(builder *accountstd.InitBui
 
 func (dva DelayedVestingAccount) RegisterExecuteHandlers(builder *accountstd.ExecuteBuilder) {
 	accountstd.RegisterExecuteHandler(builder, dva.ExecuteMessages)
-	dva.BaseVestingAccount.RegisterExecuteHandlers(builder)
+	dva.BaseVesting.RegisterExecuteHandlers(builder)
 }
 
 func (dva DelayedVestingAccount) RegisterQueryHandlers(builder *accountstd.QueryBuilder) {
 	accountstd.RegisterQueryHandler(builder, dva.QueryVestedCoins)
 	accountstd.RegisterQueryHandler(builder, dva.QueryVestingCoins)
-	dva.BaseVestingAccount.RegisterQueryHandlers(builder)
+	dva.BaseVesting.RegisterQueryHandlers(builder)
 }

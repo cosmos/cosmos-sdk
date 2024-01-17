@@ -27,19 +27,19 @@ var (
 
 // NewPeriodicVestingAccount creates a new PeriodicVestingAccount object.
 func NewPeriodicVestingAccount(d accountstd.Dependencies) (*PeriodicVestingAccount, error) {
-	baseVestingAccount, err := NewBaseVestingAccount(d)
+	baseVestingAccount, err := NewBaseVesting(d)
 
 	periodicsVestingAccount := PeriodicVestingAccount{
-		BaseVestingAccount: baseVestingAccount,
-		StartTime:          collections.NewItem(d.SchemaBuilder, StartTimePrefix, "start_time", sdk.IntValue),
-		VestingPeriods:     collections.NewMap(d.SchemaBuilder, VestingPeriodsPrefix, "vesting_periods", collections.StringKey, codec.CollValue[vestingtypes.Period](d.BinaryCodec)),
+		BaseVesting:    baseVestingAccount,
+		StartTime:      collections.NewItem(d.SchemaBuilder, StartTimePrefix, "start_time", sdk.IntValue),
+		VestingPeriods: collections.NewMap(d.SchemaBuilder, VestingPeriodsPrefix, "vesting_periods", collections.StringKey, codec.CollValue[vestingtypes.Period](d.BinaryCodec)),
 	}
 
 	return &periodicsVestingAccount, err
 }
 
 type PeriodicVestingAccount struct {
-	*BaseVestingAccount
+	*BaseVesting
 	StartTime      collections.Item[math.Int]
 	VestingPeriods collections.Map[string, vestingtypes.Period]
 }
@@ -122,7 +122,7 @@ func (pva PeriodicVestingAccount) Init(ctx context.Context, msg *vestingtypes.Ms
 func (pva *PeriodicVestingAccount) ExecuteMessages(ctx context.Context, msg *account_abstractionv1.MsgExecute) (
 	*account_abstractionv1.MsgExecuteResponse, error,
 ) {
-	return pva.BaseVestingAccount.ExecuteMessages(ctx, msg, pva.GetVestingCoins)
+	return pva.BaseVesting.ExecuteMessages(ctx, msg, pva.GetVestingCoins)
 }
 
 // ----------------- Query --------------------
@@ -267,7 +267,7 @@ func (pva PeriodicVestingAccount) RegisterInitHandler(builder *accountstd.InitBu
 
 func (pva PeriodicVestingAccount) RegisterExecuteHandlers(builder *accountstd.ExecuteBuilder) {
 	accountstd.RegisterExecuteHandler(builder, pva.ExecuteMessages)
-	pva.BaseVestingAccount.RegisterExecuteHandlers(builder)
+	pva.BaseVesting.RegisterExecuteHandlers(builder)
 }
 
 func (pva PeriodicVestingAccount) RegisterQueryHandlers(builder *accountstd.QueryBuilder) {
@@ -275,5 +275,5 @@ func (pva PeriodicVestingAccount) RegisterQueryHandlers(builder *accountstd.Quer
 	accountstd.RegisterQueryHandler(builder, pva.QueryVestedCoins)
 	accountstd.RegisterQueryHandler(builder, pva.QueryVestingCoins)
 	accountstd.RegisterQueryHandler(builder, pva.QueryVestingPeriods)
-	pva.BaseVestingAccount.RegisterQueryHandlers(builder)
+	pva.BaseVesting.RegisterQueryHandlers(builder)
 }

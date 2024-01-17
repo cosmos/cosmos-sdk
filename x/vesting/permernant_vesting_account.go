@@ -21,19 +21,19 @@ var (
 
 // NewPermanentLockedAccount creates a new PermanentLockedAccount object.
 func NewPermanentLockedAccount(d accountstd.Dependencies) (*PermanentLockedAccount, error) {
-	baseVestingAccount, err := NewBaseVestingAccount(d)
+	baseVestingAccount, err := NewBaseVesting(d)
 
 	return &PermanentLockedAccount{baseVestingAccount}, err
 }
 
 type PermanentLockedAccount struct {
-	*BaseVestingAccount
+	*BaseVesting
 }
 
 // --------------- Init -----------------
 
 func (plva PermanentLockedAccount) Init(ctx context.Context, msg *vestingtypes.MsgInitVestingAccount) (*vestingtypes.MsgInitVestingAccountResponse, error) {
-	resp, err := plva.BaseVestingAccount.Init(ctx, msg)
+	resp, err := plva.BaseVesting.Init(ctx, msg)
 	err = plva.EndTime.Set(ctx, math.ZeroInt())
 	if err != nil {
 		return nil, err
@@ -47,7 +47,7 @@ func (plva PermanentLockedAccount) Init(ctx context.Context, msg *vestingtypes.M
 func (plva *PermanentLockedAccount) ExecuteMessages(ctx context.Context, msg *account_abstractionv1.MsgExecute) (
 	*account_abstractionv1.MsgExecuteResponse, error,
 ) {
-	return plva.BaseVestingAccount.ExecuteMessages(ctx, msg, func(_ context.Context, _ time.Time) (sdk.Coins, error) {
+	return plva.BaseVesting.ExecuteMessages(ctx, msg, func(_ context.Context, _ time.Time) (sdk.Coins, error) {
 		var originalVesting sdk.Coins
 		plva.IterateCoinEntries(ctx, plva.OriginalVesting, func(key string, value math.Int) (stop bool) {
 			originalVesting = append(originalVesting, sdk.NewCoin(key, value))
@@ -87,11 +87,11 @@ func (plva PermanentLockedAccount) RegisterInitHandler(builder *accountstd.InitB
 
 func (plva PermanentLockedAccount) RegisterExecuteHandlers(builder *accountstd.ExecuteBuilder) {
 	accountstd.RegisterExecuteHandler(builder, plva.ExecuteMessages)
-	plva.BaseVestingAccount.RegisterExecuteHandlers(builder)
+	plva.BaseVesting.RegisterExecuteHandlers(builder)
 }
 
 func (plva PermanentLockedAccount) RegisterQueryHandlers(builder *accountstd.QueryBuilder) {
 	accountstd.RegisterQueryHandler(builder, plva.QueryVestedCoins)
 	accountstd.RegisterQueryHandler(builder, plva.QueryVestingCoins)
-	plva.BaseVestingAccount.RegisterQueryHandlers(builder)
+	plva.BaseVesting.RegisterQueryHandlers(builder)
 }

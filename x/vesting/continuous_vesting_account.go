@@ -24,18 +24,18 @@ var (
 
 // NewContinuousVestingAccount creates a new ContinuousVestingAccount object.
 func NewContinuousVestingAccount(d accountstd.Dependencies) (*ContinuousVestingAccount, error) {
-	baseVestingAccount, err := NewBaseVestingAccount(d)
+	baseVestingAccount, err := NewBaseVesting(d)
 
 	continuousVestingAccount := ContinuousVestingAccount{
-		BaseVestingAccount: baseVestingAccount,
-		StartTime:          collections.NewItem(d.SchemaBuilder, StartTimePrefix, "start_time", sdk.IntValue),
+		BaseVesting: baseVestingAccount,
+		StartTime:   collections.NewItem(d.SchemaBuilder, StartTimePrefix, "start_time", sdk.IntValue),
 	}
 
 	return &continuousVestingAccount, err
 }
 
 type ContinuousVestingAccount struct {
-	*BaseVestingAccount
+	*BaseVesting
 	StartTime collections.Item[math.Int]
 }
 
@@ -66,7 +66,7 @@ func (cva ContinuousVestingAccount) Init(ctx context.Context, msg *vestingtypes.
 		return nil, err
 	}
 
-	return cva.BaseVestingAccount.Init(ctx, msg)
+	return cva.BaseVesting.Init(ctx, msg)
 }
 
 // --------------- execute -----------------
@@ -74,7 +74,7 @@ func (cva ContinuousVestingAccount) Init(ctx context.Context, msg *vestingtypes.
 func (cva *ContinuousVestingAccount) ExecuteMessages(ctx context.Context, msg *account_abstractionv1.MsgExecute) (
 	*account_abstractionv1.MsgExecuteResponse, error,
 ) {
-	return cva.BaseVestingAccount.ExecuteMessages(ctx, msg, cva.GetVestingCoins)
+	return cva.BaseVesting.ExecuteMessages(ctx, msg, cva.GetVestingCoins)
 }
 
 // --------------- Query -----------------
@@ -179,12 +179,12 @@ func (cva ContinuousVestingAccount) RegisterInitHandler(builder *accountstd.Init
 
 func (cva ContinuousVestingAccount) RegisterExecuteHandlers(builder *accountstd.ExecuteBuilder) {
 	accountstd.RegisterExecuteHandler(builder, cva.ExecuteMessages)
-	cva.BaseVestingAccount.RegisterExecuteHandlers(builder)
+	cva.BaseVesting.RegisterExecuteHandlers(builder)
 }
 
 func (cva ContinuousVestingAccount) RegisterQueryHandlers(builder *accountstd.QueryBuilder) {
 	accountstd.RegisterQueryHandler(builder, cva.QueryStartTime)
 	accountstd.RegisterQueryHandler(builder, cva.QueryVestedCoins)
 	accountstd.RegisterQueryHandler(builder, cva.QueryVestingCoins)
-	cva.BaseVestingAccount.RegisterQueryHandlers(builder)
+	cva.BaseVesting.RegisterQueryHandlers(builder)
 }

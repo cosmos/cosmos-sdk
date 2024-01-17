@@ -33,9 +33,9 @@ var (
 
 type getVestingFunc = func(ctx context.Context, time time.Time) (sdk.Coins, error)
 
-// NewBaseVestingAccount creates a new BaseVestingAccount object.
-func NewBaseVestingAccount(d accountstd.Dependencies) (*BaseVestingAccount, error) {
-	baseVestingAccount := &BaseVestingAccount{
+// NewBaseVesting creates a new BaseVesting object.
+func NewBaseVesting(d accountstd.Dependencies) (*BaseVesting, error) {
+	baseVestingAccount := &BaseVesting{
 		Owner:            collections.NewItem(d.SchemaBuilder, OwnerPrefix, "owner", collections.BytesValue),
 		OriginalVesting:  collections.NewMap(d.SchemaBuilder, OriginalVestingPrefix, "original_vesting", collections.StringKey, sdk.IntValue),
 		DelegatedFree:    collections.NewMap(d.SchemaBuilder, DelegatedFreePrefix, "delegated_free", collections.StringKey, sdk.IntValue),
@@ -48,7 +48,7 @@ func NewBaseVestingAccount(d accountstd.Dependencies) (*BaseVestingAccount, erro
 	return baseVestingAccount, nil
 }
 
-type BaseVestingAccount struct {
+type BaseVesting struct {
 	// Owner is the address of the account owner.
 	Owner            collections.Item[[]byte]
 	OriginalVesting  collections.Map[string, math.Int]
@@ -60,7 +60,7 @@ type BaseVestingAccount struct {
 	EndTime collections.Item[math.Int]
 }
 
-func (bva *BaseVestingAccount) Init(ctx context.Context, msg *vestingtypes.MsgInitVestingAccount) (
+func (bva *BaseVesting) Init(ctx context.Context, msg *vestingtypes.MsgInitVestingAccount) (
 	*vestingtypes.MsgInitVestingAccountResponse, error,
 ) {
 	sender := accountstd.Sender(ctx)
@@ -119,7 +119,7 @@ func (bva *BaseVestingAccount) Init(ctx context.Context, msg *vestingtypes.MsgIn
 //
 // CONTRACT: The account's coins, delegation coins, vesting coins, and delegated
 // vesting coins must be sorted.
-func (bva *BaseVestingAccount) TrackDelegation(
+func (bva *BaseVesting) TrackDelegation(
 	ctx context.Context, balance, vestingCoins, amount sdk.Coins,
 ) error {
 	for _, coin := range amount {
@@ -180,7 +180,7 @@ func (bva *BaseVestingAccount) TrackDelegation(
 // the undelegated tokens are non-integral.
 //
 // CONTRACT: The account's coins and undelegation coins must be sorted.
-func (bva *BaseVestingAccount) TrackUndelegation(ctx context.Context, amount sdk.Coins) error {
+func (bva *BaseVesting) TrackUndelegation(ctx context.Context, amount sdk.Coins) error {
 	for _, coin := range amount {
 		// panic if the undelegation amount is zero
 		if coin.Amount.IsZero() {
@@ -229,7 +229,7 @@ func (bva *BaseVestingAccount) TrackUndelegation(ctx context.Context, amount sdk
 // and update the vesting account DelegatedFree and DelegatedVesting
 // when delegate or undelegate is trigger. And check for locked coins
 // when performing a send message.
-func (bva *BaseVestingAccount) ExecuteMessages(
+func (bva *BaseVesting) ExecuteMessages(
 	ctx context.Context, msg *account_abstractionv1.MsgExecute, getVestingFunc getVestingFunc,
 ) (
 	*account_abstractionv1.MsgExecuteResponse, error,
@@ -348,7 +348,7 @@ func (bva *BaseVestingAccount) ExecuteMessages(
 }
 
 // Check the sender of the bundle is the owner of the vesting account
-func (bva BaseVestingAccount) Authenticate(ctx context.Context, msg *account_abstractionv1.MsgAuthenticate) (*account_abstractionv1.MsgAuthenticateResponse, error) {
+func (bva BaseVesting) Authenticate(ctx context.Context, msg *account_abstractionv1.MsgAuthenticate) (*account_abstractionv1.MsgAuthenticateResponse, error) {
 	bundler, err := bva.addressCodec.StringToBytes(msg.Bundler)
 	if err != nil {
 		return nil, err
@@ -367,7 +367,7 @@ func (bva BaseVestingAccount) Authenticate(ctx context.Context, msg *account_abs
 // --------------- Query -----------------
 
 // IterateSendEnabledEntries iterates over all the SendEnabled entries.
-func (bva BaseVestingAccount) IterateCoinEntries(
+func (bva BaseVesting) IterateCoinEntries(
 	ctx context.Context,
 	entries collections.Map[string, math.Int],
 	cb func(denom string, value math.Int) bool,
@@ -385,7 +385,7 @@ func (bva BaseVestingAccount) IterateCoinEntries(
 // an empty slice of Coins is returned.
 //
 // CONTRACT: Delegated vesting coins and vestingCoins must be sorted.
-func (bva BaseVestingAccount) LockedCoinsFromVesting(ctx context.Context, vestingCoins sdk.Coins) sdk.Coins {
+func (bva BaseVesting) LockedCoinsFromVesting(ctx context.Context, vestingCoins sdk.Coins) sdk.Coins {
 	var delegatedVestingCoins sdk.Coins
 	bva.IterateCoinEntries(ctx, bva.DelegatedVesting, func(key string, value math.Int) (stop bool) {
 		delegatedVestingCoins = append(delegatedVestingCoins, sdk.NewCoin(key, value))
@@ -400,7 +400,7 @@ func (bva BaseVestingAccount) LockedCoinsFromVesting(ctx context.Context, vestin
 }
 
 // QueryOriginalVesting returns a vesting account's original vesting amount
-func (bva BaseVestingAccount) QueryOriginalVesting(ctx context.Context, _ *vestingtypes.QueryOriginalVestingRequest) (
+func (bva BaseVesting) QueryOriginalVesting(ctx context.Context, _ *vestingtypes.QueryOriginalVestingRequest) (
 	*vestingtypes.QueryOriginalVestingResponse, error,
 ) {
 	var originalVesting sdk.Coins
@@ -415,7 +415,7 @@ func (bva BaseVestingAccount) QueryOriginalVesting(ctx context.Context, _ *vesti
 
 // QueryDelegatedFree returns a vesting account's delegation amount that is not
 // vesting.
-func (bva BaseVestingAccount) QueryDelegatedFree(ctx context.Context, _ *vestingtypes.QueryDelegatedFreeRequest) (
+func (bva BaseVesting) QueryDelegatedFree(ctx context.Context, _ *vestingtypes.QueryDelegatedFreeRequest) (
 	*vestingtypes.QueryDelegatedFreeResponse, error,
 ) {
 	var delegatedFree sdk.Coins
@@ -430,7 +430,7 @@ func (bva BaseVestingAccount) QueryDelegatedFree(ctx context.Context, _ *vesting
 
 // QueryDelegatedVesting returns a vesting account's delegation amount that is
 // still vesting.
-func (bva BaseVestingAccount) QueryDelegatedVesting(ctx context.Context, _ *vestingtypes.QueryDelegatedVestingRequest) (
+func (bva BaseVesting) QueryDelegatedVesting(ctx context.Context, _ *vestingtypes.QueryDelegatedVestingRequest) (
 	*vestingtypes.QueryDelegatedVestingResponse, error,
 ) {
 	var delegatedVesting sdk.Coins
@@ -444,7 +444,7 @@ func (bva BaseVestingAccount) QueryDelegatedVesting(ctx context.Context, _ *vest
 }
 
 // QueryEndTime returns a vesting account's end time
-func (bva BaseVestingAccount) QueryEndTime(ctx context.Context, _ *vestingtypes.QueryEndTimeRequest) (
+func (bva BaseVesting) QueryEndTime(ctx context.Context, _ *vestingtypes.QueryEndTimeRequest) (
 	*vestingtypes.QueryEndTimeResponse, error,
 ) {
 	endTime, err := bva.EndTime.Get(ctx)
@@ -456,11 +456,11 @@ func (bva BaseVestingAccount) QueryEndTime(ctx context.Context, _ *vestingtypes.
 	}, nil
 }
 
-func (bva BaseVestingAccount) RegisterExecuteHandlers(builder *accountstd.ExecuteBuilder) {
+func (bva BaseVesting) RegisterExecuteHandlers(builder *accountstd.ExecuteBuilder) {
 	accountstd.RegisterExecuteHandler(builder, bva.Authenticate)
 }
 
-func (bva BaseVestingAccount) RegisterQueryHandlers(builder *accountstd.QueryBuilder) {
+func (bva BaseVesting) RegisterQueryHandlers(builder *accountstd.QueryBuilder) {
 	accountstd.RegisterQueryHandler(builder, bva.QueryOriginalVesting)
 	accountstd.RegisterQueryHandler(builder, bva.QueryDelegatedFree)
 	accountstd.RegisterQueryHandler(builder, bva.QueryDelegatedVesting)

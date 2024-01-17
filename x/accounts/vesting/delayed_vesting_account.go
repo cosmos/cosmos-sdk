@@ -6,6 +6,7 @@ import (
 
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/accounts/accountstd"
+	account_abstractionv1 "cosmossdk.io/x/accounts/interfaces/account_abstraction/v1"
 	vestingtypes "cosmossdk.io/x/accounts/vesting/types/v1"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -43,8 +44,8 @@ func (dva DelayedVestingAccount) Init(ctx context.Context, msg *vestingtypes.Msg
 
 // --------------- execute -----------------
 
-func (dva *DelayedVestingAccount) ExecuteMessages(ctx context.Context, msg *vestingtypes.MsgExecuteMessages) (
-	*vestingtypes.MsgExecuteMessagesResponse, error,
+func (dva *DelayedVestingAccount) ExecuteMessages(ctx context.Context, msg *account_abstractionv1.MsgExecute) (
+	*account_abstractionv1.MsgExecuteResponse, error,
 ) {
 	return dva.BaseVestingAccount.ExecuteMessages(ctx, msg, dva.GetVestingCoins)
 }
@@ -120,6 +121,7 @@ func (dva DelayedVestingAccount) RegisterInitHandler(builder *accountstd.InitBui
 
 func (dva DelayedVestingAccount) RegisterExecuteHandlers(builder *accountstd.ExecuteBuilder) {
 	accountstd.RegisterExecuteHandler(builder, dva.ExecuteMessages)
+	dva.BaseVestingAccount.RegisterExecuteHandlers(builder)
 }
 
 func (dva DelayedVestingAccount) RegisterQueryHandlers(builder *accountstd.QueryBuilder) {

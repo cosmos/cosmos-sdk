@@ -12,6 +12,7 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/accounts/accountstd"
+	account_abstractionv1 "cosmossdk.io/x/accounts/interfaces/account_abstraction/v1"
 	impl "cosmossdk.io/x/accounts/internal/implementation"
 	vestingtypes "cosmossdk.io/x/accounts/vesting/types/v1"
 	vestingtypesv1 "cosmossdk.io/x/accounts/vesting/types/v1"
@@ -32,9 +33,6 @@ var (
 	VestingPeriodsPrefix   = collections.NewPrefix(5)
 	OwnerPrefix            = collections.NewPrefix(6)
 )
-
-// Base Vesting Account
-var _ accountstd.Interface = (*BaseVestingAccount)(nil)
 
 type getVestingFunc = func(ctx context.Context, time time.Time) (sdk.Coins, error)
 
@@ -232,18 +230,18 @@ func (bva *BaseVestingAccount) TrackUndelegation(ctx context.Context, amount sdk
 
 // ExecuteMessages handle the execution of codectypes Any messages
 // and update the vesting account DelegatedFree and DelegatedVesting
-// when delegate or undelegate is trigger.
+// when delegate or undelegate is trigger. And check for locked coins
+// when performing a send message.
 func (bva *BaseVestingAccount) ExecuteMessages(
-	ctx context.Context, msg *vestingtypesv1.MsgExecuteMessages, getVestingFunc getVestingFunc,
+	ctx context.Context, msg *account_abstractionv1.MsgExecute, getVestingFunc getVestingFunc,
 ) (
-	*vestingtypesv1.MsgExecuteMessagesResponse, error,
+	*account_abstractionv1.MsgExecuteResponse, error,
 ) {
-	// Make sure sender are the owner of the vesting account
-	err := bva.Authenticate(ctx)
-	if err != nil {
-		return nil, err
+	// we always want to ensure that this is called by the x/accounts module, it's the only trusted entrypoint.
+	// if we do not do this check then someone could call this method directly and bypass the authentication.
+	if !accountstd.SenderIsAccountsModule(ctx) {
+		return nil, fmt.Errorf("sender is not the x/accounts module")
 	}
-
 	hs := bva.headerService.GetHeaderInfo(ctx)
 
 	for _, m := range msg.ExecutionMessages {
@@ -354,21 +352,24 @@ func (bva *BaseVestingAccount) ExecuteMessages(
 		return nil, err
 	}
 
-	return &vestingtypesv1.MsgExecuteMessagesResponse{ExecutionMessagesResponse: responses}, nil
+	return &account_abstractionv1.MsgExecuteResponse{ExecutionMessagesResponse: responses}, nil
 }
 
-// Check the sender of the execute message is the owner of the vesting account
-func (bva BaseVestingAccount) Authenticate(ctx context.Context) error {
-	sender := accountstd.Sender(ctx)
+// Check the sender of the bundle is the owner of the vesting account
+func (bva BaseVestingAccount) Authenticate(ctx context.Context, msg *account_abstractionv1.MsgAuthenticate) (*account_abstractionv1.MsgAuthenticateResponse, error) {
+	bundler, err := bva.addressCodec.StringToBytes(msg.Bundler)
+	if err != nil {
+		return nil, err
+	}
 	owner, err := bva.Owner.Get(ctx)
 	if err != nil {
-		return sdkerrors.ErrInvalidAddress.Wrapf("invalid 'to' address: %s", err)
+		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid owner address: %s", err)
 	}
-	if !bytes.Equal(sender, owner) {
-		return fmt.Errorf("sender account is not the owner of this vesting account, expected owner address %s: ", owner)
+	if !bytes.Equal(bundler, owner) {
+		return nil, fmt.Errorf("bundler is not the owner of this vesting account")
 	}
 
-	return nil
+	return &account_abstractionv1.MsgAuthenticateResponse{}, nil
 }
 
 // --------------- Query -----------------
@@ -463,13 +464,8 @@ func (bva BaseVestingAccount) QueryEndTime(ctx context.Context, _ *vestingtypesv
 	}, nil
 }
 
-// Only for implementing account interface, base vesting account
-// served as a base for other types of vesting account only
-// and should not be initialize as a stand alone vesting account type.
-func (bva BaseVestingAccount) RegisterInitHandler(builder *accountstd.InitBuilder) {
-}
-
 func (bva BaseVestingAccount) RegisterExecuteHandlers(builder *accountstd.ExecuteBuilder) {
+	accountstd.RegisterExecuteHandler(builder, bva.Authenticate)
 }
 
 func (bva BaseVestingAccount) RegisterQueryHandlers(builder *accountstd.QueryBuilder) {

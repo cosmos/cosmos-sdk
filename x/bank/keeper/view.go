@@ -190,7 +190,6 @@ func (k BaseViewKeeper) LockedCoins(ctx context.Context, addr sdk.AccAddress) sd
 			return vacc.LockedCoins(sdkCtx.HeaderInfo().Time)
 		}
 	}
-	// TODO: Add check for x/accounts vesting account
 
 	return sdk.NewCoins()
 }

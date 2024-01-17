@@ -6,6 +6,7 @@ import (
 
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/accounts/accountstd"
+	account_abstractionv1 "cosmossdk.io/x/accounts/interfaces/account_abstraction/v1"
 	vestingtypes "cosmossdk.io/x/accounts/vesting/types/v1"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -43,8 +44,8 @@ func (plva PermanentLockedAccount) Init(ctx context.Context, msg *vestingtypes.M
 
 // --------------- execute -----------------
 
-func (plva *PermanentLockedAccount) ExecuteMessages(ctx context.Context, msg *vestingtypes.MsgExecuteMessages) (
-	*vestingtypes.MsgExecuteMessagesResponse, error,
+func (plva *PermanentLockedAccount) ExecuteMessages(ctx context.Context, msg *account_abstractionv1.MsgExecute) (
+	*account_abstractionv1.MsgExecuteResponse, error,
 ) {
 	return plva.BaseVestingAccount.ExecuteMessages(ctx, msg, func(_ context.Context, _ time.Time) (sdk.Coins, error) {
 		var originalVesting sdk.Coins
@@ -86,6 +87,7 @@ func (plva PermanentLockedAccount) RegisterInitHandler(builder *accountstd.InitB
 
 func (plva PermanentLockedAccount) RegisterExecuteHandlers(builder *accountstd.ExecuteBuilder) {
 	accountstd.RegisterExecuteHandler(builder, plva.ExecuteMessages)
+	plva.BaseVestingAccount.RegisterExecuteHandlers(builder)
 }
 
 func (plva PermanentLockedAccount) RegisterQueryHandlers(builder *accountstd.QueryBuilder) {

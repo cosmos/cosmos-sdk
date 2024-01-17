@@ -9,6 +9,7 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/accounts/accountstd"
+	account_abstractionv1 "cosmossdk.io/x/accounts/interfaces/account_abstraction/v1"
 	vestingtypes "cosmossdk.io/x/accounts/vesting/types/v1"
 	banktypes "cosmossdk.io/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -118,8 +119,8 @@ func (pva PeriodicVestingAccount) Init(ctx context.Context, msg *vestingtypes.Ms
 
 // --------------- execute -----------------
 
-func (pva *PeriodicVestingAccount) ExecuteMessages(ctx context.Context, msg *vestingtypes.MsgExecuteMessages) (
-	*vestingtypes.MsgExecuteMessagesResponse, error,
+func (pva *PeriodicVestingAccount) ExecuteMessages(ctx context.Context, msg *account_abstractionv1.MsgExecute) (
+	*account_abstractionv1.MsgExecuteResponse, error,
 ) {
 	return pva.BaseVestingAccount.ExecuteMessages(ctx, msg, pva.GetVestingCoins)
 }
@@ -266,6 +267,7 @@ func (pva PeriodicVestingAccount) RegisterInitHandler(builder *accountstd.InitBu
 
 func (pva PeriodicVestingAccount) RegisterExecuteHandlers(builder *accountstd.ExecuteBuilder) {
 	accountstd.RegisterExecuteHandler(builder, pva.ExecuteMessages)
+	pva.BaseVestingAccount.RegisterExecuteHandlers(builder)
 }
 
 func (pva PeriodicVestingAccount) RegisterQueryHandlers(builder *accountstd.QueryBuilder) {

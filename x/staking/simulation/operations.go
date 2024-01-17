@@ -923,8 +923,10 @@ func SimulateMsgRedeemTokensforShares(ak types.AccountKeeper, bk types.BankKeepe
 		}
 
 		// prevent redemption that returns a 0 amount
-		shareDenomSupply := bk.GetSupply(ctx, tokenizeShareRecord.GetShareTokenDenom())
-		shares := delegation.Shares.Mul(sdk.NewDecFromInt(redeemCoin.Amount)).QuoInt(shareDenomSupply.Amount)
+		shares := sdk.NewDecFromInt(redeemCoin.Amount)
+		if redeemCoin.Amount.Equal(delegation.Shares.TruncateInt()) {
+			shares = delegation.Shares
+		}
 
 		if validator.TokensFromShares(shares).TruncateInt().IsZero() {
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgRedeemTokensForShares, "zero tokens returned"), nil, nil

@@ -6,30 +6,10 @@ import (
 	"io"
 
 	"cosmossdk.io/server/v2/core/appmanager"
+	"cosmossdk.io/server/v2/core/stf"
 	"cosmossdk.io/server/v2/core/store"
 	"cosmossdk.io/server/v2/core/transaction"
 )
-
-// STF defines the state transition handler used by AppManager to execute
-// state transitions over some state. STF never writes to state, instead
-// returns the state changes caused by the state transitions.
-// TODO move to v2/core
-type STF[T transaction.Tx] interface {
-	// DeliverBlock is used to process an entire block, given a state to apply the state transition to.
-	// Returns the state changes of the transition.
-	DeliverBlock(
-		ctx context.Context,
-		block *appmanager.BlockRequest[T],
-		state store.ReadonlyState,
-	) (*appmanager.BlockResponse, store.WritableState, error)
-	// Simulate simulates the execution of a transaction over the provided state, with the provided gas limit.
-	// TODO: Might be useful to return the state changes caused by the TX.
-	Simulate(ctx context.Context, state store.ReadonlyState, gasLimit uint64, tx T) appmanager.TxResult
-	// Query runs the provided query over the provided readonly state.
-	Query(ctx context.Context, state store.ReadonlyState, gasLimit uint64, queryRequest Type) (queryResponse Type, err error)
-	// ValidateTx validates the TX.
-	ValidateTx(ctx context.Context, state store.ReadonlyState, gasLimit uint64, tx T) appmanager.TxResult
-}
 
 // AppManager is a coordinator for all things related to an application
 type AppManager[T transaction.Tx] struct {
@@ -47,15 +27,14 @@ type AppManager[T transaction.Tx] struct {
 
 	prepareHandler appmanager.PrepareHandler[T]
 	processHandler appmanager.ProcessHandler[T]
-	stf            STF[T] // consider if instead of having an interface (which is boxed?), we could have another type Parameter defining STF.
+	stf            stf.STF[T] // consider if instead of having an interface (which is boxed?), we could have another type Parameter defining STF.
 }
 
 // TODO add initgenesis and figure out how to use it
 // TODO make sure to provide defaults for handlers and configs
 
 // BuildBlock builds a block when requested by consensus. It will take in the total size txs to be included and return a list of transactions
-// TODO accept maxtxbytes instead of []T
-func (a AppManager[T]) BuildBlock(ctx context.Context, height uint64, txs []T) ([]T, error) {
+func (a AppManager[T]) BuildBlock(ctx context.Context, height, maxBlockBytes uint64) ([]T, error) {
 	latestVersion, currentState, err := a.db.StateLatest()
 	if err != nil {
 		return nil, fmt.Errorf("unable to create new state for height %d: %w", height, err)
@@ -65,7 +44,7 @@ func (a AppManager[T]) BuildBlock(ctx context.Context, height uint64, txs []T) (
 		return nil, fmt.Errorf("invalid BuildBlock height wanted %d, got %d", latestVersion+1, height)
 	}
 
-	txs, err = a.prepareHandler(ctx, currentState)
+	txs, err := a.prepareHandler(ctx, currentState)
 	if err != nil {
 		return nil, err
 	}
@@ -136,7 +115,7 @@ func (a AppManager[T]) Simulate(ctx context.Context, tx T) (appmanager.TxResult,
 }
 
 // Query queries the application at the provided version.
-func (a AppManager[T]) Query(ctx context.Context, version uint64, request Type) (response Type, err error) {
+func (a AppManager[T]) Query(ctx context.Context, version uint64, request appmanager.Type) (response appmanager.Type, err error) {
 	// if version is provided attempt to do a height query.
 	if version != 0 {
 		queryState, err := a.db.StateAt(version)

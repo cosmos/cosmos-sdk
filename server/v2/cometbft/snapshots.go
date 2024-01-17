@@ -11,12 +11,12 @@ import (
 
 // ApplySnapshotChunk implements types.Application.
 func (c *Consensus[T]) ApplySnapshotChunk(_ context.Context, req *abci.RequestApplySnapshotChunk) (*abci.ResponseApplySnapshotChunk, error) {
-	if c.cfg.SnapshotManager == nil {
+	if c.snapshotManager == nil {
 		c.logger.Error("snapshot manager not configured")
 		return &abci.ResponseApplySnapshotChunk{Result: abci.ResponseApplySnapshotChunk_ABORT}, nil
 	}
 
-	_, err := c.cfg.SnapshotManager.RestoreChunk(req.Chunk)
+	_, err := c.snapshotManager.RestoreChunk(req.Chunk)
 	switch {
 	case err == nil:
 		return &abci.ResponseApplySnapshotChunk{Result: abci.ResponseApplySnapshotChunk_ACCEPT}, nil
@@ -42,11 +42,11 @@ func (c *Consensus[T]) ApplySnapshotChunk(_ context.Context, req *abci.RequestAp
 
 // ListSnapshots implements types.Application.
 func (c *Consensus[T]) ListSnapshots(_ context.Context, ctx *abci.RequestListSnapshots) (resp *abci.ResponseListSnapshots, err error) {
-	if c.cfg.SnapshotManager == nil {
+	if c.snapshotManager == nil {
 		return resp, nil
 	}
 
-	snapshots, err := c.cfg.SnapshotManager.List()
+	snapshots, err := c.snapshotManager.List()
 	if err != nil {
 		c.logger.Error("failed to list snapshots", "err", err)
 		return nil, err
@@ -67,11 +67,11 @@ func (c *Consensus[T]) ListSnapshots(_ context.Context, ctx *abci.RequestListSna
 
 // LoadSnapshotChunk implements types.Application.
 func (c *Consensus[T]) LoadSnapshotChunk(_ context.Context, req *abci.RequestLoadSnapshotChunk) (*abci.ResponseLoadSnapshotChunk, error) {
-	if c.cfg.SnapshotManager == nil {
+	if c.snapshotManager == nil {
 		return &abci.ResponseLoadSnapshotChunk{}, nil
 	}
 
-	chunk, err := c.cfg.SnapshotManager.LoadChunk(req.Height, req.Format, req.Chunk)
+	chunk, err := c.snapshotManager.LoadChunk(req.Height, req.Format, req.Chunk)
 	if err != nil {
 		c.logger.Error(
 			"failed to load snapshot chunk",
@@ -88,7 +88,7 @@ func (c *Consensus[T]) LoadSnapshotChunk(_ context.Context, req *abci.RequestLoa
 
 // OfferSnapshot implements types.Application.
 func (c *Consensus[T]) OfferSnapshot(_ context.Context, req *abci.RequestOfferSnapshot) (*abci.ResponseOfferSnapshot, error) {
-	if c.cfg.SnapshotManager == nil {
+	if c.snapshotManager == nil {
 		c.logger.Error("snapshot manager not configured")
 		return &abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_ABORT}, nil
 	}
@@ -104,7 +104,7 @@ func (c *Consensus[T]) OfferSnapshot(_ context.Context, req *abci.RequestOfferSn
 		return &abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_REJECT}, nil
 	}
 
-	err = c.cfg.SnapshotManager.Restore(snapshot)
+	err = c.snapshotManager.Restore(snapshot)
 	switch {
 	case err == nil:
 		return &abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_ACCEPT}, nil

@@ -2,6 +2,7 @@ package cometbft
 
 import (
 	"fmt"
+	"math"
 	"strings"
 	"time"
 
@@ -19,7 +20,6 @@ import (
 	"cosmossdk.io/core/comet"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/server/v2/core/appmanager"
-
 	"cosmossdk.io/server/v2/core/event"
 )
 
@@ -363,8 +363,8 @@ func (c *Consensus[T]) GetBlockRetentionHeight(cp *cmtproto.ConsensusParams, com
 		retentionHeight = commitHeight - cp.Evidence.MaxAgeNumBlocks
 	}
 
-	if c.cfg.SnapshotManager != nil {
-		snapshotRetentionHeights := c.cfg.SnapshotManager.GetSnapshotBlockRetentionHeights()
+	if c.snapshotManager != nil {
+		snapshotRetentionHeights := c.snapshotManager.GetSnapshotBlockRetentionHeights()
 		if snapshotRetentionHeights > 0 {
 			retentionHeight = minNonZero(retentionHeight, commitHeight-snapshotRetentionHeights)
 		}
@@ -397,4 +397,20 @@ func (c *Consensus[T]) checkHalt(height int64, time time.Time) error {
 	}
 
 	return nil
+}
+
+// int64ToUint64 converts an int64 to a uint64, returning 0 if the int64 is negative.
+func int64ToUint64(i int64) uint64 {
+	if i < 0 {
+		return 0
+	}
+	return uint64(i)
+}
+
+// uint64ToInt64 converts a uint64 to an int64, returning math.MaxInt64 if the uint64 is too large.
+func uint64ToInt64(u uint64) int64 {
+	if u > uint64(math.MaxInt64) {
+		return math.MaxInt64
+	}
+	return int64(u)
 }

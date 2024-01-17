@@ -6,7 +6,7 @@ import "gogoproto/gogo.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/auth/v1beta1/auth.proto";
 
-option go_package = "cosmossdk.io/x/accounts/vesting/types/v1";
+option go_package = "cosmossdk.io/x/vesting/types/v1";
 
 // Period defines a length of time and amount of coins that will vest.
 message Period {

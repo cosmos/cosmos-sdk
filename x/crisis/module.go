@@ -7,22 +7,13 @@ import (
 	"time"
 
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
-	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 
-	modulev1 "cosmossdk.io/api/cosmos/crisis/module/v1"
-	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/store"
-	"cosmossdk.io/depinject"
-	am "cosmossdk.io/depinject/appmodule"
-	authtypes "cosmossdk.io/x/auth/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/server"
-	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/crisis/keeper"
@@ -109,9 +100,6 @@ func NewAppModule(keeper *keeper.Keeper, skipGenesisInvariants bool) AppModule {
 	}
 }
 
-// IsOnePerModuleType implements the depinject.OnePerModuleType interface.
-func (am AppModule) IsOnePerModuleType() {}
-
 // IsAppModule implements the appmodule.AppModule interface.
 func (am AppModule) IsAppModule() {}
 
@@ -159,69 +147,4 @@ func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
 func (am AppModule) EndBlock(ctx context.Context) error {
 	EndBlocker(ctx, *am.keeper)
 	return nil
-}
-
-// App Wiring Setup
-
-func init() {
-	am.Register(
-		&modulev1.Module{},
-		am.Provide(ProvideModule),
-	)
-}
-
-type ModuleInputs struct {
-	depinject.In
-
-	Config       *modulev1.Module
-	StoreService store.KVStoreService
-	Cdc          codec.Codec
-	AppOpts      servertypes.AppOptions `optional:"true"`
-
-	BankKeeper   types.SupplyKeeper
-	AddressCodec address.Codec
-}
-
-type ModuleOutputs struct {
-	depinject.Out
-
-	Module       appmodule.AppModule
-	CrisisKeeper *keeper.Keeper
-}
-
-func ProvideModule(in ModuleInputs) ModuleOutputs {
-	var invalidCheckPeriod uint
-	if in.AppOpts != nil {
-		invalidCheckPeriod = cast.ToUint(in.AppOpts.Get(server.FlagInvCheckPeriod))
-	}
-
-	feeCollectorName := in.Config.FeeCollectorName
-	if feeCollectorName == "" {
-		feeCollectorName = authtypes.FeeCollectorName
-	}
-
-	// default to governance authority if not provided
-	authority := authtypes.NewModuleAddress(types.GovModuleName)
-	if in.Config.Authority != "" {
-		authority = authtypes.NewModuleAddressOrBech32Address(in.Config.Authority)
-	}
-
-	k := keeper.NewKeeper(
-		in.Cdc,
-		in.StoreService,
-		invalidCheckPeriod,
-		in.BankKeeper,
-		feeCollectorName,
-		authority.String(),
-		in.AddressCodec,
-	)
-
-	var skipGenesisInvariants bool
-	if in.AppOpts != nil {
-		skipGenesisInvariants = cast.ToBool(in.AppOpts.Get(FlagSkipGenesisInvariants))
-	}
-
-	m := NewAppModule(k, skipGenesisInvariants)
-
-	return ModuleOutputs{CrisisKeeper: k, Module: m}
 }

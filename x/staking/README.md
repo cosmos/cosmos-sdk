@@ -797,10 +797,10 @@ The message handling can fail if:
 
 * The new pubkey is not a `cryptotypes.PubKey`.
 * The new pubkey is already associated with another validator.
-* The new pubkey already present in the cons pubkey rotation history.
+* The new pubkey is already present in the cons pubkey rotation history.
 * The validator address is not in validators list.
 * The `max_cons_pubkey_rotations` limit reached within unbonding period.
-* The validator don't have fee to pay for rotation.
+* The validator doesn't have enough balance to pay for the rotation.
 
 ## Begin-Block
 

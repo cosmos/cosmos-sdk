@@ -138,8 +138,8 @@ schema = 3
     version = "v0.13.3"
     hash = "sha256-4f73odipfgWku0/gK2UtXbrBXvj8kT9sg4IhnfAP/S0="
   [mod."github.com/creachadair/atomicfile"]
-    version = "v0.3.2"
-    hash = "sha256-oklAvdJrNFKNcCHvQdLVrLyLf0LG5ipusTXKSVycc64="
+    version = "v0.3.3"
+    hash = "sha256-sm0lJGGjpm27HQlOc8C3QgWHjlyjJZ/tKIO5qpSNH7E="
   [mod."github.com/creachadair/tomledit"]
     version = "v0.0.25"
     hash = "sha256-EW3K2z4sfCdgKTQsjTpHxV96xdnTbnggu1EF34BlTzk="

@@ -352,12 +352,12 @@ message Params {
   string optimistic_rejected_threshold = 19 [(cosmos_proto.scalar) = "cosmos.Dec"];
 }
 
-// ProposalMessageBasedParams defines the parameters of specific messages in a proposal.
+// MessageBasedParams defines the parameters of specific messages in a proposal.
 // It is used to define the parameters of a proposal that is based on a specific message.
 // Once a message has message based params, it only supports a standard proposal type.
 //
 // Since: x/gov v1.0.0
-message ProposalMessageBasedParams {
+message MessageBasedParams {
   // Duration of the voting period.
   google.protobuf.Duration voting_period = 1 [(gogoproto.stdduration) = true];
 

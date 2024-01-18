@@ -20,18 +20,6 @@ import (
 
 // SubmitProposal creates a new proposal given an array of messages
 func (k Keeper) SubmitProposal(ctx context.Context, messages []sdk.Msg, metadata, title, summary string, proposer sdk.AccAddress, proposalType v1.ProposalType) (v1.Proposal, error) {
-	// check if any of the message has message based params
-	for _, msg := range messages {
-		hasMessagedBasedParams, err := k.ProposalMessageBasedParams.Has(ctx, sdk.MsgTypeURL(msg))
-		if err != nil {
-			return v1.Proposal{}, err
-		}
-
-		if hasMessagedBasedParams && len(messages) > 1 {
-			return v1.Proposal{}, errorsmod.Wrap(types.ErrInvalidProposalMsg)
-		}
-	}
-
 	params, err := k.Params.Get(ctx)
 	if err != nil {
 		return v1.Proposal{}, err
@@ -56,6 +44,24 @@ func (k Keeper) SubmitProposal(ctx context.Context, messages []sdk.Msg, metadata
 	// Loop through all messages and confirm that each has a handler and the gov module account as the only signer
 	for _, msg := range messages {
 		msgs = append(msgs, sdk.MsgTypeURL(msg))
+
+		// check if any of the message has message based params
+		hasMessagedBasedParams, err := k.MessageBasedParams.Has(ctx, sdk.MsgTypeURL(msg))
+		if err != nil {
+			return v1.Proposal{}, err
+		}
+
+		if hasMessagedBasedParams {
+			// TODO(@julienrbrt), in the future, we can check if all messages have the same params
+			// and if so, we can allow the proposal.
+			if len(messages) > 1 {
+				return v1.Proposal{}, errorsmod.Wrap(types.ErrInvalidProposalMsg, "cannot submit multiple messages proposal with message based params")
+			}
+
+			if proposalType != v1.ProposalType_PROPOSAL_TYPE_STANDARD {
+				return v1.Proposal{}, errorsmod.Wrap(types.ErrInvalidProposalMsg, "cannot submit non standard proposal with message based params")
+			}
+		}
 
 		// perform a basic validation of the message
 		if m, ok := msg.(sdk.HasValidateBasic); ok {
@@ -263,27 +269,38 @@ func (k Keeper) ActivateVotingPeriod(ctx context.Context, proposal v1.Proposal) 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	startTime := sdkCtx.HeaderInfo().Time
 	proposal.VotingStartTime = &startTime
-	var votingPeriod *time.Duration
+
 	params, err := k.Params.Get(ctx)
 	if err != nil {
 		return err
 	}
 
-	if proposal.Expedited {
+	var votingPeriod *time.Duration
+	switch proposal.ProposalType {
+	case v1.ProposalType_PROPOSAL_TYPE_EXPEDITED:
 		votingPeriod = params.ExpeditedVotingPeriod
-	} else {
+	default:
 		votingPeriod = params.VotingPeriod
+
+		if len(proposal.Messages) > 0 {
+			// check if any of the message has message based params
+			customMessageParams, err := k.MessageBasedParams.Get(ctx, sdk.MsgTypeURL(proposal.Messages[0]))
+			if err == nil {
+				votingPeriod = customMessageParams.VotingPeriod
+			} else if err != nil && !errors.Is(err, collections.ErrNotFound) {
+				return err
+			}
+		}
 	}
+
 	endTime := proposal.VotingStartTime.Add(*votingPeriod)
 	proposal.VotingEndTime = &endTime
 	proposal.Status = v1.StatusVotingPeriod
-	err = k.SetProposal(ctx, proposal)
-	if err != nil {
+	if err = k.SetProposal(ctx, proposal); err != nil {
 		return err
 	}
 
-	err = k.InactiveProposalsQueue.Remove(ctx, collections.Join(*proposal.DepositEndTime, proposal.Id))
-	if err != nil {
+	if err = k.InactiveProposalsQueue.Remove(ctx, collections.Join(*proposal.DepositEndTime, proposal.Id)); err != nil {
 		return err
 	}
 

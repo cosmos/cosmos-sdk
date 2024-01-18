@@ -305,7 +305,7 @@ func (k msgServer) Deposit(goCtx context.Context, msg *v1.MsgDeposit) (*v1.MsgDe
 	return &v1.MsgDepositResponse{}, nil
 }
 
-// UpdateParams implements the MsgServer.UpdateParams method.
+// UpdateParams implements the v1.UpdateParams method.
 func (k msgServer) UpdateParams(ctx context.Context, msg *v1.MsgUpdateParams) (*v1.MsgUpdateParamsResponse, error) {
 	if k.authority != msg.Authority {
 		return nil, errors.Wrapf(govtypes.ErrInvalidSigner, "invalid authority; expected %s, got %s", k.authority, msg.Authority)
@@ -320,6 +320,23 @@ func (k msgServer) UpdateParams(ctx context.Context, msg *v1.MsgUpdateParams) (*
 	}
 
 	return &v1.MsgUpdateParamsResponse{}, nil
+}
+
+// UpdateMessageParams implements the v1.MsgServer method
+func (k msgServer) UpdateMessageParams(ctx context.Context, msg *v1.MsgUpdateMessageParams) (*v1.MsgUpdateMessageParamsResponse, error) {
+	if k.authority != msg.Authority {
+		return nil, errors.Wrapf(govtypes.ErrInvalidSigner, "invalid authority; expected %s, got %s", k.authority, msg.Authority)
+	}
+
+	if err := msg.Params.ValidateBasic(); err != nil {
+		return nil, err
+	}
+
+	if err := k.MessageBasedParams.Set(ctx, msg.MsgUrl, *msg.Params); err != nil {
+		return nil, err
+	}
+
+	return &v1.MsgUpdateMessageParamsResponse{}, nil
 }
 
 type legacyMsgServer struct {

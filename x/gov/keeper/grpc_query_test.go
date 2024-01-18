@@ -898,82 +898,53 @@ func (suite *KeeperTestSuite) TestLegacyGRPCQueryVotes() {
 
 func (suite *KeeperTestSuite) TestGRPCQueryParams() {
 	queryClient := suite.queryClient
-
-	params := v1.DefaultParams()
-
-	var (
-		req    *v1.QueryParamsRequest
-		expRes *v1.QueryParamsResponse
-	)
-
 	testCases := []struct {
-		msg      string
-		malleate func()
-		expPass  bool
+		msg     string
+		req     v1.QueryParamsRequest
+		expPass bool
 	}{
 		{
 			"empty request (valid and returns all params)",
-			func() {
-				req = &v1.QueryParamsRequest{}
-			},
+			v1.QueryParamsRequest{},
 			true,
 		},
 		{
-			"deposit params request",
-			func() {
-				req = &v1.QueryParamsRequest{ParamsType: v1.ParamDeposit}
-				depositParams := v1.NewDepositParams(params.MinDeposit, params.MaxDepositPeriod) //nolint:staticcheck // SA1019: params.MinDeposit is deprecated: Use MinInitialDeposit instead.
-				expRes = &v1.QueryParamsResponse{
-					DepositParams: &depositParams,
-				}
-			},
+			"invalid request (but passes as params type is deprecated)",
+			v1.QueryParamsRequest{ParamsType: "wrongPath"},
 			true,
-		},
-		{
-			"voting params request",
-			func() {
-				req = &v1.QueryParamsRequest{ParamsType: v1.ParamVoting}
-				votingParams := v1.NewVotingParams(params.VotingPeriod) //nolint:staticcheck // SA1019: params.VotingPeriod is deprecated: Use VotingPeriod instead.
-				expRes = &v1.QueryParamsResponse{
-					VotingParams: &votingParams,
-				}
-			},
-			true,
-		},
-		{
-			"tally params request",
-			func() {
-				req = &v1.QueryParamsRequest{ParamsType: v1.ParamTallying}
-				tallyParams := v1.NewTallyParams(params.Quorum, params.Threshold, params.VetoThreshold) //nolint:staticcheck // SA1019: params.Quorum is deprecated: Use Quorum instead.
-				expRes = &v1.QueryParamsResponse{
-					TallyParams: &tallyParams,
-				}
-			},
-			true,
-		},
-		{
-			"invalid request",
-			func() {
-				req = &v1.QueryParamsRequest{ParamsType: "wrongPath"}
-				expRes = &v1.QueryParamsResponse{}
-			},
-			false,
 		},
 	}
 
 	for _, tc := range testCases {
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
-			if tc.malleate != nil {
-				tc.malleate()
-			}
-
-			params, err := queryClient.Params(gocontext.Background(), req)
+			params, err := queryClient.Params(gocontext.Background(), &tc.req)
 
 			if tc.expPass {
 				suite.Require().NoError(err)
-				suite.Require().Equal(expRes.GetDepositParams(), params.GetDepositParams()) //nolint:staticcheck // SA1019: params.MinDeposit is deprecated: Use MinInitialDeposit instead.
-				suite.Require().Equal(expRes.GetVotingParams(), params.GetVotingParams())   //nolint:staticcheck // SA1019: params.VotingPeriod is deprecated: Use VotingPeriod instead.
-				suite.Require().Equal(expRes.GetTallyParams(), params.GetTallyParams())     //nolint:staticcheck // SA1019: params.Quorum is deprecated: Use Quorum instead.
+			} else {
+				suite.Require().Error(err)
+				suite.Require().Nil(params)
+			}
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestGRPCQueryMessagedBasedParams() {
+	queryClient := suite.queryClient
+	testCases := []struct {
+		msg     string
+		req     v1.QueryMessageBasedParamsRequest
+		expPass bool
+	}{}
+
+	// TODO: add test cases
+
+	for _, tc := range testCases {
+		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
+			params, err := queryClient.MessageBasedParams(gocontext.Background(), &tc.req)
+
+			if tc.expPass {
+				suite.Require().NoError(err)
 			} else {
 				suite.Require().Error(err)
 				suite.Require().Nil(params)

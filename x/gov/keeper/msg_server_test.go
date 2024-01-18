@@ -1850,6 +1850,24 @@ func (suite *KeeperTestSuite) TestMsgUpdateParams() {
 	}
 }
 
+func (suite *KeeperTestSuite) TestMsgUpdateMesagedParams() {
+	testCases := []struct {
+		name      string
+		input     func() *v1.MsgUpdateMessageParams
+		expErr    bool
+		expErrMsg string
+	}{}
+
+	// TODO
+
+	for _, tc := range testCases {
+		tc := tc
+		suite.Run(tc.name, func() {
+
+		})
+	}
+}
+
 func (suite *KeeperTestSuite) TestSubmitProposal_InitialDeposit() {
 	const meetsDepositValue = baseDepositTestAmount * baseDepositTestPercent / 100
 	baseDepositRatioDec := sdkmath.LegacyNewDec(baseDepositTestPercent).Quo(sdkmath.LegacyNewDec(100))

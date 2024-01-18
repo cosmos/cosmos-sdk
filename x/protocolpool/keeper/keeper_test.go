@@ -69,7 +69,6 @@ func (s *KeeperTestSuite) SetupTest() {
 		bankKeeper,
 		stakingKeeper,
 		authtypes.NewModuleAddress(types.GovModuleName).String(),
-		authtypes.NewModuleAddress(types.StreamAccount).String(),
 	)
 	s.ctx = ctx
 	s.poolKeeper = poolKeeper

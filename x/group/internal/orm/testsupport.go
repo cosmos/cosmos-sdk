@@ -1,8 +1,6 @@
 package orm
 
 import (
-	"fmt"
-
 	dbm "github.com/cosmos/cosmos-db"
 
 	"cosmossdk.io/log"
@@ -61,7 +59,6 @@ func (d debuggingGasMeter) Limit() storetypes.Gas {
 }
 
 func (d debuggingGasMeter) ConsumeGas(amount storetypes.Gas, descriptor string) {
-	fmt.Printf("++ Consuming gas: %q :%d\n", descriptor, amount)
 	d.g.ConsumeGas(amount, descriptor)
 }
 

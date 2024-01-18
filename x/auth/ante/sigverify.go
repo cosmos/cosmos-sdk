@@ -326,7 +326,7 @@ func (svd SigVerificationDecorator) verifySig(ctx sdk.Context, simulate bool, tx
 
 // setPubKey will attempt to set the pubkey for the account given the list of available public keys.
 // This must be called only in case the account has not a pubkey set yet.
-func (svd SigVerificationDecorator) setPubKey(isSigVerifyTx bool, simulate bool, acc sdk.AccountI, txPubKey cryptotypes.PubKey) error {
+func (svd SigVerificationDecorator) setPubKey(isSigVerifyTx, simulate bool, acc sdk.AccountI, txPubKey cryptotypes.PubKey) error {
 	// if we're not in sig verify then we can just skip.
 	if !isSigVerifyTx {
 		return nil

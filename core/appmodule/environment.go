@@ -14,6 +14,6 @@ type Environment struct {
 	EventService    event.Service
 	GasService      gas.Service
 	HeaderService   header.Service
-	KvStoreService  store.KVStoreService
+	KVStoreService  store.KVStoreService
 	MemStoreService store.MemoryStoreService
 }

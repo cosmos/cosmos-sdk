@@ -251,10 +251,10 @@ func ProvideAppVersionModifier(app *AppBuilder) baseapp.AppVersionModifier {
 	return app.app
 }
 
-func ProvideEnvironment(config *runtimev1alpha1.Module, key depinject.ModuleKey, app *AppBuilder, kvservice func(config *runtimev1alpha1.Module, key depinject.ModuleKey, app *AppBuilder) store.KVStoreService) appmodule.Environment {
+func ProvideEnvironment(kvservice store.KVStoreService) appmodule.Environment {
 	env := appmodule.Environment{}
 
-	env.KvStoreService = kvservice(config, key, app)
+	env.KVStoreService = kvservice
 
 	env.EventService = EventService{}
 	env.HeaderService = HeaderService{}

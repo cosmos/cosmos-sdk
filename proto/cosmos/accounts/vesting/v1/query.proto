@@ -104,3 +104,12 @@ message QueryVestingPeriodsResponse {
   // vesting_periods defines the value of the periodic vesting account vesting periods.
   repeated Period vesting_periods = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 }
+
+// QueryOwnerRequest is used to query the owner of the vesting account.
+message QueryOwnerRequest {}
+
+// QueryOwnerResponse returns the owner of the vesting account.
+message QueryOwnerResponse {
+  // owner defines the value of the owner of the vesting account.
+  string owner = 1;
+}

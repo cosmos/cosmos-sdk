@@ -466,6 +466,19 @@ func (bva BaseVesting) QueryEndTime(ctx context.Context, _ *vestingtypes.QueryEn
 	}, nil
 }
 
+// QueryOwner returns a vesting account's owner
+func (bva BaseVesting) QueryOwner(ctx context.Context, _ *vestingtypes.QueryOwnerRequest) (
+	*vestingtypes.QueryOwnerResponse, error,
+) {
+	owner, err := bva.Owner.Get(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return &vestingtypes.QueryOwnerResponse{
+		Owner: owner,
+	}, nil
+}
+
 func (bva BaseVesting) RegisterExecuteHandlers(builder *accountstd.ExecuteBuilder) {
 	accountstd.RegisterExecuteHandler(builder, bva.Authenticate)
 }
@@ -475,4 +488,5 @@ func (bva BaseVesting) RegisterQueryHandlers(builder *accountstd.QueryBuilder) {
 	accountstd.RegisterQueryHandler(builder, bva.QueryDelegatedFree)
 	accountstd.RegisterQueryHandler(builder, bva.QueryDelegatedVesting)
 	accountstd.RegisterQueryHandler(builder, bva.QueryEndTime)
+	accountstd.RegisterQueryHandler(builder, bva.QueryOwner)
 }

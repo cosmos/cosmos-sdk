@@ -942,6 +942,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryMessagedBasedParams() {
 	// TODO: add test cases
 
 	for _, tc := range testCases {
+		tc := tc
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			params, err := queryClient.MessageBasedParams(gocontext.Background(), &tc.req)
 

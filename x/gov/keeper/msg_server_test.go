@@ -1863,7 +1863,6 @@ func (suite *KeeperTestSuite) TestMsgUpdateMesagedParams() {
 	for _, tc := range testCases {
 		tc := tc
 		suite.Run(tc.name, func() {
-
 		})
 	}
 }

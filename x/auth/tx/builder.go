@@ -294,20 +294,14 @@ func (w *wrapper) SetSignatures(signatures ...signing.SignatureV2) error {
 			err      error
 		)
 		modeInfo, rawSigs[i] = SignatureDataToModeInfoAndSig(sig.Data)
-<<<<<<< HEAD
-		any, err := codectypes.NewAnyWithValue(sig.PubKey)
-		if err != nil {
-			return err
-=======
 		if sig.PubKey != nil {
 			pubKey, err = codectypes.NewAnyWithValue(sig.PubKey)
 			if err != nil {
 				return err
 			}
->>>>>>> e621eb6b1 (fix: allow empty public keys when setting signatures (#19106))
 		}
 		signerInfos[i] = &tx.SignerInfo{
-			PublicKey: any,
+			PublicKey: pubKey,
 			ModeInfo:  modeInfo,
 			Sequence:  sig.Sequence,
 		}

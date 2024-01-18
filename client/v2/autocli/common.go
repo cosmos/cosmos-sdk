@@ -1,7 +1,6 @@
 package autocli
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/spf13/cobra"
@@ -56,7 +55,6 @@ func (b *Builder) buildMethodCommandCommon(descriptor protoreflect.MethodDescrip
 		Version:      options.Version,
 	}
 
-	cmd.SetContext(context.Background())
 	binder, err := b.AddMessageFlags(cmd.Context(), cmd.Flags(), inputType, options)
 	if err != nil {
 		return nil, err
@@ -180,7 +178,7 @@ func (b *Builder) enhanceCommandCommon(
 // enhanceQuery enhances the provided query command with the autocli commands for a module.
 func enhanceQuery(builder *Builder, moduleName string, cmd *cobra.Command, modOpts *autocliv1.ModuleOptions) error {
 	if queryCmdDesc := modOpts.Query; queryCmdDesc != nil {
-		subCmd := topLevelCmd(moduleName, fmt.Sprintf("Querying commands for the %s module", moduleName))
+		subCmd := topLevelCmd(cmd.Context(), moduleName, fmt.Sprintf("Querying commands for the %s module", moduleName))
 		if err := builder.AddQueryServiceCommands(subCmd, queryCmdDesc); err != nil {
 			return err
 		}
@@ -194,7 +192,7 @@ func enhanceQuery(builder *Builder, moduleName string, cmd *cobra.Command, modOp
 // enhanceMsg enhances the provided msg command with the autocli commands for a module.
 func enhanceMsg(builder *Builder, moduleName string, cmd *cobra.Command, modOpts *autocliv1.ModuleOptions) error {
 	if txCmdDesc := modOpts.Tx; txCmdDesc != nil {
-		subCmd := topLevelCmd(moduleName, fmt.Sprintf("Transactions commands for the %s module", moduleName))
+		subCmd := topLevelCmd(cmd.Context(), moduleName, fmt.Sprintf("Transactions commands for the %s module", moduleName))
 		if err := builder.AddMsgServiceCommands(subCmd, txCmdDesc); err != nil {
 			return err
 		}

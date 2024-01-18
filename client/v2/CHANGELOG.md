@@ -36,6 +36,15 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+### Improvements
+
+* [#19060](https://github.com/cosmos/cosmos-sdk/pull/19060) Use client context from root (or enhanced) command in autocli commands.
+  * Note, the given command must have a `client.Context` in its context.
+
+### Bug Fixes
+
+* [#19060](https://github.com/cosmos/cosmos-sdk/pull/19060) Simplify key flag parsing logic in flag handler.
+
 ## [v2.0.0-beta.1] - 2023-11-07
 
 This is the first tagged version of client/v2.

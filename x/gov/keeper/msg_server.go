@@ -328,9 +328,22 @@ func (k msgServer) UpdateMessageParams(ctx context.Context, msg *v1.MsgUpdateMes
 		return nil, errors.Wrapf(govtypes.ErrInvalidSigner, "invalid authority; expected %s, got %s", k.authority, msg.Authority)
 	}
 
+	// delete the message params if the params are empty
+	if *msg.Params == (v1.MessageBasedParams{}) {
+		if err := k.MessageBasedParams.Remove(ctx, msg.MsgUrl); err != nil {
+			return nil, err
+		}
+
+		return &v1.MsgUpdateMessageParamsResponse{}, nil
+	}
+
 	if err := msg.Params.ValidateBasic(); err != nil {
 		return nil, err
 	}
+
+	// note: we don't need to validate the message URL here, as it is gov gated
+	// a chain may want to configure proposal messages before having an upgrade
+	// adding new messages.
 
 	if err := k.MessageBasedParams.Set(ctx, msg.MsgUrl, *msg.Params); err != nil {
 		return nil, err

@@ -4,7 +4,7 @@ import (
 	"io"
 
 	coreheader "cosmossdk.io/core/header"
-	corestore "cosmossdk.io/core/store"
+	corestore "cosmossdk.io/server/v2/core/store"
 	"cosmossdk.io/store/v2/metrics"
 )
 
@@ -13,12 +13,12 @@ import (
 type RootStore interface {
 	// StateLatest returns a read-only version of the RootStore at the latest
 	// height, alongside the associated version.
-	StateLatest() (uint64, ReadOnlyRootStore, error)
+	StateLatest() (uint64, corestore.ReadonlyState, error)
 
 	// StateAt is analogous to StateLatest() except it returns a read-only version
 	// of the RootStore at the provided version. If such a version cannot be found,
 	// an error must be returned.
-	StateAt(version uint64) (ReadOnlyRootStore, error)
+	StateAt(version uint64) (corestore.ReadonlyState, error)
 
 	// GetStateStorage returns the SS backend.
 	GetStateStorage() VersionedDatabase
@@ -54,7 +54,7 @@ type RootStore interface {
 	// is responsible for writing the Changeset to the SC backend and returning the
 	// resulting root hash. Then, Commit() would return this hash and flush writes
 	// to disk.
-	WorkingHash(cs *Changeset) ([]byte, error)
+	WorkingHash(cs *corestore.ChangeSet) ([]byte, error)
 
 	// Commit should be responsible for taking the provided changeset and flushing
 	// it to disk. Note, depending on the implementation, the changeset, at this
@@ -62,7 +62,7 @@ type RootStore interface {
 	// the changeset is committed to all SC and SC backends and flushed to disk.
 	// It must return a hash of the merkle-ized committed state. This hash should
 	// be the same as the hash returned by WorkingHash() prior to calling Commit().
-	Commit(cs *Changeset) ([]byte, error)
+	Commit(cs *corestore.ChangeSet) ([]byte, error)
 
 	// LastCommitID returns a CommitID pertaining to the last commitment.
 	LastCommitID() (CommitID, error)
@@ -85,21 +85,6 @@ type UpgradeableRootStore interface {
 	// Note, handling StoreUpgrades is optional depending on the underlying RootStore
 	// implementation.
 	LoadVersionAndUpgrade(version uint64, upgrades *StoreUpgrades) error
-}
-
-// ReadOnlyRootStore defines a read-only interface for a RootStore.
-type ReadOnlyRootStore interface {
-	// Has returns if a key exists in the read-only RootStore.
-	Has(storeKey string, key []byte) (bool, error)
-
-	// Get returns the value of a key, if it exists, in the read-only RootStore.
-	Get(storeKey string, key []byte) ([]byte, error)
-
-	// Iterator returns an iterator over a given store key and domain.
-	Iterator(storeKey string, start, end []byte) (corestore.Iterator, error)
-
-	// ReverseIterator returns a reverse iterator over a given store key and domain.
-	ReverseIterator(storeKey string, start, end []byte) (corestore.Iterator, error)
 }
 
 // QueryResult defines the response type to performing a query on a RootStore.

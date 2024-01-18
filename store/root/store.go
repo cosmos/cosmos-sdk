@@ -10,6 +10,7 @@ import (
 
 	coreheader "cosmossdk.io/core/header"
 	"cosmossdk.io/log"
+	corestore "cosmossdk.io/server/v2/core/store"
 	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/metrics"
 	"cosmossdk.io/store/v2/pruning"
@@ -95,7 +96,7 @@ func (s *Store) SetInitialVersion(v uint64) error {
 	return s.stateCommitment.SetInitialVersion(v)
 }
 
-func (s *Store) StateLatest() (uint64, store.ReadOnlyRootStore, error) {
+func (s *Store) StateLatest() (uint64, corestore.ReadonlyState, error) {
 	v, err := s.GetLatestVersion()
 	if err != nil {
 		return 0, nil, err
@@ -104,7 +105,7 @@ func (s *Store) StateLatest() (uint64, store.ReadOnlyRootStore, error) {
 	return v, NewReadOnlyAdapter(v, s), nil
 }
 
-func (s *Store) StateAt(v uint64) (store.ReadOnlyRootStore, error) {
+func (s *Store) StateAt(v uint64) (corestore.ReadonlyState, error) {
 	// TODO(bez): Ensure the version <v> exists. We can utilize the GetCommitInfo()
 	// SC method once available.
 	//

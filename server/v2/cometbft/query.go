@@ -9,8 +9,8 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	cometerrors "cosmossdk.io/server/v2/cometbft/types/errors"
-	"cosmossdk.io/server/v2/core/store"
 	"cosmossdk.io/store/types"
+	"cosmossdk.io/store/v2"
 )
 
 func (c *Consensus[T]) handleQueryP2P(path []string) (*abci.ResponseQuery, error) {
@@ -81,7 +81,7 @@ func (c *Consensus[T]) handlerQueryApp(ctx context.Context, path []string, req *
 	return nil, errorsmod.Wrapf(cometerrors.ErrUnknownRequest, "unknown query: %s", path)
 }
 
-func (c *Consensus[T]) handleQueryStore(path []string, st store.Store, req *abci.RequestQuery) (*abci.ResponseQuery, error) {
+func (c *Consensus[T]) handleQueryStore(path []string, st store.RootStore, req *abci.RequestQuery) (*abci.ResponseQuery, error) {
 	req.Path = "/" + strings.Join(path[1:], "/")
 	if req.Height <= 1 && req.Prove {
 		return nil, errorsmod.Wrap(
@@ -103,13 +103,13 @@ func (c *Consensus[T]) handleQueryStore(path []string, st store.Store, req *abci
 
 	res := &abci.ResponseQuery{
 		Codespace: cometerrors.RootCodespace,
-		Height:    int64(qRes.Version()),
-		Key:       qRes.Key(),
-		Value:     qRes.Value(),
+		Height:    int64(qRes.Version),
+		Key:       qRes.Key,
+		Value:     qRes.Value,
 	}
 
 	if req.Prove {
-		bz, err := qRes.Proof().Marshal()
+		bz, err := qRes.Proof.Marshal()
 		if err != nil {
 			return nil, errorsmod.Wrap(err, "failed to marshal proof")
 		}
@@ -117,8 +117,8 @@ func (c *Consensus[T]) handleQueryStore(path []string, st store.Store, req *abci
 		res.ProofOps = &crypto.ProofOps{
 			Ops: []crypto.ProofOp{
 				{
-					Type: qRes.ProofType(),
-					Key:  qRes.Key(),
+					Type: qRes.ProofType,
+					Key:  qRes.Key,
 					Data: bz,
 				},
 			},

@@ -2,10 +2,11 @@ package root
 
 import (
 	corestore "cosmossdk.io/core/store"
+	corestorev2 "cosmossdk.io/server/v2/core/store"
 	"cosmossdk.io/store/v2"
 )
 
-var _ store.ReadOnlyRootStore = (*ReadOnlyAdapter)(nil)
+var _ corestorev2.ReadonlyState = (*ReadOnlyAdapter)(nil)
 
 // ReadOnlyAdapter defines an adapter around a RootStore that only exposes read-only
 // operations. This is useful for exposing a read-only view of the RootStore at
@@ -22,8 +23,8 @@ func NewReadOnlyAdapter(v uint64, rs store.RootStore) *ReadOnlyAdapter {
 	}
 }
 
-func (roa *ReadOnlyAdapter) Has(storeKey string, key []byte) (bool, error) {
-	val, err := roa.Get(storeKey, key)
+func (roa *ReadOnlyAdapter) Has(key []byte) (bool, error) {
+	val, err := roa.Get(key)
 	if err != nil {
 		return false, err
 	}
@@ -31,7 +32,8 @@ func (roa *ReadOnlyAdapter) Has(storeKey string, key []byte) (bool, error) {
 	return val != nil, nil
 }
 
-func (roa *ReadOnlyAdapter) Get(storeKey string, key []byte) ([]byte, error) {
+func (roa *ReadOnlyAdapter) Get(key []byte) ([]byte, error) {
+	storeKey := "main" // TODO extract store key, check if fine with store team
 	result, err := roa.rootStore.Query(storeKey, roa.version, key, false)
 	if err != nil {
 		return nil, err
@@ -40,10 +42,12 @@ func (roa *ReadOnlyAdapter) Get(storeKey string, key []byte) ([]byte, error) {
 	return result.Value, nil
 }
 
-func (roa *ReadOnlyAdapter) Iterator(storeKey string, start, end []byte) (corestore.Iterator, error) {
+func (roa *ReadOnlyAdapter) Iterator(start, end []byte) (corestore.Iterator, error) {
+	storeKey := "main" // TODO extract store key
 	return roa.rootStore.GetStateStorage().Iterator(storeKey, roa.version, start, end)
 }
 
-func (roa *ReadOnlyAdapter) ReverseIterator(storeKey string, start, end []byte) (corestore.Iterator, error) {
+func (roa *ReadOnlyAdapter) ReverseIterator(start, end []byte) (corestore.Iterator, error) {
+	storeKey := "main" // TODO extract store key
 	return roa.rootStore.GetStateStorage().ReverseIterator(storeKey, roa.version, start, end)
 }

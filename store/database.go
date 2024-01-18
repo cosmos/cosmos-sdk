@@ -6,6 +6,7 @@ import (
 	ics23 "github.com/cosmos/ics23/go"
 
 	corestore "cosmossdk.io/core/store"
+	corestorev2 "cosmossdk.io/server/v2/core/store"
 )
 
 // Reader wraps the Has and Get method of a backing data store.
@@ -55,7 +56,7 @@ type VersionedDatabase interface {
 	Iterator(storeKey string, version uint64, start, end []byte) (corestore.Iterator, error)
 	ReverseIterator(storeKey string, version uint64, start, end []byte) (corestore.Iterator, error)
 
-	ApplyChangeset(version uint64, cs *Changeset) error
+	ApplyChangeset(version uint64, cs *corestorev2.ChangeSet) error
 
 	// Prune attempts to prune all versions up to and including the provided
 	// version argument. The operation should be idempotent. An error should be
@@ -69,7 +70,7 @@ type VersionedDatabase interface {
 
 // Committer defines an API for committing state.
 type Committer interface {
-	WriteBatch(cs *Changeset) error
+	WriteBatch(cs *corestorev2.ChangeSet) error
 	WorkingStoreInfos(version uint64) []StoreInfo
 	GetLatestVersion() (uint64, error)
 	LoadVersion(targetVersion uint64) error

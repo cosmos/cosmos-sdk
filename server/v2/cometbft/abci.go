@@ -21,6 +21,7 @@ import (
 	"cosmossdk.io/server/v2/core/store"
 	"cosmossdk.io/server/v2/core/transaction"
 	"cosmossdk.io/server/v2/streaming"
+	storev2 "cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/snapshots"
 )
 
@@ -35,7 +36,7 @@ var _ abci.Application = (*Consensus[transaction.Tx])(nil)
 type Consensus[T transaction.Tx] struct {
 	app             appmanager.AppManager[T]
 	cfg             Config
-	store           store.Store
+	store           storev2.RootStore
 	logger          log.Logger
 	txCodec         transaction.Codec[T]
 	streaming       streaming.Manager
@@ -51,7 +52,7 @@ type Consensus[T transaction.Tx] struct {
 func NewConsensus[T transaction.Tx](
 	app appmanager.AppManager[T],
 	mp mempool.Mempool[T],
-	store store.Store,
+	store storev2.RootStore,
 	cfg Config,
 ) *Consensus[T] {
 	return &Consensus[T]{
@@ -344,7 +345,7 @@ func (c *Consensus[T]) FinalizeBlock(ctx context.Context, req *abci.RequestFinal
 
 	// after we get the changeset we can produce the commit hash,
 	// from the store.
-	appHash, err := c.store.StateCommit(changeSet)
+	appHash, err := c.store.Commit(changeSet) // TODO: align here
 	if err != nil {
 		return nil, fmt.Errorf("unable to commit the changeset: %w", err)
 	}

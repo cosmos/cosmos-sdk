@@ -897,7 +897,7 @@ Complete the unbonding of all mature `Redelegation.Entries` within the
 
 #### ConsPubKeyRotations
 
-After waiting for unbonding period of time the matured rotations will be removed from queues and indexes to unblock the validator for the next iterations
+After the completion of the unbonding period, matured rotations will be removed from the queues and indexes to unblock the validator for the next iterations.
 
 * remove the mature entry from state of `ValidatorConsensusKeyRotationRecordQueueKey`
 * remove the mature entry form state of 
@@ -1775,7 +1775,7 @@ simd tx staking cancel-unbond cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhf
 
 ##### rotate cons pubkey
 
-The command `rotate-cons-pubkey` allow validators to rotate the associated consensus pubkey to the new consensus pubkey.
+The command `rotate-cons-pubkey` allows validators to rotate the associated consensus pubkey to the new consensus pubkey.
 
 Usage:
 

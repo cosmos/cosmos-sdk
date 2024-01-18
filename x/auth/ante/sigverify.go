@@ -267,16 +267,7 @@ func (svd SigVerificationDecorator) consumeSignatureGas(
 }
 
 // verifySig will verify the signature of the provided signer account.
-// it will assess:
-// - the pub key is on the curve.
-// - verify sig
 func (svd SigVerificationDecorator) verifySig(ctx sdk.Context, simulate bool, tx sdk.Tx, acc sdk.AccountI, sig signing.SignatureV2) error {
-	// retrieve pubkey
-	pubKey := acc.GetPubKey()
-	if !simulate && pubKey == nil {
-		return errorsmod.Wrap(sdkerrors.ErrInvalidPubKey, "pubkey on account is not set")
-	}
-
 	if sig.Sequence != acc.GetSequence() {
 		return errorsmod.Wrapf(
 			sdkerrors.ErrWrongSequence,
@@ -289,6 +280,12 @@ func (svd SigVerificationDecorator) verifySig(ctx sdk.Context, simulate bool, tx
 	// in the tx.
 	if simulate || ctx.IsReCheckTx() || !ctx.IsSigverifyTx() {
 		return nil
+	}
+
+	// retrieve pubkey
+	pubKey := acc.GetPubKey()
+	if pubKey == nil {
+		return errorsmod.Wrap(sdkerrors.ErrInvalidPubKey, "pubkey on account is not set")
 	}
 
 	// retrieve signer data
@@ -346,6 +343,10 @@ func (svd SigVerificationDecorator) increaseSequenceAndUpdateAccount(ctx sdk.Con
 // setPubKey will attempt to set the pubkey for the account given the list of available public keys.
 // This must be called only in case the account has not a pubkey set yet.
 func (svd SigVerificationDecorator) setPubKey(ctx sdk.Context, simulate bool, acc sdk.AccountI, pubKey cryptotypes.PubKey) error {
+	// if we're not in sig verify then we can just skip.
+	if !ctx.IsSigverifyTx() {
+		return nil
+	}
 	// if the pubkey is nil then we don't have any pubkey to set
 	// for this account, which alwo means we cannot do signature
 	// verification.

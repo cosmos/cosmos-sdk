@@ -18,7 +18,6 @@ import (
 type Dependencies struct {
 	SchemaBuilder    *collections.SchemaBuilder
 	AddressCodec     address.Codec
-	BinaryCodec      codec.Codec
 	HeaderService    header.Service
 	GasService       gas.Service
 	LegacyStateCodec interface {

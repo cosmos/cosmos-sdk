@@ -32,7 +32,7 @@ func NewPeriodicVestingAccount(d accountstd.Dependencies) (*PeriodicVestingAccou
 	periodicsVestingAccount := PeriodicVestingAccount{
 		BaseVesting:    baseVestingAccount,
 		StartTime:      collections.NewItem(d.SchemaBuilder, StartTimePrefix, "start_time", sdk.IntValue),
-		VestingPeriods: collections.NewMap(d.SchemaBuilder, VestingPeriodsPrefix, "vesting_periods", collections.StringKey, codec.CollValue[vestingtypes.Period](d.BinaryCodec)),
+		VestingPeriods: collections.NewMap(d.SchemaBuilder, VestingPeriodsPrefix, "vesting_periods", collections.StringKey, codec.CollValue[vestingtypes.Period](d.LegacyStateCodec)),
 	}
 
 	return &periodicsVestingAccount, err

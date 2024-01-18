@@ -4,18 +4,27 @@ import (
 	"context"
 	"fmt"
 
+	gogoproto "github.com/cosmos/gogoproto/proto"
+
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/address"
+	"cosmossdk.io/core/gas"
 	"cosmossdk.io/core/header"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 )
 
 // Dependencies are passed to the constructor of a smart account.
 type Dependencies struct {
-	SchemaBuilder *collections.SchemaBuilder
-	AddressCodec  address.Codec
-	BinaryCodec   codec.Codec
-	HeaderService header.Service
+	SchemaBuilder    *collections.SchemaBuilder
+	AddressCodec     address.Codec
+	BinaryCodec      codec.Codec
+	HeaderService    header.Service
+	GasService       gas.Service
+	LegacyStateCodec interface {
+		Marshal(gogoproto.Message) ([]byte, error)
+		Unmarshal([]byte, gogoproto.Message) error
+	}
 }
 
 // AccountCreatorFunc is a function that creates an account.
@@ -24,19 +33,21 @@ type AccountCreatorFunc = func(deps Dependencies) (string, Account, error)
 // MakeAccountsMap creates a map of account names to account implementations
 // from a list of account creator functions.
 func MakeAccountsMap(
+	cdc codec.BinaryCodec,
 	addressCodec address.Codec,
-	binaryCodec codec.Codec,
 	hs header.Service,
+	gs gas.Service,
 	accounts []AccountCreatorFunc,
 ) (map[string]Implementation, error) {
 	accountsMap := make(map[string]Implementation, len(accounts))
 	for _, makeAccount := range accounts {
 		stateSchemaBuilder := collections.NewSchemaBuilderFromAccessor(openKVStore)
 		deps := Dependencies{
-			SchemaBuilder: stateSchemaBuilder,
-			AddressCodec:  addressCodec,
-			BinaryCodec:   binaryCodec,
-			HeaderService: headerService{hs},
+			SchemaBuilder:    stateSchemaBuilder,
+			AddressCodec:     addressCodec,
+			HeaderService:    headerService{hs},
+			GasService:       gasService{gs},
+			LegacyStateCodec: cdc,
 		}
 		name, accountInterface, err := makeAccount(deps)
 		if err != nil {

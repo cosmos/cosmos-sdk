@@ -16,6 +16,7 @@ import (
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/branch"
 	"cosmossdk.io/core/event"
+	"cosmossdk.io/core/gas"
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/x/accounts/accountstd"
@@ -62,16 +63,17 @@ type InterfaceRegistry interface {
 }
 
 func NewKeeper(
+	cdc codec.BinaryCodec,
 	ss store.KVStoreService,
 	es event.Service,
 	hs header.Service,
 	bs branch.Service,
+	gs gas.Service,
 	addressCodec address.Codec,
 	signerProvider SignerProvider,
 	execRouter MsgRouter,
 	queryRouter QueryRouter,
 	ir InterfaceRegistry,
-	codec *codec.ProtoCodec,
 	accounts ...accountstd.AccountCreatorFunc,
 ) (Keeper, error) {
 	sb := collections.NewSchemaBuilder(ss)
@@ -95,7 +97,7 @@ func NewKeeper(
 		return Keeper{}, err
 	}
 	keeper.Schema = schema
-	keeper.accounts, err = implementation.MakeAccountsMap(keeper.addressCodec, codec, hs, accounts)
+	keeper.accounts, err = implementation.MakeAccountsMap(cdc, keeper.addressCodec, hs, gs, accounts)
 	if err != nil {
 		return Keeper{}, err
 	}

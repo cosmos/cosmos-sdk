@@ -73,7 +73,7 @@ func TestValidateGenesis(t *testing.T) {
 
 				return v1.NewGenesisState(v1.DefaultStartingProposalID, params1)
 			},
-			expErrMsg: "quorom too large",
+			expErrMsg: "quorum too large",
 		},
 		{
 			name: "invalid threshold",

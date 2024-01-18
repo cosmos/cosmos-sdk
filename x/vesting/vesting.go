@@ -78,9 +78,13 @@ func (bva *BaseVesting) Init(ctx context.Context, msg *vestingtypes.MsgInitVesti
 	}
 	fromAddress, err := bva.addressCodec.BytesToString(sender)
 	if err != nil {
-		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid 'to' address: %s", err)
+		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid 'sender' address: %s", err)
 	}
-	err = bva.Owner.Set(ctx, sender)
+	owner, err := bva.addressCodec.StringToBytes(msg.Owner)
+	if err != nil {
+		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid 'owner' address: %s", err)
+	}
+	err = bva.Owner.Set(ctx, owner)
 	if err != nil {
 		return nil, err
 	}

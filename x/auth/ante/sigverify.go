@@ -357,8 +357,9 @@ func (svd SigVerificationDecorator) setPubKey(ctx sdk.Context, simulate bool, ac
 			return fmt.Errorf("the account %s is without a pubkey and did not provide a pubkey in the tx to set it", acc.GetAddress().String())
 		}
 		// if we're in simulation mode, then we can populate the pubkey with the
-		// sim one.
+		// sim one and simply return.
 		pubKey = simSecp256k1Pubkey
+		return acc.SetPubKey(pubKey)
 	}
 
 	// NOTE(tip): this is a way to claim the account, in a context in which the

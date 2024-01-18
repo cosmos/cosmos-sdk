@@ -232,6 +232,7 @@ require (
 // SimApp on main always tests the latest extracted SDK modules importing the sdk
 replace (
 	cosmossdk.io/api => ../api
+	cosmossdk.io/core => ../core
 	cosmossdk.io/client/v2 => ../client/v2
 	cosmossdk.io/depinject => ../depinject
 	cosmossdk.io/tools/confix => ../tools/confix
@@ -252,6 +253,7 @@ replace (
 	cosmossdk.io/x/slashing => ../x/slashing
 	cosmossdk.io/x/staking => ../x/staking
 	cosmossdk.io/x/upgrade => ../x/upgrade
+	cosmossdk.io/x/tx => ../x/tx
 )
 
 // Below are the long-lived replace of the SimApp

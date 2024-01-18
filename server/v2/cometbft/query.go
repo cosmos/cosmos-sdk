@@ -54,7 +54,7 @@ func (c *Consensus[T]) handlerQueryApp(ctx context.Context, path []string, req *
 			return nil, errorsmod.Wrap(err, "failed to decode tx")
 		}
 
-		txResult, err := c.app.Simulate(ctx, tx)
+		txResult, _, err := c.app.Simulate(ctx, tx)
 		if err != nil {
 			return nil, errorsmod.Wrap(err, "failed to simulate tx")
 		}

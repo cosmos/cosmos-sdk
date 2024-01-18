@@ -1697,7 +1697,7 @@ func (suite *KeeperTestSuite) TestMsgUpdateParams() {
 				}
 			},
 			expErr:    true,
-			expErrMsg: "quorom cannot be negative",
+			expErrMsg: "quorum cannot be negative",
 		},
 		{
 			name: "quorum > 1",
@@ -1711,7 +1711,7 @@ func (suite *KeeperTestSuite) TestMsgUpdateParams() {
 				}
 			},
 			expErr:    true,
-			expErrMsg: "quorom too large",
+			expErrMsg: "quorum too large",
 		},
 		{
 			name: "invalid threshold",

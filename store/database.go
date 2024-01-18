@@ -3,8 +3,6 @@ package store
 import (
 	"io"
 
-	ics23 "github.com/cosmos/ics23/go"
-
 	corestore "cosmossdk.io/core/store"
 )
 
@@ -69,13 +67,22 @@ type VersionedDatabase interface {
 
 // Committer defines an API for committing state.
 type Committer interface {
+	// WriteBatch writes a batch of key-value pairs to the tree.
 	WriteBatch(cs *Changeset) error
-	WorkingStoreInfos(version uint64) []StoreInfo
+	// WorkingCommitInfo returns the CommitInfo for the working tree.
+	WorkingCommitInfo(version uint64) *CommitInfo
+	// GetLatestVersion returns the latest version.
 	GetLatestVersion() (uint64, error)
+	// LoadVersion loads the tree at the given version.
 	LoadVersion(targetVersion uint64) error
-	Commit() ([]StoreInfo, error)
+	// Commit commits the working tree to the database.
+	Commit(version uint64) (*CommitInfo, error)
+	// GetProof returns the proof of existence or non-existence for the given key.
+	GetProof(storeKey string, version uint64, key []byte) ([]CommitmentOp, error)
+	// SetInitialVersion sets the initial version of the tree.
 	SetInitialVersion(version uint64) error
-	GetProof(storeKey string, version uint64, key []byte) (*ics23.CommitmentProof, error)
+	// GetCommitInfo returns the CommitInfo for the given version.
+	GetCommitInfo(version uint64) (*CommitInfo, error)
 
 	// Prune attempts to prune all versions up to and including the provided
 	// version argument. The operation should be idempotent. An error should be

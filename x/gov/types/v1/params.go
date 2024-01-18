@@ -162,10 +162,10 @@ func (p Params) ValidateBasic(addressCodec address.Codec) error {
 	if err != nil {
 		return fmt.Errorf("invalid expedited threshold string: %w", err)
 	}
-	if !threshold.IsPositive() {
+	if !expeditedThreshold.IsPositive() {
 		return fmt.Errorf("expedited vote threshold must be positive: %s", threshold)
 	}
-	if threshold.GT(sdkmath.LegacyOneDec()) {
+	if expeditedThreshold.GT(sdkmath.LegacyOneDec()) {
 		return fmt.Errorf("expedited vote threshold too large: %s", threshold)
 	}
 	if expeditedThreshold.LTE(threshold) {

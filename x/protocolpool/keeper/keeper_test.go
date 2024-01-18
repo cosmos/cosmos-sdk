@@ -53,6 +53,7 @@ func (s *KeeperTestSuite) SetupTest() {
 	accountKeeper := pooltestutil.NewMockAccountKeeper(ctrl)
 	accountKeeper.EXPECT().GetModuleAddress(types.ModuleName).Return(poolAcc.GetAddress())
 	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
+	accountKeeper.EXPECT().GetModuleAddress(types.StreamAccount).Return(streamAcc.GetAddress())
 	s.authKeeper = accountKeeper
 
 	bankKeeper := pooltestutil.NewMockBankKeeper(ctrl)

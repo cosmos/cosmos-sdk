@@ -72,6 +72,9 @@ necessary for simulation.
 				return err
 			}
 
+			// gas must be set to auto to avoid getting an empty simPk
+			_ = cmd.Flags().Set(flags.FlagGas, "auto")
+
 			txf, err := tx.NewFactoryCLI(clientCtx, cmd.Flags())
 			if err != nil {
 				return err

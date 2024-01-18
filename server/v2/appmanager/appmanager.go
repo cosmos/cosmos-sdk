@@ -32,6 +32,7 @@ type AppManager[T transaction.Tx] struct {
 
 // TODO add initgenesis and figure out how to use it
 // TODO make sure to provide defaults for handlers and configs
+// TODO: handle multimessage txs
 
 // BuildBlock builds a block when requested by consensus. It will take in the total size txs to be included and return a list of transactions
 func (a AppManager[T]) BuildBlock(ctx context.Context, height, maxBlockBytes uint64) ([]T, error) {
@@ -105,13 +106,13 @@ func (a AppManager[T]) ValidateTx(ctx context.Context, tx T) (appmanager.TxResul
 }
 
 // Simulate runs validation and execution flow of a Tx.
-func (a AppManager[T]) Simulate(ctx context.Context, tx T) (appmanager.TxResult, error) {
+func (a AppManager[T]) Simulate(ctx context.Context, tx T) (appmanager.TxResult, []store.ChangeSet, error) {
 	_, state, err := a.db.StateLatest()
 	if err != nil {
-		return appmanager.TxResult{}, err
+		return appmanager.TxResult{}, nil, err
 	}
-	result := a.stf.Simulate(ctx, state, a.simulationGasLimit, tx)
-	return result, nil
+	result, cs := a.stf.Simulate(ctx, state, a.simulationGasLimit, tx)
+	return result, cs, nil
 }
 
 // Query queries the application at the provided version.
@@ -133,9 +134,14 @@ func (a AppManager[T]) Query(ctx context.Context, version uint64, request appman
 	return a.stf.Query(ctx, queryState, a.queryGasLimit, request)
 }
 
-/* TODO query with state changes
-func (a Appmanager[T]) QueryWitStateChanges(ctx context.Context, changeset []store.ChangeSet, request Type) (response Type, err error) {
+func (a AppManager[T]) QueryWitStateChanges(ctx context.Context, changeset []store.ChangeSet, request transaction.Type) (response transaction.Type, err error) {
 
+	// // otherwise rely on latest available state.
+	// _, queryState, err := a.db.StateLatest()
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// return a.stf.Query(ctx, queryState, a.queryGasLimit, request)
 
+	return nil, nil
 }
-*/

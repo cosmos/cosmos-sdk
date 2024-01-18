@@ -23,7 +23,7 @@ func TestSTF(t *testing.T) {
 	}
 
 	stf := &STF[mock.Tx]{
-		handleMsg: func(ctx context.Context, msg Type) (msgResp Type, err error) {
+		handleMsg: func(ctx context.Context, msg transaction.Type) (msgResp transaction.Type, err error) {
 			kvSet(t, ctx, "exec")
 			return nil, nil
 		},
@@ -68,7 +68,9 @@ func TestSTF(t *testing.T) {
 	t.Run("fail exec tx", func(t *testing.T) {
 		// update the stf to fail on the handler
 		stf := cloneSTF(stf)
-		stf.handleMsg = func(ctx context.Context, msg Type) (msgResp Type, err error) { return nil, fmt.Errorf("failure") }
+		stf.handleMsg = func(ctx context.Context, msg transaction.Type) (msgResp transaction.Type, err error) {
+			return nil, fmt.Errorf("failure")
+		}
 
 		blockResult, newState, err := stf.DeliverBlock(context.Background(), &appmanager.BlockRequest[mock.Tx]{
 			Txs: []mock.Tx{mockTx},
@@ -101,7 +103,9 @@ func TestSTF(t *testing.T) {
 
 	t.Run("tx failed and post tx failed", func(t *testing.T) {
 		stf := cloneSTF(stf)
-		stf.handleMsg = func(ctx context.Context, msg Type) (msgResp Type, err error) { return nil, fmt.Errorf("exec failure") }
+		stf.handleMsg = func(ctx context.Context, msg transaction.Type) (msgResp transaction.Type, err error) {
+			return nil, fmt.Errorf("exec failure")
+		}
 		stf.postTxExec = func(ctx context.Context, tx mock.Tx, success bool) error { return fmt.Errorf("post tx failure") }
 		blockResult, newState, err := stf.DeliverBlock(context.Background(), &appmanager.BlockRequest[mock.Tx]{
 			Txs: []mock.Tx{mockTx},

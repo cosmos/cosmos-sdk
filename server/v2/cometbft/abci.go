@@ -96,7 +96,7 @@ func (c *Consensus[T]) CheckTx(ctx context.Context, req *abci.RequestCheckTx) (*
 	*/
 
 	cometResp := &abci.ResponseCheckTx{
-		Code:      resp.Code,
+		// Code:      resp.Code, //TODO: extract error code from resp.Error
 		GasWanted: uint64ToInt64(resp.GasWanted),
 		GasUsed:   uint64ToInt64(resp.GasUsed),
 		Events:    intoABCIEvents(resp.Events, c.cfg.IndexEvents),

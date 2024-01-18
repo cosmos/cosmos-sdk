@@ -4,21 +4,29 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
+	"cosmossdk.io/server/v2/core/transaction"
 )
 
 var ErrNoHandler = errors.New("no handler")
 
-// MsgHandler is a function that handles the message execution. TODO: move to appmanager.Module.go
-type MsgHandler = func(ctx context.Context, msg Type) (msgResp Type, err error)
+// MsgHandler is a function that handles the message execution.
+// TODO: move to appmanager.Module.go (marko)
+type MsgHandler = func(ctx context.Context, msg transaction.Type) (msgResp transaction.Type, err error)
 
-// PreMsgHandler is a function that executes before the message execution.TODO: move to appmanager.Module.go
-type PreMsgHandler = func(ctx context.Context, msg Type) (err error)
+// PreMsgHandler is a function that executes before the message execution.
+// TODO: move to appmanager.Module.go (marko)
+type PreMsgHandler = func(ctx context.Context, msg transaction.Type) (err error)
 
-// PostMsgHandler is a function that executes after the message execution.TODO: move to appmanager.Module.go
-type PostMsgHandler = func(ctx context.Context, msg, msgResp Type) (err error)
+// PostMsgHandler is a function that executes after the message execution.
+// TODO: move to appmanager.Module.go (marko)
+type PostMsgHandler = func(ctx context.Context, msg, msgResp transaction.Type) (err error)
 
 type QueryHandler = MsgHandler
 
+// TODO: make a case for *, listen to all messages
+
+// newMsgRouter is a router that routes messages to their respective handlers.
 func newMsgRouterBuilder() *msgRouterBuilder {
 	return &msgRouterBuilder{
 		handlers:     make(map[string]MsgHandler),
@@ -29,7 +37,7 @@ func newMsgRouterBuilder() *msgRouterBuilder {
 
 type msgRouterBuilder struct {
 	handlers     map[string]MsgHandler
-	preHandlers  map[string][]PreMsgHandler
+	preHandlers  map[string][]PreMsgHandler // TODO document how to do ordering, if needed
 	postHandlers map[string][]PostMsgHandler
 }
 
@@ -63,8 +71,8 @@ func (b *msgRouterBuilder) Build() (MsgHandler, error) {
 	// TODO: add checks for when a pre handler/post handler is registered but there is no matching handler.
 
 	// return handler as function
-	return func(ctx context.Context, msg Type) (Type, error) {
-		typeName := TypeName(msg)
+	return func(ctx context.Context, msg transaction.Type) (transaction.Type, error) {
+		typeName := typeName(msg)
 		handler, exists := handlers[typeName]
 		if !exists {
 			return nil, fmt.Errorf("%w: %s", ErrNoHandler, typeName)
@@ -74,21 +82,25 @@ func (b *msgRouterBuilder) Build() (MsgHandler, error) {
 }
 
 func buildHandler(handler MsgHandler, preHandlers []PreMsgHandler, postHandlers []PostMsgHandler) MsgHandler {
-	// TODO: maybe we can optimize this by doing a switch case and checking if the pre/post handlers are empty
-	// in order to avoid pointless iterations when there are no pre/post handlers
-	return func(ctx context.Context, msg Type) (msgResp Type, err error) {
-		for _, preHandler := range preHandlers {
-			if err := preHandler(ctx, msg); err != nil {
-				return nil, err
+	return func(ctx context.Context, msg transaction.Type) (msgResp transaction.Type, err error) {
+
+		if len(preHandlers) != 0 {
+			for _, preHandler := range preHandlers {
+				if err := preHandler(ctx, msg); err != nil {
+					return nil, err
+				}
 			}
 		}
 		msgResp, err = handler(ctx, msg)
 		if err != nil {
 			return nil, err
 		}
-		for _, postHandler := range postHandlers {
-			if err := postHandler(ctx, msg, msgResp); err != nil {
-				return nil, err
+
+		if len(postHandlers) != 0 {
+			for _, postHandler := range postHandlers {
+				if err := postHandler(ctx, msg, msgResp); err != nil {
+					return nil, err
+				}
 			}
 		}
 		return msgResp, nil

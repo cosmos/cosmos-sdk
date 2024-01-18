@@ -170,15 +170,15 @@ type _moduleMsgRouter struct {
 }
 
 func (r *_moduleMsgRouter) RegisterPreHandler(msg appmanager.Type, preHandler func(ctx context.Context, msg appmanager.Type) error) {
-	r.msgRouterBuilder.RegisterPreHandler(TypeName(msg), preHandler)
+	r.msgRouterBuilder.RegisterPreHandler(typeName(msg), preHandler)
 }
 
 func (r *_moduleMsgRouter) RegisterPostHandler(msg appmanager.Type, postHandler func(ctx context.Context, msg, msgResp appmanager.Type) error) {
-	r.msgRouterBuilder.RegisterPostHandler(TypeName(msg), postHandler)
+	r.msgRouterBuilder.RegisterPostHandler(typeName(msg), postHandler)
 }
 
 func (r *_moduleMsgRouter) RegisterHandler(msg appmanager.Type, handlerFunc func(ctx context.Context, msg appmanager.Type) (resp appmanager.Type, err error)) {
-	err := r.msgRouterBuilder.RegisterHandler(TypeName(msg), handlerFunc)
+	err := r.msgRouterBuilder.RegisterHandler(typeName(msg), handlerFunc)
 	if err != nil {
 		r.err = errors.Join(r.err, fmt.Errorf("%w: %s", err, r.moduleName))
 	}

@@ -1,7 +1,10 @@
 package stf
 
-import "google.golang.org/protobuf/proto"
+import (
+	"cosmossdk.io/server/v2/core/transaction"
+	"google.golang.org/protobuf/proto"
+)
 
-func TypeName(msg Type) string {
+func typeName(msg transaction.Type) string {
 	return string(proto.MessageName(msg))
 }

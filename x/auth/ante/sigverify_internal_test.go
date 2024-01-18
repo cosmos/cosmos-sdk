@@ -3,11 +3,13 @@ package ante
 import (
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	authcodec "cosmossdk.io/x/auth/codec"
 	authtypes "cosmossdk.io/x/auth/types"
+
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/stretchr/testify/require"
 )
 
 func TestSigVerify_setPubKey(t *testing.T) {
@@ -56,5 +58,4 @@ func TestSigVerify_setPubKey(t *testing.T) {
 		err := svd.setPubKey(ctx, false, acc, bobPk)
 		require.ErrorContains(t, err, "cannot be claimed")
 	})
-
 }

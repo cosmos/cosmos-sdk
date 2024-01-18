@@ -364,7 +364,7 @@ func (svd SigVerificationDecorator) setPubKey(ctx sdk.Context, simulate bool, ac
 
 	// NOTE(tip): this is a way to claim the account, in a context in which the
 	// account was created in an implicit way.
-	// TODO(tip): considering moving account initalization logic: https://github.com/cosmos/cosmos-sdk/issues/19092
+	// TODO(tip): considering moving account initialization logic: https://github.com/cosmos/cosmos-sdk/issues/19092
 	if !acc.GetAddress().Equals(sdk.AccAddress(pubKey.Address().Bytes())) {
 		return sdkerrors.ErrInvalidPubKey.Wrapf("the account %s cannot be claimed by public key with address %x", acc.GetAddress(), pubKey.Address())
 	}

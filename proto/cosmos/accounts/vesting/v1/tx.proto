@@ -18,7 +18,7 @@ message MsgInitVestingAccount {
 
   option (gogoproto.equal) = true;
 
-  // owner of the vesting account 
+  // owner of the vesting account
   string   owner                           = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   repeated cosmos.base.v1beta1.Coin amount = 2 [
     (gogoproto.nullable)     = false,
@@ -46,9 +46,11 @@ message MsgInitPeriodicVestingAccount {
 
   option (gogoproto.equal) = false;
 
+  // owner of the vesting account
+  string owner = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   // start of vesting as unix time (in seconds).
-  int64           start_time      = 1;
-  repeated Period vesting_periods = 2 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+  int64           start_time      = 2;
+  repeated Period vesting_periods = 3 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 }
 
 // MsgInitVestingAccountResponse defines the Msg/InitPeriodicVestingAccount

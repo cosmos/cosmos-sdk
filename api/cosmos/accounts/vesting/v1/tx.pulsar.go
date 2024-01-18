@@ -1080,59 +1080,60 @@ func (x *fastReflection_MsgInitVestingAccountResponse) ProtoMethods() *protoifac
 	}
 }
 
-var _ protoreflect.List = (*_MsgInitPeriodicVestingAccount_2_list)(nil)
+var _ protoreflect.List = (*_MsgInitPeriodicVestingAccount_3_list)(nil)
 
-type _MsgInitPeriodicVestingAccount_2_list struct {
+type _MsgInitPeriodicVestingAccount_3_list struct {
 	list *[]*Period
 }
 
-func (x *_MsgInitPeriodicVestingAccount_2_list) Len() int {
+func (x *_MsgInitPeriodicVestingAccount_3_list) Len() int {
 	if x.list == nil {
 		return 0
 	}
 	return len(*x.list)
 }
 
-func (x *_MsgInitPeriodicVestingAccount_2_list) Get(i int) protoreflect.Value {
+func (x *_MsgInitPeriodicVestingAccount_3_list) Get(i int) protoreflect.Value {
 	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
 }
 
-func (x *_MsgInitPeriodicVestingAccount_2_list) Set(i int, value protoreflect.Value) {
+func (x *_MsgInitPeriodicVestingAccount_3_list) Set(i int, value protoreflect.Value) {
 	valueUnwrapped := value.Message()
 	concreteValue := valueUnwrapped.Interface().(*Period)
 	(*x.list)[i] = concreteValue
 }
 
-func (x *_MsgInitPeriodicVestingAccount_2_list) Append(value protoreflect.Value) {
+func (x *_MsgInitPeriodicVestingAccount_3_list) Append(value protoreflect.Value) {
 	valueUnwrapped := value.Message()
 	concreteValue := valueUnwrapped.Interface().(*Period)
 	*x.list = append(*x.list, concreteValue)
 }
 
-func (x *_MsgInitPeriodicVestingAccount_2_list) AppendMutable() protoreflect.Value {
+func (x *_MsgInitPeriodicVestingAccount_3_list) AppendMutable() protoreflect.Value {
 	v := new(Period)
 	*x.list = append(*x.list, v)
 	return protoreflect.ValueOfMessage(v.ProtoReflect())
 }
 
-func (x *_MsgInitPeriodicVestingAccount_2_list) Truncate(n int) {
+func (x *_MsgInitPeriodicVestingAccount_3_list) Truncate(n int) {
 	for i := n; i < len(*x.list); i++ {
 		(*x.list)[i] = nil
 	}
 	*x.list = (*x.list)[:n]
 }
 
-func (x *_MsgInitPeriodicVestingAccount_2_list) NewElement() protoreflect.Value {
+func (x *_MsgInitPeriodicVestingAccount_3_list) NewElement() protoreflect.Value {
 	v := new(Period)
 	return protoreflect.ValueOfMessage(v.ProtoReflect())
 }
 
-func (x *_MsgInitPeriodicVestingAccount_2_list) IsValid() bool {
+func (x *_MsgInitPeriodicVestingAccount_3_list) IsValid() bool {
 	return x.list != nil
 }
 
 var (
 	md_MsgInitPeriodicVestingAccount                 protoreflect.MessageDescriptor
+	fd_MsgInitPeriodicVestingAccount_owner           protoreflect.FieldDescriptor
 	fd_MsgInitPeriodicVestingAccount_start_time      protoreflect.FieldDescriptor
 	fd_MsgInitPeriodicVestingAccount_vesting_periods protoreflect.FieldDescriptor
 )
@@ -1140,6 +1141,7 @@ var (
 func init() {
 	file_cosmos_accounts_vesting_v1_tx_proto_init()
 	md_MsgInitPeriodicVestingAccount = File_cosmos_accounts_vesting_v1_tx_proto.Messages().ByName("MsgInitPeriodicVestingAccount")
+	fd_MsgInitPeriodicVestingAccount_owner = md_MsgInitPeriodicVestingAccount.Fields().ByName("owner")
 	fd_MsgInitPeriodicVestingAccount_start_time = md_MsgInitPeriodicVestingAccount.Fields().ByName("start_time")
 	fd_MsgInitPeriodicVestingAccount_vesting_periods = md_MsgInitPeriodicVestingAccount.Fields().ByName("vesting_periods")
 }
@@ -1209,6 +1211,12 @@ func (x *fastReflection_MsgInitPeriodicVestingAccount) Interface() protoreflect.
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
 func (x *fastReflection_MsgInitPeriodicVestingAccount) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.Owner != "" {
+		value := protoreflect.ValueOfString(x.Owner)
+		if !f(fd_MsgInitPeriodicVestingAccount_owner, value) {
+			return
+		}
+	}
 	if x.StartTime != int64(0) {
 		value := protoreflect.ValueOfInt64(x.StartTime)
 		if !f(fd_MsgInitPeriodicVestingAccount_start_time, value) {
@@ -1216,7 +1224,7 @@ func (x *fastReflection_MsgInitPeriodicVestingAccount) Range(f func(protoreflect
 		}
 	}
 	if len(x.VestingPeriods) != 0 {
-		value := protoreflect.ValueOfList(&_MsgInitPeriodicVestingAccount_2_list{list: &x.VestingPeriods})
+		value := protoreflect.ValueOfList(&_MsgInitPeriodicVestingAccount_3_list{list: &x.VestingPeriods})
 		if !f(fd_MsgInitPeriodicVestingAccount_vesting_periods, value) {
 			return
 		}
@@ -1236,6 +1244,8 @@ func (x *fastReflection_MsgInitPeriodicVestingAccount) Range(f func(protoreflect
 // a repeated field is populated if it is non-empty.
 func (x *fastReflection_MsgInitPeriodicVestingAccount) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
+	case "cosmos.accounts.vesting.v1.MsgInitPeriodicVestingAccount.owner":
+		return x.Owner != ""
 	case "cosmos.accounts.vesting.v1.MsgInitPeriodicVestingAccount.start_time":
 		return x.StartTime != int64(0)
 	case "cosmos.accounts.vesting.v1.MsgInitPeriodicVestingAccount.vesting_periods":
@@ -1256,6 +1266,8 @@ func (x *fastReflection_MsgInitPeriodicVestingAccount) Has(fd protoreflect.Field
 // Clear is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_MsgInitPeriodicVestingAccount) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
+	case "cosmos.accounts.vesting.v1.MsgInitPeriodicVestingAccount.owner":
+		x.Owner = ""
 	case "cosmos.accounts.vesting.v1.MsgInitPeriodicVestingAccount.start_time":
 		x.StartTime = int64(0)
 	case "cosmos.accounts.vesting.v1.MsgInitPeriodicVestingAccount.vesting_periods":
@@ -1276,14 +1288,17 @@ func (x *fastReflection_MsgInitPeriodicVestingAccount) Clear(fd protoreflect.Fie
 // of the value; to obtain a mutable reference, use Mutable.
 func (x *fastReflection_MsgInitPeriodicVestingAccount) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
+	case "cosmos.accounts.vesting.v1.MsgInitPeriodicVestingAccount.owner":
+		value := x.Owner
+		return protoreflect.ValueOfString(value)
 	case "cosmos.accounts.vesting.v1.MsgInitPeriodicVestingAccount.start_time":
 		value := x.StartTime
 		return protoreflect.ValueOfInt64(value)
 	case "cosmos.accounts.vesting.v1.MsgInitPeriodicVestingAccount.vesting_periods":
 		if len(x.VestingPeriods) == 0 {
-			return protoreflect.ValueOfList(&_MsgInitPeriodicVestingAccount_2_list{})
+			return protoreflect.ValueOfList(&_MsgInitPeriodicVestingAccount_3_list{})
 		}
-		listValue := &_MsgInitPeriodicVestingAccount_2_list{list: &x.VestingPeriods}
+		listValue := &_MsgInitPeriodicVestingAccount_3_list{list: &x.VestingPeriods}
 		return protoreflect.ValueOfList(listValue)
 	default:
 		if descriptor.IsExtension() {
@@ -1305,11 +1320,13 @@ func (x *fastReflection_MsgInitPeriodicVestingAccount) Get(descriptor protorefle
 // Set is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_MsgInitPeriodicVestingAccount) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
+	case "cosmos.accounts.vesting.v1.MsgInitPeriodicVestingAccount.owner":
+		x.Owner = value.Interface().(string)
 	case "cosmos.accounts.vesting.v1.MsgInitPeriodicVestingAccount.start_time":
 		x.StartTime = value.Int()
 	case "cosmos.accounts.vesting.v1.MsgInitPeriodicVestingAccount.vesting_periods":
 		lv := value.List()
-		clv := lv.(*_MsgInitPeriodicVestingAccount_2_list)
+		clv := lv.(*_MsgInitPeriodicVestingAccount_3_list)
 		x.VestingPeriods = *clv.list
 	default:
 		if fd.IsExtension() {
@@ -1335,8 +1352,10 @@ func (x *fastReflection_MsgInitPeriodicVestingAccount) Mutable(fd protoreflect.F
 		if x.VestingPeriods == nil {
 			x.VestingPeriods = []*Period{}
 		}
-		value := &_MsgInitPeriodicVestingAccount_2_list{list: &x.VestingPeriods}
+		value := &_MsgInitPeriodicVestingAccount_3_list{list: &x.VestingPeriods}
 		return protoreflect.ValueOfList(value)
+	case "cosmos.accounts.vesting.v1.MsgInitPeriodicVestingAccount.owner":
+		panic(fmt.Errorf("field owner of message cosmos.accounts.vesting.v1.MsgInitPeriodicVestingAccount is not mutable"))
 	case "cosmos.accounts.vesting.v1.MsgInitPeriodicVestingAccount.start_time":
 		panic(fmt.Errorf("field start_time of message cosmos.accounts.vesting.v1.MsgInitPeriodicVestingAccount is not mutable"))
 	default:
@@ -1352,11 +1371,13 @@ func (x *fastReflection_MsgInitPeriodicVestingAccount) Mutable(fd protoreflect.F
 // For lists, maps, and messages, this returns a new, empty, mutable value.
 func (x *fastReflection_MsgInitPeriodicVestingAccount) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
+	case "cosmos.accounts.vesting.v1.MsgInitPeriodicVestingAccount.owner":
+		return protoreflect.ValueOfString("")
 	case "cosmos.accounts.vesting.v1.MsgInitPeriodicVestingAccount.start_time":
 		return protoreflect.ValueOfInt64(int64(0))
 	case "cosmos.accounts.vesting.v1.MsgInitPeriodicVestingAccount.vesting_periods":
 		list := []*Period{}
-		return protoreflect.ValueOfList(&_MsgInitPeriodicVestingAccount_2_list{list: &list})
+		return protoreflect.ValueOfList(&_MsgInitPeriodicVestingAccount_3_list{list: &list})
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.vesting.v1.MsgInitPeriodicVestingAccount"))
@@ -1426,6 +1447,10 @@ func (x *fastReflection_MsgInitPeriodicVestingAccount) ProtoMethods() *protoifac
 		var n int
 		var l int
 		_ = l
+		l = len(x.Owner)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
 		if x.StartTime != 0 {
 			n += 1 + runtime.Sov(uint64(x.StartTime))
 		}
@@ -1477,13 +1502,20 @@ func (x *fastReflection_MsgInitPeriodicVestingAccount) ProtoMethods() *protoifac
 				copy(dAtA[i:], encoded)
 				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
 				i--
-				dAtA[i] = 0x12
+				dAtA[i] = 0x1a
 			}
 		}
 		if x.StartTime != 0 {
 			i = runtime.EncodeVarint(dAtA, i, uint64(x.StartTime))
 			i--
-			dAtA[i] = 0x8
+			dAtA[i] = 0x10
+		}
+		if len(x.Owner) > 0 {
+			i -= len(x.Owner)
+			copy(dAtA[i:], x.Owner)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Owner)))
+			i--
+			dAtA[i] = 0xa
 		}
 		if input.Buf != nil {
 			input.Buf = append(input.Buf, dAtA...)
@@ -1535,6 +1567,38 @@ func (x *fastReflection_MsgInitPeriodicVestingAccount) ProtoMethods() *protoifac
 			}
 			switch fieldNum {
 			case 1:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Owner", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Owner = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 2:
 				if wireType != 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field StartTime", wireType)
 				}
@@ -1553,7 +1617,7 @@ func (x *fastReflection_MsgInitPeriodicVestingAccount) ProtoMethods() *protoifac
 						break
 					}
 				}
-			case 2:
+			case 3:
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field VestingPeriods", wireType)
 				}
@@ -1998,6 +2062,7 @@ type MsgInitVestingAccount struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
+	// owner of the vesting account
 	Owner  string          `protobuf:"bytes,1,opt,name=owner,proto3" json:"owner,omitempty"`
 	Amount []*v1beta1.Coin `protobuf:"bytes,2,rep,name=amount,proto3" json:"amount,omitempty"`
 	// end of vesting as unix time (in seconds).
@@ -2098,9 +2163,11 @@ type MsgInitPeriodicVestingAccount struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
+	// owner of the vesting account
+	Owner string `protobuf:"bytes,1,opt,name=owner,proto3" json:"owner,omitempty"`
 	// start of vesting as unix time (in seconds).
-	StartTime      int64     `protobuf:"varint,1,opt,name=start_time,json=startTime,proto3" json:"start_time,omitempty"`
-	VestingPeriods []*Period `protobuf:"bytes,2,rep,name=vesting_periods,json=vestingPeriods,proto3" json:"vesting_periods,omitempty"`
+	StartTime      int64     `protobuf:"varint,2,opt,name=start_time,json=startTime,proto3" json:"start_time,omitempty"`
+	VestingPeriods []*Period `protobuf:"bytes,3,rep,name=vesting_periods,json=vestingPeriods,proto3" json:"vesting_periods,omitempty"`
 }
 
 func (x *MsgInitPeriodicVestingAccount) Reset() {
@@ -2121,6 +2188,13 @@ func (*MsgInitPeriodicVestingAccount) ProtoMessage() {}
 // Deprecated: Use MsgInitPeriodicVestingAccount.ProtoReflect.Descriptor instead.
 func (*MsgInitPeriodicVestingAccount) Descriptor() ([]byte, []int) {
 	return file_cosmos_accounts_vesting_v1_tx_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *MsgInitPeriodicVestingAccount) GetOwner() string {
+	if x != nil {
+		return x.Owner
+	}
+	return ""
 }
 
 func (x *MsgInitPeriodicVestingAccount) GetStartTime() int64 {
@@ -2203,12 +2277,15 @@ var file_cosmos_accounts_vesting_v1_tx_proto_rawDesc = []byte{
 	0x67, 0x49, 0x6e, 0x69, 0x74, 0x56, 0x65, 0x73, 0x74, 0x69, 0x6e, 0x67, 0x41, 0x63, 0x63, 0x6f,
 	0x75, 0x6e, 0x74, 0x22, 0x1f, 0x0a, 0x1d, 0x4d, 0x73, 0x67, 0x49, 0x6e, 0x69, 0x74, 0x56, 0x65,
 	0x73, 0x74, 0x69, 0x6e, 0x67, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x52, 0x65, 0x73, 0x70,
-	0x6f, 0x6e, 0x73, 0x65, 0x22, 0xc4, 0x01, 0x0a, 0x1d, 0x4d, 0x73, 0x67, 0x49, 0x6e, 0x69, 0x74,
+	0x6f, 0x6e, 0x73, 0x65, 0x22, 0xf4, 0x01, 0x0a, 0x1d, 0x4d, 0x73, 0x67, 0x49, 0x6e, 0x69, 0x74,
 	0x50, 0x65, 0x72, 0x69, 0x6f, 0x64, 0x69, 0x63, 0x56, 0x65, 0x73, 0x74, 0x69, 0x6e, 0x67, 0x41,
-	0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x12, 0x1d, 0x0a, 0x0a, 0x73, 0x74, 0x61, 0x72, 0x74, 0x5f,
-	0x74, 0x69, 0x6d, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x03, 0x52, 0x09, 0x73, 0x74, 0x61, 0x72,
+	0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x12, 0x2e, 0x0a, 0x05, 0x6f, 0x77, 0x6e, 0x65, 0x72, 0x18,
+	0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
+	0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52,
+	0x05, 0x6f, 0x77, 0x6e, 0x65, 0x72, 0x12, 0x1d, 0x0a, 0x0a, 0x73, 0x74, 0x61, 0x72, 0x74, 0x5f,
+	0x74, 0x69, 0x6d, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x03, 0x52, 0x09, 0x73, 0x74, 0x61, 0x72,
 	0x74, 0x54, 0x69, 0x6d, 0x65, 0x12, 0x56, 0x0a, 0x0f, 0x76, 0x65, 0x73, 0x74, 0x69, 0x6e, 0x67,
-	0x5f, 0x70, 0x65, 0x72, 0x69, 0x6f, 0x64, 0x73, 0x18, 0x02, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x22,
+	0x5f, 0x70, 0x65, 0x72, 0x69, 0x6f, 0x64, 0x73, 0x18, 0x03, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x22,
 	0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73,
 	0x2e, 0x76, 0x65, 0x73, 0x74, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x2e, 0x50, 0x65, 0x72, 0x69,
 	0x6f, 0x64, 0x42, 0x09, 0xc8, 0xde, 0x1f, 0x00, 0xa8, 0xe7, 0xb0, 0x2a, 0x01, 0x52, 0x0e, 0x76,

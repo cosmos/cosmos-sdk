@@ -102,7 +102,7 @@ func (pva PeriodicVestingAccount) Init(ctx context.Context, msg *vestingtypes.Ms
 	if err != nil {
 		return nil, err
 	}
-	err = pva.Owner.Set(ctx, sender)
+	err = pva.Owner.Set(ctx, msg.Owner)
 	if err != nil {
 		return nil, err
 	}
